@@ -1,0 +1,18 @@
+
+Prerequisites for building F* from sources (work in progress)
+
+Windows
+  any particular flavour?
+
+Z3 4.3? from http://z3.codeplex.com/
+32bit version will do fine?
+Copy libz3.dll, Microsoft.Z3.dll, and z3.exe to the bin directory.
+  Any other file (e.g. the .pyc files)?
+
+Make 3.81? With Cygwin? Any other unix tool needed?
+  Tried Microsoft's nmake but it didn't like the syntax
+
+[optional?] Visual Studio ????
+  Which version? I tried opening fstar.fsproj with Visual Studio 2010
+  and got that "This project is incompatible with the current version
+  of Visual Studio"
