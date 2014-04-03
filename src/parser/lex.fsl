@@ -1,0 +1,669 @@
+﻿{
+// Adapted from sources of F#
+//----------------------------------------------------------------------------
+//
+// Copyright (c) 2002-2012 Microsoft Corporation. 
+//
+// This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
+// copy of the license can be found in the License.html file at the root of this distribution. 
+// By using this source code in any fashion, you are agreeing to be bound 
+// by the terms of the Apache License, Version 2.0.
+//
+// You must not remove this notice, or any other, from this software.
+//----------------------------------------------------------------------------
+// See LICENSE-fsharp.txt at the root of this distribution for terms and conditions
+#light "off"
+  module Microsoft.FStar.LexFStar
+(*------------------------------------------------------------------------
+ * The Lexer.  Some of the complication arises from the fact it is 
+ * reused by the Visual Studio mode to do partial lexing reporting 
+ * whitespace etc.
+ * (c) Microsoft Corporation. All rights reserved 
+ *-----------------------------------------------------------------------*)
+
+open System
+open Microsoft.FSharp.Compatibility
+open Microsoft.FSharp.Compatibility.OCaml.Pervasives
+open Microsoft.FSharp.Text.Lexing
+open Microsoft.FStar
+open Microsoft.FStar.Range
+open Microsoft.FStar.Parser
+open Microsoft.FStar.Parser.Parse
+open Microsoft.FStar.Parser.AST
+open Microsoft.FStar.Parser.Lexhelp
+
+let lexeme (lexbuf : Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) = 
+    Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*).LexemeString(lexbuf)
+let ulexeme lexbuf = lexeme lexbuf
+
+let adjust_lexbuf_start_pos (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) p =  lexbuf.StartPos <- p 
+
+let string_trim_both s n m = String.sub s n (String.length s - (n+m))
+let trim_both   lexbuf n m = string_trim_both (ulexeme lexbuf) n m
+let trim_right  lexbuf n = trim_both lexbuf 0 n
+let trim_left   lexbuf n = trim_both lexbuf n 0
+
+let fail lexbuf msg dflt =
+     let m = GetLexerRange  lexbuf in 
+     errorR(Absyn.Syntax.Error(msg,m));
+     dflt
+        
+
+let trim_to_i32 lexbuf n = 
+    try int32 (trim_right lexbuf n)
+    with _ -> fail lexbuf "This number is outside the allowable range for this integer type" 0
+
+let CheckExprOp lexbuf = 
+  if String.contains (ulexeme lexbuf)  ':' 
+  then errorR(Absyn.Syntax.Error("':' is no longer permitted as a character in operator names" , GetLexerRange lexbuf))
+
+let quote_op_is_raw s = String.length s >= 1 && s.[0] = '@'
+
+let rev_string s = 
+  let n = String.length s in 
+  let res = Buffer.create n in 
+  for i = n - 1 downto 0 do Buffer.add_char res s.[i] done;
+  Buffer.contents res
+  
+let unexpected_char lexbuf =
+    LEX_FAILURE ("Unexpected character '"^(lexeme lexbuf)^"'")
+
+let start_string (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) =
+    let buf = Bytes.Bytebuf.create 100 in 
+    let m = GetLexerRange  lexbuf in
+    let startp = lexbuf.StartPos in  
+    let fin = (fun m2 b s -> 
+                     let endp = lexbuf.EndPos in  
+                     (* Adjust the start-of-token mark back to the true start of the token *)
+                     adjust_lexbuf_start_pos lexbuf startp;
+                     if b then
+                        if Lexhelp.stringbuf_is_bytes buf then
+                            BYTEARRAY (Lexhelp.stringbuf_as_bytes buf)
+                        else (
+                            fail lexbuf "This byte array literal contains characters that do not encode as a single byte" ();
+                            BYTEARRAY (Lexhelp.stringbuf_as_bytes buf)
+                        )
+                     else
+                        STRING s)  in
+    buf,fin,m
+                     
+} 
+
+let letter = '\Lu' | '\Ll' | '\Lt' | '\Lm' | '\Lo' | '\Nl'
+let digit = '\Nd'
+let hex = ['0'-'9'] | ['A'-'F'] | ['a'-'f']
+let truewhite = [' ']
+let offwhite = ['\t']
+let anywhite = truewhite | offwhite
+let op_char = '!'|'$'|'%'|'&'|'*'|'+'|'-'|'.'|'/'|'<'|'='|'?'|'^'|'|'|'~'|':'
+let ignored_op_char = '.' | '$'
+let xinteger = 
+  (  '0' ('x'| 'X')  hex + 
+   | '0' ('o'| 'O')  (['0'-'7']) + 
+   | '0' ('b'| 'B')  (['0'-'1']) + )
+let integer = digit+
+let int8 = integer 'y'
+let uint8 = (xinteger | integer) 'u' 'y' 
+let int16 = integer 's'
+let uint16 = (xinteger | integer) 'u' 's'
+let int = integer 
+let int32 = integer 'l'
+let uint32 = (xinteger | integer) 'u' 
+let uint32l = (xinteger | integer) 'u' 'l'
+let nativeint = (xinteger | integer) 'n'
+let unativeint = (xinteger | integer) 'u' 'n'
+let int64 = (xinteger | integer) 'L' 
+let uint64 = (xinteger | integer) ('u' | 'U') 'L' 
+let xint8 = xinteger 'y'
+let xint16 = xinteger 's'
+let xint = xinteger 
+let xint32 = xinteger 'l'
+let floatp = digit+ '.' digit*  
+let floate = digit+ ('.' digit* )? ('e'| 'E') ['+' '-']? digit+
+let float = floatp | floate 
+let bigint =  integer 'I' 
+let bignum =  integer 'N' 
+let ieee64 = float
+(* let ieee64d = (float | integer) ('d' | 'D')  *)
+let ieee32 = float ('f' | 'F') 
+let decimal = (float | integer) ('m' | 'M') 
+let xieee32 = xinteger 'l' 'f'
+let xieee64 = xinteger 'L' 'F'
+let escape_char = ('\\' ( '\\' | "\"" | '\'' | 'n' | 't' | 'b' | 'r'))
+let char = '\'' ( [^'\\''\n''\r''\t''\b'] | escape_char) '\''
+let trigraph = '\\' digit digit digit
+let hexgraph_short = '\\' 'x' hex hex 
+let unicodegraph_short = '\\' 'u' hex hex hex hex
+let unicodegraph_long =  '\\' 'U' hex hex hex hex hex hex hex hex
+let newline = ('\n' | '\r' '\n')
+
+let connecting_char = '\Pc'
+let combining_char = '\Mn' | '\Mc'
+let formatting_char = '\Cf' 
+
+let constructor_start_char = ['A'-'Z']
+  
+let ident_start_char = 
+    ['a'-'z'] | '_'
+
+let ident_char = 
+    letter
+  | connecting_char 
+  | combining_char 
+  | formatting_char 
+  | digit 
+  | ['\'']
+
+let constructor = constructor_start_char ident_char*  
+let ident = ident_start_char ident_char*
+let ident_LESS = ident_start_char ident_char* "<"
+let tvar = '\'' (ident_start_char | constructor_start_char) ident_char*
+let basekind = '*' | 'A' | 'E' | "Prop"
+
+rule token args = parse
+ | "{~" { LBRACE_TILDE }
+ | "~}" { TILDE_RBRACE }
+ | ident 
+     { kwd_or_id args lexbuf (ulexeme lexbuf) }
+ | constructor
+     { NAME(ulexeme lexbuf) }
+ | tvar 
+     { TVAR (ulexeme lexbuf) }
+ | "#monadic"
+     { PRAGMAMONADIC }
+ | "#dynamic"
+     { PRAGMADYNAMIC }
+ | "#light"
+     { PRAGMALIGHT }
+ | "F#" | "C#"  { LANG(ulexeme lexbuf) }
+ | int8 
+     { let n = trim_to_i32 lexbuf 1 in 
+       if n > 0x80 || n < -0x80 then fail lexbuf "This number is outside the allowable range for 8-bit signed integers" (INT8(0y,false))
+    (* Allow <max_int+1> to parse as min_int.  Allowed only because we parse '-' as an operator. *)
+       else if n = 0x80 then INT8(sbyte(-0x80), true (* 'true' = 'bad'*) )
+       else INT8(sbyte n,false) }
+ | xint8 
+     { let n = trim_to_i32 lexbuf 1 in 
+       if n > 0xFF || n < 0 then fail lexbuf "This number is outside the allowable range for hexadecimal 8-bit signed integers" (INT8(0y,false))
+       else INT8(sbyte(byte(n)),false) }
+ | uint8
+     { let n = trim_to_i32 lexbuf 2 in 
+       if n > 0xFF || n < 0 then fail lexbuf "This number is outside the allowable range for 8-bit unsigned integers" (UINT8(0uy))
+       else UINT8(byte n) }
+ | int16 
+     { let n = trim_to_i32 lexbuf 1 in 
+       if n > 0x8000 || n < -0x8000 then fail lexbuf "This number is outside the allowable range for 16-bit signed integers" (INT16(0s,false))
+    (* Allow <max_int+1> to parse as min_int.  Allowed only because we parse '-' as an operator. *)
+       else if n = 0x8000 then INT16(-0x8000s,true)
+       else INT16(int16 n,false) }
+ | xint16 
+     { let n = trim_to_i32 lexbuf 1 in 
+       if n > 0xFFFF || n < 0 then fail lexbuf "This number is outside the allowable range for 16-bit signed integers" (INT16(0s,false))
+       else INT16(int16(uint16(n)),false) }
+ | uint16 
+     { let n = trim_to_i32 lexbuf 2 in 
+       if n > 0xFFFF || n < 0 then fail lexbuf "This number is outside the allowable range for 16-bit unsigned integers" (UINT16(0us))
+       else UINT16(uint16 n) }
+ | int '.' '.' 
+     { let s = trim_right lexbuf 2 in 
+       (* Allow <max_int+1> to parse as min_int.  Allowed only because we parse '-' as an operator. *)
+       if s = "2147483648" then INT32_DOT_DOT(-2147483648,true) else
+       let n = try int32 s with _ ->  fail lexbuf "This number is outside the allowable range for 32-bit signed integers" 0 in
+       INT32_DOT_DOT(n,false)
+     } 
+ | xint 
+ | int 
+     { let s = ulexeme lexbuf in 
+       (* Allow <max_int+1> to parse as min_int.  Allowed only because we parse '-' as an operator. *)
+       if s = "2147483648" then INT32(-2147483648,true) else
+       let n =
+           try int32 s with _ ->  fail lexbuf "This number is outside the allowable range for 32-bit signed integers" 0
+       in 
+       INT32(n,false)
+     } 
+ | xint32 
+ | int32 
+     { let s = trim_right lexbuf 1 in 
+       (* Allow <max_int+1> to parse as min_int.  Allowed only because we parse '-' as an operator. *)
+       if s = "2147483648" then INT32(-2147483648,true) else
+       let n = 
+           try int32 s with _ ->  fail lexbuf "This number is outside the allowable range for 32-bit signed integers" 0
+       in
+       INT32(n,false)
+     } 
+
+ | uint32
+     { 
+       let s = trim_right lexbuf 1 in 
+       let n = 
+           try int64 s with _ ->  fail lexbuf "This number is outside the allowable range for 32-bit unsigned integers" 0L
+       in
+       if n > 0xFFFFFFFFL || n < 0L then fail lexbuf "This number is outside the allowable range for 32-bit unsigned integers" (UINT32(0u)) else
+       UINT32(uint32 (uint64 n)) } 
+
+ | uint32l
+     { 
+       let s = trim_right lexbuf 2 in 
+       let n = 
+           try int64 s with _ ->  fail lexbuf "This number is outside the allowable range for 32-bit unsigned integers" 0L
+       in
+       if n > 0xFFFFFFFFL || n < 0L then fail lexbuf "This number is outside the allowable range for 32-bit unsigned integers" (UINT32(0u)) else
+       UINT32(uint32 (uint64 n)) } 
+
+ | int64 
+     { let s = trim_right lexbuf 1 in 
+       (* Allow <max_int+1> to parse as min_int.  Stupid but allowed because we parse '-' as an operator. *)
+       if s = "9223372036854775808" then 
+         INT64(-9223372036854775808L,true) 
+       else
+         let n = 
+           try int64 s with _ ->  fail lexbuf "This number is outside the allowable range for 64-bit signed integers" 0L
+         in 
+           INT64(n,false)
+     }
+
+ | uint64     
+     { let s = trim_right lexbuf 2 in 
+       let n = 
+         try uint64 s with _ -> fail lexbuf "This number is outside the allowable range for 64-bit unsigned integers" 0UL
+       in 
+       UINT64(n) } 
+
+ | nativeint  
+     { try 
+           NATIVEINT(int64 (trim_right lexbuf 1)) 
+       with _ ->  fail lexbuf "This number is outside the allowable range for native integers" (NATIVEINT(0L)) } 
+
+ | unativeint 
+     { try 
+           UNATIVEINT(uint64 (trim_right lexbuf 2)) 
+       with _ ->  fail lexbuf "This number is outside the allowable range for unsigned native integers"  (UNATIVEINT(0UL)) }
+
+ | ieee32     
+     { IEEE32 (try float32(trim_right lexbuf 1) with _ -> fail lexbuf "Invalid floating point number" 0.0f) }
+ | ieee64     
+     { IEEE64 (try float(ulexeme lexbuf) with _ -> fail lexbuf "Invalid floating point number" 0.0) }
+
+(*  | ieee64d    { IEEE64 (float (trim_right lexbuf 1)) } *)
+ | decimal    
+     { try 
+          let s = trim_right lexbuf 1 in
+          (* This implements a range check for decimal literals *)
+          let d = System.Decimal.Parse(s,System.Globalization.CultureInfo.InvariantCulture) in
+          DECIMAL d 
+       with 
+          e -> fail lexbuf "This number is outside the allowable range for decimal literals" (DECIMAL (decimal 0))
+     }
+ | xieee32     
+     { 
+       let s = trim_right lexbuf 2 in
+       let n64 = int64 s in 
+       if n64 > 0xFFFFFFFFL || n64 < 0L then 
+         fail lexbuf "This number is outside the allowable range for 32-bit floats" (IEEE32 0.0f) 
+       else
+         IEEE32 (System.BitConverter.ToSingle(System.BitConverter.GetBytes(int32 (uint32 (uint64 n64))),0)) }
+
+ | xieee64     
+     { 
+       let n64 = int64 (trim_right lexbuf 2) in 
+       IEEE64 (System.BitConverter.Int64BitsToDouble(n64)) }
+       
+ | bigint     
+       { BIGINT (Bytes.string_as_unicode_bytes (trim_right lexbuf 1)) }
+
+ | bignum     
+       { BIGNUM (Bytes.string_as_unicode_bytes (trim_right lexbuf 1)) }
+
+ | (int | xint | float) ident_char+
+       { fail lexbuf "This is not a valid numeric literal. Sample formats include 4, 0x4, 0b0100, 4L, 4UL, 4u, 4s, 4us, 4y, 4uy, 4.0, 4.0f, 4N, 4I" (INT32(0,false)) }
+ 
+ | char
+     { 
+       let s = ulexeme lexbuf in 
+         CHAR (if s.[1] = '\\' then 
+                 escape s.[2] 
+               else s.[1])  
+     }
+
+ | char 'B' 
+     { let s = ulexeme lexbuf in 
+       UINT8 (byte(int32 (if s.[1] = '\\' then escape s.[2] else s.[1])))  }
+     
+ | '\'' trigraph '\''
+     { let s = ulexeme lexbuf in 
+       CHAR (trigraph s.[2] s.[3] s.[4]) }
+
+ | "/\\"   { CONJUNCTION }
+ | "\\/"   { DISJUNCTION }
+ | '\'' hexgraph_short '\'' { CHAR (char (int32 (hexgraph_short (trim_both lexbuf 3 1)))) }
+ | '\'' unicodegraph_short '\'' { CHAR (char (int32 (unicodegraph_short (trim_both lexbuf 3 1)))) }
+ | '\'' unicodegraph_long '\''  { LEX_FAILURE "This unicode encoding is only valid in string literals" }
+ | "<:"             { SUBTYPE }
+ | "<@"             { SUBKIND }
+
+ | "(*)"            { LPAREN_STAR_RPAREN }
+
+ | "(*"
+     { let m = GetLexerRange  lexbuf in 
+       comment(1,m,args) lexbuf }
+
+ | '"' 
+     { let buf,fin,m = start_string lexbuf in 
+       string (buf,fin,m,args) lexbuf }
+      
+ | '"' 
+     { let buf,fin,m = start_string lexbuf in 
+       vstring (buf,fin,m,args) lexbuf }
+
+ | truewhite+  
+     { token args lexbuf }
+
+ | offwhite+  
+     { 
+       token args lexbuf 
+     }
+
+ | "////"  [^'\n''\r']* 
+     { (* 4+ slash are 1-line comments, online 3 slash are XMLDoc *)
+       token args lexbuf 
+     }
+
+ | "//"  [^'\n''\r']* 
+     { token args lexbuf  }
+
+ | newline 
+     { newline lexbuf; 
+       token args lexbuf }
+
+ | '`' '`' ([^'`' '\n' '\r' '\t'] | '`' [^'`''\n' '\r' '\t']) + '`' '`' 
+     { IDENT (trim_both lexbuf 2 2) }
+
+ | '#' { HASH }
+ | '&' { AMP }
+ | "&&" { AMP_AMP }
+ | "||" { BAR_BAR }
+ | '\'' { QUOTE }
+ | "()" { LPAREN_RPAREN }
+ | '(' { LPAREN }
+ | ')' { RPAREN }
+ | '*' { STAR }
+ | "$*" 
+     { BASEKIND("*") }
+ | "$A" 
+ | "$Affine" 
+     { BASEKIND("A") }
+ | "$E" 
+ | "$Erasable" 
+     { BASEKIND("E") } 
+ | "$P" 
+ | "$Prop" 
+     { BASEKIND("P") }
+ | ',' { COMMA }
+ | "->" { RARROW }
+ | "->>" { RARROW2 }
+ | "=>" { RRARROW }
+ | "<==>" { IFF }
+ | "==>" { IMPLIES }
+ | "?" { QMARK }
+ | "??" { QMARK_QMARK }
+ | ".." { DOT_DOT }
+ | "." { DOT }
+ | "{:pattern" { LBRACE_COLON_PATTERN }
+ | ":" { COLON }
+ | "::" { COLON_COLON }
+ | "@" { ATSIGN }
+ | "^" { HAT }
+ | ":>" { COLON_GREATER }
+ | ">." { GREATER_DOT }
+ | ">|]" { GREATER_BAR_RBRACK }
+ | ":?>" { COLON_QMARK_GREATER }
+ | ":?" { COLON_QMARK }
+ | ":=" { COLON_EQUALS }
+ | ";;" { SEMICOLON_SEMICOLON }
+ | ";" { SEMICOLON }
+ | "<-" { LARROW }
+ | "=" { EQUALS }
+ | "[" { LBRACK }
+ | "[|" { LBRACK_BAR }
+ | "<=" { LEQ }
+ | ">=" { GEQ }
+ | "<>" { LESSGREATER }
+ | "<" { LESS }
+ | ">" { GREATER }
+ | "|>" { PIPE_RIGHT }
+ | "<|" { PIPE_LEFT }
+ | "[<" { LBRACK_LESS }
+ | "]" { RBRACK }
+ | "|]" { BAR_RBRACK }
+ | ">]" { GREATER_RBRACK }
+ | "{" { LBRACE }
+ | "|" { BAR }
+ | "}" { RBRACE }
+ | "$" { DOLLAR }
+ | "%%" { PERCENT_OP("%%") }
+ | "!" { BANG(ulexeme lexbuf) }
+ | "~" { RESERVED }
+ | "`" { RESERVED }
+ | "\\" { BACKSLASH }
+ | ('/' | '%')                                          { DIV_MOD_OP(ulexeme lexbuf) }
+ | ('+'|'-')                                            { PLUS_MINUS_OP(ulexeme lexbuf) }
+ | ignored_op_char* '*' '*'                    op_char* { CheckExprOp lexbuf; INFIX_STAR_STAR_OP(ulexeme lexbuf) }
+ | ignored_op_char* ('=' | "!=" | '<' | '>' | '$')  op_char* { CheckExprOp lexbuf; INFIX_COMPARE_OP(ulexeme lexbuf) }
+ | ignored_op_char* ('&')                      op_char* { CheckExprOp lexbuf; INFIX_AMP_OP(ulexeme lexbuf) }
+ | ignored_op_char* '|'                        op_char* { CheckExprOp lexbuf; INFIX_BAR_OP(ulexeme lexbuf) }
+ | ignored_op_char* ('?' | '~' )         op_char* { CheckExprOp lexbuf; PREFIX_OP(ulexeme lexbuf) }
+ | ".[]"  | ".[]<-" | ".[,]<-" | ".[,,]<-" | ".[,,]" | ".[,]" | ".[..]" | ".[..,..]" 
+ | ".()"  | ".()<-" | ".(,)<-" | ".(,,)<-" | ".(,,)" | ".(,)" | ".(..)" | ".(..,..)" { FUNKY_OPERATOR_NAME(ulexeme lexbuf) }
+ | _ { unexpected_char lexbuf }     
+ | eof { EOF }
+
+and string sargs = parse
+ |  '\\' newline anywhite* 
+    { let (buf,fin,m,args) = sargs in 
+      newline lexbuf; 
+      string sargs lexbuf }
+
+ |  escape_char
+    { let (buf,fin,m,args) = sargs in 
+      add_byte_char buf (escape (lexeme lexbuf).[1]);
+      string sargs lexbuf } 
+
+ | trigraph
+    (* REVIEW: Disallow these in string sargs constants, at least if > 127, since then *)
+    (* they have no established meaning *)
+    { let (buf,fin,m,args) = sargs in 
+      let s = ulexeme lexbuf in 
+      add_byte_char buf (trigraph s.[1] s.[2] s.[3]);
+      string sargs lexbuf }
+
+ | hexgraph_short
+    { let (buf,fin,m,args) = sargs in 
+      add_unichar buf (int (hexgraph_short (trim_left lexbuf 2)));
+      string sargs lexbuf  }
+      
+ | unicodegraph_short
+    (* REVIEW: Disallow these in bytearray constants *)
+    { let (buf,fin,m,args) = sargs in 
+      add_unichar buf (int (unicodegraph_short (trim_left lexbuf 2)));
+      string sargs lexbuf  }
+     
+ | unicodegraph_long
+    { let (buf,fin,m,args) = sargs in 
+      let hi,lo = unicodegraph_long (trim_left lexbuf 2) in 
+      (match hi with | None -> () | Some c -> add_unichar buf (int c));
+      add_unichar buf (int lo);
+      string sargs lexbuf  }
+     
+ |  '"' 
+    { let (buf,fin,m,args) = sargs in 
+      let m2 = GetLexerRange lexbuf in 
+      call_string_finish fin buf m2 false }
+
+ |  '"''B' 
+    { let (buf,fin,m,args) = sargs in 
+      let m2 = GetLexerRange lexbuf in 
+      call_string_finish fin buf m2 true }
+
+ | newline
+    { let (buf,fin,m,args) = sargs in 
+      newline lexbuf; 
+      add_string buf (ulexeme lexbuf); 
+      string sargs lexbuf }
+
+ | ident  
+    { let (buf,fin,m,args) = sargs in 
+      add_string buf (ulexeme lexbuf); 
+      string sargs lexbuf }
+
+ | xinteger
+    { let (buf,fin,m,args) = sargs in 
+      add_string buf (ulexeme lexbuf); 
+      string sargs lexbuf }
+
+ | anywhite +  
+    { let (buf,fin,m,args) = sargs in 
+      add_string buf (ulexeme lexbuf); 
+      string sargs lexbuf }
+
+ | eof  
+    { let (buf,fin,m,args) = sargs in 
+      EOF }
+ | _ 
+    { let (buf,fin,m,args) = sargs in 
+      add_string buf (lexeme lexbuf); 
+      string sargs lexbuf }
+
+(* REVIEW: consider sharing this code with the 'string' lexer state *)
+and vstring sargs = parse
+ |  '"' '"'
+   { let (buf,fin,m,args) = sargs in 
+     add_byte_char buf '\"';
+     vstring sargs lexbuf } 
+
+ |  '"' 
+    { let (buf,fin,m,args) = sargs in 
+      let m2 = GetLexerRange lexbuf in 
+      call_string_finish fin buf m2 false }
+
+ |  '"''B' 
+    { let (buf,fin,m,args) = sargs in 
+      let m2 = GetLexerRange lexbuf in 
+      call_string_finish fin buf m2 true }
+
+ | newline 
+    { let (buf,fin,m,args) = sargs in 
+      newline lexbuf; 
+      add_string buf (ulexeme lexbuf); 
+      vstring sargs lexbuf }
+
+ | ident  
+    { let (buf,fin,m,args) = sargs in 
+      add_string buf (ulexeme lexbuf); 
+      vstring sargs lexbuf }
+
+ | xinteger
+    { let (buf,fin,m,args) = sargs in 
+      add_string buf (ulexeme lexbuf); 
+      vstring sargs lexbuf }
+
+ | anywhite +  
+    { let (buf,fin,m,args) = sargs in 
+      add_string buf (ulexeme lexbuf); 
+      vstring sargs lexbuf }
+
+ | eof 
+    { let (buf,fin,m,args) = sargs in 
+      EOF  }
+ | _ 
+    { let (buf,fin,m,args) = sargs in 
+      add_string buf (lexeme lexbuf); 
+      vstring sargs lexbuf }
+
+(* WARNING: taking sargs as a single parameter seems to make a difference as to whether *)
+(* OCaml takes tailcalls. *)
+and comment cargs = parse
+ |  char
+    { let n,m,args = cargs in 
+      comment(n,m,args) lexbuf  } 
+    
+ | '"'   
+    { let n,m,args = cargs in 
+      comment_string n m args lexbuf }
+
+ | '@' '"'
+    { let n,m,args = cargs in 
+      comment_vstring n m args lexbuf }
+
+ | '(' '*'
+    { let n,m,args = cargs in 
+      comment (n+1,m,args) lexbuf }
+     
+ | newline
+    { let n,m,args = cargs in 
+      newline lexbuf; 
+      comment cargs lexbuf }
+ | "*)" 
+    { 
+      let n,m,args = cargs in 
+      if n > 1 then comment (n-1,m,args) lexbuf 
+      else token args lexbuf }
+      
+ | [^ '\'' '(' '*' '\n' '\r' '"' ')' '@' ]+  
+    { 
+      let n,m,args = cargs in 
+      comment cargs lexbuf }
+    
+ | eof 
+     { let n,m,args = cargs in 
+       EOF }
+     
+ | _ { let n,m,args = cargs in 
+       comment(n,m,args) lexbuf }
+
+and comment_string n m args = parse
+ (* Follow string lexing, skipping tokens until it finishes *)
+ |  '\\' newline anywhite* 
+     { newline lexbuf; 
+       comment_string n m args lexbuf }
+
+ | escape_char
+ | trigraph
+ | hexgraph_short
+ | unicodegraph_short
+ | unicodegraph_long
+ | ident  
+ | xinteger
+ | anywhite +  
+     { comment_string n m args lexbuf }
+
+
+ | '"' 
+     { comment(n,m,args) lexbuf }
+     
+ | newline 
+     { newline lexbuf;  
+       comment_string n m args lexbuf }
+     
+ | eof 
+     { EOF }
+     
+ | _  
+     { comment_string n m args lexbuf }
+
+and comment_vstring n m args = parse
+ (* Follow vstring lexing, in short, skip double-quotes and other chars until we hit a single quote *)
+ | '"' '"'
+     { comment_vstring n m args lexbuf }
+
+ | '"' 
+     { comment(n,m,args) lexbuf }
+     
+ | newline 
+     { newline lexbuf;
+       comment_vstring n m args lexbuf }
+     
+ | eof 
+     { EOF }
+     
+ | _  
+     { comment_vstring n m args lexbuf }

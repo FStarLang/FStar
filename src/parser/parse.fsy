@@ -1,0 +1,988 @@
+%{
+#light "off" 
+(*
+ Known (intentional) ambiguitites:
+   2 s/r conflicts on BAR
+      match  with | P -> match with | Q -> _ | R -> _
+      function ...
+
+   1 s/r conflict on STAR (unclear exactly why)
+
+   1 r/r conflict on STAR
+     (x:t{P} * t')  can also be reduced as ((x:t{P}) * t')
+
+   1 s/r conflict on SEMICOLON
+       e1 . ; e2
+  
+   (* 4 s/r conflicts on SEMICOLON *)
+   (*     -- if e then e';e'' *)
+   (*     -- let x = e in e';e'' *)
+   (*     -- fun x -> e;e *)
+   (*     -- match x with | P -> e;e' *)
+*)
+// (c) Microsoft Corporation. All rights reserved
+open Microsoft.FSharp.Compatibility
+open Microsoft.FSharp.Compatibility.OCaml.Pervasives
+open Microsoft.FSharp.Text.Parsing
+open System
+open Microsoft.FStar
+open Microsoft.FStar.Util
+open Microsoft.FStar.Range
+open Microsoft.FStar.Absyn
+open Microsoft.FStar.Absyn.Syntax
+open Microsoft.FStar.Absyn.Const
+open Microsoft.FStar.Absyn.Util
+open Microsoft.FStar.Parser
+open Microsoft.FStar.Parser.AST 
+
+let pos_of_lexpos (p:Microsoft.FSharp.Text.Lexing.Position) =
+    mk_pos p.Line p.Column
+
+let mksyn_range (p1:Microsoft.FSharp.Text.Lexing.Position) p2 =
+    mk_file_idx_range (decode_file_idx p1.FileName) (pos_of_lexpos p1) (pos_of_lexpos p2)
+
+let GetLexerRange (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char>) = (* UnicodeLexing.Lexbuf) = *)
+  mksyn_range lexbuf.StartPos lexbuf.EndPos
+
+(* Get the range corresponding to the result of a grammar rule while it is being reduced *)
+let lhs (parseState: Microsoft.FSharp.Text.Parsing.IParseState) =
+  let p1,p2 = parseState.ResultRange in
+  mksyn_range p1 p2
+    
+(* Get the position corresponding to the start of one of the r.h.s. symbols of a grammar rule while it is being reduced *)
+let rhspos (parseState: Microsoft.FSharp.Text.Parsing.IParseState) n =
+  pos_of_lexpos (fst (parseState.InputRange(n)))
+
+(* /// Get the range covering two of the r.h.s. symbols of a grammar rule while it is being reduced *)
+let rhs2 (parseState: Microsoft.FSharp.Text.Parsing.IParseState) n m =
+  let p1 = parseState.InputRange(n) |> fst in
+  let p2 = parseState.InputRange(m) |> snd in
+  mksyn_range p1 p2
+
+(* /// Get the range corresponding to one of the r.h.s. symbols of a grammar rule while it is being reduced *)
+let rhs (parseState: Microsoft.FSharp.Text.Parsing.IParseState) n =
+  let p1,p2 = parseState.InputRange(n) in
+  mksyn_range p1 p2
+
+exception WrappedError of exn * range
+exception ReportedError
+exception StopProcessing
+let warningHandler = ref (fun (e:exn) -> Util.print_string "no warning handler installed\n" ; ())
+let errorHandler = ref (fun (e:exn) -> Util.print_string "no warning handler installed\n" ; ())  
+let errorAndWarningCount = ref 0
+let errorR  exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !errorHandler exn
+let warning exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !warningHandler exn
+
+let consPat r hd tl = PatApp(mk_pattern (PatName Const.cons_lid) r, [hd;tl])
+
+let consTerm r hd tl = mk_term (Construct(Const.cons_lid, [hd;tl])) r Expr
+
+let mkConsList r elts = 
+  let nil = mk_term (Construct(Const.nil_lid, [])) r Expr in
+    List.fold_right (fun e tl -> consTerm r e tl) elts nil
+  
+let mkApp t args r = match args with 
+  | [] -> t 
+  | _ -> match t.term with 
+      | Name s -> mk_term (Construct(s, args)) r Un
+      | _ -> List.fold_left (fun t a -> mk_term (App(t, a)) r Un) t args
+          
+let mkTuple args r = 
+  let cons = lid_of_path [Util.strcat "MkTuple" (Util.string_of_int <| List.length args)] r in 
+  mkApp (mk_term (Name cons) r Expr) args r
+    
+let mkRefinedBinder id t refopt m = 
+  let b = mk_binder (Annotated(id, t)) m Type in
+  match refopt with 
+    | None -> b 
+    | Some t -> mk_binder (Annotated(id, mk_term (Refine(b, t)) m Type)) m Type
+
+%} 
+
+%token <byte[]> BYTEARRAY
+%token <byte[]> STRING 
+%token <string> IDENT 
+%token <string> IDENT_LESS
+%token <string> NAME
+%token <string> TVAR
+%token <string> BASEKIND 
+%token <string> LANG
+%token <string> INFIX_STAR_STAR_OP 
+%token <string> INFIX_COMPARE_OP 
+%token <string> INFIX_AT_HAT_OP 
+%token <string> INFIX_BAR_OP 
+%token <string> PREFIX_OP
+%token <string> DIV_MOD_OP 
+%token <string> INFIX_STAR_DIV_MOD_OP 
+%token <string> INFIX_AMP_OP 
+%token <string> PLUS_MINUS_OP 
+%token <string> ADJACENT_PREFIX_PLUS_MINUS_OP 
+%token <string> FUNKY_OPERATOR_NAME
+%token <string> BANG 
+
+/* bool indicates if INT8 was 'bad' max_int+1, e.g. '128'  */
+%token <sbyte * bool> INT8 
+%token <int16 * bool> INT16
+%token <int32 * bool> INT32 INT32_DOT_DOT
+%token <int64 * bool> INT64
+
+%token <byte> UINT8
+%token <uint16> UINT16
+%token <uint32> UINT32
+%token <uint64> UINT64
+%token <uint64> UNATIVEINT
+%token <int64> NATIVEINT
+%token <single> IEEE32
+%token <double> IEEE64
+%token <char> CHAR
+%token <System.Decimal> DECIMAL 
+%token <byte[]> BIGINT BIGNUM
+%token <bool> LET YIELD YIELD_BANG
+%token <string> SPLICE_SYMBOL PERCENT_OP BINDER 
+%token <string * bool> LQUOTE RQUOTE 
+%token FORALL EXISTS ASSUME QUERY DEFINE LOGIC PRAGMAMONADIC PRAGMADYNAMIC PRAGMALIGHT
+%token BAR_BAR LEQ GEQ LESS GREATER LESSGREATER UPCAST DOWNCAST NULL RESERVED MODULE DELEGATE CONSTRAINT BASE SUBTYPE SUBKIND
+%token AND AS ASSERT ASR BEGIN DO DONE DOWNTO ELSE ELIF END DOT_DOT
+%token EXCEPTION FALSE FOR FUN FUNCTION IF IN FINALLY DO_BANG 
+%token LAZY  MATCH METHOD MUTABLE NEW OF 
+%token OPEN OR PROP REC THEN TO TRUE TRY TYPE VAL INLINE INTERFACE INSTANCE
+%token WHEN WHILE WITH HASH AMP AMP_AMP QUOTE LPAREN RPAREN LPAREN_RPAREN STAR COMMA RARROW RARROW2 RRARROW 
+%token IFF IMPLIES CONJUNCTION DISJUNCTION 
+%token GREATER_DOT GREATER_BAR_RBRACK LPAREN_STAR_RPAREN
+%token QMARK QMARK_QMARK DOT COLON COLON_COLON ATSIGN HAT COLON_GREATER  COLON_QMARK_GREATER COLON_QMARK COLON_EQUALS SEMICOLON 
+%token SEMICOLON_SEMICOLON LARROW EQUALS  LBRACK  LBRACK_BAR  LBRACK_LESS LBRACE BACKSLASH
+%token LBRACE_LESS BAR_RBRACK GREATER_RBRACE UNDERSCORE 
+%token BAR RBRACK RBRACE MINUS DOLLAR 
+%token GREATER_RBRACK STRUCT SIG 
+%token STATIC MEMBER CLASS VIRTUAL ABSTRACT OVERRIDE DEFAULT CONSTRUCTOR INHERIT 
+%token EXTERN REFERENCE VOID PUBLIC PRIVATE INTERNAL LBRACE_COLON_PATTERN LBRACE_TILDE TILDE_RBRACE PIPE_LEFT PIPE_RIGHT
+
+/* These are artificial */
+%token <string> LEX_FAILURE
+%token COMMENT WHITESPACE HASH_LINE HASH_LIGHT HASH_IF HASH_ELSE HASH_ENDIF INACTIVECODE LINE_COMMENT STRING_TEXT EOF
+
+%start file
+%type <file> file
+
+%%
+file: 
+  | pragmas moduleList
+      { ($1, $2) }
+
+moduleList:
+  | modul moduleList
+      { $1::$2 }
+  | EOF
+      { [] }
+      
+modul:    
+  | MODULE qname decls endopt
+        { Module($2, $3) }
+
+endopt:
+  | END  {} 
+  |      {}
+
+pragmas: 
+  | pragmas pragma
+      { ($1@$2) }
+  |   { [] }
+
+pragma: 
+  | PRAGMAMONADIC LPAREN eitherQname COMMA eitherQname COMMA eitherQname RPAREN
+      { [Monadic($3, $5, $7)] }
+  | PRAGMALIGHT STRING
+      { [] }
+
+decls:
+  |   { [] }
+  | SEMICOLON_SEMICOLON term 
+      { [mk_decl (Main $2) (rhs2 parseState 1 2)] }
+  | decl decls
+      { ($1::$2) }
+
+decl:
+  | decl' { mk_decl $1 (rhs parseState 1) }
+
+decl':
+  | OPEN qname
+      { Open $2 }
+  | tycon 
+      { $1 }
+  | LET recopt letbinding letbindings
+      { ToplevelLet($2, $3::$4) }
+  | valQuals VAL eitherName COLON typ
+      { Val($1, $3, $5) }
+  | assumeTag name COLON formula
+      { Assume($1, $2, $4) }
+  | EXTERN REFERENCE name erefDefn
+      { ExternRef($3, $4) }
+  | EXCEPTION name of_typ
+      { Exception($2, $3) }
+
+valQuals:
+  |       { NoQual }
+  | LOGIC { LogicTag Logic_val }
+  | EXTERN name { Extern $2 }
+      
+erefDefn: 
+  | LBRACE ident EQUALS STRING erefFields RBRACE
+      { let id:ident = $2 in (id.idText,Util.string_of_unicode($4))::$5 }
+
+erefFields:
+  |  { [] }
+  | SEMICOLON ident EQUALS STRING erefFields
+      {let id:ident = $2 in (id.idText,Util.string_of_unicode($4))::$5}
+      
+logicTag:
+  |       { false }
+  | LOGIC { true } 
+
+assumeTag:
+  | ASSUME { AssumeTag }
+  | QUERY  { QueryTag }
+  | DEFINE { DefinitionTag }
+
+tycon: 
+  | tyconQuals TYPE tyconDefinition tyconDefinitions 
+      { Tycon ($1, $3::$4) }
+
+tyconDefinition:
+  | eitherName typars ascribeKindOpt tyconDefn
+      { $4 $1 $2 $3 }
+
+tyconDefinitions:
+  |   { [] }
+  | AND tyconDefinition tyconDefinitions
+      { $2::$3 }
+
+tyconQuals:
+  |              { NoQual }
+  | LOGIC ident_opt logicArrayArgs
+      { match $2, $3 with 
+        | Some {idText="tfun"}, None -> LogicTag Logic_tfun
+        | Some {idText="data"}, None -> LogicTag Logic_data
+        | Some {idText="array"}, Some larr -> LogicTag  (Logic_array larr)
+        | None, None -> LogicTag (Logic_type)
+        | _ -> errorR(Error("Unexpected type qualifier: expected {data, array, tfun}", (rhs parseState 2))); NoQual
+      }
+
+  | EXTERN name 
+      { 
+        Extern $2
+      }
+
+ident_opt:
+  |       { None }
+  | ident { Some $1 }
+logicArrayArgs:
+  |    { None }
+  | LPAREN qname COMMA qname COMMA qname COMMA qname RPAREN
+      { 
+        Some {array_sel=$2;
+              array_upd=$4;
+              array_emp=$6;
+              array_indom=$8}
+      }
+
+recopt:
+  | REC { true }
+  |     { false }
+
+letbindings:
+  | AND letbinding letbindings 
+      { $2::$3 }
+  |   { [] }
+
+letbinding:
+  | pattern ascribeTypOpt EQUALS term 
+      { 
+        match $2 with 
+          | None -> ($1, $4)
+          | Some t -> (mk_pattern (PatAscribed($1, t)) (rhs2 parseState 1 2), $4)
+      }
+      
+pattern:
+  | tuplePattern { $1 }
+
+
+tuplePattern:
+  | listPattern patternListComma 
+      {
+        match $2 with 
+          | [] -> $1
+          | _ -> mk_pattern (PatTuple($1::$2)) (rhs2 parseState 1 2)
+      }
+
+patternListComma:
+  |   { [] }
+  | COMMA listPattern patternListComma { $2::$3 }
+
+listPattern:
+  | appPattern consPattern
+      { 
+        match $2 with 
+          | None -> $1
+          | Some tl -> mk_pattern (consPat (rhs parseState 2) $1 tl) (rhs2 parseState 1 2) 
+      }
+
+consPattern:
+  |  { None }
+  |  COLON_COLON appPattern consPattern 
+      { 
+        match $3 with 
+          | None -> Some $2
+          | Some tl -> Some (mk_pattern (consPat (rhs parseState 1) $2 tl) (rhs2 parseState 1 3))
+      }
+
+appPattern:
+  | atomicPattern atomicPatterns
+      { 
+        let hd = $1 in 
+        let r = rhs parseState 1 in 
+        match $2 with 
+          | [] -> hd
+          | _ -> mk_pattern (PatApp(hd, $2)) (Range.union_ranges r (rhs parseState 1))
+      }
+
+compositePattern:
+  | atomicPattern atomicPattern atomicPatterns
+      {
+        let args = $2::$3 in 
+          mk_pattern (PatApp($1, args)) (rhs2 parseState 1 3)
+      }
+  | tuplePattern { $1 }
+
+atomicPatterns:
+  |    { [] }
+  | atomicPattern atomicPatterns { $1::$2 }
+
+atomicPattern: 
+  | atomicPattern' { mk_pattern $1 (rhs parseState 1) }
+
+atomicPattern':
+  | nonTvarPattern' { $1 }
+  | tvar  { PatTvar $1 }
+
+nonTvarPattern:
+  | nonTvarPattern' { mk_pattern $1 (rhs parseState 1) }
+
+nonTvarPattern':      
+  | UNDERSCORE { PatWild }
+  | constant { PatConst $1 }
+  | ident { PatVar $1 }
+  | qname { PatName $1 }
+  | LBRACK patternListSemiColon RBRACK { PatList $2 }
+  | LPAREN ascriptionOrPattern RPAREN { $2 } 
+  | LBRACE recordPattern RBRACE { PatRecord $2 }
+
+ascriptionOrPattern:
+  |  nonTvarPattern COLON typ { PatAscribed($1, $3) }
+  |  tvar COLON  kind        { PatAscribed(mk_pattern (PatTvar $1) (rhs parseState 1), $3) }
+  |  pattern { $1.pattern }
+
+maybeAscribeKind: 
+  |            { fun p -> p }
+  | COLON kind { fun p -> PatAscribed(mk_pattern p (lhs parseState), $2) }
+
+patternListSemiColon:
+  |   { [] }
+  | appPattern patternListSemiColonRest { $1::$2 }
+
+patternListSemiColonRest:
+  |  { [] }
+  | SEMICOLON appPattern patternListSemiColonRest { $2::$3 }
+
+
+recordPattern:
+  |   { [] }
+  | lid EQUALS atomicPattern SEMICOLON recordPattern { ($1,$3)::$5 }
+      
+binder:
+  | ident { mk_binder (Variable($1)) (rhs parseState 1) Type }
+  | tvar  { mk_binder (TVariable($1)) (rhs parseState 1) Kind }
+  | LPAREN ident COLON appTerm refineOpt RPAREN 
+      { mkRefinedBinder $2 $4 $5 (rhs2 parseState 1 6) }
+  | LPAREN tvar COLON  kind RPAREN { mk_binder (TAnnotated($2, $4)) (rhs2 parseState 1 5) Kind }
+
+typars:
+  | tvarinsts              { $1 }
+  | binders                { $1 }
+
+tvarinsts: 
+  | LESS tvars GREATER    { List.map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind) $2 }
+
+binders: 
+  | binder binders { $1::$2 }
+  |                { [] }
+
+tyconDefn: 
+  |               { (fun id binders kopt -> TyconAbstract(id, binders, kopt)) }
+  | EQUALS typ    { (fun id binders kopt -> TyconAbbrev(id, binders, kopt, $2)) }
+  | EQUALS LBRACE recordFieldDecl recordFields RBRACE { (fun id binders kopt -> TyconRecord(id, binders, kopt, $3::$4)) }
+  | EQUALS constructors { (fun id binders kopt -> TyconVariant(id, binders, kopt, $2)) }
+
+
+recordFields:
+  | SEMICOLON recordFieldDecl recordFields
+      { $2::$3 }
+  | SEMICOLON { [] }
+  |   { [] }
+
+
+constructors:
+  |   { [] }
+  | constructors constructorDecl
+      { $1@[$2] }
+
+recordFieldDecl:
+  |  ident COLON tmTuple
+      { ($1, $3) }
+
+constructorDecl:
+  | BAR name COLON typ
+      { ($2,$4,false) }
+  | BAR name of_typ
+      { ($2,$3,true) }
+
+of_typ:
+  |        {  mk_term (Var(lid_of_path ["unit"] 0L)) 0L Type }
+  | OF typ { $2 }
+
+eitherQname: 
+  | eitherQname' { lid_of_ids $1 }
+
+eitherQname': 
+  | eitherName { [$1] }
+  | name DOT eitherQname' { $1::$3 }
+
+lid:
+  | idpath { lid_of_ids $1 }
+
+qname:
+  | namepath { lid_of_ids $1 }
+
+instname:
+  | IDENT LESS               { [Syntax.mk_ident($1, rhs parseState 1)] }
+  | name DOT instname        { $1::$3 }
+
+eitherName:
+  | ident { $1 } 
+  | name  { $1 }
+
+ident:
+  | IDENT 
+      { Syntax.mk_ident($1, rhs parseState 1)}
+
+name:
+  | NAME 
+      { Syntax.mk_ident($1, rhs parseState 1) }
+
+tvars:
+  | TVAR                { [Syntax.mk_ident($1, rhs parseState 1)] }
+  | TVAR COMMA tvars    { Syntax.mk_ident($1, rhs parseState 1)::$3 }
+
+tvar:
+  | TVAR 
+      { Syntax.mk_ident($1, rhs parseState 1) }
+
+namepath:
+  | name 
+      { [$1] }
+  | name DOT namepath
+      { $1::$3 }
+
+idpath:
+  | ident 
+      { [$1] }
+  | name DOT idpath
+      { $1::$3 }
+      
+ascribeTypOpt:
+  |              { None }
+  | COLON tmCons { Some $2 }
+
+ascribeKindOpt: 
+  |               { None }
+  | COLON  kind { Some $2 }
+
+kind:
+  | product { {$1 with level=Kind} }
+
+atomicKind:
+  | atomicTerm { let tm:term = $1 in {tm with level=Kind} }
+      
+typ: 
+  | simpleTerm { {$1 with level=Type} }
+
+
+term:
+  | noSeqTerm 
+      { $1 }
+
+  | noSeqTerm SEMICOLON term 
+      { mk_term (Seq($1, $3)) (rhs2 parseState 1 3) Expr }
+
+
+noSeqTerm:
+  | simpleTerm { $1 }
+
+  | IF term THEN term ELSE term
+      {
+        mk_term (If($2, $4, $6)) (rhs2 parseState 1 6) Expr
+      } 
+
+  | MATCH term WITH patternBranch patternBranches 
+      {
+        mk_term (Match($2, $4::$5)) (rhs2 parseState 1 5) Expr
+      }
+
+  | LET recopt letbinding letbindings IN term
+      {
+        mk_term (Let($2, ($3::$4), $6)) (rhs2 parseState 1 6) Expr
+      }
+
+  | FORALL binders DOT qpat noSeqTerm
+      {
+        mk_term (QForall($2,$4,$5)) (rhs2 parseState 1 5) Formula
+      }
+
+  | EXISTS binders DOT qpat noSeqTerm
+      {
+        mk_term (QExists($2,$4,$5)) (rhs2 parseState 1 5) Formula
+      }
+
+  | FUNCTION patternBranch patternBranches 
+      { 
+        let x = Util.genident (Some (lhs parseState)) in 
+        mk_term (Abs([mk_pattern (PatVar x) (lhs parseState)], 
+                  mk_term (Match(mk_term (Var(lid_of_ids [x])) (lhs parseState) Expr, $2::$3)) (rhs2 parseState 1 3) Expr))
+          (rhs2 parseState 1 3) Expr
+      }
+
+  | ASSUME atomicTerm 
+      { mkApp (mk_term (Var Const.assume_lid) (rhs parseState 1) Expr) [$2]
+          (rhs2 parseState 1 2)
+      }
+
+qpat: 
+  |   { [] }
+  | LBRACE_COLON_PATTERN appTerm morePats RBRACE
+      { $2::$3 }
+
+morePats:
+  |  { [] }
+  | SEMICOLON appTerm morePats  { $2::$3 }
+
+simpleTerm:
+  | tmIff { $1 }
+
+  | FUN atomicPattern atomicPatterns funArrow term
+      {
+        $4 (Abs($2::$3, $5)) (rhs2 parseState 1 5) 
+      }
+
+patternBranches:
+  |   { [] }
+  | patternBranches patternBranch
+      { $1@[$2] }
+
+patternBranch: /* shift/reduce conflict on BAR ... expected for nested matches */
+  | BAR disjunctivePattern maybeWhen RARROW term 
+      { 
+        let pat = match $2 with 
+          | [p] -> p 
+          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2) in
+        (pat, $3, $5) 
+      }
+
+disjunctivePattern:
+  | pattern     { [$1] }
+  | pattern BAR disjunctivePattern { $1::$3 }
+
+maybeWhen:
+  |             { None }
+  | WHEN appTerm { Some $2 }       
+
+funArrow:
+  | RARROW { fun t r -> mk_term t r Expr }
+  | RRARROW { fun t r -> mk_term t r Type }
+
+tmIff:
+  | tmImplies IFF tmIff
+      {
+        mk_term (Op("<==>", [$1; $3])) (rhs2 parseState 1 3) Formula
+      }
+
+  | tmImplies
+      { $1 }
+
+tmImplies:
+  | tmDisjunction IMPLIES tmImplies
+      {
+        mk_term (Op("==>", [$1; $3])) (rhs2 parseState 1 3) Formula
+      }
+
+  | tmDisjunction
+      { $1 }
+
+tmDisjunction:
+  | tmDisjunction DISJUNCTION tmConjunction
+      { mk_term (Op("\\/", [$1;$3])) (rhs2 parseState 1 3) Formula }
+      
+  | tmConjunction
+      { $1 }
+
+tmConjunction:
+  | tmConjunction CONJUNCTION tmTuple
+      { mk_term (Op("/\\", [$1;$3])) (rhs2 parseState 1 3) Formula }
+
+  | tmTuple
+      { $1 }
+
+/*
+tmSeq:
+  | tmSeq SEMICOLON tmTuple
+      { mk_term (Seq($1, $3)) (rhs2 parseState 1 3) Expr }
+
+  | tmTuple 
+      { $1 }
+*/
+
+tmTuple:
+  | tupleN
+      {
+        match $1 with 
+          | [x] -> x
+          | components -> mkTuple components (rhs2 parseState 1 1)
+      }
+
+tmEq:
+  | tmEq EQUALS tmCons
+      {
+        mk_term (Op("=", [$1; $3])) (rhs2 parseState 1 3) Un
+      }
+      
+  | tmEq LESSGREATER tmCons 
+      {
+        mk_term (Op("<>", [$1; $3])) (rhs2 parseState 1 3) Un
+      }
+
+  | tmEq COLON_EQUALS tmCons
+      {
+        mk_term (Op(":=", [$1; $3])) (rhs2 parseState 1 3) Un
+      }
+
+  | tmCons
+      { $1 }
+
+tmCons:
+  | tmOr COLON_COLON tmCons
+      { consTerm (rhs parseState 2) $1 $3 }
+
+  | tmOr
+      { $1 }
+
+tmOr:
+  | tmOr BAR_BAR tmAnd
+      { mk_term (Op("||", [$1; $3])) (rhs2 parseState 1 3) Un}
+
+  | tmAnd
+      { $1 }
+
+tmAnd:
+  | tmAnd AMP_AMP arithTerm
+      { mk_term (Op("&&", [$1;$3])) (rhs2 parseState 1 3) Un}
+
+  | cmpTerm
+      { $1 }
+      
+cmpTerm:
+  | cmpTerm comparisonOp arithTerm
+      { mk_term (Op($2, [$1;$3])) (rhs2 parseState 1 3) Expr }
+  | arithTerm
+      { $1 }
+
+comparisonOp:
+  | LESS { "<" }
+  | GREATER { ">" } 
+  | LEQ { "<=" }
+  | GEQ { ">=" }
+  | PIPE_LEFT { "<|" }
+  | PIPE_RIGHT { "|>" }
+  | ATSIGN { "@" }
+  | HAT { "^" }
+
+arithTerm:
+  | arithTerm PLUS_MINUS_OP starDivModTerm
+      { mk_term (Op($2, [$1;$3])) (rhs2 parseState 1 3) Un}
+
+  | starDivModTerm 
+      { $1 }
+
+starDivModTerm:
+  | starDivModTerm STAR sumType
+      { mk_term (Op("*", [$1;$3])) (rhs2 parseState 1 3) Un}
+
+  | starDivModTerm DIV_MOD_OP sumType
+      { mk_term (Op($2, [$1;$3])) (rhs2 parseState 1 3) Un}
+
+  | sumType
+      { $1 }
+
+sumType:
+  | productOrSumDomain STAR sumTypeTail
+      { mk_term (Sum([$1], $3)) (rhs2 parseState 1 3) Type }
+
+  | product
+      { $1 }
+
+product':
+  | productOrSumDomain prodArrow product'
+      { $2 (Product([$1], $3)) (rhs2 parseState 1 3) }
+
+  | appTerm prodArrow product'
+      { 
+        let b = mk_binder (NoName $1) (rhs parseState 1) Un in
+          $2 (Product([b], $3)) (rhs2 parseState 1 3)
+      }
+  | appTerm
+      { $1 }
+
+prodArrow:
+  | RARROW { fun t r -> mk_term t r Type }
+  | RRARROW { fun t r -> mk_term t r Kind }
+
+sumTypeTail:
+  | atomicTerm STAR sumType
+      { mk_term (Sum([mk_binder (NoName $1) (rhs parseState 1) Type], $3)) (rhs2 parseState 1 3) Type }
+  | sumType
+      { $1 }
+
+product: 
+  | productOrSumDomain prodArrow product
+      { let mkProd = $2 in mkProd (Product([$1], $3)) (rhs2 parseState 1 3) }
+
+  | appTerm prodArrow product
+      { 
+        let b = mk_binder (NoName $1) (rhs parseState 1) Un in
+        let mkProd = $2 in 
+        mkProd (Product([b], $3)) (rhs2 parseState 1 3) 
+      }
+  | refinementTerm
+      { $1 }
+
+productOrSumDomain:
+  | ident COLON appTerm refineOpt
+      { mkRefinedBinder $1 $3 $4 (rhs2 parseState 1 4) }
+  | tvar COLON  atomicKind
+      { mk_binder (TAnnotated($1, $3)) (rhs2 parseState 1 3) Kind}
+
+refineOpt:
+  |       { None }
+  | LBRACE formula RBRACE { Some $2 }
+
+refinementTerm:
+  | ident COLON appTerm LBRACE formula RBRACE 
+      {
+        mk_term (Refine(mk_binder (Annotated($1, $3)) (rhs2 parseState 1 3) Type, $5)) 
+        (rhs2 parseState 1 6) Type
+      }
+
+  | LBRACE recordExp RBRACE { $2 }
+
+  | unaryTerm { $1 }
+
+unaryTerm: 
+  | PLUS_MINUS_OP atomicTerm
+      { mk_term (Op($1, [$2])) (rhs2 parseState 1 3) Expr }
+
+  | appTerm { $1 }
+
+appTerm:
+  | atomicTerm atomicTerms
+      {
+        mkApp $1 $2 (rhs2 parseState 1 2)
+      }
+
+
+formula:
+  | noSeqTerm
+      { {$1 with level=Formula} }
+
+atomicTerm:
+  | UNDERSCORE { mk_term Wild (rhs parseState 1) Un }
+  | ASSERT   { mk_term (Var Const.assert_lid) (rhs parseState 1) Expr }
+  | tvar     { mk_term (Tvar($1)) (rhs parseState 1) Type }
+  | qname    { mk_term (Name $1) (rhs parseState 1) Un }
+  | constant { mk_term (Const $1) (rhs parseState 1) Expr }
+  | projectionLHS maybeFieldProjections 
+      {  
+        List.fold_left (fun e f -> 
+                          mk_term (Project(e, lid_of_ids [f])) (rhs2 parseState 1 3) Expr )
+          $1 $2
+      }
+  | LBRACE_TILDE recdFieldTypes TILDE_RBRACE 
+      { mk_term (Record(None,$2)) (rhs2 parseState 1 3) Type }
+
+  | BANG atomicTerm
+      { mk_term (Op($1, [$2])) (rhs2 parseState 1 3) Expr }
+  | BEGIN term END 
+      { $2 }
+
+recdFieldTypes:
+  |  { [] }
+  | recdFieldType moreRecdFieldTypes { $1::$2 }
+
+moreRecdFieldTypes:
+  |  { [] }
+  | SEMICOLON recdFieldType moreRecdFieldTypes { $2::$3 }
+
+recdFieldType:
+  | lid COLON typ { ($1, $3) }
+
+maybeFieldProjections:
+  |    { [] }
+  | maybeFieldProjections DOT ident 
+      { $1@[$3] }
+
+targs:
+  | atomicTerm { [$1] }
+  | atomicTerm COMMA targs { $1::$3 }
+
+maybeInsts:
+  |    { (fun x -> x) }
+  | LESS targs GREATER 
+      {
+        (fun (x:term) -> mkApp x $2 (Range.union_ranges x.range (rhs2 parseState 1 3)))
+      }
+
+projectionLHS:
+  | lid maybeInsts     
+      { $2 (mk_term (Var($1)) (rhs parseState 1) Un) }
+  | LPAREN term maybeWithSort RPAREN 
+      { $3 $2 (rhs2 parseState 1 4) }
+  | LBRACK_BAR semiColonTermList BAR_RBRACK
+      {
+        let l = mkConsList (rhs2 parseState 1 3) $2 in 
+        mkApp (mk_term (Var (Const.array_mk_array_lid)) (rhs2 parseState 1 3) Expr) 
+              [l] (rhs2 parseState 1 3)
+      }
+  | LBRACK semiColonTermList RBRACK
+      { 
+        mkConsList (rhs2 parseState 1 3) $2
+      }
+
+projection: 
+  | projectionLHS DOT ident 
+      { mk_term (Project($1, lid_of_ids[$3])) (rhs2 parseState 1 3) Expr } 
+  | projectionLHS 
+      { $1 }
+
+semiColonTermList:
+  |  { [] }
+  | noSeqTerm moreSemiColonTerms
+      { $1::$2 }
+
+moreSemiColonTerms:
+  |   { [] }
+  | SEMICOLON noSeqTerm moreSemiColonTerms 
+      { $2::$3 }
+
+recordExp: 
+  | atomicTerm recordExpRest 
+      { $2 $1 (lhs parseState) }
+
+recordExpRest:
+  | WITH recordFieldAssignment recordFieldAssignments
+      {
+        (fun e r -> mk_term (Record(Some e, $2::$3)) (Range.union_ranges r (rhs2 parseState 1 3)) Expr)
+      }
+
+  | EQUALS tmTuple recordFieldAssignments
+      {
+        (fun e r -> match e.term with 
+          | Var l -> mk_term (Record(None, (l,$2)::$3)) (Range.union_ranges r (rhs2 parseState 1 3)) Expr
+          | _ -> errorR(Error("Record field names must be constant identifiers", lhs(parseState)));
+            mk_term (Record(None, $3)) (rhs2 parseState 1 3) Expr)
+      }
+
+recordFieldAssignment:
+  | lid EQUALS tmTuple 
+      { ($1,$3) }
+
+recordFieldAssignments:
+  |  { [] }
+  | SEMICOLON recordFieldAssignment recordFieldAssignments
+     { $2::$3 }
+
+maybeWithSort:
+  |     { fun x r -> x }
+  | hasSort simpleTerm
+        { fun x r -> mk_term (Ascribed(x,{$2 with level=$1})) (Range.union_ranges r (rhs2 parseState 1 2)) $1 }
+hasSort:
+  | SUBTYPE { Expr }
+  | SUBKIND { Type }
+
+atomicTerms:
+  |        { [] }
+  | atomicTerm atomicTerms { $1::$2 }
+
+consTerm:
+  |       { None }
+  | COLON_COLON tmTuple consTerm 
+      { 
+        match $3 with 
+          | None -> Some $2
+          | Some tl -> Some (consTerm (rhs2 parseState 2 3) $2 tl)
+      }
+
+tupleN:
+  | tmEq                       { [$1] }
+  | tmEq COMMA tupleN       { $1::$3 }
+
+constant:  
+  | LPAREN_RPAREN { Syntax.Const_unit }
+  | INT32 
+      { 
+        if snd $1 then 
+          errorR(Error("This number is outside the allowable range for 32-bit signed integers", lhs(parseState)));
+        Const_int32 (fst $1) 
+      } 
+  
+  | CHAR { Const_char $1 } 
+  | STRING { Const_string ($1,lhs(parseState)) } 
+  | BYTEARRAY { Const_bytearray ($1,lhs(parseState)) }
+  | TRUE { Const_bool true }
+  | FALSE { Const_bool false } 
+  | IEEE64 { Const_float $1 } 
+  | INT64 
+      { 
+        if snd $1 then 
+          errorR(Error("This number is outside the allowable range for 64-bit signed integers", lhs(parseState)));
+        Const_int64 (fst $1) 
+      }   
+/*
+  | UINT32 { Const_uint32 $1 } 
+  | INT8 
+      { 
+        if snd $1 then
+          errorR(Error("This number is outside the allowable range for 8-bit signed integers", lhs(parseState)));
+        Const_int8 (fst $1) 
+      } 
+  | UINT8 { Const_uint8 $1 } 
+  | INT16 
+      { 
+        if snd $1 then 
+          errorR(Error("This number is outside the allowable range for 16-bit signed integers", lhs(parseState)));
+        Const_int16 (fst $1) 
+      } 
+  | UINT16 { Const_uint16 $1 } 
+  | BIGINT { Const_bigint $1 } 
+  | DECIMAL { Const_decimal $1 } 
+  | BIGNUM { Const_bignum $1 } 
+  | UINT64 { Const_uint64 $1 } 
+  | NATIVEINT { Const_nativeint $1 } 
+  | UNATIVEINT { Const_unativeint $1 } 
+  | IEEE32 { Const_float32 $1 } 
+*/

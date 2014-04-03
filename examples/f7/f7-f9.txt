@@ -1,0 +1,6 @@
+
+assume -> Assume
+F of string * string -> F of (string * string)
+Db.t -> Db_t
+Db.* -> *
+let keydb: (key,value) Db.t = ... -> let keydb = ...
