@@ -4,7 +4,7 @@ FStar
 An ML-like language with a type system for program verification
 
 --------------------------------------------------------------------------------
-
+ 
 This note describes the general structure of the F* verifier and its code.
 
 Files:
@@ -20,7 +20,7 @@ Files:
 
     The Apache 2.0 license of F# reproduced verbatim here. Of the
     ~20,000 lines of source code included here, a total of 1,330 lines
-    of source code was derived from F#. The rest was written from
+    of source code were derived from F#. The rest was written from
     scratch, primarily by N. Swamy. This is documented in further
     detail below.
 
