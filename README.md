@@ -3,8 +3,7 @@ FStar
 
 An ML-like language with a type system for program verification
 
-
------------------------------------
+--------------------------------------------------------------------------------
 
 This note describes the general structure of the F* verifier and its code.
 
