@@ -36,6 +36,7 @@ let spr = Printf.sprintf
 let fpr = Printf.fprintf 
 
 let print_string s = pr "%s" s
+let print_any s = pr "%A" s
 let strcat s1 s2 = s1 ^ s2
 let concat_l sep (l:list<string>) = String.concat sep l 
 
@@ -43,10 +44,19 @@ let unicodeEncoding = new System.Text.UnicodeEncoding()
 let asciiEncoding = new System.Text.ASCIIEncoding()
 let string_of_unicode (bytes:byte []) = unicodeEncoding.GetString(bytes)
 let unicode_of_string (string:string) = unicodeEncoding.GetBytes(string)
+
+let char_of_int (i:int) = char i
+let int_of_string (s:string) = int_of_string s
+let int_of_char (s:char) = int s
+
+let uint16_of_int (i:int) = uint16 i
+
 let string_of_int   i = string_of_int i
 let string_of_float i = string_of_float i
 let string_of_char  (i:char) = spr "%A" i
 let string_of_bytes (i:byte[]) = string_of_unicode i
+
+let char_at (s:string) (i:int) : char = s.[i]
 
 let iof = int_of_float
 let foi = float_of_int
@@ -210,4 +220,13 @@ let write_file (fn:string) s =
   fpr fh "%s" s;
   fh.Close()
 
+let for_range lo hi f = 
+  for i = lo to hi do
+    f i
+  done
 
+let incr r = r := !r + 1
+let geq (i:int) (j:int) = i >= j
+
+let expand_environment_variable s = 
+  System.Environment.ExpandEnvironmentVariables ("%"^s^"%")

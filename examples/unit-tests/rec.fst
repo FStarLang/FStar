@@ -15,13 +15,25 @@
 *)
 module Record
 
+type r = {a:int; b:int}
+let foo x y = if x <= y && y <= x then 0 else 1
+
+let matchr r = match r with 
+  | ({a=_}) -> 1
+
 type pair = {x:int; y:int}
+and triple = {fst:pair; z:int}
 
+let mkR i j = {a=i; b=j}
+let mkPair i j = {x=i; y=j}
+let mkFoo i = {fst={x=i; y=i}; z=i}
+
+let a x = x.a
 let f x y = {x=x; y=y}
-
 let g p = p.x
-
 let h p = p.y
+let i p = match p with
+  | {fst=_} -> ""
 
 let rec even x = x=0 || not (odd (x - 1))
 and odd x = x=1 || not (even (x - 1))

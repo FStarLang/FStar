@@ -30,7 +30,7 @@ open Microsoft.FStar.Range
 open Microsoft.FStar.Parser
 open Microsoft.FStar.Parser.Parse
 open Microsoft.FStar.Parser.AST
-open Microsoft.FStar.Parser.Lexhelp
+(* open Microsoft.FStar.Parser.Lexhelp *)
 
 let lexeme (lexbuf : Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) = 
     Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*).LexemeString(lexbuf)
@@ -69,7 +69,7 @@ let unexpected_char lexbuf =
     LEX_FAILURE ("Unexpected character '"^(lexeme lexbuf)^"'")
 
 let start_string (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) =
-    let buf = Bytes.Bytebuf.create 100 in 
+    let buf = Bytes.create 100 in 
     let m = GetLexerRange  lexbuf in
     let startp = lexbuf.StartPos in  
     let fin = (fun m2 b s -> 
@@ -154,17 +154,24 @@ let ident_char =
   | digit 
   | ['\'']
 
+let tvar_char = 
+    letter
+  | connecting_char 
+  | combining_char 
+  | formatting_char 
+  | digit 
+
 let constructor = constructor_start_char ident_char*  
 let ident = ident_start_char ident_char*
 let ident_LESS = ident_start_char ident_char* "<"
-let tvar = '\'' (ident_start_char | constructor_start_char) ident_char*
+let tvar = '\'' (ident_start_char | constructor_start_char) tvar_char*
 let basekind = '*' | 'A' | 'E' | "Prop"
 
 rule token args = parse
  | "{~" { LBRACE_TILDE }
  | "~}" { TILDE_RBRACE }
  | ident 
-     { kwd_or_id args lexbuf (ulexeme lexbuf) }
+     { Lexhelp.kwd_or_id args (GetLexerRange lexbuf) (ulexeme lexbuf) }
  | constructor
      { NAME(ulexeme lexbuf) }
  | tvar 
@@ -321,22 +328,22 @@ rule token args = parse
      { 
        let s = ulexeme lexbuf in 
          CHAR (if s.[1] = '\\' then 
-                 escape s.[2] 
+                 Lexhelp.escape s.[2] 
                else s.[1])  
      }
 
  | char 'B' 
      { let s = ulexeme lexbuf in 
-       UINT8 (byte(int32 (if s.[1] = '\\' then escape s.[2] else s.[1])))  }
+       UINT8 (byte(int32 (if s.[1] = '\\' then Lexhelp.escape s.[2] else s.[1])))  }
      
  | '\'' trigraph '\''
      { let s = ulexeme lexbuf in 
-       CHAR (trigraph s.[2] s.[3] s.[4]) }
+       CHAR (Lexhelp.trigraph s.[2] s.[3] s.[4]) }
 
  | "/\\"   { CONJUNCTION }
  | "\\/"   { DISJUNCTION }
- | '\'' hexgraph_short '\'' { CHAR (char (int32 (hexgraph_short (trim_both lexbuf 3 1)))) }
- | '\'' unicodegraph_short '\'' { CHAR (char (int32 (unicodegraph_short (trim_both lexbuf 3 1)))) }
+ | '\'' hexgraph_short '\'' { CHAR (char (int32 (Lexhelp.hexgraph_short (trim_both lexbuf 3 1)))) }
+ | '\'' unicodegraph_short '\'' { CHAR (char (int32 (Lexhelp.unicodegraph_short (trim_both lexbuf 3 1)))) }
  | '\'' unicodegraph_long '\''  { LEX_FAILURE "This unicode encoding is only valid in string literals" }
  | "<:"             { SUBTYPE }
  | "<@"             { SUBKIND }
@@ -465,7 +472,7 @@ and string sargs = parse
 
  |  escape_char
     { let (buf,fin,m,args) = sargs in 
-      add_byte_char buf (escape (lexeme lexbuf).[1]);
+      Lexhelp.add_byte_char buf (Lexhelp.escape (lexeme lexbuf).[1]);
       string sargs lexbuf } 
 
  | trigraph
@@ -473,56 +480,56 @@ and string sargs = parse
     (* they have no established meaning *)
     { let (buf,fin,m,args) = sargs in 
       let s = ulexeme lexbuf in 
-      add_byte_char buf (trigraph s.[1] s.[2] s.[3]);
+      Lexhelp.add_byte_char buf (Lexhelp.trigraph s.[1] s.[2] s.[3]);
       string sargs lexbuf }
 
  | hexgraph_short
     { let (buf,fin,m,args) = sargs in 
-      add_unichar buf (int (hexgraph_short (trim_left lexbuf 2)));
+      Lexhelp.add_unichar buf (int (Lexhelp.hexgraph_short (trim_left lexbuf 2)));
       string sargs lexbuf  }
       
  | unicodegraph_short
     (* REVIEW: Disallow these in bytearray constants *)
     { let (buf,fin,m,args) = sargs in 
-      add_unichar buf (int (unicodegraph_short (trim_left lexbuf 2)));
+      Lexhelp.add_unichar buf (int (Lexhelp.unicodegraph_short (trim_left lexbuf 2)));
       string sargs lexbuf  }
      
  | unicodegraph_long
     { let (buf,fin,m,args) = sargs in 
-      let hi,lo = unicodegraph_long (trim_left lexbuf 2) in 
-      (match hi with | None -> () | Some c -> add_unichar buf (int c));
-      add_unichar buf (int lo);
+      let hi,lo = Lexhelp.unicodegraph_long (trim_left lexbuf 2) in 
+      (match hi with | None -> () | Some c -> Lexhelp.add_unichar buf (int c));
+      Lexhelp.add_unichar buf (int lo);
       string sargs lexbuf  }
      
  |  '"' 
     { let (buf,fin,m,args) = sargs in 
       let m2 = GetLexerRange lexbuf in 
-      call_string_finish fin buf m2 false }
+      Lexhelp.call_string_finish fin buf m2 false }
 
  |  '"''B' 
     { let (buf,fin,m,args) = sargs in 
       let m2 = GetLexerRange lexbuf in 
-      call_string_finish fin buf m2 true }
+      Lexhelp.call_string_finish fin buf m2 true }
 
  | newline
     { let (buf,fin,m,args) = sargs in 
       newline lexbuf; 
-      add_string buf (ulexeme lexbuf); 
+      Lexhelp.add_string buf (ulexeme lexbuf); 
       string sargs lexbuf }
 
  | ident  
     { let (buf,fin,m,args) = sargs in 
-      add_string buf (ulexeme lexbuf); 
+      Lexhelp.add_string buf (ulexeme lexbuf); 
       string sargs lexbuf }
 
  | xinteger
     { let (buf,fin,m,args) = sargs in 
-      add_string buf (ulexeme lexbuf); 
+      Lexhelp.add_string buf (ulexeme lexbuf); 
       string sargs lexbuf }
 
  | anywhite +  
     { let (buf,fin,m,args) = sargs in 
-      add_string buf (ulexeme lexbuf); 
+      Lexhelp.add_string buf (ulexeme lexbuf); 
       string sargs lexbuf }
 
  | eof  
@@ -530,45 +537,45 @@ and string sargs = parse
       EOF }
  | _ 
     { let (buf,fin,m,args) = sargs in 
-      add_string buf (lexeme lexbuf); 
+      Lexhelp.add_string buf (lexeme lexbuf); 
       string sargs lexbuf }
 
 (* REVIEW: consider sharing this code with the 'string' lexer state *)
 and vstring sargs = parse
  |  '"' '"'
    { let (buf,fin,m,args) = sargs in 
-     add_byte_char buf '\"';
+     Lexhelp.add_byte_char buf '\"';
      vstring sargs lexbuf } 
 
  |  '"' 
     { let (buf,fin,m,args) = sargs in 
       let m2 = GetLexerRange lexbuf in 
-      call_string_finish fin buf m2 false }
+      Lexhelp.call_string_finish fin buf m2 false }
 
  |  '"''B' 
     { let (buf,fin,m,args) = sargs in 
       let m2 = GetLexerRange lexbuf in 
-      call_string_finish fin buf m2 true }
+      Lexhelp.call_string_finish fin buf m2 true }
 
  | newline 
     { let (buf,fin,m,args) = sargs in 
       newline lexbuf; 
-      add_string buf (ulexeme lexbuf); 
+      Lexhelp.add_string buf (ulexeme lexbuf); 
       vstring sargs lexbuf }
 
  | ident  
     { let (buf,fin,m,args) = sargs in 
-      add_string buf (ulexeme lexbuf); 
+      Lexhelp.add_string buf (ulexeme lexbuf); 
       vstring sargs lexbuf }
 
  | xinteger
     { let (buf,fin,m,args) = sargs in 
-      add_string buf (ulexeme lexbuf); 
+      Lexhelp.add_string buf (ulexeme lexbuf); 
       vstring sargs lexbuf }
 
  | anywhite +  
     { let (buf,fin,m,args) = sargs in 
-      add_string buf (ulexeme lexbuf); 
+      Lexhelp.add_string buf (ulexeme lexbuf); 
       vstring sargs lexbuf }
 
  | eof 
@@ -576,7 +583,7 @@ and vstring sargs = parse
       EOF  }
  | _ 
     { let (buf,fin,m,args) = sargs in 
-      add_string buf (lexeme lexbuf); 
+      Lexhelp.add_string buf (lexeme lexbuf); 
       vstring sargs lexbuf }
 
 (* WARNING: taking sargs as a single parameter seems to make a difference as to whether *)

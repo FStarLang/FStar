@@ -18,12 +18,14 @@
 
 module Microsoft.FStar.Parser.DesugarEnv
 
+
 open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Absyn.Const
+open Microsoft.FStar.Parser
     
 type binding = 
   | Binding_typ_var of ident
@@ -32,10 +34,10 @@ type binding =
 
 type env = {
   curmodule: lident;
-  modules:list<lident * modul>;  (* previously desugared modules *)
+  modules:list<(lident * modul)>;  (* previously desugared modules *)
   open_namespaces: list<lident>; (* fully qualified names, in order of precedence *)
   sigaccum:sigelts;              (* type declarations being accumulated for the current module *)
-  localbindings:list<either<btvdef,bvvdef> * binding>;  (* local name bindings for name resolution, paired with an env-generated unique name *)
+  localbindings:list<(either<btvdef,bvvdef> * binding)>;  (* local name bindings for name resolution, paired with an env-generated unique name *)
   recbindings:list<binding>;     (* names bound by recursive type definitions only *)
   phase:AST.level;
   sigmap: Util.smap<sigelt>;
@@ -60,7 +62,7 @@ let empty_env () = {curmodule=lid_of_ids [];
                     localbindings=[]; 
                     recbindings=[];
                     phase=AST.Un;
-                    sigmap=Util.smap_create(100);}
+                    sigmap=Util.smap_create(100)}
 
 let prepare_module env mname = 
   let open_ns = if lid_equals mname Const.prims_lid then [] else [Const.prims_lid] in
@@ -91,7 +93,7 @@ let try_lookup_typ_var env (id:ident) =
     | _ -> None 
 
 let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a> =
-  let rec is_prefix = function
+  let rec is_prefix arg = match arg with
     | hd::tl, hd'::tl' -> hd.idText = hd'.idText && is_prefix (tl, tl')
     | [], _ -> true
     | _ -> false in
@@ -160,7 +162,7 @@ let try_lookup_id env (id:ident) =
     | Some l -> Some <| ewithpos (Exp_fvar(fv l)) id.idRange
     | _ -> 
       find_map env.localbindings (function 
-        | Inr bvd, Binding_var id' when id'.idText=id.idText -> Some (bvd_to_exp (set_bvd_range bvd id.idRange) Typ_unknown)
+        | Inr bvd, Binding_var id' when (id'.idText=id.idText) -> Some (bvd_to_exp (set_bvd_range bvd id.idRange) Typ_unknown)
         | _ -> None)
         
 let try_lookup_module env path = 
@@ -207,13 +209,15 @@ type record = {
   typename: lident;
   constrname: lident;
   params: list<tparam>;
-  fields: list<fieldname * typ>
+  fields: list<(fieldname * typ)>
 }
-let record_cache : ref<list<record>> = ref []
+let record_cache : ref<list<record>> = Util.mk_ref []
 
 let extract_record env = function 
   | Sig_bundle sigs -> 
-    let is_rec = List.exists (function Logic_record -> true | _ -> false) in
+    let is_rec = Util.for_some (function 
+      | Logic_record -> true
+      | _ -> false) in
     
     let find_dc dc = 
       sigs |> Util.find_opt (function 
@@ -250,6 +254,17 @@ let try_lookup_record_by_field_name env (fieldname:lident) =
         then Some(record, fname)
         else None)) in
   resolve_in_open_namespaces env fieldname find_in_cache
+
+let qualify_field_to_record env (record:record) (f:lident) = 
+  let qualify fieldname =  
+    let ns, fieldname = Util.prefix fieldname.lid in
+    let _, constrname = Util.prefix record.constrname.lid in
+    let fname = lid_of_ids (ns@[constrname]@[fieldname]) in
+    Util.find_map record.fields (fun (f, _) -> 
+      if lid_equals fname f
+      then Some(fname)
+      else None) in
+  resolve_in_open_namespaces env f qualify
     
 let unique_name env lid = 
   match try_lookup_lid env lid with

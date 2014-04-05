@@ -17,15 +17,13 @@
 module Microsoft.FStar.FStar
 open Microsoft.FStar
 open Microsoft.FStar.Absyn
-open System.IO
-open Util
-open Options 
-open Getopt
-open Profiling 
-    
+open Microsoft.FStar.Absyn.Syntax
+open Microsoft.FStar.Util
+open Microsoft.FStar.Getopt
+
 let process_args () = 
-  let file_list = ref [] in
-  let res = parse_cmdline Options.specs (fun i -> file_list := !file_list @ [i]) in
+  let file_list = Util.mk_ref [] in
+  let res = Getopt.parse_cmdline (Options.specs()) (fun i -> file_list := !file_list @ [i]) in
     (match res with
        | GoOn -> ignore (Options.set_fstar_home ())
        | _ -> ());
@@ -35,35 +33,33 @@ let err msg args = Util.print_string (Util.format msg args)
 
 let go _ =    
   let finished (mods:Syntax.modul list) = 
-    mods |> List.iter (fun m -> err "Parsed and desugared module: %s\n" [Syntax.text_of_lid m.name]);
-    messageWithTime "Done" in
+    mods |> List.iter (fun m -> err "Parsed and desugared module: %s\n" [Syntax.text_of_lid m.name]) in
   let (res, filenames) = process_args () in
   match res with
     | Help ->
-      display_usage ()
+      Options.display_usage (Options.specs())
     | Die msg ->
       err msg []
     | GoOn ->
       begin
-        let _ = startClock () in
-        let fmods = Parser.Driver.parse_files (prims()::filenames) in
+        (* let _ = startClock () in *)
+        let fmods = Parser.Driver.parse_files (Options.prims()::filenames) in
         finished fmods
       end
       
-let cleanup () = 
-  System.Console.Out.Flush();
-  System.Console.Error.Flush()
+let cleanup () = ()
+  (* System.Console.Out.Flush(); *)
+  (* System.Console.Error.Flush() *)
     
 let _ = 
   try 
     go ();
-    Profiling.print_profile ();
     cleanup ();
-    System.Environment.Exit(0);
+    exit 0
   with 
     | Syntax.Err msg -> err "Failure: %s\n" [msg]
     | Syntax.Error(msg, r) -> err "Failure (%s): %s" [Range.string_of_range r; msg]
     | e ->
       (err "Unexpected exception :( \n" [];
        cleanup();
-       System.Environment.Exit(-1))
+       exit -1)

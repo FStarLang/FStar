@@ -30,44 +30,29 @@
 
 module Microsoft.FStar.Parser.Lexhelp
 
-open Microsoft.FSharp.Compatibility
-open Microsoft.FSharp.Compatibility.OCaml.Pervasives
-open Microsoft.FSharp.Text.Lexing
 open Microsoft.FStar
+open Microsoft.FStar.Util
 open Microsoft.FStar.Range
 open Microsoft.FStar.Parser
 open Microsoft.FStar.Parser.AST
-open Microsoft.FStar.Parser.Parse 
+open Microsoft.FStar.Parser.Parse
 
 let intern_string = 
-  let strings = new System.Collections.Generic.Dictionary<string,string>(100) in 
+  let strings = Util.smap_create 100 in (* new System.Collections.Generic.Dictionary<string,string>(100) in  *)
   fun s ->
-    let mutable res = "" in
-    let ok = strings.TryGetValue(s,&res)  in
-    if ok then res 
-    else (strings.[s] <- s; s)
+    match Util.smap_try_find strings s with 
+      | Some res -> res
+      | None -> Util.smap_add strings s s; s
       
-type lexargs =  
-    { getSourceDirectory: (unit -> string); }
-      
-let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) = 
-  lexbuf.EndPos <- {lexbuf.EndPos with 
-    pos_fname= encode_file filename; 
-    pos_cnum=0;
-    pos_lnum=1 }
-
-let mkLexargs (srcdir,filename) =
-  { getSourceDirectory=srcdir; }
-
 let default_string_finish = (fun endm b s -> STRING (s))
 
-let call_string_finish fin buf endm b = fin endm b (Bytes.Bytebuf.close buf)
+let call_string_finish fin buf endm b = fin endm b (Bytes.close buf)
 
-let add_string buf x = Bytes.Bytebuf.emit_bytes buf (Bytes.string_as_unicode_bytes x)
+let add_string buf x = Bytes.emit_bytes buf (Bytes.string_as_unicode_bytes x)
 
 let add_int_char buf c = 
-  Bytes.Bytebuf.emit_int_as_byte buf (c % 256);
-  Bytes.Bytebuf.emit_int_as_byte buf (c / 256)
+  Bytes.emit_int_as_byte buf (c % 256);
+  Bytes.emit_int_as_byte buf (c / 256)
 
 let add_unichar buf c = add_int_char buf (int c)
 let add_byte_char buf (c:char) = add_int_char buf (int32 c % 256)
@@ -78,52 +63,54 @@ let add_byte_char buf (c:char) = add_int_char buf (int32 c % 256)
 (* we just take every second byte we stored.  Note all bytes > 127 should have been *)
 (* stored using add_int_char *)
 let stringbuf_as_bytes buf = 
-    let bytes = Bytes.Bytebuf.close buf in 
+    let bytes = Bytes.close buf in 
     Bytes.make (fun i -> Bytes.get bytes (i*2)) (Bytes.length bytes / 2)
 
 (* Sanity check that high bytes are zeros. Further check each low byte <= 127 *)
 let stringbuf_is_bytes buf = 
-    let bytes = Bytes.Bytebuf.close buf in
-    let mutable ok = true in
-    for i = 0 to Bytes.length bytes/2-1 do
-      if Bytes.get bytes (i*2+1) <> 0 then ok <- false
-    done;
-    ok
-
-let newline (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<_>) = 
-    lexbuf.EndPos <- lexbuf.EndPos.NextLine
+    let bytes = Bytes.close buf in
+    let ok = Util.mk_ref true in
+    Util.for_range 0 (Bytes.length bytes/2-1) (fun i -> 
+      if Bytes.get bytes (i*2+1) <> 0 
+      then ok := false
+      else ());
+    !ok
 
 let trigraph c1 c2 c3 =
     let digit (c:char) = int c - int '0' in 
-    char (digit c1 * 100 + digit c2 * 10 + digit c3)
+    char_of_int (digit c1 * 100 + digit c2 * 10 + digit c3)
 
 let digit d = 
-    if d >= '0' && d <= '9' then int32 d - int32 '0'   
+    if d >= '0' && d <= '9' then int_of_char d - int_of_char '0'   
     else failwith "digit" 
 
 let hexdigit d = 
     if d >= '0' && d <= '9' then digit d 
-    else if d >= 'a' && d <= 'f' then int32 d - int32 'a' + 10
-    else if d >= 'A' && d <= 'F' then int32 d - int32 'A' + 10
+    else if d >= 'a' && d <= 'f' then int_of_char d - int_of_char 'a' + 10
+    else if d >= 'A' && d <= 'F' then int_of_char d - int_of_char 'A' + 10
     else failwith "hexdigit" 
 
 let unicodegraph_short s =
-    if String.length s <> 4 then failwith "unicodegraph";
-    uint16 (hexdigit s.[0] * 4096 + hexdigit s.[1] * 256 + hexdigit s.[2] * 16 + hexdigit s.[3])
+    if String.length s <> 4 
+    then failwith "unicodegraph"
+    else uint16_of_int (hexdigit (char_at s 0) * 4096 + hexdigit (char_at s 1) * 256 + hexdigit (char_at s 2) * 16 + hexdigit (char_at s 3))
 
 let hexgraph_short s =
-    if String.length s <> 2 then failwith "hexgraph";
-    uint16 (hexdigit s.[0] * 16 + hexdigit s.[1])
+    if String.length s <> 2 
+    then failwith "hexgraph"
+    else uint16_of_int (hexdigit (char_at s 0) * 16 + hexdigit (char_at s 1))
 
 let unicodegraph_long s =
-    if String.length s <> 8 then failwith "unicodegraph_long";
-    let high = hexdigit s.[0] * 4096 + hexdigit s.[1] * 256 + hexdigit s.[2] * 16 + hexdigit s.[3] in 
-    let low = hexdigit s.[4] * 4096 + hexdigit s.[5] * 256 + hexdigit s.[6] * 16 + hexdigit s.[7] in 
-    if high = 0 then None, uint16 low 
-    else 
+    if String.length s <> 8 
+    then failwith "unicodegraph_long"
+    else
+      let high = hexdigit (char_at s 0) * 4096 + hexdigit (char_at s 1) * 256 + hexdigit (char_at s 2) * 16 + hexdigit (char_at s 3) in 
+      let low = hexdigit (char_at s 4) * 4096 + hexdigit (char_at s 5) * 256 + hexdigit (char_at s 6) * 16 + hexdigit (char_at s 7) in 
+      if high = 0 then None, uint16_of_int low 
+      else 
       (* A surrogate pair - see http://www.unicode.org/unicode/uni2book/ch03.pdf, section 3.7 *)
-      Some (uint16 (0xD800 + ((high * 0x10000 + low - 0x10000) / 0x400))),
-      uint16 (0xDF30 + ((high * 0x10000 + low - 0x10000) % 0x400))
+        Some (uint16_of_int (0xD800 + ((high * 0x10000 + low - 0x10000) / 0x400))),
+        uint16_of_int (0xDF30 + ((high * 0x10000 + low - 0x10000) % 0x400))
 
 let escape c = 
     match c with
@@ -223,7 +210,7 @@ let keywords =
     ALWAYS, "with"       ,WITH;
     FSHARP, "yield"      ,YIELD(true);
     ALWAYS, "_"          ,UNDERSCORE;
-    FSHARP, "__token_constraint",CONSTRAINT;
+    FSHARP, "__token_constraint",CONSTRAINT
   ]
 (*------- reserved keywords which are ml-compatibility ids *) 
   @ List.map (fun s -> (FSHARP,s,RESERVED)) 
@@ -234,9 +221,9 @@ let keywords =
       "include";  (* "instance"; *)
       "mixin"; 
       (* "object";  *)
-      "parallel"; "params";  "process"; "protected"; "pure"; (* "pattern"; *)
+      "parallel"; "process"; "protected"; "pure"; (* "pattern"; *)
       "sealed"; "trait";  "tailcall";
-      "volatile"; ]
+      "volatile" ]
 
 let stringKeywords = List.map (fun (_, w, _) -> w) keywords
 
@@ -245,41 +232,40 @@ let stringKeywords = List.map (fun (_, w, _) -> w) keywords
  *-----------------------------------------------------------------------*)
 
 let unreserve_words = 
-    List.choose (function (mode,keyword,_) -> if mode = FSHARP then Some keyword else None) keywords
+    List.choose (fun (mode,keyword,_) -> if mode = FSHARP then Some keyword else None) keywords
 
 let kwd_table = 
-    let tab = Hashtbl.create 1000 in
-    List.iter (fun (mode,keyword,token) -> Hashtbl.add tab keyword token) keywords;
+    let tab = Util.smap_create 1000 in
+    List.iter (fun (mode,keyword,token) -> Util.smap_add tab keyword token) keywords;
     tab
-let kwd s = Hashtbl.find kwd_table s
-
-(* REVIEW: get rid of this element of global state *)
-let permitFsharpKeywords = ref true
-
+let kwd s = Util.smap_try_find kwd_table s 
 exception ReservedKeyword of string * range
 exception IndentationProblem of string * range
 
-let kwd_or_id args (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) s =
-  if not !permitFsharpKeywords && List.mem s unreserve_words then
-    IDENT (intern_string(s))
-  else if Hashtbl.mem kwd_table s then 
-    let v = kwd s in 
-    if v = RESERVED then
-      begin
-        let m = GetLexerRange lexbuf in 
-        warning(ReservedKeyword("The keyword '"^s^"' is reserved for future use by F#.",m));
+type lexargs =  
+    { getSourceDirectory: (unit -> string); }
+
+let mkLexargs (srcdir,filename) =
+  { getSourceDirectory=srcdir }
+
+let kwd_or_id args (r:Range.range) s =
+  match kwd s with 
+    | Some v -> 
+      if v = RESERVED then
+        begin
+          Util.print_string (Util.format2 "The keyword '%s' is reserved for future use by F#. (%s)" s (string_of_range r));
           (* This will give a proper syntax error at the right location for true F# files. *)
-        IDENT (intern_string(s))
-      end
-    else v
-  else 
-    match s with 
-    | "__SOURCE_DIRECTORY__" -> 
-       STRING (Bytes.string_as_unicode_bytes (args.getSourceDirectory()))
-    | "__SOURCE_FILE__" -> 
-       STRING (Bytes.string_as_unicode_bytes (file_of_file_idx (decode_file_idx lexbuf.StartPos.FileName)))
-    | "__LINE__" -> 
-       STRING (Bytes.string_as_unicode_bytes (string lexbuf.StartPos.Line))
-    | _ -> 
-       IDENT (intern_string(s))
+          IDENT (intern_string(s))
+        end
+      else v
+    | None -> 
+      match s with 
+        | "__SOURCE_DIRECTORY__" -> 
+          STRING (Bytes.string_as_unicode_bytes (args.getSourceDirectory()))
+        | "__SOURCE_FILE__" -> 
+          STRING (Bytes.string_as_unicode_bytes (Range.file_of_range r))
+        | "__LINE__" -> 
+          STRING (Bytes.string_as_unicode_bytes (string_of_int (Range.line_of_pos (Range.start_of_range r))))
+        | _ -> 
+          IDENT (intern_string(s))
 

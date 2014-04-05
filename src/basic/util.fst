@@ -31,14 +31,21 @@ val format2: string -> string -> string -> string
 val format3: string -> string -> string -> string -> string
 val format4: string -> string -> string -> string -> string -> string
 val print_string : string -> unit
+val print_any: 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list<string> -> string
 val write_file: string -> string -> unit
 
+val int_of_string:   string -> int
+val int_of_char:   char -> int
+val char_of_int:   int -> char
+val uint16_of_int: int -> uint16
 val string_of_int:   int -> string
 val string_of_float: float -> string
 val string_of_char:  char -> string
 val string_of_bytes: byte[] -> string
+val substring: string -> int -> int -> string
+val char_at: string -> int -> char
 
 type either<'a,'b> =
   | Inl of 'a
@@ -65,6 +72,7 @@ val string_of_unicode: byte[] -> string
 val unicode_of_string: string -> byte[] 
 val incr: ref int -> unit
 val geq: int -> int -> bool
+val for_range: int -> int -> (int -> unit) -> unit
 
 (* A simple state monad *)
 type state<'s,'a> = ('s -> 'a * 's) (* not relying on definition *)
@@ -77,7 +85,10 @@ val stmap: list<'a> -> ('a -> state<'s,'b>) -> state<'s, list<'b>>
 val stiter: list<'a> -> ('a -> state<'s,unit>) -> state<'s,unit>
 val stfold: 'b -> list<'a> -> ('b -> 'a -> state<'s,'b>) -> state<'s,'b>
 val run_st: 's -> state<'s,'a> -> ('a * 's)
+val mk_ref: 'a -> ref<'a>
 
 (* query log *)
 val bump_query_count: (unit -> int)
 val query_count: (unit -> int)
+
+val expand_environment_variable: string -> string

@@ -67,6 +67,8 @@ let rec concatMap f = function
   | [] -> []
   | a::tl -> append (f a) (concatMap f tl)
 
+val map2: ('a -> 'b -> 'c) -> list 'a -> list 'b -> list 'c
+val split: list ('a * 'b) -> list 'a * list 'b
 val unzip3: list ('a * 'b * 'c) -> list 'a * list 'b * list 'c
 val zip3: (list 'a * list 'b * list 'c) -> list ('a * 'b * 'c)
 val map3: ('a -> 'b -> 'c -> 'd) -> list 'a -> list 'b -> list 'c -> list 'd
@@ -78,3 +80,4 @@ val tryFind: ('a -> bool) -> list 'a -> option 'b
 val concat: list (list 'a) -> list 'a
 val sortWith: ('a -> 'a -> int) -> list 'a -> list 'a
 val choose: ('a -> option 'b) -> list 'a -> list 'b
+val flatten: list (list 'a) -> list 'a

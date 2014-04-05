@@ -45,10 +45,12 @@ assume Unit_id: forall (x:unit). x=()
 type int
 type char
 type byte
+type uint16
 type int32
 type int64
 type double
 type string
+type array : S => S
 type ref : S => S
 type LBL : string => E => E
 type bytes
@@ -179,6 +181,9 @@ val failwith: string -> 'a (* TODO: refine with a monadic type *)
 val raise: exn -> 'a (* TODO: refine with a monadic type *)
 val pipe_right: 'a -> ('a -> 'b) -> 'b
 val pipe_left: ('a -> 'b) -> 'a -> 'b
+val ignore: 'a -> unit
+val exit: int -> unit
+val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
 
 (* Primitive functions with trusted specs  *)
 val _dummy_op_ColonEquals: ref 'a -> 'a -> unit

@@ -17,25 +17,26 @@
 
 // (c) Microsoft Corporation. All rights reserved
 module Microsoft.FStar.Options
-open Getopt
-open Util
+open Microsoft.FStar
+open Microsoft.FStar.Util
+open Microsoft.FStar.Getopt
 
-let z3log = ref false
-let quiet = ref true
-let silent=ref false
-let print_real_names = ref true
-let dump_module = ref None
-let logQueries = ref false
-let z3exe = ref true
-let outputDir = ref (Some ".")
-let describe_queries = ref false
-let skip_queries = ref (None : Option<int>)
-let skipped_queries = ref 0
-let fstar_home_opt = ref None
-let _fstar_home = ref ""
-let prims_ref = ref None
-let __unsafe = ref false
-let z3timeout = ref None
+let z3log = Util.mk_ref false
+let quiet = Util.mk_ref true
+let silent=Util.mk_ref false
+let print_real_names = Util.mk_ref true
+let dump_module = Util.mk_ref None
+let logQueries = Util.mk_ref false
+let z3exe = Util.mk_ref true
+let outputDir = Util.mk_ref (Some ".")
+let describe_queries = Util.mk_ref false
+let skip_queries : ref<option<int>> = Util.mk_ref None
+let skipped_queries = Util.mk_ref 0
+let fstar_home_opt = Util.mk_ref None
+let _fstar_home = Util.mk_ref ""
+let prims_ref = Util.mk_ref None
+let __unsafe = Util.mk_ref false
+let z3timeout = Util.mk_ref None
 
 let query_file () = 
   let f = "query-" ^ (Util.string_of_int <| Util.query_count()) ^ ".smt2" in
@@ -46,7 +47,7 @@ let query_file () =
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
     | None ->
-      let x = System.Environment.ExpandEnvironmentVariables("%FSTAR_HOME%") in
+      let x = Util.expand_environment_variable "FSTAR_HOME" in
       _fstar_home := x;
       fstar_home_opt := Some x;
       x
@@ -71,45 +72,42 @@ let getZ3Timeout () = match !z3timeout with
 let skip_first_queries s =
   try
     let n = int_of_string s in
-      if n < 0 then
-        (System.Console.Error.Write("error: can't skip a negative number ('" + s + "') of queries\n");
-         System.Environment.Exit(1))
-      else
-        (if n = 0 then ()
-         else
-           (Printf.printf "SKIPPING THE FIRST %d QUERIES!!!\n" n;
-            skip_queries := Some n))
+    (if n = 0 then ()
+     else if n > 0 then 
+       (Util.print_string (Util.format1 "SKIPPING THE FIRST %s QUERIES!!!\n" (Util.string_of_int n));
+        skip_queries := Some n)
+     else (Util.print_string ("error: can't skip a negative number ('" + s + "') of queries\n");
+           exit 1))
   with
     | _ -> 
-      (System.Console.Error.Write("error: argument '" + s + "' of --UNSAFE_skip_first_queries is not a number\n");
-       System.Environment.Exit(1))  
+      (Util.print_string ("error: argument '" + s + "' of --UNSAFE_skip_first_queries is not a number\n");
+       exit 1)  
 
-let rec specs : list<Getopt.opt> = 
-[
-  ( 'h', "help", ZeroArgs (fun x -> display_usage (); System.Environment.Exit(0)), "Display this information");
-  ( noshort, "z3exe", ZeroArgs (fun () -> logQueries := true; z3exe := true), "Call z3.exe instead of via the .NET API (implies --logQueries)");
-  ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
-  ( noshort, "profile", ZeroArgs (fun () -> Printf.printf "Setting profiling flag!\n"; Profiling.profiling := true), "");
-  ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
-  ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
-  ( noshort, "prn", ZeroArgs (fun () -> print_real_names := true), "Print real names---you may want to use this in conjunction with logQueries");
-  ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
-  ( noshort, "z3timeout", OneArg ((fun s -> z3timeout := Some s), "t"), "Set the Z3 soft timeout to t milliseconds");
-  ( noshort, "logQueries", ZeroArgs (fun () -> logQueries := true;), "Log the Z3 queries in $FSTAR_HOME/bin/queries/, or in odir, if set; also see --prn");
-  ( noshort, "UNSAFE", ZeroArgs (fun () -> Printf.printf "UNSAFE MODE!\n"; __unsafe := true), "");
-  ( noshort, "describe_queries", ZeroArgs (fun () -> describe_queries := true), "Print the queried formula and its location");
-  ( noshort, "UNSAFE_skip_first_queries", OneArg ((fun x -> skip_first_queries x), "n"), "Skip the first n queries");
-  ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir");
-]
-and display_usage () =
-  printfn "fstar [option] infile...";
+let display_usage specs =
+  Util.print_string "fstar [option] infile...";
   List.iter
     (fun (_, flag, p, doc) ->
        match p with
          | ZeroArgs _ ->
-             if doc = "" then printfn "  --%s" flag
-             else printfn "  --%s  %s" flag doc
+             if doc = "" then Util.print_string (Util.format1 "  --%s" flag)
+             else Util.print_string (Util.format2 "  --%s  %s" flag doc)
          | OneArg (_, argname) ->
-             if doc = "" then printfn "  --%s %s" flag argname
-             else printfn "  --%s %s  %s" flag argname doc)
+             if doc = "" then Util.print_string (Util.format2 "  --%s %s" flag argname)
+             else Util.print_string (Util.format3 "  --%s %s  %s" flag argname doc))
     specs
+
+let specs () : list<Getopt.opt> = 
+  let specs =   
+    [( noshort, "z3exe", ZeroArgs (fun () -> logQueries := true; z3exe := true), "Call z3.exe instead of via the .NET API (implies --logQueries)");
+     ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
+     ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
+     ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
+     ( noshort, "prn", ZeroArgs (fun () -> print_real_names := true), "Print real names---you may want to use this in conjunction with logQueries");
+     ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
+     ( noshort, "z3timeout", OneArg ((fun s -> z3timeout := Some s), "t"), "Set the Z3 soft timeout to t milliseconds");
+     ( noshort, "logQueries", ZeroArgs (fun () -> logQueries := true), "Log the Z3 queries in $FSTAR_HOME/bin/queries/, or in odir, if set; also see --prn");
+     ( noshort, "UNSAFE", ZeroArgs (fun () -> Util.print_string "UNSAFE MODE!\n"; __unsafe := true), "");
+     ( noshort, "describe_queries", ZeroArgs (fun () -> describe_queries := true), "Print the queried formula and its location");
+     ( noshort, "UNSAFE_skip_first_queries", OneArg ((fun x -> skip_first_queries x), "n"), "Skip the first n queries");
+     ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir")] in 
+  ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs

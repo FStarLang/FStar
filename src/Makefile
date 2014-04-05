@@ -1,10 +1,10 @@
-BASIC=profiling.fs util.fsi util.fs bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs options.fs unionfind.fsi unionfind.fs 
+BASIC=profiling.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs options.fs unionfind.fsi unionfind.fs 
 BASIC_SRC=$(addprefix basic/, $(BASIC))
 
 ABSYN=syntax.fs const.fs visit.fs util.fs print.fs 
 ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
 
-PARSER=ast.fs parse.fs lexhelp.fs lex.fs dsenv.fs desugar.fs driver.fs
+PARSER=ast.fs parse.fs lexhelp.fs lex.fs dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
 PARSER_SRC=$(addprefix parser/, $(PARSER))
 
 TCCORE=tcenv.fsi tcenv.fs tcutil.fsi tcutil.fs treln.fsi treln.fs krivine.fs

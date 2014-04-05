@@ -27,3 +27,7 @@ val decode_file_idx:string -> int
 val file_of_file_idx:file_idx -> string
 val union_ranges: range -> range -> range
 val string_of_range: range -> string
+val file_of_range: range -> string
+val string_of_pos: pos -> string
+val start_of_range: range -> pos
+val line_of_pos: pos -> int

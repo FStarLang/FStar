@@ -120,12 +120,11 @@ module Bytestream =
         let res = System.Text.Encoding.UTF8.GetString(b.bytes,b.pos,n) in  
         b.pos <- b.pos + n; res 
 
+type bytebuf = 
+     { mutable bbArray: bytes; 
+       mutable bbCurrent: int }
 
-module Bytebuf = 
-    type t = 
-        { mutable bbArray: bytes; 
-          mutable bbCurrent: int }
-
+module Bytebuf =
     let create sz = 
         { bbArray=zero_create sz; 
           bbCurrent = 0; }
@@ -193,5 +192,8 @@ module Bytebuf =
     let length bb = bb.bbCurrent
     let position bb = bb.bbCurrent
 
-
+let create i = Bytebuf.create i
+let close t = Bytebuf.close t
+let emit_int_as_byte t i = Bytebuf.emit_int_as_byte t i
+let emit_bytes t b = Bytebuf.emit_bytes t b
 

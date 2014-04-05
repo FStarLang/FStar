@@ -37,6 +37,7 @@ type term' =
   | Seq       of term * term
   | If        of term * term * term
   | Match     of term * list<branch>
+  | TryWith   of term * list<branch>
   | Ascribed  of term * term 
   | Record    of option<term> * list<(lid * term)>
   | Project   of term * lid
@@ -114,7 +115,13 @@ let mk_decl d r = {decl=d; range=r}
 let mk_binder b r l = {binder=b; range=r; level=l}
 let mk_term t r l = {term=t; range=r; level=l}
 let mk_pattern p r = {pattern=p; range=r}
-
+let mk_function branches r1 r2 = 
+  let x = Util.genident (Some r1) in
+  mk_term (Abs([mk_pattern (PatVar x) r1],
+               mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
+    r2 Expr
+    
+  
 let lid_with_range lid r = lid_of_path (path_of_lid lid) r
 
 let to_string_l sep f l = 

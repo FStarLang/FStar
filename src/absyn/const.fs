@@ -88,6 +88,7 @@ let string_concat_lid = p2l ["String"; "concat"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
+let op_notEq           = pconst "op_disEquality"
 let op_ColonEq         = pconst "_dummy_op_ColonEquals"
 let op_And_lid         = pconst "_dummy_op_AmpAmp"
 let op_Or_lid          = pconst "_dummy_op_BarBar"
@@ -115,6 +116,9 @@ let op_Division        = p2l ["op_Division"]
 let op_Modulus         = p2l ["op_Modulus"]
 let op_And             = p2l ["op_AmpAmp"]
 let op_Or              = p2l ["op_BarBar"]
+
+(* control primitives *)
+let try_with_lid       = p2l ["try_with"]
 
 (* Array constants *)
 let array_lid          = p2l ["Array"; "array"]
