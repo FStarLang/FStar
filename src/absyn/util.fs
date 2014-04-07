@@ -198,7 +198,7 @@ and is_logic_function e = match (unascribe e).v with
 (************** Collecting all unification variables in a type ******************)
 (********************************************************************************)
 
-type uvars = uvar list
+type uvars = uvar_t list
 let uvars_in_typ t : uvars = 
   let collect_uvars uvs t = match t with 
     | Typ_uvar (uv, k) -> 

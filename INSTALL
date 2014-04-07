@@ -1,18 +1,33 @@
-
 Prerequisites for building F* from sources (work in progress)
 
-Windows
-  any particular flavour?
+At the moment:
 
-Z3 4.3? from http://z3.codeplex.com/
-32bit version will do fine?
-Copy libz3.dll, Microsoft.Z3.dll, and z3.exe to the bin directory.
-  Any other file (e.g. the .pyc files)?
+  On Windows 8 with .NET framework 4.5 and F# v2.0 :
 
-Make 3.81? With Cygwin? Any other unix tool needed?
-  Tried Microsoft's nmake but it didn't like the syntax
+     -- You need at least Z3 version 4.1. Later versions should be
+        fine, but have not been tested.
 
-[optional?] Visual Studio ????
-  Which version? I tried opening fstar.fsproj with Visual Studio 2010
-  and got that "This project is incompatible with the current version
-  of Visual Studio"
+        Copy z3.exe, z3.dll and Microsoft.Z3.dll into FStar/bin
+        
+        By default, F* uses the 64-bit versions. But, you should also
+        be able to use the 32 bit versions by passing the flag
+        --platform:x86 to fsc.
+     
+     Then either: 
+
+          Using VisualStudio 2012, open FStar/VS/FStar.sln and build
+          solution.
+
+          Or, with Cygwin's GNU make (4.0), run "make" from FStar/src
+
+  Also, can be built using Mono (Pierre-Yves?)
+
+  
+
+
+
+
+          
+     
+  
+

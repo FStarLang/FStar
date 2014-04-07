@@ -18,8 +18,8 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;JS</DefineConstants>
+    <OutputPath>..\..\bin</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <WarningLevel>1</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>
@@ -67,6 +67,8 @@
     <Compile Include="lex.fs" />
     <Compile Include="dsenv.fs" />
     <Compile Include="desugar.fs" />
+    <Compile Include="parseit.fsi" />
+    <Compile Include="parseit.fs" />
     <Compile Include="driver.fs" />
   </ItemGroup>
   <PropertyGroup>
@@ -75,6 +77,10 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition="(!Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')) And (Exists('$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets'))" />
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="(!Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')) And (!Exists('$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets')) And (Exists('$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets'))" />
+  <PropertyGroup>
+    <PreBuildEvent>fsyacc --module Microsoft.FStar.Parser.Parse $(ProjectDir)\parse.fsy -o $(ProjectDir)\parse.fs
+fslex --unicode $(ProjectDir)\lex.fsl -o $(ProjectDir)\lex.fs</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.
 	<Target Name="BeforeBuild">

@@ -6,6 +6,8 @@ ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
 
 PARSER=ast.fs parse.fs lexhelp.fs lex.fs dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
 PARSER_SRC=$(addprefix parser/, $(PARSER))
+PARSER_NOGEN=ast.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
+PARSER_NOGEN_SRC=$(addprefix parser/, $(PARSER_NOGEN))
 
 TCCORE=tcenv.fsi tcenv.fs tcutil.fsi tcutil.fs treln.fsi treln.fs krivine.fs
 TCCORE_SRC=$(addprefix tccore/, $(TCCORE))
@@ -16,7 +18,7 @@ MONADIC_SRC=$(addprefix monadic/, $(MONADIC))
 Z3ENCODE=term.fs env.fs basicdt.fs decodetyp.fs encodingdt.fs query.fs
 Z3ENCODE_SRC=$(addprefix z3encode/, $(Z3ENCODE))
 
-TC=tc.fsi tc.fs
+TC=tcenv.fs tcutil.fs
 TC_SRC=$(addprefix tc/, $(TC))
 
 PLATFORM=
@@ -25,7 +27,7 @@ OTHERFLAGS=--nologo -g -O --warn:0 $(addprefix --define:, $(BUILD_VERSION))
 
 LIB=../lib
 BIN=../bin
-ALL_DLLS=basic.dll absyn.dll parser.dll #tccore.dll tc.dll z3encode.dll monadic.dll
+ALL_DLLS=basic.dll absyn.dll parser.dll tc.dll #tccore.dll tc.dll z3encode.dll monadic.dll
 FSHARP_LIBS=$(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll 
 OTHER_DLLS=
 BASELIBS=$(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
@@ -75,7 +77,7 @@ Z3ENCODE_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tccore.dll)
 $(BIN)/z3encode.dll: $(Z3ENCODE_DEPS) $(Z3ENCODE_SRC)
 	fsc  $(OTHERFLAGS) -a -o $@ $(BASELIBS) -r $(BIN)/Microsoft.Z3.dll $(addprefix -r , $(Z3ENCODE_DEPS)) $(Z3ENCODE_SRC)
 
-TC_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tccore.dll)
+TC_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll)
 $(BIN)/tc.dll: $(TC_DEPS) $(TC_SRC)
 	fsc  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TC_DEPS)) $(TC_SRC)
 
@@ -97,6 +99,9 @@ check: $(BIN)/fstar.exe
 	cp -r $(OTHER_DLLS) $(BIN)/FSharp.Compiler.dll $(BIN)/Microsoft.Z3.dll $(BIN)/z3.dll $(STAGE)/
 	$(STAGE)/fstar --fstar_home .. --cert --gadt --prims ../lib/prims_wotuples.f9 certify/coretyping.fst 
 	$(STAGE)/fstar --fstar_home .. --rdcil_z3eq --gadt --genIL --writePrims --odir $(STAGE)/queries --prims certify/prims.fst $(CERTIFY_SRC)
+
+wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) fstar.fs
+	wc -l $^
 
 tidy: 
 	rm -f $(BIN)/basic.dll

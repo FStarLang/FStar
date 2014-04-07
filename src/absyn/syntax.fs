@@ -65,19 +65,19 @@ type typ =
   | Typ_lam      of bvvdef * typ * typ                  (* fun (x:t) => T *)
   | Typ_tlam     of btvdef* kind * typ                  (* fun ('a:k) => T *) 
   | Typ_ascribed of typ * kind                          (* t <: k *)
-  | Typ_uvar     of uvar * kind                         (* Only needed for unification *)
+  | Typ_uvar     of uvar_t * kind                         (* Only needed for unification *)
   | Typ_meta     of meta                                (* Not really in the type language; a way to stash convenient metadata with types *)
   | Typ_unknown                                         (* Initially, every AST node has type unknown *)
-and uvar = Unionfind.uvar<uvar_basis>
+and uvar_t = Unionfind.uvar<uvar_basis<typ,kind>>
 and meta = 
   | Meta_pos of typ * Range.range   (* user wrote down this type 1 at source position 2 *)
   | Meta_pattern of typ * list<either<typ,exp>>
   | Meta_cases of list<typ>
   | Meta_tid of int
-and uvar_basis = 
-  | Uvar of (typ -> kind -> bool) (* A well-formedness check to ensure that all names are in scope *)
-  | Fixed of typ
-  | Delayed of typ
+and uvar_basis<'a,'b> = 
+  | Uvar of ('a -> 'b -> bool) (* A well-formedness check to ensure that all names are in scope *)
+  | Fixed of 'a
+  | Delayed of 'a
 and exp' =
   | Exp_bvar       of bvar<exp,typ>
   | Exp_fvar       of var<typ> 
@@ -91,7 +91,9 @@ and exp' =
   | Exp_ascribed   of exp * typ 
   | Exp_let        of bool * list<(bvvdef * typ * exp)> * exp    (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Exp_primop     of ident * list<exp>
+  | Exp_uvar       of uvar_e * typ
 and exp = withinfo_t<exp',typ>
+and uvar_e = Unionfind.uvar<uvar_basis<exp,typ>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
 and pat = 

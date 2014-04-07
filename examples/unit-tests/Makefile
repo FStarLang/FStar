@@ -1,16 +1,18 @@
+FSTAR=../../bin/FStar.exe --fstar_home ../../
+
 all: utils list tuple rec compiler
 
 utils:
-	fstar  --prims prims.fst utils.fst
+	$(FSTAR)  --prims prims.fst utils.fst
 
 list:
-	fstar  --prims prims.fst list.fst
+	$(FSTAR)  --prims prims.fst list.fst
 
 tuple:
-	fstar --prims prims.fst tuple.fst
+	$(FSTAR) --prims prims.fst tuple.fst
 
 rec:
-	fstar  --prims prims.fst rec.fst
+	$(FSTAR)  --prims prims.fst rec.fst
 
 STDFILES=list.fst string.fst
 BASICFILES=bytes.fst util.fst getoptsimple.fsi options.fs range.fsi unionfind.fst
@@ -22,7 +24,7 @@ PARSER=$(addprefix ../../src/parser/, $(PARSERFILES))
 MAINFILES=fstar.fs
 MAIN=$(addprefix ../../src/, $(MAINFILES))
 compiler:
-	fstar --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(MAIN)
+	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(MAIN)
 
 wc: prims.fst utils.fst list.fst string.fst tuple.fst rec.fst ../../src/basic/util.fst ../../src/basic/options.fst ../../src/basic/range.fsi ../../src/basic/unionfind.fst $(SYNTAX) $(PARSER)
 	wc -l $^

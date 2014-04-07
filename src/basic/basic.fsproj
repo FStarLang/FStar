@@ -18,7 +18,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <Tailcalls>false</Tailcalls>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\..\bin</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>
@@ -48,6 +48,7 @@
     <Compile Include="profiling.fs" />
     <Compile Include="util.fsi" />
     <Compile Include="util.fs" />
+    <Compile Include="bytes.fsi" />
     <Compile Include="bytes.fs" />
     <Compile Include="range.fsi" />
     <Compile Include="range.fs" />
