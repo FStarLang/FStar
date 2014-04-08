@@ -1,0 +1,32 @@
+OASISFormat: 0.3
+Name: EVP
+Version: 0.0.1
+Synopsis: Bindings for the OpenSSL EVP library
+Authors: Pierre-Yves Strub
+License: CC-BY
+BuildTools: ocamlbuild
+Plugins: DevFiles(0.3), META(0.3)
+
+Library EVP
+  Path: src
+  FindlibName: EVP
+  Modules: Evp
+  CSources: evp_stub.c
+  CCLib: -lcrypto
+  CCOpt: -Wall -W -O2 -ggdb
+  CompiledObject: best
+
+Flag runtests
+  Description: Build and run tests
+  
+Executable test
+  Path: test
+  MainIs: test.ml
+  Install: false
+  Build$: flag(runtests)
+  BuildDepends: EVP
+  CompiledObject: best
+  
+Test main
+  Run$: flag(runtests)
+  Command: $test

@@ -1,5 +1,16 @@
-#!/bin/bash 
+#! /bin/bash
 
-PWD=`pwd`
-export FSTAR_HOME=`cygpath -d "$PWD"`
-export PATH=`cygpath -d "$PWD/bin"`:$PATH
+mydir=$(pwd)
+mydir=$(realpath "${mydir}")
+
+case "$(uname)" in
+    *CYGWIN*)
+        mydir=$(cygpath -d "${mydir}")
+        ;;
+
+    *)
+        ;;
+esac
+
+export FSTAR_HOME="${mydir}"
+export PATH="${mydir}/bin:${PATH}"

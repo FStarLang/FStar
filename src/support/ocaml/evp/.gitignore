@@ -1,0 +1,5 @@
+/_build/
+/test.native
+/test.byte
+/setup.data
+/setup.log
