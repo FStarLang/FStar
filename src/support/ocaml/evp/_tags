@@ -1,0 +1,29 @@
+# OASIS_START
+# DO NOT EDIT (digest: 9239143d4d0075dc17ced9747555d977)
+# Ignore VCS directories, you can use the same kind of rule outside 
+# OASIS_START/STOP if you want to exclude directories that contains 
+# useless stuff for the build process
+<**/.svn>: -traverse
+<**/.svn>: not_hygienic
+".bzr": -traverse
+".bzr": not_hygienic
+".hg": -traverse
+".hg": not_hygienic
+".git": -traverse
+".git": not_hygienic
+"_darcs": -traverse
+"_darcs": not_hygienic
+# Library EVP
+"src/EVP.cmxs": use_EVP
+<src/*.ml{,i}>: oasis_library_evp_ccopt
+"src/evp_stub.c": oasis_library_evp_ccopt
+<src/EVP.{cma,cmxa}>: oasis_library_evp_cclib
+"src/libEVP_stubs.lib": oasis_library_evp_cclib
+"src/dllEVP_stubs.dll": oasis_library_evp_cclib
+"src/libEVP_stubs.a": oasis_library_evp_cclib
+"src/dllEVP_stubs.so": oasis_library_evp_cclib
+<src/EVP.{cma,cmxa}>: use_libEVP_stubs
+# Executable test
+<test/test.{native,byte}>: use_EVP
+<test/*.ml{,i}>: use_EVP
+# OASIS_STOP
