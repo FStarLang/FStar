@@ -30,6 +30,7 @@ type smap<'value>=HashMultiMap<string, 'value>
 let smap_create<'value> (i:int) = new HashMultiMap<string,'value>(i, HashIdentity.Structural)
 let smap_add (m:smap<'value>) k (v:'value) = m.Add(k,v)
 let smap_try_find (m:smap<'value>) k = m.TryFind(k)
+let smap_fold (m:smap<'value>) f a = m.Fold f a
 
 let pr  = Printf.printf
 let spr = Printf.sprintf 
@@ -108,6 +109,10 @@ let remove_dups f l =
    | hd::tl -> let _, tl' = List.partition (f hd) tl in aux (hd::out) tl'
    | _ -> out in
    aux [] l
+
+let is_some = function 
+  | None -> false
+  | Some _ -> true
 
 let must = function
   | Some x -> x

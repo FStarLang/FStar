@@ -89,36 +89,23 @@ let string_concat_lid = p2l ["String"; "concat"]
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
 let op_notEq           = pconst "op_disEquality"
-let op_ColonEq         = pconst "_dummy_op_ColonEquals"
-let op_And_lid         = pconst "_dummy_op_AmpAmp"
-let op_Or_lid          = pconst "_dummy_op_BarBar"
-let op_Not_lid         = pconst "_dummy_op_Negation"
-let op_Add_lid         = pconst "_dummy_op_Addition"
-let op_Subtraction_lid = pconst "_dummy_op_Subtraction"
-let op_Multiply_lid    = pconst "_dummy_op_Multiply"
-let op_Division_lid    = pconst "_dummy_op_Division"
-let op_Modulus_lid     = pconst "_dummy_op_Modulus"
-let op_lte_lid         = pconst "_dummy_op_LessThanOrEqual"
-let op_gte_lid         = pconst "_dummy_op_GreaterThanOrEqual"
-let op_lt_lid          = pconst "_dummy_op_LessThan"
-let op_gt_lid          = pconst "_dummy_op_GreatherThan"
-
-
-let op_LT              = p2l ["op_LessThan"]
-let op_LTE             = p2l ["op_LessThanOrEqual"]
-let op_GT              = p2l ["op_GreaterThan"]
-let op_GTE             = p2l ["op_GreaterThanOrEqual"]
-let op_Subtraction     = p2l ["op_Subtraction"]
-let op_Minus           = p2l ["op_Minus"]
-let op_Addition        = p2l ["op_Addition"]
-let op_Multiply        = p2l ["op_Multiply"]
-let op_Division        = p2l ["op_Division"]
-let op_Modulus         = p2l ["op_Modulus"]
-let op_And             = p2l ["op_AmpAmp"]
-let op_Or              = p2l ["op_BarBar"]
+let op_ColonEq         = pconst "op_ColonEquals"
+let op_LT              = pconst "op_LessThan"
+let op_LTE             = pconst "op_LessThanOrEqual"
+let op_GT              = pconst "op_GreaterThan"
+let op_GTE             = pconst "op_GreaterThanOrEqual"
+let op_Subtraction     = pconst "op_Subtraction"
+let op_Minus           = pconst "op_Minus"
+let op_Addition        = pconst "op_Addition"
+let op_Multiply        = pconst "op_Multiply"
+let op_Division        = pconst "op_Division"
+let op_Modulus         = pconst "op_Modulus"
+let op_And             = pconst "op_AmpAmp"
+let op_Or              = pconst "op_BarBar"
+let op_Negation        = pconst "op_Negation"
 
 (* control primitives *)
-let try_with_lid       = p2l ["try_with"]
+let try_with_lid       = pconst "try_with"
 
 (* Array constants *)
 let array_lid          = p2l ["Array"; "array"]

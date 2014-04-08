@@ -26,7 +26,10 @@ exception Warning of string * Range.range
 
 type ident = {idText:string;
               idRange:Range.range}
-type LongIdent = {lid:ident list; str:string}
+type LongIdent = {ns:list<ident>; 
+                  ident:ident; 
+                  nsstr:string;
+                  str:string}
 type lident = LongIdent
 type withinfo_t<'a,'t> = {
   v: 'a; 
@@ -165,7 +168,7 @@ type atag =
 type letbinding = list<(lident * typ * exp)> (* let recs may have more than one element *)
 
 type sigelt =
-  | Sig_tycon          of lident * list<tparam> * kind * list<lident> * list<lident> * list<logic_tag> (* bool is for a prop, list<lident> identifies mutuals *)
+  | Sig_tycon          of lident * list<tparam> * kind * list<lident> * list<lident> * list<logic_tag> (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
   | Sig_typ_abbrev     of lident * list<tparam> * kind * typ
   | Sig_datacon        of lident * typ
   | Sig_val_decl       of lident * typ 
@@ -192,9 +195,18 @@ let id_of_text str = mk_ident(str, dummyRange)
 let text_of_id (id:ident) = id.idText
 let text_of_path path = Util.concat_l "." path
 let path_of_text text = String.split ['.'] text 
-let path_of_lid lid = List.map text_of_id lid.lid
-let lid_of_ids ids = {lid=ids; str=List.map text_of_id ids |> text_of_path}
-let lid_of_path path pos = {lid=List.map (fun s -> mk_ident(s,pos)) path; str=text_of_path path}
+let path_of_lid lid = List.map text_of_id (lid.ns@[lid.ident])
+let ids_of_lid lid = lid.ns@[lid.ident]
+let lid_of_ids ids = 
+    let ns, id = Util.prefix ids in 
+    let nsstr = List.map text_of_id ns |> text_of_path in
+    {ns=ns; 
+     ident=id; 
+     nsstr=nsstr; 
+     str=(if nsstr="" then id.idText else nsstr ^ "." ^ id.idText)}
+let lid_of_path path pos = 
+    let ids = List.map (fun s -> mk_ident(s, pos)) path in
+    lid_of_ids ids
 let text_of_lid lid = lid.str
 let lid_equals l1 l2 = l1.str = l2.str
 
@@ -202,11 +214,4 @@ let withinfo v s r = {v=v; sort=s; p=r}
 let withsort v s = withinfo v s dummyRange
 let ewithpos v r = {v=v; sort=Typ_unknown; p=r}
 
-let range_of_lid (lid:LongIdent) = 
-  let rec last x = match x with
-    | [] -> failwith "Empty identifier"
-    | [tl] -> tl
-    | hd::tl -> last tl in
-  let hd = List.hd lid.lid in
-  let tl = last lid.lid in
-  tl.idRange
+let range_of_lid (lid:LongIdent) = lid.ident.idRange

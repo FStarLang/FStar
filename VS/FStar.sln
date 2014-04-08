@@ -9,6 +9,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "parser", "..\src\parser\par
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fstar", "..\src\fstar.fsproj", "{F95B3965-1A6A-4FBF-A079-E849E8EA3FF7}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tc", "..\src\tc\tc.fsproj", "{5BF4AF3F-BEC2-4CFD-94B7-11A38A031F4B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{F95B3965-1A6A-4FBF-A079-E849E8EA3FF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F95B3965-1A6A-4FBF-A079-E849E8EA3FF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F95B3965-1A6A-4FBF-A079-E849E8EA3FF7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BF4AF3F-BEC2-4CFD-94B7-11A38A031F4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BF4AF3F-BEC2-4CFD-94B7-11A38A031F4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BF4AF3F-BEC2-4CFD-94B7-11A38A031F4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BF4AF3F-BEC2-4CFD-94B7-11A38A031F4B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,1 +1,13 @@
 *~
+bin/FSharp.Core.xml
+bin/FStar.*
+bin/absyn.*
+bin/basic.*
+bin/parser.*
+bin/tc.*
+bin/*z3*
+bin/*Z3*
+notes
+src/parser/parse.fs
+src/parser/parse.fsi
+src/parser/lex.fs

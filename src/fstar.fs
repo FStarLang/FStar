@@ -59,7 +59,8 @@ let _ =
   with 
     | Syntax.Err msg -> err "Failure: %s\n" [msg]
     | Syntax.Error(msg, r) -> err "Failure (%s): %s" [Range.string_of_range r; msg]
-    | e ->
-      (err "Unexpected exception :( \n" [];
-       cleanup();
-       exit -1)
+//    | e ->
+//      (err "Unexpected exception :( \n" [];
+//       Util.print_any e;
+//       cleanup();
+//       exit -1)

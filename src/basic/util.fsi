@@ -24,6 +24,7 @@ type smap<'value> = HashMultiMap<string,'value> (* not relying on representation
 val smap_create: int -> smap<'value>
 val smap_add: smap<'value> -> string -> 'value -> unit
 val smap_try_find: smap<'value> -> string -> option<'value>
+val smap_fold: smap<'value> -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
 
 val format: string -> list<string> -> string
 val format1: string -> string -> string
@@ -62,6 +63,7 @@ val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
 val for_all: ('a -> bool) -> list<'a> -> bool
 val for_some: ('a -> bool) -> list<'a> -> bool
 
+val is_some: option<'a> -> bool
 val must: option<'a> -> 'a
 val find_opt: ('a -> bool) -> list<'a> -> option<'a>
 val bind_opt: option<'a> -> ('a -> option<'b>) -> option<'b>

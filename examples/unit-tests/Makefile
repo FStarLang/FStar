@@ -21,12 +21,16 @@ SYNTAXFILES=syntax.fs const.fs visit.fs util.fs print.fs
 SYNTAX=$(addprefix ../../src/absyn/, $(SYNTAXFILES))
 PARSERFILES=ast.fs dsenv.fs desugar.fs parse.fst lexhelp.fs parseit.fsi driver.fs 
 PARSER=$(addprefix ../../src/parser/, $(PARSERFILES))
+TCFILES=tcenv.fs
+TC=$(addprefix ../../src/tc/, $(TCFILES))
 MAINFILES=fstar.fs
 MAIN=$(addprefix ../../src/, $(MAINFILES))
-compiler:
-	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(MAIN)
+ALL=$(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(MAIN)
 
-wc: prims.fst utils.fst list.fst string.fst tuple.fst rec.fst ../../src/basic/util.fst ../../src/basic/options.fst ../../src/basic/range.fsi ../../src/basic/unionfind.fst $(SYNTAX) $(PARSER)
+compiler:
+	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(MAIN)
+
+wc: prims.fst $(ALL)
 	wc -l $^
 
 clean:

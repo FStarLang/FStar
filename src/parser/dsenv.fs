@@ -33,7 +33,7 @@ type binding =
   | Binding_tycon of lident
 
 type env = {
-  curmodule: lident;
+  curmodule: option<lident>;
   modules:list<(lident * modul)>;  (* previously desugared modules *)
   open_namespaces: list<lident>; (* fully qualified names, in order of precedence *)
   sigaccum:sigelts;              (* type declarations being accumulated for the current module *)
@@ -52,10 +52,12 @@ let fail_or2 lookup id = match lookup id with
   | Some r -> r
 
 let open_modules e = e.modules
-let current_module env = env.curmodule
-let qual lid id = set_lid_range (lid_of_ids (lid.lid @ [id])) id.idRange
-let qualify env id = qual env.curmodule id
-let empty_env () = {curmodule=lid_of_ids []; 
+let current_module env = match env.curmodule with 
+    | None -> failwith "Unset current module"
+    | Some m -> m
+let qual lid id = set_lid_range (lid_of_ids (lid.ns @ [lid.ident;id])) id.idRange
+let qualify env id = qual (current_module env) id
+let empty_env () = {curmodule=None; 
                     modules=[]; 
                     open_namespaces=[];
                     sigaccum=[]; 
@@ -66,11 +68,11 @@ let empty_env () = {curmodule=lid_of_ids [];
 
 let prepare_module env mname = 
   let open_ns = if lid_equals mname Const.prims_lid then [] else [Const.prims_lid] in
-  {env with curmodule=mname; open_namespaces = open_ns}
+  {env with curmodule=Some mname; open_namespaces = open_ns}
 
 let finish_module env modul = 
   {env with 
-    curmodule=lid_of_ids [];
+    curmodule=None;
     modules=(modul.name, modul)::env.modules; 
     open_namespaces=[];
     sigaccum=[];
@@ -98,10 +100,14 @@ let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a
     | [], _ -> true
     | _ -> false in
   let aux (namespaces:list<lident>) : option<'a> =
-    find_map namespaces (fun (ns:lident) ->
-      let full_name = lid_of_ids (ns.lid@lid.lid) in
-      finder full_name) in
-  aux (lid_of_ids []::env.curmodule::env.open_namespaces)
+    match finder lid with 
+        | Some r -> Some r
+        | _ -> 
+            let ids = ids_of_lid lid in
+            find_map namespaces (fun (ns:lident) ->
+                let full_name = lid_of_ids (ids_of_lid ns @ ids) in
+                finder full_name) in
+  aux (current_module env::env.open_namespaces)
 
 
 (* let resolve_in_open_namespaces env lid (finder:lident -> sigelt -> option<'a>) : option<'a> = *)
@@ -126,8 +132,9 @@ let try_lookup_typ_name env (lid:lident) : option<typ> =
      1. rec bindings
      2. sig bindings in current module
      3. each open namespace, in order *)
-  let find_rec () = match lid.lid with 
-    | [n] -> 
+  let find_rec () = match lid.ns with 
+    | [] -> 
+      let n = lid.ident in
       let qlid = qualify env n in 
       find_map env.recbindings
         (function 
@@ -188,8 +195,8 @@ let try_lookup_lid env (lid:lident) =
       | _ -> 
         None in
 
-  let found_id = match lid.lid with
-    | [n] -> try_lookup_id env n
+  let found_id = match lid.ns with
+    | [] -> try_lookup_id env (lid.ident)
     | _ -> None in
   
   match found_id with 
@@ -245,9 +252,9 @@ let extract_record env = function
 
 let try_lookup_record_by_field_name env (fieldname:lident) = 
   let find_in_cache fieldname = 
-    let ns, fieldname = Util.prefix fieldname.lid in
+    let ns, fieldname = fieldname.ns, fieldname.ident in
     Util.find_map (!record_cache) (fun record -> 
-      let _, constrname = Util.prefix record.constrname.lid in
+      let constrname = record.constrname.ident in
       let fname = lid_of_ids (ns@[constrname]@[fieldname]) in
       Util.find_map record.fields (fun (f, _) -> 
         if lid_equals fname f
@@ -257,8 +264,8 @@ let try_lookup_record_by_field_name env (fieldname:lident) =
 
 let qualify_field_to_record env (record:record) (f:lident) = 
   let qualify fieldname =  
-    let ns, fieldname = Util.prefix fieldname.lid in
-    let _, constrname = Util.prefix record.constrname.lid in
+    let ns, fieldname = fieldname.ns, fieldname.ident in
+    let constrname = record.constrname.ident in
     let fname = lid_of_ids (ns@[constrname]@[fieldname]) in
     Util.find_map record.fields (fun (f, _) -> 
       if lid_equals fname f

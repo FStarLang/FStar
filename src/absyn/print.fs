@@ -22,8 +22,8 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 
-let rec sli (l:lident) : string = match l.lid with 
-  | hd::tl when (hd.idText="Prims") -> Util.concat_l "." (tl |> List.map (fun x -> x.idText))
+let rec sli (l:lident) : string = match l.ns with 
+  | hd::tl when (hd.idText="Prims") -> l.ident.idText
   | _ -> l.str
 
 let strBvd bvd = 

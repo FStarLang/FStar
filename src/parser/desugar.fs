@@ -476,9 +476,9 @@ and desugar_exp (env:env) (top:term) : exp =
       let f, _ = List.hd fields in
       let record, _ = fail_or (try_lookup_record_by_field_name env) f in
       let get_field xopt f =
-        let _, fn = Util.prefix f.lid in
+        let fn = f.ident in
         let found = fields |> Util.find_opt (fun (g, _) ->
-          let _, gn = Util.prefix g.lid in
+          let gn = g.ident in
           fn.idText = fn.idText) in
         match found with
           | Some (_, e) -> e
@@ -812,7 +812,7 @@ let mk_data_ops env = function
     let build_kind = build_kind freevars in
     let rec aux subst fields t = match compress t with
       | Typ_fun(Some x, t1, t2) ->
-        let field_name = lid_of_ids (lid.lid @ [x.ppname]) in
+        let field_name = lid_of_ids (ids_of_lid lid @ [x.ppname]) in
         let t = build_typ t1 in
         let body = ewithpos (Exp_match(formal_exp, [(Pat_cons(lid, argpats), None, bvd_to_exp x t1)])) x.ppname.idRange in
         let sigs =
@@ -824,7 +824,7 @@ let mk_data_ops env = function
         aux subst (fields@sigs) t2
           
       | Typ_univ(a, k, t2) ->
-        let field_name = lid_of_ids (lid.lid @ [a.ppname]) in
+        let field_name = lid_of_ids (ids_of_lid lid @ [a.ppname]) in
         let sigs = Sig_tycon(field_name, [], build_kind k, [], [], [Logic_projector]) in
         (* let _ = Util.print_string (Util.format1 "adding type projector %s\n" field_name.str) in *)
         let subst = Inl(a, mk_tapp (ftv field_name) [Inr formal_exp])::subst in

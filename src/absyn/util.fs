@@ -84,7 +84,7 @@ let set_bvd_range bvd r = {ppname=mk_ident(bvd.ppname.idText, r);
                            realname=mk_ident(bvd.realname.idText, r);
                            instantiation=bvd.instantiation}
 let set_lid_range l r = 
-  let ids = l.lid |> List.map (fun i -> mk_ident(i.idText, r)) in
+  let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
   lid_of_ids ids
 let fv l = withinfo l Typ_unknown (range_of_lid l)
 let fvar l r = ewithpos (Exp_fvar(fv (set_lid_range l r))) r
@@ -186,12 +186,12 @@ and is_logic_function e = match (unascribe e).v with
   (* | Exp_tapp(e1, _) -> is_logic_function e1 *)
   | Exp_app(e1, e2) -> is_value e2 && is_logic_function e1
   | Exp_fvar v ->
-      lid_equals v.v Const.op_And_lid ||
-        lid_equals v.v Const.op_Or_lid ||
-        lid_equals v.v Const.op_Not_lid ||
-        lid_equals v.v Const.op_Add_lid ||
-        lid_equals v.v Const.op_Subtraction_lid ||
-        lid_equals v.v Const.op_Multiply_lid
+      lid_equals v.v Const.op_And ||
+        lid_equals v.v Const.op_Or ||
+        lid_equals v.v Const.op_Negation ||
+        lid_equals v.v Const.op_Addition ||
+        lid_equals v.v Const.op_Subtraction ||
+        lid_equals v.v Const.op_Multiply
   | _ -> false       
 
 (********************************************************************************)
@@ -199,24 +199,25 @@ and is_logic_function e = match (unascribe e).v with
 (********************************************************************************)
 
 type uvars = uvar_t list
-let uvars_in_typ t : uvars = 
-  let collect_uvars uvs t = match t with 
+let collect_uvars uvs t = match t with 
     | Typ_uvar (uv, k) -> 
-      (match List.tryFind (Unionfind.equivalent uv) uvs with 
+        (match List.tryFind (Unionfind.equivalent uv) uvs with 
         | Some _ -> uvs, t
         | None -> uv::uvs, t)
-    | _ -> uvs, t in
-  let exp_folder_noop env e = (env,e) in
-  let uvs, _ = Visit.visit_typ_simple collect_uvars exp_folder_noop [] t in
-  uvs
-        
+    | _ -> uvs, t 
+let exp_folder_noop env e = (env,e) 
+
+let uvars_in_typ t : uvars = 
+  fst <| Visit.visit_typ_simple collect_uvars exp_folder_noop [] t
+let uvars_in_kind k : uvars = 
+  fst <| Visit.visit_kind_simple collect_uvars exp_folder_noop [] k
 let rec uvars_in_uvar uv : uvars =
   match Unionfind.find uv with 
     | Uvar _ -> [uv]
     | Delayed t
     | Fixed t -> 
       let uvt = uvars_in_typ t in
-      let uvs = List.concat (List.map uvars_in_uvar uvt) in
+      let uvs = List.collect uvars_in_uvar uvt in
       uv::uvs
 
 (********************************************************************************)
@@ -342,6 +343,13 @@ let close_with_arrow tps t =
 
 let close_typ = close_with_arrow
       
+let close_kind tps k = 
+    List.fold_right 
+        (fun tp k -> match tp with
+            | Tparam_typ (a, k') -> Kind_tcon(Some a, k', k)
+            | Tparam_term (x, t) -> Kind_dcon(Some x, t, k))
+        tps k 
+
 let instantiate_tparams t tps (args:list<either<typ,exp>>) =
   List.fold_left open_typ (close_with_lam tps t) args
 
@@ -484,9 +492,7 @@ let mkRefinedUnit formula =
 
 let findValDecl (vds:list<sigelt>) bvd : option<sigelt> =
   vds |> Util.find_opt (function
-                         | Sig_val_decl(lid, t) ->
-                            let _, name = Util.prefix lid.lid in
-                            name.idText = bvd.ppname.idText
+                         | Sig_val_decl(lid, t) -> lid.ident.idText = bvd.ppname.idText
                          | _ -> false)
       
 let findValDecls (vds:list<sigelt>) ((lb, _): (letbinding * bool)) : list<sigelt> =

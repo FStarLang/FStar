@@ -186,23 +186,22 @@ val exit: int -> unit
 val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
 
 (* Primitive functions with trusted specs  *)
-val _dummy_op_ColonEquals: ref 'a -> 'a -> unit
-val _dummy_op_Dereference: ref 'a -> 'a
-val _dummy_op_AmpAmp             : x:bool -> y:bool -> z:bool { z=true ==>  x=true /\  y=true}
-val _dummy_op_BarBar             : x:bool -> y:bool -> z:bool { (z=true ==> x=true \/  y=true) /\
+val op_ColonEquals: ref 'a -> 'a -> unit
+val op_Dereference: ref 'a -> 'a
+val op_AmpAmp             : x:bool -> y:bool -> z:bool { z=true ==>  x=true /\  y=true}
+val op_BarBar             : x:bool -> y:bool -> z:bool { (z=true ==> x=true \/  y=true) /\
                                                                 (z=false ==> x=false /\ y=false) }
-val _dummy_op_Negation           : x:bool -> y:bool { (y=true ==> x=false) /\ (y=false ==> x=true) }
+val op_Negation           : x:bool -> y:bool { (y=true ==> x=false) /\ (y=false ==> x=true) }
 
-val _dummy_op_Multiply           : x:int -> y:int -> z:int{z=x*y}
-val _dummy_op_Division           : x:int -> y:int{y<>0} -> z:int{z=x/y}
-val _dummy_op_Subtraction        : x:int -> y:int -> z:int{z=x-y}
-val _dummy_op_Addition           : x:int -> y:int -> z:int{z=x+y}
-val _dummy_op_Minus              : x:int -> y:int{y=Minus x}
-val _dummy_op_Modulus            : x:int -> y:int -> z:int{z=x%y}
+val op_Multiply           : x:int -> y:int -> z:int{z=x*y}
+val op_Division           : x:int -> y:int{y<>0} -> z:int{z=x/y}
+val op_Subtraction        : x:int -> y:int -> z:int{z=x-y}
+val op_Addition           : x:int -> y:int -> z:int{z=x+y}
+val op_Minus              : x:int -> y:int{y=Minus x}
+val op_Modulus            : x:int -> y:int -> z:int{z=x%y}
+val op_LessThanOrEqual : x:int -> y:int -> z:bool{(z=true ==> x <= y) /\ (z=false ==> x > y)}
+val op_GreaterThan : x:int -> y:int -> z:bool{(z=true ==> x > y) /\ (z=false ==> x <= y)}
 
-val _dummy_op_LessThanOrEqual : x:int -> y:int -> z:bool{(z=true ==> x <= y) /\ (z=false ==> x > y)}
-val _dummy_op_GreaterThan : x:int -> y:int -> z:bool{(z=true ==> x > y) /\ (z=false ==> x <= y)}
-
-(* TODO: >= in operators clashes with t<..> notation. Fix *)
-(* val _dummy_op_GreaterThanOrEqual : x:int -> y:int -> z:bool{(z=true ==> x >= y) /\ (z=false ==> x < y) } *)
-(* val _dummy_op_LessThan : x:int -> y:int -> z:bool{(z=true ==> x < y) /\ (z=false ==> x >= y)} *)
+(* TODO: < in operators clashes with t<..> notation. Fix *)
+(* val op_GreaterThanOrEqual : x:int -> y:int -> z:bool{(z=true ==> x >= y) /\ (z=false ==> x < y) } *)
+(* val op_LessThan : x:int -> y:int -> z:bool{(z=true ==> x < y) /\ (z=false ==> x >= y)} *)
