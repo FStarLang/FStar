@@ -20,7 +20,7 @@ exception NYI of string
 exception Failure of string
 
 (* generic utils *)
-type smap : S => S
+type smap : Type => Type
 val smap_create: int -> smap 'value
 val smap_add: smap 'value -> string -> 'value -> unit
 val smap_try_find: smap<'value> -> string -> option<'value>
@@ -60,6 +60,7 @@ val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
 val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
 val for_all: ('a -> bool) -> list<'a> -> bool
 val for_some: ('a -> bool) -> list<'a> -> bool
+val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 
 val must: option<'a> -> 'a
 val find_opt: ('a -> bool) -> list<'a> -> option<'a>

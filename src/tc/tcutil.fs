@@ -19,6 +19,7 @@
 module Microsoft.FStar.Tc.Util
 
 open Microsoft.FStar
+open Microsoft.FStar.Tc
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
@@ -39,10 +40,11 @@ let handle_err warning ret e =
     | NYI s -> 
         Util.print_string (Util.format1 "Feature not yet implemented: %s" s); 
         ret
+    | _ -> raise e
     
 let terr env t1 t2 exp = 
   let msg = 
-    Printf.sprintf "Expected an expression of type:\n\n%s\n\nbut got (%s):\n\n%s"
+     Util.format3 "Expected an expression of type:\n\n%s\n\nbut got (%s):\n\n%s"
       (Print.typ_to_string t1) 
       (Print.exp_to_string exp)
       (Print.typ_to_string t2) in
@@ -54,7 +56,7 @@ let t_int = Typ_const (Util.withsort Const.int_lid Kind_star)
 let t_string = Typ_const (Util.withsort Const.string_lid Kind_star)
 let t_float = Typ_const (Util.withsort Const.float_lid Kind_star)
 
-let typing_const (env:env) = function
+let typing_const (_:env) = function
   | Const_unit -> t_unit
   | Const_bool _ -> t_bool
   | Const_int32 _ -> t_int
@@ -65,8 +67,8 @@ let typing_const (env:env) = function
 let push_tparams env tps = 
   List.fold_left (fun env tp -> 
                     let binding = match tp with
-                      | Tparam_typ (x,k) -> Binding_typ (x.realname,k) 
-                      | Tparam_term (x, t) -> Binding_var (x.realname,t) in
+                      | Tparam_typ (a, k) -> Binding_typ (a, k) 
+                      | Tparam_term (x, t) -> Binding_var (x, t) in
                       push_local_binding env binding) env tps 
 
 let is_xvar_free (x:bvvdef) t = 
@@ -76,33 +78,45 @@ let is_xvar_free (x:bvvdef) t =
 let is_tvar_free (a:btvdef) t = 
   let tvs, _ = Util.freevars_typ t in
   Util.for_some (fun (bv:btvar) -> Util.bvd_eq bv.v a) tvs 
-//
-//let eqT_of_typ env t = 
-//  let eqK = Tcenv.lookup_typ_const env (AbsynUtils.Wftv Const.eq_lid) in
-//    (twithsort (Typ_app(twithsort (Typ_const (fvwithsort Const.eq_lid eqK,None)) eqK, t))
-//       (Kind_dcon(None, t, Kind_dcon(None, t, Kind_star))))
-//
-//let unify uv t = Unionfind.change uv (Fixed (alpha_convert t)) (* NS: added alpha conversoin 9/2/11 *)
-//
-//let check_unify (uv,(k:kind)) t = 
-//  let occurs uv t = 
-//    let uvs_typ uvs t = match t with 
-//      | Typ_uvar(uv, _) -> uv::uvs, t
-//      | _ -> uvs, t in 
-//    let uvs_exp uvs e = uvs, e in 
-//    let uvs, _ = descend_typ_map uvs_typ uvs_exp [] t in
-//      List.exists (fun uv' -> Unionfind.equivalent uv uv') uvs 
-//  in 
-//    
-//    match Unionfind.find uv with 
-//      | Uvar wf -> 
-//          if wf t k
-//          then 
-//            (if not (occurs uv t)
-//             then (unify uv t; None)
-//             else Some "Unification fails occurs check")
-//          else Some "Unification fails kinding check"
-//      | t -> (pr "Unexpected uvar in well-formedness check: %A\n" t; raise Impos)
+
+
+let new_kvar env =
+  let wf k () =
+    let tvs, xvs = Util.freevars_kind k in 
+    let tvs', xvs' = Env.idents env in
+    let eq bv bvd = Util.bvd_eq bv.v bvd in
+    Util.forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
+  Kind_uvar (Unionfind.fresh (Uvar wf))
+
+let kind_equiv env k1 k2 = failwith "NYI"
+
+let new_tvar env k =
+  let wf t k =
+    let tvs, xvs = Util.freevars_typ t in 
+    let tvs', xvs' = Env.idents env in 
+    let eq bv bvd = Util.bvd_eq bv.v bvd in
+    Util.forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
+  Typ_uvar (Unionfind.fresh (Uvar wf), k)
+
+let typ_equiv env t1 t2 = failwith "NYI"
+let subtype env t1 t2 = failwith "NYI"
+let destruct_function_typ env t : option<typ> = failwith "NYI"
+
+let unify uv t = Unionfind.change uv (Fixed (alpha_convert t))
+
+let check_unify (uv,(k:kind)) t = 
+  let occurs uv t = Util.for_some (Unionfind.equivalent uv) (uvars_in_typ t) in
+    match Unionfind.find uv with 
+      | Uvar wf -> 
+          if wf t k
+          then 
+            (if not (occurs uv t)
+             then (unify uv t; None)
+             else Some "Unification fails occurs check")
+          else Some "Unification fails kinding check"
+      | t -> failwith "impossible"
+
+
 //          
 //
 //type subst = list<(list<uvar*kind> * option<typ>)>         
@@ -119,12 +133,12 @@ let is_tvar_free (a:btvdef) t =
 //let mkTypApp t1 t2 = match t1.sort(* .u *)with 
 //  | Kind_tcon(_, _, k2) -> 
 //      twithsort (Typ_app(t1, t2)) (open_kind t1.sort t2)
-//  | _ -> raise Impos
+//  | _ -> failwith "impossible"
 //
 //let mkTypDep t v = match t.sort(* .u *)with 
 //  | Kind_dcon(_, _, k2) -> 
 //      twithsort (Typ_dep(t, v)) (open_kind_with_exp t.sort v)
-//  | _ -> raise Impos
+//  | _ -> failwith "impossible"
 //
 //let rec reduce_typ_delta_beta tenv t = 
 //  let rec aux t = 
@@ -228,33 +242,10 @@ let is_tvar_free (a:btvdef) t =
 //                 let out_typ = twithsort (Typ_univ (btv.v, btv.sort, forms, out_typ)) Kind_star  in
 //                 let Lambda_e = ewithinfo (Exp_tabs (btv.v, btv.sort, forms, Lambda_e)) out_typ Lambda_e.p in
 //                   (residue, out_typ, Lambda_e)
-//             | _ -> raise Impos) tvars (forms_sub, tsub, e) in
+//             | _ -> failwith "impossible") tvars (forms_sub, tsub, e) in
 //      residue, univ_typ, Lambda_e
 //
 //let generalize env t e = 
 //  match generalize_with_constraints env [] t e with 
 //    | ([], t, e) -> t, e
-//    | _ -> raise Impos
-//
-//
-//let extractSignature (env:Tcenv.env) (m:modul) = 
-//  let find_letbinding lets (lid:lident) = 
-//    lets |> Util.findOpt (fun (lb, _) -> 
-//                            lb |> List.exists (fun (bvd, _, _) -> 
-//                                                 let _, name = Util.pfx lid.lid in 
-//                                                   name.idText = (pp_name bvd).idText)) in
-//  let extract_signature_prelude (env:Tcenv.env) sigs lets = 
-//    let prelude, valdecls = sigs |> 
-//        List.partition (function 
-//                          | Sig_value_decl(lid, t) -> 
-//                              (match find_letbinding lets lid with 
-//                                 | None -> 
-//                                     if (not (Sugar.lid_equals env.curmodule Const.prims_lid)) &&
-//                                       (not (Sugar.lid_equals env.curmodule Const.prooflib_lid))
-//                                     then Util.warn "Admitting value declaration %s as an axiom without a corresponding definition\n" (Pretty.sli lid);
-//                                     true 
-//                                 | Some _ -> false)
-//                          | _ -> true) in 
-//      prelude, valdecls in
-//  let signature, valdecls = extract_signature_prelude env m.signature m.letbindings in 
-//    signature, valdecls
+//    | _ -> failwith "impossible"

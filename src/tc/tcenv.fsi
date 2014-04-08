@@ -22,8 +22,8 @@ open Microsoft.FStar.Absyn.Syntax
 
 
 type binding =
-  | Binding_var of ident * typ
-  | Binding_typ of ident * kind
+  | Binding_var of bvvdef * typ
+  | Binding_typ of btvdef * kind
   | Binding_sig of sigelt
 
 type level = 
@@ -37,7 +37,6 @@ type env = {
   gamma:list<binding>;           (* Local typing environment and signature elements *)
   modules:list<modul>;           (* already fully type checked modules *)
   expected_typ:option<typ>;      (* type expected by the context *)
-  expected_kind:option<kind>;    (* kind expected by the context *)
   level:level;                   (* current term being checked is at level *)
   sigtab:Util.smap<sigelt>       (* a dictionary of long-names to sigelts *)
 }
@@ -52,7 +51,6 @@ val set_current_module : env -> lident -> env
 val set_range : env -> Range.range -> env
 val get_range : env -> Range.range
 
-val lookup_bvar_ident : env -> rn:ident -> option<typ> 
 val lookup_bvar : env -> bvvar -> typ
 val lookup_lid : env -> lident -> typ      
 val lookup_val_decl : env -> lident -> typ
@@ -63,9 +61,8 @@ val is_logic_array : env -> lident -> bool
 val is_record : env -> lident -> bool
 val lookup_datacons_of_typ : env -> lident -> option<list<(lident * typ)>>
 val lookup_typ_abbrev : env -> lident -> option<typ>
-val lookup_btvar_ident : env -> rn:ident -> option<kind> 
 val lookup_btvar : env -> btvar -> kind
-val lookup_typ_lid : env -> lident -> option<Util.either<kind, typ>> 
+val lookup_typ_lid : env -> lident -> kind
 val lookup_operator : env -> ident -> typ
 
 val push_sigelt : env -> sigelt -> env
@@ -76,12 +73,9 @@ val push_module : env -> modul -> env
 val set_expected_typ : env -> typ -> env
 val expected_typ : env -> option<typ>
 val clear_expected_typ : env -> env*option<typ>
-val set_expected_kind : env -> kind -> env
-val expected_kind : env -> option<kind>
-val clear_expected_kind : env -> env*option<kind>
 
 val fold_env : env -> ('a -> binding -> 'a) -> 'a -> 'a 
-val idents : env -> (list<ident> * list<ident>) 
+val idents : env -> (list<btvdef> * list<bvvdef>) 
 val lidents : env -> list<lident>     
 
 (* probably move this to TcUtil *)

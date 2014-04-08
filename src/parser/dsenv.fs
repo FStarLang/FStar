@@ -109,24 +109,6 @@ let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a
                 finder full_name) in
   aux (current_module env::env.open_namespaces)
 
-
-(* let resolve_in_open_namespaces env lid (finder:lident -> sigelt -> option<'a>) : option<'a> = *)
-(*   let rec is_prefix = function *)
-(*     | hd::tl, hd'::tl' -> hd.idText = hd'.idText && is_prefix (tl, tl') *)
-(*     | [], _ -> true *)
-(*     | _ -> false in *)
-(*   let aux (namespaces:list<lident>) (modules:list<(lident * sigelts)>) : option<'a> = *)
-(*     find_map namespaces (fun (ns:lident) -> *)
-(*       let full_name = lid_of_ids (ns.lid@lid.lid) in *)
-(*       find_map modules (fun (name,signature) -> *)
-(*         let len = List.length name.lid in *)
-(*         let res:option<'a> = *)
-(*           if is_prefix (name.lid, full_name.lid) *)
-(*           then find_map signature (finder full_name) *)
-(*           else None in *)
-(*         res)) in *)
-(*   aux (lid_of_ids []::env.curmodule::env.open_namespaces) ((env.curmodule, env.sigaccum)::List.map (fun (l,m) -> (l,m.declarations)) env.modules) *)
-
 let try_lookup_typ_name env (lid:lident) : option<typ> = 
   (* Resolve using, in order, 
      1. rec bindings
@@ -157,7 +139,7 @@ let try_lookup_typ_name env (lid:lident) : option<typ> =
 
 
 let unmangleMap = [("op_ColonColon", "Cons");
-                   ("not", "_dummy_op_Negation")]
+                   ("not", "_op_Negation")]
       
 let unmangleOpName (id:ident) = 
   find_map unmangleMap (fun (x,y) -> 
@@ -166,7 +148,7 @@ let unmangleOpName (id:ident) =
     
 let try_lookup_id env (id:ident) =
   match unmangleOpName id with 
-    | Some l -> Some <| ewithpos (Exp_fvar(fv l)) id.idRange
+    | Some l -> Some <| ewithpos (Exp_fvar(fv l, false)) id.idRange
     | _ -> 
       find_map env.localbindings (function 
         | Inr bvd, Binding_var id' when (id'.idText=id.idText) -> Some (bvd_to_exp (set_bvd_range bvd id.idRange) Typ_unknown)
@@ -307,13 +289,13 @@ let push_local_binding env b =
 let push_local_tbinding env a = 
   match push_local_binding env (Binding_typ_var a) with 
     | env, Inl x -> env, x
-    | _ -> raise Impos
+    | _ -> failwith "impossible"
     
 let push_local_vbinding env b = 
   match push_local_binding env (Binding_var b) with 
     | env, Inr x -> 
       env, x
-    | _ -> raise Impos
+    | _ -> failwith "impossible"
       
 let push_rec_binding env b = match b with 
   | Binding_tycon lid -> 

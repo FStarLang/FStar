@@ -23,11 +23,11 @@ TC_SRC=$(addprefix tc/, $(TC))
 
 PLATFORM=
 BUILD_VERSION=
-OTHERFLAGS=--nologo -g -O --warn:0 $(addprefix --define:, $(BUILD_VERSION))
+OTHERFLAGS=--nologo -g -O --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 
 LIB=../lib
 BIN=../bin
-ALL_DLLS=basic.dll absyn.dll parser.dll #tc.dll #tccore.dll tc.dll z3encode.dll monadic.dll
+ALL_DLLS=basic.dll absyn.dll parser.dll tc.dll #tccore.dll tc.dll z3encode.dll monadic.dll
 FSHARP_LIBS=$(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll 
 OTHER_DLLS=
 BASELIBS=$(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))

@@ -15,29 +15,28 @@
 *)
 module Prims
 
-type l_and : E => E => P
-type l_or  : E => E => P
-type l_not : E => P
-type l_iff : E => E => P
-type l_implies : E => E => P
-type Forall : 'a:S => ('a => E) => E
-type Exists : 'a:S => ('a => E) => E
-type Relational : E => E
-type DoubleSided : E => E
-type SPEC_ONLY : E => E
-type True : P
-type False : P
-type EqTyp : E => E => E
-type Eq : 'a:S => 'a => 'a => P
-type Eq2 : 'a:S => 'b:S => 'a => 'b => P
-type TypeOf : 'a:S => 'a => E
-logic tfun type AsE : 'a:S => 'a => E
-type neq2 : _ = fun ('a:S) ('b:S) (x:'a) (y:'b) => x<>y
-type neq : _ = fun ('a:S) (x:'a) (y:'a) => x<>y
-type KindOf : E => E
-type Not : _ = fun ('P:E) => (l_not 'P)
-type XOR : _ = fun ('P:E) ('Q:E) => (l_and (l_or 'P 'Q) (Not(l_and 'P 'Q)))
-type ITE : _ = fun ('P:E) ('Q:E) ('R:E) => ('P ==> 'Q) /\ ((l_not 'P) ==> 'R)
+type l_and : Type => Type => Type
+type l_or  : Type => Type => Type
+type l_not : Type => Type
+type l_iff : Type => Type => Type
+type l_implies : Type => Type => Type
+type Forall : 'a:Type => ('a => Type) => Type
+type Exists : 'a:Type => ('a => Type) => Type
+type Relational : Type => Type
+type DoubleSided : Type => Type
+type True : Type
+type False : Type
+type EqTyp : Type => Type => Type
+type Eq : 'a:Type => 'a => 'a => Type
+type Eq2 : 'a:Type => 'b:Type => 'a => 'b => Type
+type TypeOf : 'a:Type => 'a => Type
+logic tfun type AsE : 'a:Type => 'a => Type
+type neq2 : _ = fun ('a:Type) ('b:Type) (x:'a) (y:'b) => x<>y
+type neq : _ = fun ('a:Type) (x:'a) (y:'a) => x<>y
+type KindOf : Type => Type
+type Not : _ = fun ('P:Type) => (l_not 'P)
+type XOR : _ = fun ('P:Type) ('Q:Type) => (l_and (l_or 'P 'Q) (Not(l_and 'P 'Q)))
+type ITE : _ = fun ('P:Type) ('Q:Type) ('R:Type) => ('P ==> 'Q) /\ ((l_not 'P) ==> 'R)
 type object
 type bool
 type unit
@@ -50,59 +49,59 @@ type int32
 type int64
 type double
 type string
-type array : S => S
-type ref : S => S
-type LBL : string => E => E
+type array : Type => Type
+type ref : Type => Type
+type LBL : string => Type => Type
 type bytes
 val mk_ref: 'a -> ref 'a
 
-logic data type Tuple2: 'a:S 
-          => 'b:('a => S)
-          => S = 
-  | MkTuple2: 'a:S 
-           -> 'b:('a => S) 
+logic data type Tuple2: 'a:Type 
+          => 'b:('a => Type)
+          => Type = 
+  | MkTuple2: 'a:Type 
+           -> 'b:('a => Type) 
            -> _1:'a 
            -> _2:'b _1 
            -> Tuple2 'a 'b
 
-logic data type Tuple3: 'a:S 
-          => 'b:('a => S) 
-          => 'c:(x:'a => 'b x => S) 
-          => S = 
-  | MkTuple3: 'a:S 
-           -> 'b:('a => S) 
-           -> 'c:(x:'a => 'b x => S)
+logic data type Tuple3: 'a:Type 
+          => 'b:('a => Type) 
+          => 'c:(x:'a => 'b x => Type) 
+          => Type = 
+  | MkTuple3: 'a:Type 
+           -> 'b:('a => Type) 
+           -> 'c:(x:'a => 'b x => Type)
            -> _1:'a 
            -> _2:'b _1 
            -> _3:'c _1 _2 
            -> Tuple3 'a 'b 'c
 
-logic data type Tuple4: 'a:S 
-          => 'b:(x:'a => S)
-          => 'c:(x:'a => 'b x => S) 
-          => 'd:(x:'a => y:'b x => z:'c x y => S) 
-          => S = 
-  | MkTuple4: 'a:S 
-           -> 'b:('a => S) 
-           -> 'c:(x:'a => 'b x => S)
-           -> 'd:(x:'a => y:'b x => z:'c x y => S) 
+logic data type Tuple4: 'a:Type 
+          => 'b:(x:'a => Type)
+          => 'c:(x:'a => 'b x => Type) 
+          => 'd:(x:'a => y:'b x => z:'c x y => Type) 
+          => Type = 
+  | MkTuple4: 'a:Type 
+           -> 'b:('a => Type) 
+           -> 'c:(x:'a => 'b x => Type)
+           -> 'd:(x:'a => y:'b x => z:'c x y => Type) 
            -> _1:'a 
            -> _2:'b _1 
            -> _3:'c _1 _2 
            -> _4:'d _1 _2 _3
            -> Tuple4 'a 'b 'c 'd
 
-logic data type Tuple5: 'a:S 
-          => 'b:('a => S)
-          => 'c:(x:'a => 'b x => S) 
-          => 'd:(x:'a => y:'b x => z:'c x y => S) 
-          => 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => S) 
-          => S = 
-  | MkTuple5: 'a:S 
-           -> 'b:('a => S) 
-           -> 'c:(x:'a => 'b x => S)
-           -> 'd:(x:'a => y:'b x => z:'c x y => S) 
-           -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => S) 
+logic data type Tuple5: 'a:Type 
+          => 'b:('a => Type)
+          => 'c:(x:'a => 'b x => Type) 
+          => 'd:(x:'a => y:'b x => z:'c x y => Type) 
+          => 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type) 
+          => Type = 
+  | MkTuple5: 'a:Type 
+           -> 'b:('a => Type) 
+           -> 'c:(x:'a => 'b x => Type)
+           -> 'd:(x:'a => y:'b x => z:'c x y => Type) 
+           -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type) 
            -> _1:'a 
            -> _2:'b _1 
            -> _3:'c _1 _2 
@@ -111,18 +110,18 @@ logic data type Tuple5: 'a:S
            -> Tuple5 'a 'b 'c 'd 'e
 
 
-logic data type Tuple6: 'a:S 
-          => 'b:('a => S)
-          => 'c:(x:'a => 'b x => S) 
-          => 'd:(x:'a => y:'b x => z:'c x y => S) 
-          => 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => S) 
-          => 'f:(x:'a => y:'b x => z:'c x y => w:'d x y z => u:'e x y z w => S) 
-          => S = 
-  | MkTuple6: 'a:S 
-           -> 'b:('a => S) 
-           -> 'c:(x:'a => 'b x => S)
-           -> 'd:(x:'a => y:'b x => z:'c x y => S) 
-           -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => S) 
+logic data type Tuple6: 'a:Type 
+          => 'b:('a => Type)
+          => 'c:(x:'a => 'b x => Type) 
+          => 'd:(x:'a => y:'b x => z:'c x y => Type) 
+          => 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type) 
+          => 'f:(x:'a => y:'b x => z:'c x y => w:'d x y z => u:'e x y z w => Type) 
+          => Type = 
+  | MkTuple6: 'a:Type 
+           -> 'b:('a => Type) 
+           -> 'c:(x:'a => 'b x => Type)
+           -> 'd:(x:'a => y:'b x => z:'c x y => Type) 
+           -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type) 
            -> _1:'a 
            -> _2:'b _1 
            -> _3:'c _1 _2 
@@ -133,17 +132,17 @@ logic data type Tuple6: 'a:S
 
 type exn
 type float
-logic data type result : S => S =
-  | V : 'a:S -> v:'a -> result 'a
-  | E : 'a:S -> e:exn -> result 'a
-  | Err : 'a:S -> result 'a
+logic data type result : Type => Type =
+  | V : 'a:Type -> v:'a -> result 'a
+  | E : 'a:Type -> e:exn -> result 'a
+  | Err : 'a:Type -> result 'a
 logic val L : 'a -> 'a
 logic val R : 'a -> 'a
 
 (* Primitive (structural) equality.
    What about for function types? *)
-val op_Equality : 'a:S -> 'b:S -> x:'a -> y:'b -> z:bool {(z=true <==> x=y) /\ (z=false <==> (x<>y))}
-logic type IfThenElse : 'P:E => (u:unit{'P} => E) => (u:unit{not 'P} => E) => E
+val op_Equality : 'a:Type -> 'b:Type -> x:'a -> y:'b -> z:bool {(z=true <==> x=y) /\ (z=false <==> (x<>y))}
+logic type IfThenElse : 'P:Type => (u:unit{'P} => Type) => (u:unit{not 'P} => Type) => Type
 
 logic val Add : int -> int -> int
 logic val Sub : int -> int -> int
@@ -152,10 +151,10 @@ logic val Div : int -> int -> int
 logic val Minus : int -> int
 logic val Modulo : int -> int -> int
 
-type LT : int => int => E
-type GT : int => int => E
-type LTE : int => int => E
-type GTE : int => int => E
+type LT : int => int => Type
+type GT : int => int => Type
+type LTE : int => int => Type
+type GTE : int => int => Type
 type nat = i:int{i >= 0}
 type pos = n:nat{n > 0}
 
@@ -173,9 +172,9 @@ logic data type list 'a =
 
 val fst : ('a * 'b) -> 'a
 val snd : ('a * 'b) -> 'b
-val Assume: 'P:E -> unit -> (y:unit{'P})
-val Assert : 'P:E -> x:unit{'P} -> y:unit{'P}
-val lemma : 'P:E -> x:unit{'P} -> z:unit{'P}
+val Assume: 'P:Type -> unit -> (y:unit{'P})
+val Assert : 'P:Type -> x:unit{'P} -> y:unit{'P}
+val lemma : 'P:Type -> x:unit{'P} -> z:unit{'P}
 val unreachable : x:unit{LBL "unreachable" False} -> 'a
 val failwith: string -> 'a (* TODO: refine with a monadic type *)
 val raise: exn -> 'a (* TODO: refine with a monadic type *)

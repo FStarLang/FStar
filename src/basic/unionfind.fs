@@ -38,11 +38,11 @@ let rec rep cell = match cell.contents with
 
 let find x = match (rep x).contents with
     Data ((hd::tl), _) -> hd
-  | _ -> raise Impos
+  | _ -> failwith "impossible"
 
 let uvar_id uv = match (rep uv).contents with
     Data (_, id) -> id
-  | _ -> raise Impos
+  | _ -> failwith "impossible"
 
 let union x y = 
   let cellX = rep x in
@@ -53,14 +53,14 @@ let union x y =
           let newcell = {contents = Data ((dx@dy),ctrx) } in
             cellX.contents <- Fwd newcell;
             cellY.contents <- Fwd newcell
-      | _ -> raise Impos
+      | _ -> failwith "impossible"
           
 let change x a = 
   let cellX = rep x in
     match cellX.contents with 
 	Data (_, ctrX) -> 
 	  cellX.contents <- Data ([a],ctrX)
-      | _ -> raise Impos
+      | _ -> failwith "impossible"
 
 
 let equivalent x y =

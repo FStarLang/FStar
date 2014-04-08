@@ -783,8 +783,10 @@ product:
       { $1 }
 
 productOrSumDomain:
+  | HASH ident COLON appTerm refineOpt
+      { mkRefinedBinder $2 $4 $5 (rhs2 parseState 1 4) } 
   | ident COLON appTerm refineOpt
-      { mkRefinedBinder $1 $3 $4 (rhs2 parseState 1 4) }
+      { mkRefinedBinder $1 $3 $4 (rhs2 parseState 1 4) } 
   | tvar COLON  atomicKind
       { mk_binder (TAnnotated($1, $3)) (rhs2 parseState 1 3) Kind}
 
@@ -810,11 +812,10 @@ unaryTerm:
   | appTerm { $1 }
 
 appTerm:
-  | atomicTerm atomicTerms
+  | atomicTerm hashAtomicTerms
       {
         mkApp $1 $2 (rhs2 parseState 1 2)
       }
-
 
 formula:
   | noSeqTerm
@@ -935,7 +936,15 @@ hasSort:
   | SUBTYPE { Expr }
   | SUBKIND { Type }
 
-atomicTerms:
+maybeHash: 
+  |        { false }
+  | HASH { true }
+
+hashAtomicTerms:
+  |        { [] }
+  | maybeHash atomicTerm hashAtomicTerms { $2::$3 }
+
+atomicTerms: 
   |        { [] }
   | atomicTerm atomicTerms { $1::$2 }
 

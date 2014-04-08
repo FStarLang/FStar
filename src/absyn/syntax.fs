@@ -60,41 +60,39 @@ type sconst =
 type typ =  
   | Typ_btvar    of bvar<typ,kind>
   | Typ_const    of var<kind> 
-  | Typ_fun      of option<bvvdef> * typ * typ          (* x:t -> t'  or  t -> t' *)
+  | Typ_fun      of option<bvvdef> * typ * typ * bool   (* x:t -> t'  or  t -> t', bool is a flag marking implicit arguments *)
   | Typ_univ     of btvdef * kind  * typ                (* 'a:k -> t *)
   | Typ_refine   of bvvdef * typ * typ                  (* x:t{phi} *)
   | Typ_app      of typ * typ                           (* t t' *) 
   | Typ_dep      of typ * exp                           (* t e *) 
   | Typ_lam      of bvvdef * typ * typ                  (* fun (x:t) => T *)
-  | Typ_tlam     of btvdef* kind * typ                  (* fun ('a:k) => T *) 
+  | Typ_tlam     of btvdef * kind * typ                 (* fun ('a:k) => T *) 
   | Typ_ascribed of typ * kind                          (* t <: k *)
-  | Typ_uvar     of uvar_t * kind                         (* Only needed for unification *)
   | Typ_meta     of meta                                (* Not really in the type language; a way to stash convenient metadata with types *)
-  | Typ_unknown                                         (* Initially, every AST node has type unknown *)
+  | Typ_uvar     of uvar_t * kind                       (* not present after 1st round tc *)
+  | Typ_unknown                                         (* not present after 1st round tc *)
 and uvar_t = Unionfind.uvar<uvar_basis<typ,kind>>
 and meta = 
-  | Meta_pos of typ * Range.range   (* user wrote down this type 1 at source position 2 *)
+  | Meta_pos of typ * Range.range                       (* user wrote down this type 1 at source position 2 *)
   | Meta_pattern of typ * list<either<typ,exp>>
   | Meta_cases of list<typ>
   | Meta_tid of int
 and uvar_basis<'a,'b> = 
-  | Uvar of ('a -> 'b -> bool) (* A well-formedness check to ensure that all names are in scope *)
+  | Uvar of ('a -> 'b -> bool)                          (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a
-  | Delayed of 'a
 and exp' =
   | Exp_bvar       of bvar<exp,typ>
-  | Exp_fvar       of var<typ> 
+  | Exp_fvar       of var<typ> * bool                            (* flag indicates a constructor *)
   | Exp_constant   of sconst
-  | Exp_constr_app of var<typ> * list<either<typ,exp>>
   | Exp_abs        of bvvdef * typ * exp 
   | Exp_tabs       of btvdef * kind * exp            
-  | Exp_app        of exp * exp
+  | Exp_app        of exp * exp * bool                           (* flag indicates whether the argument is explicit instantiation of an implict param *)
   | Exp_tapp       of exp * typ             
   | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
   | Exp_ascribed   of exp * typ 
   | Exp_let        of bool * list<(bvvdef * typ * exp)> * exp    (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Exp_primop     of ident * list<exp>
-  | Exp_uvar       of uvar_e * typ
+  | Exp_uvar       of uvar_e * typ                               (* not present after 1st round tc *)
 and exp = withinfo_t<exp',typ>
 and uvar_e = Unionfind.uvar<uvar_basis<exp,typ>>
 and btvdef = bvdef<typ>
@@ -109,11 +107,11 @@ and pat =
   | Pat_twild
 and kind =
   | Kind_star
-  | Kind_prop
-  | Kind_erasable
   | Kind_tcon of option<bvdef<typ>> * kind * kind   (* 'a:k -> k' *)
   | Kind_dcon of option<bvvdef> * typ * kind        (* x:t -> k *)
-  | Kind_unknown
+  | Kind_uvar of uvar_k                             (* not present after 1st round tc *)
+  | Kind_unknown                                    (* not present after 1st round tc *)
+and uvar_k = Unionfind.uvar<uvar_basis<kind,unit>>
 
 type formula = typ
 type btvar = bvar<typ,kind>

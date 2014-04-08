@@ -52,8 +52,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="tcenv.fsi" />
+    <Compile Include="errors.fs" />
     <Compile Include="tcenv.fs" />
     <Compile Include="tcutil.fs" />
+    <Compile Include="infer.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\absyn\absyn.fsproj">

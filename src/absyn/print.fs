@@ -39,7 +39,9 @@ let const_to_string x = match x with
   | Const_char x ->       Util.string_of_char x
   | Const_string(bytes, _) -> Util.string_of_bytes bytes
   | Const_bytearray _  ->  failwith "NYI: to string of byte array"
-    
+  | Const_int64 _ -> failwith "NYI: to string of int64"
+  | Const_uint8 _ -> failwith "NYI: to string of uint8"
+     
 let rec typ_to_string x = match whnf x with 
   | Typ_btvar btv -> 
     (match !btv.v.instantiation with 
@@ -47,8 +49,8 @@ let rec typ_to_string x = match whnf x with
         if !Options.print_real_names then btv.v.realname.idText else btv.v.realname.idText
       | Some x -> x|> typ_to_string)
   | Typ_const v -> Util.format1 "%s" (sli v.v)
-  | Typ_fun(Some x, t1, t2) -> Util.format3 "%s:%s -> %s"  (strBvd x) (t1 |> typ_to_string) (t2|> typ_to_string)
-  | Typ_fun(None, t1, t2) ->   Util.format2 "%s -> %s"  (t1|> typ_to_string) (t2|> typ_to_string)
+  | Typ_fun(Some x, t1, t2, imp) -> Util.format4 "%s%s%s -> %s"  (strBvd x) (if imp then "@" else ":") (t1 |> typ_to_string) (t2|> typ_to_string)
+  | Typ_fun(None, t1, t2, _) -> Util.format2 "%s -> %s"  (t1|> typ_to_string) (t2|> typ_to_string)
   | Typ_univ(a, k, t) ->       Util.format3 "%s::%s -> %s" (strBvd a) (k |> kind_to_string) (t|> typ_to_string)
   | Typ_refine(x, t, f) ->     Util.format3 "%s:%s{%s}" (strBvd x) (t|> typ_to_string) (f|> typ_to_string)
   | Typ_app(t1, t2) ->         Util.format2 "(%s %s)" (t1|> typ_to_string) (t2|> typ_to_string)
@@ -59,7 +61,6 @@ let rec typ_to_string x = match whnf x with
   | Typ_unknown -> "_"
   | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)
   | Typ_uvar(uv, _) -> (match Unionfind.find uv with 
-      | Delayed t
       | Fixed t -> t|> typ_to_string
       | Uvar _ ->               Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)))
 
@@ -69,12 +70,11 @@ and exp_to_string x = match x.v with
       | None -> 
         if !Options.print_real_names then bvv.v.realname.idText else bvv.v.realname.idText
       | Some x -> x|> exp_to_string)
-  | Exp_fvar fv ->  sli fv.v
+  | Exp_fvar(fv, _) ->  sli fv.v
   | Exp_constant c -> c |> const_to_string
-  | Exp_constr_app(d, args) -> Util.format2 "(%s %s)" (sli d.v) (Util.concat_l " " (List.map either_to_string args))
   | Exp_abs(x, t, e) -> Util.format3 "(fun (%s:%s) -> %s)" (strBvd x) (t |> typ_to_string) (e|> exp_to_string)
   | Exp_tabs(a, k, e) -> Util.format3 "(fun (%s::%s) -> %s)" (strBvd a) (k |> kind_to_string) (e|> exp_to_string)
-  | Exp_app(e1, e2) -> Util.format2 "(%s %s)" (e1|> exp_to_string) (e2|> exp_to_string)
+  | Exp_app(e1, e2, imp) -> Util.format3 "(%s %s%s)" (e1|> exp_to_string) (if imp then "#" else "") (e2|> exp_to_string)
   | Exp_tapp(e, t) -> Util.format2 "(%s %s)" (e|> exp_to_string) (t |> typ_to_string)
   | Exp_match(e, pats) -> Util.format2 "(match %s with %s)" 
     (e |> exp_to_string) 
@@ -94,14 +94,13 @@ and either_to_string x = match x with
   | Inr e -> exp_to_string e
 
 and meta_to_string x = match x with 
+  | Meta_pos(t, _) -> typ_to_string t
   | Meta_cases tl -> Util.format1 "\n\tMetaCases [%s]\n" (Util.concat_l ";\n" (List.map typ_to_string tl))
   | Meta_tid i -> Util.format1 "(Meta_tid %d)" (Util.string_of_int i)
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (t |> typ_to_string) (Util.concat_l ", " (ps |> List.map either_to_string))
 
 and kind_to_string x = match x with 
   | Kind_star -> "*"
-  | Kind_prop -> "P"
-  | Kind_erasable -> "E"
   | Kind_tcon(Some x, k, k') -> Util.format3 "(%s::%s => %s)" (strBvd x) (k |> kind_to_string) (k' |> kind_to_string)
   | Kind_tcon(_, k, k') -> Util.format2 "(%s => %s)" (k |> kind_to_string) (k' |> kind_to_string)
   | Kind_dcon(Some x, t, k) -> Util.format3 "(%s:%s => %s)" (strBvd x) (t |> typ_to_string) (k |> kind_to_string)

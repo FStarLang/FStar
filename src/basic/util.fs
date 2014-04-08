@@ -116,7 +116,9 @@ let is_some = function
 
 let must = function
   | Some x -> x
-  | None -> raise Impos
+  | None -> failwith "impossible"
+
+
 
 let find_opt f l = 
   let rec aux = function 
@@ -147,6 +149,7 @@ let rec find_map l f = match l with
 
 let for_all f l = List.forall f l
 let for_some f l = List.exists f l
+let forall_exists rel l1 l2= l1 |> for_all (fun x -> l2 |> for_some (rel x))
 
 let first_N n l =
   let rec f acc i l =
@@ -159,7 +162,7 @@ let first_N n l =
 
 let prefix l = match List.rev l with 
   | hd::tl -> List.rev tl, hd
-  | _ -> raise Impos
+  | _ -> failwith "impossible"
           
 let (===) a b = LanguagePrimitives.PhysicalEquality a b
 let physical_eq a b = a === b

@@ -23,21 +23,29 @@ open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Profiling
 
-let compress typ = Visit.compress typ
-let rec_compress t = 
-  Visit.visit_typ_simple
-    (fun () t -> (), compress t)
-    (fun () x -> (), x) 
-    () t
-let rec compress_hard typ = match typ with
-  | Typ_uvar (uv,k) -> 
-    begin
-      match Unionfind.find uv with 
-        | Uvar _ -> typ
-        | Delayed typ
-        | Fixed typ -> compress typ
-    end
-  | _ -> typ
+(********************************************************************************)
+(******************** Compressing out unification vars **************************)
+(********************************************************************************)          
+
+let rec compress_kind k = match k with
+  | Kind_uvar uv -> 
+      begin
+        match Unionfind.find uv with 
+          | Fixed k -> compress_kind k
+          | _ -> k
+      end
+  | _ -> k
+
+let rec compress_exp e = match e.v with
+  | Exp_uvar (uv,_) -> 
+      begin
+        match Unionfind.find uv with 
+          | Fixed e -> compress_exp e
+          | _ -> e
+      end
+  | _ -> e
+
+let compress_typ typ = Visit.compress typ
 
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
@@ -87,7 +95,7 @@ let set_lid_range l r =
   let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
   lid_of_ids ids
 let fv l = withinfo l Typ_unknown (range_of_lid l)
-let fvar l r = ewithpos (Exp_fvar(fv (set_lid_range l r))) r
+let fvar l r = ewithpos (Exp_fvar(fv (set_lid_range l r), false)) r
 let ftv l = Typ_const (withinfo l Kind_unknown (range_of_lid l))
 let order_bvd x y = match x, y with 
   | Inl _, Inr _ -> -1
@@ -177,22 +185,29 @@ let rec is_value e =
             id.idText = "_dummy_op_Negation")
         then Util.for_all is_value el
         else false
-    | Exp_constr_app (_, args) -> Util.for_all (function | Inl _ -> true | Inr e -> is_value e) args
     | Exp_ascribed(e, _) -> is_value e
+    | Exp_app _ -> is_data e
     | _ -> false in 
     (is_val e) || (is_logic_function e)
 
+and is_data e = match (unascribe e).v with 
+  | Exp_fvar(_, b) -> b
+  | Exp_app(e, e', _) -> is_value e' && is_data e
+  | Exp_tapp(e, _) -> is_data e
+  | _ -> false
+
 and is_logic_function e = match (unascribe e).v with
   (* | Exp_tapp(e1, _) -> is_logic_function e1 *)
-  | Exp_app(e1, e2) -> is_value e2 && is_logic_function e1
-  | Exp_fvar v ->
+  | Exp_app(e1, e2, _) -> is_value e2 && is_logic_function e1
+  | Exp_fvar(v, _) ->
       lid_equals v.v Const.op_And ||
         lid_equals v.v Const.op_Or ||
         lid_equals v.v Const.op_Negation ||
         lid_equals v.v Const.op_Addition ||
         lid_equals v.v Const.op_Subtraction ||
         lid_equals v.v Const.op_Multiply
-  | _ -> false       
+  | _ -> false     
+   
 
 (********************************************************************************)
 (************** Collecting all unification variables in a type ******************)
@@ -214,7 +229,6 @@ let uvars_in_kind k : uvars =
 let rec uvars_in_uvar uv : uvars =
   match Unionfind.find uv with 
     | Uvar _ -> [uv]
-    | Delayed t
     | Fixed t -> 
       let uvt = uvars_in_typ t in
       let uvs = List.collect uvars_in_uvar uvt in
@@ -321,13 +335,13 @@ let subst_typ s t = subst_typ' (mk_subst_map s) t
 let subst_exp s e = subst_exp' (mk_subst_map s) e 
 
 let open_typ typ (te:either<typ,exp>) : typ =
-  match compress typ, te with
-    | Typ_fun(None, targ, tret), Inr _ -> tret
+  match compress_typ typ, te with
+    | Typ_fun(None, targ, tret, _), Inr _ -> tret
     | Typ_lam(bvd, targ, tret), Inr exp
-    | Typ_fun(Some bvd, targ, tret), Inr exp -> subst_typ [Inr(bvd,exp)] tret
+    | Typ_fun(Some bvd, targ, tret, _), Inr exp -> subst_typ [Inr(bvd,exp)] tret
     | Typ_tlam(bvd, k, t), Inl targ
     | Typ_univ(bvd, k, t), Inl targ -> subst_typ [Inl(bvd, targ)] t
-    | _ -> raise Impos
+    | _ -> failwith "impossible"
 
 let close_with_lam tps t = List.fold_right
   (fun tp out -> match tp with
@@ -339,7 +353,7 @@ let close_with_arrow tps t =
   t |> (tps |> List.fold_right (
     fun tp out -> match tp with
       | Tparam_typ (a,k) -> Typ_univ (a,k,out)
-      | Tparam_term (x,t) -> Typ_fun (Some x,t,out)))
+      | Tparam_term (x,t) -> Typ_fun (Some x,t,out,true)))
 
 let close_typ = close_with_arrow
       
@@ -391,10 +405,12 @@ let freshen_bvars_kind (ropt:option<Range.range>) (k:kind) (subst:subst) : kind 
          (freshen_label ropt)
          ext () subst k)
 
+(* move to de Bruijn? *)
 let freshen_typ t benv   : typ  = freshen_bvars_typ None t benv
 let alpha_convert t      : typ  = freshen_bvars_typ None t []
 let alpha_convert_kind k : kind = freshen_bvars_kind None k []
 let alpha_fresh_labels r t : typ = freshen_bvars_typ (Some r) t []
+
 
 (********************************************************************************)
 (******************** Reducing to weak head normal form *************************)
@@ -402,7 +418,7 @@ let alpha_fresh_labels r t : typ = freshen_bvars_typ (Some r) t []
 
 let whnf t =
   let rec aux ctr t =
-    let t' = match compress t with
+    let t' = match compress_typ t with
       | Typ_dep(t1, e) ->
         let t1,ctr = aux (ctr+1) t1 in
         (match t1 with
@@ -463,7 +479,7 @@ let rec get_tycon t =
   | _ -> None
 
 let base_kind = function
-  | Kind_star | Kind_prop | Kind_erasable -> true
+  | Kind_star -> true
   | _ -> false
 
 let sortByFieldName (fn_a_l:list<(fieldname * 'a)>) =
@@ -472,14 +488,6 @@ let sortByFieldName (fn_a_l:list<(fieldname * 'a)>) =
         String.compare
           (text_of_lid fn1)
           (text_of_lid fn2))
-
-let rec is_prop k = match k(* .u *) with
-  | Kind_prop
-  | Kind_erasable -> true
-  | Kind_star -> false
-  | Kind_tcon(_, _, k)
-  | Kind_dcon(_, _, k) -> is_prop k
-  | _ -> false
     
 let mk_tlam xopt t1 t2 = match xopt with
   | None ->  Typ_lam(new_bvd None, t1, t2)
@@ -529,8 +537,8 @@ let forall_kind =
   let a = new_bvd None in
   let atyp = bvd_to_typ a Kind_star in
     Kind_tcon(Some a, Kind_star,
-              Kind_tcon(None, Kind_dcon(None, atyp, Kind_erasable),
-                        Kind_erasable))
+              Kind_tcon(None, Kind_dcon(None, atyp, Kind_star),
+                        Kind_star))
 
 let mkForall (x:bvvdef) (a:typ) (body:typ) : typ =
   let forall_typ = Typ_const(withsort Const.forall_lid forall_kind) in
@@ -545,7 +553,7 @@ let unForall t = match t.v with
 let collect_formals t = 
   let rec aux out t =
     match whnf t with
-      | Typ_fun(xopt, t1, t2) -> aux (Inr(xopt, t1)::out) t2
+      | Typ_fun(xopt, t1, t2, _) -> aux (Inr(xopt, t1)::out) t2
       | Typ_univ(a, k, t2) -> aux (Inl(a, k)::out) t2
       | Typ_meta(Meta_pos _) -> failwith "Unexpected position-tagged type"
       | t -> List.rev out, t 
@@ -554,7 +562,7 @@ let collect_formals t =
 let collect_u_quants t =
   let rec aux out t =
     match flatten_typ_apps (whnf t) with
-      | Typ_fun(Some x, t1, t2), _ -> aux ((x, t1)::out) t2
+      | Typ_fun(Some x, t1, t2, _), _ -> aux ((x, t1)::out) t2
       | Typ_const tc, [Inl t1; Inl (Typ_lam(x, _, t2))]
         when is_forall tc.v ->
         aux ((x, t1)::out) t2
@@ -564,7 +572,7 @@ let collect_u_quants t =
 let collect_forall_xt t =
   let rec aux out t =
     match flatten_typ_apps (whnf t) with
-      | Typ_fun(Some x, t1, t2), _ -> aux (Inr(x, t1)::out) t2
+      | Typ_fun(Some x, t1, t2, _), _ -> aux (Inr(x, t1)::out) t2
       | Typ_const tc, [Inl t1; Inl (Typ_lam(x, _, t2))]
         when is_forall tc.v ->
         aux (Inr(x, t1)::out) t2

@@ -1,4 +1,4 @@
-(*
+﻿(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,14 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Parser.ParseIt
-open Microsoft.FStar.Parser
+
+module Microsoft.FStar.Tc.Errors
+
+open Microsoft.FStar.Absyn
 open Microsoft.FStar.Util
 
-val parse_file: either<string,string> -> either<AST.file, string>
+let expected_arrow_kind k = 
+  format1 "Expected a type-constructor or type-function; got a type of kind %s" (Print.kind_to_string k)
+
+let expected_function_typ t = 
+  format1 "Expected a function; got an expression of type %s" (Print.typ_to_string t)

@@ -26,8 +26,8 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Profiling 
    
 type binding =
-  | Binding_var of ident * typ
-  | Binding_typ of ident * kind
+  | Binding_var of bvvdef * typ
+  | Binding_typ of btvdef * kind
   | Binding_sig of sigelt 
 
 type sigtable = Util.smap<sigelt>
@@ -54,7 +54,6 @@ type env = {
   gamma:list<binding>;           (* Local typing environment and signature elements *)
   modules:list<modul>;           (* already fully type checked modules *)
   expected_typ:option<typ>;      (* type expected by the context *)
-  expected_kind:option<kind>;    (* kind expected by the context *)
   level:level;                   (* current term being checked is at level *)
   sigtab:sigtable                (* a dictionary of long-names to sigelts *)
 }
@@ -71,7 +70,6 @@ let initial_env module_lid =
     gamma= [];
     modules= [];
     expected_typ=None;
-    expected_kind=None;
     level=Expr;
     sigtab=Util.smap_create default_table_size
   }
@@ -87,13 +85,13 @@ let find_in_sigtab env lid = Util.smap_try_find env.sigtab (text_of_lid lid)
 
 exception Not_found_binding of env * either<typ,exp>
 
-let lookup_bvar_ident env (rn:ident) : option<typ> = 
+let lookup_bvvdef env (bvvd:bvvdef) : option<typ> = 
   Util.find_map env.gamma (function
-    | Binding_var (id, t) when (id.idText = rn.idText) -> Some t
+    | Binding_var (id, t) when (Util.bvd_eq id bvvd) -> Some t
     | _ -> None) 
       
 let lookup_bvar env bv = 
-  match lookup_bvar_ident env (bvar_realname bv) with
+  match lookup_bvvdef env bv.v with
     | None -> raise (Not_found_binding(env, Inr (Util.bvar_to_exp bv)))
     | Some t -> t 
     
@@ -169,25 +167,23 @@ let lookup_typ_abbrev env lid =
     | Some (Sig_typ_abbrev (lid, tps, _, t)) -> Some (Util.close_with_lam tps t)
     | _ -> None
         
-let lookup_btvar_ident env (rn:ident): option<kind> = 
+let lookup_btvdef env (btvd:btvdef): option<kind> = 
   Util.find_map env.gamma (function
-    | Binding_typ (id, k) when (id.idText = rn.idText) -> Some k
+    | Binding_typ (id, k) when Util.bvd_eq id btvd -> Some k
     | _ -> None)  
     
 let lookup_btvar env btv = 
-  let rn = bvar_realname btv in
-    match lookup_btvar_ident env rn with
-      | None -> raise (Not_found_binding(env, Inl (Typ_btvar btv)))
-      | Some k -> k 
+  match lookup_btvdef env btv.v with
+    | None -> raise (Not_found_binding(env, Inl (Typ_btvar btv)))
+    | Some k -> k 
 
-let lookup_typ_lid env (ftv:lident) : option<either<kind, typ>> = 
+let lookup_typ_lid env (ftv:lident) : kind = 
   match lookup_qname env ftv with
-    | Some (Sig_tycon (lid, tps, k, _, _, _)) -> 
-        Some (Inl (Util.close_kind tps k))
-    | Some (Sig_typ_abbrev (lid, tps, _, t)) -> 
-        Some (Inr (Util.close_typ tps t))
-    | _ ->  
-        None
+    | Some (Sig_tycon (lid, tps, k, _, _, _)) 
+    | Some (Sig_typ_abbrev (lid, tps, k, _)) -> 
+      Util.close_kind tps k
+    | _ ->
+      raise (Not_found_binding(env, Inl (Util.ftv ftv)))
 
 let lookup_operator env (opname:ident) = 
   let primName = lid_of_path ["Prims"; ("_dummy_" ^ opname.idText)] dummyRange in
@@ -210,19 +206,15 @@ let push_module env (m:modul) =
     {env with 
       modules=m::env.modules; 
       gamma=[];
-      expected_typ=None;
-      expected_kind=None}
+      expected_typ=None}
 
 let set_expected_typ env t = {env with expected_typ = Some t}
 let expected_typ env = env.expected_typ
 let clear_expected_typ env = {env with expected_typ=None}, env.expected_typ
-let set_expected_kind env k = {env with expected_kind = Some k}
-let expected_kind env = env.expected_kind
-let clear_expected_kind env = {env with expected_kind=None}, env.expected_kind
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
-let idents env : (list<ident> * list<ident>) = 
+let idents env : (list<btvdef> * list<bvvdef>) = 
   fold_env env (fun (tvs, xvs) b -> match b with 
     | Binding_var(x, _) -> (tvs, x::xvs)
     | Binding_typ(a, _) -> (a::tvs, xvs)
@@ -240,5 +232,5 @@ let quantifier_pattern_env env t =
     | [] -> fst (Util.collect_exists_xt t)
     | _ -> vars in
   List.fold_left (fun env -> function
-    | Inr (x, t) -> push_local_binding env (Binding_var(x.realname, t))
-    | Inl (a, k) -> push_local_binding env (Binding_typ(a.realname, k))) env vars 
+    | Inr (x, t) -> push_local_binding env (Binding_var(x, t))
+    | Inl (a, k) -> push_local_binding env (Binding_typ(a, k))) env vars 
