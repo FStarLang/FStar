@@ -7,6 +7,9 @@ ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
 FORMAT=format.fsi format.fs
 FORMAT_SRC=$(addprefix format/, $(FORMAT))
 
+BACKEND=ocaml.fs
+BACKEND_SRC=$(addprefix backend/, $(BACKEND))
+
 PARSER=ast.fs parse.fs lexhelp.fs lex.fs dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
 PARSER_SRC=$(addprefix parser/, $(PARSER))
 PARSER_NOGEN=ast.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
@@ -30,7 +33,7 @@ OTHERFLAGS=--nologo -g -O --mlcompatibility $(addprefix --define:, $(BUILD_VERSI
 
 LIB=../lib
 BIN=../bin
-ALL_DLLS=basic.dll format.dll absyn.dll parser.dll tc.dll #tccore.dll tc.dll z3encode.dll monadic.dll
+ALL_DLLS=basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll #tccore.dll tc.dll z3encode.dll monadic.dll
 FSHARP_LIBS=$(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll 
 OTHER_DLLS=
 BASELIBS=$(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
@@ -71,6 +74,10 @@ $(BIN)/absyn.dll: $(ABSYN_DEPS) $(ABSYN_SRC)
 FORMAT_DEPS=
 $(BIN)/format.dll: $(FORMAT_DEPS) $(FORMAT_SRC)
 	fsc $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(FORMAT_DEPS)) $(FORMAT_SRC)
+
+BACKEND_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll format.dll)
+$(BIN)/backend.dll: $(BACKEND_DEPS) $(BACKEND_SRC)
+	fsc $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(BACKEND_DEPS)) $(BACKEND_SRC)
 
 PARSER_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll)
 $(BIN)/parser.dll: $(PARSER_DEPS) $(PARSER_SRC)
