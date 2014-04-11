@@ -1,1 +1,10 @@
 *.suo
+
+/src/parser/parse.fs
+/src/parser/parse.fsi
+/src/parser/lex.fs
+
+/bin/*.dll
+/bin/*.pdb
+/bin/*.mdb
+/bin/fstar.exe
