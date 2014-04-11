@@ -21,7 +21,6 @@ val print_flush   : formatter -> unit
 val print_newline : formatter -> unit
 
 (* -------------------------------------------------------------------- *)
-val print_char   : formatter -> char   -> unit
-val print_string : formatter -> string -> unit
-val print_int    : formatter -> int    -> unit
-val print_float  : formatter -> float  -> unit
+type value = Char of char | String of string | Int of int | Float of float
+
+val (<<) : formatter -> value -> unit

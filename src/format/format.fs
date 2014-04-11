@@ -488,8 +488,6 @@ let formatter_of_text_writter (oc: System.IO.TextWriter)  =
   make_formatter output oc.Flush
 
 (* -------------------------------------------------------------------- *)
-type box = Box of int | HBox | VBox of int | HVBox of int | HoVBox of int
-
 let open_box    fmt i = pp_open_box    fmt i
 let open_hbox   fmt   = pp_open_hbox   fmt ()
 let open_vbox   fmt i = pp_open_vbox   fmt i
@@ -504,7 +502,11 @@ let print_brk     fmt i j = pp_print_break   fmt i j
 let print_flush   fmt     = pp_print_flush   fmt ()
 let print_newline fmt     = pp_print_newline fmt ()
 
-let print_char   fmt c = pp_print_char   fmt c
-let print_string fmt s = pp_print_string fmt s
-let print_int    fmt i = pp_print_int    fmt i
-let print_float  fmt d = pp_print_float  fmt d
+(* -------------------------------------------------------------------- *)
+type value = Char of char | String of string | Int of int | Float of float
+
+let (<<) fmt = function
+  | Char   c -> pp_print_char   fmt c
+  | String s -> pp_print_string fmt s
+  | Int    i -> pp_print_int    fmt i
+  | Float  d -> pp_print_float  fmt d
