@@ -265,7 +265,7 @@ and tc_exp env e : exp * typ = match e.v with
     withinfo (Exp_primop(op, es')) t e.p, t
 
   | Exp_uvar(u, t1) -> 
-    check_expected_typ env {e with sort=t1}
+    check_expected_typ env ({e with sort=t1})
 
 and tc_eqn pat_t env (pat, when_clause, branch) = 
   let env' = tc_pat pat_t env pat in 

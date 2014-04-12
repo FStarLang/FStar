@@ -61,6 +61,7 @@ val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
 val for_all: ('a -> bool) -> list<'a> -> bool
 val for_some: ('a -> bool) -> list<'a> -> bool
 val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
+val multiset_equiv: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 
 val must: option<'a> -> 'a
 val find_opt: ('a -> bool) -> list<'a> -> option<'a>

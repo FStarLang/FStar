@@ -129,7 +129,7 @@ let pat_as_exps env p : list<exp> =
   let single = function 
     | [p] -> p
     | _ -> failwith "Impossible" in
-  let rec aux = function 
+  let rec aux p = match p with
     | Pat_wild ->  [Inr (new_evar env (new_tvar env Kind_star))]
     | Pat_twild  -> [Inl (new_tvar env (new_kvar env))]
     | Pat_var x -> [Inr (Util.bvd_to_exp x (new_tvar env Kind_star))]
