@@ -126,6 +126,11 @@ let lookup_lid env lid =
     match Util.bind_opt (lookup_qname env lid) mapper with 
       | Some t -> t
       | None -> not_found ()
+
+let lookup_datacon env lid = 
+  match lookup_qname env lid with
+    | Some (Sig_datacon (_, t)) -> t
+    | _ -> raise (Not_found_binding(env, Inr(Util.fvar lid (range_of_lid lid))))
       
 let is_datacon env lid = 
   match lookup_qname env lid with

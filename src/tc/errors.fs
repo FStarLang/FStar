@@ -25,3 +25,19 @@ let expected_arrow_kind k =
 
 let expected_function_typ t = 
   format1 "Expected a function; got an expression of type %s" (Print.typ_to_string t)
+
+let expected_poly_typ t = 
+  format1 "Expected a polymorphic function; got an expression of type %s" (Print.typ_to_string t)
+
+let nonlinear_pattern_variable x = 
+  format1 "The pattern variable %s was used more than once" (Print.strBvd x)
+
+let disjunctive_pattern_vars v1 v2 = 
+  let vars v =
+    v |> List.map (function 
+      | Inl a -> Print.strBvd a 
+      | Inr x ->  Print.strBvd x) |> String.concat ", " in
+  format2 
+    "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (%s) and another (%s)" 
+    (vars v1) (vars v2)
+  

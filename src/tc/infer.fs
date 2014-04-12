@@ -206,7 +206,7 @@ and tc_exp env e : exp * typ = match e.v with
   | Exp_app(e1, e2, imp) -> 
     let env1, _ = Env.clear_expected_typ env in
     let e1', t1 = tc_exp env1 e1 in
-    let xopt, env2, tres = match Tc.Util.destruct_function_typ env t1 with 
+    let xopt, env2, tres = match Tc.Util.destruct_function_typ env t1 imp with 
       | Some (Typ_fun(xopt, targ, tres, implicit)) -> 
         let env2 = Env.set_expected_typ env targ in
         xopt, env2, tres
@@ -218,19 +218,102 @@ and tc_exp env e : exp * typ = match e.v with
       | Some y -> Util.subst_typ [Inr(y, e2')] tres in
     check_expected_typ env (withinfo (Exp_app(e1', e2', imp)) t e.p)
        
-  | Exp_tapp(e1, t1) -> failwith "NYI"
-  | Exp_match(e1, eqns) -> failwith "NYI"
-  | Exp_ascribed(e1, t1) -> failwith "NYI"
+  | Exp_tapp(e1, t1) -> 
+    let env1, _ = Env.clear_expected_typ env in 
+    let e1', t_e1 = tc_exp env1 e1 in 
+    let t1', k = tc_typ env1 t1 in 
+    begin match Tc.Util.destruct_poly_typ env1 t_e1 with
+      | Some (Typ_univ(a, k', tres)) ->
+          Tc.Util.kind_equiv env1 k k';
+          let t = Util.subst_typ [Inl(a, t1')] tres in
+          check_expected_typ env (withinfo (Exp_tapp(e1', t1')) t e.p) 
+      | _ -> 
+        raise (Error(Tc.Errors.expected_poly_typ t_e1, e.p))
+    end
+    
+  | Exp_match(e1, eqns) -> 
+    let env1, topt = Env.clear_expected_typ env in 
+    let e1', t1 = tc_exp env1 e1 in
+    let t_eqns = eqns |> List.map (tc_eqn t1 env) in
+    let eqns', result_t = match topt with 
+      | Some t -> (* already checked against type from context *)
+        List.map fst t_eqns, t
+      | None -> 
+        let result_t = Tc.Util.new_tvar env Kind_star in
+        let eqns' = t_eqns |> List.map (fun (eqn, t) -> Tc.Util.typ_equiv env t result_t; eqn) in
+        eqns', result_t in
+    withinfo (Exp_match(e1', eqns')) result_t e.p, result_t
+
+  | Exp_ascribed(e1, t1) -> 
+    let t1', _ = tc_typ env t1 in 
+    let env1 = Env.set_expected_typ env t1' in 
+    let e1', _ = tc_exp env1 e1 in
+    check_expected_typ env (withinfo (Exp_ascribed(e1', t1')) t1' e.p)
+     
   | Exp_let(is_rec, lbs, e1) -> failwith "NYI"
-  | Exp_primop(op, es) -> failwith "NYI"
-  | Exp_uvar(u, t1) -> failwith "NYI"
 
-and tc_pat env p : pat * typ = match p with 
-  | Pat_cons(l, pats) -> failwith "NYI"
-  | Pat_var(x) -> failwith "NYI"
-  | Pat_tvar(a) -> failwith "NYI"
-  | Pat_constant c -> failwith "NYI"
-  | Pat_disj pats -> failwith "NYI"
-  | Pat_wild  -> failwith "NYI"
-  | Pat_twild  -> failwith "NYI"
+  | Exp_primop(op, es) -> 
+    let op_t = Tc.Env.lookup_operator env op in
+    let x = Util.new_bvd (Some op.idRange) in
+    let env' = Tc.Env.push_local_binding env (Env.Binding_var(x, op_t)) in
+    let app = Util.mk_curried_app (Util.bvd_to_exp x op_t) (List.map Inr es) in
+    let app', t = tc_exp env' app in
+    let _, tes = Util.uncurry_app app' in
+    let es' = tes |> List.map (function 
+      | Inl _ -> failwith "Impossible"
+      | Inr e -> e) in 
+    withinfo (Exp_primop(op, es')) t e.p, t
 
+  | Exp_uvar(u, t1) -> 
+    check_expected_typ env {e with sort=t1}
+
+and tc_eqn pat_t env (pat, when_clause, branch) = 
+  let env' = tc_pat pat_t env pat in 
+  let when_clause' = match when_clause with 
+    | None -> None
+    | Some e -> Some (fst <| tc_exp (Env.set_expected_typ env' Tc.Util.t_bool) e) in
+  let branch', t = tc_exp env' branch in 
+  (pat, when_clause', branch'), t
+
+and tc_pat (pat_t:typ) env p : Env.env = 
+  let pvar_eq x y = match x, y with 
+    | Inl xx, Inl yy -> bvd_eq xx yy
+    | Inr xx, Inr yy -> bvd_eq xx yy
+    | _ -> false in
+  let var_exists vars x = vars |> Util.for_some (pvar_eq x) in
+  let rec mk_pat_env vars env p = match p with 
+    | Pat_wild 
+    | Pat_twild
+    | Pat_constant _ -> env, []
+    | Pat_var x -> 
+      if var_exists vars (Inr x) 
+      then raise (Error(Tc.Errors.nonlinear_pattern_variable x, Util.range_of_bvd x))
+      else 
+        let env = Tc.Env.push_local_binding env (Env.Binding_var(x, Tc.Util.new_tvar env Kind_star)) in
+        env, [Inl x]
+    | Pat_tvar a -> 
+      if var_exists vars (Inl a) 
+      then raise (Error(Tc.Errors.nonlinear_pattern_variable a, Util.range_of_bvd a))
+      else 
+        let env = Tc.Env.push_local_binding env (Env.Binding_typ(a, Tc.Util.new_kvar env)) in 
+        env, [Inr a]
+    | Pat_cons(l, pats) -> 
+      pats |> List.fold_left (fun (env, outvars) p -> 
+        let env, moreoutvars = mk_pat_env (outvars@vars) env p in
+        env, moreoutvars@outvars) (env, [])
+    | Pat_disj (p::pats) -> 
+      let env, outvars = mk_pat_env vars env p in 
+      pats |> List.iter (fun p -> 
+        let _, outvars' = mk_pat_env vars env p in
+        if not (Util.multiset_equiv pvar_eq outvars outvars')
+        then raise (Error(Tc.Errors.disjunctive_pattern_vars outvars outvars', Tc.Env.get_range env))
+        else ());
+      env, outvars in
+  let pat_env, _ = mk_pat_env [] env p in
+  let exps = Tc.Util.pat_as_exps env p in
+  let env = Tc.Env.set_expected_typ env pat_t in
+  ignore <| List.map (tc_exp env) exps; 
+  pat_env
+
+  
+   

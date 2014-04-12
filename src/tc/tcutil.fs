@@ -98,9 +98,18 @@ let new_tvar env k =
     Util.forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
   Typ_uvar (Unionfind.fresh (Uvar wf), k)
 
+let new_evar env t =
+  let wf e t = 
+    let tvs, xvs = Util.freevars_exp e in
+    let tvs', xvs' = Env.idents env in 
+    let eq bv bvd = Util.bvd_eq bv.v bvd in
+    forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
+  withinfo (Exp_uvar (Unionfind.fresh (Uvar wf), t)) t (Env.get_range env)
+
 let typ_equiv env t1 t2 = failwith "NYI"
 let subtype env t1 t2 = failwith "NYI"
-let destruct_function_typ env t : option<typ> = failwith "NYI"
+let destruct_function_typ env t imp : option<typ> = failwith "NYI"
+let destruct_poly_typ env t : option<typ> = failwith "NYI"
 
 let unify uv t = Unionfind.change uv (Fixed (alpha_convert t))
 
@@ -116,7 +125,24 @@ let check_unify (uv,(k:kind)) t =
           else Some "Unification fails kinding check"
       | t -> failwith "impossible"
 
-
+let pat_as_exps env p : list<exp> = 
+  let single = function 
+    | [p] -> p
+    | _ -> failwith "Impossible" in
+  let rec aux = function 
+    | Pat_wild ->  [Inr (new_evar env (new_tvar env Kind_star))]
+    | Pat_twild  -> [Inl (new_tvar env (new_kvar env))]
+    | Pat_var x -> [Inr (Util.bvd_to_exp x (new_tvar env Kind_star))]
+    | Pat_tvar a -> [Inl (Util.bvd_to_typ a (new_kvar env))]
+    | Pat_constant c -> [Inr (withinfo (Exp_constant c) (typing_const env c) (Env.get_range env))]
+    | Pat_cons(l, pats) -> 
+      let args = List.map (fun p -> single (aux p)) pats in 
+      [Inr (Util.mk_data l args)]
+    | Pat_disj pats -> 
+      pats |> List.map (fun p -> single <| aux p) in
+  List.map (function 
+    | Inl _ -> failwith "Impossible"
+    | Inr e -> e) (aux p)    
 //          
 //
 //type subst = list<(list<uvar*kind> * option<typ>)>         

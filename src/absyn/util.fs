@@ -167,6 +167,24 @@ let rec lids_of_sigelt se = match se with
     
 let lid_of_sigelt se = List.hd <| lids_of_sigelt se
 let range_of_sigelt x = range_of_lid <| lid_of_sigelt x
+let range_of_typ t def = match compress_typ t with 
+  | Typ_meta(Meta_pos(_, r)) -> r
+  | _ -> def
+
+let mk_curried_app e e_or_t = 
+  List.fold_left (fun f -> function
+    | Inl t -> ewithpos (Exp_tapp(f, t)) (Range.union_ranges f.p (range_of_typ t f.p))
+    | Inr e -> ewithpos (Exp_app(f, e, false)) (Range.union_ranges f.p e.p)) e e_or_t 
+
+let uncurry_app e =
+  let rec aux e out = match (compress_exp e).v with 
+    | Exp_app(e1, e2, _) -> aux e1 (Inr e2::out)
+    | Exp_tapp(e1, t) -> aux e1 (Inl t::out)
+    | _ -> e, List.rev out in
+  aux e []
+
+let mk_data l args = 
+  mk_curried_app (fvar l (range_of_lid l)) args
 
 (********************************************************************************)
 (******************************** Syntactic values ******************************)

@@ -149,8 +149,9 @@ let rec find_map l f = match l with
 
 let for_all f l = List.forall f l
 let for_some f l = List.exists f l
-let forall_exists rel l1 l2= l1 |> for_all (fun x -> l2 |> for_some (rel x))
-
+let forall_exists rel l1 l2 = l1 |> for_all (fun x -> l2 |> for_some (rel x))
+let multiset_equiv rel l1 l2 = List.length l1 = List.length l2 && forall_exists rel l1 l2
+   
 let first_N n l =
   let rec f acc i l =
     if i = n then List.rev acc,l else

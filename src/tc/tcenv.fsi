@@ -54,6 +54,7 @@ val get_range : env -> Range.range
 val lookup_bvar : env -> bvvar -> typ
 val lookup_lid : env -> lident -> typ      
 val lookup_val_decl : env -> lident -> typ
+val lookup_datacon: env -> lident -> typ
 val is_datacon : env -> lident -> bool
 val is_logic_function : env -> lident -> bool
 val is_logic_data : env -> lident -> bool
