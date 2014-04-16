@@ -1,7 +1,6 @@
 #! /bin/bash
 
 mydir=$(pwd)
-mydir=$(realpath "${mydir}")
 
 case "$(uname)" in
     *CYGWIN*)
