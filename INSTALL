@@ -20,14 +20,25 @@ At the moment:
 
           Or, with Cygwin's GNU make (4.0), run "make" from FStar/src
 
-  Also, can be built using Mono (Pierre-Yves?)
-
-  
 
 
 
 
-          
-     
-  
 
+  On Linux Debian using Mono:
+
+- install the fsharp package
+- get FSharpPowerPack-4.0.0.0
+- copy FSharpPowerPack-4.0.0.0/bin/*.dll in the bin directory
+- put in your PATH:
+  + fsc as a link to fsharpc
+  + fslex containing:
+      #!/bin/bash
+      mono /path/to/FSharpPowerPack-4.0.0.0/bin/fslex.exe $@
+  + fsyacc containing:
+      #!/bin/bash
+      mono /path/to/FSharpPowerPack-4.0.0.0/bin/fsyacc.exe $@
+- run:
+      $ source setenv.sh
+      $ cd src
+      $ make

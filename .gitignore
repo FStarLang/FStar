@@ -1,4 +1,8 @@
+*~
 *.suo
+
+*-10.sln
+*-10.fsproj
 
 /src/parser/parse.fs
 /src/parser/parse.fsi
