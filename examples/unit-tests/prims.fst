@@ -53,7 +53,7 @@ type array : Type => Type
 type ref : Type => Type
 type LBL : string => Type => Type
 type bytes
-val mk_ref: 'a -> ref 'a
+assume val mk_ref: 'a -> ref 'a
 
 logic data type Tuple2: 'a:Type 
           => 'b:('a => Type)
@@ -141,7 +141,7 @@ logic val R : 'a -> 'a
 
 (* Primitive (structural) equality.
    What about for function types? *)
-val op_Equality : 'a:Type -> 'b:Type -> x:'a -> y:'b -> z:bool {(z=true <==> x=y) /\ (z=false <==> (x<>y))}
+assume val op_Equality : 'a:Type -> 'b:Type -> x:'a -> y:'b -> z:bool {(z=true <==> x=y) /\ (z=false <==> (x<>y))}
 logic type IfThenElse : 'P:Type => (u:unit{'P} => Type) => (u:unit{not 'P} => Type) => Type
 
 logic val Add : int -> int -> int
@@ -170,36 +170,36 @@ logic data type list 'a =
   | Nil : list 'a
   | Cons : hd:'a -> tl:list 'a -> list 'a
 
-val fst : ('a * 'b) -> 'a
-val snd : ('a * 'b) -> 'b
-val Assume: 'P:Type -> unit -> (y:unit{'P})
-val Assert : 'P:Type -> x:unit{'P} -> y:unit{'P}
-val lemma : 'P:Type -> x:unit{'P} -> z:unit{'P}
-val unreachable : x:unit{LBL "unreachable" False} -> 'a
-val failwith: string -> 'a (* TODO: refine with a monadic type *)
-val raise: exn -> 'a (* TODO: refine with a monadic type *)
-val pipe_right: 'a -> ('a -> 'b) -> 'b
-val pipe_left: ('a -> 'b) -> 'a -> 'b
-val ignore: 'a -> unit
-val exit: int -> unit
-val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
+assume val fst : ('a * 'b) -> 'a
+assume val snd : ('a * 'b) -> 'b
+assume val Assume: 'P:Type -> unit -> (y:unit{'P})
+assume val Assert : 'P:Type -> x:unit{'P} -> y:unit{'P}
+assume val lemma : 'P:Type -> x:unit{'P} -> z:unit{'P}
+assume val unreachable : x:unit{LBL "unreachable" False} -> 'a
+assume val failwith: string -> 'a (* TODO: refine with a monadic type *)
+assume val raise: exn -> 'a (* TODO: refine with a monadic type *)
+assume val pipe_right: 'a -> ('a -> 'b) -> 'b
+assume val pipe_left: ('a -> 'b) -> 'a -> 'b
+assume val ignore: 'a -> unit
+assume val exit: int -> unit
+assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
 
 (* Primitive functions with trusted specs  *)
-val op_ColonEquals: ref 'a -> 'a -> unit
-val op_Dereference: ref 'a -> 'a
-val op_AmpAmp             : x:bool -> y:bool -> z:bool { z=true ==>  x=true /\  y=true}
-val op_BarBar             : x:bool -> y:bool -> z:bool { (z=true ==> x=true \/  y=true) /\
+assume val op_ColonEquals: ref 'a -> 'a -> unit
+assume val op_Dereference: ref 'a -> 'a
+assume val op_AmpAmp             : x:bool -> y:bool -> z:bool { z=true ==>  x=true /\  y=true}
+assume val op_BarBar             : x:bool -> y:bool -> z:bool { (z=true ==> x=true \/  y=true) /\
                                                                 (z=false ==> x=false /\ y=false) }
-val op_Negation           : x:bool -> y:bool { (y=true ==> x=false) /\ (y=false ==> x=true) }
+assume val op_Negation           : x:bool -> y:bool { (y=true ==> x=false) /\ (y=false ==> x=true) }
 
-val op_Multiply           : x:int -> y:int -> z:int{z=x*y}
-val op_Division           : x:int -> y:int{y<>0} -> z:int{z=x/y}
-val op_Subtraction        : x:int -> y:int -> z:int{z=x-y}
-val op_Addition           : x:int -> y:int -> z:int{z=x+y}
-val op_Minus              : x:int -> y:int{y=Minus x}
-val op_Modulus            : x:int -> y:int -> z:int{z=x%y}
-val op_LessThanOrEqual : x:int -> y:int -> z:bool{(z=true ==> x <= y) /\ (z=false ==> x > y)}
-val op_GreaterThan : x:int -> y:int -> z:bool{(z=true ==> x > y) /\ (z=false ==> x <= y)}
+assume val op_Multiply           : x:int -> y:int -> z:int{z=x*y}
+assume val op_Division           : x:int -> y:int{y<>0} -> z:int{z=x/y}
+assume val op_Subtraction        : x:int -> y:int -> z:int{z=x-y}
+assume val op_Addition           : x:int -> y:int -> z:int{z=x+y}
+assume val op_Minus              : x:int -> y:int{y=Minus x}
+assume val op_Modulus            : x:int -> y:int -> z:int{z=x%y}
+assume val op_LessThanOrEqual : x:int -> y:int -> z:bool{(z=true ==> x <= y) /\ (z=false ==> x > y)}
+assume val op_GreaterThan : x:int -> y:int -> z:bool{(z=true ==> x > y) /\ (z=false ==> x <= y)}
 
 (* TODO: < in operators clashes with t<..> notation. Fix *)
 (* val op_GreaterThanOrEqual : x:int -> y:int -> z:bool{(z=true ==> x >= y) /\ (z=false ==> x < y) } *)

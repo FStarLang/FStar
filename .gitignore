@@ -8,3 +8,7 @@
 /bin/*.pdb
 /bin/*.mdb
 /bin/fstar.exe
+/bin/z3-x86.exe
+*~
+/src/*/obj
+\#*\#

@@ -27,25 +27,9 @@ open Microsoft.FStar.Profiling
 (******************** Compressing out unification vars **************************)
 (********************************************************************************)          
 
-let rec compress_kind k = match k with
-  | Kind_uvar uv -> 
-      begin
-        match Unionfind.find uv with 
-          | Fixed k -> compress_kind k
-          | _ -> k
-      end
-  | _ -> k
-
-let rec compress_exp e = match e.v with
-  | Exp_uvar (uv,_) -> 
-      begin
-        match Unionfind.find uv with 
-          | Fixed e -> compress_exp e
-          | _ -> e
-      end
-  | _ -> e
-
-let compress_typ typ = Visit.compress typ
+let compress_kind = Visit.compress_kind
+let compress_typ  = Visit.compress
+let compress_exp  = Visit.compress_exp 
 
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
@@ -87,7 +71,6 @@ let new_bvd ropt = let id = genident ropt in mkbvd (id,id)
 let gen_bvar sort = let bvd = (new_bvd None) in bvd_to_bvar_s bvd sort
 let gen_bvar_p r sort = let bvd = (new_bvd (Some r)) in bvd_to_bvar_s bvd sort
 let bvdef_of_str s = let id = id_of_text s in mkbvd(id, id)
-let mk_extern_ref l d ns c icn eq = {language=l;dll=d;namespce=ns;classname=c;innerclass=icn;extqual=eq}
 let set_bvd_range bvd r = {ppname=mk_ident(bvd.ppname.idText, r);
                            realname=mk_ident(bvd.realname.idText, r);
                            instantiation=bvd.instantiation}
@@ -136,7 +119,7 @@ let rec pre_typ t =
 
 let hoist e (body:exp->exp) : exp' = 
   let bvd = new_bvd (Some e.p) in
-  Exp_let(false, [(bvd, e.sort, e)], body (bvd_to_exp bvd e.sort))
+  Exp_let((false, [(Inl bvd, e.sort, e)]), body (bvd_to_exp bvd e.sort))
 
 (* If the input type is a Typ_app, walks the Typ_app tree and
    flattens the type parameters. Does not recursively drill into
@@ -158,11 +141,13 @@ let rec lids_of_sigelt se = match se with
   | Sig_bundle ses -> List.collect lids_of_sigelt ses
   | Sig_tycon (lid, _, _, _, _, _)    
   | Sig_typ_abbrev  (lid, _, _, _)
-  | Sig_datacon (lid, _)
-  | Sig_val_decl (lid, _) 
+  | Sig_datacon (lid, _, _)
+  | Sig_val_decl (lid, _, _) 
   | Sig_assume (lid, _, _, _)
   | Sig_logic_function (lid, _, _) -> [lid]
-  | Sig_let(lbs, _) -> List.map (fun (l, _, _) -> l) lbs
+  | Sig_let((_, lbs)) -> List.map (function 
+    | (Inr l, _, _) -> l
+    | (Inl x, _, _) -> failwith (Util.format1 "Impossible: got top-level letbinding with name %s" x.ppname.idText)) lbs
   | Sig_main _ -> []
     
 let lid_of_sigelt se = List.hd <| lids_of_sigelt se
@@ -170,6 +155,9 @@ let range_of_sigelt x = range_of_lid <| lid_of_sigelt x
 let range_of_typ t def = match compress_typ t with 
   | Typ_meta(Meta_pos(_, r)) -> r
   | _ -> def
+let range_of_lb = function
+  | (Inl x, _, _) -> range_of_bvd x
+  | (Inr l, _, _) -> range_of_lid l 
 
 let mk_curried_app e e_or_t = 
   List.fold_left (fun f -> function
@@ -231,26 +219,36 @@ and is_logic_function e = match (unascribe e).v with
 (************** Collecting all unification variables in a type ******************)
 (********************************************************************************)
 
-type uvars = uvar_t list
-let collect_uvars uvs t = match t with 
+type uvars = {
+  uvars_k: list<uvar_k>;
+  uvars_t: list<(uvar_t*kind)>;
+  uvars_e: list<(uvar_e*typ)>
+  }
+let empty_uvars = {uvars_k=[]; uvars_t=[]; uvars_e=[]}
+let collect_uvars_k uvs k = match k with 
+  | Kind_uvar uv -> 
+      (match List.tryFind (Unionfind.equivalent uv) uvs.uvars_k with 
+          | Some _ -> uvs, k
+          | None -> {uvs with uvars_k=uv::uvs.uvars_k}, k)
+  | _ -> uvs, k
+let collect_uvars_t uvs t : uvars * typ = match t with 
     | Typ_uvar (uv, k) -> 
-        (match List.tryFind (Unionfind.equivalent uv) uvs with 
-        | Some _ -> uvs, t
-        | None -> uv::uvs, t)
-    | _ -> uvs, t 
-let exp_folder_noop env e = (env,e) 
-
-let uvars_in_typ t : uvars = 
-  fst <| Visit.visit_typ_simple collect_uvars exp_folder_noop [] t
+        (match List.tryFind (fun (uv', _) -> Unionfind.equivalent uv uv') uvs.uvars_t with 
+          | Some _ -> uvs, t
+          | None -> {uvs with uvars_t=(uv,k)::uvs.uvars_t}, t)
+      | _ -> uvs, t 
+let collect_uvars_e uvs e : uvars * exp' = match e with 
+    | Exp_uvar (uv, t) -> 
+        (match List.tryFind (fun (uv', _) -> Unionfind.equivalent uv uv') uvs.uvars_e with 
+          | Some _ -> uvs, e
+          | None -> {uvs with uvars_e=(uv,t)::uvs.uvars_e}, e)
+      | _ -> uvs, e 
 let uvars_in_kind k : uvars = 
-  fst <| Visit.visit_kind_simple collect_uvars exp_folder_noop [] k
-let rec uvars_in_uvar uv : uvars =
-  match Unionfind.find uv with 
-    | Uvar _ -> [uv]
-    | Fixed t -> 
-      let uvt = uvars_in_typ t in
-      let uvs = List.collect uvars_in_uvar uvt in
-      uv::uvs
+  fst <| Visit.visit_kind_simple collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars k
+let uvars_in_typ t : uvars = 
+  fst <| Visit.visit_typ_simple collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars t
+let uvars_in_exp e : uvars = 
+  fst <| Visit.visit_exp_simple collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars e
 
 (********************************************************************************)
 (**************************** Free type/term variables **************************)
@@ -280,15 +278,16 @@ let ext_fv_env ((btvs, bxvs):boundvars) : either<btvar,bvvar> -> (boundvars * ei
   function 
     | Inl tv -> (tv.v::btvs, bxvs), Inl tv.v
     | Inr xv -> (btvs, xv.v::bxvs), Inr xv.v 
+let fold_kind_noop env benv k = (env, k)
 
 let freevars_kind : kind -> freevars = 
-  fun k -> fst <| Visit.visit_kind fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) k
+  fun k -> fst <| Visit.visit_kind fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) k
       
 let freevars_typ : typ -> freevars = 
-  fun t -> fst <| Visit.visit_typ  fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) t
+  fun t -> fst <| Visit.visit_typ fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) t
       
 let freevars_exp : exp -> freevars =
-  fun e -> fst <| Visit.visit_exp  fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) e
+  fun e -> fst <| Visit.visit_exp fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) e
 
 (********************************************************************************)
 (************************** Type/term substitutions *****************************)
@@ -306,16 +305,19 @@ let lift_subst f = (fun () x -> (), f x)
 (* Should never call these ones directly *)
 let rec subst_kind' (s:subst_map) (k:kind) : kind =
   snd (Visit.visit_kind_simple
+         (fun e k -> e,k)
          (lift_subst (subst_tvar s))
          (lift_subst (subst_xvar s))
          () k)
 and subst_typ' (s:subst_map) (t:typ) : typ =
   snd (Visit.visit_typ_simple
+         (fun e k -> e,k)
          (lift_subst (subst_tvar s))
          (lift_subst (subst_xvar s))
          () t)
 and subst_exp' (s:subst_map) (e:exp) : exp =
   snd (Visit.visit_exp_simple
+         (fun e k -> e,k)
          (lift_subst (subst_tvar s))
          (lift_subst (subst_xvar s))
          () e)
@@ -411,6 +413,7 @@ let freshen_label ropt _ e = match ropt with
 
 let freshen_bvars_typ (ropt:option<Range.range>) (t:typ) (subst:subst) : typ =
   snd (Visit.visit_typ
+         fold_kind_noop
          (fun () subst t -> (), subst_tvar (mk_subst_map subst) t)
          (fun () subst e -> (), subst_xvar (mk_subst_map subst) e)
          (freshen_label ropt)
@@ -418,6 +421,7 @@ let freshen_bvars_typ (ropt:option<Range.range>) (t:typ) (subst:subst) : typ =
 
 let freshen_bvars_kind (ropt:option<Range.range>) (k:kind) (subst:subst) : kind =
   snd (Visit.visit_kind
+         fold_kind_noop
          (fun () subst t -> (), subst_tvar (mk_subst_map subst) t)
          (fun () subst e -> (), subst_xvar (mk_subst_map subst) e)
          (freshen_label ropt)
@@ -518,14 +522,14 @@ let mkRefinedUnit formula =
 
 let findValDecl (vds:list<sigelt>) bvd : option<sigelt> =
   vds |> Util.find_opt (function
-                         | Sig_val_decl(lid, t) -> lid.ident.idText = bvd.ppname.idText
+                         | Sig_val_decl(lid, t, _) -> lid.ident.idText = bvd.ppname.idText
                          | _ -> false)
       
-let findValDecls (vds:list<sigelt>) ((lb, _): (letbinding * bool)) : list<sigelt> =
-  lb |> List.choose (fun (lid', _, _) ->
-    Util.find_map vds (fun se -> match se with
-      | Sig_val_decl(lid, t) when lid_equals lid lid' -> Some se
-      | _ -> None))
+//let findValDecls (vds:list<sigelt>) ((lb, _): (letbinding * bool)) : list<sigelt> =
+//  lb |> List.choose (fun (lid', _, _) ->
+//    Util.find_map vds (fun se -> match se with
+//      | Sig_val_decl(lid, t) when lid_equals lid lid' -> Some se
+//      | _ -> None))
 
 let rec typs_of_letbinding x = match x with
   | (_, t, e)::tl -> t::typs_of_letbinding tl
@@ -651,7 +655,7 @@ let check_bvar_identity t : bool =
         (Inl btv.v)::benv, Inl btv.v
     | Inr bxv ->
         (Inr bxv.v)::benv, Inr bxv.v in
-    fst (Visit.visit_typ fold_t fold_e (fun _ e -> e) ext true [] t)
+    fst (Visit.visit_typ fold_kind_noop fold_t fold_e (fun _ e -> e) ext true [] t)
 
 let rec check_pat_vars r = function 
   | Pat_cons(_, ps) -> 

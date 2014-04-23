@@ -245,12 +245,75 @@ and tc_exp env e : exp * typ = match e.v with
     withinfo (Exp_match(e1', eqns')) result_t e.p, result_t
 
   | Exp_ascribed(e1, t1) -> 
-    let t1', _ = tc_typ env t1 in 
+    let t1' = tc_typ_check env t1 Kind_star in 
     let env1 = Env.set_expected_typ env t1' in 
     let e1', _ = tc_exp env1 e1 in
     check_expected_typ env (withinfo (Exp_ascribed(e1', t1')) t1' e.p)
-     
-  | Exp_let(is_rec, lbs, e1) -> failwith "NYI"
+  
+  | Exp_let((false, [(x, Typ_unknown, e1)]), e2) -> 
+    let env1, topt = Env.clear_expected_typ env in 
+    let e1', t1 = tc_exp env1 e1 in 
+    let uvs = Tc.Env.uvars_in_env env in
+    let e1', s1 = Tc.Util.generalize ((Env.uvars_in_env env1).uvars_t) e1' t1 in (* TODO: check for unresolved implicit and kind vars *)
+    let env2 = match x with 
+      | Inl bvd -> Env.push_local_binding env (Env.Binding_var(bvd, s1))
+      | Inr l -> Env.push_local_binding env (Env.Binding_lid(l, s1)) in 
+    let e2', t = tc_exp env2 e2 in 
+    let e' = withinfo (Exp_let((false, [(x, s1, e1')]), e2')) t e.p in
+    begin match topt, x with 
+      | None, Inl bvd -> 
+         let _, fxvs = Util.freevars_typ t in 
+         if Util.for_some (fun y -> bvd_eq y.v bvd) fxvs
+         then raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape t bvd, e2.p))
+         else e', t
+      | _ -> e', t
+    end       
+  
+  | Exp_let((false, [(x, t1, e1)]), e2) -> (* TODO: Check for unresolved implicits and kind vars *)
+    let t1' = tc_typ_check env t1 Kind_star in 
+    let env1 = Env.set_expected_typ env t1' in   
+    let e1', _ = tc_exp env1 e1 in 
+    let env2 = match x with 
+      | Inl bvd -> Env.push_local_binding env (Env.Binding_var(bvd, t1'))
+      | Inr l -> Env.push_local_binding env (Env.Binding_lid(l, t1')) in
+    let e2', t = tc_exp env2 e2 in
+    withinfo (Exp_let((false, [(x, t1', e1')]), e2')) t e.p, t
+    
+  | Exp_let((false, _), _) -> 
+    failwith "impossible"
+
+  | Exp_let((true, lbs), e1) ->
+    let env0, topt = Env.clear_expected_typ env in 
+    let lbs, env' = lbs |> List.fold_left (fun (xts, env) (x, t, e) -> 
+      let t = match t with 
+        | Typ_unknown -> Util.new_tvar env Kind_star
+        | _ -> tc_typ_check env0 t Kind_star in
+      let env = match x with 
+        | Inl bvd -> Env.push_local_binding env (Env.Binding_var(bvd, t)) 
+        | Inr l -> Env.push_local_binding env (Env.Binding_lid(l, t)) in
+      (x, t, e)::xts, env) ([], env0)  in
+    let lbs = lbs |> List.map (fun (x, t, e) -> 
+      let env' = Env.set_expected_typ env' t in
+      let e, _ = tc_exp env' e in 
+      (x, t, e)) in  
+    let lbs, env = lbs |> List.fold_left (fun (lbs, env) (x, t, e) -> 
+      let e, t = Tc.Util.generalize ((Env.uvars_in_env env').uvars_t) e t in
+      let env = match x with 
+        | Inl bvd -> Env.push_local_binding env (Env.Binding_var(bvd, t))
+        | Inr l -> Env.push_local_binding env (Env.Binding_lid(l, t)) in
+      (x, t, e)::lbs, env) ([], env) in
+    let e1, t = tc_exp env e1 in 
+    let res = withinfo (Exp_let((true, lbs), e1)) t e.p in
+    begin match topt with 
+      | Some _ -> res, t
+      | None -> 
+         let _, fxvs = Util.freevars_typ t in 
+         match fxvs |> List.tryFind (fun y -> lbs |> Util.for_some (function
+          | (Inr _, _, _) -> false
+          | (Inl x, _, _) -> bvd_eq x y.v)) with
+            | None -> res, t
+            | Some y -> raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape t y.v, e1.p))
+    end
 
   | Exp_primop(op, es) -> 
     let op_t = Tc.Env.lookup_operator env op in
@@ -301,6 +364,7 @@ and tc_pat (pat_t:typ) env p : Env.env =
       pats |> List.fold_left (fun (env, outvars) p -> 
         let env, moreoutvars = mk_pat_env (outvars@vars) env p in
         env, moreoutvars@outvars) (env, [])
+    | Pat_disj [] -> failwith "impossible"
     | Pat_disj (p::pats) -> 
       let env, outvars = mk_pat_env vars env p in 
       pats |> List.iter (fun p -> 
@@ -315,5 +379,114 @@ and tc_pat (pat_t:typ) env p : Env.env =
   ignore <| List.map (tc_exp env) exps; 
   pat_env
 
+let tc_tparams env tps : (list<tparam> * Env.env) = 
+	let tps', env = List.fold_left (fun (tps, env) tp -> match tp with 
+	  | Tparam_typ(a, k) -> 
+				let k = tc_kind env k in 
+				let env = Tc.Env.push_local_binding env (Env.Binding_typ(a, k)) in
+				Tparam_typ(a,k)::tps, env
+	  | Tparam_term(x, t) -> 
+				let t, _ = tc_typ env t in 
+				let env = Tc.Env.push_local_binding env (Env.Binding_var(x, t)) in
+				Tparam_term(x, t)::tps, env) ([], env) tps in
+		List.rev tps', env 
+
+
+let rec tc_decl env se = match se with 
+    | Sig_tycon (lid, tps, k, _mutuals, _data, tags) -> 
+      let env = Tc.Env.set_range env (range_of_lid lid) in 
+      let tps, env = tc_tparams env tps in 
+      let k = tc_kind env k in 
+      let se = Sig_tycon(lid, tps, k, _mutuals, _data, tags) in  
+      let env = Tc.Env.push_sigelt env se in
+      se, env
   
-   
+    | Sig_typ_abbrev(lid, tps, k, t) -> 
+      let env = Tc.Env.set_range env (range_of_lid lid) in 
+      let tps, env = tc_tparams env tps in
+      let t, k1 = tc_typ env t in 
+      let k2 = tc_kind env k in 
+      Tc.Util.kind_equiv env k1 k2;
+      let se = Sig_typ_abbrev(lid, tps, k1, t) in 
+      let env = Tc.Env.push_sigelt env se in 
+      se, env
+  
+    | Sig_datacon(lid, t, tname) -> 
+      let t = tc_typ_check env t Kind_star in 
+      let args, result_t = Util.collect_formals t in
+      let constructed_t, _ = Util.flatten_typ_apps result_t in (* TODO: check that the tps in tname are the same as here *)
+      let _ = match constructed_t with
+        | Typ_const fv when lid_equals fv.v tname -> ()
+        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type lid constructed_t tname, range_of_lid lid)) in
+      let se = Sig_datacon(lid, t, tname) in 
+      let env = Tc.Env.push_sigelt env se in 
+      se, env
+  
+    | Sig_val_decl(lid, t, tag) -> 
+      let t = tc_typ_check env t Kind_star in 
+      let se = Sig_val_decl(lid, t, tag) in 
+      let env = Tc.Env.push_sigelt env se in 
+      se, env
+  
+    | Sig_assume(lid, phi, qual, tag) -> 
+      let phi = tc_typ_check env phi Kind_star in 
+      let se = Sig_assume(lid, phi, qual, tag) in 
+      let env = Tc.Env.push_sigelt env se in 
+      se, env
+  
+    | Sig_logic_function(lid, t, tags) -> 
+      let t = tc_typ_check env t Kind_star in 
+      let se = Sig_logic_function(lid, t, tags) in 
+      let env = Tc.Env.push_sigelt env se in 
+      se, env
+  
+    | Sig_let lbs -> 
+      let r, lbs' = snd lbs |> List.fold_left (fun (r, lbs) lb -> 
+        let r = Range.union_ranges r (range_of_lb lb)  in
+        let lb = match lb with 
+          | (Inl _, _, _) -> failwith "impossible"
+          | (Inr l, t, e) -> 
+            match Tc.Env.try_lookup_val_decl env l with 
+              | None -> (Inr l, t, e)
+              | Some t' -> match t with 
+                  | Typ_unknown -> (Inr l, t', e)
+                  | _ -> raise (Error (Tc.Errors.inline_type_annotation_and_val_decl l, range_of_lid l)) in
+        (r, lb::lbs)) (range_of_lb (List.hd (snd lbs)), snd lbs) in
+      let lbs' = List.rev lbs' in
+      let e = ewithpos (Exp_let((fst lbs, lbs'), ewithpos (Exp_constant(Syntax.Const_unit)) r)) r in
+      let se = match (fst <| tc_exp env e).v with 
+        | Exp_let(lbs, _) -> Sig_let lbs
+        | _ -> failwith "impossible" in
+      let env = Tc.Env.push_sigelt env se in 
+      se, env
+
+    | Sig_main e -> 
+      let env = Tc.Env.set_expected_typ env Util.t_unit in
+      let e, _ = tc_exp env e in 
+      let se = Sig_main e in 
+      let env = Tc.Env.push_sigelt env se in 
+      se, env
+
+    | Sig_bundle ses -> 
+      let tycons, rest = ses |> List.partition (function
+        | Sig_tycon _ -> true
+        | _ -> false) in
+      let abbrevs, rest = rest |> List.partition (function 
+        | Sig_typ_abbrev _ -> true
+        | _ -> false) in
+      let se = Sig_bundle (fst <| tc_decls env (tycons@abbrevs@rest)) in
+      let env = Tc.Env.push_sigelt env se in 
+      se, env
+and tc_decls env ses = 
+  let ses, env = List.fold_left (fun (ses, env) se ->
+  let se, env = tc_decl env se in 
+  se::ses, env) ([], env) ses in
+  List.rev ses, env 
+
+let tc_modul env modul = 
+  let env = Tc.Env.set_current_module env modul.name in 
+  let ses, env = tc_decls env modul.declarations in 
+  let modul = {name=modul.name; declarations=ses; exports=[]} in (* TODO: handle exports *) 
+  let env = Tc.Env.finish_module env modul in
+  modul, env
+

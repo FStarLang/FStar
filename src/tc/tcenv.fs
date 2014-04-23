@@ -28,6 +28,7 @@ open Microsoft.FStar.Profiling
 type binding =
   | Binding_var of bvvdef * typ
   | Binding_typ of btvdef * kind
+  | Binding_lid of lident * typ
   | Binding_sig of sigelt 
 
 type sigtable = Util.smap<sigelt>
@@ -74,6 +75,16 @@ let initial_env module_lid =
     sigtab=Util.smap_create default_table_size
   }
 
+let finish_module env m = 
+  let sigs = env.gamma |> List.collect (function 
+    | Binding_sig se -> [se]
+    | _ -> [])  in
+  add_sigelts env sigs;
+  {env with 
+    gamma=[];
+    modules=m::env.modules}
+
+
 let set_level env level = {env with level=level}
 let is_level env level = env.level=level
 let modules env = env.modules
@@ -103,21 +114,28 @@ let lookup_qname env (lid:lident)  =
   else match find_in_sigtab env lid with
     | Some se -> Some se 
     | None -> None
-    
+
+let try_lookup_val_decl env lid = 
+  match lookup_qname env lid with
+    | Some (Sig_val_decl(_, t, _)) -> Some t
+    | _ -> None
+
 let lookup_val_decl (env:env) lid = 
   match lookup_qname env lid with
-    | Some (Sig_val_decl(_, t)) -> t
+    | Some (Sig_val_decl(_, t, _)) -> t
     | _ -> raise (Not_found_binding (env, Inr (Util.fvar lid (range_of_lid lid))))
 
 let lookup_lid env lid = 
   let not_found () = raise (Not_found_binding(env, Inr(Util.fvar lid (range_of_lid lid)))) in
   let mapper = function
-    | Sig_datacon(_, t)  
+    | Sig_datacon(_, t, _)  
     | Sig_logic_function(_, t, _)
-    | Sig_val_decl (_, t) 
-    | Sig_let([(_, t, _)], _) -> Some t 
-    | Sig_let(lbs, _) -> 
-        Util.find_map lbs (fun (lid', t, e) -> 
+    | Sig_val_decl (_, t, _) 
+    | Sig_let(_, [(_, t, _)]) -> Some t 
+    | Sig_let(_, lbs) -> 
+        Util.find_map lbs (function 
+          | (Inl _, _, _) -> failwith "impossible"
+          | (Inr lid', t, e) -> 
             if lid_equals lid lid' 
             then Some t
             else None) 
@@ -129,12 +147,12 @@ let lookup_lid env lid =
 
 let lookup_datacon env lid = 
   match lookup_qname env lid with
-    | Some (Sig_datacon (_, t)) -> t
+    | Some (Sig_datacon (_, t, _)) -> t
     | _ -> raise (Not_found_binding(env, Inr(Util.fvar lid (range_of_lid lid))))
       
 let is_datacon env lid = 
   match lookup_qname env lid with
-    | Some (Sig_datacon (_, t)) -> true
+    | Some (Sig_datacon (_, t, _)) -> true
     | _ -> false
 
 let is_logic_function env lid =
@@ -201,10 +219,18 @@ let rec push_sigelt env s : env =
         
 let push_local_binding env b = {env with gamma=b::env.gamma}
       
-let uvars_in_env env = List.collect (function
-  | Binding_var(_, t) -> Util.uvars_in_typ t
-  | Binding_typ(_, k) -> Util.uvars_in_kind k
-  | _ -> []) env.gamma
+let uvars_in_env env = 
+  let ext out uvs = 
+    {out with uvars_k=uvs.uvars_k@out.uvars_k; 
+              uvars_t=uvs.uvars_t@out.uvars_t;
+              uvars_e=uvs.uvars_e@out.uvars_e} in
+  let rec aux out g = match g with 
+    | [] -> out
+    | Binding_lid(_, t)::tl
+    | Binding_var(_, t)::tl -> aux (ext out (Util.uvars_in_typ t)) tl
+    | Binding_typ(_, k)::tl -> aux (ext out (Util.uvars_in_kind k)) tl 
+    | Binding_sig _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
+  aux empty_uvars env.gamma
 
 let push_module env (m:modul) = 
     add_sigelts env m.exports;

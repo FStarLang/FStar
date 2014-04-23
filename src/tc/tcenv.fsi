@@ -24,6 +24,7 @@ open Microsoft.FStar.Absyn.Syntax
 type binding =
   | Binding_var of bvvdef * typ
   | Binding_typ of btvdef * kind
+  | Binding_lid of lident * typ
   | Binding_sig of sigelt
 
 type level = 
@@ -43,6 +44,7 @@ type env = {
 exception Not_found_binding of env * Util.either<typ,exp>
 
 val initial_env : lident -> env
+val finish_module : env -> modul -> env
 val set_level : env -> level -> env
 val is_level : env -> level -> bool
 val modules : env -> list<modul>
@@ -53,6 +55,7 @@ val get_range : env -> Range.range
 
 val lookup_bvar : env -> bvvar -> typ
 val lookup_lid : env -> lident -> typ      
+val try_lookup_val_decl : env -> lident -> option<typ>
 val lookup_val_decl : env -> lident -> typ
 val lookup_datacon: env -> lident -> typ
 val is_datacon : env -> lident -> bool
@@ -68,7 +71,7 @@ val lookup_operator : env -> ident -> typ
 
 val push_sigelt : env -> sigelt -> env
 val push_local_binding : env -> binding -> env
-val uvars_in_env : env -> list<uvar_t>
+val uvars_in_env : env -> Absyn.Util.uvars
 val push_module : env -> modul -> env
 
 val set_expected_typ : env -> typ -> env

@@ -21,77 +21,77 @@ exception Failure of string
 
 (* generic utils *)
 type smap : Type => Type
-val smap_create: int -> smap 'value
-val smap_add: smap 'value -> string -> 'value -> unit
-val smap_try_find: smap<'value> -> string -> option<'value>
-val smap_fold: smap<'value> -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
+assume val smap_create: int -> smap 'value
+assume val smap_add: smap 'value -> string -> 'value -> unit
+assume val smap_try_find: smap<'value> -> string -> option<'value>
+assume val smap_fold: smap<'value> -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
 
-val format: string -> list<string> -> string
-val format1: string -> string -> string
-val format2: string -> string -> string -> string
-val format3: string -> string -> string -> string -> string
-val format4: string -> string -> string -> string -> string -> string
-val print_string : string -> unit
-val print_any: 'a -> unit
-val strcat : string -> string -> string
-val concat_l : string -> list<string> -> string
-val write_file: string -> string -> unit
+assume val format: string -> list<string> -> string
+assume val format1: string -> string -> string
+assume val format2: string -> string -> string -> string
+assume val format3: string -> string -> string -> string -> string
+assume val format4: string -> string -> string -> string -> string -> string
+assume val print_string : string -> unit
+assume val print_any: 'a -> unit
+assume val strcat : string -> string -> string
+assume val concat_l : string -> list<string> -> string
+assume val write_file: string -> string -> unit
 
-val int_of_string:   string -> int
-val int_of_char:   char -> int
-val char_of_int:   int -> char
-val uint16_of_int: int -> uint16
-val string_of_int:   int -> string
-val string_of_float: float -> string
-val string_of_char:  char -> string
-val string_of_bytes: byte[] -> string
-val substring: string -> int -> int -> string
-val char_at: string -> int -> char
+assume val int_of_string:   string -> int
+assume val int_of_char:   char -> int
+assume val char_of_int:   int -> char
+assume val uint16_of_int: int -> uint16
+assume val string_of_int:   int -> string
+assume val string_of_float: float -> string
+assume val string_of_char:  char -> string
+assume val string_of_bytes: byte[] -> string
+assume val substring: string -> int -> int -> string
+assume val char_at: string -> int -> char
 
 type either<'a,'b> =
   | Inl of 'a
   | Inr of 'b
 
-val physical_eq: 'a -> 'a -> bool 
-val nodups: ('a -> 'a -> bool) -> list<'a> -> bool
-val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
-val set_eq: ('a -> 'a -> int) -> list<'a> -> list<'a> -> bool
-val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
-val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
-val for_all: ('a -> bool) -> list<'a> -> bool
-val for_some: ('a -> bool) -> list<'a> -> bool
-val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
-val multiset_equiv: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
+assume val physical_eq: 'a -> 'a -> bool 
+assume val nodups: ('a -> 'a -> bool) -> list<'a> -> bool
+assume val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
+assume val set_eq: ('a -> 'a -> int) -> list<'a> -> list<'a> -> bool
+assume val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
+assume val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
+assume val for_all: ('a -> bool) -> list<'a> -> bool
+assume val for_some: ('a -> bool) -> list<'a> -> bool
+assume val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
+assume val multiset_equiv: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 
-val must: option<'a> -> 'a
-val find_opt: ('a -> bool) -> list<'a> -> option<'a>
-val bind_opt: option<'a> -> ('a -> option<'b>) -> option<'b>
-val map_opt: option<'a> -> ('a -> 'b) -> option<'b>
+assume val must: option<'a> -> 'a
+assume val find_opt: ('a -> bool) -> list<'a> -> option<'a>
+assume val bind_opt: option<'a> -> ('a -> option<'b>) -> option<'b>
+assume val map_opt: option<'a> -> ('a -> 'b) -> option<'b>
 
-val first_N: int -> list<'a> -> (list<'a> * list<'a>)
-val prefix: list<'a> -> (list<'a> * 'a)
+assume val first_N: int -> list<'a> -> (list<'a> * list<'a>)
+assume val prefix: list<'a> -> (list<'a> * 'a)
 
-val string_of_unicode: byte[] -> string
-val unicode_of_string: string -> byte[] 
-val incr: ref int -> unit
-val geq: int -> int -> bool
-val for_range: int -> int -> (int -> unit) -> unit
+assume val string_of_unicode: byte[] -> string
+assume val unicode_of_string: string -> byte[] 
+assume val incr: ref int -> unit
+assume val geq: int -> int -> bool
+assume val for_range: int -> int -> (int -> unit) -> unit
 
 (* A simple state monad *)
 type state<'s,'a> = ('s -> 'a * 's) (* not relying on definition *)
-val get: state<'s,'s> 
-val put: 's -> state<'s,unit>
-val upd: ('s -> 's) -> state<'s,unit>
-val ret: 'a -> state<'s,'a>
-val bind: state<'s,'a> -> ('a -> state<'s,'b>) -> state<'s,'b>
-val stmap: list<'a> -> ('a -> state<'s,'b>) -> state<'s, list<'b>>
-val stiter: list<'a> -> ('a -> state<'s,unit>) -> state<'s,unit>
-val stfold: 'b -> list<'a> -> ('b -> 'a -> state<'s,'b>) -> state<'s,'b>
-val run_st: 's -> state<'s,'a> -> ('a * 's)
-val mk_ref: 'a -> ref<'a>
+assume val get: state<'s,'s> 
+assume val put: 's -> state<'s,unit>
+assume val upd: ('s -> 's) -> state<'s,unit>
+assume val ret: 'a -> state<'s,'a>
+assume val bind: state<'s,'a> -> ('a -> state<'s,'b>) -> state<'s,'b>
+assume val stmap: list<'a> -> ('a -> state<'s,'b>) -> state<'s, list<'b>>
+assume val stiter: list<'a> -> ('a -> state<'s,unit>) -> state<'s,unit>
+assume val stfold: 'b -> list<'a> -> ('b -> 'a -> state<'s,'b>) -> state<'s,'b>
+assume val run_st: 's -> state<'s,'a> -> ('a * 's)
+assume val mk_ref: 'a -> ref<'a>
 
 (* query log *)
-val bump_query_count: (unit -> int)
-val query_count: (unit -> int)
+assume val bump_query_count: (unit -> int)
+assume val query_count: (unit -> int)
 
-val expand_environment_variable: string -> string
+assume val expand_environment_variable: string -> string

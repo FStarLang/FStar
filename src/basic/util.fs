@@ -31,6 +31,7 @@ let smap_create<'value> (i:int) = new HashMultiMap<string,'value>(i, HashIdentit
 let smap_add (m:smap<'value>) k (v:'value) = m.Add(k,v)
 let smap_try_find (m:smap<'value>) k = m.TryFind(k)
 let smap_fold (m:smap<'value>) f a = m.Fold f a
+let smap_remove (m:smap<'value>) k = m.Remove k
 
 let pr  = Printf.printf
 let spr = Printf.sprintf 
@@ -73,14 +74,12 @@ let format1 f a = format f [a]
 let format2 f a b = format f [a;b]
 let format3 f a b c = format f [a;b;c]
 let format4 f a b c d = format f [a;b;c;d]
+let format5 f a b c d e = format f [a;b;c;d;e]
 
         
 let err_out : option<System.IO.StreamWriter> ref = ref None 
 let open_err_out (s:string) = (err_out := Some (new System.IO.StreamWriter(s)))
 let flush_err_out () = match !err_out with None -> () | Some e -> (e.Flush(); e.Close())
-
-let warn (x:Printf.TextWriterFormat<'a>) = pr "Warning: "; pr x
-let err (x:Printf.TextWriterFormat<'a>) = Printf.printf x
 
 let try_find_position matcher f = 
   let rec aux pos = function

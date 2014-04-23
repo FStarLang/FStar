@@ -33,6 +33,24 @@ let rec compress typ = match typ with
   | Typ_meta(Meta_pos(t, _)) -> compress t
   | _ -> typ
 
+let rec compress_exp exp = match exp.v with 
+  | Exp_uvar (uv, _) -> 
+    begin
+      match Unionfind.find uv with 
+        | Fixed e -> compress_exp e 
+        | _ -> exp
+    end
+  | _ -> exp
+  
+let rec compress_kind kind = match kind with 
+  | Kind_uvar uv -> 
+    begin
+      match Unionfind.find uv with 
+        | Fixed k -> compress_kind k
+        | _ -> kind
+    end
+  | _ -> kind
+
 let left ext benv btv = match ext benv (Inl btv) with 
   | benv, Inl bvd -> benv, bvd
   | _ -> failwith "impossible" 
@@ -40,37 +58,43 @@ let right ext benv bvv = match ext benv (Inr bvv) with
   | benv, Inr bvd -> benv, bvd
   | _ -> failwith "impossible" 
   
-(* Utilities for recursively descending AST and applying substitutions *)
+(* Utilities for recursively descending AST and visiting 
+   the leaves of a term while gathering a context of names.
+   Useful for implementing substitutions, computing freevars etc. *)
 let rec visit_kind'
+    (h: 'env -> 'benv -> kind -> ('env * kind))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp' -> ('env * exp'))
     (l: 'env -> exp -> exp) 
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
     (env:'env) (benv:'benv) (k:kind) (cont: ('env * kind) -> 'res) : 'res =
+  let k = compress_kind k in 
   match k with
+    | Kind_uvar _ 
     | Kind_star
-    | Kind_unknown -> cont (env, k)
+    | Kind_unknown -> cont (h env benv k)
     | Kind_tcon(aopt, k, k') ->
-        visit_kind' f g l ext env benv k
+        visit_kind' h f g l ext env benv k
           (fun (env, k) ->
              let benv, aopt = match aopt with
                | None -> benv, None
                | Some a ->
                    let benv, bvd = left ext benv (withsort a k) in
                      benv, Some bvd in (* Note: previously, with qkind, we were extending the benv before folding over k *)
-               visit_kind' f g l ext env benv k'
+               visit_kind' h f g l ext env benv k'
                  (fun (env, k') ->
                     cont (env, Kind_tcon(aopt, k, k'))))
     | Kind_dcon(xopt, t, k') ->
-        visit_typ' f g l ext env benv t
+        visit_typ' h f g l ext env benv t
           (fun (env, t) ->
              let benv, xopt = match xopt with
                | None -> benv, None
                | Some x -> let benv, bvd = right ext benv (withsort x t) in benv, Some bvd in
-               visit_kind' f g l ext env benv k'
+               visit_kind' h f g l ext env benv k'
                  (fun (env, k') ->
                     cont (env, Kind_dcon(xopt, t, k'))))
 and visit_typ'
+    (h: 'env -> 'benv -> kind -> ('env * kind))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp' -> ('env * exp'))
     (l: 'env -> exp -> exp) (* transforms labels *)
@@ -79,11 +103,11 @@ and visit_typ'
   let t_top = compress t in
   let t = t_top in
   match t with
-    | Typ_uvar (_,k) ->
+    | Typ_uvar (_, k) ->
       let env, t' = f env benv t in
       (match t' with
         | Typ_uvar(uv, k) ->
-          visit_kind' f g l ext env benv k
+          visit_kind' h f g l ext env benv k
             (fun (env, k) ->
               cont (env, Typ_uvar(uv, k)))
         | _ ->
@@ -94,7 +118,7 @@ and visit_typ'
           let env, t' = f env benv t in
           cont (env, t')
         | Some t -> 
-          visit_typ' f g l ext env benv t cont)
+          visit_typ' h f g l ext env benv t cont)
         
     | Typ_const _
     | Typ_unknown ->
@@ -103,37 +127,37 @@ and visit_typ'
     | _ ->
       match t with
         | Typ_fun (nopt, t1, t2, imp) ->
-          visit_typ' f g l ext env benv t1
+          visit_typ' h f g l ext env benv t1
             (fun (env, t1') ->
               let benv', nopt' = match nopt with
                 | None -> benv, nopt
                 | Some bvd ->
                   let benv, bvd' = right ext benv (withsort bvd t1) in
                   benv, Some bvd' in
-              visit_typ' f g l ext env benv' t2
+              visit_typ' h f g l ext env benv' t2
                 (fun (env, t2') ->
                   cont (env, Typ_fun(nopt', t1', t2', imp))))
             
         | Typ_univ (bvd, k,  t) ->
           let benv', bvd' = left ext benv (withsort bvd k) in
-          visit_typ' f g l ext env benv' t
+          visit_typ' h f g l ext env benv' t
             (fun (env, t') ->
-              visit_kind' f g l ext env benv' k
+              visit_kind' h f g l ext env benv' k
                 (fun (env, k') ->
                       cont (env, Typ_univ(bvd', k', t'))))
             
         | Typ_refine (bvd, t, form) ->
-          visit_typ' f g l ext env benv t
+          visit_typ' h f g l ext env benv t
             (fun (env, t') ->
               let benv', bvd' = right ext benv (withsort bvd t) in
-              visit_typ' f g l ext env benv' form
+              visit_typ' h f g l ext env benv' form
                 (fun (env, form') ->
                   cont (env, Typ_refine(bvd', t', form'))))
 
         | Typ_app(t1, t2) ->
-          visit_typ' f g l ext env benv t1
+          visit_typ' h f g l ext env benv t1
             (fun (env, t1') ->
-              visit_typ' f g l ext env benv t2
+              visit_typ' h f g l ext env benv t2
                 (fun (env, t2') ->
                   cont (env, Typ_app(t1', t2'))))
 
@@ -142,37 +166,37 @@ and visit_typ'
           cont (env, Typ_dep(Typ_const(v), l env str))
             
         | Typ_dep (t, e) ->
-          visit_typ' f g l ext env benv t
+          visit_typ' h f g l ext env benv t
             (fun (env, t') ->
-              visit_exp' f g l ext env benv e
+              visit_exp' h f g l ext env benv e
                 (fun (env, e') ->
                   cont (env, Typ_dep(t', e'))))
 
         | Typ_lam(x, t, t') ->
-          visit_typ' f g l ext env benv t
+          visit_typ' h f g l ext env benv t
             (fun (env, t) ->
               let benv', bvd' = right ext benv (withsort x t) in
-              visit_typ' f g l ext env benv' t'
+              visit_typ' h f g l ext env benv' t'
                 (fun (env, t') ->
                   cont (env, Typ_lam(bvd', t, t'))))
 
         | Typ_tlam(bvd, k, t) ->
           let benv', bvd' = left ext benv (withsort bvd k) in
-          visit_typ' f g l ext env benv' t
+          visit_typ' h f g l ext env benv' t
             (fun (env, t') ->
-              visit_kind' f g l ext env benv' k
+              visit_kind' h f g l ext env benv' k
                 (fun (env, k') ->
                   cont (env, Typ_tlam(bvd', k', t'))))
             
         | Typ_ascribed(t, k) ->
-          visit_typ' f g l ext env benv t
+          visit_typ' h f g l ext env benv t
             (fun (env, t') ->
-              visit_kind' f g l ext env benv k
+              visit_kind' h f g l ext env benv k
                 (fun (env, k') ->
                   cont (env, Typ_ascribed(t,k))))
 
         | Typ_meta (Meta_cases tl) ->
-          visit_typs' f g l ext env benv tl
+          visit_typs' h f g l ext env benv tl
             (fun (env, tl') -> cont (env, Typ_meta(Meta_cases tl')))
 
         | Typ_meta (Meta_tid i) ->
@@ -181,24 +205,24 @@ and visit_typ'
         | Typ_meta (Meta_pattern(t, ps)) -> 
           let rec aux env ps cont = match ps with 
             | [] -> cont (env, [])
-            | Inl t::tl ->  visit_typ' f g l ext env benv t (fun (env, t') -> 
+            | Inl t::tl ->  visit_typ' h f g l ext env benv t (fun (env, t') -> 
               aux env tl (fun (env, accum) -> cont (env, Inl t'::accum)))
-            | Inr v::tl ->  visit_exp' f g l ext env benv v (fun (env, e') -> 
+            | Inr v::tl ->  visit_exp' h f g l ext env benv v (fun (env, e') -> 
               aux env tl (fun (env, accum) -> cont (env, Inr e'::accum))) in 
-          visit_typ' f g l ext env benv t 
+          visit_typ' h f g l ext env benv t 
             (fun (env, t') -> aux env ps (fun (env, ps) -> cont (env, Typ_meta(Meta_pattern(t', ps)))))
 
         | _ -> failwith "Unexpected type"
 
-
 and visit_exp'
+    (h: 'env -> 'benv -> kind -> ('env * kind))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp' -> ('env * exp'))
     (l: 'env -> exp -> exp)
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
     (env:'env) (benv:'benv) (e:exp) (contorig : ('env * exp) -> 'res) : 'res =
   let cont (env, exp') =
-    visit_typ' f g l ext env benv e.sort
+    visit_typ' h f g l ext env benv e.sort
       (fun (env, sort') -> contorig (env, withinfo exp' sort' e.p)) in
   let extl b l = match ext b l with
     | (x, Inl y) -> (x,y) 
@@ -206,51 +230,53 @@ and visit_exp'
   let extr b l = match ext b l with
     | (x, Inr y) -> (x,y) 
     | _ -> failwith "Unexpected result" in
+  let e = compress_exp e in 
     match e.v with
     | Exp_bvar bv -> 
       (match !bv.v.instantiation with 
         | None -> cont (g env benv e.v)
-        | Some e -> visit_exp' f g l ext env benv e contorig)
+        | Some e -> visit_exp' h f g l ext env benv e contorig)
     | Exp_fvar _
-    | Exp_constant _ -> cont (g env benv e.v)
+    | Exp_constant _ 
+    | Exp_uvar _ -> cont (g env benv e.v)
    
     | Exp_primop(op, el) ->
-      visit_exps' f g l ext env benv el
+      visit_exps' h f g l ext env benv el
         (fun (env, el) ->
           cont (env, Exp_primop(op, el)))
         
     | Exp_abs (bvd, t, e) ->
-      visit_typ' f g l ext env benv t
+      visit_typ' h f g l ext env benv t
         (fun (env, t') ->
           let benv', bvd' = extr benv (Inr (withsort bvd t)) in
-          visit_exp' f g l ext env benv' e
+          visit_exp' h f g l ext env benv' e
             (fun (env, e') ->
               cont (env, Exp_abs(bvd', t', e'))))
         
     | Exp_tabs(bvd, k, e) ->
-      visit_kind' f g l ext env benv k
+      visit_kind' h f g l ext env benv k
         (fun (env, k') ->
           let benv', bvd' = extl benv (Inl (withsort bvd k)) in
-          visit_exp' f g l ext env benv' e
+          visit_exp' h f g l ext env benv' e
             (fun (env, e') ->
               cont (env, Exp_tabs(bvd', k', e'))))
         
     | Exp_app (e1, e2, imp) ->
-      visit_exp' f g l ext env benv e1
+      visit_exp' h f g l ext env benv e1
         (fun (env, e1') ->
-          visit_exp' f g l ext env benv e2
+          visit_exp' h f g l ext env benv e2
             (fun (env, e2') ->
               cont (env, Exp_app(e1', e2', imp))))
         
     | Exp_tapp (e, t) ->
-      visit_exp' f g l ext env benv e
+      visit_exp' h f g l ext env benv e
         (fun (env, e') ->
-          visit_typ' f g l ext env benv t
+          visit_typ' h f g l ext env benv t
             (fun (env, t') ->
               cont (env, Exp_tapp(e',t'))))
         
     | Exp_match(e, eqns) ->
-      let rec visit_pat f g l ext env benv pat cont = match pat with
+      let rec visit_pat h f g l ext env benv pat cont = match pat with
         | Pat_var bv -> 
            let benv', bvd' = extr benv (Inr (withsort bv Typ_unknown)) in
               cont (env, benv', Pat_var bvd')
@@ -258,93 +284,99 @@ and visit_exp'
            let benv', bvd' = extl benv (Inl (withsort btv Kind_unknown)) in
               cont (env, benv', Pat_tvar bvd')
         | Pat_cons(c, pats) -> 
-          visit_pats f g l ext env benv pats 
+          visit_pats h f g l ext env benv pats 
             (fun (env, benv, pats) ->  cont (env, benv, Pat_cons(c, pats))) 
         | Pat_constant c -> 
           cont (env, benv, pat)
         | Pat_disj [] -> failwith "impossible"
         | Pat_disj (p::ps) -> 
-          visit_pat f g l ext env benv p 
+          visit_pat h f g l ext env benv p 
             (fun (env, benv, p) -> 
-              visit_pats f g l ext env benv ps
+              visit_pats h f g l ext env benv ps
                 (fun (_, _, ps) ->  cont (env, benv, Pat_disj(p::ps))))
         | Pat_wild
         | Pat_twild -> cont (env, benv, pat)
           
-      and visit_pats f g l ext env benv pats cont = match pats with
+      and visit_pats h f g l ext env benv pats cont = match pats with
         | [] -> cont (env, benv, pats)
-        | hd::tl -> visit_pat f g l ext env benv hd (fun (env, benv, hd) -> 
-          visit_pats f g l ext env benv tl (fun (env, benv, tl) -> 
+        | hd::tl -> visit_pat h f g l ext env benv hd (fun (env, benv, hd) -> 
+          visit_pats h f g l ext env benv tl (fun (env, benv, tl) -> 
             cont (env, benv, hd::tl))) in
       
       let rec visit_eqns env benv eqns cont = match eqns with
         | [] -> cont (env, [])
         | (pat, wopt, br)::rest -> 
-          visit_pat f g l ext env benv pat
+          visit_pat h f g l ext env benv pat
             (fun (env, benv', pat') -> 
               match wopt with 
                 | None -> 
-                  visit_exp' f g l ext env benv' br 
+                  visit_exp' h f g l ext env benv' br 
                     (fun (env, br') -> 
                       visit_eqns env benv rest 
                         (fun (env, rest') -> 
                           cont (env, (pat', None, br')::rest')))
                 | Some w -> 
-                  visit_exp' f g l ext env benv' w 
+                  visit_exp' h f g l ext env benv' w 
                     (fun (env, w') -> 
-                      visit_exp' f g l ext env benv' br 
+                      visit_exp' h f g l ext env benv' br 
                         (fun (env, br') -> 
                           visit_eqns env benv rest 
                             (fun (env, rest') -> 
                               cont (env, (pat', Some w', br')::rest'))))) in
-      visit_exp' f g l ext env benv e
+      visit_exp' h f g l ext env benv e
         (fun (env, e) ->
           visit_eqns env benv eqns
             (fun (env, eqns) ->
               cont (env, Exp_match(e, eqns))))
         
     | Exp_ascribed (e,t) -> 
-      visit_exp' f g l ext env benv e
+      visit_exp' h f g l ext env benv e
         (fun (env, e') ->
-          visit_typ' f g l ext env benv t
+          visit_typ' h f g l ext env benv t
             (fun (env, t') ->
               cont (env, Exp_ascribed(e',t'))))
         
-    | Exp_let (false, bvd_t_e_l, e) ->
-      let rec binders_visit env benv bvd_t_e_l cont = match bvd_t_e_l with
+    | Exp_let ((false,lbs), e) ->
+      let rec binders_visit env benv lbs cont = match lbs with
         | [] -> cont (env, benv, [])
-        | (bv,t,e)::rest ->
-          visit_exp' f g l ext env benv e
+        | (lbname,t,e)::rest ->
+          visit_exp' h f g l ext env benv e
             (fun (env, e') ->
-              visit_typ' f g l ext env benv t
+              visit_typ' h f g l ext env benv t
                 (fun (env, t') ->
-                  let benv', bv' = right ext benv (withsort bv t) in
+                  let benv', lbname' = match lbname with
+                    | Inl bv -> 
+                      let benv', bv' = right ext benv (withsort bv t) in
+                      benv', Inl bv'
+                    | _ -> benv, lbname in
                   binders_visit env benv' rest (fun (env, benv, accum) ->
-                    cont (env, benv, (bv',t',e')::accum)))) in
-      binders_visit env benv bvd_t_e_l
-        (fun (env, benv', bvd_t_e_l) ->
-          visit_exp' f g l ext env benv' e
-            (fun (env, e') -> cont (env, Exp_let(false, bvd_t_e_l, e'))))
+                    cont (env, benv, (lbname',t',e')::accum)))) in
+      binders_visit env benv lbs
+        (fun (env, benv', lbs') ->
+          visit_exp' h f g l ext env benv' e
+            (fun (env, e') -> cont (env, Exp_let((false, lbs'), e'))))
         
-    | Exp_let (true, bvd_t_e_l, e) ->
-      let benv', bvd_t_e_l' = List.fold_left
-        (fun (benv, out) (bv,t,e) ->
-          let benv', bv' = right ext benv (withsort bv t) in
-          benv', (bv', t, e)::out) (benv,[]) bvd_t_e_l in
-      let bvs, typs, exps = List.unzip3 bvd_t_e_l' in
-      visit_typs' f g l ext env benv' typs
+    | Exp_let ((true, lbs), e) ->
+      let benv', lbs' = List.fold_left
+        (fun (benv, out) (lbname,t,e) ->
+          let benv', lbname' = match lbname with 
+            | Inl bv -> 
+              let benv', bv' = right ext benv (withsort bv t) in
+              benv', Inl bv'
+            | Inr _ -> benv, lbname in 
+          benv', (lbname', t, e)::out) (benv,[]) lbs in
+      let names, typs, exps = List.unzip3 lbs' in
+      visit_typs' h f g l ext env benv' typs
         (fun (env, tl) ->
-          visit_exps' f g l ext env benv' exps
+          visit_exps' h f g l ext env benv' exps
             (fun (env, el) ->
-              let bvd_t_e_l' = List.zip3 bvs typs exps in
-              visit_exp' f g l ext env benv' e
+              let lbs' = List.zip3 names typs exps in
+              visit_exp' h f g l ext env benv' e
                 (fun (env, e') ->
-                  cont (env, Exp_let(true, bvd_t_e_l', e')))))
-        
-    | e -> failwith "Unexpected expression"
-
+                  cont (env, Exp_let((true, lbs'), e')))))
 
 and visit_typs'
+    (h: 'env -> 'benv -> kind -> ('env * kind))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp' -> ('env * exp'))
     (l: 'env -> exp -> exp)
@@ -352,11 +384,12 @@ and visit_typs'
     (env:'env) (benv:'benv) (ts:list<typ>) (cont:('env * list<typ>) -> 'res) : 'res =
   let rec aux env tl cont = match tl with
     | [] -> cont (env, [])
-    | t::tl -> visit_typ' f g l ext env benv t (fun (env,t') -> aux env tl (fun (env, accum) -> cont (env, t'::accum)))
+    | t::tl -> visit_typ' h f g l ext env benv t (fun (env,t') -> aux env tl (fun (env, accum) -> cont (env, t'::accum)))
   in
     aux env ts cont 
 
 and visit_exps'
+    (h: 'env -> 'benv -> kind -> ('env * kind))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp' -> ('env * exp'))
     (l: 'env -> exp -> exp)
@@ -365,11 +398,12 @@ and visit_exps'
   
   let rec aux env tl cont = match tl with
     | [] -> cont (env, [])
-    | e::tl -> visit_exp' f g l ext env benv e (fun (env,t') -> aux env tl (fun (env, accum) -> cont (env, t'::accum)))
+    | e::tl -> visit_exp' h f g l ext env benv e (fun (env,t') -> aux env tl (fun (env, accum) -> cont (env, t'::accum)))
   in
     aux env es cont
 
 and visit_either_l'
+    (h: 'env -> 'benv -> kind -> ('env * kind))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp' -> ('env * exp'))
     (l: 'env -> exp -> exp)
@@ -377,17 +411,18 @@ and visit_either_l'
     (env:'env) (benv:'benv) (es:list<either<typ,exp>>) (cont:('env * list<either<typ,exp>>) -> 'res) : 'res =
   let rec aux env tl cont = match tl with
     | [] -> cont (env, [])
-    | (Inr e)::tl -> visit_exp' f g l ext env benv e (fun (env,e') -> aux env tl (fun (env, accum) -> cont (env, Inr e'::accum)))
-    | (Inl t)::tl -> visit_typ' f g l ext env benv t (fun (env,t') -> aux env tl (fun (env, accum) -> cont (env, Inl t'::accum)))
+    | (Inr e)::tl -> visit_exp' h f g l ext env benv e (fun (env,e') -> aux env tl (fun (env, accum) -> cont (env, Inr e'::accum)))
+    | (Inl t)::tl -> visit_typ' h f g l ext env benv t (fun (env,t') -> aux env tl (fun (env, accum) -> cont (env, Inl t'::accum)))
   in
     aux env es cont
       
-let visit_typs f g l ext env benv t = visit_typs' f g l ext env benv t (fun x -> x)
-let visit_typ f g l ext env benv t = visit_typ' f g l ext env benv t (fun x -> x)
-let visit_exp f g l ext env benv t = visit_exp' f g l ext env benv t (fun x -> x)
-let visit_kind f g l ext env benv t = visit_kind' f g l ext env benv t (fun x -> x)
+let visit_typs h f g l ext env benv t = visit_typs' h f g l ext env benv t (fun x -> x)
+let visit_typ h f g l ext env benv t = visit_typ' h f g l ext env benv t (fun x -> x)
+let visit_exp h f g l ext env benv t = visit_exp' h f g l ext env benv t (fun x -> x)
+let visit_kind h f g l ext env benv t = visit_kind' h f g l ext env benv t (fun x -> x)
 
 let visit_simple skel
+    (h: 'env -> kind -> ('env * kind))
     (f: 'env -> typ -> ('env * typ))
     (g: 'env -> exp' -> ('env * exp'))
     (env:'env) (t:'kte) : ('env * 'kte) =
@@ -395,6 +430,7 @@ let visit_simple skel
     | Inl tv -> (benv, Inl tv.v)
     | Inr xv -> (benv, Inr xv.v) in
   skel
+    (fun env _ k -> h env k)
     (fun env _ t -> f env t)
     (fun env _ e -> g env e)
     (fun _ e -> e)
@@ -404,8 +440,6 @@ let visit_simple skel
 let visit_kind_simple f = visit_simple visit_kind f
 let visit_typ_simple f = visit_simple visit_typ f 
 let visit_exp_simple f = visit_simple visit_exp f
-
-
 
 (**********************************************************************************)
 (* A more general way to reduce types. Would be good to migrate to this uniformly *)
@@ -432,8 +466,10 @@ let rec reduce_kind
     (combine_typ: (typ -> (kind list * typ list * exp list) -> 'env -> (typ * 'env)))
     (combine_exp: (exp -> (kind list * typ list * exp list) -> 'env -> (exp * 'env))) (env:'env) binders kind : (kind * 'env) =
   let rec visit_kind env binders k =
+    let k = compress_kind k in
     let kl, tl, el, env =   
-      (match k(* .u *) with 
+      match k with 
+        | Kind_uvar _
         | Kind_star 
         | Kind_unknown -> [], [], [], env
         | Kind_tcon (aopt, k1, k2) -> 
@@ -443,7 +479,7 @@ let rec reduce_kind
         | Kind_dcon (xopt, t, k) -> 
           let t, env = map_typ env binders t in
           let k, env = map_kind env (push_vbinder binders xopt) k in
-          [k],[t],[],env) in
+          [k],[t],[],env in
     combine_kind k (kl, tl, el) env 
   and map_kind env binders k = map_kind' visit_kind map_typ map_exp env binders k
   and map_typ env binders t = reduce_typ map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders t 
@@ -465,52 +501,51 @@ and reduce_typ
       t::out, binders, env) ([], binders, env) tl in
     List.rev tl, env 
   and visit_typ env binders t = 
-    let kl, tl, el, env =   
-      (match compress t with 
-        | Typ_unknown
-        | Typ_btvar _   
-        | Typ_const _ -> [],[],[], env
-        | Typ_app(t1, t2) -> 
-          let tl, env = map_typs env binders [(None, t1); (None, t2)] in 
-          [], tl, [], env 
-        | Typ_lam(x, t1, t2)
-        | Typ_refine(x, t1, t2) -> 
-          let tl, env = map_typs env binders [(Some x, t1); (None, t2)] in 
-          [], tl, [], env 
-        | Typ_fun(xopt, t1, t2, imp) -> 
-          let tl, env = map_typs env binders [(xopt,t1);(None, t2)] in
-          [], tl, [], env 
-        | Typ_univ(a, k, t) 
-        | Typ_tlam(a, k, t) ->
-          let k, env = map_kind env binders k in
-          let t, env = map_typ env (push_tbinder binders (Some a)) t in
-          [k], [t], [], env
-        | Typ_dep(t, e) -> 
-          let t, env = map_typ env binders t in
-          let e, env = map_exp env binders e in
-          [], [t], [e], env
-        | Typ_ascribed(t,k) ->  
-          let t, env = map_typ env binders t in
-          let k, env = map_kind env binders k in
-          [k], [t], [], env
-        | Typ_uvar(_, k) -> 
-          let k, env = map_kind env binders k in
-          [k], [], [], env
-        | Typ_meta(Meta_pos(t,_)) ->
-          let t, env = map_typ env binders t in
-          [], [t], [], env 
-        | Typ_meta(Meta_tid _) -> 
-          [], [], [], env
-        | Typ_meta(Meta_cases tl) -> 
-          let tl, env = map_typs env binders (List.map (fun t -> (None, t)) tl) in 
-          [], tl, [], env
-        | Typ_meta(Meta_pattern(t,ps)) -> 
-          let t,env = map_typ env binders t in 
-          let tpats, vpats, env = List.fold_left (fun (tpats, vpats, env) -> function
-            | Inl t -> let t, env = map_typ env binders t in (t::tpats, vpats, env)
-            | Inr e -> let e, env = map_exp env binders e in (tpats, e::vpats, env)) ([], [], env) ps in 
-          [], t::tpats, vpats, env)
-    in 
+    let t = compress t in 
+    let kl, tl, el, env = match compress t with 
+      | Typ_unknown
+      | Typ_btvar _   
+      | Typ_const _ -> [],[],[], env
+      | Typ_app(t1, t2) -> 
+        let tl, env = map_typs env binders [(None, t1); (None, t2)] in 
+        [], tl, [], env 
+      | Typ_lam(x, t1, t2)
+      | Typ_refine(x, t1, t2) -> 
+        let tl, env = map_typs env binders [(Some x, t1); (None, t2)] in 
+        [], tl, [], env 
+      | Typ_fun(xopt, t1, t2, imp) -> 
+        let tl, env = map_typs env binders [(xopt,t1);(None, t2)] in
+        [], tl, [], env 
+      | Typ_univ(a, k, t) 
+      | Typ_tlam(a, k, t) ->
+        let k, env = map_kind env binders k in
+        let t, env = map_typ env (push_tbinder binders (Some a)) t in
+        [k], [t], [], env
+      | Typ_dep(t, e) -> 
+        let t, env = map_typ env binders t in
+        let e, env = map_exp env binders e in
+        [], [t], [e], env
+      | Typ_ascribed(t,k) ->  
+        let t, env = map_typ env binders t in
+        let k, env = map_kind env binders k in
+        [k], [t], [], env
+      | Typ_uvar(_, k) -> 
+        let k, env = map_kind env binders k in
+        [k], [], [], env
+      | Typ_meta(Meta_pos(t,_)) ->
+        let t, env = map_typ env binders t in
+        [], [t], [], env 
+      | Typ_meta(Meta_tid _) -> 
+        [], [], [], env
+      | Typ_meta(Meta_cases tl) -> 
+        let tl, env = map_typs env binders (List.map (fun t -> (None, t)) tl) in 
+        [], tl, [], env
+      | Typ_meta(Meta_pattern(t,ps)) -> 
+        let t,env = map_typ env binders t in 
+        let tpats, vpats, env = List.fold_left (fun (tpats, vpats, env) -> function
+          | Inl t -> let t, env = map_typ env binders t in (t::tpats, vpats, env)
+          | Inr e -> let e, env = map_exp env binders e in (tpats, e::vpats, env)) ([], [], env) ps in 
+        [], t::tpats, vpats, env in
     combine_typ t (kl, tl, el) env 
   and map_kind env binders k = reduce_kind map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders k 
   and map_typ env binders t = map_typ' map_kind visit_typ map_exp env binders t
@@ -563,11 +598,14 @@ and reduce_exp
   and map_typ env binders t = reduce_typ map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders t 
   and map_exp env binders e = map_exp' map_kind map_typ visit_exp env binders e
   and visit_exp env binders e = 
-    let kl, tl, el, env = 
-      (match e.v with 
+    let e = compress_exp e in 
+    let kl, tl, el, env = match e.v with 
         | Exp_bvar _  
         | Exp_fvar _ 
         | Exp_constant _ -> [], [], [], env
+        | Exp_uvar (uv, t) -> 
+          let t, env = map_typ env binders t in
+          [], [t], [], env
         | Exp_abs(x, t, e) -> 
           let tl, env = map_typs env binders [t] in
           let e, env = map_exp env (push_vbinder binders (Some x)) e in
@@ -605,26 +643,32 @@ and reduce_exp
           let t, env = map_typ env binders t in
           let e, env = map_exp env binders e in
           [], [t], [e], env
-        | Exp_let(false, [(x,t,e1)], e2) -> 
+        | Exp_let((false, [(x,t,e1)]), e2) -> 
           let tl, env = map_typs env binders [t] in
-          let el, env = map_exps_with_binders env [(binders, e1); (push_vbinder binders (Some x), e2)] in 
+          let binders' = match x with 
+            | Inl x -> push_vbinder binders (Some x)
+            | _ -> binders in
+          let el, env = map_exps_with_binders env [(binders, e1); (binders', e2)] in 
           [], tl, el, env 
-        | Exp_let(true, bvdt_tl, e) ->
+        | Exp_let((true, bvdt_tl), e) ->
           let tl = List.map (fun (_, t, _) -> t) bvdt_tl in
           let el = List.map (fun (_, _, e) -> e) bvdt_tl in
           let tl, env = map_typs env binders tl in
-          let binders = List.fold_left (fun binders (x, _, _) -> push_vbinder binders (Some x)) binders bvdt_tl in 
+          let binders = List.fold_left (fun binders (x, _, _) -> match x with 
+            | Inl x -> push_vbinder binders (Some x)
+            | _ -> binders) binders bvdt_tl in 
           let el, env = map_exps env binders (el@[e]) in
           [], tl, el, env 
         | Exp_let _ -> failwith "impossible"
         | Exp_primop(_, el) ->
           let el, env = map_exps env binders el in
-          [], [], el, env) in
+          [], [], el, env in
     combine_exp e (kl, tl, el) env in
   map_exp env binders exp
     
 let combine_kind k (kl, tl, el) env = 
   let k' = match k, kl, tl with 
+    | Kind_uvar _, [], []
     | Kind_star, [], [] 
     | Kind_unknown, [], [] -> k
     | Kind_tcon (aopt, k1, k2), [k1';k2'], [] -> Kind_tcon(aopt, k1', k2')
@@ -658,6 +702,7 @@ let combine_exp e (kl,tl,el) env =
     | Exp_bvar _, [], [], []  
     | Exp_fvar _, [], [], [] 
     | Exp_constant _, [], [], [] -> e.v
+    | Exp_uvar(uv, _), [], [t], [] -> Exp_uvar(uv, t)
     | Exp_abs(x, t, e), [], [t'], [e'] -> Exp_abs(x, t', e')
     | Exp_tabs(a, k, e), [k'], [], [e'] -> Exp_tabs(a, k', e')
     | Exp_app(e1, e2, imp), [], [], [e1';e2'] -> Exp_app(e1', e2', imp)  
@@ -669,11 +714,11 @@ let combine_exp e (kl,tl,el) env =
         | _ -> failwith "impossible" in
       Exp_match(e1', mk_eqns eqns el)
     | Exp_ascribed(e, t), [], [t'], [e'] -> Exp_ascribed(e', t')
-    | Exp_let(x, bvdt_tl, e), [], _, _ ->
-        (match Util.first_N (List.length bvdt_tl) el with 
+    | Exp_let((x, lbs), e), [], _, _ ->
+        (match Util.first_N (List.length lbs) el with 
            | el, [e'] -> 
-              let bvdt_tl' = List.map3 (fun (bvd, _, _) t e -> (bvd, t, e)) bvdt_tl tl el in
-              Exp_let(x, bvdt_tl', e') 
+              let lbs' = List.map3 (fun (lbname, _, _) t e -> (lbname, t, e)) lbs tl el in
+              Exp_let((x, lbs'), e') 
            | _ -> failwith "impossible")
     | Exp_primop(x, es), [], [], _ -> Exp_primop(x, el)
     | _ -> failwith "impossible" in

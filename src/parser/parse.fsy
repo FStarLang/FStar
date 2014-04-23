@@ -229,6 +229,7 @@ valQuals:
   |       { NoQual }
   | LOGIC { LogicTag Logic_val }
   | EXTERN name { Extern $2 }
+  | ASSUME { AST.Assumption }
       
 erefDefn: 
   | LBRACE ident EQUALS STRING erefFields RBRACE

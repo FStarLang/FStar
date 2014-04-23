@@ -91,6 +91,7 @@ type tyvalQual =
   | LogicTag  of logic_tag
   | Extern    of ident
   | TupleType of int
+  | Assumption
       
 type decl' = 
   | Open of lid 

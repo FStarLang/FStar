@@ -30,6 +30,7 @@ open Microsoft.FStar.Parser
 type binding = 
   | Binding_typ_var of ident
   | Binding_var of ident
+  | Binding_let of lident
   | Binding_tycon of lident
 
 type env = {
@@ -38,7 +39,7 @@ type env = {
   open_namespaces: list<lident>; (* fully qualified names, in order of precedence *)
   sigaccum:sigelts;              (* type declarations being accumulated for the current module *)
   localbindings:list<(either<btvdef,bvvdef> * binding)>;  (* local name bindings for name resolution, paired with an env-generated unique name *)
-  recbindings:list<binding>;     (* names bound by recursive type definitions only *)
+  recbindings:list<binding>;     (* names bound by recursive type and top-level let-bindings definitions only *)
   phase:AST.level;
   sigmap: Util.smap<sigelt>;
 }
@@ -70,19 +71,10 @@ let prepare_module env mname =
   let open_ns = if lid_equals mname Const.prims_lid then [] else [Const.prims_lid] in
   {env with curmodule=Some mname; open_namespaces = open_ns}
 
-let finish_module env modul = 
-  {env with 
-    curmodule=None;
-    modules=(modul.name, modul)::env.modules; 
-    open_namespaces=[];
-    sigaccum=[];
-    localbindings=[];
-    recbindings=[];
-    phase=AST.Un}
-
 let range_of_binding = function
   | Binding_typ_var id
   | Binding_var id -> id.idRange
+  | Binding_let lid
   | Binding_tycon lid -> range_of_lid lid
             
 let try_lookup_typ_var env (id:ident) =
@@ -95,10 +87,6 @@ let try_lookup_typ_var env (id:ident) =
     | _ -> None 
 
 let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a> =
-  let rec is_prefix arg = match arg with
-    | hd::tl, hd'::tl' -> hd.idText = hd'.idText && is_prefix (tl, tl')
-    | [], _ -> true
-    | _ -> false in
   let aux (namespaces:list<lident>) : option<'a> =
     match finder lid with 
         | Some r -> Some r
@@ -178,7 +166,15 @@ let try_lookup_lid env (lid:lident) =
         None in
 
   let found_id = match lid.ns with
-    | [] -> try_lookup_id env (lid.ident)
+    | [] -> 
+      begin match try_lookup_id env (lid.ident) with 
+        | Some e -> Some e
+        | None -> 
+          let recname = qualify env lid.ident in
+          Util.find_map env.recbindings (function
+            | Binding_let l when lid_equals l recname -> Some (Util.fvar recname (range_of_lid recname))
+            | _ -> None)
+      end
     | _ -> None in
   
   match found_id with 
@@ -193,11 +189,10 @@ let try_lookup_datacon env (lid:lident) =
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
-
 type record = {
   typename: lident;
   constrname: lident;
-  params: list<tparam>;
+  parms: list<tparam>;
   fields: list<(fieldname * typ)>
 }
 let record_cache : ref<list<record>> = Util.mk_ref []
@@ -210,20 +205,20 @@ let extract_record env = function
     
     let find_dc dc = 
       sigs |> Util.find_opt (function 
-        | Sig_datacon(lid, _) -> lid_equals dc lid 
+        | Sig_datacon(lid, _, _) -> lid_equals dc lid 
         | _ -> false) in
     
     sigs |> List.iter (function 
-      | Sig_tycon(typename, params, _, _, [dc], tags) when is_rec tags -> 
+      | Sig_tycon(typename, parms, _, _, [dc], tags) when is_rec tags -> 
         begin match must <| find_dc dc with 
-          | Sig_datacon(constrname, t) -> 
+          | Sig_datacon(constrname, t, _) -> 
               let fields = 
                 (fst <| collect_formals t) |> List.collect (function
                   | Inr(Some x, t) -> [(qual constrname x.ppname, t)]
                   | _ -> []) in
               let record = {typename=typename;
                             constrname=constrname;
-                            params=params;
+                            parms=parms;
                             fields=fields} in 
               record_cache := record::!record_cache 
           | _ -> ()
@@ -298,6 +293,7 @@ let push_local_vbinding env b =
     | _ -> failwith "impossible"
       
 let push_rec_binding env b = match b with 
+  | Binding_let lid
   | Binding_tycon lid -> 
     if unique env lid
     then {env with recbindings=b::env.recbindings}
@@ -306,29 +302,15 @@ let push_rec_binding env b = match b with
     
 let push_sigelt env s = 
   let err l = raise (Error ("Duplicate top-level names " ^ (text_of_lid l), range_of_lid l)) in
-  (* Util.print_string (Util.format1 "Trying to pushing sigelt %s\n" *)
-  (*                      (Util.concat_l ", " (List.map (fun l -> l.str) (lids_of_sigelt s)))); *)
-  let env = match s with
-    | Sig_let(lbs, _) -> 
-      let finder (l, _, _) = match Util.smap_try_find env.sigmap l.str with 
-        | None -> None
-        | Some se -> Some (se, l) in
-      begin match Util.find_map lbs finder with 
-        | None 
-        | Some (Sig_val_decl _, _) ->
-          {env with sigaccum=s::env.sigaccum}
-        | Some (_, l) -> err l
-      end
-    | _ -> 
-      let lids = lids_of_sigelt s in 
-      match Util.find_map lids (fun l -> if not (unique env l) then Some l else None) with 
-        | None -> 
-          extract_record env s;
-          {env with sigaccum=s::env.sigaccum}
-        | Some l -> 
-          err l in 
+  let env = match Util.find_map (lids_of_sigelt s) (fun l -> if not (unique env l) then Some l else None) with 
+    | None -> 
+      extract_record env s;
+      {env with sigaccum=s::env.sigaccum}
+    | Some l -> 
+      err l in 
   let lss = match s with 
     | Sig_bundle ses -> List.map (fun se -> (lids_of_sigelt se, se)) ses
+    | Sig_val_decl(_, _, None) -> [] 
     | _ -> [lids_of_sigelt s, s] in
   lss |> List.iter (fun (lids, se) -> 
     lids |> List.iter (fun lid -> 
@@ -342,3 +324,24 @@ let is_type_lid env lid =
   match try_lookup_typ_name env lid with
     | Some _ -> true
     | _ -> false
+
+let finish_module env modul = 
+  env.sigaccum |> List.iter (fun se -> match se with
+    | Sig_val_decl(l, t, None) -> 
+      begin match try_lookup_lid env l with 
+        | None -> 
+          Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.sli l));
+          Util.smap_add env.sigmap l.str se
+        | Some _ -> ()
+      end
+    | _ -> ());
+  {env with 
+    curmodule=None;
+    modules=(modul.name, modul)::env.modules; 
+    open_namespaces=[];
+    sigaccum=[];
+    localbindings=[];
+    recbindings=[];
+    phase=AST.Un}
+
+

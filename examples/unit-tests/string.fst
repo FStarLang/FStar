@@ -15,8 +15,8 @@
 *)
 module String
 
-val split: string -> string -> list string
-val concat: string -> string -> string
-val compare: string -> string -> int
-val length: string -> int
-val substring: string -> int -> int -> string
+assume val split: string -> string -> list string
+assume val concat: string -> string -> string
+assume val compare: string -> string -> int
+assume val length: string -> int
+assume val substring: string -> int -> int -> string

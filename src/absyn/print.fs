@@ -83,11 +83,15 @@ and exp_to_string x = match x.v with
       (match wopt with | None -> "" | Some w -> Util.format1 "when %s" (w |> exp_to_string)) 
       (e |> exp_to_string))))
   | Exp_ascribed(e, t) -> Util.format2 "(%s:%s)" (e|> exp_to_string) (t |> typ_to_string)
-  | Exp_let(r, lbs, e) -> Util.format3 "let %s %s in %s" 
-    (if r then "rec" else "") 
-    (Util.concat_l "\n and" (lbs |> List.map (fun (x, t, e) -> Util.format3 "%s:%s = %s" (strBvd x) (t |> typ_to_string) (e|> exp_to_string)))) 
+  | Exp_let(lbs, e) -> Util.format3 "let %s %s in %s" 
+    (if fst lbs then "rec" else "") 
+    (Util.concat_l "\n and" (snd lbs |> List.map (fun (x, t, e) -> Util.format3 "%s:%s = %s" (lbname_to_string x) (t |> typ_to_string) (e|> exp_to_string)))) 
     (e|> exp_to_string)
   | Exp_primop(id, el)-> Util.format2 "(%s %s)" (id.idText) (Util.concat_l " " (List.map exp_to_string el))
+
+and lbname_to_string x = match x with
+  | Inl bvd -> strBvd bvd 
+  | Inr lid -> sli lid
 
 and either_to_string x = match x with
   | Inl t -> typ_to_string t
@@ -100,7 +104,7 @@ and meta_to_string x = match x with
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (t |> typ_to_string) (Util.concat_l ", " (ps |> List.map either_to_string))
 
 and kind_to_string x = match x with 
-  | Kind_star -> "*"
+  | Kind_star -> "Type"
   | Kind_tcon(Some x, k, k') -> Util.format3 "(%s::%s => %s)" (strBvd x) (k |> kind_to_string) (k' |> kind_to_string)
   | Kind_tcon(_, k, k') -> Util.format2 "(%s => %s)" (k |> kind_to_string) (k' |> kind_to_string)
   | Kind_dcon(Some x, t, k) -> Util.format3 "(%s:%s => %s)" (strBvd x) (t |> typ_to_string) (k |> kind_to_string)

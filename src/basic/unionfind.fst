@@ -18,10 +18,10 @@
 module Microsoft.FStar.Unionfind
 
 type uvar 'a
-val uvar_id: uvar<'a> -> int
-val fresh : 'a -> uvar<'a>
-val find : uvar<'a> -> 'a
-val change : uvar<'a> -> 'a -> unit
-val equivalent : uvar<'a> -> uvar<'a> -> bool
-val union : uvar<'a> -> uvar<'a> -> unit
+assume val uvar_id: uvar<'a> -> int
+assume val fresh : 'a -> uvar<'a>
+assume val find : uvar<'a> -> 'a
+assume val change : uvar<'a> -> 'a -> unit
+assume val equivalent : uvar<'a> -> uvar<'a> -> bool
+assume val union : uvar<'a> -> uvar<'a> -> unit
 

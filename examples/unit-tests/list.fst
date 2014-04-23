@@ -67,17 +67,19 @@ let rec concatMap f = function
   | [] -> []
   | a::tl -> append (f a) (concatMap f tl)
 
-val map2: ('a -> 'b -> 'c) -> list 'a -> list 'b -> list 'c
-val split: list ('a * 'b) -> list 'a * list 'b
-val unzip3: list ('a * 'b * 'c) -> list 'a * list 'b * list 'c
-val zip3: (list 'a * list 'b * list 'c) -> list ('a * 'b * 'c)
-val map3: ('a -> 'b -> 'c -> 'd) -> list 'a -> list 'b -> list 'c -> list 'd
-val rev: list 'a -> list 'a
-val collect: ('a -> list 'b) -> list 'a -> list 'b
-val tl: list 'a -> list 'a
-val length: list 'a -> int
-val tryFind: ('a -> bool) -> list 'a -> option 'b
-val concat: list (list 'a) -> list 'a
-val sortWith: ('a -> 'a -> int) -> list 'a -> list 'a
-val choose: ('a -> option 'b) -> list 'a -> list 'b
-val flatten: list (list 'a) -> list 'a
+assume val map2: ('a -> 'b -> 'c) -> list 'a -> list 'b -> list 'c
+assume val split: list ('a * 'b) -> list 'a * list 'b
+assume val unzip3: list ('a * 'b * 'c) -> list 'a * list 'b * list 'c
+assume val zip3: (list 'a * list 'b * list 'c) -> list ('a * 'b * 'c)
+assume val map3: ('a -> 'b -> 'c -> 'd) -> list 'a -> list 'b -> list 'c -> list 'd
+assume val rev: list 'a -> list 'a
+assume val collect: ('a -> list 'b) -> list 'a -> list 'b
+assume val tl: list 'a -> list 'a
+assume val length: list 'a -> int
+assume val tryFind: ('a -> bool) -> list 'a -> option 'b
+assume val concat: list (list 'a) -> list 'a
+assume val sortWith: ('a -> 'a -> int) -> list 'a -> list 'a
+assume val choose: ('a -> option 'b) -> list 'a -> list 'b
+assume val flatten: list (list 'a) -> list 'a
+assume val filter: ('a -> bool) -> list 'a -> list 'a
+assume val partition: ('a -> bool) -> list 'a -> list 'a -> list 'a

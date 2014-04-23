@@ -90,7 +90,7 @@ and exp' =
   | Exp_tapp       of exp * typ             
   | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
   | Exp_ascribed   of exp * typ 
-  | Exp_let        of bool * list<(bvvdef * typ * exp)> * exp    (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
+  | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Exp_primop     of ident * list<exp>
   | Exp_uvar       of uvar_e * typ                               (* not present after 1st round tc *)
 and exp = withinfo_t<exp',typ>
@@ -112,29 +112,11 @@ and kind =
   | Kind_uvar of uvar_k                             (* not present after 1st round tc *)
   | Kind_unknown                                    (* not present after 1st round tc *)
 and uvar_k = Unionfind.uvar<uvar_basis<kind,unit>>
+and letbindings = bool * list<(either<bvvdef,lident> * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
 
 type formula = typ
 type btvar = bvar<typ,kind>
 type bvvar = bvar<exp,typ>
-
-
-type language = 
-  | FSharp 
-  | CSharp 
-  | Fine
-  | F7
-  | FStar
-  | JavaScript
-type externqual = | Nullary 
-type externref = {language:language;
-                  dll:string;
-                  namespce:LongIdent;
-                  classname:LongIdent;
-                  innerclass:string option;
-                  extqual:option<externqual>}
-type externreference = 
-  | ExternRefId of ident
-  | ExternRef of externref
 
 type tparam =
   | Tparam_typ  of btvdef * kind (* idents for pretty printing *)
@@ -163,16 +145,14 @@ type atag =
   | Definition
   | Lemma
 
-type letbinding = list<(lident * typ * exp)> (* let recs may have more than one element *)
-
 type sigelt =
   | Sig_tycon          of lident * list<tparam> * kind * list<lident> * list<lident> * list<logic_tag> (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
   | Sig_typ_abbrev     of lident * list<tparam> * kind * typ
-  | Sig_datacon        of lident * typ
-  | Sig_val_decl       of lident * typ 
+  | Sig_datacon        of lident * typ * lident (* second lident is the name of the type this constructs *)
+  | Sig_val_decl       of lident * typ * option<atag>
   | Sig_assume         of lident * formula * aqual * atag
   | Sig_logic_function of lident * typ * list<logic_tag>
-  | Sig_let            of letbinding * bool
+  | Sig_let            of letbindings
   | Sig_main           of exp
   | Sig_bundle         of list<sigelt>  (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
 type sigelts = list<sigelt>
