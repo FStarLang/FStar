@@ -24,7 +24,7 @@ MONADIC_SRC=$(addprefix monadic/, $(MONADIC))
 Z3ENCODE=term.fs env.fs basicdt.fs decodetyp.fs encodingdt.fs query.fs
 Z3ENCODE_SRC=$(addprefix z3encode/, $(Z3ENCODE))
 
-TC=errors.fs tcenv.fs tcutil.fs infer.fs
+TC=errors.fs tcenv.fs tcutil.fs pretype.fs
 TC_SRC=$(addprefix tc/, $(TC))
 
 PLATFORM=

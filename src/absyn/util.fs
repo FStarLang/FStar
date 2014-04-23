@@ -60,6 +60,10 @@ let bvar_realname bv = bv.v.realname
 let bvar_eq (bv1:bvar<'a,'b>) (bv2:bvar<'a,'b>) = 
   (bvar_realname bv1).idText = (bvar_realname bv2).idText
 let bvd_eq bvd1 bvd2 = bvd1.realname.idText=bvd2.realname.idText
+let lbname_eq l1 l2 = match l1, l2 with
+  | Inl x, Inl y -> bvd_eq x y
+  | Inr l, Inr m -> lid_equals l m
+  | _ -> false
 let fvar_eq fv1 fv2  = lid_equals fv1.v fv2.v
 let bvd_to_bvar_s bvd sort = {v=bvd; sort=sort; p=bvd.ppname.idRange}
 let bvar_to_bvd bv = bv.v

@@ -20,6 +20,15 @@ module Microsoft.FStar.Tc.Errors
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Util
 
+let unexpected_implicit_argument = 
+  "Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"
+
+let expected_expression_of_type t1 t2 = 
+  format2 "Expected expression of type %s; got type %s" (Print.typ_to_string t1) (Print.typ_to_string t2)
+
+let basic_type_error t1 t2 = 
+  format2 "Expected type %s; got type %s" (Print.typ_to_string t1) (Print.typ_to_string t2)
+  
 let occurs_check = 
   "Possibly infinite typ (occurs check failed)"
 

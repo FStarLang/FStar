@@ -56,7 +56,7 @@ let t_int = Typ_const (Util.withsort Const.int_lid Kind_star)
 let t_string = Typ_const (Util.withsort Const.string_lid Kind_star)
 let t_float = Typ_const (Util.withsort Const.float_lid Kind_star)
 
-let typing_const (_:env) = function
+let typing_const (_:env) (s:sconst) = match s with 
   | Const_unit -> t_unit
   | Const_bool _ -> t_bool
   | Const_int32 _ -> t_int
@@ -79,7 +79,6 @@ let is_tvar_free (a:btvdef) t =
   let tvs, _ = Util.freevars_typ t in
   Util.for_some (fun (bv:btvar) -> Util.bvd_eq bv.v a) tvs 
 
-
 let new_kvar env =
   let wf k () =
     let tvs, xvs = Util.freevars_kind k in 
@@ -87,6 +86,22 @@ let new_kvar env =
     let eq bv bvd = Util.bvd_eq bv.v bvd in
     Util.forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
   Kind_uvar (Unionfind.fresh (Uvar wf))
+          
+let new_tvar env k =
+  let wf t k =
+    let tvs, xvs = Util.freevars_typ t in 
+    let tvs', xvs' = Env.idents env in 
+    let eq bv bvd = Util.bvd_eq bv.v bvd in
+    Util.forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
+  Typ_uvar (Unionfind.fresh (Uvar wf), k)
+
+let new_evar env t =
+  let wf e t = 
+    let tvs, xvs = Util.freevars_exp e in
+    let tvs', xvs' = Env.idents env in 
+    let eq bv bvd = Util.bvd_eq bv.v bvd in
+    forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
+  withinfo (Exp_uvar (Unionfind.fresh (Uvar wf), t)) t (Env.get_range env)
 
 let unchecked_unify uv t = Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here *)
 
@@ -284,7 +299,7 @@ and snk tcenv (config:config<kind>) : config<kind> =
     | Kind_unknown -> 
       failwith "Impossible"
 
-(* The type checker never attempts to reduce expressions itself; rely on the solver for that *)
+(* The type checker never attempts to reduce expressions itself; relies on the solver for that *)
 and wne tcenv (config:config<exp>) : config<exp> = config 
       
 let normalize tcenv t = 
@@ -292,103 +307,251 @@ let normalize tcenv t =
   c.code
 
 (**********************************************************************************************************************)
+type rel = 
+  | EQ 
+  | SUB
 
-let rec kind_equiv env k k' : bool =
+let rec krel rel env k k' : bool =
   let k, k' = compress_kind k, compress_kind k' in
   match k, k' with 
-  | Kind_star, Kind_star -> true
-  | Kind_tcon(aopt, k1, k2), Kind_tcon(bopt, k1', k2') -> 
-    if kind_equiv env k1 k1'
-    then match aopt, bopt with 
-      | None, _
-      | _, None -> kind_equiv env k2 k2'
-      | Some a, Some b -> 
-        let k2' = Util.subst_kind [Inl(b, Util.bvd_to_typ a k1)] k2' in
-        kind_equiv env k2 k2'
-    else false
-  | Kind_dcon(xopt, t1, k1), Kind_dcon(yopt, t1', k1') -> 
-    if typ_equiv env t1 t1'
-    then match xopt, yopt with 
-      | None, _
-      | _, None -> kind_equiv env k1 k1'
-      | Some x, Some y -> 
-        let k1' = Util.subst_kind [Inr(y, Util.bvd_to_exp x t1)] k1' in
-        kind_equiv env k1 k1'
-    else false
-  | Kind_uvar uv, k1  
-  | k1 , Kind_uvar uv -> 
-    unify_kind (uv, ()) k1
-  | _ -> false 
+    | Kind_star, Kind_star -> true
+    | Kind_tcon(aopt, k1, k2), Kind_tcon(bopt, k1', k2') -> 
+      if krel rel env k1' k1
+      then match aopt, bopt with 
+        | None, _
+        | _, None -> krel rel env k2 k2'
+        | Some a, Some b -> 
+          let k2' = Util.subst_kind [Inl(b, Util.bvd_to_typ a k1')] k2' in
+          krel rel env k2 k2'
+      else false
+    | Kind_dcon(xopt, t1, k1), Kind_dcon(yopt, t1', k1') -> 
+      if trel rel env t1' t1
+      then match xopt, yopt with 
+        | None, _
+        | _, None -> krel rel env k1 k1'
+        | Some x, Some y -> 
+          let k1' = Util.subst_kind [Inr(y, Util.bvd_to_exp x t1')] k1' in
+          krel rel env k1 k1'
+      else false
+    | Kind_uvar uv, k1  
+    | k1 , Kind_uvar uv -> 
+      unify_kind (uv, ()) k1
+    | _ -> false 
 
-and typ_equiv env t t' = 
-  let t, t' = compress_typ t, compress_typ t' in
-    match t, t' with 
-     | Typ_ascribed(t, _), _
-     | Typ_meta (Meta_pattern(t, _)), _
-     | Typ_meta (Meta_pos(t, _)), _ -> typ_equiv env t t'
+and trel rel env t t' = 
+  let rec aux norm t t' =
+    let t, t' = compress_typ t, compress_typ t' in
+      match t, t' with 
+       | Typ_ascribed(t, _), _
+       | Typ_meta (Meta_pattern(t, _)), _
+       | Typ_meta (Meta_pos(t, _)), _ -> aux norm t t' 
 
-     | _, Typ_ascribed(t', _)
-     | _, Typ_meta (Meta_pattern(t', _))
-     | _, Typ_meta (Meta_pos(t', _)) -> typ_equiv env t t'
+       | _, Typ_ascribed(t', _)
+       | _, Typ_meta (Meta_pattern(t', _))
+       | _, Typ_meta (Meta_pos(t', _)) -> aux norm t t'
 
-     | Typ_btvar a1, Typ_btvar a1' when Util.bvd_eq a1.v a1'.v -> true
-     | Typ_const c1, Typ_const c1' when Util.fvar_eq c1 c1' -> true
+       | Typ_refine(_, t, _), _ when (rel=SUB) -> aux norm t t'
+       | _, Typ_refine(_, t', _) when (rel=SUB) -> aux norm t t'
+
+       | Typ_btvar a1, Typ_btvar a1' -> Util.bvd_eq a1.v a1'.v 
+       | Typ_const c1, Typ_const c1' when Util.fvar_eq c1 c1' -> true
      
-     | Typ_fun(Some x, t1, t2, _), Typ_fun(Some x', t1', t2', _)  
-     | Typ_lam(x, t1, t2), Typ_lam(x', t1', t2')  
-     | Typ_refine(x, t1, t2), Typ_refine(x', t1', t2') -> 
-       typ_equiv env t1 t1' && 
-       typ_equiv env t2 (Util.subst_typ [Inr(x', Util.bvd_to_exp x t1)] t2')
+       | Typ_fun(Some x, t1, t2, _), Typ_fun(Some x', t1', t2', _)  
+       | Typ_lam(x, t1, t2), Typ_lam(x', t1', t2')  
+       | Typ_refine(x, t1, t2), Typ_refine(x', t1', t2') -> 
+         aux norm t1' t1 && 
+         aux norm t2 (Util.subst_typ [Inr(x', Util.bvd_to_exp x t1)] t2')
       
-     | Typ_fun(_, t1, t2, _), Typ_fun(_, t1', t2', _)  -> 
-       typ_equiv env t1 t1' &&
-       typ_equiv env t2 t2'
+       | Typ_fun(_, t1, t2, _), Typ_fun(_, t1', t2', _)  -> 
+         aux norm t1' t1 &&
+         aux norm t2 t2'
      
-     | Typ_tlam(a1, k1, t1), Typ_tlam(a1', k1', t1')  
-     | Typ_univ(a1, k1, t1), Typ_univ(a1', k1', t1') -> 
-       kind_equiv env k1 k1' &&
-       typ_equiv env t1 (Util.subst_typ [Inl(a1', Util.bvd_to_typ a1 k1)] t1')
+       | Typ_tlam(a1, k1, t1), Typ_tlam(a1', k1', t1')  
+       | Typ_univ(a1, k1, t1), Typ_univ(a1', k1', t1') -> 
+         krel rel env k1' k1 &&
+         aux norm t1 (Util.subst_typ [Inl(a1', Util.bvd_to_typ a1 k1')] t1')
      
-     | Typ_app(t1, t2), Typ_app(t1', t2') -> 
+       | Typ_const _, _
+       | Typ_app _, _
+       | Typ_dep _, _
+       | _, Typ_const _
+       | _, Typ_app _
+       | _, Typ_dep _  -> 
+         let tc, args = Util.flatten_typ_apps t in
+         let tc', args' = Util.flatten_typ_apps t' in
+         if List.length args = List.length args' && aux norm tc tc'
+         then List.zip args args' |> Util.for_all (function 
+                | Inl t1, Inl t1' -> aux norm t1 t1'
+                | Inr e1, Inr e1' -> exp_equiv env e1 e1'
+                | _ -> false)
+         else if not norm 
+         then aux true (normalize env t) (normalize env t')
+         else false
 
-       typ_equiv env t1 t1' &&
-       typ_equiv env t2 t2'
-         
-     | Typ_dep(t1, e1), Typ_dep(t1', e1') -> 
-       typ_equiv env t1 t1' &&
-       exp_equiv env e1 e1'
-       
-     | Typ_uvar(uv1, k1), Typ_uvar(uv1', k1') -> 
-       kind_equiv env k1 k1' && 
-       unify_typ (uv1, k1) t'
+       | Typ_uvar(uv, k), t1 
+       | t1, Typ_uvar(uv,k) -> 
+         unify_typ (uv, k) t1 
 
-     | Typ_unknown, _ 
-     | _, Typ_unknown -> failwith "Impossible"
+       | Typ_unknown, _ 
+       | _, Typ_unknown -> failwith "Impossible"
 
-     | _ -> failwith "NYI"
+       | _ -> false in
+  aux false t t'
 
-and exp_equiv env e1 e2 = false
+and exp_equiv env e e' = 
+  let e, e' = compress_exp e, compress_exp e' in 
+  match e.v, e'.v with 
+    | Exp_bvar x1, Exp_bvar x1' -> Util.bvd_eq x1.v x1'.v
+    | Exp_fvar (fv1, _), Exp_fvar (fv1', _) -> lid_equals fv1.v fv1'.v
+    | Exp_constant s1, Exp_constant s1' -> const_eq s1 s1'
 
+    | Exp_abs(x1, t1, e1), Exp_abs(x1', t1', e1') -> 
+      if trel EQ env t1 t1'
+      then let e1' = Util.subst_exp [Inr(x1', Util.bvd_to_exp x1 t1)] e1' in
+           exp_equiv env e1 e1'
+      else false
 
-let new_tvar env k =
-  let wf t k =
-    let tvs, xvs = Util.freevars_typ t in 
-    let tvs', xvs' = Env.idents env in 
-    let eq bv bvd = Util.bvd_eq bv.v bvd in
-    Util.forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
-  Typ_uvar (Unionfind.fresh (Uvar wf), k)
+    | Exp_tabs(a1, k1, e1), Exp_tabs(a1', k1', e1') -> 
+      if krel EQ env k1 k1' 
+      then let e1' = Util.subst_exp [Inl(a1', Util.bvd_to_typ a1 k1)] e1' in
+           exp_equiv env e1 e1'
+      else false
 
-let new_evar env t =
-  let wf e t = 
-    let tvs, xvs = Util.freevars_exp e in
-    let tvs', xvs' = Env.idents env in 
-    let eq bv bvd = Util.bvd_eq bv.v bvd in
-    forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
-  withinfo (Exp_uvar (Unionfind.fresh (Uvar wf), t)) t (Env.get_range env)
+    | Exp_app(e1, e2, _), Exp_app(e1', e2', _) -> 
+      exp_equiv env e1 e1' && exp_equiv env e2 e2'
 
-let subtype env t1 t2 = failwith "NYI"
-let destruct_function_typ env t imp : option<typ> = failwith "NYI"
-let destruct_poly_typ env t : option<typ> = failwith "NYI"
+    | Exp_tapp(e1, t1), Exp_tapp(e1', t1') -> 
+      exp_equiv env e1 e1' && trel EQ env t1 t1'
+
+    | Exp_match(e1, pats), Exp_match(e1', pats') -> 
+      if List.length pats = List.length pats' && exp_equiv env e1 e1'
+      then 
+        List.zip pats pats' |> Util.for_all (fun ((p, wopt, b), (p', wopt', b')) -> 
+          let weq = match wopt, wopt' with 
+            | None, None -> true
+            | Some w, Some w' -> exp_equiv env w w'
+            | _ -> false in
+          pat_eq env p p' && weq && exp_equiv env b b')
+      else false
+
+    | Exp_ascribed(e1, _), Exp_ascribed(e1', _) -> 
+      exp_equiv env e1 e1'
+
+    | Exp_let((b, lbs), e1), Exp_let((b', lbs'), e1') when (b=b') -> 
+      if List.length lbs = List.length lbs'
+      then exp_equiv env e1 e1' && List.zip lbs lbs' |> Util.for_all (function
+        | (Inl x, t, e), (Inl x', t', e') ->
+          trel EQ env t t' && exp_equiv env e (Util.subst_exp [Inr(x', Util.bvd_to_exp x t)] e')
+        | (Inr l, t, e), (Inr l', t', e') when lid_equals l l' -> 
+          trel EQ env t t' && exp_equiv env e e'
+        | _ -> false)
+      else false
+
+    | Exp_primop(id, el), Exp_primop(id', el') when (id.idText = id'.idText && List.length el = List.length el') -> 
+      List.zip el el' |> Util.for_all (fun (e,e') -> exp_equiv env e e')
+
+    | Exp_uvar(uv, t), _ -> unify_exp (uv, t) e'
+    | _, Exp_uvar(uv, t) -> unify_exp (uv, t) e
+
+    | _ -> false
+
+and pat_eq env p p' = match p, p' with
+  | Pat_cons(l, pats), Pat_cons(l', pats') when (lid_equals l l' && List.length pats = List.length pats') ->
+    List.zip pats pats' |> Util.for_all (fun (p,p') -> pat_eq env p p')
+  | Pat_var x, Pat_var x' -> Util.bvd_eq x x'
+  | Pat_tvar a, Pat_var a' -> Util.bvd_eq a a'
+  | Pat_constant s, Pat_constant s' -> const_eq s s'
+  | Pat_disj pats, Pat_disj pats' when (List.length pats = List.length pats') -> 
+    List.zip pats pats' |> Util.for_all (fun (p,p') -> pat_eq env p p')
+  | Pat_wild, Pat_wild -> true
+  | Pat_twild, Pat_twild -> true
+  | _ -> false
+
+and const_eq s1 s2 = match s1, s2 with 
+  | Const_bytearray(b1, _), Const_bytearray(b2, _) -> b1=b2
+  | Const_string(b1, _), Const_string(b2, _) -> b1=b2
+  | _ -> s1=s2 
+
+let keq env k1 k2 = 
+  if krel EQ env k1 k2
+  then ()
+  else raise (Error(Tc.Errors.incompatible_kinds k2 k1, Tc.Env.get_range env))
+
+let teq env t1 t2 = 
+  if trel EQ env t1 t2
+  then ()
+  else raise (Error(Tc.Errors.basic_type_error t2 t1, Tc.Env.get_range env))
+
+let check_and_ascribe (env:env) (e:exp) (t:typ) : exp =
+  if not (trel SUB env e.sort t)
+  then raise (Error(Tc.Errors.expected_expression_of_type t e.sort, e.p))
+  else if trel EQ env e.sort t
+  then e 
+  else withinfo (Exp_ascribed(e, t)) t e.p
+
+let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : option<(typ * exp)> = 
+  let rec aux norm t f =
+    let t = compress_typ t in 
+    match t with 
+      | Typ_uvar _ -> 
+        let arg = new_tvar env Kind_star in
+        let res = new_tvar env Kind_star in 
+        let tf = Typ_fun(None, arg, res, false) in
+        teq env t tf;
+        Some (tf, f)
+
+      | Typ_univ(a, k, t) -> 
+        (* need to instantiate an implicit type argument *)
+        let arg = new_tvar env k in
+        let t' = Util.subst_typ [Inl(a, arg)] t in
+        let g = withinfo (Exp_tapp(f, new_tvar env k)) t' f.p in
+        aux norm t' g 
+
+      | Typ_fun(_, _, _, false) when imp_arg_follows -> 
+        (* function type wants an explicit argument, but we have an implicit arg expected *)
+        raise (Error (Tc.Errors.unexpected_implicit_argument, Tc.Env.get_range env))
+      
+      | Typ_fun(Some x, t1, t2, imp_t1) when (imp_t1 && not imp_arg_follows) ->
+        (* need to instantiate an implicit argument *)
+        let arg = new_evar env t1 in
+        let t2' = subst_typ [Inr(x, arg)] t2 in
+        let g = withinfo (Exp_app(f, arg, true)) t2' f.p in
+        aux norm t2' g
+
+      | Typ_fun _ -> 
+        (* either, we have an implicit function but with an explicit instantiation following;
+           or, we have a function with an explicit argument and no implicit arg following *)
+        Some (t, f)
+
+      | _ when not norm -> 
+        let t = normalize env t in 
+        aux true t f 
+
+      | _ -> 
+        raise (Error (Tc.Errors.expected_function_typ t, Tc.Env.get_range env)) in
+    aux false t f
+
+let destruct_poly_typ (env:env) (t:typ) (f:exp) : option<(typ*exp)> = 
+  let rec aux norm t f =
+    let t = compress_typ t in 
+    match t with 
+      | Typ_univ(a, k, t) -> 
+        Some (t, f)
+
+      | Typ_fun(Some x, t1, t2, true) ->
+        (* need to instantiate an implicit argument *)
+        let arg = new_evar env t1 in
+        let t2' = subst_typ [Inr(x, arg)] t2 in
+        let g = withinfo (Exp_app(f, arg, true)) t2' f.p in
+        aux norm t2' g
+
+      | _ when not norm -> 
+        let t = normalize env t in 
+        aux true t f 
+
+      | _ -> 
+        raise (Error (Tc.Errors.expected_poly_typ t, Tc.Env.get_range env)) in
+    aux false t f
 
 let pat_as_exps env p : list<exp> = 
   let single = function 
@@ -408,98 +571,12 @@ let pat_as_exps env p : list<exp> =
   List.map (function 
     | Inl _ -> failwith "Impossible"
     | Inr e -> e) (aux p)    
-//          
-//
-//type subst = list<(list<uvar*kind> * option<typ>)>         
-//let unify_subst_vars (subst:subst) = 
-//  let unify_eq_class (uvl, topt) = match uvl with 
-//    | [] -> raise (NYI "Unexpected empty equivalence class")
-//    | (uv,_)::tl  -> 
-//        List.iter (fun (uv',_) -> Unionfind.union uv uv') tl;
-//        match topt with
-//          | None -> ()
-//          | Some t -> unify uv t in
-//    List.iter unify_eq_class subst
-//
-//let mkTypApp t1 t2 = match t1.sort(* .u *)with 
-//  | Kind_tcon(_, _, k2) -> 
-//      twithsort (Typ_app(t1, t2)) (open_kind t1.sort t2)
-//  | _ -> failwith "impossible"
-//
-//let mkTypDep t v = match t.sort(* .u *)with 
-//  | Kind_dcon(_, _, k2) -> 
-//      twithsort (Typ_dep(t, v)) (open_kind_with_exp t.sort v)
-//  | _ -> failwith "impossible"
-//
-//let rec reduce_typ_delta_beta tenv t = 
-//  let rec aux t = 
-//    let t = expand_typ tenv t in 
-//      match t.v with 
-//        | Typ_dep(t1orig, e) -> 
-//            let t1 = aux t1orig in
-//              (match t1.v with 
-//                 | Typ_lam(x, t1_a, t1_r) -> 
-//                     let t1_r' = substitute_exp t1_r x e in 
-//                       aux t1_r'
-//                 | _ -> 
-//                     if t1orig===t1 
-//                     then t
-//                     else twithinfo (Typ_dep(t1, e)) t.sort t.p)
-//        | Typ_app(t1orig, t2orig) -> 
-//            let t1 = aux t1orig in
-//            let t2 = aux t2orig in
-//              (match t1.v with 
-//                 | Typ_tlam(a, t1_a, t1_r) -> 
-//                     let t1_r' = substitute t1_r a t2 in
-//                       aux t1_r'
-//                 | _ -> 
-//                     if t1orig===t1 && t2orig===t2 
-//                     then t
-//                     else twithinfo (Typ_app(t1, t2)) t.sort t.p)
-//        | _ -> t in
-//    aux t
-//
-//let rtdb tenv t = 
-//  let rec rtdb i tenv t = 
-//    let rec aux smap t =
-//      let t = expand_typ tenv t in 
-//        match t.v with 
-//          | Typ_dep(t1orig, e) -> 
-//              let smap, t1 = aux smap t1orig in
-//                (match t1.v with 
-//                   | Typ_lam(x, t1_a, t1_r) -> 
-//                       let smap = Inr(x,(substitute_exp_typ_or_exp_l e smap))::smap in 
-//                         aux smap t1_r
-//                   | _ -> 
-//                       if t1orig===t1 
-//                       then smap, t
-//                       else smap, twithinfo (Typ_dep(t1, e)) t.sort t.p)
-//          | Typ_app(t1orig, t2orig) -> 
-//              let smap, t1 = aux smap t1orig  in
-//              let smap, t2 = aux smap t2orig in
-//                (match t1.v with 
-//                   | Typ_tlam(a, t1_a, t1_r) -> 
-//                       let smap = Inl(a, (substitute_l_typ_or_exp t2 smap))::smap in 
-//                         aux smap t1_r
-//                   | _ -> 
-//                       if t1orig===t1 && t2orig===t2 
-//                       then smap, t
-//                       else smap, twithinfo (Typ_app(t1, t2)) t.sort t.p)
-//          | _ -> smap, t in
-//    let smap, t = aux [] t in 
-//      match smap with 
-//        | [] -> (* pr "rtdb %d noop\n" i; *)
-//            t
-//        | _ -> 
-//            (* pr "rtdb %d subst %d\n" i (List.length smap);  *)
-//            rtdb (i+1) tenv (substitute_l_typ_or_exp t smap) in 
-//    rtdb 0 tenv t
 
 let generalize uvars e t : (exp * typ) = 
     if not (is_value e) then e, t 
     else
       let uvars_t = (Util.uvars_in_typ t).uvars_t in
-      let generalizable = uvars_t |> List.filter (fun (uv,_) -> not (uvars |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
+      let generalizable = uvars_t |> List.filter (fun (uv,_) -> not (uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
       let tvars = generalizable |> List.map (fun (u,k) -> 
         let a = Util.new_bvd (Some e.p) in
         let t = Util.bvd_to_typ a k in

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Tc.Infer
+module Microsoft.FStar.Tc.PreType
 
 open Microsoft.FStar
 open Microsoft.FStar.Tc
@@ -26,9 +26,7 @@ open Microsoft.FStar.Absyn.Util
 let check_expected_typ env e = 
   match Env.expected_typ env with 
   | None -> e, e.sort
-  | Some t -> 
-     Tc.Util.subtype env e.sort t;
-     withinfo (Exp_ascribed(e, t)) t e.p, t
+  | Some t -> Tc.Util.check_and_ascribe env e t, t
 
 let rec tc_kind env k : kind = 
   let k = Util.compress_kind k in 
@@ -92,7 +90,7 @@ and tc_typ env t : typ * kind =
       | Kind_tcon(aopt, karg, kres) -> aopt, karg, kres
       | Kind_uvar uv ->  (* inference never introduces a dependent function *)
         let karg, kres = Tc.Util.new_kvar env, Tc.Util.new_kvar env in 
-        Tc.Util.kind_equiv env (Kind_uvar uv) (Kind_tcon(None, karg, kres));
+        Tc.Util.keq env (Kind_uvar uv) (Kind_tcon(None, karg, kres));
         None, karg, kres
       | _ -> raise (Error(Tc.Errors.expected_arrow_kind k1', Env.get_range env)) in
     let t2' = tc_typ_check env t2 karg in
@@ -107,7 +105,7 @@ and tc_typ env t : typ * kind =
       | Kind_dcon(xopt, targ, kres) -> xopt, targ, kres
       | Kind_uvar uv -> (* inference never introduces a dependent function *)
         let targ, kres = Tc.Util.new_tvar env Kind_star, Tc.Util.new_kvar env in 
-        Tc.Util.kind_equiv env (Kind_uvar uv) (Kind_dcon(None, targ, kres));
+        Tc.Util.keq env (Kind_uvar uv) (Kind_dcon(None, targ, kres));
         None, targ, kres
       | _ -> raise (Error(Tc.Errors.expected_arrow_kind k1', Env.get_range env)) in
     let env' = Env.set_expected_typ env targ in
@@ -149,7 +147,7 @@ and tc_typ env t : typ * kind =
 
 and tc_typ_check env t k : typ = 
   let t', k' = tc_typ env t in
-  Tc.Util.kind_equiv env k k';
+  Tc.Util.keq env k k';
   t'       
 
 and tc_exp env e : exp * typ = match e.v with 
@@ -174,7 +172,7 @@ and tc_exp env e : exp * typ = match e.v with
       | Some t -> 
         (match Util.compress_typ t with 
           | Typ_fun(xopt, targ, tres, implicit) -> 
-            Tc.Util.typ_equiv env targ t1';
+            Tc.Util.teq env targ t1';   (* yes, really want this to be teq *)
             let tres = match xopt with 
               | None -> tres
               | Some y -> Util.subst_typ [Inr(y, Util.bvd_to_exp x targ)] tres in
@@ -193,7 +191,7 @@ and tc_exp env e : exp * typ = match e.v with
       | Some t -> 
         (match Util.compress_typ t with 
           | Typ_univ(b, karg, tres) -> 
-            Tc.Util.kind_equiv env karg k1';
+            Tc.Util.keq env karg k1';
             let tres = Util.subst_typ [Inl(b, Util.bvd_to_typ a karg)] tres in
             karg, Env.set_expected_typ env tres
           | _ -> k1', env)
@@ -206,10 +204,10 @@ and tc_exp env e : exp * typ = match e.v with
   | Exp_app(e1, e2, imp) -> 
     let env1, _ = Env.clear_expected_typ env in
     let e1', t1 = tc_exp env1 e1 in
-    let xopt, env2, tres = match Tc.Util.destruct_function_typ env t1 imp with 
-      | Some (Typ_fun(xopt, targ, tres, implicit)) -> 
+    let xopt, env2, tres, e1' = match Tc.Util.destruct_function_typ env t1 e1' imp with 
+      | Some (Typ_fun(xopt, targ, tres, _), e1') -> 
         let env2 = Env.set_expected_typ env targ in
-        xopt, env2, tres
+        xopt, env2, tres, e1'
       | _ -> 
         raise (Error(Tc.Errors.expected_function_typ t1, e1.p)) in
     let e2', t2 = tc_exp env2 e2 in 
@@ -222,9 +220,9 @@ and tc_exp env e : exp * typ = match e.v with
     let env1, _ = Env.clear_expected_typ env in 
     let e1', t_e1 = tc_exp env1 e1 in 
     let t1', k = tc_typ env1 t1 in 
-    begin match Tc.Util.destruct_poly_typ env1 t_e1 with
-      | Some (Typ_univ(a, k', tres)) ->
-          Tc.Util.kind_equiv env1 k k';
+    begin match Tc.Util.destruct_poly_typ env1 t_e1 e1' with
+      | Some (Typ_univ(a, k', tres), e1') ->
+          Tc.Util.keq env1 k k';
           let t = Util.subst_typ [Inl(a, t1')] tres in
           check_expected_typ env (withinfo (Exp_tapp(e1', t1')) t e.p) 
       | _ -> 
@@ -237,10 +235,10 @@ and tc_exp env e : exp * typ = match e.v with
     let t_eqns = eqns |> List.map (tc_eqn t1 env) in
     let eqns', result_t = match topt with 
       | Some t -> (* already checked against type from context *)
-        List.map fst t_eqns, t
+        t_eqns, t
       | None -> 
         let result_t = Tc.Util.new_tvar env Kind_star in
-        let eqns' = t_eqns |> List.map (fun (eqn, t) -> Tc.Util.typ_equiv env t result_t; eqn) in
+        let eqns' = t_eqns |> List.map (fun (pat, w, b) -> (pat, w, Tc.Util.check_and_ascribe env b result_t)) in
         eqns', result_t in
     withinfo (Exp_match(e1', eqns')) result_t e.p, result_t
 
@@ -254,7 +252,7 @@ and tc_exp env e : exp * typ = match e.v with
     let env1, topt = Env.clear_expected_typ env in 
     let e1', t1 = tc_exp env1 e1 in 
     let uvs = Tc.Env.uvars_in_env env in
-    let e1', s1 = Tc.Util.generalize ((Env.uvars_in_env env1).uvars_t) e1' t1 in (* TODO: check for unresolved implicit and kind vars *)
+    let e1', s1 = Tc.Util.generalize (Env.uvars_in_env env1) e1' t1 in (* TODO: check for unresolved implicit and kind vars *)
     let env2 = match x with 
       | Inl bvd -> Env.push_local_binding env (Env.Binding_var(bvd, s1))
       | Inr l -> Env.push_local_binding env (Env.Binding_lid(l, s1)) in 
@@ -297,7 +295,7 @@ and tc_exp env e : exp * typ = match e.v with
       let e, _ = tc_exp env' e in 
       (x, t, e)) in  
     let lbs, env = lbs |> List.fold_left (fun (lbs, env) (x, t, e) -> 
-      let e, t = Tc.Util.generalize ((Env.uvars_in_env env').uvars_t) e t in
+      let e, t = Tc.Util.generalize (Env.uvars_in_env env') e t in
       let env = match x with 
         | Inl bvd -> Env.push_local_binding env (Env.Binding_var(bvd, t))
         | Inr l -> Env.push_local_binding env (Env.Binding_lid(l, t)) in
@@ -336,7 +334,7 @@ and tc_eqn pat_t env (pat, when_clause, branch) =
     | None -> None
     | Some e -> Some (fst <| tc_exp (Env.set_expected_typ env' Tc.Util.t_bool) e) in
   let branch', t = tc_exp env' branch in 
-  (pat, when_clause', branch'), t
+  (pat, when_clause', branch')
 
 and tc_pat (pat_t:typ) env p : Env.env = 
   let pvar_eq x y = match x, y with 
@@ -406,7 +404,7 @@ let rec tc_decl env se = match se with
       let tps, env = tc_tparams env tps in
       let t, k1 = tc_typ env t in 
       let k2 = tc_kind env k in 
-      Tc.Util.kind_equiv env k1 k2;
+      Tc.Util.keq env k1 k2;
       let se = Sig_typ_abbrev(lid, tps, k1, t) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
