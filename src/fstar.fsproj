@@ -68,6 +68,11 @@
       <Project>{9974a6de-6ca8-44b6-a52e-51fc52932179}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="tc\tc.fsproj">
+      <Name>tc</Name>
+      <Project>{5bf4af3f-bec2-4cfd-94b7-11a38a031f4b}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="fstar.fs" />

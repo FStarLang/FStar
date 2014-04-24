@@ -24,6 +24,9 @@ open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Absyn.Const
 open Microsoft.FStar.Util
 open Microsoft.FStar.Profiling 
+open Microsoft.FStar.Tc
+open Microsoft.FStar.Tc.Errors
+
    
 type binding =
   | Binding_var of bvvdef * typ
@@ -94,21 +97,20 @@ let set_range e r = {e with range=r}
 let get_range e = e.range
 let find_in_sigtab env lid = Util.smap_try_find env.sigtab (text_of_lid lid)
 
-exception Not_found_binding of env * either<typ,exp>
-
 let lookup_bvvdef env (bvvd:bvvdef) : option<typ> = 
   Util.find_map env.gamma (function
     | Binding_var (id, t) when (Util.bvd_eq id bvvd) -> Some t
     | _ -> None) 
       
-let lookup_bvar env bv = 
+let lookup_bvar env (bv:bvvar) = 
   match lookup_bvvdef env bv.v with
-    | None -> raise (Not_found_binding(env, Inr (Util.bvar_to_exp bv)))
+    | None -> raise (Error(Tc.Errors.variable_not_found bv.v, Util.range_of_bvd bv.v))
     | Some t -> t 
     
 let lookup_qname env (lid:lident)  = 
-  if lid.nsstr = (current_module env).nsstr 
-  then Util.find_map env.gamma (function 
+  if lid.nsstr = (current_module env).str 
+  then 
+    Util.find_map env.gamma (function 
     | Binding_sig s -> if lid_equals lid (lid_of_sigelt s) then Some s else None
     | _ -> None) 
   else match find_in_sigtab env lid with
@@ -123,10 +125,10 @@ let try_lookup_val_decl env lid =
 let lookup_val_decl (env:env) lid = 
   match lookup_qname env lid with
     | Some (Sig_val_decl(_, t, _)) -> t
-    | _ -> raise (Not_found_binding (env, Inr (Util.fvar lid (range_of_lid lid))))
+    | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
 
 let lookup_lid env lid = 
-  let not_found () = raise (Not_found_binding(env, Inr(Util.fvar lid (range_of_lid lid)))) in
+  let not_found () = raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid)) in
   let mapper = function
     | Sig_datacon(_, t, _)  
     | Sig_logic_function(_, t, _)
@@ -148,7 +150,7 @@ let lookup_lid env lid =
 let lookup_datacon env lid = 
   match lookup_qname env lid with
     | Some (Sig_datacon (_, t, _)) -> t
-    | _ -> raise (Not_found_binding(env, Inr(Util.fvar lid (range_of_lid lid))))
+    | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
       
 let is_datacon env lid = 
   match lookup_qname env lid with
@@ -195,9 +197,9 @@ let lookup_btvdef env (btvd:btvdef): option<kind> =
     | Binding_typ (id, k) when Util.bvd_eq id btvd -> Some k
     | _ -> None)  
     
-let lookup_btvar env btv = 
+let lookup_btvar env (btv:btvar) = 
   match lookup_btvdef env btv.v with
-    | None -> raise (Not_found_binding(env, Inl (Typ_btvar btv)))
+    | None -> raise (Error(Tc.Errors.variable_not_found btv.v, Util.range_of_bvd btv.v))
     | Some k -> k 
 
 let lookup_typ_lid env (ftv:lident) : kind = 
@@ -206,7 +208,7 @@ let lookup_typ_lid env (ftv:lident) : kind =
     | Some (Sig_typ_abbrev (lid, tps, k, _)) -> 
       Util.close_kind tps k
     | _ ->
-      raise (Not_found_binding(env, Inl (Util.ftv ftv)))
+      raise (Error(Tc.Errors.name_not_found ftv, range_of_lid ftv))
 
 let lookup_operator env (opname:ident) = 
   let primName = lid_of_path ["Prims"; ("_dummy_" ^ opname.idText)] dummyRange in

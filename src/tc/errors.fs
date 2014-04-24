@@ -18,7 +18,14 @@
 module Microsoft.FStar.Tc.Errors
 
 open Microsoft.FStar.Absyn
+open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
+
+let name_not_found (l:Syntax.lident) = 
+  format1 "Name %s not found" l.str
+
+let variable_not_found v = 
+  format1 "Variable %s not found" (Print.strBvd v) 
 
 let unexpected_implicit_argument = 
   "Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"

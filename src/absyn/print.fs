@@ -45,8 +45,7 @@ let const_to_string x = match x with
 let rec typ_to_string x = match whnf x with 
   | Typ_btvar btv -> 
     (match !btv.v.instantiation with 
-      | None -> 
-        if !Options.print_real_names then btv.v.realname.idText else btv.v.realname.idText
+      | None -> strBvd btv.v
       | Some x -> x|> typ_to_string)
   | Typ_const v -> Util.format1 "%s" (sli v.v)
   | Typ_fun(Some x, t1, t2, imp) -> Util.format4 "%s%s%s -> %s"  (strBvd x) (if imp then "@" else ":") (t1 |> typ_to_string) (t2|> typ_to_string)
@@ -67,8 +66,7 @@ let rec typ_to_string x = match whnf x with
 and exp_to_string x = match x.v with 
   | Exp_bvar bvv -> 
     (match !bvv.v.instantiation with 
-      | None -> 
-        if !Options.print_real_names then bvv.v.realname.idText else bvv.v.realname.idText
+      | None -> strBvd bvv.v
       | Some x -> x|> exp_to_string)
   | Exp_fvar(fv, _) ->  sli fv.v
   | Exp_constant c -> c |> const_to_string

@@ -41,7 +41,6 @@ type env = {
   level:level;                   (* current term being checked is at level *)
   sigtab:Util.smap<sigelt>       (* a dictionary of long-names to sigelts *)
 }
-exception Not_found_binding of env * Util.either<typ,exp>
 
 val initial_env : lident -> env
 val finish_module : env -> modul -> env

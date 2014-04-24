@@ -39,7 +39,7 @@ let rec tc_kind env k : kind =
     let env' = match aopt with 
       | None -> env 
       | Some a -> Env.push_local_binding env (Env.Binding_typ(a, k1')) in
-    let k2' = tc_kind env k2 in
+    let k2' = tc_kind env' k2 in
     Kind_tcon(aopt, k1', k2')
 
   | Kind_dcon (xopt, t1, k2) ->
@@ -124,7 +124,7 @@ and tc_typ env t : typ * kind =
   | Typ_tlam(a, k1, t1) -> 
     let k1' = tc_kind env k1 in 
     let env' = Env.push_local_binding env (Env.Binding_typ(a, k1')) in 
-    let t1', k2 = tc_typ env t1 in 
+    let t1', k2 = tc_typ env' t1 in 
     Typ_tlam(a, k1', t1'), Kind_tcon(Some a, k1', k2)
 
   | Typ_ascribed(t1, k1) -> 
@@ -488,3 +488,9 @@ let tc_modul env modul =
   let env = Tc.Env.finish_module env modul in
   modul, env
 
+let check_modules mods = 
+   let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 
+    let m, env = tc_modul env m in 
+    (m::mods, env)) ([], Tc.Env.initial_env Const.prims_lid) in
+   List.rev fmods
+ 

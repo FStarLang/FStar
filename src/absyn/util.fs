@@ -23,6 +23,16 @@ open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Profiling
 
+let handle_err warning ret e = 
+  match e with
+    | Error(msg, r) ->
+        Util.print_string (Util.format3 "%s : %s : %s\n" (Range.string_of_range r) (if warning then "Warning" else "Error") msg);
+        ret
+    | NYI s -> 
+        Util.print_string (Util.format1 "Feature not yet implemented: %s" s); 
+        ret
+    | _ -> raise e
+
 (********************************************************************************)
 (******************** Compressing out unification vars **************************)
 (********************************************************************************)          

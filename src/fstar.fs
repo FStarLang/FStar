@@ -41,11 +41,9 @@ let go _ =
     | Die msg ->
       err msg []
     | GoOn ->
-      begin
-        (* let _ = startClock () in *)
         let fmods = Parser.Driver.parse_files (Options.prims()::filenames) in
-        finished fmods
-      end
+        let fmods = if !Options.pretype then Tc.PreType.check_modules fmods else fmods in
+        finished fmods 
       
 let cleanup () = ()
   (* System.Console.Out.Flush(); *)
@@ -57,5 +55,4 @@ try
   cleanup ();
   exit 0
 with 
-  | Syntax.Err msg -> err "Failure: %s\n" [msg]
-  | Syntax.Error(msg, r) -> err "Failure (%s): %s" [Range.string_of_range r; msg]
+  | e -> Util.handle_err false () e

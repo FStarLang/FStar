@@ -31,12 +31,12 @@ type Eq : 'a:Type => 'a => 'a => Type
 type Eq2 : 'a:Type => 'b:Type => 'a => 'b => Type
 type TypeOf : 'a:Type => 'a => Type
 logic tfun type AsE : 'a:Type => 'a => Type
-type neq2 : _ = fun ('a:Type) ('b:Type) (x:'a) (y:'b) => x<>y
-type neq : _ = fun ('a:Type) (x:'a) (y:'a) => x<>y
+type neq2 = fun ('a:Type) ('b:Type) (x:'a) (y:'b) => x<>y
+type neq = fun ('a:Type) (x:'a) (y:'a) => x<>y
 type KindOf : Type => Type
-type Not : _ = fun ('P:Type) => (l_not 'P)
-type XOR : _ = fun ('P:Type) ('Q:Type) => (l_and (l_or 'P 'Q) (Not(l_and 'P 'Q)))
-type ITE : _ = fun ('P:Type) ('Q:Type) ('R:Type) => ('P ==> 'Q) /\ ((l_not 'P) ==> 'R)
+type Not = fun ('P:Type) => (l_not 'P)
+type XOR = fun ('P:Type) ('Q:Type) => (l_and (l_or 'P 'Q) (Not(l_and 'P 'Q)))
+type ITE = fun ('P:Type) ('Q:Type) ('R:Type) => ('P ==> 'Q) /\ ((l_not 'P) ==> 'R)
 type object
 type bool
 type unit

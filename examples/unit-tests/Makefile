@@ -3,7 +3,7 @@ FSTAR=../../bin/FStar.exe --fstar_home ../../
 all: utils list tuple rec compiler
 
 utils:
-	$(FSTAR)  --prims prims.fst utils.fst
+	$(FSTAR) --pretype --prims prims.fst utils.fst
 
 list:
 	$(FSTAR)  --prims prims.fst list.fst
@@ -21,7 +21,7 @@ SYNTAXFILES=syntax.fs const.fs visit.fs util.fs print.fs
 SYNTAX=$(addprefix ../../src/absyn/, $(SYNTAXFILES))
 PARSERFILES=ast.fs dsenv.fs desugar.fs parse.fst lexhelp.fs parseit.fsi driver.fs 
 PARSER=$(addprefix ../../src/parser/, $(PARSERFILES))
-TCFILES=tcenv.fs errors.fs tcutil.fs pretype.fs
+TCFILES=errors.fs tcenv.fs tcutil.fs pretype.fs
 TC=$(addprefix ../../src/tc/, $(TCFILES))
 MAINFILES=fstar.fs
 MAIN=$(addprefix ../../src/, $(MAINFILES))

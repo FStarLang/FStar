@@ -25,23 +25,7 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Util
 open Microsoft.FStar.Tc.Env
-        
-let handle_err warning ret e = 
-  match e with
-    | Not_found_binding (env, Inl t) -> 
-        Util.print_string (Util.format1 "(Compiler bug?) Type name not found: %s\n" (Print.typ_to_string t));
-        ret
-    | Not_found_binding (env, Inr e) -> 
-        Util.print_string (Util.format1 "(Compiler bug?) Variable not found: %s\n" (Print.exp_to_string e));
-        ret
-    | Error(msg, r) ->
-        Util.print_string (Util.format3 "%s : %s : %s\n" (Range.string_of_range r) (if warning then "Warning" else "Error") msg);
-        ret
-    | NYI s -> 
-        Util.print_string (Util.format1 "Feature not yet implemented: %s" s); 
-        ret
-    | _ -> raise e
-    
+            
 let terr env t1 t2 exp = 
   let msg = 
      Util.format3 "Expected an expression of type:\n\n%s\n\nbut got (%s):\n\n%s"

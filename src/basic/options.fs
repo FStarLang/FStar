@@ -24,7 +24,7 @@ open Microsoft.FStar.Getopt
 let z3log = Util.mk_ref false
 let quiet = Util.mk_ref true
 let silent=Util.mk_ref false
-let print_real_names = Util.mk_ref true
+let print_real_names = Util.mk_ref false
 let dump_module = Util.mk_ref None
 let logQueries = Util.mk_ref false
 let z3exe = Util.mk_ref true
@@ -37,6 +37,7 @@ let _fstar_home = Util.mk_ref ""
 let prims_ref = Util.mk_ref None
 let __unsafe = Util.mk_ref false
 let z3timeout = Util.mk_ref None
+let pretype = Util.mk_ref false
 
 let query_file () = 
   let f = "query-" ^ (Util.string_of_int <| Util.query_count()) ^ ".smt2" in
@@ -98,7 +99,8 @@ let display_usage specs =
 
 let specs () : list<Getopt.opt> = 
   let specs =   
-    [( noshort, "z3exe", ZeroArgs (fun () -> logQueries := true; z3exe := true), "Call z3.exe instead of via the .NET API (implies --logQueries)");
+    [( noshort, "pretype", ZeroArgs (fun () -> pretype := true), "Run the pre-type checker");
+     ( noshort, "z3exe", ZeroArgs (fun () -> logQueries := true; z3exe := true), "Call z3.exe instead of via the .NET API (implies --logQueries)");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
      ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
      ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
@@ -110,4 +112,4 @@ let specs () : list<Getopt.opt> =
      ( noshort, "describe_queries", ZeroArgs (fun () -> describe_queries := true), "Print the queried formula and its location");
      ( noshort, "UNSAFE_skip_first_queries", OneArg ((fun x -> skip_first_queries x), "n"), "Skip the first n queries");
      ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir")] in 
-  ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
+     ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
