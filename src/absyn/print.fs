@@ -23,7 +23,11 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 
 let rec sli (l:lident) : string = match l.ns with 
-  | hd::tl when (hd.idText="Prims") -> l.ident.idText
+  | hd::tl when (hd.idText="Prims") ->
+    begin match tl with 
+      | [] -> l.ident.idText
+      | _ -> (List.map (fun i -> i.idText) tl |> String.concat ".") ^  "." ^ l.ident.idText
+    end
   | _ -> l.str
 
 let strBvd bvd = 

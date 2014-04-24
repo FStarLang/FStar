@@ -55,76 +55,85 @@ type LBL : string => Type => Type
 type bytes
 assume val mk_ref: 'a -> ref 'a
 
-logic data type Tuple2: 'a:Type 
+logic data type Foo : Type => int => Type =
+             | MkFoo : 'a:Type -> 'b:Type -> f:int -> g:'b -> Foo 'a f
+
+(* type MkFoo.'a : 'aa:Type => i:int => Foo 'aa i => Type *)
+(* type MkFoo.'b : 'aa:Type => i:int => Foo 'aa i => Type *)
+(* val projf: 'aa:Type -> i:int -> f:Foo 'aa i -> int *)
+(* val projg: 'aa:Type -> i:int -> f:Foo 'aa i -> MkFoo.'b 'aa i f *)
+
+
+logic data type Tuple2: 'a:Type
           => 'b:('a => Type)
-          => Type = 
-  | MkTuple2: 'a:Type 
-           -> 'b:('a => Type) 
-           -> _1:'a 
-           -> _2:'b _1 
+          => Type =
+  | MkTuple2: 'a:Type
+           -> 'b:('a => Type)
+           -> _1:'a
+           -> _2:'b _1
            -> Tuple2 'a 'b
 
-logic data type Tuple3: 'a:Type 
-          => 'b:('a => Type) 
-          => 'c:(x:'a => 'b x => Type) 
-          => Type = 
-  | MkTuple3: 'a:Type 
-           -> 'b:('a => Type) 
+logic data type Tuple3: 'a:Type
+          => 'b:('a => Type)
+          => 'c:(x:'a => 'b x => Type)
+          => Type =
+  | MkTuple3: 'a:Type
+           -> 'b:('a => Type)
            -> 'c:(x:'a => 'b x => Type)
-           -> _1:'a 
-           -> _2:'b _1 
-           -> _3:'c _1 _2 
+           -> _1:'a
+           -> _2:'b _1
+           -> _3:'c _1 _2
            -> Tuple3 'a 'b 'c
 
-logic data type Tuple4: 'a:Type 
+logic data type Tuple4: 'a:Type
           => 'b:(x:'a => Type)
-          => 'c:(x:'a => 'b x => Type) 
-          => 'd:(x:'a => y:'b x => z:'c x y => Type) 
-          => Type = 
-  | MkTuple4: 'a:Type 
-           -> 'b:('a => Type) 
+          => 'c:(x:'a => 'b x => Type)
+          => 'd:(x:'a => y:'b x => z:'c x y => Type)
+          => Type =
+  | MkTuple4: 'a:Type
+           -> 'b:('a => Type)
            -> 'c:(x:'a => 'b x => Type)
-           -> 'd:(x:'a => y:'b x => z:'c x y => Type) 
-           -> _1:'a 
-           -> _2:'b _1 
-           -> _3:'c _1 _2 
+           -> 'd:(x:'a => y:'b x => z:'c x y => Type)
+           -> _1:'a
+           -> _2:'b _1
+           -> _3:'c _1 _2
            -> _4:'d _1 _2 _3
            -> Tuple4 'a 'b 'c 'd
 
-logic data type Tuple5: 'a:Type 
+logic data type Tuple5: 'a:Type
           => 'b:('a => Type)
-          => 'c:(x:'a => 'b x => Type) 
-          => 'd:(x:'a => y:'b x => z:'c x y => Type) 
-          => 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type) 
-          => Type = 
-  | MkTuple5: 'a:Type 
-           -> 'b:('a => Type) 
+          => 'c:(x:'a => 'b x => Type)
+          => 'd:(x:'a => y:'b x => z:'c x y => Type)
+          => 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type)
+          => Type =
+  | MkTuple5: 'a:Type
+           -> 'b:('a => Type)
            -> 'c:(x:'a => 'b x => Type)
-           -> 'd:(x:'a => y:'b x => z:'c x y => Type) 
-           -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type) 
-           -> _1:'a 
-           -> _2:'b _1 
-           -> _3:'c _1 _2 
+           -> 'd:(x:'a => y:'b x => z:'c x y => Type)
+           -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type)
+           -> _1:'a
+           -> _2:'b _1
+           -> _3:'c _1 _2
            -> _4:'d _1 _2 _3
            -> _5:'e _1 _2 _3 _4
            -> Tuple5 'a 'b 'c 'd 'e
 
 
-logic data type Tuple6: 'a:Type 
+logic data type Tuple6: 'a:Type
           => 'b:('a => Type)
-          => 'c:(x:'a => 'b x => Type) 
-          => 'd:(x:'a => y:'b x => z:'c x y => Type) 
-          => 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type) 
-          => 'f:(x:'a => y:'b x => z:'c x y => w:'d x y z => u:'e x y z w => Type) 
-          => Type = 
-  | MkTuple6: 'a:Type 
-           -> 'b:('a => Type) 
+          => 'c:(x:'a => 'b x => Type)
+          => 'd:(x:'a => y:'b x => z:'c x y => Type)
+          => 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type)
+          => 'f:(x:'a => y:'b x => z:'c x y => w:'d x y z => u:'e x y z w => Type)
+          => Type =
+  | MkTuple6: 'a:Type
+           -> 'b:('a => Type)
            -> 'c:(x:'a => 'b x => Type)
-           -> 'd:(x:'a => y:'b x => z:'c x y => Type) 
-           -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type) 
-           -> _1:'a 
-           -> _2:'b _1 
-           -> _3:'c _1 _2 
+           -> 'd:(x:'a => y:'b x => z:'c x y => Type)
+           -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type)
+           -> _1:'a
+           -> _2:'b _1
+           -> _3:'c _1 _2
            -> _4:'d _1 _2 _3
            -> _5:'e _1 _2 _3 _4
            -> _6:'f _1 _2 _3 _4 _5
@@ -204,3 +213,4 @@ assume val op_GreaterThan : x:int -> y:int -> z:bool{(z=true ==> x > y) /\ (z=fa
 (* TODO: < in operators clashes with t<..> notation. Fix *)
 (* val op_GreaterThanOrEqual : x:int -> y:int -> z:bool{(z=true ==> x >= y) /\ (z=false ==> x < y) } *)
 (* val op_LessThan : x:int -> y:int -> z:bool{(z=true ==> x < y) /\ (z=false ==> x >= y)} *)
+    

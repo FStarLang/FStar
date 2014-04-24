@@ -337,7 +337,7 @@ and subst_exp' (s:subst_map) (e:exp) : exp =
          () e)
 and subst_tvar (s:subst_map) (t:typ) : typ =
   let find_typ btv = match Util.smap_try_find s btv.realname.idText with 
-    | Some (Inl l) -> Some t
+    | Some (Inl l) -> Some l
     | _ ->  None in
   match t with
     | Typ_btvar btv ->

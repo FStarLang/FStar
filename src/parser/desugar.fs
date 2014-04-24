@@ -812,12 +812,17 @@ let logic_tags q = List.collect logic_tag q
 let mk_data_ops env = function
   | Sig_datacon(lid, t, _) ->
     let args, tconstr = collect_formals t in
+    //Printf.printf "Collecting formals from type %s; got %s with args %d\n" (Print.typ_to_string t) (Print.typ_to_string tconstr) (List.length args);
     let argpats = args |> List.map (function
       | Inr(Some x,_) -> Pat_var x
       | Inr(None,targ) -> Pat_var (new_bvd (Some (range_of_lid lid)))
       | Inl(a,_) -> Pat_tvar a) in
     let freetv, freexv  = freevars_typ tconstr in
     let freevars = (List.map Inl freetv)@(List.map Inr freexv) in
+    //Printf.printf "Got %d free vars\n" (List.length freevars);
+    let freeterms = freevars |> List.map (function 
+      | Inl a -> Inl (Util.bvd_to_typ a.v Kind_unknown)
+      | Inr x -> Inr (Util.bvd_to_exp x.v  Typ_unknown)) in
     let formal = new_bvd (Some <| range_of_lid lid) in
     let formal_exp = bvd_to_exp formal tconstr in
     let rec build_exp freevars e = match freevars with
@@ -835,7 +840,16 @@ let mk_data_ops env = function
     let build_exp  = build_exp freevars in
     let build_typ  = build_typ freevars in
     let build_kind = build_kind freevars in
-    let rec aux subst fields t = match compress_typ t with
+    let subst_to_string s = 
+      List.map (function 
+        | Inl (a, t) -> Util.format2 "(%s -> %s)" (Print.strBvd a) (Print.typ_to_string t)  
+        | Inr (x, e) -> Util.format2 "(%s -> %s)" (Print.strBvd x) (Print.exp_to_string e)) s 
+      |> String.concat ", " in  
+    let subst_typ s t =
+      //Printf.printf "Substituting [%s] in type\n%s\n" (subst_to_string s) (Print.typ_to_string t);
+      let res = subst_typ s t in  res in
+      //Printf.printf "Got\n%s\n" (Print.typ_to_string res); flush stdout; res in
+    let rec aux fields t = match compress_typ t with
       | Typ_fun(Some x, t1, t2, _) ->
         let field_name = lid_of_ids (ids_of_lid lid @ [x.ppname]) in
         let t = build_typ t1 in
@@ -843,22 +857,23 @@ let mk_data_ops env = function
         let sigs =
           [Sig_val_decl(field_name, t, None);
            Sig_let((false, [(Inr field_name, t, build_exp body)]))] in
-        (* let _ = Util.print_string (Util.format1 "adding value projector %s\n" field_name.str) in *)
-        let subst = Inr(x, mk_app (fvar field_name (range_of_lid field_name)) [Inr formal_exp])::subst in
+        //let _ = Util.print_string (Util.format2 "adding value projector %s at type %s\n" field_name.str (Print.typ_to_string t)) in 
+        let subst = [Inr(x, mk_app (fvar field_name (range_of_lid field_name)) (freeterms@[Inr formal_exp]))] in
         let t2 = subst_typ subst t2 in
-        aux subst (fields@sigs) t2
+        aux (fields@sigs) t2
           
       | Typ_univ(a, k, t2) ->
         let field_name = lid_of_ids (ids_of_lid lid @ [a.ppname]) in
-        let sigs = Sig_tycon(field_name, [], build_kind k, [], [], [Logic_projector]) in
-        (* let _ = Util.print_string (Util.format1 "adding type projector %s\n" field_name.str) in *)
-        let subst = Inl(a, mk_tapp (ftv field_name) [Inr formal_exp])::subst in
+        let kk = build_kind k in
+        let sigs = Sig_tycon(field_name, [], kk, [], [], [Logic_projector]) in
+        //let _ = Util.print_string (Util.format2 "adding type projector %s at type %s\n" field_name.str (Print.kind_to_string kk)) in 
+        let subst = [Inl(a, mk_tapp (ftv field_name) (freeterms@[Inr formal_exp]))] in
         let t2 = subst_typ subst t2 in
-        aux subst (fields@[sigs]) t2
+        aux (fields@[sigs]) t2
 
       | _ -> fields in
     
-    aux [] [] t
+    aux [] t
   | _ -> []
 
 let rec desugar_tycon env quals tcs : (env * sigelts) =
