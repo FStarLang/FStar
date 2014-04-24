@@ -473,7 +473,7 @@ let check_and_ascribe (env:env) (e:exp) (t:typ) : exp =
   then e 
   else withinfo (Exp_ascribed(e, t)) t e.p
 
-let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : option<(typ * exp)> = 
+let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : (typ * exp) = 
   let rec aux norm t f =
     let t = compress_typ t in 
     match t with 
@@ -482,7 +482,7 @@ let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : opt
         let res = new_tvar env Kind_star in 
         let tf = Typ_fun(None, arg, res, false) in
         teq env t tf;
-        Some (tf, f)
+        (tf, f)
 
       | Typ_univ(a, k, t) -> 
         (* need to instantiate an implicit type argument *)
@@ -505,7 +505,7 @@ let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : opt
       | Typ_fun _ -> 
         (* either, we have an implicit function but with an explicit instantiation following;
            or, we have a function with an explicit argument and no implicit arg following *)
-        Some (t, f)
+        (t, f)
 
       | _ when not norm -> 
         let t = normalize env t in 
@@ -515,12 +515,12 @@ let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : opt
         raise (Error (Tc.Errors.expected_function_typ t, Tc.Env.get_range env)) in
     aux false t f
 
-let destruct_poly_typ (env:env) (t:typ) (f:exp) : option<(typ*exp)> = 
+let destruct_poly_typ (env:env) (t:typ) (f:exp) : (typ*exp) = 
   let rec aux norm t f =
     let t = compress_typ t in 
     match t with 
       | Typ_univ(a, k, t) -> 
-        Some (t, f)
+        (t, f)
 
       | Typ_fun(Some x, t1, t2, true) ->
         (* need to instantiate an implicit argument *)
@@ -536,6 +536,34 @@ let destruct_poly_typ (env:env) (t:typ) (f:exp) : option<(typ*exp)> =
       | _ -> 
         raise (Error (Tc.Errors.expected_poly_typ t, Tc.Env.get_range env)) in
     aux false t f
+
+let destruct_tcon_kind env k t = 
+  let k = compress_kind k in 
+  match k with 
+   | Kind_uvar uv ->  (* inference never introduces a dependent function *)
+        let k' = Kind_tcon(None, new_kvar env, new_kvar env) in
+        keq env k k';
+        k'
+   | Kind_tcon _ -> k
+   | _ -> raise (Error(Tc.Errors.expected_tcon_kind t k, Tc.Env.get_range env)) 
+
+let destruct_dcon_kind env k tt =
+  let rec aux t k =  
+    let k = compress_kind k in 
+    match k with 
+    | Kind_uvar uv ->  (* inference never introduces a dependent function *)
+        let k' = Kind_dcon(None, new_tvar env Kind_star, new_kvar env) in
+        keq env k k';
+        (k', t)
+    | Kind_tcon(aopt, k, k') -> 
+      let arg = new_tvar env k in
+      let kres = match aopt with 
+        | None -> k'
+        | Some a -> Util.subst_kind [Inl(a, arg)] k' in
+      aux (Typ_app(t, arg)) kres
+    | Kind_dcon _ -> (k, t)
+    | _ -> raise (Error(Tc.Errors.expected_dcon_kind tt k, Tc.Env.get_range env)) in
+  aux tt k
 
 let pat_as_exps env p : list<exp> = 
   let single = function 

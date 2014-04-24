@@ -166,7 +166,7 @@ let rec lids_of_sigelt se = match se with
     
 let lid_of_sigelt se = List.hd <| lids_of_sigelt se
 let range_of_sigelt x = range_of_lid <| lid_of_sigelt x
-let range_of_typ t def = match compress_typ t with 
+let range_of_typ t def = match t with 
   | Typ_meta(Meta_pos(_, r)) -> r
   | _ -> def
 let range_of_lb = function
@@ -337,7 +337,7 @@ and subst_exp' (s:subst_map) (e:exp) : exp =
          () e)
 and subst_tvar (s:subst_map) (t:typ) : typ =
   let find_typ btv = match Util.smap_try_find s btv.realname.idText with 
-    | Some (Inl l) -> Some t
+    | Some (Inl l) -> Some l
     | _ ->  None in
   match t with
     | Typ_btvar btv ->
@@ -591,7 +591,7 @@ let collect_formals t =
     match whnf t with
       | Typ_fun(xopt, t1, t2, _) -> aux (Inr(xopt, t1)::out) t2
       | Typ_univ(a, k, t2) -> aux (Inl(a, k)::out) t2
-      | Typ_meta(Meta_pos _) -> failwith "Unexpected position-tagged type"
+      | Typ_meta(Meta_pos(t, _)) -> failwith "Unexpected position tagged type"
       | t -> List.rev out, t 
   in aux [] t
   

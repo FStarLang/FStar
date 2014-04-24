@@ -22,8 +22,6 @@ type l_iff : Type => Type => Type
 type l_implies : Type => Type => Type
 type Forall : 'a:Type => ('a => Type) => Type
 type Exists : 'a:Type => ('a => Type) => Type
-type Relational : Type => Type
-type DoubleSided : Type => Type
 type True : Type
 type False : Type
 type EqTyp : Type => Type => Type
@@ -31,7 +29,7 @@ type Eq : 'a:Type => 'a => 'a => Type
 type Eq2 : 'a:Type => 'b:Type => 'a => 'b => Type
 type TypeOf : 'a:Type => 'a => Type
 logic tfun type AsE : 'a:Type => 'a => Type
-type neq2 = fun ('a:Type) ('b:Type) (x:'a) (y:'b) => x<>y
+type neq2 = fun ('a:Type) ('b:Type) (x:'a) (y:'b) => l_not (Eq2 x y)
 type neq = fun ('a:Type) (x:'a) (y:'a) => x<>y
 type KindOf : Type => Type
 type Not = fun ('P:Type) => (l_not 'P)
@@ -41,6 +39,7 @@ type object
 type bool
 type unit
 assume Unit_id: forall (x:unit). x=()
+
 type int
 type char
 type byte
@@ -55,76 +54,76 @@ type LBL : string => Type => Type
 type bytes
 assume val mk_ref: 'a -> ref 'a
 
-logic data type Tuple2: 'a:Type 
+logic data type Tuple2: 'a:Type
           => 'b:('a => Type)
-          => Type = 
-  | MkTuple2: 'a:Type 
-           -> 'b:('a => Type) 
-           -> _1:'a 
-           -> _2:'b _1 
+          => Type =
+  | MkTuple2: 'a:Type
+           -> 'b:('a => Type)
+           -> _1:'a
+           -> _2:'b _1
            -> Tuple2 'a 'b
 
-logic data type Tuple3: 'a:Type 
-          => 'b:('a => Type) 
-          => 'c:(x:'a => 'b x => Type) 
-          => Type = 
-  | MkTuple3: 'a:Type 
-           -> 'b:('a => Type) 
+logic data type Tuple3: 'a:Type
+          => 'b:('a => Type)
+          => 'c:(x:'a => 'b x => Type)
+          => Type =
+  | MkTuple3: 'a:Type
+           -> 'b:('a => Type)
            -> 'c:(x:'a => 'b x => Type)
-           -> _1:'a 
-           -> _2:'b _1 
-           -> _3:'c _1 _2 
+           -> _1:'a
+           -> _2:'b _1
+           -> _3:'c _1 _2
            -> Tuple3 'a 'b 'c
 
-logic data type Tuple4: 'a:Type 
+logic data type Tuple4: 'a:Type
           => 'b:(x:'a => Type)
-          => 'c:(x:'a => 'b x => Type) 
-          => 'd:(x:'a => y:'b x => z:'c x y => Type) 
-          => Type = 
-  | MkTuple4: 'a:Type 
-           -> 'b:('a => Type) 
+          => 'c:(x:'a => 'b x => Type)
+          => 'd:(x:'a => y:'b x => z:'c x y => Type)
+          => Type =
+  | MkTuple4: 'a:Type
+           -> 'b:('a => Type)
            -> 'c:(x:'a => 'b x => Type)
-           -> 'd:(x:'a => y:'b x => z:'c x y => Type) 
-           -> _1:'a 
-           -> _2:'b _1 
-           -> _3:'c _1 _2 
+           -> 'd:(x:'a => y:'b x => z:'c x y => Type)
+           -> _1:'a
+           -> _2:'b _1
+           -> _3:'c _1 _2
            -> _4:'d _1 _2 _3
            -> Tuple4 'a 'b 'c 'd
 
-logic data type Tuple5: 'a:Type 
+logic data type Tuple5: 'a:Type
           => 'b:('a => Type)
-          => 'c:(x:'a => 'b x => Type) 
-          => 'd:(x:'a => y:'b x => z:'c x y => Type) 
-          => 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type) 
-          => Type = 
-  | MkTuple5: 'a:Type 
-           -> 'b:('a => Type) 
+          => 'c:(x:'a => 'b x => Type)
+          => 'd:(x:'a => y:'b x => z:'c x y => Type)
+          => 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type)
+          => Type =
+  | MkTuple5: 'a:Type
+           -> 'b:('a => Type)
            -> 'c:(x:'a => 'b x => Type)
-           -> 'd:(x:'a => y:'b x => z:'c x y => Type) 
-           -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type) 
-           -> _1:'a 
-           -> _2:'b _1 
-           -> _3:'c _1 _2 
+           -> 'd:(x:'a => y:'b x => z:'c x y => Type)
+           -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type)
+           -> _1:'a
+           -> _2:'b _1
+           -> _3:'c _1 _2
            -> _4:'d _1 _2 _3
            -> _5:'e _1 _2 _3 _4
            -> Tuple5 'a 'b 'c 'd 'e
 
 
-logic data type Tuple6: 'a:Type 
+logic data type Tuple6: 'a:Type
           => 'b:('a => Type)
-          => 'c:(x:'a => 'b x => Type) 
-          => 'd:(x:'a => y:'b x => z:'c x y => Type) 
-          => 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type) 
-          => 'f:(x:'a => y:'b x => z:'c x y => w:'d x y z => u:'e x y z w => Type) 
-          => Type = 
-  | MkTuple6: 'a:Type 
-           -> 'b:('a => Type) 
+          => 'c:(x:'a => 'b x => Type)
+          => 'd:(x:'a => y:'b x => z:'c x y => Type)
+          => 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type)
+          => 'f:(x:'a => y:'b x => z:'c x y => w:'d x y z => u:'e x y z w => Type)
+          => Type =
+  | MkTuple6: 'a:Type
+           -> 'b:('a => Type)
            -> 'c:(x:'a => 'b x => Type)
-           -> 'd:(x:'a => y:'b x => z:'c x y => Type) 
-           -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type) 
-           -> _1:'a 
-           -> _2:'b _1 
-           -> _3:'c _1 _2 
+           -> 'd:(x:'a => y:'b x => z:'c x y => Type)
+           -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type)
+           -> _1:'a
+           -> _2:'b _1
+           -> _3:'c _1 _2
            -> _4:'d _1 _2 _3
            -> _5:'e _1 _2 _3 _4
            -> _6:'f _1 _2 _3 _4 _5

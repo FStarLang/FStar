@@ -35,7 +35,10 @@ val normalize : env -> typ -> typ
 val keq : env -> kind -> kind -> unit
 val teq : env -> typ -> typ -> unit
 val check_and_ascribe : env -> exp -> typ -> exp
-val destruct_function_typ : env -> typ -> exp -> bool -> option<(typ*exp)>
-val destruct_poly_typ: env -> typ -> exp -> option<(typ*exp)> 
 val pat_as_exps: env -> pat -> list<exp>
 val generalize: Util.uvars -> exp -> typ -> (exp * typ)
+
+val destruct_function_typ : env -> typ -> exp -> bool -> (typ*exp)
+val destruct_poly_typ: env -> typ -> exp -> (typ*exp) 
+val destruct_tcon_kind: env -> kind -> typ -> kind
+val destruct_dcon_kind: env -> kind -> typ -> (kind*typ)

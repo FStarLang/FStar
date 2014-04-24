@@ -57,8 +57,11 @@ let inferred_type_causes_variable_to_escape t x =
 let expected_typ_of_kind k1 k2 =
   format2 "Expected type of kind %s; got %s"  (Print.kind_to_string k1) (Print.kind_to_string k2)
 
-let expected_arrow_kind k = 
-  format1 "Expected a type-constructor or type-function; got a type of kind %s" (Print.kind_to_string k)
+let expected_tcon_kind t k = 
+  format2 "Expected a type-to-type constructor or function; got a type %s of kind %s" (Print.typ_to_string t) (Print.kind_to_string k)
+
+let expected_dcon_kind t k = 
+  format2 "Expected a term-to-type constructor or function; got a type %s of kind %s" (Print.typ_to_string t) (Print.kind_to_string k)
 
 let expected_function_typ t = 
   format1 "Expected a function; got an expression of type %s" (Print.typ_to_string t)

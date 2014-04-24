@@ -101,7 +101,8 @@ and meta_to_string x = match x with
   | Meta_tid i -> Util.format1 "(Meta_tid %d)" (Util.string_of_int i)
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (t |> typ_to_string) (Util.concat_l ", " (ps |> List.map either_to_string))
 
-and kind_to_string x = match x with 
+and kind_to_string x = match compress_kind x with 
+  | Kind_uvar uv -> format1 "'k_%s" (Util.string_of_int (Unionfind.uvar_id uv))
   | Kind_star -> "Type"
   | Kind_tcon(Some x, k, k') -> Util.format3 "(%s::%s => %s)" (strBvd x) (k |> kind_to_string) (k' |> kind_to_string)
   | Kind_tcon(_, k, k') -> Util.format2 "(%s => %s)" (k |> kind_to_string) (k' |> kind_to_string)
