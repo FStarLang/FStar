@@ -188,6 +188,15 @@ let uncurry_app e =
 let mk_data l args = 
   mk_curried_app (fvar l (range_of_lid l)) args
 
+let destruct_app =
+    let rec destruct acc (e : exp) =
+        match e.v with
+        | Exp_app (e1, e2, b) -> destruct ((e2, b) :: acc) e1
+        | _ -> (e, acc)
+    in
+
+    fun e -> destruct [] e
+
 (********************************************************************************)
 (******************************** Syntactic values ******************************)
 (********************************************************************************)

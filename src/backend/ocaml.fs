@@ -9,7 +9,13 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 
-open FSharp.OCaml.Format
+(* -------------------------------------------------------------------- *)
+let unexpected () =
+    failwith "ocaml-backend-unexpected-construct"
+
+(* -------------------------------------------------------------------- *)
+let unsupported () =
+    failwith "ocaml-backend-unsupported-construct"
 
 (* -------------------------------------------------------------------- *)
 let ocaml_u8_codepoint (i : byte) =
@@ -34,117 +40,161 @@ let encode_char c =
     | _                              -> ocaml_u8_codepoint ((byte)c)
 
 (* -------------------------------------------------------------------- *)
-let pp_sconst fmt sctt =
+let pp_sconst sctt =
   match sctt with
-  | Const_unit         -> fmt << String "()"
-  | Const_char   c     -> fmt << String (sprintf "'%s'" (encode_char c))
-  | Const_uint8  c     -> fmt << String (sprintf "'%s'" (ocaml_u8_codepoint c))
-  | Const_int32  i     -> fmt << Int ((int) i) // FIXME
-  | Const_int64  i     -> fmt << Int ((int) i) // FIXME
-  | Const_bool   true  -> fmt << String "true"
-  | Const_bool   false -> fmt << String "false"
-  | Const_float  d     -> fmt << Float d
+  | Const_unit         -> "()"
+  | Const_char   c     -> sprintf "'%s'" (encode_char c)
+  | Const_uint8  c     -> sprintf "'%s'" (ocaml_u8_codepoint c)
+  | Const_int32  i     -> sprintf "%d" i // FIXME
+  | Const_int64  i     -> sprintf "%d" i // FIXME
+  | Const_bool   true  -> "true"
+  | Const_bool   false -> "false"
+  | Const_float  d     -> sprintf "%f" d
 
   | Const_bytearray (bytes, _) ->
       let bytes = bytes |> Array.map ocaml_u8_codepoint
-      fmt << String (sprintf "\"%s\"" (bytes |> String.concat ""))
+      sprintf "\"%s\"" (bytes |> String.concat "")
 
   | Const_string (bytes, _) ->
       let chars = (new UTF8Encoding (true, true)).GetString(bytes)
       let chars = chars |> String.collect encode_char
-      fmt << String (sprintf "\"%s\"" chars)
-
-(*
-(* -------------------------------------------------------------------- *)
-let norm_ty_r k ty =
-  match ty with
-  | Typ_btvar    of bvar<typ,kind>
-  | Typ_const    of var<kind> 
-
-  | Typ_fun      of option<bvvdef> * typ * typ          (* x:t -> t'  or  t -> t' *)
-  | Typ_univ     of btvdef * kind  * typ                (* 'a:k -> t *)
-
-  | Typ_refine   of bvvdef * typ * typ                  (* x:t{phi} *)
-  | Typ_app      of typ * typ                           (* t t' *) 
-  | Typ_dep      of typ * exp                           (* t e *) 
-  | Typ_lam      of bvvdef * typ * typ                  (* fun (x:t) => T *)
-  | Typ_tlam     of btvdef* kind * typ                  (* fun ('a:k) => T *) 
-
-  | Typ_unknown _ -> error "ocaml-bk-typ-unknown"
-  | Typ_meta    _ -> error "ocaml-bk-type-meta"
-  | Type_uvar   _ -> error "ocaml-bk-type-uvar"
+      sprintf "\"%s\"" chars
 
 (* -------------------------------------------------------------------- *)
-let pp_typ fmt ty =
-  match ty with
-  | Typ_refine     (ty, _) -> pp_typ fmt ty
-  | Type_abscribed (ty, _) -> pp_typ fmt ty
-
-  | Typ_unknown _ -> error "ocaml-bk-typ-unknown"
-  | Typ_meta    _ -> error "ocaml-bk-type-meta"
-  | Type_uvar   _ -> error "ocaml-bk-type-uvar"
-
-type typ =
-  | Typ_btvar    of bvar<typ,kind>
-  | Typ_const    of var<kind> 
-  | Typ_fun      of option<bvvdef> * typ * typ          (* x:t -> t'  or  t -> t' *)
-  | Typ_univ     of btvdef * kind  * typ                (* 'a:k -> t *)
-  | Typ_refine   of bvvdef * typ * typ                  (* x:t{phi} *)
-  | Typ_app      of typ * typ                           (* t t' *) 
-  | Typ_dep      of typ * exp                           (* t e *) 
-  | Typ_lam      of bvvdef * typ * typ                  (* fun (x:t) => T *)
-  | Typ_tlam     of btvdef* kind * typ                  (* fun ('a:k) => T *) 
-  | Typ_ascribed of typ * kind                          (* t <: k *)
-  | Typ_uvar     of uvar * kind                         (* Only needed for unification *)
-  | Typ_meta     of meta                                (* Not really in the type language; a way to stash convenient metadata with types *)
-  | Typ_unknown                                         (* Initially, every AST node has type unknown *)
-
-and exp' =
-  | Exp_bvar       of bvar<exp,typ>
-  | Exp_fvar       of var<typ> 
-  | Exp_constant   of sconst
-  | Exp_constr_app of var<typ> * list<either<typ,exp>>
-  | Exp_abs        of bvvdef * typ * exp 
-  | Exp_tabs       of btvdef * kind * exp            
-  | Exp_app        of exp * exp
-  | Exp_tapp       of exp * typ             
-  | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
-  | Exp_ascribed   of exp * typ 
-  | Exp_let        of bool * list<(bvvdef * typ * exp)> * exp    (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Exp_primop     of ident * list<exp>
-
-and pat = 
-  | Pat_cons     of lident * list<pat>
-  | Pat_var      of bvvdef
-  | Pat_tvar     of bvdef<typ>
-  | Pat_constant of sconst
-  | Pat_disj     of list<pat>
-  | Pat_wild
-  | Pat_twild
-
+let is_prim_ns (ns : list<ident>) =
+    match ns with
+    | [{ idText = "Prims" }] -> true
+    | _ -> false
 
 (* -------------------------------------------------------------------- *)
-let pp_modelt (fmt : formatter) (modx : sigelt)=
-  match modx with
-  | _ -> assert false
+let is_op_equality (x : lident) =
+    is_prim_ns x.ns && x.ident.idText = "op_Equality"
 
-(*
-type sigelt =
-  | Sig_tycon          of lident * list<tparam> * kind * list<lident> * list<lident> * list<logic_tag> (* bool is for a prop, list<lident> identifies mutuals *)
-  | Sig_typ_abbrev     of lident * list<tparam> * kind * typ
-  | Sig_datacon        of lident * typ
-  | Sig_val_decl       of lident * typ 
-  | Sig_assume         of lident * formula * aqual * atag
-  | Sig_logic_function of lident * typ * list<logic_tag>
-  | Sig_let            of letbinding * bool
-  | Sig_main           of exp
-  | Sig_bundle         of list<sigelt>  (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
-type sigelts = list<sigelt>
+(* -------------------------------------------------------------------- *)
+let name_of_let_ident (x : either<bvvdef,lident>) =
+    match x with
+    | Inl x -> x.realname.idText
+    | Inr x -> x.ident.idText
 
-type modul = {
-  name: lident;
-  declarations: sigelts;
-  exports: sigelts;
-}
-*)
-*)
+(* -------------------------------------------------------------------- *)
+let rec pp_let_binding ((rec_, lb) : letbindings) =
+    match lb with
+    | [x, _, body] ->
+        sprintf "let %s %s = %s"
+            (if rec_ then "rec" else "")
+            (name_of_let_ident x)
+            (pp_exp body)
+
+    | _ -> unsupported ()
+
+(* -------------------------------------------------------------------- *)
+and pp_exp (e : exp) =
+    match Absyn.Util.destruct_app e with
+    | ({ v = Exp_fvar (x, _) }, [(e1, _); (e2, _)]) when is_op_equality x.v ->
+        sprintf "(%s) = (%s)" (pp_exp e1) (pp_exp e2)
+
+    | _ ->
+        match e.v with
+        | Exp_bvar x ->
+            x.v.realname.idText
+
+        | Exp_fvar (x, _) ->
+            x.v.ident.idText
+
+        | Exp_constant c ->
+            pp_sconst c
+
+        | Exp_abs (x, _, e) ->
+            sprintf "fun %s => %s" x.realname.idText (pp_exp e)
+
+        | Exp_app (e1, e2, _) ->
+            sprintf "(%s) (%s)" (pp_exp e1) (pp_exp e2)
+
+        | Exp_match (e, bs) ->
+            sprintf "match %s with %s"
+                (pp_exp e)
+                (bs |> List.map pp_match_branch |> String.concat " ")
+
+        | Exp_let (lb, body) ->
+            sprintf "%s in %s" (pp_let_binding lb) (pp_exp body)
+
+        | Exp_primop (x, es) ->
+            sprintf "%s %s"
+                x.idText
+                (es |> List.map (fun e -> sprintf "(%s)" (pp_exp e))
+                    |> String.concat ", ")
+
+        | Exp_ascribed (e, _) ->
+            pp_exp e
+
+        | Exp_uvar      _ -> unexpected  ()
+        | Exp_tabs      _ -> unsupported ()
+        | Exp_tapp      _ -> unsupported ()
+
+(* -------------------------------------------------------------------- *)
+and pp_pattern (p : pat) =
+    match p with
+    | Pat_cons (x, ps) ->
+        match ps with
+        | [] -> x.ident.idText
+        | _  ->
+            sprintf "%s (%s)"
+                x.ident.idText
+                (ps |> List.map pp_pattern |> String.concat ", ")
+
+    | Pat_var x ->
+        x.realname.idText
+
+    | Pat_constant c ->
+        pp_sconst c
+
+    | Pat_disj ps ->
+        sprintf "(%s)" (ps |> List.map pp_pattern |> String.concat " | ")
+
+    | Pat_wild ->
+        "_"
+
+    | Pat_tvar   _ -> unsupported ()
+    | Pat_twild  _ -> unsupported ()
+    
+
+(* -------------------------------------------------------------------- *)
+and pp_match_branch ((p, cl, body) : pat * exp option * exp) =
+    sprintf "| %s %s -> (%s)"
+        (pp_pattern p)
+        (match cl with
+         | None   -> ""
+         | Some e -> sprintf "when %s" (pp_exp e))
+         (pp_exp body)
+
+(* -------------------------------------------------------------------- *)
+let pp_modelt (modx : sigelt)=
+    match modx with
+    | Sig_let lb ->
+        Some (pp_let_binding lb)
+
+    | Sig_main e ->
+        Some (sprintf "let _ = %s" (pp_exp e))
+
+    | Sig_tycon _ ->
+        Some "tycon"
+
+    | Sig_typ_abbrev _ ->
+        Some "abbrev"
+
+    | Sig_datacon _ ->
+        Some "datacon"
+
+    | Sig_bundle _ ->
+        Some "bundle"
+
+    | Sig_assume         _ -> None
+    | Sig_val_decl       _ -> None
+    | Sig_logic_function _ -> None
+
+(* -------------------------------------------------------------------- *)
+let pp_module (mod_ : modul) =
+    let parts = mod_.declarations |> List.choose pp_modelt in
+    sprintf "module %s = struct\n%s\nend"
+        mod_.name.ident.idText
+        (parts |> String.concat "\n\n")
