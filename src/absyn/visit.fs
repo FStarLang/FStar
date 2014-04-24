@@ -30,7 +30,7 @@ let rec compress typ = match typ with
           | Fixed typ -> compress typ
           | _ -> typ
       end
-  | Typ_meta(Meta_pos(t, _)) -> compress t
+  | Typ_meta(Meta_pos(t, r)) -> compress t
   | _ -> typ
 
 let rec compress_exp exp = match exp.v with 

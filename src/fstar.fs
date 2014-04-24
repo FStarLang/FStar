@@ -43,6 +43,9 @@ let go _ =
     | GoOn ->
         let fmods = Parser.Driver.parse_files (Options.prims()::filenames) in
         let fmods = if !Options.pretype then Tc.PreType.check_modules fmods else fmods in
+        (* FIXME: add an option *)
+        List.tail fmods
+            |> List.iter (fun mod_ ->printfn "%s\n" (Backends.OCaml.pp_module mod_));
         finished fmods 
       
 let cleanup () = ()

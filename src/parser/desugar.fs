@@ -591,7 +591,7 @@ and desugar_typ env (top:term) : typ =
           match binder with
             | LetBinder _ -> failwith "impossible"
             | TBinder (a,k) -> pos <| Typ_tlam(a, k, body)
-            | VBinder (x,t) -> pos <| Typ_lam(x,t, body)
+            | VBinder (x,t) -> pos <| Typ_lam(x, t, body)
       end
 
     | App(t1, t2) ->
@@ -904,7 +904,7 @@ let rec desugar_tycon env quals tcs : (env * sigelts) =
     | TyconAbstract(id, binders, kopt) ->
       let env', typars = typars_of_binders env binders in
       let k = match kopt with
-        | None -> Kind_star
+        | None -> Kind_unknown
         | Some k -> desugar_kind env' k in
       let tconstr = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) binders in
       let qlid = qualify env id in
@@ -928,7 +928,7 @@ let rec desugar_tycon env quals tcs : (env * sigelts) =
     | [TyconAbbrev(id, binders, kopt, t)] ->
         let env', typars = typars_of_binders env binders in
         let k = match kopt with
-            | None -> Kind_star
+            | None -> Kind_unknown
             | Some k -> desugar_kind env' k in
         let t = desugar_typ env' t in
         let se = Sig_typ_abbrev(qualify env id, typars, k, t) in

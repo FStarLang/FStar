@@ -166,7 +166,7 @@ let rec lids_of_sigelt se = match se with
     
 let lid_of_sigelt se = List.hd <| lids_of_sigelt se
 let range_of_sigelt x = range_of_lid <| lid_of_sigelt x
-let range_of_typ t def = match compress_typ t with 
+let range_of_typ t def = match t with 
   | Typ_meta(Meta_pos(_, r)) -> r
   | _ -> def
 let range_of_lb = function
@@ -187,6 +187,15 @@ let uncurry_app e =
 
 let mk_data l args = 
   mk_curried_app (fvar l (range_of_lid l)) args
+
+let destruct_app =
+    let rec destruct acc (e : exp) =
+        match e.v with
+        | Exp_app (e1, e2, b) -> destruct ((e2, b) :: acc) e1
+        | _ -> (e, acc)
+    in
+
+    fun e -> destruct [] e
 
 (********************************************************************************)
 (******************************** Syntactic values ******************************)
@@ -591,7 +600,7 @@ let collect_formals t =
     match whnf t with
       | Typ_fun(xopt, t1, t2, _) -> aux (Inr(xopt, t1)::out) t2
       | Typ_univ(a, k, t2) -> aux (Inl(a, k)::out) t2
-      | Typ_meta(Meta_pos _) -> failwith "Unexpected position-tagged type"
+      | Typ_meta(Meta_pos(t, _)) -> failwith "Unexpected position tagged type"
       | t -> List.rev out, t 
   in aux [] t
   

@@ -53,7 +53,12 @@ let rec tc_kind env k : kind =
   | Kind_unknown -> 
     Tc.Util.new_kvar env
 
-and tc_typ env t : typ * kind = 
+and tc_typ env t = 
+  let t', k' = tc_typ' env t in
+  t', k'
+
+and tc_typ' env t : typ * kind = 
+  let env = Tc.Env.set_range env (Util.range_of_typ t (Tc.Env.get_range env)) in
   let t = Util.compress_typ t in
   match t with 
   | Typ_btvar a -> 
@@ -86,13 +91,9 @@ and tc_typ env t : typ * kind =
 
   | Typ_app(t1, t2) -> 
     let t1', k1' = tc_typ env t1 in 
-    let aopt, karg, kres = match Util.compress_kind k1' with 
+    let aopt, karg, kres = match Tc.Util.destruct_tcon_kind env k1' t1' with 
       | Kind_tcon(aopt, karg, kres) -> aopt, karg, kres
-      | Kind_uvar uv ->  (* inference never introduces a dependent function *)
-        let karg, kres = Tc.Util.new_kvar env, Tc.Util.new_kvar env in 
-        Tc.Util.keq env (Kind_uvar uv) (Kind_tcon(None, karg, kres));
-        None, karg, kres
-      | _ -> raise (Error(Tc.Errors.expected_arrow_kind k1', Env.get_range env)) in
+      | _ -> failwith "impossible" in
     let t2' = tc_typ_check env t2 karg in
     let k2 = match aopt with 
       | None -> kres
@@ -101,13 +102,9 @@ and tc_typ env t : typ * kind =
     
   | Typ_dep(t1, e1) -> 
     let t1', k1' = tc_typ env t1 in
-    let xopt, targ, kres = match Util.compress_kind k1' with 
-      | Kind_dcon(xopt, targ, kres) -> xopt, targ, kres
-      | Kind_uvar uv -> (* inference never introduces a dependent function *)
-        let targ, kres = Tc.Util.new_tvar env Kind_star, Tc.Util.new_kvar env in 
-        Tc.Util.keq env (Kind_uvar uv) (Kind_dcon(None, targ, kres));
-        None, targ, kres
-      | _ -> raise (Error(Tc.Errors.expected_arrow_kind k1', Env.get_range env)) in
+    let xopt, targ, kres, t1' = match Tc.Util.destruct_dcon_kind env k1' t1' with 
+      | Kind_dcon(xopt, targ, kres), t1' -> xopt, targ, kres, t1'
+      | _ -> failwith "impossible" in
     let env' = Env.set_expected_typ env targ in
     let e1', _ = tc_exp env' e1 in
     let k2 = match xopt with 
@@ -205,11 +202,10 @@ and tc_exp env e : exp * typ = match e.v with
     let env1, _ = Env.clear_expected_typ env in
     let e1', t1 = tc_exp env1 e1 in
     let xopt, env2, tres, e1' = match Tc.Util.destruct_function_typ env t1 e1' imp with 
-      | Some (Typ_fun(xopt, targ, tres, _), e1') -> 
+      | Typ_fun(xopt, targ, tres, _), e1' -> 
         let env2 = Env.set_expected_typ env targ in
         xopt, env2, tres, e1'
-      | _ -> 
-        raise (Error(Tc.Errors.expected_function_typ t1, e1.p)) in
+      | _ -> failwith "impossible" in 
     let e2', t2 = tc_exp env2 e2 in 
     let t = match xopt with 
       | None -> tres
@@ -221,12 +217,11 @@ and tc_exp env e : exp * typ = match e.v with
     let e1', t_e1 = tc_exp env1 e1 in 
     let t1', k = tc_typ env1 t1 in 
     begin match Tc.Util.destruct_poly_typ env1 t_e1 e1' with
-      | Some (Typ_univ(a, k', tres), e1') ->
+      | Typ_univ(a, k', tres), e1' ->
           Tc.Util.keq env1 k k';
           let t = Util.subst_typ [Inl(a, t1')] tres in
           check_expected_typ env (withinfo (Exp_tapp(e1', t1')) t e.p) 
-      | _ -> 
-        raise (Error(Tc.Errors.expected_poly_typ t_e1, e.p))
+      | _ -> failwith "impossible"
     end
     
   | Exp_match(e1, eqns) -> 
@@ -396,6 +391,9 @@ let rec tc_decl env se = match se with
       let tps, env = tc_tparams env tps in 
       let k = tc_kind env k in 
       let se = Sig_tycon(lid, tps, k, _mutuals, _data, tags) in  
+      let _ = match compress_kind k with
+        | Kind_uvar _ -> Tc.Util.keq env k Kind_star
+        | _ -> () in 
       let env = Tc.Env.push_sigelt env se in
       se, env
   
@@ -426,7 +424,7 @@ let rec tc_decl env se = match se with
       let env = Tc.Env.push_sigelt env se in 
       se, env
   
-    | Sig_assume(lid, phi, qual, tag) -> 
+    | Sig_assume(lid, phi, qual, tag) ->
       let phi = tc_typ_check env phi Kind_star in 
       let se = Sig_assume(lid, phi, qual, tag) in 
       let env = Tc.Env.push_sigelt env se in 

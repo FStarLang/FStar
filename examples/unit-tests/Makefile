@@ -2,6 +2,9 @@ FSTAR=../../bin/FStar.exe --fstar_home ../../
 
 all: utils list tuple rec compiler
 
+prims: 
+	$(FSTAR) --pretype --prims prims.fst 
+
 utils:
 	$(FSTAR) --pretype --prims prims.fst utils.fst
 

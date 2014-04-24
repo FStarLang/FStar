@@ -22,8 +22,6 @@ type l_iff : Type => Type => Type
 type l_implies : Type => Type => Type
 type Forall : 'a:Type => ('a => Type) => Type
 type Exists : 'a:Type => ('a => Type) => Type
-type Relational : Type => Type
-type DoubleSided : Type => Type
 type True : Type
 type False : Type
 type EqTyp : Type => Type => Type
@@ -31,7 +29,7 @@ type Eq : 'a:Type => 'a => 'a => Type
 type Eq2 : 'a:Type => 'b:Type => 'a => 'b => Type
 type TypeOf : 'a:Type => 'a => Type
 logic tfun type AsE : 'a:Type => 'a => Type
-type neq2 = fun ('a:Type) ('b:Type) (x:'a) (y:'b) => x<>y
+type neq2 = fun ('a:Type) ('b:Type) (x:'a) (y:'b) => l_not (Eq2 x y)
 type neq = fun ('a:Type) (x:'a) (y:'a) => x<>y
 type KindOf : Type => Type
 type Not = fun ('P:Type) => (l_not 'P)
@@ -41,6 +39,7 @@ type object
 type bool
 type unit
 assume Unit_id: forall (x:unit). x=()
+
 type int
 type char
 type byte
@@ -54,15 +53,6 @@ type ref : Type => Type
 type LBL : string => Type => Type
 type bytes
 assume val mk_ref: 'a -> ref 'a
-
-logic data type Foo : Type => int => Type =
-             | MkFoo : 'a:Type -> 'b:Type -> f:int -> g:'b -> Foo 'a f
-
-(* type MkFoo.'a : 'aa:Type => i:int => Foo 'aa i => Type *)
-(* type MkFoo.'b : 'aa:Type => i:int => Foo 'aa i => Type *)
-(* val projf: 'aa:Type -> i:int -> f:Foo 'aa i -> int *)
-(* val projg: 'aa:Type -> i:int -> f:Foo 'aa i -> MkFoo.'b 'aa i f *)
-
 
 logic data type Tuple2: 'a:Type
           => 'b:('a => Type)
