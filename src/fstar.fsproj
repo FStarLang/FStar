@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -26,7 +26,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
     <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\examples\unit-tests\</StartWorkingDirectory>
-    <StartArguments>--fstar_home ../../ --prims prims.fst</StartArguments>
+    <StartArguments>--fstar_home ../../ --prims dummyprims.fst --pretype</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -58,6 +58,11 @@
     <ProjectReference Include="absyn\absyn.fsproj">
       <Name>absyn</Name>
       <Project>{13e8984e-188d-447b-b7b7-9f7441050565}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="backend\backend.fsproj">
+      <Name>backend</Name>
+      <Project>{2f500a50-bdba-40d3-92fa-f186adb9a44f}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="basic\basic.fsproj">

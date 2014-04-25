@@ -43,10 +43,11 @@ let go _ =
     | GoOn ->
         let fmods = Parser.Driver.parse_files (Options.prims()::filenames) in
         let fmods = if !Options.pretype then Tc.PreType.check_modules fmods else fmods in
-        (* FIXME: add an option *)
-        List.tail fmods
-            |> List.iter (fun mod_ ->printfn "%s\n" (Backends.OCaml.pp_module mod_));
-        finished fmods 
+        if !Options.codegen = Some "OCaml"
+        then List.tail fmods
+              |> List.iter (fun mod_ -> Util.print_string (Util.format1 "%s\n" (Backends.OCaml.pp_module mod_)))
+        else ();
+       finished fmods 
       
 let cleanup () = ()
   (* System.Console.Out.Flush(); *)
@@ -58,4 +59,4 @@ try
   cleanup ();
   exit 0
 with 
-  | e -> Util.handle_err false () e
+  | e when (not !Options.trace_error && Util.handleable e) -> Util.handle_err false () e

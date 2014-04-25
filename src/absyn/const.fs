@@ -34,16 +34,16 @@ let float_lid = pconst  "float"
 let exn_lid = pconst  "exn" 
 
 (* Logical connectives and operators *)
-let kun k k'                 = Kind_tcon(None, k, k')
-let kbin k k'                = Kind_tcon(None, k, Kind_tcon(None, k, k')) 
-let ktern k k'               = Kind_tcon(None, k, Kind_tcon(None, k, Kind_tcon(None, k, k')))
+let kun k k'                 = Kind_tcon(None, k, k', false)
+let kbin k k'                = Kind_tcon(None, k, Kind_tcon(None, k, k', false), false) 
+let ktern k k'               = Kind_tcon(None, k, Kind_tcon(None, k, Kind_tcon(None, k, k', false), false), false)
 let true_lid = pconst "True"
 let false_lid = pconst "False"
 let and_lid = pconst "l_and"  
 let or_lid = pconst "l_or"    
 let not_lid = pconst "l_not"  
 let lbl_lid = pconst "LBL"    
-let implies_lid = pconst "l_implies"
+let implies_lid = pconst "l_imp"
 let iff_lid = pconst "l_iff"      
 let ite_lid = pconst "IfThenElse" 
 let exists_lid = pconst "Exists"  

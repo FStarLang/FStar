@@ -108,7 +108,7 @@ let lookup_bvar env (bv:bvvar) =
     | Some t -> t 
     
 let lookup_qname env (lid:lident)  = 
-  if lid.nsstr = (current_module env).str 
+  if Util.starts_with lid.nsstr (current_module env).str
   then 
     Util.find_map env.gamma (function 
     | Binding_sig s -> if lid_equals lid (lid_of_sigelt s) then Some s else None

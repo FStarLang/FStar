@@ -38,6 +38,8 @@ let prims_ref = Util.mk_ref None
 let __unsafe = Util.mk_ref false
 let z3timeout = Util.mk_ref None
 let pretype = Util.mk_ref false
+let codegen = Util.mk_ref None
+let trace_error = Util.mk_ref false
 
 let query_file () = 
   let f = "query-" ^ (Util.string_of_int <| Util.query_count()) ^ ".smt2" in
@@ -99,7 +101,9 @@ let display_usage specs =
 
 let specs () : list<Getopt.opt> = 
   let specs =   
-    [( noshort, "pretype", ZeroArgs (fun () -> pretype := true), "Run the pre-type checker");
+    [( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
+     ( noshort, "codegen", OneArg ((fun s -> codegen := Some s), "OCaml|F#|JS"), "Generate code for execution");
+     ( noshort, "pretype", ZeroArgs (fun () -> pretype := true), "Run the pre-type checker");
      ( noshort, "z3exe", ZeroArgs (fun () -> logQueries := true; z3exe := true), "Call z3.exe instead of via the .NET API (implies --logQueries)");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
      ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");

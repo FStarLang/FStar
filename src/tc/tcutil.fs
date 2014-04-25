@@ -118,7 +118,7 @@ and env_entry =
   | V of (bvvdef * vclos * memo<exp>)
   | TDummy of btvdef
   | VDummy of bvvdef
-and stack_entry = either<tclos,vclos>
+and stack_entry = either<tclos,vclos> * bool
 and tclos = (typ * environment)
 and vclos = (exp * environment)
 and memo<'a> = ref<option<'a>>
@@ -132,12 +132,12 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
   let rebuild config  = 
     let rec aux out stack : typ = match stack with
       | [] -> out
-      | Inl (t,e)::rest -> 
+      | (Inl (t,e), imp)::rest -> 
         let c = sn tcenv ({code=t; environment=e; stack=[]}) in 
-        aux (Typ_app(out, c.code)) rest 
-      | Inr (v,e)::rest -> 
+        aux (Typ_app(out, c.code, imp)) rest 
+      | (Inr (v,e), imp)::rest -> 
         let c = wne tcenv ({code=v; environment=e; stack=[]}) in 
-        aux (Typ_dep(out, c.code)) rest in
+        aux (Typ_dep(out, c.code, imp)) rest in
     {config with code=aux config.code config.stack; stack=[]} in
 
   let sn_prod xopt t1 t2 mk = 
@@ -176,13 +176,13 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
         | _ -> failwith "Impossible: expected a type"
       end
 
-    | Typ_app(t1, t2) -> 
-      let se = Inl (t2, config.environment) in
+    | Typ_app(t1, t2, imp) -> 
+      let se = Inl (t2, config.environment), imp in
       let config = push se ({config with code=t1}) in 
       sn tcenv config 
         
-    | Typ_dep(t, v) -> 
-      let se = Inr (v, config.environment) in
+    | Typ_dep(t, v, imp) -> 
+      let se = Inr (v, config.environment), imp in
       let config = push se ({config with code=t}) in 
       sn tcenv config 
 
@@ -195,7 +195,7 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
             environment=VDummy x::config.environment}) in
           {config with code=Typ_lam(x, c1.code, c2.code)} 
             
-        | Some (Inr vclos), config -> (* beta(); *)
+        | Some (Inr vclos, _), config -> (* beta(); *)
           sn tcenv ({config with 
             code=t2;
             environment=V(x,vclos,ref None)::config.environment})
@@ -213,7 +213,7 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
             environment=TDummy a::config.environment}) in 
           {config with code=Typ_tlam(a, ck.code, c.code)}
             
-        | Some (Inl tclos), config ->  (* beta();  type-level beta redex *)
+        | Some (Inl tclos, _), config ->  (* beta();  type-level beta redex *)
           sn tcenv ({config with 
             code=t;
             environment=T(a,tclos,ref None)::config.environment})
@@ -262,23 +262,23 @@ and snk tcenv (config:config<kind>) : config<kind> =
   match Util.compress_kind config.code with
     | Kind_uvar _ 
     | Kind_star -> config
-    | Kind_tcon(aopt, k1, k2) -> 
+    | Kind_tcon(aopt, k1, k2, imp) -> 
       let c1 = snk tcenv ({config with code=k1}) in
       let c2 = snk tcenv ({config with 
         code=k2;
         environment=(match aopt with 
           | None -> config.environment
           | Some a -> TDummy a::config.environment)}) in 
-      {config with code=Kind_tcon(aopt, c1.code, c2.code)}
+      {config with code=Kind_tcon(aopt, c1.code, c2.code, imp)}
         
-    | Kind_dcon(xopt, t1, k2) -> 
+    | Kind_dcon(xopt, t1, k2, imp) -> 
       let c1 = sn tcenv ({code=t1; environment=config.environment; stack=[]}) in
       let c2 = snk tcenv ({config with 
         code=k2;
         environment=(match xopt with 
           | None -> config.environment
           | Some x -> VDummy x::config.environment)}) in 
-      {config with code=Kind_dcon(xopt, c1.code, c2.code)}
+      {config with code=Kind_dcon(xopt, c1.code, c2.code, imp)}
         
     | Kind_unknown -> 
       failwith "Impossible"
@@ -299,7 +299,7 @@ let rec krel rel env k k' : bool =
   let k, k' = compress_kind k, compress_kind k' in
   match k, k' with 
     | Kind_star, Kind_star -> true
-    | Kind_tcon(aopt, k1, k2), Kind_tcon(bopt, k1', k2') -> 
+    | Kind_tcon(aopt, k1, k2, _), Kind_tcon(bopt, k1', k2', _) -> 
       if krel rel env k1' k1
       then match aopt, bopt with 
         | None, _
@@ -308,7 +308,7 @@ let rec krel rel env k k' : bool =
           let k2' = Util.subst_kind [Inl(b, Util.bvd_to_typ a k1')] k2' in
           krel rel env k2 k2'
       else false
-    | Kind_dcon(xopt, t1, k1), Kind_dcon(yopt, t1', k1') -> 
+    | Kind_dcon(xopt, t1, k1, _), Kind_dcon(yopt, t1', k1', _) -> 
       if trel rel env t1' t1
       then match xopt, yopt with 
         | None, _
@@ -338,8 +338,12 @@ and trel rel env t t' =
        | _, Typ_refine(_, t', _) when (rel=SUB) -> aux norm t t'
 
        | Typ_btvar a1, Typ_btvar a1' -> Util.bvd_eq a1.v a1'.v 
-       | Typ_const c1, Typ_const c1' when Util.fvar_eq c1 c1' -> true
-     
+       | Typ_const c1, Typ_const c1' -> 
+         if Util.fvar_eq c1 c1' then true
+         else if not norm
+         then aux true (normalize env t) (normalize env t') 
+         else false
+
        | Typ_fun(Some x, t1, t2, _), Typ_fun(Some x', t1', t2', _)  
        | Typ_lam(x, t1, t2), Typ_lam(x', t1', t2')  
        | Typ_refine(x, t1, t2), Typ_refine(x', t1', t2') -> 
@@ -355,10 +359,12 @@ and trel rel env t t' =
          krel rel env k1' k1 &&
          aux norm t1 (Util.subst_typ [Inl(a1', Util.bvd_to_typ a1 k1')] t1')
      
-       | Typ_const _, _
+       | Typ_uvar(uv, k), t1 
+       | t1, Typ_uvar(uv,k) -> 
+         unify_typ (uv, k) t1 
+
        | Typ_app _, _
        | Typ_dep _, _
-       | _, Typ_const _
        | _, Typ_app _
        | _, Typ_dep _  -> 
          let tc, args = Util.flatten_typ_apps t in
@@ -371,10 +377,6 @@ and trel rel env t t' =
          else if not norm 
          then aux true (normalize env t) (normalize env t')
          else false
-
-       | Typ_uvar(uv, k), t1 
-       | t1, Typ_uvar(uv,k) -> 
-         unify_typ (uv, k) t1 
 
        | Typ_unknown, _ 
        | _, Typ_unknown -> failwith "Impossible"
@@ -456,10 +458,12 @@ and const_eq s1 s2 = match s1, s2 with
   | Const_string(b1, _), Const_string(b2, _) -> b1=b2
   | _ -> s1=s2 
 
-let keq env k1 k2 = 
+let keq env t k1 k2 = 
   if krel EQ env k1 k2
   then ()
-  else raise (Error(Tc.Errors.incompatible_kinds k2 k1, Tc.Env.get_range env))
+  else match t with 
+    | None -> raise (Error(Tc.Errors.incompatible_kinds k2 k1, Tc.Env.get_range env))
+    | Some t -> raise (Error(Tc.Errors.expected_typ_of_kind k2 t k1, Tc.Env.get_range env))
 
 let teq env t1 t2 = 
   if trel EQ env t1 t2
@@ -477,7 +481,7 @@ let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : (ty
   let rec aux norm t f =
     let t = compress_typ t in 
     match t with 
-      | Typ_uvar _ -> 
+      | Typ_uvar _ when (not imp_arg_follows) -> 
         let arg = new_tvar env Kind_star in
         let res = new_tvar env Kind_star in 
         let tf = Typ_fun(None, arg, res, false) in
@@ -519,7 +523,7 @@ let destruct_poly_typ (env:env) (t:typ) (f:exp) : (typ*exp) =
   let rec aux norm t f =
     let t = compress_typ t in 
     match t with 
-      | Typ_univ(a, k, t) -> 
+      | Typ_univ _ -> 
         (t, f)
 
       | Typ_fun(Some x, t1, t2, true) ->
@@ -537,31 +541,46 @@ let destruct_poly_typ (env:env) (t:typ) (f:exp) : (typ*exp) =
         raise (Error (Tc.Errors.expected_poly_typ t, Tc.Env.get_range env)) in
     aux false t f
 
-let destruct_tcon_kind env k t = 
-  let k = compress_kind k in 
-  match k with 
-   | Kind_uvar uv ->  (* inference never introduces a dependent function *)
-        let k' = Kind_tcon(None, new_kvar env, new_kvar env) in
-        keq env k k';
-        k'
-   | Kind_tcon _ -> k
-   | _ -> raise (Error(Tc.Errors.expected_tcon_kind t k, Tc.Env.get_range env)) 
+let destruct_tcon_kind env k tt imp_arg_follows = 
+  let rec aux t k = 
+    let k = compress_kind k in 
+    match k with 
+     | Kind_uvar uv when not imp_arg_follows ->  (* inference never introduces a dependent function *)
+          let k' = Kind_tcon(None, new_kvar env, new_kvar env, false) in
+          keq env None k k';
+          k', t
+     | Kind_tcon(_, _, _, false) when not imp_arg_follows -> k, t
+     | Kind_tcon(_, _, _, true) when imp_arg_follows -> k, t
+     | Kind_tcon(Some a, k1, k2, true) -> 
+       let targ = new_tvar env k1 in 
+       let t' = Typ_app(t, targ, true) in
+       aux t' (Util.subst_kind [Inl(a, targ)] k2)
+     | Kind_dcon(Some x, t1, k1, true) -> 
+       let earg = new_evar env t1 in 
+       let t' = Typ_dep(t, earg, true) in 
+       aux t' (Util.subst_kind [Inr(x, earg)] k1)
+     | _ -> raise (Error(Tc.Errors.expected_tcon_kind tt k, Tc.Env.get_range env)) in
+  aux tt k
 
-let destruct_dcon_kind env k tt =
+let destruct_dcon_kind env k tt imp_arg_follows =
   let rec aux t k =  
     let k = compress_kind k in 
     match k with 
-    | Kind_uvar uv ->  (* inference never introduces a dependent function *)
-        let k' = Kind_dcon(None, new_tvar env Kind_star, new_kvar env) in
-        keq env k k';
+    | Kind_uvar uv when not imp_arg_follows ->  (* inference never introduces a dependent function *)
+        let k' = Kind_dcon(None, new_tvar env Kind_star, new_kvar env, false) in
+        keq env None k k';
         (k', t)
-    | Kind_tcon(aopt, k, k') -> 
+    | Kind_tcon(aopt, k, k', true) -> 
       let arg = new_tvar env k in
       let kres = match aopt with 
         | None -> k'
         | Some a -> Util.subst_kind [Inl(a, arg)] k' in
-      aux (Typ_app(t, arg)) kres
-    | Kind_dcon _ -> (k, t)
+      aux (Typ_app(t, arg, true)) kres
+    | Kind_dcon(_, _, _, b) when (b=imp_arg_follows) -> (k, t)
+    | Kind_dcon(Some x, t1, k1, true) -> 
+      let earg = new_evar env t1 in 
+      let t' = Typ_dep(t, earg, true) in 
+      aux t' (Util.subst_kind [Inr(x, earg)] k1)
     | _ -> raise (Error(Tc.Errors.expected_dcon_kind tt k, Tc.Env.get_range env)) in
   aux tt k
 

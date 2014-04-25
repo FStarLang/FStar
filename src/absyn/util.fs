@@ -33,6 +33,11 @@ let handle_err warning ret e =
         ret
     | _ -> raise e
 
+let handleable = function
+  | Error _
+  | NYI _ -> true
+  | _ -> false
+
 (********************************************************************************)
 (******************** Compressing out unification vars **************************)
 (********************************************************************************)          
@@ -141,8 +146,8 @@ let hoist e (body:exp->exp) : exp' =
 let flatten_typ_apps : typ -> typ * (list<either<typ,exp>>) =
   let rec aux acc t = 
     match pre_typ t with
-      | Typ_app(t1,t2) -> aux (Inl t2::acc) t1 
-      | Typ_dep(t1, v) -> aux (Inr v::acc) t1
+      | Typ_app(t1, t2, _) -> aux (Inl t2::acc) t1 
+      | Typ_dep(t1, v, _) -> aux (Inr v::acc) t1
       | _              -> t, acc in
   (fun t -> aux [] t)
     
@@ -403,8 +408,8 @@ let close_typ = close_with_arrow
 let close_kind tps k = 
     List.fold_right 
         (fun tp k -> match tp with
-            | Tparam_typ (a, k') -> Kind_tcon(Some a, k', k)
-            | Tparam_term (x, t) -> Kind_dcon(Some x, t, k))
+            | Tparam_typ (a, k') -> Kind_tcon(Some a, k', k, false)
+            | Tparam_term (x, t) -> Kind_dcon(Some x, t, k, false))
         tps k 
 
 let instantiate_tparams t tps (args:list<either<typ,exp>>) =
@@ -464,21 +469,21 @@ let alpha_fresh_labels r t : typ = freshen_bvars_typ (Some r) t []
 let whnf t =
   let rec aux ctr t =
     let t' = match compress_typ t with
-      | Typ_dep(t1, e) ->
+      | Typ_dep(t1, e, imp) ->
         let t1,ctr = aux (ctr+1) t1 in
         (match t1 with
           | Typ_lam(x, t1_a, t1_r) ->
             let t1_r' = subst_typ [Inr(x,e)] t1_r in
             aux (ctr+1) t1_r'
-          | _ -> Typ_dep(t1, e), ctr)
-      | Typ_app(t1, t2) ->
+          | _ -> Typ_dep(t1, e, imp), ctr)
+      | Typ_app(t1, t2, imp) ->
         let t1,ctr = aux (ctr+1) t1 in
         let t2,ctr = aux (ctr+1) t2 in
         (match t1 with
           | Typ_tlam(a, t1_a, t1_r) ->
             let t1_r' = subst_typ [Inl(a,t2)] t1_r in
             aux (ctr+1) t1_r'
-          | _ -> Typ_app(t1, t2), ctr)
+          | _ -> Typ_app(t1, t2, imp), ctr)
       | t -> t,ctr in
     t' in
   fst (aux 0 t)
@@ -510,8 +515,8 @@ let is_constructor t lid =
       
 let rec is_constructed_typ t lid = match pre_typ t with
   | Typ_const _ -> is_constructor t lid
-  | Typ_app(t, _)
-  | Typ_dep(t, _) -> is_constructed_typ t lid
+  | Typ_app(t, _, _)
+  | Typ_dep(t, _, _) -> is_constructed_typ t lid
   | _ -> false
 
 let rec get_tycon t = 
@@ -519,8 +524,8 @@ let rec get_tycon t =
   match t with
   | Typ_btvar _ 
   | Typ_const _  -> Some t
-  | Typ_app(t, _)
-  | Typ_dep(t, _) -> get_tycon t
+  | Typ_app(t, _, _)
+  | Typ_dep(t, _, _) -> get_tycon t
   | _ -> None
 
 let base_kind = function
@@ -561,8 +566,8 @@ let rec typs_of_letbinding x = match x with
 let mk_conj phi1 phi2 = match phi1 with
   | None -> Some phi2
   | Some phi1 ->
-    let app1 = Typ_app(ftv Const.and_lid, phi1) in
-    let and_t = Typ_app(app1, phi2) in
+    let app1 = Typ_app(ftv Const.and_lid, phi1, false) in
+    let and_t = Typ_app(app1, phi2, false) in
     Some and_t
 
 let normalizeRefinement t =
@@ -582,16 +587,18 @@ let forall_kind =
   let a = new_bvd None in
   let atyp = bvd_to_typ a Kind_star in
     Kind_tcon(Some a, Kind_star,
-              Kind_tcon(None, Kind_dcon(None, atyp, Kind_star),
-                        Kind_star))
+              Kind_tcon(None, Kind_dcon(None, atyp, Kind_star, false),
+                        Kind_star, 
+                        false), 
+              true)
 
 let mkForall (x:bvvdef) (a:typ) (body:typ) : typ =
   let forall_typ = Typ_const(withsort Const.forall_lid forall_kind) in
-  Typ_app(Typ_app(forall_typ, a), Typ_lam(x, a, body))
+  Typ_app(Typ_app(forall_typ, a, true), Typ_lam(x, a, body), false)
 
 let unForall t = match t.v with
-  | Typ_app(Typ_app(Typ_const(lid), _), 
-            Typ_lam(x, t, body)) when is_forall lid.v ->
+  | Typ_app(Typ_app(Typ_const(lid), _, _), 
+            Typ_lam(x, t, body), _) when is_forall lid.v ->
     Some (x, t, body)
   | _ -> None
 

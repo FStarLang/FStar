@@ -27,6 +27,11 @@ let hd = function
   | hd::tl -> hd
   | _ -> failwith "head of empty list"
 
+val tail: list 'a -> list 'a
+let tail = function 
+  | hd::tl -> tl
+  | _ -> failwith "tail of empty list"
+
 val mem: x:'a -> l:list 'a -> b:bool{b=true <==> In x l}
 let rec mem x = function
   | [] -> false

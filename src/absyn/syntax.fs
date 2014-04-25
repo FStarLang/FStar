@@ -63,8 +63,8 @@ type typ =
   | Typ_fun      of option<bvvdef> * typ * typ * bool   (* x:t -> t'  or  t -> t', bool is a flag marking implicit arguments *)
   | Typ_univ     of btvdef * kind  * typ                (* 'a:k -> t *)
   | Typ_refine   of bvvdef * typ * typ                  (* x:t{phi} *)
-  | Typ_app      of typ * typ                           (* t t' *) 
-  | Typ_dep      of typ * exp                           (* t e *) 
+  | Typ_app      of typ * typ * bool                    (* t t' -- bool marks an explicitly provided implicit arg *) 
+  | Typ_dep      of typ * exp * bool                    (* t e -- bool marks an explicitly provided implicit arg *)  
   | Typ_lam      of bvvdef * typ * typ                  (* fun (x:t) => T *)
   | Typ_tlam     of btvdef * kind * typ                 (* fun ('a:k) => T *) 
   | Typ_ascribed of typ * kind                          (* t <: k *)
@@ -107,10 +107,10 @@ and pat =
   | Pat_twild
 and kind =
   | Kind_star
-  | Kind_tcon of option<bvdef<typ>> * kind * kind   (* 'a:k -> k' *)
-  | Kind_dcon of option<bvvdef> * typ * kind        (* x:t -> k *)
-  | Kind_uvar of uvar_k                             (* not present after 1st round tc *)
-  | Kind_unknown                                    (* not present after 1st round tc *)
+  | Kind_tcon of option<bvdef<typ>> * kind * kind * bool  (* 'a:k -> k'; bool marks implicit *)
+  | Kind_dcon of option<bvvdef> * typ * kind * bool       (* x:t -> k; bool marks implicit *)
+  | Kind_uvar of uvar_k                                   (* not present after 1st round tc *)
+  | Kind_unknown                                          (* not present after 1st round tc *)
 and uvar_k = Unionfind.uvar<uvar_basis<kind,unit>>
 and letbindings = bool * list<(either<bvvdef,lident> * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
 

@@ -54,10 +54,10 @@ let rec typ_to_string x = match whnf x with
   | Typ_const v -> Util.format1 "%s" (sli v.v)
   | Typ_fun(Some x, t1, t2, imp) -> Util.format4 "%s%s%s -> %s"  (strBvd x) (if imp then "@" else ":") (t1 |> typ_to_string) (t2|> typ_to_string)
   | Typ_fun(None, t1, t2, _) -> Util.format2 "%s -> %s"  (t1|> typ_to_string) (t2|> typ_to_string)
-  | Typ_univ(a, k, t) ->       Util.format3 "%s::%s -> %s" (strBvd a) (k |> kind_to_string) (t|> typ_to_string)
+  | Typ_univ(a, k, t) ->       Util.format3 "%s:%s -> %s" (strBvd a) (k |> kind_to_string) (t|> typ_to_string)
   | Typ_refine(x, t, f) ->     Util.format3 "%s:%s{%s}" (strBvd x) (t|> typ_to_string) (f|> typ_to_string)
-  | Typ_app(t1, t2) ->         Util.format2 "(%s %s)" (t1|> typ_to_string) (t2|> typ_to_string)
-  | Typ_dep(t, v) ->           Util.format2 "(%s %s)" (t|> typ_to_string) (v|> exp_to_string)
+  | Typ_app(t1, t2, imp) ->    Util.format3 "(%s %s%s)" (t1|> typ_to_string) (if imp then "#" else "") (t2|> typ_to_string)
+  | Typ_dep(t, v, imp) ->      Util.format3 "(%s %s%s)" (t|> typ_to_string) (if imp then "#" else "") (v|> exp_to_string)
   | Typ_lam(x, t1, t2) ->      Util.format2 "(fun %s => %s)" (strBvd x) (t2|> typ_to_string)
   | Typ_tlam(a, k, t) ->       Util.format2 "(fun %s => %s)" (strBvd a) (t|> typ_to_string)
   | Typ_ascribed(t, k) ->      t|> typ_to_string
@@ -85,12 +85,16 @@ and exp_to_string x = match x.v with
       (match wopt with | None -> "" | Some w -> Util.format1 "when %s" (w |> exp_to_string)) 
       (e |> exp_to_string))))
   | Exp_ascribed(e, t) -> Util.format2 "(%s:%s)" (e|> exp_to_string) (t |> typ_to_string)
-  | Exp_let(lbs, e) -> Util.format3 "let %s %s in %s" 
-    (if fst lbs then "rec" else "") 
-    (Util.concat_l "\n and" (snd lbs |> List.map (fun (x, t, e) -> Util.format3 "%s:%s = %s" (lbname_to_string x) (t |> typ_to_string) (e|> exp_to_string)))) 
+  | Exp_let(lbs, e) -> Util.format2 "%s in %s" 
+    (lbs_to_string lbs)
     (e|> exp_to_string)
   | Exp_primop(id, el)-> Util.format2 "(%s %s)" (id.idText) (Util.concat_l " " (List.map exp_to_string el))
 
+and lbs_to_string lbs = 
+    Util.format2 "let %s %s"
+    (if fst lbs then "rec" else "") 
+    (Util.concat_l "\n and" (snd lbs |> List.map (fun (x, t, e) -> Util.format3 "%s:%s = %s" (lbname_to_string x) (t |> typ_to_string) (e|> exp_to_string)))) 
+    
 and lbname_to_string x = match x with
   | Inl bvd -> strBvd bvd 
   | Inr lid -> sli lid
@@ -108,10 +112,10 @@ and meta_to_string x = match x with
 and kind_to_string x = match compress_kind x with 
   | Kind_uvar uv -> format1 "'k_%s" (Util.string_of_int (Unionfind.uvar_id uv))
   | Kind_star -> "Type"
-  | Kind_tcon(Some x, k, k') -> Util.format3 "(%s::%s => %s)" (strBvd x) (k |> kind_to_string) (k' |> kind_to_string)
-  | Kind_tcon(_, k, k') -> Util.format2 "(%s => %s)" (k |> kind_to_string) (k' |> kind_to_string)
-  | Kind_dcon(Some x, t, k) -> Util.format3 "(%s:%s => %s)" (strBvd x) (t |> typ_to_string) (k |> kind_to_string)
-  | Kind_dcon(_, t, k) -> Util.format2 "(%s => %s)" (t |> typ_to_string) (k |> kind_to_string)
+  | Kind_tcon(Some x, k, k', imp) -> Util.format4 "(%s%s:%s => %s)" (if imp then "#" else "") (strBvd x) (k |> kind_to_string) (k' |> kind_to_string)
+  | Kind_tcon(_, k, k', _) -> Util.format2 "(%s => %s)" (k |> kind_to_string) (k' |> kind_to_string)
+  | Kind_dcon(Some x, t, k, imp) -> Util.format4 "(%s%s:%s => %s)" (if imp then "#" else "") (strBvd x) (t |> typ_to_string) (k |> kind_to_string)
+  | Kind_dcon(_, t, k, _) -> Util.format2 "(%s => %s)" (t |> typ_to_string) (k |> kind_to_string)
   | Kind_unknown -> "_"
 
 and pat_to_string x = match x with
@@ -122,3 +126,20 @@ and pat_to_string x = match x with
   | Pat_wild -> "_"
   | Pat_twild -> "'_"
   | Pat_disj ps ->  Util.concat_l " | " (List.map pat_to_string ps)
+
+let tparam_to_string = function
+  | Tparam_typ(a, k) -> Util.format2 "(%s:%s)" (strBvd a) (kind_to_string k)
+  | Tparam_term(x, t) -> Util.format2 "(%s:%s)" (strBvd x) (typ_to_string t)
+
+let tparams_to_string tps = List.map tparam_to_string tps |> String.concat " "
+
+let rec sigelt_to_string x = match x with 
+  | Sig_tycon(lid, tps, k, _, _, _) -> Util.format3 "type %s %s : %s" lid.str (tparams_to_string tps) (kind_to_string k)
+  | Sig_typ_abbrev(lid, tps, k, t) ->  Util.format4 "type %s %s : %s = %s" lid.str (tparams_to_string tps) (kind_to_string k) (typ_to_string t)
+  | Sig_datacon(lid, t, _) -> Util.format2 "datacon %s : %s" lid.str (typ_to_string t)
+  | Sig_val_decl(lid, t, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string t)
+  | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string f)
+  | Sig_logic_function(lid, t, _) -> Util.format2 "logic val %s : %s" lid.str (typ_to_string t)
+  | Sig_let lbs -> lbs_to_string lbs
+  | Sig_main e -> Util.format1 "let _ = %s" (exp_to_string e)
+  | Sig_bundle ses -> List.map sigelt_to_string ses |> String.concat "\n"

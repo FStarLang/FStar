@@ -31,7 +31,7 @@ MAIN=$(addprefix ../../src/, $(MAINFILES))
 ALL=$(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(MAIN)
 
 compiler:
-	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(MAIN)
+	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) backends.fsi $(MAIN)
 
 wc: prims.fst $(ALL)
 	wc -l $^

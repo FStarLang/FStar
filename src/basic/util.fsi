@@ -47,6 +47,7 @@ val string_of_float: float -> string
 val string_of_char:  char -> string
 val string_of_bytes: byte[] -> string
 val substring: string -> int -> int -> string
+val starts_with: string -> string -> bool
 val char_at: string -> int -> char
 
 type either<'a,'b> =

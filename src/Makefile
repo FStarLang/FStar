@@ -29,7 +29,7 @@ TC_SRC=$(addprefix tc/, $(TC))
 
 PLATFORM=
 BUILD_VERSION=
-OTHERFLAGS=--nologo -g -O --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
+OTHERFLAGS=--optimize+ --debug:full --nologo -g -O --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 
 LIB=../lib
 BIN=../bin

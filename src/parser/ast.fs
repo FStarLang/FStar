@@ -30,9 +30,9 @@ type term' =
   | Tvar      of ident
   | Var       of lid
   | Name      of lid
-  | Construct of lid * list<term>       (* data, type, predicate *)
+  | Construct of lid * list<(term*bool)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
-  | App       of term * term 
+  | App       of term * term * bool                    (* bool marks an explicitly provided implicit parameter *)
   | Let       of bool * list<(pattern * term)> * term  (* bool is for let rec *)
   | Seq       of term * term
   | If        of term * term * term
@@ -57,7 +57,7 @@ and binder' =
   | Annotated of ident * term 
   | TAnnotated of ident * term 
   | NoName of term
-and binder = {binder:binder'; range:range; level:level}
+and binder = {binder:binder'; range:range; level:level; implicit:bool}
 
 and pattern' = 
   | PatWild
@@ -113,7 +113,7 @@ type file = list<pragma> * list<modul>
 
 (********************************************************************************)
 let mk_decl d r = {decl=d; range=r}
-let mk_binder b r l = {binder=b; range=r; level=l}
+let mk_binder b r l i = {binder=b; range=r; level=l; implicit=i}
 let mk_term t r l = {term=t; range=r; level=l}
 let mk_pattern p r = {pattern=p; range=r}
 let mk_function branches r1 r2 = 
@@ -136,12 +136,12 @@ let rec term_to_string (x:term) = match x.term with
   | Var l
   | Name l -> Print.sli l
   | Construct(l, args) -> 
-    Util.format2 "(%s %s)" (Print.sli l) (to_string_l " " term_to_string args)
+    Util.format2 "(%s %s)" (Print.sli l) (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (if imp then "#" else "") (term_to_string a)) args)
   | Abs(pats, t) when (x.level = Expr) -> 
     Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | Abs(pats, t) when (x.level = Type) -> 
     Util.format2 "(fun %s => %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
-  | App(t1, t2) -> Util.format2 "%s %s" (t1|> term_to_string) (t2|> term_to_string)
+  | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (if imp then "#" else "") (t2|> term_to_string)
   | Let(false, [(pat,tm)], body) -> 
     Util.format3 "let %s = %s in %s" (pat|> pat_to_string) (tm|> term_to_string) (body|> term_to_string)
   | Let(_, lbs, body) -> 
@@ -191,12 +191,14 @@ let rec term_to_string (x:term) = match x.term with
   | Affine t -> Util.format1 "!%s" (t|> term_to_string)
   | _ -> failwith "Missing case in term_to_string"
 
-and binder_to_string x = match x.binder with 
+and binder_to_string x = 
+  let s = match x.binder with 
   | Variable i -> i.idText
-  | TVariable i -> Util.format1 "%s:S" (i.idText) 
+  | TVariable i -> Util.format1 "%s:_" (i.idText) 
   | TAnnotated(i,t)
   | Annotated(i,t) -> Util.format2 "%s:%s" (i.idText) (t |> term_to_string)
-  | NoName t -> t |> term_to_string
+  | NoName t -> t |> term_to_string in
+  if x.implicit then Util.format1 "#%s" s else s
 
 and pat_to_string x = match x.pattern with 
   | PatWild -> "_"

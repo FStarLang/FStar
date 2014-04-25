@@ -47,6 +47,7 @@ assume val string_of_char:  char -> string
 assume val string_of_bytes: byte[] -> string
 assume val substring: string -> int -> int -> string
 assume val char_at: string -> int -> char
+assume val starts_with: string -> string -> bool
 
 type either<'a,'b> =
   | Inl of 'a

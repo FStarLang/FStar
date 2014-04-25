@@ -19,18 +19,17 @@ type l_and : Type => Type => Type
 type l_or  : Type => Type => Type
 type l_not : Type => Type
 type l_iff : Type => Type => Type
-type l_implies : Type => Type => Type
-type Forall : 'a:Type => ('a => Type) => Type
-type Exists : 'a:Type => ('a => Type) => Type
+type l_imp : Type => Type => Type
+type Forall : #'a:Type => ('a => Type) => Type
+type Exists : #'a:Type => ('a => Type) => Type
+type ForallTyp : (Type => Type) => Type
+type ExistsTyp : (Type => Type) => Type
 type True : Type
 type False : Type
 type EqTyp : Type => Type => Type
-type Eq : 'a:Type => 'a => 'a => Type
-type Eq2 : 'a:Type => 'b:Type => 'a => 'b => Type
-type TypeOf : 'a:Type => 'a => Type
-logic tfun type AsE : 'a:Type => 'a => Type
-type neq2 = fun ('a:Type) ('b:Type) (x:'a) (y:'b) => l_not (Eq2 x y)
-type neq = fun ('a:Type) (x:'a) (y:'a) => x<>y
+type Eq : #'a:Type => 'a => 'a => Type
+type Eq2 : #'a:Type => #'b:Type => 'a => 'b => Type
+type TypeOf : #'a:Type => 'a => Type
 type KindOf : Type => Type
 type Not = fun ('P:Type) => (l_not 'P)
 type XOR = fun ('P:Type) ('Q:Type) => (l_and (l_or 'P 'Q) (Not(l_and 'P 'Q)))
@@ -108,7 +107,6 @@ logic data type Tuple5: 'a:Type
            -> _5:'e _1 _2 _3 _4
            -> Tuple5 'a 'b 'c 'd 'e
 
-
 logic data type Tuple6: 'a:Type
           => 'b:('a => Type)
           => 'c:(x:'a => 'b x => Type)
@@ -121,6 +119,7 @@ logic data type Tuple6: 'a:Type
            -> 'c:(x:'a => 'b x => Type)
            -> 'd:(x:'a => y:'b x => z:'c x y => Type)
            -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type)
+           -> 'f:(x:'a => y:'b x => z:'c x y => w:'d x y z => v:'e x y z w => Type)
            -> _1:'a
            -> _2:'b _1
            -> _3:'c _1 _2

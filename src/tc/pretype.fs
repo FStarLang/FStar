@@ -34,30 +34,26 @@ let rec tc_kind env k : kind =
   | Kind_uvar _
   | Kind_star -> k
 
-  | Kind_tcon (aopt, k1, k2) -> 
+  | Kind_tcon (aopt, k1, k2, imp) -> 
     let k1' = tc_kind env k1 in 
     let env' = match aopt with 
       | None -> env 
       | Some a -> Env.push_local_binding env (Env.Binding_typ(a, k1')) in
     let k2' = tc_kind env' k2 in
-    Kind_tcon(aopt, k1', k2')
+    Kind_tcon(aopt, k1', k2', imp)
 
-  | Kind_dcon (xopt, t1, k2) ->
+  | Kind_dcon (xopt, t1, k2, imp) ->
     let t1', _ = tc_typ env t1 in
     let env' = match xopt with 
       | None -> env
       | Some x -> Env.push_local_binding env (Env.Binding_var(x, t1')) in
     let k2' = tc_kind env' k2 in
-    Kind_dcon(xopt, t1', k2')
+    Kind_dcon(xopt, t1', k2', imp)
 
   | Kind_unknown -> 
     Tc.Util.new_kvar env
 
-and tc_typ env t = 
-  let t', k' = tc_typ' env t in
-  t', k'
-
-and tc_typ' env t : typ * kind = 
+and tc_typ env t : typ * kind = 
   let env = Tc.Env.set_range env (Util.range_of_typ t (Tc.Env.get_range env)) in
   let t = Util.compress_typ t in
   match t with 
@@ -89,40 +85,40 @@ and tc_typ' env t : typ * kind =
     let t2' = tc_typ_check env' t2 Kind_star in
     Typ_refine(x, t1', t2'), Kind_star
 
-  | Typ_app(t1, t2) -> 
+  | Typ_app(t1, t2, imp) -> 
     let t1', k1' = tc_typ env t1 in 
-    let aopt, karg, kres = match Tc.Util.destruct_tcon_kind env k1' t1' with 
-      | Kind_tcon(aopt, karg, kres) -> aopt, karg, kres
+    let aopt, karg, kres, t1' = match Tc.Util.destruct_tcon_kind env k1' t1' imp with 
+      | Kind_tcon(aopt, karg, kres, _), t1' -> aopt, karg, kres, t1'
       | _ -> failwith "impossible" in
     let t2' = tc_typ_check env t2 karg in
     let k2 = match aopt with 
       | None -> kres
-      | Some a -> Util.subst_kind [Inl(a, t1')] kres in
-    t2', k2
+      | Some a -> Util.subst_kind [Inl(a, t2')] kres in
+    Typ_app(t1', t2', imp), k2
     
-  | Typ_dep(t1, e1) -> 
+  | Typ_dep(t1, e1, imp) -> 
     let t1', k1' = tc_typ env t1 in
-    let xopt, targ, kres, t1' = match Tc.Util.destruct_dcon_kind env k1' t1' with 
-      | Kind_dcon(xopt, targ, kres), t1' -> xopt, targ, kres, t1'
+    let xopt, targ, kres, t1' = match Tc.Util.destruct_dcon_kind env k1' t1' imp with 
+      | Kind_dcon(xopt, targ, kres, _), t1' -> xopt, targ, kres, t1'
       | _ -> failwith "impossible" in
     let env' = Env.set_expected_typ env targ in
     let e1', _ = tc_exp env' e1 in
     let k2 = match xopt with 
       | None -> kres
       | Some x -> Util.subst_kind [Inr(x, e1')] kres in
-    Typ_dep(t1', e1'), k2
+    Typ_dep(t1', e1', imp), k2
   
   | Typ_lam(x, t1, t2) -> 
     let t1', k1 = tc_typ env t1 in 
     let env' = Env.push_local_binding env (Env.Binding_var(x, t1')) in
     let t2', k2 = tc_typ env' t2 in
-    Typ_lam(x, t1', t2'), Kind_dcon(Some x, t1', k2)
+    Typ_lam(x, t1', t2'), Kind_dcon(Some x, t1', k2, false)
 
   | Typ_tlam(a, k1, t1) -> 
     let k1' = tc_kind env k1 in 
     let env' = Env.push_local_binding env (Env.Binding_typ(a, k1')) in 
     let t1', k2 = tc_typ env' t1 in 
-    Typ_tlam(a, k1', t1'), Kind_tcon(Some a, k1', k2)
+    Typ_tlam(a, k1', t1'), Kind_tcon(Some a, k1', k2, false)
 
   | Typ_ascribed(t1, k1) -> 
     let k1' = tc_kind env k1 in 
@@ -144,7 +140,7 @@ and tc_typ' env t : typ * kind =
 
 and tc_typ_check env t k : typ = 
   let t', k' = tc_typ env t in
-  Tc.Util.keq env k k';
+  Tc.Util.keq env (Some t') k' k;
   t'       
 
 and tc_exp env e : exp * typ = match e.v with 
@@ -154,8 +150,8 @@ and tc_exp env e : exp * typ = match e.v with
 
   | Exp_fvar(v, dc) -> 
     let t = Env.lookup_lid env v.v in
-    if dc &&  not (Env.is_datacon env v.v)
-    then failwith "Expected a data constructor"
+    if dc &&  not (Env.is_datacon env v.v) && not (Env.is_logic_function env v.v)
+    then raise (Error(Util.format1 "Expected a data constructor; got %s" v.v.str, e.p))
     else check_expected_typ env ({e with sort=t})
 
   | Exp_constant c -> 
@@ -188,7 +184,7 @@ and tc_exp env e : exp * typ = match e.v with
       | Some t -> 
         (match Util.compress_typ t with 
           | Typ_univ(b, karg, tres) -> 
-            Tc.Util.keq env karg k1';
+            Tc.Util.keq env None karg k1';
             let tres = Util.subst_typ [Inl(b, Util.bvd_to_typ a karg)] tres in
             karg, Env.set_expected_typ env tres
           | _ -> k1', env)
@@ -218,7 +214,7 @@ and tc_exp env e : exp * typ = match e.v with
     let t1', k = tc_typ env1 t1 in 
     begin match Tc.Util.destruct_poly_typ env1 t_e1 e1' with
       | Typ_univ(a, k', tres), e1' ->
-          Tc.Util.keq env1 k k';
+          Tc.Util.keq env1 (Some t1) k k';
           let t = Util.subst_typ [Inl(a, t1')] tres in
           check_expected_typ env (withinfo (Exp_tapp(e1', t1')) t e.p) 
       | _ -> failwith "impossible"
@@ -368,7 +364,7 @@ and tc_pat (pat_t:typ) env p : Env.env =
       env, outvars in
   let pat_env, _ = mk_pat_env [] env p in
   let exps = Tc.Util.pat_as_exps env p in
-  let env = Tc.Env.set_expected_typ env pat_t in
+  let env = Tc.Env.set_expected_typ pat_env pat_t in
   ignore <| List.map (tc_exp env) exps; 
   pat_env
 
@@ -392,7 +388,7 @@ let rec tc_decl env se = match se with
       let k = tc_kind env k in 
       let se = Sig_tycon(lid, tps, k, _mutuals, _data, tags) in  
       let _ = match compress_kind k with
-        | Kind_uvar _ -> Tc.Util.keq env k Kind_star
+        | Kind_uvar _ -> Tc.Util.keq env None k Kind_star
         | _ -> () in 
       let env = Tc.Env.push_sigelt env se in
       se, env
@@ -402,7 +398,7 @@ let rec tc_decl env se = match se with
       let tps, env = tc_tparams env tps in
       let t, k1 = tc_typ env t in 
       let k2 = tc_kind env k in 
-      Tc.Util.keq env k1 k2;
+      Tc.Util.keq env (Some t) k1 k2;
       let se = Sig_typ_abbrev(lid, tps, k1, t) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
@@ -475,7 +471,9 @@ let rec tc_decl env se = match se with
       se, env
 and tc_decls env ses = 
   let ses, env = List.fold_left (fun (ses, env) se ->
+//  Printf.printf "Checking sigelt\n\t%s\n" (Print.sigelt_to_string se);
   let se, env = tc_decl env se in 
+//  Printf.printf "Checked sigelt\n\t%s\n" (Print.sigelt_to_string se);
   se::ses, env) ([], env) ses in
   List.rev ses, env 
 
