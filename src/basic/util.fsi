@@ -53,10 +53,7 @@ val char_at: string -> int -> char
 type either<'a,'b> =
   | Inl of 'a
   | Inr of 'b
-
-val physical_eq: 'a -> 'a -> bool 
-  when 'a:not struct (* physical equality *)
-      
+     
 val nodups: ('a -> 'a -> bool) -> list<'a> -> bool
 val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
 val set_eq: ('a -> 'a -> int) -> list<'a> -> list<'a> -> bool

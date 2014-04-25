@@ -59,7 +59,10 @@ type env = {
   modules:list<modul>;           (* already fully type checked modules *)
   expected_typ:option<typ>;      (* type expected by the context *)
   level:level;                   (* current term being checked is at level *)
-  sigtab:sigtable                (* a dictionary of long-names to sigelts *)
+  sigtab:sigtable;               (* a dictionary of long-names to sigelts *)
+  is_pattern:bool;               (* is the current term being checked a pattern? *)
+  instantiate_targs:bool;        (* instantiate implicit type arguments? default=true *)
+  instantiate_vargs:bool         (* instantiate implicit value agruments? default=true *)
 }
 
 let rec add_sigelt env se = match se with 
@@ -75,7 +78,10 @@ let initial_env module_lid =
     modules= [];
     expected_typ=None;
     level=Expr;
-    sigtab=Util.smap_create default_table_size
+    sigtab=Util.smap_create default_table_size;
+    is_pattern=false;
+    instantiate_targs=true;
+    instantiate_vargs=true
   }
 
 let finish_module env m = 

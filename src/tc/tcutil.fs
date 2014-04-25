@@ -26,14 +26,6 @@ open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Util
 open Microsoft.FStar.Tc.Env
             
-let terr env t1 t2 exp = 
-  let msg = 
-     Util.format3 "Expected an expression of type:\n\n%s\n\nbut got (%s):\n\n%s"
-      (Print.typ_to_string t1) 
-      (Print.exp_to_string exp)
-      (Print.typ_to_string t2) in
-    raise (Error (msg, exp.p))
-
 let t_unit = Typ_const (Util.withsort Const.unit_lid Kind_star)
 let t_bool = Typ_const (Util.withsort Const.bool_lid Kind_star)
 let t_int = Typ_const (Util.withsort Const.int_lid Kind_star)
@@ -85,7 +77,7 @@ let new_evar env t =
     let tvs', xvs' = Env.idents env in 
     let eq bv bvd = Util.bvd_eq bv.v bvd in
     forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
-  withinfo (Exp_uvar (Unionfind.fresh (Uvar wf), t)) t (Env.get_range env)
+  Exp_uvar (Unionfind.fresh (Uvar wf), t)
 
 let unchecked_unify uv t = Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here *)
 
@@ -386,7 +378,7 @@ and trel rel env t t' =
 
 and exp_equiv env e e' = 
   let e, e' = compress_exp e, compress_exp e' in 
-  match e.v, e'.v with 
+  match e, e' with 
     | Exp_bvar x1, Exp_bvar x1' -> Util.bvd_eq x1.v x1'.v
     | Exp_fvar (fv1, _), Exp_fvar (fv1', _) -> lid_equals fv1.v fv1'.v
     | Exp_constant s1, Exp_constant s1' -> const_eq s1 s1'
@@ -470,12 +462,41 @@ let teq env t1 t2 =
   then ()
   else raise (Error(Tc.Errors.basic_type_error t2 t1, Tc.Env.get_range env))
 
-let check_and_ascribe (env:env) (e:exp) (t:typ) : exp =
-  if not (trel SUB env e.sort t)
-  then raise (Error(Tc.Errors.expected_expression_of_type t e.sort, e.p))
-  else if trel EQ env e.sort t
+let check_and_ascribe (env:env) (e:exp) (t1:typ) (t2:typ) : exp =
+  if not (trel SUB env t1 t2)
+  then (if env.is_pattern
+        then raise (Error(Tc.Errors.expected_pattern_of_type t2 e t1, Tc.Env.get_range env))
+        else raise (Error(Tc.Errors.expected_expression_of_type t2 e t1, Tc.Env.get_range env)))
+  else if trel EQ env t1 t2
   then e 
-  else withinfo (Exp_ascribed(e, t)) t e.p
+  else Exp_ascribed(e, t2)
+
+let maybe_instantiate env e t = 
+  let rec aux norm t e = 
+    let t = compress_typ t in 
+    match t with 
+      | Typ_univ(a, k, t) when env.instantiate_targs -> 
+        let arg = new_tvar env k in
+        let t' = Util.subst_typ [Inl(a, arg)] t in
+        let f = Exp_tapp(e, new_tvar env k) in
+        aux norm t' f 
+
+      | Typ_fun(Some x, t1, t2, true) when env.instantiate_vargs -> 
+        let arg = new_evar env t1 in
+        let t2' = subst_typ [Inr(x, arg)] t2 in
+        let f = Exp_app(e, arg, true) in
+        aux norm t2' f
+
+      | _ when not norm -> 
+        let t' = normalize env t in 
+        begin match t' with 
+          | Typ_fun _
+          | Typ_univ _ -> aux true t' e
+          | _ -> (e, t)
+        end
+
+      | _ -> (e, t) in
+  aux false t e
 
 let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : (typ * exp) = 
   let rec aux norm t f =
@@ -492,7 +513,7 @@ let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : (ty
         (* need to instantiate an implicit type argument *)
         let arg = new_tvar env k in
         let t' = Util.subst_typ [Inl(a, arg)] t in
-        let g = withinfo (Exp_tapp(f, new_tvar env k)) t' f.p in
+        let g = Exp_tapp(f, new_tvar env k) in
         aux norm t' g 
 
       | Typ_fun(_, _, _, false) when imp_arg_follows -> 
@@ -503,7 +524,7 @@ let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : (ty
         (* need to instantiate an implicit argument *)
         let arg = new_evar env t1 in
         let t2' = subst_typ [Inr(x, arg)] t2 in
-        let g = withinfo (Exp_app(f, arg, true)) t2' f.p in
+        let g = Exp_app(f, arg, true) in
         aux norm t2' g
 
       | Typ_fun _ -> 
@@ -530,7 +551,7 @@ let destruct_poly_typ (env:env) (t:typ) (f:exp) : (typ*exp) =
         (* need to instantiate an implicit argument *)
         let arg = new_evar env t1 in
         let t2' = subst_typ [Inr(x, arg)] t2 in
-        let g = withinfo (Exp_app(f, arg, true)) t2' f.p in
+        let g = Exp_app(f, arg, true) in
         aux norm t2' g
 
       | _ when not norm -> 
@@ -593,27 +614,31 @@ let pat_as_exps env p : list<exp> =
     | Pat_twild  -> [Inl (new_tvar env (new_kvar env))]
     | Pat_var x -> [Inr (Util.bvd_to_exp x (new_tvar env Kind_star))]
     | Pat_tvar a -> [Inl (Util.bvd_to_typ a (new_kvar env))]
-    | Pat_constant c -> [Inr (withinfo (Exp_constant c) (typing_const env c) (Env.get_range env))]
+    | Pat_constant c -> [Inr (Exp_constant c)]
     | Pat_cons(l, pats) -> 
       let args = List.map (fun p -> single (aux p)) pats in 
       [Inr (Util.mk_data l args)]
     | Pat_disj pats -> 
-      pats |> List.map (fun p -> single <| aux p) in
+      pats |> List.map (fun p -> single <| aux p)
+    | Pat_withinfo(p, r) -> 
+      aux p |> List.map (function 
+        | Inr e -> Inr (Exp_withinfo(e, Typ_unknown, r))
+        | Inl t -> Inl (Typ_meta(Meta_pos(t, r)))) in
   List.map (function 
     | Inl _ -> failwith "Impossible"
     | Inr e -> e) (aux p)    
 
-let generalize uvars e t : (exp * typ) = 
+let generalize env uvars e t : (exp * typ) = 
     if not (is_value e) then e, t 
     else
       let uvars_t = (Util.uvars_in_typ t).uvars_t in
       let generalizable = uvars_t |> List.filter (fun (uv,_) -> not (uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
       let tvars = generalizable |> List.map (fun (u,k) -> 
-        let a = Util.new_bvd (Some e.p) in
+        let a = Util.new_bvd (Some <| Tc.Env.get_range env) in
         let t = Util.bvd_to_typ a k in
         unchecked_unify u t;
         (a,k)) in
       tvars |> List.fold_left (fun (e,t) (a,k) ->
         let t' = Typ_univ(a, k, t) in
-        let e' = withinfo (Exp_tabs(a, k, e)) t' e.p in
+        let e' = Exp_tabs(a, k, e) in
         (e', t')) (e,t) 

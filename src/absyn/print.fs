@@ -67,7 +67,9 @@ let rec typ_to_string x = match whnf x with
       | Fixed t -> t|> typ_to_string
       | Uvar _ ->               Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)))
 
-and exp_to_string x = match x.v with 
+and exp_to_string x = match compress_exp x with 
+  | Exp_withinfo _ -> failwith "impossible"
+  | Exp_uvar(uv, _) -> Util.format1 "'e%s" (Util.string_of_int (Unionfind.uvar_id uv))
   | Exp_bvar bvv -> 
     (match !bvv.v.instantiation with 
       | None -> strBvd bvv.v
@@ -126,6 +128,7 @@ and pat_to_string x = match x with
   | Pat_wild -> "_"
   | Pat_twild -> "'_"
   | Pat_disj ps ->  Util.concat_l " | " (List.map pat_to_string ps)
+  | Pat_withinfo (p, _) -> pat_to_string p
 
 let tparam_to_string = function
   | Tparam_typ(a, k) -> Util.format2 "(%s:%s)" (strBvd a) (kind_to_string k)

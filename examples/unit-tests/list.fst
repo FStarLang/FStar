@@ -15,8 +15,8 @@
 *)
 module List
 
-type In : 'a:Type => 'a => list 'a => Type
-type ListUnion : 'a:Type => list 'a => list 'a => list 'a => Type
+type In : #'a:Type => 'a => list 'a => Type
+type ListUnion : #'a:Type => list 'a => list 'a => list 'a => Type
 assume In_hd: forall 'a (hd:'a) (tl:list 'a). In hd (Cons hd tl)
 assume In_tl: forall 'a (hd:'a) (x:'a) (tl:list 'a). In x tl ==> In x (Cons hd tl)
 assume NotinNil: forall 'a (x:'a). not (In x Nil)

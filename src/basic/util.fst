@@ -44,7 +44,7 @@ assume val uint16_of_int: int -> uint16
 assume val string_of_int:   int -> string
 assume val string_of_float: float -> string
 assume val string_of_char:  char -> string
-assume val string_of_bytes: byte[] -> string
+assume val string_of_bytes: array byte -> string
 assume val substring: string -> int -> int -> string
 assume val char_at: string -> int -> char
 assume val starts_with: string -> string -> bool
@@ -72,8 +72,8 @@ assume val map_opt: option<'a> -> ('a -> 'b) -> option<'b>
 assume val first_N: int -> list<'a> -> (list<'a> * list<'a>)
 assume val prefix: list<'a> -> (list<'a> * 'a)
 
-assume val string_of_unicode: byte[] -> string
-assume val unicode_of_string: string -> byte[] 
+assume val string_of_unicode: array byte -> string
+assume val unicode_of_string: string -> array byte
 assume val incr: ref int -> unit
 assume val geq: int -> int -> bool
 assume val for_range: int -> int -> (int -> unit) -> unit

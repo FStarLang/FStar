@@ -29,17 +29,17 @@ let process_args () =
        | _ -> ());
     (res, !file_list)
 
-let err msg args = Util.print_string (Util.format msg args)
 
 let go _ =    
   let finished (mods:Syntax.modul list) = 
-    mods |> List.iter (fun m -> err "Parsed and desugared module: %s\n" [Syntax.text_of_lid m.name]) in
+    let msg = if !Options.pretype then "Parsed, desugared, and pre-typed module:" else "Parsed and desugared module:" in
+    mods |> List.iter (fun m -> Util.print_string (Util.format2 "%s %s\n" msg (Syntax.text_of_lid m.name))) in
   let (res, filenames) = process_args () in
   match res with
     | Help ->
       Options.display_usage (Options.specs())
     | Die msg ->
-      err msg []
+      Util.print_string msg
     | GoOn ->
         let fmods = Parser.Driver.parse_files (Options.prims()::filenames) in
         let fmods = if !Options.pretype then Tc.PreType.check_modules fmods else fmods in
@@ -50,9 +50,7 @@ let go _ =
        finished fmods 
       
 let cleanup () = ()
-  (* System.Console.Out.Flush(); *)
-  (* System.Console.Error.Flush() *)
-;;    
+;;
 
 try 
   go ();

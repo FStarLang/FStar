@@ -24,7 +24,7 @@ assume In_tl: forall 'a (hd:'a) (x:'a) (tl:list 'a). In x tl ==> In x (Cons hd t
 
 val mem: x:'a -> l:list 'a -> b:bool{b=true <==> In x l}
 let rec mem x = function
-  (* | [] -> false *)
+  | [] -> false
   | hd::tl -> if hd = x then true else mem x tl
 
 val map: ('a -> 'b) -> list 'a -> list 'b

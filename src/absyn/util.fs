@@ -31,11 +31,14 @@ let handle_err warning ret e =
     | NYI s -> 
         Util.print_string (Util.format1 "Feature not yet implemented: %s" s); 
         ret
+    | Err s -> 
+        Util.print_string (Util.format1 "Error: %s" s)
     | _ -> raise e
 
 let handleable = function
   | Error _
-  | NYI _ -> true
+  | NYI _ 
+  | Err _ -> true
   | _ -> false
 
 (********************************************************************************)
@@ -84,7 +87,7 @@ let bvd_to_bvar_s bvd sort = {v=bvd; sort=sort; p=bvd.ppname.idRange}
 let bvar_to_bvd bv = bv.v
 let btvar_to_typ bv  = Typ_btvar bv
 let bvd_to_typ bvd k = btvar_to_typ (bvd_to_bvar_s bvd k)
-let bvar_to_exp bv   = withsort (Exp_bvar bv) bv.sort
+let bvar_to_exp bv   =  Exp_bvar bv
 let bvd_to_exp bvd t = bvar_to_exp (bvd_to_bvar_s bvd t)
 let new_bvd ropt = let id = genident ropt in mkbvd (id,id)
 let gen_bvar sort = let bvd = (new_bvd None) in bvd_to_bvar_s bvd sort
@@ -97,7 +100,7 @@ let set_lid_range l r =
   let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
   lid_of_ids ids
 let fv l = withinfo l Typ_unknown (range_of_lid l)
-let fvar l r = ewithpos (Exp_fvar(fv (set_lid_range l r), false)) r
+let fvar l r =  Exp_fvar(fv (set_lid_range l r), false)
 let ftv l = Typ_const (withinfo l Kind_unknown (range_of_lid l))
 let order_bvd x y = match x, y with 
   | Inl _, Inr _ -> -1
@@ -110,11 +113,11 @@ let order_bvd x y = match x, y with
 (****************Simple utils on the local structure of a term ******************)
 (********************************************************************************)
 
-let rec ascribe e t = match e.v with 
+let rec ascribe e t = match e with 
   | Exp_ascribed (e, _) -> ascribe e t
   | _ -> withsort (Exp_ascribed(e, t)) t
     
-let rec unascribe e = match e.v with 
+let rec unascribe e = match e with 
   | Exp_ascribed (e, _) -> unascribe e 
   | _ -> e
 
@@ -130,15 +133,14 @@ let rec unrefine t = match t with
   | Typ_refine(x, t, _) -> unrefine t
   | _ -> t
 
-let rec pre_typ t = 
-  let t' = unascribe_typ (unrefine t) in
-  if Util.physical_eq t t' 
-  then t
-  else pre_typ t
+let pos e r' = match e with 
+  | Exp_withinfo(_, _, r) -> r
+  | _ -> r'
 
-let hoist e (body:exp->exp) : exp' = 
-  let bvd = new_bvd (Some e.p) in
-  Exp_let((false, [(Inl bvd, e.sort, e)]), body (bvd_to_exp bvd e.sort))
+let rec pre_typ t = match compress_typ t with 
+  | Typ_refine(_, t, _) 
+  | Typ_ascribed(t, _) -> pre_typ t
+  | t -> t
 
 (* If the input type is a Typ_app, walks the Typ_app tree and
    flattens the type parameters. Does not recursively drill into
@@ -180,11 +182,11 @@ let range_of_lb = function
 
 let mk_curried_app e e_or_t = 
   List.fold_left (fun f -> function
-    | Inl t -> ewithpos (Exp_tapp(f, t)) (Range.union_ranges f.p (range_of_typ t f.p))
-    | Inr e -> ewithpos (Exp_app(f, e, false)) (Range.union_ranges f.p e.p)) e e_or_t 
+    | Inl t -> Exp_tapp(f, t) 
+    | Inr e -> Exp_app(f, e, false))  e e_or_t 
 
 let uncurry_app e =
-  let rec aux e out = match (compress_exp e).v with 
+  let rec aux e out = match compress_exp e with 
     | Exp_app(e1, e2, _) -> aux e1 (Inr e2::out)
     | Exp_tapp(e1, t) -> aux e1 (Inl t::out)
     | _ -> e, List.rev out in
@@ -195,7 +197,7 @@ let mk_data l args =
 
 let destruct_app =
     let rec destruct acc (e : exp) =
-        match e.v with
+        match e with
         | Exp_app (e1, e2, b) -> destruct ((e2, b) :: acc) e1
         | _ -> (e, acc)
     in
@@ -207,7 +209,7 @@ let destruct_app =
 (********************************************************************************)
 
 let rec is_value e = 
-  let is_val e = match e.v with 
+  let is_val e = match compress_exp e with 
     | Exp_constant _
     | Exp_bvar _
     | Exp_fvar _ 
@@ -224,13 +226,14 @@ let rec is_value e =
     | _ -> false in 
     (is_val e) || (is_logic_function e)
 
-and is_data e = match (unascribe e).v with 
+and is_data e = match compress_exp e with 
   | Exp_fvar(_, b) -> b
   | Exp_app(e, e', _) -> is_value e' && is_data e
   | Exp_tapp(e, _) -> is_data e
+  | Exp_ascribed(e, _) -> is_data e
   | _ -> false
 
-and is_logic_function e = match (unascribe e).v with
+and is_logic_function e = match compress_exp e with
   (* | Exp_tapp(e1, _) -> is_logic_function e1 *)
   | Exp_app(e1, e2, _) -> is_value e2 && is_logic_function e1
   | Exp_fvar(v, _) ->
@@ -240,6 +243,7 @@ and is_logic_function e = match (unascribe e).v with
         lid_equals v.v Const.op_Addition ||
         lid_equals v.v Const.op_Subtraction ||
         lid_equals v.v Const.op_Multiply
+  | Exp_ascribed(e, _) -> is_logic_function e
   | _ -> false     
    
 
@@ -265,12 +269,12 @@ let collect_uvars_t uvs t : uvars * typ = match t with
           | Some _ -> uvs, t
           | None -> {uvs with uvars_t=(uv,k)::uvs.uvars_t}, t)
       | _ -> uvs, t 
-let collect_uvars_e uvs e : uvars * exp' = match e with 
+let collect_uvars_e uvs e : uvars * exp = match e with 
     | Exp_uvar (uv, t) -> 
         (match List.tryFind (fun (uv', _) -> Unionfind.equivalent uv uv') uvs.uvars_e with 
           | Some _ -> uvs, e
           | None -> {uvs with uvars_e=(uv,t)::uvs.uvars_e}, e)
-      | _ -> uvs, e 
+    | _ -> uvs, e 
 let uvars_in_kind k : uvars = 
   fst <| Visit.visit_kind_simple collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars k
 let uvars_in_typ t : uvars = 
@@ -295,7 +299,7 @@ let fv_fold_t (out:freevars) (benv:boundvars) (t:typ) : (freevars * typ) =
       if is_bound_tv benv bv then out, t
       else (bv::ftvs, fxvs), t
     | _ -> out, t 
-let fv_fold_e (out:freevars) (benv:boundvars) (e:exp') : (freevars * exp') =
+let fv_fold_e (out:freevars) (benv:boundvars) (e:exp) : (freevars * exp) =
   let (ftvs, fxvs) = out in
   match e with
     | Exp_bvar bv ->
@@ -363,9 +367,9 @@ and subst_tvar (s:subst_map) (t:typ) : typ =
             Typ_btvar (setsort btv sort')
       end
     | _ -> t
-and subst_xvar (s:subst_map) (e:exp') : exp' =
+and subst_xvar (s:subst_map) (e:exp) : exp =
   let find_exp bv =  match Util.smap_try_find s bv.realname.idText with 
-    | Some (Inr e) -> Some e.v
+    | Some (Inr e) -> Some e
     | _ ->  None in
   match e with
     | Exp_bvar bv ->
@@ -433,10 +437,10 @@ let freshen_label ropt _ e = match ropt with
   | None -> e
   | Some r ->
     let rstr = Range.string_of_range r in
-    match (unascribe e).v with
+    match unascribe e with
       | Exp_constant(Const_string(bytes, p)) ->
         let bytes =  Util.unicode_of_string (Util.string_of_unicode bytes ^ " : " ^ rstr) in
-        withinfo (Exp_constant(Const_string(bytes, p))) e.sort e.p
+        Exp_constant(Const_string(bytes, p))
       | _ -> e 
 
 let freshen_bvars_typ (ropt:option<Range.range>) (t:typ) (subst:subst) : typ =
@@ -653,39 +657,39 @@ let collect_e_quants t =
         | _ -> List.rev out, t
   in aux [] t
 
-let check_bvar_identity t : bool =
-  let check_btv flag benv btv =
-    let f = function 
-      | Inr _ -> false 
-      | Inl btv' -> btv'.realname.idText = btv.realname.idText in
-      match Util.find_opt f benv with
-        | Some(Inl btv') ->
-            if not (Util.physical_eq btv.instantiation btv'.instantiation)
-            then (Util.print_string (Util.format1 "Btvar identity is broken for %s\n" btv.ppname.idText); false)
-            else flag
-        | _ -> Util.print_string (Util.format1 "Btvar is free %s\n" btv.ppname.idText); flag in
-  let check_bvv flag benv btv =
-    let f = function 
-      | Inl _ -> false 
-      | Inr btv' -> btv'.realname.idText = btv.realname.idText in
-      match Util.find_opt f benv with
-        | Some(Inr btv') ->
-            if not (Util.physical_eq btv.instantiation btv'.instantiation)
-            then (Util.print_string <| Util.format1 "Bvar identity is broken for %s\n" btv.ppname.idText; false)
-            else flag
-        | _ -> Util.print_string <| Util.format1 "Bvar is free %s\n" btv.ppname.idText; flag in
-  let fold_t flag benv t = match t with
-    | Typ_btvar bv -> check_btv flag benv bv.v, t
-    | _ -> flag, t in
-  let fold_e flag benv e = match e with
-    | Exp_bvar bv -> check_bvv flag benv bv.v, e
-    | _ -> flag, e in
-  let ext benv = function
-    | Inl btv ->
-        (Inl btv.v)::benv, Inl btv.v
-    | Inr bxv ->
-        (Inr bxv.v)::benv, Inr bxv.v in
-    fst (Visit.visit_typ fold_kind_noop fold_t fold_e (fun _ e -> e) ext true [] t)
+//let check_bvar_identity t : bool =
+//  let check_btv flag benv btv =
+//    let f = function 
+//      | Inr _ -> false 
+//      | Inl btv' -> btv'.realname.idText = btv.realname.idText in
+//      match Util.find_opt f benv with
+//        | Some(Inl btv') ->
+//            if not (Util.physical_eq btv.instantiation btv'.instantiation)
+//            then (Util.print_string (Util.format1 "Btvar identity is broken for %s\n" btv.ppname.idText); false)
+//            else flag
+//        | _ -> Util.print_string (Util.format1 "Btvar is free %s\n" btv.ppname.idText); flag in
+//  let check_bvv flag benv btv =
+//    let f = function 
+//      | Inl _ -> false 
+//      | Inr btv' -> btv'.realname.idText = btv.realname.idText in
+//      match Util.find_opt f benv with
+//        | Some(Inr btv') ->
+//            if not (Util.physical_eq btv.instantiation btv'.instantiation)
+//            then (Util.print_string <| Util.format1 "Bvar identity is broken for %s\n" btv.ppname.idText; false)
+//            else flag
+//        | _ -> Util.print_string <| Util.format1 "Bvar is free %s\n" btv.ppname.idText; flag in
+//  let fold_t flag benv t = match t with
+//    | Typ_btvar bv -> check_btv flag benv bv.v, t
+//    | _ -> flag, t in
+//  let fold_e flag benv e = match e with
+//    | Exp_bvar bv -> check_bvv flag benv bv.v, e
+//    | _ -> flag, e in
+//  let ext benv = function
+//    | Inl btv ->
+//        (Inl btv.v)::benv, Inl btv.v
+//    | Inr bxv ->
+//        (Inr bxv.v)::benv, Inr bxv.v in
+//    fst (Visit.visit_typ fold_kind_noop fold_t fold_e (fun _ e -> e) ext true [] t)
 
 let rec check_pat_vars r = function 
   | Pat_cons(_, ps) -> 
@@ -711,3 +715,4 @@ let rec check_pat_vars r = function
   | Pat_wild 
   | Pat_twild
   | Pat_constant _ -> []
+  | Pat_withinfo (p, r) -> check_pat_vars r p

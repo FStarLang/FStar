@@ -23,24 +23,29 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
 open Microsoft.FStar.Profiling
 
-let rec compress typ = match typ with
+let rec compress_typ_aux pos typ = match typ with
   | Typ_uvar (uv,k) -> 
       begin
         match Unionfind.find uv with 
-          | Fixed typ -> compress typ
+          | Fixed typ -> compress_typ_aux pos typ
           | _ -> typ
       end
-  | Typ_meta(Meta_pos(t, r)) -> compress t
+  | Typ_meta(Meta_pos(t, _)) when pos -> compress_typ_aux pos t
   | _ -> typ
+let compress typ = compress_typ_aux true typ
+let compress_typ_uvars typ = compress_typ_aux false typ
 
-let rec compress_exp exp = match exp.v with 
+let rec compress_exp_aux pos exp = match exp with 
   | Exp_uvar (uv, _) -> 
     begin
       match Unionfind.find uv with 
-        | Fixed e -> compress_exp e 
+        | Fixed e -> compress_exp_aux pos e 
         | _ -> exp
     end
+  | Exp_withinfo(e, _, _) when pos -> compress_exp_aux pos e
   | _ -> exp
+let compress_exp e = compress_exp_aux true e
+let compress_exp_uvars e = compress_exp_aux false e
   
 let rec compress_kind kind = match kind with 
   | Kind_uvar uv -> 
@@ -64,7 +69,7 @@ let right ext benv bvv = match ext benv (Inr bvv) with
 let rec visit_kind'
     (h: 'env -> 'benv -> kind -> ('env * kind))
     (f: 'env -> 'benv -> typ -> ('env * typ))
-    (g: 'env -> 'benv -> exp' -> ('env * exp'))
+    (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp) 
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
     (env:'env) (benv:'benv) (k:kind) (cont: ('env * kind) -> 'res) : 'res =
@@ -96,7 +101,7 @@ let rec visit_kind'
 and visit_typ'
     (h: 'env -> 'benv -> kind -> ('env * kind))
     (f: 'env -> 'benv -> typ -> ('env * typ))
-    (g: 'env -> 'benv -> exp' -> ('env * exp'))
+    (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp) (* transforms labels *)
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
     (env:'env) (benv:'benv) (t:typ) (cont:('env * typ) -> 'res) : 'res =
@@ -217,14 +222,10 @@ and visit_typ'
 and visit_exp'
     (h: 'env -> 'benv -> kind -> ('env * kind))
     (f: 'env -> 'benv -> typ -> ('env * typ))
-    (g: 'env -> 'benv -> exp' -> ('env * exp'))
+    (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp)
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
-    (env:'env) (benv:'benv) (e:exp) (contorig : ('env * exp) -> 'res) : 'res =
-//  let cont (env, exp') =
-//    visit_typ' h f g l ext env benv e.sort
-//      (fun (env, sort') -> contorig (env, withinfo exp' sort' e.p)) in
-  let cont (env, exp') = contorig (env, withinfo exp' e.sort e.p) in
+    (env:'env) (benv:'benv) (e:exp) (cont : ('env * exp) -> 'res) : 'res =
   let extl b l = match ext b l with
     | (x, Inl y) -> (x,y) 
     | _ -> failwith "Unexpected result" in
@@ -232,14 +233,21 @@ and visit_exp'
     | (x, Inr y) -> (x,y) 
     | _ -> failwith "Unexpected result" in
   let e = compress_exp e in 
-    match e.v with
+    match e with
+    | Exp_withinfo(e, t, p) -> 
+      visit_exp' h f g l ext env benv e 
+        (fun (env, e') -> 
+          visit_typ' h f g l ext env benv t
+            (fun (env, t') -> 
+              cont (env, Exp_withinfo(e', t', p))))
+
     | Exp_bvar bv -> 
       (match !bv.v.instantiation with 
-        | None -> cont (g env benv e.v)
-        | Some e -> visit_exp' h f g l ext env benv e contorig)
+        | None -> cont (g env benv e)
+        | Some e -> visit_exp' h f g l ext env benv e cont)
     | Exp_fvar _
     | Exp_constant _ 
-    | Exp_uvar _ -> cont (g env benv e.v)
+    | Exp_uvar _ -> cont (g env benv e)
    
     | Exp_primop(op, el) ->
       visit_exps' h f g l ext env benv el
@@ -297,6 +305,10 @@ and visit_exp'
                 (fun (_, _, ps) ->  cont (env, benv, Pat_disj(p::ps))))
         | Pat_wild
         | Pat_twild -> cont (env, benv, pat)
+        | Pat_withinfo (p, r) -> 
+          visit_pat h f g l ext env benv p 
+            (fun (env, benv, p) -> 
+              cont (env, benv, Pat_withinfo(p, r)))
           
       and visit_pats h f g l ext env benv pats cont = match pats with
         | [] -> cont (env, benv, pats)
@@ -379,7 +391,7 @@ and visit_exp'
 and visit_typs'
     (h: 'env -> 'benv -> kind -> ('env * kind))
     (f: 'env -> 'benv -> typ -> ('env * typ))
-    (g: 'env -> 'benv -> exp' -> ('env * exp'))
+    (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp)
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
     (env:'env) (benv:'benv) (ts:list<typ>) (cont:('env * list<typ>) -> 'res) : 'res =
@@ -392,7 +404,7 @@ and visit_typs'
 and visit_exps'
     (h: 'env -> 'benv -> kind -> ('env * kind))
     (f: 'env -> 'benv -> typ -> ('env * typ))
-    (g: 'env -> 'benv -> exp' -> ('env * exp'))
+    (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp)
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
     (env:'env) (benv:'benv) (es:list<exp>) (cont:('env * list<exp>) -> 'res) : 'res =
@@ -406,7 +418,7 @@ and visit_exps'
 and visit_either_l'
     (h: 'env -> 'benv -> kind -> ('env * kind))
     (f: 'env -> 'benv -> typ -> ('env * typ))
-    (g: 'env -> 'benv -> exp' -> ('env * exp'))
+    (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp)
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
     (env:'env) (benv:'benv) (es:list<either<typ,exp>>) (cont:('env * list<either<typ,exp>>) -> 'res) : 'res =
@@ -425,7 +437,7 @@ let visit_kind h f g l ext env benv t = visit_kind' h f g l ext env benv t (fun 
 let visit_simple skel
     (h: 'env -> kind -> ('env * kind))
     (f: 'env -> typ -> ('env * typ))
-    (g: 'env -> exp' -> ('env * exp'))
+    (g: 'env -> exp -> ('env * exp))
     (env:'env) (t:'kte) : ('env * 'kte) =
   let null_extension benv (x:either<btvar, bvvar>) = match x with
     | Inl tv -> (benv, Inl tv.v)
@@ -502,7 +514,7 @@ and reduce_typ
       t::out, binders, env) ([], binders, env) tl in
     List.rev tl, env 
   and visit_typ env binders t = 
-    let t = compress t in 
+    let t = compress_typ_uvars t in 
     let kl, tl, el, env = match compress t with 
       | Typ_unknown
       | Typ_btvar _   
@@ -599,12 +611,16 @@ and reduce_exp
   and map_typ env binders t = reduce_typ map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders t 
   and map_exp env binders e = map_exp' map_kind map_typ visit_exp env binders e
   and visit_exp env binders e = 
-    let e = compress_exp e in 
-    let kl, tl, el, env = match e.v with 
+     let e = compress_exp_uvars e in 
+     let kl, tl, el, env = match e with 
+        | Exp_withinfo(e, t, _) -> 
+          let e, env = map_exp env binders e in 
+          let t, env = map_typ env binders t in 
+          [], [t], [e], env
         | Exp_bvar _  
         | Exp_fvar _ 
         | Exp_constant _ -> [], [], [], env
-        | Exp_uvar (uv, t) -> 
+        | Exp_uvar(_, t) ->  
           let t, env = map_typ env binders t in
           [], [t], [], env
         | Exp_abs(x, t, e) -> 
@@ -628,6 +644,7 @@ and reduce_exp
             | Pat_wild
             | Pat_twild
             | Pat_constant _ -> b
+            | Pat_withinfo(p, _) -> pat_binders b p
             | Pat_var x -> push_vbinder b (Some x)
             | Pat_tvar t -> push_tbinder b (Some t)
             | Pat_cons(c, pats) -> List.fold_left pat_binders b pats

@@ -136,7 +136,7 @@ let unmangleOpName (id:ident) =
     
 let try_lookup_id env (id:ident) =
   match unmangleOpName id with 
-    | Some l -> Some <| ewithpos (Exp_fvar(fv l, false)) id.idRange
+    | Some l -> Some <|  Exp_fvar(fv l, false)
     | _ -> 
       find_map env.localbindings (function 
         | Inr bvd, Binding_var id' when (id'.idText=id.idText) -> Some (bvd_to_exp (set_bvd_range bvd id.idRange) Typ_unknown)
@@ -154,7 +154,7 @@ let try_lookup_let env (lid:lident) =
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
           
-let try_lookup_lid env (lid:lident) = 
+let try_lookup_lid env (lid:lident) : option<exp> = 
   let find_in_sig lid  = 
     match Util.smap_try_find env.sigmap lid.str with 
       | Some (Sig_datacon _)

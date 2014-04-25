@@ -90,11 +90,13 @@ let rec pp_let_binding ((rec_, lb) : letbindings) =
 (* -------------------------------------------------------------------- *)
 and pp_exp (e : exp) =
     match Absyn.Util.destruct_app e with
-    | ({ v = Exp_fvar (x, _) }, [(e1, _); (e2, _)]) when is_op_equality x.v ->
+    | (Exp_fvar (x, _), [(e1, _); (e2, _)]) when is_op_equality x.v ->
         sprintf "(%s) = (%s)" (pp_exp e1) (pp_exp e2)
 
     | _ ->
-        match e.v with
+        match Absyn.Util.compress_exp e with
+        | Exp_withinfo _ -> failwith "imposssible"
+
         | Exp_bvar x ->
             x.v.realname.idText
 

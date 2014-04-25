@@ -39,7 +39,10 @@ type env = {
   modules:list<modul>;           (* already fully type checked modules *)
   expected_typ:option<typ>;      (* type expected by the context *)
   level:level;                   (* current term being checked is at level *)
-  sigtab:Util.smap<sigelt>       (* a dictionary of long-names to sigelts *)
+  sigtab:Util.smap<sigelt>;      (* a dictionary of long-names to sigelts *)
+  is_pattern:bool;               (* is the current term being checked a pattern? *)
+  instantiate_targs:bool;
+  instantiate_vargs:bool
 }
 
 val initial_env : lident -> env

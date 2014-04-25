@@ -24,14 +24,20 @@ open Microsoft.FStar.Util
 let name_not_found (l:Syntax.lident) = 
   format1 "Name %s not found" l.str
 
+let expected_a_term_of_type_t_got_a_function t e = 
+  format2 "Expected a term of type %s; got a function %s" (Print.typ_to_string t) (Print.exp_to_string e)
+
 let variable_not_found v = 
   format1 "Variable %s not found" (Print.strBvd v) 
 
 let unexpected_implicit_argument = 
   "Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"
 
-let expected_expression_of_type t1 t2 = 
-  format2 "Expected expression of type %s; got type %s" (Print.typ_to_string t1) (Print.typ_to_string t2)
+let expected_expression_of_type t1 e t2 = 
+  format3 "Expected expression of type %s; got expression %s of type %s" (Print.typ_to_string t1) (Print.exp_to_string e) (Print.typ_to_string t2)
+
+let expected_pattern_of_type t1 e t2 = 
+  format3 "Expected pattern of type %s; got pattern %s of type %s" (Print.typ_to_string t1) (Print.exp_to_string e) (Print.typ_to_string t2)
 
 let basic_type_error t1 t2 = 
   format2 "Expected type %s; got type %s" (Print.typ_to_string t1) (Print.typ_to_string t2)

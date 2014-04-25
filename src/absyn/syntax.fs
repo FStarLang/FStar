@@ -80,7 +80,7 @@ and meta =
 and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                          (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a
-and exp' =
+and exp =
   | Exp_bvar       of bvar<exp,typ>
   | Exp_fvar       of var<typ> * bool                            (* flag indicates a constructor *)
   | Exp_constant   of sconst
@@ -93,7 +93,7 @@ and exp' =
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Exp_primop     of ident * list<exp>
   | Exp_uvar       of uvar_e * typ                               (* not present after 1st round tc *)
-and exp = withinfo_t<exp',typ>
+  | Exp_withinfo   of exp * typ * Range.range                    (* No longer tag every expression with info, only selectively *)
 and uvar_e = Unionfind.uvar<uvar_basis<exp,typ>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
@@ -105,6 +105,7 @@ and pat =
   | Pat_disj     of list<pat>
   | Pat_wild
   | Pat_twild
+  | Pat_withinfo of pat * Range.range
 and kind =
   | Kind_star
   | Kind_tcon of option<bvdef<typ>> * kind * kind * bool  (* 'a:k -> k'; bool marks implicit *)

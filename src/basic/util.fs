@@ -164,9 +164,6 @@ let prefix l = match List.rev l with
   | hd::tl -> List.rev tl, hd
   | _ -> failwith "impossible"
           
-let (===) a b = LanguagePrimitives.PhysicalEquality a b
-let physical_eq a b = a === b
-
 let string_to_ascii_bytes: string -> byte [] = fun s -> asciiEncoding.GetBytes(s)
 let ascii_bytes_to_string: byte [] -> string = fun b -> asciiEncoding.GetString(b)
 let substring (s:string) i j = s.Substring(i,j)

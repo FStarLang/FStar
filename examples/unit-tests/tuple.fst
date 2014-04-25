@@ -20,7 +20,7 @@ let f x y = (x,y)
 let g (x,y) = x
 let h (x,y) = y
 
-val f' : 'a:S -> 'b:('a => S) -> 'c:(x:'a => 'b x => S) 
+val f' : 'a:Type -> 'b:('a => Type) -> 'c:(x:'a => 'b x => Type) 
      ->  x:'a -> y:'b x -> 'c x y -> (x:'a * y:'b x * 'c x y)
 let f' x y z = (x,y,z)
 let g' (x,y,z) = x

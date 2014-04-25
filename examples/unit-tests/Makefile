@@ -9,10 +9,10 @@ utils:
 	$(FSTAR) --pretype --prims prims.fst utils.fst
 
 list:
-	$(FSTAR)  --prims prims.fst list.fst
+	$(FSTAR) --pretype  --prims prims.fst list.fst
 
 tuple:
-	$(FSTAR) --prims prims.fst tuple.fst
+	$(FSTAR) --pretype --prims prims.fst tuple.fst
 
 rec:
 	$(FSTAR)  --prims prims.fst rec.fst
@@ -29,6 +29,9 @@ TC=$(addprefix ../../src/tc/, $(TCFILES))
 MAINFILES=fstar.fs
 MAIN=$(addprefix ../../src/, $(MAINFILES))
 ALL=$(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(MAIN)
+
+pt-compiler:
+	$(FSTAR) --pretype --prims prims.fst $(STDFILES) $(BASIC)
 
 compiler:
 	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) backends.fsi $(MAIN)
