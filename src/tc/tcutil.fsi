@@ -34,6 +34,7 @@ val new_evar : env -> typ -> exp
 val normalize : env -> typ -> typ
 val keq : env -> option<typ> -> kind -> kind -> unit
 val teq : env -> typ -> typ -> unit
+val subtype: env -> typ -> typ -> bool
 val check_and_ascribe : env -> exp -> typ -> typ -> exp
 val pat_as_exps: env -> pat -> list<exp>
 val generalize: env -> Util.uvars -> exp -> typ -> (exp * typ)

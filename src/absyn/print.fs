@@ -68,7 +68,7 @@ let rec typ_to_string x = match whnf x with
       | Uvar _ ->               Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)))
 
 and exp_to_string x = match compress_exp x with 
-  | Exp_withinfo _ -> failwith "impossible"
+  | Exp_meta(Meta_datainst(e,t)) -> Util.format2 "(%s :<: %s)" (exp_to_string e) (typ_to_string t)
   | Exp_uvar(uv, _) -> Util.format1 "'e%s" (Util.string_of_int (Unionfind.uvar_id uv))
   | Exp_bvar bvv -> 
     (match !bvv.v.instantiation with 

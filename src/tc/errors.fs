@@ -51,8 +51,8 @@ let unification_well_formedness =
 let incompatible_kinds k1 k2 = 
   format2 "Kinds %s and %s are incompatible" (Print.kind_to_string k1) (Print.kind_to_string k2)
 
-let constructor_builds_the_wrong_type d t l = 
-  format3 "Constructor %s builds a value of type %s; expected %s" (Print.sli d) (Print.typ_to_string t) (Print.sli l)
+let constructor_builds_the_wrong_type d t t' = 
+  format3 "Constructor %s builds a value of type %s; expected %s" (Print.exp_to_string d) (Print.typ_to_string t) (Print.typ_to_string t')
 
 let inline_type_annotation_and_val_decl l = 
   format1 "%s has a val declaration as well as an inlined type annotation; remove one" (Print.sli l)

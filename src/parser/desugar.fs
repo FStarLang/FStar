@@ -363,9 +363,9 @@ and desugar_typ_or_exp (env:env) (t:term) : either<typ,exp> =
 and desugar_exp env e = desugar_exp_maybe_top false env e 
 
 and desugar_exp_maybe_top (top_level:bool) (env:env) (top:term) : exp =
-  let pos e = Exp_withinfo(e, Typ_unknown, top.range) in
+  let pos e = Exp_meta(Meta_info(e, Typ_unknown, top.range)) in
   let getpos = function
-    | Exp_withinfo(_, _, p) -> p
+    | Exp_meta(Meta_info(_, _, p)) -> p
     | _ -> failwith "impossible" in
   begin match top.term with
     | Const c -> pos <| Exp_constant c
@@ -385,7 +385,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env) (top:term) : exp =
     | Construct(l, args) ->
       let dt = pos <| Exp_fvar(fail_or (DesugarEnv.try_lookup_datacon env) l, true) in
       let args = List.map (fun (t, imp) -> desugar_typ_or_exp env t, imp) args in
-      pos <| mk_app dt args 
+      pos <| Exp_meta(Meta_dataapp(mk_app dt args)) 
 
     | Abs(binders, body) ->
       let ftv = List.fold_left (fun ftvs pat ->
@@ -412,7 +412,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env) (top:term) : exp =
               let body = desugar_exp env body in
               let body = match pat with
                 | None -> body
-                | Some pat -> Exp_withinfo (Exp_match(bvd_to_exp x t, [(pat, None, body)]), Typ_unknown, getpos body) in
+                | Some pat -> Exp_meta(Meta_info(Exp_match(bvd_to_exp x t, [(pat, None, body)]), Typ_unknown, getpos body)) in
               pos <| Exp_abs(x, t, body)
           end
 
@@ -473,7 +473,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env) (top:term) : exp =
           let body = desugar_exp env t2 in
           let body = match pat with
             | None -> body
-            | Some pat -> Exp_withinfo (Exp_match(bvd_to_exp x t, [(pat, None, body)]), Typ_unknown, getpos body) in
+            | Some pat -> Exp_meta(Meta_info(Exp_match(bvd_to_exp x t, [(pat, None, body)]), Typ_unknown, getpos body)) in
           pos <| Exp_let((false, [(Inl x, t, t1)]), body)
       end
 

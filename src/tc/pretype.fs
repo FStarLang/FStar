@@ -18,6 +18,7 @@ module Microsoft.FStar.Tc.PreType
 
 open Microsoft.FStar
 open Microsoft.FStar.Tc
+open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
@@ -147,10 +148,10 @@ and tc_typ_check env t k : typ =
   t'       
 
 and tc_exp env e : exp * typ = match e with
-  | Exp_withinfo(e, _, p) -> 
+  | Exp_meta(Meta_info(e, _, p)) -> 
     let env = Tc.Env.set_range env p in
     let e, t = tc_exp env e in
-    Exp_withinfo(e, t, p), t
+    Exp_meta(Meta_info(e, t, p)), t
    
   | Exp_bvar x -> 
     let e, t = Tc.Util.maybe_instantiate env e <| Env.lookup_bvar env x in 
@@ -158,6 +159,7 @@ and tc_exp env e : exp * typ = match e with
 
   | Exp_fvar(v, dc) -> 
     let e, t = Tc.Util.maybe_instantiate env e <| Env.lookup_lid env v.v in
+    //Printf.printf "Reached fv %s; instantiate targs=%b, vargs=%b, instantiated to %s at type %s\n" v.v.str env.instantiate_targs env.instantiate_vargs (Print.exp_to_string e) (Print.typ_to_string t);
     if dc &&  not (Env.is_datacon env v.v) && not (Env.is_logic_function env v.v)
     then raise (Error(Util.format1 "Expected a data constructor; got %s" v.v.str, Tc.Env.get_range env))
     else check_expected_typ env e t
@@ -219,6 +221,30 @@ and tc_exp env e : exp * typ = match e with
     let t = Typ_univ(a, karg, tres) in
     Exp_tabs(a, karg, e1'), t
 
+  | Exp_meta(Meta_dataapp e) -> 
+    let env = instantiate_both env in
+    let env, topt = Env.clear_expected_typ env in 
+    begin match topt with 
+      | None -> 
+        let e, t = tc_exp env e in
+        Exp_meta(Meta_dataapp e), t
+      | Some expected_t -> 
+        let d, args = Util.uncurry_app e in 
+        let d = Exp_meta(Meta_datainst(d, expected_t)) in
+        let e = Util.mk_curried_app d args in
+        //Printf.printf "Instrumented data app to %s\n" (Print.exp_to_string e);
+        let e, t = tc_exp env e in
+        //Printf.printf "After checking got term %s\n" (Print.exp_to_string e);
+        check_expected_typ env (Exp_meta(Meta_dataapp e)) expected_t
+    end
+
+  | Exp_meta(Meta_datainst(e, t_expected)) -> 
+     let e, t_d = tc_exp env e in 
+     let _, tres = Util.collect_formals t_d in
+     if Tc.Util.subtype env tres t_expected
+     then e, t_d
+     else raise (Error(Tc.Errors.constructor_builds_the_wrong_type e tres t_expected, rng env)) 
+    
   | Exp_app(e1, e2, imp) -> 
     let env1, _ = Env.clear_expected_typ env in
     let e1', t1 = tc_exp ({env1 with Tc.Env.instantiate_vargs=not imp}) e1 in
@@ -338,12 +364,12 @@ and tc_exp env e : exp * typ = match e with
     let op_t = Tc.Env.lookup_operator env op in
     let x = Util.new_bvd (Some op.idRange) in
     let env' = Tc.Env.push_local_binding env (Env.Binding_var(x, op_t)) in
-    let app = Util.mk_curried_app (Util.bvd_to_exp x op_t) (List.map Inr es) in
+    let app = Util.mk_curried_app (Util.bvd_to_exp x op_t) (List.map (fun e -> Inr(e, false)) es) in
     let app', t = tc_exp env' app in
     let _, tes = Util.uncurry_app app' in
     let es' = tes |> List.map (function 
       | Inl _ -> failwith "Impossible"
-      | Inr e -> e) in 
+      | Inr (e, _) -> e) in 
     Exp_primop(op, es'), t
 
   | Exp_uvar(u, t1) -> 
@@ -441,7 +467,7 @@ let rec tc_decl env se = match se with
       let constructed_t, _ = Util.flatten_typ_apps result_t in (* TODO: check that the tps in tname are the same as here *)
       let _ = match constructed_t with
         | Typ_const fv when lid_equals fv.v tname -> ()
-        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type lid constructed_t tname, range_of_lid lid)) in
+        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type (Util.fvar lid (range_of_lid lid)) constructed_t (Util.ftv tname), range_of_lid lid)) in
       let se = Sig_datacon(lid, t, tname) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
@@ -471,9 +497,11 @@ let rec tc_decl env se = match se with
           | (Inl _, _, _) -> failwith "impossible"
           | (Inr l, t, e) -> 
             match Tc.Env.try_lookup_val_decl env l with 
-              | None -> (Inr l, t, e)
+              | None -> 
+                (Inr l, t, e)
               | Some t' -> match t with 
                   | Typ_unknown -> 
+                   // Util.print_string (Util.format2 "Looked up val %s got type %s\n" l.str (Print.typ_to_string t'));
                     (Inr l, t', e)
                   | _ -> raise (Error (Tc.Errors.inline_type_annotation_and_val_decl l, range_of_lid l)) in
         (r, lb::lbs)) (range_of_lb (List.hd (snd lbs)), []) in
@@ -502,11 +530,15 @@ let rec tc_decl env se = match se with
       let se = Sig_bundle (fst <| tc_decls env (tycons@abbrevs@rest)) in
       let env = Tc.Env.push_sigelt env se in 
       se, env
-and tc_decls env ses = 
-  let ses, env = List.fold_left (fun (ses, env) se ->
-  //Printf.printf "Checking sigelt\n\t%s\n" (Print.sigelt_to_string se);
+and tc_decls (env:Tc.Env.env) ses = 
+  let ses, env = List.fold_left (fun (ses, (env:Tc.Env.env)) se ->
+//  if (env.curmodule.str <> "Prims")
+//  then Util.print_string (Util.format1 "Checking sigelt\n\t%s\n" (Print.sigelt_to_string se))
+//  else ();
   let se, env = tc_decl env se in 
-  //Printf.printf "Checked sigelt\n\t%s\n" (Print.sigelt_to_string se);
+//  if (env.curmodule.str <> "Prims")
+//  then Util.print_string (Util.format1 "Checked sigelt\n\t%s\n" (Print.sigelt_to_string se))
+//  else ();
   se::ses, env) ([], env) ses in
   List.rev ses, env 
 

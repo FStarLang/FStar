@@ -95,7 +95,7 @@ and pp_exp (e : exp) =
 
     | _ ->
         match Absyn.Util.compress_exp e with
-        | Exp_withinfo _ -> failwith "imposssible"
+        | Exp_meta _ -> failwith "imposssible"
 
         | Exp_bvar x ->
             x.v.realname.idText

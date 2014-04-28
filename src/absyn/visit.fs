@@ -35,14 +35,15 @@ let rec compress_typ_aux pos typ = match typ with
 let compress typ = compress_typ_aux true typ
 let compress_typ_uvars typ = compress_typ_aux false typ
 
-let rec compress_exp_aux pos exp = match exp with 
+let rec compress_exp_aux meta exp = match exp with 
   | Exp_uvar (uv, _) -> 
     begin
       match Unionfind.find uv with 
-        | Fixed e -> compress_exp_aux pos e 
+        | Fixed e -> compress_exp_aux meta e 
         | _ -> exp
     end
-  | Exp_withinfo(e, _, _) when pos -> compress_exp_aux pos e
+  | Exp_meta(Meta_info(e, _, _))
+  | Exp_meta(Meta_dataapp e) when meta -> compress_exp_aux meta e
   | _ -> exp
 let compress_exp e = compress_exp_aux true e
 let compress_exp_uvars e = compress_exp_aux false e
@@ -232,15 +233,22 @@ and visit_exp'
   let extr b l = match ext b l with
     | (x, Inr y) -> (x,y) 
     | _ -> failwith "Unexpected result" in
-  let e = compress_exp e in 
+  let e = compress_exp_uvars e in 
     match e with
-    | Exp_withinfo(e, t, p) -> 
+    | Exp_meta(Meta_datainst _) -> failwith "impossible"
+    | Exp_meta(Meta_info(e, t, p)) -> 
       visit_exp' h f g l ext env benv e 
         (fun (env, e') -> 
-          visit_typ' h f g l ext env benv t
-            (fun (env, t') -> 
-              cont (env, Exp_withinfo(e', t', p))))
+//          visit_typ' h f g l ext env benv t
+//            (fun (env, t) -> 
+              cont (env, Exp_meta(Meta_info(e', t, p))))
+//              )
 
+    | Exp_meta(Meta_dataapp e) -> 
+      visit_exp' h f g l ext env benv e 
+        (fun (env, e') -> 
+          cont (env, Exp_meta(Meta_dataapp e')))
+                    
     | Exp_bvar bv -> 
       (match !bv.v.instantiation with 
         | None -> cont (g env benv e)
@@ -613,10 +621,14 @@ and reduce_exp
   and visit_exp env binders e = 
      let e = compress_exp_uvars e in 
      let kl, tl, el, env = match e with 
-        | Exp_withinfo(e, t, _) -> 
+        | Exp_meta(Meta_datainst _) -> failwith "impossible"
+        | Exp_meta(Meta_info(e, t, _)) -> 
           let e, env = map_exp env binders e in 
           let t, env = map_typ env binders t in 
           [], [t], [e], env
+        | Exp_meta(Meta_dataapp e) -> 
+          let e, env = map_exp env binders e in 
+          [], [], [e], env
         | Exp_bvar _  
         | Exp_fvar _ 
         | Exp_constant _ -> [], [], [], env
@@ -739,5 +751,9 @@ let combine_exp e (kl,tl,el) env =
               Exp_let((x, lbs'), e') 
            | _ -> failwith "impossible")
     | Exp_primop(x, es), [], [], _ -> Exp_primop(x, el)
+    | Exp_meta(Meta_info(_, _, p)), [], [t], [e] -> 
+      Exp_meta(Meta_info(e, t, p))
+    | Exp_meta(Meta_dataapp _), [], [], [e] -> 
+      Exp_meta(Meta_dataapp e)
     | _ -> failwith "impossible" in
   withinfo e' e.sort e.p, env

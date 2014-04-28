@@ -134,7 +134,7 @@ let rec unrefine t = match t with
   | _ -> t
 
 let pos e r' = match e with 
-  | Exp_withinfo(_, _, r) -> r
+  | Exp_meta(Meta_info(_, _, r)) -> r
   | _ -> r'
 
 let rec pre_typ t = match compress_typ t with 
@@ -183,26 +183,25 @@ let range_of_lb = function
 let mk_curried_app e e_or_t = 
   List.fold_left (fun f -> function
     | Inl t -> Exp_tapp(f, t) 
-    | Inr e -> Exp_app(f, e, false))  e e_or_t 
+    | Inr (e, imp) -> Exp_app(f, e, imp))  e e_or_t 
 
 let uncurry_app e =
   let rec aux e out = match compress_exp e with 
-    | Exp_app(e1, e2, _) -> aux e1 (Inr e2::out)
+    | Exp_app(e1, e2, imp) -> aux e1 (Inr (e2, imp)::out)
     | Exp_tapp(e1, t) -> aux e1 (Inl t::out)
-    | _ -> e, List.rev out in
+    | _ -> e, out in
   aux e []
 
 let mk_data l args = 
-  mk_curried_app (fvar l (range_of_lid l)) args
+  Exp_meta(Meta_dataapp(mk_curried_app (fvar l (range_of_lid l)) args))
 
 let destruct_app =
-    let rec destruct acc (e : exp) =
-        match e with
-        | Exp_app (e1, e2, b) -> destruct ((e2, b) :: acc) e1
-        | _ -> (e, acc)
-    in
-
-    fun e -> destruct [] e
+  let rec destruct acc (e : exp) =
+      match e with
+      | Exp_app (e1, e2, b) -> destruct ((e2, b) :: acc) e1
+      | _ -> (e, acc)
+  in
+  fun e -> destruct [] (compress_exp e)
 
 (********************************************************************************)
 (******************************** Syntactic values ******************************)

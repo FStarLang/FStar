@@ -462,8 +462,10 @@ let teq env t1 t2 =
   then ()
   else raise (Error(Tc.Errors.basic_type_error t2 t1, Tc.Env.get_range env))
 
+let subtype env t1 t2 = trel SUB env t1 t2
+
 let check_and_ascribe (env:env) (e:exp) (t1:typ) (t2:typ) : exp =
-  if not (trel SUB env t1 t2)
+  if not (subtype env t1 t2)
   then (if env.is_pattern
         then raise (Error(Tc.Errors.expected_pattern_of_type t2 e t1, Tc.Env.get_range env))
         else raise (Error(Tc.Errors.expected_expression_of_type t2 e t1, Tc.Env.get_range env)))
@@ -478,7 +480,7 @@ let maybe_instantiate env e t =
       | Typ_univ(a, k, t) when env.instantiate_targs -> 
         let arg = new_tvar env k in
         let t' = Util.subst_typ [Inl(a, arg)] t in
-        let f = Exp_tapp(e, new_tvar env k) in
+        let f = Exp_tapp(e, arg) in
         aux norm t' f 
 
       | Typ_fun(Some x, t1, t2, true) when env.instantiate_vargs -> 
@@ -606,9 +608,13 @@ let destruct_dcon_kind env k tt imp_arg_follows =
   aux tt k
 
 let pat_as_exps env p : list<exp> = 
-  let single = function 
-    | [p] -> p
+  let single_arg = function 
+    | [Inl p] -> Inl p
+    | [Inr e] -> Inr (e, false)
     | _ -> failwith "Impossible" in
+  let single = function 
+    | [te] -> te
+    | _ -> failwith "impossible" in
   let rec aux p = match p with
     | Pat_wild ->  [Inr (new_evar env (new_tvar env Kind_star))]
     | Pat_twild  -> [Inl (new_tvar env (new_kvar env))]
@@ -616,17 +622,17 @@ let pat_as_exps env p : list<exp> =
     | Pat_tvar a -> [Inl (Util.bvd_to_typ a (new_kvar env))]
     | Pat_constant c -> [Inr (Exp_constant c)]
     | Pat_cons(l, pats) -> 
-      let args = List.map (fun p -> single (aux p)) pats in 
+      let args = List.map (fun p -> single_arg (aux p)) pats in 
       [Inr (Util.mk_data l args)]
     | Pat_disj pats -> 
       pats |> List.map (fun p -> single <| aux p)
     | Pat_withinfo(p, r) -> 
       aux p |> List.map (function 
-        | Inr e -> Inr (Exp_withinfo(e, Typ_unknown, r))
+        | Inr (e) -> Inr (Exp_meta(Meta_info(e, Typ_unknown, r)))
         | Inl t -> Inl (Typ_meta(Meta_pos(t, r)))) in
   List.map (function 
     | Inl _ -> failwith "Impossible"
-    | Inr e -> e) (aux p)    
+    | Inr (e) -> e) (aux p)    
 
 let generalize env uvars e t : (exp * typ) = 
     if not (is_value e) then e, t 

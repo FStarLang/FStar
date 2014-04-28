@@ -68,11 +68,11 @@ type typ =
   | Typ_lam      of bvvdef * typ * typ                  (* fun (x:t) => T *)
   | Typ_tlam     of btvdef * kind * typ                 (* fun ('a:k) => T *) 
   | Typ_ascribed of typ * kind                          (* t <: k *)
-  | Typ_meta     of meta                                (* Not really in the type language; a way to stash convenient metadata with types *)
+  | Typ_meta     of meta_t                              (* Not really in the type language; a way to stash convenient metadata with types *)
   | Typ_uvar     of uvar_t * kind                       (* not present after 1st round tc *)
   | Typ_unknown                                         (* not present after 1st round tc *)
 and uvar_t = Unionfind.uvar<uvar_basis<typ,kind>>
-and meta = 
+and meta_t = 
   | Meta_pos of typ * Range.range                       (* user wrote down this type 1 at source position 2 *)
   | Meta_pattern of typ * list<either<typ,exp>>
   | Meta_cases of list<typ>
@@ -93,7 +93,11 @@ and exp =
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Exp_primop     of ident * list<exp>
   | Exp_uvar       of uvar_e * typ                               (* not present after 1st round tc *)
-  | Exp_withinfo   of exp * typ * Range.range                    (* No longer tag every expression with info, only selectively *)
+  | Exp_meta       of meta_e                                     (* No longer tag every expression with info, only selectively *)
+and meta_e = 
+  | Meta_info      of exp * typ * Range.range                    (* Expression tagged with typ and position info *)
+  | Meta_dataapp   of exp                                        (* Node marked as the application of a constructor *)
+  | Meta_datainst  of exp * typ                                  (* Expect the data constructor e to build a t-typed value *)
 and uvar_e = Unionfind.uvar<uvar_basis<exp,typ>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>

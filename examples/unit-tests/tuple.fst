@@ -15,14 +15,19 @@
 *)
 module Tuple
 
-val f : 'a -> 'b -> ('a * 'b) 
+val f : 'a -> 'b -> ('a * 'b)
 let f x y = (x,y)
-let g (x,y) = x
-let h (x,y) = y
 
-val f' : 'a:Type -> 'b:('a => Type) -> 'c:(x:'a => 'b x => Type) 
+let f' x y = (x,y)
+let g (x,y) = x
+let h (x,y) = (x,y)
+
+val h' : ('a * 'b) -> 'b
+let h' (x,y) = y
+
+val f3 : 'a:Type -> 'b:('a => Type) -> 'c:(x:'a => 'b x => Type)
      ->  x:'a -> y:'b x -> 'c x y -> (x:'a * y:'b x * 'c x y)
-let f' x y z = (x,y,z)
-let g' (x,y,z) = x
-let h' (x,y,z) = y
-let i' (x,y,z) = z
+let f3 x y z = (x,y,z)
+(* let g' (x,y,z) = x *)
+(* let h' (x,y,z) = y *)
+(* let i' (x,y,z) = z *)
