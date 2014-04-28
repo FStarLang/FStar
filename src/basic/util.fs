@@ -146,6 +146,20 @@ let rec find_map l f = match l with
       | None -> find_map tl f
       | y -> y
 
+let fold_map f state s =
+    let fold (state, acc) x =
+        let state, v = f state x in (state, v :: acc) in
+    let (state, rs) = List.fold fold (state, []) s in
+    (state, List.rev rs)
+
+let choose_map f state s =
+    let fold (state, acc) x =
+        match f state x with
+        | state, None   -> (state, acc)
+        | state, Some v -> (state, v :: acc) in
+    let (state, rs) = List.fold fold (state, []) s in
+    (state, List.rev rs)
+
 let for_all f l = List.forall f l
 let for_some f l = List.exists f l
 let forall_exists rel l1 l2 = l1 |> for_all (fun x -> l2 |> for_some (rel x))
