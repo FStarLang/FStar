@@ -221,13 +221,13 @@ and tc_exp env e : exp * typ = match e with
     let t = Typ_univ(a, karg, tres) in
     Exp_tabs(a, karg, e1'), t
 
-  | Exp_meta(Meta_dataapp e) -> 
+  | Exp_meta(Meta_desugared(e, Data_app)) -> 
     let env = instantiate_both env in
     let env, topt = Env.clear_expected_typ env in 
     begin match topt with 
       | None -> 
         let e, t = tc_exp env e in
-        Exp_meta(Meta_dataapp e), t
+        Exp_meta(Meta_desugared(e, Data_app)), t
       | Some expected_t -> 
         let d, args = Util.uncurry_app e in 
         let d = Exp_meta(Meta_datainst(d, expected_t)) in
@@ -235,8 +235,12 @@ and tc_exp env e : exp * typ = match e with
         //Printf.printf "Instrumented data app to %s\n" (Print.exp_to_string e);
         let e, t = tc_exp env e in
         //Printf.printf "After checking got term %s\n" (Print.exp_to_string e);
-        check_expected_typ env (Exp_meta(Meta_dataapp e)) expected_t
+        check_expected_typ env (Exp_meta(Meta_desugared(e, Data_app))) expected_t
     end
+
+  | Exp_meta(Meta_desugared(e, tag)) -> 
+    let e, t = tc_exp env e in
+    Exp_meta(Meta_desugared(e, tag)), t
 
   | Exp_meta(Meta_datainst(e, t_expected)) -> 
      let e, t_d = tc_exp env e in 
@@ -472,9 +476,9 @@ let rec tc_decl env se = match se with
       let env = Tc.Env.push_sigelt env se in 
       se, env
   
-    | Sig_val_decl(lid, t, tag) -> 
+    | Sig_val_decl(lid, t, tag, ltag) -> 
       let t = tc_typ_check env t Kind_star in 
-      let se = Sig_val_decl(lid, t, tag) in 
+      let se = Sig_val_decl(lid, t, tag, ltag) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
   

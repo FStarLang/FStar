@@ -163,7 +163,7 @@ let rec lids_of_sigelt se = match se with
   | Sig_tycon (lid, _, _, _, _, _)    
   | Sig_typ_abbrev  (lid, _, _, _)
   | Sig_datacon (lid, _, _)
-  | Sig_val_decl (lid, _, _) 
+  | Sig_val_decl (lid, _, _, _) 
   | Sig_assume (lid, _, _, _)
   | Sig_logic_function (lid, _, _) -> [lid]
   | Sig_let((_, lbs)) -> List.map (function 
@@ -193,7 +193,7 @@ let uncurry_app e =
   aux e []
 
 let mk_data l args = 
-  Exp_meta(Meta_dataapp(mk_curried_app (fvar l (range_of_lid l)) args))
+  Exp_meta(Meta_desugared(mk_curried_app (fvar l (range_of_lid l)) args, Data_app))
 
 let destruct_app =
     let rec destruct acc (e : exp) =
@@ -567,7 +567,7 @@ let mkRefinedUnit formula =
 
 let findValDecl (vds:list<sigelt>) bvd : option<sigelt> =
   vds |> Util.find_opt (function
-                         | Sig_val_decl(lid, t, _) -> lid.ident.idText = bvd.ppname.idText
+                         | Sig_val_decl(lid, t, _, _) -> lid.ident.idText = bvd.ppname.idText
                          | _ -> false)
       
 //let findValDecls (vds:list<sigelt>) ((lb, _): (letbinding * bool)) : list<sigelt> =

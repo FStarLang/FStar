@@ -45,7 +45,7 @@ let rec compress_exp_aux meta exp = match exp with
     end
   | Exp_ascribed(e, _)
   | Exp_meta(Meta_info(e, _, _))
-  | Exp_meta(Meta_dataapp e) when meta -> compress_exp_aux meta e
+  | Exp_meta(Meta_desugared(e, _)) when meta -> compress_exp_aux meta e
   | _ -> exp
 let compress_exp e = compress_exp_aux true e
 let compress_exp_uvars e = compress_exp_aux false e
@@ -246,10 +246,10 @@ and visit_exp'
               cont (env, Exp_meta(Meta_info(e', t, p))))
 //              )
 
-    | Exp_meta(Meta_dataapp e) -> 
+    | Exp_meta(Meta_desugared(e, tag)) -> 
       visit_exp' h f g l ext env benv e 
         (fun (env, e') -> 
-          cont (env, Exp_meta(Meta_dataapp e')))
+          cont (env, Exp_meta(Meta_desugared(e', tag))))
                     
     | Exp_bvar bv -> 
       (match !bv.v.instantiation with 
@@ -628,7 +628,7 @@ and reduce_exp
           let e, env = map_exp env binders e in 
           let t, env = map_typ env binders t in 
           [], [t], [e], env
-        | Exp_meta(Meta_dataapp e) -> 
+        | Exp_meta(Meta_desugared(e, _)) -> 
           let e, env = map_exp env binders e in 
           [], [], [e], env
         | Exp_bvar _  
@@ -755,7 +755,7 @@ let combine_exp e (kl,tl,el) env =
     | Exp_primop(x, es), [], [], _ -> Exp_primop(x, el)
     | Exp_meta(Meta_info(_, _, p)), [], [t], [e] -> 
       Exp_meta(Meta_info(e, t, p))
-    | Exp_meta(Meta_dataapp _), [], [], [e] -> 
-      Exp_meta(Meta_dataapp e)
+    | Exp_meta(Meta_desugared(_, tag)), [], [], [e] -> 
+      Exp_meta(Meta_desugared(e, tag))
     | _ -> failwith "impossible" in
   withinfo e' e.sort e.p, env

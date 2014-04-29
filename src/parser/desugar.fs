@@ -389,7 +389,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env) (top:term) : exp =
     | Construct(l, args) ->
       let dt = pos <| Exp_fvar(fail_or (DesugarEnv.try_lookup_datacon env) l, true) in
       let args = List.map (fun (t, imp) -> desugar_typ_or_exp env t, imp) args in
-      pos <| Exp_meta(Meta_dataapp(mk_app dt args)) 
+      pos <| Exp_meta(Meta_desugared(mk_app dt args, Data_app)) 
 
     | Abs(binders, body) ->
       let ftv = List.fold_left (fun ftvs pat ->
@@ -436,7 +436,8 @@ and desugar_exp_maybe_top (top_level:bool) (env:env) (top:term) : exp =
       pos <| mk_app e [(t,imp)]
         
     | Seq(t1, t2) ->
-      desugar_exp env (mk_term (Let(false, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr)
+      pos <| Exp_meta(Meta_desugared(desugar_exp env (mk_term (Let(false, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr), 
+                              Sequence))
         
     | Let(b, ((pat, _snd)::_tl), body) when is_app_pattern pat ->
       let bindings = (pat, _snd)::_tl in
@@ -476,7 +477,8 @@ and desugar_exp_maybe_top (top_level:bool) (env:env) (top:term) : exp =
         | VBinder (x,t) ->
           let body = desugar_exp env t2 in
           let body = match pat with
-            | None -> body
+            | None 
+            | Some Pat_wild -> body
             | Some pat -> Exp_meta(Meta_info(Exp_match(bvd_to_exp x t, [(pat, None, body)]), Typ_unknown, getpos body)) in
           pos <| Exp_let((false, [(Inl x, t, t1)]), body)
       end
@@ -882,7 +884,7 @@ let mk_data_ops env = function
         let t = build_typ t1 in
         let body = ewithpos (Exp_match(formal_exp, [(Pat_cons(lid, argpats), None, bvd_to_exp x t1)])) x.ppname.idRange in
         let sigs =
-          [Sig_val_decl(field_name, t, Some Assumption)
+          [Sig_val_decl(field_name, t, Some Assumption, Some Logic_projector)
            //;Sig_let((false, [(Inr field_name, t, build_exp body)]))
           ] in
         //let _ = Util.print_string (Util.format2 "adding value projector %s at type %s\n" field_name.str (Print.typ_to_string t)) in 
@@ -1057,13 +1059,13 @@ let desugar_decl env (d:decl) : (env * sigelts) = match d.decl with
 
   | Val(AST.Assumption, id, t) -> 
     let t = desugar_typ env (close env t) in
-    let se = Sig_val_decl(qualify env id, t, Some Assumption) in
+    let se = Sig_val_decl(qualify env id, t, Some Assumption, None) in
     let env = push_sigelt env se in
     env, [se]
 
   | Val(NoQual, id, t) ->
     let t = desugar_typ env (close env t) in
-    let se = Sig_val_decl(qualify env id, t, None) in
+    let se = Sig_val_decl(qualify env id, t, None, None) in
     let env = push_sigelt env se in
     env, [se]
         

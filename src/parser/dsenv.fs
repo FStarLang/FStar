@@ -310,7 +310,7 @@ let push_sigelt env s =
       err l in 
   let lss = match s with 
     | Sig_bundle ses -> List.map (fun se -> (lids_of_sigelt se, se)) ses
-    | Sig_val_decl(_, _, None) -> [] 
+    | Sig_val_decl(_, _, None, _) -> [] 
     | _ -> [lids_of_sigelt s, s] in
   lss |> List.iter (fun (lids, se) -> 
     lids |> List.iter (fun lid -> 
@@ -327,7 +327,7 @@ let is_type_lid env lid =
 
 let finish_module env modul = 
   env.sigaccum |> List.iter (fun se -> match se with
-    | Sig_val_decl(l, t, None) -> 
+    | Sig_val_decl(l, t, None, _) -> 
       begin match try_lookup_lid env l with 
         | None -> 
           Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.sli l));

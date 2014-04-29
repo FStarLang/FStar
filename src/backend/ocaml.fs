@@ -210,7 +210,7 @@ let rec doc_of_exp outer (env : env) (e : exp) =
         | Exp_meta (Meta_info (e, _, _)) ->
             doc_of_exp outer env e
 
-        | Exp_meta (Meta_dataapp e) ->
+        | Exp_meta (Meta_desugared(e, Data_app)) ->
             doc_of_exp outer env e
 
         | Exp_meta (Meta_datainst (e, _)) ->

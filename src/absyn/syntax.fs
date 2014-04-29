@@ -96,8 +96,11 @@ and exp =
   | Exp_meta       of meta_e                                     (* No longer tag every expression with info, only selectively *)
 and meta_e = 
   | Meta_info      of exp * typ * Range.range                    (* Expression tagged with typ and position info *)
-  | Meta_dataapp   of exp                                        (* Node marked as the application of a constructor *)
-  | Meta_datainst  of exp * typ                                  (* Expect the data constructor e to build a t-typed value *)
+  | Meta_desugared of exp * meta_source_info                     (* Node tagged with some information about source term before desugaring *)
+  | Meta_datainst  of exp * typ                                  (* Expect the data constructor e to build a t-typed value; only used internally to pretyping; not visible elsewhere *)
+and meta_source_info =
+  | Data_app
+  | Sequence                                                     (* ... add more cases here as needed for better code generation *)
 and uvar_e = Unionfind.uvar<uvar_basis<exp,typ>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
@@ -154,7 +157,7 @@ type sigelt =
   | Sig_tycon          of lident * list<tparam> * kind * list<lident> * list<lident> * list<logic_tag> (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
   | Sig_typ_abbrev     of lident * list<tparam> * kind * typ
   | Sig_datacon        of lident * typ * lident (* second lident is the name of the type this constructs *)
-  | Sig_val_decl       of lident * typ * option<atag>
+  | Sig_val_decl       of lident * typ * option<atag> * option<logic_tag>
   | Sig_assume         of lident * formula * aqual * atag
   | Sig_logic_function of lident * typ * list<logic_tag>
   | Sig_let            of letbindings

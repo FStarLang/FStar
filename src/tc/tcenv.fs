@@ -125,12 +125,12 @@ let lookup_qname env (lid:lident)  =
 
 let try_lookup_val_decl env lid = 
   match lookup_qname env lid with
-    | Some (Sig_val_decl(_, t, _)) -> Some t
+    | Some (Sig_val_decl(_, t, _, _)) -> Some t
     | _ -> None
 
 let lookup_val_decl (env:env) lid = 
   match lookup_qname env lid with
-    | Some (Sig_val_decl(_, t, _)) -> t
+    | Some (Sig_val_decl(_, t, _, _)) -> t
     | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
 
 let lookup_lid env lid = 
@@ -138,7 +138,7 @@ let lookup_lid env lid =
   let mapper = function
     | Sig_datacon(_, t, _)  
     | Sig_logic_function(_, t, _)
-    | Sig_val_decl (_, t, _) 
+    | Sig_val_decl (_, t, _, _) 
     | Sig_let(_, [(_, t, _)]) -> Some t 
     | Sig_let(_, lbs) -> 
         Util.find_map lbs (function 
