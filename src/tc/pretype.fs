@@ -521,12 +521,8 @@ let rec tc_decl env se = match se with
       se, env
 
     | Sig_bundle ses -> 
-      let tycons, rest = ses |> List.partition (function
-        | Sig_tycon _ -> true
-        | _ -> false) in
-      let abbrevs, rest = rest |> List.partition (function 
-        | Sig_typ_abbrev _ -> true
-        | _ -> false) in
+      let tycons, rest = ses |> List.partition (function Sig_tycon _ -> true | _ -> false) in
+      let abbrevs, rest = rest |> List.partition (function Sig_typ_abbrev _ -> true | _ -> false) in
       let se = Sig_bundle (fst <| tc_decls env (tycons@abbrevs@rest)) in
       let env = Tc.Env.push_sigelt env se in 
       se, env

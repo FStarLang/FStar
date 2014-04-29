@@ -60,7 +60,8 @@ let rec typ_to_string x = match whnf x with
   | Typ_dep(t, v, imp) ->      Util.format3 "(%s %s%s)" (t|> typ_to_string) (if imp then "#" else "") (v|> exp_to_string)
   | Typ_lam(x, t1, t2) ->      Util.format2 "(fun %s => %s)" (strBvd x) (t2|> typ_to_string)
   | Typ_tlam(a, k, t) ->       Util.format2 "(fun %s => %s)" (strBvd a) (t|> typ_to_string)
-  | Typ_ascribed(t, k) ->      t|> typ_to_string
+  | Typ_ascribed(t, k) when !Options.print_real_names -> Util.format2 "(%s <: %s)" (typ_to_string t) (kind_to_string k)
+  | Typ_ascribed(t, _) ->      t|> typ_to_string
   | Typ_unknown -> "_"
   | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)
   | Typ_uvar(uv, _) -> (match Unionfind.find uv with 

@@ -2,14 +2,14 @@
 #light "off" 
 (*
  Known (intentional) ambiguitites:
-   2 s/r conflicts on BAR
+   3 s/r conflicts on BAR
       match  with | P -> match with | Q -> _ | R -> _
       function ...
-
-   1 s/r conflict on STAR (unclear exactly why)
+      try e with | ... 
 
    1 r/r conflict on STAR
      (x:t{P} * t')  can also be reduced as ((x:t{P}) * t')
+      we pick the first one.
 
    1 s/r conflict on SEMICOLON
        e1 . ; e2
@@ -17,11 +17,9 @@
    1 s/r conflict on LESS
        t < t
        t<t>
-   (* 4 s/r conflicts on SEMICOLON *)
-   (*     -- if e then e';e'' *)
-   (*     -- let x = e in e';e'' *)
-   (*     -- fun x -> e;e *)
-   (*     -- match x with | P -> e;e' *)
+
+   1 s/r conflict on STAR (from the sum types but unclear exactly why)
+
 *)
 // (c) Microsoft Corporation. All rights reserved
 open Microsoft.FSharp.Compatibility
@@ -287,6 +285,7 @@ tyconQuals:
 ident_opt:
   |       { None }
   | ident { Some $1 }
+
 logicArrayArgs:
   |    { None }
   | LPAREN qname COMMA qname COMMA qname COMMA qname RPAREN
@@ -547,12 +546,12 @@ noSeqTerm:
         mk_term (If($2, $4, $6)) (rhs2 parseState 1 6) Expr
       } 
 
-  | TRY term WITH patternBranch patternBranches 
+  | TRY term WITH firstPatternBranch patternBranches 
       {
          mk_term (TryWith($2, $4::$5)) (rhs2 parseState 1 5) Expr
       }
 
-  | MATCH term WITH patternBranch patternBranches 
+  | MATCH term WITH firstPatternBranch patternBranches 
       {
         mk_term (Match($2, $4::$5)) (rhs2 parseState 1 5) Expr
       }
@@ -572,7 +571,7 @@ noSeqTerm:
         mk_term (QExists($2,$4,$5)) (rhs2 parseState 1 5) Formula
       }
 
-  | FUNCTION patternBranch patternBranches 
+  | FUNCTION firstPatternBranch patternBranches 
       { 
         AST.mk_function ($2::$3) (lhs parseState) (rhs2 parseState 1 3)
       }
@@ -603,6 +602,19 @@ patternBranches:
   |   { [] }
   | patternBranches patternBranch
       { $1@[$2] }
+
+maybeBar:
+  |     {()}
+  | BAR {()}
+
+firstPatternBranch: /* shift/reduce conflict on BAR ... expected for nested matches */
+  | maybeBar disjunctivePattern maybeWhen RARROW term 
+      { 
+        let pat = match $2 with 
+          | [p] -> p 
+          | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2) in
+        (pat, $3, $5) 
+      }
 
 patternBranch: /* shift/reduce conflict on BAR ... expected for nested matches */
   | BAR disjunctivePattern maybeWhen RARROW term 
@@ -731,28 +743,40 @@ comparisonOp:
   | HAT { "^" }
 
 arithTerm:
-  | arithTerm PLUS_MINUS_OP starDivModTerm
+  | starDivModTerm PLUS_MINUS_OP arithTerm
       { mk_term (Op($2, [$1;$3])) (rhs2 parseState 1 3) Un}
 
   | starDivModTerm 
       { $1 }
 
 starDivModTerm:
-  | starDivModTerm STAR sumType
-      { mk_term (Op("*", [$1;$3])) (rhs2 parseState 1 3) Un}
+  | sumType STAR starDivModTerm 
+      { 
+        mk_term (Op("*", [$1;$3])) (rhs2 parseState 1 3) Un
+      }
 
-  | starDivModTerm DIV_MOD_OP sumType
+  | sumType DIV_MOD_OP starDivModTerm
       { mk_term (Op($2, [$1;$3])) (rhs2 parseState 1 3) Un}
 
   | sumType
-      { $1 }
+      { 
+        $1 
+      }
 
 sumType:
   | productOrSumDomain STAR sumTypeTail
-      { mk_term (Sum([$1], $3)) (rhs2 parseState 1 3) Type }
-
+      { 
+        let stt = $3 in
+        let binders, final = match stt.term with 
+          | Sum(binders, final) -> binders, final
+          | _ -> [], stt in
+        mk_term (Sum($1::binders, final)) (rhs2 parseState 1 3) Type 
+      }
   | product
-      { $1 }
+      { 
+        $1 
+      }
+
 
 product':
   | productOrSumDomain prodArrow product'
@@ -772,9 +796,18 @@ prodArrow:
 
 sumTypeTail:
   | atomicTerm STAR sumType
-      { mk_term (Sum([mk_binder (NoName $1) (rhs parseState 1) Type false], $3)) (rhs2 parseState 1 3) Type }
+      { 
+        let sum_type = $3 in
+        let binders, final = match sum_type.term with 
+          | Sum(binders, final) -> binders, final
+          | _ -> [], sum_type in
+        let b = mk_binder (NoName $1) (rhs parseState 1) Type false in
+        mk_term (Sum(b::binders, final)) (rhs2 parseState 1 3) Type 
+      }
   | sumType
-      { $1 }
+      { 
+        $1 
+      }
 
 product: 
   | productOrSumDomain prodArrow product
@@ -843,10 +876,6 @@ atomicTerm:
                           mk_term (Project(e, lid_of_ids [f])) (rhs2 parseState 1 3) Expr )
           $1 $2
       }
-
-  | LBRACE_TILDE recdFieldTypes TILDE_RBRACE 
-      { mk_term (Record(None,$2)) (rhs2 parseState 1 3) Type }
-
   | BANG atomicTerm
       { mk_term (Op($1, [$2])) (rhs2 parseState 1 3) Expr }
   | BEGIN term END 
@@ -884,7 +913,7 @@ projectionLHS:
   | lid maybeInsts     
       { $2 (mk_term (Var($1)) (rhs parseState 1) Un) }
   | LPAREN term maybeWithSort RPAREN 
-      { $3 $2 (rhs2 parseState 1 4) }
+      { mk_term (Paren($3 $2 (rhs2 parseState 2 3))) (rhs2 parseState 1 4) Un }
   | LBRACK_BAR semiColonTermList BAR_RBRACK
       {
         let l = mkConsList (rhs2 parseState 1 3) $2 in 

@@ -28,6 +28,11 @@ let h' (x,y) = y
 val f3 : 'a:Type -> 'b:('a => Type) -> 'c:(x:'a => 'b x => Type)
      ->  x:'a -> y:'b x -> 'c x y -> (x:'a * y:'b x * 'c x y)
 let f3 x y z = (x,y,z)
-(* let g' (x,y,z) = x *)
-(* let h' (x,y,z) = y *)
-(* let i' (x,y,z) = z *)
+
+let g3 (x,y,z) = x
+
+val h3': ('a * 'b * 'c) -> 'b
+let h3' (x,y,z) = y
+
+val i3': ('a * 'b * 'c) -> 'c
+let i3' (x,y,z) = z 

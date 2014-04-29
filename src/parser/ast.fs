@@ -173,8 +173,8 @@ let rec term_to_string (x:term) = match x.term with
     Util.format2 "%s -> %s" (b|> binder_to_string) (t|> term_to_string)
   | Product([b], t) when (x.level = Kind) -> 
     Util.format2 "%s => %s" (b|> binder_to_string) (t|> term_to_string)
-  | Sum([b], t) -> 
-    Util.format2 "%s * %s" (b|> binder_to_string) (t|> term_to_string)
+  | Sum(binders, t) -> 
+    Util.format2 "%s * %s" (binders |> (List.map binder_to_string) |> String.concat " * " ) (t|> term_to_string)
   | QForall(bs, pats, t) -> 
     Util.format3 "forall %s.{:pattern %s} %s"
       (to_string_l " " binder_to_string bs)
@@ -189,7 +189,7 @@ let rec term_to_string (x:term) = match x.term with
     Util.format2 "%s:{%s}" (b|> binder_to_string) (t|> term_to_string)      
   | Paren t -> Util.format1 "(%s)" (t|> term_to_string)
   | Affine t -> Util.format1 "!%s" (t|> term_to_string)
-  | _ -> failwith "Missing case in term_to_string"
+  | t -> failwith "Missing case in term_to_string"
 
 and binder_to_string x = 
   let s = match x.binder with 

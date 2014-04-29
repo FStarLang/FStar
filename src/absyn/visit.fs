@@ -30,6 +30,7 @@ let rec compress_typ_aux pos typ = match typ with
           | Fixed typ -> compress_typ_aux pos typ
           | _ -> typ
       end
+  | Typ_ascribed(t, _)
   | Typ_meta(Meta_pos(t, _)) when pos -> compress_typ_aux pos t
   | _ -> typ
 let compress typ = compress_typ_aux true typ
@@ -42,6 +43,7 @@ let rec compress_exp_aux meta exp = match exp with
         | Fixed e -> compress_exp_aux meta e 
         | _ -> exp
     end
+  | Exp_ascribed(e, _)
   | Exp_meta(Meta_info(e, _, _))
   | Exp_meta(Meta_dataapp e) when meta -> compress_exp_aux meta e
   | _ -> exp

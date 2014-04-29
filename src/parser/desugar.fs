@@ -26,6 +26,10 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Util
 
+let unparen t = match t.term with 
+  | Paren t -> t
+  | _ -> t
+
 let tpos = function 
   | Typ_meta (Meta_pos(t,r)) -> r
   | Typ_btvar btv -> btv.v.ppname.idRange
@@ -101,7 +105,7 @@ let op_as_tylid r s =
 
 let rec is_type env (t:term) =
   if t.level = Type then true
-  else match t.term with
+  else match (unparen t).term with
     | Wild -> true
     | Op("*", hd::_)                    (* tuple constructor *)
     | Op("=", hd::_) -> is_type env hd  (* equality predicate *)
@@ -130,7 +134,7 @@ let rec is_type env (t:term) =
 let rec is_kind (t:term) : bool =
   if t.level = Kind
   then true
-  else match t.term with
+  else match (unparen t).term with
     | Name {str="Type"} -> true
     | Product(_, t) -> is_kind t
     | Paren t -> is_kind t
@@ -167,7 +171,7 @@ let rec free_type_vars_b env binder = match binder.binder with
     (env, [])
   | NoName t ->
     (env, free_type_vars env t)
-and free_type_vars env t = match t.term with
+and free_type_vars env t = match (unparen t).term with
   | Tvar a ->
     (match DesugarEnv.try_lookup_typ_var env a with
       | None -> [a]
@@ -367,7 +371,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env) (top:term) : exp =
   let getpos = function
     | Exp_meta(Meta_info(_, _, p)) -> p
     | _ -> failwith "impossible" in
-  begin match top.term with
+  begin match (unparen top).term with
     | Const c -> pos <| Exp_constant c
 
     | Op(s, args) ->
@@ -554,11 +558,21 @@ and desugar_exp_maybe_top (top_level:bool) (env:env) (top:term) : exp =
   
 and desugar_typ env (top:term) : typ =
   let pos t = Typ_meta (Meta_pos(t, top.range)) in
+  let top = unparen top in  
   match top.term with
     | Wild -> pos <| Typ_unknown
 
-    | Op("*", [t1;t2]) when is_type env t1 ->
-      desugar_typ env (mk_term (Sum([mk_binder (NoName t1) t1.range Type false], t2)) top.range top.level)
+    | Op("*", [t1; _]) when is_type env t1 ->
+      let rec flatten t = match t.term with
+        | Op("*", [t1;t2]) -> 
+          let binders, final = flatten t2 in
+          let b = mk_binder (NoName t1) t1.range Type false in
+          b::binders, final
+        | Sum(binders, final) -> binders, final 
+        | _ -> [], t in 
+      let binders, final = flatten top in
+      let t = mk_term (Sum(binders, final)) top.range top.level in
+      desugar_typ env t
       
     | Op("<>", args) ->
       let t = desugar_typ env (mk_term (Op("=", args)) top.range top.level) in
@@ -664,7 +678,7 @@ and desugar_typ env (top:term) : typ =
     | _ -> error "Expected a type" top top.range
 
 and desugar_kind env k : kind =
-  match k.term with
+  match (unparen k).term with
     | Name {str="Type"} -> Kind_star
     | Wild           -> Kind_unknown
     | Product([b], t) ->
@@ -726,7 +740,7 @@ and desugar_formula' env (f:term) : typ =
       mk_term (q([b], [], body)) f.range Formula
     | _ -> failwith "impossible" in
 
-  match f.term with
+  match (unparen f).term with
     | Op("=", ((hd::_args))) ->
       let args = hd::_args in
       let args = List.map (fun t -> desugar_typ_or_exp env t, false) args in

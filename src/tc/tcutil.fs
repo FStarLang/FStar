@@ -275,8 +275,50 @@ and snk tcenv (config:config<kind>) : config<kind> =
     | Kind_unknown -> 
       failwith "Impossible"
 
-(* The type checker never attempts to reduce expressions itself; relies on the solver for that *)
-and wne tcenv (config:config<exp>) : config<exp> = config 
+(* The type checker never attempts to reduce expressions itself; but still need to do substitutions *)
+and wne tcenv (config:config<exp>) : config<exp> = 
+  match compress_exp config.code with 
+    | Exp_fvar _ 
+    | Exp_constant _
+    | Exp_uvar _  -> config
+
+    | Exp_bvar x -> 
+      begin match config.environment |> Util.find_opt (function VDummy y | V (y, _, _) -> bvd_eq x.v y | _ -> false) with 
+        | None 
+        | Some (VDummy _) -> config
+        | Some (V(x, vclos, m)) -> 
+          (match !m with 
+            | Some v -> (* nlazy(); *)
+              wne tcenv ({config with code=v; environment=snd vclos}) 
+            | None -> 
+              let config = {config with code=fst vclos; environment=snd vclos} in 
+              let c = wne tcenv config in 
+              m:=Some c.code; 
+              c)
+        | _ -> failwith "Impossible: ill-typed term"
+      end
+    
+    | Exp_primop(id, el) -> 
+      let cl = List.map (wne tcenv) (el |> List.map (fun e -> {config with code=e})) in 
+      {config with code=Exp_primop(id, cl |> List.map (fun c -> c.code))}
+
+    | Exp_app(e1, e2, imp) -> 
+      let c1 = wne tcenv ({config with code=e1}) in
+      let c2 = wne tcenv ({config with code=e2}) in
+      {config with code=Exp_app(c1.code, c2.code, imp)} 
+
+    | Exp_tapp(e, t) -> 
+      let c1 = wne tcenv ({config with code=e}) in
+      let c2 = sn tcenv ({code=t; environment=config.environment; stack=[]}) in 
+      {config with code=Exp_tapp(c1.code, c2.code)}
+       
+    | Exp_abs(x, t, e) -> failwith "nyi"
+    | Exp_tabs(a, k, e) -> failwith "nyi"
+    | Exp_match _
+    | Exp_let  _
+    | Exp_meta _ -> failwith "nyi"
+    | Exp_ascribed _ -> failwith "impossible"
+
       
 let normalize tcenv t = 
   let c = sn tcenv ({code=t; environment=[]; stack=[]}) in
@@ -361,14 +403,14 @@ and trel rel env t t' =
        | _, Typ_dep _  -> 
          let tc, args = Util.flatten_typ_apps t in
          let tc', args' = Util.flatten_typ_apps t' in
-         if List.length args = List.length args' && aux norm tc tc'
-         then List.zip args args' |> Util.for_all (function 
+         let matches = 
+          if List.length args = List.length args' && aux norm tc tc'
+          then List.zip args args' |> Util.for_all (function 
                 | Inl t1, Inl t1' -> aux norm t1 t1'
                 | Inr e1, Inr e1' -> exp_equiv env e1 e1'
                 | _ -> false)
-         else if not norm 
-         then aux true (normalize env t) (normalize env t')
-         else false
+          else false in
+         matches || (not norm && aux true (normalize env t) (normalize env t'))
 
        | Typ_unknown, _ 
        | _, Typ_unknown -> failwith "Impossible"
@@ -468,7 +510,12 @@ let check_and_ascribe (env:env) (e:exp) (t1:typ) (t2:typ) : exp =
   if not (subtype env t1 t2)
   then (if env.is_pattern
         then raise (Error(Tc.Errors.expected_pattern_of_type t2 e t1, Tc.Env.get_range env))
-        else raise (Error(Tc.Errors.expected_expression_of_type t2 e t1, Tc.Env.get_range env)))
+        else 
+          begin
+            Util.print_string "subtyping failed\n";
+            let _ = subtype env t1 t2 in
+            raise (Error(Tc.Errors.expected_expression_of_type t2 e t1, Tc.Env.get_range env))
+          end)
   else if trel EQ env t1 t2
   then e 
   else Exp_ascribed(e, t2)
