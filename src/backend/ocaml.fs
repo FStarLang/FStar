@@ -84,6 +84,36 @@ let string_of_primop (_env : env) (x : string) =
     x
 
 (* -------------------------------------------------------------------- *)
+type assoc  = ILeft | IRight | Left | Right | NonAssoc
+type fixity = Prefix | Postfix | Infix of assoc
+type opprec = int * fixity
+
+let e_bin_prio_lambda = ( 5, Prefix)
+let e_bin_prio_if     = (15, Prefix)
+let e_bin_prio_letin  = (19, Prefix)
+let e_bin_prio_eq     = (27, Infix NonAssoc)
+let e_app_prio        = (10000, Infix Left)
+
+let min_op_prec = (-1, Infix NonAssoc)
+let max_op_prec = (System.Int32.MaxValue, Infix NonAssoc)
+
+(* -------------------------------------------------------------------- *)
+let maybe_paren (outer, side) inner doc =
+  let noparens ((pi, fi) as _inner) ((po, fo) as _outer) side =
+    (pi > po) ||
+      match fi, side with
+      | Postfix    , Left     -> true
+      | Prefix     , Right    -> true
+      | Infix Left , Left     -> (pi = po) && (fo = Infix Left )
+      | Infix Right, Right    -> (pi = po) && (fo = Infix Right)
+      | Infix Left , ILeft    -> (pi = po) && (fo = Infix Left )
+      | Infix Right, IRight   -> (pi = po) && (fo = Infix Right)
+      | _          , NonAssoc -> (pi = po) && (fi = fo)
+      | _          , _        -> false
+
+  if noparens inner outer side then doc else parens doc
+
+(* -------------------------------------------------------------------- *)
 let rec doc_of_ty (env : env) (ty : typ) =
     let ty = Absyn.Util.compress_typ ty in
 
@@ -105,14 +135,19 @@ let rec doc_of_ty (env : env) (ty : typ) =
     | Typ_unknown   -> unexpected  ()
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_exp (env : env) (e : exp) =
+let rec doc_of_exp outer (env : env) (e : exp) =
     let e = Absyn.Util.compress_exp e in
 
     match Absyn.Util.destruct_app e with
     | (Exp_fvar (x, _), [(e1, _); (e2, _)]) when is_op_equality x.v ->
-        let d1 = doc_of_exp env e1
-        let d2 = doc_of_exp env e2
-        d1 +. %"=" +. d2
+        let d1 = doc_of_exp (e_bin_prio_eq, Left ) env e1
+        let d2 = doc_of_exp (e_bin_prio_eq, Right) env e2
+        maybe_paren outer e_bin_prio_eq (d1 +. %"=" +. d2)
+
+    | (e, args) when not (List.isEmpty args) ->
+        let e    = e    |> doc_of_exp (e_app_prio, ILeft) env
+        let args = args |> List.map (fst >> doc_of_exp (e_app_prio, IRight) env)
+        maybe_paren outer e_app_prio (e +. (joins args))
 
     | _ ->
         match e with
@@ -128,18 +163,27 @@ let rec doc_of_exp (env : env) (e : exp) =
         | Exp_abs (x, _, e) ->
             let lenv = push env x.realname.idText x.ppname.idText
             let x    = resolve lenv x.realname.idText
-            let d    = doc_of_exp lenv e
-            %"fun" +. %x +. %"->" +. d
-
-        | Exp_app (e1, e2, _) ->
-            let d1 = doc_of_exp env e1 in
-            let d2 = doc_of_exp env e2 in
-            (parens d1) +. (parens d2)
+            let d    = doc_of_exp (min_op_prec, NonAssoc) lenv e
+            maybe_paren outer e_bin_prio_lambda (%"fun" +. %x +. %"->" +. d)
 
         | Exp_match (e, bs) ->
-            let de = doc_of_exp env e
-            let bs = bs |> List.map (fun b -> %"|" +. doc_of_branch env b)
-            %"match" +. de +. %"with" +. (List.reduce (+.) bs)
+            match bs with
+            | [(Pat_constant (Const_bool true ), None, e1);
+               (Pat_constant (Const_bool false), None, e2)]
+
+            | [(Pat_constant (Const_bool false), None, e1);
+               (Pat_constant (Const_bool true), None, e2)] ->
+
+                let doc = %"if"   +. (doc_of_exp (e_bin_prio_if, Left)     env e ) +.
+                          %"then" +. (doc_of_exp (e_bin_prio_if, NonAssoc) env e1) +.
+                          %"else" +. (doc_of_exp (e_bin_prio_if, Right   ) env e2)
+
+                maybe_paren outer e_bin_prio_if doc
+
+            | _ ->
+                let de = doc_of_exp (min_op_prec, NonAssoc) env e
+                let bs = bs |> List.map (fun b -> %"|" +. doc_of_branch env b)
+                %"match" +. de +. %"with" +. (List.reduce (+.) bs)
 
         | Exp_let ((rec_, lb), body) ->
             let downct (x, _, e) =
@@ -148,26 +192,31 @@ let rec doc_of_exp (env : env) (e : exp) =
                 | Inr _ -> unexpected ()
             let kw = if rec_ then "let rec" else "let"
             let lenv, ds = lb |> List.map downct |> Util.fold_map (doc_of_let rec_) env
-            %kw +. (join "and" (ds |> List.map group)) +. %"in" +. (doc_of_exp lenv body)
+            let doc = %kw +. (join "and" (ds |> List.map group)) +. %"in" +.
+                      (doc_of_exp (min_op_prec, NonAssoc) lenv body)
+
+            maybe_paren outer e_bin_prio_letin doc
 
         | Exp_primop (x, es) ->
+            (* FIXME: prioritoy of operators *)
             let x = string_of_primop env x.idText
             if   List.isEmpty es
             then %x
-            else %x +. (groups (es |> List.map (doc_of_exp env)))
+            else %x +. (groups (es |> List.map (doc_of_exp outer env)))
 
         | Exp_ascribed (e, _) ->
-            doc_of_exp env e
+            doc_of_exp outer env e
 
         | Exp_meta (Meta_info (e, _, _)) ->
-            doc_of_exp env e
+            doc_of_exp outer env e
 
         | Exp_meta (Meta_dataapp e) ->
-            doc_of_exp env e
+            doc_of_exp outer env e
 
         | Exp_meta (Meta_datainst (e, _)) ->
-            doc_of_exp env e
+            doc_of_exp outer env e
 
+        | Exp_app  _ -> unexpected  ()
         | Exp_uvar _ -> unexpected  ()
         | Exp_tabs _ -> unsupported ()
         | Exp_tapp _ -> unsupported ()
@@ -177,13 +226,13 @@ and doc_of_constr (env : env) c args =
     let x = c.ident.idText
     match args with
     | [] -> %x
-    | _  -> %x +. group (parens (join ", " args))
+    | _  -> %x +. group (join ", " args)
 
 (* -------------------------------------------------------------------- *)
 and doc_of_let (rec_ : bool) (env : env) (x, e) =
     let lenv = push env x.realname.idText x.ppname.idText
     let x    = resolve lenv x.realname.idText
-    let d    = doc_of_exp (if rec_ then lenv else env) e
+    let d    = doc_of_exp (min_op_prec, NonAssoc) (if rec_ then lenv else env) e
     lenv, %x +. %"=" +. d
 
 (* -------------------------------------------------------------------- *)
@@ -199,7 +248,7 @@ and doc_of_toplet (rec_ : bool) (env : env) (x, e) =
                 let x    = resolve lenv x.realname.idText
                 (lenv, %x))
             (if rec_ then lenv else env) bds
-    let d = doc_of_exp benv e
+    let d = doc_of_exp (min_op_prec, NonAssoc) benv e
 
     lenv, %x +. (group (joins args)) +. %"=" +. d
 
@@ -233,8 +282,8 @@ and doc_of_pattern env (p : pat) : env * doc =
 (* -------------------------------------------------------------------- *)
 and doc_of_branch (env : env) ((p, cl, body) : pat * exp option * exp) : doc =
     let env, pd = doc_of_pattern env p
-    let dwhen = cl |> Option.map (doc_of_exp env)
-    let dbody = body |> doc_of_exp env 
+    let dwhen = cl |> Option.map (doc_of_exp (min_op_prec, NonAssoc) env)
+    let dbody = body |> doc_of_exp (min_op_prec, NonAssoc) env 
 
     match dwhen with
     | None -> pd +. %"->" +. dbody
@@ -253,7 +302,7 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
         env, Some (%kw +. (join "and" (ds |> List.map group)))
 
     | Sig_main e ->
-        env, Some (%"let" +. %"_" +. %"=" +. (doc_of_exp env e))
+        env, Some (%"let" +. %"_" +. %"=" +. (doc_of_exp (min_op_prec, NonAssoc) env e))
 
     | Sig_tycon _ ->
         env, Some %"tycon"
