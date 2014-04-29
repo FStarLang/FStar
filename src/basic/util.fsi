@@ -59,6 +59,8 @@ val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
 val set_eq: ('a -> 'a -> int) -> list<'a> -> list<'a> -> bool
 val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
 val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
+val fold_map: ('a -> 'b -> 'a * 'c) -> 'a -> list<'b> -> 'a * list<'c>
+val choose_map: ('a -> 'b -> 'a * 'c option) -> 'a -> list<'b> -> 'a * list<'c>
 val for_all: ('a -> bool) -> list<'a> -> bool
 val for_some: ('a -> bool) -> list<'a> -> bool
 val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool

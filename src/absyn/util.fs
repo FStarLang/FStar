@@ -196,12 +196,26 @@ let mk_data l args =
   Exp_meta(Meta_dataapp(mk_curried_app (fvar l (range_of_lid l)) args))
 
 let destruct_app =
-  let rec destruct acc (e : exp) =
-      match e with
-      | Exp_app (e1, e2, b) -> destruct ((e2, b) :: acc) e1
-      | _ -> (e, acc)
-  in
-  fun e -> destruct [] (compress_exp e)
+    let rec destruct acc (e : exp) =
+        match e with
+        | Exp_app (e1, e2, b) -> destruct ((e2, b) :: acc) e1
+        | Exp_ascribed (e, _) -> destruct acc e
+        | Exp_meta (Meta_info (e, _, _)) -> destruct acc e
+        | _ -> (e, acc)
+    in
+
+    fun e -> destruct [] e
+
+let destruct_fun =
+    let rec destruct acc (e : exp) =
+        match e with
+        | Exp_abs (x, ty, e) -> destruct ((x, ty) :: acc) e
+        | Exp_ascribed (e, _) -> destruct acc e
+        | Exp_meta (Meta_info (e, _, _)) -> destruct acc e
+        | _ -> (List.rev acc, e)
+    in
+
+    fun e -> destruct [] e
 
 (********************************************************************************)
 (******************************** Syntactic values ******************************)

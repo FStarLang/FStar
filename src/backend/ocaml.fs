@@ -8,24 +8,27 @@ open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
+open Microsoft.FStar.Backends.NameEnv
+
+open FSharp.Format
 
 (* -------------------------------------------------------------------- *)
 let unexpected () =
-    failwith "ocaml-backend-unexpected-construct"
+    failwith "ocaml-backend-unexpected-construction"
 
 (* -------------------------------------------------------------------- *)
 let unsupported () =
-    failwith "ocaml-backend-unsupported-construct"
+    failwith "ocaml-backend-unsupported-construction"
 
 (* -------------------------------------------------------------------- *)
 let ocaml_u8_codepoint (i : byte) =
-  sprintf "\\x%x" i
+  if (int)i = 0 then "" else sprintf "\\x%x" i
 
 (* -------------------------------------------------------------------- *)
 let encode_char c =
   if (int)c > 127 then // Use UTF-8 encoding
     let bytes = System.String (c, 1)
-    let bytes = (new UTF8Encoding (true, true)).GetBytes(bytes)
+    let bytes = (new UTF8Encoding (false, true)).GetBytes(bytes)
     bytes
       |> Array.map ocaml_u8_codepoint
       |> String.concat ""
@@ -40,7 +43,7 @@ let encode_char c =
     | _                              -> ocaml_u8_codepoint ((byte)c)
 
 (* -------------------------------------------------------------------- *)
-let pp_sconst sctt =
+let string_of_sconst sctt =
   match sctt with
   | Const_unit         -> "()"
   | Const_char   c     -> sprintf "'%s'" (encode_char c)
@@ -56,7 +59,7 @@ let pp_sconst sctt =
       sprintf "\"%s\"" (bytes |> String.concat "")
 
   | Const_string (bytes, _) ->
-      let chars = (new UTF8Encoding (true, true)).GetString(bytes)
+      let chars = (new UTF8Encoding (false, true)).GetString(bytes)
       let chars = chars |> String.collect encode_char
       sprintf "\"%s\"" chars
 
@@ -77,126 +80,181 @@ let name_of_let_ident (x : either<bvvdef,lident>) =
     | Inr x -> x.ident.idText
 
 (* -------------------------------------------------------------------- *)
-let rec pp_let_binding ((rec_, lb) : letbindings) =
-    match lb with
-    | [x, _, body] ->
-        sprintf "let %s %s = %s"
-            (if rec_ then "rec" else "")
-            (name_of_let_ident x)
-            (pp_exp body)
-
-    | _ -> unsupported ()
+let string_of_primop (_env : env) (x : string) =
+    x
 
 (* -------------------------------------------------------------------- *)
-and pp_exp (e : exp) =
+let rec doc_of_exp (env : env) (e : exp) =
+    let e = Absyn.Util.compress_exp e in
+
     match Absyn.Util.destruct_app e with
     | (Exp_fvar (x, _), [(e1, _); (e2, _)]) when is_op_equality x.v ->
-        sprintf "(%s) = (%s)" (pp_exp e1) (pp_exp e2)
+        let d1 = doc_of_exp env e1
+        let d2 = doc_of_exp env e2
+        d1 +. %"=" +. d2
 
     | _ ->
-        match Absyn.Util.compress_exp e with
-        | Exp_meta _ -> failwith "imposssible"
-
+        match e with
         | Exp_bvar x ->
-            x.v.realname.idText
+            %(resolve env x.v.realname.idText)
 
         | Exp_fvar (x, _) ->
-            x.v.ident.idText
+            %(x.v.ident.idText)
 
         | Exp_constant c ->
-            pp_sconst c
+            %(string_of_sconst c)
 
         | Exp_abs (x, _, e) ->
-            sprintf "fun %s => %s" x.realname.idText (pp_exp e)
+            let lenv = push env x.realname.idText x.ppname.idText
+            let x    = resolve lenv x.realname.idText
+            let d    = doc_of_exp lenv e
+            %"fun" +. %x +. %"->" +. d
 
         | Exp_app (e1, e2, _) ->
-            sprintf "(%s) (%s)" (pp_exp e1) (pp_exp e2)
+            let d1 = doc_of_exp env e1 in
+            let d2 = doc_of_exp env e2 in
+            (paren d1) +. (paren d2)
 
         | Exp_match (e, bs) ->
-            sprintf "match %s with %s"
-                (pp_exp e)
-                (bs |> List.map pp_match_branch |> String.concat " ")
+            let de = doc_of_exp env e
+            let bs = bs |> List.map (fun b -> %"|" +. doc_of_branch env b)
+            %"match" +. de +. %"with" +. (List.reduce (+.) bs)
 
-        | Exp_let (lb, body) ->
-            sprintf "%s in %s" (pp_let_binding lb) (pp_exp body)
+        | Exp_let ((rec_, lb), body) ->
+            let downct (x, _, e) =
+                match x with
+                | Inl x -> (x, e)
+                | Inr _ -> unexpected ()
+            let kw = if rec_ then "let rec" else "let"
+            let lenv, ds = lb |> List.map downct |> Util.fold_map (doc_of_let rec_) env
+            %kw +. (join %"and" (ds |> List.map group)) +. %"in" +. (doc_of_exp lenv body)
 
         | Exp_primop (x, es) ->
-            sprintf "%s %s"
-                x.idText
-                (es |> List.map (fun e -> sprintf "(%s)" (pp_exp e))
-                    |> String.concat ", ")
+            let x = string_of_primop env x.idText
+            if   List.isEmpty es
+            then %x
+            else %x +. (groups (es |> List.map (doc_of_exp env)))
 
         | Exp_ascribed (e, _) ->
-            pp_exp e
+            doc_of_exp env e
 
-        | Exp_uvar      _ -> unexpected  ()
-        | Exp_tabs      _ -> unsupported ()
-        | Exp_tapp      _ -> unsupported ()
+        | Exp_meta (Meta_info (e, _, _)) ->
+            doc_of_exp env e
+
+        | Exp_meta (Meta_dataapp e) ->
+            doc_of_exp env e
+
+        | Exp_meta (Meta_datainst (e, _)) ->
+            doc_of_exp env e
+
+        | Exp_uvar _ -> unexpected  ()
+        | Exp_tabs _ -> unsupported ()
+        | Exp_tapp _ -> unsupported ()
 
 (* -------------------------------------------------------------------- *)
-and pp_pattern (p : pat) =
+and doc_of_constr (env : env) c args =
+    let x = c.ident.idText
+    match args with
+    | [] -> %x
+    | _  -> %x +. group (paren (join %", " args))
+
+(* -------------------------------------------------------------------- *)
+and doc_of_let (rec_ : bool) (env : env) (x, e) =
+    let lenv = push env x.realname.idText x.ppname.idText
+    let x    = resolve lenv x.realname.idText
+    let d    = doc_of_exp (if rec_ then lenv else env) e
+    lenv, %x +. %"=" +. d
+
+(* -------------------------------------------------------------------- *)
+and doc_of_toplet (rec_ : bool) (env : env) (x, e) =
+    let lenv = push env x.idText x.idText
+    let x    = resolve lenv x.idText
+
+    let bds, e = destruct_fun e
+    let benv, args =
+        Util.fold_map
+            (fun lenv (x, _) ->
+                let lenv = push lenv x.realname.idText x.ppname.idText
+                let x    = resolve lenv x.realname.idText
+                (lenv, %x))
+            (if rec_ then lenv else env) bds
+    let d = doc_of_exp benv e
+
+    lenv, %x +. (group (join %" " args)) +. %"=" +. d
+
+(* -------------------------------------------------------------------- *)
+and doc_of_pattern env (p : pat) : env * doc =
     match p with
     | Pat_cons (x, ps) ->
-        match ps with
-        | [] -> x.ident.idText
-        | _  ->
-            sprintf "%s (%s)"
-                x.ident.idText
-                (ps |> List.map pp_pattern |> String.concat ", ")
+        let env, ds = ps |> Util.fold_map doc_of_pattern env
+        (env, doc_of_constr env x ds)
 
     | Pat_var x ->
-        x.realname.idText
+        let env = push env x.realname.idText x.ppname.idText
+        (env, %(resolve env x.realname.idText))
 
     | Pat_constant c ->
-        pp_sconst c
+        (env, %(string_of_sconst c))
 
     | Pat_disj ps ->
-        sprintf "(%s)" (ps |> List.map pp_pattern |> String.concat " | ")
+        let env, ds = ps |> Util.fold_map doc_of_pattern env
+        (env, paren (join %"|" ds))
 
     | Pat_wild ->
-        "_"
+        (env, %"_")
 
-    | Pat_tvar   _ -> unsupported ()
-    | Pat_twild  _ -> unsupported ()
-    
+    | Pat_withinfo (p, _) ->
+        doc_of_pattern env p
 
-(* -------------------------------------------------------------------- *)
-and pp_match_branch ((p, cl, body) : pat * exp option * exp) =
-    sprintf "| %s %s -> (%s)"
-        (pp_pattern p)
-        (match cl with
-         | None   -> ""
-         | Some e -> sprintf "when %s" (pp_exp e))
-         (pp_exp body)
+    | Pat_tvar  _ -> unsupported ()
+    | Pat_twild _ -> unsupported ()
 
 (* -------------------------------------------------------------------- *)
-let pp_modelt (modx : sigelt)=
+and doc_of_branch (env : env) ((p, cl, body) : pat * exp option * exp) : doc =
+    let env, pd = doc_of_pattern env p
+    let dwhen = cl |> Option.map (doc_of_exp env)
+    let dbody = body |> doc_of_exp env 
+
+    match dwhen with
+    | None -> pd +. %"->" +. dbody
+    | Some dwhen -> pd +. %"when" +. (paren dwhen) +. %"->" +. dbody
+
+(* -------------------------------------------------------------------- *)
+let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
     match modx with
-    | Sig_let lb ->
-        Some (pp_let_binding lb)
+    | Sig_let (rec_, lb) ->
+        let downct (x, _, e) =
+            match x with
+            | Inr x -> (x.ident, e)
+            | Inl _ -> unexpected ()
+        let kw = if rec_ then "let rec" else "let"
+        let env, ds = lb |> List.map downct |> Util.fold_map (doc_of_toplet rec_) env
+        env, Some (%kw +. (join %"and" (ds |> List.map group)))
 
     | Sig_main e ->
-        Some (sprintf "let _ = %s" (pp_exp e))
+        env, Some (%"let" +. %"_" +. %"=" +. (doc_of_exp env e))
 
     | Sig_tycon _ ->
-        Some "tycon"
+        env, Some %"tycon"
 
     | Sig_typ_abbrev _ ->
-        Some "abbrev"
+        env, Some %"abbrev"
 
     | Sig_datacon _ ->
-        Some "datacon"
+        env, Some %"datacon"
 
     | Sig_bundle _ ->
-        Some "bundle"
+        env, Some %"bundle"
 
-    | Sig_assume         _ -> None
-    | Sig_val_decl       _ -> None
-    | Sig_logic_function _ -> None
+    | Sig_assume         _ -> env, None
+    | Sig_val_decl       _ -> env, None
+    | Sig_logic_function _ -> env, None
 
 (* -------------------------------------------------------------------- *)
 let pp_module (mod_ : modul) =
-    let parts = mod_.declarations |> List.choose pp_modelt in
+    let env = NameEnv.create [mod_.name.str]
+    let env, parts = mod_.declarations |> Util.choose_map doc_of_modelt env
+
     sprintf "module %s = struct\n%s\nend"
         mod_.name.ident.idText
-        (parts |> String.concat "\n\n")
+        (parts |> List.map (FSharp.Format.tostring 80) |> String.concat "\n\n")
