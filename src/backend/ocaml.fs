@@ -84,6 +84,27 @@ let string_of_primop (_env : env) (x : string) =
     x
 
 (* -------------------------------------------------------------------- *)
+let rec doc_of_ty (env : env) (ty : typ) =
+    let ty = Absyn.Util.compress_typ ty in
+
+    match ty with
+    | Typ_refine (_, ty, _) ->
+        doc_of_ty env ty
+
+    | Typ_ascribed (ty, _) ->
+        doc_of_ty env ty
+
+    | Typ_meta (Meta_pos (ty, _)) ->
+        doc_of_ty env ty
+
+    | Typ_lam     _ -> unsupported ()
+    | Typ_tlam    _ -> unsupported ()
+    | Typ_dep     _ -> unsupported ()
+    | Typ_meta    _ -> unexpected  ()
+    | Typ_uvar    _ -> unexpected  ()
+    | Typ_unknown   -> unexpected  ()
+
+(* -------------------------------------------------------------------- *)
 let rec doc_of_exp (env : env) (e : exp) =
     let e = Absyn.Util.compress_exp e in
 
@@ -113,7 +134,7 @@ let rec doc_of_exp (env : env) (e : exp) =
         | Exp_app (e1, e2, _) ->
             let d1 = doc_of_exp env e1 in
             let d2 = doc_of_exp env e2 in
-            (paren d1) +. (paren d2)
+            (parens d1) +. (parens d2)
 
         | Exp_match (e, bs) ->
             let de = doc_of_exp env e
@@ -127,7 +148,7 @@ let rec doc_of_exp (env : env) (e : exp) =
                 | Inr _ -> unexpected ()
             let kw = if rec_ then "let rec" else "let"
             let lenv, ds = lb |> List.map downct |> Util.fold_map (doc_of_let rec_) env
-            %kw +. (join %"and" (ds |> List.map group)) +. %"in" +. (doc_of_exp lenv body)
+            %kw +. (join "and" (ds |> List.map group)) +. %"in" +. (doc_of_exp lenv body)
 
         | Exp_primop (x, es) ->
             let x = string_of_primop env x.idText
@@ -156,7 +177,7 @@ and doc_of_constr (env : env) c args =
     let x = c.ident.idText
     match args with
     | [] -> %x
-    | _  -> %x +. group (paren (join %", " args))
+    | _  -> %x +. group (parens (join ", " args))
 
 (* -------------------------------------------------------------------- *)
 and doc_of_let (rec_ : bool) (env : env) (x, e) =
@@ -180,7 +201,7 @@ and doc_of_toplet (rec_ : bool) (env : env) (x, e) =
             (if rec_ then lenv else env) bds
     let d = doc_of_exp benv e
 
-    lenv, %x +. (group (join %" " args)) +. %"=" +. d
+    lenv, %x +. (group (joins args)) +. %"=" +. d
 
 (* -------------------------------------------------------------------- *)
 and doc_of_pattern env (p : pat) : env * doc =
@@ -198,7 +219,7 @@ and doc_of_pattern env (p : pat) : env * doc =
 
     | Pat_disj ps ->
         let env, ds = ps |> Util.fold_map doc_of_pattern env
-        (env, paren (join %"|" ds))
+        (env, parens (join "|" ds))
 
     | Pat_wild ->
         (env, %"_")
@@ -217,7 +238,7 @@ and doc_of_branch (env : env) ((p, cl, body) : pat * exp option * exp) : doc =
 
     match dwhen with
     | None -> pd +. %"->" +. dbody
-    | Some dwhen -> pd +. %"when" +. (paren dwhen) +. %"->" +. dbody
+    | Some dwhen -> pd +. %"when" +. (parens dwhen) +. %"->" +. dbody
 
 (* -------------------------------------------------------------------- *)
 let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
@@ -229,7 +250,7 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
             | Inl _ -> unexpected ()
         let kw = if rec_ then "let rec" else "let"
         let env, ds = lb |> List.map downct |> Util.fold_map (doc_of_toplet rec_) env
-        env, Some (%kw +. (join %"and" (ds |> List.map group)))
+        env, Some (%kw +. (join "and" (ds |> List.map group)))
 
     | Sig_main e ->
         env, Some (%"let" +. %"_" +. %"=" +. (doc_of_exp env e))
@@ -257,4 +278,4 @@ let pp_module (mod_ : modul) =
 
     sprintf "module %s = struct\n%s\nend"
         mod_.name.ident.idText
-        (parts |> List.map (FSharp.Format.tostring 80) |> String.concat "\n\n")
+        (parts |> List.map (FSharp.Format.pretty 80) |> String.concat "\n\n")

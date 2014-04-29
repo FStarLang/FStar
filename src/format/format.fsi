@@ -3,15 +3,29 @@ module FSharp.Format
 
 (* -------------------------------------------------------------------- *)
 type doc
-type width = int
 
-val (~%)   : string -> doc
-val (+.)   : doc -> doc -> doc
-val (+?)   : doc -> doc option -> doc
-val endl   : doc
+(* -------------------------------------------------------------------- *)
+val empty  : doc
+val text   : string -> doc
+val cat    : doc -> doc -> doc
+val nest   : int -> doc -> doc
 val group  : doc -> doc
-val groups : list<doc> -> doc
-val paren  : doc -> doc
-val join   : doc -> list<doc> -> doc
 
-val tostring : width -> doc -> string
+val break_ : int -> doc
+val break0 : doc
+val break1 : doc
+
+val (~%) : string -> doc
+val (+.) : doc -> doc -> doc
+val (@.) : doc -> doc -> doc
+
+(* -------------------------------------------------------------------- *)
+val enclose : string -> string -> doc -> doc
+val parens  : doc -> doc
+
+val join   : string -> doc list -> doc
+val joins  : doc list -> doc
+val groups : doc list -> doc
+
+(* -------------------------------------------------------------------- *)
+val pretty : int -> doc -> string
