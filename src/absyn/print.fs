@@ -46,7 +46,9 @@ let const_to_string x = match x with
   | Const_int64 _ -> failwith "NYI: to string of int64"
   | Const_uint8 _ -> failwith "NYI: to string of uint8"
      
-let rec typ_to_string x = match whnf x with 
+let rec typ_to_string x =
+  let x = if !Options.print_real_names then x else whnf x in
+  match x with 
   | Typ_btvar btv -> 
     (match !btv.v.instantiation with 
       | None -> strBvd btv.v
@@ -58,18 +60,19 @@ let rec typ_to_string x = match whnf x with
   | Typ_refine(x, t, f) ->     Util.format3 "%s:%s{%s}" (strBvd x) (t|> typ_to_string) (f|> typ_to_string)
   | Typ_app(t1, t2, imp) ->    Util.format3 "(%s %s%s)" (t1|> typ_to_string) (if imp then "#" else "") (t2|> typ_to_string)
   | Typ_dep(t, v, imp) ->      Util.format3 "(%s %s%s)" (t|> typ_to_string) (if imp then "#" else "") (v|> exp_to_string)
-  | Typ_lam(x, t1, t2) ->      Util.format2 "(fun %s => %s)" (strBvd x) (t2|> typ_to_string)
-  | Typ_tlam(a, k, t) ->       Util.format2 "(fun %s => %s)" (strBvd a) (t|> typ_to_string)
+  | Typ_lam(x, t1, t2) ->      Util.format3 "(fun (%s:%s) => %s)" (strBvd x) (t1 |> typ_to_string) (t2|> typ_to_string)
+  | Typ_tlam(a, k, t) ->       Util.format3 "(fun (%s:%s) => %s)" (strBvd a) (k |> kind_to_string) (t|> typ_to_string)
   | Typ_ascribed(t, k) when !Options.print_real_names -> Util.format2 "(%s <: %s)" (typ_to_string t) (kind_to_string k)
   | Typ_ascribed(t, _) ->      t|> typ_to_string
   | Typ_unknown -> "_"
   | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)
-  | Typ_uvar(uv, _) -> (match Unionfind.find uv with 
+  | Typ_uvar(uv, k) -> (match Unionfind.find uv with 
       | Fixed t -> t|> typ_to_string
+      | Uvar _ when !Options.print_real_names ->  Util.format2 "'U%s : %s"  (Util.string_of_int (Unionfind.uvar_id uv)) (kind_to_string k)
       | Uvar _ ->               Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)))
 
 and exp_to_string x = match compress_exp x with 
-  | Exp_meta(Meta_datainst(e,t)) -> Util.format2 "(%s :<: %s)" (exp_to_string e) (typ_to_string t)
+  | Exp_meta(Meta_datainst(e,_)) -> exp_to_string e 
   | Exp_uvar(uv, _) -> Util.format1 "'e%s" (Util.string_of_int (Unionfind.uvar_id uv))
   | Exp_bvar bvv -> 
     (match !bvv.v.instantiation with 

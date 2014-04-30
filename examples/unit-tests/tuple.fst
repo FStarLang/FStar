@@ -15,24 +15,28 @@
 *)
 module Tuple
 
-val f : 'a -> 'b -> ('a * 'b)
 let f x y = (x,y)
 
 let f' x y = (x,y)
 let g (x,y) = x
 let h (x,y) = (x,y)
 
-val h' : ('a * 'b) -> 'b
 let h' (x,y) = y
 
 val f3 : 'a:Type -> 'b:('a => Type) -> 'c:(x:'a => 'b x => Type)
      ->  x:'a -> y:'b x -> 'c x y -> (x:'a * y:'b x * 'c x y)
 let f3 x y z = (x,y,z)
-
 let g3 (x,y,z) = x
+let h3 (x,y,z) = y
+let i3 (x,y,z) = z
 
-val h3': ('a * 'b * 'c) -> 'b
-let h3' (x,y,z) = y
+type ibcf = int * bool * char * float
+let quads () : list Tuple.ibcf = 
+  let quads = [(0,true,'c',1.0)] in
+  (1,false,'d',2.0)::quads
 
-val i3': ('a * 'b * 'c) -> 'c
-let i3' (x,y,z) = z 
+    
+(* TODO: pre-typing needs to reason about projection *)
+(* val i3' : 'a:Type -> 'b:('a => Type) -> 'c:(x:'a => 'b x => Type) *)
+(*      ->  t:(x:'a * y:'b x * 'c x y) -> 'c (MkTuple3._1 t) (MkTuple3._2 t) *)
+(* let i3' (x,y,z) = z  *)

@@ -13,10 +13,21 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module String
 
-assume val split: list char -> string -> list string
-assume val concat: string -> string -> string
-assume val compare: string -> string -> int
-assume val length: string -> int
-assume val substring: string -> int -> int -> string
+module Patterns
+
+let is_some = function 
+  None -> false
+  | Some _ -> true 
+
+let get_some = function 
+  | None -> failwith "got None"
+  | Some x -> x
+
+let bind_opt o f = match o with 
+  | None -> None
+  | Some x -> f x
+
+let map_opt o f = match o with 
+  | None -> None
+  | Some x -> Some <| f x

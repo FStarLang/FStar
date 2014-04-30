@@ -242,99 +242,115 @@ type bnd =
   | TBinder of btvdef * kind
   | VBinder of bvvdef * typ
   | LetBinder of lident * typ
+type env_t = DesugarEnv.env
+type lenv_t = list<either<btvdef,bvvdef>>
+let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
+  let resolvex (l:lenv_t) e x = 
+    match l |> Util.find_opt (function Inr y -> y.ppname.idText=x.idText | _ -> false) with 
+      | Some (Inr y) -> l, e, y
+      | _ -> 
+        let e, x = push_local_vbinding e x in
+        (Inr x::l), e, x in
+  let resolvea (l:lenv_t) e a = 
+    match l |> Util.find_opt (function Inl b -> b.ppname.idText=a.idText | _ -> false) with 
+      | Some (Inl b) -> l, e, b
+      | _ -> 
+        let e, a = push_local_tbinding e a in
+        (Inl a::l), e, a in
+  let rec aux (loc:lenv_t) env (p:pattern) =
+    let pos q = Pat_withinfo(q, p.range) in 
+    match p.pattern with
+      | PatOr [] -> failwith "impossible"
+      | PatOr (p::ps) ->
+        let env0 = env in
+        let q = p in
+        let loc, env, var, p = aux loc env p in
+        let loc, env, ps = List.fold_left (fun (loc, env, ps) p ->
+          let loc, env, _, p = aux loc env p in
+          loc, env, p::ps) (loc, env, []) ps in
+        let pat = Pat_disj (p::List.rev ps) in
+        ignore (check_pat_vars q.range pat);
+        loc, env, var, pos <| pat
 
-let rec desugar_data_pat env (p:pattern) : (env * bnd * Syntax.pat) =
-  let pos q = Pat_withinfo(q, p.range) in 
-  match p.pattern with
-    | PatOr [] -> failwith "impossible"
-    | PatOr (p::ps) ->
-      let env0 = env in
-      let q = p in
-      let env, var, p = desugar_data_pat env p in
-      let ps = List.map (fun p ->
-        let _, _, p = desugar_data_pat env0 p in
-        p) ps in
-      let pat = Pat_disj (p::ps) in
-      ignore (check_pat_vars q.range pat);
-      env, var, pos <| pat
+      | PatAscribed(p, t) ->
+        let loc, env, binder, p = aux loc env p in
+        let binder = match binder with
+          | LetBinder _ -> failwith "impossible"
+          | TBinder (x, _) -> TBinder(x, desugar_kind env t)
+          | VBinder (x, _) -> VBinder(x, desugar_typ env t) in
+        loc, env, binder, p
 
-    | PatAscribed(p, t) ->
-      let (env, binder, p) = desugar_data_pat env p in
-      let binder = match binder with
-        | LetBinder _ -> failwith "impossible"
-        | TBinder (x, _) -> TBinder(x, desugar_kind env t)
-        | VBinder (x, _) -> VBinder(x, desugar_typ env t) in
-      (env, binder, p)
+      | PatTvar a ->
+        if a.idText = "'_"
+        then loc, env, TBinder(new_bvd (Some p.range), Kind_unknown), Pat_twild
+        else let loc, env, abvd = resolvea loc env a in
+             loc, env, TBinder(abvd, Kind_unknown), pos <| Pat_tvar abvd
 
-    | PatTvar a ->
-      if a.idText = "'_"
-      then (env, TBinder(new_bvd (Some p.range), Kind_unknown), Pat_twild)
-      else let env, abvd = push_local_tbinding env a in
-           (env, TBinder(abvd, Kind_unknown), pos <| Pat_tvar abvd)
-
-    | PatWild ->
-      let x = new_bvd (Some p.range) in
-      (env, VBinder(x, Typ_unknown), pos <| Pat_wild)
+      | PatWild ->
+        let x = new_bvd (Some p.range) in
+        loc, env, VBinder(x, Typ_unknown), pos <| Pat_wild
         
-    | PatConst c ->
-      let x = new_bvd (Some p.range) in
-      (env, VBinder(x, Typ_unknown), pos <| Pat_constant c)
+      | PatConst c ->
+        let x = new_bvd (Some p.range) in
+        loc, env, VBinder(x, Typ_unknown), pos <| Pat_constant c
 
-    | PatVar x ->
-      let env, xbvd = push_local_vbinding env x in
-      (env, VBinder(xbvd, Typ_unknown), pos <| Pat_var xbvd)
+      | PatVar x ->
+        let loc, env, xbvd = resolvex loc env x in 
+        loc, env, VBinder(xbvd, Typ_unknown), pos <| Pat_var xbvd
 
-    | PatName l ->
-      let _ = fail_or (try_lookup_datacon env) l in
-      let x = new_bvd (Some p.range) in
-      (env, VBinder(x, Typ_unknown), pos <| Pat_cons(l, []))
+      | PatName l ->
+        let l = fail_or (try_lookup_datacon env) l in
+        let x = new_bvd (Some p.range) in
+        loc, env, VBinder(x, Typ_unknown), pos <| Pat_cons(l.v, [])
 
-    | PatApp({pattern=PatName l}, args) ->
-      let (env, args) = List.fold_right (fun arg (env,args) ->
-        let (env, _, arg) = desugar_data_pat env arg in
-        (env, arg::args)) args (env, []) in
-      let _ = fail_or (try_lookup_datacon env) l in
-      let x = new_bvd (Some p.range) in
-      (env, VBinder(x, Typ_unknown), pos <| Pat_cons(l, args))
+      | PatApp({pattern=PatName l}, args) ->
+        let loc, env, args = List.fold_right (fun arg (loc,env,args) ->
+          let loc, env, _, arg = aux loc env arg in
+          (loc, env, arg::args)) args (loc, env, []) in
+        let l = fail_or (try_lookup_datacon env) l in
+        let x = new_bvd (Some p.range) in
+        loc, env, VBinder(x, Typ_unknown), pos <| Pat_cons(l.v, args)
 
-    | PatApp _ -> raise (Error ("Unexpected pattern", p.range))
+      | PatApp _ -> raise (Error ("Unexpected pattern", p.range))
 
-    | PatList pats ->
-      let (env,pats) = List.fold_right (fun pat (env, pats) ->
-        let (env,_,pat) = desugar_data_pat env pat in
-        (env, pat::pats)) pats (env, []) in
-      let pat = List.fold_right (fun hd tl -> Pat_cons(Const.cons_lid, [hd;tl])) pats (Pat_cons(Const.nil_lid, [])) in
-      let x = new_bvd (Some p.range) in
-      (env, VBinder(x, Typ_unknown), pos <| pat)
+      | PatList pats ->
+        let loc, env, pats = List.fold_right (fun pat (loc, env, pats) ->
+          let loc,env,_,pat = aux loc env pat in
+          loc, env, pat::pats) pats (loc, env, []) in
+        let pat = List.fold_right (fun hd tl -> Pat_cons(Const.cons_lid, [hd;tl])) pats (Pat_cons(Const.nil_lid, [])) in
+        let x = new_bvd (Some p.range) in
+        loc, env, VBinder(x, Typ_unknown), pos <| pat
         
-    | PatTuple(args) ->
-      let env, args = List.fold_left (fun (env, pats) p ->
-        let env, _, pat = desugar_data_pat env p in
-        (env, pat::pats)) (env,[]) args in
-      let args = List.rev args in
-      let constr = fail_or (DesugarEnv.try_lookup_lid env) (lid_of_path [Util.strcat "MkTuple" (Util.string_of_int <| List.length args)] p.range) in
-      let l = match constr with
-        | Exp_fvar (v, _) -> v.v
-        | _ -> failwith "impossible" in
-      let x = new_bvd (Some p.range) in
-      (env, VBinder(x, Typ_unknown), pos <| Pat_cons(l, args))
+      | PatTuple(args) ->
+        let loc, env, args = List.fold_left (fun (loc, env, pats) p ->
+          let loc, env, _, pat = aux loc env p in
+          loc, env, pat::pats) (loc,env,[]) args in
+        let args = List.rev args in
+        let constr = fail_or (DesugarEnv.try_lookup_lid env) (lid_of_path [Util.strcat "MkTuple" (Util.string_of_int <| List.length args)] p.range) in
+        let l = match constr with
+          | Exp_fvar (v, _) -> v.v
+          | _ -> failwith "impossible" in
+        let x = new_bvd (Some p.range) in
+        loc, env, VBinder(x, Typ_unknown), pos <| Pat_cons(l, args)
 
-    | PatRecord ([]) -> 
-      raise (Error ("Unexpected pattern", p.range))
+      | PatRecord ([]) -> 
+        raise (Error ("Unexpected pattern", p.range))
         
-    | PatRecord (fields) -> 
-      let (f, _) = List.hd fields in 
-      let record, _ = fail_or (try_lookup_record_by_field_name env) f in
-      let fields = fields |> List.map (fun (f, p) -> 
-        (fail_or (qualify_field_to_record env record) f, p)) in
-      let args = record.fields |> List.map (fun (f, _) -> 
-        match fields |> List.tryFind (fun (g, _) -> lid_equals f g) with 
-          | None -> mk_pattern PatWild p.range
-          | Some (_, p) -> p) in 
-      let app = mk_pattern (PatApp(mk_pattern (PatName record.constrname) p.range, args)) p.range in
-      desugar_data_pat env app
+      | PatRecord (fields) -> 
+        let (f, _) = List.hd fields in 
+        let record, _ = fail_or (try_lookup_record_by_field_name env) f in
+        let fields = fields |> List.map (fun (f, p) -> 
+          (fail_or (qualify_field_to_record env record) f, p)) in
+        let args = record.fields |> List.map (fun (f, _) -> 
+          match fields |> List.tryFind (fun (g, _) -> lid_equals f g) with 
+            | None -> mk_pattern PatWild p.range
+            | Some (_, p) -> p) in 
+        let app = mk_pattern (PatApp(mk_pattern (PatName record.constrname) p.range, args)) p.range in
+        aux loc env app in
+  let _, env, b, p = aux [] env p in
+  env, b, p
          
-and desugar_binding_pat_maybe_top top env pat : (env * bnd * option<pat>) =
+and desugar_binding_pat_maybe_top top env pat : (env_t * bnd * option<pat>) =
   if top 
   then match pat.pattern with 
     | PatVar x -> (env, LetBinder(qualify env x, Typ_unknown), None)
@@ -359,14 +375,14 @@ and desugar_match_pat_maybe_top top env pat =
 
 and desugar_match_pat env = desugar_match_pat_maybe_top false env 
 
-and desugar_typ_or_exp (env:env) (t:term) : either<typ,exp> =
+and desugar_typ_or_exp (env:env_t) (t:term) : either<typ,exp> =
   if is_type env t
   then Inl <| desugar_typ env t
   else Inr <| desugar_exp env t
 
 and desugar_exp env e = desugar_exp_maybe_top false env e 
 
-and desugar_exp_maybe_top (top_level:bool) (env:env) (top:term) : exp =
+and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
   let pos e = Exp_meta(Meta_info(e, Typ_unknown, top.range)) in
   let getpos = function
     | Exp_meta(Meta_info(_, _, p)) -> p
@@ -519,7 +535,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env) (top:term) : exp =
         let fn = f.ident in
         let found = fields |> Util.find_opt (fun (g, _) ->
           let gn = g.ident in
-          fn.idText = fn.idText) in
+          fn.idText = gn.idText) in
         match found with
           | Some (_, e) -> e
           | None ->
@@ -545,9 +561,9 @@ and desugar_exp_maybe_top (top_level:bool) (env:env) (top:term) : exp =
       desugar_exp env recterm
         
     | Project(e, f) ->
-      (* let _ = Util.print_string (Util.format1 "Looking up field name %s\n" (Print.sli f)) in *)
+      //let _ = Util.print_string (Util.format1 "Looking up field name %s\n" (Print.sli f)) in 
       let _, fieldname = fail_or (try_lookup_record_by_field_name env) f in
-      (* let _ = Util.print_string (Util.format2 "resolved %s as %s\n" (Print.sli f) (Print.sli fieldname)) in *)
+      //let _ = Util.print_string (Util.format2 "resolved %s as %s\n" (Print.sli f) (Print.sli fieldname)) in 
       let proj = mk_term (App(mk_term (Var fieldname) (range_of_lid f) Expr, e, false)) top.range top.level in
       desugar_exp env proj
 
@@ -575,6 +591,9 @@ and desugar_typ env (top:term) : typ =
       let binders, final = flatten top in
       let t = mk_term (Sum(binders, final)) top.range top.level in
       desugar_typ env t
+
+    | Op("*", [t1;_]) -> 
+      raise (Error(Util.format1 "The operator \"*\" is resolved here as multiplication since \"%s\" is a term, although a type was expected" (term_to_string t1), top.range))
       
     | Op("<>", args) ->
       let t = desugar_typ env (mk_term (Op("=", args)) top.range top.level) in
@@ -582,7 +601,7 @@ and desugar_typ env (top:term) : typ =
 
     | Op(s, args) ->
       begin match op_as_tylid top.range s with
-        | None -> raise (Error("Unrecognized type operator: " ^ s, top.range))
+        | None -> raise (Error("Unrecognized type operator" ^ s, top.range))
         | Some l ->
           let args = List.map (fun t -> desugar_typ_or_exp env t, false) args in
           mk_tapp (ftv l) args
@@ -913,7 +932,7 @@ let mk_data_ops env = function
     aux [] t
   | _ -> []
 
-let rec desugar_tycon env quals tcs : (env * sigelts) =
+let rec desugar_tycon env quals tcs : (env_t * sigelts) =
   let tycon_id = function
     | TyconAbstract(id, _, _)
     | TyconAbbrev(id, _, _, _)
@@ -1025,7 +1044,7 @@ let rec desugar_tycon env quals tcs : (env * sigelts) =
 
     | [] -> failwith "impossible"
            
-let desugar_decl env (d:decl) : (env * sigelts) = match d.decl with
+let desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
   | Open lid ->
     let env = DesugarEnv.push_namespace env lid in
     env, []
@@ -1078,7 +1097,7 @@ let desugar_decl env (d:decl) : (env * sigelts) = match d.decl with
 
   | _ -> raise (Error("Unexpected declaration", d.range))
         
-let desugar_modul env (m:AST.modul) : env * Syntax.modul = match m with
+let desugar_modul env (m:AST.modul) : env_t * Syntax.modul = match m with
   | Module(mname, decls) ->
     let env = DesugarEnv.prepare_module env mname in
     let env, sigelts = List.fold_left (fun (env, sigelts) d ->

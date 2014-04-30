@@ -231,7 +231,7 @@ let rec is_value e =
     | Exp_primop(id, el) -> 
         if (id.idText = "op_AmpAmp" ||
             id.idText = "op_BarBar" ||
-            id.idText = "_dummy_op_Negation")
+            id.idText = "op_Negation")
         then Util.for_all is_value el
         else false
     | Exp_ascribed(e, _) -> is_value e
@@ -508,6 +508,13 @@ let whnf t =
 (********************************************************************************)
 (*********************** Various tests on constants  ****************************)
 (********************************************************************************)
+let is_tuple_constructor (t:typ) = match t with 
+  | Typ_const l -> Util.starts_with l.v.str "Prims.Tuple"
+  | _ -> false
+
+let mk_tuple_lid n = 
+  let t = Util.format1 "Tuple%s" (Util.string_of_int n) in
+  Const.pconst t
 
 let is_lid_equality x =
   (lid_equals x Const.eq_lid) ||
@@ -570,12 +577,6 @@ let findValDecl (vds:list<sigelt>) bvd : option<sigelt> =
                          | Sig_val_decl(lid, t, _, _) -> lid.ident.idText = bvd.ppname.idText
                          | _ -> false)
       
-//let findValDecls (vds:list<sigelt>) ((lb, _): (letbinding * bool)) : list<sigelt> =
-//  lb |> List.choose (fun (lid', _, _) ->
-//    Util.find_map vds (fun se -> match se with
-//      | Sig_val_decl(lid, t) when lid_equals lid lid' -> Some se
-//      | _ -> None))
-
 let rec typs_of_letbinding x = match x with
   | (_, t, e)::tl -> t::typs_of_letbinding tl
   | _ -> []

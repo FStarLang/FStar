@@ -51,7 +51,6 @@ type array : Type => Type
 type ref : Type => Type
 type LBL : string => Type => Type
 type bytes
-assume val mk_ref: 'a -> ref 'a
 
 logic data type Tuple2: 'a:Type
           => 'b:('a => Type)

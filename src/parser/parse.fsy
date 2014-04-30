@@ -224,8 +224,6 @@ decl':
       { Val($1, $3, $5) }
   | assumeTag name COLON formula
       { Assume($1, $2, $4) }
-  | EXTERN REFERENCE name erefDefn
-      { ExternRef($3, $4) }
   | EXCEPTION name of_typ
       { Exception($2, $3) }
 
@@ -234,15 +232,6 @@ valQuals:
   | LOGIC { LogicTag Logic_val }
   | EXTERN name { Extern $2 }
   | ASSUME { AST.Assumption }
-      
-erefDefn: 
-  | LBRACE ident EQUALS STRING erefFields RBRACE
-      { let id:ident = $2 in (id.idText,Util.string_of_unicode($4))::$5 }
-
-erefFields:
-  |  { [] }
-  | SEMICOLON ident EQUALS STRING erefFields
-      {let id:ident = $2 in (id.idText,Util.string_of_unicode($4))::$5}
       
 logicTag:
   |       { false }
@@ -514,7 +503,7 @@ idpath:
       
 ascribeTypOpt:
   |              { None }
-  | COLON tmCons { Some $2 }
+  | COLON arithTerm { Some $2 }
 
 ascribeKindOpt: 
   |               { None }
@@ -669,15 +658,6 @@ tmConjunction:
   | tmTuple
       { $1 }
 
-/*
-tmSeq:
-  | tmSeq SEMICOLON tmTuple
-      { mk_term (Seq($1, $3)) (rhs2 parseState 1 3) Expr }
-
-  | tmTuple 
-      { $1 }
-*/
-
 tmTuple:
   | tupleN
       {
@@ -687,16 +667,6 @@ tmTuple:
       }
 
 tmEq:
-  | tmEq EQUALS tmCons
-      {
-        mk_term (Op("=", [$1; $3])) (rhs2 parseState 1 3) Un
-      }
-      
-  | tmEq LESSGREATER tmCons 
-      {
-        mk_term (Op("<>", [$1; $3])) (rhs2 parseState 1 3) Un
-      }
-
   | tmEq COLON_EQUALS tmCons
       {
         mk_term (Op(":=", [$1; $3])) (rhs2 parseState 1 3) Un
@@ -741,6 +711,8 @@ comparisonOp:
   | PIPE_RIGHT { "|>" }
   | ATSIGN { "@" }
   | HAT { "^" }
+  | EQUALS { "=" }
+  | LESSGREATER { "<>" }
 
 arithTerm:
   | starDivModTerm PLUS_MINUS_OP arithTerm
@@ -776,7 +748,6 @@ sumType:
       { 
         $1 
       }
-
 
 product':
   | productOrSumDomain prodArrow product'

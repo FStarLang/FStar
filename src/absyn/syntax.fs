@@ -54,8 +54,8 @@ type sconst =
   | Const_int64       of int64
   | Const_char        of char
   | Const_float       of double
-  | Const_bytearray   of byte[] * Range.range 
-  | Const_string      of byte[] * Range.range (* unicode encoded, F#/Caml independent *)
+  | Const_bytearray   of array<byte> * Range.range 
+  | Const_string      of array<byte> * Range.range (* unicode encoded, F#/Caml independent *)
 
 type typ =  
   | Typ_btvar    of bvar<typ,kind>
@@ -97,7 +97,7 @@ and exp =
 and meta_e = 
   | Meta_info      of exp * typ * Range.range                    (* Expression tagged with typ and position info *)
   | Meta_desugared of exp * meta_source_info                     (* Node tagged with some information about source term before desugaring *)
-  | Meta_datainst  of exp * typ                                  (* Expect the data constructor e to build a t-typed value; only used internally to pretyping; not visible elsewhere *)
+  | Meta_datainst  of exp * option<typ>                          (* Expect the data constructor e to build a t-typed value; only used internally to pretyping; not visible elsewhere *)
 and meta_source_info =
   | Data_app
   | Sequence                                                     (* ... add more cases here as needed for better code generation *)

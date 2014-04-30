@@ -13,10 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module String
+module ST
 
-assume val split: list char -> string -> list string
-assume val concat: string -> string -> string
-assume val compare: string -> string -> int
-assume val length: string -> int
-assume val substring: string -> int -> int -> string
+(* stateful primitives in F*, currently just simply typed; soon to be monadically typed *)
+
+assume val alloc: 'a -> ref 'a
+assume val read: ref 'a -> 'a
+assume val write: ref 'a -> 'a -> unit

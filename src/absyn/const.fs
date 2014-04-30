@@ -22,16 +22,17 @@ let pconst s  = p2l ["Prims";s]
 let prims_lid = p2l ["Prims"]
 
 (* Primitive types *)
-let extern_id = p2l ["extern"]
-let heap_lid     = pconst  "heap" 
-let bool_lid     = pconst  "bool" 
-let unit_lid     = pconst  "unit" 
-let string_lid   = pconst  "string" 
-let bytes_lid   = pconst  "bytes" 
-let int_lid = pconst  "int" 
-let num_lid = pconst  "number" 
-let float_lid = pconst  "float" 
-let exn_lid = pconst  "exn" 
+let heap_lid   = pconst  "heap" 
+let bool_lid   = pconst  "bool" 
+let unit_lid   = pconst  "unit" 
+let string_lid = pconst  "string" 
+let bytes_lid  = pconst  "bytes" 
+let char_lid   = pconst  "char" 
+let int_lid    = pconst  "int" 
+let int64_lid  = pconst  "int64" 
+let num_lid    = pconst  "number" 
+let float_lid  = pconst  "float" 
+let exn_lid    = pconst  "exn" 
 
 (* Logical connectives and operators *)
 let kun k k'                 = Kind_tcon(None, k, k', false)
@@ -111,12 +112,10 @@ let try_with_lid       = pconst "try_with"
 let array_lid          = p2l ["Array"; "array"]
 let array_mk_array_lid = p2l ["Array"; "mk_array"]
 
-(* Dijkstra monad constants *)
-let dst_lid      = p2l ["DST"; "DST"]
-let returnTX_lid = p2l ["DST"; "returnTX"]
-let bindTX_lid   = p2l ["DST"; "bindTX"]
-let write_lid    = p2l ["DST"; "write"]
-let read_lid     = p2l ["DST"; "read"]
+(* Stateful constants *)
+let write_lid    = p2l ["ST"; "write"]
+let read_lid     = p2l ["ST"; "read"]
+let alloc_lid    = p2l ["ST"; "alloc"]
 
 (* relational mode constants *)
 let lproj_lid            = pconst  "L"

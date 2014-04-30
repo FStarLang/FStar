@@ -29,16 +29,20 @@ open Microsoft.FStar.Tc.Env
 let t_unit = Typ_const (Util.withsort Const.unit_lid Kind_star)
 let t_bool = Typ_const (Util.withsort Const.bool_lid Kind_star)
 let t_int = Typ_const (Util.withsort Const.int_lid Kind_star)
+let t_int64 = Typ_const (Util.withsort Const.int64_lid Kind_star)
 let t_string = Typ_const (Util.withsort Const.string_lid Kind_star)
 let t_float = Typ_const (Util.withsort Const.float_lid Kind_star)
+let t_char = Typ_const(Util.withsort Const.char_lid Kind_star)
 
-let typing_const (_:env) (s:sconst) = match s with 
+let typing_const env (s:sconst) = match s with 
   | Const_unit -> t_unit
   | Const_bool _ -> t_bool
   | Const_int32 _ -> t_int
   | Const_string _ -> t_string
   | Const_float _ -> t_float
-  | _ -> raise (NYI "Unsupported constant")
+  | Const_char _ -> t_char
+  | Const_int64 _ -> t_int64
+  | _ -> raise (Error("Unsupported constant", Tc.Env.get_range env))
 
 let push_tparams env tps = 
   List.fold_left (fun env tp -> 
@@ -80,18 +84,6 @@ let new_evar env t =
   Exp_uvar (Unionfind.fresh (Uvar wf), t)
 
 let unchecked_unify uv t = Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here *)
-
-let unify uvars_in_b (uv,a) b = 
-  let occurs uv t = Util.for_some (Unionfind.equivalent uv) (uvars_in_b b) in
-    match Unionfind.find uv with 
-      | Uvar wf -> 
-          if wf b a && not (occurs uv b)
-          then (unchecked_unify uv b; true)
-          else false
-      | _ -> failwith "impossible"
-let unify_typ  = unify (fun t -> (uvars_in_typ t).uvars_t |> List.map fst)
-let unify_kind = unify (fun u -> (uvars_in_kind u).uvars_k)
-let unify_exp  = unify (fun t -> (uvars_in_exp t).uvars_e |> List.map fst)
 
 (**********************************************************************************************)
 (* Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -323,6 +315,23 @@ and wne tcenv (config:config<exp>) : config<exp> =
 let normalize tcenv t = 
   let c = sn tcenv ({code=t; environment=[]; stack=[]}) in
   c.code
+(**********************************************************************************************************************)
+let unify uvars_in_b (uv,a) b = 
+  let occurs uv t = Util.for_some (Unionfind.equivalent uv) (uvars_in_b b) in
+    match Unionfind.find uv with 
+      | Uvar wf -> 
+          if wf b a && not (occurs uv b)
+          then (unchecked_unify uv b; true)
+          else false
+      | _ -> failwith "impossible"
+let unify_typ env uv t  = 
+  let uvars_in_t t = (uvars_in_typ t).uvars_t |> List.map fst in
+  if unify uvars_in_t uv t
+  then true
+  else let t = normalize env t in
+       unify uvars_in_t uv t
+let unify_kind = unify (fun u -> (uvars_in_kind u).uvars_k)
+let unify_exp = unify (fun t -> (uvars_in_exp t).uvars_e |> List.map fst)
 
 (**********************************************************************************************************************)
 type rel = 
@@ -393,9 +402,12 @@ and trel rel env t t' =
          krel rel env k1' k1 &&
          aux norm t1 (Util.subst_typ [Inl(a1', Util.bvd_to_typ a1 k1')] t1')
      
+       | Typ_uvar(uv, _), Typ_uvar(uv', _) when Unionfind.equivalent uv uv' -> 
+         true
+       
        | Typ_uvar(uv, k), t1 
        | t1, Typ_uvar(uv,k) -> 
-         unify_typ (uv, k) t1 
+         unify_typ env (uv, k) t1 
 
        | Typ_app _, _
        | Typ_dep _, _
@@ -406,11 +418,11 @@ and trel rel env t t' =
          let matches = 
           if List.length args = List.length args' && aux norm tc tc'
           then List.zip args args' |> Util.for_all (function 
-                | Inl t1, Inl t1' -> aux norm t1 t1'
+                | Inl t1, Inl t1' -> aux true t1 t1'
                 | Inr e1, Inr e1' -> exp_equiv env e1 e1'
                 | _ -> false)
           else false in
-         matches || (not norm && aux true (normalize env t) (normalize env t'))
+         (matches || (not norm && aux true (normalize env t) (normalize env t')))
 
        | Typ_unknown, _ 
        | _, Typ_unknown -> failwith "Impossible"
@@ -547,7 +559,7 @@ let maybe_instantiate env e t =
       | _ -> (e, t) in
   aux false t e
 
-let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : (typ * exp) = 
+let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:bool) : (typ * option<exp>) = 
   let rec aux norm t f =
     let t = compress_typ t in 
     match t with 
@@ -562,7 +574,9 @@ let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : (ty
         (* need to instantiate an implicit type argument *)
         let arg = new_tvar env k in
         let t' = Util.subst_typ [Inl(a, arg)] t in
-        let g = Exp_tapp(f, new_tvar env k) in
+        let g = match f with 
+          | None -> None
+          | Some f -> Some <| Exp_tapp(f, new_tvar env k) in
         aux norm t' g 
 
       | Typ_fun(_, _, _, false) when imp_arg_follows -> 
@@ -573,7 +587,9 @@ let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : (ty
         (* need to instantiate an implicit argument *)
         let arg = new_evar env t1 in
         let t2' = subst_typ [Inr(x, arg)] t2 in
-        let g = Exp_app(f, arg, true) in
+        let g = match f with 
+          | None -> None
+          | Some f -> Some <| Exp_app(f, arg, true) in
         aux norm t2' g
 
       | Typ_fun _ -> 
@@ -589,7 +605,7 @@ let destruct_function_typ (env:env) (t:typ) (f:exp) (imp_arg_follows:bool) : (ty
         raise (Error (Tc.Errors.expected_function_typ t, Tc.Env.get_range env)) in
     aux false t f
 
-let destruct_poly_typ (env:env) (t:typ) (f:exp) : (typ*exp) = 
+let destruct_poly_typ (env:env) (t:typ) (f:exp) targ : (typ*exp) = 
   let rec aux norm t f =
     let t = compress_typ t in 
     match t with 
@@ -608,7 +624,7 @@ let destruct_poly_typ (env:env) (t:typ) (f:exp) : (typ*exp) =
         aux true t f 
 
       | _ -> 
-        raise (Error (Tc.Errors.expected_poly_typ t, Tc.Env.get_range env)) in
+        raise (Error (Tc.Errors.expected_poly_typ f t targ, Tc.Env.get_range env)) in
     aux false t f
 
 let destruct_tcon_kind env k tt imp_arg_follows = 
@@ -695,3 +711,27 @@ let generalize env uvars e t : (exp * typ) =
         let t' = Typ_univ(a, k, t) in
         let e' = Exp_tabs(a, k, e) in
         (e', t')) (e,t) 
+
+let mk_basic_tuple_type env n = 
+  let r = Tc.Env.get_range env in
+  let l = Util.mk_tuple_lid n in
+  let k = Tc.Env.lookup_typ_lid env l in
+  let t = Typ_const(withinfo l k r) in
+  let rec close t k = match k with 
+    | Kind_dcon(Some x, tx, k, _) -> 
+      Typ_lam(x, tx, close t k)
+    | Kind_dcon(None, tx, k, _) -> 
+      Typ_lam(Util.new_bvd (Some r), tx, close t k)
+    | Kind_tcon(Some a, k1, k, _) -> 
+      Typ_tlam(a, k1, close t k)
+    | Kind_tcon(None, k1, k, _) -> 
+      Typ_tlam(Util.new_bvd (Some r), k1, close t k)
+    | _ -> t in 
+  let rec build t subst k = match k with 
+    | Kind_tcon(Some a, ka, k, _) ->
+      let u = new_tvar env Kind_star in 
+      let ka = Util.subst_kind subst ka in
+      let arg = close u ka in
+      build (Typ_app(t, arg, false)) (Inl(a, arg)::subst) k
+    | _ -> t in
+  build t [] k

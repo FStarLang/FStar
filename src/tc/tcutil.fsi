@@ -39,7 +39,8 @@ val check_and_ascribe : env -> exp -> typ -> typ -> exp
 val pat_as_exps: env -> pat -> list<exp>
 val generalize: env -> Util.uvars -> exp -> typ -> (exp * typ)
 val maybe_instantiate : env -> exp -> typ -> (exp * typ)
-val destruct_function_typ : env -> typ -> exp -> bool -> (typ*exp)
-val destruct_poly_typ: env -> typ -> exp -> (typ*exp) 
+val destruct_function_typ : env -> typ -> option<exp> -> bool -> (typ * option<exp>)
+val destruct_poly_typ: env -> typ -> exp -> typ -> (typ*exp) 
 val destruct_tcon_kind: env -> kind -> typ -> bool -> (kind*typ)
 val destruct_dcon_kind: env -> kind -> typ -> bool -> (kind*typ)
+val mk_basic_tuple_type: env -> int -> typ

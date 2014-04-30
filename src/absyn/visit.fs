@@ -487,7 +487,7 @@ let rec reduce_kind
     (map_exp': mapper<'env, exp, exp>)
     (combine_kind: (kind -> (kind list * typ list * exp list) -> 'env -> (kind * 'env)))
     (combine_typ: (typ -> (kind list * typ list * exp list) -> 'env -> (typ * 'env)))
-    (combine_exp: (exp -> (kind list * typ list * exp list) -> 'env -> (exp * 'env))) (env:'env) binders kind : (kind * 'env) =
+    (combine_exp: (exp -> (kind list * typ list * exp list) -> 'env -> (exp * 'env))) (env:'env) binders k: (kind * 'env) =
   let rec visit_kind env binders k =
     let k = compress_kind k in
     let kl, tl, el, env =   
@@ -508,7 +508,7 @@ let rec reduce_kind
   and map_typ env binders t = reduce_typ map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders t 
   and map_exp env binders e = reduce_exp map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders e
   in
-  map_kind env binders kind
+  map_kind env binders k
     
 and reduce_typ 
     (map_kind': mapper<'env, kind, kind>)
@@ -516,7 +516,7 @@ and reduce_typ
     (map_exp': mapper<'env, exp, exp>)
     (combine_kind: (kind -> (kind list * typ list * exp list) -> 'env -> (kind * 'env)))
     (combine_typ: (typ -> (kind list * typ list * exp list) -> 'env -> (typ * 'env)))
-    (combine_exp: (exp -> (kind list * typ list * exp list) -> 'env -> (exp * 'env))) (env:'env) binders typ : (typ * 'env) =
+    (combine_exp: (exp -> (kind list * typ list * exp list) -> 'env -> (exp * 'env))) (env:'env) binders t : (typ * 'env) =
   let rec map_typs env binders tl = 
     let tl, _, env = List.fold_left (fun (out, binders, env) (xopt, t) -> 
       let t, env = map_typ env binders t in
@@ -574,7 +574,7 @@ and reduce_typ
   and map_typ env binders t = map_typ' map_kind visit_typ map_exp env binders t
   and map_exp env binders e = reduce_exp map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders e  
   in
-  map_typ env binders typ
+  map_typ env binders t
     
 and reduce_exp 
     (map_kind': mapper<'env, kind, kind>)
@@ -582,7 +582,7 @@ and reduce_exp
     (map_exp': mapper<'env, exp, exp>)
     (combine_kind: (kind -> (kind list * typ list * exp list) -> 'env -> (kind * 'env)))
     (combine_typ: (typ -> (kind list * typ list * exp list) -> 'env -> (typ * 'env)))
-    (combine_exp: (exp -> (kind list * typ list * exp list) -> 'env -> (exp * 'env))) (env:'env) binders exp : (exp * 'env) =
+    (combine_exp: (exp -> (kind list * typ list * exp list) -> 'env -> (exp * 'env))) (env:'env) binders e : (exp * 'env) =
   let rec map_exps env binders el = 
     let el, env = List.fold_left (fun (out, env) e -> 
       let e, env = map_exp env binders e in
@@ -696,7 +696,7 @@ and reduce_exp
           let el, env = map_exps env binders el in
           [], [], el, env in
     combine_exp e (kl, tl, el) env in
-  map_exp env binders exp
+  map_exp env binders e
     
 let combine_kind k (kl, tl, el) env = 
   let k' = match k, kl, tl with 

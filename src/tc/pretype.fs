@@ -170,7 +170,9 @@ and tc_exp env e : exp * typ = match e with
 
   | Exp_abs(x, t1, e1) -> 
     let destruct_expected_typ env = 
-      let rec aux norm env t = match compress_typ t with
+      let rec aux norm env t = 
+        let t = compress_typ t in 
+        match t with
         | Typ_fun(xopt, targ, tres, implicit) -> 
             let tres = match xopt with 
               | None -> tres
@@ -180,9 +182,11 @@ and tc_exp env e : exp * typ = match e with
             let env = Tc.Env.push_local_binding env (Env.Binding_typ(a, k)) in 
             let targ, tres, env, gen = aux norm env t in
             targ, tres, env, (fun x -> Exp_tabs(a, k, gen x))
+        | Typ_uvar _ ->
+          aux norm env (fst <| Tc.Util.destruct_function_typ env t None false)
         | _ when not norm ->
           aux true env (Tc.Util.normalize env t)
-        | _ -> raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function t e, rng env)) in
+        | t -> raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function t e, rng env)) in
       match Tc.Env.expected_typ env with
         | None -> None, None, env, (fun x -> x) 
         | Some t -> 
@@ -208,12 +212,15 @@ and tc_exp env e : exp * typ = match e with
     let env, topt = Env.clear_expected_typ env in 
     let karg, env' = match topt with 
       | Some t -> 
-        (match Util.compress_typ t with 
+        let rec aux norm t = match Util.compress_typ t with 
           | Typ_univ(b, karg, tres) -> 
             Tc.Util.keq env None karg k1';
             let tres = Util.subst_typ [Inl(b, Util.bvd_to_typ a karg)] tres in
             karg, Env.set_expected_typ env tres
-          | _ -> k1', env)
+          | t when not norm -> aux true (Tc.Util.normalize env t)
+          | t -> 
+             raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function t e, rng env)) in
+       aux false t
       | None -> 
         k1', env in
     let env' = instantiate_both env' in
@@ -224,36 +231,61 @@ and tc_exp env e : exp * typ = match e with
   | Exp_meta(Meta_desugared(e, Data_app)) -> 
     let env = instantiate_both env in
     let env, topt = Env.clear_expected_typ env in 
+    let d, args = Util.uncurry_app e in 
+    let d = Exp_meta(Meta_datainst(d, topt)) in
+    let e = Util.mk_curried_app d args in
+    //Printf.printf "Instrumented data app to %s\n" (Print.exp_to_string e);
+    let e, t = tc_exp env e in
+    //Printf.printf "After checking got term %s\n" (Print.exp_to_string e);
     begin match topt with 
-      | None -> 
-        let e, t = tc_exp env e in
-        Exp_meta(Meta_desugared(e, Data_app)), t
-      | Some expected_t -> 
-        let d, args = Util.uncurry_app e in 
-        let d = Exp_meta(Meta_datainst(d, expected_t)) in
-        let e = Util.mk_curried_app d args in
-        //Printf.printf "Instrumented data app to %s\n" (Print.exp_to_string e);
-        let e, t = tc_exp env e in
-        //Printf.printf "After checking got term %s\n" (Print.exp_to_string e);
+      | None -> e, t
+      | Some expected_t ->
         check_expected_typ env (Exp_meta(Meta_desugared(e, Data_app))) expected_t
     end
-
+    
   | Exp_meta(Meta_desugared(e, tag)) -> 
     let e, t = tc_exp env e in
     Exp_meta(Meta_desugared(e, tag)), t
 
-  | Exp_meta(Meta_datainst(e, t_expected)) -> 
+  | Exp_meta(Meta_datainst(e, topt)) -> 
+    (* For compatibility with ML: tuples without a type annotation default to their non-dependent versions *)
+    let maybe_default_tuple_type env tres topt = 
+      let err t = raise (Error(Tc.Errors.constructor_builds_the_wrong_type e tres t, rng env))  in 
+      let tconstr, args = Util.flatten_typ_apps tres in
+      if Util.is_tuple_constructor tconstr 
+      then
+        let tup = Tc.Util.mk_basic_tuple_type env (List.length args) in
+       // let _ = Util.print_string (Util.format3 "At %s: defaulting %s to %s\n" (Range.string_of_range (rng env)) (Print.typ_to_string tres) (Print.typ_to_string tup)) in
+        let _ = match topt with 
+          | None -> ()
+          | Some t -> if Tc.Util.subtype env t tup then () else err t in
+        if Tc.Util.subtype env tres tup
+        then ()
+        else err tup
+      else () in
      let e, t_d = tc_exp env e in 
      let _, tres = Util.collect_formals t_d in
-     if Tc.Util.subtype env tres t_expected
-     then e, t_d
-     else raise (Error(Tc.Errors.constructor_builds_the_wrong_type e tres t_expected, rng env)) 
-    
+     begin match topt with 
+       | Some t_expected -> 
+         begin match compress_typ t_expected with 
+          | Typ_uvar _ -> 
+            maybe_default_tuple_type env tres (Some t_expected);
+            e, t_d
+          | _ -> 
+           if Tc.Util.subtype env tres t_expected
+           then e, t_d
+           else raise (Error(Tc.Errors.constructor_builds_the_wrong_type e tres t_expected, rng env)) 
+         end
+       | None -> 
+         maybe_default_tuple_type env tres None;
+         e, t_d
+     end
+
   | Exp_app(e1, e2, imp) -> 
     let env1, _ = Env.clear_expected_typ env in
     let e1', t1 = tc_exp ({env1 with Tc.Env.instantiate_vargs=not imp}) e1 in
-    let xopt, env2, tres, e1' = match Tc.Util.destruct_function_typ env t1 e1' imp with 
-      | Typ_fun(xopt, targ, tres, _), e1' -> 
+    let xopt, env2, tres, e1' = match Tc.Util.destruct_function_typ env t1 (Some e1') imp with 
+      | Typ_fun(xopt, targ, tres, _), Some e1' -> 
         let env2 = Env.set_expected_typ env targ in
         xopt, env2, tres, e1'
       | _ -> failwith "impossible" in 
@@ -267,7 +299,7 @@ and tc_exp env e : exp * typ = match e with
     let env1, _ = Env.clear_expected_typ env in 
     let e1', t_e1 = tc_exp ({env1 with Env.instantiate_targs=false}) e1 in 
     let t1', k = tc_typ env1 t1 in 
-    begin match Tc.Util.destruct_poly_typ env1 t_e1 e1' with
+    begin match Tc.Util.destruct_poly_typ env1 t_e1 e1' t1 with
       | Typ_univ(a, k', tres), e1' ->
           Tc.Util.keq env1 (Some t1) k k';
           let t = Util.subst_typ [Inl(a, t1')] tres in

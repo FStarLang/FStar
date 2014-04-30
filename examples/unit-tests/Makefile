@@ -15,7 +15,13 @@ tuple:
 	$(FSTAR) --pretype --prims prims.fst tuple.fst
 
 rec:
-	$(FSTAR)  --prims prims.fst rec.fst
+	$(FSTAR) --pretype --prims prims.fst rec.fst
+
+pat:
+	$(FSTAR) --pretype --prims prims.fst pat.fst
+
+letrec:
+	$(FSTAR) --pretype --prims prims.fst letrec.fst
 
 STDFILES=list.fst string.fst
 BASICFILES=bytes.fst util.fst getoptsimple.fsi options.fs range.fsi unionfind.fst
@@ -31,7 +37,7 @@ MAIN=$(addprefix ../../src/, $(MAINFILES))
 ALL=$(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(MAIN)
 
 pt-compiler:
-	$(FSTAR) --pretype --prims prims.fst $(STDFILES) $(BASIC)
+	$(FSTAR) --prn --pretype --prims prims.fst st.fst $(STDFILES) $(BASIC) $(SYNTAX)
 
 compiler:
 	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) backends.fsi $(MAIN)

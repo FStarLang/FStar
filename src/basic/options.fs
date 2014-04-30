@@ -79,11 +79,11 @@ let skip_first_queries s =
      else if n > 0 then 
        (Util.print_string (Util.format1 "SKIPPING THE FIRST %s QUERIES!!!\n" (Util.string_of_int n));
         skip_queries := Some n)
-     else (Util.print_string ("error: can't skip a negative number ('" + s + "') of queries\n");
+     else (Util.print_string ("error: can't skip a negative number ('" ^ s ^ "') of queries\n");
            exit 1))
   with
     | _ -> 
-      (Util.print_string ("error: argument '" + s + "' of --UNSAFE_skip_first_queries is not a number\n");
+      (Util.print_string ("error: argument '" ^ s ^ "' of --UNSAFE_skip_first_queries is not a number\n");
        exit 1)  
 
 let display_usage specs =

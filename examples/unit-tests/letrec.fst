@@ -13,10 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module String
+module LetRec
 
-assume val split: list char -> string -> list string
-assume val concat: string -> string -> string
-assume val compare: string -> string -> int
-assume val length: string -> int
-assume val substring: string -> int -> int -> string
+let rec f (x:'a) (y:'b) : 'a = g 'a int x 0
+and g (x:'a) (y:'b) : 'a = f 'a bool x true

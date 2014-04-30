@@ -127,7 +127,7 @@ let try_lookup_typ_name env (lid:lident) : option<typ> =
 
 
 let unmangleMap = [("op_ColonColon", "Cons");
-                   ("not", "_op_Negation")]
+                   ("not", "op_Negation")]
       
 let unmangleOpName (id:ident) = 
   find_map unmangleMap (fun (x,y) -> 
@@ -228,11 +228,18 @@ let extract_record env = function
   | _ -> ()
 
 let try_lookup_record_by_field_name env (fieldname:lident) = 
+  let maybe_add_constrname ns c = 
+    let rec aux ns = match ns with
+      | [] -> [c]
+      | [c'] -> if c'.idText = c.idText then [c] else [c';c]
+      | hd::tl -> hd::aux tl in 
+    aux ns in
   let find_in_cache fieldname = 
     let ns, fieldname = fieldname.ns, fieldname.ident in
     Util.find_map (!record_cache) (fun record -> 
       let constrname = record.constrname.ident in
-      let fname = lid_of_ids (ns@[constrname]@[fieldname]) in
+      let ns = maybe_add_constrname ns constrname in 
+      let fname = lid_of_ids (ns@[fieldname]) in
       Util.find_map record.fields (fun (f, _) -> 
         if lid_equals fname f
         then Some(record, fname)
@@ -321,9 +328,14 @@ let push_namespace env lid =
   {env with open_namespaces = lid::env.open_namespaces}
 
 let is_type_lid env lid = 
-  match try_lookup_typ_name env lid with
+  let aux () = match try_lookup_typ_name env lid with
     | Some _ -> true
-    | _ -> false
+    | _ -> false in
+  if lid.ns=[]
+  then match try_lookup_id env lid.ident with //bound variables can shadow type names
+    | Some _ -> false
+    | _ -> aux()
+  else aux ()
 
 let finish_module env modul = 
   env.sigaccum |> List.iter (fun se -> match se with

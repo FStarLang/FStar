@@ -113,34 +113,36 @@ let lookup_bvar env (bv:bvvar) =
     | None -> raise (Error(Tc.Errors.variable_not_found bv.v, Util.range_of_bvd bv.v))
     | Some t -> t 
     
-let lookup_qname env (lid:lident)  = 
+let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  = 
   if Util.starts_with lid.nsstr (current_module env).str
   then 
     Util.find_map env.gamma (function 
-    | Binding_sig s -> if lid_equals lid (lid_of_sigelt s) then Some s else None
+    | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl t) else None
+    | Binding_sig s -> if lid_equals lid (lid_of_sigelt s) then Some (Inr s) else None
     | _ -> None) 
   else match find_in_sigtab env lid with
-    | Some se -> Some se 
+    | Some se -> Some (Inr se) 
     | None -> None
 
 let try_lookup_val_decl env lid = 
   match lookup_qname env lid with
-    | Some (Sig_val_decl(_, t, _, _)) -> Some t
+    | Some (Inr (Sig_val_decl(_, t, _, _))) -> Some t
     | _ -> None
 
 let lookup_val_decl (env:env) lid = 
   match lookup_qname env lid with
-    | Some (Sig_val_decl(_, t, _, _)) -> t
+    | Some (Inr (Sig_val_decl(_, t, _, _))) -> t
     | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
 
 let lookup_lid env lid = 
   let not_found () = raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid)) in
   let mapper = function
-    | Sig_datacon(_, t, _)  
-    | Sig_logic_function(_, t, _)
-    | Sig_val_decl (_, t, _, _) 
-    | Sig_let(_, [(_, t, _)]) -> Some t 
-    | Sig_let(_, lbs) -> 
+    | Inl t
+    | Inr (Sig_datacon(_, t, _))  
+    | Inr (Sig_logic_function(_, t, _))
+    | Inr (Sig_val_decl (_, t, _, _)) 
+    | Inr (Sig_let(_, [(_, t, _)])) -> Some t 
+    | Inr (Sig_let(_, lbs)) -> 
         Util.find_map lbs (function 
           | (Inl _, _, _) -> failwith "impossible"
           | (Inr lid', t, e) -> 
@@ -155,28 +157,28 @@ let lookup_lid env lid =
 
 let lookup_datacon env lid = 
   match lookup_qname env lid with
-    | Some (Sig_datacon (_, t, _)) -> t
+    | Some (Inr (Sig_datacon (_, t, _))) -> t
     | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
       
 let is_datacon env lid = 
   match lookup_qname env lid with
-    | Some (Sig_datacon (_, t, _)) -> true
+    | Some (Inr (Sig_datacon (_, t, _))) -> true
     | _ -> false
 
 let is_logic_function env lid =
   match lookup_qname env lid with 
-    | Some (Sig_logic_function (_, t, _)) -> true
+    | Some (Inr (Sig_logic_function (_, t, _))) -> true
     | _ -> false
     
 let is_logic_data env lid = 
   match lookup_qname env lid with 
-    | Some (Sig_tycon(_, _, _, _, _, tags)) -> 
+    | Some (Inr (Sig_tycon(_, _, _, _, _, tags))) -> 
         Util.for_some (fun t -> t=Logic_data) tags 
     | _ -> false
   
 let is_logic_array env lid =
   match lookup_qname env lid with 
-    | Some (Sig_tycon(_, _, _, _, _, tags)) -> 
+    | Some (Inr (Sig_tycon(_, _, _, _, _, tags))) -> 
         Util.for_some (function 
             | Logic_array _ -> true 
             | _ -> false) tags 
@@ -184,18 +186,18 @@ let is_logic_array env lid =
 
 let is_record env lid =
   match lookup_qname env lid with 
-    | Some (Sig_tycon(_, _, _, _, _, tags)) -> 
+    | Some (Inr (Sig_tycon(_, _, _, _, _, tags))) -> 
         Util.for_some (fun t -> t=Logic_record) tags 
     | _ -> false
 
 let lookup_datacons_of_typ (env:env) lid = 
   match lookup_qname env lid with 
-    | Some (Sig_tycon(_, _, _, _, datas, _)) -> Some (List.map (fun l -> (l, lookup_lid env l)) datas)
+    | Some (Inr (Sig_tycon(_, _, _, _, datas, _))) -> Some (List.map (fun l -> (l, lookup_lid env l)) datas)
     | _ -> None
     
 let lookup_typ_abbrev env lid =
   match lookup_qname env lid with 
-    | Some (Sig_typ_abbrev (lid, tps, _, t)) -> Some (Util.close_with_lam tps t)
+    | Some (Inr (Sig_typ_abbrev (lid, tps, _, t))) -> Some (Util.close_with_lam tps t)
     | _ -> None
         
 let lookup_btvdef env (btvd:btvdef): option<kind> = 
@@ -210,8 +212,8 @@ let lookup_btvar env (btv:btvar) =
 
 let lookup_typ_lid env (ftv:lident) : kind = 
   match lookup_qname env ftv with
-    | Some (Sig_tycon (lid, tps, k, _, _, _)) 
-    | Some (Sig_typ_abbrev (lid, tps, k, _)) -> 
+    | Some (Inr (Sig_tycon (lid, tps, k, _, _, _))) 
+    | Some (Inr (Sig_typ_abbrev (lid, tps, k, _))) -> 
       Util.close_kind tps k
     | _ ->
       raise (Error(Tc.Errors.name_not_found ftv, range_of_lid ftv))
