@@ -92,6 +92,7 @@ let e_bin_prio_lambda = ( 5, Prefix)
 let e_bin_prio_if     = (15, Prefix)
 let e_bin_prio_letin  = (19, Prefix)
 let e_bin_prio_eq     = (27, Infix NonAssoc)
+let e_bin_prio_seq    = (35, Infix Left)
 let e_app_prio        = (10000, Infix Left)
 
 let min_op_prec = (-1, Infix NonAssoc)
@@ -136,8 +137,6 @@ let rec doc_of_ty (env : env) (ty : typ) =
 
 (* -------------------------------------------------------------------- *)
 let rec doc_of_exp outer (env : env) (e : exp) =
-    let e = Absyn.Util.compress_exp e in
-
     match Absyn.Util.destruct_app e with
     | (Exp_fvar (x, _), [(e1, _); (e2, _)]) when is_op_equality x.v ->
         let d1 = doc_of_exp (e_bin_prio_eq, Left ) env e1
@@ -166,13 +165,16 @@ let rec doc_of_exp outer (env : env) (e : exp) =
             let d    = doc_of_exp (min_op_prec, NonAssoc) lenv e
             maybe_paren outer e_bin_prio_lambda (%"fun" +. %x +. %"->" +. d)
 
+        | Exp_match ((Exp_fvar _ | Exp_bvar _), [p, None, e]) when Absyn.Util.is_wild_pat p ->
+            doc_of_exp outer env e
+
         | Exp_match (e, bs) ->
             match bs with
             | [(Pat_constant (Const_bool true ), None, e1);
                (Pat_constant (Const_bool false), None, e2)]
 
             | [(Pat_constant (Const_bool false), None, e1);
-               (Pat_constant (Const_bool true), None, e2)] ->
+               (Pat_constant (Const_bool true ), None, e2)] ->
 
                 let doc = %"if"   +. (doc_of_exp (e_bin_prio_if, Left)     env e ) +.
                           %"then" +. (doc_of_exp (e_bin_prio_if, NonAssoc) env e1) +.
@@ -183,7 +185,7 @@ let rec doc_of_exp outer (env : env) (e : exp) =
             | _ ->
                 let de = doc_of_exp (min_op_prec, NonAssoc) env e
                 let bs = bs |> List.map (fun b -> %"|" +. doc_of_branch env b)
-                %"match" +. de +. %"with" +. (List.reduce (+.) bs)
+                align ((%"match" +. de +. %"with") :: bs)
 
         | Exp_let ((rec_, lb), body) ->
             let downct (x, _, e) =
@@ -210,8 +212,26 @@ let rec doc_of_exp outer (env : env) (e : exp) =
         | Exp_meta (Meta_info (e, _, _)) ->
             doc_of_exp outer env e
 
-        | Exp_meta (Meta_desugared(e, Data_app)) ->
-            doc_of_exp outer env e
+        | Exp_meta (Meta_desugared (e, Data_app)) ->
+            let (c, args) =
+                match Absyn.Util.destruct_app e with
+                | Exp_fvar (c, true), args -> (c, args)
+                | _, _ -> unexpected ()
+            in
+            
+            let dargs = args |> List.map (fst >> doc_of_exp (min_op_prec, NonAssoc) env)
+
+            doc_of_constr env c.v dargs
+            
+        | Exp_meta (Meta_desugared (e, Sequence)) ->
+            match e with
+            | Exp_let ((false, [Inl _, _, e1]), e2) ->
+                let d1 = doc_of_exp (e_bin_prio_seq, Left ) env e1
+                let d2 = doc_of_exp (e_bin_prio_seq, Right) env e2
+
+                maybe_paren outer e_bin_prio_seq (d1 @. %";" +. d2)
+
+            | _ -> unexpected ()
 
         | Exp_meta (Meta_datainst (e, _)) ->
             doc_of_exp outer env e
@@ -226,7 +246,7 @@ and doc_of_constr (env : env) c args =
     let x = c.ident.idText
     match args with
     | [] -> %x
-    | _  -> %x +. group (join ", " args)
+    | _  -> %x +. group (parens (join ", " args))
 
 (* -------------------------------------------------------------------- *)
 and doc_of_let (rec_ : bool) (env : env) (x, e) =

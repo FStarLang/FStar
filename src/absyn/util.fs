@@ -730,3 +730,9 @@ let rec check_pat_vars r = function
   | Pat_twild
   | Pat_constant _ -> []
   | Pat_withinfo (p, r) -> check_pat_vars r p
+
+let rec is_wild_pat p =
+    match p with
+    | Pat_wild -> true
+    | Pat_withinfo (p, _) -> is_wild_pat p
+    | _ -> false

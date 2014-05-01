@@ -114,6 +114,16 @@ let groups (docs : list<doc>) =
     group (List.fold cat empty docs)
 
 (* -------------------------------------------------------------------- *)
+let align (docs : list<doc>) =
+    List.fold (+.) empty docs
+(* There is a bug with hard lines *)
+(*
+    let for1 d1 d2 = d1 @. hardline @. d2
+    List.fold for1 empty docs
+*)
+
+
+(* -------------------------------------------------------------------- *)
 type state = {
     (*---*) width  : int;
     (*---*) ribbon : int;
