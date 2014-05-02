@@ -88,5 +88,5 @@ assume val sortWith: ('a -> 'a -> int) -> list 'a -> list 'a
 assume val choose: ('a -> option 'b) -> list 'a -> list 'b
 assume val flatten: list (list 'a) -> list 'a
 assume val filter: ('a -> bool) -> list 'a -> list 'a
-assume val partition: ('a -> bool) -> list 'a -> list 'a -> list 'a
+assume val partition: ('a -> bool) -> list 'a -> (list 'a * list 'a)
 assume val contains: 'a -> list 'a -> bool

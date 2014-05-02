@@ -150,3 +150,7 @@ let rec sigelt_to_string x = match x with
   | Sig_let(lbs, _) -> lbs_to_string lbs
   | Sig_main(e, _) -> Util.format1 "let _ = %s" (exp_to_string e)
   | Sig_bundle(ses, _) -> List.map sigelt_to_string ses |> String.concat "\n"
+
+let rec sigelt_to_string_short x = match x with 
+  | Sig_let((_, [(Inr l, t, _)]), _) -> Util.format2 "%s : %s" l.str (typ_to_string t) 
+  | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "

@@ -240,17 +240,13 @@ and tc_exp env e : exp * typ = match e with
 
   | Exp_meta(Meta_desugared(e, Data_app)) -> 
     let env = instantiate_both env in
-    let env, topt = Env.clear_expected_typ env in 
+    let env1, topt = Env.clear_expected_typ env in 
     let d, args = Util.uncurry_app e in 
     //Printf.printf "%s: Instantiating data app %s to %s\n" (Range.string_of_range (rng env)) (Print.exp_to_string d) (match topt with | None -> "None" | Some t -> Print.typ_to_string t);
     let d = Exp_meta(Meta_datainst(d, topt)) in
     let e = Util.mk_curried_app d args in
-    let e, t = tc_exp env e in
-    begin match topt with 
-      | None -> e, t
-      | Some expected_t ->
-        check_expected_typ env (Exp_meta(Meta_desugared(e, Data_app))) expected_t
-    end
+    let e, t = tc_exp env1 e in
+    check_expected_typ env (Exp_meta(Meta_desugared(e, Data_app))) t
     
   | Exp_meta(Meta_desugared(e, tag)) -> 
     let e, t = tc_exp env e in
@@ -267,7 +263,7 @@ and tc_exp env e : exp * typ = match e with
     //      let _ = Util.print_string (Util.format4 "At %s: defaulting %s to %s and kind %s\n" (Range.string_of_range (rng env)) (Print.typ_to_string tres) (Print.typ_to_string tup) (Print.kind_to_string tup.k)) in
           let _ = match topt with 
             | None -> ()
-            | Some t -> if Tc.Util.subtype env t tup then () else err tres t in
+            | Some t -> if Tc.Util.subtype env t tup then () else err tup t in
           if Tc.Util.subtype env tres tup
           then ()
           else err tres tup
@@ -573,16 +569,32 @@ let rec tc_decl env se = match se with
            let k = match k with 
             | Kind_unknown -> Tc.Util.new_kvar env 
             | _ -> k in
-           Sig_tycon(lid, tps, k, [], [], [], r), Sig_typ_abbrev(lid, tps, k, t, r)
+           Sig_tycon(lid, tps, k, [], [], [], r), t
         | _ -> failwith "impossible") in
-      let recs, abbrevs = List.split recs in
-      let tc_and_recs = fst <| tc_decls env (tycons@recs) in
-      let tycons, _ = tc_and_recs |> List.partition (function
-        | Sig_tycon(l, _, _, _, _, _, _) -> Util.for_some (function Sig_tycon(l', _, _, _, _, _, _) -> lid_equals l l' | _ -> false) tycons
-        | _ -> false) in
-      let env1 = Tc.Env.push_sigelt env (Sig_bundle(tc_and_recs, r)) in
+      let recs, abbrev_defs = List.split recs in
+      let tycons = fst <| tc_decls env tycons in 
+      let recs = fst <| tc_decls env recs in
+      let env1 = Tc.Env.push_sigelt env (Sig_bundle(tycons@recs, r)) in
       let rest = fst <| tc_decls env1 rest in
-      let abbrevs = fst <| tc_decls (Tc.Env.push_sigelt env (Sig_bundle(tycons, r))) abbrevs in
+      let abbrevs = List.map2 (fun se t -> match se with 
+        | Sig_tycon(lid, tps, k, [], [], [], r) -> 
+          let tt = Util.close_with_lam tps (withkind kun <| Typ_ascribed(t, k)) in
+          let tt, _ = tc_typ env1 tt in
+          let tps, t = 
+            let rec aux tps t =
+            let t = compress_typ t in 
+             match tps, t.t with 
+              | Tparam_typ _::tl, Typ_tlam(a, k, t) -> 
+                let tps, t = aux tl t in
+                Tparam_typ(a, k)::tps, t
+              | Tparam_term _::tl, Typ_lam(x, t1, t2) -> 
+                let tps, t = aux tl t2 in
+                Tparam_term(x, t1)::tps, t
+              | [], _ -> [], t
+              | _ -> failwith "impossible" in
+             aux tps tt in 
+           Sig_typ_abbrev(lid, tps, compress_kind k, t, r)
+         | _ -> failwith "impossible") recs abbrev_defs in    
       let env = Tc.Env.push_sigelt env (Sig_bundle(tycons@abbrevs@rest, r)) in 
       se, env
 
@@ -594,7 +606,7 @@ and tc_decls (env:Tc.Env.env) ses =
 //  else ();
   let se, env = tc_decl env se in 
 //  if (env.curmodule.str <> "Prims")
-//  then Util.print_string (Util.format1 "Checked sigelt\n\t%s\n" (Print.sigelt_to_string se))
+//  then Util.print_string (Util.format1 "Checked sigelt\n\t%s\n" (Print.sigelt_to_string_short se))// (Print.sigelt_to_string se))
 //  else ();
   se::ses, env) ([], env) ses in
   List.rev ses, env 

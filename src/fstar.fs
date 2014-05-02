@@ -29,7 +29,6 @@ let process_args () =
        | _ -> ());
     (res, !file_list)
 
-
 let go _ =    
   let finished (mods:Syntax.modul list) = 
     let msg = if !Options.pretype then "Parsed, desugared, and pre-typed module:" else "Parsed and desugared module:" in

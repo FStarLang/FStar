@@ -81,9 +81,13 @@ let new_tvar env k =
     let tvs', xvs' = Env.idents env in 
     let eq bv bvd = Util.bvd_eq bv.v bvd in
     let freevars_in_env = Util.forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
-    let err () = () in
-//      printfn "Failed: Trying to unify uvar of kind %s with type %s of kind %s\n" (Print.kind_to_string k) (Print.typ_to_string t) (Print.kind_to_string tk);
-//      printfn "freevars = %b; %A; %A\n" freevars_in_env tvs xvs in
+    let err () = 
+//      Util.print_string (Util.format3 "Failed: Trying to unify uvar of kind %s with type %s of kind %s\n" (Print.kind_to_string k) (Print.typ_to_string t) (Print.kind_to_string tk));
+//      Util.print_string (Util.format3 "freevars = %s; %s; %s\n" 
+//        (if freevars_in_env then "true" else "false") 
+//        (List.map (fun x -> Print.strBvd x.v) tvs |> String.concat ", ")
+//        (List.map (fun x -> Print.strBvd x.v) xvs |> String.concat ", "));
+      () in
     let result = freevars_in_env && pre_kind_compat k tk in
     if result then result else (err(); result) in
   withkind k <| Typ_uvar (Unionfind.fresh (Uvar wf), k)
@@ -204,7 +208,7 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
         | Some (Inr vclos, _), config -> (* beta(); *)
           sn tcenv ({config with 
             code=t2;
-            environment=V(x,vclos,ref None)::config.environment})
+            environment=V(x,vclos,Util.mk_ref None)::config.environment})
             
         | _ -> failwith "Impossible: ill-typed redex"
       end
@@ -222,7 +226,7 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
         | Some (Inl tclos, _), config ->  (* beta();  type-level beta redex *)
           sn tcenv ({config with 
             code=t;
-            environment=T(a,tclos,ref None)::config.environment})
+            environment=T(a,tclos,Util.mk_ref None)::config.environment})
             
         | _ -> failwith "Impossible: Ill-typed redex"
       end
@@ -412,9 +416,22 @@ let rec krel rel env k k' : bool =
       unify_kind (uv, ()) k1
     | _ -> false 
 
+
 and trel rel env t t' = 
+  let rec reduce t =
+    let t = compress_typ t in 
+    match t.t with 
+    | Typ_app(t1, t2, _) -> 
+      (match (compress_typ t1).t with 
+        | Typ_tlam(a, k, t) -> reduce (subst_typ [Inl(a, t2)] t)
+        | _ -> t)
+    | Typ_dep(t1, v, _) -> 
+      (match (compress_typ t1).t with 
+        | Typ_lam(x, _, t) -> reduce (subst_typ [Inr(x, v)] t)
+        | _ -> t)
+    | _ -> t in
   let rec aux norm t t' =
-    let t, t' = compress_typ t, compress_typ t' in
+    let t, t' = reduce t, reduce t' in
       match t.t, t'.t with 
        | Typ_refine(_, t, _), _ when (rel=SUB) -> aux norm t t'
        | _, Typ_refine(_, t', _) when (rel=SUB) -> aux norm t t'
@@ -554,12 +571,7 @@ let teq env t1 t2 =
   then ()
   else raise (Error(Tc.Errors.basic_type_error t2 t1, Tc.Env.get_range env))
 
-let subtype env t1 t2 = 
-  let t1' = (norm_typ [Beta] env t1) in
-  let t2' =  (norm_typ [Beta] env t2) in
-//  printfn "Normalized %s to %s\n" (Print.typ_to_string t2) (Print.typ_to_string t2');
- // printfn "Subtyping %s and %s\n" (Print.typ_to_string t1') (Print.typ_to_string t2');
-  trel SUB env t1' t2'
+let subtype env t1 t2 = trel SUB env t1 t2
 
 let check_and_ascribe (env:env) (e:exp) (t1:typ) (t2:typ) : exp =
   if not (subtype env t1 t2)
