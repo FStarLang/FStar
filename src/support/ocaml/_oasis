@@ -1,15 +1,22 @@
-OASISFormat: 0.3
+OASISFormat: 0.4
 Name: EVP
 Version: 0.0.1
-Synopsis: Bindings for the OpenSSL EVP library
+Synopsis: Support Library for the F*'s OCaml backend
 Authors: Pierre-Yves Strub
-License: CC-BY
+License: Apache-2.0
 BuildTools: ocamlbuild
-Plugins: DevFiles(0.3), META(0.3)
+Plugins: DevFiles(0.4), META(0.4)
 
-Library EVP
+Library fstar
   Path: src
-  FindlibName: EVP
+  FindLibName: fstar
+  Modules: Support
+  CompiledObject: best
+
+Library evp
+  Path: src/evp
+  FindlibName: evp
+  FindlibParent: fstar
   Modules: Evp
   CSources: evp_stub.c
   CCLib: -lcrypto
@@ -24,7 +31,7 @@ Executable test
   MainIs: test.ml
   Install: false
   Build$: flag(runtests)
-  BuildDepends: EVP
+  BuildDepends: fstar, fstar.evp
   CompiledObject: best
   
 Test main
