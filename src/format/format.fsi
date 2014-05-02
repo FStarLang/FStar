@@ -26,6 +26,7 @@ val parens  : doc -> doc
 val join   : string -> doc list -> doc
 val joins  : doc list -> doc
 val groups : doc list -> doc
+val align  : doc list -> doc
 
 (* -------------------------------------------------------------------- *)
 val pretty : int -> doc -> string
