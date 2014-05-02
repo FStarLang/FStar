@@ -43,9 +43,10 @@ type int
 type char
 type byte
 type uint16
-type int32
+type int32 = int
 type int64
-type double
+type float
+type double = float
 type string
 type array : Type => Type
 type ref : Type => Type
@@ -127,8 +128,58 @@ logic data type Tuple6: 'a:Type
            -> _6:'f _1 _2 _3 _4 _5
            -> Tuple6 'a 'b 'c 'd 'e 'f
 
+logic data type Tuple7: 'a:Type
+          => 'b:('a => Type)
+          => 'c:(x:'a => 'b x => Type)
+          => 'd:(x:'a => y:'b x => z:'c x y => Type)
+          => 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type)
+          => 'f:(x:'a => y:'b x => z:'c x y => w:'d x y z => u:'e x y z w => Type)
+          => 'g:(x:'a => y:'b x => z:'c x y => w:'d x y z => u:'e x y z w => v:'f x y z w u => Type)
+          => Type =
+  | MkTuple7: 'a:Type
+           -> 'b:('a => Type)
+           -> 'c:(x:'a => 'b x => Type)
+           -> 'd:(x:'a => y:'b x => z:'c x y => Type)
+           -> 'e:(x:'a => y:'b x => z:'c x y => w:'d x y z => Type)
+           -> 'f:(x:'a => y:'b x => z:'c x y => w:'d x y z => u:'e x y z w => Type)
+           -> 'g:(x:'a => y:'b x => z:'c x y => w:'d x y z => u:'e x y z w => v:'f x y z w u => Type)
+           -> _1:'a
+           -> _2:'b _1
+           -> _3:'c _1 _2
+           -> _4:'d _1 _2 _3
+           -> _5:'e _1 _2 _3 _4
+           -> _6:'f _1 _2 _3 _4 _5
+           -> _7:'g _1 _2 _3 _4 _5 _6
+           -> Tuple7 'a 'b 'c 'd 'e 'f 'g
+
+logic data type Tuple8: 'a:Type
+          => 'b:('a => Type)
+          => 'c:(a:'a => 'b a => Type)
+          => 'd:(a:'a => b:'b a => c:'c a b => Type)
+          => 'e:(a:'a => b:'b a => c:'c a b => d:'d a b c => Type)
+          => 'f:(a:'a => b:'b a => c:'c a b => d:'d a b c => e:'e a b c d => Type)
+          => 'g:(a:'a => b:'b a => c:'c a b => d:'d a b c => e:'e a b c d => f:'f a b c d e => Type)
+          => 'h:(a:'a => b:'b a => c:'c a b => d:'d a b c => e:'e a b c d => f:'f a b c d e => g:'g a b c d e f => Type)
+          => Type =
+  | MkTuple8: 'a:Type
+           -> 'b:('a => Type)
+           -> 'c:(a:'a => 'b a => Type)
+           -> 'd:(a:'a => b:'b a => c:'c a b => Type)
+           -> 'e:(a:'a => b:'b a => c:'c a b => d:'d a b c => Type)
+           -> 'f:(a:'a => b:'b a => c:'c a b => d:'d a b c => e:'e a b c d => Type)
+           -> 'g:(a:'a => b:'b a => c:'c a b => d:'d a b c => e:'e a b c d => f:'f a b c d e => Type)
+           -> 'h:(a:'a => b:'b a => c:'c a b => d:'d a b c => e:'e a b c d => f:'f a b c d e => g:'g a b c d e f => Type)
+           -> _1:'a
+           -> _2:'b _1
+           -> _3:'c _1 _2
+           -> _4:'d _1 _2 _3
+           -> _5:'e _1 _2 _3 _4
+           -> _6:'f _1 _2 _3 _4 _5
+           -> _7:'g _1 _2 _3 _4 _5 _6
+           -> _8:'h _1 _2 _3 _4 _5 _6 _7
+           -> Tuple8 'a 'b 'c 'd 'e 'f 'g 'h
+
 type exn
-type float
 logic data type result : Type => Type =
   | V : 'a:Type -> v:'a -> result 'a
   | E : 'a:Type -> e:exn -> result 'a
@@ -139,6 +190,7 @@ logic val R : 'a -> 'a
 (* Primitive (structural) equality.
    What about for function types? *)
 assume val op_Equality : 'a:Type -> 'b:Type -> x:'a -> y:'b -> z:bool {(z=true <==> x=y) /\ (z=false <==> (x<>y))}
+assume val op_disEquality : 'a:Type -> 'b:Type -> x:'a -> y:'b -> z:bool {(z=true <==> x<>y) /\ (z=false <==> (x=y))}
 logic type IfThenElse : 'P:Type => (u:unit{'P} => Type) => (u:unit{not 'P} => Type) => Type
 
 logic val Add : int -> int -> int
@@ -178,7 +230,7 @@ assume val raise: exn -> 'a (* TODO: refine with a monadic type *)
 assume val pipe_right: 'a -> ('a -> 'b) -> 'b
 assume val pipe_left: ('a -> 'b) -> 'a -> 'b
 assume val ignore: 'a -> unit
-assume val exit: int -> unit
+assume val exit: int -> 'a
 assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
 
 (* Primitive functions with trusted specs  *)
@@ -199,6 +251,6 @@ assume val op_LessThanOrEqual : x:int -> y:int -> z:bool{(z=true ==> x <= y) /\ 
 assume val op_GreaterThan : x:int -> y:int -> z:bool{(z=true ==> x > y) /\ (z=false ==> x <= y)}
 
 (* TODO: < in operators clashes with t<..> notation. Fix *)
-(* val op_GreaterThanOrEqual : x:int -> y:int -> z:bool{(z=true ==> x >= y) /\ (z=false ==> x < y) } *)
-(* val op_LessThan : x:int -> y:int -> z:bool{(z=true ==> x < y) /\ (z=false ==> x >= y)} *)
+assume val op_GreaterThanOrEqual : x:int -> y:int -> bool(* {(z=true ==> x >= y) /\ (z=false ==> x < y) } *)
+assume val op_LessThan : x:int -> y:int -> bool(* {(z=true ==> x < y) /\ (z=false ==> x >= y)} *\) *)
     

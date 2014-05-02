@@ -1,6 +1,6 @@
 module Microsoft.FStar.Bytes
 
-type bytes
+type bytes = array byte
 assume val length : bytes -> int
 assume val get: bytes -> int -> int
 assume val zero_create : int -> bytes

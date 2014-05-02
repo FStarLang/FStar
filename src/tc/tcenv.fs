@@ -26,7 +26,7 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Profiling 
 open Microsoft.FStar.Tc
 open Microsoft.FStar.Tc.Errors
-
+open Microsoft.FStar.Absyn.Util
    
 type binding =
   | Binding_var of bvvdef * typ
@@ -36,12 +36,14 @@ type binding =
 
 type sigtable = Util.smap<sigelt>
 let default_table_size = 200
-let strlid_of_sigelt se = text_of_lid <| lid_of_sigelt se
+let strlid_of_sigelt se = match lid_of_sigelt se with 
+  | None -> None
+  | Some l -> Some (text_of_lid l)
 let signature_to_sigtables s = 
   let ht = Util.smap_create default_table_size in
   let _ = List.iter (fun se -> 
-    let key = strlid_of_sigelt se in
-    Util.smap_add ht key se) s in
+    let lids = lids_of_sigelt se in
+    List.iter (fun l -> Util.smap_add ht l.str se) lids) s in
   ht
       
 let modules_to_sigtables mods = 
@@ -66,8 +68,10 @@ type env = {
 }
 
 let rec add_sigelt env se = match se with 
-  | Sig_bundle ses -> add_sigelts env ses
-  | _ -> Util.smap_add env.sigtab (strlid_of_sigelt se) se
+  | Sig_bundle(ses, _) -> add_sigelts env ses
+  | _ -> 
+    let lids = lids_of_sigelt se in
+    List.iter (fun l -> Util.smap_add env.sigtab l.str se) lids
 and add_sigelts (env:env) ses = 
   ses |> List.iter (add_sigelt env)
 
@@ -114,11 +118,23 @@ let lookup_bvar env (bv:bvvar) =
     | Some t -> t 
     
 let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  = 
-  if Util.starts_with lid.nsstr (current_module env).str
+  let in_cur_mod (l:lident) = (* TODO: need a more efficient namespace check! *)
+    let lns = l.ns@[l.ident] in
+    let cur = current_module env in 
+    let cur = cur.ns@[cur.ident] in
+    let rec aux c l = match c, l with 
+      | [], _ -> true
+      | _, [] -> false
+      | hd::tl, hd'::tl' when (hd.idText=hd'.idText) -> aux tl tl'
+      | _ -> false in
+    aux cur lns in
+  if in_cur_mod lid 
   then 
     Util.find_map env.gamma (function 
     | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl t) else None
-    | Binding_sig s -> if lid_equals lid (lid_of_sigelt s) then Some (Inr s) else None
+    | Binding_sig s -> 
+      let lids = lids_of_sigelt s in 
+      if lids |> Util.for_some (lid_equals lid) then Some (Inr s) else None
     | _ -> None) 
   else match find_in_sigtab env lid with
     | Some se -> Some (Inr se) 
@@ -126,30 +142,32 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
 
 let try_lookup_val_decl env lid = 
   match lookup_qname env lid with
-    | Some (Inr (Sig_val_decl(_, t, _, _))) -> Some t
+    | Some (Inr (Sig_val_decl(_, t, _, _, _))) -> Some t
     | _ -> None
 
 let lookup_val_decl (env:env) lid = 
   match lookup_qname env lid with
-    | Some (Inr (Sig_val_decl(_, t, _, _))) -> t
+    | Some (Inr (Sig_val_decl(_, t, _, _, _))) -> t
     | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
 
 let lookup_lid env lid = 
-  let not_found () = raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid)) in
+  let not_found () = 
+    let _ = Util.smap_fold env.sigtab (fun k _ _ -> Util.print_string (Util.format1 "%s, " k)) () in
+    raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid)) in
   let mapper = function
     | Inl t
-    | Inr (Sig_datacon(_, t, _))  
-    | Inr (Sig_logic_function(_, t, _))
-    | Inr (Sig_val_decl (_, t, _, _)) 
-    | Inr (Sig_let(_, [(_, t, _)])) -> Some t 
-    | Inr (Sig_let(_, lbs)) -> 
+    | Inr (Sig_datacon(_, t, _, _))  
+    | Inr (Sig_logic_function(_, t, _, _))
+    | Inr (Sig_val_decl (_, t, _, _, _)) 
+    | Inr (Sig_let((_, [(_, t, _)]), _)) -> Some t 
+    | Inr (Sig_let((_, lbs), _)) -> 
         Util.find_map lbs (function 
           | (Inl _, _, _) -> failwith "impossible"
           | (Inr lid', t, e) -> 
             if lid_equals lid lid' 
             then Some t
             else None) 
-    | _ -> None
+    | t -> None
   in
     match Util.bind_opt (lookup_qname env lid) mapper with 
       | Some t -> t
@@ -157,28 +175,28 @@ let lookup_lid env lid =
 
 let lookup_datacon env lid = 
   match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, t, _))) -> t
+    | Some (Inr (Sig_datacon (_, t, _, _))) -> t
     | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
       
 let is_datacon env lid = 
   match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, t, _))) -> true
+    | Some (Inr (Sig_datacon (_, t, _, _))) -> true
     | _ -> false
 
 let is_logic_function env lid =
   match lookup_qname env lid with 
-    | Some (Inr (Sig_logic_function (_, t, _))) -> true
+    | Some (Inr (Sig_logic_function (_, t, _, _))) -> true
     | _ -> false
     
 let is_logic_data env lid = 
   match lookup_qname env lid with 
-    | Some (Inr (Sig_tycon(_, _, _, _, _, tags))) -> 
+    | Some (Inr (Sig_tycon(_, _, _, _, _, tags, _))) -> 
         Util.for_some (fun t -> t=Logic_data) tags 
     | _ -> false
   
 let is_logic_array env lid =
   match lookup_qname env lid with 
-    | Some (Inr (Sig_tycon(_, _, _, _, _, tags))) -> 
+    | Some (Inr (Sig_tycon(_, _, _, _, _, tags, _))) -> 
         Util.for_some (function 
             | Logic_array _ -> true 
             | _ -> false) tags 
@@ -186,18 +204,18 @@ let is_logic_array env lid =
 
 let is_record env lid =
   match lookup_qname env lid with 
-    | Some (Inr (Sig_tycon(_, _, _, _, _, tags))) -> 
+    | Some (Inr (Sig_tycon(_, _, _, _, _, tags, _))) -> 
         Util.for_some (fun t -> t=Logic_record) tags 
     | _ -> false
 
 let lookup_datacons_of_typ (env:env) lid = 
   match lookup_qname env lid with 
-    | Some (Inr (Sig_tycon(_, _, _, _, datas, _))) -> Some (List.map (fun l -> (l, lookup_lid env l)) datas)
+    | Some (Inr (Sig_tycon(_, _, _, _, datas, _, _))) -> Some (List.map (fun l -> (l, lookup_lid env l)) datas)
     | _ -> None
     
 let lookup_typ_abbrev env lid =
   match lookup_qname env lid with 
-    | Some (Inr (Sig_typ_abbrev (lid, tps, _, t))) -> Some (Util.close_with_lam tps t)
+    | Some (Inr (Sig_typ_abbrev (lid, tps, _, t, _))) -> Some (Util.close_with_lam tps t)
     | _ -> None
         
 let lookup_btvdef env (btvd:btvdef): option<kind> = 
@@ -212,8 +230,8 @@ let lookup_btvar env (btv:btvar) =
 
 let lookup_typ_lid env (ftv:lident) : kind = 
   match lookup_qname env ftv with
-    | Some (Inr (Sig_tycon (lid, tps, k, _, _, _))) 
-    | Some (Inr (Sig_typ_abbrev (lid, tps, k, _))) -> 
+    | Some (Inr (Sig_tycon (lid, tps, k, _, _, _, _))) 
+    | Some (Inr (Sig_typ_abbrev (lid, tps, k, _, _))) -> 
       Util.close_kind tps k
     | _ ->
       raise (Error(Tc.Errors.name_not_found ftv, range_of_lid ftv))
@@ -224,7 +242,7 @@ let lookup_operator env (opname:ident) =
       
 let rec push_sigelt env s : env = 
   match s with 
-    | Sig_bundle(ses) -> List.fold_left push_sigelt env ses 
+    | Sig_bundle(ses, _) -> List.fold_left push_sigelt env ses 
     | _ -> {env with gamma=Binding_sig s::env.gamma}
         
 let push_local_binding env b = {env with gamma=b::env.gamma}
@@ -249,9 +267,12 @@ let push_module env (m:modul) =
       gamma=[];
       expected_typ=None}
 
-let set_expected_typ env t = {env with expected_typ = Some t}
-let expected_typ env = env.expected_typ
-let clear_expected_typ env = {env with expected_typ=None}, env.expected_typ
+let set_expected_typ env t = 
+  {env with expected_typ = Some t}
+let expected_typ env = match env.expected_typ with 
+  | None -> None
+  | Some t -> Some t
+let clear_expected_typ env = {env with expected_typ=None}, expected_typ env
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 

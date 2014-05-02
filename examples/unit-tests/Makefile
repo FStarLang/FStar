@@ -1,6 +1,6 @@
 FSTAR=../../bin/FStar.exe --fstar_home ../../
 
-all: utils list tuple rec compiler
+all: utils list tuple rec pat letrec compiler
 
 prims: 
 	$(FSTAR) --pretype --prims prims.fst 
@@ -37,7 +37,7 @@ MAIN=$(addprefix ../../src/, $(MAINFILES))
 ALL=$(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(MAIN)
 
 pt-compiler:
-	$(FSTAR) --prn --pretype --prims prims.fst st.fst $(STDFILES) $(BASIC) $(SYNTAX)
+	$(FSTAR) --prn --pretype --prims prims.fst st.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC)
 
 compiler:
 	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) backends.fsi $(MAIN)

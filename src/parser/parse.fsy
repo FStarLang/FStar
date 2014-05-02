@@ -78,7 +78,7 @@ let consPat r hd tl = PatApp(mk_pattern (PatName Const.cons_lid) r, [hd;tl])
 
 let consTerm r hd tl = mk_term (Construct(Const.cons_lid, [(hd, false);(tl, false)])) r Expr
 
-let mkConsList r elts = 
+let mkConsList r elts =  
   let nil = mk_term (Construct(Const.nil_lid, [])) r Expr in
     List.fold_right (fun e tl -> consTerm r e tl) elts nil
   
@@ -444,13 +444,13 @@ recordFieldDecl:
 
 constructorDecl:
   | BAR name COLON typ
-      { ($2,$4,false) }
+      { ($2,Some $4,false) }
   | BAR name of_typ
       { ($2,$3,true) }
 
 of_typ:
-  |        {  mk_term (Var(lid_of_path ["unit"] 0L)) 0L Type }
-  | OF typ { $2 }
+  |        {  None }
+  | OF typ { Some $2 }
 
 eitherQname: 
   | eitherQname' { lid_of_ids $1 }
@@ -503,7 +503,7 @@ idpath:
       
 ascribeTypOpt:
   |              { None }
-  | COLON arithTerm { Some $2 }
+  | COLON product { Some $2 }
 
 ascribeKindOpt: 
   |               { None }
@@ -697,9 +697,9 @@ tmAnd:
       { $1 }
       
 cmpTerm:
-  | cmpTerm comparisonOp arithTerm
+  | cmpTerm comparisonOp product
       { mk_term (Op($2, [$1;$3])) (rhs2 parseState 1 3) Expr }
-  | arithTerm
+  | product
       { $1 }
 
 comparisonOp:
@@ -713,6 +713,23 @@ comparisonOp:
   | HAT { "^" }
   | EQUALS { "=" }
   | LESSGREATER { "<>" }
+
+product: 
+  | productOrSumDomain prodArrow product
+      { let mkProd = $2 in mkProd (Product([$1], $3)) (rhs2 parseState 1 3) }
+
+  | appTerm prodArrow product
+      { 
+        let b = mk_binder (NoName $1) (rhs parseState 1) Un false in
+        let mkProd = $2 in 
+        mkProd (Product([b], $3)) (rhs2 parseState 1 3) 
+      }
+  | arithTerm
+      { $1 }
+
+prodArrow:
+  | RARROW { fun t r -> mk_term t r Type }
+  | RRARROW { fun t r -> mk_term t r Kind }
 
 arithTerm:
   | starDivModTerm PLUS_MINUS_OP arithTerm
@@ -744,26 +761,10 @@ sumType:
           | _ -> [], stt in
         mk_term (Sum($1::binders, final)) (rhs2 parseState 1 3) Type 
       }
-  | product
+  | refinementTerm
       { 
         $1 
       }
-
-product':
-  | productOrSumDomain prodArrow product'
-      { $2 (Product([$1], $3)) (rhs2 parseState 1 3) }
-
-  | appTerm prodArrow product'
-      { 
-        let b = mk_binder (NoName $1) (rhs parseState 1) Un false in
-          $2 (Product([b], $3)) (rhs2 parseState 1 3)
-      }
-  | appTerm
-      { $1 }
-
-prodArrow:
-  | RARROW { fun t r -> mk_term t r Type }
-  | RRARROW { fun t r -> mk_term t r Kind }
 
 sumTypeTail:
   | atomicTerm STAR sumType
@@ -779,19 +780,6 @@ sumTypeTail:
       { 
         $1 
       }
-
-product: 
-  | productOrSumDomain prodArrow product
-      { let mkProd = $2 in mkProd (Product([$1], $3)) (rhs2 parseState 1 3) }
-
-  | appTerm prodArrow product
-      { 
-        let b = mk_binder (NoName $1) (rhs parseState 1) Un false in
-        let mkProd = $2 in 
-        mkProd (Product([b], $3)) (rhs2 parseState 1 3) 
-      }
-  | refinementTerm
-      { $1 }
 
 productOrSumDomain:
   | ident COLON appTerm refineOpt

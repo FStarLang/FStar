@@ -16,7 +16,8 @@
 module String
 
 assume val split: list char -> string -> list string
-assume val concat: string -> string -> string
+assume val strcat : string -> string -> string
+assume val concat: string -> list string -> string
 assume val compare: string -> string -> int
 assume val length: string -> int
 assume val substring: string -> int -> int -> string

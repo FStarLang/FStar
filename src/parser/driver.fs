@@ -20,7 +20,7 @@ open Microsoft.FStar
 open Microsoft.FStar.Parser
 open Microsoft.FStar.Parser.AST
 open Microsoft.FStar.Parser.Parse
-open Util
+open Microsoft.FStar.Util
 
 let print_error msg r = 
   Util.print_string (Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg)

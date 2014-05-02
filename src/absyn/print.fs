@@ -42,13 +42,13 @@ let const_to_string x = match x with
   | Const_float x ->      Util.string_of_float x
   | Const_char x ->       Util.string_of_char x
   | Const_string(bytes, _) -> Util.string_of_bytes bytes
-  | Const_bytearray _  ->  failwith "NYI: to string of byte array"
-  | Const_int64 _ -> failwith "NYI: to string of int64"
-  | Const_uint8 _ -> failwith "NYI: to string of uint8"
+  | Const_bytearray _  ->  "<bytearray>"
+  | Const_int64 _ -> "<int64>"
+  | Const_uint8 _ -> "<uint8>"
      
 let rec typ_to_string x =
   let x = if !Options.print_real_names then x else whnf x in
-  match x with 
+  match (compress_typ x).t with 
   | Typ_btvar btv -> 
     (match !btv.v.instantiation with 
       | None -> strBvd btv.v
@@ -141,12 +141,12 @@ let tparam_to_string = function
 let tparams_to_string tps = List.map tparam_to_string tps |> String.concat " "
 
 let rec sigelt_to_string x = match x with 
-  | Sig_tycon(lid, tps, k, _, _, _) -> Util.format3 "type %s %s : %s" lid.str (tparams_to_string tps) (kind_to_string k)
-  | Sig_typ_abbrev(lid, tps, k, t) ->  Util.format4 "type %s %s : %s = %s" lid.str (tparams_to_string tps) (kind_to_string k) (typ_to_string t)
-  | Sig_datacon(lid, t, _) -> Util.format2 "datacon %s : %s" lid.str (typ_to_string t)
-  | Sig_val_decl(lid, t, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string t)
-  | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string f)
-  | Sig_logic_function(lid, t, _) -> Util.format2 "logic val %s : %s" lid.str (typ_to_string t)
-  | Sig_let lbs -> lbs_to_string lbs
-  | Sig_main e -> Util.format1 "let _ = %s" (exp_to_string e)
-  | Sig_bundle ses -> List.map sigelt_to_string ses |> String.concat "\n"
+  | Sig_tycon(lid, tps, k, _, _, _, _) -> Util.format3 "type %s %s : %s" lid.str (tparams_to_string tps) (kind_to_string k)
+  | Sig_typ_abbrev(lid, tps, k, t, _) ->  Util.format4 "type %s %s : %s = %s" lid.str (tparams_to_string tps) (kind_to_string k) (typ_to_string t)
+  | Sig_datacon(lid, t, _, _) -> Util.format2 "datacon %s : %s" lid.str (typ_to_string t)
+  | Sig_val_decl(lid, t, _, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string t)
+  | Sig_assume(lid, f, _, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string f)
+  | Sig_logic_function(lid, t, _, _) -> Util.format2 "logic val %s : %s" lid.str (typ_to_string t)
+  | Sig_let(lbs, _) -> lbs_to_string lbs
+  | Sig_main(e, _) -> Util.format1 "let _ = %s" (exp_to_string e)
+  | Sig_bundle(ses, _) -> List.map sigelt_to_string ses |> String.concat "\n"

@@ -117,7 +117,7 @@ let maybe_paren (outer, side) inner doc =
 let rec doc_of_ty (env : env) (ty : typ) =
     let ty = Absyn.Util.compress_typ ty in
 
-    match ty with
+    match ty.t with
     | Typ_refine (_, ty, _) ->
         doc_of_ty env ty
 
@@ -292,7 +292,7 @@ and doc_of_branch (env : env) ((p, cl, body) : pat * exp option * exp) : doc =
 (* -------------------------------------------------------------------- *)
 let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
     match modx with
-    | Sig_let (rec_, lb) ->
+    | Sig_let ((rec_, lb), _) ->
         let downct (x, _, e) =
             match x with
             | Inr x -> (x.ident, e)
@@ -301,7 +301,7 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
         let env, ds = lb |> List.map downct |> Util.fold_map (doc_of_toplet rec_) env
         env, Some (%kw +. (join "and" (ds |> List.map group)))
 
-    | Sig_main e ->
+    | Sig_main (e, _) ->
         env, Some (%"let" +. %"_" +. %"=" +. (doc_of_exp (min_op_prec, NonAssoc) env e))
 
     | Sig_tycon _ ->

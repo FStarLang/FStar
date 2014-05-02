@@ -54,8 +54,8 @@ let add_int_char buf c =
   Bytes.emit_int_as_byte buf (c % 256);
   Bytes.emit_int_as_byte buf (c / 256)
 
-let add_unichar buf c = add_int_char buf (int c)
-let add_byte_char buf (c:char) = add_int_char buf (int32 c % 256)
+let add_unichar buf c = add_int_char buf c
+let add_byte_char buf (c:char) = add_int_char buf (Util.int_of_char c % 256)
 
 (* When lexing bytearrays we don't expect to see any unicode stuff. *)
 (* Likewise when lexing string constants we shouldn't see any trigraphs > 127 *)
@@ -77,17 +77,19 @@ let stringbuf_is_bytes buf =
     !ok
 
 let trigraph c1 c2 c3 =
-    let digit (c:char) = int c - int '0' in 
+    let digit (c:char) = Util.int_of_char c - Util.int_of_char '0' in 
     char_of_int (digit c1 * 100 + digit c2 * 10 + digit c3)
 
 let digit d = 
-    if d >= '0' && d <= '9' then int_of_char d - int_of_char '0'   
+    let dd = int_of_char d in
+    if dd >= int_of_char '0' && dd <= int_of_char '9' then int_of_char d - int_of_char '0'   
     else failwith "digit" 
 
 let hexdigit d = 
-    if d >= '0' && d <= '9' then digit d 
-    else if d >= 'a' && d <= 'f' then int_of_char d - int_of_char 'a' + 10
-    else if d >= 'A' && d <= 'F' then int_of_char d - int_of_char 'A' + 10
+    let dd = int_of_char d in
+    if dd >= int_of_char '0' && dd <= int_of_char '9' then digit d 
+    else if dd >= int_of_char 'a' && dd <= int_of_char 'f' then dd - int_of_char 'a' + 10
+    else if dd >= int_of_char 'A' && dd <= int_of_char 'F' then dd - int_of_char 'A' + 10
     else failwith "hexdigit" 
 
 let unicodegraph_short s =

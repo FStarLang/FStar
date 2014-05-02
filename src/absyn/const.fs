@@ -85,7 +85,7 @@ let assert_lid     = pconst  "Assert"
 let pipe_right_lid    = pconst "pipe_right"
 let pipe_left_lid     = pconst "pipe_left"
 let list_append_lid   = p2l ["List"; "append"]
-let string_concat_lid = p2l ["String"; "concat"]
+let strcat_lid = p2l ["String"; "strcat"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"

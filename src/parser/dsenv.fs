@@ -139,9 +139,9 @@ let try_lookup_id env (id:ident) =
     | Some l -> Some <|  Exp_fvar(fv l, false)
     | _ -> 
       find_map env.localbindings (function 
-        | Inr bvd, Binding_var id' when (id'.idText=id.idText) -> Some (bvd_to_exp (set_bvd_range bvd id.idRange) Typ_unknown)
+        | Inr bvd, Binding_var id' when (id'.idText=id.idText) -> Some (bvd_to_exp (set_bvd_range bvd id.idRange) tun)
         | _ -> None)
-        
+       
 let try_lookup_module env path = 
   match List.tryFind (fun (mlid, modul) -> path_of_lid mlid = path) env.modules with
     | Some (_, modul) -> Some modul
@@ -198,20 +198,20 @@ type record = {
 let record_cache : ref<list<record>> = Util.mk_ref []
 
 let extract_record env = function 
-  | Sig_bundle sigs -> 
+  | Sig_bundle(sigs, _) -> 
     let is_rec = Util.for_some (function 
       | Logic_record -> true
       | _ -> false) in
     
     let find_dc dc = 
       sigs |> Util.find_opt (function 
-        | Sig_datacon(lid, _, _) -> lid_equals dc lid 
+        | Sig_datacon(lid, _, _, _) -> lid_equals dc lid 
         | _ -> false) in
     
     sigs |> List.iter (function 
-      | Sig_tycon(typename, parms, _, _, [dc], tags) when is_rec tags -> 
+      | Sig_tycon(typename, parms, _, _, [dc], tags, _) when is_rec tags -> 
         begin match must <| find_dc dc with 
-          | Sig_datacon(constrname, t, _) -> 
+          | Sig_datacon(constrname, t, _, _) -> 
               let fields = 
                 (fst <| collect_formals t) |> List.collect (function
                   | Inr(Some x, t) -> [(qual constrname x.ppname, t)]
@@ -316,8 +316,8 @@ let push_sigelt env s =
     | Some l -> 
       err l in 
   let lss = match s with 
-    | Sig_bundle ses -> List.map (fun se -> (lids_of_sigelt se, se)) ses
-    | Sig_val_decl(_, _, None, _) -> [] 
+    | Sig_bundle(ses, _) -> List.map (fun se -> (lids_of_sigelt se, se)) ses
+    | Sig_val_decl(_, _, None, _, _) -> [] 
     | _ -> [lids_of_sigelt s, s] in
   lss |> List.iter (fun (lids, se) -> 
     lids |> List.iter (fun lid -> 
@@ -339,7 +339,7 @@ let is_type_lid env lid =
 
 let finish_module env modul = 
   env.sigaccum |> List.iter (fun se -> match se with
-    | Sig_val_decl(l, t, None, _) -> 
+    | Sig_val_decl(l, t, None, _, _) -> 
       begin match try_lookup_lid env l with 
         | None -> 
           Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.sli l));

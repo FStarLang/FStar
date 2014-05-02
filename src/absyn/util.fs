@@ -46,9 +46,8 @@ let handleable = function
 (********************************************************************************)          
 
 let compress_kind = Visit.compress_kind
-let compress_typ  = Visit.compress
+let compress_typ  = Visit.compress_typ
 let compress_exp  = Visit.compress_exp 
-
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
@@ -68,8 +67,7 @@ let genident r =
     | Some r -> mk_ident(sym, r)
 
 let range_of_bvd x = x.ppname.idRange
-let inst () = mk_ref None
-let mkbvd (x,y) = {ppname=x;realname=y;instantiation=inst()}
+let mkbvd (x,y) = {ppname=x;realname=y;instantiation=mk_ref None}
 let setsort w t = {v=w.v; sort=t; p=w.p}
 let withinfo e s r = {v=e; sort=s; p=r}
 let withsort e s   = withinfo e s dummyRange
@@ -85,7 +83,7 @@ let lbname_eq l1 l2 = match l1, l2 with
 let fvar_eq fv1 fv2  = lid_equals fv1.v fv2.v
 let bvd_to_bvar_s bvd sort = {v=bvd; sort=sort; p=bvd.ppname.idRange}
 let bvar_to_bvd bv = bv.v
-let btvar_to_typ bv  = Typ_btvar bv
+let btvar_to_typ bv  = withkind kun <| Typ_btvar bv
 let bvd_to_typ bvd k = btvar_to_typ (bvd_to_bvar_s bvd k)
 let bvar_to_exp bv   =  Exp_bvar bv
 let bvd_to_exp bvd t = bvar_to_exp (bvd_to_bvar_s bvd t)
@@ -99,9 +97,9 @@ let set_bvd_range bvd r = {ppname=mk_ident(bvd.ppname.idText, r);
 let set_lid_range l r = 
   let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
   lid_of_ids ids
-let fv l = withinfo l Typ_unknown (range_of_lid l)
-let fvar l r =  Exp_fvar(fv (set_lid_range l r), false)
-let ftv l = Typ_const (withinfo l Kind_unknown (range_of_lid l))
+let fv l = withinfo l tun (range_of_lid l)
+let fvar l r = Exp_fvar(fv (set_lid_range l r), false)
+let ftv l = withkind kun <| Typ_const (withinfo l Kind_unknown (range_of_lid l))
 let order_bvd x y = match x, y with 
   | Inl _, Inr _ -> -1
   | Inr _, Inl _ -> 1
@@ -121,23 +119,32 @@ let rec unascribe e = match e with
   | Exp_ascribed (e, _) -> unascribe e 
   | _ -> e
 
-let rec ascribe_typ t k = match t with 
+let rec ascribe_typ t k = match t.t with 
   |  Typ_ascribed (t', _) -> ascribe_typ t' k
   | _ -> Typ_ascribed(t, k)
     
-let rec unascribe_typ t = match t with 
+let rec unascribe_typ t = match t.t with 
   | Typ_ascribed (t, _) -> unascribe_typ t
   | _ -> t
 
-let rec unrefine t = match t with 
+let rec unrefine t = match t.t with 
   | Typ_refine(x, t, _) -> unrefine t
   | _ -> t
 
 let pos e r' = match e with 
   | Exp_meta(Meta_info(_, _, r)) -> r
+  | Exp_bvar x -> x.v.ppname.idRange
+  | Exp_fvar(l, _) -> range_of_lid l.v
   | _ -> r'
 
-let rec pre_typ t = match compress_typ t with 
+let tpos t = match t.t with  
+  | Typ_meta (Meta_pos(t, r)) -> r
+  | Typ_btvar btv -> btv.v.ppname.idRange
+  | Typ_const l -> range_of_lid l.v
+  | _ -> failwith "Missing position info"
+
+
+let rec pre_typ t = match (compress_typ t).t with 
   | Typ_refine(_, t, _) 
   | Typ_ascribed(t, _) -> pre_typ t
   | t -> t
@@ -155,25 +162,37 @@ let flatten_typ_apps : typ -> typ * (list<either<typ,exp>>) =
     
 let destruct typ lid = 
   match flatten_typ_apps typ with 
-    | Typ_const tc, args when lid_equals tc.v lid -> Some args
+    | {t=Typ_const tc}, args when lid_equals tc.v lid -> Some args
     | _ -> None
 
 let rec lids_of_sigelt se = match se with 
-  | Sig_bundle ses -> List.collect lids_of_sigelt ses
-  | Sig_tycon (lid, _, _, _, _, _)    
-  | Sig_typ_abbrev  (lid, _, _, _)
-  | Sig_datacon (lid, _, _)
-  | Sig_val_decl (lid, _, _, _) 
-  | Sig_assume (lid, _, _, _)
-  | Sig_logic_function (lid, _, _) -> [lid]
-  | Sig_let((_, lbs)) -> List.map (function 
+  | Sig_bundle(ses, _) -> List.collect lids_of_sigelt ses
+  | Sig_tycon (lid, _, _,  _, _, _, _)    
+  | Sig_typ_abbrev  (lid, _, _, _, _)
+  | Sig_datacon (lid, _, _, _)
+  | Sig_val_decl (lid, _, _, _, _) 
+  | Sig_assume (lid, _, _, _, _)
+  | Sig_logic_function (lid, _, _, _) -> [lid]
+  | Sig_let((_, lbs), _) -> List.map (function 
     | (Inr l, _, _) -> l
     | (Inl x, _, _) -> failwith (Util.format1 "Impossible: got top-level letbinding with name %s" x.ppname.idText)) lbs
   | Sig_main _ -> []
     
-let lid_of_sigelt se = List.hd <| lids_of_sigelt se
-let range_of_sigelt x = range_of_lid <| lid_of_sigelt x
-let range_of_typ t def = match t with 
+let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
+  | [l] -> Some l
+  | _ -> None
+let range_of_sigelt x = match x with 
+  | Sig_bundle(_, r) 
+  | Sig_tycon (_, _, _,  _, _, _, r)    
+  | Sig_typ_abbrev  (_, _, _, _, r)
+  | Sig_datacon (_, _, _, r)
+  | Sig_val_decl (_, _, _, _, r) 
+  | Sig_assume (_, _, _, _, r)
+  | Sig_logic_function (_, _, _, r) 
+  | Sig_let(_, r) 
+  | Sig_main(_, r) -> r
+
+let range_of_typ t def = match t.t with 
   | Typ_meta(Meta_pos(_, r)) -> r
   | _ -> def
 let range_of_lb = function
@@ -276,7 +295,7 @@ let collect_uvars_k uvs k = match k with
           | Some _ -> uvs, k
           | None -> {uvs with uvars_k=uv::uvs.uvars_k}, k)
   | _ -> uvs, k
-let collect_uvars_t uvs t : uvars * typ = match t with 
+let collect_uvars_t uvs t : uvars * typ = match t.t with 
     | Typ_uvar (uv, k) -> 
         (match List.tryFind (fun (uv', _) -> Unionfind.equivalent uv uv') uvs.uvars_t with 
           | Some _ -> uvs, t
@@ -307,7 +326,7 @@ let is_bound_xv ((_, bxvs):boundvars) (bv:bvvar) =
   Util.for_some (fun bvd' -> bvd_eq bvd' bv.v) bxvs 
 let fv_fold_t (out:freevars) (benv:boundvars) (t:typ) : (freevars * typ) =
   let (ftvs, fxvs) = out in
-  match t with
+  match t.t with
     | Typ_btvar bv -> 
       if is_bound_tv benv bv then out, t
       else (bv::ftvs, fxvs), t
@@ -370,14 +389,12 @@ and subst_tvar (s:subst_map) (t:typ) : typ =
   let find_typ btv = match Util.smap_try_find s btv.realname.idText with 
     | Some (Inl l) -> Some l
     | _ ->  None in
-  match t with
+  match t.t with
     | Typ_btvar btv ->
       begin
         match find_typ btv.v with
           | Some t -> t
-          | _ ->
-            let sort' = subst_kind' s btv.sort in
-            Typ_btvar (setsort btv sort')
+          | _ -> t
       end
     | _ -> t
 and subst_xvar (s:subst_map) (e:exp) : exp =
@@ -389,9 +406,7 @@ and subst_xvar (s:subst_map) (e:exp) : exp =
       begin
         match find_exp bv.v with
           | Some e -> e
-          | None ->
-            let sort' = subst_typ' s bv.sort in
-            Exp_bvar (setsort bv sort')
+          | None -> e
       end
     | _ -> e
 
@@ -399,8 +414,8 @@ let subst_kind s k = subst_kind' (mk_subst_map s) k
 let subst_typ s t = subst_typ' (mk_subst_map s) t
 let subst_exp s e = subst_exp' (mk_subst_map s) e 
 
-let open_typ typ (te:either<typ,exp>) : typ =
-  match compress_typ typ, te with
+let open_typ ty (te:either<typ,exp>) : typ =
+  match (compress_typ ty).t, te with
     | Typ_fun(None, targ, tret, _), Inr _ -> tret
     | Typ_lam(bvd, targ, tret), Inr exp
     | Typ_fun(Some bvd, targ, tret, _), Inr exp -> subst_typ [Inr(bvd,exp)] tret
@@ -410,15 +425,15 @@ let open_typ typ (te:either<typ,exp>) : typ =
 
 let close_with_lam tps t = List.fold_right
   (fun tp out -> match tp with
-    | Tparam_typ (a,k) -> Typ_tlam (a,k,out)
-    | Tparam_term (x,t) -> Typ_lam (x,t,out))
+    | Tparam_typ (a,k) -> withkind (Kind_tcon(Some a, k, out.k, false)) <| Typ_tlam (a,k,out)
+    | Tparam_term (x,t) -> withkind (Kind_dcon(Some x, t, out.k, false)) <| Typ_lam (x,t,out))
   tps t 
 
 let close_with_arrow tps t =
   t |> (tps |> List.fold_right (
     fun tp out -> match tp with
-      | Tparam_typ (a,k) -> Typ_univ (a,k,out)
-      | Tparam_term (x,t) -> Typ_fun (Some x,t,out,true)))
+      | Tparam_typ (a,k) -> withkind Kind_star <| Typ_univ (a,k,out)
+      | Tparam_term (x,t) -> withkind Kind_star <| Typ_fun (Some x,t,out,true)))
 
 let close_typ = close_with_arrow
       
@@ -485,30 +500,30 @@ let alpha_fresh_labels r t : typ = freshen_bvars_typ (Some r) t []
 
 let whnf t =
   let rec aux ctr t =
-    let t' = match compress_typ t with
+    let t' = match (compress_typ t).t with
       | Typ_dep(t1, e, imp) ->
         let t1,ctr = aux (ctr+1) t1 in
-        (match t1 with
+        (match t1.t with
           | Typ_lam(x, t1_a, t1_r) ->
             let t1_r' = subst_typ [Inr(x,e)] t1_r in
             aux (ctr+1) t1_r'
-          | _ -> Typ_dep(t1, e, imp), ctr)
+          | _ -> withkind t.k <| Typ_dep(t1, e, imp), ctr)
       | Typ_app(t1, t2, imp) ->
         let t1,ctr = aux (ctr+1) t1 in
         let t2,ctr = aux (ctr+1) t2 in
-        (match t1 with
+        (match t1.t with
           | Typ_tlam(a, t1_a, t1_r) ->
             let t1_r' = subst_typ [Inl(a,t2)] t1_r in
             aux (ctr+1) t1_r'
-          | _ -> Typ_app(t1, t2, imp), ctr)
-      | t -> t,ctr in
+          | _ -> withkind t.k <| Typ_app(t1, t2, imp), ctr)
+      | t' -> withkind t.k t', ctr in
     t' in
   fst (aux 0 t)
 
 (********************************************************************************)
 (*********************** Various tests on constants  ****************************)
 (********************************************************************************)
-let is_tuple_constructor (t:typ) = match t with 
+let is_tuple_constructor (t:typ) = match t.t with 
   | Typ_const l -> Util.starts_with l.v.str "Prims.Tuple"
   | _ -> false
 
@@ -574,7 +589,7 @@ let mkRefinedUnit formula =
 
 let findValDecl (vds:list<sigelt>) bvd : option<sigelt> =
   vds |> Util.find_opt (function
-                         | Sig_val_decl(lid, t, _, _) -> lid.ident.idText = bvd.ppname.idText
+                         | Sig_val_decl(lid, t, _, _, _) -> lid.ident.idText = bvd.ppname.idText
                          | _ -> false)
       
 let rec typs_of_letbinding x = match x with
@@ -584,12 +599,12 @@ let rec typs_of_letbinding x = match x with
 let mk_conj phi1 phi2 = match phi1 with
   | None -> Some phi2
   | Some phi1 ->
-    let app1 = Typ_app(ftv Const.and_lid, phi1, false) in
-    let and_t = Typ_app(app1, phi2, false) in
+    let app1 = withkind kun <| Typ_app(ftv Const.and_lid, phi1, false) in
+    let and_t = withkind kun <| Typ_app(app1, phi2, false) in
     Some and_t
 
 let normalizeRefinement t =
-  let rec aux xopt t = match t with
+  let rec aux xopt t = match t.t with
     | Typ_refine(bvd, t', phi) ->
       let x, phi = match xopt with
         | None ->
@@ -611,29 +626,30 @@ let forall_kind =
               true)
 
 let mkForall (x:bvvdef) (a:typ) (body:typ) : typ =
-  let forall_typ = Typ_const(withsort Const.forall_lid forall_kind) in
-  Typ_app(Typ_app(forall_typ, a, true), Typ_lam(x, a, body), false)
+  let forall_typ = withkind kun <| Typ_const(withsort Const.forall_lid forall_kind) in
+  withkind kun <| Typ_app(withkind kun <| Typ_app(forall_typ, a, true), withkind kun <| Typ_lam(x, a, body), false)
 
-let unForall t = match t.v with
-  | Typ_app(Typ_app(Typ_const(lid), _, _), 
-            Typ_lam(x, t, body), _) when is_forall lid.v ->
+let unForall t = match t.t with
+  | Typ_app({t=Typ_app({t=Typ_const(lid)}, _, _)}, 
+            {t=Typ_lam(x, t, body)}, _) when is_forall lid.v ->
     Some (x, t, body)
   | _ -> None
 
 let collect_formals t = 
   let rec aux out t =
-    match whnf t with
+    let t = whnf t in
+    match t.t with
       | Typ_fun(xopt, t1, t2, _) -> aux (Inr(xopt, t1)::out) t2
       | Typ_univ(a, k, t2) -> aux (Inl(a, k)::out) t2
       | Typ_meta(Meta_pos(t, _)) -> failwith "Unexpected position tagged type"
-      | t -> List.rev out, t 
+      | _ -> List.rev out, t 
   in aux [] t
   
 let collect_u_quants t =
   let rec aux out t =
     match flatten_typ_apps (whnf t) with
-      | Typ_fun(Some x, t1, t2, _), _ -> aux ((x, t1)::out) t2
-      | Typ_const tc, [Inl t1; Inl (Typ_lam(x, _, t2))]
+      | {t=Typ_fun(Some x, t1, t2, _)}, _ -> aux ((x, t1)::out) t2
+      | {t=Typ_const tc}, [Inl t1; Inl ({t=Typ_lam(x, _, t2)})]
         when is_forall tc.v ->
         aux ((x, t1)::out) t2
       | _ -> List.rev out, t
@@ -642,21 +658,21 @@ let collect_u_quants t =
 let collect_forall_xt t =
   let rec aux out t =
     match flatten_typ_apps (whnf t) with
-      | Typ_fun(Some x, t1, t2, _), _ -> aux (Inr(x, t1)::out) t2
-      | Typ_const tc, [Inl t1; Inl (Typ_lam(x, _, t2))]
+      | {t=Typ_fun(Some x, t1, t2, _)}, _ -> aux (Inr(x, t1)::out) t2
+      | {t=Typ_const tc}, [Inl t1; Inl ({t=Typ_lam(x, _, t2)})]
         when is_forall tc.v ->
         aux (Inr(x, t1)::out) t2
-      | Typ_univ(a, k, t), _ ->  aux (Inl(a,k)::out) t
+      | {t=Typ_univ(a, k, t)}, _ ->  aux (Inl(a,k)::out) t
       | _ -> List.rev out, t
   in aux [] t
 
 let collect_exists_xt t =
   let rec aux out t =
       match flatten_typ_apps (whnf t) with
-        | Typ_const tc, [Inl t1; Inl (Typ_lam(x, _, t2))]
+        | {t=Typ_const tc}, [Inl t1; Inl ({t=Typ_lam(x, _, t2)})]
           when lid_equals tc.v Const.exists_lid ->
           aux (Inr(x, t1)::out) t2
-        | Typ_const tc, [Inl (Typ_tlam(a, k, t2))]
+        | {t=Typ_const tc}, [Inl ({t=Typ_tlam(a, k, t2)})]
           when (lid_equals tc.v Const.exTyp_lid) ->
           aux (Inl(a,k)::out) t2
         | _ -> List.rev out, t
@@ -665,45 +681,11 @@ let collect_exists_xt t =
 let collect_e_quants t =
   let rec aux out t =
       match flatten_typ_apps (whnf t) with
-        | Typ_const tc, [Inl t1; Inl (Typ_lam(x, _, t2))]
+        | {t=Typ_const tc}, [Inl t1; Inl ({t=Typ_lam(x, _, t2)})]
           when lid_equals tc.v Const.exists_lid ->
           aux ((x, t1)::out) t2
         | _ -> List.rev out, t
   in aux [] t
-
-//let check_bvar_identity t : bool =
-//  let check_btv flag benv btv =
-//    let f = function 
-//      | Inr _ -> false 
-//      | Inl btv' -> btv'.realname.idText = btv.realname.idText in
-//      match Util.find_opt f benv with
-//        | Some(Inl btv') ->
-//            if not (Util.physical_eq btv.instantiation btv'.instantiation)
-//            then (Util.print_string (Util.format1 "Btvar identity is broken for %s\n" btv.ppname.idText); false)
-//            else flag
-//        | _ -> Util.print_string (Util.format1 "Btvar is free %s\n" btv.ppname.idText); flag in
-//  let check_bvv flag benv btv =
-//    let f = function 
-//      | Inl _ -> false 
-//      | Inr btv' -> btv'.realname.idText = btv.realname.idText in
-//      match Util.find_opt f benv with
-//        | Some(Inr btv') ->
-//            if not (Util.physical_eq btv.instantiation btv'.instantiation)
-//            then (Util.print_string <| Util.format1 "Bvar identity is broken for %s\n" btv.ppname.idText; false)
-//            else flag
-//        | _ -> Util.print_string <| Util.format1 "Bvar is free %s\n" btv.ppname.idText; flag in
-//  let fold_t flag benv t = match t with
-//    | Typ_btvar bv -> check_btv flag benv bv.v, t
-//    | _ -> flag, t in
-//  let fold_e flag benv e = match e with
-//    | Exp_bvar bv -> check_bvv flag benv bv.v, e
-//    | _ -> flag, e in
-//  let ext benv = function
-//    | Inl btv ->
-//        (Inl btv.v)::benv, Inl btv.v
-//    | Inr bxv ->
-//        (Inr bxv.v)::benv, Inr bxv.v in
-//    fst (Visit.visit_typ fold_kind_noop fold_t fold_e (fun _ e -> e) ext true [] t)
 
 let rec check_pat_vars r = function 
   | Pat_cons(_, ps) -> 

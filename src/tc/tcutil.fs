@@ -26,13 +26,13 @@ open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Util
 open Microsoft.FStar.Tc.Env
             
-let t_unit = Typ_const (Util.withsort Const.unit_lid Kind_star)
-let t_bool = Typ_const (Util.withsort Const.bool_lid Kind_star)
-let t_int = Typ_const (Util.withsort Const.int_lid Kind_star)
-let t_int64 = Typ_const (Util.withsort Const.int64_lid Kind_star)
-let t_string = Typ_const (Util.withsort Const.string_lid Kind_star)
-let t_float = Typ_const (Util.withsort Const.float_lid Kind_star)
-let t_char = Typ_const(Util.withsort Const.char_lid Kind_star)
+let t_unit = withkind Kind_star <| Typ_const (Util.withsort Const.unit_lid Kind_star)
+let t_bool = withkind Kind_star <| Typ_const (Util.withsort Const.bool_lid Kind_star)
+let t_int = withkind Kind_star <| Typ_const (Util.withsort Const.int_lid Kind_star)
+let t_int64 = withkind Kind_star <| Typ_const (Util.withsort Const.int64_lid Kind_star)
+let t_string = withkind Kind_star <| Typ_const (Util.withsort Const.string_lid Kind_star)
+let t_float = withkind Kind_star <| Typ_const (Util.withsort Const.float_lid Kind_star)
+let t_char = withkind Kind_star <| Typ_const(Util.withsort Const.char_lid Kind_star)
 
 let typing_const env (s:sconst) = match s with 
   | Const_unit -> t_unit
@@ -68,12 +68,25 @@ let new_kvar env =
   Kind_uvar (Unionfind.fresh (Uvar wf))
           
 let new_tvar env k =
-  let wf t k =
+  let rec pre_kind_compat k1 k2 = match compress_kind k1, compress_kind k2 with 
+    | _, Kind_uvar uv 
+    | Kind_uvar uv, _ -> true
+    | Kind_star, Kind_star -> true
+    | Kind_tcon(_, k1, k2, _), Kind_tcon(_, k1', k2', _) -> pre_kind_compat k1 k1' && pre_kind_compat k2 k2'
+    | Kind_dcon(_, _, k1, _), Kind_dcon(_, _, k1', _) -> pre_kind_compat k1 k1'
+    | k1, k2 -> //Util.print_string (Util.format2 "Pre-kind-compat failed on %s and %s\n" (Print.kind_to_string k1) (Print.kind_to_string k2)); 
+    false in
+  let wf t tk =
     let tvs, xvs = Util.freevars_typ t in 
     let tvs', xvs' = Env.idents env in 
     let eq bv bvd = Util.bvd_eq bv.v bvd in
-    Util.forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
-  Typ_uvar (Unionfind.fresh (Uvar wf), k)
+    let freevars_in_env = Util.forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
+    let err () = () in
+//      printfn "Failed: Trying to unify uvar of kind %s with type %s of kind %s\n" (Print.kind_to_string k) (Print.typ_to_string t) (Print.kind_to_string tk);
+//      printfn "freevars = %b; %A; %A\n" freevars_in_env tvs xvs in
+    let result = freevars_in_env && pre_kind_compat k tk in
+    if result then result else (err(); result) in
+  withkind k <| Typ_uvar (Unionfind.fresh (Uvar wf), k)
 
 let new_evar env t =
   let wf e t = 
@@ -92,9 +105,14 @@ let unchecked_unify uv t = Unionfind.change uv (Fixed t) (* used to be an alpha-
    Strongly reducing variants of the Krivine abstract machine
    Pierre Crégut
    Higher-Order Symb Comput (2007) 20: 209–230 *)
+type step = 
+  | Alpha
+  | Delta
+  | Beta
 type config<'a> = {code:'a;
                    environment:environment;
-                   stack:stack}
+                   stack:stack;
+                   steps:list<step>}
 and environment = list<env_entry>    
 and stack = list<stack_entry>
 and env_entry = 
@@ -103,8 +121,8 @@ and env_entry =
   | TDummy of btvdef
   | VDummy of bvvdef
 and stack_entry = either<tclos,vclos> * bool
-and tclos = (typ * environment)
-and vclos = (exp * environment)
+and tclos = (typ * environment * kind)
+and vclos = (exp * environment * kind)
 and memo<'a> = ref<option<'a>>
 
 let push se config = {config with stack=se::config.stack}
@@ -116,12 +134,12 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
   let rebuild config  = 
     let rec aux out stack : typ = match stack with
       | [] -> out
-      | (Inl (t,e), imp)::rest -> 
-        let c = sn tcenv ({code=t; environment=e; stack=[]}) in 
-        aux (Typ_app(out, c.code, imp)) rest 
-      | (Inr (v,e), imp)::rest -> 
-        let c = wne tcenv ({code=v; environment=e; stack=[]}) in 
-        aux (Typ_dep(out, c.code, imp)) rest in
+      | (Inl (t,e,k), imp)::rest -> 
+        let c = sn tcenv ({code=t; environment=e; stack=[]; steps=config.steps}) in 
+        aux (withkind k <| Typ_app(out, c.code, imp)) rest 
+      | (Inr (v,e,k), imp)::rest -> 
+        let c = wne tcenv ({code=v; environment=e; stack=[]; steps=config.steps}) in 
+        aux (withkind k <| Typ_dep(out, c.code, imp)) rest in
     {config with code=aux config.code config.stack; stack=[]} in
 
   let sn_prod xopt t1 t2 mk = 
@@ -131,28 +149,32 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
       | Some x -> {config with code=t2; environment=VDummy x::config.environment; stack=[]} in
     let c2 = sn tcenv c2 in 
     {config with code=mk c1.code c2.code} in
- 
-  match Util.compress_typ config.code with 
+
+  let wk = withkind config.code.k in
+  let config = {config with code=Util.compress_typ config.code} in
+  match config.code.t with 
     | Typ_uvar(uv, k) ->
       rebuild config 
 
     | Typ_const fv ->
-      begin match Tc.Env.lookup_typ_abbrev tcenv fv.v with
-        | None -> rebuild config 
-        | Some t -> (* delta(); alpha ();  *)
-          sn tcenv ({config with code=Util.alpha_convert t})
-      end  
+      if config.steps |> List.contains Delta
+      then match Tc.Env.lookup_typ_abbrev tcenv fv.v with
+          | None -> rebuild config 
+          | Some t -> (* delta(); alpha ();  *)
+            let t = if config.steps |> List.contains Alpha then Util.alpha_convert t else t in
+            sn tcenv ({config with code=t})
+      else rebuild config
         
     | Typ_btvar btv -> 
       begin match config.environment |> Util.find_opt (function | TDummy a | T (a, _, _) -> bvd_eq btv.v a | _ -> false) with 
         | None  (* possible for an open term *)
         | Some (TDummy _) -> rebuild config 
-        | Some (T(_, (t,e), m)) -> 
+        | Some (T(_, (t,e,_), m)) -> 
           begin match !m with 
             | Some t -> (* nlazy();  *)
               sn tcenv ({config with code=t; environment=e}) 
             | None -> 
-              let config' = {code=t; environment=e; stack=[]} in
+              let config' = {code=t; environment=e; stack=[]; steps=config.steps} in
               let c = sn tcenv config' in
               m := Some c.code;
               sn tcenv ({c with stack=config.stack})
@@ -161,12 +183,12 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
       end
 
     | Typ_app(t1, t2, imp) -> 
-      let se = Inl (t2, config.environment), imp in
+      let se = Inl (t2, config.environment, config.code.k), imp in
       let config = push se ({config with code=t1}) in 
       sn tcenv config 
         
     | Typ_dep(t, v, imp) -> 
-      let se = Inr (v, config.environment), imp in
+      let se = Inr (v, config.environment, config.code.k), imp in
       let config = push se ({config with code=t}) in 
       sn tcenv config 
 
@@ -177,7 +199,7 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
           let c2 = sn tcenv ({config with 
             code=t2;
             environment=VDummy x::config.environment}) in
-          {config with code=Typ_lam(x, c1.code, c2.code)} 
+          {config with code=wk <| Typ_lam(x, c1.code, c2.code)} 
             
         | Some (Inr vclos, _), config -> (* beta(); *)
           sn tcenv ({config with 
@@ -189,13 +211,13 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
         
         
     | Typ_tlam(a, k, t) -> 
-      let ck = snk tcenv ({code=k; environment=config.environment; stack=[]}) in
+      let ck = snk tcenv ({code=k; environment=config.environment; stack=[]; steps=config.steps}) in
       begin match pop config with 
         | None, config  -> (* stack is empty; reduce under lambda and be done *)
           let c = sn tcenv ({config with 
             code=t;
             environment=TDummy a::config.environment}) in 
-          {config with code=Typ_tlam(a, ck.code, c.code)}
+          {config with code=wk <| Typ_tlam(a, ck.code, c.code)}
             
         | Some (Inl tclos, _), config ->  (* beta();  type-level beta redex *)
           sn tcenv ({config with 
@@ -208,34 +230,31 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
     | Typ_ascribed(t, _) -> 
       sn tcenv ({config with code=t})
 
-    | Typ_meta(Meta_pos(t, p)) -> 
-      let c = sn tcenv ({config with code=t}) in
-      {c with code=Typ_meta(Meta_pos(c.code, p))}
-
     (* In all remaining cases, the stack should be empty *)
     | Typ_fun(xopt, t1, t2, imp) -> 
-      sn_prod xopt t1 t2 (fun t1 t2 -> Typ_fun(xopt, t1, t2, imp)) 
+      sn_prod xopt t1 t2 (fun t1 t2 -> wk <| Typ_fun(xopt, t1, t2, imp)) 
         
     | Typ_refine(x, t1, t2) -> 
-      sn_prod (Some x) t1 t2 (fun t1 t2 -> Typ_refine(x, t1, t2)) 
+      sn_prod (Some x) t1 t2 (fun t1 t2 -> wk <| Typ_refine(x, t1, t2)) 
   
     | Typ_univ(a, k, t) -> 
-      let ck = snk tcenv ({code=k; environment=config.environment; stack=[]}) in 
+      let ck = snk tcenv ({code=k; environment=config.environment; stack=[]; steps=config.steps}) in 
       let ct = sn tcenv ({config with 
         code=t; 
         stack=[];
         environment=TDummy a::config.environment}) in 
-      {config with code=Typ_univ(a, ck.code, ct.code)}
+      {config with code=wk <| Typ_univ(a, ck.code, ct.code)}
 
     | Typ_meta(Meta_pattern(t, ps)) -> (* no reduction in patterns *)
       let c = sn tcenv ({config with code=t}) in
-      {c with code=Typ_meta(Meta_pattern(c.code, ps))}
+      {c with code=wk <| Typ_meta(Meta_pattern(c.code, ps))}
     
     | Typ_meta(Meta_cases tl) -> 
       let cases = snl tcenv (tl |> List.map (fun t -> {config with code=t; stack=[]})) in
       let t = Typ_meta(Meta_cases (cases |> List.map (fun c -> c.code))) in
-      {config with code=t}
+      {config with code=wk <| t}
         
+    | Typ_meta(Meta_pos _) 
     | Typ_meta(Meta_tid _)
     | Typ_unknown -> failwith "impossible"
             
@@ -256,7 +275,7 @@ and snk tcenv (config:config<kind>) : config<kind> =
       {config with code=Kind_tcon(aopt, c1.code, c2.code, imp)}
         
     | Kind_dcon(xopt, t1, k2, imp) -> 
-      let c1 = sn tcenv ({code=t1; environment=config.environment; stack=[]}) in
+      let c1 = sn tcenv ({code=t1; environment=config.environment; stack=[]; steps=config.steps}) in
       let c2 = snk tcenv ({config with 
         code=k2;
         environment=(match xopt with 
@@ -269,7 +288,8 @@ and snk tcenv (config:config<kind>) : config<kind> =
 
 (* The type checker never attempts to reduce expressions itself; but still need to do substitutions *)
 and wne tcenv (config:config<exp>) : config<exp> = 
-  match compress_exp config.code with 
+  let e = compress_exp config.code in
+  match e with 
     | Exp_fvar _ 
     | Exp_constant _
     | Exp_uvar _  -> config
@@ -278,12 +298,12 @@ and wne tcenv (config:config<exp>) : config<exp> =
       begin match config.environment |> Util.find_opt (function VDummy y | V (y, _, _) -> bvd_eq x.v y | _ -> false) with 
         | None 
         | Some (VDummy _) -> config
-        | Some (V(x, vclos, m)) -> 
+        | Some (V(x, (vc, e, _), m)) -> 
           (match !m with 
             | Some v -> (* nlazy(); *)
-              wne tcenv ({config with code=v; environment=snd vclos}) 
+              wne tcenv ({config with code=v; environment=e}) 
             | None -> 
-              let config = {config with code=fst vclos; environment=snd vclos} in 
+              let config = {config with code=vc; environment=e} in 
               let c = wne tcenv config in 
               m:=Some c.code; 
               c)
@@ -301,38 +321,65 @@ and wne tcenv (config:config<exp>) : config<exp> =
 
     | Exp_tapp(e, t) -> 
       let c1 = wne tcenv ({config with code=e}) in
-      let c2 = sn tcenv ({code=t; environment=config.environment; stack=[]}) in 
+      let c2 = sn tcenv ({code=t; environment=config.environment; stack=[]; steps=config.steps}) in 
       {config with code=Exp_tapp(c1.code, c2.code)}
        
-    | Exp_abs(x, t, e) -> failwith "nyi"
-    | Exp_tabs(a, k, e) -> failwith "nyi"
+    | Exp_abs _
+    | Exp_tabs _
     | Exp_match _
-    | Exp_let  _
-    | Exp_meta _ -> failwith "nyi"
+    | Exp_let  _ -> config // failwith (Util.format1 "NYI: %s" (Print.exp_to_string e))
+    | Exp_meta _ 
     | Exp_ascribed _ -> failwith "impossible"
 
       
 let normalize tcenv t = 
-  let c = sn tcenv ({code=t; environment=[]; stack=[]}) in
+  let c = sn tcenv ({code=t; environment=[]; stack=[]; steps=[Delta;Alpha;Beta]}) in
   c.code
-(**********************************************************************************************************************)
-let unify uvars_in_b (uv,a) b = 
-  let occurs uv t = Util.for_some (Unionfind.equivalent uv) (uvars_in_b b) in
-    match Unionfind.find uv with 
-      | Uvar wf -> 
-          if wf b a && not (occurs uv b)
-          then (unchecked_unify uv b; true)
-          else false
-      | _ -> failwith "impossible"
-let unify_typ env uv t  = 
-  let uvars_in_t t = (uvars_in_typ t).uvars_t |> List.map fst in
-  if unify uvars_in_t uv t
-  then true
-  else let t = normalize env t in
-       unify uvars_in_t uv t
-let unify_kind = unify (fun u -> (uvars_in_kind u).uvars_k)
-let unify_exp = unify (fun t -> (uvars_in_exp t).uvars_e |> List.map fst)
 
+let norm_kind steps tcenv k = 
+  let c = snk tcenv ({code=k; environment=[]; stack=[]; steps=steps}) in
+  c.code
+
+let norm_typ steps tcenv t = 
+  let c = sn tcenv ({code=t; environment=[]; stack=[]; steps=steps}) in
+  c.code
+
+(**********************************************************************************************************************)
+let unify_typ env (uv,k) t  = match Unionfind.find uv with 
+  | Fixed _ -> failwith "impossible"
+  | Uvar wf ->
+    let rec aux retry t =
+      let tk = t.k in 
+      let uvars_in_t = (uvars_in_typ t).uvars_t |> List.map fst in 
+      let occurs () = Util.for_some (Unionfind.equivalent uv) uvars_in_t in
+      let doit t = match (compress_typ t).t with 
+        | Typ_uvar (uv', _) -> Unionfind.union uv uv'; true
+        | t' -> 
+          if wf t tk && not (occurs ()) 
+          then (unchecked_unify uv t; true)
+          else false in
+      doit t || (retry && aux false (normalize env t)) in
+   aux true t
+let unify_kind (uv, ()) k = match Unionfind.find uv with 
+  | Fixed _ -> failwith "impossible"
+  | Uvar wf -> 
+    match compress_kind k with 
+      | Kind_uvar uv' -> Unionfind.union uv uv'; true
+      | k -> 
+        let occurs = Util.for_some (Unionfind.equivalent uv) ((uvars_in_kind k).uvars_k) in
+        if not occurs && wf k ()
+        then (unchecked_unify uv k; true)
+        else false
+let unify_exp (uv, t) e = match Unionfind.find uv with 
+  | Fixed _ -> failwith "impossible"
+  | Uvar wf -> 
+    match compress_exp e with 
+      | Exp_uvar(uv', _) -> Unionfind.union uv uv'; true
+      | e -> 
+        let occurs = Util.for_some (Unionfind.equivalent uv) ((uvars_in_exp e).uvars_e |> List.map fst) in
+        if not occurs && wf e t 
+        then (unchecked_unify uv e; true)
+        else false
 (**********************************************************************************************************************)
 type rel = 
   | EQ 
@@ -368,15 +415,7 @@ let rec krel rel env k k' : bool =
 and trel rel env t t' = 
   let rec aux norm t t' =
     let t, t' = compress_typ t, compress_typ t' in
-      match t, t' with 
-       | Typ_ascribed(t, _), _
-       | Typ_meta (Meta_pattern(t, _)), _
-       | Typ_meta (Meta_pos(t, _)), _ -> aux norm t t' 
-
-       | _, Typ_ascribed(t', _)
-       | _, Typ_meta (Meta_pattern(t', _))
-       | _, Typ_meta (Meta_pos(t', _)) -> aux norm t t'
-
+      match t.t, t'.t with 
        | Typ_refine(_, t, _), _ when (rel=SUB) -> aux norm t t'
        | _, Typ_refine(_, t', _) when (rel=SUB) -> aux norm t t'
 
@@ -405,9 +444,8 @@ and trel rel env t t' =
        | Typ_uvar(uv, _), Typ_uvar(uv', _) when Unionfind.equivalent uv uv' -> 
          true
        
-       | Typ_uvar(uv, k), t1 
-       | t1, Typ_uvar(uv,k) -> 
-         unify_typ env (uv, k) t1 
+       | Typ_uvar(uv, k), _ -> unify_typ env (uv, k) t'
+       | _, Typ_uvar(uv,k) -> unify_typ env (uv, k) t
 
        | Typ_app _, _
        | Typ_dep _, _
@@ -505,18 +543,23 @@ and const_eq s1 s2 = match s1, s2 with
   | _ -> s1=s2 
 
 let keq env t k1 k2 = 
-  if krel EQ env k1 k2
+  if krel EQ env (norm_kind [Beta] env k1) (norm_kind [Beta] env k2)
   then ()
   else match t with 
     | None -> raise (Error(Tc.Errors.incompatible_kinds k2 k1, Tc.Env.get_range env))
     | Some t -> raise (Error(Tc.Errors.expected_typ_of_kind k2 t k1, Tc.Env.get_range env))
 
 let teq env t1 t2 = 
-  if trel EQ env t1 t2
+  if trel EQ env (norm_typ [Beta] env t1) (norm_typ [Beta] env t2)
   then ()
   else raise (Error(Tc.Errors.basic_type_error t2 t1, Tc.Env.get_range env))
 
-let subtype env t1 t2 = trel SUB env t1 t2
+let subtype env t1 t2 = 
+  let t1' = (norm_typ [Beta] env t1) in
+  let t2' =  (norm_typ [Beta] env t2) in
+//  printfn "Normalized %s to %s\n" (Print.typ_to_string t2) (Print.typ_to_string t2');
+ // printfn "Subtyping %s and %s\n" (Print.typ_to_string t1') (Print.typ_to_string t2');
+  trel SUB env t1' t2'
 
 let check_and_ascribe (env:env) (e:exp) (t1:typ) (t2:typ) : exp =
   if not (subtype env t1 t2)
@@ -525,7 +568,6 @@ let check_and_ascribe (env:env) (e:exp) (t1:typ) (t2:typ) : exp =
         else 
           begin
             Util.print_string "subtyping failed\n";
-            let _ = subtype env t1 t2 in
             raise (Error(Tc.Errors.expected_expression_of_type t2 e t1, Tc.Env.get_range env))
           end)
   else if trel EQ env t1 t2
@@ -535,7 +577,7 @@ let check_and_ascribe (env:env) (e:exp) (t1:typ) (t2:typ) : exp =
 let maybe_instantiate env e t = 
   let rec aux norm t e = 
     let t = compress_typ t in 
-    match t with 
+    match t.t with 
       | Typ_univ(a, k, t) when env.instantiate_targs -> 
         let arg = new_tvar env k in
         let t' = Util.subst_typ [Inl(a, arg)] t in
@@ -550,10 +592,10 @@ let maybe_instantiate env e t =
 
       | _ when not norm -> 
         let t' = normalize env t in 
-        begin match t' with 
+        begin match t'.t with 
           | Typ_fun _
           | Typ_univ _ -> aux true t' e
-          | _ -> (e, t)
+          | _ -> (e, t')
         end
 
       | _ -> (e, t) in
@@ -562,11 +604,11 @@ let maybe_instantiate env e t =
 let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:bool) : (typ * option<exp>) = 
   let rec aux norm t f =
     let t = compress_typ t in 
-    match t with 
+    match t.t with 
       | Typ_uvar _ when (not imp_arg_follows) -> 
         let arg = new_tvar env Kind_star in
         let res = new_tvar env Kind_star in 
-        let tf = Typ_fun(None, arg, res, false) in
+        let tf = withkind Kind_star <| Typ_fun(None, arg, res, false) in
         teq env t tf;
         (tf, f)
 
@@ -602,13 +644,16 @@ let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:boo
         aux true t f 
 
       | _ -> 
+        let _ = match f with 
+          | Some e -> Util.print_string (Util.format1 "destruct function type failed on expression %s\n" (Print.exp_to_string e))
+          | _ -> Util.print_string "Destruct function typ failed, no expression available" in
         raise (Error (Tc.Errors.expected_function_typ t, Tc.Env.get_range env)) in
     aux false t f
 
 let destruct_poly_typ (env:env) (t:typ) (f:exp) targ : (typ*exp) = 
   let rec aux norm t f =
     let t = compress_typ t in 
-    match t with 
+    match t.t with 
       | Typ_univ _ -> 
         (t, f)
 
@@ -639,12 +684,14 @@ let destruct_tcon_kind env k tt imp_arg_follows =
      | Kind_tcon(_, _, _, true) when imp_arg_follows -> k, t
      | Kind_tcon(Some a, k1, k2, true) -> 
        let targ = new_tvar env k1 in 
-       let t' = Typ_app(t, targ, true) in
-       aux t' (Util.subst_kind [Inl(a, targ)] k2)
+       let k2 = Util.subst_kind [Inl(a, targ)] k2 in
+       let t' = withkind k2 <| Typ_app(t, targ, true) in
+       aux t' k2
      | Kind_dcon(Some x, t1, k1, true) -> 
        let earg = new_evar env t1 in 
-       let t' = Typ_dep(t, earg, true) in 
-       aux t' (Util.subst_kind [Inr(x, earg)] k1)
+       let k1 = Util.subst_kind [Inr(x, earg)] k1 in
+       let t' = withkind k1 <| Typ_dep(t, earg, true) in 
+       aux t' k1
      | _ -> raise (Error(Tc.Errors.expected_tcon_kind tt k, Tc.Env.get_range env)) in
   aux tt k
 
@@ -661,12 +708,13 @@ let destruct_dcon_kind env k tt imp_arg_follows =
       let kres = match aopt with 
         | None -> k'
         | Some a -> Util.subst_kind [Inl(a, arg)] k' in
-      aux (Typ_app(t, arg, true)) kres
+      aux (withkind kres <| Typ_app(t, arg, true)) kres
     | Kind_dcon(_, _, _, b) when (b=imp_arg_follows) -> (k, t)
     | Kind_dcon(Some x, t1, k1, true) -> 
       let earg = new_evar env t1 in 
-      let t' = Typ_dep(t, earg, true) in 
-      aux t' (Util.subst_kind [Inr(x, earg)] k1)
+      let k1 = Util.subst_kind [Inr(x, earg)] k1 in
+      let t' = withkind k1 <| Typ_dep(t, earg, true) in 
+      aux t' k1
     | _ -> raise (Error(Tc.Errors.expected_dcon_kind tt k, Tc.Env.get_range env)) in
   aux tt k
 
@@ -691,15 +739,16 @@ let pat_as_exps env p : list<exp> =
       pats |> List.map (fun p -> single <| aux p)
     | Pat_withinfo(p, r) -> 
       aux p |> List.map (function 
-        | Inr (e) -> Inr (Exp_meta(Meta_info(e, Typ_unknown, r)))
-        | Inl t -> Inl (Typ_meta(Meta_pos(t, r)))) in
+        | Inr (e) -> Inr (Exp_meta(Meta_info(e, tun, r)))
+        | Inl t -> Inl (withkind kun <| Typ_meta(Meta_pos(t, r)))) in
   List.map (function 
     | Inl _ -> failwith "Impossible"
     | Inr (e) -> e) (aux p)    
 
-let generalize env uvars e t : (exp * typ) = 
+let generalize env e t : (exp * typ) = 
     if not (is_value e) then e, t 
     else
+      let uvars = Env.uvars_in_env env in
       let uvars_t = (Util.uvars_in_typ t).uvars_t in
       let generalizable = uvars_t |> List.filter (fun (uv,_) -> not (uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
       let tvars = generalizable |> List.map (fun (u,k) -> 
@@ -708,7 +757,7 @@ let generalize env uvars e t : (exp * typ) =
         unchecked_unify u t;
         (a,k)) in
       tvars |> List.fold_left (fun (e,t) (a,k) ->
-        let t' = Typ_univ(a, k, t) in
+        let t' = withkind Kind_star <| Typ_univ(a, k, t) in
         let e' = Exp_tabs(a, k, e) in
         (e', t')) (e,t) 
 
@@ -716,22 +765,47 @@ let mk_basic_tuple_type env n =
   let r = Tc.Env.get_range env in
   let l = Util.mk_tuple_lid n in
   let k = Tc.Env.lookup_typ_lid env l in
-  let t = Typ_const(withinfo l k r) in
-  let rec close t k = match k with 
+  let t = withkind k <| Typ_const(withinfo l k r) in
+  let rec close t ktop = match ktop with 
     | Kind_dcon(Some x, tx, k, _) -> 
-      Typ_lam(x, tx, close t k)
+      let cod = close t k in
+      withkind ktop <| Typ_lam(x, tx, close t k)
     | Kind_dcon(None, tx, k, _) -> 
-      Typ_lam(Util.new_bvd (Some r), tx, close t k)
+      withkind ktop <| Typ_lam(Util.new_bvd (Some r), tx, close t k)
     | Kind_tcon(Some a, k1, k, _) -> 
-      Typ_tlam(a, k1, close t k)
+      withkind ktop <| Typ_tlam(a, k1, close t k)
     | Kind_tcon(None, k1, k, _) -> 
-      Typ_tlam(Util.new_bvd (Some r), k1, close t k)
+      withkind ktop <| Typ_tlam(Util.new_bvd (Some r), k1, close t k)
     | _ -> t in 
-  let rec build t subst k = match k with 
+  let rec build t k = match k with 
     | Kind_tcon(Some a, ka, k, _) ->
       let u = new_tvar env Kind_star in 
-      let ka = Util.subst_kind subst ka in
       let arg = close u ka in
-      build (Typ_app(t, arg, false)) (Inl(a, arg)::subst) k
+      let kk = Util.subst_kind [Inl(a, arg)] k in
+      build (withkind kk <| Typ_app(t, arg, false))  kk
     | _ -> t in
-  build t [] k
+  build t k
+
+let extract_lb_annotation env t e = match t.t with 
+  | Typ_unknown -> 
+    let mk_kind env = function 
+      | Kind_unknown -> new_kvar env
+      | k -> k in
+    let mk_typ env t = match t.t with 
+      | Typ_unknown -> new_tvar env Kind_star
+      | _ -> t in
+    let rec aux env e = match e with 
+      | Exp_meta(Meta_info(e, _, _)) 
+      | Exp_meta(Meta_desugared(e, _)) -> aux env e 
+      | Exp_tabs(a, k, e) -> 
+        let k = mk_kind env k in
+        let env = Env.push_local_binding env (Binding_typ(a, k)) in
+        withkind Kind_star <| Typ_univ(a, k, aux env e)
+      | Exp_abs(x, t, e) -> 
+        let t = mk_typ env t in
+        let env = Env.push_local_binding env (Binding_var(x, t)) in
+        withkind Kind_star <| Typ_fun(Some x, t, aux env e, false)
+      | Exp_ascribed(e, t) -> t
+      | _ -> new_tvar env Kind_star in 
+    aux env e       
+  | _ -> t

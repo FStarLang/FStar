@@ -55,9 +55,9 @@ type sconst =
   | Const_char        of char
   | Const_float       of double
   | Const_bytearray   of array<byte> * Range.range 
-  | Const_string      of array<byte> * Range.range (* unicode encoded, F#/Caml independent *)
+  | Const_string      of array<byte> * Range.range      (* unicode encoded, F#/Caml independent *)
 
-type typ =  
+type typ' =  
   | Typ_btvar    of bvar<typ,kind>
   | Typ_const    of var<kind> 
   | Typ_fun      of option<bvvdef> * typ * typ * bool   (* x:t -> t'  or  t -> t', bool is a flag marking implicit arguments *)
@@ -71,9 +71,10 @@ type typ =
   | Typ_meta     of meta_t                              (* Not really in the type language; a way to stash convenient metadata with types *)
   | Typ_uvar     of uvar_t * kind                       (* not present after 1st round tc *)
   | Typ_unknown                                         (* not present after 1st round tc *)
+and typ = {t:typ'; k:kind}
 and uvar_t = Unionfind.uvar<uvar_basis<typ,kind>>
 and meta_t = 
-  | Meta_pos of typ * Range.range                       (* user wrote down this type 1 at source position 2 *)
+  | Meta_pos of typ * Range.range                (* user wrote down this type 1 at source position 2 *)
   | Meta_pattern of typ * list<either<typ,exp>>
   | Meta_cases of list<typ>
   | Meta_tid of int
@@ -154,15 +155,15 @@ type atag =
   | Lemma
 
 type sigelt =
-  | Sig_tycon          of lident * list<tparam> * kind * list<lident> * list<lident> * list<logic_tag> (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
-  | Sig_typ_abbrev     of lident * list<tparam> * kind * typ
-  | Sig_datacon        of lident * typ * lident (* second lident is the name of the type this constructs *)
-  | Sig_val_decl       of lident * typ * option<atag> * option<logic_tag>
-  | Sig_assume         of lident * formula * aqual * atag
-  | Sig_logic_function of lident * typ * list<logic_tag>
-  | Sig_let            of letbindings
-  | Sig_main           of exp
-  | Sig_bundle         of list<sigelt>  (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
+  | Sig_tycon          of lident * list<tparam> * kind * list<lident> * list<lident> * list<logic_tag> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
+  | Sig_typ_abbrev     of lident * list<tparam> * kind * typ * Range.range 
+  | Sig_datacon        of lident * typ * lident * Range.range  (* second lident is the name of the type this constructs *)
+  | Sig_val_decl       of lident * typ * option<atag> * option<logic_tag> * Range.range 
+  | Sig_assume         of lident * formula * aqual * atag * Range.range 
+  | Sig_logic_function of lident * typ * list<logic_tag> * Range.range 
+  | Sig_let            of letbindings * Range.range 
+  | Sig_main           of exp * Range.range 
+  | Sig_bundle         of list<sigelt> * Range.range  (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
 type sigelts = list<sigelt>
 
 type modul = {
@@ -176,6 +177,9 @@ type modul = {
 (*********************************************************************************)
 type path = list<string>
 let dummyRange = 0L
+let withkind k t = {t=t; k=k}
+let kun = Kind_unknown
+let tun = withkind kun Typ_unknown
 let mk_ident (text,range) = {idText=text; idRange=range}
 let id_of_text str = mk_ident(str, dummyRange)
 let text_of_id (id:ident) = id.idText
@@ -201,3 +205,6 @@ let withsort v s = withinfo v s dummyRange
 let ewithpos v r = {v=v; sort=Typ_unknown; p=r}
 
 let range_of_lid (lid:LongIdent) = lid.ident.idRange
+
+
+

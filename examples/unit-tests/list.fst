@@ -76,7 +76,7 @@ assume val map2: ('a -> 'b -> 'c) -> list 'a -> list 'b -> list 'c
 assume val split: list ('a * 'b) -> list 'a * list 'b
 assume val unzip3: list ('a * 'b * 'c) -> list 'a * list 'b * list 'c
 assume val zip: list 'a -> list 'b -> list ('a * 'b)
-assume val zip3: (list 'a * list 'b * list 'c) -> list ('a * 'b * 'c)
+assume val zip3: list 'a -> list 'b -> list 'c -> list ('a * 'b * 'c)
 assume val map3: ('a -> 'b -> 'c -> 'd) -> list 'a -> list 'b -> list 'c -> list 'd
 assume val rev: list 'a -> list 'a
 assume val collect: ('a -> list 'b) -> list 'a -> list 'b
@@ -89,3 +89,4 @@ assume val choose: ('a -> option 'b) -> list 'a -> list 'b
 assume val flatten: list (list 'a) -> list 'a
 assume val filter: ('a -> bool) -> list 'a -> list 'a
 assume val partition: ('a -> bool) -> list 'a -> list 'a -> list 'a
+assume val contains: 'a -> list 'a -> bool

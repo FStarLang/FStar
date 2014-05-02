@@ -13,10 +13,15 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Record
+module Foo.Record
 
-type r = {a:int; b:int}
 let foo x y = if x <= y && y <= x then 0 else 1
+
+type r = {
+  a:int; 
+  b:int;
+}
+
 
 let matchr r = match r with 
   | ({a=_}) -> 1
@@ -37,3 +42,4 @@ let i p = match p with
 
 let rec even x = x=0 || not (odd (x - 1))
 and odd x = x=1 || not (even (x - 1))
+

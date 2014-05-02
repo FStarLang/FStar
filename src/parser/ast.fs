@@ -57,7 +57,7 @@ and binder' =
   | Annotated of ident * term 
   | TAnnotated of ident * term 
   | NoName of term
-and binder = {binder:binder'; range:range; level:level; implicit:bool}
+and binder = {binder:binder'; brange:range; blevel:level; implicit:bool}
 
 and pattern' = 
   | PatWild
@@ -71,7 +71,7 @@ and pattern' =
   | PatRecord   of list<(lid * pattern)>
   | PatAscribed of pattern * term 
   | PatOr       of list<pattern>
-and pattern = {pattern:pattern'; range:range}
+and pattern = {pattern:pattern'; prange:range}
 
 and branch = (pattern * option<term> * term)
 
@@ -84,7 +84,7 @@ type tycon =
   | TyconAbstract of ident * list<binder> * option<kind>
   | TyconAbbrev   of ident * list<binder> * option<kind> * term
   | TyconRecord   of ident * list<binder> * option<kind> * list<(ident * term)>
-  | TyconVariant  of ident * list<binder> * option<kind> * list<(ident * term * bool)> (* using 'of' notion *)
+  | TyconVariant  of ident * list<binder> * option<kind> * list<(ident * option<term> * bool)> (* using 'of' notion *)
 
 type tyvalQual = 
   | NoQual
@@ -101,8 +101,8 @@ type decl' =
   | Assume of atag * ident * term
   | Val of tyvalQual * ident * term  (* bool is for logic val *)
   | ExternRef of ident * list<(string * string)>
-  | Exception of ident * term
-and decl = {decl:decl'; range:range}
+  | Exception of ident * option<term>
+and decl = {decl:decl'; drange:range}
 
 type pragma =
   | Monadic of lid * lid * lid
@@ -112,10 +112,10 @@ type modul =
 type file = list<pragma> * list<modul>
 
 (********************************************************************************)
-let mk_decl d r = {decl=d; range=r}
-let mk_binder b r l i = {binder=b; range=r; level=l; implicit=i}
+let mk_decl d r = {decl=d; drange=r}
+let mk_binder b r l i = {binder=b; brange=r; blevel=l; implicit=i}
 let mk_term t r l = {term=t; range=r; level=l}
-let mk_pattern p r = {pattern=p; range=r}
+let mk_pattern p r = {pattern=p; prange=r}
 let mk_function branches r1 r2 = 
   let x = Util.genident (Some r1) in
   mk_term (Abs([mk_pattern (PatVar x) r1],

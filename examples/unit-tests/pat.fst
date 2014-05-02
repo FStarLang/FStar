@@ -15,19 +15,27 @@
 *)
 
 module Patterns
+  
+let test (a,b)  = 
+  let _ = true, b in
+  Cons 0 a
 
-let is_some = function 
-  None -> false
-  | Some _ -> true 
+ (* ([],env) el  *)
 
-let get_some = function 
-  | None -> failwith "got None"
-  | Some x -> x
+assume val fold_left: ('a -> 'b -> 'a) -> 'a -> list 'b -> 'a
+let test2 env el =
+  fold_left (fun (out, env) wopt ->
+    let w, env = None, env in
+    (Cons w out), env) ([], env) el
 
-let bind_opt o f = match o with 
-  | None -> None
-  | Some x -> f x
 
-let map_opt o f = match o with 
-  | None -> None
-  | Some x -> Some <| f x
+let test3 map_exp env el =
+  fold_left (fun (out, env) (b,wopt,e) ->
+    let w, env = match wopt with
+      | None -> None, env
+      | Some w ->
+        let w, env = map_exp env b w in
+        Some w, env in
+    let e, env = map_exp env b e in
+    (w,e)::out, env) ([], env) el
+

@@ -15,5 +15,16 @@
 *)
 module LetRec
 
+let hello () =
+  let rec f (x:'a) (y:'b) : 'a = g 'a int x 0
+  and g (x:'a) (y:'b) : 'a = f 'a bool x true in
+  g () ()
+
 let rec f (x:'a) (y:'b) : 'a = g 'a int x 0
-and g (x:'a) (y:'b) : 'a = f 'a bool x true
+and g (x:'a) (y:'b) : 'a = f 'a bool x true 
+
+;;
+
+g () ()
+
+  

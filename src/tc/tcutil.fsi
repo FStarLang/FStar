@@ -24,6 +24,10 @@ open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Tc.Env
 
+type step = 
+  | Alpha
+  | Delta
+  | Beta
 val t_bool : typ
 val t_unit : typ
 val typing_const : env -> sconst -> typ
@@ -37,10 +41,12 @@ val teq : env -> typ -> typ -> unit
 val subtype: env -> typ -> typ -> bool
 val check_and_ascribe : env -> exp -> typ -> typ -> exp
 val pat_as_exps: env -> pat -> list<exp>
-val generalize: env -> Util.uvars -> exp -> typ -> (exp * typ)
+val generalize: env -> exp -> typ -> (exp * typ)
 val maybe_instantiate : env -> exp -> typ -> (exp * typ)
 val destruct_function_typ : env -> typ -> option<exp> -> bool -> (typ * option<exp>)
 val destruct_poly_typ: env -> typ -> exp -> typ -> (typ*exp) 
 val destruct_tcon_kind: env -> kind -> typ -> bool -> (kind*typ)
 val destruct_dcon_kind: env -> kind -> typ -> bool -> (kind*typ)
 val mk_basic_tuple_type: env -> int -> typ
+val extract_lb_annotation: env -> typ -> exp -> typ
+val norm_typ: list<step> -> env -> typ -> typ
