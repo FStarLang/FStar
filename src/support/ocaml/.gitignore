@@ -3,3 +3,10 @@
 /test.byte
 /setup.data
 /setup.log
+/setup.ml
+/Makefile
+/configure
+*.mllib
+*.mldylib
+*.clib
+
