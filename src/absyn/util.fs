@@ -300,7 +300,7 @@ let collect_uvars_t uvs t : uvars * typ = match t.t with
         (match List.tryFind (fun (uv', _) -> Unionfind.equivalent uv uv') uvs.uvars_t with 
           | Some _ -> uvs, t
           | None -> {uvs with uvars_t=(uv,k)::uvs.uvars_t}, t)
-      | _ -> uvs, t 
+    | _ -> uvs, t 
 let collect_uvars_e uvs e : uvars * exp = match e with 
     | Exp_uvar (uv, t) -> 
         (match List.tryFind (fun (uv', _) -> Unionfind.equivalent uv uv') uvs.uvars_e with 
@@ -410,9 +410,15 @@ and subst_xvar (s:subst_map) (e:exp) : exp =
       end
     | _ -> e
 
-let subst_kind s k = subst_kind' (mk_subst_map s) k 
-let subst_typ s t = subst_typ' (mk_subst_map s) t
-let subst_exp s e = subst_exp' (mk_subst_map s) e 
+let subst_kind s k = match s with 
+  | [] -> k
+  | _ -> subst_kind' (mk_subst_map s) k 
+let subst_typ s t = match s with 
+  | [] -> t
+  | _ -> subst_typ' (mk_subst_map s) t
+let subst_exp s e = match s with
+  | [] -> e
+  | _ -> subst_exp' (mk_subst_map s) e 
 
 let open_typ ty (te:either<typ,exp>) : typ =
   match (compress_typ ty).t, te with

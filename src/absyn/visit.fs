@@ -108,31 +108,20 @@ and visit_typ'
     (l: 'env -> exp -> exp) (* transforms labels *)
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
     (env:'env) (benv:'benv) (t:typ) (cont:('env * typ) -> 'res) : 'res =
-  let t_top = compress_typ t in
-  let t = t_top in
   let wk = withkind t.k in
   match t.t with
-    | Typ_uvar (_, k) ->
-      let env, t' = f env benv t in
-      (match t'.t with
-        | Typ_uvar(uv, k) ->
-          visit_kind' h f g l ext env benv k
-            (fun (env, k) ->
-              cont (env, withkind t.k <| Typ_uvar(uv, k)))
-        | _ ->
-          cont (env, t'))
-    | Typ_btvar btv -> 
-      (match !btv.v.instantiation with 
-        | None -> 
-          let env, t' = f env benv t in
-          cont (env, t')
-        | Some t -> 
-          visit_typ' h f g l ext env benv t cont)
-        
+    | Typ_uvar (uv, k) ->
+      (match Unionfind.find uv with 
+        | Fixed t -> visit_typ' h f g l ext env benv t cont
+        | _ -> cont (f env benv t))
+
+    | Typ_meta(Meta_pos(t, _)) 
+    | Typ_ascribed(t, _) -> visit_typ' h f g l ext env benv t cont
+
+    | Typ_btvar _ 
     | Typ_const _
-    | Typ_unknown ->
-      let env, t' = f env benv t in
-      cont (env, t')
+    | Typ_unknown -> cont (f env benv t)
+
     | _ ->
       match t.t with
         | Typ_fun (nopt, t1, t2, imp) ->
@@ -196,14 +185,7 @@ and visit_typ'
               visit_kind' h f g l ext env benv' k
                 (fun (env, k') ->
                   cont (env, wk <| Typ_tlam(bvd', k', t'))))
-            
-        | Typ_ascribed(t, k) ->
-          visit_typ' h f g l ext env benv t
-            (fun (env, t') ->
-              visit_kind' h f g l ext env benv k
-                (fun (env, k') ->
-                  cont (env, wk <| Typ_ascribed(t,k))))
-
+    
         | Typ_meta (Meta_cases tl) ->
           visit_typs' h f g l ext env benv tl
             (fun (env, tl') -> cont (env, wk <| Typ_meta(Meta_cases tl')))
@@ -236,16 +218,11 @@ and visit_exp'
   let extr b l = match ext b l with
     | (x, Inr y) -> (x,y) 
     | _ -> failwith "Unexpected result" in
-  let e = compress_exp_uvars e in 
     match e with
     | Exp_meta(Meta_datainst _) -> failwith "impossible"
     | Exp_meta(Meta_info(e, t, p)) -> 
       visit_exp' h f g l ext env benv e 
-        (fun (env, e') -> 
-//          visit_typ' h f g l ext env benv t
-//            (fun (env, t) -> 
-              cont (env, Exp_meta(Meta_info(e', t, p))))
-//              )
+        (fun (env, e') -> cont (env, Exp_meta(Meta_info(e', t, p))))
 
     | Exp_meta(Meta_desugared(e, tag)) -> 
       visit_exp' h f g l ext env benv e 
@@ -256,6 +233,12 @@ and visit_exp'
       (match !bv.v.instantiation with 
         | None -> cont (g env benv e)
         | Some e -> visit_exp' h f g l ext env benv e cont)
+
+    | Exp_uvar(uv, _) -> 
+      (match Unionfind.find uv with 
+        | Fixed e -> visit_exp' h f g l ext env benv e cont
+        | _ -> cont (g env benv e))
+
     | Exp_fvar _
     | Exp_constant _ 
     | Exp_uvar _ -> cont (g env benv e)
@@ -733,10 +716,10 @@ let combine_typ t (kl, tl, el) env =
   withkind t.k t', env
 
 let combine_exp e (kl,tl,el) env = 
-  let e' = match e.v, kl, tl, el with 
+  let e' = match e, kl, tl, el with 
     | Exp_bvar _, [], [], []  
     | Exp_fvar _, [], [], [] 
-    | Exp_constant _, [], [], [] -> e.v
+    | Exp_constant _, [], [], [] -> e
     | Exp_uvar(uv, _), [], [t], [] -> Exp_uvar(uv, t)
     | Exp_abs(x, t, e), [], [t'], [e'] -> Exp_abs(x, t', e')
     | Exp_tabs(a, k, e), [k'], [], [e'] -> Exp_tabs(a, k', e')
@@ -761,4 +744,4 @@ let combine_exp e (kl,tl,el) env =
     | Exp_meta(Meta_desugared(_, tag)), [], [], [e] -> 
       Exp_meta(Meta_desugared(e, tag))
     | _ -> failwith "impossible" in
-  withinfo e' e.sort e.p, env
+  e', env

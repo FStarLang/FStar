@@ -587,34 +587,34 @@ let check_and_ascribe (env:env) (e:exp) (t1:typ) (t2:typ) : exp =
   else Exp_ascribed(e, t2)
 
 let maybe_instantiate env e t = 
-  let rec aux norm t e = 
+  let rec aux norm subst t e = 
     let t = compress_typ t in 
     match t.t with 
       | Typ_univ(a, k, t) when env.instantiate_targs -> 
-        let arg = new_tvar env k in
-        let t' = Util.subst_typ [Inl(a, arg)] t in
+        let arg = new_tvar env (Util.subst_kind subst k) in
+        let subst = Inl(a, arg)::subst in
         let f = Exp_tapp(e, arg) in
-        aux norm t' f 
+        aux norm subst t f 
 
       | Typ_fun(Some x, t1, t2, true) when env.instantiate_vargs -> 
-        let arg = new_evar env t1 in
-        let t2' = subst_typ [Inr(x, arg)] t2 in
+        let arg = new_evar env (Util.subst_typ subst t1) in
+        let subst = Inr(x, arg)::subst in 
         let f = Exp_app(e, arg, true) in
-        aux norm t2' f
+        aux norm subst t2 f
 
       | _ when not norm -> 
         let t' = normalize env t in 
         begin match t'.t with 
           | Typ_fun _
-          | Typ_univ _ -> aux true t' e
-          | _ -> (e, t')
+          | Typ_univ _ -> aux true subst t' e
+          | _ -> (e, Util.subst_typ subst t')
         end
 
-      | _ -> (e, t) in
-  aux false t e
+      | _ -> (e, Util.subst_typ subst t) in
+  aux false [] t e
 
 let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:bool) : (typ * option<exp>) = 
-  let rec aux norm t f =
+  let rec aux norm subst t f =
     let t = compress_typ t in 
     match t.t with 
       | Typ_uvar _ when (not imp_arg_follows) -> 
@@ -626,12 +626,12 @@ let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:boo
 
       | Typ_univ(a, k, t) -> 
         (* need to instantiate an implicit type argument *)
-        let arg = new_tvar env k in
-        let t' = Util.subst_typ [Inl(a, arg)] t in
+        let arg = new_tvar env (Util.subst_kind subst k) in
+        let subst = Inl(a, arg)::subst in
         let g = match f with 
           | None -> None
-          | Some f -> Some <| Exp_tapp(f, new_tvar env k) in
-        aux norm t' g 
+          | Some f -> Some <| Exp_tapp(f, arg) in
+        aux norm subst t g 
 
       | Typ_fun(_, _, _, false) when imp_arg_follows -> 
         (* function type wants an explicit argument, but we have an implicit arg expected *)
@@ -639,50 +639,50 @@ let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:boo
       
       | Typ_fun(Some x, t1, t2, imp_t1) when (imp_t1 && not imp_arg_follows) ->
         (* need to instantiate an implicit argument *)
-        let arg = new_evar env t1 in
-        let t2' = subst_typ [Inr(x, arg)] t2 in
+        let arg = new_evar env (Util.subst_typ subst t1) in
+        let subst = Inr(x, arg)::subst in 
         let g = match f with 
           | None -> None
           | Some f -> Some <| Exp_app(f, arg, true) in
-        aux norm t2' g
+        aux norm subst t2 g
 
       | Typ_fun _ -> 
         (* either, we have an implicit function but with an explicit instantiation following;
            or, we have a function with an explicit argument and no implicit arg following *)
-        (t, f)
+        (Util.subst_typ subst t, f)
 
       | _ when not norm -> 
         let t = normalize env t in 
-        aux true t f 
+        aux true subst t f 
 
       | _ -> 
         let _ = match f with 
           | Some e -> Util.print_string (Util.format1 "destruct function type failed on expression %s\n" (Print.exp_to_string e))
           | _ -> Util.print_string "Destruct function typ failed, no expression available" in
-        raise (Error (Tc.Errors.expected_function_typ t, Tc.Env.get_range env)) in
-    aux false t f
+        raise (Error (Tc.Errors.expected_function_typ (Util.subst_typ subst t), Tc.Env.get_range env)) in
+    aux false [] t f
 
 let destruct_poly_typ (env:env) (t:typ) (f:exp) targ : (typ*exp) = 
-  let rec aux norm t f =
+  let rec aux norm subst t f =
     let t = compress_typ t in 
     match t.t with 
       | Typ_univ _ -> 
-        (t, f)
+        (Util.subst_typ subst t, f)
 
       | Typ_fun(Some x, t1, t2, true) ->
         (* need to instantiate an implicit argument *)
-        let arg = new_evar env t1 in
-        let t2' = subst_typ [Inr(x, arg)] t2 in
+        let arg = new_evar env (Util.subst_typ subst t1) in
+        let subst = Inr(x, arg)::subst in
         let g = Exp_app(f, arg, true) in
-        aux norm t2' g
+        aux norm subst t2 g
 
       | _ when not norm -> 
         let t = normalize env t in 
-        aux true t f 
+        aux true subst t f 
 
       | _ -> 
-        raise (Error (Tc.Errors.expected_poly_typ f t targ, Tc.Env.get_range env)) in
-    aux false t f
+        raise (Error (Tc.Errors.expected_poly_typ f (Util.subst_typ subst t) targ, Tc.Env.get_range env)) in
+    aux false [] t f
 
 let destruct_tcon_kind env k tt imp_arg_follows = 
   let rec aux t k = 
@@ -758,7 +758,13 @@ let pat_as_exps env p : list<exp> =
     | Inr (e) -> e) (aux p)    
 
 let generalize env e t : (exp * typ) = 
-    if not (is_value e) then e, t 
+    let togen = match compress_exp e with 
+      | Exp_abs _
+      | Exp_tabs _ 
+      | Exp_meta(Meta_desugared(_, Data_app)) -> true
+      | _ -> false in 
+    if not togen 
+    then e, t
     else
       let uvars = Env.uvars_in_env env in
       let uvars_t = (Util.uvars_in_typ t).uvars_t in
