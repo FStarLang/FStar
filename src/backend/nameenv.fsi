@@ -1,4 +1,6 @@
 ﻿(* -------------------------------------------------------------------- *)
+#light "off"
+
 module Microsoft.FStar.Backends.NameEnv
 
 type env

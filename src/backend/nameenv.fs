@@ -1,4 +1,6 @@
 ﻿(* -------------------------------------------------------------------- *)
+#light "off"
+
 module Microsoft.FStar.Backends.NameEnv
 
 // At some point, that nameenv should be responsible of printing
@@ -18,7 +20,8 @@ let create (nm : list<string>) : env=
 let push (env : env) (x : string) (pp : string) =
     if Map.containsKey x env.env_map then
         failwith "duplicated-internal-name"
-    { env with env_map = Map.add x pp env.env_map; }
+    else
+        { env with env_map = Map.add x pp env.env_map; }
 
 let resolve (env : env) (x : string) =
     match Map.tryFind x env.env_map with

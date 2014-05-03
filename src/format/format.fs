@@ -1,4 +1,6 @@
 ﻿(* -------------------------------------------------------------------- *)
+#light "off"
+
 module FSharp.Format
 
 open System.IO
@@ -46,7 +48,7 @@ let hardline =
     { node = HardLF; width = Inf; }
 
 let text (s : string) =
-    let node = if String.length s = 0 then Empty else Text s
+    let node = if String.length s = 0 then Empty else Text s in
     { node = node; width = Finite (String.length s); }
 
 let blank (n : int) =
@@ -97,7 +99,7 @@ let join (sep : string) (docs : list<doc>) =
         | _    , Empty -> d2
         | _    , _     -> d1 +. %sep +. d2
 
-    List.fold fold1 empty docs
+    in List.fold fold1 empty docs
 
 (* -------------------------------------------------------------------- *)
 let joins (docs : list<doc>) =
@@ -107,7 +109,7 @@ let joins (docs : list<doc>) =
         | _    , Empty -> d2
         | _    , _     -> d1 +. d2
 
-    List.fold fold1 empty docs
+    in List.fold fold1 empty docs
 
 (* -------------------------------------------------------------------- *)
 let groups (docs : list<doc>) =
@@ -115,7 +117,7 @@ let groups (docs : list<doc>) =
 
 (* -------------------------------------------------------------------- *)
 let align (docs : list<doc>) =
-    let for1 d1 d2 = d1 +. d2
+    let for1 d1 d2 = d1 +. d2 in
     List.fold for1 empty docs
 
 (* -------------------------------------------------------------------- *)
@@ -138,9 +140,9 @@ type stack = list<stack1>
 
 (* -------------------------------------------------------------------- *)
 let emit_crlf (state : state) (indent : int) =
-    state.output.WriteLine ()
-    state.prefix <- indent
-    state.indent <- indent
+    state.output.WriteLine ();
+    state.prefix <- indent;
+    state.indent <- indent;
     state.column <- indent
 
 (* -------------------------------------------------------------------- *)
@@ -148,15 +150,16 @@ let emit_blanks (state : state) (n : int) =
     if state.prefix > 0 || state.column = 0 then
         state.prefix <- state.prefix + n
     else
-        state.output.Write (String.replicate n " ")
+        state.output.Write (String.replicate n " ");
     state.column <- state.column + n
 
 (* -------------------------------------------------------------------- *)
 let emit_string (state : state) (s : string) =
-    state.output.Write (s)
-    if state.prefix > 0 then
-        state.output.Write (String.replicate state.prefix " ")
+    state.output.Write (s);
+    if state.prefix > 0 then begin
+        state.output.Write (String.replicate state.prefix " ");
         state.prefix <- 0
+    end;
     state.column <- state.column + s.Length
 
 (* -------------------------------------------------------------------- *)
@@ -170,36 +173,36 @@ let rec format (state : state) (cps : stack) (cp : stack1) =
         continue_ state cps
 
     | Text s ->
-        emit_string state s
+        emit_string state s;
         continue_ state cps
 
     | HardLF ->
-        emit_crlf state cp.indent
+        emit_crlf state cp.indent;
         continue_ state cps
 
     | Blank n ->
-        emit_blanks state n
+        emit_blanks state n;
         continue_ state cps
 
     | Nest (n, d) ->
         format state cps { indent cp n with doc = d; }
 
     | Concat (d1, d2) ->
-        let cp1 = { cp with doc = d1 }
-        let cp2 = { cp with doc = d2 }
+        let cp1 = { cp with doc = d1 } in
+        let cp2 = { cp with doc = d2 } in
         format state (cp2 :: cps) cp1
 
     | Group d ->
         let fit () =
             let column = (Finite state.column) +& cp.doc.width in
                column <=& Finite state.width
-            && column <=& Finite (state.indent + state.ribbon)
-        let flatten = cp.flatten || fit ()
+            && column <=& Finite (state.indent + state.ribbon) in
+        let flatten = cp.flatten || fit () in
 
         format state cps { cp with flatten = flatten; doc = d; }
 
     | MaybeFlat (d1, d2) ->
-        let d = if cp.flatten then d1 else d2
+        let d = if cp.flatten then d1 else d2 in
         format state cps { cp with doc = d }
 
 and continue_ (state : state) = function
@@ -208,8 +211,8 @@ and continue_ (state : state) = function
 
 (* -------------------------------------------------------------------- *)
 let pretty (width : int) (d : doc) =
-    let width  = max 10 width
-    let writer = new StringWriter ()
+    let width  = max 10 width in
+    let writer = new StringWriter () in
 
     let state = {
         width  = width;
@@ -218,10 +221,10 @@ let pretty (width : int) (d : doc) =
         prefix = 0;
         column = 0;
         output = writer :> TextWriter;
-    }
+    } in
 
-    let cp = { indent = 0; flatten = false; doc = group d; }
+    let cp = { indent = 0; flatten = false; doc = group d; } in
 
-    format state [] cp
-    state.output.Flush ()
+    format state [] cp;
+    state.output.Flush ();
     writer.ToString ()
