@@ -277,6 +277,8 @@ let rec doc_of_exp outer (env : env) (e : exp) =
 
 (* -------------------------------------------------------------------- *)
 and doc_of_exp_r outer (env : env) (e : exp) =
+    let e = Absyn.Util.compress_exp e in
+
     match Absyn.Util.destruct_app e with
     | (e, args) when not (List.isEmpty args) ->
         let e    = e    |> doc_of_exp (e_app_prio, ILeft) env in
@@ -384,7 +386,18 @@ and doc_of_exp_r outer (env : env) (e : exp) =
 
 (* -------------------------------------------------------------------- *)
 and maybe_doc_of_primexp_r outer (env : env) (e : exp) =
-    match Absyn.Util.destruct_app e with
+    let rec strip_tapp e =
+        match Absyn.Util.compress_exp e with
+        | Exp_tapp     (e, _)
+        | Exp_ascribed (e, _) -> strip_tapp e
+        | _ -> e
+    in
+
+    let e = Absyn.Util.compress_exp e in
+    let (c, args) = Absyn.Util.destruct_app e in
+    let c = strip_tapp c in
+
+    match (c, args) with
     | (Exp_fvar (x, _), [(e1, _); (e2, _)]) when is_prim_ns x.v.ns -> begin
         let test (y, _, _) = x.v.ident.idText = y in
 
@@ -394,6 +407,13 @@ and maybe_doc_of_primexp_r outer (env : env) (e : exp) =
             let d1 = doc_of_exp (prio, Left ) env e1 in
             let d2 = doc_of_exp (prio, Right) env e2 in
             Some (maybe_paren outer prio (d1 +. %txt +. d2))
+    end
+
+    | (Exp_fvar (x, _), [(e, _)])
+        when is_prim_ns x.v.ns && x.v.ident.idText = "op_Negation" -> begin
+
+        let d = doc_of_exp (min_op_prec, NonAssoc) env e in
+        Some (%"not" +. (parens d)) (* FIXME *)
     end
 
     | _ -> None
