@@ -119,15 +119,18 @@ let lookup_bvar env (bv:bvvar) =
     
 let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  = 
   let in_cur_mod (l:lident) = (* TODO: need a more efficient namespace check! *)
-    let lns = l.ns@[l.ident] in
     let cur = current_module env in 
-    let cur = cur.ns@[cur.ident] in
-    let rec aux c l = match c, l with 
-      | [], _ -> true
-      | _, [] -> false
-      | hd::tl, hd'::tl' when (hd.idText=hd'.idText) -> aux tl tl'
-      | _ -> false in
-    aux cur lns in
+    if l.nsstr = cur.str then true (* fast case; works for everything except records *)
+    else if Util.starts_with l.nsstr cur.str
+    then let lns = l.ns@[l.ident] in
+         let cur = cur.ns@[cur.ident] in
+         let rec aux c l = match c, l with 
+          | [], _ -> true
+          | _, [] -> false
+          | hd::tl, hd'::tl' when (hd.idText=hd'.idText) -> aux tl tl'
+          | _ -> false in
+         aux cur lns
+    else false in
   if in_cur_mod lid 
   then 
     Util.find_map env.gamma (function 

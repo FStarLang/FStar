@@ -62,18 +62,24 @@ let op_as_vlid env arity r s =
     | ">=", _ ->   r Const.op_GTE
     | "&&", _ ->   r Const.op_And
     | "||", _ ->   r Const.op_Or
-    | "*", Expr -> r Const.op_Multiply
-    | "*", _ ->    r Const.mul_lid
-    | "+", Expr -> r Const.op_Addition
-    | "+", _ ->    r Const.add_lid
-    | "-", Expr when (arity=1) -> r Const.op_Minus
-    | "-", _ when (arity=1) -> r Const.minus_lid
-    | "-", Expr -> r Const.op_Subtraction
-    | "-", _ ->    r Const.sub_lid
-    | "/", Expr -> r Const.op_Division
-    | "/", _ ->    r Const.div_lid
-    | "%", Expr -> r Const.op_Modulus
-    | "%", _ ->    r Const.modulo_lid
+    | "*", Type 
+    | "*", Formula -> r Const.mul_lid
+    | "*", _ -> r Const.op_Multiply
+    | "+", Type 
+    | "+", Formula -> r Const.add_lid
+    | "+", _ ->    r Const.op_Addition
+    | "-", Type when (arity=1) -> r Const.minus_lid
+    | "-", Formula when (arity=1) -> r Const.minus_lid
+    | "-", _    when (arity=1) -> r Const.op_Minus
+    | "-", Type -> r Const.sub_lid
+    | "-", Formula -> r Const.sub_lid
+    | "-", _ ->    r Const.op_Subtraction
+    | "/", Type -> r Const.div_lid
+    | "/", Formula -> r Const.div_lid
+    | "/", _ ->    r Const.op_Division
+    | "%", Type -> r Const.modulo_lid
+    | "%", Formula -> r Const.modulo_lid
+    | "%", _ ->    r Const.op_Modulus
     | "!", _ ->    r Const.read_lid
     | "@", _ ->    r Const.list_append_lid
     | "^", _ ->    r Const.strcat_lid
