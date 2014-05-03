@@ -13,6 +13,25 @@ open Microsoft.FStar.Backends.NameEnv
 open FSharp.Format
 
 (* -------------------------------------------------------------------- *)
+type mltyname = list<string> * string
+
+type mlty =
+    | Ty_var   of string
+    | Ty_fun   of string option * mlty * mlty
+    | Ty_named of mltyname * mlty list
+
+type mltycons =
+    (string option * mlty) list * mlty
+
+(* To be changed for polymorphic types *)
+type mldtype = string * mlty list
+
+type mlenv = {
+    mle_types : Map<mltyname, mldtype>;
+    mle_vals  : unit;
+}
+
+(* -------------------------------------------------------------------- *)
 let unexpected () =
     failwith "ocaml-backend-unexpected-construction"
 
@@ -70,10 +89,6 @@ let is_prim_ns (ns : list<ident>) =
     | _ -> false
 
 (* -------------------------------------------------------------------- *)
-let is_op_equality (x : lident) =
-    is_prim_ns x.ns && x.ident.idText = "op_Equality"
-
-(* -------------------------------------------------------------------- *)
 let name_of_let_ident (x : either<bvvdef,lident>) =
     match x with
     | Inl x -> x.realname.idText
@@ -88,15 +103,36 @@ type assoc  = ILeft | IRight | Left | Right | NonAssoc
 type fixity = Prefix | Postfix | Infix of assoc
 type opprec = int * fixity
 
+let t_prio_fun  = (10, Infix Right)
+let t_prio_tpl  = (20, Infix NonAssoc)
+let t_prio_name = (30, Postfix)
+
 let e_bin_prio_lambda = ( 5, Prefix)
 let e_bin_prio_if     = (15, Prefix)
 let e_bin_prio_letin  = (19, Prefix)
+let e_bin_prio_or     = (20, Infix Left)
+let e_bin_prio_and    = (25, Infix Left)
 let e_bin_prio_eq     = (27, Infix NonAssoc)
-let e_bin_prio_seq    = (35, Infix Left)
+let e_bin_prio_order  = (29, Infix NonAssoc)
+let e_bin_prio_op1    = (30, Infix Left)
+let e_bin_prio_op2    = (40, Infix Left)
+let e_bin_prio_op3    = (50, Infix Left)
+let e_bin_prio_op4    = (60, Infix Left)
+let e_bin_prio_seq    = (100, Infix Left)
 let e_app_prio        = (10000, Infix Left)
 
 let min_op_prec = (-1, Infix NonAssoc)
 let max_op_prec = (System.Int32.MaxValue, Infix NonAssoc)
+
+(* -------------------------------------------------------------------- *)
+let infix_prim_ops = [
+    ("op_Addition"       , e_bin_prio_op1   , "+" );
+    ("op_Subtraction"    , e_bin_prio_op1   , "-" );
+    ("op_Equality"       , e_bin_prio_eq    , "=" );
+    ("op_AmpAmp"         , e_bin_prio_and   , "&&");
+    ("op_BarBar"         , e_bin_prio_or    , "||");
+    ("op_LessThanOrEqual", e_bin_prio_order , "<=");
+]
 
 (* -------------------------------------------------------------------- *)
 let maybe_paren (outer, side) inner doc =
@@ -115,34 +151,131 @@ let maybe_paren (outer, side) inner doc =
   if noparens inner outer side then doc else parens doc
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_ty (env : env) (ty : typ) =
+let mltyname_of_lident (ns, x) =
+    (List.map (fun x -> x.idText) ns, x.idText)
+
+(* -------------------------------------------------------------------- *)
+let rec mlty_of_ty (ty : typ) =
     let ty = Absyn.Util.compress_typ ty in
 
-    match ty.t with
+    match maybe_mltynamed_of_ty [] ty with
+    | None ->
+        match ty.t with
+        | Typ_btvar x ->
+            Ty_var x.v.realname.idText
+
+        | Typ_refine (_, ty, _) ->
+            mlty_of_ty ty
+
+        | Typ_ascribed (ty, _) ->
+            mlty_of_ty ty
+
+        | Typ_meta (Meta_pos (ty, _)) ->
+            mlty_of_ty ty
+
+        | Typ_fun (x, t1, t2, _) ->
+            let mlt1 = mlty_of_ty t1
+            let mlt2 = mlty_of_ty t2
+            Ty_fun (Option.map (fun x -> x.ppname.idText) x, mlt1, mlt2)
+
+        | Typ_const   _ -> unexpected  ()
+        | Typ_app     _ -> unsupported ()
+        | Typ_dep     _ -> unsupported ()
+        | Typ_lam     _ -> unsupported ()
+        | Typ_tlam    _ -> unsupported ()
+        | Typ_univ    _ -> unsupported ()
+        | Typ_meta    _ -> unexpected  ()
+        | Typ_uvar    _ -> unexpected  ()
+        | Typ_unknown   -> unexpected  ()
+
+    | Some (c, tys) -> Ty_named (c, tys)
+
+and maybe_mltynamed_of_ty acc ty =
+    match (Absyn.Util.compress_typ ty).t with
+    | Typ_const c ->
+        Some (mltyname_of_lident (c.v.ns, c.v.ident), List.rev acc)
+
+    | Typ_app (t1, t2, _) ->
+        maybe_mltynamed_of_ty (mlty_of_ty t2 :: acc) t1
+
     | Typ_refine (_, ty, _) ->
-        doc_of_ty env ty
+        maybe_mltynamed_of_ty acc ty
 
     | Typ_ascribed (ty, _) ->
-        doc_of_ty env ty
+        maybe_mltynamed_of_ty acc ty
 
-    | Typ_meta (Meta_pos (ty, _)) ->
-        doc_of_ty env ty
-
+    | Typ_btvar   _ -> None
+    | Typ_fun     _ -> None
+    | Typ_dep     _ -> unsupported ()
     | Typ_lam     _ -> unsupported ()
     | Typ_tlam    _ -> unsupported ()
-    | Typ_dep     _ -> unsupported ()
+    | Typ_univ    _ -> unsupported ()
     | Typ_meta    _ -> unexpected  ()
     | Typ_uvar    _ -> unexpected  ()
     | Typ_unknown   -> unexpected  ()
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_exp outer (env : env) (e : exp) =
-    match Absyn.Util.destruct_app e with
-    | (Exp_fvar (x, _), [(e1, _); (e2, _)]) when is_op_equality x.v ->
-        let d1 = doc_of_exp (e_bin_prio_eq, Left ) env e1
-        let d2 = doc_of_exp (e_bin_prio_eq, Right) env e2
-        maybe_paren outer e_bin_prio_eq (d1 +. %"=" +. d2)
+let mltycons_of_mlty (ty : mlty) =
+    let rec aux acc ty =
+        match ty with
+        | Ty_fun (x, dom, codom) ->
+            aux ((x, dom) :: acc) codom
+        | _ ->
+            (List.rev acc, ty)
 
+    aux [] ty
+
+(* -------------------------------------------------------------------- *)
+let rec doc_of_mltype_r outer mlty =
+    match mlty with
+    | Ty_var x ->
+        %x
+
+    | Ty_named ((_, name), args) ->
+        let doc =
+            match args with
+            | [] ->
+                %name
+
+            | [arg] ->
+                (doc_of_mltype (t_prio_name, Left) arg) +. %name
+
+            | _ ->
+                let docs = List.map (doc_of_mltype (min_op_prec, NonAssoc)) args
+                parens (join ", " docs) +. %name
+
+        maybe_paren outer t_prio_name doc
+
+    | Ty_fun (_, t1, t2) ->
+        let d1 = doc_of_mltype (t_prio_fun, Left ) t1
+        let d2 = doc_of_mltype (t_prio_fun, Right) t2
+
+        maybe_paren outer t_prio_fun (d1 +. %"->" +. d2)
+
+(* -------------------------------------------------------------------- *)
+and doc_of_mltype outer ty =
+    group (doc_of_mltype_r outer ty)
+
+(* -------------------------------------------------------------------- *)
+let doc_of_mltypes_bundle bundle =
+    let for1 (name, _) = %name
+
+    let docs = List.map for1 bundle
+
+    %"type" +. (join "and" docs)
+
+(* -------------------------------------------------------------------- *)
+let rec doc_of_exp outer (env : env) (e : exp) =
+    let doc =
+        match maybe_doc_of_primexp_r outer env e with
+        | None   -> doc_of_exp_r outer env e
+        | Some d -> d
+
+    group doc
+
+(* -------------------------------------------------------------------- *)
+and doc_of_exp_r outer (env : env) (e : exp) =
+    match Absyn.Util.destruct_app e with
     | (e, args) when not (List.isEmpty args) ->
         let e    = e    |> doc_of_exp (e_app_prio, ILeft) env
         let args = args |> List.map (fst >> doc_of_exp (e_app_prio, IRight) env)
@@ -184,8 +317,8 @@ let rec doc_of_exp outer (env : env) (e : exp) =
 
             | _ ->
                 let de = doc_of_exp (min_op_prec, NonAssoc) env e
-                let bs = bs |> List.map (fun b -> %"|" +. doc_of_branch env b)
-                align ((%"match" +. de +. %"with") :: bs)
+                let bs = bs |> List.map (fun b -> group (%"|" +. doc_of_branch env b))
+                align ((group (%"match" +. de +. %"with")) :: bs)
 
         | Exp_let ((rec_, lb), body) ->
             let downct (x, _, e) =
@@ -194,13 +327,12 @@ let rec doc_of_exp outer (env : env) (e : exp) =
                 | Inr _ -> unexpected ()
             let kw = if rec_ then "let rec" else "let"
             let lenv, ds = lb |> List.map downct |> Util.fold_map (doc_of_let rec_) env
-            let doc = %kw +. (join "and" (ds |> List.map group)) +. %"in" +.
+            let doc = %kw +. (join " and " (ds |> List.map group)) +. %"in" +.
                       (doc_of_exp (min_op_prec, NonAssoc) lenv body)
 
             maybe_paren outer e_bin_prio_letin doc
 
         | Exp_primop (x, es) ->
-            (* FIXME: prioritoy of operators *)
             let x = string_of_primop env x.idText
             if   List.isEmpty es
             then %x
@@ -236,14 +368,33 @@ let rec doc_of_exp outer (env : env) (e : exp) =
         | Exp_meta (Meta_datainst (e, _)) ->
             doc_of_exp outer env e
 
+        | Exp_tapp (e, _) ->
+            (* FIXME: add a type annotation *)
+            doc_of_exp outer env e
+
         | Exp_app  _ -> unexpected  ()
         | Exp_uvar _ -> unexpected  ()
         | Exp_tabs _ -> unsupported ()
-        | Exp_tapp _ -> unsupported ()
+
+(* -------------------------------------------------------------------- *)
+and maybe_doc_of_primexp_r outer (env : env) (e : exp) =
+    match Absyn.Util.destruct_app e with
+    | (Exp_fvar (x, _), [(e1, _); (e2, _)]) when is_prim_ns x.v.ns ->
+        let test (y, _, _) = x.v.ident.idText = y
+
+        match List.tryFind test infix_prim_ops with
+        | None -> None
+        | Some (_, prio, txt) ->
+            let d1 = doc_of_exp (prio, Left ) env e1
+            let d2 = doc_of_exp (prio, Right) env e2
+            Some (maybe_paren outer prio (d1 +. %txt +. d2))
+
+    | _ -> None
 
 (* -------------------------------------------------------------------- *)
 and doc_of_constr (env : env) c args =
     let x = c.ident.idText
+
     match args with
     | [] -> %x
     | _  -> %x +. group (parens (join ", " args))
@@ -270,10 +421,15 @@ and doc_of_toplet (rec_ : bool) (env : env) (x, e) =
             (if rec_ then lenv else env) bds
     let d = doc_of_exp (min_op_prec, NonAssoc) benv e
 
-    lenv, %x +. (group (joins args)) +. %"=" +. d
+    lenv, group (%x +. (group (joins args)) +. %"=") +. d
 
 (* -------------------------------------------------------------------- *)
-and doc_of_pattern env (p : pat) : env * doc =
+and doc_of_pattern env p : env * doc =
+    let env, d = doc_of_pattern_r env p
+    (env, group d)
+
+(* -------------------------------------------------------------------- *)
+and doc_of_pattern_r env (p : pat) : env * doc =
     match p with
     | Pat_cons (x, ps) ->
         let env, ds = ps |> Util.fold_map doc_of_pattern env
@@ -304,10 +460,76 @@ and doc_of_branch (env : env) ((p, cl, body) : pat * exp option * exp) : doc =
     let env, pd = doc_of_pattern env p
     let dwhen = cl |> Option.map (doc_of_exp (min_op_prec, NonAssoc) env)
     let dbody = body |> doc_of_exp (min_op_prec, NonAssoc) env 
+    let doc =
+        match dwhen with
+        | None -> pd +. %"->" +. dbody
+        | Some dwhen -> pd +. %"when" +. (parens dwhen) +. %"->" +. dbody
 
-    match dwhen with
-    | None -> pd +. %"->" +. dbody
-    | Some dwhen -> pd +. %"when" +. (parens dwhen) +. %"->" +. dbody
+    group doc
+
+(* -------------------------------------------------------------------- *)
+let is_kind_for_mldtype (k : kind) =
+    match k with
+    | Kind_star    -> true
+    | Kind_unknown -> true
+    | Kind_dcon _  -> false
+    | Kind_tcon _  -> false
+    | Kind_uvar _  -> unexpected  ()
+
+(* -------------------------------------------------------------------- *)
+let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
+    let (ts, cs) =
+        let fold1 sigelt (types, ctors) =
+            match sigelt with
+            | Sig_tycon (x, tps, k, ts, cs, _, _) ->
+                if not (is_kind_for_mldtype k) then
+                    unsupported ()
+                ((x.ident.idText, tps, cs) :: types, ctors)
+
+            | Sig_datacon (x, ty, pr, _) ->
+                (types, (x.ident.idText, (ty, pr)) :: ctors)
+
+            | _ -> unsupported ()
+        in
+
+        let (ts, cs) = List.foldBack fold1 indt ([], [])
+
+        (ts, Map.ofList cs)
+
+    let fortype (x, tps, tcs) =
+        if not (List.isEmpty tps) then unsupported ()
+
+        let mldcons_of_cons cname =
+            let (c, _) = Map.find cname.ident.idText cs
+            let (args, name) = mltycons_of_mlty (mlty_of_ty c)
+
+            match name with
+            | Ty_named (name, []) when name = (root env, x) ->
+                (cname.ident.idText, args)
+            | _ -> unexpected ()            
+
+        (x, List.map mldcons_of_cons tcs)
+
+    List.map fortype ts
+
+(* -------------------------------------------------------------------- *)
+let doc_of_indt (env : env) (indt : list<sigelt>) =
+    try
+        let mltypes = mldtype_of_bundle env indt in
+
+        let for_mltype (name, constrs) =
+            let for_constr (name, tys) =
+                let docs = List.map (fun (_, ty) -> doc_of_mltype (t_prio_tpl, NonAssoc) ty) tys
+                group (%"|" +. %name +. %"of" +. parens (join "*" docs))
+
+            group (%name +. %"=" +. group (joins (List.map for_constr constrs)))
+
+        let types = List.map for_mltype mltypes
+        let doc = %"type" +. (join "and" types)
+        (env, Some doc)
+
+    with Failure _ -> (* FIXME *)
+        (env, None)
 
 (* -------------------------------------------------------------------- *)
 let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
@@ -325,24 +547,23 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
         env, Some (%"let" +. %"_" +. %"=" +. (doc_of_exp (min_op_prec, NonAssoc) env e))
 
     | Sig_tycon _ ->
-        env, Some %"tycon"
+        env, None
 
     | Sig_typ_abbrev _ ->
-        env, Some %"abbrev"
+        unsupported ()
 
-    | Sig_datacon _ ->
-        env, Some %"datacon"
-
-    | Sig_bundle _ ->
-        env, Some %"bundle"
+    | Sig_bundle (indt, _) ->
+        doc_of_indt env indt
 
     | Sig_assume         _ -> env, None
     | Sig_val_decl       _ -> env, None
     | Sig_logic_function _ -> env, None
 
+    | Sig_datacon _ -> unexpected ()
+
 (* -------------------------------------------------------------------- *)
 let pp_module (mod_ : modul) =
-    let env = NameEnv.create [mod_.name.str]
+    let env = NameEnv.create (path_of_lid mod_.name)
     let env, parts = mod_.declarations |> Util.choose_map doc_of_modelt env
 
     sprintf "module %s = struct\n%s\nend"

@@ -4,17 +4,23 @@ module Microsoft.FStar.Backends.NameEnv
 // At some point, that nameenv should be responsible of printing
 // the shortest path to a lident. Currently, only a map from
 // internal names to external names.
-type env = Env of Map<string, string>
+type env = {
+    env_root : list<string>;
+    env_map  : Map<string, string>;
+}
+
+let root (env : env) =
+    env.env_root
 
 let create (nm : list<string>) : env=
-    Env Map.empty
+    { env_root = nm; env_map = Map.empty; }
 
-let push (Env env : env) (x : string) (pp : string) =
-    if Map.containsKey x env then
+let push (env : env) (x : string) (pp : string) =
+    if Map.containsKey x env.env_map then
         failwith "duplicated-internal-name"
-    Env (Map.add x pp env)
+    { env with env_map = Map.add x pp env.env_map; }
 
-let resolve (Env env : env) (x : string) =
-    match Map.tryFind x env with
+let resolve (env : env) (x : string) =
+    match Map.tryFind x env.env_map with
     | None   -> failwith "unknown-internal-name"
     | Some x -> x

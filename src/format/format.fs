@@ -95,7 +95,7 @@ let join (sep : string) (docs : list<doc>) =
         match d1.node, d2.node with
         | Empty, _     -> d2
         | _    , Empty -> d2
-        | _    , _     -> d1 @. %sep @. d2
+        | _    , _     -> d1 +. %sep +. d2
 
     List.fold fold1 empty docs
 
@@ -115,13 +115,8 @@ let groups (docs : list<doc>) =
 
 (* -------------------------------------------------------------------- *)
 let align (docs : list<doc>) =
-    List.fold (+.) empty docs
-(* There is a bug with hard lines *)
-(*
-    let for1 d1 d2 = d1 @. hardline @. d2
+    let for1 d1 d2 = d1 +. d2
     List.fold for1 empty docs
-*)
-
 
 (* -------------------------------------------------------------------- *)
 type state = {
@@ -195,11 +190,11 @@ let rec format (state : state) (cps : stack) (cp : stack1) =
         format state (cp2 :: cps) cp1
 
     | Group d ->
-        let fit = lazy (
+        let fit () =
             let column = (Finite state.column) +& cp.doc.width in
                column <=& Finite state.width
-            && column <=& Finite (state.indent + state.ribbon))
-        let flatten = cp.flatten || not (fit.Force ())
+            && column <=& Finite (state.indent + state.ribbon)
+        let flatten = cp.flatten || fit ()
 
         format state cps { cp with flatten = flatten; doc = d; }
 
@@ -225,7 +220,7 @@ let pretty (width : int) (d : doc) =
         output = writer :> TextWriter;
     }
 
-    let cp = { indent = 0; flatten = false; doc = d; }
+    let cp = { indent = 0; flatten = false; doc = group d; }
 
     format state [] cp
     state.output.Flush ()
