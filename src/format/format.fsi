@@ -17,18 +17,17 @@ val break_ : int -> doc
 val break0 : doc
 val break1 : doc
 
-val (~%) : string -> doc
-val (+.) : doc -> doc -> doc
-val (@.) : doc -> doc -> doc
+(* -------------------------------------------------------------------- *)
+val cat1    : doc -> doc -> doc
+val reduce  : list<doc> -> doc
+val reduce1 : list<doc> -> doc
+val combine : doc -> list<doc> -> doc
+val groups  : list<doc> -> doc
+val align   : list<doc> -> doc
 
 (* -------------------------------------------------------------------- *)
-val enclose : string -> string -> doc -> doc
+val enclose : doc -> doc -> doc -> doc
 val parens  : doc -> doc
-
-val join   : string -> doc list -> doc
-val joins  : doc list -> doc
-val groups : doc list -> doc
-val align  : doc list -> doc
 
 (* -------------------------------------------------------------------- *)
 val pretty : int -> doc -> string

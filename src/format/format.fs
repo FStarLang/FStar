@@ -8,12 +8,12 @@ open System.IO
 (* -------------------------------------------------------------------- *)
 type width = Inf | Finite of int
 
-let inline (+&) (x : width) (y : width) =
+let add_w (x : width) (y : width) =
     match x, y with
     | Inf, _ | _, Inf -> Inf
     | Finite x, Finite y -> Finite (x + y)
 
-let inline (<=&) (x : width) (y : width) =
+let le_w (x : width) (y : width) =
     match x, y with
     | Finite _, Inf      -> true
     | Inf     , Finite _ -> false
@@ -77,37 +77,25 @@ let cat (d1 : doc) (d2 : doc) =
     | Empty, _     -> d2
     | _    , Empty -> d1
     | _    , _     ->
-        { node = Concat (d1, d2); width = d1.width +& d2.width; }
+        { node = Concat (d1, d2); width = add_w d1.width d2.width; }
 
 (* -------------------------------------------------------------------- *)
-let (~%) = fun s -> text s
-let (@.) = fun d1 d2 -> cat d1 d2
-let (+.) = fun d1 d2 -> d1 @. break1 @. d2
-
-(* -------------------------------------------------------------------- *)
-let enclose (left : string) (right : string) (doc : doc) =
-    %left @. doc @. %right
-
-let parens (doc : doc) =
-    enclose "(" ")" doc
-
-(* -------------------------------------------------------------------- *)
-let join (sep : string) (docs : list<doc>) =
+let reduce (docs : list<doc>) =
     let fold1 (d1 : doc) (d2 : doc) =
         match d1.node, d2.node with
         | Empty, _     -> d2
         | _    , Empty -> d2
-        | _    , _     -> d1 +. %sep +. d2
+        | _    , _     -> cat d1 d2
 
     in List.fold fold1 empty docs
 
 (* -------------------------------------------------------------------- *)
-let joins (docs : list<doc>) =
+let combine (sep : doc) (docs : list<doc>) =
     let fold1 (d1 : doc) (d2 : doc) =
         match d1.node, d2.node with
         | Empty, _     -> d2
         | _    , Empty -> d2
-        | _    , _     -> d1 +. d2
+        | _    , _     -> reduce [d1; sep; d2]
 
     in List.fold fold1 empty docs
 
@@ -116,8 +104,27 @@ let groups (docs : list<doc>) =
     group (List.fold cat empty docs)
 
 (* -------------------------------------------------------------------- *)
+let cat1 (d1 : doc) (d2 : doc) =
+    reduce [d1; break1; d2]
+
+(* -------------------------------------------------------------------- *)
+let reduce1 (docs : list<doc>) =
+    combine break1 docs
+
+(* -------------------------------------------------------------------- *)
+let enclose (left : doc) (right : doc) (doc : doc) =
+    reduce [left; doc; right]
+
+(* -------------------------------------------------------------------- *)
+let lparen = text "("
+let rparen = text ")"
+
+let parens (doc : doc) =
+    enclose lparen rparen doc
+
+(* -------------------------------------------------------------------- *)
 let align (docs : list<doc>) =
-    let for1 d1 d2 = d1 +. d2 in
+    let for1 d1 d2 = cat d1 d2 in
     List.fold for1 empty docs
 
 (* -------------------------------------------------------------------- *)
@@ -194,9 +201,9 @@ let rec format (state : state) (cps : stack) (cp : stack1) =
 
     | Group d ->
         let fit () =
-            let column = (Finite state.column) +& cp.doc.width in
-               column <=& Finite state.width
-            && column <=& Finite (state.indent + state.ribbon) in
+            let column = add_w (Finite state.column) cp.doc.width in
+               le_w column (Finite state.width)
+            && le_w column (Finite (state.indent + state.ribbon)) in
         let flatten = cp.flatten || fit () in
 
         format state cps { cp with flatten = flatten; doc = d; }

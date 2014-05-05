@@ -15,7 +15,7 @@ open Microsoft.FStar.Backends.NameEnv
 open FSharp.Format
 
 (* -------------------------------------------------------------------- *)
-type mltyname = list<string> * string
+type mltyname = string list<string> * string
 
 type mlty =
     | Ty_var   of string
@@ -50,9 +50,7 @@ let encode_char c =
   if (int)c > 127 then // Use UTF-8 encoding
     let bytes = System.String (c, 1) in
     let bytes = (new UTF8Encoding (false, true)).GetBytes(bytes) in
-    bytes
-      |> Array.map ocaml_u8_codepoint
-      |> String.concat ""
+    String.concat "" (Array.map ocaml_u8_codepoint bytes)
   else
     match c with
     | c when Char.IsLetterOrDigit(c) -> System.String (c, 1)
@@ -76,12 +74,12 @@ let string_of_sconst sctt =
   | Const_float  d     -> sprintf "%f" d
 
   | Const_bytearray (bytes, _) ->
-      let bytes = bytes |> Array.map ocaml_u8_codepoint in
-      sprintf "\"%s\"" (bytes |> String.concat "")
+      let bytes = Array.map ocaml_u8_codepoint bytes in
+      sprintf "\"%s\"" (String.concat "" bytes)
 
   | Const_string (bytes, _) ->
       let chars = (new UTF8Encoding (false, true)).GetString(bytes) in
-      let chars = chars |> String.collect encode_char in
+      let chars = String.collect encode_char chars in
       sprintf "\"%s\"" chars
 
 (* -------------------------------------------------------------------- *)
@@ -232,20 +230,20 @@ let mltycons_of_mlty (ty : mlty) =
 let rec doc_of_mltype_r outer mlty =
     match mlty with
     | Ty_var x ->
-        %x
+        text x
 
     | Ty_named ((_, name), args) -> begin
         let doc =
             match args with
             | [] ->
-                %name
+                text name
 
             | [arg] ->
-                (doc_of_mltype (t_prio_name, Left) arg) +. %name
+                reduce1 [doc_of_mltype (t_prio_name, Left) arg; text name]
 
             | _ ->
                 let docs = List.map (doc_of_mltype (min_op_prec, NonAssoc)) args in
-                parens (join ", " docs) +. %name
+                reduce1 [parens (combine (text ",") docs); text name]
 
         in maybe_paren outer t_prio_name doc
     end
@@ -254,7 +252,7 @@ let rec doc_of_mltype_r outer mlty =
         let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
         let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
 
-        maybe_paren outer t_prio_fun (d1 +. %"->" +. d2)
+        maybe_paren outer t_prio_fun (reduce1 [d1; text "->"; d2])
 
 (* -------------------------------------------------------------------- *)
 and doc_of_mltype outer ty =
@@ -262,9 +260,9 @@ and doc_of_mltype outer ty =
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltypes_bundle bundle =
-    let for1 (name, _) = %name in
+    let for1 (name, _) = text name in
     let docs = List.map for1 bundle in
-    %"type" +. (join "and" docs)
+    reduce1 [text "type"; combine (text "and") docs]
 
 (* -------------------------------------------------------------------- *)
 let rec doc_of_exp outer (env : env) (e : exp) =
@@ -281,26 +279,26 @@ and doc_of_exp_r outer (env : env) (e : exp) =
 
     match Absyn.Util.destruct_app e with
     | (e, args) when not (List.isEmpty args) ->
-        let e    = e    |> doc_of_exp (e_app_prio, ILeft) env in
-        let args = args |> List.map (fst >> doc_of_exp (e_app_prio, IRight) env) in
-        maybe_paren outer e_app_prio (e +. (joins args))
+        let e    = doc_of_exp (e_app_prio, ILeft) env e in
+        let args = List.map (fun (e, _) -> doc_of_exp (e_app_prio, IRight) env e) args in
+        maybe_paren outer e_app_prio (cat1 e (reduce args))
 
     | _ -> begin
         match e with
         | Exp_bvar x ->
-            %(resolve env x.v.realname.idText)
+            text (resolve env x.v.realname.idText)
 
         | Exp_fvar (x, _) ->
-            %(x.v.ident.idText)
+            text x.v.ident.idText
 
         | Exp_constant c ->
-            %(string_of_sconst c)
+            text (string_of_sconst c)
 
         | Exp_abs (x, _, e) ->
             let lenv = push env x.realname.idText x.ppname.idText in
             let x    = resolve lenv x.realname.idText in
             let d    = doc_of_exp (min_op_prec, NonAssoc) lenv e in
-            maybe_paren outer e_bin_prio_lambda (%"fun" +. %x +. %"->" +. d)
+            maybe_paren outer e_bin_prio_lambda (reduce1 [text "fun"; text x; text "->"; d])
 
         | Exp_match ((Exp_fvar _ | Exp_bvar _), [p, None, e]) when Absyn.Util.is_wild_pat p ->
             doc_of_exp outer env e
@@ -313,16 +311,22 @@ and doc_of_exp_r outer (env : env) (e : exp) =
             | [(Pat_constant (Const_bool false), None, e1);
                (Pat_constant (Const_bool true ), None, e2)] ->
 
-                let doc = %"if"   +. (doc_of_exp (e_bin_prio_if, Left)     env e ) +.
-                          %"then" +. (doc_of_exp (e_bin_prio_if, NonAssoc) env e1) +.
-                          %"else" +. (doc_of_exp (e_bin_prio_if, Right   ) env e2) in
+                let doc = reduce1 [
+                    text "if"  ; doc_of_exp (e_bin_prio_if, Left)     env e ;
+                    text "then"; doc_of_exp (e_bin_prio_if, NonAssoc) env e1;
+                    text "else"; doc_of_exp (e_bin_prio_if, Right   ) env e2
+                ] in
 
                 maybe_paren outer e_bin_prio_if doc
 
             | _ ->
                 let de = doc_of_exp (min_op_prec, NonAssoc) env e in
-                let bs = bs |> List.map (fun b -> group (%"|" +. doc_of_branch env b)) in
-                align ((group (%"match" +. de +. %"with")) :: bs)
+                let bs =
+                    List.map
+                        (fun b -> group (reduce1 [text "|"; doc_of_branch env b]))
+                        bs
+                in
+                align ((group (reduce1 [text "match"; de; text "with"])) :: bs)
         end
 
         | Exp_let ((rec_, lb), body) ->
@@ -332,17 +336,19 @@ and doc_of_exp_r outer (env : env) (e : exp) =
                 | Inr _ -> unexpected () in
 
             let kw = if rec_ then "let rec" else "let" in
-            let lenv, ds = lb |> List.map downct |> Util.fold_map (doc_of_let rec_) env in
-            let doc = %kw +. (join " and " (ds |> List.map group)) +. %"in" +.
-                      (doc_of_exp (min_op_prec, NonAssoc) lenv body) in
+            let lenv, ds = Util.fold_map (doc_of_let rec_) env (List.map downct lb) in
+            let doc = reduce1 [
+                text kw; combine (text "and") (List.map group ds); text "in";
+                doc_of_exp (min_op_prec, NonAssoc) lenv body
+            ]
 
-            maybe_paren outer e_bin_prio_letin doc
+            in maybe_paren outer e_bin_prio_letin doc
 
         | Exp_primop (x, es) ->
             let x = string_of_primop env x.idText in
             if   List.isEmpty es
-            then %x
-            else %x +. (groups (es |> List.map (doc_of_exp outer env)))
+            then text x
+            else cat1 (text x) (groups (List.map (doc_of_exp outer env) es))
 
         | Exp_ascribed (e, _) ->
             doc_of_exp outer env e
@@ -357,8 +363,10 @@ and doc_of_exp_r outer (env : env) (e : exp) =
                 | _, _ -> unexpected ()
             in
             
-            let dargs = args |> List.map (fst >> doc_of_exp (min_op_prec, NonAssoc) env) in
-
+            let dargs =
+                List.map
+                    (fun (e, _) -> doc_of_exp (min_op_prec, NonAssoc) env e) args
+            in
             doc_of_constr env c.v dargs
             
         | Exp_meta (Meta_desugared (e, Sequence)) -> begin
@@ -367,7 +375,7 @@ and doc_of_exp_r outer (env : env) (e : exp) =
                 let d1 = doc_of_exp (e_bin_prio_seq, Left ) env e1 in
                 let d2 = doc_of_exp (e_bin_prio_seq, Right) env e2 in
 
-                maybe_paren outer e_bin_prio_seq (d1 @. %";" +. d2)
+                maybe_paren outer e_bin_prio_seq (cat1 (cat d1 (text ";")) d2)
 
             | _ -> unexpected ()
         end
@@ -406,14 +414,14 @@ and maybe_doc_of_primexp_r outer (env : env) (e : exp) =
         | Some (_, prio, txt) ->
             let d1 = doc_of_exp (prio, Left ) env e1 in
             let d2 = doc_of_exp (prio, Right) env e2 in
-            Some (maybe_paren outer prio (d1 +. %txt +. d2))
+            Some (maybe_paren outer prio (reduce1 [d1; text txt; d2]))
     end
 
     | (Exp_fvar (x, _), [(e, _)])
         when is_prim_ns x.v.ns && x.v.ident.idText = "op_Negation" -> begin
 
         let d = doc_of_exp (min_op_prec, NonAssoc) env e in
-        Some (%"not" +. (parens d)) (* FIXME *)
+        Some (cat1 (text "not") (parens d)) (* FIXME *)
     end
 
     | _ -> None
@@ -423,15 +431,15 @@ and doc_of_constr (env : env) c args =
     let x = c.ident.idText in
 
     match args with
-    | [] -> %x
-    | _  -> %x +. group (parens (join ", " args))
+    | [] -> text x
+    | _  -> reduce1 [text x; group (parens (combine (text ", ") args))]
 
 (* -------------------------------------------------------------------- *)
 and doc_of_let (rec_ : bool) (env : env) (x, e) =
     let lenv = push env x.realname.idText x.ppname.idText in
     let x    = resolve lenv x.realname.idText in
     let d    = doc_of_exp (min_op_prec, NonAssoc) (if rec_ then lenv else env) e in
-    lenv, %x +. %"=" +. d
+    lenv, (reduce1 [text x; text "="; d])
 
 (* -------------------------------------------------------------------- *)
 and doc_of_toplet (rec_ : bool) (env : env) (x, e) =
@@ -444,11 +452,11 @@ and doc_of_toplet (rec_ : bool) (env : env) (x, e) =
             (fun lenv (x, _) ->
                 let lenv = push lenv x.realname.idText x.ppname.idText in
                 let x    = resolve lenv x.realname.idText in
-                (lenv, %x))
+                (lenv, text x))
             (if rec_ then lenv else env) bds in
     let d = doc_of_exp (min_op_prec, NonAssoc) benv e in
 
-    lenv, group (%x +. (group (joins args)) +. %"=") +. d
+    lenv, cat1 (group (reduce1 [text x; group (reduce args); text "="])) d
 
 (* -------------------------------------------------------------------- *)
 and doc_of_pattern env p : env * doc =
@@ -459,22 +467,22 @@ and doc_of_pattern env p : env * doc =
 and doc_of_pattern_r env (p : pat) : env * doc =
     match p with
     | Pat_cons (x, ps) ->
-        let env, ds = ps |> Util.fold_map doc_of_pattern env in
+        let env, ds = Util.fold_map doc_of_pattern env ps in
         (env, doc_of_constr env x ds)
 
     | Pat_var x ->
         let env = push env x.realname.idText x.ppname.idText in
-        (env, %(resolve env x.realname.idText))
+        (env, text (resolve env x.realname.idText))
 
     | Pat_constant c ->
-        (env, %(string_of_sconst c))
+        (env, text (string_of_sconst c))
 
     | Pat_disj ps ->
-        let env, ds = ps |> Util.fold_map doc_of_pattern env in
-        (env, parens (join "|" ds))
+        let env, ds = Util.fold_map doc_of_pattern env ps in
+        (env, parens (combine (text "|") ds))
 
     | Pat_wild ->
-        (env, %"_")
+        (env, text "_")
 
     | Pat_withinfo (p, _) ->
         doc_of_pattern env p
@@ -485,12 +493,12 @@ and doc_of_pattern_r env (p : pat) : env * doc =
 (* -------------------------------------------------------------------- *)
 and doc_of_branch (env : env) ((p, cl, body) : pat * exp option * exp) : doc =
     let env, pd = doc_of_pattern env p in
-    let dwhen = cl |> Option.map (doc_of_exp (min_op_prec, NonAssoc) env) in
-    let dbody = body |> doc_of_exp (min_op_prec, NonAssoc) env in
+    let dwhen = Option.map (doc_of_exp (min_op_prec, NonAssoc) env) cl in
+    let dbody = doc_of_exp (min_op_prec, NonAssoc) env body in
     let doc =
         match dwhen with
-        | None -> pd +. %"->" +. dbody
-        | Some dwhen -> pd +. %"when" +. (parens dwhen) +. %"->" +. dbody in
+        | None -> reduce1 [pd; text "->"; dbody]
+        | Some dwhen -> reduce1 [pd; text "when"; (parens dwhen); text "->"; dbody] in
 
     group doc
 
@@ -548,13 +556,23 @@ let doc_of_indt (env : env) (indt : list<sigelt>) =
 
         let for_mltype (name, constrs) =
             let for_constr (name, tys) =
-                let docs = List.map (fun (_, ty) -> doc_of_mltype (t_prio_tpl, NonAssoc) ty) tys in
-                group (%"|" +. %name +. %"of" +. parens (join "*" docs))
+                let docs =
+                    List.map
+                        (fun (_, ty) -> doc_of_mltype (t_prio_tpl, NonAssoc) ty)
+                        tys
+                in
+                group (reduce1 [text "|"; text name; text "of";
+                                parens (combine (text "*") docs)])
 
-            in group (%name +. %"=" +. group (joins (List.map for_constr constrs)))
+            in
+            
+            group (reduce1 [
+                text name; text "="; 
+                group (reduce (List.map for_constr constrs))
+            ])
         in
         let types = List.map for_mltype mltypes in
-        let doc = %"type" +. (join "and" types) in
+        let doc = reduce1 [text "type"; combine (text "and") types] in
         (env, Some doc)
 
     with Failure _ -> (* FIXME *)
@@ -570,11 +588,14 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
             | Inl _ -> unexpected () in
 
         let kw = if rec_ then "let rec" else "let" in
-        let env, ds = lb |> List.map downct |> Util.fold_map (doc_of_toplet rec_) env in
-        env, Some (%kw +. (join "and" (ds |> List.map group)))
+        let env, ds = Util.fold_map (doc_of_toplet rec_) env (List.map downct lb) in
+        env, Some (reduce1 [text kw; combine (text "and") (List.map group ds)])
 
     | Sig_main (e, _) ->
-        env, Some (%"let" +. %"_" +. %"=" +. (doc_of_exp (min_op_prec, NonAssoc) env e))
+        env, Some (reduce1 [
+            text "let"; text "_"; text "=";
+            doc_of_exp (min_op_prec, NonAssoc) env e
+        ])
 
     | Sig_tycon _ ->
         env, None
@@ -594,8 +615,9 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
 (* -------------------------------------------------------------------- *)
 let pp_module (mod_ : modul) =
     let env = NameEnv.create (path_of_lid mod_.name) in
-    let env, parts = mod_.declarations |> Util.choose_map doc_of_modelt env in
+    let env, parts = Util.choose_map doc_of_modelt env mod_.declarations in
 
     sprintf "module %s = struct\n%s\nend"
         mod_.name.ident.idText
-        (parts |> List.map (FSharp.Format.pretty 80) |> String.concat "\n\n")
+        (String.concat "\n\n"
+            (List.map (FSharp.Format.pretty 80) parts))
