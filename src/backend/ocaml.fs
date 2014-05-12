@@ -15,7 +15,7 @@ open Microsoft.FStar.Backends.NameEnv
 open FSharp.Format
 
 (* -------------------------------------------------------------------- *)
-type mltyname = string list<string> * string
+type mltyname = list<string> * string
 
 type mlty =
     | Ty_var   of string

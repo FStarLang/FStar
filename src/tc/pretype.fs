@@ -145,7 +145,9 @@ and tc_typ' env (t:typ) : typ' * kind =
 and tc_typ env t = 
   let t, k = tc_typ' env t in 
   match t with
-    | Typ_meta(Meta_pos _) -> withkind k t, k
+    | Typ_meta(Meta_pos _) 
+    | Typ_btvar _
+    | Typ_const _ -> withkind k t, k
     | _ -> withkind k <| Typ_meta(Meta_pos(withkind k t, rng env)), k
 
 and tc_typ_check env t k : typ = 
@@ -161,7 +163,7 @@ and tc_exp env e : exp * typ = match e with
    
   | Exp_bvar x -> 
     let t = Env.lookup_bvar env x in
-    let e, t = Tc.Util.maybe_instantiate env e t in//(Exp_bvar ({x with sort=t})) t in
+    let e, t = Tc.Util.maybe_instantiate env e t in
     check_expected_typ env e t 
 
   | Exp_fvar(v, dc) -> 
@@ -211,7 +213,11 @@ and tc_exp env e : exp * typ = match e with
       | Some t -> Tc.Env.set_expected_typ env t in 
     let envbody = instantiate_both envbody in
     let e1', tres = tc_exp (Env.push_local_binding envbody (Env.Binding_var(x, tx))) e1 in 
-    let t = withkind Kind_star <| Typ_fun(Some x, tx, tres, false) in
+    let (_, xvars) = Util.freevars_typ tres in
+    let dom = match xvars |> Util.find_opt (fun (y:bvvar) -> bvd_eq x y.v) with
+      | None -> None
+      | Some _ -> Some x in 
+    let t = withkind Kind_star <| Typ_fun(dom, tx, tres, false) in
     let e' = Exp_abs(x, tx, e1') in 
     gen (e', t)
    
