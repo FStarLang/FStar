@@ -235,19 +235,19 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
       sn tcenv ({config with code=t})
 
     (* In all remaining cases, the stack should be empty *)
-    | Typ_fun(xopt, t1, t2, imp) -> 
-      sn_prod xopt t1 t2 (fun t1 t2 -> wk <| Typ_fun(xopt, t1, t2, imp)) 
+    | Typ_fun(xopt, t1, Pure t2, imp) -> 
+      sn_prod xopt t1 t2 (fun t1 t2 -> wk <| Typ_fun(xopt, t1, Pure t2, imp)) 
         
     | Typ_refine(x, t1, t2) -> 
       sn_prod (Some x) t1 t2 (fun t1 t2 -> wk <| Typ_refine(x, t1, t2)) 
   
-    | Typ_univ(a, k, t) -> 
+    | Typ_univ(a, k, Pure t) -> 
       let ck = snk tcenv ({code=k; environment=config.environment; stack=[]; steps=config.steps}) in 
       let ct = sn tcenv ({config with 
         code=t; 
         stack=[];
         environment=TDummy a::config.environment}) in 
-      {config with code=wk <| Typ_univ(a, ck.code, ct.code)}
+      {config with code=wk <| Typ_univ(a, ck.code, Pure ct.code)}
 
     | Typ_meta(Meta_pattern(t, ps)) -> (* no reduction in patterns *)
       let c = sn tcenv ({config with code=t}) in
@@ -443,18 +443,18 @@ and trel rel env t t' =
          then aux true (normalize env t) (normalize env t') 
          else false
 
-       | Typ_fun(Some x, t1, t2, _), Typ_fun(Some x', t1', t2', _)  
+       | Typ_fun(Some x, t1, Pure t2, _), Typ_fun(Some x', t1', Pure t2', _)  
        | Typ_lam(x, t1, t2), Typ_lam(x', t1', t2')  
        | Typ_refine(x, t1, t2), Typ_refine(x', t1', t2') -> 
          aux norm t1' t1 && 
          aux norm t2 (Util.subst_typ [Inr(x', Util.bvd_to_exp x t1)] t2')
       
-       | Typ_fun(_, t1, t2, _), Typ_fun(_, t1', t2', _)  -> 
+       | Typ_fun(_, t1, Pure t2, _), Typ_fun(_, t1', Pure t2', _)  -> 
          aux norm t1' t1 &&
          aux norm t2 t2'
      
        | Typ_tlam(a1, k1, t1), Typ_tlam(a1', k1', t1')  
-       | Typ_univ(a1, k1, t1), Typ_univ(a1', k1', t1') -> 
+       | Typ_univ(a1, k1, Pure t1), Typ_univ(a1', k1', Pure t1') -> 
          krel rel env k1' k1 &&
          aux norm t1 (Util.subst_typ [Inl(a1', Util.bvd_to_typ a1 k1')] t1')
      
@@ -590,13 +590,13 @@ let maybe_instantiate env e t =
   let rec aux norm subst t e = 
     let t = compress_typ t in 
     match t.t with 
-      | Typ_univ(a, k, t) when env.instantiate_targs -> 
+      | Typ_univ(a, k, Pure t) when env.instantiate_targs -> 
         let arg = new_tvar env (Util.subst_kind subst k) in
         let subst = Inl(a, arg)::subst in
         let f = Exp_tapp(e, arg) in
         aux norm subst t f 
 
-      | Typ_fun(Some x, t1, t2, true) when env.instantiate_vargs -> 
+      | Typ_fun(Some x, t1, Pure t2, true) when env.instantiate_vargs -> 
         let arg = new_evar env (Util.subst_typ subst t1) in
         let subst = Inr(x, arg)::subst in 
         let f = Exp_app(e, arg, true) in
@@ -620,11 +620,11 @@ let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:boo
       | Typ_uvar _ when (not imp_arg_follows) -> 
         let arg = new_tvar env Kind_star in
         let res = new_tvar env Kind_star in 
-        let tf = withkind Kind_star <| Typ_fun(None, arg, res, false) in
+        let tf = withkind Kind_star <| Typ_fun(None, arg, Pure res, false) in
         teq env t tf;
         (tf, f)
 
-      | Typ_univ(a, k, t) -> 
+      | Typ_univ(a, k, Pure t) -> 
         (* need to instantiate an implicit type argument *)
         let arg = new_tvar env (Util.subst_kind subst k) in
         let subst = Inl(a, arg)::subst in
@@ -637,7 +637,7 @@ let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:boo
         (* function type wants an explicit argument, but we have an implicit arg expected *)
         raise (Error (Tc.Errors.unexpected_implicit_argument, Tc.Env.get_range env))
       
-      | Typ_fun(Some x, t1, t2, imp_t1) when (imp_t1 && not imp_arg_follows) ->
+      | Typ_fun(Some x, t1, Pure t2, imp_t1) when (imp_t1 && not imp_arg_follows) ->
         (* need to instantiate an implicit argument *)
         let arg = new_evar env (Util.subst_typ subst t1) in
         let subst = Inr(x, arg)::subst in 
@@ -669,7 +669,7 @@ let destruct_poly_typ (env:env) (t:typ) (f:exp) targ : (typ*exp) =
       | Typ_univ _ -> 
         (Util.subst_typ subst t, f)
 
-      | Typ_fun(Some x, t1, t2, true) ->
+      | Typ_fun(Some x, t1, Pure t2, true) ->
         (* need to instantiate an implicit argument *)
         let arg = new_evar env (Util.subst_typ subst t1) in
         let subst = Inr(x, arg)::subst in
@@ -775,7 +775,7 @@ let generalize env e t : (exp * typ) =
         unchecked_unify u t;
         (a,k)) in
       tvars |> List.fold_left (fun (e,t) (a,k) ->
-        let t' = withkind Kind_star <| Typ_univ(a, k, t) in
+        let t' = withkind Kind_star <| Typ_univ(a, k, Pure t) in
         let e' = Exp_tabs(a, k, e) in
         (e', t')) (e,t) 
 
@@ -818,11 +818,11 @@ let extract_lb_annotation env t e = match t.t with
       | Exp_tabs(a, k, e) -> 
         let k = mk_kind env k in
         let env = Env.push_local_binding env (Binding_typ(a, k)) in
-        withkind Kind_star <| Typ_univ(a, k, aux env e)
+        withkind Kind_star <| Typ_univ(a, k, Pure <| aux env e)
       | Exp_abs(x, t, e) -> 
         let t = mk_typ env t in
         let env = Env.push_local_binding env (Binding_var(x, t)) in
-        withkind Kind_star <| Typ_fun(Some x, t, aux env e, false)
+        withkind Kind_star <| Typ_fun(Some x, t, Pure <| aux env e, false)
       | Exp_ascribed(e, t) -> t
       | _ -> new_tvar env Kind_star in 
     aux env e       

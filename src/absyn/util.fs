@@ -416,18 +416,14 @@ let subst_kind s k = match s with
 let subst_typ s t = match s with 
   | [] -> t
   | _ -> subst_typ' (mk_subst_map s) t
+let subst_comp_typ s t = match s with 
+  | [] -> t
+  | _ -> match t with 
+    | Pure t -> Pure (subst_typ s t)
+    | Computation(m, t, wp) -> Computation (m, subst_typ s t, subst_typ s wp)
 let subst_exp s e = match s with
   | [] -> e
   | _ -> subst_exp' (mk_subst_map s) e 
-
-let open_typ ty (te:either<typ,exp>) : typ =
-  match (compress_typ ty).t, te with
-    | Typ_fun(None, targ, tret, _), Inr _ -> tret
-    | Typ_lam(bvd, targ, tret), Inr exp
-    | Typ_fun(Some bvd, targ, tret, _), Inr exp -> subst_typ [Inr(bvd,exp)] tret
-    | Typ_tlam(bvd, k, t), Inl targ
-    | Typ_univ(bvd, k, t), Inl targ -> subst_typ [Inl(bvd, targ)] t
-    | _ -> failwith "impossible"
 
 let close_with_lam tps t = List.fold_right
   (fun tp out -> match tp with
@@ -438,8 +434,8 @@ let close_with_lam tps t = List.fold_right
 let close_with_arrow tps t =
   t |> (tps |> List.fold_right (
     fun tp out -> match tp with
-      | Tparam_typ (a,k) -> withkind Kind_star <| Typ_univ (a,k,out)
-      | Tparam_term (x,t) -> withkind Kind_star <| Typ_fun (Some x,t,out,true)))
+      | Tparam_typ (a,k) -> withkind Kind_star <| Typ_univ (a,k, Pure out)
+      | Tparam_term (x,t) -> withkind Kind_star <| Typ_fun (Some x,t,Pure out,true)))
 
 let close_typ = close_with_arrow
       
@@ -449,9 +445,6 @@ let close_kind tps k =
             | Tparam_typ (a, k') -> Kind_tcon(Some a, k', k, false)
             | Tparam_term (x, t) -> Kind_dcon(Some x, t, k, false))
         tps k 
-
-let instantiate_tparams t tps (args:list<either<typ,exp>>) =
-  List.fold_left open_typ (close_with_lam tps t) args
 
 (********************************************************************************)
 (******************************** Alpha conversion ******************************)
@@ -621,7 +614,7 @@ let normalizeRefinement t =
       t', mk_conj phi_opt phi
     | _ -> t, None in
   aux None t
-
+ 
 let forall_kind =
   let a = new_bvd None in
   let atyp = bvd_to_typ a Kind_star in
@@ -634,19 +627,20 @@ let forall_kind =
 let mkForall (x:bvvdef) (a:typ) (body:typ) : typ =
   let forall_typ = withkind kun <| Typ_const(withsort Const.forall_lid forall_kind) in
   withkind kun <| Typ_app(withkind kun <| Typ_app(forall_typ, a, true), withkind kun <| Typ_lam(x, a, body), false)
-
+  
 let unForall t = match t.t with
   | Typ_app({t=Typ_app({t=Typ_const(lid)}, _, _)}, 
             {t=Typ_lam(x, t, body)}, _) when is_forall lid.v ->
     Some (x, t, body)
   | _ -> None
 
+(* collect all curried arguments until we reach a non-trivial computation type *)
 let collect_formals t = 
   let rec aux out t =
     let t = whnf t in
     match t.t with
-      | Typ_fun(xopt, t1, t2, _) -> aux (Inr(xopt, t1)::out) t2
-      | Typ_univ(a, k, t2) -> aux (Inl(a, k)::out) t2
+      | Typ_fun(xopt, t1, Pure t2, _) -> aux (Inr(xopt, t1)::out) t2
+      | Typ_univ(a, k, Pure t2) -> aux (Inl(a, k)::out) t2
       | Typ_meta(Meta_pos(t, _)) -> failwith "Unexpected position tagged type"
       | _ -> List.rev out, t 
   in aux [] t
@@ -654,36 +648,12 @@ let collect_formals t =
 let collect_u_quants t =
   let rec aux out t =
     match flatten_typ_apps (whnf t) with
-      | {t=Typ_fun(Some x, t1, t2, _)}, _ -> aux ((x, t1)::out) t2
       | {t=Typ_const tc}, [Inl t1; Inl ({t=Typ_lam(x, _, t2)})]
         when is_forall tc.v ->
         aux ((x, t1)::out) t2
       | _ -> List.rev out, t
   in aux [] t
 
-let collect_forall_xt t =
-  let rec aux out t =
-    match flatten_typ_apps (whnf t) with
-      | {t=Typ_fun(Some x, t1, t2, _)}, _ -> aux (Inr(x, t1)::out) t2
-      | {t=Typ_const tc}, [Inl t1; Inl ({t=Typ_lam(x, _, t2)})]
-        when is_forall tc.v ->
-        aux (Inr(x, t1)::out) t2
-      | {t=Typ_univ(a, k, t)}, _ ->  aux (Inl(a,k)::out) t
-      | _ -> List.rev out, t
-  in aux [] t
-
-let collect_exists_xt t =
-  let rec aux out t =
-      match flatten_typ_apps (whnf t) with
-        | {t=Typ_const tc}, [Inl t1; Inl ({t=Typ_lam(x, _, t2)})]
-          when lid_equals tc.v Const.exists_lid ->
-          aux (Inr(x, t1)::out) t2
-        | {t=Typ_const tc}, [Inl ({t=Typ_tlam(a, k, t2)})]
-          when (lid_equals tc.v Const.exTyp_lid) ->
-          aux (Inl(a,k)::out) t2
-        | _ -> List.rev out, t
-  in aux [] t
-  
 let collect_e_quants t =
   let rec aux out t =
       match flatten_typ_apps (whnf t) with

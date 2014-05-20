@@ -658,18 +658,18 @@ and desugar_typ env (top:term) : typ =
       let p = match tk with
         | Inl(None, k) ->
           let x = new_bvd (Some b.brange) in
-          Typ_univ(x, k, desugar_typ env t)
+          Typ_univ(x, k, Pure <| desugar_typ env t)
 
         | Inl(Some x, k) ->
           let env, x = push_local_tbinding env x in
-          Typ_univ(x, k, desugar_typ env t)
+          Typ_univ(x, k, Pure <| desugar_typ env t)
 
         | Inr(None, t1) ->
-          Typ_fun(None, t1, desugar_typ env t, b.implicit)
+          Typ_fun(None, t1, Pure <| desugar_typ env t, b.implicit)
 
         | Inr(Some x, t1) ->
           let env, x = push_local_vbinding env x in
-          Typ_fun(Some x, t1, desugar_typ env t, b.implicit) in
+          Typ_fun(Some x, t1, Pure <| desugar_typ env t, b.implicit) in
       pk p
 
     | Refine(b,f) ->
@@ -883,10 +883,10 @@ let mk_data_ops env = function
       | Inr (Some x, t)::rest -> Exp_abs(x, t, build_exp rest e)
       | _::rest -> failwith "impossible"
       | [] -> Exp_abs(formal, tconstr, e) in
-    let rec build_typ freevars t = match freevars with
-      | Inl (a,k)::rest -> withkind kun <| Typ_univ(a, k, build_typ rest t)
-      | Inr (xopt,tt)::rest -> withkind kun <| Typ_fun(xopt, tt, build_typ rest t, false)
-      | [] -> withkind kun <| Typ_fun(Some formal, tconstr, t, false) in
+    let rec build_typ freevars (t:typ) = match freevars with
+      | Inl (a,k)::rest -> withkind kun <| Typ_univ(a, k, Pure <| build_typ rest t)
+      | Inr (xopt,tt)::rest -> withkind kun <| Typ_fun(xopt, tt, Pure <| build_typ rest t, false)
+      | [] -> withkind kun <| Typ_fun(Some formal, tconstr, Pure <| t, false) in
     let rec build_kind freevars k = match freevars with
       | Inl (a,kk)::rest -> Kind_tcon(Some a, kk, build_kind rest k, false)
       | Inr (xopt,t)::rest -> Kind_dcon(xopt, t, build_kind rest k, false)
@@ -904,7 +904,7 @@ let mk_data_ops env = function
       let res = subst_typ s t in  res in
       //Printf.printf "Got\n%s\n" (Print.typ_to_string res); flush stdout; res in
     let rec aux fields t = match (compress_typ t).t with
-      | Typ_fun(Some x, t1, t2, _) ->
+      | Typ_fun(Some x, t1, Pure t2, _) ->
         let field_name = lid_of_ids (ids_of_lid lid @ [x.ppname]) in
         let t = build_typ t1 in
         let body = ewithpos (Exp_match(formal_exp, [(Pat_cons(lid, argpats), None, bvd_to_exp x t1)])) x.ppname.idRange in
@@ -921,7 +921,7 @@ let mk_data_ops env = function
             subst_typ subst t2 in
         aux (fields@sigs) t2
           
-      | Typ_univ(a, k, t2) ->
+      | Typ_univ(a, k, Pure t2) ->
         let field_name = lid_of_ids (ids_of_lid lid @ [a.ppname]) in
         let kk = build_kind k in
         let sigs = Sig_tycon(field_name, [], kk, [], [], [Logic_projector], range_of_lid field_name) in
@@ -1106,10 +1106,13 @@ let desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
         
   | Exception(id, Some term) ->
     let t = desugar_typ env term in
-    let t = withkind kun <| Typ_fun(None, t, fail_or (try_lookup_typ_name env) Const.exn_lid, false) in
+    let t = withkind kun <| Typ_fun(None, t, Pure <| fail_or (try_lookup_typ_name env) Const.exn_lid, false) in
     let se = Sig_datacon(qualify env id, t, Const.exn_lid, d.drange) in
     let env = push_sigelt env se in
     env, [se]
+
+  | MonadLat(monads, lifts) -> //TODO: Ignoring this for now
+    env, []
 
   | _ -> raise (Error("Unexpected declaration", d.drange))
         

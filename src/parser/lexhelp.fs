@@ -193,7 +193,6 @@ let keywords =
     ALWAYS, "query"      ,QUERY;
     ALWAYS, "rec"        ,REC;
     FSHARP, "reference"  ,REFERENCE;
-    FSHARP, "return"     ,YIELD(false);
     ALWAYS, "sig"        ,SIG;
     FSHARP, "static"     ,STATIC;
     ALWAYS, "struct"     ,STRUCT;
@@ -210,6 +209,8 @@ let keywords =
     ALWAYS, "when"       ,WHEN;
     ALWAYS, "while"      ,WHILE;
     ALWAYS, "with"       ,WITH;
+    ALWAYS, "monad_lattice", MONADLATTICE;
+    ALWAYS, "terminating", TOTAL;
     FSHARP, "yield"      ,YIELD(true);
     ALWAYS, "_"          ,UNDERSCORE;
     FSHARP, "__token_constraint",CONSTRAINT

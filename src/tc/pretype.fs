@@ -69,19 +69,19 @@ and tc_typ' env (t:typ) : typ' * kind =
     let k = Env.lookup_typ_lid env i.v in 
     t.t,k
     
-  | Typ_fun(xopt, t1, t2, imp) -> 
+  | Typ_fun(xopt, t1, Pure t2, imp) -> 
     let t1' = tc_typ_check env t1 Kind_star in
     let env' = match xopt with 
       | None -> env
       | Some x -> Env.push_local_binding env (Env.Binding_var(x, t1')) in
     let t2' = tc_typ_check env' t2 Kind_star in
-    Typ_fun(xopt, t1', t2', imp), Kind_star
+    Typ_fun(xopt, t1', Pure t2', imp), Kind_star
 
-  | Typ_univ(a, k1, t1) -> 
+  | Typ_univ(a, k1, Pure t1) -> 
     let k1' = tc_kind env k1 in 
     let env' = Env.push_local_binding env (Env.Binding_typ(a, k1')) in
     let t1' = tc_typ_check env' t1 Kind_star in 
-    Typ_univ(a, k1', t1'), Kind_star
+    Typ_univ(a, k1', Pure t1'), Kind_star
 
   | Typ_refine(x, t1, t2) -> 
     let t1' = tc_typ_check env t1 Kind_star in
@@ -183,12 +183,12 @@ and tc_exp env e : exp * typ = match e with
       let rec aux norm env t = 
         let t = compress_typ t in 
         match t.t with
-        | Typ_fun(xopt, targ, tres, implicit) -> 
+        | Typ_fun(xopt, targ, Pure tres, implicit) -> 
             let tres = match xopt with 
               | None -> tres
               | Some y -> Util.subst_typ [Inr(y, Util.bvd_to_exp x targ)] tres in
             Some targ, Some tres, env, (fun x -> x)
-        | Typ_univ(a, k, t) -> 
+        | Typ_univ(a, k, Pure t) -> 
             let env = Tc.Env.push_local_binding env (Env.Binding_typ(a, k)) in 
             let targ, tres, env, gen = aux norm env t in
             targ, tres, env, (fun x -> Exp_tabs(a, k, gen x))
@@ -217,7 +217,7 @@ and tc_exp env e : exp * typ = match e with
     let dom = match xvars |> Util.find_opt (fun (y:bvvar) -> bvd_eq x y.v) with
       | None -> None
       | Some _ -> Some x in 
-    let t = withkind Kind_star <| Typ_fun(dom, tx, tres, false) in
+    let t = withkind Kind_star <| Typ_fun(dom, tx, Pure tres, false) in
     let e' = Exp_abs(x, tx, e1') in 
     gen (e', t)
    
@@ -229,7 +229,7 @@ and tc_exp env e : exp * typ = match e with
         let rec aux norm t = 
           let t = compress_typ t in 
           match t.t with 
-            | Typ_univ(b, karg, tres) -> 
+            | Typ_univ(b, karg, Pure tres) -> 
               Tc.Util.keq env None karg k1';
               let tres = Util.subst_typ [Inl(b, Util.bvd_to_typ a karg)] tres in
               karg, Env.set_expected_typ env tres
@@ -241,7 +241,7 @@ and tc_exp env e : exp * typ = match e with
         k1', env in
     let env' = instantiate_both env' in
     let e1', tres = tc_exp (Env.push_local_binding env' (Env.Binding_typ(a, karg))) e1 in 
-    let t = withkind Kind_star <| Typ_univ(a, karg, tres) in
+    let t = withkind Kind_star <| Typ_univ(a, karg, Pure tres) in
     Exp_tabs(a, karg, e1'), t
 
   | Exp_meta(Meta_desugared(e, Data_app)) -> 
@@ -298,7 +298,7 @@ and tc_exp env e : exp * typ = match e with
     let env1, _ = Env.clear_expected_typ env in
     let e1', t1 = tc_exp ({env1 with Tc.Env.instantiate_vargs=not imp}) e1 in
     let xopt, env2, tres, e1' = match Tc.Util.destruct_function_typ env t1 (Some e1') imp with 
-      | {t=Typ_fun(xopt, targ, tres, _)}, Some e1' -> 
+      | {t=Typ_fun(xopt, targ, Pure tres, _)}, Some e1' -> 
         let env2 = Env.set_expected_typ env targ in
         xopt, env2, tres, e1'
       | _ -> failwith "impossible" in 
@@ -313,7 +313,7 @@ and tc_exp env e : exp * typ = match e with
     let e1', t_e1 = tc_exp ({env1 with Env.instantiate_targs=false}) e1 in 
     let t1', k = tc_typ env1 t1 in 
     begin match Tc.Util.destruct_poly_typ env1 t_e1 e1' t1 with
-      | {t=Typ_univ(a, k', tres)}, e1' ->
+      | {t=Typ_univ(a, k', Pure tres)}, e1' ->
           Tc.Util.keq env1 (Some t1) k k';
           let t = Util.subst_typ [Inl(a, t1')] tres in
           check_expected_typ env (Exp_tapp(e1', t1')) t  

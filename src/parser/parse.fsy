@@ -165,7 +165,8 @@ let newline (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<_>) =
 %token GREATER_RBRACK STRUCT SIG 
 %token STATIC MEMBER CLASS VIRTUAL ABSTRACT OVERRIDE DEFAULT CONSTRUCTOR INHERIT 
 %token EXTERN REFERENCE VOID PUBLIC PRIVATE INTERNAL LBRACE_COLON_PATTERN LBRACE_TILDE TILDE_RBRACE PIPE_LEFT PIPE_RIGHT
-
+%token MONADLATTICE SQUIGGLY_RARROW TOTAL 
+ 
 /* These are artificial */
 %token <string> LEX_FAILURE
 %token COMMENT WHITESPACE HASH_LINE HASH_LIGHT HASH_IF HASH_ELSE HASH_ENDIF INACTIVECODE LINE_COMMENT STRING_TEXT EOF
@@ -226,6 +227,82 @@ decl':
       { Assume($1, $2, $4) }
   | EXCEPTION name of_typ
       { Exception($2, $3) }
+  | MONADLATTICE LBRACE monads WITH lifts RBRACE
+      { MonadLat($3, $5) }
+
+monads:
+  | monad moreMonads
+      { $1::$2 }
+
+moreMonads:
+  |    { [] }
+  | SEMICOLON monad moreMonads { $2::$3 }
+
+maybeTotal:
+  | TOTAL { true }
+  |       { false }
+
+monad:
+  | qname COLON_COLON maybeTotal monad_kinds tycon tycon  
+      {
+        let name = $1 in
+        let total = $3 in 
+        let pre_sig, post_sig, wp_sig = match $4 with 
+          | [(pre, pre_k); (post, post_k); (wp, wp_k)]
+              when (pre.str="Pre" && post.str="Post" && wp.str="WP") -> 
+            pre_k, post_k, wp_k
+          | kinds -> 
+            errorR(Error(Printf.sprintf 
+                           "Unexpected kind abbreviations in monad signature (expected 'Pre', 'Post' and 'WP') got %A" kinds, rhs parseState 5)); 
+            let r = rhs parseState 5 in
+            let wild = mk_term Wild r Kind in 
+            wild, wild, wild in
+        let ret, bind = match $5, $6 with 
+          | Tycon(NoQual, [TyconAbbrev(ret, _, _, _) as ret_def]), Tycon(NoQual, [TyconAbbrev(bind, _, _, _) as bind_def]) 
+            when ret.idText="return" && bind.idText="bind" -> ret_def, bind_def
+          | _ -> 
+            errorR(Error("Unexpected type definitions abbreviations in monad signature (expected 'Pre', 'Post' and 'WP')", rhs parseState 5));             
+            let r = rhs parseState 5 in
+            let wild = mk_term Wild r Type in 
+            let tc = TyconAbbrev(mk_ident("dummy", rhs parseState 6), [], None, wild) in
+            tc, tc in 
+        {name=name;
+         pre_sig=pre_sig;
+         post_sig=post_sig;
+         wp_sig=wp_sig;
+         ret=ret;
+         bind=bind;
+         total=total}
+      }
+
+monad_kinds:
+  |   { [] }
+  | monad_kind monad_kinds
+      { $1::$2 }
+      
+monad_kind:
+  | LET qname EQUALS term 
+      { ($2, $4) }
+
+
+lifts:
+  | lift moreLifts
+      { $1::$2 }
+
+moreLifts:
+  |   { [] }
+  | SEMICOLON lift moreLifts 
+      { $2::$3}
+
+lift:
+  | qname SQUIGGLY_RARROW qname EQUALS atomicTerm
+      {
+        { 
+          msource=$1;
+          mdest=$3;
+          lift_op=$5
+        }
+      }
 
 valQuals:
   |       { NoQual }

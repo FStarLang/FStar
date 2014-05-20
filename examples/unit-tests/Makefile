@@ -1,6 +1,6 @@
 FSTAR=../../bin/FStar.exe --fstar_home ../../
 
-all: utils list tuple rec pat letrec termination compiler pt-compiler
+all: utils list tuple rec pat letrec termination pt-compiler
 
 prims: 
 	$(FSTAR) --pretype --prims prims.fst 

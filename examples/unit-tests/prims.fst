@@ -52,6 +52,53 @@ type array : Type => Type
 type ref : Type => Type
 type LBL : string => Type => Type
 type bytes
+type exn
+type heap
+
+logic data type result : Type => Type =
+  | V : 'a:Type -> v:'a -> result 'a
+  | E : 'a:Type -> e:exn -> result 'a
+  | Err : 'a:Type -> result 'a
+
+let retype 'a 'b (r:result 'a) : result 'b = match r with 
+  | V _ -> Err
+  | Err -> Err
+  | E e -> E e 
+
+monad_lattice {
+  Pure::
+             terminating
+             let Pre  = Type
+             let Post = 'a:Type => 'a => Type
+             let WP   = 'a:Type => Post 'a => Pre
+             type return ('a:Type) (x:'a) ('p:Post 'a) = 'p x
+             type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2: 'a => WP 'b) ('p:Post 'b) = 'wp1 (fun a => 'wp2 a 'p);
+  ST::
+             let Pre  = heap => Type
+             let Post = 'a:Type => 'a => heap => Type
+             let WP   = 'a:Type => Post 'a => Pre
+             type return ('a:Type) (x:'a) ('p:Post 'a) = 'post x
+             type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = 'wp1 (fun a => 'wp2 a 'p) h0;
+  Exn::
+             let Pre  = Type
+             let Post = 'a:Type => result 'a => Type
+             let WP   = 'a:Type =>  Post 'a => Pre
+             type return ('a:Type) (x:'a) ('p:Post 'a) = 'post (V x)
+             type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2:'a => WP 'b) ('p:Post 'b) =
+                 'wp1 (fun ra => ITE (is_V ra) ('wp2 (V.v ra) 'p) ('p (retype ra)));
+  All::
+             let Pre  = heap => Type
+             let Post = 'a:Type => result 'a => heap => Type
+             let WP   = 'a:Type => Post 'a => Pre
+             type return ('a:Type) (x:'a) ('p:Post 'a) = 'post (V x)
+             type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2:'a => WP 'b) ('p:Post 'b) (h0:heap) =
+                 'wp1 (fun ra h1 => ITE (is_V ra) ('wp2 (V.v ra) 'p h1) ('p (retype ra) h1)) h0
+  with 
+  Pure ~> ST  = (fun ('a:Type) ('wp:Pure.WP 'a) ('p:ST.Post 'a) (h:heap) => 'wp (fun a => 'p a h));
+  ST ~> All   = (fun ('a:Type) ('wp:ST.WP 'a) ('p:All.Post 'a) => 'wp (fun a => 'p (V a)));
+  Pure ~> Exn = (fun ('a:Type) ('wp:Pure.WP 'a) ('p:Exn.Post 'a) => 'wp (fun a => 'p (V a)));
+  Exn ~> All  = (fun ('a:Type) ('wp:Exn.WP 'a) ('p:All.Post 'a) (h:heap) => 'wp (fun ra => 'p ra h))
+}
 
 logic data type Tuple2: 'a:Type
           => 'b:('a => Type)
@@ -178,14 +225,6 @@ logic data type Tuple8: 'a:Type
            -> _7:'g _1 _2 _3 _4 _5 _6
            -> _8:'h _1 _2 _3 _4 _5 _6 _7
            -> Tuple8 'a 'b 'c 'd 'e 'f 'g 'h
-
-type exn
-logic data type result : Type => Type =
-  | V : 'a:Type -> v:'a -> result 'a
-  | E : 'a:Type -> e:exn -> result 'a
-  | Err : 'a:Type -> result 'a
-logic val L : 'a -> 'a
-logic val R : 'a -> 'a
 
 (* Primitive (structural) equality.
    What about for function types? *)

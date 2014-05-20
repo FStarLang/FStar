@@ -54,9 +54,9 @@ let rec typ_to_string x =
       | None -> strBvd btv.v
       | Some x -> x|> typ_to_string)
   | Typ_const v -> Util.format1 "%s" (sli v.v)
-  | Typ_fun(Some x, t1, t2, imp) -> Util.format4 "%s%s%s -> %s"  (strBvd x) (if imp then "@" else ":") (t1 |> typ_to_string) (t2|> typ_to_string)
-  | Typ_fun(None, t1, t2, _) -> Util.format2 "%s -> %s"  (t1|> typ_to_string) (t2|> typ_to_string)
-  | Typ_univ(a, k, t) ->       Util.format3 "%s:%s -> %s" (strBvd a) (k |> kind_to_string) (t|> typ_to_string)
+  | Typ_fun(Some x, t1, t2, imp) -> Util.format "%s%s%s %s %s"  [strBvd x; (if imp then "@" else ":"); (t1 |> typ_to_string); (arrow_of_comp_typ t2); (t2|> comp_typ_to_string)]
+  | Typ_fun(None, t1, t2, _) -> Util.format "%s %s %s"  [(t1 |> typ_to_string); (arrow_of_comp_typ t2); (t2|> comp_typ_to_string)]
+  | Typ_univ(a, k, t) ->       Util.format4 "%s:%s %s %s" (strBvd a) (k |> kind_to_string) (arrow_of_comp_typ t) (t|> comp_typ_to_string)
   | Typ_refine(x, t, f) ->     Util.format3 "%s:%s{%s}" (strBvd x) (t|> typ_to_string) (f|> typ_to_string)
   | Typ_app(t1, t2, imp) ->    Util.format3 "(%s %s%s)" (t1|> typ_to_string) (if imp then "#" else "") (t2|> typ_to_string)
   | Typ_dep(t, v, imp) ->      Util.format3 "(%s %s%s)" (t|> typ_to_string) (if imp then "#" else "") (v|> exp_to_string)
@@ -70,6 +70,15 @@ let rec typ_to_string x =
       | Fixed t -> t|> typ_to_string
       | Uvar _ when !Options.print_real_names ->  Util.format2 "'U%s : %s"  (Util.string_of_int (Unionfind.uvar_id uv)) (kind_to_string k)
       | Uvar _ ->               Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)))
+
+and arrow_of_comp_typ c = match c with 
+  | Pure _ -> "=>"
+  | _ -> "->"
+  
+and comp_typ_to_string c = match c with 
+  | Pure t -> typ_to_string t
+  | Computation(m, t, wp) when (m.str="All") -> typ_to_string t
+  | Computation(m, t, wp) -> Util.format3 "%s %s %s" m.str (typ_to_string t) "_"
 
 and exp_to_string x = match compress_exp x with 
   | Exp_meta(Meta_datainst(e,_)) -> exp_to_string e 

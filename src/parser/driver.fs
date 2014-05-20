@@ -37,4 +37,8 @@ let parse_files files =
     let env, m = parse env (Inl fn) in 
     (env, m::mods)) (DesugarEnv.empty_env(), []) files in 
   List.rev mods |> List.flatten
+
+(* ;;  *)
+
+(* parse_files ["prims.fst"] *)
   

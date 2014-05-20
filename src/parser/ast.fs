@@ -92,7 +92,23 @@ type tyvalQual =
   | Extern    of ident
   | TupleType of int
   | Assumption
-      
+ 
+ type monad_sig = {
+  name:lident;
+  pre_sig:term;
+  post_sig:term;
+  wp_sig:term;
+  ret:tycon;
+  bind:tycon;
+  total:bool
+ }
+
+ type lift = {
+  msource: lident;
+  mdest: lident;
+  lift_op: term
+ }
+
 type decl' = 
   | Open of lid 
   | Tycon of tyvalQual * list<tycon>
@@ -100,8 +116,8 @@ type decl' =
   | Main of term
   | Assume of atag * ident * term
   | Val of tyvalQual * ident * term  (* bool is for logic val *)
-  | ExternRef of ident * list<(string * string)>
   | Exception of ident * option<term>
+  | MonadLat of list<monad_sig> * list<lift>
 and decl = {decl:decl'; drange:range}
 
 type pragma =

@@ -117,6 +117,14 @@ let write_lid    = p2l ["ST"; "write"]
 let read_lid     = p2l ["ST"; "read"]
 let alloc_lid    = p2l ["ST"; "alloc"]
 
+(* monad constants *)
+let pure_lid      = pconst "Pure"
+let pure_ret_lid  = p2l ["Prims";"Pure";"return"]
+let pure_bind_lid = p2l ["Prims";"Pure";"bind"]
+let all_lid       = pconst "All"
+let all_ret_lid   = p2l ["Prims";"All";"return"]
+let all_bind_lid  = p2l ["Prims";"All";"bind"]
+
 (* relational mode constants *)
 let lproj_lid            = pconst  "L"
 let rproj_lid            = pconst  "R"

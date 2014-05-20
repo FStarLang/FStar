@@ -168,8 +168,6 @@ let tvar = '\'' (ident_start_char | constructor_start_char) tvar_char*
 let basekind = '*' | 'A' | 'E' | "Prop"
 
 rule token args = parse
- | "{~" { LBRACE_TILDE }
- | "~}" { TILDE_RBRACE }
  | ident 
      { Lexhelp.kwd_or_id args (GetLexerRange lexbuf) (ulexeme lexbuf) }
  | constructor
@@ -406,6 +404,7 @@ rule token args = parse
  | "$Prop" 
      { BASEKIND("P") }
  | ',' { COMMA }
+ | "~>" { SQUIGGLY_RARROW }
  | "->" { RARROW }
  | "->>" { RARROW2 }
  | "=>" { RRARROW }

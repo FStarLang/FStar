@@ -153,6 +153,9 @@ type token =
   | PRAGMAMONADIC
   | PRAGMADYNAMIC
   | PRAGMALIGHT
+  | MONADLATTICE
+  | SQUIGGLY_RARROW
+  | TOTAL
   | LET of (bool)
   | INFIX_STAR_DIV_MOD_OP of (string)
   | DIV_MOD_OP of (string)

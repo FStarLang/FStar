@@ -55,23 +55,26 @@ type sconst =
   | Const_char        of char
   | Const_float       of double
   | Const_bytearray   of array<byte> * Range.range 
-  | Const_string      of array<byte> * Range.range      (* unicode encoded, F#/Caml independent *)
+  | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
 
 type typ' =  
   | Typ_btvar    of bvar<typ,kind>
   | Typ_const    of var<kind> 
-  | Typ_fun      of option<bvvdef> * typ * typ * bool   (* x:t -> t'  or  t -> t', bool is a flag marking implicit arguments *)
-  | Typ_univ     of btvdef * kind  * typ                (* 'a:k -> t *)
-  | Typ_refine   of bvvdef * typ * typ                  (* x:t{phi} *)
-  | Typ_app      of typ * typ * bool                    (* t t' -- bool marks an explicitly provided implicit arg *) 
-  | Typ_dep      of typ * exp * bool                    (* t e -- bool marks an explicitly provided implicit arg *)  
-  | Typ_lam      of bvvdef * typ * typ                  (* fun (x:t) => T *)
-  | Typ_tlam     of btvdef * kind * typ                 (* fun ('a:k) => T *) 
-  | Typ_ascribed of typ * kind                          (* t <: k *)
-  | Typ_meta     of meta_t                              (* Not really in the type language; a way to stash convenient metadata with types *)
-  | Typ_uvar     of uvar_t * kind                       (* not present after 1st round tc *)
-  | Typ_unknown                                         (* not present after 1st round tc *)
+  | Typ_fun      of option<bvvdef> * typ * comp_typ * bool   (* x:t -> M t' wp  or  t -> M t' wp, bool marks implicit arguments *)
+  | Typ_univ     of btvdef * kind  * comp_typ                (* 'a:k -> M t wp *)
+  | Typ_refine   of bvvdef * typ * typ                       (* x:t{phi} *)
+  | Typ_app      of typ * typ * bool                         (* t t' -- bool marks an explicitly provided implicit arg *) 
+  | Typ_dep      of typ * exp * bool                         (* t e -- bool marks an explicitly provided implicit arg *)  
+  | Typ_lam      of bvvdef * typ * typ                       (* fun (x:t) => T *)
+  | Typ_tlam     of btvdef * kind * typ                      (* fun ('a:k) => T *) 
+  | Typ_ascribed of typ * kind                               (* t <: k *)
+  | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
+  | Typ_uvar     of uvar_t * kind                            (* not present after 1st round tc *)
+  | Typ_unknown                                              (* not present after 1st round tc *)
 and typ = {t:typ'; k:kind}
+and comp_typ = 
+  | Computation of (lident * typ * typ)
+  | Pure of typ
 and uvar_t = Unionfind.uvar<uvar_basis<typ,kind>>
 and meta_t = 
   | Meta_pos of typ * Range.range                (* user wrote down this type 1 at source position 2 *)

@@ -291,11 +291,11 @@ let lidents env : list<lident> =
     | _ -> keys) [] env.gamma in
   Util.smap_fold env.sigtab (fun _ v keys -> Util.lids_of_sigelt v@keys) keys  
     
-let quantifier_pattern_env env t = 
-  let vars, _ = Util.collect_forall_xt t in
-  let vars = match vars with 
-    | [] -> fst (Util.collect_exists_xt t)
-    | _ -> vars in
-  List.fold_left (fun env -> function
-    | Inr (x, t) -> push_local_binding env (Binding_var(x, t))
-    | Inl (a, k) -> push_local_binding env (Binding_typ(a, k))) env vars 
+//let quantifier_pattern_env env t = 
+//  let vars, _ = Util.collect_forall_xt t in
+//  let vars = match vars with 
+//    | [] -> fst (Util.collect_exists_xt t)
+//    | _ -> vars in
+//  List.fold_left (fun env -> function
+//    | Inr (x, t) -> push_local_binding env (Binding_var(x, t))
+//    | Inl (a, k) -> push_local_binding env (Binding_typ(a, k))) env vars 
