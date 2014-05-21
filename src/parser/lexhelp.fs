@@ -211,6 +211,7 @@ let keywords =
     ALWAYS, "with"       ,WITH;
     ALWAYS, "monad_lattice", MONADLATTICE;
     ALWAYS, "terminating", TOTAL;
+    ALWAYS, "kind"       , KIND;
     FSHARP, "yield"      ,YIELD(true);
     ALWAYS, "_"          ,UNDERSCORE;
     FSHARP, "__token_constraint",CONSTRAINT

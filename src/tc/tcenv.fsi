@@ -23,7 +23,7 @@ open Microsoft.FStar.Absyn.Syntax
 
 type binding =
   | Binding_var of bvvdef * typ
-  | Binding_typ of btvdef * kind
+  | Binding_typ of btvdef * knd
   | Binding_lid of lident * typ
   | Binding_sig of sigelt
 
@@ -67,8 +67,8 @@ val is_logic_array : env -> lident -> bool
 val is_record : env -> lident -> bool
 val lookup_datacons_of_typ : env -> lident -> option<list<(lident * typ)>>
 val lookup_typ_abbrev : env -> lident -> option<typ>
-val lookup_btvar : env -> btvar -> kind
-val lookup_typ_lid : env -> lident -> kind
+val lookup_btvar : env -> btvar -> knd
+val lookup_typ_lid : env -> lident -> knd
 val lookup_operator : env -> ident -> typ
 
 val push_sigelt : env -> sigelt -> env

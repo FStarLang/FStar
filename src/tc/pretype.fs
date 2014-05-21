@@ -32,7 +32,7 @@ let check_expected_typ env e t1 =
   | None -> e, t1
   | Some t2 -> Tc.Util.check_and_ascribe env e t1 t2, t2
 
-let rec tc_kind env k : kind = 
+let rec tc_kind env k : knd = 
   let k = Util.compress_kind k in 
   match k with
   | Kind_uvar _
@@ -57,7 +57,7 @@ let rec tc_kind env k : kind =
   | Kind_unknown -> 
     Tc.Util.new_kvar env
 
-and tc_typ' env (t:typ) : typ' * kind = 
+and tc_typ' env (t:typ) : typ' * knd = 
   let env = Tc.Env.set_range env (Util.range_of_typ t (Tc.Env.get_range env)) in
   let t = Util.compress_typ t in
   match t.t with 

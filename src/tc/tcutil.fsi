@@ -32,11 +32,11 @@ val t_bool : typ
 val t_unit : typ
 val typing_const : env -> sconst -> typ
 val push_tparams : env -> list<tparam> -> env
-val new_kvar : env -> kind          
-val new_tvar : env -> kind -> typ
+val new_kvar : env -> knd          
+val new_tvar : env -> knd -> typ
 val new_evar : env -> typ -> exp
 val normalize : env -> typ -> typ
-val keq : env -> option<typ> -> kind -> kind -> unit
+val keq : env -> option<typ> -> knd -> knd -> unit
 val teq : env -> typ -> typ -> unit
 val subtype: env -> typ -> typ -> bool
 val check_and_ascribe : env -> exp -> typ -> typ -> exp
@@ -45,8 +45,8 @@ val generalize: env -> exp -> typ -> (exp * typ)
 val maybe_instantiate : env -> exp -> typ -> (exp * typ)
 val destruct_function_typ : env -> typ -> option<exp> -> bool -> (typ * option<exp>)
 val destruct_poly_typ: env -> typ -> exp -> typ -> (typ*exp) 
-val destruct_tcon_kind: env -> kind -> typ -> bool -> (kind*typ)
-val destruct_dcon_kind: env -> kind -> typ -> bool -> (kind*typ)
+val destruct_tcon_kind: env -> knd -> typ -> bool -> (knd*typ)
+val destruct_dcon_kind: env -> knd -> typ -> bool -> (knd*typ)
 val mk_basic_tuple_type: env -> int -> typ
 val extract_lb_annotation: env -> typ -> exp -> typ
 val norm_typ: list<step> -> env -> typ -> typ

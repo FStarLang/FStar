@@ -97,6 +97,7 @@ type token =
   | TRUE
   | TRY
   | TYPE
+  | KIND
   | VAL
   | INLINE
   | INTERFACE

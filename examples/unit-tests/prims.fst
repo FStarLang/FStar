@@ -15,11 +15,14 @@
 *)
 module Prims
 
-type l_and : Type => Type => Type
-type l_or  : Type => Type => Type
-type l_not : Type => Type
-type l_iff : Type => Type => Type
-type l_imp : Type => Type => Type
+kind Unop  = Type => Type           (* simple kind abbreviation *)
+kind Binop = Type => Type => Type   
+kind Post ('a:Type) = 'a => Type    (* parameterized kind abbreviation *)
+type l_not : Unop
+type l_and : Binop
+type l_or  : Binop
+type l_iff : Binop
+type l_imp : Binop
 type Forall : #'a:Type => ('a => Type) => Type
 type Exists : #'a:Type => ('a => Type) => Type
 type ForallTyp : (Type => Type) => Type
@@ -37,6 +40,7 @@ type ITE = fun ('P:Type) ('Q:Type) ('R:Type) => ('P ==> 'Q) /\ ((l_not 'P) ==> '
 type object
 type bool
 type unit
+type foo : Post bool
 assume Unit_id: forall (x:unit). x=()
 
 type int
@@ -58,47 +62,54 @@ type heap
 logic data type result : Type => Type =
   | V : 'a:Type -> v:'a -> result 'a
   | E : 'a:Type -> e:exn -> result 'a
-  | Err : 'a:Type -> result 'a
+  | Err : 'a:Type -> msg:string -> result 'a
 
 let retype 'a 'b (r:result 'a) : result 'b = match r with 
-  | V _ -> Err
-  | Err -> Err
+  | V _ -> Err "impos"
+  | Err m -> Err m
   | E e -> E e 
 
-monad_lattice {
-  Pure::
-             terminating
-             let Pre  = Type
-             let Post = 'a:Type => 'a => Type
-             let WP   = 'a:Type => Post 'a => Pre
-             type return ('a:Type) (x:'a) ('p:Post 'a) = 'p x
-             type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2: 'a => WP 'b) ('p:Post 'b) = 'wp1 (fun a => 'wp2 a 'p);
-  ST::
-             let Pre  = heap => Type
-             let Post = 'a:Type => 'a => heap => Type
-             let WP   = 'a:Type => Post 'a => Pre
-             type return ('a:Type) (x:'a) ('p:Post 'a) = 'post x
-             type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = 'wp1 (fun a => 'wp2 a 'p) h0;
-  Exn::
-             let Pre  = Type
-             let Post = 'a:Type => result 'a => Type
-             let WP   = 'a:Type =>  Post 'a => Pre
-             type return ('a:Type) (x:'a) ('p:Post 'a) = 'post (V x)
-             type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2:'a => WP 'b) ('p:Post 'b) =
-                 'wp1 (fun ra => ITE (is_V ra) ('wp2 (V.v ra) 'p) ('p (retype ra)));
-  All::
-             let Pre  = heap => Type
-             let Post = 'a:Type => result 'a => heap => Type
-             let WP   = 'a:Type => Post 'a => Pre
-             type return ('a:Type) (x:'a) ('p:Post 'a) = 'post (V x)
-             type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2:'a => WP 'b) ('p:Post 'b) (h0:heap) =
-                 'wp1 (fun ra h1 => ITE (is_V ra) ('wp2 (V.v ra) 'p h1) ('p (retype ra) h1)) h0
-  with 
-  Pure ~> ST  = (fun ('a:Type) ('wp:Pure.WP 'a) ('p:ST.Post 'a) (h:heap) => 'wp (fun a => 'p a h));
-  ST ~> All   = (fun ('a:Type) ('wp:ST.WP 'a) ('p:All.Post 'a) => 'wp (fun a => 'p (V a)));
-  Pure ~> Exn = (fun ('a:Type) ('wp:Pure.WP 'a) ('p:Exn.Post 'a) => 'wp (fun a => 'p (V a)));
-  Exn ~> All  = (fun ('a:Type) ('wp:Exn.WP 'a) ('p:All.Post 'a) (h:heap) => 'wp (fun ra => 'p ra h))
-}
+(* monad_lattice { *)
+(*   Pure:: *)
+(*              terminating *)
+(*              let Pre  = Type *)
+(*              let Post = 'a:Type => 'a => Type *)
+(*              let WP   = 'a:Type => Post 'a => Pre *)
+(*              type prepost ('a:Type) ('pre:Pre) ('post:Post 'a) ('p:Post 'a) = Pre /\ (forall a. 'post a ==> 'p a) *)
+(*              type return ('a:Type) (x:'a) ('p:Post 'a) = 'p x *)
+(*              type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2: 'a => WP 'b) ('p:Post 'b) = 'wp1 (fun a => 'wp2 a 'p); *)
+(*   St:: *)
+(*              let Pre     = heap => Type *)
+(*              let Post    = 'a:Type => 'a => heap => Type *)
+(*              let WP      = 'a:Type => Post 'a => Pre *)
+(*              let PostAlt = 'a:Type => heap => 'a => heap => Type   *)
+(*              type prepost ('a:Type) ('pre:Pre) ('post:PostAlt 'a) = fun ('p:Post 'a) (h:heap) = Pre h /\ (forall a. 'post a ==> 'p a) *)
+(*              type return ('a:Type) (x:'a) ('p:Post 'a) = 'post x *)
+(*              type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = 'wp1 (fun a => 'wp2 a 'p) h0; *)
+(*   Exn:: *)
+(*              let Pre  = Type *)
+(*              let Post = 'a:Type => result 'a => Type *)
+(*              let WP   = 'a:Type =>  Post 'a => Pre *)
+(*              type return ('a:Type) (x:'a) ('p:Post 'a) = 'post (V x) *)
+(*              type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2:'a => WP 'b) ('p:Post 'b) = *)
+(*                  'wp1 (fun ra => ITE (is_V ra) ('wp2 (V.v ra) 'p) ('p (retype ra))); *)
+(*   All:: *)
+(*              let Pre  = heap => Type *)
+(*              let Post = 'a:Type => result 'a => heap => Type *)
+(*              let WP   = 'a:Type => Post 'a => Pre *)
+(*              type return ('a:Type) (x:'a) ('p:Post 'a) = 'post (V x) *)
+(*              type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = *)
+(*                  'wp1 (fun ra h1 => ITE (is_V ra) ('wp2 (V.v ra) 'p h1) ('p (retype ra) h1)) h0 *)
+(*   with  *)
+(*   Pure ~> ST  = (fun ('a:Type) ('wp:Pure.WP 'a) ('p:ST.Post 'a) (h:heap) => 'wp (fun a => 'p a h)); *)
+(*   ST ~> All   = (fun ('a:Type) ('wp:ST.WP 'a) ('p:All.Post 'a) => 'wp (fun a => 'p (V a))); *)
+(*   Pure ~> Exn = (fun ('a:Type) ('wp:Pure.WP 'a) ('p:Exn.Post 'a) => 'wp (fun a => 'p (V a))); *)
+(*   Exn ~> All  = (fun ('a:Type) ('wp:Exn.WP 'a) ('p:All.Post 'a) (h:heap) => 'wp (fun ra => 'p ra h)) *)
+(* } *)
+
+(* type ST 'a ('pre:St.Pre) ('post:St.Post) =  *)
+(*     St 'a (fun ('p:St.Post) (h:heap) => 'pre h /\ (forall a. 'post 'a ==> 'p  *)
+
 
 logic data type Tuple2: 'a:Type
           => 'b:('a => Type)

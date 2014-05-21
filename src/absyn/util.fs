@@ -285,7 +285,7 @@ and is_logic_function e = match compress_exp e with
 
 type uvars = {
   uvars_k: list<uvar_k>;
-  uvars_t: list<(uvar_t*kind)>;
+  uvars_t: list<(uvar_t*knd)>;
   uvars_e: list<(uvar_e*typ)>
   }
 let empty_uvars = {uvars_k=[]; uvars_t=[]; uvars_e=[]}
@@ -344,7 +344,7 @@ let ext_fv_env ((btvs, bxvs):boundvars) : either<btvar,bvvar> -> (boundvars * ei
     | Inr xv -> (btvs, xv.v::bxvs), Inr xv.v 
 let fold_kind_noop env benv k = (env, k)
 
-let freevars_kind : kind -> freevars = 
+let freevars_kind : knd -> freevars = 
   fun k -> fst <| Visit.visit_kind fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) k
       
 let freevars_typ : typ -> freevars = 
@@ -367,7 +367,7 @@ let mk_subst_map (s:subst) =
   t
 let lift_subst f = (fun () x -> (), f x)
 (* Should never call these ones directly *)
-let rec subst_kind' (s:subst_map) (k:kind) : kind =
+let rec subst_kind' (s:subst_map) (k:knd) : knd =
   snd (Visit.visit_kind_simple
          (fun e k -> e,k)
          (lift_subst (subst_tvar s))
@@ -478,7 +478,7 @@ let freshen_bvars_typ (ropt:option<Range.range>) (t:typ) (subst:subst) : typ =
          (freshen_label ropt)
          ext () subst t) 
 
-let freshen_bvars_kind (ropt:option<Range.range>) (k:kind) (subst:subst) : kind =
+let freshen_bvars_kind (ropt:option<Range.range>) (k:knd) (subst:subst) : knd =
   snd (Visit.visit_kind
          fold_kind_noop
          (fun () subst t -> (), subst_tvar (mk_subst_map subst) t)
@@ -489,7 +489,7 @@ let freshen_bvars_kind (ropt:option<Range.range>) (k:kind) (subst:subst) : kind 
 (* move to de Bruijn? *)
 let freshen_typ t benv   : typ  = freshen_bvars_typ None t benv
 let alpha_convert t      : typ  = freshen_bvars_typ None t []
-let alpha_convert_kind k : kind = freshen_bvars_kind None k []
+let alpha_convert_kind k : knd = freshen_bvars_kind None k []
 let alpha_fresh_labels r t : typ = freshen_bvars_typ (Some r) t []
 
 

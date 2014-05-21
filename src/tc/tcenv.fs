@@ -30,7 +30,7 @@ open Microsoft.FStar.Absyn.Util
    
 type binding =
   | Binding_var of bvvdef * typ
-  | Binding_typ of btvdef * kind
+  | Binding_typ of btvdef * knd
   | Binding_lid of lident * typ
   | Binding_sig of sigelt 
 
@@ -221,7 +221,7 @@ let lookup_typ_abbrev env lid =
     | Some (Inr (Sig_typ_abbrev (lid, tps, _, t, _))) -> Some (Util.close_with_lam tps t)
     | _ -> None
         
-let lookup_btvdef env (btvd:btvdef): option<kind> = 
+let lookup_btvdef env (btvd:btvdef): option<knd> = 
   Util.find_map env.gamma (function
     | Binding_typ (id, k) when Util.bvd_eq id btvd -> Some k
     | _ -> None)  
@@ -231,7 +231,7 @@ let lookup_btvar env (btv:btvar) =
     | None -> raise (Error(Tc.Errors.variable_not_found btv.v, Util.range_of_bvd btv.v))
     | Some k -> k 
 
-let lookup_typ_lid env (ftv:lident) : kind = 
+let lookup_typ_lid env (ftv:lident) : knd = 
   match lookup_qname env ftv with
     | Some (Inr (Sig_tycon (lid, tps, k, _, _, _, _))) 
     | Some (Inr (Sig_typ_abbrev (lid, tps, k, _, _))) -> 

@@ -75,16 +75,16 @@ and pattern = {pattern:pattern'; prange:range}
 
 and branch = (pattern * option<term> * term)
 
-type kind = term
+type knd = term
 type typ = term
 type expr = term
 type atag = | AssumeTag | QueryTag | DefinitionTag
 
 type tycon =  
-  | TyconAbstract of ident * list<binder> * option<kind>
-  | TyconAbbrev   of ident * list<binder> * option<kind> * term
-  | TyconRecord   of ident * list<binder> * option<kind> * list<(ident * term)>
-  | TyconVariant  of ident * list<binder> * option<kind> * list<(ident * option<term> * bool)> (* using 'of' notion *)
+  | TyconAbstract of ident * list<binder> * option<knd>
+  | TyconAbbrev   of ident * list<binder> * option<knd> * term
+  | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term)>
+  | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * bool)> (* using 'of' notion *)
 
 type tyvalQual = 
   | NoQual
@@ -111,6 +111,7 @@ type tyvalQual =
 
 type decl' = 
   | Open of lid 
+  | KindAbbrev of ident * list<binder> * knd
   | Tycon of tyvalQual * list<tycon>
   | ToplevelLet of bool * list<(pattern * term)> 
   | Main of term

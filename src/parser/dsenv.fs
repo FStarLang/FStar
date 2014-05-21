@@ -33,12 +33,14 @@ type binding =
   | Binding_let of lident
   | Binding_tycon of lident
 
+type kind_abbrev = lident * list<either<btvdef, bvvdef>> * Syntax.knd
 type env = {
   curmodule: option<lident>;
   modules:list<(lident * modul)>;  (* previously desugared modules *)
   open_namespaces: list<lident>; (* fully qualified names, in order of precedence *)
   sigaccum:sigelts;              (* type declarations being accumulated for the current module *)
   localbindings:list<(either<btvdef,bvvdef> * binding)>;  (* local name bindings for name resolution, paired with an env-generated unique name *)
+  kind_abbrevs:list<kind_abbrev>;
   recbindings:list<binding>;     (* names bound by recursive type and top-level let-bindings definitions only *)
   phase:AST.level;
   sigmap: Util.smap<sigelt>;
@@ -64,6 +66,7 @@ let empty_env () = {curmodule=None;
                     sigaccum=[]; 
                     localbindings=[]; 
                     recbindings=[];
+                    kind_abbrevs=[];
                     phase=AST.Un;
                     sigmap=Util.smap_create(100)}
 
@@ -256,12 +259,24 @@ let qualify_field_to_record env (record:record) (f:lident) =
       then Some(fname)
       else None) in
   resolve_in_open_namespaces env f qualify
+
+let find_kind_abbrev env l = 
+  List.tryFind (fun (l', _, _) -> lid_equals l l') env.kind_abbrevs
+
+let is_kind_abbrev env l = 
+  match find_kind_abbrev env l with 
+    | None -> false
+    | Some _ -> true
     
 let unique_name env lid = 
   match try_lookup_lid env lid with
-    | None -> true
+    | None -> 
+      begin match find_kind_abbrev env lid with 
+        | None -> true
+        | Some _ -> false
+      end
     | Some _ -> false
-      
+
 let unique_typ_name env lid = 
   match try_lookup_typ_name env lid with
     | None -> true
@@ -271,6 +286,11 @@ let unique env lid =
   let this_env = {env with open_namespaces=[]} in
   unique_name this_env lid && unique_typ_name this_env lid
       
+let push_kind_abbrev env lid parms k = 
+  if unique env lid 
+  then {env with kind_abbrevs=(lid, parms, k)::env.kind_abbrevs}
+  else raise (Error ("Duplicate top-level names " ^ lid.str, range_of_lid lid))
+
 let gen_bvd = function 
   | Binding_typ_var id -> Inl (mkbvd(id, genident (Some id.idRange)))
   | Binding_var id -> Inr (mkbvd(id, genident (Some id.idRange)))
@@ -298,7 +318,7 @@ let push_local_vbinding env b =
     | env, Inr x -> 
       env, x
     | _ -> failwith "impossible"
-      
+
 let push_rec_binding env b = match b with 
   | Binding_let lid
   | Binding_tycon lid -> 

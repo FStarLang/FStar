@@ -26,8 +26,8 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Util
 
-let unparen t = match t.term with 
-  | Paren t -> t
+let rec unparen t = match t.term with 
+  | Paren t -> unparen t
   | _ -> t
 
 let kind_star r = mk_term (Name (lid_of_path ["Type"] r)) r Kind
@@ -131,13 +131,15 @@ let rec is_type env (t:term) =
     | Product(_, t)  -> is_type env t
     | _ -> false
 
-let rec is_kind (t:term) : bool =
+let rec is_kind env (t:term) : bool =
   if t.level = Kind
   then true
   else match (unparen t).term with
     | Name {str="Type"} -> true
-    | Product(_, t) -> is_kind t
-    | Paren t -> is_kind t
+    | Name l -> DesugarEnv.is_kind_abbrev env l
+    | Product(_, t) -> is_kind env t
+    | Paren t -> is_kind env t
+    | App(t, _, _) -> is_kind env t 
     | _ -> false
 
 let rec is_type_binder env b =
@@ -147,13 +149,13 @@ let rec is_type_binder env b =
     | Annotated _ -> false
     | TAnnotated _
     | TVariable _ -> true
-    | NoName t -> is_kind  t
+    | NoName t -> is_kind env t
   else match b.binder with
     | Variable _ -> raise (Error("Unexpected binder without annotation", b.brange))
     | TVariable _ -> false
     | TAnnotated _ -> true
     | Annotated (_, t)
-    | NoName t -> is_kind t
+    | NoName t -> is_kind env t
 
 let sort_ftv ftv =
   Util.sort_with (fun x y -> String.compare x.idText y.idText) <|
@@ -239,7 +241,7 @@ let rec destruct_app_pattern env is_top_level p = match p.pattern with
     failwith "Not an app pattern"
 
 type bnd = 
-  | TBinder of btvdef * kind
+  | TBinder of btvdef * knd
   | VBinder of bvvdef * typ
   | LetBinder of lident * typ
 type env_t = DesugarEnv.env
@@ -702,9 +704,15 @@ and desugar_typ env (top:term) : typ =
 
     | _ -> error "Expected a type" top top.range
 
-and desugar_kind env k : kind =
-  match (unparen k).term with
+and desugar_kind env k : knd =
+  let k = unparen k in
+  match k.term with
     | Name {str="Type"} -> Kind_star
+    | Name {ns=[]; ident=id} -> 
+      begin match DesugarEnv.find_kind_abbrev env (DesugarEnv.qualify env id) with 
+        | Some (_, [], def) -> def
+        | None -> error "Unexpected term where kind was expected" k k.range
+       end
     | Wild           -> Kind_unknown
     | Product([b], t) ->
       let tk = desugar_binder env b in
@@ -722,6 +730,18 @@ and desugar_kind env k : kind =
         | Inr(Some x, t0) ->
           let env, x = push_local_vbinding env x in
           Kind_dcon(Some x, t0, desugar_kind env t, b.implicit)
+      end
+    | Construct({ns=[];ident=id}, args) -> 
+      begin match DesugarEnv.find_kind_abbrev env (DesugarEnv.qualify env id) with 
+        | None -> error "Unexpected term where kind was expected" k k.range
+        | Some (_, binders, def) -> 
+          if List.length binders <> List.length args
+          then error "Not enough arguments to kind abberviation" k k.range
+          else 
+            let subst = List.map2 (fun ax (t, _) -> match ax with 
+              | Inl a -> Inl(a, desugar_typ env t)
+              | Inr x -> Inr(x, desugar_exp env t)) binders args in 
+            Util.subst_kind subst def 
       end
     | _ -> error "Unexpected term where kind was expected" k k.range
 
@@ -1110,6 +1130,20 @@ let desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
     let se = Sig_datacon(qualify env id, t, Const.exn_lid, d.drange) in
     let env = push_sigelt env se in
     env, [se]
+
+  | KindAbbrev(id, binders, k) ->
+    let env_k, binders = List.fold_left (fun (env,binders) b -> 
+      match desugar_binder env b with
+        | Inl(Some a, k) -> 
+          let env, ax = DesugarEnv.push_local_binding env (DesugarEnv.Binding_typ_var a) in
+          env, ax::binders
+        | Inr(Some x, t) -> 
+          let env, ax = DesugarEnv.push_local_binding env (DesugarEnv.Binding_var x) in 
+          env, ax::binders
+        | _ -> raise (Error("Missing name in binder for kind abbreviation", d.drange))) (env, []) binders in 
+    let k = desugar_kind env_k k in 
+    let env = DesugarEnv.push_kind_abbrev env (DesugarEnv.qualify env id) (List.rev binders) k in 
+    env, []
 
   | MonadLat(monads, lifts) -> //TODO: Ignoring this for now
     env, []

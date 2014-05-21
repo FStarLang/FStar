@@ -165,7 +165,7 @@ let newline (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<_>) =
 %token GREATER_RBRACK STRUCT SIG 
 %token STATIC MEMBER CLASS VIRTUAL ABSTRACT OVERRIDE DEFAULT CONSTRUCTOR INHERIT 
 %token EXTERN REFERENCE VOID PUBLIC PRIVATE INTERNAL LBRACE_COLON_PATTERN LBRACE_TILDE TILDE_RBRACE PIPE_LEFT PIPE_RIGHT
-%token MONADLATTICE SQUIGGLY_RARROW TOTAL 
+%token MONADLATTICE SQUIGGLY_RARROW TOTAL KIND
  
 /* These are artificial */
 %token <string> LEX_FAILURE
@@ -219,6 +219,8 @@ decl':
       { Open $2 }
   | tycon 
       { $1 }
+  | kind_abbrev 
+      { $1 }
   | LET recopt letbinding letbindings
       { ToplevelLet($2, $3::$4) }
   | valQuals VAL eitherName COLON typ
@@ -229,6 +231,10 @@ decl':
       { Exception($2, $3) }
   | MONADLATTICE LBRACE monads WITH lifts RBRACE
       { MonadLat($3, $5) }
+
+kind_abbrev: 
+  | KIND name binders EQUALS kind
+      { KindAbbrev($2, $3, $5) }
 
 monads:
   | monad moreMonads

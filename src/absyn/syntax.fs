@@ -58,24 +58,24 @@ type sconst =
   | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
 
 type typ' =  
-  | Typ_btvar    of bvar<typ,kind>
-  | Typ_const    of var<kind> 
+  | Typ_btvar    of bvar<typ,knd>
+  | Typ_const    of var<knd> 
   | Typ_fun      of option<bvvdef> * typ * comp_typ * bool   (* x:t -> M t' wp  or  t -> M t' wp, bool marks implicit arguments *)
-  | Typ_univ     of btvdef * kind  * comp_typ                (* 'a:k -> M t wp *)
+  | Typ_univ     of btvdef * knd  * comp_typ                (* 'a:k -> M t wp *)
   | Typ_refine   of bvvdef * typ * typ                       (* x:t{phi} *)
   | Typ_app      of typ * typ * bool                         (* t t' -- bool marks an explicitly provided implicit arg *) 
   | Typ_dep      of typ * exp * bool                         (* t e -- bool marks an explicitly provided implicit arg *)  
   | Typ_lam      of bvvdef * typ * typ                       (* fun (x:t) => T *)
-  | Typ_tlam     of btvdef * kind * typ                      (* fun ('a:k) => T *) 
-  | Typ_ascribed of typ * kind                               (* t <: k *)
+  | Typ_tlam     of btvdef * knd * typ                      (* fun ('a:k) => T *) 
+  | Typ_ascribed of typ * knd                               (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
-  | Typ_uvar     of uvar_t * kind                            (* not present after 1st round tc *)
+  | Typ_uvar     of uvar_t * knd                            (* not present after 1st round tc *)
   | Typ_unknown                                              (* not present after 1st round tc *)
-and typ = {t:typ'; k:kind}
+and typ = {t:typ'; k:knd}
 and comp_typ = 
   | Computation of (lident * typ * typ)
   | Pure of typ
-and uvar_t = Unionfind.uvar<uvar_basis<typ,kind>>
+and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pos of typ * Range.range                (* user wrote down this type 1 at source position 2 *)
   | Meta_pattern of typ * list<either<typ,exp>>
@@ -89,7 +89,7 @@ and exp =
   | Exp_fvar       of var<typ> * bool                            (* flag indicates a constructor *)
   | Exp_constant   of sconst
   | Exp_abs        of bvvdef * typ * exp 
-  | Exp_tabs       of btvdef * kind * exp            
+  | Exp_tabs       of btvdef * knd * exp            
   | Exp_app        of exp * exp * bool                           (* flag indicates whether the argument is explicit instantiation of an implict param *)
   | Exp_tapp       of exp * typ             
   | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
@@ -117,21 +117,21 @@ and pat =
   | Pat_wild
   | Pat_twild
   | Pat_withinfo of pat * Range.range
-and kind =
+and knd =
   | Kind_star
-  | Kind_tcon of option<bvdef<typ>> * kind * kind * bool  (* 'a:k -> k'; bool marks implicit *)
-  | Kind_dcon of option<bvvdef> * typ * kind * bool       (* x:t -> k; bool marks implicit *)
+  | Kind_tcon of option<bvdef<typ>> * knd * knd * bool  (* 'a:k -> k'; bool marks implicit *)
+  | Kind_dcon of option<bvvdef> * typ * knd * bool       (* x:t -> k; bool marks implicit *)
   | Kind_uvar of uvar_k                                   (* not present after 1st round tc *)
   | Kind_unknown                                          (* not present after 1st round tc *)
-and uvar_k = Unionfind.uvar<uvar_basis<kind,unit>>
+and uvar_k = Unionfind.uvar<uvar_basis<knd,unit>>
 and letbindings = bool * list<(either<bvvdef,lident> * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
 
 type formula = typ
-type btvar = bvar<typ,kind>
+type btvar = bvar<typ,knd>
 type bvvar = bvar<exp,typ>
 
 type tparam =
-  | Tparam_typ  of btvdef * kind (* idents for pretty printing *)
+  | Tparam_typ  of btvdef * knd (* idents for pretty printing *)
   | Tparam_term of bvvdef * typ
 
 type aqual = 
@@ -158,8 +158,8 @@ type atag =
   | Lemma
 
 type sigelt =
-  | Sig_tycon          of lident * list<tparam> * kind * list<lident> * list<lident> * list<logic_tag> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
-  | Sig_typ_abbrev     of lident * list<tparam> * kind * typ * Range.range 
+  | Sig_tycon          of lident * list<tparam> * knd * list<lident> * list<lident> * list<logic_tag> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
+  | Sig_typ_abbrev     of lident * list<tparam> * knd * typ * Range.range 
   | Sig_datacon        of lident * typ * lident * Range.range  (* second lident is the name of the type this constructs *)
   | Sig_val_decl       of lident * typ * option<atag> * option<logic_tag> * Range.range 
   | Sig_assume         of lident * formula * aqual * atag * Range.range 

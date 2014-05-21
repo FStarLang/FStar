@@ -125,8 +125,8 @@ and env_entry =
   | TDummy of btvdef
   | VDummy of bvvdef
 and stack_entry = either<tclos,vclos> * bool
-and tclos = (typ * environment * kind)
-and vclos = (exp * environment * kind)
+and tclos = (typ * environment * knd)
+and vclos = (exp * environment * knd)
 and memo<'a> = ref<option<'a>>
 
 let push se config = {config with stack=se::config.stack}
@@ -265,7 +265,7 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
 and snl tcenv configs : list<config<typ>> =
   List.map (sn tcenv) configs
 
-and snk tcenv (config:config<kind>) : config<kind> =
+and snk tcenv (config:config<knd>) : config<knd> =
   match Util.compress_kind config.code with
     | Kind_uvar _ 
     | Kind_star -> config

@@ -50,14 +50,14 @@ let rec compress_exp_aux meta exp = match exp with
 let compress_exp e = compress_exp_aux true e
 let compress_exp_uvars e = compress_exp_aux false e
   
-let rec compress_kind kind = match kind with 
+let rec compress_kind knd = match knd with 
   | Kind_uvar uv -> 
     begin
       match Unionfind.find uv with 
         | Fixed k -> compress_kind k
-        | _ -> kind
+        | _ -> knd
     end
-  | _ -> kind
+  | _ -> knd
 
 let left ext benv btv = match ext benv (Inl btv) with 
   | benv, Inl bvd -> benv, bvd
@@ -70,12 +70,12 @@ let right ext benv bvv = match ext benv (Inr bvv) with
    the leaves of a term while gathering a context of names.
    Useful for implementing substitutions, computing freevars etc. *)
 let rec visit_kind'
-    (h: 'env -> 'benv -> kind -> ('env * kind))
+    (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp) 
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
-    (env:'env) (benv:'benv) (k:kind) (cont: ('env * kind) -> 'res) : 'res =
+    (env:'env) (benv:'benv) (k:knd) (cont: ('env * knd) -> 'res) : 'res =
   let k = compress_kind k in 
   match k with
     | Kind_uvar _ 
@@ -102,7 +102,7 @@ let rec visit_kind'
                  (fun (env, k') ->
                     cont (env, Kind_dcon(xopt, t, k', imp))))
 and visit_typ'
-    (h: 'env -> 'benv -> kind -> ('env * kind))
+    (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp) (* transforms labels *)
@@ -206,7 +206,7 @@ and visit_typ'
         | _ -> failwith "Unexpected type"
 
 and visit_comp_typ'
-    (h: 'env -> 'benv -> kind -> ('env * kind))
+    (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp)
@@ -222,7 +222,7 @@ and visit_comp_typ'
 
 
 and visit_exp'
-    (h: 'env -> 'benv -> kind -> ('env * kind))
+    (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp)
@@ -399,7 +399,7 @@ and visit_exp'
                   cont (env, Exp_let((true, lbs'), e')))))
 
 and visit_typs'
-    (h: 'env -> 'benv -> kind -> ('env * kind))
+    (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp)
@@ -412,7 +412,7 @@ and visit_typs'
     aux env ts cont 
 
 and visit_exps'
-    (h: 'env -> 'benv -> kind -> ('env * kind))
+    (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp)
@@ -426,7 +426,7 @@ and visit_exps'
     aux env es cont
 
 and visit_either_l'
-    (h: 'env -> 'benv -> kind -> ('env * kind))
+    (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp)
@@ -445,7 +445,7 @@ let visit_exp h f g l ext env benv t = visit_exp' h f g l ext env benv t (fun x 
 let visit_kind h f g l ext env benv t = visit_kind' h f g l ext env benv t (fun x -> x)
 
 let visit_simple skel
-    (h: 'env -> kind -> ('env * kind))
+    (h: 'env -> knd -> ('env * knd))
     (f: 'env -> typ -> ('env * typ))
     (g: 'env -> exp -> ('env * exp))
     (env:'env) (t:'kte) : ('env * 'kte) =
@@ -469,7 +469,7 @@ let visit_exp_simple f = visit_simple visit_exp f
 (**********************************************************************************)
 type binders = list<either<btvdef, bvvdef>>
 type mapper<'env, 'm, 'n> =
-    ('env -> binders -> kind -> (kind * 'env))
+    ('env -> binders -> knd -> (knd * 'env))
     -> ('env -> binders -> typ -> (typ * 'env))
     -> ('env -> binders -> exp -> (exp * 'env))
     -> 'env -> binders -> 'm -> ('n * 'env)
@@ -482,12 +482,12 @@ let push_vbinder binders = function
   | Some a -> (Inr a)::binders
 
 let rec reduce_kind 
-    (map_kind': mapper<'env, kind, kind>)
+    (map_kind': mapper<'env, knd, knd>)
     (map_typ': mapper<'env, typ, typ>)
     (map_exp': mapper<'env, exp, exp>)
-    (combine_kind: (kind -> (list<kind> * list<typ> * list<exp>) -> 'env -> (kind * 'env)))
-    (combine_typ: (typ -> (list<kind> * list<typ> * list<comp_typ> * list<exp>) -> 'env -> (typ * 'env)))
-    (combine_exp: (exp -> (list<kind> * list<typ> * list<exp>) -> 'env -> (exp * 'env))) (env:'env) binders k: (kind * 'env) =
+    (combine_kind: (knd -> (list<knd> * list<typ> * list<exp>) -> 'env -> (knd * 'env)))
+    (combine_typ: (typ -> (list<knd> * list<typ> * list<comp_typ> * list<exp>) -> 'env -> (typ * 'env)))
+    (combine_exp: (exp -> (list<knd> * list<typ> * list<exp>) -> 'env -> (exp * 'env))) (env:'env) binders k: (knd * 'env) =
   let rec visit_kind env binders k =
     let k = compress_kind k in
     let kl, tl, el, env =   
@@ -511,12 +511,12 @@ let rec reduce_kind
   map_kind env binders k
     
 and reduce_typ 
-    (map_kind': mapper<'env, kind, kind>)
+    (map_kind': mapper<'env, knd, knd>)
     (map_typ': mapper<'env, typ, typ>)
     (map_exp': mapper<'env, exp, exp>)
-    (combine_kind: (kind -> (list<kind> * list<typ> * list<exp>) -> 'env -> (kind * 'env)))
-    (combine_typ: (typ -> (list<kind> * list<typ> * list<comp_typ> * list<exp>) -> 'env -> (typ * 'env)))
-    (combine_exp: (exp -> (list<kind> * list<typ> * list<exp>) -> 'env -> (exp * 'env))) (env:'env) binders t : (typ * 'env) =
+    (combine_kind: (knd -> (list<knd> * list<typ> * list<exp>) -> 'env -> (knd * 'env)))
+    (combine_typ: (typ -> (list<knd> * list<typ> * list<comp_typ> * list<exp>) -> 'env -> (typ * 'env)))
+    (combine_exp: (exp -> (list<knd> * list<typ> * list<exp>) -> 'env -> (exp * 'env))) (env:'env) binders t : (typ * 'env) =
   let rec map_typs env binders tl = 
     let tl, _, env = List.fold_left (fun (out, binders, env) (xopt, t) ->
         let t, env = map_typ env binders t in
@@ -589,12 +589,12 @@ and reduce_typ
   map_typ env binders t
     
 and reduce_exp 
-    (map_kind': mapper<'env, kind, kind>)
+    (map_kind': mapper<'env, knd, knd>)
     (map_typ': mapper<'env, typ, typ>)
     (map_exp': mapper<'env, exp, exp>)
-    (combine_kind: (kind -> (list<kind> * list<typ> * list<exp>) -> 'env -> (kind * 'env)))
-    (combine_typ: (typ -> (list<kind> * list<typ> * list<comp_typ> * list<exp>) -> 'env -> (typ * 'env)))
-    (combine_exp: (exp -> (list<kind> * list<typ> * list<exp>) -> 'env -> (exp * 'env))) (env:'env) binders e : (exp * 'env) =
+    (combine_kind: (knd -> (list<knd> * list<typ> * list<exp>) -> 'env -> (knd * 'env)))
+    (combine_typ: (typ -> (list<knd> * list<typ> * list<comp_typ> * list<exp>) -> 'env -> (typ * 'env)))
+    (combine_exp: (exp -> (list<knd> * list<typ> * list<exp>) -> 'env -> (exp * 'env))) (env:'env) binders e : (exp * 'env) =
   let rec map_exps env binders el = 
     let el, env = List.fold_left (fun (out, env) e -> 
       let e, env = map_exp env binders e in
