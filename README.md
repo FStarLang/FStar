@@ -18,11 +18,9 @@ Files:
 
   LICENSE-fsharp.txt:  
 
-    The Apache 2.0 license of F# reproduced verbatim here. Of the
-    ~20,000 lines of source code included here, a total of 1,330 lines
-    of source code were derived from F#. The rest was written from
-    scratch, primarily by N. Swamy. This is documented in further
-    detail below.
+    The Apache 2.0 license of F# reproduced verbatim here. Most of the 
+    code in F* was written from scratch. However, some 1,330 lines
+    of source code were derived from F#, primarily in the lexer.
 
 Directories:
 
@@ -59,9 +57,8 @@ Directories:
      Makefile: A top-level file for building the verifier from source
                using the command line.
      
-     fstar.fsproj: A project file for building the verifier using
-                   Visual Studio.
-     
+     VS/FStar.sln:
+        A Visual Studio (2012) solution file for all the F* sources.
 
      fstar.fs: The top-level file in the source tree that launches the
                verification tool.
@@ -95,15 +92,9 @@ Directories:
         lex.fsl (derived from fsharp/src/fsharp/lex.fsl)
         lexhelp.fs (derived from fsharp/src/fsharp/lexhelp.fs)
 
-     tccore/
+     tc/
      
-        Various utilities to operate over F* types and type environments.
-
-
-     monadic/
-     
-        The main verification condition generator for F*. This is the
-        module that derives a logical specification for an F* program. 
+        The main type-checker and verification condition generator.
 
 
      z3encode/
