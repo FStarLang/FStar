@@ -420,7 +420,7 @@ let subst_comp_typ s t = match s with
   | [] -> t
   | _ -> match t with 
     | Pure t -> Pure (subst_typ s t)
-    | Computation(m, t, wp) -> Computation (m, subst_typ s t, subst_typ s wp)
+    | Computation t -> Computation (subst_typ s t)
 let subst_exp s e = match s with
   | [] -> e
   | _ -> subst_exp' (mk_subst_map s) e 
@@ -654,6 +654,30 @@ let collect_u_quants t =
       | _ -> List.rev out, t
   in aux [] t
 
+let collect_forall_xt t =
+  let rec aux out t =
+    match flatten_typ_apps (whnf t) with
+      | {t=Typ_const tc}, [Inl t1; Inl ({t=Typ_lam(x, _, t2)})]
+        when is_forall tc.v ->
+        aux (Inr(x, t1)::out) t2
+      | {t=Typ_const tc}, [Inl ({t=Typ_tlam(a, k, t2)})]
+          when (lid_equals tc.v Const.allTyp_lid) ->
+          aux (Inl(a,k)::out) t2
+      | _ -> List.rev out, t
+  in aux [] t
+
+let collect_exists_xt t =
+  let rec aux out t =
+      match flatten_typ_apps (whnf t) with
+        | {t=Typ_const tc}, [Inl t1; Inl ({t=Typ_lam(x, _, t2)})]
+          when lid_equals tc.v Const.exists_lid ->
+          aux (Inr(x, t1)::out) t2
+        | {t=Typ_const tc}, [Inl ({t=Typ_tlam(a, k, t2)})]
+          when (lid_equals tc.v Const.exTyp_lid) ->
+          aux (Inl(a,k)::out) t2
+        | _ -> List.rev out, t
+  in aux [] t
+  
 let collect_e_quants t =
   let rec aux out t =
       match flatten_typ_apps (whnf t) with

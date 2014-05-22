@@ -137,10 +137,20 @@ and tc_typ' env (t:typ) : typ' * knd =
     let t', k = tc_typ env' t in 
     Typ_meta(Meta_pos(t', r)), k
 
+  | Typ_meta (Meta_pattern(quant, pats)) -> 
+    let quant, k = tc_typ env quant in 
+    let pat_env = Env.quantifier_pattern_env env quant in
+    let pats = List.map (function 
+      | Inl t -> Inl <| fst (tc_typ pat_env t)
+      | Inr e -> Inr <| fst (tc_exp pat_env e)) pats in
+    Typ_meta(Meta_pattern(quant, pats)), k
+
   | Typ_unknown -> 
     let k = Tc.Util.new_kvar env in 
     let t = Tc.Util.new_tvar env k in 
-    t.t, k   
+    t.t, k  
+
+  | _ -> failwith (Util.format1 "Unexpected type : %s\n" (Print.typ_to_string t)) 
 
 and tc_typ env t = 
   let t, k = tc_typ' env t in 
@@ -480,6 +490,7 @@ let tc_tparams env tps : (list<tparam> * Env.env) =
 
 
 let rec tc_decl env se = match se with 
+    | Sig_monads _ -> se, env
     | Sig_tycon (lid, tps, k, _mutuals, _data, tags, r) -> 
       let env = Tc.Env.set_range env r in 
       let tps, env = tc_tparams env tps in 

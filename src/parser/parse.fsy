@@ -249,47 +249,35 @@ maybeTotal:
   |       { false }
 
 monad:
-  | qname COLON_COLON maybeTotal monad_kinds tycon tycon  
+  | name COLON_COLON maybeTotal monad_decls WITH monad_abbrevs
       {
-        let name = $1 in
-        let total = $3 in 
-        let pre_sig, post_sig, wp_sig = match $4 with 
-          | [(pre, pre_k); (post, post_k); (wp, wp_k)]
-              when (pre.str="Pre" && post.str="Post" && wp.str="WP") -> 
-            pre_k, post_k, wp_k
-          | kinds -> 
-            errorR(Error(Printf.sprintf 
-                           "Unexpected kind abbreviations in monad signature (expected 'Pre', 'Post' and 'WP') got %A" kinds, rhs parseState 5)); 
-            let r = rhs parseState 5 in
-            let wild = mk_term Wild r Kind in 
-            wild, wild, wild in
-        let ret, bind = match $5, $6 with 
-          | Tycon(NoQual, [TyconAbbrev(ret, _, _, _) as ret_def]), Tycon(NoQual, [TyconAbbrev(bind, _, _, _) as bind_def]) 
-            when ret.idText="return" && bind.idText="bind" -> ret_def, bind_def
-          | _ -> 
-            errorR(Error("Unexpected type definitions abbreviations in monad signature (expected 'Pre', 'Post' and 'WP')", rhs parseState 5));             
-            let r = rhs parseState 5 in
-            let wild = mk_term Wild r Type in 
-            let tc = TyconAbbrev(mk_ident("dummy", rhs parseState 6), [], None, wild) in
-            tc, tc in 
-        {name=name;
-         pre_sig=pre_sig;
-         post_sig=post_sig;
-         wp_sig=wp_sig;
-         ret=ret;
-         bind=bind;
-         total=total}
+        {mon_name=$1;
+         mon_total=$3;
+         mon_decls=$4;
+         mon_abbrevs=$6}
       }
 
-monad_kinds:
-  |   { [] }
-  | monad_kind monad_kinds
-      { $1::$2 }
-      
-monad_kind:
-  | LET qname EQUALS term 
-      { ($2, $4) }
+monad_decl: 
+  | kind_abbrev
+      { mk_decl $1 (rhs parseState 1) }
+  | tycon 
+      { mk_decl $1 (rhs parseState 1) }
 
+monad_decls:
+  |    { [] }
+  | monad_decl monad_decls { $1::$2 }
+
+monad_abbrev: 
+  | name typars EQUALS typ
+      { ($1, $2, $4) }
+
+monad_abbrevs:
+  | monad_abbrev more_monad_abbrevs 
+      { $1::$2 }
+
+more_monad_abbrevs: 
+  |     { [] }
+  | AND monad_abbrev more_monad_abbrevs { $2::$3 }
 
 lifts:
   | lift moreLifts
@@ -301,7 +289,7 @@ moreLifts:
       { $2::$3}
 
 lift:
-  | qname SQUIGGLY_RARROW qname EQUALS atomicTerm
+  | name SQUIGGLY_RARROW name EQUALS atomicTerm
       {
         { 
           msource=$1;

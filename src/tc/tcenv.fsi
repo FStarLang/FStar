@@ -85,4 +85,4 @@ val idents : env -> (list<btvdef> * list<bvvdef>)
 val lidents : env -> list<lident>     
 
 (* probably move this to TcUtil *)
-//val quantifier_pattern_env : env -> typ -> env
+val quantifier_pattern_env : env -> typ -> env

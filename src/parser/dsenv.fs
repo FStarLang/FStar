@@ -60,6 +60,9 @@ let current_module env = match env.curmodule with
     | Some m -> m
 let qual lid id = set_lid_range (lid_of_ids (lid.ns @ [lid.ident;id])) id.idRange
 let qualify env id = qual (current_module env) id
+let qualify_lid env lid = 
+  let cur = current_module env in 
+  set_lid_range (lid_of_ids (cur.ns @ [cur.ident] @ lid.ns @ [lid.ident])) (range_of_lid lid)
 let empty_env () = {curmodule=None; 
                     modules=[]; 
                     open_namespaces=[];
@@ -261,7 +264,10 @@ let qualify_field_to_record env (record:record) (f:lident) =
   resolve_in_open_namespaces env f qualify
 
 let find_kind_abbrev env l = 
-  List.tryFind (fun (l', _, _) -> lid_equals l l') env.kind_abbrevs
+  List.tryFind (fun (l', _, _) -> 
+    let res = lid_equals l l' in
+    //printfn "Comparing kind abbrevs %s and %s ... %b\n" l.str l'.str res;
+    res) env.kind_abbrevs
 
 let is_kind_abbrev env l = 
   match find_kind_abbrev env l with 
@@ -286,7 +292,7 @@ let unique env lid =
   let this_env = {env with open_namespaces=[]} in
   unique_name this_env lid && unique_typ_name this_env lid
       
-let push_kind_abbrev env lid parms k = 
+let push_kind_abbrev env (lid, parms, k) = 
   if unique env lid 
   then {env with kind_abbrevs=(lid, parms, k)::env.kind_abbrevs}
   else raise (Error ("Duplicate top-level names " ^ lid.str, range_of_lid lid))
@@ -357,7 +363,8 @@ let is_type_lid env lid =
     | _ -> aux()
   else aux ()
 
-let finish_module env modul = 
+
+let check_admits env = 
   env.sigaccum |> List.iter (fun se -> match se with
     | Sig_val_decl(l, t, None, _, _) -> 
       begin match try_lookup_lid env l with 
@@ -366,7 +373,9 @@ let finish_module env modul =
           Util.smap_add env.sigmap l.str se
         | Some _ -> ()
       end
-    | _ -> ());
+    | _ -> ())
+
+let finish env modul = 
   {env with 
     curmodule=None;
     modules=(modul.name, modul)::env.modules; 
@@ -376,4 +385,14 @@ let finish_module env modul =
     recbindings=[];
     phase=AST.Un}
 
+let finish_module env modul = 
+  check_admits env; finish env modul
 
+let env_for_monad_sig env mname = 
+  let curmod = current_module env in
+  let partial_mod = {name=curmod; declarations=env.sigaccum; exports=[]} in
+  let env1 = finish env partial_mod in
+  let eff = lid_of_ids (curmod.ns@[curmod.ident; mname]) in
+  {env1 with 
+    curmodule=Some eff;
+    open_namespaces=partial_mod.name::env.open_namespaces}

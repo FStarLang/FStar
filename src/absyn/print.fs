@@ -77,8 +77,7 @@ and arrow_of_comp_typ c = match c with
   
 and comp_typ_to_string c = match c with 
   | Pure t -> typ_to_string t
-  | Computation(m, t, wp) when (m.str="All") -> typ_to_string t
-  | Computation(m, t, wp) -> Util.format3 "%s %s %s" m.str (typ_to_string t) "_"
+  | Computation t -> typ_to_string t
 
 and exp_to_string x = match compress_exp x with 
   | Exp_meta(Meta_datainst(e,_)) -> exp_to_string e 

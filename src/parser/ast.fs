@@ -30,7 +30,7 @@ type term' =
   | Tvar      of ident
   | Var       of lid
   | Name      of lid
-  | Construct of lid * list<(term*bool)>               (* data, type: bool in each arg records an implicit *)
+  |   Construct of lid * list<(term*bool)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
   | App       of term * term * bool                    (* bool marks an explicitly provided implicit parameter *)
   | Let       of bool * list<(pattern * term)> * term  (* bool is for let rec *)
@@ -93,22 +93,6 @@ type tyvalQual =
   | TupleType of int
   | Assumption
  
- type monad_sig = {
-  name:lident;
-  pre_sig:term;
-  post_sig:term;
-  wp_sig:term;
-  ret:tycon;
-  bind:tycon;
-  total:bool
- }
-
- type lift = {
-  msource: lident;
-  mdest: lident;
-  lift_op: term
- }
-
 type decl' = 
   | Open of lid 
   | KindAbbrev of ident * list<binder> * knd
@@ -120,6 +104,17 @@ type decl' =
   | Exception of ident * option<term>
   | MonadLat of list<monad_sig> * list<lift>
 and decl = {decl:decl'; drange:range}
+and monad_sig = {
+  mon_name:ident;
+  mon_total:bool;
+  mon_decls:list<decl>;
+  mon_abbrevs:list<(ident * list<binder> * typ)>
+ }
+and lift = {
+  msource: ident;
+  mdest: ident;
+  lift_op: term
+ }
 
 type pragma =
   | Monadic of lid * lid * lid
@@ -231,7 +226,7 @@ and pat_to_string x = match x.pattern with
   | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)
   
 let error msg tm r =
-  let tm = tm |> term_to_string in
+ let tm = tm |> term_to_string in
   let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in 
   raise (Error(msg^"\n"^tm, r))
     

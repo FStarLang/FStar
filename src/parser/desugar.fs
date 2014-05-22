@@ -136,10 +136,10 @@ let rec is_kind env (t:term) : bool =
   then true
   else match (unparen t).term with
     | Name {str="Type"} -> true
-    | Name l -> DesugarEnv.is_kind_abbrev env l
     | Product(_, t) -> is_kind env t
     | Paren t -> is_kind env t
-    | App(t, _, _) -> is_kind env t 
+    | Construct(l, _) 
+    | Name l -> DesugarEnv.is_kind_abbrev env (DesugarEnv.qualify_lid env l)
     | _ -> false
 
 let rec is_type_binder env b =
@@ -702,14 +702,16 @@ and desugar_typ env (top:term) : typ =
           
     | Record _ -> failwith "Unexpected record type"
 
+    | _ when (top.level=Formula) -> desugar_formula env top
+
     | _ -> error "Expected a type" top top.range
 
 and desugar_kind env k : knd =
   let k = unparen k in
   match k.term with
     | Name {str="Type"} -> Kind_star
-    | Name {ns=[]; ident=id} -> 
-      begin match DesugarEnv.find_kind_abbrev env (DesugarEnv.qualify env id) with 
+    | Name l -> 
+      begin match DesugarEnv.find_kind_abbrev env (DesugarEnv.qualify_lid env l) with 
         | Some (_, [], def) -> def
         | None -> error "Unexpected term where kind was expected" k k.range
        end
@@ -731,8 +733,8 @@ and desugar_kind env k : knd =
           let env, x = push_local_vbinding env x in
           Kind_dcon(Some x, t0, desugar_kind env t, b.implicit)
       end
-    | Construct({ns=[];ident=id}, args) -> 
-      begin match DesugarEnv.find_kind_abbrev env (DesugarEnv.qualify env id) with 
+    | Construct(l, args) -> 
+      begin match DesugarEnv.find_kind_abbrev env (DesugarEnv.qualify_lid env l) with 
         | None -> error "Unexpected term where kind was expected" k k.range
         | Some (_, binders, def) -> 
           if List.length binders <> List.length args
@@ -954,8 +956,9 @@ let mk_data_ops env = function
         aux (fields@[sigs]) t2
 
       | _ -> fields in
-    
-    aux [] t
+    let disc_name = lid_of_ids (lid.ns@[Syntax.mk_ident("is_" ^ lid.ident.idText, lid.ident.idRange)]) in
+    let disc = Sig_val_decl(disc_name, build_typ (Util.ftv Const.bool_lid), Some Assumption, Some Logic_discriminator, range_of_lid disc_name) in
+    aux [disc] t
   | _ -> []
 
 let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
@@ -1073,8 +1076,24 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       env, [bundle]@data_ops
 
     | [] -> failwith "impossible"
+
+let desugar_kind_abbrev r env id binders k = 
+  let env_k, binders = List.fold_left (fun (env,binders) b -> 
+    match desugar_binder env b with
+      | Inl(Some a, k) -> 
+        let env, ax = DesugarEnv.push_local_binding env (DesugarEnv.Binding_typ_var a) in
+        env, ax::binders
+      | Inr(Some x, t) -> 
+        let env, ax = DesugarEnv.push_local_binding env (DesugarEnv.Binding_var x) in 
+        env, ax::binders
+      | _ -> raise (Error("Missing name in binder for kind abbreviation", r))) (env, []) binders in 
+  let k = desugar_kind env_k k in 
+  let name = DesugarEnv.qualify env id in
+  let binders = List.rev binders in
+  let env = DesugarEnv.push_kind_abbrev env (name, binders, k) in
+  env, (name, binders, k)
            
-let desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
+let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
   | Open lid ->
     let env = DesugarEnv.push_namespace env lid in
     env, []
@@ -1132,21 +1151,60 @@ let desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
     env, [se]
 
   | KindAbbrev(id, binders, k) ->
-    let env_k, binders = List.fold_left (fun (env,binders) b -> 
-      match desugar_binder env b with
-        | Inl(Some a, k) -> 
-          let env, ax = DesugarEnv.push_local_binding env (DesugarEnv.Binding_typ_var a) in
-          env, ax::binders
-        | Inr(Some x, t) -> 
-          let env, ax = DesugarEnv.push_local_binding env (DesugarEnv.Binding_var x) in 
-          env, ax::binders
-        | _ -> raise (Error("Missing name in binder for kind abbreviation", d.drange))) (env, []) binders in 
-    let k = desugar_kind env_k k in 
-    let env = DesugarEnv.push_kind_abbrev env (DesugarEnv.qualify env id) (List.rev binders) k in 
+    let env, _ = desugar_kind_abbrev d.drange env id binders k in 
     env, []
 
   | MonadLat(monads, lifts) -> //TODO: Ignoring this for now
-    env, []
+    let desugar_monad_sig env0 (m:AST.monad_sig) = 
+      let menv = DesugarEnv.env_for_monad_sig env0 m.mon_name in
+      let menv, kabbrevs, kmon = List.fold_left (fun (menv, kabbrevs, kmon) d -> 
+        match d.decl with 
+          | KindAbbrev(id, binders, k) when (id.idText="WP") -> 
+            let menv, (lid, binders, kwp) = desugar_kind_abbrev d.drange menv id binders k in 
+            let kmon = match binders with 
+              | [Inl a] -> Kind_tcon(Some a, Kind_star, Kind_tcon(None, kwp, Kind_tcon(None, kwp, Kind_star, false), false), false) 
+              | _ -> raise (Error("Unexpected binders in the signature of WP (expected a single type parameter)", d.drange)) in
+            menv, (lid, binders, kwp)::kabbrevs, Some kmon
+          | KindAbbrev(id, binders, k) -> 
+            let menv, kabr = desugar_kind_abbrev d.drange menv id binders k in
+            menv, kabr::kabbrevs, kmon
+          | _ -> 
+            let menv, _ = desugar_decl menv d in 
+            menv, kabbrevs, kmon) (menv, [], None) m.mon_decls in
+      let kmon = match kmon with
+        | None -> raise (Error("Monad " ^m.mon_name.idText^ " expects WP to be defined", d.drange))
+        | Some k -> k in
+      let lookup s = match DesugarEnv.try_lookup_typ_name menv (DesugarEnv.qualify menv (Syntax.mk_ident(s, d.drange))) with
+        | None -> raise (Error("Monad " ^m.mon_name.idText^ " expects definition of "^s, d.drange))
+        | Some t -> t in
+      let menv = DesugarEnv.push_sigelt menv (Sig_tycon(qualify env0 m.mon_name, [], kmon, [], [], [], d.drange)) in
+      let menv, abbrevs = m.mon_abbrevs |> List.fold_left (fun (env, out) (id, binders, t) -> 
+          let menv, ses = desugar_tycon menv d.drange [NoQual] [TyconAbbrev(id, binders, None, t)] in
+          let abbrev = match ses with 
+            | [Sig_typ_abbrev(lid, tps, _, t, _)] -> {mabbrev=lid; parms=tps; def=t}
+            | _ -> failwith "impossible" in
+          menv, abbrev::out) (menv, []) in
+      let msig = {mname=qualify env m.mon_name;
+         total=m.mon_total;
+         signature=kmon;
+         ret=lookup "return";
+         bind_wp=lookup "bind_wp";
+         bind_wlp=lookup "bind_wlp";
+         ite_wp=lookup "ite_wp";
+         ite_wlp=lookup "ite_wlp";
+         abbrevs=List.rev abbrevs} in
+      msig, List.rev kabbrevs in 
+    let env, msigs = List.fold_left (fun (env, msigs) m -> 
+      let msig, kabbrevs = desugar_monad_sig env m in
+      let env = List.fold_left DesugarEnv.push_kind_abbrev env kabbrevs in 
+      env, msig::msigs) (env, []) monads in
+    let order = lifts |> List.map (fun l -> 
+      let t = desugar_typ env (l.lift_op) in
+      {source=qualify env (l.msource);
+       target=qualify env (l.mdest);
+       lift=t}) in
+    env, [Sig_monads(List.rev msigs, order)]
+   
 
   | _ -> raise (Error("Unexpected declaration", d.drange))
         

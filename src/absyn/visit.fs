@@ -18,6 +18,7 @@
 module Microsoft.FStar.Absyn.Visit
 
 open Microsoft.FStar
+open Microsoft.FStar.ML
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
@@ -214,13 +215,8 @@ and visit_comp_typ'
     (env:'env) (benv:'benv) (ct:comp_typ) (cont : ('env * comp_typ) -> 'res) : 'res = 
     match ct with 
       | Pure t -> visit_typ' h f g l ext env benv t (fun (e, t) -> cont (e, Pure t))
-      | Computation(m, t, wp) -> 
-        visit_typ' h f g l ext env benv t (fun (env, t) -> 
-         visit_typ' h f g l ext env benv wp (fun (env, wp) -> 
-          cont (env, Computation(m, t, wp))))
-
-
-
+      | Computation t -> visit_typ' h f g l ext env benv t (fun (e, t) -> cont (e, Computation t))
+        
 and visit_exp'
     (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
@@ -527,10 +523,9 @@ and reduce_typ
     | Pure t -> 
       let t, env = map_typ env binders t in 
       Pure t, env
-    | Computation (m, t, wp) -> 
-      let t, env = map_typ env binders t in
-      let wp, env = map_typ env binders wp in 
-      Computation(m, t, wp), env 
+    | Computation t -> 
+      let t, env = map_typ env binders t in 
+      Computation t, env
   and visit_typ env binders t = 
     let kl, tl, cl, el, env = match (compress_typ t).t with 
       | Typ_unknown

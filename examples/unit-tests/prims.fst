@@ -17,7 +17,6 @@ module Prims
 
 kind Unop  = Type => Type           (* simple kind abbreviation *)
 kind Binop = Type => Type => Type   
-kind Post ('a:Type) = 'a => Type    (* parameterized kind abbreviation *)
 type l_not : Unop
 type l_and : Binop
 type l_or  : Binop
@@ -39,8 +38,9 @@ type XOR = fun ('P:Type) ('Q:Type) => (l_and (l_or 'P 'Q) (Not(l_and 'P 'Q)))
 type ITE = fun ('P:Type) ('Q:Type) ('R:Type) => ('P ==> 'Q) /\ ((l_not 'P) ==> 'R)
 type object
 type bool
+type b2t = fun (b:bool) => b=true
 type unit
-type foo : Post bool
+
 assume Unit_id: forall (x:unit). x=()
 
 type int
@@ -57,7 +57,51 @@ type ref : Type => Type
 type LBL : string => Type => Type
 type bytes
 type exn
+
+logic data type option 'a =
+  | None : option 'a
+  | Some : v:'a -> option 'a
+
 type heap
+logic val SelHeap : 'a:Type -> heap -> ref 'a -> 'a
+logic val UpdHeap : 'a:Type -> heap -> ref 'a -> 'a -> heap    
+logic val EmpHeap : heap
+logic val InHeap  : 'a:Type -> heap -> ref 'a -> bool
+assume SelUpd1: forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (SelHeap (UpdHeap h x v) x)} SelHeap (UpdHeap h x v) x = x
+assume SelUpd2: forall ('a:Type) ('b:Type) (h:heap) (x:ref 'a) (y:ref 'b) (v:'b).{:pattern (SelHeap (UpdHeap h y v) x)} y<>x ==> SelHeap (UpdHeap h y v) x = SelHeap h x
+assume InHeap1:  forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (InHeap (UpdHeap h x v) x)} InHeap (UpdHeap h x v) x = true
+assume InHeap2:  forall ('a:Type) ('b:Type) (h:heap) (x:ref 'a) (y:ref 'b) (v:'b).{:pattern (InHeap (UpdHeap h y v) x)} y<>x ==> InHeap (UpdHeap h y v) x = InHeap h x
+
+type refset
+logic val EmptySet : refset
+logic val Singleton : ref 'a -> refset
+logic val Union : refset -> refset -> refset
+logic val Intersection : refset -> refset -> refset
+type InSet : #'a:Type => ref 'a => refset => Type
+type SetEqual : refset => refset => Type
+assume InEmptySet:     forall a. not(InSet a EmptySet)
+assume InSingleton:    forall a. InSet a (Singleton a)
+assume InSingletonInv: forall a b. InSet a (Singleton b) <==> a=b
+assume InUnion:        forall s1 s2 a. InSet a (Union s1 s2) <==> (InSet a s1 \/ InSet a s1)
+assume InUnionL:       forall s1 s2 a. InSet a s1 ==> InSet a (Union s1 s2)
+assume InUnionR:       forall s1 s2 a. InSet a s2 ==> InSet a (Union s1 s2)
+assume UnionIdemL:     forall s1 s2. Union (Union s1 s2) s2 = Union s1 s2
+assume UnionIdemR:     forall s1 s2. Union s1 (Union s1 s2) = Union s1 s2
+assume InInter:        forall s1 s2 a. InSet a (Intersection s1 s2) <==> (InSet a s1 /\ InSet a s2)
+assume InterIdemL:     forall s1 s2. Intersection (Intersection s1 s2) s2 = Intersection s1 s2
+assume InterdemR:      forall s1 s2. Intersection s1 (Intersection s1 s2) = Intersection s1 s2
+assume SetEqualDef:    forall s1 s2. SetEqual s1 s2 <==> (forall a. InSet a s1 <==> InSet a s2)
+assume SeqEqualExt:    forall s1 s2. SetEqual s1 s2 ==> s1=s2 
+logic data type refs = 
+  | AllRefs : refs
+  | SomeRefs : v:refset -> refs
+
+let modifies (r:refs) = r 
+
+type Modifies (mods:refs) (h:heap) (h':heap) =
+    (ITE (b2t (is_AllRefs mods))
+         True
+         (forall 'b (x:ref 'b). (InHeap h x=true /\ not(InSet x (SomeRefs.v mods))) ==> (InHeap h' x=true /\ SelHeap h x = SelHeap h' x)))
 
 logic data type result : Type => Type =
   | V : 'a:Type -> v:'a -> result 'a
@@ -69,47 +113,117 @@ let retype 'a 'b (r:result 'a) : result 'b = match r with
   | Err m -> Err m
   | E e -> E e 
 
-(* monad_lattice { *)
-(*   Pure:: *)
-(*              terminating *)
-(*              let Pre  = Type *)
-(*              let Post = 'a:Type => 'a => Type *)
-(*              let WP   = 'a:Type => Post 'a => Pre *)
-(*              type prepost ('a:Type) ('pre:Pre) ('post:Post 'a) ('p:Post 'a) = Pre /\ (forall a. 'post a ==> 'p a) *)
-(*              type return ('a:Type) (x:'a) ('p:Post 'a) = 'p x *)
-(*              type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2: 'a => WP 'b) ('p:Post 'b) = 'wp1 (fun a => 'wp2 a 'p); *)
-(*   St:: *)
-(*              let Pre     = heap => Type *)
-(*              let Post    = 'a:Type => 'a => heap => Type *)
-(*              let WP      = 'a:Type => Post 'a => Pre *)
-(*              let PostAlt = 'a:Type => heap => 'a => heap => Type   *)
-(*              type prepost ('a:Type) ('pre:Pre) ('post:PostAlt 'a) = fun ('p:Post 'a) (h:heap) = Pre h /\ (forall a. 'post a ==> 'p a) *)
-(*              type return ('a:Type) (x:'a) ('p:Post 'a) = 'post x *)
-(*              type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = 'wp1 (fun a => 'wp2 a 'p) h0; *)
-(*   Exn:: *)
-(*              let Pre  = Type *)
-(*              let Post = 'a:Type => result 'a => Type *)
-(*              let WP   = 'a:Type =>  Post 'a => Pre *)
-(*              type return ('a:Type) (x:'a) ('p:Post 'a) = 'post (V x) *)
-(*              type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2:'a => WP 'b) ('p:Post 'b) = *)
-(*                  'wp1 (fun ra => ITE (is_V ra) ('wp2 (V.v ra) 'p) ('p (retype ra))); *)
-(*   All:: *)
-(*              let Pre  = heap => Type *)
-(*              let Post = 'a:Type => result 'a => heap => Type *)
-(*              let WP   = 'a:Type => Post 'a => Pre *)
-(*              type return ('a:Type) (x:'a) ('p:Post 'a) = 'post (V x) *)
-(*              type bind ('a:Type) ('b:Type) ('wp1:WP 'a) ('wp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = *)
-(*                  'wp1 (fun ra h1 => ITE (is_V ra) ('wp2 (V.v ra) 'p h1) ('p (retype ra) h1)) h0 *)
-(*   with  *)
-(*   Pure ~> ST  = (fun ('a:Type) ('wp:Pure.WP 'a) ('p:ST.Post 'a) (h:heap) => 'wp (fun a => 'p a h)); *)
-(*   ST ~> All   = (fun ('a:Type) ('wp:ST.WP 'a) ('p:All.Post 'a) => 'wp (fun a => 'p (V a))); *)
-(*   Pure ~> Exn = (fun ('a:Type) ('wp:Pure.WP 'a) ('p:Exn.Post 'a) => 'wp (fun a => 'p (V a))); *)
-(*   Exn ~> All  = (fun ('a:Type) ('wp:Exn.WP 'a) ('p:All.Post 'a) (h:heap) => 'wp (fun ra => 'p ra h)) *)
-(* } *)
+monad_lattice {
+  PURE::
+             terminating
+             kind Pre = Type
+             kind Post ('a:Type) = 'a => Type
+             kind WP ('a:Type) = Post 'a => Pre
+             type return   ('a:Type) (x:'a) ('p:Post 'a) = 'p x
+             type bind_wp  ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2: 'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) = 'wp1 (fun a => 'wp2 a 'p)
+             type bind_wlp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2: 'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) = 'wlp1 (fun a => 'wlp2 a 'p)
+             type ite_wlp ('a:Type) ('guard:Type) ('wlp1:WP 'a) ('wlp2:WP 'a) ('post:Post 'a) = 
+                 (forall (a:'a). 'post a \/ (ITE 'guard 
+                                               ('wlp1 (fun a1 => a<>a1))
+                                               ('wlp2 (fun a2 => a<>a2))))
+             type ite_wp  ('a:Type) ('guard:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:WP 'a) ('wlp2:WP 'a) ('post:Post 'a) = 
+                 ite_wlp 'a 'guard 'wlp1 'wlp2 'post
+                 /\ 'wp1 (fun a => True)
+                 /\ 'wp2 (fun a => True)
+             with Pure ('a:Type) ('pre:Pre) ('post:Post 'a) =
+                 PURE 'a 
+                   (fun ('p:Post 'a) => 'pre /\ (forall a. 'pre /\ 'post a ==> 'p a)) (* WP *)
+                   (fun ('p:Post 'a) => forall a. 'pre /\ 'post a ==> 'p a)           (* WLP *)
+;               
+  STATE::
+             kind Pre     = heap => Type
+             kind Post ('a:Type) = 'a => heap => Type
+             kind WP ('a:Type) = Post 'a => Pre
+             type return   ('a:Type) (x:'a) ('p:Post 'a) = 'p x
+             type bind_wp  ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a => WP 'b) ('wlp2:WP 'a) ('p:Post 'b) (h0:heap) = 'wp1 (fun a => 'wp2 a 'p) h0
+             type bind_wlp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a => WP 'b) ('wlp2:WP 'a) ('p:Post 'b) (h0:heap) = 'wlp1 (fun a => 'wlp2 a 'p) h0
+             type ite_wlp  ('a:Type) ('guard:Type) ('wlp1:WP 'a) ('wlp2:WP 'a) ('post:Post 'a) (h0:heap) = 
+                 (forall (a:'a) (h:heap). 'post a h \/ (ITE 'guard 
+                                                          ('wlp1 (fun a1 h1 => a<>a1 /\ h<>h1) h0)
+                                                          ('wlp2 (fun a2 h2 => a<>a2 /\ h<>h2) h0)))
+             type ite_wp ('a:Type) ('guard:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:WP 'a) ('wlp2:WP 'a) ('post:Post 'a) (h:heap) = 
+                 ite_wlp 'a 'guard 'wlp1 'wlp2 'post h
+                 /\ 'wp1 (fun a h_ => True) h
+                 /\ 'wp2 (fun a h => True) h
+             with ST ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refset) = 
+                 STATE 'a 
+                   (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1)) (* WP *)
+                   (fun ('p:Post 'a) (h:heap) => (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1))           (* WLP *)
+;                  
+  EXN::
+             kind Pre  = Type
+             kind Post ('a:Type) = result 'a => Type
+             kind WP   ('a:Type) = Post 'a => Pre
+             type return ('a:Type) (x:'a) ('p:Post 'a) = 'p (V x)
+             type bind_wp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) =
+                 (forall (rb:result 'b). 'p rb \/ 'wlp1 (fun ra1 => (ITE (is_V ra1) 
+                                                                       ('wlp2 (V.v ra1) (fun rb2 => rb2<>rb))
+                                                                       (retype ra1 <> rb))))
+                 /\ 'wp1 (fun ra1 => (ITE (is_V ra1) 
+                                          ('wp2 (V.v ra1) (fun rb2 => True))
+                                           True))
+             type bind_wlp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) =
+                 (forall (rb:result 'b). 'p rb \/ 'wlp1 (fun ra1 => (ITE (is_V ra1) 
+                                                                       ('wlp2 (V.v ra1) (fun rb2 => rb2<>rb))
+                                                                       (retype ra1 <> rb))))
+             type ite_wlp ('a:Type) ('guard:Type) ('wlp1:WP 'a) ('wlp2:WP 'a) ('post:Post 'a) = 
+                 (forall (a:result 'a). 'post a \/ (ITE 'guard
+                                                      ('wlp1 (fun a1 => a<>a1))
+                                                      ('wlp2 (fun a2 => a<>a2))))
+             type ite_wp ('a:Type) ('guard:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:WP 'a) ('wlp2:WP 'a) ('post:Post 'a) = 
+                 ite_wlp 'a 'guard 'wlp1 'wlp2 'post
+                 /\ 'wp1 (fun ra1 => True)
+                 /\ 'wp2 (fun ra2 => True)
+             with Exn ('a:Type) ('pre:Pre) ('post:Post 'a) =
+                 EXN 'a 
+                   (fun 'p => 'pre /\ (forall (r:result 'a). ('pre /\ 'post r) ==> 'p r)) (* WP *)
+                   (fun 'p => (forall (r:result 'a). ('pre /\ 'post r) ==> 'p r))         (* WLP *)
+ ;
+  ALL::
+             kind Pre  = heap => Type
+             kind Post ('a:Type) = result 'a => heap => Type
+             kind WP ('a:Type) = Post 'a => Pre
+             type return ('a:Type) (x:'a) ('p:Post 'a) = 'p (V x)
+             type bind_wp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) (h0:heap) =
+                 (forall rb h. 'p rb h \/ 'wlp1 (fun ra h1 => (ITE (is_V ra)
+                                                                 ('wlp2 (V.v ra) (fun rb2 h2 => not (rb=rb2 \/ h=h2)) h1)
+                                                                 (not (rb=retype ra \/ h=h1)))) h0)
+                 /\ 'wp1 (fun ra h1 => (ITE (is_V ra)
+                                          ('wp2 (V.v ra) (fun _a _b => True) h1)
+                                          True)) h0
+             type bind_wlp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) (h0:heap) =
+                 (forall rb h. 'p rb h \/ 'wlp1 (fun ra h1 => (ITE (is_V ra)
+                                                                 ('wlp2 (V.v ra) (fun rb2 h2 => not (rb=rb2 \/ h=h2)) h1)
+                                                                 (not (rb=retype ra \/ h=h1)))) h0)
+                 /\ 'wp1 (fun ra h1 => (ITE (is_V ra)
+                                          ('wp2 (V.v ra) (fun _a _b => True) h1)
+                                          True)) h0
+             type ite_wlp ('a:Type) ('guard:Type) ('wlp1:WP 'a) ('wlp2:WP 'a) ('post:Post 'a) (h0:heap) = 
+                 (forall (ra:result 'a) (h:heap). 'post ra h \/ (ITE 'guard 
+                                                                  ('wlp1 (fun ra1 h1 => ra<>ra1 /\ h<>h1) h0)
+                                                                  ('wlp2 (fun ra2 h2 => ra<>ra2 /\ h<>h2) h0)))
+             type ite_wp ('a:Type) ('guard:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:WP 'a) ('wlp2:WP 'a) ('post:Post 'a) (h:heap) = 
+                 ite_wlp 'a 'guard 'wlp1 'wlp2 'post h
+                 /\ 'wp1 (fun _a _b => True) h
+                 /\ 'wp2 (fun _a _b => True) h
+             with All ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) = 
+                 ALL 'a 
+                   (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)) (* WP *)
+                   (fun ('p:Post 'a) (h:heap) => forall ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)            (* WLP *)
+             and ML ('a:Type) =
+                 All 'a (fun h => True) (fun h0 ra h1 => True) AllRefs
 
-(* type ST 'a ('pre:St.Pre) ('post:St.Post) =  *)
-(*     St 'a (fun ('p:St.Post) (h:heap) => 'pre h /\ (forall a. 'post 'a ==> 'p  *)
-
+  with 
+  PURE  ~> STATE = (fun ('a:Type) ('wp:PURE.WP 'a) ('p:STATE.Post 'a) (h:heap) => 'wp (fun a => 'p a h));
+  STATE ~> ALL   = (fun ('a:Type) ('wp:STATE.WP 'a) ('p:ALL.Post 'a) => 'wp (fun a => 'p (V a)));
+  PURE  ~> EXN   = (fun ('a:Type) ('wp:PURE.WP 'a) ('p:EXN.Post 'a) => 'wp (fun a => 'p (V a)));
+  EXN   ~> ALL   = (fun ('a:Type) ('wp:EXN.WP 'a) ('p:ALL.Post 'a) (h:heap) => 'wp (fun ra => 'p ra h))
+}
 
 logic data type Tuple2: 'a:Type
           => 'b:('a => Type)
@@ -257,9 +371,6 @@ type GTE : int => int => Type
 type nat = i:int{i >= 0}
 type pos = n:nat{n > 0}
 
-logic data type option 'a =
-  | None : option 'a
-  | Some : v:'a -> option 'a
 
 logic data type either 'a 'b =
   | Inl : v:'a -> either 'a 'b
