@@ -57,7 +57,6 @@
     <Compile Include="tcutil.fsi" />
     <Compile Include="tcutil.fs" />
     <Compile Include="pretype.fs" />
-    <Compile Include="monadic.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\absyn\absyn.fsproj">

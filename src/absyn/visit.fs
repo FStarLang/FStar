@@ -18,7 +18,6 @@
 module Microsoft.FStar.Absyn.Visit
 
 open Microsoft.FStar
-open Microsoft.FStar.ML
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util

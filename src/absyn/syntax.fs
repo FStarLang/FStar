@@ -18,7 +18,6 @@ module Microsoft.FStar.Absyn.Syntax
 (* Type definitions for the core AST *)
 
 open Microsoft.FStar
-open Microsoft.FStar.ML
 open Microsoft.FStar.Util
 
 exception Err of string

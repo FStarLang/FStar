@@ -51,7 +51,6 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="mlcompat.fs" />
     <Compile Include="profiling.fs" />
     <Compile Include="util.fsi" />
     <Compile Include="util.fs" />
