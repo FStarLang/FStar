@@ -30,7 +30,7 @@ type term' =
   | Tvar      of ident
   | Var       of lid
   | Name      of lid
-  |   Construct of lid * list<(term*bool)>               (* data, type: bool in each arg records an implicit *)
+  | Construct of lid * list<(term*bool)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
   | App       of term * term * bool                    (* bool marks an explicitly provided implicit parameter *)
   | Let       of bool * list<(pattern * term)> * term  (* bool is for let rec *)

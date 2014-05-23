@@ -26,7 +26,8 @@
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
     <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\examples\unit-tests\</StartWorkingDirectory>
-    <StartArguments>--fstar_home ../../ --pretype --prims prims.fst</StartArguments>
+    <StartArguments>--fstar_home ../../ --pretype --prims prims.fst list.fst</StartArguments>
+    <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

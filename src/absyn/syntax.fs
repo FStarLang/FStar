@@ -118,11 +118,14 @@ and pat =
   | Pat_twild
   | Pat_withinfo of pat * Range.range
 and knd =
-  | Kind_star
-  | Kind_tcon of option<bvdef<typ>> * knd * knd * bool  (* 'a:k -> k'; bool marks implicit *)
-  | Kind_dcon of option<bvvdef> * typ * knd * bool       (* x:t -> k; bool marks implicit *)
+  | Kind_type
+  | Kind_effect
+  | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)
+  | Kind_tcon of option<bvdef<typ>> * knd * knd * bool    (* 'a:k -> k'; bool marks implicit *)
+  | Kind_dcon of option<bvvdef> * typ * knd * bool        (* x:t -> k; bool marks implicit *)
   | Kind_uvar of uvar_k                                   (* not present after 1st round tc *)
   | Kind_unknown                                          (* not present after 1st round tc *)
+and kabbrev = lident * list<either<typ,exp>>
 and uvar_k = Unionfind.uvar<uvar_basis<knd,unit>>
 and letbindings = bool * list<(either<bvvdef,lident> * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
 
@@ -162,6 +165,12 @@ type monad_abbrev = {
   parms:list<tparam>;
   def:typ
   }
+type monad_order = {
+  source:lident;
+  target:lident;
+  lift: typ
+ }
+type monad_lat = list<monad_order>
 type monad_decl = {
     mname:lident;
     total:bool;
@@ -171,16 +180,9 @@ type monad_decl = {
     bind_wlp:typ;
     ite_wp:typ;
     ite_wlp:typ;
-    abbrevs:list<monad_abbrev>
-  }
-type monad_order = {
-  source:lident;
-  target:lident;
-  lift: typ
+    abbrevs:list<sigelt> 
  }
-type monad_lat = list<monad_order>
-
-type sigelt =
+and sigelt =
   | Sig_tycon          of lident * list<tparam> * knd * list<lident> * list<lident> * list<logic_tag> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
   | Sig_typ_abbrev     of lident * list<tparam> * knd * typ * Range.range 
   | Sig_datacon        of lident * typ * lident * Range.range  (* second lident is the name of the type this constructs *)
@@ -190,7 +192,7 @@ type sigelt =
   | Sig_let            of letbindings * Range.range 
   | Sig_main           of exp * Range.range 
   | Sig_bundle         of list<sigelt> * Range.range  (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
-  | Sig_monads         of list<monad_decl> * monad_lat
+  | Sig_monads         of list<monad_decl> * monad_lat * Range.range
 type sigelts = list<sigelt>
 
 type modul = {

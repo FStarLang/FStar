@@ -36,7 +36,12 @@ let rec tc_kind env k : knd =
   let k = Util.compress_kind k in 
   match k with
   | Kind_uvar _
-  | Kind_star -> k
+  | Kind_type
+  | Kind_effect -> k
+
+  | Kind_abbrev(kabr, k) -> 
+    let k = tc_kind env k in 
+    Kind_abbrev(kabr, k)
 
   | Kind_tcon (aopt, k1, k2, imp) -> 
     let k1' = tc_kind env k1 in 
@@ -70,24 +75,24 @@ and tc_typ' env (t:typ) : typ' * knd =
     t.t,k
     
   | Typ_fun(xopt, t1, Pure t2, imp) -> 
-    let t1' = tc_typ_check env t1 Kind_star in
+    let t1' = tc_typ_check env t1 Kind_type in
     let env' = match xopt with 
       | None -> env
       | Some x -> Env.push_local_binding env (Env.Binding_var(x, t1')) in
-    let t2' = tc_typ_check env' t2 Kind_star in
-    Typ_fun(xopt, t1', Pure t2', imp), Kind_star
+    let t2' = tc_typ_check env' t2 Kind_type in
+    Typ_fun(xopt, t1', Pure t2', imp), Kind_type
 
   | Typ_univ(a, k1, Pure t1) -> 
     let k1' = tc_kind env k1 in 
     let env' = Env.push_local_binding env (Env.Binding_typ(a, k1')) in
-    let t1' = tc_typ_check env' t1 Kind_star in 
-    Typ_univ(a, k1', Pure t1'), Kind_star
+    let t1' = tc_typ_check env' t1 Kind_type in 
+    Typ_univ(a, k1', Pure t1'), Kind_type
 
   | Typ_refine(x, t1, t2) -> 
-    let t1' = tc_typ_check env t1 Kind_star in
+    let t1' = tc_typ_check env t1 Kind_type in
     let env' = Env.push_local_binding env (Env.Binding_var(x, t1')) in
-    let t2' = tc_typ_check env' t2 Kind_star in
-    Typ_refine(x, t1', t2'), Kind_star
+    let t2' = tc_typ_check env' t2 Kind_type in
+    Typ_refine(x, t1', t2'), Kind_type
 
   | Typ_app(t1, t2, imp) -> 
     let t1', k1' = tc_typ env t1 in 
@@ -227,7 +232,7 @@ and tc_exp env e : exp * typ = match e with
     let dom = match xvars |> Util.find_opt (fun (y:bvvar) -> bvd_eq x y.v) with
       | None -> None
       | Some _ -> Some x in 
-    let t = withkind Kind_star <| Typ_fun(dom, tx, Pure tres, false) in
+    let t = withkind Kind_type <| Typ_fun(dom, tx, Pure tres, false) in
     let e' = Exp_abs(x, tx, e1') in 
     gen (e', t)
    
@@ -251,7 +256,7 @@ and tc_exp env e : exp * typ = match e with
         k1', env in
     let env' = instantiate_both env' in
     let e1', tres = tc_exp (Env.push_local_binding env' (Env.Binding_typ(a, karg))) e1 in 
-    let t = withkind Kind_star <| Typ_univ(a, karg, Pure tres) in
+    let t = withkind Kind_type <| Typ_univ(a, karg, Pure tres) in
     Exp_tabs(a, karg, e1'), t
 
   | Exp_meta(Meta_desugared(e, Data_app)) -> 
@@ -339,13 +344,13 @@ and tc_exp env e : exp * typ = match e with
       | Some t -> (* already checked against type from context *)
         t_eqns |> List.map (fun (p, w, b, _) -> (p, w, b)), t
       | None -> 
-        let result_t = Tc.Util.new_tvar env Kind_star in
+        let result_t = Tc.Util.new_tvar env Kind_type in
         let eqns' = t_eqns |> List.map (fun (pat, w, b, tb) -> (pat, w, Tc.Util.check_and_ascribe env b tb result_t)) in
         eqns', result_t in
     Exp_match(e1', eqns'), result_t
 
   | Exp_ascribed(e1, t1) -> 
-    let t1' = tc_typ_check env t1 Kind_star in 
+    let t1' = tc_typ_check env t1 Kind_type in 
     let env1 = Env.set_expected_typ env t1' in 
     let e1', _ = tc_exp env1 e1 in
     check_expected_typ env (Exp_ascribed(e1', t1')) t1'
@@ -353,7 +358,7 @@ and tc_exp env e : exp * typ = match e with
   | Exp_let((false, [(x, t, e1)]), e2) -> 
     let env = instantiate_both env in
     let t = Tc.Util.extract_lb_annotation env t e1 in
-    let t = tc_typ_check env t Kind_star in
+    let t = tc_typ_check env t Kind_type in
     let env1, topt = Env.clear_expected_typ env in 
     let env1 = Tc.Env.set_expected_typ env1 t in
     let e1', t1 = tc_exp env1 e1 in 
@@ -381,7 +386,7 @@ and tc_exp env e : exp * typ = match e with
     let env0, topt = Env.clear_expected_typ env in 
     let lbs, env' = lbs |> List.fold_left (fun (xts, env) (x, t, e) -> 
       let t = Tc.Util.extract_lb_annotation env t e in 
-      let t = tc_typ_check env0 t Kind_star in
+      let t = tc_typ_check env0 t Kind_type in
       let env = match x with 
         | Inl bvd -> Env.push_local_binding env (Env.Binding_var(bvd, t)) 
         | Inr l -> Env.push_local_binding env (Env.Binding_lid(l, t)) in
@@ -448,7 +453,7 @@ and tc_pat (pat_t:typ) env p : Env.env =
       if var_exists vars (Inr x) 
       then raise (Error(Tc.Errors.nonlinear_pattern_variable x, Util.range_of_bvd x))
       else 
-        let env = Tc.Env.push_local_binding env (Env.Binding_var(x, Tc.Util.new_tvar env Kind_star)) in
+        let env = Tc.Env.push_local_binding env (Env.Binding_var(x, Tc.Util.new_tvar env Kind_type)) in
         env, [Inl x]
     | Pat_tvar a -> 
       if var_exists vars (Inl a) 
@@ -488,16 +493,76 @@ let tc_tparams env tps : (list<tparam> * Env.env) =
 				Tparam_term(x, t)::tps, env) ([], env) tps in
 		List.rev tps', env 
 
+let kt k1 k2 = Kind_tcon(None, k1, k2, false)
+let kd t k = Kind_dcon(None, t, k, false)
+let a_kwp_a m s = match s with 
+  | Kind_tcon(Some a, Kind_type, Kind_tcon(None, kwp, Kind_tcon(None, kwlp, Kind_effect, false), false), false) -> a, kwp
+  | _ -> raise (Error(Tc.Errors.unexpected_signature_for_monad m s, range_of_lid m))
 
-let rec tc_decl env se = match se with 
-    | Sig_monads _ -> se, env
+let rec tc_monad_decl env m =  
+  let mk = tc_kind env m.signature in 
+  let a, kwp_a = a_kwp_a m.mname mk in 
+  let a_typ = Util.bvd_to_typ a Kind_type in
+  let b = Util.new_bvd (Some <| range_of_lid m.mname) in 
+  let b_typ = Util.bvd_to_typ b Kind_type in
+  let kwp_b = Util.subst_kind [Inl(a, b_typ)] kwp_a in
+  let kwlp_a = kwp_a in
+  let kwlp_b = kwp_b in
+  let ret = 
+    let expected_k = Kind_tcon(Some a, Kind_type, kd a_typ kwp_a, false) in
+    tc_typ_check env m.ret expected_k in
+  let bind_wp, bind_wlp =
+    let expected_k = Kind_tcon(Some a, Kind_type, Kind_tcon(Some b, Kind_type, kt kwp_a (kt kwlp_a (kt (kd a_typ kwp_b) (kt (kd a_typ kwlp_b) kwp_b))), false), false) in
+    tc_typ_check env m.bind_wp expected_k, tc_typ_check env m.bind_wlp expected_k in
+  let ite_wp =
+    let expected_k = Kind_tcon(Some a, Kind_type, kt Kind_type (kt kwp_a (kt kwlp_a (kt kwp_a (kt kwlp_a kwp_a)))), false) in
+    tc_typ_check env m.ite_wp expected_k in
+  let ite_wlp =
+    let expected_k = Kind_tcon(Some a, Kind_type, kt Kind_type (kt kwlp_a (kt kwlp_a kwlp_a)), false) in
+    tc_typ_check env m.ite_wlp expected_k in
+  let menv = Tc.Env.push_sigelt env (Sig_tycon(m.mname, [], mk, [], [], [], range_of_lid m.mname)) in
+  let menv, abbrevs = m.abbrevs |> List.fold_left (fun (env, out) (ma:sigelt) -> 
+    let ma, env = tc_decl env ma in 
+     env, ma::out) (menv, []) in 
+  let m = { 
+    mname=m.mname;
+    total=m.total; 
+    signature=mk;
+    abbrevs=abbrevs;
+    ret=ret;
+    bind_wp=bind_wp;
+    bind_wlp=bind_wlp;
+    ite_wp=ite_wp;
+    ite_wlp=ite_wlp} in 
+    menv, m 
+
+and tc_decl env se = match se with 
+    | Sig_monads(mdecls, mlat, r) -> 
+      let env = Env.set_range env r in 
+     //TODO: check downward closure of totality flags
+      let menv, mdecls = mdecls |> List.fold_left (fun (env, out) m ->
+        let env, m = tc_monad_decl env m in 
+        env, m::out) (env, []) in
+      let lat = mlat |> List.map (fun (o:monad_order) -> 
+        let a, kwp_a_src = a_kwp_a o.source (Tc.Env.lookup_typ_lid menv o.source) in
+        let b, kwp_b_tgt = a_kwp_a o.target (Tc.Env.lookup_typ_lid menv o.target) in
+        let kwp_a_tgt = Util.subst_kind [Inl(b, Util.bvd_to_typ a Kind_type)] kwp_b_tgt in
+        let expected_k = Kind_tcon(Some a, Kind_type, kt kwp_a_src kwp_a_tgt, false) in
+        let lift = tc_typ_check menv o.lift expected_k in
+        {source=o.source; 
+          target=o.target;
+          lift=lift}) in
+      let se = Sig_monads(List.rev mdecls, lat, r) in
+      let menv = Tc.Env.push_sigelt menv se in 
+      se, menv
+
     | Sig_tycon (lid, tps, k, _mutuals, _data, tags, r) -> 
       let env = Tc.Env.set_range env r in 
       let tps, env = tc_tparams env tps in 
       let k = tc_kind env k in 
       let se = Sig_tycon(lid, tps, k, _mutuals, _data, tags, r) in  
       let _ = match compress_kind k with
-        | Kind_uvar _ -> Tc.Util.keq env None k Kind_star
+        | Kind_uvar _ -> Tc.Util.keq env None k Kind_type
         | _ -> () in 
       let env = Tc.Env.push_sigelt env se in
       se, env
@@ -514,7 +579,7 @@ let rec tc_decl env se = match se with
   
     | Sig_datacon(lid, t, tname, r) -> 
       let env = Tc.Env.set_range env r in
-      let t = tc_typ_check env t Kind_star in 
+      let t = tc_typ_check env t Kind_type in 
       let args, result_t = Util.collect_formals t in
       let constructed_t, _ = Util.flatten_typ_apps result_t in (* TODO: check that the tps in tname are the same as here *)
       let _ = match constructed_t with
@@ -526,21 +591,21 @@ let rec tc_decl env se = match se with
   
     | Sig_val_decl(lid, t, tag, ltag, r) -> 
       let env = Tc.Env.set_range env r in
-      let t = tc_typ_check env t Kind_star in 
+      let t = tc_typ_check env t Kind_type in 
       let se = Sig_val_decl(lid, t, tag, ltag, r) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
   
     | Sig_assume(lid, phi, qual, tag, r) ->
       let env = Tc.Env.set_range env r in
-      let phi = tc_typ_check env phi Kind_star in 
+      let phi = tc_typ_check env phi Kind_type in 
       let se = Sig_assume(lid, phi, qual, tag, r) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
   
     | Sig_logic_function(lid, t, tags, r) -> 
       let env = Tc.Env.set_range env r in
-      let t = tc_typ_check env t Kind_star in 
+      let t = tc_typ_check env t Kind_type in 
       let se = Sig_logic_function(lid, t, tags, r) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env

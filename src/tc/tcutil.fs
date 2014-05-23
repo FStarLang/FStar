@@ -26,13 +26,13 @@ open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Util
 open Microsoft.FStar.Tc.Env
             
-let t_unit = withkind Kind_star <| Typ_const (Util.withsort Const.unit_lid Kind_star)
-let t_bool = withkind Kind_star <| Typ_const (Util.withsort Const.bool_lid Kind_star)
-let t_int = withkind Kind_star <| Typ_const (Util.withsort Const.int_lid Kind_star)
-let t_int64 = withkind Kind_star <| Typ_const (Util.withsort Const.int64_lid Kind_star)
-let t_string = withkind Kind_star <| Typ_const (Util.withsort Const.string_lid Kind_star)
-let t_float = withkind Kind_star <| Typ_const (Util.withsort Const.float_lid Kind_star)
-let t_char = withkind Kind_star <| Typ_const(Util.withsort Const.char_lid Kind_star)
+let t_unit = withkind Kind_type <| Typ_const (Util.withsort Const.unit_lid Kind_type)
+let t_bool = withkind Kind_type <| Typ_const (Util.withsort Const.bool_lid Kind_type)
+let t_int = withkind Kind_type <| Typ_const (Util.withsort Const.int_lid Kind_type)
+let t_int64 = withkind Kind_type <| Typ_const (Util.withsort Const.int64_lid Kind_type)
+let t_string = withkind Kind_type <| Typ_const (Util.withsort Const.string_lid Kind_type)
+let t_float = withkind Kind_type <| Typ_const (Util.withsort Const.float_lid Kind_type)
+let t_char = withkind Kind_type <| Typ_const(Util.withsort Const.char_lid Kind_type)
 
 let typing_const env (s:sconst) = match s with 
   | Const_unit -> t_unit
@@ -71,7 +71,7 @@ let new_tvar env k =
   let rec pre_kind_compat k1 k2 = match compress_kind k1, compress_kind k2 with 
     | _, Kind_uvar uv 
     | Kind_uvar uv, _ -> true
-    | Kind_star, Kind_star -> true
+    | Kind_type, Kind_type -> true
     | Kind_tcon(_, k1, k2, _), Kind_tcon(_, k1', k2', _) -> pre_kind_compat k1 k1' && pre_kind_compat k2 k2'
     | Kind_dcon(_, _, k1, _), Kind_dcon(_, _, k1', _) -> pre_kind_compat k1 k1'
     | k1, k2 -> //Util.print_string (Util.format2 "Pre-kind-compat failed on %s and %s\n" (Print.kind_to_string k1) (Print.kind_to_string k2)); 
@@ -268,7 +268,11 @@ and snl tcenv configs : list<config<typ>> =
 and snk tcenv (config:config<knd>) : config<knd> =
   match Util.compress_kind config.code with
     | Kind_uvar _ 
-    | Kind_star -> config
+    | Kind_type
+    | Kind_effect -> config
+    | Kind_abbrev(kabr, k) -> 
+      let c1 = snk tcenv ({config with code=k}) in
+      {config with code=Kind_abbrev(kabr, c1.code)}
     | Kind_tcon(aopt, k1, k2, imp) -> 
       let c1 = snk tcenv ({config with code=k1}) in
       let c2 = snk tcenv ({config with 
@@ -392,7 +396,8 @@ type rel =
 let rec krel rel env k k' : bool =
   let k, k' = compress_kind k, compress_kind k' in
   match k, k' with 
-    | Kind_star, Kind_star -> true
+    | Kind_type, Kind_type
+    | Kind_effect, Kind_effect -> true
     | Kind_tcon(aopt, k1, k2, _), Kind_tcon(bopt, k1', k2', _) -> 
       if krel rel env k1' k1
       then match aopt, bopt with 
@@ -414,6 +419,8 @@ let rec krel rel env k k' : bool =
     | Kind_uvar uv, k1  
     | k1 , Kind_uvar uv -> 
       unify_kind (uv, ()) k1
+    | Kind_abbrev(_, k), _ -> krel rel env k k'
+    | _, Kind_abbrev(_, k') -> krel rel env k k'
     | _ -> false 
 
 
@@ -618,9 +625,9 @@ let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:boo
     let t = compress_typ t in 
     match t.t with 
       | Typ_uvar _ when (not imp_arg_follows) -> 
-        let arg = new_tvar env Kind_star in
-        let res = new_tvar env Kind_star in 
-        let tf = withkind Kind_star <| Typ_fun(None, arg, Pure res, false) in
+        let arg = new_tvar env Kind_type in
+        let res = new_tvar env Kind_type in 
+        let tf = withkind Kind_type <| Typ_fun(None, arg, Pure res, false) in
         teq env t tf;
         (tf, f)
 
@@ -684,7 +691,7 @@ let destruct_poly_typ (env:env) (t:typ) (f:exp) targ : (typ*exp) =
         raise (Error (Tc.Errors.expected_poly_typ f (Util.subst_typ subst t) targ, Tc.Env.get_range env)) in
     aux false [] t f
 
-let destruct_tcon_kind env k tt imp_arg_follows = 
+let destruct_tcon_kind env ktop tt imp_arg_follows = 
   let rec aux t k = 
     let k = compress_kind k in 
     match k with 
@@ -704,15 +711,16 @@ let destruct_tcon_kind env k tt imp_arg_follows =
        let k1 = Util.subst_kind [Inr(x, earg)] k1 in
        let t' = withkind k1 <| Typ_dep(t, earg, true) in 
        aux t' k1
-     | _ -> raise (Error(Tc.Errors.expected_tcon_kind tt k, Tc.Env.get_range env)) in
-  aux tt k
+     | Kind_abbrev(_, k) -> aux t k
+     | _ -> raise (Error(Tc.Errors.expected_tcon_kind tt ktop, Tc.Env.get_range env)) in
+  aux tt ktop
 
-let destruct_dcon_kind env k tt imp_arg_follows =
+let destruct_dcon_kind env ktop tt imp_arg_follows =
   let rec aux t k =  
     let k = compress_kind k in 
     match k with 
     | Kind_uvar uv when not imp_arg_follows ->  (* inference never introduces a dependent function *)
-        let k' = Kind_dcon(None, new_tvar env Kind_star, new_kvar env, false) in
+        let k' = Kind_dcon(None, new_tvar env Kind_type, new_kvar env, false) in
         keq env None k k';
         (k', t)
     | Kind_tcon(aopt, k, k', true) -> 
@@ -727,8 +735,9 @@ let destruct_dcon_kind env k tt imp_arg_follows =
       let k1 = Util.subst_kind [Inr(x, earg)] k1 in
       let t' = withkind k1 <| Typ_dep(t, earg, true) in 
       aux t' k1
-    | _ -> raise (Error(Tc.Errors.expected_dcon_kind tt k, Tc.Env.get_range env)) in
-  aux tt k
+    | Kind_abbrev(_, k) -> aux t k
+    | _ -> raise (Error(Tc.Errors.expected_dcon_kind tt ktop, Tc.Env.get_range env)) in
+  aux tt ktop
 
 let pat_as_exps env p : list<exp> = 
   let single_arg = function 
@@ -739,9 +748,9 @@ let pat_as_exps env p : list<exp> =
     | [te] -> te
     | _ -> failwith "impossible" in
   let rec aux p = match p with
-    | Pat_wild ->  [Inr (new_evar env (new_tvar env Kind_star))]
+    | Pat_wild ->  [Inr (new_evar env (new_tvar env Kind_type))]
     | Pat_twild  -> [Inl (new_tvar env (new_kvar env))]
-    | Pat_var x -> [Inr (Util.bvd_to_exp x (new_tvar env Kind_star))]
+    | Pat_var x -> [Inr (Util.bvd_to_exp x (new_tvar env Kind_type))]
     | Pat_tvar a -> [Inl (Util.bvd_to_typ a (new_kvar env))]
     | Pat_constant c -> [Inr (Exp_constant c)]
     | Pat_cons(l, pats) -> 
@@ -775,7 +784,7 @@ let generalize env e t : (exp * typ) =
         unchecked_unify u t;
         (a,k)) in
       tvars |> List.fold_left (fun (e,t) (a,k) ->
-        let t' = withkind Kind_star <| Typ_univ(a, k, Pure t) in
+        let t' = withkind Kind_type <| Typ_univ(a, k, Pure t) in
         let e' = Exp_tabs(a, k, e) in
         (e', t')) (e,t) 
 
@@ -797,7 +806,7 @@ let mk_basic_tuple_type env n =
     | _ -> t in 
   let rec build t k = match k with 
     | Kind_tcon(Some a, ka, k, _) ->
-      let u = new_tvar env Kind_star in 
+      let u = new_tvar env Kind_type in 
       let arg = close u ka in
       let kk = Util.subst_kind [Inl(a, arg)] k in
       build (withkind kk <| Typ_app(t, arg, false))  kk
@@ -810,7 +819,7 @@ let extract_lb_annotation env t e = match t.t with
       | Kind_unknown -> new_kvar env
       | k -> k in
     let mk_typ env t = match t.t with 
-      | Typ_unknown -> new_tvar env Kind_star
+      | Typ_unknown -> new_tvar env Kind_type
       | _ -> t in
     let rec aux env e = match e with 
       | Exp_meta(Meta_info(e, _, _)) 
@@ -818,12 +827,12 @@ let extract_lb_annotation env t e = match t.t with
       | Exp_tabs(a, k, e) -> 
         let k = mk_kind env k in
         let env = Env.push_local_binding env (Binding_typ(a, k)) in
-        withkind Kind_star <| Typ_univ(a, k, Pure <| aux env e)
+        withkind Kind_type <| Typ_univ(a, k, Pure <| aux env e)
       | Exp_abs(x, t, e) -> 
         let t = mk_typ env t in
         let env = Env.push_local_binding env (Binding_var(x, t)) in
-        withkind Kind_star <| Typ_fun(Some x, t, Pure <| aux env e, false)
+        withkind Kind_type <| Typ_fun(Some x, t, Pure <| aux env e, false)
       | Exp_ascribed(e, t) -> t
-      | _ -> new_tvar env Kind_star in 
+      | _ -> new_tvar env Kind_type in 
     aux env e       
   | _ -> t

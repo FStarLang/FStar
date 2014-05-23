@@ -19,8 +19,8 @@ type In : #'a:Type => 'a => list 'a => Type
 type ListUnion : #'a:Type => list 'a => list 'a => list 'a => Type
 assume In_hd: forall 'a (hd:'a) (tl:list 'a). In hd (Cons hd tl)
 assume In_tl: forall 'a (hd:'a) (x:'a) (tl:list 'a). In x tl ==> In x (Cons hd tl)
-assume NotinNil: forall 'a (x:'a). not (In x Nil)
-assume NotinCons: forall 'a (x:'a) (y:'a) (tl:list 'a). not(In x tl) /\ x<>y ==> not(In x (Cons y tl))
+assume NotinNil: forall 'a (x:'a). ~(In x Nil)
+assume NotinCons: forall 'a (x:'a) (y:'a) (tl:list 'a). ~(In x tl) /\ x=!=y ==> ~(In x (Cons y tl))
 
 val hd: list 'a -> 'a
 let hd = function 
@@ -32,7 +32,7 @@ let tail = function
   | hd::tl -> tl
   | _ -> failwith "tail of empty list"
 
-val mem: x:'a -> l:list 'a -> b:bool{b=true <==> In x l}
+val mem: x:'a -> l:list 'a -> b:bool{b==true <==> In x l}
 let rec mem x = function
   | [] -> false
   | hd::tl -> if hd = x then true else mem x tl

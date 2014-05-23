@@ -81,7 +81,7 @@ let rec sumto i f = if i = 0 then f 0 else (f i) + (sumto (i-1) f)
   since the precondition of the second argument of sumto is verified:
    {0 <= w /\ w <= v-1}
 *)
-val strangeZero: v:int{v >= 0} -> u:int{u = 0}
+val strangeZero: v:int{v >= 0} -> u:int{u == 0}
 let rec strangeZero v = if v = 0 then 0 else sumto (v-1) strangeZero
 
 

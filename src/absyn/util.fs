@@ -177,6 +177,7 @@ let rec lids_of_sigelt se = match se with
     | (Inr l, _, _) -> l
     | (Inl x, _, _) -> failwith (Util.format1 "Impossible: got top-level letbinding with name %s" x.ppname.idText)) lbs
   | Sig_main _ -> []
+  | Sig_monads(mdecls, _, _) -> mdecls |> List.map (fun md -> md.mname)
     
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
@@ -190,7 +191,8 @@ let range_of_sigelt x = match x with
   | Sig_assume (_, _, _, _, r)
   | Sig_logic_function (_, _, _, r) 
   | Sig_let(_, r) 
-  | Sig_main(_, r) -> r
+  | Sig_main(_, r) 
+  | Sig_monads(_, _, r) -> r
 
 let range_of_typ t def = match t.t with 
   | Typ_meta(Meta_pos(_, r)) -> r
@@ -434,8 +436,8 @@ let close_with_lam tps t = List.fold_right
 let close_with_arrow tps t =
   t |> (tps |> List.fold_right (
     fun tp out -> match tp with
-      | Tparam_typ (a,k) -> withkind Kind_star <| Typ_univ (a,k, Pure out)
-      | Tparam_term (x,t) -> withkind Kind_star <| Typ_fun (Some x,t,Pure out,true)))
+      | Tparam_typ (a,k) -> withkind Kind_type <| Typ_univ (a,k, Pure out)
+      | Tparam_term (x,t) -> withkind Kind_type <| Typ_fun (Some x,t,Pure out,true)))
 
 let close_typ = close_with_arrow
       
@@ -567,7 +569,7 @@ let rec get_tycon t =
   | _ -> None
 
 let base_kind = function
-  | Kind_star -> true
+  | Kind_type -> true
   | _ -> false
 
 let sortByFieldName (fn_a_l:list<(fieldname * 'a)>) =
@@ -617,10 +619,10 @@ let normalizeRefinement t =
  
 let forall_kind =
   let a = new_bvd None in
-  let atyp = bvd_to_typ a Kind_star in
-    Kind_tcon(Some a, Kind_star,
-              Kind_tcon(None, Kind_dcon(None, atyp, Kind_star, false),
-                        Kind_star, 
+  let atyp = bvd_to_typ a Kind_type in
+    Kind_tcon(Some a, Kind_type,
+              Kind_tcon(None, Kind_dcon(None, atyp, Kind_type, false),
+                        Kind_type, 
                         false), 
               true)
 

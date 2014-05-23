@@ -338,6 +338,7 @@ rule token args = parse
      { let s = ulexeme lexbuf in 
        CHAR (Lexhelp.trigraph s.[2] s.[3] s.[4]) }
 
+ | "~"     { TILDE(ulexeme lexbuf) }
  | "/\\"   { CONJUNCTION }
  | "\\/"   { DISJUNCTION }
  | '\'' hexgraph_short '\'' { CHAR (char (int32 (Lexhelp.hexgraph_short (trim_both lexbuf 3 1)))) }
@@ -428,6 +429,8 @@ rule token args = parse
  | ";;" { SEMICOLON_SEMICOLON }
  | ";" { SEMICOLON }
  | "<-" { LARROW }
+ | "=!=" { EQUALS_BANG_EQUALS }
+ | "==" { EQUALS_EQUALS }
  | "=" { EQUALS }
  | "[" { LBRACK }
  | "[|" { LBRACK_BAR }

@@ -79,8 +79,14 @@ let rec visit_kind'
   let k = compress_kind k in 
   match k with
     | Kind_uvar _ 
-    | Kind_star
+    | Kind_type
+    | Kind_effect
     | Kind_unknown -> cont (h env benv k)
+    | Kind_abbrev(kabr, k) ->
+      visit_kind' h f g l ext env benv k
+        (fun (env, k) -> 
+           visit_either_l' h f g l ext env benv (snd kabr)
+            (fun (env, args) -> cont (env, Kind_abbrev((fst kabr, args), k))))
     | Kind_tcon(aopt, k, k', imp) ->
         visit_kind' h f g l ext env benv k
           (fun (env, k) ->
@@ -488,8 +494,15 @@ let rec reduce_kind
     let kl, tl, el, env =   
       match k with 
         | Kind_uvar _
-        | Kind_star 
+        | Kind_type 
+        | Kind_effect
         | Kind_unknown -> [], [], [], env
+        | Kind_abbrev(kabr, k) -> 
+          let k, env = map_kind env binders k in
+          let env, ts, es = List.fold_left (fun (env, ts, es) te -> match te with 
+            | Inl t -> let t, env = map_typ env binders t in (env, t::ts, es)
+            | Inr e -> let e, env = map_exp env binders e in (env, ts, e::es)) (env, [], []) (snd kabr) in
+          [k], List.rev ts, List.rev es, env
         | Kind_tcon (aopt, k1, k2, _) -> 
           let k1, env = map_kind env binders k1 in
           let k2, env = map_kind env (push_tbinder binders aopt) k2 in
@@ -709,8 +722,17 @@ and reduce_exp
 let combine_kind k (kl, tl, el) env = 
   let k' = match k, kl, tl with 
     | Kind_uvar _, [], []
-    | Kind_star, [], [] 
+    | Kind_type, [], [] 
+    | Kind_effect, [], []
     | Kind_unknown, [], [] -> k
+    | Kind_abbrev(kabr, _), [k], _ -> 
+      let rec reconstruct x = match x with
+        | ([], [], []) -> []
+        | (Inl _::args, t::tl, el) -> Inl t::reconstruct (args, tl, el)
+        | (Inr _::args, tl, e::el) -> Inr e::reconstruct (args, tl, el)
+        | _ -> failwith "impossible" in
+      let args = reconstruct (snd kabr, tl, el) in 
+      Kind_abbrev((fst kabr, args), k)
     | Kind_tcon (aopt, k1, k2, imp), [k1';k2'], [] -> Kind_tcon(aopt, k1', k2', imp)
     | Kind_dcon (xopt, t, k, imp), [k'], [t'] -> Kind_dcon(xopt, t', k', imp) 
     | _ -> failwith "impossible" in

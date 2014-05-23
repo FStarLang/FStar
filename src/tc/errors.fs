@@ -21,6 +21,9 @@ open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
 
+let unexpected_signature_for_monad m k = 
+  format2 "Unexpected signature for monad \"%s\". Expected a kind of the form ('a:Type => WP 'a => WP 'a => Type); got %s" m.str (Print.kind_to_string k)
+
 let name_not_found (l:Syntax.lident) = 
   format1 "Name \"%s\" not found" l.str
 

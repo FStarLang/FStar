@@ -505,7 +505,7 @@ and doc_of_branch (env : env) ((p, cl, body) : pat * exp option * exp) : doc =
 (* -------------------------------------------------------------------- *)
 let is_kind_for_mldtype (k : knd) =
     match k with
-    | Kind_star    -> true
+    | Kind_type    -> true
     | Kind_unknown -> true
     | Kind_dcon _  -> false
     | Kind_tcon _  -> false

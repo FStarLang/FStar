@@ -54,9 +54,6 @@ z3_x64:
 	cp $(BIN)/z3.x64.dll $(BIN)/z3.dll
 
 
-WC: $(BASIC_SRC) $(ABSYN_SRC) parser/ast.fs parser/parse.fsy parser/lexhelp.fs parser/lex.fsl parser/dsenv.fs parser/desugar.fs parser/driver.fs $(TCCORE_SRC) $(MONADIC_SRC) $(Z3ENCODE_SRC) 
-	wc -l $^
-
 parser/parse.fs: parser/parse.fsy
 	fsyacc --module Microsoft.FStar.Parser.Parse $^
 
@@ -114,7 +111,7 @@ check: $(BIN)/fstar.exe
 	$(STAGE)/fstar --fstar_home .. --cert --gadt --prims ../lib/prims_wotuples.f9 certify/coretyping.fst 
 	$(STAGE)/fstar --fstar_home .. --rdcil_z3eq --gadt --genIL --writePrims --odir $(STAGE)/queries --prims certify/prims.fst $(CERTIFY_SRC)
 
-wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) fstar.fs
+wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(FORMAT_SRC) $(BACKEND_SRC) fstar.fs
 	wc -l $^
 
 tidy: 

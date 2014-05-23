@@ -44,6 +44,7 @@ type env = {
   recbindings:list<binding>;     (* names bound by recursive type and top-level let-bindings definitions only *)
   phase:AST.level;
   sigmap: Util.smap<sigelt>;
+  effect_names:list<lident>;
 }
 
 let fail_or lookup lid = match lookup lid with 
@@ -71,10 +72,11 @@ let empty_env () = {curmodule=None;
                     recbindings=[];
                     kind_abbrevs=[];
                     phase=AST.Un;
-                    sigmap=Util.smap_create(100)}
+                    sigmap=Util.smap_create(100);
+                    effect_names=[]}
 
 let prepare_module env mname = 
-  let open_ns = if lid_equals mname Const.prims_lid then [] else [Const.prims_lid] in
+  let open_ns = if lid_equals mname Const.prims_lid then [] else Const.prims_lid::env.effect_names in
   {env with curmodule=Some mname; open_namespaces = open_ns}
 
 let range_of_binding = function
@@ -131,7 +133,13 @@ let try_lookup_typ_name env (lid:lident) : option<typ> =
     | None -> resolve_in_open_namespaces env lid find_in_sig
     | r -> r
 
-
+let try_resolve_typ_abbrev env lid = 
+  let find_in_sig lid = 
+    match Util.smap_try_find env.sigmap lid.str with 
+      | Some (Sig_typ_abbrev(lid, tps, k, def, _)) -> Some (Util.close_with_lam tps def)
+      | _ -> None in
+  resolve_in_open_namespaces env lid find_in_sig
+   
 let unmangleMap = [("op_ColonColon", "Cons");
                    ("not", "op_Negation")]
       
@@ -335,16 +343,23 @@ let push_rec_binding env b = match b with
     
 let push_sigelt env s = 
   let err l = raise (Error ("Duplicate top-level names " ^ (text_of_lid l), range_of_lid l)) in
-  let env = match Util.find_map (lids_of_sigelt s) (fun l -> if not (unique env l) then Some l else None) with 
+  let lids = match s with 
+    | Sig_monads _ -> []
+    | _ -> lids_of_sigelt s in 
+  let env = match Util.find_map lids (fun l -> if not (unique env l) then Some l else None) with 
     | None -> 
       extract_record env s;
       {env with sigaccum=s::env.sigaccum}
     | Some l -> 
       err l in 
-  let lss = match s with 
-    | Sig_bundle(ses, _) -> List.map (fun se -> (lids_of_sigelt se, se)) ses
-    | Sig_val_decl(_, _, None, _, _) -> [] 
-    | _ -> [lids_of_sigelt s, s] in
+  let env, lss = match s with 
+    | Sig_bundle(ses, _) -> env, List.map (fun se -> (lids_of_sigelt se, se)) ses
+    | Sig_val_decl(_, _, None, _, _) -> env, [] 
+    | Sig_monads _ -> 
+      let lids = lids_of_sigelt s in
+      let env = {env with effect_names=lids@env.effect_names} in 
+      env, []
+    | _ -> env, [lids_of_sigelt s, s] in
   lss |> List.iter (fun (lids, se) -> 
     lids |> List.iter (fun lid -> 
       Util.smap_add env.sigmap lid.str se));
@@ -388,11 +403,14 @@ let finish env modul =
 let finish_module env modul = 
   check_admits env; finish env modul
 
-let env_for_monad_sig env mname = 
+let enter_monad_scope env mname = 
   let curmod = current_module env in
-  let partial_mod = {name=curmod; declarations=env.sigaccum; exports=[]} in
-  let env1 = finish env partial_mod in
-  let eff = lid_of_ids (curmod.ns@[curmod.ident; mname]) in
-  {env1 with 
-    curmodule=Some eff;
-    open_namespaces=partial_mod.name::env.open_namespaces}
+  let mscope = lid_of_ids (curmod.ns@[curmod.ident; mname]) in 
+  {env with 
+    curmodule=Some mscope;
+    open_namespaces=curmod::env.open_namespaces}
+
+let exit_monad_scope env0 env = 
+  {env with
+    curmodule=env0.curmodule;
+    open_namespaces=env0.open_namespaces}

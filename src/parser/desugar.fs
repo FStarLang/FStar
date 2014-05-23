@@ -91,8 +91,9 @@ let op_as_vlid env arity r s =
 let op_as_tylid r s =
   let r l = Some <| set_lid_range l r in
   match s with
-    | "=" ->    r Const.eq2_lid
-    | "<>" ->   r Const.neq2_lid
+    | "~"   ->  r Const.not_lid
+    | "=="  ->  r Const.eq2_lid
+    | "=!=" ->  r Const.neq2_lid
     | "<" ->    r Const.lt_lid
     | "<=" ->   r Const.lte_lid
     | ">" ->    r Const.gt_lid
@@ -107,8 +108,14 @@ let rec is_type env (t:term) =
   if t.level = Type then true
   else match (unparen t).term with
     | Wild -> true
-    | Op("*", hd::_)                    (* tuple constructor *)
-    | Op("=", hd::_) -> is_type env hd  (* equality predicate *)
+    | Op("*", hd::_) -> is_type env hd     (* tuple constructor *)
+    | Op("==", _)                          (* equality predicate *)
+    | Op("=!=", _) 
+    | Op("~", _)
+    | Op("/\\", _)
+    | Op("\\/", _)
+    | Op("==>", _)
+    | Op("<==>", _)  -> true               (* negation predicate *)
     | Op("<", _)
     | Op("<=", _)
     | Op(">", _)
@@ -124,11 +131,12 @@ let rec is_type env (t:term) =
     | Var l
     | Name l
     | Construct(l, _) -> is_type_lid env l
-    | Abs(_, t)
     | App(t, _, _)
     | Paren t
     | Ascribed(t, _)
-    | Product(_, t)  -> is_type env t
+    | If(t, _, _) 
+    | Product(_, t)
+    | Abs(_, t) -> is_type env t
     | _ -> false
 
 let rec is_kind env (t:term) : bool =
@@ -601,10 +609,9 @@ and desugar_typ env (top:term) : typ =
     | Op("*", [t1;_]) -> 
       raise (Error(Util.format1 "The operator \"*\" is resolved here as multiplication since \"%s\" is a term, although a type was expected" (term_to_string t1), top.range))
       
-    | Op("<>", args) ->
-      let t = desugar_typ env (mk_term (Op("=", args)) top.range top.level) in
-      pk <| Typ_app(ftv <| set_lid_range Const.not_lid top.range, t, false)
-
+    | Op("=!=", args) ->
+      desugar_typ env (mk_term(Op("~", [mk_term (Op("==", args)) top.range top.level])) top.range top.level)
+      
     | Op(s, args) ->
       begin match op_as_tylid top.range s with
         | None -> raise (Error("Unrecognized type operator" ^ s, top.range))
@@ -702,6 +709,7 @@ and desugar_typ env (top:term) : typ =
           
     | Record _ -> failwith "Unexpected record type"
 
+    | If _  -> desugar_formula env top
     | _ when (top.level=Formula) -> desugar_formula env top
 
     | _ -> error "Expected a type" top top.range
@@ -709,10 +717,10 @@ and desugar_typ env (top:term) : typ =
 and desugar_kind env k : knd =
   let k = unparen k in
   match k.term with
-    | Name {str="Type"} -> Kind_star
+    | Name {str="Type"} -> Kind_type
     | Name l -> 
       begin match DesugarEnv.find_kind_abbrev env (DesugarEnv.qualify_lid env l) with 
-        | Some (_, [], def) -> def
+        | Some (_, [], def) -> Kind_abbrev((l, []), def)
         | None -> error "Unexpected term where kind was expected" k k.range
        end
     | Wild           -> Kind_unknown
@@ -743,7 +751,8 @@ and desugar_kind env k : knd =
             let subst = List.map2 (fun ax (t, _) -> match ax with 
               | Inl a -> Inl(a, desugar_typ env t)
               | Inr x -> Inr(x, desugar_exp env t)) binders args in 
-            Util.subst_kind subst def 
+            let k = Util.subst_kind subst def in 
+            Kind_abbrev((l, subst |> List.map (function Inl(_, t) -> Inl t | Inr(_, e) -> Inr e)), k)
       end
     | _ -> error "Unexpected term where kind was expected" k k.range
 
@@ -753,6 +762,7 @@ and desugar_formula' env (f:term) : typ =
     | "\\/"  -> Some Const.or_lid
     | "==>"  -> Some Const.implies_lid
     | "<==>" -> Some Const.iff_lid
+    | "~"    -> Some Const.not_lid
     | _ -> None in
   let pos t = Typ_meta (Meta_pos(t, f.range)) in
   let wk t = withkind kun t in
@@ -790,7 +800,7 @@ and desugar_formula' env (f:term) : typ =
     | _ -> failwith "impossible" in
 
   match (unparen f).term with
-    | Op("=", ((hd::_args))) ->
+    | Op("==", ((hd::_args))) ->
       let args = hd::_args in
       let args = List.map (fun t -> desugar_typ_or_exp env t, false) args in
       let eq =
@@ -807,10 +817,6 @@ and desugar_formula' env (f:term) : typ =
             (List.map (fun x -> Inl <| desugar_formula env x, false) args)
         | _ -> desugar_typ env f
       end
-
-    | App({term=Var l}, arg, imp) when (l.str = "not") ->
-      let arg = desugar_formula env arg in
-      mk_tapp (ftv (set_lid_range Const.not_lid f.range)) [Inl arg, imp]
         
     | If(f1, f2, f3) ->
       mk_tapp
@@ -871,7 +877,7 @@ and desugar_exp_binder env b = match b.binder with
 and desugar_type_binder env b = match b.binder with
   | TAnnotated(x, t) -> Some x, desugar_kind env t
   | NoName t -> None, desugar_kind env t
-  | TVariable x -> Some x, Kind_star
+  | TVariable x -> Some x, Kind_type
   | _ -> raise (Error("Unexpected domain of an arrow or sum (expected a kind)", b.brange))
 
 let get_logic_tag = function
@@ -1154,15 +1160,19 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
     let env, _ = desugar_kind_abbrev d.drange env id binders k in 
     env, []
 
-  | MonadLat(monads, lifts) -> //TODO: Ignoring this for now
+  | MonadLat(monads, lifts) -> 
     let desugar_monad_sig env0 (m:AST.monad_sig) = 
-      let menv = DesugarEnv.env_for_monad_sig env0 m.mon_name in
+      let menv = DesugarEnv.enter_monad_scope env0 m.mon_name in
       let menv, kabbrevs, kmon = List.fold_left (fun (menv, kabbrevs, kmon) d -> 
         match d.decl with 
           | KindAbbrev(id, binders, k) when (id.idText="WP") -> 
             let menv, (lid, binders, kwp) = desugar_kind_abbrev d.drange menv id binders k in 
+            let args = binders |> List.map (function
+              | Inl a -> Inl <| Util.bvd_to_typ a Kind_type
+              | Inr x -> Inr <| Util.bvd_to_exp x tun)  in
+            let kwp = Kind_abbrev((lid, args), kwp) in
             let kmon = match binders with 
-              | [Inl a] -> Kind_tcon(Some a, Kind_star, Kind_tcon(None, kwp, Kind_tcon(None, kwp, Kind_star, false), false), false) 
+              | [Inl a] -> Kind_tcon(Some a, Kind_type, Kind_tcon(None, kwp, Kind_tcon(None, kwp, Kind_effect, false), false), false) 
               | _ -> raise (Error("Unexpected binders in the signature of WP (expected a single type parameter)", d.drange)) in
             menv, (lid, binders, kwp)::kabbrevs, Some kmon
           | KindAbbrev(id, binders, k) -> 
@@ -1174,16 +1184,17 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
       let kmon = match kmon with
         | None -> raise (Error("Monad " ^m.mon_name.idText^ " expects WP to be defined", d.drange))
         | Some k -> k in
-      let lookup s = match DesugarEnv.try_lookup_typ_name menv (DesugarEnv.qualify menv (Syntax.mk_ident(s, d.drange))) with
+      let lookup s = match DesugarEnv.try_resolve_typ_abbrev menv (DesugarEnv.qualify menv (Syntax.mk_ident(s, d.drange))) with
         | None -> raise (Error("Monad " ^m.mon_name.idText^ " expects definition of "^s, d.drange))
         | Some t -> t in
-      let menv = DesugarEnv.push_sigelt menv (Sig_tycon(qualify env0 m.mon_name, [], kmon, [], [], [], d.drange)) in
-      let menv, abbrevs = m.mon_abbrevs |> List.fold_left (fun (env, out) (id, binders, t) -> 
+      let m_decl = Sig_tycon(qualify env0 m.mon_name, [], kmon, [], [], [], d.drange) in
+      let menv = DesugarEnv.push_sigelt menv m_decl in
+      let menv, abbrevs = m.mon_abbrevs |> List.fold_left (fun (menv, out) (id, binders, t) -> 
           let menv, ses = desugar_tycon menv d.drange [NoQual] [TyconAbbrev(id, binders, None, t)] in
-          let abbrev = match ses with 
-            | [Sig_typ_abbrev(lid, tps, _, t, _)] -> {mabbrev=lid; parms=tps; def=t}
-            | _ -> failwith "impossible" in
-          menv, abbrev::out) (menv, []) in
+          match ses with 
+            | [Sig_typ_abbrev(n, tps, _, t, r)] -> menv, (Sig_typ_abbrev(n, tps, Kind_effect, t, r)::out)
+            | _ -> failwith "impossible") (menv, []) in
+      let m_abbrevs = List.rev abbrevs in
       let msig = {mname=qualify env m.mon_name;
          total=m.mon_total;
          signature=kmon;
@@ -1192,18 +1203,19 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
          bind_wlp=lookup "bind_wlp";
          ite_wp=lookup "ite_wp";
          ite_wlp=lookup "ite_wlp";
-         abbrevs=List.rev abbrevs} in
-      msig, List.rev kabbrevs in 
+         abbrevs=m_abbrevs} in
+      let env = DesugarEnv.exit_monad_scope env0 menv in 
+      env, msig in
     let env, msigs = List.fold_left (fun (env, msigs) m -> 
-      let msig, kabbrevs = desugar_monad_sig env m in
-      let env = List.fold_left DesugarEnv.push_kind_abbrev env kabbrevs in 
+      let env, msig = desugar_monad_sig env m in
       env, msig::msigs) (env, []) monads in
     let order = lifts |> List.map (fun l -> 
       let t = desugar_typ env (l.lift_op) in
       {source=qualify env (l.msource);
        target=qualify env (l.mdest);
        lift=t}) in
-    env, [Sig_monads(List.rev msigs, order)]
+    let se = Sig_monads(List.rev msigs, order, d.drange) in
+    push_sigelt env se, [se]
    
 
   | _ -> raise (Error("Unexpected declaration", d.drange))

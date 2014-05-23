@@ -15,13 +15,13 @@
 *)
 module Foo.Record
 
+
 let foo x y = if x <= y && y <= x then 0 else 1
 
 type r = {
   a:int; 
   b:int;
 }
-
 
 let matchr r = match r with 
   | ({a=_}) -> 1
