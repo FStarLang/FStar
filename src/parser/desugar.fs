@@ -667,18 +667,18 @@ and desugar_typ env (top:term) : typ =
       let p = match tk with
         | Inl(None, k) ->
           let x = new_bvd (Some b.brange) in
-          Typ_univ(x, k, Pure <| desugar_typ env t)
+          Typ_univ(x, k, desugar_typ env t)
 
         | Inl(Some x, k) ->
           let env, x = push_local_tbinding env x in
-          Typ_univ(x, k, Pure <| desugar_typ env t)
+          Typ_univ(x, k, desugar_typ env t)
 
         | Inr(None, t1) ->
-          Typ_fun(None, t1, Pure <| desugar_typ env t, b.implicit)
+          Typ_fun(None, t1, desugar_typ env t, b.implicit)
 
         | Inr(Some x, t1) ->
           let env, x = push_local_vbinding env x in
-          Typ_fun(Some x, t1, Pure <| desugar_typ env t, b.implicit) in
+          Typ_fun(Some x, t1, desugar_typ env t, b.implicit) in
       pk p
 
     | Refine(b,f) ->
@@ -888,7 +888,9 @@ let logic_tags q = List.collect get_logic_tag q
 
 let mk_data_ops env = function
   | Sig_datacon(lid, t, _, _) ->
-    let args, tconstr = collect_formals t in
+    printfn "mk_data_ops for %s\n" (Print.typ_to_string t);
+    let args, teff = collect_formals t in
+    let tconstr = if List.length args <> 0 then Util.result_typ teff else teff in
     //Printf.printf "Collecting formals from type %s; got %s with args %d\n" (Print.typ_to_string t) (Print.typ_to_string tconstr) (List.length args);
     let argpats = args |> List.map (function
       | Inr(Some x,_) -> Pat_var x
@@ -912,15 +914,15 @@ let mk_data_ops env = function
       | _::rest -> failwith "impossible"
       | [] -> Exp_abs(formal, tconstr, e) in
     let rec build_typ freevars (t:typ) = match freevars with
-      | Inl (a,k)::rest -> withkind kun <| Typ_univ(a, k, Pure <| build_typ rest t)
-      | Inr (xopt,tt)::rest -> withkind kun <| Typ_fun(xopt, tt, Pure <| build_typ rest t, false)
-      | [] -> withkind kun <| Typ_fun(Some formal, tconstr, Pure <| t, false) in
+      | Inl (a,k)::rest -> withkind kun <| Typ_univ(a, k, build_typ rest t)
+      | Inr (xopt,tt)::rest -> withkind kun <| Typ_fun(xopt, tt, build_typ rest t, false)
+      | [] -> withkind kun <| Typ_fun(Some formal, tconstr, t, false) in
     let rec build_kind freevars k = match freevars with
       | Inl (a,kk)::rest -> Kind_tcon(Some a, kk, build_kind rest k, false)
       | Inr (xopt,t)::rest -> Kind_dcon(xopt, t, build_kind rest k, false)
       | [] -> Kind_dcon(Some formal, tconstr, k, false) in
     let build_exp  = build_exp freevars in
-    let build_typ  = build_typ freevars in
+    let build_typ t = build_typ freevars (Util.total_comp t) in
     let build_kind = build_kind freevars in
     let subst_to_string s = 
       List.map (function 
@@ -932,7 +934,7 @@ let mk_data_ops env = function
       let res = subst_typ s t in  res in
       //Printf.printf "Got\n%s\n" (Print.typ_to_string res); flush stdout; res in
     let rec aux fields t = match (compress_typ t).t with
-      | Typ_fun(Some x, t1, Pure t2, _) ->
+      | Typ_fun(Some x, t1, t2, _) ->
         let field_name = lid_of_ids (ids_of_lid lid @ [x.ppname]) in
         let t = build_typ t1 in
         let body = ewithpos (Exp_match(formal_exp, [(Pat_cons(lid, argpats), None, bvd_to_exp x t1)])) x.ppname.idRange in
@@ -949,7 +951,7 @@ let mk_data_ops env = function
             subst_typ subst t2 in
         aux (fields@sigs) t2
           
-      | Typ_univ(a, k, Pure t2) ->
+      | Typ_univ(a, k, t2) ->
         let field_name = lid_of_ids (ids_of_lid lid @ [a.ppname]) in
         let kk = build_kind k in
         let sigs = Sig_tycon(field_name, [], kk, [], [], [Logic_projector], range_of_lid field_name) in
@@ -979,6 +981,16 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | TAnnotated(a, _)
     | TVariable a -> mk_term (Tvar a) a.idRange Type
     | NoName t -> t in
+  let tot = mk_term (Name (Const.p2l ["PURE"; "Tot"])) rng Expr in 
+  let with_constructor_effect t = mk_term (App(tot, t, false)) t.range t.level in
+  let add_constructor_effect t = match (unparen t).term with
+    | Product _ -> 
+      let rec aux t = match t.term with 
+        | Product(binders, s) ->  mk_term (Product(binders, aux s)) t.range t.level
+        | Paren s -> mk_term (Paren(aux s)) s.range s.level
+        | _ -> with_constructor_effect t in
+      aux t
+    | _ -> t in
   let apply_binders t binders =
     List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, false)) out.range out.level)
       t binders in
@@ -987,7 +999,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let constrName = mk_ident("Mk" ^ id.idText, id.idRange) in
       let fields = List.map (fun (x,t) -> mk_binder (Annotated(x,t)) x.idRange Expr false) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) parms in
-      let constrTyp = mk_term (Product(fields, result)) id.idRange Type in
+      let constrTyp = mk_term (Product(fields, with_constructor_effect result)) id.idRange Type in
       (* let _ = Util.print_string (Util.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in *)
       TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false)])
     | _ -> failwith "impossible" in
@@ -1059,12 +1071,13 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                 let t =
                   if of_notation
                   then match topt with 
-                    | Some t -> mk_term (Product([mk_binder (NoName t) t.range t.level false], tconstr)) t.range t.level
+                    | Some t -> mk_term (Product([mk_binder (NoName t) t.range t.level false], with_constructor_effect tconstr)) t.range t.level
                     | None -> tconstr 
                   else match topt with 
                     | None -> failwith "Impossible"
-                    | Some t -> t in
+                    | Some t -> add_constructor_effect t in
                 let t = desugar_typ env_tps (close env_tps t) in
+                printfn "Desugared type of %s to %s\n" id.idText (Print.typ_to_string t);
                 let name = qualify env id in
                 (name, Sig_datacon(name, close_typ tps t, tname, rng)))) in
               Sig_tycon(tname, tpars, k, mutuals, constrNames, tags, rng)::constrs
@@ -1151,7 +1164,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
         
   | Exception(id, Some term) ->
     let t = desugar_typ env term in
-    let t = withkind kun <| Typ_fun(None, t, Pure <| fail_or (try_lookup_typ_name env) Const.exn_lid, false) in
+    let t = withkind kun <| Typ_fun(None, t, Util.total_comp <| fail_or (try_lookup_typ_name env) Const.exn_lid, false) in
     let se = Sig_datacon(qualify env id, t, Const.exn_lid, d.drange) in
     let env = push_sigelt env se in
     env, [se]

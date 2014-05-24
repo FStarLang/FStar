@@ -34,12 +34,39 @@ type TypeOf : #'a:Type => 'a => Type
 type KindOf : Type => Type
 type XOR = fun ('P:Type) ('Q:Type) => ('P \/ 'Q) /\ ~('P /\ 'Q)
 type ITE = fun ('P:Type) ('Q:Type) ('R:Type) => ('P ==> 'Q) /\ (~'P ==> 'R) (* if/then/else in concrete syntax at the level of types/formulae *)
-type object
+
+monad_lattice { (* The definition of the PURE effect is fixed; no user should ever change this *)
+  PURE::
+             terminating
+             kind Pre = Type
+             kind Post ('a:Type) = 'a => Type
+             kind WP ('a:Type) = Post 'a => Pre
+             type return   ('a:Type) (x:'a) ('p:Post 'a) = 'p x
+             type bind_wp  ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2: 'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) = 'wp1 (fun a => 'wp2 a 'p)
+             type bind_wlp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2: 'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) = 'wlp1 (fun a => 'wlp2 a 'p)
+             type ite_wlp ('a:Type) ('guard:Type) ('wlp1:WP 'a) ('wlp2:WP 'a) ('post:Post 'a) = 
+                 (forall (a:'a). 'post a \/ (if 'guard 
+                                             then 'wlp1 (fun a1 => a=!=a1)
+                                             else 'wlp2 (fun a2 => a=!=a2)))
+             type ite_wp  ('a:Type) ('guard:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:WP 'a) ('wlp2:WP 'a) ('post:Post 'a) = 
+                 //ite_wlp 'a 'guard 'wlp1 'wlp2 'post 
+                 (forall (a:'a). 'post a \/ (if 'guard 
+                                             then 'wlp1 (fun a1 => a=!=a1)
+                                             else 'wlp2 (fun a2 => a=!=a2)))
+                 /\ 'wp1 (fun a => True)
+                 /\ 'wp2 (fun a => True)
+             with Total ('a:Type) ('pre:Pre) ('post:Post 'a) =
+                 PURE 'a 
+                   (fun ('p:Post 'a) => 'pre /\ (forall a. 'pre /\ 'post a ==> 'p a)) (* WP *)
+                   (fun ('p:Post 'a) => forall a. 'pre /\ 'post a ==> 'p a)           (* WLP *)
+             and Tot ('a:Type) =
+                 Total 'a True (fun a => True)
+}
+
 type bool
 type b2t (b:bool) = b==true
 type unit
 assume Unit_id: forall (x:unit). x==()
-
 type int
 type char
 type byte
@@ -105,38 +132,13 @@ logic data type result : Type => Type =
   | E : 'a:Type -> e:exn -> result 'a
   | Err : 'a:Type -> msg:string -> result 'a
 
-let retype 'a 'b (r:result 'a) : result 'b = match r with 
+val retype : result 'a -> PURE.Tot (result 'b)
+let retype 'a 'b r = match r with 
   | V _ -> Err "impos"
   | Err m -> Err m
   | E e -> E e 
 
 monad_lattice {
-  PURE::
-             terminating
-             kind Pre = Type
-             kind Post ('a:Type) = 'a => Type
-             kind WP ('a:Type) = Post 'a => Pre
-             type return   ('a:Type) (x:'a) ('p:Post 'a) = 'p x
-             type bind_wp  ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2: 'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) = 'wp1 (fun a => 'wp2 a 'p)
-             type bind_wlp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2: 'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) = 'wlp1 (fun a => 'wlp2 a 'p)
-             type ite_wlp ('a:Type) ('guard:Type) ('wlp1:WP 'a) ('wlp2:WP 'a) ('post:Post 'a) = 
-                 (forall (a:'a). 'post a \/ (if 'guard 
-                                             then 'wlp1 (fun a1 => a=!=a1)
-                                             else 'wlp2 (fun a2 => a=!=a2)))
-             type ite_wp  ('a:Type) ('guard:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:WP 'a) ('wlp2:WP 'a) ('post:Post 'a) = 
-                 (forall (a:'a). 'post a \/ (if 'guard 
-                                             then 'wlp1 (fun a1 => a=!=a1)
-                                             else 'wlp2 (fun a2 => a=!=a2)))
-                 (* ite_wlp 'a 'guard 'wlp1 'wlp2 'post *)
-                 /\ 'wp1 (fun a => True)
-                 /\ 'wp2 (fun a => True)
-             with Total ('a:Type) ('pre:Pre) ('post:Post 'a) =
-                 PURE 'a 
-                   (fun ('p:Post 'a) => 'pre /\ (forall a. 'pre /\ 'post a ==> 'p a)) (* WP *)
-                   (fun ('p:Post 'a) => forall a. 'pre /\ 'post a ==> 'p a)           (* WLP *)
-             and  Tot ('a:Type) =
-                 Total 'a True (fun a => True)
-;               
   STATE::
              kind Pre     = heap => Type
              kind Post ('a:Type) = 'a => heap => Type
@@ -226,8 +228,8 @@ monad_lattice {
                  ALL 'a 
                    (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)) (* WP *)
                    (fun ('p:Post 'a) (h:heap) => forall ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)            (* WLP *)
-             (* and ML ('a:Type) = *)
-             (*     All 'a (fun h => True) (fun h0 ra h1 => True) AllRefs *)
+             and ML ('a:Type) =
+                 All 'a (fun h => True) (fun h0 ra h1 => True) AllRefs
 
   with 
   PURE  ~> STATE = (fun ('a:Type) ('wp:PURE.WP 'a) ('p:STATE.Post 'a) (h:heap) => 'wp (fun a => 'p a h));

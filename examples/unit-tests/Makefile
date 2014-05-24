@@ -1,4 +1,9 @@
-FSTAR=../../bin/FStar.exe --fstar_home ../../
+TRACE=
+ifeq ($(TRACE), true)
+override OTHERFLAGS += --trace_error
+endif
+
+FSTAR=../../bin/FStar.exe --fstar_home ../../ $(OTHERFLAGS)
 
 all: utils list tuple rec pat letrec termination pt-compiler
 

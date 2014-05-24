@@ -106,6 +106,16 @@ let order_bvd x y = match x, y with
   | Inl x, Inl y -> String.compare x.ppname.idText y.ppname.idText
   | Inr x, Inr y -> String.compare x.ppname.idText y.ppname.idText
 
+let ml_comp t =  
+  let mlk = Kind_tcon(None, Kind_type, Kind_effect, false) in 
+  let mlt = {ftv Const.ml_effect_lid with k=mlk} in
+  withkind Kind_effect <| Typ_app(mlt, t, false)
+
+let total_comp t = 
+  let totk = Kind_tcon(None, Kind_type, Kind_effect, false) in 
+  let tott = {ftv Const.tot_effect_lid with k=totk} in
+  withkind Kind_effect <| Typ_app(tott, t, false)
+  
 
 (********************************************************************************)
 (****************Simple utils on the local structure of a term ******************)
@@ -124,7 +134,8 @@ let rec ascribe_typ t k = match t.t with
   | _ -> Typ_ascribed(t, k)
     
 let rec unascribe_typ t = match t.t with 
-  | Typ_ascribed (t, _) -> unascribe_typ t
+  | Typ_ascribed (t, _)  
+  | Typ_meta(Meta_pos(t, _)) -> unascribe_typ t
   | _ -> t
 
 let rec unrefine t = match t.t with 
@@ -159,7 +170,18 @@ let flatten_typ_apps : typ -> typ * (list<either<typ,exp>>) =
       | Typ_dep(t1, v, _) -> aux (Inr v::acc) t1
       | _              -> t, acc in
   (fun t -> aux [] t)
-    
+
+let result_typ t = 
+  let _, args = flatten_typ_apps t in
+  match args with 
+    | Inl hd::_ -> hd
+    | _ -> failwith (Printf.sprintf "result_typ called with %A" t)
+
+let is_total t = 
+  match flatten_typ_apps t with 
+    | {t=Typ_const l}, _  when lid_equals l.v Const.tot_effect_lid -> true
+    | _ -> false
+
 let destruct typ lid = 
   match flatten_typ_apps typ with 
     | {t=Typ_const tc}, args when lid_equals tc.v lid -> Some args
@@ -418,11 +440,6 @@ let subst_kind s k = match s with
 let subst_typ s t = match s with 
   | [] -> t
   | _ -> subst_typ' (mk_subst_map s) t
-let subst_comp_typ s t = match s with 
-  | [] -> t
-  | _ -> match t with 
-    | Pure t -> Pure (subst_typ s t)
-    | Computation t -> Computation (subst_typ s t)
 let subst_exp s e = match s with
   | [] -> e
   | _ -> subst_exp' (mk_subst_map s) e 
@@ -436,8 +453,8 @@ let close_with_lam tps t = List.fold_right
 let close_with_arrow tps t =
   t |> (tps |> List.fold_right (
     fun tp out -> match tp with
-      | Tparam_typ (a,k) -> withkind Kind_type <| Typ_univ (a,k, Pure out)
-      | Tparam_term (x,t) -> withkind Kind_type <| Typ_fun (Some x,t,Pure out,true)))
+      | Tparam_typ (a,k) -> withkind Kind_type <| Typ_univ (a,k, total_comp out)
+      | Tparam_term (x,t) -> withkind Kind_type <| Typ_fun (Some x,t, total_comp out, true)))
 
 let close_typ = close_with_arrow
       
@@ -568,6 +585,13 @@ let rec get_tycon t =
   | Typ_dep(t, _, _) -> get_tycon t
   | _ -> None
 
+let rec is_function_typ t = 
+  match t.t with 
+    | Typ_fun _ -> true
+    | Typ_uvar _ -> is_function_typ (compress_typ t)
+    | _ -> false
+
+
 let base_kind = function
   | Kind_type -> true
   | _ -> false
@@ -641,10 +665,24 @@ let collect_formals t =
   let rec aux out t =
     let t = whnf t in
     match t.t with
-      | Typ_fun(xopt, t1, Pure t2, _) -> aux (Inr(xopt, t1)::out) t2
-      | Typ_univ(a, k, Pure t2) -> aux (Inl(a, k)::out) t2
+      | Typ_fun(xopt, t1, t2, _) -> 
+        aux2 (Inr(xopt,t1)::out) t2
+      | Typ_univ(a, k, t2) -> aux2 (Inl(a,k)::out) t2
       | Typ_meta(Meta_pos(t, _)) -> failwith "Unexpected position tagged type"
       | _ -> List.rev out, t 
+  and aux2 out t = 
+   let t = unascribe_typ t in 
+   match t.t with
+    | Typ_fun _
+    | Typ_univ _ -> aux out t
+    | _ when is_total t ->
+      let r = unascribe_typ (result_typ t) in
+      begin match r.t with 
+        | Typ_fun _
+        | Typ_univ _ -> aux out r
+        | _ -> List.rev out, t
+      end 
+    | _ -> List.rev out, t
   in aux [] t
   
 let collect_u_quants t =
@@ -720,3 +758,5 @@ let rec is_wild_pat p =
     | Pat_wild -> true
     | Pat_withinfo (p, _) -> is_wild_pat p
     | _ -> false
+
+

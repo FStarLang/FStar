@@ -66,7 +66,7 @@ let foi = float_of_int
 let format (fmt:string) (args:list<string>) = 
     let frags = fmt.Split([|"%s"|], System.StringSplitOptions.None) in
     if frags.Length <> List.length args + 1
-    then failwith "Not enough arguments to format string"
+    then failwith ("Not enough arguments to format string " ^fmt^ " : expected " ^ (string frags.Length) ^ " got [" ^ (String.concat ", " args) ^ "] frags are [" ^ (String.concat ", " (List.ofArray frags)) ^ "]")
     else let args = Array.ofList (args@[""]) in 
          Array.fold2 (fun out frag arg -> out ^ frag ^ arg) "" frags args 
 

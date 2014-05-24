@@ -60,29 +60,26 @@ type sconst =
 type typ' =  
   | Typ_btvar    of bvar<typ,knd>
   | Typ_const    of var<knd> 
-  | Typ_fun      of option<bvvdef> * typ * comp_typ * bool   (* x:t -> M t' wp  or  t -> M t' wp, bool marks implicit arguments *)
-  | Typ_univ     of btvdef * knd  * comp_typ                (* 'a:k -> M t wp *)
+  | Typ_fun      of option<bvvdef> * typ * typ * bool        (* x:t -> M t' wp  or  t -> M t' wp, bool marks implicit arguments *)
+  | Typ_univ     of btvdef * knd  * typ                      (* 'a:k -> M t wp *)
   | Typ_refine   of bvvdef * typ * typ                       (* x:t{phi} *)
   | Typ_app      of typ * typ * bool                         (* t t' -- bool marks an explicitly provided implicit arg *) 
   | Typ_dep      of typ * exp * bool                         (* t e -- bool marks an explicitly provided implicit arg *)  
   | Typ_lam      of bvvdef * typ * typ                       (* fun (x:t) => T *)
-  | Typ_tlam     of btvdef * knd * typ                      (* fun ('a:k) => T *) 
-  | Typ_ascribed of typ * knd                               (* t <: k *)
+  | Typ_tlam     of btvdef * knd * typ                       (* fun ('a:k) => T *) 
+  | Typ_ascribed of typ * knd                                (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
-  | Typ_uvar     of uvar_t * knd                            (* not present after 1st round tc *)
+  | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
   | Typ_unknown                                              (* not present after 1st round tc *)
 and typ = {t:typ'; k:knd}
-and comp_typ = 
-  | Computation of typ
-  | Pure of typ
 and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
-  | Meta_pos of typ * Range.range                (* user wrote down this type 1 at source position 2 *)
+  | Meta_pos of typ * Range.range                            (* user wrote down this type 1 at source position 2 *)
   | Meta_pattern of typ * list<either<typ,exp>>
   | Meta_cases of list<typ>
   | Meta_tid of int
 and uvar_basis<'a,'b> = 
-  | Uvar of ('a -> 'b -> bool)                          (* A well-formedness check to ensure that all names are in scope *)
+  | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a
 and exp =
   | Exp_bvar       of bvar<exp,typ>

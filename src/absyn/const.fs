@@ -118,12 +118,14 @@ let read_lid     = p2l ["ST"; "read"]
 let alloc_lid    = p2l ["ST"; "alloc"]
 
 (* monad constants *)
-let pure_lid      = pconst "Pure"
-let pure_ret_lid  = p2l ["Prims";"Pure";"return"]
-let pure_bind_lid = p2l ["Prims";"Pure";"bind"]
-let all_lid       = pconst "All"
-let all_ret_lid   = p2l ["Prims";"All";"return"]
-let all_bind_lid  = p2l ["Prims";"All";"bind"]
+let pure_effect_lid = pconst "PURE"
+let tot_effect_lid  = p2l ["Prims";"PURE";"Tot"]
+let pure_ret_lid    = p2l ["Prims";"PURE";"return"]
+let pure_bind_lid   = p2l ["Prims";"PURE";"bind"]
+let all_lid         = pconst "All"
+let all_ret_lid     = p2l ["Prims";"ALL";"return"]
+let all_bind_lid    = p2l ["Prims";"ALL";"bind"]
+let ml_effect_lid   = p2l ["Prims"; "ALL"; "ML"]
 
 (* relational mode constants *)
 let lproj_lid            = pconst  "L"

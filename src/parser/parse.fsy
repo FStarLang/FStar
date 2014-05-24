@@ -230,8 +230,8 @@ decl':
       { Assume($1, $2, $4) }
   | EXCEPTION name of_typ
       { Exception($2, $3) }
-  | MONADLATTICE LBRACE monads WITH lifts RBRACE
-      { MonadLat($3, $5) }
+  | MONADLATTICE LBRACE monads with_lifts RBRACE
+      { MonadLat($3, $4) }
 
 kind_abbrev: 
   | KIND name binders EQUALS kind
@@ -279,6 +279,10 @@ monad_abbrevs:
 more_monad_abbrevs: 
   |     { [] }
   | AND monad_abbrev more_monad_abbrevs { $2::$3 }
+
+with_lifts:
+  |        { [] }
+  | WITH lifts { $2 }
 
 lifts:
   | lift moreLifts
