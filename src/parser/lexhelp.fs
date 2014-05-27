@@ -210,8 +210,8 @@ let keywords =
     ALWAYS, "while"      ,WHILE;
     ALWAYS, "with"       ,WITH;
     ALWAYS, "monad_lattice", MONADLATTICE;
-    ALWAYS, "terminating", TOTAL;
-    ALWAYS, "kind"       , KIND;
+    ALWAYS, "terminating",TOTAL;
+    ALWAYS, "kind"       ,KIND;
     FSHARP, "yield"      ,YIELD(true);
     ALWAYS, "_"          ,UNDERSCORE;
     FSHARP, "__token_constraint",CONSTRAINT
@@ -228,7 +228,6 @@ let keywords =
       "parallel"; "process"; "protected"; "pure"; (* "pattern"; *)
       "sealed"; "trait";  "tailcall";
       "volatile" ]
-
 let stringKeywords = List.map (fun (_, w, _) -> w) keywords
 
 (*------------------------------------------------------------------------

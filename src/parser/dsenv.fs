@@ -45,6 +45,7 @@ type env = {
   phase:AST.level;
   sigmap: Util.smap<sigelt>;
   effect_names:list<lident>;
+  default_result_effect:lident;
 }
 
 let fail_or lookup lid = match lookup lid with 
@@ -73,7 +74,11 @@ let empty_env () = {curmodule=None;
                     kind_abbrevs=[];
                     phase=AST.Un;
                     sigmap=Util.smap_create(100);
-                    effect_names=[]}
+                    effect_names=[];
+                    default_result_effect=Const.ml_effect_lid}
+
+let total env = {env with default_result_effect=Const.tot_effect_lid}
+let ml env = {env with default_result_effect=Const.ml_effect_lid}
 
 let prepare_module env mname = 
   let open_ns = if lid_equals mname Const.prims_lid then [] else Const.prims_lid::env.effect_names in
@@ -133,10 +138,18 @@ let try_lookup_typ_name env (lid:lident) : option<typ> =
     | None -> resolve_in_open_namespaces env lid find_in_sig
     | r -> r
 
+let is_effect_name env lid = 
+  let find_in_sig lid = 
+    match Util.smap_try_find env.sigmap lid.str with 
+      | Some (Sig_tycon(_, _, _, _, _, tags, _)) 
+      | Some (Sig_typ_abbrev (_, _, _, _, tags, _)) when List.contains Logic_effect tags -> Some (ftv <| lid)
+      | _ -> None in
+  resolve_in_open_namespaces env lid find_in_sig |> Util.is_some
+
 let try_resolve_typ_abbrev env lid = 
   let find_in_sig lid = 
     match Util.smap_try_find env.sigmap lid.str with 
-      | Some (Sig_typ_abbrev(lid, tps, k, def, _)) -> Some (Util.close_with_lam tps def)
+      | Some (Sig_typ_abbrev(lid, tps, k, def, _, _)) -> Some (Util.close_with_lam tps def)
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
    

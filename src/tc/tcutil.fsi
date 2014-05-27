@@ -28,6 +28,9 @@ type step =
   | Alpha
   | Delta
   | Beta
+type formulae = list<formula>
+type comp_with_binder = option<Env.binding> * comp_typ
+
 val t_bool : typ
 val t_unit : typ
 val typing_const : env -> sconst -> typ
@@ -36,12 +39,14 @@ val new_kvar : env -> knd
 val new_tvar : env -> knd -> typ
 val new_evar : env -> typ -> exp
 val normalize : env -> typ -> typ
-val keq : env -> option<typ> -> knd -> knd -> unit
-val teq : env -> typ -> typ -> unit
-val subtype: env -> typ -> typ -> bool
+val keq : env -> option<typ> -> knd -> knd -> formulae
+val teq : env -> typ -> typ -> formulae
+val subtype: env -> typ -> typ -> formulae
+val subtype_tauto: env -> typ -> typ -> unit
+val try_sub_comp_typ: env -> comp_typ -> comp_typ -> option<formulae>
 val check_and_ascribe : env -> exp -> typ -> typ -> exp
 val pat_as_exps: env -> pat -> list<exp>
-val generalize: env -> exp -> typ -> (exp * typ)
+val generalize: env -> exp -> comp_typ -> (exp * comp_typ)
 val maybe_instantiate : env -> exp -> typ -> (exp * typ)
 val destruct_function_typ : env -> typ -> option<exp> -> bool -> (typ * option<exp>)
 val destruct_poly_typ: env -> typ -> exp -> typ -> (typ*exp) 
@@ -50,3 +55,10 @@ val destruct_dcon_kind: env -> knd -> typ -> bool -> (knd*typ)
 val mk_basic_tuple_type: env -> int -> typ
 val extract_lb_annotation: env -> typ -> exp -> typ
 val norm_typ: list<step> -> env -> typ -> typ
+val close_formulae: list<Tc.Env.binding> -> list<formula> -> list<formula>
+val bind: env -> comp_typ -> comp_with_binder -> comp_typ
+val bind_ite: env -> comp_typ -> comp_typ -> comp_typ
+val close_comp_typ: env -> list<binding> -> comp_typ -> comp_typ
+val strengthen_precondition: env -> comp_typ -> formulae -> comp_typ
+val weaken_precondition: env -> comp_typ -> formulae -> comp_typ
+val lift_pure: env -> formula -> comp_typ (* with a uvar as a result type *)

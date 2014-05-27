@@ -218,7 +218,7 @@ let lookup_datacons_of_typ (env:env) lid =
     
 let lookup_typ_abbrev env lid =
   match lookup_qname env lid with 
-    | Some (Inr (Sig_typ_abbrev (lid, tps, _, t, _))) -> Some (Util.close_with_lam tps t)
+    | Some (Inr (Sig_typ_abbrev (lid, tps, _, t, _, _))) -> Some (Util.close_with_lam tps t)
     | _ -> None
         
 let lookup_btvdef env (btvd:btvdef): option<knd> = 
@@ -234,7 +234,7 @@ let lookup_btvar env (btv:btvar) =
 let lookup_typ_lid env (ftv:lident) : knd = 
   match lookup_qname env ftv with
     | Some (Inr (Sig_tycon (lid, tps, k, _, _, _, _))) 
-    | Some (Inr (Sig_typ_abbrev (lid, tps, k, _, _))) -> 
+    | Some (Inr (Sig_typ_abbrev (lid, tps, k, _, _, _))) -> 
       Util.close_kind tps k
     | _ ->
       raise (Error(Tc.Errors.name_not_found ftv, range_of_lid ftv))

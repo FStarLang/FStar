@@ -45,10 +45,11 @@ MAIN=$(addprefix ../../src/, $(MAINFILES))
 ALL=$(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(MAIN)
 
 pt-compiler:
-	$(FSTAR) --pretype --prims prims.fst st.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC)
+	$(FSTAR) --pretype --prims prims.fst st.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) #$(TC)
 
 compiler:
-	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) backends.fsi $(MAIN)
+	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) backends.fsi $(MAIN)
+#$(TC) 
 
 wc: prims.fst $(ALL)
 	wc -l $^

@@ -60,8 +60,8 @@ type sconst =
 type typ' =  
   | Typ_btvar    of bvar<typ,knd>
   | Typ_const    of var<knd> 
-  | Typ_fun      of option<bvvdef> * typ * typ * bool        (* x:t -> M t' wp  or  t -> M t' wp, bool marks implicit arguments *)
-  | Typ_univ     of btvdef * knd  * typ                      (* 'a:k -> M t wp *)
+  | Typ_fun      of option<bvvdef> * typ * comp_typ * bool        (* x:t -> M t' wp  or  t -> M t' wp, bool marks implicit arguments *)
+  | Typ_univ     of btvdef * knd  * comp_typ                      (* 'a:k -> M t wp *)
   | Typ_refine   of bvvdef * typ * typ                       (* x:t{phi} *)
   | Typ_app      of typ * typ * bool                         (* t t' -- bool marks an explicitly provided implicit arg *) 
   | Typ_dep      of typ * exp * bool                         (* t e -- bool marks an explicitly provided implicit arg *)  
@@ -72,6 +72,11 @@ type typ' =
   | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
   | Typ_unknown                                              (* not present after 1st round tc *)
 and typ = {t:typ'; k:knd}
+and comp_typ = {
+  effect_name:lident; 
+  result_typ:typ; 
+  effect_args:list<either<typ,exp>>
+  }
 and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pos of typ * Range.range                            (* user wrote down this type 1 at source position 2 *)
@@ -151,6 +156,7 @@ type logic_tag =
   | Logic_record
   | Logic_val
   | Logic_type
+  | Logic_effect
 
 type atag = 
   | Assumption
@@ -181,7 +187,7 @@ type monad_decl = {
  }
 and sigelt =
   | Sig_tycon          of lident * list<tparam> * knd * list<lident> * list<lident> * list<logic_tag> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
-  | Sig_typ_abbrev     of lident * list<tparam> * knd * typ * Range.range 
+  | Sig_typ_abbrev     of lident * list<tparam> * knd * typ * list<logic_tag> * Range.range 
   | Sig_datacon        of lident * typ * lident * Range.range  (* second lident is the name of the type this constructs *)
   | Sig_val_decl       of lident * typ * option<atag> * option<logic_tag> * Range.range 
   | Sig_assume         of lident * formula * aqual * atag * Range.range 
