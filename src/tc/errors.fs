@@ -21,6 +21,9 @@ open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
 
+let ill_kinded_effect e k = 
+  format2 "Ill-kinded effect (%s) has kind %s" e.str (Print.kind_to_string k)
+
 let unexpected_signature_for_monad m k = 
   format2 "Unexpected signature for monad \"%s\". Expected a kind of the form ('a:Type => WP 'a => WP 'a => Type); got %s" m.str (Print.kind_to_string k)
 
@@ -38,6 +41,9 @@ let unexpected_implicit_argument =
 
 let expected_expression_of_type t1 e t2 = 
   format3 "Expected expression of type \"%s\"; got expression \"%s\" of type \"%s\"" (Print.typ_to_string t1) (Print.exp_to_string e) (Print.typ_to_string t2)
+
+let expected_function_with_parameter_of_type t1 t2 = 
+  format3 "Expected a function with a parameter of type \"%s\"; this function has a parameter of type \"%s\"" (Print.typ_to_string t1) (Print.typ_to_string t2)
 
 let expected_pattern_of_type t1 e t2 = 
   format3 "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\"" (Print.typ_to_string t1) (Print.exp_to_string e) (Print.typ_to_string t2)

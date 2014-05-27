@@ -839,6 +839,6 @@ let extract_lb_annotation env t e = match t.t with
   | _ -> t
 
 
-  
+let close_formulae (b:list<binding>) (f:list<formula>) : list<formula> = failwith "NYI"  
 
 

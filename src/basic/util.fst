@@ -68,6 +68,7 @@ assume val must: option<'a> -> 'a
 assume val find_opt: ('a -> bool) -> list<'a> -> option<'a>
 assume val bind_opt: option<'a> -> ('a -> option<'b>) -> option<'b>
 assume val map_opt: option<'a> -> ('a -> 'b) -> option<'b>
+assume val is_some: option<'a> -> bool
 
 assume val first_N: int -> list<'a> -> (list<'a> * list<'a>)
 assume val prefix: list<'a> -> (list<'a> * 'a)

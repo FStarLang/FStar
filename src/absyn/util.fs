@@ -107,15 +107,14 @@ let order_bvd x y = match x, y with
   | Inr x, Inr y -> String.compare x.ppname.idText y.ppname.idText
 
 let ml_comp t =  
-  let mlk = Kind_tcon(None, Kind_type, Kind_effect, false) in 
-  let mlt = {ftv Const.ml_effect_lid with k=mlk} in
-  withkind Kind_effect <| Typ_app(mlt, t, false)
+  {effect_name=Const.ml_effect_lid;
+   result_typ=t;
+   effect_args=[]}
 
 let total_comp t = 
-  let totk = Kind_tcon(None, Kind_type, Kind_effect, false) in 
-  let tott = {ftv Const.tot_effect_lid with k=totk} in
-  withkind Kind_effect <| Typ_app(tott, t, false)
-  
+  {effect_name=Const.tot_effect_lid;
+   result_typ=t;
+   effect_args=[]}
 
 (********************************************************************************)
 (****************Simple utils on the local structure of a term ******************)
@@ -171,17 +170,6 @@ let flatten_typ_apps : typ -> typ * (list<either<typ,exp>>) =
       | _              -> t, acc in
   (fun t -> aux [] t)
 
-let result_typ t = 
-  let _, args = flatten_typ_apps t in
-  match args with 
-    | Inl hd::_ -> hd
-    | _ -> failwith (Printf.sprintf "result_typ called with %A" t)
-
-let is_total t = 
-  match flatten_typ_apps t with 
-    | {t=Typ_const l}, _  when lid_equals l.v Const.tot_effect_lid -> true
-    | _ -> false
-
 let destruct typ lid = 
   match flatten_typ_apps typ with 
     | {t=Typ_const tc}, args when lid_equals tc.v lid -> Some args
@@ -190,7 +178,7 @@ let destruct typ lid =
 let rec lids_of_sigelt se = match se with 
   | Sig_bundle(ses, _) -> List.collect lids_of_sigelt ses
   | Sig_tycon (lid, _, _,  _, _, _, _)    
-  | Sig_typ_abbrev  (lid, _, _, _, _)
+  | Sig_typ_abbrev  (lid, _, _, _, _, _)
   | Sig_datacon (lid, _, _, _)
   | Sig_val_decl (lid, _, _, _, _) 
   | Sig_assume (lid, _, _, _, _)
@@ -207,7 +195,7 @@ let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
 let range_of_sigelt x = match x with 
   | Sig_bundle(_, r) 
   | Sig_tycon (_, _, _,  _, _, _, r)    
-  | Sig_typ_abbrev  (_, _, _, _, r)
+  | Sig_typ_abbrev  (_, _, _, _, _, r)
   | Sig_datacon (_, _, _, r)
   | Sig_val_decl (_, _, _, _, r) 
   | Sig_assume (_, _, _, _, r)
@@ -215,6 +203,12 @@ let range_of_sigelt x = match x with
   | Sig_let(_, r) 
   | Sig_main(_, r) 
   | Sig_monads(_, _, r) -> r
+
+let range_of_exp e def = match e with 
+  | Exp_meta(Meta_info(_, _, p)) -> p
+  | Exp_bvar x -> range_of_bvd x.v
+  | Exp_fvar (l, _) -> range_of_lid l.v
+  | _ -> def
 
 let range_of_typ t def = match t.t with 
   | Typ_meta(Meta_pos(_, r)) -> r
@@ -227,6 +221,11 @@ let mk_curried_app e e_or_t =
   List.fold_left (fun f -> function
     | Inl t -> Exp_tapp(f, t) 
     | Inr (e, imp) -> Exp_app(f, e, imp))  e e_or_t 
+
+let mk_typ_app f args = 
+  List.fold_left (fun f -> function
+    | Inl t -> withkind kun <| Typ_app(f, t, false) 
+    | Inr e -> withkind kun <| Typ_dep(f, e, false)) f args
 
 let uncurry_app e =
   let rec aux e out = match compress_exp e with 
@@ -377,6 +376,12 @@ let freevars_typ : typ -> freevars =
 let freevars_exp : exp -> freevars =
   fun e -> fst <| Visit.visit_exp fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) e
 
+let freevars_comp_typ : comp_typ -> freevars = 
+  fun c -> 
+    let t = withkind kun <| Typ_app(ftv c.effect_name, c.result_typ, false) in
+    freevars_typ <| mk_typ_app t c.effect_args
+     
+
 (********************************************************************************)
 (************************** Type/term substitutions *****************************)
 (********************************************************************************)
@@ -443,6 +448,11 @@ let subst_typ s t = match s with
 let subst_exp s e = match s with
   | [] -> e
   | _ -> subst_exp' (mk_subst_map s) e 
+let subst_comp_typ s t = match s with 
+  | [] -> t
+  | _ -> 
+    {t with result_typ=subst_typ s t.result_typ; 
+            effect_args=List.map (function Inl t -> Inl <| subst_typ s t | Inr e -> Inr <| subst_exp s e) t.effect_args}
 
 let close_with_lam tps t = List.fold_right
   (fun tp out -> match tp with
@@ -586,11 +596,10 @@ let rec get_tycon t =
   | _ -> None
 
 let rec is_function_typ t = 
-  match t.t with 
-    | Typ_fun _ -> true
-    | Typ_uvar _ -> is_function_typ (compress_typ t)
+  match (compress_typ t).t with 
+    | Typ_fun _ 
+    | Typ_univ _ -> true
     | _ -> false
-
 
 let base_kind = function
   | Kind_type -> true
@@ -621,12 +630,21 @@ let rec typs_of_letbinding x = match x with
   | (_, t, e)::tl -> t::typs_of_letbinding tl
   | _ -> []
 
-let mk_conj phi1 phi2 = match phi1 with
+let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
   | Some phi1 ->
     let app1 = withkind kun <| Typ_app(ftv Const.and_lid, phi1, false) in
     let and_t = withkind kun <| Typ_app(app1, phi2, false) in
     Some and_t
+
+let mk_binop op phi1 phi2 = 
+  let app1 = withkind kun <| Typ_app(ftv op, phi1, false) in
+  withkind kun <| Typ_app(app1, phi2, false)
+
+let mk_conj phi1 phi2 = mk_binop Const.and_lid phi1 phi2
+let mk_disj phi1 phi2 = mk_binop Const.or_lid phi1 phi2
+let mk_imp phi1 phi2  = mk_binop Const.implies_lid phi1 phi2
+let mk_iff phi1 phi2  = mk_binop Const.iff_lid phi1 phi2
 
 let normalizeRefinement t =
   let rec aux xopt t = match t.t with
@@ -637,7 +655,7 @@ let normalizeRefinement t =
         | Some x ->
           xopt, subst_typ [Inr(bvd,x)] phi in
       let t', phi_opt = aux xopt t' in
-      t', mk_conj phi_opt phi
+      t', mk_conj_opt phi_opt phi
     | _ -> t, None in
   aux None t
  
@@ -662,29 +680,18 @@ let unForall t = match t.t with
 
 (* collect all curried arguments until we reach a non-trivial computation type *)
 let collect_formals t = 
-  let rec aux out t =
-    let t = whnf t in
-    match t.t with
-      | Typ_fun(xopt, t1, t2, _) -> 
-        aux2 (Inr(xopt,t1)::out) t2
-      | Typ_univ(a, k, t2) -> aux2 (Inl(a,k)::out) t2
-      | Typ_meta(Meta_pos(t, _)) -> failwith "Unexpected position tagged type"
-      | _ -> List.rev out, t 
-  and aux2 out t = 
-   let t = unascribe_typ t in 
-   match t.t with
-    | Typ_fun _
-    | Typ_univ _ -> aux out t
-    | _ when is_total t ->
-      let r = unascribe_typ (result_typ t) in
-      begin match r.t with 
-        | Typ_fun _
-        | Typ_univ _ -> aux out r
-        | _ -> List.rev out, t
-      end 
-    | _ -> List.rev out, t
-  in aux [] t
-  
+  let rec aux eff out t =
+    if not (lid_equals eff Const.tot_effect_lid)
+    then List.rev out, t
+    else 
+      match (whnf t).t with
+        | Typ_fun(xopt, t1, cod, _) -> 
+          aux cod.effect_name (Inr(xopt,t1)::out) cod.result_typ
+        | Typ_univ(a, k, cod) -> 
+          aux cod.effect_name (Inl(a,k)::out) cod.result_typ
+        | _ -> List.rev out, t 
+  in aux Const.tot_effect_lid [] t
+
 let collect_u_quants t =
   let rec aux out t =
     match flatten_typ_apps (whnf t) with

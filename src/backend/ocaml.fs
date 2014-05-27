@@ -174,9 +174,9 @@ let rec mlty_of_ty (ty : typ) =
         | Typ_meta (Meta_pos (ty, _)) ->
             mlty_of_ty ty
 
-        | Typ_fun (x, t1, t2, _) ->
+        | Typ_fun (x, t1, cod, _) ->
             let mlt1 = mlty_of_ty t1 in
-            let mlt2 = mlty_of_ty t2 in
+            let mlt2 = mlty_of_ty cod.result_typ in
             Ty_fun (Option.map (fun x -> x.ppname.idText) x, mlt1, mlt2)
 
         | Typ_const   _ -> unexpected  ()

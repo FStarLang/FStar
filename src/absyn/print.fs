@@ -18,6 +18,7 @@
 module Microsoft.FStar.Absyn.Print
 
 open Microsoft.FStar
+open Microsoft.FStar.Absyn
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
@@ -72,14 +73,14 @@ let rec typ_to_string x =
       | Uvar _ ->               Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)))
   
 and comp_typ_to_string c = 
-  let t, args = Util.flatten_typ_apps c in
-  match t.t, args with
-  | Typ_const l, [Inl r] when (lid_equals l.v Const.tot_effect_lid && Util.is_function_typ r) -> typ_to_string r
-  | Typ_const l, [Inl r] when (lid_equals l.v Const.ml_effect_lid && not (Util.is_function_typ r)) -> typ_to_string r
-  | _ -> typ_to_string c
-
+  if    (lid_equals c.effect_name Const.tot_effect_lid && Util.is_function_typ c.result_typ)
+     || (lid_equals c.effect_name Const.ml_effect_lid && not (Util.is_function_typ c.result_typ))
+  then typ_to_string c.result_typ
+  else Util.format3 "%s %s %s" (sli c.effect_name) (typ_to_string c.result_typ) (String.concat ", " <| List.map either_to_string c.effect_args)
+ 
 and exp_to_string x = match compress_exp x with 
   | Exp_meta(Meta_datainst(e,_)) -> exp_to_string e 
+  | Exp_meta(Meta_desugared(e, _)) -> exp_to_string e
   | Exp_uvar(uv, _) -> Util.format1 "'e%s" (Util.string_of_int (Unionfind.uvar_id uv))
   | Exp_bvar bvv -> 
     (match !bvv.v.instantiation with 
@@ -102,6 +103,7 @@ and exp_to_string x = match compress_exp x with
     (lbs_to_string lbs)
     (e|> exp_to_string)
   | Exp_primop(id, el)-> Util.format2 "(%s %s)" (id.idText) (Util.concat_l " " (List.map exp_to_string el))
+  | Exp_meta(Meta_info _) -> failwith "Impossible"
 
 and lbs_to_string lbs = 
     Util.format2 "let %s %s"
@@ -152,7 +154,7 @@ let tparams_to_string tps = List.map tparam_to_string tps |> String.concat " "
 
 let rec sigelt_to_string x = match x with 
   | Sig_tycon(lid, tps, k, _, _, _, _) -> Util.format3 "type %s %s : %s" lid.str (tparams_to_string tps) (kind_to_string k)
-  | Sig_typ_abbrev(lid, tps, k, t, _) ->  Util.format4 "type %s %s : %s = %s" lid.str (tparams_to_string tps) (kind_to_string k) (typ_to_string t)
+  | Sig_typ_abbrev(lid, tps, k, t, _, _) ->  Util.format4 "type %s %s : %s = %s" lid.str (tparams_to_string tps) (kind_to_string k) (typ_to_string t)
   | Sig_datacon(lid, t, _, _) -> Util.format2 "datacon %s : %s" lid.str (typ_to_string t)
   | Sig_val_decl(lid, t, _, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string t)
   | Sig_assume(lid, f, _, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string f)
