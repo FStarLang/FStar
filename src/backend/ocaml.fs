@@ -20,6 +20,7 @@ type mltyname = list<string> * string
 
 type mlty =
     | Ty_var   of string
+    | Ty_tuple of mlty list
     | Ty_fun   of string option * mlty * mlty
     | Ty_named of mltyname * mlty list
 
@@ -88,6 +89,19 @@ let is_prim_ns (ns : list<ident>) =
     match ns with
     | [{ idText = "Prims" }] -> true
     | _ -> false
+
+(* -------------------------------------------------------------------- *)
+let is_tuple_name (id : lident) =
+    if is_prim_ns id.ns then
+        match id.ident.idText with
+        | "Tuple2" -> Some 2
+        | "Tuple3" -> Some 3
+        | "Tuple4" -> Some 4
+        | "Tuple5" -> Some 5
+        | "Tuple6" -> Some 6
+        | _        -> None
+    else
+        None
 
 (* -------------------------------------------------------------------- *)
 let name_of_let_ident (x : either<bvvdef,lident>) =
@@ -160,41 +174,46 @@ let mltyname_of_lident (ns, x) =
 let rec mlty_of_ty (rg : range) (ty : typ) =
     let ty = Absyn.Util.compress_typ ty in
 
-    match maybe_mltynamed_of_ty rg [] ty with
+    match maybe_tuple rg ty with
     | None -> begin
-        match ty.t with
-        | Typ_btvar x ->
-            Ty_var x.v.realname.idText
+        match maybe_mltynamed_of_ty rg [] ty with
+        | None -> begin
+            match ty.t with
+            | Typ_btvar x ->
+                Ty_var x.v.realname.idText
 
-        | Typ_refine (_, ty, _) ->
-            mlty_of_ty rg ty
+            | Typ_refine (_, ty, _) ->
+                mlty_of_ty rg ty
 
-        | Typ_ascribed (ty, _) ->
-            mlty_of_ty rg ty
+            | Typ_ascribed (ty, _) ->
+                mlty_of_ty rg ty
 
-        | Typ_meta (Meta_pos (ty, rg)) ->
-            mlty_of_ty rg ty
+            | Typ_meta (Meta_pos (ty, rg)) ->
+                mlty_of_ty rg ty
 
-        | Typ_fun (x, t1, Pure t2, _) ->
-            let mlt1 = mlty_of_ty rg t1 in
-            let mlt2 = mlty_of_ty rg t2 in
-            Ty_fun (Option.map (fun x -> x.ppname.idText) x, mlt1, mlt2)
+            | Typ_fun (x, t1, Pure t2, _) ->
+                let mlt1 = mlty_of_ty rg t1 in
+                let mlt2 = mlty_of_ty rg t2 in
+                Ty_fun (Option.map (fun x -> x.ppname.idText) x, mlt1, mlt2)
 
-        | Typ_fun (_, _, Computation _, _) ->
-            unsupported rg
+            | Typ_fun (_, _, Computation _, _) ->
+                unsupported rg
 
-        | Typ_const   _ -> unexpected  rg
-        | Typ_app     _ -> unsupported rg
-        | Typ_dep     _ -> unsupported rg
-        | Typ_lam     _ -> unsupported rg
-        | Typ_tlam    _ -> unsupported rg
-        | Typ_univ    _ -> unsupported rg
-        | Typ_meta    _ -> unexpected  rg
-        | Typ_uvar    _ -> unexpected  rg
-        | Typ_unknown   -> unexpected  rg
+            | Typ_const   _ -> unexpected  rg
+            | Typ_app     _ -> unsupported rg
+            | Typ_dep     _ -> unsupported rg
+            | Typ_lam     _ -> unsupported rg
+            | Typ_tlam    _ -> unsupported rg
+            | Typ_univ    _ -> unsupported rg
+            | Typ_meta    _ -> unexpected  rg
+            | Typ_uvar    _ -> unexpected  rg
+            | Typ_unknown   -> unexpected  rg
+        end
+
+        | Some (c, tys) -> Ty_named (c, tys)
     end
 
-    | Some (c, tys) -> Ty_named (c, tys)
+    | Some tys -> Ty_tuple tys
 
 and maybe_mltynamed_of_ty (rg : range) acc ty =
     match (Absyn.Util.compress_typ ty).t with
@@ -223,6 +242,44 @@ and maybe_mltynamed_of_ty (rg : range) acc ty =
     | Typ_uvar    _ -> unexpected  rg
     | Typ_unknown   -> unexpected  rg
 
+and maybe_tuple (rg : range) ty =
+    let rec unfun n ty =
+        if n > 0 then
+            match (Absyn.Util.compress_typ ty).t with
+            | Typ_lam (_, _, ty)          -> unfun (n-1) ty
+            | Typ_ascribed (ty, _)        -> unfun n ty
+            | Typ_meta (Meta_pos (ty, _)) -> unfun n ty
+            | _ -> unsupported rg
+        else
+            ty
+    in
+
+    let rec aux acc ty =
+        match (Absyn.Util.compress_typ ty).t with
+        | Typ_const c -> begin
+            match is_tuple_name c.v with
+            | None -> None
+            | Some n ->
+                if List.length acc <> n then
+                    unsupported rg;
+                let acc = List.mapi unfun acc in
+                Some (List.map (mlty_of_ty rg) acc)
+        end
+
+        | Typ_app (t1, t2, _) ->
+            aux (t2 :: acc) t1
+
+        | Typ_ascribed (ty, _) ->
+            aux acc ty
+
+        | Typ_meta (Meta_pos (ty, _)) ->
+            aux acc ty
+
+        | _ -> None
+    in
+
+    aux [] ty
+
 (* -------------------------------------------------------------------- *)
 let mltycons_of_mlty (ty : mlty) =
     let rec aux acc ty =
@@ -238,6 +295,10 @@ let rec doc_of_mltype_r outer mlty =
     match mlty with
     | Ty_var x ->
         text x
+
+    | Ty_tuple tys ->
+        let docs = List.map (doc_of_mltype (min_op_prec, NonAssoc)) tys in
+        reduce1 [text "("; parens (combine (text " * ") docs); text ")"]
 
     | Ty_named ((_, name), args) -> begin
         let doc =
