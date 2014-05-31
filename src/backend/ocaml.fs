@@ -107,6 +107,10 @@ let is_tuple_name (id : lident) =
         None
 
 (* -------------------------------------------------------------------- *)
+let is_exn (id : lident) =
+    is_prim_ns id.ns && id.ident.idText = "exn"
+
+(* -------------------------------------------------------------------- *)
 let name_of_let_ident (x : either<bvvdef,lident>) =
     match x with
     | Inl x -> x.realname.idText
@@ -791,7 +795,28 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
     | Sig_logic_function _ -> env, None
     | Sig_val_decl       _ -> env, None
 
-    | Sig_datacon (_, _, _, rg) -> unexpected rg
+    | Sig_datacon (x, ty, n, rg) when is_exn n ->
+        let rec aux acc ty =
+            match (Absyn.Util.compress_typ ty).t with
+            | Typ_fun (_, ty1, (Pure ty2 | Computation ty2), _) ->
+                aux (ty1 :: acc) ty2
+            | Typ_meta (Meta_pos (ty, rg)) ->
+                aux acc ty
+            | Typ_const x when is_exn x.v ->
+                List.rev acc
+            | _ ->
+                unexpected rg
+        in
+
+        let args = aux [] ty in
+        let args = List.map (mlty_of_ty rg) args in
+
+        match args with
+        | [] -> env, Some (reduce1 [text "exception"; text x.ident.idText])
+        | _  ->
+            let args = List.map (doc_of_mltype [] (min_op_prec, NonAssoc)) args in
+            let args = parens (combine (text " * ") args) in
+            env, Some (reduce1 [text "exception"; text x.ident.idText; text "of"; group args])
 
 (* -------------------------------------------------------------------- *)
 let pp_module (mod_ : modul) =
