@@ -7,7 +7,7 @@ ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
 FORMAT=format.fsi format.fs
 FORMAT_SRC=$(addprefix format/, $(FORMAT))
 
-BACKEND=nameenv.fsi nameenv.fs ocaml.fsi ocaml.fs
+BACKEND=nameenv.fsi nameenv.fs ocaml-syntax.fsi ocaml-syntax.fs ocaml.fsi ocaml.fs
 BACKEND_SRC=$(addprefix backend/, $(BACKEND))
 
 PARSER=ast.fs parse.fs lexhelp.fs lex.fs dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
