@@ -24,6 +24,8 @@ val reduce1 : list<doc> -> doc
 val combine : doc -> list<doc> -> doc
 val groups  : list<doc> -> doc
 val align   : list<doc> -> doc
+val hbox    : doc -> doc
+val parse   : string -> doc
 
 (* -------------------------------------------------------------------- *)
 val enclose : doc -> doc -> doc -> doc
