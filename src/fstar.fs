@@ -44,7 +44,7 @@ let go _ =
         let fmods = if !Options.pretype then Tc.PreType.check_modules fmods else fmods in
         if !Options.codegen = Some "OCaml"
         then List.tail fmods
-              |> List.iter (fun mod_ -> Util.print_string (Util.format1 "%s\n" (Backends.OCaml.pp_module mod_)))
+              |> List.iter (fun mod_ -> Util.print_string (Util.format1 "%s\n" (Backends.OCaml.CodeGen.pp_module mod_)))
         else ();
        finished fmods 
       

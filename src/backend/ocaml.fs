@@ -1,7 +1,7 @@
 (* -------------------------------------------------------------------- *)
 #light "off"
 
-module Microsoft.FStar.Backends.OCaml
+module Microsoft.FStar.Backends.OCaml.CodeGen
 
 open System
 open System.Text
@@ -11,7 +11,10 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Range
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
+
+open Microsoft.FStar.Backends
 open Microsoft.FStar.Backends.NameEnv
+open Microsoft.FStar.Backends.OCaml.Syntax
 
 open FSharp.Format
 
@@ -730,10 +733,24 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
         let env, ds = Util.fold_map (doc_of_toplet rg rec_) env (List.map downct lb) in
         env, Some (reduce1 [text kw; combine (text "and") (List.map group ds)])
 
-    | Sig_typ_abbrev (t, [], _, ty, rg) ->
-        let ty  = mlty_of_ty rg ty in
-        let dty = doc_of_mltype [] (min_op_prec, NonAssoc) ty in
-        env, Some (reduce1 [text "type"; text t.ident.idText; text "="; dty])
+    | Sig_typ_abbrev (t, tps, _, ty, rg) ->
+        let tps = List.map (function
+            | Tparam_typ (x, Kind_type) -> x.realname.idText
+            | _ -> unsupported rg) tps
+        in
+
+        let tvmap = tvmap_of_tv tps in
+        let tps = List.map (fun x -> snd (List.find (fun (x', _) -> x = x') tvmap)) tps in
+        let ty = mlty_of_ty rg ty in
+        let dty = doc_of_mltype tvmap (min_op_prec, NonAssoc) ty in
+        let docargs =
+            match tps with
+            | []  -> empty
+            | [x] -> text x
+            | _   -> parens (combine (text ", ") (List.map text tps))
+        in
+
+        env, Some (reduce1 [text "type"; docargs; text t.ident.idText; text "="; dty])
 
     | Sig_val_decl (x, ty, None, None, rg) ->        
         let rec strip acc ty =
@@ -763,9 +780,6 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
 
     | Sig_tycon _ ->
         env, None
-
-    | Sig_typ_abbrev (_, _, _, _, rg) ->
-        unsupported rg
 
     | Sig_monads (_, _, rg) ->
         unsupported rg
