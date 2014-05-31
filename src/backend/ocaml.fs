@@ -598,9 +598,14 @@ let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
         let fold1 sigelt (types, ctors) =
             match sigelt with
             | Sig_tycon (x, tps, k, ts, cs, _, rg) -> begin
+                let tps = List.map (function
+                    | Tparam_typ (x, Kind_type) -> x.realname.idText
+                    | _ -> unsupported rg) tps
+                in
+                
                 match is_kind_for_mldtype rg k with
                 | Some n ->
-                    ((x.ident.idText, tps, cs, n, rg) :: types, ctors)
+                    ((x.ident.idText, tps, cs, n + List.length tps, rg) :: types, ctors)
                 | _ ->
                     unsupported rg
             end
@@ -639,8 +644,6 @@ let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
                     aux [] ar ty
         in
 
-        if not (List.isEmpty tps) then unsupported rg;
-
         let mldcons_of_cons cname =
             let (c, _) = Map.find cname.ident.idText cs in
             let ctynames, c = strip ar c in
@@ -654,7 +657,7 @@ let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
                     unexpected rg;
                 if not (List.forall2 check ctynames tyargs) then
                     unsupported rg;
-                (cname.ident.idText, args, ctynames)
+                (cname.ident.idText, args, List.append tps ctynames)
             | _ -> unexpected rg    
 
         in (x, ar, List.map mldcons_of_cons tcs)
@@ -730,7 +733,17 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
         env, Some (reduce1 [text "type"; text t.ident.idText; text "="; dty])
 
     | Sig_val_decl (x, ty, None, None, rg) ->        
-        let ty  = mlty_of_ty rg ty in
+        let rec strip ty =
+            let ty = Absyn.Util.compress_typ ty in
+            match ty.t with
+            | Typ_univ (x, Kind_type, (Computation ty | Pure ty)) ->
+                strip ty
+            | Typ_meta (Meta_pos (ty, _)) ->
+                strip ty
+            | _ ->
+                ty
+        in
+        let ty  = mlty_of_ty rg (strip ty) in
         let dty = doc_of_mltype [] (min_op_prec, NonAssoc) ty in
         env, Some (reduce1 [text "val"; text x.ident.idText; text " : "; dty])
 
