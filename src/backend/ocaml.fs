@@ -218,7 +218,7 @@ let rec mlty_of_ty (rg : range) (ty : typ) =
 and maybe_mltynamed_of_ty (rg : range) acc ty =
     match (Absyn.Util.compress_typ ty).t with
     | Typ_const c ->
-        Some (mltyname_of_lident (c.v.ns, c.v.ident), List.rev acc)
+        Some (mltyname_of_lident (c.v.ns, c.v.ident), acc)
 
     | Typ_app (t1, t2, _) ->
         maybe_mltynamed_of_ty rg (mlty_of_ty rg t2 :: acc) t1
@@ -291,13 +291,16 @@ let mltycons_of_mlty (ty : mlty) =
     in aux [] ty
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_mltype_r outer mlty =
+let rec doc_of_mltype_r tvmap outer mlty =
     match mlty with
-    | Ty_var x ->
-        text x
+    | Ty_var x -> begin
+        match List.tryFind (fun (y, _) -> x = y) tvmap with
+        | None -> text x
+        | Some (_, x) -> text x
+    end
 
     | Ty_tuple tys ->
-        let docs = List.map (doc_of_mltype (min_op_prec, NonAssoc)) tys in
+        let docs = List.map (doc_of_mltype tvmap (min_op_prec, NonAssoc)) tys in
         reduce1 [text "("; parens (combine (text " * ") docs); text ")"]
 
     | Ty_named ((_, name), args) -> begin
@@ -307,24 +310,26 @@ let rec doc_of_mltype_r outer mlty =
                 text name
 
             | [arg] ->
-                reduce1 [doc_of_mltype (t_prio_name, Left) arg; text name]
+                reduce1 [doc_of_mltype tvmap (t_prio_name, Left) arg; text name]
 
             | _ ->
-                let docs = List.map (doc_of_mltype (min_op_prec, NonAssoc)) args in
-                reduce1 [parens (combine (text ",") docs); text name]
+                let docs =
+                    List.map (doc_of_mltype tvmap (min_op_prec, NonAssoc)) args
+                in
+                    reduce1 [parens (combine (text ",") docs); text name]
 
         in maybe_paren outer t_prio_name doc
     end
 
     | Ty_fun (_, t1, t2) ->
-        let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
-        let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
+        let d1 = doc_of_mltype tvmap (t_prio_fun, Left ) t1 in
+        let d2 = doc_of_mltype tvmap (t_prio_fun, Right) t2 in
 
         maybe_paren outer t_prio_fun (reduce1 [d1; text "->"; d2])
 
 (* -------------------------------------------------------------------- *)
-and doc_of_mltype outer ty =
-    group (doc_of_mltype_r outer ty)
+and doc_of_mltype tvmap outer ty =
+    group (doc_of_mltype_r tvmap outer ty)
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltypes_bundle bundle =
@@ -391,7 +396,7 @@ and doc_of_exp_r (rg : range) outer (env : env) (e : exp) =
                 let de = doc_of_exp rg (min_op_prec, NonAssoc) env e in
                 let bs =
                     List.map
-                        (fun b -> group (reduce1 [text "|"; doc_of_branch rg env b]))
+                        (fun b -> group (reduce1 [text " | "; doc_of_branch rg env b]))
                         bs
                 in
                 align ((group (reduce1 [text "match"; de; text "with"])) :: bs)
@@ -572,25 +577,33 @@ and doc_of_branch (rg : range) (env : env) ((p, cl, body) : pat * exp option * e
 
 (* -------------------------------------------------------------------- *)
 let is_kind_for_mldtype rg (k : knd) =
-    match k with
-    | Kind_type     -> true
-    | Kind_unknown  -> true
-    | Kind_dcon _   -> false
-    | Kind_tcon _   -> false
-    | Kind_effect   -> false
-    | Kind_abbrev _ -> unsupported rg
-    | Kind_uvar _   -> unexpected rg
+    let rec aux n (k : knd) =
+        match k with
+        | Kind_type     -> Some n
+        | Kind_unknown  -> Some n
+
+        | Kind_tcon (_, k1, k2, _) when aux 0 k1 = Some 0->
+            aux (n+1) k2
+
+        | Kind_dcon _   -> None
+        | Kind_effect   -> None
+        | Kind_abbrev _ -> unsupported rg
+        | Kind_uvar _   -> unexpected rg
+    in
+        aux 0 k
 
 (* -------------------------------------------------------------------- *)
 let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
     let (ts, cs) =
         let fold1 sigelt (types, ctors) =
             match sigelt with
-            | Sig_tycon (x, tps, k, ts, cs, _, rg) ->
-                if not (is_kind_for_mldtype rg k) then
+            | Sig_tycon (x, tps, k, ts, cs, _, rg) -> begin
+                match is_kind_for_mldtype rg k with
+                | Some n ->
+                    ((x.ident.idText, tps, cs, n, rg) :: types, ctors)
+                | _ ->
                     unsupported rg
-                else
-                    ((x.ident.idText, tps, cs, rg) :: types, ctors)
+            end
 
             | Sig_datacon (x, ty, pr, rg) ->
                 (types, (x.ident.idText, (ty, pr)) :: ctors)
@@ -611,41 +624,83 @@ let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
         (ts, Map.ofList cs)
     in
 
-    let fortype (x, tps, tcs, rg) =
+    let fortype (x, tps, tcs, ar, rg) =
+        let strip ar ty =
+            let rec aux acc ar ty =
+                if ar = 0 then (List.rev acc, ty) else
+                    match (Absyn.Util.compress_typ ty).t with
+                    | Typ_univ (x, Kind_type, (Computation ty | Pure ty)) ->
+                        aux (x.realname.idText :: acc) (ar-1) ty
+                    | Typ_meta (Meta_pos (ty, _)) ->
+                        aux acc ar ty
+                    | _ ->
+                        unexpected rg
+                in
+                    aux [] ar ty
+        in
+
         if not (List.isEmpty tps) then unsupported rg;
 
         let mldcons_of_cons cname =
             let (c, _) = Map.find cname.ident.idText cs in
+            let ctynames, c = strip ar c in
             let (args, name) = mltycons_of_mlty (mlty_of_ty rg c) in
 
             match name with
-            | Ty_named (name, []) when name = (root env, x) ->
-                (cname.ident.idText, args)
+            | Ty_named (name, tyargs) when name = (root env, x) ->
+                let check x mty = match mty with | Ty_var mtyx -> x = mtyx | _ -> false in
+
+                if List.length tyargs <> List.length ctynames then
+                    unexpected rg;
+                if not (List.forall2 check ctynames tyargs) then
+                    unsupported rg;
+                (cname.ident.idText, args, ctynames)
             | _ -> unexpected rg    
 
-        in (x, List.map mldcons_of_cons tcs)
+        in (x, ar, List.map mldcons_of_cons tcs)
 
     in List.map fortype ts
 
 (* -------------------------------------------------------------------- *)
+let vars = "abcdefghijklmnopqrstuvwxyz"
+
 let doc_of_indt (env : env) (indt : list<sigelt>) =
+    let tyvar_of_int n =
+        let rec aux n =
+            let s = sprintf "%c" vars.[n % 26] in
+            if n >= String.length vars then (aux (n/26)) ^ s else s
+        in
+            "'" ^ (aux n)
+    in
+
     try
         let mltypes = mldtype_of_bundle env indt in
 
-        let for_mltype (name, constrs) =
-            let for_constr (name, tys) =
+        let for_mltype (name, ar, constrs) =
+            let tyvars = List.init ar tyvar_of_int in
+
+            let for_constr (name, tys, ctyvars) =
+                let tvmap = List.zip ctyvars tyvars in
+
                 let docs =
                     List.map
-                        (fun (_, ty) -> doc_of_mltype (t_prio_tpl, NonAssoc) ty)
+                        (fun (_, ty) -> doc_of_mltype tvmap (t_prio_tpl, NonAssoc) ty)
                         tys
                 in
-                group (reduce1 [text "|"; text name; text "of";
+                group (reduce1 [text " |"; text name; text "of";
                                 parens (combine (text "*") docs)])
 
             in
             
+            let docargs =
+                match tyvars with
+                | []  -> empty
+                | [x] -> text x
+                | _   -> parens (combine (text ", ") (List.map text tyvars))
+            in
+
             group (reduce1 [
-                text name; text "="; 
+                docargs; text name; text "="; 
                 group (reduce (List.map for_constr constrs))
             ])
         in
@@ -671,12 +726,12 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
 
     | Sig_typ_abbrev (t, [], _, ty, rg) ->
         let ty  = mlty_of_ty rg ty in
-        let dty = doc_of_mltype (min_op_prec, NonAssoc) ty in
+        let dty = doc_of_mltype [] (min_op_prec, NonAssoc) ty in
         env, Some (reduce1 [text "type"; text t.ident.idText; text "="; dty])
 
     | Sig_val_decl (x, ty, None, None, rg) ->        
         let ty  = mlty_of_ty rg ty in
-        let dty = doc_of_mltype (min_op_prec, NonAssoc) ty in
+        let dty = doc_of_mltype [] (min_op_prec, NonAssoc) ty in
         env, Some (reduce1 [text "val"; text x.ident.idText; text " : "; dty])
 
     | Sig_main (e, rg) ->
