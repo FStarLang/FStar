@@ -50,7 +50,8 @@ let lempty : lenv =
 let lpush (LEnv lenv : lenv) (real : ident) (pp : ident) =
     if Map.containsKey real.idText lenv then
         duplicated_local real.idRange (real.idText, pp.idText);
-    LEnv (Map.add real.idText (fresh pp.idText) lenv)
+    let mlid = fresh pp.idText in
+    (LEnv (Map.add real.idText mlid lenv), mlid)
 
 let lresolve (LEnv lenv : lenv) (x : ident) =
     match Map.tryFind x.idText lenv with
@@ -206,8 +207,8 @@ and mlpat_of_pat (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
         (lenv, MLP_CTor (mlpath_of_lident x, ps))
 
     | Pat_var x ->
-        let lenv = lpush lenv x.realname x.ppname in
-        (lenv, MLP_Var (lresolve lenv x.realname))
+        let lenv, mlid = lpush lenv x.realname x.ppname in
+        (lenv, MLP_Var mlid)
 
     | Pat_constant c ->
         (lenv, MLP_Const (mlconst_of_const rg c))
@@ -224,3 +225,137 @@ and mlpat_of_pat (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
 
     | Pat_tvar  _ -> unsupported rg "pattern-type-variable"
     | Pat_twild _ -> unsupported rg "pattern-type-wild"
+
+(* -------------------------------------------------------------------- *)
+let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
+    let e = Absyn.Util.compress_exp e in
+
+    match Absyn.Util.destruct_app e with
+    | (e, args) when not (List.isEmpty args) ->
+        let e    = mlexpr_of_expr rg lenv e in
+        let args = List.map (fun (e, _) -> mlexpr_of_expr rg lenv e) args in
+
+        MLE_App (e, args)
+
+    | _ -> begin
+        match e with
+        | Exp_bvar x ->
+            MLE_Var (lresolve lenv x.v.realname)
+
+        | Exp_fvar (x, _) ->
+            MLE_Name (mlpath_of_lident x.v)
+
+        | Exp_constant c ->
+            MLE_Const (mlconst_of_const rg c)
+
+        | Exp_abs (x, _, e) ->
+            let lenv, mlid = lpush lenv x.realname x.ppname in
+            let e = mlexpr_of_expr rg lenv e in
+            mlfun mlid e
+
+        | Exp_match ((Exp_fvar _ | Exp_bvar _), [p, None, e]) when Absyn.Util.is_wild_pat p ->
+            mlexpr_of_expr rg lenv e
+
+        | Exp_match (e, bs) -> begin
+            match bs with
+            | [(Pat_constant (Const_bool true ), None, e1);
+               (Pat_constant (Const_bool false), None, e2)]
+
+            | [(Pat_constant (Const_bool false), None, e1);
+               (Pat_constant (Const_bool true ), None, e2)] ->
+
+               let e  = mlexpr_of_expr rg lenv e  in
+               let e1 = mlexpr_of_expr rg lenv e1 in
+               let e2 = mlexpr_of_expr rg lenv e2 in
+
+               mlif e (e1, e2)
+
+            | _ ->
+                let e  = mlexpr_of_expr rg lenv e in
+                let bs = List.map (mlbranch_of_branch rg lenv) bs in
+
+                MLE_Match (e, bs)
+        end
+
+        | Exp_let ((rec_, lb), body) ->
+            let lenv, bindings = mllets_of_lets rg lenv (rec_, lb) in
+            let body = mlexpr_of_expr rg lenv body in
+            MLE_Let (rec_, bindings, body)
+
+        | Exp_primop (x, args) ->
+            let args = List.map (mlexpr_of_expr rg lenv) args in
+            MLE_App (MLE_Var (lresolve lenv x), args)
+
+        | Exp_meta (Meta_desugared (e, Data_app)) ->
+            let (c, args) =
+                match Absyn.Util.destruct_app e with
+                | Exp_fvar (c, true), args -> (c, args)
+                | _, _ -> unexpected rg "meta-data-app-without-fvar"
+            in
+            
+            let args = List.map fst args in
+            let args = List.map (mlexpr_of_expr rg lenv) args in
+
+            MLE_CTor (mlpath_of_lident c.v, args)
+            
+        | Exp_meta (Meta_desugared (e, Sequence)) -> begin
+            match e with
+            | Exp_let ((false, [Inl _, _, e1]), e2) ->
+                let d1 = mlexpr_of_expr rg lenv e1 in
+                let d2 = mlexpr_of_expr rg lenv e2 in
+                mlseq d1 d2
+
+            | _ -> unexpected rg "expr-seq-mark-without-let"
+        end
+
+        | Exp_ascribed (e, _) ->
+            mlexpr_of_expr rg lenv e
+
+        | Exp_meta (Meta_info (e, _, rg)) ->
+            mlexpr_of_expr rg lenv e
+
+        | Exp_meta (Meta_datainst (e, _)) ->
+            mlexpr_of_expr rg lenv e
+
+        | Exp_tapp (e, _) ->
+            (* FIXME: add a type annotation *)
+            mlexpr_of_expr rg lenv e
+
+        | Exp_tabs (_, _, e) ->
+            (* FIXME: should only occur after a let-binding *)
+            mlexpr_of_expr rg lenv e
+
+        | Exp_app  _ -> unexpected  rg "expr-app"
+        | Exp_uvar _ -> unexpected  rg "expr-uvar"
+    end
+
+(* -------------------------------------------------------------------- *)
+and mllets_of_lets (rg : range) (lenv : lenv) (rec_, lbs) =    
+    let downct (x, _, e) =
+        match x with
+        | Inl x -> (x, e)
+        | Inr _ -> unexpected rg "expr-let-in-with-fvar" in
+
+
+    let lbs = List.map downct lbs in
+
+    let lenvb, mlids =
+        Util.fold_map
+            (fun lenv (x, _) -> lpush lenv x.realname x.ppname)
+            lenv lbs in
+
+    let es =
+        let inlenv = if rec_ then lenvb else lenv in
+        List.map (fun (x, e) ->
+            let mlid = lresolve lenvb x.realname in
+            (mlid, [], mlexpr_of_expr rg inlenv e)) lbs
+    in
+
+    (lenvb, es)
+
+(* -------------------------------------------------------------------- *)
+and mlbranch_of_branch (rg : range) (lenv : lenv) (pat, when_, body) =
+    let lenv, pat = mlpat_of_pat rg lenv pat in
+    let when_ = Option.map (mlexpr_of_expr rg lenv) when_ in
+    let body  = mlexpr_of_expr rg lenv body in
+    (pat, when_, body)

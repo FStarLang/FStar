@@ -59,7 +59,7 @@ type mlexpr =
 | MLE_Record of mlpath * list<mlsymbol * mlexpr>
 | MLE_CTor   of mlpath * list<mlexpr>
 | MLE_Tuple  of mlexpr list
-| MLE_Let    of bool * list<mlident * mlidents * mlexpr>
+| MLE_Let    of bool * list<mlident * mlidents * mlexpr> * mlexpr
 | MLE_App    of mlexpr * list<mlexpr>
 | MLE_Fun    of mlidents * mlexpr
 | MLE_If     of mlexpr * mlexpr * option<mlexpr>
@@ -85,3 +85,19 @@ type sig1 =
 | MLS_Exn of list<mlty>
 
 type sig_ = list<mlsymbol * sig1>
+
+(* -------------------------------------------------------------------- *)
+let mlseq (e1 : mlexpr) (e2 : mlexpr) =
+    match e2 with
+    | MLE_Seq s -> MLE_Seq (e1 :: s)
+    | _ -> MLE_Seq [e1; e2]
+
+let mlfun (x : mlident) (e : mlexpr) =
+    match e with
+    | MLE_Fun (xs, e) -> MLE_Fun(x :: xs, e)
+    | _ -> MLE_Fun ([x], e)
+
+let mlif (b : mlexpr) ((e1, e2) : mlexpr * mlexpr) =
+    match e2 with
+    | MLE_Const MLC_Unit -> MLE_If (b, e1, None)
+    | _ -> MLE_If (b, e1, Some e2)
