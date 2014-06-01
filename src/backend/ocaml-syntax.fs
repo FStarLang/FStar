@@ -1,19 +1,29 @@
 ﻿(* -------------------------------------------------------------------- *)
 module Microsoft.FStar.Backends.OCaml.Syntax
 
+open Microsoft.FStar.Absyn.Syntax
+
+(* -------------------------------------------------------------------- *)
 type mlsymbol = string
 type mlident  = mlsymbol * int
 type mlpath   = list<mlsymbol> * mlsymbol
 
+(* -------------------------------------------------------------------- *)
 let idsym ((s, _) : mlident) : mlsymbol =
     s
 
 let ptsym ((_, s) : mlpath) : mlsymbol =
     s
 
+(* -------------------------------------------------------------------- *)
+let mlpath_of_lident (x : lident) : mlpath =
+    (List.map (fun x -> x.idText) x.ns, x.ident.idText)
+
+(* -------------------------------------------------------------------- *)
 type mlidents  = list<mlident>
 type mlsymbols = list<mlsymbol>
 
+(* -------------------------------------------------------------------- *)
 type mlty =
 | MLTY_Var   of mlident
 | MLTY_Fun   of mlty * mlty
@@ -26,9 +36,11 @@ type mlconstant =
 | MLC_Unit
 | MLC_Bool   of bool
 | MLC_Byte   of byte
-| MLC_Int    of int
+| MLC_Int    of int64
+| MLC_Float  of float
 | MLC_Char   of char
 | MLC_String of string
+| MLC_Bytes  of byte array
 
 type mlpattern =
 | MLP_Wild
@@ -37,7 +49,7 @@ type mlpattern =
 | MLP_Record of mlpath * list<mlsymbol * mlpattern>
 | MLP_CTor   of mlpath * list<mlpattern>
 | MLP_Tuple  of list<mlpattern>
-| MLP_Named  of mlident * mlpattern
+| MLP_Branch of list<mlpattern>
 
 type mlexpr =
 | MLE_Seq    of list<mlexpr>
