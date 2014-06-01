@@ -69,6 +69,9 @@ let tvar_of_btvar (TEnv tenv : tenv) (x : bvar<typ, knd>) =
     | Some x -> x
 
 (* -------------------------------------------------------------------- *)
+type mlenv = unit
+
+(* -------------------------------------------------------------------- *)
 let is_prim_ns (ns : list<ident>) =
     match ns with
     | [{ idText = "Prims" }] -> true
@@ -107,6 +110,22 @@ let mlconst_of_const (rg : range) (sctt : sconst) =
 
   | Const_string (bytes, _) ->
       MLC_String ((new UTF8Encoding (false, true)).GetString(bytes))
+
+(* -------------------------------------------------------------------- *)
+let mlkind_of_kind (k : knd) =
+    let rec aux n (k : knd) =
+        match Absyn.Util.compress_kind k with
+        | Kind_type -> Some n
+
+        | Kind_tcon (_, k1, k2, _) -> begin
+            match aux 0 k1 with
+            | Some 0 -> aux (n+1) k2
+            | _      -> None
+        end
+
+        | _ -> None
+    in
+        aux 0 k
 
 (* -------------------------------------------------------------------- *)
 let rec mlty_of_ty_core (tenv : tenv) ((rg, ty) : range * typ) =
