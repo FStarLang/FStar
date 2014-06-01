@@ -86,3 +86,8 @@ val format: string -> t list -> string
 - To fix
 
 ----
+
+18. Does not accept when clauses in match, e.g. match 1 with x when x > 0 -> 1
+- To fix
+
+----
