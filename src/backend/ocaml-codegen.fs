@@ -80,9 +80,9 @@ let rec doc_of_mltype (outer : level) (ty : mlty) =
         maybe_paren outer t_prio_fun (hbox (reduce1 [d1; parse " ->@ "; d2]))
 
 (* -------------------------------------------------------------------- *)
-let doc_of_module (m : module_) =
+let doc_of_module (m : mlmodule) =
     empty
 
 (* -------------------------------------------------------------------- *)
-let doc_of_sig (s : sig_) =
+let doc_of_sig (s : mlsig) =
     empty
