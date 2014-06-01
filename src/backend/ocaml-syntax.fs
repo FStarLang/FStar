@@ -73,18 +73,19 @@ type mltybody =
 | MLTD_DType  of list<mlsymbol * mlty list>
 
 type mlmodule1 =
-| MLM_Ty  of list<mlidents * mltybody>
+| MLM_Ty  of list<mlsymbol * mlidents * option<mltybody>>
 | MLM_Let of bool * list<mlsymbol * mlidents * mlexpr>
-| MLM_Exn of list<mlty>
+| MLM_Exn of mlsymbol * list<mlty>
+| MLM_Top of mlexpr
 
-type mlmodule = list<mlsymbol * mlmodule1>
+type mlmodule = list<mlmodule1>
 
 type mlsig1 =
-| MLS_Ty  of (mlident list * mltybody option) list
-| MLS_Val of mltyscheme
-| MLS_Exn of list<mlty>
+| MLS_Ty  of list<mlsymbol * mlidents * option<mltybody>>
+| MLS_Val of mlsymbol * mltyscheme
+| MLS_Exn of mlsymbol * list<mlty>
 
-type mlsig = list<mlsymbol * mlsig1>
+type mlsig = list<mlsig1>
 
 (* -------------------------------------------------------------------- *)
 let mlseq (e1 : mlexpr) (e2 : mlexpr) =

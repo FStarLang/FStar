@@ -42,17 +42,35 @@ let duplicated_local (rg : range) (x : string * string) =
 let fresh = let c = ref 0 in fun x -> incr c; ((x, !c) : mlident)
 
 (* -------------------------------------------------------------------- *)
+let tyvar_of_int =
+    let tyvars = "abcdefghijklmnopqrstuvwxyz" in
+    let rec aux n =
+        let s = sprintf "%c" tyvars.[n % 26] in (* FIXME *)
+        if n >= String.length tyvars then (aux (n/26)) ^ s else s
+    in fun n -> "'" ^ (aux n)
+
+(* -------------------------------------------------------------------- *)
+type mlenv = MLEnv of unit
+
+(* -------------------------------------------------------------------- *)
 type lenv = LEnv of Map<mlsymbol, mlident>
 
+(* -------------------------------------------------------------------- *)
 let lempty : lenv =
     LEnv Map.empty
 
+(* -------------------------------------------------------------------- *)
+let lenv_of_mlenv (_ : mlenv) : lenv =
+    lempty
+
+(* -------------------------------------------------------------------- *)
 let lpush (LEnv lenv : lenv) (real : ident) (pp : ident) =
     if Map.containsKey real.idText lenv then
         duplicated_local real.idRange (real.idText, pp.idText);
     let mlid = fresh pp.idText in
     (LEnv (Map.add real.idText mlid lenv), mlid)
 
+(* -------------------------------------------------------------------- *)
 let lresolve (LEnv lenv : lenv) (x : ident) =
     match Map.tryFind x.idText lenv with
     | None   -> unbound_var x.idRange x
@@ -61,6 +79,49 @@ let lresolve (LEnv lenv : lenv) (x : ident) =
 (* -------------------------------------------------------------------- *)
 type tenv = TEnv of Map<string, mlident>
 
+(* -------------------------------------------------------------------- *)
+let tempty : tenv =
+    TEnv Map.empty
+
+(* -------------------------------------------------------------------- *)
+let tenv_of_tvmap (tvs : list<option<ident * ident>>) =
+    let rec fresh_tyvar used i =
+        let pp = tyvar_of_int 0 in
+
+        if Set.contains pp used then
+            fresh_tyvar used (i+1)
+        else
+            (Set.add pp used, pp) in
+
+    let freshen used pp =
+        match pp with
+        | Some pp when not (Set.contains pp.idText used) ->
+            (Set.add pp.idText used, pp.idText)
+        | _ ->
+            fresh_tyvar used 0 in
+
+    let _, tvs =
+        let for1 used tv =
+            match tv with
+            | Some (real, pp) ->
+                let (used, pp) = freshen used (Some pp) in 
+                (used, (fresh pp, Some real.idText))
+            | None ->
+                let (used, pp) = freshen used None in
+                (used, (fresh pp, None)) in
+
+        Util.fold_map for1 Set.empty tvs
+    in
+    
+    let tparams = List.map (fun (x, _) -> x) tvs in
+    let tvs = List.choose (fun (x, y) ->
+        match y with None -> None | Some y -> Some (y, x))
+        tvs
+    in
+
+    (TEnv (Map.ofList tvs), tparams)
+
+(* -------------------------------------------------------------------- *)
 let tvar_of_btvar (TEnv tenv : tenv) (x : bvar<typ, knd>) =
     let name = x.v.realname.idText in
 
@@ -69,20 +130,18 @@ let tvar_of_btvar (TEnv tenv : tenv) (x : bvar<typ, knd>) =
     | Some x -> x
 
 (* -------------------------------------------------------------------- *)
-type mlenv = unit
-
-(* -------------------------------------------------------------------- *)
 let is_prim_ns (ns : list<ident>) =
     match ns with
     | [{ idText = "Prims" }] -> true
     | _ -> false
 
 (* -------------------------------------------------------------------- *)
-type prims =
+type tprims =
 | Tuple of int
+| Exn
 
 (* -------------------------------------------------------------------- *)
-let as_prims (id : lident) : prims option =
+let as_tprims (id : lident) : option<tprims> =
     if is_prim_ns id.ns then
         match id.ident.idText with
         | "Tuple2" -> Some (Tuple 2)
@@ -90,6 +149,7 @@ let as_prims (id : lident) : prims option =
         | "Tuple4" -> Some (Tuple 4)
         | "Tuple5" -> Some (Tuple 5)
         | "Tuple6" -> Some (Tuple 6)
+        | "Exn"    -> Some Exn
         | _        -> None
     else
         None
@@ -112,20 +172,32 @@ let mlconst_of_const (rg : range) (sctt : sconst) =
       MLC_String ((new UTF8Encoding (false, true)).GetString(bytes))
 
 (* -------------------------------------------------------------------- *)
-let mlkind_of_kind (k : knd) =
-    let rec aux n (k : knd) =
-        match Absyn.Util.compress_kind k with
-        | Kind_type -> Some n
-
-        | Kind_tcon (_, k1, k2, _) -> begin
-            match aux 0 k1 with
-            | Some 0 -> aux (n+1) k2
-            | _      -> None
-        end
-
+let mlkind_of_kind (tps : list<tparam>) (k : knd) =
+    let mltparam_of_tparam = function
+        | Tparam_typ (x, Kind_type) -> Some (x.realname, x.ppname)
         | _ -> None
     in
-        aux 0 k
+
+    let rec aux acc (k : knd) =
+        match Absyn.Util.compress_kind k with
+        | Kind_type -> Some (List.rev acc)
+
+        | Kind_tcon (x, k1, k2, _) -> begin
+            match aux [] k1 with
+            | Some [] ->
+                let x = Option.map (fun x -> (x.realname, x.ppname)) x in
+                aux (x :: acc) k2
+            | _ -> None
+        end
+
+        | _ -> None in
+
+    let aout = List.choose mltparam_of_tparam tps in
+
+    if List.length aout <> List.length tps then
+        None
+    else
+        aux (List.rev (List.map Some aout)) k
 
 (* -------------------------------------------------------------------- *)
 let rec mlty_of_ty_core (tenv : tenv) ((rg, ty) : range * typ) =
@@ -191,7 +263,7 @@ and maybe_tuple (tenv : tenv) ((rg, ty) : range * typ) =
     let rec aux acc ty =
         match (Absyn.Util.compress_typ ty).t with
         | Typ_const c -> begin
-            match as_prims c.v with
+            match as_tprims c.v with
             | Some (Tuple n) ->
                 let acc = List.choose id (List.mapi unfun acc) in
                 if List.length acc <> n then None else
@@ -219,7 +291,34 @@ and mlty_of_ty (tenv : tenv) (rgty : range * typ) : mlty =
     end
 
 (* -------------------------------------------------------------------- *)
-and mlpat_of_pat (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
+let mltycons_of_mlty (ty : mlty) =
+    let rec aux acc ty =
+        match ty with
+        | MLTY_Fun (dom, codom) ->
+            aux (dom :: acc) codom
+        | _ ->
+            (List.rev acc, ty)
+    in aux [] ty
+
+(* -------------------------------------------------------------------- *)
+let rec strip_polymorphism acc rg ty =
+    match (Absyn.Util.compress_typ ty).t with
+    | Typ_univ (x, Kind_type, (Computation ty | Pure ty)) ->
+        strip_polymorphism ((x.realname, x.ppname) :: acc) rg ty
+    | Typ_meta (Meta_pos (ty, rg)) ->
+        strip_polymorphism acc rg ty
+    | _ ->
+        (List.rev acc, rg, ty)
+
+(* -------------------------------------------------------------------- *)
+let mlscheme_of_ty (rg : range) (ty : typ) : mltyscheme =
+    let tparams, rg, ty = strip_polymorphism [] rg ty in
+    let tenv, tparams   = tenv_of_tvmap (List.map Some tparams) in
+
+    (tparams, mlty_of_ty tenv (rg, ty))
+
+(* -------------------------------------------------------------------- *)
+let rec mlpat_of_pat (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
     match p with
     | Pat_cons (x, ps) ->
         let lenv, ps = Util.fold_map (mlpat_of_pat rg) lenv ps in
@@ -378,3 +477,175 @@ and mlbranch_of_branch (rg : range) (lenv : lenv) (pat, when_, body) =
     let when_ = Option.map (mlexpr_of_expr rg lenv) when_ in
     let body  = mlexpr_of_expr rg lenv body in
     (pat, when_, body)
+
+(* -------------------------------------------------------------------- *)
+type mode    = Sig | Struct
+type mlitem1 = either<mlsig1, mlmodule1>
+
+let mlitem1_ty mode args =
+    match mode with
+    | Sig    -> Inl (MLS_Ty args)
+    | Struct -> Inr (MLM_Ty args)
+
+let mlitem1_exn mode args =
+    match mode with
+    | Sig    -> Inl (MLS_Exn args)
+    | Struct -> Inr (MLM_Exn args)
+
+(* -------------------------------------------------------------------- *)
+type mldtype = mlsymbol * mlidents * mltybody
+
+let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
+    let (ts, cs) =
+        let fold1 sigelt (types, ctors) =
+            match sigelt with
+            | Sig_tycon (x, tps, k, ts, cs, _, rg) -> begin
+                let ar =
+                    match mlkind_of_kind tps k with
+                    | None    -> unsupported rg "not-an-ML-kind"
+                    | Some ar -> ar in
+                ((x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) :: types, ctors)
+            end
+
+            | Sig_datacon (x, ty, pr, rg) ->
+                (types, (x.ident.idText, (ty, pr)) :: ctors)
+
+            | _ ->
+                unexpected
+                    (Absyn.Util.range_of_sigelt sigelt)
+                    "no-dtype-in-bundle"
+        in
+
+        let (ts, cs) = List.foldBack fold1 indt ([], []) in
+
+        (ts, Map.ofList cs)
+    in
+
+    let fortype (x, tcs, tparams, rg) =
+        let mldcons_of_cons cname =
+            let (c, _) = Map.find cname.ident.idText cs in
+            let cparams, rgty, c = strip_polymorphism [] rg c in
+
+            if List.length cparams <> List.length tparams then
+                unexpected rg "invalid-number-of-ctor-params";
+
+            let cparams = List.map (fun (x, _) -> x.idText) cparams in
+
+            let tenv = List.zip cparams tparams in
+            let tenv = TEnv (Map.ofList tenv) in
+
+            let c = mlty_of_ty tenv (rgty, c) in
+            let (args, name) = mltycons_of_mlty c in
+
+            match name with
+            | MLTY_Named (tyargs, name) when snd name = x ->
+                let check x mty = match mty with | MLTY_Var mtyx -> x = mtyx | _ -> false in
+
+                if List.length tyargs <> List.length cparams then
+                    unexpected rg "dtype-invalid-ctor-result";
+                if not (List.forall2 check tparams tyargs) then
+                    unsupported rg "dtype-invalid-ctor-result";
+                (cname.ident.idText, args)
+
+            | _ -> unexpected rg "dtype-invalid-ctor-result"   
+
+        in (x, tparams, MLTD_DType (List.map mldcons_of_cons tcs))
+
+    in List.map fortype ts
+
+(* -------------------------------------------------------------------- *)
+let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
+    match modx with
+    | Sig_val_decl (x, ty, None, None, rg) when mode = Sig ->  
+        let tparams, ty = mlscheme_of_ty rg ty in
+        Some (Inl (MLS_Val (x.ident.idText, (tparams, ty))))
+
+    | Sig_let ((rec_, lbs), rg) when mode = Struct ->
+        let downct (x, _, e) =
+            match x with
+            | Inr x -> (x, e)
+            | Inl _ -> unexpected rg "expr-top-let-with-bvar" in
+
+        let lbs = List.map downct lbs in
+        let lbs = List.map (fun (x, e) ->
+            (x.ident.idText, [], mlexpr_of_expr rg (lenv_of_mlenv mlenv) e))
+            lbs
+        in
+
+        Some (Inr (MLM_Let (rec_, lbs)))
+
+    | Sig_main (e, rg) when mode = Struct ->
+        let lenv = lenv_of_mlenv mlenv in
+        Some (Inr (MLM_Top (mlexpr_of_expr rg lenv e)))
+
+    | Sig_typ_abbrev (t, tps, k, ty, rg) -> begin
+        let ar =
+            match mlkind_of_kind tps k with
+            | None    -> unsupported rg "not-an-ML-kind"
+            | Some ar -> ar in
+
+        let tenv, tparams = tenv_of_tvmap ar in
+        let ty = mlty_of_ty tenv (rg, ty) in
+        let ty = MLTD_Abbrev ty in
+
+        Some (mlitem1_ty mode [t.ident.idText, tparams, Some ty])
+    end
+
+    | Sig_tycon (t, tps, k, [], [], [], rg) ->
+        let ar =
+            match mlkind_of_kind tps k with
+            | None    -> unsupported rg "not-an-ML-kind"
+            | Some ar -> ar
+        in
+
+        let _tenv, tparams = tenv_of_tvmap ar in
+
+        Some (mlitem1_ty mode [t.ident.idText, tparams, None])
+
+    | Sig_monads (_, _, rg) ->
+        unsupported rg "mod1-monad"
+
+    | Sig_bundle (indt, _) -> begin
+        let aout = mldtype_of_indt mlenv indt in
+        let aout = List.map (fun (x, y, z) -> (x, y, Some z)) aout in
+
+        match mode with
+        | Sig    -> Some (Inl (MLS_Ty aout))
+        | Struct -> Some (Inr (MLM_Ty aout))
+    end
+
+    | Sig_datacon (x, ty, tx, rg) when as_tprims tx = Some Exn -> begin
+        let rec aux acc ty =
+            match (Absyn.Util.compress_typ ty).t with
+            | Typ_fun (_, ty1, (Pure ty2 | Computation ty2), _) ->
+                aux (ty1 :: acc) ty2
+            | Typ_meta (Meta_pos (ty, rg)) ->
+                aux acc ty
+            | Typ_const x when as_tprims x.v = Some Exn->
+                List.rev acc
+            | _ ->
+                unexpected rg "invalid-exn-type"
+        in
+
+        let args = aux [] ty in
+        let tenv = fst (tenv_of_tvmap []) in
+        let args = List.map (fun ty -> mlty_of_ty tenv (rg, ty)) args in
+
+        Some (mlitem1_exn mode (x.ident.idText, args))
+    end
+
+    | Sig_assume         _ -> None
+    | Sig_logic_function _ -> None
+    | Sig_val_decl       _ -> None
+    | Sig_tycon          _ -> None
+    | Sig_datacon        _ -> None
+
+(* -------------------------------------------------------------------- *)
+let mlmod_of_mod (mlenv : mlenv) (modx : list<sigelt>) : mlmodule =
+    let asright = function Inr x -> x | Inl _ -> failwith "asright" in
+    List.choose (fun x -> Option.map asright (mlmod1_of_mod1 Struct mlenv x)) modx
+
+(* -------------------------------------------------------------------- *)
+let mlsig_of_sig (mlenv : mlenv) (modx : list<sigelt>) : mlsig =
+    let asleft = function Inl x -> x | Inr _ -> failwith "asleft" in
+    List.choose (fun x -> Option.map asleft (mlmod1_of_mod1 Sig mlenv x)) modx
