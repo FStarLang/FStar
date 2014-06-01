@@ -17,6 +17,8 @@ val break_ : int -> doc
 val break0 : doc
 val break1 : doc
 
+val hardline : doc
+
 (* -------------------------------------------------------------------- *)
 val cat1    : doc -> doc -> doc
 val reduce  : list<doc> -> doc

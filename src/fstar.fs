@@ -29,6 +29,8 @@ let process_args () =
        | _ -> ());
     (res, !file_list)
 
+let cleanup () = ()
+
 let go _ =    
   let finished (mods:Syntax.modul list) = 
     let msg = if !Options.pretype then "Parsed, desugared, and pre-typed module:" else "Parsed and desugared module:" in
@@ -40,20 +42,30 @@ let go _ =
     | Die msg ->
       Util.print_string msg
     | GoOn ->
+        if not (Option.isNone !Options.codegen) then
+            Options.pretype := true;
         let fmods = Parser.Driver.parse_files (Options.prims()::filenames) in
         let fmods = if !Options.pretype then Tc.PreType.check_modules fmods else fmods in
-        if !Options.codegen = Some "OCaml"
-        then List.tail fmods
-              |> List.iter (fun mod_ -> Util.print_string (Util.format1 "%s\n" (Backends.OCaml.CodeGen.pp_module mod_)))
-        else ();
-       finished fmods 
-      
-let cleanup () = ()
-;;
+        if !Options.codegen = Some "OCaml" then begin
+            try
+                let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
+                let doc   = Backends.OCaml.Code.doc_of_mllib mllib in
+                printfn "%s" (FSharp.Format.pretty 120 doc)
+            with Backends.OCaml.ASTTrans.OCamlFailure (rg, error) -> begin
+                (* FIXME: register exception and remove this block *)
+                fprintfn stderr "OCaml Backend Error: %s %s"
+                    (Range.string_of_range rg)
+                    (Backends.OCaml.ASTTrans.string_of_error error);
+                exit 1
+            end
+        end;
+        finished fmods 
 
-try 
-  go ();
-  cleanup ();
-  exit 0
-with 
-  | e when (not !Options.trace_error && Util.handleable e) -> Util.handle_err false () e
+let () =  
+    try 
+      go ();
+      cleanup ();
+      exit 0
+    with 
+    | e when (not !Options.trace_error && Util.handleable e) ->
+        Util.handle_err false () e

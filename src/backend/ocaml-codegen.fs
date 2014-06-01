@@ -58,7 +58,7 @@ let rec doc_of_mltype (outer : level) (ty : mlty) =
 
     | MLTY_Tuple tys ->
         let doc = List.map (doc_of_mltype (min_op_prec, NonAssoc)) tys in
-        let doc = parens (hbox (combine (parse " *@ ") doc)) in
+        let doc = parens (hbox (combine (text " * ") doc)) in
         doc
 
     | MLTY_Named (args, name) -> begin
@@ -68,7 +68,7 @@ let rec doc_of_mltype (outer : level) (ty : mlty) =
             | [arg] -> doc_of_mltype (t_prio_name, Left) arg
             | _     ->
                 let args = List.map (doc_of_mltype (min_op_prec, NonAssoc)) args in
-                parens (hbox (combine (parse ",@ ") args))
+                parens (hbox (combine (text ", ") args))
 
         in hbox (reduce1 [args; text (ptsym name)])
     end
@@ -77,12 +77,67 @@ let rec doc_of_mltype (outer : level) (ty : mlty) =
         let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
         let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
 
-        maybe_paren outer t_prio_fun (hbox (reduce1 [d1; parse " ->@ "; d2]))
+        maybe_paren outer t_prio_fun (hbox (reduce1 [d1; text " -> "; d2]))
 
 (* -------------------------------------------------------------------- *)
 let doc_of_module (m : mlmodule) =
     empty
 
 (* -------------------------------------------------------------------- *)
+let doc_of_sig1 (s : mlsig1) =
+    match s with
+    | MLS_Exn (x, []) ->
+        reduce1 [text "exception"; text x]
+
+    | MLS_Exn (x, args) ->
+        let args = List.map (doc_of_mltype (min_op_prec, NonAssoc)) args in
+        let args = parens (combine (text " * ") args) in
+        reduce1 [text "exception"; text x; text "of"; args]
+
+    | MLS_Val (x, (_, ty)) ->
+        let ty = doc_of_mltype (min_op_prec, NonAssoc) ty in
+        reduce1 [text "val"; text x; text ": "; ty]
+
+    | MLS_Ty decls ->
+        let for1 (x, tparams, _) =
+            let tparams =
+                match tparams with
+                | []  -> empty
+                | [x] -> text (idsym x)
+                | _   ->
+                    let doc = List.map (fun x -> (text (idsym x))) tparams in
+                    parens (combine (text ", ") doc) in
+
+            reduce1 [tparams; text x] in
+
+        let doc = List.map for1 decls in
+        let doc = reduce1 [text "type"; combine (text " and ") doc] in
+        doc
+
+(* -------------------------------------------------------------------- *)
 let doc_of_sig (s : mlsig) =
-    empty
+    let docs = List.map doc_of_sig1 s in
+    let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
+    reduce docs
+
+(* -------------------------------------------------------------------- *)
+let rec doc_of_mllib (MLLib mllib : mllib) =
+    let for1 (x, sigmod, sub) =
+        let head = reduce1 [text "module"; text "type"; text x; text "="] in
+        let tail = reduce1 [text "end"] in
+        let doc  = Option.map (fun (s, _) -> doc_of_sig s) sigmod in
+        let sub  = doc_of_mllib sub in
+
+        reduce [
+            cat head hardline;
+            (match doc with None -> empty | Some doc -> doc);
+            sub;
+            cat tail hardline;
+        ]
+    in
+
+    let docs = List.map for1 mllib in
+    let docs = List.map (fun x -> reduce[x; hardline; hardline]) docs in
+
+    reduce docs
+

@@ -12,6 +12,7 @@ open Microsoft.FStar.Range
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Backends.OCaml.Syntax
+open FSharp.Format
 
 (* -------------------------------------------------------------------- *)
 type error =
@@ -22,6 +23,9 @@ type error =
 | DuplicatedLocal of string * string
 
 exception OCamlFailure of Range.range * error
+
+let string_of_error (error : error) =
+    sprintf "%A" error
 
 let unexpected (rg : range) (what : string) =
     raise (OCamlFailure (rg, Unexpected what))
@@ -180,7 +184,8 @@ let mlkind_of_kind (tps : list<tparam>) (k : knd) =
 
     let rec aux acc (k : knd) =
         match Absyn.Util.compress_kind k with
-        | Kind_type -> Some (List.rev acc)
+        | Kind_type    -> Some (List.rev acc)
+        | Kind_unknown -> Some (List.rev acc) (* FIXME *)
 
         | Kind_tcon (x, k1, k2, _) -> begin
             match aux [] k1 with
@@ -649,3 +654,51 @@ let mlmod_of_mod (mlenv : mlenv) (modx : list<sigelt>) : mlmodule =
 let mlsig_of_sig (mlenv : mlenv) (modx : list<sigelt>) : mlsig =
     let asleft = function Inl x -> x | Inr _ -> failwith "asleft" in
     List.choose (fun x -> Option.map asleft (mlmod1_of_mod1 Sig mlenv x)) modx
+
+(* -------------------------------------------------------------------- *)
+let mlmod_of_fstar (fmod_ : modul) =
+    let mod_ = mlmod_of_mod (MLEnv ()) fmod_.exports in
+    let sig_ = mlsig_of_sig (MLEnv ()) fmod_.declarations in
+    (mlpath_of_lident fmod_.name, sig_, mod_)
+
+(* -------------------------------------------------------------------- *)
+let mllib_empty : mllib =
+    MLLib []
+
+(* -------------------------------------------------------------------- *)
+let rec mllib_add (MLLib mllib : mllib) ((path : mlpath), sig_, mod_) =
+    match fst path with
+    | [] ->
+        let rec aux = function
+        | [] ->
+            [snd path, Some (sig_, mod_), mllib_empty]
+        | ((name, sigmod, sublibs) as the) :: tl ->
+            if name = snd path then begin
+                if Option.isSome sigmod then
+                    failwith "duplicated-module";
+                (name, Some (sig_, mod_), sublibs) :: tl
+            end else
+                the :: (aux tl)
+
+        in MLLib (aux mllib)
+
+    | x :: subns ->
+        let subpath = (subns, snd path) in
+
+        let rec aux = function
+        | [] ->
+            let sub = mllib_add mllib_empty (subpath, sig_, mod_) in
+            [snd path, Some (sig_, mod_), sub]
+        | ((name, sigmod, sublibs) as the) :: tl ->
+            if name = snd path then
+                (name, sigmod, mllib_add sublibs (subpath, sig_, mod_)) :: tl
+            else
+                the :: (aux tl)
+                
+        in MLLib (aux mllib)
+
+(* -------------------------------------------------------------------- *)
+let mlmod_of_fstars (fmods : list<modul>) =
+    let fmods = List.map mlmod_of_fstar fmods in
+    List.fold mllib_add mllib_empty fmods
+    

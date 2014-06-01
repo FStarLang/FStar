@@ -88,6 +88,9 @@ type mlsig1 =
 type mlsig = list<mlsig1>
 
 (* -------------------------------------------------------------------- *)
+type mllib = MLLib of list<mlsymbol * option<mlsig * mlmodule> * mllib>
+
+(* -------------------------------------------------------------------- *)
 let mlseq (e1 : mlexpr) (e2 : mlexpr) =
     match e2 with
     | MLE_Seq s -> MLE_Seq (e1 :: s)
