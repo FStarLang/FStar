@@ -467,9 +467,11 @@ and doc_of_exp_r (rg : range) outer (env : env) (e : exp) =
             (* FIXME: add a type annotation *)
             doc_of_exp rg outer env e
 
+        | Exp_tabs (_, _, e) ->
+            doc_of_exp rg outer env e
+
         | Exp_app  _ -> unexpected  rg
         | Exp_uvar _ -> unexpected  rg
-        | Exp_tabs _ -> unsupported rg
     end
 
 (* -------------------------------------------------------------------- *)
