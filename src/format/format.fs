@@ -59,7 +59,7 @@ let maybeflat (d1 : doc) (d2 : doc) =
     { node = MaybeFlat (d1, d2); width = d1.width; }
 
 let break_ (n : int) =
-    maybeflat (blank n) hardline
+    maybeflat (blank n) (blank n) (* FIXME: hardline *)
 
 let break0 = break_ 0
 let break1 = break_ 1
@@ -84,7 +84,7 @@ let reduce (docs : list<doc>) =
     let fold1 (d1 : doc) (d2 : doc) =
         match d1.node, d2.node with
         | Empty, _     -> d2
-        | _    , Empty -> d2
+        | _    , Empty -> d1
         | _    , _     -> cat d1 d2
 
     in List.fold fold1 empty docs
@@ -126,6 +126,14 @@ let parens (doc : doc) =
 let align (docs : list<doc>) =
     let for1 d1 d2 = cat d1 d2 in
     List.fold for1 empty docs
+
+(* -------------------------------------------------------------------- *)
+let hbox (doc : doc) = (* FIXME *)
+    doc
+
+(* -------------------------------------------------------------------- *)
+let parse (s : string) = (* FIXME *)
+    text s
 
 (* -------------------------------------------------------------------- *)
 type state = {

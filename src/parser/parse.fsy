@@ -172,6 +172,9 @@ let newline (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<_>) =
 %token <string> LEX_FAILURE
 %token COMMENT WHITESPACE HASH_LINE HASH_LIGHT HASH_IF HASH_ELSE HASH_ENDIF INACTIVECODE LINE_COMMENT STRING_TEXT EOF
 
+%nonassoc THEN
+%nonassoc ELSE
+
 %start file
 %type <file> file
 
@@ -609,6 +612,12 @@ noSeqTerm:
   | IF term THEN term ELSE term
       {
         mk_term (If($2, $4, $6)) (rhs2 parseState 1 6) Expr
+      } 
+
+  | IF term THEN term
+      {
+	    let e = mk_term (Const Syntax.Const_unit) (rhs2 parseState 4 4) Expr in
+        mk_term (If($2, $4, e)) (rhs2 parseState 1 4) Expr
       } 
 
   | TRY term WITH firstPatternBranch patternBranches 
@@ -1049,6 +1058,7 @@ constant:
           errorR(Error("This number is outside the allowable range for 32-bit signed integers", lhs(parseState)));
         Const_int32 (fst $1) 
       } 
+  | UINT8 { Const_uint8 $1 } 
   
   | CHAR { Const_char $1 } 
   | STRING { Const_string ($1,lhs(parseState)) } 
@@ -1070,7 +1080,6 @@ constant:
           errorR(Error("This number is outside the allowable range for 8-bit signed integers", lhs(parseState)));
         Const_int8 (fst $1) 
       } 
-  | UINT8 { Const_uint8 $1 } 
   | INT16 
       { 
         if snd $1 then 

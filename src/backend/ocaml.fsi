@@ -1,7 +1,7 @@
 ﻿(* -------------------------------------------------------------------- *)
 #light "off"
 
-module Microsoft.FStar.Backends.OCaml
+module Microsoft.FStar.Backends.OCaml.CodeGen
 
 open Microsoft.FStar.Absyn.Syntax
 
