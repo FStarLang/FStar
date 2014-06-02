@@ -54,6 +54,18 @@ type level =
   | Type
   | Kind
 
+type mlift = typ -> typ -> typ
+type edge = {
+  msource:lident;
+  mtarget:lident;
+  mlift:typ -> typ -> typ;
+}
+type lattice = {
+  decls: list<monad_decl>;
+  order: list<edge>;                                     (* transitive closure of the order in the signature *)
+  joins: list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+}
+
 type env = {
   range:Range.range;             (* the source location of the term being checked *)
   curmodule: lident;             (* Name of this module *)
@@ -64,8 +76,78 @@ type env = {
   sigtab:sigtable;               (* a dictionary of long-names to sigelts *)
   is_pattern:bool;               (* is the current term being checked a pattern? *)
   instantiate_targs:bool;        (* instantiate implicit type arguments? default=true *)
-  instantiate_vargs:bool         (* instantiate implicit value agruments? default=true *)
+  instantiate_vargs:bool;        (* instantiate implicit value agruments? default=true *)
+  lattice:lattice
 }
+
+let monad_decl env l = 
+  match env.lattice.decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname l) with
+    | None -> raise (Error(Tc.Errors.name_not_found l, range_of_lid l))
+    | Some md -> md
+  
+let join env l1 l2 = 
+  match env.lattice.joins |> Util.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with 
+    | None -> failwith "impossible"
+    | Some (_, _, m3, j1, j2) -> m3, j1, j2
+
+let monad_leq env l1 l2 : option<edge> =
+  env.lattice.order |> Util.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)  
+
+let wp_signature env m = 
+  match env.lattice.decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname m) with
+  | None -> failwith "Impossible"
+  | Some md -> 
+    match md.signature with 
+      | Kind_tcon(Some a, Kind_type, Kind_tcon(_, kwp, _, _), _) -> a, kwp
+      | _ -> failwith "Impossible" 
+
+let build_lattice env se = match se with 
+  | Sig_monads(decls, order, _) -> 
+    let mk_lift a k1 b k2 lift_t r wp1 =
+      let k1 = Util.subst_kind [Inl(a, r)] k1 in
+      let k2 = Util.subst_kind [Inl(b, r)] k2 in
+      let l = withkind (Kind_tcon(None, k1, k2, false)) <| Typ_app(lift_t, r, false) in
+      withkind k2 <| Typ_app(l, wp1, false) in
+    let decls = env.lattice.decls@decls in
+    let kwp l = wp_signature env l in
+    let order = order |> List.map (fun mo -> 
+      let a, k1 = kwp mo.source in 
+      let b, k2 = kwp mo.target in
+      {msource=mo.source; mtarget=mo.target; mlift=mk_lift a k1 b k2 mo.lift}) in
+    let order = env.lattice.order@order in
+
+    let compose_edges e1 e2 : edge = 
+       {msource=e1.msource;
+        mtarget=e2.mtarget;
+        mlift=fun r wp1 -> e2.mlift r (e1.mlift r wp1)} in
+    let ms = List.collect (fun e -> [e.msource; e.mtarget]) order |> Util.remove_dups lid_equals in
+    let find_edge order (i, j) = 
+      order |> Util.find_opt (fun e -> lid_equals e.msource i && lid_equals e.mtarget j) in
+
+    (* basically, this is Warshall's algorithm for transitive closure, 
+       except it's ineffcient because find_edge is doing a linear scan. 
+       Could be made better. But these are really small graphs (~ 4-8 vertices) ... so not worth it *)
+    let order = ms |> List.fold_left (fun order k -> 
+        ms |> List.collect (fun i -> 
+        ms |> List.collect (fun j -> 
+          match find_edge order (i, j) with 
+            | Some e -> [e]
+            | None -> match find_edge order (i, k), find_edge order (k, j) with 
+                        | Some e1, Some e2 -> [compose_edges e1 e2]
+                        | _ -> []))) order in
+    let joins =
+      ms |> List.collect (fun i -> 
+      ms |> List.collect (fun j -> 
+      let (join, e1, e2) = ms |> List.fold_left (fun (ub, e1, e2) k ->
+        if Util.is_some (find_edge order (ub, k)) || not (Util.is_some (find_edge order (k, ub)))
+        then (ub, e1, e2)
+        else match find_edge order (i, k), find_edge order (j, k) with 
+            | Some e1, Some e2 -> (k, e1, e2)
+            | _ -> (ub, e1, e2)) (Const.all_lid, Util.must <| find_edge order (i, Const.all_lid), Util.must <| find_edge order (j, Const.all_lid))  in
+      [i, j, join, e1.mlift, e2.mlift])) in 
+    let lat = {decls=decls; order=order;joins=joins} in
+    {env with lattice=lat}
+  | _ -> env
 
 let rec add_sigelt env se = match se with 
   | Sig_bundle(ses, _) -> add_sigelts env ses
@@ -85,7 +167,8 @@ let initial_env module_lid =
     sigtab=Util.smap_create default_table_size;
     is_pattern=false;
     instantiate_targs=true;
-    instantiate_vargs=true
+    instantiate_vargs=true;
+    lattice={decls=[]; order=[]; joins=[]}
   }
 
 let finish_module env m = 

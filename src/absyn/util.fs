@@ -116,6 +116,9 @@ let total_comp t =
    result_typ=t;
    effect_args=[]}
 
+let is_total_comp c = 
+  lid_equals c.effect_name Const.tot_effect_lid
+
 (********************************************************************************)
 (****************Simple utils on the local structure of a term ******************)
 (********************************************************************************)
@@ -336,6 +339,9 @@ let uvars_in_typ t : uvars =
   fst <| Visit.visit_typ_simple collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars t
 let uvars_in_exp e : uvars = 
   fst <| Visit.visit_exp_simple collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars e
+
+let unchecked_unify uv t = Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here *)
+
 
 (********************************************************************************)
 (**************************** Free type/term variables **************************)
@@ -638,13 +644,16 @@ let mk_conj_opt phi1 phi2 = match phi1 with
     Some and_t
 
 let mk_binop op phi1 phi2 = 
-  let app1 = withkind kun <| Typ_app(ftv op, phi1, false) in
-  withkind kun <| Typ_app(app1, phi2, false)
+  let app1 = withkind (Kind_tcon(None, Kind_type, Kind_type, false)) <| Typ_app(ftv op, phi1, false) in
+  withkind Kind_type <| Typ_app(app1, phi2, false)
 
 let mk_conj phi1 phi2 = mk_binop Const.and_lid phi1 phi2
 let mk_disj phi1 phi2 = mk_binop Const.or_lid phi1 phi2
 let mk_imp phi1 phi2  = mk_binop Const.implies_lid phi1 phi2
 let mk_iff phi1 phi2  = mk_binop Const.iff_lid phi1 phi2
+let mk_eq e1 e2       = 
+  let app1 = withkind kun <| Typ_dep(ftv Const.eq2_lid, e1, false) in
+  withkind Kind_type <| Typ_dep(app1, e2, false)
 
 let normalizeRefinement t =
   let rec aux xopt t = match t.t with
@@ -668,11 +677,18 @@ let forall_kind =
                         false), 
               true)
 
-let mkForall (x:bvvdef) (a:typ) (body:typ) : typ =
+let mk_forallT a k b = match k with 
+  | Kind_type -> 
+    let allT_k = Kind_tcon(None, Kind_tcon(Some a, Kind_type, Kind_type, false), Kind_type, false) in 
+    let forall_typ = withkind allT_k <| Typ_const(withsort Const.allTyp_lid allT_k) in
+    withkind Kind_type <| Typ_app(forall_typ, b, false) 
+  | _ -> failwith "NYI"
+
+let mk_forall (x:bvvdef) (a:typ) (body:typ) : typ =
   let forall_typ = withkind kun <| Typ_const(withsort Const.forall_lid forall_kind) in
   withkind kun <| Typ_app(withkind kun <| Typ_app(forall_typ, a, true), withkind kun <| Typ_lam(x, a, body), false)
   
-let unForall t = match t.t with
+let un_forall t = match t.t with
   | Typ_app({t=Typ_app({t=Typ_const(lid)}, _, _)}, 
             {t=Typ_lam(x, t, body)}, _) when is_forall lid.v ->
     Some (x, t, body)

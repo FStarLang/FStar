@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Tc.PreType
+module Microsoft.FStar.Tc.Tc
 
 open Microsoft.FStar
 open Microsoft.FStar.Tc
@@ -23,8 +23,7 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
-
-type formulae = list<formula> 
+open Microsoft.FStar.Tc.Rel
 
 let rng env = Tc.Env.get_range env
 let instantiate_both env = {env with Env.instantiate_targs=true; Env.instantiate_vargs=true}
@@ -48,33 +47,37 @@ let maybe_extend_subst s = function
   | Inr(Some x, e) -> Inr(x,e)::s
   | _ -> s
 
-let value_check_expected_typ env e t1 : exp * typ * formulae = 
+let value_check_expected_typ env e t1 : exp * typ * guard = 
   match Env.expected_typ env with 
-   | None -> e, t1
-   | Some t2 -> Tc.Util.check_and_ascribe env e t1 t2, t2
+   | None -> e, t1, Trivial
+   | Some t2 -> 
+    let e, g = Tc.Util.check_and_ascribe env e t1 t2 in
+    e, t2, g
 
 let comp_check_expected_typ env e c : exp * comp_typ = 
   match Env.expected_typ env with 
    | None -> e, c
    | Some t -> Tc.Util.weaken_result_typ env e c t
 
-let check_expected_effect env (c:option<comp_typ>) (e, c) : exp * comp_typ = 
-  failwith "NYI"
-
-let no_formulae env (te, kt, f) = match f with
-  | [] -> te, kt
+let check_expected_effect env (copt:option<comp_typ>) (e, c) : exp * comp_typ * guard = 
+  match copt with 
+    | None -> e, c, Trivial
+    | Some c' -> Tc.Util.check_comp_typ env e c c' 
+    
+let no_guard env (te, kt, f) = match f with
+  | Trivial -> te, kt
   | _ -> raise (Error(Tc.Errors.unexpected_non_trivial_precondition_on_term, Env.get_range env)) 
 
 let binding_of_lb x t = match x with 
-  | Inl bvd -> Env.Binding_var(x, t)
+  | Inl bvd -> Env.Binding_var(bvd, t)
   | Inr lid -> Env.Binding_lid(lid, t)
 
-let rec tc_kind env k : knd * formulae = 
+let rec tc_kind env k : knd * guard = 
   let k = Util.compress_kind k in 
   match k with
   | Kind_uvar _
   | Kind_type
-  | Kind_effect -> k, []
+  | Kind_effect -> k, Trivial
 
   | Kind_abbrev(kabr, k) -> 
     let k, f = tc_kind env k in 
@@ -84,75 +87,79 @@ let rec tc_kind env k : knd * formulae =
     let k1, f1 = tc_kind env k1 in 
     let env', bindings = maybe_push_binding env (Inl(aopt, k1)) in
     let k2, f2 = tc_kind env' k2 in
-    let f2 = Tc.Util.close_formulae bindings f2 in
-    Kind_tcon(aopt, k1, k2, imp), f1@f2
+    let f2 = Tc.Util.close_guard bindings f2 in
+    Kind_tcon(aopt, k1, k2, imp), Rel.conj_guard f1 f2
 
   | Kind_dcon (xopt, t1, k2, imp) ->
     let t1, _, f1 = tc_typ env t1 in
     let env', bindings = maybe_push_binding env (Inr(xopt, t1)) in
     let k2, f2 = tc_kind env' k2 in
-    let f2 = Tc.Util.close_formulae bindings f2 in
-    Kind_dcon(xopt, t1, k2, imp), f1@f2
+    let f2 = Tc.Util.close_guard bindings f2 in
+    Kind_dcon(xopt, t1, k2, imp), Rel.conj_guard f1 f2
 
   | Kind_unknown -> 
-    Tc.Util.new_kvar env, []
+    Tc.Util.new_kvar env, Trivial
 
-and tc_comp_typ env c : comp_typ * formulae = 
+and tc_kind_trivial env k : knd = 
+  match tc_kind env k with 
+    | k, Trivial -> k
+    | _ -> raise (Error(Tc.Errors.kind_has_a_non_trivial_precondition k, Env.get_range env));
+and tc_comp_typ env c : comp_typ * guard = 
   let keff = Tc.Env.lookup_typ_lid env c.effect_name in 
   let result, f0 = tc_typ_check env c.result_typ Kind_type in 
   let k, subst = match keff with 
     | Kind_tcon(Some a, Kind_type, k, _) -> k, [Inl(a, result)]  
     | _ -> raise (Error(Tc.Errors.ill_kinded_effect c.effect_name keff, range_of_lid c.effect_name)) in
-  let rec tc_args subst k args : list<either<typ,exp>> * formulae = 
+  let rec tc_args subst k args : list<either<typ,exp>> * guard = 
     match k, args with 
       | Kind_tcon(aopt, ka, k, _), Inl t::rest -> 
         let ka = Util.subst_kind subst ka in 
         let t, f = tc_typ_check env t ka in
         let subst = maybe_extend_subst subst <| Inl(aopt, t) in
         let rest, frest = tc_args subst k rest in
-        Inl t::rest, f@frest
+        Inl t::rest, Rel.conj_guard f frest
       | Kind_dcon(xopt, t, k, _), Inr e::rest -> 
         let t = Util.subst_typ subst t in
         let e, _, f = tc_pure_exp (Tc.Env.set_expected_typ env t) e in
         let subst = maybe_extend_subst subst <| Inr(xopt, e) in 
         let rest, frest = tc_args subst k rest in
-        Inr e::rest, f@frest 
-      | Kind_effect, [] -> [], [] 
+        Inr e::rest, Rel.conj_guard f frest 
+      | Kind_effect, [] -> [], Trivial 
       | _, _ -> raise (Error(Tc.Errors.ill_kinded_effect c.effect_name k, range_of_lid c.effect_name)) in
     let args, f = tc_args subst k c.effect_args in 
   {c with 
       result_typ=result;
-      effect_args=args}, f0@f
+      effect_args=args}, Rel.conj_guard f0 f
 
-and tc_typ' env (t:typ) : typ' * knd * formulae = 
+and tc_typ' env (t:typ) : typ' * knd * guard = 
   let env = Tc.Env.set_range env (Util.range_of_typ t (Tc.Env.get_range env)) in
   let t = Util.compress_typ t in
   match t.t with 
   | Typ_btvar a -> 
     let k = Env.lookup_btvar env a in
-    t.t, k, []
+    t.t, k, Trivial
     
   | Typ_const i -> 
     let k = Env.lookup_typ_lid env i.v in 
-    t.t, k, []
+    t.t, k, Trivial
      
   | Typ_fun(xopt, t1, cod, imp) -> 
     let t1, f1 = tc_typ_check env t1 Kind_type in
     let env', bindings = maybe_push_binding env <| Inr(xopt, t1) in
     let cod, f2 = tc_comp_typ env' cod in
-    Typ_fun(xopt, t1, cod, imp), Kind_type, f1@Tc.Util.close_formulae bindings f2
+    Typ_fun(xopt, t1, cod, imp), Kind_type, Rel.conj_guard f1 (Tc.Util.close_guard bindings f2)
 
   | Typ_univ(a, k1, cod) -> 
     let k1, f1 = tc_kind env k1 in 
     let env', bindings = maybe_push_binding env <| Inl(Some a, k1) in
     let cod, f2 = tc_comp_typ env' cod in 
-    Typ_univ(a, k1, cod), Kind_type, f1@Tc.Util.close_formulae bindings f2 
+    Typ_univ(a, k1, cod), Kind_type, Rel.conj_guard f1 (Tc.Util.close_guard bindings f2) 
 
   | Typ_refine(x, t1, t2) -> 
     let t1, f1 = tc_typ_check env t1 Kind_type in
     let env', bindings = maybe_push_binding env <| Inr(Some x, t1) in
     let t2, f2 = tc_typ_check env' t2 Kind_type in
-    Typ_refine(x, t1, t2), Kind_type, f1@Tc.Util.close_formulae bindings f2
+    Typ_refine(x, t1, t2), Kind_type, Rel.conj_guard f1 (Tc.Util.close_guard bindings f2)
 
   | Typ_app(t1, t2, imp) -> 
     let t1, k1, f1 = tc_typ env t1 in 
@@ -161,7 +168,7 @@ and tc_typ' env (t:typ) : typ' * knd * formulae =
       | _ -> failwith "impossible" in
     let t2, f2 = tc_typ_check env t2 karg in
     let k2 = Util.subst_kind (maybe_make_subst <| Inl(aopt, t2)) kres in
-    Typ_app(t1, t2, imp), k2, f1@f2
+    Typ_app(t1, t2, imp), k2, Rel.conj_guard f1 f2
     
   | Typ_dep(t1, e1, imp) -> 
     let t1, k1, f1 = tc_typ env t1 in
@@ -170,27 +177,27 @@ and tc_typ' env (t:typ) : typ' * knd * formulae =
       | _ -> failwith "impossible" in
     let e1, _, f2 = tc_pure_exp (Env.set_expected_typ env targ) e1 in
     let k2 = Util.subst_kind (maybe_make_subst <| Inr(xopt, e1)) kres in
-    Typ_dep(t1, e1, imp), k2, f1@f2
+    Typ_dep(t1, e1, imp), k2, Rel.conj_guard f1 f2
   
   | Typ_lam(x, t1, t2) -> 
     let t1, k1, f1 = tc_typ env t1 in 
     let env', bindings = maybe_push_binding env <| Inr(Some x, t1) in
     let t2, k2, f2 = tc_typ env' t2 in
-    Typ_lam(x, t1, t2), Kind_dcon(Some x, t1, k2, false), f1@Tc.Util.close_formulae bindings f2
+    Typ_lam(x, t1, t2), Kind_dcon(Some x, t1, k2, false), Rel.conj_guard f1 <| Tc.Util.close_guard bindings f2
 
   | Typ_tlam(a, k1, t1) -> 
     let k1, f1 = tc_kind env k1 in 
     let env', bindings = maybe_push_binding env <| Inl(Some a, k1) in
     let t1, k2, f2 = tc_typ env' t1 in 
-    Typ_tlam(a, k1, t1), Kind_tcon(Some a, k1, k2, false), f1@Tc.Util.close_formulae bindings f2
+    Typ_tlam(a, k1, t1), Kind_tcon(Some a, k1, k2, false), Rel.conj_guard f1 <| Tc.Util.close_guard bindings f2
 
   | Typ_ascribed(t1, k1) -> 
     let k1, f1 = tc_kind env k1 in 
     let t1, f2 = tc_typ_check env t1 k1 in
-    Typ_ascribed(t1, k1), k1, f1@f2
+    Typ_ascribed(t1, k1), k1, Rel.conj_guard f1 f2
 
   | Typ_uvar(u, k1) -> 
-    t.t, k1, []
+    t.t, k1, Trivial
 
   | Typ_meta (Meta_pos(t, r)) -> 
     let env' = Env.set_range env r in
@@ -201,18 +208,18 @@ and tc_typ' env (t:typ) : typ' * knd * formulae =
     let quant, k, f = tc_typ env quant in 
     let pat_env = Env.quantifier_pattern_env env quant in
     let pats = List.map (function 
-      | Inl t -> Inl <| fst (no_formulae env <| tc_typ pat_env t)
-      | Inr e -> Inr <| fst (no_formulae env <| tc_pure_exp pat_env e)) pats in
+      | Inl t -> Inl <| fst (no_guard env <| tc_typ pat_env t)
+      | Inr e -> Inr <| fst (no_guard env <| tc_pure_exp pat_env e)) pats in
     Typ_meta(Meta_pattern(quant, pats)), k, f
 
   | Typ_unknown -> 
     let k = Tc.Util.new_kvar env in 
     let t = Tc.Util.new_tvar env k in 
-    t.t, k, []
+    t.t, k, Trivial
 
   | _ -> failwith (Util.format1 "Unexpected type : %s\n" (Print.typ_to_string t)) 
 
-and tc_typ env t : typ * knd * formulae = 
+and tc_typ env t : typ * knd * guard = 
   let t, k, f = tc_typ' env t in 
   match t with
     | Typ_meta(Meta_pos _) 
@@ -220,21 +227,27 @@ and tc_typ env t : typ * knd * formulae =
     | Typ_const _ -> withkind k t, k, f
     | _ -> withkind k <| Typ_meta(Meta_pos(withkind k t, rng env)), k, f
 
-and tc_typ_check env t k : typ * formulae = 
-  let t', k', f = tc_typ env t in
-  let f' = Tc.Util.keq env (Some t') k' k in
-  t', f@f'       
+and tc_typ_trivial env t : typ * knd = 
+  let t, k, g = tc_typ env t in
+  match g with 
+    | Trivial -> t, k
+    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t, range_of_typ t (Env.get_range env)))
 
-and tc_typ_check_tauto env t k = 
+and tc_typ_check env t k : typ * guard = 
+  let t', k', f = tc_typ env t in
+  let f' = Tc.Rel.keq env (Some t') k' k in
+  t', Rel.conj_guard f f'       
+
+and tc_typ_check_trivial env t k = 
   let t, f = tc_typ_check env t k in
   match f with 
-    | [] -> t
-    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition f, range_of_typ t (Env.get_range env)))
+    | Trivial -> t
+    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t, range_of_typ t (Env.get_range env)))
 
-and tc_pure_exp env e : exp * typ * formulae = failwith "NYI"
+and tc_pure_exp env e : exp * typ * guard = failwith "NYI"
 and tc_total_exp env e : exp * typ = failwith "NYI"
 
-and tc_value env e : exp * typ * formulae = match e with
+and tc_value env e : exp * typ * guard = match e with
   | Exp_uvar(u, t1) -> 
     value_check_expected_typ env e t1
 
@@ -274,7 +287,7 @@ and tc_value env e : exp * typ * formulae = match e with
                  targ, cod, env, (fun x -> Exp_tabs(a, k, gen x))
          
          | _ when not norm ->
-            aux true env (Tc.Util.normalize env t)
+            aux true env (Tc.Normalize.normalize env t)
         
          | _ -> err t in
 
@@ -287,21 +300,21 @@ and tc_value env e : exp * typ * formulae = match e with
     let targ, tres, env, gen = destruct_expected_typ env in 
     let tx, k1, f1 = tc_typ env t1 in
     let f2 = match targ with 
-      | None -> []
-      | Some targ -> match Tc.Util.teq env tx targ with (* yes, really want this to be teq *)
-        | None -> raise (Error(Tc.Errors.expected_function_with_parameter_of_type tx targ tx, range_of_typ tx (Env.get_range env)))
-        | Some f -> f in 
+      | None -> Trivial
+      | Some targ -> Tc.Rel.teq env tx targ in (* yes, really want this to be teq *)
     let envbody = match tres with 
       | None -> instantiate_both <| env
       | Some t -> instantiate_both <| Tc.Env.set_expected_typ env t.result_typ in 
-    let e1, tres = check_expected_effect envbody tres <| tc_exp (Env.push_local_binding envbody (Env.Binding_var(x, tx))) e1 in 
+    let b = Env.Binding_var(x, tx) in
+    let envbody = Env.push_local_binding env b in
+    let e1, tres, fbody = check_expected_effect envbody tres <| tc_exp envbody e1 in 
     let (_, xvars) = Util.freevars_comp_typ tres in
     let dom = match xvars |> Util.find_opt (fun (y:bvvar) -> bvd_eq x y.v) with
       | None -> None
       | Some _ -> Some x in 
     let t = withkind Kind_type <| Typ_fun(dom, tx, tres, false) in
     let e, t = gen (Exp_abs(x, tx, e1), t) in
-    e, t, f1@f2
+    e, t, Rel.conj_guard f1 (Rel.conj_guard f2 (Tc.Util.close_guard [b] fbody))
    
   | Exp_tabs(a, k1, e1) -> 
     let err t = raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function t e, rng env)) in
@@ -313,19 +326,21 @@ and tc_value env e : exp * typ * formulae = match e with
           let t = compress_typ t in 
           match t.t with 
             | Typ_univ(b, karg, tres) -> 
-              let f2 = Tc.Util.keq env None karg k1 in 
+              let f2 = Tc.Rel.keq env None karg k1 in 
               let tres = Util.subst_comp_typ [Inl(b, Util.bvd_to_typ a karg)] tres in
               karg, Some tres, Env.set_expected_typ env tres.result_typ, f2
-            | _ when not norm -> aux true (Tc.Util.normalize env t)
+            | _ when not norm -> aux true (Tc.Normalize.normalize env t)
             | _ -> 
                raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function t e, rng env)) in
         aux false t
       | None -> 
-        k1, None, env, [] in
+        k1, None, env, Trivial in
     let env' = instantiate_both env' in
-    let e1', tres = check_expected_effect env' copt <| tc_exp (Env.push_local_binding env' (Env.Binding_typ(a, karg))) e1 in 
+    let b = Env.Binding_typ(a, karg) in
+    let envbody = Env.push_local_binding env' b in
+    let e1', tres, fbody = check_expected_effect envbody copt <| tc_exp envbody e1 in
     let t = withkind Kind_type <| Typ_univ(a, karg, tres) in
-    Exp_tabs(a, karg, e1'), t, f1@f2
+    Exp_tabs(a, karg, e1'), t, Rel.conj_guard f1 (Rel.conj_guard f2 (Tc.Util.close_guard [b] fbody))
 
   | _ -> failwith "impossible"
 
@@ -378,8 +393,8 @@ and tc_exp env e : exp * comp_typ = match e with
       then let tup = Tc.Util.mk_basic_tuple_type env (List.length args) in
             let _ = match topt with 
             | None -> ()
-            | Some t -> Tc.Util.subtype_tauto env t tup in
-            Tc.Util.subtype_tauto env tres tup
+            | Some t -> Tc.Rel.trivial_subtype env t tup in
+            Tc.Rel.trivial_subtype env tres tup
       else () in
      
     let dc, t_dc, _ = tc_value env dc in 
@@ -391,13 +406,13 @@ and tc_exp env e : exp * comp_typ = match e with
         maybe_default_tuple_type env tres None
        
       | Some t_expected -> 
-        let t = Tc.Util.norm_typ [Tc.Util.Beta] env t_expected in
+        let t = Tc.Normalize.norm_typ [Normalize.Beta] env t_expected in
         match t.t with 
         | Typ_uvar _ -> (* We have a type from the context; but it is non-informative. So, default tuples if applicable *)
           maybe_default_tuple_type env tres (Some t_expected)
        
         | tt -> (* Finally, we have some useful info from the context; use it to instantiate the result type of dc *)
-          Tc.Util.subtype_tauto env tres t_expected in        
+          Tc.Rel.trivial_subtype env tres t_expected in        
     dc, Util.total_comp t_dc (* NB: Remove the Meta_datainst tag on the way up---no other part of the compiler sees Meta_datainst *)
 
   | Exp_app(e1, e2, imp) -> 
@@ -409,14 +424,14 @@ and tc_exp env e : exp * comp_typ = match e with
       | _ -> failwith "impossible" in 
     let e2, c2 = tc_exp (instantiate_both (Env.set_expected_typ env targ)) e2 in 
     let x_cres, c2, f = match xopt with 
-      | None -> (None, cres), c2, []
+      | None -> (None, cres), c2, Trivial
       | Some x -> 
         let total_c2 = Util.total_comp c2.result_typ in
-        match Tc.Util.try_sub_comp_typ env c2 total_c2 with 
+        match Tc.Rel.sub_comp_typ env c2 total_c2 with 
          | None -> 
               if Util.for_some (fun y -> bvd_eq y.v x) <| (snd <| Util.freevars_typ cres.result_typ)
               then raise (Error(Tc.Errors.expected_pure_expression c2, range_of_exp e2 (Env.get_range env)))
-              else (Some <| Env.Binding_var(x, targ), cres), c2, []
+              else (Some <| Env.Binding_var(x, targ), cres), c2, Trivial
          | Some f -> 
               (None, Util.subst_comp_typ [Inr(x, e2)] cres), total_c2, f in
     let res = Tc.Util.bind env c1 (None, Tc.Util.bind env c2 x_cres) in
@@ -429,7 +444,7 @@ and tc_exp env e : exp * comp_typ = match e with
     let t1, k1, f = tc_typ env1 t1 in 
     begin match Tc.Util.destruct_poly_typ env1 c1.result_typ e1 t1 with
       | {t=Typ_univ(a, k, tres)}, e1' ->
-          let f = Tc.Util.keq env1 (Some t1) k k1 in 
+          let f = Tc.Rel.keq env1 (Some t1) k k1 in 
           let tres = Util.subst_comp_typ [Inl(a, t1)] tres in
           let cres = Tc.Util.bind env c1 (None, tres) in
           comp_check_expected_typ env (Exp_tapp(e1, t1)) cres 
@@ -445,7 +460,7 @@ and tc_exp env e : exp * comp_typ = match e with
       | None -> Env.set_expected_typ env (Tc.Util.new_tvar env Kind_type) in
     let guard_x = Util.new_bvd (Some <| range_of_exp e1 (Env.get_range env)) in
     let t_eqns = eqns |> List.map (tc_eqn guard_x c1.result_typ env_branches) in
-    let c_branches = List.fold_right (fun (_, c) caccum -> Tc.Util.bind_ite env c caccum) 
+    let c_branches = List.fold_right (fun (_, c) caccum -> Tc.Util.bind_ite env c.result_typ c caccum) 
                         t_eqns 
                         (Tc.Util.lift_pure env (Util.ftv Const.false_lid)) in
     let cres = Tc.Util.bind env c1 (Some <| Env.Binding_var(guard_x, c1.result_typ), c_branches) in
@@ -464,7 +479,7 @@ and tc_exp env e : exp * comp_typ = match e with
     let env1 = Tc.Env.set_expected_typ env1 t in
     let e1, c1 = tc_exp env1 e1 in 
     let c1 = Tc.Util.strengthen_precondition env c1 f in
-    let e1, c1 = if Util.is_total c1
+    let e1, c1 = if Util.is_total_comp c1
                  then Tc.Util.generalize env1 e1 c1 
                  else e1, c1 in 
     let b = binding_of_lb x c1.result_typ in
@@ -487,7 +502,7 @@ and tc_exp env e : exp * comp_typ = match e with
     let env0, topt = Env.clear_expected_typ env in 
     let lbs, env' = lbs |> List.fold_left (fun (xts, env) (x, t, e) -> 
       let t = Tc.Util.extract_lb_annotation env t e in 
-      let t = tc_typ_check_tauto env0 t Kind_type in
+      let t = tc_typ_check_trivial env0 t Kind_type in
       let env = Env.push_local_binding env (binding_of_lb x t) in
       (x, t, e)::xts, env) ([], env0)  in 
     let lbs = lbs |> List.map (fun (x, t, e) -> 
@@ -583,7 +598,7 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pat, when_clause, branch) : (pat * option
     let guard = match when_clause with
       | None -> eqs
       | Some g -> Util.mk_conj eqs (Util.mk_eq g Const.exp_true_bool) in
-    Tc.Util.close_comp_typ env bindings <| Tc.Util.weaken_precondition env c [guard] in
+    Tc.Util.close_comp_typ env bindings <| Tc.Util.weaken_precondition env c (Guard guard) in
   (pat, when_clause, branch), c 
 
 (*****************Type-checking the signature of a module*****************************)
@@ -591,11 +606,11 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pat, when_clause, branch) : (pat * option
 let tc_tparams env tps : (list<tparam> * Env.env) = 
 	let tps', env = List.fold_left (fun (tps, env) tp -> match tp with 
 	  | Tparam_typ(a, k) -> 
-				let k = tc_kind env k in 
+				let k = tc_kind_trivial env k in 
 				let env = Tc.Env.push_local_binding env (Env.Binding_typ(a, k)) in
 				Tparam_typ(a,k)::tps, env
 	  | Tparam_term(x, t) -> 
-				let t, _ = tc_typ env t in 
+				let t, _ = tc_typ_trivial env t in 
 				let env = Tc.Env.push_local_binding env (Env.Binding_var(x, t)) in
 				Tparam_term(x, t)::tps, env) ([], env) tps in
 		List.rev tps', env 
@@ -607,7 +622,7 @@ let a_kwp_a m s = match s with
   | _ -> raise (Error(Tc.Errors.unexpected_signature_for_monad m s, range_of_lid m))
 
 let rec tc_monad_decl env m =  
-  let mk = tc_kind env m.signature in 
+  let mk = tc_kind_trivial env m.signature in 
   let a, kwp_a = a_kwp_a m.mname mk in 
   let a_typ = Util.bvd_to_typ a Kind_type in
   let b = Util.new_bvd (Some <| range_of_lid m.mname) in 
@@ -617,16 +632,27 @@ let rec tc_monad_decl env m =
   let kwlp_b = kwp_b in
   let ret = 
     let expected_k = Kind_tcon(Some a, Kind_type, kd a_typ kwp_a, false) in
-    tc_typ_check env m.ret expected_k in
+    tc_typ_check_trivial env m.ret expected_k in
   let bind_wp, bind_wlp =
     let expected_k = Kind_tcon(Some a, Kind_type, Kind_tcon(Some b, Kind_type, kt kwp_a (kt kwlp_a (kt (kd a_typ kwp_b) (kt (kd a_typ kwlp_b) kwp_b))), false), false) in
-    tc_typ_check env m.bind_wp expected_k, tc_typ_check env m.bind_wlp expected_k in
+    tc_typ_check_trivial env m.bind_wp expected_k, tc_typ_check_trivial env m.bind_wlp expected_k in
   let ite_wp =
     let expected_k = Kind_tcon(Some a, Kind_type, kt Kind_type (kt kwp_a (kt kwlp_a (kt kwp_a (kt kwlp_a kwp_a)))), false) in
-    tc_typ_check env m.ite_wp expected_k in
+    tc_typ_check_trivial env m.ite_wp expected_k in
   let ite_wlp =
     let expected_k = Kind_tcon(Some a, Kind_type, kt Kind_type (kt kwlp_a (kt kwlp_a kwlp_a)), false) in
-    tc_typ_check env m.ite_wlp expected_k in
+    tc_typ_check_trivial env m.ite_wlp expected_k in
+  let imp_wp = 
+    let expected_k = Kind_tcon(Some a, Kind_type, kt kwp_a (kt kwp_a Kind_type), false) in
+    tc_typ_check_trivial env m.imp_wp expected_k in
+  let close_wp = 
+    let b = Util.new_bvd None in
+    let expected_k = 
+      Kind_tcon(Some a, Kind_type, 
+        Kind_tcon(Some b, Kind_type, 
+          Kind_tcon(None, Kind_dcon(None, Util.bvd_to_typ b Kind_type, kwp_a, false), 
+                          kwp_a, false), false), false) in
+    tc_typ_check_trivial env m.close_wp expected_k in
   let menv = Tc.Env.push_sigelt env (Sig_tycon(m.mname, [], mk, [], [], [], range_of_lid m.mname)) in
   let menv, abbrevs = m.abbrevs |> List.fold_left (fun (env, out) (ma:sigelt) -> 
     let ma, env = tc_decl env ma in 
@@ -640,7 +666,9 @@ let rec tc_monad_decl env m =
     bind_wp=bind_wp;
     bind_wlp=bind_wlp;
     ite_wp=ite_wp;
-    ite_wlp=ite_wlp} in 
+    ite_wlp=ite_wlp;
+    imp_wp=imp_wp;
+    close_wp=close_wp} in 
     menv, m 
 
 and tc_decl env se = match se with 
@@ -655,7 +683,7 @@ and tc_decl env se = match se with
         let b, kwp_b_tgt = a_kwp_a o.target (Tc.Env.lookup_typ_lid menv o.target) in
         let kwp_a_tgt = Util.subst_kind [Inl(b, Util.bvd_to_typ a Kind_type)] kwp_b_tgt in
         let expected_k = Kind_tcon(Some a, Kind_type, kt kwp_a_src kwp_a_tgt, false) in
-        let lift = tc_typ_check menv o.lift expected_k in
+        let lift = tc_typ_check_trivial menv o.lift expected_k in
         {source=o.source; 
           target=o.target;
           lift=lift}) in
@@ -666,10 +694,10 @@ and tc_decl env se = match se with
     | Sig_tycon (lid, tps, k, _mutuals, _data, tags, r) -> 
       let env = Tc.Env.set_range env r in 
       let tps, env = tc_tparams env tps in 
-      let k = tc_kind env k in 
+      let k = tc_kind_trivial env k in 
       let se = Sig_tycon(lid, tps, k, _mutuals, _data, tags, r) in  
       let _ = match compress_kind k with
-        | Kind_uvar _ -> Tc.Util.keq env None k Kind_type
+        | Kind_uvar _ -> Rel.trivial <| Tc.Rel.keq env None k Kind_type
         | _ -> () in 
       let env = Tc.Env.push_sigelt env se in
       se, env
@@ -677,16 +705,16 @@ and tc_decl env se = match se with
     | Sig_typ_abbrev(lid, tps, k, t, tags, r) -> 
       let env = Tc.Env.set_range env r in
       let tps, env = tc_tparams env tps in
-      let t, k1 = tc_typ env t in 
-      let k2 = tc_kind env k in 
-      Tc.Util.keq env (Some t) k1 k2;
+      let t, k1 = tc_typ_trivial env t in 
+      let k2 = tc_kind_trivial env k in 
+      Rel.trivial <| Rel.keq env (Some t) k1 k2;
       let se = Sig_typ_abbrev(lid, tps, k1, t, tags, r) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
   
     | Sig_datacon(lid, t, tname, r) -> 
       let env = Tc.Env.set_range env r in
-      let t = tc_typ_check env t Kind_type in 
+      let t = tc_typ_check_trivial env t Kind_type in 
       let args, eff = Util.collect_formals t in
       let result_t = match destruct eff Const.tot_effect_lid with 
         | Some [Inl t] -> t
@@ -701,21 +729,21 @@ and tc_decl env se = match se with
   
     | Sig_val_decl(lid, t, tag, ltag, r) -> 
       let env = Tc.Env.set_range env r in
-      let t = tc_typ_check env t Kind_type in 
+      let t = tc_typ_check_trivial env t Kind_type in 
       let se = Sig_val_decl(lid, t, tag, ltag, r) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
   
     | Sig_assume(lid, phi, qual, tag, r) ->
       let env = Tc.Env.set_range env r in
-      let phi = tc_typ_check env phi Kind_type in 
+      let phi = tc_typ_check_trivial env phi Kind_type in 
       let se = Sig_assume(lid, phi, qual, tag, r) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
   
     | Sig_logic_function(lid, t, tags, r) -> 
       let env = Tc.Env.set_range env r in
-      let t = tc_typ_check env t Kind_type in 
+      let t = tc_typ_check_trivial env t Kind_type in 
       let se = Sig_logic_function(lid, t, tags, r) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
@@ -771,7 +799,7 @@ and tc_decl env se = match se with
       let abbrevs = List.map2 (fun se t -> match se with 
         | Sig_tycon(lid, tps, k, [], [], [], r) -> 
           let tt = Util.close_with_lam tps (withkind kun <| Typ_ascribed(t, k)) in
-          let tt, _ = tc_typ env1 tt in
+          let tt, _ = tc_typ_trivial env1 tt in
           let tps, t = 
             let rec aux tps t =
             let t = compress_typ t in 

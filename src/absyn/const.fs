@@ -75,8 +75,8 @@ let minus_lid  = pconst  "Minus"
 let modulo_lid = pconst  "Modulo"
 
 (* Some common term constructors *)
-let exp_true_bool  = withsort (Exp_constant (Const_bool true)) Typ_unknown
-let exp_false_bool = withsort (Exp_constant (Const_bool false)) Typ_unknown
+let exp_true_bool  = Exp_constant (Const_bool true)
+let exp_false_bool = Exp_constant (Const_bool false)
 let cons_lid       = pconst  "Cons"
 let nil_lid        = pconst  "Nil"
 let ref_lid        = pconst  "ref"
@@ -126,6 +126,8 @@ let all_lid         = pconst "All"
 let all_ret_lid     = p2l ["Prims";"ALL";"return"]
 let all_bind_lid    = p2l ["Prims";"ALL";"bind"]
 let ml_effect_lid   = p2l ["Prims"; "ALL"; "ML"]
+let assert_pure_lid = p2l ["Prims"; "assert_pure"]
+let assume_pure_lid = p2l ["Prims"; "assume_pure"]
 
 (* relational mode constants *)
 let lproj_lid            = pconst  "L"

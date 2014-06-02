@@ -95,4 +95,19 @@ let disjunctive_pattern_vars v1 v2 =
   format2 
     "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")" 
     (vars v1) (vars v2)
-  
+ 
+let computed_computation_type_does_not_match_annotation e = 
+  format1     
+    "Computed specification of expresssion \"%s\" does not match the annotation provided" (Print.exp_to_string e)
+
+let unexpected_non_trivial_precondition_on_term = 
+  "Term has an unexpected non-trivial pre-condition"
+
+let type_has_a_non_trivial_precondition t = 
+  format1 "Type \"%s\" has an unexpected non-trivial pre-condition" (Print.typ_to_string t)
+
+let kind_has_a_non_trivial_precondition k = 
+  format1 "Kind \"%s\" has an unexpected non-trivial pre-condition" (Print.kind_to_string k)
+
+let expected_pure_expression c =
+  format1 "Expected a pure expression; got an expression with effect \"%s\"" (Print.sli c.effect_name)

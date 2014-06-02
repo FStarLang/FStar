@@ -41,7 +41,7 @@ let go _ =
       Util.print_string msg
     | GoOn ->
         let fmods = Parser.Driver.parse_files (Options.prims()::filenames) in
-       // let fmods = if !Options.pretype then Tc.PreType.check_modules fmods else fmods in
+        let fmods = if !Options.pretype then Tc.Tc.check_modules fmods else fmods in
         if !Options.codegen = Some "OCaml"
         then List.tail fmods
               |> List.iter (fun mod_ -> Util.print_string (Util.format1 "%s\n" (Backends.OCaml.pp_module mod_)))
