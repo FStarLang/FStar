@@ -15,16 +15,10 @@ PARSER_SRC=$(addprefix parser/, $(PARSER))
 PARSER_NOGEN=ast.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
 PARSER_NOGEN_SRC=$(addprefix parser/, $(PARSER_NOGEN))
 
-TCCORE=tcenv.fsi tcenv.fs tcutil.fsi tcutil.fs treln.fsi treln.fs krivine.fs
-TCCORE_SRC=$(addprefix tccore/, $(TCCORE))
-
-MONADIC=monadicUtils.fs monadicInference.fs monadic.fs
-MONADIC_SRC=$(addprefix monadic/, $(MONADIC))
-
 Z3ENCODE=term.fs env.fs basicdt.fs decodetyp.fs encodingdt.fs query.fs
 Z3ENCODE_SRC=$(addprefix z3encode/, $(Z3ENCODE))
 
-TC=errors.fs tcenv.fs tcutil.fs pretype.fs
+TC=errors.fs tcenv.fsi tcenv.fs normalize.fsi normalize.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 TC_SRC=$(addprefix tc/, $(TC))
 
 PLATFORM=
@@ -33,7 +27,7 @@ OTHERFLAGS=--optimize+ --debug:full --nologo -g -O --mlcompatibility $(addprefix
 
 LIB=../lib
 BIN=../bin
-ALL_DLLS=basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll #tccore.dll tc.dll z3encode.dll monadic.dll
+ALL_DLLS=basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll #z3encode.dll
 FSHARP_LIBS=$(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll 
 OTHER_DLLS=
 BASELIBS=$(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
@@ -80,10 +74,6 @@ PARSER_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll)
 $(BIN)/parser.dll: $(PARSER_DEPS) $(PARSER_SRC)
 	fsc  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(PARSER_DEPS)) $(PARSER_SRC)
 
-TCCORE_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll desugar.dll)
-$(BIN)/tccore.dll: $(TCCORE_DEPS) $(TCCORE_SRC)
-	fsc  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TCCORE_DEPS)) $(TCCORE_SRC)
-
 Z3ENCODE_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tccore.dll) 
 $(BIN)/z3encode.dll: $(Z3ENCODE_DEPS) $(Z3ENCODE_SRC)
 	fsc  $(OTHERFLAGS) -a -o $@ $(BASELIBS) -r $(BIN)/Microsoft.Z3.dll $(addprefix -r , $(Z3ENCODE_DEPS)) $(Z3ENCODE_SRC)
@@ -91,10 +81,6 @@ $(BIN)/z3encode.dll: $(Z3ENCODE_DEPS) $(Z3ENCODE_SRC)
 TC_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll)
 $(BIN)/tc.dll: $(TC_DEPS) $(TC_SRC)
 	fsc  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TC_DEPS)) $(TC_SRC)
-
-MONADIC_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tccore.dll tc.dll z3encode.dll)
-$(BIN)/monadic.dll: $(MONADIC_DEPS) $(MONADIC_SRC)
-	fsc  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(MONADIC_DEPS)) $(MONADIC_SRC)
 
 FSTAR_DEPS=$(addprefix $(BIN)/, $(ALL_DLLS))
 $(BIN)/fstar.exe: $(FSTAR_DEPS) fstar.fs 
