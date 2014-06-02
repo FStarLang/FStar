@@ -221,7 +221,7 @@ let rec mlty_of_ty_core (tenv : tenv) ((rg, ty) : range * typ) =
     | Typ_meta (Meta_pos (ty, rg)) ->
         mlty_of_ty tenv (rg, ty)
 
-    | Typ_fun (x, t1, (Pure t2 | Computation t2), _) ->
+    | Typ_fun (x, t1, {result_typ=t2}, _) ->
         let mlt1 = mlty_of_ty tenv (rg, t1) in
         let mlt2 = mlty_of_ty tenv (rg, t2) in
         MLTY_Fun (mlt1, mlt2)
@@ -308,7 +308,7 @@ let mltycons_of_mlty (ty : mlty) =
 (* -------------------------------------------------------------------- *)
 let rec strip_polymorphism acc rg ty =
     match (Absyn.Util.compress_typ ty).t with
-    | Typ_univ (x, Kind_type, (Computation ty | Pure ty)) ->
+    | Typ_univ (x, Kind_type, {result_typ=ty}) ->
         strip_polymorphism ((x.realname, x.ppname) :: acc) rg ty
     | Typ_meta (Meta_pos (ty, rg)) ->
         strip_polymorphism acc rg ty
@@ -583,7 +583,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
         let lenv = lenv_of_mlenv mlenv in
         Some (Inr (MLM_Top (mlexpr_of_expr rg lenv e)))
 
-    | Sig_typ_abbrev (t, tps, k, ty, rg) -> begin
+    | Sig_typ_abbrev (t, tps, k, ty, _, rg) -> begin
         let ar =
             match mlkind_of_kind tps k with
             | None    -> unsupported rg "not-an-ML-kind"
@@ -622,7 +622,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
     | Sig_datacon (x, ty, tx, rg) when as_tprims tx = Some Exn -> begin
         let rec aux acc ty =
             match (Absyn.Util.compress_typ ty).t with
-            | Typ_fun (_, ty1, (Pure ty2 | Computation ty2), _) ->
+            | Typ_fun (_, ty1, {result_typ=ty2}, _) ->
                 aux (ty1 :: acc) ty2
             | Typ_meta (Meta_pos (ty, rg)) ->
                 aux acc ty

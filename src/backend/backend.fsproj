@@ -53,6 +53,11 @@
   <ItemGroup>
     <Compile Include="nameenv.fsi" />
     <Compile Include="nameenv.fs" />
+    <Compile Include="ocaml-syntax.fs" />
+    <Compile Include="ocaml-asttrans.fsi" />
+    <Compile Include="ocaml-asttrans.fs" />
+    <Compile Include="ocaml-codegen.fsi" />
+    <Compile Include="ocaml-codegen.fs" />
     <Compile Include="ocaml.fsi" />
     <Compile Include="ocaml.fs" />
   </ItemGroup>

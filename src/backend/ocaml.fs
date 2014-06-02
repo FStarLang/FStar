@@ -198,13 +198,10 @@ let rec mlty_of_ty (rg : range) (ty : typ) =
             | Typ_meta (Meta_pos (ty, rg)) ->
                 mlty_of_ty rg ty
 
-            | Typ_fun (x, t1, Pure t2, _) ->
+            | Typ_fun (x, t1, {result_typ=t2}, _) ->
                 let mlt1 = mlty_of_ty rg t1 in
                 let mlt2 = mlty_of_ty rg t2 in
                 Ty_fun (Option.map (fun x -> x.ppname.idText) x, mlt1, mlt2)
-
-            | Typ_fun (_, _, Computation _, _) ->
-                unsupported rg
 
             | Typ_const   _ -> unexpected  rg
             | Typ_app     _ -> unsupported rg
@@ -623,7 +620,7 @@ let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
                 (types, (x.ident.idText, (ty, pr)) :: ctors)
 
             | Sig_val_decl (_, _, _, _, rg)
-            | Sig_typ_abbrev (_, _, _, _, rg)
+            | Sig_typ_abbrev (_, _, _, _, _, rg)
             | Sig_assume (_, _, _, _, rg)
             | Sig_let (_, rg)
             | Sig_logic_function (_, _, _, rg)
@@ -643,7 +640,7 @@ let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
             let rec aux acc ar ty =
                 if ar = 0 then (List.rev acc, ty) else
                     match (Absyn.Util.compress_typ ty).t with
-                    | Typ_univ (x, Kind_type, (Computation ty | Pure ty)) ->
+                    | Typ_univ (x, Kind_type, {result_typ=ty}) ->
                         aux (x.realname.idText :: acc) (ar-1) ty
                     | Typ_meta (Meta_pos (ty, _)) ->
                         aux acc ar ty
@@ -739,7 +736,7 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
         let env, ds = Util.fold_map (doc_of_toplet rg rec_) env (List.map downct lb) in
         env, Some (reduce1 [text kw; combine (text "and") (List.map group ds)])
 
-    | Sig_typ_abbrev (t, tps, _, ty, rg) ->
+    | Sig_typ_abbrev (t, tps, _, ty, _, rg) ->
         let tps = List.map (function
             | Tparam_typ (x, Kind_type) -> x.realname.idText
             | _ -> unsupported rg) tps
@@ -762,7 +759,7 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
         let rec strip acc ty =
             let ty = Absyn.Util.compress_typ ty in
             match ty.t with
-            | Typ_univ (x, Kind_type, (Computation ty | Pure ty)) ->
+            | Typ_univ (x, Kind_type, {result_typ=ty}) ->
                 strip (x.realname.idText ::acc) ty
             | Typ_meta (Meta_pos (ty, _)) ->
                 strip acc ty
@@ -800,7 +797,7 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
     | Sig_datacon (x, ty, n, rg) when is_exn n ->
         let rec aux acc ty =
             match (Absyn.Util.compress_typ ty).t with
-            | Typ_fun (_, ty1, (Pure ty2 | Computation ty2), _) ->
+            | Typ_fun (_, ty1, {result_typ=ty2}, _) ->
                 aux (ty1 :: acc) ty2
             | Typ_meta (Meta_pos (ty, rg)) ->
                 aux acc ty
