@@ -132,6 +132,7 @@ and uvar_k = Unionfind.uvar<uvar_basis<knd,unit>>
 and letbindings = bool * list<(either<bvvdef,lident> * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
 
 type formula = typ
+type formulae = list<typ>
 type btvar = bvar<typ,knd>
 type bvvar = bvar<exp,typ>
 
@@ -183,6 +184,8 @@ type monad_decl = {
     bind_wlp:typ;
     ite_wp:typ;
     ite_wlp:typ;
+    imp_wp:typ;
+    close_wp:typ;
     abbrevs:list<sigelt> 
  }
 and sigelt =

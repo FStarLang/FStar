@@ -32,6 +32,17 @@ type level =
   | Type
   | Kind
 
+type mlift = typ -> typ -> typ
+type edge = {
+  msource:lident;
+  mtarget:lident;
+  mlift:typ -> typ -> typ;
+}
+type lattice = {
+  decls: list<monad_decl>;
+  order: list<edge>;                                     (* transitive closure of the order in the signature *)
+  joins: list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
+}
 type env = {
   range:Range.range;             (* the source location of the term being checked *)
   curmodule: lident;             (* Name of this module *)
@@ -42,7 +53,8 @@ type env = {
   sigtab:Util.smap<sigelt>;      (* a dictionary of long-names to sigelts *)
   is_pattern:bool;               (* is the current term being checked a pattern? *)
   instantiate_targs:bool;
-  instantiate_vargs:bool
+  instantiate_vargs:bool;
+  lattice:lattice
 }
 
 val initial_env : lident -> env
@@ -83,6 +95,12 @@ val clear_expected_typ : env -> env*option<typ>
 val fold_env : env -> ('a -> binding -> 'a) -> 'a -> 'a 
 val idents : env -> (list<btvdef> * list<bvvdef>) 
 val lidents : env -> list<lident>     
+
+(* operations on monads *)
+val join: env -> lident -> lident -> lident * mlift * mlift
+val monad_leq: env -> lident -> lident -> option<edge>
+val monad_decl: env -> lident -> monad_decl
+val wp_signature: env -> lident -> (bvdef<typ> * knd)
 
 (* probably move this to TcUtil *)
 val quantifier_pattern_env : env -> typ -> env
