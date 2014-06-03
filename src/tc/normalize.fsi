@@ -25,6 +25,8 @@ type step =
   | Alpha
   | Delta
   | Beta
+  | DeltaComp
+  | Simplify
 and steps = list<step>
 
 val normalize: Env.env -> typ -> typ

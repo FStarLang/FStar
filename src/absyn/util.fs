@@ -106,13 +106,13 @@ let order_bvd x y = match x, y with
   | Inl x, Inl y -> String.compare x.ppname.idText y.ppname.idText
   | Inr x, Inr y -> String.compare x.ppname.idText y.ppname.idText
 
-let ml_comp t =  
-  {effect_name=Const.ml_effect_lid;
+let ml_comp t r =  
+  {effect_name=set_lid_range Const.ml_effect_lid r;
    result_typ=t;
    effect_args=[]}
 
-let total_comp t = 
-  {effect_name=Const.tot_effect_lid;
+let total_comp t r = 
+  {effect_name=set_lid_range Const.tot_effect_lid r;
    result_typ=t;
    effect_args=[]}
 
@@ -469,8 +469,8 @@ let close_with_lam tps t = List.fold_right
 let close_with_arrow tps t =
   t |> (tps |> List.fold_right (
     fun tp out -> match tp with
-      | Tparam_typ (a,k) -> withkind Kind_type <| Typ_univ (a,k, total_comp out)
-      | Tparam_term (x,t) -> withkind Kind_type <| Typ_fun (Some x,t, total_comp out, true)))
+      | Tparam_typ (a,k) -> withkind Kind_type <| Typ_univ (a,k,total_comp out (range_of_bvd a))
+      | Tparam_term (x,t) -> withkind Kind_type <| Typ_fun (Some x,t, total_comp out (range_of_bvd x), true)))
 
 let close_typ = close_with_arrow
       

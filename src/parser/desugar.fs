@@ -664,8 +664,8 @@ and desugar_typ env (top:term) : typ =
 
     | Product([b], t) ->
       let tk = desugar_binder (ml env) b in
-      let desugar_cod env t = 
-        let t = desugar_typ env t in 
+      let desugar_cod env tt = 
+        let t = desugar_typ env tt in 
         let tc, args = Util.flatten_typ_apps t in
         match (compress_typ tc).t, args with 
           | Typ_const eff, Inl result_typ::rest when DesugarEnv.is_effect_name env eff.v -> 
@@ -675,12 +675,16 @@ and desugar_typ env (top:term) : typ =
 
           | Typ_fun _, []
           | Typ_univ _, [] -> 
-            {effect_name=Const.tot_effect_lid;
+            {effect_name=set_lid_range Const.tot_effect_lid tt.range;
              result_typ=tc;
              effect_args=[]}
 
-          | _ -> 
-            {effect_name=env.default_result_effect;
+          | _ ->
+            let is_effect tc = match tc.t with 
+              | Typ_const eff -> DesugarEnv.is_effect_name env eff.v
+              | _ -> false in
+            let _ = printfn "tc is %s is_effect_name = %A" (Print.typ_to_string tc) (is_effect tc) in
+            {effect_name=set_lid_range env.default_result_effect tt.range;
              result_typ=t;
              effect_args=[]} in 
       let p = match tk with
@@ -931,9 +935,9 @@ let mk_data_ops env = function
       | _::rest -> failwith "impossible"
       | [] -> Exp_abs(formal, tconstr, e) in
     let rec build_typ freevars (t:typ) = match freevars with
-      | Inl (a,k)::rest -> withkind kun <| Typ_univ(a, k, Util.total_comp <| build_typ rest t)
-      | Inr (xopt,tt)::rest -> withkind kun <| Typ_fun(xopt, tt, Util.total_comp <| build_typ rest t, false)
-      | [] -> withkind kun <| Typ_fun(Some formal, tconstr, Util.total_comp t, false) in
+      | Inl (a,k)::rest -> withkind kun <| Typ_univ(a, k, Util.total_comp (build_typ rest t) (range_of_lid lid))
+      | Inr (xopt,tt)::rest -> withkind kun <| Typ_fun(xopt, tt, Util.total_comp (build_typ rest t) (range_of_lid lid), false)
+      | [] -> withkind kun <| Typ_fun(Some formal, tconstr, Util.total_comp t (range_of_bvd formal), false) in
     let rec build_kind freevars k = match freevars with
       | Inl (a,kk)::rest -> Kind_tcon(Some a, kk, build_kind rest k, false)
       | Inr (xopt,t)::rest -> Kind_dcon(xopt, t, build_kind rest k, false)
@@ -1047,11 +1051,13 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
 
     | [TyconAbbrev(id, binders, kopt, t)] ->
         let env', typars = typars_of_binders env binders in
+        let quals = logic_tags quals in
         let k = match kopt with
+            | None when List.contains Logic_effect quals -> Kind_effect
             | None -> Kind_unknown
             | Some k -> desugar_kind env' k in
         let t = desugar_typ env' t in
-        let se = Sig_typ_abbrev(qualify env id, typars, k, t, [], rng) in
+        let se = Sig_typ_abbrev(qualify env id, typars, k, t, quals, rng) in
         let env = push_sigelt env se in
         env, [se]
 
@@ -1180,7 +1186,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
         
   | Exception(id, Some term) ->
     let t = desugar_typ env term in
-    let t = withkind kun <| Typ_fun(None, t, Util.total_comp <| fail_or (try_lookup_typ_name env) Const.exn_lid, false) in
+    let t = withkind kun <| Typ_fun(None, t, Util.total_comp (fail_or (try_lookup_typ_name env) Const.exn_lid) id.idRange, false) in
     let se = Sig_datacon(qualify env id, t, Const.exn_lid, d.drange) in
     let env = push_sigelt env se in
     env, [se]
@@ -1219,10 +1225,8 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
       let m_decl = Sig_tycon(qualify env0 m.mon_name, [], kmon, [], [], [], d.drange) in
       let menv = DesugarEnv.push_sigelt menv m_decl in
       let menv, abbrevs = m.mon_abbrevs |> List.fold_left (fun (menv, out) (id, binders, t) -> 
-          let menv, ses = desugar_tycon menv d.drange [NoQual] [TyconAbbrev(id, binders, None, t)] in
-          match ses with 
-            | [Sig_typ_abbrev(n, tps, _, t, _, r)] -> menv, (Sig_typ_abbrev(n, tps, Kind_effect, t, [Logic_effect], r)::out)
-            | _ -> failwith "impossible") (menv, []) in
+          let menv, ses = desugar_tycon menv d.drange [LogicTag Logic_effect] [TyconAbbrev(id, binders, None, t)] in
+          menv, List.hd ses::out) (menv, []) in
       let m_abbrevs = List.rev abbrevs in
       let msig = {mname=qualify env m.mon_name;
          total=m.mon_total;

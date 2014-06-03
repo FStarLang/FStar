@@ -72,12 +72,47 @@ let rec typ_to_string x =
       | Uvar _ when !Options.print_real_names ->  Util.format2 "'U%s : %s"  (Util.string_of_int (Unionfind.uvar_id uv)) (kind_to_string k)
       | Uvar _ ->               Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)))
   
-and comp_typ_to_string c = 
+and comp_typ_to_string c =
+  let c = recover_tot_effect c in 
   if    (lid_equals c.effect_name Const.tot_effect_lid && Util.is_function_typ c.result_typ)
-     || (lid_equals c.effect_name Const.ml_effect_lid && not (Util.is_function_typ c.result_typ))
+     //|| (lid_equals c.effect_name Const.ml_effect_lid && not (Util.is_function_typ c.result_typ))
   then typ_to_string c.result_typ
   else Util.format3 "%s %s %s" (sli c.effect_name) (typ_to_string c.result_typ) (String.concat ", " <| List.map either_to_string c.effect_args)
- 
+
+and recover_tot_effect c = 
+  let flatten_and_compress_typ_apps f = 
+    let f, args = Util.flatten_typ_apps (Util.compress_typ f) in
+    f, args |> List.map (function 
+      | Inl t -> Inl (compress_typ t)
+      | Inr e -> Inr (compress_exp e)) in
+  if lid_equals c.effect_name Const.tot_effect_lid 
+  then c
+  else if lid_equals c.effect_name Const.pure_effect_lid
+  then match c.effect_args with 
+    | [Inl wp; Inl wlp] -> 
+      let is_trivial wp = match (compress_typ wp).t with 
+        | Typ_tlam(post, _, fa) -> 
+          let fa, args = flatten_and_compress_typ_apps fa in
+          begin match (compress_typ fa).t, args with 
+            | Typ_const f, [_; Inl {t=Typ_lam(x, _, body)}] when lid_equals f.v Const.forall_lid -> 
+              let p, args = flatten_and_compress_typ_apps body in 
+              (match p.t, args with 
+                | Typ_btvar q, [Inr (Exp_bvar y)] when Util.bvd_eq q.v post && Util.bvd_eq y.v x -> true
+                | _ -> false)
+            | Typ_const f, [_; Inl {t=Typ_tlam(a, _, body)}] when lid_equals f.v Const.allTyp_lid -> 
+              let p, args = flatten_and_compress_typ_apps body in 
+              (match p.t, args with 
+                | Typ_btvar q, [Inl {t=Typ_btvar b}] when Util.bvd_eq q.v post && Util.bvd_eq b.v a -> true
+                | _ -> false)
+            | _ -> false
+          end
+        | _ -> false in
+      if is_trivial wp && is_trivial wlp
+      then {effect_name=Const.tot_effect_lid; result_typ=c.result_typ; effect_args=[]}
+      else c      
+    | _ -> failwith  "Impossible"
+  else c 
+   
 and exp_to_string x = match compress_exp x with 
   | Exp_meta(Meta_datainst(e,_)) -> exp_to_string e 
   | Exp_meta(Meta_desugared(e, _)) -> exp_to_string e

@@ -372,14 +372,14 @@ and crel rel env c1 c2 : option<guard> =
   | SUB -> 
     let c1 = Normalize.norm_comp env c1 in
     let c2 = Normalize.norm_comp env c2 in
-    if lid_equals c1.effect_name c2.effect_name
-    then either_rel rel env (Inl c1.result_typ::c1.effect_args) (Inl c2.result_typ::c2.effect_args)
+    if is_total_comp c1 && is_total_comp c2
+    then trel false SUB env c1.result_typ c2.result_typ
     else match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
       | None -> None
       | Some edge ->
         let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
           | Inl wp1::_, Inl wp2::_ -> wp1, wp2 
-          | _ -> failwith "impos" in
+          | _ -> failwith (Printf.sprintf "Got effects %s of %A\nand %s of %A" (Print.sli c1.effect_name) c1.effect_args (Print.sli c2.effect_name)  c2.effect_args) in
         andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
         let c2_decl : monad_decl = Tc.Env.monad_decl env c2.effect_name in
         let imp_wp = 

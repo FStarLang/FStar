@@ -40,6 +40,8 @@ type step =
   | Alpha
   | Delta
   | Beta
+  | DeltaComp
+  | Simplify
 and steps = list<step>
 
 type config<'a> = {code:'a;
@@ -70,7 +72,15 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
       | [] -> out
       | (Inl (t,e,k), imp)::rest -> 
         let c = sn tcenv ({code=t; environment=e; stack=[]; steps=config.steps}) in 
-        aux (withkind k <| Typ_app(out, c.code, imp)) rest 
+        begin match out.t, c.code.t, rest with 
+          | Typ_const f, Typ_const g, [Inl (t', e', k'), _] 
+            when (List.contains Simplify config.steps
+                 && (lid_equals f.v Const.and_lid || lid_equals f.v Const.implies_lid) 
+                 && lid_equals g.v Const.true_lid) ->
+            let c = sn tcenv ({code=t'; environment=e'; stack=[]; steps=config.steps}) in
+            c.code
+          | _ -> aux (withkind k <| Typ_app(out, c.code, imp)) rest
+        end 
       | (Inr (v,e,k), imp)::rest -> 
         let c = wne tcenv ({code=v; environment=e; stack=[]; steps=config.steps}) in 
         aux (withkind k <| Typ_dep(out, c.code, imp)) rest in
@@ -199,24 +209,31 @@ and snl tcenv configs : list<config<typ>> =
 
 and sncomp tcenv (config:config<comp_typ>) : config<comp_typ> = 
   let m = config.code in 
-  let args = snl_either tcenv config (Inl m.result_typ::m.effect_args) in
-  let remake l args = 
-    let r, eargs = match args with
-      | Inl r::rest -> r, rest
-      | _ -> failwith "impossible" in
-    let c = {effect_name=l; result_typ=r; effect_args=eargs} in
-    {config with code=c} in
-  if config.steps |> List.contains Delta
-  then match Tc.Env.lookup_typ_abbrev tcenv m.effect_name with
-      | None -> remake m.effect_name args
-      | Some t -> 
-        let t = if config.steps |> List.contains Alpha then Util.alpha_convert t else t in
-        let t = Util.mk_typ_app t args in
-        let tc, args = Util.flatten_typ_apps (sn tcenv (with_code config t)).code in 
-        match (Util.compress_typ tc).t with
-          | Typ_const fv -> remake fv.v args 
-          | _ ->  failwith (Util.format3 "Got a computation %s with constructor %s and kind %s" (Print.sli m.effect_name) (Print.typ_to_string tc) (Print.kind_to_string tc.k))
-  else remake m.effect_name args
+  if Util.is_total_comp m && not (List.contains DeltaComp config.steps)
+  then 
+    let r = sn tcenv (with_code config m.result_typ) in
+    {config with code={m with result_typ=r.code}}
+  else
+    let args = snl_either tcenv ({config with steps=Simplify::config.steps}) (Inl m.result_typ::m.effect_args) in
+    let remake l args = 
+      let r, eargs = match args with
+        | Inl r::rest -> r, rest
+        | _ -> failwith "impossible" in
+      let c = {effect_name=l; result_typ=r; effect_args=eargs} in
+      {config with code=c} in
+    if config.steps |> List.contains Delta
+    then match Tc.Env.lookup_typ_abbrev tcenv m.effect_name with
+        | None -> remake m.effect_name args
+        | Some t -> 
+          let t = if config.steps |> List.contains Alpha then Util.alpha_convert t else t in
+          let t = Util.mk_typ_app t args in
+          let tc, args = Util.flatten_typ_apps (sn tcenv (with_code config t)).code in 
+          let n = match (Util.compress_typ tc).t with
+            | Typ_const fv -> remake fv.v args 
+            | _ ->  failwith (Util.format3 "Got a computation %s with constructor %s and kind %s" (Print.sli m.effect_name) (Print.typ_to_string tc) (Print.kind_to_string tc.k)) in
+          let _ = printfn "Normalized %s\nto %s\n" (Print.comp_typ_to_string m) (Print.comp_typ_to_string n.code) in
+          n
+    else remake m.effect_name args
   
 and snl_either tcenv config args = 
   args |> List.map (function 
@@ -310,7 +327,7 @@ let norm_typ steps tcenv t =
   c.code
 
 let norm_comp tcenv c = 
-  let steps = [Delta;Beta] in
+  let steps = [Delta;Beta;DeltaComp;Simplify] in
   let c = sncomp tcenv ({code=c; environment=[]; stack=[]; steps=steps}) in
   c.code
 

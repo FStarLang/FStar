@@ -157,7 +157,7 @@ let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:boo
       | Typ_uvar _ when (not imp_arg_follows) -> 
         let arg = new_tvar env Kind_type in
         let res = new_tvar env Kind_type in 
-        let eff = {effect_name=Const.all_lid;
+        let eff = {effect_name=Util.set_lid_range Const.all_lid (Env.get_range env);
                    result_typ=res;
                    effect_args=[]} in
         let tf = withkind Kind_type <| Typ_fun(None, arg, eff, false) in
@@ -300,23 +300,23 @@ let pat_as_exps env p : list<exp> =
     | Inr (e) -> e) (aux p)    
 
 let generalize env e (c:comp_typ) : (exp * comp_typ) = 
-    if not <| Util.is_total_comp c 
-    then e, c
-    else
-      let t = c.result_typ in
-      let uvars = Env.uvars_in_env env in
-      let uvars_t = (Util.uvars_in_typ t).uvars_t in
-      let generalizable = uvars_t |> List.filter (fun (uv,_) -> not (uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
-      let tvars = generalizable |> List.map (fun (u,k) -> 
-        let a = Util.new_bvd (Some <| Tc.Env.get_range env) in
-        let t = Util.bvd_to_typ a k in
-        unchecked_unify u t;
-        (a,k)) in
-      let e, t = tvars |> List.fold_left (fun (e,t) (a,k) ->
-        let t' = withkind Kind_type <| Typ_univ(a, k, Util.total_comp t) in
-        let e' = Exp_tabs(a, k, e) in
-        (e', t')) (e,t) in
-      e, Util.total_comp t
+  if not <| Util.is_total_comp c 
+  then e, c
+  else
+    let t = c.result_typ in
+    let uvars = Env.uvars_in_env env in
+    let uvars_t = (Util.uvars_in_typ t).uvars_t in
+    let generalizable = uvars_t |> List.filter (fun (uv,_) -> not (uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
+    let tvars = generalizable |> List.map (fun (u,k) -> 
+      let a = Util.new_bvd (Some <| Tc.Env.get_range env) in
+      let t = Util.bvd_to_typ a k in
+      unchecked_unify u t;
+      (a,k)) in
+    let e, t = tvars |> List.fold_left (fun (e,t) (a,k) ->
+      let t' = withkind Kind_type <| Typ_univ(a, k, Util.total_comp t (Env.get_range env)) in
+      let e' = Exp_tabs(a, k, e) in
+      (e', t')) (e,t) in
+    e, Util.total_comp t (Env.get_range env)
 
 let mk_basic_tuple_type env n = 
   let r = Tc.Env.get_range env in
@@ -357,11 +357,11 @@ let extract_lb_annotation env t e = match t.t with
       | Exp_tabs(a, k, e) -> 
         let k = mk_kind env k in
         let env = Env.push_local_binding env (Binding_typ(a, k)) in
-        withkind Kind_type <| Typ_univ(a, k, Util.total_comp <| aux env e)
+        withkind Kind_type <| Typ_univ(a, k, Util.total_comp (aux env e) (Env.get_range env))
       | Exp_abs(x, t, e) -> 
         let t = mk_typ env t in
         let env = Env.push_local_binding env (Binding_var(x, t)) in
-        withkind Kind_type <| Typ_fun(Some x, t, Util.total_comp <| aux env e, false)
+        withkind Kind_type <| Typ_fun(Some x, t, Util.total_comp (aux env e) (Env.get_range env), false)
       | Exp_ascribed(e, t) -> t
       | _ -> new_tvar env Kind_type in 
     aux env e       
@@ -404,7 +404,8 @@ let bind env (c1:comp_typ) ((b, c2):comp_with_binder) : comp_typ =
   let mk_lam wp = match b with 
     | None -> withkind (Kind_dcon(None, t1, wp.k, false)) <| Typ_lam(Util.new_bvd None, t1, wp) 
     | Some (Env.Binding_var(x, t)) -> withkind (Kind_dcon(Some x, t, wp.k, false)) <| Typ_lam(x, t, wp)
-    | _ -> failwith "Impossible" in
+    | Some (Env.Binding_lid(l, t)) -> withkind (Kind_dcon(None, t, wp.k, false)) <| Typ_lam(Util.new_bvd None, t, wp)
+    | Some _ -> failwith "Unexpected type-variable binding" in
   let args = [Inl t1; Inl t2; Inl wp1; Inl wlp1; Inl (mk_lam wp2); Inl (mk_lam wlp2)] in
   let k = Util.subst_kind [Inl(a, t2)] kwp in
   let wp = {Util.mk_typ_app md.bind_wp args with k=k} in
@@ -473,5 +474,5 @@ let weaken_result_typ (env:env)  (e:exp) (c:comp_typ) (t:typ) : exp * comp_typ =
 
 let check_comp_typ (env:env) (e:exp) (c:comp_typ) (c':comp_typ) : exp * comp_typ * guard = 
   match Tc.Rel.sub_comp_typ env c c' with 
-    | None -> raise (Error(Tc.Errors.computed_computation_type_does_not_match_annotation e, Tc.Env.get_range env))
+    | None -> raise (Error(Tc.Errors.computed_computation_type_does_not_match_annotation e c c', Tc.Env.get_range env))
     | Some g -> e, c', g

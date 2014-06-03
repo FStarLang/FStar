@@ -86,12 +86,16 @@ let monad_decl env l =
     | Some md -> md
   
 let join env l1 l2 = 
-  match env.lattice.joins |> Util.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with 
-    | None -> failwith "impossible"
+  if lid_equals l1 l2
+  then l1, (fun t wp -> wp), (fun t wp -> wp)
+  else match env.lattice.joins |> Util.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with 
+    | None -> failwith (Util.format2 "Impossible: no join found between effects %s and %s" (Print.sli l1) (Print.sli l2))
     | Some (_, _, m3, j1, j2) -> m3, j1, j2
 
 let monad_leq env l1 l2 : option<edge> =
-  env.lattice.order |> Util.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)  
+  if lid_equals l1 l2 
+  then Some ({msource=l1; mtarget=l2; mlift=fun t wp -> wp})
+  else env.lattice.order |> Util.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)  
 
 let wp_signature env m = 
   match env.lattice.decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname m) with
@@ -329,7 +333,7 @@ let lookup_operator env (opname:ident) =
 let rec push_sigelt env s : env = 
   match s with 
     | Sig_bundle(ses, _) -> List.fold_left push_sigelt env ses 
-    | _ -> {env with gamma=Binding_sig s::env.gamma}
+    | _ -> build_lattice ({env with gamma=Binding_sig s::env.gamma}) s
         
 let push_local_binding env b = {env with gamma=b::env.gamma}
       
