@@ -213,9 +213,9 @@ and sncomp tcenv (config:config<comp_typ>) : config<comp_typ> =
         let t = if config.steps |> List.contains Alpha then Util.alpha_convert t else t in
         let t = Util.mk_typ_app t args in
         let tc, args = Util.flatten_typ_apps (sn tcenv (with_code config t)).code in 
-        match (Util.compress_typ tc).t, tc.k with
-          | Typ_const fv, Kind_effect -> remake fv.v args 
-          | _ -> failwith "Impos"
+        match (Util.compress_typ tc).t with
+          | Typ_const fv -> remake fv.v args 
+          | _ ->  failwith (Util.format3 "Got a computation %s with constructor %s and kind %s" (Print.sli m.effect_name) (Print.typ_to_string tc) (Print.kind_to_string tc.k))
   else remake m.effect_name args
   
 and snl_either tcenv config args = 

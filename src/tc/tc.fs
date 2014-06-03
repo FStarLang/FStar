@@ -100,10 +100,6 @@ let rec tc_kind env k : knd * guard =
   | Kind_unknown -> 
     Tc.Util.new_kvar env, Trivial
 
-and tc_kind_trivial env k : knd = 
-  match tc_kind env k with 
-    | k, Trivial -> k
-    | _ -> raise (Error(Tc.Errors.kind_has_a_non_trivial_precondition k, Env.get_range env));
 and tc_comp_typ env c : comp_typ * guard = 
   let keff = Tc.Env.lookup_typ_lid env c.effect_name in 
   let result, f0 = tc_typ_check env c.result_typ Kind_type in 
@@ -120,7 +116,7 @@ and tc_comp_typ env c : comp_typ * guard =
         Inl t::rest, Rel.conj_guard f frest
       | Kind_dcon(xopt, t, k, _), Inr e::rest -> 
         let t = Util.subst_typ subst t in
-        let e, _, f = tc_pure_exp (Tc.Env.set_expected_typ env t) e in
+        let e, _, f = tc_total_exp (Tc.Env.set_expected_typ env t) e in
         let subst = maybe_extend_subst subst <| Inr(xopt, e) in 
         let rest, frest = tc_args subst k rest in
         Inr e::rest, Rel.conj_guard f frest 
@@ -138,6 +134,12 @@ and tc_typ' env (t:typ) : typ' * knd * guard =
   | Typ_btvar a -> 
     let k = Env.lookup_btvar env a in
     t.t, k, Trivial
+
+  | Typ_const i when (lid_equals i.v Const.allTyp_lid || lid_equals i.v Const.exTyp_lid) -> 
+    (* Special treatment for ForallTyp and ExistsTyp, giving them polymorphic kinds *)
+    let k = Tc.Util.new_kvar env in
+    let qk = Kind_tcon(None, Kind_tcon(None, k, Kind_type, false), Kind_type, false) in
+    t.t, qk, Trivial 
     
   | Typ_const i -> 
     let k = Env.lookup_typ_lid env i.v in 
@@ -175,7 +177,7 @@ and tc_typ' env (t:typ) : typ' * knd * guard =
     let xopt, targ, kres, t1' = match Tc.Util.destruct_dcon_kind env k1 t1 imp with 
       | Kind_dcon(xopt, targ, kres, _), t1 -> xopt, targ, kres, t1
       | _ -> failwith "impossible" in
-    let e1, _, f2 = tc_pure_exp (Env.set_expected_typ env targ) e1 in
+    let e1, _, f2 = tc_total_exp (Env.set_expected_typ env targ) e1 in
     let k2 = Util.subst_kind (maybe_make_subst <| Inr(xopt, e1)) kres in
     Typ_dep(t1, e1, imp), k2, Rel.conj_guard f1 f2
   
@@ -209,7 +211,7 @@ and tc_typ' env (t:typ) : typ' * knd * guard =
     let pat_env = Env.quantifier_pattern_env env quant in
     let pats = List.map (function 
       | Inl t -> Inl <| fst (no_guard env <| tc_typ pat_env t)
-      | Inr e -> Inr <| fst (no_guard env <| tc_pure_exp pat_env e)) pats in
+      | Inr e -> Inr <| fst (no_guard env <| tc_total_exp pat_env e)) pats in
     Typ_meta(Meta_pattern(quant, pats)), k, f
 
   | Typ_unknown -> 
@@ -227,25 +229,10 @@ and tc_typ env t : typ * knd * guard =
     | Typ_const _ -> withkind k t, k, f
     | _ -> withkind k <| Typ_meta(Meta_pos(withkind k t, rng env)), k, f
 
-and tc_typ_trivial env t : typ * knd = 
-  let t, k, g = tc_typ env t in
-  match g with 
-    | Trivial -> t, k
-    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t, range_of_typ t (Env.get_range env)))
-
 and tc_typ_check env t k : typ * guard = 
   let t', k', f = tc_typ env t in
   let f' = Tc.Rel.keq env (Some t') k' k in
   t', Rel.conj_guard f f'       
-
-and tc_typ_check_trivial env t k = 
-  let t, f = tc_typ_check env t k in
-  match f with 
-    | Trivial -> t
-    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t, range_of_typ t (Env.get_range env)))
-
-and tc_pure_exp env e : exp * typ * guard = failwith "NYI"
-and tc_total_exp env e : exp * typ = failwith "NYI"
 
 and tc_value env e : exp * typ * guard = match e with
   | Exp_uvar(u, t1) -> 
@@ -342,7 +329,14 @@ and tc_value env e : exp * typ * guard = match e with
     let t = withkind Kind_type <| Typ_univ(a, karg, tres) in
     Exp_tabs(a, karg, e1'), t, Rel.conj_guard f1 (Rel.conj_guard f2 (Tc.Util.close_guard [b] fbody))
 
-  | _ -> failwith "impossible"
+  | Exp_meta(Meta_info(e, _, p)) -> 
+    let env = Tc.Env.set_range env p in
+    let e, t, g = tc_value env e in
+    Exp_meta(Meta_info(e, t, p)), t, g
+  
+  | v -> 
+    printfn "Unexpected value %A\n" v;
+    failwith (Util.format1 "Unexpected value: %s" (Print.exp_to_string v))
 
 and tc_exp env e : exp * comp_typ = match e with
   | Exp_meta(Meta_info(e, _, p)) -> 
@@ -462,7 +456,7 @@ and tc_exp env e : exp * comp_typ = match e with
     let t_eqns = eqns |> List.map (tc_eqn guard_x c1.result_typ env_branches) in
     let c_branches = List.fold_right (fun (_, c) caccum -> Tc.Util.bind_ite env c.result_typ c caccum) 
                         t_eqns 
-                        (Tc.Util.lift_pure env (Util.ftv Const.false_lid)) in
+                        (Tc.Util.lift_pure env (if !Options.pretype then Util.ftv Const.true_lid else Util.ftv Const.false_lid)) in
     let cres = Tc.Util.bind env c1 (Some <| Env.Binding_var(guard_x, c1.result_typ), c_branches) in
     Exp_match(e1, List.map fst t_eqns), cres
 
@@ -507,7 +501,7 @@ and tc_exp env e : exp * comp_typ = match e with
       (x, t, e)::xts, env) ([], env0)  in 
     let lbs = lbs |> List.map (fun (x, t, e) -> 
       let env' = Env.set_expected_typ env' t in
-      let e, c = tc_total_exp env' e in 
+      let e, c = no_guard env <| tc_total_exp env' e in 
       (x, c, e)) in  
     let lbs, bindings, env = lbs |> List.fold_left (fun (lbs, bindings, env) (x, t, e) -> 
       let e, c = Tc.Util.generalize env' e (Util.total_comp t) in
@@ -583,12 +577,12 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pat, when_clause, branch) : (pat * option
     let exps = Tc.Util.pat_as_exps env p in
     let env = {(Tc.Env.set_expected_typ pat_env pat_t) with Env.is_pattern=true} in
     //Printf.printf "Checking patterns ... expecting type %s\n" (Print.typ_to_string pat_t);
-    bindings, pat_env, List.map (fun e -> fst <| tc_total_exp env e) exps in
+    bindings, pat_env, List.map (fun e -> fst <| (no_guard env <| tc_total_exp env e)) exps in
 
   let bindings, pat_env, disj_exps = tc_pat pat_t env pat in 
   let when_clause = match when_clause with 
     | None -> None
-    | Some e -> Some (fst <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e) in
+    | Some e -> Some (fst <| (no_guard env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e)) in
   let branch, c = tc_exp pat_env branch in
   let guard_exp = Util.bvd_to_exp guard_x pat_t in
   let c = 
@@ -600,6 +594,30 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pat, when_clause, branch) : (pat * option
       | Some g -> Util.mk_conj eqs (Util.mk_eq g Const.exp_true_bool) in
     Tc.Util.close_comp_typ env bindings <| Tc.Util.weaken_precondition env c (Guard guard) in
   (pat, when_clause, branch), c 
+
+and tc_kind_trivial env k : knd = 
+  match tc_kind env k with 
+    | k, Trivial -> k
+    | _ -> raise (Error(Tc.Errors.kind_has_a_non_trivial_precondition k, Env.get_range env));
+
+and tc_typ_trivial env t : typ * knd = 
+  let t, k, g = tc_typ env t in
+  match g with 
+    | Trivial -> t, k
+    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t, range_of_typ t (Env.get_range env)))
+
+and tc_typ_check_trivial env t k = 
+  let t, f = tc_typ_check env t k in
+  match f with 
+    | Trivial -> t
+    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t, range_of_typ t (Env.get_range env)))
+
+and tc_total_exp env e : exp * typ * guard = 
+  let e, c = tc_exp env e in
+  match Tc.Rel.sub_comp_typ env c (Util.total_comp c.result_typ) with 
+    | Some g -> e, c.result_typ, g
+    | _ -> raise (Error(Tc.Errors.expected_pure_expression c, Tc.Env.get_range env))
+
 
 (*****************Type-checking the signature of a module*****************************)
 
@@ -715,10 +733,7 @@ and tc_decl env se = match se with
     | Sig_datacon(lid, t, tname, r) -> 
       let env = Tc.Env.set_range env r in
       let t = tc_typ_check_trivial env t Kind_type in 
-      let args, eff = Util.collect_formals t in
-      let result_t = match destruct eff Const.tot_effect_lid with 
-        | Some [Inl t] -> t
-        | _ -> failwith (Util.format1 "Impossible: constructors must have a total effect; got %s\n" (Print.typ_to_string t)) in
+      let args, result_t = Util.collect_formals t in
       let constructed_t, _ = Util.flatten_typ_apps result_t in (* TODO: check that the tps in tname are the same as here *)
       let _ = match destruct constructed_t tname with 
         | Some _ -> ()
@@ -766,8 +781,9 @@ and tc_decl env se = match se with
         lb::lbs) [] in
       let lbs' = List.rev lbs' in
       let e = Exp_let((fst lbs, lbs'), Exp_constant(Syntax.Const_unit)) in
-      let se = match fst <| tc_exp env e with 
-        | Exp_let(lbs, _) -> Sig_let(lbs, r)
+      let se = match tc_exp env e with 
+        | Exp_let(lbs, _), c -> (* TODO: Call the solver here! *) 
+          Sig_let(lbs, r)
         | _ -> failwith "impossible" in
       let env = Tc.Env.push_sigelt env se in 
       se, env

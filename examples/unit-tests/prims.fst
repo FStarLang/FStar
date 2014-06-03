@@ -22,10 +22,10 @@ type l_and : Binop (* infix binary '/\' *)
 type l_or  : Binop (* infix binary '\/' *)
 type l_iff : Binop (* infix binary '<==>' *)
 type l_imp : Binop (* infix binary '==>' *)
-type Forall : #'a:Type => ('a => Type) => Type
-type Exists : #'a:Type => ('a => Type) => Type
-type ForallTyp : (Type => Type) => Type
-type ExistsTyp : (Type => Type) => Type
+type Forall : #'a:Type => ('a => Type) => Type 
+type Exists : #'a:Type => ('a => Type) => Type 
+type ForallTyp : (Type => Type) => Type (* Handled specially by the type-checker to support quantification over types of arbitrary kinds *)
+type ExistsTyp : (Type => Type) => Type (* Handled specially by the type-checker to support quantification over types of arbitrary kinds *)
 type True : Type
 type False : Type
 type EqTyp : Type => Type => Type                    (* infix binary '==' *)
@@ -55,8 +55,8 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
                                              else 'wlp2 (fun a2 => a=!=a2)))
                  /\ 'wp1 (fun a => True)
                  /\ 'wp2 (fun a => True)
-             type imp_wp ('a:Type) ('wp1:WP 'a) ('wp2:'WP 'a) = forall ('p:Post 'a). 'wp1 'p ==> 'wp2 'p
-             type close_wp ('a:Type) ('b:Type) ('wp:'b => 'WP 'a) ('p:Post 'a) = forall (b:'b). 'wp b p
+             type imp_wp ('a:Type) ('wp1:WP 'a) ('wp2:WP 'a) = (forall ('p:Post 'a). 'wp1 'p ==> 'wp2 'p)
+             type close_wp ('a:Type) ('b:Type) ('wp:'b => WP 'a) ('p:Post 'a) = (forall (b:'b). 'wp b 'p)
              with Total ('a:Type) ('pre:Pre) ('post:Post 'a) =
                  PURE 'a 
                    (fun ('p:Post 'a) => 'pre /\ (forall a. 'pre /\ 'post a ==> 'p a)) (* WP *)
@@ -64,8 +64,8 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              and Tot ('a:Type) =
                  Total 'a True (fun a => True)
 }
-type assert_pure ('a:Type) ('P:Type) : Pure.WP 'a = fun ('post:WP.Post 'a) => 'P /\ 'P ==> (forall (x:'a). 'post x)
-type assume_pure ('a:Type) ('P:Type) : Pure.WP 'a = fun ('post:WP.Post 'a) => 'P ==> (forall (x:'a). 'post x)
+type assert_pure ('a:Type) ('P:Type) : PURE.WP 'a = fun ('post:PURE.Post 'a) => 'P /\ 'P ==> (forall (x:'a). 'post x)
+type assume_pure ('a:Type) ('P:Type) : PURE.WP 'a = fun ('post:PURE.Post 'a) => 'P ==> (forall (x:'a). 'post x)
 
 type bool
 type b2t (b:bool) = b==true
@@ -91,10 +91,10 @@ logic data type option 'a =
   | Some : v:'a -> option 'a
 
 type heap
-logic val SelHeap : 'a:Type -> heap -> ref 'a -> 'a
-logic val UpdHeap : 'a:Type -> heap -> ref 'a -> 'a -> heap    
+logic val SelHeap : #'a:Type -> heap -> ref 'a -> 'a
+logic val UpdHeap : #'a:Type -> heap -> ref 'a -> 'a -> heap    
 logic val EmpHeap : heap
-logic val InHeap  : 'a:Type -> heap -> ref 'a -> bool
+logic val InHeap  : #'a:Type -> heap -> ref 'a -> bool
 assume SelUpd1: forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (SelHeap (UpdHeap h x v) x)} SelHeap (UpdHeap h x v) x == x
 assume SelUpd2: forall ('a:Type) ('b:Type) (h:heap) (x:ref 'a) (y:ref 'b) (v:'b).{:pattern (SelHeap (UpdHeap h y v) x)} y=!=x ==> SelHeap (UpdHeap h y v) x == SelHeap h x
 assume InHeap1:  forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (InHeap (UpdHeap h x v) x)} InHeap (UpdHeap h x v) x == true
@@ -161,8 +161,8 @@ monad_lattice {
                  (* ite_wlp 'a 'guard 'wlp1 'wlp2 'post h *)
                  /\ 'wp1 (fun a h_ => True) h0
                  /\ 'wp2 (fun a h => True) h0
-             type imp_wp ('a:Type) ('wp1:WP 'a) ('wp2:'WP 'a) = forall ('p:Post 'a) (h:heap). 'wp1 'p h ==> 'wp2 'p h
-             type close_wp ('a:Type) ('b:Type) ('wp:'b => 'WP 'a) ('p:Post 'a) = forall (b:'b) (h:heap). 'wp b p h
+             type imp_wp ('a:Type) ('wp1:WP 'a) ('wp2:WP 'a) = (forall ('p:Post 'a) (h:heap). 'wp1 'p h ==> 'wp2 'p h)
+             type close_wp ('a:Type) ('b:Type) ('wp:'b => WP 'a) ('p:Post 'a) = (forall (b:'b) (h:heap). 'wp b 'p h)
              with ST ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) = 
                  STATE 'a 
                    (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1)) (* WP *)
@@ -195,8 +195,8 @@ monad_lattice {
                  (* ite_wlp 'a 'guard 'wlp1 'wlp2 'post *)
                  /\ 'wp1 (fun ra1 => True)
                  /\ 'wp2 (fun ra2 => True)
-             type imp_wp ('a:Type) ('wp1:WP 'a) ('wp2:'WP 'a) = forall ('p:Post 'a). 'wp1 'p ==> 'wp2 'p
-             type close_wp ('a:Type) ('b:Type) ('wp:'b => 'WP 'a) ('p:Post 'a) = forall (b:'b). 'wp b p
+             type imp_wp ('a:Type) ('wp1:WP 'a) ('wp2:WP 'a) = (forall ('p:Post 'a). 'wp1 'p ==> 'wp2 'p)
+             type close_wp ('a:Type) ('b:Type) ('wp:'b => WP 'a) ('p:Post 'a) = (forall (b:'b). 'wp b 'p)
              with Exn ('a:Type) ('pre:Pre) ('post:Post 'a) =
                  EXN 'a 
                    (fun 'p => 'pre /\ (forall (r:result 'a). ('pre /\ 'post r) ==> 'p r)) (* WP *)
@@ -232,14 +232,15 @@ monad_lattice {
                  (* ite_wlp 'a 'guard 'wlp1 'wlp2 'post h *)
                  /\ 'wp1 (fun _a _b => True) h0
                  /\ 'wp2 (fun _a _b => True) h0
-             type imp_wp ('a:Type) ('wp1:WP 'a) ('wp2:'WP 'a) = forall ('p:Post 'a) (h:heap). 'wp1 'p h ==> 'wp2 'p h
-             type close_wp ('a:Type) ('b:Type) ('wp:'b => 'WP 'a) ('p:Post 'a) = forall (b:'b) (h:heap). 'wp b p h
+             type imp_wp ('a:Type) ('wp1:WP 'a) ('wp2:WP 'a) = (forall ('p:Post 'a) (h:heap). 'wp1 'p h ==> 'wp2 'p h)
+             type close_wp ('a:Type) ('b:Type) ('wp:'b => WP 'a) ('p:Post 'a) = (forall (b:'b) (h:heap). 'wp b 'p h)
              with All ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) = 
                  ALL 'a 
                    (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)) (* WP *)
                    (fun ('p:Post 'a) (h:heap) => forall ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)             (* WLP *)
              and ML ('a:Type) =
-                 All 'a (fun h => True) (fun h0 ra h1 => True) AllRefs
+                 ALL 'a (fun ('p:Post 'a) => forall (a:result 'a) (h:heap). 'p a h)
+                        (fun ('p:Post 'a) => forall (a:result 'a) (h:heap). 'p a h)
 
   with 
   PURE  ~> STATE = (fun ('a:Type) ('wp:PURE.WP 'a) ('p:STATE.Post 'a) (h:heap) => 'wp (fun a => 'p a h));

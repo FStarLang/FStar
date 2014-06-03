@@ -463,7 +463,13 @@ let close_comp_typ env bindings c =
   let wlp = close_wp md c.result_typ bindings wlp in
   mk_comp md c.result_typ wp wlp
 
-let weaken_result_typ (env:env)  (e:exp) (c:comp_typ) (t:typ) : exp * comp_typ = failwith "NYI"
+let weaken_result_typ (env:env)  (e:exp) (c:comp_typ) (t:typ) : exp * comp_typ = 
+  let c = Tc.Normalize.norm_comp env c in
+  let tc, wp, wlp = destruct_comp c in
+  let g = Tc.Rel.subtype env tc t in
+  let md = Tc.Env.monad_decl env c.effect_name in
+  let c = strengthen_precondition env (mk_comp md tc wp wlp) g in
+  e, c
 
 let check_comp_typ (env:env) (e:exp) (c:comp_typ) (c':comp_typ) : exp * comp_typ * guard = 
   match Tc.Rel.sub_comp_typ env c c' with 
