@@ -5,7 +5,10 @@ endif
 
 FSTAR=../../bin/FStar.exe --fstar_home ../../ $(OTHERFLAGS)
 
-all: utils list tuple rec pat letrec termination pt-compiler
+all: utils list tuple rec pat letrec termination #pt-compiler
+
+testpoly:
+	$(FSTAR) --pretype --prims prims.fst testpoly.fst
 
 prims: 
 	$(FSTAR) --pretype --prims prims.fst 
@@ -45,7 +48,8 @@ MAIN=$(addprefix ../../src/, $(MAINFILES))
 ALL=$(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(MAIN)
 
 pt-compiler:
-	$(FSTAR) --pretype --prims prims.fst st.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) #$(TC)
+	$(FSTAR) --pretype --prims prims.fst st.fst $(STDFILES) $(BASIC) $(SYNTAX) 
+#$(PARSER) $(TC)
 
 compiler:
 	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) backends.fsi $(MAIN)

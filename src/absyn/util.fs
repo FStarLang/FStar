@@ -119,6 +119,9 @@ let total_comp t r =
 let is_total_comp c = 
   lid_equals c.effect_name Const.tot_effect_lid
 
+let is_ml_comp c = 
+  lid_equals c.effect_name Const.ml_effect_lid
+
 (********************************************************************************)
 (****************Simple utils on the local structure of a term ******************)
 (********************************************************************************)
@@ -170,7 +173,7 @@ let flatten_typ_apps : typ -> typ * (list<either<typ,exp>>) =
     match pre_typ t with
       | Typ_app(t1, t2, _) -> aux (Inl t2::acc) t1 
       | Typ_dep(t1, v, _) -> aux (Inr v::acc) t1
-      | _              -> t, acc in
+      | _              -> compress_typ t, acc in
   (fun t -> aux [] t)
 
 let destruct typ lid = 

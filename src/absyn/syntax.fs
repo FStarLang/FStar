@@ -186,6 +186,7 @@ type monad_decl = {
     ite_wlp:typ;
     imp_wp:typ;
     close_wp:typ;
+    close_wp_t:typ;
     abbrevs:list<sigelt> 
  }
 and sigelt =

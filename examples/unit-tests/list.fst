@@ -15,12 +15,12 @@
 *)
 module List
 
-type In : #'a:Type => 'a => list 'a => Type
-type ListUnion : #'a:Type => list 'a => list 'a => list 'a => Type
-assume In_hd: forall 'a (hd:'a) (tl:list 'a). In hd (Cons hd tl)
-assume In_tl: forall 'a (hd:'a) (x:'a) (tl:list 'a). In x tl ==> In x (Cons hd tl)
-assume NotinNil: forall 'a (x:'a). ~(In x Nil)
-assume NotinCons: forall 'a (x:'a) (y:'a) (tl:list 'a). ~(In x tl) /\ x=!=y ==> ~(In x (Cons y tl))
+(* type In : #'a:Type => 'a => list 'a => Type *)
+(* type ListUnion : #'a:Type => list 'a => list 'a => list 'a => Type *)
+(* assume In_hd: forall 'a (hd:'a) (tl:list 'a). In hd (Cons hd tl) *)
+(* assume In_tl: forall 'a (hd:'a) (x:'a) (tl:list 'a). In x tl ==> In x (Cons hd tl) *)
+(* assume NotinNil: forall 'a (x:'a). ~(In x Nil) *)
+(* assume NotinCons: forall 'a (x:'a) (y:'a) (tl:list 'a). ~(In x tl) /\ x=!=y ==> ~(In x (Cons y tl)) *)
 
 val hd: list 'a -> 'a
 let hd = function 
@@ -32,7 +32,7 @@ let tail = function
   | hd::tl -> tl
   | _ -> failwith "tail of empty list"
 
-val mem: x:'a -> l:list 'a -> b:bool{b==true <==> In x l}
+val mem: 'a -> list 'a -> bool //x:'a -> l:list 'a -> b:bool{b==true <==> In x l}
 let rec mem x = function
   | [] -> false
   | hd::tl -> if hd = x then true else mem x tl
@@ -62,7 +62,7 @@ let rec assoc a x = match x with
   | [] -> None
   | (a', b)::tl -> if a=a' then Some b else assoc a tl
 
-val append: x:list 'a -> y:list 'a -> z:list 'a { forall (a:'a). In a z <==> In a x \/ In a y }
+val append: list 'a -> list 'a -> list 'a //x:list 'a -> y:list 'a -> z:list 'a { forall (a:'a). In a z <==> In a x \/ In a y }
 let rec append x y = match x with
   | [] -> y
   | a::tl -> a::append tl y
@@ -70,7 +70,10 @@ let rec append x y = match x with
 val concatMap: ('a -> list 'b) -> list 'a -> list 'b
 let rec concatMap f = function
   | [] -> []
-  | a::tl -> append (f a) (concatMap f tl)
+  | a::tl -> 
+    let fa = f a in
+    let ftl = concatMap f tl in
+    append fa ftl
 
 assume val map2: ('a -> 'b -> 'c) -> list 'a -> list 'b -> list 'c
 assume val split: list ('a * 'b) -> list 'a * list 'b

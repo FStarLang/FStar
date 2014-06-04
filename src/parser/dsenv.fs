@@ -149,7 +149,7 @@ let is_effect_name env lid =
 let try_resolve_typ_abbrev env lid = 
   let find_in_sig lid = 
     match Util.smap_try_find env.sigmap lid.str with 
-      | Some (Sig_typ_abbrev(lid, tps, k, def, _, _)) -> Some (Util.close_with_lam tps def)
+      | Some (Sig_typ_abbrev(lid, tps, k, def, _, _)) -> Some (withkind Kind_unknown <| Typ_meta(Meta_pos(Util.close_with_lam tps def, range_of_lid lid)))
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
    

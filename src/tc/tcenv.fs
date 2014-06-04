@@ -97,28 +97,31 @@ let monad_leq env l1 l2 : option<edge> =
   then Some ({msource=l1; mtarget=l2; mlift=fun t wp -> wp})
   else env.lattice.order |> Util.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)  
 
-let wp_signature env m = 
-  match env.lattice.decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname m) with
-  | None -> failwith "Impossible"
+let wp_sig_aux decls m = 
+  match decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname m) with
+  | None -> failwith (Util.format1 "Impossible: declaration for monad %s not found" m.str)
   | Some md -> 
     match md.signature with 
       | Kind_tcon(Some a, Kind_type, Kind_tcon(_, kwp, _, _), _) -> a, kwp
       | _ -> failwith "Impossible" 
 
+let wp_signature env m = wp_sig_aux env.lattice.decls m
+
 let build_lattice env se = match se with 
-  | Sig_monads(decls, order, _) -> 
+  | Sig_monads(decls0, order, _) -> 
     let mk_lift a k1 b k2 lift_t r wp1 =
       let k1 = Util.subst_kind [Inl(a, r)] k1 in
       let k2 = Util.subst_kind [Inl(b, r)] k2 in
       let l = withkind (Kind_tcon(None, k1, k2, false)) <| Typ_app(lift_t, r, false) in
       withkind k2 <| Typ_app(l, wp1, false) in
-    let decls = env.lattice.decls@decls in
-    let kwp l = wp_signature env l in
+    let decls = env.lattice.decls@decls0 in
+    let kwp l = wp_sig_aux decls l in
     let order = order |> List.map (fun mo -> 
       let a, k1 = kwp mo.source in 
       let b, k2 = kwp mo.target in
       {msource=mo.source; mtarget=mo.target; mlift=mk_lift a k1 b k2 mo.lift}) in
     let order = env.lattice.order@order in
+    let order = order@(decls0 |> List.map (fun md -> {msource=md.mname; mtarget=md.mname; mlift=fun t wp -> wp})) in
 
     let compose_edges e1 e2 : edge = 
        {msource=e1.msource;
@@ -140,15 +143,18 @@ let build_lattice env se = match se with
                         | Some e1, Some e2 -> [compose_edges e1 e2]
                         | _ -> []))) order in
     let joins =
-      ms |> List.collect (fun i -> 
-      ms |> List.collect (fun j -> 
-      let (join, e1, e2) = ms |> List.fold_left (fun (ub, e1, e2) k ->
-        if Util.is_some (find_edge order (ub, k)) || not (Util.is_some (find_edge order (k, ub)))
-        then (ub, e1, e2)
-        else match find_edge order (i, k), find_edge order (j, k) with 
-            | Some e1, Some e2 -> (k, e1, e2)
-            | _ -> (ub, e1, e2)) (Const.all_lid, Util.must <| find_edge order (i, Const.all_lid), Util.must <| find_edge order (j, Const.all_lid))  in
-      [i, j, join, e1.mlift, e2.mlift])) in 
+      if not (Util.for_some (lid_equals Const.all_effect_lid) ms)
+      then []
+      else 
+        ms |> List.collect (fun i -> 
+        ms |> List.collect (fun j -> 
+        let (join, e1, e2) = ms |> List.fold_left (fun (ub, e1, e2) k ->
+          if Util.is_some (find_edge order (ub, k)) || not (Util.is_some (find_edge order (k, ub)))
+          then (ub, e1, e2)
+          else match find_edge order (i, k), find_edge order (j, k) with 
+              | Some e1, Some e2 -> (k, e1, e2)
+              | _ -> (ub, e1, e2)) (Const.all_effect_lid, Util.must <| find_edge order (i, Const.all_effect_lid), Util.must <| find_edge order (j, Const.all_effect_lid))  in
+        [i, j, join, e1.mlift, e2.mlift])) in 
     let lat = {decls=decls; order=order;joins=joins} in
     {env with lattice=lat}
   | _ -> env
@@ -221,6 +227,7 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
   if in_cur_mod lid 
   then 
     Util.find_map env.gamma (function 
+    | Binding_sig (Sig_monads _) -> None
     | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl t) else None
     | Binding_sig s -> 
       let lids = lids_of_sigelt s in 
@@ -333,7 +340,15 @@ let lookup_operator env (opname:ident) =
 let rec push_sigelt env s : env = 
   match s with 
     | Sig_bundle(ses, _) -> List.fold_left push_sigelt env ses 
-    | _ -> build_lattice ({env with gamma=Binding_sig s::env.gamma}) s
+    | _ -> 
+      let env0 = env in
+      let env = build_lattice ({env with gamma=Binding_sig s::env.gamma}) s in
+      let _ = match s with 
+       | Sig_monads(decls, _, _) -> 
+         decls |> List.iter (fun md -> ignore <| lookup_typ_lid env0 md.mname)
+       | _ -> () in
+       env
+   
         
 let push_local_binding env b = {env with gamma=b::env.gamma}
       

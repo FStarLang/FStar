@@ -16,7 +16,10 @@
 module Foo.Record
 
 
-let foo x y = if x <= y && y <= x then 0 else 1
+let foo x y = 
+  if x <= y && y <= x 
+  then 0 
+  else 1
 
 type r = {
   a:int; 

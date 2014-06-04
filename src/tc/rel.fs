@@ -366,21 +366,22 @@ and crel rel env c1 c2 : option<guard> =
     if lid_equals c1.effect_name c2.effect_name
     then either_rel rel env (Inl c1.result_typ::c1.effect_args) (Inl c2.result_typ::c2.effect_args) 
     else if not norm 
-    then aux true (Normalize.norm_comp env c1) (Normalize.norm_comp env c2)
+    then aux true (Normalize.weak_norm_comp env c1) (Normalize.weak_norm_comp env c2)
     else None
     
   | SUB -> 
-    let c1 = Normalize.norm_comp env c1 in
-    let c2 = Normalize.norm_comp env c2 in
     if is_total_comp c1 && is_total_comp c2
     then trel false SUB env c1.result_typ c2.result_typ
-    else match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
-      | None -> None
-      | Some edge ->
-        let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
-          | Inl wp1::_, Inl wp2::_ -> wp1, wp2 
-          | _ -> failwith (Printf.sprintf "Got effects %s of %A\nand %s of %A" (Print.sli c1.effect_name) c1.effect_args (Print.sli c2.effect_name)  c2.effect_args) in
-        andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
+    else 
+      let c1 = Normalize.weak_norm_comp env c1 in
+      let c2 = Normalize.weak_norm_comp env c2 in
+      match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
+        | None -> None
+        | Some edge ->
+          let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
+            | Inl wp1::_, Inl wp2::_ -> wp1, wp2 
+            | _ -> failwith (Printf.sprintf "Got effects %s of %A\nand %s of %A" (Print.sli c1.effect_name) c1.effect_args (Print.sli c2.effect_name)  c2.effect_args) in
+          andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
         let c2_decl : monad_decl = Tc.Env.monad_decl env c2.effect_name in
         let imp_wp = 
           let k0 = Kind_tcon(None, wpc2.k, Kind_type, false) in
@@ -400,26 +401,34 @@ and either_rel rel env l1 l2 =
 let keq env t k1 k2 : guard = 
   match krel EQ env (norm_kind [Beta] env k1) (norm_kind [Beta] env k2) with 
     | Some f -> f
-    | None -> match t with 
-      | None -> raise (Error(Tc.Errors.incompatible_kinds k2 k1, Tc.Env.get_range env))
-      | Some t -> raise (Error(Tc.Errors.expected_typ_of_kind k2 t k1, Tc.Env.get_range env))
+    | None -> 
+      let r = match t with 
+        | None -> Tc.Env.get_range env
+        | Some t -> range_of_typ t (Tc.Env.get_range env) in
+      match t with 
+        | None -> raise (Error(Tc.Errors.incompatible_kinds k2 k1, r))
+        | Some t -> raise (Error(Tc.Errors.expected_typ_of_kind k2 t k1, r))
 
 let teq env t1 t2 : guard = 
   match trel true EQ env (norm_typ [Beta] env t1) (norm_typ [Beta] env t2) with
     | Some f -> f
-    | None -> raise (Error(Tc.Errors.basic_type_error t2 t1, Tc.Env.get_range env))
+    | None -> raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env))
 
 let try_subtype env t1 t2 = trel true SUB env t1 t2 
 
 let subtype env t1 t2 : guard = 
   match try_subtype env t1 t2 with
     | Some f -> f
-    | None -> raise (Error(Tc.Errors.basic_type_error t2 t1, Tc.Env.get_range env))
+    | None -> raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env))
 
-let trivial_subtype env t1 t2 = 
+let trivial_subtype env eopt t1 t2 = 
   let f = subtype env t1 t2 in 
   match f with 
     | Trivial -> ()
-    | _ ->  raise (Error(Tc.Errors.basic_type_error t2 t1, Tc.Env.get_range env))
+    | _ ->  
+      let r = match eopt with 
+        | None -> range_of_typ t1 (Tc.Env.get_range env)
+        | Some e -> range_of_exp e (Tc.Env.get_range env) in
+      raise (Error(Tc.Errors.basic_type_error eopt t2 t1, r))
 
 let sub_comp_typ env c1 c2 = crel SUB env c1 c2

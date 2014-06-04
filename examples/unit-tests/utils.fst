@@ -15,14 +15,7 @@
 *)
 module List
 
-type In : #'a:Type => 'a => list 'a => Type
-type ListUnion : #'a:Type => list 'a => list 'a => list 'a => Type
-assume In_hd: forall 'a (hd:'a) (tl:list 'a). In hd (Cons hd tl)
-assume In_tl: forall 'a (hd:'a) (x:'a) (tl:list 'a). In x tl ==> In x (Cons hd tl)
-(* assume NotinNil: forall 'a (x:'a). not (In x Nil) *)
-(* assume NotinCons: forall 'a (x:'a) (y:'a) (tl:list 'a). not(In x tl) /\ x<>y ==> not(In x (Cons y tl)) *)
-
-val mem: x:'a -> l:list 'a -> b:bool{b==true <==> In x l}
+val mem: 'a -> list 'a -> bool
 let rec mem x = function
   | [] -> false
   | hd::tl -> if hd = x then true else mem x tl
@@ -52,7 +45,7 @@ let rec assoc a x = match x with
   | [] -> None
   | (a', b)::tl -> if a=a' then Some b else assoc a tl
 
-val append: x:list 'a -> y:list 'a -> z:list 'a { forall a. In a z <==> In a x \/ In a y }
+val append: list 'a -> list 'a -> list 'a
 let rec append x y = match x with
   | [] -> y
   | a::tl -> a::append tl y

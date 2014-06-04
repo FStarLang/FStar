@@ -218,8 +218,8 @@ and visit_comp_typ'
     (l: 'env -> exp -> exp)
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
     (env:'env) (benv:'benv) (ct:comp_typ) (cont : ('env * comp_typ) -> 'res) : 'res = 
-    visit_typ' h f g l ext env benv ct.result_typ (fun (e, t) -> 
-    visit_either_l' h f g l ext env benv ct.effect_args (fun (e, args) -> cont (e, {ct with result_typ=t; effect_args=args})))
+    visit_typ' h f g l ext env benv ct.result_typ (fun (env, t) -> 
+    visit_either_l' h f g l ext env benv ct.effect_args (fun (env, args) -> cont (env, {ct with result_typ=t; effect_args=args})))
         
 and visit_exp'
     (h: 'env -> 'benv -> knd -> ('env * knd))

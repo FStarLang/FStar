@@ -59,7 +59,10 @@ let rec factorial x = if x = 0 then 1 else x * (factorial (x-1))
    S;G |-mu fix (sumto^i: i:int{i >= 0} -> t) i = e : t
 *)
 val sumto: i:int{i >= 0} -> f:(x:int{0 <= x /\ x <= i} -> y:int{y >= 0}) -> z:int{z >= 0}
-let rec sumto i f = if i = 0 then f 0 else (f i) + (sumto (i-1) f)
+let rec sumto i f = 
+  if i = 0 
+  then f 0 
+  else (f i) + (sumto (i-1) f)
 
 
 (*

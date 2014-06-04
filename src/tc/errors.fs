@@ -48,8 +48,10 @@ let expected_function_with_parameter_of_type t1 t2 =
 let expected_pattern_of_type t1 e t2 = 
   format3 "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\"" (Print.typ_to_string t1) (Print.exp_to_string e) (Print.typ_to_string t2)
 
-let basic_type_error t1 t2 = 
-  format2 "Expected type \"%s\"; got type \"%s\"" (Print.typ_to_string t1) (Print.typ_to_string t2)
+let basic_type_error eopt t1 t2 = 
+  match eopt with 
+    | None -> format2 "Expected type \"%s\"; got type \"%s\"" (Print.typ_to_string t1) (Print.typ_to_string t2)
+    | Some e -> format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" (Print.typ_to_string t1) (Print.exp_to_string e) (Print.typ_to_string t2)
   
 let occurs_check = 
   "Possibly infinite typ (occurs check failed)"
@@ -113,5 +115,5 @@ let type_has_a_non_trivial_precondition t =
 let kind_has_a_non_trivial_precondition k = 
   format1 "Kind \"%s\" has an unexpected non-trivial pre-condition" (Print.kind_to_string k)
 
-let expected_pure_expression c =
-  format1 "Expected a pure expression; got an expression with effect \"%s\"" (Print.sli c.effect_name)
+let expected_pure_expression e c =
+  format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" (Print.exp_to_string e) (Print.sli c.effect_name)

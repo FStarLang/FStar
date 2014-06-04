@@ -91,7 +91,7 @@ let display_usage specs =
   List.iter
     (fun (_, flag, p, doc) ->
        match p with
-         | ZeroArgs _ ->
+         | ZeroArgs ig ->
              if doc = "" then Util.print_string (Util.format1 "  --%s" flag)
              else Util.print_string (Util.format2 "  --%s  %s" flag doc)
          | OneArg (_, argname) ->

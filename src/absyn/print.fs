@@ -42,7 +42,7 @@ let const_to_string x = match x with
   | Const_int32 x ->      Util.string_of_int x
   | Const_float x ->      Util.string_of_float x
   | Const_char x ->       Util.string_of_char x
-  | Const_string(bytes, _) -> Util.string_of_bytes bytes
+  | Const_string(bytes, _) -> Util.format1 "\"%s\"" (Util.string_of_bytes bytes)
   | Const_bytearray _  ->  "<bytearray>"
   | Const_int64 _ -> "<int64>"
   | Const_uint8 _ -> "<uint8>"
@@ -55,8 +55,8 @@ let rec typ_to_string x =
       | None -> strBvd btv.v
       | Some x -> x|> typ_to_string)
   | Typ_const v -> Util.format1 "%s" (sli v.v)
-  | Typ_fun(Some x, t1, t2, imp) -> Util.format "%s%s%s -> %s"  [strBvd x; (if imp then "@" else ":"); (t1 |> typ_to_string); (t2|> comp_typ_to_string)]
-  | Typ_fun(None, t1, t2, _) -> Util.format "%s -> %s"  [(t1 |> typ_to_string); (t2|> comp_typ_to_string)]
+  | Typ_fun(Some x, t1, t2, imp) -> Util.format "%s%s(%s) -> %s"  [strBvd x; (if imp then "@" else ":"); (t1 |> typ_to_string); (t2|> comp_typ_to_string)]
+  | Typ_fun(None, t1, t2, _) -> Util.format "(%s) -> %s"  [(t1 |> typ_to_string); (t2|> comp_typ_to_string)]
   | Typ_univ(a, k, t) ->       Util.format3 "%s:%s -> %s" (strBvd a) (k |> kind_to_string) (t|> comp_typ_to_string)
   | Typ_refine(x, t, f) ->     Util.format3 "%s:%s{%s}" (strBvd x) (t|> typ_to_string) (f|> typ_to_string)
   | Typ_app(t1, t2, imp) ->    Util.format3 "(%s %s%s)" (t1|> typ_to_string) (if imp then "#" else "") (t2|> typ_to_string)
@@ -73,22 +73,20 @@ let rec typ_to_string x =
       | Uvar _ ->               Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)))
   
 and comp_typ_to_string c =
-  let c = recover_tot_effect c in 
+  let c = recover_tot_or_ml_effect c in 
   if    (lid_equals c.effect_name Const.tot_effect_lid && Util.is_function_typ c.result_typ)
-     //|| (lid_equals c.effect_name Const.ml_effect_lid && not (Util.is_function_typ c.result_typ))
+     || (lid_equals c.effect_name Const.ml_effect_lid && not (Util.is_function_typ c.result_typ))
   then typ_to_string c.result_typ
   else Util.format3 "%s %s %s" (sli c.effect_name) (typ_to_string c.result_typ) (String.concat ", " <| List.map either_to_string c.effect_args)
 
-and recover_tot_effect c = 
+and recover_tot_or_ml_effect c = 
   let flatten_and_compress_typ_apps f = 
     let f, args = Util.flatten_typ_apps (Util.compress_typ f) in
     f, args |> List.map (function 
       | Inl t -> Inl (compress_typ t)
       | Inr e -> Inr (compress_exp e)) in
-  if lid_equals c.effect_name Const.tot_effect_lid 
-  then c
-  else if lid_equals c.effect_name Const.pure_effect_lid
-  then match c.effect_args with 
+
+  let recover_tot c = match c.effect_args with 
     | [Inl wp; Inl wlp] -> 
       let is_trivial wp = match (compress_typ wp).t with 
         | Typ_tlam(post, _, fa) -> 
@@ -97,12 +95,12 @@ and recover_tot_effect c =
             | Typ_const f, [_; Inl {t=Typ_lam(x, _, body)}] when lid_equals f.v Const.forall_lid -> 
               let p, args = flatten_and_compress_typ_apps body in 
               (match p.t, args with 
-                | Typ_btvar q, [Inr (Exp_bvar y)] when Util.bvd_eq q.v post && Util.bvd_eq y.v x -> true
+                | Typ_btvar q, [Inr (Exp_bvar y)] when (Util.bvd_eq q.v post && Util.bvd_eq y.v x) -> true
                 | _ -> false)
             | Typ_const f, [_; Inl {t=Typ_tlam(a, _, body)}] when lid_equals f.v Const.allTyp_lid -> 
               let p, args = flatten_and_compress_typ_apps body in 
               (match p.t, args with 
-                | Typ_btvar q, [Inl {t=Typ_btvar b}] when Util.bvd_eq q.v post && Util.bvd_eq b.v a -> true
+                | Typ_btvar q, [Inl {t=Typ_btvar b}] when (Util.bvd_eq q.v post && Util.bvd_eq b.v a) -> true
                 | _ -> false)
             | _ -> false
           end
@@ -110,8 +108,44 @@ and recover_tot_effect c =
       if is_trivial wp && is_trivial wlp
       then {effect_name=Const.tot_effect_lid; result_typ=c.result_typ; effect_args=[]}
       else c      
-    | _ -> failwith  "Impossible"
-  else c 
+    | _ -> failwith "Impossible" in
+
+  let recover_ml c = match c.effect_args with 
+    | [Inl wp; Inl wlp] -> 
+      let is_trivial wp = match (compress_typ wp).t with 
+        | Typ_tlam(post, _, hlam) ->
+          begin match (compress_typ hlam).t with
+            | Typ_lam(h, _, fa_result) ->
+             let fa_result, args = flatten_and_compress_typ_apps fa_result in
+              begin match (compress_typ fa_result).t, args with 
+               | Typ_const f, [_; Inl {t=Typ_lam(r, _, fa_heap)}] when lid_equals f.v Const.forall_lid ->
+               let fa_heap, args = flatten_and_compress_typ_apps fa_heap in
+                begin match (compress_typ fa_heap).t, args with 
+                  | Typ_const f, [_; Inl {t=Typ_lam(h, _, body)}] when lid_equals f.v Const.forall_lid -> 
+                   let p, args = flatten_and_compress_typ_apps body in 
+                   (match p.t, args with 
+                    | Typ_btvar q, [Inr (Exp_bvar r'); Inr (Exp_bvar h')] 
+                      when (Util.bvd_eq q.v post && Util.bvd_eq r'.v r && Util.bvd_eq h'.v h) -> true
+                    | _ -> false)
+                  | _ -> false
+                end
+               | _ -> false
+              end
+            | _ -> false
+           end
+        | _ -> false in
+      if is_trivial wp && is_trivial wlp
+      then {effect_name=Const.ml_effect_lid; result_typ=c.result_typ; effect_args=[]}
+      else c      
+    | _ -> failwith "Impossible" in
+
+  if lid_equals c.effect_name Const.tot_effect_lid  || lid_equals c.effect_name Const.ml_effect_lid
+  then c
+  else if lid_equals c.effect_name Const.pure_effect_lid
+  then recover_tot c
+//  else if lid_equals c.effect_name Const.all_effect_lid
+//  then recover_ml c
+  else c
    
 and exp_to_string x = match compress_exp x with 
   | Exp_meta(Meta_datainst(e,_)) -> exp_to_string e 

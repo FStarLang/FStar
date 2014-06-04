@@ -231,7 +231,7 @@ and sncomp tcenv (config:config<comp_typ>) : config<comp_typ> =
           let n = match (Util.compress_typ tc).t with
             | Typ_const fv -> remake fv.v args 
             | _ ->  failwith (Util.format3 "Got a computation %s with constructor %s and kind %s" (Print.sli m.effect_name) (Print.typ_to_string tc) (Print.kind_to_string tc.k)) in
-          let _ = printfn "Normalized %s\nto %s\n" (Print.comp_typ_to_string m) (Print.comp_typ_to_string n.code) in
+          //let _ = printfn "Normalized %s\nto %s\n" (Print.comp_typ_to_string m) (Print.comp_typ_to_string n.code) in
           n
     else remake m.effect_name args
   
@@ -317,7 +317,27 @@ and wne tcenv (config:config<exp>) : config<exp> =
 (************************************************************************************)
 (* External interface *)
 (************************************************************************************)
-      
+
+let weak_norm_comp env c = 
+  match Tc.Env.lookup_typ_abbrev env c.effect_name with
+    | None -> c
+    | Some t -> 
+      let args = Inl c.result_typ::c.effect_args in
+      let out, subst = List.fold_left (fun (out, subst) arg -> match (compress_typ out).t, arg with 
+        | Typ_tlam(a, _, out), Inl t -> (out, Inl(a, t)::subst)
+        | Typ_lam(x, _, out), Inr e -> (out, Inr(x, e)::subst)
+        | _ -> failwith "Ill-kinded comp type") (t, []) args in
+      let t = Util.subst_typ subst out in 
+      let tc, args = Util.flatten_typ_apps t in
+      let n = match (Util.compress_typ tc).t, args with
+        | Typ_const fv, Inl result::rest -> 
+          {effect_name=fv.v;
+           result_typ=result;
+           effect_args=rest}
+        | _ ->  failwith (Util.format3 "Got a computation %s with constructor %s and kind %s" (Print.sli c.effect_name) (Print.typ_to_string tc) (Print.kind_to_string tc.k)) in
+      //let _ = printfn "Normalized %s\nto %s\n" (Print.comp_typ_to_string m) (Print.comp_typ_to_string n.code) in
+      n
+       
 let norm_kind steps tcenv k = 
   let c = snk tcenv ({code=k; environment=[]; stack=[]; steps=steps}) in
   c.code

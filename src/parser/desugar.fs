@@ -683,7 +683,6 @@ and desugar_typ env (top:term) : typ =
             let is_effect tc = match tc.t with 
               | Typ_const eff -> DesugarEnv.is_effect_name env eff.v
               | _ -> false in
-            let _ = printfn "tc is %s is_effect_name = %A" (Print.typ_to_string tc) (is_effect tc) in
             {effect_name=set_lid_range env.default_result_effect tt.range;
              result_typ=t;
              effect_args=[]} in 
@@ -1238,6 +1237,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
          ite_wlp=lookup "ite_wlp";
          imp_wp=lookup "imp_wp";
          close_wp=lookup "close_wp";
+         close_wp_t=lookup "close_wp_t";
          abbrevs=m_abbrevs} in
       let env = DesugarEnv.exit_monad_scope env0 menv in 
       env, msig in
