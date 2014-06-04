@@ -141,8 +141,8 @@ and recover_tot_or_ml_effect c =
 
   if lid_equals c.effect_name Const.tot_effect_lid  || lid_equals c.effect_name Const.ml_effect_lid
   then c
-  else if lid_equals c.effect_name Const.pure_effect_lid
-  then recover_tot c
+//  else if lid_equals c.effect_name Const.pure_effect_lid
+//  then recover_tot c
 //  else if lid_equals c.effect_name Const.all_effect_lid
 //  then recover_ml c
   else c

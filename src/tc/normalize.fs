@@ -209,10 +209,16 @@ and snl tcenv configs : list<config<typ>> =
 
 and sncomp tcenv (config:config<comp_typ>) : config<comp_typ> = 
   let m = config.code in 
-  if Util.is_total_comp m && not (List.contains DeltaComp config.steps)
-  then 
-    let r = sn tcenv (with_code config m.result_typ) in
-    {config with code={m with result_typ=r.code}}
+  if not <| List.contains DeltaComp config.steps
+  then
+    let args = snl_either tcenv ({config with steps=Simplify::config.steps}) (Inl m.result_typ::m.effect_args) in
+    match args with 
+      | Inl r::rest -> 
+        let n = {effect_name=m.effect_name;
+                 result_typ=r;
+                 effect_args=rest} in
+        {config with code=n}
+      | _ -> failwith "impossible"
   else
     let args = snl_either tcenv ({config with steps=Simplify::config.steps}) (Inl m.result_typ::m.effect_args) in
     let remake l args = 
@@ -346,10 +352,13 @@ let norm_typ steps tcenv t =
   let c = sn tcenv ({code=t; environment=[]; stack=[]; steps=steps}) in
   c.code
 
-let norm_comp tcenv c = 
-  let steps = [Delta;Beta;DeltaComp;Simplify] in
+let norm_comp steps tcenv c = 
   let c = sncomp tcenv ({code=c; environment=[]; stack=[]; steps=steps}) in
   c.code
+
+let normalize_comp tcenv c = 
+  let steps = [Delta;Beta;DeltaComp;Simplify] in
+  norm_comp steps tcenv c
 
 let normalize tcenv t = norm_typ [Delta;Alpha;Beta] tcenv t
 

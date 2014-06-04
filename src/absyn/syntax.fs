@@ -77,6 +77,13 @@ and comp_typ = {
   result_typ:typ; 
   effect_args:list<either<typ,exp>>
   }
+and comp = 
+  | Comp of comp_typ
+  | Flex of uvar_c
+and uvar_c = Unionfind.uvar<comp_typ_uvar_basis>
+and comp_typ_uvar_basis = 
+  | Floating of typ (* result type *)
+  | Resolved of comp_typ
 and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pos of typ * Range.range                            (* user wrote down this type 1 at source position 2 *)

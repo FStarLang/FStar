@@ -430,10 +430,15 @@ and tc_exp env e : exp * comp_typ = match e with
         if Util.is_total_comp c2
         then (None, Util.subst_comp_typ [Inr(x,e2)] cres), c2, Trivial
         else
-          let total_c2 = Util.total_comp c2.result_typ (range_of_bvd x) in
-          match Tc.Rel.sub_comp_typ env c2 total_c2 with 
+          let fopt, total_c2, cres = 
+            if Util.is_total_comp c2 then Some Trivial, c2, cres
+            else let total_c2 = Util.total_comp c2.result_typ (range_of_bvd x) in
+                 let cres = Normalize.norm_comp [Normalize.Delta;Normalize.Beta] env cres in
+                 Tc.Rel.sub_comp_typ env c2 total_c2, total_c2, cres in
+          match fopt with 
            | None -> 
-                if Util.for_some (fun y -> bvd_eq y.v x) <| (snd <| Util.freevars_typ cres.result_typ)
+                let fvs_res = Util.freevars_typ cres.result_typ in
+                if Util.for_some (fun y -> bvd_eq y.v x) <| (snd <| fvs_res)
                 then raise (Error(Tc.Errors.expected_pure_expression e2 c2, range_of_exp e2 (Env.get_range env)))
                 else (Some <| Env.Binding_var(x, targ), cres), c2, Trivial
            | Some f -> 
