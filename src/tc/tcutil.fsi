@@ -33,22 +33,22 @@ val new_tvar : env -> knd -> typ
 val new_evar : env -> typ -> exp
 val check_and_ascribe : env -> exp -> typ -> typ -> exp * Rel.guard
 val pat_as_exps: env -> pat -> list<exp>
-val generalize: env -> exp -> comp_typ -> (exp * comp_typ)
+val generalize: env -> exp -> comp -> (exp * comp)
 val maybe_instantiate : env -> exp -> typ -> (exp * typ)
-val destruct_function_typ : env -> typ -> option<exp> -> bool -> (typ * option<exp>)
+val destruct_function_typ : env -> typ -> option<exp> -> bool -> bool -> (typ * option<exp>)
 val destruct_poly_typ: env -> typ -> exp -> typ -> (typ*exp) 
 val destruct_tcon_kind: env -> knd -> typ -> bool -> (knd*typ)
 val destruct_dcon_kind: env -> knd -> typ -> bool -> (knd*typ)
 val mk_basic_tuple_type: env -> int -> typ
 val extract_lb_annotation: env -> typ -> exp -> typ
 
-type comp_with_binder = option<Env.binding> * comp_typ
-val bind: env -> comp_typ -> comp_with_binder -> comp_typ
-val bind_ite: env -> typ -> comp_typ -> comp_typ -> comp_typ
-val weaken_result_typ: env -> exp -> comp_typ -> typ -> exp * comp_typ
-val strengthen_precondition: env -> comp_typ -> guard -> comp_typ
-val weaken_precondition: env -> comp_typ -> guard -> comp_typ
-val lift_pure: env -> formula -> comp_typ (* with a uvar as a result type *)
+type comp_with_binder = option<Env.binding> * comp
+val bind: env -> comp -> comp_with_binder -> comp
+val bind_ite: env -> typ -> comp -> comp -> comp
+val weaken_result_typ: env -> exp -> comp -> typ -> exp * comp
+val strengthen_precondition: env -> comp -> guard -> comp
+val weaken_precondition: env -> comp -> guard -> comp
+val lift_pure: env -> formula -> comp (* with a uvar as a result type *)
 val close_guard: list<Tc.Env.binding> -> guard -> guard
-val close_comp_typ: env -> list<binding> -> comp_typ -> comp_typ
-val check_comp_typ: env -> exp -> comp_typ -> comp_typ -> exp * comp_typ * guard
+val close_comp: env -> list<binding> -> comp -> comp
+val check_comp: env -> exp -> comp -> comp -> exp * comp * guard

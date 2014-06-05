@@ -34,4 +34,4 @@ val teq : env -> typ -> typ -> guard
 val try_subtype: env -> typ -> typ -> option<guard>
 val subtype: env -> typ -> typ -> guard
 val trivial_subtype: env -> option<exp> -> typ -> typ -> unit
-val sub_comp_typ: env -> comp_typ -> comp_typ -> option<guard>
+val sub_comp: env -> comp -> comp -> option<guard>

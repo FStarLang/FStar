@@ -17,6 +17,7 @@
 
 module Microsoft.FStar.Tc.Errors
 
+open Microsoft.FStar
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
@@ -98,13 +99,16 @@ let disjunctive_pattern_vars v1 v2 =
     "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")" 
     (vars v1) (vars v2)
  
+let name_and_result c = match Util.compress_comp c with
+  | Flex(u, t) -> format1 "__Eff%s__" (string_of_int <| Unionfind.uvar_id u), t
+  | Comp ct -> Print.sli ct.effect_name, ct.result_typ
+
 let computed_computation_type_does_not_match_annotation e c c' = 
+  let f1, r1 = name_and_result c in
+  let f2, r2 = name_and_result c' in
   format4    
     "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\"" 
-      (Print.typ_to_string c.result_typ)
-      (Print.sli c.effect_name) 
-      (Print.typ_to_string c'.result_typ)
-      (Print.sli c'.effect_name)
+      (Print.typ_to_string r1) f1 (Print.typ_to_string r2) f2
 
 let unexpected_non_trivial_precondition_on_term = 
   "Term has an unexpected non-trivial pre-condition"
@@ -116,4 +120,4 @@ let kind_has_a_non_trivial_precondition k =
   format1 "Kind \"%s\" has an unexpected non-trivial pre-condition" (Print.kind_to_string k)
 
 let expected_pure_expression e c =
-  format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" (Print.exp_to_string e) (Print.sli c.effect_name)
+  format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" (Print.exp_to_string e) (fst <| name_and_result c)

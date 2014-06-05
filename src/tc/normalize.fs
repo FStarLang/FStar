@@ -207,7 +207,17 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
 and snl tcenv configs : list<config<typ>> =
   List.map (sn tcenv) configs
 
-and sncomp tcenv (config:config<comp_typ>) : config<comp_typ> = 
+and sncomp tcenv (config:config<comp>) : config<comp> = 
+  let m = config.code in 
+  match compress_comp m with 
+    | Comp ct -> 
+      let ctconf = sncomp_typ tcenv (with_code config ct) in
+      {config with code=Comp (ctconf.code)}
+    | Flex(u, t) -> 
+      let tconf = sn tcenv (with_code config t) in 
+      {config with code=Flex(u, tconf.code)}
+
+and sncomp_typ tcenv (config:config<comp_typ>) : config<comp_typ> = 
   let m = config.code in 
   if not <| List.contains DeltaComp config.steps
   then
@@ -325,6 +335,7 @@ and wne tcenv (config:config<exp>) : config<exp> =
 (************************************************************************************)
 
 let weak_norm_comp env c = 
+  let c = force_comp c in
   match Tc.Env.lookup_typ_abbrev env c.effect_name with
     | None -> c
     | Some t -> 
@@ -354,7 +365,7 @@ let norm_typ steps tcenv t =
 
 let norm_comp steps tcenv c = 
   let c = sncomp tcenv ({code=c; environment=[]; stack=[]; steps=steps}) in
-  c.code
+  force_comp c.code
 
 let normalize_comp tcenv c = 
   let steps = [Delta;Beta;DeltaComp;Simplify] in

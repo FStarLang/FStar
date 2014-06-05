@@ -125,7 +125,7 @@ logic data type refs =
   | AllRefs : refs
   | SomeRefs : v:refset -> refs
 
-val modifies : r:refs -> PURE.Tot (x:refs{x==r})
+(* val modifies : r:refs -> PURE.Tot (x:refs{x==r}) *)
 let modifies (r:refs) = r 
 
 type Modifies (mods:refs) (h:heap) (h':heap) =
@@ -138,7 +138,7 @@ logic data type result : Type => Type =
   | E : 'a:Type -> e:exn -> result 'a
   | Err : 'a:Type -> msg:string -> result 'a
 
-val retype : result 'a -> PURE.Tot (result 'b)
+(* val retype : result 'a -> PURE.Tot (result 'b) *)
 let retype r = match r with 
   | V _ -> Err "impos"
   | Err m -> Err m

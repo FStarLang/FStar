@@ -60,8 +60,8 @@ type sconst =
 type typ' =  
   | Typ_btvar    of bvar<typ,knd>
   | Typ_const    of var<knd> 
-  | Typ_fun      of option<bvvdef> * typ * comp_typ * bool        (* x:t -> M t' wp  or  t -> M t' wp, bool marks implicit arguments *)
-  | Typ_univ     of btvdef * knd  * comp_typ                      (* 'a:k -> M t wp *)
+  | Typ_fun      of option<bvvdef> * typ * comp * bool       (* x:t -> M t' wp  or  t -> M t' wp, bool marks implicit arguments *)
+  | Typ_univ     of btvdef * knd  * comp                     (* 'a:k -> M t wp *)
   | Typ_refine   of bvvdef * typ * typ                       (* x:t{phi} *)
   | Typ_app      of typ * typ * bool                         (* t t' -- bool marks an explicitly provided implicit arg *) 
   | Typ_dep      of typ * exp * bool                         (* t e -- bool marks an explicitly provided implicit arg *)  
@@ -79,10 +79,10 @@ and comp_typ = {
   }
 and comp = 
   | Comp of comp_typ
-  | Flex of uvar_c
+  | Flex of uvar_c * typ
 and uvar_c = Unionfind.uvar<comp_typ_uvar_basis>
 and comp_typ_uvar_basis = 
-  | Floating of typ (* result type *)
+  | Floating 
   | Resolved of comp_typ
 and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 

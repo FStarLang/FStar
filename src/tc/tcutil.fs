@@ -102,6 +102,9 @@ let new_evar env t =
     forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
   Exp_uvar (Unionfind.fresh (Uvar wf), t)
 
+let new_cvar env t = 
+  Flex (Unionfind.fresh Floating, t)
+
 let close_guard (b:list<binding>) (g:guard) : guard = match g with 
   | Trivial -> g
   | Guard f -> Guard <|
@@ -128,22 +131,22 @@ let maybe_instantiate env e t =
       | Typ_fun(_, _, c, _) when not (Util.is_total_comp c) -> 
         (e, Util.subst_typ subst t)
 
-      | Typ_univ(a, k, c) ->
+      | Typ_univ(a, k, c) -> (* is_total_comp *)
         if env.instantiate_targs 
         then 
           let arg = new_tvar env (Util.subst_kind subst k) in
           let subst = Inl(a, arg)::subst in
           let f = Exp_tapp(e, arg) in
-          aux norm subst c.result_typ f 
+          aux norm subst (force_comp c).result_typ f 
         else (e, Util.subst_typ subst t)
 
-      | Typ_fun(xopt, t1, c, b) -> 
+      | Typ_fun(xopt, t1, c, b) -> (* is_total_comp *)
         begin match xopt with 
           | Some x when (b && env.instantiate_vargs) -> 
             let arg = new_evar env (Util.subst_typ subst t1) in
             let subst = Inr(x, arg)::subst in 
             let f = Exp_app(e, arg, true) in
-            aux norm subst c.result_typ f
+            aux norm subst (force_comp c).result_typ f
           | _ -> (e, Util.subst_typ subst t)
         end
 
@@ -158,16 +161,14 @@ let maybe_instantiate env e t =
       | _ -> (e, Util.subst_typ subst t) in
   aux false [] t e
 
-let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:bool) : (typ * option<exp>) = 
+let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:bool) (default_ml:bool) : (typ * option<exp>) = 
   let rec aux norm subst t f =
     let t = compress_typ t in 
     match t.t with 
       | Typ_uvar _ when (not imp_arg_follows) -> 
         let arg = new_tvar env Kind_type in
         let res = new_tvar env Kind_type in 
-        let eff = {effect_name=Util.set_lid_range Const.ml_effect_lid (Env.get_range env);
-                   result_typ=res;
-                   effect_args=[]} in
+        let eff = if default_ml then Util.ml_comp res (Env.get_range env) else new_cvar env res in
         let tf = withkind Kind_type <| Typ_fun(None, arg, eff, false) in
         trivial <| teq env t tf;
         (tf, f)
@@ -179,7 +180,7 @@ let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:boo
         let g = match f with 
           | None -> None
           | Some f -> Some <| Exp_tapp(f, arg) in
-        aux norm subst c.result_typ g 
+        aux norm subst (force_comp c).result_typ g 
 
       | Typ_fun(_, _, _, false) when imp_arg_follows -> 
         (* function type wants an explicit argument, but we have an implicit arg expected *)
@@ -192,7 +193,7 @@ let destruct_function_typ (env:env) (t:typ) (f:option<exp>) (imp_arg_follows:boo
         let g = match f with 
           | None -> None
           | Some f -> Some <| Exp_app(f, arg, true) in
-        aux norm subst c.result_typ g
+        aux norm subst (force_comp c).result_typ g
 
       | Typ_fun _ -> 
         (* either, we have an implicit function but with an explicit instantiation following;
@@ -222,7 +223,7 @@ let destruct_poly_typ (env:env) (t:typ) (f:exp) targ : (typ*exp) =
         let arg = new_evar env (Util.subst_typ subst t1) in
         let subst = Inr(x, arg)::subst in
         let g = Exp_app(f, arg, true) in
-        aux norm subst c.result_typ g
+        aux norm subst (force_comp c).result_typ g
 
       | _ when not norm -> 
         let t = normalize env t in 
@@ -307,20 +308,20 @@ let pat_as_exps env p : list<exp> =
     | Inl _ -> failwith "Impossible"
     | Inr (e) -> e) (aux p)    
 
-let generalize env e (c:comp_typ) : (exp * comp_typ) = 
+let generalize env e (c:comp) : (exp * comp) = 
   if not <| Util.is_total_comp c 
   then e, c
   else
-//    let _ = printfn "Generalizing %s\n" (Print.typ_to_string c.result_typ) in
-//    let print_uvars uvs = 
-//      uvs |> List.iter (fun (uv, _) -> printfn "\t%d" (Unionfind.uvar_id uv)) in
-    let t = c.result_typ in
-    let uvars = Env.uvars_in_env env in
-//    printfn "Uvars in env:"; print_uvars uvars.uvars_t;
-    let uvars_t = (Util.uvars_in_typ t).uvars_t in
-//    printfn "Uvars in type:"; print_uvars uvars_t;
-    let generalizable = uvars_t |> List.filter (fun (uv,_) -> not (uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
-    let tvars = generalizable |> List.map (fun (u,k) -> 
+     let _ = printfn "Generalizing %s\n" (Print.typ_to_string (Util.comp_result c)) in 
+     let print_uvars uvs =
+       uvs |> List.iter (fun (uv, _) -> printfn "\t%d" (Unionfind.uvar_id uv)) in
+     let t = (force_comp c).result_typ in
+     let uvars = Env.uvars_in_env env in
+     printfn "Uvars in env:"; print_uvars uvars.uvars_t;
+     let uvars_t = (Util.uvars_in_typ t).uvars_t in
+     printfn "Uvars in type:"; print_uvars uvars_t;
+     let generalizable = uvars_t |> List.filter (fun (uv,_) -> not (uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
+     let tvars = generalizable |> List.map (fun (u,k) -> 
       let a = Util.new_bvd (Some <| Tc.Env.get_range env) in
       let t = Util.bvd_to_typ a k in
       unchecked_unify u t;
@@ -384,15 +385,20 @@ let extract_lb_annotation env t e = match t.t with
       | Exp_abs _ -> Util.total_comp (aux env e) (Env.get_range env)
       | Exp_ascribed(e, t) -> 
         let c = aux_comp env e in
-        {c with result_typ=t}
-      | _ -> Util.ml_comp (new_tvar env Kind_type) (Env.get_range env) in
+        begin match compress_comp c with 
+          | Comp ct -> Comp ({ct with result_typ=t})
+          | Flex (u, t0) -> 
+            Rel.trivial <| Rel.teq env t t0;
+            Flex (u, t)
+        end
+      | _ -> new_cvar env (new_tvar env Kind_type) in
     aux env e       
   | _ -> t
 
 (*********************************************************************************************)
 (* Utils related to monadic computations *)
 (*********************************************************************************************)
-type comp_with_binder = option<Env.binding> * comp_typ
+type comp_with_binder = option<Env.binding> * comp
 
 let destruct_comp c : (typ * typ * typ) = 
   let wp, wlp = match c.effect_args with 
@@ -418,11 +424,11 @@ let lift_and_destruct env c1 c2 =
   (md, a, kwp), (destruct_comp m1), destruct_comp m2
 
 let mk_comp md result wp wlp = 
-  {effect_name=md.mname;
-   result_typ=result;
-   effect_args=[Inl wp; Inl wlp]}
+  Comp ({effect_name=md.mname;
+         result_typ=result;
+         effect_args=[Inl wp; Inl wlp]})
 
-let bind env (c1:comp_typ) ((b, c2):comp_with_binder) : comp_typ = 
+let bind env (c1:comp) ((b, c2):comp_with_binder) : comp = 
   if Util.is_total_comp c1 && Util.is_total_comp c2
   then c2
   else if Util.is_ml_comp c2
@@ -440,7 +446,7 @@ let bind env (c1:comp_typ) ((b, c2):comp_with_binder) : comp_typ =
     let wlp = {Util.mk_typ_app md.bind_wlp args with k=k} in 
     mk_comp md t2 wp wlp
 
-let bind_ite env (cond:typ) (c1:comp_typ) (c2:comp_typ) : comp_typ = 
+let bind_ite env (cond:typ) (c1:comp) (c2:comp) : comp = 
   let (md, a, kwp), (t, wp1, wlp1), (_, wp2, wlp2) = lift_and_destruct env c1 c2 in 
   let k = Util.subst_kind [Inl(a, t)] kwp in
   let wlp = {Util.mk_typ_app md.ite_wlp [Inl t; Inl cond; Inl wlp1; Inl wlp2] with k=k} in
@@ -478,15 +484,15 @@ let weaken_precondition env c f = match f with
   | Trivial -> c
   | Guard f -> bind env (lift_assumption env f) (None, c)
 
-let close_comp_typ env bindings c = 
+let close_comp env bindings (c:comp) = 
   let close_wp md res_t bindings wp0 =  
     List.fold_right (fun b wp -> match b with 
       | Env.Binding_var(x, t) -> 
         let wp = withkind (Kind_dcon(None, t, wp0.k, false)) <| Typ_lam(x, t, wp) in
-        {Util.mk_typ_app md.close_wp [Inl c.result_typ; Inl t; Inl wp] with k=wp0.k}
+        {Util.mk_typ_app md.close_wp [Inl res_t; Inl t; Inl wp] with k=wp0.k}
       | Env.Binding_typ(a, k) -> //A bit sloppy here: close_wp_t is only for Type; overloading it here for all kinds
         let wp = withkind (Kind_tcon(None, k, wp0.k, false)) <| Typ_tlam(a, k, wp) in
-        {Util.mk_typ_app md.close_wp_t [Inl c.result_typ; Inl wp] with k=wp0.k}
+        {Util.mk_typ_app md.close_wp_t [Inl res_t; Inl wp] with k=wp0.k}
       | Env.Binding_lid(l, t) -> 
         (* TODO: replace every occurrence of l in wp with a fresh bound var, abstract over the bound var and then close it.
                  Except that it is highly unlikely for the wp to actually contain such a free occurrence of l *)
@@ -499,7 +505,7 @@ let close_comp_typ env bindings c =
   let wlp = close_wp md c.result_typ bindings wlp in
   mk_comp md c.result_typ wp wlp
 
-let weaken_result_typ (env:env)  (e:exp) (c:comp_typ) (t:typ) : exp * comp_typ = 
+let weaken_result_typ (env:env)  (e:exp) (c:comp) (t:typ) : exp * comp = 
   let c = Tc.Normalize.weak_norm_comp env c in
   let tc, wp, wlp = destruct_comp c in
   let g = Tc.Rel.subtype env tc t in
@@ -507,7 +513,7 @@ let weaken_result_typ (env:env)  (e:exp) (c:comp_typ) (t:typ) : exp * comp_typ =
   let c = strengthen_precondition env (mk_comp md tc wp wlp) g in
   e, c
 
-let check_comp_typ (env:env) (e:exp) (c:comp_typ) (c':comp_typ) : exp * comp_typ * guard = 
-  match Tc.Rel.sub_comp_typ env c c' with 
+let check_comp (env:env) (e:exp) (c:comp) (c':comp) : exp * comp * guard = 
+  match Tc.Rel.sub_comp env c c' with 
     | None -> raise (Error(Tc.Errors.computed_computation_type_does_not_match_annotation e c c', Tc.Env.get_range env))
     | Some g -> e, c', g

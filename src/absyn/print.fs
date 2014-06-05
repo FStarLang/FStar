@@ -73,13 +73,16 @@ let rec typ_to_string x =
       | Uvar _ ->               Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)))
   
 and comp_typ_to_string c =
-  let c = recover_tot_or_ml_effect c in 
-  if    (lid_equals c.effect_name Const.tot_effect_lid && Util.is_function_typ c.result_typ)
-     || (lid_equals c.effect_name Const.ml_effect_lid && not (Util.is_function_typ c.result_typ))
-  then typ_to_string c.result_typ
-  else Util.format3 "%s %s %s" (sli c.effect_name) (typ_to_string c.result_typ) (String.concat ", " <| List.map either_to_string c.effect_args)
+  match compress_comp c with 
+    | Flex (u, t) -> Util.format2 "_Eff%s_ %s" (Util.string_of_int <| Unionfind.uvar_id u) (typ_to_string t)
+    | Comp c -> 
+    let c = recover_tot_or_ml_effect c in
+    if    (lid_equals c.effect_name Const.tot_effect_lid && Util.is_function_typ c.result_typ)
+       || (lid_equals c.effect_name Const.ml_effect_lid && not (Util.is_function_typ c.result_typ))
+    then typ_to_string c.result_typ
+    else Util.format3 "%s %s %s" (sli c.effect_name) (typ_to_string c.result_typ) (String.concat ", " <| List.map either_to_string c.effect_args)
 
-and recover_tot_or_ml_effect c = 
+and recover_tot_or_ml_effect (c:comp_typ) = 
   let flatten_and_compress_typ_apps f = 
     let f, args = Util.flatten_typ_apps (Util.compress_typ f) in
     f, args |> List.map (function 
@@ -141,10 +144,10 @@ and recover_tot_or_ml_effect c =
 
   if lid_equals c.effect_name Const.tot_effect_lid  || lid_equals c.effect_name Const.ml_effect_lid
   then c
-//  else if lid_equals c.effect_name Const.pure_effect_lid
-//  then recover_tot c
-//  else if lid_equals c.effect_name Const.all_effect_lid
-//  then recover_ml c
+  else if lid_equals c.effect_name Const.pure_effect_lid
+  then recover_tot c
+  else if lid_equals c.effect_name Const.all_effect_lid
+  then recover_ml c
   else c
    
 and exp_to_string x = match compress_exp x with 

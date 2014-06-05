@@ -667,7 +667,7 @@ and desugar_typ env (top:term) : typ =
       let desugar_cod env tt = 
         let t = desugar_typ env tt in 
         let tc, args = Util.flatten_typ_apps t in
-        match (compress_typ tc).t, args with 
+        let ct = match (compress_typ tc).t, args with 
           | Typ_const eff, Inl result_typ::rest when DesugarEnv.is_effect_name env eff.v -> 
             {effect_name=eff.v;
              result_typ=result_typ;
@@ -685,7 +685,8 @@ and desugar_typ env (top:term) : typ =
               | _ -> false in
             {effect_name=set_lid_range env.default_result_effect tt.range;
              result_typ=t;
-             effect_args=[]} in 
+             effect_args=[]} in
+          Comp ct in 
       let p = match tk with
         | Inl(None, k) ->
           let x = new_bvd (Some b.brange) in
@@ -968,8 +969,8 @@ let mk_data_ops env = function
           then t2
           else 
             let subst = [Inr(x, mk_app (fvar field_name (range_of_lid field_name)) (freeterms@[Inr formal_exp, false]))] in
-            subst_comp_typ subst t2 in
-        aux (fields@sigs) t2.result_typ
+            subst_comp subst t2 in
+        aux (fields@sigs) (force_comp t2).result_typ
           
       | Typ_univ(a, k, t2) ->
         let field_name = lid_of_ids (ids_of_lid lid @ [a.ppname]) in
@@ -980,8 +981,8 @@ let mk_data_ops env = function
           if freetv |> Util.for_some (fun b -> Util.bvd_eq b.v a)
           then t2
           else let subst = [Inl(a, mk_tapp (ftv field_name) (freeterms@[Inr formal_exp, false]))] in
-               subst_comp_typ subst t2 in
-        aux (fields@[sigs]) t2.result_typ
+               subst_comp subst t2 in
+        aux (fields@[sigs]) (force_comp t2).result_typ
 
       | _ -> fields in
     let disc_name = lid_of_ids (lid.ns@[Syntax.mk_ident("is_" ^ lid.ident.idText, lid.ident.idRange)]) in

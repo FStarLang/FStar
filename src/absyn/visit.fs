@@ -49,7 +49,7 @@ let rec compress_exp_aux meta exp = match exp with
   | _ -> exp
 let compress_exp e = compress_exp_aux true e
 let compress_exp_uvars e = compress_exp_aux false e
-  
+ 
 let rec compress_kind knd = match knd with 
   | Kind_uvar uv -> 
     begin
@@ -58,6 +58,18 @@ let rec compress_kind knd = match knd with
         | _ -> knd
     end
   | _ -> knd
+
+let compress_comp c : comp = match c with 
+  | Comp _ -> c
+  | Flex (u, _) -> 
+    match Unionfind.find u with 
+      | Floating _ -> c
+      | Resolved c -> Comp c
+
+let compress_comp_typ c : comp_typ =
+  match compress_comp c with 
+    | Comp c -> c
+    | _ -> failwith "Unexpected floating computation type"
 
 let left ext benv btv = match ext benv (Inl btv) with 
   | benv, Inl bvd -> benv, bvd
@@ -138,13 +150,13 @@ and visit_typ'
                 | Some bvd ->
                   let benv, bvd' = right ext benv (withsort bvd t1) in
                   benv, Some bvd' in
-              visit_comp_typ' h f g l ext env benv' t2
+              visit_comp' h f g l ext env benv' t2
                 (fun (env, t2') ->
                   cont (env, wk <| Typ_fun(nopt', t1', t2', imp))))
             
         | Typ_univ (bvd, k,  t) ->
           let benv', bvd' = left ext benv (withsort bvd k) in
-          visit_comp_typ' h f g l ext env benv' t
+          visit_comp' h f g l ext env benv' t
             (fun (env, t') ->
               visit_kind' h f g l ext env benv' k
                 (fun (env, k') ->
@@ -211,6 +223,18 @@ and visit_typ'
 
         | _ -> failwith "Unexpected type"
 
+and visit_comp' (h: 'env -> 'benv -> knd -> ('env * knd))
+                (f: 'env -> 'benv -> typ -> ('env * typ))
+                (g: 'env -> 'benv -> exp -> ('env * exp))
+                (l: 'env -> exp -> exp)
+                (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
+                (env:'env) (benv:'benv) (c:comp) (cont : ('env * comp) -> 'res) : 'res =
+   match compress_comp c with 
+    | Comp ct -> 
+      visit_comp_typ' h f g l ext env benv ct (fun (env, ct) -> cont (env, Comp ct))
+    | Flex (u, t) -> 
+      visit_typ' h f g l ext env benv t (fun (env, t) -> cont (env, Flex(u,t)))
+   
 and visit_comp_typ'
     (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
@@ -486,7 +510,7 @@ let rec reduce_kind
     (map_typ': mapper<'env, typ, typ>)
     (map_exp': mapper<'env, exp, exp>)
     (combine_kind: (knd -> (list<knd> * list<typ> * list<exp>) -> 'env -> (knd * 'env)))
-    (combine_typ: (typ -> (list<knd> * list<typ> * list<comp_typ> * list<exp>) -> 'env -> (typ * 'env)))
+    (combine_typ: (typ -> (list<knd> * list<typ> * list<comp> * list<exp>) -> 'env -> (typ * 'env)))
     (combine_exp: (exp -> (list<knd> * list<typ> * list<exp>) -> 'env -> (exp * 'env))) (env:'env) binders k: (knd * 'env) =
   let rec visit_kind env binders k =
     let k = compress_kind k in
@@ -522,7 +546,7 @@ and reduce_typ
     (map_typ': mapper<'env, typ, typ>)
     (map_exp': mapper<'env, exp, exp>)
     (combine_kind: (knd -> (list<knd> * list<typ> * list<exp>) -> 'env -> (knd * 'env)))
-    (combine_typ: (typ -> (list<knd> * list<typ> * list<comp_typ> * list<exp>) -> 'env -> (typ * 'env)))
+    (combine_typ: (typ -> (list<knd> * list<typ> * list<comp> * list<exp>) -> 'env -> (typ * 'env)))
     (combine_exp: (exp -> (list<knd> * list<typ> * list<exp>) -> 'env -> (exp * 'env))) (env:'env) binders t : (typ * 'env) =
   let rec map_typs env binders tl = 
     let tl, _, env = List.fold_left (fun (out, binders, env) (xopt, t) ->
@@ -530,7 +554,11 @@ and reduce_typ
         let binders = push_vbinder binders xopt in 
         t::out, binders, env) ([], binders, env) tl in
     List.rev tl, env 
-  and map_comp_typ env binders ct = 
+  and map_comp env binders c = match compress_comp c with 
+    | Flex (u, t) -> 
+      let t, env = map_typ env binders t in
+      Flex(u, t), env    
+    | Comp ct ->
       let t, env = map_typ env binders ct.result_typ in
       let args, env = List.fold_left (fun (env, out) -> function
         | Inl t -> 
@@ -539,7 +567,7 @@ and reduce_typ
         | Inr e -> 
           let e, env = map_exp env binders e in
           env, Inr e::out) (env, []) ct.effect_args in 
-      {ct with result_typ=t; effect_args=List.rev args}, env 
+      Comp ({ct with result_typ=t; effect_args=List.rev args}), env 
   and visit_typ env binders t = 
     let kl, tl, cl, el, env = match (compress_typ t).t with 
       | Typ_unknown
@@ -555,11 +583,11 @@ and reduce_typ
       | Typ_fun(xopt, t1, t2, imp) -> 
         let t1, env = map_typ env binders t1 in 
         let binders = push_vbinder binders xopt in
-        let t2, env = map_comp_typ env binders t2 in 
+        let t2, env = map_comp env binders t2 in 
         [], [t1], [t2], [], env 
       | Typ_univ(a, k, t) -> 
         let k, env = map_kind env binders k in
-        let t, env = map_comp_typ env (push_tbinder binders (Some a)) t in
+        let t, env = map_comp env (push_tbinder binders (Some a)) t in
         [k], [], [t], [], env
       | Typ_tlam(a, k, t) ->
         let k, env = map_kind env binders k in
@@ -602,7 +630,7 @@ and reduce_exp
     (map_typ': mapper<'env, typ, typ>)
     (map_exp': mapper<'env, exp, exp>)
     (combine_kind: (knd -> (list<knd> * list<typ> * list<exp>) -> 'env -> (knd * 'env)))
-    (combine_typ: (typ -> (list<knd> * list<typ> * list<comp_typ> * list<exp>) -> 'env -> (typ * 'env)))
+    (combine_typ: (typ -> (list<knd> * list<typ> * list<comp> * list<exp>) -> 'env -> (typ * 'env)))
     (combine_exp: (exp -> (list<knd> * list<typ> * list<exp>) -> 'env -> (exp * 'env))) (env:'env) binders e : (exp * 'env) =
   let rec map_exps env binders el = 
     let el, env = List.fold_left (fun (out, env) e -> 

@@ -211,7 +211,7 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
 
        | Typ_fun(Some x, t1, c, _), Typ_fun(Some x', t1', c', _)  -> 
          bindf (aux false norm t1' t1) (fun f -> 
-         bindf (crel rel env c (Util.subst_comp_typ [Inr(x', Util.bvd_to_exp x t1')] c')) (fun g -> 
+         bindf (crel rel env c (Util.subst_comp [Inr(x', Util.bvd_to_exp x t1')] c')) (fun g -> 
          let g = conj_guard f <| close_guard (Inl(x, t1')) g in
          ret <| Some (mk_guard_lam top t g)))
 
@@ -227,7 +227,7 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
 
        | Typ_univ(a1, k1, c), Typ_univ(a1', k1', c') -> 
          bindf (krel rel env k1' k1) (fun f -> 
-         bindf (crel rel env c (Util.subst_comp_typ [Inl(a1', Util.bvd_to_typ a1 k1')] c')) (fun g -> 
+         bindf (crel rel env c (Util.subst_comp [Inl(a1', Util.bvd_to_typ a1 k1')] c')) (fun g -> 
          let g = close_guard (Inr(a1, k1')) g in
          ret <| Some (mk_guard_lam top t <| conj_guard f g)))
       
@@ -361,35 +361,66 @@ and const_eq s1 s2 = match s1, s2 with
   | _ -> s1=s2 
 
 and crel rel env c1 c2 : option<guard> = 
-  let rec aux norm c1 c2 = match rel with 
+  let rec aux norm (c1:comp) (c2:comp) = match rel with 
   | EQ -> 
-    if lid_equals c1.effect_name c2.effect_name
-    then either_rel rel env (Inl c1.result_typ::c1.effect_args) (Inl c2.result_typ::c2.effect_args) 
-    else if not norm 
-    then aux true (Normalize.weak_norm_comp env c1) (Normalize.weak_norm_comp env c2)
-    else None
+    begin match compress_comp c1, compress_comp c2 with 
+      | Comp ct1, Comp ct2  -> 
+        if lid_equals ct1.effect_name ct2.effect_name
+        then either_rel rel env (Inl ct1.result_typ::ct1.effect_args) (Inl ct2.result_typ::ct2.effect_args) 
+        else if not norm 
+        then aux true (Comp <| Normalize.weak_norm_comp env (Comp ct1)) (Comp <| Normalize.weak_norm_comp env (Comp ct2))
+        else None
+      | Flex (u, t1), Comp ct2
+      | Comp ct2, Flex (u, t1) -> 
+        bindf (trel false EQ env t1 ct2.result_typ) (fun f -> 
+          Unionfind.change u (Resolved ct2);
+          Some f)
+      | Flex (u1, t1), Flex (u2, t2) -> 
+        bindf (trel false EQ env t1 t2) (fun f -> 
+        if (Unionfind.equivalent u1 u2) 
+        then Some f
+        else (Unionfind.union u1 u2; Some f))
+    end
     
   | SUB -> 
     if is_total_comp c1 && is_total_comp c2
-    then trel false SUB env c1.result_typ c2.result_typ
+    then trel false SUB env (force_comp c1).result_typ (force_comp c2).result_typ
     else 
-      let c1 = Normalize.weak_norm_comp env c1 in
-      let c2 = Normalize.weak_norm_comp env c2 in
-      match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
-        | None -> None
-        | Some edge ->
-          let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
-            | Inl wp1::_, Inl wp2::_ -> wp1, wp2 
-            | _ -> failwith (Printf.sprintf "Got effects %s of %A\nand %s of %A" (Print.sli c1.effect_name) c1.effect_args (Print.sli c2.effect_name)  c2.effect_args) in
-          andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
-        let c2_decl : monad_decl = Tc.Env.monad_decl env c2.effect_name in
-        let imp_wp = 
-          let k0 = Kind_tcon(None, wpc2.k, Kind_type, false) in
-          let k = Kind_tcon(None, wpc2.k, k0, false) in
-          let t = withkind k <| Typ_app(c2_decl.imp_wp, c2.result_typ, false) in
-          let t = withkind k0 <| Typ_app(t, wpc2, false) in
-          withkind Kind_type <| Typ_app(t, edge.mlift c1.result_typ wpc1, false) in
-        ret <| Some (Guard <| imp_wp)) in
+      match Util.compress_comp c1, Util.compress_comp c2 with 
+        | Comp ct1, Comp ct2 ->
+          let c1 = Normalize.weak_norm_comp env (Comp ct1) in
+          let c2 = Normalize.weak_norm_comp env (Comp ct2) in
+          begin match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
+            | None -> None
+            | Some edge ->
+              let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
+                | Inl wp1::_, Inl wp2::_ -> wp1, wp2 
+                | _ -> failwith (Printf.sprintf "Got effects %s of %A\nand %s of %A" (Print.sli c1.effect_name) c1.effect_args (Print.sli c2.effect_name)  c2.effect_args) in
+              andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
+            let c2_decl : monad_decl = Tc.Env.monad_decl env c2.effect_name in
+            let imp_wp = 
+              let k0 = Kind_tcon(None, wpc2.k, Kind_type, false) in
+              let k = Kind_tcon(None, wpc2.k, k0, false) in
+              let t = withkind k <| Typ_app(c2_decl.imp_wp, c2.result_typ, false) in
+              let t = withkind k0 <| Typ_app(t, wpc2, false) in
+              withkind Kind_type <| Typ_app(t, edge.mlift c1.result_typ wpc1, false) in
+            ret <| Some (Guard <| imp_wp))
+           end
+        
+        | Flex(u, t), Comp ct2 -> 
+          bindf (trel false SUB env t ct2.result_typ) (fun f -> 
+              Unionfind.change u (Resolved ct2);
+              Some f)
+        | Comp ct2, Flex(u, t) -> 
+          bindf (trel false SUB env ct2.result_typ t) (fun f -> 
+              Unionfind.change u (Resolved ct2);
+              Some f)
+
+        | Flex(u1, t1), Flex(u2, t2) -> 
+          bindf (trel false SUB env t1 t2) (fun f -> 
+              if not (Unionfind.equivalent u1 u2)
+              then Unionfind.union u1 u2;
+              Some f) in
   aux false c1 c2
 
 and either_rel rel env l1 l2 = 
@@ -431,4 +462,4 @@ let trivial_subtype env eopt t1 t2 =
         | Some e -> range_of_exp e (Tc.Env.get_range env) in
       raise (Error(Tc.Errors.basic_type_error eopt t2 t1, r))
 
-let sub_comp_typ env c1 c2 = crel SUB env c1 c2
+let sub_comp env c1 c2 = crel SUB env c1 c2

@@ -48,6 +48,9 @@ let handleable = function
 let compress_kind = Visit.compress_kind
 let compress_typ  = Visit.compress_typ
 let compress_exp  = Visit.compress_exp 
+let force_comp = Visit.compress_comp_typ
+let compress_comp = Visit.compress_comp
+
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
@@ -107,20 +110,27 @@ let order_bvd x y = match x, y with
   | Inr x, Inr y -> String.compare x.ppname.idText y.ppname.idText
 
 let ml_comp t r =  
-  {effect_name=set_lid_range Const.ml_effect_lid r;
-   result_typ=t;
-   effect_args=[]}
-
+  Comp ({effect_name=set_lid_range Const.ml_effect_lid r;
+         result_typ=t;
+         effect_args=[]})
+    
 let total_comp t r = 
-  {effect_name=set_lid_range Const.tot_effect_lid r;
-   result_typ=t;
-   effect_args=[]}
+  Comp  ({effect_name=set_lid_range Const.tot_effect_lid r;
+          result_typ=t;
+          effect_args=[]})
 
-let is_total_comp c = 
-  lid_equals c.effect_name Const.tot_effect_lid
+let is_total_comp c = match c with 
+  | Comp c ->
+    lid_equals c.effect_name Const.tot_effect_lid
+  | _ -> false
 
-let is_ml_comp c = 
-  lid_equals c.effect_name Const.ml_effect_lid
+let is_ml_comp = function
+  | Comp c -> lid_equals c.effect_name Const.ml_effect_lid
+  | _ -> false
+
+let comp_result c = match compress_comp c with 
+  | Flex (_, t) -> t
+  | Comp ct -> ct.result_typ
 
 (********************************************************************************)
 (****************Simple utils on the local structure of a term ******************)
@@ -389,7 +399,10 @@ let freevars_comp_typ : comp_typ -> freevars =
   fun c -> 
     let t = withkind kun <| Typ_app(ftv c.effect_name, c.result_typ, false) in
     freevars_typ <| mk_typ_app t c.effect_args
-     
+
+let freevars_comp c = match compress_comp c with 
+  | Flex(_, t) -> freevars_typ t
+  | Comp ct -> freevars_comp_typ ct
 
 (********************************************************************************)
 (************************** Type/term substitutions *****************************)
@@ -462,6 +475,12 @@ let subst_comp_typ s t = match s with
   | _ -> 
     {t with result_typ=subst_typ s t.result_typ; 
             effect_args=List.map (function Inl t -> Inl <| subst_typ s t | Inr e -> Inr <| subst_exp s e) t.effect_args}
+let subst_comp s t = match s with 
+  | [] -> t
+  | _ -> 
+    match compress_comp t with 
+      | Flex(u, t) -> Flex(u, subst_typ s t)
+      | Comp ct -> Comp(subst_comp_typ s ct)
 
 let close_with_lam tps t = List.fold_right
   (fun tp out -> match tp with
@@ -472,7 +491,7 @@ let close_with_lam tps t = List.fold_right
 let close_with_arrow tps t =
   t |> (tps |> List.fold_right (
     fun tp out -> match tp with
-      | Tparam_typ (a,k) -> withkind Kind_type <| Typ_univ (a,k,total_comp out (range_of_bvd a))
+      | Tparam_typ (a,k) -> withkind Kind_type <| Typ_univ (a,k, total_comp out (range_of_bvd a))
       | Tparam_term (x,t) -> withkind Kind_type <| Typ_fun (Some x,t, total_comp out (range_of_bvd x), true)))
 
 let close_typ = close_with_arrow
@@ -705,9 +724,17 @@ let collect_formals t =
     else 
       match (whnf t).t with
         | Typ_fun(xopt, t1, cod, _) -> 
-          aux cod.effect_name (Inr(xopt,t1)::out) cod.result_typ
+          let out = Inr(xopt,t1)::out in
+          begin match compress_comp cod with 
+            | Comp cod -> aux cod.effect_name out cod.result_typ
+            | Flex (_, t) -> List.rev out, t
+          end
         | Typ_univ(a, k, cod) -> 
-          aux cod.effect_name (Inl(a,k)::out) cod.result_typ
+          let out = Inl(a,k)::out in
+          begin match compress_comp cod with 
+            | Comp cod -> aux cod.effect_name out cod.result_typ
+            | Flex (_, t) -> List.rev out, t
+          end
         | _ -> List.rev out, t 
   in aux Const.tot_effect_lid [] t
 
