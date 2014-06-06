@@ -49,7 +49,10 @@ let const_to_string x = match x with
      
 let rec typ_to_string x =
   let x = if !Options.print_real_names then x else whnf x in
-  match (compress_typ x).t with 
+  match x.t with 
+  | Typ_meta(Meta_named(_, l)) -> sli l
+  | Typ_meta(Meta_pos(t, _)) -> typ_to_string t
+  | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)
   | Typ_btvar btv -> 
     (match !btv.v.instantiation with 
       | None -> strBvd btv.v
@@ -66,12 +69,10 @@ let rec typ_to_string x =
   | Typ_ascribed(t, k) when !Options.print_real_names -> Util.format2 "(%s <: %s)" (typ_to_string t) (kind_to_string k)
   | Typ_ascribed(t, _) ->      t|> typ_to_string
   | Typ_unknown -> "_"
-  | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)
-  | Typ_uvar(uv, k) -> (match Unionfind.find uv with 
-      | Fixed t -> t|> typ_to_string
-      | Uvar _ when !Options.print_real_names ->  Util.format2 "'U%s : %s"  (Util.string_of_int (Unionfind.uvar_id uv)) (kind_to_string k)
-      | Uvar _ ->               Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)))
-  
+  | Typ_uvar(uv, k) -> (match Visit.compress_typ_aux false x with 
+      | {t=Typ_uvar _} -> Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv))
+      | t -> t|> typ_to_string)
+      
 and comp_typ_to_string c =
   match compress_comp c with 
     | Flex (u, t) -> Util.format2 "_Eff%s_ %s" (Util.string_of_int <| Unionfind.uvar_id u) (typ_to_string t)
@@ -191,6 +192,7 @@ and either_to_string x = match x with
   | Inr e -> exp_to_string e
 
 and meta_to_string x = match x with 
+  | Meta_named(_, l) -> sli l
   | Meta_pos(t, _) -> typ_to_string t
   | Meta_cases tl -> Util.format1 "\n\tMetaCases [%s]\n" (Util.concat_l ";\n" (List.map typ_to_string tl))
   | Meta_tid i -> Util.format1 "(Meta_tid %d)" (Util.string_of_int i)

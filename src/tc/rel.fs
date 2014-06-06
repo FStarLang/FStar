@@ -399,11 +399,10 @@ and crel rel env c1 c2 : option<guard> =
               andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
             let c2_decl : monad_decl = Tc.Env.monad_decl env c2.effect_name in
             let imp_wp = 
-              let k0 = Kind_tcon(None, wpc2.k, Kind_type, false) in
-              let k = Kind_tcon(None, wpc2.k, k0, false) in
-              let t = withkind k <| Typ_app(c2_decl.imp_wp, c2.result_typ, false) in
-              let t = withkind k0 <| Typ_app(t, wpc2, false) in
-              withkind Kind_type <| Typ_app(t, edge.mlift c1.result_typ wpc1, false) in
+              let t = Util.mk_typ_app c2_decl.wp_binop [Inl c2.result_typ; Inl wpc2; Inl <| Util.ftv Const.implies_lid; Inl <| edge.mlift c1.result_typ wpc1] in
+              let t = {t with k=wpc2.k} in
+              let t = Util.mk_typ_app c2_decl.wp_as_type [Inl c2.result_typ; Inl t] in
+              {t with k=Kind_type} in
             ret <| Some (Guard <| imp_wp))
            end
         

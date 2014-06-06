@@ -985,7 +985,7 @@ let mk_data_ops env = function
         aux (fields@[sigs]) (force_comp t2).result_typ
 
       | _ -> fields in
-    let disc_name = lid_of_ids (lid.ns@[Syntax.mk_ident("is_" ^ lid.ident.idText, lid.ident.idRange)]) in
+    let disc_name = Util.mk_discriminator lid in
     let disc = Sig_val_decl(disc_name, build_typ (Util.ftv Const.bool_lid), Some Assumption, Some Logic_discriminator, range_of_lid disc_name) in
     aux [disc] t
   | _ -> []
@@ -1236,9 +1236,12 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
          bind_wlp=lookup "bind_wlp";
          ite_wp=lookup "ite_wp";
          ite_wlp=lookup "ite_wlp";
-         imp_wp=lookup "imp_wp";
+         wp_binop=lookup "wp_binop";
+         wp_as_type=lookup "wp_as_type";
          close_wp=lookup "close_wp";
          close_wp_t=lookup "close_wp_t";
+         assert_p=lookup "assert_p";
+         assume_p=lookup "assume_p";
          abbrevs=m_abbrevs} in
       let env = DesugarEnv.exit_monad_scope env0 menv in 
       env, msig in

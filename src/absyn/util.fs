@@ -54,6 +54,8 @@ let compress_comp = Visit.compress_comp
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
+let mk_discriminator lid = 
+  lid_of_ids (lid.ns@[Syntax.mk_ident("is_" ^ lid.ident.idText, lid.ident.idRange)])
 
 let gensym = 
   let ctr = mk_ref 0 in 
@@ -228,6 +230,7 @@ let range_of_exp e def = match e with
 
 let range_of_typ t def = match t.t with 
   | Typ_meta(Meta_pos(_, r)) -> r
+  | Typ_meta(Meta_named(_, l)) -> range_of_lid l
   | _ -> def
 let range_of_lb = function
   | (Inl x, _, _) -> range_of_bvd x
@@ -669,6 +672,7 @@ let mk_binop op phi1 phi2 =
   let app1 = withkind (Kind_tcon(None, Kind_type, Kind_type, false)) <| Typ_app(ftv op, phi1, false) in
   withkind Kind_type <| Typ_app(app1, phi2, false)
 
+let mk_neg phi = withkind Kind_type <| Typ_app(ftv Const.not_lid, phi, false)
 let mk_conj phi1 phi2 = mk_binop Const.and_lid phi1 phi2
 let mk_disj phi1 phi2 = mk_binop Const.or_lid phi1 phi2
 let mk_imp phi1 phi2  = mk_binop Const.implies_lid phi1 phi2

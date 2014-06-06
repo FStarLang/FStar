@@ -309,10 +309,11 @@ let pat_as_exps env p : list<exp> =
     | Inr (e) -> e) (aux p)    
 
 let generalize env e (c:comp) : (exp * comp) = 
-  if not <| Util.is_total_comp c 
+    let _ = printfn "Generalizing %s\n" (Print.typ_to_string (Util.comp_result c)) in
+     let _ = printfn "In normal form %s\n" (Print.typ_to_string (Normalize.norm_typ  [Normalize.Beta; Normalize.Delta; Normalize.SNComp; Normalize.DeltaComp] env (Util.comp_result c))) in 
+   if not <| Util.is_total_comp c 
   then e, c
   else
-     let _ = printfn "Generalizing %s\n" (Print.typ_to_string (Util.comp_result c)) in 
      let print_uvars uvs =
        uvs |> List.iter (fun (uv, _) -> printfn "\t%d" (Unionfind.uvar_id uv)) in
      let t = (force_comp c).result_typ in
@@ -428,6 +429,16 @@ let mk_comp md result wp wlp =
          result_typ=result;
          effect_args=[Inl wp; Inl wlp]})
 
+let return_value env t v = 
+  match Tc.Env.monad_decl_opt env Const.pure_effect_lid with 
+    | None -> Util.total_comp t (range_of_exp v (Env.get_range env))
+    | Some m -> 
+       let a, kwp = Env.wp_signature env Const.pure_effect_lid in
+       let k = Util.subst_kind [Inl(a, t)] kwp in
+       let wp = {Util.mk_typ_app m.ret [Inl t; Inr v] with k=k} in
+       let wlp = wp in
+       mk_comp m t wp wlp
+
 let bind env (c1:comp) ((b, c2):comp_with_binder) : comp = 
   if Util.is_total_comp c1 && Util.is_total_comp c2
   then c2
@@ -440,49 +451,84 @@ let bind env (c1:comp) ((b, c2):comp_with_binder) : comp =
       | Some (Env.Binding_var(x, t)) -> withkind (Kind_dcon(Some x, t, wp.k, false)) <| Typ_lam(x, t, wp)
       | Some (Env.Binding_lid(l, t)) -> withkind (Kind_dcon(None, t, wp.k, false)) <| Typ_lam(Util.new_bvd None, t, wp)
       | Some _ -> failwith "Unexpected type-variable binding" in
-    let args = [Inl t1; Inl t2; Inl wp1; Inl wlp1; Inl (mk_lam wp2); Inl (mk_lam wlp2)] in
+    let wp_args = [Inl t1; Inl t2; Inl wp1; Inl wlp1; Inl (mk_lam wp2); Inl (mk_lam wlp2)] in
+    let wlp_args = [Inl t1; Inl t2; Inl wlp1; Inl (mk_lam wlp2)] in
     let k = Util.subst_kind [Inl(a, t2)] kwp in
-    let wp = {Util.mk_typ_app md.bind_wp args with k=k} in
-    let wlp = {Util.mk_typ_app md.bind_wlp args with k=k} in 
+    let wp = {Util.mk_typ_app md.bind_wp wp_args with k=k} in
+    let wlp = {Util.mk_typ_app md.bind_wlp wlp_args with k=k} in 
     mk_comp md t2 wp wlp
 
-let bind_ite env (cond:typ) (c1:comp) (c2:comp) : comp = 
-  let (md, a, kwp), (t, wp1, wlp1), (_, wp2, wlp2) = lift_and_destruct env c1 c2 in 
-  let k = Util.subst_kind [Inl(a, t)] kwp in
-  let wlp = {Util.mk_typ_app md.ite_wlp [Inl t; Inl cond; Inl wlp1; Inl wlp2] with k=k} in
-  let wp = {Util.mk_typ_app md.ite_wp [Inl t; Inl cond; Inl wp1; Inl wlp1; Inl wp2; Inl wlp2] with k=k} in
-  mk_comp md t wp wlp
-
-let lift_formula t wp wlp env f = 
+let lift_formula env t mk_wp mk_wlp f = 
   let md_pure = Tc.Env.monad_decl env Const.pure_effect_lid in
   let a, kwp = Tc.Env.wp_signature env md_pure.mname in 
   let k = Util.subst_kind [Inl(a, t)] kwp in
-  let wp = {Util.mk_typ_app wp [Inl t; Inl f] with k=k} in
-  let wlp = {Util.mk_typ_app wlp [Inl t; Inl f] with k=k} in
+  let wp = {Util.mk_typ_app mk_wp [Inl t; Inl f] with k=k} in
+  let wlp = {Util.mk_typ_app mk_wlp [Inl t; Inl f] with k=k} in
   mk_comp md_pure t_unit wp wlp 
 
 let lift_assertion env f =
   let assert_pure = must <| Tc.Env.lookup_typ_abbrev env Const.assert_pure_lid in
   let assume_pure = must <| Tc.Env.lookup_typ_abbrev env Const.assume_pure_lid in
-  lift_formula assert_pure assume_pure t_unit env f
+  lift_formula env t_unit assert_pure assume_pure f
 
 let lift_assumption env f =
-  let assume_pure = must <| Tc.Env.lookup_typ_abbrev env Const.assert_pure_lid in
-  lift_formula assume_pure assume_pure t_unit env f
+  let assume_pure = must <| Tc.Env.lookup_typ_abbrev env Const.assume_pure_lid in
+  lift_formula env t_unit assume_pure assume_pure f
 
-let lift_pure env f = 
-  let t = new_tvar env Kind_type in 
+let lift_pure env t f = 
   let assert_pure = must <| Tc.Env.lookup_typ_abbrev env Const.assert_pure_lid in
   let assume_pure = must <| Tc.Env.lookup_typ_abbrev env Const.assume_pure_lid in
-  lift_formula assert_pure assume_pure t env f
+  lift_formula env t assert_pure assume_pure f
 
 let strengthen_precondition env c f = match f with 
   | Trivial -> c
-  | Guard f -> bind env (lift_assertion env f) (None, c)
+  | Guard f -> 
+    let c = force_comp c in 
+    let res_t, wp, wlp = destruct_comp c in
+    let md = Tc.Env.monad_decl env c.effect_name in 
+    let wp = Util.mk_typ_app md.assert_p [Inl res_t; Inl f; Inl wp] in
+    let wlp = Util.mk_typ_app md.assume_p [Inl res_t; Inl f; Inl wlp] in
+    mk_comp md res_t wp wlp
 
 let weaken_precondition env c f = match f with 
   | Trivial -> c
-  | Guard f -> bind env (lift_assumption env f) (None, c)
+  | Guard f -> 
+    let c = force_comp c in 
+    let res_t, wp, wlp = destruct_comp c in
+    let md = Tc.Env.monad_decl env c.effect_name in 
+    let wp = Util.mk_typ_app md.assume_p [Inl res_t; Inl f; Inl wp] in
+    let wlp = Util.mk_typ_app md.assume_p [Inl res_t; Inl f; Inl wlp] in
+    mk_comp md res_t wp wlp
+
+let bind_cases env (res_t:typ) (cases:list<(option<formula> * comp)>) : comp =
+  let caccum, guard = cases |> List.fold_left (fun (caccum, guard) (gopt, c) -> 
+    let guard, cguard = match guard, gopt with 
+      | None, Some g -> Some g, Some g
+      | Some g, None -> guard, Some <| Util.mk_neg g
+      | Some g, Some g' -> Some (Util.mk_disj g g'), Some <| Util.mk_conj (Util.mk_neg g) g'
+      | None, None -> None, None in
+    let c = match cguard with 
+      | None -> c
+      | Some g -> weaken_precondition env c (Guard g) in 
+    match caccum with 
+      | None -> (Some c, guard)
+      | Some caccum -> 
+        let (md, a, kwp), (t, wp1, wlp1), (_, wp2, wlp2) = lift_and_destruct env caccum c in 
+        let k = Util.subst_kind [Inl(a, t)] kwp in
+        let wp_conj wp1 wp2 = 
+          {Util.mk_typ_app md.wp_binop [Inl t; Inl wp1; Inl (Util.ftv Const.and_lid); Inl wp2] with k=k} in
+        let wp = wp_conj wp1 wp2 in
+        let wlp = wp_conj wlp1 wlp2 in 
+        (Some <| mk_comp md t wp wlp, guard)) (None, None) in
+  let caccum, guard = force_comp (must <| caccum), must guard in
+  let md = Tc.Env.monad_decl env caccum.effect_name in
+  let res_t, wp, wlp = destruct_comp caccum in
+  let wp = Util.mk_typ_app md.assert_p [Inl res_t; Inl guard; Inl wp] in
+  let a, kwp = Tc.Env.wp_signature env caccum.effect_name in
+  let k = Util.subst_kind [Inl(a, res_t)] kwp in
+  let wp = {Util.mk_typ_app md.ite_wp [Inl res_t; Inl wlp; Inl wp] with k=k} in
+  let wlp = {Util.mk_typ_app md.ite_wlp [Inl res_t; Inl wlp] with k=k} in
+  mk_comp md res_t wp wlp
 
 let close_comp env bindings (c:comp) = 
   let close_wp md res_t bindings wp0 =  

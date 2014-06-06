@@ -77,11 +77,28 @@ type env = {
   is_pattern:bool;               (* is the current term being checked a pattern? *)
   instantiate_targs:bool;        (* instantiate implicit type arguments? default=true *)
   instantiate_vargs:bool;        (* instantiate implicit value agruments? default=true *)
-  lattice:lattice
+  lattice:lattice;
 }
 
+let initial_env module_lid =
+  { range=Syntax.dummyRange;
+    curmodule=module_lid;
+    gamma= [];
+    modules= [];
+    expected_typ=None;
+    level=Expr;
+    sigtab=Util.smap_create default_table_size;
+    is_pattern=false;
+    instantiate_targs=true;
+    instantiate_vargs=true;
+    lattice={decls=[]; order=[]; joins=[]};
+  }
+
+let monad_decl_opt env l = 
+  env.lattice.decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname l) 
+
 let monad_decl env l = 
-  match env.lattice.decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname l) with
+  match monad_decl_opt env l with
     | None -> raise (Error(Tc.Errors.name_not_found l, range_of_lid l))
     | Some md -> md
   
@@ -167,19 +184,7 @@ let rec add_sigelt env se = match se with
 and add_sigelts (env:env) ses = 
   ses |> List.iter (add_sigelt env)
 
-let initial_env module_lid =
-  { range=Syntax.dummyRange;
-    curmodule=module_lid;
-    gamma= [];
-    modules= [];
-    expected_typ=None;
-    level=Expr;
-    sigtab=Util.smap_create default_table_size;
-    is_pattern=false;
-    instantiate_targs=true;
-    instantiate_vargs=true;
-    lattice={decls=[]; order=[]; joins=[]}
-  }
+
 
 let finish_module env m = 
   let sigs = env.gamma |> List.collect (function 
@@ -312,7 +317,9 @@ let lookup_datacons_of_typ (env:env) lid =
     
 let lookup_typ_abbrev env lid =
   match lookup_qname env lid with 
-    | Some (Inr (Sig_typ_abbrev (lid, tps, _, t, _, _))) -> Some (Util.close_with_lam tps t)
+    | Some (Inr (Sig_typ_abbrev (lid, tps, _, t, _, _))) -> 
+      let t = Util.close_with_lam tps t in
+      Some (withkind t.k <| Typ_meta(Meta_named(t, lid)))
     | _ -> None
         
 let lookup_btvdef env (btvd:btvdef): option<knd> = 

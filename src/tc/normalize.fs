@@ -42,6 +42,7 @@ type step =
   | Beta
   | DeltaComp
   | Simplify
+  | SNComp
 and steps = list<step>
 
 type config<'a> = {code:'a;
@@ -72,15 +73,7 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
       | [] -> out
       | (Inl (t,e,k), imp)::rest -> 
         let c = sn tcenv ({code=t; environment=e; stack=[]; steps=config.steps}) in 
-        begin match out.t, c.code.t, rest with 
-          | Typ_const f, Typ_const g, [Inl (t', e', k'), _] 
-            when (List.contains Simplify config.steps
-                 && (lid_equals f.v Const.and_lid || lid_equals f.v Const.implies_lid) 
-                 && lid_equals g.v Const.true_lid) ->
-            let c = sn tcenv ({code=t'; environment=e'; stack=[]; steps=config.steps}) in
-            c.code
-          | _ -> aux (withkind k <| Typ_app(out, c.code, imp)) rest
-        end 
+        aux (withkind k <| Typ_app(out, c.code, imp)) rest
       | (Inr (v,e,k), imp)::rest -> 
         let c = wne tcenv ({code=v; environment=e; stack=[]; steps=config.steps}) in 
         aux (withkind k <| Typ_dep(out, c.code, imp)) rest in
@@ -199,7 +192,8 @@ let rec sn tcenv (config:config<typ>) : config<typ> =
       let cases = snl tcenv (tl |> List.map (fun t -> {config with code=t; stack=[]})) in
       let t = Typ_meta(Meta_cases (cases |> List.map (fun c -> c.code))) in
       {config with code=wk <| t}
-        
+    
+    | Typ_meta(Meta_named _)    
     | Typ_meta(Meta_pos _) 
     | Typ_meta(Meta_tid _)
     | Typ_unknown -> failwith "impossible"
@@ -221,7 +215,7 @@ and sncomp_typ tcenv (config:config<comp_typ>) : config<comp_typ> =
   let m = config.code in 
   if not <| List.contains DeltaComp config.steps
   then
-    let args = snl_either tcenv ({config with steps=Simplify::config.steps}) (Inl m.result_typ::m.effect_args) in
+    let args = snl_either tcenv ({config with steps=config.steps}) (Inl m.result_typ::m.effect_args) in
     match args with 
       | Inl r::rest -> 
         let n = {effect_name=m.effect_name;
@@ -230,7 +224,8 @@ and sncomp_typ tcenv (config:config<comp_typ>) : config<comp_typ> =
         {config with code=n}
       | _ -> failwith "impossible"
   else
-    let args = snl_either tcenv ({config with steps=Simplify::config.steps}) (Inl m.result_typ::m.effect_args) in
+    let args = Inl m.result_typ::m.effect_args in
+    let args = if List.contains SNComp config.steps then snl_either tcenv ({config with steps=config.steps}) args else args in
     let remake l args = 
       let r, eargs = match args with
         | Inl r::rest -> r, rest
@@ -368,7 +363,7 @@ let norm_comp steps tcenv c =
   force_comp c.code
 
 let normalize_comp tcenv c = 
-  let steps = [Delta;Beta;DeltaComp;Simplify] in
+  let steps = [Delta;Beta;DeltaComp] in
   norm_comp steps tcenv c
 
 let normalize tcenv t = norm_typ [Delta;Alpha;Beta] tcenv t

@@ -77,6 +77,7 @@ let modulo_lid = pconst  "Modulo"
 (* Some common term constructors *)
 let exp_true_bool  = Exp_constant (Const_bool true)
 let exp_false_bool = Exp_constant (Const_bool false)
+let exp_unit       = Exp_constant (Const_unit)
 let cons_lid       = pconst  "Cons"
 let nil_lid        = pconst  "Nil"
 let ref_lid        = pconst  "ref"

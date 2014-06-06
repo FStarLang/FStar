@@ -89,6 +89,7 @@ and meta_t =
   | Meta_pos of typ * Range.range                            (* user wrote down this type 1 at source position 2 *)
   | Meta_pattern of typ * list<either<typ,exp>>
   | Meta_cases of list<typ>
+  | Meta_named of typ * lident                               (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_tid of int
 and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
@@ -191,9 +192,12 @@ type monad_decl = {
     bind_wlp:typ;
     ite_wp:typ;
     ite_wlp:typ;
-    imp_wp:typ;
+    wp_binop:typ;
+    wp_as_type:typ;
     close_wp:typ;
     close_wp_t:typ;
+    assert_p:typ;
+    assume_p:typ;
     abbrevs:list<sigelt> 
  }
 and sigelt =

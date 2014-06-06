@@ -31,7 +31,8 @@ let rec compress_typ_aux pos typ = match typ.t with
           | _ -> typ
       end
   | Typ_ascribed(t, _)
-  | Typ_meta(Meta_pos(t, _)) when pos -> compress_typ_aux pos t
+  | Typ_meta(Meta_pos(t, _))
+  | Typ_meta(Meta_named(t, _)) when pos -> compress_typ_aux pos t
   | _ -> typ
 let compress_typ typ = compress_typ_aux true typ
 let compress_typ_uvars typ = compress_typ_aux false typ
@@ -220,6 +221,9 @@ and visit_typ'
               aux env tl (fun (env, accum) -> cont (env, Inr e'::accum))) in 
           visit_typ' h f g l ext env benv t 
             (fun (env, t') -> aux env ps (fun (env, ps) -> cont (env, wk <| Typ_meta(Meta_pattern(t', ps)))))
+
+        | Typ_meta(Meta_named(t, name)) ->
+          visit_typ' h f g l ext env benv t (fun (env, t) -> cont (env, wk <| Typ_meta(Meta_named(t, name))))
 
         | _ -> failwith "Unexpected type"
 
@@ -604,6 +608,7 @@ and reduce_typ
       | Typ_uvar(_, k) -> 
         let k, env = map_kind env binders k in
         [k], [], [], [], env
+      | Typ_meta(Meta_named(t, _)) 
       | Typ_meta(Meta_pos(t, _)) ->
         let t, env = map_typ env binders t in
         [], [t], [], [], env 
@@ -783,6 +788,7 @@ let combine_typ t (kl, tl, cl, el) env =
     | Typ_dep(t, e, imp), [], [t'], [], [e'] -> Typ_dep(t', e', imp)
     | Typ_uvar(x, k), [k'], [], [], [] -> Typ_uvar(x, k')
     | Typ_ascribed(_,_), [k'], [t'], [], [] -> Typ_ascribed(t', k')
+    | Typ_meta(Meta_named(_, l)), [], [t'], [], [] -> Typ_meta(Meta_named(t', l))
     | Typ_meta(Meta_pos(_, r)), [], [t'], [], [] -> Typ_meta(Meta_pos(t', r))
     | Typ_meta(Meta_tid _), [], [], [], [] -> t.t
     | Typ_meta(Meta_cases _), [], _, [], [] -> Typ_meta(Meta_cases tl) 

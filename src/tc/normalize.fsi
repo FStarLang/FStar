@@ -27,6 +27,7 @@ type step =
   | Beta
   | DeltaComp
   | Simplify
+  | SNComp
 and steps = list<step>
 
 val normalize: Env.env -> typ -> typ

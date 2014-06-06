@@ -43,12 +43,13 @@ val mk_basic_tuple_type: env -> int -> typ
 val extract_lb_annotation: env -> typ -> exp -> typ
 
 type comp_with_binder = option<Env.binding> * comp
+val return_value: env -> typ -> exp -> comp
 val bind: env -> comp -> comp_with_binder -> comp
-val bind_ite: env -> typ -> comp -> comp -> comp
+val bind_cases: env -> typ -> list<(option<typ> * comp)> -> comp
 val weaken_result_typ: env -> exp -> comp -> typ -> exp * comp
 val strengthen_precondition: env -> comp -> guard -> comp
 val weaken_precondition: env -> comp -> guard -> comp
-val lift_pure: env -> formula -> comp (* with a uvar as a result type *)
+val lift_pure: env -> typ -> formula -> comp (* with t as a result type *)
 val close_guard: list<Tc.Env.binding> -> guard -> guard
 val close_comp: env -> list<binding> -> comp -> comp
 val check_comp: env -> exp -> comp -> comp -> exp * comp * guard
