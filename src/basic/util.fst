@@ -21,6 +21,7 @@ exception Failure of string
 
 (* generic utils *)
 type smap : Type => Type
+assume val lift_all: 'a -> 'a
 assume val smap_create: int -> smap 'value
 assume val smap_add: smap 'value -> string -> 'value -> unit
 assume val smap_try_find: smap<'value> -> string -> option<'value>
@@ -52,7 +53,8 @@ assume val starts_with: string -> string -> bool
 type either<'a,'b> =
   | Inl of 'a
   | Inr of 'b
-
+assume val left: either<'a,'b> -> 'a
+assume val right: either<'a,'b> -> 'b
 assume val physical_eq: 'a -> 'a -> bool 
 assume val nodups: ('a -> 'a -> bool) -> list<'a> -> bool
 assume val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>

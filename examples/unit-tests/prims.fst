@@ -491,7 +491,7 @@ assume val op_Multiply           : int -> int -> PURE.Tot int
 assume val op_Division           : int -> int -> int
 assume val op_Subtraction        : int -> int -> PURE.Tot int
 assume val op_Addition           : int -> int -> PURE.Tot int
-assume val op_Minus              : int -> int -> PURE.Tot int
+assume val op_Minus              : int -> PURE.Tot int
 assume val op_Modulus            : int -> int -> int
 assume val op_LessThanOrEqual    : int -> int -> PURE.Tot bool
 assume val op_GreaterThan        : int -> int -> PURE.Tot bool

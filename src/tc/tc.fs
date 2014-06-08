@@ -292,7 +292,7 @@ and tc_value env e : exp * comp = match e with
            aux norm env (fst <| Tc.Util.destruct_function_typ env t (Some x) None false false)
          
          | Typ_fun(xopt, targ, cod, implicit) -> 
-           let cod = cod |> Util.subst_comp (maybe_make_subst <| Inr(xopt,  Util.bvd_to_exp x targ)) in
+           let cod = Util.subst_comp (maybe_make_subst <| Inr(xopt,  Util.bvd_to_exp x targ)) cod in
            Some targ, Some cod, env, (fun x -> x)
          
          | Typ_univ(a, k, cod) -> 
@@ -363,7 +363,6 @@ and tc_value env e : exp * comp = match e with
     Exp_meta(Meta_info(e, Util.comp_result c, p)), c
   
   | v -> 
-    printfn "Unexpected value %A\n" v;
     failwith (Util.format1 "Unexpected value: %s" (Print.exp_to_string v))
 
 and tc_exp env e : exp * comp = match e with
@@ -466,7 +465,7 @@ and tc_exp env e : exp * comp = match e with
       | Inl _ -> {env with Tc.Env.instantiate_targs=false}
       | Inr (_, imp) -> {env with Tc.Env.instantiate_vargs=not imp} in
     let f, cf = tc_exp env f in
-    if debug env then printfn "Checked function LHS %s at type %s" (Print.exp_to_string f) (Print.comp_typ_to_string cf);
+    if debug env then Util.print_string <| Util.format2 "Checked function LHS %s at type %s" (Print.exp_to_string f) (Print.comp_typ_to_string cf);
     let rec aux (f, tf, (cs:list<Tc.Util.comp_with_binder>), guard, fvs) args = match args with 
       | Inl targ::rest -> 
         let targ, k, g = tc_typ env targ in 
@@ -487,10 +486,10 @@ and tc_exp env e : exp * comp = match e with
               let tt = withkind Kind_type <| Typ_fun(xopt, targ, cres, false) in
               let targ = right <| fvcheck (Inr targ) fvs in
               let arg, carg = tc_exp (instantiate_both (Env.set_expected_typ env targ)) arg in 
-              if debug env then 
-              (printfn "Checked arg %s at type %s" (Print.exp_to_string arg) (Print.comp_typ_to_string carg);
-               printfn "Result type is %s" (Print.comp_typ_to_string cres);
-               printfn "Formal is %s\n" (match xopt with None -> "none" | Some x -> Print.strBvd x));
+//              if debug env then 
+//              (Util.print_string <| Util.format2 "Checked arg %s at type %s" (Print.exp_to_string arg) (Print.comp_typ_to_string carg);
+//               printfn "Result type is %s" (Print.comp_typ_to_string cres);
+//               printfn "Formal is %s\n" (match xopt with None -> "none" | Some x -> Print.strBvd x));
               begin match xopt with 
                 | None -> 
                   let cs = (None, cres)::(None, carg)::cs in
@@ -511,8 +510,8 @@ and tc_exp env e : exp * comp = match e with
 
       | [] -> 
         let tf = right <| fvcheck (Inr tf) fvs in
-        if debug env 
-        then (cs |> List.iter (fun (_, c) -> printfn "Comp: %s" (Print.comp_typ_to_string c)));
+//        if debug env 
+//        then (cs |> List.iter (fun (_, c) -> printfn "Comp: %s" (Print.comp_typ_to_string c)));
         let tail = List.fold_left (fun accum cb -> (fst cb, Tc.Util.bind env (snd cb) accum)) (List.hd cs) (List.tl cs) in
         let c = Tc.Util.bind env cf tail in
         let c = Tc.Util.strengthen_precondition env c guard in
@@ -529,7 +528,7 @@ and tc_exp env e : exp * comp = match e with
         let res_t = Tc.Util.new_tvar env Kind_type in
         Env.set_expected_typ env res_t, res_t in
     let guard_x = Util.new_bvd (Some <| range_of_exp e1 (Env.get_range env)) in
-    let _ = if debug env then printfn "New guard exp %s\n" (Print.strBvd guard_x) in
+//    let _ = if debug env then printfn "New guard exp %s\n" (Print.strBvd guard_x) in
     let t_eqns = eqns |> List.map (tc_eqn guard_x (Util.comp_result c1) env_branches) in
     let c_branches = 
       let cases = List.fold_right (fun (_, f, c) caccum -> (f, c)::caccum) t_eqns [] in 
@@ -567,14 +566,11 @@ and tc_exp env e : exp * comp = match e with
     let lbs, env' = lbs |> List.fold_left (fun (xts, env) (x, t, e) -> 
       let t = Tc.Util.extract_lb_annotation true env t e in 
       let t = tc_typ_check_trivial env0 t Kind_type in
-      let _ = if debug env then printfn "Introducing let rec %s at type %s\n" (Print.lbname_to_string x) (Print.typ_to_string t) in
       let env = Env.push_local_binding env (binding_of_lb x t) in
       (x, t, e)::xts, env) ([], env0)  in 
     let lbs = lbs |> List.map (fun (x, t, e) -> 
       let env' = Env.set_expected_typ env' t in
-      let _ = if debug env then printfn "Checking let rec %s at type %s\n" (Print.lbname_to_string x) (Print.typ_to_string t) in
       let e, t = no_guard env <| tc_total_exp env' e in 
-      let _ = if debug env then printfn "Checked let rec %s at type %s\n" (Print.lbname_to_string x) (Print.typ_to_string t) in
       (x, t, e)) in  
     let gen_lbs = 
         let ecs = Tc.Util.generalize env (lbs |> List.map (fun (x, t, e) -> (e, Util.total_comp t <| range_of_lb (x,t,e)))) in
@@ -610,7 +606,7 @@ and tc_exp env e : exp * comp = match e with
       | Inr (e, _) -> e) in 
     Exp_primop(op, es), c
 
-and tc_eqn (guard_x:bvvdef) pat_t env (pat, when_clause, branch) : (pat * option<exp> * exp) * option<formula> * comp =
+and tc_eqn (guard_x:bvvdef) pat_t env (patt, when_clause, branch) : (pat * option<exp> * exp) * option<formula> * comp =
   let rec tc_pat (pat_t:typ) env p : list<Env.binding> * Env.env * list<exp> = 
     let pvar_eq x y = match x, y with 
       | Inl a, Inl b -> bvd_eq a b
@@ -651,17 +647,14 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pat, when_clause, branch) : (pat * option
     let pat_env = List.fold_left Env.push_local_binding env bindings in
     let exps = Tc.Util.pat_as_exps env p in
     let env = {(Tc.Env.set_expected_typ pat_env pat_t) with Env.is_pattern=true} in
-    if debug env then printfn "Checking patterns ... expecting type %s\n" (Print.typ_to_string pat_t);
     let res = bindings, pat_env, List.map (fun e -> fst <| (no_guard env <| tc_total_exp env e)) exps in
-    if debug env then printfn "Done checking patterns"; 
     res in
 
-  let bindings, pat_env, disj_exps = tc_pat pat_t env pat in 
+  let bindings, pat_env, disj_exps = tc_pat pat_t env patt in 
   let when_clause = match when_clause with 
     | None -> None
     | Some e -> Some (fst <| (no_guard env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e)) in
   let branch, c = tc_exp pat_env branch in
- // let _ = printfn "Typed branch %s at computation type %s\n" (Print.exp_to_string branch) (Print.comp_typ_to_string (Comp <| Normalize.normalize_comp env c)) in
   let guard_exp = Util.bvd_to_exp guard_x pat_t in
   let guard_env = Env.push_local_binding env (Env.Binding_var(guard_x, pat_t)) in
   let c = 
@@ -696,17 +689,17 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pat, when_clause, branch) : (pat * option
         let f, _ = Util.uncurry_app e in
         (match f with 
           | Exp_fvar(f, _) -> [discriminate f]
-          | _ -> failwith (Printf.sprintf "Impossible pat exp 1 : %A" e))
-      | e -> failwith (Printf.sprintf "Impossible pat exp 2: %A\n" e)) in
+          | _ -> failwith "Impossible")
+      | e -> failwith "Impossible") in
     List.fold_left (fun fopt f -> match fopt with 
       | None -> Some f
       | Some g -> Some (Util.mk_disj f g)) None discs in
-  (pat, when_clause, branch), gg, c 
+  (patt, when_clause, branch), gg, c 
 
 and tc_kind_trivial env k : knd = 
   match tc_kind env k with 
     | k, Trivial -> k
-    | _ -> raise (Error(Tc.Errors.kind_has_a_non_trivial_precondition k, Env.get_range env));
+    | _ -> raise (Error(Tc.Errors.kind_has_a_non_trivial_precondition k, Env.get_range env))
 
 and tc_typ_trivial env t : typ * knd = 
   let t, k, g = tc_typ env t in
@@ -873,7 +866,7 @@ and tc_decl env se = match se with
       let t = Tc.Util.refine_data_type env lid args result_t in
       let se = Sig_datacon(lid, t, tname, r) in 
       let env = Tc.Env.push_sigelt env se in 
-      if log env then printfn "data %s : %s" lid.str (Print.typ_to_string t);
+      if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Print.typ_to_string t);
       se, env
   
     | Sig_val_decl(lid, t, tag, ltag, r) -> 
@@ -881,7 +874,7 @@ and tc_decl env se = match se with
       let t = tc_typ_check_trivial env t Kind_type in 
       let se = Sig_val_decl(lid, t, tag, ltag, r) in 
       let env = Tc.Env.push_sigelt env se in 
-      if log env then printfn "val %s : %s" lid.str (Print.typ_to_string t);
+      if log env then Util.print_string <| Util.format2 "val %s : %s\n" lid.str (Print.typ_to_string t);
       se, env
   
     | Sig_assume(lid, phi, qual, tag, r) ->
@@ -911,15 +904,12 @@ and tc_decl env se = match se with
                 (Inr l, t, e)
               | Some t' -> match t.t with 
                   | Typ_unknown -> 
-                   // Util.print_string (Util.format2 "Looked up val %s got type %s\n" l.str (Print.typ_to_string t'));
                     (Inr l, t', e)
                   | _ -> raise (Error (Tc.Errors.inline_type_annotation_and_val_decl l, range_of_lid l)) in
-             if debug env then printfn "Checking %s = %s at type %s" (Print.lbname_to_string lb) (Print.exp_to_string e) (Print.typ_to_string t);
              (lb, t, e) in
         lb::lbs) [] in
       let lbs' = List.rev lbs' in
       let e = Exp_let((fst lbs, lbs'), Exp_constant(Syntax.Const_unit)) in
-      //let _ = printfn "Checking expression %s\n" (Print.exp_to_string e) in
       let se = match tc_exp env e with 
         | Exp_let(lbs, _), c -> (* TODO: Call the solver here! *) 
           if log env 

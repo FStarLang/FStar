@@ -93,7 +93,7 @@ let initial_env module_lid =
     is_pattern=false;
     instantiate_targs=true;
     instantiate_vargs=true;
-    lattice={decls=[]; order=[]; joins=[]};
+    lattice={decls=[]; order=[]; joins=[]}
   }
 
 let monad_decl_opt env l = 
@@ -104,7 +104,7 @@ let monad_decl env l =
     | None -> raise (Error(Tc.Errors.name_not_found l, range_of_lid l))
     | Some md -> md
   
-let join env l1 l2 = 
+let join env l1 l2 : (lident * (typ -> typ -> typ) * (typ -> typ -> typ)) = 
   if lid_equals l1 l2
   then l1, (fun t wp -> wp), (fun t wp -> wp)
   else match env.lattice.joins |> Util.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with 
@@ -113,7 +113,7 @@ let join env l1 l2 =
 
 let monad_leq env l1 l2 : option<edge> =
   if lid_equals l1 l2 
-  then Some ({msource=l1; mtarget=l2; mlift=fun t wp -> wp})
+  then Some ({msource=l1; mtarget=l2; mlift=(fun t wp -> wp)})
   else env.lattice.order |> Util.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)  
 
 let wp_sig_aux decls m = 
@@ -140,12 +140,12 @@ let build_lattice env se = match se with
       let b, k2 = kwp mo.target in
       {msource=mo.source; mtarget=mo.target; mlift=mk_lift a k1 b k2 mo.lift}) in
     let order = env.lattice.order@order in
-    let order = order@(decls0 |> List.map (fun md -> {msource=md.mname; mtarget=md.mname; mlift=fun t wp -> wp})) in
+    let order = order@(decls0 |> List.map (fun md -> {msource=md.mname; mtarget=md.mname; mlift=(fun t wp -> wp)})) in
 
     let compose_edges e1 e2 : edge = 
        {msource=e1.msource;
         mtarget=e2.mtarget;
-        mlift=fun r wp1 -> e2.mlift r (e1.mlift r wp1)} in
+        mlift=(fun r wp1 -> e2.mlift r (e1.mlift r wp1))} in
     let ms = List.collect (fun e -> [e.msource; e.mtarget]) order |> Util.remove_dups lid_equals in
     let find_edge order (i, j) = 
       order |> Util.find_opt (fun e -> lid_equals e.msource i && lid_equals e.mtarget j) in

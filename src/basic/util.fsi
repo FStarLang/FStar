@@ -19,6 +19,8 @@ exception Impos
 exception NYI of string
 exception Failure of string
 
+val lift_all: 'a -> 'a
+
 (* generic utils *)
 type smap<'value> = HashMultiMap<string,'value> (* not relying on representation *)
 val smap_create: int -> smap<'value>

@@ -66,8 +66,10 @@ let rec typ_to_string x =
   | Typ_dep(t, v, imp) ->      Util.format3 "(%s %s%s)" (t|> typ_to_string) (if imp then "#" else "") (v|> exp_to_string)
   | Typ_lam(x, t1, t2) ->      Util.format3 "(fun (%s:%s) => %s)" (strBvd x) (t1 |> typ_to_string) (t2|> typ_to_string)
   | Typ_tlam(a, k, t) ->       Util.format3 "(fun (%s:%s) => %s)" (strBvd a) (k |> kind_to_string) (t|> typ_to_string)
-  | Typ_ascribed(t, k) when !Options.print_real_names -> Util.format2 "(%s <: %s)" (typ_to_string t) (kind_to_string k)
-  | Typ_ascribed(t, _) ->      t|> typ_to_string
+  | Typ_ascribed(t, k) ->
+    if !Options.print_real_names  
+    then Util.format2 "(%s <: %s)" (typ_to_string t) (kind_to_string k)
+    else t|> typ_to_string
   | Typ_unknown -> "_"
   | Typ_uvar(uv, k) -> (match Visit.compress_typ_aux false x with 
       | {t=Typ_uvar _} -> Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv))
@@ -77,14 +79,14 @@ and comp_typ_to_string c =
   match compress_comp c with 
     | Flex (u, t) -> Util.format2 "_Eff%s_ %s" (Util.string_of_int <| Unionfind.uvar_id u) (typ_to_string t)
     | Total t -> if Util.is_function_typ t then typ_to_string t else Util.format1 "Tot %s" (typ_to_string t)
-    | Comp c when List.contains TOTAL c.flags && not !Options.print_effect_args -> 
-      if Util.is_function_typ c.result_typ then typ_to_string c.result_typ else Util.format1 "Tot %s" (typ_to_string c.result_typ)
-    | Comp c -> 
-    if not !Options.print_effect_args && (lid_equals c.effect_name Const.ml_effect_lid  || List.contains MLEFFECT c.flags) && not (Util.is_function_typ c.result_typ)
-    then typ_to_string c.result_typ
-    else if !Options.print_effect_args 
-    then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (String.concat ", " <| List.map either_to_string c.effect_args)
-    else Util.format2 "%s (%s)" (sli c.effect_name) (typ_to_string c.result_typ)
+    | Comp c ->
+      if List.contains TOTAL c.flags && not !Options.print_effect_args 
+      then (if Util.is_function_typ c.result_typ then typ_to_string c.result_typ else Util.format1 "Tot %s" (typ_to_string c.result_typ))
+      else if not !Options.print_effect_args && (lid_equals c.effect_name Const.ml_effect_lid  || List.contains MLEFFECT c.flags) && not (Util.is_function_typ c.result_typ)
+      then typ_to_string c.result_typ
+      else if !Options.print_effect_args 
+      then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (String.concat ", " <| List.map either_to_string c.effect_args)
+      else Util.format2 "%s (%s)" (sli c.effect_name) (typ_to_string c.result_typ)
        
 and exp_to_string x = match compress_exp x with 
   | Exp_meta(Meta_datainst(e,_)) -> exp_to_string e 

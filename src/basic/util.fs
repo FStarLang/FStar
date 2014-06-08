@@ -22,6 +22,8 @@ open System.IO
 open System.IO.Compression
 open Profiling
 
+let lift_all x = x
+
 exception Impos
 exception NYI of string
 exception Failure of string

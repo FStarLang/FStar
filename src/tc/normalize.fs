@@ -375,5 +375,5 @@ let normalize_comp tcenv c =
   let steps = [Delta;Beta;SNComp;DeltaComp] in
   norm_comp steps tcenv c
 
-let normalize tcenv t = norm_typ [Delta;Beta;] tcenv t
+let normalize tcenv t = norm_typ [Delta;Beta] tcenv t
 

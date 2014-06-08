@@ -76,13 +76,13 @@ and comp_typ = {
   effect_name:lident; 
   result_typ:typ; 
   effect_args:list<either<typ,exp>>;
-  flags:list<comp_flags>
+  flags:list<cflags>
   }
 and comp = 
   | Total of typ
   | Comp of comp_typ                    
   | Flex of uvar_c * typ
-and comp_flags = 
+and cflags = 
   | TOTAL 
   | MLEFFECT 
   | RETURN 

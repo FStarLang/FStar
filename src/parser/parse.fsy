@@ -618,12 +618,12 @@ term:
 noSeqTerm:
   | simpleTerm { $1 }
 
-  | IF term THEN term ELSE term
+  | IF noSeqTerm THEN noSeqTerm ELSE noSeqTerm
       {
         mk_term (If($2, $4, $6)) (rhs2 parseState 1 6) Expr
       } 
 
-  | IF term THEN term
+  | IF noSeqTerm THEN noSeqTerm
       {
 	    let e = mk_term (Const Syntax.Const_unit) (rhs2 parseState 4 4) Expr in
         mk_term (If($2, $4, e)) (rhs2 parseState 1 4) Expr
@@ -1006,7 +1006,7 @@ moreSemiColonTerms:
       { $2::$3 }
 
 recordExp: 
-  | atomicTerm recordExpRest 
+  | appTerm recordExpRest 
       { $2 $1 (lhs parseState) }
 
 recordExpRest:

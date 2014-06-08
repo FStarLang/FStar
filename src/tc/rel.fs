@@ -410,7 +410,7 @@ and crel rel env c1 c2 : option<guard> =
             | Some edge ->
               let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
                 | Inl wp1::_, Inl wp2::_ -> wp1, wp2 
-                | _ -> failwith (Printf.sprintf "Got effects %s of %A\nand %s of %A" (Print.sli c1.effect_name) c1.effect_args (Print.sli c2.effect_name)  c2.effect_args) in
+                | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in
               andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
             let c2_decl : monad_decl = Tc.Env.monad_decl env c2.effect_name in
             let imp_wp = 
@@ -432,8 +432,8 @@ and crel rel env c1 c2 : option<guard> =
 
         | Flex(u1, t1), Flex(u2, t2) -> 
           bindf (trel false SUB env t1 t2) (fun f -> 
-              if not (Unionfind.equivalent u1 u2)
-              then Unionfind.union u1 u2;
+              (if not (Unionfind.equivalent u1 u2)
+               then Unionfind.union u1 u2); (* TODO: Fix precedence of the ';' *)
               Some f) in
   aux false c1 c2
 

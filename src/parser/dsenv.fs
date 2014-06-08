@@ -142,7 +142,10 @@ let is_effect_name env lid =
   let find_in_sig lid = 
     match Util.smap_try_find env.sigmap lid.str with 
       | Some (Sig_tycon(_, _, _, _, _, tags, _)) 
-      | Some (Sig_typ_abbrev (_, _, _, _, tags, _)) when List.contains Logic_effect tags -> Some (ftv <| lid)
+      | Some (Sig_typ_abbrev (_, _, _, _, tags, _)) -> 
+        if List.contains Logic_effect tags
+        then Some (ftv <| lid)
+        else None 
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig |> Util.is_some
 
@@ -238,20 +241,21 @@ let extract_record env = function
         | _ -> false) in
     
     sigs |> List.iter (function 
-      | Sig_tycon(typename, parms, _, _, [dc], tags, _) when is_rec tags -> 
-        begin match must <| find_dc dc with 
-          | Sig_datacon(constrname, t, _, _) -> 
-              let fields = 
-                (fst <| collect_formals t) |> List.collect (function
-                  | Inr(Some x, t, _) -> [(qual constrname x.ppname, t)]
-                  | _ -> []) in
-              let record = {typename=typename;
-                            constrname=constrname;
-                            parms=parms;
-                            fields=fields} in 
-              record_cache := record::!record_cache 
-          | _ -> ()
-        end 
+      | Sig_tycon(typename, parms, _, _, [dc], tags, _) ->
+        if is_rec tags
+        then match must <| find_dc dc with 
+            | Sig_datacon(constrname, t, _, _) -> 
+                let fields = 
+                  (fst <| collect_formals t) |> List.collect (function
+                    | Inr(Some x, t, _) -> [(qual constrname x.ppname, t)]
+                    | _ -> []) in
+                let record = {typename=typename;
+                              constrname=constrname;
+                              parms=parms;
+                              fields=fields} in 
+                record_cache := record::!record_cache 
+            | _ -> ()
+        else () 
       | _ -> ())
 
   | _ -> ()
