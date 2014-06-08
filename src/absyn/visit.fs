@@ -23,6 +23,8 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
 open Microsoft.FStar.Profiling
 
+let log s = if !Options.fvdie then printfn "%d;" s
+
 let rec compress_typ_aux pos typ = match typ.t with
   | Typ_uvar (uv,k) -> 
       begin
@@ -60,17 +62,22 @@ let rec compress_kind knd = match knd with
     end
   | _ -> knd
 
-let compress_comp c : comp = match c with 
-  | Comp _ -> c
+let rec compress_comp c : comp = match c with 
+  | Comp _ 
+  | Total _ -> c
   | Flex (u, _) -> 
     match Unionfind.find u with 
-      | Floating _ -> c
-      | Resolved c -> Comp c
+      | Floating -> c
+      | Resolved c -> compress_comp c
 
 let compress_comp_typ c : comp_typ =
   match compress_comp c with 
     | Comp c -> c
-    | _ -> failwith "Unexpected floating computation type"
+    | Total t -> {effect_name=Const.tot_effect_lid; result_typ=t; effect_args=[]; flags=[TOTAL]}
+    | Flex(u, t) -> 
+      let ml = {effect_name=Const.ml_effect_lid; result_typ=t; effect_args=[]; flags=[MLEFFECT]} in
+      Unionfind.change u (Resolved (Comp ml));
+      ml  
 
 let left ext benv btv = match ext benv (Inl btv) with 
   | benv, Inl bvd -> benv, bvd
@@ -83,6 +90,7 @@ let right ext benv bvv = match ext benv (Inr bvv) with
    the leaves of a term while gathering a context of names.
    Useful for implementing substitutions, computing freevars etc. *)
 let rec visit_kind'
+    (visit_wps:bool)
     (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
@@ -94,33 +102,34 @@ let rec visit_kind'
     | Kind_uvar _ 
     | Kind_type
     | Kind_effect
-    | Kind_unknown -> cont (h env benv k)
-    | Kind_abbrev(kabr, k) ->
-      visit_kind' h f g l ext env benv k
+    | Kind_unknown -> (* log 1 ; *) cont (h env benv k)
+    | Kind_abbrev(kabr, k) -> (* log 2 ; *)
+      visit_kind' visit_wps h f g l ext env benv k
         (fun (env, k) -> 
-           visit_either_l' h f g l ext env benv (snd kabr)
+           visit_either_l' visit_wps h f g l ext env benv (snd kabr)
             (fun (env, args) -> cont (env, Kind_abbrev((fst kabr, args), k))))
-    | Kind_tcon(aopt, k, k', imp) ->
-        visit_kind' h f g l ext env benv k
+    | Kind_tcon(aopt, k, k', imp) -> (* log 3 ; *)
+        visit_kind' visit_wps h f g l ext env benv k
           (fun (env, k) ->
              let benv, aopt = match aopt with
                | None -> benv, None
                | Some a ->
                    let benv, bvd = left ext benv (withsort a k) in
                      benv, Some bvd in (* Note: previously, with qkind, we were extending the benv before folding over k *)
-               visit_kind' h f g l ext env benv k'
+               visit_kind' visit_wps h f g l ext env benv k'
                  (fun (env, k') ->
                     cont (env, Kind_tcon(aopt, k, k', imp))))
-    | Kind_dcon(xopt, t, k', imp) ->
-        visit_typ' h f g l ext env benv t
+    | Kind_dcon(xopt, t, k', imp) -> (* log 4 ; *)
+        visit_typ' visit_wps h f g l ext env benv t
           (fun (env, t) ->
              let benv, xopt = match xopt with
                | None -> benv, None
                | Some x -> let benv, bvd = right ext benv (withsort x t) in benv, Some bvd in
-               visit_kind' h f g l ext env benv k'
+               visit_kind' visit_wps h f g l ext env benv k'
                  (fun (env, k') ->
                     cont (env, Kind_dcon(xopt, t, k', imp))))
 and visit_typ'
+    (visit_wps:bool)
     (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
@@ -129,127 +138,134 @@ and visit_typ'
     (env:'env) (benv:'benv) (t:typ) (cont:('env * typ) -> 'res) : 'res =
   let wk = withkind t.k in
   match t.t with
-    | Typ_uvar (uv, k) ->
+    | Typ_uvar (uv, k) -> (* log 5 ; *)
       (match Unionfind.find uv with 
-        | Fixed t -> visit_typ' h f g l ext env benv t cont
+        | Fixed t -> visit_typ' visit_wps h f g l ext env benv t cont
         | _ -> cont (f env benv t))
 
     | Typ_meta(Meta_pos(t, _)) 
-    | Typ_ascribed(t, _) -> visit_typ' h f g l ext env benv t cont
+    | Typ_ascribed(t, _) -> (* log 6 ; *) visit_typ' visit_wps h f g l ext env benv t cont
 
     | Typ_btvar _ 
     | Typ_const _
-    | Typ_unknown -> cont (f env benv t)
+    | Typ_unknown -> (* log 7 ; *) cont (f env benv t)
 
     | _ ->
       match t.t with
-        | Typ_fun (nopt, t1, t2, imp) ->
-          visit_typ' h f g l ext env benv t1
+        | Typ_fun (nopt, t1, t2, imp) -> (* log 8 ; *)
+          visit_typ' visit_wps h f g l ext env benv t1
             (fun (env, t1') ->
               let benv', nopt' = match nopt with
                 | None -> benv, nopt
                 | Some bvd ->
                   let benv, bvd' = right ext benv (withsort bvd t1) in
                   benv, Some bvd' in
-              visit_comp' h f g l ext env benv' t2
+              visit_comp' visit_wps h f g l ext env benv' t2
                 (fun (env, t2') ->
                   cont (env, wk <| Typ_fun(nopt', t1', t2', imp))))
             
-        | Typ_univ (bvd, k,  t) ->
+        | Typ_univ (bvd, k,  t) -> (* log 9 ; *)
           let benv', bvd' = left ext benv (withsort bvd k) in
-          visit_comp' h f g l ext env benv' t
+          visit_comp' visit_wps h f g l ext env benv' t
             (fun (env, t') ->
-              visit_kind' h f g l ext env benv' k
+              visit_kind' visit_wps h f g l ext env benv' k
                 (fun (env, k') ->
                       cont (env, wk <| Typ_univ(bvd', k', t'))))
             
-        | Typ_refine (bvd, t, form) ->
-          visit_typ' h f g l ext env benv t
+        | Typ_refine (bvd, t, form) -> (* log 10 ; *)
+          visit_typ' visit_wps h f g l ext env benv t
             (fun (env, t') ->
               let benv', bvd' = right ext benv (withsort bvd t) in
-              visit_typ' h f g l ext env benv' form
+              visit_typ' visit_wps h f g l ext env benv' form
                 (fun (env, form') ->
                   cont (env, wk <| Typ_refine(bvd', t', form'))))
 
-        | Typ_app(t1, t2, imp) ->
-          visit_typ' h f g l ext env benv t1
+        | Typ_app(t1, t2, imp) -> (* log 11 ; *)
+          visit_typ' visit_wps h f g l ext env benv t1
             (fun (env, t1') ->
-              visit_typ' h f g l ext env benv t2
+              visit_typ' visit_wps h f g l ext env benv t2
                 (fun (env, t2') ->
                   cont (env, wk <| Typ_app(t1', t2', imp))))
 
         | Typ_dep({t=Typ_const v; k=k'}, str, imp) 
-            when lid_equals Const.lbl_lid v.v -> 
+            when lid_equals Const.lbl_lid v.v -> (* log 12 ; *)
           cont (env, wk <| Typ_dep(withkind k' <| Typ_const(v), l env str, imp))
             
-        | Typ_dep (t, e, imp) ->
-          visit_typ' h f g l ext env benv t
+        | Typ_dep (t, e, imp) -> (* log 13 ; *)
+          visit_typ' visit_wps h f g l ext env benv t
             (fun (env, t') ->
-              visit_exp' h f g l ext env benv e
+              visit_exp' visit_wps h f g l ext env benv e
                 (fun (env, e') ->
                   cont (env, wk <| Typ_dep(t', e', imp))))
 
-        | Typ_lam(x, t, t') ->
-          visit_typ' h f g l ext env benv t
+        | Typ_lam(x, t, t') -> (* log 14 ; *)
+          visit_typ' visit_wps h f g l ext env benv t
             (fun (env, t) ->
               let benv', bvd' = right ext benv (withsort x t) in
-              visit_typ' h f g l ext env benv' t'
+              visit_typ' visit_wps h f g l ext env benv' t'
                 (fun (env, t') ->
                   cont (env, wk <| Typ_lam(bvd', t, t'))))
 
-        | Typ_tlam(bvd, k, t) ->
+        | Typ_tlam(bvd, k, t) -> (* log 15 ; *)
           let benv', bvd' = left ext benv (withsort bvd k) in
-          visit_typ' h f g l ext env benv' t
+          visit_typ' visit_wps h f g l ext env benv' t
             (fun (env, t') ->
-              visit_kind' h f g l ext env benv' k
+              visit_kind' visit_wps h f g l ext env benv' k
                 (fun (env, k') ->
                   cont (env, wk <| Typ_tlam(bvd', k', t'))))
     
-        | Typ_meta (Meta_cases tl) ->
-          visit_typs' h f g l ext env benv tl
+        | Typ_meta (Meta_cases tl) -> (* log 16 ; *)
+          visit_typs' visit_wps h f g l ext env benv tl
             (fun (env, tl') -> cont (env, wk <| Typ_meta(Meta_cases tl')))
 
-        | Typ_meta (Meta_tid i) ->
+        | Typ_meta (Meta_tid i) -> (* log 17 ; *)
           cont (env, wk <| Typ_meta(Meta_tid i))
 
-        | Typ_meta (Meta_pattern(t, ps)) -> 
+        | Typ_meta (Meta_pattern(t, ps)) ->  (* log 18 ; *)
           let rec aux env ps cont = match ps with 
             | [] -> cont (env, [])
-            | Inl t::tl ->  visit_typ' h f g l ext env benv t (fun (env, t') -> 
+            | Inl t::tl ->  visit_typ' visit_wps h f g l ext env benv t (fun (env, t') -> 
               aux env tl (fun (env, accum) -> cont (env, Inl t'::accum)))
-            | Inr v::tl ->  visit_exp' h f g l ext env benv v (fun (env, e') -> 
+            | Inr v::tl ->  visit_exp' visit_wps h f g l ext env benv v (fun (env, e') -> 
               aux env tl (fun (env, accum) -> cont (env, Inr e'::accum))) in 
-          visit_typ' h f g l ext env benv t 
+          visit_typ' visit_wps h f g l ext env benv t 
             (fun (env, t') -> aux env ps (fun (env, ps) -> cont (env, wk <| Typ_meta(Meta_pattern(t', ps)))))
 
-        | Typ_meta(Meta_named(t, name)) ->
-          visit_typ' h f g l ext env benv t (fun (env, t) -> cont (env, wk <| Typ_meta(Meta_named(t, name))))
+        | Typ_meta(Meta_named(t, name)) -> (* log 19 ; *)
+          visit_typ' visit_wps h f g l ext env benv t (fun (env, t) -> cont (env, wk <| Typ_meta(Meta_named(t, name))))
 
         | _ -> failwith "Unexpected type"
 
-and visit_comp' (h: 'env -> 'benv -> knd -> ('env * knd))
+and visit_comp' (visit_wps:bool)
+                (h: 'env -> 'benv -> knd -> ('env * knd))
                 (f: 'env -> 'benv -> typ -> ('env * typ))
                 (g: 'env -> 'benv -> exp -> ('env * exp))
                 (l: 'env -> exp -> exp)
                 (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
                 (env:'env) (benv:'benv) (c:comp) (cont : ('env * comp) -> 'res) : 'res =
    match compress_comp c with 
-    | Comp ct -> 
-      visit_comp_typ' h f g l ext env benv ct (fun (env, ct) -> cont (env, Comp ct))
-    | Flex (u, t) -> 
-      visit_typ' h f g l ext env benv t (fun (env, t) -> cont (env, Flex(u,t)))
+    | Comp ct -> (* log 20 ; *)
+      visit_comp_typ' visit_wps h f g l ext env benv ct (fun (env, ct) -> cont (env, Comp ct))
+    | Total t -> (* log 21 ; *)
+      visit_typ' visit_wps h f g l ext env benv t (fun (env, t) -> cont (env, Total t))
+    | Flex (u, t) -> (* log 22 ; *)
+      visit_typ' visit_wps h f g l ext env benv t (fun (env, t) -> cont (env, Flex(u,t)))
    
 and visit_comp_typ'
+    (visit_wps:bool)
     (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
     (l: 'env -> exp -> exp)
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
     (env:'env) (benv:'benv) (ct:comp_typ) (cont : ('env * comp_typ) -> 'res) : 'res = 
-    visit_typ' h f g l ext env benv ct.result_typ (fun (env, t) -> 
-    visit_either_l' h f g l ext env benv ct.effect_args (fun (env, args) -> cont (env, {ct with result_typ=t; effect_args=args})))
+    visit_typ' visit_wps h f g l ext env benv ct.result_typ (fun (env, t) -> 
+      if visit_wps 
+      then visit_either_l' visit_wps h f g l ext env benv ct.effect_args (fun (env, args) -> cont (env, {ct with result_typ=t; effect_args=args}))
+      else cont (env, ({ct with result_typ=t})))
         
 and visit_exp'
+    (visit_wps:bool)
     (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
@@ -264,65 +280,65 @@ and visit_exp'
     | _ -> failwith "Unexpected result" in
     match e with
     | Exp_meta(Meta_datainst _) -> failwith "impossible"
-    | Exp_meta(Meta_info(e, t, p)) -> 
-      visit_exp' h f g l ext env benv e 
+    | Exp_meta(Meta_info(e, t, p)) -> (* log 23 ; *)
+      visit_exp' visit_wps h f g l ext env benv e 
         (fun (env, e') -> cont (env, Exp_meta(Meta_info(e', t, p))))
 
-    | Exp_meta(Meta_desugared(e, tag)) -> 
-      visit_exp' h f g l ext env benv e 
+    | Exp_meta(Meta_desugared(e, tag)) -> (* log 24 ; *)
+      visit_exp' visit_wps h f g l ext env benv e 
         (fun (env, e') -> 
           cont (env, Exp_meta(Meta_desugared(e', tag))))
                     
-    | Exp_bvar bv -> 
+    | Exp_bvar bv -> (* log 25 ; *)
       (match !bv.v.instantiation with 
         | None -> cont (g env benv e)
-        | Some e -> visit_exp' h f g l ext env benv e cont)
+        | Some e -> visit_exp' visit_wps h f g l ext env benv e cont)
 
-    | Exp_uvar(uv, _) -> 
+    | Exp_uvar(uv, _) -> (* log 26 ; *)
       (match Unionfind.find uv with 
-        | Fixed e -> visit_exp' h f g l ext env benv e cont
+        | Fixed e -> visit_exp' visit_wps h f g l ext env benv e cont
         | _ -> cont (g env benv e))
 
     | Exp_fvar _
     | Exp_constant _ 
-    | Exp_uvar _ -> cont (g env benv e)
+    | Exp_uvar _ -> (* log 27 ; *) cont (g env benv e)
    
-    | Exp_primop(op, el) ->
-      visit_exps' h f g l ext env benv el
+    | Exp_primop(op, el) -> (* log 28 ; *)
+      visit_exps' visit_wps h f g l ext env benv el
         (fun (env, el) ->
           cont (env, Exp_primop(op, el)))
         
-    | Exp_abs (bvd, t, e) ->
-      visit_typ' h f g l ext env benv t
+    | Exp_abs (bvd, t, e) -> (* log 29 ; *)
+      visit_typ' visit_wps h f g l ext env benv t
         (fun (env, t') ->
           let benv', bvd' = extr benv (Inr (withsort bvd t)) in
-          visit_exp' h f g l ext env benv' e
+          visit_exp' visit_wps h f g l ext env benv' e
             (fun (env, e') ->
               cont (env, Exp_abs(bvd', t', e'))))
         
-    | Exp_tabs(bvd, k, e) ->
-      visit_kind' h f g l ext env benv k
+    | Exp_tabs(bvd, k, e) -> (* log 30 ; *)
+      visit_kind' visit_wps h f g l ext env benv k
         (fun (env, k') ->
           let benv', bvd' = extl benv (Inl (withsort bvd k)) in
-          visit_exp' h f g l ext env benv' e
+          visit_exp' visit_wps h f g l ext env benv' e
             (fun (env, e') ->
               cont (env, Exp_tabs(bvd', k', e'))))
         
-    | Exp_app (e1, e2, imp) ->
-      visit_exp' h f g l ext env benv e1
+    | Exp_app (e1, e2, imp) -> (* log 31 ; *)
+      visit_exp' visit_wps h f g l ext env benv e1
         (fun (env, e1') ->
-          visit_exp' h f g l ext env benv e2
+          visit_exp' visit_wps h f g l ext env benv e2
             (fun (env, e2') ->
               cont (env, Exp_app(e1', e2', imp))))
         
-    | Exp_tapp (e, t) ->
-      visit_exp' h f g l ext env benv e
+    | Exp_tapp (e, t) -> (* log 32 ; *)
+      visit_exp' visit_wps h f g l ext env benv e
         (fun (env, e') ->
-          visit_typ' h f g l ext env benv t
+          visit_typ' visit_wps h f g l ext env benv t
             (fun (env, t') ->
               cont (env, Exp_tapp(e',t'))))
         
-    | Exp_match(e, eqns) ->
+    | Exp_match(e, eqns) -> (* log 33 ; *)
       let rec visit_pat h f g l ext env benv pat cont = match pat with
         | Pat_var bv -> 
            let benv', bvd' = extr benv (Inr (withsort bv tun)) in
@@ -361,39 +377,39 @@ and visit_exp'
             (fun (env, benv', pat') -> 
               match wopt with 
                 | None -> 
-                  visit_exp' h f g l ext env benv' br 
+                  visit_exp' visit_wps h f g l ext env benv' br 
                     (fun (env, br') -> 
                       visit_eqns env benv rest 
                         (fun (env, rest') -> 
                           cont (env, (pat', None, br')::rest')))
                 | Some w -> 
-                  visit_exp' h f g l ext env benv' w 
+                  visit_exp' visit_wps h f g l ext env benv' w 
                     (fun (env, w') -> 
-                      visit_exp' h f g l ext env benv' br 
+                      visit_exp' visit_wps h f g l ext env benv' br 
                         (fun (env, br') -> 
                           visit_eqns env benv rest 
                             (fun (env, rest') -> 
                               cont (env, (pat', Some w', br')::rest'))))) in
-      visit_exp' h f g l ext env benv e
+      visit_exp' visit_wps h f g l ext env benv e
         (fun (env, e) ->
           visit_eqns env benv eqns
             (fun (env, eqns) ->
               cont (env, Exp_match(e, eqns))))
         
-    | Exp_ascribed (e,t) -> 
-      visit_exp' h f g l ext env benv e
+    | Exp_ascribed (e,t) -> (* log 34 ; *)
+      visit_exp' visit_wps h f g l ext env benv e
         (fun (env, e') ->
-          visit_typ' h f g l ext env benv t
+          visit_typ' visit_wps h f g l ext env benv t
             (fun (env, t') ->
               cont (env, Exp_ascribed(e',t'))))
         
-    | Exp_let ((false,lbs), e) ->
+    | Exp_let ((false,lbs), e) -> (* log 35 ; *)
       let rec binders_visit env benv lbs cont = match lbs with
         | [] -> cont (env, benv, [])
         | (lbname,t,e)::rest ->
-          visit_exp' h f g l ext env benv e
+          visit_exp' visit_wps h f g l ext env benv e
             (fun (env, e') ->
-              visit_typ' h f g l ext env benv t
+              visit_typ' visit_wps h f g l ext env benv t
                 (fun (env, t') ->
                   let benv', lbname' = match lbname with
                     | Inl bv -> 
@@ -404,10 +420,10 @@ and visit_exp'
                     cont (env, benv, (lbname',t',e')::accum)))) in
       binders_visit env benv lbs
         (fun (env, benv', lbs') ->
-          visit_exp' h f g l ext env benv' e
+          visit_exp' visit_wps h f g l ext env benv' e
             (fun (env, e') -> cont (env, Exp_let((false, lbs'), e'))))
         
-    | Exp_let ((true, lbs), e) ->
+    | Exp_let ((true, lbs), e) -> (* log 36 ; *)
       let benv', lbs' = List.fold_left
         (fun (benv, out) (lbname,t,e) ->
           let benv', lbname' = match lbname with 
@@ -417,16 +433,17 @@ and visit_exp'
             | Inr _ -> benv, lbname in 
           benv', (lbname', t, e)::out) (benv,[]) lbs in
       let names, typs, exps = List.unzip3 lbs' in
-      visit_typs' h f g l ext env benv' typs
+      visit_typs' visit_wps h f g l ext env benv' typs
         (fun (env, tl) ->
-          visit_exps' h f g l ext env benv' exps
+          visit_exps' visit_wps h f g l ext env benv' exps
             (fun (env, el) ->
               let lbs' = List.zip3 names typs exps in
-              visit_exp' h f g l ext env benv' e
+              visit_exp' visit_wps h f g l ext env benv' e
                 (fun (env, e') ->
                   cont (env, Exp_let((true, lbs'), e')))))
 
 and visit_typs'
+    (visit_wps:bool)
     (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
@@ -435,11 +452,12 @@ and visit_typs'
     (env:'env) (benv:'benv) (ts:list<typ>) (cont:('env * list<typ>) -> 'res) : 'res =
   let rec aux env tl cont = match tl with
     | [] -> cont (env, [])
-    | t::tl -> visit_typ' h f g l ext env benv t (fun (env,t') -> aux env tl (fun (env, accum) -> cont (env, t'::accum)))
+    | t::tl -> visit_typ' visit_wps h f g l ext env benv t (fun (env,t') -> aux env tl (fun (env, accum) -> cont (env, t'::accum)))
   in
     aux env ts cont 
 
 and visit_exps'
+    (visit_wps:bool)
     (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
@@ -449,11 +467,12 @@ and visit_exps'
   
   let rec aux env tl cont = match tl with
     | [] -> cont (env, [])
-    | e::tl -> visit_exp' h f g l ext env benv e (fun (env,t') -> aux env tl (fun (env, accum) -> cont (env, t'::accum)))
+    | e::tl -> visit_exp' visit_wps h f g l ext env benv e (fun (env,t') -> aux env tl (fun (env, accum) -> cont (env, t'::accum)))
   in
     aux env es cont
 
 and visit_either_l'
+    (visit_wps:bool)
     (h: 'env -> 'benv -> knd -> ('env * knd))
     (f: 'env -> 'benv -> typ -> ('env * typ))
     (g: 'env -> 'benv -> exp -> ('env * exp))
@@ -462,17 +481,19 @@ and visit_either_l'
     (env:'env) (benv:'benv) (es:list<either<typ,exp>>) (cont:('env * list<either<typ,exp>>) -> 'res) : 'res =
   let rec aux env tl cont = match tl with
     | [] -> cont (env, [])
-    | (Inr e)::tl -> visit_exp' h f g l ext env benv e (fun (env,e') -> aux env tl (fun (env, accum) -> cont (env, Inr e'::accum)))
-    | (Inl t)::tl -> visit_typ' h f g l ext env benv t (fun (env,t') -> aux env tl (fun (env, accum) -> cont (env, Inl t'::accum)))
+    | (Inr e)::tl -> visit_exp' visit_wps h f g l ext env benv e (fun (env,e') -> aux env tl (fun (env, accum) -> cont (env, Inr e'::accum)))
+    | (Inl t)::tl -> visit_typ' visit_wps h f g l ext env benv t (fun (env,t') -> aux env tl (fun (env, accum) -> cont (env, Inl t'::accum)))
   in
     aux env es cont
       
-let visit_typs h f g l ext env benv t = visit_typs' h f g l ext env benv t (fun x -> x)
-let visit_typ h f g l ext env benv t = visit_typ' h f g l ext env benv t (fun x -> x)
-let visit_exp h f g l ext env benv t = visit_exp' h f g l ext env benv t (fun x -> x)
-let visit_kind h f g l ext env benv t = visit_kind' h f g l ext env benv t (fun x -> x)
+let visit_typs visit_wps h f g l ext env benv t = visit_typs' visit_wps h f g l ext env benv t (fun x -> x)
+let visit_typ visit_wps h f g l ext env benv t = visit_typ' visit_wps h f g l ext env benv t (fun x -> x)
+let visit_exp visit_wps h f g l ext env benv t = visit_exp' visit_wps h f g l ext env benv t (fun x -> x)
+let visit_kind visit_wps h f g l ext env benv t = visit_kind' visit_wps h f g l ext env benv t (fun x -> x)
 
-let visit_simple skel
+let visit_simple 
+    (visit_wps:bool)
+    skel
     (h: 'env -> knd -> ('env * knd))
     (f: 'env -> typ -> ('env * typ))
     (g: 'env -> exp -> ('env * exp))
@@ -481,6 +502,7 @@ let visit_simple skel
     | Inl tv -> (benv, Inl tv.v)
     | Inr xv -> (benv, Inr xv.v) in
   skel
+    (visit_wps:bool)
     (fun env _ k -> h env k)
     (fun env _ t -> f env t)
     (fun env _ e -> g env e)
@@ -488,13 +510,13 @@ let visit_simple skel
     null_extension
     env () t
 
-let visit_kind_simple f = visit_simple visit_kind f
-let visit_typ_simple f = visit_simple visit_typ f 
-let visit_exp_simple f = visit_simple visit_exp f
+let visit_kind_simple visit_wps f = visit_simple visit_wps visit_kind f
+let visit_typ_simple visit_wps f = visit_simple visit_wps visit_typ f 
+let visit_exp_simple visit_wps f = visit_simple visit_wps visit_exp f
 
-(**********************************************************************************)
-(* A more general way to reduce types. Would be good to migrate to this uniformly *)
-(**********************************************************************************)
+(*************************************************************************************)
+(* A more general way to reduce types. But, not as efficient as visit_typ for substs *)
+(*************************************************************************************)
 type binders = list<either<btvdef, bvvdef>>
 type mapper<'env, 'm, 'n> =
     ('env -> binders -> knd -> (knd * 'env))
@@ -562,9 +584,12 @@ and reduce_typ
     | Flex (u, t) -> 
       let t, env = map_typ env binders t in
       Flex(u, t), env    
+    | Total t -> 
+      let t, env = map_typ env binders t in
+      Total t, env
     | Comp ct ->
       let t, env = map_typ env binders ct.result_typ in
-      let args, env = List.fold_left (fun (env, out) -> function
+      let env, args = List.fold_left (fun (env, out) -> function
         | Inl t -> 
           let t, env = map_typ env binders t in
           env, Inl t::out

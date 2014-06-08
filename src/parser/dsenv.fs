@@ -45,7 +45,7 @@ type env = {
   phase:AST.level;
   sigmap: Util.smap<sigelt>;
   effect_names:list<lident>;
-  default_result_effect:lident;
+  default_result_effect:typ -> Range.range -> comp;
 }
 
 let fail_or lookup lid = match lookup lid with 
@@ -75,10 +75,10 @@ let empty_env () = {curmodule=None;
                     phase=AST.Un;
                     sigmap=Util.smap_create(100);
                     effect_names=[];
-                    default_result_effect=Const.ml_effect_lid}
+                    default_result_effect=Util.ml_comp}
 
-let total env = {env with default_result_effect=Const.tot_effect_lid}
-let ml env = {env with default_result_effect=Const.ml_effect_lid}
+let total env = {env with default_result_effect=(fun t _ -> Total t)}
+let ml env = {env with default_result_effect=Util.ml_comp}
 
 let prepare_module env mname = 
   let open_ns = if lid_equals mname Const.prims_lid then [] else Const.prims_lid::env.effect_names in
@@ -243,7 +243,7 @@ let extract_record env = function
           | Sig_datacon(constrname, t, _, _) -> 
               let fields = 
                 (fst <| collect_formals t) |> List.collect (function
-                  | Inr(Some x, t) -> [(qual constrname x.ppname, t)]
+                  | Inr(Some x, t, _) -> [(qual constrname x.ppname, t)]
                   | _ -> []) in
               let record = {typename=typename;
                             constrname=constrname;

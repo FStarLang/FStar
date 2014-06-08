@@ -80,6 +80,8 @@ type env = {
   lattice:lattice;
 }
 
+let debug env = !Options.debug |> Util.for_some (fun x -> env.curmodule.str = x) 
+
 let initial_env module_lid =
   { range=Syntax.dummyRange;
     curmodule=module_lid;
@@ -254,7 +256,7 @@ let lookup_val_decl (env:env) lid =
 
 let lookup_lid env lid = 
   let not_found () = 
-    let _ = Util.smap_fold env.sigtab (fun k _ _ -> Util.print_string (Util.format1 "%s, " k)) () in
+    //let _ = Util.smap_fold env.sigtab (fun k _ _ -> Util.print_string (Util.format1 "%s, " k)) () in
     raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid)) in
   let mapper = function
     | Inl t

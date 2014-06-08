@@ -667,26 +667,22 @@ and desugar_typ env (top:term) : typ =
       let desugar_cod env tt = 
         let t = desugar_typ env tt in 
         let tc, args = Util.flatten_typ_apps t in
-        let ct = match (compress_typ tc).t, args with 
+        match (compress_typ tc).t, args with 
           | Typ_const eff, Inl result_typ::rest when DesugarEnv.is_effect_name env eff.v -> 
-            {effect_name=eff.v;
-             result_typ=result_typ;
-             effect_args=rest} 
-
+            let flags = if lid_equals eff.v Const.tot_effect_lid
+                        then [TOTAL]
+                        else if lid_equals eff.v Const.ml_effect_lid
+                        then [MLEFFECT]
+                        else [] in
+            Comp ({effect_name=eff.v;
+                   result_typ=result_typ;
+                   effect_args=rest; 
+                   flags=flags})
+              
           | Typ_fun _, []
-          | Typ_univ _, [] -> 
-            {effect_name=set_lid_range Const.tot_effect_lid tt.range;
-             result_typ=tc;
-             effect_args=[]}
+          | Typ_univ _, [] -> Total t
 
-          | _ ->
-            let is_effect tc = match tc.t with 
-              | Typ_const eff -> DesugarEnv.is_effect_name env eff.v
-              | _ -> false in
-            {effect_name=set_lid_range env.default_result_effect tt.range;
-             result_typ=t;
-             effect_args=[]} in
-          Comp ct in 
+          | _ -> env.default_result_effect t tt.range in
       let p = match tk with
         | Inl(None, k) ->
           let x = new_bvd (Some b.brange) in
@@ -727,7 +723,7 @@ and desugar_typ env (top:term) : typ =
           | Some x -> push_local_vbinding env x in
         (env, tparams@[Tparam_term(x, t)], typs@[close_with_lam tparams t]))
         (env, [], []) (binders@[mk_binder (NoName t) t.range Type false]) in
-      let tup = fail_or (try_lookup_typ_name env) (lid_of_path [Util.strcat "Tuple" (Util.string_of_int <| List.length targs)] top.range) in
+      let tup = fail_or (try_lookup_typ_name env) (Util.mk_tuple_lid (List.length targs)) in
       List.fold_left (fun t1 t2 -> pk <| Typ_app(t1,t2,false)) tup targs
           
     | Record _ -> failwith "Unexpected record type"
@@ -911,36 +907,37 @@ let logic_tags q = List.collect get_logic_tag q
 
 let mk_data_ops env = function
   | Sig_datacon(lid, t, _, _) ->
-    let args, tconstr = collect_formals t in
+    let args, tcod = collect_formals t in
+    let tconstr = Util.comp_result tcod in
     //Printf.printf "Collecting formals from type %s; got %s with args %d\n" (Print.typ_to_string t) (Print.typ_to_string tconstr) (List.length args);
     let argpats = args |> List.map (function
-      | Inr(Some x,_) -> Pat_var x
-      | Inr(None,targ) -> Pat_var (new_bvd (Some (range_of_lid lid)))
+      | Inr(Some x,_,_) -> Pat_var x
+      | Inr(None,targ,_) -> Pat_var (new_bvd (Some (range_of_lid lid)))
       | Inl(a,_) -> Pat_tvar a) in
     let freetv, freexv  = freevars_typ tconstr in
     let freevars = args |> List.filter (function
       | Inl(a,k) -> freetv |> Util.for_some (fun b -> Util.bvd_eq a b.v)
-      | Inr(Some x,t) -> freexv |> Util.for_some (fun y -> Util.bvd_eq x y.v)
+      | Inr(Some x,t,_) -> freexv |> Util.for_some (fun y -> Util.bvd_eq x y.v)
       | _ -> false) in
     //Printf.printf "Got %d free vars\n" (List.length freevars);
     let freeterms = freevars |> List.map (function 
       | Inl (a, k) -> Inl (Util.bvd_to_typ a k), false
-      | Inr (Some x, t) -> Inr (Util.bvd_to_exp x t), false
+      | Inr (Some x, t,_) -> Inr (Util.bvd_to_exp x t), false
       | _ -> failwith "impossible") in
     let formal = new_bvd (Some <| range_of_lid lid) in
     let formal_exp = bvd_to_exp formal tconstr in
     let rec build_exp freevars e = match freevars with
       | Inl (a,k)::rest -> Exp_tabs(a, k, build_exp rest e)
-      | Inr (Some x, t)::rest -> Exp_abs(x, t, build_exp rest e)
+      | Inr (Some x, t, _)::rest -> Exp_abs(x, t, build_exp rest e)
       | _::rest -> failwith "impossible"
       | [] -> Exp_abs(formal, tconstr, e) in
     let rec build_typ freevars (t:typ) = match freevars with
       | Inl (a,k)::rest -> withkind kun <| Typ_univ(a, k, Util.total_comp (build_typ rest t) (range_of_lid lid))
-      | Inr (xopt,tt)::rest -> withkind kun <| Typ_fun(xopt, tt, Util.total_comp (build_typ rest t) (range_of_lid lid), false)
+      | Inr (xopt,tt,imp)::rest -> withkind kun <| Typ_fun(xopt, tt, Util.total_comp (build_typ rest t) (range_of_lid lid), imp)
       | [] -> withkind kun <| Typ_fun(Some formal, tconstr, Util.total_comp t (range_of_bvd formal), false) in
     let rec build_kind freevars k = match freevars with
       | Inl (a,kk)::rest -> Kind_tcon(Some a, kk, build_kind rest k, false)
-      | Inr (xopt,t)::rest -> Kind_dcon(xopt, t, build_kind rest k, false)
+      | Inr (xopt,t,imp)::rest -> Kind_dcon(xopt, t, build_kind rest k, imp)
       | [] -> Kind_dcon(Some formal, tconstr, k, false) in
     let build_exp  = build_exp freevars in
     let build_typ t = build_typ freevars t in
@@ -1106,13 +1103,13 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         | _ -> failwith "impossible") in
       let bundle = Sig_bundle(sigelts, rng) in
       let env = push_sigelt env0 bundle in
-      let data_ops =
-        if logic_tags quals |> Util.for_some (function
-          | Logic_data
-          | Logic_record -> true
-          | _ -> false)
-        then sigelts |> List.collect (mk_data_ops env)
-        else [] in
+      let data_ops = sigelts |> List.collect (mk_data_ops env) in
+//        if logic_tags quals |> Util.for_some (function
+//          | Logic_data
+//          | Logic_record -> true
+//          | _ -> false)
+//        then sigelts |> List.collect (mk_data_ops env)
+//        else [] in
       let env = List.fold_left push_sigelt env data_ops in
       env, [bundle]@data_ops
 

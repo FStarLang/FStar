@@ -1,43 +1,30 @@
 TRACE=
 ifeq ($(TRACE), true)
-override OTHERFLAGS += --trace_error
+override OTHERFLAGS += --trace_error --prn
+endif
+PRN=
+ifeq ($(PRN), true)
+override OTHERFLAGS += --prn
 endif
 
-FSTAR=../../bin/FStar.exe --fstar_home ../../ $(OTHERFLAGS)
 
-all: utils list tuple rec pat letrec termination #pt-compiler
+FSTAR=../../bin/FStar.exe --fstar_home ../../  $(OTHERFLAGS)
 
-testpoly:
-	$(FSTAR) --pretype --prims prims.fst testpoly.fst
+ALLFILES=utils list tuple rec pat letrec termination skel
+
+all: $(addprefix tc., $(ALLFILES))
 
 prims: 
-	$(FSTAR) --pretype --prims prims.fst 
+	$(FSTAR) --pretype --prims prims.fst
 
-utils:
-	$(FSTAR) --pretype --prims prims.fst utils.fst
+tc.%: %.fst
+	$(FSTAR) --pretype --prims prims.fst $^
 
-list:
-	$(FSTAR) --pretype  --prims prims.fst list.fst
-
-tuple:
-	$(FSTAR) --pretype --prims prims.fst tuple.fst
-
-rec:
-	$(FSTAR) --pretype --prims prims.fst rec.fst
-
-pat:
-	$(FSTAR) --pretype --prims prims.fst pat.fst
-
-letrec:
-	$(FSTAR) --pretype --prims prims.fst letrec.fst
-
-termination:
-	$(FSTAR) --pretype --prims prims.fst termination.fst
 
 STDFILES=list.fst string.fst
 BASICFILES=bytes.fst util.fst getoptsimple.fsi options.fs range.fsi unionfind.fst
 BASIC=$(addprefix ../../src/basic/, $(BASICFILES))
-SYNTAXFILES=syntax.fs const.fs visit.fs util.fs print.fs 
+SYNTAXFILES=syntax.fs const.fs visit-test.fs
 SYNTAX=$(addprefix ../../src/absyn/, $(SYNTAXFILES))
 PARSERFILES=ast.fs dsenv.fs desugar.fs parse.fst lexhelp.fs parseit.fsi driver.fs 
 PARSER=$(addprefix ../../src/parser/, $(PARSERFILES))

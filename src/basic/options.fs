@@ -21,9 +21,12 @@ open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Getopt
 
+let fvdie = Util.mk_ref false
 let z3log = Util.mk_ref false
-let quiet = Util.mk_ref true
 let silent=Util.mk_ref false
+let debug=Util.mk_ref []
+let log_types = Util.mk_ref false
+let print_effect_args=Util.mk_ref false
 let print_real_names = Util.mk_ref false
 let dump_module = Util.mk_ref None
 let logQueries = Util.mk_ref false
@@ -109,6 +112,9 @@ let specs () : list<Getopt.opt> =
      ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
      ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
      ( noshort, "prn", ZeroArgs (fun () -> print_real_names := true), "Print real names---you may want to use this in conjunction with logQueries");
+     ( noshort, "debug", OneArg ((fun x -> debug := x::!debug), "module name"), "Print LOTS of debugging information while checking module [arg]");
+     ( noshort, "log_types", ZeroArgs (fun () -> log_types := true), "Print types computed for data/val/let-bindings");
+     ( noshort, "print_effect_args", ZeroArgs (fun () -> print_effect_args := true), "Print inferred predicate transformers for all computation types");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
      ( noshort, "z3timeout", OneArg ((fun s -> z3timeout := Some s), "t"), "Set the Z3 soft timeout to t milliseconds");
      ( noshort, "logQueries", ZeroArgs (fun () -> logQueries := true), "Log the Z3 queries in $FSTAR_HOME/bin/queries/, or in odir, if set; also see --prn");

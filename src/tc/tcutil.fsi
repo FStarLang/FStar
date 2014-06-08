@@ -33,16 +33,17 @@ val new_tvar : env -> knd -> typ
 val new_evar : env -> typ -> exp
 val check_and_ascribe : env -> exp -> typ -> typ -> exp * Rel.guard
 val pat_as_exps: env -> pat -> list<exp>
-val generalize: env -> exp -> comp -> (exp * comp)
-val maybe_instantiate : env -> exp -> typ -> (exp * typ)
-val destruct_function_typ : env -> typ -> option<exp> -> bool -> bool -> (typ * option<exp>)
+val generalize: env -> list<(exp*comp)> -> (list<(exp*comp)>)
+val maybe_instantiate : env -> exp -> typ -> (exp * comp)
+val destruct_function_typ : env -> typ -> option<bvvdef> -> option<exp> -> bool -> bool -> (typ * option<exp>)
 val destruct_poly_typ: env -> typ -> exp -> typ -> (typ*exp) 
 val destruct_tcon_kind: env -> knd -> typ -> bool -> (knd*typ)
 val destruct_dcon_kind: env -> knd -> typ -> bool -> (knd*typ)
 val mk_basic_tuple_type: env -> int -> typ
-val extract_lb_annotation: env -> typ -> exp -> typ
+val extract_lb_annotation: bool -> env -> typ -> exp -> typ
 
 type comp_with_binder = option<Env.binding> * comp
+val is_pure: env -> comp -> bool
 val return_value: env -> typ -> exp -> comp
 val bind: env -> comp -> comp_with_binder -> comp
 val bind_cases: env -> typ -> list<(option<typ> * comp)> -> comp
@@ -53,3 +54,4 @@ val lift_pure: env -> typ -> formula -> comp (* with t as a result type *)
 val close_guard: list<Tc.Env.binding> -> guard -> guard
 val close_comp: env -> list<binding> -> comp -> comp
 val check_comp: env -> exp -> comp -> comp -> exp * comp * guard
+val refine_data_type: env -> lident -> list<Util.either<(btvdef*knd), (option<bvvdef>*typ*bool)>> -> typ -> typ

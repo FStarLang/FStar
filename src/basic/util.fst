@@ -58,6 +58,7 @@ assume val nodups: ('a -> 'a -> bool) -> list<'a> -> bool
 assume val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
 assume val set_eq: ('a -> 'a -> int) -> list<'a> -> list<'a> -> bool
 assume val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
+assume val add_unique: ('a -> 'a -> bool) -> 'a -> list<'a> -> list<'a>
 assume val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
 assume val for_all: ('a -> bool) -> list<'a> -> bool
 assume val for_some: ('a -> bool) -> list<'a> -> bool

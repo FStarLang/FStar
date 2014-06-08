@@ -20,7 +20,12 @@ let test (a,b)  =
   let _ = true, b in
   Cons 0 a
 
- (* ([],env) el  *)
+let rec f x = f x + 1
+
+type T = 
+  | MkT of int * int
+let test_impure x = MkT (f x, 0)
+
 
 assume val fold_left: ('a -> 'b -> 'a) -> 'a -> list 'b -> 'a
 let test2 env el =

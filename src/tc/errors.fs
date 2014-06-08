@@ -100,6 +100,7 @@ let disjunctive_pattern_vars v1 v2 =
     (vars v1) (vars v2)
  
 let name_and_result c = match Util.compress_comp c with
+  | Total t -> "Tot", t
   | Flex(u, t) -> format1 "__Eff%s__" (string_of_int <| Unionfind.uvar_id u), t
   | Comp ct -> Print.sli ct.effect_name, ct.result_typ
 

@@ -39,7 +39,7 @@ let unify_typ env (uv,k) t  = match Unionfind.find uv with
           if wf t tk && not (occurs ()) 
           then (unchecked_unify uv t; true)
           else false in
-      doit t || (retry && aux false (normalize env t)) in
+     doit t || (retry && aux false (normalize env t)) in
    aux true t
 
 let unify_kind (uv, ()) k = match Unionfind.find uv with 
@@ -273,7 +273,8 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
           else None in
          orf matches (fun () -> 
           if not norm 
-          then aux top true (normalize env t) (normalize env t') 
+          then aux top true (Normalize.norm_typ [Normalize.Delta;Normalize.Beta] env t)
+                            (Normalize.norm_typ [Normalize.Delta;Normalize.Beta] env t')
           else None)
 
        | Typ_refine(x, t1, phi1), Typ_refine(x', t1', phi2) -> 
@@ -363,17 +364,21 @@ and const_eq s1 s2 = match s1, s2 with
 and crel rel env c1 c2 : option<guard> = 
   let rec aux norm (c1:comp) (c2:comp) = match rel with 
   | EQ -> 
-    begin match compress_comp c1, compress_comp c2 with 
-      | Comp ct1, Comp ct2  -> 
+    begin match compress_comp c1, compress_comp c2 with
+      | Total t1, Total t2 -> trel false rel env t1 t2
+      | Total _,  _ -> crel rel env (Comp <| force_comp c1) c2
+      | _, Total _ -> crel rel env c1 (Comp <| force_comp c2)
+      | Comp ct1, Comp ct2 ->
         if lid_equals ct1.effect_name ct2.effect_name
         then either_rel rel env (Inl ct1.result_typ::ct1.effect_args) (Inl ct2.result_typ::ct2.effect_args) 
         else if not norm 
-        then aux true (Comp <| Normalize.weak_norm_comp env (Comp ct1)) (Comp <| Normalize.weak_norm_comp env (Comp ct2))
+        then aux true (Comp <| Normalize.norm_comp [Normalize.DeltaComp] env (Comp ct1)) 
+                      (Comp <| Normalize.norm_comp [Normalize.DeltaComp] env (Comp ct2))
         else None
       | Flex (u, t1), Comp ct2
       | Comp ct2, Flex (u, t1) -> 
         bindf (trel false EQ env t1 ct2.result_typ) (fun f -> 
-          Unionfind.change u (Resolved ct2);
+          Unionfind.change u (Resolved (Comp ct2));
           Some f)
       | Flex (u1, t1), Flex (u2, t2) -> 
         bindf (trel false EQ env t1 t2) (fun f -> 
@@ -383,13 +388,23 @@ and crel rel env c1 c2 : option<guard> =
     end
     
   | SUB -> 
-    if is_total_comp c1 && is_total_comp c2
-    then trel false SUB env (force_comp c1).result_typ (force_comp c2).result_typ
-    else 
-      match Util.compress_comp c1, Util.compress_comp c2 with 
-        | Comp ct1, Comp ct2 ->
-          let c1 = Normalize.weak_norm_comp env (Comp ct1) in
-          let c2 = Normalize.weak_norm_comp env (Comp ct2) in
+    let c1 = Util.compress_comp c1 in
+    let c2 = Util.compress_comp c2 in
+      match c1, c2 with 
+        | Total t1, Total t2 -> trel false SUB env (Util.comp_result c1) (Util.comp_result c2)
+        | Total t1, Flex (u, t2) -> 
+          bindf (trel false SUB env t1 t2) (fun f -> 
+              Unionfind.change u (Resolved (Total t2));
+              Some f)
+        | Flex(u, t1), Total t2 -> 
+          bindf (trel false SUB env t1 t2) (fun f -> 
+              Unionfind.change u (Resolved (Total t2));
+              Some f)
+        | Total _,  _ -> crel SUB env (Comp <| force_comp c1) c2
+        | _, Total _ -> crel SUB env c1 (Comp <| force_comp c2)
+        | Comp _, Comp _ -> 
+          let c1 = Normalize.norm_comp [Normalize.DeltaComp] env c1 in
+          let c2 = Normalize.norm_comp [Normalize.DeltaComp] env c2 in
           begin match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
             | None -> None
             | Some edge ->
@@ -408,11 +423,11 @@ and crel rel env c1 c2 : option<guard> =
         
         | Flex(u, t), Comp ct2 -> 
           bindf (trel false SUB env t ct2.result_typ) (fun f -> 
-              Unionfind.change u (Resolved ct2);
+              Unionfind.change u (Resolved (Comp ct2));
               Some f)
         | Comp ct2, Flex(u, t) -> 
           bindf (trel false SUB env ct2.result_typ t) (fun f -> 
-              Unionfind.change u (Resolved ct2);
+              Unionfind.change u (Resolved (Comp ct2));
               Some f)
 
         | Flex(u1, t1), Flex(u2, t2) -> 
@@ -452,13 +467,14 @@ let subtype env t1 t2 : guard =
     | None -> raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env))
 
 let trivial_subtype env eopt t1 t2 = 
-  let f = subtype env t1 t2 in 
+  let f = try_subtype env t1 t2 in 
   match f with 
-    | Trivial -> ()
-    | _ ->  
+    | Some Trivial -> ()
+    | None 
+    | Some (Guard _) ->  
       let r = match eopt with 
         | None -> range_of_typ t1 (Tc.Env.get_range env)
         | Some e -> range_of_exp e (Tc.Env.get_range env) in
-      raise (Error(Tc.Errors.basic_type_error eopt t2 t1, r))
+      raise (Error(Tc.Errors.basic_type_error eopt t2 t1 ^ (Util.format1 " guard is %s " (match f with None -> "none" | Some (Guard g) -> Print.typ_to_string g)), r))
 
 let sub_comp env c1 c2 = crel SUB env c1 c2

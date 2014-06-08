@@ -57,6 +57,7 @@ type env = {
   lattice:lattice
 }
 
+val debug: env -> bool
 val initial_env : lident -> env
 val finish_module : env -> modul -> env
 val set_level : env -> level -> env

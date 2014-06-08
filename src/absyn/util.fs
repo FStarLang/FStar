@@ -114,25 +114,30 @@ let order_bvd x y = match x, y with
 let ml_comp t r =  
   Comp ({effect_name=set_lid_range Const.ml_effect_lid r;
          result_typ=t;
-         effect_args=[]})
+         effect_args=[];
+         flags=[MLEFFECT]})
     
-let total_comp t r = 
-  Comp  ({effect_name=set_lid_range Const.tot_effect_lid r;
-          result_typ=t;
-          effect_args=[]})
+let total_comp t r = Total t
 
-let is_total_comp c = match c with 
-  | Comp c ->
-    lid_equals c.effect_name Const.tot_effect_lid
-  | _ -> false
+let comp_flags c = match compress_comp c with 
+  | Total _ -> [TOTAL]
+  | Comp ct -> ct.flags
+  | Flex _ -> []
+
+let is_total_comp c = List.contains TOTAL (comp_flags c)
 
 let is_ml_comp = function
-  | Comp c -> lid_equals c.effect_name Const.ml_effect_lid
+  | Comp c -> lid_equals c.effect_name Const.ml_effect_lid || List.contains MLEFFECT c.flags
   | _ -> false
 
 let comp_result c = match compress_comp c with 
+  | Total t
   | Flex (_, t) -> t
   | Comp ct -> ct.result_typ
+
+let is_trivial_wp c = 
+  let f = comp_flags c in
+  List.contains TOTAL f || List.contains RETURN f
 
 (********************************************************************************)
 (****************Simple utils on the local structure of a term ******************)
@@ -247,7 +252,13 @@ let mk_typ_app f args =
     | Inr e -> withkind kun <| Typ_dep(f, e, false)) f args
 
 let uncurry_app e =
-  let rec aux e out = match compress_exp e with 
+  let rec aux e out = match e with 
+    | Exp_meta(Meta_info(e, _, _)) -> aux e out
+    | Exp_uvar(u, _) -> 
+      begin match Unionfind.find u with 
+        | Fixed e -> aux e out
+        | _ -> e, out
+      end
     | Exp_app(e1, e2, imp) -> aux e1 (Inr (e2, imp)::out)
     | Exp_tapp(e1, t) -> aux e1 (Inl t::out)
     | _ -> e, out in
@@ -350,11 +361,11 @@ let collect_uvars_e uvs e : uvars * exp = match e with
           | None -> {uvs with uvars_e=(uv,t)::uvs.uvars_e}, e)
     | _ -> uvs, e 
 let uvars_in_kind k : uvars = 
-  fst <| Visit.visit_kind_simple collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars k
+  fst <| Visit.visit_kind_simple false collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars k
 let uvars_in_typ t : uvars = 
-  fst <| Visit.visit_typ_simple collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars t
+  fst <| Visit.visit_typ_simple false collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars t
 let uvars_in_exp e : uvars = 
-  fst <| Visit.visit_exp_simple collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars e
+  fst <| Visit.visit_exp_simple false collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars e
 
 let unchecked_unify uv t = Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here *)
 
@@ -374,14 +385,15 @@ let fv_fold_t (out:freevars) (benv:boundvars) (t:typ) : (freevars * typ) =
   match t.t with
     | Typ_btvar bv -> 
       if is_bound_tv benv bv then out, t
-      else (bv::ftvs, fxvs), t
+      else if !Options.fvdie then failwith (Util.format1 "Freevar : %s\n" (bv.v.realname.idText))
+      else (add_unique bvar_eq bv ftvs, fxvs), t
     | _ -> out, t 
 let fv_fold_e (out:freevars) (benv:boundvars) (e:exp) : (freevars * exp) =
   let (ftvs, fxvs) = out in
   match e with
     | Exp_bvar bv ->
       if is_bound_xv benv bv then out, e (* let _ = pr "Bvar %s is bound, where env is %s\n" (strBvar bv) (strBenv benv) in *)
-      else (ftvs, bv::fxvs), e      (* let _ = pr "Bvar %s is free, where env is %s\n" (strBvar bv) (strBenv benv) in *)
+      else (ftvs, add_unique bvar_eq bv fxvs), e      (* let _ = pr "Bvar %s is free, where env is %s\n" (strBvar bv) (strBenv benv) in *)
     | _ -> out, e 
 let ext_fv_env ((btvs, bxvs):boundvars) : either<btvar,bvvar> -> (boundvars * either<btvdef, bvvdef>) =
   function 
@@ -390,13 +402,13 @@ let ext_fv_env ((btvs, bxvs):boundvars) : either<btvar,bvvar> -> (boundvars * ei
 let fold_kind_noop env benv k = (env, k)
 
 let freevars_kind : knd -> freevars = 
-  fun k -> fst <| Visit.visit_kind fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) k
+  fun k -> fst <| Visit.visit_kind true fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) k
       
 let freevars_typ : typ -> freevars = 
-  fun t -> fst <| Visit.visit_typ fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) t
+  fun t -> fst <| Visit.visit_typ true fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) t
       
 let freevars_exp : exp -> freevars =
-  fun e -> fst <| Visit.visit_exp fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) e
+  fun e -> fst <| Visit.visit_exp true fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) e
 
 let freevars_comp_typ : comp_typ -> freevars = 
   fun c -> 
@@ -404,9 +416,15 @@ let freevars_comp_typ : comp_typ -> freevars =
     freevars_typ <| mk_typ_app t c.effect_args
 
 let freevars_comp c = match compress_comp c with 
+  | Total t
   | Flex(_, t) -> freevars_typ t
   | Comp ct -> freevars_comp_typ ct
 
+let is_free axs (fvs:freevars) = 
+  axs |> Util.for_some (function 
+    | Inl a -> fst fvs |> Util.for_some (fun b -> bvd_eq a b.v)
+    | Inr x -> snd fvs |> Util.for_some (fun y -> bvd_eq x y.v))
+  
 (********************************************************************************)
 (************************** Type/term substitutions *****************************)
 (********************************************************************************)
@@ -422,19 +440,19 @@ let mk_subst_map (s:subst) =
 let lift_subst f = (fun () x -> (), f x)
 (* Should never call these ones directly *)
 let rec subst_kind' (s:subst_map) (k:knd) : knd =
-  snd (Visit.visit_kind_simple
+  snd (Visit.visit_kind_simple true
          (fun e k -> e,k)
          (lift_subst (subst_tvar s))
          (lift_subst (subst_xvar s))
          () k)
 and subst_typ' (s:subst_map) (t:typ) : typ =
-  snd (Visit.visit_typ_simple
+  snd (Visit.visit_typ_simple true
          (fun e k -> e,k)
          (lift_subst (subst_tvar s))
          (lift_subst (subst_xvar s))
          () t)
 and subst_exp' (s:subst_map) (e:exp) : exp =
-  snd (Visit.visit_exp_simple
+  snd (Visit.visit_exp_simple true
          (fun e k -> e,k)
          (lift_subst (subst_tvar s))
          (lift_subst (subst_xvar s))
@@ -482,6 +500,7 @@ let subst_comp s t = match s with
   | [] -> t
   | _ -> 
     match compress_comp t with 
+      | Total t -> Total (subst_typ s t)
       | Flex(u, t) -> Flex(u, subst_typ s t)
       | Comp ct -> Comp(subst_comp_typ s ct)
 
@@ -531,7 +550,7 @@ let freshen_label ropt _ e = match ropt with
       | _ -> e 
 
 let freshen_bvars_typ (ropt:option<Range.range>) (t:typ) (subst:subst) : typ =
-  snd (Visit.visit_typ
+  snd (Visit.visit_typ true
          fold_kind_noop
          (fun () subst t -> (), subst_tvar (mk_subst_map subst) t)
          (fun () subst e -> (), subst_xvar (mk_subst_map subst) e)
@@ -539,7 +558,7 @@ let freshen_bvars_typ (ropt:option<Range.range>) (t:typ) (subst:subst) : typ =
          ext () subst t) 
 
 let freshen_bvars_kind (ropt:option<Range.range>) (k:knd) (subst:subst) : knd =
-  snd (Visit.visit_kind
+  snd (Visit.visit_kind true
          fold_kind_noop
          (fun () subst t -> (), subst_tvar (mk_subst_map subst) t)
          (fun () subst e -> (), subst_xvar (mk_subst_map subst) e)
@@ -586,9 +605,26 @@ let is_tuple_constructor (t:typ) = match t.t with
   | Typ_const l -> Util.starts_with l.v.str "Prims.Tuple"
   | _ -> false
 
-let mk_tuple_lid n = 
+let mk_tuple_lid n r = 
   let t = Util.format1 "Tuple%s" (Util.string_of_int n) in
-  Const.pconst t
+  set_lid_range (Const.pconst t) r
+
+let mk_tuple_data_lid n r = 
+  let t = Util.format1 "MkTuple%s" (Util.string_of_int n) in
+  set_lid_range (Const.pconst t) r
+
+let is_dtuple_constructor (t:typ) = match t.t with 
+  | Typ_const l -> Util.starts_with l.v.str "Prims.DTuple"
+  | _ -> false
+
+let mk_dtuple_lid n r = 
+  let t = Util.format1 "DTuple%s" (Util.string_of_int n) in
+  set_lid_range (Const.pconst t) r 
+
+let mk_dtuple_data_lid n r = 
+  let t = Util.format1 "MkDTuple%s" (Util.string_of_int n) in
+  set_lid_range (Const.pconst t) r
+
 
 let is_lid_equality x =
   (lid_equals x Const.eq_lid) ||
@@ -722,25 +758,22 @@ let un_forall t = match t.t with
 
 (* collect all curried arguments until we reach a non-trivial computation type *)
 let collect_formals t = 
-  let rec aux eff out t =
-    if not (lid_equals eff Const.tot_effect_lid)
-    then List.rev out, t
-    else 
+  let rec aux out t =
       match (whnf t).t with
-        | Typ_fun(xopt, t1, cod, _) -> 
-          let out = Inr(xopt,t1)::out in
+        | Typ_fun(xopt, t1, cod, imp) -> 
+          let out = Inr(xopt,t1,imp)::out in
           begin match compress_comp cod with 
-            | Comp cod -> aux cod.effect_name out cod.result_typ
-            | Flex (_, t) -> List.rev out, t
+            | Total t -> aux out t
+            | _ -> List.rev out, cod
           end
         | Typ_univ(a, k, cod) -> 
           let out = Inl(a,k)::out in
           begin match compress_comp cod with 
-            | Comp cod -> aux cod.effect_name out cod.result_typ
-            | Flex (_, t) -> List.rev out, t
+            | Total t -> aux out t
+            | _ -> List.rev out, cod
           end
-        | _ -> List.rev out, t 
-  in aux Const.tot_effect_lid [] t
+        | _ -> List.rev out, Total t 
+  in aux [] t
 
 let collect_u_quants t =
   let rec aux out t =

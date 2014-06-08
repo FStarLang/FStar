@@ -53,11 +53,14 @@ val char_at: string -> int -> char
 type either<'a,'b> =
   | Inl of 'a
   | Inr of 'b
-     
+ 
+val left: either<'a,'b> -> 'a
+val right: either<'a,'b> -> 'b    
 val nodups: ('a -> 'a -> bool) -> list<'a> -> bool
 val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
 val set_eq: ('a -> 'a -> int) -> list<'a> -> list<'a> -> bool
 val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
+val add_unique: ('a -> 'a -> bool) -> 'a -> list<'a> -> list<'a>
 val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
 val fold_map: ('a -> 'b -> 'a * 'c) -> 'a -> list<'b> -> 'a * list<'c>
 val choose_map: ('a -> 'b -> 'a * 'c option) -> 'a -> list<'b> -> 'a * list<'c>

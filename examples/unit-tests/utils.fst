@@ -15,6 +15,8 @@
 *)
 module List
 
+let f x : list<int> = [0]
+
 val mem: 'a -> list 'a -> bool
 let rec mem x = function
   | [] -> false
@@ -38,7 +40,7 @@ let rec fold_right f l x = match l with
 val iterate: ('a -> unit) -> list 'a -> unit
 let rec iterate f x = match x with
   | [] -> ()
-  | a::tl -> let _ = f a in iterate f tl
+  | a::tl -> f a; iterate f tl
                                   
 val assoc: 'a -> list ('a*'b) -> option 'b
 let rec assoc a x = match x with

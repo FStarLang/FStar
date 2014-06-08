@@ -90,7 +90,14 @@ let try_find_position matcher f =
 type either<'a,'b> =
   | Inl of 'a
   | Inr of 'b
-      
+ 
+let left = function 
+  | Inl x -> x
+  | _ -> failwith "Not in left"
+let right = function 
+  | Inr x -> x
+  | _ -> failwith "Not in right"  
+       
 let (-<-) f g x = f (g x)
 
 let nodups f l = 
@@ -109,15 +116,14 @@ let remove_dups f l =
    | _ -> out in
    aux [] l
 
+
 let is_some = function 
   | None -> false
   | Some _ -> true
 
 let must = function
   | Some x -> x
-  | None -> failwith "impossible"
-
-
+  | None -> failwith "Empty option"
 
 let find_opt f l = 
   let rec aux = function 
@@ -164,6 +170,11 @@ let for_all f l = List.forall f l
 let for_some f l = List.exists f l
 let forall_exists rel l1 l2 = l1 |> for_all (fun x -> l2 |> for_some (rel x))
 let multiset_equiv rel l1 l2 = List.length l1 = List.length l2 && forall_exists rel l1 l2
+
+let add_unique f x l =
+  if l |> for_some (f x) 
+  then l 
+  else x::l
    
 let first_N n l =
   let rec f acc i l =

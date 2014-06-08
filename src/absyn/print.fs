@@ -76,81 +76,16 @@ let rec typ_to_string x =
 and comp_typ_to_string c =
   match compress_comp c with 
     | Flex (u, t) -> Util.format2 "_Eff%s_ %s" (Util.string_of_int <| Unionfind.uvar_id u) (typ_to_string t)
+    | Total t -> if Util.is_function_typ t then typ_to_string t else Util.format1 "Tot %s" (typ_to_string t)
+    | Comp c when List.contains TOTAL c.flags && not !Options.print_effect_args -> 
+      if Util.is_function_typ c.result_typ then typ_to_string c.result_typ else Util.format1 "Tot %s" (typ_to_string c.result_typ)
     | Comp c -> 
-    let c = recover_tot_or_ml_effect c in
-    if    (lid_equals c.effect_name Const.tot_effect_lid && Util.is_function_typ c.result_typ)
-       || (lid_equals c.effect_name Const.ml_effect_lid && not (Util.is_function_typ c.result_typ))
+    if not !Options.print_effect_args && (lid_equals c.effect_name Const.ml_effect_lid  || List.contains MLEFFECT c.flags) && not (Util.is_function_typ c.result_typ)
     then typ_to_string c.result_typ
-    else Util.format3 "%s %s %s" (sli c.effect_name) (typ_to_string c.result_typ) (String.concat ", " <| List.map either_to_string c.effect_args)
-
-and recover_tot_or_ml_effect (c:comp_typ) = 
-  let flatten_and_compress_typ_apps f = 
-    let f, args = Util.flatten_typ_apps (Util.compress_typ f) in
-    f, args |> List.map (function 
-      | Inl t -> Inl (compress_typ t)
-      | Inr e -> Inr (compress_exp e)) in
-
-  let recover_tot c = match c.effect_args with 
-    | [Inl wp; Inl wlp] -> 
-      let is_trivial wp = match (compress_typ wp).t with 
-        | Typ_tlam(post, _, fa) -> 
-          let fa, args = flatten_and_compress_typ_apps fa in
-          begin match (compress_typ fa).t, args with 
-            | Typ_const f, [_; Inl {t=Typ_lam(x, _, body)}] when lid_equals f.v Const.forall_lid -> 
-              let p, args = flatten_and_compress_typ_apps body in 
-              (match p.t, args with 
-                | Typ_btvar q, [Inr (Exp_bvar y)] when (Util.bvd_eq q.v post && Util.bvd_eq y.v x) -> true
-                | _ -> false)
-            | Typ_const f, [_; Inl {t=Typ_tlam(a, _, body)}] when lid_equals f.v Const.allTyp_lid -> 
-              let p, args = flatten_and_compress_typ_apps body in 
-              (match p.t, args with 
-                | Typ_btvar q, [Inl {t=Typ_btvar b}] when (Util.bvd_eq q.v post && Util.bvd_eq b.v a) -> true
-                | _ -> false)
-            | _ -> false
-          end
-        | _ -> false in
-      if is_trivial wp && is_trivial wlp
-      then {effect_name=Const.tot_effect_lid; result_typ=c.result_typ; effect_args=[]}
-      else c      
-    | _ -> failwith "Impossible" in
-
-  let recover_ml c = match c.effect_args with 
-    | [Inl wp; Inl wlp] -> 
-      let is_trivial wp = match (compress_typ wp).t with 
-        | Typ_tlam(post, _, hlam) ->
-          begin match (compress_typ hlam).t with
-            | Typ_lam(h, _, fa_result) ->
-             let fa_result, args = flatten_and_compress_typ_apps fa_result in
-              begin match (compress_typ fa_result).t, args with 
-               | Typ_const f, [_; Inl {t=Typ_lam(r, _, fa_heap)}] when lid_equals f.v Const.forall_lid ->
-               let fa_heap, args = flatten_and_compress_typ_apps fa_heap in
-                begin match (compress_typ fa_heap).t, args with 
-                  | Typ_const f, [_; Inl {t=Typ_lam(h, _, body)}] when lid_equals f.v Const.forall_lid -> 
-                   let p, args = flatten_and_compress_typ_apps body in 
-                   (match p.t, args with 
-                    | Typ_btvar q, [Inr (Exp_bvar r'); Inr (Exp_bvar h')] 
-                      when (Util.bvd_eq q.v post && Util.bvd_eq r'.v r && Util.bvd_eq h'.v h) -> true
-                    | _ -> false)
-                  | _ -> false
-                end
-               | _ -> false
-              end
-            | _ -> false
-           end
-        | _ -> false in
-      if is_trivial wp && is_trivial wlp
-      then {effect_name=Const.ml_effect_lid; result_typ=c.result_typ; effect_args=[]}
-      else c      
-    | _ -> failwith "Impossible" in
-
-  if lid_equals c.effect_name Const.tot_effect_lid  || lid_equals c.effect_name Const.ml_effect_lid
-  then c
-  else if lid_equals c.effect_name Const.pure_effect_lid
-  then recover_tot c
-  else if lid_equals c.effect_name Const.all_effect_lid
-  then recover_ml c
-  else c
-   
+    else if !Options.print_effect_args 
+    then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (String.concat ", " <| List.map either_to_string c.effect_args)
+    else Util.format2 "%s (%s)" (sli c.effect_name) (typ_to_string c.result_typ)
+       
 and exp_to_string x = match compress_exp x with 
   | Exp_meta(Meta_datainst(e,_)) -> exp_to_string e 
   | Exp_meta(Meta_desugared(e, _)) -> exp_to_string e

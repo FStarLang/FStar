@@ -95,7 +95,7 @@ let mkExplicitApp t args r = match args with
       | _ -> List.fold_left (fun t a -> mk_term (App(t, a, false)) r Un) t args
           
 let mkTuple args r = 
-  let cons = lid_of_path [Util.strcat "MkTuple" (Util.string_of_int <| List.length args)] r in 
+  let cons = Util.mk_tuple_data_lid (List.length args) r in 
   mkExplicitApp (mk_term (Name cons) r Expr) args r
     
 let mkRefinedBinder id t refopt m implicit = 

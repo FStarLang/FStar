@@ -75,15 +75,22 @@ and typ = {t:typ'; k:knd}
 and comp_typ = {
   effect_name:lident; 
   result_typ:typ; 
-  effect_args:list<either<typ,exp>>
+  effect_args:list<either<typ,exp>>;
+  flags:list<comp_flags>
   }
 and comp = 
-  | Comp of comp_typ
+  | Total of typ
+  | Comp of comp_typ                    
   | Flex of uvar_c * typ
+and comp_flags = 
+  | TOTAL 
+  | MLEFFECT 
+  | RETURN 
+  | SOMETRIVIAL
 and uvar_c = Unionfind.uvar<comp_typ_uvar_basis>
 and comp_typ_uvar_basis = 
   | Floating 
-  | Resolved of comp_typ
+  | Resolved of comp
 and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pos of typ * Range.range                            (* user wrote down this type 1 at source position 2 *)

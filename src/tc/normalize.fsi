@@ -32,6 +32,7 @@ and steps = list<step>
 
 val normalize: Env.env -> typ -> typ
 val normalize_comp: Env.env -> comp -> comp_typ
+val normalize_kind: Env.env -> knd -> knd
 val norm_comp: steps -> Env.env -> comp -> comp_typ
 val weak_norm_comp: Env.env -> comp -> comp_typ
 val norm_kind: steps -> Env.env -> knd -> knd

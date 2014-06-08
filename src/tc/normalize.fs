@@ -65,7 +65,7 @@ let push se config = {config with stack=se::config.stack}
 let pop config = match config.stack with 
   | [] -> None, config
   | hd::tl -> Some hd, {config with stack=tl}
-let with_code c e = {code=e; environment=c.environment; stack=c.stack; steps=c.steps}
+let with_code c e = {code=e; environment=c.environment; stack=[]; steps=c.steps}
      
 let rec sn tcenv (config:config<typ>) : config<typ> =
   let rebuild config  = 
@@ -206,34 +206,30 @@ and sncomp tcenv (config:config<comp>) : config<comp> =
   match compress_comp m with 
     | Comp ct -> 
       let ctconf = sncomp_typ tcenv (with_code config ct) in
-      {config with code=Comp (ctconf.code)}
+      {config with code=Comp ctconf.code}
+    | Total t -> 
+      if List.contains DeltaComp config.steps 
+      then sncomp tcenv <| with_code config (Comp <| force_comp (Total t))
+      else let t = sn tcenv (with_code config t) in
+           with_code config (Total t.code)
     | Flex(u, t) -> 
       let tconf = sn tcenv (with_code config t) in 
       {config with code=Flex(u, tconf.code)}
 
 and sncomp_typ tcenv (config:config<comp_typ>) : config<comp_typ> = 
+  let remake l args = 
+    let r, eargs = match args with
+      | Inl r::rest -> r, rest
+      | _ -> failwith "impossible" in
+    let c = {effect_name=l; result_typ=r; effect_args=eargs; flags=config.code.flags} in
+    {config with code=c} in
   let m = config.code in 
+  let res = (sn tcenv (with_code config m.result_typ)).code in
+  let args = m.effect_args in
+  let args = if List.contains SNComp config.steps then Inl res::snl_either tcenv (with_code config ()) args else Inl res::args in
   if not <| List.contains DeltaComp config.steps
-  then
-    let args = snl_either tcenv ({config with steps=config.steps}) (Inl m.result_typ::m.effect_args) in
-    match args with 
-      | Inl r::rest -> 
-        let n = {effect_name=m.effect_name;
-                 result_typ=r;
-                 effect_args=rest} in
-        {config with code=n}
-      | _ -> failwith "impossible"
-  else
-    let args = Inl m.result_typ::m.effect_args in
-    let args = if List.contains SNComp config.steps then snl_either tcenv ({config with steps=config.steps}) args else args in
-    let remake l args = 
-      let r, eargs = match args with
-        | Inl r::rest -> r, rest
-        | _ -> failwith "impossible" in
-      let c = {effect_name=l; result_typ=r; effect_args=eargs} in
-      {config with code=c} in
-    if config.steps |> List.contains Delta
-    then match Tc.Env.lookup_typ_abbrev tcenv m.effect_name with
+  then remake m.effect_name args
+  else match Tc.Env.lookup_typ_abbrev tcenv m.effect_name with
         | None -> remake m.effect_name args
         | Some t -> 
           let t = if config.steps |> List.contains Alpha then Util.alpha_convert t else t in
@@ -242,10 +238,8 @@ and sncomp_typ tcenv (config:config<comp_typ>) : config<comp_typ> =
           let n = match (Util.compress_typ tc).t with
             | Typ_const fv -> remake fv.v args 
             | _ ->  failwith (Util.format3 "Got a computation %s with constructor %s and kind %s" (Print.sli m.effect_name) (Print.typ_to_string tc) (Print.kind_to_string tc.k)) in
-          //let _ = printfn "Normalized %s\nto %s\n" (Print.comp_typ_to_string m) (Print.comp_typ_to_string n.code) in
           n
-    else remake m.effect_name args
-  
+    
 and snl_either tcenv config args = 
   args |> List.map (function 
     | Inl t -> let c = sn tcenv (with_code config t) in Inl c.code
@@ -258,7 +252,8 @@ and snk tcenv (config:config<knd>) : config<knd> =
     | Kind_effect -> config
     | Kind_abbrev(kabr, k) -> 
       let c1 = snk tcenv ({config with code=k}) in
-      {config with code=Kind_abbrev(kabr, c1.code)}
+      let args = snl_either tcenv (with_code config ()) (snd kabr) in
+      {config with code=Kind_abbrev((fst kabr, args), c1.code)}
     | Kind_tcon(aopt, k1, k2, imp) -> 
       let c1 = snk tcenv ({config with code=k1}) in
       let c2 = snk tcenv ({config with 
@@ -283,6 +278,7 @@ and snk tcenv (config:config<knd>) : config<knd> =
 (* The type checker never attempts to reduce expressions itself; but still need to do substitutions *)
 and wne tcenv (config:config<exp>) : config<exp> = 
   let e = compress_exp config.code in
+  let config = with_code config e in
   match e with 
     | Exp_fvar _ 
     | Exp_constant _
@@ -315,11 +311,19 @@ and wne tcenv (config:config<exp>) : config<exp> =
 
     | Exp_tapp(e, t) -> 
       let c1 = wne tcenv ({config with code=e}) in
-      let c2 = sn tcenv ({code=t; environment=config.environment; stack=[]; steps=config.steps}) in 
+      let c2 = sn tcenv (with_code config t) in
       {config with code=Exp_tapp(c1.code, c2.code)}
        
-    | Exp_abs _
-    | Exp_tabs _
+    | Exp_abs(x, t, e) -> 
+      let t = sn tcenv (with_code config t) in
+      let e = wne tcenv ({config with environment=VDummy x::config.environment; code=e}) in
+      {config with code=Exp_abs(x, t.code, e.code)}
+
+    | Exp_tabs(a, k, e) -> 
+      let k = snk tcenv (with_code config k) in 
+      let e = wne tcenv ({config with environment=TDummy a::config.environment; code=e}) in
+      {config with code=Exp_tabs(a, k.code, e.code)}
+
     | Exp_match _
     | Exp_let  _ -> config // failwith (Util.format1 "NYI: %s" (Print.exp_to_string e))
     | Exp_meta _ 
@@ -329,7 +333,7 @@ and wne tcenv (config:config<exp>) : config<exp> =
 (* External interface *)
 (************************************************************************************)
 
-let weak_norm_comp env c = 
+let rec weak_norm_comp env c = 
   let c = force_comp c in
   match Tc.Env.lookup_typ_abbrev env c.effect_name with
     | None -> c
@@ -343,9 +347,10 @@ let weak_norm_comp env c =
       let tc, args = Util.flatten_typ_apps t in
       let n = match (Util.compress_typ tc).t, args with
         | Typ_const fv, Inl result::rest -> 
-          {effect_name=fv.v;
-           result_typ=result;
-           effect_args=rest}
+          weak_norm_comp env (Comp ({effect_name=fv.v;
+                                     result_typ=result;
+                                     effect_args=rest;
+                                     flags=c.flags}))
         | _ ->  failwith (Util.format3 "Got a computation %s with constructor %s and kind %s" (Print.sli c.effect_name) (Print.typ_to_string tc) (Print.kind_to_string tc.k)) in
       //let _ = printfn "Normalized %s\nto %s\n" (Print.comp_typ_to_string m) (Print.comp_typ_to_string n.code) in
       n
@@ -362,9 +367,13 @@ let norm_comp steps tcenv c =
   let c = sncomp tcenv ({code=c; environment=[]; stack=[]; steps=steps}) in
   force_comp c.code
 
+let normalize_kind tcenv k = 
+  let steps = [Delta;Beta] in
+  norm_kind steps tcenv k
+
 let normalize_comp tcenv c = 
-  let steps = [Delta;Beta;DeltaComp] in
+  let steps = [Delta;Beta;SNComp;DeltaComp] in
   norm_comp steps tcenv c
 
-let normalize tcenv t = norm_typ [Delta;Alpha;Beta] tcenv t
+let normalize tcenv t = norm_typ [Delta;Beta;] tcenv t
 
