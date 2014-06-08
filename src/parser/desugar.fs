@@ -26,6 +26,11 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Util
 
+let contains_binder binders = 
+  binders |> Util.for_some (fun b -> match b.binder with  
+    | Annotated _ -> true
+    | _ -> false)
+
 let rec unparen t = match t.term with 
   | Paren t -> unparen t
   | _ -> t
@@ -331,12 +336,14 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         let x = new_bvd (Some p.prange) in
         loc, env, VBinder(x, tun), pos <| pat
         
-      | PatTuple(args) ->
+      | PatTuple(args, dep) ->
         let loc, env, args = List.fold_left (fun (loc, env, pats) p ->
           let loc, env, _, pat = aux loc env p in
           loc, env, pat::pats) (loc,env,[]) args in
         let args = List.rev args in
-        let constr = fail_or (DesugarEnv.try_lookup_lid env) (lid_of_path [Util.strcat "MkTuple" (Util.string_of_int <| List.length args)] p.prange) in
+        let l = if dep then Util.mk_dtuple_data_lid (List.length args) p.prange
+                else Util.mk_tuple_data_lid (List.length args) p.prange in
+        let constr = fail_or (DesugarEnv.try_lookup_lid env) l in
         let l = match constr with
           | Exp_fvar (v, _) -> v.v
           | _ -> failwith "impossible" in
@@ -715,7 +722,7 @@ and desugar_typ env (top:term) : typ =
     | Ascribed(t,k) ->
       pk <| Typ_ascribed(desugar_typ env t, desugar_kind env k)
 
-    | Sum(binders, t) ->
+    | Sum(binders, t) when contains_binder binders ->
       let env, _, targs = List.fold_left (fun (env, tparams, typs) b ->
         let xopt, t = desugar_exp_binder env b in
         let env, x = match xopt with
@@ -723,9 +730,20 @@ and desugar_typ env (top:term) : typ =
           | Some x -> push_local_vbinding env x in
         (env, tparams@[Tparam_term(x, t)], typs@[close_with_lam tparams t]))
         (env, [], []) (binders@[mk_binder (NoName t) t.range Type false]) in
-      let tup = fail_or (try_lookup_typ_name env) (Util.mk_tuple_lid (List.length targs)) in
+      let tup = fail_or (try_lookup_typ_name env) (Util.mk_dtuple_lid (List.length targs) top.range) in
       List.fold_left (fun t1 t2 -> pk <| Typ_app(t1,t2,false)) tup targs
-          
+   
+    | Sum(binders, t) -> 
+      let env, targs = List.fold_left (fun (env, typs) b ->
+        let xopt, t = desugar_exp_binder env b in
+        let _ = match xopt with
+          | None -> ()
+          | Some _ -> failwith "Impossible" in
+        (env, typs@[t]))
+        (env, []) (binders@[mk_binder (NoName t) t.range Type false]) in
+      let tup = fail_or (try_lookup_typ_name env) (Util.mk_tuple_lid (List.length targs) top.range) in
+      List.fold_left (fun t1 t2 -> pk <| Typ_app(t1,t2,false)) tup targs
+   
     | Record _ -> failwith "Unexpected record type"
 
     | If _  -> desugar_formula env top

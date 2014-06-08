@@ -300,7 +300,7 @@ type Tuple7 'a 'b 'c 'd 'e 'f 'g =
 
 
 type Tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
-  | MkTuple7: _1:'a
+  | MkTuple8: _1:'a
            -> _2:'b
            -> _3:'c
            -> _4:'d

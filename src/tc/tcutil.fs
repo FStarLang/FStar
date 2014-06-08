@@ -311,7 +311,7 @@ let generalize env (ecs:list<(exp*comp)>) : (list<(exp*comp)>) =
 
 let mk_basic_dtuple_type env n = 
   let r = Tc.Env.get_range env in
-  let l = Util.mk_tuple_lid n in
+  let l = Util.mk_dtuple_lid n r in
   let k = Tc.Env.lookup_typ_lid env l in
   let t = withkind k <| Typ_const(withinfo l k r) in
   let rec close t ktop = match ktop with 

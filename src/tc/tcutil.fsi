@@ -39,7 +39,7 @@ val destruct_function_typ : env -> typ -> option<bvvdef> -> option<exp> -> bool 
 val destruct_poly_typ: env -> typ -> exp -> typ -> (typ*exp) 
 val destruct_tcon_kind: env -> knd -> typ -> bool -> (knd*typ)
 val destruct_dcon_kind: env -> knd -> typ -> bool -> (knd*typ)
-val mk_basic_tuple_type: env -> int -> typ
+val mk_basic_dtuple_type: env -> int -> typ
 val extract_lb_annotation: bool -> env -> typ -> exp -> typ
 
 type comp_with_binder = option<Env.binding> * comp

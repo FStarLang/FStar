@@ -25,10 +25,10 @@ let h' (x,y) = y
 
 val f3 : 'a:Type -> 'b:('a => Type) -> 'c:(x:'a => 'b x => Type)
      ->  x:'a -> y:'b x -> 'c x y -> (x:'a * y:'b x * 'c x y)
-let f3 x y z = (x,y,z)
-let g3 (x,y,z) = x
-let h3 (x,y,z) = y
-let i3 (x,y,z) = z
+let f3 x y z = (|x,y,z|)
+let g3 (|x,y,z|) = x
+let h3 (|x,y,z|) = y
+let i3 (|x,y,z|) = z
 
 type ibcf = int * bool * char * float
 let quads () : list Tuple.ibcf = 

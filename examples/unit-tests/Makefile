@@ -24,7 +24,7 @@ tc.%: %.fst
 STDFILES=list.fst string.fst
 BASICFILES=bytes.fst util.fst getoptsimple.fsi options.fs range.fsi unionfind.fst
 BASIC=$(addprefix ../../src/basic/, $(BASICFILES))
-SYNTAXFILES=syntax.fs const.fs visit-test.fs
+SYNTAXFILES=syntax.fs const.fs visit.fs
 SYNTAX=$(addprefix ../../src/absyn/, $(SYNTAXFILES))
 PARSERFILES=ast.fs dsenv.fs desugar.fs parse.fst lexhelp.fs parseit.fsi driver.fs 
 PARSER=$(addprefix ../../src/parser/, $(PARSERFILES))

@@ -411,11 +411,11 @@ and tc_exp env e : exp * comp = match e with
     (* This is where we process the type annotation on data constructors populated by the Data_app case above. *) 
     let err tres t = raise (Error(Tc.Errors.constructor_builds_the_wrong_type e tres t, rng env))  in 
 
-    (* For compatibility with ML: tuples without a type annotation default to their non-dependent versions *)
-    let maybe_default_tuple_type env tres topt : bool = 
+    (* For compatibility with ML: dtuples without a type annotation default to their non-dependent versions *)
+    let maybe_default_dtuple_type env tres topt : bool = 
       let tconstr, args = Util.flatten_typ_apps tres in
-      if Util.is_tuple_constructor tconstr 
-      then let tup = Tc.Util.mk_basic_tuple_type env (List.length args) in
+      if Util.is_dtuple_constructor tconstr 
+      then let tup = Tc.Util.mk_basic_dtuple_type env (List.length args) in
             let _ = match topt with 
             | None -> ()
             | Some t -> Tc.Rel.trivial_subtype env None t tup in
@@ -429,18 +429,17 @@ and tc_exp env e : exp * comp = match e with
     let norm = match topt with 
       | None -> 
        (* There's no type annotation from the context ... not much to do, except in the case of tuples.
-          For tuples, default to a simple (non-dependent) tuple type. *)
-        maybe_default_tuple_type env tres None
+          For dependent tuples, default to a simple (non-dependent) tuple type. *)
+        maybe_default_dtuple_type env tres None
        
       | Some t_expected -> 
         let t = Tc.Normalize.norm_typ [Normalize.Beta] env t_expected in
         match t.t with 
         | Typ_uvar _ -> (* We have a type from the context; but it is non-informative. So, default tuples if applicable *)
-          maybe_default_tuple_type env tres (Some t_expected)
+          maybe_default_dtuple_type env tres (Some t_expected)
        
         | tt -> (* Finally, we have some useful info from the context; use it to instantiate the result type of dc *)
           Tc.Rel.trivial_subtype env None tres t_expected; false in        
-   // let c_dc = if norm then Comp <| Normalize.normalize_comp env c_dc else c_dc in
     dc, c_dc (* NB: Removed the Meta_datainst tag on the way up---no other part of the compiler sees Meta_datainst *)
 
   | Exp_app _

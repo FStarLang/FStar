@@ -67,7 +67,7 @@ and pattern' =
   | PatName     of lid
   | PatTvar     of ident
   | PatList     of list<pattern>
-  | PatTuple    of list<pattern>
+  | PatTuple    of list<pattern> * bool (* dependent if flag is set *)
   | PatRecord   of list<(lid * pattern)>
   | PatAscribed of pattern * term 
   | PatOr       of list<pattern>
@@ -220,7 +220,8 @@ and pat_to_string x = match x.pattern with
   | PatVar i -> i.idText
   | PatName l -> Print.sli l
   | PatList l -> Util.format1 "[%s]" (to_string_l "; " pat_to_string l)
-  | PatTuple l -> Util.format1 "[%s]" (to_string_l ", " pat_to_string l)
+  | PatTuple (l, false) -> Util.format1 "(%s)" (to_string_l ", " pat_to_string l)
+  | PatTuple (l, true) -> Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l)
   | PatRecord l -> Util.format1 "{%s}" (to_string_l "; " (fun (f,e) -> Util.format2 "%s=%s" (Print.sli f) (e |> pat_to_string)) l)
   | PatOr l ->  to_string_l "|\n " pat_to_string l
   | PatAscribed(p,t) -> Util.format2 "(%s:%s)" (p |> pat_to_string) (t |> term_to_string)

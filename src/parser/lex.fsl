@@ -347,6 +347,9 @@ rule token args = parse
  | "<:"             { SUBTYPE }
  | "<@"             { SUBKIND }
 
+ | "(|"             { LENS_PAREN_LEFT }
+ | "|)"             { LENS_PAREN_RIGHT }
+
  | "(*)"            { LPAREN_STAR_RPAREN }
 
  | "(*"

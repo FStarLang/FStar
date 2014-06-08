@@ -23,7 +23,7 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
 open Microsoft.FStar.Profiling
 
-let log s = if !Options.fvdie then printfn "%d;" s
+let log s = ()(* if !Options.fvdie then printfn "%d;" s *)
 
 let rec compress_typ_aux pos typ = match typ.t with
   | Typ_uvar (uv,k) -> 
@@ -502,7 +502,7 @@ let visit_simple
     | Inl tv -> (benv, Inl tv.v)
     | Inr xv -> (benv, Inr xv.v) in
   skel
-    (visit_wps:bool)
+    visit_wps
     (fun env _ k -> h env k)
     (fun env _ t -> f env t)
     (fun env _ e -> g env e)
