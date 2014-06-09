@@ -9,6 +9,7 @@
 
 3. Requires parens in val f: (int * int) -> int 
 - To Fix
+[NS] This is fixed.
 ----
 
 4. type x = byte[] does not work (no abbreviations?)
@@ -18,6 +19,17 @@
 
 5. type x; val x = unit -> x does not work (same name cannot be used for val and type)
 - Rename functions in source code (this is a programming restriction for F#/OCaml programmers.) Are there similar restrictions on record labels?
+
+[NS] The top-level namespace is shared between types and values. 
+[NS] Local variables can shadow the top-level names, although this can sometimes lead to confusing error messages. 
+[NS] In particular, the convention where one names a parameter using the type name does work, but use it with care. 
+[NS] For example:
+   type env = list<(string * typ)>
+   let f env : list<env> = [env] 
+   //This parses but is type incorrect. The result type is resolved as the list constructor applied to the local variable env.
+   
+   If you are using such a naming convention for your locals/parameters, then you should be aware of this.
+
 ----
 
 6. After opening module with type x one cannot declare a new type x (even though they are in different modules)
@@ -31,6 +43,9 @@
 8. Requires type parameters curried after argument: ‘a list not accepted (‘a,’b) Map not accepted
 - Accept list<bytes> and rewrite code to use this style.
 - Requires many many changes in miTLS
+
+[NS] Note, you must write list<(t * t')> not list<t * t'>. (Just as you would write list (t * t'))
+
 ----
 
 9. decls for infix ops don’t work val (@): list ‘a -> list ‘a -> list ‘a
@@ -50,14 +65,34 @@
 
 12. No capital letters in variable names
 - Rename variables to use lower-case names (Restriction for programmers)
+[NS] Here's the naming convention for captilization (copied from another mail)
+For the capitalization rules, I’ll use the following classes of identifiers (taken from parse.fsy)
+
+ 
+n  name: This is an unqualified name (no namespace) beginning with a capital letter. E.g., Cons or Nil
+n  ident: This is an unqualified name (no namespace) beginning with a lowercase letter, E.g., append
+n  eitherName: either and ident or a name
+n  qname: This is a (possibly) qualified name, i.e., a dot-separated sequence of 1 or more names. (e.g., List.Cons)
+n  lident: This is a (possibly) qualified ident, i.e., a dot-separated sequence of 0 or more names followed by an ident (e.g., List.append)
+n  eitherQname: This is a (possibly) qualified eitherName, i.e., a dot-separated sequence of 0 or more names preceding an eitherName.
+
+- type constructors: eitherName at definition, eitherQname at use
+- term constructors: name at definition, qname at use
+- globals: Do you mean top-level val declarations? It should be an ident at definition and a lident at use.
+- locals:  ident
+- record labels: ident at definition, lident at use
+- dependent type variables/value indices in type declarations….: these are bound variables and are treated just like locals. So, you can write 
+
 ----
 
 13. Support byte literals e.g. 16uy
 - Fixed
+[NS] Done? (by PY)
 ----
 
 14. support if-then without else 
 - Fixed
+[NS] Done? (by PY)
 ----
 
 15. add sprintf to prims (what type for *printf functions?)
@@ -74,20 +109,28 @@ Of maybe something of the form:
 
 type t = String of string | Int of int | User of 'a . ('a -> string) * 'a
 
+[NS] What is the type of User? Is it first-class polymorphism? 
+[NS] That syntax is not currently supported. You need to write 'a:Type -> ('a -> string) * 'a.
+
 val format: string -> t list -> string
+
+[NS] Let's go for the dynamic version ... it's nice. 
+
 ----
 
 16. Parser ambiguity causes if x < 4 then 0 else 1 to raise a syntax error
 - To fix in parser 
-
+[NS] The less-than operator conflicts with type application. This is quite painful. Not sure yet how best to fix it.
 ----
 
 17. Does not accept list<int> style parameters in result types. e.g let f x : list<int> = [0]
 - To fix
+[NS] This parses just fine for me. However, list<t * t'> must be written as list<(t * t')>.
 
 ----
 
 18. Does not accept when clauses in match, e.g. match 1 with x when x > 0 -> 1
 - To fix
-
+[NS] When clauses need to be appTerms. That means either parenthesize the when expression, 
+[NS] or use when expressions that are function applications.
 ----
