@@ -1,4 +1,6 @@
 *~
+*.vspx
+*.psess
 *.suo
 
 *-10.sln

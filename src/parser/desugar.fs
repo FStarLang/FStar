@@ -931,7 +931,7 @@ let get_logic_tag = function
 let logic_tags q = List.collect get_logic_tag q
 
 let mk_data_ops env = function
-  | Sig_datacon(lid, t, _, _) ->
+  | Sig_datacon(lid, t, _, _) when not env.interf ->
     let args, tcod = collect_formals t in
     let tconstr = Util.comp_result tcod in
     //Printf.printf "Collecting formals from type %s; got %s with args %d\n" (Print.typ_to_string t) (Print.typ_to_string tconstr) (List.length args);
@@ -1287,22 +1287,25 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
 
   | _ -> raise (Error("Unexpected declaration", d.drange))
         
-let desugar_modul env (m:AST.modul) : env_t * Syntax.modul = match m with
-  | Module(mname, decls) ->
-    let env = DesugarEnv.prepare_module env mname in
-    let env, sigelts = List.fold_left (fun (env, sigelts) d ->
-      let env, se = desugar_decl env d in
-      env, sigelts@se) (env, []) decls in
-    let modul = {
-      name = mname;
-      declarations = sigelts;
-      exports = []
-    } in
-    let env = DesugarEnv.finish_module env modul in
-    env, modul
+let desugar_modul env (m:AST.modul) : env_t * Syntax.modul = 
+  let env, mname, decls, intf = match m with
+    | Interface(mname, decls) -> DesugarEnv.prepare_module_or_interface true env mname, mname, decls, true
+    | Module(mname, decls) -> DesugarEnv.prepare_module_or_interface false env mname, mname, decls, false in
+  let env, sigelts = List.fold_left (fun (env, sigelts) d ->
+    let env, se = desugar_decl env d in
+    env, sigelts@se) (env, []) decls in
+  let modul = {
+    name = mname;
+    declarations = sigelts;
+    exports = [];
+    is_interface=intf
+  } in
+  let env = DesugarEnv.finish_module_or_interface env modul in
+  env, modul
   
-let desugar_file env (pragmas, ms) =
+let desugar_file env (f:file) =
+  let pragmas, ms = f in
   let env, mods = List.fold_left (fun (env, mods) m ->
     let env, m = desugar_modul env m in
-    finish_module env m, m::mods) (env, []) ms in
+    env, m::mods) (env, []) ms in
   env, List.rev mods

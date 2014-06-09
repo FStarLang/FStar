@@ -80,6 +80,9 @@ type env = {
   lattice:lattice;
 }
 
+let has_interface env l = 
+  env.modules |> Util.for_some (fun m -> m.is_interface && lid_equals m.name l)
+
 let debug env = !Options.debug |> Util.for_some (fun x -> env.curmodule.str = x) 
 
 let initial_env module_lid =
@@ -231,18 +234,24 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
           | _ -> false in
          aux cur lns
     else false in
-  if in_cur_mod lid 
-  then 
-    Util.find_map env.gamma (function 
-    | Binding_sig (Sig_monads _) -> None
-    | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl t) else None
-    | Binding_sig s -> 
-      let lids = lids_of_sigelt s in 
-      if lids |> Util.for_some (lid_equals lid) then Some (Inr s) else None
-    | _ -> None) 
-  else match find_in_sigtab env lid with
-    | Some se -> Some (Inr se) 
-    | None -> None
+  let cur_mod = in_cur_mod lid in
+  let found = if cur_mod
+              then 
+                Util.find_map env.gamma (function 
+                | Binding_sig (Sig_monads _) -> None
+                | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl t) else None
+                | Binding_sig s -> 
+                  let lids = lids_of_sigelt s in 
+                  if lids |> Util.for_some (lid_equals lid) then Some (Inr s) else None
+                | _ -> None) 
+               else None in
+  if is_some found 
+  then found
+  else if not (cur_mod) || has_interface env env.curmodule
+  then match find_in_sigtab env lid with
+        | Some se -> Some (Inr se) 
+        | None -> None
+  else None
 
 let try_lookup_val_decl env lid = 
   match lookup_qname env lid with

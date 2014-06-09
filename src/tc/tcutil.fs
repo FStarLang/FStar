@@ -443,12 +443,13 @@ let bind env (c1:comp) ((b, c2):comp_with_binder) : comp =
     if Util.is_trivial_wp c1
     then match b with 
          | None -> Some c2 
+         | Some (Env.Binding_lid _) -> Some c2
          | Some (Env.Binding_var(x, _)) -> 
-           if not (Util.is_free [Inr x] (Util.freevars_comp c2))
+           if Util.is_ml_comp c2 //|| not (Util.is_free [Inr x] (Util.freevars_comp c2))
            then Some c2
            else None
          | _ -> None
-    else if List.contains MLEFFECT (comp_flags c1) && List.contains MLEFFECT (comp_flags c2) then Some c2
+    else if Util.is_ml_comp c1 && Util.is_ml_comp c2 then Some c2
     else None in
   match try_simplify () with 
     | Some c -> c
@@ -506,12 +507,14 @@ let strengthen_precondition env c f = match f with
 let weaken_precondition env c f = match f with 
   | Trivial -> c
   | Guard f -> 
-    let c = Tc.Normalize.weak_norm_comp env c in
-    let res_t, wp, wlp = destruct_comp c in
-    let md = Tc.Env.monad_decl env c.effect_name in 
-    let wp = Util.mk_typ_app md.assume_p [Inl res_t; Inl f; Inl wp] in
-    let wlp = Util.mk_typ_app md.assume_p [Inl res_t; Inl f; Inl wlp] in
-    mk_comp md res_t wp wlp c.flags
+    if Util.is_ml_comp c then c
+    else
+      let c = Tc.Normalize.weak_norm_comp env c in
+      let res_t, wp, wlp = destruct_comp c in
+      let md = Tc.Env.monad_decl env c.effect_name in 
+      let wp = Util.mk_typ_app md.assume_p [Inl res_t; Inl f; Inl wp] in
+      let wlp = Util.mk_typ_app md.assume_p [Inl res_t; Inl f; Inl wlp] in
+      mk_comp md res_t wp wlp c.flags
 
 let bind_cases env (res_t:typ) (cases:list<(option<formula> * comp)>) : comp =
   (if List.length cases = 0 then failwith "Empty cases!"); (* TODO: Fix precedence of semi colon *)
@@ -552,25 +555,27 @@ let bind_cases env (res_t:typ) (cases:list<(option<formula> * comp)>) : comp =
       mk_comp md res_t wp wlp []
 
 let close_comp env bindings (c:comp) = 
-  let close_wp md res_t bindings wp0 =  
-    List.fold_right (fun b wp -> match b with 
-      | Env.Binding_var(x, t) -> 
-        let wp = withkind (Kind_dcon(None, t, wp0.k, false)) <| Typ_lam(x, t, wp) in
-        {Util.mk_typ_app md.close_wp [Inl res_t; Inl t; Inl wp] with k=wp0.k}
-      | Env.Binding_typ(a, k) -> //A bit sloppy here: close_wp_t is only for Type; overloading it here for all kinds
-        let wp = withkind (Kind_tcon(None, k, wp0.k, false)) <| Typ_tlam(a, k, wp) in
-        {Util.mk_typ_app md.close_wp_t [Inl res_t; Inl wp] with k=wp0.k}
-      | Env.Binding_lid(l, t) -> 
-        (* TODO: replace every occurrence of l in wp with a fresh bound var, abstract over the bound var and then close it.
-                 Except that it is highly unlikely for the wp to actually contain such a free occurrence of l *)
-        wp
-      | Env.Binding_sig s -> failwith "impos") bindings wp0 in //(Printf.sprintf "NYI close_comp_typ with binding %A" b)) 
-  let c = Tc.Normalize.weak_norm_comp env c in
-  let t, wp, wlp = destruct_comp c in
-  let md = Tc.Env.monad_decl env c.effect_name in
-  let wp = close_wp md c.result_typ bindings wp in
-  let wlp = close_wp md c.result_typ bindings wlp in
-  mk_comp md c.result_typ wp wlp c.flags
+  if Util.is_ml_comp c then c
+  else
+    let close_wp md res_t bindings wp0 =  
+      List.fold_right (fun b wp -> match b with 
+        | Env.Binding_var(x, t) -> 
+          let wp = withkind (Kind_dcon(None, t, wp0.k, false)) <| Typ_lam(x, t, wp) in
+          {Util.mk_typ_app md.close_wp [Inl res_t; Inl t; Inl wp] with k=wp0.k}
+        | Env.Binding_typ(a, k) -> //A bit sloppy here: close_wp_t is only for Type; overloading it here for all kinds
+          let wp = withkind (Kind_tcon(None, k, wp0.k, false)) <| Typ_tlam(a, k, wp) in
+          {Util.mk_typ_app md.close_wp_t [Inl res_t; Inl wp] with k=wp0.k}
+        | Env.Binding_lid(l, t) -> 
+          (* TODO: replace every occurrence of l in wp with a fresh bound var, abstract over the bound var and then close it.
+                   Except that it is highly unlikely for the wp to actually contain such a free occurrence of l *)
+          wp
+        | Env.Binding_sig s -> failwith "impos") bindings wp0 in //(Printf.sprintf "NYI close_comp_typ with binding %A" b)) 
+    let c = Tc.Normalize.weak_norm_comp env c in
+    let t, wp, wlp = destruct_comp c in
+    let md = Tc.Env.monad_decl env c.effect_name in
+    let wp = close_wp md c.result_typ bindings wp in
+    let wlp = close_wp md c.result_typ bindings wlp in
+    mk_comp md c.result_typ wp wlp c.flags
 
 let weaken_result_typ (env:env)  (e:exp) (c:comp) (t:typ) : exp * comp = 
   let c = Tc.Normalize.weak_norm_comp env c in

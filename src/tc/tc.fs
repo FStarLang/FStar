@@ -898,14 +898,19 @@ and tc_decl env se = match se with
         let lb = match lb with 
           | (Inl _, _, _) -> failwith "impossible"
           | (Inr l, t, e) -> 
+            //let _ = printfn "Looking up %s\n" l.str in
             let (lb, t, e) = match Tc.Env.try_lookup_val_decl env l with 
               | None -> 
+              //  let _ = printfn "Not found!" in
                 let t = Tc.Util.extract_lb_annotation is_rec env t e in
                 (Inr l, t, e)
               | Some t' -> match t.t with 
                   | Typ_unknown -> 
+                  //  let _ = printfn "Found at type %s!" (Print.typ_to_string t') in
                     (Inr l, t', e)
-                  | _ -> raise (Error (Tc.Errors.inline_type_annotation_and_val_decl l, range_of_lid l)) in
+                  | _ -> 
+                    Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation" (Range.string_of_range r);
+                    (Inr l, t', e) in
              (lb, t, e) in
         lb::lbs) [] in
       let lbs' = List.rev lbs' in
@@ -986,13 +991,15 @@ and tc_decls (env:Tc.Env.env) ses =
 let tc_modul env modul = 
   let env = Tc.Env.set_current_module env modul.name in 
   let ses, env = tc_decls env modul.declarations in 
-  let modul = {name=modul.name; declarations=ses; exports=[]} in (* TODO: handle exports *) 
+  let modul = {name=modul.name; declarations=ses; exports=[]; is_interface=modul.is_interface} in (* TODO: handle exports *) 
   let env = Tc.Env.finish_module env modul in
   modul, env
 
 let check_modules mods = 
    let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 
     let m, env = tc_modul env m in 
-    (m::mods, env)) ([], Tc.Env.initial_env Const.prims_lid) in
+    if m.is_interface 
+    then mods, env
+    else m::mods, env) ([], Tc.Env.initial_env Const.prims_lid) in
    List.rev fmods
  

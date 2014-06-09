@@ -121,6 +121,7 @@ type pragma =
   | Dynamic 
 type modul = 
   | Module of LongIdent * list<decl>
+  | Interface of LongIdent * list<decl>
 type file = list<pragma> * list<modul>
 
 (********************************************************************************)

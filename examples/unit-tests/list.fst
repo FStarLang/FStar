@@ -15,6 +15,9 @@
 *)
 module List
 
+type foo =
+  | H
+
 (* type In : #'a:Type => 'a => list 'a => Type *)
 (* type ListUnion : #'a:Type => list 'a => list 'a => list 'a => Type *)
 (* assume In_hd: forall 'a (hd:'a) (tl:list 'a). In hd (Cons hd tl) *)
@@ -22,13 +25,14 @@ module List
 (* assume NotinNil: forall 'a (x:'a). ~(In x Nil) *)
 (* assume NotinCons: forall 'a (x:'a) (y:'a) (tl:list 'a). ~(In x tl) /\ x=!=y ==> ~(In x (Cons y tl)) *)
 
-val hd: list 'a -> 'a
-let hd = function 
+(* let foo x = hd x *)
+
+(* (\* val hd: list 'a -> 'a *\) *)
+let hd = function
   | hd::tl -> hd
   | _ -> failwith "head of empty list"
 
-val tail: list 'a -> list 'a
-let tail = function 
+let tail = function
   | hd::tl -> tl
   | _ -> failwith "tail of empty list"
 
@@ -70,7 +74,7 @@ let rec append x y = match x with
 val concatMap: ('a -> list 'b) -> list 'a -> list 'b
 let rec concatMap f = function
   | [] -> []
-  | a::tl -> 
+  | a::tl ->
     let fa = f a in
     let ftl = concatMap f tl in
     append fa ftl
@@ -93,3 +97,4 @@ assume val flatten: list (list 'a) -> PURE.Tot (list 'a)
 assume val filter: ('a -> bool) -> list 'a -> list 'a
 assume val partition: ('a -> bool) -> list 'a -> (list 'a * list 'a)
 assume val contains: 'a -> list 'a -> PURE.Tot bool
+

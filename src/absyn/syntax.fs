@@ -224,6 +224,7 @@ type modul = {
   name: lident;
   declarations: sigelts;
   exports: sigelts;
+  is_interface:bool
 }
 
 (*********************************************************************************)

@@ -14,32 +14,8 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Parser.Driver
-
-open Microsoft.FStar
+module Microsoft.FStar.Parser.ParseIt
 open Microsoft.FStar.Parser
-open Microsoft.FStar.Parser.AST
-open Microsoft.FStar.Parser.Parse
 open Microsoft.FStar.Util
 
-let print_error msg r = 
-  Util.print_string (Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg)
-
-let parse env fn =
-  match ParseIt.parse_file fn with 
-    | Inl ast ->
-      Desugar.desugar_file env ast
-    | Inr msg -> 
-      Util.print_string msg;
-      exit 0
-
-let parse_files files = 
-  let _, mods = List.fold_left (fun (env,mods) fn -> 
-    let env, m = parse env (Inl fn) in
-    (env, m::mods)) (DesugarEnv.empty_env(), []) files in 
-  List.rev mods |> List.flatten
-
-(* ;;  *)
-
-(* parse_files ["prims.fst"] *)
-  
+assume val parse_file: either<string,string> -> either<AST.file, string>

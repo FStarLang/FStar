@@ -69,7 +69,9 @@
     <Compile Include="parse.fs" />
     <Compile Include="lexhelp.fs" />
     <Compile Include="lex.fs" />
+    <Compile Include="dsenv.fsi" />
     <Compile Include="dsenv.fs" />
+    <Compile Include="desugar.fsi" />
     <Compile Include="desugar.fs" />
     <Compile Include="parseit.fsi" />
     <Compile Include="parseit.fs" />

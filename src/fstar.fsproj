@@ -26,7 +26,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
     <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\examples\unit-tests\</StartWorkingDirectory>
-    <StartArguments>--fstar_home ../../ --pretype --prims prims.fst st.fst list.fst string.fst ../../src/basic/bytes.fst ../../src/basic/util.fst ../../src/basic/getoptsimple.fsi ../../src/basic/options.fs ../../src/basic/range.fsi ../../src/basic/unionfind.fst ../../src/absyn/syntax.fs ../../src/absyn/const.fs ../../src/absyn/visit-test.fs</StartArguments>
+    <StartArguments>--fstar_home ../../ --pretype --prims prims.fst st.fst list.fst string.fst ../../src/basic/bytes.fst ../../src/basic/util.fst ../../src/basic/getoptsimple.fsi ../../src/basic/options.fs ../../src/basic/range.fsi ../../src/basic/unionfind.fst ../../src/absyn/syntax.fs ../../src/absyn/const.fs ../../src/absyn/visit.fs  ../../src/absyn/util.fs ../../src/absyn/print.fs ../../src/parser/ast.fs ../../src/parser/dsenv.fs ../../src/parser/desugar.fs ../../src/parser/parse.fst ../../src/parser/lexhelp.fs ../../src/parser/parseit.fsi ../../src/parser/driver.fs</StartArguments>
     <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

@@ -40,7 +40,13 @@ let parse_file fn =
   let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename) in 
   let lexer = LexFStar.token lexargs in 
   try
-    Inl (Parse.file lexer lexbuf)
+    let file = Parse.file lexer lexbuf in
+    let mods = if Util.ends_with filename ".fsi" 
+               then snd file |> List.map (function
+                | AST.Module(l,d) -> AST.Interface(l,d)
+                | _ -> failwith "Impossible") 
+               else snd file in
+     Inl (fst file, mods)
   with 
     | Absyn.Syntax.Error(msg, r) -> 
       let msg = Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg in

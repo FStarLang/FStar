@@ -43,9 +43,10 @@ type env = {
   kind_abbrevs:list<kind_abbrev>;
   recbindings:list<binding>;     (* names bound by recursive type and top-level let-bindings definitions only *)
   phase:AST.level;
-  sigmap: Util.smap<sigelt>;
+  sigmap: Util.smap<(sigelt * bool)>; (* bool indicates that this was declared in an interface file *)
   effect_names:list<lident>;
   default_result_effect:typ -> Range.range -> comp;
+  interf:bool
 }
 
 let fail_or lookup lid = match lookup lid with 
@@ -75,14 +76,11 @@ let empty_env () = {curmodule=None;
                     phase=AST.Un;
                     sigmap=Util.smap_create(100);
                     effect_names=[];
-                    default_result_effect=Util.ml_comp}
+                    default_result_effect=Util.ml_comp;
+                    interf=false}
 
 let total env = {env with default_result_effect=(fun t _ -> Total t)}
 let ml env = {env with default_result_effect=Util.ml_comp}
-
-let prepare_module env mname = 
-  let open_ns = if lid_equals mname Const.prims_lid then [] else Const.prims_lid::env.effect_names in
-  {env with curmodule=Some mname; open_namespaces = open_ns}
 
 let range_of_binding = function
   | Binding_typ_var id
@@ -110,7 +108,7 @@ let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a
                 finder full_name) in
   aux (current_module env::env.open_namespaces)
 
-let try_lookup_typ_name env (lid:lident) : option<typ> = 
+let try_lookup_typ_name' exclude_interf env (lid:lident) : option<typ> = 
   (* Resolve using, in order, 
      1. rec bindings
      2. sig bindings in current module
@@ -130,19 +128,21 @@ let try_lookup_typ_name env (lid:lident) : option<typ> =
 
   let find_in_sig lid = 
     match Util.smap_try_find env.sigmap lid.str with 
-      | Some (Sig_tycon _) 
-      | Some (Sig_typ_abbrev _) -> Some (ftv <| lid)
+      | Some (Sig_tycon _, i) 
+      | Some (Sig_typ_abbrev _, i) when not (i && exclude_interf) -> Some (ftv <| lid)
       | _ -> None in
   
   match find_rec () with 
     | None -> resolve_in_open_namespaces env lid find_in_sig
     | r -> r
 
+let try_lookup_typ_name env l = try_lookup_typ_name' (not env.interf) env l
+
 let is_effect_name env lid = 
   let find_in_sig lid = 
     match Util.smap_try_find env.sigmap lid.str with 
-      | Some (Sig_tycon(_, _, _, _, _, tags, _)) 
-      | Some (Sig_typ_abbrev (_, _, _, _, tags, _)) -> 
+      | Some (Sig_tycon(_, _, _, _, _, tags, _), _) 
+      | Some (Sig_typ_abbrev (_, _, _, _, tags, _), _) -> 
         if List.contains Logic_effect tags
         then Some (ftv <| lid)
         else None 
@@ -152,7 +152,7 @@ let is_effect_name env lid =
 let try_resolve_typ_abbrev env lid = 
   let find_in_sig lid = 
     match Util.smap_try_find env.sigmap lid.str with 
-      | Some (Sig_typ_abbrev(lid, tps, k, def, _, _)) -> 
+      | Some (Sig_typ_abbrev(lid, tps, k, def, _, _), _) -> 
         let t = withkind Kind_unknown <| Typ_meta(Meta_named(Util.close_with_lam tps def, lid)) in
         Some t
       | _ -> None in
@@ -182,18 +182,24 @@ let try_lookup_module env path =
 let try_lookup_let env (lid:lident) = 
   let find_in_sig lid = 
     match Util.smap_try_find env.sigmap lid.str with 
-      | Some (Sig_let _) -> Some (fvar lid (range_of_lid lid))
+      | Some (Sig_let _, _) -> Some (fvar lid (range_of_lid lid))
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
           
-let try_lookup_lid env (lid:lident) : option<exp> = 
+let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<exp> = 
   let find_in_sig lid  = 
     match Util.smap_try_find env.sigmap lid.str with 
-      | Some (Sig_datacon _)
-      | Some (Sig_val_decl _)
-      | Some (Sig_logic_function _)
-      | Some (Sig_let _) -> 
+      | Some (_, true) when exclude_interf -> None
+      | Some (Sig_datacon _, _)
+      | Some (Sig_logic_function _, _)
+      | Some (Sig_let _, _) -> 
         Some (fvar lid (range_of_lid lid))
+      | Some (Sig_val_decl(_, _, aopt, _, _), _) ->
+          begin match aopt with 
+            | Some Assumption -> Some (fvar lid (range_of_lid lid))
+            | _ when any_val -> Some (fvar lid (range_of_lid lid))
+            | _ -> None
+          end
       | _ -> 
         None in
 
@@ -213,11 +219,13 @@ let try_lookup_lid env (lid:lident) : option<exp> =
     | Some _ -> found_id
     | _ -> resolve_in_open_namespaces env lid find_in_sig
 
+let try_lookup_lid env l = try_lookup_lid' false false env l
+
 let try_lookup_datacon env (lid:lident) = 
   let find_in_sig lid = 
     match Util.smap_try_find env.sigmap lid.str with 
-      | Some (Sig_logic_function _)
-      | Some (Sig_datacon _) -> Some <| fv lid
+      | Some (Sig_logic_function _, _)
+      | Some (Sig_datacon _, _) -> Some <| fv lid
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
@@ -229,7 +237,7 @@ type record = {
 }
 let record_cache : ref<list<record>> = Util.mk_ref []
 
-let extract_record env = function 
+let extract_record (env:env) = function 
   | Sig_bundle(sigs, _) -> 
     let is_rec = Util.for_some (function 
       | Logic_record -> true
@@ -301,8 +309,8 @@ let is_kind_abbrev env l =
     | None -> false
     | Some _ -> true
     
-let unique_name env lid = 
-  match try_lookup_lid env lid with
+let unique_name any_val exclude_if env lid = 
+  match try_lookup_lid' any_val exclude_if env lid with
     | None -> 
       begin match find_kind_abbrev env lid with 
         | None -> true
@@ -311,16 +319,16 @@ let unique_name env lid =
     | Some _ -> false
 
 let unique_typ_name env lid = 
-  match try_lookup_typ_name env lid with
+  match try_lookup_typ_name' true env lid with
     | None -> true
     | Some a -> false
 
-let unique env lid = 
+let unique any_val exclude_if env lid = 
   let this_env = {env with open_namespaces=[]} in
-  unique_name this_env lid && unique_typ_name this_env lid
+  unique_name any_val exclude_if this_env lid && unique_typ_name this_env lid
       
 let push_kind_abbrev env (lid, parms, k) = 
-  if unique env lid 
+  if unique true false env lid 
   then {env with kind_abbrevs=(lid, parms, k)::env.kind_abbrevs}
   else raise (Error ("Duplicate top-level names " ^ lid.str, range_of_lid lid))
 
@@ -355,25 +363,36 @@ let push_local_vbinding env b =
 let push_rec_binding env b = match b with 
   | Binding_let lid
   | Binding_tycon lid -> 
-    if unique env lid
+    if unique false true env lid
     then {env with recbindings=b::env.recbindings}
     else raise (Error ("Duplicate top-level names " ^ lid.str, range_of_lid lid))
   | _ -> failwith "Unexpected rec_binding"
     
 let push_sigelt env s = 
-  let err l = raise (Error ("Duplicate top-level names " ^ (text_of_lid l), range_of_lid l)) in
-  let lids = match s with 
-    | Sig_monads _ -> []
-    | _ -> lids_of_sigelt s in 
-  let env = match Util.find_map lids (fun l -> if not (unique env l) then Some l else None) with 
-    | None -> 
-      extract_record env s;
-      {env with sigaccum=s::env.sigaccum}
-    | Some l -> 
-      err l in 
+  let err l = 
+    let sopt = Util.smap_try_find env.sigmap l.str in
+    let r = match sopt with 
+      | Some (se, _) ->
+        begin match Util.find_opt (lid_equals l) (lids_of_sigelt se) with
+          | Some l -> Range.string_of_range <| range_of_lid l
+          | None -> "<unknown>"
+        end
+      | None -> "<unknown>" in
+    raise (Error (Util.format2 "Duplicate top-level names [%s]; previously declared at %s" (text_of_lid l) r, range_of_lid l)) in
+  let env = match s with 
+    | Sig_monads _ -> env
+    | _ -> 
+      let any_val, exclude_if = match s with 
+        | Sig_let _ -> false, true
+        | Sig_bundle _ -> true, true
+        | _ -> false, false in 
+      let lids = lids_of_sigelt s in 
+      begin match Util.find_map lids (fun l -> if not (unique any_val exclude_if env l) then Some l else None) with
+        | None -> extract_record env s; {env with sigaccum=s::env.sigaccum}
+        | Some l -> err l
+      end in 
   let env, lss = match s with 
     | Sig_bundle(ses, _) -> env, List.map (fun se -> (lids_of_sigelt se, se)) ses
-    | Sig_val_decl(_, _, None, _, _) -> env, [] 
     | Sig_monads _ -> 
       let lids = lids_of_sigelt s in
       let env = {env with effect_names=lids@env.effect_names} in 
@@ -381,14 +400,14 @@ let push_sigelt env s =
     | _ -> env, [lids_of_sigelt s, s] in
   lss |> List.iter (fun (lids, se) -> 
     lids |> List.iter (fun lid -> 
-      Util.smap_add env.sigmap lid.str se));
+      Util.smap_add env.sigmap lid.str (se, env.interf)));
   env
     
 let push_namespace env lid = 
   {env with open_namespaces = lid::env.open_namespaces}
 
 let is_type_lid env lid = 
-  let aux () = match try_lookup_typ_name env lid with
+  let aux () = match try_lookup_typ_name' false env lid with
     | Some _ -> true
     | _ -> false in
   if lid.ns=[]
@@ -400,11 +419,11 @@ let is_type_lid env lid =
 
 let check_admits env = 
   env.sigaccum |> List.iter (fun se -> match se with
-    | Sig_val_decl(l, t, None, _, _) -> 
+    | Sig_val_decl(l, t, None, ltags, r) -> 
       begin match try_lookup_lid env l with 
         | None -> 
           Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.sli l));
-          Util.smap_add env.sigmap l.str se
+          Util.smap_add env.sigmap l.str (Sig_val_decl(l, t, Some Assumption, ltags, r), false)
         | Some _ -> ()
       end
     | _ -> ())
@@ -419,8 +438,25 @@ let finish env modul =
     recbindings=[];
     phase=AST.Un}
 
-let finish_module env modul = 
-  check_admits env; finish env modul
+let finish_module_or_interface env modul = 
+  if not modul.is_interface 
+  then check_admits env;
+  finish env modul
+
+let prepare_module_or_interface intf (env:env) mname =
+  let prep env = 
+    let open_ns = if lid_equals mname Const.prims_lid then [] else Const.prims_lid::env.effect_names in
+    {env with curmodule=Some mname; open_namespaces = open_ns; interf=intf} in
+  match env.modules |> Util.find_opt (fun (l, _) -> lid_equals l mname) with
+    | None -> prep env
+    | Some (_, m) -> 
+      if intf 
+      then raise (Error(Util.format1 "Duplicate module or interface name: %s" mname.str, range_of_lid mname));
+      prep env 
+//      let vals = m.declarations |> List.filter (function 
+//        | Sig_val_decl _ -> true
+//        | _ -> false) in
+//      prep ({env with sigaccum=m.declarations})
 
 let enter_monad_scope env mname = 
   let curmod = current_module env in

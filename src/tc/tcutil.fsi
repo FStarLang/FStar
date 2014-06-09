@@ -54,4 +54,4 @@ val lift_pure: env -> typ -> formula -> comp (* with t as a result type *)
 val close_guard: list<Tc.Env.binding> -> guard -> guard
 val close_comp: env -> list<binding> -> comp -> comp
 val check_comp: env -> exp -> comp -> comp -> exp * comp * guard
-val refine_data_type: env -> lident -> list<Util.either<(btvdef*knd), (option<bvvdef>*typ*bool)>> -> typ -> typ
+val refine_data_type: env -> lident -> list<Util.either<(btvdef * knd), (option<bvvdef> * typ * bool)>> -> typ -> typ
