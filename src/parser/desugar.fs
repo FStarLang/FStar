@@ -766,7 +766,7 @@ and desugar_kind env k : knd =
     | Name l -> 
       begin match DesugarEnv.find_kind_abbrev env (DesugarEnv.qualify_lid env l) with 
         | Some (_, [], def) -> Kind_abbrev((l, []), def)
-        | None -> error "Unexpected term where kind was expected" k k.range
+        | _ -> error "Unexpected term where kind was expected" k k.range
        end
     | Wild           -> Kind_unknown
     | Product([b], t) ->
