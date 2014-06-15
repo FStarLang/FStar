@@ -214,7 +214,8 @@ let keywords =
     ALWAYS, "kind"       ,KIND;
     FSHARP, "yield"      ,YIELD(true);
     ALWAYS, "_"          ,UNDERSCORE;
-    FSHARP, "__token_constraint",CONSTRAINT
+    FSHARP, "__token_constraint",CONSTRAINT;
+    ALWAYS, "print", PRINT;
   ]
 (*------- reserved keywords which are ml-compatibility ids *) 
   @ List.map (fun s -> (FSHARP,s,RESERVED)) 

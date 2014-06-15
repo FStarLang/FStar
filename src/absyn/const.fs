@@ -105,6 +105,7 @@ let op_Modulus         = pconst "op_Modulus"
 let op_And             = pconst "op_AmpAmp"
 let op_Or              = pconst "op_BarBar"
 let op_Negation        = pconst "op_Negation"
+let print_lid          = pconst "print"
 
 (* control primitives *)
 let try_with_lid       = pconst "try_with"
