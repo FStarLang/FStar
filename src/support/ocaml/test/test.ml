@@ -1,4 +1,27 @@
 (* -------------------------------------------------------------------- *)
+let _ =
+  let open BatPervasives in
+
+  let filename = "test.sqlite3" in
+
+  finally
+    (fun () -> try Unix.unlink filename with _ -> ())
+    (fun () ->
+      let db = DB.opendb filename in
+      finally
+        (fun () -> DB.closedb db)
+        (fun () ->
+          DB.put db "k1" "v1";
+          DB.put db "k2" "v2";
+          Printf.printf "%b\n%!" (DB.get db "XX" = None);
+          Printf.printf "%b\n%!" (DB.get db "k1" = Some "v1");
+          Printf.printf "%b\n%!" (DB.get db "k2" = Some "v2");
+          Printf.printf "%b\n%!" (List.length (DB.all  db) = 2);
+          Printf.printf "%b\n%!" (List.length (DB.keys db) = 2))
+        ())
+    ()
+
+(* -------------------------------------------------------------------- *)
 let tohex (s : string) =
   let buffer = Buffer.create (2 * (String.length s)) in
     for i = 0 to (String.length s) - 1 do

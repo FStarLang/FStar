@@ -20,6 +20,7 @@ Library db
   FindlibName: db
   FindlibParent: fstar
   Modules: DB
+  BuildDepends: batteries, fileutils, sqlite3
   CompiledObject: best
 
 Library evp
@@ -40,7 +41,7 @@ Executable test
   MainIs: test.ml
   Install: false
   Build$: flag(runtests)
-  BuildDepends: fstar, fstar.evp
+  BuildDepends: batteries, fstar, fstar.evp, fstar.db
   CompiledObject: best
   
 Test main
