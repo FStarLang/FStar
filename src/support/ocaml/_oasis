@@ -22,7 +22,7 @@ Library evp
   Modules: Evp
   CSources: evp_stub.c
   CCLib: -lcrypto
-  CCOpt: -Wall -W -O2 -ggdb
+  CCOpt: -Wall -W -Wno-deprecated-declarations -O2 -ggdb
   CompiledObject: best
 
 Flag runtests
