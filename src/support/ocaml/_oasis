@@ -15,6 +15,13 @@ Library fstar
   Pack: true
   CompiledObject: best
 
+Library db
+  Path: src/db
+  FindlibName: db
+  FindlibParent: fstar
+  Modules: DB
+  CompiledObject: best
+
 Library evp
   Path: src/evp
   FindlibName: evp
