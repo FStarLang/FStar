@@ -1,0 +1,12 @@
+[submodule "src/support/ocaml/3rdparty/ocaml-nocrypto"]
+	path = src/support/ocaml/3rdparty/ocaml-nocrypto
+	url = https://github.com/mirleft/ocaml-nocrypto.git
+	branch = master
+[submodule "src/support/ocaml/3rdparty/ocaml-asn1-combinators"]
+	path = src/support/ocaml/3rdparty/ocaml-asn1-combinators
+	url = https://github.com/mirleft/ocaml-asn1-combinators.git
+	branch = master
+[submodule "src/support/ocaml/3rdparty/ocaml-x509"]
+	path = src/support/ocaml/3rdparty/ocaml-x509
+	url = https://github.com/mirleft/ocaml-x509.git
+	branch = master
