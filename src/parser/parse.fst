@@ -18,6 +18,7 @@ type token =
   | REFERENCE
   | VOID
   | PUBLIC
+  | PRINT
   | PRIVATE
   | INTERNAL
   | LBRACE_COLON_PATTERN

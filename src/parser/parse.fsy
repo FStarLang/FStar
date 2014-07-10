@@ -1008,6 +1008,7 @@ semiColonTermList:
 
 moreSemiColonTerms:
   |   { [] }
+  | SEMICOLON { [] }
   | SEMICOLON noSeqTerm moreSemiColonTerms 
       { $2::$3 }
 

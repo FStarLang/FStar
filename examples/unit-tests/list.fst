@@ -15,9 +15,6 @@
 *)
 module List
 
-type foo =
-  | H
-
 (* type In : #'a:Type => 'a => list 'a => Type *)
 (* type ListUnion : #'a:Type => list 'a => list 'a => list 'a => Type *)
 (* assume In_hd: forall 'a (hd:'a) (tl:list 'a). In hd (Cons hd tl) *)

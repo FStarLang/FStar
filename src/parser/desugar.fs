@@ -1288,9 +1288,13 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
   | _ -> raise (Error("Unexpected declaration", d.drange))
         
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul = 
+  let open_ns (mname:LongIdent) d = 
+    if List.length mname.ns <> 0 
+    then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname))  :: d
+    else d in
   let env, mname, decls, intf = match m with
-    | Interface(mname, decls) -> DesugarEnv.prepare_module_or_interface true env mname, mname, decls, true
-    | Module(mname, decls) -> DesugarEnv.prepare_module_or_interface false env mname, mname, decls, false in
+    | Interface(mname, decls) -> DesugarEnv.prepare_module_or_interface true env mname, mname, open_ns mname decls, true
+    | Module(mname, decls) -> DesugarEnv.prepare_module_or_interface false env mname, mname, open_ns mname decls, false in
   let env, sigelts = List.fold_left (fun (env, sigelts) d ->
     let env, se = desugar_decl env d in
     env, sigelts@se) (env, []) decls in

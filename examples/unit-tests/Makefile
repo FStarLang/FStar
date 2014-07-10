@@ -7,9 +7,12 @@ ifeq ($(PRN), true)
 override OTHERFLAGS += --prn
 endif
 
-FSTAR=mono ../../bin/FStar.exe --fstar_home ../../ $(OTHERFLAGS)
+FSTAR=../../bin/FStar.exe --fstar_home ../../ $(OTHERFLAGS)
 
 ALLFILES=utils list tuple rec pat letrec termination skel 
+
+%.tc: %.fst
+	$(FSTAR) --pretype --prims prims.fst $^
 
 prims: 
 	$(FSTAR) --pretype --prims prims.fst 
@@ -21,7 +24,7 @@ list:
 	$(FSTAR) --pretype --codegen OCaml  --prims prims.fst list.fst
 
 
-STDFILES=list.fst string.fst
+STDFILES=list.fst option.fst string.fst 
 BASICFILES=bytes.fst util.fst getoptsimple.fst options.fs range.fst unionfind.fst
 BASIC=$(addprefix ../../src/basic/, $(BASICFILES))
 SYNTAXFILES=syntax.fs const.fs visit.fs util.fs print.fs
@@ -30,15 +33,22 @@ PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.f
 PARSER=$(addprefix ../../src/parser/, $(PARSERFILES))
 TCFILES=errors.fs tcenv.fsi tcenv.fs normalize.fsi normalize.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 TC=$(addprefix ../../src/tc/, $(TCFILES))
+FORMATFILES=format.fsi format.fs
+FORMAT=$(addprefix ../../src/format/, $(FORMATFILES))
+BACKENDFILES=nameenv.fsi nameenv.fs syntax.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs oaml.fsi ocaml.fs
+BACKEND=ocaml-backend-stub.fst
 MAINFILES=fstar.fs
 MAIN=$(addprefix ../../src/, $(MAINFILES))
-ALL=prims.fst st.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(MAIN)
+
+ALL=st.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) backends.fsi $(BACKEND) 
+#$(MAIN)
 
 pt-compiler:
-	$(FSTAR) --pretype --prims prims.fst st.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC)
+	$(FSTAR) --pretype --prims prims.fst $(ALL)
+
 
 compiler:
-	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) backends.fsi $(MAIN)
+	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) backends.fsi $(MAIN)
 
 
 wc: $(ALL)

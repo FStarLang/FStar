@@ -32,7 +32,7 @@ let process_args () =
 let cleanup () = ()
 
 let go _ =    
-  let finished (mods:Syntax.modul list) = 
+  let finished (mods:list<Syntax.modul>) = 
     let msg = if !Options.pretype then "Parsed, desugared, and pre-typed module:" else "Parsed and desugared module:" in
     mods |> List.iter (fun m -> Util.print_string (Util.format2 "%s %s\n" msg (Syntax.text_of_lid m.name))) in
   let (res, filenames) = process_args () in
@@ -50,10 +50,11 @@ let go _ =
             try
                 let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
                 let doc   = Backends.OCaml.Code.doc_of_mllib mllib in
-                printfn "%s" (FSharp.Format.pretty 120 doc)
+                Util.print_string (FSharp.Format.pretty 120 doc)
             with Backends.OCaml.ASTTrans.OCamlFailure (rg, error) -> begin
-                (* FIXME: register exception and remove this block *)
-                fprintfn stderr "OCaml Backend Error: %s %s"
+                (* FIXME: register exception and remove this block  *)
+                Util.print_string (* stderr *) <|
+                Util.format2 "OCaml Backend Error: %s %s"
                     (Range.string_of_range rg)
                     (Backends.OCaml.ASTTrans.string_of_error error);
                 exit 1
@@ -61,7 +62,7 @@ let go _ =
         end;
         finished fmods 
 
-let () =  
+let () =
     try 
       go ();
       cleanup ();
