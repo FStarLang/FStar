@@ -52,6 +52,7 @@ val substring: string -> int -> int -> string
 val starts_with: string -> string -> bool
 val ends_with: string -> string -> bool
 val char_at: string -> int -> char
+val is_upper: char -> bool
 
 type either<'a,'b> =
   | Inl of 'a
@@ -105,3 +106,4 @@ val bump_query_count: (unit -> int)
 val query_count: (unit -> int)
 
 val expand_environment_variable: string -> string
+

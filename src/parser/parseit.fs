@@ -44,7 +44,7 @@ let parse_file fn =
   let lexer = LexFStar.token lexargs in 
   try
     let file = Parse.file lexer lexbuf in
-    let mods = if Util.ends_with filename ".fsi" 
+    let mods = if Util.ends_with filename ".fsi" && not !Options.admit_fsi
                then snd file |> List.map (function
                 | AST.Module(l,d) -> AST.Interface(l,d)
                 | _ -> failwith "Impossible") 

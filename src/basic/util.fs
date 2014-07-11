@@ -62,6 +62,7 @@ let string_of_bytes (i:byte[]) = string_of_unicode i
 let starts_with (s1:string) (s2:string) = s1.StartsWith(s2)
 let ends_with (s1:string) (s2:string) = s1.EndsWith(s2)
 let char_at (s:string) (i:int) : char = s.[i]
+let is_upper (c:char) = 'A' <= c && c <= 'Z'
 
 let iof = int_of_float
 let foi = float_of_int

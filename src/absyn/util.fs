@@ -71,6 +71,10 @@ let genident r =
     | None -> mk_ident(sym, dummyRange)
     | Some r -> mk_ident(sym, r)
 
+let is_name (lid:lident) = 
+  let c = Util.char_at lid.ident.idText 0 in
+  Util.is_upper c
+
 let range_of_bvd x = x.ppname.idRange
 let mkbvd (x,y) = {ppname=x;realname=y;instantiation=mk_ref None}
 let setsort w t = {v=w.v; sort=t; p=w.p}

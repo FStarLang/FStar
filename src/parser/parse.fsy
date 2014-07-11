@@ -940,7 +940,7 @@ atomicTerm:
   | UNDERSCORE { mk_term Wild (rhs parseState 1) Un }
   | ASSERT   { mk_term (Var Const.assert_lid) (rhs parseState 1) Expr }
   | tvar     { mk_term (Tvar($1)) (rhs parseState 1) Type }
-  | qname    { mk_term (Name $1) (rhs parseState 1) Un }
+  /* | qname    { mk_term (Name $1) (rhs parseState 1) Un } */
   | constant { mk_term (Const $1) (rhs parseState 1) Expr }
   | LENS_PAREN_LEFT tupleN LENS_PAREN_RIGHT 
       { 
@@ -991,8 +991,11 @@ projectionLHS:
 /*  | lid 
       { mk_term (Var($1)) (rhs parseState 1) Un }
 */
-  | lid maybeInsts
-      { $2 (mk_term (Var($1)) (rhs parseState 1) Un) }
+  | eitherQname maybeInsts
+      { 
+        let t = if Util.is_name $1 then Name $1 else Var $1 in
+        $2 (mk_term t (rhs parseState 1) Un) 
+      }
   | LPAREN term maybeWithSort RPAREN 
       { mk_term (Paren($3 $2 (rhs2 parseState 2 3))) (rhs2 parseState 1 4) ($2.level) }
   | LBRACK_BAR semiColonTermList BAR_RBRACK
