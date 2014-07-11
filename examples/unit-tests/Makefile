@@ -7,7 +7,7 @@ ifeq ($(PRN), true)
 override OTHERFLAGS += --prn
 endif
 
-FSTAR=../../bin/FStar.exe --fstar_home ../../ $(OTHERFLAGS)
+FSTAR=mono ../../bin/FStar.exe --fstar_home ../../ $(OTHERFLAGS)
 
 ALLFILES=utils list tuple rec pat letrec termination skel 
 
@@ -57,21 +57,21 @@ compiler:
 wc: prims.fst $(ALL)
 
 # # Change the following line to the location of the top MITLS directory "lang-sec/msrc/cvk/samples/protocols/tls"
-MITLS=./mitls-copy/
+MITLS=~/Desktop/repositories/mitls/
 
-PDIR=$(MITLS)Platform/
-PLATFORM=$(PDIR)Bytes.fsi $(PDIR)Date.fsi $(PDIR)Error.fsi $(PDIR)List.fsi $(PDIR)Tcp.fsi
+PDIR=$(MITLS)ML/Platform/
+PLATFORM=$(PDIR)Bytes.fst $(PDIR)Date.fst $(PDIR)Error.fst $(PDIR)Tcp.fst
 
-CDIR=$(MITLS)CoreCrypto/
-CRYPTO=$(CDIR)CoreKeys.fsi $(CDIR)CoreACiphers.fsi $(CDIR)CoreHMac.fsi $(CDIR)CoreRandom.fsi $(CDIR)CoreCiphers.fsi $(CDIR)CoreHash.fsi $(CDIR)CoreSig.fsi $(CDIR)CoreDH.fsi $(CDIR)DER.fsi
+CDIR=$(MITLS)ML/CoreCrypto/
+CRYPTO=$(CDIR)CoreKeys.fst $(CDIR)CoreACiphers.fst $(CDIR)CoreHMac.fst $(CDIR)CoreRandom.fst $(CDIR)CoreCiphers.fst $(CDIR)CoreHash.fst $(CDIR)CoreSig.fst $(CDIR)CoreDH.fst $(CDIR)DER.fst
 
 TDIR=$(MITLS)lib/
 TLSI=$(TDIR)TLSError.fsi $(TDIR)Nonce.fsi $(TDIR)TLSConstants.fsi $(TDIR)RSAKey.fsi $(TDIR)DHGroup.fsi $(TDIR)PMS.fsi $(TDIR)HASH.fsi $(TDIR)HMAC.fsi $(TDIR)Sig.fsi $(TDIR)Cert.fsi $(TDIR)TLSInfo.fsi $(TDIR)TLSExtensions.fsi $(TDIR)TLSPRF.fsi $(TDIR)Range.fsi $(TDIR)DataStream.fsi $(TDIR)AppFragment.fsi $(TDIR)HSFragment.fsi $(TDIR)TLSFragment.fsi $(TDIR)StatefulPlain.fsi $(TDIR)LHAEPlain.fsi $(TDIR)MAC_SHA256.fsi $(TDIR)MAC_SHA1.fsi $(TDIR)MAC.fsi $(TDIR)Encode.fsi $(TDIR)ENC.fsi $(TDIR)AEAD_GCM.fsi $(TDIR)LHAE.fsi $(TDIR)StatefulLHAE.fsi $(TDIR)Record.fsi $(TDIR)Alert.fsi $(TDIR)PRF.fsi $(TDIR)KEF.fsi $(TDIR)DH.fsi $(TDIR)RSA.fsi $(TDIR)SessionDB.fsi $(TDIR)Handshake.fsi $(TDIR)AppData.fsi $(TDIR)Dispatch.fsi $(TDIR)TLS.fsi 
 
-TLS=$(TDIR)TLSError.fs $(TDIR)Nonce.fs $(TDIR)TLSConstants.fs $(TDIR)RSAKey.fs $(TDIR)DHGroup.fs $(TDIR)PMS.fs $(TDIR)HASH.fs $(TDIR)HMAC.fs $(TDIR)Sig.fs $(TDIR)Cert.fsi $(TDIR)TLSInfo.fs $(TDIR)TLSExtensions.fs #$(TDIR)TLSPRF.fs $(TDIR)Range.fs $(TDIR)DataStream.fs $(TDIR)AppFragment.fs $(TDIR)HSFragment.fs $(TDIR)TLSFragment.fs $(TDIR)StatefulPlain.fs $(TDIR)LHAEPlain.fs $(TDIR)MAC_SHA256.fs $(TDIR)MAC_SHA1.fs $(TDIR)MAC.fs $(TDIR)Encode.fs $(TDIR)ENC.fs $(TDIR)AEAD_GCM.fs $(TDIR)LHAE.fs $(TDIR)StatefulLHAE.fs $(TDIR)Record.fs $(TDIR)Alert.fs $(TDIR)PRF.fs $(TDIR)KEF.fs $(TDIR)DH.fs $(TDIR)RSA.fs $(TDIR)SessionDB.fsi # $(TDIR)HandshakeMessages.fs $(TDIR)Handshake.fs $(TDIR)AppData.fs $(TDIR)Dispatch.fs $(TDIR)TLS.fs $(TDIR)TLS.fs
+TLS=$(TDIR)TLSError.fs $(TDIR)Nonce.fs $(TDIR)TLSConstants.fs $(TDIR)RSAKey.fs $(TDIR)DHGroup.fs $(TDIR)PMS.fs $(TDIR)HASH.fs $(TDIR)HMAC.fs $(TDIR)Sig.fs $(TDIR)Cert.fst $(TDIR)TLSInfo.fs $(TDIR)TLSExtensions.fs #$(TDIR)TLSPRF.fs $(TDIR)Range.fs $(TDIR)DataStream.fs $(TDIR)AppFragment.fs $(TDIR)HSFragment.fs $(TDIR)TLSFragment.fs $(TDIR)StatefulPlain.fs $(TDIR)LHAEPlain.fs $(TDIR)MAC_SHA256.fs $(TDIR)MAC_SHA1.fs $(TDIR)MAC.fs $(TDIR)Encode.fs $(TDIR)ENC.fs $(TDIR)AEAD_GCM.fs $(TDIR)LHAE.fs $(TDIR)StatefulLHAE.fs $(TDIR)Record.fs $(TDIR)Alert.fs $(TDIR)PRF.fs $(TDIR)KEF.fs $(TDIR)DH.fs $(TDIR)RSA.fs $(TDIR)SessionDB.fst # $(TDIR)HandshakeMessages.fs $(TDIR)Handshake.fs $(TDIR)AppData.fs $(TDIR)Dispatch.fs $(TDIR)TLS.fs $(TDIR)TLS.fs
 
 mitls:
-	$(FSTAR) --pretype --codegen OCaml --prims prims.fst st.fst array.fst $(PLATFORM) $(CRYPTO) $(TLS)
+	$(FSTAR) --pretype --codegen OCaml --prims prims.fst --admit_fsi list.fst $(PLATFORM) $(CRYPTO) $(TLS)
 
 
 wc: prims.fst $(ALL)
