@@ -19,7 +19,7 @@ Library db
   Path: src/db
   FindlibName: db
   FindlibParent: fstar
-  Modules: DB
+  Modules: DB, DBMap
   BuildDepends: batteries, fileutils, sqlite3
   CompiledObject: best
 
