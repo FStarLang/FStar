@@ -155,7 +155,7 @@ let newline (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<_>) =
 %token <string> SPLICE_SYMBOL PERCENT_OP BINDER 
 %token <string * bool> LQUOTE RQUOTE 
 %token FORALL EXISTS ASSUME QUERY DEFINE LOGIC PRAGMAMONADIC PRAGMADYNAMIC PRAGMALIGHT
-%token BAR_BAR LEQ GEQ LESS GREATER LESSGREATER UPCAST DOWNCAST NULL RESERVED MODULE DELEGATE CONSTRAINT BASE SUBTYPE SUBKIND
+%token BAR_BAR LEQ GEQ LESS TYP_APP_LESS GREATER LESSGREATER UPCAST DOWNCAST NULL RESERVED MODULE DELEGATE CONSTRAINT BASE SUBTYPE SUBKIND
 %token AND AS ASSERT ASR BEGIN DO DONE DOWNTO ELSE ELIF END DOT_DOT
 %token EXCEPTION FALSE FOR FUN FUNCTION IF IN FINALLY DO_BANG 
 %token LAZY  MATCH METHOD MUTABLE NEW OF 
@@ -502,7 +502,7 @@ typars:
   | binders                { $1 }
 
 tvarinsts: 
-  | LESS tvars GREATER    { List.map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind false) $2 }
+  | TYP_APP_LESS tvars GREATER    { List.map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind false) $2 }
 
 binders: 
   | binder binders { $1::$2 }
@@ -553,10 +553,6 @@ lid:
 
 qname:
   | namepath { lid_of_ids $1 }
-
-instname:
-  | IDENT LESS               { [Syntax.mk_ident($1, rhs parseState 1)] }
-  | name DOT instname        { $1::$3 }
 
 eitherName:
   | ident { $1 } 
@@ -923,6 +919,18 @@ appTerm:
       {
         mkApp $1 $2 (rhs2 parseState 1 2)
       }
+/*  | fsTypApp  
+      { 
+        $1
+      }
+*/
+
+fsTypApp:
+  | eitherQname TYP_APP_LESS targs GREATER 
+      {
+        mkExplicitApp (mk_term (Var $1) (rhs parseState 1) Type) $3 (rhs2 parseState 1 4)
+      }
+
 
 formula:
   | noSeqTerm
@@ -973,14 +981,17 @@ targs:
 
 maybeInsts:
   |    { (fun x -> x) }
-  | LESS targs GREATER 
+  | TYP_APP_LESS targs GREATER 
       {
         (fun (x:term) -> mkExplicitApp x $2
           (Range.union_ranges x.range (rhs2 parseState 1 3)))
       }
 
 projectionLHS:
-  | lid maybeInsts     
+/*  | lid 
+      { mk_term (Var($1)) (rhs parseState 1) Un }
+*/
+  | lid maybeInsts
       { $2 (mk_term (Var($1)) (rhs parseState 1) Un) }
   | LPAREN term maybeWithSort RPAREN 
       { mk_term (Paren($3 $2 (rhs2 parseState 2 3))) (rhs2 parseState 1 4) ($2.level) }

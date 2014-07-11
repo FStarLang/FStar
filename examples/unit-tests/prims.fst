@@ -32,8 +32,8 @@ type EqTyp : Type => Type => Type                    (* infix binary '==' *)
 type Eq2 : #'a:Type => #'b:Type => 'a => 'b => Type  (* infix binary '==' *)
 type TypeOf : #'a:Type => 'a => Type
 type KindOf : Type => Type
-type XOR = fun ('P:Type) ('Q:Type) => ('P \/ 'Q) /\ ~('P /\ 'Q)
-type ITE = fun ('P:Type) ('Q:Type) ('R:Type) => ('P ==> 'Q) /\ (~'P ==> 'R) (* if/then/else in concrete syntax at the level of types/formulae *)
+type XOR ('P:Type) ('Q:Type) = ('P \/ 'Q) /\ ~('P /\ 'Q)
+type ITE ('P:Type) ('Q:Type) ('R:Type) = ('P ==> 'Q) /\ (~'P ==> 'R) (* if/then/else in concrete syntax at the level of types/formulae *)
 
 monad_lattice { (* The definition of the PURE effect is fixed; no user should ever change this *)
   PURE::

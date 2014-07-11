@@ -247,10 +247,12 @@ exception ReservedKeyword of string * range
 exception IndentationProblem of string * range
 
 type lexargs =  
-    { getSourceDirectory: (unit -> string); }
+    { getSourceDirectory: (unit -> string); 
+      contents:string}
 
-let mkLexargs (srcdir,filename) =
-  { getSourceDirectory=srcdir }
+let mkLexargs (srcdir,filename,(contents:string)) =
+    { getSourceDirectory=srcdir;
+      contents=contents}
 
 let kwd_or_id args (r:Range.range) s =
   match kwd s with 
@@ -270,6 +272,5 @@ let kwd_or_id args (r:Range.range) s =
           STRING (Bytes.string_as_unicode_bytes (Range.file_of_range r))
         | "__LINE__" -> 
           STRING (Bytes.string_as_unicode_bytes (string_of_int (Range.line_of_pos (Range.start_of_range r))))
-        | _ -> 
+        | _ ->
           IDENT (intern_string(s))
-

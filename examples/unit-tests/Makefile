@@ -14,6 +14,9 @@ ALLFILES=utils list tuple rec pat letrec termination skel
 %.tc: %.fst
 	$(FSTAR) --pretype --prims prims.fst $^
 
+bug:
+	$(FSTAR) --pretype --prims prims.fst dsenv.fsi
+
 prims: 
 	$(FSTAR) --pretype --prims prims.fst 
 
@@ -51,7 +54,7 @@ compiler:
 	$(FSTAR) --prims prims.fst $(STDFILES) $(BASIC) $(SYNTAX) $(PARSER) $(TC) backends.fsi $(MAIN)
 
 
-wc: $(ALL)
+wc: prims.fst $(ALL)
 
 # # Change the following line to the location of the top MITLS directory "lang-sec/msrc/cvk/samples/protocols/tls"
 MITLS=./mitls-copy/

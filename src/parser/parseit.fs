@@ -29,15 +29,18 @@ let parse_file fn =
     | Lexhelp.ReservedKeyword(m,s) -> Printf.printf "%s:%s" (Range.string_of_range s) m
     | e -> Printf.printf "Warning: %A\n" e);
   
-  let filename,sr = match fn with 
-    | Inl (filename:string) -> filename, 
-      (try new System.IO.StreamReader(filename) :> System.IO.TextReader
-       with _ -> raise (Absyn.Syntax.Err (Util.format1 "Unable to open file: %s" filename)))
-    | Inr (s:string) -> "<input>", new System.IO.StringReader(s) :> System.IO.TextReader in
+  let filename,sr,fs = match fn with 
+    | Inl (filename:string) ->  
+      (try 
+        let fs = new System.IO.StreamReader(filename) in
+        let contents = fs.ReadToEnd() in
+        filename, new System.IO.StringReader(contents) :> System.IO.TextReader, contents
+       with e -> printfn "%A" e; raise (Absyn.Syntax.Err (Util.format1 "Unable to open file: %s" filename)))
+    | Inr (s:string) -> "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s in
 
   let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromTextReader(sr) in
   resetLexbufPos filename lexbuf;
-  let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename) in 
+  let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in 
   let lexer = LexFStar.token lexargs in 
   try
     let file = Parse.file lexer lexbuf in
