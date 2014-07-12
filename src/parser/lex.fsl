@@ -109,7 +109,7 @@ let is_typ_app (args:Lexhelp.lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBu
       | _ -> () in 
     let ok () = !d.angle >= 0 && !d.paren >= 0 in
     let rec aux i = 
-      if !d.angle = 0 then true
+      if !d.angle=0 && !d.paren=0 then true
       else if i >= String.length contents || not (ok ()) 
       then ((* printfn "False 1: %d, %A" i (!d.angle, !d.paren);  *)false)
       else if not <| char_ok.IsMatch(contents, i)

@@ -70,6 +70,7 @@ type typ' =
   | Typ_ascribed of typ * knd                                (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
   | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
+  | Typ_delayed  of typ * subst                              (* A delayed substitution---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
 and typ = {t:typ'; k:knd}
 and comp_typ = {
@@ -114,6 +115,7 @@ and exp =
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Exp_primop     of ident * list<exp>
   | Exp_uvar       of uvar_e * typ                               (* not present after 1st round tc *)
+  | Exp_delayed    of exp * subst                                (* A delayed substitution --- always force it before inspecting the first arg *)
   | Exp_meta       of meta_e                                     (* No longer tag every expression with info, only selectively *)
 and meta_e = 
   | Meta_info      of exp * typ * Range.range                    (* Expression tagged with typ and position info *)
@@ -141,10 +143,15 @@ and knd =
   | Kind_tcon of option<bvdef<typ>> * knd * knd * bool    (* 'a:k -> k'; bool marks implicit *)
   | Kind_dcon of option<bvvdef> * typ * knd * bool        (* x:t -> k; bool marks implicit *)
   | Kind_uvar of uvar_k                                   (* not present after 1st round tc *)
+  | Kind_delayed of knd * subst                           (* delayed substitution --- always force before inspecting first element *)
   | Kind_unknown                                          (* not present after 1st round tc *)
+
 and kabbrev = lident * list<either<typ,exp>>
 and uvar_k = Unionfind.uvar<uvar_basis<knd,unit>>
 and letbindings = bool * list<(either<bvvdef,lident> * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
+and subst = list<subst_elt>
+and subst_map = Util.smap<either<typ, exp>>
+and subst_elt = either<(btvdef*typ), (bvvdef*exp)>
 
 type formula = typ
 type formulae = list<typ>

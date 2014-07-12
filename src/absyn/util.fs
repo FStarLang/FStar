@@ -433,8 +433,61 @@ let is_free axs (fvs:freevars) =
 (************************** Type/term substitutions *****************************)
 (********************************************************************************)
 
-type subst = list<either<(btvdef*typ), (bvvdef*exp)>>
-type subst_map = Util.smap<either<typ,exp>>
+(* delayed substitutions *)
+let rec delay_subst_typ s t = match compress_typ t with 
+  | {t=Typ_delayed(t', s')} -> withkind t.k <| Typ_delayed(t', compose_subst s' s)
+  | t -> match t.t with 
+    | Typ_btvar a -> 
+      begin match Util.find_opt (function Inl (b, _) -> bvd_eq b a.v | _ -> false) s with 
+        | Some (Inl(_, t)) -> t
+        | _ -> t
+      end
+    | _ -> withkind t.k <| Typ_delayed(t, s)
+
+and delay_subst_exp s e = match compress_exp e with 
+  | Exp_delayed(e, s') -> Exp_delayed(e, compose_subst s' s)
+  | e -> 
+    match e with 
+      | Exp_bvar x ->
+        begin match Util.find_opt (function Inr(y, _) -> bvd_eq y x.v | _ -> false) s with
+          | Some (Inr(_, e)) -> e
+          | _ -> e
+        end 
+     | _ -> Exp_delayed(e, s)
+
+and delay_subst_kind s k = match compress_kind k with
+  | Kind_type
+  | Kind_effect
+  | Kind_unknown -> k
+  | Kind_delayed(k, s') -> Kind_delayed(k, compose_subst s' s)
+  | k -> Kind_delayed(k, s)
+
+and compose_subst (s1:subst) s2 = 
+  s1 |> List.map (function 
+      | Inl(x, t) -> Inl (x, delay_subst_typ s2 t)
+      | Inr(x, e) -> Inr (x, delay_subst_exp s2 e)) 
+
+let restrict_subst axs s = 
+  s |> List.filter (function
+    | Inl(a, _) -> not (axs |> List.exists (function Inr _ -> false | Inl b -> bvd_eq a b))
+    | Inr(x, _) -> not (axs |> List.exists (function Inl _ -> false | Inr y -> bvd_eq x y)))
+let map_knd s vk mt me () binders k = delay_subst_kind (restrict_subst binders s) k, () 
+let map_typ s mk vt me () binders t = delay_subst_typ  (restrict_subst binders s) t, () 
+let map_exp s mk mt ve () binders e = delay_subst_exp  (restrict_subst binders s) e, () 
+let force_subst_kind k = match compress_kind k with 
+  | Kind_delayed (k',s) ->
+    fst <| Visit.reduce_kind (map_knd s) (map_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp () [] k'
+  | k -> k
+let force_subst_typ t = match compress_typ t with 
+  | {t=Typ_delayed (t',s)} ->
+    fst <| Visit.reduce_typ (map_knd s) (map_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp () [] t'
+  | t -> t
+let force_subst_exp e = match compress_exp e with 
+  | Exp_delayed (e',s) ->
+    fst <| Visit.reduce_exp (map_knd s) (map_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp () [] e'
+  | e -> e
+
+(* Eager substitutions *)
 let mk_subst_map (s:subst) = 
   let t = Util.smap_create(List.length s) in
   s |> List.iter (function 

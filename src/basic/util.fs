@@ -34,7 +34,7 @@ let smap_add (m:smap<'value>) k (v:'value) = m.Add(k,v)
 let smap_try_find (m:smap<'value>) k = m.TryFind(k)
 let smap_fold (m:smap<'value>) f a = m.Fold f a
 let smap_remove (m:smap<'value>) k = m.Remove k
-
+let smap_keys (m:smap<'value>) = m.Fold (fun k v keys -> k::keys) []
 let pr  = Printf.printf
 let spr = Printf.sprintf 
 let fpr = Printf.fprintf 

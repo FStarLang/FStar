@@ -28,6 +28,7 @@ val smap_add: smap<'value> -> string -> 'value -> unit
 val smap_try_find: smap<'value> -> string -> option<'value>
 val smap_fold: smap<'value> -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
 val smap_remove: smap<'value> -> string -> unit
+val smap_keys: smap<'value> -> list<string>
 
 val format: string -> list<string> -> string
 val format1: string -> string -> string
