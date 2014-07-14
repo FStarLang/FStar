@@ -30,6 +30,7 @@ open Microsoft.FStar.Tc.Rel
 
 let t_unit = withkind Kind_type <| Typ_const (Util.withsort Const.unit_lid Kind_type)
 let t_bool = withkind Kind_type <| Typ_const (Util.withsort Const.bool_lid Kind_type)
+let t_uint8 = withkind Kind_type <| Typ_const (Util.withsort Const.uint8_lid Kind_type)
 let t_int = withkind Kind_type <| Typ_const (Util.withsort Const.int_lid Kind_type)
 let t_int64 = withkind Kind_type <| Typ_const (Util.withsort Const.int64_lid Kind_type)
 let t_string = withkind Kind_type <| Typ_const (Util.withsort Const.string_lid Kind_type)
@@ -44,6 +45,7 @@ let typing_const env (s:sconst) = match s with
   | Const_float _ -> t_float
   | Const_char _ -> t_char
   | Const_int64 _ -> t_int64
+  | Const_uint8 _ -> t_char
   | _ -> raise (Error("Unsupported constant", Tc.Env.get_range env))
 
 let push_tparams env tps = 
