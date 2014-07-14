@@ -469,8 +469,8 @@ and compose_subst (s1:subst) s2 =
 
 let restrict_subst axs s = 
   s |> List.filter (function
-    | Inl(a, _) -> not (axs |> List.exists (function Inr _ -> false | Inl b -> bvd_eq a b))
-    | Inr(x, _) -> not (axs |> List.exists (function Inl _ -> false | Inr y -> bvd_eq x y)))
+    | Inl(a, _) -> not (axs |> Util.for_some (function Inr _ -> false | Inl b -> bvd_eq a b))
+    | Inr(x, _) -> not (axs |> Util.for_some (function Inl _ -> false | Inr y -> bvd_eq x y)))
 let map_knd s vk mt me () binders k = delay_subst_kind (restrict_subst binders s) k, () 
 let map_typ s mk vt me () binders t = delay_subst_typ  (restrict_subst binders s) t, () 
 let map_exp s mk mt ve () binders e = delay_subst_exp  (restrict_subst binders s) e, () 
