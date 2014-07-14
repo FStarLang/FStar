@@ -101,7 +101,7 @@ val lidents : env -> list<lident>
 val join: env -> lident -> lident -> lident * mlift * mlift
 val monad_leq: env -> lident -> lident -> option<edge>
 val monad_decl_opt: env -> lident -> option<monad_decl>
-val monad_decl: env -> lident -> monad_decl
+val get_monad_decl: env -> lident -> monad_decl
 val wp_signature: env -> lident -> (bvdef<typ> * knd)
 
 (* probably move this to TcUtil *)

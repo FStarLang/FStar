@@ -49,14 +49,6 @@ type env = {
   interf:bool
 }
 
-let fail_or lookup lid = match lookup lid with 
-  | None -> raise (Error ("Identifier not found: [" ^(text_of_lid lid)^"]", range_of_lid lid))
-  | Some r -> r
-
-let fail_or2 lookup id = match lookup id with 
-  | None -> raise (Error ("Identifier not found [" ^id.idText^"]", id.idRange))
-  | Some r -> r
-
 let open_modules e = e.modules
 let current_module env = match env.curmodule with 
     | None -> failwith "Unset current module"
@@ -107,35 +99,88 @@ let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a
                 let full_name = lid_of_ids (ids_of_lid ns @ ids) in
                 finder full_name) in
   aux (current_module env::env.open_namespaces)
+   
+let unmangleMap = [("op_ColonColon", "Cons");
+                   ("not", "op_Negation")]
+      
+let unmangleOpName (id:ident) = 
+  find_map unmangleMap (fun (x,y) -> 
+    if (id.idText = x) then Some (lid_of_path ["Prims"; y] id.idRange)
+    else None)
+    
+let try_lookup_id' env (id:ident) =
+  match unmangleOpName id with 
+    | Some l -> Some <|  (l, Exp_fvar(fv l, false))
+    | _ -> 
+      find_map env.localbindings (function 
+        | Inr bvd, Binding_var id' when (id'.idText=id.idText) -> Some (lid_of_ids [id'], bvd_to_exp (set_bvd_range bvd id.idRange) tun)
+        | _ -> None)
 
-let try_lookup_typ_name' exclude_interf env (lid:lident) : option<typ> = 
+let try_lookup_id env id = 
+  match try_lookup_id' env id with 
+    | Some(_, e) -> Some e
+    | None -> None
+
+type occurrence = 
+  | OSig of sigelt
+  | OLet of lident
+  | ORec of lident
+let range_of_occurrence = function 
+  | OLet l
+  | ORec l -> range_of_lid l 
+  | OSig se -> Util.range_of_sigelt se 
+
+type foundname = 
+  | Exp_name of occurrence * exp
+  | Typ_name of occurrence * typ
+ 
+let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> = 
   (* Resolve using, in order, 
      1. rec bindings
      2. sig bindings in current module
-     3. each open namespace, in order *)
-  let find_rec () = match lid.ns with 
+     3. each open namespace, in reverse order *)
+  let find_in_sig lid  = 
+    match Util.smap_try_find env.sigmap lid.str with 
+      | Some (_, true) when exclude_interf -> None
+      | None -> None
+      | Some (se, _) -> 
+        begin match se with 
+          | Sig_typ_abbrev _
+          | Sig_tycon _ -> Some <| Typ_name(OSig se, ftv <| lid)      
+          | Sig_datacon _
+          | Sig_logic_function _
+          | Sig_let _ -> Some <| Exp_name(OSig se,  fvar lid (range_of_lid lid))
+          | Sig_val_decl(_, _, aopt, _, _) ->
+            begin match aopt with 
+              | Some Assumption -> Some <| Exp_name(OSig se, fvar lid (range_of_lid lid))
+              | _ when any_val -> Some <| Exp_name(OSig se, fvar lid (range_of_lid lid))
+              | _ -> None
+            end
+          | _ -> None
+        end in
+
+  let found_id = match lid.ns with
     | [] -> 
-      let n = lid.ident in
-      let qlid = qualify env n in 
-      find_map env.recbindings
-        (function 
-          | Binding_tycon lid' -> 
-            if lid_equals qlid lid'
-            then Some (ftv qlid)
-            else None
-          | _ -> None)
+      begin match try_lookup_id' env (lid.ident) with 
+        | Some (lid, e) -> Some (Exp_name(OLet lid, e))
+        | None -> 
+          let recname = qualify env lid.ident in
+          Util.find_map env.recbindings (function
+            | Binding_let l when lid_equals l recname -> Some (Exp_name(ORec l, Util.fvar recname (range_of_lid recname)))
+            | Binding_tycon l when lid_equals l recname  -> Some(Typ_name(ORec l, ftv recname))
+            | _ -> None)
+      end
     | _ -> None in
 
-  let find_in_sig lid = 
-    match Util.smap_try_find env.sigmap lid.str with 
-      | Some (Sig_tycon _, i) 
-      | Some (Sig_typ_abbrev _, i) when not (i && exclude_interf) -> Some (ftv <| lid)
-      | _ -> None in
-  
-  match find_rec () with 
-    | None -> resolve_in_open_namespaces env lid find_in_sig
-    | r -> r
+  match found_id with 
+    | Some _ -> found_id
+    | _ -> resolve_in_open_namespaces env lid find_in_sig
 
+let try_lookup_typ_name' exclude_interf env (lid:lident) : option<typ> = 
+  match try_lookup_name true exclude_interf env lid with 
+    | None -> None
+    | Some (Exp_name _) -> None//Util.print_string ("Resolved name " ^lid.str^ " as an exp\n");None
+    | Some (Typ_name(_, t)) -> Some t
 let try_lookup_typ_name env l = try_lookup_typ_name' (not env.interf) env l
 
 let is_effect_name env lid = 
@@ -157,22 +202,7 @@ let try_resolve_typ_abbrev env lid =
         Some t
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
-   
-let unmangleMap = [("op_ColonColon", "Cons");
-                   ("not", "op_Negation")]
-      
-let unmangleOpName (id:ident) = 
-  find_map unmangleMap (fun (x,y) -> 
-    if (id.idText = x) then Some (lid_of_path ["Prims"; y] id.idRange)
-    else None)
-    
-let try_lookup_id env (id:ident) =
-  match unmangleOpName id with 
-    | Some l -> Some <|  Exp_fvar(fv l, false)
-    | _ -> 
-      find_map env.localbindings (function 
-        | Inr bvd, Binding_var id' when (id'.idText=id.idText) -> Some (bvd_to_exp (set_bvd_range bvd id.idRange) tun)
-        | _ -> None)
+
        
 let try_lookup_module env path = 
   match List.tryFind (fun (mlid, modul) -> path_of_lid mlid = path) env.modules with
@@ -187,38 +217,10 @@ let try_lookup_let env (lid:lident) =
   resolve_in_open_namespaces env lid find_in_sig
           
 let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<exp> = 
-  let find_in_sig lid  = 
-    match Util.smap_try_find env.sigmap lid.str with 
-      | Some (_, true) when exclude_interf -> None
-      | Some (Sig_datacon _, _)
-      | Some (Sig_logic_function _, _)
-      | Some (Sig_let _, _) -> 
-        Some (fvar lid (range_of_lid lid))
-      | Some (Sig_val_decl(_, _, aopt, _, _), _) ->
-          begin match aopt with 
-            | Some Assumption -> Some (fvar lid (range_of_lid lid))
-            | _ when any_val -> Some (fvar lid (range_of_lid lid))
-            | _ -> None
-          end
-      | _ -> 
-        None in
-
-  let found_id = match lid.ns with
-    | [] -> 
-      begin match try_lookup_id env (lid.ident) with 
-        | Some e -> Some e
-        | None -> 
-          let recname = qualify env lid.ident in
-          Util.find_map env.recbindings (function
-            | Binding_let l when lid_equals l recname -> Some (Util.fvar recname (range_of_lid recname))
-            | _ -> None)
-      end
-    | _ -> None in
-  
-  match found_id with 
-    | Some _ -> found_id
-    | _ -> resolve_in_open_namespaces env lid find_in_sig
-
+  match try_lookup_name any_val exclude_interf env lid with 
+    | None -> None
+    | Some (Typ_name _) -> None//Util.print_string ("Resolved name " ^lid.str^ " as a type\n"); None
+    | Some (Exp_name(_, e)) -> Some e
 let try_lookup_lid env l = try_lookup_lid' false false env l
 
 let try_lookup_datacon env (lid:lident) = 
@@ -236,8 +238,12 @@ type record = {
   fields: list<(fieldname * typ)>
 }
 let record_cache : ref<list<record>> = Util.mk_ref []
-
-let extract_record (env:env) = function 
+let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange) 
+let unmangle_field_name x = 
+    if Util.starts_with x.idText "^fname^"
+    then mk_ident(Util.substring_from x.idText 7, x.idRange)
+    else x
+let extract_record (e:env) = function 
   | Sig_bundle(sigs, _) -> 
     let is_rec = Util.for_some (function 
       | Logic_record -> true
@@ -255,7 +261,7 @@ let extract_record (env:env) = function
             | Sig_datacon(constrname, t, _, _) -> 
                 let fields = 
                   (fst <| collect_formals t) |> List.collect (function
-                    | Inr(Some x, t, _) -> [(qual constrname x.ppname, t)]
+                    | Inr(Some x, t, _) -> [(qual constrname (unmangle_field_name x.ppname), t)]
                     | _ -> []) in
                 let record = {typename=typename;
                               constrname=constrname;
@@ -276,6 +282,7 @@ let try_lookup_record_by_field_name env (fieldname:lident) =
       | hd::tl -> hd::aux tl in 
     aux ns in
   let find_in_cache fieldname = 
+//Util.print_string (Util.format1 "Trying field %s\n" fieldname.str);
     let ns, fieldname = fieldname.ns, fieldname.ident in
     Util.find_map (!record_cache) (fun record -> 
       let constrname = record.constrname.ident in
@@ -287,12 +294,12 @@ let try_lookup_record_by_field_name env (fieldname:lident) =
         else None)) in
   resolve_in_open_namespaces env fieldname find_in_cache
 
-let qualify_field_to_record env (record:record) (f:lident) = 
+let qualify_field_to_record env (recd:record) (f:lident) = 
   let qualify fieldname =  
     let ns, fieldname = fieldname.ns, fieldname.ident in
-    let constrname = record.constrname.ident in
+    let constrname = recd.constrname.ident in
     let fname = lid_of_ids (ns@[constrname]@[fieldname]) in
-    Util.find_map record.fields (fun (f, _) -> 
+    Util.find_map recd.fields (fun (f, _) -> 
       if lid_equals fname f
       then Some(fname)
       else None) in
@@ -443,7 +450,7 @@ let finish_module_or_interface env modul =
   then check_admits env;
   finish env modul
 
-let prepare_module_or_interface intf (env:env) mname =
+let prepare_module_or_interface intf env mname =
   let prep env = 
     let open_ns = if lid_equals mname Const.prims_lid then [] else Const.prims_lid::env.effect_names in
     {env with curmodule=Some mname; open_namespaces = open_ns; interf=intf} in
@@ -469,3 +476,20 @@ let exit_monad_scope env0 env =
   {env with
     curmodule=env0.curmodule;
     open_namespaces=env0.open_namespaces}
+
+let fail_or env lookup lid = match lookup lid with 
+  | None -> 
+    let r = match try_lookup_name true false env lid with 
+      | None -> None
+      | Some (Typ_name(o, _)) 
+      | Some (Exp_name(o, _)) -> Some <| range_of_occurrence o in
+    let msg = match r with 
+      | None -> ""
+      | Some r -> Util.format1 "(Possible clash with related name at %s)" (Range.string_of_range r) in
+    raise (Error (Util.format2 "Identifier not found: [%s] %s" (text_of_lid lid) msg, range_of_lid lid))
+  | Some r -> r
+
+let fail_or2 lookup id = match lookup id with 
+  | None -> raise (Error ("Identifier not found [" ^id.idText^"]", id.idRange))
+  | Some r -> r
+

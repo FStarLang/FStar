@@ -49,7 +49,7 @@ type term' =
   | Paren     of term
   | Affine    of term
 
-and term = {term:term'; range:range; level:level}
+and term = {tm:term'; range:range; level:level}
 
 and binder' = 
   | Variable of ident
@@ -57,7 +57,7 @@ and binder' =
   | Annotated of ident * term 
   | TAnnotated of ident * term 
   | NoName of term
-and binder = {binder:binder'; brange:range; blevel:level; implicit:bool}
+and binder = {b:binder'; brange:range; blevel:level; implicit:bool}
 
 and pattern' = 
   | PatWild
@@ -71,7 +71,7 @@ and pattern' =
   | PatRecord   of list<(lid * pattern)>
   | PatAscribed of pattern * term 
   | PatOr       of list<pattern>
-and pattern = {pattern:pattern'; prange:range}
+and pattern = {pat:pattern'; prange:range}
 
 and branch = (pattern * option<term> * term)
 
@@ -103,7 +103,7 @@ type decl' =
   | Val of tyvalQual * ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
   | MonadLat of list<monad_sig> * list<lift>
-and decl = {decl:decl'; drange:range}
+and decl = {d:decl'; drange:range}
 and monad_sig = {
   mon_name:ident;
   mon_total:bool;
@@ -125,10 +125,10 @@ type modul =
 type file = list<pragma> * list<modul>
 
 (********************************************************************************)
-let mk_decl d r = {decl=d; drange=r}
-let mk_binder b r l i = {binder=b; brange=r; blevel=l; implicit=i}
-let mk_term t r l = {term=t; range=r; level=l}
-let mk_pattern p r = {pattern=p; prange=r}
+let mk_decl d r = {d=d; drange=r}
+let mk_binder b r l i = {b=b; brange=r; blevel=l; implicit=i}
+let mk_term t r l = {tm=t; range=r; level=l}
+let mk_pattern p r = {pat=p; prange=r}
 let mk_function branches r1 r2 = 
   let x = Util.genident (Some r1) in
   mk_term (Abs([mk_pattern (PatVar x) r1],
@@ -141,7 +141,7 @@ let lid_with_range lid r = lid_of_path (path_of_lid lid) r
 let to_string_l sep f l = 
   String.concat sep (List.map f l)
 
-let rec term_to_string (x:term) = match x.term with 
+let rec term_to_string (x:term) = match x.tm with 
   | Wild -> "_"
   | Const c -> Print.const_to_string c
   | Op(s, xs) -> Util.format2 "%s(%s)" s (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
@@ -205,7 +205,7 @@ let rec term_to_string (x:term) = match x.term with
   | t -> failwith "Missing case in term_to_string"
 
 and binder_to_string x = 
-  let s = match x.binder with 
+  let s = match x.b with 
   | Variable i -> i.idText
   | TVariable i -> Util.format1 "%s:_" (i.idText) 
   | TAnnotated(i,t)
@@ -213,7 +213,7 @@ and binder_to_string x =
   | NoName t -> t |> term_to_string in
   if x.implicit then Util.format1 "#%s" s else s
 
-and pat_to_string x = match x.pattern with 
+and pat_to_string x = match x.pat with 
   | PatWild -> "_"
   | PatConst c -> Print.const_to_string c
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)

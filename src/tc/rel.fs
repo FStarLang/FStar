@@ -412,7 +412,7 @@ and crel rel env c1 c2 : option<guard> =
                 | Inl wp1::_, Inl wp2::_ -> wp1, wp2 
                 | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in
               andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
-            let c2_decl : monad_decl = Tc.Env.monad_decl env c2.effect_name in
+            let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
             let imp_wp = 
               let t = Util.mk_typ_app c2_decl.wp_binop [Inl c2.result_typ; Inl wpc2; Inl <| Util.ftv Const.implies_lid; Inl <| edge.mlift c1.result_typ wpc1] in
               let t = {t with k=wpc2.k} in
@@ -473,7 +473,7 @@ let trivial_subtype env eopt t1 t2 =
     | None 
     | Some (Guard _) ->  
       let r = match eopt with 
-        | None -> range_of_typ t1 (Tc.Env.get_range env)
+        | None -> Tc.Env.get_range env
         | Some e -> range_of_exp e (Tc.Env.get_range env) in
       raise (Error(Tc.Errors.basic_type_error eopt t2 t1 ^ (Util.format1 " guard is %s " (match f with None -> "none" | Some (Guard g) -> Print.typ_to_string g)), r))
 

@@ -56,7 +56,7 @@ type record = {
   fields: list<(fieldname * typ)>
 }
 
-val fail_or: (lident -> option<'a>) -> lident -> 'a
+val fail_or:  env -> (lident -> option<'a>) -> lident -> 'a
 val fail_or2: (ident -> option<'a>) -> ident -> 'a
 
 val qualify: env -> ident -> lident
@@ -65,14 +65,22 @@ val qualify_lid: env -> lident -> lident
 val empty_env: unit -> env
 val total: env -> env
 val ml: env -> env
-
+type occurrence = 
+  | OSig of sigelt
+  | OLet of lident
+  | ORec of lident
+type foundname = 
+  | Exp_name of occurrence * exp
+  | Typ_name of occurrence * typ
+val mangle_field_name: ident -> ident
+val unmangle_field_name: ident -> ident
+val try_lookup_name : bool -> bool -> env -> lident -> option<foundname> 
 val try_lookup_typ_var: env -> ident -> option<typ>
 val resolve_in_open_namespaces: env -> lident -> (lident -> option<'a>) -> option<'a>
 val try_lookup_typ_name: env -> lident -> option<typ>
 val is_effect_name: env -> lident -> bool
 val try_resolve_typ_abbrev: env -> lident -> option<typ>
 val try_lookup_id: env -> ident -> option<exp>
-
 val try_lookup_lid: env -> lident -> option<exp>
 val try_lookup_datacon: env -> lident -> option<var<typ>>
 val try_lookup_record_by_field_name: env -> lident -> option<(record * lident)>

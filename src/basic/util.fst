@@ -47,6 +47,7 @@ assume val string_of_float: float -> string
 assume val string_of_char:  char -> string
 assume val string_of_bytes: array byte -> string
 assume val substring: string -> int -> int -> string
+assume val substring_from: string -> int -> string
 assume val char_at: string -> int -> char
 assume val starts_with: string -> string -> bool
 assume val is_upper: char -> bool

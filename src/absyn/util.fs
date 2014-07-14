@@ -237,10 +237,26 @@ let range_of_exp e def = match e with
   | Exp_fvar (l, _) -> range_of_lid l.v
   | _ -> def
 
+let opt_range_of_exp e  = match e with 
+  | Exp_meta(Meta_info(_, _, p)) -> Some p
+  | Exp_bvar x -> Some <| range_of_bvd x.v
+  | Exp_fvar (l, _) -> Some <| range_of_lid l.v
+  | _ -> None
+
 let range_of_typ t def = match t.t with 
   | Typ_meta(Meta_pos(_, r)) -> r
   | Typ_meta(Meta_named(_, l)) -> range_of_lid l
   | _ -> def
+
+let opt_range_of_typ t = match t.t with 
+  | Typ_meta(Meta_pos(_, r)) -> Some r
+  | Typ_meta(Meta_named(_, l)) -> Some <| range_of_lid l
+  | _ -> None
+
+let set_range_of_typ t r = match t.t with 
+  | Typ_meta(Meta_pos(t', _)) -> withkind t.k <| Typ_meta(Meta_pos(t', r))
+  | _ -> withkind t.k <| Typ_meta(Meta_pos(t, r))
+
 let range_of_lb = function
   | (Inl x, _, _) -> range_of_bvd x
   | (Inr l, _, _) -> range_of_lid l 
@@ -606,7 +622,7 @@ let freshen_label ropt _ e = match ropt with
         Exp_constant(Const_string(bytes, p))
       | _ -> e 
 
-let freshen_bvars_typ (ropt:option<Range.range>) (t:typ) (subst:subst) : typ =
+let freshen_bvars_typ (ropt:option<Range.range>) (t:typ) subst : typ =
   snd (Visit.visit_typ true
          fold_kind_noop
          (fun () subst t -> (), subst_tvar (mk_subst_map subst) t)
@@ -614,7 +630,7 @@ let freshen_bvars_typ (ropt:option<Range.range>) (t:typ) (subst:subst) : typ =
          (freshen_label ropt)
          ext () subst t) 
 
-let freshen_bvars_kind (ropt:option<Range.range>) (k:knd) (subst:subst) : knd =
+let freshen_bvars_kind (ropt:option<Range.range>) (k:knd) subst : knd =
   snd (Visit.visit_kind true
          fold_kind_noop
          (fun () subst t -> (), subst_tvar (mk_subst_map subst) t)

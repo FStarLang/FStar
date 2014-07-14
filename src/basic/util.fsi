@@ -49,11 +49,12 @@ val string_of_int:   int -> string
 val string_of_float: float -> string
 val string_of_char:  char -> string
 val string_of_bytes: byte[] -> string
-val substring: string -> int -> int -> string
 val starts_with: string -> string -> bool
 val ends_with: string -> string -> bool
 val char_at: string -> int -> char
 val is_upper: char -> bool
+val substring_from: string -> int -> string
+val substring: string -> int -> int -> string
 
 type either<'a,'b> =
   | Inl of 'a

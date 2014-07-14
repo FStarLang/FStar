@@ -178,3 +178,6 @@ let rec sigelt_to_string x = match x with
 let rec sigelt_to_string_short x = match x with 
   | Sig_let((_, [(Inr l, t, _)]), _) -> Util.format2 "%s : %s" l.str (typ_to_string t) 
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
+
+let rec modul_to_string (m:modul) = 
+  Util.format2 "module %s\n%s" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")

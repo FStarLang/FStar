@@ -21,6 +21,7 @@ open Microsoft.FStar.Parser
 open Microsoft.FStar.Parser.AST
 open Microsoft.FStar.Parser.Parse
 open Microsoft.FStar.Util
+open Microsoft.FStar.Absyn.Syntax
 
 let print_error msg r = 
   Util.print_string (Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg)
@@ -36,6 +37,10 @@ let parse env fn =
 let parse_files files = 
   let _, mods = List.fold_left (fun (env,mods) fn -> 
     let env, m = parse env (Inl fn) in
+    let _ = match !Options.dump_module with 
+      | Some n -> 
+        m |> List.iter (fun (m:Absyn.Syntax.modul) -> if n=m.name.str then Absyn.Print.modul_to_string m |> Util.print_string)
+      | _ -> () in
     (env, m::mods)) (DesugarEnv.empty_env(), []) files in 
   List.rev mods |> List.flatten
 

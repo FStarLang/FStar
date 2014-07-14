@@ -63,6 +63,8 @@ let starts_with (s1:string) (s2:string) = s1.StartsWith(s2)
 let ends_with (s1:string) (s2:string) = s1.EndsWith(s2)
 let char_at (s:string) (i:int) : char = s.[i]
 let is_upper (c:char) = 'A' <= c && c <= 'Z'
+let substring_from (s:string) i = s.Substring(i)
+let substring (s:string) i j = s.Substring(i, j)
 
 let iof = int_of_float
 let foi = float_of_int
@@ -195,7 +197,6 @@ let prefix l = match List.rev l with
           
 let string_to_ascii_bytes: string -> byte [] = fun s -> asciiEncoding.GetBytes(s)
 let ascii_bytes_to_string: byte [] -> string = fun b -> asciiEncoding.GetString(b)
-let substring (s:string) i j = s.Substring(i,j)
 let mk_ref a = ref a
   
 (* A simple state monad *)

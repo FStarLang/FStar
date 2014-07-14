@@ -42,7 +42,7 @@ let __unsafe = Util.mk_ref false
 let z3timeout = Util.mk_ref None
 let pretype = Util.mk_ref false
 let codegen = Util.mk_ref None
-let admit_fsi = Util.mk_ref false
+let admit_fsi = Util.mk_ref []
 let trace_error = Util.mk_ref false
 
 let query_file () = 
@@ -122,6 +122,6 @@ let specs () : list<Getopt.opt> =
      ( noshort, "UNSAFE", ZeroArgs (fun () -> Util.print_string "UNSAFE MODE!\n"; __unsafe := true), "");
      ( noshort, "describe_queries", ZeroArgs (fun () -> describe_queries := true), "Print the queried formula and its location");
      ( noshort, "UNSAFE_skip_first_queries", OneArg ((fun x -> skip_first_queries x), "n"), "Skip the first n queries");
-     ( noshort, "admit_fsi", ZeroArgs (fun () -> admit_fsi := true), "Treat .fsi as a .fst");
+     ( noshort, "admit_fsi", OneArg ((fun x -> admit_fsi := x::!admit_fsi), "module name"), "Treat .fsi as a .fst");
      ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir")] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs

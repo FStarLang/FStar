@@ -27,11 +27,11 @@ open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Util
 
 let contains_binder binders = 
-  binders |> Util.for_some (fun b -> match b.binder with  
+  binders |> Util.for_some (fun b -> match b.b with  
     | Annotated _ -> true
     | _ -> false)
 
-let rec unparen t = match t.term with 
+let rec unparen t = match t.tm with 
   | Paren t -> unparen t
   | _ -> t
 
@@ -111,7 +111,7 @@ let op_as_tylid r s =
 
 let rec is_type env (t:term) =
   if t.level = Type then true
-  else match (unparen t).term with
+  else match (unparen t).tm with
     | Wild -> true
     | Op("*", hd::_) -> is_type env hd     (* tuple constructor *)
     | Op("==", _)                          (* equality predicate *)
@@ -147,7 +147,7 @@ let rec is_type env (t:term) =
 let rec is_kind env (t:term) : bool =
   if t.level = Kind
   then true
-  else match (unparen t).term with
+  else match (unparen t).tm with
     | Name {str="Type"} -> true
     | Product(_, t) -> is_kind env t
     | Paren t -> is_kind env t
@@ -157,13 +157,13 @@ let rec is_kind env (t:term) : bool =
 
 let rec is_type_binder env b =
   if b.blevel = Formula
-  then match b.binder with
+  then match b.b with
     | Variable _
     | Annotated _ -> false
     | TAnnotated _
     | TVariable _ -> true
     | NoName t -> is_kind env t
-  else match b.binder with
+  else match b.b with
     | Variable _ -> raise (Error("Unexpected binder without annotation", b.brange))
     | TVariable _ -> false
     | TAnnotated _ -> true
@@ -174,7 +174,7 @@ let sort_ftv ftv =
   Util.sort_with (fun x y -> String.compare x.idText y.idText) <|
       Util.remove_dups (fun x y -> x.idText = y.idText) ftv
 
-let rec free_type_vars_b env binder = match binder.binder with
+let rec free_type_vars_b env binder = match binder.b with
   | Variable x -> env, []
   | TVariable x ->
     let env, _ = push_local_tbinding env x in
@@ -186,7 +186,7 @@ let rec free_type_vars_b env binder = match binder.binder with
     (env, [])
   | NoName t ->
     (env, free_type_vars env t)
-and free_type_vars env t = match (unparen t).term with
+and free_type_vars env t = match (unparen t).tm with
   | Tvar a ->
     (match DesugarEnv.try_lookup_typ_var env a with
       | None -> [a]
@@ -237,18 +237,18 @@ let close env t =
        let result = mk_term (Product(binders, t)) t.range t.level in
        result
          
-let rec is_app_pattern p = match p.pattern with
+let rec is_app_pattern p = match p.pat with
   | PatAscribed(p,_) -> is_app_pattern p
-  | PatApp({pattern=PatVar id}, _) -> true
+  | PatApp({pat=PatVar id}, _) -> true
   | _ -> false
 
-let rec destruct_app_pattern env is_top_level p = match p.pattern with
+let rec destruct_app_pattern env is_top_level p = match p.pat with
   | PatAscribed(p,t) ->
     let (name, args, _) = destruct_app_pattern env is_top_level p in
     (name, args, Some t)
-  | PatApp({pattern=PatVar id}, args) when is_top_level ->
+  | PatApp({pat=PatVar id}, args) when is_top_level ->
     (Inr (qualify env id), args, None)
-  | PatApp({pattern=PatVar id}, args) ->
+  | PatApp({pat=PatVar id}, args) ->
     (Inl id, args, None)
   | _ ->
     failwith "Not an app pattern"
@@ -274,7 +274,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         (Inl a::l), e, a in
   let rec aux (loc:lenv_t) env (p:pattern) =
     let pos q = Pat_withinfo(q, p.prange) in 
-    match p.pattern with
+    match p.pat with
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
         let env0 = env in
@@ -288,12 +288,12 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         loc, env, var, pos <| pat
 
       | PatAscribed(p, t) ->
-        let loc, env, binder, p = aux loc env p in
+        let loc, env', binder, p = aux loc env p in
         let binder = match binder with
           | LetBinder _ -> failwith "impossible"
           | TBinder (x, _) -> TBinder(x, desugar_kind env t)
           | VBinder (x, _) -> VBinder(x, desugar_typ env t) in
-        loc, env, binder, p
+        loc, env', binder, p
 
       | PatTvar a ->
         if a.idText = "'_"
@@ -314,15 +314,15 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         loc, env, VBinder(xbvd, tun), pos <| Pat_var xbvd
 
       | PatName l ->
-        let l = fail_or (try_lookup_datacon env) l in
+        let l = fail_or env (try_lookup_datacon env) l in
         let x = new_bvd (Some p.prange) in
         loc, env, VBinder(x, tun), pos <| Pat_cons(l.v, [])
 
-      | PatApp({pattern=PatName l}, args) ->
+      | PatApp({pat=PatName l}, args) ->
         let loc, env, args = List.fold_right (fun arg (loc,env,args) ->
           let loc, env, _, arg = aux loc env arg in
           (loc, env, arg::args)) args (loc, env, []) in
-        let l = fail_or (try_lookup_datacon env) l in
+        let l = fail_or env  (try_lookup_datacon env) l in
         let x = new_bvd (Some p.prange) in
         loc, env, VBinder(x, tun), pos <| Pat_cons(l.v, args)
 
@@ -343,7 +343,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         let args = List.rev args in
         let l = if dep then Util.mk_dtuple_data_lid (List.length args) p.prange
                 else Util.mk_tuple_data_lid (List.length args) p.prange in
-        let constr = fail_or (DesugarEnv.try_lookup_lid env) l in
+        let constr = fail_or env  (DesugarEnv.try_lookup_lid env) l in
         let l = match constr with
           | Exp_fvar (v, _) -> v.v
           | _ -> failwith "impossible" in
@@ -355,9 +355,9 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         
       | PatRecord (fields) -> 
         let (f, _) = List.hd fields in 
-        let record, _ = fail_or (try_lookup_record_by_field_name env) f in
+        let record, _ = fail_or env  (try_lookup_record_by_field_name env) f in
         let fields = fields |> List.map (fun (f, p) -> 
-          (fail_or (qualify_field_to_record env record) f, p)) in
+          (fail_or env  (qualify_field_to_record env record) f, p)) in
         let args = record.fields |> List.map (fun (f, _) -> 
           match fields |> List.tryFind (fun (g, _) -> lid_equals f g) with 
             | None -> mk_pattern PatWild p.prange
@@ -369,9 +369,9 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
          
 and desugar_binding_pat_maybe_top top env p : (env_t * bnd * option<pat>) =
   if top 
-  then match p.pattern with 
+  then match p.pat with 
     | PatVar x -> (env, LetBinder(qualify env x, tun), None)
-    | PatAscribed({pattern=PatVar x}, t) -> 
+    | PatAscribed({pat=PatVar x}, t) -> 
       (env, LetBinder(qualify env x, desugar_typ env t), None)
     | _ -> raise (Error("Unexpected pattern at the top-level", p.prange)) 
   else
@@ -404,7 +404,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
   let getpos = function
     | Exp_meta(Meta_info(_, _, p)) -> p
     | _ -> failwith "impossible" in
-  begin match (unparen top).term with
+  begin match (unparen top).tm with
     | Const c -> pos <| Exp_constant c
 
     | Op(s, args) ->
@@ -417,21 +417,21 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       end
 
     | Var l
-    | Name l -> pos <| fail_or (DesugarEnv.try_lookup_lid env) l
+    | Name l -> pos <| fail_or env  (DesugarEnv.try_lookup_lid env) l
 
     | Construct(l, args) ->
-      let dt = pos <| Exp_fvar(fail_or (DesugarEnv.try_lookup_datacon env) l, true) in
+      let dt = pos <| Exp_fvar(fail_or env  (DesugarEnv.try_lookup_datacon env) l, true) in
       let args = List.map (fun (t, imp) -> desugar_typ_or_exp env t, imp) args in
       pos <| Exp_meta(Meta_desugared(mk_app dt args, Data_app)) 
 
     | Abs(binders, body) ->
       let ftv = List.fold_left (fun ftvs pat ->
-        match pat.pattern with
+        match pat.pat with
           | PatAscribed(_, t) -> free_type_vars env t@ftvs
           | _ -> ftvs) [] binders in
       let ftv = sort_ftv ftv in
       let binders = (ftv |> List.map (fun a -> mk_pattern (PatTvar a) top.range))@binders in
-      let rec desugar_abs env a = match a.term with
+      let rec desugar_abs env a = match a.tm with
         | Abs((p::q::qtl), body) ->
           let rest = q::qtl in
           desugar_abs env
@@ -457,7 +457,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       in
       desugar_abs env (mk_term (Abs(binders, body)) top.range top.level)
         
-    | App({term=Var a}, arg, _) when (lid_equals a Const.assert_lid
+    | App({tm=Var a}, arg, _) when (lid_equals a Const.assert_lid
                                    || lid_equals a Const.assume_lid) ->
       let phi = desugar_formula env arg in
       pos <| Exp_app(pos <| Exp_tapp(fvar a (range_of_lid a), phi),
@@ -554,7 +554,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
 
     | Record(eopt, fields) ->
       let f, _ = List.hd fields in
-      let record, _ = fail_or (try_lookup_record_by_field_name env) f in
+      let record, _ = fail_or env  (try_lookup_record_by_field_name env) f in
       let get_field xopt f =
         let fn = f.ident in
         let found = fields |> Util.find_opt (fun (g, _) ->
@@ -585,8 +585,8 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       desugar_exp env recterm
         
     | Project(e, f) ->
-      //let _ = Util.print_string (Util.format1 "Looking up field name %s\n" (Print.sli f)) in 
-      let _, fieldname = fail_or (try_lookup_record_by_field_name env) f in
+     // let _ = Util.print_string (Util.format1 "Looking up field name %s\n" (Print.sli f)) in 
+      let _, fieldname = fail_or env  (try_lookup_record_by_field_name env) f in
       //let _ = Util.print_string (Util.format2 "resolved %s as %s\n" (Print.sli f) (Print.sli fieldname)) in 
       let proj = mk_term (App(mk_term (Var fieldname) (range_of_lid f) Expr, e, false)) top.range top.level in
       desugar_exp env proj
@@ -605,12 +605,12 @@ and desugar_typ env (top:term) : typ =
     | Typ_meta(Meta_pos(t', _)) -> withkind t.k <| pos t'.t
     | t' -> withkind t.k <| pos t' in
   let top = unparen top in  
-  match top.term with
+  match top.tm with
     | Wild -> withkind kun <| Typ_unknown
 
     | Op("*", [t1; _]) -> 
       if is_type env t1 
-      then let rec flatten t = match t.term with
+      then let rec flatten t = match t.tm with
             | Op("*", [t1;t2]) -> 
               let binders, final = flatten t2 in
               let b = mk_binder (NoName t1) t1.range Type false in
@@ -638,10 +638,10 @@ and desugar_typ env (top:term) : typ =
           
     | Var l
     | Name l ->
-      setpos <| fail_or (try_lookup_typ_name env) l
+      setpos <| fail_or env  (try_lookup_typ_name env) l
       
     | Construct(l, args) ->
-      let t = fail_or (try_lookup_typ_name env) l in
+      let t = fail_or env  (try_lookup_typ_name env) l in
       let args = List.map (fun (t, imp) -> desugar_typ_or_exp env t, imp) args in
       mk_tapp t args
 
@@ -739,7 +739,7 @@ and desugar_typ env (top:term) : typ =
                           | Some x -> push_local_vbinding env x in
              (env, tparams@[Tparam_term(x, t)], typs@[close_with_lam tparams t]))
              (env, [], []) (binders@[mk_binder (NoName t) t.range Type false]) in
-           let tup = fail_or (try_lookup_typ_name env) (Util.mk_dtuple_lid (List.length targs) top.range) in
+           let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_dtuple_lid (List.length targs) top.range) in
            List.fold_left (fun t1 t2 -> pk <| Typ_app(t1,t2,false)) tup targs
       
       else let env, targs = List.fold_left (fun (env, typs) b ->
@@ -749,7 +749,7 @@ and desugar_typ env (top:term) : typ =
                 | Some _ -> failwith "Impossible" in
               (env, typs@[t]))
               (env, []) (binders@[mk_binder (NoName t) t.range Type false]) in
-           let tup = fail_or (try_lookup_typ_name env) (Util.mk_tuple_lid (List.length targs) top.range) in
+           let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_tuple_lid (List.length targs) top.range) in
            List.fold_left (fun t1 t2 -> pk <| Typ_app(t1,t2,false)) tup targs
    
     | Record _ -> failwith "Unexpected record type"
@@ -761,7 +761,7 @@ and desugar_typ env (top:term) : typ =
 
 and desugar_kind env k : knd =
   let k = unparen k in
-  match k.term with
+  match k.tm with
     | Name {str="Type"} -> Kind_type
     | Name l -> 
       begin match DesugarEnv.find_kind_abbrev env (DesugarEnv.qualify_lid env l) with 
@@ -844,7 +844,7 @@ and desugar_formula' env (f:term) : typ =
       mk_term (q([b], [], body)) f.range Formula
     | _ -> failwith "impossible" in
 
-  match (unparen f).term with
+  match (unparen f).tm with
     | Op("==", ((hd::_args))) ->
       let args = hd::_args in
       let args = List.map (fun t -> desugar_typ_or_exp env t, false) args in
@@ -911,14 +911,14 @@ and typars_of_binders env bs =
             | _ -> raise (Error ("Unexpected binder", b.brange))) (env, []) bs in
     env, List.rev tpars
 
-and desugar_exp_binder env b = match b.binder with
+and desugar_exp_binder env b = match b.b with
   | Annotated(x, t) -> Some x, desugar_typ env t
   | TVariable t -> None, fail_or2 (try_lookup_typ_var env) t
   | NoName t -> None, desugar_typ env t
   | Variable x -> Some x, tun
   | _ -> raise (Error("Unexpected domain of an arrow or sum (expected a type)", b.brange))
     
-and desugar_type_binder env b = match b.binder with
+and desugar_type_binder env b = match b.b with
   | TAnnotated(x, t) -> Some x, desugar_kind env t
   | NoName t -> None, desugar_kind env t
   | TVariable x -> Some x, Kind_type
@@ -929,7 +929,7 @@ let get_logic_tag = function
   | _ -> []
 
 let logic_tags q = List.collect get_logic_tag q
-
+  
 let mk_data_ops env = function
   | Sig_datacon(lid, t, _, _) when not env.interf ->
     let args, tcod = collect_formals t in
@@ -978,6 +978,7 @@ let mk_data_ops env = function
       //Printf.printf "Got\n%s\n" (Print.typ_to_string res); flush stdout; res in
     let rec aux fields t = match (compress_typ t).t with
       | Typ_fun(Some x, t1, t2, _) ->
+        let x = {x with ppname=unmangle_field_name x.ppname} in
         let field_name = lid_of_ids (ids_of_lid lid @ [x.ppname]) in
         let t = build_typ t1 in
         let body = ewithpos (Exp_match(formal_exp, [(Pat_cons(lid, argpats), None, bvd_to_exp x t1)])) x.ppname.idRange in
@@ -985,7 +986,7 @@ let mk_data_ops env = function
           [Sig_val_decl(field_name, t, Some Assumption, Some Logic_projector, range_of_lid field_name)
            //;Sig_let((false, [(Inr field_name, t, build_exp body)]))
           ] in
-        //let _ = Util.print_string (Util.format2 "adding value projector %s at type %s\n" field_name.str (Print.typ_to_string t)) in 
+       // let _ = Util.print_string (Util.format2 "adding value projector %s at type %s\n" field_name.str (Print.typ_to_string t)) in 
         let t2 = 
           if freexv |> Util.for_some (fun y -> Util.bvd_eq x y.v)
           then t2
@@ -1018,7 +1019,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | TyconAbbrev(id, _, _, _)
     | TyconRecord(id, _, _, _)
     | TyconVariant(id, _, _, _) -> id in
-  let binder_to_term b = match b.binder with
+  let binder_to_term b = match b.b with
     | Annotated (x, _)
     | Variable x -> mk_term (Var (lid_of_ids [x])) x.idRange Expr
     | TAnnotated(a, _)
@@ -1026,9 +1027,9 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | NoName t -> t in
   let tot = mk_term (Name (Const.p2l ["PURE"; "Tot"])) rng Expr in 
   let with_constructor_effect t = mk_term (App(tot, t, false)) t.range t.level in
-  let add_constructor_effect t = match (unparen t).term with
+  let add_constructor_effect t = match (unparen t).tm with
     | Product _ -> 
-      let rec aux t = match t.term with 
+      let rec aux t = match t.tm with 
         | Product(binders, s) ->  mk_term (Product(binders, aux s)) t.range t.level
         | Paren s -> mk_term (Paren(aux s)) s.range s.level
         | _ -> with_constructor_effect t in
@@ -1040,10 +1041,10 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, fields) ->
       let constrName = mk_ident("Mk" ^ id.idText, id.idRange) in
-      let fields = List.map (fun (x,t) -> mk_binder (Annotated(x,t)) x.idRange Expr false) fields in
+      let fields = List.map (fun (x,t) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr false) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) parms in
       let constrTyp = mk_term (Product(fields, with_constructor_effect result)) id.idRange Type in
-      (* let _ = Util.print_string (Util.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in *)
+      //let _ = Util.print_string (Util.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in 
       TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false)])
     | _ -> failwith "impossible" in
   let desugar_abstract_tc quals _env mutuals = function
@@ -1158,7 +1159,7 @@ let desugar_kind_abbrev r env id binders k =
   let env = DesugarEnv.push_kind_abbrev env (name, binders, k) in
   env, (name, binders, k)
            
-let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
+let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | Open lid ->
     let env = DesugarEnv.push_namespace env lid in
     env, []
@@ -1203,7 +1204,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
     env, [se]
 
   | Exception(id, None) ->
-    let t = fail_or (try_lookup_typ_name env) Const.exn_lid in
+    let t = fail_or env  (try_lookup_typ_name env) Const.exn_lid in
     let se = Sig_datacon(qualify env id, t, Const.exn_lid, d.drange) in
     let env = push_sigelt env se in
     let data_ops = mk_data_ops env se in
@@ -1212,7 +1213,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
         
   | Exception(id, Some term) ->
     let t = desugar_typ env term in
-    let t = withkind kun <| Typ_fun(None, t, Util.total_comp (fail_or (try_lookup_typ_name env) Const.exn_lid) id.idRange, false) in
+    let t = withkind kun <| Typ_fun(None, t, Util.total_comp (fail_or env (try_lookup_typ_name env) Const.exn_lid) id.idRange, false) in
     let se = Sig_datacon(qualify env id, t, Const.exn_lid, d.drange) in
     let env = push_sigelt env se in
     let data_ops = mk_data_ops env se in
@@ -1227,7 +1228,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.decl with
     let desugar_monad_sig env0 (m:AST.monad_sig) = 
       let menv = DesugarEnv.enter_monad_scope env0 m.mon_name in
       let menv, kabbrevs, kmon = List.fold_left (fun (menv, kabbrevs, kmon) d -> 
-        match d.decl with 
+        match d.d with 
           | KindAbbrev(id, binders, k) when (id.idText="WP") -> 
             let menv, (lid, binders, kwp) = desugar_kind_abbrev d.drange menv id binders k in 
             let args = binders |> List.map (function

@@ -102,7 +102,7 @@ let initial_env module_lid =
 let monad_decl_opt env l = 
   env.lattice.decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname l) 
 
-let monad_decl env l = 
+let get_monad_decl env l = 
   match monad_decl_opt env l with
     | None -> raise (Error(Tc.Errors.name_not_found l, range_of_lid l))
     | Some md -> md
@@ -186,10 +186,8 @@ let rec add_sigelt env se = match se with
   | _ -> 
     let lids = lids_of_sigelt se in
     List.iter (fun l -> Util.smap_add env.sigtab l.str se) lids
-and add_sigelts (env:env) ses = 
+and add_sigelts env ses = 
   ses |> List.iter (add_sigelt env)
-
-
 
 let finish_module env m = 
   let sigs = env.gamma |> List.collect (function 
@@ -258,7 +256,7 @@ let try_lookup_val_decl env lid =
     | Some (Inr (Sig_val_decl(_, t, _, _, _))) -> Some t
     | _ -> None
 
-let lookup_val_decl (env:env) lid = 
+let lookup_val_decl env lid = 
   match lookup_qname env lid with
     | Some (Inr (Sig_val_decl(_, t, _, _, _))) -> t
     | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
@@ -283,7 +281,7 @@ let lookup_lid env lid =
     | t -> None
   in
     match Util.bind_opt (lookup_qname env lid) mapper with 
-      | Some t -> t
+      | Some t -> Util.set_range_of_typ t (Syntax.range_of_lid lid)
       | None -> not_found ()
 
 let lookup_datacon env lid = 
@@ -321,7 +319,7 @@ let is_record env lid =
         Util.for_some (fun t -> t=Logic_record) tags 
     | _ -> false
 
-let lookup_datacons_of_typ (env:env) lid = 
+let lookup_datacons_of_typ env lid = 
   match lookup_qname env lid with 
     | Some (Inr (Sig_tycon(_, _, _, _, datas, _, _))) -> Some (List.map (fun l -> (l, lookup_lid env l)) datas)
     | _ -> None
@@ -355,12 +353,12 @@ let lookup_operator env (opname:ident) =
   let primName = lid_of_path ["Prims"; ("_dummy_" ^ opname.idText)] dummyRange in
     lookup_lid env primName
       
-let rec push_sigelt env s : env = 
+let rec push_sigelt en s : env = 
   match s with 
-    | Sig_bundle(ses, _) -> List.fold_left push_sigelt env ses 
+    | Sig_bundle(ses, _) -> List.fold_left push_sigelt en ses 
     | _ -> 
-      let env0 = env in
-      let env = build_lattice ({env with gamma=Binding_sig s::env.gamma}) s in
+      let env0 = en in
+      let env = build_lattice ({en with gamma=Binding_sig s::en.gamma}) s in
       let _ = match s with 
        | Sig_monads(decls, _, _) -> 
          decls |> List.iter (fun md -> ignore <| lookup_typ_lid env0 md.mname)

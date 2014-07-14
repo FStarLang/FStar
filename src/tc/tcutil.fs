@@ -118,7 +118,7 @@ let close_guard (b:list<binding>) (g:guard) : guard = match g with
       | Env.Binding_typ(a, k) -> Util.mk_forallT a k f
       | _ -> failwith "impossible") b f
 
-let check_and_ascribe (env:env) (e:exp) (t1:typ) (t2:typ) : exp * guard =
+let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard =
   match try_subtype env t1 t2 with
     | None -> 
         if env.is_pattern
@@ -127,7 +127,7 @@ let check_and_ascribe (env:env) (e:exp) (t1:typ) (t2:typ) : exp * guard =
     | Some f -> 
         Exp_ascribed(e, t2), f
 
-let destruct_function_typ (env:env) (t:typ) (xopt:option<bvvdef>) (f:option<exp>) (imp_arg_follows:bool) (default_ml:bool) : (typ * option<exp>) = 
+let destruct_function_typ env (t:typ) (xopt:option<bvvdef>) (f:option<exp>) (imp_arg_follows:bool) (default_ml:bool) : (typ * option<exp>) = 
   let fail subst t f = 
     let _ = match f with 
       | Some e -> Util.print_string (Util.format1 "destruct function type failed on expression %s\n" (Print.exp_to_string e))
@@ -183,7 +183,7 @@ let destruct_function_typ (env:env) (t:typ) (xopt:option<bvvdef>) (f:option<exp>
       | _ -> fail subst t f in
     aux xopt false [] t f
 
-let destruct_poly_typ (env:env) (t:typ) (f:exp) targ : (typ*exp) = 
+let destruct_poly_typ env (t:typ) (f:exp) targ : (typ*exp) = 
   let fail subst t f = 
     raise (Error (Tc.Errors.expected_poly_typ f (Util.subst_typ subst t) targ, Tc.Env.get_range env)) in
   let rec aux norm subst t f =
@@ -409,7 +409,7 @@ let lift_and_destruct env c1 c2 =
   let m, lift1, lift2 = Tc.Env.join env c1.effect_name c2.effect_name in
   let m1 = lift_comp c1 m lift1 in
   let m2 = lift_comp c2 m lift2 in
-  let md = Tc.Env.monad_decl env m in
+  let md = Tc.Env.get_monad_decl env m in
   let a, kwp = Tc.Env.wp_signature env md.mname in
   (md, a, kwp), (destruct_comp m1), destruct_comp m2
 
@@ -475,7 +475,7 @@ let bind env (c1:comp) ((b, c2):comp_with_binder) : comp =
       c
      
 let lift_formula env t mk_wp mk_wlp f = 
-  let md_pure = Tc.Env.monad_decl env Const.pure_effect_lid in
+  let md_pure = Tc.Env.get_monad_decl env Const.pure_effect_lid in
   let a, kwp = Tc.Env.wp_signature env md_pure.mname in 
   let k = Util.subst_kind [Inl(a, t)] kwp in
   let wp = {Util.mk_typ_app mk_wp [Inl t; Inl f] with k=k} in
@@ -501,7 +501,7 @@ let strengthen_precondition env c f = match f with
   | Guard f -> 
     let c = Tc.Normalize.weak_norm_comp env c in
     let res_t, wp, wlp = destruct_comp c in
-    let md = Tc.Env.monad_decl env c.effect_name in 
+    let md = Tc.Env.get_monad_decl env c.effect_name in 
     let wp = Util.mk_typ_app md.assert_p [Inl res_t; Inl f; Inl wp] in
     let wlp = Util.mk_typ_app md.assume_p [Inl res_t; Inl f; Inl wlp] in
     mk_comp md res_t wp wlp []
@@ -513,7 +513,7 @@ let weaken_precondition env c f = match f with
     else
       let c = Tc.Normalize.weak_norm_comp env c in
       let res_t, wp, wlp = destruct_comp c in
-      let md = Tc.Env.monad_decl env c.effect_name in 
+      let md = Tc.Env.get_monad_decl env c.effect_name in 
       let wp = Util.mk_typ_app md.assume_p [Inl res_t; Inl f; Inl wp] in
       let wlp = Util.mk_typ_app md.assume_p [Inl res_t; Inl f; Inl wlp] in
       mk_comp md res_t wp wlp c.flags
@@ -544,7 +544,7 @@ let bind_cases env (res_t:typ) (cases:list<(option<formula> * comp)>) : comp =
             let wlp = wp_conj wlp1 wlp2 in 
             (Some <| mk_comp md t wp wlp [], guard)) (None, None) in
       let caccum = force_comp (must <| caccum) in
-      let md = Tc.Env.monad_decl env caccum.effect_name in
+      let md = Tc.Env.get_monad_decl env caccum.effect_name in
       let res_t, wp, wlp = destruct_comp caccum in
       let wp = match guard with 
         | None -> wp 
@@ -574,20 +574,20 @@ let close_comp env bindings (c:comp) =
         | Env.Binding_sig s -> failwith "impos") bindings wp0 in //(Printf.sprintf "NYI close_comp_typ with binding %A" b)) 
     let c = Tc.Normalize.weak_norm_comp env c in
     let t, wp, wlp = destruct_comp c in
-    let md = Tc.Env.monad_decl env c.effect_name in
+    let md = Tc.Env.get_monad_decl env c.effect_name in
     let wp = close_wp md c.result_typ bindings wp in
     let wlp = close_wp md c.result_typ bindings wlp in
     mk_comp md c.result_typ wp wlp c.flags
 
-let weaken_result_typ (env:env)  (e:exp) (c:comp) (t:typ) : exp * comp = 
+let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp = 
   let c = Tc.Normalize.weak_norm_comp env c in
   let tc, wp, wlp = destruct_comp c in
   let g = Tc.Rel.subtype env tc t in
-  let md = Tc.Env.monad_decl env c.effect_name in
+  let md = Tc.Env.get_monad_decl env c.effect_name in
   let c = strengthen_precondition env (mk_comp md tc wp wlp c.flags) g in
   e, c
 
-let check_comp (env:env) (e:exp) (c:comp) (c':comp) : exp * comp * guard = 
+let check_comp env (e:exp) (c:comp) (c':comp) : exp * comp * guard = 
   match Tc.Rel.sub_comp env c c' with 
     | None -> raise (Error(Tc.Errors.computed_computation_type_does_not_match_annotation e c c', Tc.Env.get_range env))
     | Some g -> e, c', g
