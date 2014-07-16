@@ -63,17 +63,21 @@ type mlexpr =
 | MLE_App    of mlexpr * list<mlexpr>
 | MLE_Fun    of mlidents * mlexpr
 | MLE_If     of mlexpr * mlexpr * option<mlexpr>
-| MLE_Match  of mlexpr * list<(mlpattern * option<mlexpr> * mlexpr)>
+| MLE_Match  of mlexpr * list<mlbranch>
 | MLE_Raise  of mlpath * list<mlexpr>
-| MLE_Try    of mlexpr * list<(mlpattern * option<mlexpr> * mlexpr)>
+| MLE_Try    of mlexpr * list<mlbranch>
+
+and mlbranch = mlpattern * option<mlexpr> * mlexpr
 
 type mltybody =
 | MLTD_Abbrev of mlty
 | MLTD_Record of list<(mlsymbol * mlty)>
 | MLTD_DType  of list<(mlsymbol * list<mlty>)>
 
+type mltydecl = list<(mlsymbol * mlidents * option<mltybody>)>
+
 type mlmodule1 =
-| MLM_Ty  of list<(mlsymbol * mlidents * option<mltybody>)>
+| MLM_Ty  of mltydecl
 | MLM_Let of bool * list<(mlsymbol * mlidents * mlexpr)>
 | MLM_Exn of mlsymbol * list<mlty>
 | MLM_Top of mlexpr
@@ -81,7 +85,7 @@ type mlmodule1 =
 type mlmodule = list<mlmodule1>
 
 type mlsig1 =
-| MLS_Ty  of list<(mlsymbol * mlidents * option<mltybody>)>
+| MLS_Ty  of mltydecl
 | MLS_Val of mlsymbol * mltyscheme
 | MLS_Exn of mlsymbol * list<mlty>
 
