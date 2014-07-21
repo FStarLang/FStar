@@ -579,6 +579,7 @@ let is_free axs (fvs:freevars) =
 (********************************************************************************)
 (************************** Type/term substitutions *****************************)
 (********************************************************************************)
+
 (* Eager substitutions *)
 let mk_subst_map (s:subst) = 
   let t = Util.smap_create(List.length s) in
