@@ -154,6 +154,7 @@ let rec krel rel env k k' : option<guard(* Type *)> =
             | None, _
             | _, None -> krel rel env k2 k2'
             | Some a, Some b -> 
+              printfn "Sub'ing %s for %s\n" b.realname.idText a.realname.idText;
               let k2' = Util.subst_kind [Inl(b, Util.bvd_to_typ a k1')] k2' in
               krel rel env k2 k2')
 
@@ -170,12 +171,14 @@ let rec krel rel env k k' : option<guard(* Type *)> =
     
     | Kind_uvar uv, k1  
     | k1 , Kind_uvar uv -> 
-      if unify_kind (uv, ()) k1 then Some Trivial else None
+      if unify_kind (uv, ()) k1 
+      then Some Trivial 
+      else (printfn "Incompatible kinds: %s and %s\n" (Print.kind_to_string k) (Print.kind_to_string k'); None)
     
     | Kind_abbrev(_, k), _ -> krel rel env k k'
     | _, Kind_abbrev(_, k') -> krel rel env k k'
     
-    | _ -> None 
+    | _ -> printfn "incompatible kinds: %s and %s\n" (Print.kind_to_string k) (Print.kind_to_string k'); None 
 
 and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Type, otherwise Type *)> = 
   let rec reduce t =
@@ -195,7 +198,12 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
     else match t.k with 
            | Kind_type -> mk_guard_lam t f
            | _ -> f in
-  let rec aux top norm t t' =
+  let rec aux top norm t t' = 
+    let r = aux' top norm t t' in
+    match r with
+      | None -> printfn "Incompatible types %s and %s\n" (Print.typ_to_string t) (Print.typ_to_string t'); None
+      | _ -> r 
+  and aux' top norm t t' =
     let t, t' = reduce t, reduce t' in
       match t.t, t'.t with 
        | Typ_btvar a1, Typ_btvar a1' -> 
@@ -323,6 +331,12 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
   aux top false t t'
 
 and exp_equiv env e e' : option<guard (* has kind Type *)> = 
+  let r = exp_equiv' env e e' in 
+  match r with 
+    | None -> printfn "Incompaible expressions: %s and %s\n" (Print.exp_to_string e) (Print.exp_to_string e'); None
+    | _ -> r
+
+and exp_equiv' env e e' : option<guard (* has kind Type *)> = 
   let e, e' = compress_exp e, compress_exp e' in 
   match e, e' with 
     | Exp_uvar(uv, t), _ -> 
