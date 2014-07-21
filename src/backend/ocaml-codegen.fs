@@ -260,7 +260,7 @@ let rec doc_of_mltype (outer : level) (ty : mlty) =
         text (idsym x)
 
     | MLTY_Tuple tys ->
-        let doc = List.map (doc_of_mltype (min_op_prec, NonAssoc)) tys in
+        let doc = List.map (doc_of_mltype (t_prio_tpl, Left)) tys in
         let doc = parens (hbox (combine (text " * ") doc)) in
         doc
 
@@ -284,7 +284,7 @@ let rec doc_of_mltype (outer : level) (ty : mlty) =
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (decls : mltydecl) =
-    let for1 (x, tparams, _) =
+    let for1 (x, tparams, body) =
         let tparams =
             match tparams with
             | []  -> empty
@@ -293,7 +293,45 @@ let doc_of_mltydecl (decls : mltydecl) =
                 let doc = List.map (fun x -> (text (idsym x))) tparams in
                 parens (combine (text ", ") doc) in
 
-        reduce1 [tparams; text x] in
+        let forbody (body : mltybody) =
+            match body with
+            | MLTD_Abbrev ty ->
+                doc_of_mltype (min_op_prec, NonAssoc) ty
+
+            | MLTD_Record fields -> begin
+                let forfield (name, ty) =
+                    let name = text name in
+                    let ty   = doc_of_mltype (min_op_prec, NonAssoc) ty in
+                    reduce1 [name; text ":"; ty]
+
+                in brackets (combine (text "; ") (List.map forfield fields))
+            end
+
+            | MLTD_DType ctors ->
+                let forctor (name, tys) =
+                    match tys with
+                    | [] -> text name
+                    | _  ->
+                        let tys = List.map (doc_of_mltype (t_prio_tpl, Left)) tys in
+                        let tys = combine (text " * ") tys in
+                        reduce1 [text name; text "of"; tys]
+                in
+
+                let ctors = List.map forctor ctors in
+                let ctors = List.map (fun d -> reduce1 [text "|"; d]) ctors in
+                combine hardline ctors
+
+        in
+
+        let doc = reduce1 [tparams; text x] in
+
+        match body with
+        | None      -> doc
+        | Some body ->
+            let body = forbody body in
+            combine hardline [reduce1 [doc; text "="]; body]
+
+    in
 
     let doc = List.map for1 decls in
     let doc = reduce1 [text "type"; combine (text " and ") doc] in
