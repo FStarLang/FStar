@@ -73,6 +73,8 @@ TLS=$(TDIR)TLSError.fsi $(TDIR)TLSError.fs $(TDIR)Nonce.fs $(TDIR)TLSConstants.f
 mitls:
 	$(FSTAR) $(OTHERFLAGS) --debug yes --admit_fsi DataStream --admit_fsi Sig --pretype --codegen OCaml --prims prims.fst string.fst list.fst $(PLATFORM) $(CRYPTO) $(TLS)
 
+wcmitls:
+	wc prims.fst string.fst list.fst $(PLATFORM) $(CRYPTO) $(TLS)
 
 wc: prims.fst $(ALL)
 	wc -l $^
