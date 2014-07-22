@@ -123,6 +123,13 @@ let parens (doc : doc) =
     enclose lparen rparen doc
 
 (* -------------------------------------------------------------------- *)
+let lbracket = text "{"
+let rbracket = text "}"
+
+let brackets (doc : doc) =
+    enclose lbracket rbracket doc
+
+(* -------------------------------------------------------------------- *)
 let align (docs : list<doc>) =
     let for1 d1 d2 = cat d1 d2 in
     List.fold for1 empty docs

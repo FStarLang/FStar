@@ -30,8 +30,9 @@ val hbox    : doc -> doc
 val parse   : string -> doc
 
 (* -------------------------------------------------------------------- *)
-val enclose : doc -> doc -> doc -> doc
-val parens  : doc -> doc
+val enclose  : doc -> doc -> doc -> doc
+val parens   : doc -> doc
+val brackets : doc -> doc
 
 (* -------------------------------------------------------------------- *)
 val pretty : int -> doc -> string
