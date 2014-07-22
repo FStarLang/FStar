@@ -55,6 +55,8 @@ let compress_comp = Visit.compress_comp
 (*************************** Delayed substitutions ******************************)
 (********************************************************************************)
 let bvd_eq bvd1 bvd2 = bvd1.realname.idText=bvd2.realname.idText
+let subst_to_string s = 
+  s |> List.map (function Inl (b, _) -> b.realname.idText | Inr (x, _) -> x.realname.idText) |> String.concat ", "
 
 (* delayed substitutions *)
 let subst_tvar s t = match t.t with 
@@ -74,19 +76,21 @@ let subst_xvar s e = match e with
 let rec subst_typ s t = match s with 
   | [] -> t
   | _ -> match Visit.compress_typ t with 
-    | {t=Typ_delayed(t', s')} -> withkind t.k <| Typ_delayed(t', compose_subst s' s)
+    | {t=Typ_delayed(t', s', m)} -> withkind t.k <| Typ_delayed(t', compose_subst s' s, Util.mk_ref None) //m is ref None
     | t -> match t.t with 
-      | Typ_btvar _ -> subst_tvar s t
-      | _ -> withkind t.k <| Typ_delayed(t, s)
+      | Typ_btvar a -> 
+      //  printfn "Trying to subst. %s with [%s]\n" (a.v.realname.idText) (subst_to_string s);
+        subst_tvar s t
+      | _ -> withkind t.k <| Typ_delayed(t, s, Util.mk_ref None)
 
 and subst_exp s e = match s with 
   | [] -> e
   | _ -> match Visit.compress_exp e with 
-    | Exp_delayed(e, s') -> Exp_delayed(e, compose_subst s' s)
+    | Exp_delayed(e, s',m) -> Exp_delayed(e, compose_subst s' s, Util.mk_ref None)
     | e -> 
       match e with 
         | Exp_bvar _ -> subst_xvar s e
-        | _ -> Exp_delayed(e, s)
+        | _ -> Exp_delayed(e, s, Util.mk_ref None)
 
 and subst_kind s k = match s with 
   | [] -> k 
@@ -96,8 +100,8 @@ and subst_kind s k = match s with
     | Kind_type
     | Kind_effect
     | Kind_unknown -> k
-    | Kind_delayed(k, s') -> Kind_delayed(k, compose_subst s' s)
-    | k -> Kind_delayed(k, s)
+    | Kind_delayed(k, s',m) -> Kind_delayed(k, compose_subst s' s, Util.mk_ref None)
+    | k -> Kind_delayed(k, s, Util.mk_ref None)
 
 and subst_comp_typ s t = match s with 
   | [] -> t
@@ -113,16 +117,16 @@ and subst_comp s t = match s with
       | Comp ct -> Comp(subst_comp_typ s ct)
 
 and compose_subst (s1:subst) s2 = 
-  s1 |> List.map (function 
+  (s1 |> List.map (function 
       | Inl(x, t) -> Inl (x, subst_typ s2 t)
-      | Inr(x, e) -> Inr (x, subst_exp s2 e)) 
+      | Inr(x, e) -> Inr (x, subst_exp s2 e)))@s2 
 
 let restrict_subst axs s = 
   s |> List.filter (fun b ->
     let r = match b with 
-    | Inl(a, _) -> not (axs |> List.exists (function Inr _ -> false | Inl b -> bvd_eq a b))
-    | Inr(x, _) -> not (axs |> List.exists (function Inl _ -> false | Inr y -> bvd_eq x y)) in
-    if not r then printfn "Filtering %s\n" (match b with Inl (b, _) -> b.realname.idText | Inr (x, _) -> x.realname.idText);
+    | Inl(a, _) -> not (axs |> Util.for_some (function Inr _ -> false | Inl b -> bvd_eq a b))
+    | Inr(x, _) -> not (axs |> Util.for_some (function Inl _ -> false | Inr y -> bvd_eq x y)) in
+    //if not r then printfn "Filtering %s\n" (match b with Inl (b, _) -> b.realname.idText | Inr (x, _) -> x.realname.idText);
     r)
 
 let rec map_knd s vk mt me descend binders k = 
@@ -140,7 +144,7 @@ and visit_typ s mk vt me descend binders t =
   let t = Visit.compress_typ t in
   match t.t with
     | Typ_btvar a -> 
-      printfn "Trying to subst. %s with [%s]\n" (a.v.realname.idText) (s |> List.map (function Inl (b, _) -> b.realname.idText | Inr (x, _) -> x.realname.idText) |> String.concat ", ") ;
+      //printfn "Trying to subst. %s with [%s]\n" (a.v.realname.idText) (s |> subst_to_string);
       compress_typ' <| subst_tvar (restrict_subst binders s) t, descend
     | _ when (not descend) -> map_typ s mk vt me descend binders t
     | _ -> let t, _ = vt false binders t in t, descend
@@ -151,18 +155,23 @@ and visit_exp s mk me ve descend binders e =
     | _ when (not descend) -> map_exp s mk me ve descend binders e
     | _ -> let e, _ = ve false binders e in e, descend
 and compress_kind' k = match Visit.compress_kind k with 
-  | Kind_delayed (k',s) ->
-    fst <| Visit.reduce_kind (visit_knd s) (map_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp true [] k'
+  | Kind_delayed (k',s, m) ->
+    let k' = fst <| Visit.reduce_kind (visit_knd s) (map_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp true [] k' in
+    m := Some k'; 
+    k'
   | k -> k
 and compress_typ' t = match Visit.compress_typ t with 
-  | {t=Typ_delayed (t',s)} ->
+  | {t=Typ_delayed (t', s, m)} ->
     let res = fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp true [] t' in
+    m := Some res;
     //printfn "Compressing %A ... got %A\n" t' res;
     res
   | t -> t
 and compress_exp' e = match Visit.compress_exp e with 
-  | Exp_delayed (e',s) ->
-    fst <| Visit.reduce_exp (map_knd s) (map_typ s) (visit_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp true [] e'
+  | Exp_delayed (e',s, m) ->
+    let e = fst <| Visit.reduce_exp (map_knd s) (map_typ s) (visit_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp true [] e' in
+    m := Some e;
+    e
   | e -> e
 
 let compress_kind k = 
@@ -498,18 +507,22 @@ let collect_uvars_k uvs k = match k with
       (match List.tryFind (Unionfind.equivalent uv) uvs.uvars_k with 
           | Some _ -> uvs, k
           | None -> {uvs with uvars_k=uv::uvs.uvars_k}, k)
+  | Kind_delayed _ -> uvs, compress_kind k
   | _ -> uvs, k
 let collect_uvars_t uvs t : uvars * typ = match t.t with 
     | Typ_uvar (uv, k) -> 
         (match List.tryFind (fun (uv', _) -> Unionfind.equivalent uv uv') uvs.uvars_t with 
           | Some _ -> uvs, t
           | None -> {uvs with uvars_t=(uv,k)::uvs.uvars_t}, t)
+    | Typ_delayed _ -> uvs, compress_typ t
     | _ -> uvs, t 
+
 let collect_uvars_e uvs e : uvars * exp = match e with 
     | Exp_uvar (uv, t) -> 
         (match List.tryFind (fun (uv', _) -> Unionfind.equivalent uv uv') uvs.uvars_e with 
           | Some _ -> uvs, e
           | None -> {uvs with uvars_e=(uv,t)::uvs.uvars_e}, e)
+    | Exp_delayed _ -> uvs, compress_exp e
     | _ -> uvs, e 
 let uvars_in_kind k : uvars = 
   fst <| Visit.visit_kind_simple false collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars k
@@ -517,8 +530,12 @@ let uvars_in_typ t : uvars =
   fst <| Visit.visit_typ_simple false collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars t
 let uvars_in_exp e : uvars = 
   fst <| Visit.visit_exp_simple false collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars e
-
-let unchecked_unify uv t = Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here *)
+let uvars_in_typ' t : uvars = 
+  fst <| Visit.visit_typ_simple true collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars t
+let unchecked_unify uv t = 
+  match Unionfind.find uv with 
+    | Fixed _ -> failwith "Changing a fixed uvar!"
+    | _ -> Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here *)
 
 
 (********************************************************************************)
@@ -538,6 +555,8 @@ let fv_fold_t (out:freevars) (benv:boundvars) (t:typ) : (freevars * typ) =
       if is_bound_tv benv bv then out, t
       else if !Options.fvdie then failwith (Util.format1 "Freevar : %s\n" (bv.v.realname.idText))
       else (add_unique bvar_eq bv ftvs, fxvs), t
+    | Typ_delayed _ -> 
+      out, compress_typ t
     | _ -> out, t 
 let fv_fold_e (out:freevars) (benv:boundvars) (e:exp) : (freevars * exp) =
   let (ftvs, fxvs) = out in
@@ -545,12 +564,16 @@ let fv_fold_e (out:freevars) (benv:boundvars) (e:exp) : (freevars * exp) =
     | Exp_bvar bv ->
       if is_bound_xv benv bv then out, e (* let _ = pr "Bvar %s is bound, where env is %s\n" (strBvar bv) (strBenv benv) in *)
       else (ftvs, add_unique bvar_eq bv fxvs), e      (* let _ = pr "Bvar %s is free, where env is %s\n" (strBvar bv) (strBenv benv) in *)
+    | Exp_delayed _ -> 
+      out, compress_exp e
     | _ -> out, e 
 let ext_fv_env ((btvs, bxvs):boundvars) : either<btvar,bvvar> -> (boundvars * either<btvdef, bvvdef>) =
   function 
     | Inl tv -> (tv.v::btvs, bxvs), Inl tv.v
     | Inr xv -> (btvs, xv.v::bxvs), Inr xv.v 
-let fold_kind_noop env benv k = (env, k)
+let fold_kind_noop env benv k = match k with 
+  | Kind_delayed _ -> (env, compress_kind k)
+  | _ -> (env, k)
 
 let freevars_kind : knd -> freevars = 
   fun k -> fst <| Visit.visit_kind true fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) k
@@ -618,6 +641,7 @@ and eager_subst_tvar (s:subst_map) (t:typ) : typ =
           | Some t -> t
           | _ -> t
       end
+    | Typ_delayed _ -> compress_typ t
     | _ -> t
 and eager_subst_xvar (s:subst_map) (e:exp) : exp =
   let find_exp bv =  match Util.smap_try_find s bv.realname.idText with 
@@ -630,6 +654,7 @@ and eager_subst_xvar (s:subst_map) (e:exp) : exp =
           | Some e -> e
           | None -> e
       end
+    | Exp_delayed _ -> compress_exp e
     | _ -> e
 
 let eager_subst_kind s k = match s with 

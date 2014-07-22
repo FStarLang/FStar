@@ -38,6 +38,12 @@ let unify_typ env (uv,k) t  = match Unionfind.find uv with
         | t' -> 
           if wf t tk && not (occurs ()) 
           then (unchecked_unify uv t; true)
+          else if !Options.debug <> []
+          then (Util.print_string <| Util.format4 "%s occurs? %s, wf? %s ... Uvars_in_t are {%s}\n"
+                (string_of_int (Unionfind.uvar_id uv))
+                (if occurs() then "yes" else "no") 
+                (if wf t tk then "yes" else "no")
+                (uvars_in_t |> List.map (fun uv -> Util.string_of_int <| Unionfind.uvar_id uv) |> String.concat ", "); false)
           else false in
      doit t || (retry && aux false (normalize env t)) in
    aux true t
@@ -144,6 +150,7 @@ let rec forallf (l:list<'a>) (ff:'a -> option<guard>) : option<guard> = match l 
                     
 let rec krel rel env k k' : option<guard(* Type *)> =
   let k, k' = compress_kind k, compress_kind k' in
+  //printfn "krel: %s and %s" (Print.kind_to_string k) (Print.kind_to_string k');
   match k, k' with 
     | Kind_type, Kind_type
     | Kind_effect, Kind_effect -> ret <| Some Trivial
@@ -154,7 +161,7 @@ let rec krel rel env k k' : option<guard(* Type *)> =
             | None, _
             | _, None -> krel rel env k2 k2'
             | Some a, Some b -> 
-              printfn "Sub'ing %s for %s\n" b.realname.idText a.realname.idText;
+              //printfn "Sub'ing %s for %s\n" b.realname.idText a.realname.idText;
               let k2' = Util.subst_kind [Inl(b, Util.bvd_to_typ a k1')] k2' in
               krel rel env k2 k2')
 
@@ -173,12 +180,17 @@ let rec krel rel env k k' : option<guard(* Type *)> =
     | k1 , Kind_uvar uv -> 
       if unify_kind (uv, ()) k1 
       then Some Trivial 
-      else (printfn "Incompatible kinds: %s and %s\n" (Print.kind_to_string k) (Print.kind_to_string k'); None)
+      else if !Options.debug <> [] 
+      then (Util.print_string (Util.format2 "Incompatible kinds: %s and %s\n" (Print.kind_to_string k) (Print.kind_to_string k')); None)
+      else None
     
     | Kind_abbrev(_, k), _ -> krel rel env k k'
     | _, Kind_abbrev(_, k') -> krel rel env k k'
     
-    | _ -> printfn "incompatible kinds: %s and %s\n" (Print.kind_to_string k) (Print.kind_to_string k'); None 
+    | _ -> 
+      if !Options.debug <> []
+      then (Util.print_string <| Util.format2 "incompatible kinds: %s and %s\n" (Print.kind_to_string k) (Print.kind_to_string k'); None)
+      else None
 
 and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Type, otherwise Type *)> = 
   let rec reduce t =
@@ -200,8 +212,8 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
            | _ -> f in
   let rec aux top norm t t' = 
     let r = aux' top norm t t' in
-    match r with
-      | None -> printfn "Incompatible types %s and %s\n" (Print.typ_to_string t) (Print.typ_to_string t'); None
+    match !Options.debug, r with
+      | _::_, None -> Util.print_string <| Util.format2 "Incompatible types %s and %s\n" (Print.typ_to_string t) (Print.typ_to_string t'); None
       | _ -> r 
   and aux' top norm t t' =
     let t, t' = reduce t, reduce t' in
@@ -332,8 +344,8 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
 
 and exp_equiv env e e' : option<guard (* has kind Type *)> = 
   let r = exp_equiv' env e e' in 
-  match r with 
-    | None -> printfn "Incompaible expressions: %s and %s\n" (Print.exp_to_string e) (Print.exp_to_string e'); None
+  match !Options.debug, r with 
+    | _::_, None -> Util.print_string <| Util.format2 "Incompaible expressions: %s and %s\n" (Print.exp_to_string e) (Print.exp_to_string e'); None
     | _ -> r
 
 and exp_equiv' env e e' : option<guard (* has kind Type *)> = 

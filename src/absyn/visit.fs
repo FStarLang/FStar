@@ -32,6 +32,10 @@ let rec compress_typ_aux pos typ = match typ.t with
           | Fixed typ -> compress_typ_aux pos typ
           | _ -> typ
       end
+  | Typ_delayed(_, _, m) -> 
+    (match !m with 
+      | None -> typ
+      | Some t -> let t' = compress_typ_aux pos t in m := Some t'; t')
   | Typ_ascribed(t, _)
   | Typ_meta(Meta_pos(t, _))
   | Typ_meta(Meta_named(t, _)) when pos -> compress_typ_aux pos t
@@ -46,6 +50,10 @@ let rec compress_exp_aux meta exp = match exp with
         | Fixed e -> compress_exp_aux meta e 
         | _ -> exp
     end
+  | Exp_delayed(_, _, m) -> 
+    (match !m with 
+      | None -> exp
+      | Some e -> let e' = compress_exp_aux meta e in m := Some e'; e')
   | Exp_ascribed(e, _)
   | Exp_meta(Meta_info(e, _, _))
   | Exp_meta(Meta_desugared(e, _)) when meta -> compress_exp_aux meta e
@@ -60,6 +68,10 @@ let rec compress_kind knd = match knd with
         | Fixed k -> compress_kind k
         | _ -> knd
     end
+  | Kind_delayed(_, _, m) -> 
+    (match !m with 
+      | None -> knd
+      | Some k -> let k' = compress_kind k in m := Some k'; k')
   | _ -> knd
 
 let rec compress_comp c : comp = match c with 
@@ -103,6 +115,8 @@ let rec visit_kind'
     | Kind_type
     | Kind_effect
     | Kind_unknown -> (* log 1 ; *) cont (h env benv k)
+    | Kind_delayed _ -> 
+      let env, k = h env benv k in visit_kind' visit_wps h f g l ext env benv k cont
     | Kind_abbrev(kabr, k) -> (* log 2 ; *)
       visit_kind' visit_wps h f g l ext env benv k
         (fun (env, k) -> 
@@ -142,6 +156,10 @@ and visit_typ'
       (match Unionfind.find uv with 
         | Fixed t -> visit_typ' visit_wps h f g l ext env benv t cont
         | _ -> cont (f env benv t))
+
+    | Typ_delayed _ -> 
+      let env, t = f env benv t in
+      visit_typ' visit_wps h f g l ext env benv t cont
 
     | Typ_meta(Meta_pos(t, _)) 
     | Typ_ascribed(t, _) -> (* log 6 ; *) visit_typ' visit_wps h f g l ext env benv t cont
@@ -279,6 +297,7 @@ and visit_exp'
     | (x, Inr y) -> (x,y) 
     | _ -> failwith "Unexpected result" in
     match e with
+    | Exp_delayed _ -> let env, e = g env benv e in visit_exp' visit_wps h f g l ext env benv e cont
     | Exp_meta(Meta_datainst _) -> failwith "impossible"
     | Exp_meta(Meta_info(e, t, p)) -> (* log 23 ; *)
       visit_exp' visit_wps h f g l ext env benv e 
@@ -835,6 +854,7 @@ let combine_exp e (kl,tl,el) env =
       let rec mk_eqns eqns el = match eqns, el with 
         | (p,None, _)::eqns', e::el' -> (p, None, e)::mk_eqns eqns' el'
         | (p,Some _, _)::eqns', w::e::el' -> (p, Some w, e)::mk_eqns eqns' el'
+        | [], [] -> []
         | _ -> failwith "impossible" in
       Exp_match(e1', mk_eqns eqns el)
     | Exp_ascribed(e, t), [], [t'], [e'] -> Exp_ascribed(e', t')

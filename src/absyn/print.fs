@@ -48,8 +48,9 @@ let const_to_string x = match x with
   | Const_uint8 _ -> "<uint8>"
      
 let rec typ_to_string x =
-  let x = if !Options.print_real_names then x else whnf x in
+  let x = if !Options.print_real_names then Util.compress_typ x else whnf x in
   match x.t with 
+  | Typ_delayed _ -> failwith "impossible"
   | Typ_meta(Meta_named(_, l)) -> sli l
   | Typ_meta(Meta_pos(t, _)) -> typ_to_string t
   | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)

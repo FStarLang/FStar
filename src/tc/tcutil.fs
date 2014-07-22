@@ -94,6 +94,7 @@ let new_tvar env k =
           (if freevars_in_env then "true" else "false") 
           (List.map (fun x -> Util.format2 "%s@%s" (Print.strBvd x.v) (Range.string_of_range (range_of_bvd x.v))) tvs |> String.concat ", ")
           (List.map (fun x -> Print.strBvd x.v) xvs |> String.concat ", "))
+        //        printfn "%A" t
       end in
     let result = freevars_in_env && pre_kind_compat k tk in
     if result then result else (err(); result) in
@@ -311,6 +312,7 @@ let generalize env (ecs:list<(exp*comp)>) : (list<(exp*comp)>) =
           | _ -> 
               let a = Util.new_bvd (Some <| Tc.Env.get_range env) in
               let t = Util.bvd_to_typ a k in
+//              let _ = printfn "Unifying %d with %s\n" (Unionfind.uvar_id u) (Print.typ_to_string t) in
               unchecked_unify u t; a in
         (a, k)) in
       let e, t = tvars |> List.fold_left (fun (e,t) (a,k) ->

@@ -82,10 +82,12 @@ let binding_of_lb x t = match x with
 let rec tc_kind env k : knd * guard = 
   let k = Util.compress_kind k in 
   match k with
-  | Kind_uvar _
-  | Kind_type
-  | Kind_effect -> k, Trivial
+  | Kind_delayed _ -> failwith "impossible"
 
+  | Kind_type
+  | Kind_effect 
+  | Kind_uvar _ -> k, Trivial 
+  
   | Kind_abbrev(kabr, k) -> 
     let k, f = tc_kind env k in 
     Kind_abbrev(kabr, k), f
@@ -150,6 +152,9 @@ and tc_comp_typ env c : comp_typ * guard =
 and tc_typ' env (t:typ) : typ' * knd * guard = 
   let env = Tc.Env.set_range env (Util.range_of_typ t (Tc.Env.get_range env)) in
   match t.t with 
+  | Typ_delayed _ -> 
+    tc_typ' env (compress_typ t) 
+  
   | Typ_btvar a -> 
     let k = Env.lookup_btvar env a in
     t.t, k, Trivial
@@ -366,6 +371,8 @@ and tc_value env e : exp * comp = match e with
     failwith (Util.format1 "Unexpected value: %s" (Print.exp_to_string v))
 
 and tc_exp env e : exp * comp = match e with
+  | Exp_delayed _ -> tc_exp env (compress_exp e)
+
   | Exp_meta(Meta_info(e, _, p)) -> 
     let env = Tc.Env.set_range env p in
     let e, c = tc_exp env e in
@@ -465,7 +472,7 @@ and tc_exp env e : exp * comp = match e with
       | Inl _ -> {env with Tc.Env.instantiate_targs=false}
       | Inr (_, imp) -> {env with Tc.Env.instantiate_vargs=not imp} in
     let f, cf = tc_exp env f in
-    if debug env then Util.print_string <| Util.format2 "Checked function LHS %s at type %s" (Print.exp_to_string f) (Print.comp_typ_to_string cf);
+    if debug env then Util.print_string <| Util.format2 "Checked function LHS %s at type %s\n" (Print.exp_to_string f) "<hidden>";//(Print.comp_typ_to_string cf);
     let rec aux (f, tf, (cs:list<Tc.Util.comp_with_binder>), guard, fvs) args = match args with 
       | Inl targ::rest -> 
         let targ, k, g = tc_typ env targ in 
@@ -917,13 +924,27 @@ and tc_decl env se = match se with
       let e = Exp_let((fst lbs, lbs'), Exp_constant(Syntax.Const_unit)) in
       let se = match tc_exp env e with 
         | Exp_let(lbs, _), c -> (* TODO: Call the solver here! *) 
-          if log env 
+          if log env || debug env
           then snd lbs |> List.iter (function
               | (Inl _, _, _) -> ()
               | (Inr l, t, _) ->
               match Tc.Env.try_lookup_val_decl env l with 
                 | Some _ -> ()
-                | None ->  Util.print_string <| Util.format2 "let %s : %s\n" (Print.lbname_to_string (Inr l)) (Print.typ_to_string t));
+                | None -> 
+                  let nm = Print.lbname_to_string (Inr l) in
+                  if nm="Microsoft.FStar.Absyn.Visit.visit_simple"
+                  then (Util.print_string <| Util.format2 "let %s : %s\n" (Print.lbname_to_string (Inr l)) (Print.typ_to_string t);
+                        (* let uvt = Util.uvars_in_typ' t in *)
+                        (* (\* let ftvs, _ = Util.freevars_typ t in *\) *)
+                        (* Util.print_string <| Util.format1 "\tuvars={%s}\n" *)
+                        (*     (uvt.uvars_t |> List.map (fun (uv,_) -> Util.string_of_int <| Unionfind.uvar_id uv) |> String.concat ", "); *)
+                        ())
+                  else if nm="Microsoft.FStar.Absyn.Visit.visit_kind_simple" 
+                  then (Util.print_string <| Util.format2 "let %s : %s\n" (Print.lbname_to_string (Inr l)) (Print.typ_to_string t);
+                        let t = Tc.Env.lookup_lid env (lid_of_path (path_of_text "Microsoft.FStar.Absyn.Visit.visit_simple") Syntax.dummyRange) in
+                        let ftvs, _ = Util.freevars_typ t in
+                        Util.print_string <| Util.format2 "\nTypeOf visit_simple is %s\n\tftvs={%s}\n" 
+                            (Print.typ_to_string t) (ftvs |> List.map (fun x -> Print.strBvd x.v) |> String.concat ", ")));
           Sig_let(lbs, r)
         | _ -> failwith "impossible" in
       let env = Tc.Env.push_sigelt env se in 

@@ -62,6 +62,10 @@ ABSYN_DEPS=$(addprefix $(BIN)/, basic.dll)
 $(BIN)/absyn.dll: $(ABSYN_DEPS) $(ABSYN_SRC)
 	fsc  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(ABSYN_DEPS)) $(ABSYN_SRC)
 
+ABSYN_DEPS=$(addprefix $(BIN)/, basic.dll)
+$(BIN)/testAbsyn.exe: $(ABSYN_DEPS) $(ABSYN_SRC) absyn/test.fs
+	fsc  $(OTHERFLAGS) --define:TEST --define:DEBUG -o $@ $(BASELIBS) $(addprefix -r , $(ABSYN_DEPS)) $(ABSYN_SRC) absyn/test.fs
+
 FORMAT_DEPS=
 $(BIN)/format.dll: $(FORMAT_DEPS) $(FORMAT_SRC)
 	fsc $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(FORMAT_DEPS)) $(FORMAT_SRC)

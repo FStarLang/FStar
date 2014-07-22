@@ -44,12 +44,12 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              type return   ('a:Type) (x:'a) ('p:Post 'a) = 'p x
              type bind_wp  ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2: 'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) = 'wp1 (fun a => 'wp2 a 'p)
              type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) ('wlp2:'a => WP 'b) ('p:Post 'b) = 'wlp1 (fun a => 'wlp2 a 'p)
-             type ite_wlp ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) = 
+             type ite_wlp ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) =
                  (forall (a:'a). 'post a \/ 'wlp_cases (fun a1 => a=!=a1))
-             type ite_wp ('a:Type) ('wlp_cases:WP 'a) ('wp_cases:WP 'a) ('post:Post 'a) = 
+             type ite_wp ('a:Type) ('wlp_cases:WP 'a) ('wp_cases:WP 'a) ('post:Post 'a) =
                  (forall (a:'a). 'post a \/ 'wlp_cases (fun a' => a=!=a'))
                  /\ ('wp_cases (fun a => True))
-             type wp_binop ('a:Type) ('wp1:WP 'a) ('op:Type => Type => Type) ('wp2:WP 'a) ('p:Post 'a) = 
+             type wp_binop ('a:Type) ('wp1:WP 'a) ('op:Type => Type => Type) ('wp2:WP 'a) ('p:Post 'a) =
                  'op ('wp1 'p) ('wp2 'p)
              type wp_as_type ('a:Type) ('wp:WP 'a) = (forall ('p:Post 'a). 'wp 'p)
              type close_wp ('a:Type) ('b:Type) ('wp:'b => WP 'a) ('p:Post 'a) = (forall (b:'b). 'wp b 'p)
@@ -57,7 +57,7 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P /\ ('P ==> 'wp 'p))
              type assume_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P ==> 'wp 'p)
              with Pure ('a:Type) ('pre:Pre) ('post:Post 'a) =
-                 PURE 'a 
+                 PURE 'a
                    (fun ('p:Post 'a) => 'pre /\ (forall a. 'pre /\ 'post a ==> 'p a)) (* WP *)
                    (fun ('p:Post 'a) => forall a. 'pre /\ 'post a ==> 'p a)           (* WLP *)
              and Tot ('a:Type) =
@@ -119,7 +119,7 @@ assume InterIdemL:     forall s1 s2. Intersection (Intersection s1 s2) s2 == Int
 assume InterdemR:      forall s1 s2. Intersection s1 (Intersection s1 s2) == Intersection s1 s2
 assume SetEqualDef:    forall s1 s2. SetEqual s1 s2 <==> (forall a. InSet a s1 <==> InSet a s2)
 assume SeqEqualExt:    forall s1 s2. SetEqual s1 s2 ==> s1==s2
-logic data type refs = 
+logic data type refs =
   | AllRefs : refs
   | SomeRefs : v:refset -> refs
 
@@ -498,26 +498,25 @@ assume val op_GreaterThan        : int -> int -> PURE.Tot bool
 assume val op_GreaterThanOrEqual : int -> int -> PURE.Tot bool
 (* TODO: < in operators clashes with t<..> notation. Fix *)
 assume val op_LessThan           : int -> int -> PURE.Tot bool
-    
 
-(* (\* Primitive functions with trusted specs  *\) *)
-(* assume val op_ColonEquals: ref 'a -> 'a -> unit *)
-(* assume val op_Dereference: ref 'a -> 'a *)
-(* assume val op_AmpAmp             : x:bool -> y:bool -> z:bool { z==true ==>  x==true /\  y==true} *)
-(* assume val op_BarBar             : x:bool -> y:bool -> z:bool { (z==true ==> x==true \/  y==true) /\ *)
-(*                                                                 (z==false ==> x==false /\ y==false) } *)
-(* assume val op_Negation           : x:bool -> y:bool { (y==true ==> x==false) /\ (y==false ==> x==true) } *)
+(* (\* (\\* Primitive functions with trusted specs  *\\) *\) *)
+(* (\* assume val op_ColonEquals: ref 'a -> 'a -> unit *\) *)
+(* (\* assume val op_Dereference: ref 'a -> 'a *\) *)
+(* (\* assume val op_AmpAmp             : x:bool -> y:bool -> z:bool { z==true ==>  x==true /\  y==true} *\) *)
+(* (\* assume val op_BarBar             : x:bool -> y:bool -> z:bool { (z==true ==> x==true \/  y==true) /\ *\) *)
+(* (\*                                                                 (z==false ==> x==false /\ y==false) } *\) *)
+(* (\* assume val op_Negation           : x:bool -> y:bool { (y==true ==> x==false) /\ (y==false ==> x==true) } *\) *)
 
-(* assume val op_Multiply           : x:int -> y:int -> z:int{z==x*y} *)
-(* assume val op_Division           : x:int -> y:int{y=!=0} -> z:int{z==x/y} *)
-(* assume val op_Subtraction        : x:int -> y:int -> z:int{z==x-y} *)
-(* assume val op_Addition           : x:int -> y:int -> z:int{z==x+y} *)
-(* assume val op_Minus              : x:int -> y:int{y==Minus x} *)
-(* assume val op_Modulus            : x:int -> y:int -> z:int{z==x%y} *)
-(* assume val op_LessThanOrEqual : x:int -> y:int -> z:bool{(z==true ==> x <= y) /\ (z==false ==> x > y)} *)
-(* assume val op_GreaterThan : x:int -> y:int -> z:bool{(z==true ==> x > y) /\ (z==false ==> x <= y)} *)
+(* (\* assume val op_Multiply           : x:int -> y:int -> z:int{z==x*y} *\) *)
+(* (\* assume val op_Division           : x:int -> y:int{y=!=0} -> z:int{z==x/y} *\) *)
+(* (\* assume val op_Subtraction        : x:int -> y:int -> z:int{z==x-y} *\) *)
+(* (\* assume val op_Addition           : x:int -> y:int -> z:int{z==x+y} *\) *)
+(* (\* assume val op_Minus              : x:int -> y:int{y==Minus x} *\) *)
+(* (\* assume val op_Modulus            : x:int -> y:int -> z:int{z==x%y} *\) *)
+(* (\* assume val op_LessThanOrEqual : x:int -> y:int -> z:bool{(z==true ==> x <= y) /\ (z==false ==> x > y)} *\) *)
+(* (\* assume val op_GreaterThan : x:int -> y:int -> z:bool{(z==true ==> x > y) /\ (z==false ==> x <= y)} *\) *)
 
-(* (\* TODO: < in operators clashes with t<..> notation. Fix *\) *)
-(* assume val op_GreaterThanOrEqual : x:int -> y:int -> bool(\* {(z=true ==> x >= y) /\ (z=false ==> x < y) } *\) *)
-(* assume val op_LessThan : x:int -> y:int -> bool(\* {(z=true ==> x < y) /\ (z=false ==> x >= y)} *\\) *\) *)
+(* (\* (\\* TODO: < in operators clashes with t<..> notation. Fix *\\) *\) *)
+(* (\* assume val op_GreaterThanOrEqual : x:int -> y:int -> bool(\\* {(z=true ==> x >= y) /\ (z=false ==> x < y) } *\\) *\) *)
+(* (\* assume val op_LessThan : x:int -> y:int -> bool(\\* {(z=true ==> x < y) /\ (z=false ==> x >= y)} *\\\) *\\) *\) *)
     
