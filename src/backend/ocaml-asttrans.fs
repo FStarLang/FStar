@@ -69,8 +69,10 @@ let lenv_of_mlenv (_ : mlenv) : lenv =
 
 (* -------------------------------------------------------------------- *)
 let lpush (LEnv lenv : lenv) (real : ident) (pp : ident) =
+(* FIXME
     if Map.containsKey real.idText lenv then
         duplicated_local real.idRange (real.idText, pp.idText);
+*)
     let mlid = fresh pp.idText in
     (LEnv (Map.add real.idText mlid lenv), mlid)
 
@@ -663,8 +665,8 @@ let mlsig_of_sig (mlenv : mlenv) (modx : list<sigelt>) : mlsig =
 
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstar (fmod_ : modul) =
-    let mod_ = mlmod_of_mod (MLEnv ()) fmod_.exports in
-    let sig_ = mlsig_of_sig (MLEnv ()) fmod_.declarations in
+    let mod_ = mlmod_of_mod (MLEnv ()) fmod_.declarations in
+    let sig_ = mlsig_of_sig (MLEnv ()) fmod_.exports in
     (mlpath_of_lident fmod_.name, sig_, mod_)
 
 (* -------------------------------------------------------------------- *)

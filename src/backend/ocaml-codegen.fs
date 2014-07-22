@@ -415,7 +415,7 @@ let rec doc_of_mllib (MLLib mllib : mllib) =
     in
 
     let docs = List.map for1 mllib in
-    let docs = List.map (fun x -> reduce[x; hardline; hardline]) docs in
+    let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
 
     reduce docs
 
