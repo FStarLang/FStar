@@ -5,12 +5,12 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{9974a6de-6ca8-44b6-a52e-51fc52932179}</ProjectGuid>
+    <ProjectGuid>{670da3f6-7e41-4c1d-ab17-1f59e0317f52}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>parser</RootNamespace>
-    <AssemblyName>parser</AssemblyName>
+    <RootNamespace>tosmt</RootNamespace>
+    <AssemblyName>tosmt</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <Name>parser</Name>
+    <Name>tosmt</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -18,14 +18,13 @@
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
-    <OutputPath>..\..\bin</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <WarningLevel>1</WarningLevel>
+    <OutputPath>..\..\bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <WarningLevel>3</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <NoWarn>
-    </NoWarn>
+    <NoWarn>25</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -35,19 +34,14 @@
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <DocumentationFile>bin\Release\parser.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\tosmt.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FSharp.PowerPack">
-      <HintPath>..\..\bin\FSharp.PowerPack.dll</HintPath>
-    </Reference>
-    <Reference Include="FSharp.PowerPack.Compatibility">
-      <HintPath>..\..\bin\FSharp.PowerPack.Compatibility.dll</HintPath>
-    </Reference>
+    <Reference Include="FSharp.PowerPack, Version=4.0.0.1, Culture=neutral, PublicKeyToken=f536804aa0eb945b" />
+    <Reference Include="FSharp.PowerPack.Compatibility, Version=4.0.0.1, Culture=neutral, PublicKeyToken=f536804aa0eb945b" />
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\absyn\absyn.fsproj">
@@ -62,17 +56,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ast.fs" />
-    <Compile Include="parse.fs" />
-    <Compile Include="lexhelp.fs" />
-    <Compile Include="lex.fs" />
-    <Compile Include="dsenv.fsi" />
-    <Compile Include="dsenv.fs" />
-    <Compile Include="desugar.fsi" />
-    <Compile Include="desugar.fs" />
-    <Compile Include="parseit.fsi" />
-    <Compile Include="parseit.fs" />
-    <Compile Include="driver.fs" />
+    <Compile Include="term.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -80,10 +64,6 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition="Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition="(!Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')) And (Exists('$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets'))" />
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="(!Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')) And (!Exists('$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets')) And (Exists('$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets'))" />
-  <PropertyGroup>
-    <PreBuildEvent>make -C $(ProjectDir) parse.fs
-make -C $(ProjectDir) lex.fs</PreBuildEvent>
-  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
 	     Other similar extension points exist, see Microsoft.Common.targets.
 	<Target Name="BeforeBuild">

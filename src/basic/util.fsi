@@ -40,6 +40,7 @@ val print_any : 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list<string> -> string
 val write_file: string -> string -> unit
+val run_proc : string -> string -> string -> (bool * string * string)
 
 val int_of_string:   string -> int
 val int_of_char:   char -> int
@@ -50,6 +51,7 @@ val string_of_float: float -> string
 val string_of_char:  char -> string
 val string_of_bytes: byte[] -> string
 val starts_with: string -> string -> bool
+val trim_string: string -> string
 val ends_with: string -> string -> bool
 val char_at: string -> int -> char
 val is_upper: char -> bool

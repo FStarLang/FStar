@@ -28,6 +28,20 @@ exception Impos
 exception NYI of string
 exception Failure of string
 
+let run_proc (name:string) (args:string) (stdin:string) : bool * string * string = 
+  let pinfo = new ProcessStartInfo(name, args) in
+  pinfo.RedirectStandardOutput <- true;
+  pinfo.RedirectStandardError <- true;
+  pinfo.UseShellExecute <- false;
+  pinfo.RedirectStandardInput <- true;
+  let proc = new Process() in
+  proc.StartInfo <- pinfo;
+  let result = proc.Start() in 
+  proc.StandardInput.Write(stdin);
+  let stdout = proc.StandardOutput.ReadToEnd() in
+  let stderr = proc.StandardError.ReadToEnd() in 
+  result, stdout, stderr
+
 type smap<'value>=HashMultiMap<string, 'value>
 let smap_create<'value> (i:int) = new HashMultiMap<string,'value>(i, HashIdentity.Structural)
 let smap_add (m:smap<'value>) k (v:'value) = m.Add(k,v)
@@ -60,6 +74,7 @@ let string_of_float i = string_of_float i
 let string_of_char  (i:char) = spr "%A" i
 let string_of_bytes (i:byte[]) = string_of_unicode i
 let starts_with (s1:string) (s2:string) = s1.StartsWith(s2)
+let trim_string (s:string) = s.Trim()
 let ends_with (s1:string) (s2:string) = s1.EndsWith(s2)
 let char_at (s:string) (i:int) : char = s.[i]
 let is_upper (c:char) = 'A' <= c && c <= 'Z'
