@@ -41,9 +41,14 @@ let infix_prim_ops = [
     ("op_Addition"       , e_bin_prio_op1   , "+" );
     ("op_Subtraction"    , e_bin_prio_op1   , "-" );
     ("op_Equality"       , e_bin_prio_eq    , "=" );
+    ("op_disEquality"    , e_bin_prio_eq    , "<>");
     ("op_AmpAmp"         , e_bin_prio_and   , "&&");
     ("op_BarBar"         , e_bin_prio_or    , "||");
-    ("op_LessThanOrEqual", e_bin_prio_order , "<=");
+
+    ("op_LessThanOrEqual"   , e_bin_prio_order , "<=");
+    ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
+    ("op_LessThan"          , e_bin_prio_order , "<" );
+    ("op_GreaterThan"       , e_bin_prio_order , ">" );
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -287,7 +292,7 @@ and doc_of_lets (rec_, lets) =
     let for1 (name, ids, e) =
         let e   = doc_of_expr (min_op_prec, NonAssoc) e in
         let ids = List.map (fun (x, _) -> text x) ids in
-        reduce1 [text (fst name); reduce1 ids; text "="; e] in
+        reduce1 [text (idsym name); reduce1 ids; text "="; e] in
 
     let letdoc = if rec_ then reduce1 [text "let"; text "rec"] else text "let" in
 
