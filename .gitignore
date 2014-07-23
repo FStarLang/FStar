@@ -1,8 +1,10 @@
 *~
+\#*\#
 *.vspx
 *.psess
 *.suo
 
+/VS/packages
 *-10.sln
 *-10.fsproj
 
@@ -13,8 +15,8 @@
 /bin/*.dll
 /bin/*.pdb
 /bin/*.mdb
+/bin/*.xml
+/bin/*.config
 /bin/fstar.exe
 /bin/z3-x86.exe
-*~
 /src/*/obj
-\#*\#
