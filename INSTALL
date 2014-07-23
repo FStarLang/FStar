@@ -2,43 +2,19 @@ Prerequisites for building F* from sources (work in progress)
 
 At the moment:
 
-  On Windows 8 with .NET framework 4.5 and F# v2.0 :
+  On Windows 8 with .NET framework 4.5 and F# v3.0 :
 
-     -- You need at least Z3 version 4.1. Later versions should be
-        fine, but have not been tested.
+     Either: 
 
-        Copy z3.exe, z3.dll and Microsoft.Z3.dll into FStar/bin
-        
-        By default, F* uses the 64-bit versions. But, you should also
-        be able to use the 32 bit versions by passing the flag
-        --platform:x86 to fsc.
-     
-     Then either: 
+      -- Using VisualStudio 2012, open FStar/VS/FStar.sln and build
+         solution.
 
-          Using VisualStudio 2012, open FStar/VS/FStar.sln and build
-          solution.
-
-          Or, with Cygwin's GNU make (4.0), run "make" from FStar/src
-
-
-
-
-
+      -- or, with Cygwin's GNU make (4.0), run "make" from FStar/src
 
   On Linux Debian using Mono:
 
-- install the fsharp package
-- get FSharpPowerPack-4.0.0.0
-- copy FSharpPowerPack-4.0.0.0/bin/*.dll in the bin directory
-- put in your PATH:
-  + fsc as a link to fsharpc
-  + fslex containing:
-      #!/bin/bash
-      mono /path/to/FSharpPowerPack-4.0.0.0/bin/fslex.exe $@
-  + fsyacc containing:
-      #!/bin/bash
-      mono /path/to/FSharpPowerPack-4.0.0.0/bin/fsyacc.exe $@
-- run:
+    -- Install mono-complete && fsharp
+
+    -- Run
       $ source setenv.sh
-      $ cd src
-      $ make
+      $ make -C src

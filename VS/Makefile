@@ -1,20 +1,23 @@
+# -*- Makefile -*-
+
+# --------------------------------------------------------------------
 ifeq ($(OS),Windows_NT)
-MONO=./
+RUNTIME =
 else
-MONO=mono 
+RUNTIME = mono
 endif
 
-NUGET=$(MONO).nuget/NuGet.exe
-.PHONY: all update-nuget
+NUGET=$(RUNTIME) .nuget/NuGet.exe
 
-all: packages/FsLexYacc.6.0.3/bin/fslex.exe
+# --------------------------------------------------------------------
+.PHONY: all update-nuget install-packages
 
-packages:
-	mkdir packages
+all: update-nuget install-packages
 
-update-nuget: packages
+update-nuget:
+	[ -d packages ] || mkdir packages
 	$(NUGET) update -self
-	$(NUGET) restore FStar.sln
 
-packages/FsLexYacc.6.0.3/bin/fslex.exe: update-nuget
-	
+install-packages:
+	[ -d packages ] || $(MAKE) update-nuget
+	$(NUGET) restore FStar.sln
