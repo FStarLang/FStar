@@ -1,6 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30501.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{82253A13-6BB4-4C9F-8198-50F638EFB3EE}"
+EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "absyn", "..\src\absyn\absyn.fsproj", "{13E8984E-188D-447B-B7B7-9F7441050565}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "basic", "..\src\basic\basic.fsproj", "{E8957DBD-58E7-4CF8-9192-E0A9CFB3867E}"
@@ -15,7 +19,12 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "backend", "..\src\backend\b
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "format", "..\src\format\format.fsproj", "{54BC6905-03EE-4AEB-B726-742B6D4FA710}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{82253A13-6BB4-4C9F-8198-50F638EFB3EE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{8D74F56B-3B0F-4931-9AF8-A26215B25559}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,8 +63,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal

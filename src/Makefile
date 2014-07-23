@@ -37,6 +37,12 @@ ifeq ($(PLATFORM), X86)
 override OTHERFLAGS += --platform:x86
 endif
 
+ifeq ($(OS),Windows_NT)
+MONO=./
+else
+MONO=mono 
+endif
+
 all: $(BIN)/fstar.exe
 
 z3_x86:
@@ -47,12 +53,14 @@ z3_x64:
 	cp $(BIN)/Microsoft.Z3.x64.dll $(BIN)/Microsoft.Z3.dll
 	cp $(BIN)/z3.x64.dll $(BIN)/z3.dll
 
+fslexyacc:
+	make -C ../VS/
 
-parser/parse.fs: parser/parse.fsy
-	fsyacc --module Microsoft.FStar.Parser.Parse $^
+parser/parse.fs: parser/parse.fsy fslexyacc
+	$(MONO)../VS/packages/FsLexYacc.6.0.3/bin/fsyacc.exe --module Microsoft.FStar.Parser.Parse $<
 
-parser/lex.fs: parser/lex.fsl
-	fslex --unicode $^
+parser/lex.fs: parser/lex.fsl fslexyacc
+	$(MONO)../VS/packages/FsLexYacc.6.0.3/bin/fslex.exe --unicode $<
 
 BASIC_DEPS=
 $(BIN)/basic.dll: $(BASIC_DEPS) $(BASIC_SRC)
