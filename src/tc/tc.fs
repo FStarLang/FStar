@@ -905,15 +905,12 @@ and tc_decl env se = match se with
         let lb = match lb with 
           | (Inl _, _, _) -> failwith "impossible"
           | (Inr l, t, e) -> 
-            //let _ = printfn "Looking up %s\n" l.str in
             let (lb, t, e) = match Tc.Env.try_lookup_val_decl env l with 
               | None -> 
-              //  let _ = printfn "Not found!" in
                 let t = Tc.Util.extract_lb_annotation is_rec env t e in
                 (Inr l, t, e)
               | Some t' -> match t.t with 
                   | Typ_unknown -> 
-                  //  let _ = printfn "Found at type %s!" (Print.typ_to_string t') in
                     (Inr l, t', e)
                   | _ -> 
                     Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation" (Range.string_of_range r);
@@ -923,28 +920,7 @@ and tc_decl env se = match se with
       let lbs' = List.rev lbs' in
       let e = Exp_let((fst lbs, lbs'), Exp_constant(Syntax.Const_unit)) in
       let se = match tc_exp env e with 
-        | Exp_let(lbs, _), c -> (* TODO: Call the solver here! *) 
-          if log env || debug env
-          then snd lbs |> List.iter (function
-              | (Inl _, _, _) -> ()
-              | (Inr l, t, _) ->
-              match Tc.Env.try_lookup_val_decl env l with 
-                | Some _ -> ()
-                | None -> 
-                  let nm = Print.lbname_to_string (Inr l) in
-                  if nm="Microsoft.FStar.Absyn.Visit.visit_simple"
-                  then (Util.print_string <| Util.format2 "let %s : %s\n" (Print.lbname_to_string (Inr l)) (Print.typ_to_string t);
-                        (* let uvt = Util.uvars_in_typ' t in *)
-                        (* (\* let ftvs, _ = Util.freevars_typ t in *\) *)
-                        (* Util.print_string <| Util.format1 "\tuvars={%s}\n" *)
-                        (*     (uvt.uvars_t |> List.map (fun (uv,_) -> Util.string_of_int <| Unionfind.uvar_id uv) |> String.concat ", "); *)
-                        ())
-                  else if nm="Microsoft.FStar.Absyn.Visit.visit_kind_simple" 
-                  then (Util.print_string <| Util.format2 "let %s : %s\n" (Print.lbname_to_string (Inr l)) (Print.typ_to_string t);
-                        let t = Tc.Env.lookup_lid env (lid_of_path (path_of_text "Microsoft.FStar.Absyn.Visit.visit_simple") Syntax.dummyRange) in
-                        let ftvs, _ = Util.freevars_typ t in
-                        Util.print_string <| Util.format2 "\nTypeOf visit_simple is %s\n\tftvs={%s}\n" 
-                            (Print.typ_to_string t) (ftvs |> List.map (fun x -> Print.strBvd x.v) |> String.concat ", ")));
+        | Exp_let(lbs, _), _ -> (* TODO: Call the solver here to check that the inferred type is compatible with any annotation *)
           Sig_let(lbs, r)
         | _ -> failwith "impossible" in
       let env = Tc.Env.push_sigelt env se in 
@@ -998,21 +974,29 @@ and tc_decl env se = match se with
 
 and tc_decls (env:Tc.Env.env) ses = 
   let ses, env = List.fold_left (fun (ses, (env:Tc.Env.env)) se ->
-//  if (env.curmodule.str <> "Prims")
-//  //then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Util.lids_of_sigelt se |> List.map (fun l -> l.str) |> String.concat(", ")))
-//  then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se))
-//  else ();
+  if debug env
+  then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
   let se, env = tc_decl env se in 
-//  if (env.curmodule.str <> "Prims")
-//  then Util.print_string (Util.format1 "Checked sigelt\n\t%s\n" (Print.sigelt_to_string_short se))// (Print.sigelt_to_string se))
-//  else ();
+  if debug env
+  then Util.print_string (Util.format1 "Checked sigelt\n\t%s\n" (Print.sigelt_to_string_short se));
   se::ses, env) ([], env) ses in
   List.rev ses, env 
+
+let get_exports env modul decls = 
+    if modul.is_interface then decls
+    else let exports = Util.find_map (Tc.Env.modules env) (fun m -> 
+            if (m.is_interface && Syntax.lid_equals modul.name m.name)
+            then Some (m.exports)
+            else None) in
+         match exports with 
+            | None -> decls //TODO: filter decls to exclude the private ones, once we add private qualifiers
+            | Some e -> e
 
 let tc_modul env modul = 
   let env = Tc.Env.set_current_module env modul.name in 
   let ses, env = tc_decls env modul.declarations in 
-  let modul = {name=modul.name; declarations=ses; exports=[]; is_interface=modul.is_interface} in (* TODO: handle exports *) 
+  let exports = get_exports env modul ses in
+  let modul = {name=modul.name; declarations=ses; exports=exports; is_interface=modul.is_interface} in 
   let env = Tc.Env.finish_module env modul in
   modul, env
 
