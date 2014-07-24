@@ -21,3 +21,4 @@ update-nuget:
 install-packages:
 	[ -d packages ] || $(MAKE) update-nuget
 	$(NUGET) restore FStar.sln
+	find packages -name '*.exe' -exec chmod +x '{}' ';'
