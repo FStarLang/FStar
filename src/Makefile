@@ -25,21 +25,22 @@ TC=errors.fs tcenv.fsi tcenv.fs normalize.fsi normalize.fs rel.fsi rel.fs tcutil
 TC_SRC=$(addprefix tc/, $(TC))
 
 # --------------------------------------------------------------------
-PLATFORM=
-BUILD_VERSION=
-OTHERFLAGS=--optimize+ --debug:full --nologo -g -O --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
-
-LIB=../lib
-BIN=../bin
-ALL_DLLS=basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll #z3encode.dll
-FSHARP_LIBS=$(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll 
-OTHER_DLLS=
-BASELIBS=$(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
-RUNTIMEFLAGS=-g --nowarn:62
+LIB = ../lib
+BIN = ../bin
 
 # --------------------------------------------------------------------
-DONUGET ?= yes
+PLATFORM       =
+RELEASE       ?= Debug
+BUILD_VERSION  =
+OTHERFLAGS    := --optimize+ --debug:full --nologo -g -O
+OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 
+ALL_DLLS    = basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll #z3encode.dll
+FSHARP_LIBS = $(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll 
+OTHER_DLLS  =
+BASELIBS    = $(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
+
+# --------------------------------------------------------------------
 ifeq ($(PLATFORM), X86)
 override OTHERFLAGS += --platform:x86
 endif
@@ -47,13 +48,23 @@ endif
 ifeq ($(OS),Windows_NT)
 RUNTIME =
 FSC     = fsc
+MSBUILD = msbuild
 else
 RUNTIME = mono
 FSC     = fsharpc
+MSBUILD = xbuild
 endif
 
+MSBUILD := $(MSBUILD) /verbosity:normal
+
 # --------------------------------------------------------------------
-.PHONY: all donuget z3_x86 z3_x64 wc clean tidy check
+FSLYDIR := ../VS/packages/FsLexYacc.6.0.3
+FSYACC  := $(RUNTIME) $(FSLYDIR)/bin/fsyacc.exe
+FSLEX   := $(RUNTIME) $(FSLYDIR)/bin/fslex.exe
+
+# --------------------------------------------------------------------
+.PHONY: all z3_x86 z3_x64 wc clean tidy check
+.PHONY: msbuild msbuild-clean
 
 # --------------------------------------------------------------------
 all: $(BIN)/fstar.exe
@@ -68,13 +79,21 @@ z3_x64:
 	cp $(BIN)/z3.x64.dll $(BIN)/z3.dll
 
 # --------------------------------------------------------------------
+msbuild:
+	$(MAKE) -C ../VS install-packages
+	$(MSBUILD) ../VS/FStar.sln
+
+msbuild-clean:
+	$(MSBUILD) /t:clean ../VS/FStar.sln
+
+# --------------------------------------------------------------------
 parser/parse.fs: parser/parse.fsy
 	$(MAKE) -C ../VS install-packages
-	$(RUNTIME) ../VS/packages/FsLexYacc.6.0.3/bin/fsyacc.exe --module Microsoft.FStar.Parser.Parse $<
+	$(FSYACC) --module Microsoft.FStar.Parser.Parse $<
 
 parser/lex.fs: parser/lex.fsl
 	$(MAKE) -C ../VS install-packages
-	$(RUNTIME) ../VS/packages/FsLexYacc.6.0.3/bin/fslex.exe --unicode $<
+	$(FSLEX) --unicode $<
 
 BASIC_DEPS=
 $(BIN)/basic.dll: $(BASIC_DEPS) $(BASIC_SRC)
@@ -131,4 +150,5 @@ tidy:
 	rm -f $(BIN)/basic.dll
 
 clean:
-	rm -rf *.exe $(addprefix $(BIN)/, $(ALL_DLLS) fstar.exe) *~ *res $(BIN)/*.pdb  $(BIN)/queries
+	rm -rf *.exe $(addprefix $(BIN)/, $(ALL_DLLS) FStar.exe) *~ *res
+	rm -rf $(BIN)/*.pdb  $(BIN)/*.mdb $(BIN)/queries
