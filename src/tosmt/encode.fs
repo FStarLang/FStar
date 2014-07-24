@@ -15,111 +15,23 @@
 *)
 #light "off"
  
-module Microsoft.FStar.Z3Encoding.EncodingDT
+module Microsoft.FStar.ToSMT.Encode
 
 open Microsoft.FStar
-open Z3Encoding.Env
-open Z3Encoding.BasicDT
-open Microsoft.Z3
-open Util
-open Absyn
+open Microsoft.FStar.Util
+open Microsoft.FStar.Absyn
+open Microsoft.FStar.Absyn.Syntax
 open Term
-open Profiling 
-open DecodeTyp
-open KindAbbrevs
 
-let isQuery = ref false
-exception CatchMe of string * Range.range
+type vres = {term:term; 
+             aux:decls}
 
-type config = {skip_pf:bool;
-               subterm_typing:bool}
-let config = {skip_pf=true;
-              subterm_typing=false}
-type vres        = {term:tm; 
-                    subterm_phi:list<phi>}
 let vres t = {term=t; subterm_phi=[]}
 let vresphi t phi = {term=t; subterm_phi=phi}
 type res        = {term:tm; 
                    binding_phi:option<phi>}
 
-type transenv = transenv<residue>
 
-let strip tenv top = 
-  let rec strip tenv t =
-    if AbsynUtils.is_pf_typ t 
-    then strip tenv (AbsynUtils.strip_pf_typ t)
-    else 
-      let t = compress t in 
-        match t.v with
-          | Typ_meta(Meta_alpha t) -> 
-              strip tenv (AbsynUtils.alpha_fast t)
-                
-          | Typ_ascribed(t, _) -> strip tenv t
-              
-          | Typ_btvar btv -> 
-              if btv_not_bound tenv btv.v then 
-                (match lookup_tsubst tenv btv.v with
-                   | None -> 
-                       (match lookupPendingSubst tenv btv.v with 
-                          | None -> 
-                              (* let _ = pr "Env is \n%s\n" (strTenv tenv) in  *)
-                                raise (Z3Encoding (spr "In type %s: Bound tvar not found: %s :: %s\n" (Pretty.strTyp top) (strBvd btv.v) (Pretty.strKind t.sort)))
-                          | Some t -> strip tenv t)
-                   | Some t -> strip tenv t)
-              else t
-                
-          | Typ_const(fv, _) ->
-              (match Tcenv.lookup_typ_abbrev tenv.tcenv fv with 
-                 | None -> t
-                 | Some t' -> 
-                     let t'' = alpha_convert t' in 
-                       (* let _ = pr "%s expanded to %s\n" (t.ToString()) (t''.ToString()) in  *)
-                       strip tenv t'')
-
-          | _ -> t in 
-    strip tenv top
-
-(* let norm tenv top =  *)
-let rec norm tenv t = 
-  let t = strip tenv t in 
-    match t.v with 
-      | Typ_app(t1,t2) ->
-          let tenv, t1 = norm tenv t1 in
-            (match t1.v with
-               | Typ_tlam(a, k, body) ->
-                   let tenv, t2 = norm tenv t2 in
-                     if test_btv_not_bound tenv a 
-                     then 
-                       let tenv = push_tsubst tenv (a,t2) in 
-                         norm tenv body 
-                     else (match alpha_convert t1 with 
-                             | {v=Typ_tlam(a, k, body)} ->
-                                 let tenv = push_tsubst tenv (a,t2) in 
-                                   norm tenv body 
-                             | _ -> raise Impos)
-
-               | _ -> tenv, twithinfo (Typ_app(t1, t2)) t.sort t.p)
-              
-      | Typ_dep(t1,e) ->
-          let tenv, t1 = norm tenv t1 in
-            (match t1.v with
-               | Typ_lam(x, t, body) ->
-                   if test_bvv_not_bound tenv x 
-                   then 
-                     let tenv = push_vsubst tenv (x,e) in 
-                       norm tenv body
-                   else (match alpha_convert t1 with 
-                           | {v=Typ_lam(x,t,body)} ->
-                               let tenv = push_vsubst tenv (x,e) in 
-                                 norm tenv body
-                           | _ -> raise Impos)
-               | _ -> tenv, twithinfo (Typ_dep(t1, e)) t.sort t.p)
-              
-      | _ -> tenv, t 
-          (* in  *)
-          (*   try norm tenv top  *)
-          (*   with Z3Encoding _ when (pr "Normalization of %s failed\n" (Pretty.strTyp top); false) -> raise Impos *)
-      
 let bvvars_equivalent (bvar1:bvvar) (bvar2:bvvar) equivs : bool = 
   let rn1 = (bvar_real_name bvar1).idText in
   let rn2 = (bvar_real_name bvar2).idText in

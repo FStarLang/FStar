@@ -18,8 +18,8 @@ PARSER_SRC=$(addprefix parser/, $(PARSER))
 PARSER_NOGEN=ast.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
 PARSER_NOGEN_SRC=$(addprefix parser/, $(PARSER_NOGEN))
 
-Z3ENCODE=term.fs env.fs basicdt.fs decodetyp.fs encodingdt.fs query.fs
-Z3ENCODE_SRC=$(addprefix z3encode/, $(Z3ENCODE))
+TOSMT=term.fs z3.fs 
+TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
 
 TC=errors.fs tcenv.fsi tcenv.fs normalize.fsi normalize.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 TC_SRC=$(addprefix tc/, $(TC))
@@ -31,7 +31,7 @@ OTHERFLAGS=--optimize+ --debug:full --nologo -g -O --mlcompatibility $(addprefix
 
 LIB=../lib
 BIN=../bin
-ALL_DLLS=basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll #z3encode.dll
+ALL_DLLS=basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll tosmt.dll
 FSHARP_LIBS=$(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll 
 OTHER_DLLS=
 BASELIBS=$(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
@@ -100,9 +100,9 @@ PARSER_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll)
 $(BIN)/parser.dll: $(PARSER_DEPS) $(PARSER_SRC)
 	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(PARSER_DEPS)) $(PARSER_SRC)
 
-Z3ENCODE_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tccore.dll) 
-$(BIN)/z3encode.dll: $(Z3ENCODE_DEPS) $(Z3ENCODE_SRC)
-	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) -r $(BIN)/Microsoft.Z3.dll $(addprefix -r , $(Z3ENCODE_DEPS)) $(Z3ENCODE_SRC)
+TOSMT_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tc.dll) 
+$(BIN)/tosmt.dll: $(TOSMT_DEPS) $(TOSMT_SRC)
+	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TOSMT_DEPS)) $(TOSMT_SRC)
 
 TC_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll)
 $(BIN)/tc.dll: $(TC_DEPS) $(TC_SRC)
