@@ -143,21 +143,38 @@ $(BIN)/fstar.exe: $(FSTAR_DEPS) fstar.fs
 fstar-nodeps: fstar.fs 
 	$(FSC) $(OTHERFLAGS) -o $(BIN)/fstar.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs 
 
-# --------------------------------------------------------------------
-check: $(BIN)/fstar.exe 
-	rm -rf $(STAGE)
-	mkdir -p $(STAGE)/queries
-	cp -r $(addprefix $(BIN)/, $(ALL_DLLS) Prims.dll ProofLib.dll fstar.exe) $(STAGE)/
-	cp -r $(OTHER_DLLS) $(BIN)/FSharp.Compiler.dll $(BIN)/Microsoft.Z3.dll $(BIN)/z3.dll $(STAGE)/
-	$(STAGE)/fstar --fstar_home .. --cert --gadt --prims ../lib/prims_wotuples.f9 certify/coretyping.fst 
-	$(STAGE)/fstar --fstar_home .. --rdcil_z3eq --gadt --genIL --writePrims --odir $(STAGE)/queries --prims certify/prims.fst $(CERTIFY_SRC)
 
 wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(FORMAT_SRC) $(BACKEND_SRC) fstar.fs
 	wc -l $^
 
-tidy: 
-	rm -f $(BIN)/basic.dll
-
 clean:
 	rm -rf *.exe $(addprefix $(BIN)/, $(ALL_DLLS) FStar.exe) *~ *res
 	rm -rf $(BIN)/*.pdb  $(BIN)/*.mdb $(BIN)/queries
+
+# --------------------------------------------------------------------
+# Bootstrapping
+# --------------------------------------------------------------------
+
+STDFILES=st.fst list.fst option.fst string.fst
+STDLIB=$(addprefix ../lib/, $(STDFILES))
+
+BASICFILES=bytes.fst util.fst getoptsimple.fst options.fs range.fst unionfind.fst
+BASIC=$(addprefix basic/, $(BASICFILES))
+SYNTAXFILES=syntax.fs const.fs visit.fs util.fs print.fs
+SYNTAX=$(addprefix absyn/, $(SYNTAXFILES))
+PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fst driver.fs 
+PARSER=$(addprefix parser/, $(PARSERFILES))
+TCFILES=errors.fs tcenv.fsi tcenv.fs normalize.fsi normalize.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
+TC=$(addprefix tc/, $(TCFILES))
+FORMATFILES=format.fsi format.fs
+FORMAT=$(addprefix format/, $(FORMATFILES))
+BACKENDFILES=nameenv.fsi nameenv.fs syntax.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs oaml.fsi ocaml.fs
+BACKEND=$(addprefix backend/, ocaml-backend-stub.fst)
+MAIN=fstar.fs
+BOOT_ALL=$(STDLIB) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(BACKEND) 
+
+boot: $(BOOT_ALL)
+	../bin/fstar.exe --fstar_home .. $^
+
+wc-boot:
+	wc -l $(BOOT_ALL)
