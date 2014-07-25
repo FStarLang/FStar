@@ -38,8 +38,18 @@ BASELIBS=$(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
 RUNTIMEFLAGS=-g --nowarn:62
 
 # --------------------------------------------------------------------
-DONUGET ?= yes
+PLATFORM       =
+RELEASE       ?= Debug
+BUILD_VERSION  =
+OTHERFLAGS    := --optimize+ --debug:full --nologo -g -O
+OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 
+ALL_DLLS    = basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll #z3encode.dll
+FSHARP_LIBS = $(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll 
+OTHER_DLLS  =
+BASELIBS    = $(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
+
+# --------------------------------------------------------------------
 ifeq ($(PLATFORM), X86)
 override OTHERFLAGS += --platform:x86
 endif
@@ -47,13 +57,23 @@ endif
 ifeq ($(OS),Windows_NT)
 RUNTIME =
 FSC     = fsc
+MSBUILD = msbuild
 else
 RUNTIME = mono
 FSC     = fsharpc
+MSBUILD = xbuild
 endif
 
+MSBUILD := $(MSBUILD) /verbosity:normal
+
 # --------------------------------------------------------------------
-.PHONY: all donuget z3_x86 z3_x64 wc clean tidy check
+FSLYDIR := ../VS/packages/FsLexYacc.6.0.3
+FSYACC  := $(RUNTIME) $(FSLYDIR)/bin/fsyacc.exe
+FSLEX   := $(RUNTIME) $(FSLYDIR)/bin/fslex.exe
+
+# --------------------------------------------------------------------
+.PHONY: all z3_x86 z3_x64 wc clean tidy check
+.PHONY: msbuild msbuild-clean
 
 # --------------------------------------------------------------------
 all: $(BIN)/fstar.exe
@@ -68,13 +88,21 @@ z3_x64:
 	cp $(BIN)/z3.x64.dll $(BIN)/z3.dll
 
 # --------------------------------------------------------------------
+msbuild:
+	$(MAKE) -C ../VS install-packages
+	$(MSBUILD) ../VS/FStar.sln
+
+msbuild-clean:
+	$(MSBUILD) /t:clean ../VS/FStar.sln
+
+# --------------------------------------------------------------------
 parser/parse.fs: parser/parse.fsy
 	$(MAKE) -C ../VS install-packages
-	$(RUNTIME) ../VS/packages/FsLexYacc.6.0.3/bin/fsyacc.exe --module Microsoft.FStar.Parser.Parse $<
+	$(FSYACC) --module Microsoft.FStar.Parser.Parse $<
 
 parser/lex.fs: parser/lex.fsl
 	$(MAKE) -C ../VS install-packages
-	$(RUNTIME) ../VS/packages/FsLexYacc.6.0.3/bin/fslex.exe --unicode $<
+	$(FSLEX) --unicode $<
 
 BASIC_DEPS=
 $(BIN)/basic.dll: $(BASIC_DEPS) $(BASIC_SRC)
@@ -115,20 +143,38 @@ $(BIN)/fstar.exe: $(FSTAR_DEPS) fstar.fs
 fstar-nodeps: fstar.fs 
 	$(FSC) $(OTHERFLAGS) -o $(BIN)/fstar.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs 
 
-# --------------------------------------------------------------------
-check: $(BIN)/fstar.exe 
-	rm -rf $(STAGE)
-	mkdir -p $(STAGE)/queries
-	cp -r $(addprefix $(BIN)/, $(ALL_DLLS) Prims.dll ProofLib.dll fstar.exe) $(STAGE)/
-	cp -r $(OTHER_DLLS) $(BIN)/FSharp.Compiler.dll $(BIN)/Microsoft.Z3.dll $(BIN)/z3.dll $(STAGE)/
-	$(STAGE)/fstar --fstar_home .. --cert --gadt --prims ../lib/prims_wotuples.f9 certify/coretyping.fst 
-	$(STAGE)/fstar --fstar_home .. --rdcil_z3eq --gadt --genIL --writePrims --odir $(STAGE)/queries --prims certify/prims.fst $(CERTIFY_SRC)
 
 wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(FORMAT_SRC) $(BACKEND_SRC) fstar.fs
 	wc -l $^
 
-tidy: 
-	rm -f $(BIN)/basic.dll
-
 clean:
-	rm -rf *.exe $(addprefix $(BIN)/, $(ALL_DLLS) fstar.exe) *~ *res $(BIN)/*.pdb  $(BIN)/queries
+	rm -rf *.exe $(addprefix $(BIN)/, $(ALL_DLLS) FStar.exe) *~ *res
+	rm -rf $(BIN)/*.pdb  $(BIN)/*.mdb $(BIN)/queries
+
+# --------------------------------------------------------------------
+# Bootstrapping
+# --------------------------------------------------------------------
+
+STDFILES=st.fst list.fst option.fst string.fst
+STDLIB=$(addprefix ../lib/, $(STDFILES))
+
+BASICFILES=bytes.fst util.fst getoptsimple.fst options.fs range.fst unionfind.fst
+BASIC=$(addprefix basic/, $(BASICFILES))
+SYNTAXFILES=syntax.fs const.fs visit.fs util.fs print.fs
+SYNTAX=$(addprefix absyn/, $(SYNTAXFILES))
+PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fst driver.fs 
+PARSER=$(addprefix parser/, $(PARSERFILES))
+TCFILES=errors.fs tcenv.fsi tcenv.fs normalize.fsi normalize.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
+TC=$(addprefix tc/, $(TCFILES))
+FORMATFILES=format.fsi format.fs
+FORMAT=$(addprefix format/, $(FORMATFILES))
+BACKENDFILES=nameenv.fsi nameenv.fs syntax.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs oaml.fsi ocaml.fs
+BACKEND=$(addprefix backend/, ocaml-backend-stub.fst)
+MAIN=fstar.fs
+BOOT_ALL=$(STDLIB) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(BACKEND) 
+
+boot: $(BOOT_ALL)
+	../bin/fstar.exe --fstar_home .. $^
+
+wc-boot:
+	wc -l $(BOOT_ALL)

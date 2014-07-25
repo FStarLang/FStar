@@ -15,6 +15,9 @@ At the moment:
 
     -- Install mono-complete && fsharp
 
+    -- Import certificates
+       $ mozroots --import --sync
+
     -- Run
       $ source setenv.sh
       $ make -C src
