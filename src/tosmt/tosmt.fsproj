@@ -55,6 +55,11 @@
       <Project>{e8957dbd-58e7-4cf8-9192-e0a9cfb3867e}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <ProjectReference Include="..\tc\tc.fsproj">
+      <Name>tc</Name>
+      <Project>{5bf4af3f-bec2-4cfd-94b7-11a38a031f4b}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="term.fs" />

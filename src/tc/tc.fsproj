@@ -8,7 +8,7 @@
     <ProjectGuid>{5bf4af3f-bec2-4cfd-94b7-11a38a031f4b}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>tccore</RootNamespace>
-    <AssemblyName>tccore</AssemblyName>
+    <AssemblyName>tc</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <Name>tccore</Name>
     <TargetFrameworkProfile />

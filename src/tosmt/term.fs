@@ -486,9 +486,9 @@ let rec termToSmt (info:info) tm =
     else string_of_int i
   | PP(_,q) -> 
     termToSmt info q
-  | BoundV(i,_,_) as tm  -> 
+  | BoundV(i,_,nm) -> 
     if (i < List.length info.binders) 
-    then string_of_either_bvd (List.nth info.binders i)
+    then nm
     else failwith "Bad index for bound variable in formula" 
   | FreeV(x,_)    -> map_pp info x 
   | App(f,_,es) when (es.Length=0) -> map_pp info f
@@ -695,3 +695,43 @@ let eval t    = App("Eval", Arrow(Term_sort, Term_sort), [ t ])
 let valid t   = App("Valid", Arrow(Type_sort, Bool_sort), [ t ])  
 let mk_String_const i = App("String_const", Arrow(Int_sort, String_sort), [ mkInteger i ])
 
+let mk_and_opt p1 p2 = match p1, p2  with
+  | Some p1, Some p2 -> Some (mkAnd(p1, p2))
+  | Some p, None
+  | None, Some p -> Some p
+  | None, None -> None
+    
+let mk_and_opt_l pl = 
+  List.fold_left (fun out p -> mk_and_opt p out) None pl 
+    
+let mk_and_l l = match l with 
+  | [] -> []
+  | hd::tl -> [List.fold_left (fun p1 p2 -> mkAnd(p1,p2)) hd tl]
+
+//let typeOf_tm_t =
+//  let bool_t = mk_Typ_const (typeNameOfLid Const.bool_lid) in
+//  let int_t = mk_Typ_const (typeNameOfLid Const.int_lid) in
+//  let string_t = mk_Typ_const (typeNameOfLid Const.string_lid) in
+//  let heap_t = mk_Typ_const (typeNameOfLid Const.heap_lid) in
+//  let ref_t = mk_Typ_const (typeNameOfLid Const.ref_lid) in
+//  let unit_t = mk_Typ_const (typeNameOfLid Const.unit_lid) in
+//  fun tm t -> 
+//    let eqt = Eq(typeOf tm, t) in 
+//    if termEq t bool_t 
+//    then And(eqt, App(mkTester "BoxBool", Arrow(Term_sort, Bool_sort), [tm]))
+//    else if termEq t int_t
+//    then And(eqt, App(mkTester "BoxInt", Arrow(Term_sort, Bool_sort), [tm]))
+//    else if termEq t string_t 
+//    then And(eqt, App(mkTester "BoxString", Arrow(Term_sort, Bool_sort), [tm]))
+//    else if termEq t unit_t 
+//    then And(eqt, Eq(tm, unitTerm))
+//    else match t.tm with 
+//      | App("Typ_app", _, [s; tt]) -> 
+//        if termEq s ref_t 
+//        then And(eqt, 
+//                 And(App(mkTester "BoxRef", Arrow(Term_sort, Bool_sort), [|tm|]), 
+//                     Eq(kindOf tt, mk_Kind_star())))
+//        else eqt
+//      | _ -> eqt
+//        
+//let kindOf_t_k t k = Eq(kindOf t, k)

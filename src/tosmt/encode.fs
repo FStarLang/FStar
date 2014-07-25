@@ -23,243 +23,17 @@ open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Term
 
-type vres = {term:term; 
-             aux:decls}
-
-let vres t = {term=t; subterm_phi=[]}
-let vresphi t phi = {term=t; subterm_phi=phi}
-type res        = {term:tm; 
-                   binding_phi:option<phi>}
-
-
-let bvvars_equivalent (bvar1:bvvar) (bvar2:bvvar) equivs : bool = 
-  let rn1 = (bvar_real_name bvar1).idText in
-  let rn2 = (bvar_real_name bvar2).idText in
-    rn1=rn2 ||List.exists 
-      (function Inl _ -> false | Inr (b1:bvvdef, b2:bvvdef) -> 
-         let b1n = real_name b1 in
-         let b2n = real_name b2 in
-           (b1n.idText = rn1 && b2n.idText = rn2) ||
-           (b2n.idText = rn1 && b1n.idText = rn2)) equivs
-
-let btvars_equivalent (bvar1:btvar) (bvar2:btvar) equivs : bool = 
-  let rn1 = (bvar_real_name bvar1).idText in
-  let rn2 = (bvar_real_name bvar2).idText in
-    rn1=rn2 ||List.exists 
-      (function Inr _ -> false | Inl (b1:btvdef, b2:btvdef) -> 
-         let b1n = real_name b1 in
-         let b2n = real_name b2 in
-           (b1n.idText = rn1 && b2n.idText = rn2) ||
-           (b2n.idText = rn1 && b1n.idText = rn2)) equivs    
-
-let rec same_typ env equivs t t' : bool = 
-  let tt1 = compress t in 
-  let tt2 = compress t' in 
-    match (tt1.v, tt2.v) with 
-      | Typ_ascribed(_, _), _ 
-      | _, Typ_ascribed(_, _) -> same_typ env equivs (unascribe_typ tt1) (unascribe_typ tt2)
-
-      | Typ_btvar bv1, Typ_btvar bv2 -> btvars_equivalent bv1 bv2 equivs 
-          
-      | Typ_const (fv1,eref1), Typ_const (fv2, eref2) -> fvar_eq fv1 fv2 && eref1=eref2 
-      
-      | Typ_record(fnt_l1, _), Typ_record(fnt_l2, _) -> 
-          if (List.length fnt_l1 =  List.length fnt_l2) then 
-            List.forall2 (fun (fn1,t1) (fn2,t2) -> 
-                            ((Sugar.path_of_lid fn1)=(Sugar.path_of_lid fn2) &&
-                                (same_typ env equivs t1 t2))) fnt_l1 fnt_l2 
-          else false
-            
-      | Typ_fun (nopt, t1, t2),  Typ_fun (nopt', t1', t2') -> (* equivalence of bound term vars handles by tequiv *)
-          (same_typ env equivs t1 t1') &&
-            (match nopt, nopt' with 
-               | None, None 
-               | Some _, None
-               | None, Some _ -> 
-                   same_typ env equivs t2 t2'
-               | Some bvd1, Some bvd2 -> 
-                   let equivs' = (Inr(bvd1, bvd2))::equivs in
-                     same_typ env equivs' t2 t2')
-            
-      | Typ_lam(x, t1, t2), Typ_lam(y, t1', t2') -> 
-          (same_typ env equivs t1 t1') &&
-            (let equivs' = (Inr(x, y))::equivs in
-               same_typ env equivs' t2 t2')
-
-      | Typ_tlam(x, k1, t2), Typ_tlam(y, k1', t2') -> 
-          (same_kind env equivs k1 k1') &&
-            (let equivs' = (Inl(x, y))::equivs in
-               same_typ env equivs' t2 t2')
-            
-      | Typ_univ(bvd1, k, f1, t), Typ_univ(bvd2, k', f2, t') ->                 
-          (same_kind env equivs k k') &&
-            (same_typs env ((Inl(bvd1, bvd2))::equivs) (t::f1) (t'::f2))
-            
-      | Typ_dtuple nt_l, Typ_dtuple nt_l' -> 
-          if (List.length nt_l) = (List.length nt_l') then
-            let rec equiv_dep_list equivs  = function
-                [] -> true
-              | ((n1, t1), (n2, t2))::tl -> 
-                  (same_typ env equivs t1 t2) &&
-                    (match n1, n2 with
-                       | None, None 
-                       | Some _, None
-                       | None, Some _ ->
-                           equiv_dep_list equivs tl
-                       | Some bvd1, Some bvd2 -> 
-                           let equivs' = (Inr(bvd1, bvd2))::equivs in
-                             equiv_dep_list equivs' tl) in 
-            let l = List.zip nt_l nt_l' in
-              equiv_dep_list equivs l 
-          else false
-            
-      | Typ_refine (bvd1, t1, f1, _),  Typ_refine (bvd2, t2, f2, _) -> 
-          (same_typ env equivs t1 t2) && 
-            (same_typ env (Inr(bvd1,bvd2)::equivs) f1 f2)
-
-      | Typ_app (t1, t2), Typ_app (t1', t2') -> 
-          (same_typ env equivs t1 t1') &&
-            (same_typ env equivs t2 t2')
-            
-      | Typ_dep (t1, e1), Typ_dep (t2, e2) -> 
-          (same_typ env equivs t1 t2) &&
-            (same_exp env equivs e1 e2)
-        
-      | Typ_meta(Meta_alpha t), _ ->     
-          same_typ env equivs (alpha_convert t) tt2
-      | t2, Typ_meta(Meta_alpha t) ->
-          same_typ env equivs tt1 (alpha_convert t) 
-            
-      | Typ_meta(Meta_pattern(t, _)), _ -> 
-          same_typ env equivs t tt2
-      | _, Typ_meta(Meta_pattern(t, _)) -> 
-          same_typ env equivs tt1 t
-
-      | Typ_meta (Meta_cases tl), Typ_meta (Meta_cases tl') -> 
-          same_typs env equivs tl tl'
-
-      | Typ_unknown, Typ_unknown -> true
-          
-      | Typ_uvar(uv1, _), Typ_uvar(uv2, _) -> Unionfind.equivalent uv1 uv2
-
-      | Typ_affine t1, Typ_affine t2 -> 
-          same_typ env equivs t1 t2
-
-      | _ -> false
-
-and same_typs env equivs tl1 tl2 =  List.forall2 (same_typ env equivs) tl1 tl2
-
-and same_kind env equivs k1 k2 = 
-  match (unbox k1)(* .u *), (unbox k2)(* .u *)with 
-    | Kind_star, Kind_star 
-    | Kind_affine, Kind_affine
-    | Kind_prop, Kind_prop
-    | Kind_erasable, Kind_erasable -> true
-    | Kind_tcon(aopt, k1_1, k1_2), Kind_tcon(bopt, k2_1, k2_2) -> 
-        (same_kind env equivs k1_1 k2_1)  &&
-          (match aopt, bopt with 
-             | Some a, Some b -> 
-                 same_kind env (Inl(a,b)::equivs) k1_2 k2_2
-             | _ -> 
-                 same_kind env equivs k1_2 k2_2)
-
-    | Kind_dcon(xopt, t1, k1), Kind_dcon(yopt, t2, k2) -> 
-        (same_typ env equivs t1 t2)  &&
-          (match xopt, yopt with 
-             | Some x, Some y -> same_kind env (Inr(x,y)::equivs) k1 k2
-             | _ -> same_kind env equivs k1 k2)
-    | _ -> false
-
-        
-and same_exp env equivs e1 e2 = (* only implemented for non-function values *)
-  match e1.v, e2.v with
-    | Exp_bvar bv1, Exp_bvar bv2 -> bvvars_equivalent bv1 bv2 equivs 
-    | Exp_fvar (fv1, eref1), Exp_fvar (fv2, eref2) -> fvar_eq fv1 fv2 && eref1=eref2 
-    | Exp_constant c1, Exp_constant c2 -> Sugar.const_eq c1 c2
-    | Exp_constr_app (v1, tl, _, el), Exp_constr_app (v2, tl2, _, el2) ->  
-        ((fvar_eq v1 v2) &&
-           (List.length tl) = (List.length tl2) &&
-            (List.length el) = (List.length el2) &&
-            (List.forall2 (same_typ env equivs) tl tl2) && 
-            (List.forall2 (same_exp env equivs) el el2)) 
-          
-    | Exp_recd (_, _, _, fne_l_1), Exp_recd (_, _, _, fne_l_2) ->
-        (List.length fne_l_1 = List.length fne_l_2) &&
-          (List.forall2 (fun (f1, e1) (f2,e2) -> 
-                           (Sugar.lid_equals f1 f2) &&
-                             (same_exp env equivs e1 e2)) fne_l_1 fne_l_2)
-
-    | Exp_proj(e1, fn1), Exp_proj(e2, fn2) ->            
-        (Sugar.lid_equals fn1 fn2) &&
-          (same_exp env equivs e1 e2)
-
-    | Exp_ascribed(_, _, _), _ 
-    | _, Exp_ascribed(_, _, _) -> same_exp env equivs (unascribe e1) (unascribe e2)
-        
-    | _ -> false 
-
-let alphaEquiv env t1 t2 = 
-  same_typ env [] t1 t2 
-
-let flatten_l l = List.flatten l
-let flattenTypAppsAndDeps t = AbsynUtils.flattenTypAppsAndDeps t
-
-let is_unfold_lid (lid:lident) = 
-  let _, l = Util.pfx lid.lid in 
-    l.idText.StartsWith("__Unfold_")
-
-let mkAndOpt p1 p2 = match p1, p2  with
-  | Some p1, Some p2 -> Some (And(p1, p2))
-  | Some p, None
-  | None, Some p -> Some p
-  | None, None -> None
-
-let mkAndOpt_l pl = 
-  List.fold_left (fun out p -> mkAndOpt p out) None pl 
-
-let mkAnd_l l = match l with 
-  | [] -> []
-  | hd::tl -> [List.fold_left (fun p1 p2 -> And(p1,p2)) hd tl]
-  
-let mkConj tenv p l = 
-  if tenv.subterms
-  then List.fold_left (fun out p -> And(out, p)) p l
-  else p
-
-let join phi1 phi2 = mkAnd_l (phi1@phi2)
-
-let is_tfun checksort tctx tenv typ = 
-  match flattenTypAppsAndDeps (strip tenv typ) with 
-    | {v=Typ_const(tc,_)}, args -> 
-        (match tctx.funSymMap.isTfun tc.v with 
-           | None -> None
-           | Some(nm, s, tag) -> 
-               let rec sort_ok s args = match s,args with 
-                 | Arrow(Type_sort, s), (Inl _)::args 
-                 | Arrow(Term_sort, s), (Inr _)::args -> sort_ok s args
-                 | Type_sort, [] 
-                 | Term_sort, [] 
-                 | Bool_sort, [] -> true
-                 | _ -> false in 
-                 if (not checksort) || (sort_ok s args)
-                 then 
-                   (* let _ = pr "++++++++++%s is a logic fun at sort %s with %d args\n" (Pretty.sli tc.v) (strSort s) (List.length args) in  *)
-                     Some (nm, s, tag, args)
-                 else 
-                   let _ = pr "----------%s is at sort %s cannot be applied to %d args\n" (Pretty.sli tc.v) (strSort s) (List.length args) in
-                     None)
-    | _ -> None
-
-let destruct tenv typ lid = 
-  match flattenTypAppsAndDeps (strip tenv typ) with 
-    | {v=Typ_const(tc,_)}, args when Sugar.lid_equals tc.v lid -> Some args
-    | _ -> None
+type res = {
+  term:term;  (* the translation of a knd/typ/exp *)
+  aux:decls;  (* auxiliary top-level assertions in support of the term *)
+  binding_phi:option<term>; (* guard on binders, in case the term appears in binding position *)
+}
 
 let is_builtin lid = 
-    Sugar.lid_equals lid Const.int_lid ||
-    Sugar.lid_equals lid Const.bool_lid ||
-    Sugar.lid_equals lid Const.string_lid ||
-    Sugar.lid_equals lid Const.unit_lid
+    lid_equals lid Const.int_lid ||
+    lid_equals lid Const.bool_lid ||
+    lid_equals lid Const.string_lid ||
+    lid_equals lid Const.unit_lid //NS: ref?
 
 let is_lid_skippable = 
   let skippables = [Const.forall_lid;
@@ -285,7 +59,6 @@ let is_lid_skippable =
                     Const.not_lid;
                     Const.implies_lid;
                     Const.iff_lid;
-                    Const.pf_lid;
                     Const.true_lid;
                     Const.false_lid;
                     Const.add_lid;
@@ -308,203 +81,36 @@ let is_lid_skippable =
                     Const.unfold_lid] in
     fun l -> List.exists (Sugar.lid_equals l) skippables 
 
-                    
-
-let rec isProp k = match k(* .u *)with
-  | Kind_prop
-  | Kind_erasable -> true
-  | Kind_star 
-  | Kind_affine -> false
-  | Kind_dcon(_, _, k) 
-  | Kind_tcon(_, _, k) -> isProp k
-
-
-(* let mkTransenv tctx f = match f with *)
-(*   | Some tcenv ->  *)
-(*       let tenv = mkTransenv f in *)
-(*         Tcenv.fold_env tcenv (fun tenv b -> match b with  *)
-(*                                 | Tcenv.Binding_var(id, t) ->  *)
-(*                                     (match lookupArraySort tctx t with *)
-(*                                        | None -> tenv *)
-(*                                        | Some s ->  *)
-(*                                            let x = mkbvd(id,id) in  *)
-(*                                            let nm = funNameOfBvdef x in *)
-(*                                              push tenv (Var_binding(x, t, s.arr_sort, ref (Some(FreeV(nm, s.arr_sort)))))) *)
-(*                                 | _ -> tenv) tenv *)
-(*   | None -> raise Impos *)
-
-let rec kindToSorts tctx k = match k(* .u *)with
-  | Kind_tcon(_, _, k) -> Type_sort::kindToSorts tctx k
-  | Kind_dcon(_, t, k) -> Term_sort::kindToSorts tctx k
-  | Kind_star
-  | Kind_affine 
-  | Kind_prop
-  | Kind_erasable -> []
-  | _ -> raise Impos 
-
-let arrayDomSortFromTyp tcenv dom = 
-  let fail () = raise (Z3Encoding(spr "Unsupported domain of array: expected int, string, or ref; got %s\n" (Pretty.strTyp dom))) in
-    match flattenTypAppsAndDeps (Tcenv.expand_typ tcenv dom) with 
-      | {v=Typ_const(tc,_)}, _ -> 
-          if Sugar.lid_equals tc.v Const.int_lid then Int_sort
-          else if Sugar.lid_equals tc.v Const.string_lid then String_sort
-          else if Sugar.lid_equals tc.v Const.ref_lid then Ref_sort
-          else fail ()
-      | _ -> fail ()
-
-let debugSortFromTyp tenv t = 
-  let rec aux tenv t = match (strip tenv t).v with 
-    | Typ_fun(xopt, t, t') -> 
-        let s = Term_sort in
-        let tenv = match xopt with None -> tenv | Some x -> push tenv (Var_binding(x, t, s, termref())) in 
-          Arrow(s, aux tenv t')
-    | Typ_univ(a, k, _, t') -> 
-        let tenv = push tenv (Tvar_binding(a, k, Type_sort, termref())) in 
-          Arrow(Type_sort, aux tenv t') 
-    | _ -> Term_sort in
-    aux tenv t
-
-let debugSortFromKind k = 
-  let rec aux b k = match k(* .u *)with 
-    | Kind_dcon(_, t, k') -> 
-        let s = Term_sort in 
-          Arrow(s, aux true k')
-    | Kind_tcon(_, k1, k2) -> 
-        Arrow(aux false k1, aux true k2)
-    | Kind_star
-    | Kind_affine -> Type_sort
-    | Kind_prop -> Bool_sort
-    | Kind_erasable -> if b then Bool_sort else Type_sort in
-    aux true k
+let rec kind_to_sorts k = match Util.compress_kind k with
+  | Kind_tcon(_, _, k) -> Type_sort::kind_to_sorts k
+  | Kind_dcon(_, _, k) -> Term_sort::kind_to_sorts k
+  | Kind_abbrev(_, k) -> kind_to_sorts k
+  | Kind_type -> []
+    
+let rec typ_to_sorts t = match (Util.compress_typ t).t with 
+  | Typ_fun(_, _, t) -> Term_sort::typ_to_sorts t
+  | Typ_univ(_, _, t) -> Type_sort::typToSorts t
+  | _ -> Term_sort
+    
+let arrowSort sorts = 
+  sorts |> List.fold_right (fun k sopt -> match sopt with 
+    | None -> Some k 
+    | Some k' -> Some <| Arrow(k, k')) |> Util.must
 
 let isAtom tenv p = 
-  let pred, args = flattenTypAppsAndDeps p in 
-    match p.sort(* .u *)with 
-      | Kind_prop 
-      | Kind_erasable -> 
-          (match (strip tenv pred).v with 
-             | Typ_const _
-             | Typ_btvar _ 
-             | Typ_uvar _ -> true
-             | _ -> false)
-      | _ -> false
-          
-let getBvd = function Some x -> x | None -> new_bvd None 
-
-let typeOfEq =
-  let bool_t = mk_Typ_const (typeNameOfLid Const.bool_lid) in
-  let int_t = mk_Typ_const (typeNameOfLid Const.int_lid) in
-  let string_t = mk_Typ_const (typeNameOfLid Const.string_lid) in
-  let heap_t = mk_Typ_const (typeNameOfLid Const.heap_lid) in
-  let ref_t = mk_Typ_const (typeNameOfLid Const.ref_lid) in
-  let unit_t = mk_Typ_const (typeNameOfLid Const.unit_lid) in
-    fun tenv tm t -> 
-      let eqt = Eq(typeOf tm, t) in 
-        if termEq t bool_t then
-          And(eqt, App(mkTester "BoxBool", Arrow(Term_sort, Bool_sort), [|tm|]))
-        else if termEq t int_t then
-          And(eqt, App(mkTester "BoxInt", Arrow(Term_sort, Bool_sort), [|tm|]))
-        else if termEq t string_t then
-          And(eqt, App(mkTester "BoxString", Arrow(Term_sort, Bool_sort), [|tm|]))
-        else if termEq t heap_t && Tcenv.is_logic_array tenv Const.heap_lid then
-          And(eqt, App(mkTester "Term_arr_Prims.heap", Arrow(Term_sort, Bool_sort), [|tm|]))
-        else if termEq t unit_t then 
-          And(eqt, Eq(tm, unitTerm))
-        else match t.tm with 
-          | App("Typ_app", _, [| s; tt|]) when termEq s ref_t -> 
-              And(eqt, 
-                  And(App(mkTester "BoxRef", Arrow(Term_sort, Bool_sort), [|tm|]), 
-                      Eq(kindOf tt, mk_Kind_star())))
-          | _ -> eqt
-
-let mkTypeOf tenv tm_opt t  = 
-  match tm_opt with 
-    | None -> None
-    | Some tm -> 
-        try 
-          Some (typeOfEq tenv.tcenv tm t)
-        with Bad msg as e -> 
-          pr "Bad %s\n" msg;
-          pr "While mkTypeOf %s %s\n" (tm.ToString()) (t.ToString());
-          pr "LHS sort = %A\n" tm.tmsort;
-          pr "RHS sort = %A\n" t.tmsort;
-          raise e
-                
-let mkKindOf tm_opt k = 
-  match tm_opt with 
-    | None -> None
-    | Some tm -> Some (Eq(kindOf tm, k))
-
-let add_bvar_mapping bvar nm h : STR<unit>  =
-  let p, h = incrCtr h in 
-  let tm = mkTermConstant p in 
-  let op = Assume(Eq(FreeV(nm, Term_sort), tm), None, AName (spr "mapping %s" nm)) in 
-  let _, h = addOp op h in 
-    internBvar bvar tm [op] h
-
-let add_fvar_mapping fvar nm h : STR<unit> =
-  let p, h = incrCtr h in 
-  let tm = mkTermConstant p in 
-  let op = Assume(Eq(FreeV(nm, Term_sort), tm), None, AName (spr "mapping %s" nm)) in 
-  let _, h = addOp op h in 
-    internFvar fvar tm [op] h
+  let pred, args = flatten_typ_apps p in 
+  match p.sort with 
+    | Kind_type -> 
+      (match pred.v with 
+        | Typ_const _
+        | Typ_btvar _ 
+        | Typ_uvar _ -> true
+        | _ -> false)
+    | _ -> false
       
-let newTermConstant (h:opState) : STR<tm> =
-  let p, _ = incrCtr h in 
-  let tm = mkTermConstant p in 
-    tm, h
-
-let newStringConstant (h:opState) : STR<tm> =
-  let p, _ = incrCtr h in 
-  let tm = mkStringConstant p in 
-    tm, h
-
-let newFunSym h : STR<tm> =
-  let p, h = incrCtr h in 
-  let fname = spr "fun_%d" p in
-  let op = DeclFun(fname, [| |], Term_sort, None) in 
-  let _, h = addOp op h in 
-    (FreeV(fname, Term_sort), h)
-      
-let newName nm h : STR<tm> = 
-  let p, h = incrCtr h in 
-  let fname = spr "%s_%d" nm p in
-  let op = DeclFun(fname, [| |], Term_sort, None) in 
-  let _, h = addOp op h in 
-    (FreeV(fname, Term_sort), h)
-
-let newPredSym pfx k h : STR<string> = 
-  let p, h = incrCtr h in 
-  let fname = spr "Pred_%s_%d" pfx p in
-  (* let _ = pr "Generating pred sym %s\n" fname in  *)
-  let sorts = kindToSorts h.termctx k in 
-  let op = mkPred fname sorts in 
-  let _, h = addOp op h in 
-    fname, h
-
-let newTypSym kopt pfx h : STR<tm> =
-  let p, h = incrCtr h in 
-  let fname = spr "type_%s_%d" pfx p in
-  let op = DeclFun(fname, [| |], Type_sort, None) in 
-  let _, h = addOp op h in 
-  let tm = FreeV(fname, Type_sort) in
-    match kopt with 
-      | None -> tm, h
-      | Some k -> 
-          let _, h = addOp (Assume(Eq(kindOf tm, k), None, AName (spr "Kinding for uvar %s" (tm.ToString())))) h in
-            tm, h
-
-let lookupNamedType s h : STR<tm> = 
-  match h.st.named_typ_map |> Util.findOpt (fun (s',_) -> s=s') with 
-    | Some (_, t) -> t, h
-    | None -> 
-        let nm = cleanString (Util.unicodeEncoding.GetBytes s) in
-        let t, h = newTypSym None (spr "named_%s" nm) h in 
-        let p, h = incrCtr h in 
-        let tc = mkTypeConstant p in
-        let op = Assume(Eq(t, tc), None, AName "named type eq") in
-        let _, h = addOps [op] h in 
-          t, {h with st={h.st with named_typ_map=(s,t)::h.st.named_typ_map}}
+let getBvd = function 
+  | Some x -> x 
+  | None -> new_bvd None 
 
 (* ******************************************************************************** *)
 (* Encoding core language: kinds, types, terms, formulas                            *)
@@ -530,27 +136,29 @@ let destructConnectives f =
                      (Const.eq2_lid,     twoTerms@twoTypes);
                      (Const.eqA_lid,     twoTerms@[Type_sort]);
                      (Const.reln_lid,    oneType)] in 
-  let rec aux args f lid arity =  match f.v, arity with
+  let rec aux args f lid arity =  match f.t, arity with
     | Typ_app(tc, arg), [t] 
-        when (t=Type_sort && AbsynUtils.is_constructor tc lid) -> Some (lid, Inl arg::args)
+      when (t=Type_sort && Util.is_constructor tc lid) -> 
+      Some (lid, Inl arg::args)
     | Typ_dep(tc, arg), [t] 
-        when (t=Term_sort && AbsynUtils.is_constructor tc lid) -> Some (lid, Inr arg::args)
+      when (t=Term_sort && Util.is_constructor tc lid) -> 
+      Some (lid, Inr arg::args)
     | Typ_app(f, arg), t::farity 
-        when t=Type_sort -> aux (Inl arg::args) f lid farity
+      when t=Type_sort -> 
+      aux (Inl arg::args) f lid farity
     | Typ_dep(f, arg), t::farity 
-        when t=Term_sort -> aux (Inr arg::args) f lid farity
+      when t=Term_sort -> 
+      aux (Inr arg::args) f lid farity
     | _ -> None in
-    Util.find_map connectives (fun (lid, arity) -> aux [] f lid arity)
-
+  Util.find_map connectives (fun (lid, arity) -> aux [] f lid arity)
+    
 let collect_u_quants t = 
   let rec aux out t = 
-    let t' = AbsynUtils.strip_pf_typ t in
-      match AbsynUtils.flattenTypAppsAndDeps t' with
-        | {v = Typ_fun(Some x, t1, t2)}, _ -> aux ((x, t1)::out) t2
-        | {v=Typ_const(tc,_)}, [Inl t1; Inl {v=Typ_lam(x, _, t2)}] 
-            when (Const.is_forall tc.v) -> 
-            aux ((x, t1)::out) t2
-        | _ -> List.rev out, t'
+    match Util.flattenTypAppsAndDeps t' with
+      | {v=Typ_const(tc,_)}, [Inl t1; Inl {v=Typ_lam(x, _, t2)}] 
+        when (Const.is_forall tc.v) -> 
+        aux ((x, t1)::out) t2
+      | _ -> List.rev out, t'
   in aux [] t
 
 let maybeAddHoldsPred k = 
