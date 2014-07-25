@@ -19,7 +19,7 @@
 module Microsoft.FStar.Backends.JS.Ast
 
 (* Type of Javascript program *)
-type t = source_t list 
+type t = list<source_t>
 
 and source_t =
   | JS_Statement of statement_t
@@ -28,29 +28,29 @@ and source_t =
 and statement_t = 
   | JSS_Empty
   | JSS_Debugger
-  | JSS_Return of expression_t option
+  | JSS_Return of option<expression_t>
   | JSS_Throw of expression_t
-  | JSS_Continue of identifier_t option
-  | JSS_Break of identifier_t option
-  | JSS_Try of statement_t * (identifier_t * statement_t) option * statement_t option 
-  | JSS_Block of statement_t list
+  | JSS_Continue of option<identifier_t>
+  | JSS_Break of option<identifier_t>
+  | JSS_Try of statement_t * option<(identifier_t * statement_t)> * option<statement_t> 
+  | JSS_Block of list<statement_t>
   | JSS_Label of identifier_t * statement_t
   | JSS_Expression of expression_t
-  | JSS_Declaration of (identifier_t * expression_t option) list
-  | JSS_If of expression_t * statement_t * statement_t option
+  | JSS_Declaration of list<(identifier_t * option<expression_t>)>
+  | JSS_If of expression_t * statement_t * option<statement_t>
   | JSS_Do of statement_t * expression_t
   | JSS_While of expression_t * statement_t
-  | JSS_For of forinit_t option * expression_t option * expression_t option * statement_t
+  | JSS_For of option<forinit_t> * option<expression_t> * option<expression_t> * statement_t
   | JSS_Forin of forinit_t * expression_t * statement_t
   | JSS_With of expression_t * statement_t
-  | JSS_Switch of expression_t * statement_t list option * (expression_t * statement_t list) list
+  | JSS_Switch of expression_t * option<list<statement_t>> * list<(expression_t * list<statement_t>)>
 
 and forinit_t = 
   | JSF_Expression of expression_t
-  | JSF_Declaration of (identifier_t * expression_t option) list
+  | JSF_Declaration of list<(identifier_t * option<expression_t>)>
 
 and identifier_t = string
-and function_t = identifier_t option * (identifier_t list) * t
+and function_t = option<identifier_t> * list<identifier_t> * t
 
 and object_prop_t = 
   | JSP_Property of string * expression_t
@@ -67,9 +67,9 @@ and expression_t =
   | JSE_String of string
   | JSE_Regexp of (string * string)
   | JSE_Identifier of identifier_t
-  | JSE_Array of expression_t list
-  | JSE_Object of object_prop_t list
-  | JSE_New of expression_t * (expression_t list) option
+  | JSE_Array of list<expression_t>
+  | JSE_Object of list<object_prop_t>
+  | JSE_New of expression_t * option<list<expression_t>>
   | JSE_Typeof of expression_t
   | JSE_Delete of expression_t
   | JSE_Void of expression_t
@@ -83,7 +83,7 @@ and expression_t =
   | JSE_Lnot of expression_t
   | JSE_Bnot of expression_t
   | JSE_Conditional of (expression_t * expression_t * expression_t)
-  | JSE_Sequence of expression_t list
+  | JSE_Sequence of list<expression_t>
   | JSE_Assign of (expression_t * expression_t)
   | JSE_Ashassign of (expression_t * expression_t)
   | JSE_Property of (expression_t * expression_t)
@@ -109,4 +109,4 @@ and expression_t =
   | JSE_Le of (expression_t * expression_t)
   | JSE_Ge of (expression_t * expression_t)
   | JSE_Sequal of (expression_t * expression_t)
-  | JSE_Call of expression_t * expression_t list
+  | JSE_Call of expression_t * list<expression_t>

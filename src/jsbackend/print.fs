@@ -23,8 +23,7 @@ let encode_char (c : char) =
     | 9 -> "\\t"   | 10 -> "\\n"
     | 11 -> "\\v"  | 12 -> "\\f"
     | 8 -> "\\b"   | 47 -> "\\/"  | 13 -> "\\r"
-    | n when n < 0x20 -> sprintf "\\x%02x" cn
-    | _ -> System.String (c, 1)
+    | n -> if n < 32 then sprintf "\\x%02x" cn else sprintf "%c" c
 
 let jstr_escape s = String.collect encode_char s
 
@@ -136,17 +135,17 @@ and pretty_print_exp_gen (commaless:bool) (inless:bool) =
   | JSE_Call(f, l) -> let (s,p) = ppe f in (reduce [pt s (p>1); text "("; (pretty_print_elist l); text ")"],1)
   | JSE_New(e, f) -> let (s,p)=ppe e in (reduce [text "new "; pt s (p>2);
       (match f with Some l->parens (pretty_print_elist l) | None -> empty)], 2)
-  | JSE_Preincr(e) -> let (s,p)=ppe e in (reduce [text "++"; pt s (p>3)], 3)
-  | JSE_Predecr(e) -> let (s,p)=ppe e in (reduce [text "--"; pt s (p>3)], 3)
+  | JSE_Preincr(e) -> una e "++"
+  | JSE_Predecr(e) -> una e "--"
   | JSE_Postincr(e) -> let (s,p)=ppe e in (reduce [pt s (p>3); text "++"], 3)
   | JSE_Postdecr(e) -> let (s,p)=ppe e in (reduce [pt s (p>3); text "--"], 3)
-  | JSE_Plus(e) -> let (s,p)=ppe e in (reduce [text "+"; pt s (p>3)], 3)
-  | JSE_Minus(e) -> let (s,p)=ppe e in (reduce [text "-"; pt s (p>3)], 3)
-  | JSE_Bnot(e) -> let (s,p)=ppe e in (reduce [text "~"; pt s (p>3)], 3)
-  | JSE_Lnot(e) -> let (s,p)=ppe e in (reduce [text "!"; pt s (p>3)], 3)
-  | JSE_Typeof(e) -> let (s,p)=ppe e in (reduce [text "typeof "; pt s (p>3)], 3)
-  | JSE_Delete(e) -> let (s,p)=ppe e in (reduce [text "delete "; pt s (p>3)], 3)
-  | JSE_Void(e) -> let (s,p)=ppe e in (reduce [text "void "; pt s (p>3)], 3)
+  | JSE_Plus(e) -> una e "+"
+  | JSE_Minus(e) -> una e "-"
+  | JSE_Bnot(e) -> una e "~"
+  | JSE_Lnot(e) -> una e "!"
+  | JSE_Typeof(e) -> una e "typeof"
+  | JSE_Delete(e) -> una e "delete"
+  | JSE_Void(e) -> una e "void"
   | JSE_Mod(e,f) -> bin e f 6 3 "%" 4
   | JSE_Divide(e,f) -> bin e f 6 4 "/" 5
   | JSE_Multiply(e,f) -> bin e f 6 6 "*" 6
@@ -174,6 +173,7 @@ and pretty_print_exp_gen (commaless:bool) (inless:bool) =
   | JSE_Ashassign(e,f) -> bin e f 16 17 ">>>=" 17
   | JSE_Sequence(e) -> (pt (pretty_print_elist e) commaless, 18)
   | _ -> failwith "unsupported JS AST tag"
+  and una e op = let (s,p)=ppe e in (reduce [text op; pt s (p>3)], 3)
   and bin e f k1 k2 op pr = let (s1,p1)=ppe e in let (s2,p2)=ppe f in
     (reduce [pt s1 (p1>k1); ws; text op; ws; pt s2 (p2>k2)], pr)
   in fun e -> fst (ppe e)
@@ -188,7 +188,7 @@ and pretty_print_function_decl (decl:bool) ((n,args,b):function_t) = reduce [
   (if decl then text (sprintf "function %s" (match n with Some(i) -> jstr_escape i | None -> "")) else empty);
   parens (pretty_print_elist (List.map (fun s->JSE_Identifier(s)) args));
   (match List.length b with 0 -> text "{}"
-  | _ -> reduce [hardline; lbr; hardline; nest 1 (pretty_print b); text "}"])]
+  | _ -> reduce [hardline; text "{"; hardline; nest 1 (pretty_print b); text "}"])]
 
 and pretty_print_function = pretty_print_function_decl true
 

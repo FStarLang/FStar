@@ -170,8 +170,10 @@ FORMATFILES=format.fsi format.fs
 FORMAT=$(addprefix format/, $(FORMATFILES))
 BACKENDFILES=nameenv.fsi nameenv.fs syntax.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs oaml.fsi ocaml.fs
 BACKEND=$(addprefix backend/, ocaml-backend-stub.fst)
+JSBACKENDFILES=ast.fs translate.fs
+JSBACKEND=$(addprefix jsbackend/, $(JSBACKENDFILES))
 MAIN=fstar.fs
-BOOT_ALL=$(STDLIB) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(BACKEND) 
+BOOT_ALL=$(STDLIB) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(BACKEND) $(JSBACKEND)
 
 boot: $(BOOT_ALL)
 	../bin/fstar.exe --fstar_home .. $^
