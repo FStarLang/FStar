@@ -37,6 +37,40 @@ let min_op_prec = (-1, Infix NonAssoc)
 let max_op_prec = (System.Int32.MaxValue, Infix NonAssoc)
 
 (* -------------------------------------------------------------------- *)
+let infix_prim_ops = [
+    ("op_Addition"       , e_bin_prio_op1   , "+" );
+    ("op_Subtraction"    , e_bin_prio_op1   , "-" );
+    ("op_Equality"       , e_bin_prio_eq    , "=" );
+    ("op_disEquality"    , e_bin_prio_eq    , "<>");
+    ("op_AmpAmp"         , e_bin_prio_and   , "&&");
+    ("op_BarBar"         , e_bin_prio_or    , "||");
+
+    ("op_LessThanOrEqual"   , e_bin_prio_order , "<=");
+    ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
+    ("op_LessThan"          , e_bin_prio_order , "<" );
+    ("op_GreaterThan"       , e_bin_prio_order , ">" );
+]
+
+(* -------------------------------------------------------------------- *)
+let is_prims_ns (ns : list<mlsymbol>) =
+    ns = ["Prims"]
+
+(* -------------------------------------------------------------------- *)
+let as_bin_op ((ns, x) : mlpath) =
+    if is_prims_ns ns then
+        List.tryFind (fun (y, _, _) -> x = y) infix_prim_ops
+    else
+        None
+
+(* -------------------------------------------------------------------- *)
+let is_bin_op (p : mlpath) =
+    as_bin_op p <> None
+
+(* -------------------------------------------------------------------- *)
+let is_uni_op ((ns, x) : mlpath) =
+    is_prims_ns ns && (x = "op_Negation")
+
+(* -------------------------------------------------------------------- *)
 let maybe_paren (outer, side) inner doc =
   let noparens ((pi, fi) as _inner) ((po, fo) as _outer) side =
     (pi > po) ||
@@ -137,10 +171,26 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
         let body = doc_of_expr (min_op_prec, NonAssoc) body in
         combine hardline [doc; reduce1 [text "in"; body]]
 
-    | MLE_App (e, args) ->
-        let e    = doc_of_expr (e_app_prio, ILeft) e in
-        let args = List.map (doc_of_expr (e_app_prio, IRight)) args in
-        maybe_paren outer e_app_prio (reduce1 (e :: args))
+    | MLE_App (e, args) -> begin
+        match e, args with
+        | (MLE_Name p, [e1; e2]) when is_bin_op p ->
+            let (_, prio, txt) = Option.get (as_bin_op p) in
+            let e1  = doc_of_expr (prio, Left ) e1 in
+            let e2  = doc_of_expr (prio, Right) e2 in
+            let doc = reduce1 [e1; text txt; e2] in
+            maybe_paren outer prio doc
+
+        | (MLE_Name p, [e1]) when is_uni_op p ->
+            (* FIXME *)
+            let e1  = doc_of_expr (min_op_prec, NonAssoc) e1 in
+            let doc = reduce1 [text "not"; parens e1] in
+            maybe_paren outer e_app_prio doc
+
+        | _ ->
+            let e    = doc_of_expr (e_app_prio, ILeft) e in
+            let args = List.map (doc_of_expr (e_app_prio, IRight)) args in
+            maybe_paren outer e_app_prio (reduce1 (e :: args))
+    end
 
     | MLE_Fun (ids, body) ->
         let ids  = List.map (fun (x, _) -> text x) ids in
@@ -242,7 +292,7 @@ and doc_of_lets (rec_, lets) =
     let for1 (name, ids, e) =
         let e   = doc_of_expr (min_op_prec, NonAssoc) e in
         let ids = List.map (fun (x, _) -> text x) ids in
-        reduce1 [text (fst name); reduce1 ids; text "="; e] in
+        reduce1 [text (idsym name); reduce1 ids; text "="; e] in
 
     let letdoc = if rec_ then reduce1 [text "let"; text "rec"] else text "let" in
 
@@ -415,7 +465,7 @@ let rec doc_of_mllib (MLLib mllib : mllib) =
     in
 
     let docs = List.map for1 mllib in
-    let docs = List.map (fun x -> reduce[x; hardline; hardline]) docs in
+    let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
 
     reduce docs
 

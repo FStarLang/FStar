@@ -36,9 +36,6 @@
     <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FSharp.Core">
-      <HintPath>..\..\bin\FSharp.Core.dll</HintPath>
-    </Reference>
     <Reference Include="FSharp.PowerPack">
       <HintPath>..\..\bin\FSharp.PowerPack.dll</HintPath>
     </Reference>

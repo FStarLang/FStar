@@ -69,8 +69,10 @@ let lenv_of_mlenv (_ : mlenv) : lenv =
 
 (* -------------------------------------------------------------------- *)
 let lpush (LEnv lenv : lenv) (real : ident) (pp : ident) =
+(* FIXME
     if Map.containsKey real.idText lenv then
         duplicated_local real.idRange (real.idText, pp.idText);
+*)
     let mlid = fresh pp.idText in
     (LEnv (Map.add real.idText mlid lenv), mlid)
 
@@ -159,6 +161,32 @@ let as_tprims (id : lident) : option<tprims> =
         None
 
 (* -------------------------------------------------------------------- *)
+let is_xtuple (x : lident) =
+    if is_prim_ns x.ns then
+        match x.ident.idText with
+        | "MkTuple2" -> Some 2
+        | "MkTuple3" -> Some 3
+        | "MkTuple4" -> Some 4
+        | "MkTuple5" -> Some 5
+        | "MkTuple6" -> Some 6
+        | _          -> None
+    else
+        None
+
+(* -------------------------------------------------------------------- *)
+let is_etuple (e : exp) =
+    let rec aux n e =
+        match Absyn.Util.compress_exp e with
+        | Exp_tapp (e, _) -> aux (n+1) e
+        | Exp_fvar (x, _) -> begin
+            match is_xtuple x.v with
+            | Some k when k = n -> Some k
+            | _ -> None
+        end
+        | _ -> None
+    in aux 0 e
+
+(* -------------------------------------------------------------------- *)
 let mlconst_of_const (rg : range) (sctt : sconst) =
   match sctt with
   | Const_unit         -> MLC_Unit
@@ -236,6 +264,7 @@ let rec mlty_of_ty_core (tenv : tenv) ((rg, ty) : range * typ) =
     | Typ_meta    _ -> unexpected  rg "type-meta"
     | Typ_uvar    _ -> unexpected  rg "type-uvar"
     | Typ_unknown   -> unexpected  rg "type-unknown"
+    | Typ_delayed _ -> unexpected  rg "type-delayed"
 
 (* -------------------------------------------------------------------- *)
 and maybe_named (tenv : tenv) ((rg, ty) : range * typ) =
@@ -327,6 +356,10 @@ let mlscheme_of_ty (rg : range) (ty : typ) : mltyscheme =
 (* -------------------------------------------------------------------- *)
 let rec mlpat_of_pat (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
     match p with
+    | Pat_cons (x, ps) when is_xtuple x = Some (List.length ps) ->
+        let lenv, ps = Util.fold_map (mlpat_of_pat rg) lenv ps in
+        (lenv, MLP_Tuple ps)
+
     | Pat_cons (x, ps) ->
         let lenv, ps = Util.fold_map (mlpat_of_pat rg) lenv ps in
         (lenv, MLP_CTor (mlpath_of_lident x, ps))
@@ -356,6 +389,10 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
     let e = Absyn.Util.compress_exp e in
 
     match Absyn.Util.destruct_app e with
+    | (e, args) when is_etuple e = Some (List.length args) ->
+        let args = List.map (fun (e, _) -> mlexpr_of_expr rg lenv e) args in
+        MLE_Tuple args
+
     | (e, args) when not (List.isEmpty args) ->
         let e    = mlexpr_of_expr rg lenv e in
         let args = List.map (fun (e, _) -> mlexpr_of_expr rg lenv e) args in
@@ -450,8 +487,9 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
             (* FIXME: should only occur after a let-binding *)
             mlexpr_of_expr rg lenv e
 
-        | Exp_app  _ -> unexpected  rg "expr-app"
-        | Exp_uvar _ -> unexpected  rg "expr-uvar"
+        | Exp_app     _ -> unexpected rg "expr-app"
+        | Exp_uvar    _ -> unexpected rg "expr-uvar"
+        | Exp_delayed _ -> unexpected rg "expr-delayed"
     end
 
 (* -------------------------------------------------------------------- *)
@@ -663,7 +701,7 @@ let mlsig_of_sig (mlenv : mlenv) (modx : list<sigelt>) : mlsig =
 
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstar (fmod_ : modul) =
-    let mod_ = mlmod_of_mod (MLEnv ()) fmod_.exports in
+    let mod_ = mlmod_of_mod (MLEnv ()) fmod_.declarations in
     let sig_ = mlsig_of_sig (MLEnv ()) fmod_.declarations in
     (mlpath_of_lident fmod_.name, sig_, mod_)
 

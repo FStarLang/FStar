@@ -94,7 +94,7 @@ let combine (sep : doc) (docs : list<doc>) =
     let fold1 (d1 : doc) (d2 : doc) =
         match d1.node, d2.node with
         | Empty, _     -> d2
-        | _    , Empty -> d2
+        | _    , Empty -> d1
         | _    , _     -> reduce [d1; sep; d2]
 
     in List.fold fold1 empty docs
