@@ -1,0 +1,203 @@
+﻿#light "off"
+
+module Microsoft.FStar.Backends.JS.Print
+
+open Microsoft.FStar.Backends.JS.Ast
+open System
+open System.Text
+open FSharp.Format
+
+let semi = text ";"
+let comma = text ","
+let dot = text "."
+let colon = text ":"
+let lbr = text "["
+let rbr = text "]"
+let ws = break1
+
+let encode_char (c : char) =
+  let cn = (int)c in
+  if cn > 127 then sprintf "\\u%04x" cn
+  else match cn with
+    | 34 -> "\\\"" | 92 -> "\\\\"
+    | 9 -> "\\t"   | 10 -> "\\n"
+    | 11 -> "\\v"  | 12 -> "\\f"
+    | 8 -> "\\b"   | 47 -> "\\/"  | 13 -> "\\r"
+    | n when n < 0x20 -> sprintf "\\x%02x" cn
+    | _ -> System.String (c, 1)
+
+let jstr_escape s = String.collect encode_char s
+
+let rec pretty_print (program:Ast.t) : doc =
+  program 
+  |> List.map (function
+    | JS_Statement(s) -> pretty_print_statement s
+    | JS_FunctionDeclaration(f) -> pretty_print_function f)
+  |> combine hardline
+
+and pretty_print_statement (p:statement_t) : doc =
+  let optind (s:statement_t) = match s with JSS_Block(_) -> (fun x->x) | _ -> nest 1 in 
+  let f = function
+  | JSS_Empty -> semi
+  | JSS_Debugger -> text "debugger;"
+
+  | JSS_Return(e) -> reduce [text "return";
+    (match e with None -> empty
+    | Some v -> reduce [ws; pretty_print_exp v; semi]);
+    semi]
+
+  | JSS_Throw(e) -> reduce [text "throw "; pretty_print_exp e; semi]
+
+  | JSS_Break(i) -> reduce [text "break";
+    (match i with None -> empty | Some v -> cat ws (text v));
+    semi]
+
+  | JSS_Continue(i) -> reduce [text "continue";
+    (match i with None -> empty | Some v -> reduce [ws; text (jstr_escape v)]);
+    semi]
+
+  | JSS_Block(l) -> reduce [text "{"; hardline; nest 1 (pretty_print_statements l); text "}"]
+
+  | JSS_Label(l, s) -> reduce [text (jstr_escape l); text ":"; hardline; (pretty_print_statement s) |> (optind s)]
+
+  | JSS_Expression(e) -> cat (pretty_print_exp e) semi
+
+  | JSS_If(c,t,f) -> reduce [cat1 (text "if") (parens (pretty_print_exp c)); hardline;
+    (pretty_print_statement t) |> (optind t);
+    (match f with None -> empty | Some s -> reduce [text "else";
+      (match s with JSS_If(_) -> ws | _ -> hardline);
+      (pretty_print_statement s) |> (optind s)])]
+
+  | JSS_Do(s,e) -> reduce [text "do"; hardline; (pretty_print_statement s) |> (optind s);
+    text "while"; parens (pretty_print_exp e); semi]
+
+  | JSS_While(e,s) -> reduce [text "while"; parens (pretty_print_exp e); hardline;
+    (pretty_print_statement s) |> (optind s)]
+
+  | JSS_For(i,c,l,s) -> reduce [text "for"; reduce [
+    (match i with None -> empty
+     | Some e -> (match e with JSF_Expression(f) -> pretty_print_exp_il f 
+        | JSF_Declaration(l) -> List.map 
+            (fun (x,vl) -> reduce [text "var"; ws; text (jstr_escape x);
+                (match vl with None -> empty | Some v -> reduce [ws; text "="; ws; pretty_print_exp_cl v])]
+            ) l |> combine comma)
+    ); semi; ws;
+    (match c with None -> empty | Some e -> pretty_print_exp e); semi; ws;
+    (match l with None -> empty | Some e -> pretty_print_exp e)] |> parens;
+    hardline; (pretty_print_statement s) |> (optind s)]
+
+  | JSS_Forin(i,e,s) -> reduce [text "for"; reduce [
+    (match i with JSF_Expression(f) -> pretty_print_exp_il f 
+    | JSF_Declaration(l) -> List.map (fun (x,v) -> reduce [text "var"; ws; text (jstr_escape x);
+        (match v with None->empty | Some v -> reduce [ws; text "="; ws; pretty_print_exp_cl v])])
+    l |> combine comma); ws; colon; ws; pretty_print_exp e] |> parens;
+    hardline; (pretty_print_statement s) |> (optind s)]
+
+  | JSS_With(e,s) -> reduce [text "with"; parens (pretty_print_exp e); hardline; (pretty_print_statement s) |> (optind s)]
+
+  | JSS_Switch(e,def,cases) -> reduce [text "switch"; parens (pretty_print_exp e); hardline;
+      text "{"; hardline; reduce [
+        combine hardline (List.map (fun (e,l)->reduce [text "case "; pretty_print_exp e; colon; hardline; nest 1 (pretty_print_statements l)]) cases);
+        (match def with None -> empty | Some l -> reduce [text "default:"; hardline; nest 1 (pretty_print_statements l)])
+      ] |> nest 1; text "}"]
+
+  | JSS_Try(b,c,f) -> reduce [text "try"; hardline; (pretty_print_statement b);
+      (match c with Some (i,c) -> reduce [text "catch"; parens (text i); hardline; (pretty_print_statement c)]| None -> empty);
+      (match f with Some f -> reduce [text "finally"; hardline; (pretty_print_statement f)] | None -> empty)]
+
+  | JSS_Declaration(l) -> reduce [text "var"; ws; combine comma (List.map
+      (fun (i,v) -> reduce [text (jstr_escape i);
+        (match v with None -> empty
+        | Some v -> reduce [ws; text "="; ws; pretty_print_exp_cl v])]) l); semi]
+
+  in cat (f p) hardline
+
+and pretty_print_statements l = reduce (List.map pretty_print_statement l)
+
+and pt s b = if b then parens s else s
+
+and pretty_print_exp_gen (commaless:bool) (inless:bool) =
+  let rec ppe input = match input with
+  | JSE_This -> (text "this", 0)
+  | JSE_Null -> (text "null", 0)
+  | JSE_Undefined -> (text "undefined", 0)
+  | JSE_Elision -> (text "undefined", 0)
+  | JSE_Bool(b) -> (text (if b then "true" else "false"), 0) 
+  | JSE_Number(n) -> (text (sprintf "%F" n), 0)
+  | JSE_String(s) -> (text (sprintf "\"%s\"" (jstr_escape s)), 0)
+  | JSE_Regexp(r,f) -> (text (sprintf "/%s/%s" (jstr_escape r) f), 0)
+  | JSE_Identifier(id) -> (text (jstr_escape id), 0)
+  | JSE_Array(l) -> (enclose lbr rbr (pretty_print_elist l), 0)
+  | JSE_Object(l) -> ((if List.length l > 0 then reduce [
+    text "{"; hardline; (pretty_print_object l); text "}"] else text "{}"), 0)
+  | JSE_Function(f) -> (parens (pretty_print_function f), 1)
+  | JSE_Dot(e,i) -> let (s,p)=ppe e in (reduce [pt s (p>1); text "."; text (jstr_escape i)], 1)
+  | JSE_Property(e,f) -> let (s,p) = ppe e in let (s1, p1) = ppe f in (reduce [pt s (p>1); enclose lbr rbr s1],1)
+  | JSE_Call(f, l) -> let (s,p) = ppe f in (reduce [pt s (p>1); text "("; (pretty_print_elist l); text ")"],1)
+  | JSE_New(e, f) -> let (s,p)=ppe e in (reduce [text "new "; pt s (p>2);
+      (match f with Some l->parens (pretty_print_elist l) | None -> empty)], 2)
+  | JSE_Preincr(e) -> let (s,p)=ppe e in (reduce [text "++"; pt s (p>3)], 3)
+  | JSE_Predecr(e) -> let (s,p)=ppe e in (reduce [text "--"; pt s (p>3)], 3)
+  | JSE_Postincr(e) -> let (s,p)=ppe e in (reduce [pt s (p>3); text "++"], 3)
+  | JSE_Postdecr(e) -> let (s,p)=ppe e in (reduce [pt s (p>3); text "--"], 3)
+  | JSE_Plus(e) -> let (s,p)=ppe e in (reduce [text "+"; pt s (p>3)], 3)
+  | JSE_Minus(e) -> let (s,p)=ppe e in (reduce [text "-"; pt s (p>3)], 3)
+  | JSE_Bnot(e) -> let (s,p)=ppe e in (reduce [text "~"; pt s (p>3)], 3)
+  | JSE_Lnot(e) -> let (s,p)=ppe e in (reduce [text "!"; pt s (p>3)], 3)
+  | JSE_Typeof(e) -> let (s,p)=ppe e in (reduce [text "typeof "; pt s (p>3)], 3)
+  | JSE_Delete(e) -> let (s,p)=ppe e in (reduce [text "delete "; pt s (p>3)], 3)
+  | JSE_Void(e) -> let (s,p)=ppe e in (reduce [text "void "; pt s (p>3)], 3)
+  | JSE_Mod(e,f) -> bin e f 6 3 "%" 4
+  | JSE_Divide(e,f) -> bin e f 6 4 "/" 5
+  | JSE_Multiply(e,f) -> bin e f 6 6 "*" 6
+  | JSE_Add(e,f) -> bin e f 7 7 "+" 7
+  | JSE_Sub(e,f) -> bin e f 7 7 "-" 7
+  | JSE_Lsh(e,f) -> bin e f 8 7 "<<" 8
+  | JSE_Rsh(e,f) -> bin e f 8 7 ">>" 8
+  | JSE_Ash(e,f) -> bin e f 8 7 ">>>" 8
+  | JSE_Lt(e,f) -> bin e f 9 8 "<" 9
+  | JSE_Le(e,f) -> bin e f 9 8 "<=" 9
+  | JSE_Ge(e,f) -> bin e f 9 8 ">=" 9
+  | JSE_Gt(e,f) -> bin e f 9 8 ">" 9
+  | JSE_In(e,f) -> bin e f 9 8 "in" 9
+  | JSE_Instanceof(e,f) -> bin e f 9 8 "instanceof" 9
+  | JSE_Equal(e,f) -> bin e f 10 9 "==" 10
+  | JSE_Sequal(e,f) -> bin e f 10 9 "===" 10
+  | JSE_Band(e,f) -> bin e f 11 10 "&" 11
+  | JSE_Bxor(e,f) -> bin e f 12 11 "^" 12
+  | JSE_Bor(e,f) -> bin e f 13 12 "|" 13
+  | JSE_Land(e,f) -> bin e f 14 13 "&&" 14
+  | JSE_Lor(e,f) -> bin e f 15 14 "||" 15
+  | JSE_Conditional(c,e,f) -> let (s1,p1)=ppe c in let (s2,p2)=ppe e in let (s3,p3)=ppe f in
+    (reduce [pt s1 (p1>16); text " ? "; pt s2 (p2>16); text " : " ; pt s3 (p3>16)], 16)
+  | JSE_Assign(e,f) -> bin e f 16 17 "=" 17
+  | JSE_Ashassign(e,f) -> bin e f 16 17 ">>>=" 17
+  | JSE_Sequence(e) -> (pt (pretty_print_elist e) commaless, 18)
+  | _ -> failwith "unsupported JS AST tag"
+  and bin e f k1 k2 op pr = let (s1,p1)=ppe e in let (s2,p2)=ppe f in
+    (reduce [pt s1 (p1>k1); ws; text op; ws; pt s2 (p2>k2)], pr)
+  in fun e -> fst (ppe e)
+
+and pretty_print_exp : expression_t -> doc = pretty_print_exp_gen false false
+and pretty_print_exp_cl = pretty_print_exp_gen true false
+and pretty_print_exp_il = pretty_print_exp_gen false true
+
+and pretty_print_elist l = List.map pretty_print_exp_cl l |> combine comma
+
+and pretty_print_function_decl (decl:bool) ((n,args,b):function_t) = reduce [
+  (if decl then text (sprintf "function %s" (match n with Some(i) -> jstr_escape i | None -> "")) else empty);
+  parens (pretty_print_elist (List.map (fun s->JSE_Identifier(s)) args));
+  (match List.length b with 0 -> text "{}"
+  | _ -> reduce [hardline; lbr; hardline; nest 1 (pretty_print b); text "}"])]
+
+and pretty_print_function = pretty_print_function_decl true
+
+and pretty_print_object = function
+  | h::t -> let p = match h with
+    | JSP_Property(p, v) -> cat1 (text (sprintf "\"%s\":" (jstr_escape p))) (pretty_print_exp_cl v)
+    | JSP_Getter(p,f) -> cat (text ("get "^(jstr_escape p))) (pretty_print_function_decl false f)
+    | JSP_Setter(p,f) -> cat (text ("set "^(jstr_escape p))) (pretty_print_function_decl false f)
+    in reduce [p; (if List.length t>0 then comma else empty); hardline; pretty_print_object t]
+  | [] -> empty
+
+
