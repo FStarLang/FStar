@@ -62,6 +62,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="encode.fs" />
     <Compile Include="term.fs" />
     <Compile Include="z3.fs" />
   </ItemGroup>

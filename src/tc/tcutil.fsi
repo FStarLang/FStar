@@ -35,6 +35,7 @@ val check_and_ascribe : env -> exp -> typ -> typ -> exp * Rel.guard
 val pat_as_exps: env -> pat -> list<exp>
 val generalize: env -> list<(exp*comp)> -> (list<(exp*comp)>)
 val maybe_instantiate : env -> exp -> typ -> (exp * comp)
+val destruct_comp: comp_typ -> (typ * typ * typ)
 val destruct_function_typ : env -> typ -> option<bvvdef> -> option<exp> -> bool -> bool -> (typ * option<exp>)
 val destruct_poly_typ: env -> typ -> exp -> typ -> (typ*exp) 
 val destruct_tcon_kind: env -> knd -> typ -> bool -> (knd*typ)

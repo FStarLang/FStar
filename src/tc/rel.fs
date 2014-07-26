@@ -501,6 +501,6 @@ let trivial_subtype env eopt t1 t2 =
       let r = match eopt with 
         | None -> Tc.Env.get_range env
         | Some e -> range_of_exp e (Tc.Env.get_range env) in
-      raise (Error(Tc.Errors.basic_type_error eopt t2 t1 ^ (Util.format1 " guard is %s " (match f with None -> "none" | Some (Guard g) -> Print.typ_to_string g)), r))
+      raise (Error(Tc.Errors.basic_type_error eopt t2 t1, r))
 
 let sub_comp env c1 c2 = crel SUB env c1 c2
