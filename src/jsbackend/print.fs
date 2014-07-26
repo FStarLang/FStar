@@ -172,7 +172,6 @@ and pretty_print_exp_gen (commaless:bool) (inless:bool) =
   | JSE_Assign(e,f) -> bin e f 16 17 "=" 17
   | JSE_Ashassign(e,f) -> bin e f 16 17 ">>>=" 17
   | JSE_Sequence(e) -> (pt (pretty_print_elist e) commaless, 18)
-  | _ -> failwith "unsupported JS AST tag"
   and una e op = let (s,p)=ppe e in (reduce [text op; pt s (p>3)], 3)
   and bin e f k1 k2 op pr = let (s1,p1)=ppe e in let (s2,p2)=ppe f in
     (reduce [pt s1 (p1>k1); ws; text op; ws; pt s2 (p2>k2)], pr)
