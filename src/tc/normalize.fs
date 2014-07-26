@@ -89,8 +89,10 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
 
   let wk = withkind cfg.code.k in
   let config = {cfg with code=Util.compress_typ cfg.code} in
-  match config.code.t with 
-    | Typ_uvar(uv, k) ->
+  match config.code.t with
+    | Typ_delayed _ -> failwith "Impossible"
+     
+    | Typ_uvar _ -> 
       rebuild config 
 
     | Typ_const fv ->
@@ -188,14 +190,8 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
       let c = sn tcenv ({config with code=t}) in
       {c with code=wk <| Typ_meta(Meta_pattern(c.code, ps))}
     
-    | Typ_meta(Meta_cases tl) -> 
-      let cases = snl tcenv (tl |> List.map (fun t -> {config with code=t; stack=[]})) in
-      let t = Typ_meta(Meta_cases (cases |> List.map (fun c -> c.code))) in
-      {config with code=wk <| t}
-    
     | Typ_meta(Meta_named _)    
     | Typ_meta(Meta_pos _) 
-    | Typ_meta(Meta_tid _)
     | Typ_unknown -> failwith "impossible"
             
 and snl tcenv configs : list<config<typ>> =
@@ -247,6 +243,7 @@ and snl_either tcenv config args =
 
 and snk tcenv (cfg:config<knd>) : config<knd> =
   match Util.compress_kind cfg.code with
+    | Kind_delayed _ -> failwith "Impossible"
     | Kind_uvar _ 
     | Kind_type
     | Kind_effect -> cfg
@@ -280,6 +277,7 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
   let e = compress_exp cfg.code in
   let config = with_code cfg e in
   match e with 
+    | Exp_delayed _ -> failwith "Impossible"
     | Exp_fvar _ 
     | Exp_constant _
     | Exp_uvar _  -> config

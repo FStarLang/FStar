@@ -50,21 +50,11 @@ let rec strSort = function
   | Arrow(s1, s2) -> format2 "(%s -> %s)" (strSort s1) (strSort s2)
   | Ext s -> s
 
-type assumptionId =
-  | ABindingVar    of int
-  | ABindingMatch  of int
-  | AName          of string
-
-let strOfAssumptionId = function
-  | ABindingVar i     -> format1 "ABindingVar %s" <| string_of_int i
-  | ABindingMatch i   -> format1 "ABindingMatch %s" <| string_of_int i
-  | AName s           -> s
-
 type caption = string
 type var = int
 type withsort<'a> = {tm:'a; tmsort:sort}
 
-type term' =
+type term =
   | True
   | False
   | Funsym     of string
@@ -90,21 +80,19 @@ type term' =
   | Minus      of term
   | Mod        of term * term
   | IfThenElse of term * term * term * option<term>
-  | Forall     of list<pat> * list<sort> * list<(either<btvdef,bvvdef> * termref)> * term 
-  | Exists     of list<pat> * list<sort> * list<(either<btvdef,bvvdef> * termref)> * term 
+  | Forall     of list<pat> * list<(string * sort)> * term 
+  | Exists     of list<pat> * list<(string * sort)> * term 
   | Select     of term * term 
   | Update     of term * term * term
   | ConstArray of string * sort * term 
   | Cases      of list<term>
-  | Function   of int * sort * term
-and term   = withsort<term'>
-and termref = ref<option<term>>
+  | Function   of int * (string * sort) * term
 and pat = term
 
-type binders = sort list
+type binders = list<(string * sort)>
 let rec fold_term (f:binders -> 'b -> term -> 'b) binders (b:'b) (t:term) : 'b = 
   let b = f binders b t in 
-  match t.tm with 
+  match t with 
     | Funsym _
     | True _
     | False _
@@ -133,8 +121,8 @@ let rec fold_term (f:binders -> 'b -> term -> 'b) binders (b:'b) (t:term) : 'b =
     | Select(t1, t2) -> List.fold_left (fold_term f binders) b [t1;t2]
     | IfThenElse(t1, t2, t3, None) 
     | Update(t1, t2, t3) -> List.fold_left (fold_term f binders) b [t1;t2;t3]
-    | Forall(pats, binders', _, body) 
-    | Exists(pats, binders', _, body) -> 
+    | Forall(pats, binders', body) 
+    | Exists(pats, binders', body) -> 
       let binders = binders@binders' in 
       List.fold_left (fold_term f binders) b (pats@[body])
     | Cases tms -> 
@@ -143,7 +131,7 @@ let rec fold_term (f:binders -> 'b -> term -> 'b) binders (b:'b) (t:term) : 'b =
       fold_term f (binders@[sort]) b body
 
 let free_bvars t = 
-  let folder binders (bvars:list<(int * term)>) t = match t.tm with 
+  let folder binders (bvars:list<(int * term)>) t = match t with 
     | BoundV(i, _, _) -> 
       let level = i - List.length binders in 
       if level >= 0 && not (List.exists (fun (l', _) -> l'=level) bvars)
@@ -151,152 +139,6 @@ let free_bvars t =
       else bvars
     | _ -> bvars in 
   fold_term folder [] [] t
-
-let termref () = ref None
-let asBool tm = {tm=tm; tmsort=Bool_sort}
-let asInt tm = {tm=tm; tmsort=Int_sort}
-let asType tm = {tm=tm; tmsort=Type_sort}
-let asTerm tm = {tm=tm; tmsort=Term_sort}
-let withSort s tm = {tm=tm; tmsort=s}
-let asKind tm = {tm=tm; tmsort=Kind_sort}
-
-let mkBoundV (i,j,x) = withSort j <| BoundV(i,j,x)
-let mkTrue = asBool True
-let mkFalse = asBool False
-let mkInteger i = asInt <| Integer i
-let mkPP (a,p) = withSort a.tmsort <| PP(a,p)
-let mkFreeV (n,s) = withSort s <| FreeV(n,s)
-let mkNot t = asBool <| Not t
-let mkFunction(x,s,t) = withSort (Arrow(s,t.tmsort)) <| Function(x,s,t)
-let arrowSort result tms = List.fold_right (fun tm out -> Arrow(tm.tmsort, out)) tms result
-
-#if CHECKED
-let And(t1,t2) = 
-  if t1.tmsort<>Bool_sort || t2.tmsort<>Bool_sort 
-  then raise (Bad(spr "Expected bool sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asBool <| And(t1,t2)
-
-let Or(t1,t2) = 
-  if t1.tmsort<>Bool_sort || t2.tmsort<>Bool_sort 
-  then raise (Bad(spr "Expected bool sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asBool <| Or(t1,t2) 
-let Imp(t1,t2) = 
-  if t1.tmsort<>Bool_sort || t2.tmsort<>Bool_sort 
-  then raise (Bad(spr "Expected bool sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asBool <| Imp(t1,t2)
-let Iff(t1,t2) =   
-  if t1.tmsort<>Bool_sort || t2.tmsort<>Bool_sort 
-  then raise (Bad(spr "Expected bool sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asBool <| Iff(t1,t2) 
-let Eq(t1,t2) = 
-  if t1.tmsort<>t2.tmsort
-  then raise (Bad(spr "Expected equal sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asBool <| Eq(t1,t2)
-let LT(t1,t2) = 
-  if t1.tmsort<>Int_sort || t2.tmsort<>Int_sort 
-  then raise (Bad(spr "Expected int sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asBool <| LT(t1,t2)
-let LTE(t1,t2) = 
-  if t1.tmsort<>Int_sort || t2.tmsort<>Int_sort 
-  then raise (Bad(spr "Expected int sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asBool <| LTE(t1,t2)
-let GT(t1,t2) = 
-  if t1.tmsort<>Int_sort || t2.tmsort<>Int_sort 
-  then raise (Bad(spr "Expected int sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asBool <| GT(t1,t2)
-let GTE(t1,t2) = 
-  if t1.tmsort<>Int_sort || t2.tmsort<>Int_sort 
-  then raise (Bad(spr "Expected int sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asBool <| GTE(t1,t2)
-let Minus(t1) = 
-  if t1.tmsort<>Int_sort
-  then raise (Bad(spr "Expected int sorts; got %A" t1.tmsort))
-  else asInt <| Minus(t1)
-let Add(t1,t2) = 
-  if t1.tmsort<>Int_sort || t2.tmsort<>Int_sort 
-  then raise (Bad(spr "Expected int sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asInt <| Add(t1,t2)
-let Sub(t1,t2) = 
-  if t1.tmsort<>Int_sort || t2.tmsort<>Int_sort 
-  then raise (Bad(spr "Expected int sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asInt <| Sub(t1,t2)
-let Mul(t1,t2) = 
-  if t1.tmsort<>Int_sort || t2.tmsort<>Int_sort 
-  then raise (Bad(spr "Expected int sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asInt <| Mul(t1,t2)
-let Div(t1,t2) = 
-  if t1.tmsort<>Int_sort || t2.tmsort<>Int_sort 
-  then raise (Bad(spr "Expected int sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asInt <| Div(t1,t2)
-let Mod(t1,t2) = 
-  if t1.tmsort<>Int_sort || t2.tmsort<>Int_sort 
-  then raise (Bad(spr "Expected int sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else asInt <| Mod(t1,t2)
-let IfThenElse(t1,t2,t3,t4) = 
-  if t1.tmsort<>Bool_sort || (t2.tmsort <> t3.tmsort) 
-  then raise (Bad(spr "Expected int sorts; got %A,%A" t1.tmsort t2.tmsort))
-  else withSort t3.tmsort <| IfThenElse(t1,t2,t3,t4)
-let Forall(p,s,x,t) = 
-  if t.tmsort <> Bool_sort
-  then raise (Bad(spr "Expected bool sort; got %A" t.tmsort))
-  else asBool <| Forall(p,s,x,t)
-let Exists(p,s,x,t) = 
-  if t.tmsort <> Bool_sort
-  then raise (Bad(spr "Expected bool sort; got %A" t.tmsort))
-  else asBool <| Exists(p,s,x,t)
-let Update(t1,t2,t3) = 
-  match t1.tmsort with
-    | Array(s1,s2) when t2.tmsort=s1 && t3.tmsort=s2 -> 
-        withSort t1.tmsort <| Update(t1,t2,t3)
-    | _ -> raise (Bad(spr "Ill-sorted update term: %A, %A, %A" t1.tmsort t2.tmsort t3.tmsort))
-let ConstArray(n,s,t) = withSort (Array(s,t.tmsort)) <| ConstArray(n,s,t)
-let Cases tl = 
-  List.iter (fun t -> if t.tmsort <> Bool_sort then raise (Bad (spr "Expected Bool_sort in cases; got %A;\n %s\n" t.tmsort (t.ToString()))) else ()) tl;
-  asBool <| Cases tl
-
-let Application(t1,t2) = match t1.tmsort with
-    | Arrow(s1, s2) when s1=t2.tmsort -> withSort s2 <| Application(t1,t2)
-    | _ -> raise (Bad(spr "Expected sort Arrow(%A,_) got %A" t2.tmsort t1.tmsort))
-let Appl(f,s,tms) = 
-  let sort  = tms |> List.fold_left (fun out {tmsort=s} -> match out with 
-                        | Arrow(s1, out) when s1=s -> out
-                        | _ -> raise (Bad(spr "Expected sort Arrow(%A, _); got %A" s out))) s  in
-    withSort sort <| App(f,s,tms)
-let App(f,s,tms) =
-   let sort  = tm) |> List.fold_left (fun out {tmsort=s} -> match out with 
-                        | Arrow(s1, out) when s1=s -> out
-                        | _ -> raise (Bad(spr "Expected sort Arrow(%A, _); got %A" s out))) s  in
-    withSort sort <| App(f,s,tms)
-let Select(t1,t2) = match t1.tmsort with 
-    | Array(s1,s2) when s1=t2.tmsort -> withSort s2 <| Select(t1,t2)
-    | _ -> raise (Bad(spr "Expected sort Arrary(%A, _); got %A" t2.tmsort t1.tmsort))
-#else
-let unsort = Ext "Un"
-let withSort' x = withSort unsort x
-let mkAnd(t1,t2) = withSort' <| And(t1,t2)
-let mkOr(t1,t2) =  withSort' <| Or(t1,t2) 
-let mkImp(t1,t2) = withSort' <| Imp(t1,t2)
-let mkIff(t1,t2) = withSort' <| Iff(t1,t2) 
-let mkEq(t1,t2) = withSort' <| Eq(t1,t2)
-let mkLT(t1,t2) = withSort' <| LT(t1,t2)
-let mkLTE(t1,t2) = withSort' <| LTE(t1,t2)
-let mkGT(t1,t2) =  withSort' <| GT(t1,t2)
-let mkGTE(t1,t2) = withSort' <| GTE(t1,t2)
-let mkMinus(t1) = withSort' <| Minus(t1)
-let mkAdd(t1,t2) = withSort' <| Add(t1,t2)
-let mkSub(t1,t2) = withSort' <| Sub(t1,t2)
-let mkMul(t1,t2) = withSort' <| Mul(t1,t2)
-let mkDiv(t1,t2) = withSort' <| Div(t1,t2)
-let mkMod(t1,t2) = withSort' <| Mod(t1,t2)
-let mkIfThenElse(t1,t2,t3,t4) = withSort' <| IfThenElse(t1,t2,t3,t4)
-let mkForall(p,s,x,t) = withSort' <| Forall(p,s,x,t)
-let mkExists(p,s,x,t) = withSort' <| Exists(p,s,x,t)
-let mkUpdate(t1,t2,t3) = withSort' <| Update(t1,t2,t3)
-let mkConstArray(n,s,t) = withSort' <| ConstArray(n,s,t)
-let mkCases tl = withSort' <| Cases tl
-let mkApp(f,s,tms) = withSort' <| App(f,s,tms)
-let mkSelect(t1,t2) = withSort' <| Select(t1,t2)
-#endif
 
 type constr = {cname:string;
                tester:string;
@@ -310,7 +152,7 @@ type decl =
   | DefPred    of string * list<sort> * option<caption>
   | DeclFun    of string * list<sort> * sort * option<caption>
   | DefineFun  of string * list<(string * sort)> * sort * term * option<caption>
-  | Assume     of term   * option<caption> * assumptionId
+  | Assume     of term   * option<caption>
   | Query      of term
   | Comment    of caption
   | Echo       of string
@@ -318,7 +160,7 @@ type decl =
 type decls = list<decl>
 
 let rec termEq (x:term) (y:term) =
-  match x.tm, y.tm with 
+  match x, y with 
     | PP(a, _), _ -> termEq a y
     | _, PP(b, _) -> termEq x b
     | Funsym s, Funsym t -> s=t
@@ -348,10 +190,10 @@ let rec termEq (x:term) (y:term) =
     | Update(t1,t2,t3), Update(s1,s2,s3)
     | IfThenElse(t1, t2, t3, _), IfThenElse(s1, s2, s3, _) ->
         termEq t1 (s1) && termEq t2 (s2) && termEq t3 (s3)
-    | Forall(pl, sorts, _, t), Forall(ql, sorts', _, s) 
-    | Exists(pl, sorts, _, t), Forall(ql, sorts', _, s) -> 
+    | Forall(pl, sorts, t), Forall(ql, sorts', s) 
+    | Exists(pl, sorts, t), Forall(ql, sorts', s) -> 
         (List.forall2 termEq pl ql) &&
-          sorts=sorts' &&
+        sorts=sorts' &&
         termEq t (s)
     | ConstArray(str, sort, t), ConstArray(str', sort', s) -> 
         termEq t (s) && str=str' && sort=sort'
@@ -360,90 +202,85 @@ let rec termEq (x:term) (y:term) =
     | Function(x, _, t1), Function(y,_,t2) -> termEq t1 t2 && x=y
     | _ -> false
 
-
 let incrBoundV increment tm = 
-  let rec aux ix tm = match tm.tm with 
+  let rec aux ix tm = match tm with 
     | True
     | False
     | Integer _ 
     | FreeV _ -> tm
     | BoundV(i,s,xopt) -> 
-      if i >= ix then mkBoundV(i+increment, s, xopt) else tm
-    | App(s,sort, tms) -> mkApp(s, sort, List.map (aux ix) tms)
-    | Minus tm -> mkMinus (aux ix tm)
-    | Not tm -> mkNot (aux ix tm)
-    | PP(a,p) -> mkPP(aux ix a, aux ix p)
-    | And(t1,t2) -> mkAnd(aux ix t1, aux ix t2)
-    | Or(t1,t2) -> mkOr(aux ix t1, aux ix t2)
-    | Imp(t1,t2) -> mkImp(aux ix t1, aux ix t2)
-    | Iff(t1,t2) -> mkIff(aux ix t1, aux ix t2)
-    | Eq(t1,t2) -> mkEq(aux ix t1, aux ix t2)
-    | LT(t1,t2) -> mkLT(aux ix t1, aux ix t2)
-    | GT(t1,t2) -> mkGT(aux ix t1, aux ix t2)
-    | LTE(t1,t2) -> mkLTE(aux ix t1, aux ix t2)
-    | GTE(t1,t2) -> mkGTE(aux ix t1, aux ix t2)
-    | Add(t1,t2) -> mkAdd(aux ix t1, aux ix t2)
-    | Sub(t1,t2) -> mkSub(aux ix t1, aux ix t2)
-    | Mul(t1,t2) -> mkMul(aux ix t1, aux ix t2)
-    | Div(t1,t2) -> mkDiv(aux ix t1, aux ix t2)
-    | Mod(t1,t2) -> mkMod(aux ix t1, aux ix t2)
-    | Select(t1, t2) -> mkSelect(aux ix t1, aux ix t2) 
-    | Update(t1, t2, t3) -> mkUpdate(aux ix t1, aux ix t2, aux ix t3)
+      if i >= ix then BoundV(i+increment, s, xopt) else tm
+    | App(s,sort, tms) -> App(s, sort, List.map (aux ix) tms)
+    | Minus tm -> Minus (aux ix tm)
+    | Not tm -> Not (aux ix tm)
+    | PP(a,p) -> PP(aux ix a, aux ix p)
+    | And(t1,t2) -> And(aux ix t1, aux ix t2)
+    | Or(t1,t2) -> Or(aux ix t1, aux ix t2)
+    | Imp(t1,t2) -> Imp(aux ix t1, aux ix t2)
+    | Iff(t1,t2) -> Iff(aux ix t1, aux ix t2)
+    | Eq(t1,t2) -> Eq(aux ix t1, aux ix t2)
+    | LT(t1,t2) -> LT(aux ix t1, aux ix t2)
+    | GT(t1,t2) -> GT(aux ix t1, aux ix t2)
+    | LTE(t1,t2) -> LTE(aux ix t1, aux ix t2)
+    | GTE(t1,t2) -> GTE(aux ix t1, aux ix t2)
+    | Add(t1,t2) -> Add(aux ix t1, aux ix t2)
+    | Sub(t1,t2) -> Sub(aux ix t1, aux ix t2)
+    | Mul(t1,t2) -> Mul(aux ix t1, aux ix t2)
+    | Div(t1,t2) -> Div(aux ix t1, aux ix t2)
+    | Mod(t1,t2) -> Mod(aux ix t1, aux ix t2)
+    | Select(t1, t2) -> Select(aux ix t1, aux ix t2) 
+    | Update(t1, t2, t3) -> Update(aux ix t1, aux ix t2, aux ix t3)
     | IfThenElse(t1, t2, t3, None) ->  
-        mkIfThenElse(aux ix t1, aux ix t2, aux ix t3, None)
+        IfThenElse(aux ix t1, aux ix t2, aux ix t3, None)
     | IfThenElse(t1, t2, t3, Some t4) ->  
-        mkIfThenElse(aux ix t1, aux ix t2, aux ix t3, Some (aux ix t4))
-    | Forall(pats, sorts, names, tm) ->
-        let ix = ix + List.length sorts in 
-          mkForall(List.map (aux ix) pats, sorts, names, aux ix tm)
-    | Exists(pats, sorts, names, tm) ->
-        let ix = ix + List.length sorts in 
-          mkExists(List.map (aux ix) pats, sorts, names, aux ix tm)
-    | ConstArray(s, t, tm) -> mkConstArray(s, t, aux ix tm)
-    | Cases tl -> mkCases (List.map (aux ix) tl)
-    | Function(x,s,tm) -> mkFunction(x, s, aux ix tm)
+        IfThenElse(aux ix t1, aux ix t2, aux ix t3, Some (aux ix t4))
+    | Forall(pats, binders, tm) ->
+        let ix = ix + List.length binders in 
+          Forall(List.map (aux ix) pats, binders, aux ix tm)
+    | Exists(pats, binders, tm) ->
+        let ix = ix + List.length binders in 
+          Exists(List.map (aux ix) pats, binders, aux ix tm)
+    | ConstArray(s, t, tm) -> ConstArray(s, t, aux ix tm)
+    | Cases tl -> Cases (List.map (aux ix) tl)
+    | Function(x,s,tm) -> Function(x, s, aux ix tm)
   in aux 0 tm
 
 let flatten_forall fa =  
-  let rec aux (binders, pats) = fun tm -> match tm.tm with 
-    | Imp(guard, {tm=Forall(pats', sorts, names, body)}) -> 
-        let guard = incrBoundV (sorts.Length) guard in 
-          aux ((sorts, names)::binders, pats'@pats) (mkImp(guard, body))
-    | Forall (pats', sorts, names, body) -> 
-        aux ((sorts, names)::binders, pats'@pats) body
+  let rec aux (binders, pats) = fun tm -> match tm with 
+    | Imp(guard, Forall(pats', binders', body)) -> 
+        let guard = incrBoundV (List.length binders') guard in 
+          aux (binders'@binders, pats'@pats) (Imp(guard, body))
+    | Forall (pats', binders', body) -> 
+        aux (binders'@binders, pats'@pats) body
     | _ -> 
-        let sorts, names = List.unzip (List.rev binders) in
-        let pats = List.rev pats in
-          mkForall(pats, List.concat sorts, List.concat names, tm) in
+        Forall(List.rev pats, List.rev binders, tm) in
     aux ([],[]) fa
 
 let flatten_exists ex = 
-  let rec aux (binders, pats) = fun tm -> match tm.tm with
-    | Exists (pats', sorts, names, body) -> 
-        aux ((sorts, names)::binders, pats'@pats) body
+  let rec aux (binders, pats) = fun tm -> match tm with
+    | Exists (pats', binders', body) -> 
+        aux (binders'@binders, pats'@pats) body
     | _ -> 
-        let sorts, names = List.unzip (List.rev binders) in
-        let pats = List.rev pats in
-          mkExists(pats, List.concat sorts, List.concat names, tm) in
+        Exists(List.rev pats, List.rev binders, tm) in
     aux ([],[]) ex  
 
 let flatten_imp tm = 
   let mkAnd terms = match terms with 
     | [] -> raise Impos
-    | hd::tl ->  List.fold_left (fun out term -> mkAnd(out, term)) hd tl in
-  let rec aux out = fun tm -> match tm.tm with
+    | hd::tl ->  List.fold_left (fun out term -> And(out, term)) hd tl in
+  let rec aux out = fun tm -> match tm with
     | Imp(x, y) -> aux (x::out) y
-    | _ -> mkImp(mkAnd (List.rev out), tm) in
+    | _ -> Imp(mkAnd (List.rev out), tm) in
     aux [] tm
 
-let flatten_arrow = fun q -> match q.tm with 
+let flatten_arrow = fun q -> match q with 
   | Forall _ -> flatten_forall q
   | Exists _ -> flatten_exists q
   | Imp _ -> flatten_imp q
   | _ -> q
       
 let flatten_and tm =
-  let rec aux out = fun tm -> match tm.tm with 
+  let rec aux out = fun tm -> match tm with 
     | And(x, y) -> 
         let out = aux out x in 
           aux out y
@@ -451,7 +288,7 @@ let flatten_and tm =
     List.rev (aux [] tm)
       
 let flatten_or tm = 
-  let rec aux out = fun tm -> match tm.tm with 
+  let rec aux out = fun tm -> match tm with 
     | Or(x, y) -> 
         let out = aux out x in 
           aux out y
@@ -462,7 +299,7 @@ let flatten_or tm =
 (*****************************************************)
 (* Pretty printing terms and decls in SMT Lib format *)
 (*****************************************************)
-type info          = { binders: list<either<btvdef,bvvdef>>; pp_name_map:smap<string>}
+type info          = { binders: list<(string * sort)>; pp_name_map:smap<string>}
 let init_info z3 m = { binders = []; pp_name_map=m }
 
 let map_pp info f = 
@@ -478,7 +315,7 @@ let string_of_either_bvd = function
 
 let rec termToSmt (info:info) tm = 
   let tm = flatten_arrow tm in
-  match tm.tm with
+  match tm with
   | True          -> "true"
   | False         -> "false"
   | Integer i     -> 
@@ -486,9 +323,9 @@ let rec termToSmt (info:info) tm =
     else string_of_int i
   | PP(_,q) -> 
     termToSmt info q
-  | BoundV(i,_,_) as tm  -> 
+  | BoundV(i,_,nm) -> 
     if (i < List.length info.binders) 
-    then string_of_either_bvd (List.nth info.binders i)
+    then nm
     else failwith "Bad index for bound variable in formula" 
   | FreeV(x,_)    -> map_pp info x 
   | App(f,_,es) when (es.Length=0) -> map_pp info f
@@ -539,20 +376,17 @@ let rec termToSmt (info:info) tm =
     format3 "(ite %s %s %s)" (termToSmt info t1) (termToSmt info t2) (termToSmt info t3)
   | Cases tms -> 
     format1 "(and %s)" (String.concat " " (List.map (termToSmt info) tms))
-  | Forall(pats,x,y,z)
-  | Exists(pats,x,y,z) as q -> 
-      if List.length x <> List.length y 
-      then failwith "Unequal number of bound variables and their sorts"
-      else
-        let s = String.concat " "
-          (List.map (fun (a,b) -> format2 "(%s %s)" (string_of_either_bvd <| fst a) (strSort b))
-             (List.zip y x)) in
-        let binders' = (List.rev (List.map fst y)) @ info.binders in
+  | Forall(pats,binders,z)
+  | Exists(pats,binders,z) -> 
+        let s = binders |> 
+                List.map (fun (a,b) -> format2 "(%s %s)" a (strSort b)) |>
+                String.concat " " in
+        let binders' = List.rev binders @ info.binders in
         let info' = { info with binders=binders' } in
-          format3 "\n\n(%s (%s)\n\n %s)" (strQuant q) s
+            format3 "\n\n(%s (%s)\n\n %s)" (strQuant tm) s
             (if pats.Length <> 0 
-             then format2 "(! %s\n %s)" (termToSmt info' z) (patsToSmt info' pats)
-             else termToSmt info' z)
+                then format2 "(! %s\n %s)" (termToSmt info' z) (patsToSmt info' pats)
+                else termToSmt info' z)
   | ConstArray(s, _, tm) -> 
     format2 "((as const %s) %s)" s (termToSmt info tm)
   | _ -> 
@@ -604,14 +438,13 @@ let declToSmt info decl = match decl with
     let f = map_pp info f in  
     let l = List.map (fun (nm,s) -> format2 "(%s %s)" nm (strSort s)) args in
     let info = args |> List.fold_left 
-        (fun info (x,s) -> let x = mk_ident(x,dummyRange) in {info with binders=(Inl (Util.mkbvd (x,x)))::info.binders})
+        (fun info (x,s) -> {info with binders=(x,s)::info.binders})
         info  in
     format4 "(define-fun %s (%s) %s\n %s)" f (String.concat " " l) (strSort retsort) (termToSmt info body)
-  | Assume(t,co,aid) ->
-    let s = strOfAssumptionId aid in
+  | Assume(t,co) ->
     let c = match co with 
-      | Some c -> format2 ";;;;;;;;;;; %s (aid %s)\n" c s
-      | None -> format1 ";;;;;;;;;;; (aid %s)\n" s in
+      | Some c -> format1 ";;;;;;;;;;; %s\n" c
+      | None -> "" in 
     format2 "%s (assert %s)" c (termToSmt info t)
   | Echo s -> format1 "(echo \"%s\")" s
   | Eval t -> format1 "(eval %s)" (termToSmt info t)
@@ -663,7 +496,7 @@ let mkPrelude typenames termconstrs =
          typenames termconstrs
 
 let mk_Kind_type        = App("Kind_type", Kind_sort, [])
-let mk_Typ_const n      = App("Typ_const", Arrow(Ext "Type_name", Type_sort), [mkApp(n, Ext "Type_name", [])])
+let mk_Typ_const n      = App("Typ_const", Arrow(Ext "Type_name", Type_sort), [App(n, Ext "Type_name", [])])
 let mk_Typ_app t1 t2    = App("Typ_app", Arrow(Type_sort, Arrow(Type_sort, Type_sort)), [t1;t2])
 let mk_Typ_dep t1 t2    = App("Typ_dep", Arrow(Type_sort, Arrow(Term_sort, Type_sort)), [t1;t2])
 
@@ -689,9 +522,55 @@ let unboxTerm sort t = match sort with
   | Ref_sort -> unboxRef t
   | _ -> raise Impos
 
-let kindOf t  = App("KindOf", Arrow(Type_sort, Kind_sort), [ t ]) 
-let typeOf t  = App("TypeOf", Arrow(Term_sort, Type_sort), [ t ]) 
-let eval t    = App("Eval", Arrow(Term_sort, Term_sort), [ t ]) 
-let valid t   = App("Valid", Arrow(Type_sort, Bool_sort), [ t ])  
-let mk_String_const i = App("String_const", Arrow(Int_sort, String_sort), [ mkInteger i ])
+let mk_PreKind t  = App("PreKind", Arrow(Type_sort, Kind_sort), [ t ]) 
+let mk_PreType t  = App("PreType", Arrow(Term_sort, Type_sort), [ t ]) 
+let mk_Valid t    = App("Valid", Arrow(Type_sort, Bool_sort), [ t ])  
+let mk_String_const i = App("String_const", Arrow(Int_sort, String_sort), [ Integer i ])
+let mk_HasType v t = App("HasType", Arrow(Term_sort, Arrow(Type_sort, Bool_sort)), [v;t])
+let mk_HasKind t k = App("HasKind", Arrow(Type_sort, Arrow(Kind_sort, Bool_sort)), [t;k])
+let mk_tester s n t = App("is_"^n, Arrow(s, Bool_sort), [t])
+let mk_ApplyTE t e  = App("ApplyTE", Arrow(Type_sort, Arrow(Term_sort, Type_sort)), [t;e])
+let mk_ApplyTT t t' = App("ApplyTT", Arrow(Type_sort, Arrow(Type_sort, Type_sort)), [t;t'])
+let mk_ApplyET e t =  App("ApplyET", Arrow(Term_sort, Arrow(Type_sort, Term_sort)), [e;t])
+let mk_ApplyEE e e' = App("ApplyEE", Arrow(Term_sort, Arrow(Term_sort, Term_sort)), [e;e'])
 
+let mk_and_opt p1 p2 = match p1, p2  with
+  | Some p1, Some p2 -> Some (And(p1, p2))
+  | Some p, None
+  | None, Some p -> Some p
+  | None, None -> None
+    
+let mk_and_opt_l pl = 
+  List.fold_left (fun out p -> mk_and_opt p out) None pl 
+    
+let mk_and_l l = match l with 
+  | [] -> []
+  | hd::tl -> [List.fold_left (fun p1 p2 -> And(p1,p2)) hd tl]
+
+//let typeOf_tm_t =
+//  let bool_t = mk_Typ_const (typeNameOfLid Const.bool_lid) in
+//  let int_t = mk_Typ_const (typeNameOfLid Const.int_lid) in
+//  let string_t = mk_Typ_const (typeNameOfLid Const.string_lid) in
+//  let heap_t = mk_Typ_const (typeNameOfLid Const.heap_lid) in
+//  let ref_t = mk_Typ_const (typeNameOfLid Const.ref_lid) in
+//  let unit_t = mk_Typ_const (typeNameOfLid Const.unit_lid) in
+//  fun tm t -> 
+//    let eqt = Eq(typeOf tm, t) in 
+//    if termEq t bool_t 
+//    then And(eqt, App(mkTester "BoxBool", Arrow(Term_sort, Bool_sort), [tm]))
+//    else if termEq t int_t
+//    then And(eqt, App(mkTester "BoxInt", Arrow(Term_sort, Bool_sort), [tm]))
+//    else if termEq t string_t 
+//    then And(eqt, App(mkTester "BoxString", Arrow(Term_sort, Bool_sort), [tm]))
+//    else if termEq t unit_t 
+//    then And(eqt, Eq(tm, unitTerm))
+//    else match t.tm with 
+//      | App("Typ_app", _, [s; tt]) -> 
+//        if termEq s ref_t 
+//        then And(eqt, 
+//                 And(App(mkTester "BoxRef", Arrow(Term_sort, Bool_sort), [|tm|]), 
+//                     Eq(kindOf tt, mk_Kind_star())))
+//        else eqt
+//      | _ -> eqt
+//        
+//let kindOf_t_k t k = Eq(kindOf t, k)

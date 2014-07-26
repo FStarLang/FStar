@@ -97,9 +97,7 @@ and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pos of typ * Range.range                            (* user wrote down this type 1 at source position 2 *)
   | Meta_pattern of typ * list<either<typ,exp>>
-  | Meta_cases of list<typ>
   | Meta_named of typ * lident                               (* Useful for pretty printing to keep the type abbreviation around *)
-  | Meta_tid of int
 and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a

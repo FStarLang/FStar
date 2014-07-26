@@ -231,13 +231,6 @@ and visit_typ'
               visit_kind' visit_wps h f g l ext env benv' k
                 (fun (env, k') ->
                   cont (env, wk <| Typ_tlam(bvd', k', t'))))
-    
-        | Typ_meta (Meta_cases tl) -> (* log 16 ; *)
-          visit_typs' visit_wps h f g l ext env benv tl
-            (fun (env, tl') -> cont (env, wk <| Typ_meta(Meta_cases tl')))
-
-        | Typ_meta (Meta_tid i) -> (* log 17 ; *)
-          cont (env, wk <| Typ_meta(Meta_tid i))
 
         | Typ_meta (Meta_pattern(t, ps)) ->  (* log 18 ; *)
           let rec aux env ps cont = match ps with 
@@ -656,11 +649,6 @@ and reduce_typ
       | Typ_meta(Meta_pos(t, _)) ->
         let t, env = map_typ env binders t in
         [], [t], [], [], env 
-      | Typ_meta(Meta_tid _) -> 
-        [], [], [], [], env
-      | Typ_meta(Meta_cases tl) -> 
-        let tl, env = map_typs env binders (List.map (fun t -> (None, t)) tl) in 
-        [], tl, [], [], env
       | Typ_meta(Meta_pattern(t,ps)) -> 
         let t,env = map_typ env binders t in 
         let tpats, vpats, env = List.fold_left (fun (tpats, vpats, env) -> function
@@ -834,8 +822,6 @@ let combine_typ t (kl, tl, cl, el) env =
     | Typ_ascribed(_,_), [k'], [t'], [], [] -> Typ_ascribed(t', k')
     | Typ_meta(Meta_named(_, l)), [], [t'], [], [] -> Typ_meta(Meta_named(t', l))
     | Typ_meta(Meta_pos(_, r)), [], [t'], [], [] -> Typ_meta(Meta_pos(t', r))
-    | Typ_meta(Meta_tid _), [], [], [], [] -> t.t
-    | Typ_meta(Meta_cases _), [], _, [], [] -> Typ_meta(Meta_cases tl) 
     | Typ_meta(Meta_pattern _), [], _, _, _ -> Typ_meta(Meta_pattern(List.hd tl, (List.tl tl |> List.map Inl)@(el |> List.map Inr)))
     | _ -> failwith "impossible" in
   withkind t.k t', env

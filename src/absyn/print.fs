@@ -90,6 +90,7 @@ and comp_typ_to_string c =
       else Util.format2 "%s (%s)" (sli c.effect_name) (typ_to_string c.result_typ)
        
 and exp_to_string x = match compress_exp x with 
+  | Exp_delayed _ -> failwith "Impossible"
   | Exp_meta(Meta_datainst(e,_)) -> exp_to_string e 
   | Exp_meta(Meta_desugared(e, _)) -> exp_to_string e
   | Exp_uvar(uv, _) -> Util.format1 "'e%s" (Util.string_of_int (Unionfind.uvar_id uv))
@@ -132,12 +133,10 @@ and either_to_string x = match x with
 and meta_to_string x = match x with 
   | Meta_named(_, l) -> sli l
   | Meta_pos(t, _) -> typ_to_string t
-  | Meta_cases tl -> Util.format1 "\n\tMetaCases [%s]\n" (Util.concat_l ";\n" (List.map typ_to_string tl))
-  | Meta_tid i -> Util.format1 "(Meta_tid %d)" (Util.string_of_int i)
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (t |> typ_to_string) (Util.concat_l ", " (ps |> List.map either_to_string))
 
-
 and kind_to_string x = match compress_kind x with 
+  | Kind_delayed _ -> failwith "Impossible"
   | Kind_uvar uv -> format1 "'k_%s" (Util.string_of_int (Unionfind.uvar_id uv))
   | Kind_type -> "Type"
   | Kind_effect -> "Effect"
