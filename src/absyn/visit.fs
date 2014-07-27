@@ -314,11 +314,6 @@ and visit_exp'
     | Exp_fvar _
     | Exp_constant _ 
     | Exp_uvar _ -> (* log 27 ; *) cont (g env benv e)
-   
-    | Exp_primop(op, el) -> (* log 28 ; *)
-      visit_exps' visit_wps h f g l ext env benv el
-        (fun (env, el) ->
-          cont (env, Exp_primop(op, el)))
         
     | Exp_abs (bvd, t, e) -> (* log 29 ; *)
       visit_typ' visit_wps h f g l ext env benv t
@@ -780,9 +775,7 @@ and reduce_exp
           let el, env = map_exps env binders (el@[e]) in
           [], tl, el, env 
         | Exp_let _ -> failwith "impossible"
-        | Exp_primop(_, el) ->
-          let el, env = map_exps env binders el in
-          [], [], el, env in
+    in
     combine_exp e (kl, tl, el) env in
   map_exp env binders e
     
@@ -850,7 +843,6 @@ let combine_exp e (kl,tl,el) env =
               let lbs' = List.map3 (fun (lbname, _, _) t e -> (lbname, t, e)) lbs tl el in
               Exp_let((x, lbs'), e') 
            | _ -> failwith "impossible")
-    | Exp_primop(x, es), [], [], _ -> Exp_primop(x, el)
     | Exp_meta(Meta_info(_, _, p)), [], [t], [e] -> 
       Exp_meta(Meta_info(e, t, p))
     | Exp_meta(Meta_desugared(_, tag)), [], [], [e] -> 

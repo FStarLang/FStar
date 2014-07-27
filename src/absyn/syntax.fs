@@ -112,7 +112,6 @@ and exp =
   | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
   | Exp_ascribed   of exp * typ 
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
-  | Exp_primop     of ident * list<exp>
   | Exp_uvar       of uvar_e * typ                               (* not present after 1st round tc *)
   | Exp_delayed    of exp * subst * memo<exp>                    (* A delayed substitution --- always force it before inspecting the first arg *)
   | Exp_meta       of meta_e                                     (* No longer tag every expression with info, only selectively *)
@@ -122,7 +121,8 @@ and meta_e =
   | Meta_datainst  of exp * option<typ>                          (* Expect the data constructor e to build a t-typed value; only used internally to pretyping; not visible elsewhere *)
 and meta_source_info =
   | Data_app
-  | Sequence                                                     (* ... add more cases here as needed for better code generation *)
+  | Sequence                   
+  | Primop                                  (* ... add more cases here as needed for better code generation *)
 and uvar_e = Unionfind.uvar<uvar_basis<exp,typ>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>

@@ -422,11 +422,12 @@ and doc_of_exp_r (rg : range) outer (env : env) (e : exp) =
 
             in maybe_paren outer e_bin_prio_letin doc
 
-        | Exp_primop (x, es) ->
-            let x = string_of_primop env x.idText in
-            if   List.isEmpty es
-            then text x
-            else cat1 (text x) (groups (List.map (doc_of_exp rg outer env) es))
+//NS: this case replaced by Exp_meta(Meta_desugared(e, Primop))
+//        | Exp_primop (x, es) ->
+//            let x = string_of_primop env x.idText in
+//            if   List.isEmpty es
+//            then text x
+//            else cat1 (text x) (groups (List.map (doc_of_exp rg outer env) es))
 
         | Exp_ascribed (e, _) ->
             doc_of_exp rg outer env e
@@ -457,6 +458,9 @@ and doc_of_exp_r (rg : range) outer (env : env) (e : exp) =
 
             | _ -> unexpected rg
         end
+
+        | Exp_meta (Meta_desugared (e, Primop)) -> //NS: Fixme?
+            doc_of_exp rg outer env e
 
         | Exp_meta (Meta_datainst (e, _)) ->
             doc_of_exp rg outer env e

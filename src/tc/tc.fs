@@ -390,10 +390,6 @@ and tc_exp env e : exp * comp = match e with
     let e1, c = tc_exp (Env.set_expected_typ env t1) e1 in
     comp_check_expected_typ env (Exp_ascribed(e1, t1)) (Tc.Util.strengthen_precondition env c f)
 
-  | Exp_meta(Meta_desugared(e, Sequence)) -> 
-    let e, c = tc_exp env e in
-    Exp_meta(Meta_desugared(e, Sequence)), c
-
   | Exp_meta(Meta_desugared(e, Data_app)) -> 
     (* These are (potentially) values, but constructor types 
        already have an (Tot) effect annotation on their co-domain. 
@@ -412,6 +408,10 @@ and tc_exp env e : exp * comp = match e with
     let e = Util.mk_curried_app d args in
     let e, c = tc_exp env1 e in
     comp_check_expected_typ env (Exp_meta(Meta_desugared(e, Data_app))) c
+
+  | Exp_meta(Meta_desugared(e, i)) -> 
+    let e, c = tc_exp env e in
+    Exp_meta(Meta_desugared(e, i)), c
 
   | Exp_meta(Meta_datainst(dc, topt)) -> 
     (* This is where we process the type annotation on data constructors populated by the Data_app case above. *) 
@@ -444,7 +444,7 @@ and tc_exp env e : exp * comp = match e with
         | Typ_uvar _ -> (* We have a type from the context; but it is non-informative. So, default tuples if applicable *)
           maybe_default_dtuple_type env tres (Some t_expected)
        
-        | tt -> (* Finally, we have some useful info from the context; use it to instantiate the result type of dc *)
+        | _ -> (* Finally, we have some useful info from the context; use it to instantiate the result type of dc *)
           Tc.Rel.trivial_subtype env None tres t_expected; false in        
     dc, c_dc (* NB: Removed the Meta_datainst tag on the way up---no other part of the compiler sees Meta_datainst *)
 
@@ -599,19 +599,6 @@ and tc_exp env e : exp * comp = match e with
             | None -> e, cres
             | Some y -> raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape (Util.comp_result cres) y.v, rng env))
     end
-
-  | Exp_primop(op, es) -> 
-    let env = instantiate_both env in
-    let op_t = Tc.Env.lookup_operator env op in
-    let x = Util.new_bvd (Some op.idRange) in
-    let env' = Tc.Env.push_local_binding env (Env.Binding_var(x, op_t)) in
-    let app = Util.mk_curried_app (Util.bvd_to_exp x op_t) (List.map (fun e -> Inr(e, false)) es) in
-    let app, c = tc_exp env' app in
-    let _, tes = Util.uncurry_app app in
-    let es = tes |> List.map (function 
-      | Inl _ -> failwith "Impossible"
-      | Inr (e, _) -> e) in 
-    Exp_primop(op, es), c
 
 and tc_eqn (guard_x:bvvdef) pat_t env (patt, when_clause, branch) : (pat * option<exp> * exp) * option<formula> * comp =
   let rec tc_pat (pat_t:typ) env p : list<Env.binding> * Env.env * list<exp> = 

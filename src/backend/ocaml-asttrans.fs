@@ -444,9 +444,10 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
             let body = mlexpr_of_expr rg lenv body in
             MLE_Let (rec_, bindings, body)
 
-        | Exp_primop (x, args) ->
-            let args = List.map (mlexpr_of_expr rg lenv) args in
-            MLE_App (MLE_Var (lresolve lenv x), args)
+//NS: This case replaced by Exp_meta(Meta_desugared(e, Primop)) ... see below
+//        | Exp_primop (x, args) ->
+//            let args = List.map (mlexpr_of_expr rg lenv) args in
+//            MLE_App (MLE_Var (lresolve lenv x), args)
 
         | Exp_meta (Meta_desugared (e, Data_app)) ->
             let (c, args) =
@@ -470,6 +471,9 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
             | _ -> unexpected rg "expr-seq-mark-without-let"
         end
 
+        | Exp_meta (Meta_desugared (e, Primop)) -> //NS: Fixme?
+             mlexpr_of_expr rg lenv e
+      
         | Exp_ascribed (e, _) ->
             mlexpr_of_expr rg lenv e
 

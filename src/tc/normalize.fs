@@ -297,10 +297,6 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
               c)
         | _ -> failwith "Impossible: ill-typed term"
       end
-    
-    | Exp_primop(id, el) -> 
-      let cl = List.map (wne tcenv) (el |> List.map (fun e -> {config with code=e})) in 
-      {config with code=Exp_primop(id, cl |> List.map (fun c -> c.code))}
 
     | Exp_app(e1, e2, imp) -> 
       let c1 = wne tcenv ({config with code=e1}) in

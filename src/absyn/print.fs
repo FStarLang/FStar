@@ -114,7 +114,6 @@ and exp_to_string x = match compress_exp x with
   | Exp_let(lbs, e) -> Util.format2 "%s in %s" 
     (lbs_to_string lbs)
     (e|> exp_to_string)
-  | Exp_primop(id, el)-> Util.format2 "(%s %s)" (id.idText) (Util.concat_l " " (List.map exp_to_string el))
   | Exp_meta(Meta_info _) -> failwith "Impossible"
 
 and lbs_to_string lbs = 

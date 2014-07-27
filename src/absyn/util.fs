@@ -450,49 +450,6 @@ let destruct_fun =
     fun e -> destruct [] e
 
 (********************************************************************************)
-(******************************** Syntactic values ******************************)
-(********************************************************************************)
-
-let rec is_value e = 
-  let is_val e = match compress_exp e with 
-    | Exp_constant _
-    | Exp_bvar _
-    | Exp_fvar _ 
-    | Exp_abs _ 
-    | Exp_tabs _ -> true
-    | Exp_primop(id, el) -> 
-        if (id.idText = "op_AmpAmp" ||
-            id.idText = "op_BarBar" ||
-            id.idText = "op_Negation")
-        then Util.for_all is_value el
-        else false
-    | Exp_ascribed(e, _) -> is_value e
-    | Exp_app _ -> is_data e
-    | _ -> false in 
-    (is_val e) || (is_logic_function e)
-
-and is_data e = match compress_exp e with 
-  | Exp_fvar(_, b) -> b
-  | Exp_app(e, e', _) -> is_value e' && is_data e
-  | Exp_tapp(e, _) -> is_data e
-  | Exp_ascribed(e, _) -> is_data e
-  | _ -> false
-
-and is_logic_function e = match compress_exp e with
-  (* | Exp_tapp(e1, _) -> is_logic_function e1 *)
-  | Exp_app(e1, e2, _) -> is_value e2 && is_logic_function e1
-  | Exp_fvar(v, _) ->
-      lid_equals v.v Const.op_And ||
-        lid_equals v.v Const.op_Or ||
-        lid_equals v.v Const.op_Negation ||
-        lid_equals v.v Const.op_Addition ||
-        lid_equals v.v Const.op_Subtraction ||
-        lid_equals v.v Const.op_Multiply
-  | Exp_ascribed(e, _) -> is_logic_function e
-  | _ -> false     
-   
-
-(********************************************************************************)
 (************** Collecting all unification variables in a type ******************)
 (********************************************************************************)
 

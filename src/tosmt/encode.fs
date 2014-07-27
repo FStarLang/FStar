@@ -99,6 +99,9 @@ type res = (
   * decls    (* auxiliary top-level assertions in support of the term *)
  )
 
+let trivial_post t = 
+  withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid)
+
 let rec encode_knd (env:env_t) (k:knd)  : res = 
     match Util.compress_kind k with 
         | Kind_type -> 
@@ -201,8 +204,7 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
              let g2 = match xopt with 
                 | None -> g2
                 | _ -> close [(xxsym, Term_sort)] g2 in
-             let post = withkind kun <| Typ_lam(Util.new_bvd None, t2, Util.ftv Const.true_lid) in
-             let wp2', g3 = encode_formula env' (norm_t env' <| (withkind Kind_type <| Typ_app(wp2, post, false))) in 
+             let wp2', g3 = encode_formula env' (norm_t env' <| (withkind Kind_type <| Typ_app(wp2, trivial_post t2, false))) in 
              let tsym = fresh "type" in 
              let t = Funsym tsym in 
              let fsym = fresh "f" in 
@@ -305,11 +307,57 @@ and encode_exp (env:env_t) (e:exp) : res =
     match e with 
       | Exp_delayed _ -> encode_exp env (Util.compress_exp e)
        
-      | Exp_meta(Meta_info(Exp_abs(x, t, e), t2, _)) -> ()
-      | Exp_meta(Meta_info(Exp_tabs(a, k, e), t2, _)) -> ()
+      | Exp_meta(Meta_info(Exp_abs(x, t, e), tfun, _)) -> 
+        begin match (Util.compress_typ tfun).t with 
+            | Typ_fun(_, _, c, _) -> 
+                if not <| Util.is_pure env.tcenv c
+                then let esym = fresh "impure_fun" in
+                     Funsym esym, [Term.DeclFun(esym, [], Term_sort, None)]
+                else let t2, wp2, _ = Tc.Util.destruct_comp (Util.force_comp c) in
+                     let tt, g1 = encode_typ env t in
+                     let xxsym, env' = gen_term_var env x in
+                     let xx = Funsym xxsym in 
+                     let tt2, g2 = encode_typ env' t2 in
+                     let wp2', g3 = encode_formula env' (withkind Kind_type <| Typ_app(wp2, trivial_post t2, false)) in
+                     let ee, g4 = encode_exp env' e in
+                     let fsym = fresh "fun" in
+                     let f = Funsym fsym in 
+                     let g = [Term.DeclFun(fsym, [], Term_sort, None);
+                              Term.Assume(Forall([mk_ApplyEE f xx], [(xxsym, Term_sort)], 
+                                                 Imp(And(mk_HasType xx tt, wp2'),
+                                                     And(Eq(mk_ApplyEE f xx, ee),
+                                                         mk_HasType ee tt2))), None)] in
+                     f, g1@(close [(xxsym, Term_sort)] g2@g3@g4)@g
+            | _ -> failwith "Impossible"
+        end
 
-      | Exp_meta(Meta_desugared(e, _))
-      | Exp_meta(Meta_info(e, _, _)) -> encode_exp env e 
+
+      | Exp_meta(Meta_info(Exp_tabs(a, k, e), tfun, _)) -> 
+        begin match (Util.compress_typ tfun).t with 
+            | Typ_univ(_, _, c) -> 
+                if not <| Util.is_pure env.tcenv c
+                then let esym = fresh "impure_fun" in
+                     Funsym esym, [Term.DeclFun(esym, [], Term_sort, None)]
+                else let t2, wp2, _ = Tc.Util.destruct_comp (Util.force_comp c) in
+                     let kk, g1 = encode_knd env k in
+                     let aasym, env' = gen_typ_var env a in
+                     let aa = Funsym aasym in 
+                     let tt2, g2 = encode_typ env' t2 in
+                     let wp2', g3 = encode_formula env' (withkind Kind_type <| Typ_app(wp2, trivial_post t2, false)) in
+                     let ee, g4 = encode_exp env' e in
+                     let fsym = fresh "fun" in
+                     let f = Funsym fsym in 
+                     let g = [Term.DeclFun(fsym, [], Term_sort, None);
+                              Term.Assume(Forall([mk_ApplyET f aa], [(aasym, Type_sort)], 
+                                                 Imp(And(mk_HasKind aa kk, wp2'),
+                                                     And(Eq(mk_ApplyET f aa, ee),
+                                                         mk_HasType ee tt2))), None)] in
+                     f, g1@(close [(aasym, Type_sort)] g2@g3@g4)@g
+            | _ -> failwith "Impossible"
+        end
+
+      | Exp_meta(Meta_info(e, _, _))
+      | Exp_meta(Meta_desugared(e, _)) -> encode_exp env e
 
       | Exp_bvar x -> 
         Funsym (lookup_term_var env x), []
@@ -330,8 +378,6 @@ and encode_exp (env:env_t) (e:exp) : res =
            let g = [Term.DeclFun(esym, [], Term_sort, Some (format1 "Constant: %s" <| Print.const_to_string c))] in 
            e, g)
 
-      | Exp_primop(op, args) -> failwith "NYI"
-
       | Exp_app(e1, e2, _) -> 
         let ee1, g1 = encode_exp env e1 in 
         let ee2, g2 = encode_exp env e2 in 
@@ -341,7 +387,6 @@ and encode_exp (env:env_t) (e:exp) : res =
         let ee1, g1 = encode_exp env e1 in 
         let tt2, g2 = encode_typ env t2 in 
         mk_ApplyET ee1 tt2, g1@g2
-      
       
 //      | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
 //      | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
