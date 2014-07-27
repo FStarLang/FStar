@@ -60,6 +60,11 @@ let go _ =
                 exit 1
             end
         end;
+        if !Options.codegen = Some "JavaScript" then begin
+            let js = Backends.JS.Translate.js_of_fstars (List.tail fmods) in
+            let doc = Backends.JS.Print.pretty_print js in
+            Util.print_string (FSharp.Format.pretty 120 doc)
+        end;
         finished fmods 
 
 let () =
