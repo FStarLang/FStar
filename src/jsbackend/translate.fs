@@ -31,7 +31,7 @@ open Microsoft.FStar.Util
 
 let constructors = Util.smap_create 100
 
-let _ = 
+let nothing = 
     Util.smap_add constructors "Prims.op_Minus" (1, Some(function x::[] -> JSE_Minus(x) | _ -> failwith ""));
     Util.smap_add constructors "Prims.op_Negation" (1, Some(function x::[] -> JSE_Lnot(x) | _ -> failwith ""));
     Util.smap_add constructors "Prims.op_Addition" (2, Some(function x::y::[] -> JSE_Add(x,y) | _ -> failwith ""));
@@ -45,9 +45,12 @@ let _ =
     Util.smap_add constructors "Prims.op_LessThanOrEqual" (2, Some(function x::y::[] -> JSE_Le(x,y) | _ -> failwith ""));
     Util.smap_add constructors "Prims.op_LessThan" (2, Some(function x::y::[] -> JSE_Lt(x,y) | _ -> failwith ""));
     Util.smap_add constructors "Prims.op_GreaterThanOrEqual" (2, Some(function x::y::[] -> JSE_Ge(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_Equality" (2, Some(function x::y::[] -> JSE_Equal(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_disEquality" (2, Some(function x::y::[] -> JSE_Lnot(JSE_Equal(x,y)) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_Equality" (2, Some(function x::y::[] -> JSE_Equal(JSE_Add(x,JSE_String("")),y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_disEquality" (2, Some(function x::y::[] -> JSE_Lnot(JSE_Equal(JSE_Add(x,JSE_String("")),y)) | _ -> failwith ""));
     Util.smap_add constructors "String.strcat" (2, Some(function x::y::[] -> JSE_Add(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.fst" (1, Some(function x::[] -> JSE_Dot(x, "v[0]") | _ -> failwith ""));
+    Util.smap_add constructors "Prims.snd" (1, Some(function x::[] -> JSE_Dot(x, "v[1]") | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_ColonEquals" (2, Some(function x::y::[] -> JSE_Assign(x,y) | _ -> failwith ""));
     Util.smap_add constructors "Prims.MkTuple2" (2, None);
     Util.smap_add constructors "Prims.MkTuple3" (3, None);
     Util.smap_add constructors "Prims.MkTuple4" (4, None);
@@ -55,16 +58,18 @@ let _ =
     Util.smap_add constructors "Prims.MkTuple6" (6, None);
     Util.smap_add constructors "Prims.MkTuple7" (7, None);
     Util.smap_add constructors "Prims.MkTuple8" (8, None);
+    Util.smap_add constructors "Prims.failwith" (1, Some(function x::[] -> JSE_Call(
+        JSE_Function(None,[],[JS_Statement(JSS_Throw(x))]),[]) | _ -> failwith ""));
     ()
 
 let rec js_of_const (c:sconst) : expression_t =
     match c with
     | Const_unit -> JSE_Undefined
-    | Const_uint8(n) -> JSE_Number((float)n)
+    | Const_uint8(n) -> JSE_Number(Util.float_of_byte n)
     | Const_bool(b) -> JSE_Bool(b)
-    | Const_int32(n) -> JSE_Number((float)n)
-    | Const_int64(n) -> JSE_Number((float)n)
-    | Const_char(c) -> JSE_String((string)c)
+    | Const_int32(n) -> JSE_Number(Util.float_of_int32 n)
+    | Const_int64(n) -> JSE_Number(Util.float_of_int64 n)
+    | Const_char(c) -> JSE_String(Util.string_of_char c)
     | Const_float(f) -> JSE_Number(f)
     | Const_bytearray(ba,r) | Const_string(ba,r) -> JSE_String(Util.string_of_bytes ba)
 
@@ -83,7 +88,7 @@ and try_compile_constructor (e:exp) : option<expression_t> =
         let freevars = red args arity in
         let ae = (List.map (js_of_expr None) args) @ (List.map (fun x->JSE_Identifier(x)) freevars) in
         let compiled_cons = match compiler with
-            | None -> (JSE_Object([JSP_Property("t", JSE_Identifier(cons)); JSP_Property("v", JSE_Array(ae))]))
+            | None -> JSE_Call(JSE_Identifier("$C"), [JSE_String(cons);JSE_Array(ae)])
             | Some(f) -> f ae
         in List.fold_left (fun v s->JSE_Function(None, [s], [JS_Statement(
                 JSS_Return(Some(v)))])) compiled_cons freevars
@@ -96,7 +101,7 @@ and try_compile_constructor (e:exp) : option<expression_t> =
     | _ -> None
     in aux [] e
 
-and js_of_binding (x:either<bvvdef,lident>, t:typ, e:exp) =
+and js_of_binding ((x,t,e):(either<bvvdef,lident> * typ * exp)) =
     let n = match x with Inl(x) -> x.ppname.idText | Inr(x) -> x.ident.idText in
     (n, Some(js_of_expr None e))
 
@@ -106,7 +111,7 @@ and compress_let (e:exp) =
     | _ -> ([], e)
 
 and js_of_match (e:exp) (cases:list<(pat * option<exp> * exp)>) =
-    let compile_pat (p:pat, cond:option<exp>, ret:exp) : source_t =
+    let compile_pat ((p,cond,ret):(pat * option<exp> * exp)) : source_t =
         let and_cond e1 e2 = match (e1, e2) with
             | (_, JSE_Bool(true)) -> e1 | (JSE_Bool(true), _) -> e2
             | _ -> JSE_Land(e1, e2) in
@@ -119,7 +124,7 @@ and js_of_match (e:exp) (cases:list<(pat * option<exp> * exp)>) =
         let rec aux (id:string) (p:pat) = match p with
         | Pat_cons(x, l) -> let tagcond = JSE_Equal(JSE_Identifier(id^".t"), JSE_String(x.str)) in
             let (valcond, valbinds, _) = List.fold_left (
-                fun (cur, b, i) p -> let (next, nb) = aux (sprintf "%s.v[%d]" id i) p in
+                fun (cur, b, i) p -> let (next, nb) = aux (id^".v["^(Util.string_of_int i)^"]") p in
                 (and_cond cur next, b @ nb, i+1)
             ) (JSE_Bool(true), [], 0) l in (and_cond tagcond valcond, valbinds)
         | Pat_var(bv) -> (JSE_Bool(true), [JSP_Property(bv.ppname.idText, JSE_Identifier(id))])
@@ -133,9 +138,14 @@ and js_of_match (e:exp) (cases:list<(pat * option<exp> * exp)>) =
         in let (conds, binds) = (aux "$v" p) in
         let finalret = pat_return binds in
         JS_Statement(match conds with JSE_Bool(true) -> finalret | _ -> JSS_If(conds, finalret, None))
-    in JSE_Call(
-        JSE_Function(None, ["$v"], List.map compile_pat cases),
-        [js_of_expr None e])
+    in let add_fallback cases =
+        let r = List.map compile_pat cases in
+        if Util.for_some (function JS_Statement(JSS_Return(_))->true|_->false) r
+        then r else r @ [JS_Statement(JSS_Throw(JSE_String("Incomplete pattern")))]
+    in match cases with
+        | [(Pat_constant(Const_bool(true)), None, e1); (Pat_constant(Const_bool(false)), None, e2)] ->
+             JSE_Conditional(js_of_expr None e, js_of_expr None e1, js_of_expr None e2)
+        | _ -> JSE_Call(JSE_Function(None, ["$v"], add_fallback cases), [js_of_expr None e])
 
 and js_of_expr (binder:option<string>) (expr:exp) : expression_t =
     match try_compile_constructor expr with
@@ -152,11 +162,16 @@ and js_of_expr (binder:option<string>) (expr:exp) : expression_t =
                 [JS_Statement(JSS_Declaration(List.map js_of_binding bext));
                 JS_Statement(JSS_Return(Some(js_of_expr None ee)))]
             ), [])
+        | Exp_tabs(_, _, e) | Exp_tapp(e, _) | Exp_ascribed(e,_) -> js_of_expr binder e
+        | Exp_meta(m) -> (match m with
+            | Meta_info(e, _, _) -> js_of_expr binder e
+            | Meta_desugared(e, _) -> js_of_expr binder e
+            | Meta_datainst(e, _) -> js_of_expr binder e)
         | _ -> Util.print_any expr; JSE_Elision)
 
 and untype_expr (e:exp) =
     let e = Absyn.Util.compress_exp e in
-    let unt_pat (p:pat, cnd:option<exp>, v:exp) = 
+    let unt_pat ((p,cnd,v):(pat * option<exp> * exp)) = 
         (p, (match cnd with None->None | Some(e)->Some(untype_expr e)), untype_expr v) in
     let unt_bnd (x,t,e) =  (x, t, untype_expr e) in
     match e with
@@ -171,10 +186,10 @@ and untype_expr (e:exp) =
     | Exp_match(e, pl) -> Exp_match(untype_expr e, List.map unt_pat pl)
     | _ -> e
 
-and type_arity = function
+and type_arity ty = match ty with
   | Typ_fun(_,t,_,_) -> 1 + (type_arity t.t)
   | Typ_refine(_, t, _) -> type_arity t.t
-  | Typ_app(t, _, _) -> (type_arity t.t) - 1
+  | Typ_app(t, _, _) -> (type_arity t.t)
   | Typ_dep(t,_,_) -> type_arity t.t
   | Typ_lam(_,_,t) -> 1 + (type_arity t.t)
   | Typ_tlam(_, _, t) -> type_arity t.t
@@ -186,7 +201,7 @@ and type_arity = function
 
 and compile_def (d:sigelt) =
     match d with
-    | Sig_datacon(n,ty,tyn,_) -> printf "\nAdding %s\n" n.str; Util.smap_add constructors n.str (type_arity ty.t, None)
+    | Sig_datacon(n,ty,tyn,_) -> Util.smap_add constructors n.str (type_arity ty.t, None)
     | Sig_bundle(defs, range) -> List.iter compile_def defs
     | _ -> ()
 
@@ -209,8 +224,18 @@ let js_of_fstar (m:modul) : Ast.t =
         :: (List.map js_of_singl m.exports |> List.concat)
 
 let js_of_fstars (fmods : list<modul>) : Ast.t =
-    let fmods = List.map js_of_fstar fmods in
-    List.concat fmods
+    let fmods = List.concat (List.map js_of_fstar fmods) in
+    [JS_Statement(JSS_Expression(JSE_Call(JSE_Function(Some "FStar", [],
+        (JS_Statement(JSS_Declaration(["$C", Some(JSE_Function(None, ["t";"v"],
+            [JS_Statement(JSS_Return(Some(JSE_Object([
+                JSP_Property("t", JSE_Identifier("t"));
+                JSP_Property("v", JSE_Identifier("v"));
+                JSP_Property("toString", JSE_Function(None,[],[JS_Statement(JSS_Return(Some(
+                    JSE_Add(JSE_Add(JSE_Identifier("this.t"), JSE_String(":")), JSE_Identifier("this.v"))
+                    )))]))
+            ]))))]
+        ))])))::fmods
+    ), [])))]
 
 
 

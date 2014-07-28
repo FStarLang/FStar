@@ -42,6 +42,9 @@ assume val int_of_string:   string -> int
 assume val int_of_char:   char -> int
 assume val char_of_int:   int -> char
 assume val uint16_of_int: int -> uint16
+assume val float_of_byte: byte -> float
+assume val float_of_int32: int -> float
+assume val float_of_int64: int64 -> float
 assume val string_of_int:   int -> string
 assume val string_of_float: float -> string
 assume val string_of_char:  char -> string

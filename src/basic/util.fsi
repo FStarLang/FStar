@@ -46,6 +46,9 @@ val int_of_string:   string -> int
 val int_of_char:   char -> int
 val char_of_int:   int -> char
 val uint16_of_int: int -> uint16
+val float_of_byte: byte -> float
+val float_of_int32: int32 -> float
+val float_of_int64: int64 -> float
 val string_of_int:   int -> string
 val string_of_float: float -> string
 val string_of_char:  char -> string
