@@ -15,6 +15,8 @@ JS.utest = function(msg) {
 
 JS.console = {}
 
+JS._tS = function(){return this.t+":"+this.v}
+
 JS.console.log = function(x){
  console.log(x);
 }
@@ -25,7 +27,11 @@ JS.console.dir = function(x){
 
 String.split = function(s){
  return function(x){
-  return x.split(new RegExp("["+s.join('')+"]"));
+  console.log(s);
+  var r = List.fold_left(function(u){return function(v){return u+v}})("")(s);
+  return x.split(new RegExp("["+r+"]")).reduceRight(function(x,y){
+   return {"t":"Prims.Cons", v:[y, x], "toString": JS._tS}
+  }, {"t":"Prims.Nil", "v":[], "toString":JS._tS});
 }}
 
 String.strcat = function(x){
@@ -35,7 +41,7 @@ String.strcat = function(x){
 
 String.concat = function(s){
  return function(l){
-  return l.join(s);
+  return List.fold_left(function(u){return function(v){return u+s+v}})("")(l).substr(1);
 }}
 
 String.compare = function(x){

@@ -1,8 +1,8 @@
-FSLIBFILES=st.fst string.fst js.fst
+FSLIBFILES=st.fst string.fst js.fst list.fsi
 FSLIB=$(addprefix ../../lib/, $(FSLIBFILES))
-FSTAR=../../bin/FStar.exe --fstar_home ../../ $(OTHERFLAGS)
+FSTAR=../../bin/FStar.exe --fstar_home ../../ --admit_fsi List $(OTHERFLAGS)
 
-TESTS=constants.js fun.js tuples.js record.js
+TESTS=constants.js strings.js fun.js tuples.js record.js
 
 all: clean init $(TESTS) close
 
