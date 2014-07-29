@@ -2,7 +2,7 @@ FSLIBFILES=st.fst string.fst js.fst
 FSLIB=$(addprefix ../../lib/, $(FSLIBFILES))
 FSTAR=../../bin/FStar.exe --fstar_home ../../ $(OTHERFLAGS)
 
-TESTS=constants.js fun.js record.js
+TESTS=constants.js fun.js tuples.js record.js
 
 all: clean init $(TESTS) close
 
@@ -17,4 +17,4 @@ close:
 	echo "<script src=\"$@\"></script>" >> tests.htm
 
 clean:
-	rm -fr *.js *~ 
+	rm -fr tests.htm *.js *~ 
