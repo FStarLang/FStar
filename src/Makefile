@@ -31,7 +31,7 @@ OTHERFLAGS=--optimize+ --debug:full --nologo -g -O --mlcompatibility $(addprefix
 
 LIB=../lib
 BIN=../bin
-ALL_DLLS=basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll tosmt.dll
+ALL_DLLS=basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll tosmt.dll jsbackend.dll
 FSHARP_LIBS=$(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll 
 OTHER_DLLS=
 BASELIBS=$(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
@@ -44,7 +44,7 @@ BUILD_VERSION  =
 OTHERFLAGS    := --optimize+ --debug:full --nologo -g -O
 OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 
-ALL_DLLS    = basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll #z3encode.dll
+ALL_DLLS    = basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll tosmt.dll jsbackend.dll
 FSHARP_LIBS = $(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll 
 OTHER_DLLS  =
 BASELIBS    = $(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
@@ -158,22 +158,22 @@ clean:
 STDFILES=st.fst list.fst option.fst string.fst
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 
-BASICFILES=bytes.fst util.fsi getoptsimple.fst options.fs range.fst unionfind.fst
-BASIC=$(addprefix basic/, $(BASICFILES))
-SYNTAXFILES=syntax.fs const.fs visit.fs util.fs print.fs
-SYNTAX=$(addprefix absyn/, $(SYNTAXFILES))
-PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fst driver.fs 
-PARSER=$(addprefix parser/, $(PARSERFILES))
-TCFILES=errors.fs tcenv.fsi tcenv.fs normalize.fsi normalize.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
-TC=$(addprefix tc/, $(TCFILES))
-FORMATFILES=format.fsi format.fs
-FORMAT=$(addprefix format/, $(FORMATFILES))
-BACKENDFILES=nameenv.fsi nameenv.fs syntax.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs oaml.fsi ocaml.fs
-BACKEND=$(addprefix backend/, ocaml-backend-stub.fst)
-JSBACKENDFILES=ast.fs translate.fs
-JSBACKEND=$(addprefix jsbackend/, $(JSBACKENDFILES))
-MAIN=fstar.fs
-BOOT_ALL=$(STDLIB) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(TOSMT_SRC) $(BACKEND) #$(JSBACKEND)
+BOOT_BASICFILES=bytes.fst util.fsi getoptsimple.fst options.fs range.fst unionfind.fst
+BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
+BOOT_SYNTAXFILES=syntax.fs const.fs visit.fs util.fs print.fs
+BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
+BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fst driver.fs 
+BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))
+BOOT_TCFILES=errors.fs tcenv.fsi tcenv.fs normalize.fsi normalize.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
+BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
+BOOT_FORMATFILES=format.fsi format.fs
+BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
+BOOT_BACKENDFILES=nameenv.fsi nameenv.fs syntax.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs oaml.fsi ocaml.fs
+BOOT_BACKEND=$(addprefix backend/, ocaml-backend-stub.fst)
+BOOT_JSBACKENDFILES=ast.fs translate.fs
+BOOT_JSBACKEND=$(addprefix jsbackend/, $(BOOT_JSBACKENDFILES))
+BOOT_MAIN=fstar.fs
+BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_BACKEND) $(BOOT_JSBACKEND)
 
 boot: $(BOOT_ALL)
 	../bin/fstar.exe --fstar_home .. --admit_fsi Microsoft.FStar.Util $^
