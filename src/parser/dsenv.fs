@@ -188,7 +188,7 @@ let is_effect_name env lid =
     match Util.smap_try_find env.sigmap lid.str with 
       | Some (Sig_tycon(_, _, _, _, _, tags, _), _) 
       | Some (Sig_typ_abbrev (_, _, _, _, tags, _), _) -> 
-        if List.contains Logic_effect tags
+        if Util.for_some (function Logic_effect -> true | _ -> false) tags
         then Some (ftv <| lid)
         else None 
       | _ -> None in

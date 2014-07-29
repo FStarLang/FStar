@@ -304,7 +304,7 @@ let is_logic_function env lid =
 let is_logic_data env lid = 
   match lookup_qname env lid with 
     | Some (Inr (Sig_tycon(_, _, _, _, _, tags, _))) -> 
-        Util.for_some (fun t -> t=Logic_data) tags 
+        Util.for_some (function Logic_data -> true | _ -> false) tags 
     | _ -> false
   
 let is_logic_array env lid =
@@ -318,7 +318,7 @@ let is_logic_array env lid =
 let is_record env lid =
   match lookup_qname env lid with 
     | Some (Inr (Sig_tycon(_, _, _, _, _, tags, _))) -> 
-        Util.for_some (fun t -> t=Logic_record) tags 
+        Util.for_some (function Logic_record -> true | _ -> false) tags 
     | _ -> false
 
 let lookup_datacons_of_typ env lid = 

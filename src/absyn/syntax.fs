@@ -173,8 +173,8 @@ type logic_tag =
   | Logic_data 
   | Logic_tfun
   | Logic_array of logic_array
-  | Logic_discriminator
-  | Logic_projector
+  | Logic_discriminator of lident                          (* discriminator for a datacon l *)
+  | Logic_projector of lident * either<btvdef, bvvdef>     (* projector for datacon l's argument 'a or x *)
   | Logic_record
   | Logic_val
   | Logic_type

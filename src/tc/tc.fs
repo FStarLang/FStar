@@ -907,7 +907,19 @@ and tc_decl env se = match se with
       let lbs' = List.rev lbs' in
       let e = Exp_let((fst lbs, lbs'), Exp_constant(Syntax.Const_unit)) in
       let se = match tc_exp env e with 
-        | Exp_let(lbs, _), _ -> (* TODO: Call the solver here to check that the inferred type is compatible with any annotation *)
+        | Exp_let(lbs, _), _ -> 
+          if !Options.verify
+          then snd lbs |> List.iter (function 
+            | (Inl _, _, _) -> failwith "Impossible"
+            | (Inr l, t, e) ->
+              match Env.try_lookup_val_decl env l with 
+                | None -> ()
+                | Some t' -> 
+                  match Tc.Rel.subtype env t t' with 
+                    | Trivial -> ()
+                    | Guard phi -> 
+                      if not (env.solver env phi)
+                      then Tc.Errors.report (range_of_lid l) (Tc.Errors.failed_to_prove_specification_of l []));
           Sig_let(lbs, r)
         | _ -> failwith "impossible" in
       let env = Tc.Env.push_sigelt env se in 

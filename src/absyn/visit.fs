@@ -606,6 +606,7 @@ and reduce_typ
       Comp ({ct with result_typ=t; effect_args=List.rev args}), env 
   and visit_typ env binders t = 
     let kl, tl, cl, el, env = match (compress_typ t).t with 
+      | Typ_delayed _ -> failwith "Impossible"
       | Typ_unknown
       | Typ_btvar _   
       | Typ_const _ -> [],[],[],[], env

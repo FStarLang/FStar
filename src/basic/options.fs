@@ -44,6 +44,7 @@ let pretype = Util.mk_ref true
 let codegen = Util.mk_ref None
 let admit_fsi = Util.mk_ref []
 let trace_error = Util.mk_ref false
+let verify = Util.mk_ref false
 
 let query_file () = 
   let f = "query-" ^ (Util.string_of_int <| Util.query_count()) ^ ".smt2" in
@@ -123,5 +124,7 @@ let specs () : list<Getopt.opt> =
      ( noshort, "describe_queries", ZeroArgs (fun () -> describe_queries := true), "Print the queried formula and its location");
      ( noshort, "UNSAFE_skip_first_queries", OneArg ((fun x -> skip_first_queries x), "n"), "Skip the first n queries");
      ( noshort, "admit_fsi", OneArg ((fun x -> admit_fsi := x::!admit_fsi), "module name"), "Treat .fsi as a .fst");
-     ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir")] in 
+     ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir");
+     ( noshort, "verify", ZeroArgs (fun () -> verify := true), "Call the SMT solver to discharge verifications conditions");
+     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs

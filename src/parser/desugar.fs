@@ -983,7 +983,7 @@ let mk_data_ops env = function
         let t = build_typ t1 in
         let body = ewithpos (Exp_match(formal_exp, [(Pat_cons(lid, argpats), None, bvd_to_exp x t1)])) x.ppname.idRange in
         let sigs =
-          [Sig_val_decl(field_name, t, Some Assumption, Some Logic_projector, range_of_lid field_name)
+          [Sig_val_decl(field_name, t, Some Assumption, Some (Logic_projector(lid, Inr x)), range_of_lid field_name)
            //;Sig_let((false, [(Inr field_name, t, build_exp body)]))
           ] in
        // let _ = Util.print_string (Util.format2 "adding value projector %s at type %s\n" field_name.str (Print.typ_to_string t)) in 
@@ -998,7 +998,7 @@ let mk_data_ops env = function
       | Typ_univ(a, k, t2) ->
         let field_name = lid_of_ids (ids_of_lid lid @ [a.ppname]) in
         let kk = build_kind k in
-        let sigs = Sig_tycon(field_name, [], kk, [], [], [Logic_projector], range_of_lid field_name) in
+        let sigs = Sig_tycon(field_name, [], kk, [], [], [Logic_projector(lid, Inl a)], range_of_lid field_name) in
         //let _ = Util.print_string (Util.format2 "adding type projector %s at type %s\n" field_name.str (Print.kind_to_string kk)) in 
         let t2 = 
           if freetv |> Util.for_some (fun b -> Util.bvd_eq b.v a)
@@ -1009,7 +1009,7 @@ let mk_data_ops env = function
 
       | _ -> fields in
     let disc_name = Util.mk_discriminator lid in
-    let disc = Sig_val_decl(disc_name, build_typ (Util.ftv Const.bool_lid), Some Assumption, Some Logic_discriminator, range_of_lid disc_name) in
+    let disc = Sig_val_decl(disc_name, build_typ (Util.ftv Const.bool_lid), Some Assumption, Some (Logic_discriminator lid), range_of_lid disc_name) in
     aux [disc] t
   | _ -> []
 
@@ -1076,8 +1076,10 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         let env', typars = typars_of_binders env binders in
         let quals = logic_tags quals in
         let k = match kopt with
-            | None when List.contains Logic_effect quals -> Kind_effect
-            | None -> Kind_unknown
+            | None -> 
+              if Util.for_some (function Logic_effect -> true | _ -> false) quals
+              then Kind_effect
+              else Kind_unknown
             | Some k -> desugar_kind env' k in
         let t = desugar_typ env' t in
         let se = Sig_typ_abbrev(qualify env id, typars, k, t, quals, rng) in

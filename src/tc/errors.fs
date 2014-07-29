@@ -22,6 +22,9 @@ open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
 
+let report r msg = 
+  Util.print_string (format2 "Error %s: %s\n" (Range.string_of_range r) msg)
+
 let ill_kinded_effect e k = 
   format2 "Ill-kinded effect (%s) has kind %s" e.str (Print.kind_to_string k)
 
@@ -122,3 +125,6 @@ let kind_has_a_non_trivial_precondition k =
 
 let expected_pure_expression e c =
   format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" (Print.exp_to_string e) (fst <| name_and_result c)
+
+let failed_to_prove_specification_of l lbls = 
+  format2 "Failed to prove specification of %s; assertions at [%s] may fail" (Print.sli l) (lbls |> String.concat ", ")
