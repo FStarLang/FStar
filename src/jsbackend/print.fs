@@ -17,7 +17,7 @@ let ws = break1
 
 let encode_char (c : char) =
   let cn = (int)c in
-  if cn > 127 then sprintf "\\u%04x" cn
+  if cn > 127 || cn=39 then sprintf "\\u%04x" cn
   else match cn with
     | 34 -> "\\\"" | 92 -> "\\\\"
     | 9 -> "\\t"   | 10 -> "\\n"
@@ -35,45 +35,43 @@ let rec pretty_print (program:Ast.t) : doc =
   |> reduce (* combine hardline *)
 
 and pretty_print_statement (p:statement_t) : doc =
-  let optind (s:statement_t) = match s with JSS_Block(_) -> (fun x->x) | _ -> nest 1 in 
+  let optws (s:statement_t) = match s with JSS_Block(_) -> pretty_print_statement s
+    | _ -> reduce [ws; nest 1 (pretty_print_statement s)] in 
   let f = function
   | JSS_Empty -> semi
-  | JSS_Debugger -> text "debugger;"
+  | JSS_Debugger -> reduce [ws; text "debugger;"]
 
-  | JSS_Return(e) -> reduce [text "return";
+  | JSS_Return(e) -> reduce [ws; text "return";
     (match e with None -> empty
-    | Some v -> reduce [ws; pretty_print_exp v; semi]);
+    | Some v -> reduce [ws; pretty_print_exp v]);
     semi]
 
-  | JSS_Throw(e) -> reduce [text "throw "; pretty_print_exp e; semi]
+  | JSS_Throw(e) -> reduce [ws; text "throw "; pretty_print_exp e; semi]
 
-  | JSS_Break(i) -> reduce [text "break";
+  | JSS_Break(i) -> reduce [ws; text "break";
     (match i with None -> empty | Some v -> cat ws (text v));
     semi]
 
-  | JSS_Continue(i) -> reduce [text "continue";
+  | JSS_Continue(i) -> reduce [ws; text "continue";
     (match i with None -> empty | Some v -> reduce [ws; text (jstr_escape v)]);
     semi]
 
-  | JSS_Block(l) -> reduce [text "{"; hardline; nest 1 (pretty_print_statements l); text "}"]
+  | JSS_Block(l) -> reduce [ws; text "{"; hardline; nest 1 (pretty_print_statements l); ws; text "}"]
 
-  | JSS_Label(l, s) -> reduce [text (jstr_escape l); text ":"; hardline; (pretty_print_statement s) |> (optind s)]
+  | JSS_Label(l, s) -> reduce [ws; text (jstr_escape l); text ":"; hardline; optws s]
 
-  | JSS_Expression(e) -> cat (pretty_print_exp e) semi
+  | JSS_Expression(e) -> reduce [ws; (pretty_print_exp e); semi]
 
-  | JSS_If(c,t,f) -> reduce [cat1 (text "if") (parens (pretty_print_exp c)); hardline;
-    (pretty_print_statement t) |> (optind t);
-    (match f with None -> empty | Some s -> reduce [text "else";
-      (match s with JSS_If(_) -> ws | _ -> hardline);
-      (pretty_print_statement s) |> (optind s)])]
+  | JSS_If(c,t,f) -> reduce [ws; text "if"; (parens (pretty_print_exp c)); hardline; optws t;
+    (match f with None -> empty | Some s -> reduce [ws; text "else";
+      (match s with JSS_If(_) -> ws | _ -> hardline); optws s])]
 
-  | JSS_Do(s,e) -> reduce [text "do"; hardline; (pretty_print_statement s) |> (optind s);
-    text "while"; parens (pretty_print_exp e); semi]
+  | JSS_Do(s,e) -> reduce [ws; text "do"; hardline; optws s; pretty_print_statement s;
+    ws; text "while"; parens (pretty_print_exp e); semi]
 
-  | JSS_While(e,s) -> reduce [text "while"; parens (pretty_print_exp e); hardline;
-    (pretty_print_statement s) |> (optind s)]
+  | JSS_While(e,s) -> reduce [ws; text "while"; parens (pretty_print_exp e); hardline; optws s]
 
-  | JSS_For(i,c,l,s) -> reduce [text "for"; reduce [
+  | JSS_For(i,c,l,s) -> reduce [ws; text "for"; reduce [
     (match i with None -> empty
      | Some e -> (match e with JSF_Expression(f) -> pretty_print_exp_il f 
         | JSF_Declaration(l) -> List.map 
@@ -83,33 +81,33 @@ and pretty_print_statement (p:statement_t) : doc =
     ); semi; ws;
     (match c with None -> empty | Some e -> pretty_print_exp e); semi; ws;
     (match l with None -> empty | Some e -> pretty_print_exp e)] |> parens;
-    hardline; (pretty_print_statement s) |> (optind s)]
+    hardline; optws s]
 
-  | JSS_Forin(i,e,s) -> reduce [text "for"; reduce [
+  | JSS_Forin(i,e,s) -> reduce [ws; text "for"; reduce [
     (match i with JSF_Expression(f) -> pretty_print_exp_il f 
     | JSF_Declaration(l) -> List.map (fun (x,v) -> reduce [text "var"; ws; text (jstr_escape x);
         (match v with None->empty | Some v -> reduce [ws; text "="; ws; pretty_print_exp_cl v])])
     l |> combine comma); ws; colon; ws; pretty_print_exp e] |> parens;
-    hardline; (pretty_print_statement s) |> (optind s)]
+    hardline; optws s]
 
-  | JSS_With(e,s) -> reduce [text "with"; parens (pretty_print_exp e); hardline; (pretty_print_statement s) |> (optind s)]
+  | JSS_With(e,s) -> reduce [ws; text "with"; parens (pretty_print_exp e); hardline; optws s]
 
-  | JSS_Switch(e,def,cases) -> reduce [text "switch"; parens (pretty_print_exp e); hardline;
-      text "{"; hardline; reduce [
-        combine hardline (List.map (fun (e,l)->reduce [text "case "; pretty_print_exp e; colon; hardline; nest 1 (pretty_print_statements l)]) cases);
-        (match def with None -> empty | Some l -> reduce [text "default:"; hardline; nest 1 (pretty_print_statements l)])
-      ] |> nest 1; text "}"]
+  | JSS_Switch(e,def,cases) -> reduce [ws; text "switch"; parens (pretty_print_exp e); hardline;
+      ws; text "{"; hardline; reduce [
+        combine hardline (List.map (fun (e,l)->reduce [ws; text "case "; pretty_print_exp e; colon; hardline; nest 1 (pretty_print_statements l)]) cases);
+        (match def with None -> empty | Some l -> reduce [ws; text "default:"; hardline; nest 1 (pretty_print_statements l)])
+      ] |> nest 1; ws; text "}"]
 
-  | JSS_Try(b,c,f) -> reduce [text "try"; hardline; (pretty_print_statement b);
-      (match c with Some (i,c) -> reduce [text "catch"; parens (text i); hardline; (pretty_print_statement c)]| None -> empty);
-      (match f with Some f -> reduce [text "finally"; hardline; (pretty_print_statement f)] | None -> empty)]
+  | JSS_Try(b,c,f) -> reduce [ws; text "try"; hardline; (pretty_print_statement b);
+      (match c with Some (i,c) -> reduce [ws; text "catch"; parens (text i); hardline; (pretty_print_statement c)]| None -> empty);
+      (match f with Some f -> reduce [ws; text "finally"; hardline; (pretty_print_statement f)] | None -> empty)]
 
-  | JSS_Declaration(l) -> reduce [text "var"; ws; combine comma (List.map
+  | JSS_Declaration(l) -> reduce [ws; text "var"; ws; combine comma (List.map
       (fun (i,v) -> reduce [text (jstr_escape i);
         (match v with None -> empty
         | Some v -> reduce [ws; text "="; ws; pretty_print_exp_cl v])]) l); semi]
 
-  in cat (f p) hardline
+  in reduce [(f p) ; hardline]
 
 and pretty_print_statements l = reduce (List.map pretty_print_statement l)
 
@@ -128,7 +126,7 @@ and pretty_print_exp_gen (commaless:bool) (inless:bool) =
   | JSE_Identifier(id) -> (text (jstr_escape id), 0)
   | JSE_Array(l) -> (enclose lbr rbr (pretty_print_elist l), 0)
   | JSE_Object(l) -> ((if List.length l > 0 then reduce [
-    text "{"; hardline; (pretty_print_object l); text "}"] else text "{}"), 0)
+    text "{"; hardline; (pretty_print_object l); ws; text "}"] else text "{}"), 0)
   | JSE_Function(f) -> (parens (pretty_print_function f), 1)
   | JSE_Dot(e,i) -> let (s,p)=ppe e in (reduce [pt s (p>1); text "."; text (jstr_escape i)], 1)
   | JSE_Property(e,f) -> let (s,p) = ppe e in let (s1, p1) = ppe f in (reduce [pt s (p>1); enclose lbr rbr s1],1)
@@ -184,16 +182,16 @@ and pretty_print_exp_il = pretty_print_exp_gen false true
 and pretty_print_elist l = List.map pretty_print_exp_cl l |> combine comma
 
 and pretty_print_function_decl (decl:bool) ((n,args,b):function_t) = reduce [
-  (if decl then text (sprintf "function %s" (match n with Some(i) -> jstr_escape i | None -> "")) else empty);
+  (if decl then reduce [text "function"; ws; text (match n with Some(i) -> jstr_escape i | None -> "")] else empty);
   parens (pretty_print_elist (List.map (fun s->JSE_Identifier(s)) args));
   (match List.length b with 0 -> text "{}"
-  | _ -> reduce [hardline; text "{"; hardline; nest 1 (pretty_print b); text "}"])]
+  | _ -> reduce [hardline; ws; text "{"; hardline; ws; nest 1 (pretty_print b); ws; text "}"])]
 
 and pretty_print_function = pretty_print_function_decl true
 
 and pretty_print_object = function
   | h::t -> let p = match h with
-    | JSP_Property(p, v) -> cat1 (text (sprintf "\"%s\":" (jstr_escape p))) (pretty_print_exp_cl v)
+    | JSP_Property(p, v) -> reduce [ws; text "\""; text (jstr_escape p); text "\":"; (pretty_print_exp_cl v)]
     | JSP_Getter(p,f) -> cat (text ("get "^(jstr_escape p))) (pretty_print_function_decl false f)
     | JSP_Setter(p,f) -> cat (text ("set "^(jstr_escape p))) (pretty_print_function_decl false f)
     in reduce [p; (if List.length t>0 then comma else empty); hardline; pretty_print_object t]
