@@ -33,8 +33,9 @@ let cleanup () = ()
 
 let go _ =    
   let finished (mods:list<Syntax.modul>) = 
-    let msg = if !Options.pretype then "Parsed, desugared, and pre-typed module:" else "Parsed and desugared module:" in
-    mods |> List.iter (fun m -> Util.print_string (Util.format2 "%s %s\n" msg (Syntax.text_of_lid m.name))) in
+    if !Options.silent then () else
+      let msg = if !Options.pretype then "Parsed, desugared, and pre-typed module:" else "Parsed and desugared module:" in
+      mods |> List.iter (fun m -> Util.print_string (Util.format2 "%s %s\n" msg (Syntax.text_of_lid m.name))) in
   let (res, filenames) = process_args () in
   match res with
     | Help ->
