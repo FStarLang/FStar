@@ -75,7 +75,7 @@ let float_of_int64 (n:int64) = (float)n
 
 let string_of_int   i = string_of_int i
 let string_of_float i = string_of_float i
-let string_of_char  (i:char) = spr "%A" i
+let string_of_char  (i:char) = spr "%c" i
 let string_of_bytes (i:byte[]) = string_of_unicode i
 let starts_with (s1:string) (s2:string) = s1.StartsWith(s2)
 let trim_string (s:string) = s.Trim()

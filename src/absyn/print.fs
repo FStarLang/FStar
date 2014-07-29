@@ -41,7 +41,7 @@ let const_to_string x = match x with
   | Const_bool b -> if b then "true" else "false"
   | Const_int32 x ->      Util.string_of_int x
   | Const_float x ->      Util.string_of_float x
-  | Const_char x ->       Util.string_of_char x
+  | Const_char x ->       "'" ^ (Util.string_of_char x) ^ "'"
   | Const_string(bytes, _) -> Util.format1 "\"%s\"" (Util.string_of_bytes bytes)
   | Const_bytearray _  ->  "<bytearray>"
   | Const_int64 _ -> "<int64>"

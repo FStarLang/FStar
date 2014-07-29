@@ -29,36 +29,41 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Util
 
-let constructors = Util.smap_create 100
+let constructors = Util.smap_create 1000
 
 let nothing = 
-    Util.smap_add constructors "Prims.op_Minus" (1, Some(function x::[] -> JSE_Minus(x) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_Negation" (1, Some(function x::[] -> JSE_Lnot(x) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_Addition" (2, Some(function x::y::[] -> JSE_Add(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_Subtraction" (2, Some(function x::y::[] -> JSE_Sub(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_Division" (2, Some(function x::y::[] -> JSE_Divide(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_Multiply" (2, Some(function x::y::[] -> JSE_Multiply(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_Modulus" (2, Some(function x::y::[] -> JSE_Mod(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_BarBar" (2, Some(function x::y::[] -> JSE_Lor(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_AmpAmp" (2, Some(function x::y::[] -> JSE_Land(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_GreaterThan" (2, Some(function x::y::[] -> JSE_Gt(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_LessThanOrEqual" (2, Some(function x::y::[] -> JSE_Le(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_LessThan" (2, Some(function x::y::[] -> JSE_Lt(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_GreaterThanOrEqual" (2, Some(function x::y::[] -> JSE_Ge(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_Equality" (2, Some(function x::y::[] -> JSE_Equal(JSE_Add(x,JSE_String("")),y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_disEquality" (2, Some(function x::y::[] -> JSE_Lnot(JSE_Equal(JSE_Add(x,JSE_String("")),y)) | _ -> failwith ""));
-    Util.smap_add constructors "String.strcat" (2, Some(function x::y::[] -> JSE_Add(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.fst" (1, Some(function x::[] -> JSE_Dot(x, "v[0]") | _ -> failwith ""));
-    Util.smap_add constructors "Prims.snd" (1, Some(function x::[] -> JSE_Dot(x, "v[1]") | _ -> failwith ""));
-    Util.smap_add constructors "Prims.op_ColonEquals" (2, Some(function x::y::[] -> JSE_Assign(x,y) | _ -> failwith ""));
-    Util.smap_add constructors "Prims.MkTuple2" (2, None);
-    Util.smap_add constructors "Prims.MkTuple3" (3, None);
-    Util.smap_add constructors "Prims.MkTuple4" (4, None);
-    Util.smap_add constructors "Prims.MkTuple5" (5, None);
-    Util.smap_add constructors "Prims.MkTuple6" (6, None);
-    Util.smap_add constructors "Prims.MkTuple7" (7, None);
-    Util.smap_add constructors "Prims.MkTuple8" (8, None);
-    Util.smap_add constructors "Prims.failwith" (1, Some(function x::[] -> JSE_Call(
+    Util.smap_add constructors "Prims.op_Minus" (Some 1, Some(function x::[] -> JSE_Minus(x) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_Negation" (Some 1, Some(function x::[] -> JSE_Lnot(x) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_Addition" (Some 2, Some(function x::y::[] -> JSE_Add(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_Subtraction" (Some 2, Some(function x::y::[] -> JSE_Sub(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_Division" (Some 2, Some(function x::y::[] -> JSE_Divide(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_Multiply" (Some 2, Some(function x::y::[] -> JSE_Multiply(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_Modulus" (Some 2, Some(function x::y::[] -> JSE_Mod(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_BarBar" (Some 2, Some(function x::y::[] -> JSE_Lor(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_AmpAmp" (Some 2, Some(function x::y::[] -> JSE_Land(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_GreaterThan" (Some 2, Some(function x::y::[] -> JSE_Gt(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_LessThanOrEqual" (Some 2, Some(function x::y::[] -> JSE_Le(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_LessThan" (Some 2, Some(function x::y::[] -> JSE_Lt(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_GreaterThanOrEqual" (Some 2, Some(function x::y::[] -> JSE_Ge(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_Equality" (Some 2, Some(function x::y::[] -> JSE_Equal(JSE_Add(x,JSE_String("")),JSE_Add(y,JSE_String(""))) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_disEquality" (Some 2, Some(function x::y::[] -> JSE_Lnot(JSE_Equal(JSE_Add(x,JSE_String("")),JSE_Add(y,JSE_String("")))) | _ -> failwith ""));
+    Util.smap_add constructors "String.strcat" (Some 2, Some(function x::y::[] -> JSE_Add(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "String.length" (Some 1, Some(function x::[] -> JSE_Dot(x,"length") | _ -> failwith ""));
+    Util.smap_add constructors "Prims.fst" (Some 1, Some(function x::[] -> JSE_Dot(x, "v[0]") | _ -> failwith ""));
+    Util.smap_add constructors "Prims.snd" (Some 1, Some(function x::[] -> JSE_Dot(x, "v[1]") | _ -> failwith ""));
+    Util.smap_add constructors "Prims.op_ColonEquals" (Some 2, Some(function x::y::[] -> JSE_Assign(x,y) | _ -> failwith ""));
+    Util.smap_add constructors "Prims.Nil" (None, None);
+    Util.smap_add constructors "Prims.Cons" (None, None);
+    Util.smap_add constructors "Prims.None" (None, None);
+    Util.smap_add constructors "Prims.Some" (None, None);
+    Util.smap_add constructors "Prims.MkTuple2" (None, None);
+    Util.smap_add constructors "Prims.MkTuple3" (None, None);
+    Util.smap_add constructors "Prims.MkTuple4" (None, None);
+    Util.smap_add constructors "Prims.MkTuple5" (None, None);
+    Util.smap_add constructors "Prims.MkTuple6" (None, None);
+    Util.smap_add constructors "Prims.MkTuple7" (None, None);
+    Util.smap_add constructors "Prims.MkTuple8" (None, None);
+    Util.smap_add constructors "Prims.failwith" (Some 1, Some(function x::[] -> JSE_Call(
         JSE_Function(None,[],[JS_Statement(JSS_Throw(x))]),[]) | _ -> failwith ""));
     ()
 
@@ -95,8 +100,9 @@ and try_compile_constructor (e:exp) : option<expression_t> =
     in let rec aux (args:list<exp>) (e:exp) = match e with
     | Exp_fvar(x, b) ->
         (match Util.smap_try_find constructors x.v.str with
-        | None -> None
-        | Some(arity, compiler) -> Some(uncur x.v.str args arity compiler))
+        | Some(None, compiler) -> Some(uncur x.v.str args (List.length args) compiler)
+        | Some(Some(arity), compiler) when (arity >= List.length args) -> Some(uncur x.v.str args arity compiler)
+        | _ -> None)
     | Exp_app(e1, e2, f) -> aux (e2::args) e1
     | _ -> None
     in aux [] e
@@ -186,23 +192,35 @@ and untype_expr (e:exp) =
     | Exp_match(e, pl) -> Exp_match(untype_expr e, List.map unt_pat pl)
     | _ -> e
 
-and type_arity ty = match ty with
-  | Typ_fun(_,t,_,_) -> 1 + (type_arity t.t)
-  | Typ_refine(_, t, _) -> type_arity t.t
-  | Typ_app(t, _, _) -> (type_arity t.t)
-  | Typ_dep(t,_,_) -> type_arity t.t
-  | Typ_lam(_,_,t) -> 1 + (type_arity t.t)
-  | Typ_tlam(_, _, t) -> type_arity t.t
-  | Typ_ascribed(t,_) -> type_arity t.t
-  | Typ_meta(Meta_pos(t,_)) -> type_arity t.t
-  | Typ_meta(Meta_pattern(t,_)) -> type_arity t.t
-  | Typ_meta(Meta_named(t,_)) -> type_arity t.t
-  | _ -> 0 
+and comp_vars ct = match ct with
+    | Total(t) | Flex(_,t) -> type_vars t.t
+    | Comp(ct) -> type_vars ct.result_typ.t
+
+and type_vars ty = match ty with
+    | Typ_fun(x,t,c,_) -> x::((type_vars t.t) @ (comp_vars c))
+    | Typ_lam(_,_,t) | Typ_refine(_, t, _) | Typ_app(t, _, _) 
+    | Typ_dep(t,_,_) | Typ_tlam(_, _, t) | Typ_ascribed(t,_)
+    | Typ_meta(Meta_pos(t,_)) | Typ_meta(Meta_pattern(t,_))
+    | Typ_meta(Meta_named(t,_)) -> type_vars t.t
+    | _ -> []
 
 and compile_def (d:sigelt) =
-    match d with
-    | Sig_datacon(n,ty,tyn,_) -> Util.smap_add constructors n.str (type_arity ty.t, None)
-    | Sig_bundle(defs, range) -> List.iter compile_def defs
+    (* TODO Surely there must be a better way of figuring out the field names from records in the desugared AST *)
+    let add_fieldnames cons vnames =
+        let rec aux i l = match l with
+        | x::r -> (match x with None -> aux i r
+            | Some(v) -> if Util.starts_with v.ppname.idText "^fname^" then
+                (Util.smap_add constructors (cons^"."^(Util.substring_from v.ppname.idText 7))
+                (Some(1), Some(function x::[] -> JSE_Dot(x, "v["^(Util.string_of_int i)^"]") | _ -> failwith "")));
+                aux (i+1) r)
+        | [] -> ()
+        in aux 0 vnames
+    in match d with
+    | Sig_datacon(n,ty,_,_) ->
+        let fields = type_vars ty.t in
+        Util.smap_add constructors n.str ((match fields with []->Some(1) | _ -> None), None);
+        add_fieldnames n.str fields
+    | Sig_bundle(defs, _) -> List.iter compile_def defs
     | _ -> ()
 
 and js_of_exports isrec (id,typ,expr) : source_t =
@@ -220,12 +238,12 @@ let rec js_of_singl (p:sigelt) : list<source_t> =
     | _ -> []
 
 let js_of_fstar (m:modul) : Ast.t =
-    (JS_Statement(JSS_Expression(JSE_Assign(JSE_Identifier(m.name.str),JSE_Object([])))))
+    (JS_Statement(JSS_If(JSE_Lnot(JSE_Dot(JSE_This, m.name.str)), JSS_Expression(JSE_Assign(JSE_Identifier(m.name.str),JSE_Object([]))),None)))
         :: (List.map js_of_singl m.exports |> List.concat)
 
 let js_of_fstars (fmods : list<modul>) : Ast.t =
     let fmods = List.concat (List.map js_of_fstar fmods) in
-    [JS_Statement(JSS_Expression(JSE_Call(JSE_Function(Some "FStar", [],
+    [JS_Statement(JSS_Expression(JSE_Call(JSE_Function(None, [],
         (JS_Statement(JSS_Declaration(["$C", Some(JSE_Function(None, ["t";"v"],
             [JS_Statement(JSS_Return(Some(JSE_Object([
                 JSP_Property("t", JSE_Identifier("t"));
@@ -236,6 +254,3 @@ let js_of_fstars (fmods : list<modul>) : Ast.t =
             ]))))]
         ))])))::fmods
     ), [])))]
-
-
-
