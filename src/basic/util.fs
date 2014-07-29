@@ -69,6 +69,10 @@ let int_of_char (s:char) = int s
 
 let uint16_of_int (i:int) = uint16 i
 
+let float_of_byte (b:byte) = (float)b
+let float_of_int32 (n:int32) = (float)n
+let float_of_int64 (n:int64) = (float)n
+
 let string_of_int   i = string_of_int i
 let string_of_float i = string_of_float i
 let string_of_char  (i:char) = spr "%A" i

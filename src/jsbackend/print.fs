@@ -32,7 +32,7 @@ let rec pretty_print (program:Ast.t) : doc =
   |> List.map (function
     | JS_Statement(s) -> pretty_print_statement s
     | JS_FunctionDeclaration(f) -> pretty_print_function f)
-  |> combine hardline
+  |> reduce (* combine hardline *)
 
 and pretty_print_statement (p:statement_t) : doc =
   let optind (s:statement_t) = match s with JSS_Block(_) -> (fun x->x) | _ -> nest 1 in 
