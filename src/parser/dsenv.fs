@@ -424,12 +424,13 @@ let is_type_lid env lid =
   else aux ()
 
 
-let check_admits env = 
+let check_admits nm env = 
+  let warn = not (!Options.admit_fsi |> Util.for_some (fun l -> nm.str = l)) in
   env.sigaccum |> List.iter (fun se -> match se with
     | Sig_val_decl(l, t, None, ltags, r) -> 
       begin match try_lookup_lid env l with 
         | None -> 
-          Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.sli l));
+          if warn then Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.sli l));
           Util.smap_add env.sigmap l.str (Sig_val_decl(l, t, Some Assumption, ltags, r), false)
         | Some _ -> ()
       end
@@ -447,7 +448,7 @@ let finish env modul =
 
 let finish_module_or_interface env modul = 
   if not modul.is_interface 
-  then check_admits env;
+  then check_admits modul.name env;
   finish env modul
 
 let prepare_module_or_interface intf env mname =

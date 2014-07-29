@@ -765,7 +765,7 @@ let is_lid_equality x =
   (lid_equals x Const.eq_lid) ||
     (lid_equals x Const.eq2_lid) ||
     (lid_equals x Const.eqA_lid) ||
-    (lid_equals x Const.eqTyp_lid)
+    (lid_equals x Const.eqT_lid)
 
 let is_forall lid = lid_equals lid Const.forall_lid
 let is_exists lid = lid_equals lid Const.exists_lid
@@ -774,7 +774,7 @@ let is_equality x = is_lid_equality x.v
 
 let lid_is_connective =
   let lst = [Const.and_lid; Const.or_lid; Const.not_lid;
-             Const.iff_lid; Const.implies_lid] in
+             Const.iff_lid; Const.imp_lid] in
   fun lid -> Util.for_some (lid_equals lid) lst
     
 let is_constructor t lid =
@@ -846,7 +846,7 @@ let mk_binop op phi1 phi2 =
 let mk_neg phi = withkind Kind_type <| Typ_app(ftv Const.not_lid, phi, false)
 let mk_conj phi1 phi2 = mk_binop Const.and_lid phi1 phi2
 let mk_disj phi1 phi2 = mk_binop Const.or_lid phi1 phi2
-let mk_imp phi1 phi2  = mk_binop Const.implies_lid phi1 phi2
+let mk_imp phi1 phi2  = mk_binop Const.imp_lid phi1 phi2
 let mk_iff phi1 phi2  = mk_binop Const.iff_lid phi1 phi2
 let mk_eq e1 e2       = 
   let app1 = withkind kun <| Typ_dep(ftv Const.eq2_lid, e1, false) in

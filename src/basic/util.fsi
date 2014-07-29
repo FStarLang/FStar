@@ -49,7 +49,7 @@ val uint16_of_int: int -> uint16
 val string_of_int:   int -> string
 val string_of_float: float -> string
 val string_of_char:  char -> string
-val string_of_bytes: byte[] -> string
+val string_of_bytes: array<byte> -> string
 val starts_with: string -> string -> bool
 val trim_string: string -> string
 val ends_with: string -> string -> bool
@@ -71,7 +71,7 @@ val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
 val add_unique: ('a -> 'a -> bool) -> 'a -> list<'a> -> list<'a>
 val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
 val fold_map: ('a -> 'b -> 'a * 'c) -> 'a -> list<'b> -> 'a * list<'c>
-val choose_map: ('a -> 'b -> 'a * 'c option) -> 'a -> list<'b> -> 'a * list<'c>
+val choose_map: ('a -> 'b -> 'a * option<'c>) -> 'a -> list<'b> -> 'a * list<'c>
 val for_all: ('a -> bool) -> list<'a> -> bool
 val for_some: ('a -> bool) -> list<'a> -> bool
 val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
@@ -86,8 +86,8 @@ val map_opt: option<'a> -> ('a -> 'b) -> option<'b>
 val first_N: int -> list<'a> -> (list<'a> * list<'a>)
 val prefix: list<'a> -> (list<'a> * 'a)
 
-val string_of_unicode: byte[] -> string
-val unicode_of_string: string -> byte[] 
+val string_of_unicode: array<byte> -> string
+val unicode_of_string: string -> array<byte>
 val incr: ref<int> -> unit
 val geq: int -> int -> bool
 val for_range: int -> int -> (int -> unit) -> unit

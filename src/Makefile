@@ -18,7 +18,7 @@ PARSER_SRC=$(addprefix parser/, $(PARSER))
 PARSER_NOGEN=ast.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
 PARSER_NOGEN_SRC=$(addprefix parser/, $(PARSER_NOGEN))
 
-TOSMT=term.fs z3.fs 
+TOSMT=term.fs z3.fs encode.fs
 TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
 
 TC=errors.fs tcenv.fsi tcenv.fs normalize.fsi normalize.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
@@ -158,7 +158,7 @@ clean:
 STDFILES=st.fst list.fst option.fst string.fst
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 
-BASICFILES=bytes.fst util.fst getoptsimple.fst options.fs range.fst unionfind.fst
+BASICFILES=bytes.fst util.fsi getoptsimple.fst options.fs range.fst unionfind.fst
 BASIC=$(addprefix basic/, $(BASICFILES))
 SYNTAXFILES=syntax.fs const.fs visit.fs util.fs print.fs
 SYNTAX=$(addprefix absyn/, $(SYNTAXFILES))
@@ -173,10 +173,10 @@ BACKEND=$(addprefix backend/, ocaml-backend-stub.fst)
 JSBACKENDFILES=ast.fs translate.fs
 JSBACKEND=$(addprefix jsbackend/, $(JSBACKENDFILES))
 MAIN=fstar.fs
-BOOT_ALL=$(STDLIB) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(BACKEND) $(JSBACKEND)
+BOOT_ALL=$(STDLIB) $(BASIC) $(SYNTAX) $(PARSER) $(TC) $(TOSMT_SRC) $(BACKEND) #$(JSBACKEND)
 
 boot: $(BOOT_ALL)
-	../bin/fstar.exe --fstar_home .. $^
+	../bin/fstar.exe --fstar_home .. --admit_fsi Microsoft.FStar.Util $^
 
 wc-boot:
 	wc -l $(BOOT_ALL)

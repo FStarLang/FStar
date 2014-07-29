@@ -67,6 +67,7 @@ type lattice = {
 }
 
 type env = {
+  solver: env -> typ -> bool;
   range:Range.range;             (* the source location of the term being checked *)
   curmodule: lident;             (* Name of this module *)
   gamma:list<binding>;           (* Local typing environment and signature elements *)
@@ -85,8 +86,9 @@ let has_interface env l =
 
 let debug env = !Options.debug |> Util.for_some (fun x -> env.curmodule.str = x) 
 
-let initial_env module_lid =
-  { range=Syntax.dummyRange;
+let initial_env solver module_lid =
+  { solver=solver;
+    range=Syntax.dummyRange;
     curmodule=module_lid;
     gamma= [];
     modules= [];
@@ -96,7 +98,7 @@ let initial_env module_lid =
     is_pattern=false;
     instantiate_targs=true;
     instantiate_vargs=true;
-    lattice={decls=[]; order=[]; joins=[]}
+    lattice={decls=[]; order=[]; joins=[]};
   }
 
 let monad_decl_opt env l = 

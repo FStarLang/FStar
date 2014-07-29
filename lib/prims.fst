@@ -84,6 +84,7 @@ type ref : Type => Type
 type LBL : string => Type => Type
 type bytes
 type exn
+type HashMultiMap : Type => Type => Type
 
 logic data type option 'a =
   | None : option 'a

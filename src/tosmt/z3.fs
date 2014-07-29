@@ -17,7 +17,7 @@
 
 module Microsoft.FStar.ToSMT.Z3
 open Microsoft.FStar
-open Term
+open Microsoft.FStar.ToSMT.Term
 open Microsoft.FStar.Util
 
 (****************************************************************************)
@@ -47,30 +47,29 @@ let status_to_string = function
     
 let doZ3Exe ini_params (input:string) = 
   let parse (z3out:string) = 
-    let lines = List.ofArray (z3out.Split([|'\n'|])) |> List.map (fun l -> l.Trim()) in 
+    let lines = String.split ['\n'] z3out |> List.map Util.trim_string in
     let rec lblnegs lines = match lines with 
       | lname::"false"::rest -> lname::lblnegs rest
       | lname::_::rest -> lblnegs rest
       | _ -> [] in
-    let rec result = function
+    let rec result x = match x with 
       | "timeout"::tl -> TIMEOUT, []
       | "unknown"::tl -> UNKNOWN, lblnegs tl
       | "sat"::tl -> SAT, lblnegs tl
       | "unsat"::tl -> UNSAT, []
       | _::tl -> result tl 
-      | _ -> failwith <| format1 "Got output lines: %s\n" (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (l.Trim())) lines)) in
+      | _ -> failwith <| format1 "Got output lines: %s\n" (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (Util.trim_string l)) lines)) in
       result lines in
   let cmdargs = format1 "%s /in" ini_params in 
   let result, stdout, stderr = Util.run_proc "z3.exe" cmdargs input in    
-  let x = String.trim in
   if result 
   then let status, lblnegs = parse (Util.trim_string stdout) in
        status, lblnegs, cmdargs
   else failwith (format1 "Z3 returned an error: %s\n" stderr)
       
-let callZ3Exe info (theory:decls) labels = 
+let callZ3Exe (theory:decls) labels = 
   let theory = labels |> List.fold_left (fun decls (lname, t) -> decls@[Echo lname; Eval t]) theory in
-  let input = List.map (declToSmt info) theory |> String.concat "\n" in
+  let input = List.map declToSmt theory |> String.concat "\n" in
   let rec proc_result again (status, lblnegs, cmdargs) = 
     match status with 
       | UNSAT -> true

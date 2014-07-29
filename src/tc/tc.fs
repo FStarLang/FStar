@@ -987,13 +987,13 @@ let tc_modul env modul =
   let env = Tc.Env.finish_module env modul in
   modul, env
 
-let check_modules mods = 
+let check_modules (solver:Tc.Env.env -> typ -> bool) mods = 
    let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 
     if List.length !Options.debug <> 0
     then Util.print_string (Util.format2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name));
     let m, env = tc_modul env m in 
     if m.is_interface 
     then mods, env
-    else m::mods, env) ([], Tc.Env.initial_env Const.prims_lid) in
+    else m::mods, env) ([], Tc.Env.initial_env solver Const.prims_lid) in
    List.rev fmods
  

@@ -105,7 +105,7 @@ let op_as_tylid r s =
     | ">=" ->   r Const.gte_lid
     | "/\\" ->  r Const.and_lid
     | "\\/" ->  r Const.or_lid
-    | "==>" ->  r Const.implies_lid
+    | "==>" ->  r Const.imp_lid
     | "<==>" -> r Const.iff_lid
     | _ -> None
 
@@ -805,7 +805,7 @@ and desugar_formula' env (f:term) : typ =
   let connective s = match s with
     | "/\\"  -> Some Const.and_lid
     | "\\/"  -> Some Const.or_lid
-    | "==>"  -> Some Const.implies_lid
+    | "==>"  -> Some Const.imp_lid
     | "<==>" -> Some Const.iff_lid
     | "~"    -> Some Const.not_lid
     | _ -> None in
@@ -850,7 +850,7 @@ and desugar_formula' env (f:term) : typ =
       let args = List.map (fun t -> desugar_typ_or_exp env t, false) args in
       let eq =
         if is_type env hd
-        then ftv (set_lid_range Const.eqTyp_lid f.range)
+        then ftv (set_lid_range Const.eqT_lid f.range)
         else ftv (set_lid_range Const.eq2_lid f.range) in
       mk_tapp eq args
 

@@ -110,5 +110,5 @@ val exit_monad_scope: env -> env -> env
 (* private *) val unique_name: bool -> bool -> env -> lident -> bool
 (* private *) val unique_typ_name: env -> lident -> bool
 (* private *) val unique:  bool -> bool -> env -> lident -> bool
-(* private *) val check_admits:  env -> unit
+(* private *) val check_admits:  lident -> env -> unit
 (* private *) val finish:  env -> modul -> env

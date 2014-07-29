@@ -440,7 +440,7 @@ and crel rel env c1 c2 : option<guard> =
               andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
             let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
             let imp_wp = 
-              let t = Util.mk_typ_app c2_decl.wp_binop [Inl c2.result_typ; Inl wpc2; Inl <| Util.ftv Const.implies_lid; Inl <| edge.mlift c1.result_typ wpc1] in
+              let t = Util.mk_typ_app c2_decl.wp_binop [Inl c2.result_typ; Inl wpc2; Inl <| Util.ftv Const.imp_lid; Inl <| edge.mlift c1.result_typ wpc1] in
               let t = {t with k=wpc2.k} in
               let t = Util.mk_typ_app c2_decl.wp_as_type [Inl c2.result_typ; Inl t] in
               {t with k=Kind_type} in
