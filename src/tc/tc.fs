@@ -332,7 +332,7 @@ and tc_value env e : exp * comp = match e with
     let ee, cc = tc_exp envbody e1 in
     printfn "Expected cres=%s\nInferred comp typ %s" (match cres with None -> "none" | Some c -> Print.comp_typ_to_string c) (Print.comp_typ_to_string cc);
     let e1, cres, fbody = check_expected_effect envbody cres <| (ee, cc) in
-    printfn "Inferred cres=%s\nfbody=%s" (Print.comp_typ_to_string cres) (guard_to_string fbody);
+   // printfn "Inferred cres=%s\nfbody=%s" (Print.comp_typ_to_string cres) (guard_to_string env fbody);
     let t = withkind Kind_type <| Typ_fun(Some x, tx, cres, false) in
     let e, t = gen (Exp_abs(x, tx, e1), t) in
     let c = Tc.Util.strengthen_precondition env (Total t) <| Rel.conj_guard f1 (Rel.conj_guard f2 (Tc.Util.close_guard [b] fbody)) in
@@ -702,13 +702,13 @@ and tc_typ_trivial env t : typ * knd =
   let t, k, g = tc_typ env t in
   match g with 
     | Trivial -> t, k
-    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t ^ " : " ^ (guard_to_string g), range_of_typ t (Env.get_range env)))
+    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t ^ " 1: " ^ (guard_to_string env g), range_of_typ t (Env.get_range env)))
 
 and tc_typ_check_trivial env t k = 
   let t, f = tc_typ_check env t k in
   match f with 
     | Trivial -> t
-    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t ^ " : " ^ (guard_to_string f), range_of_typ t (Env.get_range env)))
+    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t ^ " 2: " ^ (guard_to_string env f), range_of_typ t (Env.get_range env)))
 
 and tc_total_exp env e : exp * typ * guard = 
   let e, c = tc_exp env e in
@@ -928,7 +928,7 @@ and tc_decl env se = match se with
                       Util.print_string (format2 "%s is a trival subtype of %s\n" (Print.typ_to_string t) (Print.typ_to_string t'))
                     | Guard phi -> 
                       Util.print_string (format1 "Checking validity of %s\n" (Print.typ_to_string phi));
-                      if not (env.solver env phi)
+                      if not (env.solver.solve env phi)
                       then Tc.Errors.report (range_of_lid l) (Tc.Errors.failed_to_prove_specification_of l []))
           end;
           Sig_let(lbs, r)
@@ -1010,13 +1010,13 @@ let tc_modul env modul =
   let env = Tc.Env.finish_module env modul in
   modul, env
 
-let check_modules (solver:Tc.Env.env -> typ -> bool) mods = 
+let check_modules (s:solver_t) mods = 
    let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 
     if List.length !Options.debug <> 0
     then Util.print_string (Util.format2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name));
     let m, env = tc_modul env m in 
     if m.is_interface 
     then mods, env
-    else m::mods, env) ([], Tc.Env.initial_env solver Const.prims_lid) in
+    else m::mods, env) ([], Tc.Env.initial_env s Const.prims_lid) in
    List.rev fmods
  

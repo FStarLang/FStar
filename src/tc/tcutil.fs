@@ -425,15 +425,15 @@ let mk_comp md result wp wlp flags =
          effect_args=[Inl wp; Inl wlp];
          flags=flags})
 
-let return_value env t v = 
-  match Tc.Env.monad_decl_opt env Const.pure_effect_lid with 
-    | None -> Util.total_comp t (range_of_exp v (Env.get_range env))
-    | Some m -> 
-       let a, kwp = Env.wp_signature env Const.pure_effect_lid in
-       let k = Util.subst_kind [Inl(a, t)] kwp in
-       let wp = {Util.mk_typ_app m.ret [Inl t; Inr v] with k=k} in
-       let wlp = wp in
-       mk_comp m t wp wlp [RETURN]
+let return_value env t v = Util.total_comp t (range_of_exp v (Env.get_range env))
+//  match Tc.Env.monad_decl_opt env Const.pure_effect_lid with 
+//    | None -> Util.total_comp t (range_of_exp v (Env.get_range env))
+//    | Some m -> 
+//       let a, kwp = Env.wp_signature env Const.pure_effect_lid in
+//       let k = Util.subst_kind [Inl(a, t)] kwp in
+//       let wp = {Util.mk_typ_app m.ret [Inl t; Inr v] with k=k} in
+//       let wlp = wp in
+//       mk_comp m t wp wlp [RETURN]
 
 let bind env (c1:comp) ((b, c2):comp_with_binder) : comp = 
 //  if debug env

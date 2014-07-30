@@ -758,6 +758,12 @@ let encode_env (env:env_t) (tcenv:Env.env) : (decls * env_t) =
     Env.fold_env tcenv encode_binding ([], env)
 
 open Microsoft.FStar.Tc.Env
+
+let formula_to_string tcenv q : string = 
+   let e = {bindings=[]; tcenv=tcenv} in
+   let f, _ = encode_formula e q in
+   Term.termToSmt [] f
+
 let smt_query (tcenv:Tc.Env.env) (q:typ) : bool = 
    let e = {bindings=[]; tcenv=tcenv} in
    let decls, env, tys, datas = tcenv.modules |> List.collect (fun m -> m.exports) |> encode_signature e in
@@ -766,6 +772,10 @@ let smt_query (tcenv:Tc.Env.env) (q:typ) : bool =
    let decls = Term.DefPrelude(tys, datas)::decls@decls'@decls''@[Term.Assume(mkNot phi, Some "query")] in
    Z3.callZ3Exe decls [] 
 
+let solver = {
+    solve=smt_query;
+    formula_to_string=formula_to_string
+}
 //let is_builtin lid = 
 //    lid_equals lid Const.int_lid ||
 //    lid_equals lid Const.bool_lid ||

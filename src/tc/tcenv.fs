@@ -66,8 +66,9 @@ type lattice = {
   joins: list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
 
+
 type env = {
-  solver: env -> typ -> bool;
+  solver: solver_t;
   range:Range.range;             (* the source location of the term being checked *)
   curmodule: lident;             (* Name of this module *)
   gamma:list<binding>;           (* Local typing environment and signature elements *)
@@ -79,6 +80,10 @@ type env = {
   instantiate_targs:bool;        (* instantiate implicit type arguments? default=true *)
   instantiate_vargs:bool;        (* instantiate implicit value agruments? default=true *)
   lattice:lattice;
+} 
+and solver_t = {
+    solve:env -> typ -> bool;
+    formula_to_string:env -> typ -> string;
 }
 
 let has_interface env l = 

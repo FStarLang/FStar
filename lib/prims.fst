@@ -320,32 +320,32 @@ type DTuple2: 'a:Type
            -> _2:'b _1
            -> DTuple2 'a 'b
 
-type DTuple3: 'a:Type
-          => 'b:('a => Type)
-          => 'c:(x:'a => 'b x => Type)
-          => Type =
-  | MkDTuple3: 'a:Type
-           -> 'b:('a => Type)
-           -> 'c:(x:'a => 'b x => Type)
-           -> _1:'a
-           -> _2:'b _1
-           -> _3:'c _1 _2
-           -> DTuple3 'a 'b 'c
+(* type DTuple3: 'a:Type *)
+(*           => 'b:('a => Type) *)
+(*           => 'c:(x:'a => 'b x => Type) *)
+(*           => Type = *)
+(*   | MkDTuple3: 'a:Type *)
+(*            -> 'b:('a => Type) *)
+(*            -> 'c:(x:'a => 'b x => Type) *)
+(*            -> _1:'a *)
+(*            -> _2:'b _1 *)
+(*            -> _3:'c _1 _2 *)
+(*            -> DTuple3 'a 'b 'c *)
 
-type DTuple4: 'a:Type
-          => 'b:(x:'a => Type)
-          => 'c:(x:'a => 'b x => Type)
-          => 'd:(x:'a => y:'b x => z:'c x y => Type)
-          => Type =
-  | MkDTuple4: 'a:Type
-           -> 'b:('a => Type)
-           -> 'c:(x:'a => 'b x => Type)
-           -> 'd:(x:'a => y:'b x => z:'c x y => Type)
-           -> _1:'a
-           -> _2:'b _1
-           -> _3:'c _1 _2
-           -> _4:'d _1 _2 _3
-           -> DTuple4 'a 'b 'c 'd
+(* type DTuple4: 'a:Type *)
+(*           => 'b:(x:'a => Type) *)
+(*           => 'c:(x:'a => 'b x => Type) *)
+(*           => 'd:(x:'a => y:'b x => z:'c x y => Type) *)
+(*           => Type = *)
+(*   | MkDTuple4: 'a:Type *)
+(*            -> 'b:('a => Type) *)
+(*            -> 'c:(x:'a => 'b x => Type) *)
+(*            -> 'd:(x:'a => y:'b x => z:'c x y => Type) *)
+(*            -> _1:'a *)
+(*            -> _2:'b _1 *)
+(*            -> _3:'c _1 _2 *)
+(*            -> _4:'d _1 _2 _3 *)
+(*            -> DTuple4 'a 'b 'c 'd *)
 
 (* logic data type Tuple5: 'a:Type *)
 (*           => 'b:('a => Type) *)
@@ -469,8 +469,8 @@ logic data type list 'cc =
 assume val fst : ('a * 'b) -> PURE.Tot 'a
 assume val snd : ('a * 'b) -> PURE.Tot 'b
 assume val Assume: 'P:Type -> unit -> (y:unit{'P})
-assume val Assert : 'P:Type -> x:unit{'P} -> y:unit{'P}
-(* assume val Assert : 'P:Type -> unit -> PURE.Pure unit 'P (fun (x:unit) => 'P) *)
+(* assume val Assert : 'P:Type -> x:unit{'P} -> y:unit{'P} *)
+assume val Assert : 'P:Type -> unit -> PURE.Pure unit 'P (fun (x:unit) => 'P)
 assume val lemma : 'P:Type -> x:unit{'P} -> z:unit{'P}
 assume val unreachable : x:unit{LBL "unreachable" False} -> 'a
 assume val failwith: string -> 'a (* TODO: refine with a monadic type *)

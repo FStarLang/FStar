@@ -82,9 +82,9 @@ type guard =
   | Trivial
   | Guard of formula
 
-let guard_to_string = function  
+let guard_to_string (env:env) = function  
   | Trivial -> "trivial"
-  | Guard f -> Print.typ_to_string f
+  | Guard f -> Print.typ_to_string f//env.solver.formula_to_string env f
 
 let ret g = 
   if not !Options.verify

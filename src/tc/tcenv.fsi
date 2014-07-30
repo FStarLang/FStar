@@ -43,8 +43,9 @@ type lattice = {
   order: list<edge>;                                     (* transitive closure of the order in the signature *)
   joins: list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
+
 type env = {
-  solver: env -> typ -> bool;    (* interface to the SMT solver *)
+  solver: solver_t;              (* interface to the SMT solver *)
   range:Range.range;             (* the source location of the term being checked *)
   curmodule: lident;             (* Name of this module *)
   gamma:list<binding>;           (* Local typing environment and signature elements *)
@@ -57,9 +58,13 @@ type env = {
   instantiate_vargs:bool;        (* instantiate implicit term arguments? default=true *)
   lattice:lattice                (* monad lattice *)
 }
+and solver_t = {
+    solve:env -> typ -> bool;
+    formula_to_string:env -> typ -> string;
+}
 
 val debug: env -> bool
-val initial_env : (env -> typ -> bool) -> lident -> env
+val initial_env : solver_t -> lident -> env
 val finish_module : env -> modul -> env
 val set_level : env -> level -> env
 val is_level : env -> level -> bool
