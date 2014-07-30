@@ -39,7 +39,7 @@ let parse_files files =
     let env, m = parse env (Inl fn) in
     let _ = match !Options.dump_module with 
       | Some n -> 
-        m |> List.iter (fun (m:Absyn.Syntax.modul) -> if n=m.name.str then Absyn.Print.modul_to_string m |> Util.print_string)
+        m |> List.iter (fun (m:Absyn.Syntax.modul) -> if n=m.name.str then (Util.format1 "%s\n" <| Absyn.Print.modul_to_string m) |> Util.print_string)
       | _ -> () in
     (env, m::mods)) (DesugarEnv.empty_env(), []) files in 
   List.rev mods |> List.flatten

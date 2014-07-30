@@ -3,6 +3,9 @@ FSTAR=../../bin/FStar.exe --fstar_home ../../ $(OTHERFLAGS)
 %.tc: %.fst
 	$(FSTAR) $^
 
+%.ver: %.fst
+	$(FSTAR) --verify $^
+
 prims: 
 	$(FSTAR)  
 

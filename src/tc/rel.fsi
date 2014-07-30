@@ -27,6 +27,7 @@ type guard =
   | Trivial
   | Guard of formula
 
+val guard_to_string : guard -> string
 val trivial : guard -> unit
 val conj_guard: guard -> guard -> guard
 val keq : env -> option<typ> -> knd -> knd -> guard

@@ -82,8 +82,12 @@ type guard =
   | Trivial
   | Guard of formula
 
+let guard_to_string = function  
+  | Trivial -> "trivial"
+  | Guard f -> Print.typ_to_string f
+
 let ret g = 
-  if !Options.pretype
+  if not !Options.verify
   then match g with 
     | None -> None
     | Some _ -> Some Trivial

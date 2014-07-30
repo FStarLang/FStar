@@ -63,8 +63,8 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              and Tot ('a:Type) =
                  PURE 'a (fun 'p => (forall (x:'a). 'p x)) (fun 'p => (forall (x:'a). 'p x))
 }
-type assert_pure ('a:Type) ('P:Type) : PURE.WP 'a = fun ('post:PURE.Post 'a) => 'P /\ ('P ==> (forall (x:'a). 'post x))
-type assume_pure ('a:Type) ('P:Type) : PURE.WP 'a = fun ('post:PURE.Post 'a) => 'P ==> (forall (x:'a). 'post x)
+(* type assert_pure ('a:Type) ('P:Type) : PURE.WP 'a = fun ('post:PURE.Post 'a) => 'P /\ ('P ==> (forall (x:'a). 'post x)) *)
+(* type assume_pure ('a:Type) ('P:Type) : PURE.WP 'a = fun ('post:PURE.Post 'a) => 'P ==> (forall (x:'a). 'post x) *)
 
 type bool
 type b2t (b:bool) = b==true
@@ -441,8 +441,6 @@ type DTuple4: 'a:Type
    What about for function types? *)
 assume val op_Equality : 'a:Type -> 'b:Type -> 'a -> 'b -> PURE.Tot bool
 assume val op_disEquality : 'a:Type -> 'b:Type -> 'a -> 'b -> PURE.Tot bool
-(* assume val op_Equality : 'a:Type -> 'b:Type -> x:'a -> y:'b -> z:bool {(z==true <==> x==y) /\ (z==false <==> (x=!=y))} *)
-(* assume val op_disEquality : 'a:Type -> 'b:Type -> x:'a -> y:'b -> z:bool {(z==true <==> x=!=y) /\ (z==false <==> (x==y))} *)
 logic type IfThenElse : 'P:Type => (u:unit{'P} => Type) => (u:unit{~'P} => Type) => Type
 
 logic val Add : int -> int -> int
@@ -472,6 +470,7 @@ assume val fst : ('a * 'b) -> PURE.Tot 'a
 assume val snd : ('a * 'b) -> PURE.Tot 'b
 assume val Assume: 'P:Type -> unit -> (y:unit{'P})
 assume val Assert : 'P:Type -> x:unit{'P} -> y:unit{'P}
+(* assume val Assert : 'P:Type -> unit -> PURE.Pure unit 'P (fun (x:unit) => 'P) *)
 assume val lemma : 'P:Type -> x:unit{'P} -> z:unit{'P}
 assume val unreachable : x:unit{LBL "unreachable" False} -> 'a
 assume val failwith: string -> 'a (* TODO: refine with a monadic type *)
@@ -497,27 +496,4 @@ assume val op_Modulus            : int -> int -> int
 assume val op_LessThanOrEqual    : int -> int -> PURE.Tot bool
 assume val op_GreaterThan        : int -> int -> PURE.Tot bool
 assume val op_GreaterThanOrEqual : int -> int -> PURE.Tot bool
-(* TODO: < in operators clashes with t<..> notation. Fix *)
 assume val op_LessThan           : int -> int -> PURE.Tot bool
-
-(* (\* (\\* Primitive functions with trusted specs  *\\) *\) *)
-(* (\* assume val op_ColonEquals: ref 'a -> 'a -> unit *\) *)
-(* (\* assume val op_Dereference: ref 'a -> 'a *\) *)
-(* (\* assume val op_AmpAmp             : x:bool -> y:bool -> z:bool { z==true ==>  x==true /\  y==true} *\) *)
-(* (\* assume val op_BarBar             : x:bool -> y:bool -> z:bool { (z==true ==> x==true \/  y==true) /\ *\) *)
-(* (\*                                                                 (z==false ==> x==false /\ y==false) } *\) *)
-(* (\* assume val op_Negation           : x:bool -> y:bool { (y==true ==> x==false) /\ (y==false ==> x==true) } *\) *)
-
-(* (\* assume val op_Multiply           : x:int -> y:int -> z:int{z==x*y} *\) *)
-(* (\* assume val op_Division           : x:int -> y:int{y=!=0} -> z:int{z==x/y} *\) *)
-(* (\* assume val op_Subtraction        : x:int -> y:int -> z:int{z==x-y} *\) *)
-(* (\* assume val op_Addition           : x:int -> y:int -> z:int{z==x+y} *\) *)
-(* (\* assume val op_Minus              : x:int -> y:int{y==Minus x} *\) *)
-(* (\* assume val op_Modulus            : x:int -> y:int -> z:int{z==x%y} *\) *)
-(* (\* assume val op_LessThanOrEqual : x:int -> y:int -> z:bool{(z==true ==> x <= y) /\ (z==false ==> x > y)} *\) *)
-(* (\* assume val op_GreaterThan : x:int -> y:int -> z:bool{(z==true ==> x > y) /\ (z==false ==> x <= y)} *\) *)
-
-(* (\* (\\* TODO: < in operators clashes with t<..> notation. Fix *\\) *\) *)
-(* (\* assume val op_GreaterThanOrEqual : x:int -> y:int -> bool(\\* {(z=true ==> x >= y) /\ (z=false ==> x < y) } *\\) *\) *)
-(* (\* assume val op_LessThan : x:int -> y:int -> bool(\\* {(z=true ==> x < y) /\ (z=false ==> x >= y)} *\\\) *\\) *\) *)
-    

@@ -73,7 +73,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard =
     
 let no_guard env (te, kt, f) = match f with
   | Trivial -> te, kt
-  | _ -> raise (Error(Tc.Errors.unexpected_non_trivial_precondition_on_term, Env.get_range env)) 
+  | Guard f -> raise (Error(Tc.Errors.unexpected_non_trivial_precondition_on_term, Env.get_range env)) 
 
 let binding_of_lb x t = match x with 
   | Inl bvd -> Env.Binding_var(bvd, t)
@@ -329,7 +329,10 @@ and tc_value env e : exp * comp = match e with
       | Some c -> instantiate_both <| Tc.Env.set_expected_typ env (Util.comp_result c) in
     let b = Env.Binding_var(x, tx) in
     let envbody = Env.push_local_binding envbody b in
-    let e1, cres, fbody = check_expected_effect envbody cres <| tc_exp envbody e1 in 
+    let ee, cc = tc_exp envbody e1 in
+    printfn "Expected cres=%s\nInferred comp typ %s" (match cres with None -> "none" | Some c -> Print.comp_typ_to_string c) (Print.comp_typ_to_string cc);
+    let e1, cres, fbody = check_expected_effect envbody cres <| (ee, cc) in
+    printfn "Inferred cres=%s\nfbody=%s" (Print.comp_typ_to_string cres) (guard_to_string fbody);
     let t = withkind Kind_type <| Typ_fun(Some x, tx, cres, false) in
     let e, t = gen (Exp_abs(x, tx, e1), t) in
     let c = Tc.Util.strengthen_precondition env (Total t) <| Rel.conj_guard f1 (Rel.conj_guard f2 (Tc.Util.close_guard [b] fbody)) in
@@ -699,13 +702,13 @@ and tc_typ_trivial env t : typ * knd =
   let t, k, g = tc_typ env t in
   match g with 
     | Trivial -> t, k
-    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t, range_of_typ t (Env.get_range env)))
+    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t ^ " : " ^ (guard_to_string g), range_of_typ t (Env.get_range env)))
 
 and tc_typ_check_trivial env t k = 
   let t, f = tc_typ_check env t k in
   match f with 
     | Trivial -> t
-    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t, range_of_typ t (Env.get_range env)))
+    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t ^ " : " ^ (guard_to_string f), range_of_typ t (Env.get_range env)))
 
 and tc_total_exp env e : exp * typ * guard = 
   let e, c = tc_exp env e in
@@ -907,19 +910,27 @@ and tc_decl env se = match se with
       let lbs' = List.rev lbs' in
       let e = Exp_let((fst lbs, lbs'), Exp_constant(Syntax.Const_unit)) in
       let se = match tc_exp env e with 
-        | Exp_let(lbs, _), _ -> 
+        | Exp_let(lbs, _), c -> 
           if !Options.verify
-          then snd lbs |> List.iter (function 
+          then begin 
+          Util.print_string <| Util.format1 "Comp for let binding: %s\n" (Print.comp_typ_to_string c);
+          snd lbs |> List.iter (function 
             | (Inl _, _, _) -> failwith "Impossible"
             | (Inr l, t, e) ->
               match Env.try_lookup_val_decl env l with 
-                | None -> ()
+                | None -> 
+                  Util.print_string (format1 "No annotation for %s\n" (Print.sli l));
+                  ()
                 | Some t' -> 
+                  Util.print_string (format1 "Checking spec of %s\n" (Print.sli l));
                   match Tc.Rel.subtype env t t' with 
-                    | Trivial -> ()
+                    | Trivial -> 
+                      Util.print_string (format2 "%s is a trival subtype of %s\n" (Print.typ_to_string t) (Print.typ_to_string t'))
                     | Guard phi -> 
+                      Util.print_string (format1 "Checking validity of %s\n" (Print.typ_to_string phi));
                       if not (env.solver env phi)
-                      then Tc.Errors.report (range_of_lid l) (Tc.Errors.failed_to_prove_specification_of l []));
+                      then Tc.Errors.report (range_of_lid l) (Tc.Errors.failed_to_prove_specification_of l []))
+          end;
           Sig_let(lbs, r)
         | _ -> failwith "impossible" in
       let env = Tc.Env.push_sigelt env se in 

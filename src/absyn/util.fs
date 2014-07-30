@@ -874,13 +874,11 @@ let forall_kind =
                         false), 
               true)
 
-let mk_forallT a k b = match k with 
-  | Kind_type -> 
-    let allT_k = Kind_tcon(None, Kind_tcon(Some a, Kind_type, Kind_type, false), Kind_type, false) in 
+let mk_forallT a k b = 
+    let allT_k = Kind_tcon(None, Kind_tcon(Some a, k, Kind_type, false), Kind_type, false) in 
     let forall_typ = withkind allT_k <| Typ_const(withsort Const.allTyp_lid allT_k) in
-    withkind Kind_type <| Typ_app(forall_typ, b, false) 
-  | _ -> failwith "NYI"
-
+    withkind Kind_type <| Typ_app(forall_typ, withkind kun <| Typ_tlam(a, k, b), false) 
+ 
 let mk_forall (x:bvvdef) (a:typ) (body:typ) : typ =
   let forall_typ = withkind kun <| Typ_const(withsort Const.forall_lid forall_kind) in
   withkind kun <| Typ_app(withkind kun <| Typ_app(forall_typ, a, true), withkind kun <| Typ_lam(x, a, body), false)
