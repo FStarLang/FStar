@@ -133,8 +133,12 @@ let mkSelect t   = mk (Select t) <| fv_bin t
 let mkUpdate t   = mk (Update t) <| fv_tri t
 let mkCases t    = mk (Cases t)  <| fv_l t
 let mkConstArr t = mk' (ConstArray t) <| (third t).freevars
-let mkForall (pats, vars, body) = mk (Forall(pats,vars,body)) <| fv_minus body.freevars vars
-let mkExists (pats, vars, body) = mk (Exists(pats,vars,body)) <| fv_minus body.freevars vars
+let mkForall (pats, vars, body) = 
+    if List.length vars = 0 then body 
+    else mk (Forall(pats,vars,body)) <| fv_minus body.freevars vars
+let mkExists (pats, vars, body) = 
+    if List.length vars = 0 then body 
+    else mk (Exists(pats,vars,body)) <| fv_minus body.freevars vars
 
 type caption = option<string>
 type binders = list<(string * sort)>
@@ -150,6 +154,7 @@ type decl =
   | Caption    of string
   | Eval       of term
   | Echo       of string
+  | CheckSat
 type decls = list<decl>
 
 let rec termEq (x:term) (y:term) =
@@ -295,11 +300,11 @@ let rec termToSmt binders tm =
         let strQuant = function 
           | {tm=Forall _} -> "forall"
           | _ -> "exists"  in
-        let s = binders |> 
+        let s = binders' |> 
                 List.map (fun (a,b) -> format2 "(%s %s)" a (strSort b)) |>
                 String.concat " " in
         let binders' = List.rev binders' @ binders in
-            format3 "\n\n(%s (%s)\n\n %s)" (strQuant tm) s
+            format3 "(%s (%s)\n %s)" (strQuant tm) s
             (if List.length pats <> 0 
                 then format2 "(! %s\n %s)" (termToSmt binders' z) (patsToSmt binders' pats)
                 else termToSmt binders' z)
@@ -333,54 +338,58 @@ let mkPrelude typenames datacons =
           (declare-fun PreKind (Type) Kind)\n \
           (declare-fun PreType (Term) Type)\n \
           (declare-fun Valid (Type) Bool)\n \
+          (declare-fun HasKind (Type Kind) Bool)\n \
+          (declare-fun HasType (Term Type) Bool)\n \
           (declare-fun ApplyEE (Term Term) Term)\n \
           (declare-fun ApplyET (Term Type) Term)\n \
           (declare-fun ApplyTE (Type Term) Type)\n \
           (declare-fun ApplyTT (Type Type) Type)\n \
           ;;;;;;;;;;; (Unit typing)\n \
-          (assert (= (TypeOf (Term_unit)\n \
-                             (Typ_const Type_name_Prims.unit))))\n \
+          (assert (= (PreType Term_unit)\n \
+                     (Typ_const Prims.unit)))\n \
           ;;;;;;;;;;; (Bool typing)\n \
           (assert (forall ((x Term))\n \
                           (implies (is-BoxBool x)\n \
-                                   (= (TypeOf x)\n \
-                                      (Typ_const Type_name_Prims.bool)))))\n \
+                                   (= (PreType x)\n \
+                                      (Typ_const Prims.bool)))))\n \
           ;;;;;;;;;;; (Int typing)\n \
           (assert (forall ((x Term))\n \
                           (implies (is-BoxInt x)\n \
-                                   (= (TypeOf x)\n \
-                                      (Typ_const Type_name_Prims.int)))))\n \
+                                   (= (PreType x)\n \
+                                      (Typ_const Prims.int)))))\n \
           ;;;;;;;;;;; (String typing)\n \
           (assert (forall ((x Term))\n \
                           (iff (is-BoxString x)\n \
-                               (= (TypeOf x)\n \
-                                  (Typ_const Type_name_Prims.string)))))"
+                               (= (PreType x)\n \
+                                  (Typ_const Prims.string)))))"
          (typenames |> List.map (fun s -> format1 "\t\t(%s)" s) |>  String.concat "\n") 
          (datacons |> List.map (fun (nm, projs, _) -> 
             format2 "\t\t(%s %s)" nm (projs |> List.map (fun (nm, sort) -> 
                                                             format2 "(%s %s)" nm (strSort sort)) |> String.concat " ")) |> 
           String.concat "\n")
+let caption_to_string = function 
+    | None -> ""
+    | Some c -> format1 ";;;;;;;;;;;;;;;;%s\n" c
 
 let declToSmt decl = match decl with
   | DefPrelude (tys, datas) -> 
     mkPrelude tys datas
   | Caption c -> 
     format1 "\n; %s" c
-  | DeclFun(f,argsorts,retsort,_) ->
+  | DeclFun(f,argsorts,retsort,c) ->
     let l = List.map strSort argsorts in
-    format3 "(declare-fun %s (%s) %s)" f (String.concat " " l) (strSort retsort)
+    format4 "%s(declare-fun %s (%s) %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort)
   | DefineFun(f,args,retsort,body,_) ->
     let l = List.map (fun (nm,s) -> format2 "(%s %s)" nm (strSort s)) args in
     format4 "(define-fun %s (%s) %s\n %s)" f (String.concat " " l) (strSort retsort) (termToSmt (List.rev args) body)
-  | Assume(t,co) ->
-    let c = match co with 
-      | Some c -> format1 ";;;;;;;;;;; %s\n" c
-      | None -> "" in 
-    format2 "%s (assert %s)" c (termToSmt [] t)
+  | Assume(t,c) ->
+    format2 "%s(assert %s)" (caption_to_string c) (termToSmt [] t)
   | Eval t -> 
     format1 "(eval %s)" (termToSmt [] t)
   | Echo s -> 
     format1 "(echo \"%s\")" s
+  | CheckSat -> "(check-sat)"
+
 
 let mk_Kind_type        = mkApp("Kind_type", Kind_sort, [])
 let mk_Typ_const n      = mkApp("Typ_const", Arrow(Ext "Type_name", Type_sort), [mkApp(n, Ext "Type_name", [])])
@@ -414,7 +423,7 @@ let mk_PreType t      = mkApp("PreType", Arrow(Term_sort, Type_sort), [ t ])
 let mk_Valid t        = mkApp("Valid", Arrow(Type_sort, Bool_sort), [ t ])  
 let mk_HasType v t    = mkApp("HasType", Arrow(Term_sort, Arrow(Type_sort, Bool_sort)), [v;t])
 let mk_HasKind t k    = mkApp("HasKind", Arrow(Type_sort, Arrow(Kind_sort, Bool_sort)), [t;k])
-let mk_tester s n t   = mkApp("is_"^n, Arrow(s, Bool_sort), [t])
+let mk_tester s n t   = mkApp("is-"^n,   Arrow(s, Bool_sort), [t])
 let mk_ApplyTE t e    = mkApp("ApplyTE", Arrow(Type_sort, Arrow(Term_sort, Type_sort)), [t;e])
 let mk_ApplyTT t t'   = mkApp("ApplyTT", Arrow(Type_sort, Arrow(Type_sort, Type_sort)), [t;t'])
 let mk_ApplyET e t    = mkApp("ApplyET", Arrow(Term_sort, Arrow(Type_sort, Term_sort)), [e;t])

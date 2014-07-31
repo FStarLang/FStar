@@ -145,52 +145,34 @@ and visit_typ s mk vt me descend binders t =
   match t.t with
     | Typ_btvar a -> 
       //printfn "Trying to subst. %s with [%s]\n" (a.v.realname.idText) (s |> subst_to_string);
-      compress_typ' <| subst_tvar (restrict_subst binders s) t, descend
+      compress_typ <| subst_tvar (restrict_subst binders s) t, descend
     | _ when (not descend) -> map_typ s mk vt me descend binders t
     | _ -> let t, _ = vt false binders t in t, descend
 and visit_exp s mk me ve descend binders e =
   let e = Visit.compress_exp e in 
   match e with 
-    | Exp_bvar _ ->   compress_exp' <| subst_xvar (restrict_subst binders s) e, descend
+    | Exp_bvar _ -> compress_exp <| subst_xvar (restrict_subst binders s) e, descend
     | _ when (not descend) -> map_exp s mk me ve descend binders e
     | _ -> let e, _ = ve false binders e in e, descend
-and compress_kind' k = match Visit.compress_kind k with 
+and compress_kind k = match Visit.compress_kind k with 
   | Kind_delayed (k',s, m) ->
     let k' = fst <| Visit.reduce_kind (visit_knd s) (map_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp true [] k' in
     m := Some k'; 
     k'
   | k -> k
-and compress_typ' t = match Visit.compress_typ t with 
+and compress_typ t = match Visit.compress_typ t with 
   | {t=Typ_delayed (t', s, m)} ->
     let res = fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp true [] t' in
     m := Some res;
     //printfn "Compressing %A ... got %A\n" t' res;
     res
   | t -> t
-and compress_exp' e = match Visit.compress_exp e with 
+and compress_exp e = match Visit.compress_exp e with 
   | Exp_delayed (e',s, m) ->
     let e = fst <| Visit.reduce_exp (map_knd s) (map_typ s) (visit_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp true [] e' in
     m := Some e;
     e
   | e -> e
-
-let compress_kind k = 
-  let t = compress_kind' k in
-  match t with 
-    | Kind_delayed _ -> failwith "Compressed kind but still delayed"
-    | _ -> t
- 
-let compress_typ t = 
-  let t = compress_typ' t in
-  match t with 
-    | {t=Typ_delayed _ } -> failwith "Compressed typ but still delayed"
-    | _ -> t
-
-let compress_exp t = 
-  let t = compress_exp' t in
-  match t with 
-    | Exp_delayed _ -> failwith "Compressed exp but still delayed"
-    | _ -> t
 
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
@@ -200,7 +182,7 @@ let mk_discriminator lid =
 
 let gensym = 
   let ctr = mk_ref 0 in 
-  (fun () -> Util.format1 "x_%s" (Util.string_of_int (incr ctr; !ctr)))
+  (fun () -> Util.format1 "_%s" (Util.string_of_int (incr ctr; !ctr)))
     
 let rec gensyms x = match x with
   | 0 -> []
@@ -270,6 +252,11 @@ let comp_flags c = match compress_comp c with
 
 let is_total_comp c = List.contains TOTAL (comp_flags c)
 
+let is_pure_comp c = match compress_comp c with 
+    | Total _ -> true
+    | Comp ct -> List.contains TOTAL ct.flags || Util.starts_with ct.effect_name.str "Prims.PURE"
+    | Flex _ -> false
+
 let is_ml_comp = function
   | Comp c -> lid_equals c.effect_name Const.ml_effect_lid || List.contains MLEFFECT c.flags
   | _ -> false
@@ -321,20 +308,23 @@ let tpos t = match t.t with
   | _ -> failwith "Missing position info"
 
 
-let rec pre_typ t = match (compress_typ t).t with 
-  | Typ_refine(_, t, _) 
-  | Typ_ascribed(t, _) -> pre_typ t
-  | t -> t
+let rec pre_typ t = 
+    let t = compress_typ t in 
+    match t.t with 
+      | Typ_refine(_, t, _) 
+      | Typ_ascribed(t, _) -> pre_typ t
+      | _ -> t
 
 (* If the input type is a Typ_app, walks the Typ_app tree and
    flattens the type parameters. Does not recursively drill into
    other kinds of types. *)
 let flatten_typ_apps : typ -> typ * (list<either<typ,exp>>) =
   let rec aux acc t = 
-    match pre_typ t with
+    let t = pre_typ t in
+    match t.t with
       | Typ_app(t1, t2, _) -> aux (Inl t2::acc) t1 
       | Typ_dep(t1, v, _) -> aux (Inr v::acc) t1
-      | _              -> compress_typ t, acc in
+      | _              -> t, acc in
   (fun t -> aux [] t)
 
 let destruct typ lid = 
@@ -767,8 +757,8 @@ let is_lid_equality x =
     (lid_equals x Const.eqA_lid) ||
     (lid_equals x Const.eqT_lid)
 
-let is_forall lid = lid_equals lid Const.forall_lid
-let is_exists lid = lid_equals lid Const.exists_lid
+let is_forall lid = lid_equals lid Const.forall_lid || lid_equals lid Const.allTyp_lid
+let is_exists lid = lid_equals lid Const.exists_lid || lid_equals lid Const.exTyp_lid
 let is_qlid lid   = is_forall lid || is_exists lid
 let is_equality x = is_lid_equality x.v
 
@@ -778,11 +768,11 @@ let lid_is_connective =
   fun lid -> Util.for_some (lid_equals lid) lst
     
 let is_constructor t lid =
-  match pre_typ t with
+  match (pre_typ t).t with
     | Typ_const tc -> lid_equals tc.v lid
     | _ -> false
       
-let rec is_constructed_typ t lid = match pre_typ t with
+let rec is_constructed_typ t lid = match (pre_typ t).t with
   | Typ_const _ -> is_constructor t lid
   | Typ_app(t, _, _)
   | Typ_dep(t, _, _) -> is_constructed_typ t lid
@@ -790,7 +780,7 @@ let rec is_constructed_typ t lid = match pre_typ t with
 
 let rec get_tycon t = 
   let t = pre_typ t in
-  match t with
+  match t.t with
   | Typ_btvar _ 
   | Typ_const _  -> Some t
   | Typ_app(t, _, _)
@@ -983,3 +973,89 @@ let rec is_wild_pat p =
     | _ -> false
 
 
+(**************************************************************************************)
+(* Destructing a type as a formula *)
+(**************************************************************************************)
+type qpats = list<either<typ,exp>>
+type connective = 
+    | QAll of list<either<(btvdef*knd), (bvvdef*typ)>> * qpats * typ
+    | QEx of list<either<(btvdef*knd), (bvvdef*typ)>> * qpats * typ
+    | BaseConn of lident * list<either<typ,exp>>
+
+let destruct_typ_as_formula f : option<connective> = 
+    let destruct_base_conn f = 
+        let type_sort, term_sort = true, false in
+        let oneType    = [type_sort] in
+        let twoTypes   = [type_sort;type_sort] in
+        let threeTys   = [type_sort;type_sort;type_sort] in
+        let twoTerms   = [term_sort;term_sort] in
+        let connectives = [ (Const.true_lid, []);
+                            (Const.false_lid, []);
+                            (Const.and_lid, twoTypes);
+                            (Const.or_lid,  twoTypes);
+                            (Const.imp_lid, twoTypes);
+                            (Const.iff_lid, twoTypes);
+                            (Const.ite_lid, threeTys);
+                            (Const.not_lid, oneType);
+                            (Const.lt_lid,  twoTerms);
+                            (Const.gt_lid,  twoTerms);
+                            (Const.gte_lid, twoTerms);
+                            (Const.lte_lid, twoTerms);
+                            (Const.eqT_lid, twoTypes);
+                            (Const.eq2_lid, twoTerms);
+                            (Const.eq2_lid, twoTypes@twoTerms);
+                        ] in 
+        let rec aux f (lid, arity) =  
+        let t, args = flatten_typ_apps f in 
+        if is_constructor t lid 
+            && List.length args = List.length arity
+            && List.forall2 (fun arg flag -> match arg with 
+            | Inl _ -> flag=type_sort
+            | Inr _ -> flag=term_sort) args arity
+        then Some <| BaseConn(lid, args)
+        else None in
+        Util.find_map connectives (aux f) in
+
+    let patterns t = 
+        let t = compress_typ t in 
+        match t.t with 
+            | Typ_meta(Meta_pattern(t, pats)) -> pats, compress_typ t
+            | _ -> [], compress_typ t in
+
+    let destruct_q_conn t =
+        let is_q fa l = if fa then is_forall l else is_exists l in 
+        let flat t = 
+            let t, args = flatten_typ_apps t in 
+            t, args |> List.map (function Inl t -> Inl <| compress_typ t | Inr e -> Inr <| compress_exp e) in
+        let rec aux qopt out t = match qopt, flat t with
+            | Some fa, ({t=Typ_const tc}, [Inl t1; Inl {t=Typ_lam(x, _, t2)}])  
+                when (is_q fa tc.v) ->
+              aux qopt (Inr(x, t1)::out) t2
+
+            | Some fa, ({t=Typ_const tc}, [Inl {t=Typ_tlam(a, k, t2)}])
+                when (is_q fa tc.v) -> 
+              aux qopt (Inl(a, compress_kind k)::out) t2
+
+            | None, ({t=Typ_const tc}, [Inl t1; Inl {t=Typ_lam(x, _, t2)}])  
+                when (is_qlid tc.v) -> 
+              aux (Some <| is_forall tc.v) (Inr(x, t1)::out) t2
+            
+            | None, ({t=Typ_const tc}, [Inl {t=Typ_tlam(a, k, t2)}])
+                when (is_qlid tc.v) -> 
+              aux (Some <| is_forall tc.v) (Inl(a, compress_kind k)::out) t2
+            
+            | Some true, _ -> 
+              let pats, body = patterns t in 
+              Some (QAll(List.rev out, pats, body))
+
+            | Some false, _ -> 
+              let pats, body = patterns t in 
+              Some(QEx(List.rev out, pats, body))
+
+            | _ -> None in
+        aux None [] t in
+
+    let phi = compress_typ f in
+        match destruct_base_conn phi with 
+        | Some b -> Some b
+        | None -> destruct_q_conn phi

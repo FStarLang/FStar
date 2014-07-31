@@ -147,7 +147,8 @@ and knd =
 
 and kabbrev = lident * list<either<typ,exp>>
 and uvar_k = Unionfind.uvar<uvar_basis<knd,unit>>
-and letbindings = bool * list<(either<bvvdef,lident> * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
+and lbname = either<bvvdef, lident>
+and letbindings = bool * list<(lbname * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
 and subst = list<subst_elt>
 and subst_map = Util.smap<either<typ, exp>>
 and subst_elt = either<(btvdef*typ), (bvvdef*exp)>
@@ -267,6 +268,9 @@ let withsort v s = withinfo v s dummyRange
 let ewithpos v r = {v=v; sort=Typ_unknown; p=r}
 
 let range_of_lid (lid:LongIdent) = lid.ident.idRange
+let range_of_lbname = function 
+    | Inl x -> x.ppname.idRange
+    | Inr l -> range_of_lid l
 
 
 

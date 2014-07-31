@@ -284,44 +284,6 @@ let pat_as_exps env p : list<exp> =
     | Inl _ -> failwith "Impossible"
     | Inr (e) -> e) (aux p)    
 
-let generalize env (ecs:list<(exp*comp)>) : (list<(exp*comp)>) = 
-//  let _ = printfn "Generalizing %s\n" (Print.typ_to_string (Util.comp_result c)) in
-//  let _ = printfn "In normal form %s\n" (Print.typ_to_string (Normalize.norm_typ  [Normalize.Beta; Normalize.Delta; Normalize.SNComp; Normalize.DeltaComp] env (Util.comp_result c))) in 
-  if not <| (Util.for_all (fun (_, c) -> Util.is_total_comp c) ecs) 
-  then ecs
-  else
-     let norm c = Normalize.norm_comp [Normalize.Beta; Normalize.Delta] env c in
-//     let print_uvars uvs =
-//       uvs |> List.iter (fun (uv, _) -> printfn "\t%d" (Unionfind.uvar_id uv)) in
-     let env_uvars = Env.uvars_in_env env in
-     let gen_uvars uvs = 
-       uvs |> List.filter (fun (uv,_) -> not (env_uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
-     let uvars = List.map (fun (e, c) -> 
-      let c = norm c in 
-      let uvt = Util.uvars_in_typ c.result_typ in
-      gen_uvars <| uvt.uvars_t, e, c) 
-      ecs in
-     (* adding some space 
-        for the profiler
-        ...
-        ... *)
-     let ecs = uvars |> List.map (fun (uvs, e, c) -> 
-      let tvars = uvs |> List.map (fun (u, k) -> 
-        let a = match Unionfind.find u with 
-          | Fixed ({t=Typ_btvar a}) -> a.v 
-          | _ -> 
-              let a = Util.new_bvd (Some <| Tc.Env.get_range env) in
-              let t = Util.bvd_to_typ a k in
-//              let _ = printfn "Unifying %d with %s\n" (Unionfind.uvar_id u) (Print.typ_to_string t) in
-              unchecked_unify u t; a in
-        (a, k)) in
-      let e, t = tvars |> List.fold_left (fun (e,t) (a,k) ->
-        let t' = withkind Kind_type <| Typ_univ(a, k, Util.total_comp t (Env.get_range env)) in
-        let e' = Exp_tabs(a, k, e) in
-        (e', t')) (e,c.result_typ) in
-      e, Util.total_comp t (range_of_exp e (Env.get_range env))) in
-     ecs 
-
 let mk_basic_dtuple_type env n = 
   let r = Tc.Env.get_range env in
   let l = Util.mk_dtuple_lid n r in
@@ -426,14 +388,6 @@ let mk_comp md result wp wlp flags =
          flags=flags})
 
 let return_value env t v = Util.total_comp t (range_of_exp v (Env.get_range env))
-//  match Tc.Env.monad_decl_opt env Const.pure_effect_lid with 
-//    | None -> Util.total_comp t (range_of_exp v (Env.get_range env))
-//    | Some m -> 
-//       let a, kwp = Env.wp_signature env Const.pure_effect_lid in
-//       let k = Util.subst_kind [Inl(a, t)] kwp in
-//       let wp = {Util.mk_typ_app m.ret [Inl t; Inr v] with k=k} in
-//       let wlp = wp in
-//       mk_comp m t wp wlp [RETURN]
 
 let bind env (c1:comp) ((b, c2):comp_with_binder) : comp = 
 //  if debug env
@@ -653,3 +607,50 @@ let maybe_instantiate env e t =
 
       | _ -> ret subst t in
   aux false [] t e
+
+
+(**************************************************************************************)
+(* Generalizing types ... the spot where we call the solver *)
+(**************************************************************************************)
+let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) = 
+//  let _ = printfn "Generalizing %s\n" (Print.typ_to_string (Util.comp_result c)) in
+//  let _ = printfn "In normal form %s\n" (Print.typ_to_string (Normalize.norm_typ  [Normalize.Beta; Normalize.Delta; Normalize.SNComp; Normalize.DeltaComp] env (Util.comp_result c))) in 
+//     let print_uvars uvs =
+//       uvs |> List.iter (fun (uv, _) -> printfn "\t%d" (Unionfind.uvar_id uv)) in
+  if not <| (Util.for_all (fun (_, _, c) -> Util.is_pure_comp c) ecs)
+  then ecs
+  else
+     let norm c = Normalize.normalize_comp env c in
+     let env_uvars = Env.uvars_in_env env in
+     let gen_uvars uvs = 
+       uvs |> List.filter (fun (uv,_) -> not (env_uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
+     let uvars = ecs |> List.map (fun (x, e, c) -> 
+      let t, wp, _ = destruct_comp (norm c) in 
+      let uvt = Util.uvars_in_typ t in
+      let uvs = gen_uvars <| uvt.uvars_t in 
+      let post = withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid) in
+      let vc = Normalize.normalize env (withkind Kind_type <| Typ_app(wp, post, false)) in
+      if !Options.verify 
+      then begin
+           Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));
+           if not <| env.solver.solve env vc
+           then Tc.Errors.report (range_of_lbname x) (Tc.Errors.failed_to_prove_specification_of x [])
+      end;
+      x, uvs, e, Util.force_comp <| return_value env t e) in
+
+     let ecs = uvars |> List.map (fun (x, uvs, e, c) -> 
+      let tvars = uvs |> List.map (fun (u, k) -> 
+        let a = match Unionfind.find u with 
+          | Fixed ({t=Typ_btvar a}) -> a.v 
+          | _ -> 
+              let a = Util.new_bvd (Some <| Tc.Env.get_range env) in
+              let t = Util.bvd_to_typ a k in
+//              let _ = printfn "Unifying %d with %s\n" (Unionfind.uvar_id u) (Print.typ_to_string t) in
+              unchecked_unify u t; a in
+        (a, k)) in
+      let e, t = tvars |> List.fold_left (fun (e,t) (a,k) ->
+        let t' = withkind Kind_type <| Typ_univ(a, k, Util.total_comp t (Env.get_range env)) in
+        let e' = Exp_tabs(a, k, e) in
+        (e', t')) (e,c.result_typ) in
+      x, e, Util.total_comp t (range_of_exp e (Env.get_range env))) in
+     ecs 

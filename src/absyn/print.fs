@@ -33,9 +33,11 @@ let rec sli (l:lident) : string = match l.ns with
 
 let strBvd bvd = 
     if !Options.print_real_names
-    then bvd.realname.idText
+    then bvd.ppname.idText ^ bvd.realname.idText
     else bvd.ppname.idText
 
+
+                    
 let const_to_string x = match x with
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
@@ -46,8 +48,30 @@ let const_to_string x = match x with
   | Const_bytearray _  ->  "<bytearray>"
   | Const_int64 _ -> "<int64>"
   | Const_uint8 _ -> "<uint8>"
-     
-let rec typ_to_string x =
+ 
+let rec tag_of_typ t = match t.t with 
+  | Typ_btvar _ -> "Typ_btvar"
+  | Typ_const _ -> "Typ_const"
+  | Typ_fun _ -> "Typ_fun"
+  | Typ_univ _ -> "Typ_univ"
+  | Typ_refine _ -> "Typ_refine"
+  | Typ_app _ -> 
+    let t, args = Util.flatten_typ_apps t in
+    format2 "Typ_app(%s, [%s args])" (typ_to_string t) (string_of_int <| List.length args)
+  | Typ_dep _ -> 
+    let t, args = Util.flatten_typ_apps t in
+    format2 "Typ_dep(%s, [%s args])" (typ_to_string t) (string_of_int <| List.length args)
+  | Typ_lam _ -> "Typ_lam"
+  | Typ_tlam _ -> "Typ_tlam"
+  | Typ_ascribed _ -> "Typ_ascribed"
+  | Typ_meta(Meta_pos _) -> "Typ_meta_pos"
+  | Typ_meta(Meta_pattern _) -> "Typ_meta_pattern"
+  | Typ_meta(Meta_named _) -> "Typ_meta_named"
+  | Typ_uvar _ -> "Typ_uvar"   
+  | Typ_delayed _ -> "Typ_delayed"
+  | Typ_unknown -> "Typ_unknown"
+      
+and typ_to_string x =
   let x = if !Options.print_real_names then Util.compress_typ x else whnf x in
   match x.t with 
   | Typ_delayed _ -> failwith "impossible"
@@ -86,9 +110,59 @@ and comp_typ_to_string c =
       else if not !Options.print_effect_args && (lid_equals c.effect_name Const.ml_effect_lid  || List.contains MLEFFECT c.flags) && not (Util.is_function_typ c.result_typ)
       then typ_to_string c.result_typ
       else if !Options.print_effect_args 
-      then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (String.concat ", " <| List.map either_to_string c.effect_args)
+      then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (String.concat ", " <| List.map effect_arg_to_string c.effect_args)
       else Util.format2 "%s (%s)" (sli c.effect_name) (typ_to_string c.result_typ)
        
+and effect_arg_to_string = function 
+    | Inr e -> exp_to_string e
+    | Inl wp -> formula_to_string wp
+     
+and formula_to_string phi = 
+    let const_op f _  = f in
+    let un_op  f [Inl t1] = format2 "%s %s" f (formula_to_string t1) in
+    let bin_top f [Inl t1;Inl t2] = format3 "%s %s %s" (formula_to_string t1) f (formula_to_string t2) in
+    let bin_eop f [Inr e1;Inr e2] = format3 "%s %s %s" (exp_to_string e1) f (exp_to_string e2) in
+    let ite [Inl t1;Inl t2;Inl t3] = format3 "if %s then %s else %s" (formula_to_string t1) (formula_to_string t2) (formula_to_string t3) in
+    let eq_op = function 
+        | [Inl _; Inl _; Inr e1; Inr e2]
+        | [Inr e1; Inr e2] -> format2 "%s == %s" (exp_to_string e1) (exp_to_string e2)
+        |  _ -> failwith "Impossible" in
+    let connectives = [(Const.true_lid, const_op "True");
+                       (Const.false_lid, const_op "False");
+                       (Const.and_lid,  bin_top "/\\");
+                       (Const.or_lid, bin_top "\\/");
+                       (Const.imp_lid, bin_top "==>");
+                       (Const.iff_lid, bin_top "<==>");
+                       (Const.ite_lid, ite);
+                       (Const.not_lid, un_op "~");
+                       (Const.lt_lid,  bin_eop "<");
+                       (Const.gt_lid,  bin_eop ">");
+                       (Const.gte_lid, bin_eop ">=");
+                       (Const.lte_lid, bin_eop "<=");
+                       (Const.eqT_lid, bin_top "==");
+                       (Const.eq2_lid, eq_op);] in
+
+    let fallback phi = match phi.t with 
+        | Typ_lam(x, t, phi) ->  format2 "(fun %s => %s)" (strBvd x) (formula_to_string phi)
+        | Typ_tlam(a, k, phi) ->  format2 "(fun %s => %s)" (strBvd a) (formula_to_string phi)
+        | _ -> printfn "formula_to_string ...reverts on a %s\n" (tag_of_typ phi); typ_to_string phi in
+
+    match Util.destruct_typ_as_formula phi with 
+        | None -> fallback phi
+        
+        | Some (BaseConn(op, arms)) -> 
+           (match connectives |> List.tryFind (fun (l, _) -> lid_equals op l) with 
+             | None -> fallback phi
+             | Some (_, f) -> f arms)
+
+        | Some (QAll(vars, _, body)) -> 
+          let binders = vars |> List.map (function Inl(a, _) -> strBvd a | Inr(x, _) -> strBvd x) |> String.concat " " in
+          format2 "(forall %s. %s)" binders (formula_to_string body)
+
+        | Some (QEx(vars, _, body)) -> 
+          let binders = vars |> List.map (function Inl(a, _) -> strBvd a | Inr(x, _) -> strBvd x) |> String.concat " " in
+          format2 "(exists %s. %s)" binders (formula_to_string body)
+
 and exp_to_string x = match compress_exp x with 
   | Exp_delayed _ -> failwith "Impossible"
   | Exp_meta(Meta_datainst(e,_)) -> exp_to_string e 

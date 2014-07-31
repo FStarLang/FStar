@@ -330,12 +330,14 @@ and tc_value env e : exp * comp = match e with
     let b = Env.Binding_var(x, tx) in
     let envbody = Env.push_local_binding envbody b in
     let ee, cc = tc_exp envbody e1 in
-    printfn "Expected cres=%s\nInferred comp typ %s" (match cres with None -> "none" | Some c -> Print.comp_typ_to_string c) (Print.comp_typ_to_string cc);
+    printfn "Expected cres=%s\nInferred comp typ %s" (match cres with None -> "none" | Some c -> Print.comp_typ_to_string c) (Print.comp_typ_to_string (Tc.Normalize.normalize_comp env cc |> Comp));
     let e1, cres, fbody = check_expected_effect envbody cres <| (ee, cc) in
-   // printfn "Inferred cres=%s\nfbody=%s" (Print.comp_typ_to_string cres) (guard_to_string env fbody);
+    printfn "Inferred cres=%s\n" (Print.comp_typ_to_string cres);
+    printfn "fbody=%s\n"  (guard_to_string env fbody);
     let t = withkind Kind_type <| Typ_fun(Some x, tx, cres, false) in
     let e, t = gen (Exp_abs(x, tx, e1), t) in
     let c = Tc.Util.strengthen_precondition env (Total t) <| Rel.conj_guard f1 (Rel.conj_guard f2 (Tc.Util.close_guard [b] fbody)) in
+    printfn "final type of abstraction=%s\n"  (Print.comp_typ_to_string (Comp <| Tc.Normalize.normalize_comp env c));
     e, c 
    
   | Exp_tabs(a, k1, e1) -> 
@@ -554,7 +556,7 @@ and tc_exp env e : exp * comp = match e with
     let env1 = Tc.Env.set_expected_typ env1 t in
     let e1, c1 = tc_exp env1 e1 in 
     let c1 = Tc.Util.strengthen_precondition env c1 f in
-    let e1, c1 = List.hd <| Tc.Util.generalize env1 [e1, c1] in
+    let _, e1, c1 = List.hd <| Tc.Util.generalize env1 [x, e1, c1] in
     let b = binding_of_lb x (Util.comp_result c1) in
     let e2, c2 = tc_exp (Env.push_local_binding env b) e2 in
     let cres = Tc.Util.bind env c1 (Some b, c2) in
@@ -583,8 +585,8 @@ and tc_exp env e : exp * comp = match e with
       let e, t = no_guard env <| tc_total_exp env' e in 
       (x, t, e)) in  
     let gen_lbs = 
-        let ecs = Tc.Util.generalize env (lbs |> List.map (fun (x, t, e) -> (e, Util.total_comp t <| range_of_lb (x,t,e)))) in
-        List.map2 (fun (e, c) (x, _, _) -> (x, Util.comp_result c, e)) ecs lbs in
+        let ecs = Tc.Util.generalize env (lbs |> List.map (fun (x, t, e) -> (x, e, Util.total_comp t <| range_of_lb (x,t,e)))) in //fishy
+        List.map (fun (x, e, c) -> x, Util.comp_result c, e) ecs in
     let lbs, bindings, env = gen_lbs |> List.fold_left (fun (lbs, bindings, env) (x, t, e) -> 
       let b = binding_of_lb x t in
       let env = Env.push_local_binding env b in
@@ -834,7 +836,7 @@ and tc_decl env se = match se with
       let env = Tc.Env.set_range env r in 
       let tps, env = tc_tparams env tps in 
       let k = tc_kind_trivial env k in 
-      let se = Sig_tycon(lid, tps, k, _mutuals, _data, tags, r) in  
+      let se = Sig_tycon(lid, tps, k, _mutuals, _data, tags, r) in
       let _ = match compress_kind k with
         | Kind_uvar _ -> Rel.trivial <| Tc.Rel.keq env None k Kind_type
         | _ -> () in 
@@ -911,26 +913,26 @@ and tc_decl env se = match se with
       let e = Exp_let((fst lbs, lbs'), Exp_constant(Syntax.Const_unit)) in
       let se = match tc_exp env e with 
         | Exp_let(lbs, _), c -> 
-          if !Options.verify
-          then begin 
-          Util.print_string <| Util.format1 "Comp for let binding: %s\n" (Print.comp_typ_to_string c);
-          snd lbs |> List.iter (function 
-            | (Inl _, _, _) -> failwith "Impossible"
-            | (Inr l, t, e) ->
-              match Env.try_lookup_val_decl env l with 
-                | None -> 
-                  Util.print_string (format1 "No annotation for %s\n" (Print.sli l));
-                  ()
-                | Some t' -> 
-                  Util.print_string (format1 "Checking spec of %s\n" (Print.sli l));
-                  match Tc.Rel.subtype env t t' with 
-                    | Trivial -> 
-                      Util.print_string (format2 "%s is a trival subtype of %s\n" (Print.typ_to_string t) (Print.typ_to_string t'))
-                    | Guard phi -> 
-                      Util.print_string (format1 "Checking validity of %s\n" (Print.typ_to_string phi));
-                      if not (env.solver.solve env phi)
-                      then Tc.Errors.report (range_of_lid l) (Tc.Errors.failed_to_prove_specification_of l []))
-          end;
+//          if !Options.verify
+//          then begin 
+//          Util.print_string <| Util.format1 "Comp for let binding: %s\n" (Print.comp_typ_to_string (Comp <| Tc.Normalize.normalize_comp env c));
+//          snd lbs |> List.iter (function 
+//            | (Inl _, _, _) -> failwith "Impossible"
+//            | (Inr l, t, e) ->
+//              match Env.try_lookup_val_decl env l with 
+//                | None -> 
+//                  Util.print_string (format1 "No annotation for %s\n" (Print.sli l));
+//                  ()
+//                | Some t' -> 
+//                  Util.print_string (format3 "Checking spec of %s\nInferred=%s\nExpected=%s\n" (Print.sli l) (Print.typ_to_string t) (Print.typ_to_string t'));
+//                  match Tc.Rel.subtype env t t' with 
+//                    | Trivial -> 
+//                      Util.print_string (format2 "%s is a trival subtype of %s\n" (Print.typ_to_string t) (Print.typ_to_string t'))
+//                    | Guard phi -> 
+//                      Util.print_string (format1 "Checking validity of %s\n" (Print.typ_to_string phi));
+//                      if not (env.solver.solve env phi)
+//                      then Tc.Errors.report (range_of_lid l) (Tc.Errors.failed_to_prove_specification_of (Inr l) []))
+//          end;
           Sig_let(lbs, r)
         | _ -> failwith "impossible" in
       let env = Tc.Env.push_sigelt env se in 
@@ -979,16 +981,17 @@ and tc_decl env se = match se with
              aux tps tt in 
            Sig_typ_abbrev(lid, tps, compress_kind k, t, [], r)
          | _ -> failwith "impossible") recs abbrev_defs in    
-      let env = Tc.Env.push_sigelt env (Sig_bundle(tycons@abbrevs@rest, r)) in 
+      let se = Sig_bundle(tycons@abbrevs@rest, r) in 
+      let env = Tc.Env.push_sigelt env se in
       se, env
 
 and tc_decls (env:Tc.Env.env) ses = 
   let ses, env = List.fold_left (fun (ses, (env:Tc.Env.env)) se ->
   if debug env
-  then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
+  then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string_short se));
   let se, env = tc_decl env se in 
   if debug env
-  then Util.print_string (Util.format1 "Checked sigelt\n\t%s\n" (Print.sigelt_to_string_short se));
+  then Util.print_string (Util.format1 "Checked sigelt\n\t%s\n" (Print.sigelt_to_string se));
   se::ses, env) ([], env) ses in
   List.rev ses, env 
 
@@ -1006,6 +1009,7 @@ let tc_modul env modul =
   let env = Tc.Env.set_current_module env modul.name in 
   let ses, env = tc_decls env modul.declarations in 
   let exports = get_exports env modul ses in
+
   let modul = {name=modul.name; declarations=ses; exports=exports; is_interface=modul.is_interface} in 
   let env = Tc.Env.finish_module env modul in
   modul, env

@@ -66,21 +66,32 @@ let doZ3Exe ini_params (input:string) =
   then let status, lblnegs = parse (Util.trim_string stdout) in
        status, lblnegs, cmdargs
   else failwith (format1 "Z3 returned an error: %s\n" stderr)
-      
-let callZ3Exe (theory:decls) labels = 
+
+let qfile = 
+    let ctr = Util.mk_ref 0 in
+    (fun () -> 
+        incr ctr;
+        let fname = format1 "query-%s.smt2" (string_of_int !ctr) in
+        Util.print_string (Util.format1 "Writing to file %s\n" fname);
+        fname)
+
+let callZ3Exe (debug:bool) (theory:decls) labels = 
   let theory = labels |> List.fold_left (fun decls (lname, t) -> decls@[Echo lname; Eval t]) theory in
   let input = List.map declToSmt theory |> String.concat "\n" in
-  let rec proc_result again (status, lblnegs, cmdargs) = 
-    match status with 
-      | UNSAT -> true
-      | _ -> 
-          print_string <| format2 "Called z3.exe %s\nZ3 says: %s\n" cmdargs (status_to_string status);
-          match status with 
-            | UNKNOWN -> 
-                if again
-                then proc_result false (doZ3Exe (ini_params ^ " MBQI=true") input)
-                else (print_string <| format1 "Failing assertions: %s\n" (String.concat "\n\t" lblnegs); false)
-            | _ -> 
-                print_string <| format1 "Failing assertions: %s\n" (String.concat "\n\t" lblnegs);
-                false in 
-    proc_result true (doZ3Exe ini_params input)
+  if debug 
+  then (Util.write_file (qfile()) input; true)
+  else 
+      let rec proc_result again (status, lblnegs, cmdargs) = 
+        match status with 
+          | UNSAT -> true
+          | _ -> 
+              print_string <| format2 "Called z3.exe %s\nZ3 says: %s\n" cmdargs (status_to_string status);
+              match status with 
+                | UNKNOWN -> 
+                    if again
+                    then proc_result false (doZ3Exe (ini_params ^ " MBQI=true") input)
+                    else (print_string <| format1 "Failing assertions: %s\n" (String.concat "\n\t" lblnegs); false)
+                | _ -> 
+                    print_string <| format1 "Failing assertions: %s\n" (String.concat "\n\t" lblnegs);
+                    false in 
+        proc_result true (doZ3Exe ini_params input)

@@ -54,7 +54,7 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              type wp_as_type ('a:Type) ('wp:WP 'a) = (forall ('p:Post 'a). 'wp 'p)
              type close_wp ('a:Type) ('b:Type) ('wp:'b => WP 'a) ('p:Post 'a) = (forall (b:'b). 'wp b 'p)
              type close_wp_t ('a:Type) ('wp:Type => WP 'a) ('p:Post 'a) = (forall ('b:Type). 'wp 'b 'p)
-             type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P /\ ('P ==> 'wp 'p))
+             type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P /\ 'wp 'p)
              type assume_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P ==> 'wp 'p)
              with Pure ('a:Type) ('pre:Pre) ('post:Post 'a) =
                  PURE 'a
@@ -170,7 +170,7 @@ monad_lattice {
              type wp_as_type ('a:Type) ('wp:WP 'a) = (forall ('p:Post 'a) (h:heap). 'wp 'p h)
              type close_wp ('a:Type) ('b:Type) ('wp:'b => WP 'a) ('p:Post 'a) (h:heap) = (forall (b:'b). 'wp b 'p h)
              type close_wp_t ('a:Type) ('wp:Type => WP 'a) ('p:Post 'a) (h:heap) = (forall ('b:Type). 'wp 'b 'p h)
-             type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) (h:heap) = ('P /\ ('P ==> 'wp 'p h))
+             type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) (h:heap) = ('P /\ 'wp 'p h)
              type assume_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) (h:heap) = ('P ==> 'wp 'p h)
              with ST ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) =
                  STATE 'a
@@ -203,7 +203,7 @@ monad_lattice {
              type wp_as_type ('a:Type) ('wp:WP 'a) = (forall ('p:Post 'a). 'wp 'p)
              type close_wp ('a:Type) ('b:Type) ('wp:'b => WP 'a) ('p:Post 'a) = (forall (b:'b). 'wp b 'p)
              type close_wp_t ('a:Type) ('wp:Type => WP 'a) ('p:Post 'a)  = (forall ('b:Type). 'wp 'b 'p)
-             type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P /\ ('P ==> 'wp 'p))
+             type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P /\ 'wp 'p)
              type assume_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P ==> 'wp 'p)
              with Exn ('a:Type) ('pre:Pre) ('post:Post 'a) =
                  EXN 'a
@@ -236,7 +236,7 @@ monad_lattice {
              type wp_as_type ('a:Type) ('wp:WP 'a) = (forall ('p:Post 'a) (h:heap). 'wp 'p h)
              type close_wp ('a:Type) ('b:Type) ('wp:'b => WP 'a) ('p:Post 'a) (h:heap) = (forall (b:'b). 'wp b 'p h)
              type close_wp_t ('a:Type) ('wp:Type => WP 'a) ('p:Post 'a) (h:heap) = (forall ('b:Type). 'wp 'b 'p h)
-             type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) (h:heap) = ('P /\ ('P ==> 'wp 'p h))
+             type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) (h:heap) = ('P /\ 'wp 'p h)
              type assume_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) (h:heap) = ('P ==> 'wp 'p h)
              with All ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) =
                  ALL 'a
@@ -261,55 +261,55 @@ type Tuple2 'a 'b =
 type Tuple3 'a 'b 'c =
   | MkTuple3: _1:'a
            -> _2:'b
-           -> _3:'c
-           -> Tuple3 'a 'b 'c
+           -> _3:'c0
+          -> Tuple3 'a 'b 'c
 
-type Tuple4 'a 'b 'c 'd =
-  | MkTuple4: _1:'a
-           -> _2:'b
-           -> _3:'c
-           -> _4:'d
-           -> Tuple4 'a 'b 'c 'd
+(* type Tuple4 'a 'b 'c 'd = *)
+(*   | MkTuple4: _1:'a *)
+(*            -> _2:'b *)
+(*            -> _3:'c *)
+(*            -> _4:'d *)
+(*            -> Tuple4 'a 'b 'c 'd *)
 
-type Tuple5 'a 'b 'c 'd 'e =
-  | MkTuple5: _1:'a
-           -> _2:'b
-           -> _3:'c
-           -> _4:'d
-           -> _5:'e
-           -> Tuple5 'a 'b 'c 'd 'e
+(* type Tuple5 'a 'b 'c 'd 'e = *)
+(*   | MkTuple5: _1:'a *)
+(*            -> _2:'b *)
+(*            -> _3:'c *)
+(*            -> _4:'d *)
+(*            -> _5:'e *)
+(*            -> Tuple5 'a 'b 'c 'd 'e *)
 
-type Tuple6 'a 'b 'c 'd 'e 'f =
-  | MkTuple6: _1:'a
-           -> _2:'b
-           -> _3:'c
-           -> _4:'d
-           -> _5:'e
-           -> _6:'f
-           -> Tuple6 'a 'b 'c 'd 'e 'f
-
-
-type Tuple7 'a 'b 'c 'd 'e 'f 'g =
-  | MkTuple7: _1:'a
-           -> _2:'b
-           -> _3:'c
-           -> _4:'d
-           -> _5:'e
-           -> _6:'f
-           -> _7:'g
-           -> Tuple7 'a 'b 'c 'd 'e 'f 'g
+(* type Tuple6 'a 'b 'c 'd 'e 'f = *)
+(*   | MkTuple6: _1:'a *)
+(*            -> _2:'b *)
+(*            -> _3:'c *)
+(*            -> _4:'d *)
+(*            -> _5:'e *)
+(*            -> _6:'f *)
+(*            -> Tuple6 'a 'b 'c 'd 'e 'f *)
 
 
-type Tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
-  | MkTuple8: _1:'a
-           -> _2:'b
-           -> _3:'c
-           -> _4:'d
-           -> _5:'e
-           -> _6:'f
-           -> _7:'g
-           -> _8:'h
-           -> Tuple8 'a 'b 'c 'd 'e 'f 'g 'h
+(* type Tuple7 'a 'b 'c 'd 'e 'f 'g = *)
+(*   | MkTuple7: _1:'a *)
+(*            -> _2:'b *)
+(*            -> _3:'c *)
+(*            -> _4:'d *)
+(*            -> _5:'e *)
+(*            -> _6:'f *)
+(*            -> _7:'g *)
+(*            -> Tuple7 'a 'b 'c 'd 'e 'f 'g *)
+
+
+(* type Tuple8 'a 'b 'c 'd 'e 'f 'g 'h = *)
+(*   | MkTuple8: _1:'a *)
+(*            -> _2:'b *)
+(*            -> _3:'c *)
+(*            -> _4:'d *)
+(*            -> _5:'e *)
+(*            -> _6:'f *)
+(*            -> _7:'g *)
+(*            -> _8:'h *)
+(*            -> Tuple8 'a 'b 'c 'd 'e 'f 'g 'h *)
 
 type DTuple2: 'a:Type
           => 'b:('a => Type)
@@ -443,20 +443,12 @@ assume val op_Equality : 'a:Type -> 'b:Type -> 'a -> 'b -> PURE.Tot bool
 assume val op_disEquality : 'a:Type -> 'b:Type -> 'a -> 'b -> PURE.Tot bool
 logic type IfThenElse : 'P:Type => (u:unit{'P} => Type) => (u:unit{~'P} => Type) => Type
 
-logic val Add : int -> int -> int
-logic val Sub : int -> int -> int
-logic val Mul : int -> int -> int
-logic val Div : int -> int -> int
-logic val Minus : int -> int
-logic val Modulo : int -> int -> int
-
 type LT : int => int => Type
 type GT : int => int => Type
 type LTE : int => int => Type
 type GTE : int => int => Type
 type nat = i:int{i >= 0}
 type pos = n:nat{n > 0}
-
 
 logic data type either 'a 'b =
   | Inl : v:'a -> either 'a 'b
