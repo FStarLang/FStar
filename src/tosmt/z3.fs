@@ -60,7 +60,7 @@ let doZ3Exe ini_params (input:string) =
       | _::tl -> result tl 
       | _ -> failwith <| format1 "Got output lines: %s\n" (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (Util.trim_string l)) lines)) in
       result lines in
-  let cmdargs = format1 "%s /in" ini_params in 
+  let cmdargs = format1 "%s /smt2 /in" ini_params in 
   let result, stdout, stderr = Util.run_proc "z3.exe" cmdargs input in    
   if result 
   then let status, lblnegs = parse (Util.trim_string stdout) in

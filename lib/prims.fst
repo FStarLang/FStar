@@ -107,18 +107,18 @@ logic val Union : refset -> refset -> refset
 logic val Intersection : refset -> refset -> refset
 type InSet : #'a:Type => ref 'a => refset => Type
 type SetEqual : refset => refset => Type
-assume InEmptySet:     forall a. ~(InSet a EmptySet)
-assume InSingleton:    forall a. InSet a (Singleton a)
-assume InSingletonInv: forall a b. InSet a (Singleton b) <==> a==b
-assume InUnion:        forall s1 s2 a. InSet a (Union s1 s2) <==> (InSet a s1 \/ InSet a s1)
-assume InUnionL:       forall s1 s2 a. InSet a s1 ==> InSet a (Union s1 s2)
-assume InUnionR:       forall s1 s2 a. InSet a s2 ==> InSet a (Union s1 s2)
+assume InEmptySet:     forall 'a (a:ref 'a). ~(InSet a EmptySet)
+assume InSingleton:    forall 'a (a:ref 'a). InSet a (Singleton a)
+assume InSingletonInv: forall 'a 'b (a:ref 'a) (b:ref 'b). InSet a (Singleton b) <==> a==b
+assume InUnion:        forall 'a s1 s2 (a:ref 'a). InSet a (Union s1 s2) <==> (InSet a s1 \/ InSet a s1)
+assume InUnionL:       forall 'a s1 s2 (a:ref 'a). InSet a s1 ==> InSet a (Union s1 s2)
+assume InUnionR:       forall 'a s1 s2 (a:ref 'a). InSet a s2 ==> InSet a (Union s1 s2)
 assume UnionIdemL:     forall s1 s2. Union (Union s1 s2) s2 == Union s1 s2
 assume UnionIdemR:     forall s1 s2. Union s1 (Union s1 s2) == Union s1 s2
-assume InInter:        forall s1 s2 a. InSet a (Intersection s1 s2) <==> (InSet a s1 /\ InSet a s2)
+assume InInter:        forall 'a s1 s2 (a:ref 'a). InSet a (Intersection s1 s2) <==> (InSet a s1 /\ InSet a s2)
 assume InterIdemL:     forall s1 s2. Intersection (Intersection s1 s2) s2 == Intersection s1 s2
 assume InterdemR:      forall s1 s2. Intersection s1 (Intersection s1 s2) == Intersection s1 s2
-assume SetEqualDef:    forall s1 s2. SetEqual s1 s2 <==> (forall a. InSet a s1 <==> InSet a s2)
+assume SetEqualDef:    forall s1 s2. SetEqual s1 s2 <==> (forall 'a (a:ref 'a). InSet a s1 <==> InSet a s2)
 assume SeqEqualExt:    forall s1 s2. SetEqual s1 s2 ==> s1==s2
 logic data type refs =
   | AllRefs : refs

@@ -51,7 +51,7 @@ type term' =
   | True
   | False
   | Integer    of int
-  | BoundV     of int * sort * string 
+  | BoundV     of string * sort 
   | FreeV      of string * sort
   | PP         of term * term
   | App        of string * sort * list<term>
@@ -108,14 +108,22 @@ let fv_minus v u = Set <| sub_fv (claim v) u
 let mkTrue       = mk True (Set [])
 let mkFalse      = mk False (Set [])
 let mkInteger i  = mk (Integer i) (Set [])
-let mkBoundV i   = mk (BoundV i) (Set [])
-let mkFreeV x    = mk (FreeV x) (Set [x])
+let mkBoundV i   = mk (BoundV i) (Set [i])
+let mkFreeV x    = mk (FreeV x) (Set [])
 let mkPP  t      = mk' (PP t) (snd t).freevars
 let mkApp f      = mk (App f) <| fv_l (third f)
 let mkNot t      = mk' (Not t) t.freevars
-let mkAnd t      = mk (And t) <| fv_bin t
-let mkOr t       = mk (Or t)  <| fv_bin t
-let mkImp t      = mk (Imp t) <| fv_bin t
+let mkAnd t      = match t with 
+    | {tm=True}, t'
+    | t', {tm=True} -> t'
+    | _ -> mk (And t) <| fv_bin t
+let mkOr t        = match t with 
+    | {tm=False}, t'
+    | t', {tm=False} -> t'
+    | _ -> mk (Or t)  <| fv_bin t
+let mkImp (t1, t2) = match t2.tm with 
+    | True -> t2
+    | _ -> mk (Imp (t1,t2)) <| fv_bin (t1,t2)
 let mkIff t      = mk (Iff t) <| fv_bin t
 let mkEq t       = mk (Eq t)  <| fv_bin t
 let mkLT t       = mk (LT t)  <| fv_bin t
@@ -133,12 +141,7 @@ let mkSelect t   = mk (Select t) <| fv_bin t
 let mkUpdate t   = mk (Update t) <| fv_tri t
 let mkCases t    = mk (Cases t)  <| fv_l t
 let mkConstArr t = mk' (ConstArray t) <| (third t).freevars
-let mkForall (pats, vars, body) = 
-    if List.length vars = 0 then body 
-    else mk (Forall(pats,vars,body)) <| fv_minus body.freevars vars
-let mkExists (pats, vars, body) = 
-    if List.length vars = 0 then body 
-    else mk (Exists(pats,vars,body)) <| fv_minus body.freevars vars
+
 
 type caption = option<string>
 type binders = list<(string * sort)>
@@ -164,7 +167,7 @@ let rec termEq (x:term) (y:term) =
     | True, True
     | False, False -> true
     | Integer i, Integer j -> i=j
-    | BoundV(i, s, _), BoundV(j, t, _) -> i=j  && s=t
+    | BoundV(i, _), BoundV(j, _) -> i=j
     | FreeV(x,s), FreeV(y,t) -> x=y && s=t
     | App(f,_,tl), App(g,_,sl) when (List.length tl = List.length sl) -> 
         f=g && (List.forall2 termEq tl sl)
@@ -201,6 +204,7 @@ let rec termEq (x:term) (y:term) =
 let flatten_imp tm = 
   let mkAnd_l terms = match terms with 
     | [] -> mkTrue
+    | [hd] -> hd
     | hd::tl ->  List.fold_left (fun out term -> mkAnd(out, term)) hd tl in
   let rec aux out tm = match tm.tm with
     | Imp({tm=True}, x) -> aux out x
@@ -241,11 +245,8 @@ let rec termToSmt binders tm =
         else string_of_int i
       | PP(_,q) -> 
         termToSmt binders q
-      | BoundV(i,_,nm) -> 
-        if (i < List.length binders) 
-        then nm
-        else failwith "Bad index for bound variable in formula" 
-      | FreeV(x,_)    -> x
+      | BoundV(x,_) 
+      | FreeV(x,_)  -> x
       | App(f,_,[]) -> f
       | App(f,_, es)     -> 
         let a = List.map (termToSmt binders) es in
@@ -310,6 +311,26 @@ let rec termToSmt binders tm =
                 else termToSmt binders' z)
       | ConstArray(s, _, tm) -> 
         format2 "((as const %s) %s)" s (termToSmt binders tm)
+
+let check_pats pats vars = 
+    pats |> List.iter (fun p -> 
+        let fvs = claim p.freevars in
+        if vars |> List.for_all (fun (x,_) -> fvs |> Util.for_some (fun (y, _) -> x=y))
+        then ()
+        else printfn "pattern %s misses a bound var" (termToSmt [] p))
+let mkForall (pats, vars, body) = 
+    check_pats pats vars;
+    if List.length vars = 0 then body 
+    else match body.tm with 
+            | True -> body 
+            | _ -> mk (Forall(pats,vars,body)) <| fv_minus body.freevars vars
+let mkExists (pats, vars, body) = 
+    check_pats pats vars;
+    if List.length vars = 0 then body 
+    else match body.tm with 
+            | True -> body 
+            | _ -> mk (Exists(pats,vars,body)) <| fv_minus body.freevars vars
+
       
 (****************************************************************************)
 (* Standard SMTLib prelude for F* and some term constructors                *)
@@ -359,9 +380,9 @@ let mkPrelude typenames datacons =
                                       (Typ_const Prims.int)))))\n \
           ;;;;;;;;;;; (String typing)\n \
           (assert (forall ((x Term))\n \
-                          (iff (is-BoxString x)\n \
-                               (= (PreType x)\n \
-                                  (Typ_const Prims.string)))))"
+                          (implies (is-BoxString x)\n \
+                                   (= (PreType x)\n \
+                                      (Typ_const Prims.string)))))"
          (typenames |> List.map (fun s -> format1 "\t\t(%s)" s) |>  String.concat "\n") 
          (datacons |> List.map (fun (nm, projs, _) -> 
             format2 "\t\t(%s %s)" nm (projs |> List.map (fun (nm, sort) -> 
@@ -440,5 +461,5 @@ let mk_and_opt_l pl =
   List.fold_left (fun out p -> mk_and_opt p out) None pl 
     
 let mk_and_l l = match l with 
-  | [] -> []
-  | hd::tl -> [List.fold_left (fun p1 p2 -> mkAnd(p1,p2)) hd tl]
+  | [] -> mkTrue
+  | hd::tl -> List.fold_left (fun p1 p2 -> mkAnd(p1,p2)) hd tl

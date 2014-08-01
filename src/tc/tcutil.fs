@@ -612,6 +612,11 @@ let maybe_instantiate env e t =
 (**************************************************************************************)
 (* Generalizing types ... the spot where we call the solver *)
 (**************************************************************************************)
+let check_uvars r t = 
+  let uvt = Util.uvars_in_typ t in
+  if List.length uvt.uvars_e + List.length uvt.uvars_t + List.length uvt.uvars_k > 0
+  then Tc.Errors.report r "Unconstrained unification variables; please add an annotation"
+
 let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) = 
 //  let _ = printfn "Generalizing %s\n" (Print.typ_to_string (Util.comp_result c)) in
 //  let _ = printfn "In normal form %s\n" (Print.typ_to_string (Normalize.norm_typ  [Normalize.Beta; Normalize.Delta; Normalize.SNComp; Normalize.DeltaComp] env (Util.comp_result c))) in 

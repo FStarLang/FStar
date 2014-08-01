@@ -871,6 +871,7 @@ and tc_decl env se = match se with
     | Sig_val_decl(lid, t, tag, ltag, r) -> 
       let env = Tc.Env.set_range env r in
       let t = tc_typ_check_trivial env t Kind_type in 
+      Tc.Util.check_uvars r t;
       let se = Sig_val_decl(lid, t, tag, ltag, r) in 
       let env = Tc.Env.push_sigelt env se in 
       if log env then Util.print_string <| Util.format2 "val %s : %s\n" lid.str (Print.typ_to_string t);
@@ -879,6 +880,7 @@ and tc_decl env se = match se with
     | Sig_assume(lid, phi, qual, tag, r) ->
       let env = Tc.Env.set_range env r in
       let phi = tc_typ_check_trivial env phi Kind_type in 
+      Tc.Util.check_uvars r phi;
       let se = Sig_assume(lid, phi, qual, tag, r) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
