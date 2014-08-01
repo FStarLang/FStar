@@ -78,29 +78,23 @@ and branch = (pattern * option<term> * term)
 type knd = term
 type typ = term
 type expr = term
-type atag = | AssumeTag | QueryTag | DefinitionTag
 
 type tycon =  
   | TyconAbstract of ident * list<binder> * option<knd>
   | TyconAbbrev   of ident * list<binder> * option<knd> * term
   | TyconRecord   of ident * list<binder> * option<knd> * list<(ident * term)>
   | TyconVariant  of ident * list<binder> * option<knd> * list<(ident * option<term> * bool)> (* using 'of' notion *)
+   
+type qualifiers = list<Syntax.qualifier>
 
-type tyvalQual = 
-  | NoQual
-  | LogicTag  of logic_tag
-  | Extern    of ident
-  | TupleType of int
-  | Assumption
- 
 type decl' = 
   | Open of lid 
   | KindAbbrev of ident * list<binder> * knd
-  | Tycon of tyvalQual * list<tycon>
   | ToplevelLet of bool * list<(pattern * term)> 
   | Main of term
-  | Assume of atag * ident * term
-  | Val of tyvalQual * ident * term  (* bool is for logic val *)
+  | Assume of qualifiers * ident * term
+  | Tycon of qualifiers * list<tycon>
+  | Val of qualifiers * ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
   | MonadLat of list<monad_sig> * list<lift>
 and decl = {d:decl'; drange:range}

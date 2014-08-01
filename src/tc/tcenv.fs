@@ -260,12 +260,12 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
 
 let try_lookup_val_decl env lid = 
   match lookup_qname env lid with
-    | Some (Inr (Sig_val_decl(_, t, _, _, _))) -> Some t
+    | Some (Inr (Sig_val_decl(_, t, _, _))) -> Some t
     | _ -> None
 
 let lookup_val_decl env lid = 
   match lookup_qname env lid with
-    | Some (Inr (Sig_val_decl(_, t, _, _, _))) -> t
+    | Some (Inr (Sig_val_decl(_, t, _, _))) -> t
     | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
 
 let lookup_lid env lid = 
@@ -275,8 +275,7 @@ let lookup_lid env lid =
   let mapper = function
     | Inl t
     | Inr (Sig_datacon(_, t, _, _))  
-    | Inr (Sig_logic_function(_, t, _, _))
-    | Inr (Sig_val_decl (_, t, _, _, _)) 
+    | Inr (Sig_val_decl (_, t, _, _)) 
     | Inr (Sig_let((_, [(_, t, _)]), _)) -> Some t 
     | Inr (Sig_let((_, lbs), _)) -> 
         Util.find_map lbs (function 
@@ -298,26 +297,8 @@ let lookup_datacon env lid =
       
 let is_datacon env lid = 
   match lookup_qname env lid with
+    | Some (Inr(Sig_val_decl(_, _, quals, _))) -> quals |> Util.for_some (function Assumption -> true | _ -> false)
     | Some (Inr (Sig_datacon (_, t, _, _))) -> true
-    | _ -> false
-
-let is_logic_function env lid =
-  match lookup_qname env lid with 
-    | Some (Inr (Sig_logic_function (_, t, _, _))) -> true
-    | _ -> false
-    
-let is_logic_data env lid = 
-  match lookup_qname env lid with 
-    | Some (Inr (Sig_tycon(_, _, _, _, _, tags, _))) -> 
-        Util.for_some (function Logic_data -> true | _ -> false) tags 
-    | _ -> false
-  
-let is_logic_array env lid =
-  match lookup_qname env lid with 
-    | Some (Inr (Sig_tycon(_, _, _, _, _, tags, _))) -> 
-        Util.for_some (function 
-            | Logic_array _ -> true 
-            | _ -> false) tags 
     | _ -> false
 
 let is_record env lid =

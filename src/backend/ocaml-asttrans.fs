@@ -605,8 +605,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
 (* -------------------------------------------------------------------- *)
 let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
     match modx with
-    | Sig_val_decl (x, ty, _, _, rg)
-    | Sig_logic_function (x, ty, [], rg) when mode = Sig ->
+    | Sig_val_decl (x, ty, _, rg) when mode = Sig ->
         let tparams, ty = mlscheme_of_ty rg ty in
         Some (Inl (MLS_Val (x.ident.idText, (tparams, ty))))
 
@@ -685,7 +684,6 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
         Some (mlitem1_exn mode (x.ident.idText, args))
     end
 
-    | Sig_logic_function _ -> None
     | Sig_assume         _ -> None
     | Sig_val_decl       _ -> None
     | Sig_tycon          _ -> None

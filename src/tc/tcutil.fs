@@ -625,21 +625,26 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
   if not <| (Util.for_all (fun (_, _, c) -> Util.is_pure_comp c) ecs)
   then ecs
   else
-     let norm c = Normalize.normalize_comp env c in
+     let norm c = 
+        if !Options.verify
+        then Normalize.normalize_comp env c
+        else Normalize.norm_comp [Normalize.Beta; Normalize.Delta] env c in
      let env_uvars = Env.uvars_in_env env in
      let gen_uvars uvs = 
        uvs |> List.filter (fun (uv,_) -> not (env_uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
      let uvars = ecs |> List.map (fun (x, e, c) -> 
-      let t, wp, _ = destruct_comp (norm c) in 
+      let c = norm c in
+      let t = c.result_typ in
       let uvt = Util.uvars_in_typ t in
       let uvs = gen_uvars <| uvt.uvars_t in 
-      let post = withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid) in
-      let vc = Normalize.normalize env (withkind Kind_type <| Typ_app(wp, post, false)) in
       if !Options.verify 
       then begin
-           Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));
-           if not <| env.solver.solve env vc
-           then Tc.Errors.report (range_of_lbname x) (Tc.Errors.failed_to_prove_specification_of x [])
+          let _, wp, _ = destruct_comp c in
+          let post = withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid) in
+          let vc = Normalize.normalize env (withkind Kind_type <| Typ_app(wp, post, false)) in
+          Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));
+          if not <| env.solver.solve env vc
+          then Tc.Errors.report (range_of_lbname x) (Tc.Errors.failed_to_prove_specification_of x [])
       end;
       x, uvs, e, Util.force_comp <| return_value env t e) in
 

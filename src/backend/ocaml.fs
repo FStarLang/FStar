@@ -624,11 +624,10 @@ let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
             | Sig_datacon (x, ty, pr, rg) ->
                 (types, (x.ident.idText, (ty, pr)) :: ctors)
 
-            | Sig_val_decl (_, _, _, _, rg)
+            | Sig_val_decl (_, _, _, rg)
             | Sig_typ_abbrev (_, _, _, _, _, rg)
-            | Sig_assume (_, _, _, _, rg)
+            | Sig_assume (_, _, _, rg)
             | Sig_let (_, rg)
-            | Sig_logic_function (_, _, _, rg)
             | Sig_main (_, rg)
             | Sig_bundle (_, rg)
             | Sig_monads (_, _, rg) -> unexpected rg
@@ -761,7 +760,7 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
 
         env, Some (reduce1 [text "type"; docargs; text t.ident.idText; text "="; dty])
 
-    | Sig_val_decl (x, ty, None, None, rg) ->        
+    | Sig_val_decl (x, ty, [], rg) ->        
         let rec strip acc ty =
             let ty = Absyn.Util.compress_typ ty in
             match ty.t with
@@ -798,7 +797,6 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
         doc_of_indt env indt
 
     | Sig_assume         _ -> env, None
-    | Sig_logic_function _ -> env, None
     | Sig_val_decl       _ -> env, None
 
     | Sig_datacon (x, ty, n, rg) when is_exn n ->

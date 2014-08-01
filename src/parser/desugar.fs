@@ -924,12 +924,6 @@ and desugar_type_binder env b = match b.b with
   | TVariable x -> Some x, Kind_type
   | _ -> raise (Error("Unexpected domain of an arrow or sum (expected a kind)", b.brange))
 
-let get_logic_tag = function
-  | LogicTag l -> [l]
-  | _ -> []
-
-let logic_tags q = List.collect get_logic_tag q
-  
 let mk_data_ops env = function
   | Sig_datacon(lid, t, _, _) when not env.interf ->
     let args, tcod = collect_formals t in
@@ -983,7 +977,7 @@ let mk_data_ops env = function
         let t = build_typ t1 in
         let body = ewithpos (Exp_match(formal_exp, [(Pat_cons(lid, argpats), None, bvd_to_exp x t1)])) x.ppname.idRange in
         let sigs =
-          [Sig_val_decl(field_name, t, Some Assumption, Some (Logic_projector(lid, Inr x)), range_of_lid field_name)
+          [Sig_val_decl(field_name, t, [Assumption; Logic; Projector(lid, Inr x)], range_of_lid field_name)
            //;Sig_let((false, [(Inr field_name, t, build_exp body)]))
           ] in
        // let _ = Util.print_string (Util.format2 "adding value projector %s at type %s\n" field_name.str (Print.typ_to_string t)) in 
@@ -998,7 +992,7 @@ let mk_data_ops env = function
       | Typ_univ(a, k, t2) ->
         let field_name = lid_of_ids (ids_of_lid lid @ [a.ppname]) in
         let kk = build_kind k in
-        let sigs = Sig_tycon(field_name, [], kk, [], [], [Logic_projector(lid, Inl a)], range_of_lid field_name) in
+        let sigs = Sig_tycon(field_name, [], kk, [], [], [Logic; Projector(lid, Inl a)], range_of_lid field_name) in
         //let _ = Util.print_string (Util.format2 "adding type projector %s at type %s\n" field_name.str (Print.kind_to_string kk)) in 
         let t2 = 
           if freetv |> Util.for_some (fun b -> Util.bvd_eq b.v a)
@@ -1009,7 +1003,7 @@ let mk_data_ops env = function
 
       | _ -> fields in
     let disc_name = Util.mk_discriminator lid in
-    let disc = Sig_val_decl(disc_name, build_typ (Util.ftv Const.bool_lid), Some Assumption, Some (Logic_discriminator lid), range_of_lid disc_name) in
+    let disc = Sig_val_decl(disc_name, build_typ (Util.ftv Const.bool_lid), [Assumption; Logic; Discriminator lid], range_of_lid disc_name) in
     aux [disc] t
   | _ -> []
 
@@ -1055,7 +1049,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         | Some k -> desugar_kind _env' k in
       let tconstr = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) binders in
       let qlid = qualify _env id in
-      let se = Sig_tycon(qlid, typars, k, mutuals, [], logic_tags quals, rng) in
+      let se = Sig_tycon(qlid, typars, k, mutuals, [], quals, rng) in
       let _env = push_rec_binding _env (Binding_tycon qlid) in
       let _env2 = push_rec_binding _env' (Binding_tycon qlid) in
       _env, (_env2, typars), se, tconstr
@@ -1074,10 +1068,9 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
 
     | [TyconAbbrev(id, binders, kopt, t)] ->
         let env', typars = typars_of_binders env binders in
-        let quals = logic_tags quals in
         let k = match kopt with
             | None -> 
-              if Util.for_some (function Logic_effect -> true | _ -> false) quals
+              if Util.for_some (function Effect -> true | _ -> false) quals
               then Kind_effect
               else Kind_unknown
             | Some k -> desugar_kind env' k in
@@ -1088,7 +1081,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
 
     | [TyconRecord _] ->
       let trec = List.hd tcs in
-      desugar_tycon env rng (LogicTag Logic_record::quals) [tycon_record_as_variant trec]
+      desugar_tycon env rng (Logic_record::quals) [tycon_record_as_variant trec]
 
     |  _::_ ->
       let env0 = env in
@@ -1098,7 +1091,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         match tc with
           | TyconRecord _ ->
             let trec = tc in
-            collect_tcs (env, tcs, LogicTag Logic_record::quals) (tycon_record_as_variant trec)
+            collect_tcs (env, tcs, Logic_record::quals) (tycon_record_as_variant trec)
           | TyconVariant(id, binders, kopt, constructors) ->
             let env, (_, tps), se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
             env, Inl(se, tps, constructors, tconstr)::tcs, quals
@@ -1167,7 +1160,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     env, []
   
   | Tycon(qual, tcs) ->
-    desugar_tycon env d.drange [qual] tcs
+    desugar_tycon env d.drange qual tcs
           
   | ToplevelLet(isrec, lets) ->
     begin match compress_exp <| desugar_exp_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr) with
@@ -1185,23 +1178,11 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
 
   | Assume(atag, id, t) ->
     let f = desugar_formula env t in
-    env, [Sig_assume(qualify env id, f, Public, Assumption, d.drange)]
+    env, [Sig_assume(qualify env id, f, [Public; Assumption], d.drange)]
 
-  | Val(LogicTag Logic_val, id, t) ->
-    let t = desugar_typ (total env) (close env t) in
-    let se = Sig_logic_function(qualify env id, t, [], d.drange) in
-    let env = push_sigelt env se in
-    env, [se]
-
-  | Val(AST.Assumption, id, t) -> 
+  | Val(quals, id, t) -> 
     let t = desugar_typ env (close env t) in
-    let se = Sig_val_decl(qualify env id, t, Some Assumption, None, d.drange) in
-    let env = push_sigelt env se in
-    env, [se]
-
-  | Val(NoQual, id, t) ->
-    let t = desugar_typ env (close env t) in
-    let se = Sig_val_decl(qualify env id, t, None, None, d.drange) in
+    let se = Sig_val_decl(qualify env id, t, quals, d.drange) in
     let env = push_sigelt env se in
     env, [se]
 
@@ -1256,7 +1237,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
       let m_decl = Sig_tycon(qualify env0 m.mon_name, [], kmon, [], [], [], d.drange) in
       let menv = DesugarEnv.push_sigelt menv m_decl in
       let menv, abbrevs = m.mon_abbrevs |> List.fold_left (fun (menv, out) (id, binders, t) -> 
-          let menv, ses = desugar_tycon menv d.drange [LogicTag Logic_effect] [TyconAbbrev(id, binders, None, t)] in
+          let menv, ses = desugar_tycon menv d.drange [Effect] [TyconAbbrev(id, binders, None, t)] in
           menv, List.hd ses::out) (menv, []) in
       let m_abbrevs = List.rev abbrevs in
       let msig = {mname=qualify env m.mon_name;

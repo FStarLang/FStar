@@ -162,30 +162,19 @@ type tparam =
   | Tparam_typ  of btvdef * knd (* idents for pretty printing *)
   | Tparam_term of bvvdef * typ
 
-type aqual = 
+type qualifier = 
   | Private 
-  | Public
-
-type logic_array = {array_sel:LongIdent;
-                    array_upd:LongIdent;
-                    array_emp:LongIdent;
-                    array_indom:LongIdent}
-type logic_tag =
-  | Logic_data 
-  | Logic_tfun
-  | Logic_array of logic_array
-  | Logic_discriminator of lident                          (* discriminator for a datacon l *)
-  | Logic_projector of lident * either<btvdef, bvvdef>     (* projector for datacon l's argument 'a or x *)
-  | Logic_record
-  | Logic_val
-  | Logic_type
-  | Logic_effect
-
-type atag = 
+  | Public 
   | Assumption
-  | Definition
+  | Definition  
+  | Query
   | Lemma
-
+  | Logic
+  | Discriminator of lident                          (* discriminator for a datacon l *)
+  | Projector of lident * either<btvdef, bvvdef>     (* projector for datacon l's argument 'a or x *)
+  | Logic_record
+  | Effect 
+ 
 type monad_abbrev = {
   mabbrev:lident;
   parms:list<tparam>;
@@ -215,12 +204,11 @@ type monad_decl = {
     abbrevs:list<sigelt> 
  }
 and sigelt =
-  | Sig_tycon          of lident * list<tparam> * knd * list<lident> * list<lident> * list<logic_tag> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
-  | Sig_typ_abbrev     of lident * list<tparam> * knd * typ * list<logic_tag> * Range.range 
+  | Sig_tycon          of lident * list<tparam> * knd * list<lident> * list<lident> * list<qualifier> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
+  | Sig_typ_abbrev     of lident * list<tparam> * knd * typ * list<qualifier> * Range.range 
   | Sig_datacon        of lident * typ * lident * Range.range  (* second lident is the name of the type this constructs *)
-  | Sig_val_decl       of lident * typ * option<atag> * option<logic_tag> * Range.range 
-  | Sig_assume         of lident * formula * aqual * atag * Range.range 
-  | Sig_logic_function of lident * typ * list<logic_tag> * Range.range 
+  | Sig_val_decl       of lident * typ * list<qualifier> * Range.range 
+  | Sig_assume         of lident * formula * list<qualifier> * Range.range 
   | Sig_let            of letbindings * Range.range 
   | Sig_main           of exp * Range.range 
   | Sig_bundle         of list<sigelt> * Range.range  (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)

@@ -279,7 +279,7 @@ and tc_value env e : exp * comp = match e with
     let t = Env.lookup_lid env v.v in
     let e, c = Tc.Util.maybe_instantiate env e t in 
     //printfn "Instantiated type of %s to %s\n" (Print.exp_to_string e) (Print.typ_to_string t);
-    if dc && not(Env.is_datacon env v.v) && not(Env.is_logic_function env v.v)
+    if dc && not(Env.is_datacon env v.v)
     then raise (Error(Util.format1 "Expected a data constructor; got %s" v.v.str, Tc.Env.get_range env))
     else value_check_expected_typ env e (Inr c)
 
@@ -330,14 +330,14 @@ and tc_value env e : exp * comp = match e with
     let b = Env.Binding_var(x, tx) in
     let envbody = Env.push_local_binding envbody b in
     let ee, cc = tc_exp envbody e1 in
-    printfn "Expected cres=%s\nInferred comp typ %s" (match cres with None -> "none" | Some c -> Print.comp_typ_to_string c) (Print.comp_typ_to_string (Tc.Normalize.normalize_comp env cc |> Comp));
+    //printfn "Expected cres=%s\nInferred comp typ %s" (match cres with None -> "none" | Some c -> Print.comp_typ_to_string c) (Print.comp_typ_to_string (Tc.Normalize.normalize_comp env cc |> Comp));
     let e1, cres, fbody = check_expected_effect envbody cres <| (ee, cc) in
-    printfn "Inferred cres=%s\n" (Print.comp_typ_to_string cres);
-    printfn "fbody=%s\n"  (guard_to_string env fbody);
+    //printfn "Inferred cres=%s\n" (Print.comp_typ_to_string cres);
+    //printfn "fbody=%s\n"  (guard_to_string env fbody);
     let t = withkind Kind_type <| Typ_fun(Some x, tx, cres, false) in
     let e, t = gen (Exp_abs(x, tx, e1), t) in
     let c = Tc.Util.strengthen_precondition env (Total t) <| Rel.conj_guard f1 (Rel.conj_guard f2 (Tc.Util.close_guard [b] fbody)) in
-    printfn "final type of abstraction=%s\n"  (Print.comp_typ_to_string (Comp <| Tc.Normalize.normalize_comp env c));
+    //printfn "final type of abstraction=%s\n"  (Print.comp_typ_to_string (Comp <| Tc.Normalize.normalize_comp env c));
     e, c 
    
   | Exp_tabs(a, k1, e1) -> 
@@ -868,30 +868,23 @@ and tc_decl env se = match se with
       if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Print.typ_to_string t);
       se, env
   
-    | Sig_val_decl(lid, t, tag, ltag, r) -> 
+    | Sig_val_decl(lid, t, quals, r) -> 
       let env = Tc.Env.set_range env r in
       let t = tc_typ_check_trivial env t Kind_type in 
       Tc.Util.check_uvars r t;
-      let se = Sig_val_decl(lid, t, tag, ltag, r) in 
+      let se = Sig_val_decl(lid, t, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
       if log env then Util.print_string <| Util.format2 "val %s : %s\n" lid.str (Print.typ_to_string t);
       se, env
   
-    | Sig_assume(lid, phi, qual, tag, r) ->
+    | Sig_assume(lid, phi, quals, r) ->
       let env = Tc.Env.set_range env r in
       let phi = tc_typ_check_trivial env phi Kind_type in 
       Tc.Util.check_uvars r phi;
-      let se = Sig_assume(lid, phi, qual, tag, r) in 
+      let se = Sig_assume(lid, phi, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
-  
-    | Sig_logic_function(lid, t, tags, r) -> 
-      let env = Tc.Env.set_range env r in
-      let t = tc_typ_check_trivial env t Kind_type in 
-      let se = Sig_logic_function(lid, t, tags, r) in 
-      let env = Tc.Env.push_sigelt env se in 
-      se, env
-  
+   
     | Sig_let(lbs, r) -> 
       let is_rec = fst lbs in
       let env = Tc.Env.set_range env r in

@@ -80,9 +80,6 @@ val try_lookup_val_decl : env -> lident -> option<typ>
 val lookup_val_decl : env -> lident -> typ
 val lookup_datacon: env -> lident -> typ
 val is_datacon : env -> lident -> bool
-val is_logic_function : env -> lident -> bool
-val is_logic_data : env -> lident -> bool
-val is_logic_array : env -> lident -> bool
 val is_record : env -> lident -> bool
 val lookup_datacons_of_typ : env -> lident -> option<list<(lident * typ)>>
 val lookup_typ_abbrev : env -> lident -> option<typ>

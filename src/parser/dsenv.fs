@@ -148,14 +148,11 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
           | Sig_typ_abbrev _
           | Sig_tycon _ -> Some <| Typ_name(OSig se, ftv <| lid)      
           | Sig_datacon _
-          | Sig_logic_function _
           | Sig_let _ -> Some <| Exp_name(OSig se,  fvar lid (range_of_lid lid))
-          | Sig_val_decl(_, _, aopt, _, _) ->
-            begin match aopt with 
-              | Some Assumption -> Some <| Exp_name(OSig se, fvar lid (range_of_lid lid))
-              | _ when any_val -> Some <| Exp_name(OSig se, fvar lid (range_of_lid lid))
-              | _ -> None
-            end
+          | Sig_val_decl(_, _, quals, _) ->
+            if any_val || quals |> Util.for_some (function Assumption -> true | _ -> false)
+            then Some <| Exp_name(OSig se, fvar lid (range_of_lid lid))
+            else None
           | _ -> None
         end in
 
@@ -188,7 +185,7 @@ let is_effect_name env lid =
     match Util.smap_try_find env.sigmap lid.str with 
       | Some (Sig_tycon(_, _, _, _, _, tags, _), _) 
       | Some (Sig_typ_abbrev (_, _, _, _, tags, _), _) -> 
-        if Util.for_some (function Logic_effect -> true | _ -> false) tags
+        if Util.for_some (function Effect -> true | _ -> false) tags
         then Some (ftv <| lid)
         else None 
       | _ -> None in
@@ -226,7 +223,10 @@ let try_lookup_lid env l = try_lookup_lid' false false env l
 let try_lookup_datacon env (lid:lident) = 
   let find_in_sig lid = 
     match Util.smap_try_find env.sigmap lid.str with 
-      | Some (Sig_logic_function _, _)
+      | Some (Sig_val_decl(_, _, quals, _), _) -> 
+        if quals |> Util.for_some (function Assumption -> true | _ -> false)
+        then Some <| fv lid
+        else None
       | Some (Sig_datacon _, _) -> Some <| fv lid
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
@@ -427,11 +427,11 @@ let is_type_lid env lid =
 let check_admits nm env = 
   let warn = not (!Options.admit_fsi |> Util.for_some (fun l -> nm.str = l)) in
   env.sigaccum |> List.iter (fun se -> match se with
-    | Sig_val_decl(l, t, None, ltags, r) -> 
+    | Sig_val_decl(l, t, quals, r) -> 
       begin match try_lookup_lid env l with 
         | None -> 
           if warn then Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.sli l));
-          Util.smap_add env.sigmap l.str (Sig_val_decl(l, t, Some Assumption, ltags, r), false)
+          Util.smap_add env.sigmap l.str (Sig_val_decl(l, t, Assumption::quals, r), false)
         | Some _ -> ()
       end
     | _ -> ())

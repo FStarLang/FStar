@@ -87,10 +87,10 @@ type option 'a =
   | Some : v:'a -> option 'a
 
 assume type heap
-assume logic val SelHeap : #'a:Type -> heap -> ref 'a -> 'a
-assume logic val UpdHeap : #'a:Type -> heap -> ref 'a -> 'a -> heap
+assume logic val SelHeap : #'a:Type -> heap -> ref 'a -> PURE.Tot 'a
+assume logic val UpdHeap : #'a:Type -> heap -> ref 'a -> 'a -> PURE.Tot heap
 assume logic val EmpHeap : heap
-assume logic val InHeap  : #'a:Type -> heap -> ref 'a -> bool
+assume logic val InHeap  : #'a:Type -> heap -> ref 'a -> PURE.Tot bool
 assume SelUpd1: forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (SelHeap (UpdHeap h x v) x)} SelHeap (UpdHeap h x v) x == x
 assume SelUpd2: forall ('a:Type) ('b:Type) (h:heap) (x:ref 'a) (y:ref 'b) (v:'b).{:pattern (SelHeap (UpdHeap h y v) x)} y=!=x ==> SelHeap (UpdHeap h y v) x == SelHeap h x
 assume InHeap1:  forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (InHeap (UpdHeap h x v) x)} InHeap (UpdHeap h x v) x == true
@@ -98,9 +98,9 @@ assume InHeap2:  forall ('a:Type) ('b:Type) (h:heap) (x:ref 'a) (y:ref 'b) (v:'b
 
 assume type refset
 assume logic val EmptySet : refset
-assume logic val Singleton : ref 'a -> refset
-assume logic val Union : refset -> refset -> refset
-assume logic val Intersection : refset -> refset -> refset
+assume logic val Singleton : ref 'a -> PURE.Tot refset
+assume logic val Union : refset -> refset -> PURE.Tot refset
+assume logic val Intersection : refset -> refset -> PURE.Tot refset
 logic type InSet : #'a:Type => ref 'a => refset => Type
 logic type SetEqual : refset => refset => Type
 assume InEmptySet:     forall 'a (a:ref 'a). ~(InSet a EmptySet)

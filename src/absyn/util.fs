@@ -337,9 +337,8 @@ let rec lids_of_sigelt se = match se with
   | Sig_tycon (lid, _, _,  _, _, _, _)    
   | Sig_typ_abbrev  (lid, _, _, _, _, _)
   | Sig_datacon (lid, _, _, _)
-  | Sig_val_decl (lid, _, _, _, _) 
-  | Sig_assume (lid, _, _, _, _)
-  | Sig_logic_function (lid, _, _, _) -> [lid]
+  | Sig_val_decl (lid, _, _, _) 
+  | Sig_assume (lid, _, _, _) -> [lid]
   | Sig_let((_, lbs), _) -> List.map (function 
     | (Inr l, _, _) -> l
     | (Inl x, _, _) -> failwith (Util.format1 "Impossible: got top-level letbinding with name %s" x.ppname.idText)) lbs
@@ -354,9 +353,8 @@ let range_of_sigelt x = match x with
   | Sig_tycon (_, _, _,  _, _, _, r)    
   | Sig_typ_abbrev  (_, _, _, _, _, r)
   | Sig_datacon (_, _, _, r)
-  | Sig_val_decl (_, _, _, _, r) 
-  | Sig_assume (_, _, _, _, r)
-  | Sig_logic_function (_, _, _, r) 
+  | Sig_val_decl (_, _, _, r) 
+  | Sig_assume (_, _, _, r)
   | Sig_let(_, r) 
   | Sig_main(_, r) 
   | Sig_monads(_, _, r) -> r
@@ -815,7 +813,7 @@ let mkRefinedUnit formula =
 
 let findValDecl (vds:list<sigelt>) bvd : option<sigelt> =
   vds |> Util.find_opt (function
-                         | Sig_val_decl(lid, t, _, _, _) -> lid.ident.idText = bvd.ppname.idText
+                         | Sig_val_decl(lid, t, _, _) -> lid.ident.idText = bvd.ppname.idText
                          | _ -> false)
       
 let rec typs_of_letbinding x = match x with
