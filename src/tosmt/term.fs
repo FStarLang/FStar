@@ -324,6 +324,13 @@ let mkForall (pats, vars, body) =
     else match body.tm with 
             | True -> body 
             | _ -> mk (Forall(pats,vars,body)) <| fv_minus body.freevars vars
+let collapseForall (pats, vars, body) =
+    check_pats pats vars;
+    if List.length vars = 0 then body 
+    else match body.tm with 
+        | True-> body
+        | Forall(pats', vars', body') -> mkForall(pats@pats', vars@vars', body)
+        | _ -> mkForall(pats, vars, body)
 let mkExists (pats, vars, body) = 
     check_pats pats vars;
     if List.length vars = 0 then body 

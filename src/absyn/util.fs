@@ -699,7 +699,7 @@ let alpha_convert t      : typ  = freshen_bvars_typ None t []
 
 (********************************************************************************)
 (******************** Reducing to weak head normal form *************************)
-(***********************(inefficient--see Krivine.fs)****************************)
+(***********************(inefficient--see tc/normalize.fs)***********************)
 
 let whnf t =
   let rec aux ctr t =
@@ -882,7 +882,7 @@ let un_forall t = match t.t with
 (* collect all curried arguments until we reach a non-trivial computation type *)
 let collect_formals t = 
   let rec aux out t =
-      match (whnf t).t with
+      match (compress_typ t).t with
         | Typ_fun(xopt, t1, cod, imp) -> 
           let out = Inr(xopt,t1,imp)::out in
           begin match compress_comp cod with 
@@ -898,18 +898,20 @@ let collect_formals t =
         | _ -> List.rev out, Total t 
   in aux [] t
 
-let collect_u_quants t =
-  let rec aux out t =
-    match flatten_typ_apps (whnf t) with
-      | {t=Typ_const tc}, [Inl t1; Inl ({t=Typ_lam(x, _, t2)})]
-        when is_forall tc.v ->
-        aux ((x, t1)::out) t2
-      | _ -> List.rev out, t
-  in aux [] t
+let collect_formals_k k =
+    let rec aux out k = 
+        match compress_kind k with 
+            | Kind_tcon(aopt, k, k', imp) ->
+              aux (Inl(aopt, k, imp)::out) k'
+            | Kind_dcon(xopt, t, k', imp) ->
+              aux (Inr(xopt, t, imp)::out) k'
+            | Kind_abbrev(_, k) -> aux out k
+            | k -> List.rev out, k
+    in aux [] k
 
 let collect_forall_xt t =
   let rec aux out t =
-    match flatten_typ_apps (whnf t) with
+    match flatten_typ_apps (whnf t) with //NS: Should this really be doing whnf? Try to remove
       | {t=Typ_const tc}, [Inl t1; Inl ({t=Typ_lam(x, _, t2)})]
         when is_forall tc.v ->
         aux (Inr(x, t1)::out) t2
@@ -921,7 +923,7 @@ let collect_forall_xt t =
 
 let collect_exists_xt t =
   let rec aux out t =
-      match flatten_typ_apps (whnf t) with
+      match flatten_typ_apps (whnf t) with  //NS: Should this really be doing whnf? Try to remove
         | {t=Typ_const tc}, [Inl t1; Inl ({t=Typ_lam(x, _, t2)})]
           when lid_equals tc.v Const.exists_lid ->
           aux (Inr(x, t1)::out) t2
@@ -931,15 +933,6 @@ let collect_exists_xt t =
         | _ -> List.rev out, t
   in aux [] t
   
-let collect_e_quants t =
-  let rec aux out t =
-      match flatten_typ_apps (whnf t) with
-        | {t=Typ_const tc}, [Inl t1; Inl ({t=Typ_lam(x, _, t2)})]
-          when lid_equals tc.v Const.exists_lid ->
-          aux ((x, t1)::out) t2
-        | _ -> List.rev out, t
-  in aux [] t
-
 let rec check_pat_vars r = function 
   | Pat_cons(_, ps) -> 
     let vars = List.collect (check_pat_vars r) ps in 

@@ -149,7 +149,7 @@ let close1 (binders:list<(string * sort * list<pat>)>) d : decl = match d with
     let fvs = freevars tm in
     let tm' = binders |> List.fold_left (fun tm (x,s,p) -> 
        if Util.for_some (fun (y, _) -> x=y) fvs
-       then Term.mkForall(p, [(x,s)], tm)
+       then Term.collapseForall(p, [(x,s)], tm)
        else tm) tm in
     Assume(tm', c)
   | _ -> d
@@ -186,12 +186,9 @@ let rec encode_knd (env:env_t) (k:knd)  : res =
             let fsym, f = fresh_bvar "f" Type_sort in
             let g = [Term.DeclFun(ksym, [], Kind_sort, None);
                      Term.Assume(mk_tester Kind_sort "Kind_dcon" k, None);
-                     Term.Assume(mkForall ([mk_HasKind f k], [(fsym,Type_sort)], 
-                                           mkIff(mk_HasKind f k, 
-                                             mkAnd(mk_tester Kind_sort "Kind_dcon" (mk_PreKind f), 
-                                                 mkForall([mk_ApplyTE f xx], [(xxsym, Term_sort)], 
-                                                          mkImp(mk_HasType xx tt1, 
-                                                                mk_HasKind (mk_ApplyTE f xx) kk2))))), None)] in
+                     Term.Assume(mkForall ([mk_HasKind f k; mk_ApplyTE f xx; mk_HasType xx tt1], [(fsym,Type_sort); (xxsym, Term_sort)], 
+                                            mkImp(mkAnd(mk_HasKind f k, mk_HasType xx tt1),
+                                                  mk_HasKind (mk_ApplyTE f xx) kk2)), None)] in
             k, (g1@close [(xxsym, Term_sort, [mk_HasType xx tt1])] g2@g)
              
         | Kind_tcon(aopt, k1, k2, _) -> 
@@ -204,12 +201,9 @@ let rec encode_knd (env:env_t) (k:knd)  : res =
             let fsym, f = fresh_bvar "f" Type_sort in
             let g = [Term.DeclFun(ksym, [], Kind_sort, None);
                      Term.Assume(mk_tester Kind_sort "Kind_tcon" k, None);
-                     Term.Assume(mkForall ([mk_HasKind f k], [(fsym,Type_sort)], 
-                                         mkIff(mk_HasKind f k, 
-                                             mkAnd(mk_tester Kind_sort "Kind_tcon" (mk_PreKind f), 
-                                                 mkForall([mk_ApplyTT f aa], [(aasym, Type_sort)], 
-                                                        mkImp(mk_HasKind aa kk1, 
-                                                            mk_HasKind (mk_ApplyTT f aa) kk2))))), None)] in
+                     Term.Assume(mkForall ([mk_HasKind f k; mk_ApplyTT f aa; mk_HasKind aa kk1], [(fsym,Type_sort); (aasym, Type_sort)], 
+                                         mkImp(mkAnd(mk_HasKind f k, mk_HasKind aa kk1),
+                                                     mk_HasKind (mk_ApplyTT f aa) kk2)), None)] in
             k, (g1@close [(aasym, Type_sort, [mk_HasKind aa kk1])] g2@g)
             
         | Kind_abbrev(_, k) -> 
@@ -285,73 +279,13 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
           let vars = vars |> List.map (fun (x, s, _) -> (x,s)) in
           let g = [Term.DeclFun(tsym, [], Type_sort, None);
                    Term.Assume(mk_tester Type_sort "Typ_fun" t, None);
-                   Term.Assume(mkForall([app], vars@[(fsym, Term_sort)], 
+                   Term.Assume(mkForall([app; mk_HasType f t], vars@[(fsym, Term_sort)], 
                                          mkImp(mk_HasType f t, 
                                                mkAnd(mk_tester Type_sort "Typ_fun" (mk_PreType f),
                                                      mkImp(mkAnd(guard, wp2'),
                                                             mk_HasType app tt2)))), None)] in
           t, decls@g
 
-//      | Typ_fun(xopt, t1, c, _) -> 
-//        let c = Comp <| Normalize.weak_norm_comp env.tcenv c in
-//        if not <| Util.is_pure env.tcenv c 
-//        then let tsym, t = fresh_fvar "type" Type_sort in
-//             let fsym, f = fresh_bvar "f" Term_sort in 
-//             let g = [Term.DeclFun(tsym, [], Type_sort, None);
-//                      Term.Assume(mk_tester Type_sort "Typ_fun" t, None);
-//                      Term.Assume(mkForall([mk_HasType f t], [(fsym, Term_sort)], 
-//                                         mkImp(mk_HasType f t, mk_tester Type_sort "Typ_fun" (mk_PreType f))), None)] in
-//             t, g
-//        else let tt1, g1 = encode_typ env t1 in 
-//             let xxsym, xx, env' = match xopt with 
-//                | None -> withenv env <| fresh_bvar "x" Term_sort
-//                | Some x -> gen_term_var env x in 
-//             let t2, wp2, _ = Tc.Util.destruct_comp (Util.force_comp c) in
-//             let tt2, g2 = encode_typ env' t2 in
-//             let wp2', g3 = encode_formula env' (norm_t env' <| (withkind Kind_type <| Typ_app(wp2, trivial_post t2, false))) in 
-//             let g23 = match xopt with 
-//                | None -> g2@g3
-//                | _ -> close [(xxsym, Term_sort, [mk_HasType xx tt1])] (g2@g3) in
-//             let tsym, t = fresh_fvar "type" Type_sort in 
-//             let fsym, f = fresh_bvar "f" Term_sort in 
-//             let g = [Term.DeclFun(tsym, [], Type_sort, None);
-//                      Term.Assume(mk_tester Type_sort "Typ_fun" t, None);
-//                      Term.Assume(mkForall([mk_HasType f t], [(fsym, Term_sort)], 
-//                                         mkIff(mk_HasType f t, 
-//                                             mkAnd(mk_tester Type_sort "Typ_fun" (mk_PreType f),
-//                                                 mkForall([mk_ApplyEE f xx], [(xxsym, Term_sort)], 
-//                                                        mkImp(mkAnd(mk_HasType xx tt1, wp2'),
-//                                                            mk_HasType (mk_ApplyEE f xx) tt2))))), None)] in
-//            t, g1@g23@g
-//
-//      | Typ_univ(a, k, c) -> 
-//        let c = Comp <| Normalize.weak_norm_comp env.tcenv c in
-//        if not <| Util.is_pure env.tcenv c 
-//        then let tsym, t = fresh_fvar "type" Type_sort in
-//             let fsym, f = fresh_bvar "f" Term_sort in 
-//             let g = [Term.DeclFun(tsym, [], Type_sort, None);
-//                      Term.Assume(mk_tester Type_sort "Typ_univ" t, None);
-//                      Term.Assume(mkForall([mk_HasType f t], [(fsym, Term_sort)], 
-//                                         mkImp(mk_HasType f t, mk_tester Type_sort "Typ_univ" (mk_PreType f))), None)] in
-//             f, g
-//        else let kk, g1 = encode_knd env k in 
-//             let aasym, aa, env' = gen_typ_var env a in
-//             let t2, wp2, _ = Util.destruct_comp (Util.force_comp c) in
-//             let tt2, g2 = encode_typ env' t2 in
-//             let post = withkind kun <| Typ_lam(Util.new_bvd None, t2, Util.ftv Const.true_lid) in
-//             let wp2', g3 = encode_formula env' (norm_t env' <| (withkind Kind_type <| Typ_app(wp2, post, false))) in 
-//             let tsym, t = fresh_fvar "type" Type_sort in 
-//             let fsym, f = fresh_bvar "f" Term_sort in 
-//             let g = [Term.DeclFun(tsym, [], Type_sort, None);
-//                      Term.Assume(mk_tester Type_sort "Typ_univ" t, None);
-//                      Term.Assume(mkForall([mk_HasType f t], [(fsym, Term_sort)], 
-//                                         mkIff(mk_HasType f t, 
-//                                             mkAnd(mk_tester Type_sort "Typ_univ" (mk_PreType f),
-//                                                 mkForall([mk_ApplyET f aa], [(aasym, Type_sort)], 
-//                                                        mkImp(mkAnd(mk_HasKind aa kk, wp2'),
-//                                                            mk_HasType (mk_ApplyET f aa) tt2))))), None)] in
-//            t, g1@(close [(aasym, Type_sort, [mk_HasKind aa kk])] <| g2@g3)@g
-//      
       | Typ_app(t1, t2, _) -> 
         let tt1, g1 = encode_typ env t1 in 
         let tt2, g2 = encode_typ env t2 in
@@ -384,11 +318,8 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
                                         mkEq(mk_ApplyTT t aa, tt2))), None)] in
         t, g1@close [(aasym, Type_sort, [mk_HasKind aa kk1])] g2@g
 
-      | Typ_ascribed(t, k) -> encode_typ env t
-//        let tt, g1 = encode_typ env t in 
-//        let kk, g2 = encode_knd env k in 
-//        let g = [Term.Assume(mk_HasKind tt kk, None)] in
-//        tt, g1@g2@g
+      | Typ_ascribed(t, _) -> 
+        encode_typ env t
 
       | Typ_uvar(uv, _) -> 
         let tsym = format1 "Typ_uvar_%s" (string_of_int <| Unionfind.uvar_id uv) in
@@ -549,11 +480,7 @@ and encode_exp (env:env_t) (e:exp) : res =
         branches, g@g1
       
       | Exp_ascribed(e, t) -> encode_exp env e
-//        let ee, g1 = encode_exp env e in 
-//        let tt, g2 = encode_typ env t in 
-//        let g = [Term.Assume(mk_HasType ee tt, None)] in
-//        ee, g1@g2@g
-      
+
       | Exp_uvar(uv, _) ->
         let esym = format1 "Exp_uvar %d" (string_of_int <| Unionfind.uvar_id uv) in
         let g = [Term.DeclFun(esym, [], Term_sort, None)] in 
@@ -738,7 +665,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * dataco
               let g = [Term.DeclFun(vsym, [], Term_sort, Some (format1 "val %s" (Print.sli lid)));
                        Term.Assume(mk_HasType v tt, None)] in
               g1@g@mk_prim lid v, env, [], []
-           else [], env, [], []
+          else [], env, [], []
 
 
         | Sig_assume(l, f, _, _, _) -> 
@@ -753,6 +680,30 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * dataco
                    Term.Assume(mk_HasType f tt, Some (format1 "Typing assumption for logic val %s" (Print.sli l)))] in 
           g1@g, env, [], []
        
+        | Sig_tycon(t, tps, k, _, datas, [Logic_projector(d, Inl a)], _) -> 
+          let ttsym, tt, env = gen_free_tvar env t in
+          let vars, _ = Util.collect_formals_k k in
+          let qvars, tapp, _ = vars |> List.fold_left (fun (qvars, tapp, env) -> function
+            | Inl (Some a, k, _) -> 
+              let aasym, a, env = gen_typ_var env a in 
+              (aasym, Type_sort)::qvars, Term.mk_ApplyTT tapp a, env
+            | Inl (None, k, _) -> 
+              let aasym, a = fresh_bvar "a" Type_sort in
+              (aasym, Type_sort)::qvars, Term.mk_ApplyTT tapp a, env
+            | Inr (Some x, t, _) -> 
+              let xxsym, x, env = gen_term_var env x in 
+              (xxsym, Term_sort)::qvars, Term.mk_ApplyTE tapp x, env
+            | Inr (None, t, _) -> 
+              let xxsym, x = fresh_bvar "x" Term_sort in
+              (xxsym, Term_sort)::qvars, Term.mk_ApplyTE tapp x,  env) ([], tt, env) in
+          let xxsym, _ = List.hd qvars in
+          let xx = mkBoundV(xxsym, Term_sort) in
+          let qvars = List.rev qvars in
+          let dproj_app = Term.mkApp(mk_typ_projector_name d a, Arrow(Term_sort, Type_sort), [xx]) in
+          let g = [Term.DeclFun(ttsym, [], Type_sort, Some (format1 "projector: %s" (Print.sli t)));
+                   Term.Assume(mkForall([tapp], qvars, mkEq(tapp, dproj_app)), Some "projector axiom")] in
+          g, env, [], []
+
         | Sig_tycon(t, tps, k, _, datas, tags, _) -> 
           printfn "Encoding %s at kind %s\n" (Print.sli t) (Print.kind_to_string k);
           let ttsym, _, _ = gen_free_var env t in
