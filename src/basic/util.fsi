@@ -60,6 +60,8 @@ val char_at: string -> int -> char
 val is_upper: char -> bool
 val substring_from: string -> int -> string
 val substring: string -> int -> int -> string
+val replace_char: string -> char -> char -> string
+val replace_string: string -> string -> string -> string
 
 type either<'a,'b> =
   | Inl of 'a

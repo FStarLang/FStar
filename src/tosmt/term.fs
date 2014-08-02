@@ -121,8 +121,9 @@ let mkOr t        = match t with
     | {tm=False}, t'
     | t', {tm=False} -> t'
     | _ -> mk (Or t)  <| fv_bin t
-let mkImp (t1, t2) = match t2.tm with 
-    | True -> t2
+let mkImp (t1, t2) = match t1.tm, t2.tm with 
+    | _, True
+    | True, _ -> t2
     | _ -> mk (Imp (t1,t2)) <| fv_bin (t1,t2)
 let mkIff t      = mk (Iff t) <| fv_bin t
 let mkEq t       = mk (Eq t)  <| fv_bin t
@@ -290,7 +291,7 @@ let rec termToSmt binders tm =
       | Update(h,l,v) -> 
         format3 "(store %s %s %s)" (termToSmt binders h) (termToSmt binders l) (termToSmt binders v)
       | ITE(t1, t2, t3) -> 
-        format3 "(ite %s %s %s)" (termToSmt binders t1) (termToSmt binders t2) (termToSmt binders t3)
+        format3 "(ite %s\n\t%s\n\t%s)" (termToSmt binders t1) (termToSmt binders t2) (termToSmt binders t3)
       | Cases tms -> 
         format1 "(and %s)" (String.concat " " (List.map (termToSmt binders) tms))
       | Forall(pats,binders',z)
@@ -315,9 +316,9 @@ let rec termToSmt binders tm =
 let check_pats pats vars = 
     pats |> List.iter (fun p -> 
         let fvs = claim p.freevars in
-        if vars |> List.for_all (fun (x,_) -> fvs |> Util.for_some (fun (y, _) -> x=y))
+        if vars |> Util.for_all (fun (x,_) -> fvs |> Util.for_some (fun (y, _) -> x=y))
         then ()
-        else printfn "pattern %s misses a bound var" (termToSmt [] p))
+        else Util.print_string <| Util.format1 "pattern %s misses a bound var" (termToSmt [] p))
 let mkForall (pats, vars, body) = 
     check_pats pats vars;
     if List.length vars = 0 then body 
@@ -329,7 +330,7 @@ let collapseForall (pats, vars, body) =
     if List.length vars = 0 then body 
     else match body.tm with 
         | True-> body
-        | Forall(pats', vars', body') -> mkForall(pats@pats', vars@vars', body)
+        | Forall(pats', vars', body') -> mkForall(pats@pats', vars@vars', body')
         | _ -> mkForall(pats, vars, body)
 let mkExists (pats, vars, body) = 
     check_pats pats vars;

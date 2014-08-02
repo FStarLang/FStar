@@ -113,12 +113,12 @@ and comp_typ_to_string c =
       then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (String.concat ", " <| List.map effect_arg_to_string c.effect_args)
       else Util.format2 "%s (%s)" (sli c.effect_name) (typ_to_string c.result_typ)
        
-and effect_arg_to_string = function 
+and effect_arg_to_string e = match e with
     | Inr e -> exp_to_string e
     | Inl wp -> formula_to_string wp
      
 and formula_to_string phi = 
-    let const_op f _  = f in
+    let const_op f _ = f in
     let un_op  f [Inl t1] = format2 "%s %s" f (formula_to_string t1) in
     let bin_top f [Inl t1;Inl t2] = format3 "%s %s %s" (formula_to_string t1) f (formula_to_string t2) in
     let bin_eop f [Inr e1;Inr e2] = format3 "%s %s %s" (exp_to_string e1) f (exp_to_string e2) in
@@ -127,9 +127,7 @@ and formula_to_string phi =
         | [Inl _; Inl _; Inr e1; Inr e2]
         | [Inr e1; Inr e2] -> format2 "%s == %s" (exp_to_string e1) (exp_to_string e2)
         |  _ -> failwith "Impossible" in
-    let connectives = [(Const.true_lid, const_op "True");
-                       (Const.false_lid, const_op "False");
-                       (Const.and_lid,  bin_top "/\\");
+    let connectives = [(Const.and_lid,  bin_top "/\\");
                        (Const.or_lid, bin_top "\\/");
                        (Const.imp_lid, bin_top "==>");
                        (Const.iff_lid, bin_top "<==>");
@@ -140,12 +138,15 @@ and formula_to_string phi =
                        (Const.gte_lid, bin_eop ">=");
                        (Const.lte_lid, bin_eop "<=");
                        (Const.eqT_lid, bin_top "==");
-                       (Const.eq2_lid, eq_op);] in
+                       (Const.eq2_lid, eq_op);
+                       (Const.true_lid, const_op "True");
+                       (Const.false_lid, const_op "False");
+                       ] in
 
     let fallback phi = match phi.t with 
-        | Typ_lam(x, t, phi) ->  format2 "(fun %s => %s)" (strBvd x) (formula_to_string phi)
-        | Typ_tlam(a, k, phi) ->  format2 "(fun %s => %s)" (strBvd a) (formula_to_string phi)
-        | _ -> printfn "formula_to_string ...reverts on a %s\n" (tag_of_typ phi); typ_to_string phi in
+        | Typ_lam(x, _, phi) ->  format2 "(fun %s => %s)" (strBvd x) (formula_to_string phi)
+        | Typ_tlam(a, _, phi) ->  format2 "(fun %s => %s)" (strBvd a) (formula_to_string phi)
+        | _ -> typ_to_string phi in
 
     match Util.destruct_typ_as_formula phi with 
         | None -> fallback phi

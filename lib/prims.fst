@@ -74,7 +74,7 @@ assume type float
 assume type string
 assume type array : Type => Type
 assume type ref : Type => Type
-assume type LBL : string => Type => Type
+assume logic type LBL : string => Type => Type
 assume type bytes
 assume type exn
 assume type HashMultiMap : Type => Type => Type
@@ -109,13 +109,14 @@ assume InSingletonInv: forall 'a 'b (a:ref 'a) (b:ref 'b). InSet a (Singleton b)
 assume InUnion:        forall 'a s1 s2 (a:ref 'a). InSet a (Union s1 s2) <==> (InSet a s1 \/ InSet a s1)
 assume InUnionL:       forall 'a s1 s2 (a:ref 'a). InSet a s1 ==> InSet a (Union s1 s2)
 assume InUnionR:       forall 'a s1 s2 (a:ref 'a). InSet a s2 ==> InSet a (Union s1 s2)
-assume UnionIdemL:     forall s1 s2. Union (Union s1 s2) s2 == Union s1 s2
-assume UnionIdemR:     forall s1 s2. Union s1 (Union s1 s2) == Union s1 s2
+assume UnionIdemL:     forall s1 s2.{:pattern Union (Union s1 s2) s2} Union (Union s1 s2) s2 == Union s1 s2
+assume UnionIdemR:     forall s1 s2.{:pattern Union s1 (Union s1 s2)} Union s1 (Union s1 s2) == Union s1 s2
+(* assume InInter:        forall 'a s1 s2 (a:ref 'a). {:pattern InSet a (Intersection s1 s2)} InSet a (Intersection s1 s2) <==> (InSet a s1 /\ InSet a s2) *)
 assume InInter:        forall 'a s1 s2 (a:ref 'a). InSet a (Intersection s1 s2) <==> (InSet a s1 /\ InSet a s2)
-assume InterIdemL:     forall s1 s2. Intersection (Intersection s1 s2) s2 == Intersection s1 s2
-assume InterdemR:      forall s1 s2. Intersection s1 (Intersection s1 s2) == Intersection s1 s2
-assume SetEqualDef:    forall s1 s2. SetEqual s1 s2 <==> (forall 'a (a:ref 'a). InSet a s1 <==> InSet a s2)
-assume SeqEqualExt:    forall s1 s2. SetEqual s1 s2 ==> s1==s2
+assume InterIdemL:     forall s1 s2.{:pattern Intersection (Intersection s1 s2) s2}  Intersection (Intersection s1 s2) s2 == Intersection s1 s2
+assume InterdemR:      forall s1 s2.{:pattern Intersection s1 (Intersection s1 s2)} Intersection s1 (Intersection s1 s2) == Intersection s1 s2
+assume SetEqualDef:    forall s1 s2.{:pattern SetEqual s1 s2} (forall 'a (a:ref 'a). InSet a s1 <==> InSet a s2) ==> SetEqual s1 s2 
+assume SeqEqualExt:    forall s1 s2.{:pattern SetEqual s1 s2} SetEqual s1 s2 ==> s1==s2
 type refs =
   | AllRefs : refs
   | SomeRefs : v:refset -> refs
@@ -449,16 +450,19 @@ assume val pipe_left: ('a -> 'b) -> 'a -> 'b
 assume val ignore: 'a -> unit
 assume val exit: int -> 'a
 assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
-assume val op_AmpAmp             : bool -> bool -> PURE.Tot bool
-assume val op_BarBar             : bool -> bool -> PURE.Tot bool
-assume val op_Negation           : bool -> PURE.Tot bool
-assume val op_Multiply           : int -> int -> PURE.Tot int
-assume val op_Division           : int -> int -> int
-assume val op_Subtraction        : int -> int -> PURE.Tot int
-assume val op_Addition           : int -> int -> PURE.Tot int
-assume val op_Minus              : int -> PURE.Tot int
+assume logic val op_AmpAmp             : bool -> bool -> PURE.Tot bool
+assume logic val op_BarBar             : bool -> bool -> PURE.Tot bool
+assume logic val op_Negation           : bool -> PURE.Tot bool
+assume logic val op_Multiply           : int -> int -> PURE.Tot int
+assume logic val op_Subtraction        : int -> int -> PURE.Tot int
+assume logic val op_Addition           : int -> int -> PURE.Tot int
+assume logic val op_Minus              : int -> PURE.Tot int
+assume logic val op_LessThanOrEqual    : int -> int -> PURE.Tot bool
+assume logic val op_GreaterThan        : int -> int -> PURE.Tot bool
+assume logic val op_GreaterThanOrEqual : int -> int -> PURE.Tot bool
+assume logic val op_LessThan           : int -> int -> PURE.Tot bool
 assume val op_Modulus            : int -> int -> int
-assume val op_LessThanOrEqual    : int -> int -> PURE.Tot bool
-assume val op_GreaterThan        : int -> int -> PURE.Tot bool
-assume val op_GreaterThanOrEqual : int -> int -> PURE.Tot bool
-assume val op_LessThan           : int -> int -> PURE.Tot bool
+assume val op_Division           : int -> int -> int
+(* Unrefined specifications for these functions for typing ML code *)
+assume val op_ColonEquals: ref 'a -> 'a -> unit
+assume val op_Dereference: ref 'a -> 'a
