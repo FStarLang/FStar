@@ -52,6 +52,7 @@ val bind_cases: env -> typ -> list<(option<typ> * comp)> -> comp
 val weaken_result_typ: env -> exp -> comp -> typ -> exp * comp
 val strengthen_precondition: env -> comp -> guard -> comp
 val weaken_precondition: env -> comp -> guard -> comp
+val maybe_assume_result_eq_pure_term: env -> exp -> comp -> comp
 val lift_pure: env -> typ -> formula -> comp (* with t as a result type *)
 val close_guard: list<Tc.Env.binding> -> guard -> guard
 val close_comp: env -> list<binding> -> comp -> comp

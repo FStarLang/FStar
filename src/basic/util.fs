@@ -102,6 +102,7 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
 
 type smap<'value>=HashMultiMap<string, 'value>
 let smap_create<'value> (i:int) = new HashMultiMap<string,'value>(i, HashIdentity.Structural)
+let smap_clear<'value> (s:smap<'value>) = s.Clear()
 let smap_add (m:smap<'value>) k (v:'value) = m.Add(k,v)
 let smap_try_find (m:smap<'value>) k = m.TryFind(k)
 let smap_fold (m:smap<'value>) f a = m.Fold f a

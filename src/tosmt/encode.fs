@@ -47,7 +47,8 @@ type varops_t = {
     new_var:ident -> ident -> string;
     new_fvar:lident -> string;
     fresh:string -> string;
-    string_const:string -> term * list<decl>
+    string_const:string -> term * list<decl>;
+    reset:unit -> unit
 }
               
 let escape (s:string) = Util.replace_char s '\'' '_'
@@ -77,7 +78,8 @@ let varops =
     {new_var=new_var;
      new_fvar=new_fvar;
      fresh=fresh;
-     string_const=string_const}
+     string_const=string_const;
+     reset=(fun () -> Util.smap_clear names; ctr := 0)}
 let fresh_bvar x s = let xsym = varops.fresh x in xsym, mkBoundV(xsym, s)
 let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV(xsym, s)
 
@@ -838,6 +840,7 @@ let seen (m:modul) : bool =
     else (seen_modules := m.name::!seen_modules; false)
 
 let smt_query (tcenv:Tc.Env.env) (q:typ) : bool = 
+   varops.reset();
    let e = {bindings=[]; tcenv=tcenv} in
    let decls, env, tys, datas = tcenv.modules |> List.collect (fun m -> m.exports) |> encode_signature e in
    let env_decls, env = encode_env env tcenv in

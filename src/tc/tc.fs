@@ -59,7 +59,8 @@ let value_check_expected_typ env e tc : exp * comp =
    | None -> e, c
    | Some t' -> 
      let e, g = Tc.Util.check_and_ascribe env e t t' in
-     e, Tc.Util.strengthen_precondition env c g
+     let c = Tc.Util.strengthen_precondition env c g in
+     e, Util.set_result_typ c t'
 
 let comp_check_expected_typ env e c : exp * comp = 
   match Env.expected_typ env with 
@@ -493,6 +494,7 @@ and tc_exp env e : exp * comp = match e with
       | Inr (_, imp) -> {env with Tc.Env.instantiate_vargs=not imp} in
     let f, cf = tc_exp env f in
     if debug env then Util.print_string <| Util.format2 "Checked function LHS %s at type %s\n" (Print.exp_to_string f) "<hidden>";//(Print.comp_typ_to_string cf);
+    let is_primop = Util.is_primop f in
     let rec aux (f, tf, (cs:list<Tc.Util.comp_with_binder>), guard, fvs) args = match args with 
       | Inl targ::rest -> 
         let targ, k, g = tc_typ env targ in 
@@ -542,6 +544,7 @@ and tc_exp env e : exp * comp = match e with
         let tail = List.fold_left (fun accum cb -> (fst cb, Tc.Util.bind env (snd cb) accum)) (List.hd cs) (List.tl cs) in
         let c = Tc.Util.bind env cf tail in
         let c = Tc.Util.strengthen_precondition env c guard in
+        let c = if is_primop then Tc.Util.maybe_assume_result_eq_pure_term env f c else c in
         comp_check_expected_typ env0 f c in
     aux (f, Util.comp_result cf, [], Trivial, []) args
               
@@ -699,7 +702,7 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
       let e = compress_exp e in 
       match e with 
       | Exp_uvar _
-      | Exp_bvar _ -> []
+      | Exp_bvar _ -> [Util.ftv Const.true_lid]
       | Exp_constant c -> [Util.mk_eq guard_exp e]
       | Exp_fvar(f, _) -> [discriminate f]
       | Exp_app _ 

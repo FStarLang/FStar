@@ -266,12 +266,37 @@ let comp_result c = match compress_comp c with
   | Flex (_, t) -> t
   | Comp ct -> ct.result_typ
 
+let set_result_typ c t = match compress_comp c with 
+  | Total _ -> Total t
+  | Flex(u, _) -> Flex(u, t)
+  | Comp ct -> Comp({ct with result_typ=t})
+
 let is_trivial_wp c = 
   comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
   
 (********************************************************************************)
 (****************Simple utils on the local structure of a term ******************)
 (********************************************************************************)
+let primops = 
+  [Const.op_Eq;
+   Const.op_notEq;
+   Const.op_LT;
+   Const.op_LTE;
+   Const.op_GT;
+   Const.op_GTE;
+   Const.op_Subtraction;
+   Const.op_Minus;
+   Const.op_Addition;
+   Const.op_Multiply;
+   Const.op_Division;
+   Const.op_Modulus;
+   Const.op_And;
+   Const.op_Or;
+   Const.op_Negation;]
+
+let is_primop f = match f with 
+  | Exp_fvar(fv,_) -> primops |> Util.for_some (lid_equals fv.v)
+  | _ -> false
 
 let rec ascribe e t = match e with 
   | Exp_ascribed (e, _) -> ascribe e t

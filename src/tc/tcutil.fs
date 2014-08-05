@@ -119,6 +119,10 @@ let close_guard (b:list<binding>) (g:guard) : guard = match g with
       | Env.Binding_typ(a, k) -> Util.mk_forallT a k f
       | _ -> failwith "impossible") b f
 
+let apply_guard g e = match g with 
+    | Trivial -> g
+    | Guard f -> Guard (withkind Kind_type <| Typ_dep(f, e, false))
+
 let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard =
   match try_subtype env t1 t2 with
     | None -> 
@@ -126,7 +130,7 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard =
         then raise (Error(Tc.Errors.expected_pattern_of_type t2 e t1, Tc.Env.get_range env))
         else raise (Error(Tc.Errors.expected_expression_of_type t2 e t1, Tc.Env.get_range env))
     | Some f -> 
-        Exp_ascribed(e, t2), f
+        Exp_ascribed(e, t2), apply_guard f e
 
 let destruct_function_typ env (t:typ) (xopt:option<bvvdef>) (f:option<exp>) (imp_arg_follows:bool) (default_ml:bool) : (typ * option<exp>) = 
   let fail subst t f = 
@@ -547,16 +551,35 @@ let close_comp env bindings (c:comp) =
 
 let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp = 
   let c = Tc.Normalize.weak_norm_comp env c in
-  let tc, wp, wlp = destruct_comp c in
+  let tc, _, _ = destruct_comp c in
   let g = Tc.Rel.subtype env tc t in
-  let md = Tc.Env.get_monad_decl env c.effect_name in
-  let c = strengthen_precondition env (mk_comp md tc wp wlp c.flags) g in
-  e, c
+  match g with 
+    | Trivial -> e, Comp c
+    | Guard f -> 
+      let md = Tc.Env.get_monad_decl env c.effect_name in
+      let x = new_bvd None in
+      let xexp = Util.bvd_to_exp x t in
+      let wp = Util.mk_typ_app md.ret [Inl t; Inr xexp] in
+      let cret = mk_comp md t wp wp c.flags in
+      let eq_ret = strengthen_precondition env cret (Guard (Util.mk_typ_app f [Inr xexp])) in
+      let c = bind env (Comp c) (Some(Env.Binding_var(x, tc)), eq_ret) in
+      e, c
 
 let check_comp env (e:exp) (c:comp) (c':comp) : exp * comp * guard = 
   match Tc.Rel.sub_comp env c c' with 
     | None -> raise (Error(Tc.Errors.computed_computation_type_does_not_match_annotation e c c', Tc.Env.get_range env))
     | Some g -> e, c', g
+
+let maybe_assume_result_eq_pure_term env (e:exp) (c:comp) : comp = 
+  if not (is_pure env c) then c
+  else let c = Tc.Normalize.weak_norm_comp env c in
+       let t = c.result_typ in
+       let c = Comp c in 
+       let x = Util.new_bvd None in
+       let xexp = Util.bvd_to_exp x t in
+       let ret = return_value env t xexp in
+       let eq_ret = weaken_precondition env ret (Guard (Util.mk_eq xexp e)) in
+       bind env c (Some (Env.Binding_var(x, t)), eq_ret)
 
 let refine_data_type env l (args:list<either<(btvdef*knd), (option<bvvdef> * typ * bool)>>) (result_t:typ) =
   let rec aux args = function 

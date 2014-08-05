@@ -76,7 +76,7 @@ let qfile =
 
 let callZ3Exe (debug:bool) (theory:decls) labels = 
   let theory = labels |> List.fold_left (fun decls (lname, t) -> decls@[Echo lname; Eval t]) theory in
-  let input = List.map declToSmt (theory@[Echo "\nDone!"]) |> String.concat "\n" in
+  let input = List.map declToSmt (theory@[Echo "Done!"]) |> String.concat "\n" in
     if debug then Util.write_file (qfile()) input; 
     let status, lblnegs = doZ3Exe input in
     match status with 
