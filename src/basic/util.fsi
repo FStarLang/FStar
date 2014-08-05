@@ -19,8 +19,6 @@ exception Impos
 exception NYI of string
 exception Failure of string
 
-val lift_all: 'a -> 'a
-
 (* generic utils *)
 type smap<'value> = HashMultiMap<string,'value> (* not relying on representation *)
 val smap_create: int -> smap<'value>
@@ -40,6 +38,16 @@ val print_any : 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list<string> -> string
 val write_file: string -> string -> unit
+
+type proc = {m:System.Object; 
+             outbuf:System.Text.StringBuilder;
+             proc:System.Diagnostics.Process;
+             killed:ref<bool>}  (* not relying on representation *)
+val start_process: string -> string -> (string -> bool) -> proc
+val ask_process: proc -> string -> string
+val kill_process: proc -> unit
+val kill_all: unit -> unit
+
 val run_proc : string -> string -> string -> (bool * string * string)
 
 val int_of_string:   string -> int

@@ -250,11 +250,11 @@ let comp_flags c = match compress_comp c with
   | Comp ct -> ct.flags
   | Flex _ -> []
 
-let is_total_comp c = List.contains TOTAL (comp_flags c)
+let is_total_comp c = comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
 let is_pure_comp c = match compress_comp c with 
     | Total _ -> true
-    | Comp ct -> List.contains TOTAL ct.flags || Util.starts_with ct.effect_name.str "Prims.PURE"
+    | Comp ct -> is_total_comp c || Util.starts_with ct.effect_name.str "Prims.PURE"
     | Flex _ -> false
 
 let is_ml_comp = function
@@ -267,9 +267,8 @@ let comp_result c = match compress_comp c with
   | Comp ct -> ct.result_typ
 
 let is_trivial_wp c = 
-  let f = comp_flags c in
-  List.contains TOTAL f || List.contains RETURN f
-
+  comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
+  
 (********************************************************************************)
 (****************Simple utils on the local structure of a term ******************)
 (********************************************************************************)

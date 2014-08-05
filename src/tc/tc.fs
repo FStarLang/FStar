@@ -414,6 +414,21 @@ and tc_exp env e : exp * comp = match e with
     let e, c = tc_exp env1 e in
     comp_check_expected_typ env (Exp_meta(Meta_desugared(e, Data_app))) c
 
+  | Exp_meta(Meta_desugared(e, Sequence)) -> 
+    begin match compress_exp e with 
+        | Exp_let((_,[x, _, e1]), e2) -> 
+          let e2 = match compress_exp e2 with 
+            | Exp_match(_, [_, _, e2]) -> e2
+            | _ -> failwith "Impossible" in
+          let e1, c1 = tc_exp (Env.set_expected_typ env Tc.Util.t_unit) e1 in 
+          let e2, c2 = tc_exp env e2 in 
+          let c = Tc.Util.bind env c1 (None, c2) in
+          Exp_meta(Meta_desugared(Exp_let((false, [x, Tc.Util.t_unit, e1]), e2), Sequence)), c
+        | _ -> 
+          let e, c = tc_exp env e in
+          Exp_meta(Meta_desugared(e, Sequence)), c     
+    end
+
   | Exp_meta(Meta_desugared(e, i)) -> 
     let e, c = tc_exp env e in
     Exp_meta(Meta_desugared(e, i)), c
@@ -605,7 +620,13 @@ and tc_exp env e : exp * comp = match e with
             | Some y -> raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape (Util.comp_result cres) y.v, rng env))
     end
 
-and tc_eqn (guard_x:bvvdef) pat_t env (patt, when_clause, branch) : (pat * option<exp> * exp) * option<formula> * comp =
+and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * option<exp> * exp) * option<formula> * comp =
+  (* 
+     guard_x is the scrutinee;  pat_t is the expected pattern typ; 
+     Returns: (pattern, when_clause, branch) --- typed
+              option<formula> -- guard condition for this branch, propagated up for exhaustiveness check
+              comp            -- the computation type of the branch
+  *)
   let rec tc_pat (pat_t:typ) env p : list<Env.binding> * Env.env * list<exp> = 
     let pvar_eq x y = match x, y with 
       | Inl a, Inl b -> bvd_eq a b
@@ -629,7 +650,7 @@ and tc_eqn (guard_x:bvvdef) pat_t env (patt, when_clause, branch) : (pat * optio
         if binding_exists bindings (Inl a) 
         then raise (Error(Tc.Errors.nonlinear_pattern_variable a, Util.range_of_bvd a))
         else Env.Binding_typ(a, Tc.Util.new_kvar env)::bindings, [Inl a]
-      | Pat_cons(l, pats) -> 
+      | Pat_cons(_, pats) -> 
         List.fold_left (fun (bindings, out) p -> 
             let b, o = pat_bindings bindings p in 
             b, o@out) (bindings,[]) pats
@@ -649,7 +670,7 @@ and tc_eqn (guard_x:bvvdef) pat_t env (patt, when_clause, branch) : (pat * optio
     let res = bindings, pat_env, List.map (fun e -> fst <| (no_guard env <| tc_total_exp env e)) exps in
     res in
 
-  let bindings, pat_env, disj_exps = tc_pat pat_t env patt in 
+  let bindings, pat_env, disj_exps = tc_pat pat_t env pattern in //disj_exps, an exp for each arm of a disjunctive pattern
   let when_clause = match when_clause with 
     | None -> None
     | Some e -> Some (fst <| (no_guard env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e)) in
@@ -657,13 +678,11 @@ and tc_eqn (guard_x:bvvdef) pat_t env (patt, when_clause, branch) : (pat * optio
   let guard_exp = Util.bvd_to_exp guard_x pat_t in
   let guard_env = Env.push_local_binding env (Env.Binding_var(guard_x, pat_t)) in
   let c = 
-    let eqs = disj_exps |> List.fold_left (fun fopt e -> match compress_exp e with 
-        | Exp_bvar _
-        | Exp_app _ 
-        | Exp_tapp _ -> 
+    let eqs = disj_exps |> List.fold_left (fun fopt e -> 
           let clause = Util.mk_eq guard_exp e in
-          map_opt fopt (Util.mk_disj clause) (* only the cases with pattern bound variables need to be chosen *)
-        | _ -> fopt) None in 
+          match fopt with
+            | None -> Some clause
+            | Some f -> Some <| Util.mk_disj clause f) None in 
     let c = match eqs, when_clause with
       | None, None -> c
       | Some f, None -> Tc.Util.weaken_precondition env c (Guard f)
@@ -693,7 +712,7 @@ and tc_eqn (guard_x:bvvdef) pat_t env (patt, when_clause, branch) : (pat * optio
     List.fold_left (fun fopt f -> match fopt with 
       | None -> Some f
       | Some g -> Some (Util.mk_disj f g)) None discs in
-  (patt, when_clause, branch), gg, c 
+  (pattern, when_clause, branch), gg, c 
 
 and tc_kind_trivial env k : knd = 
   match tc_kind env k with 

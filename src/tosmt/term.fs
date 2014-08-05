@@ -158,6 +158,8 @@ type decl =
   | Caption    of string
   | Eval       of term
   | Echo       of string
+  | Push
+  | Pop
   | CheckSat
 type decls = list<decl>
 
@@ -313,12 +315,12 @@ let rec termToSmt binders tm =
       | ConstArray(s, _, tm) -> 
         format2 "((as const %s) %s)" s (termToSmt binders tm)
 
-let check_pats pats vars = 
-    pats |> List.iter (fun p -> 
-        let fvs = claim p.freevars in
-        if vars |> Util.for_all (fun (x,_) -> fvs |> Util.for_some (fun (y, _) -> x=y))
-        then ()
-        else Util.print_string <| Util.format1 "pattern %s misses a bound var" (termToSmt [] p))
+let check_pats pats vars = ()
+//    pats |> List.iter (fun p -> 
+//        let fvs = claim p.freevars in
+//        if vars |> Util.for_all (fun (x,_) -> fvs |> Util.for_some (fun (y, _) -> x=y))
+//        then ()
+//        else Util.print_string <| Util.format1 "pattern %s misses a bound var" (termToSmt [] p))
 let mkForall (pats, vars, body) = 
     check_pats pats vars;
     if List.length vars = 0 then body 
@@ -374,23 +376,21 @@ let mkPrelude typenames datacons =
           (declare-fun ApplyTE (Type Term) Type)\n \
           (declare-fun ApplyTT (Type Type) Type)\n \
           ;;;;;;;;;;; (Unit typing)\n \
-          (assert (= (PreType Term_unit)\n \
-                     (Typ_const Prims.unit)))\n \
+          (assert (forall ((x Term)) \n \
+                        (iff (HasType x (Typ_const Prims.unit))\n \
+                             (= x Term_unit))))\n \
           ;;;;;;;;;;; (Bool typing)\n \
           (assert (forall ((x Term))\n \
-                          (implies (is-BoxBool x)\n \
-                                   (= (PreType x)\n \
-                                      (Typ_const Prims.bool)))))\n \
+                        (iff (is-BoxBool x)\n \
+                             (HasType x (Typ_const Prims.bool)))))\n \
           ;;;;;;;;;;; (Int typing)\n \
           (assert (forall ((x Term))\n \
-                          (implies (is-BoxInt x)\n \
-                                   (= (PreType x)\n \
-                                      (Typ_const Prims.int)))))\n \
+                        (iff (is-BoxInt x)\n \
+                             (HasType x (Typ_const Prims.int)))))\n \
           ;;;;;;;;;;; (String typing)\n \
           (assert (forall ((x Term))\n \
-                          (implies (is-BoxString x)\n \
-                                   (= (PreType x)\n \
-                                      (Typ_const Prims.string)))))"
+                        (iff (is-BoxString x)\n \
+                             (HasType x (Typ_const Prims.string)))))"
          (typenames |> List.map (fun s -> format1 "\t\t(%s)" s) |>  String.concat "\n") 
          (datacons |> List.map (fun (nm, projs, _) -> 
             format2 "\t\t(%s %s)" nm (projs |> List.map (fun (nm, sort) -> 
@@ -418,7 +418,8 @@ let declToSmt decl = match decl with
   | Echo s -> 
     format1 "(echo \"%s\")" s
   | CheckSat -> "(check-sat)"
-
+  | Push -> "(push)"
+  | Pop -> "(pop)"
 
 let mk_Kind_type        = mkApp("Kind_type", Kind_sort, [])
 let mk_Typ_const n      = mkApp("Typ_const", Arrow(Ext "Type_name", Type_sort), [mkApp(n, Ext "Type_name", [])])

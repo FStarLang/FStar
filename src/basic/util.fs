@@ -17,16 +17,74 @@
 // (c) Microsoft Corporation. All rights reserved
 module Microsoft.FStar.Util
 
+open System
+open System.Text
 open System.Diagnostics
 open System.IO
 open System.IO.Compression
 open Profiling
 
-let lift_all x = x
-
 exception Impos
 exception NYI of string
 exception Failure of string
+
+type proc = {m:Object; 
+             outbuf:StringBuilder;
+             proc:Process;
+             killed:ref<bool>}
+let all_procs : ref<list<proc>> = ref []
+
+let start_process (prog:string) (args:string) (cond:string -> bool) : proc = 
+    let signal = new Object() in
+    let with_sig f = 
+        System.Threading.Monitor.Enter(signal);
+        let res = f() in
+        System.Threading.Monitor.Exit(signal);
+        res in
+    let startInfo = new ProcessStartInfo() in
+    let driverOutput = new StringBuilder() in
+    let killed = ref false in
+    let proc = new Process() in
+        startInfo.FileName <- prog;
+        startInfo.Arguments <- args;
+        startInfo.UseShellExecute <- false;
+        startInfo.RedirectStandardOutput <- true;
+        startInfo.RedirectStandardInput <- true;
+        proc.EnableRaisingEvents <- true;
+        proc.OutputDataReceived.AddHandler(
+             DataReceivedEventHandler(fun _ args -> 
+                if !killed then ()
+                else with_sig(fun () -> 
+                           ignore <| driverOutput.Append(args.Data);
+                           ignore <| driverOutput.Append("\n");
+                           if cond args.Data
+                           then System.Threading.Monitor.Pulse(signal))));
+        proc.StartInfo <- startInfo;
+        proc.Start() |> ignore;
+        proc.BeginOutputReadLine();
+        let proc = {m=signal;
+                    outbuf=driverOutput;
+                    proc=proc;
+                    killed=killed} in
+        all_procs := proc::!all_procs;
+        proc
+
+let ask_process (p:proc) (stdin:string) : string = 
+    ignore <| p.outbuf.Clear();
+    System.Threading.Monitor.Enter(p.m);
+    p.proc.StandardInput.WriteLine(stdin);
+    ignore <| System.Threading.Monitor.Wait(p.m);
+    System.Threading.Monitor.Exit(p.m);
+    p.outbuf.ToString()
+
+let kill_process (p:proc) = 
+    p.killed := true;
+    System.Threading.Monitor.Enter(p.m);
+    p.proc.StandardInput.Close();
+    System.Threading.Monitor.Exit(p.m);
+    p.proc.WaitForExit()
+
+let kill_all () = !all_procs |> List.iter (fun p -> if not !p.killed then kill_process p)
 
 let run_proc (name:string) (args:string) (stdin:string) : bool * string * string = 
   let pinfo = new ProcessStartInfo(name, args) in

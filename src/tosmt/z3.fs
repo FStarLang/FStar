@@ -24,7 +24,7 @@ open Microsoft.FStar.Util
 (* Z3 Specifics                                                             *)
 (****************************************************************************)
 let ini_params = 
-  format1 "%s \
+  format1 "/smt2 /in %s \
        AUTO_CONFIG=false \
        MBQI=false \
        MODEL=true \
@@ -44,8 +44,8 @@ let status_to_string = function
     | UNSAT -> "unsat"
     | UNKNOWN -> "unknown"
     | TIMEOUT -> "timeout"
-    
-let doZ3Exe ini_params (input:string) = 
+
+let doZ3Exe (input:string) = 
   let parse (z3out:string) = 
     let lines = String.split ['\n'] z3out |> List.map Util.trim_string in
     let rec lblnegs lines = match lines with 
@@ -60,12 +60,11 @@ let doZ3Exe ini_params (input:string) =
       | _::tl -> result tl 
       | _ -> failwith <| format1 "Got output lines: %s\n" (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (Util.trim_string l)) lines)) in
       result lines in
-  let cmdargs = format1 "%s /smt2 /in" ini_params in 
-  let result, stdout, stderr = Util.run_proc "z3.exe" cmdargs input in    
-  if result 
-  then let status, lblnegs = parse (Util.trim_string stdout) in
-       status, lblnegs, cmdargs
-  else failwith (format1 "Z3 returned an error: %s\n" stderr)
+  let cond (s:string) = Util.trim_string s = "Done!" in
+  let z3proc = Util.start_process "z3.exe" ini_params cond in
+  let stdout = Util.ask_process z3proc input in    
+  let _ = Util.kill_all () in //process z3proc in
+  parse (Util.trim_string stdout) 
 
 let qfile = 
     let ctr = Util.mk_ref 0 in
@@ -77,21 +76,15 @@ let qfile =
 
 let callZ3Exe (debug:bool) (theory:decls) labels = 
   let theory = labels |> List.fold_left (fun decls (lname, t) -> decls@[Echo lname; Eval t]) theory in
-  let input = List.map declToSmt theory |> String.concat "\n" in
-  if debug 
-  then (Util.write_file (qfile()) input; true)
-  else 
-      let rec proc_result again (status, lblnegs, cmdargs) = 
-        match status with 
-          | UNSAT -> true
-          | _ -> 
-              print_string <| format2 "Called z3.exe %s\nZ3 says: %s\n" cmdargs (status_to_string status);
-              match status with 
-                | UNKNOWN -> 
-                    if again
-                    then proc_result false (doZ3Exe (ini_params ^ " MBQI=true") input)
-                    else (print_string <| format1 "Failing assertions: %s\n" (String.concat "\n\t" lblnegs); false)
-                | _ -> 
-                    print_string <| format1 "Failing assertions: %s\n" (String.concat "\n\t" lblnegs);
-                    false in 
-        proc_result true (doZ3Exe ini_params input)
+  let input = List.map declToSmt (theory@[Echo "\nDone!"]) |> String.concat "\n" in
+    if debug then Util.write_file (qfile()) input; 
+    let status, lblnegs = doZ3Exe input in
+    match status with 
+     | UNSAT -> true
+     | _ -> 
+       print_string <| format1 "Z3 says: %s\n" (status_to_string status);
+       match status with 
+         | UNKNOWN -> 
+           print_string <| format1 "Failing assertions: %s\n" (String.concat "\n\t" lblnegs); false
+         | _ -> 
+           print_string <| format1 "Failing assertions: %s\n" (String.concat "\n\t" lblnegs); false 

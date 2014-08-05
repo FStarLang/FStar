@@ -387,7 +387,17 @@ let mk_comp md result wp wlp flags =
          effect_args=[Inl wp; Inl wlp];
          flags=flags})
 
-let return_value env t v = Util.total_comp t (range_of_exp v (Env.get_range env))
+//let return_value env t v = Util.total_comp t (range_of_exp v (Env.get_range env))
+
+let return_value env t v = 
+  match Tc.Env.monad_decl_opt env Const.pure_effect_lid with 
+    | None -> Util.total_comp t (range_of_exp v (Env.get_range env))
+    | Some m -> 
+       let a, kwp = Env.wp_signature env Const.pure_effect_lid in
+       let k = Util.subst_kind [Inl(a, t)] kwp in
+       let wp = {Util.mk_typ_app m.ret [Inl t; Inr v] with k=k} in
+       let wlp = wp in
+       mk_comp m t wp wlp [RETURN]
 
 let bind env (c1:comp) ((b, c2):comp_with_binder) : comp = 
 //  if debug env
@@ -478,19 +488,19 @@ let bind_cases env (res_t:typ) (cases:list<(option<formula> * comp)>) : comp =
   (if List.length cases = 0 then failwith "Empty cases!"); (* TODO: Fix precedence of semi colon *)
   match cases with 
     | [(None, c)] -> c
-    | [(Some f, c)] -> weaken_precondition env c (Guard f)
+    | [(Some f, c)] -> strengthen_precondition env c (Guard f)
     | _ -> 
-      let caccum, guard = cases |> List.fold_left (fun (caccum, guard) (gopt, c) -> 
-        let guard, cguard = match guard, gopt with 
+      let caccum, some_pat_matched = cases |> List.fold_left (fun (caccum, prior_pat_matched) (gopt, c) -> 
+        let prior_or_c_matched, cguard = match prior_pat_matched, gopt with 
           | None, Some g -> Some g, Some g
-          | Some g, None -> guard, Some <| Util.mk_neg g
+          | Some g, None -> prior_pat_matched, Some <| Util.mk_neg g
           | Some g, Some g' -> Some (Util.mk_disj g g'), Some <| Util.mk_conj (Util.mk_neg g) g'
           | None, None -> None, None in
         let c = match cguard with 
           | None -> c
           | Some g -> weaken_precondition env c (Guard g) in 
         match caccum with 
-          | None -> (Some c, guard)
+          | None -> (Some c, prior_or_c_matched)
           | Some caccum -> 
             let (md, a, kwp), (t, wp1, wlp1), (_, wp2, wlp2) = lift_and_destruct env caccum c in 
             let k = Util.subst_kind [Inl(a, t)] kwp in
@@ -498,11 +508,11 @@ let bind_cases env (res_t:typ) (cases:list<(option<formula> * comp)>) : comp =
               {Util.mk_typ_app md.wp_binop [Inl t; Inl wp1; Inl (Util.ftv Const.and_lid); Inl wp2] with k=k} in
             let wp = wp_conj wp1 wp2 in
             let wlp = wp_conj wlp1 wlp2 in 
-            (Some <| mk_comp md t wp wlp [], guard)) (None, None) in
+            (Some <| mk_comp md t wp wlp [], prior_or_c_matched)) (None, None) in
       let caccum = force_comp (must <| caccum) in
       let md = Tc.Env.get_monad_decl env caccum.effect_name in
       let res_t, wp, wlp = destruct_comp caccum in
-      let wp = match guard with 
+      let wp = match some_pat_matched with 
         | None -> wp 
         | Some guard -> Util.mk_typ_app md.assert_p [Inl res_t; Inl guard; Inl wp] in
       let a, kwp = Tc.Env.wp_signature env caccum.effect_name in
@@ -642,7 +652,7 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
           let _, wp, _ = destruct_comp c in
           let post = withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid) in
           let vc = Normalize.normalize env (withkind Kind_type <| Typ_app(wp, post, false)) in
-          Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));
+          if Tc.Env.debug env then Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));
           if not <| env.solver.solve env vc
           then Tc.Errors.report (range_of_lbname x) (Tc.Errors.failed_to_prove_specification_of x [])
       end;

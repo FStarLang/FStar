@@ -485,7 +485,7 @@ and encode_exp (env:env_t) (e:exp) : res =
       | Exp_ascribed(e, t) -> encode_exp env e
 
       | Exp_uvar(uv, _) ->
-        let esym = format1 "Exp_uvar %d" (string_of_int <| Unionfind.uvar_id uv) in
+        let esym = format1 "Exp_uvar_%s" (string_of_int <| Unionfind.uvar_id uv) in
         let g = [Term.DeclFun(esym, [], Term_sort, None)] in 
         mkFreeV(esym, Term_sort), g
 
@@ -646,15 +646,17 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * dataco
                     let xxsym, xx, _ = gen_term_var env x in (Term.mk_ApplyEE tm xx, (xxsym, Term_sort)::vars) 
                 | Inr _ -> 
                     let xxsym, xx = fresh_bvar "x" Term_sort in (Term.mk_ApplyEE tm xx, (xxsym, Term_sort)::vars)) (v, []) in
-             let xxsym, xx = fresh_bvar "x" Term_sort in 
-             let vapp = mk_ApplyEE vapp xx in
              let eqAx = quals |> List.collect (function 
                 | Discriminator d -> 
-                    [Term.Assume(mkForall([vapp], (List.rev <| ((xxsym, Term_sort)::vars)), 
+                    let xxsym, _ = List.hd vars in
+                    let xx = mkBoundV(xxsym, Term_sort) in
+                    [Term.Assume(mkForall([vapp], List.rev vars,
                                             mkEq(vapp, Term.boxBool <| Term.mk_tester Term_sort (Print.sli d) xx)), None)]
 
                 | Projector(d, Inr f) -> 
-                    [Term.Assume(mkForall([vapp], (List.rev <| ((xxsym, Term_sort)::vars)), 
+                    let xxsym, _ = List.hd vars in
+                    let xx = mkBoundV(xxsym, Term_sort) in
+                    [Term.Assume(mkForall([vapp], List.rev vars,
                                         mkEq(vapp, Term.mkApp(mk_term_projector_name d f, Arrow(Term_sort, Term_sort), [xx]))), None)]
                 | _ -> []) in
              let g = match eqAx with 
@@ -776,18 +778,18 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * dataco
     | Sig_bundle(ses, _) -> 
         encode_signature env ses
 
-    | Sig_let((false,[(Inr x, t, e)]), _) ->
-        let xxsym, xx, env = gen_free_var env x in 
-        let tt, g1 = encode_typ env t in 
-        let ee, g2 = encode_exp env e in
-        let g = [Term.DeclFun(xxsym, [], Term_sort, Some (Print.sli x));
-                Term.Assume(mk_HasType xx tt, None);
-                Term.Assume(mkEq(xx, ee), None)] in
-        g1@g2@g, env, [], []
+//    | Sig_let((false,[(Inr x, t, e)]), _) ->
+//        let xxsym, xx, env = gen_free_var env x in 
+//        let tt, g1 = encode_typ env t in 
+//        let ee, g2 = encode_exp env e in
+//        let g = [Term.DeclFun(xxsym, [], Term_sort, Some (Print.sli x));
+//                Term.Assume(mk_HasType xx tt, None);
+//                Term.Assume(mkEq(xx, ee), None)] in
+//        g1@g2@g, env, [], []
 
     | Sig_let((_,lbs), _) -> //TODO 
         let msg = lbs |> List.map (fun (lb, _, _) -> Print.lbname_to_string lb) |> String.concat " and " in
-        let g = [Term.Caption(format1 "Skipping let rec %s" msg)] in
+        let g = [Term.Caption(format1 "Skipping let %s" msg)] in
         g, env, [], []
 
     | Sig_main _
@@ -829,12 +831,18 @@ let formula_to_string tcenv q : string =
    let f, _ = encode_formula e q in
    Term.termToSmt [] f
 
+let seen_modules : ref<list<lident>> = Util.mk_ref []
+let seen (m:modul) : bool = 
+    if !seen_modules |> Util.for_some (fun l -> lid_equals m.name l)
+    then true
+    else (seen_modules := m.name::!seen_modules; false)
+
 let smt_query (tcenv:Tc.Env.env) (q:typ) : bool = 
    let e = {bindings=[]; tcenv=tcenv} in
    let decls, env, tys, datas = tcenv.modules |> List.collect (fun m -> m.exports) |> encode_signature e in
-   let decls', env = encode_env env tcenv in
-   let phi, decls'' = encode_formula env q in
-   let decls = Term.DefPrelude(tys, datas)::decls@decls'@decls''@[Term.Assume(mkNot phi, Some "query"); Term.CheckSat] in
+   let env_decls, env = encode_env env tcenv in
+   let phi, phi_decls = encode_formula env q in
+   let decls = Term.DefPrelude(tys, datas)::decls@(env_decls@phi_decls@[Term.Assume(mkNot phi, Some "query"); Term.CheckSat]) in
    Z3.callZ3Exe (Tc.Env.debug tcenv) decls [] 
 
 let solver = {

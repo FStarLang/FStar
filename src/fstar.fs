@@ -29,7 +29,7 @@ let process_args () =
        | _ -> ());
     (res, !file_list)
 
-let cleanup () = ()
+let cleanup () = Util.kill_all ()
 
 let go _ =    
   let finished (mods:list<Syntax.modul>) = 
@@ -74,5 +74,8 @@ let () =
       cleanup ();
       exit 0
     with 
-    | e when (not !Options.trace_error && Util.handleable e) ->
-        Util.handle_err false () e
+    | e when (not !Options.trace_error) -> 
+        cleanup();        
+        if Util.handleable e
+        then Util.handle_err false () e
+        else raise e

@@ -421,7 +421,7 @@ and crel rel env c1 c2 : option<guard> =
     let c1 = Util.compress_comp c1 in
     let c2 = Util.compress_comp c2 in
       match c1, c2 with 
-        | Total t1, Total t2 -> trel false SUB env (Util.comp_result c1) (Util.comp_result c2)
+        | Total t1, Total t2 -> trel false SUB env t1 t2
         | Total t1, Flex (u, t2) -> 
           bindf (trel false SUB env t1 t2) (fun f -> 
               Unionfind.change u (Resolved (Total t2));
