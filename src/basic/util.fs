@@ -320,20 +320,17 @@ let rec stfold (init:'b) (l:list<'a>) (f: 'b -> 'a -> state<'s,'b>) : state<'s,'
   match l with 
     | [] -> ret init
     | hd::tl -> (f init hd) >> (fun next -> stfold next tl f)
-                                 
-(* Query logging *)
-let bump_query_count, 
-    query_count =
-  let qc = ref 0 in
-  (fun () -> 
-    incr qc;
-    pr "\n#############QUERY %d##################\n" !qc; !qc), 
-  (fun () -> !qc)
+                 
 
+type file_handle = System.IO.TextWriter
+let open_file_for_writing (fn:string) : file_handle =
+  new System.IO.StreamWriter(fn)  :> System.IO.TextWriter 
+let append_to_file (fh:file_handle) s = fpr fh "%s\n" s
+let close_file (fh:file_handle) = fh.Close()
 let write_file (fn:string) s = 
-  let fh = new System.IO.StreamWriter(fn)  :> System.IO.TextWriter in
-  fpr fh "%s" s;
-  fh.Close()
+  let fh = open_file_for_writing fn in
+  append_to_file fh s;
+  close_file fh
 
 let for_range lo hi f = 
   for i = lo to hi do

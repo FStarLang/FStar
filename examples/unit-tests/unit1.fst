@@ -44,7 +44,7 @@ let square_is_nat x = x * x
 let infer_nat x = if x < 0 then -x else x
 
 val check_nat: x:int -> PURE.Tot nat
-let check_nat x = infer_nat x 
+let check_nat x = infer_nat x
 
 
 (* val hd: x:list 'a{b2t (is_Cons x)} -> PURE.Tot 'a *)

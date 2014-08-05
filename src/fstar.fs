@@ -29,7 +29,9 @@ let process_args () =
        | _ -> ());
     (res, !file_list)
 
-let cleanup () = Util.kill_all ()
+let cleanup () = 
+    ToSMT.Z3.cleanup();
+    Util.kill_all ()
 
 let go _ =    
   let finished (mods:list<Syntax.modul>) = 

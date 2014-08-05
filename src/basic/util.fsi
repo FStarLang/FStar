@@ -34,10 +34,16 @@ val format1: string -> string -> string
 val format2: string -> string -> string -> string
 val format3: string -> string -> string -> string -> string
 val format4: string -> string -> string -> string -> string -> string
+val format5: string -> string -> string -> string -> string -> string -> string
 val print_string : string -> unit
 val print_any : 'a -> unit
 val strcat : string -> string -> string
 val concat_l : string -> list<string> -> string
+
+type file_handle = System.IO.TextWriter (* not relying representation *)
+val open_file_for_writing: string -> file_handle
+val append_to_file: file_handle -> string -> unit
+val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 
 type proc = {m:System.Object; 
@@ -118,10 +124,6 @@ val stiter: list<'a> -> ('a -> state<'s,unit>) -> state<'s,unit>
 val stfold: 'b -> list<'a> -> ('b -> 'a -> state<'s,'b>) -> state<'s,'b>
 val run_st: 's -> state<'s,'a> -> ('a * 's)
 val mk_ref: 'a -> ref<'a>
-
-(* query log *)
-val bump_query_count: (unit -> int)
-val query_count: (unit -> int)
 
 val expand_environment_variable: string -> string
 

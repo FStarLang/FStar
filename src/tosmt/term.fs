@@ -33,7 +33,7 @@ type sort =
   | Ref_sort
   | Array of sort * sort
   | Arrow of sort * sort
-  | Ext of string
+  | Sort of string
   
 let rec strSort x = match x with
   | Bool_sort  -> "Bool" 
@@ -45,7 +45,7 @@ let rec strSort x = match x with
   | Ref_sort -> "Ref"
   | Array(s1, s2) -> format2 "(Array %s %s)" (strSort s1) (strSort s2)
   | Arrow(s1, s2) -> format2 "(%s -> %s)" (strSort s1) (strSort s2)
-  | Ext s -> s
+  | Sort s -> s
 
 type term' =
   | True
@@ -54,7 +54,7 @@ type term' =
   | BoundV     of string * sort 
   | FreeV      of string * sort
   | PP         of term * term
-  | App        of string * sort * list<term>
+  | App        of string * list<term>
   | Not        of term
   | And        of term * term
   | Or         of term * term
@@ -111,15 +111,19 @@ let mkInteger i  = mk (Integer i) (Set [])
 let mkBoundV i   = mk (BoundV i) (Set [i])
 let mkFreeV x    = mk (FreeV x) (Set [])
 let mkPP  t      = mk' (PP t) (snd t).freevars
-let mkApp f      = mk (App f) <| fv_l (third f)
+let mkApp f      = mk (App f) <| fv_l (snd f)
 let mkNot t      = mk' (Not t) t.freevars
 let mkAnd t      = match t with 
     | {tm=True}, t'
     | t', {tm=True} -> t'
+    | {tm=False}, _
+    | _, {tm=False} -> mkFalse
     | _ -> mk (And t) <| fv_bin t
 let mkOr t        = match t with 
     | {tm=False}, t'
     | t', {tm=False} -> t'
+    | {tm=True}, _
+    | _, {tm=True} -> mkTrue
     | _ -> mk (Or t)  <| fv_bin t
 let mkImp (t1, t2) = match t1.tm, t2.tm with 
     | _, True
@@ -142,16 +146,40 @@ let mkSelect t   = mk (Select t) <| fv_bin t
 let mkUpdate t   = mk (Update t) <| fv_tri t
 let mkCases t    = mk (Cases t)  <| fv_l t
 let mkConstArr t = mk' (ConstArray t) <| (third t).freevars
+let check_pats pats vars = ()
+//    pats |> List.iter (fun p -> 
+//        let fvs = claim p.freevars in
+//        if vars |> Util.for_all (fun (x,_) -> fvs |> Util.for_some (fun (y, _) -> x=y))
+//        then ()
+//        else Util.print_string <| Util.format1 "pattern %s misses a bound var" (termToSmt [] p))
+let mkForall (pats, vars, body) = 
+    check_pats pats vars;
+    if List.length vars = 0 then body 
+    else match body.tm with 
+            | True -> body 
+            | _ -> mk (Forall(pats,vars,body)) <| fv_minus body.freevars vars
+let collapseForall (pats, vars, body) =
+    check_pats pats vars;
+    if List.length vars = 0 then body 
+    else match body.tm with 
+        | True-> body
+        | Forall(pats', vars', body') -> mkForall(pats@pats', vars@vars', body')
+        | _ -> mkForall(pats, vars, body)
+let mkExists (pats, vars, body) = 
+    check_pats pats vars;
+    if List.length vars = 0 then body 
+    else match body.tm with 
+            | True -> body 
+            | _ -> mk (Exists(pats,vars,body)) <| fv_minus body.freevars vars
 
 
 type caption = option<string>
 type binders = list<(string * sort)>
-type typenames = list<string>
 type projector = (string * sort)
-type datacon   = (string * list<projector> * sort)
-type datacons  = list<datacon>
+type constructor_t = (string * list<projector> * sort * int)
+type constructors  = list<constructor_t>
 type decl =
-  | DefPrelude of typenames * datacons
+  | DefPrelude
   | DeclFun    of string * list<sort> * sort * caption
   | DefineFun  of string * list<(string * sort)> * sort * term * caption
   | Assume     of term   * caption
@@ -163,46 +191,24 @@ type decl =
   | CheckSat
 type decls = list<decl>
 
-let rec termEq (x:term) (y:term) =
-  match x.tm, y.tm with 
-    | PP(a, _), _ -> termEq a y
-    | _, PP(b, _) -> termEq x b
-    | True, True
-    | False, False -> true
-    | Integer i, Integer j -> i=j
-    | BoundV(i, _), BoundV(j, _) -> i=j
-    | FreeV(x,s), FreeV(y,t) -> x=y && s=t
-    | App(f,_,tl), App(g,_,sl) when (List.length tl = List.length sl) -> 
-        f=g && (List.forall2 termEq tl sl)
-    | Minus(t), Minus(s)
-    | Not(t), Not(s) -> termEq t (s)
-    | And(t1,t2), And(s1,s2)
-    | Imp(t1,t2), Imp(s1,s2)
-    | Iff(t1,t2), Iff(s1,s2)
-    | Or(t1,t2), Or(s1,s2)
-    | Eq(t1,t2), Eq(s1,s2)
-    | LT(t1,t2), LT(s1,s2)
-    | GT(t1,t2), GT(s1,s2)
-    | GTE(t1,t2), GTE(s1,s2) 
-    | Add(t1,t2), Add(s1,s2) 
-    | Sub(t1,t2), Sub(s1,s2) 
-    | Mul(t1,t2), Mul(s1,s2) 
-    | Div(t1,t2), Div(s1,s2) 
-    | Mod(t1,t2), Mod(s1,s2) 
-    | Select(t1,t2), Select(s1,s2) -> termEq t1 (s1) && termEq t2 (s2)
-    | Update(t1,t2,t3), Update(s1,s2,s3)
-    | ITE(t1, t2, t3), ITE(s1, s2, s3) ->
-        termEq t1 (s1) && termEq t2 (s2) && termEq t3 (s3)
-    | Forall(pl, sorts, t), Forall(ql, sorts', s) 
-    | Exists(pl, sorts, t), Forall(ql, sorts', s) -> 
-        (List.forall2 termEq pl ql) &&
-        sorts=sorts' &&
-        termEq t (s)
-    | ConstArray(str, sort, t), ConstArray(str', sort', s) -> 
-        termEq t (s) && str=str' && sort=sort'
-    | Cases(tl), Cases(sl) when (List.length tl = List.length sl) -> 
-        List.forall2 termEq tl sl
-    | _ -> false
+let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
+let constructor_to_decl (name, projectors, sort, id) =
+    let cdecl = DeclFun(name, projectors |> List.map snd, sort, Some "Constructor") in
+    let bvar_name i = "x_" ^ string_of_int i in
+    let bvar i s = mkBoundV(bvar_name i, s) in
+    let bvars = projectors |> List.mapi (fun i (_, s) -> bvar_name i, s) in
+    let capp = mkApp(name, bvars |> List.map mkBoundV) in
+    let cid_app = mkApp(constr_id_of_sort sort, [capp]) in
+    let cid = Assume(mkForall([], bvars, mkEq(mkInteger id, cid_app)), Some "Constructor distinct") in //specifically omitting pattern
+    let disc_name = "is-"^name in
+    let xx = ("x", sort) in 
+    let disc_app = mkApp(disc_name, [mkBoundV xx]) in
+    let disc = DefineFun(disc_name, [xx], Bool_sort, mkEq(mkApp(constr_id_of_sort sort, [mkBoundV xx]), mkInteger id), Some "Discriminator definition") in
+    let projs = projectors |> List.mapi (fun i (name, s) -> 
+        let cproj_app = mkApp(name, [capp]) in
+        [DeclFun(name, [sort], s, Some "Projector");
+         Assume(mkForall([(*cproj_app ... specifically omitting pattern *)], bvars, mkEq(cproj_app, bvar i s)), Some "Projection inverse")]) |> List.flatten in
+    Caption (format1 "<start constructor %s>" name)::cdecl::cid::disc::projs@[Caption (format1 "</end constructor %s>" name)]
 
 let flatten_imp tm = 
   let mkAnd_l terms = match terms with 
@@ -250,8 +256,8 @@ let rec termToSmt binders tm =
         termToSmt binders q
       | BoundV(x,_) 
       | FreeV(x,_)  -> x
-      | App(f,_,[]) -> f
-      | App(f,_, es)     -> 
+      | App(f,[]) -> f
+      | App(f,es)     -> 
         let a = List.map (termToSmt binders) es in
         let s = String.concat " " a in
         format2 "(%s %s)" f s
@@ -315,102 +321,25 @@ let rec termToSmt binders tm =
       | ConstArray(s, _, tm) -> 
         format2 "((as const %s) %s)" s (termToSmt binders tm)
 
-let check_pats pats vars = ()
-//    pats |> List.iter (fun p -> 
-//        let fvs = claim p.freevars in
-//        if vars |> Util.for_all (fun (x,_) -> fvs |> Util.for_some (fun (y, _) -> x=y))
-//        then ()
-//        else Util.print_string <| Util.format1 "pattern %s misses a bound var" (termToSmt [] p))
-let mkForall (pats, vars, body) = 
-    check_pats pats vars;
-    if List.length vars = 0 then body 
-    else match body.tm with 
-            | True -> body 
-            | _ -> mk (Forall(pats,vars,body)) <| fv_minus body.freevars vars
-let collapseForall (pats, vars, body) =
-    check_pats pats vars;
-    if List.length vars = 0 then body 
-    else match body.tm with 
-        | True-> body
-        | Forall(pats', vars', body') -> mkForall(pats@pats', vars@vars', body')
-        | _ -> mkForall(pats, vars, body)
-let mkExists (pats, vars, body) = 
-    check_pats pats vars;
-    if List.length vars = 0 then body 
-    else match body.tm with 
-            | True -> body 
-            | _ -> mk (Exists(pats,vars,body)) <| fv_minus body.freevars vars
 
       
 (****************************************************************************)
 (* Standard SMTLib prelude for F* and some term constructors                *)
 (****************************************************************************)
-let mkPrelude typenames datacons = 
- format2 "(declare-sort Ref)\n \
-          (declare-datatypes () ((String (String_const (String_const_proj_0 Int))))) \n \
-          (declare-datatypes () ((Type_name (Typ_name_other (Type_name_other_id Int)) \n \
-                                             %s))) \n \
-          (declare-datatypes () ((Kind (Kind_type) \n \
-                                       (Kind_dcon (Kind_dcon_id Int)) \n \
-                                       (Kind_tcon (Kind_tcon_id Int))) \n \
-                                 (Type (Typ_other (Typ_other_id Int)) \n \
-                                       (Typ_const (Typ_const_fst Type_name)) \n \
-                                       (Typ_fun (Typ_fun_id Int)) \n \
-                                       (Typ_univ (Typ_univ_id Int)) \n \
-                                       (Typ_app (Typ_app_fst Type) (Typ_app_snd Type)) \n \
-                                       (Typ_dep (Typ_dep_fst Type) (Typ_dep_snd Term))) \n \
-                                 (Term (Term_other (Term_other_id Int)) \n \
-                                       (Term_unit) \n \
-                                       (BoxInt (BoxInt_proj_0 Int)) \n \
-                                       (BoxBool (BoxBool_proj_0 Bool)) \n \
-                                       (BoxString (BoxString_proj_0 String)) \n \
-                                       (BoxRef (BoxRef_proj_0 Ref)) \n \
-                                       %s)))\n \
-          (declare-fun PreKind (Type) Kind)\n \
-          (declare-fun PreType (Term) Type)\n \
-          (declare-fun Valid (Type) Bool)\n \
-          (declare-fun HasKind (Type Kind) Bool)\n \
-          (declare-fun HasType (Term Type) Bool)\n \
-          (declare-fun ApplyEE (Term Term) Term)\n \
-          (declare-fun ApplyET (Term Type) Term)\n \
-          (declare-fun ApplyTE (Type Term) Type)\n \
-          (declare-fun ApplyTT (Type Type) Type)\n \
-          ;;;;;;;;;;; (Unit typing)\n \
-          (assert (forall ((x Term)) \n \
-                        (iff (HasType x (Typ_const Prims.unit))\n \
-                             (= x Term_unit))))\n \
-          ;;;;;;;;;;; (Bool typing)\n \
-          (assert (forall ((x Term))\n \
-                        (iff (is-BoxBool x)\n \
-                             (HasType x (Typ_const Prims.bool)))))\n \
-          ;;;;;;;;;;; (Int typing)\n \
-          (assert (forall ((x Term))\n \
-                        (iff (is-BoxInt x)\n \
-                             (HasType x (Typ_const Prims.int)))))\n \
-          ;;;;;;;;;;; (String typing)\n \
-          (assert (forall ((x Term))\n \
-                        (iff (is-BoxString x)\n \
-                             (HasType x (Typ_const Prims.string)))))"
-         (typenames |> List.map (fun s -> format1 "\t\t(%s)" s) |>  String.concat "\n") 
-         (datacons |> List.map (fun (nm, projs, _) -> 
-            format2 "\t\t(%s %s)" nm (projs |> List.map (fun (nm, sort) -> 
-                                                            format2 "(%s %s)" nm (strSort sort)) |> String.concat " ")) |> 
-          String.concat "\n")
 let caption_to_string = function 
     | None -> ""
     | Some c -> format1 ";;;;;;;;;;;;;;;;%s\n" c
 
-let declToSmt decl = match decl with
-  | DefPrelude (tys, datas) -> 
-    mkPrelude tys datas
+let rec declToSmt decl = match decl with
+  | DefPrelude -> mkPrelude ()
   | Caption c -> 
     format1 "\n; %s" c
   | DeclFun(f,argsorts,retsort,c) ->
     let l = List.map strSort argsorts in
     format4 "%s(declare-fun %s (%s) %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort)
-  | DefineFun(f,args,retsort,body,_) ->
+  | DefineFun(f,args,retsort,body,c) ->
     let l = List.map (fun (nm,s) -> format2 "(%s %s)" nm (strSort s)) args in
-    format4 "(define-fun %s (%s) %s\n %s)" f (String.concat " " l) (strSort retsort) (termToSmt (List.rev args) body)
+    format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort) (termToSmt (List.rev args) body)
   | Assume(t,c) ->
     format2 "%s(assert %s)" (caption_to_string c) (termToSmt [] t)
   | Eval t -> 
@@ -421,20 +350,66 @@ let declToSmt decl = match decl with
   | Push -> "(push)"
   | Pop -> "(pop)"
 
-let mk_Kind_type        = mkApp("Kind_type", Kind_sort, [])
-let mk_Typ_const n      = mkApp("Typ_const", Arrow(Ext "Type_name", Type_sort), [mkApp(n, Ext "Type_name", [])])
-let mk_Typ_app t1 t2    = mkApp("Typ_app", Arrow(Type_sort, Arrow(Type_sort, Type_sort)), [t1;t2])
-let mk_Typ_dep t1 t2    = mkApp("Typ_dep", Arrow(Type_sort, Arrow(Term_sort, Type_sort)), [t1;t2])
+and mkPrelude () = 
+  let basic =  "(declare-sort Ref)\n\
+                (declare-fun Ref_constr_id (Ref) Int)\n\
+                \n\
+                (declare-sort String)\n\
+                (declare-fun String_constr_id (String) Int)\n\
+                \n\
+                (declare-sort Type_name)\n\
+                (declare-fun Type_name_constr_id (Type_name) Int)\n\
+                \n\
+                (declare-sort Kind)\n\
+                (declare-fun Kind_constr_id (Kind) Int)\n\
+                \n\
+                (declare-sort Type)\n\
+                (declare-fun Type_constr_id (Type) Int)\n\
+                \n\
+                (declare-sort Term)\n\
+                (declare-fun Term_constr_id (Term) Int)\n\
+                \n\
+                (declare-fun PreKind (Type) Kind)\n\
+                (declare-fun PreType (Term) Type)\n\
+                (declare-fun Valid (Type) Bool)\n\
+                (declare-fun HasKind (Type Kind) Bool)\n\
+                (declare-fun HasType (Term Type) Bool)\n\
+                (declare-fun ApplyEE (Term Term) Term)\n\
+                (declare-fun ApplyET (Term Type) Term)\n\
+                (declare-fun ApplyTE (Type Term) Type)\n\
+                (declare-fun ApplyTT (Type Type) Type)\n" in
+   let constrs : constructors = [("String_const", ["String_const_proj_0", Int_sort], String_sort, 0);
+                                 ("Kind_type", [], Kind_sort, 0);
+                                 ("Kind_dcon", ["Kind_dcon_id", Int_sort], Kind_sort, 1);
+                                 ("Kind_tcon", ["Kind_tcon_id", Int_sort], Kind_sort, 2);
+                                 ("Typ_const", ["Typ_const_name", Sort "Type_name"], Type_sort, 0);
+                                 ("Typ_fun",   ["Typ_fun_id", Int_sort], Type_sort, 1);
+                                 ("Typ_app",   [("Typ_app_fst", Type_sort);
+                                                ("Typ_app_snd", Type_sort)], Type_sort, 2);
+                                 ("Typ_dep",   [("Typ_dep_fst", Type_sort);
+                                                ("Typ_dep_snd", Term_sort)], Type_sort, 3);
+                                 ("Term_unit", [], Term_sort, 0);
+                                 ("BoxInt",    ["BoxInt_proj_0", Int_sort], Term_sort, 1);
+                                 ("BoxBool",   ["BoxBool_proj_0", Bool_sort], Term_sort, 2);
+                                 ("BoxString", ["BoxString_proj_0", String_sort], Term_sort, 3);
+                                 ("BoxRef",    ["BoxRef_proj_0", Ref_sort], Term_sort, 4)] in
+   let bcons = constrs |> List.collect constructor_to_decl |> List.map declToSmt |> String.concat "\n" in
+   basic ^ bcons 
 
-let mk_Term_unit        = mkApp("Term_unit", Term_sort, [])
-let boxInt t            = mkApp("BoxInt", Arrow(Int_sort, Term_sort), [t]) 
-let unboxInt t          = mkApp("BoxInt_proj_0", Arrow(Term_sort, Int_sort), [t]) 
-let boxBool t           = mkApp("BoxBool", Arrow(Bool_sort, Term_sort), [t]) 
-let unboxBool t         = mkApp("BoxBool_proj_0", Arrow(Term_sort, Bool_sort), [t]) 
-let boxString t         = mkApp("BoxString", Arrow(String_sort, Term_sort), [t]) 
-let unboxString t       = mkApp("BoxString_proj_0", Arrow(Term_sort, String_sort), [t]) 
-let boxRef t            = mkApp("BoxRef", Arrow(Ref_sort, Term_sort), [t]) 
-let unboxRef t          = mkApp("BoxRef_proj_0", Arrow(Term_sort, Ref_sort), [t]) 
+let mk_Kind_type        = mkApp("Kind_type", [])
+let mk_Typ_const n      = mkApp("Typ_const", [mkApp(n, [])])
+let mk_Typ_app t1 t2    = mkApp("Typ_app", [t1;t2])
+let mk_Typ_dep t1 t2    = mkApp("Typ_dep", [t1;t2])
+
+let mk_Term_unit        = mkApp("Term_unit", [])
+let boxInt t            = mkApp("BoxInt", [t]) 
+let unboxInt t          = mkApp("BoxInt_proj_0", [t]) 
+let boxBool t           = mkApp("BoxBool", [t]) 
+let unboxBool t         = mkApp("BoxBool_proj_0", [t]) 
+let boxString t         = mkApp("BoxString", [t]) 
+let unboxString t       = mkApp("BoxString_proj_0", [t]) 
+let boxRef t            = mkApp("BoxRef", [t]) 
+let unboxRef t          = mkApp("BoxRef_proj_0", [t]) 
 let boxTerm sort t = match sort with 
   | Int_sort -> boxInt t
   | Bool_sort -> boxBool t
@@ -448,17 +423,17 @@ let unboxTerm sort t = match sort with
   | Ref_sort -> unboxRef t
   | _ -> raise Impos
 
-let mk_PreKind t      = mkApp("PreKind", Arrow(Type_sort, Kind_sort), [ t ]) 
-let mk_PreType t      = mkApp("PreType", Arrow(Term_sort, Type_sort), [ t ]) 
-let mk_Valid t        = mkApp("Valid", Arrow(Type_sort, Bool_sort), [ t ])  
-let mk_HasType v t    = mkApp("HasType", Arrow(Term_sort, Arrow(Type_sort, Bool_sort)), [v;t])
-let mk_HasKind t k    = mkApp("HasKind", Arrow(Type_sort, Arrow(Kind_sort, Bool_sort)), [t;k])
-let mk_tester s n t   = mkApp("is-"^n,   Arrow(s, Bool_sort), [t])
-let mk_ApplyTE t e    = mkApp("ApplyTE", Arrow(Type_sort, Arrow(Term_sort, Type_sort)), [t;e])
-let mk_ApplyTT t t'   = mkApp("ApplyTT", Arrow(Type_sort, Arrow(Type_sort, Type_sort)), [t;t'])
-let mk_ApplyET e t    = mkApp("ApplyET", Arrow(Term_sort, Arrow(Type_sort, Term_sort)), [e;t])
-let mk_ApplyEE e e'   = mkApp("ApplyEE", Arrow(Term_sort, Arrow(Term_sort, Term_sort)), [e;e'])
-let mk_String_const i = mkApp("String_const", Arrow(Int_sort, String_sort), [ mkInteger i ])
+let mk_PreKind t      = mkApp("PreKind", [t]) 
+let mk_PreType t      = mkApp("PreType", [t]) 
+let mk_Valid t        = mkApp("Valid",   [t])  
+let mk_HasType v t    = mkApp("HasType", [v;t])
+let mk_HasKind t k    = mkApp("HasKind", [t;k])
+let mk_tester n t   = mkApp("is-"^n,   [t])
+let mk_ApplyTE t e    = mkApp("ApplyTE", [t;e])
+let mk_ApplyTT t t'   = mkApp("ApplyTT", [t;t'])
+let mk_ApplyET e t    = mkApp("ApplyET", [e;t])
+let mk_ApplyEE e e'   = mkApp("ApplyEE", [e;e'])
+let mk_String_const i = mkApp("String_const", [ mkInteger i ])
 
 let mk_and_opt p1 p2 = match p1, p2  with
   | Some p1, Some p2 -> Some (mkAnd(p1, p2))

@@ -48,13 +48,15 @@ type varops_t = {
     new_fvar:lident -> string;
     fresh:string -> string;
     string_const:string -> term * list<decl>;
-    reset:unit -> unit
+    reset:unit -> unit;
+    next_id: unit -> int;
 }
               
 let escape (s:string) = Util.replace_char s '\'' '_'
 
 let varops = 
-    let ctr = Util.mk_ref 0 in
+    let initial_ctr = 10 in
+    let ctr = Util.mk_ref initial_ctr in
     let names = Util.smap_create 100 in
     let string_constants = Util.smap_create 100 in
     let mk_unique y = 
@@ -79,7 +81,8 @@ let varops =
      new_fvar=new_fvar;
      fresh=fresh;
      string_const=string_const;
-     reset=(fun () -> Util.smap_clear names; ctr := 0)}
+     reset=(fun () -> Util.smap_clear names; ctr := initial_ctr);
+     next_id=(fun () -> incr ctr; !ctr)}
 let fresh_bvar x s = let xsym = varops.fresh x in xsym, mkBoundV(xsym, s)
 let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV(xsym, s)
 
@@ -145,7 +148,7 @@ let mk_term_projector (lid:lident) (a:bvvdef) : term =
     mkFreeV(mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
 let mk_term_projector_by_pos (lid:lident) (i:int) : term = 
     mkFreeV(mk_term_projector_name_by_pos lid i, Arrow(Term_sort, Term_sort))
-let mk_data_tester env l x = Term.mk_tester Term_sort (Print.sli l) x
+let mk_data_tester env l x = Term.mk_tester (Print.sli l) x
 let close1 (binders:list<(string * sort * list<pat>)>) d : decl = match d with 
   | Assume(tm, c) -> 
     let fvs = freevars tm in
@@ -165,7 +168,7 @@ let closure vars t =
         | Type_sort -> Term.mk_ApplyTT out (mkBoundV(v,t))
         | Term_sort -> Term.mk_ApplyTE out (mkBoundV(v,t))) t vars
 (*---------------------------------------------------------------------------------*)
-let norm_t env t = Tc.Normalize.normalize env.tcenv t
+let norm_t env t = Tc.Normalize.norm_typ [Tc.Normalize.Delta;Tc.Normalize.Beta] env.tcenv t
 let norm_k env k = Tc.Normalize.normalize_kind env.tcenv k
 
 type res = (
@@ -190,7 +193,7 @@ let rec encode_knd (env:env_t) (k:knd)  : res =
             let ksym, k = fresh_fvar "kind" Kind_sort in 
             let fsym, f = fresh_bvar "f" Type_sort in
             let g = [Term.DeclFun(ksym, [], Kind_sort, None);
-                     Term.Assume(mk_tester Kind_sort "Kind_dcon" k, None);
+                     Term.Assume(mk_tester "Kind_dcon" k, None);
                      Term.Assume(mkForall ([mk_HasKind f k; mk_ApplyTE f xx; mk_HasType xx tt1], [(fsym,Type_sort); (xxsym, Term_sort)], 
                                             mkImp(mkAnd(mk_HasKind f k, mk_HasType xx tt1),
                                                   mk_HasKind (mk_ApplyTE f xx) kk2)), None)] in
@@ -205,7 +208,7 @@ let rec encode_knd (env:env_t) (k:knd)  : res =
             let ksym, k = fresh_fvar "kind" Kind_sort in 
             let fsym, f = fresh_bvar "f" Type_sort in
             let g = [Term.DeclFun(ksym, [], Kind_sort, None);
-                     Term.Assume(mk_tester Kind_sort "Kind_tcon" k, None);
+                     Term.Assume(mk_tester "Kind_tcon" k, None);
                      Term.Assume(mkForall ([mk_HasKind f k; mk_ApplyTT f aa; mk_HasKind aa kk1], [(fsym,Type_sort); (aasym, Type_sort)], 
                                          mkImp(mkAnd(mk_HasKind f k, mk_HasKind aa kk1),
                                                      mk_HasKind (mk_ApplyTT f aa) kk2)), None)] in
@@ -248,9 +251,9 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
         then let tsym, t = fresh_fvar "type" Type_sort in
              let fsym, f = fresh_bvar "f" Term_sort in 
              let g = [Term.DeclFun(tsym, [], Type_sort, None);
-                      Term.Assume(mk_tester Type_sort "Typ_fun" t, None);
+                      Term.Assume(mk_tester "Typ_fun" t, None);
                       Term.Assume(mkForall([mk_HasType f t], [(fsym, Term_sort)], 
-                                         mkImp(mk_HasType f t, mk_tester Type_sort "Typ_fun" (mk_PreType f))), None)] in
+                                         mkImp(mk_HasType f t, mk_tester "Typ_fun" (mk_PreType f))), None)] in
              t, g
         else 
           let vars, env = formals |> List.fold_left (fun (v,env) -> function
@@ -283,10 +286,10 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
           let decls = close vars (List.flatten (g2::g3::decls)) in
           let vars = vars |> List.map (fun (x, s, _) -> (x,s)) in
           let g = [Term.DeclFun(tsym, [], Type_sort, None);
-                   Term.Assume(mk_tester Type_sort "Typ_fun" t, None);
+                   Term.Assume(mk_tester "Typ_fun" t, None);
                    Term.Assume(mkForall([app; mk_HasType f t], vars@[(fsym, Term_sort)], 
                                          mkImp(mk_HasType f t, 
-                                               mkAnd(mk_tester Type_sort "Typ_fun" (mk_PreType f),
+                                               mkAnd(mk_tester "Typ_fun" (mk_PreType f),
                                                      mkImp(mkAnd(guard, wp2'),
                                                             mk_HasType app tt2)))), None)] in
           t, decls@g
@@ -604,15 +607,29 @@ let mk_prim =
         ] in
     (fun l v -> prims |> List.filter (fun (l', _) -> lid_equals l l') |> List.map (fun (_, b) -> b v))
 
-let rec encode_sigelt (env:env_t) (se:sigelt) : (decls * env_t * typenames * datacons) = 
-    let g, e, t, d = encode_sigelt' env se in 
+let primitive_type_axioms = 
+    let xx = ("x", Term_sort) in
+    let x = mkBoundV xx in
+    let prims = [(Const.unit_lid,   (fun tt -> Term.Assume(mkForall([], [xx], mkIff(Term.mk_HasType x tt, mkEq(x, Term.mk_Term_unit))),    Some "unit inversion")));
+                 (Const.bool_lid,   (fun tt -> Term.Assume(mkForall([], [xx], mkIff(Term.mk_tester "BoxBool" x, Term.mk_HasType x tt)),    Some "bool inversion"))) ;
+                 (Const.int_lid,    (fun tt -> Term.Assume(mkForall([], [xx], mkIff(Term.mk_tester "BoxInt" x, Term.mk_HasType x tt)),     Some "int inversion")));
+                 (Const.string_lid, (fun tt -> Term.Assume(mkForall([], [xx], mkIff(Term.mk_tester "BoxString" x, Term.mk_HasType x tt)),  Some "string inversion")));
+                ] in
+    (fun (t:lident) (tt:term) -> 
+        match Util.find_opt (fun (l, _) -> lid_equals l t) prims with 
+            | None -> []
+            | Some(_, f) -> [f tt])
+
+let rec encode_sigelt (env:env_t) (se:sigelt) : (decls * env_t) = 
+    let g, e = encode_sigelt' env se in 
     let nm = match Util.lid_of_sigelt se with 
         | None -> ""
         | Some l -> l.str in
-    let g = Caption (format1 "<Start encoding %s>" nm)::g@[Caption (format1 "</end encoding %s>" nm)] in
-    g, e, t, d
+    match g with 
+     | [] -> [Caption (format1 "<Skipped %s/>" nm)], e
+     | _ -> Caption (format1 "<Start encoding %s>" nm)::g@[Caption (format1 "</end encoding %s>" nm)], e
     
-and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * datacons) = 
+and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) = 
     let env_of_tpars env tps tt = 
      let vars, env, app = tps |> List.fold_left (fun (vars, env, t) -> function
             | Tparam_typ(a, k') ->
@@ -628,18 +645,18 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * dataco
      | Sig_typ_abbrev(lid, tps, _, t, tags, _) -> 
         let tsym, tt, env = gen_free_tvar env lid in 
         let vars, app, env' = env_of_tpars env tps tt in 
-        let t = Tc.Normalize.normalize env.tcenv t in
+        let t = norm_t env t in
         let def, (body, g1) = if tags |> Util.for_some (function Logic -> true | _ -> false)
                               then mk_Valid app, encode_formula env' t 
                               else app, encode_typ env' t in 
         let g1 = close_vars vars g1 in
         let g = [Term.DeclFun(tsym, [], Type_sort, Some (format1 "Typ_abbrev %s" (Print.sli lid)));
                   Term.Assume(mkForall([mk_Valid(app)], vars, mkEq(def, body)), None)] in
-        g1@g, env, [], []
+        g1@g, env
 
      | Sig_val_decl(lid, t, quals, _) -> 
         if not (quals |> Util.for_some (function Logic -> true | _ -> false))
-        then [], env, [], []
+        then [], env
         else let vsym, v, env = gen_free_var env lid in 
              let args, _ = Util.collect_formals t in
              let vapp, vars = args |> List.fold_left (fun (tm, vars) arg -> match arg with 
@@ -653,13 +670,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * dataco
                     let xxsym, _ = List.hd vars in
                     let xx = mkBoundV(xxsym, Term_sort) in
                     [Term.Assume(mkForall([vapp], List.rev vars,
-                                            mkEq(vapp, Term.boxBool <| Term.mk_tester Term_sort (Print.sli d) xx)), None)]
+                                            mkEq(vapp, Term.boxBool <| Term.mk_tester (Print.sli d) xx)), None)]
 
                 | Projector(d, Inr f) -> 
                     let xxsym, _ = List.hd vars in
                     let xx = mkBoundV(xxsym, Term_sort) in
                     [Term.Assume(mkForall([vapp], List.rev vars,
-                                        mkEq(vapp, Term.mkApp(mk_term_projector_name d f, Arrow(Term_sort, Term_sort), [xx]))), None)]
+                                        mkEq(vapp, Term.mkApp(mk_term_projector_name d f, [xx]))), None)]
                 | _ -> []) in
              let g = match eqAx with 
                 | [] -> 
@@ -669,12 +686,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * dataco
                     @mk_prim lid v
                 | _ -> 
                   Term.DeclFun(vsym, [], Term_sort, Some (format1 "val %s" (Print.sli lid)))::eqAx in
-             g, env, [], []
+             g, env
 
      | Sig_assume(l, f, _, _) -> 
         let phi, g1 = encode_formula env f in 
         let g = [Term.Assume(phi, Some (format1 "Assumption: %s" (Print.sli l)))] in 
-        g1@g, env, [], []
+        g1@g, env
                
      | Sig_tycon(t, tps, k, _, datas, quals, _) -> 
         if quals |> Util.for_some (function Logic -> true | _ -> false) 
@@ -697,10 +714,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * dataco
                 | Some (Projector(d, Inl a)) -> 
                     let xx, _ = List.hd binders in
                     let qvars = List.rev qvars in
-                    let dproj_app = Term.mkApp(mk_typ_projector_name d a, Arrow(Term_sort, Type_sort), [xx]) in
+                    let dproj_app = Term.mkApp(mk_typ_projector_name d a, [xx]) in
                     let g = [Term.DeclFun(ttsym, [], Type_sort, Some (format1 "logic projector type: %s" (Print.sli t)));
                              Term.Assume(mkForall([tapp], qvars, mkEq(tapp, dproj_app)), Some "projector axiom")] in
-                    g, env, [], []
+                    g, env
                 | None -> 
                     let kk, g1 = encode_knd env' kres in
                     let guard, g1 = binders |> List.fold_left (fun (guard, g) -> function
@@ -712,9 +729,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * dataco
                           mkAnd(guard, mk_HasKind a kk), g@g') (mkTrue, g1) in
                     let g = [Term.DeclFun(ttsym, [], Type_sort, Some (format1 "logic type: %s" (Print.sli t)));
                              Term.Assume(mkForall([tapp], List.rev qvars, mkImp(guard, mk_HasKind tapp kk)), Some "kinding axiom")] in
-                    (close_vars qvars g1)@g, env, [], []
+                    (close_vars qvars g1)@g, env
              end
       else let ttsym, _, _ = gen_free_var env t in
+           let ttconstr = constructor_to_decl (ttsym, [], Sort "Type_name", varops.next_id()) in
            let tt = Term.mk_Typ_const ttsym in
            let env = push_free_tvar env t tt in 
            let vars, tapp, env' = env_of_tpars env tps tt in
@@ -727,13 +745,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * dataco
                     mkAnd(mk_HasKind (lookup_typ_var env' (Util.bvd_to_bvar_s a k)) kk, guard), g@g') (mkTrue, []) in
            let kk, g2 = encode_knd env' k in
            let g1 = (close_vars vars (g1@g2))@[Term.Assume(mkForall([tapp], vars, mkImp(guard, mk_HasKind tapp kk)), Some "kinding axiom")] in
+           let prims = primitive_type_axioms t tt in
            if List.length datas = 0
-           then g1, env, [ttsym], []
+           then ttconstr@g1@prims, env
            else let xxsym, xx = fresh_bvar "x" Term_sort in
                 let data_ax = datas |> List.fold_left (fun out l -> mkOr(out, mk_data_tester env l xx)) mkFalse in
                 let g = [Term.Assume(mkForall([mk_HasType xx tapp], (xxsym, Term_sort)::vars,
                                               mkImp(mk_HasType xx tapp, data_ax)), Some "inversion axiom")] in
-                g1@g, env, [ttsym], []
+                ttconstr@g1@prims@g, env
   
     | Sig_datacon(d, t, _, _) -> 
         let ddconstrsym = Print.sli d in
@@ -753,7 +772,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * dataco
             (mk_term_projector_name_by_pos d i, Term_sort)::p, ((xxsym, xx, Inr t), Term_sort)::v, env, i + 1) ([], [], env, 0) in
         let projectors = List.rev projectors in 
         let vars = List.rev vars in
-        let datacons = [(ddconstrsym, projectors, Term_sort)] in
+        let datacons = (ddconstrsym, projectors, Term_sort, varops.next_id()) |> Term.constructor_to_decl in
    
         let app, args, sort = List.fold_left (fun (tm, args, sort) ((_, ax, _), s) -> match s with 
             | Type_sort -> Term.mk_ApplyET tm ax, ax::args, Arrow(s, sort)
@@ -769,16 +788,20 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * dataco
         let guard = Term.mk_and_l guards in 
         let res_t, g = encode_typ env (Util.comp_result res) in
         let decls = close vars (List.flatten (g::decls)) in
-        let dapp =  mkApp(ddconstrsym, sort, List.rev args) in
+        let dapp =  mkApp(ddconstrsym, List.rev args) in
         let g = [Term.DeclFun(ddfunsym, [], Term_sort, Some (format1 "data constructor proxy: %s" (Print.sli d)));
                 Term.Assume(mkForall([app], vars |> List.map (fun (x, s, _) -> (x,s)),
                                     mkEq(app, dapp)), Some "equality for proxy");
                 Term.Assume(mkForall([mk_HasType dapp res_t], vars |> List.map (fun (x, s, _) -> (x,s)),
                                     mkImp(guard, mk_HasType dapp res_t)), Some "data constructor typing")] in
-        decls@g, env, [], datacons
+        datacons@decls@g, env
 
     | Sig_bundle(ses, _) -> 
-        encode_signature env ses
+      let g, env = encode_signature env ses in
+      let g', inversions = g |> List.partition (function
+        | Term.Assume(_, Some "inversion axiom") -> false
+        | _ -> true) in
+      g'@inversions, env
 
 //    | Sig_let((false,[(Inr x, t, e)]), _) ->
 //        let xxsym, xx, env = gen_free_var env x in 
@@ -791,16 +814,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t * typenames * dataco
 
     | Sig_let((_,lbs), _) -> //TODO 
         let msg = lbs |> List.map (fun (lb, _, _) -> Print.lbname_to_string lb) |> String.concat " and " in
-        let g = [Term.Caption(format1 "Skipping let %s" msg)] in
-        g, env, [], []
+        [], env
 
     | Sig_main _
-    | Sig_monads _ -> [], env, [], []
+    | Sig_monads _ -> [], env
 
 and encode_signature env ses = 
-    ses |> List.fold_left (fun (g, env, tys, datas) se ->            
-      let g', env, tys', datas' = encode_sigelt env se in 
-      (g@g', env, tys@tys', datas@datas')) ([], env, [], []) 
+    ses |> List.fold_left (fun (g, env) se ->            
+      let g', env = encode_sigelt env se in 
+      g@g', env) ([], env) 
 
 let encode_env (env:env_t) (tcenv:Env.env) : (decls * env_t) = 
     let encode_binding (decls, env) = function
@@ -823,7 +845,7 @@ let encode_env (env:env_t) (tcenv:Env.env) : (decls * env_t) =
                       Term.Assume(Term.mk_HasType xx tt, None)] in
             decls@g@g', env'
         | Env.Binding_sig se -> 
-            let decls, env, _, _ = encode_sigelt env se in decls, env in
+            let decls', env = encode_sigelt env se in decls@decls', env in
     Env.fold_env tcenv encode_binding ([], env)
 
 open Microsoft.FStar.Tc.Env
@@ -839,78 +861,34 @@ let seen (m:modul) : bool =
     then true
     else (seen_modules := m.name::!seen_modules; false)
 
+type cache_t = {
+        prelude_env:Tc.Env.env -> env_t * list<decl>;
+        cache_env:env_t -> unit
+    }
+
+let cache = 
+    let last_env : ref<option<env_t>> = Util.mk_ref None in
+    {prelude_env=(fun tcenv ->     
+        match !last_env with 
+            | None -> 
+                let e = {bindings=[]; tcenv=tcenv} in
+                last_env := Some e;
+                e, [Term.DefPrelude]
+            | Some e -> {e with tcenv=tcenv}, []);
+     cache_env=(fun e -> last_env := Some e)} 
+
 let smt_query (tcenv:Tc.Env.env) (q:typ) : bool = 
-   varops.reset();
-   let e = {bindings=[]; tcenv=tcenv} in
-   let decls, env, tys, datas = tcenv.modules |> List.collect (fun m -> m.exports) |> encode_signature e in
+   let e, prelude = cache.prelude_env tcenv in
+   let decls, env = tcenv.modules |> List.collect (fun m -> if seen m then [] else m.exports) |> encode_signature e in
+   cache.cache_env env;
    let env_decls, env = encode_env env tcenv in
    let phi, phi_decls = encode_formula env q in
-   let decls = Term.DefPrelude(tys, datas)::decls@(env_decls@phi_decls@[Term.Assume(mkNot phi, Some "query"); Term.CheckSat]) in
-   Z3.callZ3Exe (Tc.Env.debug tcenv) decls [] 
+   let label_suffix = [] in  //labels |> List.fold_left (fun decls (lname, t) -> decls@[Echo lname; Eval t]) theory in
+   let r = Caption (Range.string_of_range (Tc.Env.get_range tcenv)) in
+   let decls = prelude@decls@(Term.Push::r::env_decls)@phi_decls@[Term.Assume(mkNot phi, Some "query"); Term.CheckSat]@label_suffix@[Term.Pop; Term.Echo "Done!"] in
+   Z3.callZ3Exe (Tc.Env.debug tcenv) decls
 
 let solver = {
     solve=smt_query;
     formula_to_string=formula_to_string
 }
-//let is_builtin lid = 
-//    lid_equals lid Const.int_lid ||
-//    lid_equals lid Const.bool_lid ||
-//    lid_equals lid Const.string_lid ||
-//    lid_equals lid Const.unit_lid //NS: ref?
-//
-//let is_lid_skippable = 
-//  let skippables = [Const.forall_lid;
-//                    Const.forallA_lid;
-//                    Const.forallP_lid;
-//                    Const.exists_lid;
-//                    Const.existsA_lid;
-//                    Const.existsP_lid;
-//                    Const.ifthenelse_lid;
-//                    Const.assume_lid;
-//                    Const.eq_lid;
-//                    Const.eq2_lid;
-//                    Const.eqA_lid;
-//                    Const.eqTyp_lid;
-//                    Const.lt_lid;
-//                    Const.gt_lid;
-//                    Const.lte_lid;
-//                    Const.gte_lid;
-//                    Const.reln_lid;
-//                    Const.doublesided_lid;
-//                    Const.and_lid;
-//                    Const.or_lid;
-//                    Const.not_lid;
-//                    Const.implies_lid;
-//                    Const.iff_lid;
-//                    Const.true_lid;
-//                    Const.false_lid;
-//                    Const.add_lid;
-//                    Const.sub_lid;
-//                    Const.mul_lid;
-//                    Const.div_lid;
-//                    Const.minus_lid;
-//                    Const.modulo_lid;
-//                    Const.op_And_lid;
-//                    Const.op_Or_lid;
-//                    Const.op_Not_lid;
-//                    Const.op_Add_lid;
-//                    Const.op_Subtraction_lid;
-//                    Const.op_Division_lid;
-//                    Const.op_Modulus_lid;
-//                    Const.op_Multiply_lid;
-//                    Const.op_GreaterThanOrEqual_lid;
-//                    Const.op_Dereference_lid;
-//                    Const.op_Eq;
-//                    Const.unfold_lid] in
-//    fun l -> List.exists (Sugar.lid_equals l) skippables 
-//let isAtom tenv p = 
-//  let pred, args = flatten_typ_apps p in 
-//  match p.sort with 
-//    | Kind_type -> 
-//      (match pred.v with 
-//        | Typ_const _
-//        | Typ_btvar _ 
-//        | Typ_uvar _ -> true
-//        | _ -> false)
-//    | _ -> false
-//      

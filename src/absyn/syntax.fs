@@ -201,6 +201,8 @@ type monad_decl = {
     close_wp_t:typ;
     assert_p:typ;
     assume_p:typ;
+    null_wp:typ;
+    trivial:typ;
     abbrevs:list<sigelt> 
  }
 and sigelt =

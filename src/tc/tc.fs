@@ -417,9 +417,9 @@ and tc_exp env e : exp * comp = match e with
 
   | Exp_meta(Meta_desugared(e, Sequence)) -> 
     begin match compress_exp e with 
-        | Exp_let((_,[x, _, e1]), e2) -> 
+        | Exp_let((_,[(x, _, e1)]), e2) -> 
           let e2 = match compress_exp e2 with 
-            | Exp_match(_, [_, _, e2]) -> e2
+            | Exp_match(_, [(_, _, e2)]) -> e2
             | _ -> failwith "Impossible" in
           let e1, c1 = tc_exp (Env.set_expected_typ env Tc.Util.t_unit) e1 in 
           let e2, c2 = tc_exp env e2 in 
@@ -811,6 +811,12 @@ let rec tc_monad_decl env m =
     let expected_k = 
       Kind_tcon(Some a, Kind_type, kt Kind_type (kt kwp_a kwp_a), false) in
     tc_typ_check_trivial env m.assert_p expected_k, tc_typ_check_trivial env m.assume_p expected_k in
+  let null_wp = 
+      let expected_k = Kind_tcon(Some a, Kind_type, kwp_a, false) in
+      tc_typ_check_trivial env m.null_wp expected_k in
+  let trivial =
+      let expected_k = Kind_tcon(Some a, Kind_type, kt kwp_a Kind_type, false) in
+      tc_typ_check_trivial env m.trivial expected_k in
   let menv = Tc.Env.push_sigelt env (Sig_tycon(m.mname, [], mk, [], [], [], range_of_lid m.mname)) in
   let menv, abbrevs = m.abbrevs |> List.fold_left (fun (env, out) (ma:sigelt) -> 
     let ma, env = tc_decl env ma in 
@@ -830,7 +836,9 @@ let rec tc_monad_decl env m =
     close_wp=close_wp;
     close_wp_t=close_wp_t;
     assert_p=assert_p;
-    assume_p=assume_p} in 
+    assume_p=assume_p;
+    null_wp=null_wp;
+    trivial=trivial} in 
    let _ = Tc.Env.lookup_typ_lid menv m.mname in
     menv, m 
 

@@ -39,6 +39,7 @@ open Microsoft.FStar.Tc.Env
 type step = 
   | Alpha
   | Delta
+  | DeltaHard
   | Beta
   | DeltaComp
   | Simplify
@@ -96,7 +97,8 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
       rebuild config 
 
     | Typ_const fv ->
-      if config.steps |> List.contains Delta
+      if config.steps |> List.contains DeltaHard 
+        || (config.steps |> List.contains Delta && List.length config.stack <> 0)
       then match Tc.Env.lookup_typ_abbrev tcenv fv.v with
           | None -> rebuild config 
           | Some t -> (* delta(); alpha ();  *)
@@ -369,5 +371,5 @@ let normalize_comp tcenv c =
   let steps = [Delta;Beta;SNComp;DeltaComp] in
   norm_comp steps tcenv c
 
-let normalize tcenv t = norm_typ [Delta;Beta] tcenv t
+let normalize tcenv t = norm_typ [DeltaHard;Beta] tcenv t
 

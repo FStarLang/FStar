@@ -46,12 +46,6 @@ let admit_fsi = Util.mk_ref []
 let trace_error = Util.mk_ref false
 let verify = Util.mk_ref false
 
-let query_file () = 
-  let f = "query-" ^ (Util.string_of_int <| Util.query_count()) ^ ".smt2" in
-  match !outputDir with 
-    | Some x -> x ^ "/"^ f
-    | None -> f
-
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
     | None ->

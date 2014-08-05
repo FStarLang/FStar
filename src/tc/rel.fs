@@ -297,8 +297,8 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
           else None in
          orf matches (fun () -> 
           if not norm 
-          then aux top true (Normalize.norm_typ [Normalize.Delta;Normalize.Beta] env t)
-                            (Normalize.norm_typ [Normalize.Delta;Normalize.Beta] env t')
+          then aux top true (Normalize.norm_typ [Normalize.DeltaHard;Normalize.Beta] env t)
+                            (Normalize.norm_typ [Normalize.DeltaHard;Normalize.Beta] env t')
           else None)
 
        | Typ_refine(x, t1, phi1), Typ_refine(x', t1', phi2) -> 
@@ -443,11 +443,19 @@ and crel rel env c1 c2 : option<guard> =
                 | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in
               andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
             let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
+            let is_wpc2_null () = 
+                if not !Options.verify then false
+                else match trel true EQ env wpc2 (Util.mk_typ_app c2_decl.null_wp [Inl c2.result_typ]) with 
+                      | Some Trivial -> true
+                      | _ -> false in
             let imp_wp = 
-              let t = Util.mk_typ_app c2_decl.wp_binop [Inl c2.result_typ; Inl wpc2; Inl <| Util.ftv Const.imp_lid; Inl <| edge.mlift c1.result_typ wpc1] in
-              let t = {t with k=wpc2.k} in
-              let t = Util.mk_typ_app c2_decl.wp_as_type [Inl c2.result_typ; Inl t] in
-              {t with k=Kind_type} in
+              if is_wpc2_null() 
+              then let t = Util.mk_typ_app c2_decl.trivial [Inl c1.result_typ; Inl <| edge.mlift c1.result_typ wpc1] in
+                   {t with k=Kind_type}
+              else let t = Util.mk_typ_app c2_decl.wp_binop [Inl c2.result_typ; Inl wpc2; Inl <| Util.ftv Const.imp_lid; Inl <| edge.mlift c1.result_typ wpc1] in
+                   let t = {t with k=wpc2.k} in
+                   let t = Util.mk_typ_app c2_decl.wp_as_type [Inl c2.result_typ; Inl t] in
+                   {t with k=Kind_type} in
             ret <| Some (Guard <| imp_wp))
            end
         

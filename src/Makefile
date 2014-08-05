@@ -155,7 +155,7 @@ clean:
 # Bootstrapping
 # --------------------------------------------------------------------
 
-STDFILES=st.fst list.fst option.fst string.fst
+STDFILES=system.fst st.fst list.fst option.fst string.fst
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 
 BOOT_BASICFILES=bytes.fst util.fsi getoptsimple.fst options.fs range.fst unionfind.fst

@@ -22,12 +22,13 @@ open Microsoft.FStar.Tc
 open Microsoft.FStar.Absyn.Syntax
  
 type step = 
-  | Alpha
-  | Delta
+  | Alpha           
+  | Delta        (* don't expand abbreviations if they aren't blocking reduction *)
+  | DeltaHard    (* expand all abbreviations *)
   | Beta
-  | DeltaComp
-  | Simplify
-  | SNComp
+  | DeltaComp    (* expand computation-type abbreviations *)
+  | Simplify     (* simplify formulas while reducing -- experimental *)
+  | SNComp       (* normalize computation types also *)
 and steps = list<step>
 
 val normalize: Env.env -> typ -> typ

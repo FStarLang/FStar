@@ -1254,6 +1254,8 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
          close_wp_t=lookup "close_wp_t";
          assert_p=lookup "assert_p";
          assume_p=lookup "assume_p";
+         null_wp=lookup "null_wp";
+         trivial=lookup "trivial";
          abbrevs=m_abbrevs} in
       let env = DesugarEnv.exit_monad_scope env0 menv in 
       env, msig in

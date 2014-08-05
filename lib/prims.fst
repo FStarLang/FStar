@@ -56,6 +56,8 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              type close_wp_t ('a:Type) ('wp:Type => WP 'a) ('p:Post 'a) = (forall ('b:Type). 'wp 'b 'p)
              type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P /\ 'wp 'p)
              type assume_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P ==> 'wp 'p)
+             type null_wp ('a:Type) ('p:Post 'a) = (forall (x:'a). 'p x)
+             type trivial ('a:Type) ('wp:WP 'a) = 'wp (fun x => True)
              with Pure ('a:Type) ('pre:Pre) ('post:Post 'a) =
                  PURE 'a
                    (fun ('p:Post 'a) => 'pre /\ (forall a. 'pre /\ 'post a ==> 'p a)) (* WP *)
@@ -151,6 +153,8 @@ monad_lattice {
              type close_wp_t ('a:Type) ('wp:Type => WP 'a) ('p:Post 'a) (h:heap) = (forall ('b:Type). 'wp 'b 'p h)
              type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) (h:heap) = ('P /\ 'wp 'p h)
              type assume_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) (h:heap) = ('P ==> 'wp 'p h)
+             type null_wp ('a:Type) ('p:Post 'a) (h:heap) = (forall (x:'a) (h':heap). 'p x h')
+             type trivial ('a:Type) ('wp:WP 'a) = (forall h0. 'wp (fun r h1 => True) h0)
              with ST ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) =
                  STATE 'a
                    (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1)) (* WP *)
@@ -184,6 +188,8 @@ monad_lattice {
              type close_wp_t ('a:Type) ('wp:Type => WP 'a) ('p:Post 'a)  = (forall ('b:Type). 'wp 'b 'p)
              type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P /\ 'wp 'p)
              type assume_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P ==> 'wp 'p)
+             type null_wp ('a:Type) ('p:Post 'a) = (forall (r:result 'a). 'p r)
+             type trivial ('a:Type) ('wp:WP 'a) = 'wp (fun r => True) 
              with Exn ('a:Type) ('pre:Pre) ('post:Post 'a) =
                  EXN 'a
                    (fun 'p => 'pre /\ (forall (r:result 'a). ('pre /\ 'post r) ==> 'p r)) (* WP *)
@@ -217,13 +223,14 @@ monad_lattice {
              type close_wp_t ('a:Type) ('wp:Type => WP 'a) ('p:Post 'a) (h:heap) = (forall ('b:Type). 'wp 'b 'p h)
              type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) (h:heap) = ('P /\ 'wp 'p h)
              type assume_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) (h:heap) = ('P ==> 'wp 'p h)
+             type null_wp ('a:Type) ('p:Post 'a) (h0:heap) = (forall (a:result 'a) (h:heap). 'p a h)
+             type trivial ('a:Type) ('wp:WP 'a) = (forall (h0:heap). 'wp (fun r h1 => True) h0)
              with All ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) =
                  ALL 'a
                    (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)) (* WP *)
                    (fun ('p:Post 'a) (h:heap) => forall ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)             (* WLP *)
              and ML ('a:Type) =
-                 ALL 'a (fun ('p:Post 'a) (h0:heap) => forall (a:result 'a) (h:heap). 'p a h)
-                        (fun ('p:Post 'a) (h0:heap) => forall (a:result 'a) (h:heap). 'p a h)
+                 ALL 'a (fun 'p h0 => forall (a:result 'a) (h:heap). 'p a h) (fun 'p h0 => forall (a:result 'a) (h:heap). 'p a h)
 
   with
   PURE  ~> STATE = (fun ('a:Type) ('wp:PURE.WP 'a) ('p:STATE.Post 'a) (h:heap) => 'wp (fun a => 'p a h));

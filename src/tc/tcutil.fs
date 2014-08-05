@@ -674,7 +674,7 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
       then begin
           let _, wp, _ = destruct_comp c in
           let post = withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid) in
-          let vc = Normalize.normalize env (withkind Kind_type <| Typ_app(wp, post, false)) in
+          let vc = Normalize.norm_typ [Normalize.Delta; Normalize.Beta] env (withkind Kind_type <| Typ_app(wp, post, false)) in
           if Tc.Env.debug env then Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));
           if not <| env.solver.solve env vc
           then Tc.Errors.report (range_of_lbname x) (Tc.Errors.failed_to_prove_specification_of x [])
