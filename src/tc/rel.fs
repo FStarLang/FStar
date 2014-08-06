@@ -154,6 +154,7 @@ let rec forallf (l:list<'a>) (ff:'a -> option<guard>) : option<guard> = match l 
                     
 let rec krel rel env k k' : option<guard(* Type *)> =
   let k, k' = compress_kind k, compress_kind k' in
+  if Util.physical_equality k k' then Some Trivial else
   //printfn "krel: %s and %s" (Print.kind_to_string k) (Print.kind_to_string k');
   match k, k' with 
     | Kind_type, Kind_type
@@ -215,10 +216,13 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
            | Kind_type -> mk_guard_lam t f
            | _ -> f in
   let rec aux top norm t t' = 
-    let r = aux' top norm t t' in
-    match !Options.debug, r with
-      | _::_, None -> Util.print_string <| Util.format2 "Incompatible types %s and %s\n" (Print.typ_to_string t) (Print.typ_to_string t'); None
-      | _ -> r 
+    if Microsoft.FStar.Util.physical_equality t t' 
+    then Some Trivial
+    else (if Tc.Env.debug env then Util.print_string <| format2 "trel: %s \t\t %s\n" (Print.typ_to_string t) (Print.typ_to_string t');
+          let r = aux' top norm t t' in
+          match !Options.debug, r with
+              | _::_, None -> Util.print_string <| Util.format2 "Incompatible types %s and %s\n" (Print.typ_to_string t) (Print.typ_to_string t'); None
+              | _ -> r )
   and aux' top norm t t' =
     let t, t' = reduce t, reduce t' in
       match t.t, t'.t with 
@@ -234,8 +238,9 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
          else None
 
        | Typ_fun(Some x, t1, c, _), Typ_fun(Some x', t1', c', _)  -> 
+         let sc' = if Util.bvd_eq x x' then c' else Util.subst_comp [Inr(x', Util.bvd_to_exp x t1')] c' in
          bindf (aux false norm t1' t1) (fun f -> 
-         bindf (crel rel env c (Util.subst_comp [Inr(x', Util.bvd_to_exp x t1')] c')) (fun g -> 
+         bindf (crel rel env c sc') (fun g -> 
          let g = conj_guard f <| close_guard (Inl(x, t1')) g in
          ret <| Some (mk_guard_lam top t g)))
 
@@ -250,8 +255,9 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
           ret <| Some (mk_guard_lam top t g)))
 
        | Typ_univ(a1, k1, c), Typ_univ(a1', k1', c') -> 
+         let sc' = if Util.bvd_eq a1 a1' then c' else Util.subst_comp [Inl(a1', Util.bvd_to_typ a1 k1')] c' in
          bindf (krel rel env k1' k1) (fun f -> 
-         bindf (crel rel env c (Util.subst_comp [Inl(a1', Util.bvd_to_typ a1 k1')] c')) (fun g -> 
+         bindf (crel rel env c sc') (fun g -> 
          let g = close_guard (Inr(a1, k1')) g in
          ret <| Some (mk_guard_lam top t <| conj_guard f g)))
       
@@ -347,10 +353,11 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
   aux top false t t'
 
 and exp_equiv env e e' : option<guard (* has kind Type *)> = 
-  let r = exp_equiv' env e e' in 
-  match !Options.debug, r with 
-    | _::_, None -> Util.print_string <| Util.format2 "Incompaible expressions: %s and %s\n" (Print.exp_to_string e) (Print.exp_to_string e'); None
-    | _ -> r
+  if Util.physical_equality e e' then Some Trivial
+  else let r = exp_equiv' env e e' in 
+       match !Options.debug, r with 
+        | _::_, None -> Util.print_string <| Util.format2 "Incompaible expressions: %s and %s\n" (Print.exp_to_string e) (Print.exp_to_string e'); None
+        | _ -> r
 
 and exp_equiv' env e e' : option<guard (* has kind Type *)> = 
   let e, e' = compress_exp e, compress_exp e' in 
@@ -392,87 +399,89 @@ and const_eq s1 s2 = match s1, s2 with
   | _ -> s1=s2 
 
 and crel rel env c1 c2 : option<guard> = 
-  let rec aux norm (c1:comp) (c2:comp) = match rel with 
-  | EQ -> 
-    begin match compress_comp c1, compress_comp c2 with
-      | Total t1, Total t2 -> trel false rel env t1 t2
-      | Total _,  _ -> crel rel env (Comp <| force_comp c1) c2
-      | _, Total _ -> crel rel env c1 (Comp <| force_comp c2)
-      | Comp ct1, Comp ct2 ->
-        if lid_equals ct1.effect_name ct2.effect_name
-        then either_rel rel env (Inl ct1.result_typ::ct1.effect_args) (Inl ct2.result_typ::ct2.effect_args) 
-        else if not norm 
-        then aux true (Comp <| Normalize.norm_comp [Normalize.DeltaComp] env (Comp ct1)) 
-                      (Comp <| Normalize.norm_comp [Normalize.DeltaComp] env (Comp ct2))
-        else None
-      | Flex (u, t1), Comp ct2
-      | Comp ct2, Flex (u, t1) -> 
-        bindf (trel false EQ env t1 ct2.result_typ) (fun f -> 
-          Unionfind.change u (Resolved (Comp ct2));
-          Some f)
-      | Flex (u1, t1), Flex (u2, t2) -> 
-        bindf (trel false EQ env t1 t2) (fun f -> 
-        if (Unionfind.equivalent u1 u2) 
-        then Some f
-        else (Unionfind.union u1 u2; Some f))
-    end
-    
-  | SUB -> 
-    let c1 = Util.compress_comp c1 in
-    let c2 = Util.compress_comp c2 in
-      match c1, c2 with 
-        | Total t1, Total t2 -> trel false SUB env t1 t2
-        | Total t1, Flex (u, t2) -> 
-          bindf (trel false SUB env t1 t2) (fun f -> 
-              Unionfind.change u (Resolved (Total t2));
-              Some f)
-        | Flex(u, t1), Total t2 -> 
-          bindf (trel false SUB env t1 t2) (fun f -> 
-              Unionfind.change u (Resolved (Total t2));
-              Some f)
-        | Total _,  _ -> crel SUB env (Comp <| force_comp c1) c2
-        | _, Total _ -> crel SUB env c1 (Comp <| force_comp c2)
-        | Comp _, Comp _ -> 
-          let c1 = Normalize.norm_comp [Normalize.DeltaComp] env c1 in
-          let c2 = Normalize.norm_comp [Normalize.DeltaComp] env c2 in
-          begin match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
-            | None -> None
-            | Some edge ->
-              let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
-                | Inl wp1::_, Inl wp2::_ -> wp1, wp2 
-                | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in
-              andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
-            let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
-            let is_wpc2_null () = 
-                if not !Options.verify then false
-                else match trel true EQ env wpc2 (Util.mk_typ_app c2_decl.null_wp [Inl c2.result_typ]) with 
-                      | Some Trivial -> true
-                      | _ -> false in
-            let imp_wp = 
-              if is_wpc2_null() 
-              then let t = Util.mk_typ_app c2_decl.trivial [Inl c1.result_typ; Inl <| edge.mlift c1.result_typ wpc1] in
-                   {t with k=Kind_type}
-              else let t = Util.mk_typ_app c2_decl.wp_binop [Inl c2.result_typ; Inl wpc2; Inl <| Util.ftv Const.imp_lid; Inl <| edge.mlift c1.result_typ wpc1] in
-                   let t = {t with k=wpc2.k} in
-                   let t = Util.mk_typ_app c2_decl.wp_as_type [Inl c2.result_typ; Inl t] in
-                   {t with k=Kind_type} in
-            ret <| Some (Guard <| imp_wp))
-           end
-        
-        | Flex(u, t), Comp ct2 -> 
-          bindf (trel false SUB env t ct2.result_typ) (fun f -> 
-              Unionfind.change u (Resolved (Comp ct2));
-              Some f)
-        | Comp ct2, Flex(u, t) -> 
-          bindf (trel false SUB env ct2.result_typ t) (fun f -> 
-              Unionfind.change u (Resolved (Comp ct2));
-              Some f)
+  let rec aux norm (c1:comp) (c2:comp) = 
+    if Util.physical_equality c1 c2 then Some Trivial
+    else let c1 = compress_comp c1 in
+         let c2 = compress_comp c2 in
+         match rel with 
+           | EQ -> 
+             begin match c1, c2 with
+               | Total t1, Total t2 -> trel false rel env t1 t2
+               | Total _,  _ -> crel rel env (Comp <| force_comp c1) c2
+               | _, Total _ -> crel rel env c1 (Comp <| force_comp c2)
+               | Comp ct1, Comp ct2 ->
+                 if lid_equals ct1.effect_name ct2.effect_name
+                 then either_rel rel env (Inl ct1.result_typ::ct1.effect_args) (Inl ct2.result_typ::ct2.effect_args) 
+                 else if not norm 
+                 then aux true (Comp <| Normalize.norm_comp [Normalize.DeltaComp] env (Comp ct1)) 
+                   (Comp <| Normalize.norm_comp [Normalize.DeltaComp] env (Comp ct2))
+                 else None
+               | Flex (u, t1), Comp ct2
+               | Comp ct2, Flex (u, t1) -> 
+                 bindf (trel false EQ env t1 ct2.result_typ) (fun f -> 
+                   Unionfind.change u (Resolved (Comp ct2));
+                   Some f)
+               | Flex (u1, t1), Flex (u2, t2) -> 
+                 bindf (trel false EQ env t1 t2) (fun f -> 
+                   if (Unionfind.equivalent u1 u2) 
+                   then Some f
+                   else (Unionfind.union u1 u2; Some f))
+             end
+               
+           | SUB -> 
+             match c1, c2 with 
+               | Total t1, Total t2 -> trel false SUB env t1 t2
+               | Total t1, Flex (u, t2) -> 
+                 bindf (trel false SUB env t1 t2) (fun f -> 
+                   Unionfind.change u (Resolved (Total t2));
+                   Some f)
+               | Flex(u, t1), Total t2 -> 
+                 bindf (trel false SUB env t1 t2) (fun f -> 
+                   Unionfind.change u (Resolved (Total t2));
+                   Some f)
+               | Total _,  _ -> crel SUB env (Comp <| force_comp c1) c2
+               | _, Total _ -> crel SUB env c1 (Comp <| force_comp c2)
+               | Comp _, Comp _ -> 
+                 let c1 = Normalize.norm_comp [Normalize.DeltaComp] env c1 in
+                 let c2 = Normalize.norm_comp [Normalize.DeltaComp] env c2 in
+                 begin match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
+                   | None -> None
+                   | Some edge ->
+                     let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
+                       | Inl wp1::_, Inl wp2::_ -> wp1, wp2 
+                       | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in
+                     andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
+                       let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
+                       let is_wpc2_null () = 
+                         if not !Options.verify then false
+                         else match trel true EQ env wpc2 (Util.mk_typ_app c2_decl.null_wp [Inl c2.result_typ]) with 
+                           | Some Trivial -> true
+                           | _ -> false in
+                       if Util.physical_equality wpc1 wpc2
+                       then ret <| Some Trivial
+                       else if is_wpc2_null() 
+                       then let t = Util.mk_typ_app c2_decl.trivial [Inl c1.result_typ; Inl <| edge.mlift c1.result_typ wpc1] in
+                            ret <| Some (Guard <| {t with k=Kind_type})
+                       else let t = Util.mk_typ_app c2_decl.wp_binop [Inl c2.result_typ; Inl wpc2; Inl <| Util.ftv Const.imp_lid; Inl <| edge.mlift c1.result_typ wpc1] in
+                            let t = {t with k=wpc2.k} in
+                            let t = Util.mk_typ_app c2_decl.wp_as_type [Inl c2.result_typ; Inl t] in
+                            ret <| Some (Guard <| {t with k=Kind_type})) 
+                 end
+                   
+               | Flex(u, t), Comp ct2 -> 
+                 bindf (trel false SUB env t ct2.result_typ) (fun f -> 
+                   Unionfind.change u (Resolved (Comp ct2));
+                   Some f)
+               | Comp ct2, Flex(u, t) -> 
+                 bindf (trel false SUB env ct2.result_typ t) (fun f -> 
+                   Unionfind.change u (Resolved (Comp ct2));
+                   Some f)
 
-        | Flex(u1, t1), Flex(u2, t2) -> 
-          bindf (trel false SUB env t1 t2) (fun f -> 
-              (if not (Unionfind.equivalent u1 u2)
-               then Unionfind.union u1 u2); (* TODO: Fix precedence of the ';' *)
-              Some f) in
+               | Flex(u1, t1), Flex(u2, t2) -> 
+                 bindf (trel false SUB env t1 t2) (fun f -> 
+                   (if not (Unionfind.equivalent u1 u2)
+                    then Unionfind.union u1 u2); (* TODO: Fix precedence of the ';' *)
+                   Some f) in
   aux false c1 c2
 
 and either_rel rel env l1 l2 = 

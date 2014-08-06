@@ -666,13 +666,13 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
      let gen_uvars uvs = 
        uvs |> List.filter (fun (uv,_) -> not (env_uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
      let uvars = ecs |> List.map (fun (x, e, c) -> 
-      let c = norm c in
+      let c = norm c in //Util.force_comp c in
       let t = c.result_typ in
       let uvt = Util.uvars_in_typ t in
       let uvs = gen_uvars <| uvt.uvars_t in 
-      if !Options.verify 
+      if !Options.verify && not <| Util.is_total_comp (Comp c)
       then begin
-          let _, wp, _ = destruct_comp c in
+          let _, wp, _ = destruct_comp c in //(norm (Comp c)) in
           let post = withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid) in
           let vc = Normalize.norm_typ [Normalize.Delta; Normalize.Beta] env (withkind Kind_type <| Typ_app(wp, post, false)) in
           if Tc.Env.debug env then Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));

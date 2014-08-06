@@ -70,7 +70,11 @@ let comp_check_expected_typ env e c : exp * comp =
 let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard = 
   match copt with 
     | None -> e, c, Trivial
-    | Some c' -> Tc.Util.check_comp env e c c' 
+    | Some c' ->
+//      if LanguagePrimitives.PhysicalEquality c c'
+//      then e, c, Trivial
+//      else 
+      Tc.Util.check_comp env e c c' 
     
 let no_guard env (te, kt, f) = match f with
   | Trivial -> te, kt
@@ -330,15 +334,16 @@ and tc_value env e : exp * comp = match e with
       | Some c -> instantiate_both <| Tc.Env.set_expected_typ env (Util.comp_result c) in
     let b = Env.Binding_var(x, tx) in
     let envbody = Env.push_local_binding envbody b in
+    //printfn "Before checking body expected cres=%s" (match cres with None -> "none" | Some c -> Print.comp_typ_to_string c);
     let ee, cc = tc_exp envbody e1 in
-    //printfn "Expected cres=%s\nInferred comp typ %s" (match cres with None -> "none" | Some c -> Print.comp_typ_to_string c) (Print.comp_typ_to_string (Tc.Normalize.normalize_comp env cc |> Comp));
+    if Tc.Env.debug env then Util.fprint2 "Expected cres=%s\nInferred comp typ %s" (match cres with None -> "none" | Some c -> Print.comp_typ_to_string c) (Print.comp_typ_to_string cc);
     let e1, cres, fbody = check_expected_effect envbody cres <| (ee, cc) in
-    //printfn "Inferred cres=%s\n" (Print.comp_typ_to_string cres);
-    //printfn "fbody=%s\n"  (guard_to_string env fbody);
+    if Tc.Env.debug env then Util.fprint1 "Inferred cres=%s\n" (Print.comp_typ_to_string cres);
+    if Tc.Env.debug env then Util.fprint1 "fbody=%s\n"  (guard_to_string env fbody);
     let t = withkind Kind_type <| Typ_fun(Some x, tx, cres, false) in
     let e, t = gen (Exp_abs(x, tx, e1), t) in
     let c = Tc.Util.strengthen_precondition env (Total t) <| Rel.conj_guard f1 (Rel.conj_guard f2 (Tc.Util.close_guard [b] fbody)) in
-    //printfn "final type of abstraction=%s\n"  (Print.comp_typ_to_string (Comp <| Tc.Normalize.normalize_comp env c));
+    if Tc.Env.debug env then Util.fprint1 "final type of abstraction=%s\n"  (Print.comp_typ_to_string c);//(Comp c));//<| Tc.Normalize.normalize_comp env c));
     e, c 
    
   | Exp_tabs(a, k1, e1) -> 

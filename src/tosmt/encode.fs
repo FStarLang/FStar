@@ -218,7 +218,7 @@ let rec encode_knd (env:env_t) (k:knd)  : res =
             encode_knd env k
 
         | Kind_uvar uv -> 
-            let ksym = format1 "Kind_uvar %d" (string_of_int <| Unionfind.uvar_id uv) in
+            let ksym = format1 "Kind_uvar_%s" (string_of_int <| Unionfind.uvar_id uv) in
             let g = [Term.DeclFun(ksym, [], Kind_sort, None)] in
             mkFreeV(ksym, Kind_sort), g
 
