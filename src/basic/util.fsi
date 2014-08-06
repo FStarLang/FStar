@@ -35,6 +35,11 @@ val format2: string -> string -> string -> string
 val format3: string -> string -> string -> string -> string
 val format4: string -> string -> string -> string -> string -> string
 val format5: string -> string -> string -> string -> string -> string -> string
+val fprint1: string -> string -> unit
+val fprint2: string -> string -> string -> unit
+val fprint3: string -> string -> string -> string -> unit
+val fprint4: string -> string -> string -> string -> string -> unit
+val fprint5: string -> string -> string -> string -> string -> string -> unit
 val print_string : string -> unit
 val print_any : 'a -> unit
 val strcat : string -> string -> string
@@ -127,3 +132,4 @@ val mk_ref: 'a -> ref<'a>
 
 val expand_environment_variable: string -> string
 
+val physical_equality: 'a -> 'a -> bool

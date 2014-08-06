@@ -162,6 +162,11 @@ let format3 f a b c = format f [a;b;c]
 let format4 f a b c d = format f [a;b;c;d]
 let format5 f a b c d e = format f [a;b;c;d;e]
 
+let fprint1 a b = print_string <| format1 a b
+let fprint2 a b c = print_string <| format2 a b c
+let fprint3 a b c d = print_string <| format3 a b c d
+let fprint4 a b c d e = print_string <| format4 a b c d e
+let fprint5 a b c d e f = print_string <| format5 a b c d e f
         
 let err_out : option<System.IO.StreamWriter> ref = ref None 
 let open_err_out (s:string) = (err_out := Some (new System.IO.StreamWriter(s)))
@@ -342,3 +347,5 @@ let geq (i:int) (j:int) = i >= j
 
 let expand_environment_variable s = 
   System.Environment.ExpandEnvironmentVariables ("%"^s^"%")
+
+let physical_equality (x:'a) (y:'a) = LanguagePrimitives.PhysicalEquality (box x) (box y)

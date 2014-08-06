@@ -26,7 +26,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
     <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\examples\unit-tests\</StartWorkingDirectory>
-    <StartArguments>--fstar_home ../../ --pretype --prims prims.fst</StartArguments>
+    <StartArguments>--fstar_home ../../ --debug Unit1 --print_effect_args --verify unit1.fst</StartArguments>
     <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -78,6 +78,9 @@
     </Reference>
     <Reference Include="FSharp.PowerPack.Compatibility">
       <HintPath>..\bin\FSharp.PowerPack.Compatibility.dll</HintPath>
+    </Reference>
+    <Reference Include="FsLexYacc.Runtime">
+      <HintPath>..\VS\packages\FsLexYacc.Runtime.6.0.2\lib\net40\FsLexYacc.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
