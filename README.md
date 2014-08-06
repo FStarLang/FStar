@@ -97,11 +97,12 @@ Directories:
         The main type-checker and verification condition generator.
 
 
-     z3encode/
+     tosmt/
      
         A module that translates F*'s logical specification into the
-        input language of Z3. Once this translation is done, it calls
-        into the Z3 binaries (provided in /bin) to verify that the
-        logical spec is valid.
+        SMT2 language, the input of many SMT solvers, including
+        Z3. Once this translation is done, it calls into the Z3
+        binaries (needs to be available in your path) to verify that
+        the logical spec is valid.
 
      
