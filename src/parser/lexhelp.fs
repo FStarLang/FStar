@@ -149,6 +149,7 @@ let keywords =
     ALWAYS, "done"       ,DONE;
     FSHARP, "downcast"   ,DOWNCAST;
     ALWAYS, "downto"     ,DOWNTO;
+    ALWAYS, "effect"     ,EFFECT;
     FSHARP, "elif"       ,ELIF;
     ALWAYS, "else"       ,ELSE;
     ALWAYS, "end"        ,END;

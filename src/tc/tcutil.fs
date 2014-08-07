@@ -179,7 +179,7 @@ let destruct_function_typ env (t:typ) (xopt:option<bvvdef>) (f:option<exp>) (imp
             aux None norm subst (force_comp c).result_typ g
         else (* either, we have an implicit function but with an explicit instantiation following;
                or, we have a function with an explicit argument and no implicit arg following *)
-            (Util.subst_typ subst t, f)
+            (Util.compress_typ <| Util.subst_typ subst t, f)
 
       | _ when not norm -> 
         let t = normalize env t in 

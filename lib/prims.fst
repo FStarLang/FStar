@@ -65,6 +65,7 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              and Tot ('a:Type) =
                  PURE 'a (fun 'p => (forall (x:'a). 'p x)) (fun 'p => (forall (x:'a). 'p x))
 }
+open Prims.PURE
 assume type bool
 assume type unit
 assume type int
@@ -89,44 +90,56 @@ type option 'a =
   | Some : v:'a -> option 'a
 
 assume type heap
-assume logic val SelHeap : #'a:Type -> heap -> ref 'a -> PURE.Tot 'a
-assume logic val UpdHeap : #'a:Type -> heap -> ref 'a -> 'a -> PURE.Tot heap
+assume logic val SelHeap : #'a:Type -> heap -> ref 'a -> Tot 'a
+assume logic val UpdHeap : #'a:Type -> heap -> ref 'a -> 'a -> Tot heap
 assume logic val EmpHeap : heap
-assume logic val InHeap  : #'a:Type -> heap -> ref 'a -> PURE.Tot bool
+assume logic val InHeap  : #'a:Type -> heap -> ref 'a -> Tot bool
 assume SelUpd1: forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (SelHeap (UpdHeap h x v) x)} SelHeap (UpdHeap h x v) x == x
 assume SelUpd2: forall ('a:Type) ('b:Type) (h:heap) (x:ref 'a) (y:ref 'b) (v:'b).{:pattern (SelHeap (UpdHeap h y v) x)} y=!=x ==> SelHeap (UpdHeap h y v) x == SelHeap h x
 assume InHeap1:  forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (InHeap (UpdHeap h x v) x)} InHeap (UpdHeap h x v) x == true
 assume InHeap2:  forall ('a:Type) ('b:Type) (h:heap) (x:ref 'a) (y:ref 'b) (v:'b).{:pattern (InHeap (UpdHeap h y v) x)} y=!=x ==> InHeap (UpdHeap h y v) x == InHeap h x
 
-assume type refset
-assume logic val EmptySet : refset
-assume logic val Singleton : ref 'a -> PURE.Tot refset
-assume logic val Union : refset -> refset -> PURE.Tot refset
-assume logic val Intersection : refset -> refset -> PURE.Tot refset
-logic type InSet : #'a:Type => ref 'a => refset => Type
-logic type SetEqual : refset => refset => Type
-assume InEmptySet:     forall 'a (a:ref 'a). ~(InSet a EmptySet)
-assume InSingleton:    forall 'a (a:ref 'a). InSet a (Singleton a)
-assume InSingletonInv: forall 'a 'b (a:ref 'a) (b:ref 'b). InSet a (Singleton b) <==> a==b
-assume InUnion:        forall 'a s1 s2 (a:ref 'a). InSet a (Union s1 s2) <==> (InSet a s1 \/ InSet a s1)
-assume InUnionL:       forall 'a s1 s2 (a:ref 'a). InSet a s1 ==> InSet a (Union s1 s2)
-assume InUnionR:       forall 'a s1 s2 (a:ref 'a). InSet a s2 ==> InSet a (Union s1 s2)
-assume UnionIdemL:     forall s1 s2.{:pattern Union (Union s1 s2) s2} Union (Union s1 s2) s2 == Union s1 s2
-assume UnionIdemR:     forall s1 s2.{:pattern Union s1 (Union s1 s2)} Union s1 (Union s1 s2) == Union s1 s2
-(* assume InInter:        forall 'a s1 s2 (a:ref 'a). {:pattern InSet a (Intersection s1 s2)} InSet a (Intersection s1 s2) <==> (InSet a s1 /\ InSet a s2) *)
-assume InInter:        forall 'a s1 s2 (a:ref 'a). InSet a (Intersection s1 s2) <==> (InSet a s1 /\ InSet a s2)
-assume InterIdemL:     forall s1 s2.{:pattern Intersection (Intersection s1 s2) s2}  Intersection (Intersection s1 s2) s2 == Intersection s1 s2
-assume InterdemR:      forall s1 s2.{:pattern Intersection s1 (Intersection s1 s2)} Intersection s1 (Intersection s1 s2) == Intersection s1 s2
-assume SetEqualDef:    forall s1 s2.{:pattern SetEqual s1 s2} (forall 'a (a:ref 'a). InSet a s1 <==> InSet a s2) ==> SetEqual s1 s2 
-assume SeqEqualExt:    forall s1 s2.{:pattern SetEqual s1 s2} SetEqual s1 s2 ==> s1==s2
+
+assume type set : Type => Type
+assume logic val EmptySet : 'a:Type -> Tot (set 'a)
+assume logic val Singleton : 'a:Type -> 'a -> Tot (set 'a)
+assume logic val Union : 'a:Type -> set 'a -> set 'a -> Tot (set 'a)
+assume logic val Intersection : 'a:Type -> set 'a -> set 'a -> Tot (set 'a)
+logic type InSet : #'a:Type => 'a => set 'a => Type
+logic type SetEqual : #'a:Type => set 'a => set 'a => Type
+logic type Subset : #'a:Type => set 'a => set 'a => Type
+type SubsetEq : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => (SetEqual s1 s2 \/ Subset s1 s2)
+type Supset   : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => Subset s2 s1
+type SupsetEq : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => (SetEqual s1 s2 \/ Supset 'a s1 s2)
+assume InEmptySet:     forall 'a (a:'a). ~(InSet a EmptySet)
+assume InSingleton:    forall 'a (a:'a). InSet a (Singleton a)
+assume InSingletonInv: forall 'a 'b (a:'a) (b:'a). InSet a (Singleton b) <==> a==b
+assume InUnion:        forall 'a s1 s2 (a:'a). InSet a (Union s1 s2) <==> (InSet a s1 \/ InSet a s1)
+assume InUnionL:       forall 'a s1 s2 (a:'a). InSet a s1 ==> InSet a (Union s1 s2)
+assume InUnionR:       forall 'a s1 s2 (a:'a). InSet a s2 ==> InSet a (Union s1 s2)
+assume UnionIdemL:     forall 'a (s1:set 'a) (s2:set 'a).{:pattern Union (Union s1 s2) s2} Union (Union s1 s2) s2 == Union s1 s2
+assume UnionIdemR:     forall 'a (s1:set 'a) (s2:set 'a).{:pattern Union s1 (Union s1 s2)} Union s1 (Union s1 s2) == Union s1 s2
+(* assume InInter:        forall 'a s1 s2 (a:'a). {:pattern InSet a (Intersection s1 s2)} InSet a (Intersection s1 s2) <==> (InSet a s1 /\ InSet a s2) *)
+assume InInter:        forall 'a s1 s2 (a:'a). InSet a (Intersection s1 s2) <==> (InSet a s1 /\ InSet a s2)
+assume InterIdemL:     forall 'a (s1:set 'a) (s2:set 'a).{:pattern Intersection (Intersection s1 s2) s2}  Intersection (Intersection s1 s2) s2 == Intersection s1 s2
+assume InterdemR:      forall 'a (s1:set 'a) (s2:set 'a).{:pattern Intersection s1 (Intersection s1 s2)} Intersection s1 (Intersection s1 s2) == Intersection s1 s2
+assume SetEqualDef:    forall 'a (s1:set 'a) (s2:set 'a).{:pattern SetEqual s1 s2} (forall (a:'a). InSet a s1 <==> InSet a s2) ==> SetEqual s1 s2 
+assume SeqEqualExt:    forall 'a (s1:set 'a) (s2:set 'a).{:pattern SetEqual s1 s2} SetEqual s1 s2 ==> s1==s2
+assume SubsetDef:      forall 'a (s1:set 'a) (s2:set 'a).{:pattern Subset s1 s2} (forall (a:'a). InSet a s1 ==> InSet a s2) ==> Subset s1 s2 
+
+type aref = 
+  | Ref : 'a:Type -> r:ref 'a -> aref
+
 type refs =
   | AllRefs : refs
-  | SomeRefs : v:refset -> refs
+  | SomeRefs : v:set aref -> refs
+
+let oneref (r:ref 'a) = Singleton (Ref r)
 
 logic type Modifies (mods:refs) (h:heap) (h':heap) =
     (if b2t (is_AllRefs mods)
      then True
-     else forall 'b (x:ref 'b). (b2t (InHeap h x) /\ ~(InSet x (SomeRefs.v mods))) ==> (b2t (InHeap h' x) /\ SelHeap h x==SelHeap h' x))
+     else forall 'b (x:ref 'b). (b2t (InHeap h x) /\ ~(InSet (Ref x) (SomeRefs.v mods))) ==> (b2t (InHeap h' x) /\ SelHeap h x==SelHeap h' x))
 
 type result : Type => Type =
   | V : 'a:Type -> v:'a -> result 'a
@@ -425,8 +438,8 @@ type DTuple2: 'a:Type
 
 (* Primitive (structural) equality.
    What about for function types? *)
-assume val op_Equality : 'a:Type -> 'b:Type -> 'a -> 'b -> PURE.Tot bool
-assume val op_disEquality : 'a:Type -> 'b:Type -> 'a -> 'b -> PURE.Tot bool
+assume val op_Equality : 'a:Type -> 'b:Type -> 'a -> 'b -> Tot bool
+assume val op_disEquality : 'a:Type -> 'b:Type -> 'a -> 'b -> Tot bool
 
 logic type LT : int => int => Type    (* infix < in concrete syntax *)
 logic type GT : int => int => Type    (* infix > in concrete syntax *)
@@ -443,11 +456,11 @@ type list 'cc =
   | Nil : list 'cc
   | Cons : hd:'cc -> tl:list 'cc -> list 'cc
 
-assume val fst : ('a * 'b) -> PURE.Tot 'a
-assume val snd : ('a * 'b) -> PURE.Tot 'b
+assume val fst : ('a * 'b) -> Tot 'a
+assume val snd : ('a * 'b) -> Tot 'b
 assume val Assume: 'P:Type -> unit -> (y:unit{'P})
 (* assume val Assert : 'P:Type -> x:unit{'P} -> y:unit{'P} *)
-assume val Assert : 'P:Type -> unit -> PURE.Pure unit 'P (fun (x:unit) => True)
+assume val Assert : 'P:Type -> unit -> Pure unit 'P (fun (x:unit) => True)
 assume val lemma : 'P:Type -> x:unit{'P} -> z:unit{'P}
 assume val unreachable : x:unit{LBL "unreachable" False} -> 'a
 assume val failwith: string -> 'a (* TODO: refine with the Exn monad *)
@@ -457,17 +470,17 @@ assume val pipe_left: ('a -> 'b) -> 'a -> 'b
 assume val ignore: 'a -> unit
 assume val exit: int -> 'a
 assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
-assume logic val op_AmpAmp             : bool -> bool -> PURE.Tot bool
-assume logic val op_BarBar             : bool -> bool -> PURE.Tot bool
-assume logic val op_Negation           : bool -> PURE.Tot bool
-assume logic val op_Multiply           : int -> int -> PURE.Tot int
-assume logic val op_Subtraction        : int -> int -> PURE.Tot int
-assume logic val op_Addition           : int -> int -> PURE.Tot int
-assume logic val op_Minus              : int -> PURE.Tot int
-assume logic val op_LessThanOrEqual    : int -> int -> PURE.Tot bool
-assume logic val op_GreaterThan        : int -> int -> PURE.Tot bool
-assume logic val op_GreaterThanOrEqual : int -> int -> PURE.Tot bool
-assume logic val op_LessThan           : int -> int -> PURE.Tot bool
+assume logic val op_AmpAmp             : bool -> bool -> Tot bool
+assume logic val op_BarBar             : bool -> bool -> Tot bool
+assume logic val op_Negation           : bool -> Tot bool
+assume logic val op_Multiply           : int -> int -> Tot int
+assume logic val op_Subtraction        : int -> int -> Tot int
+assume logic val op_Addition           : int -> int -> Tot int
+assume logic val op_Minus              : int -> Tot int
+assume logic val op_LessThanOrEqual    : int -> int -> Tot bool
+assume logic val op_GreaterThan        : int -> int -> Tot bool
+assume logic val op_GreaterThanOrEqual : int -> int -> Tot bool
+assume logic val op_LessThan           : int -> int -> Tot bool
 assume val op_Modulus            : int -> int -> int
 assume val op_Division           : int -> int -> int
 (* Unrefined specifications for these functions for typing ML code *)

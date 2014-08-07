@@ -1,4 +1,5 @@
-FSTAR=../../bin/FStar.exe --fstar_home ../../ $(OTHERFLAGS)
+FSTAR_HOME=../..
+FSTAR=../../bin/FStar.exe --fstar_home $(FSTAR_HOME) $(OTHERFLAGS)
 
 %.tc: %.fst
 	$(FSTAR) $^
@@ -8,6 +9,9 @@ FSTAR=../../bin/FStar.exe --fstar_home ../../ $(OTHERFLAGS)
 
 prims: 
 	$(FSTAR)  
+
+millionaires:
+	$(FSTAR) $(FSTAR_HOME)/lib/partialmap.fst millionaires.fst
 
 utils:
 	$(FSTAR)  --codegen OCaml --prims prims.fst utils.fst
