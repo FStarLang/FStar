@@ -63,12 +63,13 @@ let is_tvar_free (a:btvdef) t =
   let tvs, _ = Util.freevars_typ t in
   Util.for_some (fun (bv:btvar) -> Util.bvd_eq bv.v a) tvs 
 
+let eq_bv_bvd bv bvd = Util.bvd_eq bv.v bvd
+  
 let new_kvar env =
   let wf k () =
     let tvs, xvs = Util.freevars_kind k in 
     let tvs', xvs' = Env.idents env in
-    let eq bv bvd = Util.bvd_eq bv.v bvd in
-    Util.forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
+    Util.forall_exists eq_bv_bvd tvs tvs' && Util.forall_exists eq_bv_bvd xvs xvs' in
   Kind_uvar (Unionfind.fresh (Uvar wf))
 
 let new_tvar env k =
@@ -83,8 +84,7 @@ let new_tvar env k =
   let wf t tk =
     let tvs, xvs = Util.freevars_typ t in 
     let tvs', xvs' = Env.idents env in 
-    let eq bv bvd = Util.bvd_eq bv.v bvd in
-    let freevars_in_env = Util.forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
+    let freevars_in_env = Util.forall_exists eq_bv_bvd tvs tvs' && Util.forall_exists eq_bv_bvd xvs xvs' in
     let err () = 
       if debug env 
       then begin
@@ -104,8 +104,7 @@ let new_evar env t =
   let wf e t = 
     let tvs, xvs = Util.freevars_exp e in
     let tvs', xvs' = Env.idents env in 
-    let eq bv bvd = Util.bvd_eq bv.v bvd in
-    forall_exists eq tvs tvs' && Util.forall_exists eq xvs xvs' in
+    forall_exists eq_bv_bvd tvs tvs' && Util.forall_exists eq_bv_bvd xvs xvs' in
   Exp_uvar (Unionfind.fresh (Uvar wf), t)
 
 let new_cvar env t = 
