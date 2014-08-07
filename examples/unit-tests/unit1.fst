@@ -46,15 +46,48 @@ let infer_nat x = if x < 0 then -x else x
 val check_nat: x:int -> PURE.Tot nat
 let check_nat x = infer_nat x
 
-let ctrue (x:int) (y:int) = x
-let cfalse (x:int) (y:int) = y
+let id x = x
+let church_true x y = x
+let church_false x y = y
 
-(* //val id : 'a -> PURE.Tot 'a *)
-(* let id (x:int) (y:int) = y *)
+val pure_id_annot : 'a -> PURE.Tot 'a
+let pure_id_annot x = x
 
-(* (\* val hd: x:list 'a{b2t (is_Cons x)} -> PURE.Tot 'a *\) *)
-(* (\* let hd = function *\) *)
-(* (\*   | hd::_ -> hd *\) *)
+val ml_id_annot : 'a -> 'a
+let ml_id_annot x = x
+
+val tabs_id_pure_annot_eq : 'a:Type -> x:'a -> PURE.Pure 'a True (fun y => y==x)
+let tabs_id_pure_annot_eq 'a x = x
+
+val id_pure_annot_eq : x:'a -> PURE.Pure 'a True (fun y => y==x)
+let id_pure_annot_eq x = x
+
+val id_all_annot_eq: x:'a -> ALL.All 'a (fun h => True) (fun h0 y h1 => b2t (is_V y) /\ h0==h1 /\ x==(V.v y)) (SomeRefs EmptySet)
+let id_all_annot_eq x = x
+
+val hd: list 'a -> 'a
+let hd = function
+  | x::_ -> x
+  | _ -> failwith "empty list"
+
+val hd_pure: l:list 'a{b2t (is_Cons l)} -> PURE.Tot 'a
+let hd_pure l = match l with
+  | x::_ -> x
+
+val dup_pure: x:'a -> PURE.Tot ('a * 'a)
+let dup_pure x = (x,x)
+
+val dup_pure_eq: x:'a -> PURE.Pure ('a * 'a) True (fun y => MkTuple2._1 y==MkTuple2._2 y)o
+let dup_pure_eq x = (x,x)
+
+(* (\* val mem: x:'a -> l:list 'a -> bool *\) *)
+(* (\* let rec mem x l = match l with  *\) *)
+(* (\*   | [] -> false *\) *)
+(* (\*   | hd::tl -> x=hd || mem x tl *\) *)
+
+(* (\* (\\* val hd: x:list 'a{b2t (is_Cons x)} -> PURE.Tot 'a *\\) *\) *)
+(* (\* (\\* let hd = function *\\) *\) *)
+(* (\* (\\*   | hd::_ -> hd *\\) *\) *)
 
 
 

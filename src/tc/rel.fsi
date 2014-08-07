@@ -25,7 +25,7 @@ open Microsoft.FStar.Tc.Env
 (* relations on types, kinds, etc. *)
 type guard = 
   | Trivial
-  | Guard of formula
+  | NonTrivial of formula
 
 val guard_to_string : env -> guard -> string
 val trivial : guard -> unit

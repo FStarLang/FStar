@@ -329,9 +329,10 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
 (* External interface *)
 (************************************************************************************)
 
-let rec weak_norm_comp env c = 
+let rec weak_norm_comp env c =
+  let tt0 = Util.comp_result c in 
   let c = force_comp c in
-  match Tc.Env.lookup_typ_abbrev env c.effect_name with
+  let n = match Tc.Env.lookup_typ_abbrev env c.effect_name with
     | None -> c
     | Some t -> 
       let args = Inl c.result_typ::c.effect_args in
@@ -349,7 +350,10 @@ let rec weak_norm_comp env c =
                                      flags=c.flags}))
         | _ ->  failwith (Util.format3 "Got a computation %s with constructor %s and kind %s" (Print.sli c.effect_name) (Print.typ_to_string tc) (Print.kind_to_string tc.k)) in
       //let _ = printfn "Normalized %s\nto %s\n" (Print.comp_typ_to_string m) (Print.comp_typ_to_string n.code) in
-      n
+      n in
+  //check_sharing (Util.compress_typ tt0) (Util.compress_typ n.result_typ) "weak_norm_comp";
+  n
+      
        
 let norm_kind steps tcenv k = 
   let c = snk tcenv ({code=k; environment=[]; stack=[]; steps=steps}) in

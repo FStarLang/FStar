@@ -907,16 +907,14 @@ let collect_formals t =
       match (compress_typ t).t with
         | Typ_fun(xopt, t1, cod, imp) -> 
           let out = Inr(xopt,t1,imp)::out in
-          begin match compress_comp cod with 
-            | Total t -> aux out t
-            | _ -> List.rev out, cod
-          end
+          if is_total_comp cod
+          then aux out (comp_result cod)
+          else List.rev out, cod
         | Typ_univ(a, k, cod) -> 
           let out = Inl(a,k)::out in
-          begin match compress_comp cod with 
-            | Total t -> aux out t
-            | _ -> List.rev out, cod
-          end
+          if is_total_comp cod 
+          then aux out (comp_result cod)
+          else List.rev out, cod
         | _ -> List.rev out, Total t 
   in aux [] t
 

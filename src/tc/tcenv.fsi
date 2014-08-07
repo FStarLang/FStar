@@ -60,8 +60,8 @@ type env = {
 }
 and solver_t = {
     solve:env -> typ -> bool;
-    formula_to_string:env -> typ -> string;
 }
+
 
 val debug: env -> bool
 val initial_env : solver_t -> lident -> env

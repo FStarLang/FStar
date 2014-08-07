@@ -76,8 +76,8 @@ let () =
       cleanup ();
       exit 0
     with 
-    | e when (not !Options.trace_error) -> 
-        cleanup();        
-        if Util.handleable e
-        then Util.handle_err false () e
-        else raise e
+    | e -> 
+        if Util.handleable e then Util.handle_err false () e
+        else if !Options.trace_error then Util.fprint2 "%s\n%s\n" e.Message e.StackTrace
+        else Util.print_string "Unexpected error; use the --trace_error option for more details\n";
+        cleanup ()

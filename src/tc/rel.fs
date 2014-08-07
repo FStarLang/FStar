@@ -80,11 +80,43 @@ type rel =
 
 type guard = 
   | Trivial
-  | Guard of formula
+  | NonTrivial of formula
+
+let rec is_trivial f : bool = 
+    let bin_op f l = match l with 
+        | [Inl t1; Inl t2] -> f t1 t2
+        | _ -> failwith "Impossible" in
+    let connectives = [(Const.and_lid, bin_op (fun t1 t2 -> is_trivial t1 && is_trivial t2));
+                       (Const.or_lid,  bin_op (fun t1 t2 -> is_trivial t1 || is_trivial t2));
+                       (Const.imp_lid, bin_op (fun t1 t2 -> is_trivial t2));
+                       (Const.true_lid, (fun _ -> true));
+                       (Const.false_lid, (fun _ -> false));
+                       ] in
+
+    let fallback phi = match phi.t with 
+        | Typ_lam(_, _, phi) 
+        | Typ_tlam(_, _, phi) -> is_trivial phi
+        | _ -> false in
+
+    match Util.destruct_typ_as_formula f with 
+        | None -> fallback f
+        | Some (BaseConn(op, arms)) -> 
+           (match connectives |> List.tryFind (fun (l, _) -> lid_equals op l) with 
+             | None -> false
+             | Some (_, f) -> f arms)
+        | Some (QAll(_, _, body)) 
+        | Some (QEx(_, _, body)) -> is_trivial body
+  
+
+let mkGuard env f =
+  let f = Tc.Normalize.normalize env f in 
+  if is_trivial f 
+  then Trivial
+  else NonTrivial f
 
 let guard_to_string (env:env) = function  
   | Trivial -> "trivial"
-  | Guard f -> Print.formula_to_string (Tc.Normalize.normalize env f)
+  | NonTrivial f -> Print.formula_to_string (Tc.Normalize.normalize env f)
 
 let ret g = 
   if not !Options.verify
@@ -95,16 +127,16 @@ let ret g =
 
 let trivial t = match t with 
   | Trivial -> ()
-  | Guard f -> failwith "impossible"
+  | NonTrivial _ -> failwith "impossible"
 
 let map_guard g f = match g with 
   | Trivial -> Trivial
-  | Guard x -> Guard <| f x
+  | NonTrivial x -> NonTrivial <| f x
 
 let conj_guard g1 g2 = match g1, g2 with 
   | Trivial, g
   | g, Trivial -> g
-  | Guard f1, Guard f2 -> Guard (Util.mk_conj f1 f2)
+  | NonTrivial f1, NonTrivial f2 -> NonTrivial (Util.mk_conj f1 f2)
 
 let mk_guard_lam t f = 
   let mk_lam t f = withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(Util.new_bvd None, t, f) in
@@ -130,7 +162,7 @@ let close b f = match b with
 
 let close_guard b = function
   | Trivial -> Trivial
-  | Guard f -> Guard <| close b f
+  | NonTrivial f -> NonTrivial <| close b f
 
 let close_guard_lam yopt t f = 
   let close_lam yopt t f = 
@@ -216,13 +248,16 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
            | Kind_type -> mk_guard_lam t f
            | _ -> f in
   let rec aux top norm t t' = 
+    let t = Util.compress_typ t in
+    let t' = Util.compress_typ t' in
     if Microsoft.FStar.Util.physical_equality t t' 
-    then Some Trivial
-    else (if Tc.Env.debug env then Util.print_string <| format2 "trel: %s \t\t %s\n" (Print.typ_to_string t) (Print.typ_to_string t');
-          let r = aux' top norm t t' in
-          match !Options.debug, r with
-              | _::_, None -> Util.print_string <| Util.format2 "Incompatible types %s and %s\n" (Print.typ_to_string t) (Print.typ_to_string t'); None
-              | _ -> r )
+    then (Some Trivial)
+    else (//if Tc.Env.debug env then Util.print_string <| format2 "trel: %s \t\t %s\n" (Print.typ_to_string t) (Print.typ_to_string t');
+          let r = aux' top norm t t' in r
+//          match !Options.debug, r with
+//              | _::_, None -> Util.print_string <| Util.format2 "Incompatible types %s and %s\n" (Print.typ_to_string t) (Print.typ_to_string t'); None
+//              | _ -> r 
+         )
   and aux' top norm t t' =
     let t, t' = reduce t, reduce t' in
       match t.t, t'.t with 
@@ -322,7 +357,7 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
             bindf (aux false norm phi1 (Util.subst_typ [Inr(x', xexp)] phi2)) (finish f)
 
           | SUB -> 
-            let g = Guard <| Util.mk_imp phi1 (Util.subst_typ [Inr(x', xexp)] phi2) in
+            let g = mkGuard env <| Util.mk_imp phi1 (Util.subst_typ [Inr(x', xexp)] phi2) in
             finish f g)
 
        | Typ_refine(x, t1, phi), _  when (rel=SUB) -> 
@@ -339,10 +374,10 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
          if top 
          then let xexp = Util.bvd_to_exp x t in
               let f = map_guard f (fun f -> withkind Kind_type <| Typ_dep(f, xexp, false)) in
-              let phi_f = conj_guard (Guard phi) f in
+              let phi_f = conj_guard (mkGuard env phi) f in
               ret <| (Some <| map_guard phi_f (fun phi_f -> 
                 withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(x, t, phi_f)))
-         else let f = conj_guard (Guard phi) f in
+         else let f = conj_guard (mkGuard env phi) f in
               ret <| (Some <| map_guard f (close (Inl(x, t)))))
 
        | Typ_unknown, _ 
@@ -375,12 +410,12 @@ and exp_equiv' env e e' : option<guard (* has kind Type *)> =
     | Exp_bvar x1, Exp_bvar x1' -> 
       if Util.bvd_eq x1.v x1'.v
       then Some Trivial
-      else ret <| Some (Guard <| Util.mk_eq e e')
+      else ret <| Some (NonTrivial <| Util.mk_eq e e')
 
     | Exp_fvar (fv1, _), Exp_fvar (fv1', _) -> 
       if lid_equals fv1.v fv1'.v
       then Some Trivial
-      else ret <| Some (Guard <| Util.mk_eq e e')
+      else ret <| Some (NonTrivial <| Util.mk_eq e e')
 
     | Exp_constant s1, Exp_constant s1' -> 
       if const_eq s1 s1'
@@ -391,7 +426,7 @@ and exp_equiv' env e e' : option<guard (* has kind Type *)> =
       exp_equiv env e1 e1'
 
     | _ ->
-      ret <| Some (Guard <| Util.mk_eq e e')
+      ret <| Some (NonTrivial <| Util.mk_eq e e')
 
 and const_eq s1 s2 = match s1, s2 with 
   | Const_bytearray(b1, _), Const_bytearray(b2, _) -> b1=b2
@@ -403,6 +438,7 @@ and crel rel env c1 c2 : option<guard> =
     if Util.physical_equality c1 c2 then Some Trivial
     else let c1 = compress_comp c1 in
          let c2 = compress_comp c2 in
+         //check_sharing (Util.comp_result c1) (Util.comp_result c2) "crel0";
          match rel with 
            | EQ -> 
              begin match c1, c2 with
@@ -442,8 +478,9 @@ and crel rel env c1 c2 : option<guard> =
                | Total _,  _ -> crel SUB env (Comp <| force_comp c1) c2
                | _, Total _ -> crel SUB env c1 (Comp <| force_comp c2)
                | Comp _, Comp _ -> 
-                 let c1 = Normalize.norm_comp [Normalize.DeltaComp] env c1 in
-                 let c2 = Normalize.norm_comp [Normalize.DeltaComp] env c2 in
+                 let c1 = Normalize.weak_norm_comp env c1 in
+                 let c2 = Normalize.weak_norm_comp env c2 in
+                 //check_sharing (c1.result_typ) (c2.result_typ) "crel1";
                  begin match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
                    | None -> None
                    | Some edge ->
@@ -460,12 +497,13 @@ and crel rel env c1 c2 : option<guard> =
                        if Util.physical_equality wpc1 wpc2
                        then ret <| Some Trivial
                        else if is_wpc2_null() 
-                       then let t = Util.mk_typ_app c2_decl.trivial [Inl c1.result_typ; Inl <| edge.mlift c1.result_typ wpc1] in
-                            ret <| Some (Guard <| {t with k=Kind_type})
+                       then let _ = if debug env then Util.print_string "Using trivial wp ... \n" in
+                            let t = Util.mk_typ_app c2_decl.trivial [Inl c1.result_typ; Inl <| edge.mlift c1.result_typ wpc1] in
+                            ret <| Some (mkGuard env <| {t with k=Kind_type})
                        else let t = Util.mk_typ_app c2_decl.wp_binop [Inl c2.result_typ; Inl wpc2; Inl <| Util.ftv Const.imp_lid; Inl <| edge.mlift c1.result_typ wpc1] in
                             let t = {t with k=wpc2.k} in
                             let t = Util.mk_typ_app c2_decl.wp_as_type [Inl c2.result_typ; Inl t] in
-                            ret <| Some (Guard <| {t with k=Kind_type})) 
+                            ret <| Some (NonTrivial <| {t with k=Kind_type})) 
                  end
                    
                | Flex(u, t), Comp ct2 -> 
@@ -518,7 +556,7 @@ let trivial_subtype env eopt t1 t2 =
   match f with 
     | Some Trivial -> ()
     | None 
-    | Some (Guard _) ->  
+    | Some (NonTrivial _) ->  
       let r = match eopt with 
         | None -> Tc.Env.get_range env
         | Some e -> range_of_exp e (Tc.Env.get_range env) in

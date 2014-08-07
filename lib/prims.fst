@@ -60,7 +60,7 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              type trivial ('a:Type) ('wp:WP 'a) = 'wp (fun x => True)
              with Pure ('a:Type) ('pre:Pre) ('post:Post 'a) =
                  PURE 'a
-                   (fun ('p:Post 'a) => 'pre /\ (forall a. 'pre /\ 'post a ==> 'p a)) (* WP *)
+                   (fun ('p:Post 'a) => 'pre /\ (forall a. 'post a ==> 'p a)) (* WP *)
                    (fun ('p:Post 'a) => forall a. 'pre /\ 'post a ==> 'p a)           (* WLP *)
              and Tot ('a:Type) =
                  PURE 'a (fun 'p => (forall (x:'a). 'p x)) (fun 'p => (forall (x:'a). 'p x))
@@ -227,7 +227,7 @@ monad_lattice {
              type trivial ('a:Type) ('wp:WP 'a) = (forall (h0:heap). 'wp (fun r h1 => True) h0)
              with All ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) =
                  ALL 'a
-                   (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)) (* WP *)
+                   (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall ra h1. (Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)) (* WP *)
                    (fun ('p:Post 'a) (h:heap) => forall ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)             (* WLP *)
              and ML ('a:Type) =
                  ALL 'a (fun 'p h0 => forall (a:result 'a) (h:heap). 'p a h) (fun 'p h0 => forall (a:result 'a) (h:heap). 'p a h)

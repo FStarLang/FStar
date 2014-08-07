@@ -19,6 +19,8 @@ exception Impos
 exception NYI of string
 exception Failure of string
 
+val return_all: 'a -> 'a
+
 (* generic utils *)
 type smap<'value> = HashMultiMap<string,'value> (* not relying on representation *)
 val smap_create: int -> smap<'value>
@@ -133,3 +135,4 @@ val mk_ref: 'a -> ref<'a>
 val expand_environment_variable: string -> string
 
 val physical_equality: 'a -> 'a -> bool
+val check_sharing: 'a -> 'a -> string -> unit

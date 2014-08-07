@@ -83,7 +83,6 @@ type env = {
 } 
 and solver_t = {
     solve:env -> typ -> bool;
-    formula_to_string:env -> typ -> string;
 }
 
 let has_interface env l = 

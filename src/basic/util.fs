@@ -24,6 +24,8 @@ open System.IO
 open System.IO.Compression
 open Profiling
 
+let return_all x = x
+
 exception Impos
 exception NYI of string
 exception Failure of string
@@ -349,3 +351,4 @@ let expand_environment_variable s =
   System.Environment.ExpandEnvironmentVariables ("%"^s^"%")
 
 let physical_equality (x:'a) (y:'a) = LanguagePrimitives.PhysicalEquality (box x) (box y)
+let check_sharing a b msg = if physical_equality a b then fprint1 "Sharing OK: %s\n" msg else fprint1 "Sharing broken in %s\n" msg

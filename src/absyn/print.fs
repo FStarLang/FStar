@@ -110,7 +110,7 @@ and comp_typ_to_string c =
       else if not !Options.print_effect_args && (lid_equals c.effect_name Const.ml_effect_lid  || List.contains MLEFFECT c.flags) && not (Util.is_function_typ c.result_typ)
       then typ_to_string c.result_typ
       else if !Options.print_effect_args 
-      then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (String.concat ", " <| List.map effect_arg_to_string c.effect_args)
+      then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (effect_arg_to_string (List.hd c.effect_args))
       else Util.format2 "%s (%s)" (sli c.effect_name) (typ_to_string c.result_typ)
        
 and effect_arg_to_string e = match e with

@@ -113,7 +113,7 @@ let new_cvar env t =
 
 let close_guard (b:list<binding>) (g:guard) : guard = match g with 
   | Trivial -> g
-  | Guard f -> Guard <|
+  | NonTrivial f -> NonTrivial <|
    List.fold_right (fun b f -> match b with 
       | Env.Binding_var(x, t) -> Util.mk_forall x t f
       | Env.Binding_typ(a, k) -> Util.mk_forallT a k f
@@ -121,7 +121,7 @@ let close_guard (b:list<binding>) (g:guard) : guard = match g with
 
 let apply_guard g e = match g with 
     | Trivial -> g
-    | Guard f -> Guard (withkind Kind_type <| Typ_dep(f, e, false))
+    | NonTrivial f -> NonTrivial (withkind Kind_type <| Typ_dep(f, e, false))
 
 let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard =
   match try_subtype env t1 t2 with
@@ -466,19 +466,24 @@ let lift_pure env t f =
   let assume_pure = must <| Tc.Env.lookup_typ_abbrev env Const.assume_pure_lid in
   lift_formula env t assert_pure assume_pure f
 
-let strengthen_precondition env c f = match f with 
+let strengthen_precondition env (c:comp) f = match f with 
   | Trivial -> c
-  | Guard f -> 
+  | NonTrivial f -> 
+    let tt = Util.compress_typ (Util.comp_result c) in
     let c = Tc.Normalize.weak_norm_comp env c in
+//    check_sharing tt (Util.compress_typ <| c.result_typ) "strengthen_precondition 1";
     let res_t, wp, wlp = destruct_comp c in
+//    check_sharing tt (Util.compress_typ res_t) "strengthen_precondition 2";
     let md = Tc.Env.get_monad_decl env c.effect_name in 
     let wp = Util.mk_typ_app md.assert_p [Inl res_t; Inl f; Inl wp] in
     let wlp = Util.mk_typ_app md.assume_p [Inl res_t; Inl f; Inl wlp] in
-    mk_comp md res_t wp wlp []
+    let c2 = mk_comp md res_t wp wlp [] in
+//    check_sharing tt (Util.compress_typ (Util.comp_result c2)) "strengthen_precondition 3";
+    c2
 
 let weaken_precondition env c f = match f with 
   | Trivial -> c
-  | Guard f -> 
+  | NonTrivial f -> 
     if Util.is_ml_comp c then c
     else
       let c = Tc.Normalize.weak_norm_comp env c in
@@ -492,7 +497,7 @@ let bind_cases env (res_t:typ) (cases:list<(option<formula> * comp)>) : comp =
   (if List.length cases = 0 then failwith "Empty cases!"); (* TODO: Fix precedence of semi colon *)
   match cases with 
     | [(None, c)] -> c
-    | [(Some f, c)] -> strengthen_precondition env c (Guard f)
+    | [(Some f, c)] -> strengthen_precondition env c (NonTrivial f)
     | _ -> 
       let caccum, some_pat_matched = cases |> List.fold_left (fun (caccum, prior_pat_matched) (gopt, c) -> 
         let prior_or_c_matched, cguard = match prior_pat_matched, gopt with 
@@ -502,7 +507,7 @@ let bind_cases env (res_t:typ) (cases:list<(option<formula> * comp)>) : comp =
           | None, None -> None, None in
         let c = match cguard with 
           | None -> c
-          | Some g -> weaken_precondition env c (Guard g) in 
+          | Some g -> weaken_precondition env c (NonTrivial g) in 
         match caccum with 
           | None -> (Some c, prior_or_c_matched)
           | Some caccum -> 
@@ -555,13 +560,13 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp =
   let g = Tc.Rel.subtype env tc t in
   match g with 
     | Trivial -> e, Comp c
-    | Guard f -> 
+    | NonTrivial f -> 
       let md = Tc.Env.get_monad_decl env c.effect_name in
       let x = new_bvd None in
       let xexp = Util.bvd_to_exp x t in
       let wp = Util.mk_typ_app md.ret [Inl t; Inr xexp] in
       let cret = mk_comp md t wp wp c.flags in
-      let eq_ret = strengthen_precondition env cret (Guard (Util.mk_typ_app f [Inr xexp])) in
+      let eq_ret = strengthen_precondition env cret (NonTrivial (Util.mk_typ_app f [Inr xexp])) in
       let c = bind env (Comp c) (Some(Env.Binding_var(x, tc)), eq_ret) in
       e, c
 
@@ -578,7 +583,7 @@ let maybe_assume_result_eq_pure_term env (e:exp) (c:comp) : comp =
        let x = Util.new_bvd None in
        let xexp = Util.bvd_to_exp x t in
        let ret = return_value env t xexp in
-       let eq_ret = weaken_precondition env ret (Guard (Util.mk_eq xexp e)) in
+       let eq_ret = weaken_precondition env ret (NonTrivial (Util.mk_eq xexp e)) in
        bind env c (Some (Env.Binding_var(x, t)), eq_ret)
 
 let refine_data_type env l (args:list<either<(btvdef*knd), (option<bvvdef> * typ * bool)>>) (result_t:typ) =
