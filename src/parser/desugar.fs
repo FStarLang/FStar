@@ -425,10 +425,14 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       pos <| Exp_meta(Meta_desugared(mk_app dt args, Data_app)) 
 
     | Abs(binders, body) ->
-      let ftv = List.fold_left (fun ftvs pat ->
+      let _, ftv = List.fold_left (fun (env, ftvs) pat ->
         match pat.pat with
-          | PatAscribed(_, t) -> free_type_vars env t@ftvs
-          | _ -> ftvs) [] binders in
+          | PatAscribed ({pat=PatTvar a}, t) -> 
+            let ftvs = free_type_vars env t@ftvs in 
+            fst <| DesugarEnv.push_local_tbinding env a, ftvs
+          | PatTvar a -> fst <| DesugarEnv.push_local_tbinding env a, ftvs
+          | PatAscribed(_, t) -> env, free_type_vars env t@ftvs
+          | _ -> env, ftvs) (env, []) binders in
       let ftv = sort_ftv ftv in
       let binders = (ftv |> List.map (fun a -> mk_pattern (PatTvar a) top.range))@binders in
       let rec desugar_abs env a = match a.tm with
@@ -494,6 +498,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
             | None -> def
             | Some t -> mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr in
           let def = mk_term (Abs(args, def)) top.range top.level in
+          //let _ = Util.fprint1 "Desugaring let binding: %s\n" (AST.term_to_string def) in
           desugar_exp env def in
         let defs = funs |> List.map (desugar_one_def (if b then env' else env)) in
         let lbs = List.map2 (fun lbname def -> (lbname, tun, def)) fnames defs in

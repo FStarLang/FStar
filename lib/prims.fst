@@ -134,7 +134,7 @@ type refs =
   | AllRefs : refs
   | SomeRefs : v:set aref -> refs
 
-let oneref (r:ref 'a) = Singleton (Ref r)
+(* let oneref (r:ref 'a) = Singleton (Ref r) *)
 
 logic type Modifies (mods:refs) (h:heap) (h':heap) =
     (if b2t (is_AllRefs mods)
