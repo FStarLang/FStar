@@ -583,17 +583,13 @@ and tc_exp env e : exp * comp = match e with
     let env1, topt = Env.clear_expected_typ env in 
     let env1 = Tc.Env.set_expected_typ env1 t in
     let e1, c1 = tc_exp env1 e1 in 
-    let _ = match x with 
-        | Inl xx -> Util.fprint2 "For let %s ... inferred type of e1 = %s\n" (Print.strBvd xx) (norms env c1)
-        | Inr _ -> () in 
     let c1 = Tc.Util.strengthen_precondition env c1 f in
-    let _, e1, c1 = List.hd <| Tc.Util.generalize env1 [x, e1, c1] in
+    let _, e1, c1 = match x with 
+        | Inl _ -> x, e1, c1 (* don't generalize inner lets *) 
+        | _ -> List.hd <| Tc.Util.generalize env1 [x, e1, c1] (* only generalize top-level lets *) in
     let b = binding_of_lb x (Util.comp_result c1) in
     let e2, c2 = tc_exp (Env.push_local_binding env b) e2 in
     let cres = Tc.Util.bind env c1 (Some b, c2) in
-    let _ = match x with 
-        | Inl xx -> Util.fprint3 "For let %s ... e1 = %s\ninferred type of body = %s\n" (Print.strBvd xx) (norms env c1) (norms env cres)
-        | Inr _ -> () in 
     let e = Exp_let((false, [(x, Util.comp_result c1, e1)]), e2) in
     begin match topt, x with 
       | None, Inl bvd -> 
@@ -698,10 +694,15 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
   let guard_env = Env.push_local_binding env (Env.Binding_var(guard_x, pat_t)) in
   let c = 
     let eqs = disj_exps |> List.fold_left (fun fopt e -> 
-          let clause = Util.mk_eq guard_exp e in
-          match fopt with
-            | None -> Some clause
-            | Some f -> Some <| Util.mk_disj clause f) None in 
+        match compress_exp e with 
+            | Exp_uvar _
+            | Exp_constant _ 
+            | Exp_fvar _ -> fopt (* Equation for non-binding forms are handled with the discriminators below *)
+            | e -> 
+              let clause = Util.mk_eq guard_exp e in
+                match fopt with
+                 | None -> Some clause
+                 | Some f -> Some <| Util.mk_disj clause f) None in 
     let c = match eqs, when_clause with
       | None, None -> c
       | Some f, None -> Tc.Util.weaken_precondition env c (NonTrivial f)
