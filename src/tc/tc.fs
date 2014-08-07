@@ -503,7 +503,7 @@ and tc_exp env e : exp * comp = match e with
       | Inl _ -> {env with Tc.Env.instantiate_targs=false}
       | Inr (_, imp) -> {env with Tc.Env.instantiate_vargs=not imp} in
     let f, cf = tc_exp env f in
-    if debug env then Util.print_string <| Util.format2 "Checked function LHS %s at type %s\n" (Print.exp_to_string f) "<hidden>";//(Print.comp_typ_to_string cf);
+    if debug env then Util.print_string <| Util.format2 "Checked function LHS %s at type %s\n" (Print.exp_to_string f) (norms env cf);//Print.comp_typ_to_string cf);
     let is_primop = Util.is_primop f in
     let rec aux (f, tf, (cs:list<Tc.Util.comp_with_binder>), guard, fvs) args = match args with 
       | Inl targ::rest -> 
@@ -583,11 +583,17 @@ and tc_exp env e : exp * comp = match e with
     let env1, topt = Env.clear_expected_typ env in 
     let env1 = Tc.Env.set_expected_typ env1 t in
     let e1, c1 = tc_exp env1 e1 in 
+    let _ = match x with 
+        | Inl xx -> Util.fprint2 "For let %s ... inferred type of e1 = %s\n" (Print.strBvd xx) (norms env c1)
+        | Inr _ -> () in 
     let c1 = Tc.Util.strengthen_precondition env c1 f in
     let _, e1, c1 = List.hd <| Tc.Util.generalize env1 [x, e1, c1] in
     let b = binding_of_lb x (Util.comp_result c1) in
     let e2, c2 = tc_exp (Env.push_local_binding env b) e2 in
     let cres = Tc.Util.bind env c1 (Some b, c2) in
+    let _ = match x with 
+        | Inl xx -> Util.fprint3 "For let %s ... e1 = %s\ninferred type of body = %s\n" (Print.strBvd xx) (norms env c1) (norms env cres)
+        | Inr _ -> () in 
     let e = Exp_let((false, [(x, Util.comp_result c1, e1)]), e2) in
     begin match topt, x with 
       | None, Inl bvd -> 
