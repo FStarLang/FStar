@@ -885,10 +885,10 @@ and tc_decl env se = match se with
   
     | Sig_typ_abbrev(lid, tps, k, t, tags, r) -> 
       let env = Tc.Env.set_range env r in
-      let tps, env = tc_tparams env tps in
-      let t, k1 = tc_typ_trivial env t in 
-      let k2 = tc_kind_trivial env k in 
-      Rel.trivial <| Rel.keq env (Some t) k1 k2;
+      let tps, env' = tc_tparams env tps in
+      let t, k1 = tc_typ_trivial env' t in 
+      let k2 = tc_kind_trivial env' k in 
+      Rel.trivial <| Rel.keq env' (Some t) k1 k2;
       let se = Sig_typ_abbrev(lid, tps, k1, t, tags, r) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env

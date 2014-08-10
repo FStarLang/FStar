@@ -199,7 +199,7 @@ and genKind vars ops size : knd * fvs * int =
         ret <| Kind_tcon(None, k1, k2, false)))
       | _ -> fail (Printf.sprintf "expected a kind; got %A" op)
 
-let genExps nvars size number = 
+let genMany genOne nvars size number = 
   let new_tvar () = Inl (Util.bvd_to_bvar_s (Util.new_bvd None) kun) in
   let new_xvar () = Inr (Util.bvd_to_bvar_s (Util.new_bvd None) tun) in
   let rec freevars out n = 
@@ -210,13 +210,13 @@ let genExps nvars size number =
   let vars = freevars [new_tvar(); new_xvar()] nvars in 
   let rec gen out n = 
     if n = 0 then out
-    else gen (genExp vars codes size::out) (n - 1) in 
+    else gen (genOne vars codes size::out) (n - 1) in 
   vars, gen [] number
 
 let testGen () = 
-  let _, exps = genExps 3 20 10 in 
+  let _, exps = genMany genTyp 3 20 10 in 
   exps |> List.iter (fun (e, _, _) -> 
-    Printf.printf "%s\n" (Print.exp_to_string e))
+    Printf.printf "%s\n" (Print.typ_to_string e))
 
 let mk_subst vars : Syntax.subst = 
   match choose vars with 
@@ -272,7 +272,7 @@ and equal_kinds k1 k2 =
       false
       
 let testDelaySubst nvars size num = 
-  let vars, exps = genExps nvars size num in 
+  let vars, typs = genMany genTyp nvars size num in 
   let contains vars ax = 
     vars |> List.exists (fun by -> match ax, by with 
       | Inl a, Inl b -> Util.bvar_eq a b
@@ -283,20 +283,21 @@ let testDelaySubst nvars size num =
       | Inl(a, t) -> Printf.sprintf "(%s \ '%s)" (Print.typ_to_string t) (Print.strBvd a)
       | Inr(x, e) -> Printf.sprintf "(%s \ %s)" (Print.exp_to_string e) (Print.strBvd x)) |> String.concat ", ") in   
   let count = ref 0 in
-  exps |> List.iter (fun (e, fvs, sz) -> 
+  typs |> List.iter (fun (t, fvs, sz) -> 
     let fvs = fvs |> List.filter (contains vars) in 
-    if List.length fvs <> 0 && sz > 10
+    if List.length fvs <> 0 //&& sz > 10
     then 
-      (* let _ = printfn "Size = %d\n" sz in *)
+      (* let _ = printfn "Size = %d\n" sz in *) 
       let _ = incr count in
       let s = mk_subst fvs in 
-      let e1 = Util.eager_subst_exp s e in
-      let e2 = Util.subst_exp s e in 
-      //      Printf.printf "Subst %s %s ... " (Print.exp_to_string e) (subst_to_string s);
-      if not (equal_exps e1 e2)
-      then (Printf.printf "Subst %s %s ... " (Print.exp_to_string e) (subst_to_string s);
-            Printf.printf "\nExpected:\n\t%s\nGot:\n\t%s\n" (Print.exp_to_string e1) (Print.exp_to_string e2); exit(0))
-      else ()//Printf.printf "ok\n"
+      let t1 = Util.eager_subst_typ s t in
+      let t2 = Util.subst_typ s t in
+      printfn "\n\nSubsadat %s %s ... \n%s\n" (Print.typ_to_string t1) (subst_to_string s) (Print.typ_to_string t2);
+//
+//      if not (equal_exps e1 e2)
+//      then (Printf.printf "Subst %s %s ... " (Print.exp_to_string e) (subst_to_string s);
+//            Printf.printf "\nExpected:\n\t%s\nGot:\n\t%s\n" (Print.exp_to_string e1) (Print.exp_to_string e2); exit(0))
+//      else ()//Printf.printf "ok\n"
     else ());
   Printf.printf "Tested %d cases\n" !count
  

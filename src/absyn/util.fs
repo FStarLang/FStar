@@ -52,9 +52,67 @@ let force_comp = Visit.compress_comp_typ
 let compress_comp = Visit.compress_comp
 
 (********************************************************************************)
+(**************************Utilities for identifiers ****************************)
+(********************************************************************************)
+
+let gensym = 
+  let ctr = mk_ref 0 in 
+  (fun () -> Util.format1 "_%s" (Util.string_of_int (incr ctr; !ctr)))
+    
+let rec gensyms x = match x with
+  | 0 -> []
+  | n -> gensym ()::gensyms (n-1)
+    
+let genident r = 
+  let sym = gensym () in
+  match r with 
+    | None -> mk_ident(sym, dummyRange)
+    | Some r -> mk_ident(sym, r)
+
+let bvd_eq bvd1 bvd2 = bvd1.realname.idText=bvd2.realname.idText
+let range_of_bvd x = x.ppname.idRange
+let mkbvd (x,y) = {ppname=x;realname=y;instantiation=mk_ref None}
+let setsort w t = {v=w.v; sort=t; p=w.p}
+let withinfo e s r = {v=e; sort=s; p=r}
+let withsort e s   = withinfo e s dummyRange
+let bvar_ppname bv = bv.v.ppname 
+let bvar_realname bv = bv.v.realname
+let bvar_eq (bv1:bvar<'a,'b>) (bv2:bvar<'a,'b>) = 
+  (bvar_realname bv1).idText = (bvar_realname bv2).idText
+let lbname_eq l1 l2 = match l1, l2 with
+  | Inl x, Inl y -> bvd_eq x y
+  | Inr l, Inr m -> lid_equals l m
+  | _ -> false
+let fvar_eq fv1 fv2  = lid_equals fv1.v fv2.v
+let bvd_to_bvar_s bvd sort = {v=bvd; sort=sort; p=bvd.ppname.idRange}
+let bvar_to_bvd bv = bv.v
+let btvar_to_typ bv  = withkind kun <| Typ_btvar bv
+let bvd_to_typ bvd k = btvar_to_typ (bvd_to_bvar_s bvd k)
+let bvar_to_exp bv   =  Exp_bvar bv
+let bvd_to_exp bvd t = bvar_to_exp (bvd_to_bvar_s bvd t)
+let new_bvd ropt = let id = genident ropt in mkbvd (id,id)
+let freshen_bvd bvd' = mkbvd(bvd'.ppname, genident (Some <| range_of_bvd bvd'))
+let gen_bvar sort = let bvd = (new_bvd None) in bvd_to_bvar_s bvd sort
+let gen_bvar_p r sort = let bvd = (new_bvd (Some r)) in bvd_to_bvar_s bvd sort
+let bvdef_of_str s = let id = id_of_text s in mkbvd(id, id)
+let set_bvd_range bvd r = {ppname=mk_ident(bvd.ppname.idText, r);
+                           realname=mk_ident(bvd.realname.idText, r);
+                           instantiation=bvd.instantiation}
+let set_lid_range l r = 
+  let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
+  lid_of_ids ids
+let fv l = withinfo l tun (range_of_lid l)
+let fvar l r = Exp_fvar(fv (set_lid_range l r), false)
+let ftv l = withkind kun <| Typ_const (withinfo l Kind_unknown (range_of_lid l))
+let order_bvd x y = match x, y with 
+  | Inl _, Inr _ -> -1
+  | Inr _, Inl _ -> 1
+  | Inl x, Inl y -> String.compare x.ppname.idText y.ppname.idText
+  | Inr x, Inr y -> String.compare x.ppname.idText y.ppname.idText
+
+(********************************************************************************)
 (*************************** Delayed substitutions ******************************)
 (********************************************************************************)
-let bvd_eq bvd1 bvd2 = bvd1.realname.idText=bvd2.realname.idText
 let subst_to_string s = 
   s |> List.map (function Inl (b, _) -> b.realname.idText | Inr (x, _) -> x.realname.idText) |> String.concat ", "
 
@@ -129,117 +187,150 @@ let restrict_subst axs s =
     //if not r then printfn "Filtering %s\n" (match b with Inl (b, _) -> b.realname.idText | Inr (x, _) -> x.realname.idText);
     r)
 
+type red_ctrl = {
+    stop_if_empty_subst:bool;
+    descend:bool
+}
+let alpha_ctrl = {stop_if_empty_subst=false; descend=true} 
+let subst_ctrl = {stop_if_empty_subst=true; descend=true} 
+let null_ctrl = {stop_if_empty_subst=true; descend=false} 
+ 
+
 let rec map_knd s vk mt me descend binders k = 
   subst_kind (restrict_subst binders s) k, descend
 and map_typ s mk vt me descend binders t = 
   subst_typ (restrict_subst binders s) t, descend
 and map_exp s mk me ve descend binders e =
   subst_exp (restrict_subst binders s) e, descend
-and visit_knd s vk mt me descend binders k = 
+and map_comp s mk map_typ map_exp descend binders c = match Visit.compress_comp c with 
+    | Flex (u, t) -> 
+      let t, descend = map_typ descend binders t in
+      Flex(u, t), descend    
+    | Total t -> 
+      let t, descend = map_typ descend binders t in
+      Total t, descend
+    | Comp ct ->
+      let t, descend = map_typ descend binders ct.result_typ in
+      let env, args = List.fold_left (fun (desc, out) -> function
+        | Inl t -> 
+          let t, desc = map_typ desc binders t in
+          desc, Inl t::out
+        | Inr e -> 
+          let e, desc = map_exp desc binders e in
+          desc, Inr e::out) (descend, []) ct.effect_args in 
+      Comp ({ct with result_typ=t; effect_args=List.rev args}), descend 
+and visit_knd s vk mt me ctrl binders k = 
   let k = Visit.compress_kind k in 
-  if descend 
-  then let k, _ = vk false binders k in k, descend
-  else map_knd s vk mt me descend binders k
-and visit_typ s mk vt me descend binders t = 
-  let t = Visit.compress_typ t in
+  if ctrl.descend 
+  then let k, _ = vk null_ctrl binders k in k, ctrl
+  else map_knd s vk mt me null_ctrl binders k
+and visit_typ s mk vt me ctrl binders t = 
+  let visit_prod ax tc = 
+    let ax, s, binders = match ax with 
+    | Inl(a, k) -> 
+      //printfn "Visit prod for %s" (a.ppname.idText ^ a.realname.idText);
+      let k, _ = map_knd s mk vt me null_ctrl binders k in
+      let binders' = Inl a::binders in
+      let s = restrict_subst binders' s in
+      (match s with 
+        | [] when ctrl.stop_if_empty_subst -> Inl(a,k), s, binders'
+        | _ -> 
+            let b = freshen_bvd a in
+            let s = Inl(a, bvd_to_typ b k)::s in
+            Inl(b,k), s, Inl b::binders)
+    | Inr(x, t1) -> 
+      let t1, _ = map_typ s mk vt me null_ctrl binders t1 in
+      let binders' = Inr x::binders in
+      let s = restrict_subst binders s in 
+      (match s with
+        | [] when ctrl.stop_if_empty_subst -> Inr(x,t1), s, binders
+        | _ -> 
+           let y = freshen_bvd x in
+           let s = Inr(x, bvd_to_exp y t)::s in
+           Inr(y,t1), s, Inr y::binders) in
+     let tc = match s, tc with 
+        | [], _ -> tc
+        | _, Inl t -> Inl (fst <| map_typ s mk vt me null_ctrl binders t)
+        | _, Inr c -> Inr (fst <| map_comp s mk (map_typ s mk vt me) (map_exp s mk vt me) null_ctrl binders c) in
+     ax, tc  in
+
   match t.t with
     | Typ_btvar a -> 
       //printfn "Trying to subst. %s with [%s]\n" (a.v.realname.idText) (s |> subst_to_string);
-      compress_typ <| subst_tvar (restrict_subst binders s) t, descend
-    | _ when (not descend) -> map_typ s mk vt me descend binders t
-    | _ -> let t, _ = vt false binders t in t, descend
-and visit_exp s mk me ve descend binders e =
+      compress_typ <| subst_tvar (restrict_subst binders s) t, ctrl
+    
+    | _ when (not ctrl.descend) -> map_typ s mk vt me null_ctrl binders t
+
+//     (* all the binding forms need to be alpha-converted to avoid capture *)
+//    | Typ_fun(Some x, t, c, b) ->
+//        (match visit_prod (Inr(x,t)) (Inr c) with 
+//            | Inr(y,t), Inr c -> withkind Kind_type <| Typ_fun(Some y, t, c, b), ctrl
+//            | _ -> failwith "Impossible")
+//
+//    | Typ_univ(a, k, c) -> 
+//         (match visit_prod (Inl(a,k)) (Inr c) with 
+//            | Inl(a,k), Inr c -> withkind Kind_type <| Typ_univ(a, k, c), ctrl
+//            | _ -> failwith "Impossible")
+//
+//    | Typ_refine(x, t1, t2) -> 
+//        (match visit_prod (Inr(x,t1)) (Inl t2) with 
+//            | Inr(x,t1), Inl t2 -> withkind Kind_type <| Typ_refine(x, t1, t2), ctrl
+//            | _ -> failwith "Impossible")
+//    
+//    | Typ_lam(x, t1, t2) -> 
+//        (match visit_prod (Inr(x,t1)) (Inl t2) with 
+//            | Inr(x,t1), Inl t2 -> withkind t.k <| Typ_lam(x, t1, t2), ctrl
+//            | _ -> failwith "Impossible")
+//    
+//    | Typ_tlam(a, k, t2) -> 
+//        (match visit_prod (Inl(a,k)) (Inl t2) with 
+//            | Inl(a,k), Inl t2 -> withkind t.k <| Typ_tlam(a, k, t2), ctrl
+//            | _ -> failwith "Impossible")
+    
+    | _ -> let t, _ = vt null_ctrl binders t in t, ctrl
+and visit_exp s mk me ve ctrl binders e =
   let e = Visit.compress_exp e in 
   match e with 
-    | Exp_bvar _ -> compress_exp <| subst_xvar (restrict_subst binders s) e, descend
-    | _ when (not descend) -> map_exp s mk me ve descend binders e
-    | _ -> let e, _ = ve false binders e in e, descend
+    | Exp_bvar _ -> compress_exp <| subst_xvar (restrict_subst binders s) e, ctrl
+    | _ when (not ctrl.descend) -> map_exp s mk me ve ctrl binders e
+    | _ -> let e, _ = ve null_ctrl binders e in e, ctrl
+
 and compress_kind k = match Visit.compress_kind k with 
   | Kind_delayed (k',s, m) ->
-    let k' = fst <| Visit.reduce_kind (visit_knd s) (map_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp true [] k' in
+    let k' = fst <| Visit.reduce_kind (visit_knd s) (map_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp subst_ctrl [] k' in
     m := Some k'; 
     k'
   | k -> k
 and compress_typ t = match Visit.compress_typ t with 
   | {t=Typ_delayed (t', s, m)} ->
-    let res = fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp true [] t' in
+    let res = fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp subst_ctrl [] t' in
     m := Some res;
     //printfn "Compressing %A ... got %A\n" t' res;
     res
   | t -> t
 and compress_exp e = match Visit.compress_exp e with 
   | Exp_delayed (e',s, m) ->
-    let e = fst <| Visit.reduce_exp (map_knd s) (map_typ s) (visit_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp true [] e' in
+    let e = fst <| Visit.reduce_exp (map_knd s) (map_typ s) (visit_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp subst_ctrl [] e' in
     m := Some e;
     e
   | e -> e
-
+  
+let alpha_typ t = 
+   let t = compress_typ t in
+   let s = [] in
+   Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp alpha_ctrl [] t 
+    
 let compress_typ_opt = function
     | None -> None
     | Some t -> Some (compress_typ t)
 
-(********************************************************************************)
-(**************************Utilities for identifiers ****************************)
-(********************************************************************************)
 let mk_discriminator lid = 
   lid_of_ids (lid.ns@[Syntax.mk_ident("is_" ^ lid.ident.idText, lid.ident.idRange)])
-
-let gensym = 
-  let ctr = mk_ref 0 in 
-  (fun () -> Util.format1 "_%s" (Util.string_of_int (incr ctr; !ctr)))
-    
-let rec gensyms x = match x with
-  | 0 -> []
-  | n -> gensym ()::gensyms (n-1)
-    
-let genident r = 
-  let sym = gensym () in
-  match r with 
-    | None -> mk_ident(sym, dummyRange)
-    | Some r -> mk_ident(sym, r)
 
 let is_name (lid:lident) = 
   let c = Util.char_at lid.ident.idText 0 in
   Util.is_upper c
 
-let range_of_bvd x = x.ppname.idRange
-let mkbvd (x,y) = {ppname=x;realname=y;instantiation=mk_ref None}
-let setsort w t = {v=w.v; sort=t; p=w.p}
-let withinfo e s r = {v=e; sort=s; p=r}
-let withsort e s   = withinfo e s dummyRange
-let bvar_ppname bv = bv.v.ppname 
-let bvar_realname bv = bv.v.realname
-let bvar_eq (bv1:bvar<'a,'b>) (bv2:bvar<'a,'b>) = 
-  (bvar_realname bv1).idText = (bvar_realname bv2).idText
-let lbname_eq l1 l2 = match l1, l2 with
-  | Inl x, Inl y -> bvd_eq x y
-  | Inr l, Inr m -> lid_equals l m
-  | _ -> false
-let fvar_eq fv1 fv2  = lid_equals fv1.v fv2.v
-let bvd_to_bvar_s bvd sort = {v=bvd; sort=sort; p=bvd.ppname.idRange}
-let bvar_to_bvd bv = bv.v
-let btvar_to_typ bv  = withkind kun <| Typ_btvar bv
-let bvd_to_typ bvd k = btvar_to_typ (bvd_to_bvar_s bvd k)
-let bvar_to_exp bv   =  Exp_bvar bv
-let bvd_to_exp bvd t = bvar_to_exp (bvd_to_bvar_s bvd t)
-let new_bvd ropt = let id = genident ropt in mkbvd (id,id)
-let gen_bvar sort = let bvd = (new_bvd None) in bvd_to_bvar_s bvd sort
-let gen_bvar_p r sort = let bvd = (new_bvd (Some r)) in bvd_to_bvar_s bvd sort
-let bvdef_of_str s = let id = id_of_text s in mkbvd(id, id)
-let set_bvd_range bvd r = {ppname=mk_ident(bvd.ppname.idText, r);
-                           realname=mk_ident(bvd.realname.idText, r);
-                           instantiation=bvd.instantiation}
-let set_lid_range l r = 
-  let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
-  lid_of_ids ids
-let fv l = withinfo l tun (range_of_lid l)
-let fvar l r = Exp_fvar(fv (set_lid_range l r), false)
-let ftv l = withkind kun <| Typ_const (withinfo l Kind_unknown (range_of_lid l))
-let order_bvd x y = match x, y with 
-  | Inl _, Inr _ -> -1
-  | Inr _, Inl _ -> 1
-  | Inl x, Inl y -> String.compare x.ppname.idText y.ppname.idText
-  | Inr x, Inr y -> String.compare x.ppname.idText y.ppname.idText
 
 let ml_comp t r =  
   Comp ({effect_name=set_lid_range Const.ml_effect_lid r;

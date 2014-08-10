@@ -549,7 +549,9 @@ let try_subtype env t1 t2 = trel true SUB env t1 t2
 let subtype env t1 t2 : guard = 
   match try_subtype env t1 t2 with
     | Some f -> f
-    | None -> raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env))
+    | None -> 
+     Util.fprint2 "Incompatible types %s\nand %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
+     raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env))
 
 let trivial_subtype env eopt t1 t2 = 
   let f = try_subtype env t1 t2 in 

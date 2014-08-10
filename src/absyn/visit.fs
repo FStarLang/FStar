@@ -582,7 +582,7 @@ let rec reduce_kind
   and map_exp env binders e = reduce_exp map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders e
   in
   map_kind env binders k
-    
+      
 and reduce_typ 
     (map_kind': mapper<'env, knd, knd>)
     (map_typ': mapper<'env, typ, typ>)
@@ -596,7 +596,7 @@ and reduce_typ
         let binders = push_vbinder binders xopt in 
         t::out, binders, env) ([], binders, env) tl in
     List.rev tl, env 
-  and map_comp env binders c = match compress_comp c with 
+  and map_comp (env:'env) (binders:list<either<btvdef,bvvdef>>) (c:comp) = match compress_comp c with 
     | Flex (u, t) -> 
       let t, env = map_typ env binders t in
       Flex(u, t), env    
@@ -613,6 +613,7 @@ and reduce_typ
           let e, env = map_exp env binders e in
           env, Inr e::out) (env, []) ct.effect_args in 
       Comp ({ct with result_typ=t; effect_args=List.rev args}), env 
+
   and visit_typ env binders t = 
     let kl, tl, cl, el, env = match (compress_typ t).t with 
       | Typ_delayed _ -> failwith "Impossible"

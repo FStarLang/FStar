@@ -242,7 +242,8 @@ let record_cache : ref<list<record>> = Util.mk_ref []
 let extract_record (e:env) = function 
   | Sig_bundle(sigs, _) -> 
     let is_rec = Util.for_some (function 
-      | RecordType _ -> true
+      | RecordType _ 
+      | RecordConstructor _ -> true
       | _ -> false) in
     
     let find_dc dc = 

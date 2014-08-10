@@ -80,8 +80,8 @@ and typ_to_string x =
   | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)
   | Typ_btvar btv -> 
     (match !btv.v.instantiation with 
-      | None -> strBvd btv.v
-      | Some x -> x|> typ_to_string)
+      | None -> Util.format2 "%s:%s" (strBvd btv.v) (kind_to_string x.k)
+      | Some x -> x |> typ_to_string)
   | Typ_const v -> Util.format1 "%s" (sli v.v)
   | Typ_fun(Some x, t1, t2, imp) -> Util.format "%s%s(%s) -> %s"  [strBvd x; (if imp then "@" else ":"); (t1 |> typ_to_string); (t2|> comp_typ_to_string)]
   | Typ_fun(None, t1, t2, _) -> Util.format "(%s) -> %s"  [(t1 |> typ_to_string); (t2|> comp_typ_to_string)]
@@ -97,7 +97,7 @@ and typ_to_string x =
     else t|> typ_to_string
   | Typ_unknown -> "_"
   | Typ_uvar(uv, k) -> (match Visit.compress_typ_aux false x with 
-      | {t=Typ_uvar _} -> Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv))
+      | {t=Typ_uvar _} -> Util.format2 "'U%s_%s"  (Util.string_of_int (Unionfind.uvar_id uv)) (kind_to_string k)
       | t -> t|> typ_to_string)
       
 and comp_typ_to_string c =
