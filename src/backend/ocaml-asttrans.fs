@@ -556,7 +556,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
                 ((x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) :: types, ctors)
             end
 
-            | Sig_datacon (x, ty, pr, rg) ->
+            | Sig_datacon (x, ty, pr, _, rg) ->
                 (types, (x.ident.idText, (ty, pr)) :: ctors)
 
             | _ ->
@@ -663,7 +663,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
         | Struct -> Some (Inr (MLM_Ty aout))
     end
 
-    | Sig_datacon (x, ty, tx, rg) when as_tprims tx = Some Exn -> begin
+    | Sig_datacon (x, ty, tx, _, rg) when as_tprims tx = Some Exn -> begin
         let rec aux acc ty =
             match (Absyn.Util.compress_typ ty).t with
             | Typ_fun (_, ty1, c, _) ->

@@ -930,7 +930,7 @@ and desugar_type_binder env b = match b.b with
   | _ -> raise (Error("Unexpected domain of an arrow or sum (expected a kind)", b.brange))
 
 let mk_data_ops env = function
-  | Sig_datacon(lid, t, _, _) when not env.interf ->
+  | Sig_datacon(lid, t, _, _, _) when not env.iface ->
     let args, tcod = collect_formals t in
     let tconstr = Util.comp_result tcod in
     //Printf.printf "Collecting formals from type %s; got %s with args %d\n" (Print.typ_to_string t) (Print.typ_to_string tconstr) (List.length args);
@@ -1040,11 +1040,11 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, fields) ->
       let constrName = mk_ident("Mk" ^ id.idText, id.idRange) in
-      let fields = List.map (fun (x,t) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr false) fields in
+      let mfields = List.map (fun (x,t) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr false) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) parms in
-      let constrTyp = mk_term (Product(fields, with_constructor_effect result)) id.idRange Type in
+      let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type in
       //let _ = Util.print_string (Util.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in 
-      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false)])
+      TyconVariant(id, parms, kopt, [(constrName, Some constrTyp, false)]), fields |> List.map fst
     | _ -> failwith "impossible" in
   let desugar_abstract_tc quals _env mutuals = function
     | TyconAbstract(id, binders, kopt) ->
@@ -1086,7 +1086,8 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
 
     | [TyconRecord _] ->
       let trec = List.hd tcs in
-      desugar_tycon env rng (Logic_record::quals) [tycon_record_as_variant trec]
+      let t, fs = tycon_record_as_variant trec in
+      desugar_tycon env rng (RecordType fs::quals) [t]
 
     |  _::_ ->
       let env0 = env in
@@ -1096,7 +1097,8 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
         match tc with
           | TyconRecord _ ->
             let trec = tc in
-            collect_tcs (env, tcs, Logic_record::quals) (tycon_record_as_variant trec)
+            let t, fs = tycon_record_as_variant trec in
+            collect_tcs (env, tcs, RecordType fs::quals) t
           | TyconVariant(id, binders, kopt, constructors) ->
             let env, (_, tps), se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
             env, Inl(se, tps, constructors, tconstr)::tcs, quals
@@ -1126,7 +1128,10 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                     | Some t -> t in
                 let t = desugar_typ (total env_tps) (close env_tps t) in
                 let name = qualify env id in
-                (name, Sig_datacon(name, close_typ tps t, tname, rng)))) in
+                let quals = tags |> List.collect (function 
+                    | RecordType fns -> [RecordConstructor fns]
+                    | _ -> []) in
+                (name, Sig_datacon(name, close_typ tps t, tname, quals, rng)))) in
               Sig_tycon(tname, tpars, k, mutuals, constrNames, tags, rng)::constrs
         | _ -> failwith "impossible") in
       let bundle = Sig_bundle(sigelts, rng) in
@@ -1193,7 +1198,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
 
   | Exception(id, None) ->
     let t = fail_or env  (try_lookup_typ_name env) Const.exn_lid in
-    let se = Sig_datacon(qualify env id, t, Const.exn_lid, d.drange) in
+    let se = Sig_datacon(qualify env id, t, Const.exn_lid, [ExceptionConstructor], d.drange) in
     let env = push_sigelt env se in
     let data_ops = mk_data_ops env se in
     let env = List.fold_left push_sigelt env data_ops in
@@ -1202,7 +1207,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | Exception(id, Some term) ->
     let t = desugar_typ env term in
     let t = withkind kun <| Typ_fun(None, t, Util.total_comp (fail_or env (try_lookup_typ_name env) Const.exn_lid) id.idRange, false) in
-    let se = Sig_datacon(qualify env id, t, Const.exn_lid, d.drange) in
+    let se = Sig_datacon(qualify env id, t, Const.exn_lid, [ExceptionConstructor], d.drange) in
     let env = push_sigelt env se in
     let data_ops = mk_data_ops env se in
     let env = List.fold_left push_sigelt env data_ops in

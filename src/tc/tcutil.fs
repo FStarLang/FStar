@@ -131,7 +131,27 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard =
     | Some f -> 
         Exp_ascribed(e, t2), apply_guard f e
 
-let destruct_function_typ env (t:typ) (xopt:option<bvvdef>) (f:option<exp>) (imp_arg_follows:bool) (default_ml:bool) : (typ * option<exp>) = 
+let new_function_typ env (x:bvvdef) = 
+    let arg = new_tvar env Kind_type in
+    let res = new_tvar env Kind_type in 
+    let eff = new_cvar env res in
+    withkind Kind_type <| Typ_fun(Some x, arg, eff, false) 
+
+let new_poly_typ env (a:btvdef) = 
+    let arg = new_kvar env in
+    let res = new_tvar (Tc.Env.push_local_binding env (Tc.Env.Binding_typ(a, arg))) Kind_type in 
+    let eff = new_cvar env res in
+    withkind Kind_type <| Typ_univ(a, arg, eff) 
+  
+let uvar_as_function_typ env (topt:option<typ>) (x:bvvdef) = 
+    let tf = new_function_typ env x in
+    match topt with 
+      | Some t -> 
+        trivial <| teq env t tf; //forces a unification
+        tf
+      | _ -> tf
+
+let destruct_function_typ env (t:typ) (xopt:option<bvvdef>) (f:option<exp>) (imp_arg_follows:bool) (default_effect:option<lident>) : (typ * option<exp>) = 
   let fail subst t f = 
     let _ = match f with 
       | Some e -> Util.print_string (Util.format1 "destruct function type failed on expression %s\n" (Print.exp_to_string e))
@@ -143,7 +163,14 @@ let destruct_function_typ env (t:typ) (xopt:option<bvvdef>) (f:option<exp>) (imp
       | Typ_uvar _ when (not imp_arg_follows) -> 
         let arg = new_tvar env Kind_type in
         let res = new_tvar env Kind_type in 
-        let eff, xopt = if default_ml then Util.ml_comp res (Env.get_range env), None else new_cvar env res, xopt in
+        let eff, xopt = match default_effect with 
+            | None -> new_cvar env res, xopt
+            | Some l -> 
+                if lid_equals l Const.ml_effect_lid
+                then Util.ml_comp res (Env.get_range env), None 
+                else if lid_equals l Const.tot_effect_lid 
+                then Total res, None
+                else new_cvar env res, xopt in
         let tf = withkind Kind_type <| Typ_fun(xopt, arg, eff, false) in
         trivial <| teq env t tf;
         (tf, f)
@@ -379,6 +406,17 @@ let lift_and_destruct env c1 c2 =
   let md = Tc.Env.get_monad_decl env m in
   let a, kwp = Tc.Env.wp_signature env md.mname in
   (md, a, kwp), (destruct_comp m1), destruct_comp m2
+
+let force_total c = match compress_comp c with 
+    | Total t -> Some t
+    | Flex(u, t) -> 
+        let tot = Total t in
+        Unionfind.change u (Resolved tot);
+        Some t
+    | Comp c -> 
+        if Util.is_pure_comp (Comp c )
+        then Some c.result_typ
+        else None 
 
 let is_pure env c = 
   let c = Tc.Normalize.weak_norm_comp env c in
@@ -654,6 +692,16 @@ let check_uvars r t =
   if List.length uvt.uvars_e + List.length uvt.uvars_t + List.length uvt.uvars_k > 0
   then Tc.Errors.report r "Unconstrained unification variables; please add an annotation"
 
+let discharge_guard env g = 
+    if not (!Options.verify) then ()
+    else match g with 
+        | Trivial -> ()
+        | NonTrivial vc -> 
+            let vc = Normalize.norm_typ [Normalize.Delta; Normalize.Beta] env vc in
+             if Tc.Env.debug env then Tc.Errors.diag (Tc.Env.get_range env) (Util.format1 "Checking VC=\n%s\n" (Print.formula_to_string vc));
+            if not <| env.solver.solve env vc
+            then Tc.Errors.report (Tc.Env.get_range env) (Tc.Errors.failed_to_prove_specification [])
+   
 let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) = 
 //  let _ = printfn "Generalizing %s\n" (Print.typ_to_string (Util.comp_result c)) in
 //  let _ = printfn "In normal form %s\n" (Print.typ_to_string (Normalize.norm_typ  [Normalize.Beta; Normalize.Delta; Normalize.SNComp; Normalize.DeltaComp] env (Util.comp_result c))) in 
@@ -670,6 +718,11 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
      let gen_uvars uvs = 
        uvs |> List.filter (fun (uv,_) -> not (env_uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
      let uvars = ecs |> List.map (fun (x, e, c) -> 
+      let t = Util.comp_result c in 
+      match Util.compress_typ t with 
+        | {t=Typ_univ _} -> (* explicit abstractions need not be generalized *)
+          (x, [], e, Util.force_comp c)
+        | _ -> 
       let c = norm c in //Util.force_comp c in
       let t = c.result_typ in
       let uvt = Util.uvars_in_typ t in

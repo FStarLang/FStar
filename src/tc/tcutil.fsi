@@ -37,7 +37,11 @@ val pat_as_exps: env -> pat -> list<exp>
 val generalize: env -> list<(lbname*exp*comp)> -> (list<(lbname*exp*comp)>)
 val maybe_instantiate : env -> exp -> typ -> (exp * comp)
 val destruct_comp: comp_typ -> (typ * typ * typ)
-val destruct_function_typ : env -> typ -> option<bvvdef> -> option<exp> -> bool -> bool -> (typ * option<exp>)
+val new_function_typ: env -> bvvdef -> typ
+val new_poly_typ: env -> btvdef -> typ
+val uvar_as_function_typ: env -> option<typ> -> bvvdef -> typ
+
+val destruct_function_typ : env -> typ -> option<bvvdef> -> option<exp> -> bool -> option<lident> -> (typ * option<exp>)
 val destruct_poly_typ: env -> typ -> exp -> typ -> (typ*exp) 
 val destruct_tcon_kind: env -> knd -> typ -> bool -> (knd*typ)
 val destruct_dcon_kind: env -> knd -> typ -> bool -> (knd*typ)
@@ -45,6 +49,7 @@ val mk_basic_dtuple_type: env -> int -> typ
 val extract_lb_annotation: bool -> env -> typ -> exp -> typ
 
 type comp_with_binder = option<Env.binding> * comp
+val force_total: comp -> option<typ>
 val is_pure: env -> comp -> bool
 val return_value: env -> typ -> exp -> comp
 val bind: env -> comp -> comp_with_binder -> comp
@@ -58,3 +63,5 @@ val close_guard: list<Tc.Env.binding> -> guard -> guard
 val close_comp: env -> list<binding> -> comp -> comp
 val check_comp: env -> exp -> comp -> comp -> exp * comp * guard
 val refine_data_type: env -> lident -> list<Util.either<(btvdef * knd), (option<bvvdef> * typ * bool)>> -> typ -> typ
+
+val discharge_guard: env -> guard -> unit

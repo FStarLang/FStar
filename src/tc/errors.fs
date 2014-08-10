@@ -129,5 +129,11 @@ let kind_has_a_non_trivial_precondition k =
 let expected_pure_expression e c =
   format2 "Expected a pure expression; got an expression \"%s\" with effect \"%s\"" (Print.exp_to_string e) (fst <| name_and_result c)
 
+let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
+  format2 "Expected a computation with effect %s; but it has effect %s\n" (Print.sli c1) (Print.sli c2)
+
 let failed_to_prove_specification_of l lbls = 
   format2 "Failed to prove specification of %s; assertions at [%s] may fail" (Print.lbname_to_string l) (lbls |> String.concat ", ")
+
+let failed_to_prove_specification lbls = 
+  format1 "Failed to prove specification; assertions at [%s] may fail" (lbls |> String.concat ", ")

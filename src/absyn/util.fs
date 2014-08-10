@@ -174,6 +174,10 @@ and compress_exp e = match Visit.compress_exp e with
     e
   | e -> e
 
+let compress_typ_opt = function
+    | None -> None
+    | Some t -> Some (compress_typ t)
+
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
@@ -331,6 +335,10 @@ let tpos t = match t.t with
   | Typ_const l -> range_of_lid l.v
   | _ -> failwith "Missing position info"
 
+let is_fun e = match compress_exp e with 
+    | Exp_abs _
+    | Exp_tabs _ -> true
+    | _ -> false
 
 let rec pre_typ t = 
     let t = compress_typ t in 
@@ -360,7 +368,7 @@ let rec lids_of_sigelt se = match se with
   | Sig_bundle(ses, _) -> List.collect lids_of_sigelt ses
   | Sig_tycon (lid, _, _,  _, _, _, _)    
   | Sig_typ_abbrev  (lid, _, _, _, _, _)
-  | Sig_datacon (lid, _, _, _)
+  | Sig_datacon (lid, _, _, _, _)
   | Sig_val_decl (lid, _, _, _) 
   | Sig_assume (lid, _, _, _) -> [lid]
   | Sig_let((_, lbs), _) -> List.map (function 
@@ -376,7 +384,7 @@ let range_of_sigelt x = match x with
   | Sig_bundle(_, r) 
   | Sig_tycon (_, _, _,  _, _, _, r)    
   | Sig_typ_abbrev  (_, _, _, _, _, r)
-  | Sig_datacon (_, _, _, r)
+  | Sig_datacon (_, _, _, _, r)
   | Sig_val_decl (_, _, _, r) 
   | Sig_assume (_, _, _, r)
   | Sig_let(_, r) 
@@ -985,6 +993,11 @@ let rec is_wild_pat p =
     | Pat_withinfo (p, _) -> is_wild_pat p
     | _ -> false
 
+let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange) 
+let unmangle_field_name x = 
+    if Util.starts_with x.idText "^fname^"
+    then mk_ident(Util.substring_from x.idText 7, x.idRange)
+    else x
 
 (**************************************************************************************)
 (* Destructing a type as a formula *)

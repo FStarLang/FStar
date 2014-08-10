@@ -46,7 +46,7 @@ type env = {
   sigmap: Util.smap<(sigelt * bool)>; (* bool indicates that this was declared in an interface file *)
   effect_names:list<lident>;
   default_result_effect:typ -> Range.range -> comp;
-  interf:bool
+  iface:bool
 }
 
 type record = {
@@ -72,8 +72,6 @@ type occurrence =
 type foundname = 
   | Exp_name of occurrence * exp
   | Typ_name of occurrence * typ
-val mangle_field_name: ident -> ident
-val unmangle_field_name: ident -> ident
 val try_lookup_name : bool -> bool -> env -> lident -> option<foundname> 
 val try_lookup_typ_var: env -> ident -> option<typ>
 val resolve_in_open_namespaces: env -> lident -> (lident -> option<'a>) -> option<'a>

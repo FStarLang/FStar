@@ -244,6 +244,12 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
                 Util.find_map env.gamma (function 
                 | Binding_sig (Sig_monads _) -> None
                 | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl t) else None
+                | Binding_sig (Sig_bundle(ses, _)) -> 
+                    Util.find_map ses (fun se -> 
+                        let l = lids_of_sigelt se in
+                        if lids_of_sigelt se |> Util.for_some (lid_equals lid)
+                        then Some (Inr se)
+                        else None)
                 | Binding_sig s -> 
                   let lids = lids_of_sigelt s in 
                   if lids |> Util.for_some (lid_equals lid) then Some (Inr s) else None
@@ -273,7 +279,7 @@ let lookup_lid env lid =
     raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid)) in
   let mapper = function
     | Inl t
-    | Inr (Sig_datacon(_, t, _, _))  
+    | Inr (Sig_datacon(_, t, _, _,_))  
     | Inr (Sig_val_decl (_, t, _, _)) 
     | Inr (Sig_let((_, [(_, t, _)]), _)) -> Some t 
     | Inr (Sig_let((_, lbs), _)) -> 
@@ -291,19 +297,19 @@ let lookup_lid env lid =
 
 let lookup_datacon env lid = 
   match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, t, _, _))) -> t
+    | Some (Inr (Sig_datacon (_, t, _, _,_))) -> t
     | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
       
 let is_datacon env lid = 
   match lookup_qname env lid with
     | Some (Inr(Sig_val_decl(_, _, quals, _))) -> quals |> Util.for_some (function Assumption -> true | _ -> false)
-    | Some (Inr (Sig_datacon (_, t, _, _))) -> true
+    | Some (Inr (Sig_datacon (_, t, _, _,_))) -> true
     | _ -> false
 
 let is_record env lid =
   match lookup_qname env lid with 
     | Some (Inr (Sig_tycon(_, _, _, _, _, tags, _))) -> 
-        Util.for_some (function Logic_record -> true | _ -> false) tags 
+        Util.for_some (function RecordType _ | RecordConstructor _ -> true | _ -> false) tags 
     | _ -> false
 
 let lookup_datacons_of_typ env lid = 
@@ -341,9 +347,9 @@ let lookup_operator env (opname:ident) =
     lookup_lid env primName
       
 let rec push_sigelt en s : env = 
-  match s with 
-    | Sig_bundle(ses, _) -> List.fold_left push_sigelt en ses 
-    | _ -> 
+//  match s with 
+//    | Sig_bundle(ses, _) -> List.fold_left push_sigelt en ses 
+//    | _ -> 
       let env0 = en in
       let env = build_lattice ({en with gamma=Binding_sig s::en.gamma}) s in
       let _ = match s with 

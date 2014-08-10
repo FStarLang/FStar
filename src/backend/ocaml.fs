@@ -621,7 +621,7 @@ let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
                     unsupported rg
             end
 
-            | Sig_datacon (x, ty, pr, rg) ->
+            | Sig_datacon (x, ty, pr, _, rg) ->
                 (types, (x.ident.idText, (ty, pr)) :: ctors)
 
             | Sig_val_decl (_, _, _, rg)
@@ -799,7 +799,7 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
     | Sig_assume         _ -> env, None
     | Sig_val_decl       _ -> env, None
 
-    | Sig_datacon (x, ty, n, rg) when is_exn n ->
+    | Sig_datacon (x, ty, n, _, rg) when is_exn n ->
         let rec aux acc ty =
             match (Absyn.Util.compress_typ ty).t with
             | Typ_fun (_, ty1, c, _) -> 

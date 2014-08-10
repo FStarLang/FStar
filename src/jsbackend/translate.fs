@@ -216,7 +216,7 @@ and compile_def (d:sigelt) =
         | [] -> ()
         in aux 0 vnames
     in match d with
-    | Sig_datacon(n,ty,_,_) ->
+    | Sig_datacon(n,ty,_,_,_) ->
         let fields = type_vars ty.t in
         Util.smap_add constructors n.str ((match fields with []->Some(1) | _ -> None), None);
         add_fieldnames n.str fields

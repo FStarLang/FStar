@@ -94,11 +94,10 @@ assume logic val SelHeap : #'a:Type -> heap -> ref 'a -> Tot 'a
 assume logic val UpdHeap : #'a:Type -> heap -> ref 'a -> 'a -> Tot heap
 assume logic val EmpHeap : heap
 assume logic val InHeap  : #'a:Type -> heap -> ref 'a -> Tot bool
-assume SelUpd1: forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (SelHeap (UpdHeap h x v) x)} SelHeap (UpdHeap h x v) x == x
+assume SelUpd1: forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (SelHeap (UpdHeap h x v) x)} SelHeap (UpdHeap h x v) x == v
 assume SelUpd2: forall ('a:Type) ('b:Type) (h:heap) (x:ref 'a) (y:ref 'b) (v:'b).{:pattern (SelHeap (UpdHeap h y v) x)} y=!=x ==> SelHeap (UpdHeap h y v) x == SelHeap h x
 assume InHeap1:  forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (InHeap (UpdHeap h x v) x)} InHeap (UpdHeap h x v) x == true
 assume InHeap2:  forall ('a:Type) ('b:Type) (h:heap) (x:ref 'a) (y:ref 'b) (v:'b).{:pattern (InHeap (UpdHeap h y v) x)} y=!=x ==> InHeap (UpdHeap h y v) x == InHeap h x
-
 
 assume type set : Type => Type
 assume logic val EmptySet : 'a:Type -> Tot (set 'a)
@@ -111,12 +110,12 @@ logic type Subset : #'a:Type => set 'a => set 'a => Type
 type SubsetEq : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => (SetEqual s1 s2 \/ Subset s1 s2)
 type Supset   : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => Subset s2 s1
 type SupsetEq : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => (SetEqual s1 s2 \/ Supset 'a s1 s2)
-assume InEmptySet:     forall 'a (a:'a). ~(InSet a EmptySet)
-assume InSingleton:    forall 'a (a:'a). InSet a (Singleton a)
-assume InSingletonInv: forall 'a 'b (a:'a) (b:'a). InSet a (Singleton b) <==> a==b
-assume InUnion:        forall 'a s1 s2 (a:'a). InSet a (Union s1 s2) <==> (InSet a s1 \/ InSet a s1)
-assume InUnionL:       forall 'a s1 s2 (a:'a). InSet a s1 ==> InSet a (Union s1 s2)
-assume InUnionR:       forall 'a s1 s2 (a:'a). InSet a s2 ==> InSet a (Union s1 s2)
+assume InEmptySet:     forall 'a (a:'a).{:pattern InSet a EmptySet} ~(InSet a EmptySet)
+assume InSingleton:    forall 'a (a:'a).{:pattern InSet a (Singleton a)} InSet a (Singleton a)
+assume InSingletonInv: forall 'a (a:'a) (b:'a).{:pattern InSet a (Singleton b)} InSet a (Singleton b) <==> a==b
+assume InUnion:        forall 'a s1 s2 (a:'a).{:pattern InSet a (Union s1 s2)} InSet a (Union s1 s2) <==> (InSet a s1 \/ InSet a s1)
+assume InUnionL:       forall 'a s1 s2 (a:'a).{:pattern InSet a (Union s1 s2)} InSet a s1 ==> InSet a (Union s1 s2)
+assume InUnionR:       forall 'a s1 s2 (a:'a).{:pattern InSet a (Union s1 s2)} InSet a s2 ==> InSet a (Union s1 s2)
 assume UnionIdemL:     forall 'a (s1:set 'a) (s2:set 'a).{:pattern Union (Union s1 s2) s2} Union (Union s1 s2) s2 == Union s1 s2
 assume UnionIdemR:     forall 'a (s1:set 'a) (s2:set 'a).{:pattern Union s1 (Union s1 s2)} Union s1 (Union s1 s2) == Union s1 s2
 (* assume InInter:        forall 'a s1 s2 (a:'a). {:pattern InSet a (Intersection s1 s2)} InSet a (Intersection s1 s2) <==> (InSet a s1 /\ InSet a s2) *)
@@ -152,7 +151,8 @@ monad_lattice {
              kind Post ('a:Type) = 'a => heap => Type
              kind WP ('a:Type) = Post 'a => Pre
              type return   ('a:Type) (x:'a) ('p:Post 'a) = 'p x
-             type bind_wp  ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = 'wp1 (fun a => 'wp2 a 'p) h0
+             type bind_wp  ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = 
+                 'wp1 (fun a h1 => 'wp2 a 'p h1) h0
              type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) ('wlp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = 'wlp1 (fun a => 'wlp2 a 'p) h0
              type ite_wlp  ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) (h0:heap) =
                  (forall (a:'a) (h:heap). 'post a h \/ 'wlp_cases (fun a1 h1 => a=!=a1 /\ h=!=h1) h0)
@@ -168,7 +168,8 @@ monad_lattice {
              type assume_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) (h:heap) = ('P ==> 'wp 'p h)
              type null_wp ('a:Type) ('p:Post 'a) (h:heap) = (forall (x:'a) (h':heap). 'p x h')
              type trivial ('a:Type) ('wp:WP 'a) = (forall h0. 'wp (fun r h1 => True) h0)
-             with ST ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) =
+             with State ('a:Type) ('wp:WP 'a) = STATE 'a 'wp 'wp
+             and ST ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) =
                  STATE 'a
                    (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1)) (* WP *)
                    (fun ('p:Post 'a) (h:heap) => (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1))           (* WLP *)

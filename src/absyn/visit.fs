@@ -498,9 +498,18 @@ let visit_typ visit_wps h f g l ext env benv t = visit_typ' visit_wps h f g l ex
 let visit_exp visit_wps h f g l ext env benv t = visit_exp' visit_wps h f g l ext env benv t (fun x -> x)
 let visit_kind visit_wps h f g l ext env benv t = visit_kind' visit_wps h f g l ext env benv t (fun x -> x)
 
+type visitor<'env,'a> = 
+  bool 
+  -> ('env -> unit -> knd -> ('env * knd))
+  -> ('env -> unit -> typ -> ('env * typ))
+  -> ('env -> unit -> exp -> ('env * exp))
+  -> ('env -> exp -> exp)
+  -> (unit -> either<btvar, bvvar> -> (unit * either<btvdef,bvvdef>))
+  -> 'env -> unit -> 'a -> ('env * 'a)
+
 let visit_simple 
     (visit_wps:bool)
-    skel
+    (skel:visitor<'env,'kte>)
     (h: 'env -> knd -> ('env * knd))
     (f: 'env -> typ -> ('env * typ))
     (g: 'env -> exp -> ('env * exp))

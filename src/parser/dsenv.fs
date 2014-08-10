@@ -46,7 +46,7 @@ type env = {
   sigmap: Util.smap<(sigelt * bool)>; (* bool indicates that this was declared in an interface file *)
   effect_names:list<lident>;
   default_result_effect:typ -> Range.range -> comp;
-  interf:bool
+  iface:bool
 }
 
 let open_modules e = e.modules
@@ -69,7 +69,7 @@ let empty_env () = {curmodule=None;
                     sigmap=Util.smap_create(100);
                     effect_names=[];
                     default_result_effect=Util.ml_comp;
-                    interf=false}
+                    iface=false}
 
 let total env = {env with default_result_effect=(fun t _ -> Total t)}
 let ml env = {env with default_result_effect=Util.ml_comp}
@@ -178,7 +178,7 @@ let try_lookup_typ_name' exclude_interf env (lid:lident) : option<typ> =
     | None -> None
     | Some (Exp_name _) -> None//Util.print_string ("Resolved name " ^lid.str^ " as an exp\n");None
     | Some (Typ_name(_, t)) -> Some t
-let try_lookup_typ_name env l = try_lookup_typ_name' (not env.interf) env l
+let try_lookup_typ_name env l = try_lookup_typ_name' (not env.iface) env l
 
 let is_effect_name env lid = 
   let find_in_sig lid = 
@@ -238,30 +238,26 @@ type record = {
   fields: list<(fieldname * typ)>
 }
 let record_cache : ref<list<record>> = Util.mk_ref []
-let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange) 
-let unmangle_field_name x = 
-    if Util.starts_with x.idText "^fname^"
-    then mk_ident(Util.substring_from x.idText 7, x.idRange)
-    else x
+
 let extract_record (e:env) = function 
   | Sig_bundle(sigs, _) -> 
     let is_rec = Util.for_some (function 
-      | Logic_record -> true
+      | RecordType _ -> true
       | _ -> false) in
     
     let find_dc dc = 
       sigs |> Util.find_opt (function 
-        | Sig_datacon(lid, _, _, _) -> lid_equals dc lid 
+        | Sig_datacon(lid, _, _, _, _) -> lid_equals dc lid 
         | _ -> false) in
     
     sigs |> List.iter (function 
       | Sig_tycon(typename, parms, _, _, [dc], tags, _) ->
         if is_rec tags
         then match must <| find_dc dc with 
-            | Sig_datacon(constrname, t, _, _) -> 
+            | Sig_datacon(constrname, t, _, _, _) -> 
                 let fields = 
                   (fst <| collect_formals t) |> List.collect (function
-                    | Inr(Some x, t, _) -> [(qual constrname (unmangle_field_name x.ppname), t)]
+                    | Inr(Some x, t, _) -> [(qual constrname (Util.unmangle_field_name x.ppname), t)]
                     | _ -> []) in
                 let record = {typename=typename;
                               constrname=constrname;
@@ -407,7 +403,7 @@ let push_sigelt env s =
     | _ -> env, [lids_of_sigelt s, s] in
   lss |> List.iter (fun (lids, se) -> 
     lids |> List.iter (fun lid -> 
-      Util.smap_add env.sigmap lid.str (se, env.interf)));
+      Util.smap_add env.sigmap lid.str (se, env.iface)));
   env
     
 let push_namespace env lid = 
@@ -454,7 +450,7 @@ let finish_module_or_interface env modul =
 let prepare_module_or_interface intf env mname =
   let prep env = 
     let open_ns = if lid_equals mname Const.prims_lid then [] else Const.prims_lid::env.effect_names in
-    {env with curmodule=Some mname; open_namespaces = open_ns; interf=intf} in
+    {env with curmodule=Some mname; open_namespaces = open_ns; iface=intf} in
   match env.modules |> Util.find_opt (fun (l, _) -> lid_equals l mname) with
     | None -> prep env
     | Some (_, m) -> 

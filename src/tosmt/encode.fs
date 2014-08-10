@@ -53,6 +53,10 @@ type varops_t = {
 }
               
 let escape (s:string) = Util.replace_char s '\'' '_'
+let caption_t env t = 
+    if Tc.Env.debug env.tcenv
+    then Some (Print.typ_to_string t)
+    else None
 
 let varops = 
     let initial_ctr = 10 in
@@ -240,7 +244,7 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
         let ff, g2 = encode_formula env' f in 
         let tsym, n = fresh_fvar "type" Type_sort in
         let t = closure (Term.sub_fv (Term.claim ff.freevars) [(xxsym, Term_sort)]) n in
-        let g = [Term.DeclFun(tsym, [], Type_sort, None);
+        let g = [Term.DeclFun(tsym, [], Type_sort, caption_t env t0);
                  Term.Assume(mkForall([mk_HasType xx t], [(xxsym, Term_sort)], 
                                     mkIff(mk_HasType xx t, mkAnd(mk_HasType xx tt, ff))), None)] in 
         t, g1@close [(xxsym, Term_sort, [mk_HasType xx t])] g2@g
@@ -251,7 +255,7 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
         if not <| Util.is_pure env.tcenv res 
         then let tsym, t = fresh_fvar "type" Type_sort in
              let fsym, f = fresh_bvar "f" Term_sort in 
-             let g = [Term.DeclFun(tsym, [], Type_sort, None);
+             let g = [Term.DeclFun(tsym, [], Type_sort, caption_t env t0);
                       Term.Assume(mk_tester "Typ_fun" t, None);
                       Term.Assume(mkForall([mk_HasType f t], [(fsym, Term_sort)], 
                                          mkImp(mk_HasType f t, mk_tester "Typ_fun" (mk_PreType f))), None)] in
@@ -286,7 +290,7 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
           let wp2', g3 = encode_formula env (norm_t env <| (withkind Kind_type <| Typ_app(wp2, trivial_post t2, false))) in 
           let decls = close vars (List.flatten (g2::g3::decls)) in
           let vars = vars |> List.map (fun (x, s, _) -> (x,s)) in
-          let g = [Term.DeclFun(tsym, [], Type_sort, (if Tc.Env.debug env.tcenv then Some (Print.typ_to_string t0) else None));
+          let g = [Term.DeclFun(tsym, [], Type_sort, caption_t env t0);
                    Term.Assume(mk_tester "Typ_fun" t, None);
                    Term.Assume(mkForall([app; mk_HasType f t], vars@[(fsym, Term_sort)], 
                                          mkImp(mk_HasType f t, 
@@ -310,7 +314,7 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
         let xxsym, xx, env' = gen_term_var env x in 
         let tt2, g2 = encode_typ env' t2 in 
         let tsym, t = fresh_fvar "type" Type_sort in
-        let g = [Term.DeclFun(tsym, [], Type_sort, None);
+        let g = [Term.DeclFun(tsym, [], Type_sort, caption_t env t0);
                  Term.Assume(mkForall([mk_ApplyTE t xx], [(xxsym, Term_sort)], 
                                     mkImp(mk_HasType xx tt1, 
                                         mkEq(mk_ApplyTE t xx, tt2))), None)] in
@@ -321,7 +325,7 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
         let aasym, aa, env' = gen_typ_var env a in 
         let tt2, g2 = encode_typ env' t2 in 
         let tsym, t = fresh_fvar "type" Type_sort in
-        let g = [Term.DeclFun(tsym, [], Type_sort, None);
+        let g = [Term.DeclFun(tsym, [], Type_sort, caption_t env t0);
                  Term.Assume(mkForall([mk_ApplyTT t aa], [(aasym, Type_sort)], 
                                     mkImp(mk_HasKind aa kk1,
                                         mkEq(mk_ApplyTT t aa, tt2))), None)] in
@@ -332,7 +336,7 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
 
       | Typ_uvar(uv, _) -> 
         let tsym = format1 "Typ_uvar_%s" (string_of_int <| Unionfind.uvar_id uv) in
-        let g = [Term.DeclFun(tsym, [], Type_sort, None)] in 
+        let g = [Term.DeclFun(tsym, [], Type_sort, caption_t env t0)] in 
         mkFreeV(tsym, Type_sort), g
 
       | Typ_meta _
@@ -624,10 +628,13 @@ let primitive_type_axioms =
             | Some(_, f) -> [f tt])
 
 let rec encode_sigelt (env:env_t) (se:sigelt) : (decls * env_t) = 
-    let g, e = encode_sigelt' env se in 
+    if Tc.Env.debug env.tcenv 
+    then Util.fprint1 ">>>>Encoding [%s]\n" 
+         <| (Util.lids_of_sigelt se |> List.map Print.sli |> String.concat ", ");
     let nm = match Util.lid_of_sigelt se with 
         | None -> ""
         | Some l -> l.str in
+    let g, e = encode_sigelt' env se in 
     match g with 
      | [] -> [Caption (format1 "<Skipped %s/>" nm)], e
      | _ -> Caption (format1 "<Start encoding %s>" nm)::g@[Caption (format1 "</end encoding %s>" nm)], e
@@ -645,6 +652,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
                 ((xxsym, Term_sort)::vars, env, t)) ([], env, tt) in
        List.rev vars, app, env in
     match se with
+     | Sig_typ_abbrev(_, _, _, _, [Effect], _) -> [], env
+
      | Sig_typ_abbrev(lid, tps, _, t, tags, _) -> 
         let tsym, tt, env = gen_free_tvar env lid in 
         let vars, app, env' = env_of_tpars env tps tt in 
@@ -734,10 +743,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
                              Term.Assume(mkForall([tapp], List.rev qvars, mkImp(guard, mk_HasKind tapp kk)), Some "kinding axiom")] in
                     (close_vars qvars g1)@g, env
              end
-      else let ttsym, _, _ = gen_free_var env t in
-           let ttconstr = constructor_to_decl (ttsym, [], Sort "Type_name", varops.next_id()) in
-           let tt = Term.mk_Typ_const ttsym in
-           let env = push_free_tvar env t tt in 
+      else let ttsym, tt, env = gen_free_tvar env t in
+           let ttconstr = constructor_to_decl (ttsym, [], Type_sort, varops.next_id()) in
            let vars, tapp, env' = env_of_tpars env tps tt in
            let guard, g1 = tps |> List.fold_left (fun (guard, g) -> function
                 | Tparam_term(x, t) -> 
@@ -757,17 +764,22 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
                                               mkImp(mk_HasType xx tapp, data_ax)), Some "inversion axiom")] in
                 ttconstr@g1@prims@g, env
   
-    | Sig_datacon(d, t, _, _) -> 
+    | Sig_datacon(d, t, _, quals, _) -> 
         let ddconstrsym = Print.sli d in
         let ddfunsym, ddfun = fresh_fvar (Print.sli d) Term_sort in
         let env = push_free_var env d ddfun in
         let formals, res = Util.collect_formals t in
-
+        let is_rec = quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false) in
+        let unmangle (x:bvdef<'a>) = 
+            if is_rec then Util.mkbvd (Util.unmangle_field_name x.ppname, Util.unmangle_field_name x.realname)
+            else x in 
         let projectors, vars, env, _ = formals |> List.fold_left (fun (p,v,env,i) -> function
-        | Inl(a, k) -> 
+        | Inl(a, k) ->
+            let a = unmangle a in 
             let aasym, aa, env = gen_typ_var env a in
             (mk_typ_projector_name d a, Type_sort)::p, ((aasym, aa, Inl k), Type_sort)::v, env, i + 1
         | Inr(Some x, t, _) -> 
+            let x = unmangle x in 
             let xxsym, xx, env = gen_term_var env x in
             (mk_term_projector_name d x, Term_sort)::p, ((xxsym, xx, Inr t), Term_sort)::v, env, i + 1
         | Inr(None, t, _) -> 
@@ -861,8 +873,8 @@ let formula_to_string tcenv q : string =
 let seen_modules : ref<list<lident>> = Util.mk_ref []
 let seen (m:modul) : bool = 
     if !seen_modules |> Util.for_some (fun l -> lid_equals m.name l)
-    then true
-    else (seen_modules := m.name::!seen_modules; false)
+    then (Util.fprint1 ">>Skipping module %s\n" (Print.sli m.name); true)
+    else (Util.fprint1 ">>Encoding module %s\n" (Print.sli m.name); seen_modules := m.name::!seen_modules; false)
 
 type cache_t = {
         prelude_env:Tc.Env.env -> env_t * list<decl>;
@@ -882,7 +894,7 @@ let cache =
 
 let smt_query (tcenv:Tc.Env.env) (q:typ) : bool = 
    let e, prelude = cache.prelude_env tcenv in
-   let decls, env = tcenv.modules |> List.collect (fun m -> if seen m then [] else m.exports) |> encode_signature e in
+   let decls, env = tcenv.modules |> List.rev |> List.collect (fun m -> if seen m then [] else m.exports) |> encode_signature e in
    cache.cache_env env;
    let env_decls, env = encode_env env tcenv in
    let phi, phi_decls = encode_formula env q in
