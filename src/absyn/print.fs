@@ -78,10 +78,7 @@ and typ_to_string x =
   | Typ_meta(Meta_named(_, l)) -> sli l
   | Typ_meta(Meta_pos(t, _)) -> typ_to_string t
   | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)
-  | Typ_btvar btv -> 
-    (match !btv.v.instantiation with 
-      | None -> Util.format2 "%s:%s" (strBvd btv.v) (kind_to_string x.k)
-      | Some x -> x |> typ_to_string)
+  | Typ_btvar btv -> Util.format2 "%s:%s" (strBvd btv.v) (kind_to_string x.k)
   | Typ_const v -> Util.format1 "%s" (sli v.v)
   | Typ_fun(Some x, t1, t2, imp) -> Util.format "%s%s(%s) -> %s"  [strBvd x; (if imp then "@" else ":"); (t1 |> typ_to_string); (t2|> comp_typ_to_string)]
   | Typ_fun(None, t1, t2, _) -> Util.format "(%s) -> %s"  [(t1 |> typ_to_string); (t2|> comp_typ_to_string)]
@@ -169,10 +166,7 @@ and exp_to_string x = match compress_exp x with
   | Exp_meta(Meta_datainst(e,_)) -> exp_to_string e 
   | Exp_meta(Meta_desugared(e, _)) -> exp_to_string e
   | Exp_uvar(uv, _) -> Util.format1 "'e%s" (Util.string_of_int (Unionfind.uvar_id uv))
-  | Exp_bvar bvv -> 
-    (match !bvv.v.instantiation with 
-      | None -> strBvd bvv.v
-      | Some x -> x|> exp_to_string)
+  | Exp_bvar bvv -> strBvd bvv.v
   | Exp_fvar(fv, _) ->  sli fv.v
   | Exp_constant c -> c |> const_to_string
   | Exp_abs(x, t, e) -> Util.format3 "(fun (%s:%s) -> %s)" (strBvd x) (t |> typ_to_string) (e|> exp_to_string)

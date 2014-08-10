@@ -302,9 +302,7 @@ and visit_exp'
           cont (env, Exp_meta(Meta_desugared(e', tag))))
                     
     | Exp_bvar bv -> (* log 25 ; *)
-      (match !bv.v.instantiation with 
-        | None -> cont (g env benv e)
-        | Some e -> visit_exp' visit_wps h f g l ext env benv e cont)
+        cont (g env benv e)
 
     | Exp_uvar(uv, _) -> (* log 26 ; *)
       (match Unionfind.find uv with 

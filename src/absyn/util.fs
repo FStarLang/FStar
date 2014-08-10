@@ -71,7 +71,7 @@ let genident r =
 
 let bvd_eq bvd1 bvd2 = bvd1.realname.idText=bvd2.realname.idText
 let range_of_bvd x = x.ppname.idRange
-let mkbvd (x,y) = {ppname=x;realname=y;instantiation=mk_ref None}
+let mkbvd (x,y) = {ppname=x;realname=y}
 let setsort w t = {v=w.v; sort=t; p=w.p}
 let withinfo e s r = {v=e; sort=s; p=r}
 let withsort e s   = withinfo e s dummyRange
@@ -96,8 +96,7 @@ let gen_bvar sort = let bvd = (new_bvd None) in bvd_to_bvar_s bvd sort
 let gen_bvar_p r sort = let bvd = (new_bvd (Some r)) in bvd_to_bvar_s bvd sort
 let bvdef_of_str s = let id = id_of_text s in mkbvd(id, id)
 let set_bvd_range bvd r = {ppname=mk_ident(bvd.ppname.idText, r);
-                           realname=mk_ident(bvd.realname.idText, r);
-                           instantiation=bvd.instantiation}
+                           realname=mk_ident(bvd.realname.idText, r)}
 let set_lid_range l r = 
   let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
   lid_of_ids ids
@@ -261,31 +260,31 @@ and visit_typ s mk vt me ctrl binders t =
     
     | _ when (not ctrl.descend) -> map_typ s mk vt me null_ctrl binders t
 
-//     (* all the binding forms need to be alpha-converted to avoid capture *)
-//    | Typ_fun(Some x, t, c, b) ->
-//        (match visit_prod (Inr(x,t)) (Inr c) with 
-//            | Inr(y,t), Inr c -> withkind Kind_type <| Typ_fun(Some y, t, c, b), ctrl
-//            | _ -> failwith "Impossible")
-//
-//    | Typ_univ(a, k, c) -> 
-//         (match visit_prod (Inl(a,k)) (Inr c) with 
-//            | Inl(a,k), Inr c -> withkind Kind_type <| Typ_univ(a, k, c), ctrl
-//            | _ -> failwith "Impossible")
-//
-//    | Typ_refine(x, t1, t2) -> 
-//        (match visit_prod (Inr(x,t1)) (Inl t2) with 
-//            | Inr(x,t1), Inl t2 -> withkind Kind_type <| Typ_refine(x, t1, t2), ctrl
-//            | _ -> failwith "Impossible")
-//    
-//    | Typ_lam(x, t1, t2) -> 
-//        (match visit_prod (Inr(x,t1)) (Inl t2) with 
-//            | Inr(x,t1), Inl t2 -> withkind t.k <| Typ_lam(x, t1, t2), ctrl
-//            | _ -> failwith "Impossible")
-//    
-//    | Typ_tlam(a, k, t2) -> 
-//        (match visit_prod (Inl(a,k)) (Inl t2) with 
-//            | Inl(a,k), Inl t2 -> withkind t.k <| Typ_tlam(a, k, t2), ctrl
-//            | _ -> failwith "Impossible")
+     (* all the binding forms need to be alpha-converted to avoid capture *)
+    | Typ_fun(Some x, t, c, b) ->
+        (match visit_prod (Inr(x,t)) (Inr c) with 
+            | Inr(y,t), Inr c -> withkind Kind_type <| Typ_fun(Some y, t, c, b), ctrl
+            | _ -> failwith "Impossible")
+
+    | Typ_univ(a, k, c) -> 
+         (match visit_prod (Inl(a,k)) (Inr c) with 
+            | Inl(a,k), Inr c -> withkind Kind_type <| Typ_univ(a, k, c), ctrl
+            | _ -> failwith "Impossible")
+
+    | Typ_refine(x, t1, t2) -> 
+        (match visit_prod (Inr(x,t1)) (Inl t2) with 
+            | Inr(x,t1), Inl t2 -> withkind Kind_type <| Typ_refine(x, t1, t2), ctrl
+            | _ -> failwith "Impossible")
+    
+    | Typ_lam(x, t1, t2) -> 
+        (match visit_prod (Inr(x,t1)) (Inl t2) with 
+            | Inr(x,t1), Inl t2 -> withkind t.k <| Typ_lam(x, t1, t2), ctrl
+            | _ -> failwith "Impossible")
+    
+    | Typ_tlam(a, k, t2) -> 
+        (match visit_prod (Inl(a,k)) (Inl t2) with 
+            | Inl(a,k), Inl t2 -> withkind t.k <| Typ_tlam(a, k, t2), ctrl
+            | _ -> failwith "Impossible")
     
     | _ -> let t, _ = vt null_ctrl binders t in t, ctrl
 and visit_exp s mk me ve ctrl binders e =
@@ -318,7 +317,13 @@ and compress_exp e = match Visit.compress_exp e with
 let alpha_typ t = 
    let t = compress_typ t in
    let s = [] in
-   Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp alpha_ctrl [] t 
+   match t.t with 
+    | Typ_lam _
+    | Typ_tlam _
+    | Typ_refine _ 
+    | Typ_fun _ 
+    | Typ_univ _ -> fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp alpha_ctrl [] t 
+    | _ -> t
     
 let compress_typ_opt = function
     | None -> None

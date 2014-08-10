@@ -39,7 +39,7 @@ type withinfo_t<'a,'t> = {
 type var<'t>  = withinfo_t<lident,'t>
 type fieldname = lident
 type inst<'a> = ref<option<'a>>
-type bvdef<'a> = {ppname:ident; realname:ident; instantiation:inst<'a>}
+type bvdef<'a> = {ppname:ident; realname:ident}
 type bvar<'a,'t> = withinfo_t<bvdef<'a>,'t> 
 (* Bound vars have a name for pretty printing, 
    and a unique name generated during desugaring. 
