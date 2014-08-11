@@ -26,7 +26,7 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Tc.Normalize
 
-let unify_typ env (uv,k) t  = match Unionfind.find uv with 
+let unify_typ env ((uv,k):(uvar_t * knd)) t  = match Unionfind.find uv with 
   | Fixed _ -> failwith "impossible"
   | Uvar wf ->
     let rec aux retry t =
@@ -36,13 +36,15 @@ let unify_typ env (uv,k) t  = match Unionfind.find uv with
       let doit t = match (compress_typ t).t with 
         | Typ_uvar (uv', _) -> Unionfind.union uv uv'; true
         | t' -> 
-          if wf t tk && not (occurs ()) 
+          let wfok =  wf t tk  in
+          let occ_ok = not (occurs ()) in
+          if wfok && occ_ok
           then (unchecked_unify uv t; true)
           else if !Options.debug <> []
-          then (Util.print_string <| Util.format4 "%s occurs? %s, wf? %s ... Uvars_in_t are {%s}\n"
+          then (Util.print_string <| Util.format4 "%s occurs_ok? %s, wf? %s ... Uvars_in_t are {%s}\n"
                 (string_of_int (Unionfind.uvar_id uv))
-                (if occurs() then "yes" else "no") 
-                (if wf t tk then "yes" else "no")
+                (if occ_ok then "yes" else "no") 
+                (if wfok then "yes" else "no")
                 (uvars_in_t |> List.map (fun uv -> Util.string_of_int <| Unionfind.uvar_id uv) |> String.concat ", "); false)
           else false in
      doit t || (retry && aux false (normalize env t)) in

@@ -86,7 +86,7 @@ let lbname_eq l1 l2 = match l1, l2 with
 let fvar_eq fv1 fv2  = lid_equals fv1.v fv2.v
 let bvd_to_bvar_s bvd sort = {v=bvd; sort=sort; p=bvd.ppname.idRange}
 let bvar_to_bvd bv = bv.v
-let btvar_to_typ bv  = withkind kun <| Typ_btvar bv
+let btvar_to_typ bv  = withkind bv.sort <| Typ_btvar bv
 let bvd_to_typ bvd k = btvar_to_typ (bvd_to_bvar_s bvd k)
 let bvar_to_exp bv   =  Exp_bvar bv
 let bvd_to_exp bvd t = bvar_to_exp (bvd_to_bvar_s bvd t)
@@ -210,7 +210,7 @@ and map_comp s mk map_typ map_exp descend binders c = match Visit.compress_comp 
       Total t, descend
     | Comp ct ->
       let t, descend = map_typ descend binders ct.result_typ in
-      let env, args = List.fold_left (fun (desc, out) -> function
+      let descend, args = List.fold_left (fun (desc, out) -> function
         | Inl t -> 
           let t, desc = map_typ desc binders t in
           desc, Inl t::out
@@ -240,12 +240,12 @@ and visit_typ s mk vt me ctrl binders t =
     | Inr(x, t1) -> 
       let t1, _ = map_typ s mk vt me null_ctrl binders t1 in
       let binders' = Inr x::binders in
-      let s = restrict_subst binders s in 
+      let s = restrict_subst binders' s in 
       (match s with
         | [] when ctrl.stop_if_empty_subst -> Inr(x,t1), s, binders
         | _ -> 
            let y = freshen_bvd x in
-           let s = Inr(x, bvd_to_exp y t)::s in
+           let s = Inr(x, bvd_to_exp y t1)::s in
            Inr(y,t1), s, Inr y::binders) in
      let tc = match s, tc with 
         | [], _ -> tc
@@ -779,17 +779,6 @@ let close_kind tps k =
 (********************************************************************************)
 (******************************** Alpha conversion ******************************)
 (********************************************************************************)
-let ext subst = function
-  | Inl btv ->
-    let bvd' = new_bvd (Some btv.p) in
-    let t = bvd_to_typ bvd' btv.sort in
-    Inl (btv.v, t)::subst, Inl bvd'
-
-  | Inr bxv ->
-    let bvd' = new_bvd (Some bxv.p) in
-    let e = bvd_to_exp bvd' bxv.sort in
-    Inr (bxv.v, e)::subst, Inr bvd' 
-
 let freshen_label ropt _ e = match ropt with
   | None -> e
   | Some r ->
@@ -799,29 +788,6 @@ let freshen_label ropt _ e = match ropt with
         let bytes =  Util.unicode_of_string (Util.string_of_unicode bytes ^ " : " ^ rstr) in
         Exp_constant(Const_string(bytes, p))
       | _ -> e 
-
-let freshen_bvars_typ (ropt:option<Range.range>) (t:typ) subst : typ =
-  snd (Visit.visit_typ true
-         fold_kind_noop
-         (fun () subst t -> (), eager_subst_tvar (mk_subst_map subst) t)
-         (fun () subst e -> (), eager_subst_xvar (mk_subst_map subst) e)
-         (freshen_label ropt)
-         ext () subst t) 
-
-let freshen_bvars_kind (ropt:option<Range.range>) (k:knd) subst : knd =
-  snd (Visit.visit_kind true
-         fold_kind_noop
-         (fun () subst t -> (), eager_subst_tvar (mk_subst_map subst) t)
-         (fun () subst e -> (), eager_subst_xvar (mk_subst_map subst) e)
-         (freshen_label ropt)
-         ext () subst k)
-
-(* move to de Bruijn? *)
-//let freshen_typ t benv   : typ  = freshen_bvars_typ None t benv
-let alpha_convert t      : typ  = freshen_bvars_typ None t []
-//let alpha_convert_kind k : knd = freshen_bvars_kind None k []
-//let alpha_fresh_labels r t : typ = freshen_bvars_typ (Some r) t []
-
 
 (********************************************************************************)
 (******************** Reducing to weak head normal form *************************)

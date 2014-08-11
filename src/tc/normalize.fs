@@ -37,7 +37,6 @@ open Microsoft.FStar.Tc.Env
  **********************************************************************************************)
 
 type step = 
-  | Alpha
   | Delta
   | DeltaHard
   | Beta
@@ -89,7 +88,9 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
     {cfg with code=mk c1.code c2.code} in
 
   let wk = withkind cfg.code.k in
-  let config = {cfg with code=Util.compress_typ cfg.code} in
+  let config = match cfg.environment with 
+    | [] -> {cfg with code=Util.compress_typ cfg.code} 
+    | _ -> {cfg with code=Util.alpha_typ cfg.code} in //Util.alpha_typ cfg.code} in
   match config.code.t with
     | Typ_delayed _ -> failwith "Impossible"
      
@@ -101,8 +102,7 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
         || (config.steps |> List.contains Delta && List.length config.stack <> 0)
       then match Tc.Env.lookup_typ_abbrev tcenv fv.v with
           | None -> rebuild config 
-          | Some t -> (* delta(); alpha ();  *)
-            let t = if config.steps |> List.contains Alpha then Util.alpha_convert t else t in
+          | Some t -> (* delta(); *)
             sn tcenv ({config with code=t})
       else rebuild config
         
@@ -230,7 +230,6 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
   else match Tc.Env.lookup_typ_abbrev tcenv m.effect_name with
         | None -> remake m.effect_name args
         | Some t -> 
-          let t = if cfg.steps |> List.contains Alpha then Util.alpha_convert t else t in
           let t = Util.mk_typ_app t args in
           let tc, args = Util.flatten_typ_apps (sn tcenv (with_code cfg t)).code in 
           let n = match (Util.compress_typ tc).t with

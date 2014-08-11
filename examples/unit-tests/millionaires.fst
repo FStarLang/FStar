@@ -27,40 +27,49 @@ assume val rd : string -> Wys mode (Requires (fun h => True)) (Ensures mode (fun
 assume val wr : m:mode -> Wys unit (Requires (fun h => True)) (Ensures unit (fun m1 r m2 => m2==m))
 
 assume val f: int -> Wys bool (Requires (fun h => True)) (Ensures bool (fun m0 u m1 => True))
-val test_st : m:mode -> State unit
-                            (fun 'p h0 => (forall h1. SelHeap h1 moderef==SelHeap h0 moderef ==> 'p () h1))
-let test_st (m:mode) = 
-  let cur = rd "hello" in
-  let z = f 0 in
-  ST.write moderef cur
+(* val test_st : m:mode -> State unit *)
+(*                             (fun 'p h0 => (forall h1. SelHeap h1 moderef==SelHeap h0 moderef ==> 'p () h1)) *)
+(* let test_st (m:mode) = *)
+(*   let cur = rd "hello" in *)
+(*   let z = f 0 in *)
+(*   ST.write moderef cur *)
 
   
-(* (\* let get_mode (x:unit) = !moderef *\) *)
-
-(* assume val get_mode : unit -> Wys mode *)
-(*                            (Requires (fun h => True)) *)
-(*                            (Ensures mode (fun m0 r m1 => m0==m1 /\ r==m1)) *)
-(* (\* let get_mode (x:unit) = !moderef *\) *)
+assume val get_mode : unit -> Wys mode
+                           (Requires (fun h => True))
+                           (Ensures mode (fun m0 r m1 => m0==m1 /\ r==m1))
+(* let get_mode (x:unit) = !moderef *)
 
 
-(* (\* private  *\) *)
-(* assume val set_mode : m:mode -> Wys unit *)
-(*                              (Requires (fun h => True)) *)
-(*                              (Ensures unit (fun m0 r m1 => m1==m)) *)
-(* (\* let set_mode (m:mode) = ST.write moderef m *\) *)
+(* private *)
+assume val set_mode : m:mode -> Wys unit
+                             (Requires (fun h => True))
+                             (Ensures unit (fun m0 r m1 => m1==m))
+(* let set_mode (m:mode) = ST.write moderef m *)
 
-(* val with_mode: 'a:Type  *)
-(*              -> 'Pre:(mode => Type)  *)
-(*              -> 'Post:(mode => 'a => mode => Type)  *)
-(*              -> m:mode  *)
+
+val test_match: m:mode
+             -> Wys unit (Requires (fun cur => (if cur.p_or_s==Sec then cur.prins==m.prins else Subset cur.prins m.prins)))
+                         (Ensures _ (fun m1 a m2 => True))
+let test_match (m:mode) = 
+  let cur = get_mode () in
+  let ps = cur.p_or_s in
+  (match ps with
+   | Sec -> assert (cur.prins == m.prins)
+   | _ -> assert (Subset cur.prins m.prins))
+
+(* val with_mode: 'a:Type *)
+(*              -> 'Pre:(mode => Type) *)
+(*              -> 'Post:(mode => 'a => mode => Type) *)
+(*              -> m:mode *)
 (*              -> f:(unit -> Wys 'a 'Pre 'Post) *)
-(*              -> Wys 'a (Requires (fun cur => 'Pre m))// /\ (if cur.p_or_s==Sec then cur.prins==m.prins else Subset cur.prins m.prins))) *)
-(*                        (Ensures _ (fun m1 a m2 => False)) *)
+(*              -> Wys 'a (Requires (fun cur => 'Pre m /\ (if cur.p_or_s==Sec then cur.prins==m.prins else Subset cur.prins m.prins))) *)
+(*                        (Ensures _ (fun m1 a m2 => m1==m2 /\ (exists m'. 'Post m a m'))) *)
 (* let with_mode ('a:Type) ('Pre:Pre) ('Post:Post 'a) (m:mode) (f:unit -> Wys 'a 'Pre 'Post) = *)
 (*   let cur = get_mode () in *)
-(*   (\* (match cur.p_or_s with *\) *)
-(*   (\*  | Sec -> assert (cur.prins == m.prins) *\) *)
-(*   (\*  | _ -> assert (0==0)); *\) *)
+(*   (match cur.p_or_s with *)
+(*    | Sec -> assert (cur.prins == m.prins) *)
+(*    | _ -> assert (Subset cur.prins m.prins)); *)
 (*   let x0 = set_mode m in *)
 (*   let res = f () in *)
 (*   let x1 = set_mode cur in *)

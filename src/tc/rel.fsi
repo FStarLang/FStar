@@ -27,6 +27,7 @@ type guard =
   | Trivial
   | NonTrivial of formula
 
+val unify_typ: env -> (Syntax.uvar_t * knd) -> typ -> bool
 val guard_to_string : env -> guard -> string
 val trivial : guard -> unit
 val conj_guard: guard -> guard -> guard

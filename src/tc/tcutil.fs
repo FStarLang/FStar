@@ -87,19 +87,18 @@ let new_tvar env k =
     let freevars_in_env = Util.forall_exists eq_bv_bvd tvs tvs' && Util.forall_exists eq_bv_bvd xvs xvs' in
     let err () = 
       if debug env 
-      then begin ()
-//        let print_ids vs =
-//          (List.map (fun x -> Util.format2 "%s@%s" (Print.strBvd x) (Range.string_of_range (range_of_bvd x))) vs |> String.concat ", ") in
-//        let print_vs vs = print_ids (List.map (fun x -> x.v) vs) in
-//        let print_vs vs =
-//          (List.map (fun x -> Util.format2 "%s@%s" (Print.strBvd x.v) (Range.string_of_range (range_of_bvd x.v))) vs |> String.concat ", ") in
-//        (* Options.fvdie := true; *)
-//        Util.print_string (Util.format3 "Failed: Trying to unify uvar of kind %s with type %s of kind %s\n" (Print.kind_to_string k) (Print.typ_to_string t) (Print.kind_to_string tk));
-//        Util.print_string (Util.format3 "freevars = %s; %s; %s\n" 
-//          (if freevars_in_env then "true" else "false") 
-//          (print_vs tvs) (print_vs xvs));
-//        Util.fprint3 "Env at %s\n\ttvs = {%s}\n\txvs={%s}\n" (Tc.Env.get_range env |> Range.string_of_range) (print_ids tvs') (print_ids xvs')
-//        //        printfn "%A" t
+      then begin 
+        let print_ids (vs:list<bvdef<'a>>) =
+          (List.map (fun x -> Util.format2 "%s@%s" (Print.strBvd x) (Range.string_of_range (range_of_bvd x))) vs |> String.concat ", ") in
+        let print_vs (vs:list<bvar<'a,'b>>) = print_ids (List.map (fun x -> x.v) vs) in
+        (* Options.fvdie := true; *)
+        Util.print_string (Util.format3 "Failed: Trying to unify uvar of kind %s with type %s of kind %s\n" (Print.kind_to_string k) (Print.typ_to_string t) (Print.kind_to_string tk));
+        Util.print_string (Util.format3 "Failed: Trying to unify uvar of kind %s with type %s of kind %s\n" (Print.kind_to_string k) (Print.typ_to_string t) (Print.kind_to_string tk));
+        Util.print_string (Util.format3 "freevars = %s; %s; %s\n" 
+          (if freevars_in_env then "true" else "false") 
+          (print_vs tvs) (print_vs xvs));
+        Util.fprint3 "Env at %s\n\ttvs = {%s}\n\txvs={%s}\n" (Tc.Env.get_range env |> Range.string_of_range) (print_ids tvs') (print_ids xvs')
+        //        printfn "%A" t
       end in
     let result = freevars_in_env && pre_kind_compat k tk in
     if result then result else (err(); result) in
@@ -152,8 +151,8 @@ let uvar_as_function_typ env (topt:option<typ>) (x:bvvdef) =
     let tf = new_function_typ env x in
     match topt with 
       | Some t -> 
-        trivial <| teq env t tf; //forces a unification
-        tf
+         trivial <| teq env t tf; //forces a unification
+         tf
       | _ -> tf
 
 let destruct_function_typ env (t:typ) (xopt:option<bvvdef>) (f:option<exp>) (imp_arg_follows:bool) (default_effect:option<lident>) : (typ * option<exp>) = 

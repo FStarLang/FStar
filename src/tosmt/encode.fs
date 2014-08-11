@@ -577,7 +577,7 @@ and encode_formula (env:env_t) (phi:typ) : res = (* expects phi to be normalized
 
         | Some (Util.QEx(vars, pats, body)) -> 
           let vars, guard, pats, body, g = encode_q_body env vars pats body in
-          mkForall(pats, vars, mkAnd(guard, body)), g
+          mkExists(pats, vars, mkAnd(guard, body)), g
 
 (* ----------------------------------------------------------------------------------------------- *)
 let mk_prim =

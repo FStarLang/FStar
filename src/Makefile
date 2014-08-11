@@ -176,7 +176,7 @@ BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_BACKEND) $(BOOT_JSBACKEND)
 
 boot: $(BOOT_ALL)
-	../bin/fstar.exe --fstar_home .. --admit_fsi Microsoft.FStar.Util $^
+	../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --admit_fsi Microsoft.FStar.Util $^
 
 wc-boot:
 	wc -l $(BOOT_ALL)

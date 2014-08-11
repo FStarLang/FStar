@@ -295,6 +295,10 @@ and tc_value env e : exp * comp = match e with
   | Exp_tabs _ -> (* More efficient to handle curried functions by uncurrying them first, and then re-currying. 
                      This is the dual of the treatment of application ... see the Exp_app/Exp_tapp cases below. *)
     let t0 = Tc.Env.expected_typ env in
+    let topt_to_string t0 = match t0 with 
+        | None -> () 
+        | Some t -> if debug env then Util.fprint1 "\n\tExpected type is %s\n" (Print.typ_to_string t) else () in
+    if debug env then (Util.fprint1 "Typechecking abstraction\n\t%s\n" (Print.exp_to_string e); (topt_to_string t0));
     //FYI: local lets are not generalized in F* 
     let err env tc = match t0, tc with
         | Some t, _
@@ -309,11 +313,17 @@ and tc_value env e : exp * comp = match e with
             tcfun env e (Some <| Tc.Util.new_function_typ env x)
         
         | Exp_tabs(a, _, _), None -> 
-            tcfun env e (Some <| Tc.Util.new_poly_typ env a)
+            let nt = Tc.Util.new_poly_typ env a in
+            tcfun env e (Some <| nt)
 
         | Exp_abs(x, _, _), Some ({t=Typ_uvar _}) -> 
-            tcfun env e (Some <| Tc.Util.uvar_as_function_typ env topt x)
-
+            let ft = Tc.Util.uvar_as_function_typ env topt x in
+            if debug env then Util.fprint1 "Settting expected type to %s\n" (Print.typ_to_string ft);
+            topt_to_string t0;
+            let res = tcfun env e (Some ft) in
+            if debug env then Util.fprint1 "After checking body type is %s\n" (Print.typ_to_string ft);
+            topt_to_string t0;
+            res
         | Exp_abs _, Some ({t=Typ_univ(a, k, c)}) -> 
             let b = Env.Binding_typ(a, k) in
             let tres = match Tc.Util.force_total c with 
@@ -349,6 +359,8 @@ and tc_value env e : exp * comp = match e with
             let c1 = if Util.bvd_eq a b 
                      then c1 
                      else Util.subst_comp [Inl(b,  Util.bvd_to_typ a k1)] c1 in
+//            let _ = printfn "Introducing %s at kind %s .... typ is %s\n" (Print.strBvd a) (Print.kind_to_string k1) (Print.typ_to_string aa) in
+//            let _ = printfn "Expected type for body is %s\n" (Print.typ_to_string (Util.comp_result c1)) in
             let envbody = Tc.Env.set_expected_typ (Tc.Env.push_local_binding env (Binding_typ(a, k1))) (Util.comp_result c1) in
             if is_fun body
             then let tbody = match Tc.Util.force_total c1 with
@@ -365,7 +377,9 @@ and tc_value env e : exp * comp = match e with
         | _, None -> failwith "Impossible" in
  
     let env = instantiate_both env in 
-    let e, t = tcfun env e (Tc.Env.expected_typ env) in 
+    let e, t = tcfun env e t0 in
+    if debug env then (Util.fprint2 "Done typechecked abstraction\n\t%s\n\tComputed type=%s\n" (Print.exp_to_string e) (Print.typ_to_string t);
+                      (topt_to_string t0));
     e, Total t
         
   | Exp_meta(Meta_info(e, _, p)) -> 
@@ -493,7 +507,7 @@ and tc_exp env e : exp * comp = match e with
       | Inl _ -> {env with Tc.Env.instantiate_targs=false}
       | Inr (_, imp) -> {env with Tc.Env.instantiate_vargs=not imp} in
     let f, cf = tc_exp env f in
-    if debug env then Util.print_string <| Util.format2 "Checked function LHS %s at type %s\n" (Print.exp_to_string f) (norms env cf);//Print.comp_typ_to_string cf);
+//    if debug env then Util.print_string <| Util.format2 "Checked function LHS %s at type %s\n" (Print.exp_to_string f) (norms env cf);//Print.comp_typ_to_string cf);
     let is_primop = Util.is_primop f in
     let rec aux (f, tf, (cs:list<Tc.Util.comp_with_binder>), guard, fvs) args = match args with 
       | Inl targ::rest -> 
@@ -1031,7 +1045,7 @@ let tc_modul env modul =
 let check_modules (s:solver_t) mods = 
    let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 
     if List.length !Options.debug <> 0
-    then Util.print_string (Util.format2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name));
+    then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
     let m, env = tc_modul env m in 
     if m.is_interface 
     then mods, env
