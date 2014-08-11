@@ -35,7 +35,7 @@ let parse_file fn =
         let fs = new System.IO.StreamReader(filename) in
         let contents = fs.ReadToEnd() in
         filename, new System.IO.StringReader(contents) :> System.IO.TextReader, contents
-       with e -> printfn "%A" e; raise (Absyn.Syntax.Err (Util.format1 "Unable to open file: %s" filename)))
+       with e -> raise (Absyn.Syntax.Err (Util.format1 "Unable to open file: %s" filename)))
     | Inr (s:string) -> "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s in
 
   let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromTextReader(sr) in

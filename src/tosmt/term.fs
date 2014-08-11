@@ -382,7 +382,6 @@ and mkPrelude () =
                                  ("Kind_type", [], Kind_sort, 0);
                                  ("Kind_dcon", ["Kind_dcon_id", Int_sort], Kind_sort, 1);
                                  ("Kind_tcon", ["Kind_tcon_id", Int_sort], Kind_sort, 2);
-                                 ("Typ_const", ["Typ_const_name", Sort "Type_name"], Type_sort, 0);
                                  ("Typ_fun",   ["Typ_fun_id", Int_sort], Type_sort, 1);
                                  ("Typ_app",   [("Typ_app_fst", Type_sort);
                                                 ("Typ_app_snd", Type_sort)], Type_sort, 2);
@@ -397,7 +396,6 @@ and mkPrelude () =
    basic ^ bcons 
 
 let mk_Kind_type        = mkApp("Kind_type", [])
-let mk_Typ_const n      = mkApp("Typ_const", [mkApp(n, [])])
 let mk_Typ_app t1 t2    = mkApp("Typ_app", [t1;t2])
 let mk_Typ_dep t1 t2    = mkApp("Typ_dep", [t1;t2])
 
@@ -428,7 +426,7 @@ let mk_PreType t      = mkApp("PreType", [t])
 let mk_Valid t        = mkApp("Valid",   [t])  
 let mk_HasType v t    = mkApp("HasType", [v;t])
 let mk_HasKind t k    = mkApp("HasKind", [t;k])
-let mk_tester n t   = mkApp("is-"^n,   [t])
+let mk_tester n t     = mkApp("is-"^n,   [t])
 let mk_ApplyTE t e    = mkApp("ApplyTE", [t;e])
 let mk_ApplyTT t t'   = mkApp("ApplyTT", [t;t'])
 let mk_ApplyET e t    = mkApp("ApplyET", [e;t])
