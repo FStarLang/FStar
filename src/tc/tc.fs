@@ -559,9 +559,11 @@ and tc_exp env e : exp * comp = match e with
 //        if debug env 
 //        then (cs |> List.iter (fun (_, c) -> printfn "Comp: %s" (Print.comp_typ_to_string c)));
         let tail = List.fold_left (fun accum cb -> (fst cb, Tc.Util.bind env (snd cb) accum)) (List.hd cs) (List.tl cs) in
-        let c = Tc.Util.bind env cf tail in
-        let c = Tc.Util.strengthen_precondition env c guard in
-        let c = if is_primop then Tc.Util.maybe_assume_result_eq_pure_term env f c else c in
+        let c0 = Tc.Util.bind env cf tail in
+        let c = Tc.Util.strengthen_precondition env c0 guard in
+        let c = if !Options.verify && (is_primop || Util.is_total_comp c0)
+                then Tc.Util.maybe_assume_result_eq_pure_term env f c 
+                else c in
         comp_check_expected_typ env0 f c in
     aux (f, Util.comp_result cf, [], Trivial, []) args
               

@@ -43,7 +43,7 @@ let hd_int_pure l = match l with
 val square_is_nat: x:int -> Tot nat
 let square_is_nat x = x * x
 
-val infer_nat: x:int -> Tot nat
+(* logic val infer_nat: x:int -> Tot nat *)
 let infer_nat x = if x < 0 then -x else x
 
 val check_nat: x:int -> Tot nat
@@ -90,6 +90,24 @@ let dup_pure x = (x,x)
 val dup_pure_eq: x:'a -> Pure ('a * 'a) True (fun y => MkTuple2._1 y==MkTuple2._2 y)
 let dup_pure_eq x = (x,x)
 
+
+
+(* val test_st : m:mode -> State unit *)
+(*                             (fun 'p h0 => (forall h1. SelHeap h1 moderef==SelHeap h0 moderef ==> 'p () h1)) *)
+(* let test_st (m:mode) = *)
+(*   let cur = rd "hello" in *)
+(*   let z = f 0 in *)
+(*   ST.write moderef cur *)
+
+
+(* val test_match: m:mode *)
+(*              -> Wys unit (Requires (fun cur => (if cur.p_or_s==Sec then cur.prins==m.prins else Subset cur.prins m.prins))) *)
+(*                          (Ensures _ (fun m1 a m2 => True)) *)
+(* let test_match (m:mode) =  *)
+(*   let cur = get_mode () in *)
+(*   (match cur.p_or_s with *)
+(*    | Sec -> assert (cur.prins == m.prins) *)
+(*    | _ -> assert (Subset cur.prins m.prins)) *)
 
 
 (* (\* val mem: x:'a -> l:list 'a -> bool *\) *)

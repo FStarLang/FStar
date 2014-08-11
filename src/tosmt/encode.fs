@@ -873,8 +873,10 @@ let formula_to_string tcenv q : string =
 let seen_modules : ref<list<lident>> = Util.mk_ref []
 let seen (m:modul) : bool = 
     if !seen_modules |> Util.for_some (fun l -> lid_equals m.name l)
-    then (Util.fprint1 ">>Skipping module %s\n" (Print.sli m.name); true)
-    else (Util.fprint1 ">>Encoding module %s\n" (Print.sli m.name); seen_modules := m.name::!seen_modules; false)
+    then (//Util.fprint1 ">>Skipping module %s\n" (Print.sli m.name); 
+         true)
+    else (//Util.fprint1 ">>Encoding module %s\n" (Print.sli m.name); 
+          seen_modules := m.name::!seen_modules; false)
 
 type cache_t = {
         prelude_env:Tc.Env.env -> env_t * list<decl>;

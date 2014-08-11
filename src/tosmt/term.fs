@@ -351,14 +351,12 @@ let rec declToSmt decl = match decl with
   | Pop -> "(pop)"
 
 and mkPrelude () = 
-  let basic =  "(declare-sort Ref)\n\
+  let basic =  "(set-option :global-decls false)\n\
+                (declare-sort Ref)\n\
                 (declare-fun Ref_constr_id (Ref) Int)\n\
                 \n\
                 (declare-sort String)\n\
                 (declare-fun String_constr_id (String) Int)\n\
-                \n\
-                (declare-sort Type_name)\n\
-                (declare-fun Type_name_constr_id (Type_name) Int)\n\
                 \n\
                 (declare-sort Kind)\n\
                 (declare-fun Kind_constr_id (Kind) Int)\n\

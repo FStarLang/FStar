@@ -21,6 +21,7 @@ open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Getopt
 
+let z3_exe = Util.mk_ref "z3.exe"
 let fvdie = Util.mk_ref false
 let z3log = Util.mk_ref false
 let silent=Util.mk_ref false
@@ -103,7 +104,6 @@ let specs () : list<Getopt.opt> =
     [( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
      ( noshort, "codegen", OneArg ((fun s -> codegen := Some s), "OCaml|F#|JS"), "Generate code for execution");
      ( noshort, "pretype", ZeroArgs (fun () -> pretype := true), "Run the pre-type checker");
-     ( noshort, "z3exe", ZeroArgs (fun () -> logQueries := true; z3exe := true), "Call z3.exe instead of via the .NET API (implies --logQueries)");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
      ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
      ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
@@ -120,5 +120,6 @@ let specs () : list<Getopt.opt> =
      ( noshort, "admit_fsi", OneArg ((fun x -> admit_fsi := x::!admit_fsi), "module name"), "Treat .fsi as a .fst");
      ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir");
      ( noshort, "verify", ZeroArgs (fun () -> verify := true), "Call the SMT solver to discharge verifications conditions");
+     ( noshort, "z3exe", OneArg ((fun x -> z3_exe := x), "path"), "Path to the Z3 SMT solver")
      ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs

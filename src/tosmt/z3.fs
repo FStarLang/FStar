@@ -47,7 +47,7 @@ let status_to_string = function
 
 let z3proc = 
     let cond (s:string) = Util.trim_string s = "Done!" in
-    Util.start_process "z3.exe" ini_params cond 
+    Util.start_process (!Options.z3_exe) ini_params cond 
 
 let doZ3Exe (input:string) = 
   let parse (z3out:string) = 
