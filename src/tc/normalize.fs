@@ -73,10 +73,10 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
       | [] -> out
       | (Inl (t,e,k), imp)::rest -> 
         let c = sn tcenv ({code=t; environment=e; stack=[]; steps=config.steps}) in 
-        aux (withkind k <| Typ_app(out, c.code, imp)) rest
+        aux (mk_Typ_app(out, c.code, imp) k out.pos) rest
       | (Inr (v,e,k), imp)::rest -> 
         let c = wne tcenv ({code=v; environment=e; stack=[]; steps=config.steps}) in 
-        aux (withkind k <| Typ_dep(out, c.code, imp)) rest in
+        aux (mk_Typ_dep(out, c.code, imp) k out.pos) rest in
     {config with code=aux config.code config.stack; stack=[]} in
 
   let sn_prod xopt t1 t2 mk = 
@@ -87,11 +87,11 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
     let c2 = sn tcenv c2 in 
     {cfg with code=mk c1.code c2.code} in
 
-  let wk = withkind cfg.code.k in
+  let wk f = f cfg.code.tk cfg.code.pos in
   let config = match cfg.environment with 
     | [] -> {cfg with code=Util.compress_typ cfg.code} 
     | _ -> {cfg with code=Util.alpha_typ cfg.code} in //Util.alpha_typ cfg.code} in
-  match config.code.t with
+  match config.code.n with
     | Typ_delayed _ -> failwith "Impossible"
      
     | Typ_uvar _ -> 
@@ -124,12 +124,12 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
       end
 
     | Typ_app(t1, t2, imp) -> 
-      let se = Inl (t2, config.environment, config.code.k), imp in
+      let se = Inl (t2, config.environment, config.code.tk), imp in
       let config = push se ({config with code=t1}) in 
       sn tcenv config 
         
     | Typ_dep(t, v, imp) -> 
-      let se = Inr (v, config.environment, config.code.k), imp in
+      let se = Inr (v, config.environment, config.code.tk), imp in
       let config = push se ({config with code=t}) in 
       sn tcenv config 
 
@@ -140,7 +140,7 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
           let c2 = sn tcenv ({config with 
             code=t2;
             environment=VDummy x::config.environment}) in
-          {config with code=wk <| Typ_lam(x, c1.code, c2.code)} 
+          {config with code=wk <| mk_Typ_lam(x, c1.code, c2.code)} 
             
         | Some (Inr vclos, _), config -> (* beta(); *)
           sn tcenv ({config with 
@@ -158,7 +158,7 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
           let c = sn tcenv ({config with 
             code=t;
             environment=TDummy a::config.environment}) in 
-          {config with code=wk <| Typ_tlam(a, ck.code, c.code)}
+          {config with code=wk <| mk_Typ_tlam(a, ck.code, c.code)}
             
         | Some (Inl tclos, _), config ->  (* beta();  type-level beta redex *)
           sn tcenv ({config with 
@@ -173,7 +173,7 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
 
     (* In all remaining cases, the stack should be empty *)
     | Typ_refine(x, t1, t2) -> 
-      sn_prod (Some x) t1 t2 (fun t1 t2 -> wk <| Typ_refine(x, t1, t2)) 
+      sn_prod (Some x) t1 t2 (fun t1 t2 -> wk <| mk_Typ_refine(x, t1, t2)) 
   
     | Typ_fun(xopt, t1, comp, imp) -> 
       let c1 = sn tcenv (with_code config t1) in
@@ -181,19 +181,18 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
       | None -> with_code config comp
       | Some x -> with_code ({config with environment=VDummy x::config.environment}) comp in
       let c2 = sncomp tcenv c2 in 
-      {config with code=wk <| Typ_fun(xopt, c1.code, c2.code, imp)} 
+      {config with code=wk <| mk_Typ_fun(xopt, c1.code, c2.code, imp)} 
 
     | Typ_univ(a, k, comp) -> 
       let ck = snk tcenv (with_code config k) in
       let ct = sncomp tcenv (with_code ({config with environment=TDummy a::config.environment}) comp) in
-      {config with code=wk <| Typ_univ(a, ck.code, ct.code)}
+      {config with code=wk <| mk_Typ_univ(a, ck.code, ct.code)}
 
     | Typ_meta(Meta_pattern(t, ps)) -> (* no reduction in patterns *)
       let c = sn tcenv ({config with code=t}) in
-      {c with code=wk <| Typ_meta(Meta_pattern(c.code, ps))}
+      {c with code=wk <| mk_Typ_meta'(Meta_pattern(c.code, ps))}
     
     | Typ_meta(Meta_named _)    
-    | Typ_meta(Meta_pos _) 
     | Typ_unknown -> failwith "impossible"
             
 and snl tcenv configs : list<config<typ>> =
@@ -201,18 +200,18 @@ and snl tcenv configs : list<config<typ>> =
 
 and sncomp tcenv (cfg:config<comp>) : config<comp> = 
   let m = cfg.code in 
-  match compress_comp m with 
+  match (compress_comp m).n with 
     | Comp ct -> 
       let ctconf = sncomp_typ tcenv (with_code cfg ct) in
-      {cfg with code=Comp ctconf.code}
+      {cfg with code=mk_Comp ctconf.code}
     | Total t -> 
       if List.contains DeltaComp cfg.steps 
-      then sncomp tcenv <| with_code cfg (Comp <| force_comp (Total t))
+      then sncomp tcenv <| with_code cfg (mk_Comp <| force_comp (mk_Total t))
       else let t = sn tcenv (with_code cfg t) in
-           with_code cfg (Total t.code)
+           with_code cfg (mk_Total t.code)
     | Flex(u, t) -> 
       let tconf = sn tcenv (with_code cfg t) in 
-      {cfg with code=Flex(u, tconf.code)}
+      {cfg with code=mk_Flex(u, tconf.code)}
 
 and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> = 
   let remake l args = 
@@ -230,11 +229,11 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
   else match Tc.Env.lookup_typ_abbrev tcenv m.effect_name with
         | None -> remake m.effect_name args
         | Some t -> 
-          let t = Util.mk_typ_app t args in
+          let t = Util.mk_typ_app_explicit t args in
           let tc, args = Util.flatten_typ_apps (sn tcenv (with_code cfg t)).code in 
-          let n = match (Util.compress_typ tc).t with
+          let n = match (Util.compress_typ tc).n with
             | Typ_const fv -> remake fv.v args 
-            | _ ->  failwith (Util.format3 "Got a computation %s with constructor %s and kind %s" (Print.sli m.effect_name) (Print.typ_to_string tc) (Print.kind_to_string tc.k)) in
+            | _ ->  failwith (Util.format3 "Got a computation %s with constructor %s and kind %s" (Print.sli m.effect_name) (Print.typ_to_string tc) (Print.kind_to_string tc.tk)) in
           n
     
 and snl_either tcenv config args = 
@@ -243,7 +242,8 @@ and snl_either tcenv config args =
     | Inr e -> let c = wne tcenv (with_code config e) in Inr c.code)
 
 and snk tcenv (cfg:config<knd>) : config<knd> =
-  match Util.compress_kind cfg.code with
+  let w f = f cfg.code.pos in
+  match (Util.compress_kind cfg.code).n with
     | Kind_delayed _ -> failwith "Impossible"
     | Kind_uvar _ 
     | Kind_type
@@ -251,7 +251,7 @@ and snk tcenv (cfg:config<knd>) : config<knd> =
     | Kind_abbrev(kabr, k) -> 
       let c1 = snk tcenv ({cfg with code=k}) in
       let args = snl_either tcenv (with_code cfg ()) (snd kabr) in
-      {cfg with code=Kind_abbrev((fst kabr, args), c1.code)}
+      {cfg with code=w <| mk_Kind_abbrev((fst kabr, args), c1.code)}
     | Kind_tcon(aopt, k1, k2, imp) -> 
       let c1 = snk tcenv ({cfg with code=k1}) in
       let c2 = snk tcenv ({cfg with 
@@ -259,7 +259,7 @@ and snk tcenv (cfg:config<knd>) : config<knd> =
         environment=(match aopt with 
           | None -> cfg.environment
           | Some a -> TDummy a::cfg.environment)}) in 
-      {cfg with code=Kind_tcon(aopt, c1.code, c2.code, imp)}
+      {cfg with code=w <| mk_Kind_tcon(aopt, c1.code, c2.code, imp)}
         
     | Kind_dcon(xopt, t1, k2, imp) -> 
       let c1 = sn tcenv ({code=t1; environment=cfg.environment; stack=[]; steps=cfg.steps}) in
@@ -268,7 +268,7 @@ and snk tcenv (cfg:config<knd>) : config<knd> =
         environment=(match xopt with 
           | None -> cfg.environment
           | Some x -> VDummy x::cfg.environment)}) in 
-      {cfg with code=Kind_dcon(xopt, c1.code, c2.code, imp)}
+      {cfg with code=w <| mk_Kind_dcon(xopt, c1.code, c2.code, imp)}
         
     | Kind_unknown -> 
       failwith "Impossible"
@@ -276,8 +276,9 @@ and snk tcenv (cfg:config<knd>) : config<knd> =
 (* The type checker never attempts to reduce expressions itself; but still need to do substitutions *)
 and wne tcenv (cfg:config<exp>) : config<exp> = 
   let e = compress_exp cfg.code in
+  let w f = f cfg.code.tk cfg.code.pos in
   let config = with_code cfg e in
-  match e with 
+  match e.n with 
     | Exp_delayed _ -> failwith "Impossible"
     | Exp_fvar _ 
     | Exp_constant _
@@ -302,22 +303,22 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
     | Exp_app(e1, e2, imp) -> 
       let c1 = wne tcenv ({config with code=e1}) in
       let c2 = wne tcenv ({config with code=e2}) in
-      {config with code=Exp_app(c1.code, c2.code, imp)} 
+      {config with code=w <| mk_Exp_app(c1.code, c2.code, imp)} 
 
     | Exp_tapp(e, t) -> 
       let c1 = wne tcenv ({config with code=e}) in
       let c2 = sn tcenv (with_code config t) in
-      {config with code=Exp_tapp(c1.code, c2.code)}
+      {config with code=w <| mk_Exp_tapp(c1.code, c2.code)}
        
     | Exp_abs(x, t, e) -> 
       let t = sn tcenv (with_code config t) in
       let e = wne tcenv ({config with environment=VDummy x::config.environment; code=e}) in
-      {config with code=Exp_abs(x, t.code, e.code)}
+      {config with code=w <| mk_Exp_abs(x, t.code, e.code)}
 
     | Exp_tabs(a, k, e) -> 
       let k = snk tcenv (with_code config k) in 
       let e = wne tcenv ({config with environment=TDummy a::config.environment; code=e}) in
-      {config with code=Exp_tabs(a, k.code, e.code)}
+      {config with code=w <| mk_Exp_tabs(a, k.code, e.code)}
 
     | Exp_match _
     | Exp_let  _ -> config // failwith (Util.format1 "NYI: %s" (Print.exp_to_string e))
@@ -335,19 +336,19 @@ let rec weak_norm_comp env c =
     | None -> c
     | Some t -> 
       let args = Inl c.result_typ::c.effect_args in
-      let out, subst = List.fold_left (fun (out, subst) arg -> match (compress_typ out).t, arg with 
+      let out, subst = List.fold_left (fun (out, subst) arg -> match (compress_typ out).n, arg with 
         | Typ_tlam(a, _, out), Inl t -> (out, Inl(a, t)::subst)
         | Typ_lam(x, _, out), Inr e -> (out, Inr(x, e)::subst)
         | _ -> failwith "Ill-kinded comp type") (t, []) args in
-      let t = Util.subst_typ subst out in 
+      let t = Util.subst_typ (mk_subst subst) out in 
       let tc, args = Util.flatten_typ_apps t in
-      let n = match (Util.compress_typ tc).t, args with
+      let n = match (Util.compress_typ tc).n, args with
         | Typ_const fv, Inl result::rest -> 
-          weak_norm_comp env (Comp ({effect_name=fv.v;
+          weak_norm_comp env (mk_Comp ({effect_name=fv.v;
                                      result_typ=result;
                                      effect_args=rest;
                                      flags=c.flags}))
-        | _ ->  failwith (Util.format3 "Got a computation %s with constructor %s and kind %s" (Print.sli c.effect_name) (Print.typ_to_string tc) (Print.kind_to_string tc.k)) in
+        | _ ->  failwith (Util.format3 "Got a computation %s with constructor %s and kind %s" (Print.sli c.effect_name) (Print.typ_to_string tc) (Print.kind_to_string tc.tk)) in
       //let _ = printfn "Normalized %s\nto %s\n" (Print.comp_typ_to_string m) (Print.comp_typ_to_string n.code) in
       n in
   //check_sharing (Util.compress_typ tt0) (Util.compress_typ n.result_typ) "weak_norm_comp";

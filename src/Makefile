@@ -1,7 +1,7 @@
 # -*- Makefile -*-
 
 # --------------------------------------------------------------------
-BASIC=profiling.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs options.fs unionfind.fsi unionfind.fs 
+BASIC=profiling.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs options.fs unionfind.fsi unionfind.fs lazyset.fsi lazyset.fs
 BASIC_SRC=$(addprefix basic/, $(BASIC))
 
 ABSYN=syntax.fs const.fs visit.fs util.fs print.fs 
@@ -158,9 +158,9 @@ clean:
 STDFILES=system.fst st.fst list.fst option.fst string.fst
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 
-BOOT_BASICFILES=bytes.fst util.fsi getoptsimple.fst options.fs range.fst unionfind.fst
+BOOT_BASICFILES=bytes.fst util.fsi getoptsimple.fst options.fs range.fst unionfind.fst lazyset.fsi lazyset.fs
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
-BOOT_SYNTAXFILES=syntax.fs const.fs visit.fs util.fs print.fs
+BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
 BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fst driver.fs 
 BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))
@@ -176,7 +176,7 @@ BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_BACKEND) $(BOOT_JSBACKEND)
 
 boot: $(BOOT_ALL)
-	../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --admit_fsi Microsoft.FStar.Util $^
+	../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug low --admit_fsi Microsoft.FStar.Util $^
 
 wc-boot:
 	wc -l $(BOOT_ALL)

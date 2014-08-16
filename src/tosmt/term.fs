@@ -22,6 +22,7 @@ open Microsoft.FStar
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Util
+open Microsoft.FStar.LazySet
 
 type sort =
   | Bool_sort 
@@ -79,40 +80,27 @@ type term' =
   | ConstArray of string * sort * term 
   | Cases      of list<term>
 and pat = term
-and term = {tm:term'; freevars:ref<fvs_t>}
-and fvs_t = 
-  | Set of list<var>
-  | Delayed of (unit -> list<ref<fvs_t>>)
+and term = {tm:term'; freevars:set<var>}
 and var = (string * sort)
 
-let sub_fv l1 l2 = 
-  l1 |> List.partition (fun (x, _) -> l2 |> Util.for_some (fun (y, _) -> x=y)) |> snd
-let rec claim f = match !f with 
-  | Set l -> l
-  | Delayed fs -> 
-    let l = fs() |> List.fold_left (fun out f -> (sub_fv (claim f) out)@out) [] in
-    f := Set l;
-    l
-let freevars t = claim t.freevars
+let eq_var (x1, _) (x2, _) = x1=x2
+let freevars t = list_of_set eq_var t.freevars
+let fv_minus t l = list_of_set eq_var <| difference t.freevars (set_of_list l)
 let third (_, _, x) = x
-let fvs t = match !t.freevars with 
-  | Set _ -> [t.freevars]
-  | Delayed l -> l()
-let mk t f = {tm=t; freevars=Util.mk_ref f}
-let mk' t f = {tm=t; freevars=f}
-let fv_l ts = Delayed (fun () -> ts |> List.fold_left (fun out t -> fvs t@out) [])
-let fv_bin (t1,t2) = Delayed (fun () -> fvs t1@fvs t2)
-let fv_tri (t1,t2,t3) = Delayed (fun () -> fvs t1@fvs t2@fvs t3)
-let fv_minus v u = Set <| sub_fv (claim v) u
+let mk t f = {tm=t; freevars=f}
+let emp_fvs = set_of_list []
+let fv_l ts = List.fold_left (fun out t -> union out t.freevars) emp_fvs ts
+let fv_bin (t1,t2) = union t1.freevars t2.freevars
+let fv_tri (t1,t2,t3) = union t1.freevars (union t2.freevars t3.freevars)
 
-let mkTrue       = mk True (Set [])
-let mkFalse      = mk False (Set [])
-let mkInteger i  = mk (Integer i) (Set [])
-let mkBoundV i   = mk (BoundV i) (Set [i])
-let mkFreeV x    = mk (FreeV x) (Set [])
-let mkPP  t      = mk' (PP t) (snd t).freevars
+let mkTrue       = mk True emp_fvs
+let mkFalse      = mk False emp_fvs
+let mkInteger i  = mk (Integer i) emp_fvs
+let mkBoundV i   = mk (BoundV i) (set_of_list [i])
+let mkFreeV x    = mk (FreeV x) emp_fvs
+let mkPP  t      = mk (PP t) (snd t).freevars
 let mkApp f      = mk (App f) <| fv_l (snd f)
-let mkNot t      = mk' (Not t) t.freevars
+let mkNot t      = mk (Not t) t.freevars
 let mkAnd t      = match t with 
     | {tm=True}, t'
     | t', {tm=True} -> t'
@@ -139,13 +127,13 @@ let mkAdd t      = mk (Add t) <| fv_bin t
 let mkSub t      = mk (Sub t) <| fv_bin t
 let mkDiv t      = mk (Div t) <| fv_bin t
 let mkMul t      = mk (Mul t) <| fv_bin t
-let mkMinus t    = mk' (Minus t) <| t.freevars
+let mkMinus t    = mk (Minus t) <| t.freevars
 let mkMod t      = mk (Mod t) <| fv_bin t
 let mkITE t      = mk (ITE t) <| fv_tri t
 let mkSelect t   = mk (Select t) <| fv_bin t
 let mkUpdate t   = mk (Update t) <| fv_tri t
 let mkCases t    = mk (Cases t)  <| fv_l t
-let mkConstArr t = mk' (ConstArray t) <| (third t).freevars
+let mkConstArr t = mk (ConstArray t) <| (third t).freevars
 let check_pats pats vars = ()
 //    pats |> List.iter (fun p -> 
 //        let fvs = claim p.freevars in
@@ -157,7 +145,7 @@ let mkForall (pats, vars, body) =
     if List.length vars = 0 then body 
     else match body.tm with 
             | True -> body 
-            | _ -> mk (Forall(pats,vars,body)) <| fv_minus body.freevars vars
+            | _ -> mk (Forall(pats,vars,body)) <| difference body.freevars (set_of_list vars)
 let collapseForall (pats, vars, body) =
     check_pats pats vars;
     if List.length vars = 0 then body 
@@ -170,7 +158,7 @@ let mkExists (pats, vars, body) =
     if List.length vars = 0 then body 
     else match body.tm with 
             | True -> body 
-            | _ -> mk (Exists(pats,vars,body)) <| fv_minus body.freevars vars
+            | _ -> mk (Exists(pats,vars,body)) <| difference body.freevars (set_of_list vars)
 
 
 type caption = option<string>

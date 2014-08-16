@@ -129,19 +129,19 @@ let wp_sig_aux decls m =
   match decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname m) with
   | None -> failwith (Util.format1 "Impossible: declaration for monad %s not found" m.str)
   | Some md -> 
-    match md.signature with 
-      | Kind_tcon(Some a, Kind_type, Kind_tcon(_, kwp, _, _), _) -> a, kwp
+    match md.signature.n with 
+      | Kind_tcon(Some a, {n=Kind_type}, {n=Kind_tcon(_, kwp, _, _)}, _) -> a, kwp
       | _ -> failwith "Impossible" 
 
 let wp_signature env m = wp_sig_aux env.lattice.decls m
 
 let build_lattice env se = match se with 
-  | Sig_monads(decls0, order, _) -> 
+  | Sig_monads(decls0, order, p) -> 
     let mk_lift a k1 b k2 lift_t r wp1 =
-      let k1 = Util.subst_kind [Inl(a, r)] k1 in
-      let k2 = Util.subst_kind [Inl(b, r)] k2 in
-      let l = withkind (Kind_tcon(None, k1, k2, false)) <| Typ_app(lift_t, r, false) in
-      withkind k2 <| Typ_app(l, wp1, false) in
+      let k1 = Util.subst_kind (mk_subst [Inl(a, r)]) k1 in
+      let k2 = Util.subst_kind (mk_subst [Inl(b, r)]) k2 in
+      let l = mk_Typ_app(lift_t, r, false)  (mk_Kind_tcon(None, k1, k2, false) p) p in
+      mk_Typ_app(l, wp1, false) k2 p in
     let decls = env.lattice.decls@decls0 in
     let kwp l = wp_sig_aux decls l in
     let order = order |> List.map (fun mo -> 
@@ -292,7 +292,7 @@ let lookup_lid env lid =
     | t -> None
   in
     match Util.bind_opt (lookup_qname env lid) mapper with 
-      | Some t -> Util.set_range_of_typ t (Syntax.range_of_lid lid)
+      | Some t -> {t with pos=Syntax.range_of_lid lid}
       | None -> not_found ()
 
 let lookup_datacon env lid = 
@@ -321,7 +321,7 @@ let lookup_typ_abbrev env lid =
   match lookup_qname env lid with 
     | Some (Inr (Sig_typ_abbrev (lid, tps, _, t, _, _))) -> 
       let t = Util.close_with_lam tps t in
-      Some (withkind t.k <| Typ_meta(Meta_named(t, lid)))
+      Some (mk_Typ_meta(Meta_named(t, lid)))
     | _ -> None
         
 let lookup_btvdef env (btvd:btvdef): option<knd> = 

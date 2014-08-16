@@ -48,12 +48,12 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="syntax.fsi" />
     <Compile Include="syntax.fs" />
     <Compile Include="const.fs" />
     <Compile Include="visit.fs" />
     <Compile Include="util.fs" />
     <Compile Include="print.fs" />
-    <Compile Include="test.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\basic\basic.fsproj">

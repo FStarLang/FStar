@@ -26,14 +26,15 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Tc.Normalize
 
+
 let unify_typ env ((uv,k):(uvar_t * knd)) t  = match Unionfind.find uv with 
   | Fixed _ -> failwith "impossible"
   | Uvar wf ->
     let rec aux retry t =
-      let tk = t.k in 
+      let tk = t.tk in 
       let uvars_in_t = (uvars_in_typ t).uvars_t |> List.map fst in 
       let occurs () = Util.for_some (Unionfind.equivalent uv) uvars_in_t in
-      let doit t = match (compress_typ t).t with 
+      let doit t = match (compress_typ t).n with 
         | Typ_uvar (uv', _) -> Unionfind.union uv uv'; true
         | t' -> 
           let wfok =  wf t tk  in
@@ -53,9 +54,10 @@ let unify_typ env ((uv,k):(uvar_t * knd)) t  = match Unionfind.find uv with
 let unify_kind (uv, ()) k = match Unionfind.find uv with 
   | Fixed _ -> failwith "impossible"
   | Uvar wf -> 
-    match compress_kind k with 
+    let k = compress_kind k in
+    match k.n with 
       | Kind_uvar uv' -> Unionfind.union uv uv'; true
-      | k -> 
+      | _ -> 
         let occurs = Util.for_some (Unionfind.equivalent uv) ((uvars_in_kind k).uvars_k) in
         if not occurs && wf k ()
         then (unchecked_unify uv k; true)
@@ -64,9 +66,10 @@ let unify_kind (uv, ()) k = match Unionfind.find uv with
 let unify_exp (uv, t) e = match Unionfind.find uv with 
   | Fixed _ -> failwith "impossible"
   | Uvar wf -> 
-    match compress_exp e with 
+    let e = compress_exp e in
+    match e.n with 
       | Exp_uvar(uv', _) -> Unionfind.union uv uv'; true
-      | e -> 
+      | _ -> 
         let occurs = Util.for_some (Unionfind.equivalent uv) ((uvars_in_exp e).uvars_e |> List.map fst) in
         if not occurs && wf e t 
         then (unchecked_unify uv e; true)
@@ -95,7 +98,7 @@ let rec is_trivial f : bool =
                        (Const.false_lid, (fun _ -> false));
                        ] in
 
-    let fallback phi = match phi.t with 
+    let fallback phi = match phi.n with 
         | Typ_lam(_, _, phi) 
         | Typ_tlam(_, _, phi) -> is_trivial phi
         | _ -> false in
@@ -141,7 +144,7 @@ let conj_guard g1 g2 = match g1, g2 with
   | NonTrivial f1, NonTrivial f2 -> NonTrivial (Util.mk_conj f1 f2)
 
 let mk_guard_lam t f = 
-  let mk_lam t f = withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(Util.new_bvd None, t, f) in
+  let mk_lam t f =  mk_Typ_lam(Util.new_bvd None, t, f) (mk_Kind_dcon(None, t, mk_Kind_type, false) f.pos) f.pos in
   map_guard f (mk_lam t)
 
 let bindf fopt g = match fopt with 
@@ -171,14 +174,14 @@ let close_guard_lam yopt t f =
     let y = match yopt with 
       | None -> Util.new_bvd None 
       | Some y -> y in
-    close (Inl(y, t)) (withkind Kind_type <| Typ_dep(f, Util.bvd_to_exp y t, false)) in
+    close (Inl(y, t)) (syn f.pos mk_Kind_type <| mk_Typ_dep(f, Util.bvd_to_exp y t, false)) in
   map_guard f (close_lam yopt t)
 
 let close_tlam aopt k f = 
   let a = match aopt with 
     | None -> Util.new_bvd None
     | Some a -> a in
-  close (Inr(a, k)) (withkind Kind_type <| Typ_app(f, Util.bvd_to_typ a k, false)) 
+  close (Inr(a, k)) (syn f.pos mk_Kind_type <| mk_Typ_app(f, Util.bvd_to_typ a k, false)) 
 let close_guard_tlam aopt k f = map_guard f (close_tlam aopt k)
 
 let rec forallf (l:list<'a>) (ff:'a -> option<guard>) : option<guard> = match l with 
@@ -190,7 +193,7 @@ let rec krel rel env k k' : option<guard(* Type *)> =
   let k, k' = compress_kind k, compress_kind k' in
   if Util.physical_equality k k' then Some Trivial else
   //printfn "krel: %s and %s" (Print.kind_to_string k) (Print.kind_to_string k');
-  match k, k' with 
+  match k.n, k'.n with 
     | Kind_type, Kind_type
     | Kind_effect, Kind_effect -> ret <| Some Trivial
     
@@ -201,7 +204,7 @@ let rec krel rel env k k' : option<guard(* Type *)> =
             | _, None -> krel rel env k2 k2'
             | Some a, Some b -> 
               //printfn "Sub'ing %s for %s\n" b.realname.idText a.realname.idText;
-              let k2' = Util.subst_kind [Inl(b, Util.bvd_to_typ a k1')] k2' in
+              let k2' = Util.subst_kind (mk_subst [Inl(b, Util.bvd_to_typ a k1')]) k2' in
               krel rel env k2 k2')
 
     | Kind_dcon(xopt, t1, k1, _), Kind_dcon(yopt, t1', k1', _) -> 
@@ -210,14 +213,20 @@ let rec krel rel env k k' : option<guard(* Type *)> =
           | None, _
           | _, None -> krel rel env k1 k1'
           | Some x, Some y -> 
-            let k1' = Util.subst_kind [Inr(y, Util.bvd_to_exp x t1')] k1' in
+            let k1' = Util.subst_kind (mk_subst [Inr(y, Util.bvd_to_exp x t1')]) k1' in
             krel rel env k1 k1' in
           bindf g (fun g ->
           ret <| (Some <| conj_guard (close_guard_lam None t1' f) g)))
     
-    | Kind_uvar uv, k1  
-    | k1 , Kind_uvar uv -> 
-      if unify_kind (uv, ()) k1 
+    | Kind_uvar uv, _ -> 
+      if unify_kind (uv, ()) k'
+      then Some Trivial 
+      else if !Options.debug <> [] 
+      then (Util.print_string (Util.format2 "Incompatible kinds: %s and %s\n" (Print.kind_to_string k) (Print.kind_to_string k')); None)
+      else None
+    
+    | _, Kind_uvar uv -> 
+      if unify_kind (uv, ()) k
       then Some Trivial 
       else if !Options.debug <> [] 
       then (Util.print_string (Util.format2 "Incompatible kinds: %s and %s\n" (Print.kind_to_string k) (Print.kind_to_string k')); None)
@@ -234,19 +243,19 @@ let rec krel rel env k k' : option<guard(* Type *)> =
 and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Type, otherwise Type *)> = 
   let rec reduce t =
     let t = compress_typ t in 
-    match t.t with 
+    match t.n with 
     | Typ_app(t1, t2, _) -> 
-      (match (compress_typ t1).t with 
-        | Typ_tlam(a, k, t) -> reduce (subst_typ [Inl(a, t2)] t)
+      (match (compress_typ t1).n with 
+        | Typ_tlam(a, k, t) -> reduce (subst_typ' [Inl(a, t2)] t)
         | _ -> t)
     | Typ_dep(t1, v, _) -> 
-      (match (compress_typ t1).t with 
-        | Typ_lam(x, _, t) -> reduce (subst_typ [Inr(x, v)] t)
+      (match (compress_typ t1).n with 
+        | Typ_lam(x, _, t) -> reduce (subst_typ' [Inr(x, v)] t)
         | _ -> t)
     | _ -> t in
   let mk_guard_lam top t f = 
     if not top then f 
-    else match t.k with 
+    else match t.tk.n with 
            | Kind_type -> mk_guard_lam t f
            | _ -> f in
   let rec aux top norm t t' = 
@@ -262,7 +271,7 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
          )
   and aux' top norm t t' =
     let t, t' = reduce t, reduce t' in
-      match t.t, t'.t with 
+      match t.n, t'.n with 
        | Typ_btvar a1, Typ_btvar a1' -> 
          if Util.bvd_eq a1.v a1'.v 
          then Some <| Trivial
@@ -275,7 +284,7 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
          else None
 
        | Typ_fun(Some x, t1, c, _), Typ_fun(Some x', t1', c', _)  -> 
-         let sc' = if Util.bvd_eq x x' then c' else Util.subst_comp [Inr(x', Util.bvd_to_exp x t1')] c' in
+         let sc' = if Util.bvd_eq x x' then c' else Util.subst_comp' [Inr(x', Util.bvd_to_exp x t1')] c' in
          bindf (aux false norm t1' t1) (fun f -> 
          bindf (crel rel env c sc') (fun g -> 
          let g = conj_guard f <| close_guard (Inl(x, t1')) g in
@@ -292,7 +301,7 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
           ret <| Some (mk_guard_lam top t g)))
 
        | Typ_univ(a1, k1, c), Typ_univ(a1', k1', c') -> 
-         let sc' = if Util.bvd_eq a1 a1' then c' else Util.subst_comp [Inl(a1', Util.bvd_to_typ a1 k1')] c' in
+         let sc' = if Util.bvd_eq a1 a1' then c' else Util.subst_comp' [Inl(a1', Util.bvd_to_typ a1 k1')] c' in
          bindf (krel rel env k1' k1) (fun f -> 
          bindf (crel rel env c sc') (fun g -> 
          let g = close_guard (Inr(a1, k1')) g in
@@ -300,13 +309,13 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
       
        | Typ_lam(x, t1, t2), Typ_lam(x', t1', t2') ->
          bindf (aux false norm t1' t1) (fun f -> 
-         bindf (aux false norm t2 (Util.subst_typ [Inr(x', Util.bvd_to_exp x t1')] t2')) (fun g -> 
+         bindf (aux false norm t2 (Util.subst_typ' [Inr(x', Util.bvd_to_exp x t1')] t2')) (fun g -> 
          let g = close_guard (Inl(x, t1')) g in
          ret <| Some (mk_guard_lam top t <| conj_guard f g)))
      
        | Typ_tlam(a1, k1, t1), Typ_tlam(a1', k1', t1') ->
          bindf (krel rel env k1' k1) (fun f -> 
-         bindf (aux false norm t1 (Util.subst_typ [Inl(a1', Util.bvd_to_typ a1 k1')] t1')) (fun g -> 
+         bindf (aux false norm t1 (Util.subst_typ' [Inl(a1', Util.bvd_to_typ a1 k1')] t1')) (fun g -> 
          let g = close_guard (Inr(a1, k1')) g in
          ret <| Some (mk_guard_lam top t <| conj_guard f g))) 
      
@@ -348,18 +357,18 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
          let xexp = Util.bvd_to_exp x t1 in
          let finish f g = 
             if top 
-            then let f = map_guard f (fun f -> withkind Kind_type <| Typ_dep(f, xexp, false)) in
+            then let f = map_guard f (fun f -> syn f.pos mk_Kind_type <| mk_Typ_dep(f, xexp, false)) in
                  let gf = conj_guard g f in
-                 ret (Some <| map_guard gf (fun gf -> withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(x, t, gf)))
+                 ret (Some <| map_guard gf (fun gf -> syn t.pos (mk_Kind_dcon(None, t, mk_Kind_type, false) t.pos) <| mk_Typ_lam(x, t, gf)))
             else let g = close_guard (Inl(x, t1)) g in 
                  ret <| (Some <| conj_guard f g) in
          bindf (aux top norm t1 t1') (fun f -> 
          match rel with
           | EQ -> 
-            bindf (aux false norm phi1 (Util.subst_typ [Inr(x', xexp)] phi2)) (finish f)
+            bindf (aux false norm phi1 (Util.subst_typ' [Inr(x', xexp)] phi2)) (finish f)
 
           | SUB -> 
-            let g = mkGuard env <| Util.mk_imp phi1 (Util.subst_typ [Inr(x', xexp)] phi2) in
+            let g = mkGuard env <| Util.mk_imp phi1 (Util.subst_typ' [Inr(x', xexp)] phi2) in
             finish f g)
 
        | Typ_refine(x, t1, phi), _  when (rel=SUB) -> 
@@ -367,7 +376,8 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
          if top 
          then let xexp = Util.bvd_to_exp x t1 in
               let f = map_guard f (fun f ->
-                withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(x, t, Util.mk_imp phi (withkind Kind_type <| Typ_dep(f, xexp, false)))) in
+                syn t.pos (mk_Kind_dcon(None, t, mk_Kind_type, false) t.pos) <| 
+                    mk_Typ_lam(x, t, Util.mk_imp phi (syn f.pos mk_Kind_type <| mk_Typ_dep(f, xexp, false)))) in
               ret <| Some f
          else ret <| Some (map_guard f (fun f -> close (Inl(x, t1)) (Util.mk_imp phi f))))
                    
@@ -375,10 +385,10 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
          bindf (aux top norm t t') (fun f -> 
          if top 
          then let xexp = Util.bvd_to_exp x t in
-              let f = map_guard f (fun f -> withkind Kind_type <| Typ_dep(f, xexp, false)) in
+              let f = map_guard f (fun f -> syn f.pos mk_Kind_type <| mk_Typ_dep(f, xexp, false)) in
               let phi_f = conj_guard (mkGuard env phi) f in
               ret <| (Some <| map_guard phi_f (fun phi_f -> 
-                withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(x, t, phi_f)))
+                syn phi_f.pos (mk_Kind_dcon(None, t, mk_Kind_type, false) t.pos) <| mk_Typ_lam(x, t, phi_f)))
          else let f = conj_guard (mkGuard env phi) f in
               ret <| (Some <| map_guard f (close (Inl(x, t)))))
 
@@ -398,7 +408,7 @@ and exp_equiv env e e' : option<guard (* has kind Type *)> =
 
 and exp_equiv' env e e' : option<guard (* has kind Type *)> = 
   let e, e' = compress_exp e, compress_exp e' in 
-  match e, e' with 
+  match e.n, e'.n with 
     | Exp_uvar(uv, t), _ -> 
       if unify_exp (uv, t) e'
       then Some Trivial
@@ -443,21 +453,21 @@ and crel rel env c1 c2 : option<guard> =
          //check_sharing (Util.comp_result c1) (Util.comp_result c2) "crel0";
          match rel with 
            | EQ -> 
-             begin match c1, c2 with
+             begin match c1.n, c2.n with
                | Total t1, Total t2 -> trel false rel env t1 t2
-               | Total _,  _ -> crel rel env (Comp <| force_comp c1) c2
-               | _, Total _ -> crel rel env c1 (Comp <| force_comp c2)
+               | Total _,  _ -> crel rel env (mk_Comp <| force_comp c1) c2
+               | _, Total _ -> crel rel env c1 (mk_Comp <| force_comp c2)
                | Comp ct1, Comp ct2 ->
                  if lid_equals ct1.effect_name ct2.effect_name
                  then either_rel rel env (Inl ct1.result_typ::ct1.effect_args) (Inl ct2.result_typ::ct2.effect_args) 
                  else if not norm 
-                 then aux true (Comp <| Normalize.norm_comp [Normalize.DeltaComp] env (Comp ct1)) 
-                   (Comp <| Normalize.norm_comp [Normalize.DeltaComp] env (Comp ct2))
+                 then aux true (mk_Comp <| Normalize.norm_comp [Normalize.DeltaComp] env c1)
+                               (mk_Comp <| Normalize.norm_comp [Normalize.DeltaComp] env c2)
                  else None
                | Flex (u, t1), Comp ct2
                | Comp ct2, Flex (u, t1) -> 
                  bindf (trel false EQ env t1 ct2.result_typ) (fun f -> 
-                   Unionfind.change u (Resolved (Comp ct2));
+                   Unionfind.change u (Resolved c1);
                    Some f)
                | Flex (u1, t1), Flex (u2, t2) -> 
                  bindf (trel false EQ env t1 t2) (fun f -> 
@@ -467,18 +477,18 @@ and crel rel env c1 c2 : option<guard> =
              end
                
            | SUB -> 
-             match c1, c2 with 
+             match c1.n, c2.n with 
                | Total t1, Total t2 -> trel false SUB env t1 t2
                | Total t1, Flex (u, t2) -> 
                  bindf (trel false SUB env t1 t2) (fun f -> 
-                   Unionfind.change u (Resolved (Total t2));
+                   Unionfind.change u (Resolved (mk_Total t2));
                    Some f)
                | Flex(u, t1), Total t2 -> 
                  bindf (trel false SUB env t1 t2) (fun f -> 
-                   Unionfind.change u (Resolved (Total t2));
+                   Unionfind.change u (Resolved c2);
                    Some f)
-               | Total _,  _ -> crel SUB env (Comp <| force_comp c1) c2
-               | _, Total _ -> crel SUB env c1 (Comp <| force_comp c2)
+               | Total _,  _ -> crel SUB env (mk_Comp <| force_comp c1) c2
+               | _, Total _ -> crel SUB env c1 (mk_Comp <| force_comp c2)
                | Comp _, Comp _ -> 
                  let c1 = Normalize.weak_norm_comp env c1 in
                  let c2 = Normalize.weak_norm_comp env c2 in
@@ -493,28 +503,28 @@ and crel rel env c1 c2 : option<guard> =
                        let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
                        let is_wpc2_null () = 
                          if not !Options.verify then false
-                         else match trel true EQ env wpc2 (Util.mk_typ_app c2_decl.null_wp [Inl c2.result_typ]) with 
+                         else match trel true EQ env wpc2 (Util.mk_typ_app_explicit c2_decl.null_wp [Inl c2.result_typ]) with 
                            | Some Trivial -> true
                            | _ -> false in
                        if Util.physical_equality wpc1 wpc2
                        then ret <| Some Trivial
                        else if is_wpc2_null() 
                        then let _ = if debug env then Util.print_string "Using trivial wp ... \n" in
-                            let t = Util.mk_typ_app c2_decl.trivial [Inl c1.result_typ; Inl <| edge.mlift c1.result_typ wpc1] in
-                            ret <| Some (mkGuard env <| {t with k=Kind_type})
-                       else let t = Util.mk_typ_app c2_decl.wp_binop [Inl c2.result_typ; Inl wpc2; Inl <| Util.ftv Const.imp_lid; Inl <| edge.mlift c1.result_typ wpc1] in
-                            let t = {t with k=wpc2.k} in
-                            let t = Util.mk_typ_app c2_decl.wp_as_type [Inl c2.result_typ; Inl t] in
-                            ret <| Some (NonTrivial <| {t with k=Kind_type})) 
+                            let t = Util.mk_typ_app_explicit c2_decl.trivial [Inl c1.result_typ; Inl <| edge.mlift c1.result_typ wpc1] in
+                            ret <| Some (mkGuard env <| {t with tk=mk_Kind_type})
+                       else let t = Util.mk_typ_app_explicit c2_decl.wp_binop [Inl c2.result_typ; Inl wpc2; Inl <| Util.ftv Const.imp_lid; Inl <| edge.mlift c1.result_typ wpc1] in
+                            let t = {t with tk=wpc2.tk} in
+                            let t = Util.mk_typ_app_explicit c2_decl.wp_as_type [Inl c2.result_typ; Inl t] in
+                            ret <| Some (NonTrivial <| {t with tk=mk_Kind_type})) 
                  end
                    
                | Flex(u, t), Comp ct2 -> 
                  bindf (trel false SUB env t ct2.result_typ) (fun f -> 
-                   Unionfind.change u (Resolved (Comp ct2));
+                   Unionfind.change u (Resolved c2);
                    Some f)
                | Comp ct2, Flex(u, t) -> 
                  bindf (trel false SUB env ct2.result_typ t) (fun f -> 
-                   Unionfind.change u (Resolved (Comp ct2));
+                   Unionfind.change u (Resolved c1);
                    Some f)
 
                | Flex(u1, t1), Flex(u2, t2) -> 
@@ -536,7 +546,7 @@ let keq env t k1 k2 : guard =
     | None -> 
       let r = match t with 
         | None -> Tc.Env.get_range env
-        | Some t -> range_of_typ t (Tc.Env.get_range env) in
+        | Some t -> t.pos in
       match t with 
         | None -> raise (Error(Tc.Errors.incompatible_kinds k2 k1, r))
         | Some t -> raise (Error(Tc.Errors.expected_typ_of_kind k2 t k1, r))
@@ -563,7 +573,7 @@ let trivial_subtype env eopt t1 t2 =
     | Some (NonTrivial _) ->  
       let r = match eopt with 
         | None -> Tc.Env.get_range env
-        | Some e -> range_of_exp e (Tc.Env.get_range env) in
+        | Some e -> e.pos in
       raise (Error(Tc.Errors.basic_type_error eopt t2 t1, r))
 
 let sub_comp env c1 c2 = crel SUB env c1 c2

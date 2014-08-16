@@ -176,7 +176,7 @@ let is_xtuple (x : lident) =
 (* -------------------------------------------------------------------- *)
 let is_etuple (e : exp) =
     let rec aux n e =
-        match Absyn.Util.compress_exp e with
+        match (Absyn.Util.compress_exp e).n with
         | Exp_tapp (e, _) -> aux (n+1) e
         | Exp_fvar (x, _) -> begin
             match is_xtuple x.v with
@@ -206,12 +206,12 @@ let mlconst_of_const (rg : range) (sctt : sconst) =
 (* -------------------------------------------------------------------- *)
 let mlkind_of_kind (tps : list<tparam>) (k : knd) =
     let mltparam_of_tparam = function
-        | Tparam_typ (x, Kind_type) -> Some (x.realname, x.ppname)
+        | Tparam_typ (x, {n=Kind_type}) -> Some (x.realname, x.ppname)
         | _ -> None
     in
 
     let rec aux acc (k : knd) =
-        match Absyn.Util.compress_kind k with
+        match (Absyn.Util.compress_kind k).n with
         | Kind_type    -> Some (List.rev acc)
         | Kind_unknown -> Some (List.rev acc) (* FIXME *)
 
@@ -234,9 +234,9 @@ let mlkind_of_kind (tps : list<tparam>) (k : knd) =
 
 (* -------------------------------------------------------------------- *)
 let rec mlty_of_ty_core (tenv : tenv) ((rg, ty) : range * typ) =
+    let rg = ty.pos in
     let ty = Absyn.Util.compress_typ ty in
-
-    match ty.t with
+    match ty.n with
     | Typ_btvar x ->
         MLTY_Var (tvar_of_btvar tenv x)
 
@@ -244,9 +244,6 @@ let rec mlty_of_ty_core (tenv : tenv) ((rg, ty) : range * typ) =
         mlty_of_ty tenv (rg, ty)
 
     | Typ_ascribed (ty, _) ->
-        mlty_of_ty tenv (rg, ty)
-
-    | Typ_meta (Meta_pos (ty, rg)) ->
         mlty_of_ty tenv (rg, ty)
 
     | Typ_fun (x, t1, c, _) -> 
@@ -268,8 +265,9 @@ let rec mlty_of_ty_core (tenv : tenv) ((rg, ty) : range * typ) =
 
 (* -------------------------------------------------------------------- *)
 and maybe_named (tenv : tenv) ((rg, ty) : range * typ) =
+    let rg = ty.pos in
     let rec aux acc (rg, ty) =
-        match (Absyn.Util.compress_typ ty).t with
+        match (Absyn.Util.compress_typ ty).n with
         | Typ_const c ->
             Some (mlpath_of_lident c.v, acc)
 
@@ -278,25 +276,24 @@ and maybe_named (tenv : tenv) ((rg, ty) : range * typ) =
 
         | Typ_refine (_, ty, _)        -> aux acc (rg, ty)
         | Typ_ascribed (ty, _)         -> aux acc (rg, ty)
-        | Typ_meta (Meta_pos (ty, rg)) -> aux acc (rg, ty)
-
+      
         | _ -> None
 
     in aux [] (rg, ty)
 
 (* -------------------------------------------------------------------- *)
 and maybe_tuple (tenv : tenv) ((rg, ty) : range * typ) =
+    let rg = ty.pos in
     let rec unfun n ty =
         if n <= 0 then Some ty else
-            match (Absyn.Util.compress_typ ty).t with
+            match (Absyn.Util.compress_typ ty).n with
             | Typ_lam (_, _, ty)          -> unfun (n-1) ty
             | Typ_ascribed (ty, _)        -> unfun n ty
-            | Typ_meta (Meta_pos (ty, _)) -> unfun n ty
             | _ -> None
     in
 
     let rec aux acc ty =
-        match (Absyn.Util.compress_typ ty).t with
+        match (Absyn.Util.compress_typ ty).n with
         | Typ_const c -> begin
             match as_tprims c.v with
             | Some (Tuple n) ->
@@ -308,7 +305,6 @@ and maybe_tuple (tenv : tenv) ((rg, ty) : range * typ) =
 
         | Typ_app (t1, t2, _)         -> aux (t2 :: acc) t1
         | Typ_ascribed (ty, _)        -> aux acc ty
-        | Typ_meta (Meta_pos (ty, _)) -> aux acc ty
 
         | _ -> None
     in
@@ -337,12 +333,11 @@ let mltycons_of_mlty (ty : mlty) =
 
 (* -------------------------------------------------------------------- *)
 let rec strip_polymorphism acc rg ty =
-    match (Absyn.Util.compress_typ ty).t with
-    | Typ_univ (x, Kind_type, c) -> 
+    let rg = ty.pos in
+    match (Absyn.Util.compress_typ ty).n with
+    | Typ_univ (x, {n=Kind_type}, c) -> 
         let ty = comp_result c in 
         strip_polymorphism ((x.realname, x.ppname) :: acc) rg ty
-    | Typ_meta (Meta_pos (ty, rg)) ->
-        strip_polymorphism acc rg ty
     | _ ->
         (List.rev acc, rg, ty)
 
@@ -386,6 +381,7 @@ let rec mlpat_of_pat (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
 
 (* -------------------------------------------------------------------- *)
 let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
+    let rg = e.pos in
     let e = Absyn.Util.compress_exp e in
 
     match Absyn.Util.destruct_app e with
@@ -400,7 +396,7 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
         MLE_App (e, args)
 
     | _ -> begin
-        match e with
+        match e.n with
         | Exp_bvar x ->
             MLE_Var (lresolve lenv x.v.realname)
 
@@ -415,7 +411,7 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
             let e = mlexpr_of_expr rg lenv e in
             mlfun mlid e
 
-        | Exp_match ((Exp_fvar _ | Exp_bvar _), [p, None, e]) when Absyn.Util.is_wild_pat p ->
+        | Exp_match ({n=(Exp_fvar _ | Exp_bvar _)}, [p, None, e]) when Absyn.Util.is_wild_pat p ->
             mlexpr_of_expr rg lenv e
 
         | Exp_match (e, bs) -> begin
@@ -452,7 +448,7 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
         | Exp_meta (Meta_desugared (e, Data_app)) ->
             let (c, args) =
                 match Absyn.Util.destruct_app e with
-                | Exp_fvar (c, true), args -> (c, args)
+                | {n=Exp_fvar (c, true)}, args -> (c, args)
                 | _, _ -> unexpected rg "meta-data-app-without-fvar"
             in
             
@@ -462,7 +458,7 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
             MLE_CTor (mlpath_of_lident c.v, args)
             
         | Exp_meta (Meta_desugared (e, Sequence)) -> begin
-            match e with
+            match e.n with
             | Exp_let ((false, [Inl _, _, e1]), e2) ->
                 let d1 = mlexpr_of_expr rg lenv e1 in
                 let d2 = mlexpr_of_expr rg lenv e2 in
@@ -477,9 +473,7 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
         | Exp_ascribed (e, _) ->
             mlexpr_of_expr rg lenv e
 
-        | Exp_meta (Meta_info (e, _, rg)) ->
-            mlexpr_of_expr rg lenv e
-
+        
         | Exp_meta (Meta_datainst (e, _)) ->
             mlexpr_of_expr rg lenv e
 
@@ -665,12 +659,10 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
 
     | Sig_datacon (x, ty, tx, _, rg) when as_tprims tx = Some Exn -> begin
         let rec aux acc ty =
-            match (Absyn.Util.compress_typ ty).t with
+            match (Absyn.Util.compress_typ ty).n with
             | Typ_fun (_, ty1, c, _) ->
                 let ty2 = comp_result c in 
                 aux (ty1 :: acc) ty2
-            | Typ_meta (Meta_pos (ty, rg)) ->
-                aux acc ty
             | Typ_const x when as_tprims x.v = Some Exn->
                 List.rev acc
             | _ ->

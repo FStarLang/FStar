@@ -97,7 +97,7 @@ and try_compile_constructor (e:exp) : option<expression_t> =
             | Some(f) -> f ae
         in List.fold_left (fun v s->JSE_Function(None, [s], [JS_Statement(
                 JSS_Return(Some(v)))])) compiled_cons freevars
-    in let rec aux (args:list<exp>) (e:exp) = match e with
+    in let rec aux (args:list<exp>) (e:exp) = match e.n with
     | Exp_fvar(x, b) ->
         (match Util.smap_try_find constructors x.v.str with
         | Some(None, compiler) -> Some(uncur x.v.str args (List.length args) compiler)
@@ -112,7 +112,7 @@ and js_of_binding ((x,t,e):(either<bvvdef,lident> * typ * exp)) =
     (n, Some(js_of_expr None e))
 
 and compress_let (e:exp) =
-    match e with
+    match e.n with
     | Exp_let((_, bnds), e) -> let (b,ee) = compress_let e in (List.concat [bnds; b], ee)
     | _ -> ([], e)
 
@@ -156,7 +156,7 @@ and js_of_match (e:exp) (cases:list<(pat * option<exp> * exp)>) =
 and js_of_expr (binder:option<string>) (expr:exp) : expression_t =
     match try_compile_constructor expr with
     | Some(result) -> result
-    | None -> (match expr with
+    | None -> (match expr.n with
         | Exp_bvar(x) -> JSE_Identifier(x.v.ppname.idText)
         | Exp_fvar(x,b) -> JSE_Identifier(x.v.str)
         | Exp_constant(c) -> js_of_const c
@@ -170,7 +170,6 @@ and js_of_expr (binder:option<string>) (expr:exp) : expression_t =
             ), [])
         | Exp_tabs(_, _, e) | Exp_tapp(e, _) | Exp_ascribed(e,_) -> js_of_expr binder e
         | Exp_meta(m) -> (match m with
-            | Meta_info(e, _, _) -> js_of_expr binder e
             | Meta_desugared(e, _) -> js_of_expr binder e
             | Meta_datainst(e, _) -> js_of_expr binder e)
         | _ -> Util.print_any expr; JSE_Elision)
@@ -180,28 +179,27 @@ and untype_expr (e:exp) =
     let unt_pat ((p,cnd,v):(pat * option<exp> * exp)) = 
         (p, (match cnd with None->None | Some(e)->Some(untype_expr e)), untype_expr v) in
     let unt_bnd (x,t,e) =  (x, t, untype_expr e) in
-    match e with
+    match e.n with
     | Exp_tapp(ee, _) -> untype_expr ee
     | Exp_meta(m) -> (match m with
-        | Meta_info(exp, _, _) -> untype_expr exp
         | Meta_desugared(exp, _) -> untype_expr exp
         | Meta_datainst(exp, _) -> untype_expr exp)
-    | Exp_abs(x, t, e) -> Exp_abs(x, t, untype_expr e)
-    | Exp_app(e1, e2,f) -> Exp_app(untype_expr e1, untype_expr e2, f)
-    | Exp_let((b,binds), e) -> Exp_let((b,List.map unt_bnd binds), untype_expr e)
-    | Exp_match(e, pl) -> Exp_match(untype_expr e, List.map unt_pat pl)
+    | Exp_abs(x, t, e) -> syn e.pos tun <| mk_Exp_abs(x, t, untype_expr e)
+    | Exp_app(e1, e2,f) -> syn e.pos tun <| mk_Exp_app(untype_expr e1, untype_expr e2, f)
+    | Exp_let((b,binds), e) -> syn e.pos tun <| mk_Exp_let((b,List.map unt_bnd binds), untype_expr e)
+    | Exp_match(e, pl) -> syn e.pos tun <| mk_Exp_match(untype_expr e, List.map unt_pat pl)
     | _ -> e
 
 and comp_vars ct = match ct with
-    | Total(t) | Flex(_,t) -> type_vars t.t
-    | Comp(ct) -> type_vars ct.result_typ.t
+    | Total(t) | Flex(_,t) -> type_vars t.n
+    | Comp(ct) -> type_vars ct.result_typ.n
 
 and type_vars ty = match ty with
-    | Typ_fun(x,t,c,_) -> x::((type_vars t.t) @ (comp_vars c))
+    | Typ_fun(x,t,c,_) -> x::((type_vars t.n) @ (comp_vars c.n))
     | Typ_lam(_,_,t) | Typ_refine(_, t, _) | Typ_app(t, _, _) 
     | Typ_dep(t,_,_) | Typ_tlam(_, _, t) | Typ_ascribed(t,_)
-    | Typ_meta(Meta_pos(t,_)) | Typ_meta(Meta_pattern(t,_))
-    | Typ_meta(Meta_named(t,_)) -> type_vars t.t
+    | Typ_meta(Meta_pattern(t,_))
+    | Typ_meta(Meta_named(t,_)) -> type_vars t.n
     | _ -> []
 
 and compile_def (d:sigelt) =
@@ -217,7 +215,7 @@ and compile_def (d:sigelt) =
         in aux 0 vnames
     in match d with
     | Sig_datacon(n,ty,_,_,_) ->
-        let fields = type_vars ty.t in
+        let fields = type_vars ty.n in
         Util.smap_add constructors n.str ((match fields with []->Some(1) | _ -> None), None);
         add_fieldnames n.str fields
     | Sig_bundle(defs, _) -> List.iter compile_def defs

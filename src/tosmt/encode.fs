@@ -180,12 +180,12 @@ type res = (
   * decls    (* auxiliary top-level assertions in support of the term *)
  )
 
-let trivial_post t = 
-  withkind (Kind_dcon(None, t, Kind_type, false)) <| Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid)
+let trivial_post t : typ = 
+  syn t.pos (mk_Kind_dcon(None, t, ktype, false) t.pos) <| mk_Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid)
           
 let rec encode_knd (env:env_t) (k:knd)  : res = 
     let k0 = k in
-    match Util.compress_kind k with 
+    match (Util.compress_kind k).n with 
         | Kind_type -> 
             Term.mk_Kind_type, []
 
@@ -199,7 +199,7 @@ let rec encode_knd (env:env_t) (k:knd)  : res =
             let fsym, f = fresh_bvar "f" Type_sort in
             let g = [Term.DeclFun(ksym, [], Kind_sort, (if Tc.Env.debug env.tcenv then Some (Print.kind_to_string k0) else None));
                      Term.Assume(mk_tester "Kind_dcon" k, None);
-                     Term.Assume(mkForall ([mk_HasKind f k; mk_ApplyTE f xx; mk_HasType xx tt1], [(fsym,Type_sort); (xxsym, Term_sort)]@(Term.claim tt1.freevars), 
+                     Term.Assume(mkForall ([mk_HasKind f k; mk_ApplyTE f xx; mk_HasType xx tt1], [(fsym,Type_sort); (xxsym, Term_sort)]@(freevars tt1), 
                                             mkImp(mkAnd(mk_HasKind f k, mk_HasType xx tt1),
                                                   mk_HasKind (mk_ApplyTE f xx) kk2)), None)] in
             k, (g1@close [(xxsym, Term_sort, [mk_HasType xx tt1])] g2@g)
@@ -214,7 +214,7 @@ let rec encode_knd (env:env_t) (k:knd)  : res =
             let fsym, f = fresh_bvar "f" Type_sort in
             let g = [Term.DeclFun(ksym, [], Kind_sort, None);
                      Term.Assume(mk_tester "Kind_tcon" k, None);
-                     Term.Assume(mkForall ([mk_HasKind f k; mk_ApplyTT f aa; mk_HasKind aa kk1], [(fsym,Type_sort); (aasym, Type_sort)]@(Term.claim kk1.freevars), 
+                     Term.Assume(mkForall ([mk_HasKind f k; mk_ApplyTT f aa; mk_HasKind aa kk1], [(fsym,Type_sort); (aasym, Type_sort)]@(freevars kk1),
                                          mkImp(mkAnd(mk_HasKind f k, mk_HasKind aa kk1),
                                                      mk_HasKind (mk_ApplyTT f aa) kk2)), None)] in
             k, (g1@close [(aasym, Type_sort, [mk_HasKind aa kk1])] g2@g)
@@ -231,7 +231,7 @@ let rec encode_knd (env:env_t) (k:knd)  : res =
 
 and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form already *)
     let t0 = Util.compress_typ t in
-    match t0.t with 
+    match t0.n with 
       | Typ_btvar a -> 
         lookup_typ_var env a, []
 
@@ -243,7 +243,7 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
         let xxsym, xx, env' = gen_term_var env x in
         let ff, g2 = encode_formula env' f in 
         let tsym, n = fresh_fvar "type" Type_sort in
-        let t = closure (Term.sub_fv (Term.claim ff.freevars) [(xxsym, Term_sort)]) n in
+        let t = closure (fv_minus ff [(xxsym, Term_sort)]) n in
         let g = [Term.DeclFun(tsym, [], Type_sort, caption_t env t0);
                  Term.Assume(mkForall([mk_HasType xx t], [(xxsym, Term_sort)], 
                                     mkIff(mk_HasType xx t, mkAnd(mk_HasType xx tt, ff))), None)] in 
@@ -287,7 +287,7 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
           let guard = Term.mk_and_l guards in 
           let t2, wp2, _ = Tc.Util.destruct_comp (Normalize.normalize_comp env.tcenv res) in
           let tt2, g2 = encode_typ env t2 in
-          let wp2', g3 = encode_formula env (norm_t env <| (withkind Kind_type <| Typ_app(wp2, trivial_post t2, false))) in 
+          let wp2', g3 = encode_formula env (norm_t env <| (syn t2.pos ktype <| Syntax.mk_Typ_app(wp2, trivial_post t2, false))) in 
           let decls = close vars (List.flatten (g2::g3::decls)) in
           let vars = vars |> List.map (fun (x, s, _) -> (x,s)) in
           let g = [Term.DeclFun(tsym, [], Type_sort, caption_t env t0);
@@ -355,11 +355,13 @@ and encode_exp (env:env_t) (e:exp) : res =
         let esym, e = fresh_fvar "const" Term_sort in 
         let g = [Term.DeclFun(esym, [], Term_sort, Some (format1 "Constant: %s" <| Print.const_to_string c))] in 
         e, g in
-    match e with 
+    match e.n with 
       | Exp_delayed _ -> encode_exp env (Util.compress_exp e)
        
-      | Exp_meta(Meta_info(Exp_abs(x, t, e), tfun, _)) -> 
-        begin match (Util.compress_typ tfun).t with 
+      | Exp_abs(x, t, body) ->
+        let tfun = e.tk in 
+        let e = body in
+        begin match (Util.compress_typ tfun).n with 
             | Typ_fun(_, _, c, _) -> 
                 if not <| Util.is_pure env.tcenv c
                 then let esym, e = fresh_fvar "impure_fun" Term_sort in
@@ -368,7 +370,7 @@ and encode_exp (env:env_t) (e:exp) : res =
                      let tt, g1 = encode_typ env t in
                      let xxsym, xx, env' = gen_term_var env x in
                      let tt2, g2 = encode_typ env' t2 in
-                     let wp2', g3 = encode_formula env' (withkind Kind_type <| Typ_app(wp2, trivial_post t2, false)) in
+                     let wp2', g3 = encode_formula env' (syn t2.pos ktype <| Syntax.mk_Typ_app(wp2, trivial_post t2, false)) in
                      let ee, g4 = encode_exp env' e in
                      let fsym, f = fresh_fvar "fun" Term_sort in
                      let g = [Term.DeclFun(fsym, [], Term_sort, None);
@@ -381,8 +383,10 @@ and encode_exp (env:env_t) (e:exp) : res =
         end
 
 
-      | Exp_meta(Meta_info(Exp_tabs(a, k, e), tfun, _)) -> 
-        begin match (Util.compress_typ tfun).t with 
+      | Exp_tabs(a, k, body) ->
+        let tfun = e.tk in
+        let e = body in 
+        begin match (Util.compress_typ tfun).n with 
             | Typ_univ(_, _, c) -> 
                 if not <| Util.is_pure env.tcenv c
                 then let esym, e = fresh_fvar "impure_fun" Term_sort in
@@ -391,7 +395,7 @@ and encode_exp (env:env_t) (e:exp) : res =
                      let kk, g1 = encode_knd env k in
                      let aasym, aa, env' = gen_typ_var env a in
                      let tt2, g2 = encode_typ env' t2 in
-                     let wp2', g3 = encode_formula env' (withkind Kind_type <| Typ_app(wp2, trivial_post t2, false)) in
+                     let wp2', g3 = encode_formula env' (syn t2.pos ktype <| Syntax.mk_Typ_app(wp2, trivial_post t2, false)) in
                      let ee, g4 = encode_exp env' e in
                      let fsym, f = fresh_fvar "fun" Term_sort in
                      let g = [Term.DeclFun(fsym, [], Term_sort, None);
@@ -403,7 +407,6 @@ and encode_exp (env:env_t) (e:exp) : res =
             | _ -> failwith "Impossible"
         end
 
-      | Exp_meta(Meta_info(e, _, _))
       | Exp_meta(Meta_desugared(e, _)) -> encode_exp env e
 
       | Exp_bvar x -> 

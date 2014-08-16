@@ -36,9 +36,9 @@ let float_lid  = pconst  "float"
 let exn_lid    = pconst  "exn" 
 
 (* Logical connectives and operators *)
-let kun k k'                 = Kind_tcon(None, k, k', false)
-let kbin k k'                = Kind_tcon(None, k, Kind_tcon(None, k, k', false), false) 
-let ktern k k'               = Kind_tcon(None, k, Kind_tcon(None, k, Kind_tcon(None, k, k', false), false), false)
+let kunary k k'              = mk_Kind_tcon(None, k, k', false) dummyRange
+let kbin k k'                = mk_Kind_tcon(None, k, mk_Kind_tcon(None, k, k', false) dummyRange, false) dummyRange
+let ktern k k'               = mk_Kind_tcon(None, k, mk_Kind_tcon(None, k, mk_Kind_tcon(None, k, k', false) dummyRange, false) dummyRange, false) dummyRange
 let true_lid = pconst "True"
 let false_lid = pconst "False"
 let and_lid = pconst "l_and"  
@@ -76,9 +76,9 @@ let minus_lid  = pconst  "Minus"
 let modulo_lid = pconst  "Modulo"
 
 (* Some common term constructors *)
-let exp_true_bool  = Exp_constant (Const_bool true)
-let exp_false_bool = Exp_constant (Const_bool false)
-let exp_unit       = Exp_constant (Const_unit)
+let exp_true_bool  = mk_Exp_constant (Const_bool true) tun dummyRange
+let exp_false_bool = mk_Exp_constant (Const_bool false) tun dummyRange
+let exp_unit       = mk_Exp_constant (Const_unit) tun dummyRange
 let cons_lid       = pconst  "Cons"
 let nil_lid        = pconst  "Nil"
 let ref_lid        = pconst  "ref"

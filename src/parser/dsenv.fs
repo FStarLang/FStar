@@ -71,7 +71,7 @@ let empty_env () = {curmodule=None;
                     default_result_effect=Util.ml_comp;
                     iface=false}
 
-let total env = {env with default_result_effect=(fun t _ -> Total t)}
+let total env = {env with default_result_effect=(fun t _ -> mk_Total t)}
 let ml env = {env with default_result_effect=Util.ml_comp}
 
 let range_of_binding = function
@@ -86,7 +86,7 @@ let try_lookup_typ_var env (id:ident) =
     | _ -> false) env.localbindings in
   match fopt with 
     | Some (Inl bvd, _) -> 
-      Some (bvd_to_typ (set_bvd_range bvd id.idRange) Kind_unknown)
+      Some (bvd_to_typ (set_bvd_range bvd id.idRange) kun)
     | _ -> None 
 
 let resolve_in_open_namespaces env lid (finder:lident -> option<'a>) : option<'a> =
@@ -110,7 +110,7 @@ let unmangleOpName (id:ident) =
     
 let try_lookup_id' env (id:ident) =
   match unmangleOpName id with 
-    | Some l -> Some <|  (l, Exp_fvar(fv l, false))
+    | Some l -> Some <|  (l, mk_Exp_fvar(fv l, false) tun id.idRange)
     | _ -> 
       find_map env.localbindings (function 
         | Inr bvd, Binding_var id' when (id'.idText=id.idText) -> Some (lid_of_ids [id'], bvd_to_exp (set_bvd_range bvd id.idRange) tun)
@@ -195,7 +195,7 @@ let try_resolve_typ_abbrev env lid =
   let find_in_sig lid = 
     match Util.smap_try_find env.sigmap lid.str with 
       | Some (Sig_typ_abbrev(lid, tps, k, def, _, _), _) -> 
-        let t = withkind Kind_unknown <| Typ_meta(Meta_named(Util.close_with_lam tps def, lid)) in
+        let t = mk_Typ_meta(Meta_named(Util.close_with_lam tps def, lid)) in
         Some t
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig

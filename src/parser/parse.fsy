@@ -363,6 +363,30 @@ pattern:
   | tuplePattern { $1 }
 
 
+/*
+tuplePattern:
+  | annotPattern annotPatternListComma 
+      {
+        match $2 with 
+          | [] -> $1
+          | _ -> mk_pattern (PatTuple($1::$2, false)) (rhs2 parseState 1 2)
+      }
+
+annotPattern:
+  | atomicPattern COLON atomicTerm
+	  {
+	      mk_pattern (PatAscribed($1, $3)) (rhs2 parseState 1 3)
+	  }
+
+  | listPattern 
+	  { $1 }
+
+annotPatternListComma:
+  |   { [] }
+  | COMMA annotPattern annotPatternListComma { $2::$3 }
+
+*/
+
 tuplePattern:
   | listPattern patternListComma 
       {
@@ -370,6 +394,7 @@ tuplePattern:
           | [] -> $1
           | _ -> mk_pattern (PatTuple($1::$2, false)) (rhs2 parseState 1 2)
       }
+
 
 patternListComma:
   |   { [] }

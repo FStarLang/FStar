@@ -180,12 +180,12 @@ let mltyname_of_lident (ns, x) =
 (* -------------------------------------------------------------------- *)
 let rec mlty_of_ty (rg : range) (ty : typ) =
     let ty = Absyn.Util.compress_typ ty in
-
+    let rg = ty.pos in
     match maybe_tuple rg ty with
     | None -> begin
         match maybe_mltynamed_of_ty rg [] ty with
         | None -> begin
-            match ty.t with
+            match ty.n with
             | Typ_btvar x ->
                 Ty_var x.v.realname.idText
 
@@ -193,9 +193,6 @@ let rec mlty_of_ty (rg : range) (ty : typ) =
                 mlty_of_ty rg ty
 
             | Typ_ascribed (ty, _) ->
-                mlty_of_ty rg ty
-
-            | Typ_meta (Meta_pos (ty, rg)) ->
                 mlty_of_ty rg ty
 
             | Typ_fun (x, t1, c, _) -> 
@@ -213,6 +210,7 @@ let rec mlty_of_ty (rg : range) (ty : typ) =
             | Typ_meta    _ -> unexpected  rg
             | Typ_uvar    _ -> unexpected  rg
             | Typ_unknown   -> unexpected  rg
+            | Typ_delayed _ -> unexpected  rg
         end
 
         | Some (c, tys) -> Ty_named (c, tys)
@@ -221,7 +219,8 @@ let rec mlty_of_ty (rg : range) (ty : typ) =
     | Some tys -> Ty_tuple tys
 
 and maybe_mltynamed_of_ty (rg : range) acc ty =
-    match (Absyn.Util.compress_typ ty).t with
+    let rg = ty.pos in
+    match (Absyn.Util.compress_typ ty).n with
     | Typ_const c ->
         Some (mltyname_of_lident (c.v.ns, c.v.ident), acc)
 
@@ -234,9 +233,6 @@ and maybe_mltynamed_of_ty (rg : range) acc ty =
     | Typ_ascribed (ty, _) ->
         maybe_mltynamed_of_ty rg acc ty
 
-    | Typ_meta (Meta_pos (ty, rg)) ->
-        maybe_mltynamed_of_ty rg acc ty
-
     | Typ_btvar   _ -> None
     | Typ_fun     _ -> None
     | Typ_dep     _ -> unsupported rg
@@ -246,21 +242,21 @@ and maybe_mltynamed_of_ty (rg : range) acc ty =
     | Typ_meta    _ -> unexpected  rg
     | Typ_uvar    _ -> unexpected  rg
     | Typ_unknown   -> unexpected  rg
+    | Typ_delayed _ -> unexpected  rg
 
 and maybe_tuple (rg : range) ty =
     let rec unfun n ty =
         if n > 0 then
-            match (Absyn.Util.compress_typ ty).t with
+            match (Absyn.Util.compress_typ ty).n with
             | Typ_lam (_, _, ty)          -> unfun (n-1) ty
             | Typ_ascribed (ty, _)        -> unfun n ty
-            | Typ_meta (Meta_pos (ty, _)) -> unfun n ty
             | _ -> unsupported rg
         else
             ty
     in
 
     let rec aux acc ty =
-        match (Absyn.Util.compress_typ ty).t with
+        match (Absyn.Util.compress_typ ty).n with
         | Typ_const c -> begin
             match is_tuple_name c.v with
             | None -> None
@@ -275,9 +271,6 @@ and maybe_tuple (rg : range) ty =
             aux (t2 :: acc) t1
 
         | Typ_ascribed (ty, _) ->
-            aux acc ty
-
-        | Typ_meta (Meta_pos (ty, _)) ->
             aux acc ty
 
         | _ -> None
@@ -353,6 +346,7 @@ let rec doc_of_exp (rg : range) outer (env : env) (e : exp) =
 
 (* -------------------------------------------------------------------- *)
 and doc_of_exp_r (rg : range) outer (env : env) (e : exp) =
+    let rg = e.pos in
     let e = Absyn.Util.compress_exp e in
 
     match Absyn.Util.destruct_app e with
@@ -362,7 +356,7 @@ and doc_of_exp_r (rg : range) outer (env : env) (e : exp) =
         maybe_paren outer e_app_prio (cat1 e (reduce args))
 
     | _ -> begin
-        match e with
+        match e.n with
         | Exp_bvar x ->
             text (resolve env x.v.realname.idText)
 
@@ -378,7 +372,7 @@ and doc_of_exp_r (rg : range) outer (env : env) (e : exp) =
             let d    = doc_of_exp rg (min_op_prec, NonAssoc) lenv e in
             maybe_paren outer e_bin_prio_lambda (reduce1 [text "fun"; text x; text "->"; d])
 
-        | Exp_match ((Exp_fvar _ | Exp_bvar _), [p, None, e]) when Absyn.Util.is_wild_pat p ->
+        | Exp_match ({n=(Exp_fvar _ | Exp_bvar _)}, [p, None, e]) when Absyn.Util.is_wild_pat p ->
             doc_of_exp rg outer env e
 
         | Exp_match (e, bs) -> begin
@@ -432,13 +426,10 @@ and doc_of_exp_r (rg : range) outer (env : env) (e : exp) =
         | Exp_ascribed (e, _) ->
             doc_of_exp rg outer env e
 
-        | Exp_meta (Meta_info (e, _, rg)) ->
-            doc_of_exp rg outer env e
-
         | Exp_meta (Meta_desugared (e, Data_app)) ->
             let (c, args) =
                 match Absyn.Util.destruct_app e with
-                | Exp_fvar (c, true), args -> (c, args)
+                | {n=Exp_fvar (c, true)}, args -> (c, args)
                 | _, _ -> unexpected rg
             in
             
@@ -449,7 +440,7 @@ and doc_of_exp_r (rg : range) outer (env : env) (e : exp) =
             doc_of_constr rg env c.v dargs
             
         | Exp_meta (Meta_desugared (e, Sequence)) -> begin
-            match e with
+            match e.n with
             | Exp_let ((false, [Inl _, _, e1]), e2) ->
                 let d1 = doc_of_exp rg (e_bin_prio_seq, Left ) env e1 in
                 let d2 = doc_of_exp rg (e_bin_prio_seq, Right) env e2 in
@@ -474,12 +465,13 @@ and doc_of_exp_r (rg : range) outer (env : env) (e : exp) =
 
         | Exp_app  _ -> unexpected  rg
         | Exp_uvar _ -> unexpected  rg
+        | Exp_delayed _ -> unexpected rg
     end
 
 (* -------------------------------------------------------------------- *)
 and maybe_doc_of_primexp_r (rg : range) outer (env : env) (e : exp) =
     let rec strip_tapp e =
-        match Absyn.Util.compress_exp e with
+        match (Absyn.Util.compress_exp e).n with
         | Exp_tapp     (e, _)
         | Exp_ascribed (e, _) -> strip_tapp e
         | _ -> e
@@ -489,7 +481,7 @@ and maybe_doc_of_primexp_r (rg : range) outer (env : env) (e : exp) =
     let (c, args) = Absyn.Util.destruct_app e in
     let c = strip_tapp c in
 
-    match (c, args) with
+    match (c.n, args) with
     | (Exp_fvar (x, _), [(e1, _); (e2, _)]) when is_prim_ns x.v.ns -> begin
         let test (y, _, _) = x.v.ident.idText = y in
 
@@ -588,8 +580,9 @@ and doc_of_branch (rg : range) (env : env) ((p, cl, body) : pat * exp option * e
 
 (* -------------------------------------------------------------------- *)
 let is_kind_for_mldtype rg (k : knd) =
+    let rg = k.pos in
     let rec aux n (k : knd) =
-        match k with
+        match k.n with
         | Kind_type     -> Some n
         | Kind_unknown  -> Some n
 
@@ -600,6 +593,8 @@ let is_kind_for_mldtype rg (k : knd) =
         | Kind_effect   -> None
         | Kind_abbrev _ -> unsupported rg
         | Kind_uvar _   -> unexpected rg
+        | Kind_delayed _ -> unexpected rg
+        | _ -> unexpected rg
     in
         aux 0 k
 
@@ -610,7 +605,7 @@ let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
             match sigelt with
             | Sig_tycon (x, tps, k, ts, cs, _, rg) -> begin
                 let tps = List.map (function
-                    | Tparam_typ (x, Kind_type) -> x.realname.idText
+                    | Tparam_typ (x, {n=Kind_type}) -> x.realname.idText
                     | _ -> unsupported rg) tps
                 in
                 
@@ -643,12 +638,10 @@ let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
         let strip ar ty =
             let rec aux acc ar ty =
                 if ar = 0 then (List.rev acc, ty) else
-                    match (Absyn.Util.compress_typ ty).t with
-                    | Typ_univ (x, Kind_type, c) -> 
+                    match (Absyn.Util.compress_typ ty).n with
+                    | Typ_univ (x, {n=Kind_type}, c) -> 
                         let ty = comp_result c in
                         aux (x.realname.idText :: acc) (ar-1) ty
-                    | Typ_meta (Meta_pos (ty, _)) ->
-                        aux acc ar ty
                     | _ ->
                         unexpected rg
                 in
@@ -743,7 +736,7 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
 
     | Sig_typ_abbrev (t, tps, _, ty, _, rg) ->
         let tps = List.map (function
-            | Tparam_typ (x, Kind_type) -> x.realname.idText
+            | Tparam_typ (x, {n=Kind_type}) -> x.realname.idText
             | _ -> unsupported rg) tps
         in
 
@@ -763,12 +756,10 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
     | Sig_val_decl (x, ty, [], rg) ->        
         let rec strip acc ty =
             let ty = Absyn.Util.compress_typ ty in
-            match ty.t with
-            | Typ_univ (x, Kind_type, c) -> 
+            match ty.n with
+            | Typ_univ (x, {n=Kind_type}, c) -> 
                 let ty = comp_result c in 
                 strip (x.realname.idText ::acc) ty
-            | Typ_meta (Meta_pos (ty, _)) ->
-                strip acc ty
             | _ ->
                 (List.rev acc, ty)
         in
@@ -801,12 +792,10 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
 
     | Sig_datacon (x, ty, n, _, rg) when is_exn n ->
         let rec aux acc ty =
-            match (Absyn.Util.compress_typ ty).t with
+            match (Absyn.Util.compress_typ ty).n with
             | Typ_fun (_, ty1, c, _) -> 
                 let ty2 = comp_result c in
                 aux (ty1 :: acc) ty2
-            | Typ_meta (Meta_pos (ty, rg)) ->
-                aux acc ty
             | Typ_const x when is_exn x.v ->
                 List.rev acc
             | _ ->
@@ -816,12 +805,14 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
         let args = aux [] ty in
         let args = List.map (mlty_of_ty rg) args in
 
-        match args with
+        begin match args with
         | [] -> env, Some (reduce1 [text "exception"; text x.ident.idText])
         | _  ->
             let args = List.map (doc_of_mltype [] (min_op_prec, NonAssoc)) args in
             let args = parens (combine (text " * ") args) in
             env, Some (reduce1 [text "exception"; text x.ident.idText; text "of"; group args])
+        end
+    | _ -> unexpected (Microsoft.FStar.Absyn.Util.range_of_sigelt modx)
 
 (* -------------------------------------------------------------------- *)
 let pp_module (mod_ : modul) =

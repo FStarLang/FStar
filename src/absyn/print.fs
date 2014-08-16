@@ -49,7 +49,7 @@ let const_to_string x = match x with
   | Const_int64 _ -> "<int64>"
   | Const_uint8 _ -> "<uint8>"
  
-let rec tag_of_typ t = match t.t with 
+let rec tag_of_typ t = match t.n with 
   | Typ_btvar _ -> "Typ_btvar"
   | Typ_const _ -> "Typ_const"
   | Typ_fun _ -> "Typ_fun"
@@ -64,7 +64,6 @@ let rec tag_of_typ t = match t.t with
   | Typ_lam _ -> "Typ_lam"
   | Typ_tlam _ -> "Typ_tlam"
   | Typ_ascribed _ -> "Typ_ascribed"
-  | Typ_meta(Meta_pos _) -> "Typ_meta_pos"
   | Typ_meta(Meta_pattern _) -> "Typ_meta_pattern"
   | Typ_meta(Meta_named _) -> "Typ_meta_named"
   | Typ_uvar _ -> "Typ_uvar"   
@@ -73,12 +72,11 @@ let rec tag_of_typ t = match t.t with
       
 and typ_to_string x =
   let x = if !Options.print_real_names then Util.compress_typ x else whnf x in
-  match x.t with 
+  match x.n with 
   | Typ_delayed _ -> failwith "impossible"
   | Typ_meta(Meta_named(_, l)) -> sli l
-  | Typ_meta(Meta_pos(t, _)) -> typ_to_string t
   | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)
-  | Typ_btvar btv -> Util.format2 "%s:%s" (strBvd btv.v) (kind_to_string x.k)
+  | Typ_btvar btv -> Util.format2 "%s:%s" (strBvd btv.v) (kind_to_string x.tk)
   | Typ_const v -> Util.format1 "%s" (sli v.v)
   | Typ_fun(Some x, t1, t2, imp) -> Util.format "%s%s(%s) -> %s"  [strBvd x; (if imp then "@" else ":"); (t1 |> typ_to_string); (t2|> comp_typ_to_string)]
   | Typ_fun(None, t1, t2, _) -> Util.format "(%s) -> %s"  [(t1 |> typ_to_string); (t2|> comp_typ_to_string)]
@@ -94,11 +92,11 @@ and typ_to_string x =
     else t|> typ_to_string
   | Typ_unknown -> "_"
   | Typ_uvar(uv, k) -> (match Visit.compress_typ_aux false x with 
-      | {t=Typ_uvar _} -> Util.format2 "'U%s_%s"  (Util.string_of_int (Unionfind.uvar_id uv)) (kind_to_string k)
+      | {n=Typ_uvar _} -> Util.format2 "'U%s_%s"  (Util.string_of_int (Unionfind.uvar_id uv)) (kind_to_string k)
       | t -> t|> typ_to_string)
       
 and comp_typ_to_string c =
-  match compress_comp c with 
+  match (compress_comp c).n with 
     | Flex (u, t) -> Util.format2 "_Eff%s_ %s" (Util.string_of_int <| Unionfind.uvar_id u) (typ_to_string t)
     | Total t -> if Util.is_function_typ t then typ_to_string t else Util.format1 "Tot %s" (typ_to_string t)
     | Comp c ->
@@ -140,7 +138,7 @@ and formula_to_string phi =
                        (Const.false_lid, const_op "False");
                        ] in
 
-    let fallback phi = match phi.t with 
+    let fallback phi = match phi.n with 
         | Typ_lam(x, _, phi) ->  format2 "(fun %s => %s)" (strBvd x) (formula_to_string phi)
         | Typ_tlam(a, _, phi) ->  format2 "(fun %s => %s)" (strBvd a) (formula_to_string phi)
         | _ -> typ_to_string phi in
@@ -161,7 +159,7 @@ and formula_to_string phi =
           let binders = vars |> List.map (function Inl(a, _) -> strBvd a | Inr(x, _) -> strBvd x) |> String.concat " " in
           format2 "(exists %s. %s)" binders (formula_to_string body)
 
-and exp_to_string x = match compress_exp x with 
+and exp_to_string x = match (compress_exp x).n with 
   | Exp_delayed _ -> failwith "Impossible"
   | Exp_meta(Meta_datainst(e,_)) -> exp_to_string e 
   | Exp_meta(Meta_desugared(e, _)) -> exp_to_string e
@@ -183,8 +181,7 @@ and exp_to_string x = match compress_exp x with
   | Exp_let(lbs, e) -> Util.format2 "%s in %s" 
     (lbs_to_string lbs)
     (e|> exp_to_string)
-  | Exp_meta(Meta_info _) -> failwith "Impossible"
-
+  
 and lbs_to_string lbs = 
     Util.format2 "let %s %s"
     (if fst lbs then "rec" else "") 
@@ -200,10 +197,9 @@ and either_to_string x = match x with
 
 and meta_to_string x = match x with 
   | Meta_named(_, l) -> sli l
-  | Meta_pos(t, _) -> typ_to_string t
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (t |> typ_to_string) (Util.concat_l ", " (ps |> List.map either_to_string))
 
-and kind_to_string x = match compress_kind x with 
+and kind_to_string x = match (compress_kind x).n with 
   | Kind_delayed _ -> failwith "Impossible"
   | Kind_uvar uv -> format1 "'k_%s" (Util.string_of_int (Unionfind.uvar_id uv))
   | Kind_type -> "Type"

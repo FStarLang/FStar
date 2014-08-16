@@ -25,7 +25,7 @@ open Microsoft.FStar.Profiling
 
 let log s = ()(* if !Options.fvdie then printfn "%d;" s *)
 
-let rec compress_typ_aux pos typ = match typ.t with
+let rec compress_typ_aux pos typ = match typ.n with
   | Typ_uvar (uv,k) -> 
       begin
         match Unionfind.find uv with 
@@ -37,13 +37,12 @@ let rec compress_typ_aux pos typ = match typ.t with
       | None -> typ
       | Some t -> let t' = compress_typ_aux pos t in m := Some t'; t')
   | Typ_ascribed(t, _)
-  | Typ_meta(Meta_pos(t, _))
   | Typ_meta(Meta_named(t, _)) when pos -> compress_typ_aux pos t
   | _ -> typ
 let compress_typ typ = compress_typ_aux true typ
 let compress_typ_uvars typ = compress_typ_aux false typ
 
-let rec compress_exp_aux meta exp = match exp with 
+let rec compress_exp_aux meta exp = match exp.n with 
   | Exp_uvar (uv, _) -> 
     begin
       match Unionfind.find uv with 
@@ -55,13 +54,12 @@ let rec compress_exp_aux meta exp = match exp with
       | None -> exp
       | Some e -> let e' = compress_exp_aux meta e in m := Some e'; e')
   | Exp_ascribed(e, _)
-  | Exp_meta(Meta_info(e, _, _))
   | Exp_meta(Meta_desugared(e, _)) when meta -> compress_exp_aux meta e
   | _ -> exp
 let compress_exp e = compress_exp_aux true e
 let compress_exp_uvars e = compress_exp_aux false e
  
-let rec compress_kind knd = match knd with 
+let rec compress_kind knd = match knd.n with 
   | Kind_uvar uv -> 
     begin
       match Unionfind.find uv with 
@@ -74,7 +72,7 @@ let rec compress_kind knd = match knd with
       | Some k -> let k' = compress_kind k in m := Some k'; k')
   | _ -> knd
 
-let rec compress_comp c : comp = match c with 
+let rec compress_comp c : comp = match c.n with 
   | Comp _ 
   | Total _ -> c
   | Flex (u, _) -> 
@@ -83,12 +81,12 @@ let rec compress_comp c : comp = match c with
       | Resolved c -> compress_comp c
 
 let compress_comp_typ c : comp_typ =
-  match compress_comp c with 
+  match (compress_comp c).n with 
     | Comp c -> c
     | Total t -> {effect_name=Const.tot_effect_lid; result_typ=t; effect_args=[]; flags=[TOTAL]}
     | Flex(u, t) -> 
       let ml = {effect_name=Const.ml_effect_lid; result_typ=t; effect_args=[]; flags=[MLEFFECT]} in
-      Unionfind.change u (Resolved (Comp ml));
+      Unionfind.change u (Resolved (mk_Comp ml));
       ml  
 
 let left ext benv btv = match ext benv (Inl btv) with 
@@ -110,7 +108,7 @@ let rec visit_kind'
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
     (env:'env) (benv:'benv) (k:knd) (cont: ('env * knd) -> 'res) : 'res =
   let k = compress_kind k in 
-  match k with
+  match k.n with
     | Kind_uvar _ 
     | Kind_type
     | Kind_effect
@@ -121,7 +119,7 @@ let rec visit_kind'
       visit_kind' visit_wps h f g l ext env benv k
         (fun (env, k) -> 
            visit_either_l' visit_wps h f g l ext env benv (snd kabr)
-            (fun (env, args) -> cont (env, Kind_abbrev((fst kabr, args), k))))
+            (fun (env, args) -> cont (env, mk_Kind_abbrev((fst kabr, args), k) k.pos)))
     | Kind_tcon(aopt, k, k', imp) -> (* log 3 ; *)
         visit_kind' visit_wps h f g l ext env benv k
           (fun (env, k) ->
@@ -132,7 +130,7 @@ let rec visit_kind'
                      benv, Some bvd in (* Note: previously, with qkind, we were extending the benv before folding over k *)
                visit_kind' visit_wps h f g l ext env benv k'
                  (fun (env, k') ->
-                    cont (env, Kind_tcon(aopt, k, k', imp))))
+                    cont (env, mk_Kind_tcon(aopt, k, k', imp) k.pos)))
     | Kind_dcon(xopt, t, k', imp) -> (* log 4 ; *)
         visit_typ' visit_wps h f g l ext env benv t
           (fun (env, t) ->
@@ -141,7 +139,7 @@ let rec visit_kind'
                | Some x -> let benv, bvd = right ext benv (withsort x t) in benv, Some bvd in
                visit_kind' visit_wps h f g l ext env benv k'
                  (fun (env, k') ->
-                    cont (env, Kind_dcon(xopt, t, k', imp))))
+                    cont (env, mk_Kind_dcon(xopt, t, k', imp) k.pos)))
 and visit_typ'
     (visit_wps:bool)
     (h: 'env -> 'benv -> knd -> ('env * knd))
@@ -150,8 +148,9 @@ and visit_typ'
     (l: 'env -> exp -> exp) (* transforms labels *)
     (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
     (env:'env) (benv:'benv) (t:typ) (cont:('env * typ) -> 'res) : 'res =
-  let wk = withkind t.k in
-  match t.t with
+  let wp f = f t.pos in
+  let wk f = f t.tk t.pos in
+  match t.n with
     | Typ_uvar (uv, k) -> (* log 5 ; *)
       (match Unionfind.find uv with 
         | Fixed t -> visit_typ' visit_wps h f g l ext env benv t cont
@@ -161,7 +160,6 @@ and visit_typ'
       let env, t = f env benv t in
       visit_typ' visit_wps h f g l ext env benv t cont
 
-    | Typ_meta(Meta_pos(t, _)) 
     | Typ_ascribed(t, _) -> (* log 6 ; *) visit_typ' visit_wps h f g l ext env benv t cont
 
     | Typ_btvar _ 
@@ -169,7 +167,7 @@ and visit_typ'
     | Typ_unknown -> (* log 7 ; *) cont (f env benv t)
 
     | _ ->
-      match t.t with
+      match t.n with
         | Typ_fun (nopt, t1, t2, imp) -> (* log 8 ; *)
           visit_typ' visit_wps h f g l ext env benv t1
             (fun (env, t1') ->
@@ -180,7 +178,7 @@ and visit_typ'
                   benv, Some bvd' in
               visit_comp' visit_wps h f g l ext env benv' t2
                 (fun (env, t2') ->
-                  cont (env, wk <| Typ_fun(nopt', t1', t2', imp))))
+                  cont (env, wk <| mk_Typ_fun(nopt', t1', t2', imp))))
             
         | Typ_univ (bvd, k,  t) -> (* log 9 ; *)
           let benv', bvd' = left ext benv (withsort bvd k) in
@@ -188,7 +186,7 @@ and visit_typ'
             (fun (env, t') ->
               visit_kind' visit_wps h f g l ext env benv' k
                 (fun (env, k') ->
-                      cont (env, wk <| Typ_univ(bvd', k', t'))))
+                      cont (env, wk <| mk_Typ_univ(bvd', k', t'))))
             
         | Typ_refine (bvd, t, form) -> (* log 10 ; *)
           visit_typ' visit_wps h f g l ext env benv t
@@ -196,25 +194,25 @@ and visit_typ'
               let benv', bvd' = right ext benv (withsort bvd t) in
               visit_typ' visit_wps h f g l ext env benv' form
                 (fun (env, form') ->
-                  cont (env, wk <| Typ_refine(bvd', t', form'))))
+                  cont (env, wk <| mk_Typ_refine(bvd', t', form'))))
 
         | Typ_app(t1, t2, imp) -> (* log 11 ; *)
           visit_typ' visit_wps h f g l ext env benv t1
             (fun (env, t1') ->
               visit_typ' visit_wps h f g l ext env benv t2
                 (fun (env, t2') ->
-                  cont (env, wk <| Typ_app(t1', t2', imp))))
+                  cont (env, wk <| mk_Typ_app(t1', t2', imp))))
 
-        | Typ_dep({t=Typ_const v; k=k'}, str, imp) 
+        | Typ_dep({n=Typ_const v; tk=k'; pos=p}, str, imp) 
             when lid_equals Const.lbl_lid v.v -> (* log 12 ; *)
-          cont (env, wk <| Typ_dep(withkind k' <| Typ_const(v), l env str, imp))
+          cont (env, wk <| mk_Typ_dep(mk_Typ_const v k' p, l env str, imp))
             
         | Typ_dep (t, e, imp) -> (* log 13 ; *)
           visit_typ' visit_wps h f g l ext env benv t
             (fun (env, t') ->
               visit_exp' visit_wps h f g l ext env benv e
                 (fun (env, e') ->
-                  cont (env, wk <| Typ_dep(t', e', imp))))
+                  cont (env, wk <| mk_Typ_dep(t', e', imp))))
 
         | Typ_lam(x, t, t') -> (* log 14 ; *)
           visit_typ' visit_wps h f g l ext env benv t
@@ -222,7 +220,7 @@ and visit_typ'
               let benv', bvd' = right ext benv (withsort x t) in
               visit_typ' visit_wps h f g l ext env benv' t'
                 (fun (env, t') ->
-                  cont (env, wk <| Typ_lam(bvd', t, t'))))
+                  cont (env, wk <| mk_Typ_lam(bvd', t, t'))))
 
         | Typ_tlam(bvd, k, t) -> (* log 15 ; *)
           let benv', bvd' = left ext benv (withsort bvd k) in
@@ -230,7 +228,7 @@ and visit_typ'
             (fun (env, t') ->
               visit_kind' visit_wps h f g l ext env benv' k
                 (fun (env, k') ->
-                  cont (env, wk <| Typ_tlam(bvd', k', t'))))
+                  cont (env, wk <| mk_Typ_tlam(bvd', k', t'))))
 
         | Typ_meta (Meta_pattern(t, ps)) ->  (* log 18 ; *)
           let rec aux env ps cont = match ps with 
@@ -240,10 +238,10 @@ and visit_typ'
             | Inr v::tl ->  visit_exp' visit_wps h f g l ext env benv v (fun (env, e') -> 
               aux env tl (fun (env, accum) -> cont (env, Inr e'::accum))) in 
           visit_typ' visit_wps h f g l ext env benv t 
-            (fun (env, t') -> aux env ps (fun (env, ps) -> cont (env, wk <| Typ_meta(Meta_pattern(t', ps)))))
+            (fun (env, t') -> aux env ps (fun (env, ps) -> cont (env, mk_Typ_meta (Meta_pattern(t', ps)))))
 
         | Typ_meta(Meta_named(t, name)) -> (* log 19 ; *)
-          visit_typ' visit_wps h f g l ext env benv t (fun (env, t) -> cont (env, wk <| Typ_meta(Meta_named(t, name))))
+          visit_typ' visit_wps h f g l ext env benv t (fun (env, t) -> cont (env, mk_Typ_meta(Meta_named(t, name))))
 
         | _ -> failwith "Unexpected type"
 
@@ -254,13 +252,14 @@ and visit_comp' (visit_wps:bool)
                 (l: 'env -> exp -> exp)
                 (ext: 'benv -> either<btvar, bvvar> -> ('benv * either<btvdef,bvvdef>))
                 (env:'env) (benv:'benv) (c:comp) (cont : ('env * comp) -> 'res) : 'res =
-   match compress_comp c with 
+   let c = compress_comp c in
+   match c.n with 
     | Comp ct -> (* log 20 ; *)
-      visit_comp_typ' visit_wps h f g l ext env benv ct (fun (env, ct) -> cont (env, Comp ct))
+      visit_comp_typ' visit_wps h f g l ext env benv ct (fun (env, ct) -> cont (env, mk_Comp ct))
     | Total t -> (* log 21 ; *)
-      visit_typ' visit_wps h f g l ext env benv t (fun (env, t) -> cont (env, Total t))
+      visit_typ' visit_wps h f g l ext env benv t (fun (env, t) -> cont (env, mk_Total t))
     | Flex (u, t) -> (* log 22 ; *)
-      visit_typ' visit_wps h f g l ext env benv t (fun (env, t) -> cont (env, Flex(u,t)))
+      visit_typ' visit_wps h f g l ext env benv t (fun (env, t) -> cont (env, mk_Flex (u,t)))
    
 and visit_comp_typ'
     (visit_wps:bool)
@@ -289,17 +288,16 @@ and visit_exp'
   let extr b l = match ext b l with
     | (x, Inr y) -> (x,y) 
     | _ -> failwith "Unexpected result" in
-    match e with
+  let wt f = f e.tk e.pos in
+  let wp f = f e.pos in
+    match e.n with
     | Exp_delayed _ -> let env, e = g env benv e in visit_exp' visit_wps h f g l ext env benv e cont
     | Exp_meta(Meta_datainst _) -> failwith "impossible"
-    | Exp_meta(Meta_info(e, t, p)) -> (* log 23 ; *)
-      visit_exp' visit_wps h f g l ext env benv e 
-        (fun (env, e') -> cont (env, Exp_meta(Meta_info(e', t, p))))
-
+    
     | Exp_meta(Meta_desugared(e, tag)) -> (* log 24 ; *)
       visit_exp' visit_wps h f g l ext env benv e 
         (fun (env, e') -> 
-          cont (env, Exp_meta(Meta_desugared(e', tag))))
+          cont (env, mk_Exp_meta(Meta_desugared(e', tag))))
                     
     | Exp_bvar bv -> (* log 25 ; *)
         cont (g env benv e)
@@ -319,7 +317,7 @@ and visit_exp'
           let benv', bvd' = extr benv (Inr (withsort bvd t)) in
           visit_exp' visit_wps h f g l ext env benv' e
             (fun (env, e') ->
-              cont (env, Exp_abs(bvd', t', e'))))
+              cont (env, wt <| mk_Exp_abs(bvd', t', e'))))
         
     | Exp_tabs(bvd, k, e) -> (* log 30 ; *)
       visit_kind' visit_wps h f g l ext env benv k
@@ -327,21 +325,21 @@ and visit_exp'
           let benv', bvd' = extl benv (Inl (withsort bvd k)) in
           visit_exp' visit_wps h f g l ext env benv' e
             (fun (env, e') ->
-              cont (env, Exp_tabs(bvd', k', e'))))
+              cont (env, wt <| mk_Exp_tabs(bvd', k', e'))))
         
     | Exp_app (e1, e2, imp) -> (* log 31 ; *)
       visit_exp' visit_wps h f g l ext env benv e1
         (fun (env, e1') ->
           visit_exp' visit_wps h f g l ext env benv e2
             (fun (env, e2') ->
-              cont (env, Exp_app(e1', e2', imp))))
+              cont (env, wt <| mk_Exp_app(e1', e2', imp))))
         
     | Exp_tapp (e, t) -> (* log 32 ; *)
       visit_exp' visit_wps h f g l ext env benv e
         (fun (env, e') ->
           visit_typ' visit_wps h f g l ext env benv t
             (fun (env, t') ->
-              cont (env, Exp_tapp(e',t'))))
+              cont (env, wt <| mk_Exp_tapp(e', t'))))
         
     | Exp_match(e, eqns) -> (* log 33 ; *)
       let rec visit_pat h f g l ext env benv pat cont = match pat with
@@ -399,14 +397,14 @@ and visit_exp'
         (fun (env, e) ->
           visit_eqns env benv eqns
             (fun (env, eqns) ->
-              cont (env, Exp_match(e, eqns))))
+              cont (env, wt <| mk_Exp_match(e, eqns))))
         
     | Exp_ascribed (e,t) -> (* log 34 ; *)
       visit_exp' visit_wps h f g l ext env benv e
         (fun (env, e') ->
           visit_typ' visit_wps h f g l ext env benv t
             (fun (env, t') ->
-              cont (env, Exp_ascribed(e',t'))))
+              cont (env, wp <| mk_Exp_ascribed(e', t'))))
         
     | Exp_let ((false,lbs), e) -> (* log 35 ; *)
       let rec binders_visit env benv lbs cont = match lbs with
@@ -426,7 +424,7 @@ and visit_exp'
       binders_visit env benv lbs
         (fun (env, benv', lbs') ->
           visit_exp' visit_wps h f g l ext env benv' e
-            (fun (env, e') -> cont (env, Exp_let((false, lbs'), e'))))
+            (fun (env, e') -> cont (env, wt <| mk_Exp_let((false, lbs'), e'))))
         
     | Exp_let ((true, lbs), e) -> (* log 36 ; *)
       let benv', lbs' = List.fold_left
@@ -445,7 +443,7 @@ and visit_exp'
               let lbs' = List.zip3 names typs exps in
               visit_exp' visit_wps h f g l ext env benv' e
                 (fun (env, e') ->
-                  cont (env, Exp_let((true, lbs'), e')))))
+                  cont (env, wt <| mk_Exp_let((true, lbs'), e')))))
 
 and visit_typs'
     (visit_wps:bool)
@@ -555,7 +553,8 @@ let rec reduce_kind
   let rec visit_kind env binders k =
     let k = compress_kind k in
     let kl, tl, el, env =   
-      match k with 
+      match k.n with 
+        | Kind_delayed _ -> failwith "Impossible"
         | Kind_uvar _
         | Kind_type 
         | Kind_effect
@@ -594,13 +593,15 @@ and reduce_typ
         let binders = push_vbinder binders xopt in 
         t::out, binders, env) ([], binders, env) tl in
     List.rev tl, env 
-  and map_comp (env:'env) (binders:list<either<btvdef,bvvdef>>) (c:comp) = match compress_comp c with 
+  and map_comp (env:'env) (binders:list<either<btvdef,bvvdef>>) (c:comp) = 
+    let c = compress_comp c in
+    match c.n with
     | Flex (u, t) -> 
       let t, env = map_typ env binders t in
-      Flex(u, t), env    
+      mk_Flex(u, t), env    
     | Total t -> 
       let t, env = map_typ env binders t in
-      Total t, env
+      mk_Total t, env
     | Comp ct ->
       let t, env = map_typ env binders ct.result_typ in
       let env, args = List.fold_left (fun (env, out) -> function
@@ -610,10 +611,10 @@ and reduce_typ
         | Inr e -> 
           let e, env = map_exp env binders e in
           env, Inr e::out) (env, []) ct.effect_args in 
-      Comp ({ct with result_typ=t; effect_args=List.rev args}), env 
+      mk_Comp ({ct with result_typ=t; effect_args=List.rev args}), env 
 
   and visit_typ env binders t = 
-    let kl, tl, cl, el, env = match (compress_typ t).t with 
+    let kl, tl, cl, el, env = match (compress_typ t).n with 
       | Typ_delayed _ -> failwith "Impossible"
       | Typ_unknown
       | Typ_btvar _   
@@ -649,8 +650,7 @@ and reduce_typ
       | Typ_uvar(_, k) -> 
         let k, env = map_kind env binders k in
         [k], [], [], [], env
-      | Typ_meta(Meta_named(t, _)) 
-      | Typ_meta(Meta_pos(t, _)) ->
+      | Typ_meta(Meta_named(t, _)) ->
         let t, env = map_typ env binders t in
         [], [t], [], [], env 
       | Typ_meta(Meta_pattern(t,ps)) -> 
@@ -714,12 +714,9 @@ and reduce_exp
   and map_exp env binders e = map_exp' map_kind map_typ visit_exp env binders e
   and visit_exp env binders e = 
      let e = compress_exp_uvars e in 
-     let kl, tl, el, env = match e with 
+     let kl, tl, el, env = match e.n with 
+        | Exp_delayed _
         | Exp_meta(Meta_datainst _) -> failwith "impossible"
-        | Exp_meta(Meta_info(e, t, _)) -> 
-          let e, env = map_exp env binders e in 
-          let t, env = map_typ env binders t in 
-          [], [t], [e], env
         | Exp_meta(Meta_desugared(e, _)) -> 
           let e, env = map_exp env binders e in 
           [], [], [e], env
@@ -789,11 +786,11 @@ and reduce_exp
   map_exp env binders e
     
 let combine_kind k (kl, tl, el) env = 
-  let k' = match k, kl, tl with 
+  let k' = match k.n, kl, tl with 
     | Kind_uvar _, [], []
     | Kind_type, [], [] 
     | Kind_effect, [], []
-    | Kind_unknown, [], [] -> k
+    | Kind_unknown, [], [] -> (fun p -> Util.return_all k)
     | Kind_abbrev(kabr, _), [k], _ -> 
       let rec reconstruct x = match x with
         | ([], [], []) -> []
@@ -801,60 +798,60 @@ let combine_kind k (kl, tl, el) env =
         | (Inr _::args, tl, e::el) -> Inr e::reconstruct (args, tl, el)
         | _ -> failwith "impossible" in
       let args = reconstruct (snd kabr, tl, el) in 
-      Kind_abbrev((fst kabr, args), k)
-    | Kind_tcon (aopt, k1, k2, imp), [k1';k2'], [] -> Kind_tcon(aopt, k1', k2', imp)
-    | Kind_dcon (xopt, t, k, imp), [k'], [t'] -> Kind_dcon(xopt, t', k', imp) 
+      mk_Kind_abbrev((fst kabr, args), k)
+    | Kind_tcon (aopt, k1, k2, imp), [k1';k2'], [] -> mk_Kind_tcon(aopt, k1', k2', imp)
+    | Kind_dcon (xopt, t, k, imp), [k'], [t'] -> mk_Kind_dcon(xopt, t', k', imp)
     | _ -> failwith "impossible" in
-  k', env
+  k' k.pos, env
     
 let combine_typ t (kl, tl, cl, el) env =
   let t = compress_typ t in 
-  let t' = match t.t, kl, tl, cl, el with 
+  let w f = f t.tk t.pos in
+  let t' = match t.n, kl, tl, cl, el with 
     | Typ_unknown, [], [], [], []
     | Typ_btvar _, [], [], [], []  
-    | Typ_const _, [], [], [], [] -> t.t
-    | Typ_lam(x, t1, t2), [], [t1';t2'], [], [] -> Typ_lam(x, t1', t2')
-    | Typ_app(t1, t2, imp), [], [t1';t2'], [], [] -> Typ_app(t1',t2', imp)
-    | Typ_refine(x, t1, t2), [], [t1';t2'], [], [] -> Typ_refine(x, t1', t2')
-    | Typ_fun(x, t1, t2, imp), [], [t1'], [t2'], [] -> Typ_fun(x, t1', t2', imp)
-    | Typ_tlam(a, k, t), [k'], [t'], [], [] -> Typ_tlam(a, k', t')
-    | Typ_univ(a, k, t), [k'], [], [t'], [] -> Typ_univ(a, k', t')
-    | Typ_dep(t, e, imp), [], [t'], [], [e'] -> Typ_dep(t', e', imp)
-    | Typ_uvar(x, k), [k'], [], [], [] -> Typ_uvar(x, k')
-    | Typ_ascribed(_,_), [k'], [t'], [], [] -> Typ_ascribed(t', k')
-    | Typ_meta(Meta_named(_, l)), [], [t'], [], [] -> Typ_meta(Meta_named(t', l))
-    | Typ_meta(Meta_pos(_, r)), [], [t'], [], [] -> Typ_meta(Meta_pos(t', r))
-    | Typ_meta(Meta_pattern _), [], _, _, _ -> Typ_meta(Meta_pattern(List.hd tl, (List.tl tl |> List.map Inl)@(el |> List.map Inr)))
+    | Typ_const _, [], [], [], [] -> t
+    | Typ_lam(x, t1, t2), [], [t1';t2'], [], [] ->     w <| mk_Typ_lam(x, t1', t2')
+    | Typ_app(t1, t2, imp), [], [t1';t2'], [], [] ->   w <| mk_Typ_app(t1', t2', imp)
+    | Typ_refine(x, t1, t2), [], [t1';t2'], [], [] ->  w <| mk_Typ_refine(x, t1', t2')
+    | Typ_fun(x, t1, t2, imp), [], [t1'], [t2'], [] -> w <| mk_Typ_fun(x, t1', t2', imp)
+    | Typ_tlam(a, k, t), [k'], [t'], [], [] ->         w <| mk_Typ_tlam(a, k', t')
+    | Typ_univ(a, k, t), [k'], [], [t'], [] ->         w <| mk_Typ_univ(a, k', t')
+    | Typ_dep(t, e, imp), [], [t'], [], [e'] ->        w <| mk_Typ_dep(t', e', imp)
+    | Typ_uvar(x, k), [k'], [], [], [] ->              w <| mk_Typ_uvar'(x, k')
+    | Typ_ascribed(_,_), [k'], [t'], [], [] ->         w <| mk_Typ_ascribed'(t', k')
+    | Typ_meta(Meta_named(_, l)), [], [t'], [], [] ->  w <| mk_Typ_meta'(Meta_named(t', l))
+    | Typ_meta(Meta_pattern _), [], _, _, _ ->         
+      let pp = Meta_pattern(List.hd tl, (List.tl tl |> List.map Inl)@(el |> List.map Inr)) in
+      w <| mk_Typ_meta'(pp)
     | _ -> failwith "impossible" in
-  withkind t.k t', env
+  t', env
 
 let combine_exp e (kl,tl,el) env = 
-  let e' = match e, kl, tl, el with 
+  let w f = f e.tk e.pos in
+  let e' = match e.n, kl, tl, el with 
     | Exp_bvar _, [], [], []  
     | Exp_fvar _, [], [], [] 
-    | Exp_constant _, [], [], [] -> e
-    | Exp_uvar(uv, _), [], [t], [] -> Exp_uvar(uv, t)
-    | Exp_abs(x, t, e), [], [t'], [e'] -> Exp_abs(x, t', e')
-    | Exp_tabs(a, k, e), [k'], [], [e'] -> Exp_tabs(a, k', e')
-    | Exp_app(e1, e2, imp), [], [], [e1';e2'] -> Exp_app(e1', e2', imp)  
-    | Exp_tapp(e, t), [], [t'], [e'] -> Exp_tapp(e', t')
+    | Exp_constant _, [], [], [] -> e 
+    | Exp_uvar(uv, _), [], [t], [] ->            w <| mk_Exp_uvar'(uv, t)
+    | Exp_abs(x, t, e), [], [t'], [e'] ->        w <| mk_Exp_abs(x, t', e')
+    | Exp_tabs(a, k, e), [k'], [], [e'] ->       w <| mk_Exp_tabs(a, k', e')
+    | Exp_app(e1, e2, imp), [], [], [e1';e2'] -> w <| mk_Exp_app(e1', e2', imp)
+    | Exp_tapp(e, t), [], [t'], [e'] ->          w <| mk_Exp_tapp(e', t')
     | Exp_match(e1, eqns), [], [], e1'::el -> 
       let rec mk_eqns eqns el = match eqns, el with 
         | (p,None, _)::eqns', e::el' -> (p, None, e)::mk_eqns eqns' el'
         | (p,Some _, _)::eqns', w::e::el' -> (p, Some w, e)::mk_eqns eqns' el'
         | [], [] -> []
         | _ -> failwith "impossible" in
-      Exp_match(e1', mk_eqns eqns el)
-    | Exp_ascribed(e, t), [], [t'], [e'] -> Exp_ascribed(e', t')
+                                                 w <| mk_Exp_match(e1', mk_eqns eqns el)
+    | Exp_ascribed(e, t), [], [t'], [e'] ->      w <| mk_Exp_ascribed'(e', t')
     | Exp_let((x, lbs), e), [], _, _ ->
         (match Util.first_N (List.length lbs) el with 
            | el, [e'] -> 
               let lbs' = List.map3 (fun (lbname, _, _) t e -> (lbname, t, e)) lbs tl el in
-              Exp_let((x, lbs'), e') 
+              w <| mk_Exp_let((x, lbs'), e')
            | _ -> failwith "impossible")
-    | Exp_meta(Meta_info(_, _, p)), [], [t], [e] -> 
-      Exp_meta(Meta_info(e, t, p))
-    | Exp_meta(Meta_desugared(_, tag)), [], [], [e] -> 
-      Exp_meta(Meta_desugared(e, tag))
+    | Exp_meta(Meta_desugared(_, tag)), [], [], [e] -> w <| mk_Exp_meta' (Meta_desugared(e, tag))
     | _ -> failwith "impossible" in
   e', env

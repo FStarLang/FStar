@@ -105,7 +105,7 @@ let disjunctive_pattern_vars v1 v2 =
     "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")" 
     (vars v1) (vars v2)
  
-let name_and_result c = match Util.compress_comp c with
+let name_and_result c = match (Util.compress_comp c).n with
   | Total t -> "Tot", t
   | Flex(u, t) -> format1 "__Eff%s__" (string_of_int <| Unionfind.uvar_id u), t
   | Comp ct -> Print.sli ct.effect_name, ct.result_typ
