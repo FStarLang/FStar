@@ -77,8 +77,7 @@ let withinfo e s r = {v=e; sort=s; p=r}
 let withsort e s   = withinfo e s dummyRange
 let bvar_ppname bv = bv.v.ppname 
 let bvar_realname bv = bv.v.realname
-let bvar_eq (bv1:bvar<'a,'b>) (bv2:bvar<'a,'b>) = 
-  (bvar_realname bv1).idText = (bvar_realname bv2).idText
+let bvar_eq (bv1:bvar<'a,'b>) (bv2:bvar<'a,'b>) = bvd_eq bv1.v bv2.v
 let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bvd_eq x y
   | Inr l, Inr m -> lid_equals l m
@@ -540,193 +539,294 @@ let destruct_fun =
 
     fun e -> destruct [] e
 
-(********************************************************************************)
-(************** Collecting all unification variables in a type ******************)
-(********************************************************************************)
-(* TODO: Should just remove this *)
-type uvars = {
-  uvars_k: list<uvar_k>;
-  uvars_t: list<(uvar_t*knd)>;
-  uvars_e: list<(uvar_e*typ)>
-  }
-let empty_uvars = {uvars_k=[]; uvars_t=[]; uvars_e=[]}
-let collect_uvars_k uvs k = match k.n with 
-  | Kind_uvar uv -> 
-      (match List.tryFind (Unionfind.equivalent uv) uvs.uvars_k with 
-          | Some _ -> uvs, k
-          | None -> {uvs with uvars_k=uv::uvs.uvars_k}, k)
-  | Kind_delayed _ -> uvs, compress_kind k
-  | _ -> uvs, k
-let collect_uvars_t uvs t : uvars * typ = match t.n with 
-    | Typ_uvar (uv, k) -> 
-        (match List.tryFind (fun (uv', _) -> Unionfind.equivalent uv uv') uvs.uvars_t with 
-          | Some _ -> uvs, t
-          | None -> {uvs with uvars_t=(uv,k)::uvs.uvars_t}, t)
-    | Typ_delayed _ -> uvs, compress_typ t
-    | _ -> uvs, t 
-
-let collect_uvars_e uvs e : uvars * exp = match e.n with 
-    | Exp_uvar (uv, t) -> 
-        (match List.tryFind (fun (uv', _) -> Unionfind.equivalent uv uv') uvs.uvars_e with 
-          | Some _ -> uvs, e
-          | None -> {uvs with uvars_e=(uv,t)::uvs.uvars_e}, e)
-    | Exp_delayed _ -> uvs, compress_exp e
-    | _ -> uvs, e 
-let uvars_in_kind k : uvars = 
-  fst <| Visit.visit_kind_simple false collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars k
-let uvars_in_typ t : uvars = 
-  fst <| Visit.visit_typ_simple false collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars t
-let uvars_in_exp e : uvars = 
-  fst <| Visit.visit_exp_simple false collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars e
-let uvars_in_typ' t : uvars = 
-  fst <| Visit.visit_typ_simple true collect_uvars_k collect_uvars_t collect_uvars_e empty_uvars t
 let unchecked_unify uv t = 
   match Unionfind.find uv with 
     | Fixed _ -> failwith "Changing a fixed uvar!"
     | _ -> Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here *)
 
-
 (********************************************************************************)
-(**************************** Free type/term variables **************************)
+(************************* Free type/term/unif variables ************************)
 (********************************************************************************)
+type freevars' = list<btvar> * list<bvvar>
+let eq_fvars v1 v2 = match v1, v2 with 
+    | Inl a, Inl b -> Syntax.bvd_eq a b
+    | Inr x, Inr y -> Syntax.bvd_eq x y
+    | _ -> false
 
-type freevars = (list<btvar> * list<bvvar>)
-type boundvars = (list<btvdef> * list<bvvdef>)
-let is_bound_tv ((btvs, _):boundvars) (bv:btvar) = 
-  Util.for_some (fun bvd' -> bvd_eq bvd' bv.v) btvs 
-let is_bound_xv ((_, bxvs):boundvars) (bv:bvvar) = 
-  Util.for_some (fun bvd' -> bvd_eq bvd' bv.v) bxvs 
-let fv_fold_t (out:freevars) (benv:boundvars) (t:typ) : (freevars * typ) =
-  let (ftvs, fxvs) = out in
-  match t.n with
-    | Typ_btvar bv -> 
-      if is_bound_tv benv bv then out, t
-      else if !Options.fvdie then failwith (Util.format1 "Freevar : %s\n" (bv.v.realname.idText))
-      else (add_unique bvar_eq bv ftvs, fxvs), t
-    | Typ_delayed _ -> 
-      out, compress_typ t
-    | _ -> out, t 
-let fv_fold_e (out:freevars) (benv:boundvars) (e:exp) : (freevars * exp) =
-  let (ftvs, fxvs) = out in
-  match e.n with
-    | Exp_bvar bv ->
-      if is_bound_xv benv bv then out, e (* let _ = pr "Bvar %s is bound, where env is %s\n" (strBvar bv) (strBenv benv) in *)
-      else (ftvs, add_unique bvar_eq bv fxvs), e      (* let _ = pr "Bvar %s is free, where env is %s\n" (strBvar bv) (strBenv benv) in *)
-    | Exp_delayed _ -> 
-      out, compress_exp e
-    | _ -> out, e 
-let ext_fv_env ((btvs, bxvs):boundvars) : either<btvar,bvvar> -> (boundvars * either<btvdef, bvvdef>) =
-  function 
-    | Inl tv -> (tv.v::btvs, bxvs), Inl tv.v
-    | Inr xv -> (btvs, xv.v::bxvs), Inr xv.v 
-let fold_kind_noop env benv k = match k.n with 
-  | Kind_delayed _ -> (env, compress_kind k)
-  | _ -> (env, k)
+let uv_eq (uv1,_) (uv2,_) = Unionfind.equivalent uv1 uv2
+let union_uvs uvs1 uvs2 =
+    {   uvars_k=Util.remove_dups Unionfind.equivalent (uvs1.uvars_k@uvs2.uvars_k);    
+        uvars_c=Util.remove_dups Unionfind.equivalent (uvs1.uvars_c@uvs2.uvars_c);
+        uvars_t=Util.remove_dups uv_eq (uvs1.uvars_t@uvs2.uvars_t);
+        uvars_e=Util.remove_dups uv_eq (uvs1.uvars_e@uvs2.uvars_e);
+    }
 
-let freevars_kind : knd -> freevars = 
-  fun k -> fst <| Visit.visit_kind true fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) k
+let union_fvs (fvs1, uvs1) (fvs2, uvs2) = 
+    {
+        ftvs=Util.remove_dups bvar_eq (fvs1.ftvs@fvs2.ftvs);
+        fxvs=Util.remove_dups bvar_eq (fvs1.fxvs@fvs2.fxvs);
+    }, 
+    union_uvs uvs1 uvs2
+
+let sub_fv (fvs, uvs) (by:option<either<btvdef,bvvdef>>) = match by with 
+    | None -> fvs, uvs
+    | Some (Inl b) -> 
+        {fvs with ftvs=fvs.ftvs |> List.filter (fun a -> not <| bvd_eq a.v b)}, uvs
+    | Some (Inr y) -> 
+        {fvs with fxvs=fvs.fxvs |> List.filter (fun a -> not <| bvd_eq a.v y)}, uvs
+
+let tbinder = function 
+    | None -> None
+    | Some x -> Some <| Inl x
+let vbinder = function 
+    | None -> None
+    | Some x -> Some <| Inr x
+
+
+let stash (uvonly:bool) (s:syntax<'a,'b>) ((fvs:freevars), (uvs:uvars)) = 
+    s.uvs := Some uvs;
+    if uvonly then ()
+    else s.fvs := Some fvs
+
+let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
+    let t = compress_typ t in
+    match t.n with
+        | Typ_delayed _ -> failwith "Impossible"
+        | Typ_btvar a -> 
+          if uvonly 
+          then cont (no_fvs, no_uvs)
+          else cont ({no_fvs with ftvs=[a]}, no_uvs)
+
+        | Typ_uvar (uv, k) -> cont (no_fvs, {no_uvs with uvars_t=[(uv,k)]})
+
+        | Typ_unknown        
+        | Typ_const _ -> cont (no_fvs, no_uvs)
+
+        | Typ_fun(xopt, t, c, _) -> 
+          vs_typ t uvonly (fun ft1 -> 
+          vs_comp c uvonly (fun ft2 -> 
+          let fvs = union_fvs ft1 (sub_fv ft2 (vbinder xopt)) in
+          cont fvs)) 
+
+        | Typ_refine(x, t1, t2)
+        | Typ_lam(x, t1, t2) -> 
+          vs_prod_tt uvonly (Some <| Inr x) t1 t2 cont
+
+        | Typ_app(t1, t2, _) ->
+          vs_prod_tt uvonly None t1 t2 cont
+
+        | Typ_univ(a, k, c) -> 
+          vs_kind k uvonly (fun ft1 -> 
+          vs_comp c uvonly (fun ft2 -> 
+          let fvs = union_fvs ft1 (sub_fv ft2 (Some <| Inl a)) in
+          cont fvs)) 
+    
+        | Typ_tlam(a, k, t) -> 
+          vs_kind k uvonly (fun ft1 -> 
+          vs_typ t uvonly (fun ft2 -> 
+          let fvs = union_fvs ft1 (sub_fv ft2 (Some <| Inl a)) in
+          cont fvs)) 
+          
+        | Typ_dep(t1, e1, _) ->
+          vs_prod_te uvonly None t1 e1 cont
+          
+        | Typ_ascribed(t, _) -> 
+          vs_typ t uvonly cont        
+
+        | Typ_meta(Meta_named(t, _))
+        | Typ_meta(Meta_pattern(t, _)) -> 
+          vs_typ t uvonly cont
+
+and vs_typ (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
+    match !t.fvs, !t.uvs with 
+        | Some _, None -> failwith "Impossible"
+        | None, None -> vs_typ' t uvonly (fun fvs -> stash uvonly t fvs; cont fvs)
+        | None, Some uvs -> 
+            if uvonly
+            then cont (no_fvs, uvs)
+            else vs_typ' t uvonly (fun fvs -> stash uvonly t fvs; cont fvs)
+        | Some fvs, Some uvs -> cont (fvs, uvs)
+
+and vs_prod_te (uvonly:bool) (x:option<either<btvdef,bvvdef>>) (t:typ) (e:exp) (k:(freevars * uvars) -> 'res) : 'res = 
+    vs_typ t uvonly (fun ft1 -> 
+    vs_exp e uvonly (fun ft2 -> 
+    let fvs = union_fvs ft1 (sub_fv ft2 x) in
+    k fvs)) 
+
+and vs_prod_tt (uvonly:bool) (x:option<either<btvdef, bvvdef>>) (t1:typ) (t2:typ) (k:(freevars * uvars) -> 'res) : 'res = 
+    vs_typ t1 uvonly (fun ft1 -> 
+    vs_typ t2 uvonly (fun ft2 -> 
+    let fvs = union_fvs ft1 (sub_fv ft2 x) in
+    k fvs)) 
+ 
+and vs_kind' (k:knd) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
+    let k = compress_kind k in 
+    match k.n with 
+        | Kind_delayed _ -> failwith "Impossible"
+        | Kind_unknown
+        | Kind_type
+        | Kind_effect -> cont (no_fvs, no_uvs)
+
+        | Kind_uvar uv -> cont (no_fvs, {no_uvs with uvars_k=[uv]})
+        
+        | Kind_abbrev(_, k) -> 
+          vs_kind k uvonly cont
+
+        | Kind_dcon(aopt, t, k, _) -> 
+          vs_typ t uvonly (fun ft1 -> 
+          vs_kind k uvonly (fun ft2 -> 
+          cont (union_fvs ft1 (sub_fv ft2 (vbinder aopt)))))
+
+        | Kind_tcon(aopt, k1, k2, _) -> 
+          vs_kind k1 uvonly (fun ft1 -> 
+          vs_kind k2 uvonly (fun ft2 -> 
+          cont (union_fvs ft1 (sub_fv ft2 (tbinder aopt)))))
+
+and vs_kind (k:knd) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
+    match !k.fvs, !k.uvs with 
+        | Some _, None -> failwith "Impossible"
+        | None, None -> 
+          vs_kind' k uvonly (fun fvs -> stash uvonly k fvs; cont fvs)
+        | None, Some uvs -> 
+          if uvonly 
+          then cont (no_fvs, uvs)
+          else vs_kind' k uvonly (fun fvs -> stash uvonly k fvs; cont fvs)
+        | Some fvs, Some uvs -> cont (fvs, uvs)
+       
+and vs_exp' (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
+    let e = compress_exp e in 
+    match e.n with
+      | Exp_delayed _ -> failwith "impossible"
+      | Exp_fvar _ 
+      | Exp_constant _ -> cont (no_fvs, no_uvs) 
+
+      | Exp_uvar (uv,t) -> cont (no_fvs, {no_uvs with uvars_e=[(uv,t)]})
+          
+      | Exp_bvar x -> 
+        if uvonly 
+        then cont (no_fvs, no_uvs)
+        else cont ({no_fvs with fxvs=[x]}, no_uvs)
+
+      | Exp_ascribed(e, _) -> 
+        vs_exp e uvonly cont
+    
+      | Exp_abs(x, t, e) -> 
+        vs_prod_te uvonly (Some <| Inr x) t e cont
+    
+      | Exp_tabs(a, k, e) -> 
+        vs_kind k uvonly (fun ft1 -> 
+        vs_exp e uvonly (fun ft2 -> 
+        cont (union_fvs ft1 (sub_fv ft2 (Some <| Inl a)))))
       
-let freevars_typ : typ -> freevars = 
-  fun t -> fst <| Visit.visit_typ true fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) t
+      | Exp_app(e1, e2, _) ->
+        vs_exp e1 uvonly (fun ft1 -> 
+        vs_exp e2 uvonly (fun ft2 -> 
+        cont (union_fvs ft1 ft2)))
+
+      | Exp_tapp(e, t) -> 
+        vs_exp e uvonly (fun ft1 -> 
+        vs_typ t uvonly (fun ft2 -> 
+        cont (union_fvs ft1 ft2)))
+
+      | Exp_match _       
+      | Exp_let _ -> cont (no_fvs, no_uvs) //failwith "NYI"
+                               
+      | Exp_meta(Meta_desugared(e, _))
+      | Exp_meta(Meta_datainst(e, _)) -> 
+        vs_exp e uvonly cont
+
+and vs_exp (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
+    match !e.fvs, !e.uvs with
+    | Some _, None -> failwith "Impossible"
+    | None, None -> vs_exp' e uvonly (fun fvs -> stash uvonly e fvs; cont fvs)
+    | None, Some uvs -> 
+        if uvonly 
+        then cont (no_fvs, uvs)
+        else vs_exp' e uvonly (fun fvs -> stash uvonly e fvs; cont fvs)
+    | Some fvs, Some uvs -> cont (fvs, uvs)
+    
+and vs_comp' (c:comp) (uvonly:bool) (k:(freevars * uvars) -> 'res) : 'res = 
+    let c = compress_comp c in
+    match c.n with 
+        | Total t -> vs_typ t uvonly k
+
+        | Flex(uv, t) -> 
+          vs_typ t uvonly (fun ft1 -> 
+          k <| union_fvs ft1 (no_fvs, {no_uvs with uvars_c=[uv]}))
+
+        | Comp ct -> 
+          if uvonly
+          then vs_typ ct.result_typ uvonly k
+          else vs_either_l (Inl ct.result_typ::ct.effect_args) uvonly k
+
+and vs_comp (c:comp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
+    match !c.fvs, !c.uvs with 
+    | Some _, None -> failwith "Impossible"
+    | None, None -> vs_comp' c uvonly (fun fvs -> stash uvonly c fvs; cont fvs)
+    | None, Some uvs -> 
+        if uvonly
+        then cont (no_fvs, uvs)
+        else vs_comp' c uvonly (fun fvs -> stash uvonly c fvs; cont fvs)
+    | Some fvs, Some uvs -> cont (fvs, uvs)
+
+and vs_either (te:either<typ,exp>) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
+    match te with 
+        | Inl t -> vs_typ t uvonly cont
+        | Inr e -> vs_exp e uvonly cont
+
+and vs_either_l (tes:list<either<typ,exp>>) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
+    match tes with 
+        | [] -> cont (no_fvs, no_uvs)
+        | hd::tl -> 
+          vs_either hd uvonly (fun ft1 -> 
+          vs_either_l tl uvonly (fun ft2 -> 
+          cont (union_fvs ft1 ft2)))
+
+let freevars_kind (k:knd) : freevars' = 
+   vs_kind k false (fun (x,_) -> (x.ftvs, x.fxvs))
       
-let freevars_exp : exp -> freevars =
-  fun e -> fst <| Visit.visit_exp true fold_kind_noop fv_fold_t fv_fold_e (fun _ e -> e) ext_fv_env ([], []) ([], []) e
-
-let freevars_comp_typ : comp_typ -> freevars = 
-  fun c -> 
-    let t = mk_Typ_app(ftv c.effect_name, c.result_typ, false) kun c.result_typ.pos in
-    freevars_typ <| mk_typ_app t (List.map (function Inl x -> Inl (x, false) | Inr x -> Inr (x, false)) c.effect_args)
-
-let freevars_comp c = match (compress_comp c).n with 
-  | Total t
-  | Flex(_, t) -> freevars_typ t
-  | Comp ct -> freevars_comp_typ ct
+let freevars_typ (t:typ) : freevars' = 
+   vs_typ t false (fun (x,_) -> (x.ftvs,x.fxvs))
+ 
+let freevars_exp (e:exp) : freevars' =
+   vs_exp e false (fun (x,_) -> (x.ftvs,x.fxvs))
+ 
+let freevars_comp c : freevars' = 
+   vs_comp c false (fun (x,_) -> (x.ftvs,x.fxvs))
 
 let is_free axs (fvs:freevars) = 
   axs |> Util.for_some (function 
-    | Inl a -> fst fvs |> Util.for_some (fun b -> bvd_eq a b.v)
-    | Inr x -> snd fvs |> Util.for_some (fun y -> bvd_eq x y.v))
-  
-//(********************************************************************************)
-//(************************** Type/term substitutions *****************************)
-//(********************************************************************************)
-//
-//(* Eager substitutions *)
-//let mk_subst_map (s:subst) = 
-//  let t = Util.smap_create(List.length s) in
-//  s |> List.iter (function 
-//    | Inl(a, ty) -> Util.smap_add t a.realname.idText (Inl ty)
-//    | Inr(x, e) -> Util.smap_add t x.realname.idText (Inr e));
-//  t
-//let lift_subst f = (fun () x -> (), f x)
-//(* Should never call these ones directly *)
-//let rec eager_subst_kind' (s:subst_map) (k:knd) : knd =
-//  snd (Visit.visit_kind_simple true
-//         (fun e k -> e,k)
-//         (lift_subst (eager_subst_tvar s))
-//         (lift_subst (eager_subst_xvar s))
-//         () k)
-//and eager_subst_typ' (s:subst_map) (t:typ) : typ =
-//  snd (Visit.visit_typ_simple true
-//         (fun e k -> e,k)
-//         (lift_subst (eager_subst_tvar s))
-//         (lift_subst (eager_subst_xvar s))
-//         () t)
-//and eager_subst_exp' (s:subst_map) (e:exp) : exp =
-//  snd (Visit.visit_exp_simple true
-//         (fun e k -> e,k)
-//         (lift_subst (eager_subst_tvar s))
-//         (lift_subst (eager_subst_xvar s))
-//         () e)
-//and eager_subst_tvar (s:subst_map) (t:typ) : typ =
-//  let find_typ btv = match Util.smap_try_find s btv.realname.idText with 
-//    | Some (Inl l) -> Some l
-//    | _ ->  None in
-//  match t.t with
-//    | Typ_btvar btv ->
-//      begin
-//        match find_typ btv.v with
-//          | Some t -> t
-//          | _ -> t
-//      end
-//    | Typ_delayed _ -> compress_typ t
-//    | _ -> t
-//and eager_subst_xvar (s:subst_map) (e:exp) : exp =
-//  let find_exp bv =  match Util.smap_try_find s bv.realname.idText with 
-//    | Some (Inr e) -> Some e
-//    | _ ->  None in
-//  match e with
-//    | Exp_bvar bv ->
-//      begin
-//        match find_exp bv.v with
-//          | Some e -> e
-//          | None -> e
-//      end
-//    | Exp_delayed _ -> compress_exp e
-//    | _ -> e
-//
-//let eager_subst_kind s k = match s with 
-//  | [] -> k
-//  | _ -> eager_subst_kind' (mk_subst_map s) k 
-//let eager_subst_typ s t = match s with 
-//  | [] -> t
-//  | _ -> eager_subst_typ' (mk_subst_map s) t
-//let eager_subst_exp s e = match s with
-//  | [] -> e
-//  | _ -> eager_subst_exp' (mk_subst_map s) e 
-//let eager_subst_comp_typ s t = match s with 
-//  | [] -> t
-//  | _ -> 
-//    {t with result_typ=eager_subst_typ s t.result_typ; 
-//            effect_args=List.map (function Inl t -> Inl <| eager_subst_typ s t | Inr e -> Inr <| eager_subst_exp s e) t.effect_args}
-//let eager_subst_comp s t = match s with 
-//  | [] -> t
-//  | _ -> 
-//    match compress_comp t with 
-//      | Total t -> Total (eager_subst_typ s t)
-//      | Flex(u, t) -> Flex(u, eager_subst_typ s t)
-//      | Comp ct -> Comp(eager_subst_comp_typ s ct)
+    | Inl a -> fvs.ftvs |> Util.for_some (fun b -> bvd_eq a b.v)
+    | Inr x -> fvs.fxvs |> Util.for_some (fun y -> bvd_eq x y.v))
 
+let rec update_uvars (s:syntax<'a,'b>) (uvs:uvars) =
+  let out = uvs.uvars_k |> List.fold_left (fun out u -> 
+        match Unionfind.find u with 
+            | Fixed k -> union_uvs (uvars_in_kind k) out
+            | _ -> {out with uvars_k=u::out.uvars_k}) no_uvs in
+  let out = uvs.uvars_t |> List.fold_left (fun out (u,t) -> 
+        match Unionfind.find u with 
+            | Fixed t -> union_uvs (uvars_in_typ t) out
+            | _ -> {out with uvars_t=(u,t)::out.uvars_t}) out in
+  let out = uvs.uvars_e |> List.fold_left (fun out (u,t) -> 
+        match Unionfind.find u with 
+            | Fixed e -> union_uvs (uvars_in_exp e) out
+            | _ -> {out with uvars_e=(u,t)::out.uvars_e}) out in
+  s.uvs := Some out;
+  out
+
+and uvars_in_kind k : uvars = 
+  update_uvars k <| vs_kind k true (fun (_,x) -> x) 
+  
+and uvars_in_typ t : uvars = 
+  update_uvars t <| vs_typ t true (fun (_,x) -> x)
+
+and uvars_in_exp e : uvars = 
+  update_uvars e <| vs_exp e true (fun (_,x) -> x) 
+
+and uvars_in_comp c : uvars = 
+  update_uvars c <| vs_comp c true (fun (_,x) -> x) 
+  
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)

@@ -89,7 +89,7 @@ val lookup_operator : env -> ident -> typ
 
 val push_sigelt : env -> sigelt -> env
 val push_local_binding : env -> binding -> env
-val uvars_in_env : env -> Absyn.Util.uvars
+val uvars_in_env : env -> uvars
 val push_module : env -> modul -> env
 
 val set_expected_typ : env -> typ -> env

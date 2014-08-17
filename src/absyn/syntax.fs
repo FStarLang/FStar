@@ -154,24 +154,27 @@ and letbindings = bool * list<(lbname * typ * exp)> (* let recs may have more th
 and subst' = list<subst_elt>
 and subst = {
     subst:subst';
-    subst_fvs:set<fvar>;
-    subst_uvs:set<uvar>;
+    subst_fvs:memo<freevars>;
 }
 and subst_map = Util.smap<either<typ, exp>>
 and subst_elt = either<(btvdef*typ), (bvvdef*exp)>
 and fvar = either<btvdef, bvvdef>
-and uvar = 
-    | UVK of uvar_k
-    | UVT of uvar_t
-    | UVE of uvar_e
-    | UVC of uvar_c
-and uvars = list<uvar>
+and freevars = {
+  ftvs: list<btvar>;
+  fxvs: list<bvvar>;
+}
+and uvars = {
+  uvars_k: list<uvar_k>;
+  uvars_t: list<(uvar_t*knd)>;
+  uvars_e: list<(uvar_e*typ)>;
+  uvars_c: list<uvar_c>;
+}
 and syntax<'a,'b> = {
     n:'a;
     tk:'b;
     pos:Range.range;
-    fvs:set<fvar>;
-    uvs:set<uvar>;
+    fvs:memo<freevars>;
+    uvs:memo<uvars>;
 }
 and btvar = bvar<typ,knd>
 and bvvar = bvar<exp,typ>
@@ -295,117 +298,117 @@ let range_of_lbname (l:lbname) = match l with
 open Microsoft.FStar.Range
 
 let syn p k f = f k p
-let emp_fvs = set_of_list []
-let emp_uvs = set_of_list []
+let mk_fvs () = Util.mk_ref None
+let mk_uvs () = Util.mk_ref None
+let no_fvs = {
+    ftvs=[]; fxvs=[]; 
+}
+let no_uvs = {
+    uvars_k=[]; uvars_t=[]; uvars_e=[]; uvars_c=[]
+}
 
-let mk_Kind_type = {n=Kind_type; pos=dummyRange; tk=(); fvs=emp_fvs; uvs=emp_uvs}
-let mk_Kind_effect = {n=Kind_effect; pos=dummyRange; tk=(); fvs=emp_fvs; uvs=emp_uvs}
+let mk_Kind_type = {n=Kind_type; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs=mk_fvs()}
+let mk_Kind_effect = {n=Kind_effect; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs=mk_fvs()}
 let mk_Kind_abbrev ((kabr:kabbrev), (k:knd)) p = {
     n=Kind_abbrev(kabr, k);
     pos=p;
     tk=();
-    fvs=k.fvs;
-    uvs=k.uvs;
+    uvs=mk_uvs(); fvs=mk_fvs()
 }
 let mk_Kind_tcon ((a:option<btvdef>),(k1:knd),(k2:knd),(b:bool)) p = {
     n=Kind_tcon(a, k1, k2, b);
     pos=p;
     tk=();
-    fvs=union k1.fvs (match a with None -> k2.fvs | Some a -> difference k2.fvs (set_of_list [Inl a]));
-    uvs=union k1.uvs k2.uvs;
+    uvs=mk_uvs(); fvs=mk_fvs();//union k1.fvs (match a with None -> k2.fvs | Some a -> difference k2.fvs (set_of_list [Inl a]));
 }
 let mk_Kind_dcon ((a:option<bvvdef>),(t1:typ),(k2:knd),(b:bool)) p = {
     n=Kind_dcon(a, t1, k2, b);
     pos=p;
     tk=();
-    fvs=union t1.fvs (match a with None -> k2.fvs | Some a -> difference k2.fvs (set_of_list [Inr a]));
-    uvs=union t1.uvs k2.uvs;
+    uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs (match a with None -> k2.fvs | Some a -> difference k2.fvs (set_of_list [Inr a]));
 }
 let mk_Kind_uvar (uv:uvar_k) p = {
     n=Kind_uvar uv;
     pos=p;
     tk=();
-    fvs=emp_fvs;
-    uvs=set_of_list [UVK uv];
+    uvs=mk_uvs(); fvs=mk_fvs();
+    
 }
 let mk_Kind_delayed ((k:knd),(s:subst),(m:memo<knd>)) p = {
     n=Kind_delayed(k, s, m);
     pos=p;
     tk=();
-    fvs=union k.fvs s.subst_fvs;
-    uvs=union k.uvs s.subst_uvs;
+    uvs=mk_uvs(); fvs=mk_fvs();//union k.fvs s.subst_fvs;
+    
 }
-let mk_Kind_unknown  = {n=Kind_unknown; pos=dummyRange; tk=(); fvs=emp_fvs; uvs=emp_uvs}
+let mk_Kind_unknown  = {n=Kind_unknown; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs=mk_fvs()}
 
-let mk_Typ_btvar    (x:btvar) (k:knd) (p:range) = {n=Typ_btvar x; tk=k; pos=p; uvs=emp_uvs; fvs=set_of_list [Inl x.v]}
-let mk_Typ_const    (x:ftvar) (k:knd) (p:range) = {n=Typ_const x; tk=k; pos=p; uvs=emp_uvs; fvs=emp_fvs}
+let mk_Typ_btvar    (x:btvar) (k:knd) (p:range) = {n=Typ_btvar x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs();}//set_of_list [Inl x.v]}
+let mk_Typ_const    (x:ftvar) (k:knd) (p:range) = {n=Typ_const x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs()}
 let mk_Typ_fun      ((x:option<bvvdef>),(t:typ),(c:comp),(b:bool)) (k:knd) (p:range) = {
     n=Typ_fun(x, t, c, b); 
     tk=k;
     pos=p;
-    fvs=(match x with None -> union t.fvs c.fvs | Some x -> union t.fvs (difference c.fvs (set_of_list [Inr x])));
-    uvs=union t.uvs c.uvs
+    uvs=mk_uvs(); fvs=mk_fvs();//(match x with None -> union t.fvs c.fvs | Some x -> union t.fvs (difference c.fvs (set_of_list [Inr x])));
+    
 }
 let mk_Typ_univ     ((x:btvdef),(k:knd),(c:comp)) (k':knd) (p:range) = {
     n=Typ_univ(x, k, c);
     tk=k';
     pos=p;
-    fvs=difference (union k.fvs c.fvs) (set_of_list [Inl x]);
-    uvs=union k.uvs c.uvs
+    uvs=mk_uvs(); fvs=mk_fvs();//difference (union k.fvs c.fvs) (set_of_list [Inl x]);
+    
 }
 let mk_Typ_refine   ((x:bvvdef),(t:typ),(phi:typ)) (k:knd) (p:range) = {
     n=Typ_refine(x, t, phi);
     tk=k;
     pos=p;
-    fvs=union t.fvs (difference phi.fvs (set_of_list [Inr x]));
-    uvs=union t.uvs phi.uvs
+    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference phi.fvs (set_of_list [Inr x]));
+    
 }
 let mk_Typ_app      ((t1:typ),(t2:typ),(b:bool)) (k:knd) (p:range) = {
     n=Typ_app(t1, t2, b);
     tk=k;
     pos=p;
-    fvs=union t1.fvs t2.fvs;
-    uvs=union t1.uvs t2.uvs
+    uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs t2.fvs;
+    
 }
 let mk_Typ_dep      ((t:typ),(e:exp),(b:bool)) (k:knd) (p:range) = {
     n=Typ_dep(t, e, b);
     tk=k;
     pos=p;
-    fvs=union t.fvs e.fvs;
-    uvs=union t.uvs e.uvs
+    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs e.fvs;
+    
 }
 let mk_Typ_lam      ((x:bvvdef),(t1:typ),(t2:typ)) (k:knd) (p:range) = {
     n=Typ_lam(x, t1, t2);
     tk=k;
     pos=p;
-    fvs=union t1.fvs (difference t2.fvs (set_of_list [Inr x]));
-    uvs=union t1.uvs t2.uvs
+    uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs (difference t2.fvs (set_of_list [Inr x]));
+    
 }
 let mk_Typ_tlam     ((a:btvdef),(k:knd),(t:typ)) (k':knd) (p:range) = {
     n=Typ_tlam(a, k, t);
     tk=k';
     pos=p;
-    fvs=union k.fvs (difference t.fvs (set_of_list [Inl a]));
-    uvs=union k.uvs t.uvs;
+    uvs=mk_uvs(); fvs=mk_fvs();//union k.fvs (difference t.fvs (set_of_list [Inl a]));
+    
 }
 let mk_Typ_ascribed' ((t:typ),(k:knd)) (k':knd) (p:range) = {
     n=Typ_ascribed(t, k);
     tk=k';
     pos=p;
-    fvs=union t.fvs k.fvs;
-    uvs=union t.uvs k.uvs
+    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs k.fvs;
+    
 }
 let mk_Typ_ascribed ((t:typ),(k:knd)) (p:range) = mk_Typ_ascribed' (t, k) k p
 
 let mk_Typ_meta'    (m:meta_t) (k:knd) p = 
-    let fvs, uvs = match m with 
-        | Meta_pattern(t, _) 
-        | Meta_named(t, _) ->  t.fvs, t.uvs in
     {n=Typ_meta m;
      tk=k;
      pos=p;
-     fvs=fvs;
-     uvs=uvs}
+     uvs=mk_uvs(); fvs=mk_fvs();//fvs;
+    }
 let mk_Typ_meta     (m:meta_t) = match m with 
     | Meta_pattern(t, _) 
     | Meta_named(t, _) ->  mk_Typ_meta' m t.tk t.pos 
@@ -414,98 +417,90 @@ let mk_Typ_uvar'     ((u:uvar_t),(k:knd)) (k':knd) (p:range) = {
     n=Typ_uvar(u, k);
     tk=k';
     pos=p;
-    fvs=emp_fvs;
-    uvs=set_of_list [UVT u];
+    uvs=mk_uvs(); fvs=mk_fvs();//emp_fvs;
+    
 }
 let mk_Typ_uvar (u, k) p = mk_Typ_uvar' (u, k) k p 
 let mk_Typ_delayed  ((t:typ),(s:subst),(m:memo<typ>)) (k:knd) (p:range) = {
     n=Typ_delayed(t, s, m);
     tk=k;
     pos=p;
-    fvs=union t.fvs s.subst_fvs;
-    uvs=union t.uvs s.subst_uvs;
+    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs s.subst_fvs;
+    
 }
-let mk_Typ_unknown  = {n=Typ_unknown; pos=dummyRange; tk=mk_Kind_unknown; fvs=emp_fvs; uvs=emp_uvs}
+let mk_Typ_unknown  = {n=Typ_unknown; pos=dummyRange; tk=mk_Kind_unknown; uvs=mk_uvs(); fvs=mk_fvs()}
 
 let mk_Total t = {
     n=Total t;
     tk=();
     pos=t.pos;
-    fvs=t.fvs;
-    uvs=t.uvs
+    uvs=mk_uvs(); fvs=mk_fvs();
+    
 }
 let mk_Flex (u,t) = {
     n=Flex(u,t);
     tk=();
     pos=t.pos;
-    fvs=t.fvs;
-    uvs=union t.uvs (set_of_list [UVC u])
+    uvs=mk_uvs(); fvs=mk_fvs();//t.fvs;
+    
 }
 
 let mk_Comp (ct:comp_typ) = 
-    let fvs () = 
-        ct.effect_args |> List.fold_left (fun out -> function 
-            | Inl t -> union out t.fvs
-            | Inr e -> union out e.fvs) emp_fvs in
-    let uvs () =
-        ct.effect_args |> List.fold_left (fun out -> function 
-            | Inl t -> union out t.uvs
-            | Inr e -> union out e.uvs) emp_uvs in
     {n=Comp ct;
      tk=();
      pos=ct.result_typ.pos;
-     fvs=set_of_thunk fvs;
-     uvs=set_of_thunk uvs;}
+     uvs=mk_uvs(); fvs=mk_fvs();//set_of_thunk fvs;
+    }
 
 let mk_Exp_bvar (x:bvvar) (t:typ) p = {
     n=Exp_bvar x;
     tk=t;
     pos=p;
-    fvs=set_of_list [Inr x.v];
-    uvs=emp_uvs;
+    uvs=mk_uvs(); fvs=mk_fvs();//set_of_list [Inr x.v];
+    
 }
 let mk_Exp_fvar ((x:fvvar),(b:bool)) (t:typ) p = {
     n=Exp_fvar(x, b);
     tk=t;
     pos=p;
-    fvs=emp_fvs;
-    uvs=emp_uvs;
+    uvs=mk_uvs(); fvs=mk_fvs();//emp_fvs;
+    
 } 
 
 let mk_Exp_constant (s:sconst) (t:typ) p = {
     n=Exp_constant s;
     tk=t;
     pos=p;
-    fvs=emp_fvs;
-    uvs=emp_uvs;
+    uvs=mk_uvs(); fvs=mk_fvs();//emp_fvs;
+    
 } 
 let mk_Exp_abs ((x:bvvdef),(t:typ),(e:exp)) (t':typ) p = {
     n=Exp_abs(x, t, e);
     tk=t';
     pos=p;
-    fvs=union t.fvs (difference e.fvs (set_of_list [Inr x]));
-    uvs=union t.uvs e.uvs;
+    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference e.fvs (set_of_list [Inr x]));
+    
 }
 let mk_Exp_tabs ((a:btvdef),(k:knd),(e:exp)) (t:typ) p = {
     n=Exp_tabs(a, k, e);
     tk=t;
     pos=p;
-    fvs=union t.fvs (difference e.fvs (set_of_list [Inl a]));
-    uvs=union t.uvs e.uvs;
+    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference e.fvs (set_of_list [Inl a]));
+    
 }
 let mk_Exp_app ((e1:exp),(e2:exp),(b:bool)) (t:typ) p = {
     n=Exp_app(e1, e2, b);
     tk=t;
     pos=p;
-    fvs=union e1.fvs e2.fvs;
-    uvs=union e1.uvs e2.uvs;
+    uvs=mk_uvs(); fvs=mk_fvs();//union e1.fvs e2.fvs;
+    
 }
 let mk_Exp_tapp ((e:exp),(t:typ)) (t':typ) p = {
     n=Exp_tapp(e, t);
     tk=t';
     pos=p;
-    fvs=union e.fvs t.fvs;
-    uvs=union e.uvs t.uvs;
+    uvs=mk_uvs(); fvs=mk_fvs();//union e.fvs t.fvs;
+    
 }
 
 let rec pat_vars r = function 
@@ -536,58 +531,34 @@ let rec pat_vars r = function
 
 
 let mk_Exp_match ((e:exp),(pats:list<(pat * option<exp> * exp)>)) (t:typ) p = 
-    let fv_pat (pat, wopt, e) =
-        let fvs = match wopt with 
-            | None -> e.fvs
-            | Some w -> union e.fvs w.fvs in
-       difference fvs (set_of_list (pat_vars p pat)) in
-    let uv_branch (pat, wopt, e) = match wopt with 
-        | None -> e.uvs
-        | Some w -> union w.uvs e.uvs in
-    let fv_branches () = 
-        List.fold_left (fun out b -> union out (fv_pat b)) emp_fvs pats in
-    let uv_branches () = 
-        List.fold_left (fun out b -> union out (uv_branch b)) emp_uvs pats in
     {
        n=Exp_match(e, pats);
        tk=t;
        pos=p;
-       fvs=union e.fvs (set_of_thunk fv_branches);
-       uvs=union e.uvs (set_of_thunk uv_branches);
+       uvs=mk_uvs(); fvs=mk_fvs();//union e.fvs (set_of_thunk fv_branches);
     } 
 let mk_Exp_ascribed' ((e:exp),(t:typ)) (t':typ) p = {
     n=Exp_ascribed(e, t);
     tk=t';
     pos=p;
-    fvs=union e.fvs t.fvs;
-    uvs=union e.uvs t.uvs;
+    uvs=mk_uvs(); fvs=mk_fvs();//union e.fvs t.fvs;
+    
 }
 let mk_Exp_ascribed ((e:exp),(t:typ)) p = mk_Exp_ascribed' (e, t) t p
 let mk_Exp_let ((lbs:letbindings),(e:exp)) (t:typ) p = 
-  let fv_lbs () = 
-    let out, vars = snd lbs |> List.fold_left (fun (out, vars) (lbname, t, e) -> 
-        let vars = match lbname with 
-            | Inl x -> Inr x::vars 
-            | _ -> vars in
-          (union out (union t.fvs e.fvs), vars)) (emp_fvs, []) in
-    difference (union out e.fvs) (set_of_list vars) in
- let uv_lbs () = 
-     snd lbs |> List.fold_left (fun out (_, t, e) -> 
-        union out (union t.uvs e.uvs)) emp_uvs in
    {
     n=Exp_let(lbs, e);
     tk=t;
     pos=p;
-    fvs=union e.fvs (set_of_thunk fv_lbs);
-    uvs=union e.uvs (set_of_thunk uv_lbs);
+    uvs=mk_uvs(); fvs=mk_fvs();//union e.fvs (set_of_thunk fv_lbs);
    }
 
 let mk_Exp_uvar' ((u:uvar_e),(t:typ)) (t':typ) p = {
     n=Exp_uvar(u, t);
     tk=t';
     pos=p;
-    fvs=emp_fvs;
-    uvs=set_of_list [UVE u]
+    uvs=mk_uvs(); fvs=mk_fvs();//emp_fvs;
+    
 }
 let mk_Exp_uvar  ((u:uvar_e),(t:typ)) p = mk_Exp_uvar' (u, t) t p
 
@@ -595,43 +566,28 @@ let mk_Exp_delayed ((e:exp),(s:subst),(m:memo<exp>)) (t:typ) p = {
     n=Exp_delayed(e, s, m);
     tk=t;
     pos=p;
-    fvs=union e.fvs s.subst_fvs;
-    uvs=union e.uvs s.subst_uvs
+    uvs=mk_uvs(); fvs=mk_fvs();//union e.fvs s.subst_fvs;
+    
 }
 let mk_Exp_meta' (m:meta_e) (t:typ) p = 
-    let fvs, uvs = match m with
-      | Meta_desugared(e, _)  
-      | Meta_datainst(e, _) -> e.fvs, e.uvs in
     { 
         n=Exp_meta m;
         tk=t;
         pos=p;
-        fvs=fvs;
-        uvs=uvs
+        uvs=mk_uvs(); fvs=mk_fvs();//fvs;
     }
 let mk_Exp_meta (m:meta_e) = match m with
       | Meta_desugared(e, _)  
       | Meta_datainst(e, _) -> mk_Exp_meta' m e.tk e.pos
 
 let mk_subst (s:subst') = 
-    let fvs () = 
-        s |> List.fold_left (fun out -> function 
-            | Inl (_,t) -> union out t.fvs
-            | Inr (_,e) -> union out e.fvs) emp_fvs in
-    let uvs () = 
-        s |> List.fold_left (fun out -> function 
-            | Inl (_,t) -> union out t.uvs
-            | Inr (_,e) -> union out e.uvs) emp_uvs in
     {subst=s;
-     subst_fvs=set_of_thunk fvs;
-     subst_uvs=set_of_thunk uvs}
+     subst_fvs=mk_fvs()}
+
 let extend_subst x s = 
-    let fvs, uvs = match x with 
-        | Inl (_, t) -> union t.fvs s.subst_fvs, union t.uvs s.subst_uvs
-        | Inr (_, e) -> union e.fvs s.subst_fvs, union e.uvs s.subst_uvs in
     {subst=x::s.subst;
-     subst_fvs=fvs;
-     subst_uvs=uvs}
+     subst_fvs=mk_fvs();//fvs;
+    }
 
 let tun   = mk_Typ_unknown
 let kun   = mk_Kind_unknown

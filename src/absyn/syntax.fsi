@@ -156,24 +156,27 @@ and letbindings = bool * list<(lbname * typ * exp)> (* let recs may have more th
 and subst' = list<subst_elt>
 and subst = {
     subst:subst';
-    subst_fvs:set<fvar>;
-    subst_uvs:set<uvar>;
+    subst_fvs:memo<freevars>;
 }
 and subst_map = Util.smap<either<typ, exp>>
 and subst_elt = either<(btvdef*typ), (bvvdef*exp)>
 and fvar = either<btvdef, bvvdef>
-and uvar = 
-    | UVK of uvar_k
-    | UVT of uvar_t
-    | UVE of uvar_e
-    | UVC of uvar_c
-and uvars = list<uvar>
+and freevars = {
+  ftvs: list<btvar>;
+  fxvs: list<bvvar>;
+}
+and uvars = {
+  uvars_k: list<uvar_k>;
+  uvars_t: list<(uvar_t*knd)>;
+  uvars_e: list<(uvar_e*typ)>;
+  uvars_c: list<uvar_c>;
+}
 and syntax<'a,'b> = {
     n:'a;
     tk:'b;
     pos:Range.range;
-    fvs:set<fvar>;
-    uvs:set<uvar>;
+    fvs:memo<freevars>;
+    uvs:memo<uvars>;
 }
 and btvar = bvar<typ,knd>
 and bvvar = bvar<exp,typ>
@@ -273,8 +276,10 @@ val withsort: 'a -> 'b -> withinfo_t<'a,'b>
 val ktype:knd
 val kun:knd
 val tun:typ
+val no_fvs: freevars
+val no_uvs: uvars
 
-val mk_Kind_type:knd
+val mk_Kind_type: knd
 val mk_Kind_effect:knd
 val mk_Kind_abbrev: (kabbrev * knd) -> range -> knd
 val mk_Kind_tcon: (option<btvdef> * knd * knd * bool) -> range -> knd

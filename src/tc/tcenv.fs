@@ -372,7 +372,7 @@ let uvars_in_env env =
     | Binding_var(_, t)::tl -> aux (ext out (Util.uvars_in_typ t)) tl
     | Binding_typ(_, k)::tl -> aux (ext out (Util.uvars_in_kind k)) tl 
     | Binding_sig _::_ -> out in (* this marks a top-level scope ... no more uvars beyond this *)
-  aux empty_uvars env.gamma
+  aux no_uvs env.gamma
 
 let push_module env (m:modul) = 
     add_sigelts env m.exports;
