@@ -13,6 +13,9 @@ FORMAT_SRC=$(addprefix format/, $(FORMAT))
 BACKEND=nameenv.fsi nameenv.fs ocaml-syntax.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs
 BACKEND_SRC=$(addprefix backend/, $(BACKEND))
 
+JSBACKEND=ast.fs print.fs translate.fs
+JSBACKEND_SRC=$(addprefix jsbackend/, $(JSBACKEND))
+
 PARSER=ast.fs parse.fs lexhelp.fs lex.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parseit.fsi parseit.fs driver.fs
 PARSER_SRC=$(addprefix parser/, $(PARSER))
 PARSER_NOGEN=ast.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
@@ -123,6 +126,10 @@ $(BIN)/format.dll: $(FORMAT_DEPS) $(FORMAT_SRC)
 BACKEND_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll format.dll)
 $(BIN)/backend.dll: $(BACKEND_DEPS) $(BACKEND_SRC)
 	$(FSC) $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(BACKEND_DEPS)) $(BACKEND_SRC)
+
+JSBACKEND_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll format.dll)
+$(BIN)/jsbackend.dll: $(JSBACKEND_DEPS) $(JSBACKEND_SRC)
+	$(FSC) $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(JSBACKEND_DEPS)) $(JSBACKEND_SRC)
 
 PARSER_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll)
 $(BIN)/parser.dll: $(PARSER_DEPS) $(PARSER_SRC)
