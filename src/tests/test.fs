@@ -91,6 +91,14 @@ let fset_to_iset () : iset<'a, fset<'a>> = {
     copy=fset_copy
 }
 
+let list_to_iset (eq:'a -> 'a -> bool) : iset<'a, list<'a>> = {
+    name="F# list";
+    add=fun x y -> x::y;
+    mem=fun x xs -> List.exists (eq x) xs;
+    union=fun xs ys -> xs@ys;
+    copy=fun x -> x;
+}
+
 let bench_set (s1:'set, s2:'set, f:iset<bvvar, 'set>, vars:option<bvvar>[]) =
     let timer = System.Diagnostics.Stopwatch.StartNew()
     for i in 0..99999 do
@@ -114,7 +122,7 @@ let bench_set (s1:'set, s2:'set, f:iset<bvvar, 'set>, vars:option<bvvar>[]) =
 
     printfn "%s: contains in %fs" f.name timer.Elapsed.TotalSeconds
 
-let set_vs_fset () = 
+let set_vs_fset_vs_list () = 
     let s1 = mk_ftv_hset ()
     let s2 = mk_ftv_hset ()
     let vars = Array.create<bvvar option> 100000 None
@@ -125,6 +133,9 @@ let set_vs_fset () =
     let s1 = mk_ftv_fset () in
     let s2 = mk_ftv_fset () in 
     bench_set (s1, s2, fset_to_iset(), vars)
+
+    let eq x y = bvd_eq x.v y.v in
+    bench_set ([], [], list_to_iset eq, vars)
 
 let test_freevars () =
     Options.print_real_names := true
@@ -145,5 +156,5 @@ let test_freevars () =
 
 [<EntryPoint>]
 let main argv = 
-    set_vs_fset()
+    set_vs_fset_vs_list()
     0 // return an integer exit code

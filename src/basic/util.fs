@@ -103,21 +103,43 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   result, stdout, stderr
 
 open Prims
-type set<'a> = Collections.Set<Boxed<'a>> * ('a -> Boxed<'a>)
+//type set<'a> = Collections.Set<Boxed<'a>> * ('a -> Boxed<'a>)
+//
+//let new_set (cmp:'a -> 'a -> int) (hash:'a -> int) : set<'a> = 
+//    let box v = new Boxed<'a>(v, cmp, hash) in
+//    (new Collections.Set<Boxed<'a>>([]), box)
+//
+//let set_add a ((s, b):set<'a>) = s.Add (b a), b
+//let set_remove a ((s1, b):set<'a>) = s1.Remove(b a), b
+//let set_mem a ((s, b):set<'a>) = s.Contains (b a)
+//let set_union ((s1, b):set<'a>) ((s2, _):set<'a>) = Set.union s1 s2, b
+//let set_intersect ((s1, b):set<'a>) ((s2, _):set<'a>) = Set.intersect s1 s2, b
+//let set_is_subset_of ((s1, _): set<'a>) ((s2, _):set<'a>) = s1.IsSubsetOf(s2)
+//let set_count ((s1, _):set<'a>) = s1.Count
+//let set_difference ((s1, b):set<'a>) ((s2, _):set<'a>) : set<'a> = Set.difference s1 s2, b
+//let set_elements ((s1, b):set<'a>) :list<'a> = Set.toList s1 |> List.map (fun x -> x.unbox)
+
+type set<'a> = (list<'a> * ('a -> 'a -> bool))
 
 let new_set (cmp:'a -> 'a -> int) (hash:'a -> int) : set<'a> = 
-    let box v = new Boxed<'a>(v, cmp, hash) in
-    (new Collections.Set<Boxed<'a>>([]), box)
+    ([], fun x y -> cmp x y = 0)
 
-let set_add a ((s, b):set<'a>) = s.Add (b a), b
-let set_remove a ((s1, b):set<'a>) = s1.Remove(b a), b
-let set_mem a ((s, b):set<'a>) = s.Contains (b a)
-let set_union ((s1, b):set<'a>) ((s2, _):set<'a>) = Set.union s1 s2, b
-let set_intersect ((s1, b):set<'a>) ((s2, _):set<'a>) = Set.intersect s1 s2, b
-let set_is_subset_of ((s1, _): set<'a>) ((s2, _):set<'a>) = s1.IsSubsetOf(s2)
-let set_count ((s1, _):set<'a>) = s1.Count
-let set_difference ((s1, b):set<'a>) ((s2, _):set<'a>) : set<'a> = Set.difference s1 s2, b
-let set_elements ((s1, b):set<'a>) :list<'a> = Set.toList s1 |> List.map (fun x -> x.unbox)
+let set_elements ((s1, eq):set<'a>) :list<'a> = 
+   let rec aux out = function 
+        | [] -> out
+        | hd::tl -> if List.exists (eq hd) out
+                    then aux out tl
+                    else aux (hd::out) tl in
+   aux [] s1
+let set_add a ((s, b):set<'a>) = (a::s, b)
+let set_remove x ((s1, eq):set<'a>) = (List.filter (fun y -> not (eq x y)) s1, eq)
+let set_mem a ((s, b):set<'a>) = List.exists (b a) s
+let set_union ((s1, b):set<'a>) ((s2, _):set<'a>) = (s1@s2, b)//set_elements (s1,b)@set_elements (s2,b), b)
+let set_intersect ((s1, eq):set<'a>) ((s2, _):set<'a>) = List.filter (fun y -> List.exists (eq y) s2) s1, eq
+let set_is_subset_of ((s1, eq): set<'a>) ((s2, _):set<'a>) = List.for_all (fun y -> List.exists (eq y) s2) s1
+let set_count ((s1, _):set<'a>) = s1.Length
+let set_difference ((s1, eq):set<'a>) ((s2, _):set<'a>) : set<'a> = List.filter (fun y -> not (List.exists (eq y) s2)) s1, eq
+
 
 type smap<'value>=HashMultiMap<string, 'value>
 let smap_create<'value> (i:int) = new HashMultiMap<string,'value>(i, HashIdentity.Structural)
