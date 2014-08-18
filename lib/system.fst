@@ -9,3 +9,6 @@ assume type StringBuilder
 
 module System.Diagnostics
 assume type Process
+
+module System.Collections.Generic
+assume type HashSet: Type => Type

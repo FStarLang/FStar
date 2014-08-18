@@ -19,7 +19,6 @@ module Microsoft.FStar.Absyn.Syntax
 
 open Microsoft.FStar
 open Microsoft.FStar.Util
-open Microsoft.FStar.LazySet
 
 exception Err of string
 exception Error of string * Range.range
@@ -160,14 +159,14 @@ and subst_map = Util.smap<either<typ, exp>>
 and subst_elt = either<(btvdef*typ), (bvvdef*exp)>
 and fvar = either<btvdef, bvvdef>
 and freevars = {
-  ftvs: list<btvar>;
-  fxvs: list<bvvar>;
+  ftvs: set<btvar>;
+  fxvs: set<bvvar>;
 }
 and uvars = {
-  uvars_k: list<uvar_k>;
-  uvars_t: list<(uvar_t*knd)>;
-  uvars_e: list<(uvar_e*typ)>;
-  uvars_c: list<uvar_c>;
+  uvars_k: set<uvar_k>;
+  uvars_t: set<(uvar_t*knd)>;
+  uvars_e: set<(uvar_e*typ)>;
+  uvars_c: set<uvar_c>;
 }
 and syntax<'a,'b> = {
     n:'a;
@@ -279,7 +278,7 @@ let lid_of_path path pos =
     lid_of_ids ids
 let text_of_lid lid = lid.str
 let lid_equals l1 l2 = l1.str = l2.str
-let bvd_eq (bvd1:bvdef<'a>) (bvd2:bvdef<'a>) = bvd1.realname=bvd2.realname
+let bvd_eq (bvd1:bvdef<'a>) (bvd2:bvdef<'a>) = bvd1.realname.idText=bvd2.realname.idText
 let order_bvd x y = match x, y with 
   | Inl _, Inr _ -> -1
   | Inr _, Inl _ -> 1
@@ -300,11 +299,18 @@ open Microsoft.FStar.Range
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
+let new_ftv_set () = Util.new_set (fun x y -> bvd_eq x.v y.v) (fun x -> Util.hashcode x.v.realname.idText)
+let new_uv_set () = Util.new_set Unionfind.equivalent Unionfind.uvar_id
+let new_uvt_set () = Util.new_set (fun (x, _) (y, _) -> Unionfind.equivalent x y) (fun (x, _) -> Unionfind.uvar_id x)
 let no_fvs = {
-    ftvs=[]; fxvs=[]; 
+    ftvs=new_ftv_set();
+    fxvs=new_ftv_set();
 }
 let no_uvs = {
-    uvars_k=[]; uvars_t=[]; uvars_e=[]; uvars_c=[]
+    uvars_k=new_uv_set(); 
+    uvars_t=new_uvt_set(); 
+    uvars_e=new_uvt_set(); 
+    uvars_c=new_uv_set()
 }
 
 let mk_Kind_type = {n=Kind_type; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs=mk_fvs()}

@@ -32,8 +32,8 @@ let unify_typ env ((uv,k):(uvar_t * knd)) t  = match Unionfind.find uv with
   | Uvar wf ->
     let rec aux retry t =
       let tk = t.tk in 
-      let uvars_in_t = (uvars_in_typ t).uvars_t |> List.map fst in 
-      let occurs () = Util.for_some (Unionfind.equivalent uv) uvars_in_t in
+      let uvars_in_t = (uvars_in_typ t).uvars_t in
+      let occurs () = Util.set_mem (uv,k) uvars_in_t in
       let doit t = match (compress_typ t).n with 
         | Typ_uvar (uv', _) -> Unionfind.union uv uv'; true
         | t' -> 
@@ -46,7 +46,7 @@ let unify_typ env ((uv,k):(uvar_t * knd)) t  = match Unionfind.find uv with
                 (string_of_int (Unionfind.uvar_id uv))
                 (if occ_ok then "yes" else "no") 
                 (if wfok then "yes" else "no")
-                (uvars_in_t |> List.map (fun uv -> Util.string_of_int <| Unionfind.uvar_id uv) |> String.concat ", "); false)
+                ((Util.set_elements uvars_in_t) |> List.map (fun (uv, _) -> Util.string_of_int <| Unionfind.uvar_id uv) |> String.concat ", "); false)
           else false in
      doit t || (retry && aux false (normalize env t)) in
    aux true t
@@ -58,7 +58,7 @@ let unify_kind (uv, ()) k = match Unionfind.find uv with
     match k.n with 
       | Kind_uvar uv' -> Unionfind.union uv uv'; true
       | _ -> 
-        let occurs = Util.for_some (Unionfind.equivalent uv) ((uvars_in_kind k).uvars_k) in
+        let occurs = Util.set_mem uv ((uvars_in_kind k).uvars_k) in
         if not occurs && wf k ()
         then (unchecked_unify uv k; true)
         else false
@@ -70,7 +70,7 @@ let unify_exp (uv, t) e = match Unionfind.find uv with
     match e.n with 
       | Exp_uvar(uv', _) -> Unionfind.union uv uv'; true
       | _ -> 
-        let occurs = Util.for_some (Unionfind.equivalent uv) ((uvars_in_exp e).uvars_e |> List.map fst) in
+        let occurs = Util.set_mem (uv,t) ((uvars_in_exp e).uvars_e) in
         if not occurs && wf e t 
         then (unchecked_unify uv e; true)
         else false

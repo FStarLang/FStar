@@ -21,7 +21,22 @@ exception Failure of string
 
 val return_all: 'a -> 'a
 
+
 (* generic utils *)
+type set<'value> = System.Collections.Generic.HashSet<'value> (* not relying on representation *)
+val new_set: ('a -> 'a -> bool) -> ('a -> int) -> set<'a>
+(* This interface looks functional ... but it's not! Sets are mutated in place. Copy as needed *)
+val set_add: 'a -> set<'a> -> set<'a>
+val set_remove: 'a -> set<'a> -> set<'a>
+val set_mem: 'a -> set<'a> -> bool
+val set_copy: set<'a> -> set<'a>
+val set_union: set<'a> -> set<'a> -> set<'a>
+val set_intersect: set<'a> -> set<'a> -> set<'a>
+val set_is_subset_of: set<'a> -> set<'a> -> bool
+val set_count: set<'a> -> int
+val set_difference: set<'a> -> set<'a> -> set<'a>
+val set_elements: set<'a> -> list<'a>
+
 type smap<'value> = HashMultiMap<string,'value> (* not relying on representation *)
 val smap_create: int -> smap<'value>
 val smap_clear:smap<'value> -> unit
@@ -84,6 +99,7 @@ val substring_from: string -> int -> string
 val substring: string -> int -> int -> string
 val replace_char: string -> char -> char -> string
 val replace_string: string -> string -> string -> string
+val hashcode: string -> int
 
 type either<'a,'b> =
   | Inl of 'a

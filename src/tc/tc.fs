@@ -477,9 +477,9 @@ and tc_exp env e : exp * comp =
     let fvcheck kt fvs = 
       let rec aux retry kt = 
         let fvs_kt = match kt with 
-          | Inl k -> snd <| Util.freevars_kind k
-          | Inr t -> snd <| Util.freevars_typ t in
-        match fvs |> Util.find_opt (fun (x, _, _) -> fvs_kt |> Util.for_some (fun y -> bvd_eq x y.v)) with 
+          | Inl k -> (Util.freevars_kind k).fxvs
+          | Inr t -> (Util.freevars_typ t).fxvs in
+        match fvs |> Util.find_opt (fun (x, _, _) -> Util.set_mem (bvd_to_bvar_s x tun) fvs_kt) with
           | None -> kt
           | Some (x, arg, carg) ->  
             if retry
@@ -591,7 +591,8 @@ and tc_exp env e : exp * comp =
     let e = w cres <| mk_Exp_let((false, [(x, Util.comp_result c1, e1)]), e2) in
     begin match topt, x with 
       | None, Inl bvd -> 
-         if Util.for_some (fun y -> bvd_eq y.v bvd) (snd <| Util.freevars_typ (Util.comp_result cres))
+         let fvs = Util.freevars_typ (Util.comp_result cres) in
+         if Util.set_mem (bvd_to_bvar_s bvd t) fvs.fxvs 
          then raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape t bvd, rng env))
          else e, cres
       | _ -> e, cres
@@ -625,12 +626,12 @@ and tc_exp env e : exp * comp =
     begin match topt with 
       | Some _ -> e, cres
       | None -> 
-         let _, fxvs = Util.freevars_typ <| Util.comp_result cres in
-         match fxvs |> List.tryFind (fun y -> lbs |> Util.for_some (function
-          | (Inr _, _, _) -> false
-          | (Inl x, _, _) -> bvd_eq x y.v)) with
-            | None -> e, cres
-            | Some y -> raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape (Util.comp_result cres) y.v, rng env))
+         let fvs = Util.freevars_typ <| Util.comp_result cres in
+         match lbs |> List.tryFind (function 
+                | (Inr _, _, _) -> false
+                | (Inl x, _, _) -> Util.set_mem (bvd_to_bvar_s x tun) fvs.fxvs) with
+            | Some (Inl y, _, _) -> raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape (Util.comp_result cres) y, rng env))
+            | _ -> e, cres
     end
 
 and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * option<exp> * exp) * option<formula> * comp =

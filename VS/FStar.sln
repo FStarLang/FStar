@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{82253A13-6BB4-4C9F-8198-50F638EFB3EE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{8D74F56B-3B0F-4931-9AF8-A26215B25559}"
@@ -33,6 +35,8 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tosmt", "..\src\tosmt\tosmt.fsproj", "{670DA3F6-7E41-4C1D-AB17-1F59E0317F52}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "jsbackend", "..\src\jsbackend\jsbackend.fsproj", "{6E88ED6F-BF14-4888-8A64-77432A0410DC}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tests", "..\src\tests\tests.fsproj", "{5716A290-2899-478B-BEA2-1C59FA088DAD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,6 +80,10 @@ Global
 		{6E88ED6F-BF14-4888-8A64-77432A0410DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E88ED6F-BF14-4888-8A64-77432A0410DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E88ED6F-BF14-4888-8A64-77432A0410DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5716A290-2899-478B-BEA2-1C59FA088DAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5716A290-2899-478B-BEA2-1C59FA088DAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5716A290-2899-478B-BEA2-1C59FA088DAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5716A290-2899-478B-BEA2-1C59FA088DAD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

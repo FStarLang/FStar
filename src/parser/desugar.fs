@@ -929,10 +929,10 @@ let mk_data_ops env = function
       | Inr(Some x,_,_) -> Pat_var x
       | Inr(None,targ,_) -> Pat_var (new_bvd (Some (range_of_lid lid)))
       | Inl(a,_) -> Pat_tvar a) in
-    let freetv, freexv  = freevars_typ tconstr in
+    let freevs = freevars_typ tconstr in
     let freevars = args |> List.filter (function
-      | Inl(a,k) -> freetv |> Util.for_some (fun b -> Util.bvd_eq a b.v)
-      | Inr(Some x,t,_) -> freexv |> Util.for_some (fun y -> Util.bvd_eq x y.v)
+      | Inl(a,k) -> Util.set_mem (bvd_to_bvar_s a k) freevs.ftvs
+      | Inr(Some x,t,_) -> Util.set_mem (bvd_to_bvar_s x t) freevs.fxvs
       | _ -> false) in
     //Printf.printf "Got %d free vars\n" (List.length freevars);
     let freeterms = freevars |> List.map (function 
@@ -978,7 +978,7 @@ let mk_data_ops env = function
           ] in
        // let _ = Util.print_string (Util.format2 "adding value projector %s at type %s\n" field_name.str (Print.typ_to_string t)) in 
         let t2 = 
-          if freexv |> Util.for_some (fun y -> Util.bvd_eq x y.v)
+          if Util.set_mem (bvd_to_bvar_s x t1) freevs.fxvs
           then t2
           else 
             let subst = mk_subst [Inr(x, mk_app (fvar field_name (range_of_lid field_name)) (freeterms@[Inr(formal_exp, false)]))] in
@@ -991,7 +991,7 @@ let mk_data_ops env = function
         let sigs = Sig_tycon(field_name, [], kk, [], [], [Logic; Projector(lid, Inl a)], range_of_lid field_name) in
         //let _ = Util.print_string (Util.format2 "adding type projector %s at type %s\n" field_name.str (Print.kind_to_string kk)) in 
         let t2 = 
-          if freetv |> Util.for_some (fun b -> Util.bvd_eq b.v a)
+          if Util.set_mem (bvd_to_bvar_s a k) freevs.ftvs
           then t2
           else let subst = mk_subst [Inl(a, mk_tapp (ftv field_name) (freeterms@[Inr (formal_exp, false)]))] in
                subst_comp subst t2 in

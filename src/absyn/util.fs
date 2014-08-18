@@ -555,25 +555,26 @@ let eq_fvars v1 v2 = match v1, v2 with
 
 let uv_eq (uv1,_) (uv2,_) = Unionfind.equivalent uv1 uv2
 let union_uvs uvs1 uvs2 =
-    {   uvars_k=Util.remove_dups Unionfind.equivalent (uvs1.uvars_k@uvs2.uvars_k);    
-        uvars_c=Util.remove_dups Unionfind.equivalent (uvs1.uvars_c@uvs2.uvars_c);
-        uvars_t=Util.remove_dups uv_eq (uvs1.uvars_t@uvs2.uvars_t);
-        uvars_e=Util.remove_dups uv_eq (uvs1.uvars_e@uvs2.uvars_e);
+    {   uvars_k=Util.set_union (Util.set_copy uvs1.uvars_k) uvs2.uvars_k;
+        uvars_c=Util.set_union (Util.set_copy uvs1.uvars_c) uvs2.uvars_c;
+        uvars_t=Util.set_union (Util.set_copy uvs1.uvars_t) uvs2.uvars_t;
+        uvars_e=Util.set_union (Util.set_copy uvs1.uvars_e) uvs2.uvars_e;
     }
 
 let union_fvs (fvs1, uvs1) (fvs2, uvs2) = 
     {
-        ftvs=Util.remove_dups bvar_eq (fvs1.ftvs@fvs2.ftvs);
-        fxvs=Util.remove_dups bvar_eq (fvs1.fxvs@fvs2.fxvs);
+        ftvs=Util.set_union (Util.set_copy fvs1.ftvs) fvs2.ftvs;
+        fxvs=Util.set_union (Util.set_copy fvs1.fxvs) fvs2.fxvs;
     }, 
     union_uvs uvs1 uvs2
 
 let sub_fv (fvs, uvs) (by:option<either<btvdef,bvvdef>>) = match by with 
     | None -> fvs, uvs
     | Some (Inl b) -> 
-        {fvs with ftvs=fvs.ftvs |> List.filter (fun a -> not <| bvd_eq a.v b)}, uvs
+        {fvs with ftvs=Util.set_remove (bvd_to_bvar_s b kun) (Util.set_copy fvs.ftvs)}, uvs
     | Some (Inr y) -> 
-        {fvs with fxvs=fvs.fxvs |> List.filter (fun a -> not <| bvd_eq a.v y)}, uvs
+        {fvs with fxvs=Util.set_remove (bvd_to_bvar_s y tun) (Util.set_copy fvs.fxvs)}, uvs
+    //    {fvs with fxvs=fvs.fxvs |> List.filter (fun a -> not <| bvd_eq a.v y)}, uvs
 
 let tbinder = function 
     | None -> None
@@ -588,6 +589,10 @@ let stash (uvonly:bool) (s:syntax<'a,'b>) ((fvs:freevars), (uvs:uvars)) =
     if uvonly then ()
     else s.fvs := Some fvs
 
+let single_fv x = Util.set_add x (new_ftv_set())
+let single_uv u = Util.set_add u (new_uv_set())
+let single_uvt u = Util.set_add u (new_uvt_set())
+
 let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
     let t = compress_typ t in
     match t.n with
@@ -595,9 +600,9 @@ let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Typ_btvar a -> 
           if uvonly 
           then cont (no_fvs, no_uvs)
-          else cont ({no_fvs with ftvs=[a]}, no_uvs)
+          else cont ({no_fvs with ftvs=single_fv a}, no_uvs)
 
-        | Typ_uvar (uv, k) -> cont (no_fvs, {no_uvs with uvars_t=[(uv,k)]})
+        | Typ_uvar (uv, k) -> cont (no_fvs, {no_uvs with uvars_t=single_uvt (uv,k)})
 
         | Typ_unknown        
         | Typ_const _ -> cont (no_fvs, no_uvs)
@@ -667,7 +672,7 @@ and vs_kind' (k:knd) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Kind_type
         | Kind_effect -> cont (no_fvs, no_uvs)
 
-        | Kind_uvar uv -> cont (no_fvs, {no_uvs with uvars_k=[uv]})
+        | Kind_uvar uv -> cont (no_fvs, {no_uvs with uvars_k=single_uv uv})
         
         | Kind_abbrev(_, k) -> 
           vs_kind k uvonly cont
@@ -700,12 +705,12 @@ and vs_exp' (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
       | Exp_fvar _ 
       | Exp_constant _ -> cont (no_fvs, no_uvs) 
 
-      | Exp_uvar (uv,t) -> cont (no_fvs, {no_uvs with uvars_e=[(uv,t)]})
+      | Exp_uvar (uv,t) -> cont (no_fvs, {no_uvs with uvars_e=single_uvt (uv,t)})
           
       | Exp_bvar x -> 
         if uvonly 
         then cont (no_fvs, no_uvs)
-        else cont ({no_fvs with fxvs=[x]}, no_uvs)
+        else cont ({no_fvs with fxvs=single_fv x}, no_uvs)
 
       | Exp_ascribed(e, _) -> 
         vs_exp e uvonly cont
@@ -752,7 +757,7 @@ and vs_comp' (c:comp) (uvonly:bool) (k:(freevars * uvars) -> 'res) : 'res =
 
         | Flex(uv, t) -> 
           vs_typ t uvonly (fun ft1 -> 
-          k <| union_fvs ft1 (no_fvs, {no_uvs with uvars_c=[uv]}))
+          k <| union_fvs ft1 (no_fvs, {no_uvs with uvars_c=single_uv uv}))
 
         | Comp ct -> 
           if uvonly
@@ -782,36 +787,49 @@ and vs_either_l (tes:list<either<typ,exp>>) (uvonly:bool) (cont:(freevars * uvar
           vs_either_l tl uvonly (fun ft2 -> 
           cont (union_fvs ft1 ft2)))
 
-let freevars_kind (k:knd) : freevars' = 
-   vs_kind k false (fun (x,_) -> (x.ftvs, x.fxvs))
+//let freevars_kind (k:knd) : freevars' = 
+//   vs_kind k false (fun (x,_) -> (Util.set_elements x.ftvs, Util.set_elements x.fxvs))
+//      
+//let freevars_typ (t:typ) : freevars' = 
+//   vs_typ t false (fun (x,_) -> (Util.set_elements x.ftvs, Util.set_elements x.fxvs))
+// 
+//let freevars_exp (e:exp) : freevars' =
+//   vs_exp e false (fun (x,_) -> (Util.set_elements x.ftvs, Util.set_elements x.fxvs))
+// 
+//let freevars_comp c : freevars' = 
+//   vs_comp c false (fun (x,_) -> (Util.set_elements x.ftvs, Util.set_elements x.fxvs))
+
+let freevars_kind (k:knd) : freevars = 
+   vs_kind k false (fun (x,_) -> x)
       
-let freevars_typ (t:typ) : freevars' = 
-   vs_typ t false (fun (x,_) -> (x.ftvs,x.fxvs))
+let freevars_typ (t:typ) : freevars = 
+   vs_typ t false (fun (x,_) -> x)
  
-let freevars_exp (e:exp) : freevars' =
-   vs_exp e false (fun (x,_) -> (x.ftvs,x.fxvs))
+let freevars_exp (e:exp) : freevars =
+   vs_exp e false (fun (x,_) -> x)
  
-let freevars_comp c : freevars' = 
-   vs_comp c false (fun (x,_) -> (x.ftvs,x.fxvs))
+let freevars_comp c : freevars = 
+   vs_comp c false (fun (x,_) -> x)
 
 let is_free axs (fvs:freevars) = 
   axs |> Util.for_some (function 
-    | Inl a -> fvs.ftvs |> Util.for_some (fun b -> bvd_eq a b.v)
-    | Inr x -> fvs.fxvs |> Util.for_some (fun y -> bvd_eq x y.v))
+    | Inl a -> Util.set_mem a fvs.ftvs
+    | Inr x -> Util.set_mem x fvs.fxvs)
 
 let rec update_uvars (s:syntax<'a,'b>) (uvs:uvars) =
-  let out = uvs.uvars_k |> List.fold_left (fun out u -> 
+  let add (a:'x) (s:set<'x>) : set<'x> = Util.set_add a (Util.set_copy s) in
+  let out = (Util.set_elements uvs.uvars_k) |> List.fold_left (fun out u -> 
         match Unionfind.find u with 
             | Fixed k -> union_uvs (uvars_in_kind k) out
-            | _ -> {out with uvars_k=u::out.uvars_k}) no_uvs in
-  let out = uvs.uvars_t |> List.fold_left (fun out (u,t) -> 
+            | _ -> {out with uvars_k=add u (out.uvars_k)}) no_uvs in
+  let out = (Util.set_elements uvs.uvars_t) |> List.fold_left (fun out (u,t) -> 
         match Unionfind.find u with 
             | Fixed t -> union_uvs (uvars_in_typ t) out
-            | _ -> {out with uvars_t=(u,t)::out.uvars_t}) out in
-  let out = uvs.uvars_e |> List.fold_left (fun out (u,t) -> 
+            | _ -> {out with uvars_t=add (u,t) out.uvars_t}) out in
+  let out = (Util.set_elements uvs.uvars_e) |> List.fold_left (fun out (u,t) -> 
         match Unionfind.find u with 
             | Fixed e -> union_uvs (uvars_in_exp e) out
-            | _ -> {out with uvars_e=(u,t)::out.uvars_e}) out in
+            | _ -> {out with uvars_e=add (u,t) out.uvars_e}) out in
   s.uvs := Some out;
   out
 

@@ -97,7 +97,7 @@ val expected_typ : env -> option<typ>
 val clear_expected_typ : env -> env*option<typ>
 
 val fold_env : env -> ('a -> binding -> 'a) -> 'a -> 'a 
-val idents : env -> (list<btvdef> * list<bvvdef>) 
+val idents : env -> freevars
 val lidents : env -> list<lident>     
 
 (* operations on monads *)

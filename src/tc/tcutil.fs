@@ -58,20 +58,20 @@ let push_tparams env tps =
                       push_local_binding env binding) env tps 
 
 let is_xvar_free (x:bvvdef) t = 
-  let _, xvs = Util.freevars_typ t in
-  Util.for_some (fun (bv:bvvar) -> Util.bvd_eq bv.v x) xvs
+  let f = Util.freevars_typ t in
+  Util.set_mem (bvd_to_bvar_s x tun) f.fxvs
 
 let is_tvar_free (a:btvdef) t = 
-  let tvs, _ = Util.freevars_typ t in
-  Util.for_some (fun (bv:btvar) -> Util.bvd_eq bv.v a) tvs 
+  let f = Util.freevars_typ t in
+  Util.set_mem (bvd_to_bvar_s a kun) f.ftvs
 
 let eq_bv_bvd bv bvd = Util.bvd_eq bv.v bvd
   
 let new_kvar env =
   let wf k () =
-    let tvs, xvs = Util.freevars_kind k in 
-    let tvs', xvs' = Env.idents env in
-    Util.forall_exists eq_bv_bvd tvs tvs' && Util.forall_exists eq_bv_bvd xvs xvs' in
+    let fk = Util.freevars_kind k in 
+    let fe = Env.idents env in
+    Util.set_is_subset_of fk.ftvs fe.ftvs && Util.set_is_subset_of fk.fxvs fe.fxvs in
   mk_Kind_uvar (Unionfind.fresh (Uvar wf)) (Env.get_range env)
 
 let new_tvar env k =
@@ -84,22 +84,23 @@ let new_tvar env k =
     | k1, k2 -> //Util.print_string (Util.format2 "Pre-kind-compat failed on %s and %s\n" (Print.kind_to_string k1) (Print.kind_to_string k2)); 
     false in
   let wf t tk =
-    let tvs, xvs = Util.freevars_typ t in 
-    let tvs', xvs' = Env.idents env in 
-    let freevars_in_env = Util.forall_exists eq_bv_bvd tvs tvs' && Util.forall_exists eq_bv_bvd xvs xvs' in
+    let fvs_t = Util.freevars_typ t in 
+    let fvs_e = Env.idents env in 
+    let freevars_in_env = Util.set_is_subset_of fvs_t.ftvs fvs_e.ftvs && Util.set_is_subset_of fvs_t.fxvs fvs_e.fxvs in
     let err () = 
       if debug env 
       then begin 
         let print_ids (vs:list<bvdef<'a>>) =
           (List.map (fun x -> Util.format2 "%s@%s" (Print.strBvd x) (Range.string_of_range (range_of_bvd x))) vs |> String.concat ", ") in
-        let print_vs (vs:list<bvar<'a,'b>>) = print_ids (List.map (fun x -> x.v) vs) in
+        let print_vs (vs:set<bvar<'a,'b>>) = print_ids (List.map (fun x -> x.v) (Util.set_elements vs)) in
         (* Options.fvdie := true; *)
         Util.print_string (Util.format3 "Failed: Trying to unify uvar of kind %s with type %s of kind %s\n" (Print.kind_to_string k) (Print.typ_to_string t) (Print.kind_to_string tk));
-        Util.print_string (Util.format3 "Failed: Trying to unify uvar of kind %s with type %s of kind %s\n" (Print.kind_to_string k) (Print.typ_to_string t) (Print.kind_to_string tk));
-        Util.print_string (Util.format3 "freevars = %s; %s; %s\n" 
+        //printfn "ftv inclusion=%A, fxv inclusion=%A\n" (Util.set_is_subset_of fvs_t.ftvs fvs_e.ftvs) (Util.set_is_subset_of fvs_t.fxvs fvs_e.fxvs);
+        Util.print_string (Util.format3 "freevars = %s;\n\ttvs={%s};\n\txvs={%s}\n" 
           (if freevars_in_env then "true" else "false") 
-          (print_vs tvs) (print_vs xvs));
-        Util.fprint3 "Env at %s\n\ttvs = {%s}\n\txvs={%s}\n" (Tc.Env.get_range env |> Range.string_of_range) (print_ids tvs') (print_ids xvs')
+          (print_vs fvs_t.ftvs) (print_vs fvs_t.fxvs));
+        Util.fprint3 "Env at %s\n\ttvs = {%s}\n\txvs={%s}\n" (Tc.Env.get_range env |> Range.string_of_range) (print_vs ( fvs_e.ftvs)) 
+            (print_vs ((fvs_e.fxvs)))
         //        printfn "%A" t
       end in
     let result = freevars_in_env && pre_kind_compat k tk in
@@ -108,9 +109,9 @@ let new_tvar env k =
 
 let new_evar env t =
   let wf e t = 
-    let tvs, xvs = Util.freevars_exp e in
-    let tvs', xvs' = Env.idents env in 
-    forall_exists eq_bv_bvd tvs tvs' && Util.forall_exists eq_bv_bvd xvs xvs' in
+    let fe = Util.freevars_exp e in
+    let fenv = Env.idents env in 
+    Util.set_is_subset_of fe.ftvs fenv.ftvs && Util.set_is_subset_of fe.fxvs fenv.fxvs in
   mk_Exp_uvar (Unionfind.fresh (Uvar wf), t) <| Env.get_range env
 
 let new_cvar env t = 
@@ -695,7 +696,9 @@ let maybe_instantiate env e t =
 (**************************************************************************************)
 let check_uvars r t = 
   let uvt = Util.uvars_in_typ t in
-  if List.length uvt.uvars_e + List.length uvt.uvars_t + List.length uvt.uvars_k > 0
+  if Util.set_count uvt.uvars_e + 
+     Util.set_count uvt.uvars_t + 
+     Util.set_count uvt.uvars_k > 0
   then Tc.Errors.report r "Unconstrained unification variables; please add an annotation"
 
 let discharge_guard env g = 
@@ -721,8 +724,8 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
         then Normalize.normalize_comp env c
         else Normalize.norm_comp [Normalize.Beta; Normalize.Delta] env c in
      let env_uvars = Env.uvars_in_env env in
-     let gen_uvars uvs = 
-       uvs |> List.filter (fun (uv,_) -> not (env_uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
+     let gen_uvars uvs = Util.set_difference (Util.set_copy uvs) env_uvars.uvars_t |> Util.set_elements in
+//       uvs |> List.filter (fun (uv,_) -> not (env_uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
      let uvars = ecs |> List.map (fun (x, e, c) -> 
       let t = Util.comp_result c in 
       match Util.compress_typ t with 

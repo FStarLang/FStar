@@ -362,10 +362,16 @@ let rec push_sigelt en s : env =
 let push_local_binding env b = {env with gamma=b::env.gamma}
       
 let uvars_in_env env = 
+  let no_uvs = {
+    uvars_k=new_uv_set();
+    uvars_t=new_uvt_set();
+    uvars_e=new_uvt_set();
+    uvars_c=new_uv_set()
+  } in
   let ext out uvs = 
-    {out with uvars_k=uvs.uvars_k@out.uvars_k; 
-              uvars_t=uvs.uvars_t@out.uvars_t;
-              uvars_e=uvs.uvars_e@out.uvars_e} in
+    {out with uvars_k=Util.set_union out.uvars_k uvs.uvars_k;
+              uvars_t=Util.set_union out.uvars_t uvs.uvars_t;
+              uvars_e=Util.set_union out.uvars_e uvs.uvars_e;} in
   let rec aux out g = match g with 
     | [] -> out
     | Binding_lid(_, t)::tl
@@ -390,11 +396,12 @@ let clear_expected_typ env = {env with expected_typ=None}, expected_typ env
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
-let idents env : (list<btvdef> * list<bvvdef>) = 
-  fold_env env (fun (tvs, xvs) b -> match b with 
-    | Binding_var(x, _) -> (tvs, x::xvs)
-    | Binding_typ(a, _) -> (a::tvs, xvs)
-    | _ -> (tvs, xvs)) ([],[])
+let idents env : freevars =
+  let out = {ftvs=new_ftv_set(); fxvs=new_ftv_set()} in
+  fold_env env (fun out b -> match b with 
+    | Binding_var(x, t) -> ignore <| Util.set_add (bvd_to_bvar_s x t) out.fxvs; out
+    | Binding_typ(a, k) -> ignore <| Util.set_add (bvd_to_bvar_s a k) out.ftvs; out
+    | _ -> out) out
 
 let lidents env : list<lident> =
   let keys = List.fold_left (fun keys -> function 

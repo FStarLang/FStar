@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-#light "off"
+// Using light syntax in this file because of object-oriented F# constructs 
 // (c) Microsoft Corporation. All rights reserved
 module Microsoft.FStar.Util
 
@@ -102,6 +102,35 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   let stderr = proc.StandardError.ReadToEnd() in 
   result, stdout, stderr
 
+open System.Collections.Generic
+type set<'value>=HashSet<'value>
+type EqCmp<'a> (eq:'a -> 'a -> bool, hash:'a -> int) =
+    interface System.Collections.Generic.IEqualityComparer<'a> with
+            member this.Equals(x:'a, y:'a) = eq x y
+            member this.GetHashCode(x:'a) = hash x
+let new_set (eq:'a -> 'a -> bool) (hash:'a -> int) : set<'a> = 
+    let cmp = new EqCmp<'a>(eq,hash) :> IEqualityComparer<'a> in
+    new HashSet<'a>(cmp)
+let set_add a (s:set<'a>) = ignore <| s.Add(a); s
+let set_remove a (s:set<'a>) = ignore <| s.Remove(a); s
+let set_mem a (s:set<'a>) = s.Contains(a)
+let set_copy (s:set<'a>)  = 
+    let s' = new HashSet<'a>(s.Comparer) in
+    s'.UnionWith(s); 
+    s'
+let set_union (s1:set<'a>) (s2:set<'a>) : set<'a> = s1.UnionWith(s2); s1
+let set_intersect (s1:set<'a>) (s2:set<'a>) : set<'a> = s1.IntersectWith(s2); s2
+let set_elements (s1:set<'a>) : list<'a> = 
+    let mutable e = s1.GetEnumerator() in
+    let mutable res =  [] in
+        while e.MoveNext() do
+          res <- e.Current :: res
+        done;
+        res 
+let set_is_subset_of (s1:set<'a>) (s2:set<'a>) : bool = s1.IsSubsetOf(s2)
+let set_difference (s1:set<'a>) (s2:set<'a>) : set<'a> = s1.ExceptWith(s2); s1
+let set_count (s1:set<'a>) = s1.Count
+
 type smap<'value>=HashMultiMap<string, 'value>
 let smap_create<'value> (i:int) = new HashMultiMap<string,'value>(i, HashIdentity.Structural)
 let smap_clear<'value> (s:smap<'value>) = s.Clear()
@@ -147,6 +176,7 @@ let substring_from (s:string) i = s.Substring(i)
 let substring (s:string) i j = s.Substring(i, j)
 let replace_char (s:string) (c1:char) (c2:char) = s.Replace(c1,c2)
 let replace_string (s:string) (s1:string) (s2:string) = s.Replace(s1, s2)
+let hashcode (s:string) = s.GetHashCode()
 
 let iof = int_of_float
 let foi = float_of_int
@@ -231,19 +261,23 @@ let set_eq f l1 l2 =
   let l2 = sort_with f l2 in
   List.forall2 (fun l1 l2 -> f l1 l2 = 0) l1 l2
 
-let bind_opt opt f = match opt with
-  | None -> None
-  | Some x -> f x
+let bind_opt opt f = 
+    match opt with 
+    | None -> None
+    | Some x -> f x
 
-let map_opt opt f = match opt with
-  | None -> None
-  | Some x -> Some (f x)
+let map_opt opt f = 
+    match opt with
+      | None -> None
+      | Some x -> Some (f x)
 
-let rec find_map l f = match l with 
-  | [] -> None 
-  | x::tl -> match f x with 
-      | None -> find_map tl f
-      | y -> y
+let rec find_map l f = 
+    match l with 
+      | [] -> None 
+      | x::tl -> 
+        match f x with 
+          | None -> find_map tl f
+          | y -> y
 
 let fold_map f state s =
     let fold (state, acc) x =
@@ -278,9 +312,10 @@ let first_N n l =
   in
   f [] 0 l
 
-let prefix l = match List.rev l with 
-  | hd::tl -> List.rev tl, hd
-  | _ -> failwith "impossible"
+let prefix l = 
+    match List.rev l with 
+      | hd::tl -> List.rev tl, hd
+      | _ -> failwith "impossible"
           
 let string_to_ascii_bytes: string -> byte [] = fun s -> asciiEncoding.GetBytes(s)
 let ascii_bytes_to_string: byte [] -> string = fun b -> asciiEncoding.GetString(b)
@@ -297,7 +332,8 @@ let bind (sa:state<'s,'a>) (f : 'a -> state<'s,'b>) : state<'s,'b> = fun s1 ->
 let (>>) s f = bind s f  
 let run_st init (s:state<'s,'a>) = s init
 
-let rec stmap (l:list<'a>) (f: 'a -> state<'s,'b>) : state<'s, list<'b>> = match l with 
+let rec stmap (l:list<'a>) (f: 'a -> state<'s,'b>) : state<'s, list<'b>> = 
+    match l with 
     | [] -> ret []
     | hd::tl -> bind (f hd) 
                      (fun b -> 
@@ -305,7 +341,8 @@ let rec stmap (l:list<'a>) (f: 'a -> state<'s,'b>) : state<'s, list<'b>> = match
                         bind stl (fun tl -> ret (b::tl)))   
 
 let stmapi (l:list<'a>) (f:int -> 'a -> state<'s,'b>) : state<'s, list<'b>> = 
-  let rec aux i l = match l with
+  let rec aux i l = 
+    match l with
     | [] -> ret []
     | hd::tl -> 
       bind (f i hd) 
@@ -314,7 +351,8 @@ let stmapi (l:list<'a>) (f:int -> 'a -> state<'s,'b>) : state<'s, list<'b>> =
           bind stl (fun tl -> ret (b::tl))) in 
   aux 0 l
 
-let rec stiter (l:list<'a>) (f: 'a -> state<'s,unit>) : state<'s, unit> = match l with 
+let rec stiter (l:list<'a>) (f: 'a -> state<'s,unit>) : state<'s, unit> = 
+    match l with 
     | [] -> ret ()
     | hd::tl -> bind (f hd) (fun () -> stiter tl f)
 

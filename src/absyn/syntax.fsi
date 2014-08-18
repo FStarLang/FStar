@@ -20,7 +20,6 @@ module Microsoft.FStar.Absyn.Syntax
 open Prims
 open Microsoft.FStar
 open Microsoft.FStar.Util
-open Microsoft.FStar.LazySet
 open Microsoft.FStar.Range
 
 exception Err of string
@@ -162,14 +161,14 @@ and subst_map = Util.smap<either<typ, exp>>
 and subst_elt = either<(btvdef*typ), (bvvdef*exp)>
 and fvar = either<btvdef, bvvdef>
 and freevars = {
-  ftvs: list<btvar>;
-  fxvs: list<bvvar>;
+  ftvs: set<btvar>;
+  fxvs: set<bvvar>;
 }
 and uvars = {
-  uvars_k: list<uvar_k>;
-  uvars_t: list<(uvar_t*knd)>;
-  uvars_e: list<(uvar_e*typ)>;
-  uvars_c: list<uvar_c>;
+  uvars_k: set<uvar_k>;
+  uvars_t: set<(uvar_t*knd)>;
+  uvars_e: set<(uvar_e*typ)>;
+  uvars_c: set<uvar_c>;
 }
 and syntax<'a,'b> = {
     n:'a;
@@ -185,6 +184,9 @@ and fvvar = var<typ>
 
 type formula = typ
 type formulae = list<typ>
+val new_ftv_set: unit -> set<bvar<'a,'b>>
+val new_uv_set: unit -> set<Unionfind.uvar<'a>>
+val new_uvt_set: unit -> set<(Unionfind.uvar<'a> * 'b)>
 
 type tparam =
   | Tparam_typ  of btvdef * knd (* idents for pretty printing *)
