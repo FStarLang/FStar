@@ -555,25 +555,25 @@ let eq_fvars v1 v2 = match v1, v2 with
 
 let uv_eq (uv1,_) (uv2,_) = Unionfind.equivalent uv1 uv2
 let union_uvs uvs1 uvs2 =
-    {   uvars_k=Util.set_union (Util.set_copy uvs1.uvars_k) uvs2.uvars_k;
-        uvars_c=Util.set_union (Util.set_copy uvs1.uvars_c) uvs2.uvars_c;
-        uvars_t=Util.set_union (Util.set_copy uvs1.uvars_t) uvs2.uvars_t;
-        uvars_e=Util.set_union (Util.set_copy uvs1.uvars_e) uvs2.uvars_e;
+    {   uvars_k=Util.set_union uvs1.uvars_k uvs2.uvars_k;
+        uvars_c=Util.set_union uvs1.uvars_c uvs2.uvars_c;
+        uvars_t=Util.set_union uvs1.uvars_t uvs2.uvars_t;
+        uvars_e=Util.set_union uvs1.uvars_e uvs2.uvars_e;
     }
 
 let union_fvs (fvs1, uvs1) (fvs2, uvs2) = 
     {
-        ftvs=Util.set_union (Util.set_copy fvs1.ftvs) fvs2.ftvs;
-        fxvs=Util.set_union (Util.set_copy fvs1.fxvs) fvs2.fxvs;
+        ftvs=Util.set_union fvs1.ftvs fvs2.ftvs;
+        fxvs=Util.set_union fvs1.fxvs fvs2.fxvs;
     }, 
     union_uvs uvs1 uvs2
 
 let sub_fv (fvs, uvs) (by:option<either<btvdef,bvvdef>>) = match by with 
     | None -> fvs, uvs
     | Some (Inl b) -> 
-        {fvs with ftvs=Util.set_remove (bvd_to_bvar_s b kun) (Util.set_copy fvs.ftvs)}, uvs
+        {fvs with ftvs=Util.set_remove (bvd_to_bvar_s b kun) fvs.ftvs}, uvs
     | Some (Inr y) -> 
-        {fvs with fxvs=Util.set_remove (bvd_to_bvar_s y tun) (Util.set_copy fvs.fxvs)}, uvs
+        {fvs with fxvs=Util.set_remove (bvd_to_bvar_s y tun) fvs.fxvs}, uvs
     //    {fvs with fxvs=fvs.fxvs |> List.filter (fun a -> not <| bvd_eq a.v y)}, uvs
 
 let tbinder = function 
@@ -817,19 +817,18 @@ let is_free axs (fvs:freevars) =
     | Inr x -> Util.set_mem x fvs.fxvs)
 
 let rec update_uvars (s:syntax<'a,'b>) (uvs:uvars) =
-  let add (a:'x) (s:set<'x>) : set<'x> = Util.set_add a (Util.set_copy s) in
   let out = (Util.set_elements uvs.uvars_k) |> List.fold_left (fun out u -> 
         match Unionfind.find u with 
             | Fixed k -> union_uvs (uvars_in_kind k) out
-            | _ -> {out with uvars_k=add u (out.uvars_k)}) no_uvs in
+            | _ -> {out with uvars_k=set_add u (out.uvars_k)}) no_uvs in
   let out = (Util.set_elements uvs.uvars_t) |> List.fold_left (fun out (u,t) -> 
         match Unionfind.find u with 
             | Fixed t -> union_uvs (uvars_in_typ t) out
-            | _ -> {out with uvars_t=add (u,t) out.uvars_t}) out in
+            | _ -> {out with uvars_t=set_add (u,t) out.uvars_t}) out in
   let out = (Util.set_elements uvs.uvars_e) |> List.fold_left (fun out (u,t) -> 
         match Unionfind.find u with 
             | Fixed e -> union_uvs (uvars_in_exp e) out
-            | _ -> {out with uvars_e=add (u,t) out.uvars_e}) out in
+            | _ -> {out with uvars_e=set_add (u,t) out.uvars_e}) out in
   s.uvs := Some out;
   out
 

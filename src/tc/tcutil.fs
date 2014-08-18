@@ -724,21 +724,20 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
         then Normalize.normalize_comp env c
         else Normalize.norm_comp [Normalize.Beta; Normalize.Delta] env c in
      let env_uvars = Env.uvars_in_env env in
-     let gen_uvars uvs = Util.set_difference (Util.set_copy uvs) env_uvars.uvars_t |> Util.set_elements in
-//       uvs |> List.filter (fun (uv,_) -> not (env_uvars.uvars_t |> Util.for_some (fun (uv',_) -> Unionfind.equivalent uv uv'))) in 
+     let gen_uvars uvs = Util.set_difference uvs env_uvars.uvars_t |> Util.set_elements in
      let uvars = ecs |> List.map (fun (x, e, c) -> 
       let t = Util.comp_result c in 
       match Util.compress_typ t with 
         | {n=Typ_univ _} -> (* explicit abstractions need not be generalized *)
           (x, [], e, Util.force_comp c)
         | _ -> 
-      let c = norm c in //Util.force_comp c in
+      let c = norm c in 
       let t = c.result_typ in
       let uvt = Util.uvars_in_typ t in
       let uvs = gen_uvars <| uvt.uvars_t in 
       if !Options.verify && not <| Util.is_total_comp (mk_Comp c)
       then begin
-          let _, wp, _ = destruct_comp c in //(norm (Comp c)) in
+          let _, wp, _ = destruct_comp c in 
           let post = syn t.pos (mk_Kind_dcon(None, t, ktype, false) t.pos) <| mk_Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid) in
           let vc = Normalize.norm_typ [Normalize.Delta; Normalize.Beta] env (syn wp.pos ktype <| mk_Typ_app(wp, post, false)) in
           if Tc.Env.debug env then Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));

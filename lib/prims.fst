@@ -487,3 +487,4 @@ assume val op_Division           : int -> int -> int
 (* Unrefined specifications for these functions for typing ML code *)
 assume val op_ColonEquals: ref 'a -> 'a -> unit
 assume val op_Dereference: ref 'a -> 'a
+assume type Boxed : Type => Type

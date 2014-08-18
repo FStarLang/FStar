@@ -102,34 +102,22 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   let stderr = proc.StandardError.ReadToEnd() in 
   result, stdout, stderr
 
-open System.Collections.Generic
-type set<'value>=HashSet<'value>
-type EqCmp<'a> (eq:'a -> 'a -> bool, hash:'a -> int) =
-    interface System.Collections.Generic.IEqualityComparer<'a> with
-            member this.Equals(x:'a, y:'a) = eq x y
-            member this.GetHashCode(x:'a) = hash x
-let new_set (eq:'a -> 'a -> bool) (hash:'a -> int) : set<'a> = 
-    let cmp = new EqCmp<'a>(eq,hash) :> IEqualityComparer<'a> in
-    new HashSet<'a>(cmp)
-let set_add a (s:set<'a>) = ignore <| s.Add(a); s
-let set_remove a (s:set<'a>) = ignore <| s.Remove(a); s
-let set_mem a (s:set<'a>) = s.Contains(a)
-let set_copy (s:set<'a>)  = 
-    let s' = new HashSet<'a>(s.Comparer) in
-    s'.UnionWith(s); 
-    s'
-let set_union (s1:set<'a>) (s2:set<'a>) : set<'a> = s1.UnionWith(s2); s1
-let set_intersect (s1:set<'a>) (s2:set<'a>) : set<'a> = s1.IntersectWith(s2); s2
-let set_elements (s1:set<'a>) : list<'a> = 
-    let mutable e = s1.GetEnumerator() in
-    let mutable res =  [] in
-        while e.MoveNext() do
-          res <- e.Current :: res
-        done;
-        res 
-let set_is_subset_of (s1:set<'a>) (s2:set<'a>) : bool = s1.IsSubsetOf(s2)
-let set_difference (s1:set<'a>) (s2:set<'a>) : set<'a> = s1.ExceptWith(s2); s1
-let set_count (s1:set<'a>) = s1.Count
+open Prims
+type set<'a> = Collections.Set<Boxed<'a>> * ('a -> Boxed<'a>)
+
+let new_set (cmp:'a -> 'a -> int) (hash:'a -> int) : set<'a> = 
+    let box v = new Boxed<'a>(v, cmp, hash) in
+    (new Collections.Set<Boxed<'a>>([]), box)
+
+let set_add a ((s, b):set<'a>) = s.Add (b a), b
+let set_remove a ((s1, b):set<'a>) = s1.Remove(b a), b
+let set_mem a ((s, b):set<'a>) = s.Contains (b a)
+let set_union ((s1, b):set<'a>) ((s2, _):set<'a>) = Set.union s1 s2, b
+let set_intersect ((s1, b):set<'a>) ((s2, _):set<'a>) = Set.intersect s1 s2, b
+let set_is_subset_of ((s1, _): set<'a>) ((s2, _):set<'a>) = s1.IsSubsetOf(s2)
+let set_count ((s1, _):set<'a>) = s1.Count
+let set_difference ((s1, b):set<'a>) ((s2, _):set<'a>) : set<'a> = Set.difference s1 s2, b
+let set_elements ((s1, b):set<'a>) :list<'a> = Set.toList s1 |> List.map (fun x -> x.unbox)
 
 type smap<'value>=HashMultiMap<string, 'value>
 let smap_create<'value> (i:int) = new HashMultiMap<string,'value>(i, HashIdentity.Structural)
@@ -177,6 +165,7 @@ let substring (s:string) i j = s.Substring(i, j)
 let replace_char (s:string) (c1:char) (c2:char) = s.Replace(c1,c2)
 let replace_string (s:string) (s1:string) (s2:string) = s.Replace(s1, s2)
 let hashcode (s:string) = s.GetHashCode()
+let compare (s1:string) (s2:string) = s1.CompareTo(s2)
 
 let iof = int_of_float
 let foi = float_of_int

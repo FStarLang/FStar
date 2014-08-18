@@ -23,13 +23,13 @@ val return_all: 'a -> 'a
 
 
 (* generic utils *)
-type set<'value> = System.Collections.Generic.HashSet<'value> (* not relying on representation *)
-val new_set: ('a -> 'a -> bool) -> ('a -> int) -> set<'a>
-(* This interface looks functional ... but it's not! Sets are mutated in place. Copy as needed *)
+open Prims
+(* Functional sets *)
+type set<'value> = (Collections.Set<Boxed<'value>> * ('value -> Boxed<'value>)) (* not relying on representation *)
+val new_set: ('a -> 'a -> int) -> ('a -> int) -> set<'a>
 val set_add: 'a -> set<'a> -> set<'a>
 val set_remove: 'a -> set<'a> -> set<'a>
 val set_mem: 'a -> set<'a> -> bool
-val set_copy: set<'a> -> set<'a>
 val set_union: set<'a> -> set<'a> -> set<'a>
 val set_intersect: set<'a> -> set<'a> -> set<'a>
 val set_is_subset_of: set<'a> -> set<'a> -> bool
@@ -100,6 +100,7 @@ val substring: string -> int -> int -> string
 val replace_char: string -> char -> char -> string
 val replace_string: string -> string -> string -> string
 val hashcode: string -> int
+val compare: string -> string -> int
 
 type either<'a,'b> =
   | Inl of 'a

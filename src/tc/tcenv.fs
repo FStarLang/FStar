@@ -347,16 +347,13 @@ let lookup_operator env (opname:ident) =
     lookup_lid env primName
       
 let rec push_sigelt en s : env = 
-//  match s with 
-//    | Sig_bundle(ses, _) -> List.fold_left push_sigelt en ses 
-//    | _ -> 
-      let env0 = en in
-      let env = build_lattice ({en with gamma=Binding_sig s::en.gamma}) s in
-      let _ = match s with 
-       | Sig_monads(decls, _, _) -> 
-         decls |> List.iter (fun md -> ignore <| lookup_typ_lid env0 md.mname)
-       | _ -> () in
-       env
+    let env0 = en in
+    let env = build_lattice ({en with gamma=Binding_sig s::en.gamma}) s in
+    let _ = match s with 
+    | Sig_monads(decls, _, _) -> 
+        decls |> List.iter (fun md -> ignore <| lookup_typ_lid env0 md.mname)
+    | _ -> () in
+    env
    
         
 let push_local_binding env b = {env with gamma=b::env.gamma}
@@ -399,8 +396,8 @@ let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 let idents env : freevars =
   let out = {ftvs=new_ftv_set(); fxvs=new_ftv_set()} in
   fold_env env (fun out b -> match b with 
-    | Binding_var(x, t) -> ignore <| Util.set_add (bvd_to_bvar_s x t) out.fxvs; out
-    | Binding_typ(a, k) -> ignore <| Util.set_add (bvd_to_bvar_s a k) out.ftvs; out
+    | Binding_var(x, t) -> {out with fxvs=Util.set_add (bvd_to_bvar_s x t) out.fxvs}
+    | Binding_typ(a, k) -> {out with ftvs=Util.set_add (bvd_to_bvar_s a k) out.ftvs}
     | _ -> out) out
 
 let lidents env : list<lident> =

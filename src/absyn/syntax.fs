@@ -299,9 +299,9 @@ open Microsoft.FStar.Range
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
-let new_ftv_set () = Util.new_set (fun x y -> bvd_eq x.v y.v) (fun x -> Util.hashcode x.v.realname.idText)
-let new_uv_set () = Util.new_set Unionfind.equivalent Unionfind.uvar_id
-let new_uvt_set () = Util.new_set (fun (x, _) (y, _) -> Unionfind.equivalent x y) (fun (x, _) -> Unionfind.uvar_id x)
+let new_ftv_set () = Util.new_set (fun x y -> Util.compare x.v.realname.idText y.v.realname.idText) (fun x -> Util.hashcode x.v.realname.idText)
+let new_uv_set () = Util.new_set (fun x y -> Unionfind.uvar_id x - Unionfind.uvar_id y) Unionfind.uvar_id
+let new_uvt_set () = Util.new_set (fun (x, _) (y, _) -> Unionfind.uvar_id x - Unionfind.uvar_id y) (fun (x, _) -> Unionfind.uvar_id x)
 let no_fvs = {
     ftvs=new_ftv_set();
     fxvs=new_ftv_set();
