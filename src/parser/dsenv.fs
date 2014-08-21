@@ -146,7 +146,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
       | Some (se, _) -> 
         begin match se with 
           | Sig_typ_abbrev _
-          | Sig_tycon _ -> Some <| Typ_name(OSig se, ftv <| lid)      
+          | Sig_tycon _ -> Some <| Typ_name(OSig se, ftv lid kun)      
           | Sig_datacon _
           | Sig_let _ -> Some <| Exp_name(OSig se,  fvar lid (range_of_lid lid))
           | Sig_val_decl(_, _, quals, _) ->
@@ -164,7 +164,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
           let recname = qualify env lid.ident in
           Util.find_map env.recbindings (function
             | Binding_let l when lid_equals l recname -> Some (Exp_name(ORec l, Util.fvar recname (range_of_lid recname)))
-            | Binding_tycon l when lid_equals l recname  -> Some(Typ_name(ORec l, ftv recname))
+            | Binding_tycon l when lid_equals l recname  -> Some(Typ_name(ORec l, ftv recname kun))
             | _ -> None)
       end
     | _ -> None in
@@ -186,7 +186,7 @@ let is_effect_name env lid =
       | Some (Sig_tycon(_, _, _, _, _, tags, _), _) 
       | Some (Sig_typ_abbrev (_, _, _, _, tags, _), _) -> 
         if Util.for_some (function Effect -> true | _ -> false) tags
-        then Some (ftv <| lid)
+        then Some (ftv lid kun)
         else None 
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig |> Util.is_some

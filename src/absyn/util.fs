@@ -101,7 +101,7 @@ let set_lid_range l r =
   lid_of_ids ids
 let fv l = withinfo l tun (range_of_lid l)
 let fvar l r = mk_Exp_fvar(fv (set_lid_range l r), false) tun r
-let ftv l = mk_Typ_const (withinfo l kun (range_of_lid l)) kun (range_of_lid l)
+let ftv l k = mk_Typ_const (withinfo l k (range_of_lid l)) k (range_of_lid l)
 let order_bvd x y = match x, y with 
   | Inl _, Inr _ -> -1
   | Inr _, Inl _ -> 1
@@ -494,15 +494,22 @@ let mk_curried_app e e_or_t =
     | Inl t -> mk_Exp_tapp(f, t) tun (Range.union_ranges f.pos t.pos)
     | Inr (e, imp) -> mk_Exp_app(f, e, imp) tun (Range.union_ranges f.pos e.pos))  e e_or_t 
 
+let app_kind k te = match k.n, te with 
+    | Kind_tcon(None, _, k', _), Inl t ->  k'
+    | Kind_dcon(None, _, k', _), Inr e -> k'
+    | Kind_tcon(Some a, _, k', _), Inl t -> subst_kind (mk_subst [(Inl(a, t))]) k'
+    | Kind_dcon(Some x, _, k', _), Inr e -> subst_kind (mk_subst [(Inr(x, e))]) k'
+    | _ -> kun
+
 let mk_typ_app f args = 
   List.fold_left (fun f -> function
-    | Inl (t, imp) -> mk_Typ_app(f, t, imp) kun (Range.union_ranges f.pos t.pos)
-    | Inr (e, imp) -> mk_Typ_dep(f, e, imp) kun (Range.union_ranges f.pos e.pos)) f args
+    | Inl (t, imp) -> mk_Typ_app(f, t, imp) (app_kind f.tk (Inl t)) (Range.union_ranges f.pos t.pos)
+    | Inr (e, imp) -> mk_Typ_dep(f, e, imp) (app_kind f.tk (Inr e)) (Range.union_ranges f.pos e.pos)) f args
 
 let mk_typ_app_explicit f args = 
   List.fold_left (fun f -> function
-    | Inl (t) -> mk_Typ_app(f, t, false) kun (Range.union_ranges f.pos t.pos)
-    | Inr (e) -> mk_Typ_dep(f, e, false) kun (Range.union_ranges f.pos e.pos)) f args
+    | Inl (t) -> mk_Typ_app(f, t, false) (app_kind f.tk (Inl t)) (Range.union_ranges f.pos t.pos)
+    | Inr (e) -> mk_Typ_dep(f, e, false) (app_kind f.tk (Inr e)) (Range.union_ranges f.pos e.pos)) f args
 
 let uncurry_app e =
   let rec aux e out = match e.n with 
@@ -990,12 +997,12 @@ let sortByFieldName (fn_a_l:list<(fieldname * 'a)>) =
           (text_of_lid fn2))
     
 let mk_tlam xopt t1 t2 = match xopt with
-  | None ->  mk_Typ_lam(new_bvd None, t1, t2) kun t2.pos
-  | Some x-> mk_Typ_lam(x, t1, t2) kun t2.pos
+  | None ->  mk_Typ_lam(new_bvd None, t1, t2) (mk_Kind_dcon(None, t1, t2.tk, false) t2.pos) t2.pos
+  | Some x-> mk_Typ_lam(x, t1, t2) (mk_Kind_dcon(Some x, t1, t2.tk, false) t2.pos) t2.pos
 
 let mkRefinedUnit formula =
   let bvd = new_bvd None in
-  let t = mk_Typ_refine(bvd, ftv Const.unit_lid, formula) mk_Kind_type formula.pos in
+  let t = mk_Typ_refine(bvd, ftv Const.unit_lid ktype, formula) mk_Kind_type formula.pos in
   t, bvd.realname
 
 let findValDecl (vds:list<sigelt>) bvd : option<sigelt> =
@@ -1007,25 +1014,38 @@ let rec typs_of_letbinding x = match x with
   | (_, t, e)::tl -> t::typs_of_letbinding tl
   | _ -> []
 
+let kt_kt = Const.kunary ktype ktype
+let kt_kt_kt = Const.kbin ktype ktype ktype
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
   | Some phi1 ->
-    let app1 = mk_Typ_app(ftv Const.and_lid, phi1, false) kun phi1.pos in
-    let and_t = mk_Typ_app(app1, phi2, false) mk_Kind_type (Range.union_ranges phi1.pos phi2.pos) in
+    let app1 = mk_Typ_app(ftv Const.and_lid kt_kt_kt, phi1, false) kt_kt phi1.pos in
+    let and_t = mk_Typ_app(app1, phi2, false) ktype (Range.union_ranges phi1.pos phi2.pos) in
     Some and_t
 
 let mk_binop op phi1 phi2 = 
-  let app1 = mk_Typ_app(ftv op, phi1, false) (mk_Kind_tcon(None, mk_Kind_type, mk_Kind_type, false) dummyRange) phi1.pos in
-  mk_Typ_app(app1, phi2, false) mk_Kind_type (Range.union_ranges phi1.pos phi2.pos)
+  let app1 = mk_Typ_app(ftv op kt_kt_kt, phi1, false) kt_kt phi1.pos in
+  mk_Typ_app(app1, phi2, false) ktype (Range.union_ranges phi1.pos phi2.pos)
 
-let mk_neg phi = mk_Typ_app(ftv Const.not_lid, phi, false) mk_Kind_type phi.pos
+let mk_neg phi = mk_Typ_app(ftv Const.not_lid kt_kt, phi, false) ktype phi.pos
 let mk_conj phi1 phi2 = mk_binop Const.and_lid phi1 phi2
 let mk_disj phi1 phi2 = mk_binop Const.or_lid phi1 phi2
 let mk_imp phi1 phi2  = mk_binop Const.imp_lid phi1 phi2
 let mk_iff phi1 phi2  = mk_binop Const.iff_lid phi1 phi2
+let eq_k = 
+    let a = new_bvd None in 
+    let atyp = bvd_to_typ a ktype in
+    let b = new_bvd None in 
+    let btyp = bvd_to_typ b ktype in
+    mk_Kind_tcon(Some a, ktype, 
+            mk_Kind_tcon(Some b, ktype, 
+                mk_Kind_dcon(None, atyp, 
+                    mk_Kind_dcon(None, btyp, ktype, false) dummyRange, false) dummyRange, true) dummyRange, true) dummyRange
+
 let mk_eq e1 e2       = 
-  let app1 = mk_Typ_dep(ftv Const.eq2_lid, e1, false) kun e1.pos in
-  mk_Typ_dep(app1, e2, false) mk_Kind_type (Range.union_ranges e1.pos e2.pos)
+  let eqk2 = mk_Kind_dcon(None, e2.tk, ktype, false) dummyRange in 
+  let app1 = mk_Typ_dep(ftv Const.eq2_lid eq_k, e1, false) eqk2 e1.pos in
+  mk_Typ_dep(app1, e2, false) ktype (Range.union_ranges e1.pos e2.pos)
 
 let normalizeRefinement t =
   let rec aux xopt t = match t.n with
@@ -1040,25 +1060,27 @@ let normalizeRefinement t =
     | _ -> t, None in
   aux None t
  
-let forall_kind =
+let forall_kind_t atyp =
+    mk_Kind_tcon(None, mk_Kind_dcon(None, atyp, mk_Kind_type, false) dummyRange,
+                mk_Kind_type, 
+                false) dummyRange
+ 
+ let forall_kind =
   let a = new_bvd None in
   let atyp = bvd_to_typ a mk_Kind_type in
-    mk_Kind_tcon(Some a, mk_Kind_type,
-                 mk_Kind_tcon(None, mk_Kind_dcon(None, atyp, mk_Kind_type, false) dummyRange,
-                              mk_Kind_type, 
-                              false) dummyRange, 
-                 true) dummyRange
+    mk_Kind_tcon(Some a, mk_Kind_type, forall_kind_t atyp, true) dummyRange
 
 let mk_forallT a k b = 
   let r = dummyRange in
-  let allT_k = mk_Kind_tcon(None, mk_Kind_tcon(Some a, k, mk_Kind_type, false) r, mk_Kind_type, false) r in 
-  let forall_typ = mk_Typ_const(withsort Const.allTyp_lid allT_k) allT_k r in
-  mk_Typ_app(forall_typ, mk_Typ_tlam(a, k, b) kun r, false) mk_Kind_type r
+  let allT_k = mk_Kind_tcon(None, mk_Kind_tcon(Some a, k, ktype, false) r, ktype, false) r in 
+  let forall_typ = ftv Const.allTyp_lid allT_k in
+  mk_Typ_app(forall_typ, mk_Typ_tlam(a, k, b) (mk_Kind_tcon(Some a, k, b.tk, false) r) r, false) ktype r
  
 let mk_forall (x:bvvdef) (a:typ) (body:typ) : typ =
   let r = dummyRange in
-  let forall_typ = mk_Typ_const(withsort Const.forall_lid forall_kind) kun r in
-  mk_Typ_app(mk_Typ_app(forall_typ, a, true) kun r, mk_Typ_lam(x, a, body) kun r, false) mk_Kind_type r
+  let forall_typ = ftv Const.forall_lid forall_kind in 
+  mk_Typ_app(mk_Typ_app(forall_typ, a, true) (forall_kind_t a) r, 
+            mk_Typ_lam(x, a, body) (mk_Kind_dcon(Some x, a, body.tk, false) r) r, false) mk_Kind_type r
   
 let un_forall t = match t.n with
   | Typ_app({n=Typ_app({n=Typ_const(lid)}, _, _)}, 

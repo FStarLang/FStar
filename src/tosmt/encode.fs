@@ -181,7 +181,7 @@ type res = (
  )
 
 let trivial_post t : typ = 
-  syn t.pos (mk_Kind_dcon(None, t, ktype, false) t.pos) <| mk_Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid)
+  syn t.pos (mk_Kind_dcon(None, t, ktype, false) t.pos) <| mk_Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid ktype)
           
 let rec encode_knd (env:env_t) (k:knd)  : res = 
     let k0 = k in

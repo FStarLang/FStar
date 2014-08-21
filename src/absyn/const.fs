@@ -37,8 +37,8 @@ let exn_lid    = pconst  "exn"
 
 (* Logical connectives and operators *)
 let kunary k k'              = mk_Kind_tcon(None, k, k', false) dummyRange
-let kbin k k'                = mk_Kind_tcon(None, k, mk_Kind_tcon(None, k, k', false) dummyRange, false) dummyRange
-let ktern k k'               = mk_Kind_tcon(None, k, mk_Kind_tcon(None, k, mk_Kind_tcon(None, k, k', false) dummyRange, false) dummyRange, false) dummyRange
+let kbin k1 k2 k'                = mk_Kind_tcon(None, k1, mk_Kind_tcon(None, k2, k', false) dummyRange, false) dummyRange
+let ktern k1 k2 k3 k'               = mk_Kind_tcon(None, k1, mk_Kind_tcon(None, k2, mk_Kind_tcon(None, k3, k', false) dummyRange, false) dummyRange, false) dummyRange
 let true_lid = pconst "True"
 let false_lid = pconst "False"
 let and_lid = pconst "l_and"  

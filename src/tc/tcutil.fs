@@ -558,7 +558,7 @@ let bind_cases env (res_t:typ) (cases:list<(option<formula> * comp)>) : comp =
             let (md, a, kwp), (t, wp1, wlp1), (_, wp2, wlp2) = lift_and_destruct env caccum c in 
             let k = Util.subst_kind' [Inl(a, t)] kwp in
             let wp_conj wp1 wp2 = 
-              {Util.mk_typ_app_explicit md.wp_binop [Inl t; Inl wp1; Inl (Util.ftv Const.and_lid); Inl wp2] with tk=k} in
+              {Util.mk_typ_app_explicit md.wp_binop [Inl t; Inl wp1; Inl (Util.ftv Const.and_lid (Const.kbin ktype ktype ktype)); Inl wp2] with tk=k} in
             let wp = wp_conj wp1 wp2 in
             let wlp = wp_conj wlp1 wlp2 in 
             (Some <| mk_comp md t wp wlp [], prior_or_c_matched)) (None, None) in
@@ -738,7 +738,7 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
       if !Options.verify && not <| Util.is_total_comp (mk_Comp c)
       then begin
           let _, wp, _ = destruct_comp c in 
-          let post = syn t.pos (mk_Kind_dcon(None, t, ktype, false) t.pos) <| mk_Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid) in
+          let post = syn t.pos (mk_Kind_dcon(None, t, ktype, false) t.pos) <| mk_Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid ktype) in
           let vc = Normalize.norm_typ [Normalize.Delta; Normalize.Beta] env (syn wp.pos ktype <| mk_Typ_app(wp, post, false)) in
           if Tc.Env.debug env then Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));
           if not <| env.solver.solve env vc

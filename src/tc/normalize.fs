@@ -37,6 +37,7 @@ open Microsoft.FStar.Tc.Env
  **********************************************************************************************)
 
 type step = 
+  | Eta
   | Delta
   | DeltaHard
   | Beta
@@ -66,11 +67,37 @@ let pop config = match config.stack with
   | [] -> None, config
   | hd::tl -> Some hd, {config with stack=tl}
 let with_code c e = {code=e; environment=c.environment; stack=[]; steps=c.steps}
+
+let rec eta_expand tcenv t = 
+    let rec eta_expand t = match (Util.compress_kind t.tk).n with 
+    | Kind_type 
+    | Kind_effect
+    | Kind_uvar _ -> t
+    | Kind_abbrev(_, k) -> 
+      eta_expand ({t with tk=k})
+    | Kind_dcon(xopt, t0, k', imp) ->
+      let x = match xopt with 
+        | None -> Util.new_bvd (Some t.pos)
+        | Some x -> x in
+      let body = mk_Typ_dep(t, Util.bvd_to_exp x t0, imp) k' t.pos in
+      mk_Typ_lam(x, t0, eta_expand body) t.tk t.pos
+    | Kind_tcon(aopt, k0, k', imp) -> 
+      let a = match aopt with 
+        | None -> Util.new_bvd (Some t.pos) 
+        | Some a -> a in
+      let body = mk_Typ_app(t, Util.bvd_to_typ a k0, imp) k' t.pos in
+      mk_Typ_tlam(a, k0, eta_expand body) t.tk t.pos 
+    | Kind_delayed _ -> failwith "Impossible"
+    | Kind_unknown -> failwith (Util.format2 "%s: Impossible: Kind_unknown: %s" (Tc.Env.get_range tcenv |> Range.string_of_range) (Print.typ_to_string t)) in
+    eta_expand t
      
 let rec sn tcenv (cfg:config<typ>) : config<typ> =
   let rebuild config  = 
     let rec aux out stack : typ = match stack with
-      | [] -> out
+      | [] -> eta_expand tcenv out
+//        if config.steps |> List.contains Eta
+//        then eta_expand out
+//        else out
       | (Inl (t,e,k), imp)::rest -> 
         let c = sn tcenv ({code=t; environment=e; stack=[]; steps=config.steps}) in 
         aux (mk_Typ_app(out, c.code, imp) k out.pos) rest
