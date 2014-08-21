@@ -625,7 +625,7 @@ and desugar_typ env (top:term) : typ =
         | None -> raise (Error("Unrecognized type operator" ^ s, top.range))
         | Some l ->
           let args = List.map (fun t -> withimp false <| desugar_typ_or_exp env t) args in
-          mk_tapp (ftv l) args
+          mk_tapp (ftv l kun) args
       end
 
     | Tvar a ->
@@ -819,7 +819,7 @@ and desugar_formula' env (f:term) : typ =
           | [] -> body
           | _ -> setpos <| mk_Typ_meta (Meta_pattern(body, pats)) in
         let body = pos <| mk_Typ_tlam(a, k, body) in
-        setpos <| mk_tapp (ftv (set_lid_range qt b.brange)) [Inl (body, false)]
+        setpos <| mk_tapp (ftv (set_lid_range qt b.brange) kun) [Inl (body, false)]
             
       | Inr(Some x,t) ->
         let env, x = push_local_vbinding env x in
@@ -829,7 +829,7 @@ and desugar_formula' env (f:term) : typ =
           | [] -> body
           | _ -> mk_Typ_meta (Meta_pattern(body, pats)) in
         let body = pos <| mk_Typ_lam(x, t, body) in
-        setpos <| mk_tapp (ftv (set_lid_range q b.brange)) [Inl (body, false)]
+        setpos <| mk_tapp (ftv (set_lid_range q b.brange) kun) [Inl (body, false)]
 
       | _ -> failwith "impossible" in
             
@@ -846,22 +846,22 @@ and desugar_formula' env (f:term) : typ =
       let args = List.map (fun t -> withimp false <| desugar_typ_or_exp env t) args in
       let eq =
         if is_type env hd
-        then ftv (set_lid_range Const.eqT_lid f.range)
-        else ftv (set_lid_range Const.eq2_lid f.range) in
+        then ftv (set_lid_range Const.eqT_lid f.range) kun
+        else ftv (set_lid_range Const.eq2_lid f.range) kun in
       mk_tapp eq args
 
     | Op(s, args) ->
       begin match connective s, args with
         | Some conn, [_;_] ->
           mk_tapp
-            (ftv (set_lid_range conn f.range))
+            (ftv (set_lid_range conn f.range) kun)
             (List.map (fun x -> Inl (desugar_formula env x, false)) args)
         | _ -> desugar_typ env f
       end
         
     | If(f1, f2, f3) ->
       mk_tapp
-        (ftv (set_lid_range Const.ite_lid f.range))
+        (ftv (set_lid_range Const.ite_lid f.range) kun)
         (List.map (fun x -> Inl (desugar_typ env x, false)) [f1;f2;f3])
 
     | QForall((_1::_2::_3), pats, body) ->
@@ -993,13 +993,13 @@ let mk_data_ops env = function
         let t2 = 
           if Util.set_mem (bvd_to_bvar_s a k) freevs.ftvs
           then t2
-          else let subst = mk_subst [Inl(a, mk_tapp (ftv field_name) (freeterms@[Inr (formal_exp, false)]))] in
+          else let subst = mk_subst [Inl(a, mk_tapp (ftv field_name kun) (freeterms@[Inr (formal_exp, false)]))] in
                subst_comp subst t2 in
         aux (fields@[sigs]) (force_comp t2).result_typ
 
       | _ -> fields in
     let disc_name = Util.mk_discriminator lid in
-    let disc = Sig_val_decl(disc_name, build_typ (Util.ftv Const.bool_lid), [Assumption; Logic; Discriminator lid], range_of_lid disc_name) in
+    let disc = Sig_val_decl(disc_name, build_typ (Util.ftv Const.bool_lid ktype), [Assumption; Logic; Discriminator lid], range_of_lid disc_name) in
     aux [disc] t
   | _ -> []
 

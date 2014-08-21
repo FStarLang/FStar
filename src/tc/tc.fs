@@ -96,6 +96,9 @@ let rec tc_kind env k : knd * guard =
   
   | Kind_abbrev(kabr, k) -> 
     let k, f = tc_kind env k in 
+    let kabr = (fst kabr, snd kabr |> List.map (function 
+        | Inl t -> Inl(tc_typ_trivial env t |> fst)
+        | Inr e -> Inr(let e, _, _ = tc_total_exp env e in e))) in
     w <| mk_Kind_abbrev(kabr, k), f
 
   | Kind_tcon (aopt, k1, k2, imp) -> 
@@ -719,7 +722,7 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
       let e = compress_exp e in 
       match e.n with 
       | Exp_uvar _
-      | Exp_bvar _ -> [Util.ftv Const.true_lid]
+      | Exp_bvar _ -> [Util.ftv Const.true_lid ktype]
       | Exp_constant c -> [Util.mk_eq guard_exp e]
       | Exp_fvar(f, _) -> [discriminate f]
       | Exp_app _ 
@@ -909,7 +912,7 @@ and tc_decl env se = match se with
       let constructed_t, _ = Util.flatten_typ_apps result_t in (* TODO: check that the tps in tname are the same as here *)
       let _ = match destruct constructed_t tname with 
         | Some _ -> ()
-        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type (Util.fvar lid (range_of_lid lid)) constructed_t (Util.ftv tname), range_of_lid lid)) in
+        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type (Util.fvar lid (range_of_lid lid)) constructed_t (Util.ftv tname kun), range_of_lid lid)) in
       let t = Tc.Util.refine_data_type env lid args result_t in
       let se = Sig_datacon(lid, t, tname, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
