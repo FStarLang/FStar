@@ -501,6 +501,12 @@ let app_kind k te = match k.n, te with
     | Kind_dcon(Some x, _, k', _), Inr e -> subst_kind (mk_subst [(Inr(x, e))]) k'
     | _ -> kun
 
+let app_typ t te = match t.n, te with 
+    | Typ_fun(None, _, c, _), Inr _  -> comp_result c
+    | Typ_fun(Some x, _, c, _), Inr e -> subst_typ (mk_subst [Inr(x, e)]) <| comp_result c
+    | Typ_univ(a, _, c), Inl t -> subst_typ (mk_subst [Inl(a, t)]) <| comp_result c 
+    | _ -> tun
+
 let mk_typ_app f args = 
   List.fold_left (fun f -> function
     | Inl (t, imp) -> mk_Typ_app(f, t, imp) (app_kind f.tk (Inl t)) (Range.union_ranges f.pos t.pos)
@@ -510,6 +516,11 @@ let mk_typ_app_explicit f args =
   List.fold_left (fun f -> function
     | Inl (t) -> mk_Typ_app(f, t, false) (app_kind f.tk (Inl t)) (Range.union_ranges f.pos t.pos)
     | Inr (e) -> mk_Typ_dep(f, e, false) (app_kind f.tk (Inr e)) (Range.union_ranges f.pos e.pos)) f args
+
+let mk_exp_app_explicit f args = 
+  List.fold_left (fun f -> function
+    | Inl (t) -> mk_Exp_tapp(f, t) (app_typ f.tk (Inl t)) (Range.union_ranges f.pos t.pos)
+    | Inr (e) -> mk_Exp_app(f, e, false) (app_typ f.tk (Inr e)) (Range.union_ranges f.pos e.pos)) f args
 
 let uncurry_app e =
   let rec aux e out = match e.n with 
