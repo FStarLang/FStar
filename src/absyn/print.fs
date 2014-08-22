@@ -66,6 +66,7 @@ let rec tag_of_typ t = match t.n with
   | Typ_ascribed _ -> "Typ_ascribed"
   | Typ_meta(Meta_pattern _) -> "Typ_meta_pattern"
   | Typ_meta(Meta_named _) -> "Typ_meta_named"
+  | Typ_meta(Meta_uvar_t_app _) -> "Typ_meta_uvar_t_app"
   | Typ_uvar _ -> "Typ_uvar"   
   | Typ_delayed _ -> "Typ_delayed"
   | Typ_unknown -> "Typ_unknown"
@@ -97,7 +98,7 @@ and typ_to_string x =
       
 and comp_typ_to_string c =
   match (compress_comp c).n with 
-    | Flex (u, t) -> Util.format2 "_Eff%s_ %s" (Util.string_of_int <| Unionfind.uvar_id u) (typ_to_string t)
+    | Flex ((u,_), t) -> Util.format2 "_Eff%s_ %s" (Util.string_of_int <| Unionfind.uvar_id u) (typ_to_string t)
     | Total t -> if Util.is_function_typ t then typ_to_string t else Util.format1 "Tot %s" (typ_to_string t)
     | Comp c ->
       if List.contains TOTAL c.flags && not !Options.print_effect_args 
@@ -114,10 +115,18 @@ and effect_arg_to_string e = match e with
      
 and formula_to_string phi = 
     let const_op f _ = f in
-    let un_op  f [Inl t1] = format2 "%s %s" f (formula_to_string t1) in
-    let bin_top f [Inl t1;Inl t2] = format3 "%s %s %s" (formula_to_string t1) f (formula_to_string t2) in
-    let bin_eop f [Inr e1;Inr e2] = format3 "%s %s %s" (exp_to_string e1) f (exp_to_string e2) in
-    let ite [Inl t1;Inl t2;Inl t3] = format3 "if %s then %s else %s" (formula_to_string t1) (formula_to_string t2) (formula_to_string t3) in
+    let un_op  f = function 
+        | [Inl t] -> format2 "%s %s" f (formula_to_string t)
+        | _ -> failwith "impos" in
+    let bin_top f = function 
+        | [Inl t1; Inl t2] -> format3 "%s %s %s" (formula_to_string t1) f (formula_to_string t2)
+        | _ -> failwith "Impos" in
+    let bin_eop f = function
+        | [Inr e1;Inr e2] -> format3 "%s %s %s" (exp_to_string e1) f (exp_to_string e2)
+        | _ -> failwith "impos" in
+    let ite = function 
+        | [Inl t1;Inl t2;Inl t3] -> format3 "if %s then %s else %s" (formula_to_string t1) (formula_to_string t2) (formula_to_string t3)
+        | _ -> failwith "impos" in
     let eq_op = function 
         | [Inl _; Inl _; Inr e1; Inr e2]
         | [Inr e1; Inr e2] -> format2 "%s == %s" (exp_to_string e1) (exp_to_string e2)
@@ -161,7 +170,8 @@ and formula_to_string phi =
 
 and exp_to_string x = match (compress_exp x).n with 
   | Exp_delayed _ -> failwith "Impossible"
-  | Exp_meta(Meta_datainst(e,_)) -> exp_to_string e 
+  | Exp_meta(Meta_uvar_e_app(e, _))
+  | Exp_meta(Meta_datainst(e,_))
   | Exp_meta(Meta_desugared(e, _)) -> exp_to_string e
   | Exp_uvar(uv, _) -> Util.format1 "'e%s" (Util.string_of_int (Unionfind.uvar_id uv))
   | Exp_bvar bvv -> strBvd bvv.v
@@ -196,12 +206,13 @@ and either_to_string x = match x with
   | Inr e -> exp_to_string e
 
 and meta_to_string x = match x with 
+  | Meta_uvar_t_app(t, _) -> typ_to_string t
   | Meta_named(_, l) -> sli l
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (t |> typ_to_string) (Util.concat_l ", " (ps |> List.map either_to_string))
 
 and kind_to_string x = match (compress_kind x).n with 
   | Kind_delayed _ -> failwith "Impossible"
-  | Kind_uvar uv -> format1 "'k_%s" (Util.string_of_int (Unionfind.uvar_id uv))
+  | Kind_uvar (uv,_) -> format1 "'k_%s" (Util.string_of_int (Unionfind.uvar_id uv))
   | Kind_type -> "Type"
   | Kind_effect -> "Effect"
   | Kind_abbrev((n, args), _) -> Util.format2 "%s %s" (sli n) (String.concat " " (args |> List.map either_to_string))

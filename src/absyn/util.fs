@@ -645,6 +645,11 @@ let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Typ_ascribed(t, _) -> 
           vs_typ t uvonly cont        
 
+        | Typ_meta(Meta_uvar_t_app(t, (u,k))) -> 
+          if uvonly 
+          then cont (no_fvs, {no_uvs with uvars_t=single_uvt (u,k)})
+          else vs_typ t uvonly cont
+
         | Typ_meta(Meta_named(t, _))
         | Typ_meta(Meta_pattern(t, _)) -> 
           vs_typ t uvonly cont
@@ -679,7 +684,15 @@ and vs_kind' (k:knd) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Kind_type
         | Kind_effect -> cont (no_fvs, no_uvs)
 
-        | Kind_uvar uv -> cont (no_fvs, {no_uvs with uvars_k=single_uv uv})
+        | Kind_uvar (uv,vars) -> 
+          let uvs = {no_uvs with uvars_k=single_uv uv} in
+          let mk_freevars vars =
+            List.fold_left (fun fvs -> function 
+                | Inl a -> {fvs with ftvs=Util.set_add a fvs.ftvs}
+                | Inr x -> {fvs with fxvs=Util.set_add x fvs.fxvs}) no_fvs vars in
+          if uvonly 
+          then cont (no_fvs, uvs)
+          else cont (mk_freevars vars, uvs)
         
         | Kind_abbrev(_, k) -> 
           vs_kind k uvonly cont
@@ -747,6 +760,11 @@ and vs_exp' (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
       | Exp_meta(Meta_datainst(e, _)) -> 
         vs_exp e uvonly cont
 
+      | Exp_meta(Meta_uvar_e_app(e, (uv, t))) -> 
+        if uvonly 
+        then cont (no_fvs, {no_uvs with uvars_e=single_uvt (uv,t)})
+        else vs_exp e uvonly cont
+
 and vs_exp (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
     match !e.fvs, !e.uvs with
     | Some _, None -> failwith "Impossible"
@@ -762,7 +780,7 @@ and vs_comp' (c:comp) (uvonly:bool) (k:(freevars * uvars) -> 'res) : 'res =
     match c.n with 
         | Total t -> vs_typ t uvonly k
 
-        | Flex(uv, t) -> 
+        | Flex((uv,_), t) -> 
           vs_typ t uvonly (fun ft1 -> 
           k <| union_fvs ft1 (no_fvs, {no_uvs with uvars_c=single_uv uv}))
 
@@ -854,6 +872,11 @@ and uvars_in_comp c : uvars =
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)
+let mk_curried_tlam vars t =
+    List.fold_right (fun ax t -> match ax with 
+        | Inl a -> mk_Typ_tlam(a.v, a.sort, t) (mk_Kind_tcon(Some a.v, a.sort, t.tk, false) t.pos) t.pos
+        | Inr x -> mk_Typ_lam(x.v, x.sort, t) (mk_Kind_dcon(Some x.v, x.sort, t.tk, false) t.pos) t.pos) vars t
+
 let close_with_lam tps t = List.fold_right
   (fun tp out -> match tp with
     | Tparam_typ (a,k) -> mk_Typ_tlam (a,k,out) (mk_Kind_tcon(Some a, k, out.tk, false) out.pos) out.pos

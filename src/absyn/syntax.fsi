@@ -85,14 +85,15 @@ and comp_typ = {
 and comp' = 
   | Total of typ
   | Comp of comp_typ                    
-  | Flex of uvar_c * typ
+  | Flex of uvar_c_pattern * typ
 and comp = syntax<comp', unit>
 and cflags = 
   | TOTAL 
   | MLEFFECT 
   | RETURN 
   | SOMETRIVIAL
-and uvar_c = Unionfind.uvar<comp_typ_uvar_basis>
+and uvar_c = Unionfind.uvar<comp_typ_uvar_basis> 
+and uvar_c_pattern = uvar_c * list<either<btvar,bvvar>>    (* a higher-order pattern *)
 and comp_typ_uvar_basis = 
   | Floating 
   | Resolved of comp
@@ -100,6 +101,7 @@ and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pattern of typ * list<either<typ,exp>>
   | Meta_named of typ * lident                               (* Useful for pretty printing to keep the type abbreviation around *)
+  | Meta_uvar_t_app  of typ * (uvar_t * knd)                 (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
 and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a
@@ -119,8 +121,9 @@ and exp' =
   | Exp_meta       of meta_e                                     (* No longer tag every expression with info, only selectively *)
 and exp = syntax<exp',typ>
 and meta_e = 
-  | Meta_desugared of exp * meta_source_info                     (* Node tagged with some information about source term before desugaring *)
-  | Meta_datainst  of exp * option<typ>                          (* Expect the data constructor e to build a t-typed value; only used internally to pretyping; not visible elsewhere *)
+  | Meta_desugared     of exp * meta_source_info                 (* Node tagged with some information about source term before desugaring *)
+  | Meta_datainst      of exp * option<typ>                      (* Expect the data constructor e to build a t-typed value; only used internally to pretyping; not visible elsewhere *)
+  | Meta_uvar_e_app      of exp * (uvar_e * typ)                 (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
 and meta_source_info =
   | Data_app
   | Sequence                   
@@ -141,13 +144,13 @@ and knd' =
   | Kind_type
   | Kind_effect
   | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)
-  | Kind_tcon of option<btvdef> * knd * knd * bool    (* 'a:k -> k'; bool marks implicit *)
+  | Kind_tcon of option<btvdef> * knd * knd * bool        (* 'a:k -> k'; bool marks implicit *)
   | Kind_dcon of option<bvvdef> * typ * knd * bool        (* x:t -> k; bool marks implicit *)
-  | Kind_uvar of uvar_k                                   (* not present after 1st round tc *)
+  | Kind_uvar of uvar_k_pattern                           (* not present after 1st round tc *)
   | Kind_delayed of knd * subst * memo<knd>               (* delayed substitution --- always force before inspecting first element *)
   | Kind_unknown                                          (* not present after 1st round tc *)
 and knd = syntax<knd', unit>
-
+and uvar_k_pattern = uvar_k * list<either<btvar,bvvar>>     
 and kabbrev = lident * list<either<typ,exp>>
 and uvar_k = Unionfind.uvar<uvar_basis<knd,unit>>
 and lbname = either<bvvdef, lident>
@@ -287,7 +290,7 @@ val mk_Kind_abbrev: (kabbrev * knd) -> range -> knd
 val mk_Kind_tcon: (option<btvdef> * knd * knd * bool) -> range -> knd
 val mk_Kind_dcon: (option<bvvdef> * typ * knd * bool) -> range -> knd
 val mk_Kind_delayed: (knd * subst * memo<knd>) -> range -> knd
-val mk_Kind_uvar: uvar_k -> range -> knd
+val mk_Kind_uvar: uvar_k_pattern -> range -> knd
 
 val mk_Typ_btvar: btvar -> knd -> range -> typ
 val mk_Typ_const: ftvar -> knd -> range -> typ
@@ -308,7 +311,7 @@ val mk_Typ_delayed: (typ * subst * memo<typ>) -> knd -> range -> typ
 
 val mk_Total: typ -> comp
 val mk_Comp: comp_typ -> comp
-val mk_Flex: (uvar_c * typ) -> comp
+val mk_Flex: (uvar_c_pattern * typ) -> comp
 
 val mk_Exp_bvar: bvvar -> typ -> range -> exp
 val mk_Exp_fvar: (fvvar * bool) -> typ -> range -> exp 

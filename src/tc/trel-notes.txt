@@ -1,0 +1,110 @@
+type prob = 
+  | KProb: int -> rel -> knd -> knd -> prob
+  | TProb: int -> rel -> typ -> typ -> prob
+  | EProb: int -> rel -> exp -> exp -> prob
+  | CProb: int -> rel -> comp -> comp -> prob
+
+type uvar_inst = 
+  | UK : uvar_k -> knd -> uvar_inst
+  | UT : uvar_t -> typ -> uvar_inst
+  | UE : uvar_e -> exp -> uvar_inst
+  | UC : uvar_c -> comp -> uvar_inst
+
+type worklist = {
+     attempting: list prob;
+     deferred: list prob;
+     subst: list uvar_insts;
+}
+
+trel:   env:Tc.env
+     -> top:bool 
+     -> p:prob{is_TProb p}
+     -> rest:worklist{top ==> probs=[]}
+     -> option (g:guard{g=Trivial || (g=Guard f /\ if top then is_Kind_dcon f.tk else is_Kind_type f.tk)})
+let rec trel env top (TProb _ rel t1 t2) rest = 
+    let t1, t2 = Util.compress_typ t1, Util.compress_typ t2 in 
+    match t1.tn, t2.tn with 
+      | Typ_meta(Meta_uvar_t_app(_, (uv1, _)), Typ_meta(Meta_uvar_t_app(_, (uv2, _))) 
+      | Typ_meta(Meta_uvar_t_pattern(_, (uv1, _)), Typ_meta(Meta_uvar_t_pattern(_, (uv2, _))) -> 
+
+        if Unionfind.equivalent uv1 uv2
+        then solve env top rest
+        else (* flex/flex case; differ *)
+             solve env top {rest with deferred=(TProb (List.length subst) rel t1 t2)::rest.deferred}
+
+      | Typ_fun(xopt, t1, c1), Typ_fun(yopt, t2, c2) -> 
+        let ctr = length rest.subst in 
+        let cprob = match xopt, yopt with 
+            | None, None 
+            | None, Some _
+            | Some _, None -> CProb ctr rel c1 c2
+            | Some x, Some y -> 
+              if Util.bvd_eq x y 
+              then CProb ctr rel c1 c2
+              else CProb ctr rel c1 (Util.subst_comp [Inl(y, Util.bvd_to_exp x t1_)] c2) in
+        solve env false (TProb ctr rel t2 t1)::cprob::rest)
+
+      | Typ_lam(x, t1, t2), Typ_lam(y, t1', t2') -> 
+        let t2prob = if Util.bvd_eq x y 
+                     then TProb rel t2 t2' 
+                     else TProb rel t2 (Util.subst_typ [Inl(y, Util.bvd_to_typ x t1)] t2') in
+        solve env false (TProb rel t1' t1::t2prob::rest)
+
+      | Typ_refine(x, t1, phi1), Typ_refine(y, t2, phi2) -> 
+        let phiprob, guard = 
+           match rel with
+             | EQ -> [TProb rel phi1 (Util.subst_typ [Inl(y,Util.bvd_to_typ x)] phi2)], None in 
+             | SUB -> [], mk_guard top (x,t1) (phi1 ==> phi2[x/y]) in 
+        
+        if top
+        then conj_guard (trel env top (TProb rel t1 t2) (guard@rest)) guard 
+        else conj_guard (solve env top (TProb rel t1 t2::guard@rest)) guard
+
+
+      | Typ_meta(Meta_uvar_t_pattern(t, (uv,k))), t' -> 
+        let fvs1 = Util.freevars_typ t in
+        let fvs2 = Util.freevars_typ t' in
+        let uvs = Util.uvars_in_typ t' in 
+        if Util.set_is_subset fvs2.ftvs fvs1.ftvs
+        && Util.set_is_subset fvs2.fxvs fvs1.fxvs
+        && not (Util.set_mem (uv,k) uvs.uvs_t)
+        then //fast solution for flex-pattern/rigid case
+             let _, args = flatten_typ_app t in
+             let sol = mk_tlam args t' in
+             solve env false {rest with subst=UT uv sol::rest.subst}
+        else //no fast solution here ... can only imitate and continue
+             let head, args_rhs = flatten_typ_apps t' in 
+             let _, args = flatten_typ_app t in    
+             let env' = env_of_boundvars args in
+             let arg_terms, sub_probs = args_rhs |> List.map (function 
+               | Inl t -> let t' = new_tvar env' t.tk in (t', TProb EQ t t')
+               | Inr v -> let v' = new_evar env' v.tk in (v', VProb Eq v v')) |> List.unzip
+             let im = mk_tlam args (mk_typ_app head arg_terms) in 
+             solve env false {rest with subst=UT uv im::rest.subst; attempting=sub_probs@rest.attempting}
+
+      | Typ_meta(Meta_uvar_t_pattern(t, (uv,k))), t' -> ()
+
+and solve env top worklist = 
+    match worklist.attempting with 
+       | (TProb _ as hd)::tl -> trel env top hd {worklist with attempting=tl}
+       | _ -> ... 
+       | [] -> 
+       let ctr = List.length worklist.subst in 
+       match ctr 
+       
+         
+
+    
+                                                                        
+                                                                        
+        
+        
+        
+
+ 
+
+
+                      
+
+
+    

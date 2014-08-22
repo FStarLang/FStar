@@ -62,7 +62,7 @@ and solver_t = {
     solve:env -> typ -> bool;
 }
 
-
+val bound_vars: env -> list<Util.either<btvar, bvvar>>
 val debug: env -> bool
 val initial_env : solver_t -> lident -> env
 val finish_module : env -> modul -> env

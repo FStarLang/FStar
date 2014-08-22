@@ -72,7 +72,7 @@ let new_kvar env =
     let fk = Util.freevars_kind k in 
     let fe = Env.idents env in
     Util.set_is_subset_of fk.ftvs fe.ftvs && Util.set_is_subset_of fk.fxvs fe.fxvs in
-  mk_Kind_uvar (Unionfind.fresh (Uvar wf)) (Env.get_range env)
+  mk_Kind_uvar (Unionfind.fresh (Uvar wf), Tc.Env.bound_vars env) (Env.get_range env)
 
 let new_tvar env k =
   let rec pre_kind_compat k1 k2 = match (compress_kind k1).n, (compress_kind k2).n with 
@@ -83,39 +83,48 @@ let new_tvar env k =
     | Kind_dcon(_, _, k1, _), Kind_dcon(_, _, k1', _) -> pre_kind_compat k1 k1'
     | k1, k2 -> //Util.print_string (Util.format2 "Pre-kind-compat failed on %s and %s\n" (Print.kind_to_string k1) (Print.kind_to_string k2)); 
     false in
-  let wf t tk =
-    let fvs_t = Util.freevars_typ t in 
-    let fvs_e = Env.idents env in 
-    let freevars_in_env = Util.set_is_subset_of fvs_t.ftvs fvs_e.ftvs && Util.set_is_subset_of fvs_t.fxvs fvs_e.fxvs in
-    let err () = 
-      if debug env 
-      then begin 
-        let print_ids (vs:list<bvdef<'a>>) =
-          (List.map (fun x -> Util.format2 "%s@%s" (Print.strBvd x) (Range.string_of_range (range_of_bvd x))) vs |> String.concat ", ") in
-        let print_vs (vs:set<bvar<'a,'b>>) = print_ids (List.map (fun x -> x.v) (Util.set_elements vs)) in
-        (* Options.fvdie := true; *)
-        Util.print_string (Util.format3 "Failed: Trying to unify uvar of kind %s with type %s of kind %s\n" (Print.kind_to_string k) (Print.typ_to_string t) (Print.kind_to_string tk));
-        //printfn "ftv inclusion=%A, fxv inclusion=%A\n" (Util.set_is_subset_of fvs_t.ftvs fvs_e.ftvs) (Util.set_is_subset_of fvs_t.fxvs fvs_e.fxvs);
-        Util.print_string (Util.format3 "freevars = %s;\n\ttvs={%s};\n\txvs={%s}\n" 
-          (if freevars_in_env then "true" else "false") 
-          (print_vs fvs_t.ftvs) (print_vs fvs_t.fxvs));
-        Util.fprint3 "Env at %s\n\ttvs = {%s}\n\txvs={%s}\n" (Tc.Env.get_range env |> Range.string_of_range) (print_vs ( fvs_e.ftvs)) 
-            (print_vs ((fvs_e.fxvs)))
-        //        printfn "%A" t
-      end in
-    let result = freevars_in_env && pre_kind_compat k tk in
-    if result then result else (err(); result) in
-  syn' env k <| mk_Typ_uvar' (Unionfind.fresh (Uvar wf), k)
+  let wf t tk = pre_kind_compat k tk in 
+  let vars = Tc.Env.bound_vars env in 
+  let r = Tc.Env.get_range env in
+  let rec mk_uv_app k vars = match vars with 
+    | [] -> 
+        let uv = Unionfind.fresh (Uvar wf) in
+        syn' env k <| mk_Typ_uvar' (uv,k), (uv,k)
+    | Inl a::rest -> 
+      let k' = mk_Kind_tcon(Some a.v, a.sort, k, false) r in
+      let app, uvk = mk_uv_app k' rest in 
+      mk_Typ_app(app, Util.btvar_to_typ a, false) k r, uvk
+    | Inr x::rest -> 
+      let k' = mk_Kind_dcon(Some x.v, x.sort, k, false) r in
+      let app, uvk = mk_uv_app k' rest in 
+      mk_Typ_dep(app, Util.bvar_to_exp x, false) k r, uvk in
+  let app,uvk = mk_uv_app k vars in 
+  mk_Typ_meta'(Meta_uvar_t_app(app, uvk)) k r
 
 let new_evar env t =
-  let wf e t = 
-    let fe = Util.freevars_exp e in
-    let fenv = Env.idents env in 
-    Util.set_is_subset_of fe.ftvs fenv.ftvs && Util.set_is_subset_of fe.fxvs fenv.fxvs in
-  mk_Exp_uvar (Unionfind.fresh (Uvar wf), t) <| Env.get_range env
-
+  let wf e t = true in 
+//    let fe = Util.freevars_exp e in
+//    let fenv = Env.idents env in 
+//    Util.set_is_subset_of fe.ftvs fenv.ftvs && Util.set_is_subset_of fe.fxvs fenv.fxvs in
+  let vars = Tc.Env.bound_vars env in 
+  let r = Tc.Env.get_range env in
+  let rec mk_uv_app t vars = match vars with 
+    | [] -> 
+        let uv = Unionfind.fresh (Uvar wf) in 
+        mk_Exp_uvar (uv, t) <| Env.get_range env, (uv,t)
+    | Inl a::rest -> 
+        let t' = mk_Typ_univ(a.v, a.sort, mk_Total t) ktype r in
+        let app, uvt = mk_uv_app t' rest in 
+        mk_Exp_tapp(app, Util.btvar_to_typ a) t r, uvt
+    | Inr x::rest -> 
+        let t' = mk_Typ_fun(Some x.v, x.sort, mk_Total t, false) ktype r in
+        let app, uvt = mk_uv_app t' rest in 
+        mk_Exp_app(app, Util.bvar_to_exp x, false) t r, uvt in
+  let app, uvt = mk_uv_app t vars in
+  mk_Exp_meta'(Meta_uvar_e_pattern(app, uvt)) t r
+ 
 let new_cvar env t = 
-  mk_Flex (Unionfind.fresh Floating, t)
+  mk_Flex ((Unionfind.fresh Floating, Tc.Env.bound_vars env), t)
 
 let close_guard (b:list<binding>) (g:guard) : guard = match g with 
   | Trivial -> g
@@ -416,7 +425,7 @@ let lift_and_destruct env c1 c2 =
 
 let force_total c = match (compress_comp c).n with 
     | Total t -> Some t
-    | Flex(u, t) -> 
+    | Flex((u, _), t) -> 
         let tot = mk_Total t in
         Unionfind.change u (Resolved tot);
         Some t

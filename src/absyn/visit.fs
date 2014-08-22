@@ -38,6 +38,17 @@ let rec compress_typ_aux pos typ = match typ.n with
       | Some t -> let t' = compress_typ_aux pos t in m := Some t'; t')
   | Typ_ascribed(t, _)
   | Typ_meta(Meta_named(t, _)) when pos -> compress_typ_aux pos t
+  | Typ_meta(Meta_uvar_t_app(t, (uv,_))) ->
+       begin 
+          match Unionfind.find uv with 
+            | Fixed t' -> 
+              let rec rebuild t = match t.n with 
+                | Typ_app(t0, t, imp) -> mk_Typ_app (rebuild t0, t, imp) t.tk t.pos
+                | Typ_dep(t0, e, imp) -> mk_Typ_dep (rebuild t0, e, imp) t.tk t.pos
+                | _ -> t' in
+              rebuild t       
+            | _ -> typ
+       end
   | _ -> typ
 let compress_typ typ = compress_typ_aux true typ
 let compress_typ_uvars typ = compress_typ_aux false typ
@@ -55,12 +66,24 @@ let rec compress_exp_aux meta exp = match exp.n with
       | Some e -> let e' = compress_exp_aux meta e in m := Some e'; e')
   | Exp_ascribed(e, _)
   | Exp_meta(Meta_desugared(e, _)) when meta -> compress_exp_aux meta e
+  | Exp_meta(Meta_uvar_e_app(e, (uv,_))) 
+  | Exp_meta(Meta_uvar_e_app(e, (uv,_))) ->
+       begin 
+          match Unionfind.find uv with 
+            | Fixed e' -> 
+              let rec rebuild e = match e.n with 
+                | Exp_tapp(e0, t) -> mk_Exp_tapp (rebuild e0, t) e.tk e.pos
+                | Exp_app(e0, e, imp) -> mk_Exp_app (rebuild e0, e, imp) e.tk e.pos
+                | _ -> e' in
+              rebuild e      
+            | _ -> exp
+       end
   | _ -> exp
 let compress_exp e = compress_exp_aux true e
 let compress_exp_uvars e = compress_exp_aux false e
  
 let rec compress_kind knd = match knd.n with 
-  | Kind_uvar uv -> 
+  | Kind_uvar (uv, _) -> 
     begin
       match Unionfind.find uv with 
         | Fixed k -> compress_kind k
@@ -75,7 +98,7 @@ let rec compress_kind knd = match knd.n with
 let rec compress_comp c : comp = match c.n with 
   | Comp _ 
   | Total _ -> c
-  | Flex (u, _) -> 
+  | Flex ((u,_), _) -> 
     match Unionfind.find u with 
       | Floating -> c
       | Resolved c -> compress_comp c
@@ -84,7 +107,7 @@ let compress_comp_typ c : comp_typ =
   match (compress_comp c).n with 
     | Comp c -> c
     | Total t -> {effect_name=Const.tot_effect_lid; result_typ=t; effect_args=[]; flags=[TOTAL]}
-    | Flex(u, t) -> 
+    | Flex((u,_), t) -> 
       let ml = {effect_name=Const.ml_effect_lid; result_typ=t; effect_args=[]; flags=[MLEFFECT]} in
       Unionfind.change u (Resolved (mk_Comp ml));
       ml  
@@ -223,6 +246,9 @@ and reduce_typ
       | Typ_meta(Meta_named(t, _)) ->
         let t, env = map_typ env binders t in
         [], [t], [], [], env 
+      | Typ_meta(Meta_uvar_t_app(t, _)) -> 
+        let e, env = map_typ env binders t in 
+        [], [t], [], [], env
       | Typ_meta(Meta_pattern(t,ps)) -> 
         let t,env = map_typ env binders t in 
         let tpats, vpats, env = List.fold_left (fun (tpats, vpats, env) -> function
@@ -287,6 +313,7 @@ and reduce_exp
      let kl, tl, el, env = match e.n with 
         | Exp_delayed _
         | Exp_meta(Meta_datainst _) -> failwith "impossible"
+        | Exp_meta(Meta_uvar_e_app(e, _))
         | Exp_meta(Meta_desugared(e, _)) -> 
           let e, env = map_exp env binders e in 
           [], [], [e], env
@@ -394,6 +421,8 @@ let combine_typ t (kl, tl, cl, el) env =
     | Typ_meta(Meta_pattern _), [], _, _, _ ->         
       let pp = Meta_pattern(List.hd tl, (List.tl tl |> List.map Inl)@(el |> List.map Inr)) in
       w <| mk_Typ_meta'(pp)
+    | Typ_meta(Meta_uvar_t_app(_, u)), [], [t], [], [] ->
+      w <| mk_Typ_meta' (Meta_uvar_t_app(t, u))
     | _ -> failwith "impossible" in
   t', env
 
@@ -423,5 +452,7 @@ let combine_exp e (kl,tl,el) env =
               w <| mk_Exp_let((x, lbs'), e')
            | _ -> failwith "impossible")
     | Exp_meta(Meta_desugared(_, tag)), [], [], [e] -> w <| mk_Exp_meta' (Meta_desugared(e, tag))
+    | Exp_meta(Meta_uvar_e_app(_, u)), [], [], [e] ->
+      w <| mk_Exp_meta' (Meta_uvar_e_app(e, u))
     | _ -> failwith "impossible" in
   e', env

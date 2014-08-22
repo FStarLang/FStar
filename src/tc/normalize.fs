@@ -124,6 +124,10 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
     | Typ_uvar _ -> 
       rebuild config 
 
+    | Typ_meta(Meta_uvar_t_app(t, (uv,k))) ->
+      let cfg = sn tcenv ({config with code=t}) in
+      {cfg with code=mk_Typ_meta'(Meta_uvar_t_app(cfg.code, (uv,k))) cfg.code.tk cfg.code.pos}
+   
     | Typ_const fv ->
       if config.steps |> List.contains DeltaHard 
         || (config.steps |> List.contains Delta && List.length config.stack <> 0)
@@ -311,6 +315,10 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
     | Exp_constant _
     | Exp_uvar _  -> config
 
+    | Exp_meta(Meta_uvar_e_app(e, (uv,t))) ->
+      let cfg = wne tcenv ({config with code=e}) in
+      {cfg with code=mk_Exp_meta'(Meta_uvar_e_app(cfg.code, (uv,t))) cfg.code.tk cfg.code.pos}
+ 
     | Exp_bvar x -> 
       begin match config.environment |> Util.find_opt (function VDummy y | V (y, _, _) -> bvd_eq x.v y | _ -> false) with 
         | None 

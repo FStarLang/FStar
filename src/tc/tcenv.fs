@@ -85,6 +85,13 @@ and solver_t = {
     solve:env -> typ -> bool;
 }
 
+let bound_vars env = 
+    env.gamma |> List.collect (function 
+        | Binding_typ(a,k) -> [Inl <| Util.bvd_to_bvar_s a k]
+        | Binding_var(x,t) -> [Inr <| Util.bvd_to_bvar_s x t]
+        | Binding_lid _ -> []
+        | Binding_sig _ -> [])
+
 let has_interface env l = 
   env.modules |> Util.for_some (fun m -> m.is_interface && lid_equals m.name l)
 
