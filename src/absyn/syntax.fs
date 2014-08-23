@@ -83,7 +83,8 @@ and comp_typ = {
 and comp' = 
   | Total of typ
   | Comp of comp_typ                    
-  | Flex of uvar_c_pattern * typ
+  | Rigid of typ                                             (* a type with Kind_effect; should be normalized before inspecting *)                    
+  | Flex of uvar_c_pattern * typ                             (* first type is a flex-pattern for a type-indexed computation; second type is the result type *)
 and comp = syntax<comp', unit>
 and cflags = 
   | TOTAL 
@@ -91,7 +92,7 @@ and cflags =
   | RETURN 
   | SOMETRIVIAL
 and uvar_c = Unionfind.uvar<comp_typ_uvar_basis> 
-and uvar_c_pattern = uvar_c * list<either<btvar,bvvar>>    (* a higher-order pattern *)
+and uvar_c_pattern = typ                                     (* a Typ_meta(Meta_uvar_t_app(t, (uv, ... => typ => Kind_effect))) *)
 and comp_typ_uvar_basis = 
   | Floating 
   | Resolved of comp
@@ -100,6 +101,7 @@ and meta_t =
   | Meta_pattern of typ * list<either<typ,exp>>
   | Meta_named of typ * lident                               (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_uvar_t_app      of typ * (uvar_t * knd)             (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
+  | Meta_comp of comp                                        (* Promoting a computation to a type, just for instantiating flex comp-vars with comp-lambdas *)
 and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a
@@ -169,7 +171,7 @@ and uvars = {
   uvars_k: set<uvar_k>;
   uvars_t: set<(uvar_t*knd)>;
   uvars_e: set<(uvar_e*typ)>;
-  uvars_c: set<uvar_c>;
+  uvars_c: set<(uvar_t*knd)>;
 }
 and syntax<'a,'b> = {
     n:'a;
@@ -313,7 +315,7 @@ let no_uvs = {
     uvars_k=new_uv_set(); 
     uvars_t=new_uvt_set(); 
     uvars_e=new_uvt_set(); 
-    uvars_c=new_uv_set()
+    uvars_c=new_uvt_set()
 }
 
 let mk_Kind_type = {n=Kind_type; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs=mk_fvs()}
@@ -421,7 +423,8 @@ let mk_Typ_meta'    (m:meta_t) (k:knd) p =
 let mk_Typ_meta     (m:meta_t) = match m with 
     | Meta_pattern(t, _) 
     | Meta_named(t, _)
-    | Meta_uvar_t_app(t, _) ->  mk_Typ_meta' m t.tk t.pos 
+    | Meta_uvar_t_app(t, _) -> mk_Typ_meta' m t.tk t.pos 
+    | Meta_comp c -> mk_Typ_meta' m mk_Kind_effect c.pos 
 
 let mk_Typ_uvar'     ((u:uvar_t),(k:knd)) (k':knd) (p:range) = {
     n=Typ_uvar(u, k);
@@ -451,15 +454,21 @@ let mk_Flex (u,t) = {
     n=Flex(u,t);
     tk=();
     pos=t.pos;
-    uvs=mk_uvs(); fvs=mk_fvs();//t.fvs;
-    
+    uvs=mk_uvs(); fvs=mk_fvs();//t.fvs;   
+}
+let mk_Rigid t = {
+    n=Rigid t;
+    tk=();
+    pos=t.pos;
+    uvs=mk_uvs();
+    fvs=mk_fvs();
 }
 
 let mk_Comp (ct:comp_typ) = 
     {n=Comp ct;
      tk=();
      pos=ct.result_typ.pos;
-     uvs=mk_uvs(); fvs=mk_fvs();//set_of_thunk fvs;
+     uvs=mk_uvs(); fvs=mk_fvs();
     }
 
 let mk_Exp_bvar (x:bvvar) (t:typ) p = {

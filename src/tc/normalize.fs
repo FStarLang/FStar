@@ -91,6 +91,8 @@ let rec eta_expand tcenv t =
     | Kind_unknown -> failwith (Util.format2 "%s: Impossible: Kind_unknown: %s" (Tc.Env.get_range tcenv |> Range.string_of_range) (Print.typ_to_string t)) in
     eta_expand t
      
+let rec eta_expand_exp (tcenv:Tc.Env.env) (e:exp) : exp = failwith "NYI"
+
 let rec sn tcenv (cfg:config<typ>) : config<typ> =
   let rebuild config  = 
     let rec aux out stack : typ = match stack with

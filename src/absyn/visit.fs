@@ -97,21 +97,15 @@ let rec compress_kind knd = match knd.n with
 
 let rec compress_comp c : comp = match c.n with 
   | Comp _ 
-  | Total _ -> c
-  | Flex ((u,_), _) -> 
-    match Unionfind.find u with 
-      | Floating -> c
-      | Resolved c -> compress_comp c
-
-let compress_comp_typ c : comp_typ =
-  match (compress_comp c).n with 
-    | Comp c -> c
-    | Total t -> {effect_name=Const.tot_effect_lid; result_typ=t; effect_args=[]; flags=[TOTAL]}
-    | Flex((u,_), t) -> 
-      let ml = {effect_name=Const.ml_effect_lid; result_typ=t; effect_args=[]; flags=[MLEFFECT]} in
-      Unionfind.change u (Resolved (mk_Comp ml));
-      ml  
-
+  | Total _ 
+  | Rigid _ -> c
+  | Flex ({n=Typ_meta(Meta_uvar_t_app(_, (u,_)))}, res_t) -> 
+    begin match Unionfind.find u with 
+      | Fixed t -> mk_Rigid (mk_Typ_app(t, res_t, false) mk_Kind_effect c.pos) 
+      | _ -> c
+    end
+  | Flex _ -> failwith "Impossible: Flex computation non-pattern"
+      
 let left ext benv btv = match ext benv (Inl btv) with 
   | benv, Inl bvd -> benv, bvd
   | _ -> failwith "impossible" 
@@ -189,7 +183,11 @@ and reduce_typ
   and map_comp (env:'env) (binders:list<either<btvdef,bvvdef>>) (c:comp) = 
     let c = compress_comp c in
     match c.n with
+    | Rigid t -> 
+      let t, env = map_typ env binders t in
+      mk_Rigid(t), env    
     | Flex (u, t) -> 
+      let u, env = map_typ env binders u in
       let t, env = map_typ env binders t in
       mk_Flex(u, t), env    
     | Total t -> 
@@ -243,6 +241,9 @@ and reduce_typ
       | Typ_uvar(_, k) -> 
         let k, env = map_kind env binders k in
         [k], [], [], [], env
+      | Typ_meta(Meta_comp c) -> 
+        let c, env = map_comp env binders c in
+        [], [], [c], [], env
       | Typ_meta(Meta_named(t, _)) ->
         let t, env = map_typ env binders t in
         [], [t], [], [], env 
@@ -417,6 +418,7 @@ let combine_typ t (kl, tl, cl, el) env =
     | Typ_dep(t, e, imp), [], [t'], [], [e'] ->        w <| mk_Typ_dep(t', e', imp)
     | Typ_uvar(x, k), [k'], [], [], [] ->              w <| mk_Typ_uvar'(x, k')
     | Typ_ascribed(_,_), [k'], [t'], [], [] ->         w <| mk_Typ_ascribed'(t', k')
+    | Typ_meta(Meta_comp _), [], [], [c], [] ->        w <| mk_Typ_meta'(Meta_comp c)
     | Typ_meta(Meta_named(_, l)), [], [t'], [], [] ->  w <| mk_Typ_meta'(Meta_named(t', l))
     | Typ_meta(Meta_pattern _), [], _, _, _ ->         
       let pp = Meta_pattern(List.hd tl, (List.tl tl |> List.map Inl)@(el |> List.map Inr)) in

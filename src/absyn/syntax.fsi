@@ -84,24 +84,22 @@ and comp_typ = {
   }
 and comp' = 
   | Total of typ
-  | Comp of comp_typ                    
-  | Flex of uvar_c_pattern * typ
+  | Comp of comp_typ
+  | Rigid of typ                                             (* a type with Kind_effect; should be normalized before inspecting *)                    
+  | Flex of uvar_c_pattern * typ                             (* first type is a flex-pattern for a type-indexed computation; second type is the result type *)
 and comp = syntax<comp', unit>
 and cflags = 
   | TOTAL 
   | MLEFFECT 
   | RETURN 
   | SOMETRIVIAL
-and uvar_c = Unionfind.uvar<comp_typ_uvar_basis> 
-and uvar_c_pattern = uvar_c * list<either<btvar,bvvar>>    (* a higher-order pattern *)
-and comp_typ_uvar_basis = 
-  | Floating 
-  | Resolved of comp
+and uvar_c_pattern = typ                                     (* a Typ_meta(Meta_uvar_t_app(t, (uv, ... => typ => Kind_effect))) *)
 and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pattern of typ * list<either<typ,exp>>
   | Meta_named of typ * lident                               (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_uvar_t_app  of typ * (uvar_t * knd)                 (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
+  | Meta_comp of comp                                        (* Promoting a computation to a type, just for instantiating flex comp-vars with comp-lambdas *)
 and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a
@@ -123,7 +121,7 @@ and exp = syntax<exp',typ>
 and meta_e = 
   | Meta_desugared     of exp * meta_source_info                 (* Node tagged with some information about source term before desugaring *)
   | Meta_datainst      of exp * option<typ>                      (* Expect the data constructor e to build a t-typed value; only used internally to pretyping; not visible elsewhere *)
-  | Meta_uvar_e_app      of exp * (uvar_e * typ)                 (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
+  | Meta_uvar_e_app    of exp * (uvar_e * typ)                   (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
 and meta_source_info =
   | Data_app
   | Sequence                   
@@ -142,7 +140,7 @@ and pat =
   | Pat_withinfo of pat * Range.range
 and knd' =
   | Kind_type
-  | Kind_effect
+  | Kind_effect                                           (* the kind of a computation *)
   | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)
   | Kind_tcon of option<btvdef> * knd * knd * bool        (* 'a:k -> k'; bool marks implicit *)
   | Kind_dcon of option<bvvdef> * typ * knd * bool        (* x:t -> k; bool marks implicit *)
@@ -171,7 +169,7 @@ and uvars = {
   uvars_k: set<uvar_k>;
   uvars_t: set<(uvar_t*knd)>;
   uvars_e: set<(uvar_e*typ)>;
-  uvars_c: set<uvar_c>;
+  uvars_c: set<(uvar_t*knd)>;
 }
 and syntax<'a,'b> = {
     n:'a;
@@ -312,6 +310,7 @@ val mk_Typ_delayed: (typ * subst * memo<typ>) -> knd -> range -> typ
 val mk_Total: typ -> comp
 val mk_Comp: comp_typ -> comp
 val mk_Flex: (uvar_c_pattern * typ) -> comp
+val mk_Rigid: typ -> comp
 
 val mk_Exp_bvar: bvvar -> typ -> range -> exp
 val mk_Exp_fvar: (fvvar * bool) -> typ -> range -> exp 

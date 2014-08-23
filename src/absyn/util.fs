@@ -48,7 +48,6 @@ let handleable = function
 //let compress_kind = Visit.compress_kind
 //let compress_typ  = Visit.compress_typ
 //let compress_exp  = Visit.compress_exp 
-let force_comp = Visit.compress_comp_typ
 let compress_comp = Visit.compress_comp
 
 (********************************************************************************)
@@ -169,6 +168,7 @@ and subst_comp s t = match s.subst with
     let t0 = compress_comp t in
     match t0.n with 
       | Total t -> mk_Total (subst_typ s t)
+      | Rigid t -> mk_Rigid (subst_typ s t)
       | Flex(u, t) -> mk_Flex(u, subst_typ s t)
       | Comp ct -> mk_Comp(subst_comp_typ s ct)
 
@@ -207,8 +207,12 @@ and map_exp s mk me ve descend binders e =
   subst_exp (restrict_subst binders s) e, descend
 and map_comp s mk map_typ map_exp descend binders c = match (Visit.compress_comp c).n with 
     | Flex (u, t) -> 
+      let u, descend = map_typ descend binders u in 
       let t, descend = map_typ descend binders t in
       mk_Flex(u, t), descend    
+    | Rigid t -> 
+      let t, descend = map_typ descend binders t in
+      mk_Rigid(t), descend    
     | Total t -> 
       let t, descend = map_typ descend binders t in
       mk_Total t, descend
@@ -360,6 +364,7 @@ let comp_flags c = match (compress_comp c).n with
   | Total _ -> [TOTAL]
   | Comp ct -> ct.flags
   | Flex _ -> []
+  | Rigid _ -> failwith "Normalize comp types before calling this function"
 
 let is_total_comp c = comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
@@ -367,6 +372,7 @@ let is_pure_comp c = match (compress_comp c).n with
     | Total _ -> true
     | Comp ct -> is_total_comp c || Util.starts_with ct.effect_name.str "Prims.PURE"
     | Flex _ -> false
+    | Rigid _ -> failwith "Normalize comp types before calling this function"
 
 let is_ml_comp c = match c.n with
   | Comp c -> lid_equals c.effect_name Const.ml_effect_lid || List.contains MLEFFECT c.flags
@@ -376,11 +382,13 @@ let comp_result c = match (compress_comp c).n with
   | Total t
   | Flex (_, t) -> t
   | Comp ct -> ct.result_typ
+  | Rigid _ -> failwith "Normalize comp types before calling this function"
 
 let set_result_typ c t = match (compress_comp c).n with 
   | Total _ -> mk_Total t
   | Flex(u, _) -> mk_Flex(u, t)
   | Comp ct -> mk_Comp({ct with result_typ=t})
+  | Rigid _ -> failwith "Normalize comp types before calling this function"
 
 let is_trivial_wp c = 
   comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
@@ -665,6 +673,9 @@ let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Typ_meta(Meta_pattern(t, _)) -> 
           vs_typ t uvonly cont
 
+        | Typ_meta(Meta_comp c) -> 
+          vs_comp c uvonly cont
+
 and vs_typ (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
     match !t.fvs, !t.uvs with 
         | Some _, None -> failwith "Impossible"
@@ -789,11 +800,11 @@ and vs_exp (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
 and vs_comp' (c:comp) (uvonly:bool) (k:(freevars * uvars) -> 'res) : 'res = 
     let c = compress_comp c in
     match c.n with 
-        | Total t -> vs_typ t uvonly k
-
-        | Flex((uv,_), t) -> 
-          vs_typ t uvonly (fun ft1 -> 
-          k <| union_fvs ft1 (no_fvs, {no_uvs with uvars_c=single_uv uv}))
+        | Total t 
+        | Rigid t -> vs_typ t uvonly k
+         
+        | Flex(t, t') -> 
+          vs_prod_tt uvonly None t t' k
 
         | Comp ct -> 
           if uvonly
@@ -887,6 +898,20 @@ let mk_curried_tlam vars t =
     List.fold_right (fun ax t -> match ax with 
         | Inl a -> mk_Typ_tlam(a.v, a.sort, t) (mk_Kind_tcon(Some a.v, a.sort, t.tk, false) t.pos) t.pos
         | Inr x -> mk_Typ_lam(x.v, x.sort, t) (mk_Kind_dcon(Some x.v, x.sort, t.tk, false) t.pos) t.pos) vars t
+
+let rec close_for_kind t k = 
+    let k = compress_kind k in 
+    match k.n with 
+    | Kind_unknown
+    | Kind_type
+    | Kind_effect
+    | Kind_uvar _ -> t
+    | Kind_dcon(None, t0, k', _) -> mk_Typ_lam(new_bvd None, t0, close_for_kind t k') k t.pos
+    | Kind_dcon(Some x, t0, k', _) -> mk_Typ_lam(x, t0, close_for_kind t k') k t.pos
+    | Kind_tcon(None, k0, k', _) -> mk_Typ_tlam(new_bvd None, k0, close_for_kind t k') k t.pos
+    | Kind_tcon(Some a, k0, k', _) -> mk_Typ_tlam(a, k0, close_for_kind t k') k t.pos
+    | Kind_abbrev(_, k) -> close_for_kind t k
+    | Kind_delayed _ -> failwith "Impossible"
 
 let close_with_lam tps t = List.fold_right
   (fun tp out -> match tp with
@@ -1273,3 +1298,20 @@ let destruct_typ_as_formula f : option<connective> =
         match destruct_base_conn phi with 
         | Some b -> Some b
         | None -> destruct_q_conn phi
+
+(******************************************************)
+(* Forcing a Flex computation to the default ML monad *)
+(******************************************************)
+let flex_comp_to_ml c : comp = 
+    let c = compress_comp c in 
+    match c.n with
+        | Comp _
+        | Rigid _ 
+        | Total _ -> c 
+        | Flex({n=Typ_meta(Meta_uvar_t_app(_, (u,k)))}, res_t) -> 
+          let ml = mk_Comp <| {effect_name=Const.ml_effect_lid; result_typ=res_t; effect_args=[]; flags=[MLEFFECT]} in
+          let tml = k |> close_for_kind (mk_Typ_meta(Meta_comp ml)) in
+          Unionfind.change u (Fixed tml);
+          ml 
+        | Flex _ -> failwith "Impossible" 
+

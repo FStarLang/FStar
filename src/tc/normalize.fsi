@@ -31,6 +31,8 @@ type step =
   | SNComp       (* normalize computation types also *)
 and steps = list<step>
 
+val eta_expand: Env.env -> typ -> typ
+val eta_expand_exp: Env.env -> exp -> exp
 val normalize: Env.env -> typ -> typ
 val normalize_comp: Env.env -> comp -> comp_typ
 val normalize_kind: Env.env -> knd -> knd

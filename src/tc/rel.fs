@@ -26,6 +26,14 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Tc.Normalize
 
+let rec comp_comp env c = 
+    let c = Util.compress_comp c in
+    match c.n with
+    | Rigid t -> 
+        (match (Tc.Normalize.norm_typ [Beta] env t).n with
+            | Typ_meta(Meta_comp c) -> comp_comp env c
+            | _ -> failwith "Impossible")
+    | _ -> c
 
 let unify_typ env ((uv,k):(uvar_t * knd)) t  = match Unionfind.find uv with 
   | Fixed _ -> failwith "impossible"
@@ -238,34 +246,76 @@ let new_evar env vars t =
   let app, uvt = mk_uv_app t vars in
   mk_Exp_meta'(Meta_uvar_e_app(app, uvt)) t r, uvt
  
-let new_cvar env vars t = mk_Flex ((Unionfind.fresh Floating, vars), t)
+let new_cvar env vars t = 
+    let u, _ = new_tvar env vars (mk_Kind_dcon(None, t, mk_Kind_effect, false) t.pos) in
+    mk_Flex (u,t)
+     
+let subst_xopt (xopt, t1) yopt = match xopt, yopt with 
+    | None, None 
+    | None, Some _
+    | Some _, None -> mk_subst []
+    | Some x, Some y -> 
+      if Util.bvd_eq x y 
+      then mk_subst []
+      else mk_subst [Inr(y, Util.bvd_to_exp x t1)]
+
+let subst_aopt (xopt, t1) yopt = match xopt, yopt with 
+    | None, None 
+    | None, Some _
+    | Some _, None -> mk_subst []
+    | Some x, Some y -> 
+      if Util.bvd_eq x y 
+      then mk_subst []
+      else mk_subst [Inl(y, Util.bvd_to_typ x t1)]       
 
 type prob = 
-  | KProb of int * rel * knd * knd 
-  | TProb of int * rel * typ * typ
-  | EProb of int * rel * exp * exp 
-  | CProb of int * rel * comp * comp 
-
-let prob_ctr = function 
-  | KProb (i, _, _, _)
-  | TProb (i, _, _, _)
-  | EProb (i, _, _, _) 
-  | CProb (i, _, _, _) -> i
+  | KProb of rel * knd * knd 
+  | TProb of rel * typ * typ
+  | EProb of rel * exp * exp 
+  | CProb of rel * comp * comp 
 
 type uvar_inst =  //never a uvar in the co-domain of this map
   | UK of uvar_k * knd 
   | UT of uvar_t * typ 
   | UE of uvar_e * exp
-  | UC of uvar_c * comp
+  | UC of uvar_t * typ
 
 type worklist = {
     attempting: list<prob>;
-    deferred: list<prob>;
+    deferred: list<(int * prob)>;
     subst: list<uvar_inst>;
+    top_t:typ;                     //the guard is either trivial or a type of kind top_t => Type
     guard: guard;
     ctr: int;
 }
 let extend_subst ui wl = {wl with subst=ui::wl.subst; ctr=wl.ctr + 1}
+let defer prob wl = {wl with deferred=(wl.ctr, prob)::wl.deferred}
+let attempt probs wl = {wl with attempting=probs@wl.attempting}
+let guard top g probs = 
+    let close_predicate f = match (Util.compress_kind f.tk).n with 
+        | Kind_dcon(None, t, _, _)  -> let x = Util.new_bvd None in close (Inr(x,t)) f
+        | Kind_dcon(Some x, t, _, _) -> close (Inr(x,t)) f
+        | _ ->  failwith "Unexpected kind" in
+    match g with 
+    | Trivial -> probs
+    | NonTrivial f -> 
+        let g = if not top 
+                then let qf = close_predicate f in 
+                     match probs.guard with 
+                       | Trivial -> 
+                         NonTrivial (mk_Typ_lam(Util.new_bvd None, probs.top_t, qf) (mk_Kind_dcon(None, probs.top_t, ktype, false) qf.pos) qf.pos)
+                       | NonTrivial {n=Typ_lam(x, t, body); tk=tk; pos=p} -> 
+                         NonTrivial (mk_Typ_lam(x, t, Util.mk_conj body qf) tk p)
+                       | _ -> failwith "Impossible"
+                else match probs.guard with 
+                       | Trivial -> NonTrivial f
+                       | NonTrivial g -> 
+                            match g.n, f.n with 
+                            | Typ_lam(x, t, gbody), Typ_lam(y, _, fbody) ->
+                                NonTrivial <| mk_Typ_lam(x, t, Util.mk_conj gbody (Util.subst_typ (subst_xopt (Some x, t) (Some y)) fbody)) g.tk g.pos
+                            | _ -> failwith "Impossible" in
+        {probs with guard=g}
+
 type solution = option<(list<uvar_inst> * guard)>
 let find_uvar_k uv s = Util.find_map s (function UK(u, t) -> if Unionfind.equivalent uv u then Some t else None | _ -> None)
 let find_uvar_t uv s = Util.find_map s (function UT(u, t) -> if Unionfind.equivalent uv u then Some t else None | _ -> None)
@@ -287,54 +337,133 @@ let rec compress env s t =
                   Tc.Normalize.normalize env <| Util.mk_typ_app_explicit t args
                 | _ -> t)
         | _ -> t
-     
-let subst_xopt (xopt, t1) yopt = match xopt, yopt with 
-    | None, None 
-    | None, Some _
-    | Some _, None -> mk_subst []
-    | Some x, Some y -> 
-      if Util.bvd_eq x y 
-      then mk_subst []
-      else mk_subst [Inr(y, Util.bvd_to_exp x t1)]
 
-let subst_aopt (xopt, t1) yopt = match xopt, yopt with 
-    | None, None 
-    | None, Some _
-    | Some _, None -> mk_subst []
-    | Some x, Some y -> 
-      if Util.bvd_eq x y 
-      then mk_subst []
-      else mk_subst [Inl(y, Util.bvd_to_typ x t1)]       
+let rec head_matches env t1 t2 = 
+  match (Util.compress_typ t1 |> Util.unascribe_typ).n, (Util.compress_typ t2 |> Util.unascribe_typ).n with 
+    | Typ_btvar x, Typ_btvar y -> Util.bvar_eq x y
+    | Typ_const f, Typ_const g -> Util.fvar_eq f g 
 
+    | Typ_refine(_, t, _), Typ_refine(_, t', _) -> head_matches env t t'
+   
+    | Typ_fun _, Typ_fun _ 
+    | Typ_univ _, Typ_univ _ 
+    | Typ_uvar _, _ 
+    | _, Typ_uvar _   
+    | Typ_lam _, _
+    | Typ_tlam _, _
+    | _, Typ_lam _
+    | _, Typ_tlam _ -> true
+
+    | _ -> false
+
+let head_matches_delta env t1 t2 =
+    let success d t1 t2 = if d then Some (Inr(t1, t2)) else Some (Inl()) in
+    let fail () = None in
+    let rec aux d t1 t2 = 
+        if head_matches env t1 t2 
+        then success d t1 t2
+        else if d 
+        then fail () //already took a delta step
+        else let t1 = Tc.Normalize.normalize env t1 in
+             let t2 = Tc.Normalize.normalize env t2 in
+             aux true t1 t2 in
+    aux false t1 t2
+            
 let rec solve (top:bool) (env:Tc.Env.env) probs : solution = 
     match probs.attempting with 
        | hd::tl -> 
         let probs = {probs with attempting=tl} in
          (match hd with 
-            | KProb (_, rel, k1, k2) -> solve_k top env rel k1 k2 probs
-            | TProb (_, rel, t1, t2) -> solve_t top env rel t1 t2 probs
-            | EProb (_, rel, e1, e2) -> solve_e top env rel e1 e2 probs
-            | CProb (_, rel, c1, c2) -> solve_c top env rel c1 c2 probs)
+            | KProb (rel, k1, k2) -> solve_k top env rel k1 k2 probs
+            | TProb (rel, t1, t2) -> solve_t top env rel t1 t2 probs
+            | EProb (rel, e1, e2) -> solve_e top env rel e1 e2 probs
+            | CProb (rel, c1, c2) -> solve_c top env rel c1 c2 probs)
        | [] ->
          match probs.deferred with 
             | [] -> Some (probs.subst, probs.guard) //Yay ... done!
             | _ -> 
               let ctr = List.length probs.subst in 
-              let attempt, rest = probs.deferred |> List.partition (fun t -> prob_ctr t < ctr) in
+              let attempt, rest = probs.deferred |> List.partition (fun (c, t) -> c < ctr) in
               match attempt with 
                  | [] -> None //no progress made to help with solving deferred problems; fail
-                 | _ -> solve top env {probs with attempting=attempt; deferred=rest} 
+                 | _ -> solve top env {probs with attempting=attempt |> List.map snd; deferred=rest} 
+
+and imitate env probs (u, ps, h, qs, xs) = 
+//U p1..pn =?= h q1..qm
+//extend_subst: (U -> \x1..xn. h (G1(x1..xn), ..., Gm(x1..xm)))
+//sub-problems: Gi(p1..pn) =?= qi
+    let r = Env.get_range env in
+    let gs_xs, sub_probs = qs |> List.map (function 
+        | Inl qi -> 
+            let gi_xs, gi = new_tvar env xs qi.tk in
+            let gi_ps = Util.mk_typ_app_explicit (mk_Typ_uvar(gi) r) ps in
+            Inl gi_xs, TProb(EQ, gi_ps, qi)
+        | Inr qi -> 
+            let gi_xs, gi = new_evar env xs qi.tk in
+            let gi_ps = Util.mk_exp_app_explicit (mk_Exp_uvar(gi) r) ps in
+            Inr gi_xs, EProb(EQ, gi_ps, qi)) |> List.unzip in
+
+    let im = mk_curried_tlam xs (mk_typ_app_explicit h gs_xs) in
+    let probs = extend_subst (UT(u, im)) probs in
+    solve false env ({probs with attempting=sub_probs@probs.attempting}) 
+
+and project env probs i (u, ps, h, qs, xs) =
+//U p1..pn =?= h q1..qm
+//extend subst: U -> \x1..xn. xi(G1(x1...xn) ... Gk(x1..xm)) ... where k is the arity of ti
+//sub-problems: pi(G1(p1..pn)..Gk(p1..pn)) =?= h q1..qm
+    let r = Env.get_range env in
+    let pi = List.nth ps i in
+    let rec gs k = match (Util.compress_kind k).n with 
+        | Kind_delayed _
+        | Kind_unknown
+        | Kind_effect -> failwith "Impossible"
+        | Kind_type -> [], []
+        | Kind_abbrev(_, k) -> gs k
+        | Kind_uvar((uv,_)) -> failwith "Impossible" //??? TODO ...what to do here ... constrain it to Kind_type and proceed?
+        | Kind_dcon(xopt, t, k, _) -> 
+            let gi_xs, gi = new_evar env xs t in
+            let gi_xs = Tc.Normalize.eta_expand_exp env gi_xs in
+            let gi_ps = Util.mk_exp_app_explicit (mk_Exp_uvar gi r) ps in
+            let k' = match xopt with 
+            | None -> k
+            | Some x -> Util.subst_kind (mk_subst [Inr(x, gi_xs)]) k in 
+            let g_xs, g_ps = gs k' in
+            Inr gi_xs::g_xs, Inr gi_ps::g_ps 
+        | Kind_tcon(aopt, k1, k2, _) -> 
+            let gi_xs, gi = new_tvar env xs k1 in
+            let gi_xs = Tc.Normalize.eta_expand env gi_xs in
+            let gi_ps = Util.mk_typ_app_explicit (mk_Typ_uvar gi r) ps in
+            let k2' = match aopt with
+            | None -> k2
+            | Some a -> Util.subst_kind (mk_subst [Inl(a, gi_xs)]) k2 in
+            let g_xs, g_ps = gs k2' in
+            Inl gi_xs::g_xs, Inl gi_ps::g_ps in
+    match pi, List.nth xs i with 
+        | Inl pi, Inl xi -> 
+            let head_i, _ = Util.flatten_typ_apps pi in 
+            if not <| head_matches env head_i h then None
+            else let g_xs, g_ps = gs xi.sort in 
+                    let proj = Util.mk_curried_tlam xs (Util.mk_typ_app_explicit (Util.btvar_to_typ xi) g_xs) in
+                    let sub = TProb(EQ, Util.mk_typ_app_explicit (Util.btvar_to_typ xi) g_ps, Util.mk_typ_app_explicit h qs) in
+                    let probs = extend_subst (UT(u, proj)) probs in
+                    solve false env {probs with attempting=sub::probs.attempting}
+        | _ -> None 
 
 and solve_k (top:bool) (env:Env.env) rel k1 k2 probs : solution = failwith "NYI"
 
 and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution = 
-    let t1 = compress env probs.subst t1 in
-    let t2 = compress env probs.subst t2 in 
-    let ctr = probs.ctr in 
+    let t1 = compress env probs.subst t1 |> Util.unascribe_typ in
+    let t2 = compress env probs.subst t2 |> Util.unascribe_typ in 
     let r = Env.get_range env in
     match t1.n, t2.n with
+      | Typ_meta(Meta_pattern(t, _)), _ 
+      | Typ_meta(Meta_named(t, _)), _ -> solve_t top env rel t t2 probs
+
+      | _, Typ_meta(Meta_pattern(t, _))
+      | _, Typ_meta(Meta_named(t, _)) -> solve_t top env rel t1 t probs
+
       | Typ_meta(Meta_uvar_t_app(_, (_, _))), Typ_meta(Meta_uvar_t_app(_, (_, _))) -> //flex-flex ... defer ... unless, there's no other way to proceed
-        solve top env ({probs with deferred=TProb(ctr, rel, t1, t2)::probs.deferred})
+        solve top env (defer (TProb(rel, t1, t2)) probs)
 
       | Typ_btvar a, Typ_btvar b -> 
         if Util.bvd_eq a.v b.v 
@@ -347,33 +476,40 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
         else None
     
       | Typ_fun(xopt, t1, c1, _), Typ_fun(yopt, t2, c2, _) -> 
-        let probs = {probs with attempting=TProb(ctr, rel, t2, t1)::CProb(ctr, rel, c1, Util.subst_comp (subst_xopt (xopt, t1) yopt) c2)::probs.attempting} in
+        let probs = {probs with attempting=TProb(rel, t2, t1)::CProb(rel, c1, Util.subst_comp (subst_xopt (xopt, t1) yopt) c2)::probs.attempting} in
         solve false env probs
 
       | Typ_univ(a, k1, c1), Typ_univ(b, k2, c2) -> 
-        let probs = {probs with attempting=KProb(ctr, rel, k2, k1)::CProb(ctr, rel, c1, Util.subst_comp (subst_aopt (Some a, k1) (Some b)) c2)::probs.attempting} in
+        let probs = {probs with attempting=KProb(rel, k2, k1)::CProb(rel, c1, Util.subst_comp (subst_aopt (Some a, k1) (Some b)) c2)::probs.attempting} in
         solve false env probs
 
       | Typ_lam(x, t1, t2), Typ_lam(y, t1', t2') -> 
-        let probs = {probs with attempting=TProb(ctr, rel, t1', t1)::TProb(ctr, rel, t2, Util.subst_typ (subst_xopt (Some x, t1) (Some y)) t2')::probs.attempting} in
+        let probs = {probs with attempting=TProb(rel, t1', t1)::TProb(rel, t2, Util.subst_typ (subst_xopt (Some x, t1) (Some y)) t2')::probs.attempting} in
         solve false env probs
 
       | Typ_tlam(a, k1, t2), Typ_tlam(b, k1', t2') -> 
-        let probs = {probs with attempting=KProb(ctr, rel, k1', k1)::TProb(ctr, rel, t2, Util.subst_typ (subst_aopt (Some a, k1) (Some b)) t2')::probs.attempting} in
+        let probs = {probs with attempting=KProb(rel, k1', k1)::TProb(rel, t2, Util.subst_typ (subst_aopt (Some a, k1) (Some b)) t2')::probs.attempting} in
         solve false env probs
 
       | Typ_refine(x, t1, phi1), Typ_refine(y, t2, phi2) -> 
         let phi2 = Util.subst_typ (subst_xopt (Some x, t1) (Some y)) phi2 in
         let probs = match rel with
-           | EQ -> {probs with attempting=TProb(ctr, rel, phi1, phi2)::probs.attempting}
+           | EQ -> attempt [TProb(rel, phi1, phi2)] probs
            | SUB -> (* but if either phi1 or phi2 are patterns, why not solve it by equating? *)
-           let g = mkGuard env <| Util.mk_imp phi1 phi2 in 
-           let g = map_guard g (fun f -> 
-            if top 
-            then mk_Typ_lam(x, t1, f) (mk_Kind_dcon(None, t1, ktype, false) r) r
-            else close (Inr(x, t1)) f) in
-           {probs with guard=conj_guard probs.guard g} in
+                   let g = NonTrivial <| mk_Typ_lam(x, t1, Util.mk_imp phi1 phi2) (mk_Kind_dcon(None, t1, ktype, false) r) r in
+                   guard top g probs in
         solve_t top env rel t1 t2 probs
+  
+      | Typ_refine(x, t1, phi1), _ ->
+        if rel=EQ
+        then None //but t2 may be able to take delta steps
+        else solve_t top env rel t1 t2 probs
+
+      | _, Typ_refine(x, t2, phi2) -> 
+        if rel=EQ
+        then None //but t1 may be able to take delta steps
+        else let g = NonTrivial <| mk_Typ_lam(x, t1, phi2) (mk_Kind_dcon(None, t1, ktype, false) r) r in
+             solve_t top env rel t1 t2 (guard top g probs)   
 
       | Typ_meta(Meta_uvar_t_app(t1, (uv,k))), _ -> //flex-rigid
         let _, args_lhs = Util.flatten_typ_apps t1 in
@@ -399,81 +535,16 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
             let xs = ps |> List.map (function 
                 | Inl pi -> Inl <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk
                 | Inr pi -> Inr <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk) in
-            ps, h, qs, xs in 
-
-        let imitate () = 
-                //U p1..pn =?= h q1..qm
-                //extend_subst: (U -> \x1..xn. h (G1(x1..xn), ..., Gm(x1..xm)))
-                //sub-problems: Gi(p1..pn) =?= qi
-            let ps, h, qs, xs = subterms () in
-            let gs_xs, sub_probs = qs |> List.map (function 
-                | Inl qi -> 
-                  let gi_xs, gi = new_tvar env xs qi.tk in
-                  let gi_ps = Util.mk_typ_app_explicit (mk_Typ_uvar(gi) r) ps in
-                  Inl gi_xs, TProb(ctr + 1, EQ, gi_ps, qi)
-                | Inr qi -> 
-                  let gi_xs, gi = new_evar env xs qi.tk in
-                  let gi_ps = Util.mk_exp_app_explicit (mk_Exp_uvar(gi) r) ps in
-                  Inr gi_xs, EProb(ctr + 1, EQ, gi_ps, qi)) |> List.unzip in
-
-            let im = mk_curried_tlam xs (mk_typ_app_explicit h gs_xs) in
-            let probs = extend_subst (UT(uv, im)) probs in
-            solve false env ({probs with attempting=sub_probs@probs.attempting}) in
-
-        let project i = 
-            //U p1..pn =?= h q1..qm
-            //extend subst: U -> \x1..xn. xi(G1(x1...xn) ... Gk(x1..xm)) ... where k is the arity of ti
-            //sub-problems: pi(G1(p1..pn)..Gk(p1..pn)) =?= h q1..qm
-            let ps, h, qs, xs = subterms () in
-            let pi = List.nth ps i in
-            let rec gs k = match k.n with 
-                | Kind_unknown
-                | Kind_effect -> failwith "Impossible"
-                | Kind_type -> [], []
-                | Kind_abbrev(_, k) -> gs k
-                | Kind_uvar((uv,_)) -> failwith "Impossible" //??? ...what to do here ... constrain it to Kind_type and proceed?
-                | Kind_dcon(xopt, t, k, _) -> 
-                  let gi_xs, gi = new_evar env xs t in
-                  let gi_xs = Tc.Normalize.eta_expand_exp env gi_xs in
-                  let gi_ps = Util.mk_exp_app_explicit (mk_Exp_uvar gi r) ps in
-                  let k' = match xopt with 
-                    | None -> k
-                    | Some x -> Util.subst_kind (mk_subst [Inr(x, gi_xs)]) k in 
-                  let g_xs, g_ps = gs k' in
-                  Inr gi_xs::g_xs, Inr gi_ps::g_ps 
-                | Kind_tcon(aopt, k1, k2, _) -> 
-                  let gi_xs, gi = new_tvar env xs k1 in
-                  let gi_xs = Tc.Normalize.eta_expand env gi_xs in
-                  let gi_ps = Util.mk_typ_app_explicit (mk_Typ_uvar gi r) ps in
-                  let k2' = match aopt with
-                    | None -> k2
-                    | Some a -> Util.subst_kind (mk_subst [Inl(a, gi_xs)]) k2 in
-                  let g_xs, g_ps = gs k2' in
-                  Inl gi_xs::g_xs, Inl gi_ps::g_ps in
-            match pi, List.nth xs i with 
-                | Inl pi, Inl xi -> 
-                    let head_i, _ = Util.flatten_typ_apps pi in 
-                    let matchable = match head_i.n, h.n with 
-                        | Typ_btvar x, Typ_btvar y -> Util.bvar_eq x y
-                        | Typ_const f, Typ_const g -> Util.fvar_eq f g
-                        | Typ_uvar _, _ -> true
-                        | _ -> false in
-                    if not matchable then None
-                    else let g_xs, g_ps = gs xi.sort in 
-                         let proj = Util.mk_curried_tlam xs (Util.mk_typ_app_explicit (Util.btvar_to_typ xi) g_xs) in
-                         let sub = TProb(ctr + 1, EQ, Util.mk_typ_app_explicit (Util.btvar_to_typ xi) g_ps, t2) in
-                         let probs = extend_subst (UT(uv, proj)) probs in
-                         solve false env {probs with attempting=sub::probs.attempting}
-                | _ -> None in
+            uv, ps, h, qs, xs in 
         let n = List.length args_lhs in
-        let rec imitate_or_project i = 
+        let rec imitate_or_project st i = 
             if i >= n then None
             else if i = -1 
-            then match imitate () with 
-                   | None -> imitate_or_project (i + 1) //backtracking point
+            then match imitate env probs st with
+                   | None -> imitate_or_project st (i + 1) //backtracking point
                    | sol -> sol
-            else match project i with 
-                   | None -> imitate_or_project (i + 1) //backtracking point
+            else match project env probs i st with
+                   | None -> imitate_or_project st (i + 1) //backtracking point
                    | sol -> sol in
                      
         begin match pat_vars [] args_lhs with 
@@ -487,22 +558,152 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
               then //fast solution for flex-pattern/rigid case
                    let sol = mk_curried_tlam vars t2 in
                    solve top env (extend_subst (UT(uv, sol)) probs)
-              else imitate_or_project -1
-            | None -> imitate_or_project -1
+              else imitate_or_project (subterms()) -1
+            | None -> imitate_or_project (subterms()) -1
         end
 
       | _, Typ_meta(Meta_uvar_t_app _) -> //rigid-flex
         solve_t top env EQ t2 t1 probs //re-orient
 
-
       | Typ_app _, _
       | Typ_dep _, _
       | _, Typ_app _
-      | _, Typ_dep _ -> failwith "NYI"
+      | _, Typ_dep _ -> 
+         let head, args = Util.flatten_typ_apps t1 in
+         let head', args' = Util.flatten_typ_apps t2 in
+         begin match head_matches_delta env head head' with 
+            | None -> None                //heads definitely do not match
+            | Some (Inr (head, head')) -> //took a delta to maybe match
+              probs |> solve_t top env rel (Tc.Normalize.normalize env <| Util.mk_typ_app_explicit head args) 
+                                           (Tc.Normalize.normalize env <| Util.mk_typ_app_explicit head' args') 
+            | Some (Inl _) -> //head matches head'
+              if List.length args = List.length args'
+              then let subprobs = List.map2 (fun a a' -> match a, a' with 
+                    | Inl t, Inl t' -> TProb(EQ, t, t')
+                    | Inr v, Inr v' -> EProb(EQ, v, v')
+                    | _ -> failwith "Impossible" (*terms are well-kinded*)) args args' in
+                   solve false env (attempt subprobs probs)
+              else None
+         end
+
+      | _ -> None
+
+and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
+    if Util.physical_equality c1 c2 then solve top env probs
+    else let c1 = comp_comp env c1 in
+         let c2 = comp_comp env c2 in
+         match rel with 
+           | EQ -> 
+             begin match c1.n, c2.n with
+               | Rigid _, _
+               | _, Rigid _ -> failwith "Impossible" //already normalized
+
+               | Total _, Flex _ 
+               | Comp _, Flex _ ->  //rigid-flex -- reorient
+                 solve_c top env rel c2 c1 probs
+
+               | Flex ({n=Typ_meta(Meta_uvar_t_app(t, uvs)), t1), Total t2 -> //flex-rigid 1
+                 let probs = extend_subst (UC(u, c2)) probs in
+                 solve false env (attempt [TProb(EQ, t1, t2)] probs)
+
+               | Flex((u, fvs), t1), Comp ct2 -> //flex-rigid 2
+                 let fvs' = Util.freevars_comp ct2 in
+                 if fvs |> Util.for_all (function 
+                    | Inl a -> Util.set_mem)
+
+                 bindf (trel false EQ env t1 ct2.result_typ) (fun f -> 
+                   Unionfind.change u (Resolved c1);
+                   Some f)
+
+               | Total t1, Total t2 -> //rigid-rigid 1
+                 solve_t false env rel t1 t2 probs
+
+               
+               | Total _,  _ -> solve_c top env rel (mk_Comp <| force_comp c1) c2 probs
+               | _, Total _ -> solve_c top env rel c1 (mk_Comp <| force_comp c2) probs
+               
+               | Comp ct1, Comp ct2 ->
+                 if lid_equals ct1.effect_name ct2.effect_name
+                 then either_rel rel env (Inl ct1.result_typ::ct1.effect_args) (Inl ct2.result_typ::ct2.effect_args) 
+                 else if not norm 
+                 then aux true (mk_Comp <| Normalize.norm_comp [Normalize.DeltaComp] env c1)
+                               (mk_Comp <| Normalize.norm_comp [Normalize.DeltaComp] env c2)
+                 else None
+
+               | Flex (u, t1), Comp ct2
+               | Comp ct2, Flex (u, t1) -> 
+                 bindf (trel false EQ env t1 ct2.result_typ) (fun f -> 
+                   Unionfind.change u (Resolved c1);
+                   Some f)
+               | Flex (u1, t1), Flex (u2, t2) -> 
+                 bindf (trel false EQ env t1 t2) (fun f -> 
+                   if (Unionfind.equivalent u1 u2) 
+                   then Some f
+                   else (Unionfind.union u1 u2; Some f))
+             end
+               
+           | SUB -> 
+             match c1.n, c2.n with 
+               | Total t1, Total t2 -> trel false SUB env t1 t2
+               | Total t1, Flex (u, t2) -> 
+                 bindf (trel false SUB env t1 t2) (fun f -> 
+                   Unionfind.change u (Resolved (mk_Total t2));
+                   Some f)
+               | Flex(u, t1), Total t2 -> 
+                 bindf (trel false SUB env t1 t2) (fun f -> 
+                   Unionfind.change u (Resolved c2);
+                   Some f)
+               | Total _,  _ -> crel SUB env (mk_Comp <| force_comp c1) c2
+               | _, Total _ -> crel SUB env c1 (mk_Comp <| force_comp c2)
+               | Comp _, Comp _ -> 
+                 let c1 = Normalize.weak_norm_comp env c1 in
+                 let c2 = Normalize.weak_norm_comp env c2 in
+                 //check_sharing (c1.result_typ) (c2.result_typ) "crel1";
+                 begin match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
+                   | None -> None
+                   | Some edge ->
+                     let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
+                       | Inl wp1::_, Inl wp2::_ -> wp1, wp2 
+                       | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in
+                     andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
+                       let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
+                       let is_wpc2_null () = 
+                         if not !Options.verify then false
+                         else match trel true EQ env wpc2 (Util.mk_typ_app_explicit c2_decl.null_wp [Inl c2.result_typ]) with 
+                           | Some Trivial -> true
+                           | _ -> false in
+                       if Util.physical_equality wpc1 wpc2
+                       then ret <| Some Trivial
+                       else if is_wpc2_null() 
+                       then let _ = if debug env then Util.print_string "Using trivial wp ... \n" in
+                            let t = Util.mk_typ_app_explicit c2_decl.trivial [Inl c1.result_typ; Inl <| edge.mlift c1.result_typ wpc1] in
+                            ret <| Some (mkGuard env <| {t with tk=mk_Kind_type})
+                       else let t = Util.mk_typ_app_explicit c2_decl.wp_binop [Inl c2.result_typ; Inl wpc2; Inl <| Util.ftv Const.imp_lid (Const.kbin ktype ktype ktype); 
+                                                                               Inl <| edge.mlift c1.result_typ wpc1] in
+                            let t = {t with tk=wpc2.tk} in
+                            let t = Util.mk_typ_app_explicit c2_decl.wp_as_type [Inl c2.result_typ; Inl t] in
+                            ret <| Some (NonTrivial <| {t with tk=mk_Kind_type})) 
+                 end
+                   
+               | Flex(u, t), Comp ct2 -> 
+                 bindf (trel false SUB env t ct2.result_typ) (fun f -> 
+                   Unionfind.change u (Resolved c2);
+                   Some f)
+               | Comp ct2, Flex(u, t) -> 
+                 bindf (trel false SUB env ct2.result_typ t) (fun f -> 
+                   Unionfind.change u (Resolved c1);
+                   Some f)
+
+               | Flex(u1, t1), Flex(u2, t2) -> 
+                 bindf (trel false SUB env t1 t2) (fun f -> 
+                   (if not (Unionfind.equivalent u1 u2)
+                    then Unionfind.union u1 u2); (* TODO: Fix precedence of the ';' *)
+                   Some f) in
+  aux false c1 c2
+
+
 
 and solve_e (top:bool) (env:Env.env) rel e1 e2 probs : solution = failwith "NYI"
-
-and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution = failwith "NYI"
                   
 let rec krel rel env k k' : option<guard(* Type *)> =
   let k, k' = compress_kind k, compress_kind k' in
@@ -651,8 +852,8 @@ and trel top rel env t t' : option<guard (* has kind t => Type when top and t:Ty
        | Typ_dep _, _
        | _, Typ_app _
        | _, Typ_dep _  -> 
-         let tc, args = Util.flatten_typ_apps t in
-         let tc', args' = Util.flatten_typ_apps t' in
+         let head, args = Util.flatten_typ_apps t in
+         let head', args' = Util.flatten_typ_apps t' in
          let matches = 
           if List.length args = List.length args' 
           then bindf (andf (aux false norm tc tc') (fun () -> 
