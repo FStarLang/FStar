@@ -1315,3 +1315,12 @@ let flex_comp_to_ml c : comp =
           ml 
         | Flex _ -> failwith "Impossible" 
 
+let comp_to_comp_typ (c:comp) : comp_typ = 
+    let c = compress_comp c in 
+    match c.n with
+        | Flex _
+        | Rigid _ -> failwith "Normalize rigid comps before calling"
+        | Comp c -> c
+        | Total t -> {effect_name=Const.tot_effect_lid; result_typ=t; effect_args=[]; flags=[TOTAL]} 
+        
+

@@ -247,8 +247,8 @@ let new_evar env vars t =
   mk_Exp_meta'(Meta_uvar_e_app(app, uvt)) t r, uvt
  
 let new_cvar env vars t = 
-    let u, _ = new_tvar env vars (mk_Kind_dcon(None, t, mk_Kind_effect, false) t.pos) in
-    mk_Flex (u,t)
+    let u, uvt = new_tvar env vars (mk_Kind_dcon(None, t, mk_Kind_effect, false) t.pos) in
+    mk_Flex (u,t), uvt
      
 let subst_xopt (xopt, t1) yopt = match xopt, yopt with 
     | None, None 
@@ -295,6 +295,7 @@ let guard top g probs =
     let close_predicate f = match (Util.compress_kind f.tk).n with 
         | Kind_dcon(None, t, _, _)  -> let x = Util.new_bvd None in close (Inr(x,t)) f
         | Kind_dcon(Some x, t, _, _) -> close (Inr(x,t)) f
+        | Kind_type -> f
         | _ ->  failwith "Unexpected kind" in
     match g with 
     | Trivial -> probs
@@ -368,7 +369,26 @@ let head_matches_delta env t1 t2 =
              let t2 = Tc.Normalize.normalize env t2 in
              aux true t1 t2 in
     aux false t1 t2
-            
+
+let is_pattern t = 
+    let _, args = Util.flatten_typ_apps t in
+    let rec pat_vars seen = function 
+            | [] -> Some (List.rev seen) 
+            | Inl {n=Typ_btvar a}::rest ->
+                if seen |> Util.for_some (function 
+                   | Inl b -> bvd_eq a.v b.v
+                   | _ -> false)
+                then None //not a pattern
+                else pat_vars (Inl a::seen) rest
+            | Inr {n=Exp_bvar x}::rest ->
+                if seen |> Util.for_some (function 
+                    | Inr y -> bvd_eq x.v y.v
+                    | _ -> false)
+                then None //not a pattern
+                else pat_vars (Inr x::seen) rest
+            | _ -> None in //not a pattern
+     pat_vars [] args, args
+
 let rec solve (top:bool) (env:Tc.Env.env) probs : solution = 
     match probs.attempting with 
        | hd::tl -> 
@@ -512,30 +532,15 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
              solve_t top env rel t1 t2 (guard top g probs)   
 
       | Typ_meta(Meta_uvar_t_app(t1, (uv,k))), _ -> //flex-rigid
-        let _, args_lhs = Util.flatten_typ_apps t1 in
-        let rec pat_vars seen = function 
-            | [] -> Some (List.rev seen) 
-            | Inl {n=Typ_btvar a}::rest ->
-                if seen |> Util.for_some (function 
-                   | Inl b -> bvd_eq a.v b.v
-                   | _ -> false)
-                then None //not a pattern
-                else pat_vars (Inl a::seen) rest
-            | Inr {n=Exp_bvar x}::rest ->
-                if seen |> Util.for_some (function 
-                    | Inr y -> bvd_eq x.v y.v
-                    | _ -> false)
-                then None //not a pattern
-                else pat_vars (Inr x::seen) rest
-            | _ -> None in //not a pattern 
-
-        let subterms () = 
+        let maybe_pat_vars, args_lhs = is_pattern t1 in
+        let subterms args_lhs = 
             let ps = args_lhs in
             let h, qs = flatten_typ_apps t2 in
             let xs = ps |> List.map (function 
                 | Inl pi -> Inl <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk
                 | Inr pi -> Inr <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk) in
             uv, ps, h, qs, xs in 
+
         let n = List.length args_lhs in
         let rec imitate_or_project st i = 
             if i >= n then None
@@ -547,7 +552,7 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
                    | None -> imitate_or_project st (i + 1) //backtracking point
                    | sol -> sol in
                      
-        begin match pat_vars [] args_lhs with 
+        begin match maybe_pat_vars with 
             | Some vars -> 
               let fvs1 = Util.freevars_typ t1 in
               let fvs2 = Util.freevars_typ t2 in
@@ -558,8 +563,8 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
               then //fast solution for flex-pattern/rigid case
                    let sol = mk_curried_tlam vars t2 in
                    solve top env (extend_subst (UT(uv, sol)) probs)
-              else imitate_or_project (subterms()) -1
-            | None -> imitate_or_project (subterms()) -1
+              else imitate_or_project (subterms args_lhs) -1
+            | None -> imitate_or_project (subterms args_lhs) -1
         end
 
       | _, Typ_meta(Meta_uvar_t_app _) -> //rigid-flex
@@ -592,9 +597,7 @@ and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
     if Util.physical_equality c1 c2 then solve top env probs
     else let c1 = comp_comp env c1 in
          let c2 = comp_comp env c2 in
-         match rel with 
-           | EQ -> 
-             begin match c1.n, c2.n with
+         match c1.n, c2.n with
                | Rigid _, _
                | _, Rigid _ -> failwith "Impossible" //already normalized
 
@@ -602,106 +605,93 @@ and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
                | Comp _, Flex _ ->  //rigid-flex -- reorient
                  solve_c top env rel c2 c1 probs
 
-               | Flex ({n=Typ_meta(Meta_uvar_t_app(t, uvs)), t1), Total t2 -> //flex-rigid 1
-                 let probs = extend_subst (UC(u, c2)) probs in
-                 solve false env (attempt [TProb(EQ, t1, t2)] probs)
+               | Flex ({n=Typ_meta(Meta_uvar_t_app(teff, (uv,_)))}, t1), Total t2 -> //flex-rigid 1
+                 let maybe_pat_vars, eff_args = is_pattern teff in
+                 begin match maybe_pat_vars with 
+                    | None -> //not a pattern; refuse to solve
+                      None
+                    | Some vars -> 
+                      let sol = mk_curried_tlam vars (mk_Typ_meta(Meta_comp c2)) in
+                      let probs = attempt [TProb(rel, t1, t2)] probs in
+                      solve top env (extend_subst (UT(uv, sol)) probs)  
+                 end
 
-               | Flex((u, fvs), t1), Comp ct2 -> //flex-rigid 2
-                 let fvs' = Util.freevars_comp ct2 in
-                 if fvs |> Util.for_all (function 
-                    | Inl a -> Util.set_mem)
-
-                 bindf (trel false EQ env t1 ct2.result_typ) (fun f -> 
-                   Unionfind.change u (Resolved c1);
-                   Some f)
+               | Flex ({n=Typ_meta(Meta_uvar_t_app(teff, (uv,k)))}, t1), Comp ct2 -> //flex-rigid 2
+                 let maybe_pat_vars, _ = is_pattern teff in
+                 begin match maybe_pat_vars with 
+                    | None -> //not a pattern; refuse to solve this case
+                      None
+                    | Some vars ->
+                      let fvs1 = Util.freevars_typ teff in
+                      let fvs2 = Util.freevars_comp c2 in
+                      let uv2 = Util.uvars_in_comp c2 in
+                      if Util.set_is_subset_of fvs2.ftvs fvs1.ftvs
+                         && Util.set_is_subset_of fvs2.fxvs fvs1.fxvs
+                         && not (Util.set_mem  (uv,k) uv2.uvars_c)
+                      then //good, we have an eligible pattern ... solve in one step, producing one sub problem
+                            let sol = mk_curried_tlam vars (mk_Typ_meta(Meta_comp c2)) in
+                            let probs = attempt [TProb(rel, t1, Util.comp_result c2)] probs in
+                            solve top env (extend_subst (UT(uv, sol)) probs)
+                      else None //failed free-variable or occurs check
+                 end
 
                | Total t1, Total t2 -> //rigid-rigid 1
                  solve_t false env rel t1 t2 probs
-
                
-               | Total _,  _ -> solve_c top env rel (mk_Comp <| force_comp c1) c2 probs
-               | _, Total _ -> solve_c top env rel c1 (mk_Comp <| force_comp c2) probs
+               | Total _,  Comp _ -> solve_c top env rel (mk_Comp <| comp_to_comp_typ c1) c2 probs
+               | Comp _, Total _ -> solve_c top env rel c1 (mk_Comp <| comp_to_comp_typ c2) probs
                
-               | Comp ct1, Comp ct2 ->
-                 if lid_equals ct1.effect_name ct2.effect_name
-                 then either_rel rel env (Inl ct1.result_typ::ct1.effect_args) (Inl ct2.result_typ::ct2.effect_args) 
-                 else if not norm 
-                 then aux true (mk_Comp <| Normalize.norm_comp [Normalize.DeltaComp] env c1)
-                               (mk_Comp <| Normalize.norm_comp [Normalize.DeltaComp] env c2)
-                 else None
-
-               | Flex (u, t1), Comp ct2
-               | Comp ct2, Flex (u, t1) -> 
-                 bindf (trel false EQ env t1 ct2.result_typ) (fun f -> 
-                   Unionfind.change u (Resolved c1);
-                   Some f)
-               | Flex (u1, t1), Flex (u2, t2) -> 
-                 bindf (trel false EQ env t1 t2) (fun f -> 
-                   if (Unionfind.equivalent u1 u2) 
-                   then Some f
-                   else (Unionfind.union u1 u2; Some f))
-             end
-               
-           | SUB -> 
-             match c1.n, c2.n with 
-               | Total t1, Total t2 -> trel false SUB env t1 t2
-               | Total t1, Flex (u, t2) -> 
-                 bindf (trel false SUB env t1 t2) (fun f -> 
-                   Unionfind.change u (Resolved (mk_Total t2));
-                   Some f)
-               | Flex(u, t1), Total t2 -> 
-                 bindf (trel false SUB env t1 t2) (fun f -> 
-                   Unionfind.change u (Resolved c2);
-                   Some f)
-               | Total _,  _ -> crel SUB env (mk_Comp <| force_comp c1) c2
-               | _, Total _ -> crel SUB env c1 (mk_Comp <| force_comp c2)
-               | Comp _, Comp _ -> 
+               | Comp _, Comp _ ->
                  let c1 = Normalize.weak_norm_comp env c1 in
                  let c2 = Normalize.weak_norm_comp env c2 in
-                 //check_sharing (c1.result_typ) (c2.result_typ) "crel1";
+                 let has_uvars t = 
+                    let uvs = Util.uvars_in_typ t in
+                    Util.set_count uvs.uvars_t > 0 in
                  begin match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
                    | None -> None
                    | Some edge ->
                      let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
                        | Inl wp1::_, Inl wp2::_ -> wp1, wp2 
                        | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in
-                     andf (trel false SUB env c1.result_typ c2.result_typ) (fun f -> 
-                       let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
-                       let is_wpc2_null () = 
-                         if not !Options.verify then false
-                         else match trel true EQ env wpc2 (Util.mk_typ_app_explicit c2_decl.null_wp [Inl c2.result_typ]) with 
-                           | Some Trivial -> true
-                           | _ -> false in
-                       if Util.physical_equality wpc1 wpc2
-                       then ret <| Some Trivial
-                       else if is_wpc2_null() 
-                       then let _ = if debug env then Util.print_string "Using trivial wp ... \n" in
-                            let t = Util.mk_typ_app_explicit c2_decl.trivial [Inl c1.result_typ; Inl <| edge.mlift c1.result_typ wpc1] in
-                            ret <| Some (mkGuard env <| {t with tk=mk_Kind_type})
-                       else let t = Util.mk_typ_app_explicit c2_decl.wp_binop [Inl c2.result_typ; Inl wpc2; Inl <| Util.ftv Const.imp_lid (Const.kbin ktype ktype ktype); 
-                                                                               Inl <| edge.mlift c1.result_typ wpc1] in
-                            let t = {t with tk=wpc2.tk} in
-                            let t = Util.mk_typ_app_explicit c2_decl.wp_as_type [Inl c2.result_typ; Inl t] in
-                            ret <| Some (NonTrivial <| {t with tk=mk_Kind_type})) 
+                     let res_t_prob = TProb(rel, c1.result_typ, c2.result_typ) in
+                        if Util.physical_equality wpc1 wpc2 
+                        then solve false env (attempt [res_t_prob] probs)
+                        else if has_uvars wpc2 //how to decide this test efficiently?
+                        then solve false env (attempt [res_t_prob; TProb(EQ, wpc1, wpc2)] probs)
+                        else if rel=SUB
+                        then let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
+                             let wp2_imp_wp1 = Util.mk_typ_app_explicit c2_decl.wp_binop 
+                                            [Inl c2.result_typ; 
+                                             Inl wpc2; 
+                                             Inl <| Util.ftv Const.imp_lid (Const.kbin ktype ktype ktype); 
+                                             Inl <| edge.mlift c1.result_typ wpc1] in
+                             let g = NonTrivial <| Util.mk_typ_app_explicit c2_decl.wp_as_type [Inl c2.result_typ; Inl wp2_imp_wp1] in
+                             let probs = guard top g probs in 
+                             solve false env (attempt [res_t_prob] probs)
+                        else None 
                  end
-                   
-               | Flex(u, t), Comp ct2 -> 
-                 bindf (trel false SUB env t ct2.result_typ) (fun f -> 
-                   Unionfind.change u (Resolved c2);
-                   Some f)
-               | Comp ct2, Flex(u, t) -> 
-                 bindf (trel false SUB env ct2.result_typ t) (fun f -> 
-                   Unionfind.change u (Resolved c1);
-                   Some f)
 
-               | Flex(u1, t1), Flex(u2, t2) -> 
-                 bindf (trel false SUB env t1 t2) (fun f -> 
-                   (if not (Unionfind.equivalent u1 u2)
-                    then Unionfind.union u1 u2); (* TODO: Fix precedence of the ';' *)
-                   Some f) in
-  aux false c1 c2
-
-
+               | Flex ({n=Typ_meta(Meta_uvar_t_app(teff1, (uv1,_)))}, t1), Flex ({n=Typ_meta(Meta_uvar_t_app(teff2, (uv2,_)))}, t2) -> //flex-flex
+                 let maybe_pat_vars1, _ = is_pattern teff1 in
+                 let maybe_pat_vars2, _ = is_pattern teff2 in
+                 begin match maybe_pat_vars1, maybe_pat_vars2 with 
+                    | None, _
+                    | _, None -> None
+                    | Some xs, Some ys -> 
+                       //F xs =?= G ys
+                       //zs = xs intersect ys, U fresh
+                       //F = \x1 x2. U zs
+                       //G = \y1 y2 y3. U zs
+                      let zs = intersect_vars xs ys in
+                      let u, uvt = new_cvar env zs t2 in
+                      let u_zs = mk_Typ_meta(Meta_comp u) in
+                      let fsub = mk_curried_tlam xs u_zs in
+                      let gsub = mk_curried_tlam ys u_zs in
+                      let probs = extend_subst (UC(uv1, fsub)) probs |> extend_subst (UC(uv2, gsub)) in
+                      solve false env (attempt [TProb(rel, t1, t2)] probs)
+                 end
+                 
+               | _ -> failwith "Impossible"
 
 and solve_e (top:bool) (env:Env.env) rel e1 e2 probs : solution = failwith "NYI"
                   
