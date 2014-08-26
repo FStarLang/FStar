@@ -185,6 +185,7 @@ and bvvar = bvar<exp,typ>
 and ftvar = var<knd>
 and fvvar = var<typ>
 
+type freevars_l = list<either<btvar,bvvar>>
 type formula = typ
 type formulae = list<typ>
 
@@ -317,6 +318,12 @@ let no_uvs = {
     uvars_e=new_uvt_set(); 
     uvars_c=new_uvt_set()
 }
+let freevars_of_list l = 
+    l |> List.fold_left (fun out -> function
+        | Inl btv -> {out with ftvs=Util.set_add btv out.ftvs}
+        | Inr bxv -> {out with fxvs=Util.set_add bxv out.fxvs}) no_fvs
+let list_of_freevars fvs = 
+   (Util.set_elements fvs.ftvs |> List.map Inl)@(Util.set_elements fvs.fxvs |> List.map Inr)
 
 let mk_Kind_type = {n=Kind_type; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs=mk_fvs()}
 let mk_Kind_effect = {n=Kind_effect; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs=mk_fvs()}
@@ -612,3 +619,4 @@ let extend_subst x s =
 let tun   = mk_Typ_unknown
 let kun   = mk_Kind_unknown
 let ktype = mk_Kind_type
+let keffect = mk_Kind_effect

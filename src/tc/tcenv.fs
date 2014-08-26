@@ -370,7 +370,7 @@ let uvars_in_env env =
     uvars_k=new_uv_set();
     uvars_t=new_uvt_set();
     uvars_e=new_uvt_set();
-    uvars_c=new_uv_set()
+    uvars_c=new_uvt_set()
   } in
   let ext out uvs = 
     {out with uvars_k=Util.set_union out.uvars_k uvs.uvars_k;
@@ -400,12 +400,13 @@ let clear_expected_typ env = {env with expected_typ=None}, expected_typ env
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
-let idents env : freevars =
-  let out = {ftvs=new_ftv_set(); fxvs=new_ftv_set()} in
+let freevars_l env : freevars_l = 
   fold_env env (fun out b -> match b with 
-    | Binding_var(x, t) -> {out with fxvs=Util.set_add (bvd_to_bvar_s x t) out.fxvs}
-    | Binding_typ(a, k) -> {out with ftvs=Util.set_add (bvd_to_bvar_s a k) out.ftvs}
-    | _ -> out) out
+    | Binding_var(x, t) -> Inr(bvd_to_bvar_s x t)::out
+    | Binding_typ(a, k) -> Inl(bvd_to_bvar_s a k)::out
+    | _ -> out) []
+
+let idents env : freevars = freevars_of_list (freevars_l env)
 
 let lidents env : list<lident> =
   let keys = List.fold_left (fun keys -> function 

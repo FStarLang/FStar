@@ -183,6 +183,7 @@ and bvvar = bvar<exp,typ>
 and ftvar = var<knd>
 and fvvar = var<typ>
 
+type freevars_l = list<either<btvar,bvvar>>
 type formula = typ
 type formulae = list<typ>
 val new_ftv_set: unit -> set<bvar<'a,'b>>
@@ -277,10 +278,13 @@ val text_of_lid: lident -> string
 val withsort: 'a -> 'b -> withinfo_t<'a,'b>
 
 val ktype:knd
+val keffect: knd
 val kun:knd
 val tun:typ
 val no_fvs: freevars
 val no_uvs: uvars
+val freevars_of_list: list<either<btvar, bvvar>> -> freevars
+val list_of_freevars: freevars -> list<either<btvar,bvvar>>
 
 val mk_Kind_type: knd
 val mk_Kind_effect:knd

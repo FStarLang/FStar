@@ -222,7 +222,7 @@ let rec encode_knd (env:env_t) (k:knd)  : res =
         | Kind_abbrev(_, k) -> 
             encode_knd env k
 
-        | Kind_uvar uv -> 
+        | Kind_uvar (uv, _) -> 
             let ksym = format1 "Kind_uvar_%s" (string_of_int <| Unionfind.uvar_id uv) in
             let g = [Term.DeclFun(ksym, [], Kind_sort, None)] in
             mkFreeV(ksym, Kind_sort), g
@@ -285,7 +285,7 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
                 let tt, g = encode_typ env t in
                 Term.mk_HasType x tt, g, (xx,s,[])) |> List.unzip3 in
           let guard = Term.mk_and_l guards in 
-          let t2, wp2, _ = Tc.Util.destruct_comp (Normalize.normalize_comp env.tcenv res) in
+          let t2, wp2, _ = Tc.Util.destruct_comp (Util.comp_to_comp_typ <| Normalize.normalize_comp env.tcenv res) in
           let tt2, g2 = encode_typ env t2 in
           let wp2', g3 = encode_formula env (norm_t env <| (syn t2.pos ktype <| Syntax.mk_Typ_app(wp2, trivial_post t2, false))) in 
           let decls = close vars (List.flatten (g2::g3::decls)) in
@@ -366,7 +366,7 @@ and encode_exp (env:env_t) (e:exp) : res =
                 if not <| Util.is_pure env.tcenv c
                 then let esym, e = fresh_fvar "impure_fun" Term_sort in
                      e, [Term.DeclFun(esym, [], Term_sort, None)]
-                else let t2, wp2, _ = Tc.Util.destruct_comp (Util.force_comp c) in
+                else let t2, wp2, _ = Tc.Util.destruct_comp (Util.comp_to_comp_typ c) in
                      let tt, g1 = encode_typ env t in
                      let xxsym, xx, env' = gen_term_var env x in
                      let tt2, g2 = encode_typ env' t2 in
@@ -391,7 +391,7 @@ and encode_exp (env:env_t) (e:exp) : res =
                 if not <| Util.is_pure env.tcenv c
                 then let esym, e = fresh_fvar "impure_fun" Term_sort in
                      e, [Term.DeclFun(esym, [], Term_sort, None)]
-                else let t2, wp2, _ = Tc.Util.destruct_comp (Util.force_comp c) in
+                else let t2, wp2, _ = Tc.Util.destruct_comp (Util.comp_to_comp_typ c) in
                      let kk, g1 = encode_knd env k in
                      let aasym, aa, env' = gen_typ_var env a in
                      let tt2, g2 = encode_typ env' t2 in

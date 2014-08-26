@@ -17,6 +17,7 @@
 module Microsoft.FStar.Tc.Rel
 
 open Microsoft.FStar
+open Microsoft.FStar.Util
 open Microsoft.FStar.Tc
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
@@ -26,6 +27,11 @@ open Microsoft.FStar.Tc.Env
 type guard = 
   | Trivial
   | NonTrivial of formula
+  
+val new_kvar: Range.range -> freevars_l -> knd
+val new_tvar: Range.range -> freevars_l -> knd -> typ * (uvar_t * knd)
+val new_evar: Range.range -> freevars_l -> typ -> exp * (uvar_e * typ)
+val new_cvar: Range.range -> freevars_l -> typ -> comp * (uvar_t * knd)
 
 val guard_to_string : env -> guard -> string
 val trivial : guard -> unit

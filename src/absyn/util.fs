@@ -26,7 +26,7 @@ open Microsoft.FStar.Profiling
 let handle_err warning ret e = 
   match e with
     | Error(msg, r) ->
-        Util.print_string (Util.format3 "%s : %s : %s\n" (Range.string_of_range r) (if warning then "Warning" else "Error") msg);
+        Util.print_string (Util.format3 "%s : %s\n%s\n" (Range.string_of_range r) (if warning then "Warning" else "Error") msg);
         ret
     | NYI s -> 
         Util.print_string (Util.format1 "Feature not yet implemented: %s" s); 
@@ -461,6 +461,14 @@ let flatten_typ_apps : typ -> typ * (list<either<typ,exp>>) =
       | _              -> t, acc in
   (fun t -> aux [] t)
 
+let flatten_exp_apps (e:exp) : exp * (list<either<typ, exp>>) = 
+  let rec aux e out = match (compress_exp e).n with 
+    | Exp_app(e1, e2, _) -> aux e1 (Inr e2::out)
+    | Exp_tapp(e1, t) -> aux e1 (Inl t::out)
+    | Exp_ascribed(e, _) -> aux e out
+    | _ -> e, out in
+  aux e []
+
 let destruct typ lid = 
   match flatten_typ_apps typ with 
     | {n=Typ_const tc}, args when lid_equals tc.v lid -> Some args
@@ -569,6 +577,14 @@ let unchecked_unify uv t =
   match Unionfind.find uv with 
     | Fixed _ -> failwith "Changing a fixed uvar!"
     | _ -> Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here *)
+
+let as_comp = function 
+   | {n=Typ_meta(Meta_comp c)} -> c
+   | _ -> failwith "Impossible"
+
+let destruct_flex_arg = function 
+    | {n=Typ_meta(Meta_uvar_t_app(t, uv))} -> t, uv
+    | _ -> failwith "Impossible"
 
 (********************************************************************************)
 (************************* Free type/term/unif variables ************************)
@@ -898,6 +914,11 @@ let mk_curried_tlam vars t =
     List.fold_right (fun ax t -> match ax with 
         | Inl a -> mk_Typ_tlam(a.v, a.sort, t) (mk_Kind_tcon(Some a.v, a.sort, t.tk, false) t.pos) t.pos
         | Inr x -> mk_Typ_lam(x.v, x.sort, t) (mk_Kind_dcon(Some x.v, x.sort, t.tk, false) t.pos) t.pos) vars t
+
+let mk_curried_lam vars e = 
+    List.fold_right (fun ax e -> match ax with 
+        | Inl a -> mk_Exp_tabs(a.v, a.sort, e) (mk_Typ_univ(a.v, a.sort, mk_Total e.tk) ktype e.pos) e.pos
+        | Inr x -> mk_Exp_abs(x.v, x.sort, e) (mk_Typ_fun(Some x.v, x.sort, mk_Total e.tk, false) ktype e.pos) e.pos) vars e
 
 let rec close_for_kind t k = 
     let k = compress_kind k in 
@@ -1298,22 +1319,6 @@ let destruct_typ_as_formula f : option<connective> =
         match destruct_base_conn phi with 
         | Some b -> Some b
         | None -> destruct_q_conn phi
-
-(******************************************************)
-(* Forcing a Flex computation to the default ML monad *)
-(******************************************************)
-let flex_comp_to_ml c : comp = 
-    let c = compress_comp c in 
-    match c.n with
-        | Comp _
-        | Rigid _ 
-        | Total _ -> c 
-        | Flex({n=Typ_meta(Meta_uvar_t_app(_, (u,k)))}, res_t) -> 
-          let ml = mk_Comp <| {effect_name=Const.ml_effect_lid; result_typ=res_t; effect_args=[]; flags=[MLEFFECT]} in
-          let tml = k |> close_for_kind (mk_Typ_meta(Meta_comp ml)) in
-          Unionfind.change u (Fixed tml);
-          ml 
-        | Flex _ -> failwith "Impossible" 
 
 let comp_to_comp_typ (c:comp) : comp_typ = 
     let c = compress_comp c in 

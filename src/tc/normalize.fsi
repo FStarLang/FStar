@@ -34,9 +34,12 @@ and steps = list<step>
 val eta_expand: Env.env -> typ -> typ
 val eta_expand_exp: Env.env -> exp -> exp
 val normalize: Env.env -> typ -> typ
-val normalize_comp: Env.env -> comp -> comp_typ
+val normalize_comp: Env.env -> comp -> comp
 val normalize_kind: Env.env -> knd -> knd
-val norm_comp: steps -> Env.env -> comp -> comp_typ
+val comp_comp: Env.env -> comp -> comp
+val flex_to_ml: Env.env -> comp -> comp
+val flex_to_total: Env.env -> comp -> comp
+val norm_comp: steps -> Env.env -> comp -> comp
 val weak_norm_comp: Env.env -> comp -> comp_typ
 val norm_kind: steps -> Env.env -> knd -> knd
 val norm_typ:  steps -> Env.env -> typ -> typ

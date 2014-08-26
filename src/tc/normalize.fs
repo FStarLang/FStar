@@ -91,20 +91,26 @@ let rec eta_expand tcenv t =
     | Kind_unknown -> failwith (Util.format2 "%s: Impossible: Kind_unknown: %s" (Tc.Env.get_range tcenv |> Range.string_of_range) (Print.typ_to_string t)) in
     eta_expand t
      
-let rec eta_expand_exp (tcenv:Tc.Env.env) (e:exp) : exp = failwith "NYI"
+let is_var t = match Util.compress_typ t with
+    | {n=Typ_btvar _} -> true
+    | _ -> false
 
-let rec sn tcenv (cfg:config<typ>) : config<typ> =
+let rec eta_expand_exp (tcenv:Tc.Env.env) (e:exp) : exp = failwith "NYI"
+let no_eta = List.filter (function Eta -> false | _ -> true)
+
+let rec sn_aux tcenv (cfg:config<typ>) : config<typ> =
   let rebuild config  = 
+    let s' = no_eta config.steps in
     let rec aux out stack : typ = match stack with
-      | [] -> eta_expand tcenv out
-//        if config.steps |> List.contains Eta
-//        then eta_expand out
-//        else out
+      | [] -> //eta_expand tcenv out
+        if config.steps |> List.contains Eta || not (is_var out)
+        then eta_expand tcenv out
+        else out  //if a variable is an argument to some other term, do not eta-expand it
       | (Inl (t,e,k), imp)::rest -> 
-        let c = sn tcenv ({code=t; environment=e; stack=[]; steps=config.steps}) in 
+        let c = sn_aux tcenv ({code=t; environment=e; stack=[]; steps=s'}) in 
         aux (mk_Typ_app(out, c.code, imp) k out.pos) rest
       | (Inr (v,e,k), imp)::rest -> 
-        let c = wne tcenv ({code=v; environment=e; stack=[]; steps=config.steps}) in 
+        let c = wne tcenv ({code=v; environment=e; stack=[]; steps=s'}) in 
         aux (mk_Typ_dep(out, c.code, imp) k out.pos) rest in
     {config with code=aux config.code config.stack; stack=[]} in
 
@@ -120,11 +126,16 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
   let config = match cfg.environment with 
     | [] -> {cfg with code=Util.compress_typ cfg.code} 
     | _ -> {cfg with code=Util.alpha_typ cfg.code} in //Util.alpha_typ cfg.code} in
+
   match config.code.n with
     | Typ_delayed _ -> failwith "Impossible"
      
     | Typ_uvar _ -> 
       rebuild config 
+
+    | Typ_meta(Meta_comp c) -> 
+      let cfg = sncomp tcenv (with_code config c) in
+      {config with code=mk_Typ_meta'(Meta_comp(cfg.code)) config.code.tk config.code.pos}
 
     | Typ_meta(Meta_uvar_t_app(t, (uv,k))) ->
       let cfg = sn tcenv ({config with code=t}) in
@@ -227,19 +238,27 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
     
     | Typ_meta(Meta_named _)    
     | Typ_unknown -> failwith "impossible"
-            
+          
+and sn tcenv cfg = 
+    sn_aux tcenv ({cfg with steps=Eta::cfg.steps})
+
 and snl tcenv configs : list<config<typ>> =
   List.map (sn tcenv) configs
 
 and sncomp tcenv (cfg:config<comp>) : config<comp> = 
   let m = cfg.code in 
   match (compress_comp m).n with 
+    | Rigid t -> 
+      let c = sn tcenv (with_code cfg t) in
+      (match c.code.n with
+        | Typ_meta(Meta_comp c) -> sncomp tcenv (with_code cfg c)
+        | _ -> failwith "Impossible")
     | Comp ct -> 
       let ctconf = sncomp_typ tcenv (with_code cfg ct) in
       {cfg with code=mk_Comp ctconf.code}
     | Total t -> 
       if List.contains DeltaComp cfg.steps 
-      then sncomp tcenv <| with_code cfg (mk_Comp <| force_comp (mk_Total t))
+      then sncomp tcenv <| with_code cfg (mk_Comp <| comp_to_comp_typ (mk_Total t))
       else let t = sn tcenv (with_code cfg t) in
            with_code cfg (mk_Total t.code)
     | Flex(u, t) -> 
@@ -365,10 +384,41 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
 (************************************************************************************)
 (* External interface *)
 (************************************************************************************)
+let norm_kind steps tcenv k = 
+  let c = snk tcenv ({code=k; environment=[]; stack=[]; steps=steps}) in
+  c.code
+
+let norm_typ steps tcenv t = 
+  let c = sn tcenv ({code=t; environment=[]; stack=[]; steps=steps}) in
+  c.code
+
+let rec comp_comp env c = 
+    let c = Util.compress_comp c in
+    match c.n with
+    | Rigid t -> 
+        (match (norm_typ [Beta] env t).n with
+            | Typ_meta(Meta_comp c) -> comp_comp env c
+            | _ -> failwith "Impossible")
+    | _ -> c
+
+let force_flex_comp (env:Tc.Env.env) (def:typ -> comp) (c:comp) =
+    let c = comp_comp env c in
+    match c.n with
+        | Rigid _  -> failwith "Impossible"
+        | Comp _
+        | Total _ -> c 
+        | Flex({n=Typ_meta(Meta_uvar_t_app(_, (u,k)))}, res_t) -> 
+          let def = def res_t in
+          let tdef = k |> close_for_kind (mk_Typ_meta(Meta_comp def)) in
+          Unionfind.change u (Fixed tdef);
+          def
+        | Flex _ -> failwith "Impossible" 
+let flex_to_ml env c = force_flex_comp env (fun res_t -> Util.ml_comp res_t (Env.get_range env)) c
+let flex_to_total env c = force_flex_comp env mk_Total c
 
 let rec weak_norm_comp env c =
   let tt0 = Util.comp_result c in 
-  let c = force_comp c in
+  let c = comp_to_comp_typ (flex_to_ml env c) in
   let n = match Tc.Env.lookup_typ_abbrev env c.effect_name with
     | None -> c
     | Some t -> 
@@ -390,19 +440,10 @@ let rec weak_norm_comp env c =
       n in
   //check_sharing (Util.compress_typ tt0) (Util.compress_typ n.result_typ) "weak_norm_comp";
   n
-      
-       
-let norm_kind steps tcenv k = 
-  let c = snk tcenv ({code=k; environment=[]; stack=[]; steps=steps}) in
-  c.code
-
-let norm_typ steps tcenv t = 
-  let c = sn tcenv ({code=t; environment=[]; stack=[]; steps=steps}) in
-  c.code
-
+             
 let norm_comp steps tcenv c = 
   let c = sncomp tcenv ({code=c; environment=[]; stack=[]; steps=steps}) in
-  force_comp c.code
+  c.code
 
 let normalize_kind tcenv k = 
   let steps = [Delta;Beta] in

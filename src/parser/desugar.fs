@@ -983,7 +983,7 @@ let mk_data_ops env = function
           else 
             let subst = mk_subst [Inr(x, mk_app (fvar field_name (range_of_lid field_name)) (freeterms@[Inr(formal_exp, false)]))] in
             subst_comp subst t2 in
-        aux (fields@sigs) (force_comp t2).result_typ
+        aux (fields@sigs) (Util.comp_result t2)
           
       | Typ_univ(a, k, t2) ->
         let field_name = lid_of_ids (ids_of_lid lid @ [a.ppname]) in
@@ -995,7 +995,7 @@ let mk_data_ops env = function
           then t2
           else let subst = mk_subst [Inl(a, mk_tapp (ftv field_name kun) (freeterms@[Inr (formal_exp, false)]))] in
                subst_comp subst t2 in
-        aux (fields@[sigs]) (force_comp t2).result_typ
+        aux (fields@[sigs]) (Util.comp_result t2)
 
       | _ -> fields in
     let disc_name = Util.mk_discriminator lid in

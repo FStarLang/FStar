@@ -65,67 +65,6 @@ let is_tvar_free (a:btvdef) t =
   let f = Util.freevars_typ t in
   Util.set_mem (bvd_to_bvar_s a kun) f.ftvs
 
-let eq_bv_bvd bv bvd = Util.bvd_eq bv.v bvd
-  
-let new_kvar env =
-  let wf k () =
-    let fk = Util.freevars_kind k in 
-    let fe = Env.idents env in
-    Util.set_is_subset_of fk.ftvs fe.ftvs && Util.set_is_subset_of fk.fxvs fe.fxvs in
-  mk_Kind_uvar (Unionfind.fresh (Uvar wf), Tc.Env.bound_vars env) (Env.get_range env)
-
-let new_tvar env k =
-  let rec pre_kind_compat k1 k2 = match (compress_kind k1).n, (compress_kind k2).n with 
-    | _, Kind_uvar uv 
-    | Kind_uvar uv, _ -> true
-    | Kind_type, Kind_type -> true
-    | Kind_tcon(_, k1, k2, _), Kind_tcon(_, k1', k2', _) -> pre_kind_compat k1 k1' && pre_kind_compat k2 k2'
-    | Kind_dcon(_, _, k1, _), Kind_dcon(_, _, k1', _) -> pre_kind_compat k1 k1'
-    | k1, k2 -> //Util.print_string (Util.format2 "Pre-kind-compat failed on %s and %s\n" (Print.kind_to_string k1) (Print.kind_to_string k2)); 
-    false in
-  let wf t tk = pre_kind_compat k tk in 
-  let vars = Tc.Env.bound_vars env in 
-  let r = Tc.Env.get_range env in
-  let rec mk_uv_app k vars = match vars with 
-    | [] -> 
-        let uv = Unionfind.fresh (Uvar wf) in
-        syn' env k <| mk_Typ_uvar' (uv,k), (uv,k)
-    | Inl a::rest -> 
-      let k' = mk_Kind_tcon(Some a.v, a.sort, k, false) r in
-      let app, uvk = mk_uv_app k' rest in 
-      mk_Typ_app(app, Util.btvar_to_typ a, false) k r, uvk
-    | Inr x::rest -> 
-      let k' = mk_Kind_dcon(Some x.v, x.sort, k, false) r in
-      let app, uvk = mk_uv_app k' rest in 
-      mk_Typ_dep(app, Util.bvar_to_exp x, false) k r, uvk in
-  let app,uvk = mk_uv_app k vars in 
-  mk_Typ_meta'(Meta_uvar_t_app(app, uvk)) k r
-
-let new_evar env t =
-  let wf e t = true in 
-//    let fe = Util.freevars_exp e in
-//    let fenv = Env.idents env in 
-//    Util.set_is_subset_of fe.ftvs fenv.ftvs && Util.set_is_subset_of fe.fxvs fenv.fxvs in
-  let vars = Tc.Env.bound_vars env in 
-  let r = Tc.Env.get_range env in
-  let rec mk_uv_app t vars = match vars with 
-    | [] -> 
-        let uv = Unionfind.fresh (Uvar wf) in 
-        mk_Exp_uvar (uv, t) <| Env.get_range env, (uv,t)
-    | Inl a::rest -> 
-        let t' = mk_Typ_univ(a.v, a.sort, mk_Total t) ktype r in
-        let app, uvt = mk_uv_app t' rest in 
-        mk_Exp_tapp(app, Util.btvar_to_typ a) t r, uvt
-    | Inr x::rest -> 
-        let t' = mk_Typ_fun(Some x.v, x.sort, mk_Total t, false) ktype r in
-        let app, uvt = mk_uv_app t' rest in 
-        mk_Exp_app(app, Util.bvar_to_exp x, false) t r, uvt in
-  let app, uvt = mk_uv_app t vars in
-  mk_Exp_meta'(Meta_uvar_e_pattern(app, uvt)) t r
- 
-let new_cvar env t = 
-  mk_Flex ((Unionfind.fresh Floating, Tc.Env.bound_vars env), t)
-
 let close_guard (b:list<binding>) (g:guard) : guard = match g with 
   | Trivial -> g
   | NonTrivial f -> NonTrivial <|
@@ -147,20 +86,40 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard =
     | Some f -> 
         mk_Exp_ascribed(e, t2) e.pos, apply_guard f e
 
-let new_function_typ env (x:bvvdef) = 
-    let arg = new_tvar env ktype in
-    let res = new_tvar env ktype in 
-    let eff = new_cvar env res in
-    syn' env ktype <| mk_Typ_fun(Some x, arg, eff, false) 
+let new_kvar env   = Rel.new_kvar (Env.get_range env) (Env.freevars_l env)
+let new_tvar env t = Rel.new_tvar (Env.get_range env) (Env.freevars_l env) t |> fst
+let new_evar env t = Rel.new_evar (Env.get_range env) (Env.freevars_l env) t |> fst
+let new_cvar env t = Rel.new_cvar (Env.get_range env) (Env.freevars_l env) t |> fst
 
-let new_poly_typ env (a:btvdef) = 
-    let arg = new_kvar env in
-    let res = new_tvar (Tc.Env.push_local_binding env (Tc.Env.Binding_typ(a, arg))) ktype in 
-    let eff = new_cvar env res in
+let new_function_typ env (xopt:option<bvvdef>) (default_effect:option<lident>) = 
+    let vars = Env.freevars_l env in
+    let r = Env.get_range env in
+    let arg, _ = Rel.new_tvar r vars ktype in
+    let vars' = match xopt with 
+        | None -> vars
+        | Some x -> Inr(bvd_to_bvar_s x arg)::vars in
+    let res, _ = Rel.new_tvar r vars' ktype in 
+    let eff = match default_effect with 
+        | None -> Rel.new_cvar r vars' res |> fst
+        | Some l ->
+            if lid_equals l Const.ml_effect_lid
+            then Util.ml_comp res r
+            else if lid_equals l Const.tot_effect_lid 
+            then mk_Total res
+            else failwith "Unknown default effect" in
+    syn' env ktype <| mk_Typ_fun(xopt, arg, eff, false) 
+
+let new_poly_typ env (a:btvdef) =
+    let r = Env.get_range env in
+    let vars = Env.freevars_l env in
+    let arg = Rel.new_kvar r vars in
+    let vars' = Inl(bvd_to_bvar_s a arg)::vars in
+    let res, _ = Rel.new_tvar r vars' ktype in
+    let eff, _ = Rel.new_cvar r vars' res in
     syn' env ktype <| mk_Typ_univ(a, arg, eff) 
   
-let uvar_as_function_typ env (topt:option<typ>) (x:bvvdef) = 
-    let tf = new_function_typ env x in
+let uvar_as_function_typ env (topt:option<typ>) (x:option<bvvdef>) (default_effect:option<lident>) = 
+    let tf = new_function_typ env x default_effect in
     match topt with 
       | Some t -> 
          trivial <| teq env t tf; //forces a unification
@@ -176,19 +135,8 @@ let destruct_function_typ env (t:typ) (xopt:option<bvvdef>) (f:option<exp>) (imp
   let rec aux xopt norm subst t f =
     let t = compress_typ t in 
     match t.n with 
-      | Typ_uvar _ when (not imp_arg_follows) -> 
-        let arg = new_tvar env ktype in
-        let res = new_tvar env ktype in 
-        let eff, xopt = match default_effect with 
-            | None -> new_cvar env res, xopt
-            | Some l -> 
-                if lid_equals l Const.ml_effect_lid
-                then Util.ml_comp res (Env.get_range env), None 
-                else if lid_equals l Const.tot_effect_lid 
-                then mk_Total res, None
-                else new_cvar env res, xopt in
-        let tf = syn' env ktype <| mk_Typ_fun(xopt, arg, eff, false) in
-        trivial <| teq env t tf;
+      | Typ_meta(Meta_uvar_t_app _) when (not imp_arg_follows) -> 
+        let tf = uvar_as_function_typ env (Some t) xopt default_effect in
         (tf, f)
 
       | Typ_univ(a, k, c) -> 
@@ -199,7 +147,7 @@ let destruct_function_typ env (t:typ) (xopt:option<bvvdef>) (f:option<exp>) (imp
             let g = match f with 
               | None -> None
               | Some f -> Some <| mk_Exp_tapp(f, arg) tun f.pos in
-            aux None norm subst (force_comp c).result_typ g 
+            aux None norm subst (Util.comp_result c) g 
         else if not norm 
         then let t = normalize env t in 
              aux xopt true subst t f 
@@ -218,7 +166,7 @@ let destruct_function_typ env (t:typ) (xopt:option<bvvdef>) (f:option<exp>) (imp
             let g = match f with 
               | None -> None
               | Some f -> Some <| mk_Exp_app(f, arg, true) tun f.pos in
-            aux None norm subst (force_comp c).result_typ g
+            aux None norm subst (Util.comp_result c) g
         else (* either, we have an implicit function but with an explicit instantiation following;
                or, we have a function with an explicit argument and no implicit arg following *)
             let t = Util.compress_typ <| Util.subst_typ subst t in
@@ -247,7 +195,7 @@ let destruct_poly_typ env (t:typ) (f:exp) targ : (typ*exp) =
             let arg = new_evar env (Util.subst_typ subst t1) in
             let subst = extend_subst (Inr(x, arg)) subst in
             let g = mk_Exp_app(f, arg, true) tun f.pos in
-            aux norm subst (force_comp c).result_typ g
+            aux norm subst (Util.comp_result c) g
         else fail subst t f
 
       | _ when not norm -> 
@@ -383,10 +331,11 @@ let extract_lb_annotation is_rec env t e = match t.n with
       | Exp_abs _ -> Util.total_comp (aux env e) (Env.get_range env)
       | Exp_ascribed(e, t) -> 
         let c = aux_comp env e in
-        begin match (compress_comp c).n with 
+        begin match (Normalize.comp_comp env c).n with 
           | Comp ct -> mk_Comp ({ct with result_typ=t})
           | Total _ -> mk_Total t
           | Flex (u, _) -> mk_Flex(u, t)
+          | Rigid _ -> failwith "Impossible"
         end
       | _ ->
         if is_rec then Util.ml_comp (new_tvar env ktype) (Env.get_range env)
@@ -423,16 +372,7 @@ let lift_and_destruct env c1 c2 =
   let a, kwp = Tc.Env.wp_signature env md.mname in
   (md, a, kwp), (destruct_comp m1), destruct_comp m2
 
-let force_total c = match (compress_comp c).n with 
-    | Total t -> Some t
-    | Flex((u, _), t) -> 
-        let tot = mk_Total t in
-        Unionfind.change u (Resolved tot);
-        Some t
-    | Comp c0 -> 
-        if Util.is_pure_comp c
-        then Some c0.result_typ
-        else None 
+
 
 let is_pure env c = 
   let c = Tc.Normalize.weak_norm_comp env c in
@@ -571,7 +511,7 @@ let bind_cases env (res_t:typ) (cases:list<(option<formula> * comp)>) : comp =
             let wp = wp_conj wp1 wp2 in
             let wlp = wp_conj wlp1 wlp2 in 
             (Some <| mk_comp md t wp wlp [], prior_or_c_matched)) (None, None) in
-      let caccum = force_comp (must <| caccum) in
+      let caccum = comp_to_comp_typ <| flex_to_ml env (must <| caccum) in
       let md = Tc.Env.get_monad_decl env caccum.effect_name in
       let res_t, wp, wlp = destruct_comp caccum in
       let wp = match some_pat_matched with 
@@ -735,25 +675,25 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
      let env_uvars = Env.uvars_in_env env in
      let gen_uvars uvs = Util.set_difference uvs env_uvars.uvars_t |> Util.set_elements in
      let uvars = ecs |> List.map (fun (x, e, c) -> 
-      let t = Util.comp_result c in 
-      match Util.compress_typ t with 
-        | {n=Typ_univ _} -> (* explicit abstractions need not be generalized *)
-          (x, [], e, Util.force_comp c)
-        | _ -> 
-      let c = norm c in 
-      let t = c.result_typ in
-      let uvt = Util.uvars_in_typ t in
-      let uvs = gen_uvars <| uvt.uvars_t in 
-      if !Options.verify && not <| Util.is_total_comp (mk_Comp c)
-      then begin
-          let _, wp, _ = destruct_comp c in 
-          let post = syn t.pos (mk_Kind_dcon(None, t, ktype, false) t.pos) <| mk_Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid ktype) in
-          let vc = Normalize.norm_typ [Normalize.Delta; Normalize.Beta] env (syn wp.pos ktype <| mk_Typ_app(wp, post, false)) in
-          if Tc.Env.debug env then Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));
-          if not <| env.solver.solve env vc
-          then Tc.Errors.report (range_of_lbname x) (Tc.Errors.failed_to_prove_specification_of x [])
-      end;
-      x, uvs, e, Util.force_comp <| return_value env t e) in
+          let t = Util.comp_result c in 
+          match Util.compress_typ t with 
+            | {n=Typ_univ _} -> (* explicit abstractions need not be generalized *)
+              (x, [], e, flex_to_total env c)
+            | _ -> 
+              let c = comp_to_comp_typ <| norm c in 
+              let t = c.result_typ in
+              let uvt = Util.uvars_in_typ t in
+              let uvs = gen_uvars <| uvt.uvars_t in 
+              if !Options.verify && not <| Util.is_total_comp (mk_Comp c)
+              then begin
+                  let _, wp, _ = destruct_comp c in 
+                  let post = syn t.pos (mk_Kind_dcon(None, t, ktype, false) t.pos) <| mk_Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid ktype) in
+                  let vc = Normalize.norm_typ [Normalize.Delta; Normalize.Beta] env (syn wp.pos ktype <| mk_Typ_app(wp, post, false)) in
+                  if Tc.Env.debug env then Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));
+                  if not <| env.solver.solve env vc
+                  then Tc.Errors.report (range_of_lbname x) (Tc.Errors.failed_to_prove_specification_of x [])
+              end;
+              x, uvs, e, return_value env t e) in
 
      let ecs = uvars |> List.map (fun (x, uvs, e, c) -> 
       let tvars = uvs |> List.map (fun (u, k) -> 
@@ -768,6 +708,6 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
       let e, t = tvars |> List.fold_left (fun (e,t) (a,k) ->
         let t' = syn (range_of_bvd a) ktype <| mk_Typ_univ(a, k, Util.total_comp t (Env.get_range env)) in
         let e' = mk_Exp_tabs(a, k, e) tun e.pos in
-        (e', t')) (e,c.result_typ) in
+        (e', t')) (e, Util.comp_result c) in
       x, e, Util.total_comp t e.pos) in
      ecs 
