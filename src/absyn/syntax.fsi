@@ -144,11 +144,12 @@ and knd' =
   | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)
   | Kind_tcon of option<btvdef> * knd * knd * bool        (* 'a:k -> k'; bool marks implicit *)
   | Kind_dcon of option<bvvdef> * typ * knd * bool        (* x:t -> k; bool marks implicit *)
-  | Kind_uvar of uvar_k_pattern                           (* not present after 1st round tc *)
+  | Kind_uvar of uvar_k_app                               (* not present after 1st round tc *)
+  | Kind_lam of list<either<btvar,bvvar>> * knd           (* an n-ary kind abstraction; only used to instantiate uvars *)
   | Kind_delayed of knd * subst * memo<knd>               (* delayed substitution --- always force before inspecting first element *)
   | Kind_unknown                                          (* not present after 1st round tc *)
 and knd = syntax<knd', unit>
-and uvar_k_pattern = uvar_k * list<either<btvar,bvvar>>     
+and uvar_k_app = uvar_k * list<either<typ,exp>>
 and kabbrev = lident * list<either<typ,exp>>
 and uvar_k = Unionfind.uvar<uvar_basis<knd,unit>>
 and lbname = either<bvvdef, lident>
@@ -182,6 +183,12 @@ and btvar = bvar<typ,knd>
 and bvvar = bvar<exp,typ>
 and ftvar = var<knd>
 and fvvar = var<typ>
+
+type ktec = 
+    | K of knd
+    | T of typ
+    | E of exp
+    | C of comp
 
 type freevars_l = list<either<btvar,bvvar>>
 type formula = typ
@@ -292,7 +299,8 @@ val mk_Kind_abbrev: (kabbrev * knd) -> range -> knd
 val mk_Kind_tcon: (option<btvdef> * knd * knd * bool) -> range -> knd
 val mk_Kind_dcon: (option<bvvdef> * typ * knd * bool) -> range -> knd
 val mk_Kind_delayed: (knd * subst * memo<knd>) -> range -> knd
-val mk_Kind_uvar: uvar_k_pattern -> range -> knd
+val mk_Kind_uvar: uvar_k_app -> range -> knd
+val mk_Kind_lam: (freevars_l * knd) -> range -> knd
 
 val mk_Typ_btvar: btvar -> knd -> range -> typ
 val mk_Typ_const: ftvar -> knd -> range -> typ

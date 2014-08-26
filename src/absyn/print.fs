@@ -210,15 +210,19 @@ and either_to_string x = match x with
   | Inl t -> typ_to_string t
   | Inr e -> exp_to_string e
 
+ and either_l_to_string delim l = 
+  l |> List.map either_to_string |> Util.concat_l delim
+
 and meta_to_string x = match x with 
   | Meta_comp c -> comp_typ_to_string c
   | Meta_uvar_t_app(t, _) -> typ_to_string t
   | Meta_named(_, l) -> sli l
-  | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (t |> typ_to_string) (Util.concat_l ", " (ps |> List.map either_to_string))
+  | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (t |> typ_to_string) (either_l_to_string ", " ps)
 
 and kind_to_string x = match (compress_kind x).n with 
+  | Kind_lam _ -> failwith "Impossible"
   | Kind_delayed _ -> failwith "Impossible"
-  | Kind_uvar (uv,_) -> format1 "'k_%s" (Util.string_of_int (Unionfind.uvar_id uv))
+  | Kind_uvar (uv,args) -> format2 "('k_%s %s)" (Util.string_of_int (Unionfind.uvar_id uv)) (either_l_to_string " " args)
   | Kind_type -> "Type"
   | Kind_effect -> "Effect"
   | Kind_abbrev((n, args), _) -> Util.format2 "%s %s" (sli n) (String.concat " " (args |> List.map either_to_string))

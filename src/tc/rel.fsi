@@ -28,7 +28,7 @@ type guard =
   | Trivial
   | NonTrivial of formula
   
-val new_kvar: Range.range -> freevars_l -> knd
+val new_kvar: Range.range -> freevars_l -> knd * uvar_k
 val new_tvar: Range.range -> freevars_l -> knd -> typ * (uvar_t * knd)
 val new_evar: Range.range -> freevars_l -> typ -> exp * (uvar_e * typ)
 val new_cvar: Range.range -> freevars_l -> typ -> comp * (uvar_t * knd)

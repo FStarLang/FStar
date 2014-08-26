@@ -146,11 +146,12 @@ and knd' =
   | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)
   | Kind_tcon of option<btvdef> * knd * knd * bool        (* 'a:k -> k'; bool marks implicit *)
   | Kind_dcon of option<bvvdef> * typ * knd * bool        (* x:t -> k; bool marks implicit *)
-  | Kind_uvar of uvar_k_pattern                           (* not present after 1st round tc *)
+  | Kind_uvar of uvar_k_app                               (* not present after 1st round tc *)
+  | Kind_lam of list<either<btvar,bvvar>> * knd           (* not present after 1st round tc *)
   | Kind_delayed of knd * subst * memo<knd>               (* delayed substitution --- always force before inspecting first element *)
   | Kind_unknown                                          (* not present after 1st round tc *)
 and knd = syntax<knd', unit>
-and uvar_k_pattern = uvar_k * list<either<btvar,bvvar>>     
+and uvar_k_app = uvar_k * list<either<typ,exp>>
 and kabbrev = lident * list<either<typ,exp>>
 and uvar_k = Unionfind.uvar<uvar_basis<knd,unit>>
 and lbname = either<bvvdef, lident>
@@ -257,6 +258,12 @@ type modul = {
   is_interface:bool
 }
 
+type ktec = 
+    | K of knd
+    | T of typ
+    | E of exp
+    | C of comp
+
 (*********************************************************************************)
 (* Identifiers to/from strings *)    
 (*********************************************************************************)
@@ -345,12 +352,18 @@ let mk_Kind_dcon ((a:option<bvvdef>),(t1:typ),(k2:knd),(b:bool)) p = {
     tk=();
     uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs (match a with None -> k2.fvs | Some a -> difference k2.fvs (set_of_list [Inr a]));
 }
-let mk_Kind_uvar (uv:uvar_k_pattern) p = {
+let mk_Kind_uvar (uv:uvar_k_app) p = {
     n=Kind_uvar uv;
     pos=p;
     tk=();
     uvs=mk_uvs(); fvs=mk_fvs();
     
+}
+let mk_Kind_lam ((vs:freevars_l), (k:knd)) p = {
+    n=Kind_lam(vs, k);
+    pos=p;
+    tk=();
+    uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Kind_delayed ((k:knd),(s:subst),(m:memo<knd>)) p = {
     n=Kind_delayed(k, s, m);

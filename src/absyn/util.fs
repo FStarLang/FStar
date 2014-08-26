@@ -182,6 +182,14 @@ let subst_typ' s t = subst_typ (mk_subst s) t
 let subst_exp' s t = subst_exp (mk_subst s) t
 let subst_comp' s t = subst_comp (mk_subst s) t
 
+let subst_of_list (formals:list<either<btvar,bvvar>>) (actuals:list<either<typ,exp>>) : subst = 
+    if (List.length formals = List.length actuals)
+    then List.map2 (fun ax tv -> match ax, tv with 
+        | Inl a, Inl t -> Inl(a.v, t)
+        | Inr x, Inr v -> Inr(x.v, v)
+        | _ -> failwith "Ill-formed substitution") formals actuals |> mk_subst
+    else failwith "Ill-formed substitution"
+
 let restrict_subst axs s = 
   s.subst |> List.filter (fun b ->
     let r = match b with 
@@ -308,8 +316,21 @@ and compress_kind k =
   match k.n with 
   | Kind_delayed (k',s, m) ->
     let k' = fst <| Visit.reduce_kind (visit_knd s) (map_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp subst_ctrl [] k' in
+    let k' = compress_kind k' in
     m := Some k'; 
     k'
+  | Kind_uvar(uv, actuals) -> 
+    begin match Unionfind.find uv with 
+        | Fixed k -> 
+            (match k.n with
+                | Kind_lam(formals, k') -> 
+                  compress_kind (subst_kind (subst_of_list formals actuals) k')
+                | _ -> 
+                    if List.length actuals = 0
+                    then k
+                    else failwith "Wrong arity for kind unifier")
+        | _ -> k
+    end
   | _ -> k
 and compress_typ t = 
   let t = Visit.compress_typ t in
@@ -717,21 +738,16 @@ and vs_prod_tt (uvonly:bool) (x:option<either<btvdef, bvvdef>>) (t1:typ) (t2:typ
 and vs_kind' (k:knd) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
     let k = compress_kind k in 
     match k.n with 
+        | Kind_lam(_, k) -> failwith (Util.format1 "%s: Impossible ... found a Kind_lam bare" (Range.string_of_range k.pos))
         | Kind_delayed _ -> failwith "Impossible"
         | Kind_unknown
         | Kind_type
         | Kind_effect -> cont (no_fvs, no_uvs)
 
-        | Kind_uvar (uv,vars) -> 
-          let uvs = {no_uvs with uvars_k=single_uv uv} in
-          let mk_freevars vars =
-            List.fold_left (fun fvs -> function 
-                | Inl a -> {fvs with ftvs=Util.set_add a fvs.ftvs}
-                | Inr x -> {fvs with fxvs=Util.set_add x fvs.fxvs}) no_fvs vars in
-          if uvonly 
-          then cont (no_fvs, uvs)
-          else cont (mk_freevars vars, uvs)
-        
+        | Kind_uvar (uv,args) -> 
+          vs_either_l args uvonly (fun (fvs, uvs) -> 
+            cont (fvs, {uvs with uvars_k=Util.set_add uv uvs.uvars_k}))
+
         | Kind_abbrev(_, k) -> 
           vs_kind k uvonly cont
 
@@ -923,6 +939,7 @@ let mk_curried_lam vars e =
 let rec close_for_kind t k = 
     let k = compress_kind k in 
     match k.n with 
+    | Kind_lam _ -> failwith "Impossible"
     | Kind_unknown
     | Kind_type
     | Kind_effect

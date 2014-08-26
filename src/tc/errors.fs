@@ -118,8 +118,8 @@ let computed_computation_type_does_not_match_annotation e c c' =
     "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\"" 
       (Print.typ_to_string r1) f1 (Print.typ_to_string r2) f2
 
-let unexpected_non_trivial_precondition_on_term = 
-  "Term has an unexpected non-trivial pre-condition"
+let unexpected_non_trivial_precondition_on_term f = 
+  Util.format1 "Term has an unexpected non-trivial pre-condition: %s" (Print.formula_to_string f)
 
 let type_has_a_non_trivial_precondition t = 
   format1 "Type \"%s\" has an unexpected non-trivial pre-condition" (Print.typ_to_string t)

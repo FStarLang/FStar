@@ -75,7 +75,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard =
     
 let no_guard env (te, kt, f) = match f with
   | Trivial -> te, kt
-  | NonTrivial f -> raise (Error(Tc.Errors.unexpected_non_trivial_precondition_on_term, Env.get_range env)) 
+  | NonTrivial f -> raise (Error(Tc.Errors.unexpected_non_trivial_precondition_on_term f, Env.get_range env)) 
 
 let binding_of_lb x t = match x with 
   | Inl bvd -> Env.Binding_var(bvd, t)
@@ -85,12 +85,17 @@ let rec tc_kind env k : knd * guard =
   let k = Util.compress_kind k in 
   let w f = f k.pos in
   match k.n with
+  | Kind_lam _ 
   | Kind_delayed _ -> failwith "impossible"
 
   | Kind_type
-  | Kind_effect 
-  | Kind_uvar _ -> k, Trivial 
-  
+  | Kind_effect -> k, Trivial
+  | Kind_uvar (u, args) -> 
+    let args = args |> List.map (function 
+        | Inl t -> Inl(tc_typ_trivial env t |> fst)
+        | Inr e -> Inr(let e, _, _ = tc_total_exp env e in e)) in
+    w <| mk_Kind_uvar(u, args), Trivial //TODO: collect up formulae?
+
   | Kind_abbrev(kabr, k) -> 
     let k, f = tc_kind env k in 
     let kabr = (fst kabr, snd kabr |> List.map (function 
@@ -739,7 +744,7 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
         (match f.n with 
           | Exp_fvar(f, _) -> [discriminate f]
           | _ -> failwith "Impossible")
-      | e -> failwith "Impossible") in
+      | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range e.pos) (Print.exp_to_string e))) in
     List.fold_left (fun fopt f -> match fopt with 
       | None -> Some f
       | Some g -> Some (Util.mk_disj f g)) None discs in

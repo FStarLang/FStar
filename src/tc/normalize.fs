@@ -87,6 +87,7 @@ let rec eta_expand tcenv t =
         | Some a -> a in
       let body = mk_Typ_app(t, Util.bvd_to_typ a k0, imp) k' t.pos in
       mk_Typ_tlam(a, k0, eta_expand body) t.tk t.pos 
+    | Kind_lam _
     | Kind_delayed _ -> failwith "Impossible"
     | Kind_unknown -> failwith (Util.format2 "%s: Impossible: Kind_unknown: %s" (Tc.Env.get_range tcenv |> Range.string_of_range) (Print.typ_to_string t)) in
     eta_expand t
@@ -209,7 +210,10 @@ let rec sn_aux tcenv (cfg:config<typ>) : config<typ> =
             code=t;
             environment=T(a,tclos,Util.mk_ref None)::config.environment})
             
-        | _ -> failwith "Impossible: Ill-typed redex"
+        | Some (Inr (v, _, _), _), _ -> failwith (Util.format3 "%s: Impossible: Ill-typed redex\n%s applied to %s" 
+                            (Range.string_of_range config.code.pos)
+                            (Print.typ_to_string config.code)
+                            (Print.exp_to_string v))
       end
   
     | Typ_ascribed(t, _) -> 
@@ -290,16 +294,20 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
     
 and snl_either tcenv config args = 
   args |> List.map (function 
-    | Inl t -> let c = sn tcenv (with_code config t) in Inl c.code
+    | Inl t -> let c = sn_aux tcenv (with_code config t) in Inl c.code
     | Inr e -> let c = wne tcenv (with_code config e) in Inr c.code)
 
 and snk tcenv (cfg:config<knd>) : config<knd> =
   let w f = f cfg.code.pos in
   match (Util.compress_kind cfg.code).n with
-    | Kind_delayed _ -> failwith "Impossible"
-    | Kind_uvar _ 
+    | Kind_delayed _ 
+    | Kind_lam _ -> failwith "Impossible"
     | Kind_type
     | Kind_effect -> cfg
+    | Kind_uvar(uv, args) -> 
+      let cfg = {cfg with steps=no_eta cfg.steps} in
+      let args = snl_either tcenv (with_code cfg ()) args in
+      {cfg with code=w <| mk_Kind_uvar(uv, args)}  
     | Kind_abbrev(kabr, k) -> 
       let c1 = snk tcenv ({cfg with code=k}) in
       let args = snl_either tcenv (with_code cfg ()) (snd kabr) in

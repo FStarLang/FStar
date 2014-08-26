@@ -21,7 +21,6 @@ open Microsoft.FStar
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
-open Microsoft.FStar.Profiling
 
 let log s = ()(* if !Options.fvdie then printfn "%d;" s *)
 
@@ -83,12 +82,6 @@ let compress_exp e = compress_exp_aux true e
 let compress_exp_uvars e = compress_exp_aux false e
  
 let rec compress_kind knd = match knd.n with 
-  | Kind_uvar (uv, _) -> 
-    begin
-      match Unionfind.find uv with 
-        | Fixed k -> compress_kind k
-        | _ -> knd
-    end
   | Kind_delayed(_, _, m) -> 
     (match !m with 
       | None -> knd
@@ -142,16 +135,17 @@ let rec reduce_kind
     let kl, tl, el, env =   
       match k.n with 
         | Kind_delayed _ -> failwith "Impossible"
-        | Kind_uvar _
+        | Kind_lam _ 
         | Kind_type 
         | Kind_effect
         | Kind_unknown -> [], [], [], env
+        | Kind_uvar(_, args) -> 
+          let env, ts, es = map_either_l env binders args in 
+          [], ts, es, env
         | Kind_abbrev(kabr, k) -> 
           let k, env = map_kind env binders k in
-          let env, ts, es = List.fold_left (fun (env, ts, es) te -> match te with 
-            | Inl t -> let t, env = map_typ env binders t in (env, t::ts, es)
-            | Inr e -> let e, env = map_exp env binders e in (env, ts, e::es)) (env, [], []) (snd kabr) in
-          [k], List.rev ts, List.rev es, env
+          let env, ts, es = map_either_l env binders (snd kabr) in
+          [k], ts, es, env
         | Kind_tcon (aopt, k1, k2, _) -> 
           let k1, env = map_kind env binders k1 in
           let k2, env = map_kind env (push_tbinder binders aopt) k2 in
@@ -164,6 +158,11 @@ let rec reduce_kind
   and map_kind env binders k = map_kind' visit_kind map_typ map_exp env binders k
   and map_typ env binders t = reduce_typ map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders t 
   and map_exp env binders e = reduce_exp map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders e
+  and map_either_l env binders tes =
+      let env, ts, es = List.fold_left (fun (env, ts, es) te -> match te with 
+            | Inl t -> let t, env = map_typ env binders t in (env, t::ts, es)
+            | Inr e -> let e, env = map_exp env binders e in (env, ts, e::es)) (env, [], []) tes in
+      env, List.rev ts, List.rev es
   in
   map_kind env binders k
       
@@ -384,17 +383,20 @@ and reduce_exp
   map_exp env binders e
     
 let combine_kind k (kl, tl, el) env = 
-  let k' = match k.n, kl, tl with 
-    | Kind_uvar _, [], []
-    | Kind_type, [], [] 
-    | Kind_effect, [], []
-    | Kind_unknown, [], [] -> (fun p -> Util.return_all k)
-    | Kind_abbrev(kabr, _), [k], _ -> 
-      let rec reconstruct x = match x with
+  let rec reconstruct x = match x with
         | ([], [], []) -> []
         | (Inl _::args, t::tl, el) -> Inl t::reconstruct (args, tl, el)
         | (Inr _::args, tl, e::el) -> Inr e::reconstruct (args, tl, el)
         | _ -> failwith "impossible" in
+  let k' = match k.n, kl, tl with 
+    | Kind_lam _, [], []
+    | Kind_type, [], [] 
+    | Kind_effect, [], []
+    | Kind_unknown, [], [] -> (fun p -> Util.return_all k)
+    | Kind_uvar(u, args), [], _ -> 
+      let args = reconstruct (args, tl, el) in
+      mk_Kind_uvar(u, args)
+    | Kind_abbrev(kabr, _), [k], _ -> 
       let args = reconstruct (snd kabr, tl, el) in 
       mk_Kind_abbrev((fst kabr, args), k)
     | Kind_tcon (aopt, k1, k2, imp), [k1';k2'], [] -> mk_Kind_tcon(aopt, k1', k2', imp)

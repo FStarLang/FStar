@@ -86,7 +86,7 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard =
     | Some f -> 
         mk_Exp_ascribed(e, t2) e.pos, apply_guard f e
 
-let new_kvar env   = Rel.new_kvar (Env.get_range env) (Env.freevars_l env)
+let new_kvar env   = Rel.new_kvar (Env.get_range env) (Env.freevars_l env)   |> fst
 let new_tvar env t = Rel.new_tvar (Env.get_range env) (Env.freevars_l env) t |> fst
 let new_evar env t = Rel.new_evar (Env.get_range env) (Env.freevars_l env) t |> fst
 let new_cvar env t = Rel.new_cvar (Env.get_range env) (Env.freevars_l env) t |> fst
@@ -112,7 +112,7 @@ let new_function_typ env (xopt:option<bvvdef>) (default_effect:option<lident>) =
 let new_poly_typ env (a:btvdef) =
     let r = Env.get_range env in
     let vars = Env.freevars_l env in
-    let arg = Rel.new_kvar r vars in
+    let arg, _ = Rel.new_kvar r vars in
     let vars' = Inl(bvd_to_bvar_s a arg)::vars in
     let res, _ = Rel.new_tvar r vars' ktype in
     let eff, _ = Rel.new_cvar r vars' res in
