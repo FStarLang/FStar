@@ -565,7 +565,7 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp =
       e, c
 
 let check_comp env (e:exp) (c:comp) (c':comp) : exp * comp * guard = 
-  printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_typ_to_string c) (Print.comp_typ_to_string c');
+  //printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_typ_to_string c) (Print.comp_typ_to_string c');
   match Tc.Rel.sub_comp env c c' with 
     | None -> raise (Error(Tc.Errors.computed_computation_type_does_not_match_annotation e c c', Tc.Env.get_range env))
     | Some g -> e, c', g

@@ -92,9 +92,9 @@ let rec compress_comp c : comp = match c.n with
   | Comp _ 
   | Total _ 
   | Rigid _ -> c
-  | Flex ({n=Typ_meta(Meta_uvar_t_app(_, (u,_)))}, res_t) -> 
+  | Flex ({n=Typ_meta(Meta_uvar_t_app(teff, (u,_)))}, res_t) -> 
     begin match Unionfind.find u with 
-      | Fixed t -> mk_Rigid (mk_Typ_app(t, res_t, false) mk_Kind_effect c.pos) 
+      | Fixed _ -> mk_Rigid (mk_Typ_app(teff, res_t, false) mk_Kind_effect c.pos) 
       | _ -> c
     end
   | Flex _ -> failwith "Impossible: Flex computation non-pattern"

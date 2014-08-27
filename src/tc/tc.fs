@@ -125,7 +125,7 @@ and tc_comp env c =
   match c.n with 
     | Flex(u, t) -> 
       let t, g = tc_typ_check env t ktype in
-      let u, _ = tc_typ_check env u (Const.kunary ktype mk_Kind_effect) in
+      let u, _ = tc_typ_check env u (mk_Kind_tcon(None, ktype, keffect, false) t.pos) in
       mk_Flex(u, t), g
 
     | Total t -> 
@@ -217,9 +217,11 @@ and tc_typ env (t:typ) : typ * knd * guard =
     
   | Typ_dep(t1, e1, imp) -> 
     let t1, k1, f1 = tc_typ env t1 in
+    if debug env then printfn "Kind is %s" (Print.kind_to_string k1);
     let xopt, targ, kres, t1' = match Tc.Util.destruct_dcon_kind env k1 t1 imp with 
       | {n=Kind_dcon(xopt, targ, kres, _)}, t1 -> xopt, targ, kres, t1
       | _ -> failwith "impossible" in
+    if debug env then printfn "Setting expected type to %s : %s" (Print.typ_to_string targ) (Print.kind_to_string targ.tk);
     let e1, _, f2 = tc_total_exp (Env.set_expected_typ env targ) e1 in
     let k2 = Util.subst_kind' (maybe_make_subst <| Inr(xopt, e1)) kres in
     w k2 <| mk_Typ_dep(t1, e1, imp), k2, Rel.conj_guard f1 f2
@@ -245,12 +247,15 @@ and tc_typ env (t:typ) : typ * knd * guard =
 
   | Typ_meta(Meta_uvar_t_app(t, (uv,k))) -> 
     let t, kk, f = tc_typ env t in
+    let k, _ = tc_kind env k in 
     w kk <| mk_Typ_meta'(Meta_uvar_t_app(t, (uv,k))), kk, f
 
   | Typ_uvar(u, k1) -> 
     let s = compress_typ t in 
     (match s.n with 
-        | Typ_uvar _ -> s, k1, Trivial
+        | Typ_uvar _ -> 
+          let k1, g = tc_kind env k1 in
+          w k1 <| mk_Typ_uvar'(u, k1), k1, g
         | _ -> tc_typ env s)
         
   | Typ_meta (Meta_named(t, l)) -> 
@@ -593,6 +598,7 @@ and tc_exp env e : exp * comp =
   | Exp_let((false, [(x, t, e1)]), e2) -> 
     let env = instantiate_both env in
     let t = Tc.Util.extract_lb_annotation false env t e1 in
+    printfn "Type-checking let-binding annot: %s" (Print.typ_to_string t);
     let t, f = tc_typ_check env t ktype in
     let env1, topt = Env.clear_expected_typ env in 
     let env1 = Tc.Env.set_expected_typ env1 t in
@@ -696,12 +702,12 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
     let bindings = fst <| pat_bindings [] p in
     let pat_env = List.fold_left Env.push_local_binding env bindings in
     let exps = Tc.Util.pat_as_exps env p in
-    let pat_env, _ = Tc.Env.clear_expected_typ pat_env in 
-    let env = {pat_env with Env.is_pattern=true} in //{(Tc.Env.set_expected_typ pat_env pat_t) with Env.is_pattern=true} in
+    let env, _ = Tc.Env.clear_expected_typ pat_env in 
+    let env = {env with Env.is_pattern=true} in //{(Tc.Env.set_expected_typ pat_env pat_t) with Env.is_pattern=true} in
     let res = bindings, pat_env, List.map (fun e -> 
         let e, t = no_guard env <| tc_total_exp env e in
-        printfn "Trying pattern subtype %s <: %s" (Print.typ_to_string pat_t) (Print.typ_to_string t);
-        Tc.Rel.trivial_subtype pat_env None pat_t t; //the type of the pattern must be at least as general as the type of the scrutinee
+        //printfn "Trying pattern subtype %s <: %s" (Print.typ_to_string pat_t) (Print.typ_to_string t);
+        Tc.Rel.trivial_subtype env None pat_t t; //the type of the pattern must be at least as general as the type of the scrutinee
         e) exps in
     res in
 

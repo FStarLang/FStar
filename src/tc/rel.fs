@@ -159,7 +159,7 @@ let new_evar r vars t =
   mk_Exp_meta'(Meta_uvar_e_app(app, uvt)) t r, uvt
  
 let new_cvar r vars t = 
-    let u, uvt = new_tvar r vars (mk_Kind_dcon(None, t, mk_Kind_effect, false) t.pos) in
+    let u, uvt = new_tvar r vars (mk_Kind_tcon(None, ktype, mk_Kind_effect, false) t.pos) in
     mk_Flex (u,t), uvt
 
 //////////////////////////////////////////////////////////////////////////
@@ -179,8 +179,8 @@ type prob =
   | EProb of rel * exp * exp 
   | CProb of rel * comp * comp 
 let prob_to_string = function 
-  | KProb(rel, k1, k2) -> Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.kind_to_string k1) (rel_to_string rel) (Print.kind_to_string k2)
-  | TProb(rel, k1, k2) -> Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.typ_to_string k1) (rel_to_string rel) (Print.typ_to_string k2)
+  | KProb(rel, k1, k2) -> Util.format3 "\t%s\n\t\t%s\n\t%s" (Print.kind_to_string k1) (rel_to_string rel) (Print.kind_to_string k2)
+  | TProb(rel, k1, k2) -> Util.format5 "\t%s (%s) \n\t\t%s\n\t%s (%s)" (Print.typ_to_string k1) (Print.tag_of_typ k1) (rel_to_string rel) (Print.typ_to_string k2) (Print.tag_of_typ k2)
   | EProb(rel, k1, k2) -> Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.exp_to_string k1) (rel_to_string rel) (Print.exp_to_string k2)
   | CProb(rel, k1, k2) -> Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.comp_typ_to_string k1) (rel_to_string rel) (Print.comp_typ_to_string k2)
 
@@ -267,7 +267,7 @@ let commit uvi =
     | _, Kind_abbrev(_, k2) -> pre_kind_compat k1 k2
     | Kind_tcon(_, k1, k2, _), Kind_tcon(_, k1', k2', _) -> pre_kind_compat k1 k1' && pre_kind_compat k2 k2'
     | Kind_dcon(_, _, k1, _), Kind_dcon(_, _, k1', _) -> pre_kind_compat k1 k1'
-    | _ -> Util.print_string (Util.format2 "Pre-kind-compat failed on %s and %s\n" (Print.kind_to_string k1) (Print.kind_to_string k2)); 
+    | _ -> Util.print_string (Util.format4 "(%s -- %s) Pre-kind-compat failed on %s and %s\n" (Range.string_of_range k1.pos) (Range.string_of_range k2.pos) (Print.kind_to_string k1) (Print.kind_to_string k2)); 
       false in
 
     uvi |> List.iter (function 
@@ -345,8 +345,8 @@ let rec comp_comp env s c =
         | None ->  c
         | Some t' -> 
           let t' = compress env s t' in 
-          let _, args = Util.flatten_typ_apps t in
-          as_comp <| (Tc.Normalize.norm_typ [Beta; Eta] env <| Util.mk_typ_app_explicit t' args)
+          let _, args = Util.flatten_typ_apps teff in
+          as_comp <| (Tc.Normalize.norm_typ [Beta; Eta] env <| Util.mk_typ_app_explicit t' (args@[Inl ret]))
       end
 
     | _ -> c
@@ -405,19 +405,21 @@ let vars_eq v1 v2 =
 
 let rec pat_vars seen = function 
     | [] -> Some (List.rev seen) 
-    | Inl {n=Typ_btvar a}::rest ->
-        if seen |> Util.for_some (function 
-            | Inl b -> bvd_eq a.v b.v
-            | _ -> false)
-        then None //not a pattern
-        else pat_vars (Inl a::seen) rest
-    | Inr {n=Exp_bvar x}::rest ->
-        if seen |> Util.for_some (function 
-            | Inr y -> bvd_eq x.v y.v
-            | _ -> false)
-        then None //not a pattern
-        else pat_vars (Inr x::seen) rest
-    | _ -> None //not a pattern
+    | hd::rest -> 
+        (match Util.unascribe_either hd with 
+            | Inl {n=Typ_btvar a} -> 
+                if seen |> Util.for_some (function 
+                    | Inl b -> bvd_eq a.v b.v
+                    | _ -> false)
+                then None //not a pattern
+                else pat_vars (Inl a::seen) rest
+            | Inr {n=Exp_bvar x} ->
+                if seen |> Util.for_some (function 
+                    | Inr y -> bvd_eq x.v y.v
+                    | _ -> false)
+                then None //not a pattern
+                else pat_vars (Inr x::seen) rest
+            | _ -> None) //not a pattern
  
 let is_pattern t = 
     let _, args = Util.flatten_typ_apps t in
@@ -707,7 +709,7 @@ and solve_k (top:bool) (env:Env.env) rel k1 k2 probs : solution =
      | _, Kind_delayed _ 
      | _, Kind_unknown -> failwith "Impossible"
 
-     | _ -> giveup "head mismatch" (KProb(rel, k1, k2)) probs
+     | _ -> giveup "head mismatch (k-1)" (KProb(rel, k1, k2)) probs
 
 and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution = 
     let t1 = compress env probs.subst t1 |> Util.unascribe_typ in
@@ -716,9 +718,11 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
 //    printfn "Tag t1 = %s, t2 = %s" (Print.tag_of_typ t1) (Print.tag_of_typ t2);
     let r = Env.get_range env in
     match t1.n, t2.n with
+      | Typ_ascribed(t, _), _
       | Typ_meta(Meta_pattern(t, _)), _ 
       | Typ_meta(Meta_named(t, _)), _ -> solve_t top env rel t t2 probs
 
+      | _, Typ_ascribed(t, _)
       | _, Typ_meta(Meta_pattern(t, _))
       | _, Typ_meta(Meta_named(t, _)) -> solve_t top env rel t1 t probs
 
@@ -740,7 +744,7 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
                     let u_zs, uvt = new_tvar r zs t2.tk in
                     let sub1 = mk_curried_tlam xs u_zs in
                     let sub2 = mk_curried_tlam ys u_zs in
-                    let probs = extend_subst (UT((u1,k1), sub1)) probs |> extend_subst (UC((u2,k2), sub2)) in
+                    let probs = extend_subst (UT((u1,k1), sub1)) probs |> extend_subst (UT((u2,k2), sub2)) in
                     solve false env probs
         end
 
@@ -830,43 +834,49 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
       | _, Typ_const _ 
       | _, Typ_app _
       | _, Typ_dep _ -> 
-         let t1 = Normalize.norm_typ [Beta; Eta] env t1 in
-         let t2 = Normalize.norm_typ [Beta; Eta] env t2 in
-
          let head, args = Util.flatten_typ_apps t1 in
          let head', args' = Util.flatten_typ_apps t2 in
+         begin match head.n, head'.n with  
+             | Typ_lam _, _
+             | Typ_tlam _, _
+             | _, Typ_lam _ 
+             | _, Typ_tlam _ ->  //we have a beta-redex ... eliminate it
+                 let t1 = Normalize.norm_typ [Beta; Eta] env t1 in
+                 let t2 = Normalize.norm_typ [Beta; Eta] env t2 in
+                 solve_t top env rel t1 t2 probs
+             | _ -> 
 //         printfn "head= %s, args=%s" (Print.typ_to_string head) (Print.either_l_to_string "$" args);
 //         printfn "head'= %s, args'=%s" (Print.typ_to_string head') (Print.either_l_to_string "$" args');
-         let m, o = head_matches_delta env head head' in
-         begin match m, o  with 
-            | (MisMatch, _) -> 
-                giveup "head mismatch" (TProb(rel, t1, t2)) probs        //heads definitely do not match
+                 let m, o = head_matches_delta env head head' in
+                 match m, o  with 
+                    | (MisMatch, _) -> 
+                        giveup "head mismatch (t-1)" (TProb(rel, t1, t2)) probs        //heads definitely do not match
 
-            | (HeadMatch, Some (head, head'))
-            | (FullMatch, Some (head, head')) -> //took a delta to maybe match
-//              printfn "Head match with delta %s, %s" (Print.typ_to_string head) (Print.typ_to_string head');
-              probs |> solve_t top env rel (Tc.Normalize.norm_typ [Beta; Eta] env <| Util.mk_typ_app_explicit head args) 
-                                           (Tc.Normalize.norm_typ [Beta; Eta] env <| Util.mk_typ_app_explicit head' args') 
-            | (HeadMatch, None)
-            | (FullMatch, None) -> //head matches head'
-              if List.length args = List.length args'
-              then let subprobs = List.map2 (fun a a' -> match a, a' with 
-                    | Inl t, Inl t' -> TProb(EQ, t, t')
-                    | Inr v, Inr v' -> EProb(EQ, v, v')
-                    | _ -> failwith "Impossible" (*terms are well-kinded*)) args args' in
-                   let subprobs = match m with 
-                        | FullMatch -> subprobs
-                        | _ -> TProb(EQ, head, head')::subprobs in
-                   solve false env (attempt subprobs probs)
-              else giveup (Util.format4 "unequal number of arguments: %s[%s] and %s[%s]" 
-                          (Print.typ_to_string head)
-                          (Print.either_l_to_string ", " args)
-                          (Print.typ_to_string head')
-                          (Print.either_l_to_string ", " args')) 
-                          (TProb(rel, t1, t2)) probs
-         end
+                    | (HeadMatch, Some (head, head'))
+                    | (FullMatch, Some (head, head')) -> //took a delta to maybe match
+        //              printfn "Head match with delta %s, %s" (Print.typ_to_string head) (Print.typ_to_string head');
+                      probs |> solve_t top env rel (Tc.Normalize.norm_typ [Beta; Eta] env <| Util.mk_typ_app_explicit head args) 
+                                                   (Tc.Normalize.norm_typ [Beta; Eta] env <| Util.mk_typ_app_explicit head' args') 
+                    | (HeadMatch, None)
+                    | (FullMatch, None) -> //head matches head'
+                      if List.length args = List.length args'
+                      then let subprobs = List.map2 (fun a a' -> match a, a' with 
+                            | Inl t, Inl t' -> TProb(EQ, t, t')
+                            | Inr v, Inr v' -> EProb(EQ, v, v')
+                            | _ -> failwith "Impossible" (*terms are well-kinded*)) args args' in
+                           let subprobs = match m with 
+                                | FullMatch -> subprobs
+                                | _ -> TProb(EQ, head, head')::subprobs in
+                           solve false env (attempt subprobs probs)
+                      else giveup (Util.format4 "unequal number of arguments: %s[%s] and %s[%s]" 
+                                  (Print.typ_to_string head)
+                                  (Print.either_l_to_string ", " args)
+                                  (Print.typ_to_string head')
+                                  (Print.either_l_to_string ", " args')) 
+                                  (TProb(rel, t1, t2)) probs
+            end
 
-      | _ -> giveup "head mismatch" (TProb(rel, t1, t2)) probs
+      | _ -> giveup (Util.format2 "head mismatch (t-2)" (Print.tag_of_typ t1) (Print.tag_of_typ t2)) (TProb(rel, t1, t2)) probs
 
 and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
     if Util.physical_equality c1 c2 then solve top env probs
@@ -884,18 +894,18 @@ and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
                  let maybe_pat_vars, eff_args = is_pattern teff in
                  begin match maybe_pat_vars with 
                     | None -> //not a pattern; refuse to solve
-                      giveup "flex-rigid: not a pattern" (CProb(rel, c1, c2)) probs
+                      giveup (Util.format1 "flex-rigid (1): not a pattern (%s)" (Print.typ_to_string teff)) (CProb(rel, c1, c2)) probs
                     | Some vars -> 
-                      let sol = mk_curried_tlam vars (mk_Typ_meta(Meta_comp c2)) in
+                      let sol = mk_curried_tlam (vars@[Inl (Util.bvd_to_bvar_s (Util.new_bvd None) ktype)]) (mk_Typ_meta(Meta_comp c2)) in
                       let probs = attempt [TProb(rel, t1, t2)] probs in
-                      solve top env (extend_subst (UT((uv,k), sol)) probs)  
+                      solve top env (extend_subst (UC((uv,k), sol)) probs)  
                  end
 
                | Flex ({n=Typ_meta(Meta_uvar_t_app(teff, (uv,k)))}, t1), Comp ct2 -> //flex-rigid 2
-                 let maybe_pat_vars, _ = is_pattern teff in
+                 let maybe_pat_vars, args = is_pattern teff in
                  begin match maybe_pat_vars with 
                     | None -> //not a pattern; refuse to solve this case
-                      giveup "flex-rigid: not a pattern" (CProb(rel, c1, c2)) probs
+                      giveup (Printf.sprintf "flex-rigid (2): not a pattern (%s)" (args |> List.map (function Inl t -> Print.tag_of_typ t | Inr e -> Print.tag_of_exp e) |> String.concat ", ")) (CProb(rel, c1, c2)) probs
                     | Some vars ->
                       let fvs1 = Util.freevars_typ teff in
                       let fvs2 = Util.freevars_comp c2 in
@@ -904,9 +914,9 @@ and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
                          && Util.set_is_subset_of fvs2.fxvs fvs1.fxvs
                          && not (Util.set_mem  (uv,k) uv2.uvars_c)
                       then //good, we have an eligible pattern ... solve in one step, producing one sub problem
-                            let sol = mk_curried_tlam vars (mk_Typ_meta(Meta_comp c2)) in
+                            let sol = mk_curried_tlam (vars@[Inl (Util.bvd_to_bvar_s (Util.new_bvd None) ktype)]) (mk_Typ_meta(Meta_comp c2)) in
                             let probs = attempt [TProb(rel, t1, Util.comp_result c2)] probs in
-                            solve top env (extend_subst (UT((uv,k), sol)) probs)
+                            solve top env (extend_subst (UC((uv,k), sol)) probs)
                       else giveup "flex-rigid: failed free-variable or occurs check" (CProb(rel, c1, c2)) probs 
                  end
 
@@ -1086,11 +1096,12 @@ let keq env t k1 k2 : guard =
         | Some t -> raise (Error(Tc.Errors.expected_typ_of_kind k2 t k1, r)))
     
 let teq env t1 t2 : guard = 
- let prob = TProb(EQ, norm_typ [Beta; Eta] env t1, norm_typ [Beta; Eta] env t2) in
+ let prob = TProb(EQ, t1, t2) in //norm_typ [Beta; Eta] env t1, norm_typ [Beta; Eta] env t2) in
  Util.must <| solve_and_commit env (Some t1) prob (fun _ -> 
     raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env)))
 
 let try_subtype env t1 t2 = 
+ if debug env then printfn "try_subtype of %s : %s and %s : %s\n" (Print.typ_to_string t1) (Print.kind_to_string t1.tk) (Print.typ_to_string t2) (Print.kind_to_string t2.tk);
  solve_and_commit env (Some t1) (TProb(SUB, norm_typ [Beta; Eta] env t1, norm_typ [Beta; Eta] env t2))
  (fun _ -> None)
 

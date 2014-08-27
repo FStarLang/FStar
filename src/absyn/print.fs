@@ -71,7 +71,22 @@ let rec tag_of_typ t = match t.n with
   | Typ_uvar _ -> "Typ_uvar"   
   | Typ_delayed _ -> "Typ_delayed"
   | Typ_unknown -> "Typ_unknown"
-      
+
+and tag_of_exp e = match e.n with 
+  | Exp_bvar _ -> "Exp_bvar"
+  | Exp_fvar _ -> "Exp_fvar"
+  | Exp_constant _ -> "Exp_constant"
+  | Exp_abs _ -> "Exp_constant"
+  | Exp_tabs _ -> "Exp_tabs"
+  | Exp_app _ -> "Exp_app"
+  | Exp_tapp _ -> "Exp_tapp"
+  | Exp_match _ -> "Exp_match"
+  | Exp_ascribed _ -> "Exp_ascribed"
+  | Exp_let _ -> "Exp_let"
+  | Exp_uvar _ -> "Exp_uvar"
+  | Exp_delayed _ -> "Exp_delayed"
+  | Exp_meta _ -> "Exp_meta"
+    
 and typ_to_string x =
   let x = if !Options.print_real_names then Util.compress_typ x else whnf x in
   match x.n with 
@@ -79,7 +94,7 @@ and typ_to_string x =
   | Typ_meta(Meta_named(_, l)) -> sli l
   | Typ_meta(Meta_comp c) ->   comp_typ_to_string c
   | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)
-  | Typ_btvar btv -> strBvd btv.v //Util.format2 "%s:%s" (strBvd btv.v) (kind_to_string x.tk)
+  | Typ_btvar btv -> Util.format2 "%s:%s" (strBvd btv.v) (kind_to_string x.tk)
   | Typ_const v -> Util.format1 "%s" (sli v.v)
   | Typ_fun(Some x, t1, t2, imp) -> Util.format "%s%s(%s) -> %s"  [strBvd x; (if imp then "@" else ":"); (t1 |> typ_to_string); (t2|> comp_typ_to_string)]
   | Typ_fun(None, t1, t2, _) -> Util.format "(%s) -> %s"  [(t1 |> typ_to_string); (t2|> comp_typ_to_string)]

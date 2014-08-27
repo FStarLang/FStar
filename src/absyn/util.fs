@@ -454,6 +454,10 @@ let rec unascribe_typ t = match t.n with
   | Typ_ascribed (t, _) -> unascribe_typ t
   | _ -> t
 
+let unascribe_either = function 
+    | Inl t -> Inl <| unascribe_typ (compress_typ t)
+    | Inr e -> Inr <| unascribe (compress_exp e)
+
 let rec unrefine t = match t.n with 
   | Typ_refine(x, t, _) -> unrefine t
   | _ -> t
