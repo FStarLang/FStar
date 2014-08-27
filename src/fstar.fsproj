@@ -25,8 +25,8 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\examples\unit-tests\</StartWorkingDirectory>
-    <StartArguments>--fstar_home ../../ --debug Unit1 --print_effect_args --verify unit1.fst</StartArguments>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\lib</StartWorkingDirectory>
+    <StartArguments>--fstar_home .. list.fst</StartArguments>
     <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

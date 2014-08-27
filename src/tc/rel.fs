@@ -716,6 +716,7 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
     let t2 = compress env probs.subst t2 |> Util.unascribe_typ in 
 //    printfn "Attempting %s" (prob_to_string (TProb(rel, t1, t2)));
 //    printfn "Tag t1 = %s, t2 = %s" (Print.tag_of_typ t1) (Print.tag_of_typ t2);
+    if Util.physical_equality t1 t2 then solve top env probs else
     let r = Env.get_range env in
     match t1.n, t2.n with
       | Typ_ascribed(t, _), _
@@ -809,6 +810,7 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
                 && not (Util.set_mem (uv,k) uvs.uvars_t)
               then //fast solution for flex-pattern/rigid case
                    let sol = mk_curried_tlam vars t2 in
+                   let _ = if debug env then printfn "Fast solution for %s \t -> \t %s" (Print.typ_to_string t1) (Print.typ_to_string sol) in
                    solve top env (extend_subst (UT((uv,k), sol)) probs)
               else imitate_or_project (subterms args_lhs) -1
             | None -> imitate_or_project (subterms args_lhs) -1
@@ -841,8 +843,10 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
              | Typ_tlam _, _
              | _, Typ_lam _ 
              | _, Typ_tlam _ ->  //we have a beta-redex ... eliminate it
+                 if debug env then printfn "About to normalize %s : %s\nand %s : %s" (Print.typ_to_string t1) (Print.kind_to_string t1.tk) (Print.typ_to_string t2) (Print.kind_to_string t2.tk);
                  let t1 = Normalize.norm_typ [Beta; Eta] env t1 in
                  let t2 = Normalize.norm_typ [Beta; Eta] env t2 in
+                 if debug env then printfn "done normalizing";
                  solve_t top env rel t1 t2 probs
              | _ -> 
 //         printfn "head= %s, args=%s" (Print.typ_to_string head) (Print.either_l_to_string "$" args);
@@ -917,7 +921,12 @@ and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
                             let sol = mk_curried_tlam (vars@[Inl (Util.bvd_to_bvar_s (Util.new_bvd None) ktype)]) (mk_Typ_meta(Meta_comp c2)) in
                             let probs = attempt [TProb(rel, t1, Util.comp_result c2)] probs in
                             solve top env (extend_subst (UC((uv,k), sol)) probs)
-                      else giveup "flex-rigid: failed free-variable or occurs check" (CProb(rel, c1, c2)) probs 
+                      else giveup (Util.format4 "flex-rigid: failed free-variable or occurs check: Uvars %s, {%s}\n fvs2=%s\n fvs1=%s" 
+                                        (Unionfind.uvar_id uv |> string_of_int)
+                                        (uv2.uvars_c |> Util.set_elements |> List.map (fun (u, _) -> Unionfind.uvar_id u |> Util.string_of_int) |> String.concat ", ")
+                                        (Print.freevars_to_string fvs2)
+                                        (Print.freevars_to_string fvs1)
+                                       )(CProb(rel, c1, c2)) probs 
                  end
 
                | Total t1, Total t2 -> //rigid-rigid 1
@@ -1102,8 +1111,9 @@ let teq env t1 t2 : guard =
 
 let try_subtype env t1 t2 = 
  if debug env then printfn "try_subtype of %s : %s and %s : %s\n" (Print.typ_to_string t1) (Print.kind_to_string t1.tk) (Print.typ_to_string t2) (Print.kind_to_string t2.tk);
- solve_and_commit env (Some t1) (TProb(SUB, norm_typ [Beta; Eta] env t1, norm_typ [Beta; Eta] env t2))
- (fun _ -> None)
+ let res = solve_and_commit env (Some t1) (TProb(SUB, norm_typ [Beta; Eta] env t1, norm_typ [Beta; Eta] env t2))
+ (fun _ -> None) in
+ if debug env then printfn "...done"; res
 
 let subtype env t1 t2 : guard = 
   match try_subtype env t1 t2 with

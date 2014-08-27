@@ -16,8 +16,8 @@ kind Pre = mode => Type
 kind Post ('a:Type) = mode => 'a => mode => Type
 effect Wys ('a:Type) ('Pre:Pre) ('Post:Post 'a) =
       STATE 'a 
-         (fun 'p h0 =>  'Pre (SelHeap h0 moderef) /\ (forall xxx hhh1. 'Post (SelHeap h0 moderef) xxx (SelHeap hhh1 moderef) ==> 'p xxx hhh1))
-         (fun 'p h0 => (forall x h1. ('Pre (SelHeap h0 moderef) /\ 'Post (SelHeap h0 moderef) x (SelHeap h1 moderef)) ==> 'p x h1))
+         (fun 'p h0 =>  'Pre (SelHeap h0 moderef) /\ (forall x h1. 'Post (SelHeap h0 moderef) x (SelHeap h1 moderef) ==> 'p x h1))
+         (fun 'p h0 => (forall x h1. ('Pre (SelHeap h0 moderef) /\ 'Post (SelHeap h0 moderef) x (SelHeap h1 moderef)) ==> 'p x h1)) 
 
 type Requires ('pre:Pre) = 'pre
 type Ensures ('a:Type) ('post:Post 'a) = 'post
@@ -106,10 +106,10 @@ assume logic val A : prin
 assume logic val B : prin
 assume AB_distinct: A=!=B
 
-val is_A_richer_than_B : u:unit -> Wys bool
-                                     (Requires (fun m => m.p_or_s==Par /\ SetEqual m.prins EmptySet))//(Union prin (Singleton prin A) (Singleton prin B))))
-                                     (Ensures bool (fun m0 res m1 => res == false))
-let is_A_richer_than_B (u:unit) =
+val is_A_richer_than_B : unit -> Wys bool
+                                     (Requires (fun m => m.p_or_s==Par /\ SetEqual m.prins (Union prin (Singleton prin A) (Singleton prin B))))
+                                     (Ensures (fun m0 res m1 => res == false))
+let is_A_richer_than_B _ = 
   let par_A = {p_or_s=Par; prins=Singleton A} in
   let par_B = {p_or_s=Par; prins=Singleton B} in
   let sec_AB = {p_or_s=Sec; prins=Union (Singleton A) (Singleton B)} in

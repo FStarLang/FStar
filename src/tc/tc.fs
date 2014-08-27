@@ -30,6 +30,10 @@ let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_
 let rng env = Tc.Env.get_range env
 let instantiate_both env = {env with Env.instantiate_targs=true; Env.instantiate_vargs=true}
 
+let norm_t env t = Tc.Normalize.norm_typ [Normalize.Beta; Normalize.SNComp] env t
+let norm_k env k = Tc.Normalize.norm_kind [Normalize.Beta; Normalize.SNComp] env k
+let norm_c env c = Tc.Normalize.norm_comp [Normalize.Beta; Normalize.SNComp] env c
+
 let maybe_push_binding env = function
   | Inl(Some a, k) ->
     let b = Tc.Env.Binding_typ(a, k) in
@@ -71,7 +75,9 @@ let comp_check_expected_typ env e c : exp * comp =
 let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard = 
   match copt with 
     | None -> e, c, Trivial
-    | Some c' -> Tc.Util.check_comp env e c c' 
+    | Some c' -> //expected effects should already be normalized
+       let c = norm_c env c in
+       Tc.Util.check_comp env e c c' 
     
 let no_guard env (te, kt, f) = match f with
   | Trivial -> te, kt
@@ -91,6 +97,8 @@ let rec tc_kind env k : knd * guard =
   | Kind_type
   | Kind_effect -> k, Trivial
   | Kind_uvar (u, args) -> 
+    if debug env then printfn "(%s) - Checking kind %s" (Range.string_of_range k.pos) (Print.kind_to_string k);
+    let env, _ = Tc.Env.clear_expected_typ env in
     let args = args |> List.map (function 
         | Inl t -> Inl(tc_typ_trivial env t |> fst)
         | Inr e -> Inr(let e, _, _ = tc_total_exp env e in e)) in
@@ -170,12 +178,11 @@ and tc_comp_typ env c : comp_typ * guard =
 and tc_typ env (t:typ) : typ * knd * guard = 
   let env = Tc.Env.set_range env t.pos in
   let w k = syn t.pos k in
+  let t = Util.compress_typ t in
   match t.n with 
-  | Typ_delayed _ -> 
-    tc_typ env (compress_typ t) 
-  
   | Typ_btvar a -> 
     let k = Env.lookup_btvar env a in
+    let a = {a with sort=k} in
     w k <| mk_Typ_btvar a, k, Trivial
 
   | Typ_const i when (lid_equals i.v Const.allTyp_lid || lid_equals i.v Const.exTyp_lid) -> 
@@ -217,11 +224,11 @@ and tc_typ env (t:typ) : typ * knd * guard =
     
   | Typ_dep(t1, e1, imp) -> 
     let t1, k1, f1 = tc_typ env t1 in
-    if debug env then printfn "Kind is %s" (Print.kind_to_string k1);
+   // if debug env then printfn "Kind is %s" (Print.kind_to_string k1);
     let xopt, targ, kres, t1' = match Tc.Util.destruct_dcon_kind env k1 t1 imp with 
       | {n=Kind_dcon(xopt, targ, kres, _)}, t1 -> xopt, targ, kres, t1
       | _ -> failwith "impossible" in
-    if debug env then printfn "Setting expected type to %s : %s" (Print.typ_to_string targ) (Print.kind_to_string targ.tk);
+  //  if debug env then printfn "Setting expected type to %s : %s" (Print.typ_to_string targ) (Print.kind_to_string targ.tk);
     let e1, _, f2 = tc_total_exp (Env.set_expected_typ env targ) e1 in
     let k2 = Util.subst_kind' (maybe_make_subst <| Inr(xopt, e1)) kres in
     w k2 <| mk_Typ_dep(t1, e1, imp), k2, Rel.conj_guard f1 f2
@@ -290,6 +297,7 @@ and tc_value env e : exp * comp =
     value_check_expected_typ env e (Inl t1)
   | Exp_bvar x -> 
     let t = Env.lookup_bvar env x in
+    let e = mk_Exp_bvar({x with sort=t}) t e.pos in
     let e, c = Tc.Util.maybe_instantiate env e t in
     value_check_expected_typ env e (Inr c)
 
@@ -344,7 +352,7 @@ and tc_value env e : exp * comp =
             syn e.pos t <| mk_Exp_tabs(a, k, e), t
 
         | Exp_abs(x, t1, body), Some ({n=Typ_fun(xopt, t1', c1, _)}) ->
-            let t1 = tc_typ_check_trivial env t1 ktype in
+            let t1 = tc_typ_check_trivial env t1 ktype |> norm_t env in
             let _ = trivial <| Tc.Rel.teq env t1 t1' in
             let c1 = match xopt with 
             | None -> c1 
@@ -365,7 +373,7 @@ and tc_value env e : exp * comp =
                  syn e.pos t <| mk_Exp_abs(x, t1, body), t
         
         | Exp_tabs(a, k1, body), Some ({n=Typ_univ(b, k1', c1)}) ->  
-            let k1 = tc_kind_trivial env k1 in
+            let k1 = tc_kind_trivial env k1 |> norm_k env in
             let _ = trivial <| Tc.Rel.keq env None k1 k1' in
             let c1 = if Util.bvd_eq a b 
                      then c1 
@@ -598,8 +606,8 @@ and tc_exp env e : exp * comp =
   | Exp_let((false, [(x, t, e1)]), e2) -> 
     let env = instantiate_both env in
     let t = Tc.Util.extract_lb_annotation false env t e1 in
-    printfn "Type-checking let-binding annot: %s" (Print.typ_to_string t);
     let t, f = tc_typ_check env t ktype in
+    let t = norm_t env t in
     let env1, topt = Env.clear_expected_typ env in 
     let env1 = Tc.Env.set_expected_typ env1 t in
     let e1, c1 = tc_exp env1 e1 in 
@@ -628,7 +636,7 @@ and tc_exp env e : exp * comp =
     let env0, topt = Env.clear_expected_typ env in 
     let lbs, env' = lbs |> List.fold_left (fun (xts, env) (x, t, e) -> 
       let t = Tc.Util.extract_lb_annotation true env t e in 
-      let t = tc_typ_check_trivial env0 t ktype in
+      let t = tc_typ_check_trivial env0 t ktype |> norm_t env in
       let env = Env.push_local_binding env (binding_of_lb x t) in
       (x, t, e)::xts, env) ([], env0)  in 
     let lbs = lbs |> List.map (fun (x, t, e) -> 
@@ -783,9 +791,10 @@ and tc_total_exp env e : exp * typ * guard =
   let e, c = tc_exp env e in
   if is_total_comp c 
   then e, Util.comp_result c, Trivial
-  else match Tc.Rel.sub_comp env c (Util.total_comp (Util.comp_result c) (Env.get_range env)) with 
-    | Some g -> e, Util.comp_result c, g
-    | _ -> raise (Error(Tc.Errors.expected_pure_expression e c, e.pos))
+  else let c = norm_c env c in 
+       match Tc.Rel.sub_comp env c (Util.total_comp (Util.comp_result c) (Env.get_range env)) with 
+        | Some g -> e, Util.comp_result c, g
+        | _ -> raise (Error(Tc.Errors.expected_pure_expression e c, e.pos))
 
 
 (*****************Type-checking the signature of a module*****************************)
@@ -793,11 +802,12 @@ and tc_total_exp env e : exp * typ * guard =
 let tc_tparams env tps : (list<tparam> * Env.env) = 
 	let tps', env = List.fold_left (fun (tps, env) tp -> match tp with 
 	  | Tparam_typ(a, k) -> 
-				let k = tc_kind_trivial env k in 
+				let k = tc_kind_trivial env k |> norm_k env in 
 				let env = Tc.Env.push_local_binding env (Env.Binding_typ(a, k)) in
 				Tparam_typ(a,k)::tps, env
 	  | Tparam_term(x, t) -> 
-				let t, _ = tc_typ_trivial env t in 
+				let t, _ = tc_typ_trivial env t in
+                let t = norm_t env t in 
 				let env = Tc.Env.push_local_binding env (Env.Binding_var(x, t)) in
 				Tparam_term(x, t)::tps, env) ([], env) tps in
 		List.rev tps', env 
@@ -820,25 +830,25 @@ let rec tc_monad_decl env m =
   let w k = k (range_of_lid m.mname) in
   let ret = 
     let expected_k = w <| mk_Kind_tcon(Some a, ktype, kd a_typ kwp_a, false)  in
-    tc_typ_check_trivial env m.ret expected_k in
+    tc_typ_check_trivial env m.ret expected_k |> norm_t env in
   let bind_wp =
     let expected_k = w <| mk_Kind_tcon(Some a, ktype, w <| mk_Kind_tcon(Some b, ktype, kt kwp_a (kt kwlp_a (kt (kd a_typ kwp_b) (kt (kd a_typ kwlp_b) kwp_b))), false), false)  in
-    tc_typ_check_trivial env m.bind_wp expected_k in
+    tc_typ_check_trivial env m.bind_wp expected_k |> norm_t env  in
   let bind_wlp = 
    let expected_k = w <| mk_Kind_tcon(Some a, ktype, w <| mk_Kind_tcon(Some b, ktype, kt kwlp_a (kt (kd a_typ kwlp_b) kwp_b), false), false) in
-   tc_typ_check_trivial env m.bind_wlp expected_k in
+   tc_typ_check_trivial env m.bind_wlp expected_k |> norm_t env in
   let ite_wp =
     let expected_k = w <| mk_Kind_tcon(Some a, ktype, kt kwlp_a (kt kwp_a kwp_a), false) in
-    tc_typ_check_trivial env m.ite_wp expected_k in
+    tc_typ_check_trivial env m.ite_wp expected_k |> norm_t env in
   let ite_wlp =
     let expected_k = w <| mk_Kind_tcon(Some a, ktype, kt kwlp_a kwlp_a, false) in
-    tc_typ_check_trivial env m.ite_wlp expected_k in
+    tc_typ_check_trivial env m.ite_wlp expected_k |> norm_t env in
   let wp_binop = 
     let expected_k = w <| mk_Kind_tcon(Some a, ktype, kt kwp_a (kt (kt ktype (kt ktype ktype)) (kt kwp_a kwp_a)), false) in
-    tc_typ_check_trivial env m.wp_binop expected_k in
+    tc_typ_check_trivial env m.wp_binop expected_k |> norm_t env in
   let wp_as_type = 
     let expected_k = w <| mk_Kind_tcon(Some a, ktype, kt kwp_a ktype, false) in
-    tc_typ_check_trivial env m.wp_as_type expected_k in
+    tc_typ_check_trivial env m.wp_as_type expected_k |> norm_t env in
   let close_wp = 
     let b = Util.new_bvd None in
     let expected_k = 
@@ -846,23 +856,23 @@ let rec tc_monad_decl env m =
         w <| mk_Kind_tcon(Some b, ktype, 
           w <| mk_Kind_tcon(None, w <| mk_Kind_dcon(None, Util.bvd_to_typ b ktype, kwp_a, false), 
                           kwp_a, false), false), false) in
-    tc_typ_check_trivial env m.close_wp expected_k in
+    tc_typ_check_trivial env m.close_wp expected_k |> norm_t env in
   let close_wp_t = 
     let expected_k = 
       w <| mk_Kind_tcon(Some a, ktype, 
           w <| mk_Kind_tcon(None, w <| mk_Kind_tcon(None, ktype, kwp_a, false), 
                           kwp_a, false), false) in
-    tc_typ_check_trivial env m.close_wp_t expected_k in
+    tc_typ_check_trivial env m.close_wp_t expected_k |> norm_t env in
   let assert_p, assume_p = 
     let expected_k = 
       w <| mk_Kind_tcon(Some a, ktype, kt ktype (kt kwp_a kwp_a), false) in
-    tc_typ_check_trivial env m.assert_p expected_k, tc_typ_check_trivial env m.assume_p expected_k in
+    tc_typ_check_trivial env m.assert_p expected_k |> norm_t env, tc_typ_check_trivial env m.assume_p expected_k |> norm_t env in
   let null_wp = 
       let expected_k = w <| mk_Kind_tcon(Some a, ktype, kwp_a, false) in
-      tc_typ_check_trivial env m.null_wp expected_k in
+      tc_typ_check_trivial env m.null_wp expected_k |> norm_t env in
   let trivial =
       let expected_k = w <| mk_Kind_tcon(Some a, ktype, kt kwp_a ktype, false) in
-      tc_typ_check_trivial env m.trivial expected_k in
+      tc_typ_check_trivial env m.trivial expected_k |> norm_t env in
   let menv = Tc.Env.push_sigelt env (Sig_tycon(m.mname, [], mk, [], [], [], range_of_lid m.mname)) in
   let menv, abbrevs = m.abbrevs |> List.fold_left (fun (env, out) (ma:sigelt) -> 
     let ma, env = tc_decl env ma in 
@@ -911,7 +921,7 @@ and tc_decl env se = match se with
     | Sig_tycon (lid, tps, k, _mutuals, _data, tags, r) -> 
       let env = Tc.Env.set_range env r in 
       let tps, env = tc_tparams env tps in 
-      let k = tc_kind_trivial env k in 
+      let k = tc_kind_trivial env k |> norm_k env in 
       let se = Sig_tycon(lid, tps, k, _mutuals, _data, tags, r) in
       let _ = match compress_kind k with
         | {n=Kind_uvar _} -> Rel.trivial <| Tc.Rel.keq env None k ktype
@@ -922,8 +932,8 @@ and tc_decl env se = match se with
     | Sig_typ_abbrev(lid, tps, k, t, tags, r) -> 
       let env = Tc.Env.set_range env r in
       let tps, env' = tc_tparams env tps in
-      let t, k1 = tc_typ_trivial env' t in 
-      let k2 = tc_kind_trivial env' k in 
+      let t, k1 = tc_typ_trivial env' t |> (fun (t, k) -> norm_t env t, k) in 
+      let k2 = tc_kind_trivial env' k |> norm_k env in 
       Rel.trivial <| Rel.keq env' (Some t) k1 k2;
       let se = Sig_typ_abbrev(lid, tps, k1, t, tags, r) in 
       let env = Tc.Env.push_sigelt env se in 
@@ -931,7 +941,7 @@ and tc_decl env se = match se with
   
     | Sig_datacon(lid, t, tname, quals, r) -> 
       let env = Tc.Env.set_range env r in
-      let t = tc_typ_check_trivial env t ktype in 
+      let t = tc_typ_check_trivial env t ktype |> norm_t env in 
       let args, cod = Util.collect_formals t in
       let result_t = Util.comp_result cod in
       let constructed_t, _ = Util.flatten_typ_apps result_t in (* TODO: check that the tps in tname are the same as here *)
@@ -946,7 +956,7 @@ and tc_decl env se = match se with
   
     | Sig_val_decl(lid, t, quals, r) -> 
       let env = Tc.Env.set_range env r in
-      let t = tc_typ_check_trivial env t ktype in 
+      let t = tc_typ_check_trivial env t ktype |> norm_t env in 
       Tc.Util.check_uvars r t;
       let se = Sig_val_decl(lid, t, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
@@ -955,7 +965,7 @@ and tc_decl env se = match se with
   
     | Sig_assume(lid, phi, quals, r) ->
       let env = Tc.Env.set_range env r in
-      let phi = tc_typ_check_trivial env phi ktype in 
+      let phi = tc_typ_check_trivial env phi ktype |> norm_t env in 
       Tc.Util.check_uvars r phi;
       let se = Sig_assume(lid, phi, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 

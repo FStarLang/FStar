@@ -34,7 +34,10 @@ let fresh x = counter := !counter + 1; {contents = Data ([x], !counter) }
   
 let rec rep cell = match cell.contents with 
   | Data _ -> cell
-  | Fwd cell' -> rep cell'
+  | Fwd cell' -> 
+    if Util.physical_equality cell cell'
+    then failwith "YIKES! Cycle in unionfind graph"
+    else rep cell'
 
 let find x = 
     let y = rep x in 

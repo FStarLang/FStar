@@ -48,7 +48,7 @@ let handleable = function
 //let compress_kind = Visit.compress_kind
 //let compress_typ  = Visit.compress_typ
 //let compress_exp  = Visit.compress_exp 
-let compress_comp = Visit.compress_comp
+//let compress_comp = Visit.compress_comp
 
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
@@ -165,11 +165,11 @@ and subst_comp_typ s t = match s.subst with
 and subst_comp s t = match s.subst with 
   | [] -> t
   | _ -> 
-    let t0 = compress_comp t in
+    let t0 = Visit.compress_comp t in
     match t0.n with 
       | Total t -> mk_Total (subst_typ s t)
       | Rigid t -> mk_Rigid (subst_typ s t)
-      | Flex(u, t) -> mk_Flex(u, subst_typ s t)
+      | Flex(u, t) -> mk_Flex(subst_typ s u, subst_typ s t)
       | Comp ct -> mk_Comp(subst_comp_typ s ct)
 
 and compose_subst (s1:subst) (s2:subst) = 
@@ -341,6 +341,7 @@ and compress_typ t =
     //printfn "Compressing %A ... got %A\n" t' res;
     res
   | _ -> t
+
 and compress_exp e = 
   let e = Visit.compress_exp e in
   match e.n with
@@ -349,6 +350,18 @@ and compress_exp e =
     m := Some e;
     e
   | _ -> e
+
+and compress_comp c = 
+  let c = Visit.compress_comp c in 
+  match c.n with 
+    | Flex (t, r) -> 
+        begin match t.n with 
+            | Typ_delayed _ -> compress_comp (mk_Flex(compress_typ t, r))
+            | _ -> c
+        end
+    | _ -> c
+
+
   
 let alpha_typ t = 
    let t = compress_typ t in

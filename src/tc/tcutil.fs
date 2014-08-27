@@ -671,6 +671,8 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
   then ecs
   else
      let norm c = 
+        printfn "About to normalize before generalizing ...";
+        let _ = Util.fprint1 "%s\n" (Print.comp_typ_to_string c) in
         if !Options.verify
         then Normalize.normalize_comp env c
         else Normalize.norm_comp [Beta; Delta] env c in

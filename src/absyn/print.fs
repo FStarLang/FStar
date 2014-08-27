@@ -111,13 +111,13 @@ and typ_to_string x =
   | Typ_unknown -> "_"
   | Typ_uvar(uv, k) -> (match Visit.compress_typ_aux false x with 
       | {n=Typ_uvar _} -> 
-         Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)) 
-        //Util.format2 "'U%s_%s"  (Util.string_of_int (Unionfind.uvar_id uv)) (kind_to_string k)
+         //Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)) 
+         Util.format2 "'U%s_%s"  (Util.string_of_int (Unionfind.uvar_id uv)) (kind_to_string k)
       | t -> t|> typ_to_string)
       
 and comp_typ_to_string c =
   match (compress_comp c).n with 
-    | Flex (_, t) -> Util.format1 "_Flex_ %s" (typ_to_string t) 
+    | Flex (u, t) -> Util.format2 "_Flex_ (%s) %s" (typ_to_string u) (typ_to_string t) 
     | Rigid t -> typ_to_string t
     | Total t -> if Util.is_function_typ t then typ_to_string t else Util.format1 "Tot %s" (typ_to_string t)
     | Comp c ->
@@ -126,7 +126,7 @@ and comp_typ_to_string c =
       else if not !Options.print_effect_args && (lid_equals c.effect_name Const.ml_effect_lid  || List.contains MLEFFECT c.flags) && not (Util.is_function_typ c.result_typ)
       then typ_to_string c.result_typ
       else if !Options.print_effect_args 
-      then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (match c.effect_args with hd::_ -> effect_arg_to_string hd | _ ->"")
+      then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (c.effect_args |> List.map effect_arg_to_string |> String.concat ", ")//match c.effect_args with hd::_ -> effect_arg_to_string hd | _ ->"")
       else Util.format2 "%s (%s)" (sli c.effect_name) (typ_to_string c.result_typ)
        
 and effect_arg_to_string e = match e with
@@ -194,7 +194,7 @@ and exp_to_string x = match (compress_exp x).n with
   | Exp_meta(Meta_datainst(e,_))
   | Exp_meta(Meta_desugared(e, _)) -> exp_to_string e
   | Exp_uvar(uv, _) -> Util.format1 "'e%s" (Util.string_of_int (Unionfind.uvar_id uv))
-  | Exp_bvar bvv -> strBvd bvv.v
+  | Exp_bvar bvv -> strBvd bvv.v //Util.format2 "%s : %s" (strBvd bvv.v) (typ_to_string bvv.sort)
   | Exp_fvar(fv, _) ->  sli fv.v
   | Exp_constant c -> c |> const_to_string
   | Exp_abs(x, t, e) -> Util.format3 "(fun (%s:%s) -> %s)" (strBvd x) (t |> typ_to_string) (e|> exp_to_string)
@@ -230,7 +230,7 @@ and either_to_string x = match x with
 
 and meta_to_string x = match x with 
   | Meta_comp c -> comp_typ_to_string c
-  | Meta_uvar_t_app(t, _) -> typ_to_string t
+  | Meta_uvar_t_app(t, (_,k)) -> (typ_to_string t) 
   | Meta_named(_, l) -> sli l
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (t |> typ_to_string) (either_l_to_string ", " ps)
 
@@ -256,6 +256,10 @@ and pat_to_string x = match x with
   | Pat_twild -> "'_"
   | Pat_disj ps ->  Util.concat_l " | " (List.map pat_to_string ps)
   | Pat_withinfo (p, _) -> pat_to_string p
+
+let freevars_to_string (fvs:freevars) = 
+    let f l = l |> Util.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
+    Util.format2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs) 
 
 let tparam_to_string = function
   | Tparam_typ(a, k) -> Util.format2 "(%s:%s)" (strBvd a) (kind_to_string k)

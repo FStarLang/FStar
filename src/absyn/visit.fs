@@ -88,7 +88,7 @@ let rec compress_kind knd = match knd.n with
       | Some k -> let k' = compress_kind k in m := Some k'; k')
   | _ -> knd
 
-let rec compress_comp c : comp = match c.n with 
+let compress_comp c : comp = match c.n with 
   | Comp _ 
   | Total _ 
   | Rigid _ -> c
@@ -97,7 +97,7 @@ let rec compress_comp c : comp = match c.n with
       | Fixed _ -> mk_Rigid (mk_Typ_app(teff, res_t, false) mk_Kind_effect c.pos) 
       | _ -> c
     end
-  | Flex _ -> failwith "Impossible: Flex computation non-pattern"
+  | Flex _ -> c
       
 let left ext benv btv = match ext benv (Inl btv) with 
   | benv, Inl bvd -> benv, bvd
