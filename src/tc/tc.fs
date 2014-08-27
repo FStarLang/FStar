@@ -393,7 +393,7 @@ and tc_value env e : exp * comp =
     failwith (Util.format1 "Unexpected value: %s" (Print.exp_to_string e))
 
 and tc_exp env e : exp * comp = 
-  let env = Env.set_range env e.pos in
+  let env = if e.pos=dummyRange then env else Env.set_range env e.pos in
   let w c = syn e.pos (Util.comp_result c) in
   match e.n with
   | Exp_delayed _ -> tc_exp env (compress_exp e)
@@ -696,8 +696,13 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
     let bindings = fst <| pat_bindings [] p in
     let pat_env = List.fold_left Env.push_local_binding env bindings in
     let exps = Tc.Util.pat_as_exps env p in
-    let env = {(Tc.Env.set_expected_typ pat_env pat_t) with Env.is_pattern=true} in
-    let res = bindings, pat_env, List.map (fun e -> fst <| (no_guard env <| tc_total_exp env e)) exps in
+    let pat_env, _ = Tc.Env.clear_expected_typ pat_env in 
+    let env = {pat_env with Env.is_pattern=true} in //{(Tc.Env.set_expected_typ pat_env pat_t) with Env.is_pattern=true} in
+    let res = bindings, pat_env, List.map (fun e -> 
+        let e, t = no_guard env <| tc_total_exp env e in
+        printfn "Trying pattern subtype %s <: %s" (Print.typ_to_string pat_t) (Print.typ_to_string t);
+        Tc.Rel.trivial_subtype pat_env None pat_t t; //the type of the pattern must be at least as general as the type of the scrutinee
+        e) exps in
     res in
 
   let bindings, pat_env, disj_exps = tc_pat pat_t env pattern in //disj_exps, an exp for each arm of a disjunctive pattern
@@ -735,6 +740,7 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
       let e = compress_exp e in 
       match e.n with 
       | Exp_uvar _
+      | Exp_meta(Meta_uvar_e_app _)
       | Exp_bvar _ -> [Util.ftv Const.true_lid ktype]
       | Exp_constant c -> [Util.mk_eq guard_exp e]
       | Exp_fvar(f, _) -> [discriminate f]

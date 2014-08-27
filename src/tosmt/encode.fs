@@ -497,6 +497,9 @@ and encode_exp (env:env_t) (e:exp) : res =
       
       | Exp_ascribed(e, t) -> encode_exp env e
 
+      | Exp_meta(Meta_uvar_e_app(e, _)) -> 
+        encode_exp env e
+
       | Exp_uvar(uv, _) ->
         let esym = format1 "Exp_uvar_%s" (string_of_int <| Unionfind.uvar_id uv) in
         let g = [Term.DeclFun(esym, [], Term_sort, None)] in 
@@ -504,7 +507,7 @@ and encode_exp (env:env_t) (e:exp) : res =
 
       | Exp_abs _
       | Exp_tabs _
-      | Exp_meta _ -> failwith "Impossible"
+      | Exp_meta _ -> failwith (Util.format2 "(%s): Impossible: encode_exp got %s" (Range.string_of_range e.pos) (Print.exp_to_string e))
 
 and encode_either_l env l = 
     let l, g'' = l |> List.fold_left (fun (pats, g) -> function 

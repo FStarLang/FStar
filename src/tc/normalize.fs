@@ -104,7 +104,7 @@ let rec sn_aux tcenv (cfg:config<typ>) : config<typ> =
     let s' = no_eta config.steps in
     let rec aux out stack : typ = match stack with
       | [] -> //eta_expand tcenv out
-        if config.steps |> List.contains Eta || not (is_var out)
+        if config.steps |> List.contains Eta //|| not (is_var out)
         then eta_expand tcenv out
         else out  //if a variable is an argument to some other term, do not eta-expand it
       | (Inl (t,e,k), imp)::rest -> 
@@ -397,7 +397,7 @@ let norm_kind steps tcenv k =
   c.code
 
 let norm_typ steps tcenv t = 
-  let c = sn tcenv ({code=t; environment=[]; stack=[]; steps=steps}) in
+  let c = sn_aux tcenv ({code=t; environment=[]; stack=[]; steps=steps}) in
   c.code
 
 let rec comp_comp env c = 
@@ -461,5 +461,5 @@ let normalize_comp tcenv c =
   let steps = [Delta;Beta;SNComp;DeltaComp] in
   norm_comp steps tcenv c
 
-let normalize tcenv t = norm_typ [DeltaHard;Beta] tcenv t
+let normalize tcenv t = norm_typ [DeltaHard;Beta;Eta] tcenv t
 

@@ -72,6 +72,7 @@ let get_qfile () =
     match !qfh with 
         | Some f -> f
         | None -> 
+          Util.print_string "Opening file queries.smt2\n";
           let fh = Util.open_file_for_writing "queries.smt2" in
           qfh := Some fh;
           fh

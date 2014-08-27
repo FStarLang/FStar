@@ -202,15 +202,15 @@ type worklist = {
 type solution = 
     | Success of list<uvar_inst> * guard
     | Failed of list<(int * prob * reason)>
-
-let singleton prob tk = {
-    attempting=[prob];
+let empty_worklist = {
+    attempting=[];
     deferred=[];
     subst=[];
-    top_t=tk;
+    top_t=None;
     guard=Trivial;
     ctr=0;
 }
+let singleton prob tk = {empty_worklist with attempting=[prob]; top_t=tk}
 
 let reattempt (_, p, _) = p
 let giveup reason prob probs = Failed <| (probs.ctr, prob, reason)::probs.deferred
@@ -297,7 +297,7 @@ let rec compress' env s t =
                 | Some t -> 
                   let t = compress' env s t in 
                   let _, args = Util.flatten_typ_apps t' in 
-                  Tc.Normalize.norm_typ [Normalize.Beta] env <| Util.mk_typ_app_explicit t args
+                  Tc.Normalize.norm_typ [Beta; Eta] env <| Util.mk_typ_app_explicit t args
                 | _ -> t)
         | _ -> t
 let compress env s t = compress' env s t
@@ -335,7 +335,7 @@ let rec comp_comp env s c =
     let c = Util.compress_comp c in
     match c.n with
     | Rigid t -> 
-        (match (Tc.Normalize.norm_typ [Beta] env t).n with
+        (match (Tc.Normalize.norm_typ [Beta; Eta] env t).n with
             | Typ_meta(Meta_comp c) -> comp_comp env s c
             | _ -> failwith "Impossible")
 
@@ -346,20 +346,31 @@ let rec comp_comp env s c =
         | Some t' -> 
           let t' = compress env s t' in 
           let _, args = Util.flatten_typ_apps t in
-          as_comp <| (Tc.Normalize.norm_typ [Normalize.Beta] env <| Util.mk_typ_app_explicit t' args)
+          as_comp <| (Tc.Normalize.norm_typ [Beta; Eta] env <| Util.mk_typ_app_explicit t' args)
       end
 
     | _ -> c
 
-let rec head_matches env t1 t2 = 
-  match (Util.compress_typ t1 |> Util.unascribe_typ).n, (Util.compress_typ t2 |> Util.unascribe_typ).n with 
-    | Typ_btvar x, Typ_btvar y -> Util.bvar_eq x y
-    | Typ_const f, Typ_const g -> Util.fvar_eq f g 
+type match_result = 
+  | MisMatch
+  | HeadMatch
+  | FullMatch
 
-    | Typ_refine(_, t, _), Typ_refine(_, t', _) -> head_matches env t t'
+let head_match = function 
+    | MisMatch -> MisMatch
+    | _ -> HeadMatch
+
+let rec head_matches env t1 t2 : match_result = 
+  match (Util.compress_typ t1 |> Util.unascribe_typ).n, (Util.compress_typ t2 |> Util.unascribe_typ).n with 
+    | Typ_btvar x, Typ_btvar y -> if Util.bvar_eq x y then FullMatch else MisMatch
+    | Typ_const f, Typ_const g -> if Util.fvar_eq f g then FullMatch else MisMatch
+    | Typ_btvar _, Typ_const _
+    | Typ_const _, Typ_btvar _ -> MisMatch
+
+    | Typ_refine(_, t, _), Typ_refine(_, t', _) -> head_matches env t t' |> head_match
    
-    | Typ_refine(_, t1, _), _  -> head_matches env t1 t2
-    | _, Typ_refine(_, t2, _)  -> head_matches env t1 t2
+    | Typ_refine(_, t1, _), _  -> head_matches env t1 t2 |> head_match
+    | _, Typ_refine(_, t2, _)  -> head_matches env t1 t2 |> head_match
 
     | Typ_fun _, Typ_fun _ 
     | Typ_univ _, Typ_univ _ 
@@ -368,21 +379,21 @@ let rec head_matches env t1 t2 =
     | Typ_lam _, _
     | Typ_tlam _, _
     | _, Typ_lam _
-    | _, Typ_tlam _ -> true
+    | _, Typ_tlam _ -> HeadMatch
 
-    | _ -> false
+    | _ -> MisMatch
 
-let head_matches_delta env t1 t2 =
-    let success d t1 t2 = if d then Some (Inr(t1, t2)) else Some (Inl()) in
-    let fail () = None in
+let head_matches_delta env t1 t2 : (match_result * option<(typ*typ)>) =
+    let success d r t1 t2 = (r, if d then Some(t1, t2) else None) in
+    let fail () = (MisMatch, None) in
     let rec aux d t1 t2 = 
-        if head_matches env t1 t2 
-        then success d t1 t2
-        else if d 
-        then fail () //already took a delta step
-        else let t1 = Tc.Normalize.normalize env t1 in
-             let t2 = Tc.Normalize.normalize env t2 in
-             aux true t1 t2 in
+        match head_matches env t1 t2 with 
+            | MisMatch -> 
+                if d then fail() //already took a delta step
+                else let t1 = Tc.Normalize.norm_typ [DeltaHard] env t1 in
+                     let t2 = Tc.Normalize.norm_typ [DeltaHard] env t2 in
+                     aux true t1 t2 
+            | r -> success d r t1 t2 in
     aux false t1 t2
 
 let vars_eq v1 v2 = 
@@ -476,7 +487,7 @@ let rec decompose_typ env t : (list<ktec> -> typ) * (typ -> bool) * list<(binder
             Util.mk_typ_app_explicit hd args in
           let matches t' =
             let hd', _ = Util.flatten_typ_apps t' in
-            head_matches env hd hd' in
+            head_matches env hd hd' <> MisMatch in
           rebuild, matches, args
 
         | Typ_ascribed(t, _) -> 
@@ -512,6 +523,7 @@ let rec decompose_typ env t : (list<ktec> -> typ) * (typ -> bool) * list<(binder
           rebuild, (fun t -> true), []
 
 let rec solve (top:bool) (env:Tc.Env.env) probs : solution = 
+//    printfn "Solving TODO:\n%s;;" (List.map prob_to_string probs.attempting |> String.concat "\n\t");
     match probs.attempting with 
        | hd::tl -> 
         let probs = {probs with attempting=tl} in
@@ -700,6 +712,8 @@ and solve_k (top:bool) (env:Env.env) rel k1 k2 probs : solution =
 and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution = 
     let t1 = compress env probs.subst t1 |> Util.unascribe_typ in
     let t2 = compress env probs.subst t2 |> Util.unascribe_typ in 
+//    printfn "Attempting %s" (prob_to_string (TProb(rel, t1, t2)));
+//    printfn "Tag t1 = %s, t2 = %s" (Print.tag_of_typ t1) (Print.tag_of_typ t2);
     let r = Env.get_range env in
     match t1.n, t2.n with
       | Typ_meta(Meta_pattern(t, _)), _ 
@@ -736,19 +750,20 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
         else giveup "unequal type variables" (TProb(rel, t1, t2)) probs
 
       | Typ_fun(xopt, t1, c1, _), Typ_fun(yopt, t2, c2, _) -> 
-        let probs = {probs with attempting=TProb(rel, t2, t1)::CProb(rel, c1, Util.subst_comp (subst_xopt (xopt, t1) yopt) c2)::probs.attempting} in
+        let probs = probs |> attempt [TProb(rel, t2, t1);CProb(rel, c1, Util.subst_comp (subst_xopt (xopt, t1) yopt) c2)] in
         solve false env probs
 
       | Typ_univ(a, k1, c1), Typ_univ(b, k2, c2) -> 
-        let probs = {probs with attempting=KProb(rel, k2, k1)::CProb(rel, c1, Util.subst_comp (subst_aopt (Some a, k1) (Some b)) c2)::probs.attempting} in
+        let probs = probs |> attempt [KProb(rel, k2, k1); CProb(rel, c1, Util.subst_comp (subst_aopt (Some a, k1) (Some b)) c2)] in
         solve false env probs
 
       | Typ_lam(x, t1, t2), Typ_lam(y, t1', t2') -> 
-        let probs = {probs with attempting=TProb(rel, t1', t1)::TProb(rel, t2, Util.subst_typ (subst_xopt (Some x, t1) (Some y)) t2')::probs.attempting} in
+        let probs = probs |> attempt [TProb(rel, t1', t1); TProb(rel, t2, Util.subst_typ (subst_xopt (Some x, t1) (Some y)) t2')] in
         solve false env probs
 
       | Typ_tlam(a, k1, t2), Typ_tlam(b, k1', t2') -> 
-        let probs = {probs with attempting=KProb(rel, k1', k1)::TProb(rel, t2, Util.subst_typ (subst_aopt (Some a, k1) (Some b)) t2')::probs.attempting} in
+        let sub_probs = [KProb(rel, k1', k1); TProb(rel, t2, Util.subst_typ (subst_aopt (Some a, k1) (Some b)) t2')] in
+        let probs = probs |> attempt [KProb(rel, k1', k1); TProb(rel, t2, Util.subst_typ (subst_aopt (Some a, k1) (Some b)) t2')] in
         solve false env probs
 
       | Typ_refine(x, t1, phi1), Typ_refine(y, t2, phi2) -> 
@@ -760,17 +775,6 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
                    guard env top g probs in
         solve_t top env rel t1 t2 probs
   
-      | Typ_refine(x, t1', phi1), _ ->
-        if rel=EQ
-        then giveup "refinement subtyping is not applicable" (TProb(rel, t1, t2)) probs //but t2 may be able to take delta steps
-        else solve_t top env rel t1' t2 probs
-
-      | _, Typ_refine(x, t2', phi2) -> 
-        if rel=EQ
-        then giveup "refinement subtyping is not applicable" (TProb(rel, t1, t2)) probs //but t1 may be able to take delta steps
-        else let g = NonTrivial <| mk_Typ_lam(x, t1, phi2) (mk_Kind_dcon(None, t1, ktype, false) r) r in
-             solve_t top env rel t1 t2' (guard env top g probs)   
-
       | Typ_meta(Meta_uvar_t_app(t1, (uv,k))), _ -> //flex-rigid
         let maybe_pat_vars, args_lhs = is_pattern t1 in
         let subterms args_lhs = 
@@ -809,30 +813,50 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
       | _, Typ_meta(Meta_uvar_t_app _) -> //rigid-flex
         solve_t top env EQ t2 t1 probs //re-orient
 
+      | Typ_refine(x, t1', phi1), _ ->
+        if rel=EQ
+        then giveup "refinement subtyping is not applicable" (TProb(rel, t1, t2)) probs //but t2 may be able to take delta steps
+        else solve_t top env rel t1' t2 probs
+
+      | _, Typ_refine(x, t2', phi2) -> 
+        if rel=EQ
+        then giveup "refinement subtyping is not applicable" (TProb(rel, t1, t2)) probs //but t1 may be able to take delta steps
+        else let g = NonTrivial <| mk_Typ_lam(x, t1, phi2) (mk_Kind_dcon(None, t1, ktype, false) r) r in
+             solve_t top env rel t1 t2' (guard env top g probs)   
+
       | Typ_const _, _
       | Typ_app _, _
       | Typ_dep _, _
       | _, Typ_const _ 
       | _, Typ_app _
       | _, Typ_dep _ -> 
-         let t1 = Normalize.norm_typ [Beta] env t1 in
-         let t2 = Normalize.norm_typ [Beta] env t2 in
+         let t1 = Normalize.norm_typ [Beta; Eta] env t1 in
+         let t2 = Normalize.norm_typ [Beta; Eta] env t2 in
 
          let head, args = Util.flatten_typ_apps t1 in
          let head', args' = Util.flatten_typ_apps t2 in
+//         printfn "head= %s, args=%s" (Print.typ_to_string head) (Print.either_l_to_string "$" args);
+//         printfn "head'= %s, args'=%s" (Print.typ_to_string head') (Print.either_l_to_string "$" args');
+         let m, o = head_matches_delta env head head' in
+         begin match m, o  with 
+            | (MisMatch, _) -> 
+                giveup "head mismatch" (TProb(rel, t1, t2)) probs        //heads definitely do not match
 
-         begin match head_matches_delta env head head' with 
-            | None -> giveup "head mismatch" (TProb(rel, t1, t2)) probs        //heads definitely do not match
-
-            | Some (Inr (head, head')) -> //took a delta to maybe match
-              probs |> solve_t top env rel (Tc.Normalize.norm_typ [Beta] env <| Util.mk_typ_app_explicit head args) 
-                                           (Tc.Normalize.norm_typ [Beta] env <| Util.mk_typ_app_explicit head' args') 
-            | Some (Inl _) -> //head matches head'
+            | (HeadMatch, Some (head, head'))
+            | (FullMatch, Some (head, head')) -> //took a delta to maybe match
+//              printfn "Head match with delta %s, %s" (Print.typ_to_string head) (Print.typ_to_string head');
+              probs |> solve_t top env rel (Tc.Normalize.norm_typ [Beta; Eta] env <| Util.mk_typ_app_explicit head args) 
+                                           (Tc.Normalize.norm_typ [Beta; Eta] env <| Util.mk_typ_app_explicit head' args') 
+            | (HeadMatch, None)
+            | (FullMatch, None) -> //head matches head'
               if List.length args = List.length args'
               then let subprobs = List.map2 (fun a a' -> match a, a' with 
                     | Inl t, Inl t' -> TProb(EQ, t, t')
                     | Inr v, Inr v' -> EProb(EQ, v, v')
                     | _ -> failwith "Impossible" (*terms are well-kinded*)) args args' in
+                   let subprobs = match m with 
+                        | FullMatch -> subprobs
+                        | _ -> TProb(EQ, head, head')::subprobs in
                    solve false env (attempt subprobs probs)
               else giveup (Util.format4 "unequal number of arguments: %s[%s] and %s[%s]" 
                           (Print.typ_to_string head)
@@ -902,22 +926,39 @@ and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
                  begin match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
                    | None -> giveup "incompatible monad ordering" (CProb(rel, c1_0, c2_0)) probs
                    | Some edge ->
+                     let is_null_wp c2_decl wpc2 = 
+                         if not !Options.verify then false
+                         else match solve_t false env EQ wpc2 (Util.mk_typ_app_explicit c2_decl.null_wp [Inl c2.result_typ]) empty_worklist with 
+                           | Failed _ -> false
+                           | Success _ -> true in
                      let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
                        | Inl wp1::_, Inl wp2::_ -> wp1, wp2 
                        | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in
                      let res_t_prob = TProb(rel, c1.result_typ, c2.result_typ) in
+                     //let _ = printfn "Checking sub probs:\n(1) %s" (prob_to_string res_t_prob) in
                         if Util.physical_equality wpc1 wpc2 
-                        then solve false env (attempt [res_t_prob] probs)
-                        else if has_uvars wpc2 //how to decide this test efficiently?
-                        then solve false env (attempt [res_t_prob; TProb(EQ, wpc1, wpc2)] probs)
-                        else if rel=SUB
-                        then let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
-                             let wp2_imp_wp1 = Util.mk_typ_app_explicit c2_decl.wp_binop 
+                        then (//printfn "Physical equality of wps ... done";
+                              solve false env (attempt [res_t_prob] probs))
+                        else 
+//                             let wpc1 = Tc.Normalize.norm_typ [Beta] env wpc1 in
+//                             let wpc2 = Tc.Normalize.norm_typ [Beta] env wpc2 in
+                             if false && has_uvars wpc2 //how to decide this test efficiently?
+                             then (let prob = TProb(EQ, wpc1, wpc2) in
+                                   printfn "wpc2 has uvars ... solving\n(2)%s\n" (prob_to_string prob);
+                                   solve false env (attempt [res_t_prob; prob] probs))
+                             else if rel=SUB
+                             then let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
+                             let g = 
+                               if is_null_wp c2_decl wpc2 
+                               then let _ = if debug env then Util.print_string "Using trivial wp ... \n" in
+                                    NonTrivial <| Util.mk_typ_app_explicit c2_decl.trivial [Inl c1.result_typ; Inl <| edge.mlift c1.result_typ wpc1]
+                               else let wp2_imp_wp1 = Util.mk_typ_app_explicit c2_decl.wp_binop 
                                             [Inl c2.result_typ; 
                                              Inl wpc2; 
                                              Inl <| Util.ftv Const.imp_lid (Const.kbin ktype ktype ktype); 
                                              Inl <| edge.mlift c1.result_typ wpc1] in
-                             let g = NonTrivial <| Util.mk_typ_app_explicit c2_decl.wp_as_type [Inl c2.result_typ; Inl wp2_imp_wp1] in
+                                    NonTrivial <| Util.mk_typ_app_explicit c2_decl.wp_as_type [Inl c2.result_typ; Inl wp2_imp_wp1] in
+                             //printfn "Adding guard %s\n" (guard_to_string env (simplify_guard env g));
                              let probs = guard env top g probs in 
                              solve false env (attempt [res_t_prob] probs)
                         else giveup "Equality of wps---unimplemented" (CProb(rel, c1_0, c2_0)) probs 
@@ -1027,7 +1068,9 @@ let explain d =
 let solve_and_commit env top_t prob err = 
   let sol = solve true env (singleton prob top_t) in
   match sol with 
-    | Success (s, guard) -> commit s; Some guard
+    | Success (s, guard) -> 
+      //printfn "Successs ... got guard %s\n" (guard_to_string env guard);
+      commit s; Some guard
     | Failed d -> 
         explain d;
         err d
@@ -1043,12 +1086,12 @@ let keq env t k1 k2 : guard =
         | Some t -> raise (Error(Tc.Errors.expected_typ_of_kind k2 t k1, r)))
     
 let teq env t1 t2 : guard = 
- let prob = TProb(EQ, norm_typ [Beta] env t1, norm_typ [Beta] env t2) in
+ let prob = TProb(EQ, norm_typ [Beta; Eta] env t1, norm_typ [Beta; Eta] env t2) in
  Util.must <| solve_and_commit env (Some t1) prob (fun _ -> 
     raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env)))
 
 let try_subtype env t1 t2 = 
- solve_and_commit env (Some t1) (TProb(SUB, norm_typ [Beta] env t1, norm_typ [Beta] env t2))
+ solve_and_commit env (Some t1) (TProb(SUB, norm_typ [Beta; Eta] env t1, norm_typ [Beta; Eta] env t2))
  (fun _ -> None)
 
 let subtype env t1 t2 : guard = 
@@ -1064,9 +1107,7 @@ let trivial_subtype env eopt t1 t2 =
     | Some Trivial -> ()
     | None 
     | Some (NonTrivial _) ->  
-      let r = match eopt with 
-        | None -> Tc.Env.get_range env
-        | Some e -> e.pos in
+      let r = Tc.Env.get_range env in
       raise (Error(Tc.Errors.basic_type_error eopt t2 t1, r))
 
 let sub_comp env c1 c2 = 

@@ -531,11 +531,14 @@ let mk_curried_app e e_or_t =
     | Inl t -> mk_Exp_tapp(f, t) tun (Range.union_ranges f.pos t.pos)
     | Inr (e, imp) -> mk_Exp_app(f, e, imp) tun (Range.union_ranges f.pos e.pos))  e e_or_t 
 
-let app_kind k te = match k.n, te with 
+let rec app_kind k te = 
+    let k = compress_kind k in 
+    match k.n, te with 
     | Kind_tcon(None, _, k', _), Inl t ->  k'
     | Kind_dcon(None, _, k', _), Inr e -> k'
     | Kind_tcon(Some a, _, k', _), Inl t -> subst_kind (mk_subst [(Inl(a, t))]) k'
     | Kind_dcon(Some x, _, k', _), Inr e -> subst_kind (mk_subst [(Inr(x, e))]) k'
+    | Kind_abbrev(_, k), _ -> app_kind k te
     | _ -> kun
 
 let app_typ t te = match t.n, te with 

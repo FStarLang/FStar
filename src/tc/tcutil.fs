@@ -261,9 +261,10 @@ let pat_as_exps env p : list<exp> =
   let single = function 
     | [te] -> te
     | _ -> failwith "impossible" in
+  let r = Env.get_range env in
   let rec aux p = match p with
-    | Pat_wild ->  [Inr (new_evar env (new_tvar env ktype))]
-    | Pat_twild  -> [Inl (new_tvar env (new_kvar env))]
+    | Pat_wild ->  [Inr (fst <| Rel.new_evar r [] (new_tvar env ktype))]
+    | Pat_twild  -> [Inl (fst <| Rel.new_tvar r [] (new_kvar env))]
     | Pat_var x -> [Inr (Util.bvd_to_exp x (new_tvar env ktype))]
     | Pat_tvar a -> [Inl (Util.bvd_to_typ a (new_kvar env))]
     | Pat_constant c -> [Inr (syn' env tun <| mk_Exp_constant c)]
@@ -564,6 +565,7 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp =
       e, c
 
 let check_comp env (e:exp) (c:comp) (c':comp) : exp * comp * guard = 
+  printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_typ_to_string c) (Print.comp_typ_to_string c');
   match Tc.Rel.sub_comp env c c' with 
     | None -> raise (Error(Tc.Errors.computed_computation_type_does_not_match_annotation e c c', Tc.Env.get_range env))
     | Some g -> e, c', g
@@ -655,8 +657,8 @@ let discharge_guard env g =
     else match g with 
         | Trivial -> ()
         | NonTrivial vc -> 
-            let vc = Normalize.norm_typ [Normalize.Delta; Normalize.Beta] env vc in
-             if Tc.Env.debug env then Tc.Errors.diag (Tc.Env.get_range env) (Util.format1 "Checking VC=\n%s\n" (Print.formula_to_string vc));
+            let vc = Normalize.norm_typ [Delta; Beta; Eta] env vc in
+            if Tc.Env.debug env then Tc.Errors.diag (Tc.Env.get_range env) (Util.format1 "Checking VC=\n%s\n" (Print.formula_to_string vc));
             if not <| env.solver.solve env vc
             then Tc.Errors.report (Tc.Env.get_range env) (Tc.Errors.failed_to_prove_specification [])
    
@@ -671,7 +673,7 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
      let norm c = 
         if !Options.verify
         then Normalize.normalize_comp env c
-        else Normalize.norm_comp [Normalize.Beta; Normalize.Delta] env c in
+        else Normalize.norm_comp [Beta; Delta] env c in
      let env_uvars = Env.uvars_in_env env in
      let gen_uvars uvs = Util.set_difference uvs env_uvars.uvars_t |> Util.set_elements in
      let uvars = ecs |> List.map (fun (x, e, c) -> 
@@ -688,7 +690,7 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
               then begin
                   let _, wp, _ = destruct_comp c in 
                   let post = syn t.pos (mk_Kind_dcon(None, t, ktype, false) t.pos) <| mk_Typ_lam(Util.new_bvd None, t, Util.ftv Const.true_lid ktype) in
-                  let vc = Normalize.norm_typ [Normalize.Delta; Normalize.Beta] env (syn wp.pos ktype <| mk_Typ_app(wp, post, false)) in
+                  let vc = Normalize.norm_typ [Delta; Beta] env (syn wp.pos ktype <| mk_Typ_app(wp, post, false)) in
                   if Tc.Env.debug env then Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));
                   if not <| env.solver.solve env vc
                   then Tc.Errors.report (range_of_lbname x) (Tc.Errors.failed_to_prove_specification_of x [])
