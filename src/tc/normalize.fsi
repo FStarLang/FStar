@@ -22,6 +22,7 @@ open Microsoft.FStar.Tc
 open Microsoft.FStar.Absyn.Syntax
  
 type step = 
+  | WHNF
   | Eta
   | Delta        (* don't expand abbreviations if they aren't blocking reduction *)
   | DeltaHard    (* expand all abbreviations *)
