@@ -1,4 +1,8 @@
 module Array 
+(* See examples/sep/array.fst for a full array theory 
+   (still to be ported to new syntax, so including a 
+    subset of its signature here) *)
+
 type seq : Type => Type
 type Equal : #'a:Type => seq 'a => seq 'a => Type
 assume logic val append : seq 'a -> seq 'a -> Tot (seq 'a)
