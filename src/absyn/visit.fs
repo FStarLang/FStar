@@ -37,15 +37,10 @@ let rec compress_typ_aux pos typ = match typ.n with
       | Some t -> let t' = compress_typ_aux pos t in m := Some t'; t')
   | Typ_ascribed(t, _)
   | Typ_meta(Meta_named(t, _)) when pos -> compress_typ_aux pos t
-  | Typ_meta(Meta_uvar_t_app(t, (uv,_))) ->
+  | Typ_meta(Meta_uvar_t_app({n=Typ_app({n=Typ_uvar(uv,_)}, args)}, _)) ->
        begin 
           match Unionfind.find uv with 
-            | Fixed t' -> 
-              let rec rebuild t = match t.n with 
-                | Typ_app(t0, t, imp) -> mk_Typ_app (rebuild t0, t, imp) t.tk t.pos
-                | Typ_dep(t0, e, imp) -> mk_Typ_dep (rebuild t0, e, imp) t.tk t.pos
-                | _ -> t' in
-              rebuild t       
+            | Fixed t' -> compress_typ_aux pos <| mk_Typ_app(t', args) typ.tk typ.pos
             | _ -> typ
        end
   | _ -> typ
@@ -65,17 +60,10 @@ let rec compress_exp_aux meta exp = match exp.n with
       | Some e -> let e' = compress_exp_aux meta e in m := Some e'; e')
   | Exp_ascribed(e, _)
   | Exp_meta(Meta_desugared(e, _)) when meta -> compress_exp_aux meta e
-  | Exp_meta(Meta_uvar_e_app(e, (uv,_))) 
-  | Exp_meta(Meta_uvar_e_app(e, (uv,_))) ->
-       begin 
-          match Unionfind.find uv with 
-            | Fixed e' -> 
-              let rec rebuild e = match e.n with 
-                | Exp_tapp(e0, t) -> mk_Exp_tapp (rebuild e0, t) e.tk e.pos
-                | Exp_app(e0, e, imp) -> mk_Exp_app (rebuild e0, e, imp) e.tk e.pos
-                | _ -> e' in
-              rebuild e      
-            | _ -> exp
+  | Exp_meta(Meta_uvar_e_app({n=Exp_app({n=Exp_uvar(uv, _)}, args)}, _)) -> 
+       begin match Unionfind.find uv with 
+        | Fixed e' -> mk_Exp_app(e', args) exp.tk exp.pos
+        | _ -> exp
        end
   | _ -> exp
 let compress_exp e = compress_exp_aux true e
@@ -94,7 +82,7 @@ let compress_comp c : comp = match c.n with
   | Rigid _ -> c
   | Flex ({n=Typ_meta(Meta_uvar_t_app(teff, (u,_)))}, res_t) -> 
     begin match Unionfind.find u with 
-      | Fixed _ -> mk_Rigid (mk_Typ_app(teff, res_t, false) mk_Kind_effect c.pos) 
+      | Fixed _ -> mk_Rigid (mk_Typ_app'(teff, (Inl res_t, false)) mk_Kind_effect c.pos) 
       | _ -> c
     end
   | Flex _ -> c
@@ -170,15 +158,27 @@ and reduce_typ
     (map_kind': mapper<'env, knd, knd>)
     (map_typ': mapper<'env, typ, typ>)
     (map_exp': mapper<'env, exp, exp>)
-    (combine_kind: (knd -> (list<knd> * list<typ> * list<exp>) -> 'env -> (knd * 'env)))
-    (combine_typ: (typ -> (list<knd> * list<typ> * list<comp> * list<exp>) -> 'env -> (typ * 'env)))
-    (combine_exp: (exp -> (list<knd> * list<typ> * list<exp>) -> 'env -> (exp * 'env))) (env:'env) binders t : (typ * 'env) =
+    (combine_kind: (knd -> (binders * list<knd> * list<typ> * list<exp>) -> 'env -> (knd * 'env)))
+    (combine_typ: (typ -> (binders * list<knd> * list<typ> * list<comp> * list<arg>) -> 'env -> (typ * 'env)))
+    (combine_exp: (exp -> (list<knd> * list<typ> * list<exp> * list<term>) -> 'env -> (exp * 'env))) (env:'env) binders t : (typ * 'env) =
   let rec map_typs env binders tl = 
     let tl, _, env = List.fold_left (fun (out, binders, env) (xopt, t) ->
         let t, env = map_typ env binders t in
         let binders = push_vbinder binders xopt in 
         t::out, binders, env) ([], binders, env) tl in
     List.rev tl, env 
+
+  and map_args env binders args = 
+    let args', env = List.fold_left (fun (out, env) (arg, imp) -> 
+        match arg with 
+            | Inl t ->         
+              let t, env = map_typ env binders t in
+              (Inl t::out, env)
+            | Inr e -> 
+              let e, env = map_exp env binders e in 
+              (Inr e::out, env)) ([], env) args in
+    List.rev args', env 
+  
   and map_comp (env:'env) (binders:list<either<btvdef,bvvdef>>) (c:comp) = 
     let c = compress_comp c in
     match c.n with
@@ -208,11 +208,19 @@ and reduce_typ
       | Typ_delayed _ -> failwith "Impossible"
       | Typ_unknown
       | Typ_btvar _   
-      | Typ_const _ -> [],[],[],[], env
-      | Typ_app(t1, t2, imp) -> 
-        let tl, env = map_typs env binders [(None, t1); (None, t2)] in 
-        [], tl, [], [], env 
-      | Typ_lam(x, t1, t2)
+      | Typ_const _ -> [],[],[],[],[], env
+      | Typ_app(t, args) -> 
+        let tl, env = 
+        begin match map_args env binders <| (Inl t, false)::args m with 
+            | Inl t::args -> [],[], [t], [], [], args, env
+            | _ -> failwith "Impossible"
+        end
+      | Typ_lam(axs, t) -> 
+        let axs, binders, env = List.fold_left (fun (axs, binders, env) -> function
+            | Inl a ->
+            | Inr x -> )
+        let tl, env = map_binders_and_typs env binders axs
+
       | Typ_refine(x, t1, t2) -> 
         let tl, env = map_typs env binders [(Some x, t1); (None, t2)] in 
         [], tl, [], [], env 

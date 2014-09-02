@@ -66,15 +66,20 @@ type typ' =
   | Typ_fun      of option<bvvdef> * typ * comp * bool       (* x:t -> M t' wp  or  t -> M t' wp, bool marks implicit arguments *)
   | Typ_univ     of btvdef * knd  * comp                     (* 'a:k -> M t wp *)
   | Typ_refine   of bvvdef * typ * typ                       (* x:t{phi} *)
-  | Typ_app      of typ * typ * bool                         (* t t' -- bool marks an explicitly provided implicit arg *) 
-  | Typ_dep      of typ * exp * bool                         (* t e -- bool marks an explicitly provided implicit arg *)  
-  | Typ_lam      of bvvdef * typ * typ                       (* fun (x:t) => T *)
-  | Typ_tlam     of btvdef * knd * typ                       (* fun ('a:k) => T *) 
+  | Typ_app      of typ * args                               (* args in reverse order *)
+  //| Typ_dep      of typ * exp * bool                       (* t e -- bool marks an explicitly provided implicit arg *)  
+  | Typ_lam      of binders * typ                            (* fun (ai|xi:tau_i) => T *)
+  //| Typ_tlam     of btvdef * knd * typ                     (* fun ('a:k) => T *) 
   | Typ_ascribed of typ * knd                                (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
   | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
   | Typ_delayed  of typ * subst * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
+and term = either<typ,exp>
+and arg = term * bool                                        (* bool marks an explicitly provided implicit arg *)
+and args = list<arg>
+and binder = either<btvar,bvvar>
+and binders = list<binder>
 and typ = syntax<typ',knd>
 and comp_typ = {
   effect_name:lident; 
@@ -84,7 +89,7 @@ and comp_typ = {
   }
 and comp' = 
   | Total of typ
-  | Comp of comp_typ
+  | Comp of comp_typ                    
   | Rigid of typ                                             (* a type with Kind_effect; should be normalized before inspecting *)                    
   | Flex of uvar_c_pattern * typ                             (* first type is a flex-pattern for a type-indexed computation; second type is the result type *)
 and comp = syntax<comp', unit>
@@ -93,12 +98,16 @@ and cflags =
   | MLEFFECT 
   | RETURN 
   | SOMETRIVIAL
+and uvar_c = Unionfind.uvar<comp_typ_uvar_basis> 
 and uvar_c_pattern = typ                                     (* a Typ_meta(Meta_uvar_t_app(t, (uv, ... => typ => Kind_effect))) *)
+and comp_typ_uvar_basis = 
+  | Floating 
+  | Resolved of comp
 and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pattern of typ * list<either<typ,exp>>
   | Meta_named of typ * lident                               (* Useful for pretty printing to keep the type abbreviation around *)
-  | Meta_uvar_t_app  of typ * (uvar_t * knd)                 (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
+  | Meta_uvar_t_app      of typ * (uvar_t * knd)             (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
   | Meta_comp of comp                                        (* Promoting a computation to a type, just for instantiating flex comp-vars with comp-lambdas *)
 and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
@@ -107,10 +116,11 @@ and exp' =
   | Exp_bvar       of bvvar
   | Exp_fvar       of fvvar * bool                            (* flag indicates a constructor *)
   | Exp_constant   of sconst
-  | Exp_abs        of bvvdef * typ * exp 
-  | Exp_tabs       of btvdef * knd * exp            
-  | Exp_app        of exp * exp * bool                           (* flag indicates whether the argument is explicit instantiation of an implict param *)
-  | Exp_tapp       of exp * typ             
+  | Exp_abs        of binders * exp 
+  //| Exp_tabs       of btvdef * knd * exp       
+  | Exp_app        of exp * args                                 (* args in reverse order *)
+//  | Exp_app        of exp * exp * bool                         (* flag indicates whether the argument is explicit instantiation of an implict param *)
+//  | Exp_tapp       of exp * typ             
   | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
   | Exp_ascribed   of exp * typ 
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
@@ -121,7 +131,7 @@ and exp = syntax<exp',typ>
 and meta_e = 
   | Meta_desugared     of exp * meta_source_info                 (* Node tagged with some information about source term before desugaring *)
   | Meta_datainst      of exp * option<typ>                      (* Expect the data constructor e to build a t-typed value; only used internally to pretyping; not visible elsewhere *)
-  | Meta_uvar_e_app    of exp * (uvar_e * typ)                   (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
+  | Meta_uvar_e_app      of exp * (uvar_e * typ)                 (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
 and meta_source_info =
   | Data_app
   | Sequence                   
@@ -140,12 +150,12 @@ and pat =
   | Pat_withinfo of pat * Range.range
 and knd' =
   | Kind_type
-  | Kind_effect                                           (* the kind of a computation *)
+  | Kind_effect
   | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)
   | Kind_tcon of option<btvdef> * knd * knd * bool        (* 'a:k -> k'; bool marks implicit *)
   | Kind_dcon of option<bvvdef> * typ * knd * bool        (* x:t -> k; bool marks implicit *)
   | Kind_uvar of uvar_k_app                               (* not present after 1st round tc *)
-  | Kind_lam of list<either<btvar,bvvar>> * knd           (* an n-ary kind abstraction; only used to instantiate uvars *)
+  | Kind_lam of list<binder> * knd                        (* not present after 1st round tc *)
   | Kind_delayed of knd * subst * memo<knd>               (* delayed substitution --- always force before inspecting first element *)
   | Kind_unknown                                          (* not present after 1st round tc *)
 and knd = syntax<knd', unit>
@@ -300,17 +310,18 @@ val mk_Kind_tcon: (option<btvdef> * knd * knd * bool) -> range -> knd
 val mk_Kind_dcon: (option<bvvdef> * typ * knd * bool) -> range -> knd
 val mk_Kind_delayed: (knd * subst * memo<knd>) -> range -> knd
 val mk_Kind_uvar: uvar_k_app -> range -> knd
-val mk_Kind_lam: (freevars_l * knd) -> range -> knd
+val mk_Kind_lam: (binders * knd) -> range -> knd
 
 val mk_Typ_btvar: btvar -> knd -> range -> typ
 val mk_Typ_const: ftvar -> knd -> range -> typ
 val mk_Typ_fun: (option<bvvdef> * typ * comp * bool) -> knd -> range -> typ
 val mk_Typ_univ: (btvdef * knd * comp) -> knd -> range -> typ
 val mk_Typ_refine: (bvvdef * typ * formula) -> knd -> range -> typ
-val mk_Typ_app: (typ * typ * bool) -> knd -> range -> typ
-val mk_Typ_dep: (typ * exp * bool) -> knd -> range -> typ
-val mk_Typ_lam: (bvvdef * typ * typ) -> knd -> range -> typ
-val mk_Typ_tlam: (btvdef * knd * typ) -> knd -> range -> typ
+val mk_Typ_app: (typ * args) -> knd -> range -> typ
+val mk_Typ_app': (typ * arg) -> knd -> range -> typ
+//val mk_Typ_dep: (typ * exp * bool) -> knd -> range -> typ
+val mk_Typ_lam: (binders * typ) -> knd -> range -> typ
+//val mk_Typ_tlam: (btvdef * knd * typ) -> knd -> range -> typ
 val mk_Typ_ascribed': (typ * knd) -> knd -> range -> typ
 val mk_Typ_ascribed: (typ * knd) -> range -> typ
 val mk_Typ_meta': meta_t -> knd -> range -> typ
@@ -327,10 +338,11 @@ val mk_Rigid: typ -> comp
 val mk_Exp_bvar: bvvar -> typ -> range -> exp
 val mk_Exp_fvar: (fvvar * bool) -> typ -> range -> exp 
 val mk_Exp_constant: sconst -> typ -> range -> exp
-val mk_Exp_abs: (bvvdef * typ * exp) -> typ -> range -> exp
-val mk_Exp_tabs: (btvdef * knd * exp) -> typ -> range -> exp
-val mk_Exp_app: (exp * exp * bool) -> typ -> range -> exp
-val mk_Exp_tapp: (exp * typ) -> typ -> range -> exp
+val mk_Exp_abs: (binders * exp) -> typ -> range -> exp
+//val mk_Exp_tabs: (btvdef * knd * exp) -> typ -> range -> exp
+val mk_Exp_app: (exp * args) -> typ -> range -> exp
+val mk_Exp_app': (exp * arg) -> typ -> range -> exp
+//val mk_Exp_tapp: (exp * typ) -> typ -> range -> exp
 val mk_Exp_match: (exp * list<(pat * option<exp> * exp)>) -> typ -> range -> exp
 val mk_Exp_ascribed': (exp * typ) -> typ -> range -> exp
 val mk_Exp_ascribed: (exp * typ) -> range -> exp

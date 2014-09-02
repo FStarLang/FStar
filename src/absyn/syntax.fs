@@ -64,15 +64,20 @@ type typ' =
   | Typ_fun      of option<bvvdef> * typ * comp * bool       (* x:t -> M t' wp  or  t -> M t' wp, bool marks implicit arguments *)
   | Typ_univ     of btvdef * knd  * comp                     (* 'a:k -> M t wp *)
   | Typ_refine   of bvvdef * typ * typ                       (* x:t{phi} *)
-  | Typ_app      of typ * typ * bool                         (* t t' -- bool marks an explicitly provided implicit arg *) 
-  | Typ_dep      of typ * exp * bool                         (* t e -- bool marks an explicitly provided implicit arg *)  
-  | Typ_lam      of bvvdef * typ * typ                       (* fun (x:t) => T *)
-  | Typ_tlam     of btvdef * knd * typ                       (* fun ('a:k) => T *) 
+  | Typ_app      of typ * args                               (* args in reverse order *)
+  //| Typ_dep      of typ * exp * bool                       (* t e -- bool marks an explicitly provided implicit arg *)  
+  | Typ_lam      of binders * typ                            (* fun (ai|xi:tau_i) => T *)
+  //| Typ_tlam     of btvdef * knd * typ                     (* fun ('a:k) => T *) 
   | Typ_ascribed of typ * knd                                (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
   | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
   | Typ_delayed  of typ * subst * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
+and term = either<typ,exp>
+and arg = term * bool                                        (* bool marks an explicitly provided implicit arg *)
+and args = list<arg>
+and binder = either<btvar,bvvar>
+and binders = list<binder>
 and typ = syntax<typ',knd>
 and comp_typ = {
   effect_name:lident; 
@@ -109,10 +114,11 @@ and exp' =
   | Exp_bvar       of bvvar
   | Exp_fvar       of fvvar * bool                            (* flag indicates a constructor *)
   | Exp_constant   of sconst
-  | Exp_abs        of bvvdef * typ * exp 
-  | Exp_tabs       of btvdef * knd * exp            
-  | Exp_app        of exp * exp * bool                           (* flag indicates whether the argument is explicit instantiation of an implict param *)
-  | Exp_tapp       of exp * typ             
+  | Exp_abs        of binders * exp 
+  //| Exp_tabs       of btvdef * knd * exp       
+  | Exp_app        of exp * args                                 (* args in reverse order *)
+//  | Exp_app        of exp * exp * bool                         (* flag indicates whether the argument is explicit instantiation of an implict param *)
+//  | Exp_tapp       of exp * typ             
   | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
   | Exp_ascribed   of exp * typ 
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
@@ -147,7 +153,7 @@ and knd' =
   | Kind_tcon of option<btvdef> * knd * knd * bool        (* 'a:k -> k'; bool marks implicit *)
   | Kind_dcon of option<bvvdef> * typ * knd * bool        (* x:t -> k; bool marks implicit *)
   | Kind_uvar of uvar_k_app                               (* not present after 1st round tc *)
-  | Kind_lam of list<either<btvar,bvvar>> * knd           (* not present after 1st round tc *)
+  | Kind_lam of list<binder> * knd                        (* not present after 1st round tc *)
   | Kind_delayed of knd * subst * memo<knd>               (* delayed substitution --- always force before inspecting first element *)
   | Kind_unknown                                          (* not present after 1st round tc *)
 and knd = syntax<knd', unit>
@@ -397,32 +403,32 @@ let mk_Typ_refine   ((x:bvvdef),(t:typ),(phi:typ)) (k:knd) (p:range) = {
     uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference phi.fvs (set_of_list [Inr x]));
     
 }
-let mk_Typ_app      ((t1:typ),(t2:typ),(b:bool)) (k:knd) (p:range) = {
-    n=Typ_app(t1, t2, b);
+let mk_Typ_app      ((t1:typ),(args:list<arg>)) (k:knd) (p:range) = {
+    n=Typ_app(t1, args);
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs t2.fvs;
     
 }
-let mk_Typ_dep      ((t:typ),(e:exp),(b:bool)) (k:knd) (p:range) = {
-    n=Typ_dep(t, e, b);
+let mk_Typ_app'    ((t1:typ),(arg:arg)) (k:knd) (p:range) = {
+    n=(match t1.n with Typ_app(head, args) -> Typ_app(head, arg::args) | _ -> Typ_app(t1, [arg]));
     tk=k;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs e.fvs;
-    
+    uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs t2.fvs;
 }
-let mk_Typ_lam      ((x:bvvdef),(t1:typ),(t2:typ)) (k:knd) (p:range) = {
-    n=Typ_lam(x, t1, t2);
+let mk_Typ_dep      ((t:typ),(e:exp),(b:bool)) (k:knd) (p:range) = mk_Typ_app' (t, (Inr e,b)) k p
+let mk_Typ_lam      ((b:binders),(t:typ)) (k:knd) (p:range) = {
+    n=Typ_lam(b, t);
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs (difference t2.fvs (set_of_list [Inr x]));
     
 }
-let mk_Typ_tlam     ((a:btvdef),(k:knd),(t:typ)) (k':knd) (p:range) = {
-    n=Typ_tlam(a, k, t);
-    tk=k';
+let mk_Typ_lam'      ((b:binder), (t2:typ)) (k:knd) (p:range) = {
+    n=(match t2.n with Typ_lam(binders, body) -> Typ_lam(b::binders, body) | _ -> Typ_lam([b], t2));
+    tk=k;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union k.fvs (difference t.fvs (set_of_list [Inl a]));
+    uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs (difference t2.fvs (set_of_list [Inr x]));
     
 }
 let mk_Typ_ascribed' ((t:typ),(k:knd)) (k':knd) (p:range) = {
@@ -459,7 +465,6 @@ let mk_Typ_delayed  ((t:typ),(s:subst),(m:memo<typ>)) (k:knd) (p:range) = {
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs s.subst_fvs;
-    
 }
 let mk_Typ_unknown  = {n=Typ_unknown; pos=dummyRange; tk=mk_Kind_unknown; uvs=mk_uvs(); fvs=mk_fvs()}
 
@@ -468,7 +473,6 @@ let mk_Total t = {
     tk=();
     pos=t.pos;
     uvs=mk_uvs(); fvs=mk_fvs();
-    
 }
 let mk_Flex (u,t) = {
     n=Flex(u,t);
@@ -483,65 +487,54 @@ let mk_Rigid t = {
     uvs=mk_uvs();
     fvs=mk_fvs();
 }
-
 let mk_Comp (ct:comp_typ) = 
     {n=Comp ct;
      tk=();
      pos=ct.result_typ.pos;
      uvs=mk_uvs(); fvs=mk_fvs();
-    }
-
+}
 let mk_Exp_bvar (x:bvvar) (t:typ) p = {
     n=Exp_bvar x;
     tk=t;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//set_of_list [Inr x.v];
-    
 }
 let mk_Exp_fvar ((x:fvvar),(b:bool)) (t:typ) p = {
     n=Exp_fvar(x, b);
     tk=t;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//emp_fvs;
-    
+    uvs=mk_uvs(); fvs=mk_fvs();//emp_fvs;  
 } 
-
 let mk_Exp_constant (s:sconst) (t:typ) p = {
     n=Exp_constant s;
     tk=t;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//emp_fvs;
-    
 } 
-let mk_Exp_abs ((x:bvvdef),(t:typ),(e:exp)) (t':typ) p = {
-    n=Exp_abs(x, t, e);
+let mk_Exp_abs ((b:binders),(e:exp)) (t':typ) p = {
+    n=Exp_abs(b, e);
     tk=t';
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference e.fvs (set_of_list [Inr x]));
-    
 }
-let mk_Exp_tabs ((a:btvdef),(k:knd),(e:exp)) (t:typ) p = {
-    n=Exp_tabs(a, k, e);
+let mk_Exp_abs' ((b:binder),(e:exp)) (t':typ) p = {
+    n=(match e.n with Exp_abs(binders, body) -> Exp_abs(b::binders, body) | _ -> Exp_abs([b], e));
+    tk=t';
+    pos=p;
+    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference e.fvs (set_of_list [Inr x]));
+}
+let mk_Exp_app ((e1:exp),(args:args)) (t:typ) p = {
+    n=Exp_app(e1, args);
     tk=t;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference e.fvs (set_of_list [Inl a]));
-    
+    uvs=mk_uvs(); fvs=mk_fvs();//union e1.fvs e2.fvs;   
 }
-let mk_Exp_app ((e1:exp),(e2:exp),(b:bool)) (t:typ) p = {
-    n=Exp_app(e1, e2, b);
+let mk_Exp_app' ((e1:exp),(arg:arg)) (t:typ) p = {
+    n=(match e1.n with Exp_app(e1, args) -> Exp_app(e1, arg::args) | _ -> Exp_app(e1, [arg]));
     tk=t;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union e1.fvs e2.fvs;
-    
 }
-let mk_Exp_tapp ((e:exp),(t:typ)) (t':typ) p = {
-    n=Exp_tapp(e, t);
-    tk=t';
-    pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union e.fvs t.fvs;
-    
-}
-
 let rec pat_vars r = function 
   | Pat_cons(_, ps) -> 
     let vars = List.collect (pat_vars r) ps in 
