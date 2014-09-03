@@ -97,12 +97,13 @@ let right ext benv bvv = match ext benv (Inr bvv) with
 (*************************************************************************************)
 (* A general way of reducing types. *)
 (*************************************************************************************)
-type binders = list<either<btvdef, bvvdef>>
+type boundvar = either<btvdef, bvvdef>
+type boundvars = list<boundvar>
 type mapper<'env, 'm, 'n> =
-    ('env -> binders -> knd -> (knd * 'env))
-    -> ('env -> binders -> typ -> (typ * 'env))
-    -> ('env -> binders -> exp -> (exp * 'env))
-    -> 'env -> binders -> 'm -> ('n * 'env)
+    ('env -> boundvars -> knd -> (knd * 'env))
+    -> ('env -> boundvars -> typ -> (typ * 'env))
+    -> ('env -> boundvars -> exp -> (exp * 'env))
+    -> 'env -> boundvars -> 'm -> ('n * 'env)
 
 let push_tbinder binders = function 
   | None -> binders
@@ -110,76 +111,92 @@ let push_tbinder binders = function
 let push_vbinder binders = function 
   | None -> binders
   | Some a -> (Inr a)::binders
+let bvd_to_bvar_s bvd sort = {v=bvd; sort=sort; p=bvd.ppname.idRange}
+let tbinder_opt aopt k = match aopt with 
+    | None -> []
+    | Some a -> [Inl <| bvd_to_bvar_s a k]
+let vbinder_opt aopt t = match aopt with 
+    | None -> []
+    | Some a -> [Inr <| bvd_to_bvar_s a t]
+
+
+type knd_components = binders * list<knd> * list<typ> * list<arg>
+type typ_components = binders * list<knd> * list<typ> * list<comp> * list<arg>
+type exp_components = binders * list<knd> * list<typ> * list<exp> * list<arg>
+let leaf_k = ([], [], [], [])
+let leaf_te = ([], [], [], [], [])
 
 let rec reduce_kind 
     (map_kind': mapper<'env, knd, knd>)
     (map_typ': mapper<'env, typ, typ>)
     (map_exp': mapper<'env, exp, exp>)
-    (combine_kind: (knd -> (list<knd> * list<typ> * list<exp>) -> 'env -> (knd * 'env)))
-    (combine_typ: (typ -> (list<knd> * list<typ> * list<comp> * list<exp>) -> 'env -> (typ * 'env)))
-    (combine_exp: (exp -> (list<knd> * list<typ> * list<exp>) -> 'env -> (exp * 'env))) (env:'env) binders k: (knd * 'env) =
+    (combine_kind: (knd -> knd_components -> 'env -> (knd * 'env)))
+    (combine_typ: (typ -> typ_components -> 'env -> (typ * 'env)))
+    (combine_exp: (exp -> exp_components -> 'env -> (exp * 'env))) 
+    (env:'env) binders k: (knd * 'env) =
   let rec visit_kind env binders k =
     let k = compress_kind k in
-    let kl, tl, el, env =   
+    let components, env =   
       match k.n with 
         | Kind_delayed _ -> failwith "Impossible"
         | Kind_lam _ 
         | Kind_type 
         | Kind_effect
-        | Kind_unknown -> [], [], [], env
+        | Kind_unknown -> 
+          leaf_k, env
         | Kind_uvar(_, args) -> 
-          let env, ts, es = map_either_l env binders args in 
-          [], ts, es, env
+          let args, env = map_args map_typ map_exp env binders args in 
+          ([], [], [], args), env
         | Kind_abbrev(kabr, k) -> 
           let k, env = map_kind env binders k in
-          let env, ts, es = map_either_l env binders (snd kabr) in
-          [k], ts, es, env
-        | Kind_tcon (aopt, k1, k2, _) -> 
-          let k1, env = map_kind env binders k1 in
-          let k2, env = map_kind env (push_tbinder binders aopt) k2 in
-          [k1;k2], [], [], env
-        | Kind_dcon (xopt, t, k, _) -> 
-          let t, env = map_typ env binders t in
-          let k, env = map_kind env (push_vbinder binders xopt) k in
-          [k],[t],[],env in
-    combine_kind k (kl, tl, el) env 
+          let args, env = map_args map_typ map_exp env binders (snd kabr) in
+          ([], [k], [], args), env
+        | Kind_arrow(bs, k) -> 
+          let bs, binders, env = map_binders map_kind map_typ env binders bs in
+          let k, env = map_kind env binders k in
+          (bs, [k], [], []), env
+    in
+    combine_kind k components env
   and map_kind env binders k = map_kind' visit_kind map_typ map_exp env binders k
   and map_typ env binders t = reduce_typ map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders t 
   and map_exp env binders e = reduce_exp map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders e
-  and map_either_l env binders tes =
-      let env, ts, es = List.fold_left (fun (env, ts, es) te -> match te with 
-            | Inl t -> let t, env = map_typ env binders t in (env, t::ts, es)
-            | Inr e -> let e, env = map_exp env binders e in (env, ts, e::es)) (env, [], []) tes in
-      env, List.rev ts, List.rev es
   in
   map_kind env binders k
       
+and map_args map_typ map_exp env binders args = 
+    let args', env = List.fold_left (fun (out, env) (arg, imp) -> 
+        match arg with 
+        | Inl t ->         
+            let t, env = map_typ env binders t in
+            ((Inl t, imp)::out, env)
+        | Inr e -> 
+            let e, env = map_exp env binders e in 
+            ((Inr e, imp)::out, env)) ([], env) args in
+    List.rev args', env 
+  
+and map_binders map_kind map_typ env binders (bs:binders) = 
+    let bs, binders, env = bs |> List.fold_left (fun (bs, binders, env) -> function 
+        | Inl a, imp -> 
+            let k, env = map_kind env binders a.sort in
+            let binders = push_tbinder binders (Some a.v) in
+            (Inl (bvd_to_bvar_s a.v k), imp)::bs, binders, env
+       
+        | Inr x, imp -> 
+            let t, env = map_typ env binders x.sort in
+            let binders = push_vbinder binders (Some x.v) in
+            (Inr (bvd_to_bvar_s x.v t), imp)::bs, binders, env) ([], binders, env) in
+    List.rev bs, binders, env 
+
 and reduce_typ 
     (map_kind': mapper<'env, knd, knd>)
     (map_typ': mapper<'env, typ, typ>)
     (map_exp': mapper<'env, exp, exp>)
-    (combine_kind: (knd -> (binders * list<knd> * list<typ> * list<exp>) -> 'env -> (knd * 'env)))
-    (combine_typ: (typ -> (binders * list<knd> * list<typ> * list<comp> * list<arg>) -> 'env -> (typ * 'env)))
-    (combine_exp: (exp -> (list<knd> * list<typ> * list<exp> * list<term>) -> 'env -> (exp * 'env))) (env:'env) binders t : (typ * 'env) =
-  let rec map_typs env binders tl = 
-    let tl, _, env = List.fold_left (fun (out, binders, env) (xopt, t) ->
-        let t, env = map_typ env binders t in
-        let binders = push_vbinder binders xopt in 
-        t::out, binders, env) ([], binders, env) tl in
-    List.rev tl, env 
-
-  and map_args env binders args = 
-    let args', env = List.fold_left (fun (out, env) (arg, imp) -> 
-        match arg with 
-            | Inl t ->         
-              let t, env = map_typ env binders t in
-              (Inl t::out, env)
-            | Inr e -> 
-              let e, env = map_exp env binders e in 
-              (Inr e::out, env)) ([], env) args in
-    List.rev args', env 
+    (combine_kind: (knd -> knd_components -> 'env -> (knd * 'env)))
+    (combine_typ: (typ -> typ_components -> 'env -> (typ * 'env)))
+    (combine_exp: (exp -> exp_components -> 'env -> (exp * 'env))) 
+    (env:'env) binders t : (typ * 'env) =
   
-  and map_comp (env:'env) (binders:list<either<btvdef,bvvdef>>) (c:comp) = 
+  let rec map_comp (env:'env) (binders:list<either<btvdef,bvvdef>>) (c:comp) = 
     let c = compress_comp c in
     match c.n with
     | Rigid t -> 
@@ -204,66 +221,63 @@ and reduce_typ
       mk_Comp ({ct with result_typ=t; effect_args=List.rev args}), env 
 
   and visit_typ env binders t = 
-    let kl, tl, cl, el, env = match (compress_typ t).n with 
+    let components, env = match (compress_typ t).n with 
       | Typ_delayed _ -> failwith "Impossible"
       | Typ_unknown
       | Typ_btvar _   
-      | Typ_const _ -> [],[],[],[],[], env
-      | Typ_app(t, args) -> 
-        let tl, env = 
-        begin match map_args env binders <| (Inl t, false)::args m with 
-            | Inl t::args -> [],[], [t], [], [], args, env
-            | _ -> failwith "Impossible"
-        end
-      | Typ_lam(axs, t) -> 
-        let axs, binders, env = List.fold_left (fun (axs, binders, env) -> function
-            | Inl a ->
-            | Inr x -> )
-        let tl, env = map_binders_and_typs env binders axs
+      | Typ_const _ -> 
+        leaf_te, env
 
-      | Typ_refine(x, t1, t2) -> 
-        let tl, env = map_typs env binders [(Some x, t1); (None, t2)] in 
-        [], tl, [], [], env 
-      | Typ_fun(xopt, t1, t2, imp) -> 
-        let t1, env = map_typ env binders t1 in 
-        let binders = push_vbinder binders xopt in
-        let t2, env = map_comp env binders t2 in 
-        [], [t1], [t2], [], env 
-      | Typ_univ(a, k, t) -> 
-        let k, env = map_kind env binders k in
-        let t, env = map_comp env (push_tbinder binders (Some a)) t in
-        [k], [], [t], [], env
-      | Typ_tlam(a, k, t) ->
-        let k, env = map_kind env binders k in
-        let t, env = map_typ env (push_tbinder binders (Some a)) t in
-        [k], [t], [], [], env
-      | Typ_dep(t, e, imp) -> 
+      | Typ_app(t, args) -> 
         let t, env = map_typ env binders t in
-        let e, env = map_exp env binders e in
-        [], [t], [], [e], env
+        let args, env = map_args map_typ map_exp env binders args in 
+        ([], [], [t], [], args), env
+
+      | Typ_lam(axs, t) -> 
+        let axs, binders, env = map_binders map_kind map_typ env binders axs in
+        let t, env = map_typ env binders t in
+        (axs, [], [t], [], []), env
+
+      | Typ_refine(x, t2) -> 
+        let bs, binders, env = map_binders map_kind map_typ env binders [Inr x, false] in
+        let t2, env = map_typ env binders t2 in
+        (bs, [], [t2], [], []), env
+
+      | Typ_fun(bs, c) -> 
+        let bs, binders, env = map_binders map_kind map_typ env binders bs in 
+        let c, env = map_comp env binders c in 
+        (bs, [], [], [c], []), env 
+
       | Typ_ascribed(t,k) ->  
         let t, env = map_typ env binders t in
         let k, env = map_kind env binders k in
-        [k], [t], [], [], env
+        ([], [k], [t], [], []), env
+      
       | Typ_uvar(_, k) -> 
         let k, env = map_kind env binders k in
-        [k], [], [], [], env
+        ([], [k], [], [], []), env
+
       | Typ_meta(Meta_comp c) -> 
         let c, env = map_comp env binders c in
-        [], [], [c], [], env
+        ([], [], [], [c], []), env
+
       | Typ_meta(Meta_named(t, _)) ->
         let t, env = map_typ env binders t in
-        [], [t], [], [], env 
+        ([], [], [t], [], []), env 
+
       | Typ_meta(Meta_uvar_t_app(t, _)) -> 
         let e, env = map_typ env binders t in 
-        [], [t], [], [], env
+        ([], [], [t], [], []), env
+
       | Typ_meta(Meta_pattern(t,ps)) -> 
         let t,env = map_typ env binders t in 
-        let tpats, vpats, env = List.fold_left (fun (tpats, vpats, env) -> function
-          | Inl t -> let t, env = map_typ env binders t in (t::tpats, vpats, env)
-          | Inr e -> let e, env = map_exp env binders e in (tpats, e::vpats, env)) ([], [], env) ps in 
-        [], t::tpats, [], vpats, env in
-    combine_typ t (kl, tl, cl, el) env 
+        let pats, env = List.fold_left (fun (pats, env) -> function
+          | Inl t, _ -> let t, env = map_typ env binders t in ((Inl t, false)::pats, env)
+          | Inr e, _ -> let e, env = map_exp env binders e in ((Inr e, false)::pats, env)) ([], env) ps in 
+        ([], [], [t], [], List.rev pats), env in
+
+    combine_typ t components env
+
   and map_kind env binders k = reduce_kind map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders k 
   and map_typ env binders t = map_typ' map_kind visit_typ map_exp env binders t
   and map_exp env binders e = reduce_exp map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders e  
@@ -274,9 +288,10 @@ and reduce_exp
     (map_kind': mapper<'env, knd, knd>)
     (map_typ': mapper<'env, typ, typ>)
     (map_exp': mapper<'env, exp, exp>)
-    (combine_kind: (knd -> (list<knd> * list<typ> * list<exp>) -> 'env -> (knd * 'env)))
-    (combine_typ: (typ -> (list<knd> * list<typ> * list<comp> * list<exp>) -> 'env -> (typ * 'env)))
-    (combine_exp: (exp -> (list<knd> * list<typ> * list<exp>) -> 'env -> (exp * 'env))) (env:'env) binders e : (exp * 'env) =
+    (combine_kind: (knd -> knd_components -> 'env -> (knd * 'env)))
+    (combine_typ: (typ -> typ_components -> 'env -> (typ * 'env)))
+    (combine_exp: (exp -> exp_components -> 'env -> (exp * 'env))) 
+    (env:'env) binders e : (exp * 'env) =
   let rec map_exps env binders el = 
     let el, env = List.fold_left (fun (out, env) e -> 
       let e, env = map_exp env binders e in
@@ -287,66 +302,39 @@ and reduce_exp
       let e, env = map_exp env b e in
       e::out, env) ([], env) el in
     List.rev el, env 
-  and map_branches_with_binders env el = 
-    let el, env = List.fold_left (fun (out, env) (b,wopt,e) -> 
-      let w, env = match wopt with 
-        | None -> None, env
-        | Some w -> 
-          let w, env = map_exp env b w in 
-          Some w, env in
-      let e, env = map_exp env b e in
-      (w,e)::out, env) ([], env) el in
-    List.rev el, env 
-  and map_typs env binders tl = 
-    let tl, env = List.fold_left (fun (out, env) t -> 
-      let t, env = map_typ env binders t in
-      t::out, env) ([], env) tl in
-    List.rev tl, env 
-  and map_either_l (env:'env) binders (tl:list<either<typ,exp>>) : (list<either<typ,exp>> * 'env) = 
-    let tl, env = List.fold_left (fun (out, env) t -> 
-      match t with 
-        | Inl t -> 
-          let t, env = map_typ env binders t in
-          Inl t::out, env
-        | Inr e -> 
-          let e, env = map_exp env binders e in
-          Inr e::out, env)
-      ([], env) tl in
-    List.rev tl, env 
   and map_kind env binders k = reduce_kind map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders k 
   and map_typ env binders t = reduce_typ map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders t 
   and map_exp env binders e = map_exp' map_kind map_typ visit_exp env binders e
   and visit_exp env binders e = 
      let e = compress_exp_uvars e in 
-     let kl, tl, el, env = match e.n with 
+     let components, env = match e.n with 
         | Exp_delayed _
         | Exp_meta(Meta_datainst _) -> failwith "impossible"
+
         | Exp_meta(Meta_uvar_e_app(e, _))
         | Exp_meta(Meta_desugared(e, _)) -> 
           let e, env = map_exp env binders e in 
-          [], [], [e], env
+          ([], [], [], [e], []), env
+
         | Exp_bvar _  
         | Exp_fvar _ 
-        | Exp_constant _ -> [], [], [], env
+        | Exp_constant _ -> 
+          leaf_te, env
+
         | Exp_uvar(_, t) ->  
           let t, env = map_typ env binders t in
-          [], [t], [], env
-        | Exp_abs(x, t, e) -> 
-          let tl, env = map_typs env binders [t] in
-          let e, env = map_exp env (push_vbinder binders (Some x)) e in
-          [], tl, [e], env
-        | Exp_tabs(a, k, e) ->
-          let k, env = map_kind env binders k in
-          let binders = push_tbinder binders (Some a) in
+          ([], [], [t], [], []), env
+
+        | Exp_abs(bs, e) -> 
+          let bs, binders, env = map_binders map_kind map_typ env binders bs in
           let e, env = map_exp env binders e in
-          [k], [], [e], env
-        | Exp_app(e1, e2, _) -> 
-          let el, env = map_exps env binders [e1;e2] in
-          [], [], el, env 
-        | Exp_tapp(e, t) -> 
-          let tl, env = map_typs env binders [t] in 
+          (bs, [], [], [e], []), env
+
+        | Exp_app(e, args) -> 
           let e, env = map_exp env binders e in
-          [], tl, [e], env
+          let args, env = map_args map_typ map_exp env binders args in 
+          ([], [], [], [e], args), env
+
         | Exp_match(e1, pl) -> 
           let rec pat_binders b p = match p with 
             | Pat_wild
@@ -364,107 +352,99 @@ and reduce_exp
               | None -> [(binders, e)]
               | Some w -> [(binders, w); (binders, e)]) in
           let el, env = map_exps_with_binders env ((binders, e1)::branches) in
-          [], [], el, env 
+          ([], [], [], el, []), env 
+
         | Exp_ascribed(e, t) ->
           let t, env = map_typ env binders t in
           let e, env = map_exp env binders e in
-          [], [t], [e], env
+          ([], [], [t], [e], []), env
+        
         | Exp_let((false, [(x,t,e1)]), e2) -> 
-          let tl, env = map_typs env binders [t] in
+          let t, env = map_typ env binders t in
           let binders' = match x with 
             | Inl x -> push_vbinder binders (Some x)
             | _ -> binders in
           let el, env = map_exps_with_binders env [(binders, e1); (binders', e2)] in 
-          [], tl, el, env 
+          ([], [], [t], el, []), env 
+        
         | Exp_let((true, bvdt_tl), e) ->
           let tl = List.map (fun (_, t, _) -> t) bvdt_tl in
           let el = List.map (fun (_, _, e) -> e) bvdt_tl in
-          let tl, env = map_typs env binders tl in
+          let tl, env = tl |> List.fold_left (fun (tl, env) t -> 
+            let t, env = map_typ env binders t in 
+            t::tl, env) ([], env) in 
+          let tl = List.rev tl in
           let binders = List.fold_left (fun binders (x, _, _) -> match x with 
             | Inl x -> push_vbinder binders (Some x)
             | _ -> binders) binders bvdt_tl in 
           let el, env = map_exps env binders (el@[e]) in
-          [], tl, el, env 
+          ([], [], tl, el, []), env
+           
         | Exp_let _ -> failwith "impossible"
     in
-    combine_exp e (kl, tl, el) env in
+    combine_exp e components env in
   map_exp env binders e
     
-let combine_kind k (kl, tl, el) env = 
-  let rec reconstruct x = match x with
-        | ([], [], []) -> []
-        | (Inl _::args, t::tl, el) -> Inl t::reconstruct (args, tl, el)
-        | (Inr _::args, tl, e::el) -> Inr e::reconstruct (args, tl, el)
-        | _ -> failwith "impossible" in
-  let k' = match k.n, kl, tl with 
-    | Kind_lam _, [], []
-    | Kind_type, [], [] 
-    | Kind_effect, [], []
-    | Kind_unknown, [], [] -> (fun p -> Util.return_all k)
-    | Kind_uvar(u, args), [], _ -> 
-      let args = reconstruct (args, tl, el) in
-      mk_Kind_uvar(u, args)
-    | Kind_abbrev(kabr, _), [k], _ -> 
-      let args = reconstruct (snd kabr, tl, el) in 
-      mk_Kind_abbrev((fst kabr, args), k)
-    | Kind_tcon (aopt, k1, k2, imp), [k1';k2'], [] -> mk_Kind_tcon(aopt, k1', k2', imp)
-    | Kind_dcon (xopt, t, k, imp), [k'], [t'] -> mk_Kind_dcon(xopt, t', k', imp)
+let combine_kind k (kc:knd_components) env = 
+  let k' = match k.n, kc with
+    | Kind_lam _, _
+    | Kind_type, _
+    | Kind_effect, _
+    | Kind_unknown, _ ->                         (fun p -> Util.return_all k) //need an effect coercion here
+    | Kind_uvar(u, _), (_, _, _, args) ->        mk_Kind_uvar(u, args)
+    | Kind_abbrev(kabr, _), (_, [k], _, args) -> mk_Kind_abbrev((fst kabr, args), k)
+    | Kind_arrow(_, _), (bs, [k'], _ , _)  ->    mk_Kind_arrow(bs, k')
     | _ -> failwith "impossible" in
   k' k.pos, env
     
-let combine_typ t (kl, tl, cl, el) env =
+let combine_typ t (tc:typ_components) env =
   let t = compress_typ t in 
   let w f = f t.tk t.pos in
-  let t' = match t.n, kl, tl, cl, el with 
-    | Typ_unknown, [], [], [], []
-    | Typ_btvar _, [], [], [], []  
-    | Typ_const _, [], [], [], [] -> t
-    | Typ_lam(x, t1, t2), [], [t1';t2'], [], [] ->     w <| mk_Typ_lam(x, t1', t2')
-    | Typ_app(t1, t2, imp), [], [t1';t2'], [], [] ->   w <| mk_Typ_app(t1', t2', imp)
-    | Typ_refine(x, t1, t2), [], [t1';t2'], [], [] ->  w <| mk_Typ_refine(x, t1', t2')
-    | Typ_fun(x, t1, t2, imp), [], [t1'], [t2'], [] -> w <| mk_Typ_fun(x, t1', t2', imp)
-    | Typ_tlam(a, k, t), [k'], [t'], [], [] ->         w <| mk_Typ_tlam(a, k', t')
-    | Typ_univ(a, k, t), [k'], [], [t'], [] ->         w <| mk_Typ_univ(a, k', t')
-    | Typ_dep(t, e, imp), [], [t'], [], [e'] ->        w <| mk_Typ_dep(t', e', imp)
-    | Typ_uvar(x, k), [k'], [], [], [] ->              w <| mk_Typ_uvar'(x, k')
-    | Typ_ascribed(_,_), [k'], [t'], [], [] ->         w <| mk_Typ_ascribed'(t', k')
-    | Typ_meta(Meta_comp _), [], [], [c], [] ->        w <| mk_Typ_meta'(Meta_comp c)
-    | Typ_meta(Meta_named(_, l)), [], [t'], [], [] ->  w <| mk_Typ_meta'(Meta_named(t', l))
-    | Typ_meta(Meta_pattern _), [], _, _, _ ->         
-      let pp = Meta_pattern(List.hd tl, (List.tl tl |> List.map Inl)@(el |> List.map Inr)) in
-      w <| mk_Typ_meta'(pp)
-    | Typ_meta(Meta_uvar_t_app(_, u)), [], [t], [], [] ->
-      w <| mk_Typ_meta' (Meta_uvar_t_app(t, u))
+  let t' = match t.n, tc with
+    | Typ_unknown, _
+    | Typ_btvar _, _
+    | Typ_const _, _ -> t
+    | Typ_lam _, (bs, _, [t], _, _) ->                      w <| mk_Typ_lam(bs, t)
+    | Typ_app _, (_, _, [t], _, args) ->                    w <| mk_Typ_app(t, args)
+    | Typ_refine _, ([Inr x, _], _, [t], _, _) ->           w <| mk_Typ_refine(x, t)
+    | Typ_fun _, (bs, _, _, [c], _) ->                      w <| mk_Typ_fun(bs, c)
+    | Typ_uvar(x, _), (_, [k], _, _, _) ->                  w <| mk_Typ_uvar'(x, k)
+    | Typ_ascribed _, (_, [k], [t], _, _) ->                w <| mk_Typ_ascribed'(t, k)
+    | Typ_meta(Meta_comp _), (_, _, _, [c], _) ->           w <| mk_Typ_meta'(Meta_comp c)
+    | Typ_meta(Meta_named(_, l)), (_, _, [t'], _, _) ->     w <| mk_Typ_meta'(Meta_named(t', l))
+    | Typ_meta(Meta_pattern _), (_, _, [t], _, args) ->     w <| mk_Typ_meta'(Meta_pattern(t, args))
+    | Typ_meta(Meta_uvar_t_app(_, u)), (_, _, [t], _, _) -> w <| mk_Typ_meta' (Meta_uvar_t_app(t, u))
     | _ -> failwith "impossible" in
   t', env
 
-let combine_exp e (kl,tl,el) env = 
+let combine_exp e (ec:exp_components) env = 
+  let e = compress_exp e in 
   let w f = f e.tk e.pos in
-  let e' = match e.n, kl, tl, el with 
-    | Exp_bvar _, [], [], []  
-    | Exp_fvar _, [], [], [] 
-    | Exp_constant _, [], [], [] -> e 
-    | Exp_uvar(uv, _), [], [t], [] ->            w <| mk_Exp_uvar'(uv, t)
-    | Exp_abs(x, t, e), [], [t'], [e'] ->        w <| mk_Exp_abs(x, t', e')
-    | Exp_tabs(a, k, e), [k'], [], [e'] ->       w <| mk_Exp_tabs(a, k', e')
-    | Exp_app(e1, e2, imp), [], [], [e1';e2'] -> w <| mk_Exp_app(e1', e2', imp)
-    | Exp_tapp(e, t), [], [t'], [e'] ->          w <| mk_Exp_tapp(e', t')
-    | Exp_match(e1, eqns), [], [], e1'::el -> 
+  let e' = match e.n, ec with 
+    | Exp_bvar _, _
+    | Exp_fvar _, _
+    | Exp_constant _, _ -> e 
+    | Exp_uvar(uv, _), (_, _, [t], _, _) ->                  w <| mk_Exp_uvar'(uv, t)
+    | Exp_abs _, (bs, _, _, [e], _)  ->                      w <| mk_Exp_abs(bs, e)
+    | Exp_app _, (_, _, _, [e], args) ->                     w <| mk_Exp_app(e, args)
+    | Exp_ascribed _, (_, _, [t], [e], _) ->                 w <| mk_Exp_ascribed'(e, t)
+    | Exp_meta(Meta_desugared(_, tag)), (_, _, _, [e], _) -> w <| mk_Exp_meta' (Meta_desugared(e, tag))
+    | Exp_meta(Meta_uvar_e_app(_, u)), (_, _, _, [e], _) ->  w <| mk_Exp_meta' (Meta_uvar_e_app(e, u))
+
+    | Exp_match (_, eqns), (_, [], [], e1::el, _) -> 
       let rec mk_eqns eqns el = match eqns, el with 
         | (p,None, _)::eqns', e::el' -> (p, None, e)::mk_eqns eqns' el'
         | (p,Some _, _)::eqns', w::e::el' -> (p, Some w, e)::mk_eqns eqns' el'
         | [], [] -> []
         | _ -> failwith "impossible" in
-                                                 w <| mk_Exp_match(e1', mk_eqns eqns el)
-    | Exp_ascribed(e, t), [], [t'], [e'] ->      w <| mk_Exp_ascribed'(e', t')
-    | Exp_let((x, lbs), e), [], _, _ ->
-        (match Util.first_N (List.length lbs) el with 
-           | el, [e'] -> 
-              let lbs' = List.map3 (fun (lbname, _, _) t e -> (lbname, t, e)) lbs tl el in
-              w <| mk_Exp_let((x, lbs'), e')
-           | _ -> failwith "impossible")
-    | Exp_meta(Meta_desugared(_, tag)), [], [], [e] -> w <| mk_Exp_meta' (Meta_desugared(e, tag))
-    | Exp_meta(Meta_uvar_e_app(_, u)), [], [], [e] ->
-      w <| mk_Exp_meta' (Meta_uvar_e_app(e, u))
+                                                             w <| mk_Exp_match(e1, mk_eqns eqns el)
+    | Exp_let((is_rec, lbs), _), (_, _, tl, el, _) ->
+      begin match Util.first_N (List.length lbs) el with 
+        | el, [e'] -> 
+          let lbs' = List.map3 (fun (lbname, _, _) t e -> (lbname, t, e)) lbs tl el in
+                                                             w <| mk_Exp_let((is_rec, lbs'), e')
+        | _ -> failwith "impossible"
+      end
+
     | _ -> failwith "impossible" in
   e', env

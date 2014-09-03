@@ -61,13 +61,10 @@ type memo<'a> = ref<option<'a>>
 type typ' =  
   | Typ_btvar    of btvar
   | Typ_const    of ftvar 
-  | Typ_fun      of option<bvvdef> * typ * comp * bool       (* x:t -> M t' wp  or  t -> M t' wp, bool marks implicit arguments *)
-  | Typ_univ     of btvdef * knd  * comp                     (* 'a:k -> M t wp *)
-  | Typ_refine   of bvvdef * typ * typ                       (* x:t{phi} *)
+  | Typ_fun      of binders * comp                           (* (ai:ki|xi:ti) -> M t' wp *)
+  | Typ_refine   of bvvar * typ                             (* x:t{phi} *)
   | Typ_app      of typ * args                               (* args in reverse order *)
-  //| Typ_dep      of typ * exp * bool                       (* t e -- bool marks an explicitly provided implicit arg *)  
   | Typ_lam      of binders * typ                            (* fun (ai|xi:tau_i) => T *)
-  //| Typ_tlam     of btvdef * knd * typ                     (* fun ('a:k) => T *) 
   | Typ_ascribed of typ * knd                                (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
   | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
@@ -76,7 +73,7 @@ type typ' =
 and term = either<typ,exp>
 and arg = term * bool                                        (* bool marks an explicitly provided implicit arg *)
 and args = list<arg>
-and binder = either<btvar,bvvar>
+and binder = either<btvar,bvvar> * bool
 and binders = list<binder>
 and typ = syntax<typ',knd>
 and comp_typ = {
@@ -103,11 +100,11 @@ and comp_typ_uvar_basis =
   | Resolved of comp
 and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
-  | Meta_pattern of typ * list<either<typ,exp>>
+  | Meta_pattern of typ * list<arg>
   | Meta_named of typ * lident                               (* Useful for pretty printing to keep the type abbreviation around *)
-  | Meta_uvar_t_app      of typ * (uvar_t * knd)             (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
   | Meta_comp of comp                                        (* Promoting a computation to a type, just for instantiating flex comp-vars with comp-lambdas *)
-and uvar_basis<'a,'b> = 
+  | Meta_uvar_t_app      of typ * (uvar_t * knd)             (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
+ and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a
 and exp' =
@@ -150,15 +147,14 @@ and knd' =
   | Kind_type
   | Kind_effect
   | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)
-  | Kind_tcon of option<btvdef> * knd * knd * bool        (* 'a:k -> k'; bool marks implicit *)
-  | Kind_dcon of option<bvvdef> * typ * knd * bool        (* x:t -> k; bool marks implicit *)
+  | Kind_arrow of binders * knd                           (* (ai:ki|xi:ti) => k' *)
   | Kind_uvar of uvar_k_app                               (* not present after 1st round tc *)
-  | Kind_lam of list<binder> * knd                        (* not present after 1st round tc *)
+  | Kind_lam of binders * knd                        (* not present after 1st round tc *)
   | Kind_delayed of knd * subst * memo<knd>               (* delayed substitution --- always force before inspecting first element *)
   | Kind_unknown                                          (* not present after 1st round tc *)
 and knd = syntax<knd', unit>
-and uvar_k_app = uvar_k * list<either<typ,exp>>
-and kabbrev = lident * list<either<typ,exp>>
+and uvar_k_app = uvar_k * args
+and kabbrev = lident * args
 and uvar_k = Unionfind.uvar<uvar_basis<knd,unit>>
 and lbname = either<bvvdef, lident>
 and letbindings = bool * list<(lbname * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
@@ -346,17 +342,17 @@ let mk_Kind_abbrev ((kabr:kabbrev), (k:knd)) p = {
     tk=();
     uvs=mk_uvs(); fvs=mk_fvs()
 }
-let mk_Kind_tcon ((a:option<btvdef>),(k1:knd),(k2:knd),(b:bool)) p = {
-    n=Kind_tcon(a, k1, k2, b);
+let mk_Kind_arrow ((bs:binders),(k:knd)) p = {
+    n=Kind_arrow(bs, k);
     pos=p;
     tk=();
     uvs=mk_uvs(); fvs=mk_fvs();//union k1.fvs (match a with None -> k2.fvs | Some a -> difference k2.fvs (set_of_list [Inl a]));
 }
-let mk_Kind_dcon ((a:option<bvvdef>),(t1:typ),(k2:knd),(b:bool)) p = {
-    n=Kind_dcon(a, t1, k2, b);
+let mk_Kind_arrow' ((b:binder), (k:knd)) p = {
+    n=(match k.n with Kind_arrow(bs, k') -> Kind_arrow(b::bs, k') | _ -> Kind_arrow([b], k));
     pos=p;
     tk=();
-    uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs (match a with None -> k2.fvs | Some a -> difference k2.fvs (set_of_list [Inr a]));
+    uvs=mk_uvs(); fvs=mk_fvs();//union k1.fvs (match a with None -> k2.fvs | Some a -> difference k2.fvs (set_of_list [Inl a]));
 }
 let mk_Kind_uvar (uv:uvar_k_app) p = {
     n=Kind_uvar uv;
@@ -365,7 +361,7 @@ let mk_Kind_uvar (uv:uvar_k_app) p = {
     uvs=mk_uvs(); fvs=mk_fvs();
     
 }
-let mk_Kind_lam ((vs:freevars_l), (k:knd)) p = {
+let mk_Kind_lam ((vs:binders), (k:knd)) p = {
     n=Kind_lam(vs, k);
     pos=p;
     tk=();
@@ -382,26 +378,18 @@ let mk_Kind_unknown  = {n=Kind_unknown; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs
 
 let mk_Typ_btvar    (x:btvar) (k:knd) (p:range) = {n=Typ_btvar x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs();}//set_of_list [Inl x.v]}
 let mk_Typ_const    (x:ftvar) (k:knd) (p:range) = {n=Typ_const x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs()}
-let mk_Typ_fun      ((x:option<bvvdef>),(t:typ),(c:comp),(b:bool)) (k:knd) (p:range) = {
-    n=Typ_fun(x, t, c, b); 
+let mk_Typ_fun      ((bs:binders),(c:comp)) (k:knd) (p:range) = {
+    n=Typ_fun(bs, c);
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//(match x with None -> union t.fvs c.fvs | Some x -> union t.fvs (difference c.fvs (set_of_list [Inr x])));
     
 }
-let mk_Typ_univ     ((x:btvdef),(k:knd),(c:comp)) (k':knd) (p:range) = {
-    n=Typ_univ(x, k, c);
-    tk=k';
-    pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//difference (union k.fvs c.fvs) (set_of_list [Inl x]);
-    
-}
-let mk_Typ_refine   ((x:bvvdef),(t:typ),(phi:typ)) (k:knd) (p:range) = {
-    n=Typ_refine(x, t, phi);
+let mk_Typ_refine   ((x:bvvar),(phi:typ)) (k:knd) (p:range) = {
+    n=Typ_refine(x, phi);
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference phi.fvs (set_of_list [Inr x]));
-    
 }
 let mk_Typ_app      ((t1:typ),(args:list<arg>)) (k:knd) (p:range) = {
     n=Typ_app(t1, args);

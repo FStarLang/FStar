@@ -16,6 +16,7 @@
 #light "off"
 module Microsoft.FStar.Absyn.Const
 open Microsoft.FStar.Absyn.Syntax
+open Microsoft.FStar.Util
 
 let p2l l = lid_of_path l dummyRange 
 let pconst s  = p2l ["Prims";s]
@@ -35,10 +36,18 @@ let num_lid    = pconst  "number"
 let float_lid  = pconst  "float" 
 let exn_lid    = pconst  "exn" 
 
+
 (* Logical connectives and operators *)
-let kunary k k'              = mk_Kind_tcon(None, k, k', false) dummyRange
-let kbin k1 k2 k'                = mk_Kind_tcon(None, k1, mk_Kind_tcon(None, k2, k', false) dummyRange, false) dummyRange
-let ktern k1 k2 k3 k'               = mk_Kind_tcon(None, k1, mk_Kind_tcon(None, k2, mk_Kind_tcon(None, k3, k', false) dummyRange, false) dummyRange, false) dummyRange
+let nil_id  = Syntax.mk_ident("_", Syntax.dummyRange)
+let nil_bvd = {ppname=nil_id; realname=nil_id}
+let nil_bvar k = {v=nil_bvd; sort=k; p=Syntax.dummyRange}
+
+let kunary k k'              = mk_Kind_arrow([Inl <| nil_bvar k, false], k') dummyRange
+let kbin k1 k2 k'            = mk_Kind_arrow([Inl <| nil_bvar k1, false; 
+                                              Inl <| nil_bvar k2, false], k') dummyRange
+let ktern k1 k2 k3 k'        = mk_Kind_arrow([Inl <| nil_bvar k1, false; 
+                                              Inl <| nil_bvar k2, false;
+                                              Inl <| nil_bvar k3, false], k') dummyRange
 let true_lid = pconst "True"
 let false_lid = pconst "False"
 let and_lid = pconst "l_and"  

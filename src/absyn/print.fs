@@ -48,21 +48,19 @@ let const_to_string x = match x with
   | Const_bytearray _  ->  "<bytearray>"
   | Const_int64 _ -> "<int64>"
   | Const_uint8 _ -> "<uint8>"
- 
+
+let imp_to_string = function 
+  | true -> "#"
+  | _ -> ""
+   
 let rec tag_of_typ t = match t.n with 
   | Typ_btvar _ -> "Typ_btvar"
   | Typ_const _ -> "Typ_const"
   | Typ_fun _ -> "Typ_fun"
-  | Typ_univ _ -> "Typ_univ"
   | Typ_refine _ -> "Typ_refine"
-  | Typ_app _ -> 
-    let t, args = Util.flatten_typ_apps t in
-    format2 "Typ_app(%s, [%s args])" (typ_to_string t) (string_of_int <| List.length args)
-  | Typ_dep _ -> 
-    let t, args = Util.flatten_typ_apps t in
-    format2 "Typ_dep(%s, [%s args])" (typ_to_string t) (string_of_int <| List.length args)
+  | Typ_app(head, args) -> 
+    format2 "Typ_app(%s, [%s args])" (typ_to_string head) (string_of_int <| List.length args)
   | Typ_lam _ -> "Typ_lam"
-  | Typ_tlam _ -> "Typ_tlam"
   | Typ_ascribed _ -> "Typ_ascribed"
   | Typ_meta(Meta_pattern _) -> "Typ_meta_pattern"
   | Typ_meta(Meta_named _) -> "Typ_meta_named"
@@ -76,10 +74,8 @@ and tag_of_exp e = match e.n with
   | Exp_bvar _ -> "Exp_bvar"
   | Exp_fvar _ -> "Exp_fvar"
   | Exp_constant _ -> "Exp_constant"
-  | Exp_abs _ -> "Exp_constant"
-  | Exp_tabs _ -> "Exp_tabs"
+  | Exp_abs _ -> "Exp_abs"
   | Exp_app _ -> "Exp_app"
-  | Exp_tapp _ -> "Exp_tapp"
   | Exp_match _ -> "Exp_match"
   | Exp_ascribed _ -> "Exp_ascribed"
   | Exp_let _ -> "Exp_let"
@@ -96,14 +92,12 @@ and typ_to_string x =
   | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)
   | Typ_btvar btv -> strBvd btv.v //Util.format2 "%s:%s" (strBvd btv.v) (kind_to_string x.tk)
   | Typ_const v -> Util.format1 "%s" (sli v.v)
-  | Typ_fun(Some x, t1, t2, imp) -> Util.format "%s%s(%s) -> %s"  [strBvd x; (if imp then "@" else ":"); (t1 |> typ_to_string); (t2|> comp_typ_to_string)]
-  | Typ_fun(None, t1, t2, _) -> Util.format "(%s) -> %s"  [(t1 |> typ_to_string); (t2|> comp_typ_to_string)]
-  | Typ_univ(a, k, t) ->       Util.format3 "%s:%s -> %s" (strBvd a) (k |> kind_to_string) (t|> comp_typ_to_string)
-  | Typ_refine(x, t, f) ->     Util.format3 "%s:%s{%s}" (strBvd x) (t|> typ_to_string) (f|> typ_to_string)
-  | Typ_app(t1, t2, imp) ->    Util.format3 "(%s %s%s)" (t1|> typ_to_string) (if imp then "#" else "") (t2|> typ_to_string)
-  | Typ_dep(t, v, imp) ->      Util.format3 "(%s %s%s)" (t|> typ_to_string) (if imp then "#" else "") (v|> exp_to_string)
-  | Typ_lam(x, t1, t2) ->      Util.format3 "(fun (%s:%s) => %s)" (strBvd x) (t1 |> typ_to_string) (t2|> typ_to_string)
-  | Typ_tlam(a, k, t) ->       Util.format3 "(fun (%s:%s) => %s)" (strBvd a) (k |> kind_to_string) (t|> typ_to_string)
+  | Typ_fun(binders, c) ->     Util.format2 "%s -> %s"  (binders_to_string "->" binders) (comp_typ_to_string c)
+//  | Typ_fun(None, t1, t2, _) -> Util.format "(%s) -> %s"  [(t1 |> typ_to_string); (t2|> comp_typ_to_string)]
+//  | Typ_univ(a, k, t) ->       Util.format3 "%s:%s -> %s" (strBvd a) (k |> kind_to_string) (t|> comp_typ_to_string)
+  | Typ_refine(xt, f) ->       Util.format3 "%s:%s{%s}" (strBvd xt.v) (xt.sort |> typ_to_string) (f|> typ_to_string)
+  | Typ_app(t, args) ->        Util.format2 "(%s %s)"   (t |> typ_to_string) (args |> args_to_string)
+  | Typ_lam(binders, t2) ->      Util.format2 "(fun %s => %s)" (binders_to_string " " binders) (t2|> typ_to_string)
   | Typ_ascribed(t, k) ->
     if !Options.print_real_names  
     then Util.format2 "(%s <: %s)" (typ_to_string t) (kind_to_string k)
@@ -114,16 +108,28 @@ and typ_to_string x =
          Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)) 
          //Util.format2 "'U%s_%s"  (Util.string_of_int (Unionfind.uvar_id uv)) (kind_to_string k)
       | t -> t|> typ_to_string)
-      
+  
+and binder_to_string = function 
+    | Inl a, imp -> Util.format3 "%s%s:%s" (imp_to_string imp) (strBvd a.v) (kind_to_string a.sort)
+    | Inr x, imp -> Util.format3 "%s%s:%s" (imp_to_string imp) (strBvd x.v) (typ_to_string x.sort)
+   
+and binders_to_string sep bs = bs |> List.map binder_to_string |> String.concat sep
+
+and arg_to_string = function 
+   | Inl a, imp -> Util.format2 "%s%s" (imp_to_string imp) (typ_to_string a)    
+   | Inr x, imp -> Util.format2 "%s%s" (imp_to_string imp) (exp_to_string x)
+
+and args_to_string args = args |> List.map arg_to_string |> String.concat " "
+
 and comp_typ_to_string c =
   match (compress_comp c).n with 
     | Flex (u, t) -> Util.format2 "_Flex_ (%s) %s" (typ_to_string u) (typ_to_string t) 
     | Rigid t -> typ_to_string t
-    | Total t -> if Util.is_function_typ t then typ_to_string t else Util.format1 "Tot %s" (typ_to_string t)
+    | Total t -> Util.format1 "Tot %s" (typ_to_string t)
     | Comp c ->
       if List.contains TOTAL c.flags && not !Options.print_effect_args 
-      then (if Util.is_function_typ c.result_typ then typ_to_string c.result_typ else Util.format1 "Tot %s" (typ_to_string c.result_typ))
-      else if not !Options.print_effect_args && (lid_equals c.effect_name Const.ml_effect_lid  || List.contains MLEFFECT c.flags) && not (Util.is_function_typ c.result_typ)
+      then Util.format1 "Tot %s" (typ_to_string c.result_typ)
+      else if not !Options.print_effect_args && (lid_equals c.effect_name Const.ml_effect_lid  || List.contains MLEFFECT c.flags) 
       then typ_to_string c.result_typ
       else if !Options.print_effect_args 
       then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (c.effect_args |> List.map effect_arg_to_string |> String.concat ", ")//match c.effect_args with hd::_ -> effect_arg_to_string hd | _ ->"")
@@ -136,20 +142,20 @@ and effect_arg_to_string e = match e with
 and formula_to_string phi = 
     let const_op f _ = f in
     let un_op  f = function 
-        | [Inl t] -> format2 "%s %s" f (formula_to_string t)
+        | [Inl t, _] -> format2 "%s %s" f (formula_to_string t)
         | _ -> failwith "impos" in
     let bin_top f = function 
-        | [Inl t1; Inl t2] -> format3 "%s %s %s" (formula_to_string t1) f (formula_to_string t2)
+        | [Inl t1, _; Inl t2, _] -> format3 "%s %s %s" (formula_to_string t1) f (formula_to_string t2)
         | _ -> failwith "Impos" in
     let bin_eop f = function
-        | [Inr e1;Inr e2] -> format3 "%s %s %s" (exp_to_string e1) f (exp_to_string e2)
+        | [Inr e1, _;Inr e2, _] -> format3 "%s %s %s" (exp_to_string e1) f (exp_to_string e2)
         | _ -> failwith "impos" in
     let ite = function 
-        | [Inl t1;Inl t2;Inl t3] -> format3 "if %s then %s else %s" (formula_to_string t1) (formula_to_string t2) (formula_to_string t3)
+        | [Inl t1, _;Inl t2, _;Inl t3, _] -> format3 "if %s then %s else %s" (formula_to_string t1) (formula_to_string t2) (formula_to_string t3)
         | _ -> failwith "impos" in
     let eq_op = function 
-        | [Inl _; Inl _; Inr e1; Inr e2]
-        | [Inr e1; Inr e2] -> format2 "%s == %s" (exp_to_string e1) (exp_to_string e2)
+        | [Inl _, _; Inl _, _; Inr e1, _; Inr e2, _]
+        | [Inr e1, _; Inr e2, _] -> format2 "%s == %s" (exp_to_string e1) (exp_to_string e2)
         |  _ -> failwith "Impossible" in
     let connectives = [(Const.and_lid,  bin_top "/\\");
                        (Const.or_lid, bin_top "\\/");
@@ -168,8 +174,7 @@ and formula_to_string phi =
                        ] in
 
     let fallback phi = match phi.n with 
-        | Typ_lam(x, _, phi) ->  format2 "(fun %s => %s)" (strBvd x) (formula_to_string phi)
-        | Typ_tlam(a, _, phi) ->  format2 "(fun %s => %s)" (strBvd a) (formula_to_string phi)
+        | Typ_lam(binders, phi) ->  format2 "(fun %s => %s)" (binders_to_string " " binders) (formula_to_string phi)
         | _ -> typ_to_string phi in
 
     match Util.destruct_typ_as_formula phi with 
@@ -181,13 +186,11 @@ and formula_to_string phi =
              | Some (_, f) -> f arms)
 
         | Some (QAll(vars, _, body)) -> 
-          let binders = vars |> List.map (function Inl(a, _) -> strBvd a | Inr(x, _) -> strBvd x) |> String.concat " " in
-          format2 "(forall %s. %s)" binders (formula_to_string body)
+          format2 "(forall %s. %s)" (binders_to_string " " vars) (formula_to_string body)
 
         | Some (QEx(vars, _, body)) -> 
-          let binders = vars |> List.map (function Inl(a, _) -> strBvd a | Inr(x, _) -> strBvd x) |> String.concat " " in
-          format2 "(exists %s. %s)" binders (formula_to_string body)
-
+          format2 "(exists %s. %s)" (binders_to_string " " vars) (formula_to_string body)
+         
 and exp_to_string x = match (compress_exp x).n with 
   | Exp_delayed _ -> failwith "Impossible"
   | Exp_meta(Meta_uvar_e_app(e, _))
@@ -197,10 +200,8 @@ and exp_to_string x = match (compress_exp x).n with
   | Exp_bvar bvv -> strBvd bvv.v //Util.format2 "%s : %s" (strBvd bvv.v) (typ_to_string bvv.sort)
   | Exp_fvar(fv, _) ->  sli fv.v
   | Exp_constant c -> c |> const_to_string
-  | Exp_abs(x, t, e) -> Util.format3 "(fun (%s:%s) -> %s)" (strBvd x) (t |> typ_to_string) (e|> exp_to_string)
-  | Exp_tabs(a, k, e) -> Util.format3 "(fun (%s::%s) -> %s)" (strBvd a) (k |> kind_to_string) (e|> exp_to_string)
-  | Exp_app(e1, e2, imp) -> Util.format3 "(%s %s%s)" (e1|> exp_to_string) (if imp then "#" else "") (e2|> exp_to_string)
-  | Exp_tapp(e, t) -> Util.format2 "(%s %s)" (e|> exp_to_string) (t |> typ_to_string)
+  | Exp_abs(binders, e) -> Util.format2 "(fun %s -> %s)" (binders_to_string " " binders) (e|> exp_to_string)
+  | Exp_app(e, args) -> Util.format2 "(%s %s)" (e|> exp_to_string) (args_to_string args)
   | Exp_match(e, pats) -> Util.format2 "(match %s with %s)" 
     (e |> exp_to_string) 
     (Util.concat_l "\n\t" (pats |> List.map (fun (p,wopt,e) -> Util.format3 "%s %s -> %s" 
@@ -232,7 +233,7 @@ and meta_to_string x = match x with
   | Meta_comp c -> comp_typ_to_string c
   | Meta_uvar_t_app(t, (_,k)) -> (typ_to_string t) 
   | Meta_named(_, l) -> sli l
-  | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (t |> typ_to_string) (either_l_to_string ", " ps)
+  | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (t |> typ_to_string) (args_to_string ps)
 
 and kind_to_string x = match (compress_kind x).n with 
   | Kind_lam _ -> failwith "Impossible"
@@ -242,11 +243,8 @@ and kind_to_string x = match (compress_kind x).n with
     //format2 "('k_%s %s)" (Util.string_of_int (Unionfind.uvar_id uv)) (either_l_to_string " " args)
   | Kind_type -> "Type"
   | Kind_effect -> "Effect"
-  | Kind_abbrev((n, args), _) -> Util.format2 "%s %s" (sli n) (String.concat " " (args |> List.map either_to_string))
-  | Kind_tcon(Some x, k, k', imp) -> Util.format4 "(%s%s:%s => %s)" (if imp then "#" else "") (strBvd x) (k |> kind_to_string) (k' |> kind_to_string)
-  | Kind_tcon(_, k, k', _) -> Util.format2 "(%s => %s)" (k |> kind_to_string) (k' |> kind_to_string)
-  | Kind_dcon(Some x, t, k, imp) -> Util.format4 "(%s%s:%s => %s)" (if imp then "#" else "") (strBvd x) (t |> typ_to_string) (k |> kind_to_string)
-  | Kind_dcon(_, t, k, _) -> Util.format2 "(%s => %s)" (t |> typ_to_string) (k |> kind_to_string)
+  | Kind_abbrev((n, args), _) -> Util.format2 "%s %s" (sli n) (args_to_string args)
+  | Kind_arrow(binders, k) -> Util.format2 "(%s => %s)" (binders_to_string " => " binders) (k |> kind_to_string)
   | Kind_unknown -> "_"
 
 and pat_to_string x = match x with

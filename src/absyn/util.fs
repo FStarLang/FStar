@@ -182,12 +182,12 @@ let subst_typ' s t = subst_typ (mk_subst s) t
 let subst_exp' s t = subst_exp (mk_subst s) t
 let subst_comp' s t = subst_comp (mk_subst s) t
 
-let subst_of_list (formals:list<either<btvar,bvvar>>) (actuals:list<either<typ,exp>>) : subst = 
+let subst_of_list (formals:binders) (actuals:args) : subst = 
     if (List.length formals = List.length actuals)
     then List.map2 (fun ax tv -> match ax, tv with 
-        | Inl a, Inl t -> Inl(a.v, t)
-        | Inr x, Inr v -> Inr(x.v, v)
-        | _ -> failwith "Ill-formed substitution") formals actuals |> mk_subst
+        | (Inl a, _), (Inl t, _) -> Inl(a.v, t)
+        | (Inr x, _), (Inr v, _) -> Inr(x.v, v)
+        | _ -> failwith "Ill-formed substitution") formals (List.rev actuals) |> mk_subst
     else failwith "Ill-formed substitution"
 
 let restrict_subst axs s = 
@@ -239,71 +239,66 @@ and visit_knd s vk mt me ctrl binders k =
   if ctrl.descend 
   then let k, _ = vk null_ctrl binders k in k, ctrl
   else map_knd s vk mt me null_ctrl binders k
-and visit_typ s mk vt me ctrl binders t = 
-  let visit_prod ax tc = 
-    let ax, s, binders = match ax with 
-    | Inl(a, k) -> 
-      //printfn "Visit prod for %s" (a.ppname.idText ^ a.realname.idText);
-      let k, _ = map_knd s mk vt me null_ctrl binders k in
-      let binders' = Inl a::binders in
-      let s = restrict_subst binders' s in
-      (match s.subst with 
-        | [] when ctrl.stop_if_empty_subst -> Inl(a,k), s, binders'
-        | _ -> 
-            let b = freshen_bvd a in
-            let s = extend_subst (Inl(a, bvd_to_typ b k)) s in
-            Inl(b,k), s, Inl b::binders)
-    | Inr(x, t1) -> 
-      let t1, _ = map_typ s mk vt me null_ctrl binders t1 in
-      let binders' = Inr x::binders in
-      let s = restrict_subst binders' s in 
-      (match s.subst with
-        | [] when ctrl.stop_if_empty_subst -> Inr(x,t1), s, binders
-        | _ -> 
-           let y = freshen_bvd x in
-           let s = extend_subst (Inr(x, bvd_to_exp y t1)) s in
-           Inr(y,t1), s, Inr y::binders) in
-     let tc = match s.subst, tc with 
+and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t = 
+  let visit_prod (bs:binders) tc = 
+    let bs, boundvars, s = bs |> List.fold_left (fun (bs, boundvars, s) -> function
+        | Inl a, imp -> 
+          let k, _ = map_knd s mk vt me null_ctrl boundvars a.sort in
+          let a = {a with sort=k} in
+          let boundvars' = Inl a.v::boundvars in
+          let s = restrict_subst boundvars' s in
+          let b, s, boundvars = match s.subst with 
+            | [] when ctrl.stop_if_empty_subst -> Inl a, s, boundvars'
+            | _ -> 
+                let b = bvd_to_bvar_s (freshen_bvd a.v) k in
+                let s = extend_subst (Inl(a.v, btvar_to_typ b)) s in
+                Inl b, s, Inl b.v::boundvars in
+          (b,imp)::bs, boundvars, s
+          
+        | Inr x, imp -> 
+          let t, _ = map_typ s mk vt me null_ctrl boundvars x.sort in
+          let x = {x with sort=t} in
+          let boundvars' = Inr x.v::boundvars in
+          let s = restrict_subst boundvars' s in
+          let b, s, boundvars = match s.subst with 
+            | [] when ctrl.stop_if_empty_subst -> Inr x, s, boundvars'
+            | _ -> 
+                let y = bvd_to_bvar_s (freshen_bvd x.v) t in
+                let s = extend_subst (Inr(x.v, bvar_to_exp y)) s in
+                Inr y, s, Inr y.v::boundvars in
+          (b,imp)::bs, boundvars, s) ([], boundvars, s) in
+
+    let tc = match s.subst, tc with 
         | [], _ -> tc
-        | _, Inl t -> Inl (fst <| map_typ s mk vt me null_ctrl binders t)
-        | _, Inr c -> Inr (fst <| map_comp s mk (map_typ s mk vt me) (map_exp s mk vt me) null_ctrl binders c) in
-     ax, tc  in
+        | _, Inl t -> Inl (fst <| map_typ s mk vt me null_ctrl boundvars t)
+        | _, Inr c -> Inr (fst <| map_comp s mk (map_typ s mk vt me) (map_exp s mk vt me) null_ctrl boundvars c) in
+    List.rev bs, tc  in
 
   let t0 = t in
   match t0.n with
     | Typ_btvar a -> 
       //printfn "Trying to subst. %s with [%s]\n" (a.v.realname.idText) (s |> subst_to_string);
-      compress_typ <| subst_tvar (restrict_subst binders s) t, ctrl
+      compress_typ <| subst_tvar (restrict_subst boundvars s) t, ctrl
     
-    | _ when (not ctrl.descend) -> map_typ s mk vt me null_ctrl binders t
+    | _ when (not ctrl.descend) -> map_typ s mk vt me null_ctrl boundvars t
 
      (* all the binding forms need to be alpha-converted to avoid capture *)
-    | Typ_fun(Some x, t, c, b) ->
-        (match visit_prod (Inr(x,t)) (Inr c) with 
-            | Inr(y,t), Inr c -> mk_Typ_fun (Some y, t, c, b) t0.tk t0.pos, ctrl
+    | Typ_fun(bs, c) -> 
+        (match visit_prod bs (Inr c) with 
+            | bs, Inr c -> mk_Typ_fun (bs, c) t0.tk t0.pos, ctrl
             | _ -> failwith "Impossible")
 
-    | Typ_univ(a, k, c) -> 
-         (match visit_prod (Inl(a,k)) (Inr c) with 
-            | Inl(a,k), Inr c -> mk_Typ_univ(a, k, c) t0.tk t0.pos, ctrl
-            | _ -> failwith "Impossible")
-
-    | Typ_refine(x, t1, t2) -> 
-        (match visit_prod (Inr(x,t1)) (Inl t2) with 
-            | Inr(x,t1), Inl t2 -> mk_Typ_refine(x, t1, t2) t0.tk t0.pos, ctrl
+    | Typ_refine(x, t) -> 
+        (match visit_prod [Inr x, false] (Inl t) with 
+            | [Inr x, _], Inl t -> mk_Typ_refine(x, t) t0.tk t0.pos, ctrl
             | _ -> failwith "Impossible")
     
-    | Typ_lam(x, t1, t2) -> 
-        (match visit_prod (Inr(x,t1)) (Inl t2) with 
-            | Inr(x,t1), Inl t2 -> mk_Typ_lam(x, t1, t2) t0.tk t0.pos, ctrl
+    | Typ_lam(bs, t) ->
+        (match visit_prod bs (Inl t) with 
+            | bs, Inl t -> mk_Typ_lam(bs, t) t0.tk t0.pos, ctrl
             | _ -> failwith "Impossible")
-    
-    | Typ_tlam(a, k, t2) -> 
-        (match visit_prod (Inl(a,k)) (Inl t2) with 
-            | Inl(a,k), Inl t2 -> mk_Typ_tlam(a, k, t2) t0.tk t0.pos, ctrl
-            | _ -> failwith "Impossible")
-    
-    | _ -> let t, _ = vt null_ctrl binders t in t, ctrl
+        
+    | _ -> let t, _ = vt null_ctrl boundvars t in t, ctrl
 and visit_exp s mk me ve ctrl binders e =
   let e = Visit.compress_exp e in 
   match e.n with 
@@ -361,17 +356,13 @@ and compress_comp c =
         end
     | _ -> c
 
-
-  
 let alpha_typ t = 
    let t = compress_typ t in
    let s = mk_subst [] in
    match t.n with 
     | Typ_lam _
-    | Typ_tlam _
     | Typ_refine _ 
-    | Typ_fun _ 
-    | Typ_univ _ -> fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp alpha_ctrl [] t 
+    | Typ_fun _ -> fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp alpha_ctrl [] t 
     | _ -> t
     
 let compress_typ_opt = function
@@ -384,7 +375,6 @@ let mk_discriminator lid =
 let is_name (lid:lident) = 
   let c = Util.char_at lid.ident.idText 0 in
   Util.is_upper c
-
 
 let ml_comp t r =  
   mk_Comp ({effect_name=set_lid_range Const.ml_effect_lid r;
@@ -472,44 +462,44 @@ let unascribe_either = function
     | Inr e -> Inr <| unascribe (compress_exp e)
 
 let rec unrefine t = match t.n with 
-  | Typ_refine(x, t, _) -> unrefine t
+  | Typ_refine(x, _) -> unrefine x.sort
   | _ -> t
 
 let is_fun e = match (compress_exp e).n with 
-  | Exp_abs _
-  | Exp_tabs _ -> true
+  | Exp_abs _ -> true
   | _ -> false
 
 let rec pre_typ t = 
     let t = compress_typ t in 
     match t.n with 
-      | Typ_refine(_, t, _) 
+      | Typ_refine(x, _) -> pre_typ x.sort 
       | Typ_ascribed(t, _) -> pre_typ t
       | _ -> t
 
-(* If the input type is a Typ_app, walks the Typ_app tree and
-   flattens the type parameters. Does not recursively drill into
-   other kinds of types. *)
-let flatten_typ_apps : typ -> typ * (list<either<typ,exp>>) =
-  let rec aux acc t = 
-    let t = pre_typ t in
-    match t.n with
-      | Typ_app(t1, t2, _) -> aux (Inl t2::acc) t1 
-      | Typ_dep(t1, v, _) -> aux (Inr v::acc) t1
-      | _              -> t, acc in
-  (fun t -> aux [] t)
-
-let flatten_exp_apps (e:exp) : exp * (list<either<typ, exp>>) = 
-  let rec aux e out = match (compress_exp e).n with 
-    | Exp_app(e1, e2, _) -> aux e1 (Inr e2::out)
-    | Exp_tapp(e1, t) -> aux e1 (Inl t::out)
-    | Exp_ascribed(e, _) -> aux e out
-    | _ -> e, out in
-  aux e []
-
+//(* If the input type is a Typ_app, walks the Typ_app tree and
+//   flattens the type parameters. Does not recursively drill into
+//   other kinds of types. *)
+//let flatten_typ_apps : typ -> typ * (list<either<typ,exp>>) =
+//  let rec aux acc t = 
+//    let t = pre_typ t in
+//    match t.n with
+//      | Typ_app(t1, t2, _) -> aux (Inl t2::acc) t1 
+//      | Typ_dep(t1, v, _) -> aux (Inr v::acc) t1
+//      | _              -> t, acc in
+//  (fun t -> aux [] t)
+//
+//let flatten_exp_apps (e:exp) : exp * (list<either<typ, exp>>) = 
+//  let rec aux e out = match (compress_exp e).n with 
+//    | Exp_app(e1, e2, _) -> aux e1 (Inr e2::out)
+//    | Exp_tapp(e1, t) -> aux e1 (Inl t::out)
+//    | Exp_ascribed(e, _) -> aux e out
+//    | _ -> e, out in
+//  aux e []
+//
 let destruct typ lid = 
-  match flatten_typ_apps typ with 
-    | {n=Typ_const tc}, args when lid_equals tc.v lid -> Some args
+  let typ = compress_typ typ in
+  match typ.n with 
+    | Typ_app({n=Typ_const tc}, args) when lid_equals tc.v lid -> Some args
     | _ -> None
 
 let rec lids_of_sigelt se = match se with 
@@ -543,76 +533,92 @@ let range_of_lb = function
   | (Inl x, _, _) -> range_of_bvd x
   | (Inr l, _, _) -> range_of_lid l 
 
-let mk_curried_app e e_or_t = 
-  List.fold_left (fun f -> function
-    | Inl t -> mk_Exp_tapp(f, t) tun (Range.union_ranges f.pos t.pos)
-    | Inr (e, imp) -> mk_Exp_app(f, e, imp) tun (Range.union_ranges f.pos e.pos))  e e_or_t 
+//let mk_curried_app e e_or_t = 
+//  List.fold_left (fun f -> function
+//    | Inl t -> mk_Exp_tapp(f, t) tun (Range.union_ranges f.pos t.pos)
+//    | Inr (e, imp) -> mk_Exp_app(f, e, imp) tun (Range.union_ranges f.pos e.pos))  e e_or_t 
 
-let rec app_kind k te = 
-    let k = compress_kind k in 
-    match k.n, te with 
-    | Kind_tcon(None, _, k', _), Inl t ->  k'
-    | Kind_dcon(None, _, k', _), Inr e -> k'
-    | Kind_tcon(Some a, _, k', _), Inl t -> subst_kind (mk_subst [(Inl(a, t))]) k'
-    | Kind_dcon(Some x, _, k', _), Inr e -> subst_kind (mk_subst [(Inr(x, e))]) k'
-    | Kind_abbrev(_, k), _ -> app_kind k te
-    | _ -> kun
+//let rec app_kind k te = 
+//    let k = compress_kind k in 
+//    match k.n, te with 
+//    | Kind_tcon(None, _, k', _), Inl t ->  k'
+//    | Kind_dcon(None, _, k', _), Inr e -> k'
+//    | Kind_tcon(Some a, _, k', _), Inl t -> subst_kind (mk_subst [(Inl(a, t))]) k'
+//    | Kind_dcon(Some x, _, k', _), Inr e -> subst_kind (mk_subst [(Inr(x, e))]) k'
+//    | Kind_abbrev(_, k), _ -> app_kind k te
+//    | _ -> kun
 
-let app_typ t te = match t.n, te with 
-    | Typ_fun(None, _, c, _), Inr _  -> comp_result c
-    | Typ_fun(Some x, _, c, _), Inr e -> subst_typ (mk_subst [Inr(x, e)]) <| comp_result c
-    | Typ_univ(a, _, c), Inl t -> subst_typ (mk_subst [Inl(a, t)]) <| comp_result c 
-    | _ -> tun
+//let app_typ t te = match t.n, te with 
+//    | Typ_fun(None, _, c, _), Inr _  -> comp_result c
+//    | Typ_fun(Some x, _, c, _), Inr e -> subst_typ (mk_subst [Inr(x, e)]) <| comp_result c
+//    | Typ_univ(a, _, c), Inl t -> subst_typ (mk_subst [Inl(a, t)]) <| comp_result c 
+//    | _ -> tun
 
 let mk_typ_app f args = 
-  List.fold_left (fun f -> function
-    | Inl (t, imp) -> mk_Typ_app(f, t, imp) (app_kind f.tk (Inl t)) (Range.union_ranges f.pos t.pos)
-    | Inr (e, imp) -> mk_Typ_dep(f, e, imp) (app_kind f.tk (Inr e)) (Range.union_ranges f.pos e.pos)) f args
+    let args = List.rev args in 
+    let r = match args with 
+        | (Inl hd, _)::_ -> Range.union_ranges f.pos hd.pos
+        | (Inr hd, _)::_ -> Range.union_ranges f.pos hd.pos
+        | _ -> f.pos in
+    let kf = compress_kind f.tk in
+    let k = match kf.n with
+        | Kind_arrow(bs, k) -> 
+          if (List.length bs = List.length args)
+          then subst_kind (subst_of_list bs args) k 
+          else kun
+        | _ -> kun in
+    mk_Typ_app(f, args) k r
 
-let mk_typ_app_explicit f args = 
-  List.fold_left (fun f -> function
-    | Inl (t) -> mk_Typ_app(f, t, false) (app_kind f.tk (Inl t)) (Range.union_ranges f.pos t.pos)
-    | Inr (e) -> mk_Typ_dep(f, e, false) (app_kind f.tk (Inr e)) (Range.union_ranges f.pos e.pos)) f args
+let mk_exp_app f args = 
+  let args = List.rev args in 
+  let r = match args with 
+     | (Inl hd, _)::_ -> Range.union_ranges f.pos hd.pos
+     | (Inr hd, _)::_ -> Range.union_ranges f.pos hd.pos
+     | _ -> f.pos in
+  let tf = compress_typ f.tk in
+  let t = match tf.n with 
+     | Typ_fun(bs, c) ->
+        if List.length bs = List.length args
+        then let c = subst_comp (subst_of_list bs args) c in
+             comp_result c
+        else tun
+     | _ -> tun in
+  mk_Exp_app(f, args) t r
 
-let mk_exp_app_explicit f args = 
-  List.fold_left (fun f -> function
-    | Inl (t) -> mk_Exp_tapp(f, t) (app_typ f.tk (Inl t)) (Range.union_ranges f.pos t.pos)
-    | Inr (e) -> mk_Exp_app(f, e, false) (app_typ f.tk (Inr e)) (Range.union_ranges f.pos e.pos)) f args
-
-let uncurry_app e =
-  let rec aux e out = match e.n with 
-    | Exp_uvar(u, _) -> 
-      begin match Unionfind.find u with 
-        | Fixed e -> aux e out
-        | _ -> e, out
-      end
-    | Exp_app(e1, e2, imp) -> aux e1 (Inr (e2, imp)::out)
-    | Exp_tapp(e1, t) -> aux e1 (Inl t::out)
-    | _ -> e, out in
-  aux e []
+//let uncurry_app e =
+//  let rec aux e out = match e.n with 
+//    | Exp_uvar(u, _) -> 
+//      begin match Unionfind.find u with 
+//        | Fixed e -> aux e out
+//        | _ -> e, out
+//      end
+//    | Exp_app(e1, e2, imp) -> aux e1 (Inr (e2, imp)::out)
+//    | Exp_tapp(e1, t) -> aux e1 (Inl t::out)
+//    | _ -> e, out in
+//  aux e []
 
 let mk_data l args = 
-  mk_Exp_meta(Meta_desugared(mk_curried_app (fvar l (range_of_lid l)) args, Data_app))
+  mk_Exp_meta(Meta_desugared(mk_exp_app (fvar l (range_of_lid l)) args, Data_app))
 
-let destruct_app =
-    let rec destruct acc (e : exp) =
-        match e.n with
-        | Exp_app (e1, e2, b) -> destruct ((e2, b) :: acc) e1
-        | Exp_ascribed (e, _) -> destruct acc e
-        | _ -> (e, acc)
-    in
-
-    fun e -> destruct [] e
-
-let destruct_fun =
-    let rec destruct acc (e : exp) =
-        match e.n with
-        | Exp_abs (x, ty, e) -> destruct ((x, ty) :: acc) e
-        | Exp_ascribed (e, _) -> destruct acc e
-        | _ -> (List.rev acc, e)
-    in
-
-    fun e -> destruct [] e
+//let destruct_app =
+//    let rec destruct acc (e : exp) =
+//        match e.n with
+//        | Exp_app (e1, e2, b) -> destruct ((e2, b) :: acc) e1
+//        | Exp_ascribed (e, _) -> destruct acc e
+//        | _ -> (e, acc)
+//    in
+//
+//    fun e -> destruct [] e
+//
+//let destruct_fun =
+//    let rec destruct acc (e : exp) =
+//        match e.n with
+//        | Exp_abs (x, ty, e) -> destruct ((x, ty) :: acc) e
+//        | Exp_ascribed (e, _) -> destruct acc e
+//        | _ -> (List.rev acc, e)
+//    in
+//
+//    fun e -> destruct [] e
 
 let unchecked_unify uv t = 
   match Unionfind.find uv with 
@@ -630,7 +636,9 @@ let destruct_flex_arg = function
 (********************************************************************************)
 (************************* Free type/term/unif variables ************************)
 (********************************************************************************)
-type freevars' = list<btvar> * list<bvvar>
+type bvars = set<btvar> * set<bvvar>
+let no_bvars = (Syntax.no_fvs.ftvs, Syntax.no_fvs.fxvs)
+
 let eq_fvars v1 v2 = match v1, v2 with 
     | Inl a, Inl b -> Syntax.bvd_eq a b
     | Inr x, Inr y -> Syntax.bvd_eq x y
@@ -651,13 +659,10 @@ let union_fvs (fvs1, uvs1) (fvs2, uvs2) =
     }, 
     union_uvs uvs1 uvs2
 
-let sub_fv (fvs, uvs) (by:option<either<btvdef,bvvdef>>) = match by with 
-    | None -> fvs, uvs
-    | Some (Inl b) -> 
-        {fvs with ftvs=Util.set_remove (bvd_to_bvar_s b kun) fvs.ftvs}, uvs
-    | Some (Inr y) -> 
-        {fvs with fxvs=Util.set_remove (bvd_to_bvar_s y tun) fvs.fxvs}, uvs
-    //    {fvs with fxvs=fvs.fxvs |> List.filter (fun a -> not <| bvd_eq a.v y)}, uvs
+let sub_fv (fvs, uvs) (tvars, vvars) = 
+    {fvs with ftvs=Util.set_difference fvs.ftvs tvars; 
+            fxvs=Util.set_difference fvs.fxvs vvars}, 
+    uvs
 
 let tbinder = function 
     | None -> None
@@ -665,7 +670,6 @@ let tbinder = function
 let vbinder = function 
     | None -> None
     | Some x -> Some <| Inr x
-
 
 let stash (uvonly:bool) (s:syntax<'a,'b>) ((fvs:freevars), (uvs:uvars)) = 
     s.uvs := Some uvs;
@@ -685,39 +689,32 @@ let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
           then cont (no_fvs, no_uvs)
           else cont ({no_fvs with ftvs=single_fv a}, no_uvs)
 
-        | Typ_uvar (uv, k) -> cont (no_fvs, {no_uvs with uvars_t=single_uvt (uv,k)})
+        | Typ_uvar (uv, k) -> 
+          cont (no_fvs, {no_uvs with uvars_t=single_uvt (uv,k)})
 
         | Typ_unknown        
         | Typ_const _ -> cont (no_fvs, no_uvs)
 
-        | Typ_fun(xopt, t, c, _) -> 
-          vs_typ t uvonly (fun ft1 -> 
-          vs_comp c uvonly (fun ft2 -> 
-          let fvs = union_fvs ft1 (sub_fv ft2 (vbinder xopt)) in
-          cont fvs)) 
+        | Typ_fun(bs, c) -> 
+          vs_binders bs uvonly (fun (bvs, vs1) -> 
+          vs_comp c uvonly (fun vs2 -> 
+          cont (sub_fv (union_fvs vs1 vs2) bvs)))
 
-        | Typ_refine(x, t1, t2)
-        | Typ_lam(x, t1, t2) -> 
-          vs_prod_tt uvonly (Some <| Inr x) t1 t2 cont
+        | Typ_lam(bs, t) -> 
+          vs_binders bs uvonly (fun (bvs, vs1) -> 
+          vs_typ t uvonly (fun vs2 -> 
+          cont (sub_fv (union_fvs vs1 vs2) bvs)))
 
-        | Typ_app(t1, t2, _) ->
-          vs_prod_tt uvonly None t1 t2 cont
+        | Typ_refine(x, t) -> 
+          vs_binders [Inr x, false] uvonly (fun (bvs, vs1) -> 
+          vs_typ t uvonly (fun vs2 -> 
+          cont (sub_fv (union_fvs vs1 vs2) bvs)))
 
-        | Typ_univ(a, k, c) -> 
-          vs_kind k uvonly (fun ft1 -> 
-          vs_comp c uvonly (fun ft2 -> 
-          let fvs = union_fvs ft1 (sub_fv ft2 (Some <| Inl a)) in
-          cont fvs)) 
-    
-        | Typ_tlam(a, k, t) -> 
-          vs_kind k uvonly (fun ft1 -> 
-          vs_typ t uvonly (fun ft2 -> 
-          let fvs = union_fvs ft1 (sub_fv ft2 (Some <| Inl a)) in
-          cont fvs)) 
-          
-        | Typ_dep(t1, e1, _) ->
-          vs_prod_te uvonly None t1 e1 cont
-          
+        | Typ_app(t, args) -> 
+          vs_typ t uvonly (fun vs1 -> 
+          vs_args args uvonly (fun vs2 ->
+          cont (union_fvs vs1 vs2)))
+
         | Typ_ascribed(t, _) -> 
           vs_typ t uvonly cont        
 
@@ -733,6 +730,35 @@ let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Typ_meta(Meta_comp c) -> 
           vs_comp c uvonly cont
 
+and vs_binders (bs:binders) (uvonly:bool) (cont:(bvars * (freevars * uvars)) -> 'res) : 'res = 
+    match bs with 
+        | [] -> cont (no_bvars, (no_fvs, no_uvs))
+
+        | (Inl a, _)::rest -> 
+           vs_kind a.sort uvonly (fun vs -> 
+           vs_binders rest uvonly (fun ((tvars, vvars), vs2) -> 
+           cont ((Util.set_add a tvars, vvars), union_fvs vs vs2)))
+
+        | (Inr x, _)::rest -> 
+           vs_typ x.sort uvonly (fun vs -> 
+           vs_binders rest uvonly (fun ((tvars, vvars), vs2) -> 
+           cont ((tvars, Util.set_add x vvars), union_fvs vs vs2)))
+
+and vs_args (args:args) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
+    match args with 
+        | [] -> cont (no_fvs, no_uvs)
+        
+        | (Inl t, _)::tl -> 
+          vs_typ t uvonly (fun ft1 -> 
+          vs_args tl uvonly (fun ft2 -> 
+          cont (union_fvs ft1 ft2)))
+
+        | (Inr e, _)::tl -> 
+          vs_exp e uvonly (fun ft1 -> 
+          vs_args tl uvonly (fun ft2 -> 
+          cont (union_fvs ft1 ft2)))
+
+
 and vs_typ (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
     match !t.fvs, !t.uvs with 
         | Some _, None -> failwith "Impossible"
@@ -743,18 +769,6 @@ and vs_typ (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
             else vs_typ' t uvonly (fun fvs -> stash uvonly t fvs; cont fvs)
         | Some fvs, Some uvs -> cont (fvs, uvs)
 
-and vs_prod_te (uvonly:bool) (x:option<either<btvdef,bvvdef>>) (t:typ) (e:exp) (k:(freevars * uvars) -> 'res) : 'res = 
-    vs_typ t uvonly (fun ft1 -> 
-    vs_exp e uvonly (fun ft2 -> 
-    let fvs = union_fvs ft1 (sub_fv ft2 x) in
-    k fvs)) 
-
-and vs_prod_tt (uvonly:bool) (x:option<either<btvdef, bvvdef>>) (t1:typ) (t2:typ) (k:(freevars * uvars) -> 'res) : 'res = 
-    vs_typ t1 uvonly (fun ft1 -> 
-    vs_typ t2 uvonly (fun ft2 -> 
-    let fvs = union_fvs ft1 (sub_fv ft2 x) in
-    k fvs)) 
- 
 and vs_kind' (k:knd) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
     let k = compress_kind k in 
     match k.n with 
@@ -765,21 +779,16 @@ and vs_kind' (k:knd) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Kind_effect -> cont (no_fvs, no_uvs)
 
         | Kind_uvar (uv,args) -> 
-          vs_either_l args uvonly (fun (fvs, uvs) -> 
-            cont (fvs, {uvs with uvars_k=Util.set_add uv uvs.uvars_k}))
+          vs_args args uvonly (fun (fvs, uvs) -> 
+          cont (fvs, {uvs with uvars_k=Util.set_add uv uvs.uvars_k}))
 
         | Kind_abbrev(_, k) -> 
           vs_kind k uvonly cont
 
-        | Kind_dcon(aopt, t, k, _) -> 
-          vs_typ t uvonly (fun ft1 -> 
-          vs_kind k uvonly (fun ft2 -> 
-          cont (union_fvs ft1 (sub_fv ft2 (vbinder aopt)))))
-
-        | Kind_tcon(aopt, k1, k2, _) -> 
-          vs_kind k1 uvonly (fun ft1 -> 
-          vs_kind k2 uvonly (fun ft2 -> 
-          cont (union_fvs ft1 (sub_fv ft2 (tbinder aopt)))))
+        | Kind_arrow(bs, k) -> 
+          vs_binders bs uvonly (fun (bvs, vs1) -> 
+          vs_kind k uvonly (fun vs2 -> 
+          cont (sub_fv (union_fvs vs1 vs2) bvs)))
 
 and vs_kind (k:knd) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
     match !k.fvs, !k.uvs with 
@@ -809,22 +818,14 @@ and vs_exp' (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
       | Exp_ascribed(e, _) -> 
         vs_exp e uvonly cont
     
-      | Exp_abs(x, t, e) -> 
-        vs_prod_te uvonly (Some <| Inr x) t e cont
-    
-      | Exp_tabs(a, k, e) -> 
-        vs_kind k uvonly (fun ft1 -> 
-        vs_exp e uvonly (fun ft2 -> 
-        cont (union_fvs ft1 (sub_fv ft2 (Some <| Inl a)))))
-      
-      | Exp_app(e1, e2, _) ->
-        vs_exp e1 uvonly (fun ft1 -> 
-        vs_exp e2 uvonly (fun ft2 -> 
-        cont (union_fvs ft1 ft2)))
+      | Exp_abs(bs, e) -> 
+        vs_binders bs uvonly (fun (bvs, vs1) -> 
+        vs_exp e uvonly (fun vs2 -> 
+        cont (sub_fv (union_fvs vs1 vs2) bvs)))
 
-      | Exp_tapp(e, t) -> 
+      | Exp_app(e, args) -> 
         vs_exp e uvonly (fun ft1 -> 
-        vs_typ t uvonly (fun ft2 -> 
+        vs_args args uvonly (fun ft2 ->
         cont (union_fvs ft1 ft2)))
 
       | Exp_match _       
@@ -856,7 +857,9 @@ and vs_comp' (c:comp) (uvonly:bool) (k:(freevars * uvars) -> 'res) : 'res =
         | Rigid t -> vs_typ t uvonly k
          
         | Flex(t, t') -> 
-          vs_prod_tt uvonly None t t' k
+          vs_typ t uvonly (fun vs1 -> 
+          vs_typ t' uvonly (fun vs2 -> 
+          k (union_fvs vs1 vs2)))
 
         | Comp ct -> 
           if uvonly
@@ -885,18 +888,6 @@ and vs_either_l (tes:list<either<typ,exp>>) (uvonly:bool) (cont:(freevars * uvar
           vs_either hd uvonly (fun ft1 -> 
           vs_either_l tl uvonly (fun ft2 -> 
           cont (union_fvs ft1 ft2)))
-
-//let freevars_kind (k:knd) : freevars' = 
-//   vs_kind k false (fun (x,_) -> (Util.set_elements x.ftvs, Util.set_elements x.fxvs))
-//      
-//let freevars_typ (t:typ) : freevars' = 
-//   vs_typ t false (fun (x,_) -> (Util.set_elements x.ftvs, Util.set_elements x.fxvs))
-// 
-//let freevars_exp (e:exp) : freevars' =
-//   vs_exp e false (fun (x,_) -> (Util.set_elements x.ftvs, Util.set_elements x.fxvs))
-// 
-//let freevars_comp c : freevars' = 
-//   vs_comp c false (fun (x,_) -> (Util.set_elements x.ftvs, Util.set_elements x.fxvs))
 
 let freevars_kind (k:knd) : freevars = 
    vs_kind k false (fun (x,_) -> x)
@@ -946,16 +937,6 @@ and uvars_in_comp c : uvars =
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)
-let mk_curried_tlam vars t =
-    List.fold_right (fun ax t -> match ax with 
-        | Inl a -> mk_Typ_tlam(a.v, a.sort, t) (mk_Kind_tcon(Some a.v, a.sort, t.tk, false) t.pos) t.pos
-        | Inr x -> mk_Typ_lam(x.v, x.sort, t) (mk_Kind_dcon(Some x.v, x.sort, t.tk, false) t.pos) t.pos) vars t
-
-let mk_curried_lam vars e = 
-    List.fold_right (fun ax e -> match ax with 
-        | Inl a -> mk_Exp_tabs(a.v, a.sort, e) (mk_Typ_univ(a.v, a.sort, mk_Total e.tk) ktype e.pos) e.pos
-        | Inr x -> mk_Exp_abs(x.v, x.sort, e) (mk_Typ_fun(Some x.v, x.sort, mk_Total e.tk, false) ktype e.pos) e.pos) vars e
-
 let rec close_for_kind t k = 
     let k = compress_kind k in 
     match k.n with 
@@ -964,33 +945,28 @@ let rec close_for_kind t k =
     | Kind_type
     | Kind_effect
     | Kind_uvar _ -> t
-    | Kind_dcon(None, t0, k', _) -> mk_Typ_lam(new_bvd None, t0, close_for_kind t k') k t.pos
-    | Kind_dcon(Some x, t0, k', _) -> mk_Typ_lam(x, t0, close_for_kind t k') k t.pos
-    | Kind_tcon(None, k0, k', _) -> mk_Typ_tlam(new_bvd None, k0, close_for_kind t k') k t.pos
-    | Kind_tcon(Some a, k0, k', _) -> mk_Typ_tlam(a, k0, close_for_kind t k') k t.pos
+    | Kind_arrow(bs, _) -> mk_Typ_lam(bs, t) k t.pos
     | Kind_abbrev(_, k) -> close_for_kind t k
     | Kind_delayed _ -> failwith "Impossible"
 
-let close_with_lam tps t = List.fold_right
-  (fun tp out -> match tp with
-    | Tparam_typ (a,k) -> mk_Typ_tlam (a,k,out) (mk_Kind_tcon(Some a, k, out.tk, false) out.pos) out.pos
-    | Tparam_term (x,t) -> mk_Typ_lam (x,t,out) (mk_Kind_dcon(Some x, t, out.tk, false) out.pos) out.pos)
-  tps t 
+let binders_of_tps tps = 
+    tps |> List.map (function
+    | Tparam_typ (a,k) -> Inl(bvd_to_bvar_s a k), false
+    | Tparam_term (x,t) -> Inr(bvd_to_bvar_s x t), false) 
+
+let close_with_lam tps t = 
+  let bs = binders_of_tps tps in
+  mk_Typ_lam(bs, t) (mk_Kind_arrow(bs, t.tk) t.pos) t.pos
 
 let close_with_arrow tps t =
-  t |> (tps |> List.fold_right (
-    fun tp out -> match tp with
-      | Tparam_typ (a,k) -> mk_Typ_univ (a, k, total_comp out (range_of_bvd a)) mk_Kind_type out.pos
-      | Tparam_term (x,t) -> mk_Typ_fun (Some x, t, total_comp out (range_of_bvd x), true) mk_Kind_type out.pos))
+  let bs = binders_of_tps tps in 
+  mk_Typ_fun(bs, total_comp t t.pos) ktype t.pos
 
 let close_typ = close_with_arrow
       
 let close_kind tps k = 
-    List.fold_right 
-        (fun tp k -> match tp with
-            | Tparam_typ (a, k') -> mk_Kind_tcon(Some a, k', k, false) k.pos
-            | Tparam_term (x, t) -> mk_Kind_dcon(Some x, t, k, false) k.pos)
-        tps k 
+  let bs = binders_of_tps tps in 
+  mk_Kind_arrow(bs, k) k.pos
 
 (********************************************************************************)
 (******************************** Alpha conversion ******************************)
@@ -1009,28 +985,17 @@ let freshen_label ropt _ e = match ropt with
 (******************** Reducing to weak head normal form *************************)
 (***********************(inefficient--see tc/normalize.fs)***********************)
 
-let whnf t =
-  let rec aux ctr t =
-    let t = compress_typ t in
-    let t' = match t.n with
-      | Typ_dep(t1, e, imp) ->
-        let t1,ctr = aux (ctr+1) t1 in
-        (match t1.n with
-          | Typ_lam(x, t1_a, t1_r) ->
-            let t1_r' = subst_typ (mk_subst [Inr(x,e)]) t1_r in
-            aux (ctr+1) t1_r'
-          | _ -> mk_Typ_dep(t1, e, imp) t.tk t.pos, ctr)
-      | Typ_app(t1, t2, imp) ->
-        let t1,ctr = aux (ctr+1) t1 in
-        let t2,ctr = aux (ctr+1) t2 in
-        (match t1.n with
-          | Typ_tlam(a, t1_a, t1_r) ->
-            let t1_r' = subst_typ (mk_subst [Inl(a,t2)]) t1_r in
-            aux (ctr+1) t1_r'
-          | _ -> mk_Typ_app(t1, t2, imp) t.tk t.pos, ctr)
-      | _ -> t, ctr in
-    t' in
-  fst (aux 0 t)
+let rec whnf t =
+  let t = compress_typ t in
+  match t.n with
+    | Typ_app(head, args) -> 
+        let head = compress_typ head in
+        begin match head.n with 
+            | Typ_lam(formals, body) -> 
+              whnf (subst_typ (subst_of_list formals args) body)
+            | _ -> t
+        end
+    | _ -> t
 
 (********************************************************************************)
 (*********************** Various tests on constants  ****************************)
@@ -1083,8 +1048,7 @@ let is_constructor t lid =
       
 let rec is_constructed_typ t lid = match (pre_typ t).n with
   | Typ_const _ -> is_constructor t lid
-  | Typ_app(t, _, _)
-  | Typ_dep(t, _, _) -> is_constructed_typ t lid
+  | Typ_app(t, _) -> is_constructed_typ t lid
   | _ -> false
 
 let rec get_tycon t = 
@@ -1092,15 +1056,8 @@ let rec get_tycon t =
   match t.n with
   | Typ_btvar _ 
   | Typ_const _  -> Some t
-  | Typ_app(t, _, _)
-  | Typ_dep(t, _, _) -> get_tycon t
+  | Typ_app(t, _) -> get_tycon t
   | _ -> None
-
-let rec is_function_typ t = 
-  match (compress_typ t).n with 
-    | Typ_fun _ 
-    | Typ_univ _ -> true
-    | _ -> false
 
 let base_kind = function
   | Kind_type -> true
@@ -1113,150 +1070,62 @@ let sortByFieldName (fn_a_l:list<(fieldname * 'a)>) =
           (text_of_lid fn1)
           (text_of_lid fn2))
     
-let mk_tlam xopt t1 t2 = match xopt with
-  | None ->  mk_Typ_lam(new_bvd None, t1, t2) (mk_Kind_dcon(None, t1, t2.tk, false) t2.pos) t2.pos
-  | Some x-> mk_Typ_lam(x, t1, t2) (mk_Kind_dcon(Some x, t1, t2.tk, false) t2.pos) t2.pos
-
-let mkRefinedUnit formula =
-  let bvd = new_bvd None in
-  let t = mk_Typ_refine(bvd, ftv Const.unit_lid ktype, formula) mk_Kind_type formula.pos in
-  t, bvd.realname
-
-let findValDecl (vds:list<sigelt>) bvd : option<sigelt> =
-  vds |> Util.find_opt (function
-                         | Sig_val_decl(lid, t, _, _) -> lid.ident.idText = bvd.ppname.idText
-                         | _ -> false)
-      
-let rec typs_of_letbinding x = match x with
-  | (_, t, e)::tl -> t::typs_of_letbinding tl
-  | _ -> []
 
 let kt_kt = Const.kunary ktype ktype
 let kt_kt_kt = Const.kbin ktype ktype ktype
+
+let tand = ftv Const.and_lid kt_kt_kt
+let tor  = ftv Const.or_lid kt_kt_kt
+let timp = ftv Const.imp_lid kt_kt_kt
+let tiff = ftv Const.iff_lid kt_kt_kt
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
-  | Some phi1 ->
-    let app1 = mk_Typ_app(ftv Const.and_lid kt_kt_kt, phi1, false) kt_kt phi1.pos in
-    let and_t = mk_Typ_app(app1, phi2, false) ktype (Range.union_ranges phi1.pos phi2.pos) in
-    Some and_t
+  | Some phi1 -> Some <| mk_Typ_app(tand, [(Inl phi1, false); (Inl phi2, false)]) ktype (Range.union_ranges phi1.pos phi2.pos)
+let mk_binop op_t phi1 phi2 = mk_Typ_app(op_t, [(Inl phi1, false); (Inl phi2, false)]) ktype (Range.union_ranges phi1.pos phi2.pos)
+let mk_neg phi = mk_Typ_app(ftv Const.not_lid kt_kt, [Inl phi, false]) ktype phi.pos
+let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
+let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
+let mk_imp phi1 phi2  = mk_binop timp phi1 phi2
+let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 
-let mk_binop op phi1 phi2 = 
-  let app1 = mk_Typ_app(ftv op kt_kt_kt, phi1, false) kt_kt phi1.pos in
-  mk_Typ_app(app1, phi2, false) ktype (Range.union_ranges phi1.pos phi2.pos)
+let null_binder t = bvd_to_bvar_s Const.nil_bvd t
+let t_binder a = Inl a, false
+let v_binder a = Inr a, false
+let null_t_binder t = Inl (null_binder t), false
+let null_v_binder t = Inr (null_binder t), false
+let targ t = Inl t, false
+let varg v = Inr v, false
 
-let mk_neg phi = mk_Typ_app(ftv Const.not_lid kt_kt, phi, false) ktype phi.pos
-let mk_conj phi1 phi2 = mk_binop Const.and_lid phi1 phi2
-let mk_disj phi1 phi2 = mk_binop Const.or_lid phi1 phi2
-let mk_imp phi1 phi2  = mk_binop Const.imp_lid phi1 phi2
-let mk_iff phi1 phi2  = mk_binop Const.iff_lid phi1 phi2
 let eq_k = 
-    let a = new_bvd None in 
-    let atyp = bvd_to_typ a ktype in
-    let b = new_bvd None in 
-    let btyp = bvd_to_typ b ktype in
-    mk_Kind_tcon(Some a, ktype, 
-            mk_Kind_tcon(Some b, ktype, 
-                mk_Kind_dcon(None, atyp, 
-                    mk_Kind_dcon(None, btyp, ktype, false) dummyRange, false) dummyRange, true) dummyRange, true) dummyRange
+    let a = bvd_to_bvar_s (new_bvd None) ktype in
+    let atyp = btvar_to_typ a in
+    let b = bvd_to_bvar_s (new_bvd None) ktype in 
+    let btyp = btvar_to_typ b in
+    mk_Kind_arrow([(Inl a, true); (Inl b, true); null_v_binder atyp; null_v_binder btyp],
+                  ktype) dummyRange
 
-let mk_eq e1 e2       = 
-  let eqk2 = mk_Kind_dcon(None, e2.tk, ktype, false) dummyRange in 
-  let app1 = mk_Typ_dep(ftv Const.eq2_lid eq_k, e1, false) eqk2 e1.pos in
-  mk_Typ_dep(app1, e2, false) ktype (Range.union_ranges e1.pos e2.pos)
+let teq = ftv Const.eq2_lid eq_k
+let mk_eq e1 e2 = mk_Typ_app(teq, [(Inr e1, false); (Inr e2, false)]) ktype (Range.union_ranges e1.pos e2.pos)
 
-let normalizeRefinement t =
-  let rec aux xopt t = match t.n with
-    | Typ_refine(bvd, t', phi) ->
-      let x, phi = match xopt with
-        | None ->
-          Some (bvd_to_exp bvd t'), phi
-        | Some x ->
-          xopt, subst_typ (mk_subst [Inr(bvd,x)]) phi in
-      let t', phi_opt = aux xopt t' in
-      t', mk_conj_opt phi_opt phi
-    | _ -> t, None in
-  aux None t
+let forall_kind =
+  let a = bvd_to_bvar_s (new_bvd None) ktype in
+  let atyp = btvar_to_typ a in
+  mk_Kind_arrow([(Inl a, true); 
+                 null_t_binder <| mk_Kind_arrow([null_v_binder atyp], ktype) dummyRange], 
+                ktype) 
+                dummyRange
+let tforall = ftv Const.forall_lid forall_kind 
  
-let forall_kind_t atyp =
-    mk_Kind_tcon(None, mk_Kind_dcon(None, atyp, mk_Kind_type, false) dummyRange,
-                mk_Kind_type, 
-                false) dummyRange
- 
- let forall_kind =
-  let a = new_bvd None in
-  let atyp = bvd_to_typ a mk_Kind_type in
-    mk_Kind_tcon(Some a, mk_Kind_type, forall_kind_t atyp, true) dummyRange
-
-let mk_forallT a k b = 
-  let r = dummyRange in
-  let allT_k = mk_Kind_tcon(None, mk_Kind_tcon(Some a, k, ktype, false) r, ktype, false) r in 
-  let forall_typ = ftv Const.allTyp_lid allT_k in
-  mk_Typ_app(forall_typ, mk_Typ_tlam(a, k, b) (mk_Kind_tcon(Some a, k, b.tk, false) r) r, false) ktype r
- 
-let mk_forall (x:bvvdef) (a:typ) (body:typ) : typ =
-  let r = dummyRange in
-  let forall_typ = ftv Const.forall_lid forall_kind in 
-  mk_Typ_app(mk_Typ_app(forall_typ, a, true) (forall_kind_t a) r, 
-            mk_Typ_lam(x, a, body) (mk_Kind_dcon(Some x, a, body.tk, false) r) r, false) mk_Kind_type r
+let tforall_typ k = 
+  let allT_k = mk_Kind_arrow([null_t_binder <| mk_Kind_arrow([null_t_binder k], ktype) dummyRange], ktype) dummyRange in
+  ftv Const.allTyp_lid allT_k 
   
-let un_forall t = match t.n with
-  | Typ_app({n=Typ_app({n=Typ_const(lid)}, _, _)}, 
-            {n=Typ_lam(x, t, body)}, _) when is_forall lid.v ->
-    Some (x, t, body)
-  | _ -> None
+let mk_forallT a b = 
+  mk_Typ_app(tforall_typ a.sort, [targ <| mk_Typ_lam([t_binder a], b) (mk_Kind_arrow([null_t_binder a.sort], ktype) dummyRange) dummyRange]) ktype dummyRange
 
-(* collect all curried arguments until we reach a non-trivial computation type *)
-let collect_formals t = 
-  let rec aux out t =
-      match (compress_typ t).n with
-        | Typ_fun(xopt, t1, cod, imp) -> 
-          let out = Inr(xopt,t1,imp)::out in
-          if is_total_comp cod
-          then aux out (comp_result cod)
-          else List.rev out, cod
-        | Typ_univ(a, k, cod) -> 
-          let out = Inl(a,k)::out in
-          if is_total_comp cod 
-          then aux out (comp_result cod)
-          else List.rev out, cod
-        | _ -> List.rev out, mk_Total t 
-  in aux [] t
-
-let collect_formals_k k =
-    let rec aux out k = 
-        let k = compress_kind k in 
-        match k.n with 
-            | Kind_tcon(aopt, k, k', imp) ->
-              aux (Inl(aopt, k, imp)::out) k'
-            | Kind_dcon(xopt, t, k', imp) ->
-              aux (Inr(xopt, t, imp)::out) k'
-            | Kind_abbrev(_, k) -> aux out k
-            | _ -> List.rev out, k
-    in aux [] k
-
-let collect_forall_xt t =
-  let rec aux out t =
-    match flatten_typ_apps (whnf t) with //NS: Should this really be doing whnf? Try to remove
-      | {n=Typ_const tc}, [Inl t1; Inl ({n=Typ_lam(x, _, t2)})]
-        when is_forall tc.v ->
-        aux (Inr(x, t1)::out) t2
-      | {n=Typ_const tc}, [Inl ({n=Typ_tlam(a, k, t2)})]
-          when (lid_equals tc.v Const.allTyp_lid) ->
-          aux (Inl(a,k)::out) t2
-      | _ -> List.rev out, t
-  in aux [] t
-
-let collect_exists_xt t =
-  let rec aux out t =
-      match flatten_typ_apps (whnf t) with  //NS: Should this really be doing whnf? Try to remove
-        | {n=Typ_const tc}, [Inl t1; Inl ({n=Typ_lam(x, _, t2)})]
-          when lid_equals tc.v Const.exists_lid ->
-          aux (Inr(x, t1)::out) t2
-        | {n=Typ_const tc}, [Inl ({n=Typ_tlam(a, k, t2)})]
-          when (lid_equals tc.v Const.exTyp_lid) ->
-          aux (Inl(a,k)::out) t2
-        | _ -> List.rev out, t
-  in aux [] t
+let mk_forall (x:bvvar) (body:typ) : typ =
+  let r = dummyRange in
+  mk_Typ_app(tforall, [(targ <| mk_Typ_lam([v_binder x], body) (mk_Kind_arrow([null_v_binder x.sort], ktype) r) r)]) ktype r
   
 let rec is_wild_pat p =
     match p with
@@ -1273,11 +1142,17 @@ let unmangle_field_name x =
 (**************************************************************************************)
 (* Destructing a type as a formula *)
 (**************************************************************************************)
-type qpats = list<either<typ,exp>>
+type qpats = args
 type connective = 
-    | QAll of list<either<(btvdef*knd), (bvvdef*typ)>> * qpats * typ
-    | QEx of list<either<(btvdef*knd), (bvvdef*typ)>> * qpats * typ
-    | BaseConn of lident * list<either<typ,exp>>
+    | QAll of binders * qpats * typ
+    | QEx of binders * qpats * typ
+    | BaseConn of lident * args
+
+let head_and_args t = 
+    let t = compress_typ t in
+    match t.n with
+        | Typ_app(head, args) -> head, List.rev args
+        | _ -> t, []
 
 let destruct_typ_as_formula f : option<connective> = 
     let destruct_base_conn f = 
@@ -1303,12 +1178,12 @@ let destruct_typ_as_formula f : option<connective> =
                             (Const.eq2_lid, twoTypes@twoTerms);
                         ] in 
         let rec aux f (lid, arity) =  
-        let t, args = flatten_typ_apps f in 
+        let t, args = head_and_args f in 
         if is_constructor t lid 
             && List.length args = List.length arity
             && List.forall2 (fun arg flag -> match arg with 
-            | Inl _ -> flag=type_sort
-            | Inr _ -> flag=term_sort) args arity
+            | Inl _, _ -> flag=type_sort
+            | Inr _, _ -> flag=term_sort) args arity
         then Some <| BaseConn(lid, args)
         else None in
         Util.find_map connectives (aux f) in
@@ -1322,24 +1197,18 @@ let destruct_typ_as_formula f : option<connective> =
     let destruct_q_conn t =
         let is_q fa l = if fa then is_forall l else is_exists l in 
         let flat t = 
-            let t, args = flatten_typ_apps t in 
-            t, args |> List.map (function Inl t -> Inl <| compress_typ t | Inr e -> Inr <| compress_exp e) in
+            let t, args = head_and_args t in 
+            t, args |> List.map (function (Inl t, imp) -> Inl <| compress_typ t, imp| (Inr e, imp) -> Inr <| compress_exp e, imp) in
         let rec aux qopt out t = match qopt, flat t with
-            | Some fa, ({n=Typ_const tc}, [Inl t1; Inl {n=Typ_lam(x, _, t2)}])  
+            | Some fa, ({n=Typ_const tc}, [(Inl {n=Typ_lam([b], t2)}, _)])  
+            | Some fa, ({n=Typ_const tc}, [_; (Inl {n=Typ_lam([b], t2)}, _)])  
                 when (is_q fa tc.v) ->
-              aux qopt (Inr(x, t1)::out) t2
+              aux qopt (b::out) t2
 
-            | Some fa, ({n=Typ_const tc}, [Inl {n=Typ_tlam(a, k, t2)}])
-                when (is_q fa tc.v) -> 
-              aux qopt (Inl(a, compress_kind k)::out) t2
-
-            | None, ({n=Typ_const tc}, [Inl t1; Inl {n=Typ_lam(x, _, t2)}])  
+            | None, ({n=Typ_const tc}, [Inl {n=Typ_lam([b], t2)}, _])  
+            | None, ({n=Typ_const tc}, [_; Inl {n=Typ_lam([b], t2)}, _])  
                 when (is_qlid tc.v) -> 
-              aux (Some <| is_forall tc.v) (Inr(x, t1)::out) t2
-            
-            | None, ({n=Typ_const tc}, [Inl {n=Typ_tlam(a, k, t2)}])
-                when (is_qlid tc.v) -> 
-              aux (Some <| is_forall tc.v) (Inl(a, compress_kind k)::out) t2
+              aux (Some <| is_forall tc.v) (b::out) t2
             
             | Some true, _ -> 
               let pats, body = patterns t in 

@@ -21,7 +21,7 @@ open Microsoft.FStar.Range
 open Microsoft.FStar
 open Microsoft.FStar.Util
 
-type level = | Un | Expr | Type | Kind | Formula
+type level = Un | Expr | Type | Kind | Formula
 type lid = Syntax.LongIdent
 type term' = 
   | Wild      
