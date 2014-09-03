@@ -80,7 +80,7 @@ and typ = syntax<typ',knd>
 and comp_typ = {
   effect_name:lident; 
   result_typ:typ; 
-  effect_args:list<either<typ,exp>>;
+  effect_args:args;
   flags:list<cflags>
   }
 and comp' = 
@@ -114,7 +114,7 @@ and exp' =
   | Exp_fvar       of fvvar * bool                               (* flag indicates a constructor *)
   | Exp_constant   of sconst
   | Exp_abs        of binders * exp 
-  | Exp_app        of exp * args                                 (* args in reverse order *)
+  | Exp_app        of exp * args                                 (* h tau_1 ... tau_n, args in order from left to right *)
   | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
   | Exp_ascribed   of exp * typ 
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
@@ -311,10 +311,7 @@ val mk_Typ_const: ftvar -> knd -> range -> typ
 val mk_Typ_fun: (binders * comp) -> knd -> range -> typ
 val mk_Typ_refine: (bvvar * formula) -> knd -> range -> typ
 val mk_Typ_app: (typ * args) -> knd -> range -> typ
-val mk_Typ_app': (typ * arg) -> knd -> range -> typ
-//val mk_Typ_dep: (typ * exp * bool) -> knd -> range -> typ
 val mk_Typ_lam: (binders * typ) -> knd -> range -> typ
-//val mk_Typ_tlam: (btvdef * knd * typ) -> knd -> range -> typ
 val mk_Typ_ascribed': (typ * knd) -> knd -> range -> typ
 val mk_Typ_ascribed: (typ * knd) -> range -> typ
 val mk_Typ_meta': meta_t -> knd -> range -> typ
@@ -322,6 +319,7 @@ val mk_Typ_meta: meta_t -> typ
 val mk_Typ_uvar': (uvar_t * knd) -> knd -> range -> typ
 val mk_Typ_uvar: (uvar_t * knd) -> range -> typ
 val mk_Typ_delayed: (typ * subst * memo<typ>) -> knd -> range -> typ
+val extend_typ_app: (typ * arg) -> knd -> range -> typ
 
 val mk_Total: typ -> comp
 val mk_Comp: comp_typ -> comp
@@ -332,10 +330,7 @@ val mk_Exp_bvar: bvvar -> typ -> range -> exp
 val mk_Exp_fvar: (fvvar * bool) -> typ -> range -> exp 
 val mk_Exp_constant: sconst -> typ -> range -> exp
 val mk_Exp_abs: (binders * exp) -> typ -> range -> exp
-//val mk_Exp_tabs: (btvdef * knd * exp) -> typ -> range -> exp
 val mk_Exp_app: (exp * args) -> typ -> range -> exp
-val mk_Exp_app': (exp * arg) -> typ -> range -> exp
-//val mk_Exp_tapp: (exp * typ) -> typ -> range -> exp
 val mk_Exp_match: (exp * list<(pat * option<exp> * exp)>) -> typ -> range -> exp
 val mk_Exp_ascribed': (exp * typ) -> typ -> range -> exp
 val mk_Exp_ascribed: (exp * typ) -> range -> exp
@@ -349,7 +344,14 @@ val mk_Exp_meta: meta_e -> exp
 val mk_subst: subst' -> subst
 val extend_subst: subst_elt -> subst -> subst
 
-
+val null_bvar: 'b -> bvar<'a,'b>
+val t_binder: btvar -> binder
+val v_binder: bvvar -> binder
+val null_t_binder: knd -> binder
+val null_v_binder: typ -> binder
+val targ: typ -> arg
+val varg: exp -> arg
+val is_null_binder: binder -> bool
 
 
 

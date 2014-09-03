@@ -82,7 +82,7 @@ let compress_comp c : comp = match c.n with
   | Rigid _ -> c
   | Flex ({n=Typ_meta(Meta_uvar_t_app(teff, (u,_)))}, res_t) -> 
     begin match Unionfind.find u with 
-      | Fixed _ -> mk_Rigid (mk_Typ_app'(teff, (Inl res_t, false)) mk_Kind_effect c.pos) 
+      | Fixed _ -> mk_Rigid (extend_typ_app(teff, targ res_t) mk_Kind_effect c.pos) 
       | _ -> c
     end
   | Flex _ -> c
@@ -211,14 +211,8 @@ and reduce_typ
       mk_Total t, env
     | Comp ct ->
       let t, env = map_typ env binders ct.result_typ in
-      let env, args = List.fold_left (fun (env, out) -> function
-        | Inl t -> 
-          let t, env = map_typ env binders t in
-          env, Inl t::out
-        | Inr e -> 
-          let e, env = map_exp env binders e in
-          env, Inr e::out) (env, []) ct.effect_args in 
-      mk_Comp ({ct with result_typ=t; effect_args=List.rev args}), env 
+      let args, env = map_args map_typ map_exp env binders ct.effect_args in
+      mk_Comp ({ct with result_typ=t; effect_args=args}), env 
 
   and visit_typ env binders t = 
     let components, env = match (compress_typ t).n with 

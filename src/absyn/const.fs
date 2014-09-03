@@ -38,10 +38,6 @@ let exn_lid    = pconst  "exn"
 
 
 (* Logical connectives and operators *)
-let null_id  = Syntax.mk_ident("_", Syntax.dummyRange)
-let null_bvd = {ppname=null_id; realname=null_id}
-let null_bvar k = {v=null_bvd; sort=k; p=Syntax.dummyRange}
-
 let kunary k k'              = mk_Kind_arrow([Inl <| null_bvar k, false], k') dummyRange
 let kbin k1 k2 k'            = mk_Kind_arrow([Inl <| null_bvar k1, false; 
                                               Inl <| null_bvar k2, false], k') dummyRange

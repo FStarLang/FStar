@@ -78,7 +78,7 @@ and typ = syntax<typ',knd>
 and comp_typ = {
   effect_name:lident; 
   result_typ:typ; 
-  effect_args:list<either<typ,exp>>;
+  effect_args:args;
   flags:list<cflags>
   }
 and comp' = 
@@ -111,10 +111,7 @@ and exp' =
   | Exp_fvar       of fvvar * bool                            (* flag indicates a constructor *)
   | Exp_constant   of sconst
   | Exp_abs        of binders * exp 
-  //| Exp_tabs       of btvdef * knd * exp       
-  | Exp_app        of exp * args                                 (* args in reverse order *)
-//  | Exp_app        of exp * exp * bool                         (* flag indicates whether the argument is explicit instantiation of an implict param *)
-//  | Exp_tapp       of exp * typ             
+  | Exp_app        of exp * args                                 (* args in order from left to right *)
   | Exp_match      of exp * list<(pat * option<exp> * exp)>      (* optional when clause in each equation *)
   | Exp_ascribed   of exp * typ 
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
@@ -307,7 +304,6 @@ let range_of_lbname (l:lbname) = match l with
 (*********************************************************************************)
 (* Syntax builders *)
 (*********************************************************************************)
-
 open Microsoft.FStar.Range
 
 let syn p k f = f k p
@@ -395,21 +391,15 @@ let mk_Typ_app      ((t1:typ),(args:list<arg>)) (k:knd) (p:range) = {
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs t2.fvs;
-    
 }
-let mk_Typ_app'    ((t1:typ),(arg:arg)) (k:knd) (p:range) = {
-    n=(match t1.n with Typ_app(head, args) -> Typ_app(head, arg::args) | _ -> Typ_app(t1, [arg]));
-    tk=k;
-    pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs t2.fvs;
-}
-let mk_Typ_dep      ((t:typ),(e:exp),(b:bool)) (k:knd) (p:range) = mk_Typ_app' (t, (Inr e,b)) k p
+let extend_typ_app ((t:typ), (arg:arg)) (k:knd) p = match t.n with 
+    | Typ_app(h, args) -> mk_Typ_app(h, args@[arg]) k p
+    | _ -> mk_Typ_app(t, [arg]) k p
 let mk_Typ_lam      ((b:binders),(t:typ)) (k:knd) (p:range) = {
     n=Typ_lam(b, t);
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs (difference t2.fvs (set_of_list [Inr x]));
-    
 }
 let mk_Typ_lam'      ((b:binder), (t2:typ)) (k:knd) (p:range) = {
     n=(match t2.n with Typ_lam(binders, body) -> Typ_lam(b::binders, body) | _ -> Typ_lam([b], t2));
@@ -516,12 +506,7 @@ let mk_Exp_app ((e1:exp),(args:args)) (t:typ) p = {
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union e1.fvs e2.fvs;   
 }
-let mk_Exp_app' ((e1:exp),(arg:arg)) (t:typ) p = {
-    n=(match e1.n with Exp_app(e1, args) -> Exp_app(e1, arg::args) | _ -> Exp_app(e1, [arg]));
-    tk=t;
-    pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union e1.fvs e2.fvs;
-}
+
 let rec pat_vars r = function 
   | Pat_cons(_, ps) -> 
     let vars = List.collect (pat_vars r) ps in 
@@ -613,3 +598,16 @@ let tun   = mk_Typ_unknown
 let kun   = mk_Kind_unknown
 let ktype = mk_Kind_type
 let keffect = mk_Kind_effect
+let null_id  = mk_ident("_", dummyRange)
+let null_bvd = {ppname=null_id; realname=null_id}
+let null_bvar k = {v=null_bvd; sort=k; p=dummyRange}
+let t_binder (a:btvar) : binder = Inl a, false
+let v_binder (a:bvvar) : binder = Inr a, false
+let null_t_binder t : binder = Inl (null_bvar t), false
+let null_v_binder t : binder = Inr (null_bvar t), false
+let targ t : arg = Inl t, false
+let varg v : arg = Inr v, false
+let is_null_binder (b:binder) = match b with
+    | Inl a, _ -> a.v.realname = null_id 
+    | Inr x, _ -> x.v.realname = null_id
+

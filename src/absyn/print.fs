@@ -136,8 +136,8 @@ and comp_typ_to_string c =
       else Util.format2 "%s (%s)" (sli c.effect_name) (typ_to_string c.result_typ)
        
 and effect_arg_to_string e = match e with
-    | Inr e -> exp_to_string e
-    | Inl wp -> formula_to_string wp
+    | Inr e, _ -> exp_to_string e
+    | Inl wp, _ -> formula_to_string wp
      
 and formula_to_string phi = 
     let const_op f _ = f in

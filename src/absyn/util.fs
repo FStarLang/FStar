@@ -161,7 +161,7 @@ and subst_comp_typ s t = match s.subst with
   | [] -> t
   | _ -> 
     {t with result_typ=subst_typ s t.result_typ; 
-            effect_args=List.map (function Inl t -> Inl <| subst_typ s t | Inr e -> Inr <| subst_exp s e) t.effect_args}
+            effect_args=List.map (function Inl t, imp -> Inl <| subst_typ s t, imp | Inr e, imp -> Inr <| subst_exp s e, imp) t.effect_args}
 and subst_comp s t = match s.subst with 
   | [] -> t
   | _ -> 
@@ -187,7 +187,7 @@ let subst_of_list (formals:binders) (actuals:args) : subst =
     then List.map2 (fun ax tv -> match ax, tv with 
         | (Inl a, _), (Inl t, _) -> Inl(a.v, t)
         | (Inr x, _), (Inr v, _) -> Inr(x.v, v)
-        | _ -> failwith "Ill-formed substitution") formals (List.rev actuals) |> mk_subst
+        | _ -> failwith "Ill-formed substitution") formals actuals |> mk_subst
     else failwith "Ill-formed substitution"
 
 let restrict_subst axs s = 
@@ -226,14 +226,8 @@ and map_comp s mk map_typ map_exp descend binders c = match (Visit.compress_comp
       mk_Total t, descend
     | Comp ct ->
       let t, descend = map_typ descend binders ct.result_typ in
-      let descend, args = List.fold_left (fun (desc, out) -> function
-        | Inl t -> 
-          let t, desc = map_typ desc binders t in
-          desc, Inl t::out
-        | Inr e -> 
-          let e, desc = map_exp desc binders e in
-          desc, Inr e::out) (descend, []) ct.effect_args in 
-      mk_Comp ({ct with result_typ=t; effect_args=List.rev args}), descend 
+      let args, descend = Visit.map_args map_typ map_exp descend binders ct.effect_args in 
+      mk_Comp ({ct with result_typ=t; effect_args=args}), descend 
 and visit_knd s vk mt me ctrl binders k = 
   let k = Visit.compress_kind k in 
   if ctrl.descend 
@@ -554,12 +548,13 @@ let range_of_lb = function
 //    | Typ_univ(a, _, c), Inl t -> subst_typ (mk_subst [Inl(a, t)]) <| comp_result c 
 //    | _ -> tun
 
+let range_of_args args r = 
+   args |> List.fold_left (fun r -> function 
+    | (Inl hd, _) -> Range.union_ranges r hd.pos
+    | (Inr hd, _) -> Range.union_ranges r hd.pos) r 
+
 let mk_typ_app f args = 
-    let args = List.rev args in 
-    let r = match args with 
-        | (Inl hd, _)::_ -> Range.union_ranges f.pos hd.pos
-        | (Inr hd, _)::_ -> Range.union_ranges f.pos hd.pos
-        | _ -> f.pos in
+    let r = range_of_args args f.pos in
     let kf = compress_kind f.tk in
     let k = match kf.n with
         | Kind_arrow(bs, k) -> 
@@ -570,11 +565,7 @@ let mk_typ_app f args =
     mk_Typ_app(f, args) k r
 
 let mk_exp_app f args = 
-  let args = List.rev args in 
-  let r = match args with 
-     | (Inl hd, _)::_ -> Range.union_ranges f.pos hd.pos
-     | (Inr hd, _)::_ -> Range.union_ranges f.pos hd.pos
-     | _ -> f.pos in
+  let r = range_of_args args f.pos in
   let tf = compress_typ f.tk in
   let t = match tf.n with 
      | Typ_fun(bs, c) ->
@@ -584,18 +575,6 @@ let mk_exp_app f args =
         else tun
      | _ -> tun in
   mk_Exp_app(f, args) t r
-
-//let uncurry_app e =
-//  let rec aux e out = match e.n with 
-//    | Exp_uvar(u, _) -> 
-//      begin match Unionfind.find u with 
-//        | Fixed e -> aux e out
-//        | _ -> e, out
-//      end
-//    | Exp_app(e1, e2, imp) -> aux e1 (Inr (e2, imp)::out)
-//    | Exp_tapp(e1, t) -> aux e1 (Inl t::out)
-//    | _ -> e, out in
-//  aux e []
 
 let mk_data l args = 
   mk_Exp_meta(Meta_desugared(mk_exp_app (fvar l (range_of_lid l)) args, Data_app))
@@ -864,7 +843,9 @@ and vs_comp' (c:comp) (uvonly:bool) (k:(freevars * uvars) -> 'res) : 'res =
         | Comp ct -> 
           if uvonly
           then vs_typ ct.result_typ uvonly k
-          else vs_either_l (Inl ct.result_typ::ct.effect_args) uvonly k
+          else vs_typ ct.result_typ uvonly (fun vs1 -> 
+               vs_args ct.effect_args uvonly (fun vs2 -> 
+               k (union_fvs vs1 vs2)))
 
 and vs_comp (c:comp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
     match !c.fvs, !c.uvs with 
@@ -1088,14 +1069,6 @@ let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_imp phi1 phi2  = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 
-let null_binder t = bvd_to_bvar_s Const.null_bvd t
-let t_binder a = Inl a, false
-let v_binder a = Inr a, false
-let null_t_binder t = Inl (null_binder t), false
-let null_v_binder t = Inr (null_binder t), false
-let targ t = Inl t, false
-let varg v = Inr v, false
-
 let eq_k = 
     let a = bvd_to_bvar_s (new_bvd None) ktype in
     let atyp = btvar_to_typ a in
@@ -1136,7 +1109,7 @@ let rec is_wild_pat p =
 let head_and_args t = 
     let t = compress_typ t in
     match t.n with
-        | Typ_app(head, args) -> head, List.rev args
+        | Typ_app(head, args) -> head, args
         | _ -> t, []
 
 let function_formals t = 
@@ -1144,10 +1117,6 @@ let function_formals t =
     match t.n with 
         | Typ_fun(bs, _) -> bs
         | _ -> []
-
-let is_null_binder = function
-    | Inl a, _ -> bvd_eq a.v Const.null_bvd
-    | Inr x, _ -> bvd_eq x.v Const.null_bvd
 
 let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange) 
 let unmangle_field_name x = 
