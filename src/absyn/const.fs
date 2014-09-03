@@ -38,16 +38,16 @@ let exn_lid    = pconst  "exn"
 
 
 (* Logical connectives and operators *)
-let nil_id  = Syntax.mk_ident("_", Syntax.dummyRange)
-let nil_bvd = {ppname=nil_id; realname=nil_id}
-let nil_bvar k = {v=nil_bvd; sort=k; p=Syntax.dummyRange}
+let null_id  = Syntax.mk_ident("_", Syntax.dummyRange)
+let null_bvd = {ppname=null_id; realname=null_id}
+let null_bvar k = {v=null_bvd; sort=k; p=Syntax.dummyRange}
 
-let kunary k k'              = mk_Kind_arrow([Inl <| nil_bvar k, false], k') dummyRange
-let kbin k1 k2 k'            = mk_Kind_arrow([Inl <| nil_bvar k1, false; 
-                                              Inl <| nil_bvar k2, false], k') dummyRange
-let ktern k1 k2 k3 k'        = mk_Kind_arrow([Inl <| nil_bvar k1, false; 
-                                              Inl <| nil_bvar k2, false;
-                                              Inl <| nil_bvar k3, false], k') dummyRange
+let kunary k k'              = mk_Kind_arrow([Inl <| null_bvar k, false], k') dummyRange
+let kbin k1 k2 k'            = mk_Kind_arrow([Inl <| null_bvar k1, false; 
+                                              Inl <| null_bvar k2, false], k') dummyRange
+let ktern k1 k2 k3 k'        = mk_Kind_arrow([Inl <| null_bvar k1, false; 
+                                              Inl <| null_bvar k2, false;
+                                              Inl <| null_bvar k3, false], k') dummyRange
 let true_lid = pconst "True"
 let false_lid = pconst "False"
 let and_lid = pconst "l_and"  

@@ -72,8 +72,7 @@ type typ' =
   | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
   | Typ_delayed  of typ * subst * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
-and term = either<typ,exp>
-and arg = term * bool                                        (* bool marks an explicitly provided implicit arg *)
+and arg = either<typ,exp> * bool                                        (* bool marks an explicitly provided implicit arg *)
 and args = list<arg>
 and binder = either<btvar,bvvar> * bool
 and binders = list<binder>                                   (* bool marks implicit binder *)

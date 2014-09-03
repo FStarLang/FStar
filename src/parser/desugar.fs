@@ -26,9 +26,7 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Util
 
-let withimp imp t = match t with 
-    | Inl x -> Inl (x,imp)
-    | Inr x -> Inr (x,imp) 
+let withimp imp t = t, imp
 
 let contains_binder binders = 
   binders |> Util.for_some (fun b -> match b.b with  
@@ -40,14 +38,6 @@ let rec unparen t = match t.tm with
   | _ -> t
 
 let kind_star r = mk_term (Name (lid_of_path ["Type"] r)) r Kind
-
-let mk_app e args =
-    let args = args |> List.map (function 
-       | Inl (t, imp) -> if imp then raise (Error ("Type applications at the term level are implicit by default; remove the '#' qualifier here", t.pos)) else Inl t
-       | Inr (x, imp) -> Inr (x, imp)) in
-    Util.mk_curried_app e args
-    
-let mk_tapp t args = Util.mk_typ_app t args
 
 let op_as_vlid env arity r s =
   let r l = Some <| set_lid_range l r in
@@ -404,8 +394,8 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
         | None -> raise (Error("Unexpected operator: " ^ s, top.range))
         | Some l ->
           let op = fvar l (range_of_lid l) in
-          let args = args |> List.map (fun t -> withimp false <| desugar_typ_or_exp env t) in
-          setpos <| mk_app op args
+          let args = args |> List.map (fun t -> desugar_typ_or_exp env t, false) in
+          setpos <| mk_exp_app op args
       end
 
     | Var l
@@ -413,8 +403,8 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
 
     | Construct(l, args) ->
       let dt = pos <| mk_Exp_fvar(fail_or env (DesugarEnv.try_lookup_datacon env) l, true) in
-      let args = List.map (fun (t, imp) -> withimp imp <| desugar_typ_or_exp env t) args in
-      setpos <| mk_Exp_meta(Meta_desugared(mk_app dt args, Data_app)) 
+      let args = List.map (fun (t, imp) -> desugar_typ_or_exp env t, false) args in
+      setpos <| mk_Exp_meta(Meta_desugared(mk_exp_app dt args, Data_app)) 
 
     | Abs(binders, body) ->
       let _, ftv = List.fold_left (fun (env, ftvs) pat ->
@@ -426,7 +416,8 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
           | PatAscribed(_, t) -> env, free_type_vars env t@ftvs
           | _ -> env, ftvs) (env, []) binders in
       let ftv = sort_ftv ftv in
-      let binders = (ftv |> List.map (fun a -> mk_pattern (PatTvar a) top.range))@binders in
+      let binders = (ftv |> List.map (fun a -> mk_pattern (PatTvar a) top.range))@binders in //close over the free type variables
+
       let rec desugar_abs env a = match a.tm with
         | Abs((p::q::qtl), body) ->
           let rest = q::qtl in
@@ -625,7 +616,7 @@ and desugar_typ env (top:term) : typ =
         | None -> raise (Error("Unrecognized type operator" ^ s, top.range))
         | Some l ->
           let args = List.map (fun t -> withimp false <| desugar_typ_or_exp env t) args in
-          mk_tapp (ftv l kun) args
+          mk_typ_app (ftv l kun) args
       end
 
     | Tvar a ->
@@ -638,7 +629,7 @@ and desugar_typ env (top:term) : typ =
     | Construct(l, args) ->
       let t = fail_or env  (try_lookup_typ_name env) l in
       let args = List.map (fun (t, imp) -> withimp imp <| desugar_typ_or_exp env t) args in
-      mk_tapp t args
+      mk_typ_app t args
 
     | Abs(p::(q::_rest), body) ->
       let rest = q::_rest in
@@ -661,7 +652,7 @@ and desugar_typ env (top:term) : typ =
     | App(t1, t2, imp) ->
       let t1 = desugar_typ env t1 in
       let t2 = withimp imp <| desugar_typ_or_exp env t2 in
-      mk_tapp t1 [t2]
+      mk_typ_app t1 [t2]
         
     | Product([], t) -> 
       failwith "Impossible: product with no binders"
@@ -819,7 +810,7 @@ and desugar_formula' env (f:term) : typ =
           | [] -> body
           | _ -> setpos <| mk_Typ_meta (Meta_pattern(body, pats)) in
         let body = pos <| mk_Typ_tlam(a, k, body) in
-        setpos <| mk_tapp (ftv (set_lid_range qt b.brange) kun) [Inl (body, false)]
+        setpos <| mk_typ_app (ftv (set_lid_range qt b.brange) kun) [Inl (body, false)]
             
       | Inr(Some x,t) ->
         let env, x = push_local_vbinding env x in
@@ -829,7 +820,7 @@ and desugar_formula' env (f:term) : typ =
           | [] -> body
           | _ -> mk_Typ_meta (Meta_pattern(body, pats)) in
         let body = pos <| mk_Typ_lam(x, t, body) in
-        setpos <| mk_tapp (ftv (set_lid_range q b.brange) kun) [Inl (body, false)]
+        setpos <| mk_typ_app (ftv (set_lid_range q b.brange) kun) [Inl (body, false)]
 
       | _ -> failwith "impossible" in
             
@@ -848,19 +839,19 @@ and desugar_formula' env (f:term) : typ =
         if is_type env hd
         then ftv (set_lid_range Const.eqT_lid f.range) kun
         else ftv (set_lid_range Const.eq2_lid f.range) kun in
-      mk_tapp eq args
+      mk_typ_app eq args
 
     | Op(s, args) ->
       begin match connective s, args with
         | Some conn, [_;_] ->
-          mk_tapp
+          mk_typ_app
             (ftv (set_lid_range conn f.range) kun)
             (List.map (fun x -> Inl (desugar_formula env x, false)) args)
         | _ -> desugar_typ env f
       end
         
     | If(f1, f2, f3) ->
-      mk_tapp
+      mk_typ_app
         (ftv (set_lid_range Const.ite_lid f.range) kun)
         (List.map (fun x -> Inl (desugar_typ env x, false)) [f1;f2;f3])
 

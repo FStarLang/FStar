@@ -256,9 +256,11 @@ let extract_record (e:env) = function
         if is_rec tags
         then match must <| find_dc dc with 
             | Sig_datacon(constrname, t, _, _, _) -> 
-                let fields = 
-                  (fst <| collect_formals t) |> List.collect (function
-                    | Inr(Some x, t, _) -> [(qual constrname (Util.unmangle_field_name x.ppname), t)]
+                let fields = Util.function_formals t |> List.collect (fun b -> match b with
+                    | Inr x, _ ->  
+                        if Util.is_null_binder b 
+                        then []
+                        else [(qual constrname (Util.unmangle_field_name x.v.ppname), x.sort)]
                     | _ -> []) in
                 let record = {typename=typename;
                               constrname=constrname;

@@ -1088,7 +1088,7 @@ let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_imp phi1 phi2  = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 
-let null_binder t = bvd_to_bvar_s Const.nil_bvd t
+let null_binder t = bvd_to_bvar_s Const.null_bvd t
 let t_binder a = Inl a, false
 let v_binder a = Inr a, false
 let null_t_binder t = Inl (null_binder t), false
@@ -1133,6 +1133,22 @@ let rec is_wild_pat p =
     | Pat_withinfo (p, _) -> is_wild_pat p
     | _ -> false
 
+let head_and_args t = 
+    let t = compress_typ t in
+    match t.n with
+        | Typ_app(head, args) -> head, List.rev args
+        | _ -> t, []
+
+let function_formals t = 
+    let t = compress_typ t in
+    match t.n with 
+        | Typ_fun(bs, _) -> bs
+        | _ -> []
+
+let is_null_binder = function
+    | Inl a, _ -> bvd_eq a.v Const.null_bvd
+    | Inr x, _ -> bvd_eq x.v Const.null_bvd
+
 let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange) 
 let unmangle_field_name x = 
     if Util.starts_with x.idText "^fname^"
@@ -1148,11 +1164,6 @@ type connective =
     | QEx of binders * qpats * typ
     | BaseConn of lident * args
 
-let head_and_args t = 
-    let t = compress_typ t in
-    match t.n with
-        | Typ_app(head, args) -> head, List.rev args
-        | _ -> t, []
 
 let destruct_typ_as_formula f : option<connective> = 
     let destruct_base_conn f = 
