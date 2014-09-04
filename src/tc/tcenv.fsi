@@ -98,7 +98,7 @@ val clear_expected_typ : env -> env*option<typ>
 
 val fold_env : env -> ('a -> binding -> 'a) -> 'a -> 'a 
 val idents : env -> freevars
-val freevars_l: env -> freevars_l
+val binders: env -> binders
 val lidents : env -> list<lident>     
 
 (* operations on monads *)
@@ -106,7 +106,7 @@ val join: env -> lident -> lident -> lident * mlift * mlift
 val monad_leq: env -> lident -> lident -> option<edge>
 val monad_decl_opt: env -> lident -> option<monad_decl>
 val get_monad_decl: env -> lident -> monad_decl
-val wp_signature: env -> lident -> (bvdef<typ> * knd)
+val wp_signature: env -> lident -> (btvar * knd)
 
-(* probably move this to TcUtil *)
-val quantifier_pattern_env : env -> typ -> env
+//(* probably move this to TcUtil *)
+//val quantifier_pattern_env : env -> typ -> env

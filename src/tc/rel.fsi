@@ -28,10 +28,10 @@ type guard =
   | Trivial
   | NonTrivial of formula
   
-val new_kvar: Range.range -> freevars_l -> knd * uvar_k
-val new_tvar: Range.range -> freevars_l -> knd -> typ * (uvar_t * knd)
-val new_evar: Range.range -> freevars_l -> typ -> exp * (uvar_e * typ)
-val new_cvar: Range.range -> freevars_l -> typ -> comp * (uvar_t * knd)
+val new_kvar: Range.range -> binders -> knd * uvar_k
+val new_tvar: Range.range -> binders -> knd -> typ * typ
+val new_evar: Range.range -> binders -> typ -> exp * exp
+val new_cvar: Range.range -> binders -> typ -> comp * typ
 
 val guard_to_string : env -> guard -> string
 val trivial : guard -> unit

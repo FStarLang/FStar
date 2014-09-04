@@ -37,6 +37,7 @@ let rec compress_typ_aux pos typ = match typ.n with
       | Some t -> let t' = compress_typ_aux pos t in m := Some t'; t')
   | Typ_ascribed(t, _)
   | Typ_meta(Meta_named(t, _)) when pos -> compress_typ_aux pos t
+  | Typ_app({n=Typ_uvar(uv, _)}, args)
   | Typ_meta(Meta_uvar_t_app({n=Typ_app({n=Typ_uvar(uv,_)}, args)}, _)) ->
        begin 
           match Unionfind.find uv with 

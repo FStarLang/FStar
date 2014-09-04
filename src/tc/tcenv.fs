@@ -137,24 +137,21 @@ let wp_sig_aux decls m =
   | None -> failwith (Util.format1 "Impossible: declaration for monad %s not found" m.str)
   | Some md -> 
     match md.signature.n with 
-      | Kind_tcon(Some a, {n=Kind_type}, {n=Kind_tcon(_, kwp, _, _)}, _) -> a, kwp
+      | Kind_arrow([(Inl a, _); (Inl wp, _); (Inl wlp, _)], {n=Kind_effect}) -> a, wp.sort
       | _ -> failwith "Impossible" 
 
 let wp_signature env m = wp_sig_aux env.lattice.decls m
 
 let build_lattice env se = match se with 
   | Sig_monads(decls0, order, p) -> 
-    let mk_lift a k1 b k2 lift_t r wp1 =
-      let k1 = Util.subst_kind (mk_subst [Inl(a, r)]) k1 in
-      let k2 = Util.subst_kind (mk_subst [Inl(b, r)]) k2 in
-      let l = mk_Typ_app(lift_t, r, false)  (mk_Kind_tcon(None, k1, k2, false) p) p in
-      mk_Typ_app(l, wp1, false) k2 p in
+    let mk_lift b k2 lift_t r wp1 =
+      let k2 = Util.subst_kind [Inl(b.v, r)] k2 in
+      mk_Typ_app(lift_t, [targ r; targ wp1]) k2 p in
     let decls = env.lattice.decls@decls0 in
     let kwp l = wp_sig_aux decls l in
     let order = order |> List.map (fun mo -> 
-      let a, k1 = kwp mo.source in 
       let b, k2 = kwp mo.target in
-      {msource=mo.source; mtarget=mo.target; mlift=mk_lift a k1 b k2 mo.lift}) in
+      {msource=mo.source; mtarget=mo.target; mlift=mk_lift b k2 mo.lift}) in
     let order = env.lattice.order@order in
     let order = order@(decls0 |> List.map (fun md -> {msource=md.mname; mtarget=md.mname; mlift=(fun t wp -> wp)})) in
 
@@ -400,13 +397,13 @@ let clear_expected_typ env = {env with expected_typ=None}, expected_typ env
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
-let freevars_l env : freevars_l = 
+let binders env : binders = 
   fold_env env (fun out b -> match b with 
-    | Binding_var(x, t) -> Inr(bvd_to_bvar_s x t)::out
-    | Binding_typ(a, k) -> Inl(bvd_to_bvar_s a k)::out
+    | Binding_var(x, t) -> (v_binder <| bvd_to_bvar_s x t)::out
+    | Binding_typ(a, k) -> (t_binder <| bvd_to_bvar_s a k)::out
     | _ -> out) []
 
-let idents env : freevars = freevars_of_list (freevars_l env)
+let idents env : freevars = freevars_of_list (binders env |> List.map fst)
 
 let lidents env : list<lident> =
   let keys = List.fold_left (fun keys -> function 

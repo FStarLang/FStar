@@ -833,7 +833,7 @@ and desugar_formula' env (f:term) : typ =
 
       | _ -> failwith "impossible" in
             
-  let push_quant q (binders:list<binder>) pats (body:term) = match binders with
+  let push_quant q (binders:list<AST.binder>) pats (body:term) = match binders with
     | b::(b'::_rest) ->
       let rest = b'::_rest in
       let body = mk_term (q(rest, pats, body)) (Range.union_ranges b'.brange body.range) Formula in
@@ -855,14 +855,14 @@ and desugar_formula' env (f:term) : typ =
         | Some conn, [_;_] ->
           mk_typ_app
             (ftv (set_lid_range conn f.range) kun)
-            (List.map (fun x -> Inl (desugar_formula env x, false)) args)
+            (List.map (fun x -> targ <| desugar_formula env x) args)
         | _ -> desugar_typ env f
       end
         
     | If(f1, f2, f3) ->
       mk_typ_app
         (ftv (set_lid_range Const.ite_lid f.range) kun)
-        (List.map (fun x -> Inl (desugar_typ env x, false)) [f1;f2;f3])
+        (List.map (fun x -> targ <| desugar_typ env x) [f1;f2;f3])
 
     | QForall((_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
@@ -922,85 +922,70 @@ and desugar_type_binder env b = match b.b with
 
 let mk_data_ops env = function
   | Sig_datacon(lid, t, _, _, _) when not env.iface ->
-    let args, tcod = collect_formals t in
-    let tconstr = Util.comp_result tcod in
+    let formals, tconstr = match Util.function_formals t with
+        | Some(args, cod) -> args, Util.comp_result cod
+        | _ -> [], t in
     //Printf.printf "Collecting formals from type %s; got %s with args %d\n" (Print.typ_to_string t) (Print.typ_to_string tconstr) (List.length args);
-    let argpats = args |> List.map (function
-      | Inr(Some x,_,_) -> Pat_var x
-      | Inr(None,targ,_) -> Pat_var (new_bvd (Some (range_of_lid lid)))
-      | Inl(a,_) -> Pat_tvar a) in
+    let argpats = formals |> List.map (fun b -> match b with
+      | Inr x, _ -> if is_null_binder b 
+                    then Pat_var (new_bvd (Some (range_of_lid lid)))
+                    else Pat_var x.v
+      | Inl a, _ -> Pat_tvar a.v) in
     let freevs = freevars_typ tconstr in
-    let freevars = args |> List.filter (function
-      | Inl(a,k) -> Util.set_mem (bvd_to_bvar_s a k) freevs.ftvs
-      | Inr(Some x,t,_) -> Util.set_mem (bvd_to_bvar_s x t) freevs.fxvs
+    let freevars = formals |> List.filter (function
+      | Inl a, _ -> Util.set_mem a freevs.ftvs
+      | Inr x, _ -> Util.set_mem x freevs.fxvs
       | _ -> false) in
     //Printf.printf "Got %d free vars\n" (List.length freevars);
     let freeterms = freevars |> List.map (function 
-      | Inl (a, k) -> Inl (Util.bvd_to_typ a k, false)
-      | Inr (Some x, t,_) -> Inr (Util.bvd_to_exp x t, false)
-      | _ -> failwith "impossible") in
-    let formal = new_bvd (Some <| range_of_lid lid) in
-    let formal_exp = bvd_to_exp formal tconstr in
-    let rec build_exp freevars e = match freevars with
-      | Inl (a,k)::rest -> mk_Exp_tabs(a, k, build_exp rest e) tun e.pos
-      | Inr (Some x, t, _)::rest -> mk_Exp_abs(x, t, build_exp rest e) tun e.pos
-      | _::rest -> failwith "impossible"
-      | [] -> mk_Exp_abs(formal, tconstr, e) tun e.pos in
-    let rec build_typ freevars (t:typ) = match freevars with
-      | Inl (a,k)::rest -> mk_Typ_univ(a, k, mk_Total (build_typ rest t)) kun (range_of_lid lid)
-      | Inr (xopt,tt,imp)::rest -> mk_Typ_fun(xopt, tt, mk_Total (build_typ rest t), imp) kun (range_of_lid lid)
-      | [] -> mk_Typ_fun(Some formal, tconstr, mk_Total t, false) kun (range_of_lid lid) in
-    let rec build_kind freevars k = match freevars with
-      | Inl (a,kk)::rest -> mk_Kind_tcon(Some a, kk, build_kind rest k, false) k.pos
-      | Inr (xopt,t,imp)::rest -> mk_Kind_dcon(xopt, t, build_kind rest k, imp) k.pos
-      | [] -> mk_Kind_dcon(Some formal, tconstr, k, false) k.pos in
-    let build_exp  = build_exp freevars in
-    let build_typ t = build_typ freevars t in
-    let build_kind = build_kind freevars in
-    let subst_to_string s = 
-      List.map (function 
-        | Inl (a, t) -> Util.format2 "(%s -> %s)" (Print.strBvd a) (Print.typ_to_string t)  
-        | Inr (x, e) -> Util.format2 "(%s -> %s)" (Print.strBvd x) (Print.exp_to_string e)) s 
-      |> String.concat ", " in  
-    let subst_typ s t =
-      //Printf.printf "Substituting [%s] in type\n%s\n" (subst_to_string s) (Print.typ_to_string t);
-      let res = subst_typ s t in  res in
-      //Printf.printf "Got\n%s\n" (Print.typ_to_string res); flush stdout; res in
-    let rec aux fields t = match (compress_typ t).n with
-      | Typ_fun(Some x, t1, t2, _) ->
-        let x = {x with ppname=unmangle_field_name x.ppname} in
-        let field_name = lid_of_ids (ids_of_lid lid @ [x.ppname]) in
-        let t = build_typ t1 in
-        //let body = mk_Exp_match(formal_exp, [(Pat_cons(lid, argpats), None, bvd_to_exp x t1 t1.p)]) tun x.ppname.idRange in
-        let sigs =
-          [Sig_val_decl(field_name, t, [Assumption; Logic; Projector(lid, Inr x)], range_of_lid field_name)
-           //;Sig_let((false, [(Inr field_name, t, build_exp body)]))
-          ] in
-       // let _ = Util.print_string (Util.format2 "adding value projector %s at type %s\n" field_name.str (Print.typ_to_string t)) in 
-        let t2 = 
-          if Util.set_mem (bvd_to_bvar_s x t1) freevs.fxvs
-          then t2
-          else 
-            let subst = mk_subst [Inr(x, mk_app (fvar field_name (range_of_lid field_name)) (freeterms@[Inr(formal_exp, false)]))] in
-            subst_comp subst t2 in
-        aux (fields@sigs) (Util.comp_result t2)
-          
-      | Typ_univ(a, k, t2) ->
-        let field_name = lid_of_ids (ids_of_lid lid @ [a.ppname]) in
-        let kk = build_kind k in
-        let sigs = Sig_tycon(field_name, [], kk, [], [], [Logic; Projector(lid, Inl a)], range_of_lid field_name) in
-        //let _ = Util.print_string (Util.format2 "adding type projector %s at type %s\n" field_name.str (Print.kind_to_string kk)) in 
-        let t2 = 
-          if Util.set_mem (bvd_to_bvar_s a k) freevs.ftvs
-          then t2
-          else let subst = mk_subst [Inl(a, mk_tapp (ftv field_name kun) (freeterms@[Inr (formal_exp, false)]))] in
-               subst_comp subst t2 in
-        aux (fields@[sigs]) (Util.comp_result t2)
-
-      | _ -> fields in
+      | Inl a, _ -> targ <| btvar_to_typ a
+      | Inr x, _ -> varg <| bvar_to_exp x) in
+    let r = range_of_lid lid in
+    let formal = Util.gen_bvar_p r tconstr in
+    let formal_exp = bvar_to_exp formal in
+    let binders = freevars@[v_binder formal] in
+    let rec build_exp e = mk_Exp_abs(binders, e) tun e.pos in
+    let rec build_typ t = mk_Typ_fun(binders, mk_Total t) kun r in
+    let rec build_kind k = mk_Kind_arrow(binders, k) k.pos in
+//    let subst_to_string s = 
+//      List.map (function 
+//        | Inl (a, t) -> Util.format2 "(%s -> %s)" (Print.strBvd a) (Print.typ_to_string t)  
+//        | Inr (x, e) -> Util.format2 "(%s -> %s)" (Print.strBvd x) (Print.exp_to_string e)) s 
+//      |> String.concat ", " in  
+//    let subst_typ s t =
+//      //Printf.printf "Substituting [%s] in type\n%s\n" (subst_to_string s) (Print.typ_to_string t);
+//      let res = subst_typ s t in  res in
+//      //Printf.printf "Got\n%s\n" (Print.typ_to_string res); flush stdout; res in
+    let rec projectors data_ops subst formals = match formals with 
+      | [] -> data_ops
+      | b::rest -> 
+        if is_null_binder b then projectors data_ops subst rest else
+        let proj, subst = match fst b with
+           | Inr x ->
+                let y = {x.v with ppname=unmangle_field_name x.v.ppname} in
+                let field_name = lid_of_ids (ids_of_lid lid @ [y.ppname]) in
+                let t = build_typ (Util.subst_typ subst x.sort) in
+                let sigs = [Sig_val_decl(field_name, t, [Assumption; Logic; Projector(lid, Inr y)], range_of_lid field_name)] in
+                let subst = if Util.set_mem x freevs.fxvs
+                            then subst
+                            else Inr(x.v, mk_exp_app (fvar field_name (range_of_lid field_name)) (freeterms@[varg <| formal_exp]))::subst in
+                sigs, subst
+        
+            | Inl a -> 
+                let field_name = lid_of_ids (ids_of_lid lid @ [a.v.ppname]) in
+                let kk = build_kind (Util.subst_kind subst a.sort) in
+                let sigs = [Sig_tycon(field_name, [], kk, [], [], [Logic; Projector(lid, Inl a.v)], range_of_lid field_name)] in
+                //let _ = Util.print_string (Util.format2 "adding type projector %s at type %s\n" field_name.str (Print.kind_to_string kk)) in 
+                let subst = if Util.set_mem a freevs.ftvs
+                            then subst
+                            else Inl(a.v, mk_typ_app (ftv field_name kun) (freeterms@[varg <| formal_exp]))::subst in
+                sigs, subst in
+         projectors (data_ops@proj) subst rest in
+       
     let disc_name = Util.mk_discriminator lid in
     let disc = Sig_val_decl(disc_name, build_typ (Util.ftv Const.bool_lid ktype), [Assumption; Logic; Discriminator lid], range_of_lid disc_name) in
-    aux [disc] t
+    projectors [disc] [] formals
+
   | _ -> []
 
 let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
@@ -1128,12 +1113,6 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       let bundle = Sig_bundle(sigelts, rng) in
       let env = push_sigelt env0 bundle in
       let data_ops = sigelts |> List.collect (mk_data_ops env) in
-//        if logic_tags quals |> Util.for_some (function
-//          | Logic_data
-//          | Logic_record -> true
-//          | _ -> false)
-//        then sigelts |> List.collect (mk_data_ops env)
-//        else [] in
       let env = List.fold_left push_sigelt env data_ops in
       env, [bundle]@data_ops
 
@@ -1198,7 +1177,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
         
   | Exception(id, Some term) ->
     let t = desugar_typ env term in
-    let t = mk_Typ_fun(None, t, mk_Total (fail_or env (try_lookup_typ_name env) Const.exn_lid), false) kun d.drange in
+    let t = mk_Typ_fun([null_v_binder t], mk_Total (fail_or env (try_lookup_typ_name env) Const.exn_lid)) kun d.drange in
     let se = Sig_datacon(qualify env id, t, Const.exn_lid, [ExceptionConstructor], d.drange) in
     let se' = Sig_bundle([se], d.drange) in
     let env = push_sigelt env se' in
@@ -1218,11 +1197,15 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
           | KindAbbrev(id, binders, k) when (id.idText="WP") -> 
             let menv, (lid, binders, kwp) = desugar_kind_abbrev d.drange menv id binders k in 
             let args = binders |> List.map (function
-              | Inl a -> Inl <| Util.bvd_to_typ a mk_Kind_type
-              | Inr x -> Inr <| Util.bvd_to_exp x tun)  in
+              | Inl a -> targ <| Util.bvd_to_typ a mk_Kind_type
+              | Inr x -> varg <| Util.bvd_to_exp x tun)  in
             let kwp = mk_Kind_abbrev((lid, args), kwp) d.drange in
             let kmon = match binders with 
-              | [Inl a] -> mk_Kind_tcon(Some a, mk_Kind_type, mk_Kind_tcon(None, kwp, (mk_Kind_tcon(None, kwp, mk_Kind_effect, false) d.drange), false) d.drange, false) d.drange
+              | [Inl a] -> 
+                mk_Kind_arrow([t_binder <| bvd_to_bvar_s a ktype;
+                               null_t_binder kwp;
+                               null_t_binder kwp],
+                              keffect) d.drange
               | _ -> raise (Error("Unexpected binders in the signature of WP (expected a single type parameter)", d.drange)) in
             menv, (lid, binders, kwp)::kabbrevs, Some kmon
           | KindAbbrev(id, binders, k) -> 

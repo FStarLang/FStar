@@ -154,11 +154,7 @@ and kabbrev = lident * args
 and uvar_k = Unionfind.uvar<uvar_basis<knd,unit>>
 and lbname = either<bvvdef, lident>
 and letbindings = bool * list<(lbname * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
-and subst' = list<subst_elt>
-and subst = {
-    subst:subst';
-    subst_fvs:memo<freevars>;
-}
+and subst = list<subst_elt>
 and subst_map = Util.smap<either<typ, exp>>
 and subst_elt = either<(btvdef*typ), (bvvdef*exp)>
 and fvar = either<btvdef, bvvdef>
@@ -585,14 +581,8 @@ let mk_Exp_meta (m:meta_e) = match m with
       | Meta_datainst(e, _) 
       | Meta_uvar_e_app(e, _) -> mk_Exp_meta' m e.tk e.pos
 
-let mk_subst (s:subst') = 
-    {subst=s;
-     subst_fvs=mk_fvs()}
-
-let extend_subst x s = 
-    {subst=x::s.subst;
-     subst_fvs=mk_fvs();//fvs;
-    }
+let mk_subst (s:subst) = s
+let extend_subst x s : subst = x::s
 
 let tun   = mk_Typ_unknown
 let kun   = mk_Kind_unknown
@@ -611,3 +601,11 @@ let is_null_binder (b:binder) = match b with
     | Inl a, _ -> a.v.realname = null_id 
     | Inr x, _ -> x.v.realname = null_id
 
+let freevars_of_binders (bs:binders) : freevars = 
+    bs |> List.fold_left (fun out -> function
+        | Inl btv, _ -> {out with ftvs=Util.set_add btv out.ftvs}
+        | Inr bxv, _ -> {out with fxvs=Util.set_add bxv out.fxvs}) no_fvs
+
+let binders_of_list fvs : binders = (fvs |> List.map (fun t -> t, false))
+let binders_of_freevars fvs = 
+   (Util.set_elements fvs.ftvs |> List.map t_binder)@(Util.set_elements fvs.fxvs |> List.map v_binder)

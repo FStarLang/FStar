@@ -158,11 +158,7 @@ and kabbrev = lident * args
 and uvar_k = Unionfind.uvar<uvar_basis<knd,unit>>
 and lbname = either<bvvdef, lident>
 and letbindings = bool * list<(lbname * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
-and subst' = list<subst_elt>
-and subst = {
-    subst:subst';
-    subst_fvs:memo<freevars>;
-}
+and subst = list<subst_elt>
 and subst_map = Util.smap<either<typ, exp>>
 and subst_elt = either<(btvdef*typ), (bvvdef*exp)>
 and fvar = either<btvdef, bvvdef>
@@ -295,7 +291,10 @@ val tun:typ
 val no_fvs: freevars
 val no_uvs: uvars
 val freevars_of_list: list<either<btvar, bvvar>> -> freevars
+val freevars_of_binders: binders -> freevars
 val list_of_freevars: freevars -> list<either<btvar,bvvar>>
+val binders_of_freevars: freevars -> binders
+val binders_of_list: list<either<btvar, bvvar>> -> binders
 
 val mk_Kind_type: knd
 val mk_Kind_effect:knd
@@ -341,7 +340,7 @@ val mk_Exp_delayed: (exp * subst * memo<exp>) -> typ -> range -> exp
 val mk_Exp_meta' : meta_e -> typ -> range -> exp
 val mk_Exp_meta: meta_e -> exp
 
-val mk_subst: subst' -> subst
+val mk_subst: subst -> subst
 val extend_subst: subst_elt -> subst -> subst
 
 val null_bvar: 'b -> bvar<'a,'b>

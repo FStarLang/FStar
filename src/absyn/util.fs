@@ -106,6 +106,11 @@ let order_bvd x y = match x, y with
   | Inr _, Inl _ -> 1
   | Inl x, Inl y -> String.compare x.ppname.idText y.ppname.idText
   | Inr x, Inr y -> String.compare x.ppname.idText y.ppname.idText
+let args_of_binders (binders:binders) = 
+    binders |> List.map (function 
+        | Inl a, _ -> targ <| btvar_to_typ a
+        | Inr x, _ -> varg <| bvar_to_exp x)
+
 
 (********************************************************************************)
 (*************************** Delayed substitutions ******************************)
@@ -116,19 +121,19 @@ let subst_to_string s =
 (* delayed substitutions *)
 let subst_tvar s t = match t.n with 
   | Typ_btvar a -> 
-    begin match Util.find_opt (function Inl (b, _) -> bvd_eq b a.v | _ -> false) s.subst with 
+    begin match Util.find_opt (function Inl (b, _) -> bvd_eq b a.v | _ -> false) s with 
       | Some (Inl(_, t)) -> t
       | _ -> t
     end
   | _ -> failwith "impossible"
 let subst_xvar s e = match e.n with
   | Exp_bvar x -> 
-    begin match Util.find_opt (function Inr(y, _) -> bvd_eq y x.v | _ -> false) s.subst with
+    begin match Util.find_opt (function Inr(y, _) -> bvd_eq y x.v | _ -> false) s with
             | Some (Inr(_, e)) -> e
             | _ -> e
     end
   | _ -> failwith "impossible"
-let rec subst_typ s t = match s.subst with 
+let rec subst_typ s t = match s with 
   | [] -> t
   | _ -> 
     let t0 = Visit.compress_typ t in
@@ -137,7 +142,7 @@ let rec subst_typ s t = match s.subst with
     | Typ_btvar a -> subst_tvar s t0
     | _ -> mk_Typ_delayed(t, s, Util.mk_ref None) t.tk t.pos
 
-and subst_exp s e = match s.subst with 
+and subst_exp s e = match s with 
   | [] -> e
   | _ -> 
     let e0 = Visit.compress_exp e in
@@ -146,7 +151,7 @@ and subst_exp s e = match s.subst with
     | Exp_bvar _ -> subst_xvar s e0
     | _ -> mk_Exp_delayed (e0, s, Util.mk_ref None) e0.tk e0.pos
 
-and subst_kind s k = match s.subst with 
+and subst_kind s k = match s with 
   | [] -> k 
   | _ -> 
   let k0 = Visit.compress_kind k in
@@ -157,12 +162,12 @@ and subst_kind s k = match s.subst with
     | Kind_delayed(k, s',m) -> mk_Kind_delayed(k, compose_subst s' s, Util.mk_ref None) k0.pos
     | _ -> mk_Kind_delayed(k0, s, Util.mk_ref None) k0.pos
 
-and subst_comp_typ s t = match s.subst with 
+and subst_comp_typ s t = match s with 
   | [] -> t
   | _ -> 
     {t with result_typ=subst_typ s t.result_typ; 
             effect_args=List.map (function Inl t, imp -> Inl <| subst_typ s t, imp | Inr e, imp -> Inr <| subst_exp s e, imp) t.effect_args}
-and subst_comp s t = match s.subst with 
+and subst_comp s t = match s with 
   | [] -> t
   | _ -> 
     let t0 = Visit.compress_comp t in
@@ -173,9 +178,9 @@ and subst_comp s t = match s.subst with
       | Comp ct -> mk_Comp(subst_comp_typ s ct)
 
 and compose_subst (s1:subst) (s2:subst) = 
-  mk_subst <| ((s1.subst |> List.map (function 
+  mk_subst <| ((s1 |> List.map (function 
       | Inl(x, t) -> Inl (x, subst_typ s2 t)
-      | Inr(x, e) -> Inr (x, subst_exp s2 e)))@s2.subst)
+      | Inr(x, e) -> Inr (x, subst_exp s2 e)))@s2)
 
 let subst_kind' s t = subst_kind (mk_subst s) t
 let subst_typ' s t = subst_typ (mk_subst s) t
@@ -191,7 +196,7 @@ let subst_of_list (formals:binders) (actuals:args) : subst =
     else failwith "Ill-formed substitution"
 
 let restrict_subst axs s = 
-  s.subst |> List.filter (fun b ->
+  s |> List.filter (fun b ->
     let r = match b with 
     | Inl(a, _) -> not (axs |> Util.for_some (function Inr _ -> false | Inl b -> bvd_eq a b))
     | Inr(x, _) -> not (axs |> Util.for_some (function Inl _ -> false | Inr y -> bvd_eq x y)) in
@@ -241,7 +246,7 @@ and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
           let a = {a with sort=k} in
           let boundvars' = Inl a.v::boundvars in
           let s = restrict_subst boundvars' s in
-          let b, s, boundvars = match s.subst with 
+          let b, s, boundvars = match s with 
             | [] when ctrl.stop_if_empty_subst -> Inl a, s, boundvars'
             | _ -> 
                 let b = bvd_to_bvar_s (freshen_bvd a.v) k in
@@ -254,7 +259,7 @@ and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
           let x = {x with sort=t} in
           let boundvars' = Inr x.v::boundvars in
           let s = restrict_subst boundvars' s in
-          let b, s, boundvars = match s.subst with 
+          let b, s, boundvars = match s with 
             | [] when ctrl.stop_if_empty_subst -> Inr x, s, boundvars'
             | _ -> 
                 let y = bvd_to_bvar_s (freshen_bvd x.v) t in
@@ -262,7 +267,7 @@ and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
                 Inr y, s, Inr y.v::boundvars in
           (b,imp)::bs, boundvars, s) ([], boundvars, s) in
 
-    let tc = match s.subst, tc with 
+    let tc = match s, tc with 
         | [], _ -> tc
         | _, Inl t -> Inl (fst <| map_typ s mk vt me null_ctrl boundvars t)
         | _, Inr c -> Inr (fst <| map_comp s mk (map_typ s mk vt me) (map_exp s mk vt me) null_ctrl boundvars c) in
@@ -608,8 +613,9 @@ let as_comp = function
    | {n=Typ_meta(Meta_comp c)} -> c
    | _ -> failwith "Impossible"
 
-let destruct_flex_arg = function 
-    | {n=Typ_meta(Meta_uvar_t_app(t, uv))} -> t, uv
+let destruct_flex_arg t = match t.n with
+    | Typ_app({n=Typ_uvar(uv,k)}, _) -> t, (uv,k)
+    | Typ_meta(Meta_uvar_t_app(t, uv)) -> t, uv
     | _ -> failwith "Impossible"
 
 (********************************************************************************)
@@ -1112,11 +1118,17 @@ let head_and_args t =
         | Typ_app(head, args) -> head, args
         | _ -> t, []
 
+let head_and_args_e e = 
+    let e = compress_exp e in 
+    match e.n with 
+        | Exp_app(head, args) -> head, args
+        | _ -> e, []
+
 let function_formals t = 
     let t = compress_typ t in
     match t.n with 
-        | Typ_fun(bs, _) -> bs
-        | _ -> []
+        | Typ_fun(bs, c) -> Some (bs, c)
+        | _ -> None
 
 let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange) 
 let unmangle_field_name x = 
