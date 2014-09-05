@@ -90,7 +90,8 @@ and typ_to_string x =
   | Typ_meta(Meta_named(_, l)) -> sli l
   | Typ_meta(Meta_comp c) ->   comp_typ_to_string c
   | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)
-  | Typ_btvar btv -> strBvd btv.v //Util.format2 "%s:%s" (strBvd btv.v) (kind_to_string x.tk)
+  | Typ_btvar btv -> //strBvd btv.v 
+    Util.format2 "%s:%s" (strBvd btv.v) (kind_to_string x.tk)
   | Typ_const v -> Util.format1 "%s" (sli v.v)
   | Typ_fun(binders, c) ->     Util.format2 "%s -> %s"  (binders_to_string "->" binders) (comp_typ_to_string c)
 //  | Typ_fun(None, t1, t2, _) -> Util.format "(%s) -> %s"  [(t1 |> typ_to_string); (t2|> comp_typ_to_string)]
@@ -109,9 +110,9 @@ and typ_to_string x =
          //Util.format2 "'U%s_%s"  (Util.string_of_int (Unionfind.uvar_id uv)) (kind_to_string k)
       | t -> t|> typ_to_string)
   
-and binder_to_string = function 
-    | Inl a, imp -> Util.format3 "%s%s:%s" (imp_to_string imp) (strBvd a.v) (kind_to_string a.sort)
-    | Inr x, imp -> Util.format3 "%s%s:%s" (imp_to_string imp) (strBvd x.v) (typ_to_string x.sort)
+and binder_to_string b = match b with 
+    | Inl a, imp -> if is_null_binder b then kind_to_string a.sort else Util.format3 "%s%s:%s" (imp_to_string imp) (strBvd a.v) (kind_to_string a.sort)
+    | Inr x, imp -> if is_null_binder b then typ_to_string x.sort else Util.format3 "%s%s:%s" (imp_to_string imp) (strBvd x.v) (typ_to_string x.sort)
    
 and binders_to_string sep bs = bs |> List.map binder_to_string |> String.concat sep
 

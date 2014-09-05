@@ -370,7 +370,7 @@ let mk_Kind_unknown  = {n=Kind_unknown; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs
 let mk_Typ_btvar    (x:btvar) (k:knd) (p:range) = {n=Typ_btvar x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs();}//set_of_list [Inl x.v]}
 let mk_Typ_const    (x:ftvar) (k:knd) (p:range) = {n=Typ_const x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs()}
 let mk_Typ_fun      ((bs:binders),(c:comp)) (k:knd) (p:range) = {
-    n=Typ_fun(bs, c);
+    n=(match bs with [] ->failwith "Empty binders!" | _ -> Typ_fun(bs, c));
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//(match x with None -> union t.fvs c.fvs | Some x -> union t.fvs (difference c.fvs (set_of_list [Inr x])));

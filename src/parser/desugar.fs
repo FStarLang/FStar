@@ -932,7 +932,7 @@ let mk_data_ops env = function
     let formals, tconstr = match Util.function_formals t with
         | Some(args, cod) -> args, Util.comp_result cod
         | _ -> [], t in
-    //Printf.printf "Collecting formals from type %s; got %s with args %d\n" (Print.typ_to_string t) (Print.typ_to_string tconstr) (List.length args);
+    //Printf.printf "Collecting formals from type %s; got %s with args %s\n" (Print.typ_to_string t) (Print.typ_to_string tconstr) (Print.binders_to_string ", " formals);
     let argpats = formals |> List.map (fun b -> match b with
       | Inr x, _ -> if is_null_binder b 
                     then Pat_var (new_bvd (Some (range_of_lid lid)))
@@ -973,6 +973,7 @@ let mk_data_ops env = function
                 let field_name = lid_of_ids (ids_of_lid lid @ [y.ppname]) in
                 let t = build_typ (Util.subst_typ subst x.sort) in
                 let sigs = [Sig_val_decl(field_name, t, [Assumption; Logic; Projector(lid, Inr y)], range_of_lid field_name)] in
+                let _ = Util.fprint2 "adding projector %s at type %s\n" field_name.str (Print.typ_to_string t) in 
                 let subst = if Util.set_mem x freevs.fxvs
                             then subst
                             else Inr(x.v, mk_exp_app (fvar field_name (range_of_lid field_name)) (freeterms@[varg <| formal_exp]))::subst in

@@ -946,7 +946,10 @@ and tc_decl env se = match se with
     | Sig_tycon (lid, tps, k, _mutuals, _data, tags, r) -> 
       let env = Tc.Env.set_range env r in 
       let tps, env = tc_tparams env tps in 
-      let k = tc_kind_trivial env k |> norm_k env in 
+      let k = tc_kind_trivial env k in
+      Util.fprint2 "Checked %s at kind %s\n" (Print.sli lid) (Print.kind_to_string k);
+      printfn "%A" k;
+      let k = norm_k env k in 
       let se = Sig_tycon(lid, tps, k, _mutuals, _data, tags, r) in
       let _ = match compress_kind k with
         | {n=Kind_uvar _} -> Rel.trivial <| Tc.Rel.keq env None k ktype

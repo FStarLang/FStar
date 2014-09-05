@@ -976,18 +976,26 @@ let tps_of_binders bs =
         | Inr x, _ -> Tparam_term(x.v, x.sort))
 
 let close_with_lam tps t = 
-  let bs = binders_of_tps tps in
-  mk_Typ_lam(bs, t) (mk_Kind_arrow(bs, t.tk) t.pos) t.pos
+    match tps with 
+        | [] -> t
+        | _ -> 
+          let bs = binders_of_tps tps in
+          mk_Typ_lam(bs, t) (mk_Kind_arrow(bs, t.tk) t.pos) t.pos
 
-let close_with_arrow tps t =
-  let bs = binders_of_tps tps in 
-  mk_Typ_fun(bs, total_comp t t.pos) ktype t.pos
+let close_with_arrow tps t = 
+    match tps with 
+        | [] -> t
+        | _ -> 
+          let bs = binders_of_tps tps in 
+          mk_Typ_fun(bs, total_comp t t.pos) ktype t.pos
 
 let close_typ = close_with_arrow
       
-let close_kind tps k = 
-  let bs = binders_of_tps tps in 
-  mk_Kind_arrow(bs, k) k.pos
+let close_kind tps k = match tps with 
+    | [] -> k
+    | _ ->
+      let bs = binders_of_tps tps in 
+      mk_Kind_arrow(bs, k) k.pos
 
 (********************************************************************************)
 (******************************** Alpha conversion ******************************)
