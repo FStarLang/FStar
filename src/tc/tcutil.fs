@@ -77,6 +77,7 @@ let apply_guard g e = match g with
     | NonTrivial f -> NonTrivial (syn f.pos ktype <| mk_Typ_app(f, [varg e]))
 
 let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard =
+  let env = Env.set_range env e.pos in
   match try_subtype env t1 t2 with
     | None -> 
         if env.is_pattern
@@ -91,7 +92,7 @@ let new_evar env t = Rel.new_evar (Env.get_range env) (Env.binders env) t |> fst
 let new_cvar env t = Rel.new_cvar (Env.get_range env) (Env.binders env) t |> fst
 
 let destruct_arrow_kind env tt k args : (args * binders * knd) = 
-    let ktop = compress_kind k in 
+    let ktop = compress_kind k |> Normalize.norm_kind [WHNF; Beta; Eta] env in 
     let r = Env.get_range env in
     let rec aux k = match k.n with 
         | Kind_arrow(bs, k') -> 
@@ -117,10 +118,14 @@ let destruct_arrow_kind env tt k args : (args * binders * knd) =
        | Kind_abbrev(_, k) -> aux k
 
        | Kind_uvar _ -> 
-         let kres = Tc.Rel.new_kvar r (Tc.Env.binders env) |> fst in
+         let fvs = Util.freevars_kind k in
+         let binders = Util.binders_of_freevars fvs in 
+         let kres = Tc.Rel.new_kvar r binders |> fst in
          let bs = null_binders_of_args args in
          let kar = mk_Kind_arrow(bs, kres) r in
+//         printfn "(%s) instantiating %s to %s" (Range.string_of_range r) (Print.kind_to_string k) (Print.kind_to_string kar);
          trivial <| keq env None k kar;
+//         printfn "(%s) got  %s" (Range.string_of_range r) (Print.kind_to_string k);
          [], bs, kres
 
        | _ -> raise (Error(Tc.Errors.expected_tcon_kind tt ktop, r)) in
@@ -469,6 +474,7 @@ let refine_data_type env l (formals:binders) (result_t:typ) =
        
 let maybe_instantiate env e t = 
   let t = compress_typ t in 
+  if not (env.instantiate_targs && env.instantiate_vargs) then e, t else
   match t.n with 
     | Typ_fun(bs, c) -> 
       let vars = Env.binders env in 

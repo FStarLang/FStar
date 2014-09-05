@@ -214,7 +214,7 @@ let is_level env level = env.level=level
 let modules env = env.modules
 let current_module env = env.curmodule
 let set_current_module env lid = {env with curmodule=lid} 
-let set_range e r = {e with range=r}
+let set_range e r = if r=dummyRange then e else {e with range=r}
 let get_range e = e.range
 let find_in_sigtab env lid = Util.smap_try_find env.sigtab (text_of_lid lid)
 

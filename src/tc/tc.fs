@@ -95,7 +95,8 @@ let value_check_expected_typ env e tc : exp * comp =
 let comp_check_expected_typ env e c : exp * comp = 
   match Env.expected_typ env with 
    | None -> e, c
-   | Some t -> Tc.Util.weaken_result_typ env e c t
+   | Some t ->
+     Tc.Util.weaken_result_typ env e c t
 
 let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard = 
   match copt with 
@@ -112,6 +113,10 @@ let binding_of_lb x t = match x with
   | Inl bvd -> Env.Binding_var(bvd, t)
   | Inr lid -> Env.Binding_lid(lid, t)
 
+let print_expected_ty env = match Env.expected_typ env with 
+    | None -> printfn "Expected type is None"
+    | Some t -> printfn "Expected type is %s" (Print.typ_to_string t)
+    
 let rec tc_kind env k : knd * guard = 
   let k = Util.compress_kind k in 
   let w f = f k.pos in
@@ -131,7 +136,8 @@ let rec tc_kind env k : knd * guard =
     let k, f = tc_kind env k in 
     let args, g = tc_args env <| snd kabr in
     let kabr = (fst kabr, args) in
-    w <| mk_Kind_abbrev(kabr, k), Tc.Rel.conj_guard f g
+    let kk = w <| mk_Kind_abbrev(kabr, k) in 
+    kk, Tc.Rel.conj_guard f g
 
   | Kind_arrow(bs, k) -> 
     let bs, env, g = tc_binders env bs in
@@ -202,8 +208,9 @@ and tc_comp env c =
 and tc_typ env (t:typ) : typ * knd * guard = 
   let env = Tc.Env.set_range env t.pos in
   let w k = syn t.pos k in
-  let top = Util.compress_typ t in
-  match top.n with 
+  let t = Util.compress_typ t in
+  let top = t in
+  match t.n with 
   | Typ_btvar a -> 
     let k = Env.lookup_btvar env a in
     let a = {a with sort=k} in
@@ -238,6 +245,7 @@ and tc_typ env (t:typ) : typ * knd * guard =
   | Typ_app(head, args) -> 
     let head, k1, f1 = tc_typ env head in 
     let args, f2 = tc_args env args in
+    if debug env then printfn "(%s) Destructing arrow kind: %s\n" (Range.string_of_range top.pos) (Print.kind_to_string k1);
     let imps, formals, kres = Tc.Util.destruct_arrow_kind env head k1 args in
     let rec check_args subst g formals args = match formals, args with 
       | [], [] -> g, Util.subst_kind subst kres
@@ -251,7 +259,9 @@ and tc_typ env (t:typ) : typ * knd * guard =
 
             | (Inr x, _), (Inr v, _) -> 
               let env = Env.set_range env t.pos in 
-              let _, g' = Tc.Util.check_and_ascribe env v v.tk (Util.subst_typ subst x.sort) in
+              let tx = Util.subst_typ subst x.sort in
+              if debug env then printfn "(%s) Checking arg %s:%s against type %s" (Range.string_of_range v.pos) (Print.exp_to_string v) (Print.typ_to_string v.tk) (Print.typ_to_string tx); 
+              let _, g' = Tc.Util.check_and_ascribe env v v.tk tx in
               let subst = maybe_extend_subst subst formal (Inr v) in
               check_args subst (Rel.conj_guard g g') formals actuals
 
@@ -328,7 +338,7 @@ and tc_value env e : exp * comp =
 
   | Exp_constant c -> 
     let t = Tc.Util.typing_const env c in
-    value_check_expected_typ env e (Inl t)
+    value_check_expected_typ env ({e with tk=t}) (Inl t)
 
   | Exp_abs(bs, body) ->  (* This is the dual of the treatment of application ... see the Exp_app case below. *)
     let fail t =  raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function t top, top.pos)) in
@@ -431,19 +441,28 @@ and tc_exp env e : exp * comp =
        already have an (Tot) effect annotation on their co-domain. 
        So, we can treat them as normal applications. Except ...  *)
 //    let env = instantiate_both env in
-    let env1, topt = Env.clear_expected_typ env in 
-    let d, args = Util.head_and_args_e e in 
-    (* The main subtlety with bidirectional typing is here:
-       Consider typing (e1, e2) as (x:t * t')
-       It is desugared to (MkTuple2 '_u1 '_u2 e1 e2), and we have to compute the instantiations for '_u1 and '_u2.
-       The idea is to push the result type (Tuple2 t (\x:t. t')) down to the constructor MkTuple2
-       and then instantiating MkTuple2's arguments using the expected type.
-       That's what the Meta_datainst(d, topt) does ... below. 
-       Once we compute good instantiations for '_u1 and '_u2, the rest follows as usual. *)
-    let d = mk_Exp_meta(Meta_datainst(d, topt)) in
-    let e = mk_Exp_app(d, args) tun top.pos in
-    let e, c = tc_exp env1 e in
-    comp_check_expected_typ env (mk_Exp_meta(Meta_desugared(e, Data_app))) c
+    let d, args = Util.head_and_args_e e in (* if there are no user-provided type applications, try to infer them as below ... *)
+    begin match args with 
+        | (Inl _, _)::_ -> (* user provided typ argument *)
+            let e, c = tc_exp env e in 
+            mk_Exp_meta(Meta_desugared(e, Data_app)), c
+
+        | _ -> 
+        let env1, topt = Env.clear_expected_typ env in 
+        let t = Env.expected_typ env in 
+    
+        (* The main subtlety with bidirectional typing is here:
+            Consider typing (e1, e2) as (x:t * t')
+            It is desugared to (MkTuple2 '_u1 '_u2 e1 e2), and we have to compute the instantiations for '_u1 and '_u2.
+            The idea is to push the result type (Tuple2 t (\x:t. t')) down to the constructor MkTuple2
+            and then instantiating MkTuple2's arguments using the expected type.
+            That's what the Meta_datainst(d, topt) does ... below. 
+            Once we compute good instantiations for '_u1 and '_u2, the rest follows as usual. *)
+        let d = mk_Exp_meta(Meta_datainst(d, topt)) in
+        let e = mk_Exp_app(d, args) tun top.pos in
+        let e, c = tc_exp env1 e in
+        comp_check_expected_typ env (mk_Exp_meta(Meta_desugared(e, Data_app))) c
+    end
 
   | Exp_meta(Meta_desugared(e, Sequence)) -> 
     begin match (compress_exp e).n with 
@@ -477,7 +496,7 @@ and tc_exp env e : exp * comp =
                     | Some t -> Tc.Rel.trivial_subtype env None t tup in
             Tc.Rel.trivial_subtype env None tres tup in
      
-    let dc, c_dc = tc_value env dc in 
+    let dc, c_dc = tc_value (instantiate_both env) dc in 
     let t_dc = Util.comp_result c_dc in
     let tres = match Util.function_formals t_dc with 
         | Some (_, c) -> Util.comp_result c
@@ -502,8 +521,10 @@ and tc_exp env e : exp * comp =
   | Exp_app(f, args) ->
     let env0 = env in
     let env = Tc.Env.clear_expected_typ env |> fst |> instantiate_both in 
+    if debug env then printfn "(%s) Checking app %s" (Range.string_of_range top.pos) (Print.exp_to_string top);
     let f, cf = tc_exp (no_inst env) f in
     let tf = Util.comp_result cf in
+    if debug env then printfn "(%s) Type of head is %s" (Range.string_of_range f.pos) (Print.typ_to_string tf);
     let argpos = function 
         | Inl t, _ -> t.pos
         | Inr e, _ -> e.pos in
@@ -535,16 +556,17 @@ and tc_exp env e : exp * comp =
             | (Inl a, _)::rest, (Inr e, _)::_ -> (* instantiate a type argument *) 
               let k = Util.subst_kind subst a.sort in
               fxv_check env (Inl k) fvs;
-              let targ = Inl (fst <| Tc.Rel.new_tvar e.pos vars k) in
-              let subst = maybe_extend_subst subst (List.hd bs) targ in 
-              tc_args (subst, (targ,true)::outargs, comps, g, fvs) rest args
+              let targ = fst <| Tc.Rel.new_tvar e.pos vars k in
+              if debug env then printfn "Instantiating %s to %s" (Print.strBvd a.v) (Print.typ_to_string targ);
+              let subst = extend_subst (Inl(a.v, targ)) subst in
+              tc_args (subst, (Inl targ,true)::outargs, comps, g, fvs) rest args
 
             | (Inr x, true)::rest, (_, false)::_ -> (* instantiate an implicit value arg *)
               let t = Util.subst_typ subst x.sort in
               fxv_check env (Inr t) fvs;
-              let varg = Inr (fst <| Tc.Rel.new_evar (argpos <| List.hd args) vars t) in
-              let subst = maybe_extend_subst subst (List.hd bs) varg in
-              tc_args (subst, (varg, true)::outargs, comps, g, fvs) rest args
+              let varg = (fst <| Tc.Rel.new_evar (argpos <| List.hd args) vars t) in
+              let subst = extend_subst (Inr(x.v, varg)) subst in
+              tc_args (subst, (Inr varg, true)::outargs, comps, g, fvs) rest args
 
             | (Inl a, _)::rest, (Inl t, _)::rest' -> (* a concrete type argument *)
               let k = Util.subst_kind subst a.sort in 
@@ -557,6 +579,7 @@ and tc_exp env e : exp * comp =
               let targ = Util.subst_typ subst x.sort in
               fxv_check env (Inr targ) fvs;
               let env = Tc.Env.set_expected_typ env targ in
+              if debug env then printfn "Checking arg (%s) %s at type %s" (Print.tag_of_exp e) (Print.exp_to_string e) (Print.typ_to_string targ);
               let e, c = tc_exp env e in 
               if Util.is_total_comp c 
               then let subst = maybe_extend_subst subst (List.hd bs) (Inr e) in
@@ -579,7 +602,7 @@ and tc_exp env e : exp * comp =
               mk_Exp_app(f, List.rev outargs) (Util.comp_result comp) top.pos, comp
                
             | (Inr _, _)::_, (Inl _, _)::_ ->
-              raise (Error("Unexpected type argument", argpos (List.hd args)))
+              raise (Error(Util.format1 "Unexpected type argument (%s)" (Print.exp_to_string top), argpos (List.hd args)))
 
             | [], arg::_ -> (* too many args ... maybe c returns a function? *) 
               raise (Error(Util.format1 "Too many arguments to function of type %s" (Print.typ_to_string tf), argpos arg)) in
@@ -595,6 +618,7 @@ and tc_exp env e : exp * comp =
     let c = if !Options.verify && (Util.is_primop f || Util.is_total_comp c)
             then Tc.Util.maybe_assume_result_eq_pure_term env e c 
             else c in
+    if debug env then printfn "(%s) About to check %s against expected typ %s" (Range.string_of_range e.pos) (Print.typ_to_string (Util.comp_result (Tc.Normalize.normalize_comp env0 c))) (Env.expected_typ env0 |> (fun x -> match x with None -> "None" | Some t-> Print.typ_to_string t));
     comp_check_expected_typ env0 e c 
           
   | Exp_match(e1, eqns) -> 
@@ -946,9 +970,10 @@ and tc_decl env se = match se with
     | Sig_tycon (lid, tps, k, _mutuals, _data, tags, r) -> 
       let env = Tc.Env.set_range env r in 
       let tps, env = tc_tparams env tps in 
-      let k = tc_kind_trivial env k in
-      Util.fprint2 "Checked %s at kind %s\n" (Print.sli lid) (Print.kind_to_string k);
-      printfn "%A" k;
+      let k = match k.n with 
+        | Kind_unknown -> ktype
+        | _ -> tc_kind_trivial env k in
+      if debug env then Util.fprint2 "Checked %s at kind %s\n" (Print.sli lid) (Print.kind_to_string (Util.close_kind tps k));
       let k = norm_k env k in 
       let se = Sig_tycon(lid, tps, k, _mutuals, _data, tags, r) in
       let _ = match compress_kind k with
@@ -960,10 +985,12 @@ and tc_decl env se = match se with
     | Sig_typ_abbrev(lid, tps, k, t, tags, r) -> 
       let env = Tc.Env.set_range env r in
       let tps, env' = tc_tparams env tps in
-      let t, k1 = tc_typ_trivial env' t |> (fun (t, k) -> norm_t env t, k) in 
-      let k2 = tc_kind_trivial env' k |> norm_k env in 
-      Rel.trivial <| Rel.keq env' (Some t) k1 k2;
-      let se = Sig_typ_abbrev(lid, tps, k1, t, tags, r) in 
+      let t, k1 = tc_typ_trivial env' t |> (fun (t, k) -> norm_t env' t, norm_k env' k) in 
+      let k2 = match k.n with 
+        | Kind_unknown -> k1 
+        | _ -> let k2 = tc_kind_trivial env' k |> norm_k env in 
+               Rel.trivial <| Rel.keq env' (Some t) k1 k2; k1 in
+      let se = Sig_typ_abbrev(lid, tps, k2, t, tags, r) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
   
@@ -973,10 +1000,11 @@ and tc_decl env se = match se with
       let formals, result_t = match Util.function_formals t with 
         | Some (formals, cod) -> formals, Util.comp_result cod
         | _ -> [], t in
-      let constructed_t, _ = Util.head_and_args result_t in (* TODO: check that the tps in tname are the same as here *)
-      let _ = match destruct constructed_t tname with 
+      (* TODO: check that the tps in tname are the same as here *)
+      let _ = match destruct result_t tname with 
         | Some _ -> ()
-        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type (Util.fvar lid (range_of_lid lid)) constructed_t (Util.ftv tname kun), range_of_lid lid)) in
+        | _ -> printfn "type is %s" (Print.typ_to_string t);
+               raise (Error (Tc.Errors.constructor_builds_the_wrong_type (Util.fvar lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
       let t = Tc.Util.refine_data_type env lid formals result_t in
       let se = Sig_datacon(lid, t, tname, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 

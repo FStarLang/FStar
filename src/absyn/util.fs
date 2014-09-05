@@ -132,7 +132,9 @@ let binders_of_args (args:args) : binders =
         | Inl t -> Inl (gen_bvar_p t.pos t.tk), imp 
         | Inr v -> Inr (gen_bvar_p v.pos v.tk), imp)
 
-
+let binders_of_freevars fvs = 
+    (Util.set_elements fvs.ftvs |> List.map t_binder)@
+    (Util.set_elements fvs.fxvs |> List.map v_binder)
 
 (********************************************************************************)
 (*************************** Delayed substitutions ******************************)
@@ -504,30 +506,11 @@ let rec pre_typ t =
       | Typ_ascribed(t, _) -> pre_typ t
       | _ -> t
 
-//(* If the input type is a Typ_app, walks the Typ_app tree and
-//   flattens the type parameters. Does not recursively drill into
-//   other kinds of types. *)
-//let flatten_typ_apps : typ -> typ * (list<either<typ,exp>>) =
-//  let rec aux acc t = 
-//    let t = pre_typ t in
-//    match t.n with
-//      | Typ_app(t1, t2, _) -> aux (Inl t2::acc) t1 
-//      | Typ_dep(t1, v, _) -> aux (Inr v::acc) t1
-//      | _              -> t, acc in
-//  (fun t -> aux [] t)
-//
-//let flatten_exp_apps (e:exp) : exp * (list<either<typ, exp>>) = 
-//  let rec aux e out = match (compress_exp e).n with 
-//    | Exp_app(e1, e2, _) -> aux e1 (Inr e2::out)
-//    | Exp_tapp(e1, t) -> aux e1 (Inl t::out)
-//    | Exp_ascribed(e, _) -> aux e out
-//    | _ -> e, out in
-//  aux e []
-//
 let destruct typ lid = 
   let typ = compress_typ typ in
   match typ.n with 
     | Typ_app({n=Typ_const tc}, args) when lid_equals tc.v lid -> Some args
+    | Typ_const tc when lid_equals tc.v lid -> Some[]
     | _ -> None
 
 let rec lids_of_sigelt se = match se with 
@@ -652,6 +635,9 @@ let destruct_flex_arg t = match t.n with
 (********************************************************************************)
 type bvars = set<btvar> * set<bvvar>
 let no_bvars = (Syntax.no_fvs.ftvs, Syntax.no_fvs.fxvs)
+let fvs_included fvs1 fvs2 = 
+    Util.set_is_subset_of fvs1.ftvs fvs2.ftvs &&
+    Util.set_is_subset_of fvs1.fxvs fvs2.fxvs
 
 let eq_fvars v1 v2 = match v1, v2 with 
     | Inl a, Inl b -> Syntax.bvd_eq a b
@@ -987,7 +973,10 @@ let close_with_arrow tps t =
         | [] -> t
         | _ -> 
           let bs = binders_of_tps tps in 
-          mk_Typ_fun(bs, total_comp t t.pos) ktype t.pos
+          let bs, c = match t.n with
+            | Typ_fun(bs', c) -> bs@bs', c
+            | _ -> bs, mk_Total t in 
+          mk_Typ_fun(bs, c) ktype t.pos
 
 let close_typ = close_with_arrow
       

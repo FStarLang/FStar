@@ -112,22 +112,27 @@ let whnf_only config = config.steps |> List.contains WHNF
 let is_stack_empty config = match config.stack.args with 
     | [] -> true
     | _ -> false
+let has_eta cfg = cfg.steps |> List.contains Eta
 
 let rec sn_aux tcenv (cfg:config<typ>) : config<typ> =
   let rebuild config  = 
-    let s' = no_eta config.steps in
-    let args = if whnf_only config
-               then config.stack.args |> List.map (function 
-                    | (Inl t, imp), env -> Inl <| Util.subst_typ (subst_of_env env) t, imp
-                    | (Inr v, imp), env -> Inr <| Util.subst_exp (subst_of_env env) v, imp)
-               else config.stack.args |> List.map (function 
-                    | (Inl t, imp), env -> Inl <| (sn_aux tcenv ({code=t; environment=env; stack=empty_stack t.tk; steps=s'})).code, imp
-                    | (Inr v, imp), env -> Inr <| (wne    tcenv ({code=v; environment=env; stack=empty_stack kun; steps=s'})).code, imp) in
-    let t = mk_Typ_app(config.code, args) config.stack.k config.code.pos in
-    let t = if config.steps |> List.contains Eta //|| not (is_var out)
-            then eta_expand tcenv t
-            else t in
-    {config with code=t} in
+    let emp = is_stack_empty config in
+    let eta = has_eta config in 
+    if emp && not eta 
+    then config
+    else if emp
+    then {config with code=eta_expand tcenv config.code} 
+    else let s' = no_eta config.steps in
+         let args = if whnf_only config
+         then config.stack.args |> List.map (function 
+            | (Inl t, imp), env -> Inl <| Util.subst_typ (subst_of_env env) t, imp
+            | (Inr v, imp), env -> Inr <| Util.subst_exp (subst_of_env env) v, imp)
+         else config.stack.args |> List.map (function 
+            | (Inl t, imp), env -> Inl <| (sn_aux tcenv ({code=t; environment=env; stack=empty_stack t.tk; steps=s'})).code, imp
+            | (Inr v, imp), env -> Inr <| (wne    tcenv ({code=v; environment=env; stack=empty_stack kun; steps=s'})).code, imp) in
+         let t = mk_Typ_app(config.code, args) config.stack.k config.code.pos in
+         let t = if eta then eta_expand tcenv t else t in
+         {config with code=t} in
 
   let wk f = f cfg.code.tk cfg.code.pos in
 
@@ -236,7 +241,7 @@ let rec sn_aux tcenv (cfg:config<typ>) : config<typ> =
     
             | Typ_meta(Meta_named _)    
             | Typ_unknown
-            | _ -> failwith "impossible"
+            | _ -> failwith (Util.format3 "(%s) Unexpected type (%s): %s" (Env.get_range tcenv |> Range.string_of_range) (Print.tag_of_typ config.code) (Print.typ_to_string config.code))
   end
 
 and sn_binders tcenv binders env steps = 
@@ -248,7 +253,7 @@ and sn_binders tcenv binders env steps =
        aux ((Inl a, imp)::out) env rest
 
     | (Inr x, imp)::rest -> 
-       let c = sn tcenv ({code=x.sort; stack=empty_stack kun; steps=steps; environment=env}) in
+       let c = sn tcenv ({code=x.sort; stack=empty_stack x.sort.tk; steps=steps; environment=env}) in
        let x = {x with sort=c.code} in
        let env = VDummy x::env in 
        aux ((Inr x, imp)::out) env rest
@@ -302,7 +307,7 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
        
 and sn_args tcenv env steps args = 
    args |> List.map (function 
-     | Inl t, imp -> Inl <| (sn tcenv ({code=t; stack=empty_stack t.tk; environment=env; steps=steps})).code, imp
+     | Inl t, imp -> Inl <| (sn_aux tcenv ({code=t; stack=empty_stack t.tk; environment=env; steps=steps})).code, imp
      | Inr e, imp -> Inr <| (wne tcenv ({code=e; stack=empty_stack kun; environment=env; steps=steps})).code, imp)
 
 and snk tcenv (cfg:config<knd>) : config<knd> =
@@ -315,14 +320,19 @@ and snk tcenv (cfg:config<knd>) : config<knd> =
     | Kind_uvar(uv, args) -> 
       let args = sn_args tcenv cfg.environment (no_eta cfg.steps) args in
       {cfg with code=w <| mk_Kind_uvar(uv, args)}  
-    | Kind_abbrev(kabr, k) -> 
-      let c1 = snk tcenv ({cfg with code=k}) in
-      let args = sn_args tcenv cfg.environment (no_eta cfg.steps) (snd kabr) in
-      {cfg with code=w <| mk_Kind_abbrev((fst kabr, args), c1.code)}
+//    | Kind_abbrev(kabr, k) -> 
+//      let c1 = snk tcenv ({cfg with code=k}) in
+//      let args = sn_args tcenv cfg.environment (no_eta cfg.steps) (snd kabr) in
+//      {cfg with code=w <| mk_Kind_abbrev((fst kabr, args), c1.code)}
+    | Kind_abbrev(_, k) -> 
+      snk tcenv ({cfg with code=k}) 
     | Kind_arrow(bs, k) -> 
       let bs, env = sn_binders tcenv bs cfg.environment cfg.steps in
       let c2 = snk tcenv ({code=k; steps=cfg.steps; environment=env; stack=empty_stack kun}) in
-      {cfg with code=w <| mk_Kind_arrow(bs, c2.code)}
+      let bs, rhs = match c2.code.n with 
+        | Kind_arrow(bs', k) -> bs@bs', k
+        | _ -> bs, c2.code in
+      {cfg with code=w <| mk_Kind_arrow(bs, rhs)}
     | Kind_unknown -> 
       failwith "Impossible"
 

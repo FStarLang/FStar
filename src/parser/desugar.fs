@@ -415,14 +415,8 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
 
     | Var l
     | Name l -> 
-      begin match DesugarEnv.try_lookup_datacon env l with 
-        | Some v -> 
-            let dt = pos <| mk_Exp_fvar(v, true) in
-            setpos <| mk_Exp_meta(Meta_desugared(mk_Exp_app(dt, []) tun top.range, Data_app))
-        | None -> 
-            setpos <| fail_or env (DesugarEnv.try_lookup_lid env) l
-      end
-
+      setpos <| fail_or env (DesugarEnv.try_lookup_lid env) l
+      
     | Construct(l, args) ->
       let dt = pos <| mk_Exp_fvar(fail_or env (DesugarEnv.try_lookup_datacon env) l, true) in
       let args = List.map (fun (t, imp) -> withimp imp <| desugar_typ_or_exp env t) args in
@@ -973,7 +967,6 @@ let mk_data_ops env = function
                 let field_name = lid_of_ids (ids_of_lid lid @ [y.ppname]) in
                 let t = build_typ (Util.subst_typ subst x.sort) in
                 let sigs = [Sig_val_decl(field_name, t, [Assumption; Logic; Projector(lid, Inr y)], range_of_lid field_name)] in
-                let _ = Util.fprint2 "adding projector %s at type %s\n" field_name.str (Print.typ_to_string t) in 
                 let subst = if Util.set_mem x freevs.fxvs
                             then subst
                             else Inr(x.v, mk_exp_app (fvar field_name (range_of_lid field_name)) (freeterms@[varg <| formal_exp]))::subst in

@@ -27,6 +27,7 @@ open Microsoft.FStar.Tc.Normalize
 
 let whnf env t = Tc.Normalize.whnf env t |> Util.compress_typ
 let sn env t = Tc.Normalize.norm_typ [Beta;Eta] env t |> Util.compress_typ
+let whnf_k env k = Tc.Normalize.norm_kind [Beta;Eta;WHNF] env k |> Util.compress_kind
 
 (**********************************************************************************************************************)
 (* Relations (equality and subsumption) between kinds, types, expressions and computations *)
@@ -118,16 +119,16 @@ let new_tvar r binders k =
   let wf t tk = true in
   let args = Util.args_of_non_null_binders binders in 
   let uv = Unionfind.fresh (Uvar wf) in 
-  let k = mk_Kind_arrow(binders, k) r in
-  let uv = mk_Typ_uvar'(uv,k) k r in
+  let k' = mk_Kind_arrow(binders, k) r in
+  let uv = mk_Typ_uvar'(uv,k') k' r in
   mk_Typ_app(uv, args) k r, uv
 
 let new_evar r binders t =
   let wf e t = true in 
   let args = Util.args_of_non_null_binders binders in 
   let uv = Unionfind.fresh (Uvar wf) in 
-  let t = mk_Typ_fun(binders, mk_Total t) ktype r in
-  let uv = mk_Exp_uvar'(uv, t) t r in
+  let t' = mk_Typ_fun(binders, mk_Total t) ktype r in
+  let uv = mk_Exp_uvar'(uv, t') t' r in
   mk_Exp_app(uv, args) t r, uv
 
 let new_cvar r binders t = 
@@ -254,7 +255,7 @@ let commit env uvi =
       false in
 
     uvi |> List.iter (fun uv -> 
-        //if debug env then print_uvi uv;
+        if debug env then print_uvi uv;
         match uv with 
         | UK(u,k) -> Unionfind.change u (Fixed k)
         | UT((u,k),t) -> ignore <| pre_kind_compat k t.tk; Unionfind.change u (Fixed t)
@@ -405,13 +406,13 @@ let rec pat_vars seen : args -> option<binders> = function
                     | _ -> false)
                 then None //not a pattern
                 else pat_vars ((Inr x, imp)::seen) rest
-            | _ -> None) //not a pattern
+            | te -> None) //not a pattern
 
-let decompose_binder (bs:binders) ktec (rebuild_base:binders -> ktec -> 'a) = 
+let decompose_binder (bs:binders) ktec (rebuild_base:binders -> ktec -> 'a) : ((list<ktec> -> 'a) * list<(binders * ktec)>) = 
     let fail () = failwith "Bad reconstruction" in
     let rebuild ktecs = 
         let rec aux new_bs bs ktecs = match bs, ktecs with 
-            | [], [ktec] -> rebuild_base new_bs ktec
+            | [], [ktec] -> rebuild_base (List.rev new_bs) ktec
             | (Inl a, imp)::rest, K k::rest' -> aux ((Inl ({a with sort=k}), imp)::new_bs) rest rest'
             | (Inr x, imp)::rest, T t::rest' -> aux ((Inr ({x with sort=t}), imp)::new_bs) rest rest'
             | _ -> fail () in
@@ -662,9 +663,10 @@ and solve_k (top:bool) (env:Env.env) rel k1 k2 probs : solution =
               && not(Util.set_mem u uvs2.uvars_k)
            then let k1 = mk_Kind_lam(xs, k2) r in //Solve in one-step
                 solve top env (extend_subst (UK(u, k1)) probs)
-           else imitate_k top env probs (u, xs |> Util.args_of_non_null_binders, xs, decompose_kind env k2) 
+           else (printfn "Imitating ... ";
+                 imitate_k top env probs (u, xs |> Util.args_of_non_null_binders, xs, decompose_kind env k2) )
         | None -> 
-           giveup "flex-rigid: not a pattern" (KProb(rel, k1, k2)) probs
+           giveup (Util.format1 "flex-rigid: not a pattern (args=%s)" (Print.args_to_string args)) (KProb(rel, k1, k2)) probs
        end
           
      | _, Kind_uvar _ -> //rigid-flex ... re-orient
@@ -741,7 +743,7 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
 
       | Typ_lam(bs1, t1'), Typ_lam(bs2, t2') -> 
         solve_binders bs1 bs2 rel (TProb(rel, t1, t2)) probs
-        (fun subst subprobs -> solve false env (attempt (TProb(rel, t1, Util.subst_typ subst t1')::subprobs) probs))
+        (fun subst subprobs -> solve false env (attempt (TProb(rel, t1', Util.subst_typ subst t2')::subprobs) probs))
 
       | Typ_refine(x1, phi1), Typ_refine(x2, phi2) -> 
         let x1 = v_binder x1 in
@@ -757,43 +759,56 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
   
       | Typ_app({n=Typ_uvar(uv,k)}, args_lhs), _ -> //flex-rigid
         let maybe_pat_vars = pat_vars [] args_lhs in
-        let t2 = sn env t2 in
         let subterms ps = 
             let xs = ps |> List.map (function 
                 | Inl pi, imp -> Inl <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk, imp
                 | Inr pi, imp -> Inr <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk, imp) in
             (uv,k), ps, xs, decompose_typ env t2 in
 
-        let n = List.length args_lhs in
-        let rec imitate_or_project st i = 
+        let rec imitate_or_project n st i = 
             if i >= n then giveup "flex-rigid case failed all backtracking attempts" (TProb(rel, t1, t2)) probs
             else if i = -1 
             then match imitate env probs st with
-                   | Failed _ -> imitate_or_project st (i + 1) //backtracking point
+                   | Failed _ -> imitate_or_project n st (i + 1) //backtracking point
                    | sol -> sol
             else match project env probs i st with
-                   | Failed _ -> imitate_or_project st (i + 1) //backtracking point
+                   | Failed _ -> imitate_or_project n st (i + 1) //backtracking point
                    | sol -> sol in
-                     
+
+        let check_head fvs1 t2 =
+            let fvs_hd = Util.head_and_args t2 |> fst |> Util.freevars_typ in
+            Util.fvs_included fvs_hd fvs1 in
+            
+        let imitate fvs1 t2 = (* -1 means begin by imitating *)
+            let fvs_hd = Util.head_and_args t2 |> fst |> Util.freevars_typ in
+            if Util.fvs_included fvs_hd fvs1
+            then -1
+            else 0 in
+
         begin match maybe_pat_vars with 
             | Some vars -> 
+              let t2 = sn env t2 in 
               let fvs1 = Util.freevars_typ t1 in
               let fvs2 = Util.freevars_typ t2 in
               let uvs = Util.uvars_in_typ t2 in 
               let occurs_ok = not (Util.set_mem (uv,k) uvs.uvars_t) in 
               if not occurs_ok 
-              then giveup "occurs-check failed" (TProb(rel, t1, t2)) probs
-              else if Util.set_is_subset_of fvs2.ftvs fvs1.ftvs
-                && Util.set_is_subset_of fvs2.fxvs fvs1.fxvs
+              then giveup (Util.format2 "occurs-check failed (%s occurs in {%s})" (Print.uvar_t_to_string (uv,k)) (Util.set_elements uvs.uvars_t |> List.map Print.uvar_t_to_string |> String.concat ", "))
+                          (TProb(rel, t1, t2)) probs
+              else if Util.fvs_included fvs2 fvs1
               then //fast solution for flex-pattern/rigid case
                    let sol = mk_Typ_lam(vars, t2) k r in
                    //let _ = if debug env then printfn "Fast solution for %s \t -> \t %s" (Print.typ_to_string t1) (Print.typ_to_string sol) in
                    solve top env (extend_subst (UT((uv,k), sol)) probs)
-              else imitate_or_project (subterms args_lhs) -1
-            | None -> imitate_or_project (subterms args_lhs) -1
+              else if check_head fvs1 t2 
+              then imitate_or_project (List.length args_lhs) (subterms args_lhs) -1
+              else giveup "head-symbol is free" (TProb(rel, t1, t2)) probs
+            | None -> if check_head (Util.freevars_typ t1) t2
+                      then imitate_or_project (List.length args_lhs) (subterms args_lhs) (imitate (Util.freevars_typ t1) t2)
+                      else giveup "head-symbol is free" (TProb(rel, t1, t2)) probs
         end
 
-      | _, Typ_meta(Meta_uvar_t_app _) -> //rigid-flex
+      | _, Typ_app({n=Typ_uvar _}, _) -> //rigid-flex
         solve_t top env EQ t2 t1 probs //re-orient
 
       | Typ_refine(x, phi1), _ ->
@@ -1066,7 +1081,7 @@ let teq env t1 t2 : guard =
     raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env)))
 
 let subkind env k1 k2 : guard = 
- let prob  = KProb(SUB, k1, k2) in
+ let prob  = KProb(SUB, whnf_k env k1, whnf_k env k2) in
  Util.must <| solve_and_commit env None prob (fun _ -> 
     raise (Error(Tc.Errors.incompatible_kinds k1 k2, Tc.Env.get_range env)))
 

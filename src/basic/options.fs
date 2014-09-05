@@ -21,6 +21,7 @@ open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Getopt
 
+let norm_then_print = Util.mk_ref true
 let z3_exe = Util.mk_ref "z3.exe"
 let fvdie = Util.mk_ref false
 let z3log = Util.mk_ref false
@@ -120,6 +121,7 @@ let specs () : list<Getopt.opt> =
      ( noshort, "admit_fsi", OneArg ((fun x -> admit_fsi := x::!admit_fsi), "module name"), "Treat .fsi as a .fst");
      ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir");
      ( noshort, "verify", ZeroArgs (fun () -> verify := true), "Call the SMT solver to discharge verifications conditions");
-     ( noshort, "z3exe", OneArg ((fun x -> z3_exe := x), "path"), "Path to the Z3 SMT solver")
+     ( noshort, "z3exe", OneArg ((fun x -> z3_exe := x), "path"), "Path to the Z3 SMT solver");
+     ( noshort, "print_before_norm", ZeroArgs(fun () -> norm_then_print := false), "Do not normalize types before printing (for debugging)")
      ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
