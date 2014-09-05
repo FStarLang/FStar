@@ -151,7 +151,7 @@ fstar-nodeps: fstar.fs
 	$(FSC) $(OTHERFLAGS) -o $(BIN)/fstar.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs 
 
 
-wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(FORMAT_SRC) $(BACKEND_SRC) fstar.fs
+wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMAT_SRC) $(BACKEND_SRC) $(JSBACKEND_SRC) fstar.fs
 	wc -l $^
 
 clean:

@@ -112,11 +112,11 @@ let subst_binder b1 b2 s =
 let new_kvar r binders =
   let wf k () = true in
   let u = Unionfind.fresh (Uvar wf) in
-  mk_Kind_uvar (u, Util.args_of_binders binders) r, u
+  mk_Kind_uvar (u, Util.args_of_non_null_binders binders) r, u
 
 let new_tvar r binders k =
   let wf t tk = true in
-  let args = Util.args_of_binders binders in 
+  let args = Util.args_of_non_null_binders binders in 
   let uv = Unionfind.fresh (Uvar wf) in 
   let k = mk_Kind_arrow(binders, k) r in
   let uv = mk_Typ_uvar'(uv,k) k r in
@@ -124,7 +124,7 @@ let new_tvar r binders k =
 
 let new_evar r binders t =
   let wf e t = true in 
-  let args = Util.args_of_binders binders in 
+  let args = Util.args_of_non_null_binders binders in 
   let uv = Unionfind.fresh (Uvar wf) in 
   let t = mk_Typ_fun(binders, mk_Total t) ktype r in
   let uv = mk_Exp_uvar'(uv, t) t r in
@@ -232,7 +232,8 @@ let guard env top g probs =
                        | Some _, NonTrivial ({n=Typ_lam(xs, g)}) -> 
                             begin match f.n with 
                             | Typ_lam(ys, fbody) ->
-                              NonTrivial <| mk_Typ_lam(xs, Util.mk_conj g (Util.subst_typ (Util.subst_of_list ys (Util.args_of_binders xs)) fbody)) g.tk g.pos
+                              let xs, args = Util.args_of_binders xs in
+                              NonTrivial <| mk_Typ_lam(xs, Util.mk_conj g (Util.subst_typ (Util.subst_of_list ys args) fbody)) g.tk g.pos
                             | _ -> 
                               NonTrivial <| mk_Typ_lam(xs, Util.mk_conj g f) g.tk g.pos
                             end
@@ -513,17 +514,17 @@ and imitate env probs ((u,k), ps, xs, (h, _, qs)) =
     let gs_xs, sub_probs = qs |> List.map (function 
         | binders, K ki -> 
             let gi_xs, gi = new_kvar r (xs@binders) in
-            let gi_ps = mk_Kind_uvar(gi, ps@Util.args_of_binders binders) r in
+            let gi_ps = mk_Kind_uvar(gi, ps@Util.args_of_non_null_binders binders) r in //xs are all non-null
             K gi_xs, KProb(EQ, gi_ps, ki)
 
         | binders, T ti -> 
             let gi_xs, gi = new_tvar r (xs@binders) ti.tk in
-            let gi_ps = mk_Typ_app(gi, ps@Util.args_of_binders binders) ti.tk ti.pos in
+            let gi_ps = mk_Typ_app(gi, ps@Util.args_of_non_null_binders binders) ti.tk ti.pos in
             T gi_xs, TProb(EQ, gi_ps, ti)
         
         | binders, C ci -> 
             let gi_xs, gi = new_cvar r (xs@binders) (Util.comp_result ci) in //TODO: Also imitate the result type?
-            let gi_ps = mk_Flex(mk_Typ_app(gi, ps@Util.args_of_binders binders) (Const.kunary ktype keffect) r, Util.comp_result ci) in
+            let gi_ps = mk_Flex(mk_Typ_app(gi, ps@Util.args_of_non_null_binders binders) (Const.kunary ktype keffect) r, Util.comp_result ci) in
             C gi_xs, CProb(EQ, gi_ps, ci)
 
         | _, E ei -> 
@@ -547,7 +548,7 @@ and imitate_k top env probs (u, ps, xs, (h, qs)) =
 
         | binders, K ki -> 
           let gi_xs, gi = new_kvar r (xs@binders) in
-          let gi_ps = mk_Kind_uvar(gi, (ps@Util.args_of_binders binders)) r in
+          let gi_ps = mk_Kind_uvar(gi, (ps@Util.args_of_non_null_binders binders)) r in
           K gi_xs, KProb(EQ, gi_ps, ki)
 
         | _, T ti ->  //TODO: why ignore binders here?
@@ -610,8 +611,10 @@ and project env probs i (u, ps, xs, ((h:list<ktec> -> typ), (matches:typ -> bool
         | _ -> giveup_noex probs
 
 and solve_k (top:bool) (env:Env.env) rel k1 k2 probs : solution = 
+    if Util.physical_equality k1 k2 then solve top env probs else
     let k1 = compress_k env probs.subst k1 in 
     let k2 = compress_k env probs.subst k2 in 
+    if Util.physical_equality k1 k2 then solve top env probs else
     let r = Env.get_range env in 
 
     match k1.n, k2.n with 
@@ -659,7 +662,7 @@ and solve_k (top:bool) (env:Env.env) rel k1 k2 probs : solution =
               && not(Util.set_mem u uvs2.uvars_k)
            then let k1 = mk_Kind_lam(xs, k2) r in //Solve in one-step
                 solve top env (extend_subst (UK(u, k1)) probs)
-           else imitate_k top env probs (u, xs |> Util.args_of_binders, xs, decompose_kind env k2) 
+           else imitate_k top env probs (u, xs |> Util.args_of_non_null_binders, xs, decompose_kind env k2) 
         | None -> 
            giveup "flex-rigid: not a pattern" (KProb(rel, k1, k2)) probs
        end
@@ -688,6 +691,7 @@ and solve_binders (bs1:binders) (bs2:binders) rel orig probs rhs =
        aux [] [] bs1 bs2
 
 and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution = 
+    if Util.physical_equality t1 t2 then solve top env probs else
     let t1 = compress env probs.subst t1 in
     let t2 = compress env probs.subst t2 in 
 //    printfn "Attempting %s" (prob_to_string (TProb(rel, t1, t2)));
@@ -1061,12 +1065,18 @@ let teq env t1 t2 : guard =
  Util.must <| solve_and_commit env (Some t1) prob (fun _ -> 
     raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env)))
 
+let subkind env k1 k2 : guard = 
+ let prob  = KProb(SUB, k1, k2) in
+ Util.must <| solve_and_commit env None prob (fun _ -> 
+    raise (Error(Tc.Errors.incompatible_kinds k1 k2, Tc.Env.get_range env)))
+
 let try_subtype env t1 t2 = 
  if debug env then printfn "try_subtype of %s : %s and %s : %s\n" (Print.typ_to_string t1) (Print.kind_to_string t1.tk) (Print.typ_to_string t2) (Print.kind_to_string t2.tk);
  let res = solve_and_commit env (Some t1) (TProb(SUB, t1, t2))//norm_typ [Beta; Eta] env t1, norm_typ [Beta; Eta] env t2))
  (fun _ -> None) in
  if debug env then printfn "...done"; res
 
+  
 let subtype env t1 t2 : guard = 
   match try_subtype env t1 t2 with
     | Some f -> f

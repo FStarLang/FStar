@@ -37,6 +37,7 @@ val guard_to_string : env -> guard -> string
 val trivial : guard -> unit
 val conj_guard: guard -> guard -> guard
 val keq : env -> option<typ> -> knd -> knd -> guard
+val subkind: env -> knd -> knd -> guard
 val teq : env -> typ -> typ -> guard
 val try_subtype: env -> typ -> typ -> option<guard>
 val subtype: env -> typ -> typ -> guard

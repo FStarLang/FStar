@@ -175,16 +175,15 @@ let is_xtuple (x : lident) =
 
 (* -------------------------------------------------------------------- *)
 let is_etuple (e : exp) =
-    let rec aux n e =
+    let rec aux e =
         match (Absyn.Util.compress_exp e).n with
-        | Exp_tapp (e, _) -> aux (n+1) e
-        | Exp_fvar (x, _) -> begin
-            match is_xtuple x.v with
-            | Some k when k = n -> Some k
+        | Exp_app({n=Exp_fvar (x, _)}, args) ->
+            begin match is_xtuple x.v with
+            | Some k when k = List.length args -> Some k
             | _ -> None
-        end
+            end
         | _ -> None
-    in aux 0 e
+    in aux e
 
 (* -------------------------------------------------------------------- *)
 let mlconst_of_const (rg : range) (sctt : sconst) =
@@ -215,11 +214,15 @@ let mlkind_of_kind (tps : list<tparam>) (k : knd) =
         | Kind_type    -> Some (List.rev acc)
         | Kind_unknown -> Some (List.rev acc) (* FIXME *)
 
-        | Kind_tcon (x, k1, k2, _) -> begin
-            match aux [] k1 with
+        | Kind_arrow([], k) -> aux acc k
+
+        | Kind_arrow((Inl x, _)::rest, k2) -> begin
+            match aux [] x.sort with
             | Some [] ->
-                let x = Option.map (fun x -> (x.realname, x.ppname)) x in
-                aux (x :: acc) k2
+                let x = if is_null_binder (Inl x, false)
+                        then None
+                        else Some (x.v.realname, x.v.ppname) in
+                aux (x  :: acc) (mk_Kind_arrow(rest, k2) k.pos)
             | _ -> None
         end
 
@@ -240,24 +243,25 @@ let rec mlty_of_ty_core (tenv : tenv) ((rg, ty) : range * typ) =
     | Typ_btvar x ->
         MLTY_Var (tvar_of_btvar tenv x)
 
-    | Typ_refine (_, ty, _) ->
+    | Typ_refine ({sort=ty}, _) ->
         mlty_of_ty tenv (rg, ty)
 
     | Typ_ascribed (ty, _) ->
         mlty_of_ty tenv (rg, ty)
 
-    | Typ_fun (x, t1, c, _) -> 
-        let t2 = comp_result c in
+    | Typ_fun([], c) -> 
+       mlty_of_ty tenv (rg, comp_result c)
+
+    | Typ_fun ((Inr {v=x; sort=t1},  _)::rest, c) -> 
+        let t2 = mk_Typ_fun(rest, c) ktype ty.pos in
         let mlt1 = mlty_of_ty tenv (rg, t1) in
         let mlt2 = mlty_of_ty tenv (rg, t2) in
         MLTY_Fun (mlt1, mlt2)
 
+    | Typ_fun((Inl _, _)::_, _) ->  unsupported rg "type-universe"
     | Typ_const   _ -> unexpected  rg "type-constant"
     | Typ_app     _ -> unsupported rg "type-application"
-    | Typ_dep     _ -> unsupported rg "type-expr-app"
     | Typ_lam     _ -> unsupported rg "type-fun"
-    | Typ_tlam    _ -> unsupported rg "type-type-fun"
-    | Typ_univ    _ -> unsupported rg "type-universe"
     | Typ_meta    _ -> unexpected  rg "type-meta"
     | Typ_uvar    _ -> unexpected  rg "type-uvar"
     | Typ_unknown   -> unexpected  rg "type-unknown"
@@ -271,10 +275,16 @@ and maybe_named (tenv : tenv) ((rg, ty) : range * typ) =
         | Typ_const c ->
             Some (mlpath_of_lident c.v, acc)
 
-        | Typ_app (t1, t2, _) ->
-            aux (mlty_of_ty tenv (rg, t2) :: acc) (rg, t1)
+        | Typ_app(head, args) -> 
+           if args |> Util.for_some (function Inr _, _ -> true | _ -> false)
+           then None
+           else let tys = args |> List.map (function (Inl t, _) -> mlty_of_ty tenv (rg, t) | _ -> failwith "impos") in
+                aux (tys@acc) (rg, head)
 
-        | Typ_refine (_, ty, _)        -> aux acc (rg, ty)
+//        | Typ_app (t1, t2, _) ->
+//            aux (mlty_of_ty tenv (rg, t2) :: acc) (rg, t1)
+
+        | Typ_refine ({sort=ty}, _)        -> aux acc (rg, ty)
         | Typ_ascribed (ty, _)         -> aux acc (rg, ty)
       
         | _ -> None
@@ -287,7 +297,7 @@ and maybe_tuple (tenv : tenv) ((rg, ty) : range * typ) =
     let rec unfun n ty =
         if n <= 0 then Some ty else
             match (Absyn.Util.compress_typ ty).n with
-            | Typ_lam (_, _, ty)          -> unfun (n-1) ty
+            | Typ_lam(bs, ty) -> unfun (n - List.length bs) ty
             | Typ_ascribed (ty, _)        -> unfun n ty
             | _ -> None
     in
@@ -303,7 +313,12 @@ and maybe_tuple (tenv : tenv) ((rg, ty) : range * typ) =
             | _ -> None
         end
 
-        | Typ_app (t1, t2, _)         -> aux (t2 :: acc) t1
+        | Typ_app(head, args) -> 
+          if args |> Util.for_some (function (Inr _, _) -> true | Inl t, _ -> false)
+          then None
+          else let tys = args |> List.map (function (Inl t, _) -> t | _ -> failwith "impos") in
+               aux (tys@acc) head
+
         | Typ_ascribed (ty, _)        -> aux acc ty
 
         | _ -> None
@@ -335,9 +350,11 @@ let mltycons_of_mlty (ty : mlty) =
 let rec strip_polymorphism acc rg ty =
     let rg = ty.pos in
     match (Absyn.Util.compress_typ ty).n with
-    | Typ_univ (x, {n=Kind_type}, c) -> 
-        let ty = comp_result c in 
-        strip_polymorphism ((x.realname, x.ppname) :: acc) rg ty
+    | Typ_fun(bs, c) -> 
+        let ts, vs = bs |> List.partition (function Inl {v=x; sort={n=Kind_type}}, _ -> true | _ -> false)  in
+        let ts = ts |> List.collect (function (Inl x, _) -> [(x.v.realname, x.v.ppname)] | _ -> []) in
+        ts, rg, mk_Typ_fun(vs, c) ktype ty.pos
+    
     | _ ->
         (List.rev acc, rg, ty)
 
@@ -384,14 +401,14 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
     let rg = e.pos in
     let e = Absyn.Util.compress_exp e in
 
-    match Absyn.Util.destruct_app e with
-    | (e, args) when is_etuple e = Some (List.length args) ->
-        let args = List.map (fun (e, _) -> mlexpr_of_expr rg lenv e) args in
+    match e.n with
+    | Exp_app(e, args) when is_etuple e = Some (List.length args) ->
+        let args = List.collect (function Inl _, _ -> [] | Inr e, _ -> [mlexpr_of_expr rg lenv e]) args in
         MLE_Tuple args
 
-    | (e, args) when not (List.isEmpty args) ->
+    | Exp_app(e, args) when not (List.isEmpty args) ->
         let e    = mlexpr_of_expr rg lenv e in
-        let args = List.map (fun (e, _) -> mlexpr_of_expr rg lenv e) args in
+        let args = List.collect (function (Inl _, _) -> [] | Inr e, _ -> [mlexpr_of_expr rg lenv e]) args in
 
         MLE_App (e, args)
 
@@ -406,9 +423,12 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
         | Exp_constant c ->
             MLE_Const (mlconst_of_const rg c)
 
-        | Exp_abs (x, _, e) ->
-            let lenv, mlid = lpush lenv x.realname x.ppname in
-            let e = mlexpr_of_expr rg lenv e in
+        | Exp_abs([], e) -> 
+           mlexpr_of_expr rg lenv e 
+
+        | Exp_abs ((Inr x, _)::rest, e) ->
+            let lenv, mlid = lpush lenv x.v.realname x.v.ppname in
+            let e = mlexpr_of_expr rg lenv (mk_Exp_abs(rest, e) tun e.pos) in
             mlfun mlid e
 
         | Exp_match ({n=(Exp_fvar _ | Exp_bvar _)}, [p, None, e]) when Absyn.Util.is_wild_pat p ->
@@ -447,12 +467,12 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
 
         | Exp_meta (Meta_desugared (e, Data_app)) ->
             let (c, args) =
-                match Absyn.Util.destruct_app e with
-                | {n=Exp_fvar (c, true)}, args -> (c, args)
-                | _, _ -> unexpected rg "meta-data-app-without-fvar"
+                match e.n with
+                | Exp_app({n=Exp_fvar (c, true)}, args) -> (c, args)
+                | _ -> unexpected rg "meta-data-app-without-fvar"
             in
             
-            let args = List.map fst args in
+            let args = args |> List.collect (function Inr e, _ -> [e] | _ -> [])in
             let args = List.map (mlexpr_of_expr rg lenv) args in
 
             MLE_CTor (mlpath_of_lident c.v, args)
@@ -477,13 +497,14 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
         | Exp_meta (Meta_datainst (e, _)) ->
             mlexpr_of_expr rg lenv e
 
-        | Exp_tapp (e, _) ->
-            (* FIXME: add a type annotation *)
-            mlexpr_of_expr rg lenv e
-
-        | Exp_tabs (_, _, e) ->
-            (* FIXME: should only occur after a let-binding *)
-            mlexpr_of_expr rg lenv e
+        
+//        | Exp_tapp (e, _) ->
+//            (* FIXME: add a type annotation *)
+//            mlexpr_of_expr rg lenv e
+//
+//        | Exp_tabs (_, _, e) ->
+//            (* FIXME: should only occur after a let-binding *)
+//            mlexpr_of_expr rg lenv e
 
         | Exp_app     _ -> unexpected rg "expr-app"
         | Exp_uvar    _ -> unexpected rg "expr-uvar"
@@ -660,9 +681,9 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
     | Sig_datacon (x, ty, tx, _, rg) when as_tprims tx = Some Exn -> begin
         let rec aux acc ty =
             match (Absyn.Util.compress_typ ty).n with
-            | Typ_fun (_, ty1, c, _) ->
-                let ty2 = comp_result c in 
-                aux (ty1 :: acc) ty2
+            | Typ_fun(bs, c) -> 
+                let tys = bs |> List.collect (function Inl _, _ -> [] | Inr x, _ -> [x.sort]) in
+                tys
             | Typ_const x when as_tprims x.v = Some Exn->
                 List.rev acc
             | _ ->

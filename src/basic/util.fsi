@@ -28,6 +28,7 @@ open Prims
 type set<'a> = (list<'a> * ('a -> 'a -> bool))
 //type set<'value> = (Collections.Set<Boxed<'value>> * ('value -> Boxed<'value>)) (* not relying on representation *)
 val new_set: ('a -> 'a -> int) -> ('a -> int) -> set<'a>
+val set_is_empty: set<'a> -> bool
 val set_add: 'a -> set<'a> -> set<'a>
 val set_remove: 'a -> set<'a> -> set<'a>
 val set_mem: 'a -> set<'a> -> bool

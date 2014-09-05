@@ -36,18 +36,17 @@ val check_uvars: Range.range -> typ -> unit
 val check_and_ascribe : env -> exp -> typ -> typ -> exp * Rel.guard
 val pat_as_exps: env -> pat -> list<exp>
 val generalize: env -> list<(lbname*exp*comp)> -> (list<(lbname*exp*comp)>)
-val maybe_instantiate : env -> exp -> typ -> (exp * comp)
+val maybe_instantiate : env -> exp -> typ -> (exp * typ)
 val destruct_comp: comp_typ -> (typ * typ * typ)
-val new_function_typ: env -> option<bvvdef> -> option<lident> -> typ
-val new_poly_typ: env -> btvdef -> typ
-val uvar_as_function_typ: env -> option<typ> -> option<bvvdef> -> option<lident> -> typ
+//val new_function_typ: env -> option<bvvdef> -> option<lident> -> typ
+//val new_poly_typ: env -> btvdef -> typ
+//val uvar_as_function_typ: env -> option<typ> -> option<bvvdef> -> option<lident> -> typ
 
-val destruct_function_typ : env -> typ -> option<bvvdef> -> option<exp> -> bool -> option<lident> -> (typ * option<exp>)
-val destruct_poly_typ: env -> typ -> exp -> typ -> (typ*exp) 
-val destruct_tcon_kind: env -> knd -> typ -> bool -> (knd*typ)
-val destruct_dcon_kind: env -> knd -> typ -> bool -> (knd*typ)
+//val destruct_function_typ : env -> typ -> option<bvvdef> -> option<exp> -> bool -> option<lident> -> (typ * option<exp>)
+//val destruct_poly_typ: env -> typ -> exp -> typ -> (typ*exp) 
+val destruct_arrow_kind: env -> typ -> knd -> args -> (args * binders * knd)
 val mk_basic_dtuple_type: env -> int -> typ
-val extract_lb_annotation: bool -> env -> typ -> exp -> typ
+val extract_lb_annotation: bool -> env -> typ -> exp -> (exp * typ)
 
 type comp_with_binder = option<Env.binding> * comp
 val is_pure: env -> comp -> bool
@@ -62,6 +61,6 @@ val lift_pure: env -> typ -> formula -> comp (* with t as a result type *)
 val close_guard: binders -> guard -> guard
 val close_comp: env -> list<binding> -> comp -> comp
 val check_comp: env -> exp -> comp -> comp -> exp * comp * guard
-val refine_data_type: env -> lident -> list<Util.either<(btvdef * knd), (option<bvvdef> * typ * bool)>> -> typ -> typ
+val refine_data_type: env -> lident -> binders -> typ -> typ
 
 val discharge_guard: env -> guard -> unit

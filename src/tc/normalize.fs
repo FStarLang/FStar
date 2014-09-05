@@ -94,7 +94,8 @@ let rec eta_expand tcenv t =
     | Kind_abbrev(_, k) -> 
         eta_expand tcenv ({t with tk=k})
     | Kind_arrow(binders, k') ->
-        let body = mk_Typ_app(t, Util.args_of_binders binders) k' t.pos in
+        let binders, args = Util.args_of_binders binders in 
+        let body = mk_Typ_app(t, args) k' t.pos in
         mk_Typ_lam(binders, body) k t.pos
     | Kind_lam _
     | Kind_delayed _ -> failwith "Impossible"

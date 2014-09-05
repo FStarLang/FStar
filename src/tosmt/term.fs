@@ -365,19 +365,18 @@ and mkPrelude () =
                 (declare-fun ApplyTE (Type Term) Type)\n\
                 (declare-fun ApplyTT (Type Type) Type)\n" in
    let constrs : constructors = [("String_const", ["String_const_proj_0", Int_sort], String_sort, 0);
-                                 ("Kind_type", [], Kind_sort, 0);
-                                 ("Kind_dcon", ["Kind_dcon_id", Int_sort], Kind_sort, 1);
-                                 ("Kind_tcon", ["Kind_tcon_id", Int_sort], Kind_sort, 2);
-                                 ("Typ_fun",   ["Typ_fun_id", Int_sort], Type_sort, 1);
-                                 ("Typ_app",   [("Typ_app_fst", Type_sort);
-                                                ("Typ_app_snd", Type_sort)], Type_sort, 2);
-                                 ("Typ_dep",   [("Typ_dep_fst", Type_sort);
-                                                ("Typ_dep_snd", Term_sort)], Type_sort, 3);
-                                 ("Term_unit", [], Term_sort, 0);
-                                 ("BoxInt",    ["BoxInt_proj_0", Int_sort], Term_sort, 1);
-                                 ("BoxBool",   ["BoxBool_proj_0", Bool_sort], Term_sort, 2);
-                                 ("BoxString", ["BoxString_proj_0", String_sort], Term_sort, 3);
-                                 ("BoxRef",    ["BoxRef_proj_0", Ref_sort], Term_sort, 4)] in
+                                 ("Kind_type",  [], Kind_sort, 0);
+                                 ("Kind_arrow", ["Kind_arrow_id", Int_sort], Kind_sort, 1);
+                                 ("Typ_fun",    ["Typ_fun_id", Int_sort], Type_sort, 1);
+                                 ("Typ_app",    [("Typ_app_fst", Type_sort);
+                                                 ("Typ_app_snd", Type_sort)], Type_sort, 2);
+                                 ("Typ_dep",    [("Typ_dep_fst", Type_sort);
+                                                 ("Typ_dep_snd", Term_sort)], Type_sort, 3);
+                                 ("Term_unit",  [], Term_sort, 0);
+                                 ("BoxInt",     ["BoxInt_proj_0", Int_sort], Term_sort, 1);
+                                 ("BoxBool",    ["BoxBool_proj_0", Bool_sort], Term_sort, 2);
+                                 ("BoxString",  ["BoxString_proj_0", String_sort], Term_sort, 3);
+                                 ("BoxRef",     ["BoxRef_proj_0", Ref_sort], Term_sort, 4)] in
    let bcons = constrs |> List.collect constructor_to_decl |> List.map declToSmt |> String.concat "\n" in
    basic ^ bcons 
 

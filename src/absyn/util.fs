@@ -106,10 +106,32 @@ let order_bvd x y = match x, y with
   | Inr _, Inl _ -> 1
   | Inl x, Inl y -> String.compare x.ppname.idText y.ppname.idText
   | Inr x, Inr y -> String.compare x.ppname.idText y.ppname.idText
-let args_of_binders (binders:binders) = 
-    binders |> List.map (function 
-        | Inl a, _ -> targ <| btvar_to_typ a
-        | Inr x, _ -> varg <| bvar_to_exp x)
+let arg_of_non_null_binder (b, imp) = match b with
+    | Inl a -> Inl (btvar_to_typ a), imp
+    | Inr x -> Inr (bvar_to_exp x), imp
+
+let args_of_non_null_binders (binders:binders) = 
+    binders |> List.collect (fun b -> 
+        if is_null_binder b then []
+        else [arg_of_non_null_binder b])
+let args_of_binders (binders:binders) : (binders * args) =
+ binders |> List.map (fun b -> 
+    if is_null_binder b 
+    then let b = match fst b with
+            | Inl a -> Inl <| gen_bvar a.sort, snd b 
+            | Inr x -> Inr <| gen_bvar x.sort, snd b in
+         b, arg_of_non_null_binder b 
+    else b, arg_of_non_null_binder b) |> List.unzip 
+
+let null_binders_of_args (args:args) : binders = 
+    args |> List.map (fun (a, imp) -> match a with 
+        | Inl t -> fst <| null_t_binder t.tk, imp 
+        | Inr v -> fst <| null_v_binder v.tk, imp)
+let binders_of_args (args:args) : binders = 
+    args |> List.map (fun (a, imp) -> match a with 
+        | Inl t -> Inl (gen_bvar_p t.pos t.tk), imp 
+        | Inr v -> Inr (gen_bvar_p v.pos v.tk), imp)
+
 
 
 (********************************************************************************)
@@ -186,13 +208,20 @@ let subst_kind' s t = subst_kind (mk_subst s) t
 let subst_typ' s t = subst_typ (mk_subst s) t
 let subst_exp' s t = subst_exp (mk_subst s) t
 let subst_comp' s t = subst_comp (mk_subst s) t
+let subst_binder s = function
+    | Inl a, imp -> Inl ({a with sort=subst_kind s a.sort}), imp
+    | Inr x, imp -> Inr ({x with sort=subst_typ s x.sort}), imp
+let subst_binders s bs = match s with 
+    | [] -> bs
+    | _ -> List.map (subst_binder s) bs
+let subst_formal (f:binder) (a:arg) = match f, a with 
+    | (Inl a, _), (Inl t, _) -> Inl(a.v, t)
+    | (Inr x, _), (Inr v, _) -> Inr(x.v, v)
+    | _ -> failwith "Ill-formed substitution"
 
 let subst_of_list (formals:binders) (actuals:args) : subst = 
     if (List.length formals = List.length actuals)
-    then List.map2 (fun ax tv -> match ax, tv with 
-        | (Inl a, _), (Inl t, _) -> Inl(a.v, t)
-        | (Inr x, _), (Inr v, _) -> Inr(x.v, v)
-        | _ -> failwith "Ill-formed substitution") formals actuals |> mk_subst
+    then List.map2 subst_formal formals actuals |> mk_subst
     else failwith "Ill-formed substitution"
 
 let restrict_subst axs s = 
@@ -941,6 +970,11 @@ let binders_of_tps tps =
     | Tparam_typ (a,k) -> Inl(bvd_to_bvar_s a k), false
     | Tparam_term (x,t) -> Inr(bvd_to_bvar_s x t), false) 
 
+let tps_of_binders bs = 
+    bs |> List.map (function 
+        | Inl a, _ -> Tparam_typ(a.v, a.sort)
+        | Inr x, _ -> Tparam_term(x.v, x.sort))
+
 let close_with_lam tps t = 
   let bs = binders_of_tps tps in
   mk_Typ_lam(bs, t) (mk_Kind_arrow(bs, t.tk) t.pos) t.pos
@@ -1094,11 +1128,11 @@ let forall_kind =
                 ktype) 
                 dummyRange
 let tforall = ftv Const.forall_lid forall_kind 
- 
-let tforall_typ k = 
-  let allT_k = mk_Kind_arrow([null_t_binder <| mk_Kind_arrow([null_t_binder k], ktype) dummyRange], ktype) dummyRange in
-  ftv Const.allTyp_lid allT_k 
-  
+
+let allT_k k = mk_Kind_arrow([null_t_binder <| mk_Kind_arrow([null_t_binder k], ktype) dummyRange], ktype) dummyRange 
+   
+let tforall_typ k = ftv Const.allTyp_lid (allT_k k)
+    
 let mk_forallT a b = 
   mk_Typ_app(tforall_typ a.sort, [targ <| mk_Typ_lam([t_binder a], b) (mk_Kind_arrow([null_t_binder a.sort], ktype) dummyRange) dummyRange]) ktype dummyRange
 
@@ -1190,7 +1224,8 @@ let destruct_typ_as_formula f : option<connective> =
         let is_q fa l = if fa then is_forall l else is_exists l in 
         let flat t = 
             let t, args = head_and_args t in 
-            t, args |> List.map (function (Inl t, imp) -> Inl <| compress_typ t, imp| (Inr e, imp) -> Inr <| compress_exp e, imp) in
+            t, args |> List.map (function (Inl t, imp) -> Inl <| compress_typ t, imp
+                                        | (Inr e, imp) -> Inr <| compress_exp e, imp) in
         let rec aux qopt out t = match qopt, flat t with
             | Some fa, ({n=Typ_const tc}, [(Inl {n=Typ_lam([b], t2)}, _)])  
             | Some fa, ({n=Typ_const tc}, [_; (Inl {n=Typ_lam([b], t2)}, _)])  

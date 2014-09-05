@@ -414,7 +414,14 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       end
 
     | Var l
-    | Name l -> setpos <| fail_or env (DesugarEnv.try_lookup_lid env) l
+    | Name l -> 
+      begin match DesugarEnv.try_lookup_datacon env l with 
+        | Some v -> 
+            let dt = pos <| mk_Exp_fvar(v, true) in
+            setpos <| mk_Exp_meta(Meta_desugared(mk_Exp_app(dt, []) tun top.range, Data_app))
+        | None -> 
+            setpos <| fail_or env (DesugarEnv.try_lookup_lid env) l
+      end
 
     | Construct(l, args) ->
       let dt = pos <| mk_Exp_fvar(fail_or env (DesugarEnv.try_lookup_datacon env) l, true) in

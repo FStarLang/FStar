@@ -121,6 +121,11 @@ open Prims
 
 type set<'a> = (list<'a> * ('a -> 'a -> bool))
 
+let set_is_empty ((s, _):set<'a>) = 
+    match s with 
+    | [] -> true
+    | _ -> false
+
 let new_set (cmp:'a -> 'a -> int) (hash:'a -> int) : set<'a> = 
     ([], fun x y -> cmp x y = 0)
 
