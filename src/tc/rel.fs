@@ -117,19 +117,35 @@ let new_kvar r binders =
 
 let new_tvar r binders k =
   let wf t tk = true in
-  let args = Util.args_of_non_null_binders binders in 
-  let uv = Unionfind.fresh (Uvar wf) in 
-  let k' = mk_Kind_arrow(binders, k) r in
-  let uv = mk_Typ_uvar'(uv,k') k' r in
-  mk_Typ_app(uv, args) k r, uv
+  let binders = binders |> List.filter (fun x -> is_null_binder x |> not) in
+  match binders with 
+    | [] -> 
+      let uv = Unionfind.fresh (Uvar wf) in 
+      let uv = mk_Typ_uvar'(uv,k) k r in
+      uv, uv
+    | _ -> 
+      let args = Util.args_of_non_null_binders binders in 
+      let uv = Unionfind.fresh (Uvar wf) in 
+      let k' = mk_Kind_arrow(binders, k) r in
+      let uv = mk_Typ_uvar'(uv,k') k' r in
+      mk_Typ_app(uv, args) k r, uv
 
 let new_evar r binders t =
   let wf e t = true in 
-  let args = Util.args_of_non_null_binders binders in 
-  let uv = Unionfind.fresh (Uvar wf) in 
-  let t' = mk_Typ_fun(binders, mk_Total t) ktype r in
-  let uv = mk_Exp_uvar'(uv, t') t' r in
-  mk_Exp_app(uv, args) t r, uv
+  let binders = binders |> List.filter (fun x -> is_null_binder x |> not) in
+  match binders with 
+    | [] -> 
+      let uv = Unionfind.fresh (Uvar wf) in 
+      let uv = mk_Exp_uvar'(uv,t) t r in
+      uv, uv
+    | _ ->
+      let args = Util.args_of_non_null_binders binders in 
+      let uv = Unionfind.fresh (Uvar wf) in 
+      let t' = mk_Typ_fun(binders, mk_Total t) ktype r in
+      let uv = mk_Exp_uvar'(uv, t') t' r in
+      match args with 
+        | [] -> uv, uv
+        | _ -> mk_Exp_app(uv, args) t r, uv
 
 let new_cvar r binders t = 
   let u, uv = new_tvar r (binders@[null_t_binder ktype]) keffect in
@@ -151,11 +167,14 @@ type prob =
   | TProb of rel * typ * typ
   | EProb of rel * exp * exp 
   | CProb of rel * comp * comp 
-let prob_to_string = function 
+let prob_to_string env = function 
   | KProb(rel, k1, k2) -> Util.format3 "\t%s\n\t\t%s\n\t%s" (Print.kind_to_string k1) (rel_to_string rel) (Print.kind_to_string k2)
   | TProb(rel, k1, k2) -> Util.format5 "\t%s (%s) \n\t\t%s\n\t%s (%s)" (Print.typ_to_string k1) (Print.tag_of_typ k1) (rel_to_string rel) (Print.typ_to_string k2) (Print.tag_of_typ k2)
   | EProb(rel, k1, k2) -> Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.exp_to_string k1) (rel_to_string rel) (Print.exp_to_string k2)
-  | CProb(rel, k1, k2) -> Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.comp_typ_to_string k1) (rel_to_string rel) (Print.comp_typ_to_string k2)
+  | CProb(rel, k1, k2) -> 
+    let k1 = Normalize.norm_comp [Beta;SNComp;Delta] env k1 in
+    let k2 = Normalize.norm_comp [Beta;SNComp;Delta] env k2 in   
+    Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.comp_typ_to_string k1) (rel_to_string rel) (Print.comp_typ_to_string k2)
 
 type uvar_inst =  //never a uvar in the co-domain of this map
   | UK of uvar_k * knd 
@@ -692,73 +711,32 @@ and solve_binders (bs1:binders) (bs2:binders) rel orig probs rhs =
         | _ -> giveup "arrow-kind arity" orig probs in
        aux [] [] bs1 bs2
 
-and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution = 
-    if Util.physical_equality t1 t2 then solve top env probs else
-    let t1 = compress env probs.subst t1 in
-    let t2 = compress env probs.subst t2 in 
-//    printfn "Attempting %s" (prob_to_string (TProb(rel, t1, t2)));
-//    printfn "Tag t1 = %s, t2 = %s" (Print.tag_of_typ t1) (Print.tag_of_typ t2);
-    if Util.physical_equality t1 t2 then solve top env probs else
-    let r = Env.get_range env in
-    match t1.n, t2.n with
-      | Typ_ascribed(t, _), _
-      | Typ_meta(Meta_pattern(t, _)), _ 
-      | Typ_meta(Meta_named(t, _)), _ -> solve_t top env rel t t2 probs
+and solve_t_flex_flex top env orig (t1, u1, k1, args1) (t2, u2, k2, args2) probs = 
+    let maybe_pat_vars1 = pat_vars [] args1 in
+    let maybe_pat_vars2 = pat_vars [] args2 in
+    let r = t2.pos in
+    begin match maybe_pat_vars1, maybe_pat_vars2 with 
+        | None, _
+        | _, None -> solve top env (defer "flex/flex not patterns" orig probs) //defer
+        | Some xs, Some ys -> 
+            if (Unionfind.equivalent u1 u2 && binders_eq xs ys)
+            then solve top env probs
+            else 
+                //U1 xs =?= U2 ys
+                //zs = xs intersect ys, U fresh
+                //U1 = \x1 x2. U zs
+                //U2 = \y1 y2 y3. U zs
+                let zs = intersect_vars xs ys in
+                let u_zs, _ = new_tvar r zs t2.tk in
+                let sub1 = mk_Typ_lam(xs, u_zs) k1 r in
+                let sub2 = mk_Typ_lam(ys, u_zs) k2 r in
+                //let _ = printfn "Flex-flex %s, %s" (Print.typ_to_string sub1) (Print.typ_to_string sub2) in
+                let probs = extend_subst (UT((u1,k1), sub1)) probs |> extend_subst (UT((u2,k2), sub2)) in
+                solve false env probs
+    end
 
-      | _, Typ_ascribed(t, _)
-      | _, Typ_meta(Meta_pattern(t, _))
-      | _, Typ_meta(Meta_named(t, _)) -> solve_t top env rel t1 t probs
-
-      | Typ_app({n=Typ_uvar(u1, k1)}, args1), Typ_app({n=Typ_uvar(u2, k2)}, args2) -> //flex-flex ... defer, unless they are both patterns
-        let maybe_pat_vars1 = pat_vars [] args1 in
-        let maybe_pat_vars2 = pat_vars [] args2 in
-        begin match maybe_pat_vars1, maybe_pat_vars2 with 
-            | None, _
-            | _, None -> solve top env (defer "flex/flex not patterns" (TProb(rel, t1, t2)) probs) //defer
-            | Some xs, Some ys -> 
-                if (Unionfind.equivalent u1 u2 && binders_eq xs ys)
-                then solve top env probs
-                else 
-                    //U1 xs =?= U2 ys
-                    //zs = xs intersect ys, U fresh
-                    //U1 = \x1 x2. U zs
-                    //U2 = \y1 y2 y3. U zs
-                    let zs = intersect_vars xs ys in
-                    let u_zs, _ = new_tvar r zs t2.tk in
-                    let sub1 = mk_Typ_lam(xs, u_zs) k1 r in
-                    let sub2 = mk_Typ_lam(ys, u_zs) k2 r in
-                    //let _ = printfn "Flex-flex %s, %s" (Print.typ_to_string sub1) (Print.typ_to_string sub2) in
-                    let probs = extend_subst (UT((u1,k1), sub1)) probs |> extend_subst (UT((u2,k2), sub2)) in
-                    solve false env probs
-        end
-
-      | Typ_btvar a, Typ_btvar b -> 
-        if Util.bvd_eq a.v b.v 
-        then solve top env probs
-        else giveup "unequal type variables" (TProb(rel, t1, t2)) probs
-
-      | Typ_fun(bs1, c1), Typ_fun(bs2, c2) ->
-        solve_binders bs1 bs2 rel (TProb(rel, t1, t2)) probs
-        (fun subst subprobs -> solve false env (attempt (CProb(rel, c1, Util.subst_comp subst c2)::subprobs) probs))
-
-      | Typ_lam(bs1, t1'), Typ_lam(bs2, t2') -> 
-        solve_binders bs1 bs2 rel (TProb(rel, t1, t2)) probs
-        (fun subst subprobs -> solve false env (attempt (TProb(rel, t1', Util.subst_typ subst t2')::subprobs) probs))
-
-      | Typ_refine(x1, phi1), Typ_refine(x2, phi2) -> 
-        let x1 = v_binder x1 in
-        let x2 = v_binder x2 in 
-        solve_binders [x1] [x2] rel (TProb(rel, t1, t2)) probs 
-        (fun subst subprobs -> 
-            match rel with
-               | EQ -> solve false env (attempt (TProb(rel, phi1, Util.subst_typ subst phi2)::subprobs) probs)
-               | SUB -> (* but if either phi1 or phi2 are patterns, why not solve it by equating? *)
-                let g = NonTrivial <| mk_Typ_lam([x1], Util.mk_imp phi1 (Util.subst_typ subst phi2)) (mk_Kind_arrow([x1], ktype) r) r in
-                let probs = guard env top g probs in
-                solve false env (attempt subprobs probs))
-  
-      | Typ_app({n=Typ_uvar(uv,k)}, args_lhs), _ -> //flex-rigid
-        let maybe_pat_vars = pat_vars [] args_lhs in
+and solve_t_flex_rigid top env orig (t1, uv, k, args_lhs) t2 probs = 
+      let maybe_pat_vars = pat_vars [] args_lhs in
         let subterms ps = 
             let xs = ps |> List.map (function 
                 | Inl pi, imp -> Inl <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk, imp
@@ -766,7 +744,7 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
             (uv,k), ps, xs, decompose_typ env t2 in
 
         let rec imitate_or_project n st i = 
-            if i >= n then giveup "flex-rigid case failed all backtracking attempts" (TProb(rel, t1, t2)) probs
+            if i >= n then giveup "flex-rigid case failed all backtracking attempts" orig probs
             else if i = -1 
             then match imitate env probs st with
                    | Failed _ -> imitate_or_project n st (i + 1) //backtracking point
@@ -794,20 +772,82 @@ and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution =
               let occurs_ok = not (Util.set_mem (uv,k) uvs.uvars_t) in 
               if not occurs_ok 
               then giveup (Util.format2 "occurs-check failed (%s occurs in {%s})" (Print.uvar_t_to_string (uv,k)) (Util.set_elements uvs.uvars_t |> List.map Print.uvar_t_to_string |> String.concat ", "))
-                          (TProb(rel, t1, t2)) probs
+                          orig probs
               else if Util.fvs_included fvs2 fvs1
               then //fast solution for flex-pattern/rigid case
-                   let sol = mk_Typ_lam(vars, t2) k r in
+                   let sol = match vars with 
+                    | [] -> t2
+                    | _ -> mk_Typ_lam(vars, t2) k t1.pos in
                    //let _ = if debug env then printfn "Fast solution for %s \t -> \t %s" (Print.typ_to_string t1) (Print.typ_to_string sol) in
                    solve top env (extend_subst (UT((uv,k), sol)) probs)
               else if check_head fvs1 t2 
               then imitate_or_project (List.length args_lhs) (subterms args_lhs) -1
-              else giveup "head-symbol is free" (TProb(rel, t1, t2)) probs
+              else giveup "head-symbol is free" orig probs
             | None -> if check_head (Util.freevars_typ t1) t2
                       then imitate_or_project (List.length args_lhs) (subterms args_lhs) (imitate (Util.freevars_typ t1) t2)
-                      else giveup "head-symbol is free" (TProb(rel, t1, t2)) probs
+                      else giveup "head-symbol is free" orig probs
         end
 
+  
+and solve_t (top:bool) (env:Env.env) rel t1 t2 probs : solution = 
+    if Util.physical_equality t1 t2 then solve top env probs else
+    let t1 = compress env probs.subst t1 in
+    let t2 = compress env probs.subst t2 in 
+//    printfn "Attempting %s" (prob_to_string (TProb(rel, t1, t2)));
+//    printfn "Tag t1 = %s, t2 = %s" (Print.tag_of_typ t1) (Print.tag_of_typ t2);
+    if Util.physical_equality t1 t2 then solve top env probs else
+    let r = Env.get_range env in
+    match t1.n, t2.n with
+      | Typ_ascribed(t, _), _
+      | Typ_meta(Meta_pattern(t, _)), _ 
+      | Typ_meta(Meta_named(t, _)), _ -> solve_t top env rel t t2 probs
+
+      | _, Typ_ascribed(t, _)
+      | _, Typ_meta(Meta_pattern(t, _))
+      | _, Typ_meta(Meta_named(t, _)) -> solve_t top env rel t1 t probs
+
+      (* flex-flex *)
+      | Typ_uvar (u1, k1), Typ_uvar(u2, k2) -> 
+        solve_t_flex_flex top env (TProb(rel, t1, t2)) (t1, u1, k1, []) (t2, u2, k2, []) probs
+      | Typ_app({n=Typ_uvar(u1, k1)}, args1), Typ_uvar(u2, k2) -> 
+        solve_t_flex_flex top env (TProb(rel, t1, t2)) (t1, u1, k1, args1) (t2, u2, k2, []) probs
+      | Typ_uvar(u1, k1), Typ_app({n=Typ_uvar(u2, k2)}, args2) -> 
+        solve_t_flex_flex top env (TProb(rel, t1, t2)) (t1, u1, k1, []) (t2, u2, k2, args2) probs
+      | Typ_app({n=Typ_uvar(u1, k1)}, args1), Typ_app({n=Typ_uvar(u2, k2)}, args2) -> //flex-flex ... defer, unless they are both patterns
+        solve_t_flex_flex top env (TProb(rel, t1, t2)) (t1, u1, k1, args1) (t2, u2, k2, args2) probs
+
+      | Typ_btvar a, Typ_btvar b -> 
+        if Util.bvd_eq a.v b.v 
+        then solve top env probs
+        else giveup "unequal type variables" (TProb(rel, t1, t2)) probs
+
+      | Typ_fun(bs1, c1), Typ_fun(bs2, c2) ->
+        solve_binders bs1 bs2 rel (TProb(rel, t1, t2)) probs
+        (fun subst subprobs -> solve false env (attempt (CProb(rel, c1, Util.subst_comp subst c2)::subprobs) probs))
+
+      | Typ_lam(bs1, t1'), Typ_lam(bs2, t2') -> 
+        solve_binders bs1 bs2 rel (TProb(rel, t1, t2)) probs
+        (fun subst subprobs -> solve false env (attempt (TProb(rel, t1', Util.subst_typ subst t2')::subprobs) probs))
+
+      | Typ_refine(x1, phi1), Typ_refine(x2, phi2) -> 
+        let x1 = v_binder x1 in
+        let x2 = v_binder x2 in 
+        solve_binders [x1] [x2] rel (TProb(rel, t1, t2)) probs 
+        (fun subst subprobs -> 
+            match rel with
+               | EQ -> solve false env (attempt (TProb(rel, phi1, Util.subst_typ subst phi2)::subprobs) probs)
+               | SUB -> (* but if either phi1 or phi2 are patterns, why not solve it by equating? *)
+                let g = NonTrivial <| mk_Typ_lam([x1], Util.mk_imp phi1 (Util.subst_typ subst phi2)) (mk_Kind_arrow([x1], ktype) r) r in
+                let probs = guard env top g probs in
+                solve false env (attempt subprobs probs))
+  
+      (* flex-rigid *)
+      | Typ_uvar(uv, k), _ -> 
+        solve_t_flex_rigid top env (TProb(rel, t1, t2)) (t1, uv, k, []) t2 probs
+      | Typ_app({n=Typ_uvar(uv,k)}, args_lhs), _ -> 
+        solve_t_flex_rigid top env (TProb(rel, t1, t2)) (t1, uv, k, args_lhs) t2 probs
+
+      | _, Typ_uvar _ 
       | _, Typ_app({n=Typ_uvar _}, _) -> //rigid-flex
         solve_t top env EQ t2 t1 probs //re-orient
 
@@ -881,6 +921,7 @@ and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
                                                                                                                 | Inr e, _ -> Print.tag_of_exp e) |> String.concat ", ")) 
                                                                                   (CProb(rel, c1, c2)) probs
                     | Some vars ->
+                      let c2 = Normalize.norm_comp [Beta;SNComp] env c2 in
                       let fvs1 = Util.freevars_comp c1 in
                       let fvs2 = Util.freevars_comp c2 in
                       let uv2 = Util.uvars_in_comp c2 in
@@ -934,7 +975,7 @@ and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
 //                             let wpc2 = Tc.Normalize.norm_typ [Beta] env wpc2 in
                              if false && has_uvars wpc2 //how to decide this test efficiently?
                              then (let prob = TProb(EQ, wpc1, wpc2) in
-                                   printfn "wpc2 has uvars ... solving\n(2)%s\n" (prob_to_string prob);
+                                   printfn "wpc2 has uvars ... solving\n(2)%s\n" (prob_to_string env prob);
                                    solve false env (attempt [res_t_prob; prob] probs))
                              else if rel=SUB
                              then let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
@@ -1051,9 +1092,9 @@ and solve_e (top:bool) (env:Env.env) rel e1 e2 probs : solution =
     | _ -> //TODO: check that they at least have the same head? 
      solve top env (guard env top (NonTrivial <| Util.mk_eq e1 e2) probs)  
           
-let explain d = 
+let explain env d = 
     d |> List.iter (fun (_, p, reason) -> 
-        Util.fprint2 "Problem:\n%s\nFailed because: %s\n" (prob_to_string p) reason)
+        Util.fprint2 "Problem:\n%s\nFailed because: %s\n" (prob_to_string env p) reason)
 
 let solve_and_commit env top_t prob err = 
   let sol = solve true env (singleton prob top_t) in
@@ -1062,7 +1103,7 @@ let solve_and_commit env top_t prob err =
       //printfn "Successs ... got guard %s\n" (guard_to_string env guard);
       commit env s; Some guard
     | Failed d -> 
-        explain d;
+        explain env d;
         err d
 
 let keq env t k1 k2 : guard = 

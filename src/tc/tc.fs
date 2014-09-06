@@ -376,6 +376,7 @@ and tc_value env e : exp * comp =
                               let g2 = Rel.keq env None (Util.subst_kind subst a.sort) k in
                               let g = Rel.conj_guard g (Rel.conj_guard g1 g2) in
                               let b = Inl ({b with sort=k}), imp in
+                              let env = maybe_push_binding env b in
                               let subst = maybe_alpha_subst subst hdannot b in 
                               tc_binders (b::out, env, g, subst) tl_annot tl 
 
@@ -384,6 +385,7 @@ and tc_value env e : exp * comp =
                               let g2 = Rel.teq env (Util.subst_typ subst x.sort) t in
                               let g = Rel.conj_guard g (Rel.conj_guard g1 g2) in
                               let b = Inr ({y with sort=t}), imp in
+                              let env = maybe_push_binding env b in
                               let subst = maybe_alpha_subst subst hdannot b in 
                               tc_binders (b::out, env, g, subst) tl_annot tl 
 
@@ -459,8 +461,13 @@ and tc_exp env e : exp * comp =
             That's what the Meta_datainst(d, topt) does ... below. 
             Once we compute good instantiations for '_u1 and '_u2, the rest follows as usual. *)
         let d = mk_Exp_meta(Meta_datainst(d, topt)) in
-        let e = mk_Exp_app(d, args) tun top.pos in
+        let e = match args with 
+            | [] -> d 
+            | _ -> mk_Exp_app(d, args) tun top.pos in
         let e, c = tc_exp env1 e in
+        let e = match e.n with  //reassociate inferred targs
+            | Exp_app({n=Exp_app(hd, targs)}, args) -> mk_Exp_app(hd, targs@args) e.tk e.pos 
+            | _ -> e in
         comp_check_expected_typ env (mk_Exp_meta(Meta_desugared(e, Data_app))) c
     end
 

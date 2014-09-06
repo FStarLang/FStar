@@ -398,7 +398,7 @@ let extend_typ_app ((t:typ), (arg:arg)) (k:knd) p = match t.n with
     | Typ_app(h, args) -> mk_Typ_app(h, args@[arg]) k p
     | _ -> mk_Typ_app(t, [arg]) k p
 let mk_Typ_lam      ((b:binders),(t:typ)) (k:knd) (p:range) = {
-    n=Typ_lam(b, t);
+    n=(match b with [] -> failwith "Empty binders!" | _ -> Typ_lam(b, t));
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs (difference t2.fvs (set_of_list [Inr x]));
@@ -503,7 +503,7 @@ let mk_Exp_abs' ((b:binder),(e:exp)) (t':typ) p = {
     uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference e.fvs (set_of_list [Inr x]));
 }
 let mk_Exp_app ((e1:exp),(args:args)) (t:typ) p = {
-    n=Exp_app(e1, args);
+    n=(match args with [] -> failwith "Empty args!" | _ -> Exp_app(e1, args));
     tk=t;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union e1.fvs e2.fvs;   
@@ -604,8 +604,8 @@ let null_v_binder t : binder = Inr (null_bvar t), false
 let targ t : arg = Inl t, false
 let varg v : arg = Inr v, false
 let is_null_binder (b:binder) = match b with
-    | Inl a, _ -> a.v.realname = null_id 
-    | Inr x, _ -> x.v.realname = null_id
+    | Inl a, _ -> a.v.realname.idText = null_id.idText
+    | Inr x, _ -> x.v.realname.idText = null_id.idText
 
 let freevars_of_binders (bs:binders) : freevars = 
     bs |> List.fold_left (fun out -> function

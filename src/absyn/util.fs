@@ -594,27 +594,11 @@ let mk_exp_app f args =
   mk_Exp_app(f, args) t r
 
 let mk_data l args = 
-  mk_Exp_meta(Meta_desugared(mk_exp_app (fvar l (range_of_lid l)) args, Data_app))
-
-//let destruct_app =
-//    let rec destruct acc (e : exp) =
-//        match e.n with
-//        | Exp_app (e1, e2, b) -> destruct ((e2, b) :: acc) e1
-//        | Exp_ascribed (e, _) -> destruct acc e
-//        | _ -> (e, acc)
-//    in
-//
-//    fun e -> destruct [] e
-//
-//let destruct_fun =
-//    let rec destruct acc (e : exp) =
-//        match e.n with
-//        | Exp_abs (x, ty, e) -> destruct ((x, ty) :: acc) e
-//        | Exp_ascribed (e, _) -> destruct acc e
-//        | _ -> (List.rev acc, e)
-//    in
-//
-//    fun e -> destruct [] e
+  match args with 
+    | [] -> 
+      mk_Exp_meta(Meta_desugared(fvar l (range_of_lid l), Data_app))
+    | _ -> 
+      mk_Exp_meta(Meta_desugared(mk_exp_app (fvar l (range_of_lid l)) args, Data_app))
 
 let unchecked_unify uv t = 
   match Unionfind.find uv with 
