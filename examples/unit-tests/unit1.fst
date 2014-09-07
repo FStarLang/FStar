@@ -2,93 +2,96 @@ module Unit1
 open Prims.PURE
 open Prims.ALL
 
-val assert_0_eq_0: unit -> Tot unit
-let assert_0_eq_0 () = assert (0==0)
+(* let unit_id x = () *)
+let unit_pattern () = ()
 
-val assert_0_eq_1: unit -> Tot unit
-let assert_0_eq_1 () = assert (0==1) //should fail
+(* val assert_0_eq_0: unit -> Tot unit *)
+(* let assert_0_eq_0 x = assert (0==0) *)
 
-type zero = x:int{x==0}
-val z: unit -> Tot zero
-let z x = 0
+(* val assert_0_eq_1: unit -> Tot unit *)
+(* let assert_0_eq_1 () = assert (0==1) //should fail *)
 
-val list_zero_to_int_assert : list zero -> Tot int
-let list_zero_to_int_assert l = match l with
-  | [] -> 0
-  | hd::tl -> assert (hd==0); hd
+(* type zero = x:int{x==0} *)
+(* val z: unit -> Tot zero *)
+(* let z x = 0 *)
 
-val list_zero_to_zero : list zero -> Tot zero
-let list_zero_to_zero l = match l with
-  | [] -> 0
-  | hd::tl -> hd
+(* val list_zero_to_int_assert : list zero -> Tot int *)
+(* let list_zero_to_int_assert l = match l with *)
+(*   | [] -> 0 *)
+(*   | hd::tl -> assert (hd==0); hd *)
 
-val hd_int_inexhaustive : x:list int -> int
-let hd_int_inexhaustive l = match l with
-  | hd::_ -> hd //should fail
+(* val list_zero_to_zero : list zero -> Tot zero *)
+(* let list_zero_to_zero l = match l with *)
+(*   | [] -> 0 *)
+(*   | hd::tl -> hd *)
 
-val hd_int_impure : x:list int -> int
-let hd_int_impure l = match l with
-  | hd::_ -> hd
-  | [] -> failwith "Empty list"
+(* val hd_int_inexhaustive : x:list int -> int *)
+(* let hd_int_inexhaustive l = match l with *)
+(*   | hd::_ -> hd //should fail *)
 
-val hd_int_impure_default_case : x:list int -> int
-let hd_int_impure_default_case l = match l with
-  | hd::_ -> hd
-  | _ -> failwith "Empty list"
+(* val hd_int_impure : x:list int -> int *)
+(* let hd_int_impure l = match l with *)
+(*   | hd::_ -> hd *)
+(*   | [] -> failwith "Empty list" *)
 
-val hd_int_pure : x:list int{b2t (is_Cons x)} -> Tot int
-let hd_int_pure l = match l with
-  | hd::_ -> hd
+(* val hd_int_impure_default_case : x:list int -> int *)
+(* let hd_int_impure_default_case l = match l with *)
+(*   | hd::_ -> hd *)
+(*   | _ -> failwith "Empty list" *)
 
-val square_is_nat: x:int -> Tot nat
-let square_is_nat x = x * x
+(* val hd_int_pure : x:list int{b2t (is_Cons x)} -> Tot int *)
+(* let hd_int_pure l = match l with *)
+(*   | hd::_ -> hd *)
 
-(* logic val infer_nat: x:int -> Tot nat *)
-let infer_nat x = if x < 0 then -x else x
+(* val square_is_nat: x:int -> Tot nat *)
+(* let square_is_nat x = x * x *)
 
-val check_nat: x:int -> Tot nat
-let check_nat x = infer_nat x
+(* (\* logic val infer_nat: x:int -> Tot nat *\) *)
+(* let infer_nat x = if x < 0 then -x else x *)
 
-val assert_nat: x:int -> unit
-let assert_nat x =
-  let assert_nat_y = infer_nat x in
-  assert (assert_nat_y >= 0)
+(* val check_nat: x:int -> Tot nat *)
+(* let check_nat x = infer_nat x *)
 
-let id x = x
-let church_true x y = x
-let church_false x y = y
+(* val assert_nat: x:int -> unit *)
+(* let assert_nat x = *)
+(*   let assert_nat_y = infer_nat x in *)
+(*   assert (assert_nat_y >= 0) *)
 
-val pure_id_annot : 'a -> Tot 'a
-let pure_id_annot x = x
+(* let id x = x *)
+(* let church_true x y = x *)
+(* let church_false x y = y *)
 
-val ml_id_annot : 'a -> 'a
-let ml_id_annot x = x
+(* val pure_id_annot : 'a -> Tot 'a *)
+(* let pure_id_annot x = x *)
 
-val tabs_id_pure_annot_eq : 'a:Type -> x:'a -> Pure 'a True (fun y => y==x)
-let tabs_id_pure_annot_eq ('a:Type) x = x
+(* val ml_id_annot : 'a -> 'a *)
+(* let ml_id_annot x = x *)
 
-let tabs_id ('a:Type) (x:'a) = x
+(* val tabs_id_pure_annot_eq : 'a:Type -> x:'a -> Pure 'a True (fun y => y==x) *)
+(* let tabs_id_pure_annot_eq ('a:Type) x = x *)
 
-val id_pure_annot_eq : x:'a -> Pure 'a True (fun y => y==x)
-let id_pure_annot_eq x = x
+(* let tabs_id ('a:Type) (x:'a) = x *)
 
-val id_all_annot_eq: x:'a -> All 'a (fun h => True) (fun h0 y h1 => b2t (is_V y) /\ h0==h1 /\ x==(V.v y)) (SomeRefs EmptySet)
-let id_all_annot_eq x = x
+(* val id_pure_annot_eq : x:'a -> Pure 'a True (fun y => y==x) *)
+(* let id_pure_annot_eq x = x *)
 
-val hd: list 'a -> 'a
-let hd = function
-  | x::_ -> x
-  | _ -> failwith "empty list"
+(* val id_all_annot_eq: x:'a -> All 'a (fun h => True) (fun h0 y h1 => b2t (is_V y) /\ h0==h1 /\ x==(V.v y)) (SomeRefs EmptySet) *)
+(* let id_all_annot_eq x = x *)
 
-val hd_pure: l:list 'a{b2t (is_Cons l)} -> Tot 'a
-let hd_pure l = match l with
-  | x::_ -> x
+(* val hd: list 'a -> 'a *)
+(* let hd = function *)
+(*   | x::_ -> x *)
+(*   | _ -> failwith "empty list" *)
 
-val dup_pure: x:'a -> Tot ('a * 'a)
-let dup_pure x = (x,x)
+(* val hd_pure: l:list 'a{b2t (is_Cons l)} -> Tot 'a *)
+(* let hd_pure l = match l with *)
+(*   | x::_ -> x *)
 
-val dup_pure_eq: x:'a -> Pure ('a * 'a) True (fun y => MkTuple2._1 y==MkTuple2._2 y)
-let dup_pure_eq x = (x,x)
+(* val dup_pure: x:'a -> Tot ('a * 'a) *)
+(* let dup_pure x = (x,x) *)
+
+(* val dup_pure_eq: x:'a -> Pure ('a * 'a) True (fun y => MkTuple2._1 y==MkTuple2._2 y) *)
+(* let dup_pure_eq x = (x,x) *)
 
 (* val test_st : m:mode -> State unit *)
 (*                             (fun 'p h0 => (forall h1. SelHeap h1 moderef==SelHeap h0 moderef ==> 'p () h1)) *)

@@ -79,7 +79,8 @@ type env = {
   is_pattern:bool;               (* is the current term being checked a pattern? *)
   instantiate_targs:bool;        (* instantiate implicit type arguments? default=true *)
   instantiate_vargs:bool;        (* instantiate implicit value agruments? default=true *)
-  lattice:lattice;
+  lattice:lattice;               (* monad lattice *)
+  generalize:bool;               (* generalize let-binding *)
 } 
 and solver_t = {
     solve:env -> typ -> bool;
@@ -96,6 +97,7 @@ let has_interface env l =
   env.modules |> Util.for_some (fun m -> m.is_interface && lid_equals m.name l)
 
 let debug env = !Options.debug |> Util.for_some (fun x -> env.curmodule.str = x) 
+let show env = !Options.show_signatures |> Util.for_some (fun x -> env.curmodule.str = x)
 
 let initial_env solver module_lid =
   { solver=solver;
@@ -110,6 +112,7 @@ let initial_env solver module_lid =
     instantiate_targs=true;
     instantiate_vargs=true;
     lattice={decls=[]; order=[]; joins=[]};
+    generalize=true;
   }
 
 let monad_decl_opt env l = 

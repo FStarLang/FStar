@@ -50,6 +50,7 @@ and steps = list<step>
 type config<'a> = {code:'a;
                    environment:environment;
                    stack:stack;
+                   close:option<'a -> 'a>;
                    steps:list<step>}
 and environment = list<env_entry>    
 and stack = {
@@ -83,7 +84,13 @@ let rec subst_of_env env =
              end]
         | _ -> []) 
 
-let with_new_code k c e = {code=e; environment=c.environment; stack=empty_stack k; steps=c.steps}
+let with_new_code k c e = {
+    code=e; 
+    environment=c.environment; 
+    stack=empty_stack k; 
+    steps=c.steps;
+    close=None;
+}
 
 let rec eta_expand tcenv t = 
     let k = Util.compress_kind t.tk in
@@ -94,9 +101,25 @@ let rec eta_expand tcenv t =
     | Kind_abbrev(_, k) -> 
         eta_expand tcenv ({t with tk=k})
     | Kind_arrow(binders, k') ->
-        let binders, args = Util.args_of_binders binders in 
-        let body = mk_Typ_app(t, args) k' t.pos in
-        mk_Typ_lam(binders, body) k t.pos
+        begin match (unascribe_typ t).n with 
+            | Typ_lam(real, body) -> 
+                let rec aux real expected = match real, expected with 
+                    | _::real, _::expected -> aux real expected
+                    | [], [] -> (* no need to add any *) t
+                    | _::_, [] -> (* too many binders ... ill-kinded *)
+                      failwith "Ill-kinded type"
+                    | [], more -> 
+                      let more, args = Util.args_of_binders more in 
+                      let body = mk_Typ_app(body, args) k' body.pos in
+                      mk_Typ_lam(binders@more, body) k body.pos in
+                aux real binders
+
+            | _  -> 
+                //if debug tcenv then printfn "(%s) eta-expanding %s" (Range.string_of_range t.pos) (Print.typ_to_string t);
+                let binders, args = Util.args_of_binders binders in 
+                let body = mk_Typ_app(t, args) k' t.pos in
+                mk_Typ_lam(binders, body) k t.pos
+        end
     | Kind_lam _
     | Kind_delayed _ -> failwith "Impossible"
     | Kind_unknown -> failwith (Util.format2 "%s: Impossible: Kind_unknown: %s" (Tc.Env.get_range tcenv |> Range.string_of_range) (Print.typ_to_string t))
@@ -114,32 +137,63 @@ let is_stack_empty config = match config.stack.args with
     | _ -> false
 let has_eta cfg = cfg.steps |> List.contains Eta
 
-let rec sn_aux tcenv (cfg:config<typ>) : config<typ> =
+let t_config code env steps = 
+    {close=None;
+     code=code;
+     environment=env;
+     steps=steps;
+     stack=empty_stack code.tk}
+let ke_config code env steps = 
+    {close=None;
+     code=code;
+     environment=env;
+     steps=steps;
+     stack=empty_stack kun}
+let c_config code env steps = 
+    {close=None;
+     code=code;
+     environment=env;
+     steps=steps;
+     stack=empty_stack keffect}
+
+let close_with_config cfg f = 
+  Some (fun t -> 
+   let t = f t in
+   match cfg.close with
+    | None -> t
+    | Some f -> f t)
+
+let rec sn tcenv (cfg:config<typ>) : config<typ> =
   let rebuild config  = 
-    let emp = is_stack_empty config in
-    let eta = has_eta config in 
-    if emp && not eta 
-    then config
-    else if emp
-    then {config with code=eta_expand tcenv config.code} 
-    else let s' = no_eta config.steps in
-         let args = if whnf_only config
-         then config.stack.args |> List.map (function 
-            | (Inl t, imp), env -> Inl <| Util.subst_typ (subst_of_env env) t, imp
-            | (Inr v, imp), env -> Inr <| Util.subst_exp (subst_of_env env) v, imp)
-         else config.stack.args |> List.map (function 
-            | (Inl t, imp), env -> Inl <| (sn_aux tcenv ({code=t; environment=env; stack=empty_stack t.tk; steps=s'})).code, imp
-            | (Inr v, imp), env -> Inr <| (wne    tcenv ({code=v; environment=env; stack=empty_stack kun; steps=s'})).code, imp) in
-         let t = mk_Typ_app(config.code, args) config.stack.k config.code.pos in
-         let t = if eta then eta_expand tcenv t else t in
-         {config with code=t} in
+    let rebuild_stack config = 
+        if is_stack_empty config then config
+        else let s' = no_eta config.steps in
+             let args = 
+                 if whnf_only config
+                 then config.stack.args |> List.map (function 
+                    | (Inl t, imp), env -> Inl <| Util.subst_typ (subst_of_env env) t, imp
+                    | (Inr v, imp), env -> Inr <| Util.subst_exp (subst_of_env env) v, imp)
+                 else config.stack.args |> List.map (function 
+                    | (Inl t, imp), env -> Inl <| (sn  tcenv (t_config t env s')).code, imp
+                    | (Inr v, imp), env -> Inr <| (wne tcenv (ke_config v env s')).code, imp) in
+             {config with code=mk_Typ_app(config.code, args) config.stack.k config.code.pos} in
+    
+    let config = rebuild_stack config in 
+    let t = match config.close with 
+        | None -> config.code
+        | Some f -> f config.code in
+    if has_eta config 
+    then {config with code=eta_expand tcenv t}
+    else {config with code=t} in
+        
 
   let wk f = f cfg.code.tk cfg.code.pos in
 
-  let config = match cfg.environment with 
-    | [] -> {cfg with code=Util.compress_typ cfg.code} 
-    | _ -> {cfg with code=Util.alpha_typ cfg.code} in
-
+//  let config = match cfg.environment with 
+//    | [] -> {cfg with code=Util.compress_typ cfg.code} 
+//    | _ -> {cfg with code=Util.alpha_typ cfg.code} in
+  let config = {cfg with code=Util.compress_typ cfg.code} in
+  //if debug tcenv then printfn "Norm: %s" (Print.typ_to_string config.code);
   begin match config.code.n with
     | Typ_delayed _ -> failwith "Impossible"
      
@@ -152,11 +206,11 @@ let rec sn_aux tcenv (cfg:config<typ>) : config<typ> =
 
     | Typ_meta(Meta_uvar_t_app(t, (uv,k))) ->
       let cfg = sn tcenv ({config with code=t}) in
-      {cfg with code=mk_Typ_meta'(Meta_uvar_t_app(cfg.code, (uv,k))) cfg.code.tk cfg.code.pos}
+      {config with code=mk_Typ_meta'(Meta_uvar_t_app(cfg.code, (uv,k))) cfg.code.tk cfg.code.pos}
    
     | Typ_const fv ->
       if config.steps |> List.contains DeltaHard 
-        || (config.steps |> List.contains Delta && is_stack_empty config)
+        || (config.steps |> List.contains Delta && not <| is_stack_empty config) //delta only if reduction is blocked
       then match Tc.Env.lookup_typ_abbrev tcenv fv.v with
           | None -> rebuild config 
           | Some t -> (* delta(); *)
@@ -172,19 +226,27 @@ let rec sn_aux tcenv (cfg:config<typ>) : config<typ> =
             | Some t -> (* nlazy();  *)
               sn tcenv ({config with code=t; environment=e}) 
             | None -> 
-              let c = sn tcenv ({code=t; environment=e; stack=empty_stack t.tk; steps=config.steps}) in //eval in empty stack to memo-ize
-              m := Some c.code;
-              match config.stack.args with 
-                | [] -> c
-                | _ -> sn tcenv ({c with stack=config.stack}) //then evaluate any redexes
+              if is_stack_empty config
+              then (let c = sn tcenv ({config with code=t; environment=e; stack=empty_stack t.tk}) in
+                    m := Some c.code;
+                    c)
+              else match t.n with
+                | Typ_const _  
+                | Typ_lam _ -> (* already a head symbol; no need to memoize further *)
+                    sn tcenv ({config with code=t; environment=e})
+                | _ -> 
+                   (let c = sn tcenv ({config with close=None; code=t; environment=e; stack=empty_stack t.tk}) in
+                    m := Some c.code;
+                    sn tcenv ({config with code=c.code; environment=c.environment; stack=config.stack}))
           end
         | _ -> failwith "Impossible: expected a type"
       end
 
-    | Typ_app(head, args) -> 
+    | Typ_app(head, args) -> (* TODO: optimize for the case where head is a lam ... beta directly? *)
+//      if debug tcenv then printfn "(%s) app node: %s" (Range.string_of_range config.code.pos) (Print.typ_to_string config.code);
       let stack = {config.stack with args=(args |> List.map (fun a -> a, config.environment)) @ config.stack.args} in 
       sn tcenv ({config with code=head; stack=stack})
-
+      
     | Typ_lam(binders, t2) -> 
       begin match config.stack.args with 
         | [] -> 
@@ -192,10 +254,14 @@ let rec sn_aux tcenv (cfg:config<typ>) : config<typ> =
           then {config with code=Util.subst_typ (subst_of_env config.environment) config.code}
           else (* Want full normal: reduce under lambda and return *)
                let binders, environment = sn_binders tcenv binders config.environment config.steps in
-               let c2 = sn tcenv ({config with code=t2; environment=environment}) in
-               {config with code=wk <| mk_Typ_lam(binders, c2.code)}
+               let mk_lam t = wk <| mk_Typ_lam(binders, t) in
+               sn tcenv ({config with close=close_with_config config mk_lam; code=t2; environment=environment; steps=no_eta config.steps})
         | args -> (* beta *)
-          
+//          if debug tcenv then printfn "(%s) beta-redex: \n\tbinders=%s\n\targs=%s" 
+//                                (Range.string_of_range config.code.pos) 
+//                                (Print.binders_to_string ", " binders) 
+//                                (Print.args_to_string (List.map fst args));
+//          
           let rec beta env binders args = match binders, args with 
             | [], _ -> (* fully applied, or more actuals (extra currying) *)
               sn tcenv ({config with code=t2; environment=env; stack={config.stack with args=args}})
@@ -208,7 +274,10 @@ let rec sn_aux tcenv (cfg:config<typ>) : config<typ> =
               let m = match formal, actual with 
                 | (Inl a, _), ((Inl t, _), env) -> T(a.v, (t,env), Util.mk_ref None)
                 | (Inr x, _), ((Inr v, _), env) -> V(x.v, (v,env), Util.mk_ref None)
-                | _ -> failwith "Impossible: ill-typed redex" in
+                | _ -> failwith (Util.format3 "(%s) Impossible: ill-typed redex\n formal is %s\nactual is %s\n" 
+                                            (Range.string_of_range (argpos <| fst actual))
+                                            (Print.binder_to_string formal)
+                                            (Print.arg_to_string <| fst actual)) in
               beta (m::env) rest rest' in
 
            beta config.environment binders args
@@ -224,14 +293,14 @@ let rec sn_aux tcenv (cfg:config<typ>) : config<typ> =
             (* In all remaining cases, the stack should be empty *)
             | Typ_fun(bs, comp) -> 
               let binders, environment = sn_binders tcenv bs config.environment config.steps in
-              let c2 = sncomp tcenv ({code=comp; environment=environment; stack=empty_stack keffect; steps=config.steps}) in
+              let c2 = sncomp tcenv ({close=None; code=comp; environment=environment; stack=empty_stack keffect; steps=config.steps}) in
               {config with code=wk <| mk_Typ_fun(binders, c2.code)}
 
             | Typ_refine(x, t) -> 
               begin match sn_binders tcenv [v_binder x] config.environment config.steps with
                 | [Inr x, _], env -> 
-                  let c2 = sn tcenv ({code=t; environment=env; stack=empty_stack t.tk; steps=config.steps}) in
-                  {config with code=wk <| mk_Typ_refine(x, c2.code)}
+                  let refine t = wk <| mk_Typ_refine(x, t) in
+                  sn tcenv ({close=close_with_config config refine; code=t; environment=env; stack=empty_stack t.tk; steps=config.steps})
                 | _ -> failwith "Impossible"
               end
 
@@ -247,22 +316,22 @@ let rec sn_aux tcenv (cfg:config<typ>) : config<typ> =
 and sn_binders tcenv binders env steps = 
  let rec aux out env = function 
     | (Inl a, imp)::rest -> 
-       let c = snk tcenv ({code=a.sort; stack=empty_stack kun; steps=steps; environment=env}) in
+       let c = snk tcenv (ke_config a.sort env steps) in
        let a = {a with sort=c.code} in
        let env = TDummy a::env in
        aux ((Inl a, imp)::out) env rest
 
     | (Inr x, imp)::rest -> 
-       let c = sn tcenv ({code=x.sort; stack=empty_stack x.sort.tk; steps=steps; environment=env}) in
+       let c = sn tcenv (t_config x.sort env steps) in
        let x = {x with sort=c.code} in
        let env = VDummy x::env in 
        aux ((Inr x, imp)::out) env rest
 
     | [] -> List.rev out, env in
  aux [] env binders
-
-and sn tcenv cfg = 
-    sn_aux tcenv ({cfg with steps=Eta::cfg.steps})
+//
+//and sn_eta tcenv cfg = 
+//    sn tcenv ({cfg with steps=Eta::cfg.steps})
 
 and sncomp tcenv (cfg:config<comp>) : config<comp> = 
   let m = cfg.code in 
@@ -307,8 +376,8 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
        
 and sn_args tcenv env steps args = 
    args |> List.map (function 
-     | Inl t, imp -> Inl <| (sn_aux tcenv ({code=t; stack=empty_stack t.tk; environment=env; steps=steps})).code, imp
-     | Inr e, imp -> Inr <| (wne tcenv ({code=e; stack=empty_stack kun; environment=env; steps=steps})).code, imp)
+     | Inl t, imp -> Inl <| (sn tcenv (t_config t env steps)).code, imp
+     | Inr e, imp -> Inr <| (wne tcenv (ke_config e env steps)).code, imp)
 
 and snk tcenv (cfg:config<knd>) : config<knd> =
   let w f = f cfg.code.pos in
@@ -328,7 +397,7 @@ and snk tcenv (cfg:config<knd>) : config<knd> =
       snk tcenv ({cfg with code=k}) 
     | Kind_arrow(bs, k) -> 
       let bs, env = sn_binders tcenv bs cfg.environment cfg.steps in
-      let c2 = snk tcenv ({code=k; steps=cfg.steps; environment=env; stack=empty_stack kun}) in
+      let c2 = snk tcenv (ke_config k env cfg.steps) in
       let bs, rhs = match c2.code.n with 
         | Kind_arrow(bs', k) -> bs@bs', k
         | _ -> bs, c2.code in
@@ -355,7 +424,7 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
       begin match config.environment |> Util.find_opt (function VDummy y -> bvar_eq x y | V (y, _, _) -> bvd_eq x.v y | _ -> false) with 
         | None -> config 
         | Some (VDummy x) -> {config with code=bvar_to_exp x}
-        | Some (V(x, (vc, e), m)) -> 
+        | Some (V(_, (vc, e), m)) -> 
           (match !m with 
             | Some v -> (* nlazy(); *)
               wne tcenv ({config with code=v; environment=e}) 
@@ -386,11 +455,11 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
 (* External interface *)
 (************************************************************************************)
 let norm_kind steps tcenv k = 
-  let c = snk tcenv ({code=k; environment=[]; stack=empty_stack kun; steps=steps}) in
+  let c = snk tcenv (ke_config k [] steps) in
   c.code
 
 let norm_typ steps tcenv t = 
-  let c = sn_aux tcenv ({code=t; environment=[]; stack=empty_stack t.tk; steps=steps}) in
+  let c = sn tcenv (t_config t [] steps) in
   c.code
 
 let whnf tcenv t = 
@@ -435,30 +504,52 @@ let rec weak_norm_comp env comp =
   match Tc.Env.lookup_typ_abbrev env c.effect_name with
     | None -> c
     | Some t -> 
-      let t = mk_Typ_app(t, (targ c.result_typ)::c.effect_args) keffect comp.pos in
-      let t = norm_typ [DeltaHard; WHNF] env t in
+      let t = Util.compress_typ <| Util.alpha_typ t in
       match t.n with 
-        | Typ_app({n=Typ_const eff}, (Inl res, _)::rest) ->
-           {effect_name=eff.v;
-            result_typ=res;
-            effect_args=rest;
-            flags=c.flags}
-
-        | _ ->  failwith (Util.format2 "Got a computation %s which normalized unexpectedly to %s" (Print.sli c.effect_name) (Print.typ_to_string t))
-      //let _ = printfn "Normalized %s\nto %s\n" (Print.comp_typ_to_string m) (Print.comp_typ_to_string n.code) in
+        | Typ_lam(formals, body) -> 
+          let subst = subst_of_list formals (targ c.result_typ::c.effect_args) in
+          let body = Util.subst_typ subst body in
+          begin match (Util.compress_typ body).n with 
+            | Typ_app(eff, (Inl res, _)::effs) -> 
+                (match (compress_typ eff).n with
+                    | Typ_const eff -> 
+                          weak_norm_comp env (mk_Comp <|  { 
+                             effect_name=eff.v;
+                             result_typ=res;
+                             effect_args=effs;
+                             flags=c.flags 
+                          })
+                    | _ -> failwith "Impossible")
+            | _ -> failwith (Util.format2 "Impossible: Expanded abbrev to %s (%s)" (Print.typ_to_string body) (Print.tag_of_typ body)) 
+          end
+       | _ -> failwith (Util.format2 "Impossible: Expanded abbrev %s to %s" (Print.sli c.effect_name) (Print.tag_of_typ t))
+//          
+//
+//
+//      let t = mk_Typ_app(t, (targ c.result_typ)::c.effect_args) keffect comp.pos in
+//      let t = norm_typ [DeltaHard; WHNF] env t in
+//      match t.n with 
+//        | Typ_app({n=Typ_const eff}, (Inl res, _)::rest) ->
+//           {effect_name=eff.v;
+//            result_typ=res;
+//            effect_args=rest;
+//            flags=c.flags}
+//
+//        | _ ->  failwith (Util.format2 "Got a computation %s which normalized unexpectedly to %s" (Print.sli c.effect_name) (Print.typ_to_string t))
+//      //let _ = printfn "Normalized %s\nto %s\n" (Print.comp_typ_to_string m) (Print.comp_typ_to_string n.code) in
      //check_sharing (Util.compress_typ tt0) (Util.compress_typ n.result_typ) "weak_norm_comp";
  
              
 let norm_comp steps tcenv c = 
-  let c = sncomp tcenv ({code=c; environment=[]; stack=empty_stack keffect; steps=steps}) in
+  let c = sncomp tcenv (c_config c [] steps) in
   c.code
 
 let normalize_kind tcenv k = 
-  let steps = [Delta;Beta] in
+  let steps = [Eta;Delta;Beta] in
   norm_kind steps tcenv k
 
 let normalize_comp tcenv c = 
-  let steps = [Delta;Beta;SNComp;DeltaComp] in
+  let steps = [Eta;Delta;Beta;SNComp;DeltaComp] in
   norm_comp steps tcenv c
 
 let normalize tcenv t = norm_typ [DeltaHard;Beta;Eta] tcenv t

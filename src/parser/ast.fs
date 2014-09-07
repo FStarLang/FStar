@@ -128,7 +128,9 @@ let mk_function branches r1 r2 =
   mk_term (Abs([mk_pattern (PatVar x) r1],
                mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
     r2 Expr
-    
+let un_function p tm = match p.pat, tm.tm with 
+    | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.prange, body)
+    | _ -> None
   
 let lid_with_range lid r = lid_of_path (path_of_lid lid) r
 

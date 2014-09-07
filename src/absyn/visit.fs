@@ -81,9 +81,9 @@ let compress_comp c : comp = match c.n with
   | Comp _ 
   | Total _ 
   | Rigid _ -> c
-  | Flex ({n=Typ_meta(Meta_uvar_t_app(teff, (u,_)))}, res_t) -> 
+  | Flex ({n=Typ_app({n=Typ_uvar(u, _)}, args)}, res_t) -> 
     begin match Unionfind.find u with 
-      | Fixed _ -> mk_Rigid (extend_typ_app(teff, targ res_t) mk_Kind_effect c.pos) 
+      | Fixed t -> mk_Rigid (mk_Typ_app(t, args@[targ res_t]) keffect c.pos)
       | _ -> c
     end
   | Flex _ -> c
@@ -175,7 +175,7 @@ and map_args map_typ map_exp env binders args =
             ((Inr e, imp)::out, env)) ([], env) args in
     List.rev args', env 
   
-and map_binders map_kind map_typ env binders (bs:binders) = 
+and map_binders map_kind map_typ env binders (bs:Syntax.binders) = 
     let bs, binders, env = bs |> List.fold_left (fun (bs, binders, env) -> function 
         | Inl a, imp -> 
             let k, env = map_kind env binders a.sort in
@@ -401,7 +401,7 @@ let combine_typ t (tc:typ_components) env =
     | Typ_const _, _ -> t
     | Typ_lam _, (bs, _, [t], _, _) ->                      w <| mk_Typ_lam(bs, t)
     | Typ_app _, (_, _, [t], _, args) ->                    w <| mk_Typ_app(t, args)
-    | Typ_refine _, ([Inr x, _], _, [t], _, _) ->           w <| mk_Typ_refine(x, t)
+    | Typ_refine _, ([(Inr x, _)], _, [t], _, _) ->         w <| mk_Typ_refine(x, t)
     | Typ_fun _, (bs, _, _, [c], _) ->                      w <| mk_Typ_fun(bs, c)
     | Typ_uvar(x, _), (_, [k], _, _, _) ->                  w <| mk_Typ_uvar'(x, k)
     | Typ_ascribed _, (_, [k], [t], _, _) ->                w <| mk_Typ_ascribed'(t, k)

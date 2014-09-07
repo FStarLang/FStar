@@ -56,7 +56,8 @@ type env = {
   is_pattern:bool;               (* is the current term being checked a pattern? *)
   instantiate_targs:bool;        (* instantiate implicit type arguments? default=true *)
   instantiate_vargs:bool;        (* instantiate implicit term arguments? default=true *)
-  lattice:lattice                (* monad lattice *)
+  lattice:lattice;               (* monad lattice *)
+  generalize:bool;               (* should we generalize let bindings? *)
 }
 and solver_t = {
     solve:env -> typ -> bool;
@@ -64,6 +65,7 @@ and solver_t = {
 
 val bound_vars: env -> list<Util.either<btvar, bvvar>>
 val debug: env -> bool
+val show: env -> bool
 val initial_env : solver_t -> lident -> env
 val finish_module : env -> modul -> env
 val set_level : env -> level -> env

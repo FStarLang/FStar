@@ -114,7 +114,7 @@ let args_of_non_null_binders (binders:binders) =
     binders |> List.collect (fun b -> 
         if is_null_binder b then []
         else [arg_of_non_null_binder b])
-let args_of_binders (binders:binders) : (binders * args) =
+let args_of_binders (binders:Syntax.binders) : (Syntax.binders * args) =
  binders |> List.map (fun b -> 
     if is_null_binder b 
     then let b = match fst b with
@@ -320,7 +320,7 @@ and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
 
     | Typ_refine(x, t) -> 
         (match visit_prod [Inr x, false] (Inl t) with 
-            | [Inr x, _], Inl t -> mk_Typ_refine(x, t) t0.tk t0.pos, ctrl
+            | [(Inr x, _)], Inl t -> mk_Typ_refine(x, t) t0.tk t0.pos, ctrl
             | _ -> failwith "Impossible")
     
     | Typ_lam(bs, t) ->
@@ -994,7 +994,20 @@ let rec whnf t =
         let head = compress_typ head in
         begin match head.n with 
             | Typ_lam(formals, body) -> 
-              whnf (subst_typ (subst_of_list formals args) body)
+                let rec aux formals actuals = match formals, actuals with 
+                    | f::tl, a::tl' -> 
+                        let fs, acts, more_formals, more_actuals = aux tl tl' in
+                        f::fs, a::acts, more_formals, more_actuals
+                    | _, []
+                    | [], _ -> 
+                        [], [], formals, actuals in
+                let fs, acts, more_formals, more_args = aux formals args in
+                let subst = subst_of_list fs acts in 
+                let t = match more_formals, more_args with
+                    | [], [] -> subst_typ subst body
+                    | [], _ -> mk_Typ_app(subst_typ subst body, more_args) kun t.pos
+                    | _ -> subst_typ subst (mk_Typ_lam(more_formals, body) kun t.pos) in
+                whnf t  
             | _ -> t
         end
     | _ -> t
@@ -1213,8 +1226,8 @@ let destruct_typ_as_formula f : option<connective> =
                 when (is_q fa tc.v) ->
               aux qopt (b::out) t2
 
-            | None, ({n=Typ_const tc}, [Inl {n=Typ_lam([b], t2)}, _])  
-            | None, ({n=Typ_const tc}, [_; Inl {n=Typ_lam([b], t2)}, _])  
+            | None, ({n=Typ_const tc}, [(Inl {n=Typ_lam([b], t2)}, _)])  
+            | None, ({n=Typ_const tc}, [_; (Inl {n=Typ_lam([b], t2)}, _)])  
                 when (is_qlid tc.v) -> 
               aux (Some <| is_forall tc.v) (b::out) t2
             

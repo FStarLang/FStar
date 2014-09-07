@@ -109,7 +109,7 @@ logic type SetEqual : #'a:Type => set 'a => set 'a => Type
 logic type Subset : #'a:Type => set 'a => set 'a => Type
 type SubsetEq : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => (SetEqual s1 s2 \/ Subset s1 s2)
 type Supset   : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => Subset s2 s1
-type SupsetEq : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => (SetEqual s1 s2 \/ Supset 'a s1 s2)
+type SupsetEq : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => (SetEqual s1 s2 \/ Supset s1 s2)
 assume InEmptySet:     forall 'a (a:'a).{:pattern InSet a EmptySet} ~(InSet a EmptySet)
 assume InSingleton:    forall 'a (a:'a).{:pattern InSet a (Singleton a)} InSet a (Singleton a)
 assume InSingletonInv: forall 'a (a:'a) (b:'a).{:pattern InSet a (Singleton b)} InSet a (Singleton b) <==> a==b

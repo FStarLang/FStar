@@ -419,8 +419,12 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       
     | Construct(l, args) ->
       let dt = pos <| mk_Exp_fvar(fail_or env (DesugarEnv.try_lookup_datacon env) l, true) in
-      let args = List.map (fun (t, imp) -> withimp imp <| desugar_typ_or_exp env t) args in
-      setpos <| mk_Exp_meta(Meta_desugared(mk_exp_app dt args, Data_app)) 
+      begin match args with 
+        | [] -> dt
+        | _ -> 
+          let args = List.map (fun (t, imp) -> withimp imp <| desugar_typ_or_exp env t) args in
+          setpos <| mk_Exp_meta(Meta_desugared(mk_exp_app dt args, Data_app)) 
+      end
 
     | Abs(binders, body) ->
       let _, ftv = List.fold_left (fun (env, ftvs) pat ->
@@ -496,9 +500,12 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       let ds_app_pat () = 
         let bindings = (pat, _snd)::_tl in
         let funs = bindings |> List.map (fun (p, def) ->
-          if not <| is_app_pattern p
-          then raise (Error("Only functions may be defined recursively", p.prange))
-          else (destruct_app_pattern env top_level p, def)) in
+          let p, def = if is_app_pattern p
+                       then p, def
+                       else match un_function p def with 
+                             | Some (p, def) -> p, def  
+                             | _ -> raise (Error("Only functions may be defined recursively", p.prange)) in
+          destruct_app_pattern env top_level p, def) in
         let env', fnames =
           List.fold_left (fun (env, fnames) ((f, _, _), _) ->
             let env, lbname = match f with

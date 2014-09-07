@@ -351,6 +351,7 @@ let rec comp_comp env s c =
         | None ->  c
         | Some t' -> 
           let t' = compress env s t' in 
+          if debug env then printfn ">>> Calling whnf on a flex comp: %s" (Print.comp_typ_to_string c);
           as_comp <| (whnf env <| mk_Typ_app(t', (args@[targ ret])) keffect ret.pos)
       end
 
@@ -682,7 +683,7 @@ and solve_k (top:bool) (env:Env.env) rel k1 k2 probs : solution =
               && not(Util.set_mem u uvs2.uvars_k)
            then let k1 = mk_Kind_lam(xs, k2) r in //Solve in one-step
                 solve top env (extend_subst (UK(u, k1)) probs)
-           else (printfn "Imitating ... ";
+           else (if debug env then printfn "Imitating kind ... ";
                  imitate_k top env probs (u, xs |> Util.args_of_non_null_binders, xs, decompose_kind env k2) )
         | None -> 
            giveup (Util.format1 "flex-rigid: not a pattern (args=%s)" (Print.args_to_string args)) (KProb(rel, k1, k2)) probs
@@ -728,8 +729,12 @@ and solve_t_flex_flex top env orig (t1, u1, k1, args1) (t2, u2, k2, args2) probs
                 //U2 = \y1 y2 y3. U zs
                 let zs = intersect_vars xs ys in
                 let u_zs, _ = new_tvar r zs t2.tk in
-                let sub1 = mk_Typ_lam(xs, u_zs) k1 r in
-                let sub2 = mk_Typ_lam(ys, u_zs) k2 r in
+                let sub1 = match xs with 
+                    | [] -> u_zs 
+                    | _ -> mk_Typ_lam(xs, u_zs) k1 r in
+                let sub2 = match ys with 
+                    | [] -> u_zs
+                    | _ -> mk_Typ_lam(ys, u_zs) k2 r in
                 //let _ = printfn "Flex-flex %s, %s" (Print.typ_to_string sub1) (Print.typ_to_string sub2) in
                 let probs = extend_subst (UT((u1,k1), sub1)) probs |> extend_subst (UT((u2,k2), sub2)) in
                 solve false env probs
@@ -755,7 +760,9 @@ and solve_t_flex_rigid top env orig (t1, uv, k, args_lhs) t2 probs =
 
         let check_head fvs1 t2 =
             let fvs_hd = Util.head_and_args t2 |> fst |> Util.freevars_typ in
-            Util.fvs_included fvs_hd fvs1 in
+            if Util.fvs_included fvs_hd fvs1
+            then true
+            else (printfn "Free variables are %s" (Print.freevars_to_string fvs_hd); false) in
             
         let imitate fvs1 t2 = (* -1 means begin by imitating *)
             let fvs_hd = Util.head_and_args t2 |> fst |> Util.freevars_typ in
@@ -903,6 +910,7 @@ and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
     if Util.physical_equality c1 c2 then solve top env probs
     else let c1 = comp_comp env probs.subst c1 in
          let c2 = comp_comp env probs.subst c2 in
+         if debug env then printfn "solve_c %s and %s" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2);
          let r = Env.get_range env in
          match c1.n, c2.n with
                | Rigid _, _
@@ -958,10 +966,11 @@ and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
                    | None -> giveup "incompatible monad ordering" (CProb(rel, c1_0, c2_0)) probs
                    | Some edge ->
                      let is_null_wp c2_decl wpc2 = 
-                         if not !Options.verify then false
-                         else match solve_t false env EQ wpc2 (sn env <| mk_Typ_app(c2_decl.null_wp, [targ c2.result_typ]) wpc2.tk r) empty_worklist with 
-                           | Failed _ -> false
-                           | Success _ -> true in
+                         c2.flags |> Util.for_some (function TOTAL | MLEFFECT | SOMETRIVIAL -> true | _ -> false) in
+//
+//                         else match solve_t false env EQ wpc2 (sn env <| mk_Typ_app(c2_decl.null_wp, [targ c2.result_typ]) wpc2.tk r) empty_worklist with 
+//                           | Failed _ -> false
+//                           | Success _ -> true in
                      let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
                        | (Inl wp1, _)::_, (Inl wp2, _)::_ -> wp1, wp2 
                        | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in

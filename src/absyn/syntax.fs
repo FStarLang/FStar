@@ -589,7 +589,10 @@ let mk_Exp_meta (m:meta_e) = match m with
 
 let mk_subst (s:subst) = s
 let extend_subst x s : subst = x::s
-
+let argpos : arg -> range = function 
+    | Inl t, _ -> t.pos
+    | Inr e, _ -> e.pos
+    
 let tun   = mk_Typ_unknown
 let kun   = mk_Kind_unknown
 let ktype = mk_Kind_type

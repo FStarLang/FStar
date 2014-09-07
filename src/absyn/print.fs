@@ -98,7 +98,7 @@ and typ_to_string x =
   | Typ_btvar btv -> strBvd btv.v 
     //Util.format2 "(%s:%s)" (strBvd btv.v) (kind_to_string x.tk)
   | Typ_const v -> sli v.v //Util.format2 "%s:%s" (sli v.v) (kind_to_string x.tk)
-  | Typ_fun(binders, c) ->     Util.format2 "%s -> %s"  (binders_to_string "->" binders) (comp_typ_to_string c)
+  | Typ_fun(binders, c) ->     Util.format2 "%s -> %s"  (binders_to_string " -> " binders) (comp_typ_to_string c)
 //  | Typ_fun(None, t1, t2, _) -> Util.format "(%s) -> %s"  [(t1 |> typ_to_string); (t2|> comp_typ_to_string)]
 //  | Typ_univ(a, k, t) ->       Util.format3 "%s:%s -> %s" (strBvd a) (k |> kind_to_string) (t|> comp_typ_to_string)
   | Typ_refine(xt, f) ->       Util.format3 "%s:%s{%s}" (strBvd xt.v) (xt.sort |> typ_to_string) (f|> typ_to_string)
@@ -117,7 +117,7 @@ and uvar_t_to_string (uv, k) =
    Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)) 
 
 and binder_to_string b = match b with 
-    | Inl a, imp -> if is_null_binder b then kind_to_string a.sort else Util.format2 "%s%s" (imp_to_string imp) (strBvd a.v) //(kind_to_string a.sort)
+    | Inl a, imp -> if is_null_binder b then kind_to_string a.sort else Util.format3 "%s%s:%s" (imp_to_string imp) (strBvd a.v) (kind_to_string a.sort)
     | Inr x, imp -> if is_null_binder b then typ_to_string x.sort else Util.format2 "%s%s" (imp_to_string imp) (strBvd x.v) //(typ_to_string x.sort)
    
 and binders_to_string sep bs = bs |> List.map binder_to_string |> String.concat sep
@@ -149,20 +149,20 @@ and effect_arg_to_string e = match e with
 and formula_to_string phi = 
     let const_op f _ = f in
     let un_op  f = function 
-        | [Inl t, _] -> format2 "%s %s" f (formula_to_string t)
+        | [(Inl t, _)] -> format2 "%s %s" f (formula_to_string t)
         | _ -> failwith "impos" in
     let bin_top f = function 
-        | [Inl t1, _; Inl t2, _] -> format3 "%s %s %s" (formula_to_string t1) f (formula_to_string t2)
+        | [(Inl t1, _); (Inl t2, _)] -> format3 "%s %s %s" (formula_to_string t1) f (formula_to_string t2)
         | _ -> failwith "Impos" in
     let bin_eop f = function
-        | [Inr e1, _;Inr e2, _] -> format3 "%s %s %s" (exp_to_string e1) f (exp_to_string e2)
+        | [(Inr e1, _);(Inr e2, _)] -> format3 "%s %s %s" (exp_to_string e1) f (exp_to_string e2)
         | _ -> failwith "impos" in
     let ite = function 
-        | [Inl t1, _;Inl t2, _;Inl t3, _] -> format3 "if %s then %s else %s" (formula_to_string t1) (formula_to_string t2) (formula_to_string t3)
+        | [(Inl t1, _);(Inl t2, _);(Inl t3, _)] -> format3 "if %s then %s else %s" (formula_to_string t1) (formula_to_string t2) (formula_to_string t3)
         | _ -> failwith "impos" in
     let eq_op = function 
-        | [Inl _, _; Inl _, _; Inr e1, _; Inr e2, _]
-        | [Inr e1, _; Inr e2, _] -> format2 "%s == %s" (exp_to_string e1) (exp_to_string e2)
+        | [(Inl _, _); (Inl _, _); (Inr e1, _); (Inr e2, _)]
+        | [(Inr e1, _); (Inr e2, _)] -> format2 "%s == %s" (exp_to_string e1) (exp_to_string e2)
         |  _ -> failwith "Impossible" in
     let connectives = [(Const.and_lid,  bin_top "/\\");
                        (Const.or_lid, bin_top "\\/");

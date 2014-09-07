@@ -351,9 +351,7 @@ val null_v_binder: typ -> binder
 val targ: typ -> arg
 val varg: exp -> arg
 val is_null_binder: binder -> bool
-
-
-
+val argpos: arg -> Range.range
 val pat_vars: range -> pat -> list<either<btvdef,bvvdef>>
 
 

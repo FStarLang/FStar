@@ -21,6 +21,7 @@ open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Getopt
 
+let show_signatures = Util.mk_ref []
 let norm_then_print = Util.mk_ref true
 let z3_exe = Util.mk_ref "z3.exe"
 let fvdie = Util.mk_ref false
@@ -122,6 +123,7 @@ let specs () : list<Getopt.opt> =
      ( noshort, "odir", OneArg ((fun x -> outputDir := Some x), "dir"), "Place output in directory dir");
      ( noshort, "verify", ZeroArgs (fun () -> verify := true), "Call the SMT solver to discharge verifications conditions");
      ( noshort, "z3exe", OneArg ((fun x -> z3_exe := x), "path"), "Path to the Z3 SMT solver");
-     ( noshort, "print_before_norm", ZeroArgs(fun () -> norm_then_print := false), "Do not normalize types before printing (for debugging)")
+     ( noshort, "print_before_norm", ZeroArgs(fun () -> norm_then_print := false), "Do not normalize types before printing (for debugging)");
+     ( noshort, "show_signatures", OneArg((fun x -> show_signatures := x::!show_signatures), "module name"), "Show the checked signatures for all top-level symbols in the module");
      ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
