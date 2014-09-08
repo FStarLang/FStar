@@ -1133,9 +1133,9 @@ and tc_decl env se = match se with
           let tt, _ = tc_typ_trivial env1 tt in
           let tps, t = match tt.n with 
             | Typ_lam(bs, t) -> Util.tps_of_binders bs, t
-            | _ -> failwith "Impossible" in
+            | _ -> failwith (Util.format1 "(%s) Impossible"  (Range.string_of_range r)) in
           Sig_typ_abbrev(lid, tps, compress_kind k, t, [], r)
-         | _ -> failwith "impossible") recs abbrev_defs in    
+        | _ -> failwith (Util.format1 "(%s) Impossible" (Range.string_of_range r))) recs abbrev_defs in    
       let se = Sig_bundle(tycons@abbrevs@rest, r) in 
       let env = Tc.Env.push_sigelt env se in
       se, env

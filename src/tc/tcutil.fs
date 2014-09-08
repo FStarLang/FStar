@@ -555,7 +555,8 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
   else
      let norm c =
         if debug env then printfn "Normalizing before generalizing:\n\t %s" (Print.comp_typ_to_string c);    
-        let c = Normalize.normalize_comp env c in 
+         let steps = [Eta;Delta;Beta;SNComp] in
+         let c = norm_comp steps env c in
 //                if !Options.verify
 //                then Normalize.normalize_comp env c
 //                else (Normalize.norm_comp [Beta; Delta] env c) in
