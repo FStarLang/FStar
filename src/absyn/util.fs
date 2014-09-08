@@ -941,40 +941,25 @@ let rec close_for_kind t k =
     | Kind_abbrev(_, k) -> close_for_kind t k
     | Kind_delayed _ -> failwith "Impossible"
 
-let binders_of_tps tps = 
-    tps |> List.map (function
-    | Tparam_typ (a,k) -> Inl(bvd_to_bvar_s a k), false
-    | Tparam_term (x,t) -> Inr(bvd_to_bvar_s x t), false) 
-
-let tps_of_binders bs = 
-    bs |> List.map (function 
-        | Inl a, _ -> Tparam_typ(a.v, a.sort)
-        | Inr x, _ -> Tparam_term(x.v, x.sort))
-
 let close_with_lam tps t = 
     match tps with 
         | [] -> t
-        | _ -> 
-          let bs = binders_of_tps tps in
-          mk_Typ_lam(bs, t) (mk_Kind_arrow(bs, t.tk) t.pos) t.pos
+        | _ -> mk_Typ_lam(tps, t) (mk_Kind_arrow(tps, t.tk) t.pos) t.pos
 
 let close_with_arrow tps t = 
     match tps with 
         | [] -> t
         | _ -> 
-          let bs = binders_of_tps tps in 
           let bs, c = match t.n with
-            | Typ_fun(bs', c) -> bs@bs', c
-            | _ -> bs, mk_Total t in 
+            | Typ_fun(bs', c) -> tps@bs', c
+            | _ -> tps, mk_Total t in 
           mk_Typ_fun(bs, c) ktype t.pos
 
 let close_typ = close_with_arrow
       
 let close_kind tps k = match tps with 
     | [] -> k
-    | _ ->
-      let bs = binders_of_tps tps in 
-      mk_Kind_arrow(bs, k) k.pos
+    | _ -> mk_Kind_arrow(tps, k) k.pos
 
 (********************************************************************************)
 (******************************** Alpha conversion ******************************)

@@ -747,7 +747,7 @@ and desugar_typ env (top:term) : typ =
              let env, x = match xopt with
                           | None -> env, new_bvd (Some top.range)
                           | Some x -> push_local_vbinding env x in
-             (env, tparams@[Tparam_term(x, t)], typs@[targ <| close_with_lam tparams t]))
+             (env, tparams@[Inr (bvd_to_bvar_s x t), false], typs@[targ <| close_with_lam tparams t]))
              (env, [], []) (binders@[mk_binder (NoName t) t.range Type false]) in
            let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_dtuple_lid (List.length targs) top.range) in
            pos <| mk_Typ_app(tup, targs)
@@ -906,12 +906,12 @@ and typars_of_binders env bs =
     let env, tpars = List.fold_left (fun (env, out) b ->
         let tk = desugar_binder env ({b with blevel=Formula}) in  (* typars follow the same binding conventions as formulas *)
         match tk with
-            | Inl(Some a,k) ->
+            | Inl(Some a, k) -> 
                 let env, a = push_local_tbinding env a in
-                (env, Tparam_typ(a,k)::out)
+                (env, (Inl(bvd_to_bvar_s a k), false)::out)
             | Inr(Some x,t) ->
                 let env, x = push_local_vbinding env x in
-                (env, Tparam_term(x,t)::out)
+                (env, (Inr(bvd_to_bvar_s x t), false)::out)
             | _ -> raise (Error ("Unexpected binder", b.brange))) (env, []) bs in
     env, List.rev tpars
 
@@ -1044,8 +1044,8 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
       _env, (_env2, typars), se, tconstr
     | _ -> failwith "Unexpected tycon" in
   let push_tparam env = function
-    | Tparam_term(x,_) -> push_bvvdef env x
-    | Tparam_typ(a,_) -> push_btvdef env a in
+    | Inr x, _ -> push_bvvdef env x.v
+    | Inl a, _ -> push_btvdef env a.v in
   let push_tparams = List.fold_left push_tparam in
   match tcs with
     | [TyconAbstract _] ->

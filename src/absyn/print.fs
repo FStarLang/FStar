@@ -278,15 +278,9 @@ let freevars_to_string (fvs:freevars) =
     let f l = l |> Util.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
     Util.format2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs) 
 
-let tparam_to_string = function
-  | Tparam_typ(a, k) -> Util.format2 "(%s:%s)" (strBvd a) (kind_to_string k)
-  | Tparam_term(x, t) -> Util.format2 "(%s:%s)" (strBvd x) (typ_to_string t)
-
-let tparams_to_string tps = List.map tparam_to_string tps |> String.concat " "
-
 let rec sigelt_to_string x = match x with 
-  | Sig_tycon(lid, tps, k, _, _, _, _) -> Util.format3 "type %s %s : %s" lid.str (tparams_to_string tps) (kind_to_string k)
-  | Sig_typ_abbrev(lid, tps, k, t, _, _) ->  Util.format4 "type %s %s : %s = %s" lid.str (tparams_to_string tps) (kind_to_string k) (typ_to_string t)
+  | Sig_tycon(lid, tps, k, _, _, _, _) -> Util.format3 "type %s %s : %s" lid.str (binders_to_string " " tps) (kind_to_string k)
+  | Sig_typ_abbrev(lid, tps, k, t, _, _) ->  Util.format4 "type %s %s : %s = %s" lid.str (binders_to_string " " tps) (kind_to_string k) (typ_to_string t)
   | Sig_datacon(lid, t, _, _, _) -> Util.format2 "datacon %s : %s" lid.str (typ_to_string t)
   | Sig_val_decl(lid, t, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string t)
   | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string f)

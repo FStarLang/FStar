@@ -27,8 +27,6 @@ open Microsoft.FStar.Tc.Rel
 val t_bool : typ
 val t_unit : typ
 val typing_const : env -> sconst -> typ
-val push_tparams : env -> list<tparam> -> env
-
 val new_kvar : env -> knd          
 val new_tvar : env -> knd -> typ
 val check_uvars: Range.range -> typ -> unit

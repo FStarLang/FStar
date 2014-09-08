@@ -183,10 +183,10 @@ and fvvar = var<typ>
 type freevars_l = list<either<btvar,bvvar>>
 type formula = typ
 type formulae = list<typ>
-
-type tparam =
-  | Tparam_typ  of btvdef * knd (* idents for pretty printing *)
-  | Tparam_term of bvvdef * typ
+//
+//type tparam =
+//  | Tparam_typ  of btvdef * knd (* idents for pretty printing *)
+//  | Tparam_term of bvvdef * typ
 
 type qualifier = 
   | Private 
@@ -205,7 +205,7 @@ type qualifier =
  
 type monad_abbrev = {
   mabbrev:lident;
-  parms:list<tparam>;
+  parms:binders;
   def:typ
   }
 type monad_order = {
@@ -234,8 +234,8 @@ type monad_decl = {
     abbrevs:list<sigelt> 
  }
 and sigelt =
-  | Sig_tycon          of lident * list<tparam> * knd * list<lident> * list<lident> * list<qualifier> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
-  | Sig_typ_abbrev     of lident * list<tparam> * knd * typ * list<qualifier> * Range.range 
+  | Sig_tycon          of lident * binders * knd * list<lident> * list<lident> * list<qualifier> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
+  | Sig_typ_abbrev     of lident * binders * knd * typ * list<qualifier> * Range.range 
   | Sig_datacon        of lident * typ * lident * list<qualifier> * Range.range  (* second lident is the name of the type this constructs *)
   | Sig_val_decl       of lident * typ * list<qualifier> * Range.range 
   | Sig_assume         of lident * formula * list<qualifier> * Range.range 

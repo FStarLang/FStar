@@ -50,13 +50,6 @@ let typing_const env (s:sconst) = match s with
   | Const_uint8 _ -> t_char
   | _ -> raise (Error("Unsupported constant", Tc.Env.get_range env))
 
-let push_tparams env tps = 
-  List.fold_left (fun env tp -> 
-                    let binding = match tp with
-                      | Tparam_typ (a, k) -> Binding_typ (a, k) 
-                      | Tparam_term (x, t) -> Binding_var (x, t) in
-                      push_local_binding env binding) env tps 
-
 let is_xvar_free (x:bvvdef) t = 
   let f = Util.freevars_typ t in
   Util.set_mem (bvd_to_bvar_s x tun) f.fxvs

@@ -635,13 +635,13 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls * env_t) =
      | _ -> Caption (format1 "<Start encoding %s>" nm)::g@[Caption (format1 "</end encoding %s>" nm)], e
     
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) = 
-    let env_of_tpars env tps tt = 
+    let env_of_tpars env tps tt =  (* TODO: use encode_binders instead *)
      let vars, env, app = tps |> List.fold_left (fun (vars, env, t) -> function
-            | Tparam_typ(a, k') ->
+            | Inl ({v=a; sort=k'}), _ -> 
                 let aasym, aa, env = gen_typ_var env a in 
                 let t = Term.mk_ApplyTT t aa in
                 ((aasym, Type_sort)::vars, env, t)
-            | Tparam_term(x, t') -> 
+            | Inr ({v=x; sort=t'}), _ -> 
                 let xxsym, xx, env = gen_term_var env x in 
                 let t = Term.mk_ApplyTE t xx in
                 ((xxsym, Term_sort)::vars, env, t)) ([], env, tt) in
@@ -745,10 +745,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
            let ttconstr = constructor_to_decl (ttsym, [], Type_sort, varops.next_id()) in
            let vars, tapp, env' = env_of_tpars env tps tt in
            let guard, g1 = tps |> List.fold_left (fun (guard, g) -> function
-                | Tparam_term(x, t) -> 
+                | Inr ({v=x; sort=t}), _ -> 
                     let tt, g' = encode_typ env' t in
                     mkAnd(mk_HasType (lookup_term_var env' (Util.bvd_to_bvar_s x t)) tt, guard), g@g'
-                | Tparam_typ(a, k) -> 
+                | Inl ({v=a; sort=k}), _ -> 
                     let kk, g' = encode_knd env' k in
                     mkAnd(mk_HasKind (lookup_typ_var env' (Util.bvd_to_bvar_s a k)) kk, guard), g@g') (mkTrue, []) in
            let kk, g2 = encode_knd env' k in

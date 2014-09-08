@@ -234,7 +234,7 @@ let try_lookup_datacon env (lid:lident) =
 type record = {
   typename: lident;
   constrname: lident;
-  parms: list<tparam>;
+  parms: binders;
   fields: list<(fieldname * typ)>
 }
 let record_cache : ref<list<record>> = Util.mk_ref []

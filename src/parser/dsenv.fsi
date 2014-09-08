@@ -52,7 +52,7 @@ type env = {
 type record = {
   typename: lident;
   constrname: lident;
-  parms: list<tparam>;
+  parms: binders;
   fields: list<(fieldname * typ)>
 }
 

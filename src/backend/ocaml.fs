@@ -626,7 +626,7 @@ let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
             match sigelt with
             | Sig_tycon (x, tps, k, ts, cs, _, rg) -> begin
                 let tps = List.map (function
-                    | Tparam_typ (x, {n=Kind_type}) -> x.realname.idText
+                    | Inl ({v=x; sort={n=Kind_type}}), _ -> x.realname.idText
                     | _ -> unsupported rg) tps
                 in
                 
@@ -765,7 +765,7 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
 
     | Sig_typ_abbrev (t, tps, _, ty, _, rg) ->
         let tps = List.map (function
-            | Tparam_typ (x, {n=Kind_type}) -> x.realname.idText
+            | Inl ({v=x; sort={n=Kind_type}}), _ -> x.realname.idText
             | _ -> unsupported rg) tps
         in
 

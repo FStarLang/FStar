@@ -203,9 +203,9 @@ let mlconst_of_const (rg : range) (sctt : sconst) =
       MLC_String ((new UTF8Encoding (false, true)).GetString(bytes))
 
 (* -------------------------------------------------------------------- *)
-let mlkind_of_kind (tps : list<tparam>) (k : knd) =
+let mlkind_of_kind (tps : list<binder>) (k : knd) =
     let mltparam_of_tparam = function
-        | Tparam_typ (x, {n=Kind_type}) -> Some (x.realname, x.ppname)
+        | Inl ({v=x; sort={n=Kind_type}}), _ -> Some (x.realname, x.ppname)
         | _ -> None
     in
 

@@ -877,21 +877,11 @@ and tc_total_exp env e : exp * typ * guard =
 
 (*****************Type-checking the signature of a module*****************************)
 
-let tc_tparams env tps : (list<tparam> * Env.env) = 
-	let tps', env = List.fold_left (fun (tps, env) tp -> match tp with 
-	  | Tparam_typ(a, k) -> 
-				let k = tc_kind_trivial env k |> norm_k env in 
-				let env = Tc.Env.push_local_binding env (Env.Binding_typ(a, k)) in
-				Tparam_typ(a,k)::tps, env
-	  | Tparam_term(x, t) -> 
-				let t, _ = tc_typ_trivial env t in
-                let t = norm_t env t in 
-				let env = Tc.Env.push_local_binding env (Env.Binding_var(x, t)) in
-				Tparam_term(x, t)::tps, env) ([], env) tps in
-		List.rev tps', env 
-//
-//let kt k1 k2 = mk_Kind_tcon(None, k1, k2, false) k2.pos
-//let kd t k = mk_Kind_dcon(None, t, k, false) k.pos
+let tc_tparams env (tps:binders) : (binders * Env.env) = 
+    let tps, env, g = tc_binders env tps in
+    trivial g;
+    tps, env
+
 let a_kwp_a m s = match s.n with 
   | Kind_arrow([Inl a, _;
                 Inl wp, _;
@@ -1132,8 +1122,8 @@ and tc_decl env se = match se with
           let tt = Util.close_with_lam tps (mk_Typ_ascribed(t, k) t.pos) in
           let tt, _ = tc_typ_trivial env1 tt in
           let tps, t = match tt.n with 
-            | Typ_lam(bs, t) -> Util.tps_of_binders bs, t
-            | _ -> failwith (Util.format1 "(%s) Impossible"  (Range.string_of_range r)) in
+            | Typ_lam(bs, t) -> bs, t
+            | _ -> [], tt in 
           Sig_typ_abbrev(lid, tps, compress_kind k, t, [], r)
         | _ -> failwith (Util.format1 "(%s) Impossible" (Range.string_of_range r))) recs abbrev_defs in    
       let se = Sig_bundle(tycons@abbrevs@rest, r) in 
