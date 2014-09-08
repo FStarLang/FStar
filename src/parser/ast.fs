@@ -21,7 +21,7 @@ open Microsoft.FStar.Range
 open Microsoft.FStar
 open Microsoft.FStar.Util
 
-type level = Un | Expr | Type | Kind | Formula
+type level = | Un | Expr | Type | Kind | Formula
 type lid = Syntax.LongIdent
 type term' = 
   | Wild      
@@ -123,6 +123,9 @@ let mk_decl d r = {d=d; drange=r}
 let mk_binder b r l i = {b=b; brange=r; blevel=l; implicit=i}
 let mk_term t r l = {tm=t; range=r; level=l}
 let mk_pattern p r = {pat=p; prange=r}
+let un_curry_abs ps body = match body.tm with 
+    | Abs(p', body') -> Abs(ps@p', body')
+    | _ -> Abs(ps, body)
 let mk_function branches r1 r2 = 
   let x = Util.genident (Some r1) in
   mk_term (Abs([mk_pattern (PatVar x) r1],

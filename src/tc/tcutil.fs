@@ -88,8 +88,6 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard =
 
 let new_kvar env   = Rel.new_kvar (Env.get_range env) (Env.binders env)   |> fst
 let new_tvar env t = Rel.new_tvar (Env.get_range env) (Env.binders env) t |> fst
-let new_evar env t = Rel.new_evar (Env.get_range env) (Env.binders env) t |> fst
-let new_cvar env t = Rel.new_cvar (Env.get_range env) (Env.binders env) t |> fst
 
 let destruct_arrow_kind env tt k args : (args * binders * knd) = 
     let ktop = compress_kind k |> Normalize.norm_kind [WHNF; Beta; Eta] env in 
@@ -211,7 +209,9 @@ let extract_lb_annotation is_rec env t e = match t.n with
               bs@[b]) [] in
 
         let e, res = aux (vars@bs) e in 
-        let c = if is_rec then Util.ml_comp res r else Rel.new_cvar r (vars@bs) res |> fst in
+        let c = 
+            if is_rec then Util.ml_comp res r 
+            else (failwith "Building a cvar needlessly!") in//; Rel.new_cvar r (vars@bs) res |> fst) in
         mk_Exp_abs(bs, e) e.tk e.pos, mk_Typ_fun(bs, c) ktype e.pos
 
       | _ -> e, Rel.new_tvar r vars ktype |> fst in

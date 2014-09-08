@@ -180,7 +180,8 @@ BOOT_BACKEND=$(addprefix backend/, ocaml-backend-stub.fst)
 BOOT_JSBACKENDFILES=ast.fs translate.fs
 BOOT_JSBACKEND=$(addprefix jsbackend/, $(BOOT_JSBACKENDFILES))
 BOOT_MAIN=fstar.fs
-BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_BACKEND) $(BOOT_JSBACKEND)
+BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) 
+#$(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_BACKEND) $(BOOT_JSBACKEND)
 
 boot: $(BOOT_ALL)
 	../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug low --admit_fsi Microsoft.FStar.Util $^

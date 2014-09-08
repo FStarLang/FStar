@@ -520,7 +520,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
           let def = match result_t with
             | None -> def
             | Some t -> mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr in
-          let def = mk_term (Abs(args, def)) top.range top.level in
+          let def = mk_term (un_curry_abs args def) top.range top.level in
           //let _ = Util.fprint1 "Desugaring let binding: %s\n" (AST.term_to_string def) in
           desugar_exp env def in
         let defs = funs |> List.map (desugar_one_def (if b then env' else env)) in

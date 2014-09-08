@@ -31,7 +31,6 @@ val push_tparams : env -> list<tparam> -> env
 
 val new_kvar : env -> knd          
 val new_tvar : env -> knd -> typ
-val new_evar : env -> typ -> exp
 val check_uvars: Range.range -> typ -> unit
 val check_and_ascribe : env -> exp -> typ -> typ -> exp * Rel.guard
 val pat_as_exps: env -> pat -> list<exp>

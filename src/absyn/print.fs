@@ -98,7 +98,7 @@ and typ_to_string x =
   | Typ_btvar btv -> strBvd btv.v 
     //Util.format2 "(%s:%s)" (strBvd btv.v) (kind_to_string x.tk)
   | Typ_const v -> sli v.v //Util.format2 "%s:%s" (sli v.v) (kind_to_string x.tk)
-  | Typ_fun(binders, c) ->     Util.format2 "%s -> %s"  (binders_to_string " -> " binders) (comp_typ_to_string c)
+  | Typ_fun(binders, c) ->     Util.format2 "(%s -> %s)"  (binders_to_string " -> " binders) (comp_typ_to_string c)
 //  | Typ_fun(None, t1, t2, _) -> Util.format "(%s) -> %s"  [(t1 |> typ_to_string); (t2|> comp_typ_to_string)]
 //  | Typ_univ(a, k, t) ->       Util.format3 "%s:%s -> %s" (strBvd a) (k |> kind_to_string) (t|> comp_typ_to_string)
   | Typ_refine(xt, f) ->       Util.format3 "%s:%s{%s}" (strBvd xt.v) (xt.sort |> typ_to_string) (f|> typ_to_string)
@@ -108,7 +108,7 @@ and typ_to_string x =
     if !Options.print_real_names  
     then Util.format2 "(%s <: %s)" (typ_to_string t) (kind_to_string k)
     else t|> typ_to_string
-  | Typ_unknown -> "_"
+  | Typ_unknown -> "<UNKNOWN>"
   | Typ_uvar(uv, k) -> (match Visit.compress_typ_aux false x with 
       | {n=Typ_uvar _} -> uvar_t_to_string (uv, k)
       | t -> t|> typ_to_string)
@@ -118,7 +118,7 @@ and uvar_t_to_string (uv, k) =
 
 and binder_to_string b = match b with 
     | Inl a, imp -> if is_null_binder b then kind_to_string a.sort else Util.format3 "%s%s:%s" (imp_to_string imp) (strBvd a.v) (kind_to_string a.sort)
-    | Inr x, imp -> if is_null_binder b then typ_to_string x.sort else Util.format2 "%s%s" (imp_to_string imp) (strBvd x.v) //(typ_to_string x.sort)
+    | Inr x, imp -> if is_null_binder b then typ_to_string x.sort else Util.format3 "%s%s:%s" (imp_to_string imp) (strBvd x.v) (typ_to_string x.sort)
    
 and binders_to_string sep bs = bs |> List.map binder_to_string |> String.concat sep
 
@@ -267,6 +267,11 @@ and pat_to_string x = match x with
   | Pat_disj ps ->  Util.concat_l " | " (List.map pat_to_string ps)
   | Pat_withinfo (p, _) -> pat_to_string p
 
+let subst_to_string subst = 
+   Util.format1 "{%s}" <|
+    (List.map (function 
+        | Inl (a, t) -> Util.format2 "(%s / %s)" (strBvd a) (typ_to_string t)
+        | Inr (x, e) -> Util.format2 "(%s / %s)" (strBvd x) (exp_to_string e)) subst |> String.concat ", ")
 let freevars_to_string (fvs:freevars) = 
     let f l = l |> Util.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
     Util.format2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs) 
@@ -294,3 +299,4 @@ let rec sigelt_to_string_short x = match x with
 
 let rec modul_to_string (m:modul) = 
   Util.format2 "module %s\n%s" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
+

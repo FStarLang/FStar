@@ -271,32 +271,38 @@ and visit_knd s vk mt me ctrl binders k =
   else map_knd s vk mt me null_ctrl binders k
 and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t = 
   let visit_prod (bs:binders) tc = 
-    let bs, boundvars, s = bs |> List.fold_left (fun (bs, boundvars, s) -> function
+    let bs, boundvars, s = bs |> List.fold_left (fun (bs, boundvars, s) b -> match b with
         | Inl a, imp -> 
           let k, _ = map_knd s mk vt me null_ctrl boundvars a.sort in
           let a = {a with sort=k} in
-          let boundvars' = Inl a.v::boundvars in
-          let s = restrict_subst boundvars' s in
-          let b, s, boundvars = match s with 
-            | [] when ctrl.stop_if_empty_subst -> Inl a, s, boundvars'
-            | _ -> 
-                let b = bvd_to_bvar_s (freshen_bvd a.v) k in
-                let s = extend_subst (Inl(a.v, btvar_to_typ b)) s in
-                Inl b, s, Inl b.v::boundvars in
-          (b,imp)::bs, boundvars, s
+          if is_null_binder b
+          then (Inl a, imp)::bs, boundvars, s
+          else 
+              let boundvars' = Inl a.v::boundvars in
+              let s = restrict_subst boundvars' s in
+              let b, s, boundvars = match s with 
+                | [] when ctrl.stop_if_empty_subst -> Inl a, s, boundvars'
+                | _ -> 
+                    let b = bvd_to_bvar_s (freshen_bvd a.v) k in
+                    let s = extend_subst (Inl(a.v, btvar_to_typ b)) s in
+                    Inl b, s, Inl b.v::boundvars in
+              (b,imp)::bs, boundvars, s
           
         | Inr x, imp -> 
           let t, _ = map_typ s mk vt me null_ctrl boundvars x.sort in
           let x = {x with sort=t} in
-          let boundvars' = Inr x.v::boundvars in
-          let s = restrict_subst boundvars' s in
-          let b, s, boundvars = match s with 
-            | [] when ctrl.stop_if_empty_subst -> Inr x, s, boundvars'
-            | _ -> 
-                let y = bvd_to_bvar_s (freshen_bvd x.v) t in
-                let s = extend_subst (Inr(x.v, bvar_to_exp y)) s in
-                Inr y, s, Inr y.v::boundvars in
-          (b,imp)::bs, boundvars, s) ([], boundvars, s) in
+          if is_null_binder b
+          then (Inr x, imp)::bs, boundvars, s
+          else 
+              let boundvars' = Inr x.v::boundvars in
+              let s = restrict_subst boundvars' s in
+              let b, s, boundvars = match s with 
+                | [] when ctrl.stop_if_empty_subst -> Inr x, s, boundvars'
+                | _ -> 
+                    let y = bvd_to_bvar_s (freshen_bvd x.v) t in
+                    let s = extend_subst (Inr(x.v, bvar_to_exp y)) s in
+                    Inr y, s, Inr y.v::boundvars in
+              (b,imp)::bs, boundvars, s) ([], boundvars, s) in
 
     let tc = match s, tc with 
         | [], _ -> tc
@@ -609,9 +615,9 @@ let as_comp = function
    | {n=Typ_meta(Meta_comp c)} -> c
    | _ -> failwith "Impossible"
 
-let destruct_flex_arg t = match t.n with
-    | Typ_app({n=Typ_uvar(uv,k)}, _) -> t, (uv,k)
-    | Typ_meta(Meta_uvar_t_app(t, uv)) -> t, uv
+let destruct_flex c = match c.n with
+    | Flex({n=Typ_uvar(uv, k)}, t) -> uv, k, [], t
+    | Flex({n=Typ_app({n=Typ_uvar(uv, k)}, args)}, t) -> uv, k, args, t
     | _ -> failwith "Impossible"
 
 (********************************************************************************)

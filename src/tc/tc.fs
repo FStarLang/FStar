@@ -599,7 +599,9 @@ and tc_exp env e : exp * comp =
               tc_args (subst, (targ t)::outargs, comps, Rel.conj_guard g g', fvs) rest rest'
 
             | (Inr x, _)::rest, (Inr e, _)::rest' -> (* a concrete exp argument *)
-              let targ = Util.subst_typ subst x.sort in
+              if debug env then printfn "\tType of arg (before subst (%s)) = %s" (Print.subst_to_string subst) (Print.typ_to_string x.sort);
+              let targ = Util.subst_typ subst x.sort in 
+              if debug env then printfn "\tType of arg (after subst) = %s" (Print.typ_to_string targ);
               fxv_check env (Inr targ) fvs;
               let env = Tc.Env.set_expected_typ env targ in
               if debug env then printfn "Checking arg (%s) %s at type %s" (Print.tag_of_exp e) (Print.exp_to_string e) (Print.typ_to_string targ);

@@ -394,6 +394,10 @@ let mk_Typ_app      ((t1:typ),(args:list<arg>)) (k:knd) (p:range) = {
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs t2.fvs;
 }
+let mk_Typ_app' ((t1:typ), (args:list<arg>)) (k:knd) (p:range) = 
+    match args with 
+        | [] -> t1
+        | _ -> mk_Typ_app (t1, args) k p
 let extend_typ_app ((t:typ), (arg:arg)) (k:knd) p = match t.n with 
     | Typ_app(h, args) -> mk_Typ_app(h, args@[arg]) k p
     | _ -> mk_Typ_app(t, [arg]) k p
@@ -508,7 +512,10 @@ let mk_Exp_app ((e1:exp),(args:args)) (t:typ) p = {
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union e1.fvs e2.fvs;   
 }
-
+let mk_Exp_app' ((e1:exp), (args:list<arg>)) (t:typ) (p:range) = 
+    match args with 
+        | [] -> e1
+        | _ -> mk_Exp_app (e1, args) t p
 let rec pat_vars r = function 
   | Pat_cons(_, ps) -> 
     let vars = List.collect (pat_vars r) ps in 

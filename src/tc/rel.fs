@@ -536,27 +536,65 @@ and imitate env probs ((u,k), ps, xs, (h, _, qs)) =
         | binders, K ki -> 
             let gi_xs, gi = new_kvar r (xs@binders) in
             let gi_ps = mk_Kind_uvar(gi, ps@Util.args_of_non_null_binders binders) r in //xs are all non-null
-            K gi_xs, KProb(EQ, gi_ps, ki)
+            K gi_xs, [KProb(EQ, gi_ps, ki)]
 
         | binders, T ti -> 
             let gi_xs, gi = new_tvar r (xs@binders) ti.tk in
-            let gi_ps = mk_Typ_app(gi, ps@Util.args_of_non_null_binders binders) ti.tk ti.pos in
-            T gi_xs, TProb(EQ, gi_ps, ti)
+            let gi_ps = match ps@Util.args_of_non_null_binders binders with 
+                | [] -> gi
+                | args -> mk_Typ_app(gi, args) ti.tk ti.pos in
+            T gi_xs, [TProb(EQ, gi_ps, ti)]
         
         | binders, C ci -> 
-            let gi_xs, gi = new_cvar r (xs@binders) (Util.comp_result ci) in //TODO: Also imitate the result type?
-            let gi_ps = mk_Flex(mk_Typ_app(gi, ps@Util.args_of_non_null_binders binders) (Const.kunary ktype keffect) r, Util.comp_result ci) in
-            C gi_xs, CProb(EQ, gi_ps, ci)
+            let vars = xs@binders in
+            let im_t t =                 
+                let s, u = new_tvar t.pos vars t.tk in 
+                s, (t, u) in
+            let im_e e = 
+                let f, u = new_evar e.pos vars e.tk in
+                f, (e,u) in
+
+            let gi_xs, im = match ci.n with 
+                    | Flex _ 
+                    | Rigid _ -> failwith "Impossible"
+                    | Total t -> 
+                        let s, (t, u) = im_t t in
+                        mk_Total s, (fun ps -> [TProb(EQ, t, mk_Typ_app'(u, ps) t.tk t.pos)])
+                        
+                    | Comp c -> 
+                        let sres, im_res = im_t c.result_typ in
+                        let args, ims = c.effect_args |> List.map (fun (a, imp) -> match a with 
+                            | Inl t ->  
+                                let s, im_t = im_t t in
+                                (Inl s, imp), Inl im_t
+                            | Inr e -> 
+                                let f, im_e = im_e e in
+                                (Inr f, imp), Inr im_e) |> List.unzip in
+                        let im ps = (Inl im_res)::ims |> List.map (function 
+                                | Inl(t, u) -> TProb(EQ, t, mk_Typ_app'(u, ps) t.tk t.pos)
+                                | Inr(e, u) -> EProb(EQ, e, mk_Exp_app'(u, ps) e.tk e.pos)) in
+                        let gi_xs = mk_Comp <| {
+                            effect_name=c.effect_name;
+                            result_typ=sres;
+                            effect_args=args;
+                            flags=c.flags
+                        }  in 
+                        gi_xs, im in
+            C gi_xs, im (ps@Util.args_of_non_null_binders binders)
 
         | _, E ei -> 
             let gi_xs, gi = new_evar r xs ei.tk in
-            let gi_ps = mk_Exp_app(gi, ps) ei.tk r in
-            E gi_xs, EProb(EQ, gi_ps, ei)) |> List.unzip in
+            let gi_ps = match ps with 
+                | [] -> gi
+                | _ -> mk_Exp_app(gi, ps) ei.tk r in
+            E gi_xs, [EProb(EQ, gi_ps, ei)]) |> List.unzip in
 
-    let im = mk_Typ_lam(xs, h gs_xs) k r in
+    let im = match xs with 
+        | [] -> h gs_xs
+        | _ -> mk_Typ_lam(xs, h gs_xs) k r in
     //printfn "Imitating %s (%s)" (Print.typ_to_string im) (Print.tag_of_typ im);
     let probs = extend_subst (UT((u,k), im)) probs in
-    solve false env (attempt sub_probs probs)
+    solve false env (attempt (List.flatten sub_probs) probs)
 
 and imitate_k top env probs (u, ps, xs, (h, qs)) = 
 //U p1..pn =?= h q1..qm
@@ -759,10 +797,16 @@ and solve_t_flex_rigid top env orig (t1, uv, k, args_lhs) t2 probs =
                    | sol -> sol in
 
         let check_head fvs1 t2 =
-            let fvs_hd = Util.head_and_args t2 |> fst |> Util.freevars_typ in
-            if Util.fvs_included fvs_hd fvs1
-            then true
-            else (printfn "Free variables are %s" (Print.freevars_to_string fvs_hd); false) in
+            let hd, _ = Util.head_and_args t2 in 
+            match hd.n with 
+                | Typ_fun _
+                | Typ_refine _ 
+                | Typ_const _  -> true
+                | _ ->             
+                    let fvs_hd = Util.freevars_typ hd in
+                    if Util.fvs_included fvs_hd fvs1
+                    then true
+                    else (printfn "Free variables are %s" (Print.freevars_to_string fvs_hd); false) in
             
         let imitate fvs1 t2 = (* -1 means begin by imitating *)
             let fvs_hd = Util.head_and_args t2 |> fst |> Util.freevars_typ in
@@ -920,8 +964,9 @@ and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
                | Comp _, Flex _ ->  //rigid-flex -- reorient
                  solve_c top env rel c2 c1 probs
 
-               | Flex ({n=Typ_app({n=Typ_uvar(uv,k)}, eff_args)}, t1), Total _ 
-               | Flex ({n=Typ_app({n=Typ_uvar(uv,k)}, eff_args)}, t1), Comp _ -> //flex-rigid 
+               | Flex _, Total _
+               | Flex _, Comp _ ->  //flex-rigid 
+                 let uv, k, eff_args, t1 = Util.destruct_flex c1 in
                  let maybe_pat_vars = pat_vars [] eff_args in
                  begin match maybe_pat_vars with 
                     | None -> //not a pattern; refuse to solve this case
@@ -956,55 +1001,53 @@ and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
                | Comp _, Total _ -> solve_c top env rel c1 (mk_Comp <| comp_to_comp_typ c2) probs
                
                | Comp _, Comp _ ->
-                 let c1_0, c2_0 = c1, c2 in
-                 let c1 = Normalize.weak_norm_comp env c1 in
-                 let c2 = Normalize.weak_norm_comp env c2 in
-                 let has_uvars t = 
-                    let uvs = Util.uvars_in_typ t in
-                    Util.set_count uvs.uvars_t > 0 in
-                 begin match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
-                   | None -> giveup "incompatible monad ordering" (CProb(rel, c1_0, c2_0)) probs
-                   | Some edge ->
-                     let is_null_wp c2_decl wpc2 = 
-                         c2.flags |> Util.for_some (function TOTAL | MLEFFECT | SOMETRIVIAL -> true | _ -> false) in
-//
-//                         else match solve_t false env EQ wpc2 (sn env <| mk_Typ_app(c2_decl.null_wp, [targ c2.result_typ]) wpc2.tk r) empty_worklist with 
-//                           | Failed _ -> false
-//                           | Success _ -> true in
-                     let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
-                       | (Inl wp1, _)::_, (Inl wp2, _)::_ -> wp1, wp2 
-                       | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in
-                     let res_t_prob = TProb(rel, c1.result_typ, c2.result_typ) in
-                     //let _ = printfn "Checking sub probs:\n(1) %s" (prob_to_string res_t_prob) in
-                        if Util.physical_equality wpc1 wpc2 
-                        then (//printfn "Physical equality of wps ... done";
-                              solve false env (attempt [res_t_prob] probs))
-                        else 
-//                             let wpc1 = Tc.Normalize.norm_typ [Beta] env wpc1 in
-//                             let wpc2 = Tc.Normalize.norm_typ [Beta] env wpc2 in
-                             if false && has_uvars wpc2 //how to decide this test efficiently?
-                             then (let prob = TProb(EQ, wpc1, wpc2) in
-                                   printfn "wpc2 has uvars ... solving\n(2)%s\n" (prob_to_string env prob);
-                                   solve false env (attempt [res_t_prob; prob] probs))
-                             else if rel=SUB
-                             then let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
-                             let g = 
-                               if is_null_wp c2_decl wpc2 
-                               then let _ = if debug env then Util.print_string "Using trivial wp ... \n" in
-                                    NonTrivial <| mk_Typ_app(c2_decl.trivial, [targ c1.result_typ; targ <| edge.mlift c1.result_typ wpc1]) ktype r 
-                               else let wp2_imp_wp1 = mk_Typ_app(c2_decl.wp_binop, 
-                                            [targ c2.result_typ; 
-                                             targ wpc2; 
-                                             targ <| Util.ftv Const.imp_lid (Const.kbin ktype ktype ktype); 
-                                             targ <| edge.mlift c1.result_typ wpc1]) wpc2.tk r in
-                                    NonTrivial <| mk_Typ_app(c2_decl.wp_as_type, [targ c2.result_typ; targ wp2_imp_wp1]) ktype r  in
-                             //printfn "Adding guard %s\n" (guard_to_string env (simplify_guard env g));
-                             let probs = guard env top g probs in 
-                             solve false env (attempt [res_t_prob] probs)
-                        else giveup "Equality of wps---unimplemented" (CProb(rel, c1_0, c2_0)) probs 
-                 end
+                 if Util.is_ml_comp c1 && Util.is_ml_comp c2 
+                 then solve_t top env rel (Util.comp_result c1) (Util.comp_result c2) probs 
+                 else
+                     let c1_0, c2_0 = c1, c2 in
+                     let c1 = Normalize.weak_norm_comp env c1 in
+                     let c2 = Normalize.weak_norm_comp env c2 in
+                     let has_uvars t = 
+                        let uvs = Util.uvars_in_typ t in
+                        Util.set_count uvs.uvars_t > 0 in
+                     begin match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
+                       | None -> giveup "incompatible monad ordering" (CProb(rel, c1_0, c2_0)) probs
+                       | Some edge ->
+                         let is_null_wp c2_decl wpc2 = 
+                             c2.flags |> Util.for_some (function TOTAL | MLEFFECT | SOMETRIVIAL -> true | _ -> false) in
+                         let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
+                           | (Inl wp1, _)::_, (Inl wp2, _)::_ -> wp1, wp2 
+                           | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in
+                         let res_t_prob = TProb(rel, c1.result_typ, c2.result_typ) in
+                         //let _ = printfn "Checking sub probs:\n(1) %s" (prob_to_string res_t_prob) in
+                            if Util.physical_equality wpc1 wpc2 
+                            then (//printfn "Physical equality of wps ... done";
+                                  solve false env (attempt [res_t_prob] probs))
+                            else 
+                                 if rel=EQ  
+                                 then (let prob = TProb(EQ, wpc1, wpc2) in
+                                       solve false env (attempt [res_t_prob; prob] probs))
+                                 else if rel=SUB
+                                 then let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
+                                 let g = 
+                                   if is_null_wp c2_decl wpc2 
+                                   then let _ = if debug env then Util.print_string "Using trivial wp ... \n" in
+                                        NonTrivial <| mk_Typ_app(c2_decl.trivial, [targ c1.result_typ; targ <| edge.mlift c1.result_typ wpc1]) ktype r 
+                                   else let wp2_imp_wp1 = mk_Typ_app(c2_decl.wp_binop, 
+                                                [targ c2.result_typ; 
+                                                 targ wpc2; 
+                                                 targ <| Util.ftv Const.imp_lid (Const.kbin ktype ktype ktype); 
+                                                 targ <| edge.mlift c1.result_typ wpc1]) wpc2.tk r in
+                                        NonTrivial <| mk_Typ_app(c2_decl.wp_as_type, [targ c2.result_typ; targ wp2_imp_wp1]) ktype r  in
+                                 //printfn "Adding guard %s\n" (guard_to_string env (simplify_guard env g));
+                                 let probs = guard env top g probs in 
+                                 solve false env (attempt [res_t_prob] probs)
+                            else giveup "Equality of wps---unimplemented" (CProb(rel, c1_0, c2_0)) probs 
+                     end
 
-               | Flex ({n=Typ_app({n=Typ_uvar(uv1,k1)}, eff_args1)}, t1),  Flex ({n=Typ_app({n=Typ_uvar(uv2,k2)}, eff_args2)}, t2) -> //flex-flex
+               | Flex _, Flex _ -> 
+                 let uv1, k1, eff_args1, t1 = Util.destruct_flex c1 in
+                 let uv2, k2, eff_args2, t2 = Util.destruct_flex c2 in
                  let maybe_pat_vars1 = pat_vars [] eff_args1 in
                  let maybe_pat_vars2 = pat_vars [] eff_args2 in
                  begin match maybe_pat_vars1, maybe_pat_vars2 with 
@@ -1027,8 +1070,7 @@ and solve_c (top:bool) (env:Env.env) rel c1 c2 probs : solution =
                           solve false env (attempt [TProb(rel, t1, t2)] probs)
                  end
                  
-               | _ -> failwith "Impossible"
-
+               
 and solve_e (top:bool) (env:Env.env) rel e1 e2 probs : solution = 
     let e1 = compress_e env probs.subst e1 in 
     let e2 = compress_e env probs.subst e2 in
