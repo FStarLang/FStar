@@ -300,7 +300,7 @@ val mk_Kind_type: knd
 val mk_Kind_effect:knd
 val mk_Kind_abbrev: (kabbrev * knd) -> range -> knd
 val mk_Kind_arrow: (binders * knd) -> range -> knd
-val mk_Kind_arrow': (binder * knd) -> range -> knd
+val mk_Kind_arrow': (binders * knd) -> range -> knd
 val mk_Kind_delayed: (knd * subst * memo<knd>) -> range -> knd
 val mk_Kind_uvar: uvar_k_app -> range -> knd
 val mk_Kind_lam: (binders * knd) -> range -> knd
@@ -308,6 +308,7 @@ val mk_Kind_lam: (binders * knd) -> range -> knd
 val mk_Typ_btvar: btvar -> knd -> range -> typ
 val mk_Typ_const: ftvar -> knd -> range -> typ
 val mk_Typ_fun: (binders * comp) -> knd -> range -> typ
+val mk_Typ_fun': (binders * comp) -> knd -> range -> typ
 val mk_Typ_refine: (bvvar * formula) -> knd -> range -> typ
 val mk_Typ_app: (typ * args) -> knd -> range -> typ
 val mk_Typ_app': (typ * args) -> knd -> range -> typ

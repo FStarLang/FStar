@@ -63,7 +63,7 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
                    (fun ('p:Post 'a) => 'pre /\ (forall a. 'post a ==> 'p a)) (* WP *)
                    (fun ('p:Post 'a) => forall a. 'pre /\ 'post a ==> 'p a)           (* WLP *)
              and Tot ('a:Type) =
-                 PURE 'a (fun 'p => (forall (x:'a). 'p x)) (fun 'p => (forall (x:'a). 'p x))
+                 PURE 'a (fun 'p => (forall (x:'a). 'p x)) (fun 'p => (exists (x:'a). 'p x))
 }
 open Prims.PURE
 assume type bool
@@ -172,7 +172,7 @@ monad_lattice {
              and ST ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) =
                  STATE 'a
                    (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1)) (* WP *)
-                   (fun ('p:Post 'a) (h:heap) => (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1))           (* WLP *)
+                   (fun ('p:Post 'a) (h:heap) => (exists a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1))           (* WLP *)
 ;
   EXN::
              kind Pre  = Type
@@ -207,24 +207,28 @@ monad_lattice {
              with Exn ('a:Type) ('pre:Pre) ('post:Post 'a) =
                  EXN 'a
                    (fun 'p => 'pre /\ (forall (r:result 'a). ('pre /\ 'post r) ==> 'p r)) (* WP *)
-                   (fun 'p => (forall (r:result 'a). ('pre /\ 'post r) ==> 'p r))         (* WLP *)
+                   (fun 'p => (exists (r:result 'a). ('pre /\ 'post r) ==> 'p r))         (* WLP *)
  ;
   ALL::
              kind Pre  = heap => Type
              kind Post ('a:Type) = result 'a => heap => Type
              kind WP ('a:Type) = Post 'a => Pre
              type return ('a:Type) (x:'a) ('p:Post 'a) = 'p (V x)
+             (* type bind_wp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = *)
+             (*     (forall rb h. 'p rb h \/ 'wlp1 (fun ra h1 => if b2t (is_V ra) *)
+             (*                                                  then 'wlp2 (V.v ra) (fun rb2 h2 => ~(rb==rb2 \/ h==h2)) h1 *)
+             (*                                                  else ~(rb==ra \/ h==h1)) h0) *)
+             (*     /\ 'wp1 (fun ra h1 => if b2t (is_V ra) *)
+             (*                           then 'wp2 (V.v ra) (fun _a _b => True) h1 *)
+             (*                           else True) h0 *)
+
              type bind_wp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) (h0:heap) =
-                 (forall rb h. 'p rb h \/ 'wlp1 (fun ra h1 => if b2t (is_V ra)
-                                                              then 'wlp2 (V.v ra) (fun rb2 h2 => ~(rb==rb2 \/ h==h2)) h1
-                                                              else ~(rb==ra \/ h==h1)) h0)
-                 /\ 'wp1 (fun ra h1 => if b2t (is_V ra)
-                                       then 'wp2 (V.v ra) (fun _a _b => True) h1
-                                       else True) h0
+                 ('wp1 (fun ra h1 => b2t (is_V ra) ==> 'wp2 (V.v ra) 'p h1) h0)
              type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) ('wlp2:'a => WP 'b) ('p:Post 'b) (h0:heap) =
-                 (forall rb h. 'p rb h \/ 'wlp1 (fun ra h1 => if b2t (is_V ra)
-                                                              then 'wlp2 (V.v ra) (fun rb2 h2 => ~(rb==rb2 \/ h==h2)) h1
-                                                              else ~(rb==ra \/ h==h1)) h0)
+                 (forall rb h. 'wlp1 (fun ra h1 => 
+                     if b2t (is_V ra)
+                     then 'wlp2 (V.v ra) (fun rb2 h2 => rb==rb2 /\ h==h2) h1
+                     else rb==ra /\ h==h1) h0 ==> 'p rb h)
              type ite_wlp  ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) (h0:heap) =
                  (forall (ra:result 'a) (h:heap). 'wlp_cases (fun ra2 h2 => ra==ra2 /\ h==h2) h0 ==> 'post ra h)
              type ite_wp ('a:Type) ('wlp_cases:WP 'a) ('wp_cases:WP 'a) ('post:Post 'a) (h0:heap) =
@@ -242,10 +246,10 @@ monad_lattice {
              with All ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) =
                  ALL 'a
                    (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall ra h1. (Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)) (* WP *)
-                   (fun ('p:Post 'a) (h:heap) => forall ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)             (* WLP *)
+                   (fun ('p:Post 'a) (h:heap) => exists ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)             (* WLP *)
              and ML ('a:Type) =
                  ALL 'a (fun 'p h0 => forall (a:result 'a) (h:heap). 'p a h) 
-                        (fun 'p h0 => forall (a:result 'a) (h:heap). 'p a h)
+                        (fun 'p h0 => exists (a:result 'a) (h:heap). 'p a h)
 
   with
   PURE  ~> STATE = (fun ('a:Type) ('wp:PURE.WP 'a) ('p:STATE.Post 'a) (h:heap) => 'wp (fun a => 'p a h));

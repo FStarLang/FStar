@@ -275,7 +275,7 @@ let subst_to_string subst =
         | Inl (a, t) -> Util.format2 "(%s / %s)" (strBvd a) (typ_to_string t)
         | Inr (x, e) -> Util.format2 "(%s / %s)" (strBvd x) (exp_to_string e)) subst |> String.concat ", ")
 let freevars_to_string (fvs:freevars) = 
-    let f l = l |> Util.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
+    let f (l:set<bvar<'a,'b>>) = l |> Util.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
     Util.format2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs) 
 
 let rec sigelt_to_string x = match x with 

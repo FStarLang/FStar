@@ -339,12 +339,11 @@ let mk_Kind_arrow ((bs:binders),(k:knd)) p = {
     tk=();
     uvs=mk_uvs(); fvs=mk_fvs();//union k1.fvs (match a with None -> k2.fvs | Some a -> difference k2.fvs (set_of_list [Inl a]));
 }
-let mk_Kind_arrow' ((b:binder), (k:knd)) p = {
-    n=(match k.n with Kind_arrow(bs, k') -> Kind_arrow(b::bs, k') | _ -> Kind_arrow([b], k));
-    pos=p;
-    tk=();
-    uvs=mk_uvs(); fvs=mk_fvs();//union k1.fvs (match a with None -> k2.fvs | Some a -> difference k2.fvs (set_of_list [Inl a]));
-}
+let mk_Kind_arrow' ((bs:binders), (k:knd)) p = 
+    match bs with 
+        | [] -> k
+        | _ ->  match k.n with Kind_arrow(bs', k') -> mk_Kind_arrow(bs@bs', k') p | _ -> mk_Kind_arrow(bs, k) p
+
 let mk_Kind_uvar (uv:uvar_k_app) p = {
     n=Kind_uvar uv;
     pos=p;
@@ -369,18 +368,28 @@ let mk_Kind_unknown  = {n=Kind_unknown; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs
 
 let mk_Typ_btvar    (x:btvar) (k:knd) (p:range) = {n=Typ_btvar x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs();}//set_of_list [Inl x.v]}
 let mk_Typ_const    (x:ftvar) (k:knd) (p:range) = {n=Typ_const x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs()}
-let check_fun (bs:binders) (c:comp) = 
+let check_fun (bs:binders) (c:comp) p = 
     match bs with 
         | [] -> failwith "Empty binders"
         | _ -> match c.n with 
-                | Total {n=Typ_fun _} -> failwith "redundant currying"
+                | Total {n=Typ_fun _} -> failwith (Util.format1 "(%s) redundant currying" (Range.string_of_range p))
                 | _ -> Typ_fun(bs, c)
 let mk_Typ_fun      ((bs:binders),(c:comp)) (k:knd) (p:range) = {
-    n=check_fun bs c;
+    n=check_fun bs c p;
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//(match x with None -> union t.fvs c.fvs | Some x -> union t.fvs (difference c.fvs (set_of_list [Inr x])));
-    
+}
+let uncurry_fun bs c = match c.n with 
+    | Total {n=Typ_fun(bs', c)} -> Typ_fun(bs@bs', c)
+    | _ -> match bs with 
+             | [] -> failwith "empty binders"
+             | _ -> Typ_fun(bs, c)
+let mk_Typ_fun'      ((bs:binders),(c:comp)) (k:knd) (p:range) = {
+    n=uncurry_fun bs c;
+    tk=k;
+    pos=p;
+    uvs=mk_uvs(); fvs=mk_fvs();//(match x with None -> union t.fvs c.fvs | Some x -> union t.fvs (difference c.fvs (set_of_list [Inr x])));
 }
 let mk_Typ_refine   ((x:bvvar),(phi:typ)) (k:knd) (p:range) = {
     n=Typ_refine(x, phi);

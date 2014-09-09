@@ -383,13 +383,13 @@ and desugar_binding_pat_maybe_top top env p : (env_t * bnd * option<pat>) =
       | _ -> Some p in
     (env, binder, p)
 
-and desugar_binding_pat env = desugar_binding_pat_maybe_top false env
+and desugar_binding_pat env p = desugar_binding_pat_maybe_top false env p
 
 and desugar_match_pat_maybe_top _ env pat =
   let (env, _, pat) = desugar_data_pat env pat in
   (env, pat)
 
-and desugar_match_pat env = desugar_match_pat_maybe_top false env 
+and desugar_match_pat env p = desugar_match_pat_maybe_top false env p
 
 and desugar_typ_or_exp (env:env_t) (t:term) : either<typ,exp> =
   if is_type env t
@@ -952,8 +952,8 @@ let mk_data_ops env = function
     let formal = Util.gen_bvar_p r tconstr in
     let formal_exp = bvar_to_exp formal in
     let binders = freevars@[v_binder formal] in
-    let rec build_typ t = mk_Typ_fun(binders, mk_Total t) kun r in
-    let rec build_kind k = mk_Kind_arrow(binders, k) k.pos in
+    let rec build_typ t = mk_Typ_fun'(binders, mk_Total t) kun r in
+    let rec build_kind k = mk_Kind_arrow'(binders, k) k.pos in
 //    let subst_to_string s = 
 //      List.map (function 
 //        | Inl (a, t) -> Util.format2 "(%s -> %s)" (Print.strBvd a) (Print.typ_to_string t)  

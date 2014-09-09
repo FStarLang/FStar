@@ -17,6 +17,7 @@
 // (c) Microsoft Corporation. All rights reserved
 module Microsoft.FStar.Absyn.Util
 
+open Prims
 open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
@@ -1166,7 +1167,6 @@ type connective =
     | QEx of binders * qpats * typ
     | BaseConn of lident * args
 
-
 let destruct_typ_as_formula f : option<connective> = 
     let destruct_base_conn f = 
         let type_sort, term_sort = true, false in
@@ -1208,7 +1208,7 @@ let destruct_typ_as_formula f : option<connective> =
             | _ -> [], compress_typ t in
 
     let destruct_q_conn t =
-        let is_q fa l = if fa then is_forall l else is_exists l in 
+        let is_q : bool -> lident -> Tot<bool> = fun fa l -> if fa then is_forall l else is_exists l in 
         let flat t = 
             let t, args = head_and_args t in 
             t, args |> List.map (function (Inl t, imp) -> Inl <| compress_typ t, imp

@@ -31,7 +31,10 @@ let rng env = Tc.Env.get_range env
 let instantiate_both env = {env with Env.instantiate_targs=true; Env.instantiate_vargs=true}
 let no_inst env = {env with Env.instantiate_targs=false; Env.instantiate_vargs=false}
 
-let steps = if !Options.verify then [Normalize.Beta; Normalize.SNComp] else [Normalize.Beta] 
+let steps = 
+    if !Options.verify then 
+    [Normalize.Beta; Normalize.SNComp]
+    else [Normalize.Beta] 
 let norm_t env t = Tc.Normalize.norm_typ steps env t
 let norm_k env k = Tc.Normalize.norm_kind steps env k
 let norm_c env c = Tc.Normalize.norm_comp steps env c
@@ -239,7 +242,7 @@ and tc_typ env (t:typ) : typ * knd * guard =
   | Typ_fun(bs, cod) -> 
     let bs, env, g = tc_binders env bs in 
     let cod, f = tc_comp env cod in
-    w ktype <| mk_Typ_fun(bs, cod), ktype, Rel.conj_guard g (Tc.Util.close_guard bs f)
+    w ktype <| mk_Typ_fun'(bs, cod), ktype, Rel.conj_guard g (Tc.Util.close_guard bs f)
 
   | Typ_lam(bs, t) -> 
     let bs, env, g = tc_binders env bs in

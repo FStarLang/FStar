@@ -37,14 +37,14 @@ open Microsoft.FStar.Parser
 open Microsoft.FStar.Parser.AST
 open Microsoft.FStar.Parser.Parse
 
-let intern_string = 
+let intern_string : string -> string = 
   let strings = Util.smap_create 100 in (* new System.Collections.Generic.Dictionary<string,string>(100) in  *)
   fun s ->
     match Util.smap_try_find strings s with 
       | Some res -> res
       | None -> Util.smap_add strings s s; s
       
-let default_string_finish = (fun endm b s -> STRING (s))
+let default_string_finish endm b s = STRING s
 
 let call_string_finish fin buf endm b = fin endm b (Bytes.close buf)
 
