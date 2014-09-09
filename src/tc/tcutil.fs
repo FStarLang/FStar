@@ -129,8 +129,8 @@ let pat_as_exps env p : list<exp> =
     | _ -> failwith "impossible" in
   let r = Env.get_range env in
   let rec aux p = match p with
-    | Pat_wild ->  [Inr (fst <| Rel.new_evar r [] (new_tvar env ktype))]
-    | Pat_twild  -> [Inl (fst <| Rel.new_tvar r [] (new_kvar env))]
+    | Pat_wild ->  [Inr (fst <| Rel.new_evar r [] (new_tvar env ktype))] //TODO: why empty vars?
+    | Pat_twild  -> [Inl (fst <| Rel.new_tvar r (Tc.Env.t_binders env) (new_kvar env))] 
     | Pat_var x -> [Inr (Util.bvd_to_exp x (new_tvar env ktype))]
     | Pat_tvar a -> [Inl (Util.bvd_to_typ a (new_kvar env))]
     | Pat_constant c -> [Inr (syn' env tun <| mk_Exp_constant c)]
@@ -193,23 +193,27 @@ let extract_lb_annotation is_rec env t e = match t.n with
       | Exp_ascribed(_, t) -> e, t
 
       | Exp_abs(bs, e) -> 
-        let bs = bs |> List.fold_left (fun bs b -> match fst b with 
+        let scope, bs = bs |> List.fold_left (fun (scope, bs) b -> match fst b with 
             | Inl a -> 
-              let b = (Inl (mk_t_binder bs a), snd b) in
-              bs@[b]
-            | Inr x -> 
-              let b = (Inr (mk_v_binder bs x), snd b) in
-              bs@[b]) [] in
+              let b = (Inl (mk_t_binder scope a), snd b) in
+              let bs = bs@[b] in
+              let scope = scope@[b] in
+              scope, bs
+            | Inr x -> //don't introduce dependent types, if there's no annotation
+              let b = (Inr (mk_v_binder scope x), snd b) in
+              scope, bs@[b]) (vars,[]) in
 
-        let e, res = aux (vars@bs) e in 
+        let e, res = aux scope e in 
         let c = 
             if is_rec then Util.ml_comp res r 
             else (failwith "Building a cvar needlessly!") in//; Rel.new_cvar r (vars@bs) res |> fst) in
-        mk_Exp_abs(bs, e) e.tk e.pos, mk_Typ_fun(bs, c) ktype e.pos
+        let t = mk_Typ_fun(bs, c) ktype e.pos in
+        if debug env then printfn "(%s) Using type %s" (Range.string_of_range r) (Print.typ_to_string t);
+        mk_Exp_abs(bs, e) e.tk e.pos, t
 
       | _ -> e, Rel.new_tvar r vars ktype |> fst in
 
-     aux (Env.binders env)  e       
+     aux (Env.t_binders env)  e       
 
   | _ -> e, t
 
@@ -480,10 +484,11 @@ let maybe_instantiate env e t =
   match t.n with 
     | Typ_fun(bs, c) -> 
       let vars = Env.binders env in 
+      let tvars = vars |> List.filter (function Inl _, _ -> true | _ -> false) in
       let rec aux subst = function 
         | (Inl a, _)::rest -> 
           let k = Util.subst_kind subst a.sort in
-          let t = Rel.new_tvar e.pos vars k |> fst in
+          let t = Rel.new_tvar e.pos tvars k |> fst in
           let subst = extend_subst (Inl(a.v, t)) subst in 
           let args, bs, subst = aux subst rest in 
           (Inl t, true)::args, bs, subst  
@@ -549,10 +554,10 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
      let norm c =
         if debug env then printfn "Normalizing before generalizing:\n\t %s" (Print.comp_typ_to_string c);    
          let steps = [Eta;Delta;Beta;SNComp] in
-         let c = norm_comp steps env c in
-//                if !Options.verify
-//                then Normalize.normalize_comp env c
-//                else (Normalize.norm_comp [Beta; Delta] env c) in
+         let c = //norm_comp steps env c in
+                if !Options.verify
+                then Normalize.norm_comp steps env c
+                else (Normalize.norm_comp [Beta; Delta] env c) in
         if debug env then printfn "Normalized to:\n\t %s" (Print.comp_typ_to_string c);
         c in
      let env_uvars = Env.uvars_in_env env in
@@ -598,7 +603,7 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
     
           let t = match Util.comp_result c |> Util.function_formals with 
             | Some (bs, cod) -> mk_Typ_fun(tvars@bs, cod) ktype c.pos 
-            | None -> mk_Typ_fun(tvars, c) ktype c.pos in
+            | None -> match tvars with [] -> Util.comp_result c | _ -> mk_Typ_fun(tvars, c) ktype c.pos in
           let e = match e.n with 
             | Exp_abs(bs, body) -> mk_Exp_abs(tvars@bs, body) t e.pos 
             | _ -> mk_Exp_abs(tvars, e) t e.pos in

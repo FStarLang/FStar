@@ -500,8 +500,8 @@ let mk_Exp_abs ((b:binders),(e:exp)) (t':typ) p = {
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference e.fvs (set_of_list [Inr x]));
 }
-let mk_Exp_abs' ((b:binder),(e:exp)) (t':typ) p = {
-    n=(match e.n with Exp_abs(binders, body) -> Exp_abs(b::binders, body) | _ -> Exp_abs([b], e));
+let mk_Exp_abs' ((b:binders),(e:exp)) (t':typ) p = {
+    n=(match e.n with Exp_abs(binders, body) -> Exp_abs(b@binders, body) | _ -> Exp_abs(b, e));
     tk=t';
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference e.fvs (set_of_list [Inr x]));
@@ -596,7 +596,7 @@ let mk_Exp_meta (m:meta_e) = match m with
 
 let mk_subst (s:subst) = s
 let extend_subst x s : subst = x::s
-let argpos : arg -> range = function 
+let argpos (x:arg) = match x with
     | Inl t, _ -> t.pos
     | Inr e, _ -> e.pos
     

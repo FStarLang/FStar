@@ -31,9 +31,10 @@ let rng env = Tc.Env.get_range env
 let instantiate_both env = {env with Env.instantiate_targs=true; Env.instantiate_vargs=true}
 let no_inst env = {env with Env.instantiate_targs=false; Env.instantiate_vargs=false}
 
-let norm_t env t = Tc.Normalize.norm_typ [Normalize.Beta; Normalize.SNComp] env t
-let norm_k env k = Tc.Normalize.norm_kind [Normalize.Beta; Normalize.SNComp] env k
-let norm_c env c = Tc.Normalize.norm_comp [Normalize.Beta; Normalize.SNComp] env c
+let steps = if !Options.verify then [Normalize.Beta; Normalize.SNComp] else [Normalize.Beta] 
+let norm_t env t = Tc.Normalize.norm_typ steps env t
+let norm_k env k = Tc.Normalize.norm_kind steps env k
+let norm_c env c = Tc.Normalize.norm_comp steps env c
 let fxv_check env kt fvs =
     let rec aux norm kt = 
         if Util.set_is_empty fvs then ()
@@ -154,7 +155,8 @@ let rec tc_kind env k : knd * guard =
     w <| mk_Kind_arrow(bs, k), Rel.conj_guard g f
 
   | Kind_unknown -> 
-    Tc.Util.new_kvar env, Trivial
+    let tvars = Env.t_binders env in
+    Tc.Rel.new_kvar k.pos tvars |> fst, Trivial
 
 and tc_vbinder env x = 
     let t, g = tc_typ_check env x.sort ktype in
@@ -311,7 +313,7 @@ and tc_typ env (t:typ) : typ * knd * guard =
     mk_Typ_meta(Meta_pattern(quant, pats)), quant.tk, Rel.conj_guard f g
  
   | Typ_unknown -> 
-    let vars = Env.binders env in
+    let vars = Env.t_binders env in //by default, depend only on the type variables in scope
     let k, _ = Rel.new_kvar top.pos vars in
     let t, _ = Rel.new_tvar top.pos vars k in
     t, k, Trivial
@@ -567,7 +569,7 @@ and tc_exp env e : exp * comp =
                     and  'ai are the free type variables in the environment *)
           let args, comps = tc_args env args in 
           let bs = null_binders_of_args args in
-          let ai = Env.binders env |> List.filter (function Inl _, _ -> true | _ -> false) in
+          let ai = Env.t_binders env in
           let cres = Util.ml_comp (Rel.new_tvar f.pos ai ktype |> fst) top.pos in
           trivial <| Rel.teq env tf (mk_Typ_fun(bs, cres) ktype tf.pos);
           let comp = List.fold_right (fun c out -> Tc.Util.bind env None c (None, out)) (cf::comps) cres in
@@ -575,11 +577,12 @@ and tc_exp env e : exp * comp =
 
         | Typ_fun(bs, c) -> 
           let vars = Tc.Env.binders env in
+          let tvars = vars |> List.filter (function Inl _, _ -> true | _ -> false) in
           let rec tc_args (subst, outargs, comps, g, fvs) bs args = match bs, args with 
             | (Inl a, _)::rest, (Inr e, _)::_ -> (* instantiate a type argument *) 
               let k = Util.subst_kind subst a.sort in
               fxv_check env (Inl k) fvs;
-              let targ = fst <| Tc.Rel.new_tvar e.pos vars k in
+              let targ = fst <| Tc.Rel.new_tvar e.pos tvars k in
               if debug env then printfn "Instantiating %s to %s" (Print.strBvd a.v) (Print.typ_to_string targ);
               let subst = extend_subst (Inl(a.v, targ)) subst in
               tc_args (subst, (Inl targ,true)::outargs, comps, g, fvs) rest args
@@ -653,7 +656,7 @@ and tc_exp env e : exp * comp =
     let env_branches, res_t = match topt with
       | Some t -> env, t
       | None -> 
-        let res_t = Tc.Util.new_tvar env ktype in
+        let res_t = Tc.Rel.new_tvar top.pos (Env.t_binders env) ktype |> fst in
         Env.set_expected_typ env res_t, res_t in
     let guard_x = Util.new_bvd (Some <| e1.pos) in
 //    let _ = if debug env then printfn "New guard exp %s\n" (Print.strBvd guard_x) in
@@ -704,9 +707,10 @@ and tc_exp env e : exp * comp =
             let e = w cres <| mk_Exp_let((false, [(x, Util.comp_result c1, e1)]), e2) in
             match topt with
               | None -> (* no expected type; check that x doesn't escape it's scope *)
-                 let fvs = Util.freevars_typ (norm_t env (Util.comp_result cres)) in
+                 let tres = norm_t env (Util.comp_result cres) in 
+                 let fvs = Util.freevars_typ tres in
                  if Util.set_mem (bvd_to_bvar_s bvd t) fvs.fxvs 
-                 then raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape t bvd, rng env))
+                 then raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape tres bvd, rng env))
                  else e, cres
               | _ -> e, cres
      end       
@@ -720,7 +724,19 @@ and tc_exp env e : exp * comp =
     let lbs, env' = lbs |> List.fold_left (fun (xts, env) (x, t, e) -> 
       let e, t = Tc.Util.extract_lb_annotation true env t e in //NS: pull inline annotation to force the ML monad here; remove once we have better termination checks
       let t = tc_typ_check_trivial env0 t ktype |> norm_t env in
-      let env = Env.push_local_binding env (binding_of_lb x t) in
+//      let tinst = match t.n with //experimenting with monomorphic recursion
+//        | Typ_fun(bs, c) ->
+//          let targs, vargs = bs |> List.partition (function Inl _, _ -> true | _ -> false) in
+//          let scope = Env.t_binders env @ targs in
+//          let subst = targs |> List.map (function 
+//            | Inl a, _ -> Inl(a.v, Rel.new_tvar t.pos scope a.sort |> fst)
+//            | _ -> failwith "impos") in
+//          let t_inst = Util.subst_typ subst <| mk_Typ_fun(vargs, c) ktype t.pos in //monomorphic recursion, by default
+//          if debug env then printfn "Introducing %s monomorphically at: %s" (Print.lbname_to_string x) (Print.typ_to_string t_inst);
+//          t_inst
+//        | _ -> t in
+      let tinst = t in
+      let env = Env.push_local_binding env (binding_of_lb x tinst) in
       (x, t, e)::xts, env) ([], env0)  in 
     let lbs = lbs |> List.map (fun (x, t, e) -> 
       let env' = Env.set_expected_typ env' t in
@@ -1080,7 +1096,7 @@ and tc_decl env se = match se with
                   | Typ_unknown -> 
                     false, (Inr l, t', e) //explicit annotation; do not generalize
                   | _ -> 
-                    Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation" (Range.string_of_range r);
+                    Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation\n" (Range.string_of_range r);
                     false, (Inr l, t', e) in
              gen, (lb, t, e) in
         gen, lb::lbs) (true, []) in
@@ -1108,7 +1124,7 @@ and tc_decl env se = match se with
       let recs = abbrevs |> List.map (function 
         | Sig_typ_abbrev(lid, tps, k, t, [], r) ->
            let k = match k.n with 
-            | Kind_unknown -> Tc.Util.new_kvar env 
+            | Kind_unknown -> Tc.Rel.new_kvar r tps |> fst
             | _ -> k in
            Sig_tycon(lid, tps, k, [], [], [], r), t
         | _ -> failwith "impossible") in

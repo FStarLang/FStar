@@ -45,9 +45,9 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              type bind_wp  ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2: 'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) = 'wp1 (fun a => 'wp2 a 'p)
              type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) ('wlp2:'a => WP 'b) ('p:Post 'b) = 'wlp1 (fun a => 'wlp2 a 'p)
              type ite_wlp ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) =
-                 (forall (a:'a). 'post a \/ 'wlp_cases (fun a1 => a=!=a1))
+                 (forall (a:'a). 'wlp_cases (fun a1 => a=!=a1) ==> 'post a)
              type ite_wp ('a:Type) ('wlp_cases:WP 'a) ('wp_cases:WP 'a) ('post:Post 'a) =
-                 (forall (a:'a). 'post a \/ 'wlp_cases (fun a' => a=!=a'))
+                 (forall (a:'a). 'wlp_cases (fun a' => a==a') ==> 'post a)
                  /\ ('wp_cases (fun a => True))
              type wp_binop ('a:Type) ('wp1:WP 'a) ('op:Type => Type => Type) ('wp2:WP 'a) ('p:Post 'a) =
                  'op ('wp1 'p) ('wp2 'p)
@@ -155,9 +155,9 @@ monad_lattice {
                  'wp1 (fun a h1 => 'wp2 a 'p h1) h0
              type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) ('wlp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = 'wlp1 (fun a => 'wlp2 a 'p) h0
              type ite_wlp  ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) (h0:heap) =
-                 (forall (a:'a) (h:heap). 'post a h \/ 'wlp_cases (fun a1 h1 => a=!=a1 /\ h=!=h1) h0)
+                 (forall (a:'a) (h:heap). 'wlp_cases (fun a1 h1 => a==a1 /\ h==h1) h0 ==> 'post a h)
              type ite_wp ('a:Type) ('wlp_cases:WP 'a) ('wp_cases:WP 'a) ('post:Post 'a) (h0:heap) =
-                 (forall (a:'a) (h:heap). 'post a h \/ 'wlp_cases (fun a1 h1 => a=!=a1 /\ h=!=h1) h0)
+                 (forall (a:'a) (h:heap). 'wlp_cases (fun a1 h1 => a==a1 /\ h==h1) h0 ==> 'post a h)
                  /\ 'wp_cases (fun a h_ => True) h0
              type wp_binop ('a:Type) ('wp1:WP 'a) ('op:Type => Type => Type) ('wp2:WP 'a) ('p:Post 'a) (h:heap) =
                  'op ('wp1 'p h) ('wp2 'p h)
@@ -191,9 +191,9 @@ monad_lattice {
                                                                     then 'wlp2 (V.v ra1) (fun rb2 => rb2=!=rb)
                                                                     else  ra1 =!= rb))
              type ite_wlp  ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) =
-                 (forall (a:result 'a). 'post a \/ 'wlp_cases (fun a1 => a=!=a1))
+                 (forall (a:result 'a). 'wlp_cases (fun a1 => a==a1) ==> 'post a)
              type ite_wp ('a:Type) ('wlp_cases:WP 'a) ('wp_cases:WP 'a) ('post:Post 'a) =
-                 (forall (a:result 'a). 'post a \/ 'wlp_cases (fun a1 => a=!=a1))
+                 (forall (a:result 'a). 'wlp_cases (fun a1 => a==a1) ==> 'post a)
                  /\ 'wp_cases (fun ra2 => True)
              type wp_binop ('a:Type) ('wp1:WP 'a) ('op:Type => Type => Type) ('wp2:WP 'a) ('p:Post 'a) =
                  'op ('wp1 'p) ('wp2 'p)
@@ -226,9 +226,9 @@ monad_lattice {
                                                               then 'wlp2 (V.v ra) (fun rb2 h2 => ~(rb==rb2 \/ h==h2)) h1
                                                               else ~(rb==ra \/ h==h1)) h0)
              type ite_wlp  ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) (h0:heap) =
-                 (forall (ra:result 'a) (h:heap). 'post ra h \/ 'wlp_cases (fun ra2 h2 => ra=!=ra2 /\ h=!=h2) h0)
+                 (forall (ra:result 'a) (h:heap). 'wlp_cases (fun ra2 h2 => ra==ra2 /\ h==h2) h0 ==> 'post ra h)
              type ite_wp ('a:Type) ('wlp_cases:WP 'a) ('wp_cases:WP 'a) ('post:Post 'a) (h0:heap) =
-                 (forall (ra:result 'a) (h:heap). 'post ra h \/ 'wlp_cases (fun ra2 h2 => ra=!=ra2 /\ h=!=h2) h0)
+                 (forall (ra:result 'a) (h:heap). 'wlp_cases (fun ra2 h2 => ra==ra2 /\ h==h2) h0 ==> 'post ra h)
                  /\ 'wp_cases (fun _a _b => True) h0
              type wp_binop ('a:Type) ('wp1:WP 'a) ('op:Type => Type => Type) ('wp2:WP 'a) ('p:Post 'a) (h:heap) =
                  'op ('wp1 'p h) ('wp2 'p h)

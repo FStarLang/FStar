@@ -444,7 +444,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
               let body = match sc_pat_opt with 
                 | Some (sc, pat) -> mk_Exp_match(sc, [(pat, None, body)]) tun body.pos
                 | None -> body in 
-              mk_Exp_abs(List.rev bs, body) tun top.range
+              mk_Exp_abs'(List.rev bs, body) tun top.range
 
             | p::rest -> 
               let env, b, pat = desugar_binding_pat env p in
@@ -952,7 +952,6 @@ let mk_data_ops env = function
     let formal = Util.gen_bvar_p r tconstr in
     let formal_exp = bvar_to_exp formal in
     let binders = freevars@[v_binder formal] in
-    let rec build_exp e = mk_Exp_abs(binders, e) tun e.pos in
     let rec build_typ t = mk_Typ_fun(binders, mk_Total t) kun r in
     let rec build_kind k = mk_Kind_arrow(binders, k) k.pos in
 //    let subst_to_string s = 

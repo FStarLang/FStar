@@ -101,6 +101,7 @@ val clear_expected_typ : env -> env*option<typ>
 val fold_env : env -> ('a -> binding -> 'a) -> 'a -> 'a 
 val idents : env -> freevars
 val binders: env -> binders
+val t_binders : env -> binders
 val lidents : env -> list<lident>     
 
 (* operations on monads *)

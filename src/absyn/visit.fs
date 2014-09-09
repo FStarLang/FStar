@@ -100,10 +100,11 @@ let right ext benv bvv = match ext benv (Inr bvv) with
 (*************************************************************************************)
 type boundvar = either<btvdef, bvvdef>
 type boundvars = list<boundvar>
+type imap<'env, 'm> = 'env -> boundvars -> 'm -> ('m * 'env)
 type mapper<'env, 'm, 'n> =
-    ('env -> boundvars -> knd -> (knd * 'env))
-    -> ('env -> boundvars -> typ -> (typ * 'env))
-    -> ('env -> boundvars -> exp -> (exp * 'env))
+    imap<'env,knd>
+    -> imap<'env, typ>
+    -> imap<'env, exp>
     -> 'env -> boundvars -> 'm -> ('n * 'env)
 
 let push_tbinder binders = function 
@@ -164,10 +165,10 @@ let rec reduce_kind
   in
   map_kind env binders k
       
-and map_args map_typ map_exp env binders args = 
-    let args', env = List.fold_left (fun (out, env) (arg, imp) -> 
-        match arg with 
-        | Inl t ->         
+and map_args (map_typ:imap<'env, typ>) (map_exp:imap<'env,exp>) (env:'env) binders args =
+    let args', env = List.fold_left (fun (out, env) (arg, imp) ->
+        match arg with
+        | Inl t ->
             let t, env = map_typ env binders t in
             ((Inl t, imp)::out, env)
         | Inr e -> 
@@ -175,9 +176,9 @@ and map_args map_typ map_exp env binders args =
             ((Inr e, imp)::out, env)) ([], env) args in
     List.rev args', env 
   
-and map_binders map_kind map_typ env binders (bs:Syntax.binders) = 
-    let bs, binders, env = bs |> List.fold_left (fun (bs, binders, env) -> function 
-        | Inl a, imp -> 
+and map_binders (map_kind:imap<'env,knd>) (map_typ:imap<'env,typ>) (env:'env) binders (bs:Syntax.binders) =
+    let bs, binders, env = bs |> List.fold_left (fun (bs, binders, env) b -> match b with
+        | Inl a, imp ->
             let k, env = map_kind env binders a.sort in
             let binders = push_tbinder binders (Some a.v) in
             (Inl (bvd_to_bvar_s a.v k), imp)::bs, binders, env
@@ -264,9 +265,9 @@ and reduce_typ
         let e, env = map_typ env binders t in 
         ([], [], [t], [], []), env
 
-      | Typ_meta(Meta_pattern(t,ps)) -> 
-        let t,env = map_typ env binders t in 
-        let pats, env = List.fold_left (fun (pats, env) -> function
+      | Typ_meta(Meta_pattern(t,ps)) ->
+        let t,env = map_typ env binders t in
+        let pats, env = List.fold_left (fun (pats, env) arg -> match arg with
           | Inl t, _ -> let t, env = map_typ env binders t in ((Inl t, false)::pats, env)
           | Inr e, _ -> let e, env = map_exp env binders e in ((Inr e, false)::pats, env)) ([], env) ps in 
         ([], [], [t], [], List.rev pats), env in

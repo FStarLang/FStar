@@ -54,7 +54,7 @@ let handleable = function
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
 
-let gensym = 
+let gensym : unit -> string = 
   let ctr = mk_ref 0 in 
   (fun () -> Util.format1 "_%s" (Util.string_of_int (incr ctr; !ctr)))
     
@@ -898,7 +898,9 @@ let is_free axs (fvs:freevars) =
     | Inl a -> Util.set_mem a fvs.ftvs
     | Inr x -> Util.set_mem x fvs.fxvs)
 
-let rec update_uvars (s:syntax<'a,'b>) (uvs:uvars) =
+
+(* FYI: using polymorphic mutual recursion here ... need to annotate result type *)
+let rec update_uvars (s:syntax<'a,'b>) (uvs:uvars) : uvars =
   let out = (Util.set_elements uvs.uvars_k) |> List.fold_left (fun out u -> 
         match Unionfind.find u with 
             | Fixed k -> union_uvs (uvars_in_kind k) out

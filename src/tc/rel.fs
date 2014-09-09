@@ -25,6 +25,7 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Tc.Normalize
 
+let norm_targ env t = Tc.Normalize.norm_typ [Beta] env t
 let whnf env t = Tc.Normalize.whnf env t |> Util.compress_typ
 let sn env t = Tc.Normalize.norm_typ [Beta;Eta] env t |> Util.compress_typ
 let whnf_k env k = Tc.Normalize.norm_kind [Beta;Eta;WHNF] env k |> Util.compress_kind
@@ -423,22 +424,29 @@ let binders_eq v1 v2 =
         | Inr x, Inr y -> Util.bvar_eq x y
         | _ -> false) v1 v2
 
-let rec pat_vars seen : args -> option<binders> = function 
+let rec pat_vars env seen : args -> option<binders> = function 
     | [] -> Some (List.rev seen) 
     | (hd, imp)::rest -> 
         (match Util.unascribe_either hd with 
-            | Inl {n=Typ_btvar a} -> 
-                if seen |> Util.for_some (function 
-                    | Inl b, _ -> bvd_eq a.v b.v
-                    | _ -> false)
-                then None //not a pattern
-                else pat_vars ((Inl a, imp)::seen) rest
+            | Inl t -> 
+               let check_unique a = 
+                    if seen |> Util.for_some (function 
+                        | Inl b, _ -> bvd_eq a.v b.v
+                        | _ -> false)
+                    then None //not a pattern
+                    else pat_vars env ((Inl a, imp)::seen) rest in
+               begin match t.n with 
+                | Typ_btvar a -> check_unique a
+                | _ -> (match (norm_targ env t).n with
+                            | Typ_btvar a -> check_unique a
+                            | _ -> None)
+               end
             | Inr {n=Exp_bvar x} ->
                 if seen |> Util.for_some (function 
                     | Inr y, _ -> bvd_eq x.v y.v
                     | _ -> false)
                 then None //not a pattern
-                else pat_vars ((Inr x, imp)::seen) rest
+                else pat_vars env ((Inr x, imp)::seen) rest
             | te -> None) //not a pattern
 
 let decompose_binder (bs:binders) ktec (rebuild_base:binders -> ktec -> 'a) : ((list<ktec> -> 'a) * list<(binders * ktec)>) = 
@@ -703,8 +711,8 @@ and solve_k (top:bool) (env:Env.env) rel k1 k2 probs : solution =
        (fun subst subprobs -> solve false env (attempt (KProb(rel, k1', Util.subst_kind subst k2')::subprobs) probs)) 
        
      | Kind_uvar(u1, args1), Kind_uvar (u2, args2) -> //flex-flex ... unify, if patterns
-       let maybe_vars1 = pat_vars [] args1 in
-       let maybe_vars2 = pat_vars [] args2 in
+       let maybe_vars1 = pat_vars env [] args1 in
+       let maybe_vars2 = pat_vars env [] args2 in
        begin match maybe_vars1, maybe_vars2 with 
             | None, _
             | _, None -> giveup env "flex-flex: non patterns" (KProb(rel, k1, k2)) probs
@@ -725,7 +733,7 @@ and solve_k (top:bool) (env:Env.env) rel k1 k2 probs : solution =
        end
 
      | Kind_uvar(u, args), _ -> //flex-rigid: only resolve kind variables to closed kind-lambdas
-       let maybe_vars1 = pat_vars [] args in
+       let maybe_vars1 = pat_vars env [] args in
        begin match maybe_vars1 with 
          | Some xs -> 
            let fvs1 = freevars_of_binders xs in
@@ -766,12 +774,22 @@ and solve_binders env (bs1:binders) (bs2:binders) rel orig probs rhs =
        aux [] [] bs1 bs2
 
 and solve_t_flex_flex top env orig (t1, u1, k1, args1) (t2, u2, k2, args2) probs = 
-    let maybe_pat_vars1 = pat_vars [] args1 in
-    let maybe_pat_vars2 = pat_vars [] args2 in
+    let maybe_pat_vars1 = pat_vars env [] args1 in
+    let maybe_pat_vars2 = pat_vars env [] args2 in
     let r = t2.pos in
     begin match maybe_pat_vars1, maybe_pat_vars2 with 
         | None, _
-        | _, None -> solve top env (defer "flex/flex not patterns" orig probs) //defer
+        | _, None -> (* not patterns; try solving component wise, if the kinds permit *)
+          let rec aux sub args1 args2 = match args1, args2 with 
+            | [], [] -> solve false env (attempt (KProb(EQ, k1, k2)::sub) probs)
+            | (Inl t1, _)::rest1, (Inl t2, _)::rest2 -> aux (TProb(EQ, t1, t2)::sub) rest1 rest2
+            | (Inr e1, _)::rest1, (Inr e2, _)::rest2 -> aux (EProb(EQ, e1, e2)::sub) rest1 rest2
+            | _ -> solve top env (defer "flex/flex not patterns" orig probs) //defer 
+          in
+          
+          let sub = [TProb(EQ, mk_Typ_uvar(u1, k1) t1.pos, mk_Typ_uvar(u2, k2) t2.pos)] in
+          aux sub args1 args2
+
         | Some xs, Some ys -> 
             if (Unionfind.equivalent u1 u2 && binders_eq xs ys)
             then solve top env probs
@@ -795,7 +813,7 @@ and solve_t_flex_flex top env orig (t1, u1, k1, args1) (t2, u2, k2, args2) probs
     end
 
 and solve_t_flex_rigid top env orig (t1, uv, k, args_lhs) t2 probs = 
-      let maybe_pat_vars = pat_vars [] args_lhs in
+      let maybe_pat_vars = pat_vars env [] args_lhs in
         let subterms ps = 
             let xs = ps |> List.map (function 
                 | Inl pi, imp -> Inl <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk, imp
@@ -1132,8 +1150,8 @@ and solve_e (top:bool) (env:Env.env) rel e1 e2 probs : solution =
       solve_e top env rel e1 e2 probs
 
     | Exp_app({n=Exp_uvar(u1,t1); pos=r1}, args1), Exp_app({n=Exp_uvar(u2, t2); pos=r2}, args2) -> //flex-flex: solve only patterns
-      let maybe_vars1 = pat_vars [] args1 in
-      let maybe_vars2 = pat_vars [] args2 in
+      let maybe_vars1 = pat_vars env [] args1 in
+      let maybe_vars2 = pat_vars env [] args2 in
       begin match maybe_vars1, maybe_vars2 with 
         | None, _
         | _, None -> solve top env (defer "flex/flex not a pattern" (EProb(rel, e1, e2)) probs) //refuse to solve non-patterns
@@ -1153,7 +1171,7 @@ and solve_e (top:bool) (env:Env.env) rel e1 e2 probs : solution =
       end
 
     | Exp_app({n=Exp_uvar(u1,t1); pos=r1}, args1), _ -> //flex-rigid: solve only patterns
-      let maybe_vars1 = pat_vars [] args1 in
+      let maybe_vars1 = pat_vars env [] args1 in
       begin match maybe_vars1 with 
         | None -> solve top env (defer "flex/rigid not a pattern" (EProb(rel, e1, e2)) probs)
         | Some xs -> 

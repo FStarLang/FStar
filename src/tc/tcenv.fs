@@ -406,6 +406,12 @@ let binders env : binders =
     | Binding_typ(a, k) -> (t_binder <| bvd_to_bvar_s a k)::out
     | _ -> out) []
 
+let t_binders env : binders = 
+  fold_env env (fun out b -> match b with 
+    | Binding_var _ -> out
+    | Binding_typ(a, k) -> (t_binder <| bvd_to_bvar_s a k)::out
+    | _ -> out) []
+
 let idents env : freevars = freevars_of_list (binders env |> List.map fst)
 
 let lidents env : list<lident> =

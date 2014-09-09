@@ -330,6 +330,7 @@ val mk_Exp_bvar: bvvar -> typ -> range -> exp
 val mk_Exp_fvar: (fvvar * bool) -> typ -> range -> exp 
 val mk_Exp_constant: sconst -> typ -> range -> exp
 val mk_Exp_abs: (binders * exp) -> typ -> range -> exp
+val mk_Exp_abs': (binders * exp) -> typ -> range -> exp
 val mk_Exp_app: (exp * args) -> typ -> range -> exp
 val mk_Exp_app': (exp * args) -> typ -> range -> exp
 val mk_Exp_match: (exp * list<(pat * option<exp> * exp)>) -> typ -> range -> exp

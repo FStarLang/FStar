@@ -225,7 +225,7 @@ and exp_to_string x = match (compress_exp x).n with
 and lbs_to_string lbs = 
     Util.format2 "let %s %s"
     (if fst lbs then "rec" else "") 
-    (Util.concat_l "\n and" (snd lbs |> List.map (fun (x, t, e) -> Util.format3 "%s:%s = %s" (lbname_to_string x) (t |> typ_to_string) (e|> exp_to_string)))) 
+    (Util.concat_l "\n and " (snd lbs |> List.map (fun (x, t, e) -> Util.format3 "%s:%s = %s" (lbname_to_string x) (t |> typ_to_string) (e|> exp_to_string)))) 
     
 and lbname_to_string x = match x with
   | Inl bvd -> strBvd bvd 
