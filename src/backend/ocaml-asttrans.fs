@@ -253,7 +253,9 @@ let rec mlty_of_ty_core (tenv : tenv) ((rg, ty) : range * typ) =
        mlty_of_ty tenv (rg, comp_result c)
 
     | Typ_fun ((Inr {v=x; sort=t1},  _)::rest, c) -> 
-        let t2 = mk_Typ_fun(rest, c) ktype ty.pos in
+        let t2 = match rest with 
+            | [] -> comp_result c 
+            | _ -> mk_Typ_fun(rest, c) ktype ty.pos in
         let mlt1 = mlty_of_ty tenv (rg, t1) in
         let mlt2 = mlty_of_ty tenv (rg, t2) in
         MLTY_Fun (mlt1, mlt2)
@@ -426,6 +428,10 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
         | Exp_abs([], e) -> 
            mlexpr_of_expr rg lenv e 
 
+        | Exp_abs ((Inl _, _)::rest, e) ->
+          (* FIXME: should only occur after a let-binding *)
+           mlexpr_of_expr rg lenv (mk_Exp_abs(rest, e) tun e.pos)  
+
         | Exp_abs ((Inr x, _)::rest, e) ->
             let lenv, mlid = lpush lenv x.v.realname x.v.ppname in
             let e = mlexpr_of_expr rg lenv (mk_Exp_abs(rest, e) tun e.pos) in
@@ -502,9 +508,6 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
 //            (* FIXME: add a type annotation *)
 //            mlexpr_of_expr rg lenv e
 //
-//        | Exp_tabs (_, _, e) ->
-//            (* FIXME: should only occur after a let-binding *)
-//            mlexpr_of_expr rg lenv e
 
         | Exp_app     _ -> unexpected rg "expr-app"
         | Exp_uvar    _ -> unexpected rg "expr-uvar"

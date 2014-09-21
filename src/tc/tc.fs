@@ -553,7 +553,7 @@ and tc_exp env e : exp * comp =
     let env0 = env in
     let env = Tc.Env.clear_expected_typ env |> fst |> instantiate_both in 
     if debug env then printfn "(%s) Checking app %s" (Range.string_of_range top.pos) (Print.exp_to_string top);
-    let f, cf = tc_exp (no_inst env) f in
+    let f, cf = tc_exp (no_inst env) f in //Don't instantiate f; instantiations will be computed below, accounting for implicits/explicits
     let tf = Util.comp_result cf in
     if debug env then printfn "(%s) Type of head is %s" (Range.string_of_range f.pos) (Print.typ_to_string tf);
     let rec check_function_app norm tf = match tf.n with 
@@ -581,28 +581,37 @@ and tc_exp env e : exp * comp =
         | Typ_fun(bs, c) -> 
           let vars = Tc.Env.binders env in
           let tvars = vars |> List.filter (function Inl _, _ -> true | _ -> false) in
-          let rec tc_args (subst, outargs, comps, g, fvs) bs args = match bs, args with 
+          
+          let rec tc_args (subst,   (* substituting actuals for formals seen so far, when actual is pure *)
+                           outargs, (* type-checked actuals *)
+                           comps,   (* computation types for each actual *)
+                           g,       (* conjoined guard formula for all the actuals *)
+                           fvs)     (* unsubstituted formals, to check that they do not occur free elsewhere in the type of f *)
+                           bs       (* formal parameters *)
+                           cres     (* function result comp *)
+                           args     (* actual arguments  *) =
+           match bs, args with 
             | (Inl a, _)::rest, (Inr e, _)::_ -> (* instantiate a type argument *) 
               let k = Util.subst_kind subst a.sort in
               fxv_check env (Inl k) fvs;
               let targ = fst <| Tc.Rel.new_tvar e.pos tvars k in
               if debug env then printfn "Instantiating %s to %s" (Print.strBvd a.v) (Print.typ_to_string targ);
               let subst = extend_subst (Inl(a.v, targ)) subst in
-              tc_args (subst, (Inl targ,true)::outargs, comps, g, fvs) rest args
+              tc_args (subst, (Inl targ,true)::outargs, comps, g, fvs) rest cres args
 
             | (Inr x, true)::rest, (_, false)::_ -> (* instantiate an implicit value arg *)
               let t = Util.subst_typ subst x.sort in
               fxv_check env (Inr t) fvs;
               let varg = (fst <| Tc.Rel.new_evar (argpos <| List.hd args) vars t) in
               let subst = extend_subst (Inr(x.v, varg)) subst in
-              tc_args (subst, (Inr varg, true)::outargs, comps, g, fvs) rest args
+              tc_args (subst, (Inr varg, true)::outargs, comps, g, fvs) rest cres args
 
             | (Inl a, _)::rest, (Inl t, _)::rest' -> (* a concrete type argument *)
               let k = Util.subst_kind subst a.sort in 
               fxv_check env (Inl k) fvs;
               let t, g' = tc_typ_check env t k in
               let subst = maybe_extend_subst subst (List.hd bs) (Inl t) in
-              tc_args (subst, (targ t)::outargs, comps, Rel.conj_guard g g', fvs) rest rest'
+              tc_args (subst, (targ t)::outargs, comps, Rel.conj_guard g g', fvs) rest cres rest'
 
             | (Inr x, _)::rest, (Inr e, _)::rest' -> (* a concrete exp argument *)
               if debug env then printfn "\tType of arg (before subst (%s)) = %s" (Print.subst_to_string subst) (Print.typ_to_string x.sort);
@@ -614,19 +623,19 @@ and tc_exp env e : exp * comp =
               let e, c = tc_exp env e in 
               if Util.is_total_comp c 
               then let subst = maybe_extend_subst subst (List.hd bs) (Inr e) in
-                   tc_args (subst, (varg e)::outargs, comps, g, fvs) rest rest'
+                   tc_args (subst, (varg e)::outargs, comps, g, fvs) rest cres rest'
               else if Tc.Util.is_pure env c 
               then let g' = Util.must <| Tc.Rel.sub_comp env c (mk_Total (Util.comp_result c)) in
                    let subst = maybe_extend_subst subst (List.hd bs) (Inr e) in
-                   tc_args (subst, (varg e)::outargs, comps, Rel.conj_guard g g', fvs) rest rest'
+                   tc_args (subst, (varg e)::outargs, comps, Rel.conj_guard g g', fvs) rest cres rest'
               else if is_null_binder (List.hd bs)
-              then tc_args (subst, (varg e)::outargs, (None, c)::comps, g, fvs) rest rest'
-              else tc_args (subst, (varg e)::outargs, (Some <| Env.Binding_var(x.v, x.sort), c)::comps, g, Util.set_add x fvs) rest rest'
+              then tc_args (subst, (varg e)::outargs, (None, c)::comps, g, fvs) rest cres rest'
+              else tc_args (subst, (varg e)::outargs, (Some <| Env.Binding_var(x.v, x.sort), c)::comps, g, Util.set_add x fvs) rest cres rest'
 
             | _, [] -> (* full or partial application *) 
               let cres = match bs with 
-                | [] -> Util.subst_comp subst c (* full app *)
-                | _ -> mk_Total  (Util.subst_typ subst <| mk_Typ_fun(bs, c) ktype top.pos) (* partial app *) in
+                | [] -> Util.subst_comp subst cres (* full app *)
+                | _ -> mk_Total  (Util.subst_typ subst <| mk_Typ_fun(bs, cres) ktype top.pos) (* partial app *) in
               let comp = List.fold_left (fun out c -> fst c, Tc.Util.bind env None (snd c) out) (None, cres) comps in
               let comp = Tc.Util.bind env None cf comp in
               let comp = Tc.Util.strengthen_precondition env comp g in
@@ -635,10 +644,17 @@ and tc_exp env e : exp * comp =
             | (Inr _, _)::_, (Inl _, _)::_ ->
               raise (Error(Util.format1 "Unexpected type argument (%s)" (Print.exp_to_string top), argpos (List.hd args)))
 
-            | [], arg::_ -> (* too many args ... maybe c returns a function? *) 
-              raise (Error(Util.format1 "Too many arguments to function of type %s" (Print.typ_to_string tf), argpos arg)) in
+            | [], arg::_ -> (* too many args, except maybe c returns a function *) 
+              let tres = Util.comp_result cres |> Util.compress_typ in 
+              begin match tres.n with 
+                | Typ_fun(bs, cres') -> 
+                  Util.fprint1 "%s: Warning: Potentially redundant explicit currying of a function type \n" (Range.string_of_range tres.pos);
+                  tc_args (subst, outargs, (None, cres)::comps, g, fvs) bs cres' args
+                | _ -> 
+                  raise (Error(Util.format1 "Too many arguments to function of type %s" (Print.typ_to_string tf), argpos arg))
+              end in
          
-          tc_args ([], [], [], Trivial, no_fvs.fxvs) bs args
+          tc_args ([], [], [], Trivial, no_fvs.fxvs) bs c args
                   
         | _ -> 
             if not norm

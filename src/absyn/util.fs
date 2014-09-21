@@ -396,10 +396,11 @@ and compress_comp c =
 let alpha_typ t = 
    let t = compress_typ t in
    let s = mk_subst [] in
+   let doit t = fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp alpha_ctrl [] t  in
    match t.n with 
-    | Typ_lam _
-    | Typ_refine _ 
-    | Typ_fun _ -> fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp alpha_ctrl [] t 
+    | Typ_lam(bs, _)
+    | Typ_fun(bs, _) -> if Util.for_all is_null_binder bs then t else doit t
+    | Typ_refine _  -> doit t
     | _ -> t
     
 let compress_typ_opt = function
