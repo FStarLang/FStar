@@ -50,7 +50,7 @@ and steps = list<step>
 type config<'a> = {code:'a;
                    environment:environment;
                    stack:stack;
-                   close:option<'a -> 'a>;
+                   close:option<('a -> 'a)>;
                    steps:list<step>}
 and environment = list<env_entry>    
 and stack = {
@@ -156,7 +156,7 @@ let c_config code env steps =
      steps=steps;
      stack=empty_stack keffect}
 
-let close_with_config cfg f = 
+let close_with_config cfg f : option<(typ -> typ)> = 
   Some (fun t -> 
    let t = f t in
    match cfg.close with
@@ -294,7 +294,7 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
 
                 | Typ_refine(x, t) -> 
                   begin match sn_binders tcenv [v_binder x] config.environment config.steps with
-                    | [Inr x, _], env -> 
+                    | [(Inr x, _)], env -> 
                       let refine t = wk <| mk_Typ_refine(x, t) in
                       sn tcenv ({close=close_with_config config refine; code=t; environment=env; stack=empty_stack t.tk; steps=config.steps})
                     | _ -> failwith "Impossible"

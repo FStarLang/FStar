@@ -29,7 +29,7 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Util
 
-let constructors = Util.smap_create 1000
+let constructors : smap<(option<int> * option<(list<expression_t> -> expression_t)>)>   = Util.smap_create 1000
 
 let nothing = 
     Util.smap_add constructors "Prims.op_Minus" (Some 1, Some(function x::[] -> JSE_Minus(x) | _ -> failwith ""));
@@ -228,7 +228,7 @@ and compile_def (d:sigelt) =
         let fields = type_vars ty.n in
         Util.smap_add constructors n.str ((match fields with []->Some(1) | _ -> None), None);
         add_fieldnames n.str fields
-    | Sig_bundle(defs, _) -> List.iter compile_def defs
+    | Sig_bundle(defs, _, _) -> List.iter compile_def defs
     | _ -> ()
 
 and js_of_exports isrec (id,typ,expr) : source_t =
@@ -241,8 +241,8 @@ and js_of_exports isrec (id,typ,expr) : source_t =
 
 let rec js_of_singl (p:sigelt) : list<source_t> =
     match p with
-    | Sig_let((isrec, bind),range) -> List.map (js_of_exports isrec) bind
-    | Sig_bundle(defs, range) -> List.iter compile_def defs; []
+    | Sig_let((isrec, bind),range, _) -> List.map (js_of_exports isrec) bind
+    | Sig_bundle(defs, range, _) -> List.iter compile_def defs; []
     | _ -> []
 
 let js_of_fstar (m:modul) : Ast.t =

@@ -627,7 +627,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
         let tparams, ty = mlscheme_of_ty rg ty in
         Some (Inl (MLS_Val (x.ident.idText, (tparams, ty))))
 
-    | Sig_let ((rec_, lbs), rg) when mode = Struct ->
+    | Sig_let ((rec_, lbs), rg, _) when mode = Struct ->
         let downct (x, _, e) =
             match x with
             | Inr x -> (x, e)
@@ -669,10 +669,10 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
 
         Some (mlitem1_ty mode [t.ident.idText, tparams, None])
 
-    | Sig_monads (_, _, rg) ->
+    | Sig_monads (_, _, rg, _) ->
         unsupported rg "mod1-monad"
 
-    | Sig_bundle (indt, _) -> begin
+    | Sig_bundle (indt, _, _) -> begin
         let aout = mldtype_of_indt mlenv indt in
         let aout = List.map (fun (x, y, z) -> (x, y, Some z)) aout in
 

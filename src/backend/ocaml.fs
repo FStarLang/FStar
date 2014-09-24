@@ -643,10 +643,10 @@ let mldtype_of_bundle (env : env) (indt : list<sigelt>) =
             | Sig_val_decl (_, _, _, rg)
             | Sig_typ_abbrev (_, _, _, _, _, rg)
             | Sig_assume (_, _, _, rg)
-            | Sig_let (_, rg)
+            | Sig_let (_, rg, _)
             | Sig_main (_, rg)
-            | Sig_bundle (_, rg)
-            | Sig_monads (_, _, rg) -> unexpected rg
+            | Sig_bundle (_, rg, _)
+            | Sig_monads (_, _, rg, _) -> unexpected rg
 
         in
 
@@ -753,7 +753,7 @@ let doc_of_indt (env : env) (indt : list<sigelt>) =
 (* -------------------------------------------------------------------- *)
 let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
     match modx with
-    | Sig_let ((rec_, lb), rg) ->
+    | Sig_let ((rec_, lb), rg, _) ->
         let downct (x, _, e) =
             match x with
             | Inr x -> (x.ident, e)
@@ -811,10 +811,10 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
     | Sig_tycon _ ->
         env, None
 
-    | Sig_monads (_, _, rg) ->
+    | Sig_monads (_, _, rg, _) ->
         unsupported rg
 
-    | Sig_bundle (indt, _) ->
+    | Sig_bundle (indt, _, _) ->
         doc_of_indt env indt
 
     | Sig_assume         _ -> env, None

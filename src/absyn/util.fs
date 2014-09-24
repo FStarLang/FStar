@@ -227,13 +227,13 @@ let subst_of_list (formals:binders) (actuals:args) : subst =
     then List.map2 subst_formal formals actuals |> mk_subst
     else failwith "Ill-formed substitution"
 
-let restrict_subst axs s = 
-  s |> List.filter (fun b ->
-    let r = match b with 
-    | Inl(a, _) -> not (axs |> Util.for_some (function Inr _ -> false | Inl b -> bvd_eq a b))
-    | Inr(x, _) -> not (axs |> Util.for_some (function Inl _ -> false | Inr y -> bvd_eq x y)) in
-    //if not r then printfn "Filtering %s\n" (match b with Inl (b, _) -> b.realname.idText | Inr (x, _) -> x.realname.idText);
-    r) |> mk_subst
+let restrict_subst axs s = s
+//  s |> List.filter (fun b ->
+//    let r = match b with 
+//    | Inl(a, _) -> not (axs |> Util.for_some (function Inr _ -> false | Inl b -> bvd_eq a b))
+//    | Inr(x, _) -> not (axs |> Util.for_some (function Inl _ -> false | Inr y -> bvd_eq x y)) in
+//    //if not r then printfn "Filtering %s\n" (match b with Inl (b, _) -> b.realname.idText | Inr (x, _) -> x.realname.idText);
+//    r) |> mk_subst
 
 type red_ctrl = {
     stop_if_empty_subst:bool;
@@ -522,56 +522,34 @@ let destruct typ lid =
     | _ -> None
 
 let rec lids_of_sigelt se = match se with 
-  | Sig_bundle(ses, _) -> List.collect lids_of_sigelt ses
+  | Sig_let(_, _, lids) 
+  | Sig_bundle(_, _, lids)
+  | Sig_monads(_, _, _, lids) -> lids
   | Sig_tycon (lid, _, _,  _, _, _, _)    
   | Sig_typ_abbrev  (lid, _, _, _, _, _)
   | Sig_datacon (lid, _, _, _, _)
   | Sig_val_decl (lid, _, _, _) 
   | Sig_assume (lid, _, _, _) -> [lid]
-  | Sig_let((_, lbs), _) -> List.map (function 
-    | (Inr l, _, _) -> l
-    | (Inl x, _, _) -> failwith (Util.format1 "Impossible: got top-level letbinding with name %s" x.ppname.idText)) lbs
   | Sig_main _ -> []
-  | Sig_monads(mdecls, _, _) -> mdecls |> List.map (fun md -> md.mname)
     
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | [l] -> Some l
   | _ -> None
+
 let range_of_sigelt x = match x with 
-  | Sig_bundle(_, r) 
+  | Sig_bundle(_, r, _) 
   | Sig_tycon (_, _, _,  _, _, _, r)    
   | Sig_typ_abbrev  (_, _, _, _, _, r)
   | Sig_datacon (_, _, _, _, r)
   | Sig_val_decl (_, _, _, r) 
   | Sig_assume (_, _, _, r)
-  | Sig_let(_, r) 
+  | Sig_let(_, r, _) 
   | Sig_main(_, r) 
-  | Sig_monads(_, _, r) -> r
+  | Sig_monads(_, _, r, _) -> r
 
 let range_of_lb = function
   | (Inl x, _, _) -> range_of_bvd x
   | (Inr l, _, _) -> range_of_lid l 
-
-//let mk_curried_app e e_or_t = 
-//  List.fold_left (fun f -> function
-//    | Inl t -> mk_Exp_tapp(f, t) tun (Range.union_ranges f.pos t.pos)
-//    | Inr (e, imp) -> mk_Exp_app(f, e, imp) tun (Range.union_ranges f.pos e.pos))  e e_or_t 
-
-//let rec app_kind k te = 
-//    let k = compress_kind k in 
-//    match k.n, te with 
-//    | Kind_tcon(None, _, k', _), Inl t ->  k'
-//    | Kind_dcon(None, _, k', _), Inr e -> k'
-//    | Kind_tcon(Some a, _, k', _), Inl t -> subst_kind (mk_subst [(Inl(a, t))]) k'
-//    | Kind_dcon(Some x, _, k', _), Inr e -> subst_kind (mk_subst [(Inr(x, e))]) k'
-//    | Kind_abbrev(_, k), _ -> app_kind k te
-//    | _ -> kun
-
-//let app_typ t te = match t.n, te with 
-//    | Typ_fun(None, _, c, _), Inr _  -> comp_result c
-//    | Typ_fun(Some x, _, c, _), Inr e -> subst_typ (mk_subst [Inr(x, e)]) <| comp_result c
-//    | Typ_univ(a, _, c), Inl t -> subst_typ (mk_subst [Inl(a, t)]) <| comp_result c 
-//    | _ -> tun
 
 let range_of_args args r = 
    args |> List.fold_left (fun r -> function 

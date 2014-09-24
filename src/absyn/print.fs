@@ -23,13 +23,16 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 
-let rec sli (l:lident) : string = match l.ns with 
-  | hd::tl when (hd.idText="Prims") ->
-    begin match tl with 
-      | [] -> l.ident.idText
-      | _ -> (List.map (fun i -> i.idText) tl |> String.concat ".") ^  "." ^ l.ident.idText
-    end
-  | _ -> l.str
+let rec sli (l:lident) : string = 
+  if !Options.print_real_names
+  then match l.ns with 
+      | hd::tl when (hd.idText="Prims") ->
+        begin match tl with 
+          | [] -> l.ident.idText
+          | _ -> (List.map (fun i -> i.idText) tl |> String.concat ".") ^  "." ^ l.ident.idText
+        end
+      | _ -> l.str
+   else l.ident.idText
 
 let strBvd bvd = 
     if !Options.print_real_names
@@ -284,13 +287,13 @@ let rec sigelt_to_string x = match x with
   | Sig_datacon(lid, t, _, _, _) -> Util.format2 "datacon %s : %s" lid.str (typ_to_string t)
   | Sig_val_decl(lid, t, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string t)
   | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string f)
-  | Sig_let(lbs, _) -> lbs_to_string lbs
+  | Sig_let(lbs, _, _) -> lbs_to_string lbs
   | Sig_main(e, _) -> Util.format1 "let _ = %s" (exp_to_string e)
-  | Sig_bundle(ses, _) -> List.map sigelt_to_string ses |> String.concat "\n"
+  | Sig_bundle(ses, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
   | Sig_monads _ -> "monad_lattice { ... }"
 
 let rec sigelt_to_string_short x = match x with 
-  | Sig_let((_, [(Inr l, t, _)]), _) -> Util.format2 "%s : %s" l.str (typ_to_string t) 
+  | Sig_let((_, [(Inr l, t, _)]), _, _) -> Util.format2 "%s : %s" l.str (typ_to_string t) 
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) = 

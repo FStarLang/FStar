@@ -21,6 +21,12 @@ open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Getopt
 
+type debug_level_t = 
+    | Low
+    | Medium
+    | High
+    | Extreme
+
 let show_signatures = Util.mk_ref []
 let norm_then_print = Util.mk_ref true
 let z3_exe = Util.mk_ref "z3.exe"
@@ -28,6 +34,18 @@ let fvdie = Util.mk_ref false
 let z3log = Util.mk_ref false
 let silent=Util.mk_ref false
 let debug=Util.mk_ref []
+let debug_level = Util.mk_ref Low 
+let dlevel = function 
+    | "Low" -> Low
+    | "Medium" -> Medium
+    | "High" -> High
+    | "Extreme" -> Extreme
+    | _ -> failwith "Unrecognized debug level"
+let debug_level_geq l1 l2 = match l2 with 
+    | Low -> true
+    | Medium -> (l1 = Medium || l1 = High || l1 = Extreme)
+    | High -> (l1 = High || l1 = Extreme)
+    | Extreme -> l1 = Extreme 
 let log_types = Util.mk_ref false
 let print_effect_args=Util.mk_ref false
 let print_real_names = Util.mk_ref false
@@ -111,6 +129,7 @@ let specs () : list<Getopt.opt> =
      ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
      ( noshort, "prn", ZeroArgs (fun () -> print_real_names := true), "Print real names---you may want to use this in conjunction with logQueries");
      ( noshort, "debug", OneArg ((fun x -> debug := x::!debug), "module name"), "Print LOTS of debugging information while checking module [arg]");
+     ( noshort, "debug_level", OneArg ((fun x -> debug_level := dlevel x), "Low|Medium|High|Extreme"), "Control the verbosity of debugging info");
      ( noshort, "log_types", ZeroArgs (fun () -> log_types := true), "Print types computed for data/val/let-bindings");
      ( noshort, "print_effect_args", ZeroArgs (fun () -> print_effect_args := true), "Print inferred predicate transformers for all computation types");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");

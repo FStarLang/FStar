@@ -98,4 +98,4 @@ assume val filter: ('a -> bool) -> list 'a -> list 'a
 assume val partition: ('a -> bool) -> list 'a -> (list 'a * list 'a)
 assume val contains: 'a -> list 'a -> PURE.Tot bool
 assume val fold_left2: ('s -> 'a -> 'b -> 's) -> 's -> list 'a -> list 'b -> 's
-
+assume val nth: list 'a -> int -> 'a

@@ -240,7 +240,7 @@ type record = {
 let record_cache : ref<list<record>> = Util.mk_ref []
 
 let extract_record (e:env) = function 
-  | Sig_bundle(sigs, _) -> 
+  | Sig_bundle(sigs, _, _) -> 
     let is_rec = Util.for_some (function 
       | RecordType _ 
       | RecordConstructor _ -> true
@@ -401,7 +401,7 @@ let push_sigelt env s =
         | Some l -> err l
       end in 
   let env, lss = match s with 
-    | Sig_bundle(ses, _) -> env, List.map (fun se -> (lids_of_sigelt se, se)) ses
+    | Sig_bundle(ses, _, _) -> env, List.map (fun se -> (lids_of_sigelt se, se)) ses
     | Sig_monads _ -> 
       let lids = lids_of_sigelt s in
       let env = {env with effect_names=lids@env.effect_names} in 

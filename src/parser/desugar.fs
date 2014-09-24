@@ -1117,7 +1117,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                 (name, Sig_datacon(name, close_typ tps t, tname, quals, rng)))) in
               Sig_tycon(tname, tpars, k, mutuals, constrNames, tags, rng)::constrs
         | _ -> failwith "impossible") in
-      let bundle = Sig_bundle(sigelts, rng) in
+      let bundle = Sig_bundle(sigelts, rng, List.collect Util.lids_of_sigelt sigelts) in
       let env = push_sigelt env0 bundle in
       let data_ops = sigelts |> List.collect (mk_data_ops env) in
       let env = List.fold_left push_sigelt env data_ops in
@@ -1152,7 +1152,10 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | ToplevelLet(isrec, lets) ->
     begin match (compress_exp <| desugar_exp_maybe_top true env (mk_term (Let(isrec, lets, mk_term (Const Const_unit) d.drange Expr)) d.drange Expr)).n with
         | Exp_let(lbs, _) ->
-          let s = Sig_let(lbs, d.drange) in
+          let lids = snd lbs |> List.map (function 
+            | (Inr l, _, _) -> l
+            | _ -> failwith "impossible") in
+          let s = Sig_let(lbs, d.drange, lids) in
           let env = push_sigelt env s in
           env, [s]
         | _ -> failwith "Desugaring a let did not produce a let"
@@ -1175,8 +1178,9 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
 
   | Exception(id, None) ->
     let t = fail_or env  (try_lookup_typ_name env) Const.exn_lid in
-    let se = Sig_datacon(qualify env id, t, Const.exn_lid, [ExceptionConstructor], d.drange) in
-    let se' = Sig_bundle([se], d.drange) in
+    let l = qualify env id in
+    let se = Sig_datacon(l, t, Const.exn_lid, [ExceptionConstructor], d.drange) in
+    let se' = Sig_bundle([se], d.drange, [l]) in
     let env = push_sigelt env se' in
     let data_ops = mk_data_ops env se in
     let env = List.fold_left push_sigelt env data_ops in
@@ -1185,8 +1189,9 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | Exception(id, Some term) ->
     let t = desugar_typ env term in
     let t = mk_Typ_fun([null_v_binder t], mk_Total (fail_or env (try_lookup_typ_name env) Const.exn_lid)) kun d.drange in
-    let se = Sig_datacon(qualify env id, t, Const.exn_lid, [ExceptionConstructor], d.drange) in
-    let se' = Sig_bundle([se], d.drange) in
+    let l = qualify env id in
+    let se = Sig_datacon(l, t, Const.exn_lid, [ExceptionConstructor], d.drange) in
+    let se' = Sig_bundle([se], d.drange, [l]) in
     let env = push_sigelt env se' in
     let data_ops = mk_data_ops env se in
     let env = List.fold_left push_sigelt env data_ops in
@@ -1260,7 +1265,8 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
       {source=qualify env (l.msource);
        target=qualify env (l.mdest);
        lift=t}) in
-    let se = Sig_monads(List.rev msigs, order, d.drange) in
+    let lids = msigs |> List.map (fun m -> m.mname) in
+    let se = Sig_monads(List.rev msigs, order, d.drange, lids) in
     push_sigelt env se, [se]
    
 

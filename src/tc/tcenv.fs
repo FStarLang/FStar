@@ -96,7 +96,9 @@ let bound_vars env =
 let has_interface env l = 
   env.modules |> Util.for_some (fun m -> m.is_interface && lid_equals m.name l)
 
-let debug env = !Options.debug |> Util.for_some (fun x -> env.curmodule.str = x) 
+let debug env (l:Options.debug_level_t) = 
+       !Options.debug |> Util.for_some (fun x -> env.curmodule.str = x) 
+    && Options.debug_level_geq !Options.debug_level l
 let show env = !Options.show_signatures |> Util.for_some (fun x -> env.curmodule.str = x)
 
 let initial_env solver module_lid =
@@ -146,7 +148,7 @@ let wp_sig_aux decls m =
 let wp_signature env m = wp_sig_aux env.lattice.decls m
 
 let build_lattice env se = match se with 
-  | Sig_monads(decls0, order, p) -> 
+  | Sig_monads(decls0, order, p, _) -> 
     let mk_lift b k2 lift_t r wp1 =
       let k2 = Util.subst_kind [Inl(b.v, r)] k2 in
       mk_Typ_app(lift_t, [targ r; targ wp1]) k2 p in
@@ -195,7 +197,7 @@ let build_lattice env se = match se with
   | _ -> env
 
 let rec add_sigelt env se = match se with 
-  | Sig_bundle(ses, _) -> add_sigelts env ses
+  | Sig_bundle(ses, _, _) -> add_sigelts env ses
   | _ -> 
     let lids = lids_of_sigelt se in
     List.iter (fun l -> Util.smap_add env.sigtab l.str se) lids
@@ -251,9 +253,8 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
                 Util.find_map env.gamma (function 
                 | Binding_sig (Sig_monads _) -> None
                 | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl t) else None
-                | Binding_sig (Sig_bundle(ses, _)) -> 
+                | Binding_sig (Sig_bundle(ses, _, _)) -> 
                     Util.find_map ses (fun se -> 
-                        let l = lids_of_sigelt se in
                         if lids_of_sigelt se |> Util.for_some (lid_equals lid)
                         then Some (Inr se)
                         else None)
@@ -288,8 +289,8 @@ let lookup_lid env lid =
     | Inl t
     | Inr (Sig_datacon(_, t, _, _,_))  
     | Inr (Sig_val_decl (_, t, _, _)) 
-    | Inr (Sig_let((_, [(_, t, _)]), _)) -> Some t 
-    | Inr (Sig_let((_, lbs), _)) -> 
+    | Inr (Sig_let((_, [(_, t, _)]), _, _)) -> Some t 
+    | Inr (Sig_let((_, lbs), _, _)) -> 
         Util.find_map lbs (function 
           | (Inl _, _, _) -> failwith "impossible"
           | (Inr lid', t, e) -> 
@@ -357,7 +358,7 @@ let rec push_sigelt en s : env =
     let env0 = en in
     let env = build_lattice ({en with gamma=Binding_sig s::en.gamma}) s in
     let _ = match s with 
-    | Sig_monads(decls, _, _) -> 
+    | Sig_monads(decls, _, _, _) -> 
         decls |> List.iter (fun md -> ignore <| lookup_typ_lid env0 md.mname)
     | _ -> () in
     env
@@ -406,7 +407,7 @@ let binders env : binders =
     | Binding_typ(a, k) -> (t_binder <| bvd_to_bvar_s a k)::out
     | _ -> out) []
 
-let t_binders env : binders = 
+let t_binders env : Microsoft.FStar.Absyn.Syntax.binders = 
   fold_env env (fun out b -> match b with 
     | Binding_var _ -> out
     | Binding_typ(a, k) -> (t_binder <| bvd_to_bvar_s a k)::out

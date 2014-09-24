@@ -64,7 +64,7 @@ and solver_t = {
 }
 
 val bound_vars: env -> list<Util.either<btvar, bvvar>>
-val debug: env -> bool
+val debug: env -> Options.debug_level_t -> bool
 val show: env -> bool
 val initial_env : solver_t -> lident -> env
 val finish_module : env -> modul -> env
@@ -101,7 +101,7 @@ val clear_expected_typ : env -> env*option<typ>
 val fold_env : env -> ('a -> binding -> 'a) -> 'a -> 'a 
 val idents : env -> freevars
 val binders: env -> binders
-val t_binders : env -> binders
+val t_binders : env -> Microsoft.FStar.Absyn.Syntax.binders
 val lidents : env -> list<lident>     
 
 (* operations on monads *)
@@ -110,6 +110,3 @@ val monad_leq: env -> lident -> lident -> option<edge>
 val monad_decl_opt: env -> lident -> option<monad_decl>
 val get_monad_decl: env -> lident -> monad_decl
 val wp_signature: env -> lident -> (btvar * knd)
-
-//(* probably move this to TcUtil *)
-//val quantifier_pattern_env : env -> typ -> env
