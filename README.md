@@ -33,9 +33,9 @@ Directories:
 
      All these binaries are available separately. 
 
-     In order to use F*, you will need to separately download Z3
-     binaries and place them in this directory. You can fetch these
-     binaries from z3.codeplex.com.
+     In order to use F*, you will need to separately download Z3 4.3.1
+     binaries and place them in this directory (or somewhere in your
+     path). You can fetch these binaries from z3.codeplex.com.
      
      
   examples/
