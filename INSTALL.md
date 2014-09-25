@@ -25,8 +25,8 @@ At the moment:
 
   - Install Z3 4.3.1 from sources
 
-          $ wget "https://download-codeplex.sec.s-msft.com/Download/SourceControlFileDownload.ashx?ProjectName=z3&changeSetId=89c1785b73225a1b363c0e485f854613121b70a7" -O z3-4.3.1-89c1785b-src
-          $ unzip z3-4.3.1-89c1785b-src -d z3-4.3.1-89c1785b-src
+          $ wget "https://download-codeplex.sec.s-msft.com/Download/SourceControlFileDownload.ashx?ProjectName=z3&changeSetId=89c1785b73225a1b363c0e485f854613121b70a7" -O z3-4.3.1-89c1785b-src.zip
+          $ unzip z3-4.3.1-89c1785b-src.zip -d z3-4.3.1-89c1785b-src
           $ cd z3-4.3.1-89c1785b-src
           $ autoconf
           $ ./configure
