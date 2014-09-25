@@ -42,4 +42,5 @@ At the moment:
 
   - Try out
 
+          $ mono bin/fstar.exe --prims lib/prims.fst examples/unit-tests/utils.fst
           $ mono bin/fstar.exe --prims lib/prims.fst examples/unit-tests/rec.fst
