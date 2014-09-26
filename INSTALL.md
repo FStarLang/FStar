@@ -44,3 +44,6 @@ At the moment:
 
           $ mono bin/fstar.exe --prims lib/prims.fst examples/unit-tests/utils.fst
           $ mono bin/fstar.exe --prims lib/prims.fst examples/unit-tests/rec.fst
+
+  - There are some known issues with Z3 interfacing (and some workarounds):
+    https://github.com/FStarLang/FStar/issues/7
