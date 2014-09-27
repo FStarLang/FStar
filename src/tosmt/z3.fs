@@ -24,14 +24,21 @@ open Microsoft.FStar.Util
 (* Z3 Specifics                                                             *)
 (****************************************************************************)
 let ini_params = 
-  format1 "/smt2 /in %s \
+  let timeout = 
+    match !Options.z3timeout with
+    | None   -> ""
+    | Some s -> format1 "-T:%s" (string_of_int <| (int_of_string s) / 1000)
+  in
+
+  format1 "-smt2 -in %s \
        AUTO_CONFIG=false \
        MBQI=false \
        MODEL=true \
        MODEL_ON_TIMEOUT=true \
        RELEVANCY=2 \
        ARRAY_DELAY_EXP_AXIOM=false \
-       ARRAY_EXTENSIONAL=false" (match !Options.z3timeout with None -> "" | Some s -> format1 "/T:%s" (string_of_int <| (int_of_string s) / 1000))
+       ARRAY_EXTENSIONAL=false"
+       timeout
 
 type z3status = 
     | SAT 

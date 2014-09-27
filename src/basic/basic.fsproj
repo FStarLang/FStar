@@ -52,6 +52,8 @@
     <Compile Include="profiling.fs" />
     <Compile Include="util.fsi" />
     <Compile Include="util.fs" />
+    <Compile Include="platform.fsi" />
+    <Compile Include="platform.fs" />
     <Compile Include="bytes.fsi" />
     <Compile Include="bytes.fs" />
     <Compile Include="range.fsi" />
