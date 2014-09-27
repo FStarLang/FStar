@@ -29,7 +29,7 @@ type debug_level_t =
 
 let show_signatures = Util.mk_ref []
 let norm_then_print = Util.mk_ref true
-let z3_exe = Util.mk_ref "z3.exe"
+let z3_exe = Util.mk_ref (Platform.exe "z3")
 let fvdie = Util.mk_ref false
 let z3log = Util.mk_ref false
 let silent=Util.mk_ref false
