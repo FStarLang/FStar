@@ -5,11 +5,11 @@ module Microsoft.FStar.Platform
 open Microsoft.FStar
 open System
 
-type system =
+type sys =
 | Windows
 | Posix
 
-let system : system =
+let system : sys =
     match Environment.OSVersion.Platform with
     | PlatformID.MacOSX
     | PlatformID.Unix -> Posix

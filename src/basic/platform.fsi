@@ -1,8 +1,8 @@
 ﻿module Microsoft.FStar.Platform
 
-type system =
+type sys =
 | Windows
 | Posix
 
-val system : system
+val system : sys
 val exe : string -> string

@@ -32,7 +32,6 @@ let ini_params =
 
   format1 "-smt2 -in %s \
        AUTO_CONFIG=false \
-       MBQI=false \
        MODEL=true \
        MODEL_ON_TIMEOUT=true \
        RELEVANCY=2 \

@@ -340,6 +340,7 @@ let rec declToSmt decl = match decl with
 
 and mkPrelude () = 
   let basic =  "(set-option :global-decls false)\n\
+                (set-option :mbqi false)\n\
                 (declare-sort Ref)\n\
                 (declare-fun Ref_constr_id (Ref) Int)\n\
                 \n\
