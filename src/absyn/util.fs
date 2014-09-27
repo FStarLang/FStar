@@ -227,13 +227,13 @@ let subst_of_list (formals:binders) (actuals:args) : subst =
     then List.map2 subst_formal formals actuals |> mk_subst
     else failwith "Ill-formed substitution"
 
-let restrict_subst axs s = s
-//  s |> List.filter (fun b ->
-//    let r = match b with 
-//    | Inl(a, _) -> not (axs |> Util.for_some (function Inr _ -> false | Inl b -> bvd_eq a b))
-//    | Inr(x, _) -> not (axs |> Util.for_some (function Inl _ -> false | Inr y -> bvd_eq x y)) in
-//    //if not r then printfn "Filtering %s\n" (match b with Inl (b, _) -> b.realname.idText | Inr (x, _) -> x.realname.idText);
-//    r) |> mk_subst
+let restrict_subst axs s = //s ... NS: Not clear that it's worth restricting a subst, particularly as we are also alpha converting
+  s |> List.filter (fun b ->
+    let r = match b with 
+    | Inl(a, _) -> not (axs |> Util.for_some (function Inr _ -> false | Inl b -> bvd_eq a b))
+    | Inr(x, _) -> not (axs |> Util.for_some (function Inl _ -> false | Inr y -> bvd_eq x y)) in
+    //if not r then printfn "Filtering %s\n" (match b with Inl (b, _) -> b.realname.idText | Inr (x, _) -> x.realname.idText);
+    r) |> mk_subst
 
 type red_ctrl = {
     stop_if_empty_subst:bool;

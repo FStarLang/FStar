@@ -402,16 +402,16 @@ let clear_expected_typ env = {env with expected_typ=None}, expected_typ env
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
 let binders env : binders = 
-  fold_env env (fun out b -> match b with 
+  List.fold_left (fun out b -> match b with 
     | Binding_var(x, t) -> (v_binder <| bvd_to_bvar_s x t)::out
     | Binding_typ(a, k) -> (t_binder <| bvd_to_bvar_s a k)::out
-    | _ -> out) []
+    | _ -> out) [] env.gamma
 
 let t_binders env : Microsoft.FStar.Absyn.Syntax.binders = 
-  fold_env env (fun out b -> match b with 
+  List.fold_left (fun out b -> match b with 
     | Binding_var _ -> out
     | Binding_typ(a, k) -> (t_binder <| bvd_to_bvar_s a k)::out
-    | _ -> out) []
+    | _ -> out) [] env.gamma 
 
 let idents env : freevars = freevars_of_list (binders env |> List.map fst)
 

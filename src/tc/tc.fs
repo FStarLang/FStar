@@ -173,6 +173,8 @@ and tc_binders env bs =
       let k, g' = tc_kind env a.sort in
       let b = Inl ({a with sort=k}), imp in
       let env' = maybe_push_binding env b in
+      if debug env Options.Extreme 
+      then Util.fprint1 "Introducing binder: %s\n" (Print.binder_to_string b);
       b::bs, env', Tc.Rel.conj_guard g g'
 
     | Inr x ->
@@ -256,7 +258,10 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     w ktype <| mk_Typ_refine(x, phi), ktype, Rel.conj_guard f1 (Tc.Util.close_guard [v_binder x] f2)
 
   | Typ_app(head, args) -> 
-    if debug env Options.Extreme then Util.fprint2 "(%s) Checking type application: %s\n" (Range.string_of_range top.pos) (Print.typ_to_string top);
+    if debug env Options.Extreme then Util.fprint3 "(%s) Checking type application (%s): %s\n" 
+        (Range.string_of_range top.pos)
+        (Util.string_of_int <| List.length args)
+        (Print.typ_to_string top);
     let head, k1, f1 = tc_typ env head in 
     let args, f2 = tc_args env args in
     if debug env Options.Extreme then Util.fprint2 "(%s) Destructing arrow kind: %s\n" (Range.string_of_range top.pos) (Print.kind_to_string k1);
@@ -696,16 +701,19 @@ and tc_exp env e : exp * comp =
   | Exp_let((false, [(x, t, e1)]), e2) -> 
     let env = instantiate_both env in
     let topt = Env.expected_typ env in
+    let top_level = match x with Inr _ -> true | _ -> false in
     let f, env1 = match t.n with 
         | Typ_unknown ->
             let env1, _ = Env.clear_expected_typ env in 
             Trivial, env1 
         | _ -> 
-            if debug env Options.Extreme then  Util.fprint2 "(%s) Checking type annotation %s" (Range.string_of_range top.pos) (Print.typ_to_string t);
-            let t, f = tc_typ_check env t ktype in
-            let t = norm_t env t in
-            let env1 = Tc.Env.set_expected_typ env t in
-            f, env1 in
+            if top_level && not (env.generalize)
+            then Trivial, Tc.Env.set_expected_typ env t //t has already be kind-checked
+            else let t, f = tc_typ_check env t ktype in
+                 if debug env Options.Medium then Util.fprint2 "(%s) Checked type annotation %s" (Range.string_of_range top.pos) (Print.typ_to_string t);
+                 let t = norm_t env t in
+                 let env1 = Tc.Env.set_expected_typ env t in
+                 f, env1 in
 
     let e1, c1 = tc_exp env1 e1 in 
     let c1 = Tc.Util.strengthen_precondition env c1 f in
@@ -741,9 +749,13 @@ and tc_exp env e : exp * comp =
   | Exp_let((true, lbs), e1) ->
     let env = instantiate_both env in
     let env0, topt = Env.clear_expected_typ env in 
+    let is_inner_let = lbs |> Util.for_some (function (Inl _, _, _) -> true (* inner let *) | _ -> false) in
     let lbs, env' = lbs |> List.fold_left (fun (xts, env) (x, t, e) -> 
       let e, t = Tc.Util.extract_lb_annotation true env t e in //NS: pull inline annotation to force the ML monad here; remove once we have better termination checks
-      let t = tc_typ_check_trivial env0 t ktype |> norm_t env in
+      let t = 
+        if not (is_inner_let) && not(env.generalize)
+        then t (* t is already checked *) 
+        else tc_typ_check_trivial env0 t ktype |> norm_t env in
       let tinst = t in
       let env = Env.push_local_binding env (binding_of_lb x tinst) in
       (x, t, e)::xts, env) ([], env0)  in 
@@ -751,7 +763,6 @@ and tc_exp env e : exp * comp =
       let env' = Env.set_expected_typ env' t in
       let e, t = no_guard env <| tc_total_exp env' e in 
       (x, t, e)) in  
-    let is_inner_let = lbs |> Util.for_some (function (Inl _, _, _) -> true (* inner let *) | _ -> false) in
     let lbs = 
         if not env.generalize || is_inner_let
         then lbs
@@ -1081,7 +1092,7 @@ and tc_decl env se = match se with
   
     | Sig_val_decl(lid, t, quals, r) -> 
       let env = Tc.Env.set_range env r in
-      let t = tc_typ_check_trivial env t ktype |> norm_t env in 
+      let t = tc_typ_check_trivial env t ktype |> Tc.Normalize.norm_typ [Normalize.Beta; Normalize.SNComp] env in 
       Tc.Util.check_uvars r t;
       let se = Sig_val_decl(lid, t, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
@@ -1106,7 +1117,10 @@ and tc_decl env se = match se with
             let gen, (lb, t, e) = match Tc.Env.try_lookup_val_decl env l with 
               | None -> gen, lb //                let t = Tc.Util.extract_lb_annotation is_rec env t e in
                                //                (Inr l, t, e) //<--NS: Used to pull out inline annots ... not sure it helps
-              | Some t' -> match t.n with 
+              | Some t' -> 
+                if debug env Options.Medium
+                then Util.fprint2 "Using annotation %s for let binding %s\n" (Print.typ_to_string t') (Print.sli l);
+                match t.n with 
                   | Typ_unknown -> 
                     false, (Inr l, t', e) //explicit annotation; do not generalize
                   | _ -> 
@@ -1163,7 +1177,7 @@ and tc_decl env se = match se with
 and tc_decls (env:Tc.Env.env) ses = 
   let ses, env = List.fold_left (fun (ses, (env:Tc.Env.env)) se ->
   if debug env Options.Low
-  then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string_short se));
+  then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
   let se, env = tc_decl env se in 
   if debug env Options.Medium
   then Util.print_string (Util.format1 "Checked sigelt\n\t%s\n" (Print.sigelt_to_string se));

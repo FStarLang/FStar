@@ -313,7 +313,7 @@ and sn_binders tcenv binders env steps =
  let rec aux out env = function 
     | (Inl a, imp)::rest -> 
        let c = snk tcenv (ke_config a.sort env steps) in
-       let b = Util.gen_bvar_p a.p c.code in
+       let b = Util.bvd_to_bvar_s (Util.freshen_bvd a.v) c.code in
        let btyp = Util.btvar_to_typ b in
        let memo = Util.mk_ref (Some btyp) in
        let b_for_a = T(a.v, (btyp, []), memo) in
@@ -322,7 +322,7 @@ and sn_binders tcenv binders env steps =
 
     | (Inr x, imp)::rest -> 
        let c = sn tcenv (t_config x.sort env steps) in
-       let y = Util.gen_bvar_p x.p c.code in
+       let y = Util.bvd_to_bvar_s (Util.freshen_bvd x.v) c.code in
        let yexp = Util.bvar_to_exp y in
        let memo = Util.mk_ref (Some yexp) in
        let y_for_x = V(x.v, (yexp, []), memo) in
@@ -348,9 +348,9 @@ and sncomp tcenv (cfg:config<comp>) : config<comp> =
       then sncomp tcenv <| with_new_code keffect cfg (mk_Comp <| comp_to_comp_typ (mk_Total t))
       else let t = sn tcenv (with_new_code t.tk cfg t) in
            with_new_code keffect cfg (mk_Total t.code)
-    | Flex(u, t) -> 
-      let tconf = sn tcenv (with_new_code t.tk cfg t) in 
-      {cfg with code=mk_Flex(u, tconf.code)}
+//    | Flex(u, t) -> 
+//      let tconf = sn tcenv (with_new_code t.tk cfg t) in 
+//      {cfg with code=mk_Flex(u, tconf.code)}
 
 and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> = 
   let remake l r eargs = 
@@ -361,7 +361,10 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
   let args = 
     if List.contains SNComp cfg.steps 
     then sn_args tcenv cfg.environment cfg.steps m.effect_args 
-    else m.effect_args in 
+    else let s = subst_of_env cfg.environment in
+         m.effect_args |> List.map (function 
+            | Inl t, imp -> Util.subst_typ s t |> Inl, imp
+            | Inr e, imp -> Util.subst_exp s e |> Inr, imp) in
   if not <| List.contains DeltaComp cfg.steps
   then remake m.effect_name res args
   else match Tc.Env.lookup_typ_abbrev tcenv m.effect_name with

@@ -60,7 +60,7 @@ logic val mk_box : x:'a -> u:unit -> Wys (box 'a)
                                    (Ensures  (fun m1 b m2 => m1==m2 /\ b==Box x m1))
 let mk_box (x:'a) (u:unit) = Box x (get_mode())
 
-logic val unbox: x:box 'a -> u:unit -> Wys 'a 
+logic val unbox: x:box 'a -> u:unit -> Wys 'a
                                      (Requires (fun cur => Subset cur.prins (Box.m x).prins))
                                      (Ensures  (fun m1 a m2 => m1==m2 /\ Box.v x==a))
   
@@ -72,7 +72,7 @@ let unbox (x:box 'a) (u:unit) =
 type wire 'a = PartialMap.t prin 'a
 open PartialMap
 
-logic type CanUnbox ('a:Type) (m:mode) (x:box 'a) = Subset m.prins (Box.m x).prins 
+logic type CanUnbox ('a:Type) (m:mode) (x:box 'a) = Subset m.prins (Box.m x).prins
 
 
 (* val mk_wire : m:mode -> x:box 'a -> Wys (wire 'a) *)
