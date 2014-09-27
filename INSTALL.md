@@ -31,7 +31,6 @@ At the moment:
           $ python scripts/mk_make.py
           $ cd build
           $ make -j4
-          $ ln -s z3 z3.exe
 
   - Compile F* from sources
 
@@ -44,6 +43,3 @@ At the moment:
 
           $ mono bin/fstar.exe --prims lib/prims.fst examples/unit-tests/utils.fst
           $ mono bin/fstar.exe --prims lib/prims.fst examples/unit-tests/rec.fst
-
-  - There are some known issues with Z3 interfacing (and some workarounds):
-    https://github.com/FStarLang/FStar/issues/7
