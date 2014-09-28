@@ -1,7 +1,5 @@
-FStar
-=====
-
-An ML-like language with a type system for program verification
+F*: An ML-like language with a type system for program verification
+===================================================================
 
 
 ### Version 1.0
@@ -20,9 +18,9 @@ see LICENSE for more details.
 
 ### Code structure
 
-#### Files
+This section describes the general structure of the F* verifier.
 
-This note describes the general structure of the F* verifier and its code.
+#### Files
 
   README.md: 
     This file
