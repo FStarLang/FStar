@@ -3,14 +3,32 @@ FStar
 
 An ML-like language with a type system for program verification
 
---------------------------------------------------------------------------------
- 
+
+### Version 1.0
+
+This is a new variant of F* that is still in development and we
+hope will lead to a 1.0 release soon. This new variant is
+incompatible and quite different compared to the previously
+released 0.7 versions.
+
+
+### License
+
+This new variant of F* is released under the Apache 2.0 license;
+see LICENSE for more details.
+
+
+### Code structure
+
+#### Files
+
 This note describes the general structure of the F* verifier and its code.
 
-Files:
-
-  README.txt: 
+  README.md: 
     This file
+
+  INSTALL.md: 
+    Current installation instruction
 
   setenv.sh: 
 
@@ -22,7 +40,7 @@ Files:
     code in F* was written from scratch. However, some 1,330 lines
     of source code were derived from F#, primarily in the lexer.
 
-Directories:
+#### Directories
 
   bin/
 
