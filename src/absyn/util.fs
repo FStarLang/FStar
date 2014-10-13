@@ -214,9 +214,15 @@ let subst_comp' s t = subst_comp (mk_subst s) t
 let subst_binder s = function
     | Inl a, imp -> Inl ({a with sort=subst_kind s a.sort}), imp
     | Inr x, imp -> Inr ({x with sort=subst_typ s x.sort}), imp
+let subst_arg s = function 
+    | Inl t, imp -> Inl (subst_typ s t), imp
+    | Inr e, imp -> Inr (subst_exp s e), imp
 let subst_binders s bs = match s with 
     | [] -> bs
     | _ -> List.map (subst_binder s) bs
+let subst_args s args = match s with 
+    | [] -> args
+    | _ -> List.map (subst_arg s) args
 let subst_formal (f:binder) (a:arg) = match f, a with 
     | (Inl a, _), (Inl t, _) -> Inl(a.v, t)
     | (Inr x, _), (Inr v, _) -> Inr(x.v, v)
@@ -421,6 +427,11 @@ let ml_comp t r =
          flags=[MLEFFECT]})
     
 let total_comp t r = mk_Total t
+
+let comp_set_flags (c:comp) f = match c.n with 
+  | Total _ -> c
+  | Comp ct -> {c with n=Comp ({ct with flags=f})}
+  | _ -> failwith "Impossible"
 
 let comp_flags c = match (compress_comp c).n with 
   | Total _ -> [TOTAL]

@@ -144,7 +144,7 @@ let lookup_free_tvar env a =
     | Some s -> s
 
 let mk_typ_projector_name lid (a:btvdef) = escape <| format2 "%s_%s" (Print.sli lid) a.ppname.idText
-let mk_term_projector_name lid (a:bvvdef) = escape <| format2 "%s_%s" (Print.sli lid) a.ppname.idText
+let mk_term_projector_name lid (a:bvvdef) = escape <| format2 "%s_%s" (Print.sli lid) (Util.unmangle_field_name a.ppname).idText
 let mk_term_projector_name_by_pos lid (i:int) = escape <| format2 "%s_%s" (Print.sli lid) (string_of_int i)
 let mk_typ_projector (lid:lident) (a:btvdef)  : term = 
     mkFreeV(mk_typ_projector_name lid a, Arrow(Term_sort, Type_sort))
@@ -318,7 +318,7 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
         let args, g2 = encode_args env args in
         let tm = args |> List.fold_left (fun out -> function 
             | Inl t -> Term.mk_ApplyTT out t
-            | Inr e -> Term.mk_ApplyEE out e) tt1 in
+            | Inr e -> Term.mk_ApplyTE out e) tt1 in
         tm, g1@g2
 
       | Typ_lam(bs, t) -> 
@@ -346,7 +346,7 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
 
       | Typ_meta _
       | Typ_delayed  _ 
-      | Typ_unknown    -> failwith (format1 "Impossible: %s" (Print.tag_of_typ t))                 
+      | Typ_unknown    -> failwith (format2 "(%s) Impossible: %s" (Range.string_of_range <| t.pos) (Print.tag_of_typ t))                 
        
 and encode_exp (env:env_t) (e:exp) : res =
     let e = Visit.compress_exp_uvars e in 
@@ -557,9 +557,15 @@ and encode_formula (env:env_t) (phi:typ) : res = (* expects phi to be normalized
       let body, g' = encode_formula env body in 
       let pats, _ = encode_fe env pats in
       List.rev vars |> List.map (fun (x, y, _) -> (x,y)), guard, List.rev pats, body, (close vars (g@g')) in
-        
+   
+    if Tc.Env.debug env.tcenv Options.Low
+    then Util.fprint1 ">>>> Destructing as formula ... %s\n" (Print.typ_to_string phi);
+         
     match Util.destruct_typ_as_formula phi with
-        | None -> fallback phi
+        | None -> 
+          if Tc.Env.debug env.tcenv Options.Low
+          then Util.print_string ">>>> Not a formula ... falling back\n";
+          fallback phi
         
         | Some (Util.BaseConn(op, arms)) -> 
           (match connectives |> List.tryFind (fun (l, _) -> lid_equals op l) with 
@@ -567,6 +573,9 @@ and encode_formula (env:env_t) (phi:typ) : res = (* expects phi to be normalized
              | Some (_, f) -> f arms)
 
         | Some (Util.QAll(vars, pats, body)) -> 
+          if Tc.Env.debug env.tcenv Options.Low
+          then Util.fprint1 ">>>> Got QALL [%s]\n" (vars |> Print.binders_to_string "; ");
+
           let vars, guard, pats, body, g = encode_q_body env vars pats body in
           mkForall(pats, vars, mkImp(guard, body)), g
 
@@ -905,7 +914,7 @@ let smt_query (tcenv:Tc.Env.env) (q:typ) : bool =
    let label_suffix = [] in  //labels |> List.fold_left (fun decls (lname, t) -> decls@[Echo lname; Eval t]) theory in
    let r = Caption (Range.string_of_range (Tc.Env.get_range tcenv)) in
    let decls = prelude@decls@(Term.Push::r::env_decls)@Term.Caption "<Query>"::phi_decls@[Term.Assume(mkNot phi, Some "query"); Term.Caption "</Query>"; Term.CheckSat]@label_suffix@[Term.Pop; Term.Echo "Done!"] in
-   Z3.callZ3Exe (Tc.Env.debug tcenv Options.Medium) decls
+   Z3.callZ3Exe (!Options.logQueries) decls
 
 let is_trivial (tcenv:Tc.Env.env) (q:typ) : bool = 
    let e, prelude = cache.prelude_env tcenv in

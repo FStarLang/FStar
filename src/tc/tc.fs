@@ -95,8 +95,8 @@ let value_check_expected_typ env e tc : exp * comp =
      let e, g = Tc.Util.check_and_ascribe env e t t' in
      let c = Tc.Util.strengthen_precondition env c g in
      e, Util.set_result_typ c t' in
-  if debug env Options.Medium 
-  then Util.fprint1 "Return comp type is %s" (Print.comp_typ_to_string <| snd res);
+  if debug env Options.Extreme 
+  then Util.fprint1 "Return comp type is %s\n" (Print.comp_typ_to_string <| snd res);
   res
 
 
@@ -345,7 +345,8 @@ and tc_value env e : exp * comp =
     let t = Env.lookup_bvar env x in
     let e = mk_Exp_bvar({x with sort=t}) t e.pos in
     let e, t = Tc.Util.maybe_instantiate env e t in
-    value_check_expected_typ env e (Inr (mk_Total t))
+    let tc = if !Options.verify then Inl t else Inr (mk_Total t) in
+    value_check_expected_typ env e tc
 
   | Exp_fvar(v, dc) -> 
     let t = Env.lookup_lid env v.v in
@@ -558,10 +559,10 @@ and tc_exp env e : exp * comp =
   | Exp_app(f, args) ->
     let env0 = env in
     let env = Tc.Env.clear_expected_typ env |> fst |> instantiate_both in 
-    if debug env Options.Extreme then Util.fprint2 "(%s) Checking app %s" (Range.string_of_range top.pos) (Print.exp_to_string top);
+    if debug env Options.High then Util.fprint2 "(%s) Checking app %s\n" (Range.string_of_range top.pos) (Print.exp_to_string top);
     let f, cf = tc_exp (no_inst env) f in //Don't instantiate f; instantiations will be computed below, accounting for implicits/explicits
     let tf = Util.comp_result cf in
-    if debug env Options.Extreme then Util.fprint2 "(%s) Type of head is %s" (Range.string_of_range f.pos) (Print.typ_to_string tf);
+    if debug env Options.High then Util.fprint2 "(%s) Type of head is %s\n" (Range.string_of_range f.pos) (Print.comp_typ_to_string cf);
     let rec check_function_app norm tf = match tf.n with 
         | Typ_uvar _
         | Typ_app({n=Typ_uvar _}, _) ->
@@ -620,12 +621,12 @@ and tc_exp env e : exp * comp =
               tc_args (subst, (targ t)::outargs, comps, Rel.conj_guard g g', fvs) rest cres rest'
 
             | (Inr x, _)::rest, (Inr e, _)::rest' -> (* a concrete exp argument *)
-              if debug env Options.Extreme then Util.fprint2 "\tType of arg (before subst (%s)) = %s" (Print.subst_to_string subst) (Print.typ_to_string x.sort);
+              if debug env Options.Extreme then Util.fprint2 "\tType of arg (before subst (%s)) = %s\n" (Print.subst_to_string subst) (Print.typ_to_string x.sort);
               let targ = Util.subst_typ subst x.sort in 
-              if debug env Options.Extreme then  Util.fprint1 "\tType of arg (after subst) = %s" (Print.typ_to_string targ);
+              if debug env Options.Extreme then  Util.fprint1 "\tType of arg (after subst) = %s\n" (Print.typ_to_string targ);
               fxv_check env (Inr targ) fvs;
               let env = Tc.Env.set_expected_typ env targ in
-              if debug env Options.Extreme then  Util.fprint3 "Checking arg (%s) %s at type %s" (Print.tag_of_exp e) (Print.exp_to_string e) (Print.typ_to_string targ);
+              if debug env Options.High then  Util.fprint3 "Checking arg (%s) %s at type %s\n" (Print.tag_of_exp e) (Print.exp_to_string e) (Print.typ_to_string targ);
               let e, c = tc_exp env e in 
               if Util.is_total_comp c 
               then let subst = maybe_extend_subst subst (List.hd bs) (Inr e) in
@@ -642,9 +643,11 @@ and tc_exp env e : exp * comp =
               let cres = match bs with 
                 | [] -> Util.subst_comp subst cres (* full app *)
                 | _ -> mk_Total  (Util.subst_typ subst <| mk_Typ_fun(bs, cres) ktype top.pos) (* partial app *) in
-              let comp = List.fold_left (fun out c -> fst c, Tc.Util.bind env None (snd c) out) (None, cres) comps in
-              let comp = Tc.Util.bind env None cf comp in
+              if debug env Options.High then Util.fprint1 "\t Type of result cres is %s\n" (Print.comp_typ_to_string cres);
+              let comp = List.fold_left (fun out c -> Tc.Util.bind env None (snd c) (fst c, out)) cres comps in
+              let comp = Tc.Util.bind env None cf (None, comp) in
               let comp = Tc.Util.strengthen_precondition env comp g in
+              if debug env Options.High then Util.fprint1 "\t Type of app term is %s\n" (Tc.Normalize.normalize_comp env comp |> Print.comp_typ_to_string);
               mk_Exp_app(f, List.rev outargs) (Util.comp_result comp) top.pos, comp
                
             | (Inr _, _)::_, (Inl _, _)::_ ->

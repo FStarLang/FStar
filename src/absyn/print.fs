@@ -243,7 +243,7 @@ and meta_to_string x = match x with
   | Meta_comp c -> comp_typ_to_string c
   | Meta_uvar_t_app(t, (_,k)) -> (typ_to_string t) 
   | Meta_named(_, l) -> sli l
-  | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (t |> typ_to_string) (args_to_string ps)
+  | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (args_to_string ps) (t |> typ_to_string) 
 
 and kind_to_string x = match (compress_kind x).n with 
   | Kind_lam _ -> failwith "Impossible"

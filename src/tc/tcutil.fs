@@ -470,7 +470,7 @@ let maybe_assume_result_eq_pure_term env (e:exp) (c:comp) : comp =
        let xexp = Util.bvd_to_exp x t in
        let ret = return_value env t xexp in
        let eq_ret = weaken_precondition env ret (NonTrivial (Util.mk_eq xexp e)) in
-       bind env None c (Some (Env.Binding_var(x, t)), eq_ret)
+       comp_set_flags (bind env None c (Some (Env.Binding_var(x, t)), eq_ret)) (comp_flags c)
 
 let refine_data_type env l (formals:binders) (result_t:typ) = 
    match formals with 

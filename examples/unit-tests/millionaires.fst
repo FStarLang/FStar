@@ -42,7 +42,7 @@ val with_mode:  'a:Type
              -> f:(unit -> Wys 'a 'Pre 'Post)
              -> Wys 'a (Requires (fun cur => 'Pre m /\ (if (is_Sec cur.p_or_s == true) then cur.prins==m.prins else Subset cur.prins m.prins)))
                        (Ensures  (fun m1 a m2 => m1==m2 /\ (exists m'. 'Post m a m')))
-let with_mode m f = 
+let with_mode m f =
   let cur = get_mode () in
   (match cur.p_or_s with
    | Sec -> assert (cur.prins == m.prins)
@@ -55,10 +55,10 @@ let with_mode m f =
 type box 'a =
   | Box : v:'a -> m:mode -> box 'a
 
-logic val mk_box : x:'a -> u:unit -> Wys (box 'a)
+logic val mk_box : 'a:Type -> x:'a -> u:unit -> Wys (box 'a)
                                    (Requires (fun m => True))
                                    (Ensures  (fun m1 b m2 => m1==m2 /\ b==Box x m1))
-let mk_box (x:'a) (u:unit) = Box x (get_mode())
+let mk_box ('a:Type) (x:'a) (u:unit) = Box x (get_mode())
 
 logic val unbox: x:box 'a -> u:unit -> Wys 'a
                                      (Requires (fun cur => Subset cur.prins (Box.m x).prins))

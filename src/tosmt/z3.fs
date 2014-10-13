@@ -33,10 +33,7 @@ let ini_params =
   format1 "-smt2 -in %s \
        AUTO_CONFIG=false \
        MODEL=true \
-       MODEL_ON_TIMEOUT=true \
-       RELEVANCY=2 \
-       ARRAY_DELAY_EXP_AXIOM=false \
-       ARRAY_EXTENSIONAL=false"
+       RELEVANCY=2"
        timeout
 
 type z3status = 

@@ -170,9 +170,7 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
         else let s' = no_eta config.steps in
              let args = 
                  if whnf_only config
-                 then config.stack.args |> List.map (function 
-                    | (Inl t, imp), env -> Inl <| Util.subst_typ (subst_of_env env) t, imp
-                    | (Inr v, imp), env -> Inr <| Util.subst_exp (subst_of_env env) v, imp)
+                 then config.stack.args |> List.map (fun (arg, env) -> Util.subst_arg (subst_of_env env) arg) 
                  else config.stack.args |> List.map (function 
                     | (Inl t, imp), env -> Inl <| (sn  tcenv (t_config t env s')).code, imp
                     | (Inr v, imp), env -> Inr <| (wne tcenv (ke_config v env s')).code, imp) in
@@ -301,8 +299,10 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
                   end
 
                 | Typ_meta(Meta_pattern(t, ps)) -> (* no reduction in patterns *)
-                  let c = sn tcenv ({config with code=t}) in
-                  {c with code=wk <| mk_Typ_meta'(Meta_pattern(c.code, ps))}
+                  let pat t = 
+                    let ps = sn_args tcenv config.environment config.steps ps in
+                    wk <| mk_Typ_meta'(Meta_pattern(t, ps)) in
+                  sn tcenv ({config with code=t; close=close_with_config config pat})
     
                 | Typ_meta(Meta_named _)    
                 | Typ_unknown
@@ -362,9 +362,7 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
     if List.contains SNComp cfg.steps 
     then sn_args tcenv cfg.environment cfg.steps m.effect_args 
     else let s = subst_of_env cfg.environment in
-         m.effect_args |> List.map (function 
-            | Inl t, imp -> Util.subst_typ s t |> Inl, imp
-            | Inr e, imp -> Util.subst_exp s e |> Inr, imp) in
+         m.effect_args |> Util.subst_args s in
   if not <| List.contains DeltaComp cfg.steps
   then remake m.effect_name res args
   else match Tc.Env.lookup_typ_abbrev tcenv m.effect_name with
