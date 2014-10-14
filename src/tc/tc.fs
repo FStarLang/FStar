@@ -263,8 +263,8 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
         (Util.string_of_int <| List.length args)
         (Print.typ_to_string top);
     let head, k1, f1 = tc_typ env head in 
-    let args, f2 = tc_args env args in
     if debug env Options.Extreme then Util.fprint2 "(%s) Destructing arrow kind: %s\n" (Range.string_of_range top.pos) (Print.kind_to_string k1);
+    let args, f2 = tc_args env args in
     let imps, formals, kres = Tc.Util.destruct_arrow_kind env head k1 args in
     let rec check_args subst g formals args = match formals, args with 
       | [], [] -> g, Util.subst_kind subst kres
@@ -601,7 +601,9 @@ and tc_exp env e : exp * comp =
             | (Inl a, _)::rest, (Inr e, _)::_ -> (* instantiate a type argument *) 
               let k = Util.subst_kind subst a.sort in
               fxv_check env (Inl k) fvs;
-              let targ = fst <| Tc.Rel.new_tvar e.pos tvars k in
+              let targ = match k.n with 
+                | Kind_type -> fst <| Tc.Rel.new_tvar e.pos tvars k //for base-kinded types, don't depend on values
+                | _ -> fst <| Tc.Rel.new_tvar e.pos vars k in 
               if debug env Options.Extreme then Util.fprint2 "Instantiating %s to %s" (Print.strBvd a.v) (Print.typ_to_string targ);
               let subst = extend_subst (Inl(a.v, targ)) subst in
               tc_args (subst, (Inl targ,true)::outargs, comps, g, fvs) rest cres args
@@ -705,17 +707,18 @@ and tc_exp env e : exp * comp =
     let env = instantiate_both env in
     let topt = Env.expected_typ env in
     let top_level = match x with Inr _ -> true | _ -> false in
+    let env1, _ = Env.clear_expected_typ env in
     let f, env1 = match t.n with 
         | Typ_unknown ->
-            let env1, _ = Env.clear_expected_typ env in 
             Trivial, env1 
         | _ -> 
             if top_level && not (env.generalize)
-            then Trivial, Tc.Env.set_expected_typ env t //t has already be kind-checked
-            else let t, f = tc_typ_check env t ktype in
-                 if debug env Options.Medium then Util.fprint2 "(%s) Checked type annotation %s" (Range.string_of_range top.pos) (Print.typ_to_string t);
-                 let t = norm_t env t in
-                 let env1 = Tc.Env.set_expected_typ env t in
+            then Trivial, Tc.Env.set_expected_typ env1 t //t has already be kind-checked
+            else let _ = if debug env Options.Low then Util.fprint2 "(%s) Checking type annotation %s\n" (Range.string_of_range top.pos) (Print.typ_to_string t) in
+                 let t, f = tc_typ_check env1 t ktype in
+                 if debug env Options.Medium then Util.fprint2 "(%s) Checked type annotation %s\n" (Range.string_of_range top.pos) (Print.typ_to_string t);
+                 let t = norm_t env1 t in
+                 let env1 = Tc.Env.set_expected_typ env1 t in
                  f, env1 in
 
     let e1, c1 = tc_exp env1 e1 in 

@@ -638,7 +638,7 @@ let primitive_type_axioms : lident -> term -> list<decl> =
 let rec encode_sigelt (env:env_t) (se:sigelt) : (decls * env_t) = 
     if Tc.Env.debug env.tcenv Options.Low
     then Util.fprint1 ">>>>Encoding [%s]\n" 
-         <| (Util.lids_of_sigelt se |> List.map Print.sli |> String.concat ", ");
+         <| (Print.sigelt_to_string_short se);//Util.lids_of_sigelt se |> List.map Print.sli |> String.concat ", ");
     let nm = match Util.lid_of_sigelt se with 
         | None -> ""
         | Some l -> l.str in
@@ -910,6 +910,7 @@ let smt_query (tcenv:Tc.Env.env) (q:typ) : bool =
    let decls, env = tcenv.modules |> List.rev |> List.collect (fun m -> if seen m then [] else m.exports) |> encode_signature e in
    cache.cache_env env;
    let env_decls, env = encode_env env tcenv in
+   if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);
    let phi, phi_decls = encode_formula env q in
    let label_suffix = [] in  //labels |> List.fold_left (fun decls (lname, t) -> decls@[Echo lname; Eval t]) theory in
    let r = Caption (Range.string_of_range (Tc.Env.get_range tcenv)) in

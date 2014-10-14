@@ -925,7 +925,7 @@ and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist
             then curry_fun l2 bs1 c1, (bs2, c2) 
             else (bs1, c1), curry_fun l1 bs2 c2 in
         solve_binders env bs1 bs2 rel (TProb(rel, t1, t2)) probs
-        (fun subst subprobs -> solve false env (attempt (CProb(rel, c1, Util.subst_comp subst c2)::subprobs) probs))
+        (fun subst subprobs -> solve false env (attempt (CProb((if !Options.verify then EQ else rel), c1, Util.subst_comp subst c2)::subprobs) probs))
 
       | Typ_lam(bs1, t1'), Typ_lam(bs2, t2') -> 
         solve_binders env bs1 bs2 rel (TProb(rel, t1, t2)) probs

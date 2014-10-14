@@ -36,8 +36,11 @@ let cleanup () =
 let go _ =    
   let finished (mods:list<Syntax.modul>) = 
     if !Options.silent then () else
-      let msg = if !Options.pretype then "Parsed, desugared, and pre-typed module:" else "Parsed and desugared module:" in
-      mods |> List.iter (fun m -> Util.print_string (Util.format2 "%s %s\n" msg (Syntax.text_of_lid m.name))) in
+      let msg = 
+        if !Options.verify then "Verified" 
+        else if !Options.pretype then "Lax type-checked"
+        else "Parsed and desugared" in
+      mods |> List.iter (fun m -> Util.print_string (Util.format2 "%s module: %s\n" msg (Syntax.text_of_lid m.name))) in
   let (res, filenames) = process_args () in
   match res with
     | Help ->

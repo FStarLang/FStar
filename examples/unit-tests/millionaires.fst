@@ -22,72 +22,81 @@ effect Wys ('a:Type) ('Pre:Pre) ('Post:Post 'a) =
 type Requires ('pre:Pre) = 'pre
 type Ensures : #'a:Type => Post 'a => Post 'a = fun ('a:Type) ('post:Post 'a) => 'post
   
-val get_mode : unit -> Wys mode
-                           (Requires (fun h => True))
-                           (Ensures  (fun m0 r m1 => m0==m1 /\ r==m1))
+(* val get_mode : unit -> Wys mode *)
+(*                            (Requires (fun h => True)) *)
+(*                            (Ensures  (fun m0 r m1 => m0==m1 /\ r==m1)) *)
 let get_mode (x:unit) = ST.read moderef
 
 
 (* private *)
-val set_mode : m:mode -> Wys unit
-                             (Requires (fun h => True))
-                             (Ensures  (fun m0 r m1 => m1==m))
+(* val set_mode : m:mode -> Wys unit *)
+(*                              (Requires (fun h => True)) *)
+(*                              (Ensures  (fun m0 r m1 => m1==m)) *)
 let set_mode (m:mode) = ST.write moderef m
 
 
+type CanSetMode (cur:mode) (m:mode) = (if b2t (is_Sec cur.p_or_s) then cur.prins==m.prins else Subset cur.prins m.prins)
 val with_mode:  'a:Type
-             -> 'Pre:(mode => Type)
-             -> 'Post:(mode => 'a => mode => Type)
+             -> 'req_f:(heap => Type)
+             -> 'ens_f:(heap => 'a => heap => Type)
              -> m:mode
-             -> f:(unit -> Wys 'a 'Pre 'Post)
-             -> Wys 'a (Requires (fun cur => 'Pre m /\ (if (is_Sec cur.p_or_s == true) then cur.prins==m.prins else Subset cur.prins m.prins)))
-                       (Ensures  (fun m1 a m2 => m1==m2 /\ (exists m'. 'Post m a m')))
+             -> f:(unit -> ST2 'a 'req_f 'ens_f)
+             -> ST2 'a 
+                   (fun h0 => 
+                          'req_f (UpdHeap h0 moderef m) 
+                          /\ CanSetMode (SelHeap h0 moderef) m)
+                   (fun h0 a h1 => 
+                          (SelHeap h0 moderef == SelHeap h1 moderef)
+                          /\ (exists h1'. 'ens_f (UpdHeap h0 moderef m) a h1' /\ h1==UpdHeap h1' moderef (SelHeap h0 moderef)))
 let with_mode m f =
-  let cur = get_mode () in
+  let cur = ST.read moderef in 
   (match cur.p_or_s with
    | Sec -> assert (cur.prins == m.prins)
    | _ -> assert (Subset cur.prins m.prins));
-  let x0 = set_mode m in
+  let x0 = ST.write moderef m in 
   let res = f () in
-  let x1 = set_mode cur in
+  let x1 = ST.write moderef cur in 
   res
-           
+    
 type box 'a =
   | Box : v:'a -> m:mode -> box 'a
 
-logic val mk_box : 'a:Type -> x:'a -> u:unit -> Wys (box 'a)
-                                   (Requires (fun m => True))
-                                   (Ensures  (fun m1 b m2 => m1==m2 /\ b==Box x m1))
+logic val mk_box : 'a:Type -> x:'a -> u:unit -> ST2 (box 'a)
+                                   (fun h0 => True)
+                                   (fun h0 b h1 => h0==h1 /\ b==Box x (SelHeap h0 moderef))
 let mk_box ('a:Type) (x:'a) (u:unit) = Box x (get_mode())
 
-logic val unbox: x:box 'a -> u:unit -> Wys 'a
-                                     (Requires (fun cur => Subset cur.prins (Box.m x).prins))
-                                     (Ensures  (fun m1 a m2 => m1==m2 /\ Box.v x==a))
+logic type CanUnbox ('a:Type) (m:mode) (x:box 'a) = Subset m.prins (Box.m x).prins
+logic val unbox: x:box 'a -> u:unit -> ST2 'a
+                                     (fun h0 => CanUnbox 'a (SelHeap h0 moderef) x)
+                                     (fun h0 a h1 => h0==h1 /\ Box.v x==a)
   
 let unbox (x:box 'a) (u:unit) =
   let cur = get_mode () in
-  assert (Subset cur.prins (Box.m x).prins);
+  assert (CanUnbox 'a cur x);
   Box.v x
 
 type wire 'a = PartialMap.t prin 'a
 open PartialMap
 
-logic type CanUnbox ('a:Type) (m:mode) (x:box 'a) = Subset m.prins (Box.m x).prins
-
-
-(* val mk_wire : m:mode -> x:box 'a -> Wys (wire 'a) *)
-(*                                         (Requires (fun cur => (if is_Sec m.p_or_s == true *)
-(*                                                                then CanUnbox 'a cur x *)
-(*                                                                else (Subset cur.prins m.prins /\ CanUnbox 'a m x)))) *)
-(*                                         (Ensures (fun m1 w m2 => m1==m2 /\ w==ConstMap m.prins (Box.v x))) *)
+type req_f ('a:Type) (x:box 'a) (h0:heap) = CanUnbox 'a (SelHeap h0 moderef) x
+type ens_f ('a:Type) (m:mode) (x:box 'a) (h0:heap) (w:wire 'a) (h1:heap) = 
+    HeapEq h0 h1 /\ w==ConstMap m.prins (Box.v x)
+val mk_wire : m:mode -> x:box 'a -> ST2 (wire 'a)
+                                        (fun h0 => (if b2t (is_Par m.p_or_s)
+                                                    then (CanSetMode (SelHeap h0 moderef) m /\ CanUnbox 'a m x)
+                                                    else CanUnbox 'a (SelHeap h0 moderef) x))
+                                        (fun h0 w h1 => SelHeap h0 moderef==SelHeap h1 moderef (* HeapEq h0 h1 *)
+                                                        /\ w==ConstMap m.prins (Box.v x))
 let mk_wire (m:mode) (x:box 'a) =
-  let f (u:unit) = ConstMap m.prins (unbox x ()) in
-  match m.p_or_s with
-  | Sec -> f ()
-  | _ -> with_mode m f
+  let f : unit -> ST2 (wire 'a) (req_f 'a x) (ens_f 'a m x) = 
+    fun () -> let y = unbox x () in ConstMap m.prins y in
+  match m.p_or_s with 
+  | Par -> with_mode m f
+  | _ -> f ()
 
 let concat_wires (w1:wire 'a) (w2:wire 'a) =
-  assert (DisjointDom (* prin 'a *) w1 w2);
+  assert (DisjointDom w1 w2);
   Concat w1 w2
 
 let project_wire (w:wire 'a) (p:prin) =
@@ -98,24 +107,26 @@ let project_wire (w:wire 'a) (p:prin) =
    | Par -> assert (SetEqual cur.prins (Singleton p)));
   Sel w p
                                 
-(*--------------------------------------------------------------------------------*)
+(* (\*--------------------------------------------------------------------------------*\) *)
 
-module Millionaires
-open Wysteria
-assume logic val A : prin
-assume logic val B : prin
-assume AB_distinct: A=!=B
+(* module Millionaires *)
+(* open Wysteria *)
+(* assume logic val A : prin *)
+(* assume logic val B : prin *)
+(* assume logic val AB: set prin *)
+(* assume AB_distinct: A=!=B *)
 
-val is_A_richer_than_B : unit -> Wys bool
-                                     (Requires (fun m => m.p_or_s==Par /\ SetEqual m.prins (Union (Singleton A) (Singleton B))))
-                                     (Ensures  (fun m0 res m1 => res == false))
+(* type eq_check =  *)
+(* val is_A_richer_than_B : unit -> Wys bool *)
+(*                                      (Requires (fun m => m.p_or_s==Par /\ SetEqual m.prins (Union (Singleton A) (Singleton B)))) *)
+(*                                      (Ensures  (fun m0 res m1 => res == false)) *)
 
-let is_A_richer_than_B _ =
-  let par_A = {p_or_s=Par; prins=Singleton A} in
-  let par_B = {p_or_s=Par; prins=Singleton B} in
-  let sec_AB = {p_or_s=Sec; prins=Union (Singleton A) (Singleton B)} in
-  let x = with_mode par_A (mk_box 2) in
-  let y = with_mode par_B (mk_box 3) in
-  let z = concat_wires (mk_wire par_A x) (mk_wire par_B y) in
-  let check (u:unit) = project_wire z A > project_wire z B in
-  with_mode sec_AB check
+(* let is_A_richer_than_B _ = *)
+(*   let par_A = {p_or_s=Par; prins=Singleton A} in *)
+(*   let par_B = {p_or_s=Par; prins=Singleton B} in *)
+(*   let sec_AB = {p_or_s=Sec; prins=Union (Singleton A) (Singleton B)} in *)
+(*   let x = with_mode par_A (mk_box 2) in *)
+(*   let y = with_mode par_B (mk_box 3) in *)
+(*   let z = concat_wires (mk_wire par_A x) (mk_wire par_B y) in *)
+(*   let check : unit -> ST2 bool req_check ens_check = fun () -> project_wire z A > project_wire z B in *)
+(*   with_mode sec_AB check *)
