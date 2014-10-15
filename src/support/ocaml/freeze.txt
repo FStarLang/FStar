@@ -1,13 +1,24 @@
 Installed packages for fstar:
 base-bigarray             base  Bigarray library distributed with the OCaml compiler
+base-bytes                base  Bytes library distributed with the OCaml compiler
 base-threads              base  Threads library distributed with the OCaml compiler
 base-unix                 base  Unix library distributed with the OCaml compiler
 batteries                2.3.1  Community-maintained foundation library
 camlp4                  4.02.1  Camlp4 is a system for writing extensible parsers for programming languages
+conf-gmp                     1  Virtual package relying on a GMP lib system installation.
+cstruct                  1.4.0  access C structures via a camlp4 extension
+ctypes                   0.3.3  Combinators for binding to C libraries without writing any C.
+fileutils                0.4.4  Library to provide pure OCaml functions to manipulate real file (POSIX like) and filename.
 menhir                20140422  LR(1) parser generator
 oasis                    0.4.4  Architecture for building OCaml libraries and applications
 ocaml-data-notation     0.0.11  Store data using OCaml notation
 ocamlfind                1.5.3  A library manager for OCaml
 ocamlify                 0.0.1  Include files in OCaml code
 ocamlmod                 0.0.7  Generate OCaml modules from source files
+ocplib-endian              0.7  Optimised functions to read and write int16/32/64 from strings and bigarrays, based on new primitives added in version 4.01.
+optcomp                    1.6  Optional compilation with cpp-like directives
+ounit                    2.0.0  Unit testing framework loosely based on HUnit. It is similar to JUnit, and other XUnit testing frameworks
+sexplib              112.01.00  Library for serializing OCaml values to and from S-expressions
+sqlite3-ocaml            2.0.7  sqlite3-ocaml - SQLite3 bindings
 type_conv            112.01.00  Library for building type-driven syntax extensions
+zarith                     1.3  Implements arithmetic and logical operations over arbitrary-precision integers
