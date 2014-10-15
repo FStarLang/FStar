@@ -103,6 +103,8 @@ val replace_char: string -> char -> char -> string
 val replace_string: string -> string -> string -> string
 val hashcode: string -> int
 val compare: string -> string -> int
+val splitlines: string -> list<string>
+val split: string -> string -> list<string>
 
 type either<'a,'b> =
   | Inl of 'a
@@ -125,6 +127,7 @@ val multiset_equiv: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 
 val is_some: option<'a> -> bool
 val must: option<'a> -> 'a
+val dflt: 'a -> option<'a> -> 'a
 val find_opt: ('a -> bool) -> list<'a> -> option<'a>
 val bind_opt: option<'a> -> ('a -> option<'b>) -> option<'b>
 val map_opt: option<'a> -> ('a -> 'b) -> option<'b>

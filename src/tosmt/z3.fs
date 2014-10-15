@@ -23,6 +23,45 @@ open Microsoft.FStar.Util
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
 (****************************************************************************)
+type z3version =
+| Z3V_Unknown
+| Z3V of int * int * int
+
+let z3v_compare known (w1, w2, w3) =
+    match known with
+    | Z3V_Unknown -> None
+    | Z3V (k1, k2, k3) -> Some(
+        if k1 <> w1 then w1 - k1 else
+        if k2 <> w2 then w2 - k2 else
+        w3 - k3
+    )
+
+let z3v_le known wanted =
+    match z3v_compare known wanted with
+    | None   -> false
+    | Some i -> i <= 0
+
+let _z3version = ref (None : option<z3version>)
+
+let get_z3version () =
+    let prefix = "Z3 version " in
+
+    match !_z3version with
+    | Some version -> version
+    | None ->
+        let _, out, _ = Util.run_proc !Options.z3_exe "-version" "" in
+        let out =
+            match splitlines out with
+            | x :: _ when starts_with x prefix ->
+                let x = trim_string (substring_from x (String.length prefix)) in
+                let x = try List.map int_of_string (split x ".") with _ -> [] in
+                match x with
+                | [i1; i2; i3] -> Z3V (i1, i2, i3)
+                | _ -> Z3V_Unknown
+            | _ -> Z3V_Unknown
+        in
+            _z3version := Some out; out
+
 let ini_params = 
   let timeout = 
     match !Options.z3timeout with
@@ -30,11 +69,16 @@ let ini_params =
     | Some s -> format1 "-T:%s" (string_of_int <| (int_of_string s) / 1000)
   in
 
-  format1 "-smt2 -in %s \
-       AUTO_CONFIG=false \
-       MODEL=true \
-       RELEVANCY=2"
-       timeout
+  let relevancy =
+    if   z3v_le (get_z3version ()) (4, 3, 1)
+    then "RELEVANCY"
+    else "SMT.RELEVANCY"
+  in
+  format2 "-smt2 -in %s \
+    AUTO_CONFIG=false \
+    MODEL=true \
+    %s=2"
+    timeout relevancy
 
 type z3status = 
     | SAT 
@@ -48,7 +92,7 @@ let status_to_string = function
     | UNKNOWN -> "unknown"
     | TIMEOUT -> "timeout"
 
-let z3proc = 
+let z3proc =
     let cond (s:string) = Util.trim_string s = "Done!" in
     Util.start_process (!Options.z3_exe) ini_params cond 
 
