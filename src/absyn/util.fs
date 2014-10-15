@@ -469,6 +469,14 @@ let is_trivial_wp c =
 (********************************************************************************)
 (****************Simple utils on the local structure of a term ******************)
 (********************************************************************************)
+let rec is_atom e = match (compress_exp e).n with
+    | Exp_bvar _ 
+    | Exp_fvar _ 
+    | Exp_constant _ -> true
+    | Exp_meta (Meta_desugared(e, _))
+    | Exp_meta (Meta_datainst(e, _)) -> is_atom e
+    | _ -> false
+     
 let primops = 
   [Const.op_Eq;
    Const.op_notEq;

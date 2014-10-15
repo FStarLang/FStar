@@ -185,5 +185,15 @@ BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSM
 boot: $(BOOT_ALL)
 	../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
+test: boot
+	echo "--------Unit1: Expect two failing assertions--------------"
+	make -C ../examples/unit-tests unit1.ver 
+	echo "--------Unit1: Expect two failing assertions--------------"
+	echo "--------TestSet: Expect three failing assertions----------"
+	make -C ../examples/unit-tests testset.ver
+	echo "--------TestSet: Expect three failing assertions----------"
+	make -C ../examples/unit-tests millionaires
+	make -C ../../../miTLS/ML
+
 wc-boot:
 	wc -l $(BOOT_ALL)

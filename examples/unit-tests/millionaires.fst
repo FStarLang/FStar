@@ -84,7 +84,7 @@ val mk_wire : 'a:Type -> m:mode -> x:box 'a -> ST (wire 'a)
                                                         /\ w==ConstMap m.prins (Box.v x))
 let mk_wire ('a:Type) m x =
   let f : unit -> ST (wire 'a) (req_f 'a x) (ens_f 'a m x) = (* TODO, should infer an ST type automatically *)
-    fun () -> let y = unbox x () in ConstMap m.prins y in     (* TODO: Should be able to remove the explicit let-binding here *)
+    fun () -> ConstMap m.prins (unbox x ()) in   
   match m.p_or_s with 
     | Par -> with_mode m f
     | _ -> f ()
@@ -170,7 +170,8 @@ let is_A_richer_than_B _ =
   let y = with_mode par_B (mk_box 3) in
   let z = concat_wires (mk_wire par_A x) (mk_wire par_B y) in
   let check : unit -> ST bool (req_check z) ens_check = fun () -> (* XXX TODO, should infer an ST type automatically *)
-    let zA = project_wire z A in (* TODO: remove this let-binding *)
-    let zB = project_wire z B in (* TODO: remove this let-binding *)
-    zA > zB in
+    project_wire z A > project_wire z B in
+    (* let zA = project_wire z A in (\* TODO: remove this let-binding *\) *)
+    (* let zB = project_wire z B in (\* TODO: remove this let-binding *\) *)
+    (* zA > zB in *)
   with_mode sec_AB check

@@ -107,3 +107,15 @@ let dup_pure x = (x,x)
 val dup_pure_eq: x:'a -> Pure ('a * 'a) True (fun y => MkTuple2._1 y==MkTuple2._2 y)
 let dup_pure_eq x = (x,x)
 
+(* the programs below are equivalent---see the refinement of the result in tc.fs/Exp_app case. *)
+assume val get_0: unit -> ST int (fun _h => True) (fun _h i _h' => i==0)
+assume val get_1: unit -> ST int (fun _h => True) (fun _h i _h' => i==1)
+val get_false: unit -> ST bool (fun _h => True) (fun _h b _h' => b==false)
+let get_false u = get_0 () > get_1 ()
+
+val get_false_ANF: unit -> ST bool (fun _h => True) (fun _h b _h' => b==false)
+let get_false_ANF u =
+  let x = get_0 () in
+  let y = get_1 () in
+  x > y
+

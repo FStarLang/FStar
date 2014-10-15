@@ -81,30 +81,30 @@ val kill_all: unit -> unit
 
 val run_proc : string -> string -> string -> (bool * string * string)
 
-val int_of_string:   string -> int
-val int_of_char:   char -> int
-val char_of_int:   int -> char
-val uint16_of_int: int -> uint16
-val float_of_byte: byte -> float
-val float_of_int32: int32 -> float
-val float_of_int64: int64 -> float
-val string_of_int:   int -> string
-val string_of_float: float -> string
-val string_of_char:  char -> string
-val string_of_bytes: array<byte> -> string
-val starts_with: string -> string -> bool
-val trim_string: string -> string
-val ends_with: string -> string -> bool
+val int_of_string: string -> int
+val int_of_char:   char -> Tot<int>
+val char_of_int:   int -> Tot<char>
+val uint16_of_int: int -> Tot<uint16>
+val float_of_byte: byte -> Tot<float>
+val float_of_int32: int32 -> Tot<float>
+val float_of_int64: int64 -> Tot<float>
+val string_of_int:   int -> Tot<string>
+val string_of_float: float -> Tot<string>
+val string_of_char:  char -> Tot<string>
+val string_of_bytes: array<byte> -> Tot<string>
+val starts_with: string -> string -> Tot<bool>
+val trim_string: string -> Tot<string>
+val ends_with: string -> string -> Tot<bool>
 val char_at: string -> int -> char
-val is_upper: char -> bool
+val is_upper: char -> Tot<bool>
 val substring_from: string -> int -> string
 val substring: string -> int -> int -> string
-val replace_char: string -> char -> char -> string
-val replace_string: string -> string -> string -> string
-val hashcode: string -> int
-val compare: string -> string -> int
-val splitlines: string -> list<string>
-val split: string -> string -> list<string>
+val replace_char: string -> char -> char -> Tot<string>
+val replace_string: string -> string -> string -> Tot<string>
+val hashcode: string -> Tot<int>
+val compare: string -> string -> Tot<int>
+val splitlines: string -> Tot<list<string>>
+val split: string -> string -> Tot<list<string>>
 
 type either<'a,'b> =
   | Inl of 'a
@@ -125,20 +125,20 @@ val for_some: ('a -> bool) -> list<'a> -> bool
 val forall_exists: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 val multiset_equiv: ('a -> 'b -> bool) -> list<'a> -> list<'b> -> bool
 
-val is_some: option<'a> -> bool
+val is_some: option<'a> -> Tot<bool>
 val must: option<'a> -> 'a
-val dflt: 'a -> option<'a> -> 'a
+val dflt: 'a -> option<'a> -> Tot<'a>
 val find_opt: ('a -> bool) -> list<'a> -> option<'a>
 val bind_opt: option<'a> -> ('a -> option<'b>) -> option<'b>
 val map_opt: option<'a> -> ('a -> 'b) -> option<'b>
 
-val first_N: int -> list<'a> -> (list<'a> * list<'a>)
-val prefix: list<'a> -> (list<'a> * 'a)
+val first_N: int -> list<'a> -> Tot<(list<'a> * list<'a>)>
+val prefix: list<'a> -> Tot<(list<'a> * 'a)>
 
-val string_of_unicode: array<byte> -> string
-val unicode_of_string: string -> array<byte>
+val string_of_unicode: array<byte> -> Tot<string>
+val unicode_of_string: string -> Tot<array<byte>>
 val incr: ref<int> -> unit
-val geq: int -> int -> bool
+val geq: int -> int -> Tot<bool>
 val for_range: int -> int -> (int -> unit) -> unit
 
 (* A simple state monad *)

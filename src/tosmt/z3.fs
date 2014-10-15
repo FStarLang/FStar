@@ -41,7 +41,7 @@ let z3v_le known wanted =
     | None   -> false
     | Some i -> i >= 0
 
-let _z3version = ref (None : option<z3version>)
+let _z3version : ref<option<z3version>> = Util.mk_ref None
 
 let get_z3version () =
     let prefix = "Z3 version " in
