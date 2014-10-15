@@ -21,3 +21,9 @@
 /bin/z3-x86.exe
 /bin/z3-x64.exe
 /src/*/obj
+
+attic/
+_build/
+
+*.native*
+*.byte*
