@@ -5,8 +5,6 @@
 *.suo
 
 /VS/packages
-*-10.sln
-*-10.fsproj
 
 /src/parser/parse.fs
 /src/parser/parse.fsi
@@ -19,5 +17,7 @@
 /bin/*.config
 /bin/fstar.exe
 /bin/tests.exe
+/bin/z3.exe
 /bin/z3-x86.exe
+/bin/z3-x64.exe
 /src/*/obj
