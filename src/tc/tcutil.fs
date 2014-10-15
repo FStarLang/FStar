@@ -260,7 +260,7 @@ let mk_comp md result wp wlp flags =
 
 let return_value env t v = 
   (match (compress_typ t).n with
-    | Typ_fun _ -> failwith "Returning a function!"
+    | Typ_fun _ -> failwith (Util.format1 "(%s): Returning a function!" (Range.string_of_range (Env.get_range env)))
     | _ -> ());
   let c = match Tc.Env.monad_decl_opt env Const.pure_effect_lid with 
     | None -> mk_Total t 
@@ -463,7 +463,10 @@ let check_comp env (e:exp) (c:comp) (c':comp) : exp * comp * guard_t =
 
 let maybe_assume_result_eq_pure_term env (e:exp) (c:comp) : comp = 
   if not (is_pure env c) then c
-  else let c = Tc.Normalize.weak_norm_comp env c in
+  else match (compress_typ (Util.comp_result c)).n with 
+    | Typ_fun _ -> c (* no need to include equalities for functions *)
+    | _ -> 
+       let c = Tc.Normalize.weak_norm_comp env c in
        let t = c.result_typ in
        let c = mk_Comp c in 
        let x = Util.new_bvd None in

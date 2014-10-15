@@ -105,6 +105,7 @@ assume InHeap1:  forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (InHeap (
 assume InHeap2:  forall ('a:Type) ('b:Type) (h:heap) (x:ref 'a) (y:ref 'b) (v:'b).{:pattern (InHeap (UpdHeap h y v) x)} y=!=x ==> InHeap (UpdHeap h y v) x == InHeap h x
 assume HeapEqDef:    forall (h1:heap) (h2:heap).{:pattern HeapEq h1 h2} (forall ('a:Type) (r:ref 'a). SelHeap h1 r == SelHeap h2 r) ==> HeapEq h1 h2
 assume HeapEqExt:    forall (h1:heap) (h2:heap).{:pattern HeapEq h1 h2} HeapEq h1 h2 ==> h1==h2
+assume HeapEqRefl:   forall (h:heap).{:pattern HeapEq h h} HeapEq h h
 
 assume type set : Type => Type
 assume logic val EmptySet : 'a:Type -> Tot (set 'a)
@@ -114,13 +115,13 @@ assume logic val Intersection : 'a:Type -> set 'a -> set 'a -> Tot (set 'a)
 logic type InSet : #'a:Type => 'a => set 'a => Type
 logic type SetEqual : #'a:Type => set 'a => set 'a => Type
 logic type Subset : #'a:Type => set 'a => set 'a => Type
-type SubsetEq : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => (SetEqual s1 s2 \/ Subset s1 s2)
-type Supset   : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => Subset s2 s1
-type SupsetEq : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => (SetEqual s1 s2 \/ Supset s1 s2)
+logic type SubsetEq : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => (SetEqual s1 s2 \/ Subset s1 s2)
+logic type Supset   : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => Subset s2 s1
+logic type SupsetEq : #'a:Type => set 'a => set 'a => Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) => (SetEqual s1 s2 \/ Supset s1 s2)
 assume InEmptySet:     forall 'a (a:'a).{:pattern InSet a EmptySet} ~(InSet a EmptySet)
 assume InSingleton:    forall 'a (a:'a).{:pattern InSet a (Singleton a)} InSet a (Singleton a)
 assume InSingletonInv: forall 'a (a:'a) (b:'a).{:pattern InSet a (Singleton b)} InSet a (Singleton b) <==> a==b
-assume InUnion:        forall 'a s1 s2 (a:'a).{:pattern InSet a (Union s1 s2)} InSet a (Union s1 s2) <==> (InSet a s1 \/ InSet a s1)
+assume InUnion:        forall 'a s1 s2 (a:'a).{:pattern InSet a (Union s1 s2)} InSet a (Union s1 s2) <==> (InSet a s1 \/ InSet a s2)
 assume InUnionL:       forall 'a s1 s2 (a:'a).{:pattern InSet a (Union s1 s2)} InSet a s1 ==> InSet a (Union s1 s2)
 assume InUnionR:       forall 'a s1 s2 (a:'a).{:pattern InSet a (Union s1 s2)} InSet a s2 ==> InSet a (Union s1 s2)
 assume UnionIdemL:     forall 'a (s1:set 'a) (s2:set 'a).{:pattern Union (Union s1 s2) s2} Union (Union s1 s2) s2 == Union s1 s2
@@ -130,8 +131,9 @@ assume InInter:        forall 'a s1 s2 (a:'a). InSet a (Intersection s1 s2) <==>
 assume InterIdemL:     forall 'a (s1:set 'a) (s2:set 'a).{:pattern Intersection (Intersection s1 s2) s2}  Intersection (Intersection s1 s2) s2 == Intersection s1 s2
 assume InterdemR:      forall 'a (s1:set 'a) (s2:set 'a).{:pattern Intersection s1 (Intersection s1 s2)} Intersection s1 (Intersection s1 s2) == Intersection s1 s2
 assume SetEqualDef:    forall 'a (s1:set 'a) (s2:set 'a).{:pattern SetEqual s1 s2} (forall (a:'a). InSet a s1 <==> InSet a s2) ==> SetEqual s1 s2 
-assume SeqEqualExt:    forall 'a (s1:set 'a) (s2:set 'a).{:pattern SetEqual s1 s2} SetEqual s1 s2 ==> s1==s2
-assume SubsetDef:      forall 'a (s1:set 'a) (s2:set 'a).{:pattern Subset s1 s2} (forall (a:'a). InSet a s1 ==> InSet a s2) ==> Subset s1 s2 
+assume SetEqualExt:    forall 'a (s1:set 'a) (s2:set 'a).{:pattern SetEqual s1 s2} SetEqual s1 s2 ==> s1==s2
+assume SetEqualExt:    forall 'a (s:set 'a).{:pattern SetEqual s s} SetEqual s s
+assume SubsetDef:      forall 'a (s1:set 'a) (s2:set 'a).{:pattern Subset s1 s2} (forall (a:'a).{:pattern InSet a s1} InSet a s1 ==> InSet a s2) ==> Subset s1 s2 
 
 type aref = 
   | Ref : 'a:Type -> r:ref 'a -> aref
@@ -176,11 +178,11 @@ monad_lattice {
              type null_wp ('a:Type) ('p:Post 'a) (h:heap) = (forall (x:'a) (h':heap). 'p x h')
              type trivial ('a:Type) ('wp:WP 'a) = (forall h0. 'wp (fun r h1 => True) h0)
              with State ('a:Type) ('wp:WP 'a) = STATE 'a 'wp 'wp
-             and ST2 ('a:Type) ('pre:Pre) ('post: heap => Post 'a) =
+             and ST ('a:Type) ('pre:Pre) ('post: heap => Post 'a) =
                  STATE 'a
                    (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall a h1. ('pre h /\ 'post h a h1) ==> 'p a h1)) (* WP *)
                    (fun ('p:Post 'a) (h:heap) => (forall a h1. ('pre h /\ 'post h a h1) ==> 'p a h1))           (* WLP *)
-             and ST ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) =
+             and ST2 ('a:Type) ('pre:Pre) ('post: heap => Post 'a) (mods:refs) =
                  STATE 'a
                    (fun ('p:Post 'a) (h:heap) => 'pre h /\ (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1)) (* WP *)
                    (fun ('p:Post 'a) (h:heap) => (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1))           (* WLP *)
@@ -476,6 +478,7 @@ type list 'cc =
 assume val fst : ('a * 'b) -> Tot 'a
 assume val snd : ('a * 'b) -> Tot 'b
 assume val Assume: 'P:Type -> unit -> (y:unit{'P})
+assume val admit: 'P:Type -> unit -> Pure unit True (fun x => 'P)
 (* assume val Assert : 'P:Type -> x:unit{'P} -> y:unit{'P} *)
 assume val Assert : 'P:Type -> unit -> Pure unit 'P (fun (x:unit) => True)
 assume val lemma : 'P:Type -> x:unit{'P} -> z:unit{'P}

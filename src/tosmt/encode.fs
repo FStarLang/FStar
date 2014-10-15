@@ -660,7 +660,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
                 ((xxsym, Term_sort)::vars, env, t)) ([], env, tt) in
        List.rev vars, app, env in
     match se with
-     | Sig_typ_abbrev(_, _, _, _, [Effect], _) -> [], env
+     | Sig_typ_abbrev(_, _, _, _, [Effect], _) 
+     | Sig_typ_abbrev(_, _, _, _, [Logic], _) -> [], env
 
      | Sig_typ_abbrev(lid, tps, _, t, tags, _) -> 
         let tsym, tt, env = gen_free_tvar env lid in 

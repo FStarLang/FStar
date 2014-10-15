@@ -11,7 +11,7 @@ prims:
 	$(FSTAR)  
 
 millionaires:
-	$(FSTAR) $(FSTAR_HOME)/lib/st.fst $(FSTAR_HOME)/lib/partialmap.fst millionaires.fst
+	$(FSTAR) --verify $(FSTAR_HOME)/lib/st.fst $(FSTAR_HOME)/lib/partialmap.fst millionaires.fst
 
 utils:
 	$(FSTAR)  --codegen OCaml --prims prims.fst utils.fst
