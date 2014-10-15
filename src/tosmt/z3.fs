@@ -52,12 +52,13 @@ let get_z3version () =
         let _, out, _ = Util.run_proc !Options.z3_exe "-version" "" in
         let out =
             match splitlines out with
-            | x :: _ when starts_with x prefix ->
+            | x :: _ when starts_with x prefix -> begin
                 let x = trim_string (substring_from x (String.length prefix)) in
                 let x = try List.map int_of_string (split x ".") with _ -> [] in
                 match x with
                 | [i1; i2; i3] -> Z3V (i1, i2, i3)
                 | _ -> Z3V_Unknown
+            end
             | _ -> Z3V_Unknown
         in
             _z3version := Some out; out
