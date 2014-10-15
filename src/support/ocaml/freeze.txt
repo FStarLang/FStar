@@ -1,0 +1,13 @@
+Installed packages for fstar:
+base-bigarray             base  Bigarray library distributed with the OCaml compiler
+base-threads              base  Threads library distributed with the OCaml compiler
+base-unix                 base  Unix library distributed with the OCaml compiler
+batteries                2.3.1  Community-maintained foundation library
+camlp4                  4.02.1  Camlp4 is a system for writing extensible parsers for programming languages
+menhir                20140422  LR(1) parser generator
+oasis                    0.4.4  Architecture for building OCaml libraries and applications
+ocaml-data-notation     0.0.11  Store data using OCaml notation
+ocamlfind                1.5.3  A library manager for OCaml
+ocamlify                 0.0.1  Include files in OCaml code
+ocamlmod                 0.0.7  Generate OCaml modules from source files
+type_conv            112.01.00  Library for building type-driven syntax extensions
