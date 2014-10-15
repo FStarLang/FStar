@@ -7,4 +7,4 @@ true : bin_annot
 
 # --------------------------------------------------------------------
 <src>   : include
-<src/*> : package(batteries), package(menhirLib)
+<src/*> : package(menhirLib), package(fstar)

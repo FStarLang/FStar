@@ -13,7 +13,7 @@ OCAMLBUILD := $(OCAMLBUILD_BIN) $(OCAMLBUILD_EXTRA)
 AOUT = FSLangTest
 
 # --------------------------------------------------------------------
-.PHONY: all build byte native clean
+.PHONY: all build byte native clean fstar-lib
 
 all: build
 	@true
@@ -33,3 +33,8 @@ native:
 clean:
 	$(OCAMLBUILD) -clean
 	rm -f $(AOUT).native* $(AOUT).byte*
+
+fstar-lib:
+	for i in uninstall build install; do \
+	  $(MAKE) -C ../fstar-lib $$i; \
+	done
