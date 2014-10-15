@@ -171,7 +171,4 @@ let is_A_richer_than_B _ =
   let z = concat_wires (mk_wire par_A x) (mk_wire par_B y) in
   let check : unit -> ST bool (req_check z) ens_check = fun () -> (* XXX TODO, should infer an ST type automatically *)
     project_wire z A > project_wire z B in
-    (* let zA = project_wire z A in (\* TODO: remove this let-binding *\) *)
-    (* let zB = project_wire z B in (\* TODO: remove this let-binding *\) *)
-    (* zA > zB in *)
   with_mode sec_AB check
