@@ -39,7 +39,7 @@ let z3v_compare known (w1, w2, w3) =
 let z3v_le known wanted =
     match z3v_compare known wanted with
     | None   -> false
-    | Some i -> i <= 0
+    | Some i -> i >= 0
 
 let _z3version = ref (None : option<z3version>)
 
