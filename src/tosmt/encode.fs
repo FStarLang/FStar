@@ -380,6 +380,7 @@ and encode_typ (env:env_t) (t:typ) : res = (* expects t to be in normal form alr
        
 and encode_exp (env:env_t) (e:exp) : res =
     let e = Visit.compress_exp_uvars e in 
+    let e0 = e in
     let encode_const = function 
         | Const_unit -> mk_Term_unit, []
         | Const_bool true -> boxBool mkTrue, []
@@ -449,12 +450,16 @@ and encode_exp (env:env_t) (e:exp) : res =
         
         begin match (Util.compress_exp e).n with 
             | Exp_fvar(fv, false) -> 
-                (match Util.function_formals fv.sort with 
-                    | None -> failwith "Impossible"
-                    | Some (formals, _) -> 
-                      if List.length formals = List.length args
-                      then encode_full_app fv
-                      else encode_partial_app ())
+                if not <| !Options.z3_optimize_full_applications
+                then encode_partial_app()
+                else
+                    (match Util.function_formals e.tk with 
+                        | None -> failwith (Util.format3 "(%s) term is %s; head type is %s\n" 
+                                           (Range.string_of_range e0.pos) (Print.exp_to_string e0) (Print.typ_to_string e.tk))
+                        | Some (formals, _) -> 
+                          if List.length formals = List.length args
+                          then encode_full_app fv
+                          else encode_partial_app ())
             | _ -> encode_partial_app ()
         end
 
@@ -739,37 +744,39 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
                 | Inl _, _ -> Type_sort
                 | Inr _, _ -> Term_sort) in
              let vname_decl = Term.DeclFun(vname, vname_arg_sorts, Term_sort, None) in
-             let vtok_app, vars = formals |> List.fold_left (fun (tm, vars) formal -> match formal with 
+             let vtok_app, vars_rev = formals |> List.fold_left (fun (tm, vars) formal -> match formal with 
                 | Inl a, _ -> let aasym, aa, _ = gen_typ_var env a.v in (Term.mk_ApplyET tm aa, (aasym, Type_sort)::vars) 
                 | Inr x, _ -> 
                     let xxsym, xx = if is_null_binder formal
                                     then fresh_bvar "x" Term_sort
                                     else let xxsym, xx, _ = gen_term_var env x.v in xxsym, xx in 
                    (Term.mk_ApplyEE tm xx, (xxsym, Term_sort)::vars)) (vtok, []) in
-             let vars = List.rev vars in
+             let vars = List.rev vars_rev in
              let vname_app = Term.mkApp(vname, List.map Term.mkBoundV vars) in
              let name_tok_corr = 
                  Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vname_app)), Some (format1 "val %s" (Print.sli lid))) in
+             let vapp, opt_decls = if !Options.z3_optimize_full_applications 
+                                   then vname_app, [vname_decl; name_tok_corr] 
+                                   else vtok_app, [] in
              let eqAx = quals |> List.collect (function 
                 | Discriminator d -> 
-                    let xxsym, _ = List.hd vars in
+                    let xxsym, _ = List.hd vars_rev in
                     let xx = mkBoundV(xxsym, Term_sort) in
-                    [Term.Assume(mkForall([vname_app], vars,
-                                            mkEq(vname_app, Term.boxBool <| Term.mk_tester (Print.sli d) xx)), None)]
+                    [Term.Assume(mkForall([vapp], vars,
+                                            mkEq(vapp, Term.boxBool <| Term.mk_tester (Print.sli d) xx)), None)]
 
                 | Projector(d, Inr f) -> 
-                    let xxsym, _ = List.hd vars in
+                    let xxsym, _ = List.hd vars_rev in
                     let xx = mkBoundV(xxsym, Term_sort) in
-                    [Term.Assume(mkForall([vname_app], List.rev vars,
-                                          mkEq(vname_app, Term.mkApp(mk_term_projector_name d f, [xx]))), None)]
+                    [Term.Assume(mkForall([vapp], vars,
+                                          mkEq(vapp, Term.mkApp(mk_term_projector_name d f, [xx]))), None)]
                 | _ -> []) in
              let g = match eqAx with 
                 | [] -> 
                   let tt, g1 = encode_typ env t in 
-                  g1@[vname_decl;
-                      Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None);
-                      Term.Assume(mk_HasType vtok tt, None);
-                      name_tok_corr]
+                  g1@[Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None);
+                      Term.Assume(mk_HasType vtok tt, None)]
+                    @opt_decls
                     @mk_prim lid vtok
                 | _ -> 
                   vname_decl

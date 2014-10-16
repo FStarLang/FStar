@@ -2,18 +2,18 @@ module Unit1
 open Prims.PURE
 open Prims.ALL
 
-let rec comp x y = comp x y
+(* let rec comp x y = comp x y *)
 
-let rec foo x =
-  let rec bar y = bar y in
-  foo (bar x)
+(* let rec foo x = *)
+(*   let rec bar y = bar y in *)
+(*   foo (bar x) *)
 
-let partial_app f x y =
-  let g = f x in
-  g y
+(* let partial_app f x y = *)
+(*   let g = f x in *)
+(*   g y *)
 
-let unit_id x = ()
-let unit_pattern () = ()
+(* let unit_id x = () *)
+(* let unit_pattern () = () *)
 
 val assert_0_eq_0: unit -> Tot unit
 let assert_0_eq_0 x = assert (0==0)
@@ -119,10 +119,10 @@ let get_false_ANF u =
   let y = get_1 () in
   x > y
 
-(* TODO: Fix the axioms for field-projection functions *)
-type record = {f:option<int>}
-val record_f_exhaustive: record -> Tot int
-let record_f_exhaustive r = match r.f with (* should be able to prove that the pattern below is exhaustive for r.f *)
-  | Some i -> i
-  | None -> 0
+(* (\* TODO: Fix the axioms for field-projection functions *\) *)
+(* type record = {f:option<int>} *)
+(* val record_f_exhaustive: record -> Tot int *)
+(* let record_f_exhaustive r = match r.f with (\* should be able to prove that the pattern below is exhaustive for r.f *\) *)
+(*   | Some i -> i *)
+(*   | None -> 0 *)
     

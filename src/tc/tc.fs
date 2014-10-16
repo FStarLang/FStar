@@ -239,7 +239,8 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     
   | Typ_const i -> 
     let k = Env.lookup_typ_lid env i.v in 
-    {t with tk=k}, k, Trivial
+    let i = {i with sort=k} in
+    mk_Typ_const i k t.pos, k, Trivial
      
   | Typ_fun(bs, cod) -> 
     let bs, env, g = tc_binders env bs in 
@@ -350,7 +351,7 @@ and tc_value env e : exp * comp =
 
   | Exp_fvar(v, dc) -> 
     let t = Env.lookup_lid env v.v in
-    let e = {e with tk=t} in
+    let e = mk_Exp_fvar({v with sort=t}, dc) t e.pos in
     let e, t = Tc.Util.maybe_instantiate env e t in 
     //printfn "Instantiated type of %s to %s\n" (Print.exp_to_string e) (Print.typ_to_string t);
     if dc && not(Env.is_datacon env v.v)
