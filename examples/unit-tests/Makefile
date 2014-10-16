@@ -8,7 +8,7 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-FSTAR      =.$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(OTHERFLAGS)
+FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(OTHERFLAGS)
 
 %.tc: %.fst
 	$(FSTAR) $^
