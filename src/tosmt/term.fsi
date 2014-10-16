@@ -153,3 +153,5 @@ val mk_ApplyTT: term -> term -> term
 val mk_ApplyET: term -> term -> term
 val mk_ApplyEE: term -> term -> term
 val mk_String_const: int -> term
+
+val freeV_sym: term -> string

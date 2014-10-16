@@ -66,6 +66,8 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
                  PURE 'a
                    (fun ('p:Post 'a) => 'pre /\ (forall a. 'post a ==> 'p a)) (* WP *)
                    (fun ('p:Post 'a) => forall a. 'pre /\ 'post a ==> 'p a)   (* WLP *)
+             (* and PURE ('a:Type) ('wp:WP 'a) ('wlp:WP 'a) =  *)
+             (*     Pure 'a ('wp (fun a => True)) (fun a => 'wlp (fun a' => a==a')) *)
              and Tot ('a:Type) =
                  PURE 'a (fun 'p => (forall (x:'a). 'p x)) (fun 'p => (forall (x:'a). 'p x))
 }

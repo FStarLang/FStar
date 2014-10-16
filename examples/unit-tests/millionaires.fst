@@ -158,7 +158,7 @@ logic type req_check (z:wire int) (h:heap) =
             proj_ok int z B (SelHeap h moderef)
 logic type ens_check (h0:heap) (b:bool) (h1:heap) = b==false
 
-(* This is main client of Wysteria *)
+(* This is the main client of Wysteria *)
 val is_A_richer_than_B : unit -> Wys bool
                                      (Requires (fun m => m=={p_or_s=Par; prins=(Union (Singleton A) (Singleton B))}))
                                      (Ensures  (fun m0 res m1 => res == false))

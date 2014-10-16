@@ -92,6 +92,9 @@ let emp_fvs = set_of_list []
 let fv_l ts = List.fold_left (fun out t -> union out t.freevars) emp_fvs ts
 let fv_bin (t1,t2) = union t1.freevars t2.freevars
 let fv_tri (t1,t2,t3) = union t1.freevars (union t2.freevars t3.freevars)
+let freeV_sym fv = match fv.tm with 
+    | FreeV(s, _) -> s
+    | _ -> failwith "Not a free variable"
 
 let mkTrue       = mk True emp_fvs
 let mkFalse      = mk False emp_fvs
