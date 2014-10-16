@@ -188,13 +188,14 @@ boot: $(BOOT_ALL)
 
 
 test: boot
+	make -C ../examples/unit-tests rec.tc format.tc pat.tc
 	echo "--------Unit1: Expect two failing assertions--------------"
 	make -C ../examples/unit-tests unit1.ver 
 	echo "--------Unit1: Expect two failing assertions--------------"
 	echo "--------TestSet: Expect three failing assertions----------"
 	make -C ../examples/unit-tests testset.ver
 	echo "--------TestSet: Expect three failing assertions----------"
-	make -C ../examples/unit-tests millionaires
+	make -C ../examples/unit-tests millionaires.ver
 	#make -C ../../../miTLS/ML
 
 wc-boot:

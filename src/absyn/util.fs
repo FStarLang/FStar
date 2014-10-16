@@ -447,6 +447,10 @@ let is_pure_comp c = match (compress_comp c).n with
     | Flex _ -> false
     | Rigid _ -> failwith "Normalize comp types before calling this function"
 
+let is_pure_function t = match (compress_typ t).n with 
+    | Typ_fun(_, c) -> is_pure_comp c
+    | _ -> true
+
 let is_ml_comp c = match c.n with
   | Comp c -> lid_equals c.effect_name Const.ml_effect_lid || List.contains MLEFFECT c.flags
   | _ -> false

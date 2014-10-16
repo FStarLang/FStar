@@ -108,14 +108,11 @@ let rec vt x f k = match x with
 and vts xs f k = match xs with
   | [] -> k 0
   | hd::tl -> vt hd f (fun l -> vts tl f (fun m -> k (l+m)))
-
-
  
 let foo x y =
   if x <= y && y <= x
   then 0
   else 1
-
 
 let matchr r = match r with
   | ({a=_}) -> 1

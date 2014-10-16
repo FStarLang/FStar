@@ -13,14 +13,30 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module String
 
-assume val split:   list char -> string -> Tot (list string)
-assume val strcat:  string -> string -> Tot string
-assume val concat:  string -> list string -> Tot string
-assume val compare: string -> string -> Tot int
-assume val strlen:  string -> Tot nat
-assume val length:  string -> Tot nat
 
-(* may fail with index out of bounds *)
-assume val substring: string -> int -> int -> string
+(*
+   Termination checking is not yet implemented. 
+   A let rec with an explicitly annotated "Tot" effect is admitted. 
+   Without such an annotation, the inferred effect is "All" 
+*)
+
+module Recursion
+
+type z = i:int{i==0}
+
+val zero: list 'a -> Tot z
+let rec zero l = match l with
+  | [] -> 0
+  | hd::tl -> zero tl
+
+val length: list 'a -> Tot nat
+let rec length l = match l with
+  | [] -> 0
+  | hd::tl -> 1 + length tl
+
+val mem: 'a -> list 'a -> Tot bool
+let rec mem a l = match l with
+  | [] -> false
+  | hd::tl -> hd=a || mem a tl
+

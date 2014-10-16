@@ -10,15 +10,11 @@ assume logic val slice : seq 'a -> int -> int -> Tot (seq 'a)
 assume logic val length : seq 'a -> Tot nat
 assume logic val create : int -> 'a -> Tot (seq 'a)
 
-module String
-assume logic val strlen: string -> Tot nat
-
 
 module Format
 open Prims.PURE
-open Array
 open String
-
+open Array
 
 type message = seq char//byte
 type msg (l:nat) = m:message{length m == l}

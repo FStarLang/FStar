@@ -772,65 +772,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
         g1@g, env
 
      | Sig_val_decl(lid, t, quals, _) -> 
-        if not (quals |> Util.for_some (function Logic -> true | _ -> false)) (* REVIEW: replace this with a purity check on the codomain of t? *)
-        then [], env
-        else let mk_disc_proj_axioms vapp vars = quals |> List.collect (function 
-                    | Discriminator d -> 
-                        let _, (xxsym, _) = Util.prefix vars in
-                        let xx = mkBoundV(xxsym, Term_sort) in
-                        [Term.Assume(mkForall([vapp], vars,
-                                                mkEq(vapp, Term.boxBool <| Term.mk_tester d.str xx)), None)]
-
-                    | Projector(d, Inr f) -> 
-                        let _, (xxsym, _) = Util.prefix vars in
-                        let xx = mkBoundV(xxsym, Term_sort) in
-                        [Term.Assume(mkForall([vapp], vars,
-                                              mkEq(vapp, Term.mkApp(mk_term_projector_name d f, [xx]))), None)]
-                    | _ -> []) in
-        
-             let vname, vtok, env = gen_free_var env lid in 
-             let formals, res = match Util.function_formals t with 
-                | Some (args, comp) -> args, Util.comp_result comp 
-                | None -> [], t in
-
-             if !Options.z3_optimize_full_applications
-             then (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
-                  let guarded_vars, _, env', aux = encode_binders env formals in
-                  let vars = List.map (function (x, y, _) -> (x,y)) guarded_vars in
-                  let vtok_app = mk_ApplyE vtok vars in
-                  let vapp = Term.mkApp(vname, List.map Term.mkBoundV vars) in
-                  let vname_decl = Term.DeclFun(vname, formals |> List.map (function Inl _, _ -> Type_sort | _ -> Term_sort), Term_sort, None) in
-                  let tok_decl, env = match formals with 
-                    | [] -> [], push_free_var env lid vname (mkFreeV(vname, Term_sort))
-                    | _ -> 
-                      let vtok_decl = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None) in
-                      let name_tok_corr = Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vapp)), None) in
-                      [vtok_decl;name_tok_corr], env in
-                  let res, aux' = encode_typ env' res in
-                  let typingAx = 
-                    let guard = List.collect (fun (_, _, g) -> g) guarded_vars |> Term.mk_and_l in
-                    Term.Assume(mkForall([vapp], vars, mkImp(guard, mk_HasType vapp res)), None) in
-                  let g = aux@aux'@vname_decl::typingAx::(tok_decl@mk_disc_proj_axioms vapp vars@mk_prim lid (Inl vname)) in
-                  g, env
-             else (* Generate a token and use curried applications everywhere *)
-                  let vapp, vars_rev = formals |> List.fold_left (fun (tm, vars) formal -> match formal with 
-                    | Inl a, _ -> 
-                        let aasym, aa, _ = gen_typ_var env a.v in 
-                        (Term.mk_ApplyET tm aa, (aasym, Type_sort)::vars) 
-                    | Inr x, _ -> 
-                        let xxsym, xx = if is_null_binder formal
-                                        then fresh_bvar "x" Term_sort
-                                        else let xxsym, xx, _ = gen_term_var env x.v in xxsym, xx in 
-                        (Term.mk_ApplyEE tm xx, (xxsym, Term_sort)::vars)) (vtok, []) in
-                 let vars = List.rev vars_rev in
-                 let typingAx = 
-                    let tt, g1 = encode_typ env t in
-                    g1@[Term.Assume(mk_HasType vtok tt, None)] in
-                 let g = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None)
-                       ::(typingAx
-                          @mk_disc_proj_axioms vapp vars
-                          @mk_prim lid (Inr vtok)) in
-                 g, env
+        encode_free_var env lid t quals
 
      | Sig_assume(l, f, _, _) -> 
         let phi, g1 = encode_formula env f in 
@@ -963,6 +905,72 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
     | Sig_main _
     | Sig_monads _ -> [], env
 
+and encode_free_var env lid t quals = 
+    if not <| Util.is_pure_function t 
+    then [], env
+    else let formals, res = match Util.function_formals t with 
+            | Some (args, comp) -> args, Util.comp_result comp 
+            | None -> [], t in
+
+         let mk_disc_proj_axioms vapp vars = quals |> List.collect (function 
+            | Discriminator d -> 
+                let _, (xxsym, _) = Util.prefix vars in
+                let xx = mkBoundV(xxsym, Term_sort) in
+                [Term.Assume(mkForall([vapp], vars,
+                                        mkEq(vapp, Term.boxBool <| Term.mk_tester d.str xx)), None)]
+
+            | Projector(d, Inr f) -> 
+                let _, (xxsym, _) = Util.prefix vars in
+                let xx = mkBoundV(xxsym, Term_sort) in
+                [Term.Assume(mkForall([vapp], vars,
+                                        mkEq(vapp, Term.mkApp(mk_term_projector_name d f, [xx]))), None)]
+            | _ -> []) in
+        
+        let vname, vtok, env = gen_free_var env lid in 
+        let formals, res = match Util.function_formals t with 
+        | Some (args, comp) -> args, Util.comp_result comp 
+        | None -> [], t in
+
+        if !Options.z3_optimize_full_applications
+        then (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
+            let guarded_vars, _, env', aux = encode_binders env formals in
+            let vars = List.map (function (x, y, _) -> (x,y)) guarded_vars in
+            let vtok_app = mk_ApplyE vtok vars in
+            let vapp = Term.mkApp(vname, List.map Term.mkBoundV vars) in
+            let vname_decl = Term.DeclFun(vname, formals |> List.map (function Inl _, _ -> Type_sort | _ -> Term_sort), Term_sort, None) in
+            let tok_decl, env = match formals with 
+            | [] -> [], push_free_var env lid vname (mkFreeV(vname, Term_sort))
+            | _ -> 
+                let vtok_decl = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None) in
+                let name_tok_corr = Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vapp)), None) in
+                [vtok_decl;name_tok_corr], env in
+            let res, aux' = encode_typ env' res in
+            let typingAx = 
+            let guard = List.collect (fun (_, _, g) -> g) guarded_vars |> Term.mk_and_l in
+            Term.Assume(mkForall([vapp], vars, mkImp(guard, mk_HasType vapp res)), None) in
+            let g = aux@aux'@vname_decl::typingAx::(tok_decl@mk_disc_proj_axioms vapp vars@mk_prim lid (Inl vname)) in
+            g, env
+        else (* Generate a token and use curried applications everywhere *)
+            let vapp, vars_rev = formals |> List.fold_left (fun (tm, vars) formal -> match formal with 
+            | Inl a, _ -> 
+                let aasym, aa, _ = gen_typ_var env a.v in 
+                (Term.mk_ApplyET tm aa, (aasym, Type_sort)::vars) 
+            | Inr x, _ -> 
+                let xxsym, xx = if is_null_binder formal
+                                then fresh_bvar "x" Term_sort
+                                else let xxsym, xx, _ = gen_term_var env x.v in xxsym, xx in 
+                (Term.mk_ApplyEE tm xx, (xxsym, Term_sort)::vars)) (vtok, []) in
+            let vars = List.rev vars_rev in
+            let typingAx = 
+            let tt, g1 = encode_typ env t in
+            g1@[Term.Assume(mk_HasType vtok tt, None)] in
+            let g = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None)
+                ::(typingAx
+                    @mk_disc_proj_axioms vapp vars
+                    @mk_prim lid (Inr vtok)) in
+            g, env
+
+
 and encode_signature env ses = 
     ses |> List.fold_left (fun (g, env) se ->            
       let g', env = encode_sigelt env se in 
@@ -983,11 +991,8 @@ let encode_env (env:env_t) (tcenv:Env.env) : (decls * env_t) =
                       Term.Assume(Term.mk_HasKind aa kk, None)] in
             decls@g@g', env'
         | Env.Binding_lid(x, t) -> 
-            let tt, g = encode_typ env (norm_t env t) in
-            let xxname, xxtok, env' = gen_free_var env x in 
-            let g' = [Term.DeclFun(Term.freeV_sym xxtok, [], Term_sort, Some (Print.sli x));
-                      Term.Assume(Term.mk_HasType xxtok tt, None)] in
-            decls@g@g', env'
+            let g, env' = encode_free_var env x t [] in
+            decls@g, env'
         | Env.Binding_sig se -> 
             let decls', env = encode_sigelt env se in decls@decls', env in
     Env.fold_env tcenv encode_binding ([], env)

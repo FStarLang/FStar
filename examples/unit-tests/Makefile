@@ -8,7 +8,10 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(OTHERFLAGS)
+STDLIB = $(addprefix $(FSTAR_HOME)/lib/, string.fst st.fst partialmap.fst)
+FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
+
+all: unit1.ver testset.ver recursion.ver millionaires.ver
 
 %.tc: %.fst
 	$(FSTAR) $^
@@ -18,9 +21,6 @@ FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(OTHERFL
 
 prims: 
 	$(FSTAR)  
-
-millionaires:
-	$(FSTAR) --verify $(FSTAR_HOME)/lib/st.fst $(FSTAR_HOME)/lib/partialmap.fst millionaires.fst
 
 utils:
 	$(FSTAR) --codegen OCaml --prims prims.fst utils.fst
