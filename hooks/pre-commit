@@ -1,0 +1,5 @@
+#! /bin/sh
+
+# put this file in .git/hooks directory and make it executable (chmod +x)
+
+make -C src/ test

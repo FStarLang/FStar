@@ -1,5 +1,14 @@
-FSTAR_HOME=../..
-FSTAR=../../bin/FStar.exe --fstar_home $(FSTAR_HOME) $(OTHERFLAGS)
+# --------------------------------------------------------------------
+ifeq ($(OS),Windows_NT)
+RUNTIME =
+MSBUILD = msbuild
+else
+RUNTIME = mono
+MSBUILD = xbuild
+endif
+
+FSTAR_HOME = ../..
+FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(OTHERFLAGS)
 
 %.tc: %.fst
 	$(FSTAR) $^
@@ -14,10 +23,10 @@ millionaires:
 	$(FSTAR) --verify $(FSTAR_HOME)/lib/st.fst $(FSTAR_HOME)/lib/partialmap.fst millionaires.fst
 
 utils:
-	$(FSTAR)  --codegen OCaml --prims prims.fst utils.fst
+	$(FSTAR) --codegen OCaml --prims prims.fst utils.fst
 
 stdlib:
-	$(FSTAR)  --codegen OCaml $(STDLIB)
+	$(FSTAR) --codegen OCaml $(STDLIB)
 
 #NS: Moved the specifics from here to the mitls repo. 
 #This target remains here just to not suprise anyone ... we should remove it soon.

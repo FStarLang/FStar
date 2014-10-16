@@ -183,7 +183,9 @@ BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_BACKEND) $(BOOT_JSBACKEND)
 
 boot: $(BOOT_ALL)
-	../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+
+
 
 test: boot
 	echo "--------Unit1: Expect two failing assertions--------------"
@@ -193,7 +195,7 @@ test: boot
 	make -C ../examples/unit-tests testset.ver
 	echo "--------TestSet: Expect three failing assertions----------"
 	make -C ../examples/unit-tests millionaires
-	make -C ../../../miTLS/ML
+	#make -C ../../../miTLS/ML
 
 wc-boot:
 	wc -l $(BOOT_ALL)
