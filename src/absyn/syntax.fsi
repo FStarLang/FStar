@@ -334,6 +334,7 @@ val mk_Exp_abs: (binders * exp) -> typ -> range -> exp
 val mk_Exp_abs': (binders * exp) -> typ -> range -> exp
 val mk_Exp_app: (exp * args) -> typ -> range -> exp
 val mk_Exp_app': (exp * args) -> typ -> range -> exp
+val mk_Exp_app_flat: (exp * args) -> typ -> range -> exp
 val mk_Exp_match: (exp * list<(pat * option<exp> * exp)>) -> typ -> range -> exp
 val mk_Exp_ascribed': (exp * typ) -> typ -> range -> exp
 val mk_Exp_ascribed: (exp * typ) -> range -> exp

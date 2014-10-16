@@ -521,6 +521,10 @@ let mk_Exp_app ((e1:exp),(args:args)) (t:typ) p = {
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();//union e1.fvs e2.fvs;   
 }
+let mk_Exp_app_flat ((e1:exp), (args:args)) (t:typ) p =
+    match e1.n with 
+        | Exp_app(e1', args') -> mk_Exp_app(e1', args'@args) t p
+        | _ -> mk_Exp_app(e1, args) t p
 let mk_Exp_app' ((e1:exp), (args:list<arg>)) (t:typ) (p:range) = 
     match args with 
         | [] -> e1

@@ -960,7 +960,7 @@ let close_typ = close_with_arrow
       
 let close_kind tps k = match tps with 
     | [] -> k
-    | _ -> mk_Kind_arrow(tps, k) k.pos
+    | _ -> mk_Kind_arrow'(tps, k) k.pos
 
 (********************************************************************************)
 (******************************** Alpha conversion ******************************)

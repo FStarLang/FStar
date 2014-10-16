@@ -42,7 +42,7 @@ let with_mode m f =
   let cur = get_mode () in
   (match cur.p_or_s with
    | Sec -> assert (cur.prins == m.prins)
-   | _   -> assert (Subset m.prins cur.prins));
+   | Par   -> assert (Subset m.prins cur.prins));
   set_mode m;
   let res = f () in
   set_mode cur;
@@ -87,7 +87,7 @@ let mk_wire ('a:Type) m x =
     fun () -> ConstMap m.prins (unbox x ()) in   
   match m.p_or_s with 
     | Par -> with_mode m f
-    | _ -> f ()
+    | Sec -> f ()
 
 let concat_wires (w1:wire 'a) (w2:wire 'a) =
   assert (DisjointDom w1 w2);

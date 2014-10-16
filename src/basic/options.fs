@@ -66,7 +66,7 @@ let codegen = Util.mk_ref None
 let admit_fsi = Util.mk_ref []
 let trace_error = Util.mk_ref false
 let verify = Util.mk_ref false
-let z3_optimize_full_applications = Util.mk_ref false
+let z3_optimize_full_applications = Util.mk_ref true
 
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
@@ -145,6 +145,7 @@ let specs () : list<Getopt.opt> =
      ( noshort, "z3exe", OneArg ((fun x -> z3_exe := x), "path"), "Path to the Z3 SMT solver");
      ( noshort, "print_before_norm", ZeroArgs(fun () -> norm_then_print := false), "Do not normalize types before printing (for debugging)");
      ( noshort, "show_signatures", OneArg((fun x -> show_signatures := x::!show_signatures), "module name"), "Show the checked signatures for all top-level symbols in the module");
-     ( noshort, "optimize_full_applications", ZeroArgs(fun () -> z3_optimize_full_applications := true), "Generate shallow embeddings of function symbols")
+     ( noshort, "optimize_full_applications", OneArg((fun a -> if a="true" then z3_optimize_full_applications := true else z3_optimize_full_applications := false), "true|false"), 
+                        "Generate shallow embeddings of function symbols")
      ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs

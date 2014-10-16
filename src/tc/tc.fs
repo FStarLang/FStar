@@ -663,7 +663,7 @@ and tc_exp env e : exp * comp =
                     *)
                     if Util.is_total_comp cres && head_is_atom && 
                        comps |> Util.for_some (fun (_, c) -> not (Util.is_pure env c))
-                    then Util.maybe_assume_result_eq_pure_term env (mk_Exp_app(f, List.rev arg_rets) (Util.comp_result cres) top.pos) cres
+                    then Util.maybe_assume_result_eq_pure_term env (mk_Exp_app_flat(f, List.rev arg_rets) (Util.comp_result cres) top.pos) cres
                     else if Env.debug env Options.Low
                     then (Util.fprint3 "Not refining result: f=%s; cres=%s; head_is_atom?=%s\n" (Print.exp_to_string f) (if head_is_atom then "yes" else "no") (Print.comp_typ_to_string cres); cres)
                     else cres
@@ -673,7 +673,7 @@ and tc_exp env e : exp * comp =
               let comp = Tc.Util.bind env None cf (None, comp) in
               let comp = Tc.Util.strengthen_precondition env comp g in
               if debug env Options.High then Util.fprint1 "\t Type of app term is %s\n" (Tc.Normalize.normalize_comp env comp |> Print.comp_typ_to_string);
-              mk_Exp_app(f, List.rev outargs) (Util.comp_result comp) top.pos, comp
+              mk_Exp_app_flat(f, List.rev outargs) (Util.comp_result comp) top.pos, comp
                
             | (Inr _, _)::_, (Inl _, _)::_ ->
               raise (Error(Util.format1 "Unexpected type argument (%s)" (Print.exp_to_string top), argpos (List.hd args)))
