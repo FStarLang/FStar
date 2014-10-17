@@ -42,10 +42,10 @@ let rec mem a l = match l with
   | [] -> false
   | hd::tl -> hd=a || mem a tl
 
-(* val append: l1:list 'a -> l2:list 'a -> Tot (l3:list 'a{length l3 == length l1 + length l2}) *)
-(* let rec append l1 l2 = match l1 with  *)
-(*   | [] -> l2 *)
-(*   | hd::tl -> hd::append tl l2 *)
+val append: l1:list 'a -> l2:list 'a -> Tot (l3:list 'a{length l3 == length l1 + length l2})
+let rec append l1 l2 = match l1 with
+  | [] -> l2
+  | hd::tl -> hd::append tl l2
 
 (* val append_mem:  l1:list 'a  *)
 (*               -> l2:list 'a  *)

@@ -8,7 +8,7 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-STDLIB = $(addprefix $(FSTAR_HOME)/lib/, string.fst st.fst partialmap.fst)
+STDLIB = $(addprefix $(FSTAR_HOME)/lib/, string.fst st.fst )
 FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
 
 all: unit1.ver testset.ver recursion.ver millionaires.ver
