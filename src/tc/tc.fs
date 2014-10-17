@@ -553,7 +553,8 @@ and tc_exp env e : exp * comp =
               maybe_default_dtuple_type env tres (Some t_expected)
        
             | _ -> (* Finally, we have some useful info from the context; use it to instantiate the result type of dc *)
-              Tc.Rel.trivial_subtype env None tres t_expected
+              if debug env Options.Low then Util.fprint2 "Expected = %s\n Unrefined = %s\n" (Print.typ_to_string t_expected) (Print.typ_to_string <| Util.unrefine t_expected);
+              Tc.Rel.trivial_subtype env None tres (Util.unrefine t_expected)
     end;
     dc, c_dc (* NB: Removed the Meta_datainst tag on the way up---no other part of the compiler sees Meta_datainst *)
 

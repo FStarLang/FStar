@@ -49,23 +49,12 @@ let op_as_vlid env arity r s =
     | ">=", _ ->   r Const.op_GTE
     | "&&", _ ->   r Const.op_And
     | "||", _ ->   r Const.op_Or
-    | "*", Type 
-    | "*", Formula -> r Const.mul_lid
-    | "*", _ -> r Const.op_Multiply
-    | "+", Type 
-    | "+", Formula -> r Const.add_lid
+    | "*", _ ->    r Const.op_Multiply
     | "+", _ ->    r Const.op_Addition
-    | "-", Type when (arity=1) -> r Const.minus_lid
-    | "-", Formula when (arity=1) -> r Const.minus_lid
-    | "-", _    when (arity=1) -> r Const.op_Minus
-    | "-", Type -> r Const.sub_lid
-    | "-", Formula -> r Const.sub_lid
+    | "-", _  when 
+      (arity=1) -> r Const.op_Minus
     | "-", _ ->    r Const.op_Subtraction
-    | "/", Type -> r Const.div_lid
-    | "/", Formula -> r Const.div_lid
     | "/", _ ->    r Const.op_Division
-    | "%", Type -> r Const.modulo_lid
-    | "%", Formula -> r Const.modulo_lid
     | "%", _ ->    r Const.op_Modulus
     | "!", _ ->    r Const.read_lid
     | "@", _ ->    r Const.list_append_lid

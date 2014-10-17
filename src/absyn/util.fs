@@ -522,9 +522,11 @@ let unascribe_either = function
     | Inl t -> Inl <| unascribe_typ (compress_typ t)
     | Inr e -> Inr <| unascribe (compress_exp e)
 
-let rec unrefine t = match t.n with 
-  | Typ_refine(x, _) -> unrefine x.sort
-  | _ -> t
+let rec unrefine t = 
+  let t = compress_typ t in
+  match t.n with
+      | Typ_refine(x, _) -> unrefine x.sort
+      | _ -> t
 
 let is_fun e = match (compress_exp e).n with 
   | Exp_abs _ -> true
