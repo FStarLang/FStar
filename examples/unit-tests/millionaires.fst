@@ -90,7 +90,7 @@ let mk_wire ('a:Type) m x =
     | Sec -> f ()
 
 let concat_wires (w1:wire 'a) (w2:wire 'a) =
-  assert (DisjointDom w1 w2);
+  assert (DisjointDom prin 'a w1 w2);
   Concat w1 w2
 
 logic type proj_ok ('a:Type) (w:wire 'a) (p:prin) (cur:mode) = 

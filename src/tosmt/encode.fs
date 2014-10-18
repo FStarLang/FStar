@@ -712,6 +712,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
 
      | Sig_typ_abbrev(lid, tps, _, t, tags, _) -> 
         let tname, ttok, env = gen_free_tvar env lid in 
+        let tps, t = match t.n with 
+            | Typ_lam(tps', body) -> tps@tps', body
+            | _ -> tps, t in 
         let vars, guards, env', _ = encode_binders tps env in
         let tok_app = mk_ApplyT ttok vars in
         let tok_decl = Term.DeclFun(Term.freeV_sym ttok, [], Type_sort, None) in
@@ -862,7 +865,7 @@ and encode_free_var env lid t quals =
         let guard = mk_and_l guards in
         let vtok_app = mk_ApplyE vtok vars in
         
-        let vapp, prim, decls =    
+        let vapp, prim, decls, env =    
             if !Options.z3_optimize_full_applications
             then (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                 let vapp = Term.mkApp(vname, List.map Term.mkBoundV vars) in
@@ -873,10 +876,10 @@ and encode_free_var env lid t quals =
                         let vtok_decl = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None) in
                         let name_tok_corr = Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vapp)), None) in
                         [vtok_decl;name_tok_corr], env in
-                vapp, Inl vname, vname_decl::tok_decl 
+                vapp, Inl vname, vname_decl::tok_decl, env
             else     
                 let tok_decl = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None) in
-                vtok_app, Inr vtok, [tok_decl] in
+                vtok_app, Inr vtok, [tok_decl], env in
 
         let ty_pred = encode_typ_pred res env' vapp in
         let typingAx = Term.Assume(mkForall([vapp], vars, mkImp(guard, ty_pred)), None) in

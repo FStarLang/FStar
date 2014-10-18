@@ -9,8 +9,8 @@ assume logic val Emp : 'k:Type -> 'v:Type -> Tot (t 'k 'v)
 assume logic val Concat: 'k:Type -> 'v:Type -> t 'k 'v -> t 'k 'v -> Tot (t 'k 'v)
 assume logic val ConstMap: 'k:Type -> 'v:Type -> set 'k -> 'v -> Tot (t 'k 'v)
 logic type InDom  : #'k:Type => #'v:Type => 'k => t 'k 'v => Type
-logic type DisjointDom : #'k:Type => #'v:Type => t 'k 'v => t 'k 'v => Type = 
-    fun 'k 'v (m1:t 'k 'v) (m2:t 'k 'v) => (forall x.{:pattern (InDom x m1)} InDom x m1 ==> ~(InDom x m2))
+logic type DisjointDom ('k:Type) ('v:Type) (m1:t 'k 'v) (m2:t 'k 'v) = 
+          (forall x.{:pattern (InDom x m1)} InDom x m1 ==> ~(InDom x m2))
                          
 assume SelUpd1: forall ('k:Type) ('v:Type) (m:t 'k 'v) (k:'k) (v:'v).{:pattern (Sel (Upd m k v) k)} Sel (Upd m k v) k == k
 assume SelUpd2: forall ('k:Type) ('v:Type) (m:t 'k 'v) (k1:'k) (k2:'k) (v:'v).{:pattern (Sel (Upd m k2 v) k1)} k2=!=k1 ==> Sel (Upd m k2 v) k1 == Sel m k1
