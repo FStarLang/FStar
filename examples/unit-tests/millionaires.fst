@@ -1,7 +1,7 @@
 module Wysteria
 open Prims.STATE
 
-type prin 
+type prin = string 
 type prins = set prin 
 type p_or_s = 
   | Par 
@@ -115,60 +115,54 @@ let project_wire (w:wire 'a) (p:prin) =
 module Millionaires
 open Wysteria
 open PartialMap
-assume logic val A : prin
-assume logic val B : prin
-assume logic val AB: set prin
-assume AB_distinct: A=!=B
 
-(* LOTS OF BORING TESTS *)
+let pA = "A"
+let pB = "B"
+let setAB = Union (Singleton pA) (Singleton pB)
+let initial_mode = {p_or_s=Par; prins=setAB}
+let par_A = {p_or_s=Par; prins=Singleton pA} 
+let par_B = {p_or_s=Par; prins=Singleton pB} 
+let sec_AB = {p_or_s=Sec; prins=setAB}
+
+(* SOME BORING TESTS *)
 val test2 : unit -> Tot unit
 let test2 u = 
-  let initial_mode = {p_or_s=Par; prins=(Union (Singleton A) (Singleton B))} in 
-  let par_B = {p_or_s=Par; prins=Singleton B} in 
-  let par_A = {p_or_s=Par; prins=Singleton A} in 
-  let sec_AB = {p_or_s=Sec; prins=Union (Singleton A) (Singleton B)} in
   assert (CanSetMode initial_mode par_A);
   assert (CanSetMode initial_mode par_B);
   assert (CanSetMode initial_mode sec_AB)
 
 val test: unit -> Wys unit
-                      (Requires (fun m => m=={p_or_s=Par; prins=(Union (Singleton A) (Singleton B))}))
+                      (Requires (fun m => m=={p_or_s=Par; prins=(Union (Singleton pA) (Singleton pB))}))
                       (Ensures  (fun m0 res m1 => True))
 let test _ =
-  let par_A = {p_or_s=Par; prins=Singleton A} in
-  let par_B = {p_or_s=Par; prins=Singleton B} in
-  let sec_AB = {p_or_s=Sec; prins=Union (Singleton A) (Singleton B)} in
   let x = with_mode par_A (mk_box 2) in
   let y = with_mode par_B (mk_box 3) in
   let z = concat_wires (mk_wire par_A x) (mk_wire par_B y) in
   assert (Box.v x == 2);
   assert (Box.v y == 3);
-  assert (z == Concat (ConstMap (Singleton A) 2) (ConstMap (Singleton B) 3));
-  assert (Sel z A == 2);
-  assert (Sel z B == 3);
-  assert (InDom A z);
-  let x = Sel z A > Sel z B in
+  assert (z == Concat (ConstMap (Singleton pA) 2) (ConstMap (Singleton pB) 3));
+  assert (Sel z pA == 2);
+  assert (Sel z pB == 3);
+  assert (InDom pA z);
+  let x = Sel z pA > Sel z pB in
   assert (x == false);
-  assert (proj_ok int z A sec_AB)
+  assert (proj_ok int z pA sec_AB)
 
   
 logic type req_check (z:wire int) (h:heap) = 
-          (z == Concat (ConstMap (Singleton A) 2) (ConstMap (Singleton B) 3)) /\
-            proj_ok int z A (SelHeap h moderef) /\ 
-            proj_ok int z B (SelHeap h moderef)
+          (z == Concat (ConstMap (Singleton pA) 2) (ConstMap (Singleton pB) 3)) /\
+            proj_ok int z pA (SelHeap h moderef) /\ 
+            proj_ok int z pB (SelHeap h moderef)
 logic type ens_check (h0:heap) (b:bool) (h1:heap) = b==false
 
 (* This is the main client of Wysteria *)
 val is_A_richer_than_B : unit -> Wys bool
-                                     (Requires (fun m => m=={p_or_s=Par; prins=(Union (Singleton A) (Singleton B))}))
+                                     (Requires (fun m => m==initial_mode))
                                      (Ensures  (fun m0 res m1 => res == false))
 let is_A_richer_than_B _ =
-  let par_A = {p_or_s=Par; prins=Singleton A} in
-  let par_B = {p_or_s=Par; prins=Singleton B} in
-  let sec_AB = {p_or_s=Sec; prins=Union (Singleton A) (Singleton B)} in
   let x = with_mode par_A (mk_box 2) in
   let y = with_mode par_B (mk_box 3) in
   let z = concat_wires (mk_wire par_A x) (mk_wire par_B y) in
   let check : unit -> ST bool (req_check z) ens_check = fun () -> (* XXX TODO, should infer an ST type automatically *)
-    project_wire z A > project_wire z B in
+    project_wire z pA > project_wire z pB in
   with_mode sec_AB check

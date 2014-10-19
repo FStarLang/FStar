@@ -148,6 +148,8 @@ let gen_free_var (env:env_t) (x:lident) =
     let fname = varops.new_fvar x in
     let ftok = mkFreeV(varops.new_fvar x , Term_sort) in
     fname, ftok, {env with bindings=Binding_fvar(x, fname, ftok)::env.bindings}
+let try_lookup_lid env a = 
+    lookup_binding env (function Binding_fvar(b, t1, t2) when lid_equals b a -> Some (t1, t2) | _ -> None) 
 let lookup_lid env a = 
     match lookup_binding env (function Binding_fvar(b, t1, t2) when lid_equals b a -> Some (t1, t2) | _ -> None) with
     | None -> failwith (format1 "Name not found: %s" (Print.sli a))
@@ -351,7 +353,6 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t *)
         sym, [(name, guard)]
 
       | Typ_app(head, args) -> (* this is in head normal form; so t must be a type variable or a constant *)
-        let args, vars = encode_args args env in
         let is_full_app () = match (Util.compress_kind head.tk).n with
             | Kind_arrow(formals, _) -> List.length formals = List.length args
             | _ -> false in
@@ -359,10 +360,12 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t *)
         begin match head.n with
             | Typ_btvar a -> 
               let head = lookup_typ_var env a in
+              let args, vars = encode_args args env in
               let t = mk_ApplyT_args head args in
               t, vars
                 
             | Typ_const fv -> 
+              let args, vars = encode_args args env in
               if is_full_app () && !Options.z3_optimize_full_applications
               then let head = lookup_free_tvar_name env fv in
                    let t = Term.mkApp(head, List.map (function Inl t | Inr t -> t) args) in
@@ -371,7 +374,10 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t *)
                    let t = mk_ApplyT_args head args in
                    t, vars
 
-            | _ -> failwith (Util.format3 "(%s) Impossible: head symbol is not a variable %s (%s)" (Range.string_of_range <| head.pos) (Print.typ_to_string t) (Print.tag_of_typ head))
+            | _ -> 
+              let t = norm_t env t in
+              encode_typ_term t env
+//                failwith (Util.format3 "(%s) Impossible: head symbol is not a variable %s (%s)" (Range.string_of_range <| head.pos) (Print.typ_to_string t) (Print.tag_of_typ head))
         end
 
       | Typ_lam(bs, t) ->
@@ -475,11 +481,26 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars) =
                 Util.fprint1 "%s is not a full application!\n" (Print.exp_to_string e0); encode_partial_app ()
         end
 
+//      | Exp_let((false, [(Inl x, t1, e1)]), e2) ->
+//        let ee1, g1 = encode_exp env e1 in
+//        let tt1, g2 = encode_typ env t1 in 
+//        let env' = push_term_var env x ee1 in
+//        let ee2, g3 = encode_exp env' e2 in
+//        let g = [Term.Assume(mk_HasType ee1 tt1, None)] in
+//        ee2, g1@g2@g@g3
+
+
       | Exp_let _
-      | Exp_match _ -> failwith "Let/Match currently disabled"
+      | Exp_match _ -> 
+        let name = varops.fresh "Expression", Term_sort in
+        let sym = mkBoundV name in
+        sym, [(name, Term.mkTrue)]
+
+
 //        
 //      | Exp_let((true, _), _) -> failwith "Nested let recs not yet supported in SMT encoding" 
 //      | Exp_let((_, (Inr l, _, _)::_), _) -> failwith "Unexpected top-level binding"
+
 //      | Exp_let((false, [(Inl x, t1, e1)]), e2) ->
 //        let ee1, g1 = encode_exp env e1 in
 //        let tt1, g2 = encode_typ env t1 in 
@@ -822,14 +843,25 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
         | _ -> true) in
       g'@inversions, env
 
-//    | Sig_let((false,[(Inr x, t, e)]), _) ->
-//        let xxsym, xx, env = gen_free_var env x in 
-//        let tt, g1 = encode_typ env t in 
-//        let ee, g2 = encode_exp env e in
-//        let g = [Term.DeclFun(xxsym, [], Term_sort, Some (Print.sli x));
-//                Term.Assume(mk_HasType xx tt, None);
-//                Term.Assume(mkEq(xx, ee), None)] in
-//        g1@g2@g, env, [], []
+    | Sig_let((false,[(Inr x, t1, e)]), _, _) ->
+        if not (Util.is_pure_function t1) then [], env  else
+        let (n, x), decls, env = match try_lookup_lid env x with 
+            | None -> (* Need to introduce a new name decl *)
+              let decls, env = encode_free_var env x t1 [] in
+              (lookup_lid env x), decls, env 
+            | Some (n, x) -> (* already declared, only need an equation *)
+              (n, x), [], env in
+        let e = Util.compress_exp e in
+        let binders, body = match e.n with
+            | Exp_abs(binders, body) -> binders, body
+            | _ -> [], e in
+        let vars, guards, env', _ = encode_binders binders env in
+        let body, ex_vars = encode_exp body env' in
+        let app = if !Options.z3_optimize_full_applications 
+                  then Term.mkApp(n, List.map mkBoundV vars)
+                  else mk_ApplyE x vars in
+        let eqn = Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(app, body))), None) in
+        decls@[eqn], env 
 
     | Sig_let((_,lbs), _, _) -> //TODO 
         let msg = lbs |> List.map (fun (lb, _, _) -> Print.lbname_to_string lb) |> String.concat " and " in

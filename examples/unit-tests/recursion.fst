@@ -23,7 +23,7 @@
 
 module Recursion
 open Prims.PURE
-(*ghost*) effect Fact ('p:Type) = Pure unit True (fun r => 'p)
+(*ghost*) effect Fact ('res:Type) ('p:Type) = Pure 'res True (fun r => 'p)
 
 type z = i:int{i==0}
 
@@ -47,14 +47,14 @@ let rec append l1 l2 = match l1 with
   | [] -> l2
   | hd::tl -> hd::append tl l2
 
-(* val append_mem:  l1:list 'a  *)
-(*               -> l2:list 'a  *)
-(*               -> a:'a  *)
-(*               -> Fact (b2t (mem a (append l1 l2)) <==>  b2t (mem a l1) \/ b2t(mem a l2)) *)
-(* let rec append_mem l1 l2 a = match l1 with  *)
-(*   | [] -> assert (append l1 l2 == l2) *)
-(*   | hd::tl ->  *)
-(*     if hd=a *)
-(*     then () *)
-(*     else append_mem tl l2 a  *)
+val append_mem:  l1:list 'a
+              -> l2:list 'a
+              -> a:'a
+              -> Fact unit (b2t (mem a (append l1 l2)) <==>  b2t (mem a l1) \/ b2t(mem a l2))
+let rec append_mem l1 l2 a = match l1 with
+  | [] -> assert (append l1 l2 == l2)
+  | hd::tl ->
+    if hd=a
+    then ()
+    else append_mem tl l2 a
   
