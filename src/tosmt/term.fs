@@ -95,6 +95,9 @@ let fv_tri (t1,t2,t3) = union t1.freevars (union t2.freevars t3.freevars)
 let freeV_sym fv = match fv.tm with 
     | FreeV(s, _) -> s
     | _ -> failwith "Not a free variable"
+let boundV_sym x = match x.tm with 
+    | BoundV(x, _) -> x
+    | _ -> failwith "Not a bound variable"
 
 let mkTrue       = mk True emp_fvs
 let mkFalse      = mk False emp_fvs
