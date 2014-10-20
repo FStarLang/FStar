@@ -57,6 +57,7 @@ let exists_lid = pconst "Exists"
 let forall_lid = pconst "Forall"  
 let exTyp_lid  = pconst "ExistsTyp"
 let allTyp_lid = pconst "ForallTyp"
+let b2t_lid = pconst "b2t" (* coercion from boolean to type *)
 
 (* Predicates corresponding to binops *)
 let lt_lid    = pconst  "LT"

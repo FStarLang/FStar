@@ -578,9 +578,12 @@ and doc_of_pattern_r (rg : range) env (p : pat) : env * doc =
     | Pat_wild ->
         (env, text "_")
 
-    | Pat_withinfo (p, rg) ->
+    | Pat_meta(Meta_pat_pos(p, rg)) ->
         doc_of_pattern rg env p
 
+    | Pat_meta(Meta_pat_exp(p, _)) ->
+        doc_of_pattern rg env p
+    
     | Pat_tvar  _ -> unsupported rg
     | Pat_twild _ -> unsupported rg
 

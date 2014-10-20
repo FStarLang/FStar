@@ -262,7 +262,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         let e, a = push_local_tbinding e a in
         (Inl a::l), e, a in
   let rec aux (loc:lenv_t) env (p:pattern) =
-    let pos q = Pat_withinfo(q, p.prange) in 
+    let pos q = Pat_meta(Meta_pat_pos(q, p.prange)) in 
     match p.pat with
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
@@ -367,8 +367,8 @@ and desugar_binding_pat_maybe_top top env p : (env_t * bnd * option<pat>) =
     let p = match p with
       | Pat_var _
       | Pat_tvar _ 
-      | Pat_withinfo (Pat_var _, _) 
-      | Pat_withinfo (Pat_tvar _, _) -> None
+      | Pat_meta(Meta_pat_pos(Pat_var _, _))
+      | Pat_meta(Meta_pat_pos(Pat_tvar _, _)) -> None
       | _ -> Some p in
     (env, binder, p)
 

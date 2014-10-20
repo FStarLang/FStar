@@ -202,7 +202,10 @@ let constructor_to_decl (name, projectors, sort, id) =
         let cproj_app = mkApp(name, [capp]) in
         [DeclFun(name, [sort], s, Some "Projector");
          Assume(mkForall([(*cproj_app ... specifically omitting pattern *)], bvars, mkEq(cproj_app, bvar i s)), Some "Projection inverse")]) |> List.flatten in
-    Caption (format1 "<start constructor %s>" name)::cdecl::cid::disc::projs@[Caption (format1 "</end constructor %s>" name)]
+    let disc_proj = Assume(mkForall([], [xx], mkImp(disc_app, 
+                                                    mkEq(mkBoundV xx, 
+                                                         mkApp(name, projectors |> List.map (fun (proj, s) -> mkApp(proj, [mkBoundV xx])))))), Some "Disc/Proj correspondence") in
+    Caption (format1 "<start constructor %s>" name)::cdecl::cid::disc::projs@[disc_proj;Caption (format1 "</end constructor %s>" name)]
 
 let flatten_imp tm = 
   let mkAnd_l terms = match terms with 

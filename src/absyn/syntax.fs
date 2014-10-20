@@ -138,7 +138,10 @@ and pat =
   | Pat_disj     of list<pat>
   | Pat_wild
   | Pat_twild
-  | Pat_withinfo of pat * Range.range
+  | Pat_meta     of meta_pat
+and meta_pat = 
+  | Meta_pat_pos of pat * Range.range
+  | Meta_pat_exp of pat * exp
 and knd' =
   | Kind_type
   | Kind_effect
@@ -553,8 +556,8 @@ let rec pat_vars r = function
   | Pat_wild 
   | Pat_twild
   | Pat_constant _ -> []
-  | Pat_withinfo (p, r) -> pat_vars r p
-
+  | Pat_meta(Meta_pat_pos(p, r)) -> pat_vars r p
+  | Pat_meta(Meta_pat_exp(p, _)) -> pat_vars r p
 
 let mk_Exp_match ((e:exp),(pats:list<(pat * option<exp> * exp)>)) (t:typ) p = 
     {

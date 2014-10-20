@@ -93,9 +93,11 @@ let value_check_expected_typ env e tc : exp * comp =
    | None -> e, c
    | Some t' -> 
      let e, g = Tc.Util.check_and_ascribe env e t t' in
+     if debug env Options.Low
+     then Util.fprint1 "Strengthening pre-condition with guard = %s\n" (Rel.guard_to_string env g);
      let c = Tc.Util.strengthen_precondition env c g in
      e, Util.set_result_typ c t' in
-  if debug env Options.Extreme 
+  if debug env Options.Low 
   then Util.fprint1 "Return comp type is %s\n" (Print.comp_typ_to_string <| snd res);
   res
 
@@ -113,9 +115,9 @@ let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard_t 
        if debug env Options.Medium then Util.fprint3 "(%s) About to check\n\t%s\nagainst expected effect\n\t%s" 
                                   (Range.string_of_range e.pos) (Print.comp_typ_to_string c) (Print.comp_typ_to_string c');
        let c = norm_c env c in
-       let res = Tc.Util.check_comp env e c c' in
-       if debug env Options.Medium then Util.fprint1 "(%s) DONE check_expected_effect" (Range.string_of_range e.pos);
-       res 
+       let e, c, g = Tc.Util.check_comp env e c c' in
+       if debug env Options.Low then Util.fprint2 "(%s) DONE check_expected_effect; guard is: %s" (Range.string_of_range e.pos) (Rel.guard_to_string env g);
+       e, c, g//res 
     
 let no_guard env (te, kt, f) = match f with
   | Trivial -> te, kt
@@ -267,15 +269,15 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     if debug env Options.Extreme then Util.fprint2 "(%s) Destructing arrow kind: %s\n" (Range.string_of_range top.pos) (Print.kind_to_string k1);
     let args, f2 = tc_args env args in
     let imps, formals, kres = Tc.Util.destruct_arrow_kind env head k1 args in
-    let rec check_args subst g formals args = match formals, args with 
-      | [], [] -> g, Util.subst_kind subst kres
+    let rec check_args outargs subst g formals args = match formals, args with 
+      | [], [] -> g, Util.subst_kind subst kres, List.rev outargs
       | formal::formals, actual::actuals -> 
         begin match formal, actual with 
             | (Inl a, _), (Inl t, _) -> 
               let env = Env.set_range env t.pos in 
               let g' = Tc.Rel.subkind env t.tk (Util.subst_kind subst a.sort) in
               let subst = maybe_extend_subst subst formal (Inl t) in
-              check_args subst (Rel.conj_guard g g') formals actuals
+              check_args (actual::outargs) subst (Rel.conj_guard g g') formals actuals
 
             | (Inr x, _), (Inr v, _) -> 
               let env = Env.set_range env t.pos in 
@@ -283,19 +285,33 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
               if debug env Options.Extreme then Util.fprint4 "(%s) Checking arg %s:%s against type %s" (Range.string_of_range v.pos) (Print.exp_to_string v) (Print.typ_to_string v.tk) (Print.typ_to_string tx); 
               let _, g' = Tc.Util.check_and_ascribe env v v.tk tx in
               let subst = maybe_extend_subst subst formal (Inr v) in
-              check_args subst (Rel.conj_guard g g') formals actuals
+              check_args (actual::outargs) subst (Rel.conj_guard g g') formals actuals
 
-            | (Inl _, _), (Inr v, _) ->
-              raise (Error("Expected a type; got an expression", v.pos))
+            | (Inl a, _), (Inr v, _) ->
+               let fail () = raise (Error("Expected a type; got an expression", v.pos)) in
+              (match a.sort.n with
+                | Kind_type ->
+                    begin match try_subtype env v.tk Tc.Util.t_bool with 
+                        | Some Trivial -> (* implicitly promote it to a Type using b2t *)
+                           begin match Tc.Env.lookup_typ_abbrev env Const.b2t_lid with 
+                            | None -> fail ()
+                            | Some b2t -> 
+                              let tv = mk_Typ_app(b2t, [varg v]) ktype v.pos in
+                              check_args outargs subst g (formal::formals) (targ tv::actuals)
+                           end
+                        | _ -> fail ()
+                    end
+                | _ -> 
+                  raise (Error("Expected a type; got an expression", v.pos)))
             
             | (Inr _, _), (Inl t, _) ->
               raise (Error("Expected an expression; got a type", t.pos)) 
         end 
 
-      | _, [] -> g, Util.subst_kind subst (mk_Kind_arrow(formals, kres) kres.pos) //partial app
+      | _, [] -> g, Util.subst_kind subst (mk_Kind_arrow(formals, kres) kres.pos), List.rev outargs //partial app
 
       | [], _ -> raise (Error("Too many arguments to type", top.pos)) in
-    let g, k = check_args [] (Rel.conj_guard f1 f2) formals args in
+    let g, k, args = check_args [] [] (Rel.conj_guard f1 f2) formals args in
     let t = mk_Typ_app(head, imps@args) k top.pos in
     t, k, g
   
@@ -826,7 +842,7 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
               option<formula> -- guard condition for this branch, propagated up for exhaustiveness check
               comp            -- the computation type of the branch
   *)
-  let rec tc_pat (pat_t:typ) env p : list<Env.binding> * Env.env * list<exp> = 
+  let rec tc_pat (pat_t:typ) env p : pat * list<Env.binding> * Env.env * list<exp> = 
     let pvar_eq x y = match x, y with 
       | Inl a, Inl b -> bvd_eq a b
       | Inr x, Inr y -> bvd_eq x y
@@ -840,7 +856,7 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
       | Pat_wild 
       | Pat_twild
       | Pat_constant _ -> bindings, []
-      | Pat_withinfo(p, _) -> pat_bindings bindings p
+      | Pat_meta(Meta_pat_pos(p, _)) -> pat_bindings bindings p
       | Pat_var x -> 
         if binding_exists bindings (Inr x) 
         then raise (Error(Tc.Errors.nonlinear_pattern_variable x, Util.range_of_bvd x))
@@ -867,14 +883,22 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
     let exps = Tc.Util.pat_as_exps env p in
     let env, _ = Tc.Env.clear_expected_typ pat_env in 
     let env = {env with Env.is_pattern=true} in //{(Tc.Env.set_expected_typ pat_env pat_t) with Env.is_pattern=true} in
-    let res = bindings, pat_env, List.map (fun e -> 
+    let exps = exps |> List.map (fun e -> 
         let e, t = no_guard env <| tc_total_exp env e in
         //printfn "Trying pattern subtype %s <: %s" (Print.typ_to_string pat_t) (Print.typ_to_string t);
         Tc.Rel.trivial_subtype env None pat_t t; //the type of the pattern must be at least as general as the type of the scrutinee
-        e) exps in
-    res in
+        e) in
+    let p = match p with 
+        | Pat_meta(Meta_pat_pos(q, r)) -> 
+          let q = match q, exps with 
+            | Pat_disj ps, _ -> Pat_disj (List.map2 (fun p e -> Pat_meta(Meta_pat_exp(p, e))) ps exps)
+            | _, [e] -> Pat_meta(Meta_pat_exp(q, e))
+            | _ -> failwith (Util.format1 "(%s) impossible: unexpected pat\n" (Range.string_of_range (Env.get_range env))) in
+          Pat_meta(Meta_pat_pos(q, r))
+        | _ -> Pat_meta(Meta_pat_exp(p, List.hd exps)) in
+     p, bindings, pat_env, exps in
 
-  let bindings, pat_env, disj_exps = tc_pat pat_t env pattern in //disj_exps, an exp for each arm of a disjunctive pattern
+  let pattern, bindings, pat_env, disj_exps = tc_pat pat_t env pattern in //disj_exps, an exp for each arm of a disjunctive pattern
   let when_clause = match when_clause with 
     | None -> None
     | Some e -> Some (fst <| (no_guard env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e)) in

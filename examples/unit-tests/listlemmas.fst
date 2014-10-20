@@ -17,17 +17,20 @@
 
 (*
    TODO: Termination checking is not yet implemented. 
+  
    A let rec with an explicitly annotated "Tot" effect is admitted. 
    Without such an annotation, the inferred effect is "All" 
+
+   Termination checks to be added soon ... 
 *)
 
-module Recursion
+module ListLemmas
 open Prims.PURE
 
 (* An effect abbreviation for a lemma *)
 (*ghost*) effect Fact ('res:Type) ('p:Type) = Pure 'res True (fun r => 'p)
 
-(* An elaborate way of computing zero *)
+(* Warm up: An elaborate way of computing zero *)
 type z = i:int{i==0}
 val zero: list 'a -> Tot z
 let rec zero l = match l with
@@ -49,7 +52,12 @@ let rec mem a l = match l with
 
 (* Prove a property about the length of appended lists intrinsically.
    Notice the use of the pure function length in the spec. 
-
+ *)
+val append: l1:list 'a -> l2:list 'a -> Tot (l3:list 'a{length l3 == length l1 + length l2})
+let rec append l1 l2 =  match l1 with
+  | [] -> l2
+  | hd::tl -> hd::append tl l2
+(*
 For contrast, in old F*/F7, you'd have to write:
 
    logic function Length: 'a -> list 'a -> nat
@@ -61,14 +69,23 @@ For contrast, in old F*/F7, you'd have to write:
    val append: l1:list 'a -> l2:list 'a -> (l3:list 'a{Length l3 = Length l1 + Length l2})
    let rec append = ...
 *)
-val append: l1:list 'a -> l2:list 'a -> Tot (l3:list 'a{length l3 == length l1 + length l2})
-let rec append l1 l2 =  match l1 with
-  | [] -> l2
-  | hd::tl -> hd::append tl l2
+
 
 (* You can also prove lemmas about pure functions "after the fact", i.e., extrinsically. 
    Here's an inductive proofs relating append and mem. 
-   
+*)
+val append_mem:  l1:list 'a
+              -> l2:list 'a
+              -> a:'a
+              -> Fact unit (mem a (append l1 l2) <==>  mem a l1 \/ mem a l2)
+let rec append_mem l1 l2 a = match l1 with
+  | [] -> ()
+  | hd::tl -> 
+    if hd=a
+    then ()
+    else append_mem tl l2 a
+  
+(*   
    Such an extrinsic proof would have been impossible in old F*/F7. You'd have to
    prove the relation between mem and append intrinsically.
 
@@ -81,14 +98,3 @@ let rec append l1 l2 =  match l1 with
         functions easily. So, you'd have to resort to an external
         proof (in Coq, say) and then admit it to the SMT solver.
  *)
-val append_mem:  l1:list 'a
-              -> l2:list 'a
-              -> a:'a
-              -> Fact unit (mem a (append l1 l2) <==>  mem a l1 \/ mem a l2)
-let rec append_mem l1 l2 a = match l1 with
-  | [] -> ()
-  | hd::tl -> 
-    if hd=a
-    then ()
-    else append_mem tl l2 a
-  

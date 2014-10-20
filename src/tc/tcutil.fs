@@ -139,7 +139,7 @@ let pat_as_exps env p : list<exp> =
       [Inr (Util.mk_data l args)]
     | Pat_disj pats -> 
       pats |> List.map (fun p -> single <| aux p)
-    | Pat_withinfo(p, r) -> 
+    | Pat_meta(Meta_pat_pos(p, r)) -> 
       aux p |> List.map (function 
         | Inr (e) -> Inr ({e with pos=r})
         | Inl t -> Inl ({t with pos=r})) in

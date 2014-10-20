@@ -229,6 +229,14 @@ let close_ex vars pred = match vars with
     and term(*) is just term
  *)
 
+let encode_const = function 
+    | Const_unit -> mk_Term_unit
+    | Const_bool true -> boxBool mkTrue
+    | Const_bool false -> boxBool mkFalse
+    | Const_int32 i -> boxInt (mkInteger i)
+    | Const_string(bytes, _) -> varops.string_const (Util.string_of_bytes <| bytes)
+    | c -> failwith (Util.format1 "Unhandled constant: %s\n" (Print.const_to_string c))
+ 
 let rec encode_knd (k:knd) (env:env_t) (t:term) : term = 
     match (Util.compress_kind k).n with 
         | Kind_type -> 
@@ -399,13 +407,6 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t *)
 and encode_exp (e:exp) (env:env_t) : (term * ex_vars) = 
     let e = Visit.compress_exp_uvars e in 
     let e0 = e in
-    let encode_const = function 
-        | Const_unit -> mk_Term_unit
-        | Const_bool true -> boxBool mkTrue
-        | Const_bool false -> boxBool mkFalse
-        | Const_int32 i -> boxInt (mkInteger i)
-        | Const_string(bytes, _) -> varops.string_const (Util.string_of_bytes <| bytes)
-        | c -> failwith (Util.format1 "Unhandled constant: %s\n" (Print.exp_to_string e0)) in
     match e.n with 
       | Exp_delayed _ -> (* REVIEW: dead code? *)
         encode_exp (Util.compress_exp e) env
@@ -842,103 +843,169 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
         | _ -> true) in
       g'@inversions, env
 
-    | Sig_let((is_rec, [(Inr x, t1, e)]), _, _) when not is_rec -> 
+    | Sig_let((is_rec, [(Inr f, t1, e)]), _, _) when not is_rec -> 
         if not (Util.is_pure_function t1) then [], env  else
-        let (n, x), decls, env = match try_lookup_lid env x with 
-            | None -> (* Need to introduce a new name decl *)
-              let decls, env = encode_free_var env x t1 [] in
-              (lookup_lid env x), decls, env 
-            | Some (n, x) -> (* already declared, only need an equation *)
-              (n, x), [], env in
+        let (f, ftok), decls, env = declare_top_level_let env f t1 in
         let e = Util.compress_exp e in
         let binders, body = match e.n with
             | Exp_abs(binders, body) -> binders, body 
             | _ -> [], e in
         let vars, guards, env', _ = encode_binders binders env in
         let app = if !Options.z3_optimize_full_applications 
-                  then Term.mkApp(n, List.map mkBoundV vars)
-                  else mk_ApplyE x vars in
+                  then Term.mkApp(f, List.map mkBoundV vars)
+                  else mk_ApplyE ftok vars in
         let body, ex_vars = encode_exp body env' in
         let eqn = Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(app, body))), None) in
         decls@[eqn], env
      
-//
-//     | Sig_let((is_rec, [(Inr x, t1, e)]), _, _) ->
-//        (* only encoding recursive pure functions defined immediately by cases on one of the arguments 
-//                 let rec f x1 .. xi .. xn = match xi with 
-//                   | P1 y1..ym1 -> e1 
-//                   | P2 y1..ym2 -> e2
-//                   | ... 
-//                  ~>
-//                  forall x1...(y1..ymi)..xn. f x1...(Pj y1..ymj)..xn = [[ej]]
-//        *)
-//
-//        if not (Util.is_pure_function t1) then [], env
-//        else 
-//            
-//            let encode_equation (xs:Syntax.binders) (scrutinee:exp) (p:pat) (env:env_t) : list<var> * list<term> * term * env_t = 
-//                match scrutinee.n with
-//                    | Exp_bvar x ->
-//                        let prefix, xi, suffix = xs |> List.fold_left (fun ())
-//                          
-//                    | _ -> failwith "TODO" in
-//        
-//            match e.n with 
-//               | Exp_abs(xs, {n=Exp_match(scrutinee, cases)}) -> 
-//                 cases |> List.map (fun (p, when_clause, branch) -> 
-//                    let vars, guard, app_pat, env = encode_equation xs scrutinee p env in
-//                    let w = match when_clause with 
-//                        | None -> Term.mkTrue
-//                        | Some w -> let w, wvars = encode_exp w env in close_ex wvars (mkEq(w, Term.boxBool(Term.mkTrue))) in
-//                    let branch, bvars = encode_exp branch env in
-//                    Term.Assume(mkForall([app_pat], vars, mkImp(mk_and_l (w::guard), close_ex bvars <| mkEq(app_pat, branch))), None) 
-//                 ), env
-//
-//               | _ -> [], env in
-//               
-//               
-//               let binders, body = 
-//
-//             let mk_app args = if !Options.z3_optimize_full_applications 
-//                               then Term.mkApp(n, args) 
-//                               else mk_ApplyE_args x args in
-//             
-//             begin match body.n with 
-//                | Exp_match({n=Exp_bvar xi}, pats) ->
-//                  let xi = lookup_term_var env xi in 
-//                  let other_vars = vars |> List.filter (fun (var, _) -> var <> boundV_sym xi) in
-//                 
-//                  let encode_pat p env : (term        (* pattern term *) 
-//                                          * list<var> (* pattern vars *)
-//                                          * env_t)    (* branch env   *) 
-//                                      = failwith "TODO" in
-//
-//                  let equations = pats |> List.map (fun (pat, when_clause, branch) -> 
-//                      let p, ys, env = encode_pat pat env in 
-//                      let args = vars |> List.map (fun v -> 
-//                        if fst v <> boundV_sym xi 
-//                        then mkBoundV v 
-//                        else p) in
-//                      let app = mk_app args in
-//                      let w, wvars = encode_exp when_clause env in 
-//                      let branch, bvars  encode_exp branch env in
-//                      mkForall([app], other_vars@ys, mkImp( )
-//                  ) in 
-//
-//
-//                
-//                failwith "TODO"
-//                | _ -> decls, env (* not encoding the definition *)
-//             end
 
-    | Sig_let((_,lbs), _, _) -> //TODO 
+    | Sig_let((is_rec, [(Inr f, t, e)]), _, _) ->
+      (* only encoding recursive pure functions defined immediately by cases on some subset of the arguments 
+         The case where the subset of arguments is just xi looks like this:
+        
+                 let rec f x1 .. xi .. xn = match xi with
+                   | P1 y1..ym1 -> e1 
+                   | P2 y1..ym2 -> e2
+                   | ... 
+                  ~>
+                  forall x1...xn. f x1...(Pj y1..ymj)..xn = [[ej]]
+
+        The extension to a tuple of the arguments in place of xi is tedious but straightforward.
+      *)
+
+      if not (Util.is_pure_function t) then [], env else
+      let _ = if Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding let rec %s\n" (Print.sli f) in
+      let (f, ftok), decls, env = declare_top_level_let env f t in
+  
+      let binders_until bs x = match x.n with 
+        | Exp_bvar xi -> 
+          let rec aux prefix bs = match bs with
+            | [] -> None
+            | (Inl _, _)::tl -> aux (List.hd bs::prefix) tl
+            | (Inr xi', _)::tl -> 
+              if Util.bvar_eq xi xi'
+              then Some (List.rev prefix, xi, tl)
+              else aux (List.hd bs::prefix) tl in
+          aux [] bs
+        | _ -> None in
+        
+      let encode_pat p env : list<var> * term * exp * env_t = 
+        let _, tun = Tc.Rel.new_tvar Syntax.dummyRange [] ktype in
+        let kun, _ = Tc.Rel.new_kvar Syntax.dummyRange [] in
+        let rec aux (vars, env) p = match p with 
+            | Pat_disj _ -> failwith "Impossible: nested disjunctive pattern"
+            | Pat_var x -> 
+               let x, _, env = gen_term_var env x in
+               let vars = (x,Term_sort)::vars in
+               vars,  env
+    
+            | Pat_tvar a -> 
+               let a, _, env = gen_typ_var env a in
+               let vars = (a, Type_sort)::vars in
+               vars, env
+    
+            | Pat_wild
+            | Pat_twild
+            | Pat_constant _ -> vars, env
+
+            | Pat_cons(l, pats) -> 
+               let vars, env = pats |> List.fold_left aux (vars, env) in
+               vars, env
+        
+            | Pat_meta(Meta_pat_exp(p, _)) 
+            | Pat_meta(Meta_pat_pos(p, _)) -> 
+                aux (vars, env) p in
+        
+        let vars, env = aux ([], env) p in 
+
+        let pat_tm, pat_exp, wildcards = match p with 
+            | Pat_meta(Meta_pat_exp(_, e))
+            | Pat_meta(Meta_pat_pos(Pat_meta(Meta_pat_exp(_,e)), _)) -> 
+              let pat_tm, ex_vars = encode_exp e env in
+              pat_tm, e, ex_vars
+            | _ -> failwith "Impossible" in
+
+        vars@List.map fst wildcards, pat_tm, pat_exp, env in
+
+      let encode_equation (xs:Syntax.binders) (scrutinee:exp) (p, w, br) (env:env_t) : option<decl> = 
+        let arg_pats = match scrutinee.n, p with
+            | Exp_bvar x, _ -> [varg <| scrutinee, p] 
+           
+            | Exp_app({n=Exp_fvar(fv, _)}, args), Pat_cons(l, pats) 
+                when (Util.is_tuple_data_lid fv.v (List.length args)
+                      && Util.is_tuple_data_lid l (List.length pats)) ->
+              List.zip args pats 
+              
+            | _ -> [] in
+
+        let rec encode_pat_binders binders arg_pats (env, vars, args, guards) = match arg_pats with 
+            | [] -> 
+              let vars', guards', env, _ = encode_binders binders env in 
+              Some (env, vars@vars', args@List.map mkBoundV vars', guards@guards')
+
+            | ((Inr a, _), p)::arg_pats -> 
+              begin match binders_until binders a with 
+                | None -> None
+                | Some(prefix, xi, suffix) -> 
+                  let prefix, guards', env, _ = encode_binders prefix env in 
+                  let pat_vars, pat_tm, pat_exp, env = encode_pat p env in
+                  let pat_guard = encode_typ_pred xi.sort env pat_tm in
+                  let suffix = Util.subst_binders ([Inr(xi.v, pat_exp)]) suffix in
+                  encode_pat_binders suffix arg_pats (env, vars@prefix@pat_vars, args@List.map mkBoundV prefix@[pat_tm], guards@[pat_guard]@guards')
+              end
+
+            | _ -> None  in
+
+        match encode_pat_binders xs arg_pats (env, [], [], []) with 
+            | None -> None
+            | Some (env, vars, args, guards) -> 
+                let f_app = 
+                    if !Options.z3_optimize_full_applications
+                    then Term.mkApp(f, args)
+                    else let args = args |> List.map (fun a -> match a.tm with 
+                                | BoundV(_, Type_sort) -> Inl a
+                                | BoundV(_, Term_sort) -> Inr a 
+                                | _ -> Inr a) in
+                         mk_ApplyE_args ftok args in
+                let w = match w with 
+                    | None -> Term.mkTrue
+                    | Some w -> let w, wvars = encode_exp w env in close_ex wvars (mkEq(w, Term.boxBool(Term.mkTrue))) in
+                let br, br_vars = encode_exp br env in
+                Some <| Term.Assume(mkForall([f_app], vars, mkImp(mk_and_l (w::guards), close_ex br_vars <| mkEq(f_app, br))), Some (Util.format1 "Equation: %s" f)) in
+        
+        let equations = match e.n with 
+            | Exp_abs(xs, {n=Exp_match(scrutinee, cases)}) -> 
+                let rec aux out = function 
+                    | [] -> List.rev out
+                    | case::cases -> 
+                      match encode_equation xs scrutinee case env with 
+                        | None -> 
+                          if Env.debug env.tcenv Options.Low then Util.fprint1 "No equations; failed to encode case %s\n" (Print.pat_to_string (let p, _, _ = case in p));
+                          []
+                        | Some d -> aux (d::out) cases in
+
+                aux [] cases
+
+            | _ -> 
+              if Env.debug env.tcenv Options.Low then Util.print_string "No equations, because top-level term is not a match\n";
+              [] in
+        decls@equations, env
+
+
+    | Sig_let((_,lbs), _, _) -> //TODO: mutual recursion
         let msg = lbs |> List.map (fun (lb, _, _) -> Print.lbname_to_string lb) |> String.concat " and " in
         [], env
 
     | Sig_main _
     | Sig_monads _ -> [], env
 
-//and declare_top_level_let env lid t =
+and declare_top_level_let env x t =
+    match try_lookup_lid env x with 
+        | None -> (* Need to introduce a new name decl *)
+            let decls, env = encode_free_var env x t [] in
+            lookup_lid env x, decls, env 
+        | Some (n, x) -> (* already declared, only need an equation *)
+            (n, x), [], env
 
 and encode_free_var env lid t quals = 
     if not <| Util.is_pure_function t 

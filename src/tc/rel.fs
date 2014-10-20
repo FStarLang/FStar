@@ -88,13 +88,12 @@ let conj_guard g1 g2 = match g1, g2 with
   | g, Trivial -> g
   | NonTrivial f1, NonTrivial f2 -> NonTrivial (Util.mk_conj f1 f2)
 
-let close bs f = List.fold_right (fun b f -> match b with 
-    | Inl a, _ -> Util.mk_forallT a f
-    | Inr x, _ -> Util.mk_forall x f) bs f
-  
-let close_guard b = function
-  | Trivial -> Trivial
-  | NonTrivial f -> NonTrivial <| close b f
+let rec close bs f = match bs with 
+    | [] -> f
+    | (Inl a, _)::rest -> 
+      mk_Typ_app(Util.tforall_typ a.sort, [targ <| close rest f]) ktype f.pos
+    | (Inr x, _)::rest -> 
+      mk_Typ_app(Util.tforall, [targ <| close rest f]) ktype f.pos
 
 //////////////////////////////////////////////////////////////////////////
 //Making substitutions for alpha-renaming 
@@ -255,7 +254,7 @@ let guard (env:env) top g probs =
                        | Some _, NonTrivial {n=Typ_lam(bs, body); tk=tk; pos=p} -> 
                          NonTrivial (mk_Typ_lam(bs, Util.mk_conj body qf) tk p)
                        | None, NonTrivial g -> 
-                         NonTrivial <| Util.mk_conj g f
+                         NonTrivial <| Util.mk_conj g qf
                        | _ -> failwith "Impossible"
                 else match probs.top_t, probs.guard with 
                        | _, Trivial -> NonTrivial f
@@ -1027,7 +1026,7 @@ and solve_c (top:bool) (env:Env.env) (rel:rel) (c1:comp) (c2:comp) (probs:workli
                | Comp _, Comp _ ->
                  if (Util.is_ml_comp c1 && Util.is_ml_comp c2) 
                     ||(Util.is_total_comp c1 && (Util.is_total_comp c2 || Util.is_ml_comp c2))
-                 then solve_t top env rel (Util.comp_result c1) (Util.comp_result c2) probs 
+                 then solve_t false env rel (Util.comp_result c1) (Util.comp_result c2) probs 
                  else
                      let c1_0, c2_0 = c1, c2 in
                      let c1 = Normalize.weak_norm_comp env c1 in

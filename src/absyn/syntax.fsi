@@ -142,8 +142,11 @@ and pat =
   | Pat_disj     of list<pat>
   | Pat_wild
   | Pat_twild
-  | Pat_withinfo of pat * Range.range
-and knd' =
+  | Pat_meta     of meta_pat
+and meta_pat = 
+  | Meta_pat_pos of pat * Range.range
+  | Meta_pat_exp of pat * exp
+ and knd' =
   | Kind_type
   | Kind_effect
   | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)

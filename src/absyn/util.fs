@@ -99,6 +99,7 @@ let set_bvd_range bvd r = {ppname=mk_ident(bvd.ppname.idText, r);
 let set_lid_range l r = 
   let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
   lid_of_ids ids
+let exp_of_lid l t = mk_Exp_fvar (withinfo l t <| range_of_lid l, false) t (range_of_lid l)
 let fv l = withinfo l tun (range_of_lid l)
 let fvar l r = mk_Exp_fvar(fv (set_lid_range l r), false) tun r
 let ftv l k = mk_Typ_const (withinfo l k (range_of_lid l)) k (range_of_lid l)
@@ -1025,6 +1026,9 @@ let mk_tuple_data_lid n r =
   let t = Util.format1 "MkTuple%s" (Util.string_of_int n) in
   set_lid_range (Const.pconst t) r
 
+let is_tuple_data_lid f n = 
+  Syntax.lid_equals f (mk_tuple_data_lid n Syntax.dummyRange)
+
 let is_dtuple_constructor (t:typ) = match t.n with 
   | Typ_const l -> Util.starts_with l.v.str "Prims.DTuple"
   | _ -> false
@@ -1135,7 +1139,8 @@ let mk_forall (x:bvvar) (body:typ) : typ =
 let rec is_wild_pat p =
     match p with
     | Pat_wild -> true
-    | Pat_withinfo (p, _) -> is_wild_pat p
+    | Pat_meta(Meta_pat_pos(p, _))
+    | Pat_meta(Meta_pat_exp(p, _)) -> is_wild_pat p
     | _ -> false
 
 let head_and_args t = 

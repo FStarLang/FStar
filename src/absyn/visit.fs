@@ -336,7 +336,8 @@ and reduce_exp
             | Pat_wild
             | Pat_twild
             | Pat_constant _ -> b
-            | Pat_withinfo(p, _) -> pat_binders b p
+            | Pat_meta(Meta_pat_pos(p, _))
+            | Pat_meta(Meta_pat_exp(p, _)) -> pat_binders b p
             | Pat_var x -> push_vbinder b (Some x)
             | Pat_tvar t -> push_tbinder b (Some t)
             | Pat_cons(c, pats) -> List.fold_left pat_binders b pats

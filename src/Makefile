@@ -196,6 +196,7 @@ test: boot
 	make -C ../examples/unit-tests testset.ver
 	echo "--------TestSet: Expect three failing assertions----------"
 	make -C ../examples/unit-tests millionaires.ver
+	make -C ../examples/unit-tests listlemmas.ver
 	#make -C ../../../miTLS/ML
 
 wc-boot:

@@ -392,7 +392,10 @@ let rec mlpat_of_pat (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
     | Pat_wild ->
         lenv, MLP_Wild
 
-    | Pat_withinfo (p, rg) ->
+    | Pat_meta(Meta_pat_exp(p, _)) -> 
+        mlpat_of_pat rg lenv p
+
+    | Pat_meta(Meta_pat_pos (p, rg)) ->
         mlpat_of_pat rg lenv p
 
     | Pat_tvar  _ -> unsupported rg "pattern-type-variable"
