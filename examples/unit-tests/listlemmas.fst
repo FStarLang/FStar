@@ -73,7 +73,11 @@ For contrast, in old F*/F7, you'd have to write:
 
 (* You can also prove lemmas about pure functions "after the fact", i.e., extrinsically. 
    Here's an inductive proofs relating append and mem. 
-*)
+
+   Note also the use of boolean valued terms as predicates. I'm
+   beginning to add support for automatically lifting bool to Type,
+   when needed. That's still in progress, though.
+ *)
 val append_mem:  l1:list 'a
               -> l2:list 'a
               -> a:'a
