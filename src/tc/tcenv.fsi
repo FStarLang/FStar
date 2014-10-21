@@ -60,7 +60,13 @@ type env = {
   generalize:bool;               (* should we generalize let bindings? *)
 }
 and solver_t = {
+    init: env -> unit;
+    push:unit -> unit;
+    pop:unit -> unit;
+    encode_modul:env -> modul -> unit;
+    encode_sig:env -> sigelt -> unit;
     solve:env -> typ -> bool;
+    is_trivial: env -> typ -> bool;
 }
 
 val bound_vars: env -> list<Util.either<btvar, bvvar>>

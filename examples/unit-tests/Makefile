@@ -11,7 +11,13 @@ FSTAR_HOME = ../..
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, string.fst st.fst partialmap.fst)
 FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
 
-all: unit1.ver testset.ver recursion.ver millionaires.ver
+all: all-lax all-ver
+
+all-ver: unit1.fst testset.fst millionaires.fst listlemmas.fst
+	$(FSTAR) --verify unit1.fst testset.fst millionaires.fst listlemmas.fst
+
+all-lax: rec.fst pat.fst format.fst 
+	$(FSTAR) $^
 
 %.tc: %.fst
 	$(FSTAR) $^

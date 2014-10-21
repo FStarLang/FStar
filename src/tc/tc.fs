@@ -1211,10 +1211,10 @@ and tc_decl env se = match se with
            Sig_tycon(lid, tps, k, [], [], [], r), t
         | _ -> failwith "impossible") in
       let recs, abbrev_defs = List.split recs in
-      let tycons = fst <| tc_decls env tycons in 
-      let recs = fst <| tc_decls env recs in
+      let tycons = fst <| tc_decls' env tycons in 
+      let recs = fst <| tc_decls' env recs in
       let env1 = Tc.Env.push_sigelt env (Sig_bundle(tycons@recs, r, lids)) in
-      let rest = fst <| tc_decls env1 rest in
+      let rest = fst <| tc_decls' env1 rest in
       let abbrevs = List.map2 (fun se t -> match se with 
         | Sig_tycon(lid, tps, k, [], [], [], r) -> 
           let tt = Util.close_with_lam tps (mk_Typ_ascribed(t, k) t.pos) in
@@ -1228,13 +1228,18 @@ and tc_decl env se = match se with
       let env = Tc.Env.push_sigelt env se in
       se, env
 
-and tc_decls (env:Tc.Env.env) ses = 
+and tc_decls' (env:Tc.Env.env) ses = 
   let ses, env = List.fold_left (fun (ses, (env:Tc.Env.env)) se ->
+  let se, env = tc_decl env se in
+  se::ses, env) ([], env) ses in
+  List.rev ses, env 
+
+let tc_decls env ses = 
+ let ses, env = List.fold_left (fun (ses, (env:Tc.Env.env)) se ->
   if debug env Options.Low
   then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
-  let se, env = tc_decl env se in 
-  if debug env Options.Medium
-  then Util.print_string (Util.format1 "Checked sigelt\n\t%s\n" (Print.sigelt_to_string se));
+  let se, env = tc_decl env se in
+  if not <| lid_equals env.curmodule Const.prims_lid then env.solver.encode_sig env se; 
   se::ses, env) ([], env) ses in
   List.rev ses, env 
 
@@ -1252,18 +1257,21 @@ let tc_modul env modul =
   let env = Tc.Env.set_current_module env modul.name in 
   let ses, env = tc_decls env modul.declarations in 
   let exports = get_exports env modul ses in
-
   let modul = {name=modul.name; declarations=ses; exports=exports; is_interface=modul.is_interface} in 
   let env = Tc.Env.finish_module env modul in
   modul, env
 
 let check_modules (s:solver_t) mods = 
+   let env = Tc.Env.initial_env s Const.prims_lid in
+   s.init env; 
    let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 
     if List.length !Options.debug <> 0
     then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
+    s.push();
     let m, env = tc_modul env m in 
+    s.pop();
     if m.is_interface 
     then mods, env
-    else m::mods, env) ([], Tc.Env.initial_env s Const.prims_lid) in
+    else (s.encode_modul env m; m::mods, env)) ([], env) in
    List.rev fmods
  

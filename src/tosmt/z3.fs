@@ -97,6 +97,8 @@ let z3proc =
     let cond (s:string) = Util.trim_string s = "Done!" in
     Util.start_process (!Options.z3_exe) ini_params cond 
 
+ 
+
 let doZ3Exe (input:string) = 
   let parse (z3out:string) = 
     let lines = String.split ['\n'] z3out |> List.map Util.trim_string in
@@ -131,9 +133,13 @@ let cleanup () =
         | Some f -> Util.close_file f
         | _ -> ()
 
-let callZ3Exe (debug:bool) (theory:decls)  = 
+let batch : ref<decls> = Util.mk_ref []
+let clear_batch () = let r = !batch in batch:=[]; r
+let giveZ3 (theory:decls) = batch := !batch@theory
+let queryZ3 (theory:decls)  =
+  let theory = clear_batch()@theory in
   let input = List.map declToSmt theory |> String.concat "\n" in
-    if debug then Util.append_to_file (get_qfile()) input;
+    if !Options.logQueries then Util.append_to_file (get_qfile()) input;
     let status, lblnegs = doZ3Exe input in
     match status with 
         | UNSAT -> true

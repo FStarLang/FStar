@@ -51,7 +51,8 @@ let go _ =
         if not (Option.isNone !Options.codegen) then
             Options.pretype := true;
         let fmods = Parser.Driver.parse_files (Options.prims()::filenames) in
-        let fmods = if !Options.pretype then Tc.Tc.check_modules ToSMT.Encode.solver fmods else fmods in
+        let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
+        let fmods = if !Options.pretype then Tc.Tc.check_modules solver fmods else fmods in
         if !Options.codegen = Some "OCaml" then begin
             try
                 let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in

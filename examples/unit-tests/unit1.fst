@@ -2,18 +2,21 @@ module Unit1
 open Prims.PURE
 open Prims.ALL
 
-let rec comp x y = comp x y
+type t = 
+  | A 
+  | B
+(* let rec comp x y = comp x y *)
 
-let rec foo x =
-  let rec bar y = bar y in
-  foo (bar x)
+(* let rec foo x = *)
+(*   let rec bar y = bar y in *)
+(*   foo (bar x) *)
 
-let partial_app f x y =
-  let g = f x in
-  g y
+(* let partial_app f x y = *)
+(*   let g = f x in *)
+(*   g y *)
 
-let unit_id x = ()
-let unit_pattern () = ()
+(* let unit_id x = () *)
+(* let unit_pattern () = () *)
 
 val assert_0_eq_0: unit -> Tot unit
 let assert_0_eq_0 x = assert (0==0)

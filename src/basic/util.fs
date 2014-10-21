@@ -392,7 +392,7 @@ let rec stfold (init:'b) (l:list<'a>) (f: 'b -> 'a -> state<'s,'b>) : state<'s,'
 type file_handle = System.IO.TextWriter
 let open_file_for_writing (fn:string) : file_handle =
   new System.IO.StreamWriter(fn)  :> System.IO.TextWriter 
-let append_to_file (fh:file_handle) s = fpr fh "%s\n" s
+let append_to_file (fh:file_handle) s = fpr fh "%s\n" s; flush fh
 let close_file (fh:file_handle) = fh.Close()
 let write_file (fn:string) s = 
   let fh = open_file_for_writing fn in

@@ -1061,8 +1061,8 @@ and encode_signature env ses =
       let g', env = encode_sigelt env se in 
       g@g', env) ([], env) 
 
-let encode_env (env:env_t) (tcenv:Env.env) : (decls * env_t) = 
-    let encode_binding (decls, env) = function
+let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls * env_t) = 
+    let encode_binding b (decls, env) = match b with
         | Env.Binding_var(x, t) -> 
             let xxsym, xx, env' = gen_free_term_var env x in 
             let g = [Term.DeclFun(xxsym, [], Term_sort, Some (Print.strBvd x));
@@ -1079,55 +1079,88 @@ let encode_env (env:env_t) (tcenv:Env.env) : (decls * env_t) =
         | Env.Binding_sig se -> 
             let g, env' = encode_sigelt env se in 
             decls@g, env' in
-    Env.fold_env tcenv encode_binding ([], env)
+    List.fold_right encode_binding bindings ([], env)
 
 (* caching encodings of the environment and the top-level API to the encoding *)
 open Microsoft.FStar.Tc.Env
-let seen_modules : ref<list<lident>> = Util.mk_ref []
-let seen (m:modul) : bool = 
-    if !seen_modules |> Util.for_some (fun l -> lid_equals m.name l)
-    then (//Util.fprint1 ">>Skipping module %s\n" (Print.sli m.name); 
-         true)
-    else (//Util.fprint1 ">>Encoding module %s\n" (Print.sli m.name); 
-          seen_modules := m.name::!seen_modules; false)
+let last_env : ref<list<env_t>> = Util.mk_ref []
+let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv}]
+let get_env tcenv = match !last_env with 
+    | [] -> failwith "No env; call init first!"
+    | e::_ -> {e with tcenv=tcenv}
+let set_env env = match !last_env with 
+    | [] -> failwith "Empty env stack"
+    | _::tl -> last_env := env::tl
+let push_env () = match !last_env with 
+    | [] -> failwith "Empty env stack"
+    | hd::tl -> last_env := hd::hd::tl 
+let pop_env () = match !last_env with 
+    | [] -> failwith "Popping an empty stack"
+    | _::tl -> last_env := tl
 
-type cache_t = {
-        prelude_env:Tc.Env.env -> env_t * list<decl>;
-        cache_env:env_t -> unit
-    }
+(* TOP-LEVEL API *)
 
-let cache = 
-    let last_env : ref<option<env_t>> = Util.mk_ref None in
-    {prelude_env=(fun tcenv ->     
-        match !last_env with 
-            | None -> 
-                let e = {bindings=[]; tcenv=tcenv} in
-                last_env := Some e;
-                e, [Term.DefPrelude]
-            | Some e -> {e with tcenv=tcenv}, []);
-     cache_env=(fun e -> last_env := Some e)} 
-
-let smt_query (tcenv:Tc.Env.env) (q:typ) : bool = 
-   let e, prelude = cache.prelude_env tcenv in
-   let decls, env = tcenv.modules |> List.rev |> List.collect (fun m -> if seen m then [] else m.exports) |> encode_signature e in
-   cache.cache_env env;
-   varops.push();
-   let env_decls, env = encode_env env tcenv in
-   if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);
-   let phi = encode_formula q env in
-   let label_suffix = [] in  //labels |> List.fold_left (fun decls (lname, t) -> decls@[Echo lname; Eval t]) theory in
-   let r = Caption (Range.string_of_range (Tc.Env.get_range tcenv)) in
-   varops.pop();
-   let decls = prelude@decls@(Term.Push::r::env_decls)@Term.Caption "<Query>"::[Term.Assume(mkNot phi, Some "query"); Term.Caption "</Query>"; Term.CheckSat]@label_suffix@[Term.Pop; Term.Echo "Done!"] in
-   Z3.callZ3Exe (!Options.logQueries) decls
-
+let init tcenv =
+    init_env tcenv;
+    Z3.giveZ3 [DefPrelude]
+let push () = 
+    push_env ();
+    varops.push(); 
+    Z3.giveZ3 [Term.Push]
+let pop ()  = 
+    ignore <| pop_env();
+    varops.pop(); 
+    Z3.giveZ3 [Term.Pop]
+let encode_sig tcenv se =
+   let env = get_env tcenv in
+   let decls, env = encode_sigelt env se in
+   set_env env;
+   Z3.giveZ3 decls
+let encode_modul tcenv modul = 
+   let env = get_env tcenv in
+   let decls, env = encode_signature env modul.exports in
+   set_env env;
+   Z3.giveZ3 decls
+let solve tcenv q =
+    let env = get_env tcenv in
+    push_env (); varops.push();
+    let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) tcenv.gamma) in
+    if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);
+    let phi = encode_formula q env in
+    let label_suffix = [] in  //labels |> List.fold_left (fun decls (lname, t) -> decls@[Echo lname; Eval t]) theory in
+    let r = Caption (Range.string_of_range (Tc.Env.get_range tcenv)) in
+    ignore <| pop_env(); varops.pop();
+    let decls = [Term.Push; r]
+                @env_decls
+                @[Term.Caption "<Query>"; Term.Assume(mkNot phi, Some "query"); Term.Caption "</Query>"; Term.CheckSat]
+                @label_suffix
+                @[Term.Pop; Term.Echo "Done!"] in
+    Z3.queryZ3 decls
 let is_trivial (tcenv:Tc.Env.env) (q:typ) : bool = 
-   let e, prelude = cache.prelude_env tcenv in
-   let f = encode_formula q e in
+   let env = get_env tcenv in
+   push();
+   let f = encode_formula q env in
+   pop();
    match f.tm with 
     | True -> true
     | _ -> false
 
 let solver = {
-    solve=smt_query;
+    init=init;
+    push=push;
+    pop=pop;
+    encode_sig=encode_sig;
+    encode_modul=encode_modul;
+    solve=solve;
+    is_trivial=is_trivial
 }
+let dummy = {
+    init=(fun _ -> ());
+    push=(fun _ -> ());
+    pop=(fun _ -> ());
+    encode_sig=(fun _ _ -> ());
+    encode_modul=(fun _ _ -> ());
+    solve=(fun _ _ -> true);
+    is_trivial=(fun _ _ -> false)
+}
+
