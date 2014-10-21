@@ -69,6 +69,7 @@ val open_file_for_writing: string -> file_handle
 val append_to_file: file_handle -> string -> unit
 val close_file: file_handle -> unit
 val write_file: string -> string -> unit
+val flush_file: file_handle -> unit
 
 type proc = {m:System.Object; 
              outbuf:System.Text.StringBuilder;

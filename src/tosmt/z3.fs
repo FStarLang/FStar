@@ -133,7 +133,7 @@ let cleanup () =
 
 let callZ3Exe (debug:bool) (theory:decls)  = 
   let input = List.map declToSmt theory |> String.concat "\n" in
-    if debug then Util.append_to_file (get_qfile()) input;
+    if debug then Util.append_to_file (get_qfile()) input; Util.flush_file (get_qfile());
     let status, lblnegs = doZ3Exe input in
     match status with 
         | UNSAT -> true
