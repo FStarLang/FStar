@@ -136,11 +136,7 @@ let giveZ3 (theory:decls) = batch := !batch@theory
 let queryZ3 (theory:decls)  =
   let theory = clear_batch()@theory in
   let input = List.map declToSmt theory |> String.concat "\n" in
-<<<<<<< HEAD
-    if !Options.logQueries then Util.append_to_file (get_qfile()) input;
-=======
-    if debug then Util.append_to_file (get_qfile()) input; Util.flush_file (get_qfile());
->>>>>>> 1217611c29329533a4d519d687eac593d71cfc5c
+    if !Options.logQueries then Util.append_to_file (get_qfile()) input; (* append flushes *)
     let status, lblnegs = doZ3Exe input in
     match status with 
         | UNSAT -> true
