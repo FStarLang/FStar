@@ -67,8 +67,6 @@ let rec tag_of_typ t = match t.n with
   | Typ_ascribed _ -> "Typ_ascribed"
   | Typ_meta(Meta_pattern _) -> "Typ_meta_pattern"
   | Typ_meta(Meta_named _) -> "Typ_meta_named"
-  | Typ_meta(Meta_uvar_t_app _) -> "Typ_meta_uvar_t_app"
-  | Typ_meta(Meta_comp _) -> "Typ_meta_comp"
   | Typ_uvar _ -> "Typ_uvar"   
   | Typ_delayed _ -> "Typ_delayed"
   | Typ_unknown -> "Typ_unknown"
@@ -96,7 +94,6 @@ and typ_to_string x =
   match x.n with 
   | Typ_delayed _ -> failwith "impossible"
   | Typ_meta(Meta_named(_, l)) -> sli l
-  | Typ_meta(Meta_comp c) ->   comp_typ_to_string c
   | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)
   | Typ_btvar btv -> strBvd btv.v 
     //Util.format2 "(%s:%s)" (strBvd btv.v) (kind_to_string x.tk)
@@ -130,9 +127,7 @@ and arg_to_string = function
 and args_to_string args = args |> List.map arg_to_string |> String.concat " "
 
 and comp_typ_to_string c =
-  match (compress_comp c).n with 
-    | Flex (u, t) -> Util.format2 "_Flex_ (%s) %s" (typ_to_string u) (typ_to_string t) 
-    | Rigid t -> typ_to_string t
+  match c.n with
     | Total t -> Util.format1 "Tot %s" (typ_to_string t)
     | Comp c ->
       if List.contains TOTAL c.flags && not !Options.print_effect_args 
@@ -203,7 +198,6 @@ and formula_to_string phi =
          
 and exp_to_string x = match (compress_exp x).n with 
   | Exp_delayed _ -> failwith "Impossible"
-  | Exp_meta(Meta_uvar_e_app(e, _))
   | Exp_meta(Meta_datainst(e,_))
   | Exp_meta(Meta_desugared(e, _)) -> exp_to_string e
   | Exp_uvar(uv, _) -> Util.format1 "'e%s" (Util.string_of_int (Unionfind.uvar_id uv))
@@ -240,8 +234,6 @@ and either_to_string x = match x with
   l |> List.map either_to_string |> Util.concat_l delim
 
 and meta_to_string x = match x with 
-  | Meta_comp c -> comp_typ_to_string c
-  | Meta_uvar_t_app(t, (_,k)) -> (typ_to_string t) 
   | Meta_named(_, l) -> sli l
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (args_to_string ps) (t |> typ_to_string) 
 

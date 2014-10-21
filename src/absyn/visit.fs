@@ -37,8 +37,7 @@ let rec compress_typ_aux pos typ = match typ.n with
       | Some t -> let t' = compress_typ_aux pos t in m := Some t'; t')
   | Typ_ascribed(t, _)
   | Typ_meta(Meta_named(t, _)) when pos -> compress_typ_aux pos t
-  | Typ_app({n=Typ_uvar(uv, _)}, args)
-  | Typ_meta(Meta_uvar_t_app({n=Typ_app({n=Typ_uvar(uv,_)}, args)}, _)) ->
+  | Typ_app({n=Typ_uvar(uv, _)}, args) ->
        begin 
           match Unionfind.find uv with 
             | Fixed t' -> compress_typ_aux pos <| mk_Typ_app(t', args) typ.tk typ.pos
@@ -61,7 +60,7 @@ let rec compress_exp_aux meta exp = match exp.n with
       | Some e -> let e' = compress_exp_aux meta e in m := Some e'; e')
   | Exp_ascribed(e, _)
   | Exp_meta(Meta_desugared(e, _)) when meta -> compress_exp_aux meta e
-  | Exp_meta(Meta_uvar_e_app({n=Exp_app({n=Exp_uvar(uv, _)}, args)}, _)) -> 
+  | Exp_app({n=Exp_uvar(uv, _)}, args) -> 
        begin match Unionfind.find uv with 
         | Fixed e' -> mk_Exp_app(e', args) exp.tk exp.pos
         | _ -> exp
@@ -76,17 +75,6 @@ let rec compress_kind knd = match knd.n with
       | None -> knd
       | Some k -> let k' = compress_kind k in m := Some k'; k')
   | _ -> knd
-
-let compress_comp c : comp = match c.n with 
-  | Comp _ 
-  | Total _ 
-  | Rigid _ -> c
-  | Flex ({n=Typ_app({n=Typ_uvar(u, _)}, args)}, res_t) -> 
-    begin match Unionfind.find u with 
-      | Fixed t -> mk_Rigid (mk_Typ_app(t, args@[targ res_t]) keffect c.pos)
-      | _ -> c
-    end
-  | Flex _ -> c
       
 let left ext benv btv = match ext benv (Inl btv) with 
   | benv, Inl bvd -> benv, bvd
@@ -199,15 +187,7 @@ and reduce_typ
     (env:'env) binders t : (typ * 'env) =
   
   let rec map_comp (env:'env) (binders:list<either<btvdef,bvvdef>>) (c:comp) = 
-    let c = compress_comp c in
     match c.n with
-    | Rigid t -> 
-      let t, env = map_typ env binders t in
-      mk_Rigid(t), env    
-    | Flex (u, t) -> 
-      let u, env = map_typ env binders u in
-      let t, env = map_typ env binders t in
-      mk_Flex(u, t), env    
     | Total t -> 
       let t, env = map_typ env binders t in
       mk_Total t, env
@@ -253,17 +233,9 @@ and reduce_typ
         let k, env = map_kind env binders k in
         ([], [k], [], [], []), env
 
-      | Typ_meta(Meta_comp c) -> 
-        let c, env = map_comp env binders c in
-        ([], [], [], [c], []), env
-
       | Typ_meta(Meta_named(t, _)) ->
         let t, env = map_typ env binders t in
         ([], [], [t], [], []), env 
-
-      | Typ_meta(Meta_uvar_t_app(t, _)) -> 
-        let e, env = map_typ env binders t in 
-        ([], [], [t], [], []), env
 
       | Typ_meta(Meta_pattern(t,ps)) ->
         let t,env = map_typ env binders t in
@@ -307,7 +279,6 @@ and reduce_exp
         | Exp_delayed _
         | Exp_meta(Meta_datainst _) -> failwith "impossible"
 
-        | Exp_meta(Meta_uvar_e_app(e, _))
         | Exp_meta(Meta_desugared(e, _)) -> 
           let e, env = map_exp env binders e in 
           ([], [], [], [e], []), env
@@ -407,10 +378,8 @@ let combine_typ t (tc:typ_components) env =
     | Typ_fun _, (bs, _, _, [c], _) ->                      w <| mk_Typ_fun(bs, c)
     | Typ_uvar(x, _), (_, [k], _, _, _) ->                  w <| mk_Typ_uvar'(x, k)
     | Typ_ascribed _, (_, [k], [t], _, _) ->                w <| mk_Typ_ascribed'(t, k)
-    | Typ_meta(Meta_comp _), (_, _, _, [c], _) ->           w <| mk_Typ_meta'(Meta_comp c)
     | Typ_meta(Meta_named(_, l)), (_, _, [t'], _, _) ->     w <| mk_Typ_meta'(Meta_named(t', l))
     | Typ_meta(Meta_pattern _), (_, _, [t], _, args) ->     w <| mk_Typ_meta'(Meta_pattern(t, args))
-    | Typ_meta(Meta_uvar_t_app(_, u)), (_, _, [t], _, _) -> w <| mk_Typ_meta' (Meta_uvar_t_app(t, u))
     | _ -> failwith "impossible" in
   t', env
 
@@ -426,8 +395,6 @@ let combine_exp e (ec:exp_components) env =
     | Exp_app _, (_, _, _, [e], args) ->                     w <| mk_Exp_app(e, args)
     | Exp_ascribed _, (_, _, [t], [e], _) ->                 w <| mk_Exp_ascribed'(e, t)
     | Exp_meta(Meta_desugared(_, tag)), (_, _, _, [e], _) -> w <| mk_Exp_meta' (Meta_desugared(e, tag))
-    | Exp_meta(Meta_uvar_e_app(_, u)), (_, _, _, [e], _) ->  w <| mk_Exp_meta' (Meta_uvar_e_app(e, u))
-
     | Exp_match (_, eqns), (_, [], [], e1::el, _) -> 
       let rec mk_eqns eqns el = match eqns, el with 
         | (p,None, _)::eqns', e::el' -> (p, None, e)::mk_eqns eqns' el'

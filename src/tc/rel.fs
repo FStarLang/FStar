@@ -152,10 +152,6 @@ let new_evar r binders t =
         | [] -> uv, uv
         | _ -> mk_Exp_app(uv, args) t r, uv
 
-let new_cvar r binders t = 
-  let u, uv = new_tvar r (binders@[null_t_binder ktype]) keffect in
-  mk_Flex (u,t), uv
-
 //////////////////////////////////////////////////////////////////////////
 //Refinement subtyping with higher-order unification 
 //with special treatment for higher-order patterns 
@@ -351,25 +347,6 @@ let rec compress_e (env:env) s e =
                 mk_Exp_app(e', args) e.tk e.pos //TODO: whnf for expressions?
            end
         | _ -> e
-
-let rec comp_comp env s c = 
-    let c = Util.compress_comp c in
-    match c.n with
-    | Rigid t -> 
-        (match (whnf env t).n with
-            | Typ_meta(Meta_comp c) -> comp_comp env s c
-            | _ -> failwith "Impossible")
-
-    | Flex({n=Typ_app({n=Typ_uvar(uv, _)}, args)}, ret) -> 
-      begin match find_uvar_c uv s with 
-        | None ->  c
-        | Some t' -> 
-          let t' = compress env s t' in 
-          if debug env Extreme then Util.fprint1 ">>> Calling whnf on a flex comp: %s" (Print.comp_typ_to_string c);
-          as_comp <| (whnf env <| mk_Typ_app(t', (args@[targ ret])) keffect ret.pos)
-      end
-
-    | _ -> c
 
 type match_result = 
   | MisMatch
@@ -581,8 +558,6 @@ and imitate (env:Tc.Env.env) (probs:worklist) (p:im_or_proj_t) : solution =
                 f, (e,u) in
 
             let gi_xs, im = match ci.n with 
-                    | Flex _ 
-                    | Rigid _ -> failwith "Impossible"
                     | Total t -> 
                         let s, (t, u) = im_t t in
                         let im : Syntax.args -> list<prob> = fun ps -> [TProb(EQ, t, mk_Typ_app'(u, ps) t.tk t.pos)] in
@@ -1009,14 +984,9 @@ and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist
 
 and solve_c (top:bool) (env:Env.env) (rel:rel) (c1:comp) (c2:comp) (probs:worklist) : solution =
     if Util.physical_equality c1 c2 then solve top env probs
-    else let c1 = comp_comp env probs.subst c1 in
-         let c2 = comp_comp env probs.subst c2 in
-         if debug env High then Util.fprint2 "solve_c %s and %s" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2);
+    else let _ = if debug env High then Util.fprint2 "solve_c %s and %s" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2) in
          let r = Env.get_range env in
          match c1.n, c2.n with
-               | Rigid _, _
-               | _, Rigid _ -> failwith "Impossible" //already normalized
-
                | Total t1, Total t2 -> //rigid-rigid 1
                  solve_t false env rel t1 t2 probs
                
@@ -1069,7 +1039,6 @@ and solve_c (top:bool) (env:Env.env) (rel:rel) (c1:comp) (c2:comp) (probs:workli
                             else giveup env "Equality of wps---unimplemented" (CProb(rel, c1_0, c2_0)) probs 
                      end
 
-                 | _ -> failwith "Unexpected flex comp"
                                 
 and solve_e (top:bool) (env:Env.env) (rel:rel) (e1:exp) (e2:exp) (probs:worklist) : solution = 
     let e1 = compress_e env probs.subst e1 in 

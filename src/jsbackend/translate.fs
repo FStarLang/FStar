@@ -197,7 +197,7 @@ and untype_expr (e:exp) =
     | _ -> e
 
 and comp_vars ct = match ct with
-    | Total(t) | Flex(_,t) -> type_vars t.n
+    | Total(t) -> type_vars t.n
     | Comp(ct) -> type_vars ct.result_typ.n
 
 and type_vars ty = match ty with

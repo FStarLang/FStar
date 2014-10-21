@@ -421,8 +421,7 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars) =
         encode_const c, []
       
       | Exp_ascribed(e, _)
-      | Exp_meta(Meta_desugared(e, _)) 
-      | Exp_meta(Meta_uvar_e_app(e, _)) -> 
+      | Exp_meta(Meta_desugared(e, _)) -> 
         encode_exp e env
 
       | Exp_uvar(uv, _) ->

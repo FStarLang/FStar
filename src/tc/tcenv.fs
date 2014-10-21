@@ -377,7 +377,6 @@ let uvars_in_env env =
     uvars_k=new_uv_set();
     uvars_t=new_uvt_set();
     uvars_e=new_uvt_set();
-    uvars_c=new_uvt_set()
   } in
   let ext out uvs = 
     {out with uvars_k=Util.set_union out.uvars_k uvs.uvars_k;

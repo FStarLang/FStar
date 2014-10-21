@@ -196,11 +196,8 @@ and subst_comp_typ s t = match s with
 and subst_comp s t = match s with 
   | [] -> t
   | _ -> 
-    let t0 = Visit.compress_comp t in
-    match t0.n with 
+    match t.n with 
       | Total t -> mk_Total (subst_typ s t)
-      | Rigid t -> mk_Rigid (subst_typ s t)
-      | Flex(u, t) -> mk_Flex(subst_typ s u, subst_typ s t)
       | Comp ct -> mk_Comp(subst_comp_typ s ct)
 
 and compose_subst (s1:subst) (s2:subst) = 
@@ -257,14 +254,7 @@ and map_typ s mk vt me descend binders t =
   subst_typ (restrict_subst binders s) t, descend
 and map_exp s mk me ve descend binders e =
   subst_exp (restrict_subst binders s) e, descend
-and map_comp s mk map_typ map_exp descend binders c = match (Visit.compress_comp c).n with 
-    | Flex (u, t) -> 
-      let u, descend = map_typ descend binders u in 
-      let t, descend = map_typ descend binders t in
-      mk_Flex(u, t), descend    
-    | Rigid t -> 
-      let t, descend = map_typ descend binders t in
-      mk_Rigid(t), descend    
+and map_comp s mk map_typ map_exp descend binders c = match c.n with 
     | Total t -> 
       let t, descend = map_typ descend binders t in
       mk_Total t, descend
@@ -390,16 +380,6 @@ and compress_exp e =
     e
   | _ -> e
 
-and compress_comp c = 
-  let c = Visit.compress_comp c in 
-  match c.n with 
-    | Flex (t, r) -> 
-        begin match t.n with 
-            | Typ_delayed _ -> compress_comp (mk_Flex(compress_typ t, r))
-            | _ -> c
-        end
-    | _ -> c
-
 let alpha_typ t = 
    let t = compress_typ t in
    let s = mk_subst [] in
@@ -432,22 +412,17 @@ let total_comp t r = mk_Total t
 let comp_set_flags (c:comp) f = match c.n with 
   | Total _ -> c
   | Comp ct -> {c with n=Comp ({ct with flags=f})}
-  | _ -> failwith "Impossible"
 
-let comp_flags c = match (compress_comp c).n with 
+let comp_flags c = match c.n with 
   | Total _ -> [TOTAL]
   | Comp ct -> ct.flags
-  | Flex _ -> []
-  | Rigid _ -> failwith "Normalize comp types before calling this function"
 
 let is_total_comp c = comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 
-let is_pure_comp c = match (compress_comp c).n with 
+let is_pure_comp c = match c.n with 
     | Total _ -> true
     | Comp ct -> is_total_comp c || Util.starts_with ct.effect_name.str "Prims.PURE"
-    | Flex _ -> false
-    | Rigid _ -> failwith "Normalize comp types before calling this function"
-
+   
 let is_pure_function t = match (compress_typ t).n with 
     | Typ_fun(_, c) -> is_pure_comp c
     | _ -> true
@@ -456,17 +431,13 @@ let is_ml_comp c = match c.n with
   | Comp c -> lid_equals c.effect_name Const.ml_effect_lid || List.contains MLEFFECT c.flags
   | _ -> false
 
-let comp_result c = match (compress_comp c).n with 
-  | Total t
-  | Flex (_, t) -> t
+let comp_result c = match c.n with 
+  | Total t -> t
   | Comp ct -> ct.result_typ
-  | Rigid _ -> failwith "Normalize comp types before calling this function"
 
-let set_result_typ c t = match (compress_comp c).n with 
+let set_result_typ c t = match c.n with 
   | Total _ -> mk_Total t
-  | Flex(u, _) -> mk_Flex(u, t)
   | Comp ct -> mk_Comp({ct with result_typ=t})
-  | Rigid _ -> failwith "Normalize comp types before calling this function"
 
 let is_trivial_wp c = 
   comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
@@ -617,14 +588,6 @@ let unchecked_unify uv t =
     | Fixed _ -> failwith "Changing a fixed uvar!"
     | _ -> Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here *)
 
-let as_comp = function 
-   | {n=Typ_meta(Meta_comp c)} -> c
-   | _ -> failwith "Impossible"
-
-let destruct_flex c = match c.n with
-    | Flex({n=Typ_uvar(uv, k)}, t) -> uv, k, [], t
-    | Flex({n=Typ_app({n=Typ_uvar(uv, k)}, args)}, t) -> uv, k, args, t
-    | _ -> failwith "Impossible"
 
 (********************************************************************************)
 (************************* Free type/term/unif variables ************************)
@@ -643,7 +606,6 @@ let eq_fvars v1 v2 = match v1, v2 with
 let uv_eq (uv1,_) (uv2,_) = Unionfind.equivalent uv1 uv2
 let union_uvs uvs1 uvs2 =
     {   uvars_k=Util.set_union uvs1.uvars_k uvs2.uvars_k;
-        uvars_c=Util.set_union uvs1.uvars_c uvs2.uvars_c;
         uvars_t=Util.set_union uvs1.uvars_t uvs2.uvars_t;
         uvars_e=Util.set_union uvs1.uvars_e uvs2.uvars_e;
     }
@@ -714,17 +676,10 @@ let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Typ_ascribed(t, _) -> 
           vs_typ t uvonly cont        
 
-        | Typ_meta(Meta_uvar_t_app(t, (u,k))) -> 
-          if uvonly 
-          then cont (no_fvs, {no_uvs with uvars_t=single_uvt (u,k)})
-          else vs_typ t uvonly cont
-
         | Typ_meta(Meta_named(t, _))
         | Typ_meta(Meta_pattern(t, _)) -> 
           vs_typ t uvonly cont
 
-        | Typ_meta(Meta_comp c) -> 
-          vs_comp c uvonly cont
 
 and vs_binders (bs:binders) (uvonly:bool) (cont:(bvars * (freevars * uvars)) -> 'res) : 'res = 
     match bs with 
@@ -831,11 +786,6 @@ and vs_exp' (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
       | Exp_meta(Meta_datainst(e, _)) -> 
         vs_exp e uvonly cont
 
-      | Exp_meta(Meta_uvar_e_app(e, (uv, t))) -> 
-        if uvonly 
-        then cont (no_fvs, {no_uvs with uvars_e=single_uvt (uv,t)})
-        else vs_exp e uvonly cont
-
 and vs_exp (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
     match !e.fvs, !e.uvs with
     | Some _, None -> failwith "Impossible"
@@ -847,16 +797,9 @@ and vs_exp (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
     | Some fvs, Some uvs -> cont (fvs, uvs)
     
 and vs_comp' (c:comp) (uvonly:bool) (k:(freevars * uvars) -> 'res) : 'res = 
-    let c = compress_comp c in
     match c.n with 
-        | Total t 
-        | Rigid t -> vs_typ t uvonly k
+        | Total t -> vs_typ t uvonly k
          
-        | Flex(t, t') -> 
-          vs_typ t uvonly (fun vs1 -> 
-          vs_typ t' uvonly (fun vs2 -> 
-          k (union_fvs vs1 vs2)))
-
         | Comp ct -> 
           if uvonly
           then vs_typ ct.result_typ uvonly k
@@ -1250,10 +1193,7 @@ let destruct_typ_as_formula f : option<connective> =
         | None -> destruct_q_conn phi
 
 let comp_to_comp_typ (c:comp) : comp_typ = 
-    let c = compress_comp c in 
     match c.n with
-        | Flex _
-        | Rigid _ -> failwith "Normalize rigid comps before calling"
         | Comp c -> c
         | Total t -> {effect_name=Const.tot_effect_lid; result_typ=t; effect_args=[]; flags=[TOTAL]} 
         

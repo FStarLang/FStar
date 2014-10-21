@@ -86,8 +86,6 @@ and comp_typ = {
 and comp' = 
   | Total of typ
   | Comp of comp_typ                    
-  | Rigid of typ                                             (* a type with Kind_effect; should be normalized before inspecting *)                    
-  | Flex of uvar_c_pattern * typ                             (* first type is a flex-pattern for a type-indexed computation; second type is the result type *)
 and comp = syntax<comp', unit>
 and cflags = 
   | TOTAL 
@@ -103,9 +101,6 @@ and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pattern of typ * list<arg>
   | Meta_named of typ * lident                               (* Useful for pretty printing to keep the type abbreviation around *)
-  | Meta_comp of comp                                        (* Promoting a computation to a type, just for instantiating flex comp-vars with comp-lambdas *)
- //remove 
-  | Meta_uvar_t_app      of typ * (uvar_t * knd)             (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
 and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a
@@ -125,8 +120,6 @@ and exp = syntax<exp',typ>
 and meta_e = 
   | Meta_desugared     of exp * meta_source_info                 (* Node tagged with some information about source term before desugaring *)
   | Meta_datainst      of exp * option<typ>                      (* Expect the data constructor e to build a t-typed value; only used internally to pretyping; not visible elsewhere *)
- //remove
-  | Meta_uvar_e_app    of exp * (uvar_e * typ)                   (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
 and meta_source_info =
   | Data_app
   | Sequence                   
@@ -173,7 +166,6 @@ and uvars = {
   uvars_k: set<uvar_k>;
   uvars_t: set<(uvar_t*knd)>;
   uvars_e: set<(uvar_e*typ)>;
-  uvars_c: set<(uvar_t*knd)>;
 }
 and syntax<'a,'b> = {
     n:'a;
@@ -199,10 +191,6 @@ type formulae = list<typ>
 val new_ftv_set: unit -> set<bvar<'a,'b>>
 val new_uv_set: unit -> set<Unionfind.uvar<'a>>
 val new_uvt_set: unit -> set<(Unionfind.uvar<'a> * 'b)>
-
-//type tparam =
-//  | Tparam_typ  of btvdef * knd (* idents for pretty printing *)
-//  | Tparam_term of bvvdef * typ
 
 type qualifier = 
   | Private 
@@ -327,8 +315,6 @@ val extend_typ_app: (typ * arg) -> knd -> range -> typ
 
 val mk_Total: typ -> comp
 val mk_Comp: comp_typ -> comp
-val mk_Flex: (uvar_c_pattern * typ) -> comp
-val mk_Rigid: typ -> comp
 
 val mk_Exp_bvar: bvvar -> typ -> range -> exp
 val mk_Exp_fvar: (fvvar * bool) -> typ -> range -> exp 

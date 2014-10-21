@@ -397,7 +397,7 @@ let bind_cases env (res_t:typ) (cases:list<(option<formula> * comp)>) : comp =
             let wp = wp_conj wp1 wp2 in
             let wlp = wp_conj wlp1 wlp2 in 
             (Some <| mk_comp md t wp wlp [], prior_or_c_matched)) (None, None) in
-      let caccum = comp_to_comp_typ <| flex_to_ml env (must <| caccum) in
+      let caccum = comp_to_comp_typ <|  (must <| caccum) in
       let md = Tc.Env.get_monad_decl env caccum.effect_name in
       let res_t, wp, wlp = destruct_comp caccum in
       let wp = match some_pat_matched with 
@@ -580,7 +580,7 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
      let uvars = ecs |> List.map (fun (x, e, c) -> 
           let t = Util.comp_result c |> Util.compress_typ in 
           if not <| should_gen t
-          then (x, [], e, flex_to_total env c)
+          then (x, [], e, c)
           else let c = norm c in 
                let ct = comp_to_comp_typ c in
                let t = ct.result_typ in

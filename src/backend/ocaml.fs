@@ -479,7 +479,6 @@ and doc_of_exp_r (rg : range) outer (env : env) (e : exp) =
 //            doc_of_exp rg outer env e
 
 //        | Exp_app  _ -> unexpected  rg
-        | Exp_meta(Meta_uvar_e_app _)
         | Exp_uvar _ -> unexpected  rg
         | Exp_delayed _ -> unexpected rg
     end

@@ -195,14 +195,6 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
     | Typ_uvar _ -> 
       rebuild config 
 
-    | Typ_meta(Meta_comp c) -> 
-      let cfg = sncomp tcenv (with_new_code keffect config c) in
-      {config with code=mk_Typ_meta'(Meta_comp(cfg.code)) config.code.tk config.code.pos}
-
-    | Typ_meta(Meta_uvar_t_app(t, (uv,k))) ->
-      let cfg = sn tcenv ({config with code=t}) in
-      {config with code=mk_Typ_meta'(Meta_uvar_t_app(cfg.code, (uv,k))) cfg.code.tk cfg.code.pos}
-   
     | Typ_const fv ->
       if config.steps |> List.contains DeltaHard 
         || (config.steps |> List.contains Delta && not <| is_stack_empty config) //delta only if reduction is blocked
@@ -334,23 +326,16 @@ and sn_binders tcenv binders env steps =
 
 and sncomp tcenv (cfg:config<comp>) : config<comp> = 
   let m = cfg.code in 
-  match (compress_comp m).n with 
-    | Rigid t -> 
-      let c = sn tcenv (with_new_code t.tk cfg t) in
-      (match c.code.n with
-        | Typ_meta(Meta_comp c) -> sncomp tcenv (with_new_code keffect cfg c)
-        | _ -> failwith "Impossible")
+  match m.n with
     | Comp ct -> 
       let ctconf = sncomp_typ tcenv (with_new_code keffect cfg ct) in
       {cfg with code=mk_Comp ctconf.code}
+
     | Total t -> 
       if List.contains DeltaComp cfg.steps 
       then sncomp tcenv <| with_new_code keffect cfg (mk_Comp <| comp_to_comp_typ (mk_Total t))
       else let t = sn tcenv (with_new_code t.tk cfg t) in
            with_new_code keffect cfg (mk_Total t.code)
-//    | Flex(u, t) -> 
-//      let tconf = sn tcenv (with_new_code t.tk cfg t) in 
-//      {cfg with code=mk_Flex(u, tconf.code)}
 
 and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> = 
   let remake l r eargs = 
@@ -412,10 +397,6 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
     | Exp_constant _
     | Exp_uvar _  -> config
 
-    | Exp_meta(Meta_uvar_e_app(e, (uv,t))) ->
-      let cfg = wne tcenv ({config with code=e}) in
-      {cfg with code=mk_Exp_meta'(Meta_uvar_e_app(cfg.code, (uv,t))) cfg.code.tk cfg.code.pos}
- 
     | Exp_bvar x -> 
       begin match config.environment |> Util.find_opt (function VDummy y -> bvar_eq x y | V (y, _, _) -> bvd_eq x.v y | _ -> false) with 
         | None -> config 
@@ -471,32 +452,8 @@ let whnf tcenv t =
         | Typ_app({n=Typ_uvar _}, _) -> eta_expand tcenv t
         | _ -> norm_typ [WHNF;Beta;Eta] tcenv t
 
-let rec comp_comp env c = 
-    let c = Util.compress_comp c in
-    match c.n with
-    | Rigid t -> 
-        (match (norm_typ [Beta] env t).n with
-            | Typ_meta(Meta_comp c) -> comp_comp env c
-            | _ -> failwith "Impossible")
-    | _ -> c
-
-let force_flex_comp (env:Tc.Env.env) (def:typ -> comp) (c:comp) =
-    let c = comp_comp env c in
-    match c.n with
-        | Rigid _  -> failwith "Impossible"
-        | Comp _
-        | Total _ -> c 
-        | Flex({n=Typ_meta(Meta_uvar_t_app(_, (u,k)))}, res_t) -> 
-          let def = def res_t in
-          let tdef = k |> close_for_kind (mk_Typ_meta(Meta_comp def)) in
-          Unionfind.change u (Fixed tdef);
-          def
-        | Flex _ -> failwith "Impossible" 
-let flex_to_ml env c = force_flex_comp env (fun res_t -> Util.ml_comp res_t (Env.get_range env)) c
-let flex_to_total env c = force_flex_comp env mk_Total c
-
 let rec weak_norm_comp env comp =
-  let c = comp_to_comp_typ (flex_to_ml env comp) in
+  let c = comp_to_comp_typ comp in
   match Tc.Env.lookup_typ_abbrev env c.effect_name with
     | None -> c
     | Some t -> 

@@ -84,8 +84,6 @@ and comp_typ = {
 and comp' = 
   | Total of typ
   | Comp of comp_typ                    
-  | Rigid of typ                                             (* a type with Kind_effect; should be normalized before inspecting *)                    
-  | Flex of uvar_c_pattern * typ                             (* first type is a flex-pattern for a type-indexed computation; second type is the result type *)
 and comp = syntax<comp', unit>
 and cflags = 
   | TOTAL 
@@ -101,9 +99,7 @@ and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pattern of typ * list<arg>
   | Meta_named of typ * lident                               (* Useful for pretty printing to keep the type abbreviation around *)
-  | Meta_comp of comp                                        (* Promoting a computation to a type, just for instantiating flex comp-vars with comp-lambdas *)
-  | Meta_uvar_t_app      of typ * (uvar_t * knd)             (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
- and uvar_basis<'a,'b> = 
+  and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a
 and exp' =
@@ -122,7 +118,6 @@ and exp = syntax<exp',typ>
 and meta_e = 
   | Meta_desugared     of exp * meta_source_info                 (* Node tagged with some information about source term before desugaring *)
   | Meta_datainst      of exp * option<typ>                      (* Expect the data constructor e to build a t-typed value; only used internally to pretyping; not visible elsewhere *)
-  | Meta_uvar_e_app      of exp * (uvar_e * typ)                 (* Application of a uvar to some terms 'U (t|e)_1 ... (t|e)_n *)  
 and meta_source_info =
   | Data_app
   | Sequence                   
@@ -148,7 +143,7 @@ and knd' =
   | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)
   | Kind_arrow of binders * knd                           (* (ai:ki|xi:ti) => k' *)
   | Kind_uvar of uvar_k_app                               (* not present after 1st round tc *)
-  | Kind_lam of binders * knd                        (* not present after 1st round tc *)
+  | Kind_lam of binders * knd                             (* not present after 1st round tc *)
   | Kind_delayed of knd * subst * memo<knd>               (* delayed substitution --- always force before inspecting first element *)
   | Kind_unknown                                          (* not present after 1st round tc *)
 and knd = syntax<knd', unit>
@@ -169,7 +164,6 @@ and uvars = {
   uvars_k: set<uvar_k>;
   uvars_t: set<(uvar_t*knd)>;
   uvars_e: set<(uvar_e*typ)>;
-  uvars_c: set<(uvar_t*knd)>;
 }
 and syntax<'a,'b> = {
     n:'a;
@@ -186,11 +180,6 @@ and fvvar = var<typ>
 type freevars_l = list<either<btvar,bvvar>>
 type formula = typ
 type formulae = list<typ>
-//
-//type tparam =
-//  | Tparam_typ  of btvdef * knd (* idents for pretty printing *)
-//  | Tparam_term of bvvdef * typ
-
 type qualifier = 
   | Private 
   | Public 
@@ -319,7 +308,6 @@ let no_uvs = {
     uvars_k=new_uv_set(); 
     uvars_t=new_uvt_set(); 
     uvars_e=new_uvt_set(); 
-    uvars_c=new_uvt_set()
 }
 let freevars_of_list l = 
     l |> List.fold_left (fun out -> function
@@ -340,7 +328,7 @@ let mk_Kind_arrow ((bs:binders),(k:knd)) p = {
     n=Kind_arrow(bs, k);
     pos=p;
     tk=();
-    uvs=mk_uvs(); fvs=mk_fvs();//union k1.fvs (match a with None -> k2.fvs | Some a -> difference k2.fvs (set_of_list [Inl a]));
+    uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Kind_arrow' ((bs:binders), (k:knd)) p = 
     match bs with 
@@ -369,7 +357,7 @@ let mk_Kind_delayed ((k:knd),(s:subst),(m:memo<knd>)) p = {
 }
 let mk_Kind_unknown  = {n=Kind_unknown; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs=mk_fvs()}
 
-let mk_Typ_btvar    (x:btvar) (k:knd) (p:range) = {n=Typ_btvar x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs();}//set_of_list [Inl x.v]}
+let mk_Typ_btvar    (x:btvar) (k:knd) (p:range) = {n=Typ_btvar x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs();}
 let mk_Typ_const    (x:ftvar) (k:knd) (p:range) = {n=Typ_const x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs()}
 let check_fun (bs:binders) (c:comp) p = 
     match bs with 
@@ -381,7 +369,7 @@ let mk_Typ_fun      ((bs:binders),(c:comp)) (k:knd) (p:range) = {
     n=check_fun bs c p;
     tk=k;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//(match x with None -> union t.fvs c.fvs | Some x -> union t.fvs (difference c.fvs (set_of_list [Inr x])));
+    uvs=mk_uvs(); fvs=mk_fvs();
 }
 let uncurry_fun bs c = match c.n with 
     | Total {n=Typ_fun(bs', c)} -> Typ_fun(bs@bs', c)
@@ -392,19 +380,19 @@ let mk_Typ_fun'      ((bs:binders),(c:comp)) (k:knd) (p:range) = {
     n=uncurry_fun bs c;
     tk=k;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//(match x with None -> union t.fvs c.fvs | Some x -> union t.fvs (difference c.fvs (set_of_list [Inr x])));
+    uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Typ_refine   ((x:bvvar),(phi:typ)) (k:knd) (p:range) = {
     n=Typ_refine(x, phi);
     tk=k;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference phi.fvs (set_of_list [Inr x]));
+    uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Typ_app      ((t1:typ),(args:list<arg>)) (k:knd) (p:range) = {
     n=(match args with [] -> failwith "Empty arg list!" | _ -> Typ_app(t1, args));
     tk=k;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs t2.fvs;
+    uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Typ_app' ((t1:typ), (args:list<arg>)) (k:knd) (p:range) = 
     match args with 
@@ -417,20 +405,20 @@ let mk_Typ_lam      ((b:binders),(t:typ)) (k:knd) (p:range) = {
     n=(match b with [] -> failwith "Empty binders!" | _ -> Typ_lam(b, t));
     tk=k;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs (difference t2.fvs (set_of_list [Inr x]));
+    uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Typ_lam'      ((b:binder), (t2:typ)) (k:knd) (p:range) = {
     n=(match t2.n with Typ_lam(binders, body) -> Typ_lam(b::binders, body) | _ -> Typ_lam([b], t2));
     tk=k;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union t1.fvs (difference t2.fvs (set_of_list [Inr x]));
+    uvs=mk_uvs(); fvs=mk_fvs();
     
 }
 let mk_Typ_ascribed' ((t:typ),(k:knd)) (k':knd) (p:range) = {
     n=Typ_ascribed(t, k);
     tk=k';
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs k.fvs;
+    uvs=mk_uvs(); fvs=mk_fvs();
     
 }
 let mk_Typ_ascribed ((t:typ),(k:knd)) (p:range) = mk_Typ_ascribed' (t, k) k p
@@ -439,19 +427,17 @@ let mk_Typ_meta'    (m:meta_t) (k:knd) p =
     {n=Typ_meta m;
      tk=k;
      pos=p;
-     uvs=mk_uvs(); fvs=mk_fvs();//fvs;
+     uvs=mk_uvs(); fvs=mk_fvs();
     }
 let mk_Typ_meta     (m:meta_t) = match m with 
     | Meta_pattern(t, _) 
-    | Meta_named(t, _)
-    | Meta_uvar_t_app(t, _) -> mk_Typ_meta' m t.tk t.pos 
-    | Meta_comp c -> mk_Typ_meta' m mk_Kind_effect c.pos 
+    | Meta_named(t, _) -> mk_Typ_meta' m t.tk t.pos 
 
 let mk_Typ_uvar'     ((u:uvar_t),(k:knd)) (k':knd) (p:range) = {
     n=Typ_uvar(u, k);
     tk=k';
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//emp_fvs;
+    uvs=mk_uvs(); fvs=mk_fvs();
     
 }
 let mk_Typ_uvar (u, k) p = mk_Typ_uvar' (u, k) k p 
@@ -459,7 +445,7 @@ let mk_Typ_delayed  ((t:typ),(s:subst),(m:memo<typ>)) (k:knd) (p:range) = {
     n=Typ_delayed(t, s, m);
     tk=k;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs s.subst_fvs;
+    uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Typ_unknown  = {n=Typ_unknown; pos=dummyRange; tk=mk_Kind_unknown; uvs=mk_uvs(); fvs=mk_fvs()}
 
@@ -468,19 +454,6 @@ let mk_Total t = {
     tk=();
     pos=t.pos;
     uvs=mk_uvs(); fvs=mk_fvs();
-}
-let mk_Flex (u,t) = {
-    n=Flex(u,t);
-    tk=();
-    pos=t.pos;
-    uvs=mk_uvs(); fvs=mk_fvs();//t.fvs;   
-}
-let mk_Rigid t = {
-    n=Rigid t;
-    tk=();
-    pos=t.pos;
-    uvs=mk_uvs();
-    fvs=mk_fvs();
 }
 let mk_Comp (ct:comp_typ) = 
     {n=Comp ct;
@@ -492,37 +465,37 @@ let mk_Exp_bvar (x:bvvar) (t:typ) p = {
     n=Exp_bvar x;
     tk=t;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//set_of_list [Inr x.v];
+    uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Exp_fvar ((x:fvvar),(b:bool)) (t:typ) p = {
     n=Exp_fvar(x, b);
     tk=t;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//emp_fvs;  
+    uvs=mk_uvs(); fvs=mk_fvs();
 } 
 let mk_Exp_constant (s:sconst) (t:typ) p = {
     n=Exp_constant s;
     tk=t;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//emp_fvs;
+    uvs=mk_uvs(); fvs=mk_fvs();
 } 
 let mk_Exp_abs ((b:binders),(e:exp)) (t':typ) p = {
     n=Exp_abs(b, e);
     tk=t';
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference e.fvs (set_of_list [Inr x]));
+    uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Exp_abs' ((b:binders),(e:exp)) (t':typ) p = {
     n=(match e.n with Exp_abs(binders, body) -> Exp_abs(b@binders, body) | _ -> Exp_abs(b, e));
     tk=t';
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union t.fvs (difference e.fvs (set_of_list [Inr x]));
+    uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Exp_app ((e1:exp),(args:args)) (t:typ) p = {
     n=(match args with [] -> failwith "Empty args!" | _ -> Exp_app(e1, args));
     tk=t;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union e1.fvs e2.fvs;   
+    uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Exp_app_flat ((e1:exp), (args:args)) (t:typ) p =
     match e1.n with 
@@ -564,13 +537,13 @@ let mk_Exp_match ((e:exp),(pats:list<(pat * option<exp> * exp)>)) (t:typ) p =
        n=Exp_match(e, pats);
        tk=t;
        pos=p;
-       uvs=mk_uvs(); fvs=mk_fvs();//union e.fvs (set_of_thunk fv_branches);
+       uvs=mk_uvs(); fvs=mk_fvs();
     } 
 let mk_Exp_ascribed' ((e:exp),(t:typ)) (t':typ) p = {
     n=Exp_ascribed(e, t);
     tk=t';
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union e.fvs t.fvs;
+    uvs=mk_uvs(); fvs=mk_fvs();
     
 }
 let mk_Exp_ascribed ((e:exp),(t:typ)) p = mk_Exp_ascribed' (e, t) t p
@@ -579,14 +552,14 @@ let mk_Exp_let ((lbs:letbindings),(e:exp)) (t:typ) p =
     n=Exp_let(lbs, e);
     tk=t;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union e.fvs (set_of_thunk fv_lbs);
+    uvs=mk_uvs(); fvs=mk_fvs();
    }
 
 let mk_Exp_uvar' ((u:uvar_e),(t:typ)) (t':typ) p = {
     n=Exp_uvar(u, t);
     tk=t';
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//emp_fvs;
+    uvs=mk_uvs(); fvs=mk_fvs();
     
 }
 let mk_Exp_uvar  ((u:uvar_e),(t:typ)) p = mk_Exp_uvar' (u, t) t p
@@ -595,7 +568,7 @@ let mk_Exp_delayed ((e:exp),(s:subst),(m:memo<exp>)) (t:typ) p = {
     n=Exp_delayed(e, s, m);
     tk=t;
     pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();//union e.fvs s.subst_fvs;
+    uvs=mk_uvs(); fvs=mk_fvs();
     
 }
 let mk_Exp_meta' (m:meta_e) (t:typ) p = 
@@ -607,8 +580,7 @@ let mk_Exp_meta' (m:meta_e) (t:typ) p =
     }
 let mk_Exp_meta (m:meta_e) = match m with
       | Meta_desugared(e, _)  
-      | Meta_datainst(e, _) 
-      | Meta_uvar_e_app(e, _) -> mk_Exp_meta' m e.tk e.pos
+      | Meta_datainst(e, _)  -> mk_Exp_meta' m e.tk e.pos
 
 let mk_subst (s:subst) = s
 let extend_subst x s : subst = x::s

@@ -105,10 +105,8 @@ let disjunctive_pattern_vars v1 v2 =
     "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")" 
     (vars v1) (vars v2)
  
-let name_and_result c = match (Util.compress_comp c).n with
-  | Rigid _ -> failwith "Should normalize type before calling"
+let name_and_result c = match c.n with
   | Total t -> "Tot", t
-  | Flex(_, t) -> "__Eff__", t
   | Comp ct -> Print.sli ct.effect_name, ct.result_typ
 
 let computed_computation_type_does_not_match_annotation e c c' = 

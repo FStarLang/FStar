@@ -195,13 +195,7 @@ and tc_args env args : Syntax.args * guard_t =
 
    
 and tc_comp env c = 
-  let c = Normalize.comp_comp env c in
   match c.n with 
-    | Flex(u, t) -> 
-      let t, g = tc_typ_check env t ktype in
-      let u, g' = tc_typ_check env u (mk_Kind_arrow([null_t_binder ktype], keffect) t.pos) in
-      mk_Flex(u, t), Tc.Rel.conj_guard g g'
-
     | Total t -> 
       let t, g = tc_typ_check env t ktype in
       mk_Total t, g
@@ -219,9 +213,6 @@ and tc_comp env c =
           result_typ=res;
           effect_args=args}), f
 
-    | Rigid _
-    | Flex _ -> failwith "Impossible"
-  
 and tc_typ env (t:typ) : typ * knd * guard_t = 
   let env = Tc.Env.set_range env t.pos in
   let w k = syn t.pos k in
@@ -467,8 +458,6 @@ and tc_exp env e : exp * comp =
   let w c = syn e.pos (Util.comp_result c) in
   let top = e in
   match e.n with
-  | Exp_meta(Meta_uvar_e_app _) -> failwith "Impossible"
-
   | Exp_delayed _ -> tc_exp env (compress_exp e)
 
   | Exp_uvar _ 
