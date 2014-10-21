@@ -63,11 +63,8 @@ let get_z3version () =
         in
             _z3version := Some out; out
 
-let ini_params = 
-  let timeout = 
-    match !Options.z3timeout with
-    | None   -> ""
-    | Some s -> format1 "-T:%s" (string_of_int <| (int_of_string s) / 1000)
+let ini_params =
+  let timeout = format1 "-T:%s" (!Options.z3timeout)
   in
 
   let relevancy =
