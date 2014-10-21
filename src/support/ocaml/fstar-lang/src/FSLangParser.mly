@@ -17,7 +17,6 @@
 %token <Fstar.Types.double > IEEE64
 
 %token <char> CHAR
-%token <bool> LET
 
 %token AMP_AMP
 %token AND
@@ -67,6 +66,7 @@
 %token LEQ
 %token LESS
 %token LESSGREATER
+%token LET
 %token LOGIC
 %token LPAREN
 %token LPAREN_RPAREN

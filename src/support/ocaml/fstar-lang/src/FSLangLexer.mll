@@ -36,7 +36,7 @@
     Hashtbl.add keywords "if"            IF          ;
     Hashtbl.add keywords "in"            IN          ;
     Hashtbl.add keywords "kind"          KIND        ;
-    Hashtbl.add keywords "let"           (LET false) ;
+    Hashtbl.add keywords "let"           LET         ;
     Hashtbl.add keywords "logic"         LOGIC       ;
     Hashtbl.add keywords "match"         MATCH       ;
     Hashtbl.add keywords "module"        MODULE      ;
