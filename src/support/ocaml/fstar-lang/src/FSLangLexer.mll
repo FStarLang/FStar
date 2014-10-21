@@ -1,6 +1,10 @@
 {
   open FSLangParser
 
+  module Option  = BatOption
+  module String  = BatString
+  module Hashtbl = BatHashtbl
+
   module L : sig
     include module type of struct include Lexing end
 
@@ -12,7 +16,47 @@
       (lexeme_start_p lexbuf, lexeme_end_p lexbuf)
   end
 
-  let is_typ_app = fun _ -> true
+  let keywords = Hashtbl.create 0
+
+  let () =
+    Hashtbl.add keywords "and"           AND         ;
+    Hashtbl.add keywords "assert"        ASSERT      ;
+    Hashtbl.add keywords "assume"        ASSUME      ;
+    Hashtbl.add keywords "begin"         BEGIN       ;
+    Hashtbl.add keywords "define"        DEFINE      ;
+    Hashtbl.add keywords "effect"        EFFECT      ;
+    Hashtbl.add keywords "else"          ELSE        ;
+    Hashtbl.add keywords "end"           END         ;
+    Hashtbl.add keywords "exception"     EXCEPTION   ;
+    Hashtbl.add keywords "exists"        EXISTS      ;
+    Hashtbl.add keywords "false"         FALSE       ;
+    Hashtbl.add keywords "forall"        FORALL      ;
+    Hashtbl.add keywords "fun"           FUN         ;
+    Hashtbl.add keywords "function"      FUNCTION    ;
+    Hashtbl.add keywords "if"            IF          ;
+    Hashtbl.add keywords "in"            IN          ;
+    Hashtbl.add keywords "kind"          KIND        ;
+    Hashtbl.add keywords "let"           (LET false) ;
+    Hashtbl.add keywords "logic"         LOGIC       ;
+    Hashtbl.add keywords "match"         MATCH       ;
+    Hashtbl.add keywords "module"        MODULE      ;
+    Hashtbl.add keywords "monad_lattice" MONADLATTICE;
+    Hashtbl.add keywords "of"            OF          ;
+    Hashtbl.add keywords "open"          OPEN        ;
+    Hashtbl.add keywords "print"         PRINT       ;
+    Hashtbl.add keywords "query"         QUERY       ;
+    Hashtbl.add keywords "rec"           REC         ;
+    Hashtbl.add keywords "then"          THEN        ;
+    Hashtbl.add keywords "total"         TOTAL       ;
+    Hashtbl.add keywords "true"          TRUE        ;
+    Hashtbl.add keywords "try"           TRY         ;
+    Hashtbl.add keywords "type"          TYPE        ;
+    Hashtbl.add keywords "underscore"    UNDERSCORE  ;
+    Hashtbl.add keywords "val"           VAL         ;
+    Hashtbl.add keywords "when"          WHEN        ;
+    Hashtbl.add keywords "with"          WITH
+
+  let is_typ_app = fun _ -> false
 }
 
 (* -------------------------------------------------------------------- *)
@@ -92,12 +136,12 @@ rule token = parse
      { PRAGMAMONADIC }
  | "#light"
      { PRAGMALIGHT }
- | ident
-     { IDENT (L.lexeme lexbuf) }   (* FIXME: keywords *)
- | constructor
-     { NAME (L.lexeme lexbuf) }
- | tvar 
-     { TVAR (L.lexeme lexbuf) }
+ | ident as id
+     { id |> Hashtbl.find_option keywords |> Option.default (IDENT id) }
+ | constructor as id
+     { NAME id }
+ | tvar as id
+     { TVAR id }
  | xint | int | xint32 | int32 
      { INT32 (Int32.zero, false) }
  | int64 
@@ -165,8 +209,8 @@ rule token = parse
  | "}"         { RBRACE }
  | "!"         { BANG (L.lexeme lexbuf) }
 
- | ('/' | '%') { DIV_MOD_OP (L.lexeme lexbuf) }
- | ('+' | '-') { PLUS_MINUS_OP (L.lexeme lexbuf) }
+ | ('/' | '%') as op { DIV_MOD_OP    (String.of_char op) }
+ | ('+' | '-') as op { PLUS_MINUS_OP (String.of_char op) }
 
  | "(*"
      { comment lexbuf; token lexbuf }
@@ -175,7 +219,7 @@ rule token = parse
      { token lexbuf }
 
  | '"' 
-     { string lexbuf; STRING "" }
+     { string lexbuf }
 
  | truewhite+  
      { token lexbuf }
@@ -218,10 +262,10 @@ and string = parse
     { string lexbuf  }
      
  |  '"' 
-    { () }
+    { STRING "" }
 
  |  '"''B' 
-    { () }
+    { BYTEARRAY "" }
 
  | ident  
     { string lexbuf }
