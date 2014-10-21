@@ -398,6 +398,7 @@ let write_file (fn:string) s =
   let fh = open_file_for_writing fn in
   append_to_file fh s;
   close_file fh
+let flush_file (fh:file_handle) = fh.Flush()
 
 let for_range lo hi f = 
   for i = lo to hi do

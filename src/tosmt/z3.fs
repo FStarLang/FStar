@@ -63,11 +63,8 @@ let get_z3version () =
         in
             _z3version := Some out; out
 
-let ini_params = 
-  let timeout = 
-    match !Options.z3timeout with
-    | None   -> ""
-    | Some s -> format1 "-T:%s" (string_of_int <| (int_of_string s) / 1000)
+let ini_params =
+  let timeout = format1 "-T:%s" (!Options.z3timeout)
   in
 
   let relevancy =
@@ -139,7 +136,11 @@ let giveZ3 (theory:decls) = batch := !batch@theory
 let queryZ3 (theory:decls)  =
   let theory = clear_batch()@theory in
   let input = List.map declToSmt theory |> String.concat "\n" in
+<<<<<<< HEAD
     if !Options.logQueries then Util.append_to_file (get_qfile()) input;
+=======
+    if debug then Util.append_to_file (get_qfile()) input; Util.flush_file (get_qfile());
+>>>>>>> 1217611c29329533a4d519d687eac593d71cfc5c
     let status, lblnegs = doZ3Exe input in
     match status with 
         | UNSAT -> true

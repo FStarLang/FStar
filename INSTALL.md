@@ -36,10 +36,10 @@ At the moment:
 
           $ git clone https://github.com/FStarLang/FStar.git
           $ cd FStar
-          $ source setenv.sh
           $ make -C src
 
   - Try out
 
+          $ source setenv.sh
           $ mono bin/fstar.exe --prims lib/prims.fst examples/unit-tests/utils.fst
           $ mono bin/fstar.exe --prims lib/prims.fst examples/unit-tests/rec.fst

@@ -60,7 +60,7 @@ let fstar_home_opt = Util.mk_ref None
 let _fstar_home = Util.mk_ref ""
 let prims_ref = Util.mk_ref None
 let __unsafe = Util.mk_ref false
-let z3timeout = Util.mk_ref None
+let z3timeout = Util.mk_ref "5"
 let pretype = Util.mk_ref true
 let codegen = Util.mk_ref None
 let admit_fsi = Util.mk_ref []
@@ -88,10 +88,6 @@ let prims () = match !prims_ref with
 let prependOutputDir fname = match !outputDir with
   | None -> fname
   | Some x -> x ^ "/" ^ fname 
-
-let getZ3Timeout () = match !z3timeout with 
-  | Some s -> s
-  | _ -> "10000"
 
 let skip_first_queries s =
   try
@@ -134,7 +130,7 @@ let specs () : list<Getopt.opt> =
      ( noshort, "log_types", ZeroArgs (fun () -> log_types := true), "Print types computed for data/val/let-bindings");
      ( noshort, "print_effect_args", ZeroArgs (fun () -> print_effect_args := true), "Print inferred predicate transformers for all computation types");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
-     ( noshort, "z3timeout", OneArg ((fun s -> z3timeout := Some s), "t"), "Set the Z3 soft timeout to t milliseconds");
+     ( noshort, "z3timeout", OneArg ((fun s -> z3timeout := s), "t"), "Set the Z3 timeout to t seconds");
      ( noshort, "logQueries", ZeroArgs (fun () -> logQueries := true), "Log the Z3 queries in queries.smt2");
      ( noshort, "UNSAFE", ZeroArgs (fun () -> Util.print_string "UNSAFE MODE!\n"; __unsafe := true), "");
      ( noshort, "describe_queries", ZeroArgs (fun () -> describe_queries := true), "Print the queried formula and its location");
