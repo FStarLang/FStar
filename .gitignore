@@ -27,3 +27,5 @@ _build/
 
 *.native*
 *.byte*
+
+queries.smt2

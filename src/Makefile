@@ -188,16 +188,18 @@ boot: $(BOOT_ALL)
 
 
 test: boot
+# CH: added minus in front of the commands that are expected to fail
+#     now can we please make --verify actually fail when it couldn't discharge all obligations
 	make -C ../examples/unit-tests rec.tc format.tc pat.tc
-	echo "--------Unit1: Expect two failing assertions--------------"
-	make -C ../examples/unit-tests unit1.ver 
-	echo "--------Unit1: Expect two failing assertions--------------"
-	echo "--------TestSet: Expect three failing assertions----------"
-	make -C ../examples/unit-tests testset.ver
-	echo "--------TestSet: Expect three failing assertions----------"
+	@echo "--------Unit1: Expect two failing assertions--------------"
+	-make -C ../examples/unit-tests unit1.ver 
+	@echo "--------Unit1: Expect two failing assertions--------------"
+	@echo "--------TestSet: Expect three failing assertions----------"
+	-make -C ../examples/unit-tests testset.ver
+	@echo "--------TestSet: Expect three failing assertions----------"
 	make -C ../examples/unit-tests millionaires.ver
 	make -C ../examples/unit-tests listlemmas.ver
-	#make -C ../../../miTLS/ML
+#	make -C ../../../miTLS/ML
 
 wc-boot:
 	wc -l $(BOOT_ALL)
