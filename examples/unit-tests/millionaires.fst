@@ -53,16 +53,16 @@ type box 'a =
 
 (* No need to annotate, except for testing the result of inference *)
 val mk_box : x:'a -> unit -> ST (box 'a)
-                                 (fun h0 => True)
-                                 (fun h0 b h1 => h0==h1 /\ b==Box x (SelHeap h0 moderef))
+                                (fun h0 => True)
+                                (fun h0 b h1 => h0==h1 /\ b==Box x (SelHeap h0 moderef))
 let mk_box x u = Box x (get_mode())
 
 
 logic type CanUnbox ('a:Type) (m:mode) (x:box 'a) = Subset m.prins (Box.m x).prins
 (* No need to annotate, except for testing the result of inference *)
 val unbox: x:box 'a -> unit -> ST 'a
-                                   (fun h0 => CanUnbox 'a (SelHeap h0 moderef) x)
-                                   (fun h0 a h1 => h0==h1 /\ Box.v x==a)
+                                  (fun h0 => CanUnbox 'a (SelHeap h0 moderef) x)
+                                  (fun h0 a h1 => h0==h1 /\ Box.v x==a)
 let unbox x u =
   let cur = get_mode () in
   assert (CanUnbox _ cur x);

@@ -48,6 +48,9 @@ type term' =
   | Refine    of binder * term 
   | Paren     of term
   | Affine    of term
+  | Requires  of term
+  | Ensures   of term
+  | Labeled   of term * string * bool
 
 and term = {tm:term'; range:range; level:level}
 
@@ -142,6 +145,9 @@ let to_string_l sep f l =
 
 let rec term_to_string (x:term) = match x.tm with 
   | Wild -> "_"
+  | Requires t -> Util.format1 "(requires %s)" (term_to_string t)
+  | Ensures t -> Util.format1 "(ensures %s)" (term_to_string t)
+  | Labeled (t, l, _) -> Util.format2 "(labeled %s %s)" l (term_to_string t)
   | Const c -> Print.const_to_string c
   | Op(s, xs) -> Util.format2 "%s(%s)" s (String.concat ", " (List.map (fun x -> x|> term_to_string) xs))
   | Tvar id -> id.idText

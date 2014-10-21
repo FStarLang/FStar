@@ -95,7 +95,7 @@ let value_check_expected_typ env e tc : exp * comp =
      let e, g = Tc.Util.check_and_ascribe env e t t' in
      if debug env Options.Low
      then Util.fprint1 "Strengthening pre-condition with guard = %s\n" (Rel.guard_to_string env g);
-     let c = Tc.Util.strengthen_precondition env c g in
+     let c = Tc.Util.strengthen_precondition (Some <| Errors.subtyping_check t t') env c g in
      e, Util.set_result_typ c t' in
   if debug env Options.Low 
   then Util.fprint1 "Return comp type is %s\n" (Print.comp_typ_to_string <| snd res);
@@ -318,7 +318,11 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
           let k1, g = tc_kind env k1 in
           w k1 <| mk_Typ_uvar'(u, k1), k1, g
         | _ -> tc_typ env s)
-        
+   
+  | Typ_meta(Meta_labeled(t, l, p)) -> 
+    let t, k, f = tc_typ env t in 
+    mk_Typ_meta(Meta_labeled(t, l, p)), k, f
+     
   | Typ_meta (Meta_named(t, l)) -> 
     let t, k, f = tc_typ env t in 
     mk_Typ_meta(Meta_named(t, l)), k, f
@@ -374,10 +378,6 @@ and tc_value env e : exp * comp =
     let expected_function_typ t0 = match t0 with 
         | None -> (* no expected type; just build a function type from the binders in the term *)
             let bs, envbody, g = tc_binders env bs in
-            //result type depends only on the type variables in scope
-//            let res_t = Rel.new_tvar body.pos (bs |> List.filter (function Inl _, _ -> true | _ -> false)) ktype |> fst in
-//            let c = Rel.new_cvar body.pos (Env.binders envbody) res_t |> fst in
-//            let envbody = Env.set_expected_typ envbody res_t in
             None, bs, None, envbody, g
 
         | Some t -> 
@@ -469,12 +469,7 @@ and tc_exp env e : exp * comp =
   | Exp_ascribed(e1, t1) -> 
     let t1, f = tc_typ_check env t1 ktype in 
     let e1, c = tc_exp (Env.set_expected_typ env t1) e1 in
-    comp_check_expected_typ env (w c <| mk_Exp_ascribed'(e1, t1)) (Tc.Util.strengthen_precondition env c f)
-
-//  | Exp_meta(Meta_uvar_e_app(e, (u,t))) -> 
-//    let e, c = tc_exp env e in 
-//    mk_Exp_meta(Meta_uvar_e_app(e, (u,t))), c
-    
+    comp_check_expected_typ env (w c <| mk_Exp_ascribed'(e1, t1)) (Tc.Util.strengthen_precondition (Some Errors.ill_kinded_type) (Env.set_range env t1.pos) c f)
 
   | Exp_meta(Meta_desugared(e, Data_app)) -> 
     (* These are (potentially) values, but constructor types 
@@ -630,6 +625,7 @@ and tc_exp env e : exp * comp =
               let k = Util.subst_kind subst a.sort in 
               fxv_check env (Inl k) fvs;
               let t, g' = tc_typ_check env t k in
+              let g' = Tc.Util.label_guard Errors.ill_kinded_type t.pos g' in
               let subst = maybe_extend_subst subst (List.hd bs) (Inl t) in
               let arg = targ t in 
               tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard g g', fvs) rest cres rest'
@@ -648,6 +644,8 @@ and tc_exp env e : exp * comp =
                    tc_args (subst, arg::outargs, arg::arg_rets, comps, g, fvs) rest cres rest'
               else if Tc.Util.is_pure env c 
               then let g' = Util.must <| Tc.Rel.sub_comp env c (mk_Total (Util.comp_result c)) in
+                   if debug env Options.Low then Util.fprint1 "Guard is %s\n" (Tc.Rel.guard_to_string env g');
+                   let g' = Tc.Util.label_guard Errors.totality_check e.pos g' in
                    let subst = maybe_extend_subst subst (List.hd bs) (Inr e) in
                    let arg = varg e in
                    tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard g g', fvs) rest cres rest'
@@ -661,23 +659,24 @@ and tc_exp env e : exp * comp =
             | _, [] -> (* full or partial application *) 
               let cres = match bs with 
                 | [] -> (* full app *)
-                    let cres = Util.subst_comp subst cres in
+                    let cres = Util.subst_comp subst cres in (* TODO: relabel the labeled sub-terms in cres to report failing pre-conditions at a call-site *)
                     (* If we have f e1 e2
                        where e1 or e2 is impure but f is a pure function, 
                        then refine the result to be equal to f x1 x2, 
                        where xi is the result of ei. (See the last two tests in examples/unit-tests/unit1.fst)
                     *)
-                    if Util.is_total_comp cres && head_is_atom && 
-                       comps |> Util.for_some (fun (_, c) -> not (Util.is_pure env c))
+                    if Util.is_total_comp cres 
+                    && head_is_atom 
+                    && comps |> Util.for_some (fun (_, c) -> not (Util.is_pure env c))
                     then Util.maybe_assume_result_eq_pure_term env (mk_Exp_app_flat(f, List.rev arg_rets) (Util.comp_result cres) top.pos) cres
-                    else if Env.debug env Options.Low
-                    then (Util.fprint3 "Not refining result: f=%s; cres=%s; head_is_atom?=%s\n" (Print.exp_to_string f) (if head_is_atom then "yes" else "no") (Print.comp_typ_to_string cres); cres)
-                    else cres
+                    else (if Env.debug env Options.Low
+                          then Util.fprint3 "Not refining result: f=%s; cres=%s; head_is_atom?=%s\n" (Print.exp_to_string f) (if head_is_atom then "yes" else "no") (Print.comp_typ_to_string cres); 
+                          cres)
                 | _ -> mk_Total  (Util.subst_typ subst <| mk_Typ_fun(bs, cres) ktype top.pos) (* partial app *) in
               if debug env Options.High then Util.fprint1 "\t Type of result cres is %s\n" (Print.comp_typ_to_string cres);
               let comp = List.fold_left (fun out c -> Tc.Util.bind env None (snd c) (fst c, out)) cres comps in
               let comp = Tc.Util.bind env None cf (None, comp) in
-              let comp = Tc.Util.strengthen_precondition env comp g in
+              let comp = Tc.Util.strengthen_precondition None env comp g in //Each conjunct in g is already labeled
               if debug env Options.High then Util.fprint1 "\t Type of app term is %s\n" (Tc.Normalize.normalize_comp env comp |> Print.comp_typ_to_string);
               mk_Exp_app_flat(f, List.rev outargs) (Util.comp_result comp) top.pos, comp
                
@@ -751,7 +750,7 @@ and tc_exp env e : exp * comp =
                  f, env1 in
 
     let e1, c1 = tc_exp env1 e1 in 
-    let c1 = Tc.Util.strengthen_precondition env c1 f in
+    let c1 = Tc.Util.strengthen_precondition (Some Errors.ill_kinded_type) (Env.set_range env t.pos) c1 f in
     begin match x with 
         | Inr _ -> (* top-level let, always ends with e2=():unit *)
           let _, e1, c1 = if env.generalize 

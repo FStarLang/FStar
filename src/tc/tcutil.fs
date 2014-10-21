@@ -346,7 +346,17 @@ let lift_pure env t f =
   let assume_pure = must <| Tc.Env.lookup_typ_abbrev env Const.assume_pure_lid in
   lift_formula env t assert_pure assume_pure f
 
-let strengthen_precondition env (c:comp) f = match f with 
+
+let label reason r f = 
+    let label = Util.format2 "%s (%s)" reason (Range.string_of_range r) in
+    Syntax.mk_Typ_meta(Meta_labeled(f, label, true))
+let label_opt reason r f = match reason with 
+    | None -> f
+    | Some reason -> label reason r f
+let label_guard reason r g = match g with 
+    | Trivial -> g
+    | NonTrivial f -> NonTrivial (label reason r f)
+let strengthen_precondition (reason:option<string>) env (c:comp) f = match f with 
   | Trivial -> c
   | NonTrivial f -> 
     if debug env Options.High then Util.fprint2 "\tStrengthening precondition %s with %s" (Print.comp_typ_to_string c) (Print.typ_to_string f);
@@ -354,7 +364,7 @@ let strengthen_precondition env (c:comp) f = match f with
     let res_t, wp, wlp = destruct_comp c in
     //if debug env then Util.fprint1 "\tWp is %s" (Print.typ_to_string wp);
     let md = Tc.Env.get_monad_decl env c.effect_name in 
-    let wp = mk_Typ_app(md.assert_p, [targ res_t; targ f; targ wp]) wp.tk wp.pos in
+    let wp = mk_Typ_app(md.assert_p, [targ res_t; targ <| label_opt reason (Env.get_range env) f; targ wp]) wp.tk wp.pos in
     let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) wlp.tk wlp.pos in
     let c2 = mk_comp md res_t wp wlp [] in
    // if debug env then Util.fprint1 "\tStrengthened precondition is %s" (Print.comp_typ_to_string c2);
@@ -376,7 +386,7 @@ let bind_cases env (res_t:typ) (cases:list<(option<formula> * comp)>) : comp =
   (if List.length cases = 0 then failwith "Empty cases!"); (* TODO: Fix precedence of semi colon *)
   match cases with 
     | [(None, c)] -> c
-    | [(Some f, c)] -> strengthen_precondition env c (NonTrivial f)
+    | [(Some f, c)] -> strengthen_precondition (Some Errors.exhaustiveness_check) env c (NonTrivial f)
     | _ -> 
       let caccum, some_pat_matched = cases |> List.fold_left (fun (caccum, prior_pat_matched) (gopt, c) -> 
         let prior_or_c_matched, cguard = match prior_pat_matched, gopt with 
@@ -402,12 +412,13 @@ let bind_cases env (res_t:typ) (cases:list<(option<formula> * comp)>) : comp =
       let res_t, wp, wlp = destruct_comp caccum in
       let wp = match some_pat_matched with 
         | None -> wp 
-        | Some guard -> mk_Typ_app(md.assert_p, [targ res_t; targ guard; targ wp]) wp.tk wp.pos in
+        | Some guard ->
+          let guard = label Errors.exhaustiveness_check (Env.get_range env) guard in
+          mk_Typ_app(md.assert_p, [targ res_t; targ guard; targ wp]) wp.tk wp.pos in
       let a, kwp = Tc.Env.wp_signature env caccum.effect_name in
       let k = Util.subst_kind' [Inl(a.v, res_t)] kwp in
       let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) k wp.pos in
       let wlp = mk_Typ_app(md.ite_wlp, [targ res_t; targ wlp]) k wlp.pos in
-      //Comp <| Normalize.normalize_comp env (
       mk_comp md res_t wp wlp []
 
 let close_comp env bindings (c:comp) = 
@@ -451,7 +462,8 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp =
       let k = Util.subst_kind [Inl(a.v, t)] kwp in
       let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) k xexp.pos  in
       let cret = mk_comp md t wp wp c.flags in
-      let eq_ret = strengthen_precondition env cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
+      let reason = Errors.subtyping_check tc t in
+      let eq_ret = strengthen_precondition (Some reason) (Env.set_range env e.pos) cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
       let c = bind env (Some e) (mk_Comp c) (Some(Env.Binding_var(x, tc)), eq_ret) in
       e, c
 
@@ -529,6 +541,11 @@ let maybe_instantiate env e t =
 (**************************************************************************************)
 (* Calling the solver *)
 (**************************************************************************************)
+let solve env f = 
+    let ok, errs = env.solver.solve env f in
+    if not ok
+    then Tc.Errors.report (Tc.Env.get_range env) (Tc.Errors.failed_to_prove_specification errs)
+
 let discharge_guard env g = 
     if not (!Options.verify) then ()
     else match g with 
@@ -536,8 +553,7 @@ let discharge_guard env g =
         | NonTrivial vc -> 
             let vc = Normalize.norm_typ [Delta; Beta; Eta] env vc in
             if Tc.Env.debug env Options.High then Tc.Errors.diag (Tc.Env.get_range env) (Util.format1 "Checking VC=\n%s\n" (Print.formula_to_string vc));
-            if not <| env.solver.solve env vc
-            then Tc.Errors.report (Tc.Env.get_range env) (Tc.Errors.failed_to_prove_specification [])
+            solve env vc
 
 (**************************************************************************************)
 (* Generalizing types *)
@@ -593,8 +609,8 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
                   let post = mk_Typ_lam(binder, Util.ftv Const.true_lid ktype) (mk_Kind_arrow(binder, ktype) t.pos) t.pos in
                   let vc = Normalize.norm_typ [Delta; Beta] env (syn wp.pos ktype <| mk_Typ_app(wp, [targ post])) in
                   if Tc.Env.debug env Options.Medium then Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));
-                  if not <| env.solver.solve env vc
-                  then Tc.Errors.report (range_of_lbname x) (Tc.Errors.failed_to_prove_specification_of x [])
+                  solve env vc 
+                  //Tc.Errors.report (range_of_lbname x) (Tc.Errors.failed_to_prove_specification_of x [])
                end;
                x, uvs, e, c) in //return_value env t e) in
 

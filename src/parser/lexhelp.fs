@@ -133,7 +133,7 @@ type compatibilityMode =
     | FSHARP  (* keyword, but an identifier under --ml-compatibility mode *)
 
 let keywords = 
-  [ FSHARP, "abstract", ABSTRACT;
+  [ FSHARP, "abstract"   ,ABSTRACT;
     ALWAYS, "and"        ,AND;
     ALWAYS, "as"         ,AS;
     ALWAYS, "assert"     ,ASSERT;
@@ -153,6 +153,7 @@ let keywords =
     FSHARP, "elif"       ,ELIF;
     ALWAYS, "else"       ,ELSE;
     ALWAYS, "end"        ,END;
+    ALWAYS, "ensures"    ,ENSURES;
     ALWAYS, "exception"  ,EXCEPTION;
     ALWAYS, "exists"     ,EXISTS;
     FSHARP, "extern"     ,EXTERN;
@@ -194,6 +195,7 @@ let keywords =
     ALWAYS, "query"      ,QUERY;
     ALWAYS, "rec"        ,REC;
     FSHARP, "reference"  ,REFERENCE;
+    ALWAYS, "requires"   ,REQUIRES;
     ALWAYS, "sig"        ,SIG;
     FSHARP, "static"     ,STATIC;
     ALWAYS, "struct"     ,STRUCT;

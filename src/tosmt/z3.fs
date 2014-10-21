@@ -133,17 +133,17 @@ let cleanup () =
 let batch : ref<decls> = Util.mk_ref []
 let clear_batch () = let r = !batch in batch:=[]; r
 let giveZ3 (theory:decls) = batch := !batch@theory
-let queryZ3 (theory:decls)  =
+let queryZ3 label_messages (theory:decls)  =
   let theory = clear_batch()@theory in
   let input = List.map declToSmt theory |> String.concat "\n" in
     if !Options.logQueries then Util.append_to_file (get_qfile()) input; (* append flushes *)
     let status, lblnegs = doZ3Exe input in
     match status with 
-        | UNSAT -> true
+        | UNSAT -> true, []
         | _ -> 
-        print_string <| format1 "Z3 says: %s\n" (status_to_string status);
-        match status with 
-            | UNKNOWN -> 
-            print_string <| format1 "Failing assertions: %s\n" (String.concat "\n\t" lblnegs); false
-            | _ -> 
-            print_string <| format1 "Failing assertions: %s\n" (String.concat "\n\t" lblnegs); false 
+          if !Options.debug <> [] then print_string <| format1 "Z3 says: %s\n" (status_to_string status);
+          let failing_assertions = lblnegs |> List.collect (fun l -> 
+            match label_messages |> List.tryFind (fun (m, _) -> fst m = l) with
+                | None -> []
+                | Some (_, msg) -> [msg]) in
+          false, failing_assertions

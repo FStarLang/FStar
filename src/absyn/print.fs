@@ -67,6 +67,7 @@ let rec tag_of_typ t = match t.n with
   | Typ_ascribed _ -> "Typ_ascribed"
   | Typ_meta(Meta_pattern _) -> "Typ_meta_pattern"
   | Typ_meta(Meta_named _) -> "Typ_meta_named"
+  | Typ_meta(Meta_labeled _) -> "Typ_meta_labeled"
   | Typ_uvar _ -> "Typ_uvar"   
   | Typ_delayed _ -> "Typ_delayed"
   | Typ_unknown -> "Typ_unknown"
@@ -99,7 +100,7 @@ and typ_to_string x =
     //Util.format2 "(%s:%s)" (strBvd btv.v) (kind_to_string x.tk)
   | Typ_const v -> sli v.v //Util.format2 "%s:%s" (sli v.v) (kind_to_string x.tk)
   | Typ_fun(binders, c) ->     Util.format2 "(%s -> %s)"  (binders_to_string " -> " binders) (comp_typ_to_string c)
-  | Typ_refine(xt, f) ->       Util.format3 "%s:%s{%s}" (strBvd xt.v) (xt.sort |> typ_to_string) (f|> typ_to_string)
+  | Typ_refine(xt, f) ->       Util.format3 "%s:%s{%s}" (strBvd xt.v) (xt.sort |> typ_to_string) (f|> formula_to_string)
   | Typ_app(t, args) ->        Util.format2 "(%s %s)"   (t |> typ_to_string) (args |> args_to_string)
   | Typ_lam(binders, t2) ->      Util.format2 "(fun %s => %s)" (binders_to_string " " binders) (t2|> typ_to_string)
   | Typ_ascribed(t, k) ->
@@ -234,6 +235,7 @@ and either_to_string x = match x with
   l |> List.map either_to_string |> Util.concat_l delim
 
 and meta_to_string x = match x with 
+  | Meta_labeled(t, _, _) -> typ_to_string t
   | Meta_named(_, l) -> sli l
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (args_to_string ps) (t |> typ_to_string) 
 

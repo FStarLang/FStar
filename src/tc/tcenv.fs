@@ -88,7 +88,7 @@ and solver_t = {
     pop:unit -> unit;
     encode_modul:env -> modul -> unit;
     encode_sig:env -> sigelt -> unit;
-    solve:env -> typ -> bool;
+    solve:env -> typ -> (bool * list<string>);
     is_trivial: env -> typ -> bool;
 }
 

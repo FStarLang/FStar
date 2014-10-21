@@ -233,6 +233,7 @@ and reduce_typ
         let k, env = map_kind env binders k in
         ([], [k], [], [], []), env
 
+      | Typ_meta(Meta_labeled(t, _, _))
       | Typ_meta(Meta_named(t, _)) ->
         let t, env = map_typ env binders t in
         ([], [], [t], [], []), env 
@@ -380,6 +381,7 @@ let combine_typ t (tc:typ_components) env =
     | Typ_ascribed _, (_, [k], [t], _, _) ->                w <| mk_Typ_ascribed'(t, k)
     | Typ_meta(Meta_named(_, l)), (_, _, [t'], _, _) ->     w <| mk_Typ_meta'(Meta_named(t', l))
     | Typ_meta(Meta_pattern _), (_, _, [t], _, args) ->     w <| mk_Typ_meta'(Meta_pattern(t, args))
+    | Typ_meta(Meta_labeled(_, l, p)), (_, _, [t], _, _) -> w <| mk_Typ_meta'(Meta_labeled(t, l, p))
     | _ -> failwith "impossible" in
   t', env
 

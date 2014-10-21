@@ -35,6 +35,10 @@ let contains_binder binders =
 let rec unparen t = match t.tm with 
   | Paren t -> unparen t
   | _ -> t
+let rec unlabel t = match t.tm with 
+  | Paren t -> unlabel t
+  | Labeled(t, _, _) -> unlabel t
+  | _ -> t
 
 let kind_star r = mk_term (Name (lid_of_path ["Type"] r)) r Kind
 
@@ -82,7 +86,7 @@ let op_as_tylid r s =
 
 let rec is_type env (t:term) =
   if t.level = Type then true
-  else match (unparen t).tm with
+  else match (unlabel t).tm with
     | Wild -> true
     | Op("*", hd::_) -> is_type env hd     (* tuple constructor *)
     | Op("==", _)                          (* equality predicate *)
@@ -168,6 +172,9 @@ and free_type_vars env t = match (unparen t).tm with
   | Var  _
   | Name _  -> []
 
+  | Requires t
+  | Ensures t
+  | Labeled(t, _, _)
   | Paren t
   | Ascribed(t, _) -> free_type_vars env t
 
@@ -248,6 +255,31 @@ let as_binder env imp = function
      
 type env_t = DesugarEnv.env
 type lenv_t = list<either<btvdef,bvvdef>>
+
+let label_conjuncts polarity f = 
+  let label f = 
+    let tag = if polarity then "pre-condition" else "post-condition" in
+    let msg = Util.format2 "%s at %s" tag (Range.string_of_range f.range) in
+    mk_term (Labeled(f, msg, polarity)) f.range f.level  in
+
+  let rec aux f = match f.tm with 
+    | Paren g -> 
+      mk_term (Paren(aux g)) f.range f.level
+
+    | Op("/\\", [f1;f2]) ->  
+      mk_term (Op("/\\", [aux f1; aux f2])) f.range f.level
+
+    | If(f1, f2, f3) ->
+      mk_term (If(f1, aux f2, aux f3)) f.range f.level
+
+    | Abs(binders, g) -> 
+      mk_term (Abs(binders, aux g)) f.range f.level
+      
+    | _ -> 
+      label f in
+
+  aux f
+
 let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
   let resolvex (l:lenv_t) e x = 
     match l |> Util.find_opt (function Inr y -> y.ppname.idText=x.idText | _ -> false) with 
@@ -622,6 +654,14 @@ and desugar_typ env (top:term) : typ =
   match top.tm with
     | Wild -> setpos tun
 
+    | Requires t -> 
+      let t = label_conjuncts false t in
+      desugar_typ env t
+
+    | Ensures t -> 
+      let t = label_conjuncts true t in
+      desugar_typ env t
+
     | Op("*", [t1; _]) -> 
       if is_type env t1 
       then let rec flatten t = match t.tm with
@@ -753,7 +793,8 @@ and desugar_typ env (top:term) : typ =
    
     | Record _ -> failwith "Unexpected record type"
 
-    | If _  -> desugar_formula env top
+    | If _  
+    | Labeled _ -> desugar_formula env top
     | _ when (top.level=Formula) -> desugar_formula env top
 
     | _ -> error "Expected a type" top top.range
@@ -838,6 +879,10 @@ and desugar_formula' env (f:term) : typ =
     | _ -> failwith "impossible" in
 
   match (unparen f).tm with
+    | Labeled(f, l, p) -> 
+      let f = desugar_formula env f in
+      mk_Typ_meta(Meta_labeled(f, l, p))
+
     | Op("==", ((hd::_args))) ->
       let args = hd::_args in
       let args = List.map (fun t -> withimp false <| desugar_typ_or_exp env t) args in

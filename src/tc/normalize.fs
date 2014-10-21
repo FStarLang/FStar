@@ -296,6 +296,10 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
                     wk <| mk_Typ_meta'(Meta_pattern(t, ps)) in
                   sn tcenv ({config with code=t; close=close_with_config config pat})
     
+                | Typ_meta(Meta_labeled(t, l, b)) -> 
+                  let lab t = wk <| mk_Typ_meta'(Meta_labeled(t, l, b)) in
+                  sn tcenv ({config with code=t; close=close_with_config config lab})
+
                 | Typ_meta(Meta_named _)    
                 | Typ_unknown
                 | _ -> failwith (Util.format3 "(%s) Unexpected type (%s): %s" (Env.get_range tcenv |> Range.string_of_range) (Print.tag_of_typ config.code) (Print.typ_to_string config.code))

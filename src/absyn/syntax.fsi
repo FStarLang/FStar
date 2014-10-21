@@ -72,7 +72,7 @@ type typ' =
   | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
   | Typ_delayed  of typ * subst * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
-and arg = either<typ,exp> * bool                                        (* bool marks an explicitly provided implicit arg *)
+and arg = either<typ,exp> * bool                             (* bool marks an explicitly provided implicit arg *)
 and args = list<arg>
 and binder = either<btvar,bvvar> * bool
 and binders = list<binder>                                   (* bool marks implicit binder *)
@@ -92,15 +92,11 @@ and cflags =
   | MLEFFECT 
   | RETURN 
   | SOMETRIVIAL
-and uvar_c = Unionfind.uvar<comp_typ_uvar_basis> 
-and uvar_c_pattern = typ                                     (* a Typ_meta(Meta_uvar_t_app(t, (uv, ... => typ => Kind_effect))) *)
-and comp_typ_uvar_basis = 
-  | Floating 
-  | Resolved of comp
 and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pattern of typ * list<arg>
   | Meta_named of typ * lident                               (* Useful for pretty printing to keep the type abbreviation around *)
+  | Meta_labeled of typ * string * bool                      (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
 and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a

@@ -90,16 +90,12 @@ and cflags =
   | MLEFFECT 
   | RETURN 
   | SOMETRIVIAL
-and uvar_c = Unionfind.uvar<comp_typ_uvar_basis> 
-and uvar_c_pattern = typ                                     (* a Typ_meta(Meta_uvar_t_app(t, (uv, ... => typ => Kind_effect))) *)
-and comp_typ_uvar_basis = 
-  | Floating 
-  | Resolved of comp
 and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pattern of typ * list<arg>
   | Meta_named of typ * lident                               (* Useful for pretty printing to keep the type abbreviation around *)
-  and uvar_basis<'a,'b> = 
+  | Meta_labeled of typ * string * bool                      (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
+and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a
 and exp' =
@@ -431,7 +427,8 @@ let mk_Typ_meta'    (m:meta_t) (k:knd) p =
     }
 let mk_Typ_meta     (m:meta_t) = match m with 
     | Meta_pattern(t, _) 
-    | Meta_named(t, _) -> mk_Typ_meta' m t.tk t.pos 
+    | Meta_named(t, _)
+    | Meta_labeled(t, _, _) -> mk_Typ_meta' m t.tk t.pos 
 
 let mk_Typ_uvar'     ((u:uvar_t),(k:knd)) (k':knd) (p:range) = {
     n=Typ_uvar(u, k);

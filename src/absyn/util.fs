@@ -364,12 +364,12 @@ and compress_kind k =
 and compress_typ t = 
   let t = Visit.compress_typ t in
   match t.n with
-  | Typ_delayed (t', s, m) ->
-    let res = fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp subst_ctrl [] t' in
-    m := Some res;
-    //printfn "Compressing %A ... got %A\n" t' res;
-    res
-  | _ -> t
+      | Typ_delayed (t', s, m) ->
+        let res = fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp subst_ctrl [] t' in
+        m := Some res;
+        //printfn "Compressing %A ... got %A\n" t' res;
+        res
+      | _ -> t
 
 and compress_exp e = 
   let e = Visit.compress_exp e in
@@ -676,6 +676,7 @@ let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Typ_ascribed(t, _) -> 
           vs_typ t uvonly cont        
 
+        | Typ_meta(Meta_labeled(t, _, _))
         | Typ_meta(Meta_named(t, _))
         | Typ_meta(Meta_pattern(t, _)) -> 
           vs_typ t uvonly cont
@@ -1143,14 +1144,14 @@ let destruct_typ_as_formula f : option<connective> =
                             (Const.eq2_lid, twoTypes@twoTerms);
                         ] in 
         let rec aux f (lid, arity) =  
-        let t, args = head_and_args f in 
-        if is_constructor t lid 
-            && List.length args = List.length arity
-            && List.forall2 (fun arg flag -> match arg with 
-            | Inl _, _ -> flag=type_sort
-            | Inr _, _ -> flag=term_sort) args arity
-        then Some <| BaseConn(lid, args)
-        else None in
+            let t, args = head_and_args f in 
+            if is_constructor t lid 
+                && List.length args = List.length arity
+                && List.forall2 (fun arg flag -> match arg with 
+                | Inl _, _ -> flag=type_sort
+                | Inr _, _ -> flag=term_sort) args arity
+            then Some <| BaseConn(lid, args)
+            else None in
         Util.find_map connectives (aux f) in
 
     let patterns t = 

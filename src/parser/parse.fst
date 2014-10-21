@@ -14,6 +14,8 @@ type token =
   | STRING_TEXT
   | EOF
   | LEX_FAILURE of (string)
+  | REQUIRES                     
+  | ENSURES                     
   | EXTERN
   | REFERENCE
   | VOID

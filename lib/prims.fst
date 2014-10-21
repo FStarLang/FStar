@@ -481,8 +481,8 @@ assume val fst : ('a * 'b) -> Tot 'a
 assume val snd : ('a * 'b) -> Tot 'b
 assume val Assume: 'P:Type -> unit -> (y:unit{'P})
 assume val admit: 'P:Type -> unit -> Pure unit True (fun x => 'P)
-(* assume val Assert : 'P:Type -> x:unit{'P} -> y:unit{'P} *)
-assume val Assert : 'P:Type -> unit -> Pure unit 'P (fun (x:unit) => True)
+(* assume val Assert : 'P:Type -> x:unit{'P} -> Tot unit *)
+assume val Assert : 'P:Type -> unit -> Pure unit 'P (fun x => True)
 assume val lemma : 'P:Type -> x:unit{'P} -> z:unit{'P}
 assume val unreachable : x:unit{LBL "unreachable" False} -> 'a
 assume val failwith: string -> 'a (* TODO: refine with the Exn monad *)

@@ -22,6 +22,12 @@ open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
 
+(* Error messages for labels in VCs *)
+let exhaustiveness_check = "Patterns are incomplete"
+let subtyping_check t1 t2 = Util.format2 "Subtyping check failed; expected type %s; got type %s" (Print.typ_to_string t2) (Print.typ_to_string t1)
+let ill_kinded_type = "Ill-kinded type"
+let totality_check  = "This term may not terminate"
+
 let diag r msg = 
   Util.print_string (format2 "Diagnostic %s: %s\n" (Range.string_of_range r) msg)
 
@@ -135,4 +141,6 @@ let failed_to_prove_specification_of l lbls =
   format2 "Failed to prove specification of %s; assertions at [%s] may fail" (Print.lbname_to_string l) (lbls |> String.concat ", ")
 
 let failed_to_prove_specification lbls = 
-  format1 "Failed to prove specification; assertions at [%s] may fail" (lbls |> String.concat ", ")
+  match lbls with 
+    | [] -> "An unknown assertion in the term at this location was not provable"
+    | _ -> format1 "The following problems were found:\n\t%s" (lbls |> String.concat "\n\t")

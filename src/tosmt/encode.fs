@@ -229,6 +229,9 @@ let close_ex vars pred = match vars with
     and term(*) is just term
  *)
 
+type label = (var * string)
+type labels = list<label>
+
 let encode_const = function 
     | Const_unit -> mk_Term_unit
     | Const_bool true -> boxBool mkTrue
@@ -570,11 +573,6 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars) =
 //      
       | Exp_meta _ -> failwith (Util.format2 "(%s): Impossible: encode_exp got %s" (Range.string_of_range e.pos) (Print.exp_to_string e))
 
-and encode_fe l env = 
-    let tms, ex_vars = l |> List.fold_left (fun (tms, ex_vars) x -> match x with 
-        | Inl t, _ -> encode_formula t env::tms, ex_vars
-        | Inr e, _ -> let e, vars = encode_exp e env in e::tms, vars@ex_vars) ([], []) in
-    List.rev tms, ex_vars
 
 and encode_args l env =
     let l, vars = l |> List.fold_left (fun (tms, ex_vars) x -> match x with
@@ -582,9 +580,21 @@ and encode_args l env =
         | Inr e, _ -> let t, vs = encode_exp e env in Inr t::tms, vs@ex_vars) ([], []) in
     List.rev l, vars
 
-and encode_formula  (phi:typ) (env:env_t) : term = (* expects phi to be normalized *)
-    let enc : (list<term> -> term) -> args -> term = fun f l -> let l, ex_vars = encode_fe l env in close_ex ex_vars (f l) in
-    let const_op f _ = f in
+and encode_formula (phi:typ) (env:env_t) : term = 
+    let t, vars = encode_formula_with_labels phi env in
+    match vars with
+        | [] -> t
+        | _ -> failwith "Unexpected labels in formula"
+        
+and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels = (* expects phi to be normalized; the existential variables are all labels *)
+    let encode_fe l env = 
+        let tms, labels, ex_vars = l |> List.fold_left (fun (tms, labels, ex_vars) x -> match x with 
+            | Inl t, _ -> let phi, labs = encode_formula_with_labels t env in phi::tms, labs@labels, ex_vars
+            | Inr e, _ -> let e, vars = encode_exp e env in e::tms, labels, vars@ex_vars) ([], [], []) in
+    List.rev tms, labels, ex_vars in
+
+    let enc : (list<term> -> term) -> args -> term * labels = fun f l -> let l, labels, ex_vars = encode_fe l env in close_ex ex_vars (f l), labels in
+    let const_op f _ = f, [] in
     let un_op f l = f <| List.hd l in
     let bin_op : ((term * term) -> term) -> list<term> -> term = fun f -> function 
         | [t1;t2] -> f(t1,t2)
@@ -613,22 +623,29 @@ and encode_formula  (phi:typ) (env:env_t) : term = (* expects phi to be normaliz
                         (Const.false_lid, const_op mkFalse);
                     ] in
 
-    let fallback phi =  
-     //   let t, args = Util.head_and_args phi in
-//        let _ = printfn "Falling back on %s\n" (Print.typ_to_string phi) in
-//        let _ = printfn "Failed to destruct %s (%s) (%s)\n" (Print.typ_to_string t) (Print.tag_of_typ t) (args |> List.map (function Inl t -> Print.tag_of_typ t | Inr e -> Print.exp_to_string e) |> String.concat ", ") in
-        let tt, ex_vars = encode_typ_term phi env in
-        close_ex ex_vars <| Term.mk_Valid tt in
+    let fallback phi =  match phi.n with
+        | Typ_meta(Meta_labeled(phi', msg, b)) -> 
+          let phi, labs = encode_formula_with_labels phi' env in
+          let lvar = varops.fresh "label", Bool_sort in
+          let lterm = Term.mkFreeV lvar in
+          let lphi = if b then Term.mkOr(lterm, phi) else Term.mkAnd(lterm, phi) in
+          lphi, (lvar, msg)::labs
+        
+        | _ -> 
+            let tt, ex_vars = encode_typ_term phi env in
+            close_ex ex_vars <| Term.mk_Valid tt, [] in
 
     let encode_q_body env (bs:Syntax.binders) (ps:args) body = 
         let vars, guards, env, _ = encode_binders bs env in 
-        let pats, ex_vars = encode_fe ps env in
-        match ex_vars with 
-            | _::_ -> failwith (Util.format1 "Unexpected patterns %s\n" (Print.args_to_string ps))
-            | [] -> 
-             let body = encode_formula body env in
-             vars, pats, mk_and_l guards, body in
+        let pats, ex_vars, labs = encode_fe ps env in
 
+        match ex_vars, labs with 
+            | [], [] -> 
+                 let body, labs = encode_formula_with_labels body env in
+                 vars, pats, mk_and_l guards, body, labs
+
+            | _ -> failwith (Util.format1 "Unexpected patterns %s\n" (Print.args_to_string ps)) in
+    
     if Tc.Env.debug env.tcenv Options.Low
     then Util.fprint1 ">>>> Destructing as formula ... %s\n" (Print.typ_to_string phi);
          
@@ -647,12 +664,12 @@ and encode_formula  (phi:typ) (env:env_t) : term = (* expects phi to be normaliz
           if Tc.Env.debug env.tcenv Options.Low
           then Util.fprint1 ">>>> Got QALL [%s]\n" (vars |> Print.binders_to_string "; ");
 
-          let vars, pats, guard, body = encode_q_body env vars pats body in
-          mkForall(pats, vars, mkImp(guard, body))
+          let vars, pats, guard, body, labs = encode_q_body env vars pats body in
+          mkForall(pats, vars, mkImp(guard, body)), labs
 
         | Some (Util.QEx(vars, pats, body)) -> 
-          let vars, pats, guard, body = encode_q_body env vars pats body in
-          mkExists(pats, vars, mkAnd(guard, body))
+          let vars, pats, guard, body, labs = encode_q_body env vars pats body in
+          mkExists(pats, vars, mkAnd(guard, body)), labs
 
 (***************************************************************************************************)
 (* end main encoding of kinds/types/exps/formulae *)
@@ -1080,6 +1097,11 @@ let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls * e
             decls@g, env' in
     List.fold_right encode_binding bindings ([], env)
 
+let encode_labels labs = 
+    let prefix = labs |> List.map (fun (l, _) -> Term.DeclFun(fst l, [], Bool_sort, None)) in
+    let suffix = labs |> List.collect (fun (l, _) -> [Echo <| fst l; Eval (mkFreeV l)]) in
+    prefix, suffix
+
 (* caching encodings of the environment and the top-level API to the encoding *)
 open Microsoft.FStar.Tc.Env
 let last_env : ref<list<env_t>> = Util.mk_ref []
@@ -1125,20 +1147,21 @@ let solve tcenv q =
     push_env (); varops.push();
     let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) tcenv.gamma) in
     if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);
-    let phi = encode_formula q env in
-    let label_suffix = [] in  //labels |> List.fold_left (fun decls (lname, t) -> decls@[Echo lname; Eval t]) theory in
+    let phi, labels = encode_formula_with_labels q env in
+    let label_prefix, label_suffix = encode_labels labels in
     let r = Caption (Range.string_of_range (Tc.Env.get_range tcenv)) in
     ignore <| pop_env(); varops.pop();
     let decls = [Term.Push; r]
                 @env_decls
+                @label_prefix
                 @[Term.Caption "<Query>"; Term.Assume(mkNot phi, Some "query"); Term.Caption "</Query>"; Term.CheckSat]
                 @label_suffix
                 @[Term.Pop; Term.Echo "Done!"] in
-    Z3.queryZ3 decls
+    Z3.queryZ3 labels decls
 let is_trivial (tcenv:Tc.Env.env) (q:typ) : bool = 
    let env = get_env tcenv in
    push();
-   let f = encode_formula q env in
+   let f, _ = encode_formula_with_labels q env in
    pop();
    match f.tm with 
     | True -> true
@@ -1159,7 +1182,7 @@ let dummy = {
     pop=(fun _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
-    solve=(fun _ _ -> true);
+    solve=(fun _ _ -> true, []);
     is_trivial=(fun _ _ -> false)
 }
 
