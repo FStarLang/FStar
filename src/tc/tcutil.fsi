@@ -63,3 +63,4 @@ val refine_data_type: env -> lident -> binders -> typ -> typ
 val discharge_guard: env -> guard_t -> unit
 val label: string -> Range.range -> typ -> typ
 val label_guard: string -> Range.range -> guard_t -> guard_t
+val get_err_count: unit -> int
