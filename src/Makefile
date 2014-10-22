@@ -200,6 +200,9 @@ test: boot
 	make -C ../examples/unit-tests millionaires.ver
 	make -C ../examples/unit-tests listlemmas.ver
 #	make -C ../../../miTLS/ML
+	@echo "--------InsertionSort: Expect two errors (unknown assertion and subtyping check failed)----------"
+	-make -C ../examples/unit-tests insertionsort.ver
+	@echo "--------InsertionSort: Expect two errors (unknown assertion and subtyping check failed)----------"
 
 
 wc-boot:
