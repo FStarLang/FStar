@@ -32,7 +32,7 @@ let parse env fn =
       Desugar.desugar_file env ast
     | Inr msg -> 
       Util.print_string msg;
-      exit 0
+      exit 1
 
 let parse_files files = 
   let _, mods = List.fold_left (fun (env,mods) fn -> 
