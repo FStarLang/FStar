@@ -1,0 +1,33 @@
+Support for compiled interfaces
+————————————————
+
+When F* type checks a module, it also has to type check the standard
+library and all imported modules to include their definitions in the
+environment. Instead, it would be good to have support for persistent
+cache of compiled module interfaces, that can be restored when
+needed.
+
+On the writing side, once F* type checker finishes type checking a
+module module.fs, it can serialize following details of the module to
+a module.tc file:
+
+— The definition of non-private types
+— Signature (kinds) of private types (?)
+— Non-private val declarations
+— Signature of non-private top level let bindings that do not have val
+declarations
+— Definitions of top-level pure functions
+— Non-private assumptions
+— Monad declarations
+
+(Thanks Nik for the list !)
+
+Marshaling format: TBD
+
+On the reading side, when the type checker finds an import module,
+it’s going to read the module.tc file and populate the type
+environment. It needs to check that the module.tc file is not
+outdated. It can do that by comparing the timestamps of the module
+file and module.tc file. Alternatively, we can have more elaborate
+Makefile rules listing all the dependencies there, and then let make
+handle the generation of module.tc file.
