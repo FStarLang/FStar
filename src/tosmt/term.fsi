@@ -125,7 +125,7 @@ val freevars: term -> list<(string * sort)>
 val fv_minus: term -> list<(string * sort)> -> list<(string * sort)>
 val constructor_to_decl: constructor_t -> decls
 val termToSmt: binders -> term -> string
-val declToSmt: decl -> string
+val declToSmt: string -> decl -> string
 
 val mk_Kind_type : term
 val mk_Typ_app : term -> term -> term

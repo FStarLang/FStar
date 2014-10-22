@@ -130,12 +130,25 @@ let cleanup () =
         | Some f -> Util.close_file f
         | _ -> ()
 
+let z3_options () =
+  let mbqi =
+    if   z3v_le (get_z3version ()) (4, 3, 1)
+    then "mbqi"
+    else "smt.mbqi" in
+  let model_on_timeout =
+    if   z3v_le (get_z3version ()) (4, 3, 1)
+    then "(set-option :model-on-timeout true)\n"
+    else ""
+  in "(set-option :global-decls false)\n" ^
+     "(set-option :" ^ mbqi ^ " false)\n" ^
+     model_on_timeout
+
 let batch : ref<decls> = Util.mk_ref []
 let clear_batch () = let r = !batch in batch:=[]; r
 let giveZ3 (theory:decls) = batch := !batch@theory
 let queryZ3 label_messages (theory:decls)  =
   let theory = clear_batch()@theory in
-  let input = List.map declToSmt theory |> String.concat "\n" in
+  let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
     if !Options.logQueries then Util.append_to_file (get_qfile()) input; (* append flushes *)
     let status, lblnegs = doZ3Exe input in
     match status with 

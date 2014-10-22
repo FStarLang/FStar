@@ -327,8 +327,8 @@ let caption_to_string = function
     | None -> ""
     | Some c -> format1 ";;;;;;;;;;;;;;;;%s\n" c
 
-let rec declToSmt decl = match decl with
-  | DefPrelude -> mkPrelude ()
+let rec declToSmt z3options decl = match decl with
+  | DefPrelude -> mkPrelude z3options
   | Caption c -> 
     format1 "\n; %s" c
   | DeclFun(f,argsorts,retsort,c) ->
@@ -347,11 +347,9 @@ let rec declToSmt decl = match decl with
   | Push -> "(push)"
   | Pop -> "(pop)"
 
-and mkPrelude () = 
-  let basic =  "(set-option :global-decls false)\n\
-                (set-option :mbqi false)\n\
-                (set-option :model-on-timeout true)\n\
-                (declare-sort Ref)\n\
+and mkPrelude z3options =
+  let basic = z3options ^
+                "(declare-sort Ref)\n\
                 (declare-fun Ref_constr_id (Ref) Int)\n\
                 \n\
                 (declare-sort String)\n\
@@ -388,7 +386,7 @@ and mkPrelude () =
                                  ("BoxBool",    ["BoxBool_proj_0", Bool_sort], Term_sort, 2);
                                  ("BoxString",  ["BoxString_proj_0", String_sort], Term_sort, 3);
                                  ("BoxRef",     ["BoxRef_proj_0", Ref_sort], Term_sort, 4)] in
-   let bcons = constrs |> List.collect constructor_to_decl |> List.map declToSmt |> String.concat "\n" in
+   let bcons = constrs |> List.collect constructor_to_decl |> List.map (declToSmt z3options) |> String.concat "\n" in
    basic ^ bcons 
 
 let mk_Kind_type        = mkApp("Kind_type", [])
