@@ -172,8 +172,8 @@ and free_type_vars env t = match (unparen t).tm with
   | Var  _
   | Name _  -> []
 
-  | Requires t
-  | Ensures t
+  | Requires (t, _)
+  | Ensures (t, _)
   | Labeled(t, _, _)
   | Paren t
   | Ascribed(t, _) -> free_type_vars env t
@@ -256,9 +256,11 @@ let as_binder env imp = function
 type env_t = DesugarEnv.env
 type lenv_t = list<either<btvdef,bvvdef>>
 
-let label_conjuncts polarity f = 
+let label_conjuncts polarity label_opt f = 
   let label f = 
-    let tag = if polarity then "pre-condition" else "post-condition" in
+    let tag = match label_opt with 
+        | Some l -> l
+        | _ -> if polarity then "pre-condition" else "post-condition" in
     let msg = Util.format2 "%s at %s" tag (Range.string_of_range f.range) in
     mk_term (Labeled(f, msg, polarity)) f.range f.level  in
 
@@ -654,12 +656,12 @@ and desugar_typ env (top:term) : typ =
   match top.tm with
     | Wild -> setpos tun
 
-    | Requires t -> 
-      let t = label_conjuncts false t in
+    | Requires (t, lopt) -> 
+      let t = label_conjuncts true lopt t in
       desugar_typ env t
 
-    | Ensures t -> 
-      let t = label_conjuncts true t in
+    | Ensures (t, lopt) -> 
+      let t = label_conjuncts true lopt t in
       desugar_typ env t
 
     | Op("*", [t1; _]) -> 

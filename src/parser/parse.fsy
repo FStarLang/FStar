@@ -612,19 +612,20 @@ term:
 noSeqTerm:
   | simpleTerm { $1 }
 
-  | REQUIRES atomicPatterns RRARROW typ 
+  | REQUIRES label_opt reqEnsBinders typ 
      {
         let pos = rhs2 parseState 1 4 in
-        let f = match $2 with [] -> $4 | _ -> mk_term (Abs($2, $4)) pos Type in
-        mk_term (Requires f) pos Type
+        let f = match $3 with [] -> $4 | _ -> mk_term (Abs($3, $4)) pos Type in
+        mk_term (Requires(f, $2)) pos Type
      }
 
-  | ENSURES atomicPatterns RRARROW typ  
+	 
+  | ENSURES label_opt reqEnsBinders typ 
      {
         let pos = rhs2 parseState 1 4 in
-        let f = mk_term (Abs($2, $4)) pos Type in
-        mk_term (Ensures f) pos Type
-     } 
+        let f = match $3 with [] -> $4 | _ -> mk_term (Abs($3, $4)) pos Type in
+        mk_term (Requires(f, $2)) pos Type
+     }
 
   | IF noSeqTerm THEN noSeqTerm ELSE noSeqTerm
       {
@@ -677,9 +678,13 @@ noSeqTerm:
 		  (mk_term (Var Const.print_lid) (rhs parseState 1) Expr)
 		  ($2 :: $3) (rhs2 parseState 1 3) }
 
-maybeBinders:
-  |  { fun x -> x }
-  | atomicPatterns RRARROW { fun x -> mk_term (Abs($1, x)) x.range Type }
+reqEnsBinders:
+  |                        { [] }
+  | BACKSLASH atomicPatterns RRARROW { $2 }
+
+label_opt:
+  |                        { None }
+  | DOLLAR STRING          { Some (Util.string_of_bytes $2) }
 
 qpat: 
   |   { [] }

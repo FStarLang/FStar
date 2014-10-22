@@ -20,6 +20,7 @@ open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
 open Microsoft.FStar.Getopt
+open Microsoft.FStar.Tc.Util
 
 let process_args () = 
   let file_list = Util.mk_ref [] in
@@ -72,8 +73,17 @@ let go _ =
             let doc = Backends.JS.Print.pretty_print js in
             Util.print_string (FSharp.Format.pretty 120 doc)
         end;
-        finished fmods 
-
+        finished fmods;
+        let errs = Tc.Util.get_err_count () in
+        if !Options.verify then begin
+          if errs>0 then begin
+            fprint1 ("Error: %s verification conditions could not be " ^
+                     "discharged (see above)\n") (string_of_int errs);
+            exit 1
+            end
+          else if not !Options.silent then
+            print_string "All verification conditions discharged successfully\n"
+        end
 let () =
     try 
       go ();
@@ -85,4 +95,5 @@ let () =
         if !Options.trace_error then Util.fprint2 "%s\n%s\n" e.Message e.StackTrace;
         if not (Util.handleable e || !Options.trace_error)
         then Util.print_string "Unexpected error; use the --trace_error option for more details\n";
-        cleanup ()
+        cleanup ();
+        exit 1
