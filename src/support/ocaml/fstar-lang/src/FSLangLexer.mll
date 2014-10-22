@@ -182,7 +182,7 @@ rule token = parse
  | "<==>"      { IFF }
  | "==>"       { IMPLIES }
  | "."         { DOT }
- | "{:pattern" { LBRACE_COLON_PATTERN }
+ | "{:pattern" { LBRACE_COLON_PTN }
  | ":"         { COLON }
  | "::"        { COLON_COLON }
  | "@"         { ATSIGN }

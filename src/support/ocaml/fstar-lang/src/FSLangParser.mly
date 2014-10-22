@@ -1,4 +1,13 @@
 (* -------------------------------------------------------------------- *)
+%{
+  module Ast = FSLangAst
+
+  let range = Ast.range
+  let desc  = Ast.desc
+  let mk_rg = Ast.mk_rg
+%}
+
+(* -------------------------------------------------------------------- *)
 %token <Fstar.Types.bytes> BYTEARRAY
 %token <Fstar.Types.bytes> STRING
 
@@ -58,7 +67,7 @@
 %token IN
 %token KIND
 %token LBRACE
-%token LBRACE_COLON_PATTERN
+%token LBRACE_COLON_PTN
 %token LBRACK
 %token LBRACK_BAR
 %token LENS_PAREN_LEFT
@@ -112,786 +121,807 @@
 
 %%
 
-(* -------------------------------------------------------------------- *)
-file: 
-| pragmas moduleList
+(* ==================================================================== *)
+ident: x=loc(IDENT) { Ast.mk_ident x }
+name : x=loc(NAME)  { Ast.mk_ident x }
+tvar : x=loc(TVAR)  { Ast.mk_ident x }
+
+
+eitherQname:
+| nm=rlist0(suffix(name, DOT), empty) name=eitherName
+    { nm@[name] }
+
+lid:
+| idpath
 {};
 
-(* -------------------------------------------------------------------- *)
-moduleList:
-| modul moduleList
-| EOF
-{};      
-      
-(* -------------------------------------------------------------------- *)
-modul:    
-| MODULE qname decls endopt
+qname:
+| namepath
 {};
 
-(* -------------------------------------------------------------------- *)
-endopt:
-| (* empty *)
-| END   
+eitherName:
+| ident
+| name
 {};
 
-(* -------------------------------------------------------------------- *)
-pragmas: 
-| (* empty *)
-| pragmas pragma
+namepath:
+| name
+| name DOT namepath
 {};
 
+idpath:
+| ident
+| name DOT idpath
+{};
+
+
+(* ==================================================================== *)
+file:
+| pg=pragmas ms=modul+ EOF
+    { ignore (pg, ms) }
+
 (* -------------------------------------------------------------------- *)
-pragma: 
-| PRAGMAMONADIC LPAREN eitherQname COMMA eitherQname COMMA eitherQname RPAREN
+modul:
+| MODULE name=qname decls=decls END?
+    { Ast.mk_module (name, decls) }
+
+(* -------------------------------------------------------------------- *)
+pragma:
+| PRAGMAMONADIC LPAREN
+    x1=eitherQname COMMA
+    x2=eitherQname COMMA
+    x3=eitherQname
+  RPAREN
+    { [Ast.mk_monadic (x1, x2, x3)] }
+
 | PRAGMALIGHT STRING
-{};
+    { [] }
+
+(* -------------------------------------------------------------------- *)
+%inline pragmas:
+| pgs=pragma* { List.flatten pgs }
 
 (* -------------------------------------------------------------------- *)
 decls:
 | (* empty *)
-| SEMICOLON_SEMICOLON term 
-| decl decls
-{};
+    { [] }
+
+| SEMICOLON_SEMICOLON t=term
+    { [Ast.mk_decl ~rg:(mk_rg $startpos $endpos) t] }
+
+| d=decl ds=decls
+    { d :: ds }
 
 (* -------------------------------------------------------------------- *)
 decl:
-| decl_r
-{};
+| OPEN name=qname
+    { Ast.mk_open name }
 
-(* -------------------------------------------------------------------- *)
-decl_r:
-| OPEN qname
-| kind_abbrev 
-| tycon 
-| LET recopt letbinding letbindings
-| qualifiers VAL eitherName COLON typ
-| assumeTag name COLON formula
-| EXCEPTION name of_typ
-| MONADLATTICE LBRACE monads with_lifts RBRACE
-{};
+| ka=kind_abbrev
+    { ka }
+
+| tyc=tycon
+    { tyc }
+
+| LET rec_=REC? bds=plist1(letbinding, AND)
+    { Ast.mk_top_let (rec_, bds) }
+
+| ql=qualifiers VAL name=eitherName COLON ty=typ
+    { Ast.mk_val (ql, name, ty) }
+
+| tg=assumeTag name=name COLON f=formula
+   { Ast.mk_assume (tg, name, f) }
+
+| EXCEPTION name=name ty=prefix(OF, typ)?
+   { Ast.mk_exception (name, ty) }
+
+| MONADLATTICE LBRACE
+    mds=plist1(monad, SEMICOLON)
+    lifts=prefix(WITH, plist1(lift, SEMICOLON))?
+  RBRACE
+    { Ast.mk_monadlat (mds, lifts) }
 
 (* -------------------------------------------------------------------- *)
 tycon:
-| qualifiers TYPE tyconDefinition tyconDefinitions 
-| EFFECT tyconDefinition 
-{};
+| ql=qualifiers TYPE defs=plist1(tyconDefinition, AND)
+    { Ast.mk_tycon (ql, defs) }
+
+| EFFECT def=tyconDefinition 
+	  { Ast.mk_tycon ([`Effect], [def]) }
 
 (* -------------------------------------------------------------------- *)
-kind_abbrev: 
-| KIND name binders EQUALS kind
-{};
-
-(* -------------------------------------------------------------------- *)
-monads:
-| monad moreMonads
-{};
-
-(* -------------------------------------------------------------------- *)
-moreMonads:
-| (* empty *)
-| SEMICOLON monad moreMonads 
-{};
-
-(* -------------------------------------------------------------------- *)
-maybeTotal:
-| (* empty *)
-| TOTAL 
-{};
+kind_abbrev:
+| KIND name=name bds=binder* EQUALS kd=kind
+    { Ast.mk_kind_abbrv (name, bds, kd) }
 
 (* -------------------------------------------------------------------- *)
 monad:
-| name COLON_COLON maybeTotal monad_decls WITH monad_abbrevs
-{};
+| name=name COLON_COLON t=TOTAL? dcls=monad_decl* WITH abbrvs=plist1(monad_abbrev, AND)
+    { Ast.mk_monad (name, t, dcls, abbrvs) }
 
 (* -------------------------------------------------------------------- *)
-monad_decl: 
-| kind_abbrev
-| tycon 
-{};
+monad_decl:
+| x=loc(kind_abbrev)
+    { Ast.mk_decl ~rg:(range x) (desc x) }
+
+| x=loc(tycon)
+    { Ast.mk_decl ~rg:(range x) (desc x) }
 
 (* -------------------------------------------------------------------- *)
-monad_decls:
-| (* empty *)
-| monad_decl monad_decls 
-{};
-
-(* -------------------------------------------------------------------- *)
-monad_abbrev: 
-| name typars EQUALS typ
-{};
-
-(* -------------------------------------------------------------------- *)
-monad_abbrevs:
-| monad_abbrev more_monad_abbrevs 
-{};
-
-(* -------------------------------------------------------------------- *)
-more_monad_abbrevs: 
-| (* empty *)
-| AND monad_abbrev more_monad_abbrevs 
-{};
-
-(* -------------------------------------------------------------------- *)
-with_lifts:
-| (* empty *)
-| WITH lifts 
-{};
-
-(* -------------------------------------------------------------------- *)
-lifts:
-| lift moreLifts
-{};
-
-(* -------------------------------------------------------------------- *)
-moreLifts:
-| (* empty *)
-| SEMICOLON lift moreLifts 
-{};
+monad_abbrev:
+| name=name tvs=typars EQUALS ty=typ
+    { Ast.mk_monad_abbrv (name, tvs, ty) }
 
 (* -------------------------------------------------------------------- *)
 lift:
-| name SQUIGGLY_RARROW name EQUALS atomicTerm
-{};
+| src=name SQUIGGLY_RARROW dst=name EQUALS t=atomicTerm
+    { Ast.mk_lift (src, dst, t) }
 
 (* -------------------------------------------------------------------- *)
 qualifiers:
-| (* empty *)
-| LOGIC        
-| ASSUME       
-| ASSUME LOGIC 
-{};
+| empty        { [] } 
+| LOGIC        { [`Logic] }
+| ASSUME       { [`Assume] }
+| ASSUME LOGIC { [`Assume; `Logic] }
 
 (* -------------------------------------------------------------------- *)
 assumeTag:
-| ASSUME 
-| QUERY  
-| DEFINE 
-{};
+| ASSUME { [`Assumption] }
+| QUERY  { [`Query] }
+| DEFINE { [`Definition] }
 
 (* -------------------------------------------------------------------- *)
 tyconDefinition:
-| eitherName typars ascribeKindOpt tyconDefn
-{};
-
-(* -------------------------------------------------------------------- *)
-tyconDefinitions:
-| (* empty *)
-| AND tyconDefinition tyconDefinitions
-{};
-
-(* -------------------------------------------------------------------- *)
-recopt:
-| (* empty *)
-| REC 
-{};
-
-(* -------------------------------------------------------------------- *)
-letbindings:
-| (* empty *)
-| AND letbinding letbindings 
-{};
+| name=eitherName tvs=typars asc=prefix(COLON, kind)? tyc=tyconDefn
+    { tyc (name, tvs, asc) }
 
 (* -------------------------------------------------------------------- *)
 letbinding:
-| pattern ascribeTypOpt EQUALS term 
-{};      
-      
+| pt=pattern asc=prefix(COLON, product)? EQUALS e=term
+    { let pt =
+        match asc with
+        | None     -> pt
+        | Some asc ->
+            let rg = mk_rg $startpos(pt) $endpos(asc) in
+              Ast.mk_pattern ~rg (Ast.mk_pat_ascribed (pt, asc))
+      in (pt, e) }
+
 (* -------------------------------------------------------------------- *)
 pattern:
-| tuplePattern 
-{};
+| pt=tuplePattern { pt }
 
 (* -------------------------------------------------------------------- *)
 tuplePattern:
-| listPattern patternListComma 
-{};
-
-(* -------------------------------------------------------------------- *)
-patternListComma:
-| (* empty *)
-| COMMA listPattern patternListComma 
-{};
+| pts=loc(plist1(listPattern, COMMA))
+    { match desc pts with
+      | []   -> assert false
+      | [pt] -> pt
+      | _    ->
+         let pt = Ast.mk_pat_tuple (desc pts, false) in
+         Ast.mk_pattern ~rg:(range pts) pt }
 
 (* -------------------------------------------------------------------- *)
 listPattern:
-| appPattern consPattern
-{};
+| pta=appPattern ptc=loc(consPattern?)
+    { match desc ptc with 
+      | None     -> pta
+      | Some ptc ->
+          let pt = Ast.mk_pat_cons (pta, ptc) in
+          Ast.mk_pattern ~rg:(mk_rg $startpos $endpos) pt }
 
 (* -------------------------------------------------------------------- *)
 consPattern:
-| (* empty *)
-| COLON_COLON appPattern consPattern 
-{};
+| COLON_COLON pta=appPattern ptc=loc(consPattern?)
+    { match desc ptc with 
+      | None     -> Some pta
+      | Some ptc ->
+          let pt = Ast.mk_pat_cons (pta, ptc) in
+          Some (Ast.mk_pattern ~rg:(mk_rg $startpos $endpos) pt) }
 
 (* -------------------------------------------------------------------- *)
 appPattern:
-| atomicPattern atomicPatterns
-{};
+| pts=loc(atomicPattern+)
+    { match desc pts with
+      | []     -> assert false
+      | [pt]   -> pt
+      | hd::tl ->
+          let pt = Ast.mk_pat_app (hd, tl) in
+          Ast.mk_pattern ~rg:(range pts) pt }
 
 (* -------------------------------------------------------------------- *)
-atomicPatterns:
-| (* empty *)
-| atomicPattern atomicPatterns 
-{};
-
-(* -------------------------------------------------------------------- *)
-atomicPattern: 
-| atomicPattern_r
-{};
-
-(* -------------------------------------------------------------------- *)
-atomicPattern_r:
-| nonTvarPattern_r 
-| tvar  
-{};
+atomicPattern:
+| pt=tvar
+| pt=nonTvarPattern { pt }
 
 (* -------------------------------------------------------------------- *)
 nonTvarPattern:
-| nonTvarPattern_r 
-{};
+| UNDERSCORE
+    { Ast.mk_pat_wild () }
 
-(* -------------------------------------------------------------------- *)
-nonTvarPattern_r:      
-| UNDERSCORE 
-| constant 
-| ident 
-| qname 
-| LBRACK patternListSemiColon RBRACK 
-| LPAREN ascriptionOrPattern RPAREN  
-| LBRACE recordPattern RBRACE 
-| LENS_PAREN_LEFT listPattern COMMA listPattern patternListComma LENS_PAREN_RIGHT 
-{};
+| c=constant
+    { Ast.mk_pat_const c }
+
+| id=ident
+    { Ast.mk_pat_var id }
+
+| name=qname
+    { Ast.mk_pat_name name }
+
+| pt=brackets(plist0(appPattern, SEMICOLON))
+    { Ast.mk_pat_list pt }
+
+| pt=parens(ascriptionOrPattern)
+    { pt }
+
+| pt=braces(term1(sepby(lid, EQUALS, pattern), SEMICOLON))
+    { Ast.mk_pat_record pt }
+
+| LENS_PAREN_LEFT pts=plist1(listPattern, COMMA) LENS_PAREN_RIGHT
+    { Ast.mk_pat_tuple pts }
 
 (* -------------------------------------------------------------------- *)
 ascriptionOrPattern:
-| nonTvarPattern COLON typ 
-| tvar COLON  kind        
-| pattern 
-{};
+| pt=nonTvarPattern COLON ty=typ
+    { Ast.mk_pat_ascribed (pt, ty) }
 
-(* -------------------------------------------------------------------- *)
-patternListSemiColon:
-| (* empty *)
-| appPattern patternListSemiColonRest 
-{};
+| tv=loc(tvar) COLON k=kind
+    { let pt = Ast.mk_pattern ~rg:(range tv) (Ast.mk_pat_tvar (desc tv)) in
+      Ast.mk_pat_ascribed (pt, k) }
 
-(* -------------------------------------------------------------------- *)
-patternListSemiColonRest:
-| (* empty *)
-| SEMICOLON appPattern patternListSemiColonRest 
-{};
-
-(* -------------------------------------------------------------------- *)
-recordPattern:
-| lid EQUALS pattern moreFieldPatterns 
-{};
-      
-(* -------------------------------------------------------------------- *)
-moreFieldPatterns:
-| (* empty *)
-| SEMICOLON lid EQUALS pattern moreFieldPatterns 
-{};
+| pt=pattern
+    { pt }                              (* FIXME *)
 
 (* -------------------------------------------------------------------- *)
 binder:
-| ident 
-| tvar  
-| LPAREN ident COLON appTerm refineOpt RPAREN 
-| LPAREN tvar COLON  kind RPAREN 
-{};
+| x=loc(ident)
+    { Ast.mk_binder ~rg:(range x) (Ast.mk_bd_var (desc x), `Type, false) }
+
+| x=loc(tvar)
+    { Ast.mk_binder ~rg:(range x) (Ast.mk_bd_tvar (desc x), `Kind, false) }
+
+| LPAREN x=ident COLON at=appTerm r=refine? RPAREN
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_binder ~rg (Ast.mk_bd_refined (x, at, r), `Type, false) }
+
+| LPAREN x=tvar COLON k=kind RPAREN
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_binder ~rg (Ast.mk_bd_tannot (x, k), `Kind, false) }
 
 (* -------------------------------------------------------------------- *)
 typars:
-| tvarinsts              
-| binders                
-{};
+| x=tvarinsts { x }
+| x=binder*   { x }
 
 (* -------------------------------------------------------------------- *)
-tvarinsts: 
-| TYP_APP_LESS tvars GREATER    
-{};
+tvarinsts:
+| TYP_APP_LESS tvs=plist1(loc(tvar), COMMA) GREATER
+    { let for1 tv =
+        let bdtv = Ast.mk_bd_tvar (desc tv) in
+        Ast.mk_binder ~rg:(range tv) (bdtv, `Kind, false)
+      in List.map for1 tvs }
 
 (* -------------------------------------------------------------------- *)
-binders: 
-| (* empty *)
-| binder binders 
-{};
+tyconDefn:
+| empty
+    { fun (id, bds, k) -> Ast.mk_tycon_abs (id, bds, k) }
 
-(* -------------------------------------------------------------------- *)
-tyconDefn: 
-| (* empty *)
-| EQUALS typ    
-| EQUALS LBRACE recordFieldDecl recordFields RBRACE 
-| EQUALS constructors 
-{};
+| EQUALS ty=typ
+    { fun (id, bds, k) -> Ast.mk_tycon_abbrv (id, bds, k, ty) }
 
-(* -------------------------------------------------------------------- *)
-recordFields:
-| (* empty *)
-| SEMICOLON recordFieldDecl recordFields
-| SEMICOLON 
-{};
+| EQUALS fields=braces(plist1(recordFieldDecl, SEMICOLON))
+    { fun (id, bds, k) -> Ast.mk_tycon_record (id, bds, k, fields) }
 
-(* -------------------------------------------------------------------- *)
-constructors:
-| (* empty *)
-| constructors constructorDecl
-{};
+| EQUALS ctors=prefix(BAR, plist1(constructorDecl, BAR))
+    { fun (id, bds, k) -> Ast.mk_tycon_variant (id, bds, k, ctors) }
 
 (* -------------------------------------------------------------------- *)
 recordFieldDecl:
-| ident COLON tmTuple
-{};
+| x=ident COLON ty=tmTuple
+    { (x, ty) }
 
 (* -------------------------------------------------------------------- *)
 constructorDecl:
-| BAR name COLON typ
-| BAR name of_typ
-{};
+| name=name COLON ty=typ        { (name, Some ty, false) }
+| name=name ty=prefix(OF, typ)? { (name,      ty, true) }
 
 (* -------------------------------------------------------------------- *)
-of_typ:
-| (* empty *)
-| OF typ 
-{};
-
-(* -------------------------------------------------------------------- *)
-eitherQname: 
-| eitherQname_r 
-{};
-
-(* -------------------------------------------------------------------- *)
-eitherQname_r: 
-| eitherName 
-| name DOT eitherQname_r 
-{};
-
-(* -------------------------------------------------------------------- *)
-lid:
-| idpath 
-{};
-
-(* -------------------------------------------------------------------- *)
-qname:
-| namepath 
-{};
-
-(* -------------------------------------------------------------------- *)
-eitherName:
-| ident  
-| name  
-{};
-
-(* -------------------------------------------------------------------- *)
-ident:
-| IDENT 
-{};
-
-(* -------------------------------------------------------------------- *)
-name:
-| NAME 
-{};
-
-(* -------------------------------------------------------------------- *)
-tvars:
-| TVAR                
-| TVAR COMMA tvars    
-{};
-
-(* -------------------------------------------------------------------- *)
-tvar:
-| TVAR 
-{};
-
-(* -------------------------------------------------------------------- *)
-namepath:
-| name 
-| name DOT namepath
-{};
-
-(* -------------------------------------------------------------------- *)
-idpath:
-| ident 
-| name DOT idpath
-{};      
-      
-(* -------------------------------------------------------------------- *)
-ascribeTypOpt:
-| (* empty *)
-| COLON product 
-{};
-
-(* -------------------------------------------------------------------- *)
-ascribeKindOpt: 
-| (* empty *)
-| COLON  kind 
-{};
-
-(* -------------------------------------------------------------------- *)
-kind:
-| product
-{};
-
-(* -------------------------------------------------------------------- *)
-atomicKind:
-| atomicTerm
-{};
-      
-(* -------------------------------------------------------------------- *)
-typ: 
-| simpleTerm
-{};
+kind      : x=product    { Ast.tm_set_level `Kind x }
+atomicKind: x=atomicTerm { Ast.tm_set_level `Kind x }
+typ       : x=simpleTerm { Ast.tm_set_level `Type x }
 
 (* -------------------------------------------------------------------- *)
 term:
-| noSeqTerm 
-| noSeqTerm SEMICOLON term 
-{};
+| x=plist1(noSeqTerm, SEMICOLON)
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_tm_seq x, `Expr) }
 
 (* -------------------------------------------------------------------- *)
 noSeqTerm:
-| simpleTerm 
-| IF noSeqTerm THEN noSeqTerm ELSE noSeqTerm
-| IF noSeqTerm THEN noSeqTerm
-| TRY term WITH firstPatternBranch patternBranches 
-| MATCH term WITH firstPatternBranch patternBranches 
-| LET recopt letbinding letbindings IN term
-| FORALL binders DOT qpat noSeqTerm
-| EXISTS binders DOT qpat noSeqTerm
-| FUNCTION firstPatternBranch patternBranches 
-| ASSUME atomicTerm 
-| PRINT atomicTerm atomicTerms
-{};
+| tm=simpleTerm
+    { tm }
+
+| IF cond=noSeqTerm THEN t1=noSeqTerm ELSE t2=noSeqTerm
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_tm_if (cond, t1, t2), `Expr)}
+
+| IF cond=noSeqTerm THEN t=noSeqTerm
+    { let e  = Ast.mk_ct_unit () in
+      let e  = Ast.mk_term ~rg:(mk_rg $startpos(t) $endpos(t)) (e, `Expr) in
+      let rg = mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_tm_if (cond, t, e), `Expr) }
+
+| TRY t=term WITH BAR? pt=plist1(patternBranch, BAR)
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_tm_try (t, pt), `Expr) }
+
+| MATCH t=term WITH BAR? pt=plist1(patternBranch, BAR)
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_tm_match (t, pt), `Expr) }
+
+| LET r=boption(REC) bds=plist1(letbinding, AND) IN t=term
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_tm_let (r, bds, t), `Expr) }
+
+| FORALL bds=binder* DOT qp=qpat t=noSeqTerm
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_tm_qforall (bds, qp, t), `Form) }
+
+| EXISTS bds=binder* DOT qp=qpat t=noSeqTerm
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_tm_qexists (bds, qp, t), `Form) }
+
+| FUNCTION BAR? pt=plist1(patternBranch, BAR)
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_tm_function pt, `Expr) }
+
+| x=loc(ASSUME) t=atomicTerm
+    { let a  = Ast.mk_term ~rg:(range x) (Ast.mk_tm_var "__assume", `Expr) in
+      let rg = mk_rg $startpos $endpos in
+      Ast.mk_tm_app ~rg (a, [t]) }
+
+| x=loc(PRINT) ts=atomicTerm+
+    { let p  = Ast.mk_term ~rg:(range x) (Ast.mk_tm_var "__print", `Expr) in
+      let rg = mk_rg $startpos $endpos in
+      Ast.mk_tm_app ~rg (p, ts) }
 
 (* -------------------------------------------------------------------- *)
-qpat: 
-| (* empty *)
-| LBRACE_COLON_PATTERN appTerm morePats RBRACE
-{};
-
-(* -------------------------------------------------------------------- *)
-morePats:
-| (* empty *)
-| SEMICOLON appTerm morePats  
-{};
+qpat:
+| x=enclosed(LBRACE_COLON_PTN, plist1(appTerm, SEMICOLON), RBRACE)? { x }
 
 (* -------------------------------------------------------------------- *)
 simpleTerm:
-| tmIff 
-| FUN atomicPattern atomicPatterns funArrow term
-{};
+| t=tmIff
+    { t }
+
+| FUN pts=atomicPattern+ fa=funArrow t=term
+    { fa ~rg:(mk_rg $startpos $endpos) (Ast.mk_tm_abs (pts, t)) }
 
 (* -------------------------------------------------------------------- *)
-patternBranches:
-| (* empty *)
-| patternBranches patternBranch
-{};
-
-(* -------------------------------------------------------------------- *)
-maybeBar:
-| (* empty *)
-| BAR 
-{};
-
-(* -------------------------------------------------------------------- *)
-firstPatternBranch: /* shift/reduce conflict on BAR ... expected for nested matches */
-| maybeBar disjunctivePattern maybeWhen RARROW term 
-{};
-
-(* -------------------------------------------------------------------- *)
-patternBranch: /* shift/reduce conflict on BAR ... expected for nested matches */
-| BAR disjunctivePattern maybeWhen RARROW term 
-{};
-
-(* -------------------------------------------------------------------- *)
-disjunctivePattern:
-| pattern     
-| pattern BAR disjunctivePattern 
-{};
-
-(* -------------------------------------------------------------------- *)
-maybeWhen:
-| (* empty *)
-| WHEN appTerm        
-{};
+patternBranch:
+| pts=loc(plist1(pattern, BAR)) cond=prefix(WHEN, appTerm)? RARROW e=term
+    { let pts =
+        match desc pts with
+        | []   -> assert false
+        | [pt] -> pt
+        | _    -> Ast.mk_pattern ~rg:(range pts) (Ast.mk_pat_or (desc pts))
+      in (pts, cond, e) }
 
 (* -------------------------------------------------------------------- *)
 funArrow:
-| RARROW 
-| RRARROW 
-{};
+| RARROW  { fun ~rg t -> Ast.mk_term ~rg (t, `Expr) }
+| RRARROW { fun ~rg t -> Ast.mk_term ~rg (t, `Type) }
 
 (* -------------------------------------------------------------------- *)
 tmIff:
-| tmImplies IFF tmIff
-| tmImplies
-{};
+| t1=tmImplies IFF t2=tmIff
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op ("<==>", [t1; t2]), `Formula) }
+
+| t=tmImplies
+    { t }
+;
 
 (* -------------------------------------------------------------------- *)
 tmImplies:
-| tmDisjunction IMPLIES tmImplies
-| tmDisjunction
-{};
+| t1=tmDisjunction IMPLIES t2=tmImplies
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op ("==>", [t1; t2]), `Formula) }
+
+| t=tmDisjunction
+    { t }
 
 (* -------------------------------------------------------------------- *)
 tmDisjunction:
-| tmDisjunction DISJUNCTION tmConjunction
-| tmConjunction
-{};
+| t1=tmDisjunction DISJUNCTION t2=tmConjunction
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op ("\\/", [t1; t2]), `Formula) }
+
+| t=tmConjunction
+    { t }
 
 (* -------------------------------------------------------------------- *)
 tmConjunction:
-| tmConjunction CONJUNCTION tmTuple
-| tmTuple
-{};
+| t1=tmConjunction CONJUNCTION t2=tmTuple
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op ("/\\", [t1; t2]), `Formula) }
+
+| t=tmTuple
+    { t }
 
 (* -------------------------------------------------------------------- *)
 tmTuple:
-| tupleN
-{};
+| ts=loc(plist1(tmEq, COMMA))
+    { match desc ts with
+      | []  -> assert false
+      | [t] -> t
+      | _   -> Ast.mk_term ~rg:(range ts) (Ast.mk_tm_tuple (desc ts), `Expr) }
 
 (* -------------------------------------------------------------------- *)
 tmEq:
-| tmEq COLON_EQUALS tmOr
-| tmOr
-{};
+| t1=tmEq COLON_EQUALS t2=tmOr
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op (":=", [t1; t2]), `Formula) }
+
+| t=tmOr
+    { t }
 
 (* -------------------------------------------------------------------- *)
 tmOr:
-| tmOr BAR_BAR tmAnd
-| tmAnd
-{};
+| t1=tmOr BAR_BAR t2=tmAnd
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op ("||", [t1; t2]), `Formula) }
+
+| t=tmAnd
+    { t }
 
 (* -------------------------------------------------------------------- *)
 tmAnd:
-| tmAnd AMP_AMP cmpTerm
-| cmpTerm
-{};      
-      
+| t1=tmAnd AMP_AMP t2=cmpTerm
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op ("&&", [t1; t2]), `Formula) }
+
+| t=cmpTerm
+    { t }
+
 (* -------------------------------------------------------------------- *)
 cmpTerm:
-| cmpTerm comparisonOp tmCons
-| tmCons
-{};
+| t1=cmpTerm op=comparisonOp t2=tmCons
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op (op, [t1; t2]), `Formula) }
+
+| t=tmCons
+    { t }
 
 (* -------------------------------------------------------------------- *)
 comparisonOp:
-| PIPE_LEFT 
-| PIPE_RIGHT 
-| LESS 
-| GREATER  
-| LEQ 
-| GEQ 
-| ATSIGN 
-| HAT 
-| EQUALS 
-| EQUALS_EQUALS 
-| EQUALS_BANG_EQUALS 
-| LESSGREATER 
-{};
+| PIPE_LEFT          { "<|"  }
+| PIPE_RIGHT         { "|>"  }
+| LESS               { "<"   }
+| GREATER            { ">"   } 
+| LEQ                { "<="  }
+| GEQ                { ">="  }
+| ATSIGN             { "@"   }
+| HAT                { "^"   }
+| EQUALS             { "="   }
+| EQUALS_EQUALS      { "=="  }
+| EQUALS_BANG_EQUALS { "=!=" }
+| LESSGREATER        { "<>"  }
 
 (* -------------------------------------------------------------------- *)
 tmCons:
-| product COLON_COLON tmCons
-| product
-{};
+| t1=product COLON_COLON t2=tmCons      (* FIXME *)
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op ("::", [t1; t2]), `Formula) }
+
+| t=product
+    { t }
 
 (* -------------------------------------------------------------------- *)
-product: 
-| productOrSumDomain prodArrow product
-| appTerm prodArrow product
-| arithTerm
-{};
+product:
+| t1=productOrSumDomain pa=prodArrow t2=product
+    { let rg = Ast.mk_rg $startpos $endpos in
+      pa ~rg (Ast.mk_tm_product ([t1], t2)) }
+
+| t1=loc(appTerm) pa=prodArrow t2=product
+    { let rg = Ast.mk_rg $startpos $endpos in
+      let bd = (Ast.mk_bd_anon (desc t1), `Un, false) in
+      let bd = Ast.mk_binder ~rg:(range t1) bd in
+      pa ~rg (Ast.mk_tm_product ([bd], t2)) }
+
+| t=arithTerm
+    { t }
 
 (* -------------------------------------------------------------------- *)
 prodArrow:
-| RARROW 
-| RRARROW 
-{};
+| RARROW  { fun ~rg r -> Ast.mk_term ~rg (r, `Type) }
+| RRARROW { fun ~rg r -> Ast.mk_term ~rg (r, `Kind) }
 
 (* -------------------------------------------------------------------- *)
 arithTerm:
-| starDivModTerm PLUS_MINUS_OP arithTerm
-| starDivModTerm 
-{};
+| t1=starDivModTerm op=PLUS_MINUS_OP t2=arithTerm
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op (op, [t1; t2]), `Formula) }
+
+| t=starDivModTerm
+    { t }
 
 (* -------------------------------------------------------------------- *)
 starDivModTerm:
-| sumType STAR starDivModTerm 
-| sumType DIV_MOD_OP starDivModTerm
-| sumType
-{};
+| t1=sumType STAR t2=starDivModTerm
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op ("*", [t1; t2]), `Formula) }
+
+| t1=sumType op=DIV_MOD_OP t2=starDivModTerm
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op (op, [t1; t2]), `Formula) }
+
+| t=sumType
+    { t }
 
 (* -------------------------------------------------------------------- *)
 sumType:
-| productOrSumDomain STAR sumTypeTail
-| refinementTerm
-{};
+| t1=productOrSumDomain STAR t2=sumTypeTail
+    { let rg = Ast.mk_rg $startpos $endpos in
+      let bds, t2 =
+       match `Sum ([], t2) with         (* FIXME *)
+       | `Sum (bds, t2) -> (bds, t2)
+       | _              -> ([] , t2)
+     in Ast.mk_term ~rg (`Sum (t1 :: bds, t2), `Type) }
+
+| t=refinementTerm
+    { t }
 
 (* -------------------------------------------------------------------- *)
 sumTypeTail:
-| atomicTerm STAR sumType
-| sumType
-{};
+| t1=loc(atomicTerm) STAR t2=sumType
+    { let rg = Ast.mk_rg $startpos $endpos in
+      let bds, t2 =
+       match `Sum ([], t2) with         (* FIXME *)
+       | `Sum (bds, t2) -> (bds, t2)
+       | _              -> ([] , t2) in
+
+      let bd = (Ast.mk_bd_anon (desc t1), `Type, false) in
+      let bd = Ast.mk_binder ~rg:(range t1) bd in
+      Ast.mk_term ~rg (`Sum (bd :: bds, t2), `Type) }
+
+| t=sumType
+    { t }
 
 (* -------------------------------------------------------------------- *)
 productOrSumDomain:
-| ident COLON appTerm refineOpt
-| HASH ident COLON appTerm refineOpt
-| tvar COLON atomicKind
-| HASH tvar COLON atomicKind
-{};
+| x=ident COLON at=appTerm r=refine?
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_binder ~rg (Ast.mk_bd_refined (x, at, r), `Type, false) }
 
-(* -------------------------------------------------------------------- *)
-refineOpt:
-| (* empty *)
-| LBRACE formula RBRACE 
-{};
+| HASH x=ident COLON at=appTerm r=refine?
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_binder ~rg (Ast.mk_bd_refined (x, at, r), `Type, true) }
+
+| x=tvar COLON k=atomicKind
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_binder ~rg (Ast.mk_bd_tannot (x, k), `Kind, false) }
+
+| HASH x=tvar COLON k=atomicKind
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_binder ~rg (Ast.mk_bd_tannot (x, k), `Kind, true) }
 
 (* -------------------------------------------------------------------- *)
 refinementTerm:
-| ident COLON appTerm LBRACE formula RBRACE 
-| LBRACE recordExp RBRACE
-| unaryTerm
-{};
+| x=ident COLON at=appTerm LBRACE f=formula RBRACE
+    { let rg = mk_rg $startpos $endpos in
+      let bd = (Ast.mk_bd_annot (x, at), `Type, false) in
+      let bd = Ast.mk_binder ~rg:(mk_rg $startpos(x) $endpos(at)) bd in
+      Ast.mk_term ~rg (Ast.mk_tm_refine (bd, f), `Type) }
+
+| LBRACE t=recordExp RBRACE
+    { t }
+
+| t=unaryTerm
+    { t }
 
 (* -------------------------------------------------------------------- *)
-unaryTerm: 
-| PLUS_MINUS_OP atomicTerm
-| TILDE atomicTerm
-| appTerm 
-{};
+unaryTerm:
+| op=PLUS_MINUS_OP t=atomicTerm
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op (op, [t]), `Expr) }
+
+| op=TILDE t=atomicTerm
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op (op, [t]), `Formula) }
+
+| t=appTerm
+    { t }
 
 (* -------------------------------------------------------------------- *)
 appTerm:
-| atomicTerm hashAtomicTerms
-{};      
+| t1=atomicTerm t2=hashAtomicTerms
+    { let rg = mk_rg $startpos $endpos in
+      Ast.mk_tm_app ~rg (t1, t2) }
 
 (* -------------------------------------------------------------------- *)
 formula:
-| noSeqTerm
-{};
+| x=noSeqTerm { Ast.tm_set_level x `Formula }
+
+(* -------------------------------------------------------------------- *)
+refine:
+| f=braces(formula) { f }
 
 (* -------------------------------------------------------------------- *)
 atomicTerm:
-| UNDERSCORE
-| ASSERT
-| tvar
-| constant
-| LENS_PAREN_LEFT tupleN LENS_PAREN_RIGHT 
-| projectionLHS maybeFieldProjections 
-| BANG atomicTerm
-| BEGIN term END 
-{};
+| x=loc(UNDERSCORE)
+    { Ast.mk_term ~rg:(range x) (Ast.mk_tm_wild, `Un) }
+
+| x=loc(ASSERT)
+    { Ast.mk_term ~rg:(range x) (Ast.mk_tm_var "__assert", `Expr) }
+
+| x=loc(tvar)
+    { Ast.mk_term ~rg:(range x) (Ast.mk_tm_tvar (desc x), `Type) }
+
+| c=loc(constant)
+    { Ast.mk_term ~rg:(range c) (Ast.mk_tm_const (desc c), `Expr) }
+
+| op=BANG t=atomicTerm
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_op (op, [t]), `Expr) }
+
+| LENS_PAREN_LEFT ts=plist1(tmEq, COMMA) LENS_PAREN_RIGHT
+    { match ts with
+      | []  -> assert false
+      | [t] -> t
+      | _   ->
+        let rg = Ast.mk_rg $startpos $endpos in
+        Ast.mk_term ~rg (Ast.mk_tm_dtuple ts, `Expr) }
+
+| t=projectionLHS pjs=maybeFieldProjections
+    { let rg = Ast.mk_rg $startpos $endpos in
+      List.fold_left (fun e p ->
+        Ast.mk_term ~rg (Ast.mk_tm_proj (e, p), `Expr))
+        t pjs }
+
+| BEGIN t=term END
+    { t }
 
 (* -------------------------------------------------------------------- *)
 maybeFieldProjections:
 | (* empty *)
-| maybeFieldProjections DOT ident 
-{};
+    { [] }
+
+| ps=maybeFieldProjections DOT p=ident
+    { ps @ [p] }
 
 (* -------------------------------------------------------------------- *)
 targs:
-| atomicTerm
-| atomicTerm COMMA targs
-{};
-
-(* -------------------------------------------------------------------- *)
-maybeInsts:
-| (* empty *)
-| TYP_APP_LESS targs GREATER 
-{};
+| ts=plist1(atomicTerm, COMMA) { ts }
 
 (* -------------------------------------------------------------------- *)
 projectionLHS:
-| eitherQname maybeInsts
-| LPAREN term maybeWithSort RPAREN 
-| LBRACK_BAR semiColonTermList BAR_RBRACK
-| LBRACK semiColonTermList RBRACK
-{};
+| name=eitherQname ts=enclosed(TYP_APP_LESS, targs, GREATER)?
+    { let rg = Ast.mk_rg $startpos $endpos in
+      let tm = Ast.mk_tm_qname name in
+      Ast.mk_term ~rg (Ast.mk_tm_app (tm, ts), `Un) }
+
+| LPAREN t=term sort=pair(hasSort, simpleTerm)? RPAREN
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_term ~rg (Ast.mk_tm_parens (sort, t), Ast.tm_get_level t) }
+
+| LBRACK_BAR ts=term0(noSeqTerm, SEMICOLON) BAR_RBRACK
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_tm_array ~rg (ts, `Expr) }
+
+| LBRACK ts=term0(noSeqTerm, SEMICOLON) RBRACK
+    { let rg = Ast.mk_rg $startpos $endpos in
+      Ast.mk_tm_list ~rg (ts, `Expr) }
 
 (* -------------------------------------------------------------------- *)
-semiColonTermList:
-| (* empty *)
-| noSeqTerm moreSemiColonTerms
-{};
-
-(* -------------------------------------------------------------------- *)
-moreSemiColonTerms:
-| (* empty *)
-| SEMICOLON
-| SEMICOLON noSeqTerm moreSemiColonTerms 
-{};
-
-(* -------------------------------------------------------------------- *)
-recordExp: 
-| appTerm recordExpRest 
-{};
+recordExp:
+| t=appTerm r=recordExpRest
+     { let rg = Ast.mk_rg $startpos $endpos in
+       Ast.mk_term ~rg (Ast.mk_tm_record (t, r), `Expr) }
 
 (* -------------------------------------------------------------------- *)
 recordExpRest:
-| WITH recordFieldAssignment recordFieldAssignments
-| EQUALS tmTuple recordFieldAssignments
-{};
+| WITH fs=recordFieldAssignments1
+    { `RecordWith fs }
+
+| EQUALS t=tmTuple fs=recordFieldAssignments0
+    { `RecordLiteral (t, fs) }
 
 (* -------------------------------------------------------------------- *)
 recordFieldAssignment:
-| lid EQUALS tmTuple 
-{};
+| x=lid EQUALS t=tmTuple { (x, t) }
 
 (* -------------------------------------------------------------------- *)
-recordFieldAssignments:
-| (* empty *)
-| SEMICOLON
-| SEMICOLON recordFieldAssignment recordFieldAssignments
-{};
+recordFieldAssignments0:
+| empty | SEMICOLON
+    { [] }
+
+| SEMICOLON r=recordFieldAssignment rs=recordFieldAssignments0
+    { r :: rs }
 
 (* -------------------------------------------------------------------- *)
-maybeWithSort:
-| (* empty *)
-| hasSort simpleTerm
-{};
+recordFieldAssignments1:
+| r=recordFieldAssignment rs=recordFieldAssignments0  { r :: rs }
 
 (* -------------------------------------------------------------------- *)
 hasSort:
-| SUBTYPE
-| SUBKIND
-{};
-
-(* -------------------------------------------------------------------- *)
-maybeHash: 
-| (* empty *)
-| HASH
-{};
+| SUBTYPE { `Expr }
+| SUBKIND { `Type }
 
 (* -------------------------------------------------------------------- *)
 hashAtomicTerms:
 | (* empty *)
-| maybeHash atomicTerm hashAtomicTerms
-{};
+    { [] }
 
-(* -------------------------------------------------------------------- *)
-atomicTerms: 
-|
-| atomicTerm atomicTerms
-{};
-
-(* -------------------------------------------------------------------- *)
-tupleN:
-| tmEq
-| tmEq COMMA tupleN
-{};
+| HASH? t1=atomicTerm t2=hashAtomicTerms
+    { t1 :: t2 }
 
 (* -------------------------------------------------------------------- *)
 constant:
-| LPAREN_RPAREN
-| INT32
-| UINT8
-| CHAR
-| STRING
-| BYTEARRAY
-| TRUE
-| FALSE
-| IEEE64
-| INT64
-{};
+|   LPAREN_RPAREN { Ast.mk_ct_unit      () }
+| x=INT32         { Ast.mk_ct_int32     x  }
+| x=UINT8         { Ast.mk_ct_uint8     x  }
+| x=CHAR          { Ast.mk_ct_char      x  }
+| x=STRING        { Ast.mk_ct_string    x  }
+| x=BYTEARRAY     { Ast.mk_ct_bytearray x  }
+|   TRUE          { Ast.mk_ct_true      () }
+|   FALSE         { Ast.mk_ct_false     () }
+|   IEEE64        { Ast.mk_ct_ieee64    () }
+| x=INT64         { Ast.mk_ct_int64     x  }
+
+(*-------------------------------------------------------------------- *)
+%inline braces(X):
+| LBRACE x=X RBRACE { x }
+
+%inline brackets(X):
+| LBRACK x=X RBRACK { x }
+
+%inline parens(X):
+| LPAREN x=X RPAREN { x }
+
+(* -------------------------------------------------------------------- *)
+%inline sepby(X1, S, X2):
+| x1=X1 S x2=X2 { (x1, x2) }
+
+(* -------------------------------------------------------------------- *)
+%inline plist0(X, S):
+| aout=separated_list(S, X) { aout }
+
+%inline plist1(X, S):
+| aout=separated_nonempty_list(S, X) { aout }
+
+(* -------------------------------------------------------------------- *)
+%inline term1(X, S):
+| aout=rlist1(X, S) S? { aout }
+
+%inline term0(X, S):
+| aout=rlist1(X, S) S? { aout }
+
+(* -------------------------------------------------------------------- *)
+__rlist1(X, S):                         (* left-recursive *)
+| x=X { [x] }
+| xs=__rlist1(X, S) S x=X { x :: xs }
+
+%inline rlist0(X, S):
+| /* empty */     { [] }
+| xs=rlist1(X, S) { xs }
+
+%inline rlist1(X, S):
+| xs=__rlist1(X, S) { List.rev xs }
+
+(* -------------------------------------------------------------------- *)
+%inline prefix(S, X):
+| S x=X { x }
+
+%inline suffix(S, X):
+| x=X S { x }
+
+%inline enclosed(S1, X, S2):
+| S1 x=X S2 { x }
+
+(* -------------------------------------------------------------------- *)
+%inline empty:
+| (* empty *) {}
+
+(* -------------------------------------------------------------------- *)
+%inline loc(X):
+| x=X { Ast.mk_loc (mk_rg $startpos $endpos) x }
