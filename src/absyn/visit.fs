@@ -234,7 +234,8 @@ and reduce_typ
         ([], [k], [], [], []), env
 
       | Typ_meta(Meta_labeled(t, _, _))
-      | Typ_meta(Meta_named(t, _)) ->
+      | Typ_meta(Meta_named(t, _))
+      | Typ_meta(Meta_refresh_label(t, _)) ->
         let t, env = map_typ env binders t in
         ([], [], [t], [], []), env 
 
@@ -382,6 +383,7 @@ let combine_typ t (tc:typ_components) env =
     | Typ_meta(Meta_named(_, l)), (_, _, [t'], _, _) ->     w <| mk_Typ_meta'(Meta_named(t', l))
     | Typ_meta(Meta_pattern _), (_, _, [t], _, args) ->     w <| mk_Typ_meta'(Meta_pattern(t, args))
     | Typ_meta(Meta_labeled(_, l, p)), (_, _, [t], _, _) -> w <| mk_Typ_meta'(Meta_labeled(t, l, p))
+    | Typ_meta(Meta_refresh_label(_, r)), (_, _, [t], _, _) -> w <| mk_Typ_meta'(Meta_refresh_label(t, r))
     | _ -> failwith "impossible" in
   t', env
 

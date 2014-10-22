@@ -112,9 +112,11 @@ let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard_t 
   match copt with 
     | None -> e, norm_c env c, Trivial
     | Some c' -> //expected effects should already be normalized
-       if debug env Options.Medium then Util.fprint3 "(%s) About to check\n\t%s\nagainst expected effect\n\t%s" 
+       if debug env Options.Low then Util.fprint3 "(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n" 
                                   (Range.string_of_range e.pos) (Print.comp_typ_to_string c) (Print.comp_typ_to_string c');
        let c = norm_c env c in
+       if debug env Options.Low then Util.fprint2 "(%s) After normalization, c is %s\n" 
+                                  (Range.string_of_range e.pos) (Print.comp_typ_to_string c);
        let e, c, g = Tc.Util.check_comp env e c c' in
        if debug env Options.Low then Util.fprint2 "(%s) DONE check_expected_effect; guard is: %s" (Range.string_of_range e.pos) (Rel.guard_to_string env g);
        e, c, g//res 
@@ -319,6 +321,10 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
           w k1 <| mk_Typ_uvar'(u, k1), k1, g
         | _ -> tc_typ env s)
    
+  | Typ_meta(Meta_refresh_label(t, r)) -> 
+    let t, k, f = tc_typ env t in 
+    mk_Typ_meta(Meta_refresh_label(t, r)), k, f
+  
   | Typ_meta(Meta_labeled(t, l, p)) -> 
     let t, k, f = tc_typ env t in 
     mk_Typ_meta(Meta_labeled(t, l, p)), k, f
@@ -659,25 +665,27 @@ and tc_exp env e : exp * comp =
             | _, [] -> (* full or partial application *) 
               let cres = match bs with 
                 | [] -> (* full app *)
-                    let cres = Util.subst_comp subst cres in (* TODO: relabel the labeled sub-terms in cres to report failing pre-conditions at a call-site *)
+                    let cres = Util.subst_comp subst cres in 
                     (* If we have f e1 e2
                        where e1 or e2 is impure but f is a pure function, 
                        then refine the result to be equal to f x1 x2, 
                        where xi is the result of ei. (See the last two tests in examples/unit-tests/unit1.fst)
                     *)
-                    if Util.is_total_comp cres 
-                    && head_is_atom 
-                    && comps |> Util.for_some (fun (_, c) -> not (Util.is_pure env c))
-                    then Util.maybe_assume_result_eq_pure_term env (mk_Exp_app_flat(f, List.rev arg_rets) (Util.comp_result cres) top.pos) cres
-                    else (if Env.debug env Options.Low
-                          then Util.fprint3 "Not refining result: f=%s; cres=%s; head_is_atom?=%s\n" (Print.exp_to_string f) (if head_is_atom then "yes" else "no") (Print.comp_typ_to_string cres); 
-                          cres)
+                    let cres = if Util.is_total_comp cres 
+                               && head_is_atom 
+                               && comps |> Util.for_some (fun (_, c) -> not (Util.is_pure env c))
+                               then Util.maybe_assume_result_eq_pure_term env (mk_Exp_app_flat(f, List.rev arg_rets) (Util.comp_result cres) top.pos) cres
+                               else (if Env.debug env Options.Low
+                                     then Util.fprint3 "Not refining result: f=%s; cres=%s; head_is_atom?=%s\n" (Print.exp_to_string f) (if head_is_atom then "yes" else "no") (Print.comp_typ_to_string cres); 
+                                     cres) in
+                    (* relabeling the labeled sub-terms in cres to report failing pre-conditions at this call-site *)
+                    Tc.Util.refresh_comp_label env cres 
                 | _ -> mk_Total  (Util.subst_typ subst <| mk_Typ_fun(bs, cres) ktype top.pos) (* partial app *) in
-              if debug env Options.High then Util.fprint1 "\t Type of result cres is %s\n" (Print.comp_typ_to_string cres);
+              if debug env Options.Low then Util.fprint1 "\t Type of result cres is %s\n" (Print.comp_typ_to_string cres);
               let comp = List.fold_left (fun out c -> Tc.Util.bind env None (snd c) (fst c, out)) cres comps in
               let comp = Tc.Util.bind env None cf (None, comp) in
               let comp = Tc.Util.strengthen_precondition None env comp g in //Each conjunct in g is already labeled
-              if debug env Options.High then Util.fprint1 "\t Type of app term is %s\n" (Tc.Normalize.normalize_comp env comp |> Print.comp_typ_to_string);
+              if debug env Options.Low then Util.fprint1 "\t Type of app term is %s\n" (Print.comp_typ_to_string comp);
               mk_Exp_app_flat(f, List.rev outargs) (Util.comp_result comp) top.pos, comp
                
             | (Inr _, _)::_, (Inl _, _)::_ ->
@@ -1227,6 +1235,8 @@ let tc_decls env ses =
   if debug env Options.Low
   then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
   let se, env = tc_decl env se in
+  if debug env Options.Low
+  then Util.print_string (Util.format1 "Checked sigelt\t%s\n" (Print.sigelt_to_string se));
   if not <| lid_equals env.curmodule Const.prims_lid then env.solver.encode_sig env se; 
   se::ses, env) ([], env) ses in
   List.rev ses, env 

@@ -97,6 +97,7 @@ and meta_t =
   | Meta_pattern of typ * list<arg>
   | Meta_named of typ * lident                               (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_labeled of typ * string * bool                      (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
+  | Meta_refresh_label of typ * Range.range                  (* Add the range to the label of any labeled sub-term of the type *)
 and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a

@@ -256,12 +256,12 @@ let as_binder env imp = function
 type env_t = DesugarEnv.env
 type lenv_t = list<either<btvdef,bvvdef>>
 
-let label_conjuncts polarity label_opt f = 
+let label_conjuncts tag polarity label_opt f = 
   let label f = 
-    let tag = match label_opt with 
+    let msg = match label_opt with 
         | Some l -> l
-        | _ -> if polarity then "pre-condition" else "post-condition" in
-    let msg = Util.format2 "%s at %s" tag (Range.string_of_range f.range) in
+        | _ -> 
+          Util.format2 "%s at %s" tag (Range.string_of_range f.range) in
     mk_term (Labeled(f, msg, polarity)) f.range f.level  in
 
   let rec aux f = match f.tm with 
@@ -657,11 +657,11 @@ and desugar_typ env (top:term) : typ =
     | Wild -> setpos tun
 
     | Requires (t, lopt) -> 
-      let t = label_conjuncts true lopt t in
+      let t = label_conjuncts "pre-condition" true lopt t in
       desugar_typ env t
 
     | Ensures (t, lopt) -> 
-      let t = label_conjuncts true lopt t in
+      let t = label_conjuncts "post-condition" false lopt t in
       desugar_typ env t
 
     | Op("*", [t1; _]) -> 
@@ -928,8 +928,8 @@ and desugar_formula' env (f:term) : typ =
     | _ -> 
       if is_type env f 
       then desugar_typ env f
-      else error "Expected a formula" f f.range
-
+      else mk_Typ_app(Util.ftv Const.b2t_lid kun, [varg <| desugar_exp env f]) kun f.range //implicitly coerce a boolean to a type
+      
 and desugar_formula env t =
   desugar_formula' ({env with phase=Formula}) t
 

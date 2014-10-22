@@ -95,6 +95,7 @@ and meta_t =
   | Meta_pattern of typ * list<arg>
   | Meta_named of typ * lident                               (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_labeled of typ * string * bool                      (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
+  | Meta_refresh_label of typ * Range.range                  (* Add the range to the label of any labeled sub-term of the type *)
 and uvar_basis<'a,'b> = 
   | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
   | Fixed of 'a
@@ -428,7 +429,8 @@ let mk_Typ_meta'    (m:meta_t) (k:knd) p =
 let mk_Typ_meta     (m:meta_t) = match m with 
     | Meta_pattern(t, _) 
     | Meta_named(t, _)
-    | Meta_labeled(t, _, _) -> mk_Typ_meta' m t.tk t.pos 
+    | Meta_labeled(t, _, _) 
+    | Meta_refresh_label(t, _) -> mk_Typ_meta' m t.tk t.pos 
 
 let mk_Typ_uvar'     ((u:uvar_t),(k:knd)) (k':knd) (p:range) = {
     n=Typ_uvar(u, k);

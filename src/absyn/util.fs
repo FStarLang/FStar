@@ -676,6 +676,7 @@ let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Typ_ascribed(t, _) -> 
           vs_typ t uvonly cont        
 
+        | Typ_meta(Meta_refresh_label(t, _))
         | Typ_meta(Meta_labeled(t, _, _))
         | Typ_meta(Meta_named(t, _))
         | Typ_meta(Meta_pattern(t, _)) -> 

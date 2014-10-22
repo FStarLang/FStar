@@ -624,7 +624,7 @@ noSeqTerm:
      {
         let pos = rhs2 parseState 1 4 in
         let f = match $3 with [] -> $4 | _ -> mk_term (Abs($3, $4)) pos Type in
-        mk_term (Requires(f, $2)) pos Type
+        mk_term (Ensures(f, $2)) pos Type 
      }
 
   | IF noSeqTerm THEN noSeqTerm ELSE noSeqTerm

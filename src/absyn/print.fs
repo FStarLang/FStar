@@ -68,6 +68,7 @@ let rec tag_of_typ t = match t.n with
   | Typ_meta(Meta_pattern _) -> "Typ_meta_pattern"
   | Typ_meta(Meta_named _) -> "Typ_meta_named"
   | Typ_meta(Meta_labeled _) -> "Typ_meta_labeled"
+  | Typ_meta(Meta_refresh_label _) -> "Typ_meta_refresh_label"
   | Typ_uvar _ -> "Typ_uvar"   
   | Typ_delayed _ -> "Typ_delayed"
   | Typ_unknown -> "Typ_unknown"
@@ -235,7 +236,8 @@ and either_to_string x = match x with
   l |> List.map either_to_string |> Util.concat_l delim
 
 and meta_to_string x = match x with 
-  | Meta_labeled(t, _, _) -> typ_to_string t
+  | Meta_refresh_label(t, _) -> Util.format1 "(refresh) %s" (typ_to_string t)
+  | Meta_labeled(t, l, _) -> Util.format2 "(labeled %s) %s" l (typ_to_string t)
   | Meta_named(_, l) -> sli l
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (args_to_string ps) (t |> typ_to_string) 
 

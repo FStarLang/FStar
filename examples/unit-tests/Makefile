@@ -16,7 +16,7 @@ all: all-lax all-ver
 all-ver: unit1.fst testset.fst millionaires.fst listlemmas.fst
 	$(FSTAR) --verify unit1.fst testset.fst millionaires.fst listlemmas.fst
 
-all-lax: rec.fst pat.fst format.fst 
+all-lax: pat.fst format.fst 
 	$(FSTAR) $^
 
 %.tc: %.fst
