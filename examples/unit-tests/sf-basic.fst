@@ -3,13 +3,8 @@ A translation to F* of Basics.v from Software Foundations
 Original name: "Basics: Functional Programming in Coq"
 *)
 
-module Basic
+module SfBasic
 open Prims.PURE
-
-(* An effect abbreviation for a lemma *)
-(*ghost*) effect Fact ('res:Type) ('p:Type) = Pure 'res True (fun r => 'p)
-
-assume val ignore: unit -> Fact unit False
 
 type day =
   | Monday
@@ -152,12 +147,14 @@ let rec minus (n : nat) (m : nat) : nat =
 val beq_nat : nat -> nat -> Tot mbool
 let rec beq_nat n m =
   match n with
-  | O -> (match m with
+  | O -> match m with begin
          | O -> MTrue
-         | S m' -> MFalse)
-  | S n' -> (match m with
+         | S m' -> MFalse
+         end
+  | S n' -> match m with begin
             | O -> MFalse
-            | S m' -> beq_nat n' m')
+            | S m' -> beq_nat n' m'
+            end
 
 val ble_nat : nat -> nat -> Tot mbool
 let rec ble_nat n m =

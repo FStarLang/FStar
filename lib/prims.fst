@@ -508,3 +508,6 @@ assume val op_Division           : int -> int -> int
 assume val op_ColonEquals: ref 'a -> 'a -> unit
 assume val op_Dereference: ref 'a -> 'a
 assume type Boxed : Type => Type
+
+(* An effect abbreviation for a lemma *)
+(*ghost*) effect Fact ('res:Type) ('p:Type) = Pure 'res True (fun r => 'p)
