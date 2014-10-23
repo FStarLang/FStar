@@ -52,7 +52,7 @@ let hd_int_impure_default_case l = match l with
   | hd::_ -> hd
   | _ -> failwith "Empty list"
 
-val hd_int_pure : x:list int{b2t (is_Cons x)} -> Tot int
+val hd_int_pure : x:list int{is_Cons x} -> Tot int
 let hd_int_pure l = match l with
   | hd::_ -> hd
 
@@ -88,7 +88,7 @@ let tabs_id ('a:Type) (x:'a) = x
 val id_pure_annot_eq : x:'a -> Pure 'a True (fun y => y==x)
 let id_pure_annot_eq x = x
 
-val id_all_annot_eq: x:'a -> All 'a (fun h => True) (fun h0 y h1 => b2t (is_V y) /\ h0==h1 /\ x==(V.v y)) (SomeRefs EmptySet)
+val id_all_annot_eq: x:'a -> All 'a (fun h => True) (fun h0 y h1 => is_V y /\ h0==h1 /\ x==(V.v y)) (SomeRefs EmptySet)
 let id_all_annot_eq x = x
 
 val hd: list 'a -> 'a
@@ -96,11 +96,11 @@ let hd = function
   | x::_ -> x
   | _ -> failwith "empty list"
 
-val hd_pure: l:list 'a{b2t (is_Cons l)} -> Tot 'a
+val hd_pure: l:list 'a{is_Cons l} -> Tot 'a
 let hd_pure l = match l with
   | x::_ -> x
 
-val hd_pure_alt: x:list 'a{b2t (is_Cons x)} -> Tot 'a
+val hd_pure_alt: x:list 'a{is_Cons x} -> Tot 'a
 let hd_pure_alt = function
   | hd::_ -> hd
 

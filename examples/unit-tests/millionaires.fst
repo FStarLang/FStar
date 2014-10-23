@@ -15,7 +15,7 @@ assume (* TODO: private *) logic val moderef : ref mode
 (* TODO: private *)  let get_mode (x:unit) = ST.read moderef
 (* TODO: private *)  let set_mode (m:mode) = ST.write moderef m
 
-logic type CanSetMode (cur:mode) (m:mode) = (if b2t (is_Sec cur.p_or_s) then cur.prins==m.prins else Subset m.prins cur.prins)
+logic type CanSetMode (cur:mode) (m:mode) = (if is_Sec cur.p_or_s then cur.prins==m.prins else Subset m.prins cur.prins)
 val with_mode:  'a:Type
              -> 'req_f:(heap => Type)
              -> 'ens_f:(heap => 'a => heap => Type)
@@ -67,7 +67,7 @@ logic type ens_f ('a:Type) (m:mode) (x:box 'a) (h0:heap) (w:wire 'a) (h1:heap) =
 
 (* No need to annotate, except for testing the result of inference *)
 val mk_wire : 'a:Type -> m:mode -> x:box 'a -> ST (wire 'a)
-                                        (requires \h0 => (if b2t (is_Par m.p_or_s)
+                                        (requires \h0 => (if is_Par m.p_or_s
                                                           then (CanSetMode (SelHeap h0 moderef) m /\ CanUnbox 'a m x)
                                                           else CanUnbox 'a (SelHeap h0 moderef) x))
                                         (ensures  \h0 w h1 => SelHeap h0 moderef==SelHeap h1 moderef (* HeapEq h0 h1 *) (* TODO: Need to sort our extensional equality on heaps *) 
@@ -85,7 +85,7 @@ let concat_wires (w1:wire 'a) (w2:wire 'a) =
 
 logic type proj_ok ('a:Type) (w:wire 'a) (p:prin) (cur:mode) = 
     InDom p w /\ 
-    (if b2t (is_Sec cur.p_or_s) 
+    (if is_Sec cur.p_or_s
      then InSet p cur.prins
      else SetEqual cur.prins (Singleton p))
 

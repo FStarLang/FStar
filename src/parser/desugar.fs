@@ -114,9 +114,9 @@ let rec is_type env (t:term) =
     | App(t, _, _)
     | Paren t
     | Ascribed(t, _)
-    | If(t, _, _) 
     | Product(_, t)
     | Abs(_, t) -> is_type env t
+    | If(t, t1, t2) -> is_type env t || is_type env t1 || is_type env t2 
     | _ -> false
 
 let rec is_kind env (t:term) : bool =
@@ -906,7 +906,11 @@ and desugar_formula' env (f:term) : typ =
     | If(f1, f2, f3) ->
       mk_typ_app
         (ftv (set_lid_range Const.ite_lid f.range) kun)
-        (List.map (fun x -> targ <| desugar_typ env x) [f1;f2;f3])
+        (List.map (fun x -> 
+            match desugar_typ_or_exp env x with
+                | Inl t -> targ t
+                | Inr v -> targ <| (Util.b2t v)) //implicitly coerce a boolean to a type
+         [f1;f2;f3])
 
     | QForall((_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
@@ -928,8 +932,7 @@ and desugar_formula' env (f:term) : typ =
     | _ -> 
       if is_type env f 
       then desugar_typ env f
-      else mk_Typ_app(Util.ftv Const.b2t_lid kun, [varg <| desugar_exp env f]) kun f.range //implicitly coerce a boolean to a type
-      
+      else Util.b2t <| desugar_exp env f //implicitly coerce a boolean to a type
 and desugar_formula env t =
   desugar_formula' ({env with phase=Formula}) t
 

@@ -1040,6 +1040,8 @@ let tand = ftv Const.and_lid kt_kt_kt
 let tor  = ftv Const.or_lid kt_kt_kt
 let timp = ftv Const.imp_lid kt_kt_kt
 let tiff = ftv Const.iff_lid kt_kt_kt
+let b2t_v = ftv Const.b2t_lid kun
+
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
   | Some phi1 -> Some <| mk_Typ_app(tand, [(Inl phi1, false); (Inl phi2, false)]) ktype (Range.union_ranges phi1.pos phi2.pos)
@@ -1049,6 +1051,7 @@ let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_imp phi1 phi2  = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
+let b2t e = mk_Typ_app(b2t_v, [varg <| e]) kun e.pos//implicitly coerce a boolean to a type     
 
 let eq_k = 
     let a = bvd_to_bvar_s (new_bvd None) ktype in
