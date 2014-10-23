@@ -13,8 +13,8 @@ FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB)
 
 all: all-lax all-ver
 
-all-ver: unit1.fst testset.fst millionaires.fst listlemmas.fst
-	$(FSTAR) --verify unit1.fst testset.fst millionaires.fst listlemmas.fst
+all-ver: unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst
+	$(FSTAR) --verify $^
 
 all-lax: rec.fst pat.fst format.fst 
 	$(FSTAR) $^
