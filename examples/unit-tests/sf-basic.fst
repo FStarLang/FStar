@@ -168,14 +168,17 @@ let rec ble_nat n m =
       | O -> MFalse
       | S m' -> ble_nat n' m'
 
+(* This doesn't work *)
 val test_ble_nat1 : unit -> Fact unit
       (ensures (ble_nat (S (S O)) (S (S O)) == MTrue))
 let test_ble_nat1 () = ()
 
+(* This doesn't work *)
 val test_ble_nat2 : unit -> Fact unit
       (ensures (ble_nat (S (S O)) (S (S (S (S O)))) == MTrue))
 let test_ble_nat2 () = ()
 
+(* This doesn't work *)
 val test_ble_nat3 : unit -> Fact unit
       (ensures (ble_nat (S (S (S (S O)))) (S (S O)) == MFalse))
 let test_ble_nat3 () = ()
@@ -209,8 +212,38 @@ let plus_1_neq_0 n =
 
 (* This doesn't work *)
 val negb_involutive : b : mbool -> Fact unit
-    (ensures (negb (negb b) == b))
+      (ensures (negb (negb b) == b))
 let negb_involutive b =
   match b with
   | MTrue -> ()
   | MFalse -> ()
+
+(* Proof by Induction (Induction.v) *)
+
+val plus_0_r : n : nat -> Fact unit
+      (ensures (plus n O == n))
+let rec plus_0_r n =
+  match n with
+  | O -> ()
+  | S n' -> plus_0_r n'
+
+val plus_n_Sm : n : nat -> m : nat -> Fact unit
+    (ensures (S (plus n m) == plus n (S m)))
+let rec plus_n_Sm n m =
+  match n with
+  | O -> ()
+  | S n' -> plus_n_Sm n' m
+
+(* this one uses previous lemma -- needs to be explicit it seems *)
+val plus_comm : n : nat -> m : nat -> Fact unit
+      (ensures (plus n m == plus m n))
+let rec plus_comm n m =
+  match n with
+  | O -> plus_0_r m
+  | S n' -> plus_comm n' m; plus_n_Sm m n'
+
+(* this one uses previous lemma -- needs to be explicit it seems *)
+val plus_rearrange : n : nat -> m : nat -> p : nat -> q : nat -> Fact unit
+      (ensures (plus (plus n m) (plus p q) == plus (plus m n) (plus p q)))
+let rec plus_rearrange n m p q =
+  plus_comm n m
