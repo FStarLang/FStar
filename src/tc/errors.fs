@@ -31,6 +31,9 @@ let totality_check  = "This term may not terminate"
 let diag r msg = 
   Util.print_string (format2 "Diagnostic %s: %s\n" (Range.string_of_range r) msg)
 
+let warn r msg = 
+  Util.print_string (format2 "Diagnostic %s: %s\n" (Range.string_of_range r) msg)
+
 let report r msg = 
   Util.print_string (format2 "Error %s: %s\n" (Range.string_of_range r) msg)
 

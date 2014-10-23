@@ -191,7 +191,7 @@ test: boot
 # CH: added minus in front of the commands that are expected to fail
 #     now can we please make --verify actually fail when it couldn't discharge all obligations
 	-make -C ../examples/unit-tests all-lax all-ver 
-	@echo "--------Expect 7 failing assertions--------------"
+	@echo "--------Expect 8 failing assertions--------------"
 
 wc-boot:
 	wc -l $(BOOT_ALL)

@@ -506,85 +506,74 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars) =
         let ee2, vars2 = encode_exp e2 env' in
         ee2, vars1@[(xvar, Term_sort), mkAnd(guard, mkEq(x, ee1))]@vars2 
   
-      | Exp_let _
-      | Exp_match _ -> 
+      | Exp_let((true, _), _) -> 
         let name = varops.fresh "Expression", Term_sort in
         let sym = mkBoundV name in
+        Tc.Errors.warn e.pos "Nested 'let rec' is not yet fully encoded to the SMT solver; you may not be able to prove some facts";
         sym, [(name, Term.mkTrue)]
 
+      | Exp_match(e, pats) -> 
+        let encode_pat env scrutinee pat when_clause branch = 
+            let rec top_level_pats x = match x with
+                | Pat_meta(Meta_pat_pos(p, _)) -> top_level_pats p 
+                | Pat_disj pats -> pats
+                | p -> [p] in
 
-//        
-//      | Exp_let((true, _), _) -> failwith "Nested let recs not yet supported in SMT encoding" 
-//      | Exp_let((_, (Inr l, _, _)::_), _) -> failwith "Unexpected top-level binding"
+            let rec mk_guard_env env d pat = match pat with 
+                | Pat_disj _ -> failwith "Impossible"
+                | Pat_meta(Meta_pat_pos(p, _)) 
+                | Pat_meta(Meta_pat_exp(p, _)) -> mk_guard_env env d p
+                | Pat_var x  -> mkTrue, push_term_var env x d   
+                | Pat_tvar a -> mkTrue, push_typ_var env a d
+                | Pat_wild
+                | Pat_twild -> mkTrue, env
+                | Pat_constant c -> 
+                  let c = encode_const c in
+                  mkEq(d, c), env
+                | Pat_cons(lid, pats) -> 
+                  let guard = mk_data_tester env lid d in
+                  let formals =  match Util.function_formals <| Tc.Env.lookup_datacon env.tcenv lid with 
+                    | Some (args, _) -> args
+                    | _ -> [] in  
+                  let rec sub_pats (guards, env) formals pats = match formals, pats with
+                    | [], [] -> Term.mk_and_l guards, env 
+                    | (Inl a, _)::formals', Pat_tvar _::pats' -> 
+                      let tm = Term.mkApp(mk_typ_projector_name lid a.v, [d]) in
+                      let guard, env = mk_guard_env env tm (List.hd pats) in
+                      sub_pats (guard::guards, env) formals' pats'
+                    | (Inl a, _)::formals', _ ->  
+                      sub_pats (guards, env) formals' pats
+                    | (Inr x, _)::formals', p::pats' -> 
+                      let tm = Term.mkApp(mk_term_projector_name lid x.v, [d]) in
+                      let guard, env = mk_guard_env env tm p in
+                      sub_pats (guard::guards, env) formals' pats' in
 
-//      | Exp_let((false, [(Inl x, t1, e1)]), e2) ->
-//        let ee1, g1 = encode_exp env e1 in
-//        let tt1, g2 = encode_typ env t1 in 
-//        let env' = push_term_var env x ee1 in
-//        let ee2, g3 = encode_exp env' e2 in
-//        let g = [Term.Assume(mk_HasType ee1 tt1, None)] in
-//        ee2, g1@g2@g@g3
-//      
-//      | Exp_let _ -> failwith "Impossible"
-//
-//        
-//      | Exp_match(e, pats) -> 
-//        let encode_pat env ee pat wopt b = 
-//            let rec top_level_pats x = match x with
-//                | Pat_withinfo(p, _) -> top_level_pats p 
-//                | Pat_disj pats -> pats
-//                | p -> [p] in
-//            let rec mk_guard_env env d pat = match pat with 
-//                | Pat_disj _ -> failwith "Impossible"
-//                | Pat_withinfo(p, _) -> mk_guard_env env d p
-//                | Pat_var x -> mkTrue, push_term_var env x d, []     
-//                | Pat_tvar a -> mkTrue, push_typ_var env a d, [] 
-//                | Pat_wild
-//                | Pat_twild -> mkTrue, env, []
-//                | Pat_constant c -> 
-//                  let c, g = encode_const c in
-//                  mkEq(d, c), env, g 
-//                | Pat_cons(lid, pats) -> 
-//                  let guard = mk_data_tester env lid d in
-//                  let formals =  match Util.function_formals <| Tc.Env.lookup_datacon env.tcenv lid with 
-//                    | Some (args, _) -> args
-//                    | _ -> [] in  
-//                  let guards, env, g, _ = List.fold_left2 (fun (guards, env, g, i) formal pat -> match fst formal with 
-//                    | Inl {v=a; sort=k} -> 
-//                      let t = mk_typ_projector lid a in
-//                      let aa = Term.mk_ApplyTE t d in 
-//                      let guard, env, g' = mk_guard_env env aa pat in
-//                      (guard::guards, env, g@g', i+1)
-//                    | Inr {v=x; sort=t} -> 
-//                      let t = if is_null_binder formal
-//                              then mk_term_projector_by_pos lid i
-//                              else mk_term_projector lid x in
-//                      let xx = Term.mk_ApplyTE t d in 
-//                      let guard, env, g' = mk_guard_env env xx pat in
-//                      (guard::guards, env, g@g', i+1))
-//                      ([], env, [], 0) formals pats in
-//                  let guard = Term.mk_and_l (guard::guards) in 
-//                  guard, env, g in
-//            top_level_pats pat |> 
-//            List.map (mk_guard_env env ee) |>
-//            List.map (fun (guard, env, g) -> 
-//                let bb, g1 = encode_exp env b in
-//                let guard, g2 = match wopt with 
-//                    | None -> guard, []
-//                    | Some e -> 
-//                        let w, g = encode_exp env e in  
-//                        mkAnd(guard, mkEq(w, boxBool mkTrue)), g in
-//                guard, bb, g@g1@g2) in
-//
-//        let ee, g1 = encode_exp env e in 
-//        let branches, g = List.fold_right (fun (pat, wopt, b) (def, g) -> 
-//            let gbgs = encode_pat env ee pat wopt b in 
-//            List.fold_right (fun (guard, branch, g') (def, g) -> 
-//               mkITE(guard, branch, def), g@g') gbgs (def, g))
-//            pats (Term.boxBool mkFalse, []) in
-//        branches, g@g1
-//      
-//      
+                  sub_pats ([guard], env) formals pats in
+
+            top_level_pats pat 
+            |> List.map (mk_guard_env env scrutinee) 
+            |> List.map (fun (guard, env) -> 
+                let branch, ex_vars = encode_exp branch env in
+                let guard = match when_clause with 
+                    | None -> guard
+                    | Some e -> 
+                        let w, g = encode_exp e env in  
+                        mkAnd(guard, close_ex g <| mkEq(w, boxBool mkTrue)) in
+                (guard, (branch, ex_vars))) in
+
+        let scrutinee, g1 = encode_exp e env in
+        let def = varops.fresh "default", Term_sort in
+        let branches, vars = List.fold_right (fun (pat, wopt, b) (else_case, vars) -> 
+            let eqn = encode_pat env scrutinee pat wopt b in 
+            List.fold_right (fun (guard, (rhs, rhs_vars)) (else_case, vars) -> 
+               mkITE(guard, rhs, else_case), vars@rhs_vars) 
+               eqn 
+              (else_case, vars))
+            pats 
+            (mkBoundV def, []) in
+        branches, (def, Term.mkTrue)::vars
+      
+      
       | Exp_meta _ -> failwith (Util.format2 "(%s): Impossible: encode_exp got %s" (Range.string_of_range e.pos) (Print.exp_to_string e))
 
 
@@ -731,10 +720,28 @@ let mk_prim =
 let primitive_type_axioms : lident -> term -> list<decl> = 
     let xx = ("x", Term_sort) in
     let x = mkBoundV xx in
-    let mk_unit : term -> decl = fun tt -> Term.Assume(mkForall([], [xx], mkIff(Term.mk_HasType x tt, mkEq(x, Term.mk_Term_unit))),    Some "unit inversion") in
-    let mk_bool : term -> decl = fun tt -> Term.Assume(mkForall([], [xx], mkIff(Term.mk_tester "BoxBool" x, Term.mk_HasType x tt)),    Some "bool inversion") in
-    let mk_int : term -> decl  = fun tt -> Term.Assume(mkForall([], [xx], mkIff(Term.mk_tester "BoxInt" x, Term.mk_HasType x tt)),     Some "int inversion") in
-    let mk_str : term -> decl  = fun tt -> Term.Assume(mkForall([], [xx], mkIff(Term.mk_tester "BoxString" x, Term.mk_HasType x tt)),  Some "string inversion") in
+    let mk_unit : term -> decls = fun tt -> 
+        let typing_pred = Term.mk_HasType x tt in
+        [Term.Assume(Term.mk_HasType Term.mk_Term_unit tt,    Some "unit typing");
+         Term.Assume(mkForall([typing_pred], [xx], mkImp(typing_pred, mkEq(x, Term.mk_Term_unit))),  Some "unit inversion")] in
+    let mk_bool : term -> decls = fun tt -> 
+        let typing_pred = Term.mk_HasType x tt in
+        let bb = ("b", Bool_sort) in
+        let b = mkBoundV bb in
+        [Term.Assume(mkForall([typing_pred], [xx], mkImp(typing_pred, Term.mk_tester "BoxBool" x)),    Some "bool inversion");
+         Term.Assume(mkForall([Term.boxBool b], [bb], Term.mk_HasType (Term.boxBool b) tt),    Some "bool typing")] in
+    let mk_int : term -> decls  = fun tt -> 
+        let typing_pred = Term.mk_HasType x tt in
+        let bb = ("b", Int_sort) in
+        let b = mkBoundV bb in
+        [Term.Assume(mkForall([typing_pred], [xx], mkImp(typing_pred, Term.mk_tester "BoxInt" x)),    Some "int inversion");
+         Term.Assume(mkForall([Term.boxInt b], [bb], Term.mk_HasType (Term.boxInt b) tt),    Some "int typing")] in
+    let mk_str : term -> decls  = fun tt -> 
+        let typing_pred = Term.mk_HasType x tt in
+        let bb = ("b", String_sort) in
+        let b = mkBoundV bb in
+        [Term.Assume(mkForall([typing_pred], [xx], mkImp(typing_pred, Term.mk_tester "BoxString" x)),    Some "string inversion");
+         Term.Assume(mkForall([Term.boxString b], [bb], Term.mk_HasType (Term.boxString b) tt),    Some "string typing")] in
     let prims = [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
@@ -743,7 +750,7 @@ let primitive_type_axioms : lident -> term -> list<decl> =
     (fun (t:lident) (tt:term) -> 
         match Util.find_opt (fun (l, _) -> lid_equals l t) prims with 
             | None -> []
-            | Some(_, f) -> [f tt])
+            | Some(_, f) -> f tt)
 
 let rec encode_sigelt (env:env_t) (se:sigelt) : (decls * env_t) = 
     if Tc.Env.debug env.tcenv Options.Low

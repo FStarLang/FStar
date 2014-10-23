@@ -197,15 +197,19 @@ let constructor_to_decl (name, projectors, sort, id) =
     let disc_name = "is-"^name in
     let xx = ("x", sort) in 
     let disc_app = mkApp(disc_name, [mkBoundV xx]) in
-    let disc = DefineFun(disc_name, [xx], Bool_sort, mkEq(mkApp(constr_id_of_sort sort, [mkBoundV xx]), mkInteger id), Some "Discriminator definition") in
+    let disc = DefineFun(disc_name, [xx], Bool_sort, 
+                         mkAnd(mkEq(mkApp(constr_id_of_sort sort, [mkBoundV xx]), mkInteger id),
+                               mkEq(mkBoundV xx, 
+                                    mkApp(name, projectors |> List.map (fun (proj, s) -> mkApp(proj, [mkBoundV xx]))))),
+                         Some "Discriminator definition") in
     let projs = projectors |> List.mapi (fun i (name, s) -> 
         let cproj_app = mkApp(name, [capp]) in
         [DeclFun(name, [sort], s, Some "Projector");
-         Assume(mkForall([(*cproj_app ... specifically omitting pattern *)], bvars, mkEq(cproj_app, bvar i s)), Some "Projection inverse")]) |> List.flatten in
-    let disc_proj = Assume(mkForall([], [xx], mkImp(disc_app, 
-                                                    mkEq(mkBoundV xx, 
-                                                         mkApp(name, projectors |> List.map (fun (proj, s) -> mkApp(proj, [mkBoundV xx])))))), Some "Disc/Proj correspondence") in
-    Caption (format1 "<start constructor %s>" name)::cdecl::cid::disc::projs@[disc_proj;Caption (format1 "</end constructor %s>" name)]
+         Assume(mkForall([capp(* cproj_app ... specifically omitting pattern *)], bvars, mkEq(cproj_app, bvar i s)), Some "Projection inverse")]) |> List.flatten in
+//    let disc_proj = Assume(mkForall([], [xx], mkImp(disc_app, 
+//                                                    mkEq(mkBoundV xx, 
+//                                                         mkApp(name, projectors |> List.map (fun (proj, s) -> mkApp(proj, [mkBoundV xx])))))), Some "Disc/Proj correspondence") in
+    Caption (format1 "<start constructor %s>" name)::cdecl::cid::projs@[disc;Caption (format1 "</end constructor %s>" name)]
 
 let flatten_imp tm = 
   let mkAnd_l terms = match terms with 

@@ -26,7 +26,6 @@ let next_weekday d =
   | Saturday  -> Monday
   | Sunday    -> Monday
 
-(* This doesn't work *)
 val test_next_weekday : unit -> Fact unit
       (ensures ((next_weekday (next_weekday Saturday)) == Tuesday))
 let test_next_weekday () = ()
@@ -59,22 +58,18 @@ let orb b1 b2 =
   | MTrue -> MTrue
   | MFalse -> b2
 
-(* This doesn't work *)
 val test_orb1 : unit -> Fact unit
       (ensures ((orb MTrue MFalse) == MTrue))
 let test_orb1 () = ()
 
-(* This doesn't work *)
 val test_orb2 : unit -> Fact unit
       (ensures ((orb MFalse MFalse) == MFalse))
 let test_orb2 () = ()
 
-(* This doesn't work *)
 val test_orb3 : unit -> Fact unit
       (ensures ((orb MFalse MTrue) == MTrue))
 let test_orb3 () = ()
 
-(* This doesn't work *)
 val test_orb4 : unit -> Fact unit
       (ensures ((orb MTrue MTrue) == MTrue))
 let test_orb4 () = ()
@@ -108,14 +103,13 @@ let rec evenb n =
 val oddb : nat -> Tot mbool
 let oddb n = negb (evenb n)
 
-(* This doesn't work *)
 val test_oddb1 : unit -> Fact unit
       (ensures ((oddb (S O)) == MTrue))
 let test_oddb1 () = ()
 
-(* This doesn't work *)
+(* NS: this fails, as expected. 4 is not odd *)
 val test_oddb2 : unit -> Fact unit
-      (ensures ((oddb (S (S (S (S O))))) == MTrue))
+      (ensures (oddb (S (S (S (S O)))) == MTrue))
 let test_oddb2 () = ()
 
 val plus : nat -> nat -> Tot nat
@@ -130,7 +124,6 @@ let rec mult n m =
     | O -> O
     | S n' -> plus m (mult n' m)
 
-(* This does work, although it's much more complicated! *)
 val test_mult1 : unit -> Fact unit
       (ensures (mult (S (S (S O))) (S (S (S O))))
                 == (S (S (S (S (S (S (S (S (S O))))))))))
@@ -143,15 +136,14 @@ let rec minus (n : nat) (m : nat) : nat =
   | S _ , O    -> n
   | S n', S m' -> minus n' m'
 
-(* Without the parens around the inner matches this parses wrongly *)
 val beq_nat : nat -> nat -> Tot mbool
 let rec beq_nat n m =
   match n with
-  | O -> match m with begin
+  | O -> begin match m with 
          | O -> MTrue
          | S m' -> MFalse
          end
-  | S n' -> match m with begin
+  | S n' -> begin match m with 
             | O -> MFalse
             | S m' -> beq_nat n' m'
             end
@@ -165,17 +157,14 @@ let rec ble_nat n m =
       | O -> MFalse
       | S m' -> ble_nat n' m'
 
-(* This doesn't work *)
 val test_ble_nat1 : unit -> Fact unit
       (ensures (ble_nat (S (S O)) (S (S O)) == MTrue))
 let test_ble_nat1 () = ()
 
-(* This doesn't work *)
 val test_ble_nat2 : unit -> Fact unit
       (ensures (ble_nat (S (S O)) (S (S (S (S O)))) == MTrue))
 let test_ble_nat2 () = ()
 
-(* This doesn't work *)
 val test_ble_nat3 : unit -> Fact unit
       (ensures (ble_nat (S (S (S (S O)))) (S (S O)) == MFalse))
 let test_ble_nat3 () = ()
@@ -198,8 +187,6 @@ val mult_0_plus : n : nat -> m : nat -> Fact unit
 let mult_0_plus n m = ()
 
 (* Proof by Case Analysis *)
-
-(* This doesn't work *)
 val plus_1_neq_0 : n : nat -> Fact unit
       (ensures (beq_nat (plus n (S O)) O == MFalse))
 let plus_1_neq_0 n =
@@ -207,7 +194,6 @@ let plus_1_neq_0 n =
   | O -> ()
   | S n' -> ()
 
-(* This doesn't work *)
 val negb_involutive : b : mbool -> Fact unit
       (ensures (negb (negb b) == b))
 let negb_involutive b =
@@ -216,7 +202,6 @@ let negb_involutive b =
   | MFalse -> ()
 
 (* Proof by Induction (Induction.v) *)
-
 val plus_0_r : n : nat -> Fact unit
       (ensures (plus n O == n))
 let rec plus_0_r n =

@@ -210,12 +210,15 @@ let rec add_sigelt env se = match se with
 and add_sigelts env ses = 
   ses |> List.iter (add_sigelt env)
 
+let empty_lid = Syntax.lid_of_ids [Syntax.id_of_text ""]
+
 let finish_module env m = 
   let sigs = env.gamma |> List.collect (function 
     | Binding_sig se -> [se]
     | _ -> [])  in
   add_sigelts env sigs;
   {env with 
+    curmodule=empty_lid;
     gamma=[];
     modules=m::env.modules}
 
@@ -277,6 +280,11 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
         | None -> None
   else None
 
+let lookup_datacon env lid = 
+  match lookup_qname env lid with
+    | Some (Inr (Sig_datacon (_, t, _, _,_))) -> t
+    | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
+
 let try_lookup_val_decl env lid = 
   match lookup_qname env lid with
     | Some (Inr (Sig_val_decl(_, t, _, _))) -> Some t
@@ -309,11 +317,7 @@ let lookup_lid env lid =
       | Some t -> {t with pos=Syntax.range_of_lid lid}
       | None -> not_found ()
 
-let lookup_datacon env lid = 
-  match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, t, _, _,_))) -> t
-    | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
-      
+
 let is_datacon env lid = 
   match lookup_qname env lid with
     | Some (Inr(Sig_val_decl(_, _, quals, _))) -> quals |> Util.for_some (function Assumption -> true | _ -> false)
@@ -425,3 +429,5 @@ let lidents env : list<lident> =
     | Binding_sig s -> Util.lids_of_sigelt s@keys
     | _ -> keys) [] env.gamma in
   Util.smap_fold env.sigtab (fun _ v keys -> Util.lids_of_sigelt v@keys) keys  
+
+      
