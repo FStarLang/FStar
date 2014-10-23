@@ -628,7 +628,7 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels = (* expec
           let phi, labs = encode_formula_with_labels phi' env in
           let lvar = varops.fresh "label", Bool_sort in
           let lterm = Term.mkFreeV lvar in
-          let lphi = if b then Term.mkOr(lterm, phi) else Term.mkAnd(lterm, phi) in
+          let lphi = Term.mkOr(lterm, phi) in
           lphi, (lvar, msg)::labs
         
         | _ -> 

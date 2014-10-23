@@ -62,6 +62,7 @@ and env_entry =
   | V of (bvvdef * vclos * memo<exp>)
   | TDummy of btvar
   | VDummy of bvvar
+  | LabelSuffix of bool * string
 and tclos = (typ * environment)
 and vclos = (exp * environment)
 and memo<'a> = ref<option<'a>>
@@ -89,7 +90,7 @@ let with_new_code k c e = {
     environment=c.environment; 
     stack=empty_stack k; 
     steps=c.steps;
-    close=None;
+    close=None
 }
 
 let rec eta_expand tcenv t = 
@@ -154,7 +155,8 @@ let c_config code env steps =
      code=code;
      environment=env;
      steps=steps;
-     stack=empty_stack keffect}
+     stack=empty_stack keffect
+     }
 
 let close_with_config cfg f : option<(typ -> typ)> = 
   Some (fun t -> 
@@ -162,6 +164,12 @@ let close_with_config cfg f : option<(typ -> typ)> =
    match cfg.close with
     | None -> t
     | Some f -> f t)
+
+let rec is_head_symbol t = match (compress_typ t).n with 
+    | Typ_const _
+    | Typ_lam _ -> true
+    | Typ_meta(Meta_refresh_label(t, _, _)) -> is_head_symbol t
+    | _ -> false
 
 let rec sn tcenv (cfg:config<typ>) : config<typ> =
   let rebuild config  = 
@@ -214,17 +222,20 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
               sn tcenv ({config with code=t; environment=e}) 
             | None -> 
               if is_stack_empty config
-              then (let c = sn tcenv ({config with code=t; environment=e; stack=empty_stack t.tk}) in
+              then let c = sn tcenv ({config with code=t; environment=e; stack=empty_stack t.tk}) in
                     m := Some c.code;
-                    c)
-              else match t.n with
-                | Typ_const _  
-                | Typ_lam _ -> (* already a head symbol; no need to memoize further *)
+                    c
+              else if is_head_symbol t 
+              then  (* already a head symbol; no need to memoize further *)
                     sn tcenv ({config with code=t; environment=e})
-                | _ -> 
-                   (let c = sn tcenv ({config with close=None; code=t; environment=e; stack=empty_stack t.tk}) in
-                    m := Some c.code;
-                    sn tcenv ({config with code=c.code; environment=c.environment; stack=config.stack}))
+              else let c = sn tcenv ({config with close=None; code=t; environment=e; stack=empty_stack t.tk}) in
+                   m := Some c.code;
+                   if Tc.Env.debug tcenv Options.Low && c.environment |> Util.for_some (function LabelSuffix _ -> true | _ -> false) (* Double labeling ... bad! *)
+                   then (Util.fprint3 "Label suffix available; \n\toriginal code=%s;\n\tnormalize code=%s\n stack is:\n\t%s\n" 
+                            (Print.typ_to_string t)
+                            (Print.typ_to_string c.code) 
+                            (config.stack.args |> List.map (fun (a, _) -> Print.arg_to_string a) |> String.concat ";; "));
+                   sn tcenv ({config with code=c.code; environment=c.environment; stack=config.stack})
           end
         | _ -> failwith "Impossible: expected a type"
       end
@@ -279,14 +290,18 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
                 (* In all remaining cases, the stack should be empty *)
                 | Typ_fun(bs, comp) -> 
                   let binders, environment = sn_binders tcenv bs config.environment config.steps in
-                  let c2 = sncomp tcenv ({close=None; code=comp; environment=environment; stack=empty_stack keffect; steps=config.steps}) in
+                  let c2 = sncomp tcenv (c_config comp environment config.steps) in
                   {config with code=wk <| mk_Typ_fun(binders, c2.code)}
 
                 | Typ_refine(x, t) -> 
                   begin match sn_binders tcenv [v_binder x] config.environment config.steps with
                     | [(Inr x, _)], env -> 
                       let refine t = wk <| mk_Typ_refine(x, t) in
-                      sn tcenv ({close=close_with_config config refine; code=t; environment=env; stack=empty_stack t.tk; steps=config.steps})
+                      sn tcenv ({close=close_with_config config refine; 
+                                 code=t; 
+                                 environment=env; 
+                                 stack=empty_stack t.tk; 
+                                 steps=config.steps})
                     | _ -> failwith "Impossible"
                   end
 
@@ -297,8 +312,20 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
                   sn tcenv ({config with code=t; close=close_with_config config pat})
     
                 | Typ_meta(Meta_labeled(t, l, b)) -> 
-                  let lab t = wk <| mk_Typ_meta'(Meta_labeled(t, l, b)) in
+                  let lab t =
+                    match config.environment |> List.tryFind (function LabelSuffix _ -> true | _ -> false) with
+                            | Some (LabelSuffix(b', sfx)) ->
+                                if b=b'
+                                then (if Tc.Env.debug tcenv Options.Low then Util.fprint2 "Stripping label %s because of enclosing refresh %s\n" l sfx; t)
+                                else (if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Normalizer refreshing label: %s\n" sfx;
+                                      wk <| mk_Typ_meta'(Meta_labeled(t, l ^ sfx, b)))
+                            | _ -> wk <| mk_Typ_meta'(Meta_labeled(t, l, b))  in
                   sn tcenv ({config with code=t; close=close_with_config config lab})
+
+                | Typ_meta(Meta_refresh_label(t, b, r)) -> 
+                   let sfx = if not b then Util.format1 " (call at %s)" <| Range.string_of_range r else "" in
+                   let config = {config with code=t; environment=LabelSuffix (b, sfx)::config.environment} in
+                   sn tcenv config
 
                 | Typ_meta(Meta_named _)    
                 | Typ_unknown

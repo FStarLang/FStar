@@ -142,7 +142,8 @@ let pat_as_exps env p : list<exp> =
     | Pat_meta(Meta_pat_pos(p, r)) -> 
       aux p |> List.map (function 
         | Inr (e) -> Inr ({e with pos=r})
-        | Inl t -> Inl ({t with pos=r})) in
+        | Inl t -> Inl ({t with pos=r}))
+    | Pat_meta(Meta_pat_exp _) -> failwith "Impossible" in
   List.map (function 
     | Inl _ -> failwith "Impossible"
     | Inr (e) -> e) (aux p)    
@@ -346,6 +347,20 @@ let lift_pure env t f =
   let assume_pure = must <| Tc.Env.lookup_typ_abbrev env Const.assume_pure_lid in
   lift_formula env t assert_pure assume_pure f
 
+let refresh_comp_label env b c = 
+    if Util.is_ml_comp c then c
+    else match c.n with 
+    | Total _ -> c
+    | Comp ct -> 
+      if Tc.Env.debug env Options.Low
+      then (Util.fprint1 "Refreshing label at %s\n" (Range.string_of_range <| Env.get_range env));
+      let c' = Tc.Normalize.weak_norm_comp env c in
+      if not <| lid_equals ct.effect_name c'.effect_name && Tc.Env.debug env Options.Low
+      then Util.fprint2 "To refresh, normalized\n\t%s\nto\n\t%s\n" (Print.comp_typ_to_string c) (Print.comp_typ_to_string <| mk_Comp c');
+      let t, wp, wlp = destruct_comp c' in 
+      let wp = mk_Typ_meta(Meta_refresh_label(wp, b, Env.get_range env)) in
+      let wlp = mk_Typ_meta(Meta_refresh_label(wlp, b, Env.get_range env)) in
+      Syntax.mk_Comp ({c' with effect_args=[targ wp; targ wlp]; flags=c'.flags})
 
 let label reason r f = 
     let label = Util.format2 "%s (%s)" reason (Range.string_of_range r) in

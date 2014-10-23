@@ -875,11 +875,13 @@ and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist
       | Typ_ascribed(t, _), _
       | Typ_meta(Meta_pattern(t, _)), _ 
       | Typ_meta(Meta_labeled(t, _, _)), _
+      | Typ_meta(Meta_refresh_label(t, _, _)), _
       | Typ_meta(Meta_named(t, _)), _ -> solve_t top env rel t t2 probs
 
       | _, Typ_ascribed(t, _)
       | _, Typ_meta(Meta_pattern(t, _))
       | _, Typ_meta(Meta_labeled(t, _, _))
+      | _, Typ_meta(Meta_refresh_label(t, _, _))
       | _, Typ_meta(Meta_named(t, _)) -> solve_t top env rel t1 t probs
 
       | Typ_btvar a, Typ_btvar b -> 

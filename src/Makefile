@@ -191,9 +191,9 @@ test: boot
 # CH: added minus in front of the commands that are expected to fail
 #     now can we please make --verify actually fail when it couldn't discharge all obligations
 	make -C ../examples/unit-tests rec.tc format.tc pat.tc
-	@echo "--------Unit1: Expect two failing assertions--------------"
+	@echo "--------Unit1: Expect four failing assertions--------------"
 	-make -C ../examples/unit-tests unit1.ver 
-	@echo "--------Unit1: Expect two failing assertions--------------"
+	@echo "--------Unit1: Expect four failing assertions--------------"
 	@echo "--------TestSet: Expect three failing assertions----------"
 	-make -C ../examples/unit-tests testset.ver
 	@echo "--------TestSet: Expect three failing assertions----------"

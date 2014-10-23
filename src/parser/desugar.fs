@@ -114,9 +114,9 @@ let rec is_type env (t:term) =
     | App(t, _, _)
     | Paren t
     | Ascribed(t, _)
-    | If(t, _, _) 
     | Product(_, t)
     | Abs(_, t) -> is_type env t
+    | If(t, t1, t2) -> is_type env t || is_type env t1 || is_type env t2 
     | _ -> false
 
 let rec is_kind env (t:term) : bool =
@@ -256,12 +256,12 @@ let as_binder env imp = function
 type env_t = DesugarEnv.env
 type lenv_t = list<either<btvdef,bvvdef>>
 
-let label_conjuncts polarity label_opt f = 
+let label_conjuncts tag polarity label_opt f = 
   let label f = 
-    let tag = match label_opt with 
+    let msg = match label_opt with 
         | Some l -> l
-        | _ -> if polarity then "pre-condition" else "post-condition" in
-    let msg = Util.format2 "%s at %s" tag (Range.string_of_range f.range) in
+        | _ -> 
+          Util.format2 "%s at %s" tag (Range.string_of_range f.range) in
     mk_term (Labeled(f, msg, polarity)) f.range f.level  in
 
   let rec aux f = match f.tm with 
@@ -657,11 +657,11 @@ and desugar_typ env (top:term) : typ =
     | Wild -> setpos tun
 
     | Requires (t, lopt) -> 
-      let t = label_conjuncts true lopt t in
+      let t = label_conjuncts "pre-condition" true lopt t in
       desugar_typ env t
 
     | Ensures (t, lopt) -> 
-      let t = label_conjuncts true lopt t in
+      let t = label_conjuncts "post-condition" false lopt t in
       desugar_typ env t
 
     | Op("*", [t1; _]) -> 
@@ -906,7 +906,11 @@ and desugar_formula' env (f:term) : typ =
     | If(f1, f2, f3) ->
       mk_typ_app
         (ftv (set_lid_range Const.ite_lid f.range) kun)
-        (List.map (fun x -> targ <| desugar_typ env x) [f1;f2;f3])
+        (List.map (fun x -> 
+            match desugar_typ_or_exp env x with
+                | Inl t -> targ t
+                | Inr v -> targ <| (Util.b2t v)) //implicitly coerce a boolean to a type
+         [f1;f2;f3])
 
     | QForall((_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
@@ -928,8 +932,7 @@ and desugar_formula' env (f:term) : typ =
     | _ -> 
       if is_type env f 
       then desugar_typ env f
-      else error "Expected a formula" f f.range
-
+      else Util.b2t <| desugar_exp env f //implicitly coerce a boolean to a type
 and desugar_formula env t =
   desugar_formula' ({env with phase=Formula}) t
 
