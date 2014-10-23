@@ -38,7 +38,7 @@ let hd l =
 val tl : ilist -> Tot ilist
 let tl l =
   match l with
-  | Nil -> Nil  
+  | Nil -> Nil
   | Cons h t -> t
 
 val test_app1 : unit -> Fact unit
@@ -61,12 +61,14 @@ val nil_app : l:ilist -> Fact unit
 let nil_app l = ()
 
 (* This doesn't work *)
+(* NS: fails ... need to investigate *)
 val tl_length_pred : l:ilist -> Fact unit
       (ensures (length l - 1 == length (tl l)))
 let tl_length_pred l = ()
 
 (* It can prove associativity without induction, really?
    seems too good to be true *)
+(* NS: fails now ... as it should! *)
 val app_assoc : l1 : ilist -> l2 : ilist -> l3 : ilist -> Fact unit
       (ensures (app (app l1 l2) l3) == app l1 (app l2 l3))
 let app_assoc l1 l2 l3 = ()
@@ -78,14 +80,14 @@ let rec app_length l1 l2 =
   | Nil -> ()
   | Cons x1 l1' -> app_length l1' l2
 
-val snoc : ilist -> int -> Tot ilist        
-let rec snoc l v = 
+val snoc : ilist -> int -> Tot ilist
+let rec snoc l v =
   match l with
   | Nil -> Cons v Nil
   | Cons h t -> Cons h (snoc t v)
 
 val rev : ilist -> Tot ilist
-let rec rev l = 
+let rec rev l =
   match l with
   | Nil -> Nil
   | Cons h t -> snoc (rev t) h
@@ -99,6 +101,7 @@ let rec length_snoc n l =
 
 (* In SF needed to use length_snoc lemma and call induction
    hypothesis, again impressed/scared *)
+(* NS: fails now ... as it should! *)
 val rev_length : l : ilist -> Fact unit
       (ensures (length (rev l) == length l))
 let rev_length l =
@@ -108,19 +111,23 @@ let rev_length l =
 
 val foo1 : n : int -> l : ilist -> Pure unit
       (requires (repeat n 0 == l))
-      (ensures \r => length l == 0)
+      (ensures \r => length l == 0) (* NS: fails ... need to investigate *)
 let foo1 n l =
   match l with
   | Nil -> ()
   | Cons h t -> ()
 
 (* This doesn't work; even with both branches admited, WTF? *)
+(* NS: You need to write admit P (), for some formula P; admit False (), for example.
+       Inference does not figure out what that formula should be. 
+       TODO: need to fix something so that you can just write (admit P), instead of the addition () argument.
+ *)
 val foo2 : n : int -> m : int -> l : ilist -> Pure unit
       (requires (repeat n m == l))
       (ensures \r => length l == m)
 let rec foo2 n m l =
   match l with
-  | Nil -> admit()
+  | Nil -> admit ()
   | Cons h t -> admit() (* foo2 n (m-1) t *)
 
 (* The admit fails even without the case split *)
@@ -129,6 +136,7 @@ val foo2' : n : int -> m : int -> l : ilist -> Pure unit
       (ensures \r => length l == m)
 let foo2' n m l = admit()
 
+(* NS: fails, need to investigate *)
 val foo3 : l : ilist -> n : int -> m : int -> Pure unit
       (requires (length l == m))
       (ensures \r => (length (snoc l n) == m+1))

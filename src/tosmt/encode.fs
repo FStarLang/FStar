@@ -30,8 +30,16 @@ let withenv c (a, b) = (a,b,c)
 (* ------------------------------------ *)
 (* Some operations on constants *)
 let escape (s:string) = Util.replace_char s '\'' '_'
-let mk_typ_projector_name lid (a:btvdef) = escape <| format2 "%s_%s" lid.str a.ppname.idText
-let mk_term_projector_name lid (a:bvvdef) = escape <| format2 "%s_%s" lid.str (Util.unmangle_field_name a.ppname).idText
+let escape_null_name a = 
+    if a.ppname.idText = "_"
+    then a.ppname.idText ^ a.realname.idText
+    else a.ppname.idText 
+
+let mk_typ_projector_name lid (a:btvdef) = 
+    escape <| format2 "%s_%s" lid.str (escape_null_name a)
+let mk_term_projector_name lid (a:bvvdef) = 
+    let a = {ppname=Util.unmangle_field_name a.ppname; realname=a.realname} in
+    escape <| format2 "%s_%s" lid.str (escape_null_name a)
 let mk_term_projector_name_by_pos lid (i:int) = escape <| format2 "%s_%s" lid.str (string_of_int i)
 let mk_typ_projector (lid:lident) (a:btvdef)  : term = 
     mkFreeV(mk_typ_projector_name lid a, Arrow(Term_sort, Type_sort))
