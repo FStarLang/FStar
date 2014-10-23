@@ -129,3 +129,11 @@ let record_f_exhaustive r = match r.f with (* should be able to prove that the p
   | Some i -> i
   | None -> 0
     
+val test_label: x:int -> Pure int (requires (x > 0)) (ensures \y => y > 0)
+let test_label x = x
+
+val test_precondition_label: x:int -> Tot int
+let test_precondition_label x = test_label x //should fail
+
+val test_postcondition_label: x:int -> Pure int (requires True) (ensures \y => y > 0)
+let test_postcondition_label x = x //should fail

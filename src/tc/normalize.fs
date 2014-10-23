@@ -62,7 +62,7 @@ and env_entry =
   | V of (bvvdef * vclos * memo<exp>)
   | TDummy of btvar
   | VDummy of bvvar
-  | LabelSuffix of string
+  | LabelSuffix of bool * string
 and tclos = (typ * environment)
 and vclos = (exp * environment)
 and memo<'a> = ref<option<'a>>
@@ -168,7 +168,7 @@ let close_with_config cfg f : option<(typ -> typ)> =
 let rec is_head_symbol t = match (compress_typ t).n with 
     | Typ_const _
     | Typ_lam _ -> true
-    | Typ_meta(Meta_refresh_label(t, _)) -> is_head_symbol t
+    | Typ_meta(Meta_refresh_label(t, _, _)) -> is_head_symbol t
     | _ -> false
 
 let rec sn tcenv (cfg:config<typ>) : config<typ> =
@@ -314,16 +314,17 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
                 | Typ_meta(Meta_labeled(t, l, b)) -> 
                   let lab t =
                     match config.environment |> List.tryFind (function LabelSuffix _ -> true | _ -> false) with
-                            | Some (LabelSuffix sfx) ->
-                                if not b //this is an ensures clause at a call-site, not a proof obligation; remove the label on it
+                            | Some (LabelSuffix(b', sfx)) ->
+                                if b=b'
                                 then (if Tc.Env.debug tcenv Options.Low then Util.fprint2 "Stripping label %s because of enclosing refresh %s\n" l sfx; t)
                                 else (if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Normalizer refreshing label: %s\n" sfx;
                                       wk <| mk_Typ_meta'(Meta_labeled(t, l ^ sfx, b)))
                             | _ -> wk <| mk_Typ_meta'(Meta_labeled(t, l, b))  in
                   sn tcenv ({config with code=t; close=close_with_config config lab})
 
-                | Typ_meta(Meta_refresh_label(t, r)) -> 
-                   let config = {config with code=t; environment=LabelSuffix (Util.format1 " (%s)" <| Range.string_of_range r)::config.environment} in
+                | Typ_meta(Meta_refresh_label(t, b, r)) -> 
+                   let sfx = if not b then Util.format1 " (call at %s)" <| Range.string_of_range r else "" in
+                   let config = {config with code=t; environment=LabelSuffix (b, sfx)::config.environment} in
                    sn tcenv config
 
                 | Typ_meta(Meta_named _)    

@@ -114,7 +114,8 @@ let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard_t 
     | Some c' -> //expected effects should already be normalized
        if debug env Options.Low then Util.fprint3 "(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n" 
                                   (Range.string_of_range e.pos) (Print.comp_typ_to_string c) (Print.comp_typ_to_string c');
-       let c = norm_c env c in
+       let c = norm_c env c in 
+       let c' = Tc.Util.refresh_comp_label env true c' in
        if debug env Options.Low then Util.fprint2 "(%s) After normalization, c is %s\n" 
                                   (Range.string_of_range e.pos) (Print.comp_typ_to_string c);
        let e, c, g = Tc.Util.check_comp env e c c' in
@@ -321,9 +322,9 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
           w k1 <| mk_Typ_uvar'(u, k1), k1, g
         | _ -> tc_typ env s)
    
-  | Typ_meta(Meta_refresh_label(t, r)) -> 
+  | Typ_meta(Meta_refresh_label(t, b, r)) -> 
     let t, k, f = tc_typ env t in 
-    mk_Typ_meta(Meta_refresh_label(t, r)), k, f
+    mk_Typ_meta(Meta_refresh_label(t, b, r)), k, f
   
   | Typ_meta(Meta_labeled(t, l, p)) -> 
     let t, k, f = tc_typ env t in 
@@ -679,7 +680,7 @@ and tc_exp env e : exp * comp =
                                      then Util.fprint3 "Not refining result: f=%s; cres=%s; head_is_atom?=%s\n" (Print.exp_to_string f) (if head_is_atom then "yes" else "no") (Print.comp_typ_to_string cres); 
                                      cres) in
                     (* relabeling the labeled sub-terms in cres to report failing pre-conditions at this call-site *)
-                    Tc.Util.refresh_comp_label env cres 
+                    Tc.Util.refresh_comp_label env false cres 
                 | _ -> mk_Total  (Util.subst_typ subst <| mk_Typ_fun(bs, cres) ktype top.pos) (* partial app *) in
               if debug env Options.Low then Util.fprint1 "\t Type of result cres is %s\n" (Print.comp_typ_to_string cres);
               let comp = List.fold_left (fun out c -> Tc.Util.bind env None (snd c) (fst c, out)) cres comps in
