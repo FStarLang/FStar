@@ -137,3 +137,21 @@ let test_precondition_label x = test_label x //should fail
 
 val test_postcondition_label: x:int -> Pure int (requires True) (ensures \y => y > 0)
 let test_postcondition_label x = x //should fail
+
+
+val repeat : int -> int -> Tot int
+let rec repeat n count =
+  match count with
+  | 0 -> 0
+  | _ -> repeat n (count-1)
+
+type nat = 
+  | O
+  | S : nat -> nat
+
+val minus : nat -> nat -> Tot nat
+let rec minus n m : nat = 
+  match n, m with
+  | O   , _    -> O
+  | S _ , O    -> n
+  | S n', S m' -> minus n' m'

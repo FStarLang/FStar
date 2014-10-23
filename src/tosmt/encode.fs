@@ -106,6 +106,12 @@ type binding =
    
 type env_t = {bindings:list<binding>;
               tcenv:Env.env}
+let print_env e = 
+    e.bindings |> List.map (function 
+        | Binding_var (x, t) -> Print.strBvd x
+        | Binding_tvar (a, t) -> Print.strBvd a
+        | Binding_fvar(l, s, t) -> Print.sli l
+        | Binding_ftvar(l, s, t) -> Print.sli l) |> String.concat ", "
 
 let lookup_binding env f = Util.find_map env.bindings f 
               
@@ -997,9 +1003,16 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
                 | Some(prefix, xi, suffix) -> 
                   let prefix, guards', env, _ = encode_binders prefix env in 
                   let pat_vars, pat_tm, pat_exp, env = encode_pat p env in
-                  let pat_guard = encode_typ_pred xi.sort env pat_tm in
-                  let suffix = Util.subst_binders ([Inr(xi.v, pat_exp)]) suffix in
-                  encode_pat_binders suffix arg_pats (env, vars@prefix@pat_vars, args@List.map mkBoundV prefix@[pat_tm], guards@[pat_guard]@guards')
+                  let pat_vars, pat_guard, suffix, env = match p with 
+                    | Pat_wild ->  (* no binders ... a wildcard pattern *)
+                        let xvars, xguard, env, _ = encode_binders [v_binder xi] env in
+                        xvars, xguard, suffix, env 
+                    | _ -> 
+                        let guard = encode_typ_pred xi.sort env pat_tm in
+                        let suffix = Util.subst_binders ([Inr(xi.v, pat_exp)]) suffix in
+                        let env = push_term_var env xi.v pat_tm in
+                        pat_vars, [guard], suffix, env in
+                  encode_pat_binders suffix arg_pats (env, vars@prefix@pat_vars, args@List.map mkBoundV prefix@[pat_tm], guards@pat_guard@guards')
               end
 
             | _ -> None  in
