@@ -15,7 +15,7 @@
 *)
 
 
-module InsertionSort
+module IntList_InsertionSort
 open Prims.PURE
 
 type intlist = 

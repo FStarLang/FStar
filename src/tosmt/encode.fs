@@ -854,10 +854,34 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
         let guard = Term.mk_and_l guards in 
         let dapp =  mkApp(ddconstrsym, List.map mkBoundV vars) in
         let ty_pred = encode_typ_pred t_res env' dapp in
+        let index_injectivity = match (Util.compress_typ t_res).n with 
+            | Typ_app _ -> 
+                let free_indices = Util.freevars_typ t_res in
+                let x = varops.fresh "x", Term_sort in 
+                let xterm = mkBoundV x in
+                let t, vars1 = encode_typ_term t_res env' in 
+                begin match vars1 with 
+                    | _::_ -> [] (* warn? no index injectivity in this case *)
+                    | _ -> 
+                    let x_hastype_t = mk_HasType xterm t in
+                    let x_is_d = mk_data_tester env d xterm in 
+                    let env'' = List.fold_left2 (fun env formal proj -> match formal with 
+                        | Inl a, _ -> push_typ_var env a.v <| Term.mkApp(fst proj, [xterm])
+                        | Inr x, _ -> push_term_var env x.v <| Term.mkApp(fst proj, [xterm])) env' formals projectors in
+                    let t_res_subst, ex_vars = encode_typ_term t_res env'' in
+                    let tvars = Util.set_elements free_indices.ftvs |> List.map (fun a -> 
+                        let tm = lookup_typ_var env' a in 
+                        boundV_sym tm, Type_sort) in
+                    let vvars = Util.set_elements free_indices.fxvs |> List.map (fun x -> 
+                        let tm = lookup_term_var env' x in 
+                        boundV_sym tm, Term_sort) in
+                    [Term.Assume(Term.mkForall([x_hastype_t], x::tvars@vvars, Term.mkImp(mkAnd(x_hastype_t, x_is_d), close_ex ex_vars (mkEq(t, t_res_subst)))), Some "index injectivity")]
+                end
+            | _ -> [] in
         let g = [Term.DeclFun(Term.freeV_sym ddtok, [], Term_sort, Some (format1 "data constructor proxy: %s" (Print.sli d)));
                  Term.Assume(mkForall([app], vars, 
                                        mkEq(app, dapp)), Some "equality for proxy");
-                Term.Assume(mkForall([ty_pred], vars, mkImp(guard, ty_pred)), Some "data constructor typing")] in
+                 Term.Assume(mkForall([ty_pred], vars, mkImp(guard, ty_pred)), Some "data constructor typing")]@index_injectivity in
         datacons@g, env
 
     | Sig_bundle(ses, _, _) -> 
