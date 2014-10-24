@@ -104,7 +104,7 @@ let rec index l n =
 (* Functions as Data *)
 
 (* This is as pure as it gets, still it gets inferred ALL effect *)
-val filter : test:('a->bool) -> l:(list 'a) -> Tot (list 'a)
+val filter : test:('a->Tot bool) -> l:(list 'a) -> Tot (list 'a)
 let rec filter test l =
   match l with
   | []     -> []
