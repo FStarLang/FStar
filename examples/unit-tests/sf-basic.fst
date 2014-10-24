@@ -107,9 +107,8 @@ val test_oddb1 : unit -> Fact unit
       (ensures ((oddb (S O)) == MTrue))
 let test_oddb1 () = ()
 
-(* NS: this fails, as expected. 4 is not odd *)
 val test_oddb2 : unit -> Fact unit
-      (ensures (oddb (S (S (S (S O)))) == MTrue))
+      (ensures (oddb (S (S (S (S O)))) == MFalse))
 let test_oddb2 () = ()
 
 val plus : nat -> nat -> Tot nat
@@ -189,17 +188,11 @@ let mult_0_plus n m = ()
 (* Proof by Case Analysis *)
 val plus_1_neq_0 : n : nat -> Fact unit
       (ensures (beq_nat (plus n (S O)) O == MFalse))
-let plus_1_neq_0 n =
-  match n with
-  | O -> ()
-  | S n' -> ()
+let plus_1_neq_0 n = ()
 
 val negb_involutive : b : mbool -> Fact unit
       (ensures (negb (negb b) == b))
-let negb_involutive b =
-  match b with
-  | MTrue -> ()
-  | MFalse -> ()
+let negb_involutive b = ()
 
 (* Proof by Induction (Induction.v) *)
 val plus_0_r : n : nat -> Fact unit
