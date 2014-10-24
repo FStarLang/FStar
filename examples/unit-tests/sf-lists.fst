@@ -8,20 +8,6 @@ Original name: "Lists: Working with Structured Data"
 module SfLists
 open Prims.PURE
 
-(* NS: You need to write admit P (), for some formula P; admit False (),
-       for example.
-       Inference does not figure out what that formula should be.
-       TODO: need to fix something so that you can just write (admit P),
-       instead of the addition () argument. *)
-(* CH: This is what I actually need (it matches what Coq does) *)
-(* NS: It's hard to figure out what the minimal P needs to be exactly. 
-       An easier way is to simply change prims to 
-           assume val admit: unit -> Fact unit False
-       avoiding the definition you have below
-*)
-
-let admit () = admit False ()
-
 type ilist =
   | Nil : ilist
   | Cons : int -> ilist -> ilist
