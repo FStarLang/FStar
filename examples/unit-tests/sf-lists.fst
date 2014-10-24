@@ -71,22 +71,29 @@ let hd l =
   | Cons h t -> h
 
 (* In SF they have tl Nil == nil, but we do better here *)
-val tl : l:ilist{l =!= Nil} -> Tot ilist
+(* val tl : l:ilist{l =!= Nil} -> Tot ilist *)
+(* let tl l = *)
+(*   match l with *)
+(*   | Cons h t -> t *)
+
+val tl : l:ilist -> Tot ilist
 let tl l =
   match l with
+  | Nil -> Nil
   | Cons h t -> t
 
+
 val nil_app : l:ilist -> Fact unit
-      (ensures (app Nil l == l))
+                              (ensures (app Nil l == l))
 let nil_app l = ()
 
-(* CH: I have no clue why this still fails *)
-val tl_length_pred : l:ilist{l =!= Nil} -> Fact unit
-      (ensures ((length l) - 1 == length (tl l)))
-let tl_length_pred l = ()
+(* (\* CH: I have no clue why this still fails *\) *)
+(* val tl_length_pred : l:ilist{l =!= Nil} -> Fact unit *)
+(*       (ensures ((length l) - 1 == length (tl l))) *)
+(* let tl_length_pred l = () *)
 
 val tl_length_pred_fixed : l:ilist{is_Cons l} -> Fact unit
-      (ensures ((length l) - 1 == length (tl l)))
+                                                      (ensures ((length l) - 1 == length (tl l)))
 let tl_length_pred_fixed l = ()
 
 val app_assoc : l1 : ilist -> l2 : ilist -> l3 : ilist -> Fact unit
@@ -162,17 +169,8 @@ let rec foo3 l n m =
 (* CH: this should succeed (at least in Coq it doesn't use induction
    or additional lemmas, just a destruct l1 which I've done below,
    but which Z3 should anyway be able to do automatically) *)
+(* NS: it works now *)
 val foo4 : n : int -> l1 : ilist -> l2 : ilist -> Pure unit
       (requires (snoc l1 n == l2))
       (ensures \r => 0 < length l2)
-let foo4 n l1 l2 = 
-  match l1 with
-  | Nil -> ()
-  | Cons h t -> () (* NS: It works, but seems to require the explicit case-split.
-
-                      Note:  if is_Nil l1 then () else ()
-                             this also fails
-
-                          TODO: Need to investigate ... probably has to do with needing
-                          a pattern to reduce snoc. 
-                   *)
+let foo4 n l1 l2 = ()

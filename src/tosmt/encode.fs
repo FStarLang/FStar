@@ -881,7 +881,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
         let g = [Term.DeclFun(Term.freeV_sym ddtok, [], Term_sort, Some (format1 "data constructor proxy: %s" (Print.sli d)));
                  Term.Assume(mkForall([app], vars, 
                                        mkEq(app, dapp)), Some "equality for proxy");
-                 Term.Assume(mkForall([ty_pred], vars, mkImp(guard, ty_pred)), Some "data constructor typing")]@index_injectivity in
+                 Term.Assume(mkForall([ty_pred], vars, mkIff(guard, ty_pred)), Some "data constructor typing")]@index_injectivity in
         datacons@g, env
 
     | Sig_bundle(ses, _, _) -> 

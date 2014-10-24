@@ -103,7 +103,11 @@ let rec index l n =
 
 (* Functions as Data *)
 
-(* This is as pure as it gets, still it gets inferred ALL effect *)
+(* This is as pure as it gets, still it gets inferred ALL effect 
+   NS: Unannotated let recs have the ALL effect. To get the Tot effect, you must request it (enabling the termination checker).
+   NS: BTW, the default function type has ML effect, so if not annotated, test will be in ML, and so the whole thing will be ALL. 
+   NS: An alternative may be to have some other syntax, like fix instead let rec, to locally change the default function effect to Tot.
+*)
 val filter : test:('a->Tot bool) -> l:(list 'a) -> Tot (list 'a)
 let rec filter test l =
   match l with
