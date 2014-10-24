@@ -324,20 +324,32 @@ and encode_typ_pred (t:typ) (env:env_t) (e:term) : term = (* expects t to be in 
         let refinement = encode_formula f env' in
         Term.mkAnd(base_pred, refinement)
 
-      | Typ_fun(binders, res) -> 
-        let pretype = mk_tester "Typ_fun" (mk_PreType e) in
-        if not <| Util.is_pure env.tcenv res 
-        then pretype 
-        else let vars, guards, env', _ = encode_binders binders env in 
-             let app = mk_ApplyE e vars in
-             if Util.is_total_comp res
-             then let app_pred = mkForall(app::guards, vars, mkImp(mk_and_l guards, encode_typ_pred (Util.comp_result res) env' app)) in
-                  mkAnd(pretype, app_pred)
-             else let t2, wp2, _ = Tc.Util.destruct_comp (Util.comp_to_comp_typ <| Normalize.normalize_comp env.tcenv res) in
-                  let pre = Syntax.mk_Typ_app(wp2, [targ <| trivial_post t2]) ktype t2.pos in
-                  let app_pred = mkForall(app::guards, vars, mkImp(Term.mkAnd(mk_and_l guards, encode_formula pre env'), 
-                                                                   encode_typ_pred t2 env' app)) in
-                  mkAnd(pretype, app_pred)
+      | Typ_fun _ -> 
+        let t, g = encode_typ_term t env in
+        close_ex g (mk_HasType e t)
+
+//        (binders, res) -> 
+//        let pretype = mk_tester "Typ_fun" (mk_PreType e) in
+//        let tsym = varops.fresh "Type_fun", Type_sort in
+//        let ttm = mkBoundV tsym in
+//        let ex_t = [tsym, Term.mkTrue]  in
+//        if not <| Util.is_pure env.tcenv res 
+//        then mkAnd(pretype, close_ex ex_t (mk_HasType e ttm)) 
+//        else let vars, guards, env', _ = encode_binders binders env in 
+//             let fsym = varops.fresh "f", Term_sort in
+//             let f = mkBoundV fsym in
+//             let app = mk_ApplyE f vars in
+//             if Util.is_total_comp res
+//             then let app_pred = mkForall([app], fsym::vars, mkImp(mk_and_l guards, encode_typ_pred (Util.comp_result res) env' app)) in
+//                  mkAnd(pretype, 
+//                        close_ex ex_t (mkAnd(mk_HasType e ttm, 
+//                                              mkForall([mk_HasType f ttm], [fsym], mkImp(mk_HasType f ttm, app_pred)))))
+//             else pretype 
+////                  let t2, wp2, _ = Tc.Util.destruct_comp (Util.comp_to_comp_typ <| Normalize.normalize_comp env.tcenv res) in
+////                  let pre = Syntax.mk_Typ_app(wp2, [targ <| trivial_post t2]) ktype t2.pos |> norm_t env in
+////                  let app_pred = mkForall(app::guards, vars, mkImp(Term.mkAnd(mk_and_l guards, encode_formula pre env'), 
+////                                                                   encode_typ_pred t2 env' app)) in
+////                  mkAnd(pretype, app_pred)
 
       | Typ_app _ ->
         let t, vars = encode_typ_term t env in 
@@ -366,8 +378,34 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t *)
       | Typ_const fv -> 
         lookup_free_tvar env fv, []
 
+      | Typ_fun(binders, res) -> 
+        let tsym = varops.fresh "Type_fun", Type_sort in
+        let ttm = mkBoundV tsym in
+        let ex_t = [tsym, Term.mkTrue]  in
+ 
+        let fsym = varops.fresh "f", Term_sort in
+        let f = mkBoundV fsym in
+        let pretype = mk_tester "Typ_fun" (mk_PreType f) in
+ 
+        let f_hastype_t = mk_HasType f ttm in
+        let guard = 
+            if not <| Util.is_pure env.tcenv res 
+            then pretype 
+            else let vars, guards, env', _ = encode_binders binders env in 
+                 let app = mk_ApplyE f vars in
+                 if Util.is_total_comp res
+                 then let app_pred = mkForall([app], vars, mkImp(mk_and_l guards, encode_typ_pred (Util.comp_result res) env' app)) in
+                      mkAnd(pretype, app_pred)
+                 else pretype in
+        ttm, [tsym, mkForall([f_hastype_t], [fsym], mkImp(f_hastype_t, guard))]
+//                  let t2, wp2, _ = Tc.Util.destruct_comp (Util.comp_to_comp_typ <| Normalize.normalize_comp env.tcenv res) in
+//                  let pre = Syntax.mk_Typ_app(wp2, [targ <| trivial_post t2]) ktype t2.pos |> norm_t env in
+//                  let app_pred = mkForall(app::guards, vars, mkImp(Term.mkAnd(mk_and_l guards, encode_formula pre env'), 
+//                                                                   encode_typ_pred t2 env' app)) in
+//                  mkAnd(pretype, app_pred)
+
+      
       | Typ_refine _
-      | Typ_fun _ 
       | Typ_uvar _ ->
         let name = varops.fresh (Print.tag_of_typ t0), Type_sort in
         let sym = mkBoundV name in
@@ -491,10 +529,14 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars) =
                         | Some (formals, _) -> 
                           if List.length formals = List.length args
                           then encode_full_app fv
-                          else (Util.fprint1 "%s is not a full application!\n" (Print.exp_to_string e0);
+                          else (if Tc.Env.debug env.tcenv Options.Low then Util.fprint2 "(%s) %s is not a full application!\n" 
+                                    (Range.string_of_range e0.pos)
+                                    (Print.exp_to_string e0);
                                 encode_partial_app ()))
             | _ ->
-                Util.fprint1 "%s is not a full application!\n" (Print.exp_to_string e0); encode_partial_app ()
+                if Tc.Env.debug env.tcenv Options.Low then Util.fprint2 "(%s) %s is not a full application!\n" 
+                    (Range.string_of_range e0.pos)
+                    (Print.exp_to_string e0); encode_partial_app ()
         end
 
       | Exp_let((false, [(Inr _, _, _)]), _) -> failwith "Impossible: already handled by encoding of Sig_let" 
@@ -1097,7 +1139,7 @@ and encode_free_var env lid t quals =
             | _ -> []) in
         
         let vname, vtok, env = gen_free_var env lid in 
-
+        
         let vars, guards, env', _ = encode_binders formals env in
         let guard = mk_and_l guards in
         let vtok_app = mk_ApplyE vtok vars in
@@ -1108,15 +1150,19 @@ and encode_free_var env lid t quals =
                 let vapp = Term.mkApp(vname, List.map Term.mkBoundV vars) in
                 let vname_decl = Term.DeclFun(vname, formals |> List.map (function Inl _, _ -> Type_sort | _ -> Term_sort), Term_sort, None) in
                 let tok_decl, env = match formals with 
-                    | [] -> [], push_free_var env lid vname (mkFreeV(vname, Term_sort))
+                    | [] -> 
+                        let tok_typing = Term.Assume(encode_typ_pred t env (mkFreeV(vname, Term_sort)), Some "function token typing") in 
+                        [tok_typing], push_free_var env lid vname (mkFreeV(vname, Term_sort))
                     | _ -> 
                         let vtok_decl = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None) in
+                        let tok_typing = Term.Assume(encode_typ_pred t env vtok, Some "function token typing") in 
                         let name_tok_corr = Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vapp)), None) in
-                        [vtok_decl;name_tok_corr], env in
+                        [vtok_decl;name_tok_corr;tok_typing], env in
                 vapp, Inl vname, vname_decl::tok_decl, env
             else     
+                let tok_typing = Term.Assume(encode_typ_pred t env vtok, Some "function token typing") in 
                 let tok_decl = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None) in
-                vtok_app, Inr vtok, [tok_decl], env in
+                vtok_app, Inr vtok, [tok_decl;tok_typing], env in
 
         let ty_pred = encode_typ_pred res env' vapp in
         let typingAx = Term.Assume(mkForall([vapp], vars, mkImp(guard, ty_pred)), None) in

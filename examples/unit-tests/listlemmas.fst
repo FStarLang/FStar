@@ -103,3 +103,21 @@ let rec append_mem l1 l2 a = match l1 with
         functions easily. So, you'd have to resort to an external
         proof (in Coq, say) and then admit it to the SMT solver.
  *)
+
+
+val map: ('a -> Tot 'b)
+      -> list 'a
+      -> Tot (list 'b)
+let rec map f l = match l with
+  | [] -> []
+  | hd::tl -> f hd::map f tl
+
+
+let plus_one x = x + 1
+
+val test_map: unit -> Tot unit
+let test_map x = 
+  let l = [0;1;2] in
+  let g = map plus_one l in
+  assert (g == [1;2;3])
+
