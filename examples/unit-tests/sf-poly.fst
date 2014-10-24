@@ -3,6 +3,8 @@ A translation to F* of Poly.v from Software Foundations
 Original name: "Polymorphism and Higher-Order Functions"
 *)
 
+(* This chapter is very boring in terms of proofs *)
+
 module SfPoly
 open Prims.PURE
 
@@ -96,7 +98,7 @@ val length_nil : unit -> Fact unit
       (ensures (length [] == 0))
 let length_nil () = ()
 
-(* Was getting incomplete patterns here, with or without the [] pattern,
+(* Getting incomplete patterns here, with or without the [] pattern,
    caused by the same problem with length_nil I think, still it should
    be a different error message when the [] pattern is present *)
 val index : l : list 'a -> n:int{(0 <= n) /\ (n < length l)} -> Tot 'a
@@ -125,23 +127,143 @@ I would prefer something like this for %
 assume val mod : x : int -> y:int{x =!= 0} -> Tot int
 *)
 
-val evenb : int -> Tot bool
+val evenb : nat -> Tot bool
 let rec evenb i =
   match i with
   | 0 -> true
   | 1 -> false
   | _ -> evenb (i-2)
 
+val oddb : nat -> Tot bool
+let oddb n = not (evenb n)
+
+(* CH: This fails as follows:
+Failed because: refinement subtyping is not applicable
+Incompatible types (list i:int{i >= 0}) and (list nat)
 val test_filter1 : unit -> Fact unit
       (ensures (filter evenb [1;2;3;4] == [2;4]))
 let test_filter1 () = ()
+*)
 
 (* Map *)
 
+val map : ('a->Tot 'b) -> (list 'a) -> Tot (list 'b)
+let rec map f l =
+  match l with
+  | []     -> []
+  | h :: t -> (f h) :: (map f t)
 
+val plus3 : int -> Tot int
+let plus3 n = n + 3
 
+val test_map1 : unit -> Fact unit
+      (ensures (map plus3 [2;0;2] == [5;3;5]))
+(* CH: Replacing plus3 with a lambda (just inlining) fails to parse +, strange *)
+let test_map1 () = ()
 
+(* CH: again: Incompatible types (list i:int{i >= 0}) and (list nat)
+val test_map2 : unit -> Fact unit
+      (ensures (map oddb [2;1;2;5] == [false;true;false;true]))
+let test_map2 () = ()
+*)
 
+(* This shouldn't blow up:
+unknown(0,0-0,0) : Error
+Identifier not found: [Prims.Cons] (Possible clash with related name at ../../lib/prims.fst(477,0-481,6))
+val test_map3 : unit -> Fact unit
+    (ensures (map (fun n => [evenb n;oddb n]) [2;1;2;5]
+              == [[true;false];[false;true];[true;false];[false;true]]))
+*)
 
+(* Map for options *)
 
+val option_map : ('a -> Tot 'b) -> option 'a -> Tot (option 'b)
+let option_map f o =
+  match o with
+    | None   -> None
+    | Some a -> Some (f a)
+
+(* Fold *)
+
+val fold : (f : 'a -> 'b -> Tot 'b) -> list 'a -> 'b -> Tot 'b
+let rec fold f l b =
+  match l with
+  | []   -> b
+  | h::t -> f h (fold f t b)
+
+(* CH: This completely blows up because of the lambda
+   Bound term variable not found: x
+val fold_example1 : unit -> Fact unit 
+      (ensures (fold (fun x y -> x * y) [1;2;3;4] 1 == 24))
+let fold_example1 () = ()
+*)
+
+(* CH: Without the lambda it works fine *)
+let mult x y = x * y
+
+val fold_example1 : unit -> Fact unit 
+      (ensures (fold mult [1;2;3;4] 1 == 24))
+let fold_example1 () = ()
+
+(* CH: This also completely blows up because of the lambda
+   Bound term variable not found: x
+val fold_example2 : unit -> Fact unit
+      (ensures (fold (fun x y -> x && y) [true;true;false;true] true == false))
+let fold_example2 () = ()
+*)
+
+(* CH: Again without the lambda it works fine *)
+let andb x y = x && y
+
+val fold_example2 : unit -> Fact unit
+      (ensures (fold andb [true;true;false;true] true == false))
+let fold_example2 () = ()
+
+(* CH: This fails, but maybe can't expect so much from Z3? *)
+val fold_example3 : unit -> Fact unit
+      (ensures (fold app  [[1];[];[2;3];[4]] [] == [1;2;3;4]))
+let fold_example3 () = ()
+
+(* Functions For Constructing Functions *)
+
+val constfun : 'a -> 'b -> Tot 'a
+let constfun x _ = x
+
+val ftrue : 'b -> Tot bool
+(* This should work, but it doesn't: arrow mismatch
+let ftrue = constfun true
+*)
+let ftrue _ = true
+
+(* CH: This causes syntax error at character 12, is override a keyword?
+val override : ('a -> Tot 'b) -> 'a -> 'b -> 'a -> Tot 'b
+*)
+
+val my_override : ('a -> Tot 'b) -> 'a -> 'b -> 'a -> Tot 'b
+let my_override f k x k' = if k = k' then x else f k'
+
+val fmostlytrue : int -> Tot bool
+let fmostlytrue = my_override (my_override ftrue 1 false) 3 false
+
+(* CH: these fail, too higher order? *)
+val override_example1 : unit -> Fact unit
+      (ensures (fmostlytrue 0 == true))
+let override_example1 () = ()
+
+val override_example2 : unit -> Fact unit
+      (ensures (fmostlytrue 1 == false))
+let override_example2 () = ()
+
+val override_example3 : unit -> Fact unit
+      (ensures (fmostlytrue 2 == true))
+let override_example3 () = ()
+
+val override_example4 : unit -> Fact unit
+      (ensures (fmostlytrue 3 == false))
+let override_example4 () = ()
+
+(* Surprisingly F* manages to prove this *)
+val override_eq : x:'a -> k:'b -> f:('b->Tot 'a) -> Fact unit
+      (ensures ((my_override f k x) k == x))
+let override_eq x k f = ()
 
