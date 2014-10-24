@@ -122,7 +122,6 @@ let get_false_ANF u =
   let y = get_1 () in
   x > y
 
-(* TODO: Fix the axioms for field-projection functions *)
 type record = {f:option<int>}
 val record_f_exhaustive: record -> Tot int
 let record_f_exhaustive r = match r.f with (* should be able to prove that the pattern below is exhaustive for r.f *)
