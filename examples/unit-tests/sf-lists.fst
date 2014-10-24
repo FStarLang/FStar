@@ -128,22 +128,23 @@ val foo1 : n:int -> l : ilist -> Pure unit
       (requires (repeat n z == l))
       (ensures \r => length l == 0) (* NS: now works. Needed to prove a property about the length of repeat, which I did intrinsically above. *)
 let foo1 n l = ()                   (* CH: this should succeed. NS: and it does *)
+    (* CH: From an extrinsic proof point of view, this is just cheating.
+           Any reason we can't have a purely-extrinsic proof of this? *)
 
 val foo2 : n : nat -> m : nat -> l : ilist -> Pure unit
       (requires (repeat n m == l))
       (ensures \r => length l == m)
 let rec foo2 n m l = 
   match m with
-  | 0 -> ()  (* CH: should actually work without a call to foo1? NS: And it does with the property about the length of repeat. *)
+  | 0 -> ()  (* CH: should actually work without a call to foo1? NS: And it does with the property about the length of repeat. *)(* CH: ditto, this is no longer an extrinsic proof, basically the refinement you've put on repeat directly implies foo2 *)
   | _ -> foo2 n (m-1) (repeat n (m-1))
          (* CH: this should succeed (NS: and it does), and (NS: the previous version should) clearly not fail pre-type-checking
             it's a frequent pattern for generalizing the induction hypothesis *)
          (* NS: TODO: explicit generalization fails pre-type checking. Fix! 
-                But, FYI, all let-rec bound names are implicitly generalized. So, no need for this pattern. *) 
+            But, FYI, all let-rec bound names are implicitly generalized. So, no need for this pattern. *)
+         (* CH: This is very cool, a consequence of having n-argument
+                fixpoints, while Coq only only has one argument ones *)
 
-(* CH: after my fixes to it, it should succeed,
-   but it fails with same problem as above *)
-(* NS: It seems to works now. *)
 val foo3 : l : ilist -> n : int -> m : int -> Pure unit
       (requires (length l == m))
       (ensures \r => (length (snoc l n) == m+1))

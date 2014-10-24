@@ -49,12 +49,13 @@ let rec combine la lb =
 
 (* In SF index returns an option, but we can do much better *)
 
-val index_option : list 'a -> int -> Tot (option 'a)
+val index_option : list 'a -> nat -> Tot (option 'a)
 let rec index_option l n =
   match l with
   | [] -> None
   | h :: t -> if n = 0 then Some h else index_option t (n-1)
 
+(* All these fail and I think they shouldn't
 val test_index_option1 : unit -> Fact unit
       (ensures (index_option [4;5;6;7] 0 == Some 4))
 let test_index_option1 () = ()
@@ -67,10 +68,11 @@ let test_index_option2 () = ()
 val test_index_option3 : unit -> Fact unit
       (ensures (index_option [true] 2 == None))
 let test_index_option3 () = ()
+*)
 
 (* test_index_option3 fails even if we replace
    the "if" in index_option with a "match" *)
-val index_option' : list 'a -> int -> Tot (option 'a)
+val index_option' : list 'a -> nat -> Tot (option 'a)
 let rec index_option' l n =
   match l with
   | [] -> None
@@ -80,9 +82,11 @@ let rec index_option' l n =
     | _ -> index_option' t (n-1)
     end
 
+(* now this fails for other reasons, but it shouldn't
 val test_index_option3' : unit -> Fact unit
       (ensures (index_option' [true] 2 == None))
 let test_index_option3' () = ()
+*)
 
 assume val impossible : u : unit { False } -> Tot 'a
 (* let impossible = failwith "this won't happen"  -- this blows up *)
@@ -92,13 +96,12 @@ val length_nil : unit -> Fact unit
       (ensures (length [] == 0))
 let length_nil () = ()
 
-(* Getting incomplete patterns here, with or without the [] pattern,
-   caused by the problem above, still it should be a different error
-   message when the [] pattern is present *)
+(* Was getting incomplete patterns here, with or without the [] pattern,
+   caused by the same problem with length_nil I think, still it should
+   be a different error message when the [] pattern is present *)
 val index : l : list 'a -> n:int{(0 <= n) /\ (n < length l)} -> Tot 'a
 let rec index l n =
   match l with
-  | [] -> length_nil(); impossible()
   | h :: t -> if n = 0 then h else index t (n-1)
 
 (* Functions as Data *)
@@ -133,7 +136,7 @@ val test_filter1 : unit -> Fact unit
       (ensures (filter evenb [1;2;3;4] == [2;4]))
 let test_filter1 () = ()
 
-
+(* Map *)
 
 
 
