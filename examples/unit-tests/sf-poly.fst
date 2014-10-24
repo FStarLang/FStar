@@ -30,17 +30,55 @@ let rec app l1 l2 =
   | []   -> l2
   | h::t -> h :: app t l2
 
+val nil_app : l : list 'a -> Fact unit
+      (ensures (app [] l == l))
+let nil_app l = ()
+
+val app_nil : l : list 'a -> Fact unit
+      (ensures (app l [] == l))
+let rec app_nil l =
+  match l with
+  | [] -> ()
+  | h::t -> app_nil t
+
 val snoc : list 'a -> 'a -> Tot (list 'a)
 let rec snoc l x =
   match l with
   | []   -> [x]
   | h::t -> h :: snoc t x
 
+val snoc_with_append : l1:list 'a -> l2:list 'a -> a:'a -> Fact unit
+      (ensures (snoc (app l1 l2) a == app l1 (snoc l2 a)))
+let rec snoc_with_append l1 l2 a =
+  match l1 with
+  | [] -> ()
+  | a1 :: l1' -> snoc_with_append l1' l2 a
+
 val rev : list 'a -> Tot (list 'a)
 let rec rev l =
   match l with
   | []   -> []
   | h::t -> snoc (rev t) h
+
+val rev_snoc : a:'a -> l:list 'a -> Fact unit
+      (ensures (rev (snoc l a) == a :: (rev l)))
+let rec rev_snoc a l =
+  match l with
+  | []   -> ()
+  | h::t -> rev_snoc a t
+
+val rev_involutive : l:list 'a -> Fact unit
+      (ensures (rev (rev l)) == l)
+let rec rev_involutive l =
+  match l with
+  | []   -> ()
+  | h::t -> rev_snoc h (rev t); rev_involutive t
+
+val repeat : 'a -> nat -> list 'a
+let rec repeat a n =
+  match n with
+  | 0 -> []
+  | _ -> a :: (repeat a (n-1))
 
 val combine : list 'a -> list 'b -> list ('a * 'b)
 let rec combine la lb =
@@ -113,6 +151,29 @@ let rec index l n =
    NS: BTW, the default function type has ML effect, so if not annotated, test will be in ML, and so the whole thing will be ALL. 
    NS: An alternative may be to have some other syntax, like fix instead let rec, to locally change the default function effect to Tot.
 *)
+
+(* Currying *)
+
+val prod_curry : (('a * 'b) -> Tot 'c) -> 'a -> 'b -> Tot 'c
+let prod_curry f x y = f (x,y)
+
+val prod_uncurry : ('a -> 'b -> Tot 'c) -> ('a * 'b) -> Tot 'c
+let prod_uncurry f xy = f (fst xy) (snd xy)
+
+(* CH: how can we help the prover prove something like this? *)
+val uncurry_curry : f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Fact unit
+      (ensures (prod_curry (prod_uncurry f) x y == f x y))
+let uncurry_curry f x y = ()
+
+(* CH: how can we help the prover prove something like this? *)
+val curry_uncurry : f:(('a*'b)->Tot 'c) -> xy:('a*'b) -> Fact unit
+      (ensures (prod_uncurry (prod_curry f) xy == f xy))
+let curry_uncurry f xy =
+  match xy with
+  | (x,y) -> ()
+
+(* Filter *)
+
 val filter : test:('a->Tot bool) -> l:(list 'a) -> Tot (list 'a)
 let rec filter test l =
   match l with
@@ -175,6 +236,20 @@ val test_map3 : unit -> Fact unit
               == [[true;false];[false;true];[true;false];[false;true]]))
 *)
 
+val map_snoc : f:('a->Tot 'b) -> x:'a -> l:list 'a -> Fact unit
+      (ensures (map f (snoc l x) == snoc (map f l) (f x)))
+let rec map_snoc f x l =
+  match l with
+  | [] -> ()
+  | h::t -> map_snoc f x t
+
+val map_rev : f:('a->Tot 'b) -> l:(list 'a) -> Fact unit
+      (ensures (map f (rev l) == rev (map f l)))
+let rec map_rev f l =
+  match l with
+  | [] -> ()
+  | h::t -> map_snoc f h (rev t); map_rev f t
+
 (* Map for options *)
 
 val option_map : ('a -> Tot 'b) -> option 'a -> Tot (option 'b)
@@ -199,10 +274,10 @@ let fold_example1 () = ()
 *)
 
 (* CH: Without the lambda it works fine *)
-let mult x y = x * y
+let mult_clos x y = x * y
 
 val fold_example1 : unit -> Fact unit 
-      (ensures (fold mult [1;2;3;4] 1 == 24))
+      (ensures (fold mult_clos [1;2;3;4] 1 == 24))
 let fold_example1 () = ()
 
 (* CH: This also completely blows up because of the lambda
@@ -262,8 +337,68 @@ val override_example4 : unit -> Fact unit
       (ensures (fmostlytrue 3 == false))
 let override_example4 () = ()
 
-(* Surprisingly F* manages to prove this *)
+(* Maybe surprisingly, F* manages to prove these *)
 val override_eq : x:'a -> k:'b -> f:('b->Tot 'a) -> Fact unit
       (ensures ((my_override f k x) k == x))
 let override_eq x k f = ()
 
+val override_neq : x1:'a -> x2:'a -> k1:'b -> k2:'b -> f:('b->Tot 'a) -> Pure unit
+      (requires ((f k1 == x1) /\ (k2 =!= k1)))
+      (ensures \r => (my_override f k2 x2) k1 == x1)
+let override_neq x1 x2 k1 k2 f = ()
+
+(* CH: can't inline this because support for lambdas sucks *)
+val closure42 : 'a -> nat -> Tot nat
+let closure42 a n = n + 1
+
+val fold_length : l:list 'a -> Tot nat
+let fold_length l = fold closure42 l 0
+
+(* CH: both cases are supposed to be trivial, but none of them works *)
+val fold_length_correct : l:list 'a -> Fact unit
+      (ensures (fold_length l == length l))
+let rec fold_length_correct l =
+  match l with
+  | [] -> ()
+  | h::t -> fold_length_correct t
+
+val closure43 : ('a->Tot 'b) -> 'a -> list 'b -> Tot (list 'b)
+let closure43 f x l = f x :: l
+
+val fold_map : ('a->Tot 'b) -> list 'a -> Tot (list 'b)
+let fold_map f l= fold (closure43 f) l []
+
+(* CH: again, this should just work *)
+val fold_map_correct : f:('a->Tot 'b) -> l:list 'a -> Fact unit
+      (ensures (fold_map f l == map f l))
+let rec fold_map_correct f l =
+  match l with
+  | [] -> ()
+  | h::t -> fold_map_correct f t
+
+(* Church numerals *)
+
+(* Q: How can I define a type abbreviation? *)
+
+val zero : ('a->'a) -> 'a -> 'a
+let zero f x = x
+
+val one : ('a->'a) -> 'a -> 'a
+let one f x = f x
+
+val two : ('a->'a) -> 'a -> 'a
+let two f x = f (f x)
+
+val succ : (('a->'a) -> 'a -> 'a) -> ('a->'a) -> 'a -> 'a
+let succ n f x = f (n f x)
+
+val plus  : (('a->'a) -> 'a -> 'a) -> (('a->'a) -> 'a -> 'a) -> ('a->'a) -> 'a -> 'a
+let plus n m f x = n f (m f x)
+
+val mult  : (('a->'a) -> 'a -> 'a) -> (('a->'a) -> 'a -> 'a) -> ('a->'a) -> 'a -> 'a
+let mult n m f x = n (m f) x
+
+(* CH: not enough polymorphism to do this in F*?
+val exp  : (('a->'a) -> 'a -> 'a) -> (('a->'a) -> 'a -> 'a) -> ('a->'a) -> 'a -> 'a
+let exp n m f x = m n f x
+*)
