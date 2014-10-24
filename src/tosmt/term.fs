@@ -376,7 +376,8 @@ and mkPrelude z3options =
                 (declare-fun ApplyEE (Term Term) Term)\n\
                 (declare-fun ApplyET (Term Type) Term)\n\
                 (declare-fun ApplyTE (Type Term) Type)\n\
-                (declare-fun ApplyTT (Type Type) Type)\n" in
+                (declare-fun ApplyTT (Type Type) Type)\n\
+                (declare-fun Rank (Term) Int)\n" in
    let constrs : constructors = [("String_const", ["String_const_proj_0", Int_sort], String_sort, 0);
                                  ("Kind_type",  [], Kind_sort, 0);
                                  ("Kind_arrow", ["Kind_arrow_id", Int_sort], Kind_sort, 1);
@@ -424,6 +425,7 @@ let mk_PreType t      = mkApp("PreType", [t])
 let mk_Valid t        = mkApp("Valid",   [t])  
 let mk_HasType v t    = mkApp("HasType", [v;t])
 let mk_HasKind t k    = mkApp("HasKind", [t;k])
+let mk_Rank x         = mkApp("Rank", [x])
 let mk_tester n t     = mkApp("is-"^n,   [t])
 let mk_ApplyTE t e    = mkApp("ApplyTE", [t;e])
 let mk_ApplyTT t t'   = mkApp("ApplyTT", [t;t'])

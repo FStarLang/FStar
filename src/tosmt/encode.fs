@@ -719,20 +719,34 @@ let primitive_type_axioms : lident -> term -> list<decl> =
          Term.Assume(mkForall([Term.boxBool b], [bb], Term.mk_HasType (Term.boxBool b) tt),    Some "bool typing")] in
     let mk_int : term -> decls  = fun tt -> 
         let typing_pred = Term.mk_HasType x tt in
+        let aa = ("a", Int_sort) in
+        let a = mkBoundV aa in
         let bb = ("b", Int_sort) in
         let b = mkBoundV bb in
+        let precedes = Term.mk_Valid <| mkApp("Prims.Precedes", [tt;tt;Term.boxInt a; Term.boxInt b]) in
         [Term.Assume(mkForall([typing_pred], [xx], mkImp(typing_pred, Term.mk_tester "BoxInt" x)),    Some "int inversion");
-         Term.Assume(mkForall([Term.boxInt b], [bb], Term.mk_HasType (Term.boxInt b) tt),    Some "int typing")] in
+         Term.Assume(mkForall([Term.boxInt b], [bb], Term.mk_HasType (Term.boxInt b) tt),    Some "int typing");
+         Term.Assume(mkForall([precedes], [aa;bb], mkIff(precedes, mk_and_l [Term.mkGTE(a, Term.mkInteger 0);
+                                                                             Term.mkGTE(b, Term.mkInteger 0);
+                                                                             Term.mkLT(a, b)])), Some "Well-founded ordering on nats")] in
     let mk_str : term -> decls  = fun tt -> 
         let typing_pred = Term.mk_HasType x tt in
         let bb = ("b", String_sort) in
         let b = mkBoundV bb in
         [Term.Assume(mkForall([typing_pred], [xx], mkImp(typing_pred, Term.mk_tester "BoxString" x)),    Some "string inversion");
          Term.Assume(mkForall([Term.boxString b], [bb], Term.mk_HasType (Term.boxString b) tt),    Some "string typing")] in
+    let mk_precedes : term -> decls = fun tt -> 
+        let aa = "a", Type_sort in 
+        let bb = "b", Type_sort in 
+        let yy = "y", Term_sort in
+        let guard = Term.mk_Valid <| mkApp("Prims.Precedes", [mkBoundV aa; mkBoundV bb; x; mkBoundV yy ]) in
+        let assumption = mkForall([guard], [aa;bb;xx;yy], mkIff(guard, Term.mkLT(mkApp("Rank", [x]), mkApp("Rank", [mkBoundV yy])))) in
+        [Term.Assume(assumption, Some "Definition of Precedes relation")] in
     let prims = [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
                  (Const.string_lid, mk_str);
+                 (Const.precedes_lid, mk_precedes)
                 ] in
     (fun (t:lident) (tt:term) -> 
         match Util.find_opt (fun (l, _) -> lid_equals l t) prims with 

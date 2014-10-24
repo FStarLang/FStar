@@ -35,6 +35,7 @@ let int64_lid  = pconst  "int64"
 let num_lid    = pconst  "number" 
 let float_lid  = pconst  "float" 
 let exn_lid    = pconst  "exn" 
+let precedes_lid = pconst "Precedes"
 
 
 (* Logical connectives and operators *)

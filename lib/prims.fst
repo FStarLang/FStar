@@ -33,7 +33,8 @@ logic type False
 logic type EqTyp : Type => Type => Type                    (* infix binary '==' *)
 logic type Eq2 : #'a:Type => #'b:Type => 'a => 'b => Type  (* infix binary '==' *)
 logic type XOR 'P 'Q = ('P \/ 'Q) /\ ~('P /\ 'Q)
-logic type ITE 'P 'Q 'R = ('P ==> 'Q) /\ (~'P ==> 'R) (* written if/then/else in concrete syntax *)
+logic type ITE 'P 'Q 'R = ('P ==> 'Q) /\ (~'P ==> 'R)         (* written if/then/else in concrete syntax *)
+logic type Precedes : #'a:Type => #'b:Type => 'a => 'b => Type  (* a built-in well-founded partial order over all terms *)
 
 monad_lattice { (* The definition of the PURE effect is fixed; no user should ever change this *)
   PURE::
