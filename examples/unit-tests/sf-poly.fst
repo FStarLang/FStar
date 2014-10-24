@@ -63,7 +63,7 @@ val test_index_option2 : unit -> Fact unit
       (ensures (index_option [[1];[2]] 1 == Some [2]))
 let test_index_option2 () = ()
 
-(* This should succeed *)
+(* CH: This should succeed *)
 val test_index_option3 : unit -> Fact unit
       (ensures (index_option [true] 2 == None))
 let test_index_option3 () = ()

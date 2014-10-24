@@ -50,17 +50,6 @@ let rec app l1 l2 =
   | Nil    -> l2
   | Cons h t -> Cons h (app t l2)
 
-val hd : l : ilist{l =!= Nil} -> Tot int
-let hd l =
-  match l with
-  | Cons h t -> h
-
-val tl : ilist -> Tot ilist
-let tl l =
-  match l with
-  | Nil -> Nil
-  | Cons h t -> t
-
 val test_app1 : unit -> Fact unit
       (ensures (app (Cons 1 (Cons 2 (Cons 3 Nil))) (Cons 4 (Cons 5 Nil))
                 == (Cons 1 (Cons 2 (Cons 3 (Cons 4 (Cons 5 Nil)))))))
@@ -76,17 +65,25 @@ val test_app3 : unit -> Fact unit
                 == (Cons 1 (Cons 2 (Cons 3 Nil))))
 let test_app3 () = ()
 
+val hd : l:ilist{l =!= Nil} -> Tot int
+let hd l =
+  match l with
+  | Cons h t -> h
+
+(* In SF they have tl Nil == nil, but we do better here *)
+val tl : l:ilist{l =!= Nil} -> Tot ilist
+let tl l =
+  match l with
+  | Cons h t -> t
+
 val nil_app : l:ilist -> Fact unit
       (ensures (app Nil l == l))
 let nil_app l = ()
 
-(* NS: This should fail, of course. It's not true for Nil *)
-val tl_length_pred : l:ilist -> Fact unit
+(* CH: I have no clue why this still fails *)
+val tl_length_pred : l:ilist{l =!= Nil} -> Fact unit
       (ensures ((length l) - 1 == length (tl l)))
-let tl_length_pred l =
-  match l with
-  | Nil -> ()
-  | Cons h t -> ()
+let tl_length_pred l = ()
 
 val tl_length_pred_fixed : l:ilist{is_Cons l} -> Fact unit
       (ensures ((length l) - 1 == length (tl l)))
