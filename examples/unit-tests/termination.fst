@@ -1,3 +1,5 @@
+(* Expect 3 intentional failures *)
+
 (*
    Copyright 2008-2014 Nikhil Swamy, Chantal Keller, Microsoft Research and Inria
 
@@ -15,134 +17,92 @@
 *)
 module Termination
 
+val factorial: nat -> Tot nat
+let rec factorial x =
+  match x with
+    | 0 -> 1
+    | _ -> (x + factorial (x - 1))
 
-(***** Factorial *****)
+val fibonacci: nat -> Tot nat
+let rec fibonacci n =
+  if n<=1 then 1
+  else fibonacci (n - 1) + fibonacci (n - 2)
 
-(*
-  val factorial^x: x:int{x >= 0} -> y:int{y >= 0}
+val ackermann: m:nat -> n:nat -> Tot nat
+let rec ackermann m n =
+  if m=0 then n + 1
+  else if n = 0 then ackermann (m - 1) 1
+  else ackermann (m - 1) (ackermann m (n - 1))
 
-  Terminates thanks to the T-Fix rule:
+val ackermann_bad: m:int -> n:int -> Tot int
+let rec ackermann_bad m n = (* expected failure *)
+  if m=0 then n + 1
+  else if n = 0 then ackermann_bad (m - 1) 1
+  else ackermann_bad (m - 1) (ackermann_bad m (n - 1))
 
-  t == z:int{z >= 0}
-  e == if x = 0 then 1 else x * (factorial (x-1))
+val length: list 'a -> Tot nat
+let rec length l = match l with
+  | [] -> 0
+  | _::tl -> 1 + length tl
 
-   S,G, x:int{x >= 0}; factorial:(y:int{y >= 0 /\ y < x}) --> t |-mu e : t
- --------------------------------------------------------------------------- [T-Fix]
-   S;G |-mu fix (factorial^x: x:int{x >= 0} -> t) x = e : t
-*)
-val factorial: x:int{x >= 0} -> y:int{y >= 0}
-let rec factorial x = if x = 0 then 1 else x * (factorial (x-1))
+val length_bad: list 'a -> Tot nat
+let rec length_bad l = match l with (* expect failure *)
+  | [] -> 0
+  | _::tl -> 1 + length_bad l
 
-
-
-
-
-
-
-
-
-
+val half_length: list 'a -> Tot nat
+let rec half_length l = match l with
+  | [] -> 0
+  | [_] -> 0
+  | _::_::tl -> 1 + half_length tl (* testing transitivity of ordering *)
 
 
 (***** Coq-Club example *****)
+val sumto: i:nat -> f:(x:nat{x <= i} -> Tot nat) -> Tot nat
+let rec sumto i f =
+  if i = 0
+  then f 0
+  else f i + sumto (i-1) f
 
-(*
-  val sumto^i: i:int{i >= 0} -> f:(x:int{0 <= x /\ x <= i} -> y:int{y >= 0}) -> z:int{z >= 0}
+val strangeZero: nat -> Tot nat
+let rec strangeZero v =
+  if v = 0
+  then 0
+  else sumto (v-1) strangeZero
 
-  Terminates thanks to the T-Fix rule:
-
-  t == f:(x:int{0 <= x /\ x <= i} -> y:int{y >= 0}) -> z:int{z >= 0}
-  e == fun f -> if i = 0 then f 0 else (f i) + (sumto (i-1) f)
-
-   S,G, i:int{i >= 0}; sumto:(j:int{j >= 0 /\ j < i}) --> t |-mu e : t
- ----------------------------------------------------------------------- [T-Fix]
-   S;G |-mu fix (sumto^i: i:int{i >= 0} -> t) i = e : t
-*)
-val sumto: i:int{i >= 0} -> f:(x:int{0 <= x /\ x <= i} -> y:int{y >= 0}) -> z:int{z >= 0}
-let rec sumto i f = 
-  if i = 0 
-  then f 0 
-  else (f i) + (sumto (i-1) f)
-
-
-(*
-  val strangeZero^v: v:int{v >= 0} -> u:int{u = 0}
-
-  Terminates thanks to the T-Fix rule and the typing given to sumto:
-
-  t == u:int{u = 0}
-  e == if v = 0 then 0 else sumto (v-1) strangeZero
-
-   S,G, v:int{v >= 0}; strangeZero:(w:int{w >= 0 /\ w < v}) --> t |-mu e : t
- ----------------------------------------------------------------------------- [T-Fix]
-   S;G |-mu fix (strangeZero^v: v:int{v >= 0} -> t) v = e : t
-
-  The premise is true because:
-
-   S;G, v:int{v >= 0}; strangeZero:(w:int{w >= 0 /\ w < v}) --> t |-mu sumto (v-1) strangeZero : z:int{z >= 0}
-
-  since the precondition of the second argument of sumto is verified:
-   {0 <= w /\ w <= v-1}
-*)
-val strangeZero: v:int{v >= 0} -> u:int{u == 0}
-let rec strangeZero v = if v = 0 then 0 else sumto (v-1) strangeZero
-
-
-
-
-
-
-
-
-
-
-
-
-
-(***** Map function *****)
-
-(*
-  val mapTotal : [d:'a] -> l:list 'a{forall x ∈ l. x < d} -> (y:'a{y < d} -> 'b) -> list 'b
-*)
-val mapTotal : list 'a -> ('a -> 'b) -> list 'b
-let rec mapTotal l f = match l with
+val strangeZeroBad: nat -> Tot nat
+let rec strangeZeroBad v = (* expect failure *)
+  if v = 0
+  then 0
+  else sumto v strangeZeroBad
+    
+val map : ('a -> Tot 'b) -> list 'a -> list 'b
+let rec map f l = match l with
   | [] -> []
-  | hd::tl -> (f hd)::(mapTotal tl f)
+  | hd::tl -> f hd::map f tl
+
+val mem: 'a -> list 'a -> Tot bool
+let rec mem a l = match l with
+  | [] -> false
+  | hd::tl -> hd=a || mem a tl
+
+val move_refinement: 'a:Type
+                   -> 'P:('a => Type) 
+                   -> l:list 'a{forall x. mem x l ==> 'P x} 
+                   -> Tot (list (x:'a{'P x}))
+let rec move_refinement 'a 'P l = match l with 
+  | [] -> [] 
+  | hd::tl -> hd::(move_refinement 'a 'P tl)
 
 
+(* type T 'a = *)
+(*   | Leaf : 'a -> T 'a *)
+(*   | Node : list (T 'a) -> T 'a *)
 
-type T 'a =
-  | Leaf : 'a -> T 'a
-  | Node : list (T 'a) -> T 'a
-
-
-(*
-  val treeMap^v: v:T 'a -> ('a -> 'b) -> T 'b
-
-  Terminates thanks to the T-Fix rule and the typing given to mapTotal:
-
-  t == ('a -> 'b) -> T 'b
-  e == fun f -> ...
-
-   S,G, v:T 'a; treeMap:(w:T 'a{w < v}) --> t |-mu e : t
- --------------------------------------------------------- [T-Fix]
-   S;G |-mu fix (treeMap^v: v:T 'a -> t) v = e : t
-
-  because:
-
-   S,G, v:T 'a; treeMap:(w:T 'a{w < v}) --> t |-mu mapTotal [v] l (fun u -> treeMap u f) : list (T 'b)
-
-  since:
-    l:(list (T 'a)){forall x ∈ l. x < v}            (this is the subterm order on trees)
-    S,G, v:T 'a; treeMap:(w:T 'a{w < v}) --> t |-mu fun u -> treeMap u f : y:(T 'a){y < v} -> T 'b
-*)
-val treeMap : T 'a -> ('a -> 'b) -> T 'b
-let rec treeMap v f = match v with
-  | Leaf a -> Leaf (f a)
-  | Node l -> Node (mapTotal l (fun u -> treeMap u f))
-
-
-
-(* TODO:
-   - type treeMap like mapTotal
-   - rephrase in terms of measures rather than [d:'a] *)
+(* Doesn't work yet ... *)
+(* val treeMap : ('a -> Tot 'b) -> T 'a -> Tot (T 'b) *)
+(* let rec treeMap f v = match v with *)
+(*   | Leaf a -> Leaf (f a) *)
+(*   | Node l ->  *)
+(*     let l = move_refinement 'a (fun a => Precedes (LexPair f a) (LexPair f v)) l in *)
+(*     Node (map (treeMap f) l) (\* doesn't work yet *\) *)

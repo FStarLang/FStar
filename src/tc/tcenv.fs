@@ -81,6 +81,7 @@ type env = {
   instantiate_vargs:bool;        (* instantiate implicit value agruments? default=true *)
   lattice:lattice;               (* monad lattice *)
   generalize:bool;               (* generalize let-binding *)
+  letrecs:list<(lbname * typ)>   (* mutually recursive names and their types (for termination checking) *)
 } 
 and solver_t = {
     init: env -> unit;
@@ -121,6 +122,7 @@ let initial_env solver module_lid =
     instantiate_vargs=true;
     lattice={decls=[]; order=[]; joins=[]};
     generalize=true;
+    letrecs=[]
   }
 
 let monad_decl_opt env l = 

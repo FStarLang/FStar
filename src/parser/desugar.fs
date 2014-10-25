@@ -968,7 +968,7 @@ and desugar_type_binder env b = match b.b with
   | _ -> raise (Error("Unexpected domain of an arrow or sum (expected a kind)", b.brange))
 
 let mk_data_ops env = function
-  | Sig_datacon(lid, t, _, _, _) when not env.iface ->
+  | Sig_datacon(lid, t, _, _, _) when (not env.iface && not (lid_equals lid Const.lexpair_lid)) ->
     let formals, tconstr = match Util.function_formals t with
         | Some(args, cod) -> args, Util.comp_result cod
         | _ -> [], t in

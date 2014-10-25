@@ -58,6 +58,7 @@ type env = {
   instantiate_vargs:bool;        (* instantiate implicit term arguments? default=true *)
   lattice:lattice;               (* monad lattice *)
   generalize:bool;               (* should we generalize let bindings? *)
+  letrecs:list<(lbname * typ)>   (* mutually recursive names and their types (for termination checking) *)
 }
 and solver_t = {
     init: env -> unit;

@@ -381,9 +381,10 @@ and tc_value env e : exp * comp =
     value_check_expected_typ env ({e with tk=t}) (Inl t)
 
   | Exp_abs(bs, body) ->  (* This is the dual of the treatment of application ... see the Exp_app case below. *)
-    let fail (x:option<'a>) (t:typ) : 'a = raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function t top, top.pos)) in
+    let fail (_x:option<'a>) (t:typ) : 'a = raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function t top, top.pos)) in
     let expected_function_typ t0 = match t0 with 
         | None -> (* no expected type; just build a function type from the binders in the term *)
+            let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
             let bs, envbody, g = tc_binders env bs in
             None, bs, None, envbody, g
 
@@ -393,11 +394,15 @@ and tc_value env e : exp * comp =
                match t.n with 
                 | Typ_uvar _
                 | Typ_app({n=Typ_uvar _}, _) -> (* expected a uvar; build a function type from the term and unify with it *)
+                  let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
                   let bs, envbody, g = tc_binders env bs in 
                   let envbody, _ = Env.clear_expected_typ envbody in
                   Some t, bs, None, envbody, g
 
-                | Typ_fun(bs', c) -> (* the main interesting bit here is that the expected type may have additional type binders *)
+                | Typ_fun(bs', c) -> 
+                    (* Two main interesting bits here;
+                        1. the expected type may have additional type binders
+                        2. If the function is a let-rec, and the expected type is pure, then we need to add termination checks. *)
                   
                   let rec tc_binders (out, env, g, subst) bs_annot bs = match bs_annot, bs with
                     | [], [] -> List.rev out, env, g, Util.subst_comp subst c 
@@ -431,7 +436,40 @@ and tc_value env e : exp * comp =
                     
                     | _ -> raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function t top, top.pos)) in
 
+                 let mk_letrec_environment actuals env = match env.letrecs with 
+                    | [] -> env
+                    | letrecs ->
+                     let r = Env.get_range env in
+                     let env = {env with letrecs=[]} in 
+                     let mk_lex_tuple args = 
+                        let lexpair = Util.fvar Const.lexpair_lid r in
+                        let top = Util.fvar Const.lextop_lid r in
+                        List.fold_right (fun arg out -> match arg with 
+                            | Inl _, _ -> out (* skip the type arguments from the ordering *)
+                            | _ -> Syntax.mk_Exp_app(lexpair, [arg; varg out]) tun r) args top in
+                     let actual_args = Util.args_of_binders actuals |> snd |> mk_lex_tuple in
+                     let precedes = Util.ftv Const.precedes_lid kun in
+                     let letrecs = letrecs |> List.map (fun (l, t) -> match t.n with 
+                        | Typ_fun(bs, c) -> 
+                          let t = match Util.prefix bs with 
+                            | bs, (Inr x, imp) -> 
+                              let y = Util.gen_bvar_p x.p x.sort in
+                              let formal_args = Util.args_of_binders (bs@[v_binder y]) |> snd |> mk_lex_tuple in
+                              let refined_domain = mk_Typ_refine(y, Syntax.mk_Typ_app(precedes, [varg formal_args; varg actual_args]) kun r) kun r in
+                              let bs = bs@[Inr({x with sort=refined_domain}), imp] in
+                              let t' = mk_Typ_fun(bs, c) kun r in
+                              if debug env Options.Low
+                              then Util.fprint3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n" 
+                                    (Print.lbname_to_string l) (Print.typ_to_string t) (Print.typ_to_string t');
+                              let t', _, _ = tc_typ (Tc.Env.clear_expected_typ env |> fst) t' in
+                              t'
+                            | _ -> failwith "Impossible" in
+                          (l, t)
+                        | _ -> failwith "Impossible") in
+                     letrecs |> List.fold_left (fun env (x,t) -> Env.push_local_binding env (binding_of_lb x t)) env in
+
                  let bs, envbody, g, c = tc_binders ([], env, Trivial, []) bs' bs in
+                 let envbody = if !Options.verify then mk_letrec_environment bs envbody else envbody in
                  let envbody = Tc.Env.set_expected_typ envbody (Util.comp_result c) in
                  Some t, bs, Some c, envbody, g
 
@@ -490,7 +528,6 @@ and tc_exp env e : exp * comp =
 
         | _ -> 
         let env1, topt = Env.clear_expected_typ env in 
-        let t = Env.expected_typ env in 
     
         (* The main subtlety with bidirectional typing is here:
             Consider typing (e1, e2) as (x:t * t')
@@ -793,28 +830,33 @@ and tc_exp env e : exp * comp =
     let env = instantiate_both env in
     let env0, topt = Env.clear_expected_typ env in 
     let is_inner_let = lbs |> Util.for_some (function (Inl _, _, _) -> true (* inner let *) | _ -> false) in
+    (* build and environment with recursively bound names. refining the types of those names with decreased clauses is done in Exp_abs *)
     let lbs, env' = lbs |> List.fold_left (fun (xts, env) (x, t, e) -> 
       let e, t = Tc.Util.extract_lb_annotation true env t e in //NS: pull inline annotation to force the ML monad here; remove once we have better termination checks
       let t = 
         if not (is_inner_let) && not(env.generalize)
         then t (* t is already checked *) 
         else tc_typ_check_trivial env0 t ktype |> norm_t env in
-      let tinst = t in
-      let env = Env.push_local_binding env (binding_of_lb x tinst) in
-      (x, t, e)::xts, env) ([], env0)  in 
+      let env = if Util.is_pure_function t && !Options.verify (* store the let rec names separately for termination checks *)
+                then {env with letrecs=(x,t)::env.letrecs}
+                else Env.push_local_binding env (binding_of_lb x t) in
+      (x, t, e)::xts, env) ([],env)  in 
+    
     let lbs = (lbs |> List.rev) |> List.map (fun (x, t, e) -> 
-      let env' = Env.set_expected_typ env' t in
-      let e, t = no_guard env <| tc_total_exp env' e in 
-      (x, t, e)) in  
+        let env' = Env.set_expected_typ env' t in
+        let e, t = no_guard env <| tc_total_exp env' e in 
+        (x, t, e)) in  
+
     let lbs = 
         if not env.generalize || is_inner_let
         then lbs
-        else let ecs = Tc.Util.generalize env (lbs |> List.map (fun (x, t, e) -> (x, e, Util.total_comp t <| range_of_lb (x,t,e)))) in //fishy
+        else let ecs = Tc.Util.generalize env (lbs |> List.map (fun (x, t, e) -> (x, e, Util.total_comp t <| range_of_lb (x,t,e)))) in 
              List.map (fun (x, e, c) -> x, Util.comp_result c, e) ecs in
+
     if not is_inner_let (* the body is just unit *)
     then let cres = Util.total_comp Tc.Util.t_unit top.pos in
          w cres <| mk_Exp_let((true, lbs), {e1 with tk=Tc.Util.t_unit}), cres
-    else let bindings, env = lbs |> List.fold_left (fun (bindings, env) (x, t, e) -> 
+    else let bindings, env = lbs |> List.fold_left (fun (bindings, env) (x, t, _) -> 
              let b = binding_of_lb x t in
              let env = Env.push_local_binding env b in
              b::bindings, env) ([], env) in

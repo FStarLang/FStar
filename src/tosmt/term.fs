@@ -205,7 +205,7 @@ let constructor_to_decl (name, projectors, sort, id) =
     let projs = projectors |> List.mapi (fun i (name, s) -> 
         let cproj_app = mkApp(name, [capp]) in
         [DeclFun(name, [sort], s, Some "Projector");
-         Assume(mkForall([capp(* cproj_app ... specifically omitting pattern *)], bvars, mkEq(cproj_app, bvar i s)), Some "Projection inverse")]) |> List.flatten in
+         Assume(mkForall([capp], bvars, mkEq(cproj_app, bvar i s)), Some "Projection inverse")]) |> List.flatten in
 //    let disc_proj = Assume(mkForall([], [xx], mkImp(disc_app, 
 //                                                    mkEq(mkBoundV xx, 
 //                                                         mkApp(name, projectors |> List.map (fun (proj, s) -> mkApp(proj, [mkBoundV xx])))))), Some "Disc/Proj correspondence") in
@@ -377,7 +377,14 @@ and mkPrelude z3options =
                 (declare-fun ApplyET (Term Type) Term)\n\
                 (declare-fun ApplyTE (Type Term) Type)\n\
                 (declare-fun ApplyTT (Type Type) Type)\n\
-                (declare-fun Rank (Term) Int)\n" in
+                (declare-fun Rank (Term) Int)\n\
+                (declare-fun Precedes (Term Term) Type)\n\
+                (assert (forall ((t1 Term) (t2 Term))\n\
+                     (! (iff (Valid (Precedes t1 t2)) \n\
+                             (< (Rank t1) (Rank t2)))\n\
+                        :pattern ((Precedes t1 t2)))))\n\
+                (define-fun Prims.Precedes ((a Type) (b Type) (t1 Term) (t2 Term)) Type\n\
+                         (Precedes t1 t2))\n" in
    let constrs : constructors = [("String_const", ["String_const_proj_0", Int_sort], String_sort, 0);
                                  ("Kind_type",  [], Kind_sort, 0);
                                  ("Kind_arrow", ["Kind_arrow_id", Int_sort], Kind_sort, 1);
@@ -390,9 +397,17 @@ and mkPrelude z3options =
                                  ("BoxInt",     ["BoxInt_proj_0", Int_sort], Term_sort, 1);
                                  ("BoxBool",    ["BoxBool_proj_0", Bool_sort], Term_sort, 2);
                                  ("BoxString",  ["BoxString_proj_0", String_sort], Term_sort, 3);
-                                 ("BoxRef",     ["BoxRef_proj_0", Ref_sort], Term_sort, 4)] in
+                                 ("BoxRef",     ["BoxRef_proj_0", Ref_sort], Term_sort, 4);
+                                 ("LexPair",    [("LexPair_0", Term_sort); ("LexPair_1", Term_sort)], Term_sort, 5)] in
    let bcons = constrs |> List.collect constructor_to_decl |> List.map (declToSmt z3options) |> String.concat "\n" in
-   basic ^ bcons 
+   let lex_ordering = "\n(define-fun is-Prims.LexPair ((t Term)) Bool \n\
+                                   (is-LexPair t))\n\
+                       (assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
+                                    (iff (Valid (Precedes (LexPair x1 x2) (LexPair y1 y2)))\n\
+                                         (or (Valid (Precedes x1 y1))\n\
+                                             (and (= x1 y1)\n\
+                                                  (Valid (Precedes x2 y2)))))))\n" in
+   basic ^ bcons ^ lex_ordering
 
 let mk_Kind_type        = mkApp("Kind_type", [])
 let mk_Typ_app t1 t2    = mkApp("Typ_app", [t1;t2])
@@ -432,6 +447,8 @@ let mk_ApplyTT t t'   = mkApp("ApplyTT", [t;t'])
 let mk_ApplyET e t    = mkApp("ApplyET", [e;t])
 let mk_ApplyEE e e'   = mkApp("ApplyEE", [e;e'])
 let mk_String_const i = mkApp("String_const", [ mkInteger i ])
+let mk_Precedes x1 x2 = mkApp("Precedes", [x1;x2]) |> mk_Valid
+let mk_LexPair x1 x2  = mkApp("LexPair", [x1;x2])
 
 let mk_and_opt p1 p2 = match p1, p2  with
   | Some p1, Some p2 -> Some (mkAnd(p1, p2))

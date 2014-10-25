@@ -59,7 +59,9 @@ let start_process (prog:string) (args:string) (cond:string -> bool) : proc =
                 else with_sig(fun () -> 
                            ignore <| driverOutput.Append(args.Data);
                            ignore <| driverOutput.Append("\n");
-                           if cond args.Data
+//                           if null = args.Data
+//                           then (print_string <| driverOutput.ToString(); failwith ("BAD OUTPUT FROM " ^ prog));
+                           if null = args.Data || cond args.Data
                            then System.Threading.Monitor.Pulse(signal))));
         proc.StartInfo <- startInfo;
         proc.Start() |> ignore;

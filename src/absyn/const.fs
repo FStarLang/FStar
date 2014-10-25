@@ -36,7 +36,8 @@ let num_lid    = pconst  "number"
 let float_lid  = pconst  "float" 
 let exn_lid    = pconst  "exn" 
 let precedes_lid = pconst "Precedes"
-
+let lexpair_lid  = pconst "LexPair"
+let lextop_lid   = pconst "LexTop"
 
 (* Logical connectives and operators *)
 let kunary k k'              = mk_Kind_arrow([Inl <| null_bvar k, false], k') dummyRange

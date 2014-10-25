@@ -1,3 +1,4 @@
+(* Expect 5 intentional failures *)
 module Unit1
 open Prims.PURE
 open Prims.ALL
@@ -138,19 +139,33 @@ val test_postcondition_label: x:int -> Pure int (requires True) (ensures \y => y
 let test_postcondition_label x = x //should fail
 
 
-val repeat : int -> int -> Tot int
+(* Expected: should fails termination check *)
+val repeat_diverge : int -> int -> Tot int
+let rec repeat_diverge n count =
+  match count with
+  | 0 -> 0
+  | _ -> repeat_diverge n (count-1)
+
+val repeat : int -> nat -> Tot int
 let rec repeat n count =
   match count with
   | 0 -> 0
   | _ -> repeat n (count-1)
 
-type nat = 
-  | O
-  | S : nat -> nat
 
-val minus : nat -> nat -> Tot nat
-let rec minus n m : nat = 
+type inat = 
+  | O
+  | S : inat -> inat
+
+val minus : inat -> inat -> Tot inat
+let rec minus n m : inat = 
   match n, m with
   | O   , _    -> O
   | S _ , O    -> n
   | S n', S m' -> minus n' m'
+
+val ackermann: m:nat -> n:nat -> Tot nat
+let rec ackermann m n = 
+  if m=0 then n + 1
+  else if n = 0 then ackermann (m - 1) 1
+  else ackermann (m - 1) (ackermann m (n - 1))

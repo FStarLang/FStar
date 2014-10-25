@@ -310,8 +310,17 @@ and encode_binders (bs:Syntax.binders) (env:env_t) : (list<var>       (* transla
     List.rev names
 
 and encode_typ_pred (t:typ) (env:env_t) (e:term) : term = 
-    let t, ex = encode_typ_term t env in 
-    close_ex ex (mk_HasType e t)
+    let t = Util.compress_typ t in 
+    match t.n with 
+        | Typ_refine(x, f) -> 
+          let base_pred = encode_typ_pred x.sort env e in 
+          let env' = push_term_var env x.v e in
+          let refinement = encode_formula f env' in
+          Term.mkAnd(base_pred, refinement) 
+
+        | _ -> 
+            let t, ex = encode_typ_term t env in 
+            close_ex ex (mk_HasType e t)
 
 and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects t to be in normal form already *)
                                            * ex_vars) (* new names and guards generated for this type, which must be bound in the caller's scope *) = 
@@ -353,7 +362,7 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
         let base_pred = encode_typ_pred x.sort env xtm in 
         let env' = push_term_var env x.v xtm in
         let refinement = encode_formula f env' in
-        ttm, [(tsym, Term.mkForall([x_has_t], [xsym], mkImp(x_has_t, Term.mkAnd(base_pred, refinement))))]
+        ttm, [(tsym, Term.mkForall([x_has_t], [xsym], mkIff(x_has_t, Term.mkAnd(base_pred, refinement))))]
 
 
       | Typ_uvar _ ->
@@ -449,6 +458,12 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars) =
 
             | _ -> failwith "Impossible"
         end
+
+      | Exp_app({n=Exp_fvar(l, _)}, [(Inl _, _); (Inl _, _); (Inr v1, _); (Inr v2, _)]) when (lid_equals l.v Const.lexpair_lid) -> 
+         let v1, vars1 = encode_exp v1 env in 
+         let v2, vars2 = encode_exp v2 env in
+         Term.mk_LexPair v1 v2, vars1@vars2
+
 
       | Exp_app(head, args) -> 
         let args, vars = encode_args args env in
@@ -735,18 +750,10 @@ let primitive_type_axioms : lident -> term -> list<decl> =
         let b = mkBoundV bb in
         [Term.Assume(mkForall([typing_pred], [xx], mkImp(typing_pred, Term.mk_tester "BoxString" x)),    Some "string inversion");
          Term.Assume(mkForall([Term.boxString b], [bb], Term.mk_HasType (Term.boxString b) tt),    Some "string typing")] in
-    let mk_precedes : term -> decls = fun tt -> 
-        let aa = "a", Type_sort in 
-        let bb = "b", Type_sort in 
-        let yy = "y", Term_sort in
-        let guard = Term.mk_Valid <| mkApp("Prims.Precedes", [mkBoundV aa; mkBoundV bb; x; mkBoundV yy ]) in
-        let assumption = mkForall([guard], [aa;bb;xx;yy], mkIff(guard, Term.mkLT(mkApp("Rank", [x]), mkApp("Rank", [mkBoundV yy])))) in
-        [Term.Assume(assumption, Some "Definition of Precedes relation")] in
     let prims = [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
                  (Const.string_lid, mk_str);
-                 (Const.precedes_lid, mk_precedes)
                 ] in
     (fun (t:lident) (tt:term) -> 
         match Util.find_opt (fun (l, _) -> lid_equals l t) prims with 
@@ -798,6 +805,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
      | Sig_assume(l, f, _, _) -> 
         let g = [Term.Assume(encode_formula f env, Some (format1 "Assumption: %s" (Print.sli l)))] in 
         g, env
+
+     | Sig_tycon(t, tps, k, _, datas, quals, _) when (lid_equals t Const.precedes_lid) -> 
+        let tname, ttok, env = gen_free_tvar env t in
+        [], env
                
      | Sig_tycon(t, tps, k, _, datas, quals, _) -> 
         let constructor_or_logic_type_decl c = 
@@ -812,7 +823,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
             if List.length datas = 0
             then []
             else let xxsym, xx = fresh_bvar "x" Term_sort in
-                    let data_ax = datas |> List.fold_left (fun out l -> mkOr(out, mk_data_tester env l xx)) mkFalse in
+                 let data_ax = datas |> List.fold_left (fun out l -> mkOr(out, mk_data_tester env l xx)) mkFalse in
                     [Term.Assume(mkForall([mk_HasType xx tapp], (xxsym, Term_sort)::vars,
                                         mkImp(mk_HasType xx tapp, data_ax)), Some "inversion axiom")] in
 
@@ -854,6 +865,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
                 @(projection_axioms tapp vars) in
         g, env
 
+    | Sig_datacon(d, _, _, _, _) when (lid_equals d Const.lexpair_lid) -> [], env 
+
     | Sig_datacon(d, t, _, quals, _) -> 
         let ddconstrsym, ddtok, env = gen_free_var env d in //Print.sli d in
         let formals, t_res = match Util.function_formals t with 
@@ -866,7 +879,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
         let datacons = (ddconstrsym, projectors, Term_sort, varops.next_id()) |> Term.constructor_to_decl in
         let app = mk_ApplyE ddtok vars in
         let guard = Term.mk_and_l guards in 
-        let dapp =  mkApp(ddconstrsym, List.map mkBoundV vars) in
+        let xvars = List.map mkBoundV vars in
+        let dapp =  mkApp(ddconstrsym, xvars) in
         let ty_pred = encode_typ_pred t_res env' dapp in
         let index_injectivity = match (Util.compress_typ t_res).n with 
             | Typ_app _ -> 
@@ -892,10 +906,35 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
                     [Term.Assume(Term.mkForall([x_hastype_t], x::tvars@vvars, Term.mkImp(mkAnd(x_hastype_t, x_is_d), close_ex ex_vars (mkEq(t, t_res_subst)))), Some "index injectivity")]
                 end
             | _ -> [] in
+        let precedence = 
+            if lid_equals d Const.lexpair_lid
+            then let vars', guards', env', _ = encode_binders formals env' in
+                 let yvars = List.map mkBoundV vars' in
+                 let dapp' = mkApp(ddconstrsym, yvars) in
+                 let [_; _; x1; x2] = xvars in
+                 let [_; _; y1; y2] = yvars in  
+                 let prec = mkForall([Term.mk_Precedes dapp dapp'], 
+                                     vars@vars', 
+                                     mkImp(mk_and_l (guards@guards'), 
+                                           mkIff(Term.mk_Precedes dapp dapp', 
+                                                 mkOr(Term.mk_Precedes x1 y1, 
+                                                      mkAnd(Term.mkEq(x1, y1), Term.mk_Precedes x2 y2))))) in
+                Term.Assume(prec, Some "Ordering on lex pairs") 
+            else if lid_equals d Const.lextop_lid
+            then let x = varops.fresh "x", Term_sort in
+                 let xtm = mkBoundV x in
+                 Term.Assume(mkForall([Term.mk_Precedes xtm dapp], [x], mkImp(mk_tester "LexPair" xtm, Term.mk_Precedes xtm dapp)), Some "lextop is top")
+            else (* subterm ordering *)
+                let prec = vars |> List.collect (fun v -> match snd v with 
+                    | Type_sort -> []
+                    | Term_sort -> [Term.mk_Precedes (mkBoundV v) dapp]) in
+                Term.Assume(mkForall([ty_pred], vars, mkImp(guard, mk_and_l prec)), Some "subterm ordering") in
+
         let g = [Term.DeclFun(Term.freeV_sym ddtok, [], Term_sort, Some (format1 "data constructor proxy: %s" (Print.sli d)));
                  Term.Assume(mkForall([app], vars, 
                                        mkEq(app, dapp)), Some "equality for proxy");
-                 Term.Assume(mkForall([ty_pred], vars, mkIff(guard, ty_pred)), Some "data constructor typing")]@index_injectivity in
+                 Term.Assume(mkForall([ty_pred], vars, mkIff(guard, ty_pred)), Some "data constructor typing");
+                 precedence]@index_injectivity in
         datacons@g, env
 
     | Sig_bundle(ses, _, _) -> 

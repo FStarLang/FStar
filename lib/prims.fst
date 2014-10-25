@@ -275,6 +275,10 @@ monad_lattice { (* STATE a wp wlp *)
   EXN   ~> ALL   = (fun ('a:Type) ('wp:EXN.WP 'a) ('p:ALL.Post 'a) (h:heap) => 'wp (fun ra => 'p ra h))
 }
 
+type lex_t =
+  | LexPair : 'a:Type -> 'b:Type -> 'a -> 'b -> lex_t
+  | LexTop : lex_t
+
 type Tuple2 'a 'b =
   | MkTuple2: _1:'a
            -> _2:'b

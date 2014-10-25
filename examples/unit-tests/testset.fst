@@ -1,3 +1,4 @@
+(* Expect 3 intentional failures *)
 module TestSet
 assume type elt
 assume logic val A : elt
