@@ -449,7 +449,9 @@ and tc_value env e : exp * comp =
                             | _ -> Syntax.mk_Exp_app(lexpair, [arg; varg out]) tun r) args top in
                      let actual_args = Util.args_of_binders actuals |> snd |> mk_lex_tuple in
                      let precedes = Util.ftv Const.precedes_lid kun in
-                     let letrecs = letrecs |> List.map (fun (l, t) -> match t.n with 
+                     let letrecs = letrecs |> List.map (fun (l, t) -> 
+                        let t = Util.alpha_typ t in
+                        match (Util.compress_typ t).n with 
                         | Typ_fun(bs, c) -> 
                           let t = match Util.prefix bs with 
                             | bs, (Inr x, imp) -> 

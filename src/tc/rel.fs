@@ -95,6 +95,11 @@ let rec close bs f = match bs with
     | (Inr x, _)::rest -> 
       mk_Typ_app(Util.tforall, [targ <| close rest f]) ktype f.pos
 
+let close_guard binders g = match g with 
+    | Trivial -> g
+    | NonTrivial f -> close binders 
+                    (mk_Typ_lam(binders, f) (mk_Kind_arrow(binders, f.tk) f.pos) f.pos) |> NonTrivial
+        
 //////////////////////////////////////////////////////////////////////////
 //Making substitutions for alpha-renaming 
 //////////////////////////////////////////////////////////////////////////
@@ -667,8 +672,8 @@ and project (env:Tc.Env.env) (probs:worklist) (i:int) (p:im_or_proj_t) : solutio
             if not <| matches pi then giveup_noex probs
             else let g_xs, g_ps = gs xi.sort in 
                  let xi = btvar_to_typ xi in
-                 let proj = mk_Typ_lam(xs, mk_Typ_app(xi, g_xs) ktype r) (snd u) r in
-                 let sub = TProb(EQ, mk_Typ_app(xi, g_ps) ktype r, h <| List.map snd qs) in
+                 let proj = mk_Typ_lam(xs, mk_Typ_app'(xi, g_xs) ktype r) (snd u) r in
+                 let sub = TProb(EQ, mk_Typ_app'(xi, g_ps) ktype r, h <| List.map snd qs) in
                  if debug env High then Util.fprint1 "Projecting %s" (Print.typ_to_string proj);
                  let probs = extend_subst (UT(u, proj)) probs in
                  solve false env ({probs with attempting=sub::probs.attempting})
@@ -915,7 +920,18 @@ and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist
         solve_binders env [x1] [x2] rel (TProb(rel, t1, t2)) probs 
         (fun subst subprobs -> 
             match rel with
-               | EQ -> solve false env (attempt (TProb(rel, phi1, Util.subst_typ subst phi2)::subprobs) probs)
+               | EQ -> 
+                 let sol = solve_t false env EQ phi1 (Util.subst_typ subst phi2) empty_worklist  in
+                 begin match sol with 
+                    | Success (subst, guard_f) -> 
+                      let probs = extend_subst' subst probs |> guard env false (close_guard [x1] guard_f) in
+                      solve false env (attempt subprobs probs)
+
+                    | Failed reasons -> 
+                      giveup env "Failed to prove equality of refinement predicates" (TProb(EQ, phi1, phi2)) probs
+                  end
+
+               //solve false env (attempt (TProb(rel, phi1, Util.subst_typ subst phi2)::subprobs) probs)
                | SUB -> (* but if either phi1 or phi2 are patterns, why not solve it by equating? *)
                 let g = NonTrivial <| mk_Typ_lam([x1], Util.mk_imp phi1 (Util.subst_typ subst phi2)) (mk_Kind_arrow([x1], ktype) r) r in
                 let probs = guard env top g probs in
