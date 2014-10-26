@@ -147,6 +147,15 @@ let rec beq_nat n m =
             | S m' -> beq_nat n' m'
             end
 
+(* CH: This equivalent definition causes F* to blow up
+val beq_nat : nat -> nat -> Tot mbool
+let rec beq_nat n m =
+  match n, m with
+  | O   , O    -> MTrue
+  | S n', S m' -> beq_nat n' m'
+  | _   , _    -> MFalse
+*)
+
 val ble_nat : nat -> nat -> Tot mbool
 let rec ble_nat n m =
   match n with
@@ -155,6 +164,15 @@ let rec ble_nat n m =
       match m with
       | O -> MFalse
       | S m' -> ble_nat n' m'
+
+(* CH: This equivalent definition also causes F* to blow up, same problem
+val ble_nat : nat -> nat -> Tot mbool
+let rec ble_nat n m =
+  match n, m with
+  | O   , _    -> MTrue
+  | S n', O    -> MFalse
+  | S n', S m' -> ble_nat n' m'
+*)
 
 val test_ble_nat1 : unit -> Fact unit
       (ensures (ble_nat (S (S O)) (S (S O)) == MTrue))
