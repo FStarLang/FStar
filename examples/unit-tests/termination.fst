@@ -128,9 +128,17 @@ val treeMap : 'a:Type -> 'b:Type -> ('a -> Tot 'b) -> T 'a -> Tot (T 'b)
 let rec treeMap 'a 'b f v = match v with
   | Leaf a -> Leaf (f a)
   | Node l ->
-    let _ = (* ghost *) list_subterm_ordering_lemma l v in (* TODO: eliminate this explicit call by encoding the lemma to the solver *)
+    list_subterm_ordering_lemma l v; (* TODO: eliminate this explicit call by encoding the lemma to the solver *)
+
     (* NS: this next call seems to be unavoidable. We need to move the refinement "inside" the list. 
            An alternative would be to give map a different type accouting for this "outside" refinement. 
            But, it's seeems nicer to give map its normal type *)
-    let l = (* ghost *) move_refinement (T 'a) (fun aa => Precedes (LexPair f (LexPair aa LexTop)) (LexPair f (LexPair v LexTop))) l in
+
+    let l = (* ghost *) 
+      move_refinement (* Two type parameteres inferred
+                         1. (T 'a) -- inferred
+                         2. (fun aa => Precedes (LexPair f (LexPair aa LexTop)) (LexPair f (LexPair v LexTop)))  --inferred by higher-order unification!
+                      *) 
+        l in
+
     Node (map (treeMap f) l)
