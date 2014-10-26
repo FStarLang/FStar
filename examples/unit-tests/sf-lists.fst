@@ -79,7 +79,7 @@ let nil_app l = ()
 (* let tl_length_pred l = () *)
 
 val tl_length_pred_fixed : l:ilist{is_Cons l} -> Fact unit
-                                                      (ensures ((length l) - 1 == length (tl l)))
+      (ensures ((length l) - 1 == length (tl l)))
 let tl_length_pred_fixed l = ()
 
 val app_assoc : l1 : ilist -> l2 : ilist -> l3 : ilist -> Fact unit

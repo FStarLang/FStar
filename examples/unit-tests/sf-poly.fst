@@ -135,6 +135,28 @@ assume val impossible : u : unit { False } -> Tot 'a
 val length_nil : unit -> Fact unit
       (ensures (length [] == 0))
 let length_nil () = ()
+(* it seems that Z3 cannot use this pattern:
+
+; <Start encoding LengthProblems.length>
+;;;;;;;;;;;;;;;;Equation: LengthProblems.length
+(assert (forall ((_a___7853__1009 Type))
+ (! (implies true
+ (= (LengthProblems.length _a___7853__1009 (Prims.Nil _a___7853__1009))
+ (BoxInt 0)))
+:pattern ((LengthProblems.length _a___7853__1009 (Prims.Nil _a___7853__1009))))))
+
+to prove the following query
+
+; <Query>
+;;;;;;;;;;;;;;;;query
+(assert (not (exists ((uvar_1016 Type) (uvar_1015 Type))
+ (= (LengthProblems.length uvar_1015 (Prims.Nil uvar_1016))
+ (BoxInt 0)))))
+
+removing the pattern makes this provable, but I'm not sure that's the
+correct fix, what's with these 2 separate existentials in the query
+anyway?  using a single common existential also makes this provable
+(with the current pattern for the equation) *)
 
 (* Getting incomplete patterns here, with or without the [] pattern,
    caused by the same problem with length_nil I think, still it should
