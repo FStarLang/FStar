@@ -164,15 +164,14 @@ anyway?  using a single common existential also makes this provable
 val index : l : list 'a -> n:int{(0 <= n) /\ (n < length l)} -> Tot 'a
 let rec index l n =
   match l with
+(*  | [] -> length_nil(); impossible() *)
   | h :: t -> if n = 0 then h else index t (n-1)
 
 (* Functions as Data *)
 
-(* This is as pure as it gets, still it gets inferred ALL effect 
-   NS: Unannotated let recs have the ALL effect. To get the Tot effect, you must request it (enabling the termination checker).
+(* NS: Unannotated let recs have the ALL effect. To get the Tot effect, you must request it (enabling the termination checker).
    NS: BTW, the default function type has ML effect, so if not annotated, test will be in ML, and so the whole thing will be ALL. 
-   NS: An alternative may be to have some other syntax, like fix instead let rec, to locally change the default function effect to Tot.
-*)
+   NS: An alternative may be to have some other syntax, like fix instead let rec, to locally change the default function effect to Tot. *)
 
 (* Currying *)
 
