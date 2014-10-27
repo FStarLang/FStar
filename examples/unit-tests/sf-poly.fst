@@ -249,12 +249,19 @@ val test_map2 : unit -> Fact unit
 let test_map2 () = ()
 *)
 
-(* This shouldn't blow up:
+(* This shouldn't blow up, although I'm using the wrong kind of arrow for fun:
 unknown(0,0-0,0) : Error
 Identifier not found: [Prims.Cons] (Possible clash with related name at ../../lib/prims.fst(477,0-481,6))
 val test_map3 : unit -> Fact unit
     (ensures (map (fun n => [evenb n;oddb n]) [2;1;2;5]
               == [[true;false];[false;true];[true;false];[false;true]]))
+*)
+
+(* CH: again: Incompatible types (list i:int{i >= 0}) and (list nat)
+val test_map3 : unit -> Fact unit
+    (ensures (map (fun n -> [evenb n;oddb n]) [2;1;2;5]
+              == [[true;false];[false;true];[true;false];[false;true]]))
+let test_map3 () = ()
 *)
 
 val map_snoc : f:('a->Tot 'b) -> x:'a -> l:list 'a -> Fact unit
