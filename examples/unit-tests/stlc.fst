@@ -135,17 +135,47 @@ val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Pure unit
 let canonical_forms_fun e t1 t2 = ()
 
 (* CH: This is proved without even needing induction or the lemmas,
-   again, too good to be true *)
+   again, too good to be true (see stlc-false.fst) *)
 val progress : e:exp -> t:ty -> Pure unit
       (requires (typing e empty == Some t))
       (ensures \r => (is_value e \/ (exists (e':exp). step e == Some e')))
-let progress e t = ()
+let rec progress e t = ()
 
-val inconsistent : e:exp -> t:ty -> Pure unit
-      (requires (typing e empty == Some t))
-      (ensures \r => False)
-let inconsistent e t = ()
+val appears_free_in : x:int -> e:exp -> Tot bool
+let rec appears_free_in x e =
+  match e with
+  | EVar y -> x = y
+  | EApp e1 e2 -> appears_free_in x e1 || appears_free_in x e2
+  | EAbs y t e -> if x = y then false else appears_free_in x e
+  | EIf e1 e2 e3 ->
+      appears_free_in x e1 || appears_free_in x e2 || appears_free_in x e3
+  | _ -> false
 
+(* CH: can we specify these kind of type-level functions?
+   Or do I need to inline them everywhere? *)
+(* val closed : exp -> Tot Type *)
+(* let closed e = (forall (x:int), ~(appears_free_in x e)) *)
 
+val free_in_context : x:int -> e:exp -> t:ty -> g:env -> Pure unit
+      (requires (appears_free_in x e == true /\ typing e g == Some t))
+      (ensures \r => (exists (t':ty). g x == Some t'))
+let free_in_context x e t g = ()
 
+val context_invariance : g:env -> g':env -> e:exp -> t:ty -> Pure unit
+      (requires (typing e g == Some t /\
+                   (forall (x:int). appears_free_in x e == true ==>
+                                    g x == g' x)))
+      (ensures \r => (typing e g == Some t))
+let context_invariance g g' e t = ()
 
+val substitution_preserves_typing :
+      g:env -> x:int -> e:exp -> u:ty -> t:ty -> v:exp -> Pure unit
+          (requires (typing e (extend g x u) == Some t /\
+                       (typing v empty == Some u)))
+          (ensures \r => (typing (subst x v e) g == Some t))
+let substitution_preserves_typing g x e u t v = ()
+
+val preservation : e:exp -> e':exp -> t:ty -> Pure unit
+      (requires (typing e empty == Some t /\ step e == Some e'))
+      (ensures \r => (typing e' empty == Some t))
+let preservation e e' t = ()
