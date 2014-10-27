@@ -20,15 +20,15 @@ let rec length l =
   | Nil -> 0
   | Cons h t -> length t + 1
 
+(* CH: The intrinsic property for repeat is just cheating,
+       this file is supposed to be about *extrinsic* proofs *)
 val repeat : int -> count:nat -> Tot (i:ilist{length i == count})
 let rec repeat n count = 
   if count = 0 
   then Nil
   else if count > 0
-  then let tl = repeat n (count - 1) in (* NS: TODO ... seem to need an explicit let here, otherwise the refinement is lost. Fix! *)
-       Cons n tl
+  then Cons n (repeat n (count - 1))
   else (assert False; Nil)
-
 
 val app : ilist -> ilist -> Tot ilist
 let rec app l1 l2 = 
@@ -51,36 +51,48 @@ val test_app3 : unit -> Fact unit
                 == (Cons 1 (Cons 2 (Cons 3 Nil))))
 let test_app3 () = ()
 
+val nil_app : l:ilist -> Fact unit
+                              (ensures (app Nil l == l))
+let nil_app l = ()
+
+val app_nil : l:ilist -> Fact unit
+                              (ensures (app l Nil == l))
+let rec app_nil l =
+  match l with
+  | Nil -> ()
+  | Cons h t -> app_nil t
+
 val hd : l:ilist{l =!= Nil} -> Tot int
 let hd l =
   match l with
   | Cons h t -> h
 
-(* In SF they have tl Nil == nil, but we do better here *)
-(* val tl : l:ilist{l =!= Nil} -> Tot ilist *)
-(* let tl l = *)
-(*   match l with *)
-(*   | Cons h t -> t *)
+(* In SF they have tl Nil == nil, but we do better below *)
 
-val tl : l:ilist -> Tot ilist
-let tl l =
+val tl_strange : l:ilist -> Tot ilist
+let tl_strange l =
   match l with
   | Nil -> Nil
   | Cons h t -> t
 
+val tl_strange_length_pred : l:ilist{l =!= Nil} -> Fact unit
+      (ensures ((length l) - 1 == length (tl_strange l)))
+let tl_strange_length_pred l = ()
 
-val nil_app : l:ilist -> Fact unit
-                              (ensures (app Nil l == l))
-let nil_app l = ()
+val tl_strange_length_pred_equiv : l:ilist{is_Cons l} -> Fact unit
+      (ensures ((length l) - 1 == length (tl_strange l)))
+let tl_strange_length_pred_equiv l = ()
 
-(* (\* CH: I have no clue why this still fails *\) *)
-(* val tl_length_pred : l:ilist{l =!= Nil} -> Fact unit *)
-(*       (ensures ((length l) - 1 == length (tl l))) *)
-(* let tl_length_pred l = () *)
+val tl : l:ilist{l =!= Nil} -> Tot ilist
+let tl l =
+  match l with
+  | Cons h t -> t
 
-val tl_length_pred_fixed : l:ilist{is_Cons l} -> Fact unit
+(* CH: this should succeed, but it fails with a larger than usual error massage
+val tl_length_pred : l:ilist{l =!= Nil} -> Fact unit
       (ensures ((length l) - 1 == length (tl l)))
-let tl_length_pred_fixed l = ()
+let tl_length_pred l = ()
+*)
 
 val app_assoc : l1 : ilist -> l2 : ilist -> l3 : ilist -> Fact unit
       (ensures (app (app l1 l2) l3) == app l1 (app l2 l3))
