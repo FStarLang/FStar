@@ -148,6 +148,8 @@ let rec beq_nat n m =
             end
 
 (* CH: This equivalent definition causes F* to blow up
+   Bound term variable not found: n'
+   Filed this as https://github.com/FStarLang/FStar/issues/22
 val beq_nat : nat -> nat -> Tot mbool
 let rec beq_nat n m =
   match n, m with

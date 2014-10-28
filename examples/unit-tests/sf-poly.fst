@@ -97,6 +97,7 @@ let rec index_option l n =
 
 (* All these fail and I think they shouldn't:
    Type "(unit -> Fact (unit))" has unexpected non-trivial pre-condition
+   Filed this as: https://github.com/FStarLang/FStar/issues/18
 val test_index_option1 : unit -> Fact unit
       (ensures (index_option [4;5;6;7] 0 == Some 4))
 let test_index_option1 () = ()
@@ -226,8 +227,9 @@ val oddb : nat -> Tot bool
 let oddb n = not (evenb n)
 
 (* CH: This fails as follows:
-Failed because: refinement subtyping is not applicable
-Incompatible types (list i:int{i >= 0}) and (list nat)
+   Failed because: refinement subtyping is not applicable
+   Incompatible types (list i:int{i >= 0}) and (list nat)
+   Filed this as: https://github.com/FStarLang/FStar/issues/20
 val test_filter1 : unit -> Fact unit
       (ensures (filter evenb [1;2;3;4] == [2;4]))
 let test_filter1 () = ()
@@ -249,7 +251,9 @@ val test_map1 : unit -> Fact unit
 (* CH: Replacing plus3 with (fun n -> n + 3) (just inlining) makes F* blow up:
    Bound term variable not found: n
    at Microsoft.FStar.ToSMT.Encode.lookup_term_var[a,b](env_t env, withinfo_t`2
-   a) in E:\Projects\fstar\pub\src\tosmt\encode.fs:line 141 *)
+   a) in E:\Projects\fstar\pub\src\tosmt\encode.fs:line 141
+   Filed this as: https://github.com/FStarLang/FStar/issues/19
+   *)
 let test_map1 () = ()
 
 (* CH: again: Incompatible types (list i:int{i >= 0}) and (list nat)
@@ -343,6 +347,7 @@ let constfun x _ = x
 
 val ftrue : 'b -> Tot bool
 (* This should work, but it doesn't: arrow mismatch
+   Filed this as: https://github.com/FStarLang/FStar/issues/21
 let ftrue = constfun true
 *)
 let ftrue _ = true

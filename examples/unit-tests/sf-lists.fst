@@ -88,7 +88,10 @@ let tl l =
   match l with
   | Cons h t -> t
 
-(* CH: this should succeed, but it fails with a larger than usual error massage
+(* CH: This fails with the following error:
+   Type "(l:l:ilist{~ l == Nil} -> Fact (unit))" has an unexpected non-trivial pre-
+   condition 2: (forall l:l:ilist{~ l == Nil}
+   Might be a more obvious variant of: https://github.com/FStarLang/FStar/issues/18
 val tl_length_pred : l:ilist{l =!= Nil} -> Fact unit
       (ensures ((length l) - 1 == length (tl l)))
 let tl_length_pred l = ()
@@ -156,6 +159,16 @@ let rec foo2 n m l =
             But, FYI, all let-rec bound names are implicitly generalized. So, no need for this pattern. *)
          (* CH: This is very cool, a consequence of having n-argument
                 fixpoints, while Coq only only has one argument ones *)
+
+(* Explicit generalization problem filed as: https://github.com/FStarLang/FStar/issues/15
+val foo2' : n : nat -> m : nat -> l : ilist -> Pure unit
+      (requires (repeat n m == l))
+      (ensures \r => length l == m)
+let rec foo2' n m = 
+  match m with
+  | 0 -> (fun l -> ())
+  | _ -> (fun l -> foo2' n (m-1) (repeat n (m-1)))
+*)
 
 val foo3 : l : ilist -> n : int -> m : int -> Pure unit
       (requires (length l == m))

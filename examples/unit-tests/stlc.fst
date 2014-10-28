@@ -29,7 +29,8 @@ val subst : int -> exp -> exp -> Tot exp
 let rec subst x e e' =
   match e' with
   | EVar xprime -> if x = xprime then e else e'
-(* CH: This fails because F* can't find xsecond for some reason
+(* CH: This fails because the SMT encoding can't find xsecond for some reason
+   Seems the same problem as: https://github.com/FStarLang/FStar/issues/22
   | EAbs xsecond t e1 ->
       EAbs xsecond t (if x = xsecond then e1 else (subst x e e1))
 *)
@@ -81,6 +82,7 @@ let extend g x t  = (fun x' -> if x = x' then Some t else g x')
 Expected a term of type "(_:env -> _:int -> _:ty -> Tot env)";
 got a function "(fun g:<UNKNOWN> x:<UNKNOWN> t:<UNKNOWN> x':<UNKNOWN> -> (match (op_Equality x x') with true  -> (Some t)
 	false  -> (g x')))"
+Filed as: https://github.com/FStarLang/FStar/issues/23
 *)
 
 val extend : env -> int -> ty -> int -> Tot (option ty)
@@ -117,7 +119,8 @@ let rec typing e g =
   | ETrue  -> Some TBool
   | EFalse -> Some TBool
   | EIf e1 e2 e3 -> begin
-      (* CH: This triple pattern matching is in fact complete *)
+      (* CH: This triple pattern matching is in fact complete
+         Filed as: https://github.com/FStarLang/FStar/issues/24 *)
       match typing e1 g, typing e2 g, typing e3 g with
       | Some TBool, Some t2, Some t3 -> if t2 = t3 then Some t2 else None
       | _         , _      , _       -> None
