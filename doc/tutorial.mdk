@@ -154,9 +154,45 @@ interpreted as pre-conditions on them for the function, which must now
 be applied to arguments that are provably positive.
 
 
-### Inductive data-types
+### Higher-order functions and polymorphism
 
-TODO: example of lists, example of higher-order functions
+TODO: example of higher-order functions
+
+
+### Effects
+
+TODO: example of states and exceptions
+
+
+### Polymorphic inductive data-types
+
+As in ML-like languages, one can define its own data-types in F\*. The
+`prims` library comes with the definition of standard such types, like
+polymorphic lists:
+
+```
+type list 'a =
+  | Nil : list 'a
+  | Cons : 'a -> list 'a -> list 'a
+```
+
+The F\* parser provides special syntax for building and pattern matching
+list values: `Nil` can be written as `[]`, `Cons x xs`, as `x::xs`, and
+a list containing for instance `1`, `2`, and `3`, as `[1;2;3]`.
+
+Recursive functions traversing such data-types can be defined, such as a
+function computing the length of a list:
+
+```
+let rec length l = match l with
+  | [] -> 0
+  | _::xs -> 1 + (length xs)
+```
+
+Here, F\* automatically infers the type `val length: list 'a -> int`;
+note that it could prove, for instance, that it returns only positive
+integers, if we require the type `val length : list 'a -> nat`. (We
+could even be more precise, as we will see later.)
 
 
 ### Term-indexed types
@@ -164,15 +200,18 @@ TODO: example of lists, example of higher-order functions
 TODO: example of vectors
 
 
+## Pure and total functions
+### Pure functions
 
-## Termination checking
-### Terminating functions
-
-TODO: introduce the Pure keyword, explain how to prove that a function
-is terminating
+TODO: introduce the Pure keyword
 
 
-### Using terminating functions in specifications
+### Total functions
+
+TODO: explain how to prove that a function is terminating
+
+
+### Using pure and total functions in specifications
 
 TODO: basic examples that do not require lemmas
 
@@ -182,7 +221,7 @@ TODO: basic examples that do not require lemmas
 TODO: Facts, examples like listlemmas and insertion sort
 
 
-## Effects
+## Fine-grained effects
 
 TODO: introduce monads, present ST and exceptions
 
@@ -207,14 +246,9 @@ TODO
 
 TODO:
 
-- installation
-
-- grammar of the language
-
-- description of the internals of F\*
-
-- explanation of all the keywords
-
-- the monad lattice (and how to extend it)
-
-- the backends
+* installation
+* grammar of the language
+* description of the internals of F\*
+* explanation of all the keywords
+* the monad lattice (and how to extend it)
+* the backends
