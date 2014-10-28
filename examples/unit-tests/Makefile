@@ -13,7 +13,7 @@ FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB)
 
 all: all-lax all-ver
 
-VERFILES=unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst sf-basic.fst sf-lists.fst termination.fst
+VERFILES=unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst
 all-ver: $(VERFILES)
 	$(FSTAR) --verify $^
 

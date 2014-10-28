@@ -876,13 +876,14 @@ and tc_exp env e : exp * comp =
                 | _ -> e, cres
          end
 
-and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * option<exp> * exp) * option<formula> * comp =
+and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * option<exp> * exp) * option<formula> * comp =
   (* 
-     guard_x is the scrutinee;  pat_t is the expected pattern typ; 
+     scrutinee_x is the scrutinee;  pat_t is the expected pattern typ; 
      Returns: (pattern, when_clause, branch) --- typed
               option<formula> -- guard condition for this branch, propagated up for exhaustiveness check
               comp            -- the computation type of the branch
   *)
+  (*<tc_pat>*)
   let rec tc_pat (pat_t:typ) env p : pat * list<Env.binding> * Env.env * list<exp> = 
     let pvar_eq x y = match x, y with 
       | Inl a, Inl b -> bvd_eq a b
@@ -922,13 +923,14 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
     let bindings = fst <| pat_bindings [] p in
     let pat_env = List.fold_left Env.push_local_binding env bindings in
     let exps = Tc.Util.pat_as_exps env p in
-    let env, _ = Tc.Env.clear_expected_typ pat_env in 
-    let env = {env with Env.is_pattern=true} in //{(Tc.Env.set_expected_typ pat_env pat_t) with Env.is_pattern=true} in
+    let env1, _ = Tc.Env.clear_expected_typ pat_env in 
+    let env1 = {env1 with Env.is_pattern=true} in //{(Tc.Env.set_expected_typ pat_env pat_t) with Env.is_pattern=true} in
     let exps = exps |> List.map (fun e -> 
-        let e, t = no_guard env <| tc_total_exp env e in
+        let e, t = no_guard env1 <| tc_total_exp env1 e in
         //printfn "Trying pattern subtype %s <: %s" (Print.typ_to_string pat_t) (Print.typ_to_string t);
-        Tc.Rel.trivial_subtype env None pat_t t; //the type of the pattern must be at least as general as the type of the scrutinee
+        Tc.Rel.trivial_subtype env1 None pat_t t; //the type of the pattern must be at least as general as the type of the scrutinee
         e) in
+    (* Annotate the pattern with its corresponding expression; consumed downstream by the encoding to SMT *)
     let p = match p with 
         | Pat_meta(Meta_pat_pos(q, r)) -> 
           let q = match q, exps with 
@@ -936,16 +938,19 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
             | _, [e] -> Pat_meta(Meta_pat_exp(q, e))
             | _ -> failwith (Util.format1 "(%s) impossible: unexpected pat\n" (Range.string_of_range (Env.get_range env))) in
           Pat_meta(Meta_pat_pos(q, r))
+
         | _ -> Pat_meta(Meta_pat_exp(p, List.hd exps)) in
+
      p, bindings, pat_env, exps in
+  (*</tc_pat>*)
 
   let pattern, bindings, pat_env, disj_exps = tc_pat pat_t env pattern in //disj_exps, an exp for each arm of a disjunctive pattern
   let when_clause = match when_clause with 
     | None -> None
-    | Some e -> Some (fst <| (no_guard env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e)) in
+    | Some e -> Some (fst <| (no_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e)) in
   let branch, c = tc_exp pat_env branch in
-  let guard_exp = Util.bvd_to_exp guard_x pat_t in
-  let guard_env = Env.push_local_binding env (Env.Binding_var(guard_x, pat_t)) in
+  let scrutinee = Util.bvd_to_exp scrutinee_x pat_t in
+  let scrutinee_env, _ = Env.push_local_binding env (Env.Binding_var(scrutinee_x, pat_t)) |> Tc.Env.clear_expected_typ in
   let c = 
     let eqs = disj_exps |> List.fold_left (fun fopt e -> 
         let e = compress_exp e in
@@ -954,7 +959,7 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
             | Exp_constant _ 
             | Exp_fvar _ -> fopt (* Equation for non-binding forms are handled with the discriminators below *)
             | _ -> 
-              let clause = Util.mk_eq guard_exp e in
+              let clause = Util.mk_eq scrutinee e in
                 match fopt with
                  | None -> Some clause
                  | Some f -> Some <| Util.mk_disj clause f) None in 
@@ -964,26 +969,37 @@ and tc_eqn (guard_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * op
       | Some f, Some w -> Tc.Util.weaken_precondition env c (NonTrivial <| Util.mk_conj f (Util.mk_eq w Const.exp_true_bool)) 
       | None, Some w -> Tc.Util.weaken_precondition env c (NonTrivial <| Util.mk_eq w Const.exp_true_bool) in
     Tc.Util.close_comp env bindings c in
-  let discriminate f = 
-    let disc = Util.mk_discriminator f.v in 
-    let disc = mk_Exp_app(Util.fvar disc (range_of_lid f.v), [varg <| guard_exp]) tun guard_exp.pos in
-    let e, _, _ = tc_total_exp (Env.set_expected_typ guard_env Tc.Util.t_bool) disc in
+
+  let discriminate scrutinee f = 
+    let disc = Util.fvar (Util.mk_discriminator f.v) <| range_of_lid f.v in 
+    let disc = mk_Exp_app(disc, [varg <| scrutinee]) tun scrutinee.pos in
+    let e, _, _ = tc_total_exp (Env.set_expected_typ scrutinee_env Tc.Util.t_bool) disc in
     Util.mk_eq e Const.exp_true_bool in
-  let gg =
-    let discs = disj_exps |> List.collect (fun e -> 
-      let e = compress_exp e in 
-      match e.n with 
-      | Exp_uvar _
-      | Exp_app({n=Exp_uvar _}, _) 
-      | Exp_bvar _ -> [Util.ftv Const.true_lid ktype]
-      | Exp_constant _ -> [Util.mk_eq guard_exp e]
-      | Exp_fvar(f, _) 
-      | Exp_app({n=Exp_fvar(f, _)}, _) ->  [discriminate f]
-      | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range e.pos) (Print.exp_to_string e))) in
-    List.fold_left (fun fopt f -> match fopt with 
-      | None -> Some f
-      | Some g -> Some (Util.mk_disj f g)) None discs in
-  (pattern, when_clause, branch), gg, c 
+
+  let rec mk_guard scrutinee pat_exp : typ = 
+        let pat_exp = compress_exp pat_exp in
+        match pat_exp.n with 
+          | Exp_uvar _
+          | Exp_app({n=Exp_uvar _}, _) 
+          | Exp_bvar _ -> Util.ftv Const.true_lid ktype
+          | Exp_constant _ -> Util.mk_eq scrutinee pat_exp
+          | Exp_fvar(f, _) -> discriminate scrutinee f
+          | Exp_app({n=Exp_fvar(f, _)}, args) ->  
+            let head = discriminate scrutinee f in
+            let sub_term_guards = args |> List.mapi (fun i arg -> match fst arg with 
+                | Inl _ -> (* no patterns on type arguments *) []
+                | Inr ei ->
+                    let projector = Tc.Env.lookup_projector env f.v i in
+                    let sub_term = mk_Exp_app(Util.fvar projector f.p, [varg scrutinee]) tun f.p in
+                    let sub_term, _ = no_guard scrutinee_env <| tc_total_exp scrutinee_env sub_term in
+                    [mk_guard sub_term ei]) |> List.flatten in
+            Util.mk_conj_l (head::sub_term_guards)
+          | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range pat_exp.pos) (Print.exp_to_string pat_exp)) in
+
+  let guard = 
+    if !Options.verify then Some (disj_exps |> List.map (mk_guard scrutinee) |> Util.mk_disj_l)
+    else None in
+  (pattern, when_clause, branch), guard, c 
 
 and tc_kind_trivial env k : knd = 
   match tc_kind env k with 
@@ -1171,7 +1187,9 @@ and tc_decl env se = match se with
   
     | Sig_datacon(lid, t, tname, quals, r) -> 
       let env = Tc.Env.set_range env r in
-      let t = tc_typ_check_trivial env t ktype |> norm_t env in 
+      let t = tc_typ_check_trivial env t ktype in
+      let t = norm_t env t in  
+    
       let formals, result_t = match Util.function_formals t with 
         | Some (formals, cod) -> formals, Util.comp_result cod
         | _ -> [], t in

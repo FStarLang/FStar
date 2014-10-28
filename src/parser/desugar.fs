@@ -979,11 +979,16 @@ let mk_data_ops env = function
                     else Pat_var x.v
       | Inl a, _ -> Pat_tvar a.v) in
     let freevs = freevars_typ tconstr in
-    let freevars = formals |> List.filter (function
-      | Inl a, _ -> Util.set_mem a freevs.ftvs
-      | Inr x, _ -> Util.set_mem x freevs.fxvs
-      | _ -> false) in
-    //Printf.printf "Got %d free vars\n" (List.length freevars);
+    let freevars = formals 
+        |> List.collect (function
+          | Inl a, imp -> 
+            if Util.set_mem a freevs.ftvs
+            then [Inl a, imp (*true*)] // implicit
+            else []
+          | Inr x, imp -> 
+            if Util.set_mem x freevs.fxvs
+            then [Inr x, imp (*true*)] //implicit
+            else []) in
     let freeterms = freevars |> List.map (function 
       | Inl a, _ -> targ <| btvar_to_typ a
       | Inr x, _ -> varg <| bvar_to_exp x) in
@@ -1002,35 +1007,35 @@ let mk_data_ops env = function
 //      //Printf.printf "Substituting [%s] in type\n%s\n" (subst_to_string s) (Print.typ_to_string t);
 //      let res = subst_typ s t in  res in
 //      //Printf.printf "Got\n%s\n" (Print.typ_to_string res); flush stdout; res in
-    let rec projectors data_ops subst formals = match formals with 
+//    Util.fprint2 "Adding projectors for %s : %s\n" lid.str  (Print.typ_to_string t);
+               
+    let rec projectors data_ops subst formals i = match formals with 
       | [] -> data_ops
       | b::rest -> 
-        if is_null_binder b then projectors data_ops subst rest else
-        let proj, subst = match fst b with
-           | Inr x ->
-                let y = {x.v with ppname=unmangle_field_name x.v.ppname} in
-                let field_name = lid_of_ids (ids_of_lid lid @ [y.ppname]) in
+        match fst b with 
+            | Inl a -> 
+                let field_name, b = Util.mk_field_projector_name lid a i in
+                let kk = build_kind (Util.subst_kind subst a.sort) in
+                let sigs = [Sig_tycon(field_name, [], kk, [], [], [Logic; Projector(lid, Inl b)], range_of_lid field_name)] in
+                //let _ = Util.print_string (Util.format2 "adding type projector %s at type %s\n" field_name.str (Print.kind_to_string kk)) in 
+                let subst = if Util.set_mem a freevs.ftvs
+                            then subst
+                            else Inl(a.v, mk_typ_app (ftv field_name kun) (freeterms@[varg <| formal_exp]))::subst in
+                projectors (data_ops@sigs) subst rest (i + 1)
+
+            | Inr x -> 
+                let field_name, y = Util.mk_field_projector_name lid x i in 
+  //              Util.fprint1 "Adding projector %s\n" (field_name.str);
                 let t = build_typ (Util.subst_typ subst x.sort) in
                 let sigs = [Sig_val_decl(field_name, t, [Assumption; Logic; Projector(lid, Inr y)], range_of_lid field_name)] in
                 let subst = if Util.set_mem x freevs.fxvs
                             then subst
                             else Inr(x.v, mk_exp_app (fvar field_name (range_of_lid field_name)) (freeterms@[varg <| formal_exp]))::subst in
-                sigs, subst
-        
-            | Inl a -> 
-                let field_name = lid_of_ids (ids_of_lid lid @ [a.v.ppname]) in
-                let kk = build_kind (Util.subst_kind subst a.sort) in
-                let sigs = [Sig_tycon(field_name, [], kk, [], [], [Logic; Projector(lid, Inl a.v)], range_of_lid field_name)] in
-                //let _ = Util.print_string (Util.format2 "adding type projector %s at type %s\n" field_name.str (Print.kind_to_string kk)) in 
-                let subst = if Util.set_mem a freevs.ftvs
-                            then subst
-                            else Inl(a.v, mk_typ_app (ftv field_name kun) (freeterms@[varg <| formal_exp]))::subst in
-                sigs, subst in
-         projectors (data_ops@proj) subst rest in
+                projectors (data_ops@sigs) subst rest (i + 1) in
        
     let disc_name = Util.mk_discriminator lid in
     let disc = Sig_val_decl(disc_name, build_typ (Util.ftv Const.bool_lid ktype), [Assumption; Logic; Discriminator lid], range_of_lid disc_name) in
-    projectors [disc] [] formals
+    projectors [disc] [] formals 0
 
   | _ -> []
 
@@ -1153,7 +1158,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                 let quals = tags |> List.collect (function 
                     | RecordType fns -> [RecordConstructor fns]
                     | _ -> []) in
-                (name, Sig_datacon(name, close_typ tps t, tname, quals, rng)))) in
+                (name, Sig_datacon(name, close_typ tps t |> Util.name_all_binders, tname, quals, rng)))) in
               Sig_tycon(tname, tpars, k, mutuals, constrNames, tags, rng)::constrs
         | _ -> failwith "impossible") in
       let bundle = Sig_bundle(sigelts, rng, List.collect Util.lids_of_sigelt sigelts) in

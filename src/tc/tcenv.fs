@@ -287,6 +287,20 @@ let lookup_datacon env lid =
     | Some (Inr (Sig_datacon (_, t, _, _,_))) -> t
     | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
 
+let lookup_projector env lid i = 
+    let fail () = failwith (Util.format2 "Impossible: projecting field #%s from constructor %s is undefined" (Util.string_of_int i) (Print.sli lid)) in
+    let t = lookup_datacon env lid in 
+    match (Util.compress_typ t).n with 
+        | Typ_fun(binders, _) -> 
+          if ((i < 0) || i >= List.length binders)
+          then fail ()
+          else let b = List.nth binders i in //this has to be within bounds!
+               begin match fst b with 
+                | Inl a -> Util.mk_field_projector_name lid a i |> fst
+                | Inr x -> Util.mk_field_projector_name lid x i |> fst
+               end
+        | _ -> fail ()
+
 let try_lookup_val_decl env lid = 
   match lookup_qname env lid with
     | Some (Inr (Sig_val_decl(_, t, _, _))) -> Some t
