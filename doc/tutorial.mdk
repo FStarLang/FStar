@@ -1,22 +1,38 @@
 Title         : F* - guide
 Subtitle      : Certifying program correctness with F*
 Heading Base  : 2
-Author        :
+Author        : Chantal Keller
+Affiliation   : MSR-Inria
+Author        : Nikhil Swamy
+Colorizer     : fstar
+~Code,~Pre    : language=fstar
 
 
 [TITLE]
 [TOC]
 
+<style>
+.fstar .token.keyword { color: blue }
+</style>
+
 
 # Tutorial
+
+Daan's hints:
+
+* Refer to Section [#sec-getstarted].
+* Use `Alt-Q` to reformat paragraphs.
+* Drag&Drop a `.bib` file on the editor and start including citations.
+
+
 ## Presentation
 
 F\* is a verification-oriented programming language developed at
-[Microsoft Research](http://research.microsoft.com/en-us). It follows in
-the tradition of the ML family of languages in that it is a typed,
-strict, higher-order programming language. However, its type system is
-significantly richer than ML's, allowing functional correctness
-specifications to be stated and checked semi-automatically.
+[Microsoft Research][msr]. It follows in the tradition of the ML family
+of languages in that it is a typed, strict, higher-order programming
+language. However, its type system is significantly richer than ML's,
+allowing functional correctness specifications to be stated and checked
+semi-automatically.
 
 This tutorial provides a first taste of verified programming in F\*. We
 will focus initially on writing several small, purely functional
@@ -24,7 +40,9 @@ programs and write specifications for these programs that can be
 automatically verified by F\*. Next, we will discuss verifying
 higher-order programs that also make use of state. Finally, we consider
 designing and implementing a small cryptographic protocol in a style
-suitable for verification. <!-- Be sure to follow along with the examples by -->
+suitable for verification.
+
+<!-- Be sure to follow along with the examples by -->
 <!-- clicking the **load in editor** link in the corner. See what F\* says, -->
 <!-- try your own programs, and experiment! -->
 
@@ -32,13 +50,15 @@ It will help if the reader is already familiar with functional
 programming languages in the ML family, e.g., Standard ML, Ocaml, F#, or
 Haskell---we provide a quick review of basic concepts for those a little
 rusty. If you lack this background, there are several useful resources
-on the web, e.g., [TryF#](http://tryfsharp.org), or this
-[introduction to Caml](http://www.cs.jhu.edu/~scott/pl/lectures/caml-intro.html).
+on the web, e.g., [TryF#], or this [introduction to Caml][camlintro].
 
 Please send feedback, comments and/or corrections regarding this
 tutorial to Nikhil Swamy by email at the following address: nswamy 'AT'
 microsoft 'DOT' com.
 
+[camlintro]: http://www.cs.jhu.edu/~scott/pl/lectures/caml-intro.html
+[tryF#]: http://tryfsharp.org
+[msr]: http://research.microsoft.com/en-us
 
 ### More about F\*
 
@@ -48,26 +68,28 @@ extensions, and even parts of the F\* compiler itself. F\* can also be
 used as an intermediate verification language. Rather than writing
 programs in F\* directly, programs written in other languages can be
 translated to F\* and then verified. We have built translations from a
-variety of languages to F\*, including
-[JavaScript](http://research.microsoft.com/~nswamy/papers/dijkstra-pldi13.pdf),
-[F7](http://research.microsoft.com/f7), and
-[DKAL](http://research.microsoft.com/en-us/projects/dkal). F\* can also
-be securely compiled to various platforms. For example,
-[this paper](http://research.microsoft.com/apps/pubs/?id=120933)
-describes how we compile F\* to .NET bytecode while preserving types;
-and
+variety of languages to F\*, including [JavaScript], [F7], and [DKAL].
+F\* can also be securely compiled to various platforms. For example,
+[this paper][fstarpaper] describes how we compile F\* to .NET bytecode
+while preserving types; and
 [this page](http://research.microsoft.com/en-us/um/people/nswamy/supp/full-abstraction.html)
 describes a fully abstract translation from F\* to JavaScript.
 
-To find out more, check out the
-[F\* website](http://research.microsoft.com/fstar): you'll find links to
-several papers and to a compiler download (including sources). With the
-compiler, you will be able to run F\* programs, provided you have the
-.NET 4.0 virtual machine installed. You can also get the development
-version [on github](http://github.com/FStarLang/FStar).
+To find out more, check out the [F\* website][fstar]: you'll find links
+to several papers and to a compiler download (including sources). With
+the compiler, you will be able to run F\* programs, provided you have
+the .NET 4.0 virtual machine installed. You can also get the development
+version on [github].
+
+[JavaScript]: http://research.microsoft.com/~nswamy/papers/dijkstra-pldi13.pdf
+[F7]: http://research.microsoft.com/f7
+[DKAL]: http://research.microsoft.com/en-us/projects/dkal
+[fstar]: http://research.microsoft.com/fstar
+[github]: http://github.com/FStarLang/FStar
+[fstarpaper]: http://research.microsoft.com/apps/pubs/?id=120933
 
 
-## Getting started
+## Getting started  { #sec-getstarted }
 ### First program
 
 An F\* program is composed of several modules. Each module begins with a
