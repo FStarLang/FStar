@@ -60,9 +60,17 @@ let start_process (prog:string) (args:string) (cond:string -> bool) : proc =
                            ignore <| driverOutput.Append(args.Data);
                            ignore <| driverOutput.Append("\n");
                            if null = args.Data
-                           then (Printf.printf "Unexpected output from %s\n%s\n" prog <| driverOutput.ToString());
+                           then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
                            if null = args.Data || cond args.Data
                            then System.Threading.Monitor.Pulse(signal))));
+        proc.Exited.AddHandler(
+             EventHandler(fun _ _ ->
+               System.Threading.Monitor.Enter(signal);
+               killed := true;
+               Printf.fprintf stdout "Z3 exited unadvertedly\n%s\n" (driverOutput.ToString());
+               stdout.Flush();
+               System.Threading.Monitor.Exit(signal);
+               exit(1)));
         proc.StartInfo <- startInfo;
         proc.Start() |> ignore;
         proc.BeginOutputReadLine();

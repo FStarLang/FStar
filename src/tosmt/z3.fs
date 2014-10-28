@@ -64,9 +64,12 @@ let get_z3version () =
             _z3version := Some out; out
 
 let ini_params =
-  let timeout = format1 "-T:%s" (!Options.z3timeout)
+  let t =
+    if z3v_le (get_z3version ()) (4, 3, 1)
+    then !Options.z3timeout
+    else !Options.z3timeout * 1000
   in
-
+  let timeout = format1 "-t:%s" (string_of_int t) in
   let relevancy =
     if   z3v_le (get_z3version ()) (4, 3, 1)
     then "RELEVANCY"
