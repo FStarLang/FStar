@@ -3,11 +3,13 @@ Subtitle      : Certifying program correctness with F*
 Heading Base  : 2
 Author        :
 
+
 [TITLE]
 [TOC]
 
 
-# Presentation
+# Tutorial
+## Presentation
 
 F\* is a verification-oriented programming language developed at
 [Microsoft Research](http://research.microsoft.com/en-us). It follows in
@@ -22,9 +24,9 @@ programs and write specifications for these programs that can be
 automatically verified by F\*. Next, we will discuss verifying
 higher-order programs that also make use of state. Finally, we consider
 designing and implementing a small cryptographic protocol in a style
-suitable for verification. Be sure to follow along with the examples by
-clicking the **load in editor** link in the corner. See what F\* says,
-try your own programs, and experiment!
+suitable for verification. <!-- Be sure to follow along with the examples by -->
+<!-- clicking the **load in editor** link in the corner. See what F\* says, -->
+<!-- try your own programs, and experiment! -->
 
 It will help if the reader is already familiar with functional
 programming languages in the ML family, e.g., Standard ML, Ocaml, F#, or
@@ -38,7 +40,7 @@ tutorial to Nikhil Swamy by email at the following address: nswamy 'AT'
 microsoft 'DOT' com.
 
 
-## More about F\*
+### More about F\*
 
 We have used F\* to construct many verified programs, including
 implementations of security protocols, web servers, web browser
@@ -63,3 +65,156 @@ several papers and to a compiler download (including sources). With the
 compiler, you will be able to run F\* programs, provided you have the
 .NET 4.0 virtual machine installed. You can also get the development
 version [on github](http://github.com/FStarLang/FStar).
+
+
+## Getting started
+### First program
+
+An F\* program is composed of several modules. Each module begins with a
+`module` declaration, defining the name of the module. Here's a very
+simple program, that computes the maximum of two integers:
+
+```
+module Max
+let max i j = if i < j then j else i
+```
+
+This program is automatically given the following type by F\*:
+
+```
+val max : int -> int -> int
+```
+
+where `int` is the base type for integers, as defined (with its basic
+constructions, such as strict comparison `<`) in the standard prelude of
+F\* (a module called `prims`), together with other standard base types
+such as `unit` or `string`. Note that the type could be specified
+instead of letting F\* infer it:
+
+```
+module Max
+val max : int -> int -> int
+let max i j = if i < j then j else i
+```
+
+
+### First proofs
+
+So far, the first program we have written lies in the ML fragment of
+F\*. In addition to writting ML programs, F\* allows to state properties
+about them, by *refining* their types, and shows them
+semi-automatically, using the Z3 SMT solver.
+
+On our example, we can for instance establish that the maximum function
+returns an integer which is greater than its two arguments:
+
+```
+module Max
+val max : i:int -> j:int -> k:int{k >= i /\ k >= j}
+let max i j = if i < j then j else i
+```
+
+Here, the `max` function is unchanged, but its type gets more precise.
+
+First, the arguments are still two integers, but they are now given
+names (`i:int` and `j:int`) that can be referred to in the remaining of
+the type: F\* enjoys dependent function types.
+
+Second, the result is not only an integer, but an integer greater than
+both `i` and `j` (`k:int{k >= i /\ k >= j}`). When feeding F\* with this
+program, it actually checks that this precise return type of the
+function holds for every possible arguments.
+
+More generally, any F\* type `τ` can be refined into a type `x:τ{φ}`
+where `φ` is a logical formula expressing properties about all the
+variables in scope so far (including `x`), possibly using functions
+defined before, as we will see later. This type represents the elements
+`x` of type `τ` such that `φ` holds. Note that `x` is bound in this
+type: it has no meaning outside it.
+
+For instance, we can define the type of natural integers as the type of
+integers greater than 0:
+
+```
+type nat = i:int{i >= 0}
+```
+
+giving an alias to it thanks to the `type` keyword (also used to defined
+inductive data-types, as we will see soon). Another possible type for
+our maximum function is then:
+
+```
+val max : nat -> nat -> nat
+```
+
+in which case F\* will check that, given two positive integers, the
+function actually returns a positive integer. This example shows that
+the arguments of a function can also be given refinement types,
+interpreted as pre-conditions on them for the function, which must now
+be applied to arguments that are provably positive.
+
+
+### Inductive data-types
+
+TODO: example of lists, example of higher-order functions
+
+
+### Term-indexed types
+
+TODO: example of vectors
+
+
+
+## Termination checking
+### Terminating functions
+
+TODO: introduce the Pure keyword, explain how to prove that a function
+is terminating
+
+
+### Using terminating functions in specifications
+
+TODO: basic examples that do not require lemmas
+
+
+## Guiding F\*
+
+TODO: Facts, examples like listlemmas and insertion sort
+
+
+## Effects
+
+TODO: introduce monads, present ST and exceptions
+
+
+## Backends
+
+TODO: OCaml and JavaScript backends, examples of what we can do with
+them
+
+
+## More advanced examples
+
+TODO
+
+### Quicksort
+### Authentication protocol
+### Simply-typed λ-calculus
+### JavaScript
+
+
+# Reference manual
+
+TODO:
+
+- installation
+
+- grammar of the language
+
+- description of the internals of F\*
+
+- explanation of all the keywords
+
+- the monad lattice (and how to extend it)
+
+- the backends
