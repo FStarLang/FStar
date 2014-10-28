@@ -186,11 +186,11 @@ boot: $(BOOT_ALL)
 	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
 test.internal: boot
-	-make -C ../examples/unit-tests all-lax all-ver 
+	-make -s -C ../examples/unit-tests all-lax all-ver 
 	@echo "--------Expect 16 failing assertions--------------"
 
 test:
-	@make test.internal | grep -v "^make\[" > .test.out
+	@make -s test.internal | grep -v "^make\[" > .test.out
 	@diff .test.out expected-test-output
 	@echo "F* ok"
 

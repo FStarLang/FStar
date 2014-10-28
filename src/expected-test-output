@@ -1,4 +1,3 @@
-../bin/fstar.exe --fstar_home ..  --debug low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform ../lib/system.fst ../lib/st.fst ../lib/list.fst ../lib/option.fst ../lib/string.fst basic/bytes.fst basic/platform.fsi basic/util.fsi basic/getoptsimple.fst basic/options.fs basic/range.fst basic/unionfind.fst basic/lazyset.fsi basic/lazyset.fs absyn/syntax.fsi absyn/syntax.fs absyn/const.fs absyn/visit.fs absyn/util.fs absyn/print.fs parser/ast.fs parser/dsenv.fsi parser/dsenv.fs parser/desugar.fsi parser/desugar.fs parser/parse.fst parser/lexhelp.fs parser/parseit.fst parser/driver.fs tc/errors.fs tc/tcenv.fsi tc/tcenv.fs tc/normalize.fsi tc/normalize.fs tc/rel.fsi tc/rel.fs tc/tcutil.fsi tc/tcutil.fs tc/tc.fs tosmt/term.fsi tosmt/term.fs tosmt/z3.fs tosmt/encode.fs backend/ocaml-backend-stub.fst jsbackend/ast.fs jsbackend/translate.fs
 Checking module: Prims
 Checking module: System
 Checking module: IO
@@ -102,8 +101,6 @@ Lax type-checked module: Microsoft.FStar.Backends.OCaml.ASTTrans
 Lax type-checked module: Microsoft.FStar.Backends.OCaml.Code
 Lax type-checked module: Microsoft.FStar.Backends.JS.Ast
 Lax type-checked module: Microsoft.FStar.Backends.JS.Translate
-make -C ../examples/unit-tests all-lax all-ver 
-../../bin/fstar.exe --fstar_home ../.. ../../lib/string.fst ../../lib/st.fst ../../lib/partialmap.fst  rec.fst pat.fst format.fst
 Lax type-checked module: Prims
 Lax type-checked module: String
 Lax type-checked module: ST
@@ -112,7 +109,6 @@ Lax type-checked module: Foo.Record
 Lax type-checked module: Patterns
 Lax type-checked module: Array
 Lax type-checked module: Format
-../../bin/fstar.exe --fstar_home ../.. ../../lib/string.fst ../../lib/st.fst ../../lib/partialmap.fst  --verify unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst
 Error unit1.fst(26,0-26,36): The following problems were found:
 	assertion failed (call at unit1.fst(26,23-26,36))
 Error unit1.fst(43,0-44,15): The following problems were found:
@@ -170,5 +166,4 @@ Verified module: Termination
 Verified module: TerminationBugs
 Error: 16 verification conditions could not be discharged (see above)
 Makefile:18: recipe for target 'all-ver' failed
-Makefile:189: recipe for target 'test.internal' failed
 --------Expect 16 failing assertions--------------
