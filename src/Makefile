@@ -185,13 +185,14 @@ BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSM
 boot: $(BOOT_ALL)
 	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
-
-
-test: boot
-# CH: added minus in front of the commands that are expected to fail
-#     now can we please make --verify actually fail when it couldn't discharge all obligations
+test.internal: boot
 	-make -C ../examples/unit-tests all-lax all-ver 
 	@echo "--------Expect 16 failing assertions--------------"
+
+test:
+	@make test.internal | grep -v "^make\[" > .test.out
+	@diff .test.out expected-test-output
+	@echo "F* ok"
 
 wc-boot:
 	wc -l $(BOOT_ALL)
