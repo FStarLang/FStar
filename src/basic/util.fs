@@ -65,12 +65,14 @@ let start_process (prog:string) (args:string) (cond:string -> bool) : proc =
                            then System.Threading.Monitor.Pulse(signal))));
         proc.Exited.AddHandler(
              EventHandler(fun _ _ ->
-               System.Threading.Monitor.Enter(signal);
-               killed := true;
-               Printf.fprintf stdout "Z3 exited unadvertedly\n%s\n" (driverOutput.ToString());
-               stdout.Flush();
-               System.Threading.Monitor.Exit(signal);
-               exit(1)));
+                if !killed then ()
+                else
+                    System.Threading.Monitor.Enter(signal);
+                    killed := true;
+                    Printf.fprintf stdout "Z3 exited unadvertedly\n%s\n" (driverOutput.ToString());
+                    stdout.Flush();
+                    System.Threading.Monitor.Exit(signal);
+                    exit(1)));
         proc.StartInfo <- startInfo;
         proc.Start() |> ignore;
         proc.BeginOutputReadLine();

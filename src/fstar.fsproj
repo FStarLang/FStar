@@ -70,9 +70,6 @@
       <Project>{670da3f6-7e41-4c1d-ab17-1f59e0317f52}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <Reference Include="FSharp.Core">
-      <HintPath>..\bin\FSharp.Core.dll</HintPath>
-    </Reference>
     <Reference Include="FSharp.PowerPack">
       <HintPath>..\bin\FSharp.PowerPack.dll</HintPath>
     </Reference>
