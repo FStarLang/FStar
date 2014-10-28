@@ -146,7 +146,7 @@ let rec appears_free_in x e =
   match e with
   | EVar y -> x = y
   | EApp e1 e2 -> appears_free_in x e1 || appears_free_in x e2
-  | EAbs y t e -> if x = y then false else appears_free_in x e
+  | EAbs y t e1 -> if x = y then false else appears_free_in x e1
   | EIf e1 e2 e3 ->
       appears_free_in x e1 || appears_free_in x e2 || appears_free_in x e3
   | _ -> false
@@ -165,7 +165,7 @@ val context_invariance : g:env -> g':env -> e:exp -> t:ty -> Pure unit
       (requires (typing e g == Some t /\
                    (forall (x:int). appears_free_in x e == true ==>
                                     g x == g' x)))
-      (ensures \r => (typing e g == Some t))
+      (ensures \r => (typing e g' == Some t))
 let context_invariance g g' e t = ()
 
 val substitution_preserves_typing :
