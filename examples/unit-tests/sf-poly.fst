@@ -95,7 +95,8 @@ let rec index_option l n =
   | [] -> None
   | h :: t -> if n = 0 then Some h else index_option t (n-1)
 
-(* All these fail and I think they shouldn't
+(* All these fail and I think they shouldn't:
+   Type "(unit -> Fact (unit))" has unexpected non-trivial pre-condition
 val test_index_option1 : unit -> Fact unit
       (ensures (index_option [4;5;6;7] 0 == Some 4))
 let test_index_option1 () = ()
@@ -104,7 +105,6 @@ val test_index_option2 : unit -> Fact unit
       (ensures (index_option [[1];[2]] 1 == Some [2]))
 let test_index_option2 () = ()
 
-(* CH: This should succeed *)
 val test_index_option3 : unit -> Fact unit
       (ensures (index_option [true] 2 == None))
 let test_index_option3 () = ()
@@ -122,14 +122,20 @@ let rec index_option' l n =
     | _ -> index_option' t (n-1)
     end
 
-(* now this fails for other reasons, but it shouldn't
+(* still get same error:
+   Type "(unit -> Fact (unit))" has unexpected non-trivial pre-condition
 val test_index_option3' : unit -> Fact unit
       (ensures (index_option' [true] 2 == None))
 let test_index_option3' () = ()
 *)
 
 assume val impossible : u : unit { False } -> Tot 'a
-(* let impossible = failwith "this won't happen"  -- this blows up *)
+(* let impossible = failwith "this won't happen"
+This blows up
+Name not found: failwith
+   at Microsoft.FStar.ToSMT.Encode.lookup_lid(env_t env, LongIdent a) in E:\Proj
+   ects\fstar\pub\src\tosmt\encode.fs:line 169
+Filed as https://github.com/FStarLang/FStar/issues/16 *)
 
 (* CH: This should really work *)
 val length_nil : unit -> Fact unit
@@ -159,7 +165,7 @@ anyway?  using a single common existential also makes this provable
 (with the current pattern for the equation) *)
 
 (* Getting incomplete patterns here, with or without the [] pattern,
-   caused by the same problem with length_nil I think, still it should
+   caused by the same problem as length_nil I think; it should clearly
    be a different error message when the [] pattern is present *)
 val index : l : list 'a -> n:int{(0 <= n) /\ (n < length l)} -> Tot 'a
 let rec index l n =
@@ -208,7 +214,7 @@ let evenb i = i % 2 = 0
 I would prefer something like this for %
 assume val mod : x : int -> y:int{x =!= 0} -> Tot int
 *)
-
+(* Working around it for now *)
 val evenb : nat -> Tot bool
 let rec evenb i =
   match i with
@@ -240,7 +246,10 @@ let plus3 n = n + 3
 
 val test_map1 : unit -> Fact unit
       (ensures (map plus3 [2;0;2] == [5;3;5]))
-(* CH: Replacing plus3 with a lambda (just inlining) fails to parse +, strange *)
+(* CH: Replacing plus3 with (fun n -> n + 3) (just inlining) makes F* blow up:
+   Bound term variable not found: n
+   at Microsoft.FStar.ToSMT.Encode.lookup_term_var[a,b](env_t env, withinfo_t`2
+   a) in E:\Projects\fstar\pub\src\tosmt\encode.fs:line 141 *)
 let test_map1 () = ()
 
 (* CH: again: Incompatible types (list i:int{i >= 0}) and (list nat)
