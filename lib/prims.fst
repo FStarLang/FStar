@@ -287,7 +287,7 @@ type Tuple2 'a 'b =
 type Tuple3 'a 'b 'c =
   | MkTuple3: _1:'a
            -> _2:'b
-           -> _3:'c0
+           -> _3:'c
           -> Tuple3 'a 'b 'c
 
 type Tuple4 'a 'b 'c 'd =
