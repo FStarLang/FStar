@@ -5,14 +5,14 @@ module Bug24
 
 (* Example 2 *)
 
-(* Adding this makes it work
-val nth : int -> list 'a -> 'a
-*)
-let rec nth n l = match l with
-    | [] -> failwith "Not enough elements"
-    | x::xs -> if n = 0 then x else nth (n-1) xs
+(* Adding this signature makes it work
+val nth : list 'a -> int *)
+(* Also removing the rec makes it work *)
+let rec nth l = match l with
+    | [] -> 0
+    | x::xs -> 1
 
-(* Example 3 *)
+(* Example 3 
 
 val length : list 'a -> Tot nat
 let rec length l =
@@ -34,3 +34,5 @@ let rec index l n =
   match l with
   | [] -> length_nil(); impossible()
   | h :: t -> if n = 0 then h else index t (n-1)
+
+*)
