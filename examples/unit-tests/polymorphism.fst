@@ -8,7 +8,4 @@ type foo 'a : Type => Type =
 
 let f x =
   match x with
-  | Foo (_, y) -> y
-
-(* val test2 : int * unit *)
-(* let test2 = (3, ()) *)
+    | Foo _ y -> y
