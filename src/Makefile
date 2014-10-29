@@ -185,12 +185,12 @@ BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSM
 boot: $(BOOT_ALL)
 	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
-test.internal: boot
+test: boot
 	-make -s -C ../examples/unit-tests all-lax all-ver 
 	@echo "--------Expect 16 failing assertions--------------"
 
-test:
-	@make -s test.internal | grep -v "^make\[" > .test.out
+test.diff:
+	@make -s test | grep -v "^make\[" > .test.out
 	@diff .test.out expected-test-output
 	@echo "F* ok"
 
