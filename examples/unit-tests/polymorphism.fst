@@ -6,3 +6,6 @@ type foo 'a : Type => Type =
 let f x =
   match x with
   | Foo (_, y) -> y
+
+(* val test : int * unit *)
+(* let test = let g x = x in (g 3, g ()) *)
