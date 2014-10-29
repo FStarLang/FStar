@@ -120,11 +120,23 @@ let rec typing e g =
   | EFalse -> Some TBool
   | EIf e1 e2 e3 -> begin
       (* CH: This triple pattern matching is in fact complete
-         Filed as: https://github.com/FStarLang/FStar/issues/24 *)
+         Filed as: https://github.com/FStarLang/FStar/issues/24
+         CH: And it should type-check
+         Filed that one as: https://github.com/FStarLang/FStar/issues/28
       match typing e1 g, typing e2 g, typing e3 g with
       | Some TBool, Some t2, Some t3 -> if t2 = t3 then Some t2 else None
       | _         , _      , _       -> None
-      end
+         end *)
+      (* Working around these errors for now *)
+      match typing e1 g with
+      | Some TBool -> begin
+          match typing e2 g, typing e3 g with
+          | Some t2, Some t3 ->
+              if t2 = t3 then Some t2 else None
+          | _, _ -> None
+          end
+      | _ -> None
+       end
   | _ -> None
 
 val canonical_forms_bool : e:exp -> Pure unit

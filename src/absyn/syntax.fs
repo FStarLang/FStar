@@ -600,9 +600,10 @@ let null_t_binder t : binder = Inl (null_bvar t), false
 let null_v_binder t : binder = Inr (null_bvar t), false
 let targ t : arg = Inl t, false
 let varg v : arg = Inr v, false
+let is_null_bvar (b:bvar<'a,'b>) = b.v.realname.idText = null_id.idText
 let is_null_binder (b:binder) = match b with
-    | Inl a, _ -> a.v.realname.idText = null_id.idText
-    | Inr x, _ -> x.v.realname.idText = null_id.idText
+    | Inl a, _ -> is_null_bvar a
+    | Inr x, _ -> is_null_bvar x
 
 let freevars_of_binders (bs:binders) : freevars = 
     bs |> List.fold_left (fun out -> function

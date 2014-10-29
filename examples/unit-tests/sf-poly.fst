@@ -167,7 +167,8 @@ anyway?  using a single common existential also makes this provable
 
 (* Getting incomplete patterns here, with or without the [] pattern,
    caused by the same problem as length_nil I think; it should clearly
-   be a different error message when the [] pattern is present *)
+   be a different error message when the [] pattern is present.
+   Seems to be the same problem as: https://github.com/FStarLang/FStar/issues/24 *)
 val index : l : list 'a -> n:int{(0 <= n) /\ (n < length l)} -> Tot 'a
 let rec index l n =
   match l with

@@ -91,6 +91,7 @@ let bvar_to_exp bv   =  mk_Exp_bvar bv bv.sort bv.p
 let bvd_to_exp bvd t = bvar_to_exp (bvd_to_bvar_s bvd t)
 let new_bvd ropt = let id = genident ropt in mkbvd (id,id)
 let freshen_bvd bvd' = mkbvd(bvd'.ppname, genident (Some <| range_of_bvd bvd'))
+let freshen_bvar b =  bvd_to_bvar_s (freshen_bvd b.v) b.sort
 let gen_bvar sort = let bvd = (new_bvd None) in bvd_to_bvar_s bvd sort
 let gen_bvar_p r sort = let bvd = (new_bvd (Some r)) in bvd_to_bvar_s bvd sort
 let bvdef_of_str s = let id = id_of_text s in mkbvd(id, id)
@@ -120,11 +121,28 @@ let args_of_binders (binders:Syntax.binders) : (Syntax.binders * args) =
  binders |> List.map (fun b -> 
     if is_null_binder b 
     then let b = match fst b with
-            | Inl a -> Inl <| gen_bvar a.sort, snd b 
-            | Inr x -> Inr <| gen_bvar x.sort, snd b in
+            | Inl a -> 
+              Inl <| gen_bvar a.sort, snd b 
+
+            | Inr x -> 
+              Inr <| gen_bvar x.sort, snd b 
+        in
          b, arg_of_non_null_binder b 
     else b, arg_of_non_null_binder b) |> List.unzip 
 
+let name_all_binders t = match t.n with 
+    | Typ_fun(binders, comp) -> 
+        let binders = binders |> List.mapi (fun i b ->
+            if is_null_binder b
+            then match b with 
+                    | Inl _, _ -> failwith "impossible"
+                    | Inr y, imp -> 
+                      let x = id_of_text ("_" ^ string_of_int i) in
+                      let x = bvd_to_bvar_s (mkbvd(x,x)) y.sort in
+                      Inr x, imp
+            else b) in
+        mk_Typ_fun(binders, comp) t.tk t.pos
+    | _ -> t
 let null_binders_of_args (args:args) : binders = 
     args |> List.map (fun (a, imp) -> match a with 
         | Inl t -> fst <| null_t_binder t.tk, imp 
@@ -582,6 +600,19 @@ let mk_data l args =
       mk_Exp_meta(Meta_desugared(fvar l (range_of_lid l), Data_app))
     | _ -> 
       mk_Exp_meta(Meta_desugared(mk_exp_app (fvar l (range_of_lid l)) args, Data_app))
+
+let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange) 
+let unmangle_field_name x = 
+    if Util.starts_with x.idText "^fname^"
+    then mk_ident(Util.substring_from x.idText 7, x.idRange)
+    else x
+
+let mk_field_projector_name lid x i = 
+    let nm = if Syntax.is_null_bvar x
+             then Syntax.mk_ident("_" ^ Util.string_of_int i, x.p)
+             else x.v.ppname in
+    let y = {x.v with ppname=nm} in
+    lid_of_ids (ids_of_lid lid @ [unmangle_field_name nm]), y
 
 let unchecked_unify uv t = 
   match Unionfind.find uv with 
@@ -1048,7 +1079,13 @@ let mk_conj_opt phi1 phi2 = match phi1 with
 let mk_binop op_t phi1 phi2 = mk_Typ_app(op_t, [(Inl phi1, false); (Inl phi2, false)]) ktype (Range.union_ranges phi1.pos phi2.pos)
 let mk_neg phi = mk_Typ_app(ftv Const.not_lid kt_kt, [Inl phi, false]) ktype phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
+let mk_conj_l phi = match phi with 
+    | [] -> ftv Const.true_lid ktype
+    | hd::tl -> List.fold_right mk_conj tl hd
 let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
+let mk_disj_l phi = match phi with 
+    | [] -> ftv Const.false_lid ktype
+    | hd::tl -> List.fold_right mk_disj tl hd
 let mk_imp phi1 phi2  = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 let b2t e = mk_Typ_app(b2t_v, [varg <| e]) kun e.pos//implicitly coerce a boolean to a type     
@@ -1108,12 +1145,6 @@ let function_formals t =
     match t.n with 
         | Typ_fun(bs, c) -> Some (bs, c)
         | _ -> None
-
-let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange) 
-let unmangle_field_name x = 
-    if Util.starts_with x.idText "^fname^"
-    then mk_ident(Util.substring_from x.idText 7, x.idRange)
-    else x
 
 (**************************************************************************************)
 (* Destructing a type as a formula *)
