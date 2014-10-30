@@ -396,7 +396,9 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
 
       | Typ_uvar _ ->
         let tsym = varops.fresh "uvar", Type_sort in 
-        mkBoundV tsym, [tsym, Term.mkTrue]
+        let ttm = mkBoundV tsym in
+        let k = encode_knd t.tk env ttm in
+        ttm, [tsym, k]
 
       | Typ_app(head, args) -> (* this is in head normal form; so t must be a type variable or a constant *)
         let is_full_app () = match (Util.compress_kind head.tk).n with
