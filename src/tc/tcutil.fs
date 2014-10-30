@@ -780,9 +780,15 @@ let check_uvars r t =
   if Util.set_count uvt.uvars_e + 
      Util.set_count uvt.uvars_t + 
      Util.set_count uvt.uvars_k > 0
-  then Tc.Errors.report r "Unconstrained unification variables; please add an annotation"
+  then
+    let ue = List.map Print.uvar_e_to_string (Util.set_elements uvt.uvars_e) in
+    let ut = List.map Print.uvar_t_to_string (Util.set_elements uvt.uvars_t) in
+    let uk = List.map Print.uvar_k_to_string (Util.set_elements uvt.uvars_k) in
+    let union = String.concat ","  (ue @ ut @ uk) in
+    Tc.Errors.report r
+      (format2 "Unconstrained unification variables %s in type signature %s; \
+       please add an annotation" union (Print.typ_to_string t))
 
-   
 let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) = 
  if debug env Options.Low then Util.fprint1 "Generalizing: %s" (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) ecs |> String.concat ", ");
  //  let _ = printfn "Generalizing %s\n" (Print.typ_to_string (Util.comp_result c)) in

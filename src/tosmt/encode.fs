@@ -427,6 +427,9 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
 
             | _ -> 
               let t = norm_t env t in
+              (* CH: WARNING: if norm_t returns the same type it got as input
+                     this code enters infinite loop (as it happened with uvars);
+                     might want to do something about this!? *)
               encode_typ_term t env
         end
 

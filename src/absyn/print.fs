@@ -202,7 +202,7 @@ and exp_to_string x = match (compress_exp x).n with
   | Exp_delayed _ -> failwith "Impossible"
   | Exp_meta(Meta_datainst(e,_))
   | Exp_meta(Meta_desugared(e, _)) -> exp_to_string e
-  | Exp_uvar(uv, _) -> Util.format1 "'e%s" (Util.string_of_int (Unionfind.uvar_id uv))
+  | Exp_uvar(uv, t) -> uvar_e_to_string (uv, t)
   | Exp_bvar bvv -> strBvd bvv.v //Util.format2 "%s : %s" (strBvd bvv.v) (typ_to_string bvv.sort)
   | Exp_fvar(fv, _) ->  sli fv.v
   | Exp_constant c -> c |> const_to_string
@@ -218,7 +218,9 @@ and exp_to_string x = match (compress_exp x).n with
   | Exp_let(lbs, e) -> Util.format2 "%s in %s" 
     (lbs_to_string lbs)
     (e|> exp_to_string)
-  
+
+and uvar_e_to_string (uv, _) = Util.format1 "'e%s" (Util.string_of_int (Unionfind.uvar_id uv))
+
 and lbs_to_string lbs = 
     Util.format2 "let %s %s"
     (if fst lbs then "rec" else "") 
@@ -244,9 +246,7 @@ and meta_to_string x = match x with
 and kind_to_string x = match (compress_kind x).n with 
   | Kind_lam _ -> failwith "Impossible"
   | Kind_delayed _ -> failwith "Impossible"
-  | Kind_uvar (uv,args) ->
-      //format1 "'k_%s" (Util.string_of_int (Unionfind.uvar_id uv)) 
-    format2 "('k_%s %s)" (Util.string_of_int (Unionfind.uvar_id uv)) (args_to_string args)
+  | Kind_uvar (uv,args) -> uvar_k_to_string' (uv,args)
   | Kind_type -> "Type"
   | Kind_effect -> "Effect"
   | Kind_abbrev((n, args), k) -> 
@@ -255,6 +255,12 @@ and kind_to_string x = match (compress_kind x).n with
     else Util.format2 "%s %s" (sli n) (args_to_string args)
   | Kind_arrow(binders, k) -> Util.format2 "(%s => %s)" (binders_to_string " => " binders) (k |> kind_to_string)
   | Kind_unknown -> "_"
+
+and uvar_k_to_string uv =
+    format1 "'k_%s" (Util.string_of_int (Unionfind.uvar_id uv)) 
+
+and uvar_k_to_string' (uv,args) =
+    format2 "('k_%s %s)" (uvar_k_to_string uv) (args_to_string args)
 
 and pat_to_string x = match x.v with
   | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (sli l.v) (List.map pat_to_string pats |> String.concat " ") 
