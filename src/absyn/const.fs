@@ -137,8 +137,8 @@ let all_effect_lid  = pconst "ALL"
 let all_ret_lid     = p2l ["Prims";"ALL";"return"]
 let all_bind_lid    = p2l ["Prims";"ALL";"bind"]
 let ml_effect_lid   = p2l ["Prims"; "ALL"; "ML"]
-let assert_pure_lid = p2l ["Prims"; "assert_pure"]
-let assume_pure_lid = p2l ["Prims"; "assume_pure"]
+let assert_pure_lid = p2l ["Prims"; "PURE"; "assert_p"]
+let assume_pure_lid = p2l ["Prims"; "PURE"; "assume_p"]
 
 (* relational mode constants *)
 let lproj_lid            = pconst  "L"

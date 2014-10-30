@@ -49,6 +49,10 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) 
                                                ('wlp2:'a => WP 'b) 
                                                ('p:Post 'b) = 'wlp1 (fun a => 'wlp2 a 'p)
+             type if_then_else ('a:Type) ('p:Type) ('wp_then:WP 'a) ('wp_else:WP 'a) ('post:Post 'a) = 
+                 (if 'p 
+                  then 'wp_then 'post
+                  else 'wp_else 'post)
              type ite_wlp ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) =
                  (forall (a:'a). 'wlp_cases (fun a' => a=!=a') \/ 'post a)
              type ite_wp ('a:Type) ('wlp_cases:WP 'a) ('wp_cases:WP 'a) ('post:Post 'a) =
@@ -167,6 +171,10 @@ monad_lattice { (* STATE a wp wlp *)
              type bind_wp  ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = 
                  'wp1 (fun a h1 => 'wp2 a 'p h1) h0
              type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) ('wlp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = 'wlp1 (fun a => 'wlp2 a 'p) h0
+             type if_then_else ('a:Type) ('p:Type) ('wp_then:WP 'a) ('wp_else:WP 'a) ('post:Post 'a) (h0:heap) = 
+                 (if 'p 
+                  then 'wp_then 'post h0
+                  else 'wp_else 'post h0)
              type ite_wlp  ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) (h0:heap) =
                  (forall (a:'a) (h:heap). 'wlp_cases (fun a1 h1 => a=!=a1 \/ h=!=h1) h0 \/ 'post a h)
              type ite_wp ('a:Type) ('wlp_cases:WP 'a) ('wp_cases:WP 'a) ('post:Post 'a) (h0:heap) =
@@ -207,6 +215,10 @@ monad_lattice { (* STATE a wp wlp *)
                  (forall (rb:result 'b). 'p rb \/ 'wlp1 (fun ra1 => if b2t (is_V ra1)
                                                                     then 'wlp2 (V.v ra1) (fun rb2 => rb2=!=rb)
                                                                     else  ra1 =!= rb))
+             type if_then_else ('a:Type) ('p:Type) ('wp_then:WP 'a) ('wp_else:WP 'a) ('post:Post 'a) =
+                 (if 'p 
+                  then 'wp_then 'post
+                  else 'wp_else 'post)
              type ite_wlp  ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) =
                  (forall (a:result 'a). 'wlp_cases (fun a1 => a=!=a1) \/ 'post a)
              type ite_wp ('a:Type) ('wlp_cases:WP 'a) ('wp_cases:WP 'a) ('post:Post 'a) =
@@ -231,13 +243,6 @@ monad_lattice { (* STATE a wp wlp *)
              kind Post ('a:Type) = result 'a => heap => Type
              kind WP ('a:Type) = Post 'a => Pre
              type return ('a:Type) (x:'a) ('p:Post 'a) = 'p (V x)
-             (* type bind_wp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) (h0:heap) = *)
-             (*     (forall rb h. 'p rb h \/ 'wlp1 (fun ra h1 => if b2t (is_V ra) *)
-             (*                                                  then 'wlp2 (V.v ra) (fun rb2 h2 => ~(rb==rb2 \/ h==h2)) h1 *)
-             (*                                                  else ~(rb==ra \/ h==h1)) h0) *)
-             (*     /\ 'wp1 (fun ra h1 => if b2t (is_V ra) *)
-             (*                           then 'wp2 (V.v ra) (fun _a _b => True) h1 *)
-             (*                           else True) h0 *)
 
              type bind_wp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a => WP 'b) ('wlp2:'a => WP 'b) ('p:Post 'b) (h0:heap) =
                  ('wp1 (fun ra h1 => b2t (is_V ra) ==> 'wp2 (V.v ra) 'p h1) h0)
@@ -246,6 +251,10 @@ monad_lattice { (* STATE a wp wlp *)
                      if b2t (is_V ra)
                      then 'wlp2 (V.v ra) (fun rb2 h2 => rb==rb2 /\ h==h2) h1
                      else rb==ra /\ h==h1) h0 ==> 'p rb h)
+             type if_then_else ('a:Type) ('p:Type) ('wp_then:WP 'a) ('wp_else:WP 'a) ('post:Post 'a) (h0:heap) =
+                 (if 'p 
+                  then 'wp_then 'post h0
+                  else 'wp_else 'post h0)
              type ite_wlp  ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) (h0:heap) =
                  (forall (ra:result 'a) (h:heap). 'wlp_cases (fun ra2 h2 => ra=!=ra2 \/ h=!=h2) h0 \/ 'post ra h)
              type ite_wp ('a:Type) ('wlp_cases:WP 'a) ('wp_cases:WP 'a) ('post:Post 'a) (h0:heap) =

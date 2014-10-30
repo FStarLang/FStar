@@ -54,7 +54,7 @@ type comp_with_binder = option<Env.binding> * comp
 val is_pure: env -> comp -> bool
 val return_value: env -> typ -> exp -> comp
 val bind: env -> option<exp> -> comp -> comp_with_binder -> comp
-val bind_cases: env -> typ -> list<(option<typ> * comp)> -> comp
+val bind_cases: env -> typ -> list<(typ * comp)> -> comp
 val weaken_result_typ: env -> exp -> comp -> typ -> exp * comp
 val strengthen_precondition: option<string> -> env -> comp -> guard_t -> comp
 val weaken_precondition: env -> comp -> guard_t -> comp

@@ -119,7 +119,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard_t 
        if debug env Options.Low then Util.fprint2 "(%s) After normalization, c is %s\n" 
                                   (Range.string_of_range e.pos) (Print.comp_typ_to_string c);
        let e, c, g = Tc.Util.check_comp env e c c' in
-       if debug env Options.Low then Util.fprint2 "(%s) DONE check_expected_effect; guard is: %s" (Range.string_of_range e.pos) (Rel.guard_to_string env g);
+       if debug env Options.Low then Util.fprint2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (Rel.guard_to_string env g);
        e, c, g//res 
     
 let no_guard env (te, kt, f) = match f with
@@ -767,10 +767,10 @@ and tc_exp env e : exp * comp =
     let t_eqns = eqns |> List.map (tc_eqn guard_x (Util.comp_result c1) env_branches) in
     let c_branches = 
       let cases = List.fold_right (fun (_, f, c) caccum -> 
-        if debug env Options.Extreme then  Util.fprint3 "(%s) branch:\n\tguard= %s\n\tcomp= %s" 
-                                  (Range.string_of_range top.pos) 
-                                  (match f with None -> "None" | Some f -> Print.typ_to_string f)
-                                  (Print.comp_typ_to_string c);
+//        if debug env Options.Extreme then  Util.fprint3 "(%s) branch:\n\tguard= %s\n\tcomp= %s" 
+//                                  (Range.string_of_range top.pos) 
+//                                  (match f with None -> "None" | Some f -> Print.typ_to_string f)
+//                                  (Print.comp_typ_to_string c);
         (f, c)::caccum) t_eqns [] in 
       Tc.Util.bind_cases env res_t cases in (* bind_cases adds an exhaustiveness check *)
     if debug env Options.Extreme then Util.fprint3 "(%s) comp\n\tscrutinee: %s\n\tbranches: %s" (Range.string_of_range top.pos) (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c_branches);
@@ -874,7 +874,7 @@ and tc_exp env e : exp * comp =
                 | _ -> e, cres
          end
 
-and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * option<exp> * exp) * option<formula> * comp =
+and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat * option<exp> * exp) * formula * comp =
   (* 
      scrutinee_x is the scrutinee;  pat_t is the expected pattern typ; 
      Returns: (pattern, when_clause, branch) --- typed
@@ -955,13 +955,14 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
           | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range pat_exp.pos) (Print.exp_to_string pat_exp)) in
 
   let guard = 
-    if !Options.verify     (* Annotate the pattern with its corresponding expression and guard; consumed downstream by the encoding to SMT *)
-    then let guard = disj_exps |> List.map (mk_guard scrutinee) |> Util.mk_disj_l  in
+//    if !Options.verify     (* Annotate the pattern with its corresponding expression and guard; consumed downstream by the encoding to SMT *)
+//    then 
+    let guard = disj_exps |> List.map (mk_guard scrutinee) |> Util.mk_disj_l  in
          let guard = match when_condition with 
             | None -> guard
             | Some w -> Util.mk_conj guard w in
-         Some guard
-    else None in
+         guard in
+//    else None in
 
   (pattern, when_clause, branch), guard, c 
 
@@ -1032,6 +1033,12 @@ let rec tc_monad_decl env m =
                                         null_t_binder a_kwlp_b],
                                         kwlp_b) in
    tc_typ_check_trivial env m.bind_wlp expected_k |> norm_t env in
+  let if_then_else = 
+    let expected_k = w <| mk_Kind_arrow([t_binder a; 
+                                         t_binder b;
+                                         null_t_binder kwp_a;
+                                         null_t_binder kwp_a], kwp_a) in
+    tc_typ_check_trivial env m.if_then_else expected_k |> norm_t env in
   let ite_wp =
     let expected_k = w <| mk_Kind_arrow([t_binder a;
                                          null_t_binder kwlp_a;
@@ -1089,6 +1096,7 @@ let rec tc_monad_decl env m =
     ret=ret;
     bind_wp=bind_wp;
     bind_wlp=bind_wlp;
+    if_then_else=if_then_else;
     ite_wp=ite_wp;
     ite_wlp=ite_wlp;
     wp_binop=wp_binop;

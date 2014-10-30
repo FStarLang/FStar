@@ -1291,6 +1291,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
          ret=lookup "return";
          bind_wp=lookup "bind_wp";
          bind_wlp=lookup "bind_wlp";
+         if_then_else=lookup "if_then_else";
          ite_wp=lookup "ite_wp";
          ite_wlp=lookup "ite_wlp";
          wp_binop=lookup "wp_binop";

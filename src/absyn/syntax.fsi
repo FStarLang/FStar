@@ -222,6 +222,7 @@ type monad_decl = {
     ret:typ;
     bind_wp:typ;
     bind_wlp:typ;
+    if_then_else:typ;
     ite_wp:typ;
     ite_wlp:typ;
     wp_binop:typ;
