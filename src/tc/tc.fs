@@ -935,6 +935,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
     Util.mk_eq e Const.exp_true_bool in
 
   let rec mk_guard scrutinee pat_exp : typ = 
+    if not !Options.verify then Util.ftv Const.true_lid ktype else //NS: TODO ... seem to be hitting a bug when type-checking visit.fs
         let pat_exp = compress_exp pat_exp in
         match pat_exp.n with 
           | Exp_uvar _

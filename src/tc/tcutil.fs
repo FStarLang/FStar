@@ -598,55 +598,25 @@ let weaken_precondition env c f = match f with
 
 let bind_cases env (res_t:typ) (cases:list<(formula * comp)>) : comp =
   (if List.length cases = 0 then failwith "Empty cases!"); (* TODO: Fix precedence of semi colon *)
-//  match cases with 
-//    | [(f, c)] -> strengthen_precondition (Some Errors.exhaustiveness_check) env c (NonTrivial f)
-//    | _ -> 
     let ifthenelse md res_t g wp_t wp_e = mk_Typ_app(md.if_then_else, [targ res_t; targ g; targ wp_t; targ wp_e]) wp_t.tk (Range.union_ranges wp_t.pos wp_e.pos) in
     let default_case = 
-        lift_pure env res_t (label Errors.exhaustiveness_check (Env.get_range env) (Util.ftv Const.false_lid ktype)) in
+        let post_k = mk_Kind_arrow([null_v_binder res_t], ktype) res_t.pos in
+        let kwp = mk_Kind_arrow([null_t_binder post_k], ktype) res_t.pos in
+        let post = Util.bvd_to_bvar_s (Util.new_bvd None) post_k in
+        let wp = mk_Typ_lam([t_binder post], label Errors.exhaustiveness_check (Env.get_range env) <| Util.ftv Const.false_lid ktype) kwp res_t.pos in
+        let wlp = mk_Typ_lam([t_binder post], Util.ftv Const.true_lid ktype) kwp res_t.pos in
+        let md = Tc.Env.get_monad_decl env Const.pure_effect_lid in
+        mk_comp md res_t wp wlp [] in 
     let comp = List.fold_right (fun (g, cthen) celse ->
         let (md, a, kwp), (res_t, wp_then, wlp_then), (_, wp_else, wlp_else) = lift_and_destruct env cthen celse in
-       mk_comp md res_t (ifthenelse md res_t g wp_then wp_else) (ifthenelse md res_t g wlp_then wlp_else) []) cases default_case in
+        mk_comp md res_t (ifthenelse md res_t g wp_then wp_else) (ifthenelse md res_t g wlp_then wlp_else) []) cases default_case in
     let comp = comp_to_comp_typ comp in
     let md = Tc.Env.get_monad_decl env comp.effect_name in
     let res_t, wp, wlp = destruct_comp comp in
     let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) wp.tk wp.pos in
     let wlp = mk_Typ_app(md.ite_wlp, [targ res_t; targ wlp]) wlp.tk wlp.pos in
     mk_comp md res_t wp wlp []
-  
-//      let caccum, some_pat_matched = cases |> List.fold_left (fun (caccum, prior_pat_matched) (gopt, c) -> 
-//        let prior_or_c_matched, cguard = match prior_pat_matched, gopt with 
-//          | None, Some g -> Some g, Some g
-//          | Some g, None -> prior_pat_matched, Some <| Util.mk_neg g
-//          | Some g, Some g' -> Some (Util.mk_disj g g'), Some <| Util.mk_conj (Util.mk_neg g) g'
-//          | None, None -> None, None in
-//        let c = match cguard with 
-//          | None -> c
-//          | Some g -> weaken_precondition env c (NonTrivial g) in 
-//        match caccum with 
-//          | None -> (Some c, prior_or_c_matched)
-//          | Some caccum -> 
-//            let (md, a, kwp), (t, wp1, wlp1), (_, wp2, wlp2) = lift_and_destruct env caccum c in 
-//            let k = Util.subst_kind' [Inl(a.v, t)] kwp in
-//            let wp_conj wp1 wp2 = 
-//              mk_Typ_app(md.wp_binop, [targ t; targ wp1; targ (Util.ftv Const.and_lid (Const.kbin ktype ktype ktype)); targ wp2]) k wp2.pos in
-//            let wp = wp_conj wp1 wp2 in
-//            let wlp = wp_conj wlp1 wlp2 in 
-//            (Some <| mk_comp md t wp wlp [], prior_or_c_matched)) (None, None) in
-//      let caccum = comp_to_comp_typ <|  (must <| caccum) in
-//      let md = Tc.Env.get_monad_decl env caccum.effect_name in
-//      let res_t, wp, wlp = destruct_comp caccum in
-//      let wp = match some_pat_matched with 
-//        | None -> wp 
-//        | Some guard ->
-//          let guard = label Errors.exhaustiveness_check (Env.get_range env) guard in
-//          mk_Typ_app(md.assert_p, [targ res_t; targ guard; targ wp]) wp.tk wp.pos in
-//      let a, kwp = Tc.Env.wp_signature env caccum.effect_name in
-//      let k = Util.subst_kind' [Inl(a.v, res_t)] kwp in
-//      let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) k wp.pos in
-//      let wlp = mk_Typ_app(md.ite_wlp, [targ res_t; targ wlp]) k wlp.pos in
-//      mk_comp md res_t wp wlp []
-
+ 
 let close_comp env bindings (c:comp) = 
   if Util.is_ml_comp c then c
   else
