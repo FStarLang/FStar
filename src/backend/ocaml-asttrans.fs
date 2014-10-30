@@ -369,17 +369,22 @@ let mlscheme_of_ty (rg : range) (ty : typ) : mltyscheme =
 
 (* -------------------------------------------------------------------- *)
 let rec mlpat_of_pat (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
-    match p with
-    | Pat_cons (x, ps) when is_xtuple x = Some (List.length ps) ->
-        let lenv, ps = Util.fold_map (mlpat_of_pat rg) lenv ps in
+    match p.v with
+    | Pat_cons (x, ps) when is_xtuple x.v = Some (List.length ps) ->
+        let ps = ps |> List.filter (fun p -> match p.v with 
+            | Pat_dot_term _ 
+            | Pat_dot_typ _ -> false
+            | _ -> true) in
+        let lenv, ps = Util.fold_map (fun lenv pat -> mlpat_of_pat pat.p lenv pat) 
+            lenv ps in
         (lenv, MLP_Tuple ps)
 
     | Pat_cons (x, ps) ->
         let lenv, ps = Util.fold_map (mlpat_of_pat rg) lenv ps in
-        (lenv, MLP_CTor (mlpath_of_lident x, ps))
+        (lenv, MLP_CTor (mlpath_of_lident x.v, ps))
 
     | Pat_var x ->
-        let lenv, mlid = lpush lenv x.realname x.ppname in
+        let lenv, mlid = lpush lenv x.v.realname x.v.ppname in
         (lenv, MLP_Var mlid)
 
     | Pat_constant c ->
@@ -392,12 +397,8 @@ let rec mlpat_of_pat (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
     | Pat_wild _ ->
         lenv, MLP_Wild
 
-    | Pat_meta(Meta_pat_exp(p, _, _)) -> 
-        mlpat_of_pat rg lenv p
-
-    | Pat_meta(Meta_pat_pos (p, rg)) ->
-        mlpat_of_pat rg lenv p
-
+    | Pat_dot_term _
+    | Pat_dot_typ _ -> unsupported rg "top-level dot patterns"
     | Pat_tvar  _ -> unsupported rg "pattern-type-variable"
     | Pat_twild _ -> unsupported rg "pattern-type-wild"
 
@@ -445,11 +446,11 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
 
         | Exp_match (e, bs) -> begin
             match bs with
-            | [(Pat_constant (Const_bool true ), None, e1);
-               (Pat_constant (Const_bool false), None, e2)]
+            | [({v=Pat_constant (Const_bool true )}, None, e1);
+               ({v=Pat_constant (Const_bool false)}, None, e2)]
 
-            | [(Pat_constant (Const_bool false), None, e1);
-               (Pat_constant (Const_bool true ), None, e2)] ->
+            | [({v=Pat_constant (Const_bool false)}, None, e1);
+               ({v=Pat_constant (Const_bool true )}, None, e2)] ->
 
                let e  = mlexpr_of_expr rg lenv e  in
                let e1 = mlexpr_of_expr rg lenv e1 in

@@ -253,15 +253,17 @@ let right = function
        
 let (-<-) f g x = f (g x)
 
-let nodups f l = 
+let find_dup f l = 
   let rec aux = function 
     | hd::tl -> 
         let hds, tl' = List.partition (f hd) tl in 
           (match hds with 
              | [] -> aux tl' 
-             | _ -> false)
-    | _ -> true in
+             | _ -> Some hd)
+    | _ -> None in
     aux l
+
+let nodups f l = find_dup f l |> Option.isNone
 
 let remove_dups f l = 
    let rec aux out = function 
@@ -353,7 +355,16 @@ let prefix l =
     match List.rev l with 
       | hd::tl -> List.rev tl, hd
       | _ -> failwith "impossible"
-          
+
+let prefix_until f l = 
+    let rec aux prefix = function
+        | [] -> None
+        | hd::tl -> 
+            if f hd then Some (List.rev prefix, hd, tl)
+            else aux (hd::prefix) tl in
+    aux [] l
+
+        
 let string_to_ascii_bytes: string -> byte [] = fun s -> asciiEncoding.GetBytes(s)
 let ascii_bytes_to_string: byte [] -> string = fun b -> asciiEncoding.GetString(b)
 let mk_ref a = ref a

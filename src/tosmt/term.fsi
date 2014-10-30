@@ -131,6 +131,7 @@ val mk_Kind_type : term
 val mk_Typ_app : term -> term -> term
 val mk_Typ_dep : term -> term -> term
 val mk_and_l: list<term> -> term
+val mk_or_l: list<term> -> term
 
 val boxInt: term -> term
 val unboxInt: term -> term

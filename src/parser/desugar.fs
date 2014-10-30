@@ -296,37 +296,39 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         let e, a = push_local_tbinding e a in
         (Inl a::l), e, a in
   let rec aux (loc:lenv_t) env (p:pattern) =
-    let pos q = Pat_meta(Meta_pat_pos(q, p.prange)) in 
+    let pos q = Syntax.withinfo q (Inr tun) p.prange in
+    let pos_r r q = Syntax.withinfo q (Inr tun) r in
     match p.pat with
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
-        let q = p in
         let loc, env, var, p = aux loc env p in
         let loc, env, ps = List.fold_left (fun (loc, env, ps) p ->
           let loc, env, _, p = aux loc env p in
           loc, env, p::ps) (loc, env, []) ps in
-        let pat = Pat_disj (p::List.rev ps) in
-        ignore (pat_vars q.prange pat);
-        loc, env, var, pos <| pat
+        let pat = pos <| Pat_disj (p::List.rev ps) in
+        ignore (pat_vars pat);
+        loc, env, var, pat
 
       | PatAscribed(p, t) ->
         let loc, env', binder, p = aux loc env p in
         let binder = match binder with
           | LetBinder _ -> failwith "impossible"
           | TBinder(x, _) -> TBinder(x, desugar_kind env t)
-          | VBinder(x, _) -> VBinder(x, desugar_typ env t) in
+          | VBinder(x, _) ->  
+             let t = close env t in
+             VBinder(x, desugar_typ env t) in
         loc, env', binder, p
 
       | PatTvar a ->
         if a.idText = "'_"
         then let a = new_bvd <| Some p.prange in
-             loc, env, TBinder(a, kun), Pat_twild a
+             loc, env, TBinder(a, kun), pos <| Pat_twild (bvd_to_bvar_s a kun)
         else let loc, env, abvd = resolvea loc env a in
-             loc, env, TBinder(abvd, kun), pos <| Pat_tvar abvd
+             loc, env, TBinder(abvd, kun), pos <| Pat_tvar (bvd_to_bvar_s abvd kun)
 
       | PatWild ->
         let x = new_bvd (Some p.prange) in
-        loc, env, VBinder(x, tun), pos <| Pat_wild x
+        loc, env, VBinder(x, tun), pos <| Pat_wild (bvd_to_bvar_s x tun)
         
       | PatConst c ->
         let x = new_bvd (Some p.prange) in
@@ -334,12 +336,12 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
 
       | PatVar x ->
         let loc, env, xbvd = resolvex loc env x in 
-        loc, env, VBinder(xbvd, tun), pos <| Pat_var xbvd
+        loc, env, VBinder(xbvd, tun), pos <| Pat_var (bvd_to_bvar_s xbvd tun)
 
       | PatName l ->
         let l = fail_or env (try_lookup_datacon env) l in
         let x = new_bvd (Some p.prange) in
-        loc, env, VBinder(x, tun), pos <| Pat_cons(l.v, [])
+        loc, env, VBinder(x, tun), pos <| Pat_cons(l, [])
 
       | PatApp({pat=PatName l}, args) ->
         let loc, env, args = List.fold_right (fun arg (loc,env,args) ->
@@ -347,7 +349,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
           (loc, env, arg::args)) args (loc, env, []) in
         let l = fail_or env  (try_lookup_datacon env) l in
         let x = new_bvd (Some p.prange) in
-        loc, env, VBinder(x, tun), pos <| Pat_cons(l.v, args)
+        loc, env, VBinder(x, tun), pos <| Pat_cons(l, args)
 
       | PatApp _ -> raise (Error ("Unexpected pattern", p.prange))
 
@@ -355,9 +357,11 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         let loc, env, pats = List.fold_right (fun pat (loc, env, pats) ->
           let loc,env,_,pat = aux loc env pat in
           loc, env, pat::pats) pats (loc, env, []) in
-        let pat = List.fold_right (fun hd tl -> Pat_cons(Const.cons_lid, [hd;tl])) pats (Pat_cons(Const.nil_lid, [])) in
+        let pat = List.fold_right (fun hd tl -> 
+            let r = Range.union_ranges hd.p tl.p in
+            pos_r r <| Pat_cons(Util.fv Const.cons_lid, [hd;tl])) pats (pos_r (Range.end_range p.prange) <| Pat_cons(Util.fv Const.nil_lid, [])) in
         let x = new_bvd (Some p.prange) in
-        loc, env, VBinder(x, tun), pos <| pat
+        loc, env, VBinder(x, tun), pat
         
       | PatTuple(args, dep) ->
         let loc, env, args = List.fold_left (fun (loc, env, pats) p ->
@@ -368,7 +372,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
                 else Util.mk_tuple_data_lid (List.length args) p.prange in
         let constr = fail_or env  (DesugarEnv.try_lookup_lid env) l in
         let l = match constr.n with
-          | Exp_fvar (v, _) -> v.v
+          | Exp_fvar (v, _) -> v
           | _ -> failwith "impossible" in
         let x = new_bvd (Some p.prange) in
         loc, env, VBinder(x, tun), pos <| Pat_cons(l, args)
@@ -399,11 +403,9 @@ and desugar_binding_pat_maybe_top top env p : (env_t * bnd * option<pat>) =
     | _ -> raise (Error("Unexpected pattern at the top-level", p.prange)) 
   else
     let (env, binder, p) = desugar_data_pat env p in
-    let p = match p with
+    let p = match p.v with
       | Pat_var _
-      | Pat_tvar _ 
-      | Pat_meta(Meta_pat_pos(Pat_var _, _))
-      | Pat_meta(Meta_pat_pos(Pat_tvar _, _)) -> None
+      | Pat_tvar _ -> None
       | _ -> Some p in
     (env, binder, p)
 
@@ -481,16 +483,16 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
                         | None, _ -> sc_pat_opt
                         | Some p, None -> Some (Util.bvar_to_exp b, p) 
                         | Some p, Some (sc, p') ->
-                             begin match sc.n, p' with 
+                             begin match sc.n, p'.v with 
                                 | Exp_bvar _, _ -> 
                                   let tup = Util.mk_tuple_data_lid 2 top.range in
                                   let sc = Syntax.mk_Exp_app(Util.fvar tup top.range, [varg sc; varg <| Util.bvar_to_exp b]) tun top.range in
-                                  let p = Pat_cons(tup, [p';p]) in
+                                  let p = withinfo (Pat_cons(Util.fv tup, [p';p])) (Inr tun) (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | Exp_app(_, args), Pat_cons(_, pats) ->
                                   let tup = Util.mk_tuple_data_lid (1 + List.length args) top.range in
                                   let sc = Syntax.mk_Exp_app(Util.fvar tup top.range, args@[(varg <| Util.bvar_to_exp b)]) tun top.range in 
-                                  let p = Pat_cons(tup, pats@[p]) in
+                                  let p = withinfo (Pat_cons(Util.fv tup, pats@[p])) (Inr tun) (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | _ -> failwith "Impossible"
                               end in
@@ -564,7 +566,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
             let body = desugar_exp env t2 in
             let body = match pat with
               | None 
-              | Some (Pat_wild _) -> body
+              | Some ({v=Pat_wild _}) -> body
               | Some pat -> mk_Exp_match(bvd_to_exp x t, [(pat, None, body)]) tun body.pos in
             pos <| mk_Exp_let((false, [(Inl x, t, t1)]), body)
         end in
@@ -577,8 +579,8 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       
     | If(t1, t2, t3) ->
       pos <| mk_Exp_match(desugar_exp env t1,
-                          [(Pat_constant (Const_bool true), None, desugar_exp env t2);
-                           (Pat_constant (Const_bool false), None, desugar_exp env t3)])
+                          [(withinfo (Pat_constant (Const_bool true)) (Inr tun) t2.range, None, desugar_exp env t2);
+                           (withinfo (Pat_constant (Const_bool false)) (Inr tun) t3.range, None, desugar_exp env t3)])
 
     | TryWith(e, branches) -> 
       let r = top.range in 
@@ -976,9 +978,9 @@ let mk_data_ops env = function
     //Printf.printf "Collecting formals from type %s; got %s with args %s\n" (Print.typ_to_string t) (Print.typ_to_string tconstr) (Print.binders_to_string ", " formals);
     let argpats = formals |> List.map (fun b -> match b with
       | Inr x, _ -> if is_null_binder b 
-                    then Pat_var (new_bvd (Some (range_of_lid lid)))
-                    else Pat_var x.v
-      | Inl a, _ -> Pat_tvar a.v) in
+                    then Pat_var (bvd_to_bvar_s (new_bvd (Some (range_of_lid lid))) tun)
+                    else Pat_var x
+      | Inl a, _ -> Pat_tvar a) in
     let freevs = freevars_typ tconstr in
     let freevars = formals 
         |> List.collect (function

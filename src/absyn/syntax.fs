@@ -122,18 +122,17 @@ and meta_source_info =
 and uvar_e = Unionfind.uvar<uvar_basis<exp,typ>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
-and pat = 
-  | Pat_cons     of lident * list<pat>
-  | Pat_var      of bvvdef
-  | Pat_tvar     of btvdef
-  | Pat_constant of sconst
+and pat' = 
   | Pat_disj     of list<pat>
-  | Pat_wild     of bvvdef                                (* need stable names for even the wild patterns *)
-  | Pat_twild    of btvdef
-  | Pat_meta     of meta_pat
-and meta_pat = 
-  | Meta_pat_pos of pat * Range.range
-  | Meta_pat_exp of pat * exp * typ
+  | Pat_constant of sconst
+  | Pat_cons     of fvvar * list<pat>
+  | Pat_var      of bvvar
+  | Pat_tvar     of btvar
+  | Pat_wild     of bvvar                                 (* need stable names for even the wild patterns *)
+  | Pat_twild    of btvar
+  | Pat_dot_term of bvvar * exp
+  | Pat_dot_typ  of btvar * typ
+and pat = withinfo_t<pat',either<knd,typ>>                (* the meta-data is a typ, except for Pat_dot_typ and Pat_tvar, where it is a kind (not strictly needed) *)
 and knd' =
   | Kind_type
   | Kind_effect
@@ -174,7 +173,8 @@ and bvvar = bvar<exp,typ>
 and ftvar = var<knd>
 and fvvar = var<typ>
 
-type freevars_l = list<either<btvar,bvvar>>
+type either_var = either<btvar, bvvar>
+type freevars_l = list<either_var>
 type formula = typ
 type formulae = list<typ>
 type qualifier = 
@@ -504,32 +504,32 @@ let mk_Exp_app' ((e1:exp), (args:list<arg>)) (t:typ) (p:range) =
     match args with 
         | [] -> e1
         | _ -> mk_Exp_app (e1, args) t p
-let rec pat_vars r = function 
+let rec pat_vars p = match p.v with
   | Pat_cons(_, ps) -> 
-    let vars = List.collect (pat_vars r) ps in 
+    let vars = List.collect pat_vars ps in 
     if vars |> nodups (fun x y -> match x, y with 
       | Inl x, Inl y -> bvd_eq x y
       | Inr x, Inr y -> bvd_eq x y
       | _ -> false) 
     then vars
-    else raise (Error("Pattern variables may not occur more than once", r))
-  | Pat_var x -> [Inr x]
-  | Pat_tvar a -> [Inl a]
+    else raise (Error("Pattern variables may not occur more than once", p.p))
+  | Pat_var x -> [Inr x.v]
+  | Pat_tvar a -> [Inl a.v]
   | Pat_disj ps -> 
-    let vars = List.map (pat_vars r) ps in 
+    let vars = List.map pat_vars ps in 
     if not (List.tl vars |> Util.for_all (Util.set_eq order_bvd (List.hd vars)))
     then 
       let vars = Util.concat_l ";\n" (vars |> 
           List.map (fun v -> Util.concat_l ", " (List.map (function 
             | Inr x -> x.ppname.idText
             | Inl x -> x.ppname.idText) v))) in
-      raise (Error(Util.format1 "Each branch of this pattern binds different variables: %s" vars, r))
+      raise (Error(Util.format1 "Each branch of this pattern binds different variables: %s" vars, p.p))
     else List.hd vars
+  | Pat_dot_term _
+  | Pat_dot_typ _
   | Pat_wild _
   | Pat_twild _
   | Pat_constant _ -> []
-  | Pat_meta(Meta_pat_pos(p, r)) -> pat_vars r p
-  | Pat_meta(Meta_pat_exp(p, _, _)) -> pat_vars r p
 
 let mk_Exp_match ((e:exp),(pats:list<(pat * option<exp> * exp)>)) (t:typ) p = 
     {

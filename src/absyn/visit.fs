@@ -305,15 +305,15 @@ and reduce_exp
           ([], [], [], [e], args), env
 
         | Exp_match(e1, pl) -> 
-          let rec pat_binders b p = match p with 
+          let rec pat_binders b p = match p.v with 
+            | Pat_dot_term _
+            | Pat_dot_typ _
             | Pat_wild _
             | Pat_twild _
             | Pat_constant _ -> b
-            | Pat_meta(Meta_pat_pos(p, _))
-            | Pat_meta(Meta_pat_exp(p, _, _)) -> pat_binders b p
-            | Pat_var x -> push_vbinder b (Some x)
-            | Pat_tvar t -> push_tbinder b (Some t)
-            | Pat_cons(c, pats) -> List.fold_left pat_binders b pats
+            | Pat_var x -> push_vbinder b (Some x.v)
+            | Pat_tvar t -> push_tbinder b (Some t.v)
+            | Pat_cons(_, pats) -> List.fold_left pat_binders b pats
             | Pat_disj(p::_) -> pat_binders b p
             | Pat_disj [] -> failwith "impossible" in
           let branches = pl |> List.collect (fun (p,w,e) -> 

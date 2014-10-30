@@ -256,16 +256,16 @@ and kind_to_string x = match (compress_kind x).n with
   | Kind_arrow(binders, k) -> Util.format2 "(%s => %s)" (binders_to_string " => " binders) (k |> kind_to_string)
   | Kind_unknown -> "_"
 
-and pat_to_string x = match x with
-  | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (sli l) (List.map pat_to_string pats |> String.concat " ") 
-  | Pat_var x -> strBvd x
-  | Pat_tvar a -> strBvd a
-  | Pat_constant c -> const_to_string c 
+and pat_to_string x = match x.v with
+  | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (sli l.v) (List.map pat_to_string pats |> String.concat " ") 
+  | Pat_dot_term (x, _) -> Util.format1 ".%s" (strBvd x.v)
+  | Pat_dot_typ (x, _) -> Util.format1 ".'%s" (strBvd x.v)
+  | Pat_var x -> strBvd x.v
+  | Pat_tvar a -> strBvd a.v
+  | Pat_constant c -> const_to_string c
   | Pat_wild _ -> "_"
   | Pat_twild _ -> "'_"
   | Pat_disj ps ->  Util.concat_l " | " (List.map pat_to_string ps)
-  | Pat_meta(Meta_pat_pos (p, _))
-  | Pat_meta(Meta_pat_exp (p, _, _)) -> pat_to_string p
 
 let subst_to_string subst = 
    Util.format1 "{%s}" <|

@@ -130,20 +130,18 @@ and js_of_match (e:exp) (cases:list<(pat * option<exp> * exp)>) =
         let pat_return props = let rs = JSS_Return(Some(js_of_expr None ret)) in
             let r = match cond with None -> rs | Some(c) -> JSS_If(js_of_expr None c, rs, None)
             in if props=[] then r else JSS_With(JSE_Object(props),r) in
-        let rec aux (id:string) (p:pat) = match p with
-        | Pat_cons(x, l) -> let tagcond = JSE_Equal(JSE_Identifier(id^".t"), JSE_String(x.str)) in
+        let rec aux (id:string) (p:pat) = match p.v with
+        | Pat_cons(x, l) -> let tagcond = JSE_Equal(JSE_Identifier(id^".t"), JSE_String(x.v.str)) in
             let (valcond, valbinds, _) = List.fold_left (
                 fun (cur, b, i) p -> let (next, nb) = aux (id^".v["^(Util.string_of_int i)^"]") p in
                 (and_cond cur next, b @ nb, i+1)
             ) (JSE_Bool(true), [], 0) l in (and_cond tagcond valcond, valbinds)
-        | Pat_var(bv) -> (JSE_Bool(true), [JSP_Property(bv.ppname.idText, JSE_Identifier(id))])
+        | Pat_var(bv) -> (JSE_Bool(true), [JSP_Property(bv.v.ppname.idText, JSE_Identifier(id))])
         | Pat_tvar(_) -> failwith "fail..."
         | Pat_constant(c) -> (JSE_Sequal(JSE_Identifier(id), js_of_const c), [])
         | Pat_disj(l) -> List.fold_left (fun (cur,b) p->
             let (next, nb) = aux id p in (or_cond cur next, b @ nb)) (JSE_Bool(false), []) l
         | Pat_wild _ -> (JSE_Bool(true), [])
-        | Pat_meta(Meta_pat_exp(p, _, _))
-        | Pat_meta(Meta_pat_pos(p,_)) -> aux id p
         | _ -> failwith "fail..."
         in let (conds, binds) = (aux "$v" p) in
         let finalret = pat_return binds in
@@ -153,7 +151,7 @@ and js_of_match (e:exp) (cases:list<(pat * option<exp> * exp)>) =
         if Util.for_some (function JS_Statement(JSS_Return(_))->true|_->false) r
         then r else r @ [JS_Statement(JSS_Throw(JSE_String("Incomplete pattern")))]
     in match cases with
-        | [(Pat_constant(Const_bool(true)), None, e1); (Pat_constant(Const_bool(false)), None, e2)] ->
+        | [({v=Pat_constant(Const_bool(true))}, None, e1); ({v=Pat_constant(Const_bool(false))}, None, e2)] ->
              JSE_Conditional(js_of_expr None e, js_of_expr None e1, js_of_expr None e2)
         | _ -> JSE_Call(JSE_Function(None, ["$v"], add_fallback cases), [js_of_expr None e])
 

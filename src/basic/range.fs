@@ -65,10 +65,6 @@ let proj_ord f a1 a2 = compare (f a1)  (f a2)
 type file_idx = int32 
 type pos = int32 
 type range = int64 
-(*    { rangeFile: string;
-      rangeBegin: pos;
-      rangeEnd: pos }  *) 
-    (* { posLine: int; posCol: int }  *)
 
 let col_nbits  = 9
 let line_nbits  = 16
@@ -152,7 +148,6 @@ let file_of_file_idx n = fileIndexTable.IndexToFile(n)
 let mk_range f b e = mk_file_idx_range (file_idx_of_file f) b e
 let file_of_range r = file_of_file_idx (file_idx_of_range r)
 
-
 (* end representation, start derived ops *)
 
 let start_of_range r = mk_pos (start_line_of_range r) (start_col_of_range r)
@@ -160,6 +155,7 @@ let end_of_range r = mk_pos (end_line_of_range r) (end_col_of_range r)
 let dest_file_idx_range r = file_idx_of_range r,start_of_range r,end_of_range r
 let dest_range r = file_of_range r,start_of_range r,end_of_range r
 let dest_pos p = line_of_pos p,col_of_pos p
+let end_range (r:range) = mk_range (file_of_range r) (end_of_range r) (end_of_range r)
 
 let trim_range_right r n = 
     let fidx,p1,p2 = dest_file_idx_range r in 

@@ -106,7 +106,10 @@ let mkBoundV i   = mk (BoundV i) (set_of_list [i])
 let mkFreeV x    = mk (FreeV x) emp_fvs
 let mkPP  t      = mk (PP t) (snd t).freevars
 let mkApp f      = mk (App f) <| fv_l (snd f)
-let mkNot t      = mk (Not t) t.freevars
+let mkNot t      = match t.tm with
+    | True -> mkFalse
+    | False -> mkTrue
+    | _ -> mk (Not t) t.freevars
 let mkAnd t      = match t with 
     | {tm=True}, t'
     | t', {tm=True} -> t'
@@ -462,3 +465,7 @@ let mk_and_opt_l pl =
 let mk_and_l l = match l with 
   | [] -> mkTrue
   | hd::tl -> List.fold_left (fun p1 p2 -> mkAnd(p1,p2)) hd tl
+
+let mk_or_l l = match l with 
+  | [] -> mkFalse
+  | hd::tl -> List.fold_left (fun p1 p2 -> mkOr(p1,p2)) hd tl

@@ -392,11 +392,11 @@ and doc_of_exp_r (rg : range) outer (env : env) (e : exp) =
 
         | Exp_match (e, bs) -> begin
             match bs with
-            | [(Pat_constant (Const_bool true ), None, e1);
-               (Pat_constant (Const_bool false), None, e2)]
+            | [({v=Pat_constant (Const_bool true )}, None, e1);
+               ({v=Pat_constant (Const_bool false)}, None, e2)]
 
-            | [(Pat_constant (Const_bool false), None, e1);
-               (Pat_constant (Const_bool true ), None, e2)] ->
+            | [({v=Pat_constant (Const_bool false)}, None, e1);
+               ({v=Pat_constant (Const_bool true )}, None, e2)] ->
 
                 let doc = reduce1 [
                     text "if"  ; doc_of_exp rg (e_bin_prio_if, Left)     env e ;
@@ -558,14 +558,18 @@ and doc_of_pattern (rg : range) env p : env * doc =
 
 (* -------------------------------------------------------------------- *)
 and doc_of_pattern_r (rg : range) env (p : pat) : env * doc =
-    match p with
+    match p.v with
     | Pat_cons (x, ps) ->
+        let ps = ps |> List.filter (fun p -> match p.v with
+            | Pat_dot_term _ 
+            | Pat_dot_typ _ -> false
+            | _ -> true) in
         let env, ds = Util.fold_map (doc_of_pattern rg) env ps in
-        (env, doc_of_constr rg env x ds)
+        (env, doc_of_constr rg env x.v ds)
 
     | Pat_var x ->
-        let env = push env x.realname.idText x.ppname.idText in
-        (env, text (resolve env x.realname.idText))
+        let env = push env x.v.realname.idText x.v.ppname.idText in
+        (env, text (resolve env x.v.realname.idText))
 
     | Pat_constant c ->
         (env, text (string_of_sconst c))
@@ -577,12 +581,8 @@ and doc_of_pattern_r (rg : range) env (p : pat) : env * doc =
     | Pat_wild _ ->
         (env, text "_")
 
-    | Pat_meta(Meta_pat_pos(p, rg)) ->
-        doc_of_pattern rg env p
-
-    | Pat_meta(Meta_pat_exp(p, _, _)) ->
-        doc_of_pattern rg env p
-    
+    | Pat_dot_term _
+    | Pat_dot_typ _
     | Pat_tvar  _ -> unsupported rg
     | Pat_twild _ -> unsupported rg
 

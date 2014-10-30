@@ -240,5 +240,4 @@ let rec plus_comm n m =
 (* this one uses previous lemma -- needs to be explicit it seems *)
 val plus_rearrange : n : nat -> m : nat -> p : nat -> q : nat -> Fact unit
       (ensures (plus (plus n m) (plus p q) == plus (plus m n) (plus p q)))
-let rec plus_rearrange n m p q =
-  plus_comm n m
+let plus_rearrange n m p q = plus_comm n m

@@ -124,19 +124,18 @@ and meta_source_info =
 and uvar_e = Unionfind.uvar<uvar_basis<exp,typ>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
-and pat = 
-  | Pat_cons     of lident * list<pat>
-  | Pat_var      of bvvdef
-  | Pat_tvar     of btvdef
-  | Pat_constant of sconst
+and pat' = 
   | Pat_disj     of list<pat>
-  | Pat_wild     of bvvdef                                      (* need stable names for even the wild patterns *)
-  | Pat_twild    of btvdef
-  | Pat_meta     of meta_pat
-and meta_pat = 
-  | Meta_pat_pos of pat * Range.range
-  | Meta_pat_exp of pat * exp * typ                  
- and knd' =
+  | Pat_constant of sconst
+  | Pat_cons     of fvvar * list<pat>
+  | Pat_var      of bvvar
+  | Pat_tvar     of btvar
+  | Pat_wild     of bvvar                                 (* need stable names for even the wild patterns *)
+  | Pat_twild    of btvar
+  | Pat_dot_term of bvvar * exp
+  | Pat_dot_typ  of btvar * typ
+and pat = withinfo_t<pat',either<knd,typ>>                (* the meta-data is a typ, except for Pat_dot_typ and Pat_tvar, where it is a kind (not strictly needed) *)
+and knd' =
   | Kind_type
   | Kind_effect
   | Kind_abbrev of kabbrev * knd                          (* keep the abbreviation around for printing *)
@@ -182,7 +181,8 @@ type ktec =
     | E of exp
     | C of comp
 
-type freevars_l = list<either<btvar,bvvar>>
+type either_var = either<btvar, bvvar>
+type freevars_l = list<either_var>
 type formula = typ
 type formulae = list<typ>
 val new_ftv_set: unit -> set<bvar<'a,'b>>
@@ -271,6 +271,7 @@ val lid_of_path: path -> range -> lident
 val path_of_lid: lident -> path
 val text_of_lid: lident -> string
 val withsort: 'a -> 'b -> withinfo_t<'a,'b>
+val withinfo: 'a -> 'b -> Range.range -> withinfo_t<'a,'b>
 
 val ktype:knd
 val keffect: knd
@@ -344,7 +345,7 @@ val varg: exp -> arg
 val is_null_bvar: bvar<'a,'b> -> bool
 val is_null_binder: binder -> bool
 val argpos: arg -> Range.range
-val pat_vars: range -> pat -> list<either<btvdef,bvvdef>>
+val pat_vars: pat -> list<either<btvdef,bvvdef>>
 
 
 

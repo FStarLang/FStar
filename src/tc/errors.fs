@@ -103,13 +103,16 @@ let expected_poly_typ f t targ =
   format3 "Expected a polymorphic function;\ngot an expression \"%s\" of type \"%s\" applied to a type \"%s\"" (Print.exp_to_string f) (Print.typ_to_string t) (Print.typ_to_string targ)
 
 let nonlinear_pattern_variable x = 
-  format1 "The pattern variable \"%s\" was used more than once" (Print.strBvd x)
+  let m = match x with 
+    | Inl x -> Print.strBvd x.v
+    | Inr a -> Print.strBvd a.v in
+  format1 "The pattern variable \"%s\" was used more than once" m
 
 let disjunctive_pattern_vars v1 v2 = 
   let vars v =
     v |> List.map (function 
-      | Inl a -> Print.strBvd a 
-      | Inr x ->  Print.strBvd x) |> String.concat ", " in
+      | Inl a -> Print.strBvd a.v 
+      | Inr x ->  Print.strBvd x.v) |> String.concat ", " in
   format2 
     "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")" 
     (vars v1) (vars v2)

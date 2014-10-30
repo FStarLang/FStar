@@ -31,3 +31,4 @@ assume val file_of_range: range -> string
 assume val string_of_pos: pos -> string
 assume val start_of_range: range -> pos
 assume val line_of_pos: pos -> int
+assume val end_range: range -> range

@@ -1130,10 +1130,8 @@ let mk_forall (x:bvvar) (body:typ) : typ =
   mk_Typ_app(tforall, [(targ <| mk_Typ_lam([v_binder x], body) (mk_Kind_arrow([null_v_binder x.sort], ktype) r) r)]) ktype r
   
 let rec is_wild_pat p =
-    match p with
+    match p.v with
     | Pat_wild _ -> true
-    | Pat_meta(Meta_pat_pos(p, _))
-    | Pat_meta(Meta_pat_exp(p, _, _)) -> is_wild_pat p
     | _ -> false
 
 let head_and_args t = 

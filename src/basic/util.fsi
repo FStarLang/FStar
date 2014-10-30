@@ -113,6 +113,7 @@ type either<'a,'b> =
  
 val left: either<'a,'b> -> 'a
 val right: either<'a,'b> -> 'b    
+val find_dup: ('a -> 'a -> bool) -> list<'a> -> option<'a>
 val nodups: ('a -> 'a -> bool) -> list<'a> -> bool
 val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
 val set_eq: ('a -> 'a -> int) -> list<'a> -> list<'a> -> bool
@@ -135,6 +136,7 @@ val map_opt: option<'a> -> ('a -> 'b) -> option<'b>
 
 val first_N: int -> list<'a> -> (list<'a> * list<'a>)
 val nth_tail: int -> list<'a> -> list<'a>
+val prefix_until: ('a -> bool) -> list<'a> -> option<(list<'a> * 'a * list<'a>)>
 val prefix: list<'a> -> Tot<(list<'a> * 'a)>
 
 val string_of_unicode: array<byte> -> Tot<string>

@@ -114,42 +114,234 @@ let destruct_arrow_kind env tt k args : (Syntax.args * binders * knd) =
          let kres = Tc.Rel.new_kvar r binders |> fst in
          let bs = null_binders_of_args args in
          let kar = mk_Kind_arrow(bs, kres) r in
-//         printfn "(%s) instantiating %s to %s" (Range.string_of_range r) (Print.kind_to_string k) (Print.kind_to_string kar);
          trivial <| keq env None k kar;
-//         printfn "(%s) got  %s" (Range.string_of_range r) (Print.kind_to_string k);
          [], bs, kres
 
        | _ -> raise (Error(Tc.Errors.expected_tcon_kind tt ktop, r)) in
 
     aux ktop
 
-let pat_as_exps' (wild:bool) env p : list<exp> = 
-  let single = function 
-    | [te] -> te
-    | _ -> failwith "impossible" in
-  let r = Env.get_range env in
-  let rec aux p = match p with
-    | Pat_wild _ when (not wild) -> [Inr (fst <| Rel.new_evar r [] (new_tvar env ktype))] //TODO: why empty vars?
-    | Pat_twild _ -> [Inl (fst <| Rel.new_tvar r (Tc.Env.t_binders env) (new_kvar env))] 
-    | Pat_wild x
-    | Pat_var x -> [Inr (Util.bvd_to_exp x (new_tvar env ktype))]
-    | Pat_tvar a -> [Inl (Util.bvd_to_typ a (new_kvar env))]
-    | Pat_constant c -> [Inr (syn' env tun <| mk_Exp_constant c)]
-    | Pat_cons(l, pats) -> 
-      let args = List.map (fun p -> List.hd (aux p), false) pats in 
-      [Inr (Util.mk_data l args)]
-    | Pat_disj pats -> 
-      pats |> List.map (fun p -> single <| aux p)
-    | Pat_meta(Meta_pat_pos(p, r)) -> 
-      aux p |> List.map (function 
-        | Inr (e) -> Inr ({e with pos=r})
-        | Inl t -> Inl ({t with pos=r}))
-    | Pat_meta(Meta_pat_exp _) -> failwith "Impossible" in
-  List.map (function 
-    | Inl _ -> failwith "Impossible"
-    | Inr (e) -> e) (aux p)    
+let pat_as_exps env p = 
+     let pvar_eq x y = match x, y with 
+          | Inl a, Inl b -> bvd_eq a.v b.v
+          | Inr x, Inr y -> bvd_eq x.v y.v
+          | _ -> false in
+     let rec pat_as_args (p:pat) : (list<Env.binding> * list<Env.binding> * list<either<btvar,bvvar>> * list<arg>) =
+        match p.v with 
+           | Pat_dot_term _ -> 
+              let t = new_tvar env ktype in
+              let e = fst <| Rel.new_evar p.p [] t in //TODO: why empty vars?
+              [], [], [], [varg e]
 
-let pat_as_exps env p = pat_as_exps' false env p
+           | Pat_dot_typ _ -> 
+             let k = new_kvar env in
+             let t = new_tvar env k in
+             [], [], [], [targ t]
+
+           | Pat_constant c -> 
+                let e = mk_Exp_constant c tun p.p in
+                [], [], [], [varg e]
+
+           | Pat_wild x -> 
+                let w = Env.Binding_var(x.v, new_tvar env ktype) in
+                let e = mk_Exp_bvar x tun p.p in
+                [], [w], [], [varg e]
+
+           | Pat_var x -> 
+                let b = Env.Binding_var(x.v, new_tvar env ktype) in
+                let e = mk_Exp_bvar x tun p.p in
+                [b], [], [Inr x], [varg e]
+ 
+           | Pat_twild a -> 
+                let w = Env.Binding_typ(a.v, new_kvar env) in
+                let t = mk_Typ_btvar a kun p.p in
+                [], [w], [], [targ t]
+
+           | Pat_tvar a ->      
+                let b = Env.Binding_typ(a.v, new_kvar env) in
+                let t = mk_Typ_btvar a kun p.p in
+                [b], [], [], [targ t]
+
+           | Pat_cons(fv, pats) -> 
+               let b, w, o, args = List.fold_right (fun p (b, w, o, args) -> 
+                    let b', w', o', arg = pat_as_arg p in 
+                    b'@b, w'@w, o'@o, arg::args) pats ([], [], [], []) in
+               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar fv.v fv.p, args) tun p.p, Data_app)) in
+               b, w, o, [varg e]
+
+           | Pat_disj [] -> failwith "impossible"
+
+           | Pat_disj (p::pats) -> 
+              let b, w, o, arg = pat_as_arg p in
+              let w, args = List.fold_right (fun p (w, args) -> 
+                  let _, w', o', arg = pat_as_arg p in
+                  if not (Util.multiset_equiv pvar_eq o o')
+                  then raise (Error(Tc.Errors.disjunctive_pattern_vars o o', Tc.Env.get_range env))
+                  else (w'@w, arg::args)) 
+                  pats (w, []) in
+              b, w, o, arg::args 
+
+      and pat_as_arg p = 
+        let b, w, o, args = pat_as_args p in
+        match o |> Util.find_dup pvar_eq with 
+            | Some x -> raise (Error(Tc.Errors.nonlinear_pattern_variable x, p.p))
+            | _ ->
+                match args with
+                    | [a] -> b, w, o, a
+                    | _ -> failwith "Impossible: nested disjunctive pattern" in
+
+    let b, w, _, args = pat_as_args p in
+    let exps = args |> List.map (function 
+        | Inl _, _ -> failwith "Impossible: top-level pattern must be an expression"
+        | Inr e, _ -> e) in
+    b, w, exps 
+
+let decorate_pattern p exps = 
+    let rec aux p e = 
+        let pkg q t = withinfo q (Inr t) p.p in
+        let e = Util.unmeta_exp e in
+        match p.v, e.n with 
+            | Pat_constant _, Exp_constant _ -> pkg p.v e.tk
+
+            | Pat_var x, Exp_bvar y -> 
+              if Util.bvar_eq x y |> not
+              then failwith (Util.format2 "Expected pattern variable %s; got %s" (Print.strBvd x.v) (Print.strBvd y.v));
+              let x = {x with sort=e.tk} in
+              pkg (Pat_var x) e.tk
+
+            | Pat_wild x, Exp_bvar y -> 
+              if Util.bvar_eq x y |> not
+              then failwith (Util.format2 "Expected pattern variable %s; got %s" (Print.strBvd x.v) (Print.strBvd y.v));
+              let x = {x with sort=e.tk} in
+              pkg (Pat_wild x) e.tk
+            
+            | Pat_dot_term(x, _), _ -> 
+              let x = {x with sort=e.tk} in
+              pkg (Pat_dot_term(x, e)) e.tk 
+
+            | Pat_cons(fv, []), Exp_fvar (fv',_) -> 
+              if Util.fvar_eq fv fv' |> not
+              then failwith (Util.format2 "Expected pattern constructor %s; got %s" fv.v.str fv'.v.str);
+              let fv = {fv with sort=e.tk} in
+              pkg (Pat_cons(fv, [])) e.tk
+
+            | Pat_cons(fv, argpats), Exp_app({n=Exp_fvar(fv', _);tk=t}, args) -> 
+              if Util.fvar_eq fv fv' |> not
+              then failwith (Util.format2 "Expected pattern constructor %s; got %s" fv.v.str fv'.v.str);
+              let fv = {fv with sort=t} in
+
+              let rec match_args matched_pats args argpats = match args, argpats with 
+                | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats)) e.tk
+                | (Inl t, true)::args, _ -> (* implicit type argument *)
+                  let x = Util.gen_bvar_p p.p t.tk in
+                  let q = withinfo (Pat_dot_typ(x, t)) (Inl t.tk) p.p in
+                  match_args (q::matched_pats) args argpats
+                 
+                | (Inr e, true)::args, _ -> (* implicit value argument *)  
+                  let x = Util.gen_bvar_p p.p e.tk in
+                  let q = withinfo (Pat_dot_term(x, e)) (Inr e.tk) p.p in
+                  match_args (q::matched_pats) args argpats
+                  
+                | (Inl t, _)::args, pat::argpats -> 
+                  let pat = aux_t pat t in
+                  match_args (pat::matched_pats) args argpats
+
+                | (Inr e, _)::args, pat::argpats -> 
+                  let pat = aux pat e in
+                  match_args (pat::matched_pats) args argpats
+
+                | _ -> failwith "Unexpected number of pattern arguments" in
+
+              match_args [] args argpats
+
+           | _ -> failwith (Util.format3 "(%s) Impossible: pattern to decorate is %s; expression is %s\n" (Range.string_of_range p.p) (Print.pat_to_string p) (Print.exp_to_string e))
+        
+    and aux_t p t =
+       let pkg q k = withinfo q (Inl k) p.p in
+       let t = Util.compress_typ t in
+       match p.v, t.n with
+         | Pat_twild a, Typ_btvar b -> 
+            if Util.bvar_eq a b |> not
+            then failwith (Util.format2 "Expected pattern variable %s; got %s" (Print.strBvd a.v) (Print.strBvd b.v));
+            let a = {a with sort=t.tk} in
+            pkg (Pat_twild a) t.tk
+
+         | Pat_tvar a, Typ_btvar b -> 
+            if Util.bvar_eq a b |> not
+            then failwith (Util.format2 "Expected pattern variable %s; got %s" (Print.strBvd a.v) (Print.strBvd b.v));
+            let a = {a with sort=t.tk} in
+            pkg (Pat_tvar a) t.tk
+
+         | Pat_dot_typ(a, _), _ -> 
+            let a = {a with sort=t.tk} in
+            pkg (Pat_dot_typ(a, t)) t.tk
+            
+         | _ -> failwith (Util.format3 "(%s) Impossible: pattern to decorate is %s; expression is %s\n" (Range.string_of_range p.p) (Print.pat_to_string p) (Print.typ_to_string t)) in
+
+    match p.v, exps with 
+        | Pat_disj ps, _ when (List.length ps = List.length exps) -> 
+          let ps = List.map2 aux ps exps in
+          withinfo (Pat_disj ps) (Inr tun) p.p
+
+        | _, [e] ->
+          aux p e
+          
+        | _ -> failwith "Unexpected number of patterns"
+ 
+ let rec decorated_pattern_as_exp (pat:pat) : list<either_var> * exp = 
+    let t = match pat.sort with 
+        | Inr t -> t 
+        | Inl _ -> failwith "top-level pattern should be decorated with a type" in
+    let pkg f = f t pat.p in
+
+    let pat_as_arg p = 
+        let vars, te = decorated_pattern_as_either p in 
+        vars, (te, true) in
+    
+    match pat.v with 
+        | Pat_disj _ -> failwith "Impossible" (* these are only on top-level patterns *)
+    
+        | Pat_constant c -> 
+            [], mk_Exp_constant c |> pkg
+
+        | Pat_wild x
+        | Pat_var x  ->
+            [Inr x], mk_Exp_bvar x |> pkg
+
+        | Pat_cons(fv, pats) -> 
+            let vars, args = pats |> List.map pat_as_arg |> List.unzip in
+            let vars = List.flatten vars in
+            vars,  mk_Exp_app'(mk_Exp_fvar(fv, true) fv.sort fv.p, args) |> pkg
+
+        | Pat_dot_term(x, e) -> 
+            [], e
+
+        | Pat_twild _
+        | Pat_tvar _
+        | Pat_dot_typ _ -> failwith "Impossible: expected a term pattern" 
+
+and decorated_pattern_as_typ (p:pat) : list<either_var> * typ = match p.v with 
+    | Pat_twild a
+    | Pat_tvar a -> 
+        [Inl a], mk_Typ_btvar a a.sort p.p
+
+    | Pat_dot_typ(a, t) ->
+        [], t 
+            
+    | _ -> failwith "Expected a type pattern" 
+
+and decorated_pattern_as_either (p:pat) =
+    match p.v with 
+        | Pat_twild _
+        | Pat_tvar _
+        | Pat_dot_typ _ -> 
+            let vars, t = decorated_pattern_as_typ p in
+            vars, Inl t
+
+        | _ -> 
+            let vars, e = decorated_pattern_as_exp p in
+            vars, Inr e 
+
 
 //DTuple u1 (\_:u1. u2) (\_:u1 u2. u3) ...
 // where ui:Type
