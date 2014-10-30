@@ -895,53 +895,45 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
       | _ -> failwith "impossible" in
     let binding_exists bindings x = bindings |> Util.for_some (fun b -> pvar_eq (pvar_of_binding b) x) in
     let rec pat_bindings bindings p = match p with 
-      | Pat_wild 
-      | Pat_twild
-      | Pat_constant _ -> bindings, []
+      | Pat_constant _ -> bindings, [], []
       | Pat_meta(Meta_pat_pos(p, _)) -> pat_bindings bindings p
+      | Pat_wild x -> 
+        let w = Env.Binding_var(x, Tc.Util.new_tvar env ktype) in
+        bindings, [], [w]
       | Pat_var x -> 
         if binding_exists bindings (Inr x) 
         then raise (Error(Tc.Errors.nonlinear_pattern_variable x, Util.range_of_bvd x))
-        else Env.Binding_var(x, Tc.Util.new_tvar env ktype) :: bindings , [Inr x]
+        else Env.Binding_var(x, Tc.Util.new_tvar env ktype) :: bindings , [Inr x], []
+      | Pat_twild _ -> bindings, [], []
       | Pat_tvar a -> 
         if binding_exists bindings (Inl a) 
         then raise (Error(Tc.Errors.nonlinear_pattern_variable a, Util.range_of_bvd a))
-        else Env.Binding_typ(a, Tc.Util.new_kvar env)::bindings, [Inl a]
+        else Env.Binding_typ(a, Tc.Util.new_kvar env)::bindings, [Inl a], []
       | Pat_cons(_, pats) -> 
-        List.fold_left (fun (bindings, out) p -> 
-            let b, o = pat_bindings bindings p in 
-            b, o@out) (bindings,[]) pats
+        List.fold_left (fun (bindings, out, w) p -> 
+            let b, o, w' = pat_bindings bindings p in 
+            b, o@out, w@w') (bindings,[],[]) pats
       | Pat_disj [] -> failwith "impossible"
       | Pat_disj (p::pats) -> 
-        let b, o = pat_bindings bindings p in 
-        pats |> List.iter (fun p -> 
-          let _, o' = pat_bindings bindings p in 
+        let b, o, w = pat_bindings bindings p in 
+        let w = pats |> List.fold_left (fun w p -> 
+          let _, o', w' = pat_bindings bindings p in 
           if not (Util.multiset_equiv pvar_eq o o')
           then raise (Error(Tc.Errors.disjunctive_pattern_vars o o', Tc.Env.get_range env))
-          else ());
-        b, o in
-    let bindings = fst <| pat_bindings [] p in
+          else w@w') w in
+        b, o, w in
+    let bindings, _, w = pat_bindings [] p in
     let pat_env = List.fold_left Env.push_local_binding env bindings in
-    let exps = Tc.Util.pat_as_exps env p in
+    let exps = Tc.Util.pat_as_exps' true env p in
     let env1, _ = Tc.Env.clear_expected_typ pat_env in 
     let env1 = {env1 with Env.is_pattern=true} in //{(Tc.Env.set_expected_typ pat_env pat_t) with Env.is_pattern=true} in
+    let env1 = List.fold_left Env.push_local_binding env1 w in
     let exps = exps |> List.map (fun e -> 
         let e, t = no_guard env1 <| tc_total_exp env1 e in
         //printfn "Trying pattern subtype %s <: %s" (Print.typ_to_string pat_t) (Print.typ_to_string t);
         Tc.Rel.trivial_subtype env1 None pat_t t; //the type of the pattern must be at least as general as the type of the scrutinee
         e) in
-    (* Annotate the pattern with its corresponding expression; consumed downstream by the encoding to SMT *)
-    let p = match p with 
-        | Pat_meta(Meta_pat_pos(q, r)) -> 
-          let q = match q, exps with 
-            | Pat_disj ps, _ -> Pat_disj (List.map2 (fun p e -> Pat_meta(Meta_pat_exp(p, e))) ps exps)
-            | _, [e] -> Pat_meta(Meta_pat_exp(q, e))
-            | _ -> failwith (Util.format1 "(%s) impossible: unexpected pat\n" (Range.string_of_range (Env.get_range env))) in
-          Pat_meta(Meta_pat_pos(q, r))
-
-        | _ -> Pat_meta(Meta_pat_exp(p, List.hd exps)) in
-
-     p, bindings, pat_env, exps in
+     p, bindings@w, pat_env, exps in
   (*</tc_pat>*)
 
   let pattern, bindings, pat_env, disj_exps = tc_pat pat_t env pattern in //disj_exps, an exp for each arm of a disjunctive pattern
@@ -950,6 +942,8 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
     | Some e -> Some (fst <| (no_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e)) in
   let branch, c = tc_exp pat_env branch in
   let scrutinee = Util.bvd_to_exp scrutinee_x pat_t in
+  let scrutinee_binder = [v_binder <| bvd_to_bvar_s scrutinee_x pat_t] in
+  let close_guard t = mk_Typ_lam(scrutinee_binder, t) (mk_Kind_arrow(scrutinee_binder, t.tk) t.pos) t.pos in
   let scrutinee_env, _ = Env.push_local_binding env (Env.Binding_var(scrutinee_x, pat_t)) |> Tc.Env.clear_expected_typ in
   let c = 
     let eqs = disj_exps |> List.fold_left (fun fopt e -> 
@@ -996,9 +990,23 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
             Util.mk_conj_l (head::sub_term_guards)
           | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range pat_exp.pos) (Print.exp_to_string pat_exp)) in
 
-  let guard = 
-    if !Options.verify then Some (disj_exps |> List.map (mk_guard scrutinee) |> Util.mk_disj_l)
-    else None in
+  let guard, pattern = 
+    if !Options.verify     (* Annotate the pattern with its corresponding expression and guard; consumed downstream by the encoding to SMT *)
+    then let exp_guard_l = disj_exps |> List.map (fun e -> e, mk_guard scrutinee e) in
+         let pattern = match pattern with 
+            | Pat_meta(Meta_pat_pos(q, r)) -> 
+              let q = match q, exp_guard_l with 
+                | Pat_disj ps, _ -> Pat_disj (List.map2 (fun p (e,g) -> Pat_meta(Meta_pat_exp(p, e, close_guard g))) ps exp_guard_l)
+                | _, [(e,g)] -> Pat_meta(Meta_pat_exp(q, e, close_guard g))
+                | _ -> failwith (Util.format1 "(%s) impossible: unexpected pat\n" (Range.string_of_range (Env.get_range env))) in
+              Pat_meta(Meta_pat_pos(q, r))
+            | _ -> 
+                let (e, g) = List.hd exp_guard_l in
+                Pat_meta(Meta_pat_exp(pattern, e, close_guard g)) in
+         let guard = exp_guard_l |> List.map snd |> Util.mk_disj_l in
+         Some guard, pattern 
+    else None, pattern in
+
   (pattern, when_clause, branch), guard, c 
 
 and tc_kind_trivial env k : knd = 

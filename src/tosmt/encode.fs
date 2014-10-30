@@ -26,6 +26,7 @@ open Microsoft.FStar.ToSMT.Term
 
 
 let withenv c (a, b) = (a,b,c)
+let vargs args = List.filter (function (Inl _, _) -> false | _ -> true) args
 
 (* ------------------------------------ *)
 (* Some operations on constants *)
@@ -40,6 +41,19 @@ let mk_typ_projector_name lid (a:btvdef) =
 let mk_term_projector_name lid (a:bvvdef) = 
     let a = {ppname=Util.unmangle_field_name a.ppname; realname=a.realname} in
     escape <| format2 "%s_%s" lid.str (escape_null_name a)
+let primitive_projector_by_pos env lid i = 
+    let fail () = failwith (Util.format2 "Projector %s on data constructor %s not found" (string_of_int i) (lid.str)) in
+    let t = Tc.Env.lookup_datacon env lid in 
+    match (Util.compress_typ t).n with 
+        | Typ_fun(binders, _) -> 
+          if ((i < 0) || i >= List.length binders) //this has to be within bounds!
+          then fail ()
+          else let b = List.nth binders i in 
+               begin match fst b with 
+                | Inl a -> mk_typ_projector_name lid a.v
+                | Inr x -> mk_term_projector_name lid x.v 
+               end
+        | _ -> fail ()
 let mk_term_projector_name_by_pos lid (i:int) = escape <| format2 "%s_%s" lid.str (string_of_int i)
 let mk_typ_projector (lid:lident) (a:btvdef)  : term = 
     mkFreeV(mk_typ_projector_name lid a, Arrow(Term_sort, Type_sort))
@@ -105,7 +119,8 @@ type binding =
     | Binding_ftvar of lident * string * term (* ... are mapped either to SMT2 functions, or to nullary term/type tokens *)
    
 type env_t = {bindings:list<binding>;
-              tcenv:Env.env}
+              tcenv:Env.env;
+              warn:bool}
 let print_env e = 
     e.bindings |> List.map (function 
         | Binding_var (x, t) -> Print.strBvd x
@@ -245,6 +260,23 @@ let close_ex vars pred = match vars with
 
 type label = (var * string)
 type labels = list<label>
+type match_branch = {
+    guard:term;       (* bool; negation of all prior pattern guards *)
+    pat_vars:ex_vars; (* existentially bound pattern variables *)
+    pattern:term;     (* the pattern itself *)
+    rhs:term;         (* the branch translated as a term *)
+}
+type match_branches = list<match_branch>
+type either_var = either<btvdef, bvvdef>
+type scrutinee = exp * term
+type pattern = {
+  pat_vars: list<(option<either_var> * var)>;
+  pat_exp:  exp;
+  pat_term: (term * ex_vars);     (* the pattern as a term *)
+  guard: exp -> env_t -> term;
+  projections: term -> list<(option<either_var> * term)> (* bound variables of the pattern, and the corresponding projected components of the scrutinee *)
+ }
+exception Let_rec_unencodeable of string
 
 let encode_const = function 
     | Const_unit -> mk_Term_unit
@@ -391,6 +423,9 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
                    let t = mk_ApplyT_args head args in
                    t, vars
 
+            | Typ_uvar _ -> 
+              encode_typ_term head env  
+
             | _ -> 
               let t = norm_t env t in
               encode_typ_term t env
@@ -466,6 +501,7 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars) =
 
 
       | Exp_app(head, args) -> 
+        Util.fprint2 "Encoding %s (%s)\n" (Print.exp_to_string e0) (Print.tag_of_exp e0);
         let args, vars = encode_args args env in
     
         let encode_partial_app () = 
@@ -514,70 +550,117 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars) =
         Tc.Errors.warn e.pos "Nested 'let rec' is not yet fully encoded to the SMT solver; you may not be able to prove some facts";
         sym, [(name, Term.mkTrue)]
 
-      | Exp_match(e, pats) -> 
-        let encode_pat env scrutinee pat when_clause branch = 
-            let rec top_level_pats x = match x with
-                | Pat_meta(Meta_pat_pos(p, _)) -> top_level_pats p 
-                | Pat_disj pats -> pats
-                | p -> [p] in
-
-            let rec mk_guard_env env d pat = match pat with 
-                | Pat_disj _ -> failwith "Impossible"
-                | Pat_meta(Meta_pat_pos(p, _)) 
-                | Pat_meta(Meta_pat_exp(p, _)) -> mk_guard_env env d p
-                | Pat_var x  -> mkTrue, push_term_var env x d   
-                | Pat_tvar a -> mkTrue, push_typ_var env a d
-                | Pat_wild
-                | Pat_twild -> mkTrue, env
-                | Pat_constant c -> 
-                  let c = encode_const c in
-                  mkEq(d, c), env
-                | Pat_cons(lid, pats) -> 
-                  let guard = mk_data_tester env lid d in
-                  let formals =  match Util.function_formals <| Tc.Env.lookup_datacon env.tcenv lid with 
-                    | Some (args, _) -> args
-                    | _ -> [] in  
-                  let rec sub_pats (guards, env) formals pats = match formals, pats with
-                    | [], [] -> Term.mk_and_l guards, env 
-                    | (Inl a, _)::formals', Pat_tvar _::pats' -> 
-                      let tm = Term.mkApp(mk_typ_projector_name lid a.v, [d]) in
-                      let guard, env = mk_guard_env env tm (List.hd pats) in
-                      sub_pats (guard::guards, env) formals' pats'
-                    | (Inl a, _)::formals', _ ->  
-                      sub_pats (guards, env) formals' pats
-                    | (Inr x, _)::formals', p::pats' -> 
-                      let tm = Term.mkApp(mk_term_projector_name lid x.v, [d]) in
-                      let guard, env = mk_guard_env env tm p in
-                      sub_pats (guard::guards, env) formals' pats' in
-
-                  sub_pats ([guard], env) formals pats in
-
-            top_level_pats pat 
-            |> List.map (mk_guard_env env scrutinee) 
-            |> List.map (fun (guard, env) -> 
-                let branch, ex_vars = encode_exp branch env in
-                let guard = match when_clause with 
-                    | None -> guard
-                    | Some e -> 
-                        let w, g = encode_exp e env in  
-                        mkAnd(guard, close_ex g <| mkEq(w, boxBool mkTrue)) in
-                (guard, (branch, ex_vars))) in
-
-        let scrutinee, g1 = encode_exp e env in
+      | Exp_match(e, pats) ->
+        let scr, scr_vars = encode_exp e env in 
         let def = varops.fresh "default", Term_sort in
-        let branches, vars = List.fold_right (fun (pat, wopt, b) (else_case, vars) -> 
-            let eqn = encode_pat env scrutinee pat wopt b in 
-            List.fold_right (fun (guard, (rhs, rhs_vars)) (else_case, vars) -> 
-               mkITE(guard, rhs, else_case), vars@rhs_vars) 
-               eqn 
-              (else_case, vars))
-            pats 
-            (mkBoundV def, []) in
-        branches, (def, Term.mkTrue)::vars
-      
-      
+        let match_tm, vars = List.fold_right (fun (p, w, br) (else_case, ex_vars) -> 
+            let patterns = encode_pat env (p, w, br) in
+            List.fold_right (fun (env0, pattern) (else_case, ex_vars) -> 
+                let guard = pattern.guard e env0 in
+                let projections = pattern.projections scr in
+                let env = projections |> List.fold_left (fun env (x, t) -> match x with 
+                    | None -> env
+                    | Some (Inl a) -> push_typ_var env a t
+                    | Some (Inr x) -> push_term_var env x t) env in
+                let br, br_vars = encode_exp br env in
+                mkITE(guard, br, else_case), ex_vars@br_vars)
+            patterns (else_case, ex_vars))
+            pats (mkBoundV def, (def, Term.mkTrue)::scr_vars) in
+        match_tm, vars
+
       | Exp_meta _ -> failwith (Util.format2 "(%s): Impossible: encode_exp got %s" (Range.string_of_range e.pos) (Print.exp_to_string e))
 
+and encode_pat env (pat, when_clause, _) : list<(env_t * pattern)> (* one for each disjunct *) = 
+    let rec unpos pat = match pat with
+        | Pat_meta(Meta_pat_pos(p, _)) -> unpos p
+        | _ -> pat in
+
+    let rec aux (env:env_t) pat : env_t * pattern = 
+        Util.fprint1 "Encoding pattern %s\n" (Print.pat_to_string pat);
+        let p, pat_exp, g = match pat with 
+            | Pat_meta(Meta_pat_exp(p, e, g)) -> p, e, g
+            | _ -> failwith "Type checker should have annotated top-level patterns" in
+        
+        let rec pat_vars (env:env_t) pat = 
+          match unpos pat with 
+            | Pat_disj _ 
+            | Pat_meta _ -> failwith "Impossible" (* these are only on top-level patterns *)
+
+            | Pat_twild _
+            | Pat_constant _ -> 
+              env, []
+           
+            | Pat_wild x
+            | Pat_var x  -> 
+              let xx, _, env = gen_term_var env x in 
+              env, [(Some <| Inr x, (xx,Term_sort))]
+
+            | Pat_tvar a -> 
+              let aa, _, env = gen_typ_var env a in 
+              env, [(Some <| Inl a, (aa, Type_sort))] 
+
+            | Pat_cons(lid, pats) -> 
+                let env, vars = pats |> List.fold_left (fun (env, vars) p -> 
+                    let env, vars' = pat_vars env p in
+                    env, vars@vars') (env, []) in 
+                env, vars in
+
+         let env, pat_vars = pat_vars env p in
+         Util.print_string "Got pat vars\n";
+        
+         let guard scr_exp env = 
+            let guard = 
+                let g = norm_t env <| Syntax.mk_Typ_app(g, [varg scr_exp]) ktype g.pos in
+                if Tc.Env.debug env.tcenv Options.Low
+                then Util.fprint1 "Encoding pattern guard: %s\n" (Print.formula_to_string g);
+                encode_formula g env in
+            match when_clause with 
+                | None -> guard 
+                | Some w -> 
+                  let w, g = encode_exp w env in  
+                  mkAnd(guard, close_ex g <| mkEq(w, boxBool mkTrue)) in
+
+         let projections scr_tm =
+            let rec projections scr pat_arg = match fst pat_arg with 
+                | Inr e -> 
+                    (match (Util.unmeta_exp e).n with 
+                        | Exp_constant _
+                        | Exp_fvar _ -> []
+                        | Exp_bvar x -> [(Some <| Inr x.v, scr)]
+                        | Exp_app(f, pats) -> 
+                          let fv = match (Util.unmeta_exp f).n with 
+                            | Exp_fvar (fv, _) -> fv
+                            | _ -> failwith (Util.format1 "Impossible: Unexpected pattern expression: %s" (Print.exp_to_string e)) in
+                          let var_projs, _ = pats |> List.fold_left (fun (var_projs, i) p -> 
+                              let proj = primitive_projector_by_pos env.tcenv fv.v i in
+                              let scr = Term.mkApp(proj, [scr]) in
+                              let var_projs' = projections scr p in
+                              var_projs@var_projs', i + 1) ([], 0) in 
+                          var_projs
+                        | _ -> failwith (Util.format1 "Impossible: Unexpected pattern expression: %s" (Print.exp_to_string e)))
+                        
+                | Inl t -> 
+                    (match (Util.compress_typ t).n with
+                        | Typ_btvar a -> [(Some <| Inl a.v, scr)]
+                        | _ -> []) in
+
+           projections scr_tm (varg pat_exp) in
+
+        Util.fprint2 "About to encode pat_exp: %s (%s)\n" (Print.exp_to_string pat_exp) (Print.tag_of_exp pat_exp);
+        
+        let pattern = {
+                pat_vars=pat_vars;
+                pat_exp=pat_exp;
+                pat_term=encode_exp pat_exp env;
+                guard=guard;
+                projections=projections;
+            }  in
+        Util.fprint1 "Done ... pat_term is %s\n" (Term.termToSmt [] (fst <| pattern.pat_term));
+        env, pattern in
+
+    match unpos pat with 
+        | Pat_disj ps -> List.map (aux env) ps
+        | p -> [aux env p]
 
 and encode_args l env =
     let l, vars = l |> List.fold_left (fun (tms, ex_vars) x -> match x with
@@ -960,7 +1043,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
         decls@[eqn], env
      
 
-    | Sig_let((is_rec, [(Inr f, t, e)]), _, _) ->
+    | Sig_let((is_rec, [(Inr flid, t, e)]), _, _) ->
       (* only encoding recursive pure functions defined immediately by cases on some subset of the arguments 
          The case where the subset of arguments is just xi looks like this:
         
@@ -969,137 +1052,174 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls * env_t) =
                    | P2 y1..ym2 -> e2
                    | ... 
                   ~>
-                  forall x1...xn. f x1...(Pj y1..ymj)..xn = [[ej]]
+                  forall x1 .. (y1 ... ymj) .. xn. not(OR is-P{1..{j-1}) xi) ==> f x1...(Pj y1..ymj)..xn = [[ej]]
 
-        The extension to a tuple of the arguments in place of xi is tedious but straightforward.
+        The extension to a tuple of the arguments (in the same order as the parameters) in place of xi is tedious but straightforward.
       *)
 
       if not (Util.is_pure_function t) then [], env else
-      let _ = if Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding let rec %s\n" (Print.sli f) in
-      let (f, ftok), decls, env = declare_top_level_let env f t in
-  
-      let binders_until bs x = match x.n with 
-        | Exp_bvar xi -> 
-          let rec aux prefix bs = match bs with
-            | [] -> None
-            | (Inl _, _)::tl -> aux (List.hd bs::prefix) tl
-            | (Inr xi', _)::tl -> 
-              if Util.bvar_eq xi xi'
-              then Some (List.rev prefix, xi, tl)
-              else aux (List.hd bs::prefix) tl in
-          aux [] bs
-        | _ -> None in
-        
-      let encode_pat p env : list<var> * term * exp * env_t = 
-        let _, tun = Tc.Rel.new_tvar Syntax.dummyRange [] ktype in
-        let kun, _ = Tc.Rel.new_kvar Syntax.dummyRange [] in
-        let rec aux (vars, env) p = match p with 
-            | Pat_disj _ -> failwith "Impossible: nested disjunctive pattern"
-            | Pat_var x -> 
-               let x, _, env = gen_term_var env x in
-               let vars = (x,Term_sort)::vars in
-               vars,  env
-    
-            | Pat_tvar a -> 
-               let a, _, env = gen_typ_var env a in
-               let vars = (a, Type_sort)::vars in
-               vars, env
-    
-            | Pat_wild
-            | Pat_twild
-            | Pat_constant _ -> vars, env
+      let _ = if Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding let rec %s\n" (Print.sli flid) in
+      let (f, ftok), decls, env = declare_top_level_let env flid t in
+      
+      let warn why = 
+        if env.warn
+        then (let msg = Util.format2 "Unable to encode '%s' to SMT (because %s); try writing it by matching directly on some subset of the arguments " (Print.sli flid) why in
+              Tc.Errors.warn (range_of_lid flid) msg);
+        decls, env in
+      let giveup why = raise (Let_rec_unencodeable why) in
 
-            | Pat_cons(l, pats) -> 
-               let vars, env = pats |> List.fold_left aux (vars, env) in
-               vars, env
-        
-            | Pat_meta(Meta_pat_exp(p, _)) 
-            | Pat_meta(Meta_pat_pos(p, _)) -> 
-                aux (vars, env) p in
-        
-        let vars, env = aux ([], env) p in 
+      (* writing these three as let rec just so that the top-level comes first; would prefer to use a "where" instead *)
+      let rec doit () =     
+         try
+          match (Util.compress_exp e).n with 
+            | Exp_abs(binders, body) -> 
+                begin match (Util.unmeta_exp body).n with 
+                    | Exp_match(scrutinee, cases) -> 
+                          if not <| scrutinee_ok scrutinee
+                          then warn "the scrutinee is not one of the parameters, or a tuple of them"
+                          else decls@[Caption (Util.format1 "<Equations for %s>" flid.str)]@encode_equations binders scrutinee cases@[Caption "</Equations>"], env
+                    | _ -> warn "the body of the function doesn't begin with a match"
+                end
 
-        let pat_tm, pat_exp, wildcards = match p with 
-            | Pat_meta(Meta_pat_exp(_, e))
-            | Pat_meta(Meta_pat_pos(Pat_meta(Meta_pat_exp(_,e)), _)) -> 
-              let pat_tm, ex_vars = encode_exp e env in
-              pat_tm, e, ex_vars
-            | _ -> failwith "Impossible" in
+            | _ -> warn "it doesn't appear to be a function"
+         with 
+            | Let_rec_unencodeable why -> warn why
 
-        vars@List.map fst wildcards, pat_tm, pat_exp, env in
+      and scrutinee_ok e = 
+        Util.print_string "Checking scrutinee\n";
+        match (Util.unmeta_exp e).n with 
+        | Exp_bvar _ -> true
+        | Exp_meta(Meta_desugared(e, Data_app)) -> scrutinee_ok e 
+        | Exp_app(f, args)  -> 
+            begin match (Util.unmeta_exp f).n with 
+                | Exp_fvar (fv,_) -> 
+                  Util.is_tuple_data_lid fv.v (List.length (List.filter (function (Inl _, _) -> false | _ -> true) args))
+                | _ -> false
+            end
+        | _ -> false 
 
-      let encode_equation (xs:Syntax.binders) (scrutinee:exp) (p, w, br) (env:env_t) : option<decl> = 
-        let arg_pats = match scrutinee.n, p with
-            | Exp_bvar x, _ -> [varg <| scrutinee, p] 
+      and encode_equations binders scrutinee cases = 
+            let rec aux prior_patterns cases = match cases with 
+                | [] -> []
+                | (p, w, br)::cases -> 
+                    Util.fprint1 "Encoding case at %s\n" (Range.string_of_range br.pos);
+                    let disjuncts = encode_pat env (p, w, br) in
+                    Util.print_string "Done encoding pattern\n";
+                    let prior_patterns, eqns = disjuncts |> List.fold_left (fun (prior_patterns, out) (env, pattern) -> 
+                        let this_guard = prior_patterns |> List.map (fun p -> p.guard pattern.pat_exp env) in
+                        let binders, binders_guard, lhs, env = build_lhs env binders scrutinee pattern in
+                        let rhs, rhs_vars = encode_exp br env in
+                        let ex_vars = snd pattern.pat_term @ rhs_vars in
+                        let eqn = 
+                            Term.Assume(mkForall([lhs], binders, close_ex ex_vars <| mkImp(Term.mkAnd(binders_guard, Term.mkNot (mk_and_l this_guard)), mkEq(lhs, rhs))), None) in
+                        (pattern::prior_patterns, eqn::out)) (prior_patterns, []) in
+                    List.rev eqns@(aux prior_patterns cases) in
+
+            aux [] cases
+
+      and build_lhs env binders scrutinee pattern =
+         let binders_until bs ax = 
+              let rec aux prefix bs = match bs, ax with
+                | (Inl a', _)::tl, Inl a -> 
+                  if Util.bvar_eq a a'
+                  then Some (List.rev prefix, Inl a', tl)
+                  else aux (List.hd bs::prefix) tl 
+
+                | (Inr x', _)::tl, Inr x -> 
+                  if Util.bvar_eq x x'
+                  then Some (List.rev prefix, Inr x', tl)
+                  else aux (List.hd bs::prefix) tl 
+
+                | _ -> None in
+            aux [] bs in
+
+         let pat_vars = pattern.pat_vars in 
+         let pat_exp = pattern.pat_exp in
+         let pat_tm = pattern.pat_term |> fst in
+
+         let arg_pats = match (Util.unmeta_exp scrutinee).n, (Util.unmeta_exp pat_exp).n, pat_tm.tm with
+            | Exp_bvar x, _, _ -> [varg <| scrutinee, varg pat_exp, pat_tm] 
            
-            | Exp_app({n=Exp_fvar(fv, _)}, args), Pat_cons(l, pats) 
-                when (Util.is_tuple_data_lid fv.v (List.length args)
-                      && Util.is_tuple_data_lid l (List.length pats)) ->
-              List.zip args pats 
-              
-            | _ -> [] in
-
-        let rec encode_pat_binders binders arg_pats (env, vars, args, guards) = match arg_pats with 
-            | [] -> 
-              let vars', guards', env, _ = encode_binders binders env in 
-              Some (env, vars@vars', args@List.map mkBoundV vars', guards@guards')
-
-            | ((Inr a, _), p)::arg_pats -> 
-              begin match binders_until binders a with 
-                | None -> None
-                | Some(prefix, xi, suffix) -> 
-                  let prefix, guards', env, _ = encode_binders prefix env in 
-                  let pat_vars, pat_tm, pat_exp, env = encode_pat p env in
-                  let pat_vars, pat_guard, suffix, env = match p with 
-                    | Pat_wild ->  (* no binders ... a wildcard pattern *)
-                        let xvars, xguard, env, _ = encode_binders [v_binder xi] env in
-                        xvars, xguard, suffix, env 
-                    | _ -> 
-                        let guard = encode_typ_pred xi.sort env pat_tm in
-                        let suffix = Util.subst_binders ([Inr(xi.v, pat_exp)]) suffix in
-                        let env = push_term_var env xi.v pat_tm in
-                        pat_vars, [guard], suffix, env in
-                  encode_pat_binders suffix arg_pats (env, vars@prefix@pat_vars, args@List.map mkBoundV prefix@[pat_tm], guards@pat_guard@guards')
+            | Exp_app(f, args), 
+              Exp_app(f', pats), 
+              App(_, pat_tms) -> 
+              begin match (Util.unmeta_exp f).n, (Util.unmeta_exp f').n with
+                | Exp_fvar (fv, _), Exp_fvar(fv', _) 
+                    when (Util.is_tuple_data_lid fv.v (List.length (vargs args))
+                          && Util.is_tuple_data_lid fv'.v (List.length (vargs pats))
+                          && List.length args = List.length pats
+                          && List.length args = List.length pat_tms) -> 
+                  let args = vargs args in
+                  let pats = vargs pats in
+                  let pat_tms = Util.nth_tail (List.length args) pat_tms in
+                  List.zip3 args pats pat_tms
+                | _ -> giveup (Util.format2 "Not a tuple or simple pattern: scrutinee is %s, pat is %s" (Print.exp_to_string <| Util.unmeta_exp scrutinee) (Print.exp_to_string <| Util.unmeta_exp pat_exp)) 
               end
 
-            | _ -> None  in
+              
+              
+            | _ -> giveup (Util.format2 "Not a tuple or simple pattern: scrutinee is %s, pat is %s" (Print.tag_of_exp <| Util.unmeta_exp scrutinee) (Print.tag_of_exp <| Util.unmeta_exp pat_exp)) in
+          
+         let suffix, bs, bs_guard, args, env = arg_pats |> List.fold_left (fun (binders, bs, bs_guard, args, env) (a, pat_arg, pat_tm) ->  
+              match fst a, fst pat_arg with 
+                | Inr ({n=Exp_bvar a}), Inr pat_exp -> 
+                    begin match binders_until binders (Inr a) with 
+                        | Some(prefix, Inr xi, suffix) -> 
+                          let prefix, prefix_guards, env, _ = encode_binders prefix env in 
+                          let pat_guard = encode_typ_pred xi.sort env pat_tm in
+                          let suffix = Util.subst_binders ([Inr(xi.v, pat_exp)]) suffix in
+                          let env = push_term_var env xi.v pat_tm in
+                          suffix,
+                          bs@prefix, 
+                          bs_guard@prefix_guards@[pat_guard], 
+                          args@List.map mkBoundV prefix@[pat_tm],
+                          env
 
-        match encode_pat_binders xs arg_pats (env, [], [], []) with 
-            | None -> None
-            | Some (env, vars, args, guards) -> 
-                let f_app = 
-                    if !Options.z3_optimize_full_applications
-                    then Term.mkApp(f, args)
-                    else let args = args |> List.map (fun a -> match a.tm with 
-                                | BoundV(_, Type_sort) -> Inl a
-                                | BoundV(_, Term_sort) -> Inr a 
-                                | _ -> Inr a) in
-                         mk_ApplyE_args ftok args in
-                let w = match w with 
-                    | None -> Term.mkTrue
-                    | Some w -> let w, wvars = encode_exp w env in close_ex wvars (mkEq(w, Term.boxBool(Term.mkTrue))) in
-                let br, br_vars = encode_exp br env in
-                Some <| Term.Assume(mkForall([f_app], vars, mkImp(mk_and_l (w::guards), close_ex br_vars <| mkEq(f_app, br))), Some (Util.format1 "Equation: %s" f)) in
+                        | _ -> giveup (Util.format1 "%s is not a unique parameter" (Print.strBvd a.v))
+                    end
+                
+               | Inl ({n=Typ_btvar a}), Inl pat_typ -> 
+                    begin match binders_until binders (Inl a) with 
+                        | Some(prefix, Inl ai, suffix) -> 
+                          let prefix, prefix_guards, env, _ = encode_binders prefix env in 
+                          let pat_guard = encode_knd ai.sort env pat_tm in
+                          let suffix = Util.subst_binders ([Inl(ai.v, pat_typ)]) suffix in
+                          let env = push_typ_var env ai.v pat_tm in
+                          suffix,
+                          bs@prefix, 
+                          bs_guard@prefix_guards@[pat_guard], 
+                          args@List.map mkBoundV prefix@[pat_tm],
+                          env
         
-        let equations = match e.n with 
-            | Exp_abs(xs, {n=Exp_match(scrutinee, cases)}) -> 
-                let rec aux out = function 
-                    | [] -> List.rev out
-                    | case::cases -> 
-                      match encode_equation xs scrutinee case env with 
-                        | None -> 
-                          if Env.debug env.tcenv Options.Low then Util.fprint1 "No equations; failed to encode case %s\n" (Print.pat_to_string (let p, _, _ = case in p));
-                          []
-                        | Some d -> aux (d::out) cases in
 
-                aux [] cases
+                        | _ -> giveup (Util.format1 "%s is not a unique parameter" (Print.strBvd a.v))
+                    end
+              
+               | _ -> binders, bs, bs_guard, args@[pat_tm], env
+                     //giveup (Util.format1 "%s is not a parameter" (Print.arg_to_string a))
+               ) (binders, [], [], [], env) in
 
-            | _ -> 
-              if Env.debug env.tcenv Options.Low then Util.print_string "No equations, because top-level term is not a match\n";
-              [] in
-        decls@equations, env
+          let suffix, suffix_guards, env, _ = encode_binders suffix env in 
+          let bs = bs@suffix in
+          let bs_guard = bs_guard@suffix_guards in
+          let args = args@List.map mkBoundV suffix in
 
+        let lhs = 
+            if !Options.z3_optimize_full_applications
+            then Term.mkApp(f, args)
+            else let args = args |> List.map (fun a -> match a.tm with 
+                | BoundV(_, Type_sort) -> Inl a
+                | BoundV(_, Term_sort) -> Inr a 
+                | _ -> Inr a) in
+                mk_ApplyE_args ftok args in 
+        
+        bs@(List.map snd pattern.pat_vars)@(List.map fst <| snd pattern.pat_term), 
+        Term.mk_and_l bs_guard, 
+        lhs, 
+        env in
 
+        doit()
+          
     | Sig_let((_,lbs), _, _) -> //TODO: mutual recursion
         let msg = lbs |> List.map (fun (lb, _, _) -> Print.lbname_to_string lb) |> String.concat " and " in
         [], env
@@ -1201,7 +1321,7 @@ let encode_labels labs =
 (* caching encodings of the environment and the top-level API to the encoding *)
 open Microsoft.FStar.Tc.Env
 let last_env : ref<list<env_t>> = Util.mk_ref []
-let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv}]
+let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true}]
 let get_env tcenv = match !last_env with 
     | [] -> failwith "No env; call init first!"
     | e::_ -> {e with tcenv=tcenv}
@@ -1235,8 +1355,8 @@ let encode_sig tcenv se =
    Z3.giveZ3 decls
 let encode_modul tcenv modul = 
    let env = get_env tcenv in
-   let decls, env = encode_signature env modul.exports in
-   set_env env;
+   let decls, env = encode_signature ({env with warn=false}) modul.exports in
+   set_env ({env with warn=true});
    Z3.giveZ3 decls
 let solve tcenv q =
     let env = get_env tcenv in

@@ -398,6 +398,14 @@ and compress_exp e =
     e
   | _ -> e
 
+let rec unmeta_exp e =
+    let e = compress_exp e in 
+    match e.n with 
+        | Exp_meta(Meta_desugared(e, _)) 
+        | Exp_meta(Meta_datainst(e, _)) -> unmeta_exp e
+        | Exp_ascribed(e, _) -> unmeta_exp e
+        | _ -> e
+
 let alpha_typ t = 
    let t = compress_typ t in
    let s = mk_subst [] in
@@ -1123,9 +1131,9 @@ let mk_forall (x:bvvar) (body:typ) : typ =
   
 let rec is_wild_pat p =
     match p with
-    | Pat_wild -> true
+    | Pat_wild _ -> true
     | Pat_meta(Meta_pat_pos(p, _))
-    | Pat_meta(Meta_pat_exp(p, _)) -> is_wild_pat p
+    | Pat_meta(Meta_pat_exp(p, _, _)) -> is_wild_pat p
     | _ -> false
 
 let head_and_args t = 

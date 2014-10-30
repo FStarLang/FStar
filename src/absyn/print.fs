@@ -261,11 +261,11 @@ and pat_to_string x = match x with
   | Pat_var x -> strBvd x
   | Pat_tvar a -> strBvd a
   | Pat_constant c -> const_to_string c 
-  | Pat_wild -> "_"
-  | Pat_twild -> "'_"
+  | Pat_wild _ -> "_"
+  | Pat_twild _ -> "'_"
   | Pat_disj ps ->  Util.concat_l " | " (List.map pat_to_string ps)
   | Pat_meta(Meta_pat_pos (p, _))
-  | Pat_meta(Meta_pat_exp (p, _)) -> pat_to_string p
+  | Pat_meta(Meta_pat_exp (p, _, _)) -> pat_to_string p
 
 let subst_to_string subst = 
    Util.format1 "{%s}" <|

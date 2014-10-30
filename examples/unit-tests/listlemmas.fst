@@ -25,12 +25,17 @@ open Prims.PURE
 (* An effect abbreviation for a lemma *)
 (*ghost*) effect Fact ('res:Type) ('p:Type) = Pure 'res True (fun r => 'p)
 
-(* Warm up: An elaborate way of computing zero *)
-type z = i:int{i==0}
-val zero: list 'a -> Tot z
-let rec zero l = match l with
-  | [] -> 0
-  | hd::tl -> zero tl
+val hd: list 'a -> Tot bool
+let hd l = match l with
+  | [] -> false
+  | hd::tl -> true
+
+(* (\* Warm up: An elaborate way of computing zero *\) *)
+(* type z = i:int{i==0} *)
+(* val zero: list 'a -> Tot z *)
+(* let rec zero l = match l with *)
+(*   | [] -> 0 *)
+(*   | hd::tl -> zero tl *)
 
 (* Using a refinement type to prove a property of a function as it is being defined,
    i.e., an intrinsic proof about length being non-negative *)
@@ -39,19 +44,19 @@ let rec length l = match l with
   | [] -> 0
   | hd::tl -> 1 + length tl
 
-(* Similar to length, although there's no interesting refinement here. *)
-val mem: 'a -> list 'a -> Tot bool
-let rec mem a l = match l with
-  | [] -> false
-  | hd::tl -> hd=a || mem a tl
+(* (\* Similar to length, although there's no interesting refinement here. *\) *)
+(* val mem: 'a -> list 'a -> Tot bool *)
+(* let rec mem a l = match l with *)
+(*   | [] -> false *)
+(*   | hd::tl -> hd=a || mem a tl *)
 
 (* Prove a property about the length of appended lists intrinsically.
    Notice the use of the pure function length in the spec.
  *)
-val append: l1:list 'a -> l2:list 'a -> Tot (l3:list 'a{length l3 == length l1 + length l2})
-let rec append l1 l2 =  match l1 with
-  | [] -> l2
-  | hd::tl -> hd::append tl l2
+(* val append: l1:list 'a -> l2:list 'a -> Tot (l3:list 'a{length l3 == length l1 + length l2}) *)
+(* let rec append l1 l2 =  match l1 with *)
+(*   | [] -> l2 *)
+(*   | hd::tl -> hd::append tl l2 *)
 (*
 For contrast, in old F*/F7, you'd have to write:
 
@@ -65,54 +70,54 @@ For contrast, in old F*/F7, you'd have to write:
    let rec append = ...
 *)
 
-assume val ignore: unit -> Fact unit False
+(* assume val ignore: unit -> Fact unit False *)
 
-(* You can also prove lemmas about pure functions "after the fact", i.e., extrinsically.
-   Here's an inductive proofs relating append and mem.
+(* (\* You can also prove lemmas about pure functions "after the fact", i.e., extrinsically. *)
+(*    Here's an inductive proofs relating append and mem. *)
 
-   Note also the use of boolean valued terms as predicates. I'm
-   beginning to add support for automatically lifting bool to Type,
-   when needed. That's still in progress, though.
- *)
-val append_mem:  l1:list 'a
-              -> l2:list 'a
-              -> a:'a
-              -> Fact unit (ensures (mem a (append l1 l2) <==>  mem a l1 \/ mem a l2))
-let rec append_mem l1 l2 a = match l1 with
-  | [] -> ()
-  | hd::tl ->
-    if hd=a
-    then ()
-    else append_mem tl l2 a
+(*    Note also the use of boolean valued terms as predicates. I'm *)
+(*    beginning to add support for automatically lifting bool to Type, *)
+(*    when needed. That's still in progress, though. *)
+(*  *\) *)
+(* val append_mem:  l1:list 'a *)
+(*               -> l2:list 'a *)
+(*               -> a:'a *)
+(*               -> Fact unit (ensures (mem a (append l1 l2) <==>  mem a l1 \/ mem a l2)) *)
+(* let rec append_mem l1 l2 a = match l1 with *)
+(*   | [] -> () *)
+(*   | hd::tl -> *)
+(*     if hd=a *)
+(*     then () *)
+(*     else append_mem tl l2 a *)
   
-(*
-   Such an extrinsic proof would have been impossible in old F*/F7. You'd have to
-   prove the relation between mem and append intrinsically.
+(* (\* *)
+(*    Such an extrinsic proof would have been impossible in old F*/F7. You'd have to *)
+(*    prove the relation between mem and append intrinsically. *)
 
-   Alternatively, you could
-     1. define a logic function Append and Mem (like Length above),
-     2. intrinsically prove the connection between append and Append, mem and Mem
-     3. extrinsically try to use induction to prove relate Append and Mem
+(*    Alternatively, you could *)
+(*      1. define a logic function Append and Mem (like Length above), *)
+(*      2. intrinsically prove the connection between append and Append, mem and Mem *)
+(*      3. extrinsically try to use induction to prove relate Append and Mem *)
 
-        generally, 3 is not possible, since you couldn't write total
-        functions easily. So, you'd have to resort to an external
-        proof (in Coq, say) and then admit it to the SMT solver.
- *)
-
-
-val map: ('a -> Tot 'b)
-      -> list 'a
-      -> Tot (list 'b)
-let rec map f l = match l with
-  | [] -> []
-  | hd::tl -> f hd::map f tl
+(*         generally, 3 is not possible, since you couldn't write total *)
+(*         functions easily. So, you'd have to resort to an external *)
+(*         proof (in Coq, say) and then admit it to the SMT solver. *)
+(*  *\) *)
 
 
-let plus_one x = x + 1
+(* val map: ('a -> Tot 'b) *)
+(*       -> list 'a *)
+(*       -> Tot (list 'b) *)
+(* let rec map f l = match l with *)
+(*   | [] -> [] *)
+(*   | hd::tl -> f hd::map f tl *)
 
-val test_map: unit -> Tot unit
-let test_map x =
-  let l = [0;1;2] in
-  let g = map plus_one l in
-  assert (g == [1;2;3])
+
+(* let plus_one x = x + 1 *)
+
+(* val test_map: unit -> Tot unit *)
+(* let test_map x = *)
+(*   let l = [0;1;2] in *)
+(*   let g = map plus_one l in *)
+(*   assert (g == [1;2;3]) *)
 

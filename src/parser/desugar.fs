@@ -319,13 +319,14 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
 
       | PatTvar a ->
         if a.idText = "'_"
-        then loc, env, TBinder(new_bvd <| Some p.prange, kun), Pat_twild
+        then let a = new_bvd <| Some p.prange in
+             loc, env, TBinder(a, kun), Pat_twild a
         else let loc, env, abvd = resolvea loc env a in
              loc, env, TBinder(abvd, kun), pos <| Pat_tvar abvd
 
       | PatWild ->
         let x = new_bvd (Some p.prange) in
-        loc, env, VBinder(x, tun), pos <| Pat_wild
+        loc, env, VBinder(x, tun), pos <| Pat_wild x
         
       | PatConst c ->
         let x = new_bvd (Some p.prange) in
@@ -563,7 +564,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
             let body = desugar_exp env t2 in
             let body = match pat with
               | None 
-              | Some Pat_wild -> body
+              | Some (Pat_wild _) -> body
               | Some pat -> mk_Exp_match(bvd_to_exp x t, [(pat, None, body)]) tun body.pos in
             pos <| mk_Exp_let((false, [(Inl x, t, t1)]), body)
         end in

@@ -130,12 +130,12 @@ and pat =
   | Pat_tvar     of btvdef
   | Pat_constant of sconst
   | Pat_disj     of list<pat>
-  | Pat_wild
-  | Pat_twild
+  | Pat_wild     of bvvdef                                      (* need stable names for even the wild patterns *)
+  | Pat_twild    of btvdef
   | Pat_meta     of meta_pat
 and meta_pat = 
   | Meta_pat_pos of pat * Range.range
-  | Meta_pat_exp of pat * exp
+  | Meta_pat_exp of pat * exp * typ                  
  and knd' =
   | Kind_type
   | Kind_effect

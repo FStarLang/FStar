@@ -292,9 +292,9 @@ let lookup_projector env lid i =
     let t = lookup_datacon env lid in 
     match (Util.compress_typ t).n with 
         | Typ_fun(binders, _) -> 
-          if ((i < 0) || i >= List.length binders)
+          if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
-          else let b = List.nth binders i in //this has to be within bounds!
+          else let b = List.nth binders i in 
                begin match fst b with 
                 | Inl a -> Util.mk_field_projector_name lid a i |> fst
                 | Inr x -> Util.mk_field_projector_name lid x i |> fst

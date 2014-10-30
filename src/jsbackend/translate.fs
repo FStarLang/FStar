@@ -141,8 +141,8 @@ and js_of_match (e:exp) (cases:list<(pat * option<exp> * exp)>) =
         | Pat_constant(c) -> (JSE_Sequal(JSE_Identifier(id), js_of_const c), [])
         | Pat_disj(l) -> List.fold_left (fun (cur,b) p->
             let (next, nb) = aux id p in (or_cond cur next, b @ nb)) (JSE_Bool(false), []) l
-        | Pat_wild -> (JSE_Bool(true), [])
-        | Pat_meta(Meta_pat_exp(p, _))
+        | Pat_wild _ -> (JSE_Bool(true), [])
+        | Pat_meta(Meta_pat_exp(p, _, _))
         | Pat_meta(Meta_pat_pos(p,_)) -> aux id p
         | _ -> failwith "fail..."
         in let (conds, binds) = (aux "$v" p) in

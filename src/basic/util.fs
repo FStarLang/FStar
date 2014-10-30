@@ -69,7 +69,7 @@ let start_process (prog:string) (args:string) (cond:string -> bool) : proc =
                 else
                     System.Threading.Monitor.Enter(signal);
                     killed := true;
-                    Printf.fprintf stdout "Z3 exited unadvertedly\n%s\n" (driverOutput.ToString());
+                    Printf.fprintf stdout "%s exited inadvertently\n%s\n" prog (driverOutput.ToString());
                     stdout.Flush();
                     System.Threading.Monitor.Exit(signal);
                     exit(1)));
@@ -345,6 +345,9 @@ let first_N n l =
       | _     -> failwith "firstN"
   in
   f [] 0 l
+
+let rec nth_tail n l =
+   if n=0 then l else nth_tail (n - 1) (List.tl l)
 
 let prefix l = 
     match List.rev l with 

@@ -389,10 +389,10 @@ let rec mlpat_of_pat (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
         let lenv, ps = Util.fold_map (mlpat_of_pat rg) lenv ps in
         (lenv, MLP_Branch ps)
 
-    | Pat_wild ->
+    | Pat_wild _ ->
         lenv, MLP_Wild
 
-    | Pat_meta(Meta_pat_exp(p, _)) -> 
+    | Pat_meta(Meta_pat_exp(p, _, _)) -> 
         mlpat_of_pat rg lenv p
 
     | Pat_meta(Meta_pat_pos (p, rg)) ->

@@ -133,7 +133,8 @@ val find_opt: ('a -> bool) -> list<'a> -> option<'a>
 val bind_opt: option<'a> -> ('a -> option<'b>) -> option<'b>
 val map_opt: option<'a> -> ('a -> 'b) -> option<'b>
 
-val first_N: int -> list<'a> -> Tot<(list<'a> * list<'a>)>
+val first_N: int -> list<'a> -> (list<'a> * list<'a>)
+val nth_tail: int -> list<'a> -> list<'a>
 val prefix: list<'a> -> Tot<(list<'a> * 'a)>
 
 val string_of_unicode: array<byte> -> Tot<string>

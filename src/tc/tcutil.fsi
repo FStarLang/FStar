@@ -31,6 +31,7 @@ val new_kvar : env -> knd
 val new_tvar : env -> knd -> typ
 val check_uvars: Range.range -> typ -> unit
 val check_and_ascribe : env -> exp -> typ -> typ -> exp * Rel.guard_t
+val pat_as_exps': bool -> env -> pat -> list<exp>
 val pat_as_exps: env -> pat -> list<exp>
 val generalize: env -> list<(lbname*exp*comp)> -> (list<(lbname*exp*comp)>)
 val maybe_instantiate : env -> exp -> typ -> (exp * typ)

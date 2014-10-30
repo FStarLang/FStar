@@ -123,14 +123,15 @@ let destruct_arrow_kind env tt k args : (Syntax.args * binders * knd) =
 
     aux ktop
 
-let pat_as_exps env p : list<exp> = 
+let pat_as_exps' (wild:bool) env p : list<exp> = 
   let single = function 
     | [te] -> te
     | _ -> failwith "impossible" in
   let r = Env.get_range env in
   let rec aux p = match p with
-    | Pat_wild ->  [Inr (fst <| Rel.new_evar r [] (new_tvar env ktype))] //TODO: why empty vars?
-    | Pat_twild  -> [Inl (fst <| Rel.new_tvar r (Tc.Env.t_binders env) (new_kvar env))] 
+    | Pat_wild _ when (not wild) -> [Inr (fst <| Rel.new_evar r [] (new_tvar env ktype))] //TODO: why empty vars?
+    | Pat_twild _ -> [Inl (fst <| Rel.new_tvar r (Tc.Env.t_binders env) (new_kvar env))] 
+    | Pat_wild x
     | Pat_var x -> [Inr (Util.bvd_to_exp x (new_tvar env ktype))]
     | Pat_tvar a -> [Inl (Util.bvd_to_typ a (new_kvar env))]
     | Pat_constant c -> [Inr (syn' env tun <| mk_Exp_constant c)]
@@ -147,6 +148,8 @@ let pat_as_exps env p : list<exp> =
   List.map (function 
     | Inl _ -> failwith "Impossible"
     | Inr (e) -> e) (aux p)    
+
+let pat_as_exps env p = pat_as_exps' false env p
 
 //DTuple u1 (\_:u1. u2) (\_:u1 u2. u3) ...
 // where ui:Type

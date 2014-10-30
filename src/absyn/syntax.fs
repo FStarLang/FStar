@@ -128,12 +128,12 @@ and pat =
   | Pat_tvar     of btvdef
   | Pat_constant of sconst
   | Pat_disj     of list<pat>
-  | Pat_wild
-  | Pat_twild
+  | Pat_wild     of bvvdef                                (* need stable names for even the wild patterns *)
+  | Pat_twild    of btvdef
   | Pat_meta     of meta_pat
 and meta_pat = 
   | Meta_pat_pos of pat * Range.range
-  | Meta_pat_exp of pat * exp
+  | Meta_pat_exp of pat * exp * typ
 and knd' =
   | Kind_type
   | Kind_effect
@@ -525,11 +525,11 @@ let rec pat_vars r = function
             | Inl x -> x.ppname.idText) v))) in
       raise (Error(Util.format1 "Each branch of this pattern binds different variables: %s" vars, r))
     else List.hd vars
-  | Pat_wild 
-  | Pat_twild
+  | Pat_wild _
+  | Pat_twild _
   | Pat_constant _ -> []
   | Pat_meta(Meta_pat_pos(p, r)) -> pat_vars r p
-  | Pat_meta(Meta_pat_exp(p, _)) -> pat_vars r p
+  | Pat_meta(Meta_pat_exp(p, _, _)) -> pat_vars r p
 
 let mk_Exp_match ((e:exp),(pats:list<(pat * option<exp> * exp)>)) (t:typ) p = 
     {

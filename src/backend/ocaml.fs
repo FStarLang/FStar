@@ -574,13 +574,13 @@ and doc_of_pattern_r (rg : range) env (p : pat) : env * doc =
         let env, ds = Util.fold_map (doc_of_pattern rg) env ps in
         (env, parens (combine (text "|") ds))
 
-    | Pat_wild ->
+    | Pat_wild _ ->
         (env, text "_")
 
     | Pat_meta(Meta_pat_pos(p, rg)) ->
         doc_of_pattern rg env p
 
-    | Pat_meta(Meta_pat_exp(p, _)) ->
+    | Pat_meta(Meta_pat_exp(p, _, _)) ->
         doc_of_pattern rg env p
     
     | Pat_tvar  _ -> unsupported rg
