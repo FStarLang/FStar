@@ -1,8 +1,9 @@
 
 module GenBug15
 
-val foo2 : m : int -> l : int -> unit
-let foo2 m =
-  match m with
-  | 0 -> (fun l => ())
-  | _ -> (fun l => ())
+(* This simple thing fails pre-type-checking *)
+
+assume val foo : int -> unit
+
+val foo2 : bool -> int -> unit
+let foo2 (b : bool) = foo
