@@ -737,16 +737,11 @@ let maybe_instantiate env e t =
 (**************************************************************************************)
 (* Calling the solver *)
 (**************************************************************************************)
-let solver_err_count = Util.mk_ref 0
-
-let get_err_count () = !solver_err_count
-
 let solve env f = 
     let ok, errs = env.solver.solve env f in
     if not ok then begin
       Tc.Errors.report (Tc.Env.get_range env)
-                       (Tc.Errors.failed_to_prove_specification errs);
-      incr solver_err_count
+                       (Tc.Errors.failed_to_prove_specification errs)
     end
 
 let discharge_guard env g = 

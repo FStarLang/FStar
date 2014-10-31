@@ -1,4 +1,4 @@
-module Stlc
+module Bug22
 open Prims.PURE
 
 type exp =

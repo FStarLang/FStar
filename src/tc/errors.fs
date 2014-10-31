@@ -34,8 +34,11 @@ let diag r msg =
 let warn r msg = 
   Util.print_string (format2 "Diagnostic %s: %s\n" (Range.string_of_range r) msg)
 
+let num_errs = Util.mk_ref 0
 let report r msg = 
+  incr num_errs;
   Util.print_string (format2 "Error %s: %s\n" (Range.string_of_range r) msg)
+let get_err_count () = !num_errs
 
 let ill_kinded_effect e k = 
   format2 "Ill-kinded effect (%s) has kind %s" e.str (Print.kind_to_string k)

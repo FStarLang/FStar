@@ -69,4 +69,4 @@ val discharge_guard: env -> guard_t -> unit
 val label: string -> Range.range -> typ -> typ
 val label_guard: string -> Range.range -> guard_t -> guard_t
 val refresh_comp_label: env -> bool -> comp -> comp
-val get_err_count: unit -> int
+

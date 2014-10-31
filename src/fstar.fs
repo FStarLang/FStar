@@ -79,11 +79,10 @@ let go _ =
             Util.print_string (FSharp.Format.pretty 120 doc)
         end;
         finished fmods;
-        let errs = Tc.Util.get_err_count () in
+        let errs = Tc.Errors.get_err_count () in
         if !Options.verify then begin
           if errs>0 then begin
-            fprint1 ("Error: %s verification conditions could not be " ^
-                     "discharged (see above)\n") (string_of_int errs);
+            fprint1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
             exit 1
             end
           else if not !Options.silent then

@@ -120,7 +120,9 @@ type binding =
    
 type env_t = {bindings:list<binding>;
               tcenv:Env.env;
-              warn:bool}
+              warn:bool;
+              polarity:bool}
+let negate env = {env with polarity=not env.polarity}
 let print_env e = 
     e.bindings |> List.map (function 
         | Binding_var (x, t) -> Print.strBvd x
@@ -234,6 +236,18 @@ let close_ex vars pred = match vars with
     | _ -> 
         let vars, guards = List.unzip vars in 
         Term.mkExists([], vars, mk_and_l (pred::guards))
+        
+let close_all vars pred = match vars with
+    | [] -> pred
+    | _ -> 
+        let vars, guards = List.unzip vars in 
+        Term.mkForall([], vars, Term.mkImp(mk_and_l guards, pred))
+        
+let close env vars pred = 
+    if env.polarity
+    then close_ex vars pred
+    else close_all vars pred
+
 (* </Utilities> *)
 
 (**********************************************************************************)
@@ -475,27 +489,49 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars) =
         mkBoundV fsym, [(fsym, Term.mkTrue)]
  
       | Exp_abs(bs, body) -> 
-        begin match (Util.compress_typ e.tk).n with 
-            | Typ_fun(_, c) -> 
-                let esym, lam = fresh_fvar "lambda" Term_sort in
-                if not <| Util.is_pure env.tcenv c
-                then lam, [(esym, Term_sort), Term.mkTrue]
-                else let vars, guards, env, _ = encode_binders bs env in 
-                     let app = mk_ApplyE lam vars in
-                     let body, body_vars = encode_exp body env in
-                     let eq = close_ex body_vars (mkEq(app, body)) in
-                     let tguard = encode_typ_pred (Util.comp_result c) env app in
-                     let pre = if Util.is_total_comp c 
-                               then mk_and_l guards
-                               else let tres, wp, _ =  Tc.Util.destruct_comp (Util.comp_to_comp_typ c) in   
-                                    let pre = encode_formula (Syntax.mk_Typ_app(wp, [targ <| trivial_post tres]) ktype e.pos) env in
-                                    mk_and_l (pre::guards) in
-                     let appAx = Term.mkForall(app::guards, vars, mkImp(mk_and_l guards, mkAnd(eq, tguard))) in
-                     lam, [(esym, Term_sort), appAx]
+        let esym, lam = fresh_bvar "lambda" Term_sort in
+        if not <| Util.is_pure_function e.tk 
+        then lam, [(esym, Term_sort), Term.mkTrue]
+        else let vars, guards, envbody, _ = encode_binders bs env in 
+             let app = mk_ApplyE lam vars in
+             let body, body_vars = encode_exp body envbody in
+             let eq = close_ex body_vars (mkEq(app, body)) in
+             let lam_typed = encode_typ_pred e.tk env lam in
+             let tsym, t = fresh_bvar "t" Type_sort in 
+             let app_is_typed = close_ex [(tsym, Type_sort), Term.mkTrue] (Term.mk_HasType app t) in
+             let app_eq = Term.mkForall(app::guards, vars, mkImp(app_is_typed, eq)) in
+             lam, [(esym, Term_sort), Term.mkAnd(app_eq, lam_typed)]
 
-            | _ -> failwith "Impossible"
-        end
+//             let tguard = encode_typ_pred (Util.comp_result c) env app in
+//             let pre = if Util.is_total_comp c 
+//                        then mk_and_l guards
+//                        else let tres, wp, _ =  Tc.Util.destruct_comp (Util.comp_to_comp_typ c) in   
+//                             let pre = (Syntax.mk_Typ_app(wp, [targ <| trivial_post tres]) ktype e.pos) |> norm_t env in
+//                             let pre = encode_formula pre env in
+//                             mk_and_l (pre::guards) in
+//            let appAx = Term.mkForall(app::guards, vars, mkImp(pre, mkAnd(eq, tguard))) in
+//            lam, [(esym, Term_sort), appAx]
 
+             
+//        else begin match (Util.compress_typ e.tk).n with 
+//            | Typ_fun(_, c) -> 
+//              let vars, guards, env, _ = encode_binders bs env in 
+//              let app = mk_ApplyE lam vars in
+//              let body, body_vars = encode_exp body env in
+//              let eq = close_ex_pos body_vars (mkEq(app, body)) in
+//              let tguard = encode_typ_pred (Util.comp_result c) env app in
+//              let pre = if Util.is_total_comp c 
+//                        then mk_and_l guards
+//                        else let tres, wp, _ =  Tc.Util.destruct_comp (Util.comp_to_comp_typ c) in   
+//                             let pre = (Syntax.mk_Typ_app(wp, [targ <| trivial_post tres]) ktype e.pos) |> norm_t env in
+//                             let pre = encode_formula pre env in
+//                             mk_and_l (pre::guards) in
+//            let appAx = Term.mkForall(app::guards, vars, mkImp(pre, mkAnd(eq, tguard))) in
+//            lam, [(esym, Term_sort), appAx]
+//
+//            | _ -> failwith "Impossible"
+//        end
+//
       | Exp_app({n=Exp_fvar(l, _)}, [(Inl _, _); (Inl _, _); (Inr v1, _); (Inr v2, _)]) when (lid_equals l.v Const.lexpair_lid) -> 
          let v1, vars1 = encode_exp v1 env in 
          let v2, vars2 = encode_exp v2 env in
@@ -655,13 +691,25 @@ and encode_formula (phi:typ) (env:env_t) : term =
         | _ -> failwith "Unexpected labels in formula"
         
 and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels = (* expects phi to be normalized; the existential variables are all labels *)
-    let encode_fe l env = 
+    let encode_fe polarities l env = 
         let tms, labels, ex_vars = l |> List.fold_left (fun (tms, labels, ex_vars) x -> match x with 
             | Inl t, _ -> let phi, labs = encode_formula_with_labels t env in phi::tms, labs@labels, ex_vars
             | Inr e, _ -> let e, vars = encode_exp e env in e::tms, labels, vars@ex_vars) ([], [], []) in
     List.rev tms, labels, ex_vars in
 
-    let enc : (list<term> -> term) -> args -> term * labels = fun f l -> let l, labels, ex_vars = encode_fe l env in close_ex ex_vars (f l), labels in
+    let enc (f:list<term> -> term) : args -> term * labels = fun l -> 
+        let vars, args = Util.fold_map (fun vars x -> match fst x with 
+            | Inl t -> let t, vars' = encode_typ_term t env in vars@vars', t
+            | Inr e -> let e, vars' = encode_exp e env in vars@vars', e) [] l in
+        close env vars (f args), [] in
+
+    let enc_prop_c polarities f : args -> term * labels = fun l ->
+        let phis, labs = List.unzip <| List.map2 (fun p l -> 
+            let env = if p then env else negate env in 
+            match fst l with 
+                | Inl t -> encode_formula_with_labels t env
+                | _ -> failwith "Expected a formula") polarities l in
+        f phis, List.flatten labs in
     let const_op f _ = f, [] in
     let un_op f l = f <| List.hd l in
     let bin_op : ((term * term) -> term) -> list<term> -> term = fun f -> function 
@@ -670,23 +718,34 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels = (* expec
     let tri_op : ((term * term * term) -> term) -> list<term> -> term = fun f -> function
         | [t1;t2;t3] -> f(t1,t2,t3)
         | _ -> failwith "Impossible" in
-    let eq_op : ((term * term) -> term) -> list<term> -> term = fun f -> function 
-        | [_;_;e1;e2] -> bin_op f [e1;e2]
-        | l -> bin_op f l in
+    let eq_op : args -> term * labels = function 
+        | [_;_;e1;e2] -> enc (bin_op mkEq) [e1;e2]
+        | l ->  enc (bin_op mkEq) l in
+    let mk_iff : args -> term * labels = function 
+        | [(Inl lhs, _); (Inl rhs, _)] -> 
+          let l1, labs1 = encode_formula_with_labels lhs (negate env) in
+          let l2, labs2 = encode_formula_with_labels rhs env in
+
+          let m1, labs3 = encode_formula_with_labels lhs env in
+          let m2, labs4 = encode_formula_with_labels rhs (negate env) in
+
+          mkAnd(mkImp(l1, l2), mkImp(m2, m1)), labs1@labs2@labs3@labs4
+  
+        | _ -> failwith "Impossible" in
     let unboxInt_l : (list<term> -> term) -> list<term> -> term = fun f l -> f (List.map Term.unboxInt l) in
     let connectives = [ 
-                        (Const.and_lid, enc <| bin_op mkAnd);
-                        (Const.or_lid,  enc <| bin_op mkOr);
-                        (Const.imp_lid, enc <| bin_op mkImp);
-                        (Const.iff_lid, enc <| bin_op mkIff);
-                        (Const.ite_lid, enc <| tri_op mkITE);
-                        (Const.not_lid, enc <| un_op mkNot);
+                        (Const.and_lid, enc_prop_c [true;true]  <| bin_op mkAnd);
+                        (Const.or_lid,  enc_prop_c [true;true]  <| bin_op mkOr);
+                        (Const.imp_lid, enc_prop_c [false;true] <| bin_op mkImp);
+                        (Const.iff_lid, mk_iff);
+                        (Const.ite_lid, enc_prop_c [false;true;true] <| tri_op mkITE);
+                        (Const.not_lid, enc_prop_c [false] <| un_op mkNot);
                         (Const.lt_lid,  enc (unboxInt_l <| bin_op mkLT));
                         (Const.gt_lid,  enc (unboxInt_l <| bin_op mkGT));
                         (Const.gte_lid, enc (unboxInt_l <| bin_op mkGTE));
                         (Const.lte_lid, enc (unboxInt_l <| bin_op mkLTE));
                         (Const.eqT_lid, enc <| bin_op mkEq);
-                        (Const.eq2_lid, enc <| eq_op mkEq);
+                        (Const.eq2_lid, eq_op);
                         (Const.true_lid, const_op mkTrue);
                         (Const.false_lid, const_op mkFalse);
                     ] in
@@ -701,18 +760,15 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels = (* expec
         
         | _ -> 
             let tt, ex_vars = encode_typ_term phi env in
-            close_ex ex_vars <| Term.mk_Valid tt, [] in
+            close env ex_vars <| Term.mk_Valid tt, [] in
 
     let encode_q_body env (bs:Syntax.binders) (ps:args) body = 
         let vars, guards, env, _ = encode_binders bs env in 
-        let pats, ex_vars, labs = encode_fe ps env in
-
-        match ex_vars, labs with 
-            | [], [] -> 
-                 let body, labs = encode_formula_with_labels body env in
-                 vars, pats, mk_and_l guards, body, labs
-
-            | _ -> failwith (Util.format1 "Unexpected patterns %s\n" (Print.args_to_string ps)) in
+        let pats = ps |> List.map (function 
+            | Inl t, _ -> encode_formula t env
+            | Inr e, _ -> encode_exp e env |> fst) in 
+        let body, labs = encode_formula_with_labels body env in
+            vars, pats, mk_and_l guards, body, labs in
     
     if Tc.Env.debug env.tcenv Options.Low
     then Util.fprint1 ">>>> Destructing as formula ... %s\n" (Print.typ_to_string phi);
@@ -1287,7 +1343,7 @@ let encode_labels labs =
 (* caching encodings of the environment and the top-level API to the encoding *)
 open Microsoft.FStar.Tc.Env
 let last_env : ref<list<env_t>> = Util.mk_ref []
-let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true}]
+let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; polarity=true}]
 let get_env tcenv = match !last_env with 
     | [] -> failwith "No env; call init first!"
     | e::_ -> {e with tcenv=tcenv}
@@ -1329,7 +1385,7 @@ let solve tcenv q =
     push_env (); varops.push();
     let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) tcenv.gamma) in
     if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);
-    let phi, labels = encode_formula_with_labels q env in
+    let phi, labels = encode_formula_with_labels q (negate env) in
     let label_prefix, label_suffix = encode_labels labels in
     let r = Caption (Range.string_of_range (Tc.Env.get_range tcenv)) in
     ignore <| pop_env(); varops.pop();

@@ -49,6 +49,7 @@ val smap_remove: smap<'value> -> string -> unit
 val smap_keys: smap<'value> -> list<string>
 
 val format: string -> list<string> -> string
+
 val format1: string -> string -> string
 val format2: string -> string -> string -> string
 val format3: string -> string -> string -> string -> string

@@ -357,11 +357,11 @@ let mk_Kind_unknown  = {n=Kind_unknown; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs
 
 let mk_Typ_btvar    (x:btvar) (k:knd) (p:range) = {n=Typ_btvar x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs();}
 let mk_Typ_const    (x:ftvar) (k:knd) (p:range) = {n=Typ_const x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs()}
-let check_fun (bs:binders) (c:comp) p = 
+let rec check_fun (bs:binders) (c:comp) p = 
     match bs with 
         | [] -> failwith "Empty binders"
         | _ -> match c.n with 
-                | Total {n=Typ_fun _} -> failwith (Util.format1 "(%s) redundant currying" (Range.string_of_range p))
+                | Total {n=Typ_fun(bs',c)} -> check_fun (bs@bs') c p
                 | _ -> Typ_fun(bs, c)
 let mk_Typ_fun      ((bs:binders),(c:comp)) (k:knd) (p:range) = {
     n=check_fun bs c p;

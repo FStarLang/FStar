@@ -450,8 +450,8 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
       {config with code=w <| mk_Exp_app(c1.code, args)} 
  
     | Exp_abs(bs, e) -> 
-      let bs, _ = sn_binders tcenv bs config.environment config.steps in
-      let s = subst_of_env config.environment in
+      let bs, env = sn_binders tcenv bs config.environment config.steps in
+      let s = subst_of_env env in
       let e = subst_exp s e in
       {config with code=w <| mk_Exp_abs(bs, e)}
 
