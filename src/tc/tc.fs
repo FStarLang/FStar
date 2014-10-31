@@ -974,15 +974,13 @@ and tc_kind_trivial env k : knd =
 
 and tc_typ_trivial env t : typ * knd = 
   let t, k, g = tc_typ env t in
-  match g with 
-    | Trivial -> t, k
-    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t ^ " 1: " ^ (guard_to_string env g), t.pos))
+  Tc.Util.discharge_guard env g;
+  t, k
 
 and tc_typ_check_trivial env t (k:knd) = 
   let t, f = tc_typ_check env t k in
-  match f with 
-    | Trivial -> t
-    | _ -> raise (Error(Tc.Errors.type_has_a_non_trivial_precondition t ^ " 2: " ^ (guard_to_string env f), t.pos))
+  Tc.Util.discharge_guard env f;
+  t
 
 and tc_total_exp env e : exp * typ * guard_t = 
   let e, c = tc_exp env e in
