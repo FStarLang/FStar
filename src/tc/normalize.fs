@@ -451,11 +451,17 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
  
     | Exp_abs(bs, e) -> 
       let bs, _ = sn_binders tcenv bs config.environment config.steps in
+      let s = subst_of_env config.environment in
+      let e = subst_exp s e in
       {config with code=w <| mk_Exp_abs(bs, e)}
 
     | Exp_match _
-    | Exp_let  _ -> //TODO: not implemented yet
-      config // failwith (Util.format1 "NYI: %s" (Print.exp_to_string e))
+    | Exp_let  _ -> 
+      let s = subst_of_env config.environment in
+      let e = subst_exp s e in
+      {config with code=e}
+        
+      //config // failwith (Util.format1 "NYI: %s" (Print.exp_to_string e))
     | Exp_meta _ 
     | Exp_ascribed _ -> failwith "impossible"
 
