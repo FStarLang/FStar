@@ -28,8 +28,8 @@ exception Warning of string * Range.range
  
 type ident = {idText:string;
               idRange:Range.range}
-type LongIdent = {ns:list<ident>; 
-                  ident:ident; 
+type LongIdent = {ns:list<ident>; //["Microsoft"; "FStar"; "Absyn"; "Syntax"]
+                  ident:ident;    //"LongIdent"
                   nsstr:string;
                   str:string}
 type lident = LongIdent
@@ -39,8 +39,8 @@ type withinfo_t<'a,'t> = {
   p: Range.range; 
 } 
 type var<'t>  = withinfo_t<lident,'t>
-type fieldname = lident
-type inst<'a> = ref<option<'a>>
+type fieldname = lident //TODO:remove
+type inst<'a> = ref<option<'a>> //TODO: remove
 type bvdef<'a> = {ppname:ident; realname:ident}
 type bvar<'a,'t> = withinfo_t<bvdef<'a>,'t> 
 (* Bound vars have a name for pretty printing, 
@@ -65,7 +65,7 @@ type typ' =
   | Typ_const    of ftvar 
   | Typ_fun      of binders * comp                           (* (ai:ki|xi:ti) -> M t' wp *)
   | Typ_refine   of bvvar * typ                              (* x:t{phi} *)
-  | Typ_app      of typ * args                               (* args in reverse order *)
+  | Typ_app      of typ * args                               (* args in order *)
   | Typ_lam      of binders * typ                            (* fun (ai|xi:tau_i) => T *)
   | Typ_ascribed of typ * knd                                (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
@@ -74,7 +74,7 @@ type typ' =
   | Typ_unknown                                              (* not present after 1st round tc *)
 and arg = either<typ,exp> * bool                             (* bool marks an explicitly provided implicit arg *)
 and args = list<arg>
-and binder = either<btvar,bvvar> * bool
+and binder = either<btvar,bvvar> * bool                      (* f:   #n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                   (* bool marks implicit binder *)
 and typ = syntax<typ',knd>
 and comp_typ = {

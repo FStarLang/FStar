@@ -488,9 +488,9 @@ type either 'a 'b =
   | Inl : v:'a -> either 'a 'b
   | Inr : v:'b -> either 'a 'b
 
-type list 'cc =
-  | Nil : list 'cc
-  | Cons : hd:'cc -> tl:list 'cc -> list 'cc
+type list 'a =
+  | Nil : list 'a
+  | Cons : hd:'a -> tl:list 'a -> list 'a
 
 assume val fst : ('a * 'b) -> Tot 'a
 assume val snd : ('a * 'b) -> Tot 'b
