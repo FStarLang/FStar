@@ -17,6 +17,7 @@
 module Microsoft.FStar.Absyn.Syntax
 (* Type definitions for the core AST *)
 
+(* Prims is used for bootstrapping *)
 open Prims
 open Microsoft.FStar
 open Microsoft.FStar.Util
@@ -33,14 +34,21 @@ type LongIdent = {ns:list<ident>;
                   nsstr:string;
                   str:string}
 type lident = LongIdent
+
+(* Objects with metadata *)
 type withinfo_t<'a,'t> = {
   v: 'a; 
   sort: 't;
   p: Range.range; 
 } 
+
+(* Free term and type varibles *)
 type var<'t>  = withinfo_t<lident,'t>
 type fieldname = lident
 type inst<'a> = ref<option<'a>>
+
+(* Bound variables. 'a is a phantom type to distinguish between term and
+   type bound variables. 't is the type or the kind of the variable. *)
 type bvdef<'a> = {ppname:ident; realname:ident}
 type bvar<'a,'t> = withinfo_t<bvdef<'a>,'t> 
 (* Bound vars have a name for pretty printing, 
@@ -76,7 +84,7 @@ and arg = either<typ,exp> * bool                             (* bool marks an ex
 and args = list<arg>
 and binder = either<btvar,bvvar> * bool
 and binders = list<binder>                                   (* bool marks implicit binder *)
-and typ = syntax<typ',knd>
+and typ = syntax<typ',knd>                                   (* A type is a typ' + its kind as metadata *)
 and comp_typ = {
   effect_name:lident; 
   result_typ:typ; 

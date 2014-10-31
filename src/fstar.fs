@@ -34,6 +34,7 @@ let cleanup () =
     ToSMT.Z3.cleanup();
     Util.kill_all ()
 
+(* Main function *)
 let go _ =    
   let finished (mods:list<Syntax.modul>) = 
     if !Options.silent then () else
@@ -51,9 +52,13 @@ let go _ =
     | GoOn ->
         if not (Option.isNone !Options.codegen) then
             Options.pretype := true;
+        (* 1. Parsing the file + desugaring *)
         let fmods = Parser.Driver.parse_files (Options.prims()::filenames) in
+        (* 2. Pre-typing + produce VCs + encode them + prove them, if the option --verify is set *)
         let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
+        (* 2b. Pre-typing only (throw away all the VCs) *)
         let fmods = if !Options.pretype then Tc.Tc.check_modules solver fmods else fmods in
+        (* 3. Code generation, if the flag is set *)
         if !Options.codegen = Some "OCaml" then begin
             try
                 let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in

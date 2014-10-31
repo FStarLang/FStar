@@ -21,6 +21,10 @@ open Microsoft.FStar.Range
 open Microsoft.FStar
 open Microsoft.FStar.Util
 
+(* AST produced by the parser, before desugaring
+   It is not stratified: a single type called "term" containing
+   expressions, formulas, types, and so on
+ *)
 type level = | Un | Expr | Type | Kind | Formula
 type lid = Syntax.LongIdent
 type term' = 

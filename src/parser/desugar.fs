@@ -1320,6 +1320,10 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
 
   | _ -> raise (Error("Unexpected declaration", d.drange))
         
+
+(* Most important function: from AST to a module
+   Keeps track of the name of variables and so on (in the context)
+ *)
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul = 
   let open_ns (mname:lident) d = 
     if List.length mname.ns <> 0 
