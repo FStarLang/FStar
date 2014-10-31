@@ -24,6 +24,8 @@ open Microsoft.FStar.Util
 
 let log s = ()(* if !Options.fvdie then printfn "%d;" s *)
 
+(* We always have to compress before pattern matching on a term or a
+   type. It computes the substitutions at head of the term. *)
 let rec compress_typ_aux pos typ = match typ.n with
   | Typ_uvar (uv,k) -> 
       begin
