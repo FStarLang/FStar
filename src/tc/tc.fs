@@ -1304,7 +1304,7 @@ let check_modules (s:solver_t) mods =
     s.push();
     let m, env = tc_modul env m in 
     s.pop();
-    if m.is_interface 
+    if m.is_interface  //TODO: admit interfaces to the solver also
     then mods, env
     else (s.encode_modul env m; m::mods, env)) ([], env) in
    List.rev fmods

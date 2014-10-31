@@ -42,14 +42,6 @@ let handleable = function
   | Err _ -> true
   | _ -> false
 
-(********************************************************************************)
-(******************** Compressing out unification vars **************************)
-(********************************************************************************)          
-
-//let compress_kind = Visit.compress_kind
-//let compress_typ  = Visit.compress_typ
-//let compress_exp  = Visit.compress_exp 
-//let compress_comp = Visit.compress_comp
 
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
