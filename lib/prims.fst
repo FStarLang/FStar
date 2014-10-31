@@ -492,8 +492,8 @@ type list 'a =
   | Nil : list 'a
   | Cons : hd:'a -> tl:list 'a -> list 'a
 
-assume val fst : ('a * 'b) -> Tot 'a
-assume val snd : ('a * 'b) -> Tot 'b
+assume val fst : x:('a * 'b) -> Tot (y:'a{y == MkTuple2._1 x})
+assume val snd : x:('a * 'b) -> Tot (y:'b{y == MkTuple2._2 x})
 assume val Assume: 'P:Type -> unit -> (y:unit{'P})
 assume val admit: unit -> Pure unit True (fun x => False)
 assume val admitP: 'P:Type -> unit -> Pure unit True (fun x => 'P)
