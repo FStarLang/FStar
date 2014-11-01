@@ -22,7 +22,6 @@ open Microsoft.FStar
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Util
-open Microsoft.FStar.LazySet
 
 type sort =
   | Bool_sort 
@@ -68,7 +67,7 @@ type term' =
   | ConstArray of string * sort * term 
   | Cases      of list<term>
 and pat = term
-and term = {tm:term'; freevars:set<var>}
+and term = {tm:term'}
 and var = (string * sort)
 
 val mkTrue : term
@@ -121,8 +120,6 @@ type decl =
   | CheckSat
 type decls = list<decl>
 
-val freevars: term -> list<(string * sort)>
-val fv_minus: term -> list<(string * sort)> -> list<(string * sort)>
 val constructor_to_decl: constructor_t -> decls
 val termToSmt: binders -> term -> string
 val declToSmt: string -> decl -> string

@@ -22,7 +22,6 @@ open Microsoft.FStar
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Util
-open Microsoft.FStar.LazySet
 
 type sort =
   | Bool_sort 
@@ -80,18 +79,12 @@ type term' =
   | ConstArray of string * sort * term 
   | Cases      of list<term>
 and pat = term
-and term = {tm:term'; freevars:set<var>}
+and term = {tm:term'}
 and var = (string * sort)
 
 let eq_var (x1, _) (x2, _) = x1=x2
-let freevars t = list_of_set eq_var t.freevars
-let fv_minus t l = list_of_set eq_var <| difference t.freevars (set_of_list l)
 let third (_, _, x) = x
-let mk t f = {tm=t; freevars=f}
-let emp_fvs = set_of_list []
-let fv_l ts = List.fold_left (fun out t -> union out t.freevars) emp_fvs ts
-let fv_bin (t1,t2) = union t1.freevars t2.freevars
-let fv_tri (t1,t2,t3) = union t1.freevars (union t2.freevars t3.freevars)
+let mk t = {tm=t}
 let freeV_sym fv = match fv.tm with 
     | FreeV(s, _) -> s
     | _ -> failwith "Not a free variable"
@@ -99,62 +92,57 @@ let boundV_sym x = match x.tm with
     | BoundV(x, _) -> x
     | _ -> failwith "Not a bound variable"
 
-let mkTrue       = mk True emp_fvs
-let mkFalse      = mk False emp_fvs
-let mkInteger i  = mk (Integer i) emp_fvs
-let mkBoundV i   = mk (BoundV i) (set_of_list [i])
-let mkFreeV x    = mk (FreeV x) emp_fvs
-let mkPP  t      = mk (PP t) (snd t).freevars
-let mkApp f      = mk (App f) <| fv_l (snd f)
+let mkTrue       = mk True 
+let mkFalse      = mk False
+let mkInteger i  = mk (Integer i) 
+let mkBoundV i   = mk (BoundV i) 
+let mkFreeV x    = mk (FreeV x) 
+let mkPP  t      = mk (PP t) 
+let mkApp f      = mk (App f) 
 let mkNot t      = match t.tm with
     | True -> mkFalse
     | False -> mkTrue
-    | _ -> mk (Not t) t.freevars
+    | _ -> mk (Not t) 
 let mkAnd t      = match t with 
     | {tm=True}, t'
     | t', {tm=True} -> t'
     | {tm=False}, _
     | _, {tm=False} -> mkFalse
-    | _ -> mk (And t) <| fv_bin t
+    | _ -> mk (And t) 
 let mkOr t        = match t with 
     | {tm=False}, t'
     | t', {tm=False} -> t'
     | {tm=True}, _
     | _, {tm=True} -> mkTrue
-    | _ -> mk (Or t)  <| fv_bin t
+    | _ -> mk (Or t)  
 let mkImp (t1, t2) = match t1.tm, t2.tm with 
     | _, True
     | True, _ -> t2
-    | _ -> mk (Imp (t1,t2)) <| fv_bin (t1,t2)
-let mkIff t      = mk (Iff t) <| fv_bin t
-let mkEq t       = mk (Eq t)  <| fv_bin t
-let mkLT t       = mk (LT t)  <| fv_bin t
-let mkLTE t      = mk (LTE t) <| fv_bin t
-let mkGT t       = mk (GT t)  <| fv_bin t
-let mkGTE t      = mk (GTE t) <| fv_bin t
-let mkAdd t      = mk (Add t) <| fv_bin t
-let mkSub t      = mk (Sub t) <| fv_bin t
-let mkDiv t      = mk (Div t) <| fv_bin t
-let mkMul t      = mk (Mul t) <| fv_bin t
-let mkMinus t    = mk (Minus t) <| t.freevars
-let mkMod t      = mk (Mod t) <| fv_bin t
-let mkITE t      = mk (ITE t) <| fv_tri t
-let mkSelect t   = mk (Select t) <| fv_bin t
-let mkUpdate t   = mk (Update t) <| fv_tri t
-let mkCases t    = mk (Cases t)  <| fv_l t
-let mkConstArr t = mk (ConstArray t) <| (third t).freevars
+    | _ -> mk (Imp (t1,t2)) 
+let mkIff t      = mk (Iff t)
+let mkEq t       = mk (Eq t) 
+let mkLT t       = mk (LT t) 
+let mkLTE t      = mk (LTE t)
+let mkGT t       = mk (GT t) 
+let mkGTE t      = mk (GTE t)
+let mkAdd t      = mk (Add t)
+let mkSub t      = mk (Sub t)
+let mkDiv t      = mk (Div t)
+let mkMul t      = mk (Mul t)
+let mkMinus t    = mk (Minus t)
+let mkMod t      = mk (Mod t) 
+let mkITE t      = mk (ITE t) 
+let mkSelect t   = mk (Select t) 
+let mkUpdate t   = mk (Update t) 
+let mkCases t    = mk (Cases t)  
+let mkConstArr t = mk (ConstArray t) 
 let check_pats pats vars = ()
-//    pats |> List.iter (fun p -> 
-//        let fvs = claim p.freevars in
-//        if vars |> Util.for_all (fun (x,_) -> fvs |> Util.for_some (fun (y, _) -> x=y))
-//        then ()
-//        else Util.print_string <| Util.format1 "pattern %s misses a bound var" (termToSmt [] p))
 let mkForall (pats, vars, body) = 
     check_pats pats vars;
     if List.length vars = 0 then body 
     else match body.tm with 
             | True -> body 
-            | _ -> mk (Forall(pats,vars,body)) <| difference body.freevars (set_of_list vars)
+            | _ -> mk (Forall(pats,vars,body)) 
 let collapseForall (pats, vars, body) =
     check_pats pats vars;
     if List.length vars = 0 then body 
@@ -167,7 +155,7 @@ let mkExists (pats, vars, body) =
     if List.length vars = 0 then body 
     else match body.tm with 
             | True -> body 
-            | _ -> mk (Exists(pats,vars,body)) <| difference body.freevars (set_of_list vars)
+            | _ -> mk (Exists(pats,vars,body)) 
 
 
 type caption = option<string>
