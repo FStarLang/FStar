@@ -183,12 +183,7 @@ let rec appears_free_in x e =
       appears_free_in x e1 || appears_free_in x e2 || appears_free_in x e3
   | _ -> false
 
-(* CH: can we specify these kind of type-level functions?
-   Or do I need to inline them everywhere? *)
-(* NS: here's how *)
 type closed e = (forall (x:int). not (appears_free_in x e))
-(* val closed : exp -> Tot Type *)
-(* let closed e = (forall (x:int), ~(appears_free_in x e)) *)
 
 val free_in_context : x:int -> e:exp -> t:ty -> g:env -> Pure unit
       (requires (appears_free_in x e == true /\ typing e g == Some t))

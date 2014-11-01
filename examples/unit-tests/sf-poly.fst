@@ -365,7 +365,18 @@ let rec fold_map_correct f l =
 
 (* Church numerals *)
 
-(* Q: How can I define a type abbreviation? *)
+(* Using type abbreviation here does not work, even with full annotations
+   Problem seems similar to https://github.com/FStarLang/FStar/issues/15
+
+type church 'a = ('a -> 'a) -> 'a -> 'a
+
+val zero : church 'a
+let zero ('a:Type) (f:'a->'a) (x:'a) = x
+
+sf-poly.fst(371,0-373,3) : Error
+Expected a term of type "('a:Type -> (church 'a))";
+got a function "(fun 'a:Type f:('a -> 'a) x:'a -> x)"
+*)
 
 val zero : ('a->'a) -> 'a -> 'a
 let zero f x = x
