@@ -185,6 +185,8 @@ let rec appears_free_in x e =
 
 (* CH: can we specify these kind of type-level functions?
    Or do I need to inline them everywhere? *)
+(* NS: here's how *)
+type closed e = (forall (x:int). not (appears_free_in x e))
 (* val closed : exp -> Tot Type *)
 (* let closed e = (forall (x:int), ~(appears_free_in x e)) *)
 
