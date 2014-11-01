@@ -28,9 +28,9 @@ let is_value e =
 val subst : int -> exp -> exp -> Tot exp
 let rec subst x e e' =
   match e' with
-  | EVar xprime -> if x = xprime then e else e'
-  | EAbs xsecond t e1 ->
-      EAbs xsecond t (if x = xsecond then e1 else (subst x e e1))
+  | EVar x' -> if x = x' then e else e'
+  | EAbs x' t e1 ->
+      EAbs x' t (if x = x' then e1 else (subst x e e1))
   | EApp e1 e2 -> EApp (subst x e e1) (subst x e e2)
   | ETrue -> ETrue
   | EFalse -> EFalse
@@ -122,18 +122,56 @@ let rec typing e g =
 
 val canonical_forms_bool : e:exp -> Pure unit
       (requires ((typing e empty == Some TBool) /\ (is_value e == true)))
-      (ensures \r => (e == true) \/ (e == false))
-let canonical_forms_bool e = ()
+      (ensures \r => (e == ETrue) \/ (e == EFalse))
+let canonical_forms_bool e =
+  match e with
+  | EVar x -> ()
+  | EAbs x' t e1 ->
+      (* strange that F* can't prove this simple case *)
+      (* This fails now, but maybe if we manage to get rid of the existentials
+         by replacing them with testers and projectors?
+      assert(exists (t1:ty). exists (t2:ty).
+               typing (EAbs x' t e1) == Some (TArrow t1 t2)); *)
+      admit()
+  | EApp e1 e2 -> ()
+  | ETrue -> ()
+  | EFalse -> ()
+  | EIf e1 e2 e3 -> ()
 
 val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Pure unit
       (requires ((typing e empty == Some (TArrow t1 t2)) /\ (is_value e == true)))
-      (ensures \r => (exists (x:int). (exists (e':exp). (e == EAbs x t1 e'))))
+      (ensures \r => (is_EAbs e))
 let canonical_forms_fun e t1 t2 = ()
 
 val progress : e:exp -> t:ty -> Pure unit
       (requires (typing e empty == Some t))
-      (ensures \r => (is_value e \/ (exists (e':exp). step e == Some e')))
-let progress e t = ()
+      (ensures \r => (is_value e \/ (is_Some (step e))))
+let rec progress e t =
+  match e with
+  | EVar x ->
+      (* assert(typing (EVar x) empty == None); -- this fails *)
+      admit()
+  | EAbs x' t e1 -> ()
+  | EApp e1 e2 ->
+(* problem: for progress e1 and progress e2 we don't have anything to
+   pass for t; implicit lemma instantiation might help for such cases *)
+      assert(exists (t1:ty). exists (t2:ty).
+               typing e1 empty == Some (TArrow t1 t2) /\
+               typing e2 empty == Some t1);
+          (* The assert is proved, but it's not enough.
+             We want to apply progress for the existentially
+             quantified t1 and t2 above! How can we do that?
+             If we prove unique existence for something logical
+             can we somehow soundly expose it back to F*? *)
+      if is_value e1 then
+        if is_value e2 then ()
+        else admit()
+      else admit()
+  | ETrue -> ()
+  | EFalse -> ()
+  | EIf e1 e2 e3 ->
+      progress e1 TBool; progress e2 t; progress e3 t;
+      if is_value e1 then canonical_forms_bool e1
 
 val appears_free_in : x:int -> e:exp -> Tot bool
 let rec appears_free_in x e =
@@ -152,7 +190,7 @@ let rec appears_free_in x e =
 
 val free_in_context : x:int -> e:exp -> t:ty -> g:env -> Pure unit
       (requires (appears_free_in x e == true /\ typing e g == Some t))
-      (ensures \r => (exists (t':ty). g x == Some t'))
+      (ensures \r => (is_Some (g x)))
 let free_in_context x e t g = ()
 
 val context_invariance : g:env -> g':env -> e:exp -> t:ty -> Pure unit
@@ -173,3 +211,7 @@ val preservation : e:exp -> e':exp -> t:ty -> Pure unit
       (requires (typing e empty == Some t /\ step e == Some e'))
       (ensures \r => (typing e' empty == Some t))
 let preservation e e' t = ()
+
+(* CH: With this purely-executable way of specifying things we can't
+   do rule induction, and that is restrictive and will probably lead
+   to rather unnatural proofs. *)
