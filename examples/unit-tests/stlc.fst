@@ -29,12 +29,8 @@ val subst : int -> exp -> exp -> Tot exp
 let rec subst x e e' =
   match e' with
   | EVar xprime -> if x = xprime then e else e'
-(* CH: This fails because the SMT encoding can't find xsecond for some reason
-   Seems the same problem as: https://github.com/FStarLang/FStar/issues/22
   | EAbs xsecond t e1 ->
       EAbs xsecond t (if x = xsecond then e1 else (subst x e e1))
-*)
-  | EAbs xsecond t e1 -> EAbs xsecond t e1
   | EApp e1 e2 -> EApp (subst x e e1) (subst x e e2)
   | ETrue -> ETrue
   | EFalse -> EFalse
@@ -94,7 +90,6 @@ val extend_eq : g:env -> x:int -> a:ty -> Fact unit
       (ensures ((extend g x a) x) == Some a)
 let extend_eq g x a = ()
 
-(* CH: turning int into nat we get again the non-trivial precondition problem *)
 val extend_neq : g:env -> x1:int -> a:ty -> x2:int -> Pure unit
       (requires (x2 =!= x1))
       (ensures \r => ((extend g x2 a) x1) == g x1)
@@ -135,12 +130,10 @@ val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Pure unit
       (ensures \r => (exists (x:int). (exists (e':exp). (e == EAbs x t1 e'))))
 let canonical_forms_fun e t1 t2 = ()
 
-(* CH: This is proved without even needing induction or the lemmas,
-   again, too good to be true (see stlc-false.fst) *)
 val progress : e:exp -> t:ty -> Pure unit
       (requires (typing e empty == Some t))
       (ensures \r => (is_value e \/ (exists (e':exp). step e == Some e')))
-let rec progress e t = ()
+let progress e t = ()
 
 val appears_free_in : x:int -> e:exp -> Tot bool
 let rec appears_free_in x e =

@@ -95,9 +95,6 @@ let rec index_option l n =
   | [] -> None
   | h :: t -> if n = 0 then Some h else index_option t (n-1)
 
-(* All these fail and I think they shouldn't:
-   Type "(unit -> Fact (unit))" has unexpected non-trivial pre-condition
-   Filed this as: https://github.com/FStarLang/FStar/issues/18
 val test_index_option1 : unit -> Fact unit
       (ensures (index_option [4;5;6;7] 0 == Some 4))
 let test_index_option1 () = ()
@@ -106,29 +103,10 @@ val test_index_option2 : unit -> Fact unit
       (ensures (index_option [[1];[2]] 1 == Some [2]))
 let test_index_option2 () = ()
 
+(* F* fails to prove this one, but it proves the above ones *)
 val test_index_option3 : unit -> Fact unit
       (ensures (index_option [true] 2 == None))
 let test_index_option3 () = ()
-*)
-
-(* test_index_option3 fails even if we replace
-   the "if" in index_option with a "match" *)
-val index_option' : list 'a -> nat -> Tot (option 'a)
-let rec index_option' l n =
-  match l with
-  | [] -> None
-  | h :: t -> begin
-    match n with
-    | 0 -> Some h
-    | _ -> index_option' t (n-1)
-    end
-
-(* still get same error:
-   Type "(unit -> Fact (unit))" has unexpected non-trivial pre-condition
-val test_index_option3' : unit -> Fact unit
-      (ensures (index_option' [true] 2 == None))
-let test_index_option3' () = ()
-*)
 
 assume val impossible : u : unit { False } -> Tot 'a
 (* let impossible = failwith "this won't happen"
@@ -168,11 +146,12 @@ anyway?  using a single common existential also makes this provable
 (* Getting incomplete patterns here, with or without the [] pattern,
    caused by the same problem as length_nil I think; it should clearly
    be a different error message when the [] pattern is present.
-   Seems to be the same problem as: https://github.com/FStarLang/FStar/issues/24 *)
+   TODO: minimize + file separately (not 24 it seems) *)
+(* This also gets a non-termination error now *)
 val index : l : list 'a -> n:int{(0 <= n) /\ (n < length l)} -> Tot 'a
 let rec index l n =
   match l with
-(*  | [] -> length_nil(); impossible() *)
+  | [] -> length_nil(); impossible()
   | h :: t -> if n = 0 then h else index t (n-1)
 
 (* Functions as Data *)
@@ -244,17 +223,8 @@ let rec map f l =
   | []     -> []
   | h :: t -> (f h) :: (map f t)
 
-val plus3 : int -> Tot int
-let plus3 n = n + 3
-
 val test_map1 : unit -> Fact unit
-      (ensures (map plus3 [2;0;2] == [5;3;5]))
-(* CH: Replacing plus3 with (fun n -> n + 3) (just inlining) makes F* blow up:
-   Bound term variable not found: n
-   at Microsoft.FStar.ToSMT.Encode.lookup_term_var[a,b](env_t env, withinfo_t`2
-   a) in E:\Projects\fstar\pub\src\tosmt\encode.fs:line 141
-   Filed this as: https://github.com/FStarLang/FStar/issues/19
-   *)
+      (ensures (map (fun n -> n + 3) [2;0;2] == [5;3;5]))
 let test_map1 () = ()
 
 (* CH: again: Incompatible types (list i:int{i >= 0}) and (list nat)
@@ -308,32 +278,12 @@ let rec fold f l b =
   | []   -> b
   | h::t -> f h (fold f t b)
 
-(* CH: This completely blows up because of the lambda
-   Bound term variable not found: x
 val fold_example1 : unit -> Fact unit 
       (ensures (fold (fun x y -> x * y) [1;2;3;4] 1 == 24))
 let fold_example1 () = ()
-*)
 
-(* CH: Without the lambda it works fine *)
-let mult_clos x y = x * y
-
-val fold_example1 : unit -> Fact unit 
-      (ensures (fold mult_clos [1;2;3;4] 1 == 24))
-let fold_example1 () = ()
-
-(* CH: This also completely blows up because of the lambda
-   Bound term variable not found: x
 val fold_example2 : unit -> Fact unit
       (ensures (fold (fun x y -> x && y) [true;true;false;true] true == false))
-let fold_example2 () = ()
-*)
-
-(* CH: Again without the lambda it works fine *)
-let andb x y = x && y
-
-val fold_example2 : unit -> Fact unit
-      (ensures (fold andb [true;true;false;true] true == false))
 let fold_example2 () = ()
 
 (* CH: This fails, but maybe can't expect so much from Z3? *)
@@ -390,12 +340,9 @@ val override_neq : x1:'a -> x2:'a -> k1:'b -> k2:'b -> f:('b->Tot 'a) -> Pure un
       (ensures \r => (my_override f k2 x2) k1 == x1)
 let override_neq x1 x2 k1 k2 f = ()
 
-(* CH: can't inline this because support for lambdas sucks *)
-val closure42 : 'a -> nat -> Tot nat
-let closure42 a n = n + 1
-
+(* This causes subtyping check failure without the annotation on n *)
 val fold_length : l:list 'a -> Tot nat
-let fold_length l = fold closure42 l 0
+let fold_length l = fold (fun _ (n:nat) -> n + 1) l 0
 
 (* CH: both cases are supposed to be trivial, but none of them works *)
 val fold_length_correct : l:list 'a -> Fact unit
@@ -405,11 +352,8 @@ let rec fold_length_correct l =
   | [] -> ()
   | h::t -> fold_length_correct t
 
-val closure43 : ('a->Tot 'b) -> 'a -> list 'b -> Tot (list 'b)
-let closure43 f x l = f x :: l
-
 val fold_map : ('a->Tot 'b) -> list 'a -> Tot (list 'b)
-let fold_map f l= fold (closure43 f) l []
+let fold_map f l= fold (fun x l -> f x :: l) l []
 
 (* CH: again, this should just work *)
 val fold_map_correct : f:('a->Tot 'b) -> l:list 'a -> Fact unit

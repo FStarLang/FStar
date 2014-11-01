@@ -137,44 +137,17 @@ let rec minus (n : nat) (m : nat) : nat =
 
 val beq_nat : nat -> nat -> Tot mbool
 let rec beq_nat n m =
-  match n with
-  | O -> begin match m with 
-         | O -> MTrue
-         | S m' -> MFalse
-         end
-  | S n' -> begin match m with 
-            | O -> MFalse
-            | S m' -> beq_nat n' m'
-            end
-
-(* CH: This equivalent definition causes F* to blow up
-   Bound term variable not found: n'
-   Filed this as https://github.com/FStarLang/FStar/issues/22
-val beq_nat : nat -> nat -> Tot mbool
-let rec beq_nat n m =
   match n, m with
   | O   , O    -> MTrue
   | S n', S m' -> beq_nat n' m'
   | _   , _    -> MFalse
-*)
 
-val ble_nat : nat -> nat -> Tot mbool
-let rec ble_nat n m =
-  match n with
-  | O -> MTrue
-  | S n' ->
-      match m with
-      | O -> MFalse
-      | S m' -> ble_nat n' m'
-
-(* CH: This equivalent definition also causes F* to blow up, same problem
 val ble_nat : nat -> nat -> Tot mbool
 let rec ble_nat n m =
   match n, m with
   | O   , _    -> MTrue
   | S n', O    -> MFalse
   | S n', S m' -> ble_nat n' m'
-*)
 
 val test_ble_nat1 : unit -> Fact unit
       (ensures (ble_nat (S (S O)) (S (S O)) == MTrue))

@@ -183,7 +183,7 @@ BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_BACKEND) $(BOOT_JSBACKEND)
 
 boot: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug_level Low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
 test: boot
 	-make -s -C ../examples/unit-tests all-lax all-ver 
