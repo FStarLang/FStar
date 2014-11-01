@@ -20,15 +20,11 @@ let rec length l =
   | Nil -> 0
   | Cons h t -> length t + 1
 
-(* CH: The intrinsic property for repeat is just cheating,
-       this file is supposed to be about *extrinsic* proofs *)
-val repeat : int -> count:nat -> Tot (i:ilist{length i == count})
-let rec repeat n count = 
-  if count = 0 
-  then Nil
-  else if count > 0
-  then Cons n (repeat n (count - 1))
-  else (assert False; Nil)
+val repeat : int -> count:nat -> Tot ilist
+let rec repeat n count =
+  match count with
+  | 0 -> Nil
+  | _ -> Cons n (repeat n (count - 1))
 
 val app : ilist -> ilist -> Tot ilist
 let rec app l1 l2 = 
@@ -88,14 +84,9 @@ let tl l =
   match l with
   | Cons h t -> t
 
-(* CH: This fails with the following error:
-   Type "(l:l:ilist{~ l == Nil} -> Fact (unit))" has an unexpected non-trivial pre-
-   condition 2: (forall l:l:ilist{~ l == Nil}
-   Might be a more obvious variant of: https://github.com/FStarLang/FStar/issues/18
 val tl_length_pred : l:ilist{l =!= Nil} -> Fact unit
       (ensures ((length l) - 1 == length (tl l)))
 let tl_length_pred l = ()
-*)
 
 val app_assoc : l1 : ilist -> l2 : ilist -> l3 : ilist -> Fact unit
       (ensures (app (app l1 l2) l3) == app l1 (app l2 l3))
@@ -137,38 +128,18 @@ let rec rev_length l =
   | Nil -> ()
   | Cons h t -> length_snoc h (rev t); rev_length t
 
-let z:nat = 0 //TODO: relax restriction on well-formedness of types having trivial refinements
-
 val foo1 : n:int -> l : ilist -> Pure unit
-      (requires (repeat n z == l))
-      (ensures \r => length l == 0) (* NS: now works. Needed to prove a property about the length of repeat, which I did intrinsically above. *)
-let foo1 n l = ()                   (* CH: this should succeed. NS: and it does *)
-    (* CH: From an extrinsic proof point of view, this is just cheating.
-           Any reason we can't have a purely-extrinsic proof of this? *)
+      (requires (repeat n 0 == l))
+      (ensures \r => length l == 0)
+let foo1 n l = ()
 
 val foo2 : n : nat -> m : nat -> l : ilist -> Pure unit
       (requires (repeat n m == l))
       (ensures \r => length l == m)
-let rec foo2 n m l = 
+let rec foo2 n m l =
   match m with
-  | 0 -> ()  (* CH: should actually work without a call to foo1? NS: And it does with the property about the length of repeat. *)(* CH: ditto, this is no longer an extrinsic proof, basically the refinement you've put on repeat directly implies foo2 *)
+  | 0 -> () 
   | _ -> foo2 n (m-1) (repeat n (m-1))
-         (* CH: this should succeed (NS: and it does), and (NS: the previous version should) clearly not fail pre-type-checking
-            it's a frequent pattern for generalizing the induction hypothesis *)
-         (* NS: TODO: explicit generalization fails pre-type checking. Fix! 
-            But, FYI, all let-rec bound names are implicitly generalized. So, no need for this pattern. *)
-         (* CH: This is very cool, a consequence of having n-argument
-                fixpoints, while Coq only only has one argument ones *)
-
-(* Explicit generalization problem filed as: https://github.com/FStarLang/FStar/issues/15
-val foo2' : n : nat -> m : nat -> l : ilist -> Pure unit
-      (requires (repeat n m == l))
-      (ensures \r => length l == m)
-let rec foo2' n m = 
-  match m with
-  | 0 -> (fun l -> ())
-  | _ -> (fun l -> foo2' n (m-1) (repeat n (m-1)))
-*)
 
 val foo3 : l : ilist -> n : int -> m : int -> Pure unit
       (requires (length l == m))
@@ -178,10 +149,6 @@ let rec foo3 l n m =
   | Nil -> ()
   | Cons h t -> foo3 t n (length t)
 
-(* CH: this should succeed (at least in Coq it doesn't use induction
-   or additional lemmas, just a destruct l1 which I've done below,
-   but which Z3 should anyway be able to do automatically) *)
-(* NS: it works now *)
 val foo4 : n : int -> l1 : ilist -> l2 : ilist -> Pure unit
       (requires (snoc l1 n == l2))
       (ensures \r => 0 < length l2)
