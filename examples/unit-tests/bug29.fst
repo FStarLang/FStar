@@ -13,15 +13,19 @@ val f3 : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b == g a})) ->  x:'a -> r:('b 
 let f3 g h x = (h x, h x)
 
  
-(*  Unfortunately: (h x, h x) in the type is inferred to 
-    have type (b:'b{b == h x} * b:'b{b == h x}), which isn't the same as r; the types differ 
+(*  Unfortunately: (h x, h x) in the type is inferred to
+    have type (b:'b{b == h x} * b:'b{b == h x}), which isn't the same as r; the types differ
 
-    val f4 : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b == g a})) ->  x:'a -> Tot (r:('b * 'b){r == (h x, h x)} 
+    val f4 : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b == g a})) ->  x:'a -> Tot (r:('b * 'b){r == (h x, h x)}
 
-    Need to write the type instantiations explicitly. 
+    Need to write the type instantiations explicitly.
 *)
 val f4 : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b == g a})) ->  x:'a -> Tot (r:('b * 'b){r == MkTuple2 'b 'b (h x) (g x)})
 let f4 g h x = (h x, h x)
+
+(* Or, alternatively, don't use heterogenous equality. *)
+val f4' : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b == g a})) ->  x:'a -> Tot (r:('b * 'b){r=(h x, h x)})
+let f4' g h x = (h x, h x)
 
 val f5 : g:('a -> Tot 'a) -> h:(a:'a -> Tot (b:'b{b == g a})) ->  x:'a -> Tot (r:('b * 'b){MkTuple2._1 r == MkTuple2._2 r})
 let f5 g h x = (h x, h x)

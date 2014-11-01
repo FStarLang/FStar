@@ -173,15 +173,15 @@ type prob =
   | TProb of rel * typ * typ
   | EProb of rel * exp * exp 
   | CProb of rel * comp * comp 
-//let prob_to_string env = function 
-//  | KProb(rel, k1, k2) -> Util.format3 "\t%s\n\t\t%s\n\t%s" (Print.kind_to_string k1) (rel_to_string rel) (Print.kind_to_string k2)
-//  | TProb(rel, k1, k2) -> Util.format5 "\t%s (%s) \n\t\t%s\n\t%s (%s)" (Print.typ_to_string k1) (Print.tag_of_typ k1) (rel_to_string rel) (Print.typ_to_string k2) (Print.tag_of_typ k2)
-//  | EProb(rel, k1, k2) -> Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.exp_to_string k1) (rel_to_string rel) (Print.exp_to_string k2)
-//  | CProb(rel, k1, k2) -> 
-//    let k1 = Normalize.norm_comp [Beta;SNComp;Delta] env k1 in
-//    let k2 = Normalize.norm_comp [Beta;SNComp;Delta] env k2 in   
-//    Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.comp_typ_to_string k1) (rel_to_string rel) (Print.comp_typ_to_string k2)
-let prob_to_string (env:Env.env) (p:prob) = "<prob>"
+let prob_to_string env = function 
+  | KProb(rel, k1, k2) -> Util.format3 "\t%s\n\t\t%s\n\t%s" (Print.kind_to_string k1) (rel_to_string rel) (Print.kind_to_string k2)
+  | TProb(rel, k1, k2) -> Util.format5 "\t%s (%s) \n\t\t%s\n\t%s (%s)" (Print.typ_to_string k1) (Print.tag_of_typ k1) (rel_to_string rel) (Print.typ_to_string k2) (Print.tag_of_typ k2)
+  | EProb(rel, k1, k2) -> Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.exp_to_string k1) (rel_to_string rel) (Print.exp_to_string k2)
+  | CProb(rel, k1, k2) -> 
+    let k1 = Normalize.norm_comp [Beta;SNComp;Delta] env k1 in
+    let k2 = Normalize.norm_comp [Beta;SNComp;Delta] env k2 in   
+    Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.comp_typ_to_string k1) (rel_to_string rel) (Print.comp_typ_to_string k2)
+//let prob_to_string (env:Env.env) (p:prob) = "<prob>"
 type uvar_inst =  //never a uvar in the co-domain of this map
   | UK of uvar_k * knd 
   | UT of (uvar_t * knd) * typ 
@@ -872,7 +872,7 @@ and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist
     if Util.physical_equality t1 t2 then solve top env probs else
     let t1 = compress env probs.subst t1 in
     let t2 = compress env probs.subst t2 in 
-//    if debug env then Util.fprint1 "Attempting\n%s" (prob_to_string env (TProb(rel, t1, t2)));
+    if debug env Options.Medium then Util.fprint1 "Attempting:\n%s\n" (prob_to_string env (TProb(rel, t1, t2)));
 //    printfn "Tag t1 = %s, t2 = %s" (Print.tag_of_typ t1) (Print.tag_of_typ t2);
     if Util.physical_equality t1 t2 then solve top env probs else
     let r = Env.get_range env in
@@ -981,6 +981,7 @@ and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist
                probs |> solve_t top env rel t1 t2
 
             | (_, None) -> //head matches head'
+                if debug env Options.Medium then Util.fprint2 "Head matches: %s and %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
                 let head, args = Util.head_and_args t1 in
                 let head', args' = Util.head_and_args t2 in
                 if List.length args = List.length args'
@@ -1168,9 +1169,12 @@ let subkind env k1 k2 : guard_t =
 
 let try_subtype env t1 t2 = 
  if debug env Low then Util.fprint4 "try_subtype of %s : %s and %s : %s\n" (Print.typ_to_string t1) (Print.kind_to_string t1.tk) (Print.typ_to_string t2) (Print.kind_to_string t2.tk);
- solve_and_commit env (Some t1) (TProb(SUB, t1, t2))//norm_typ [Beta; Eta] env t1, norm_typ [Beta; Eta] env t2))
- (fun _ -> None) 
-  
+ let g = solve_and_commit env (Some t1) (TProb(SUB, t1, t2))
+ (fun _ -> None) in
+ if debug env Options.Medium && Util.is_some g
+ then Util.fprint2 "try_subtype succeeded: %s <: %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
+ g
+
 let subtype env t1 t2 : guard_t = 
   if debug env Low then Util.fprint1 "(%s) Subtype test \n" (Range.string_of_range <| Env.get_range env);
   match try_subtype env t1 t2 with

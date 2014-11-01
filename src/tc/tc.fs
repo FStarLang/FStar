@@ -609,8 +609,8 @@ and tc_exp env e : exp * comp =
     let head_is_atom = Util.is_atom f in 
     let f, cf = tc_exp (no_inst env) f in //Don't instantiate f; instantiations will be computed below, accounting for implicits/explicits
     let tf = Util.comp_result cf in
-    if debug env Options.High then Util.fprint2 "(%s) Type of head is %s\n" (Range.string_of_range f.pos) (Print.comp_typ_to_string cf);
-    let rec check_function_app norm tf = match tf.n with 
+    if debug env Options.High then Util.fprint2 "(%s) Type of head is %s\n" (Range.string_of_range f.pos) (Print.typ_to_string tf);
+    let rec check_function_app norm tf = match (Util.compress_typ tf).n with 
         | Typ_uvar _
         | Typ_app({n=Typ_uvar _}, _) ->
           let rec tc_args env args : (Syntax.args * list<comp>) = match args with
@@ -743,7 +743,7 @@ and tc_exp env e : exp * comp =
                   
         | _ -> 
             if not norm
-            then check_function_app true (Normalize.normalize env tf)
+            then check_function_app true (Normalize.normalize env tf) //TODO: instead of a full normalization; some way to normalize until head is Typ_fun
             else raise (Error(Tc.Errors.expected_function_typ tf, f.pos)) in
 
     let e, c = check_function_app false tf in

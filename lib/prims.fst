@@ -474,15 +474,13 @@ type DTuple2: 'a:Type
 
 (* Primitive (structural) equality.
    What about for function types? *)
-assume val op_Equality : 'a:Type -> 'b:Type -> 'a -> 'b -> Tot bool
-assume val op_disEquality : 'a:Type -> 'b:Type -> 'a -> 'b -> Tot bool
+assume val op_Equality : 'a:Type -> 'a -> 'a -> Tot bool
+assume val op_disEquality : 'a:Type -> 'a -> 'a -> Tot bool
 
 logic type LT : int => int => Type    (* infix < in concrete syntax *)
 logic type GT : int => int => Type    (* infix > in concrete syntax *)
 logic type LTE : int => int => Type   (* infix <= in concrete syntax *)
 logic type GTE : int => int => Type   (* infix >= in concrete syntax *)
-type nat = i:int{i >= 0}
-type pos = n:nat{n > 0}
 
 type either 'a 'b =
   | Inl : v:'a -> either 'a 'b
@@ -492,8 +490,12 @@ type list 'a =
   | Nil : list 'a
   | Cons : hd:'a -> tl:list 'a -> list 'a
 
-assume val fst : x:('a * 'b) -> Tot (y:'a{y == MkTuple2._1 x})
-assume val snd : x:('a * 'b) -> Tot (y:'b{y == MkTuple2._2 x})
+val fst : ('a * 'b) -> Tot 'a
+let fst x = MkTuple2._1 x
+
+val snd : ('a * 'b) -> Tot 'b
+let snd x = MkTuple2._2 x
+
 assume val Assume: 'P:Type -> unit -> (y:unit{'P})
 assume val admit: unit -> Pure unit True (fun x => False)
 assume val admitP: 'P:Type -> unit -> Pure unit True (fun x => 'P)
@@ -518,12 +520,16 @@ assume logic val op_LessThanOrEqual    : int -> int -> Tot bool
 assume logic val op_GreaterThan        : int -> int -> Tot bool
 assume logic val op_GreaterThanOrEqual : int -> int -> Tot bool
 assume logic val op_LessThan           : int -> int -> Tot bool
-assume val op_Modulus            : int -> int -> int
-assume val op_Division           : int -> int -> int
+type nat = i:int{i >= 0}
+type pos = i:int{i > 0}
+type nonzero = i:int{i<>0}
+assume val op_Modulus            : int -> pos -> Tot int
+assume val op_Division           : int -> nonzero -> Tot int
 (* Unrefined specifications for these functions for typing ML code *)
 assume val op_ColonEquals: ref 'a -> 'a -> unit
 assume val op_Dereference: ref 'a -> 'a
 assume type Boxed : Type => Type
+
 
 (* An effect abbreviation for a lemma *)
 (*ghost*) effect Fact ('res:Type) ('p:Type) = Pure 'res True (fun r => 'p)

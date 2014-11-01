@@ -385,7 +385,7 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
       | Typ_fun(binders, res) -> 
         let tsym, ttm, fsym, f = fresh_vars "funtype" "f" in
         let pretype = mk_tester "Typ_fun" (mk_PreType f) in
- 
+        let t_has_kind = mk_HasKind ttm Term.mk_Kind_type in
         let f_hastype_t = mk_HasType f ttm in
         let guard = 
             if not <| Util.is_pure env.tcenv res 
@@ -396,16 +396,16 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
                  then let app_pred = mkForall([app], vars, mkImp(mk_and_l guards, encode_typ_pred (Util.comp_result res) env' app)) in
                       mkAnd(pretype, app_pred)
                  else pretype in
-        ttm, [tsym, mkForall([f_hastype_t], [fsym], mkImp(f_hastype_t, guard))]
+        ttm, [tsym, Term.mkAnd(t_has_kind, mkForall([f_hastype_t], [fsym], mkImp(f_hastype_t, guard)))]
       
       | Typ_refine(x, f) ->
         let tsym, ttm, xsym, xtm = fresh_vars "refinet" "x" in
         let x_has_t = mk_HasType xtm ttm in
-
+        let t_has_kind = mk_HasKind ttm Term.mk_Kind_type in
         let base_pred = encode_typ_pred x.sort env xtm in 
         let env' = push_term_var env x.v xtm in
         let refinement = encode_formula f env' in
-        ttm, [(tsym, Term.mkForall([x_has_t], [xsym], mkIff(x_has_t, Term.mkAnd(base_pred, refinement))))]
+        ttm, [(tsym, Term.mkAnd(t_has_kind, Term.mkForall([x_has_t], [xsym], mkIff(x_has_t, Term.mkAnd(base_pred, refinement)))))]
 
 
       | Typ_uvar _ ->
@@ -813,6 +813,9 @@ let mk_prim =
     let abxy_t : term -> either<string, term> -> decl = fun tm v -> 
         let vars = [(asym, Type_sort); (bsym, Type_sort); (xsym, Term_sort); (ysym, Term_sort)] in 
         eq_assumption vars (mk_tm v vars) tm in 
+    let axy_t : term -> either<string, term> -> decl = fun tm v -> 
+        let vars = [(asym, Type_sort); (xsym, Term_sort); (ysym, Term_sort)] in 
+        eq_assumption vars (mk_tm v vars) tm in 
     let xy_t : term -> either<string,term> -> decl = fun tm v -> 
         let vars = [(xsym, Term_sort); (ysym, Term_sort)] in 
         eq_assumption vars (mk_tm v vars) tm in 
@@ -820,8 +823,8 @@ let mk_prim =
         let vars = [(xsym, Term_sort)] in
         eq_assumption vars (mk_tm v vars) tm in 
     let prims = [
-        (Const.op_Eq,          (abxy_t (boxBool <| mkEq(x,y))));
-        (Const.op_notEq,       (abxy_t (boxBool <| mkNot(mkEq(x,y)))));
+        (Const.op_Eq,          (axy_t (boxBool <| mkEq(x,y))));
+        (Const.op_notEq,       (axy_t (boxBool <| mkNot(mkEq(x,y)))));
         (Const.op_LT,          (xy_t  (boxBool <| mkLT(unboxInt x, unboxInt y))));
         (Const.op_LTE,         (xy_t  (boxBool <| mkLTE(unboxInt x, unboxInt y))));
         (Const.op_GT,          (xy_t  (boxBool <| mkGT(unboxInt x, unboxInt y))));

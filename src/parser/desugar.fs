@@ -661,11 +661,14 @@ and desugar_typ env (top:term) : typ =
 
     | Requires (t, lopt) -> 
       let t = label_conjuncts "pre-condition" true lopt t in
-      desugar_typ env t
-
+      if is_type env t 
+      then desugar_typ env t
+      else desugar_exp env t |> Util.b2t
+ 
     | Ensures (t, lopt) -> 
       let t = label_conjuncts "post-condition" false lopt t in
-      desugar_typ env t
+      if is_type env t then desugar_typ env t
+      else desugar_exp env t |> Util.b2t
 
     | Op("*", [t1; _]) -> 
       if is_type env t1 
@@ -764,7 +767,7 @@ and desugar_typ env (top:term) : typ =
           let b, env = match as_binder env false (Inr b) with 
             | (Inr x, _), env -> x, env
             | _ -> failwith "impossible" in
-          let f = desugar_formula env f in
+          let f = if is_type env f then desugar_formula env f else desugar_exp env f |> Util.b2t in
           pos <| mk_Typ_refine(b, f)
       end
 
@@ -903,7 +906,7 @@ and desugar_formula' env (f:term) : typ =
           mk_typ_app
             (ftv (set_lid_range conn f.range) kun)
             (List.map (fun x -> targ <| desugar_formula env x) args)
-        | _ -> desugar_typ env f
+        | _ -> if is_type env f then desugar_typ env f else desugar_exp env f |> Util.b2t
       end
         
     | If(f1, f2, f3) ->
