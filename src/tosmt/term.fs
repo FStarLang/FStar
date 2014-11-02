@@ -56,8 +56,8 @@ type term' =
   | PP         of term * term
   | App        of string * list<term>
   | Not        of term
-  | And        of term * term
-  | Or         of term * term
+  | And        of list<term>
+  | Or         of list<term>
   | Imp        of term * term
   | Iff        of term * term
   | Eq         of term * term
@@ -79,12 +79,149 @@ type term' =
   | ConstArray of string * sort * term 
   | Cases      of list<term>
 and pat = term
-and term = {tm:term'}
+and term = {tm:term'; as_str:string; freevars:Syntax.memo<list<var>>}
 and var = (string * sort)
+
+(*****************************************************)
+(* free variables in a term *)
+(*****************************************************)
+let rec freevars t = match t.tm with
+  | True
+  | False
+  | Integer _ 
+  | FreeV _ -> []
+  
+  | BoundV(x,y) -> [(x,y)]
+  
+  | ConstArray(_, _, t)
+  | Minus t
+  | Not t
+  | PP(_, t) -> freevars t
+
+  | Cases tms
+  | And tms
+  | Or tms
+  | App(_, tms) -> List.collect freevars tms
+  
+  | Imp(t1, t2)
+  | Iff(t1, t2)
+  | Eq(t1, t2) 
+  | LT(t1, t2)
+  | LTE(t1, t2)
+  | GT(t1, t2)
+  | GTE(t1, t2)
+  | Add(t1, t2)
+  | Sub(t1, t2)
+  | Div(t1, t2)
+  | Mul(t1, t2)
+  | Select(t1, t2)
+  | Mod(t1, t2) -> freevars t1 @ freevars t2
+
+  | ITE   (t1, t2, t3)
+  | Update(t1, t2, t3) -> freevars t1@freevars t2@freevars t3
+
+  | Forall (_, binders, t) 
+  | Exists (_, binders, t) -> 
+    freevars t |> List.filter (fun (x, _) -> binders |> Util.for_all (fun (y, _) -> x<>y))
+
+let free_variables t = match !t.freevars with 
+    | Some b -> b
+    | None -> 
+      let fvs = Util.remove_dups (fun (x, _) (y, _) -> x = y) (freevars t) in
+      t.freevars := Some fvs;
+      fvs
+ 
+(*****************************************************)
+(* Pretty printing terms and decls in SMT Lib format *)
+(*****************************************************)
+let termToSmt t = t.as_str
+
+let rec term'ToSmt tm = 
+     match tm with
+      | True          -> "true"
+      | False         -> "false"
+      | Integer i     -> 
+        if i < 0 then Util.format1 "(- %s)" (string_of_int (-i)) 
+        else string_of_int i
+      | PP(_,q) -> 
+        termToSmt q
+      | BoundV(x,_) -> "bound_" ^ x
+      | FreeV(x,_)  -> x
+      | App(f,[]) -> f
+      | App(f,es)     -> 
+        let a = List.map termToSmt es in
+        let s = String.concat " " a in
+        format2 "(%s %s)" f s
+      | Not(x) -> 
+        format1 "(not %s)" (termToSmt x)
+      | And tms -> 
+        format1 "(and %s)" (String.concat "\n" (List.map termToSmt tms))
+      | Or tms -> 
+        format1 "(or %s)" (String.concat "\n" (List.map termToSmt tms))
+      | Imp(x,y) -> 
+        format2 "(implies %s\n %s)" (termToSmt x)(termToSmt y)
+      | Iff(x,y) -> 
+        format2 "(iff %s\n %s)" (termToSmt x) (termToSmt y)
+      | Eq(x,y) -> 
+        format2 "(= %s\n %s)" (termToSmt x) (termToSmt y)
+      | LT(x,y) -> 
+        format2 "(< %s %s)" (termToSmt x) (termToSmt y)
+      | GT(x,y) -> 
+        format2 "(> %s %s)" (termToSmt x) (termToSmt y)
+      | LTE(x,y) -> 
+        format2 "(<= %s %s)" (termToSmt x) (termToSmt y)
+      | GTE(x,y) -> 
+        format2 "(>= %s %s)" (termToSmt x) (termToSmt y)
+      | Minus(t1) -> 
+        format1 "(- %s)" (termToSmt t1)
+      | Add(t1,t2) -> 
+        format2 "(+ %s\n %s)" (termToSmt t1) (termToSmt t2)
+      | Sub(t1,t2) -> 
+        format2 "(- %s\n %s)" (termToSmt t1) (termToSmt t2)
+      | Mul(t1,t2) -> 
+        format2 "(* %s\n %s)" (termToSmt t1) (termToSmt t2)
+      | Div(t1,t2) -> 
+        format2 "(div %s\n %s)" (termToSmt t1) (termToSmt t2)
+      | Mod(t1,t2) -> 
+        format2 "(mod %s\n %s)" (termToSmt t1) (termToSmt t2)
+      | Select(h,l) -> 
+        format2 "(select %s %s)" (termToSmt h) (termToSmt l)
+      | Update(h,l,v) -> 
+        format3 "(store %s %s %s)" (termToSmt h) (termToSmt l) (termToSmt v)
+      | ITE(t1, t2, t3) -> 
+        format3 "(ite %s\n\t%s\n\t%s)" (termToSmt t1) (termToSmt t2) (termToSmt t3)
+      | Cases tms -> 
+        format1 "(and %s)" (String.concat " " (List.map termToSmt tms))
+      | Forall(pats,binders',z)
+      | Exists(pats,binders',z) -> 
+        let patsToSmt = function 
+          | [] -> ""
+          | pats -> format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p -> format1 "%s" (termToSmt p)) pats)) in
+        let strQuant = function 
+          | Forall _ -> "forall"
+          | _ -> "exists"  in
+        let s = binders' |> 
+                List.map (fun (a,b) -> format2 "(bound_%s %s)" a (strSort b)) |>
+                String.concat " " in
+            format3 "(%s (%s)\n %s)" (strQuant tm) s
+            (if List.length pats <> 0 
+                then format2 "(! %s\n %s)" (termToSmt z) (patsToSmt pats)
+                else termToSmt z)
+      | ConstArray(s, _, tm) -> 
+        format2 "((as const %s) %s)" s (termToSmt tm)
 
 let eq_var (x1, _) (x2, _) = x1=x2
 let third (_, _, x) = x
-let mk t = {tm=t}
+let all_terms = Util.smap_create<term> 10000
+let mk t = 
+    let key = term'ToSmt t in
+    match Util.smap_try_find all_terms key with 
+        | Some tm -> tm 
+        | None -> 
+            let tm = {tm=t; as_str=key; freevars=Util.mk_ref None} in
+            Util.smap_add all_terms key tm;
+            tm
+
 let freeV_sym fv = match fv.tm with 
     | FreeV(s, _) -> s
     | _ -> failwith "Not a free variable"
@@ -103,22 +240,29 @@ let mkNot t      = match t.tm with
     | True -> mkFalse
     | False -> mkTrue
     | _ -> mk (Not t) 
-let mkAnd t      = match t with 
-    | {tm=True}, t'
-    | t', {tm=True} -> t'
-    | {tm=False}, _
-    | _, {tm=False} -> mkFalse
-    | _ -> mk (And t) 
-let mkOr t        = match t with 
-    | {tm=False}, t'
-    | t', {tm=False} -> t'
-    | {tm=True}, _
-    | _, {tm=True} -> mkTrue
-    | _ -> mk (Or t)  
-let mkImp (t1, t2) = match t1.tm, t2.tm with 
-    | _, True
+let mkAnd (t1, t2)  = match t1.tm, t2.tm with 
     | True, _ -> t2
-    | _ -> mk (Imp (t1,t2)) 
+    | _, True -> t1
+    | False, _
+    | _, False -> mkFalse
+    | And ts1, And ts2 -> mk (And (ts1@ts2))
+    | _, And ts2 -> mk (And(t1::ts2))
+    | And ts1, _ -> mk (And(ts1@[t2]))
+    | _ -> mk (And [t1;t2]) 
+let mkOr (t1, t2)  = match t1.tm, t2.tm with 
+    | True, _ 
+    | _, True -> mkTrue
+    | False, _ -> t2
+    | _, False -> t1
+    | Or ts1, Or ts2 -> mk (Or (ts1@ts2))
+    | _, Or ts2 -> mk (Or(t1::ts2))
+    | Or ts1, _ -> mk (Or(ts1@[t2]))
+    | _ -> mk (Or [t1;t2]) 
+let rec mkImp (t1, t2) = match t1.tm, t2.tm with 
+    | _, True -> mkTrue
+    | True, _ -> t2
+    | _, Imp(t1', t2') -> mkImp(mkAnd(t1, t1'), t2')
+    | _ -> mk (Imp(t1, t2)) 
 let mkIff t      = mk (Iff t)
 let mkEq t       = mk (Eq t) 
 let mkLT t       = mk (LT t) 
@@ -174,7 +318,7 @@ type decl =
   | Push
   | Pop
   | CheckSat
-type decls = list<decl>
+type decls_t = list<decl>
 
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
 let constructor_to_decl (name, projectors, sort, id) =
@@ -202,117 +346,6 @@ let constructor_to_decl (name, projectors, sort, id) =
 //                                                         mkApp(name, projectors |> List.map (fun (proj, s) -> mkApp(proj, [mkBoundV xx])))))), Some "Disc/Proj correspondence") in
     Caption (format1 "<start constructor %s>" name)::cdecl::cid::projs@[disc;Caption (format1 "</end constructor %s>" name)]
 
-let flatten_imp tm = 
-  let mkAnd_l terms = match terms with 
-    | [] -> mkTrue
-    | [hd] -> hd
-    | hd::tl ->  List.fold_left (fun out term -> mkAnd(out, term)) hd tl in
-  let rec aux out tm = match tm.tm with
-    | Imp({tm=True}, x) -> aux out x
-    | Imp(x, y) -> aux (x::out) y
-    | _ -> mkAnd_l (List.rev out), tm in
-    aux [] tm
-
-let flatten_and tm =
-  let rec aux out tm = match tm.tm with 
-    | And({tm=True}, x) 
-    | And(x, {tm=True}) -> aux out x
-    | And(x, y) -> aux (aux out x) y
-    | _ -> tm::out in
-    List.rev (aux [] tm)
-      
-let flatten_or tm = 
-  let rec aux out tm = match tm.tm with 
-    | Or({tm=False}, x)
-    | Or(x, {tm=False}) -> aux out x
-    | Or(x, y) -> aux (aux out x) y
-    | _ -> tm::out in
-    List.rev (aux [] tm)
-
-
-(*****************************************************)
-(* Pretty printing terms and decls in SMT Lib format *)
-(*****************************************************)
-let string_of_either_bvd = function
-  | Inl x -> Print.strBvd x
-  | Inr x -> Print.strBvd x
-
-let rec termToSmt binders tm = 
-     match tm.tm with
-      | True          -> "true"
-      | False         -> "false"
-      | Integer i     -> 
-        if i < 0 then Util.format1 "(- %s)" (string_of_int (-i)) 
-        else string_of_int i
-      | PP(_,q) -> 
-        termToSmt binders q
-      | BoundV(x,_) 
-      | FreeV(x,_)  -> x
-      | App(f,[]) -> f
-      | App(f,es)     -> 
-        let a = List.map (termToSmt binders) es in
-        let s = String.concat " " a in
-        format2 "(%s %s)" f s
-      | Not(x) -> 
-        format1 "(not %s)" (termToSmt binders x)
-      | And _ -> 
-        format1 "(and %s)" (String.concat "\n" (List.map (termToSmt binders) (flatten_and tm)))
-      | Or _ -> 
-        format1 "(or %s)" (String.concat "\n" (List.map (termToSmt binders) (flatten_or tm)))
-      | Imp _ -> 
-        let x, y = flatten_imp tm in
-        format2 "(implies %s\n %s)"(termToSmt binders x)(termToSmt binders y)
-      | Iff(x,y) -> 
-        format2 "(iff %s\n %s)" (termToSmt binders x) (termToSmt binders y)
-      | Eq(x,y) -> 
-        format2 "(= %s\n %s)" (termToSmt binders x) (termToSmt binders y)
-      | LT(x,y) -> 
-        format2 "(< %s %s)" (termToSmt binders x) (termToSmt binders y)
-      | GT(x,y) -> 
-        format2 "(> %s %s)" (termToSmt binders x) (termToSmt binders y)
-      | LTE(x,y) -> 
-        format2 "(<= %s %s)" (termToSmt binders x) (termToSmt binders y)
-      | GTE(x,y) -> 
-        format2 "(>= %s %s)" (termToSmt binders x) (termToSmt binders y)
-      | Minus(t1) -> 
-        format1 "(- %s)" (termToSmt binders t1)
-      | Add(t1,t2) -> 
-        format2 "(+ %s\n %s)" (termToSmt binders t1) (termToSmt binders t2)
-      | Sub(t1,t2) -> 
-        format2 "(- %s\n %s)" (termToSmt binders t1) (termToSmt binders t2)
-      | Mul(t1,t2) -> 
-        format2 "(* %s\n %s)" (termToSmt binders t1) (termToSmt binders t2)
-      | Div(t1,t2) -> 
-        format2 "(div %s\n %s)" (termToSmt binders t1) (termToSmt binders t2)
-      | Mod(t1,t2) -> 
-        format2 "(mod %s\n %s)" (termToSmt binders t1) (termToSmt binders t2)
-      | Select(h,l) -> 
-        format2 "(select %s %s)" (termToSmt binders h) (termToSmt binders l)
-      | Update(h,l,v) -> 
-        format3 "(store %s %s %s)" (termToSmt binders h) (termToSmt binders l) (termToSmt binders v)
-      | ITE(t1, t2, t3) -> 
-        format3 "(ite %s\n\t%s\n\t%s)" (termToSmt binders t1) (termToSmt binders t2) (termToSmt binders t3)
-      | Cases tms -> 
-        format1 "(and %s)" (String.concat " " (List.map (termToSmt binders) tms))
-      | Forall(pats,binders',z)
-      | Exists(pats,binders',z) -> 
-        let patsToSmt binders = function 
-          | [] -> ""
-          | pats -> format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p -> format1 "%s" (termToSmt binders p)) pats)) in
-        let strQuant = function 
-          | {tm=Forall _} -> "forall"
-          | _ -> "exists"  in
-        let s = binders' |> 
-                List.map (fun (a,b) -> format2 "(%s %s)" a (strSort b)) |>
-                String.concat " " in
-        let binders' = List.rev binders' @ binders in
-            format3 "(%s (%s)\n %s)" (strQuant tm) s
-            (if List.length pats <> 0 
-                then format2 "(! %s\n %s)" (termToSmt binders' z) (patsToSmt binders' pats)
-                else termToSmt binders' z)
-      | ConstArray(s, _, tm) -> 
-        format2 "((as const %s) %s)" s (termToSmt binders tm)
-
 
       
 (****************************************************************************)
@@ -330,12 +363,12 @@ let rec declToSmt z3options decl = match decl with
     let l = List.map strSort argsorts in
     format4 "%s(declare-fun %s (%s) %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort)
   | DefineFun(f,args,retsort,body,c) ->
-    let l = List.map (fun (nm,s) -> format2 "(%s %s)" nm (strSort s)) args in
-    format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort) (termToSmt (List.rev args) body)
+    let l = List.map (fun (nm,s) -> format2 "(bound_%s %s)" nm (strSort s)) args in
+    format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort) (termToSmt body)
   | Assume(t,c) ->
-    format2 "%s(assert %s)" (caption_to_string c) (termToSmt [] t)
+    format2 "%s(assert %s)" (caption_to_string c) (termToSmt t)
   | Eval t -> 
-    format1 "(eval %s)" (termToSmt [] t)
+    format1 "(eval %s)" (termToSmt t)
   | Echo s -> 
     format1 "(echo \"%s\")" s
   | CheckSat -> "(check-sat)"

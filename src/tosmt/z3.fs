@@ -146,10 +146,10 @@ let z3_options () =
      "(set-option :" ^ mbqi ^ " false)\n" ^
      model_on_timeout
 
-let batch : ref<decls> = Util.mk_ref []
+let batch : ref<decls_t> = Util.mk_ref []
 let clear_batch () = let r = !batch in batch:=[]; r
-let giveZ3 (theory:decls) = batch := !batch@theory
-let queryZ3 label_messages (theory:decls)  =
+let giveZ3 (theory:decls_t) = batch := !batch@theory
+let queryZ3 label_messages (theory:decls_t)  =
   let theory = clear_batch()@theory in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
     if !Options.logQueries then Util.append_to_file (get_qfile()) input; (* append flushes *)
