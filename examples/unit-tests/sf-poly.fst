@@ -206,14 +206,9 @@ let rec evenb i =
 val oddb : nat -> Tot bool
 let oddb n = not (evenb n)
 
-(* CH: This fails as follows:
-   Failed because: refinement subtyping is not applicable
-   Incompatible types (list i:int{i >= 0}) and (list nat)
-   Filed this as: https://github.com/FStarLang/FStar/issues/20
 val test_filter1 : unit -> Fact unit
       (ensures (filter evenb [1;2;3;4] == [2;4]))
 let test_filter1 () = ()
-*)
 
 (* Map *)
 
@@ -227,11 +222,9 @@ val test_map1 : unit -> Fact unit
       (ensures (map (fun n -> n + 3) [2;0;2] == [5;3;5]))
 let test_map1 () = ()
 
-(* CH: again: Incompatible types (list i:int{i >= 0}) and (list nat)
 val test_map2 : unit -> Fact unit
       (ensures (map oddb [2;1;2;5] == [false;true;false;true]))
 let test_map2 () = ()
-*)
 
 (* This shouldn't blow up, although I'm using the wrong kind of arrow for fun:
 unknown(0,0-0,0) : Error
@@ -241,12 +234,11 @@ val test_map3 : unit -> Fact unit
               == [[true;false];[false;true];[true;false];[false;true]]))
 *)
 
-(* CH: again: Incompatible types (list i:int{i >= 0}) and (list nat)
+(* F* can't prove this, but it's indeed a bit complex *)
 val test_map3 : unit -> Fact unit
     (ensures (map (fun n -> [evenb n;oddb n]) [2;1;2;5]
               == [[true;false];[false;true];[true;false];[false;true]]))
 let test_map3 () = ()
-*)
 
 val map_snoc : f:('a->Tot 'b) -> x:'a -> l:list 'a -> Fact unit
       (ensures (map f (snoc l x) == snoc (map f l) (f x)))
