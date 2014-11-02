@@ -184,8 +184,10 @@ and tc_binders env bs =
 
     | Inr x ->
       let x, env, g' = tc_vbinder env x in
-      (Inr x, imp)::bs, env, Tc.Rel.conj_guard g g') ([], env, Trivial) in
- List.rev bs, env, g
+      let b = (Inr x, imp) in
+      b::bs, env, Tc.Rel.conj_guard g g') ([], env, Trivial) in
+ let bs = List.rev bs in
+ bs, env, Tc.Util.close_guard bs g
 
 and tc_args env args : Syntax.args * guard_t = 
    List.fold_right (fun (arg, imp) (args, g) -> match arg with 
@@ -968,9 +970,9 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
   (pattern, when_clause, branch), guard, c 
 
 and tc_kind_trivial env k : knd = 
-  match tc_kind env k with 
-    | k, Trivial -> k
-    | _ -> raise (Error(Tc.Errors.kind_has_a_non_trivial_precondition k, Env.get_range env))
+  let k, g = tc_kind env k in 
+  Tc.Util.discharge_guard env g;
+  k
 
 and tc_typ_trivial env t : typ * knd = 
   let t, k, g = tc_typ env t in
@@ -1241,10 +1243,11 @@ and tc_decl env se = match se with
            Sig_tycon(lid, tps, k, [], [], [], r), t
         | _ -> failwith "impossible") in
       let recs, abbrev_defs = List.split recs in
-      let tycons = fst <| tc_decls' env tycons in 
-      let recs = fst <| tc_decls' env recs in
+      env.solver.push(); //Push a context in the solver to check the recursively bound definitions
+      let tycons = fst <| tc_decls env tycons in 
+      let recs = fst <| tc_decls env recs in
       let env1 = Tc.Env.push_sigelt env (Sig_bundle(tycons@recs, r, lids)) in
-      let rest = fst <| tc_decls' env1 rest in
+      let rest = fst <| tc_decls env1 rest in
       let abbrevs = List.map2 (fun se t -> match se with 
         | Sig_tycon(lid, tps, k, [], [], [], r) -> 
           let tt = Util.close_with_lam tps (mk_Typ_ascribed(t, k) t.pos) in
@@ -1253,18 +1256,14 @@ and tc_decl env se = match se with
             | Typ_lam(bs, t) -> bs, t
             | _ -> [], tt in 
           Sig_typ_abbrev(lid, tps, compress_kind k, t, [], r)
-        | _ -> failwith (Util.format1 "(%s) Impossible" (Range.string_of_range r))) recs abbrev_defs in    
+        | _ -> failwith (Util.format1 "(%s) Impossible" (Range.string_of_range r))) 
+        recs abbrev_defs in    
+      env.solver.pop();
       let se = Sig_bundle(tycons@abbrevs@rest, r, lids) in 
       let env = Tc.Env.push_sigelt env se in
       se, env
 
-and tc_decls' (env:Tc.Env.env) ses = 
-  let ses, env = List.fold_left (fun (ses, (env:Tc.Env.env)) se ->
-  let se, env = tc_decl env se in
-  se::ses, env) ([], env) ses in
-  List.rev ses, env 
-
-let tc_decls env ses = 
+and tc_decls env ses = 
  let ses, env = List.fold_left (fun (ses, (env:Tc.Env.env)) se ->
   if debug env Options.Low
   then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
