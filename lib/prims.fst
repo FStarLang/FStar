@@ -523,8 +523,20 @@ assume logic val op_LessThan           : int -> int -> Tot bool
 type nat = i:int{i >= 0}
 type pos = i:int{i > 0}
 type nonzero = i:int{i<>0}
-assume val op_Modulus            : int -> pos -> Tot int
-assume val op_Division           : int -> nonzero -> Tot int
+
+(* For the moment we require not just that the divisor is non-zero,
+   but also that the dividend is natural. This works around a
+   mismatch between the semantics of integer division in SMT-LIB and
+   in F#/OCaml. For SMT-LIB ints the modulus is always positive (as in
+   math Euclidian division), while for F#/OCaml ints the modulus has
+   the same sign as the dividend. Our arbitrary precision ints don't
+   quite correspond to finite precision F#/OCaml ints though, but to
+   OCaml's big_ints (for which the modulus is always positive).  So
+   we'll need to return to this point anyway, when we discuss how to
+   soundly map F* ints to something in F#/OCaml. *)
+assume val op_Modulus            : nat -> nonzero -> Tot int
+assume val op_Division           : nat -> nonzero -> Tot int
+
 (* Unrefined specifications for these functions for typing ML code *)
 assume val op_ColonEquals: ref 'a -> 'a -> unit
 assume val op_Dereference: ref 'a -> 'a
