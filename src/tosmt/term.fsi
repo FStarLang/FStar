@@ -70,7 +70,7 @@ and pat = term
 and term = {tm:term'; as_str:string; freevars:Syntax.memo<list<var>>}
 and var = (string * sort)
 
-val free_variables: term -> list<(string * sort)>
+val free_variables: term -> list<var>
 
 val mkTrue : term
 val mkFalse : term
@@ -142,6 +142,7 @@ val unboxString: term -> term
 val boxRef: term -> term
 val unboxRef: term -> term
 
+val mk_Closure: int -> list<var> -> term
 val mk_Term_unit: term
 val mk_PreKind: term -> term
 val mk_PreType: term -> term

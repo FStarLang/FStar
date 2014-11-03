@@ -402,6 +402,9 @@ and mkPrelude z3options =
                 (declare-fun ApplyTE (Type Term) Type)\n\
                 (declare-fun ApplyTT (Type Type) Type)\n\
                 (declare-fun Rank (Term) Int)\n\
+                (declare-fun Closure (Term) Term)\n\
+                (declare-fun ConsTerm (Term Term) Term)\n
+                (declare-fun ConsType (Type Term) Term)\n
                 (declare-fun Precedes (Term Term) Type)\n\
                 (assert (forall ((t1 Term) (t2 Term))\n\
                      (! (iff (Valid (Precedes t1 t2)) \n\
@@ -475,6 +478,13 @@ let mk_ApplyEE e e'   = mkApp("ApplyEE", [e;e'])
 let mk_String_const i = mkApp("String_const", [ mkInteger i ])
 let mk_Precedes x1 x2 = mkApp("Precedes", [x1;x2]) |> mk_Valid
 let mk_LexPair x1 x2  = mkApp("LexPair", [x1;x2])
+let mk_Closure i vars   = 
+   let vars = vars |> List.fold_left (fun out v -> match snd v with 
+    | Term_sort -> mkApp("ConsTerm", [mkBoundV v; out])
+    | Type_sort -> mkApp("ConsType", [mkBoundV v; out])) (boxInt <| mkInteger i) in
+    mkApp("Closure", [vars])
+
+
 
 let mk_and_opt p1 p2 = match p1, p2  with
   | Some p1, Some p2 -> Some (mkAnd(p1, p2))

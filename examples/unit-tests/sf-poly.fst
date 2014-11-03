@@ -336,11 +336,45 @@ val override_neq : x1:'a -> x2:'a -> k1:'b -> k2:'b -> f:('b->Tot 'a) -> Pure un
       (ensures \r => (my_override f k2 x2) k1 = x1)
 let override_neq x1 x2 k1 k2 f = ()
 
-(* This causes subtyping check failure without the annotation on n *)
+(* NS: Experimenting first with named functions *)
+val plus_one: 'a -> nat -> Tot nat
+let plus_one m n = n + 1
+
+val fold_length_named : l:list 'a -> Tot nat
+let fold_length_named l = fold plus_one l 0
+
+val fold_length_named_correct : l:list 'a -> Fact unit
+      (ensures (fold_length_named l = length l))
+let rec fold_length_named_correct l =
+  match l with
+  | [] -> ()
+  | h::t -> fold_length_named_correct t
+
+(* NS: But, with named functions, you have to explicitly closure-convert ...
+       and the closure arguments have to be explicitly curried ... yuck *)
+val fcons : ('a -> Tot 'b) -> Tot ('a -> list 'b -> Tot (list 'b))
+let fcons f =
+  let ugly = () in  (* TODO: fix notation *)
+  fun x l -> f x :: l
+
+val fold_map_named : ('a->Tot 'b) -> list 'a -> Tot (list 'b)
+let fold_map_named f l= fold (fcons f) l []
+
+(* But it works *)
+val fold_map_named_correct : f:('a->Tot 'b) -> l:list 'a -> Fact unit
+      (ensures (fold_map_named f l = map f l))
+let rec fold_map_named_correct f l =
+  match l with
+  | [] -> ()
+  | h::t -> fold_map_named_correct f t
+
+(* NS: So, let's do better with closures this time *)
+(* NS: The lambda here is relatively easy, since it has no free variables *)
 val fold_length : l:list 'a -> Tot nat
 let fold_length l = fold (fun _ (n:nat) -> n + 1) l 0
 
 (* CH: both cases are supposed to be trivial, but none of them works *)
+(* NS: They do now *)
 val fold_length_correct : l:list 'a -> Fact unit
       (ensures (fold_length l = length l))
 let rec fold_length_correct l =
@@ -348,10 +382,12 @@ let rec fold_length_correct l =
   | [] -> ()
   | h::t -> fold_length_correct t
 
+(* NS: This lambda is fancier, since it captures 'f' in its environment *)
 val fold_map : ('a->Tot 'b) -> list 'a -> Tot (list 'b)
 let fold_map f l= fold (fun x l -> f x :: l) l []
 
 (* CH: again, this should just work *)
+(* NS: And it does. *)
 val fold_map_correct : f:('a->Tot 'b) -> l:list 'a -> Fact unit
       (ensures (fold_map f l = map f l))
 let rec fold_map_correct f l =
