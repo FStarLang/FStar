@@ -358,6 +358,22 @@ val mult  : (('a->'a) -> 'a -> 'a) -> (('a->'a) -> 'a -> 'a) -> ('a->'a) -> 'a -
 let mult n m f x = n (m f) x
 
 (* CH: not enough polymorphism to do this in F*?
+   NS: I don't see why this should type-check. In particular, (m n) is ill-typed. 
+       Perhaps you really want higher-rank polymorphism? 
+       In which case, you can write it as shown below.
+   
 val exp  : (('a->'a) -> 'a -> 'a) -> (('a->'a) -> 'a -> 'a) -> ('a->'a) -> 'a -> 'a
 let exp n m f x = m n f x
 *)
+
+val exp : 'a:Type 
+     -> n:(('a -> 'a) -> 'a -> 'a) 
+     -> m:('b:Type -> 'b -> 'b)
+     -> f:('a -> 'a)
+     -> 'a 
+     -> 'a
+let exp n m f x = 
+  let n' = m n in (* TODO: I should just allow you to write (m n f x) *)
+  n' f x
+
+
