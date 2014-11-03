@@ -521,14 +521,15 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
         let esym, lam = fresh_bvar "lambda" Term_sort in
         if not <| Util.is_pure_function e.tk 
         then lam, [(esym, Term_sort), Term.mkTrue], []
-        else let vars, guards, envbody, decls, _ = encode_binders bs env in 
+        else let vars, _, envbody, decls, _ = encode_binders bs env in 
              let app = mk_ApplyE lam vars in
              let body, body_vars, decls' = encode_exp body envbody in
              let eq = close_ex body_vars (mkEq(app, body)) in
              let lam_typed, decls'' = encode_typ_pred e.tk env lam in
              let tsym, t = fresh_bvar "t" Type_sort in 
-             let app_is_typed = close_ex [(tsym, Type_sort), Term.mkTrue] (Term.mk_HasType app t) in
-             let app_eq = Term.mkForall(app::guards, vars, mkImp(app_is_typed, eq)) in
+             let app_has_t = Term.mk_HasType app t in
+             let app_is_typed = Term.mkExists([app_has_t], [(tsym, Type_sort)], app_has_t) in
+             let app_eq = Term.mkForall([app], vars, mkImp(app_is_typed, eq)) in
              lam, [(esym, Term_sort), Term.mkAnd(app_eq, lam_typed)], decls@decls'@decls''
 
       | Exp_app({n=Exp_fvar(l, _)}, [(Inl _, _); (Inl _, _); (Inr v1, _); (Inr v2, _)]) when (lid_equals l.v Const.lexpair_lid) -> 

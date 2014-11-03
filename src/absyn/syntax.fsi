@@ -1,4 +1,4 @@
-(*
+﻿(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -305,7 +305,7 @@ val mk_Kind_lam: (binders * knd) -> range -> knd
 val mk_Typ_btvar: btvar -> knd -> range -> typ
 val mk_Typ_const: ftvar -> knd -> range -> typ
 val mk_Typ_fun: (binders * comp) -> knd -> range -> typ
-val mk_Typ_fun': (binders * comp) -> knd -> range -> typ
+//val mk_Typ_fun': (binders * comp) -> knd -> range -> typ
 val mk_Typ_refine: (bvvar * formula) -> knd -> range -> typ
 val mk_Typ_app: (typ * args) -> knd -> range -> typ
 val mk_Typ_app': (typ * args) -> knd -> range -> typ

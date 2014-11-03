@@ -243,7 +243,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
   | Typ_fun(bs, cod) -> 
     let bs, env, g = tc_binders env bs in 
     let cod, f = tc_comp env cod in
-    w ktype <| mk_Typ_fun'(bs, cod), ktype, Rel.conj_guard g (Tc.Util.close_guard bs f)
+    w ktype <| mk_Typ_fun(bs, cod), ktype, Rel.conj_guard g (Tc.Util.close_guard bs f)
 
   | Typ_lam(bs, t) -> 
     let bs, env, g = tc_binders env bs in
@@ -735,7 +735,7 @@ and tc_exp env e : exp * comp =
               let tres = Util.comp_result cres |> Util.compress_typ in 
               begin match tres.n with 
                 | Typ_fun(bs, cres') -> 
-                  Util.fprint1 "%s: Warning: Potentially redundant explicit currying of a function type \n" (Range.string_of_range tres.pos);
+                  if debug env Options.Low then Util.fprint1 "%s: Warning: Potentially redundant explicit currying of a function type \n" (Range.string_of_range tres.pos);
                   tc_args (subst, outargs, arg_rets, (None, cres)::comps, g, fvs) bs cres' args
                 | _ -> 
                   raise (Error(Util.format1 "Too many arguments to function of type %s" (Print.typ_to_string tf), argpos arg))

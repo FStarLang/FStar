@@ -135,7 +135,7 @@ let free_variables t = match !t.freevars with
 (* Pretty printing terms and decls in SMT Lib format *)
 (*****************************************************)
 let termToSmt t = t.as_str
-
+let boundvar_prefix = "@"
 let rec term'ToSmt tm = 
      match tm with
       | True          -> "true"
@@ -145,7 +145,7 @@ let rec term'ToSmt tm =
         else string_of_int i
       | PP(_,q) -> 
         termToSmt q
-      | BoundV(x,_) -> "bound_" ^ x
+      | BoundV(x,_) -> boundvar_prefix ^ x
       | FreeV(x,_)  -> x
       | App(f,[]) -> f
       | App(f,es)     -> 
@@ -201,7 +201,7 @@ let rec term'ToSmt tm =
           | Forall _ -> "forall"
           | _ -> "exists"  in
         let s = binders' |> 
-                List.map (fun (a,b) -> format2 "(bound_%s %s)" a (strSort b)) |>
+                List.map (fun (a,b) -> format3 "(%s%s %s)" boundvar_prefix a (strSort b)) |>
                 String.concat " " in
             format3 "(%s (%s)\n %s)" (strQuant tm) s
             (if List.length pats <> 0 
@@ -363,7 +363,7 @@ let rec declToSmt z3options decl = match decl with
     let l = List.map strSort argsorts in
     format4 "%s(declare-fun %s (%s) %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort)
   | DefineFun(f,args,retsort,body,c) ->
-    let l = List.map (fun (nm,s) -> format2 "(bound_%s %s)" nm (strSort s)) args in
+    let l = List.map (fun (nm,s) -> format3 "(%s%s %s)" boundvar_prefix nm (strSort s)) args in
     format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort) (termToSmt body)
   | Assume(t,c) ->
     format2 "%s(assert %s)" (caption_to_string c) (termToSmt t)

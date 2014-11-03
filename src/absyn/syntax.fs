@@ -360,26 +360,27 @@ let mk_Typ_const    (x:ftvar) (k:knd) (p:range) = {n=Typ_const x; tk=k; pos=p; u
 let rec check_fun (bs:binders) (c:comp) p = 
     match bs with 
         | [] -> failwith "Empty binders"
-        | _ -> match c.n with 
-                | Total {n=Typ_fun(bs',c)} -> check_fun (bs@bs') c p
-                | _ -> Typ_fun(bs, c)
+        | _  -> Typ_fun(bs, c)
+//            match c.n with 
+//                | Total {n=Typ_fun(bs',c)} -> check_fun (bs@bs') c p
+//                | _ -> Typ_fun(bs, c)
 let mk_Typ_fun      ((bs:binders),(c:comp)) (k:knd) (p:range) = {
     n=check_fun bs c p;
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
-let uncurry_fun bs c = match c.n with 
-    | Total {n=Typ_fun(bs', c)} -> Typ_fun(bs@bs', c)
-    | _ -> match bs with 
-             | [] -> failwith "empty binders"
-             | _ -> Typ_fun(bs, c)
-let mk_Typ_fun'      ((bs:binders),(c:comp)) (k:knd) (p:range) = {
-    n=uncurry_fun bs c;
-    tk=k;
-    pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();
-}
+//let uncurry_fun bs c = match c.n with 
+//    | Total {n=Typ_fun(bs', c)} -> Typ_fun(bs@bs', c)
+//    | _ -> match bs with 
+//             | [] -> failwith "empty binders"
+//             | _ -> Typ_fun(bs, c)
+//let mk_Typ_fun'      ((bs:binders),(c:comp)) (k:knd) (p:range) = {
+//    n=uncurry_fun bs c;
+//    tk=k;
+//    pos=p;
+//    uvs=mk_uvs(); fvs=mk_fvs();
+//}
 let mk_Typ_refine   ((x:bvvar),(phi:typ)) (k:knd) (p:range) = {
     n=Typ_refine(x, phi);
     tk=k;

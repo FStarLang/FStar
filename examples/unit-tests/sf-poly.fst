@@ -134,23 +134,46 @@ let rec index l n =
 
 (* Currying *)
 
-val prod_curry : (('a * 'b) -> Tot 'c) -> 'a -> 'b -> Tot 'c
-let prod_curry f x y = f (x,y)
+(* NS: Currying in F* is explicit. 
 
-val prod_uncurry : ('a -> 'b -> Tot 'c) -> ('a * 'b) -> Tot 'c
-let prod_uncurry f xy = f (fst xy) (snd xy)
+       If you intend to reason logically about partial applications of
+       terms, then you should make currying explicit in types and mark
+       each partially applied arrow with an effect (possibly Tot) in
+       its co-domain.
+       
+       However, the notation for function application doesn't 
+       distinguish between partial and full applications. 
 
-(* CH: how can we help the prover prove something like this? *)
+       OTOH, currently, the notation for introducing functions that
+       are explicitly curried is currently horribly explicit.
+       Hence the weird definitions for prod_curry/prod_uncurry.
+       I will change this shortly (related to the other
+       bugs on matching val-declarations with the corresponding
+       definitions).
+ *)
+val prod_curry : (('a * 'b) -> Tot 'c) -> Tot ('a -> 'b -> Tot 'c)
+let prod_curry f =
+  let z = () in fun x y -> f (x,y)
+
+val prod_uncurry : ('a -> 'b -> Tot 'c) -> Tot (('a * 'b) -> Tot 'c)
+let prod_uncurry f = 
+  let z = () in fun xy -> f (fst xy) (snd xy)
+
+val test_prod_curry: f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Fact unit
+      (ensures ((prod_uncurry f) (x, y) = f x y))
+let test_prod_curry f x y = ()
+
+val test_prod_uncurry: f:(('a * 'b)->Tot 'c) -> x:'a -> y:'b -> Fact unit
+      (ensures ((prod_curry f) x y = f (x, y)))
+let test_prod_uncurry f x y = ()
+
 val uncurry_curry : f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Fact unit
       (ensures (prod_curry (prod_uncurry f) x y = f x y))
 let uncurry_curry f x y = ()
 
-(* CH: how can we help the prover prove something like this? *)
 val curry_uncurry : f:(('a*'b)->Tot 'c) -> xy:('a*'b) -> Fact unit
       (ensures (prod_uncurry (prod_curry f) xy = f xy))
-let curry_uncurry f xy =
-  match xy with
-  | (x,y) -> ()
+let curry_uncurry f xy = ()
 
 (* Filter *)
 
@@ -204,6 +227,7 @@ val test_map3 : unit -> Fact unit
 *)
 
 (* F* can't prove this, but it's indeed a bit complex *)
+(* NS: Oh yes, it can! *)
 val test_map3 : unit -> Fact unit
     (ensures (map (fun n -> [evenb n;oddb n]) [2;1;2;5]
               = [[true;false];[false;true];[true;false];[false;true]]))

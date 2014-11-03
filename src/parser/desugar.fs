@@ -1003,7 +1003,7 @@ let mk_data_ops env = function
     let formal = Util.gen_bvar_p r tconstr in
     let formal_exp = bvar_to_exp formal in
     let binders = freevars@[v_binder formal] in
-    let rec build_typ t = mk_Typ_fun'(binders, mk_Total t) kun r in
+    let rec build_typ t = mk_Typ_fun(binders, mk_Total t) kun r in
     let rec build_kind k = mk_Kind_arrow'(binders, k) k.pos in
 //    let subst_to_string s = 
 //      List.map (function 
