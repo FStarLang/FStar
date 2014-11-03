@@ -325,6 +325,9 @@ and encode_binders (bs:Syntax.binders) (env:env_t) : (list<var>       (* transla
                                                       * env_t         (* extended context *)
                                                       * decls_t         (* top-level decls to be emitted *)
                                                       * list<either<btvdef, bvvdef>>) (* unmangled names *) =
+
+    if Tc.Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
+    
     let vars, guards, env, decls, names = bs |> List.fold_left (fun (vars, guards, env, decls, names) b -> 
         let v, g, env, decls', n = match fst b with 
             | Inl {v=a; sort=k} -> 
@@ -702,12 +705,6 @@ and encode_formula (phi:typ) (env:env_t) : term * decls_t =
         | _ -> failwith "Unexpected labels in formula"
         
 and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t = (* expects phi to be normalized; the existential variables are all labels *)
-    let encode_fe polarities l env = 
-        let tms, labels, ex_vars, decls = l |> List.fold_left (fun (tms, labels, ex_vars, decls) x -> match x with 
-            | Inl t, _ -> let phi, labs, decls' = encode_formula_with_labels t env in phi::tms, labs@labels, ex_vars, decls@decls'
-            | Inr e, _ -> let e, vars, decls' = encode_exp e env in e::tms, labels, vars@ex_vars, decls@decls') ([], [], [], []) in
-    List.rev tms, labels, ex_vars, decls in
-
     let enc (f:list<term> -> term) : args -> term * labels * decls_t = fun l -> 
         let (vars, decls), args = Util.fold_map (fun (vars, decls) x -> match fst x with 
             | Inl t -> let t, vars', decls' = encode_typ_term t env in (vars@vars', decls@decls'), t
@@ -721,6 +718,8 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
                 | Inl t -> encode_formula_with_labels t env
                 | _ -> failwith "Expected a formula") polarities l in
         f phis, List.flatten labs, List.flatten decls in
+  
+
     let const_op f _ = f, [], [] in
     let un_op f l = f <| List.hd l in
     let bin_op : ((term * term) -> term) -> list<term> -> term = fun f -> function 
@@ -732,6 +731,17 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
     let eq_op : args -> term * labels * decls_t = function 
         | [_;_;e1;e2] -> enc (bin_op mkEq) [e1;e2]
         | l ->  enc (bin_op mkEq) l in
+  
+    let mk_imp : args -> term * labels * decls_t = function 
+        | [(Inl lhs, _); (Inl rhs, _)] -> 
+          let l1, labs1, decls1 = encode_formula_with_labels rhs env in
+          begin match l1.tm with 
+            | True -> l1, labs1, decls1 (* Optimization: don't bother encoding the LHS of a trivial implication *)
+            | _ -> 
+             let l2, labs2, decls2 = encode_formula_with_labels lhs (negate env) in
+             Term.mkImp(l2, l1), labs1@labs2, decls1@decls2
+          end in
+  
     let mk_iff : args -> term * labels * decls_t = function 
         | [(Inl lhs, _); (Inl rhs, _)] -> 
           let l1, labs1, decls1 = encode_formula_with_labels lhs (negate env) in
@@ -747,7 +757,7 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
     let connectives = [ 
                         (Const.and_lid, enc_prop_c [true;true]  <| bin_op mkAnd);
                         (Const.or_lid,  enc_prop_c [true;true]  <| bin_op mkOr);
-                        (Const.imp_lid, enc_prop_c [false;true] <| bin_op mkImp);
+                        (Const.imp_lid, mk_imp);
                         (Const.iff_lid, mk_iff);
                         (Const.ite_lid, enc_prop_c [false;true;true] <| tri_op mkITE);
                         (Const.not_lid, enc_prop_c [false] <| un_op mkNot);
@@ -1395,47 +1405,56 @@ let pop_env () = match !last_env with
 
 let init tcenv =
     init_env tcenv;
-    Z3.giveZ3 [DefPrelude]
-let push () = 
-    push_env ();
-    varops.push(); 
-    Z3.giveZ3 [Term.Push]
-let pop ()  = 
-    ignore <| pop_env();
-    varops.pop(); 
-    Z3.giveZ3 [Term.Pop]
+    Z3.giveZ3 "init" (fun () -> [DefPrelude])
+let push msg = 
+    Z3.push msg
+            (fun () ->  push_env ();
+                        varops.push();
+                        [])
+let pop msg   = 
+    Z3.pop msg (fun () -> ignore <| pop_env(); varops.pop(); [])
 let encode_sig tcenv se =
-   let env = get_env tcenv in
-   let decls, env = encode_sigelt env se in
-   set_env env;
-   Z3.giveZ3 decls
+   let doit () = 
+       let env = get_env tcenv in
+       let decls, env = encode_sigelt env se in
+       set_env env; decls in
+   Z3.giveZ3 ("encoding sigelt " ^ (Print.sigelt_to_string_short se)) doit
 let encode_modul tcenv modul = 
-   let env = get_env tcenv in
-   let decls, env = encode_signature ({env with warn=false}) modul.exports in
-   set_env ({env with warn=true});
-   Z3.giveZ3 decls
+   let doit () =
+       if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Actually encoding module externals %s\n" (modul.name.str);
+       let env = get_env tcenv in
+       let decls, env = encode_signature ({env with warn=false}) modul.exports in
+       let msg = "Externals for module " ^ modul.name.str in
+       set_env ({env with warn=true}); 
+       let res = Caption msg::decls@[Caption ("End " ^ msg)] in
+       if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Done encoding module externals %s\n" (modul.name.str);
+       res in
+   Z3.giveZ3 ("encoding module externals " ^ modul.name.str)  doit
 let solve tcenv q =
-    push_env (); varops.push();
-    let env = get_env tcenv in
-    let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) tcenv.gamma) in
-    if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);
-    let phi, labels, qdecls = encode_formula_with_labels q (negate env) in
-    let label_prefix, label_suffix = encode_labels labels in
-    let r = Caption (Range.string_of_range (Tc.Env.get_range tcenv)) in
-    ignore <| pop_env(); varops.pop();
-    let decls = [Term.Push; r]
-                @env_decls
-                @label_prefix
-                @qdecls
-                @[Term.Caption "<Query>"; Term.Assume(mkNot phi, Some "query"); Term.Caption "</Query>"; Term.CheckSat]
-                @label_suffix
-                @[Term.Pop; Term.Echo "Done!"] in
-    Z3.queryZ3 labels decls
+    let query_and_labels () = 
+        push_env (); varops.push();
+        let env = get_env tcenv in
+        let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) tcenv.gamma) in
+        if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);
+        let phi, labels, qdecls = encode_formula_with_labels q (negate env) in
+        let label_prefix, label_suffix = encode_labels labels in
+        let r = Caption (Range.string_of_range (Tc.Env.get_range tcenv)) in
+        let decls = [r]
+                    @env_decls
+                    @label_prefix
+                    @qdecls
+                    @[Term.Caption "<Query>"; Term.Assume(mkNot phi, Some "query"); Term.Caption "</Query>"; Term.CheckSat]
+                    @label_suffix
+                    @[Term.Echo "Done!"] in
+        decls, labels in
+    let pop () = ignore <| pop_env(); varops.pop() in
+    Z3.queryAndPop query_and_labels pop
+
 let is_trivial (tcenv:Tc.Env.env) (q:typ) : bool = 
    let env = get_env tcenv in
-   push();
+   push "query";
    let f, _, _ = encode_formula_with_labels q env in
-   pop();
+   pop "query";
    match f.tm with 
     | True -> true
     | _ -> false

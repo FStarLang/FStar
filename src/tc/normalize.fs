@@ -449,11 +449,11 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
       let args = sn_args tcenv config.environment config.steps args in
       {config with code=w <| mk_Exp_app(c1.code, args)} 
  
-    | Exp_abs(bs, e) -> 
+    | Exp_abs(bs, body) -> 
       let bs, env = sn_binders tcenv bs config.environment config.steps in
       let s = subst_of_env env in
-      let e = subst_exp s e in
-      {config with code=w <| mk_Exp_abs(bs, e)}
+      let body = subst_exp s body in
+      {config with code=mk_Exp_abs(bs, body) (Util.subst_typ s e.tk) e.pos}
 
     | Exp_match _
     | Exp_let  _ -> 

@@ -1243,7 +1243,10 @@ and tc_decl env se = match se with
            Sig_tycon(lid, tps, k, [], [], [], r), t
         | _ -> failwith "impossible") in
       let recs, abbrev_defs = List.split recs in
-      env.solver.push(); //Push a context in the solver to check the recursively bound definitions
+      let msg = if !Options.logQueries 
+                then Util.format1 "Recursive bindings: %s" (Print.sigelt_to_string_short se)
+                else "" in
+      env.solver.push msg; //Push a context in the solver to check the recursively bound definitions
       let tycons = fst <| tc_decls env tycons in 
       let recs = fst <| tc_decls env recs in
       let env1 = Tc.Env.push_sigelt env (Sig_bundle(tycons@recs, r, lids)) in
@@ -1258,7 +1261,7 @@ and tc_decl env se = match se with
           Sig_typ_abbrev(lid, tps, compress_kind k, t, [], r)
         | _ -> failwith (Util.format1 "(%s) Impossible" (Range.string_of_range r))) 
         recs abbrev_defs in    
-      env.solver.pop();
+      env.solver.pop msg;
       let se = Sig_bundle(tycons@abbrevs@rest, r, lids) in 
       let env = Tc.Env.push_sigelt env se in
       se, env
@@ -1298,9 +1301,10 @@ let check_modules (s:solver_t) mods =
    let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 
     if List.length !Options.debug <> 0
     then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
-    s.push();
+    let msg = ("Internals for module " ^m.name.str) in
+    s.push msg;
     let m, env = tc_modul env m in 
-    s.pop();
+    s.pop msg;
     if m.is_interface  //TODO: admit interfaces to the solver also
     then mods, env
     else (s.encode_modul env m; m::mods, env)) ([], env) in

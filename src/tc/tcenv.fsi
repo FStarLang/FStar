@@ -62,8 +62,8 @@ type env = {
 }
 and solver_t = {
     init: env -> unit;
-    push:unit -> unit;
-    pop:unit -> unit;
+    push: string -> unit;
+    pop: string -> unit;
     encode_modul:env -> modul -> unit;
     encode_sig:env -> sigelt -> unit;
     solve:env -> typ -> (bool * list<string>);

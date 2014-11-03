@@ -327,7 +327,6 @@ val override_example4 : unit -> Fact unit
       (ensures (fmostlytrue 3 = false))
 let override_example4 () = ()
 
-(* Maybe surprisingly, F* manages to prove these *)
 val override_eq : x:'a -> k:'b -> f:('b->Tot 'a) -> Fact unit
       (ensures ((my_override f k x) k = x))
 let override_eq x k f = ()
