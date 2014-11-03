@@ -417,6 +417,7 @@ and mkPrelude z3options =
                                                  ("Typ_app_snd", Type_sort)], Type_sort, 2);
                                  ("Typ_dep",    [("Typ_dep_fst", Type_sort);
                                                  ("Typ_dep_snd", Term_sort)], Type_sort, 3);
+                                 ("Typ_uvar",   [("Typ_uvar_fst", Int_sort)], Type_sort, 4);
                                  ("Term_unit",  [], Term_sort, 0);
                                  ("BoxInt",     ["BoxInt_proj_0", Int_sort], Term_sort, 1);
                                  ("BoxBool",    ["BoxBool_proj_0", Bool_sort], Term_sort, 2);
@@ -436,6 +437,7 @@ and mkPrelude z3options =
 let mk_Kind_type        = mkApp("Kind_type", [])
 let mk_Typ_app t1 t2    = mkApp("Typ_app", [t1;t2])
 let mk_Typ_dep t1 t2    = mkApp("Typ_dep", [t1;t2])
+let mk_Typ_uvar i       = mkApp("Typ_uvar", [mkInteger i])
 
 let mk_Term_unit        = mkApp("Term_unit", [])
 let boxInt t            = mkApp("BoxInt", [t]) 

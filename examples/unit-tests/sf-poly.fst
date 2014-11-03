@@ -1,3 +1,4 @@
+
 (*
 A translation to F* of Poly.v from Software Foundations
 Original name: "Polymorphism and Higher-Order Functions"
@@ -96,16 +97,18 @@ let rec index_option l n =
   | h :: t -> if n = 0 then Some h else index_option t (n-1)
 
 val test_index_option1 : unit -> Fact unit
-      (ensures (index_option [4;5;6;7] 0 == Some 4))
+      (ensures (index_option [4;5;6;7] 0 = Some 4))
 let test_index_option1 () = ()
 
 val test_index_option2 : unit -> Fact unit
-      (ensures (index_option [[1];[2]] 1 == Some [2]))
+      (ensures (index_option [[1];[2]] 1 = Some [2]))
 let test_index_option2 () = ()
 
 (* F* fails to prove this one, but it proves the above ones *)
+(* NS: Use homogenous equality, unless you really mean heterogenous.
+       Changed the above ones too. *)
 val test_index_option3 : unit -> Fact unit
-      (ensures (index_option [true] 2 == None))
+      (ensures (index_option [true] 2 = None))
 let test_index_option3 () = ()
 
 assume val impossible : u : unit { False } -> Tot 'a
@@ -116,32 +119,10 @@ Name not found: failwith
    ects\fstar\pub\src\tosmt\encode.fs:line 169
 Filed as https://github.com/FStarLang/FStar/issues/16 *)
 
-(* CH: This should really work *)
+(* CH: This should really work; NS: it does now *)
 val length_nil : unit -> Fact unit
-      (ensures (length [] == 0))
+      (ensures (length [] = 0))
 let length_nil () = ()
-(* it seems that Z3 cannot use this pattern:
-
-; <Start encoding LengthProblems.length>
-;;;;;;;;;;;;;;;;Equation: LengthProblems.length
-(assert (forall ((_a___7853__1009 Type))
- (! (implies true
- (= (LengthProblems.length _a___7853__1009 (Prims.Nil _a___7853__1009))
- (BoxInt 0)))
-:pattern ((LengthProblems.length _a___7853__1009 (Prims.Nil _a___7853__1009))))))
-
-to prove the following query
-
-; <Query>
-;;;;;;;;;;;;;;;;query
-(assert (not (exists ((uvar_1016 Type) (uvar_1015 Type))
- (= (LengthProblems.length uvar_1015 (Prims.Nil uvar_1016))
- (BoxInt 0)))))
-
-removing the pattern makes this provable, but I'm not sure that's the
-correct fix, what's with these 2 separate existentials in the query
-anyway?  using a single common existential also makes this provable
-(with the current pattern for the equation) *)
 
 (* Getting incomplete patterns here, with or without the [] pattern,
    caused by the same problem as length_nil I think; it should clearly
@@ -170,12 +151,12 @@ let prod_uncurry f xy = f (fst xy) (snd xy)
 
 (* CH: how can we help the prover prove something like this? *)
 val uncurry_curry : f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Fact unit
-      (ensures (prod_curry (prod_uncurry f) x y == f x y))
+      (ensures (prod_curry (prod_uncurry f) x y = f x y))
 let uncurry_curry f x y = ()
 
 (* CH: how can we help the prover prove something like this? *)
 val curry_uncurry : f:(('a*'b)->Tot 'c) -> xy:('a*'b) -> Fact unit
-      (ensures (prod_uncurry (prod_curry f) xy == f xy))
+      (ensures (prod_uncurry (prod_curry f) xy = f xy))
 let curry_uncurry f xy =
   match xy with
   | (x,y) -> ()
@@ -194,20 +175,24 @@ val evenb : int -> Tot bool
 let evenb i = i % 2 = 0
 I would prefer something like this for %
 assume val mod : x : int -> y:int{x =!= 0} -> Tot int
+
+NS: I changed it to that (div is also similar) a few days ago. 
 *)
-(* Working around it for now *)
 val evenb : nat -> Tot bool
-let rec evenb i =
-  match i with
-  | 0 -> true
-  | 1 -> false
-  | _ -> evenb (i-2)
+let evenb i = i%2 = 0
+
+(* Note: induction over non-inductive types like int doesn't generate good patterns for the solver *)
+(* let rec evenb i = (i%2) = 0 *)
+(*   match i with *)
+(*   | 0 -> true *)
+(*   | 1 -> false *)
+(*   | _ -> evenb (i-2) *)
 
 val oddb : nat -> Tot bool
 let oddb n = not (evenb n)
 
 val test_filter1 : unit -> Fact unit
-      (ensures (filter evenb [1;2;3;4] == [2;4]))
+      (ensures (filter evenb [1;2;3;4] = [2;4]))
 let test_filter1 () = ()
 
 (* Map *)
@@ -219,11 +204,11 @@ let rec map f l =
   | h :: t -> (f h) :: (map f t)
 
 val test_map1 : unit -> Fact unit
-      (ensures (map (fun n -> n + 3) [2;0;2] == [5;3;5]))
+      (ensures (map (fun n -> n + 3) [2;0;2] = [5;3;5]))
 let test_map1 () = ()
 
 val test_map2 : unit -> Fact unit
-      (ensures (map oddb [2;1;2;5] == [false;true;false;true]))
+      (ensures (map oddb [2;1;2;5] = [false;true;false;true]))
 let test_map2 () = ()
 
 (* This shouldn't blow up, although I'm using the wrong kind of arrow for fun:
@@ -237,18 +222,18 @@ val test_map3 : unit -> Fact unit
 (* F* can't prove this, but it's indeed a bit complex *)
 val test_map3 : unit -> Fact unit
     (ensures (map (fun n -> [evenb n;oddb n]) [2;1;2;5]
-              == [[true;false];[false;true];[true;false];[false;true]]))
+              = [[true;false];[false;true];[true;false];[false;true]]))
 let test_map3 () = ()
 
 val map_snoc : f:('a->Tot 'b) -> x:'a -> l:list 'a -> Fact unit
-      (ensures (map f (snoc l x) == snoc (map f l) (f x)))
+      (ensures (map f (snoc l x) = snoc (map f l) (f x)))
 let rec map_snoc f x l =
   match l with
   | [] -> ()
   | h::t -> map_snoc f x t
 
 val map_rev : f:('a->Tot 'b) -> l:(list 'a) -> Fact unit
-      (ensures (map f (rev l) == rev (map f l)))
+      (ensures (map f (rev l) = rev (map f l)))
 let rec map_rev f l =
   match l with
   | [] -> ()
@@ -271,16 +256,16 @@ let rec fold f l b =
   | h::t -> f h (fold f t b)
 
 val fold_example1 : unit -> Fact unit 
-      (ensures (fold (fun x y -> x * y) [1;2;3;4] 1 == 24))
+      (ensures (fold (fun x y -> x * y) [1;2;3;4] 1 = 24))
 let fold_example1 () = ()
 
 val fold_example2 : unit -> Fact unit
-      (ensures (fold (fun x y -> x && y) [true;true;false;true] true == false))
+      (ensures (fold (fun x y -> x && y) [true;true;false;true] true = false))
 let fold_example2 () = ()
 
 (* CH: This fails, but maybe can't expect so much from Z3? *)
 val fold_example3 : unit -> Fact unit
-      (ensures (fold app  [[1];[];[2;3];[4]] [] == [1;2;3;4]))
+      (ensures (fold app  [[1];[];[2;3];[4]] [] = [1;2;3;4]))
 let fold_example3 () = ()
 
 (* Functions For Constructing Functions *)
@@ -307,29 +292,29 @@ let fmostlytrue = my_override (my_override ftrue 1 false) 3 false
 
 (* CH: these fail, too higher order? *)
 val override_example1 : unit -> Fact unit
-      (ensures (fmostlytrue 0 == true))
+      (ensures (fmostlytrue 0 = true))
 let override_example1 () = ()
 
 val override_example2 : unit -> Fact unit
-      (ensures (fmostlytrue 1 == false))
+      (ensures (fmostlytrue 1 = false))
 let override_example2 () = ()
 
 val override_example3 : unit -> Fact unit
-      (ensures (fmostlytrue 2 == true))
+      (ensures (fmostlytrue 2 = true))
 let override_example3 () = ()
 
 val override_example4 : unit -> Fact unit
-      (ensures (fmostlytrue 3 == false))
+      (ensures (fmostlytrue 3 = false))
 let override_example4 () = ()
 
 (* Maybe surprisingly, F* manages to prove these *)
 val override_eq : x:'a -> k:'b -> f:('b->Tot 'a) -> Fact unit
-      (ensures ((my_override f k x) k == x))
+      (ensures ((my_override f k x) k = x))
 let override_eq x k f = ()
 
 val override_neq : x1:'a -> x2:'a -> k1:'b -> k2:'b -> f:('b->Tot 'a) -> Pure unit
-      (requires ((f k1 == x1) /\ (k2 =!= k1)))
-      (ensures \r => (my_override f k2 x2) k1 == x1)
+      (requires (f k1 = x1 /\ k2 <> k1))
+      (ensures \r => (my_override f k2 x2) k1 = x1)
 let override_neq x1 x2 k1 k2 f = ()
 
 (* This causes subtyping check failure without the annotation on n *)
@@ -338,7 +323,7 @@ let fold_length l = fold (fun _ (n:nat) -> n + 1) l 0
 
 (* CH: both cases are supposed to be trivial, but none of them works *)
 val fold_length_correct : l:list 'a -> Fact unit
-      (ensures (fold_length l == length l))
+      (ensures (fold_length l = length l))
 let rec fold_length_correct l =
   match l with
   | [] -> ()
@@ -349,7 +334,7 @@ let fold_map f l= fold (fun x l -> f x :: l) l []
 
 (* CH: again, this should just work *)
 val fold_map_correct : f:('a->Tot 'b) -> l:list 'a -> Fact unit
-      (ensures (fold_map f l == map f l))
+      (ensures (fold_map f l = map f l))
 let rec fold_map_correct f l =
   match l with
   | [] -> ()

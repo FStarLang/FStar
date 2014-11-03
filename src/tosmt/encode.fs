@@ -435,12 +435,11 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
                      ttm, [(tsym, Term.mkAnd(t_has_kind, Term.mkForall([x_has_t], [xsym], mkIff(x_has_t, encoding))))], decls@decls'
         end
 
-      | Typ_uvar _ ->
-        (* TODO: sharing uvars for identity *)
-        let tsym = varops.fresh "uvar", Type_sort in 
-        let ttm = mkBoundV tsym in
-        let k, decls = encode_knd t.tk env ttm in
-        ttm, [tsym, k], decls
+      | Typ_uvar (uv, _) ->
+        let ttm = Term.mk_Typ_uvar (Unionfind.uvar_id uv) in
+        let t_has_k, decls = encode_knd t.tk env ttm in //TODO: skip encoding this if it has already been encoded before
+        let d = Term.Assume(t_has_k, None) in
+        ttm, [], d::decls
 
       | Typ_app(head, args) -> (* this is in head normal form; so t must be a type variable; unification variable; or a constant *)
         let is_full_app () = match (Util.compress_kind head.tk).n with

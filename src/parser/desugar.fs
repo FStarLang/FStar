@@ -86,8 +86,9 @@ let op_as_tylid r s =
 
 let rec is_type env (t:term) =
   if t.level = Type then true
-  else match (unlabel t).tm with
+  else match (unparen t).tm with
     | Wild -> true
+    | Labeled _ -> true
     | Op("*", hd::_) -> is_type env hd     (* tuple constructor *)
     | Op("==", _)                          (* equality predicate *)
     | Op("=!=", _) 
@@ -689,7 +690,7 @@ and desugar_typ env (top:term) : typ =
       
     | Op(s, args) ->
       begin match op_as_tylid top.range s with
-        | None -> raise (Error("Unrecognized type operator" ^ s, top.range))
+        | None -> desugar_exp env top |> Util.b2t
         | Some l ->
           let args = List.map (fun t -> withimp false <| desugar_typ_or_exp env t) args in
           mk_typ_app (ftv l kun) args
