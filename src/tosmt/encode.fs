@@ -535,19 +535,30 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
         let esym, lam = fresh_bvar "lambda" Term_sort in
         if not <| Util.is_pure_function e.tk 
         then lam, [(esym, Term_sort), Term.mkTrue], []
-        else let vars, _, envbody, decls, _ = encode_binders bs env in 
-             let app = mk_ApplyE lam vars in
-             let body, body_vars, decls' = encode_exp body envbody in
-             let eq = close_ex body_vars (mkEq(app, body)) in
-             let lam_typed, decls'' = encode_typ_pred e.tk env lam in
-             let tsym, t = fresh_bvar "t" Type_sort in 
-             let app_has_t = Term.mk_HasType app t in
-             let app_is_typed = Term.mkExists([app_has_t], [(tsym, Type_sort)], app_has_t) in
-             let app_eq = Term.mkForall([app], vars, mkImp(app_is_typed, eq)) in
-             let clos = 
-                let fvars = Term.free_variables app_eq |> List.filter (fun x -> fst x <> esym) in
-                Term.mk_Closure (varops.next_id()) fvars in
-             lam, [(esym, Term_sort), mk_and_l [mkEq(lam, clos); app_eq; lam_typed]], decls@decls'@decls''
+        else let t = Util.compress_typ e.tk in
+             begin match t.n with 
+                | Typ_fun(bs', c) -> 
+                    let nformals = List.length bs' in
+                    if nformals < List.length bs && Util.is_total_comp c (* explicit currying *)
+                    then let bs0, rest = Util.first_N nformals bs in 
+                         let e = mk_Exp_abs(bs0, mk_Exp_abs(rest, body) (Util.comp_result c) body.pos) t e0.pos in
+                         Util.fprint1 "Explicitly currying %s\n" (Print.exp_to_string e);
+                         encode_exp e env
+                    else let vars, _, envbody, decls, _ = encode_binders bs env in 
+                         let app = mk_ApplyE lam vars in
+                         let body, body_vars, decls' = encode_exp body envbody in
+                         let eq = close_ex body_vars (mkEq(app, body)) in
+                         let lam_typed, decls'' = encode_typ_pred e.tk env lam in
+                         let tsym, t = fresh_bvar "t" Type_sort in 
+                         let app_has_t = Term.mk_HasType app t in
+                         let app_is_typed = Term.mkExists([app_has_t], [(tsym, Type_sort)], app_has_t) in
+                         let app_eq = Term.mkForall([app], vars, mkImp(app_is_typed, eq)) in
+                         let clos = 
+                            let fvars = Term.free_variables app_eq |> List.filter (fun x -> fst x <> esym) in
+                            Term.mk_Closure (varops.next_id()) fvars in
+                         lam, [(esym, Term_sort), mk_and_l [mkEq(lam, clos); app_eq; lam_typed]], decls@decls'@decls''
+              | _ -> failwith "Impossible"
+            end
 
       | Exp_app({n=Exp_fvar(l, _)}, [(Inl _, _); (Inl _, _); (Inr v1, _); (Inr v2, _)]) when (lid_equals l.v Const.lexpair_lid) -> 
          let v1, vars1, decls1 = encode_exp v1 env in 

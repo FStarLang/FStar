@@ -404,16 +404,20 @@ and tc_value env e : exp * comp =
                 | Typ_fun(bs', c) -> 
                     (* Two main interesting bits here;
                         1. the expected type may have additional type binders
-                        2. If the function is a let-rec, and the expected type is pure, then we need to add termination checks. *)
+                        2. If the function is a let-rec, and the expected type is pure, then we need to add termination checks. 
+                        3. Or, the expected type may have 
+                             a. more immediate binders, whereas the function may itself return a function 
+                             b. fewer immediate binders, meaning that the function type is explicitly curried    
+                    *)
                   
-                  let rec tc_binders (out, env, g, subst) bs_annot bs = match bs_annot, bs with
+                  let rec tc_binders (out, env, g, subst) bs_annot c bs = match bs_annot, bs with
                     | [], [] -> List.rev out, env, g, Util.subst_comp subst c 
-                    
+                                        
                     | hdannot::tl_annot,  hd::tl -> 
                       begin match hdannot, hd with 
                             | (Inl _, _), (Inr _, _) -> (* expected type includes a type-binder; add a type abstraction to the term *)
                               let env = maybe_push_binding env hdannot in
-                              tc_binders (hdannot::out, env, g, subst) tl_annot bs
+                              tc_binders (hdannot::out, env, g, subst) tl_annot c bs
                               
                             | (Inl a, _), (Inl b, imp) -> 
                               let k, g1 = tc_kind env b.sort in
@@ -422,7 +426,7 @@ and tc_value env e : exp * comp =
                               let b = Inl ({b with sort=k}), imp in
                               let env = maybe_push_binding env b in
                               let subst = maybe_alpha_subst subst hdannot b in 
-                              tc_binders (b::out, env, g, subst) tl_annot tl 
+                              tc_binders (b::out, env, g, subst) tl_annot c tl 
 
                             | (Inr x, _), (Inr y, imp) -> 
                               let t, _, g1 = tc_typ env y.sort in
@@ -431,12 +435,21 @@ and tc_value env e : exp * comp =
                               let b = Inr ({y with sort=t}), imp in
                               let env = maybe_push_binding env b in
                               let subst = maybe_alpha_subst subst hdannot b in 
-                              tc_binders (b::out, env, g, subst) tl_annot tl 
+                              tc_binders (b::out, env, g, subst) tl_annot c tl 
 
                             | _ -> fail None t
                       end
-                    
-                    | _ -> raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function t top, top.pos)) in
+                  
+                    | [], _ -> (* the expected type is explicitly curried *)
+                        if Util.is_total_comp c 
+                        then match (Util.compress_typ (Util.comp_result c)).n with
+                            | Typ_fun(bs_annot, c') ->  tc_binders(out, env, g, subst) bs_annot c' bs
+                            | _ -> fail None t
+                        else fail None t
+
+                    | _, [] -> (* more expected args; expect the body to return a total function *)
+                       let c = Util.total_comp (mk_Typ_fun(bs_annot, c) ktype c.pos) c.pos in
+                       List.rev out, env, g, Util.subst_comp subst c in
 
                  let mk_letrec_environment actuals env = match env.letrecs with 
                     | [] -> env
@@ -472,7 +485,7 @@ and tc_value env e : exp * comp =
                         | _ -> failwith "Impossible") in
                      letrecs |> List.fold_left (fun env (x,t) -> Env.push_local_binding env (binding_of_lb x t)) env in
 
-                 let bs, envbody, g, c = tc_binders ([], env, Trivial, []) bs' bs in
+                 let bs, envbody, g, c = tc_binders ([], env, Trivial, []) bs' c bs in
                  let envbody = if !Options.verify then mk_letrec_environment bs envbody else envbody in
                  let envbody = Tc.Env.set_expected_typ envbody (Util.comp_result c) in
                  Some t, bs, Some c, envbody, g
@@ -489,13 +502,18 @@ and tc_value env e : exp * comp =
     Tc.Util.discharge_guard envbody (Rel.conj_guard g guard);
     let tfun = match tfun_opt with 
         | Some t -> 
-           (match (Util.compress_typ t).n with 
+           let t = Util.compress_typ t in
+           (match t.n with 
                 | Typ_fun _ -> t
                 | _ -> 
+                    if Env.debug env Options.Low
+                    then Util.fprint2 "!!!!!!!!!!!!!!!Expected function type is instead %s (%s)\n" (Print.typ_to_string t) (Print.tag_of_typ t);
                     let t' = mk_Typ_fun(bs, cbody) ktype top.pos in
                     trivial <| Rel.teq env t t';
                     t')
         | None -> mk_Typ_fun(bs, cbody) ktype top.pos in
+    if Env.debug env Options.Low
+    then Util.fprint2 "!!!!!!!!!!!!!!!Annotating lambda with type %s (%s)\n" (Print.typ_to_string tfun) (Print.tag_of_typ tfun);
     syn e.pos tfun <| mk_Exp_abs(bs, body), mk_Total tfun
 
   | _ -> 

@@ -152,9 +152,9 @@ let rec index l n =
        definitions).
  *)
 val prod_curry : (('a * 'b) -> Tot 'c) -> Tot ('a -> 'b -> Tot 'c)
-let prod_curry f =
-  let z = () in  (* NS TODO: fix ugly syntax *)
-  fun x y -> f (x,y) 
+let prod_curry f x y =  f (x,y)
+  (* let z = () in  (\* NS TODO: fix ugly syntax *\) *)
+  (* fun x y -> f (x,y) *)
 
 val prod_uncurry : ('a -> 'b -> Tot 'c) -> Tot (('a * 'b) -> Tot 'c)
 let prod_uncurry f = 
