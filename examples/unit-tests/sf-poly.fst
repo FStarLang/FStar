@@ -272,6 +272,7 @@ val fold_example2 : unit -> Fact unit
 let fold_example2 () = ()
 
 (* CH: This fails, but maybe can't expect so much from Z3? *)
+(* NS: Oh yes, you can! : ) *)
 val fold_example3 : unit -> Fact unit
       (ensures (fold app  [[1];[];[2;3];[4]] [] = [1;2;3;4]))
 let fold_example3 () = ()

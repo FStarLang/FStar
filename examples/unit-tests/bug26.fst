@@ -3,7 +3,7 @@ module Bug26
 assume val factorial : n:nat -> Tot nat
 assume val bar:n:int{n > 1} -> Tot (y:int{y==factorial n})
 
-val evenb: int -> Tot bool
+val evenb: nat -> Tot bool
 let evenb i = (i % 2) = 0
 
 val filter: ('a -> Tot bool) -> list 'a -> Tot (list 'a)

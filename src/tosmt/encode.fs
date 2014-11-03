@@ -391,21 +391,33 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
         lookup_free_tvar env fv, [], []
 
       | Typ_fun(binders, res) -> (* TODO: add sharing *)
-        let tsym, ttm, fsym, f = fresh_vars "funtype" "f" in
-        let pretype = mk_tester "Typ_fun" (mk_PreType f) in
-        let t_has_kind = mk_HasKind ttm Term.mk_Kind_type in
-        let f_hastype_t = mk_HasType f ttm in
-        let guard, decls = 
-            if not <| Util.is_pure env.tcenv res 
-            then pretype, [] 
-            else let vars, guards, env', decls, _ = encode_binders binders env in 
-                 let app = mk_ApplyE f vars in
-                 if Util.is_total_comp res
-                 then let res_pred, decls' = encode_typ_pred (Util.comp_result res) env' app in
-                      let app_pred = mkForall([app], vars, mkImp(mk_and_l guards, res_pred)) in
-                      mkAnd(pretype, app_pred), decls@decls'
-                 else pretype, decls in
-        ttm, [tsym, Term.mkAnd(t_has_kind, mkForall([f_hastype_t], [fsym], mkImp(f_hastype_t, guard)))], decls
+        let doit binders res =
+            let tsym, ttm, fsym, f = fresh_vars "funtype" "f" in
+            let pretype = mk_tester "Typ_fun" (mk_PreType f) in
+            let t_has_kind = mk_HasKind ttm Term.mk_Kind_type in
+            let f_hastype_t = mk_HasType f ttm in
+            let guard, decls = 
+                if not <| Util.is_pure env.tcenv res 
+                then pretype, [] 
+                else let vars, guards, env', decls, _ = encode_binders binders env in 
+                     let app = mk_ApplyE f vars in
+                     if Util.is_total_comp res
+                     then let res_pred, decls' = encode_typ_pred (Util.comp_result res) env' app in
+                          let app_pred = mkForall([app], vars, mkImp(mk_and_l guards, res_pred)) in
+                          mkAnd(pretype, app_pred), decls@decls'
+                     else pretype, decls in
+            ttm, [tsym, Term.mkAnd(t_has_kind, mkForall([f_hastype_t], [fsym], mkImp(f_hastype_t, guard)))], decls in
+
+        begin match binders |> Util.prefix_until (function (Inr _, _) -> true | _ -> false) with 
+            | Some (t_binders, first_v_binder, rest) -> //explicitly curry the type-binders, since partial type-applications arise via unification commonly in ML programs
+              begin match t_binders with 
+                | [] -> doit binders res
+                | _ -> 
+                  let res = mk_Typ_fun(first_v_binder::rest, res) ktype t0.pos |> Syntax.mk_Total in
+                  doit t_binders res
+             end
+            | None -> doit binders res 
+        end
       
       | Typ_refine(x, f) ->
         let xsym = "this", Term_sort in 
