@@ -87,12 +87,12 @@ let extend g x t  = (fun x' -> if x = x' then Some t else g x')
 let x45 = extend (extend empty 42 TBool) 0 (TArrow TBool TBool)
 
 val extend_eq : g:env -> x:int -> a:ty -> Fact unit
-      (ensures ((extend g x a) x) == Some a)
+      (ensures ((extend g x a) x) = Some a)
 let extend_eq g x a = ()
 
 val extend_neq : g:env -> x1:int -> a:ty -> x2:int -> Pure unit
       (requires (x2 =!= x1))
-      (ensures \r => ((extend g x2 a) x1) == g x1)
+      (ensures \r => ((extend g x2 a) x1) = g x1)
 let extend_neq g x1 a x2 = ()
 
 (* CH: swapped env and exp args until functions are ignored from the
@@ -121,8 +121,8 @@ let rec typing e g =
   | _ -> None
 
 val canonical_forms_bool : e:exp -> Pure unit
-      (requires ((typing e empty == Some TBool) /\ (is_value e == true)))
-      (ensures \r => (e == ETrue) \/ (e == EFalse))
+      (requires ((typing e empty = Some TBool) /\ (is_value e = true)))
+      (ensures \r => (e = ETrue) \/ (e = EFalse))
 let canonical_forms_bool e =
   match e with
   | EVar x -> ()
@@ -131,7 +131,7 @@ let canonical_forms_bool e =
       (* This fails now, but maybe if we manage to get rid of the existentials
          by replacing them with testers and projectors?
       assert(exists (t1:ty). exists (t2:ty).
-               typing (EAbs x' t e1) == Some (TArrow t1 t2)); *)
+               typing (EAbs x' t e1) = Some (TArrow t1 t2)); *)
       admit()
   | EApp e1 e2 -> ()
   | ETrue -> ()
@@ -139,25 +139,25 @@ let canonical_forms_bool e =
   | EIf e1 e2 e3 -> ()
 
 val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Pure unit
-      (requires ((typing e empty == Some (TArrow t1 t2)) /\ (is_value e == true)))
+      (requires ((typing e empty = Some (TArrow t1 t2)) /\ (is_value e = true)))
       (ensures \r => (is_EAbs e))
 let canonical_forms_fun e t1 t2 = ()
 
 val progress : e:exp -> t:ty -> Pure unit
-      (requires (typing e empty == Some t))
+      (requires (typing e empty = Some t))
       (ensures \r => (is_value e \/ (is_Some (step e))))
 let rec progress e t =
   match e with
   | EVar x ->
-      (* assert(typing (EVar x) empty == None); -- this fails *)
+      (* assert(typing (EVar x) empty = None); -- this fails *)
       admit()
   | EAbs x' t e1 -> ()
   | EApp e1 e2 ->
 (* problem: for progress e1 and progress e2 we don't have anything to
    pass for t; implicit lemma instantiation might help for such cases *)
       assert(exists (t1:ty). exists (t2:ty).
-               typing e1 empty == Some (TArrow t1 t2) /\
-               typing e2 empty == Some t1);
+               typing e1 empty = Some (TArrow t1 t2) /\
+               typing e2 empty = Some t1);
           (* The assert is proved, but it's not enough.
              We want to apply progress for the existentially
              quantified t1 and t2 above! How can we do that?
@@ -186,27 +186,27 @@ let rec appears_free_in x e =
 type closed e = (forall (x:int). not (appears_free_in x e))
 
 val free_in_context : x:int -> e:exp -> t:ty -> g:env -> Pure unit
-      (requires (appears_free_in x e == true /\ typing e g == Some t))
+      (requires (appears_free_in x e = true /\ typing e g = Some t))
       (ensures \r => (is_Some (g x)))
 let free_in_context x e t g = ()
 
 val context_invariance : g:env -> g':env -> e:exp -> t:ty -> Pure unit
-      (requires (typing e g == Some t /\
-                   (forall (x:int). appears_free_in x e == true ==>
-                                    g x == g' x)))
-      (ensures \r => (typing e g' == Some t))
+      (requires (typing e g = Some t /\
+                   (forall (x:int). appears_free_in x e = true ==>
+                                    g x = g' x)))
+      (ensures \r => (typing e g' = Some t))
 let context_invariance g g' e t = ()
 
 val substitution_preserves_typing :
       g:env -> x:int -> e:exp -> u:ty -> t:ty -> v:exp -> Pure unit
-          (requires (typing e (extend g x u) == Some t /\
-                       (typing v empty == Some u)))
-          (ensures \r => (typing (subst x v e) g == Some t))
+          (requires (typing e (extend g x u) = Some t /\
+                       (typing v empty = Some u)))
+          (ensures \r => (typing (subst x v e) g = Some t))
 let substitution_preserves_typing g x e u t v = ()
 
 val preservation : e:exp -> e':exp -> t:ty -> Pure unit
-      (requires (typing e empty == Some t /\ step e == Some e'))
-      (ensures \r => (typing e' empty == Some t))
+      (requires (typing e empty = Some t /\ step e = Some e'))
+      (ensures \r => (typing e' empty = Some t))
 let preservation e e' t = ()
 
 (* CH: With this purely-executable way of specifying things we can't

@@ -18,11 +18,11 @@ let rec length l =
   | hd::tl -> 1 + length tl
 
 val test_length1 : unit -> Fact unit
-      (ensures (length [1;2] == 2))
+      (ensures (length [1;2] = 2))
 let test_length1 () = ()
 
 val test_length2 : unit -> Fact unit
-      (ensures (length [true] == 1))
+      (ensures (length [true] = 1))
 let test_length2 () = ()
 
 val app : list 'a -> list 'a -> Tot (list 'a)
@@ -32,11 +32,11 @@ let rec app l1 l2 =
   | h::t -> h :: app t l2
 
 val nil_app : l : list 'a -> Fact unit
-      (ensures (app [] l == l))
+      (ensures (app [] l = l))
 let nil_app l = ()
 
 val app_nil : l : list 'a -> Fact unit
-      (ensures (app l [] == l))
+      (ensures (app l [] = l))
 let rec app_nil l =
   match l with
   | [] -> ()
@@ -49,7 +49,7 @@ let rec snoc l x =
   | h::t -> h :: snoc t x
 
 val snoc_with_append : l1:list 'a -> l2:list 'a -> a:'a -> Fact unit
-      (ensures (snoc (app l1 l2) a == app l1 (snoc l2 a)))
+      (ensures (snoc (app l1 l2) a = app l1 (snoc l2 a)))
 let rec snoc_with_append l1 l2 a =
   match l1 with
   | [] -> ()
@@ -62,14 +62,14 @@ let rec rev l =
   | h::t -> snoc (rev t) h
 
 val rev_snoc : a:'a -> l:list 'a -> Fact unit
-      (ensures (rev (snoc l a) == a :: (rev l)))
+      (ensures (rev (snoc l a) = a :: (rev l)))
 let rec rev_snoc a l =
   match l with
   | []   -> ()
   | h::t -> rev_snoc a t
 
 val rev_involutive : l:list 'a -> Fact unit
-      (ensures (rev (rev l)) == l)
+      (ensures (rev (rev l)) = l)
 let rec rev_involutive l =
   match l with
   | []   -> ()
@@ -104,9 +104,6 @@ val test_index_option2 : unit -> Fact unit
       (ensures (index_option [[1];[2]] 1 = Some [2]))
 let test_index_option2 () = ()
 
-(* F* fails to prove this one, but it proves the above ones *)
-(* NS: Use homogenous equality, unless you really mean heterogenous.
-       Changed the above ones too. *)
 val test_index_option3 : unit -> Fact unit
       (ensures (index_option [true] 2 = None))
 let test_index_option3 () = ()
@@ -119,16 +116,10 @@ Name not found: failwith
    ects\fstar\pub\src\tosmt\encode.fs:line 169
 Filed as https://github.com/FStarLang/FStar/issues/16 *)
 
-(* CH: This should really work; NS: it does now *)
 val length_nil : unit -> Fact unit
       (ensures (length [] = 0))
 let length_nil () = ()
 
-(* Getting incomplete patterns here, with or without the [] pattern,
-   caused by the same problem as length_nil I think; it should clearly
-   be a different error message when the [] pattern is present.
-   TODO: minimize + file separately (not 24 it seems) *)
-(* This also gets a non-termination error now *)
 val index : l : list 'a -> n:int{(0 <= n) /\ (n < length l)} -> Tot 'a
 let rec index l n =
   match l with
@@ -170,19 +161,12 @@ let rec filter test l =
   | h :: t -> if test h then h :: (filter test t)
                         else       filter test t
 
-(* seems that typing for % is very restrictive
-val evenb : int -> Tot bool
-let evenb i = i % 2 = 0
-I would prefer something like this for %
-assume val mod : x : int -> y:int{x =!= 0} -> Tot int
-
-NS: I changed it to that (div is also similar) a few days ago. 
-*)
 val evenb : nat -> Tot bool
 let evenb i = i%2 = 0
 
-(* Note: induction over non-inductive types like int doesn't generate good patterns for the solver *)
-(* let rec evenb i = (i%2) = 0 *)
+(* NS: Note: induction over non-inductive types like int *)
+(*     doesn't generate good patterns for the solver *)
+(* let rec evenb i = *)
 (*   match i with *)
 (*   | 0 -> true *)
 (*   | 1 -> false *)
@@ -216,7 +200,7 @@ unknown(0,0-0,0) : Error
 Identifier not found: [Prims.Cons] (Possible clash with related name at ../../lib/prims.fst(477,0-481,6))
 val test_map3 : unit -> Fact unit
     (ensures (map (fun n => [evenb n;oddb n]) [2;1;2;5]
-              == [[true;false];[false;true];[true;false];[false;true]]))
+              = [[true;false];[false;true];[true;false];[false;true]]))
 *)
 
 (* F* can't prove this, but it's indeed a bit complex *)
