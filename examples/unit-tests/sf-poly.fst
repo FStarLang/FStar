@@ -153,11 +153,13 @@ let rec index l n =
  *)
 val prod_curry : (('a * 'b) -> Tot 'c) -> Tot ('a -> 'b -> Tot 'c)
 let prod_curry f =
-  let z = () in fun x y -> f (x,y)
+  let z = () in  (* NS TODO: fix ugly syntax *)
+  fun x y -> f (x,y) 
 
 val prod_uncurry : ('a -> 'b -> Tot 'c) -> Tot (('a * 'b) -> Tot 'c)
 let prod_uncurry f = 
-  let z = () in fun xy -> f (fst xy) (snd xy)
+  let z = () in (* NS TODO: fix ugly syntax *)
+  fun xy -> f (fst xy) (snd xy)
 
 val test_prod_curry: f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Fact unit
       (ensures ((prod_uncurry f) (x, y) = f x y))
@@ -289,17 +291,26 @@ let ftrue = constfun true
 *)
 let ftrue _ = true
 
-(* CH: This causes syntax error at character 12, is override a keyword?
-val override : ('a -> Tot 'b) -> 'a -> 'b -> 'a -> Tot 'b
-*)
+(* CH: This causes syntax error at character 12, is override a
+   keyword?  
 
-val my_override : ('a -> Tot 'b) -> 'a -> 'b -> 'a -> Tot 'b
-let my_override f k x k' = if k = k' then x else f k'
+   NS: Yes, override is a keyword. Only because it is a keyword in F#,
+   and since we (plan to) codegen to F# and Caml, unless we mangle
+   names, we inherit their keywords.
+
+val override : ('a -> Tot 'b) -> 'a -> 'b -> 'a -> Tot 'b
+ *)
+
+val my_override : ('a -> Tot 'b) -> 'a -> 'b -> Tot ('a -> Tot 'b)
+let my_override f k x = 
+  let z = () in  (* NS: TODO, fix ugly syntax *)
+  fun k' -> if k = k' then x else f k'
 
 val fmostlytrue : int -> Tot bool
-let fmostlytrue = my_override (my_override ftrue 1 false) 3 false
+let fmostlytrue x = my_override (my_override ftrue 1 false) 3 false x
 
 (* CH: these fail, too higher order? *)
+(* NS: Not any more ... need to make currying explicit *)
 val override_example1 : unit -> Fact unit
       (ensures (fmostlytrue 0 = true))
 let override_example1 () = ()
@@ -398,7 +409,7 @@ val exp : 'a:Type
      -> 'a 
      -> 'a
 let exp n m f x = 
-  let n' = m n in (* TODO: I should just allow you to write (m n f x) *)
+  let n' = m n in (* NS TODO: fix ugly syntax. I should just allow you to write (m n f x) *)
   n' f x
 
 
