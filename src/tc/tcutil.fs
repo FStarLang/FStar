@@ -478,7 +478,7 @@ let bind env e1opt (c1:comp) ((b, c2):comp_with_binder) : comp =
       | None -> "none"
       | Some (Env.Binding_var(x, _)) -> Print.strBvd x
       | _ -> "??" in
-    Util.fprint3 "Before lift: Making bind c1=%s\nb=%s\t\tc2=%s" (Print.comp_typ_to_string c1) bstr (Print.comp_typ_to_string c2));
+    Util.fprint3 "Before lift: Making bind c1=%s\nb=%s\t\tc2=%s\n" (Print.comp_typ_to_string c1) bstr (Print.comp_typ_to_string c2));
   let try_simplify () = 
     let aux () = 
         if Util.is_trivial_wp c1
@@ -494,7 +494,7 @@ let bind env e1opt (c1:comp) ((b, c2):comp_with_binder) : comp =
         else None in
     match e1opt, b with 
         | Some e, Some (Env.Binding_var(x,_)) -> 
-            if Util.is_total_comp c1 
+            if Util.is_total_comp c1 && not (Syntax.is_null_bvd x)
             then Some <| Util.subst_comp [Inr(x, e)] c2
             else aux ()
         | _ -> aux () in
@@ -597,7 +597,8 @@ let weaken_precondition env c f = match f with
       mk_comp md res_t wp wlp c.flags
 
 let bind_cases env (res_t:typ) (cases:list<(formula * comp)>) : comp =
-  (if List.length cases = 0 then failwith "Empty cases!"); (* TODO: Fix precedence of semi colon *)
+    if List.length cases = 0 then failwith "Empty cases!"; (* TODO: Fix precedence of semi colon *)
+    if debug env Options.Extreme then Util.fprint1 "bind_cases, res_t is %s\n" (Print.typ_to_string res_t);
     let ifthenelse md res_t g wp_t wp_e = mk_Typ_app(md.if_then_else, [targ res_t; targ g; targ wp_t; targ wp_e]) wp_t.tk (Range.union_ranges wp_t.pos wp_e.pos) in
     let default_case = 
         let post_k = mk_Kind_arrow([null_v_binder res_t], ktype) res_t.pos in

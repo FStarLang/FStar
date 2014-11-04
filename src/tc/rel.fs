@@ -872,10 +872,25 @@ and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist
     if Util.physical_equality t1 t2 then solve top env probs else
     let t1 = compress env probs.subst t1 in
     let t2 = compress env probs.subst t2 in 
-    if debug env Options.Medium then Util.fprint1 "Attempting:\n%s\n" (prob_to_string env (TProb(rel, t1, t2)));
+    if Util.physical_equality t1 t2 then solve top env probs else
+    let _ = if debug env Options.Medium then Util.fprint1 "Attempting:\n%s\n" (prob_to_string env (TProb(rel, t1, t2))) in
 //    printfn "Tag t1 = %s, t2 = %s" (Print.tag_of_typ t1) (Print.tag_of_typ t2);
     if Util.physical_equality t1 t2 then solve top env probs else
     let r = Env.get_range env in
+    let solve_and_close top env binders subprobs probs p = 
+        let sol = match p with 
+            | TProb(rel, t1, t2) -> solve_t top env rel t1 t2 empty_worklist 
+            | CProb(rel, c1, c2) -> solve_c top env rel c1 c2 empty_worklist
+            | _ -> failwith "impos" in
+        begin match sol with 
+            | Success (subst, guard_f) -> 
+                let probs = extend_subst' subst probs |> guard env false (close_guard binders guard_f) in
+                solve false env (attempt subprobs probs)
+
+            | Failed reasons -> 
+                giveup env "Failed on goal: " p probs
+        end in 
+
     match t1.n, t2.n with
       | Typ_ascribed(t, _), _
       | Typ_meta(Meta_pattern(t, _)), _ 
@@ -908,11 +923,16 @@ and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist
             then curry_fun l2 bs1 c1, (bs2, c2) 
             else (bs1, c1), curry_fun l1 bs2 c2 in
         solve_binders env bs1 bs2 rel (TProb(rel, t1, t2)) probs
-        (fun subst subprobs -> solve false env (attempt (CProb((if !Options.verify then EQ else rel), c1, Util.subst_comp subst c2)::subprobs) probs))
+        (fun subst subprobs -> 
+            let c2 = Util.subst_comp subst c2 in
+            let rel = if !Options.verify then EQ else rel in
+            solve_and_close false env bs1 subprobs probs (CProb(rel, c1, c2)))
 
       | Typ_lam(bs1, t1'), Typ_lam(bs2, t2') -> 
         solve_binders env bs1 bs2 rel (TProb(rel, t1, t2)) probs
         (fun subst subprobs -> solve false env (attempt (TProb(rel, t1', Util.subst_typ subst t2')::subprobs) probs))
+        //NS: Why not close? TODO ... something fishy to resolve here. Closing it produces strange VCs
+        //(fun subst subprobs -> solve_and_close false env bs1 subprobs probs (TProb(rel, t1', Util.subst_typ subst t2')))
 
       | Typ_refine(x1, phi1), Typ_refine(x2, phi2) -> 
         let x1 = v_binder x1 in
@@ -920,18 +940,8 @@ and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist
         solve_binders env [x1] [x2] rel (TProb(rel, t1, t2)) probs 
         (fun subst subprobs -> 
             match rel with
-               | EQ -> 
-                 let sol = solve_t false env EQ phi1 (Util.subst_typ subst phi2) empty_worklist  in
-                 begin match sol with 
-                    | Success (subst, guard_f) -> 
-                      let probs = extend_subst' subst probs |> guard env false (close_guard [x1] guard_f) in
-                      solve false env (attempt subprobs probs)
+               | EQ -> solve_and_close false env [x1] subprobs probs (TProb(EQ, phi1, Util.subst_typ subst phi2))
 
-                    | Failed reasons -> 
-                      giveup env "Failed to prove equality of refinement predicates" (TProb(EQ, phi1, phi2)) probs
-                  end
-
-               //solve false env (attempt (TProb(rel, phi1, Util.subst_typ subst phi2)::subprobs) probs)
                | SUB -> (* but if either phi1 or phi2 are patterns, why not solve it by equating? *)
                 let g = NonTrivial <| mk_Typ_lam([x1], Util.mk_imp phi1 (Util.subst_typ subst phi2)) (mk_Kind_arrow([x1], ktype) r) r in
                 let probs = guard env top g probs in

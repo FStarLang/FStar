@@ -498,6 +498,8 @@ and tc_value env e : exp * comp =
 
     let tfun_opt, bs, c_opt, envbody, g = expected_function_typ (Tc.Env.expected_typ env) in
     let body, cbody = tc_exp envbody body in 
+    if Env.debug env Options.Medium
+    then Util.fprint2 "!!!!!!!!!!!!!!!body %s has type %s\n" (Print.exp_to_string body) (Print.comp_typ_to_string cbody);
     let body, _, guard = check_expected_effect envbody c_opt (body, cbody) in
     Tc.Util.discharge_guard envbody (Rel.conj_guard g guard);
     let tfun = match tfun_opt with 
@@ -783,17 +785,12 @@ and tc_exp env e : exp * comp =
         let res_t = Tc.Rel.new_tvar top.pos (Env.t_binders env) ktype |> fst in
         Env.set_expected_typ env res_t, res_t in
     let guard_x = Util.new_bvd (Some <| e1.pos) in
-//    let _ = if debug env then printfn "New guard exp %s\n" (Print.strBvd guard_x) in
     let t_eqns = eqns |> List.map (tc_eqn guard_x (Util.comp_result c1) env_branches) in
     let c_branches = 
       let cases = List.fold_right (fun (_, f, c) caccum -> 
-//        if debug env Options.Extreme then  Util.fprint3 "(%s) branch:\n\tguard= %s\n\tcomp= %s" 
-//                                  (Range.string_of_range top.pos) 
-//                                  (match f with None -> "None" | Some f -> Print.typ_to_string f)
-//                                  (Print.comp_typ_to_string c);
         (f, c)::caccum) t_eqns [] in 
       Tc.Util.bind_cases env res_t cases in (* bind_cases adds an exhaustiveness check *)
-    if debug env Options.Extreme then Util.fprint3 "(%s) comp\n\tscrutinee: %s\n\tbranches: %s" (Range.string_of_range top.pos) (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c_branches);
+    if debug env Options.Extreme then Util.fprint3 "(%s) comp\n\tscrutinee: %s\n\tbranches: %s\n" (Range.string_of_range top.pos) (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c_branches);
     let cres = Tc.Util.bind env (Some e1) c1 (Some <| Env.Binding_var(guard_x, Util.comp_result c1), c_branches) in
     w cres <| mk_Exp_match(e1, List.map (fun (f, _, _) -> f) t_eqns), cres
 
