@@ -719,21 +719,23 @@ let maybe_instantiate env e t =
 (**************************************************************************************)
 (* Calling the solver *)
 (**************************************************************************************)
-let solve env f = 
-    let ok, errs = env.solver.solve env f in
-    if not ok then begin
-      Tc.Errors.report (Tc.Env.get_range env)
-                       (Tc.Errors.failed_to_prove_specification errs)
-    end
-
-let discharge_guard env g = 
-    if not (!Options.verify) then ()
-    else match g with 
-        | Trivial -> ()
+let try_solve env f = env.solver.solve env f 
+let report env errs = 
+    Tc.Errors.report (Tc.Env.get_range env)
+                     (Tc.Errors.failed_to_prove_specification errs)
+    
+let try_discharge_guard env g = 
+   if not (!Options.verify) then true, []
+   else match g with 
+        | Trivial -> true, []
         | NonTrivial vc -> 
             let vc = Normalize.norm_typ [Delta; Beta; Eta] env vc in
             if Tc.Env.debug env Options.High then Tc.Errors.diag (Tc.Env.get_range env) (Util.format1 "Checking VC=\n%s\n" (Print.formula_to_string vc));
-            solve env vc
+            try_solve env vc
+
+let discharge_guard env g = 
+    let ok, errs = try_discharge_guard env g in
+    if not ok then report env errs
 
 (**************************************************************************************)
 (* Generalizing types *)
@@ -789,7 +791,7 @@ let gen env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
                   let binder = [null_v_binder t] in
                   let post = mk_Typ_lam(binder, Util.ftv Const.true_lid ktype) (mk_Kind_arrow(binder, ktype) t.pos) t.pos in
                   let vc = Normalize.norm_typ [Delta; Beta] env (syn wp.pos ktype <| mk_Typ_app(wp, [targ post])) in
-                  solve env vc 
+                  discharge_guard env (NonTrivial vc)
                end;
                uvs, e, c) in 
 
@@ -842,17 +844,23 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp =
           let eq_ret = strengthen_precondition (Some reason) (Env.set_range env e.pos) cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
           let c = bind env (Some e) (mk_Comp ct) (Some(Env.Binding_var(x, tc)), eq_ret) in
           Some(e, c) in
-
   let must = function 
     | Some ec -> ec
     | None -> subtype_fail env (Util.comp_result c) t in
-
-
   match aux e c with
     | None -> (* before giving up, try again after generalizing the type of e, if possible *)
       begin match gen env [e,c] with 
         | Some ([(e,c)]) -> aux e c |> must
         | _ -> Rel.subtype_fail env (Util.comp_result c) t
       end
-
     | Some ec -> ec
+
+let check_total env c : bool * list<string> = 
+  if Util.is_total_comp c 
+  then true, []
+  else
+      let steps = [Normalize.Beta; Normalize.SNComp] in
+      let c = Tc.Normalize.norm_comp steps env c in
+      match Tc.Rel.sub_comp env c (Util.total_comp (Util.comp_result c) (Env.get_range env)) with 
+        | Some g -> try_discharge_guard env g 
+        | _ -> false, []

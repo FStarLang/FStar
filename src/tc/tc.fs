@@ -816,6 +816,12 @@ and tc_exp env e : exp * comp =
     let c1 = Tc.Util.strengthen_precondition (Some Errors.ill_kinded_type) (Env.set_range env t.pos) c1 f in
     begin match x with 
         | Inr _ -> (* top-level let, always ends with e2=():unit *)
+          begin if !Options.verify
+                then let ok, errs = Tc.Util.check_total env c1 in
+                     if not ok 
+                     then Tc.Errors.report (range_of_lbname x)
+                                           (Tc.Errors.top_level_effect errs)
+          end;
           let _, e1, c1 = if env.generalize 
                           then List.hd <| Tc.Util.generalize env1 [x, e1, c1] (* only generalize top-level lets, when there is no val decl *)
                           else x, e1, c1 in

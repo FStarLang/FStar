@@ -186,8 +186,9 @@ boot: $(BOOT_ALL)
 	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug_level Low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
 test: boot
-	-make -s -C ../examples/unit-tests all-lax all-ver 
-	@echo "--------Expect 17 errors--------------"
+	make -s -C ../examples/unit-tests all-lax 
+	-make -s -C ../examples/unit-tests all-ver 
+	@echo "--------Expect 19 errors--------------"
 
 test.diff:
 	@make -s test | grep -v "^make\[" > .test.out
