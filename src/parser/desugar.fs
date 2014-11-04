@@ -523,8 +523,8 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       setpos <| mk_Exp_meta(Meta_desugared(desugar_exp env (mk_term (Let(false, [(mk_pattern PatWild t1.range,t1)], t2)) top.range Expr), 
                               Sequence))
         
-    | Let(b, ((pat, _snd)::_tl), body) -> 
-      let ds_app_pat () = 
+    | Let(is_rec, ((pat, _snd)::_tl), body) -> 
+      let ds_let_rec () = 
         let bindings = (pat, _snd)::_tl in
         let funs = bindings |> List.map (fun (p, def) ->
           let p, def = if is_app_pattern p
@@ -550,10 +550,10 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
           let def = mk_term (un_curry_abs args def) top.range top.level in
           //let _ = Util.fprint1 "Desugaring let binding: %s\n" (AST.term_to_string def) in
           desugar_exp env def in
-        let defs = funs |> List.map (desugar_one_def (if b then env' else env)) in
+        let defs = funs |> List.map (desugar_one_def (if is_rec then env' else env)) in
         let lbs = List.map2 (fun lbname def -> (lbname, tun, def)) fnames defs in
         let body = desugar_exp env' body in
-        pos <| mk_Exp_let((b, lbs), body) in
+        pos <| mk_Exp_let((is_rec, lbs), body) in
 
       let ds_non_rec pat t1 t2 =
         let t1 = desugar_exp env t1 in
@@ -572,11 +572,9 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
             pos <| mk_Exp_let((false, [(Inl x, t, t1)]), body)
         end in
 
-      if is_app_pattern pat 
-      then ds_app_pat ()
-      else if not b 
-      then ds_non_rec pat _snd body
-      else error "Unexpected term" top top.range
+      if is_rec || is_app_pattern pat
+      then ds_let_rec()
+      else ds_non_rec pat _snd body
       
     | If(t1, t2, t3) ->
       pos <| mk_Exp_match(desugar_exp env t1,
