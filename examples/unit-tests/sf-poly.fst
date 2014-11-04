@@ -153,13 +153,9 @@ let rec index l n =
  *)
 val prod_curry : (('a * 'b) -> Tot 'c) -> Tot ('a -> 'b -> Tot 'c)
 let prod_curry f x y =  f (x,y)
-  (* let z = () in  (\* NS TODO: fix ugly syntax *\) *)
-  (* fun x y -> f (x,y) *)
 
 val prod_uncurry : ('a -> 'b -> Tot 'c) -> Tot (('a * 'b) -> Tot 'c)
-let prod_uncurry f = 
-  let z = () in (* NS TODO: fix ugly syntax *)
-  fun xy -> f (fst xy) (snd xy)
+let prod_uncurry f xy = f (fst xy) (snd xy)
 
 val test_prod_curry: f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Fact unit
       (ensures ((prod_uncurry f) (x, y) = f x y))
@@ -302,9 +298,7 @@ val override : ('a -> Tot 'b) -> 'a -> 'b -> 'a -> Tot 'b
  *)
 
 val my_override : ('a -> Tot 'b) -> 'a -> 'b -> Tot ('a -> Tot 'b)
-let my_override f k x = 
-  let z = () in  (* NS: TODO, fix ugly syntax *)
-  fun k' -> if k = k' then x else f k'
+let my_override f k x k' = if k = k' then x else f k'
 
 val fmostlytrue : int -> Tot bool
 let fmostlytrue x = my_override (my_override ftrue 1 false) 3 false x
@@ -353,9 +347,7 @@ let rec fold_length_named_correct l =
 (* NS: But, with named functions, you have to explicitly closure-convert ...
        and the closure arguments have to be explicitly curried ... yuck *)
 val fcons : ('a -> Tot 'b) -> Tot ('a -> list 'b -> Tot (list 'b))
-let fcons f =
-  let ugly = () in  (* TODO: fix notation *)
-  fun x l -> f x :: l
+let fcons f x l = f x :: l
 
 val fold_map_named : ('a->Tot 'b) -> list 'a -> Tot (list 'b)
 let fold_map_named f l= fold (fcons f) l []

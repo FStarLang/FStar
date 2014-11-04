@@ -542,7 +542,7 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
                     if nformals < List.length bs && Util.is_total_comp c (* explicit currying *)
                     then let bs0, rest = Util.first_N nformals bs in 
                          let e = mk_Exp_abs(bs0, mk_Exp_abs(rest, body) (Util.comp_result c) body.pos) t e0.pos in
-                         Util.fprint1 "Explicitly currying %s\n" (Print.exp_to_string e);
+                         //Util.fprint1 "Explicitly currying %s\n" (Print.exp_to_string e);
                          encode_exp e env
                     else let vars, _, envbody, decls, _ = encode_binders bs env in 
                          let app = mk_ApplyE lam vars in
@@ -1112,7 +1112,18 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let (f, ftok), decls, env = declare_top_level_let env flid t1 in
         let e = Util.compress_exp e in
         let binders, body = match e.n with
-            | Exp_abs(binders, body) -> binders, body 
+            | Exp_abs(binders, body) -> 
+                let t1 = Util.compress_typ t1 in
+                begin match t1.n with 
+                 | Typ_fun(bs', c) -> 
+                    let nformals = List.length bs' in
+                    if nformals < List.length binders && Util.is_total_comp c (* explicit currying *)
+                    then let bs0, rest = Util.first_N nformals binders in 
+                         let body = mk_Exp_abs(rest, body) (Util.comp_result c) body.pos in
+                         bs0, body
+                    else binders, body
+                 | _ -> binders, body
+                end
             | _ -> [], e in
         let vars, guards, env', binder_decls, _ = encode_binders binders env in
         let app = if !Options.z3_optimize_full_applications 
@@ -1152,7 +1163,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       let rec doit () =     
          try
           match (Util.compress_exp e).n with 
-            | Exp_abs(binders, body) -> 
+            | Exp_abs(binders, body) -> (* TODO: what about explicit currying for recursive functions? *)
                 begin match (Util.unmeta_exp body).n with 
                     | Exp_match(scrutinee, cases) -> 
                           let cases = flatten_disjuncts cases in
