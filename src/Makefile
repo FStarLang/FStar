@@ -188,7 +188,7 @@ boot: $(BOOT_ALL)
 test: boot
 	make -s -C ../examples/unit-tests all-lax 
 	-make -s -C ../examples/unit-tests all-ver 
-	@echo "--------Expect 19 errors--------------"
+	@echo "--------Expect 17 errors--------------"
 
 test.diff:
 	@make -s test | grep -v "^make\[" > .test.out

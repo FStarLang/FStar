@@ -35,6 +35,7 @@ let steps =
     if !Options.verify then 
     [Normalize.Beta; Normalize.SNComp]
     else [Normalize.Beta] 
+let whnf env t = Tc.Normalize.norm_typ [Normalize.WHNF; Normalize.DeltaHard; Normalize.Beta] env t
 let norm_t env t = Tc.Normalize.norm_typ steps env t
 let norm_k env k = Tc.Normalize.norm_kind steps env k
 let norm_c env c = Tc.Normalize.norm_comp steps env c
@@ -442,7 +443,7 @@ and tc_value env e : exp * comp =
                   
                     | [], _ -> (* the expected type is explicitly curried *)
                         if Util.is_total_comp c 
-                        then match (Util.compress_typ (Util.comp_result c)).n with
+                        then match (Util.comp_result c |> whnf env).n with
                             | Typ_fun(bs_annot, c') ->  tc_binders(out, env, g, subst) bs_annot c' bs
                             | _ -> fail None t
                         else fail None t
@@ -492,7 +493,7 @@ and tc_value env e : exp * comp =
 
                 | _ -> (* expected type is not a function; try normalizing it before giving up *)
                   if not norm
-                  then as_function_typ true (Normalize.normalize env t) 
+                  then as_function_typ true (whnf env t) 
                   else fail None t in
            as_function_typ false t in
 
@@ -819,8 +820,7 @@ and tc_exp env e : exp * comp =
           begin if !Options.verify
                 then let ok, errs = Tc.Util.check_total env c1 in
                      if not ok 
-                     then Tc.Errors.report (range_of_lbname x)
-                                           (Tc.Errors.top_level_effect errs)
+                     then raise (Error(Tc.Errors.top_level_effect errs, Tc.Env.get_range env))
           end;
           let _, e1, c1 = if env.generalize 
                           then List.hd <| Tc.Util.generalize env1 [x, e1, c1] (* only generalize top-level lets, when there is no val decl *)
