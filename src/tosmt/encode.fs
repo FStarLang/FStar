@@ -470,7 +470,7 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
                 
             | Typ_const fv -> 
               let args, vars, decls = encode_args args env in
-              if is_full_app () && !Options.z3_optimize_full_applications
+              if is_full_app () 
               then let head = lookup_free_tvar_name env fv in
                    let t = Term.mkApp(head, List.map (function Inl t | Inr t -> t) args) in
                    t, vars, decls
@@ -580,19 +580,16 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
         let head = Util.compress_exp head in
         begin match head.n with 
             | Exp_fvar(fv, _) -> 
-                if not <| !Options.z3_optimize_full_applications
-                then encode_partial_app()
-                else
-                    (match Util.function_formals head.tk with 
-                        | None -> failwith (Util.format3 "(%s) term is %s; head type is %s\n" 
-                                           (Range.string_of_range e0.pos) (Print.exp_to_string e0) (Print.typ_to_string e.tk))
-                        | Some (formals, _) -> 
-                          if List.length formals = List.length args
-                          then encode_full_app fv
-                          else (if Tc.Env.debug env.tcenv Options.Low then Util.fprint2 "(%s) %s is not a full application!\n" 
-                                    (Range.string_of_range e0.pos)
-                                    (Print.exp_to_string e0);
-                                encode_partial_app ()))
+                (match Util.function_formals head.tk with 
+                    | None -> failwith (Util.format3 "(%s) term is %s; head type is %s\n" 
+                                        (Range.string_of_range e0.pos) (Print.exp_to_string e0) (Print.typ_to_string e.tk))
+                    | Some (formals, _) -> 
+                        if List.length formals = List.length args
+                        then encode_full_app fv
+                        else (if Tc.Env.debug env.tcenv Options.Low then Util.fprint2 "(%s) %s is not a full application!\n" 
+                                (Range.string_of_range e0.pos)
+                                (Print.exp_to_string e0);
+                            encode_partial_app ()))
             | _ ->
                 if Tc.Env.debug env.tcenv Options.Low then Util.fprint2 "(%s) %s is not a full application!\n" 
                     (Range.string_of_range e0.pos)
@@ -940,14 +937,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let vars, guards, env', binder_decls, _ = encode_binders tps env in
         let tok_app = mk_ApplyT ttok vars in
         let tok_decl = Term.DeclFun(Term.freeV_sym ttok, [], Type_sort, None) in
-        let app, decls = 
-            if !Options.z3_optimize_full_applications 
-            then let app = mkApp(tname, List.map mkBoundV vars) in
-                 let decls = [Term.DeclFun(tname, List.map snd vars, Type_sort, None);
-                              tok_decl;
-                              Term.Assume(mkForall([tok_app], vars, mkEq(tok_app, app)), Some "name-token correspondence")] in
-                 app, decls 
-            else tok_app, [tok_decl] in
+        let app = mkApp(tname, List.map mkBoundV vars) in
+        let decls = [Term.DeclFun(tname, List.map snd vars, Type_sort, None);
+                    tok_decl;
+                    Term.Assume(mkForall([tok_app], vars, mkEq(tok_app, app)), Some "name-token correspondence")] in
         let def, (body, ex_vars, decls1) = 
             if tags |> Util.for_some (function Logic -> true | _ -> false) (* REVIEW: This code is dead, given the previous pattern *)
             then mk_Valid app, (let f, decls = encode_formula t env' in f, [], decls)
@@ -971,9 +964,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let constructor_or_logic_type_decl c = 
             if quals |> Util.for_some (function Logic -> true | _ -> false) 
             then let name, args, _, _ = c in 
-                if !Options.z3_optimize_full_applications
-                then [Term.DeclFun(name, args |> List.map snd, Type_sort, None)]
-                else [Term.DeclFun(name, [], Type_sort, None)]
+                 [Term.DeclFun(name, args |> List.map snd, Type_sort, None)]
             else constructor_to_decl c in
  
         let inversion_axioms tapp vars = 
@@ -999,21 +990,17 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             | _ -> [], k in
         let vars, guards, env', binder_decls, _ = encode_binders formals env in
         let guard = mk_and_l guards in
-        let decls, tapp, env =
-            if !Options.z3_optimize_full_applications
-            then let tname_decl = constructor_or_logic_type_decl(tname, vars, Type_sort, varops.next_id()) in
-                 let tapp = Term.mkApp(tname, List.map mkBoundV vars) in
-                 let tok_decls, env = match vars with 
-                    | [] -> [], push_free_tvar env t tname (mkFreeV(tname, Type_sort)) 
-                    | _ -> 
-                         let ttok_decl = Term.DeclFun(Term.freeV_sym ttok, [], Type_sort, Some "token") in
-                         let ttok_app = mk_ApplyT ttok vars in 
-                         let name_tok_corr = Term.Assume(mkForall([ttok_app], vars, mkEq(ttok_app, tapp)), Some "name-token correspondence") in
-                         [ttok_decl;name_tok_corr], env in
-                 tname_decl@tok_decls, tapp, env 
-            else let ttok_decl = constructor_or_logic_type_decl (Term.freeV_sym ttok, [], Type_sort, varops.next_id()) in
-                 let ttok_app = mk_ApplyT ttok vars in 
-                 ttok_decl, ttok_app, env in
+        let tapp = Term.mkApp(tname, List.map mkBoundV vars) in
+        let decls, env =
+            let tname_decl = constructor_or_logic_type_decl(tname, vars, Type_sort, varops.next_id()) in
+            let tok_decls, env = match vars with 
+                | [] -> [], push_free_tvar env t tname (mkFreeV(tname, Type_sort)) 
+                | _ -> 
+                        let ttok_decl = Term.DeclFun(Term.freeV_sym ttok, [], Type_sort, Some "token") in
+                        let ttok_app = mk_ApplyT ttok vars in 
+                        let name_tok_corr = Term.Assume(mkForall([ttok_app], vars, mkEq(ttok_app, tapp)), Some "name-token correspondence") in
+                        [ttok_decl;name_tok_corr], env in
+            tname_decl@tok_decls, env in
         let kindingAx = 
             let k, decls = encode_knd res env' tapp in
             decls@[Term.Assume(mkForall([tapp], vars, mkImp(guard, k)), Some "kinding")] in
@@ -1126,9 +1113,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 end
             | _ -> [], e in
         let vars, guards, env', binder_decls, _ = encode_binders binders env in
-        let app = if !Options.z3_optimize_full_applications 
-                  then Term.mkApp(f, List.map mkBoundV vars)
-                  else mk_ApplyE ftok vars in
+        let app = Term.mkApp(f, List.map mkBoundV vars) in
         let body, ex_vars, decls2 = encode_exp body env' in
         let eqn = Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(app, body))), Some (Util.format1 "Equation for %s" flid.str)) in
         decls@binder_decls@decls2@[eqn], env
@@ -1341,10 +1326,10 @@ and encode_free_var env lid t quals =
         let guard = mk_and_l guards in
         let vtok_app = mk_ApplyE vtok vars in
         
-        let vapp, prim, decls2, env =    
-            if !Options.z3_optimize_full_applications
-            then (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
-                let vapp = Term.mkApp(vname, List.map Term.mkBoundV vars) in
+        let vapp = Term.mkApp(vname, List.map Term.mkBoundV vars) in
+        let prim = Inl vname in
+        let decls2, env =    
+              (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                 let vname_decl = Term.DeclFun(vname, formals |> List.map (function Inl _, _ -> Type_sort | _ -> Term_sort), Term_sort, None) in
                 let tok_decl, env = match formals with 
                     | [] -> 
@@ -1357,13 +1342,7 @@ and encode_free_var env lid t quals =
                         let tok_typing = Term.Assume(t, Some "function token typing") in 
                         let name_tok_corr = Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vapp)), None) in
                         decls2@[vtok_decl;name_tok_corr;tok_typing], env in
-                vapp, Inl vname, vname_decl::tok_decl, env
-            else     
-                let t, decls2 = encode_typ_pred t env vtok in
-                let tok_typing = Term.Assume(t, Some "function token typing") in 
-                let tok_decl = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None) in
-                vtok_app, Inr vtok, decls2@[tok_decl;tok_typing], env in
-
+                vname_decl::tok_decl, env in
         let ty_pred, decls3 = encode_typ_pred res env' vapp in
         let typingAx = Term.Assume(mkForall([vapp], vars, mkImp(guard, ty_pred)), None) in
         let g = decls1@decls2@decls3@typingAx::mk_disc_proj_axioms vapp vars@mk_prim lid prim in

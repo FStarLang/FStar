@@ -1074,6 +1074,7 @@ and solve_c (top:bool) (env:Env.env) (rel:rel) (c1:comp) (c2:comp) (probs:workli
 and solve_e (top:bool) (env:Env.env) (rel:rel) (e1:exp) (e2:exp) (probs:worklist) : solution = 
     let e1 = compress_e env probs.subst e1 in 
     let e2 = compress_e env probs.subst e2 in
+    let _ = if debug env Options.Medium then Util.fprint1 "Attempting:\n%s\n" (prob_to_string env (EProb(rel, e1, e2))) in
     match e1.n, e2.n with 
     | Exp_bvar x1, Exp_bvar x1' -> 
       if Util.bvd_eq x1.v x1'.v
@@ -1137,7 +1138,8 @@ and solve_e (top:bool) (env:Env.env) (rel:rel) (e1:exp) (e2:exp) (probs:worklist
           else giveup env "flex-rigid: free variable/occurs check failed" (EProb(rel, e1, e2)) probs
       end
 
-    | _, Exp_uvar _ -> //rigid-flex ... reorient
+    | _, Exp_uvar _ 
+    | _, Exp_app({n=Exp_uvar _}, _) -> //rigid-flex ... reorient
      solve_e top env EQ e2 e1 probs
 
     | _ -> //TODO: check that they at least have the same head? 

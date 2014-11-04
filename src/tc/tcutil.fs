@@ -79,8 +79,13 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
     | Some f -> 
         {e with tk=t2}, apply_guard f e
 
-let new_kvar env   = Rel.new_kvar (Env.get_range env) (Env.binders env)   |> fst
-let new_tvar env t = Rel.new_tvar (Env.get_range env) (Env.binders env) t |> fst
+let env_binders env = 
+    if !Options.full_context_dependency 
+    then Env.binders env
+    else Env.t_binders env
+let new_kvar env   = Rel.new_kvar (Env.get_range env) (env_binders env)   |> fst
+let new_tvar env t = Rel.new_tvar (Env.get_range env) (env_binders env) t |> fst
+let new_evar env t = Rel.new_evar (Env.get_range env) (env_binders env) t |> fst
 
 let destruct_arrow_kind env tt k args : (Syntax.args * binders * knd) = 
     let ktop = compress_kind k |> Normalize.norm_kind [WHNF; Beta; Eta] env in 
@@ -126,17 +131,20 @@ let pat_as_exps env p =
           | Inl a, Inl b -> bvd_eq a.v b.v
           | Inr x, Inr y -> bvd_eq x.v y.v
           | _ -> false in
-     let rec pat_as_args (p:pat) : (list<Env.binding> * list<Env.binding> * list<either<btvar,bvvar>> * list<arg>) =
+     let rec pat_as_args env (p:pat) : (list<Env.binding>                    (* pattern bound variables *)
+                                        * list<Env.binding>                  (* pattern-bound wild variables *)
+                                        * list<either<btvar,bvvar>>          (* the variables in the first field, for checking disjunctive patterns *)
+                                        * list<arg>) =                       (* pattern sub-terms *)
         match p.v with 
            | Pat_dot_term _ -> 
-              let t = new_tvar env ktype in
-              let e = fst <| Rel.new_evar p.p [] t in //TODO: why empty vars?
-              [], [], [], [varg e]
+                let t = new_tvar env ktype in
+                let e = fst <| Rel.new_evar p.p [] t in //TODO: why empty vars?
+                [], [], [], [varg e]
 
            | Pat_dot_typ _ -> 
-             let k = new_kvar env in
-             let t = new_tvar env k in
-             [], [], [], [targ t]
+                let k = new_kvar env in
+                let t = new_tvar env k in
+                [], [], [], [targ t]
 
            | Pat_constant c -> 
                 let e = mk_Exp_constant c tun p.p in
@@ -160,29 +168,34 @@ let pat_as_exps env p =
            | Pat_tvar a ->      
                 let b = Env.Binding_typ(a.v, new_kvar env) in
                 let t = mk_Typ_btvar a kun p.p in
-                [b], [], [], [targ t]
+                [b], [], [Inl a], [targ t]
 
            | Pat_cons(fv, pats) -> 
-               let b, w, o, args = List.fold_right (fun p (b, w, o, args) -> 
-                    let b', w', o', arg = pat_as_arg p in 
-                    b'@b, w'@w, o'@o, arg::args) pats ([], [], [], []) in
-               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar fv.v fv.p, args) tun p.p, Data_app)) in
-               b, w, o, [varg e]
+               let _, b, w, o, args = pats |> List.fold_left (fun (env, b, w, o, args) p -> 
+                    let b', w', o', arg = pat_as_arg env p in 
+                    let env = b' |> List.fold_left Env.push_local_binding env in
+                    env, b'::b, w'::w, o'::o, arg::args) (env, [], [], [], []) in
+
+               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar fv.v fv.p, List.rev args) tun p.p, Data_app)) in
+               List.rev b |> List.flatten, 
+               List.rev w |> List.flatten, 
+               List.rev o |> List.flatten, 
+               [varg e]
 
            | Pat_disj [] -> failwith "impossible"
 
            | Pat_disj (p::pats) -> 
-              let b, w, o, arg = pat_as_arg p in
+              let b, w, o, arg = pat_as_arg env p in
               let w, args = List.fold_right (fun p (w, args) -> 
-                  let _, w', o', arg = pat_as_arg p in
+                  let _, w', o', arg = pat_as_arg env p in
                   if not (Util.multiset_equiv pvar_eq o o')
                   then raise (Error(Tc.Errors.disjunctive_pattern_vars o o', Tc.Env.get_range env))
                   else (w'@w, arg::args)) 
                   pats (w, []) in
               b, w, o, arg::args 
 
-      and pat_as_arg p = 
-        let b, w, o, args = pat_as_args p in
+      and pat_as_arg env p = 
+        let b, w, o, args = pat_as_args env p in
         match o |> Util.find_dup pvar_eq with 
             | Some x -> raise (Error(Tc.Errors.nonlinear_pattern_variable x, p.p))
             | _ ->
@@ -190,7 +203,7 @@ let pat_as_exps env p =
                     | [a] -> b, w, o, a
                     | _ -> failwith "Impossible: nested disjunctive pattern" in
 
-    let b, w, _, args = pat_as_args p in
+    let b, w, _, args = pat_as_args env p in
     let exps = args |> List.map (function 
         | Inl _, _ -> failwith "Impossible: top-level pattern must be an expression"
         | Inr e, _ -> e) in
@@ -369,7 +382,7 @@ let mk_basic_dtuple_type env n =
 
     | _ -> failwith "Impossible" 
 
-let extract_lb_annotation is_rec env t e = match t.n with 
+let extract_lb_annotation (is_rec:bool) env t e = match t.n with 
   | Typ_unknown -> 
     let r = Env.get_range env in
     let mk_t_binder scope a = match a.sort.n with 
@@ -395,14 +408,13 @@ let extract_lb_annotation is_rec env t e = match t.n with
               let bs = bs@[b] in
               let scope = scope@[b] in
               scope, bs
-            | Inr x -> //don't introduce dependent types, if there's no annotation
+            | Inr x -> 
               let b = (Inr (mk_v_binder scope x), snd b) in
+              let scope = if !Options.full_context_dependency then scope@[b] else scope in//don't introduce dependent types, if there's no annotation, by default
               scope, bs@[b]) (vars,[]) in
 
         let e, res = aux scope e in 
-        let c = 
-            if is_rec then Util.ml_comp res r 
-            else (failwith "Building a cvar needlessly!") in//; Rel.new_cvar r (vars@bs) res |> fst) in
+        let c = Util.ml_comp res r in
         let t = mk_Typ_fun(bs, c) ktype e.pos in
         if debug env Options.High then Util.fprint2 "(%s) Using type %s" (Range.string_of_range r) (Print.typ_to_string t);
         mk_Exp_abs(bs, e) e.tk e.pos, t
@@ -680,19 +692,17 @@ let maybe_instantiate env e t =
   if not (env.instantiate_targs && env.instantiate_vargs) then e, t else
   match t.n with 
     | Typ_fun(bs, c) -> 
-      let vars = Env.binders env in 
-      let tvars = vars |> List.filter (function Inl _, _ -> true | _ -> false) in
       let rec aux subst = function 
         | (Inl a, _)::rest -> 
           let k = Util.subst_kind subst a.sort in
-          let t = Rel.new_tvar e.pos tvars k |> fst in
+          let t = new_tvar env k in
           let subst = extend_subst (Inl(a.v, t)) subst in 
           let args, bs, subst = aux subst rest in 
           (Inl t, true)::args, bs, subst  
 
         | (Inr x, true)::rest -> 
           let t = Util.subst_typ subst x.sort in 
-          let v = Rel.new_evar e.pos vars t |> fst in
+          let v = new_evar env t in
           let subst = extend_subst (Inr(x.v, v)) subst in 
           let args, bs, subst = aux subst rest in 
           (Inr v, true)::args, bs, subst

@@ -29,6 +29,7 @@ val t_unit : typ
 val typing_const : env -> sconst -> typ
 val new_kvar : env -> knd          
 val new_tvar : env -> knd -> typ
+val new_evar : env -> typ -> exp
 val check_uvars: Range.range -> typ -> unit
 val check_and_ascribe : env -> exp -> typ -> typ -> exp * Rel.guard_t
 val pat_as_exps: env -> pat -> list<Env.binding> * list<Env.binding> * list<exp>

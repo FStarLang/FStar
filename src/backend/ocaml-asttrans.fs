@@ -685,7 +685,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
         | Struct -> Some (Inr (MLM_Ty aout))
     end
 
-    | Sig_datacon (x, ty, tx, _, rg) when as_tprims tx = Some Exn -> begin
+    | Sig_datacon (x, ty, (tx,_,_), _, rg) when as_tprims tx = Some Exn -> begin
         let rec aux acc ty =
             match (Absyn.Util.compress_typ ty).n with
             | Typ_fun(bs, c) -> 

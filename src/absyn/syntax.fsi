@@ -210,7 +210,8 @@ type qualifier =
   | RecordConstructor of list<ident>                 (* unmangled field names *)
   | ExceptionConstructor
   | Effect 
- 
+
+type tycon = lident * binders * knd
 type monad_abbrev = {
   mabbrev:lident;
   parms:binders;
@@ -245,7 +246,7 @@ type monad_decl = {
 and sigelt =
   | Sig_tycon          of lident * binders * knd * list<lident> * list<lident> * list<qualifier> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
   | Sig_typ_abbrev     of lident * binders * knd * typ * list<qualifier> * Range.range 
-  | Sig_datacon        of lident * typ * lident * list<qualifier> * Range.range  (* second lident is the name of the type this constructs *)
+  | Sig_datacon        of lident * typ * tycon * list<qualifier> * Range.range  (* second lident is the name of the type this constructs *)
   | Sig_val_decl       of lident * typ * list<qualifier> * Range.range 
   | Sig_assume         of lident * formula * list<qualifier> * Range.range 
   | Sig_let            of letbindings * Range.range * list<lident>

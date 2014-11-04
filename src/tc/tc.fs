@@ -164,8 +164,7 @@ let rec tc_kind env k : knd * guard_t =
     w <| mk_Kind_arrow(bs, k), Rel.conj_guard g f
 
   | Kind_unknown -> 
-    let tvars = Env.t_binders env in
-    Tc.Rel.new_kvar k.pos tvars |> fst, Trivial
+    Tc.Util.new_kvar env, Trivial
 
 and tc_vbinder env x = 
     let t, g = tc_typ_check env x.sort ktype in
@@ -343,9 +342,8 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     mk_Typ_meta(Meta_pattern(quant, pats)), quant.tk, Rel.conj_guard f g
  
   | Typ_unknown -> 
-    let vars = Env.t_binders env in //by default, depend only on the type variables in scope
-    let k, _ = Rel.new_kvar top.pos vars in
-    let t, _ = Rel.new_tvar top.pos vars k in
+    let k = Tc.Util.new_kvar env in
+    let t = Tc.Util.new_tvar env k in
     t, k, Trivial
 
   | _ -> failwith (Util.format1 "Unexpected type : %s\n" (Print.typ_to_string t)) 
@@ -384,8 +382,8 @@ and tc_value env e : exp * comp =
     value_check_expected_typ env ({e with tk=t}) (Inl t)
 
   | Exp_abs(bs, body) ->  (* This is the dual of the treatment of application ... see the Exp_app case below. *)
-    let fail (_x:option<'a>) (t:typ) : 'a = raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function t top, top.pos)) in
-    let expected_function_typ t0 = match t0 with 
+    let fail : typ -> 'a = fun t -> raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function t top, top.pos)) in
+    let expected_function_typ env t0 = match t0 with 
         | None -> (* no expected type; just build a function type from the binders in the term *)
             let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
             let bs, envbody, g = tc_binders env bs in
@@ -438,15 +436,15 @@ and tc_value env e : exp * comp =
                               let subst = maybe_alpha_subst subst hdannot b in 
                               tc_binders (b::out, env, g, subst) tl_annot c tl 
 
-                            | _ -> fail None t
+                            | _ -> fail t
                       end
                   
                     | [], _ -> (* the expected type is explicitly curried *)
                         if Util.is_total_comp c 
                         then match (Util.comp_result c |> whnf env).n with
                             | Typ_fun(bs_annot, c') ->  tc_binders(out, env, g, subst) bs_annot c' bs
-                            | _ -> fail None t
-                        else fail None t
+                            | _ -> fail t
+                        else fail t
 
                     | _, [] -> (* more expected args; expect the body to return a total function *)
                        let c = Util.total_comp (mk_Typ_fun(bs_annot, c) ktype c.pos) c.pos in
@@ -485,7 +483,7 @@ and tc_value env e : exp * comp =
                           (l, t)
                         | _ -> failwith "Impossible") in
                      letrecs |> List.fold_left (fun env (x,t) -> Env.push_local_binding env (binding_of_lb x t)) env in
-
+                
                  let bs, envbody, g, c = tc_binders ([], env, Trivial, []) bs' c bs in
                  let envbody = if !Options.verify then mk_letrec_environment bs envbody else envbody in
                  let envbody = Tc.Env.set_expected_typ envbody (Util.comp_result c) in
@@ -494,10 +492,11 @@ and tc_value env e : exp * comp =
                 | _ -> (* expected type is not a function; try normalizing it before giving up *)
                   if not norm
                   then as_function_typ true (whnf env t) 
-                  else fail None t in
+                  else fail t in
            as_function_typ false t in
 
-    let tfun_opt, bs, c_opt, envbody, g = expected_function_typ (Tc.Env.expected_typ env) in
+    let env, topt = Tc.Env.clear_expected_typ env in
+    let tfun_opt, bs, c_opt, envbody, g = expected_function_typ env topt in
     let body, cbody = tc_exp envbody body in 
     if Env.debug env Options.Medium
     then Util.fprint2 "!!!!!!!!!!!!!!!body %s has type %s\n" (Print.exp_to_string body) (Print.comp_typ_to_string cbody);
@@ -650,14 +649,13 @@ and tc_exp env e : exp * comp =
           let args, comps = tc_args env args in 
           let bs = null_binders_of_args args in
           let ai = Env.t_binders env in
-          let cres = Util.ml_comp (Rel.new_tvar f.pos ai ktype |> fst) top.pos in
+          let cres = Util.ml_comp (Tc.Util.new_tvar env ktype) top.pos in
           trivial <| Rel.teq env tf (mk_Typ_fun(bs, cres) ktype tf.pos);
           let comp = List.fold_right (fun c out -> Tc.Util.bind env None c (None, out)) (cf::comps) cres in
           mk_Exp_app(f, args) (Util.comp_result comp) top.pos, comp
 
         | Typ_fun(bs, c) -> 
           let vars = Tc.Env.binders env in
-          let tvars = vars |> List.filter (function Inl _, _ -> true | _ -> false) in
           
           let rec tc_args (subst,   (* substituting actuals for formals seen so far, when actual is pure *)
                            outargs, (* type-checked actuals *)
@@ -673,8 +671,8 @@ and tc_exp env e : exp * comp =
               let k = Util.subst_kind subst a.sort in
               fxv_check env (Inl k) fvs;
               let targ = match k.n with 
-                | Kind_type -> fst <| Tc.Rel.new_tvar e.pos tvars k //for base-kinded types, don't depend on values
-                | _ -> fst <| Tc.Rel.new_tvar e.pos vars k in 
+                | Kind_type -> Tc.Util.new_tvar env k       
+                | _ -> fst <| Tc.Rel.new_tvar e.pos vars k in (* TODO: remove case split? *)
               if debug env Options.Extreme then Util.fprint2 "Instantiating %s to %s" (Print.strBvd a.v) (Print.typ_to_string targ);
               let subst = extend_subst (Inl(a.v, targ)) subst in
               let arg = Inl targ, true in
@@ -683,7 +681,7 @@ and tc_exp env e : exp * comp =
             | (Inr x, true)::rest, (_, false)::_ -> (* instantiate an implicit value arg *)
               let t = Util.subst_typ subst x.sort in
               fxv_check env (Inr t) fvs;
-              let varg = (fst <| Tc.Rel.new_evar (argpos <| List.hd args) vars t) in
+              let varg = Tc.Util.new_evar env t in
               let subst = extend_subst (Inr(x.v, varg)) subst in
               let arg = Inr varg, true in
               tc_args (subst, arg::outargs, arg::arg_rets, comps, g, fvs) rest cres args
@@ -783,7 +781,7 @@ and tc_exp env e : exp * comp =
     let env_branches, res_t = match topt with
       | Some t -> env, t
       | None -> 
-        let res_t = Tc.Rel.new_tvar top.pos (Env.t_binders env) ktype |> fst in
+        let res_t = Tc.Util.new_tvar env ktype in
         Env.set_expected_typ env res_t, res_t in
     let guard_x = Util.new_bvd (Some <| e1.pos) in
     let t_eqns = eqns |> List.map (tc_eqn guard_x (Util.comp_result c1) env_branches) in
@@ -914,7 +912,9 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
     let exps = exps |> List.map (fun e -> 
         let e, t = no_guard env1 <| tc_total_exp env1 e in
         //printfn "Trying pattern subtype %s <: %s" (Print.typ_to_string pat_t) (Print.typ_to_string t);
-        Tc.Rel.trivial_subtype env1 None pat_t t; //the type of the pattern must be at least as general as the type of the scrutinee
+        (match Tc.Rel.try_subtype env1 pat_t t with
+            | None -> Tc.Rel.subtype_fail env1 pat_t t
+            | Some _ -> ());//the type of the pattern must be pre-compatible with the type of the scrutinee
         e) in
     let p = Tc.Util.decorate_pattern p exps in
     p, bindings@w, pat_env, exps in
@@ -929,8 +929,6 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
         | Some w -> Some <| Util.mk_eq w Const.exp_true_bool in
   let branch, c = tc_exp pat_env branch in
   let scrutinee = Util.bvd_to_exp scrutinee_x pat_t in
-  let scrutinee_binder = [v_binder <| bvd_to_bvar_s scrutinee_x pat_t] in
-  let close_guard t = mk_Typ_lam(scrutinee_binder, t) (mk_Kind_arrow(scrutinee_binder, t.tk) t.pos) t.pos in
   let scrutinee_env, _ = Env.push_local_binding env (Env.Binding_var(scrutinee_x, pat_t)) |> Tc.Env.clear_expected_typ in
   let c = 
     let eqs = disj_exps |> List.fold_left (fun fopt e -> 
@@ -973,7 +971,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
                 | Inr ei ->
                     let projector = Tc.Env.lookup_projector env f.v i in
                     let sub_term = mk_Exp_app(Util.fvar projector f.p, [varg scrutinee]) tun f.p in
-                    let sub_term, _ = no_guard scrutinee_env <| tc_total_exp scrutinee_env sub_term in
+                    let sub_term, _, _ = tc_total_exp scrutinee_env sub_term in
                     [mk_guard sub_term ei]) |> List.flatten in
             Util.mk_conj_l (head::sub_term_guards)
           | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range pat_exp.pos) (Print.exp_to_string pat_exp)) in
@@ -1179,7 +1177,8 @@ and tc_decl env se = match se with
       let env = Tc.Env.push_sigelt env se in 
       se, env
   
-    | Sig_datacon(lid, t, tname, quals, r) -> 
+    | Sig_datacon(lid, t, tycon, quals, r) -> 
+      let tname, _, _  = tycon in
       let env = Tc.Env.set_range env r in
       let t = tc_typ_check_trivial env t ktype in
       let t = norm_t env t in  
@@ -1192,7 +1191,7 @@ and tc_decl env se = match se with
         | Some _ -> ()
         | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type (Util.fvar lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
       let t = Tc.Util.refine_data_type env lid formals result_t in
-      let se = Sig_datacon(lid, t, tname, quals, r) in 
+      let se = Sig_datacon(lid, t, tycon, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
       if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Print.typ_to_string t);
       se, env
@@ -1326,6 +1325,7 @@ let check_modules (s:solver_t) mods =
     s.push msg;
     let m, env = tc_modul env m in 
     s.pop msg;
+    if Options.should_dump m.name.str then Util.fprint1 "%s\n" (Print.modul_to_string m);
     if m.is_interface  //TODO: admit interfaces to the solver also
     then mods, env
     else (s.encode_modul env m; m::mods, env)) ([], env) in
