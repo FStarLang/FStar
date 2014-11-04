@@ -1246,7 +1246,8 @@ and tc_decl env se = match se with
     | Sig_main(e, r) ->
       let env = Tc.Env.set_range env r in
       let env = Tc.Env.set_expected_typ env Util.t_unit in
-      let e, _ = tc_exp env e in 
+      let e, _, g = check_expected_effect env (Some (Util.ml_comp Util.t_unit r)) (tc_exp env e) in
+      Tc.Util.discharge_guard env g;
       let se = Sig_main(e, r) in 
       let env = Tc.Env.push_sigelt env se in 
       se, env
