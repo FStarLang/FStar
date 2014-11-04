@@ -1144,8 +1144,9 @@ and solve_e (top:bool) (env:Env.env) (rel:rel) (e1:exp) (e2:exp) (probs:worklist
      solve top env (guard env top (NonTrivial <| Util.mk_eq e1 e2) probs)  
           
 let explain env d = 
-    d |> List.iter (fun (_, p, reason) -> 
-        Util.fprint2 "Problem:\n%s\nFailed because: %s\n" (prob_to_string env p) reason)
+    if debug env Options.Low
+    then  d |> List.iter (fun (_, p, reason) -> 
+                    Util.fprint2 "Problem:\n%s\nFailed because: %s\n" (prob_to_string env p) reason)
 
 let solve_and_commit env top_t prob err = 
   let sol = solve true env (singleton prob top_t) in
@@ -1185,13 +1186,14 @@ let try_subtype env t1 t2 =
  then Util.fprint2 "try_subtype succeeded: %s <: %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
  g
 
+let subtype_fail env t1 t2 = 
+    raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env))
+
 let subtype env t1 t2 : guard_t = 
   if debug env Low then Util.fprint1 "(%s) Subtype test \n" (Range.string_of_range <| Env.get_range env);
   match try_subtype env t1 t2 with
     | Some f -> f
-    | None -> 
-         Util.fprint2 "Incompatible types %s\nand %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
-         raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env))
+    | None -> subtype_fail env t1 t2
 
 let trivial_subtype env eopt t1 t2 = 
   let f = try_subtype env t1 t2 in 

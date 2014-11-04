@@ -804,7 +804,7 @@ and tc_exp env e : exp * comp =
             Trivial, env1 
         | _ -> 
             if top_level && not (env.generalize)
-            then Trivial, Tc.Env.set_expected_typ env1 t //t has already be kind-checked
+            then Trivial, Tc.Env.set_expected_typ env1 t //t has already been kind-checked
             else let _ = if debug env Options.Low then Util.fprint2 "(%s) Checking type annotation %s\n" (Range.string_of_range top.pos) (Print.typ_to_string t) in
                  let t, f = tc_typ_check env1 t ktype in
                  if debug env Options.Medium then Util.fprint2 "(%s) Checked type annotation %s\n" (Range.string_of_range top.pos) (Print.typ_to_string t);
@@ -1216,14 +1216,13 @@ and tc_decl env se = match se with
           | (Inl _, _, _) -> failwith "impossible"
           | (Inr l, t, e) -> 
             let gen, (lb, t, e) = match Tc.Env.try_lookup_val_decl env l with 
-              | None -> gen, lb //                let t = Tc.Util.extract_lb_annotation is_rec env t e in
-                               //                (Inr l, t, e) //<--NS: Used to pull out inline annots ... not sure it helps
+              | None -> gen, lb 
               | Some t' -> 
                 if debug env Options.Medium
                 then Util.fprint2 "Using annotation %s for let binding %s\n" (Print.typ_to_string t') (Print.sli l);
                 match t.n with 
                   | Typ_unknown -> 
-                    false, (Inr l, t', e) //explicit annotation; do not generalize
+                    false, (Inr l, t', e) //explicit annotation provided; do not generalize
                   | _ -> 
                     Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation\n" (Range.string_of_range r);
                     false, (Inr l, t', e) in

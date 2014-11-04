@@ -645,25 +645,6 @@ let close_comp env bindings (c:comp) =
     let wlp = close_wp md c.result_typ bindings wlp in
     mk_comp md c.result_typ wp wlp c.flags
 
-let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp = 
-  let c = Tc.Normalize.weak_norm_comp env c in
-  let tc, _, _ = destruct_comp c in
-  let g = Tc.Rel.subtype env tc t in
-  match g with 
-    | Trivial -> e, mk_Comp c
-    | NonTrivial f -> 
-      let md = Tc.Env.get_monad_decl env c.effect_name in
-      let x = new_bvd None in
-      let xexp = Util.bvd_to_exp x t in
-      let a, kwp = Env.wp_signature env Const.pure_effect_lid in
-      let k = Util.subst_kind [Inl(a.v, t)] kwp in
-      let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) k xexp.pos  in
-      let cret = mk_comp md t wp wp c.flags in
-      let reason = Errors.subtyping_check tc t in
-      let eq_ret = strengthen_precondition (Some reason) (Env.set_range env e.pos) cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
-      let c = bind env (Some e) (mk_Comp c) (Some(Env.Binding_var(x, tc)), eq_ret) in
-      e, c
-
 let check_comp env (e:exp) (c:comp) (c':comp) : exp * comp * guard_t = 
   //printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_typ_to_string c) (Print.comp_typ_to_string c');
   match Tc.Rel.sub_comp env c c' with 
@@ -771,14 +752,9 @@ let check_uvars r t =
       (format2 "Unconstrained unification variables %s in type signature %s; \
        please add an annotation" union (Print.typ_to_string t))
 
-let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) = 
- if debug env Options.Low then Util.fprint1 "Generalizing: %s" (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) ecs |> String.concat ", ");
- //  let _ = printfn "Generalizing %s\n" (Print.typ_to_string (Util.comp_result c)) in
-//  let _ = printfn "In normal form %s\n" (Print.typ_to_string (Normalize.norm_typ  [Normalize.Beta; Normalize.Delta; Normalize.SNComp; Normalize.DeltaComp] env (Util.comp_result c))) in 
-//     let print_uvars uvs =
-//       uvs |> List.iter (fun (uv, _) -> printfn "\t%d" (Unionfind.uvar_id uv)) in
-  if not <| (Util.for_all (fun (_, _, c) -> Util.is_pure_comp c) ecs)
-  then ecs
+let gen env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
+  if not <| (Util.for_all (fun (_, c) -> Util.is_pure_comp c) ecs) //No value restriction in F*---generalize the types of pure computations
+  then None
   else
      let norm c =
         if debug env Options.Medium then Util.fprint1 "Normalizing before generalizing:\n\t %s" (Print.comp_typ_to_string c);    
@@ -798,10 +774,10 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
             else true
         | _ -> true in
 
-     let uvars = ecs |> List.map (fun (x, e, c) -> 
+     let uvars = ecs |> List.map (fun (e, c) -> 
           let t = Util.comp_result c |> Util.compress_typ in 
           if not <| should_gen t
-          then (x, [], e, c)
+          then ([], e, c)
           else let c = norm c in 
                let ct = comp_to_comp_typ c in
                let t = ct.result_typ in
@@ -813,20 +789,17 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
                   let binder = [null_v_binder t] in
                   let post = mk_Typ_lam(binder, Util.ftv Const.true_lid ktype) (mk_Kind_arrow(binder, ktype) t.pos) t.pos in
                   let vc = Normalize.norm_typ [Delta; Beta] env (syn wp.pos ktype <| mk_Typ_app(wp, [targ post])) in
-                  if Tc.Env.debug env Options.Medium then Tc.Errors.diag (range_of_lbname x) (Util.format2  "Checking %s with VC=\n%s\n" (Print.lbname_to_string x) (Print.formula_to_string vc));
                   solve env vc 
-                  //Tc.Errors.report (range_of_lbname x) (Tc.Errors.failed_to_prove_specification_of x [])
                end;
-               x, uvs, e, c) in //return_value env t e) in
+               uvs, e, c) in 
 
-     let ecs = uvars |> List.map (fun (x, uvs, e, c) -> 
+     let ecs = uvars |> List.map (fun (uvs, e, c) -> 
           let tvars = uvs |> List.map (fun (u, k) -> 
             let a = match Unionfind.find u with 
               | Fixed ({n=Typ_btvar a}) -> a.v 
               | _ -> 
                   let a = Util.new_bvd (Some <| Tc.Env.get_range env) in
                   let t = Util.bvd_to_typ a k in
-    //              let _ = printfn "Unifying %d with %s\n" (Unionfind.uvar_id u) (Print.typ_to_string t) in
                   unchecked_unify u t; a in
             t_binder <| Util.bvd_to_bvar_s a k) in
     
@@ -836,6 +809,50 @@ let generalize env (ecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) =
           let e = match e.n with 
             | Exp_abs(bs, body) -> mk_Exp_abs(tvars@bs, body) t e.pos 
             | _ -> mk_Exp_abs(tvars, e) t e.pos in
-          if debug env Options.Medium then Util.fprint3 "(%s) Generalized %s to %s" (Range.string_of_range e.pos) (Print.lbname_to_string x) (Print.typ_to_string t);
-          x, e, mk_Total t) in
-     ecs 
+          e, mk_Total t) in
+     Some ecs 
+
+
+let generalize env (lecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) = 
+  if debug env Options.Low then Util.fprint1 "Generalizing: %s" (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
+  match gen env (lecs |> List.map (fun (_, e, c) -> (e, c))) with 
+    | None -> lecs
+    | Some ecs -> 
+      List.map2 (fun (l, _, _) (e, c) -> 
+         if debug env Options.Medium then Util.fprint3 "(%s) Generalized %s to %s" (Range.string_of_range e.pos) (Print.lbname_to_string l) (Print.typ_to_string (Util.comp_result c));
+      (l, e, c)) lecs ecs
+
+ 
+let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp = 
+  let aux e c = 
+      let ct = Tc.Normalize.weak_norm_comp env c in
+      let tc, _, _ = destruct_comp ct in
+      match Tc.Rel.try_subtype env tc t with
+        | None -> None
+        | Some Trivial -> Some (e, mk_Comp ct)
+        | Some (NonTrivial f) -> 
+          let md = Tc.Env.get_monad_decl env ct.effect_name in
+          let x = new_bvd None in
+          let xexp = Util.bvd_to_exp x t in
+          let a, kwp = Env.wp_signature env Const.pure_effect_lid in
+          let k = Util.subst_kind [Inl(a.v, t)] kwp in
+          let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) k xexp.pos  in
+          let cret = mk_comp md t wp wp ct.flags in
+          let reason = Errors.subtyping_check tc t in
+          let eq_ret = strengthen_precondition (Some reason) (Env.set_range env e.pos) cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
+          let c = bind env (Some e) (mk_Comp ct) (Some(Env.Binding_var(x, tc)), eq_ret) in
+          Some(e, c) in
+
+  let must = function 
+    | Some ec -> ec
+    | None -> subtype_fail env (Util.comp_result c) t in
+
+
+  match aux e c with
+    | None -> (* before giving up, try again after generalizing the type of e, if possible *)
+      begin match gen env [e,c] with 
+        | Some ([(e,c)]) -> aux e c |> must
+        | _ -> Rel.subtype_fail env (Util.comp_result c) t
+      end
+
+    | Some ec -> ec
