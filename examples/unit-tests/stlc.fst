@@ -211,11 +211,12 @@ val free_in_context : x:int -> e:exp -> t:ty -> g:env -> Pure unit
       (ensures \r -> (is_Some (g x)))
 let (* rec *) free_in_context x e t g =
   match e with
-  | _ -> admit()
-  | EAbs y _ e1 -> begin
+  | EAbs y _ e1 ->
+      begin
       match typing e g with
       | Some (TArrow t1 t2) ->
           admit() (* free_in_context x e1 t2 (extend g y t1) *)
+      | _ -> admit() (* F* can't prove this is unreachable *)
       end
   | EApp e1 e2 -> begin
       match typing e1 g with
@@ -225,26 +226,49 @@ let (* rec *) free_in_context x e t g =
           else
             admit() (* free_in_context x e2 t1 *)
       end
-  | EIf e1 e2 e3 ->
+  | EIf e1 e2 e3 -> begin
       if appears_free_in x e1 then
         admit() (* free_in_context x e1 TBool *)
       else if appears_free_in x e2 then
         admit() (* free_in_context x e2 t *)
       else
         admit() (* free_in_context x e3 t *)
+      end
   | _ -> ()
 
 val context_invariance : g:env -> g':env -> e:exp -> t:ty -> Pure unit
       (requires (typing e g = Some t /\
-                   (forall (x:int). appears_free_in x e = true ==>
-                                    g x = g' x)))
+                (forall (x:int). appears_free_in x e ==> g x = g' x)))
       (ensures \r -> (typing e g' = Some t))
-let context_invariance g g' e t = ()
+let rec context_invariance g g' e t =
+  match e with
+  | EAbs x t e1 -> begin
+      (* bogus incomplete patterns error,
+         even when I do write the None pattern,
+         (I shouldn't have to, because that's unreachable anyway)
+         + equaly bogus bad postcondition error, both branches are admitted! *)
+      match typing e1 (extend g x t) with
+      | Some t' ->
+          context_invariance (extend g x t) (extend g' x t) e1 t';
+          admit()
+      | None -> admit()
+      end
+  | EApp e1 e2 -> begin
+      match typing e1 g with
+      | Some (TArrow t1 t2) ->
+          context_invariance g g' e1 (TArrow t1 t2);
+          context_invariance g g' e2 t1
+      end
+  | EIf e1 e2 e3 ->
+      context_invariance g g' e1 TBool;
+      context_invariance g g' e2 t;
+      context_invariance g g' e3 t
+  | _ -> ()
 
 val substitution_preserves_typing :
       g:env -> x:int -> e:exp -> u:ty -> t:ty -> v:exp -> Pure unit
           (requires (typing e (extend g x u) = Some t /\
-                       (typing v empty = Some u)))
+                     typing v empty = Some u))
           (ensures \r -> (typing (subst x v e) g = Some t))
 let substitution_preserves_typing g x e u t v = ()
 
