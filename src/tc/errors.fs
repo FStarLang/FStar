@@ -24,7 +24,8 @@ open Microsoft.FStar.Util
 
 (* Error messages for labels in VCs *)
 let exhaustiveness_check = "Patterns are incomplete"
-let subtyping_check t1 t2 = Util.format2 "Subtyping check failed; expected type %s; got type %s" (Print.typ_to_string t2) (Print.typ_to_string t1)
+let subtyping_check : typ -> typ -> unit -> string = 
+     fun t1 t2 x -> Util.format2 "Subtyping check failed; expected type %s; got type %s" (Print.typ_to_string t2) (Print.typ_to_string t1)
 let ill_kinded_type = "Ill-kinded type"
 let totality_check  = "This term may not terminate"
 

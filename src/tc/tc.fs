@@ -538,7 +538,7 @@ and tc_exp env e : exp * comp =
   | Exp_ascribed(e1, t1) -> 
     let t1, f = tc_typ_check env t1 ktype in 
     let e1, c = tc_exp (Env.set_expected_typ env t1) e1 in
-    comp_check_expected_typ env (w c <| mk_Exp_ascribed'(e1, t1)) (Tc.Util.strengthen_precondition (Some Errors.ill_kinded_type) (Env.set_range env t1.pos) c f)
+    comp_check_expected_typ env (w c <| mk_Exp_ascribed'(e1, t1)) (Tc.Util.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t1.pos) c f)
 
   | Exp_meta(Meta_desugared(e, Data_app)) -> 
     (* These are (potentially) values, but constructor types 
@@ -812,7 +812,7 @@ and tc_exp env e : exp * comp =
                  f, env1 in
 
     let e1, c1 = tc_exp env1 e1 in 
-    let c1 = Tc.Util.strengthen_precondition (Some Errors.ill_kinded_type) (Env.set_range env t.pos) c1 f in
+    let c1 = Tc.Util.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t.pos) c1 f in
     begin match x with 
         | Inr _ -> (* top-level let, always ends with e2=():unit *)
           begin if !Options.verify

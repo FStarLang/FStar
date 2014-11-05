@@ -578,11 +578,11 @@ let label reason r f =
     Syntax.mk_Typ_meta(Meta_labeled(f, label, true))
 let label_opt reason r f = match reason with 
     | None -> f
-    | Some reason -> label reason r f
+    | Some reason -> label (reason()) r f
 let label_guard reason r g = match g with 
     | Trivial -> g
     | NonTrivial f -> NonTrivial (label reason r f)
-let strengthen_precondition (reason:option<string>) env (c:comp) f = match f with 
+let strengthen_precondition (reason:option<(unit -> string)>) env (c:comp) f = match f with 
   | Trivial -> c
   | NonTrivial f -> 
     if debug env Options.High then Util.fprint2 "\tStrengthening precondition %s with %s" (Print.comp_typ_to_string c) (Print.typ_to_string f);
@@ -794,7 +794,7 @@ let gen env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
                let ct = comp_to_comp_typ c in
                let t = ct.result_typ in
                let uvt = Util.uvars_in_typ t in
-               let uvs = gen_uvars <| uvt.uvars_t in 
+               let uvs = gen_uvars uvt.uvars_t in 
                if !Options.verify && not <| Util.is_total_comp c
                then begin
                   let _, wp, _ = destruct_comp ct in 
@@ -850,8 +850,7 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp =
           let k = Util.subst_kind [Inl(a.v, t)] kwp in
           let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) k xexp.pos  in
           let cret = mk_comp md t wp wp ct.flags in
-          let reason = Errors.subtyping_check tc t in
-          let eq_ret = strengthen_precondition (Some reason) (Env.set_range env e.pos) cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
+          let eq_ret = strengthen_precondition (Some <| Errors.subtyping_check tc t) (Env.set_range env e.pos) cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
           let c = bind env (Some e) (mk_Comp ct) (Some(Env.Binding_var(x, tc)), eq_ret) in
           Some(e, c) in
   let must = function 
