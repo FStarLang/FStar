@@ -75,10 +75,9 @@ let empty _ = None
 (* CH: This should work but it seems that F* stumbles upon the type abbreviation
 val extend : env -> int -> ty -> Tot env
 let extend g x t  = (fun x' -> if x = x' then Some t else g x')
-Expected a term of type "(_:env -> _:int -> _:ty -> Tot env)";
-got a function "(fun g:<UNKNOWN> x:<UNKNOWN> t:<UNKNOWN> x':<UNKNOWN> -> (match (op_Equality x x') with true  -> (Some t)
-	false  -> (g x')))"
-Filed as: https://github.com/FStarLang/FStar/issues/23
+   Now it stumbles a bit later below:
+bug23.fst(8,31-8,32) : Error
+Too many arguments to function of type (_:env -> _:int -> _:ty -> Tot env)
 *)
 
 val extend : env -> int -> ty -> int -> Tot (option ty)
