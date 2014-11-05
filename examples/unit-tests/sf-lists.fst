@@ -128,12 +128,12 @@ let rec rev_length l =
 
 val foo1 : n:int -> l : ilist -> Pure unit
       (requires (repeat n 0 = l))
-      (ensures \r => length l = 0)
+      (ensures \r -> length l = 0)
 let foo1 n l = ()
 
 val foo2 : n : nat -> m : nat -> l : ilist -> Pure unit
       (requires (repeat n m = l))
-      (ensures \r => length l = m)
+      (ensures \r -> length l = m)
 let rec foo2 n m l =
   match m with
   | 0 -> () 
@@ -141,7 +141,7 @@ let rec foo2 n m l =
 
 val foo3 : l : ilist -> n : int -> m : nat -> Pure unit
       (requires (length l = m))
-      (ensures \r => (length (snoc l n) = m+1))
+      (ensures \r -> (length (snoc l n) = m+1))
 let rec foo3 l n m =
   match l with
   | Nil -> ()
@@ -149,5 +149,5 @@ let rec foo3 l n m =
 
 val foo4 : n : int -> l1 : ilist -> l2 : ilist -> Pure unit
       (requires (snoc l1 n = l2))
-      (ensures \r => 0 < length l2)
+      (ensures \r -> 0 < length l2)
 let foo4 n l1 l2 = ()

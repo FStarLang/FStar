@@ -17,15 +17,15 @@ assume (* TODO: private *) logic val moderef : ref mode
 
 logic type CanSetMode (cur:mode) (m:mode) = (if is_Sec cur.p_or_s then cur.prins==m.prins else Subset m.prins cur.prins)
 val with_mode:  'a:Type
-             -> 'req_f:(heap => Type)
-             -> 'ens_f:(heap => 'a => heap => Type)
+             -> 'req_f:(heap -> Type)
+             -> 'ens_f:(heap -> 'a -> heap -> Type)
              -> m:mode
              -> f:(unit -> ST 'a 'req_f 'ens_f)
              -> ST 'a 
-                   (requires \h0 => 
+                   (requires \h0 -> 
                           'req_f (UpdHeap h0 moderef m) 
                           /\ CanSetMode (SelHeap h0 moderef) m)
-                   (ensures \h0 a h1 => 
+                   (ensures \h0 a h1 -> 
                           (SelHeap h0 moderef == SelHeap h1 moderef)
                           /\ (exists h1'. 'ens_f (UpdHeap h0 moderef m) a h1' /\ h1==UpdHeap h1' moderef (SelHeap h0 moderef)))
 let with_mode m f =
@@ -43,16 +43,16 @@ type box 'a =
 
 (* No need to annotate, except for testing the result of inference *)
 val mk_box : x:'a -> unit -> ST (box 'a)
-                                (requires \h0 => True)
-                                (ensures  \h0 b h1 => h0==h1 /\ b==Box x (SelHeap h0 moderef))
+                                (requires \h0 -> True)
+                                (ensures  \h0 b h1 -> h0==h1 /\ b==Box x (SelHeap h0 moderef))
 let mk_box x u = Box x (get_mode())
 
 
 logic type CanUnbox ('a:Type) (m:mode) (x:box 'a) = Subset m.prins (Box.m x).prins
 (* No need to annotate, except for testing the result of inference *)
 val unbox: x:box 'a -> unit -> ST 'a
-                                  (requires \h0 => CanUnbox 'a (SelHeap h0 moderef) x)
-                                  (ensures  \h0 a h1 => h0==h1 /\ Box.v x==a)
+                                  (requires \h0 -> CanUnbox 'a (SelHeap h0 moderef) x)
+                                  (ensures  \h0 a h1 -> h0==h1 /\ Box.v x==a)
 let unbox x u =
   let cur = get_mode () in
   assert (CanUnbox _ cur x);
@@ -67,10 +67,10 @@ logic type ens_f ('a:Type) (m:mode) (x:box 'a) (h0:heap) (w:wire 'a) (h1:heap) =
 
 (* No need to annotate, except for testing the result of inference *)
 val mk_wire : 'a:Type -> m:mode -> x:box 'a -> ST (wire 'a)
-                                        (requires \h0 => (if is_Par m.p_or_s
+                                        (requires \h0 -> (if is_Par m.p_or_s
                                                           then (CanSetMode (SelHeap h0 moderef) m /\ CanUnbox 'a m x)
                                                           else CanUnbox 'a (SelHeap h0 moderef) x))
-                                        (ensures  \h0 w h1 => SelHeap h0 moderef==SelHeap h1 moderef (* HeapEq h0 h1 *) (* TODO: Need to sort our extensional equality on heaps *) 
+                                        (ensures  \h0 w h1 -> SelHeap h0 moderef==SelHeap h1 moderef (* HeapEq h0 h1 *) (* TODO: Need to sort our extensional equality on heaps *) 
                                                              /\ w==ConstMap m.prins (Box.v x))
 let mk_wire ('a:Type) m x =
   let f : unit -> ST (wire 'a) (req_f 'a x) (ens_f 'a m x) = (* TODO, should infer an ST type automatically *)
@@ -90,7 +90,7 @@ logic type proj_ok ('a:Type) (w:wire 'a) (p:prin) (cur:mode) =
      else SetEqual cur.prins (Singleton p))
 
 (* no need to annotate, unless you want to check this 
-   val project_wire: w:wire 'a -> p:prin -> Wys 'a (proj_ok 'a w p) (fun m1 a m2 => a==Sel w p /\ m1==m2) 
+   val project_wire: w:wire 'a -> p:prin -> Wys 'a (proj_ok 'a w p) (fun m1 a m2 -> a==Sel w p /\ m1==m2) 
 *)
 let project_wire (w:wire 'a) (p:prin) =
   assert (InDom p w);
@@ -101,12 +101,12 @@ let project_wire (w:wire 'a) (p:prin) =
   Sel w p
 
 
-kind Pre = mode => Type
-kind Post ('a:Type) = mode => 'a => mode => Type
+kind Pre = mode -> Type
+kind Post ('a:Type) = mode -> 'a -> mode -> Type
 effect Wys ('a:Type) ('Pre:Pre) ('Post:Post 'a) =
       STATE 'a 
-         (fun 'p h0 =>  'Pre (SelHeap h0 moderef) /\ (forall x h1. 'Post (SelHeap h0 moderef) x (SelHeap h1 moderef) ==> 'p x h1))
-         (fun 'p h0 => (forall x h1. ('Pre (SelHeap h0 moderef) /\ 'Post (SelHeap h0 moderef) x (SelHeap h1 moderef)) ==> 'p x h1)) 
+         (fun 'p h0 ->  'Pre (SelHeap h0 moderef) /\ (forall x h1. 'Post (SelHeap h0 moderef) x (SelHeap h1 moderef) ==> 'p x h1))
+         (fun 'p h0 -> (forall x h1. ('Pre (SelHeap h0 moderef) /\ 'Post (SelHeap h0 moderef) x (SelHeap h1 moderef)) ==> 'p x h1)) 
                                 
 (*--------------------------------------------------------------------------------*)
 
@@ -130,8 +130,8 @@ let test2 u =
   assert (CanSetMode initial_mode sec_AB)
 
 val test: unit -> Wys unit
-                      (requires \m => m=={p_or_s=Par; prins=setAB})
-                      (ensures  \m0 res m1 => True)
+                      (requires \m -> m=={p_or_s=Par; prins=setAB})
+                      (ensures  \m0 res m1 -> True)
 let test _ =
   let x = with_mode par_A (mk_box 2) in
   let y = with_mode par_B (mk_box 3) in
@@ -155,8 +155,8 @@ logic type ens_check (h0:heap) (b:bool) (h1:heap) = b==false
 
 (* This is the main client of Wysteria *)
 val is_A_richer_than_B : unit -> Wys bool
-                                     (requires \m => m==initial_mode)
-                                     (ensures  \m0 res m1 => res == false)
+                                     (requires \m -> m==initial_mode)
+                                     (ensures  \m0 res m1 -> res == false)
 let is_A_richer_than_B _ =
   let x = with_mode par_A (mk_box 2) in
   let y = with_mode par_B (mk_box 3) in

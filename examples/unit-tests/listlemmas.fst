@@ -23,7 +23,7 @@ module ListLemmas
 open Prims.PURE
 
 (* An effect abbreviation for a lemma *)
-(*ghost*) effect Fact ('res:Type) ('p:Type) = Pure 'res True (fun r => 'p)
+(*ghost*) effect Fact ('res:Type) ('p:Type) = Pure 'res True (fun r -> 'p)
 
 val hd: list 'a -> Tot bool
 let hd l = match l with

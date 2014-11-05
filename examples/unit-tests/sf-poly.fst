@@ -220,7 +220,7 @@ let test_map2 () = ()
 unknown(0,0-0,0) : Error
 Identifier not found: [Prims.Cons] (Possible clash with related name at ../../lib/prims.fst(477,0-481,6))
 val test_map3 : unit -> Fact unit
-    (ensures (map (fun n => [evenb n;oddb n]) [2;1;2;5]
+    (ensures (map (fun n -> [evenb n;oddb n]) [2;1;2;5]
               = [[true;false];[false;true];[true;false];[false;true]]))
 *)
 
@@ -327,7 +327,7 @@ let override_eq x k f = ()
 
 val override_neq : x1:'a -> x2:'a -> k1:'b -> k2:'b -> f:('b->Tot 'a) -> Pure unit
       (requires (f k1 = x1 /\ k2 <> k1))
-      (ensures \r => (my_override f k2 x2) k1 = x1)
+      (ensures \r -> (my_override f k2 x2) k1 = x1)
 let override_neq x1 x2 k1 k2 f = ()
 
 (* NS: Experimenting first with named functions *)

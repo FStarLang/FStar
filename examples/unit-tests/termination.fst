@@ -96,7 +96,7 @@ val list_subterm_ordering_coercion: l:list 'a
                         -> bound:'b
                         -> Pure (list 'a)
                                 (requires (Precedes l bound))
-                                (ensures \m => (forall (x:'a). mem x m ==> Precedes x bound) /\ l==m)
+                                (ensures \m -> (forall (x:'a). mem x m ==> Precedes x bound) /\ l==m)
 let rec list_subterm_ordering_coercion l bound = match l with
   | [] -> l (* TODO: writing [] here causes it to fail because the [] doesn't appear in the VC *)
   | hd::tl ->
@@ -107,13 +107,13 @@ val list_subterm_ordering_lemma: l:list 'a
                         -> bound:'b
                         -> Pure unit
                                 (requires (Precedes l bound))
-                                (ensures \m => (forall (x:'a). mem x l ==> Precedes x bound))
+                                (ensures \m -> (forall (x:'a). mem x l ==> Precedes x bound))
 let rec list_subterm_ordering_lemma l bound = match l with
   | [] -> () 
   | hd::tl -> list_subterm_ordering_lemma tl bound
       
 val move_refinement: 'a:Type
-                   -> 'P:('a => Type)
+                   -> 'P:('a -> Type)
                    -> l:list 'a{forall z. mem z l ==> 'P z}
                    -> Tot (list (a:'a{'P a}))
 let rec move_refinement 'a 'P l = match l with
@@ -137,7 +137,7 @@ let rec treeMap 'a 'b f v = match v with
     let l = (* ghost *) 
       move_refinement (* Two type parameteres inferred
                          1. (T 'a) -- inferred
-                         2. (fun aa => Precedes (LexPair f (LexPair aa LexTop)) (LexPair f (LexPair v LexTop)))  --inferred by higher-order unification!
+                         2. (fun aa -> Precedes (LexPair f (LexPair aa LexTop)) (LexPair f (LexPair v LexTop)))  --inferred by higher-order unification!
                       *) 
         l in
 

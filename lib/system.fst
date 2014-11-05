@@ -11,7 +11,7 @@ module System.Diagnostics
 assume type Process
 
 module System.Collections.Generic
-assume type HashSet: Type => Type
+assume type HashSet: Type -> Type
 
 module Collections
-assume type Set: Type => Type
+assume type Set: Type -> Type

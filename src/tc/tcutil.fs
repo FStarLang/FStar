@@ -578,7 +578,10 @@ let label reason r f =
     Syntax.mk_Typ_meta(Meta_labeled(f, label, true))
 let label_opt reason r f = match reason with 
     | None -> f
-    | Some reason -> label (reason()) r f
+    | Some reason -> 
+        if not <| !Options.verify
+        then f
+        else label (reason()) r f
 let label_guard reason r g = match g with 
     | Trivial -> g
     | NonTrivial f -> NonTrivial (label reason r f)

@@ -3,8 +3,8 @@ module Array
    (still to be ported to new syntax, so including a 
     subset of its signature here) *)
 
-type seq : Type => Type
-type Equal : #'a:Type => seq 'a => seq 'a => Type
+type seq : Type -> Type
+type Equal : #'a:Type -> seq 'a -> seq 'a -> Type
 assume logic val append : seq 'a -> seq 'a -> Tot (seq 'a)
 assume logic val slice : seq 'a -> int -> int -> Tot (seq 'a)
 assume logic val length : seq 'a -> Tot nat
@@ -20,15 +20,17 @@ type message = seq char//byte
 type msg (l:nat) = m:message{length m == l}
 
 (* lemma *) 
+val append_check: b1:message -> b2:message -> c1:message -> c2:message -> Tot bool (ensures \b -> b==true <==> b1==c1 /\ b2==c2)
+
 val append_inj_l: #l:nat 
                -> b1:msg l -> b2:message 
                -> c1:msg l -> c2:message{append b1 b2 == append c1 c2} 
                -> Tot (u:unit{Equal b1 c1 /\ Equal b2 c2})
 let rec append_inj_l l b1 b2 c1 c2 (* {decreases l} *) = match l with
-  | 0 ->
-     assert (Equal b1 c1);
-     assert (append b1 b2 == b2);
-     assert (append c1 c2 == c2)
+  | 0 -> ()
+     (* assert (Equal b1 c1); *)
+     (* assert (append b1 b2 == b2); *)
+     (* assert (append c1 c2 == c2) *)
 
   | n ->
      append_inj_l #(n - 1) (slice b1 1 n) b2 (slice c1 1 n) c2;
@@ -63,16 +65,16 @@ let response s t =
                       (append (utf8 s) 
                               (utf8 t)))
 
-(* ask !v,v',s,s',t'. (Requested(v,s) /\ Responded(v',s',t')) => (v <> v') *)
+(* ask !v,v',s,s',t'. (Requested(v,s) /\ Responded(v',s',t')) -> (v <> v') *)
 (* lemma *) 
 val req_resp_distinct: s:string -> s':string16 -> t':string -> Tot (u:unit{request s =!= response s' t'})
 let req_resp_distinct s s' t' = ()
 
 query ReqInj: forall s s'. request s==request s' ==> s==s'
 
-(* ask !v,s,s',t,t'. (Responded(v,s,t) /\ Responded(v,s',t')) => (s = s' /\ t = t') *)
-(* ask !v,v',s,s'. (Requested(v,s) /\ Requested(v',s') /\ v = v') => (s = s') *)
-(* ask !v,s,s',t,t'. (Responded(v,s,t) /\ Responded(v,s',t')) => (s = s' /\ t = t') *)
+(* ask !v,s,s',t,t'. (Responded(v,s,t) /\ Responded(v,s',t')) -> (s = s' /\ t = t') *)
+(* ask !v,v',s,s'. (Requested(v,s) /\ Requested(v',s') /\ v = v') -> (s = s') *)
+(* ask !v,s,s',t,t'. (Responded(v,s,t) /\ Responded(v,s',t')) -> (s = s' /\ t = t') *)
      
      
 
