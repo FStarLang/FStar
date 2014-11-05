@@ -968,11 +968,29 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             else constructor_to_decl c in
  
         let inversion_axioms tapp vars = 
-            if List.length datas = 0
+            if List.length datas = 0  || datas |> Util.for_some (fun l -> Tc.Env.lookup_qname env.tcenv l |> Option.isNone)
             then []
-            else let xxsym, xx = fresh_bvar "x" Term_sort in
-                 let data_ax = datas |> List.fold_left (fun out l -> mkOr(out, mk_data_tester env l xx)) mkFalse in
-                    [Term.Assume(mkForall([mk_HasType xx tapp], (xxsym, Term_sort)::vars,
+            else 
+                 let xxsym, xx = fresh_bvar "x" Term_sort in
+                 let data_ax, decls = datas |> List.fold_left (fun (out, decls) l -> 
+                    let data_t = Tc.Env.lookup_datacon env.tcenv l in
+                    let args, res = match Util.function_formals data_t with
+                        | Some (formals, res) -> formals, Util.comp_result res
+                        | None -> [], data_t in
+                    let indices = match (Util.compress_typ res).n with 
+                        | Typ_app(_, indices) -> indices
+                        | _ -> [] in
+                    let env = args |> List.fold_left (fun env a -> match fst a with 
+                        | Inl a -> push_typ_var env a.v (Term.mkApp(mk_typ_projector_name l a.v, [xx]))
+                        | Inr x -> push_term_var env x.v (Term.mkApp(mk_term_projector_name l x.v, [xx]))) env in
+                    let indices, ex_vars, decls' = encode_args indices env in
+                    if List.length indices <> List.length vars
+                    then failwith "Impossible";
+                    let eqs = List.map2 (fun v a -> match a with 
+                        | Inl a -> Term.mkEq(mkBoundV v, a)
+                        | Inr a -> Term.mkEq(mkBoundV v, a)) vars indices |> Term.mk_and_l |> close_ex ex_vars in
+                    mkOr(out, mkAnd(mk_data_tester env l xx, eqs)), decls@decls') (mkFalse, []) in
+                    decls@[Term.Assume(mkForall([mk_HasType xx tapp], (xxsym, Term_sort)::vars,
                                         mkImp(mk_HasType xx tapp, data_ax)), Some "inversion axiom")] in
 
         let projection_axioms tapp vars = 
@@ -1029,30 +1047,30 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let xvars = List.map mkBoundV vars in
         let dapp =  mkApp(ddconstrsym, xvars) in
         let ty_pred, decls2 = encode_typ_pred t_res env' dapp in
-        let index_injectivity = match (Util.compress_typ t_res).n with 
-            | Typ_app _ -> 
-                let free_indices = Util.freevars_typ t_res in
-                let x = varops.fresh "x", Term_sort in 
-                let xterm = mkBoundV x in
-                let t, vars1, decls1 = encode_typ_term t_res env' in 
-                begin match vars1 with 
-                    | _::_ -> decls1 (* warn? no index injectivity in this case *)
-                    | _ -> 
-                    let x_hastype_t = mk_HasType xterm t in
-                    let x_is_d = mk_data_tester env d xterm in 
-                    let env'' = List.fold_left2 (fun env formal proj -> match formal with 
-                        | Inl a, _ -> push_typ_var env a.v <| Term.mkApp(fst proj, [xterm])
-                        | Inr x, _ -> push_term_var env x.v <| Term.mkApp(fst proj, [xterm])) env' formals projectors in
-                    let t_res_subst, ex_vars, decls2 = encode_typ_term t_res env'' in
-                    let tvars = Util.set_elements free_indices.ftvs |> List.map (fun a -> 
-                        let tm = lookup_typ_var env' a in 
-                        boundV_sym tm, Type_sort) in
-                    let vvars = Util.set_elements free_indices.fxvs |> List.map (fun x -> 
-                        let tm = lookup_term_var env' x in 
-                        boundV_sym tm, Term_sort) in
-                    decls1@decls2@[Term.Assume(Term.mkForall([x_hastype_t], x::tvars@vvars, Term.mkImp(mkAnd(x_hastype_t, x_is_d), close_ex ex_vars (mkEq(t, t_res_subst)))), Some "index injectivity")]
-                end
-            | _ -> [] in
+//        let index_injectivity = match (Util.compress_typ t_res).n with 
+//            | Typ_app _ -> 
+//                let free_indices = Util.freevars_typ t_res in
+//                let x = varops.fresh "x", Term_sort in 
+//                let xterm = mkBoundV x in
+//                let t, vars1, decls1 = encode_typ_term t_res env' in 
+//                begin match vars1 with 
+//                    | _::_ -> decls1 (* warn? no index injectivity in this case *)
+//                    | _ -> 
+//                    let x_hastype_t = mk_HasType xterm t in
+//                    let x_is_d = mk_data_tester env d xterm in 
+//                    let env'' = List.fold_left2 (fun env formal proj -> match formal with 
+//                        | Inl a, _ -> push_typ_var env a.v <| Term.mkApp(fst proj, [xterm])
+//                        | Inr x, _ -> push_term_var env x.v <| Term.mkApp(fst proj, [xterm])) env' formals projectors in
+//                    let t_res_subst, ex_vars, decls2 = encode_typ_term t_res env'' in
+//                    let tvars = Util.set_elements free_indices.ftvs |> List.map (fun a -> 
+//                        let tm = lookup_typ_var env' a in 
+//                        boundV_sym tm, Type_sort) in
+//                    let vvars = Util.set_elements free_indices.fxvs |> List.map (fun x -> 
+//                        let tm = lookup_term_var env' x in 
+//                        boundV_sym tm, Term_sort) in
+//                    decls1@decls2@[Term.Assume(Term.mkForall([x_hastype_t], x::tvars@vvars, Term.mkImp(mkAnd(x_hastype_t, x_is_d), close_ex ex_vars (mkEq(t, t_res_subst)))), Some "index injectivity")]
+//                end
+//            | _ -> [] in
         let precedence = 
             if lid_equals d Const.lexpair_lid
             then let vars', guards', env', decls1 ,_ = encode_binders formals env' in
@@ -1083,8 +1101,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                   Term.Assume(mkForall([app], vars, 
                                        mkEq(app, dapp)), Some "equality for proxy");
                   Term.Assume(mkForall([ty_pred], vars, mkIff(guard, ty_pred)), Some "data constructor typing")]
-                 @precedence
-                 @index_injectivity in
+                 @precedence in
+//                 @index_injectivity in
         datacons@g, env
 
     | Sig_bundle(ses, _, _) -> 

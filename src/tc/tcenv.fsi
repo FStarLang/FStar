@@ -96,6 +96,7 @@ val lookup_btvar : env -> btvar -> knd
 val lookup_typ_lid : env -> lident -> knd
 val lookup_operator : env -> ident -> typ
 val lookup_projector: env -> lident -> int -> lident
+val lookup_qname: env -> lident -> option<Util.either<typ,sigelt>>
 
 val push_sigelt : env -> sigelt -> env
 val push_local_binding : env -> binding -> env

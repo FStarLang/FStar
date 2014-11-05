@@ -20,6 +20,9 @@ all-ver: $(VERFILES)
 all-lax: rec.fst pat.fst format.fst bug16.fst
 	$(FSTAR) $^
 
+vector: vectors.fst
+	$(FSTAR) --verify --full_context_dependency vectors.fst
+
 wc-ver: $(VERFILES)
 	wc -l $^
 
