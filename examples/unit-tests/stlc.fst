@@ -265,12 +265,33 @@ let rec context_invariance g g' e t =
       context_invariance g g' e3 t
   | _ -> ()
 
+(* not sure if this is really needed for substitution proof *)
+val appears_free_in_empty : x:int -> e:exp -> Pure unit
+      (requires (is_Some (typing e empty)))
+      (ensures \r -> (appears_free_in x e))
+let appears_free_in_empty x e = ()
+
 val substitution_preserves_typing :
       g:env -> x:int -> e:exp -> u:ty -> t:ty -> v:exp -> Pure unit
           (requires (typing e (extend g x u) = Some t /\
                      typing v empty = Some u))
           (ensures \r -> (typing (subst x v e) g = Some t))
-let substitution_preserves_typing g x e u t v = ()
+let substitution_preserves_typing g x e u t v =
+  appears_free_in_empty x v;
+  match e with
+  | EVar x ->
+      admit() (* if x = x' then e else e' *)
+  | EAbs x t e1 ->
+      admit() (* EAbs x t (if x = x' then e1 else (subst x e e1)) *)
+  | EApp e1 e2 ->
+      admit() (* EApp (subst x e e1) (subst x e e2) *)
+  | ETrue ->
+      assert(t = TBool); (*  *)
+      admit() (* ETrue *)
+  | EFalse ->
+      admit() (* EFalse *)
+  | EIf e1 e2 e3 ->
+      admit() (* EIf (subst x e e1) (subst x e e2) (subst x e e3) *)
 
 val preservation : e:exp -> e':exp -> t:ty -> Pure unit
       (requires (typing e empty = Some t /\ step e = Some e'))
