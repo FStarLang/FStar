@@ -566,7 +566,7 @@ name:
 
 tvars:
   | TVAR                { [Syntax.mk_ident($1, rhs parseState 1)] }
-  | TVAR COMMA tvars    { Syntax.mk_ident($1, rhs parseState 1)::$3 }
+  | TVAR COMMA tvars    { Syntax.mk_ident($1, rhs parseState 1) ::$3 }
 
 tvar:
   | TVAR 

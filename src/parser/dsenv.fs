@@ -82,10 +82,11 @@ let range_of_binding = function
             
 let try_lookup_typ_var env (id:ident) =
   let fopt = List.tryFind (fun (_, b) -> match b with 
-    | Binding_typ_var id' -> id.idText=id'.idText 
+    | Binding_typ_var id' 
+    | Binding_var id' -> id.idText=id'.idText 
     | _ -> false) env.localbindings in
   match fopt with 
-    | Some (Inl bvd, _) -> 
+    | Some (Inl bvd, Binding_typ_var _) -> 
       Some (bvd_to_typ (set_bvd_range bvd id.idRange) kun)
     | _ -> None 
 
@@ -112,9 +113,13 @@ let try_lookup_id' env (id:ident) =
   match unmangleOpName id with 
     | Some l -> Some <|  (l, mk_Exp_fvar(fv l, false) tun id.idRange)
     | _ -> 
-      find_map env.localbindings (function 
-        | Inr bvd, Binding_var id' when (id'.idText=id.idText) -> Some (lid_of_ids [id'], bvd_to_exp (set_bvd_range bvd id.idRange) tun)
-        | _ -> None)
+      let found = find_map env.localbindings (function 
+        | Inl _, Binding_typ_var id' when (id'.idText=id.idText) -> Some (Inl ())
+        | Inr bvd, Binding_var id' when (id'.idText=id.idText) -> Some (Inr (lid_of_ids [id'], bvd_to_exp (set_bvd_range bvd id.idRange) tun))
+        | _ -> None) in
+      match found with 
+        | Some (Inr x) -> Some x
+        | _ -> None
 
 let try_lookup_id env id = 
   match try_lookup_id' env id with 

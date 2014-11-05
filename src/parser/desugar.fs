@@ -110,6 +110,12 @@ let rec is_type env (t:term) =
     | Refine _
     | Tvar _ -> true
     | Var l
+    | Name l when (List.length l.ns = 0) ->
+      begin match DesugarEnv.try_lookup_typ_var env l.ident with 
+        | Some _ -> true
+        | _ -> is_type_lid env l
+      end
+    | Var l 
     | Name l
     | Construct(l, _) -> is_type_lid env l
     | App(t, _, _)
@@ -134,10 +140,10 @@ let rec is_kind env (t:term) : bool =
 let rec is_type_binder env b =
   if b.blevel = Formula
   then match b.b with
-    | Variable _
-    | Annotated _ -> false
+    | Variable _ -> false
     | TAnnotated _
     | TVariable _ -> true
+    | Annotated(_, t)
     | NoName t -> is_kind env t
   else match b.b with
     | Variable _ -> raise (Error("Unexpected binder without annotation", b.brange))
@@ -311,13 +317,19 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         loc, env, var, pat
 
       | PatAscribed(p, t) ->
+        let p = if is_kind env t 
+                then match p.pat with 
+                        | PatTvar _ -> p
+                        | PatVar x -> {p with pat=PatTvar x}
+                        | _ -> raise (Error ("Unexpected pattern", p.prange))
+                else p in
         let loc, env', binder, p = aux loc env p in
         let binder = match binder with
-          | LetBinder _ -> failwith "impossible"
-          | TBinder(x, _) -> TBinder(x, desugar_kind env t)
-          | VBinder(x, _) ->  
-             let t = close env t in
-             VBinder(x, desugar_typ env t) in
+            | LetBinder _ -> failwith "impossible"
+            | TBinder(x, _) -> TBinder(x, desugar_kind env t)
+            | VBinder(x, _) ->  
+                let t = close env t in
+                VBinder(x, desugar_typ env t) in
         loc, env', binder, p
 
       | PatTvar a ->
@@ -696,7 +708,14 @@ and desugar_typ env (top:term) : typ =
 
     | Tvar a ->
       setpos <| fail_or2 (try_lookup_typ_var env) a
-          
+
+    | Var l
+    | Name l when (List.length l.ns = 0) ->
+      begin match try_lookup_typ_var env l.ident with
+        | Some t -> setpos t
+        | None -> setpos <| fail_or env  (try_lookup_typ_name env) l
+      end
+              
     | Var l
     | Name l ->
       setpos <| fail_or env  (try_lookup_typ_name env) l
@@ -966,11 +985,14 @@ and desugar_exp_binder env b = match b.b with
   | Variable x -> Some x, tun
   | _ -> raise (Error("Unexpected domain of an arrow or sum (expected a type)", b.brange))
     
-and desugar_type_binder env b = match b.b with
+and desugar_type_binder env b = 
+ let fail () = raise (Error("Unexpected domain of an arrow or sum (expected a kind)", b.brange)) in
+ match b.b with
+  | Annotated(x, t) 
   | TAnnotated(x, t) -> Some x, desugar_kind env t
   | NoName t -> None, desugar_kind env t
   | TVariable x -> Some x, {mk_Kind_type with pos=b.brange}
-  | _ -> raise (Error("Unexpected domain of an arrow or sum (expected a kind)", b.brange))
+  | _ -> fail ()
 
 let gather_tc_binders tps k = 
     let rec aux bs k = match k.n with 
