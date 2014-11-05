@@ -182,34 +182,44 @@ let rec progress e t =
       (* assert(typing (EVar x) empty = None);
          -- this fails and it shouldn't; the case should be trivial *)
       admit()
-  | EAbs x' t e1 -> ()
   | EApp e1 e2 -> begin
       match typing e1 empty with
       | Some (TArrow t1 t2) ->
           progress e1 (TArrow t1 t2); progress e2 t1
       end
-  | ETrue -> ()
-  | EFalse -> ()
   | EIf e1 e2 e3 ->
       progress e1 TBool; progress e2 t; progress e3 t;
       if is_value e1 then canonical_forms_bool e1
+  | _ -> ()
 
 val appears_free_in : x:int -> e:exp -> Tot bool
 let rec appears_free_in x e =
   match e with
   | EVar y -> x = y
   | EApp e1 e2 -> appears_free_in x e1 || appears_free_in x e2
-  | EAbs y t e1 -> if x = y then false else appears_free_in x e1
+  | EAbs y _ e1 -> x <> y && appears_free_in x e1
   | EIf e1 e2 e3 ->
       appears_free_in x e1 || appears_free_in x e2 || appears_free_in x e3
   | _ -> false
 
 type closed e = (forall (x:int). not (appears_free_in x e))
 
+(* Adding the rec keyword on this one makes it blow up,
+   no matter what's inside it, triggered by the function argument? *)
 val free_in_context : x:int -> e:exp -> t:ty -> g:env -> Pure unit
-      (requires (appears_free_in x e = true /\ typing e g = Some t))
+      (requires (appears_free_in x e /\ typing e g = Some t))
       (ensures \r -> (is_Some (g x)))
-let free_in_context x e t g = ()
+let (* rec *) free_in_context x e t g =
+  match e with
+  | _ -> admit()
+  | EAbs y _ e1 -> begin
+      match typing e g with
+      | Some (TArrow t1 t2) -> admit()
+          (* free_in_context x e1 t2 (extend g y t1) *)
+      end
+  | EApp e1 e2 -> admit()
+  | EIf e1 e2 e3 -> admit()
+  | _ -> ()
 
 val context_invariance : g:env -> g':env -> e:exp -> t:ty -> Pure unit
       (requires (typing e g = Some t /\
@@ -230,8 +240,6 @@ val preservation : e:exp -> e':exp -> t:ty -> Pure unit
       (ensures \r -> (typing e' empty = Some t))
 let rec preservation e e' t =
   match e with
-  | EVar _ -> ()
-  | EAbs _ _ _ -> ()
   | EApp e1 e2 -> begin
       match typing e1 empty with
       | Some (TArrow t1 t2) -> begin
@@ -256,14 +264,13 @@ let rec preservation e e' t =
             | Some e1' -> preservation e1 e1' (TArrow t1 t2)
           end
       end
-  | ETrue -> ()
-  | EFalse -> ()
   | EIf e1 _ _ ->
       if is_value e1 then ()
       else begin
         match (step e1) with
         | Some e1' -> preservation e1 e1' TBool
       end
+  | _ -> ()
 
 (* CH: With this purely-executable way of specifying things we can't
    do rule induction, and that is restrictive and will probably lead
