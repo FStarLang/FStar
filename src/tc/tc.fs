@@ -574,7 +574,6 @@ and tc_exp env e : exp * comp =
   | Exp_meta(Meta_desugared(e, Sequence)) -> 
     begin match (compress_exp e).n with 
         | Exp_let((_,[(x, _, e1)]), e2) -> 
-          let e2 = compress_exp e2 in 
           let e1, c1 = tc_exp (Env.set_expected_typ env Tc.Util.t_unit) e1 in 
           let e2, c2 = tc_exp env e2 in 
           let c = Tc.Util.bind env (Some e1) c1 (None, c2) in

@@ -403,6 +403,16 @@ let rec unmeta_exp e =
         | Exp_ascribed(e, _) -> unmeta_exp e
         | _ -> e
 
+let rec unmeta_typ t =
+    let t = compress_typ t in
+    match t.n with 
+        | Typ_ascribed(t, _) 
+        | Typ_meta(Meta_named(t, _))
+        | Typ_meta(Meta_pattern(t, _))
+        | Typ_meta(Meta_labeled(t, _, _))
+        | Typ_meta(Meta_refresh_label(t, _, _)) -> unmeta_typ t
+        | _ -> t
+
 let alpha_typ t = 
    let t = compress_typ t in
    let s = mk_subst [] in

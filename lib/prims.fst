@@ -503,6 +503,7 @@ assume val Assume: 'P:Type -> unit -> (y:unit{'P})
 assume val admit: unit -> Pure unit True (fun x -> False)
 assume val admitP: 'P:Type -> unit -> Pure unit True (fun x -> 'P)
 assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
+(* assume val Assert : b:bool -> Pure unit (requires $"assertion failed" (b2t b)) (ensures \x -> True) *)
 assume val lemma : 'P:Type -> x:unit{'P} -> z:unit{'P}
 assume val unreachable : x:unit{LBL "unreachable" False} -> 'a
 assume val failwith: string -> 'a (* TODO: refine with the Exn monad *)

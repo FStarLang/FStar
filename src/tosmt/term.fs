@@ -403,8 +403,8 @@ and mkPrelude z3options =
                 (declare-fun ApplyTT (Type Type) Type)\n\
                 (declare-fun Rank (Term) Int)\n\
                 (declare-fun Closure (Term) Term)\n\
-                (declare-fun ConsTerm (Term Term) Term)\n
-                (declare-fun ConsType (Type Term) Term)\n
+                (declare-fun ConsTerm (Term Term) Term)\n\
+                (declare-fun ConsType (Type Term) Term)\n\
                 (declare-fun Precedes (Term Term) Type)\n\
                 (assert (forall ((t1 Term) (t2 Term))\n\
                      (! (iff (Valid (Precedes t1 t2)) \n\

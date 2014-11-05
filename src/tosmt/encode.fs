@@ -349,7 +349,7 @@ and encode_binders (bs:Syntax.binders) (env:env_t) : (list<var>       (* transla
                     if is_null_binder b   
                     then withenv env <| fresh_bvar "x" Term_sort
                     else gen_term_var env x in
-                let guard_x_t, decls' = encode_typ_pred t env xx in
+                let guard_x_t, decls' = encode_typ_pred (norm_t env t) env xx in
                 (xxsym, Term_sort), 
                 guard_x_t,
                 env', 
@@ -364,7 +364,7 @@ and encode_binders (bs:Syntax.binders) (env:env_t) : (list<var>       (* transla
 
 and encode_typ_pred (t:typ) (env:env_t) (e:term) : term * decls_t = 
     let t = Util.compress_typ t in 
-    match t.n with 
+    match (Util.unmeta_typ t).n with 
         | Typ_refine(x, f) -> 
           let base_pred, decls = encode_typ_pred x.sort env e in 
           let env' = push_term_var env x.v e in
