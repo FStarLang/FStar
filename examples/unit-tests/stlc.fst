@@ -214,11 +214,24 @@ let (* rec *) free_in_context x e t g =
   | _ -> admit()
   | EAbs y _ e1 -> begin
       match typing e g with
-      | Some (TArrow t1 t2) -> admit()
-          (* free_in_context x e1 t2 (extend g y t1) *)
+      | Some (TArrow t1 t2) ->
+          admit() (* free_in_context x e1 t2 (extend g y t1) *)
       end
-  | EApp e1 e2 -> admit()
-  | EIf e1 e2 e3 -> admit()
+  | EApp e1 e2 -> begin
+      match typing e1 g with
+      | Some (TArrow t1 t2) ->
+          if appears_free_in x e1 then
+            admit() (* free_in_context x e1 (TArrow t1 t2) *)
+          else
+            admit() (* free_in_context x e2 t1 *)
+      end
+  | EIf e1 e2 e3 ->
+      if appears_free_in x e1 then
+        admit() (* free_in_context x e1 TBool *)
+      else if appears_free_in x e2 then
+        admit() (* free_in_context x e2 t *)
+      else
+        admit() (* free_in_context x e3 t *)
   | _ -> ()
 
 val context_invariance : g:env -> g':env -> e:exp -> t:ty -> Pure unit
