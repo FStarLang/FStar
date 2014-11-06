@@ -542,13 +542,13 @@ let normalize tcenv t = norm_typ [DeltaHard;Beta;Eta] tcenv t
 (* Functions for normalization and printing *)
 
 let typ_norm_to_string tcenv t =
-  Print.typ_to_string (norm_typ [DeltaHard;Beta] tcenv t)
+  Print.typ_to_string (norm_typ [Beta;SNComp] tcenv t)
 
 let kind_norm_to_string tcenv k =
-  Print.kind_to_string (norm_kind [DeltaHard;Beta] tcenv k)
+  Print.kind_to_string (norm_kind [Beta;SNComp] tcenv k)
 
 let formula_norm_to_string tcenv f =
-  Print.formula_to_string (norm_typ [SNComp] tcenv f)
+  Print.formula_to_string (norm_typ [Beta;SNComp] tcenv f)
 
 let comp_typ_norm_to_string tcenv c =
-  Print.comp_typ_to_string (norm_comp [Beta;SNComp;Delta] tcenv c)
+  Print.comp_typ_to_string (norm_comp [Beta;SNComp] tcenv c)

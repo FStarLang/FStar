@@ -76,7 +76,7 @@ type typ' =
   | Typ_lam      of binders * typ                            (* fun (ai|xi:tau_i) => T *)
   | Typ_ascribed of typ * knd                                (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
-  | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
+  | Typ_uvar     of uvar_t * knd                             (* Unification variables, not present after 1st round tc *)
   | Typ_delayed  of typ * subst * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
 and arg = either<typ,exp> * bool                             (* bool marks an explicitly provided implicit arg *)

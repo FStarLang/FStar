@@ -20,15 +20,16 @@ module Microsoft.FStar.Tc.Normalize
 
 open Microsoft.FStar.Tc
 open Microsoft.FStar.Absyn.Syntax
- 
-type step = 
-  | WHNF
-  | Eta
-  | Delta        (* don't expand abbreviations if they aren't blocking reduction *)
-  | DeltaHard    (* expand all abbreviations *)
-  | Beta
+
+(* CH: without WHNF, all the strategies reduce under lambdas, right? *)
+type step =
+  | WHNF         (* reduce to weak head normal form only -- CH: adding this removes behaviors, quite unintuitive *)
+  | Eta          (* eta expansion (of type functions) *)
+  | Delta        (* expand type abbreviations only if reduction is blocked *)
+  | DeltaHard    (* expand all type abbreviations *)
+  | Beta         (* beta reduction -- CH: currently adding this changes nothing, seems that Beta always performed *)
   | DeltaComp    (* expand computation-type abbreviations *)
-  | Simplify     (* simplify formulas while reducing -- experimental *)
+  | Simplify     (* simplify formulas while reducing -- experimental -- CH: actually unused *)
   | SNComp       (* normalize computation types also *)
 and steps = list<step>
 
