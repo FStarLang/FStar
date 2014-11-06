@@ -67,7 +67,7 @@ let go _ =
             with Backends.OCaml.ASTTrans.OCamlFailure (rg, error) -> begin
                 (* FIXME: register exception and remove this block  *)
                 Util.print_string (* stderr *) <|
-                Util.format2 "OCaml Backend Error: %s %s"
+                Util.format2 "OCaml Backend Error: %s %s\n"
                     (Range.string_of_range rg)
                     (Backends.OCaml.ASTTrans.string_of_error error);
                 exit 1
