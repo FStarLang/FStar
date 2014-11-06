@@ -40,7 +40,7 @@ OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 RUNTIMEFLAGS   = -g --nowarn:62
 
 ALL_DLLS    = basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll tosmt.dll jsbackend.dll
-FSHARP_LIBS = $(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll $(BIN)/FSharp.PPrint.dll
+FSHARP_LIBS = System.Runtime.Serialization.dll System.Xml.dll $(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll $(BIN)/FSharp.PPrint.dll
 OTHER_DLLS  =
 BASELIBS    = $(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
 
