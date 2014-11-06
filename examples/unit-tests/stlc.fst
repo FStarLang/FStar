@@ -90,8 +90,8 @@ val extend_eq : g:env -> x:int -> a:ty -> Fact unit
 let extend_eq g x a = ()
 
 val extend_neq : g:env -> x1:int -> a:ty -> x2:int -> Pure unit
-      (requires (x2 =!= x1))
-      (ensures \r -> ((extend g x2 a) x1) = g x1)
+      (requires (x1 <> x2))
+      (ensures \r -> ((extend g x1 a) x2) = g x2)
 let extend_neq g x1 a x2 = ()
 
 (* CH: swapped env and exp args until functions are ignored from the
@@ -243,7 +243,8 @@ val typable_empty_closed : x:int -> e:exp -> Pure unit
       (ensures \r -> closed e)
 let typable_empty_closed x e =
   match typing e empty with
-  | Some t -> free_in_context x e t empty
+  | Some t -> admit() (* free_in_context x e t empty -- this blows up
+                         Filed as: https://github.com/FStarLang/FStar/issues/46 *)
 
 val context_invariance : g:env -> g':env -> e:exp -> t:ty -> Pure unit
       (requires (typing e g = Some t /\
@@ -276,6 +277,8 @@ let rec context_invariance g g' e t =
       context_invariance g g' e3 t
   | _ -> ()
 
+(* This is a complete disaster, the typing e (extend g x u) = Some t
+   assumption seems to be not usable at all in the proof *)
 val substitution_preserves_typing :
       g:env -> x:int -> e:exp -> u:ty -> t:ty -> v:exp -> Pure unit
           (requires (typing e (extend g x u) = Some t /\
@@ -284,14 +287,25 @@ val substitution_preserves_typing :
 let substitution_preserves_typing g x e u t v =
   typable_empty_closed x v;
   match e with
-  | EVar x ->
-      admit() (* if x = x' then e else e' *)
-  | EAbs x t e1 ->
+  | EVar x' -> (* (subst x v e) = if x = x' then e else e' *)
+      (* assert(typing e (extend g x u) = (extend g x u) x);
+           -- this should work but it fails (just unfolding definition) *)
+      if x = x' then begin
+        extend_eq g x u;
+        assert(x = x'); assert(e = EVar x);
+        (* assert(u = t);  -- this should work but it fails *)
+        admit()
+      end else begin
+        assert(x<>x');
+        extend_neq g x u x';
+        admit()
+      end
+  | EAbs x' t e1 ->
       admit() (* EAbs x t (if x = x' then e1 else (subst x e e1)) *)
   | EApp e1 e2 ->
       admit() (* EApp (subst x e e1) (subst x e e2) *)
   | ETrue ->
-      assert(t = TBool); (* this should be provable but it currently fails *)
+      (* assert(t = TBool); -- this should be provable but it currently fails *)
       admit() (* ETrue *)
   | EFalse ->
       admit() (* EFalse *)
