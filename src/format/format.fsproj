@@ -42,6 +42,9 @@
     <Reference Include="FSharp.PowerPack.Compatibility">
       <HintPath>..\..\bin\FSharp.PowerPack.Compatibility.dll</HintPath>
     </Reference>
+    <Reference Include="FSharp.PPrint">
+      <HintPath>..\..\bin\FSharp.PPrint.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
