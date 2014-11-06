@@ -28,17 +28,8 @@ TC=errors.fs tcenv.fsi tcenv.fs normalize.fsi normalize.fs rel.fsi rel.fs tcutil
 TC_SRC=$(addprefix tc/, $(TC))
 
 # --------------------------------------------------------------------
-PLATFORM=
-BUILD_VERSION=
-OTHERFLAGS=--optimize+ --debug:full --nologo -g -O --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
-
 LIB=../lib
 BIN=../bin
-ALL_DLLS=basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll tosmt.dll jsbackend.dll
-FSHARP_LIBS=$(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll $(BIN)/FSharp.PPrint.dll
-OTHER_DLLS=
-BASELIBS=$(addprefix -r , $(FSHARP_LIBS) $(OTHER_DLLS))
-RUNTIMEFLAGS=-g --nowarn:62
 
 # --------------------------------------------------------------------
 PLATFORM       =
@@ -46,6 +37,7 @@ RELEASE       ?= Debug
 BUILD_VERSION  =
 OTHERFLAGS    := --optimize+ --debug:full --nologo -g -O
 OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
+RUNTIMEFLAGS   = -g --nowarn:62
 
 ALL_DLLS    = basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll tosmt.dll jsbackend.dll
 FSHARP_LIBS = $(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll 
@@ -75,7 +67,7 @@ FSYACC  := $(RUNTIME) $(FSLYDIR)/bin/fsyacc.exe
 FSLEX   := $(RUNTIME) $(FSLYDIR)/bin/fslex.exe
 
 # --------------------------------------------------------------------
-.PHONY: all z3_x86 z3_x64 wc clean tidy check
+.PHONY: all z3_x86 z3_x64 wc clean tidy boot ocaml
 .PHONY: msbuild msbuild-clean
 
 # --------------------------------------------------------------------
@@ -184,6 +176,9 @@ BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSM
 
 boot: $(BOOT_ALL)
 	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug_level Low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+
+ocaml: $(BOOT_ALL)
+	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --codegen OCaml --debug_level Low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
 test: boot
 	make -s -C ../examples/unit-tests all-lax 
