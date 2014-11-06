@@ -1,14 +1,14 @@
 module PartialMap
 open Prims.PURE
 
-assume type t : Type => Type => Type
+assume type t : Type -> Type -> Type
 
 assume logic val Sel : 'k:Type -> 'v:Type -> m:t 'k 'v -> k:'k -> Tot 'v
 assume logic val Upd : 'k:Type -> 'v:Type -> m:t 'k 'v -> k:'k -> v:'v -> Tot (t 'k 'v)
 assume logic val Emp : 'k:Type -> 'v:Type -> Tot (t 'k 'v)
 assume logic val Concat: 'k:Type -> 'v:Type -> t 'k 'v -> t 'k 'v -> Tot (t 'k 'v)
 assume logic val ConstMap: 'k:Type -> 'v:Type -> set 'k -> 'v -> Tot (t 'k 'v)
-logic type InDom  : #'k:Type => #'v:Type => 'k => t 'k 'v => Type
+logic type InDom  : #'k:Type -> #'v:Type -> 'k -> t 'k 'v -> Type
 logic type DisjointDom ('k:Type) ('v:Type) (m1:t 'k 'v) (m2:t 'k 'v) = 
           (forall x.{:pattern (InDom x m1)} InDom x m1 ==> ~(InDom x m2))
                          

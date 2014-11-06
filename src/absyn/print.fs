@@ -97,7 +97,7 @@ and typ_to_string x =
   | Typ_delayed _ -> failwith "impossible"
   | Typ_meta(Meta_named(_, l)) -> sli l
   | Typ_meta meta ->           Util.format1 "(Meta %s)" (meta|> meta_to_string)
-  | Typ_btvar btv -> strBvd btv.v 
+  | Typ_btvar btv -> strBvd btv.v
     //Util.format2 "(%s:%s)" (strBvd btv.v) (kind_to_string x.tk)
   | Typ_const v -> sli v.v //Util.format2 "%s:%s" (sli v.v) (kind_to_string x.tk)
   | Typ_fun(binders, c) ->     Util.format2 "(%s -> %s)"  (binders_to_string " -> " binders) (comp_typ_to_string c)
@@ -239,7 +239,7 @@ and either_to_string x = match x with
 
 and meta_to_string x = match x with 
   | Meta_refresh_label(t, _, _) -> Util.format1 "(refresh) %s" (typ_to_string t)
-  | Meta_labeled(t, l, _) -> Util.format2 "(labeled %s) %s" l (typ_to_string t)
+  | Meta_labeled(t, l, _) -> Util.format2 "(labeled \"%s\") %s" l (typ_to_string t)
   | Meta_named(_, l) -> sli l
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (args_to_string ps) (t |> typ_to_string) 
 
@@ -276,8 +276,8 @@ and pat_to_string x = match x.v with
 let subst_to_string subst = 
    Util.format1 "{%s}" <|
     (List.map (function 
-        | Inl (a, t) -> Util.format2 "(%s / %s)" (strBvd a) (typ_to_string t)
-        | Inr (x, e) -> Util.format2 "(%s / %s)" (strBvd x) (exp_to_string e)) subst |> String.concat ", ")
+        | Inl (a, t) -> Util.format2 "(%s -> %s)" (strBvd a) (typ_to_string t)
+        | Inr (x, e) -> Util.format2 "(%s -> %s)" (strBvd x) (exp_to_string e)) subst |> String.concat ", ")
 let freevars_to_string (fvs:freevars) = 
     let f (l:set<bvar<'a,'b>>) = l |> Util.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
     Util.format2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs) 

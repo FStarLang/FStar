@@ -3,7 +3,7 @@ module Bug26
 assume val factorial : n:nat -> Tot nat
 assume val bar:n:int{n > 1} -> Tot (y:int{y==factorial n})
 
-val evenb: int -> Tot bool
+val evenb: nat -> Tot bool
 let evenb i = (i % 2) = 0
 
 val filter: ('a -> Tot bool) -> list 'a -> Tot (list 'a)
@@ -25,10 +25,9 @@ let test_filter2 () = ()
 val evenb3: i:int{i>0} -> Tot bool
 let evenb3 i = (i % 2) = 0
 
-(* TODO: this one still fails, because refinements are not yet shared in the encoding *) 
-(* val test_filter3 : unit -> Fact unit *)
-(*       (ensures (b2t (filter evenb3 [1;2;3;4] = [2;4]))) *)
-(* let test_filter3 () = () *)
+val test_filter3 : unit -> Fact unit
+      (ensures (b2t (filter evenb3 [1;2;3;4] = [2;4])))
+let test_filter3 () = ()
 
 
 

@@ -822,7 +822,7 @@ let doc_of_modelt (env : env) (modx : sigelt) : env * doc option =
     | Sig_assume         _ -> env, None
     | Sig_val_decl       _ -> env, None
 
-    | Sig_datacon (x, ty, n, _, rg) when is_exn n ->
+    | Sig_datacon (x, ty, (n,_,_), _, rg) when is_exn n ->
         let rec aux ty =
             match (Absyn.Util.compress_typ ty).n with
             | Typ_fun(bs, c) -> 

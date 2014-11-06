@@ -25,7 +25,12 @@ type error =
 exception OCamlFailure of Range.range * error
 
 let string_of_error (error : error) =
-    sprintf "%A" error
+    match error with
+    | Unexpected      s -> sprintf "unexpected: %s" s
+    | Unsupported     s -> sprintf "unsupported: %s" s
+    | UnboundVar      s -> sprintf "unbound-var: %s" s
+    | UnboundTyVar    s -> sprintf "unbound-ty-var: %s" s
+    | DuplicatedLocal _ -> sprintf "duplicated-local"
 
 let unexpected (rg : range) (what : string) =
     raise (OCamlFailure (rg, Unexpected what))
@@ -352,10 +357,14 @@ let mltycons_of_mlty (ty : mlty) =
 let rec strip_polymorphism acc rg ty =
     let rg = ty.pos in
     match (Absyn.Util.compress_typ ty).n with
-    | Typ_fun(bs, c) -> 
+    | Typ_fun(bs, c) -> begin
         let ts, vs = bs |> List.partition (function Inl {v=x; sort={n=Kind_type}}, _ -> true | _ -> false)  in
         let ts = ts |> List.collect (function (Inl x, _) -> [(x.v.realname, x.v.ppname)] | _ -> []) in
-        ts, rg, mk_Typ_fun(vs, c) ktype ty.pos
+        match vs, c.n with
+        | [], Total ty -> ts, rg, ty
+        | [], Comp c   -> ts, rg, c.result_typ
+        | _ , _        -> ts, rg, mk_Typ_fun(vs, c) ktype ty.pos
+    end
     
     | _ ->
         (List.rev acc, rg, ty)
@@ -372,14 +381,17 @@ let rec mlpat_of_pat (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
     match p.v with
     | Pat_cons (x, ps) when is_xtuple x.v = Some (List.length ps) ->
         let ps = ps |> List.filter (fun p -> match p.v with 
-            | Pat_dot_term _ 
-            | Pat_dot_typ _ -> false
-            | _ -> true) in
-        let lenv, ps = Util.fold_map (fun lenv pat -> mlpat_of_pat pat.p lenv pat) 
-            lenv ps in
+            | Pat_dot_term _ | Pat_dot_typ _ -> false
+            | _ -> true)
+        in
+        let lenv, ps = Util.fold_map (fun lenv pat -> mlpat_of_pat pat.p lenv pat) lenv ps in
         (lenv, MLP_Tuple ps)
 
     | Pat_cons (x, ps) ->
+        let ps = ps |> List.filter (fun p -> match p.v with 
+            | Pat_dot_term _ | Pat_dot_typ _ -> false
+            | _ -> true)
+        in
         let lenv, ps = Util.fold_map (mlpat_of_pat rg) lenv ps in
         (lenv, MLP_CTor (mlpath_of_lident x.v, ps))
 
@@ -397,10 +409,10 @@ let rec mlpat_of_pat (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
     | Pat_wild _ ->
         lenv, MLP_Wild
 
-    | Pat_dot_term _
-    | Pat_dot_typ _ -> unsupported rg "top-level dot patterns"
-    | Pat_tvar  _ -> unsupported rg "pattern-type-variable"
-    | Pat_twild _ -> unsupported rg "pattern-type-wild"
+    | Pat_dot_term _ -> unsupported rg "top-level-dot-patterns"
+    | Pat_dot_typ  _ -> unsupported rg "top-level-dot-patterns"
+    | Pat_tvar     _ -> unsupported rg "pattern-type-variable"
+    | Pat_twild    _ -> unsupported rg "pattern-type-wild"
 
 (* -------------------------------------------------------------------- *)
 let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
@@ -470,11 +482,6 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
             let body = mlexpr_of_expr rg lenv body in
             MLE_Let (rec_, bindings, body)
 
-//NS: This case replaced by Exp_meta(Meta_desugared(e, Primop)) ... see below
-//        | Exp_primop (x, args) ->
-//            let args = List.map (mlexpr_of_expr rg lenv) args in
-//            MLE_App (MLE_Var (lresolve lenv x), args)
-
         | Exp_meta (Meta_desugared (e, Data_app)) ->
             let (c, args) =
                 match e.n with
@@ -497,7 +504,7 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
             | _ -> unexpected rg "expr-seq-mark-without-let"
         end
 
-        | Exp_meta (Meta_desugared (e, Primop)) -> //NS: Fixme?
+        | Exp_meta (Meta_desugared (e, Primop)) ->
              mlexpr_of_expr rg lenv e
       
         | Exp_ascribed (e, _) ->
@@ -506,12 +513,6 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
         
         | Exp_meta (Meta_datainst (e, _)) ->
             mlexpr_of_expr rg lenv e
-
-        
-//        | Exp_tapp (e, _) ->
-//            (* FIXME: add a type annotation *)
-//            mlexpr_of_expr rg lenv e
-//
 
         | Exp_app     _ -> unexpected rg "expr-app"
         | Exp_uvar    _ -> unexpected rg "expr-uvar"
@@ -567,29 +568,32 @@ let mlitem1_exn mode args =
 type mldtype = mlsymbol * mlidents * mltybody
 
 let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
-    let (ts, cs) =
-        let fold1 sigelt (types, ctors) =
+    let (ts, cs, abbrvs) =
+        let fold1 sigelt (types, ctors, abbrvs) =
             match sigelt with
             | Sig_tycon (x, tps, k, ts, cs, _, rg) -> begin
                 let ar =
                     match mlkind_of_kind tps k with
                     | None    -> unsupported rg "not-an-ML-kind"
                     | Some ar -> ar in
-                ((x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) :: types, ctors)
+                ((x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) :: types, ctors, abbrvs)
             end
 
             | Sig_datacon (x, ty, pr, _, rg) ->
-                (types, (x.ident.idText, (ty, pr)) :: ctors)
+                (types, (x.ident.idText, (ty, pr)) :: ctors, abbrvs)
+
+            | Sig_typ_abbrev (x, tps, k, body, _, rg) ->
+                (types, ctors, abbrvs) (* FIXME *)
 
             | _ ->
                 unexpected
                     (Absyn.Util.range_of_sigelt sigelt)
-                    "no-dtype-in-bundle"
+                    "no-dtype--or-abbrvs-in-bundle"
         in
 
-        let (ts, cs) = List.foldBack fold1 indt ([], []) in
+        let (ts, cs, abbrvs) = List.foldBack fold1 indt ([], [], []) in
 
-        (ts, Map.ofList cs)
+        (ts, Map.ofList cs, abbrvs)
     in
 
     let fortype (x, tcs, tparams, rg) =
@@ -685,7 +689,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
         | Struct -> Some (Inr (MLM_Ty aout))
     end
 
-    | Sig_datacon (x, ty, tx, _, rg) when as_tprims tx = Some Exn -> begin
+    | Sig_datacon (x, ty, (tx,_,_), _, rg) when as_tprims tx = Some Exn -> begin
         let rec aux acc ty =
             match (Absyn.Util.compress_typ ty).n with
             | Typ_fun(bs, c) -> 
@@ -723,6 +727,7 @@ let mlsig_of_sig (mlenv : mlenv) (modx : list<sigelt>) : mlsig =
 
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstar (fmod_ : modul) =
+    printfn "OCaml: %s" fmod_.name.ident.idText;
     let mod_ = mlmod_of_mod (MLEnv ()) fmod_.declarations in
     let sig_ = mlsig_of_sig (MLEnv ()) fmod_.declarations in
     (mlpath_of_lident fmod_.name, sig_, mod_)
@@ -741,7 +746,7 @@ let rec mllib_add (MLLib mllib : mllib) ((path : mlpath), sig_, mod_) =
         | ((name, sigmod, sublibs) as the) :: tl ->
             if name = snd path then begin
                 if Option.isSome sigmod then
-                    failwith "duplicated-module";
+                    failwith ("duplicated-module: " ^ name);
                 (name, Some (sig_, mod_), sublibs) :: tl
             end else
                 the :: (aux tl)

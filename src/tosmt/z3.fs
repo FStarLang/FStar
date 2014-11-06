@@ -146,15 +146,65 @@ let z3_options () =
      "(set-option :" ^ mbqi ^ " false)\n" ^
      model_on_timeout
 
-let batch : ref<decls> = Util.mk_ref []
-let clear_batch () = let r = !batch in batch:=[]; r
-let giveZ3 (theory:decls) = batch := !batch@theory
-let queryZ3 label_messages (theory:decls)  =
-  let theory = clear_batch()@theory in
+//Invariant: if scopes[i] = Pending(true, f), then the declarations 'f() = Push::_' have yet to be given to the solver
+//Invariant: if scopes[i] = Pending(false, f), then the declarations 'f() <> Push::_' have yet to be given to the solver
+//Invariant: if scopes[i] = Closed, then a Pop is yet to be given to the solver for each level i
+type scope = 
+    | Closed of string * (unit -> decls_t)
+        | Pending of string * bool * (unit -> decls_t)
+
+let print_scopes s = s |> List.map (function 
+    | Closed (m, _) -> "Closed "^m
+    | Pending (m, true, _) -> "Pending (true) " ^m
+    | Pending (m, _, _) -> "Pending (false) " ^m) |> String.concat "\n\t"
+
+let open_scope m  = Pending (m, false, (fun () -> []))
+let scopes : ref<list<scope>> = Util.mk_ref [open_scope "top"]
+let push msg f =
+    let b = !scopes in
+    let hd = Pending (msg, true, (fun () -> [Term.Push; Term.Caption ("push" ^ msg)]@f())) in
+    scopes := hd::b
+let pop msg f =
+    let rec aux l = match l with
+        | [] -> failwith "Too many pops"
+        | Closed(m,g)::tl -> Closed(m,g)::aux tl
+        | Pending(_, true, _)::tl -> tl   // top of the stack contains a push that was never given to the solver; so, don't add a pop
+        | Pending(m, false, _)::tl -> Closed ("popped" ^m, (fun () -> f()@[Term.Pop; Term.Caption ("Pop " ^ msg)]))::tl in
+    scopes := aux (!scopes) 
+let flush_scopes () = 
+    let close_all closed = 
+        closed |> List.collect (function 
+            | Closed(_, f) -> f()
+            | _ -> failwith "impossible") in
+    let flush_pending pending = 
+        List.fold_right (fun p decls -> match p with
+            | Pending (_, _, f) -> decls@f()
+            | _ -> decls) pending [] in
+    let pending, closed = !scopes |> List.partition (function Closed _ -> false | _ -> true) in
+    let decls = close_all closed @ flush_pending pending in 
+    scopes := pending |> List.map (function 
+        | Closed _ -> failwith (Util.format1 "impos!!!:\n\t%s\n" (print_scopes !scopes))  
+        | Pending(m, _, _) -> open_scope m);
+    decls
+
+let giveZ3 msg (theory:unit -> decls_t) = 
+    if !Options.debug <> [] then Util.fprint1 "GiveZ3: %s\n" msg;
+    let rec aux l = match l with 
+        | [] -> failwith "no open scopes"
+        | Closed(m, f)::tl -> Closed(m, f)::aux tl
+        | Pending(m, b, f)::tl -> 
+            let g () = f()@theory() in 
+            Pending(m, b, g)::tl in
+    scopes := aux !scopes
+
+let queryAndPop query_and_labels pop_fn =
+  let bg_theory = flush_scopes() in
+  let qry, label_messages = query_and_labels () in
+  let theory = bg_theory@[Term.Push]@qry@[Term.Pop] in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
     if !Options.logQueries then Util.append_to_file (get_qfile()) input; (* append flushes *)
     let status, lblnegs = doZ3Exe input in
-    match status with 
+  let result = match status with 
         | UNSAT -> true, []
         | _ -> 
           if !Options.debug <> [] then print_string <| format1 "Z3 says: %s\n" (status_to_string status);
@@ -162,4 +212,6 @@ let queryZ3 label_messages (theory:decls)  =
             match label_messages |> List.tryFind (fun (m, _) -> fst m = l) with
                 | None -> []
                 | Some (_, msg) -> [msg]) in
-          false, failing_assertions
+          false, failing_assertions in
+  pop_fn(); 
+  result

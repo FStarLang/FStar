@@ -34,6 +34,35 @@ exception Impos
 exception NYI of string
 exception Failure of string
 
+open System.Collections.Generic
+
+type weakmap<'a> =
+    | Dummy of 'a
+    | Map of Dictionary<int, list<WeakReference>>
+
+let new_weakmap () = Map (new Dictionary<int,list<WeakReference>>())
+
+let weakmap_insert (map:weakmap<'a>) key (value:'a) = 
+  let w = new WeakReference(value) in
+  match map with 
+    | Map m ->
+        let (exists, value) = m.TryGetValue(key) in
+        if exists
+        then (m.Remove(key) |> ignore; m.Add(key, w::value))
+        else m.Add(key, [w])
+    | _ -> failwith "impossible"
+
+let weakmap_lookup (map:weakmap<'a>) key = 
+   match map with 
+    | Map m -> 
+        let (ok, value) = m.TryGetValue(key) in
+        if ok 
+        then Some (value |> List.map (fun v -> v.Target :?> 'a))
+        else None
+    | _ -> failwith "impossible"
+
+
+
 type proc = {m:Object; 
              outbuf:StringBuilder;
              proc:Process;
@@ -184,6 +213,10 @@ let smap_try_find (m:smap<'value>) k = m.TryFind(k)
 let smap_fold (m:smap<'value>) f a = m.Fold f a
 let smap_remove (m:smap<'value>) k = m.Remove k
 let smap_keys (m:smap<'value>) = m.Fold (fun k v keys -> k::keys) []
+let smap_copy (m:smap<'value>) = 
+    let n = smap_create (m.Count) in
+    smap_fold m (fun k v () -> smap_add n k v) ();
+    n
 let pr  = Printf.printf
 let spr = Printf.sprintf 
 let fpr = Printf.fprintf 

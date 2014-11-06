@@ -29,6 +29,7 @@ val t_unit : typ
 val typing_const : env -> sconst -> typ
 val new_kvar : env -> knd          
 val new_tvar : env -> knd -> typ
+val new_evar : env -> typ -> exp
 val check_uvars: Range.range -> typ -> unit
 val check_and_ascribe : env -> exp -> typ -> typ -> exp * Rel.guard_t
 val pat_as_exps: env -> pat -> list<Env.binding> * list<Env.binding> * list<exp>
@@ -56,7 +57,7 @@ val return_value: env -> typ -> exp -> comp
 val bind: env -> option<exp> -> comp -> comp_with_binder -> comp
 val bind_cases: env -> typ -> list<(typ * comp)> -> comp
 val weaken_result_typ: env -> exp -> comp -> typ -> exp * comp
-val strengthen_precondition: option<string> -> env -> comp -> guard_t -> comp
+val strengthen_precondition: option<(unit -> string)> -> env -> comp -> guard_t -> comp
 val weaken_precondition: env -> comp -> guard_t -> comp
 val maybe_assume_result_eq_pure_term: env -> exp -> comp -> comp
 val lift_pure: env -> typ -> formula -> comp (* with t as a result type *)
@@ -69,4 +70,5 @@ val discharge_guard: env -> guard_t -> unit
 val label: string -> Range.range -> typ -> typ
 val label_guard: string -> Range.range -> guard_t -> guard_t
 val refresh_comp_label: env -> bool -> comp -> comp
+val check_total: env -> comp -> bool * list<string>
 

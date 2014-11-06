@@ -446,14 +446,25 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
 
     | Exp_app(e, args) ->
       let c1 = wne tcenv ({config with code=e}) in
-      let args = sn_args tcenv config.environment config.steps args in
-      {config with code=w <| mk_Exp_app(c1.code, args)} 
+      begin match c1.code.n with 
+        | Exp_abs(binders, body) when (List.length binders = List.length args) -> 
+          let subst = List.map2 (fun b a -> match fst b, fst a with 
+            | Inl a, Inl t -> Inl (a.v, t)
+            | Inr x, Inr v -> Inr (x.v, v)
+            | _ -> failwith "Impossible") binders args in
+          let body = Util.subst_exp subst body in 
+          wne tcenv ({cfg with code=body})
+
+        | _ -> 
+         let args = sn_args tcenv config.environment config.steps args in
+         {config with code=w <| mk_Exp_app(c1.code, args)}
+      end 
  
-    | Exp_abs(bs, e) -> 
+    | Exp_abs(bs, body) -> 
       let bs, env = sn_binders tcenv bs config.environment config.steps in
       let s = subst_of_env env in
-      let e = subst_exp s e in
-      {config with code=w <| mk_Exp_abs(bs, e)}
+      let body = subst_exp s body in
+      {config with code=mk_Exp_abs(bs, body) (Util.subst_typ s e.tk) e.pos}
 
     | Exp_match _
     | Exp_let  _ -> 

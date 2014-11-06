@@ -81,15 +81,15 @@ let pure_id_annot x = x
 val ml_id_annot : 'a -> 'a
 let ml_id_annot x = x
 
-val tabs_id_pure_annot_eq : 'a:Type -> x:'a -> Pure 'a True (fun y => y==x)
+val tabs_id_pure_annot_eq : 'a:Type -> x:'a -> Pure 'a True (fun y -> y==x)
 let tabs_id_pure_annot_eq ('a:Type) x = x
 
 let tabs_id ('a:Type) (x:'a) = x
 
-val id_pure_annot_eq : x:'a -> Pure 'a True (fun y => y==x)
+val id_pure_annot_eq : x:'a -> Pure 'a True (fun y -> y==x)
 let id_pure_annot_eq x = x
 
-val id_all_annot_eq: x:'a -> All 'a (fun h => True) (fun h0 y h1 => is_V y /\ h0==h1 /\ x==(V.v y)) (SomeRefs EmptySet)
+val id_all_annot_eq: x:'a -> All 'a (fun h -> True) (fun h0 y h1 -> is_V y /\ h0==h1 /\ x==(V.v y)) (SomeRefs EmptySet)
 let id_all_annot_eq x = x
 
 val hd: list 'a -> 'a
@@ -108,16 +108,16 @@ let hd_pure_alt = function
 val dup_pure: x:'a -> Tot ('a * 'a)
 let dup_pure x = (x,x)
 
-val dup_pure_eq: x:'a -> Pure ('a * 'a) True (fun y => MkTuple2._1 y==MkTuple2._2 y)
+val dup_pure_eq: x:'a -> Pure ('a * 'a) True (fun y -> MkTuple2._1 y==MkTuple2._2 y)
 let dup_pure_eq x = (x,x)
 
 (* the programs below are equivalent---see the refinement of the result in tc.fs/Exp_app case. *)
-assume val get_0: unit -> ST int (fun _h => True) (fun _h i _h' => i==0)
-assume val get_1: unit -> ST int (fun _h => True) (fun _h i _h' => i==1)
-val get_false: unit -> ST bool (fun _h => True) (fun _h b _h' => b==false)
+assume val get_0: unit -> ST int (fun _h -> True) (fun _h i _h' -> i==0)
+assume val get_1: unit -> ST int (fun _h -> True) (fun _h i _h' -> i==1)
+val get_false: unit -> ST bool (fun _h -> True) (fun _h b _h' -> b==false)
 let get_false u = get_0 () > get_1 ()
 
-val get_false_ANF: unit -> ST bool (fun _h => True) (fun _h b _h' => b==false)
+val get_false_ANF: unit -> ST bool (fun _h -> True) (fun _h b _h' -> b==false)
 let get_false_ANF u =
   let x = get_0 () in
   let y = get_1 () in
@@ -129,13 +129,13 @@ let record_f_exhaustive r = match r.f with (* should be able to prove that the p
   | Some i -> i
   | None -> 0
     
-val test_label: x:int -> Pure int (requires (x > 0)) (ensures \y => y > 0)
+val test_label: x:int -> Pure int (requires (x > 0)) (ensures \y -> y > 0)
 let test_label x = x
 
 val test_precondition_label: x:int -> Tot int
 let test_precondition_label x = test_label x //should fail
 
-val test_postcondition_label: x:int -> Pure int (requires True) (ensures \y => y > 0)
+val test_postcondition_label: x:int -> Pure int (requires True) (ensures \y -> y > 0)
 let test_postcondition_label x = x //should fail
 
 

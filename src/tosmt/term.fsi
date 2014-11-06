@@ -44,8 +44,8 @@ type term' =
   | PP         of term * term
   | App        of string * list<term>
   | Not        of term
-  | And        of term * term
-  | Or         of term * term
+  | And        of list<term>
+  | Or         of list<term>
   | Imp        of term * term
   | Iff        of term * term
   | Eq         of term * term
@@ -67,8 +67,10 @@ type term' =
   | ConstArray of string * sort * term 
   | Cases      of list<term>
 and pat = term
-and term = {tm:term'}
+and term = {tm:term'; as_str:string; freevars:Syntax.memo<list<var>>}
 and var = (string * sort)
+
+val free_variables: term -> list<var>
 
 val mkTrue : term
 val mkFalse : term
@@ -118,15 +120,16 @@ type decl =
   | Push
   | Pop
   | CheckSat
-type decls = list<decl>
+type decls_t = list<decl>
 
-val constructor_to_decl: constructor_t -> decls
-val termToSmt: binders -> term -> string
+val constructor_to_decl: constructor_t -> decls_t
+val termToSmt: term -> string
 val declToSmt: string -> decl -> string
 
 val mk_Kind_type : term
 val mk_Typ_app : term -> term -> term
 val mk_Typ_dep : term -> term -> term
+val mk_Typ_uvar: int -> term
 val mk_and_l: list<term> -> term
 val mk_or_l: list<term> -> term
 
@@ -139,6 +142,7 @@ val unboxString: term -> term
 val boxRef: term -> term
 val unboxRef: term -> term
 
+val mk_Closure: int -> list<var> -> term
 val mk_Term_unit: term
 val mk_PreKind: term -> term
 val mk_PreType: term -> term

@@ -47,6 +47,15 @@ val smap_try_find: smap<'value> -> string -> option<'value>
 val smap_fold: smap<'value> -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
 val smap_remove: smap<'value> -> string -> unit
 val smap_keys: smap<'value> -> list<string>
+val smap_copy: smap<'value> -> smap<'value>
+
+//type weakmap<'a> = (* not relying on representation *)
+//    | Dummy of 'a
+//    | Map of System.Collections.Generic.Dictionary<int, list<System.WeakReference>>
+//
+//val new_weakmap: unit -> weakmap<'a>
+//val weakmap_insert: weakmap<'a> -> int -> 'a -> unit
+//val weakmap_lookup: weakmap<'a> -> int -> option<list<'a>>
 
 val format: string -> list<string> -> string
 

@@ -192,6 +192,7 @@ type qualifier =
   | ExceptionConstructor
   | Effect 
  
+type tycon = lident * binders * knd
 type monad_abbrev = {
   mabbrev:lident;
   parms:binders;
@@ -226,7 +227,7 @@ type monad_decl = {
 and sigelt =
   | Sig_tycon          of lident * binders * knd * list<lident> * list<lident> * list<qualifier> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
   | Sig_typ_abbrev     of lident * binders * knd * typ * list<qualifier> * Range.range 
-  | Sig_datacon        of lident * typ * lident * list<qualifier> * Range.range  (* second lident is the name of the type this constructs *)
+  | Sig_datacon        of lident * typ * tycon * list<qualifier> * Range.range  
   | Sig_val_decl       of lident * typ * list<qualifier> * Range.range 
   | Sig_assume         of lident * formula * list<qualifier> * Range.range 
   | Sig_let            of letbindings * Range.range * list<lident>
@@ -360,22 +361,9 @@ let mk_Typ_const    (x:ftvar) (k:knd) (p:range) = {n=Typ_const x; tk=k; pos=p; u
 let rec check_fun (bs:binders) (c:comp) p = 
     match bs with 
         | [] -> failwith "Empty binders"
-        | _ -> match c.n with 
-                | Total {n=Typ_fun(bs',c)} -> check_fun (bs@bs') c p
-                | _ -> Typ_fun(bs, c)
+        | _  -> Typ_fun(bs, c)
 let mk_Typ_fun      ((bs:binders),(c:comp)) (k:knd) (p:range) = {
     n=check_fun bs c p;
-    tk=k;
-    pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();
-}
-let uncurry_fun bs c = match c.n with 
-    | Total {n=Typ_fun(bs', c)} -> Typ_fun(bs@bs', c)
-    | _ -> match bs with 
-             | [] -> failwith "empty binders"
-             | _ -> Typ_fun(bs, c)
-let mk_Typ_fun'      ((bs:binders),(c:comp)) (k:knd) (p:range) = {
-    n=uncurry_fun bs c;
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
@@ -601,7 +589,8 @@ let null_t_binder t : binder = Inl (null_bvar t), false
 let null_v_binder t : binder = Inr (null_bvar t), false
 let targ t : arg = Inl t, false
 let varg v : arg = Inr v, false
-let is_null_bvar (b:bvar<'a,'b>) = b.v.realname.idText = null_id.idText
+let is_null_bvd (b:bvdef<'a>) = b.realname.idText = null_id.idText
+let is_null_bvar (b:bvar<'a,'b>) = is_null_bvd b.v
 let is_null_binder (b:binder) = match b with
     | Inl a, _ -> is_null_bvar a
     | Inr x, _ -> is_null_bvar x

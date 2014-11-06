@@ -566,7 +566,7 @@ name:
 
 tvars:
   | TVAR                { [Syntax.mk_ident($1, rhs parseState 1)] }
-  | TVAR COMMA tvars    { Syntax.mk_ident($1, rhs parseState 1)::$3 }
+  | TVAR COMMA tvars    { Syntax.mk_ident($1, rhs parseState 1) ::$3 }
 
 tvar:
   | TVAR 
@@ -680,7 +680,7 @@ noSeqTerm:
 
 reqEnsBinders:
   |                        { [] }
-  | BACKSLASH atomicPatterns RRARROW { $2 }
+  | BACKSLASH atomicPatterns funArrow { $2 }
 
 label_opt:
   |                        { None }
@@ -739,9 +739,8 @@ maybeWhen:
   | WHEN appTerm { Some $2 }       
 
 funArrow:
-  | RARROW { fun t r -> mk_term t r Expr }
-  | RRARROW { fun t r -> mk_term t r Type }
-
+  | RARROW { fun t r -> mk_term t r Un }
+ 
 tmIff:
   | tmImplies IFF tmIff
       {
@@ -846,8 +845,7 @@ product:
       { $1 }
 
 prodArrow:
-  | RARROW { fun t r -> mk_term t r Type }
-  | RRARROW { fun t r -> mk_term t r Kind }
+  | RARROW { fun t r -> mk_term t r Un }
 
 arithTerm:
   | starDivModTerm PLUS_MINUS_OP arithTerm

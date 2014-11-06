@@ -17,16 +17,10 @@
 
 module Vector
 
-type vector 'a : int => Type =
-  | VNil : vector 'a 0
-  | VCons : 'a -> n:int -> vector 'a n -> vector 'a (n+1)
+type vector 'a : nat -> Type =
+  | VNil : vector 'a 0 
+  | VCons : 'a -> n:nat -> vector 'a n -> vector 'a (n + 1) 
 
-(* type vector2 'a : nat => Type = *)
-(*   | VNil2 : vector2 'a 0 *)
-(*   | VCons2 : 'a -> n:nat -> vector2 'a n -> vector2 'a (n+1) *)
-
-(* val head: n:(n:int{n > 0}) -> vector 'a n -> 'a *)
-(* let head n v = *)
-(*   match v with *)
-(*     | VNil -> assert false; failwith "Dead code" *)
-(*     | VCons x n xs -> x *)
+val head: n:pos -> vector 'a n -> 'a
+let head n v = match v with
+  | VCons x m xs -> x

@@ -19,5 +19,5 @@ open Prims.STATE
 (* stateful primitives in F*, currently just simply typed; soon to be monadically typed *)
 
 assume val alloc: 'a -> ref 'a
-assume val read: r:ref 'a -> State 'a (fun 'p h => 'p (SelHeap h r) h) 
+assume val read: r:ref 'a -> State 'a (fun 'p h -> 'p (SelHeap h r) h) 
 assume val write: r:ref 'a -> v:'a -> State unit (fun 'p h -> 'p () (UpdHeap h r v)) 

@@ -122,18 +122,23 @@ let args_of_binders (binders:Syntax.binders) : (Syntax.binders * args) =
          b, arg_of_non_null_binder b 
     else b, arg_of_non_null_binder b) |> List.unzip 
 
-let name_all_binders t = match t.n with 
-    | Typ_fun(binders, comp) -> 
-        let binders = binders |> List.mapi (fun i b ->
+let name_binders binders = 
+    binders |> List.mapi (fun i b ->
             if is_null_binder b
             then match b with 
-                    | Inl _, _ -> failwith "impossible"
+                    | Inl a, imp -> 
+                      let b = id_of_text ("_" ^ string_of_int i) in
+                      let b = bvd_to_bvar_s (mkbvd(b,b)) a.sort in
+                      Inl b, imp
+
                     | Inr y, imp -> 
                       let x = id_of_text ("_" ^ string_of_int i) in
                       let x = bvd_to_bvar_s (mkbvd(x,x)) y.sort in
                       Inr x, imp
-            else b) in
-        mk_Typ_fun(binders, comp) t.tk t.pos
+            else b)
+             
+let name_function_binders t = match t.n with 
+    | Typ_fun(binders, comp) -> mk_Typ_fun(name_binders binders, comp) t.tk t.pos
     | _ -> t
 let null_binders_of_args (args:args) : binders = 
     args |> List.map (fun (a, imp) -> match a with 
@@ -397,6 +402,16 @@ let rec unmeta_exp e =
         | Exp_meta(Meta_datainst(e, _)) -> unmeta_exp e
         | Exp_ascribed(e, _) -> unmeta_exp e
         | _ -> e
+
+let rec unmeta_typ t =
+    let t = compress_typ t in
+    match t.n with 
+        | Typ_ascribed(t, _) 
+        | Typ_meta(Meta_named(t, _))
+        | Typ_meta(Meta_pattern(t, _))
+        | Typ_meta(Meta_labeled(t, _, _))
+        | Typ_meta(Meta_refresh_label(t, _, _)) -> unmeta_typ t
+        | _ -> t
 
 let alpha_typ t = 
    let t = compress_typ t in

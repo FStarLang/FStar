@@ -197,6 +197,7 @@ let tvar_char =
 let constructor = constructor_start_char ident_char*  
 let ident = ident_start_char ident_char*
 let tvar = '\'' (ident_start_char | constructor_start_char) tvar_char*
+let tvar_alt = constructor_start_char+
 let basekind = '*' | 'A' | 'E' | "Prop"
 
 rule token args = parse
