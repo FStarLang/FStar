@@ -45,3 +45,4 @@ val whnf: Env.env -> typ -> typ
 val typ_norm_to_string : Env.env -> typ -> string
 val kind_norm_to_string : Env.env -> knd -> string
 val formula_norm_to_string : Env.env -> typ -> string
+val comp_typ_norm_to_string : Env.env -> comp -> string

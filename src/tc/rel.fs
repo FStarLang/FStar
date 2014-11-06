@@ -79,7 +79,7 @@ let guard_to_string (env:env) = function
   | Trivial -> "trivial"
   | NonTrivial f ->
       if debug env Medium then
-        Print.formula_to_string (Tc.Normalize.normalize env f)
+        Normalize.formula_norm_to_string env f
       else
         "non-trivial"
 
@@ -182,9 +182,7 @@ let prob_to_string env = function
   | TProb(rel, k1, k2) -> Util.format5 "\t%s (%s) \n\t\t%s\n\t%s (%s)" (Print.typ_to_string k1) (Print.tag_of_typ k1) (rel_to_string rel) (Print.typ_to_string k2) (Print.tag_of_typ k2)
   | EProb(rel, k1, k2) -> Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.exp_to_string k1) (rel_to_string rel) (Print.exp_to_string k2)
   | CProb(rel, k1, k2) -> 
-    let k1 = Normalize.norm_comp [Beta;SNComp;Delta] env k1 in
-    let k2 = Normalize.norm_comp [Beta;SNComp;Delta] env k2 in   
-    Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.comp_typ_to_string k1) (rel_to_string rel) (Print.comp_typ_to_string k2)
+    Util.format3 "\t%s \n\t\t%s\n\t%s" (Normalize.comp_typ_norm_to_string env k1) (rel_to_string rel) (Normalize.comp_typ_norm_to_string env k2)
 //let prob_to_string (env:Env.env) (p:prob) = "<prob>"
 type uvar_inst =  //never a uvar in the co-domain of this map
   | UK of uvar_k * knd 

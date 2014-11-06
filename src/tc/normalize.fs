@@ -549,3 +549,6 @@ let kind_norm_to_string tcenv k =
 
 let formula_norm_to_string tcenv f =
   Print.formula_to_string (norm_typ [SNComp] tcenv f)
+
+let comp_typ_norm_to_string tcenv c =
+  Print.comp_typ_to_string (norm_comp [Beta;SNComp;Delta] tcenv c)

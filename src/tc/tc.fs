@@ -96,7 +96,7 @@ let value_check_expected_typ env e tc : exp * comp =
      let e, g = Tc.Util.check_and_ascribe env e t t' in
      if debug env Options.Low
      then Util.fprint1 "Strengthening pre-condition with guard = %s\n" (Rel.guard_to_string env g);
-     let c = Tc.Util.strengthen_precondition (Some <| Errors.subtyping_check env t t') env c g in
+     let c = Tc.Util.strengthen_precondition (Some <| Errors.subtyping_failed env t t') env c g in
      e, Util.set_result_typ c t' in
   if debug env Options.Low 
   then Util.fprint1 "Return comp type is %s\n" (Print.comp_typ_to_string <| snd res);
@@ -771,7 +771,7 @@ and tc_exp env e : exp * comp =
                   if debug env Options.Low then Util.fprint1 "%s: Warning: Potentially redundant explicit currying of a function type \n" (Range.string_of_range tres.pos);
                   tc_args (subst, outargs, arg_rets, (None, cres)::comps, g, fvs) bs cres' args
                 | _ -> 
-                  raise (Error(Util.format1 "Too many arguments to function of type %s" (Print.typ_to_string tf), argpos arg))
+                  raise (Error(Util.format1 "Too many arguments to function of type %s" (Normalize.typ_norm_to_string env tf), argpos arg))
               end in
          
           tc_args ([], [], [], [], Trivial, no_fvs.fxvs) bs c args
