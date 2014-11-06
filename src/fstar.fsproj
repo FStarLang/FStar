@@ -25,8 +25,8 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartWorkingDirectory>C:\Users\nswamy\workspace\new\FStar\examples\unit-tests</StartWorkingDirectory>
-    <StartArguments>--fstar_home ../.. ../../lib/string.fst ../../lib/st.fst ../../lib/partialmap.fst --debug ListLemmas --verify listlemmas.fst</StartArguments>
+    <StartWorkingDirectory>E:\Projects\fstar\pub\src</StartWorkingDirectory>
+    <StartArguments>--fstar_home .  --trace_error --prims ..\lib\prims.fst --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform ..\lib\system.fst ..\lib\st.fst ..\lib\list.fst ..\lib\option.fst ..\lib\string.fst basic\bytes.fst basic\platform.fsi basic\util.fsi basic\getoptsimple.fst basic\options.fs basic\range.fst basic\unionfind.fst basic\lazyset.fsi basic\lazyset.fs absyn\syntax.fsi absyn\syntax.fs absyn\const.fs absyn\visit.fs absyn\util.fs absyn\print.fs parser\ast.fs parser\dsenv.fsi parser\dsenv.fs parser\desugar.fsi parser\desugar.fs parser\parse.fst parser\lexhelp.fs parser\parseit.fst parser\driver.fs tc\tcenv.fsi tc\tcenv.fs tc\normalize.fsi tc\normalize.fs tc\errors.fs tc\rel.fsi tc\rel.fs tc\tcutil.fsi tc\tcutil.fs tc\tc.fs tosmt\term.fsi tosmt\term.fs tosmt\z3.fs tosmt\encode.fs backend\ocaml-backend-stub.fst jsbackend\ast.fs jsbackend\translate.fs --debug Microsoft.FStar.ToSMT.Encode --debug_level Low &gt; log.txt</StartArguments>
     <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

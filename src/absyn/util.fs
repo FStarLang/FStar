@@ -985,30 +985,30 @@ let freshen_label ropt _ e = match ropt with
 (******************** Reducing to weak head normal form *************************)
 (***********************(inefficient--see tc/normalize.fs)***********************)
 
-let rec whnf t =
-  let t = compress_typ t in
-  match t.n with
-    | Typ_app(head, args) -> 
-        let head = compress_typ head in
-        begin match head.n with 
-            | Typ_lam(formals, body) -> 
-                let rec aux formals actuals = match formals, actuals with 
-                    | f::tl, a::tl' -> 
-                        let fs, acts, more_formals, more_actuals = aux tl tl' in
-                        f::fs, a::acts, more_formals, more_actuals
-                    | _, []
-                    | [], _ -> 
-                        [], [], formals, actuals in
-                let fs, acts, more_formals, more_args = aux formals args in
-                let subst = subst_of_list fs acts in 
-                let t = match more_formals, more_args with
-                    | [], [] -> subst_typ subst body
-                    | [], _ -> mk_Typ_app(subst_typ subst body, more_args) kun t.pos
-                    | _ -> subst_typ subst (mk_Typ_lam(more_formals, body) kun t.pos) in
-                whnf t  
-            | _ -> t
-        end
-    | _ -> t
+//let rec whnf t =
+//  let t = compress_typ t in
+//  match t.n with
+//    | Typ_app(head, args) -> 
+//        let head = compress_typ head in
+//        begin match head.n with 
+//            | Typ_lam(formals, body) -> 
+//                let rec aux formals actuals = match formals, actuals with 
+//                    | f::tl, a::tl' -> 
+//                        let fs, acts, more_formals, more_actuals = aux tl tl' in
+//                        f::fs, a::acts, more_formals, more_actuals
+//                    | _, []
+//                    | [], _ -> 
+//                        [], [], formals, actuals in
+//                let fs, acts, more_formals, more_args = aux formals args in
+//                let subst = subst_of_list fs acts in 
+//                let t = match more_formals, more_args with
+//                    | [], [] -> subst_typ subst body
+//                    | [], _ -> mk_Typ_app(subst_typ subst body, more_args) kun t.pos
+//                    | _ -> subst_typ subst (mk_Typ_lam(more_formals, body) kun t.pos) in
+//                whnf t  
+//            | _ -> t
+//        end
+//    | _ -> t
 
 (********************************************************************************)
 (*********************** Various tests on constants  ****************************)

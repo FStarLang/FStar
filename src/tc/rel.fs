@@ -1177,14 +1177,14 @@ let keq env t k1 k2 : guard_t =
         | None -> Tc.Env.get_range env
         | Some t -> t.pos in
       match t with 
-        | None -> raise (Error(Tc.Errors.incompatible_kinds k2 k1, r))
-        | Some t -> raise (Error(Tc.Errors.expected_typ_of_kind k2 t k1, r)))
+        | None -> raise (Error(Tc.Errors.incompatible_kinds env k2 k1, r))
+        | Some t -> raise (Error(Tc.Errors.expected_typ_of_kind env k2 t k1, r)))
     
 let teq env t1 t2 : guard_t = 
  if debug env <| Other "Rel" then Util.fprint2 "teq of %s and %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
  let prob = TProb(EQ, t1, t2) in //norm_typ [Beta; Eta] env t1, norm_typ [Beta; Eta] env t2) in
  let g = Util.must <| solve_and_commit env (Some t1) prob (fun _ -> 
-    raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env))) in
+    raise (Error(Tc.Errors.basic_type_error env None t2 t1, Tc.Env.get_range env))) in
  if debug env <| Other "Rel" then Util.fprint3 "teq of %s and %s succeeded with guard %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2) (guard_to_string env g);
  close_guard_predicate g
 
@@ -1192,7 +1192,7 @@ let subkind env k1 k2 : guard_t =
  if debug env <| Other "Rel" then Util.fprint2 "try_subkind of %s and %s\n" (Print.kind_to_string k1) (Print.kind_to_string k2);
  let prob  = KProb(SUB, whnf_k env k1, whnf_k env k2) in
  Util.must <| solve_and_commit env None prob (fun _ -> 
-    raise (Error(Tc.Errors.incompatible_kinds k1 k2, Tc.Env.get_range env)))
+    raise (Error(Tc.Errors.incompatible_kinds env k1 k2, Tc.Env.get_range env)))
 
 let try_subtype env t1 t2 = 
  if debug env <| Other "Rel" then Util.fprint2 "try_subtype of %s and %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
@@ -1204,7 +1204,7 @@ let try_subtype env t1 t2 =
  g
 
 let subtype_fail env t1 t2 = 
-    raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env))
+    raise (Error(Tc.Errors.basic_type_error env None t2 t1, Tc.Env.get_range env))
 
 let subtype env t1 t2 : guard_t = 
   if debug env Low then Util.fprint1 "(%s) Subtype test \n" (Range.string_of_range <| Env.get_range env);
@@ -1219,7 +1219,7 @@ let trivial_subtype env eopt t1 t2 =
     | None 
     | Some (NonTrivial _) ->  
       let r = Tc.Env.get_range env in
-      raise (Error(Tc.Errors.basic_type_error eopt t2 t1, r))
+      raise (Error(Tc.Errors.basic_type_error env eopt t2 t1, r))
 
 let sub_comp env c1 c2 = 
   if debug env <| Other "Rel" then Util.fprint2 "sub_comp of %s and %s\n" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2);

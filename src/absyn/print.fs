@@ -91,8 +91,13 @@ and meta_e_to_string = function
     | Sequence -> "Sequence"                  
     | Primop   -> "Primop"
 
+(* This function prints the type it gets as argument verbatim.
+   For already type-checked types use the typ_norm_to_string
+   function in normalize.fs instead, since elaboration
+   (higher-order unification) produces types containing lots of
+   redexes that should first be reduced. *)
 and typ_to_string x =
-  let x = if !Options.norm_then_print then whnf x else Util.compress_typ x in
+  let x = Util.compress_typ x in
   match x.n with 
   | Typ_delayed _ -> failwith "impossible"
   | Typ_meta(Meta_named(_, l)) -> sli l

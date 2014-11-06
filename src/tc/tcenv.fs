@@ -24,8 +24,6 @@ open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Absyn.Const
 open Microsoft.FStar.Util
 open Microsoft.FStar.Profiling 
-open Microsoft.FStar.Tc
-open Microsoft.FStar.Tc.Errors
 open Microsoft.FStar.Absyn.Util
    
 type binding =
@@ -128,9 +126,15 @@ let initial_env solver module_lid =
 let monad_decl_opt env l = 
   env.lattice.decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname l) 
 
+let name_not_found (l:Syntax.lident) =
+  format1 "Name \"%s\" not found" l.str
+
+let variable_not_found v = 
+  format1 "Variable \"%s\" not found" (Print.strBvd v)
+
 let get_monad_decl env l = 
   match monad_decl_opt env l with
-    | None -> raise (Error(Tc.Errors.name_not_found l, range_of_lid l))
+    | None -> raise (Error(name_not_found l, range_of_lid l))
     | Some md -> md
   
 let join env l1 l2 : (lident * (typ -> typ -> typ) * (typ -> typ -> typ)) = 
@@ -241,7 +245,7 @@ let lookup_bvvdef env (bvvd:bvvdef) : option<typ> =
       
 let lookup_bvar env (bv:bvvar) = 
   match lookup_bvvdef env bv.v with
-    | None -> raise (Error(Tc.Errors.variable_not_found bv.v, Util.range_of_bvd bv.v))
+    | None -> raise (Error(variable_not_found bv.v, Util.range_of_bvd bv.v))
     | Some t -> t 
     
 let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  = 
@@ -285,7 +289,7 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
 let lookup_datacon env lid = 
   match lookup_qname env lid with
     | Some (Inr (Sig_datacon (_, t, _, _,_))) -> t
-    | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
+    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_projector env lid i = 
     let fail () = failwith (Util.format2 "Impossible: projecting field #%s from constructor %s is undefined" (Util.string_of_int i) (Print.sli lid)) in
@@ -309,12 +313,12 @@ let try_lookup_val_decl env lid =
 let lookup_val_decl env lid = 
   match lookup_qname env lid with
     | Some (Inr (Sig_val_decl(_, t, _, _))) -> t
-    | _ -> raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid))
+    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_lid env lid = 
   let not_found () = 
     //let _ = Util.smap_fold env.sigtab (fun k _ _ -> Util.print_string (Util.format1 "%s, " k)) () in
-    raise (Error(Tc.Errors.name_not_found lid, range_of_lid lid)) in
+    raise (Error(name_not_found lid, range_of_lid lid)) in
   let mapper = function
     | Inl t
     | Inr (Sig_datacon(_, t, _, _,_))  
@@ -365,7 +369,7 @@ let lookup_btvdef env (btvd:btvdef): option<knd> =
     
 let lookup_btvar env (btv:btvar) = 
   match lookup_btvdef env btv.v with
-    | None -> raise (Error(Tc.Errors.variable_not_found btv.v, Util.range_of_bvd btv.v))
+    | None -> raise (Error(variable_not_found btv.v, Util.range_of_bvd btv.v))
     | Some k -> k 
 
 let lookup_typ_lid env (ftv:lident) : knd = 
@@ -374,7 +378,7 @@ let lookup_typ_lid env (ftv:lident) : knd =
     | Some (Inr (Sig_typ_abbrev (lid, tps, k, _, _, _))) -> 
       Util.close_kind tps k
     | _ ->
-      raise (Error(Tc.Errors.name_not_found ftv, range_of_lid ftv))
+      raise (Error(name_not_found ftv, range_of_lid ftv))
 
 let lookup_operator env (opname:ident) = 
   let primName = lid_of_path ["Prims"; ("_dummy_" ^ opname.idText)] dummyRange in

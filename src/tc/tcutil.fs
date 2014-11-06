@@ -74,8 +74,8 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
   match try_subtype env t1 t2 with
     | None -> 
         if env.is_pattern
-        then raise (Error(Tc.Errors.expected_pattern_of_type t2 e t1, Tc.Env.get_range env))
-        else raise (Error(Tc.Errors.expected_expression_of_type t2 e t1, Tc.Env.get_range env))
+        then raise (Error(Tc.Errors.expected_pattern_of_type env t2 e t1, Tc.Env.get_range env))
+        else raise (Error(Tc.Errors.expected_expression_of_type env t2 e t1, Tc.Env.get_range env))
     | Some f -> 
         let g = apply_guard f e in
         if debug env <| Options.Other "Rel"
@@ -125,7 +125,7 @@ let destruct_arrow_kind env tt k args : (Syntax.args * binders * knd) =
          trivial <| keq env None k kar;
          [], bs, kres
 
-       | _ -> raise (Error(Tc.Errors.expected_tcon_kind tt ktop, r)) in
+       | _ -> raise (Error(Tc.Errors.expected_tcon_kind env tt ktop, r)) in
 
     aux ktop
 
@@ -666,7 +666,7 @@ let close_comp env bindings (c:comp) =
 let check_comp env (e:exp) (c:comp) (c':comp) : exp * comp * guard_t = 
   //printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_typ_to_string c) (Print.comp_typ_to_string c');
   match Tc.Rel.sub_comp env c c' with 
-    | None -> raise (Error(Tc.Errors.computed_computation_type_does_not_match_annotation e c c', Tc.Env.get_range env))
+    | None -> raise (Error(Tc.Errors.computed_computation_type_does_not_match_annotation env e c c', Tc.Env.get_range env))
     | Some g -> e, c', g
 
 let maybe_assume_result_eq_pure_term env (e:exp) (c:comp) : comp = 
@@ -856,7 +856,7 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp =
           let xexp = Util.bvd_to_exp x t in
           let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) k xexp.pos  in
           let cret = mk_comp md t wp wp ct.flags in
-          let eq_ret = strengthen_precondition (Some <| Errors.subtyping_check tc t) (Env.set_range env e.pos) cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
+          let eq_ret = strengthen_precondition (Some <| Errors.subtyping_check env tc t) (Env.set_range env e.pos) cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
           let eq_ret = 
             if Util.is_pure_comp c 
             then weaken_precondition env eq_ret (NonTrivial (Util.mk_eq xexp e))

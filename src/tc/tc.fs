@@ -96,7 +96,7 @@ let value_check_expected_typ env e tc : exp * comp =
      let e, g = Tc.Util.check_and_ascribe env e t t' in
      if debug env Options.Low
      then Util.fprint1 "Strengthening pre-condition with guard = %s\n" (Rel.guard_to_string env g);
-     let c = Tc.Util.strengthen_precondition (Some <| Errors.subtyping_check t t') env c g in
+     let c = Tc.Util.strengthen_precondition (Some <| Errors.subtyping_check env t t') env c g in
      e, Util.set_result_typ c t' in
   if debug env Options.Low 
   then Util.fprint1 "Return comp type is %s\n" (Print.comp_typ_to_string <| snd res);
@@ -125,7 +125,7 @@ let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard_t 
     
 let no_guard env (te, kt, f) = match f with
   | Trivial -> te, kt
-  | NonTrivial f -> raise (Error(Tc.Errors.unexpected_non_trivial_precondition_on_term f, Env.get_range env)) 
+  | NonTrivial f -> raise (Error(Tc.Errors.unexpected_non_trivial_precondition_on_term env f, Env.get_range env)) 
 
 let binding_of_lb x t = match x with 
   | Inl bvd -> Env.Binding_var(bvd, t)
@@ -387,7 +387,7 @@ and tc_value env e : exp * comp =
     value_check_expected_typ env ({e with tk=t}) (Inl t)
 
   | Exp_abs(bs, body) ->  (* This is the dual of the treatment of application ... see the Exp_app case below. *)
-    let fail : typ -> 'a = fun t -> raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function t top, top.pos)) in
+    let fail : typ -> 'a = fun t -> raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function env t top, top.pos)) in
     let expected_function_typ env t0 = match t0 with 
         | None -> (* no expected type; just build a function type from the binders in the term *)
             let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
@@ -779,7 +779,7 @@ and tc_exp env e : exp * comp =
         | _ -> 
             if not norm
             then check_function_app true (Normalize.normalize env tf) //TODO: instead of a full normalization; some way to normalize until head is Typ_fun
-            else raise (Error(Tc.Errors.expected_function_typ tf, f.pos)) in
+            else raise (Error(Tc.Errors.expected_function_typ env tf, f.pos)) in
 
     let e, c = check_function_app false tf in
     let c = if !Options.verify && (Util.is_primop f || Util.is_total_comp c)
@@ -853,7 +853,7 @@ and tc_exp env e : exp * comp =
                  let tres = norm_t env (Util.comp_result cres) in 
                  let fvs = Util.freevars_typ tres in
                  if Util.set_mem (bvd_to_bvar_s bvd t) fvs.fxvs 
-                 then raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape tres bvd, rng env))
+                 then raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres bvd, rng env))
                  else e, cres
               | _ -> e, cres
      end       
@@ -905,7 +905,7 @@ and tc_exp env e : exp * comp =
              match lbs |> List.tryFind (function 
                     | (Inr _, _, _) -> false
                     | (Inl x, _, _) -> Util.set_mem (bvd_to_bvar_s x tun) fvs.fxvs) with
-                | Some (Inl y, _, _) -> raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape (Util.comp_result cres) y, rng env))
+                | Some (Inl y, _, _) -> raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env (Util.comp_result cres) y, rng env))
                 | _ -> e, cres
          end
 
@@ -1034,15 +1034,15 @@ let tc_tparams env (tps:binders) : (binders * Env.env) =
     trivial g;
     tps, env
 
-let a_kwp_a m s = match s.n with 
+let a_kwp_a env m s = match s.n with 
   | Kind_arrow([(Inl a, _);
                 (Inl wp, _);
                 (Inl _, _)], _) -> a, wp.sort
-  | _ -> raise (Error(Tc.Errors.unexpected_signature_for_monad m s, range_of_lid m))
+  | _ -> raise (Error(Tc.Errors.unexpected_signature_for_monad env m s, range_of_lid m))
 
 let rec tc_monad_decl env m =  
   let mk = tc_kind_trivial env m.signature in 
-  let a, kwp_a = a_kwp_a m.mname mk in 
+  let a, kwp_a = a_kwp_a env m.mname mk in 
   let a_typ = Util.btvar_to_typ a in
   let b = Util.gen_bvar_p (range_of_lid m.mname) ktype in
   let b_typ = Util.btvar_to_typ b in
@@ -1152,8 +1152,8 @@ and tc_decl env se = match se with
         let env, m = tc_monad_decl env m in 
         env, m::out) (env, []) in
       let lat = mlat |> List.map (fun (o:monad_order) -> 
-        let a, kwp_a_src = a_kwp_a o.source (Tc.Env.lookup_typ_lid menv o.source) in
-        let b, kwp_b_tgt = a_kwp_a o.target (Tc.Env.lookup_typ_lid menv o.target) in
+        let a, kwp_a_src = a_kwp_a env o.source (Tc.Env.lookup_typ_lid menv o.source) in
+        let b, kwp_b_tgt = a_kwp_a env o.target (Tc.Env.lookup_typ_lid menv o.target) in
         let kwp_a_tgt = Util.subst_kind' [Inl(b.v, Util.btvar_to_typ a)] kwp_b_tgt in
         let expected_k = r |> mk_Kind_arrow([t_binder a; null_t_binder kwp_a_src], kwp_a_tgt) in
         let lift = tc_typ_check_trivial menv o.lift expected_k in
@@ -1203,7 +1203,7 @@ and tc_decl env se = match se with
       (* TODO: check that the tps in tname are the same as here *)
       let _ = match destruct result_t tname with 
         | Some _ -> ()
-        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type (Util.fvar lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
+        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
       let t = Tc.Util.refine_data_type env lid formals result_t in
       let se = Sig_datacon(lid, t, tycon, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
@@ -1344,4 +1344,3 @@ let check_modules (s:solver_t) mods =
     then mods, env
     else (s.encode_modul env m; m::mods, env)) ([], env) in
    List.rev fmods
- 

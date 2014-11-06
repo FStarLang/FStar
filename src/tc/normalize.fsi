@@ -42,3 +42,6 @@ val weak_norm_comp: Env.env -> comp -> comp_typ
 val norm_kind: steps -> Env.env -> knd -> knd
 val norm_typ:  steps -> Env.env -> typ -> typ
 val whnf: Env.env -> typ -> typ
+val typ_norm_to_string : Env.env -> typ -> string
+val kind_norm_to_string : Env.env -> knd -> string
+val formula_norm_to_string : Env.env -> typ -> string
