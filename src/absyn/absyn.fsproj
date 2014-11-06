@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>absyn</RootNamespace>
     <AssemblyName>absyn</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Name>absyn</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -46,6 +46,8 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="syntax.fsi" />
@@ -54,6 +56,7 @@
     <Compile Include="visit.fs" />
     <Compile Include="util.fs" />
     <Compile Include="print.fs" />
+    <Compile Include="ssyntax.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\basic\basic.fsproj">

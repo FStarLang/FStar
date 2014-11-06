@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>format</RootNamespace>
     <AssemblyName>format</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Name>format</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>

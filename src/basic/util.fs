@@ -24,6 +24,10 @@ open System.IO
 open System.IO.Compression
 open Profiling
 
+open System.Runtime.Serialization
+open System.Runtime.Serialization.Json
+
+
 let return_all x = x
 
 exception Impos
@@ -113,6 +117,20 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   let stdout = proc.StandardOutput.ReadToEnd() in
   let stderr = proc.StandardError.ReadToEnd() in 
   result, stdout, stderr
+
+let write_JSON<'a> (o :'a) (file: string) :unit =
+    let s = new DataContractJsonSerializerSettings((*EmitTypeInformation = EmitTypeInformation.Never*)) in
+    let d = new DataContractJsonSerializer(typeof<'a>, s) in
+    let fs = new FileStream(file, FileMode.Create)
+    d.WriteObject(fs, o)
+    fs.Close()
+
+let read_JSON<'a> (file: string) :'a =
+    let s = new DataContractJsonSerializerSettings((*EmitTypeInformation = EmitTypeInformation.Never*)) in
+    let d = new DataContractJsonSerializer(typeof<'a>, s) in
+    let fs = new FileStream(file, FileMode.Open)
+    let o = (d.ReadObject(fs)) :?> 'a in
+    fs.Close(); o
 
 open Prims
 //type set<'a> = Collections.Set<Boxed<'a>> * ('a -> Boxed<'a>)

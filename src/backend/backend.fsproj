@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>backend</RootNamespace>
     <AssemblyName>backend</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Name>backend</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>

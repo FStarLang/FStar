@@ -293,6 +293,7 @@ val list_of_freevars: freevars -> list<either<btvar,bvvar>>
 val binders_of_freevars: freevars -> binders
 val binders_of_list: list<either<btvar, bvvar>> -> binders
 
+val mk_Kind_unknown: knd
 val mk_Kind_type: knd
 val mk_Kind_effect:knd
 val mk_Kind_abbrev: (kabbrev * knd) -> range -> knd
@@ -302,6 +303,7 @@ val mk_Kind_delayed: (knd * subst * memo<knd>) -> range -> knd
 val mk_Kind_uvar: uvar_k_app -> range -> knd
 val mk_Kind_lam: (binders * knd) -> range -> knd
 
+val mk_Typ_unknown: typ
 val mk_Typ_btvar: btvar -> knd -> range -> typ
 val mk_Typ_const: ftvar -> knd -> range -> typ
 val mk_Typ_fun: (binders * comp) -> knd -> range -> typ
