@@ -77,7 +77,11 @@ let simplify_guard (env:env) g =
 
 let guard_to_string (env:env) = function  
   | Trivial -> "trivial"
-  | NonTrivial f -> Print.formula_to_string (Tc.Normalize.normalize env f)
+  | NonTrivial f ->
+      if debug env Medium then
+        Print.formula_to_string (Tc.Normalize.normalize env f)
+      else
+        "non-trivial"
 
 let trivial t = match t with 
   | Trivial -> ()
@@ -1181,7 +1185,10 @@ let subkind env k1 k2 : guard_t =
     raise (Error(Tc.Errors.incompatible_kinds k1 k2, Tc.Env.get_range env)))
 
 let try_subtype env t1 t2 = 
- if debug env Low then Util.fprint4 "try_subtype of %s : %s and %s : %s\n" (Print.typ_to_string t1) (Print.kind_to_string t1.tk) (Print.typ_to_string t2) (Print.kind_to_string t2.tk);
+ if debug env Medium then
+   Util.fprint4 "try_subtype of %s : %s and %s : %s\n"
+     (Print.typ_to_string t1) (Print.kind_to_string t1.tk)
+     (Print.typ_to_string t2) (Print.kind_to_string t2.tk);
  let g = solve_and_commit env (Some t1) (TProb(SUB, t1, t2))
  (fun _ -> None) in
  if debug env Options.Medium && Util.is_some g
