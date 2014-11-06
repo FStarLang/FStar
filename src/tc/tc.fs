@@ -419,18 +419,28 @@ and tc_value env e : exp * comp =
                               tc_binders (hdannot::out, env, g, subst) tl_annot c bs
                               
                             | (Inl a, _), (Inl b, imp) -> 
-                              let k, g1 = tc_kind env b.sort in
-                              let g2 = Rel.keq env None (Util.subst_kind subst a.sort) k in
-                              let g = Rel.conj_guard g (Rel.conj_guard g1 g2) in
+                              let ka = Util.subst_kind subst a.sort in
+                              let k, g = match b.sort.n with 
+                                | Kind_unknown -> ka, Trivial
+                                | _ -> 
+                                    let k, g1 = tc_kind env b.sort in
+                                    let g2 = Rel.keq env None ka k in
+                                    let g = Rel.conj_guard g (Rel.conj_guard g1 g2) in
+                                    k, g in
                               let b = Inl ({b with sort=k}), imp in
                               let env = maybe_push_binding env b in
                               let subst = maybe_alpha_subst subst hdannot b in 
                               tc_binders (b::out, env, g, subst) tl_annot c tl 
 
                             | (Inr x, _), (Inr y, imp) -> 
-                              let t, _, g1 = tc_typ env y.sort in
-                              let g2 = Rel.teq env (Util.subst_typ subst x.sort) t in
-                              let g = Rel.conj_guard g (Rel.conj_guard g1 g2) in
+                              let tx = Util.subst_typ subst x.sort in
+                              let t, g = match (Util.unmeta_typ y.sort).n with 
+                                | Typ_unknown -> tx, g
+                                | _ -> 
+                                    let t, _, g1 = tc_typ env y.sort in
+                                    let g2 = Rel.teq env tx t in
+                                    let g = Rel.conj_guard g (Rel.conj_guard g1 g2) in
+                                    t, g in
                               let b = Inr ({y with sort=t}), imp in
                               let env = maybe_push_binding env b in
                               let subst = maybe_alpha_subst subst hdannot b in 
@@ -709,7 +719,7 @@ and tc_exp env e : exp * comp =
               else if Tc.Util.is_pure env c 
               then let g' = Util.must <| Tc.Rel.sub_comp env c (mk_Total (Util.comp_result c)) in
                    if debug env Options.Low then Util.fprint1 "Guard is %s\n" (Tc.Rel.guard_to_string env g');
-                   let g' = Tc.Util.label_guard Errors.totality_check e.pos g' in
+                 //  let g' = Tc.Util.label_guard Errors.totality_check e.pos g' in
                    let subst = maybe_extend_subst subst (List.hd bs) (Inr e) in
                    let arg = varg e in
                    tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard g g', fvs) rest cres rest'

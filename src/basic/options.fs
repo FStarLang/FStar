@@ -26,6 +26,7 @@ type debug_level_t =
     | Medium
     | High
     | Extreme
+    | Other of string
 
 let show_signatures = Util.mk_ref []
 let norm_then_print = Util.mk_ref true
@@ -38,12 +39,14 @@ let dlevel = function
     | "Medium" -> Medium
     | "High" -> High
     | "Extreme" -> Extreme
-    | _ -> failwith "Unrecognized debug level"
-let debug_level_geq l1 l2 = match l2 with 
-    | Low -> true
-    | Medium -> (l1 = Medium || l1 = High || l1 = Extreme)
-    | High -> (l1 = High || l1 = Extreme)
-    | Extreme -> l1 = Extreme 
+    | s -> Other s
+let debug_level_geq l1 l2 = match l1 with 
+    | Other _ 
+    | Low -> l1 = l2
+    | Medium -> (l2 = Low || l2 = Medium)
+    | High -> (l2 = Low || l2 = Medium || l2 = High)
+    | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
+    
 let log_types = Util.mk_ref false
 let print_effect_args=Util.mk_ref false
 let print_real_names = Util.mk_ref false

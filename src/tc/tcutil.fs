@@ -47,7 +47,7 @@ let typing_const env (s:sconst) = match s with
   | Const_float _ -> t_float
   | Const_char _ -> t_char
   | Const_int64 _ -> t_int64
-  | Const_uint8 _ -> t_char
+  | Const_uint8 _ -> t_uint8
   | _ -> raise (Error("Unsupported constant", Tc.Env.get_range env))
 
 let is_xvar_free (x:bvvdef) t = 
@@ -77,7 +77,10 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
         then raise (Error(Tc.Errors.expected_pattern_of_type t2 e t1, Tc.Env.get_range env))
         else raise (Error(Tc.Errors.expected_expression_of_type t2 e t1, Tc.Env.get_range env))
     | Some f -> 
-        {e with tk=t2}, apply_guard f e
+        let g = apply_guard f e in
+        if debug env <| Options.Other "Rel"
+        then Util.fprint1 "Applied guard is %s\n" <| guard_to_string env g;
+        {e with tk=t2}, g
 
 let env_binders env = 
     if !Options.full_context_dependency 
@@ -846,14 +849,18 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp =
         | None -> None
         | Some Trivial -> Some (e, mk_Comp ct)
         | Some (NonTrivial f) -> 
+          let a, kwp = Env.wp_signature env Const.pure_effect_lid in
+          let k = Util.subst_kind [Inl(a.v, t)] kwp in
           let md = Tc.Env.get_monad_decl env ct.effect_name in
           let x = new_bvd None in
           let xexp = Util.bvd_to_exp x t in
-          let a, kwp = Env.wp_signature env Const.pure_effect_lid in
-          let k = Util.subst_kind [Inl(a.v, t)] kwp in
           let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) k xexp.pos  in
           let cret = mk_comp md t wp wp ct.flags in
           let eq_ret = strengthen_precondition (Some <| Errors.subtyping_check tc t) (Env.set_range env e.pos) cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
+          let eq_ret = 
+            if Util.is_pure_comp c 
+            then weaken_precondition env eq_ret (NonTrivial (Util.mk_eq xexp e))
+            else eq_ret in 
           let c = bind env (Some e) (mk_Comp ct) (Some(Env.Binding_var(x, tc)), eq_ret) in
           Some(e, c) in
   let must = function 

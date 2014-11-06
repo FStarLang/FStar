@@ -454,11 +454,19 @@ let is_total_comp c = comp_flags c |> Util.for_some (function TOTAL | RETURN -> 
 
 let is_pure_comp c = match c.n with 
     | Total _ -> true
-    | Comp ct -> is_total_comp c || Util.starts_with ct.effect_name.str "Prims.PURE"
-   
+    | Comp ct -> is_total_comp c 
+                 || Util.starts_with ct.effect_name.str "Prims.PURE"
+                 || List.contains LEMMA ct.flags
+                 
 let is_pure_function t = match (compress_typ t).n with 
     | Typ_fun(_, c) -> is_pure_comp c
     | _ -> true
+
+let is_lemma t = match (compress_typ t).n with 
+    | Typ_fun(_, c) -> (match c.n with 
+        | Comp ct -> lid_equals ct.effect_name Const.lemma_lid
+        | _ -> false)
+    | _ -> false
 
 let is_ml_comp c = match c.n with
   | Comp c -> lid_equals c.effect_name Const.ml_effect_lid || List.contains MLEFFECT c.flags

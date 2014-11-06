@@ -69,22 +69,22 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              type assume_p (a:Type) (q:Type) (wp:WP a) (p:Post a) = (q ==> wp p)
              type null_wp (a:Type) (p:Post a) = (forall (x:a). p x)
              type trivial (a:Type) (wp:WP a) = wp (fun x -> True)
-             with Pure (a:Type) (pre:Pre) (post:Post a) =
-                 PURE a
-                   (fun (p:Post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
-                   (fun (p:Post a) -> forall a. pre /\ post a ==> p a)   (* WLP *)
-             and Fact (res:Type) (p:Type) = Pure res True (fun r -> p)
-             (* and PURE (a:Type) (wp:WP a) (wlp:WP a) =  *)
-             (*     Pure a (wp (fun a -> True)) (fun a -> wlp (fun a' -> a==a')) *)
-             and Tot (a:Type) =
-                 PURE a (fun (p:Post a) -> (forall (x:a). p x)) (fun (p:Post a) -> (forall (x:a). p x))
+                                               with Pure (a:Type) (pre:Pre) (post:Post a) =
+                                                      PURE a
+                                                           (fun (p:Post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
+                                                           (fun (p:Post a) -> forall a. pre /\ post a ==> p a)   (* WLP *)
+              (* and PURE (a:Type) (wp:WP a) (wlp:WP a) =  *)
+              (*     Pure a (wp (fun a -> True)) (fun a -> wlp (fun a' -> a==a')) *)
+              and Tot (a:Type) =
+                PURE a (fun (p:Post a) -> (forall (x:a). p x)) (fun (p:Post a) -> (forall (x:a). p x))
+              and Fact (res:Type) (p:Type) = Pure res True (fun r -> p)
+
 }
 open Prims.PURE
 
 assume type unit
 assume type int
 assume type char
-assume type byte
 assume type uint16
 assume type int64
 assume type float
@@ -95,14 +95,29 @@ assume logic type LBL : string -> Type -> Type
 assume type bytes
 assume type exn
 assume type HashMultiMap : Type -> Type -> Type
+assume type uint8
+type byte = uint8
 type double = float
 type int32 = int
 
 
+type list 'a =
+  | Nil : list 'a
+  | Cons : hd:'a -> tl:list 'a -> list 'a
+
+type pattern = 
+  | VPat : 'a:Type -> 'a -> pattern
+  | TPat : 'a:Type -> pattern
+
+effect Lemma (_a:Type) (pre:Type) (post:Type) (pats:list pattern) = Pure unit pre (fun r -> post)
 
 type option (a:Type) =
   | None : option a
   | Some : v:a -> option a
+
+type either 'a 'b =
+  | Inl : v:'a -> either 'a 'b
+  | Inr : v:'b -> either 'a 'b
 
 assume type heap
 assume logic val SelHeap : #'a:Type -> heap -> ref 'a -> Tot 'a
@@ -153,7 +168,7 @@ type refs =
   | AllRefs : refs
   | SomeRefs : v:set aref -> refs
 
-(* let oneref (r:ref 'a) = Singleton (Ref r) *)
+                               (* let oneref (r:ref 'a) = Singleton (Ref r) *)
 
 logic type Modifies (mods:refs) (h:heap) (h':heap) =
     (if b2t (is_AllRefs mods)
@@ -485,14 +500,6 @@ logic type GT : int -> int -> Type    (* infix > in concrete syntax *)
 logic type LTE : int -> int -> Type   (* infix <= in concrete syntax *)
 logic type GTE : int -> int -> Type   (* infix >= in concrete syntax *)
 
-type either 'a 'b =
-  | Inl : v:'a -> either 'a 'b
-  | Inr : v:'b -> either 'a 'b
-
-type list 'a =
-  | Nil : list 'a
-  | Cons : hd:'a -> tl:list 'a -> list 'a
-
 val fst : ('a * 'b) -> Tot 'a
 let fst x = MkTuple2._1 x
 
@@ -503,6 +510,7 @@ assume val Assume: 'P:Type -> unit -> (y:unit{'P})
 assume val admit: unit -> Pure unit True (fun x -> False)
 assume val admitP: 'P:Type -> unit -> Pure unit True (fun x -> 'P)
 assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
+assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> 'P)
 (* assume val Assert : b:bool -> Pure unit (requires $"assertion failed" (b2t b)) (ensures \x -> True) *)
 assume val lemma : 'P:Type -> x:unit{'P} -> z:unit{'P}
 assume val unreachable : x:unit{LBL "unreachable" False} -> 'a
@@ -546,6 +554,3 @@ assume val op_ColonEquals: ref 'a -> 'a -> unit
 assume val op_Dereference: ref 'a -> 'a
 assume type Boxed : Type -> Type
 
-
-(* An effect abbreviation for a lemma *)
-(*ghost*) effect Fact ('res:Type) ('p:Type) = Pure 'res True (fun r -> 'p)

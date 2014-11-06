@@ -169,3 +169,14 @@ let rec ackermann m n =
   if m=0 then n + 1
   else if n = 0 then ackermann (m - 1) 1
   else ackermann (m - 1) (ackermann m (n - 1))
+
+open Array
+type message = seq char
+assume val impure: m:message -> ST message
+                                 (requires \h -> True)
+                                 (ensures \h0 n h1 -> length n == length m)
+assume val lm_corr: l:nat -> m:message{length m==l} -> int
+val unsafe_slice: message -> i:nat -> j:nat{i<=j} -> Tot message
+let unsafe_slice (Seq c _ _) n m = Seq c n m
+val test_impure: l:nat{l > 0} -> m:message{length m==l} -> int
+let test_impure l m =  lm_corr (l - 1) (unsafe_slice (impure m) 1 l)

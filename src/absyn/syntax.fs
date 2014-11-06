@@ -90,6 +90,7 @@ and cflags =
   | MLEFFECT 
   | RETURN 
   | SOMETRIVIAL
+  | LEMMA
 and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pattern of typ * list<arg>

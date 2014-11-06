@@ -1,4 +1,4 @@
-﻿(*
+(*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -236,11 +236,16 @@ let extend_subst' uis wl =
 let defer reason prob wl = {wl with deferred=(wl.ctr, prob, reason)::wl.deferred}
 let attempt probs wl = {wl with attempting=probs@wl.attempting}
 
-let guard (env:env) top g probs = 
-    let close_predicate f = match (Util.compress_kind f.tk).n with 
-        | Kind_arrow(bs, {n=Kind_type}) -> close bs f
-        | Kind_type -> f
-        | _ ->  failwith "Unexpected kind" in
+let close_predicate f = match (Util.compress_kind f.tk).n with 
+    | Kind_arrow(bs, {n=Kind_type}) -> close bs f
+    | Kind_type -> f
+    | _ ->  failwith "Unexpected kind"
+
+let close_guard_predicate = function
+    | Trivial -> Trivial
+    | NonTrivial f -> NonTrivial <| close_predicate f
+
+let guard (env:env) top g probs =
     let mk_pred top_t f = match top_t with 
         | None -> f
         | Some t -> 
@@ -807,77 +812,78 @@ and solve_t_flex_flex (top:bool) (env:Tc.Env.env) (orig:prob)
     end
 
 and solve_t_flex_rigid (top:bool) (env:Tc.Env.env) (orig:prob) (lhs:flex_t) (t2:typ) (probs:worklist) = 
-      let (t1, uv, k, args_lhs) = lhs in
-      let maybe_pat_vars = pat_vars env [] args_lhs in
-        let subterms ps = 
-            let xs = ps |> List.map (function 
-                | Inl pi, imp -> Inl <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk, imp
-                | Inr pi, imp -> Inr <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk, imp) in
-            (uv,k), ps, xs, decompose_typ env t2 in
+    let (t1, uv, k, args_lhs) = lhs in
+    let maybe_pat_vars = pat_vars env [] args_lhs in
+    let subterms ps = 
+        let xs = ps |> List.map (function 
+            | Inl pi, imp -> Inl <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk, imp
+            | Inr pi, imp -> Inr <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk, imp) in
+        (uv,k), ps, xs, decompose_typ env t2 in
 
-        let rec imitate_or_project n st i = 
-            if i >= n then giveup env "flex-rigid case failed all backtracking attempts" orig probs
-            else if i = -1 
-            then match imitate env probs st with
-                   | Failed _ -> imitate_or_project n st (i + 1) //backtracking point
-                   | sol -> sol
-            else match project env probs i st with
-                   | Failed _ -> imitate_or_project n st (i + 1) //backtracking point
-                   | sol -> sol in
+    let rec imitate_or_project n st i = 
+        if i >= n then giveup env "flex-rigid case failed all backtracking attempts" orig probs
+        else if i = -1 
+        then match imitate env probs st with
+                | Failed _ -> imitate_or_project n st (i + 1) //backtracking point
+                | sol -> sol
+        else match project env probs i st with
+                | Failed _ -> imitate_or_project n st (i + 1) //backtracking point
+                | sol -> sol in
 
-        let check_head fvs1 t2 =
-            let hd, _ = Util.head_and_args t2 in 
-            match hd.n with 
-                | Typ_fun _
-                | Typ_refine _ 
-                | Typ_const _
-                | Typ_lam _  -> true
-                | _ ->             
-                    let fvs_hd = Util.freevars_typ hd in
-                    if Util.fvs_included fvs_hd fvs1
-                    then true
-                    else (Util.fprint1 "Free variables are %s" (Print.freevars_to_string fvs_hd); false) in
+    let check_head fvs1 t2 =
+        let hd, _ = Util.head_and_args t2 in 
+        match hd.n with 
+            | Typ_fun _
+            | Typ_refine _ 
+            | Typ_const _
+            | Typ_lam _  -> true
+            | _ ->             
+                let fvs_hd = Util.freevars_typ hd in
+                if Util.fvs_included fvs_hd fvs1
+                then true
+                else (Util.fprint1 "Free variables are %s" (Print.freevars_to_string fvs_hd); false) in
             
-        let imitate fvs1 t2 = (* -1 means begin by imitating *)
-            let fvs_hd = Util.head_and_args t2 |> fst |> Util.freevars_typ in
-            if Util.fvs_included fvs_hd fvs1
-            then -1
-            else 0 in
+    let imitate fvs1 t2 = (* -1 means begin by imitating *)
+        let fvs_hd = Util.head_and_args t2 |> fst |> Util.freevars_typ in
+        if Util.fvs_included fvs_hd fvs1
+        then -1
+        else 0 in
 
-        begin match maybe_pat_vars with 
-            | Some vars -> 
-              let t2 = sn env t2 in 
-              let fvs1 = Util.freevars_typ t1 in
-              let fvs2 = Util.freevars_typ t2 in
-              let uvs = Util.uvars_in_typ t2 in 
-              let occurs_ok = not (Util.set_mem (uv,k) uvs.uvars_t) in 
-              if not occurs_ok 
-              then giveup env (Util.format2 "occurs-check failed (%s occurs in {%s})" (Print.uvar_t_to_string (uv,k)) (Util.set_elements uvs.uvars_t |> List.map Print.uvar_t_to_string |> String.concat ", "))
-                          orig probs
-              else if Util.fvs_included fvs2 fvs1
-              then //fast solution for flex-pattern/rigid case
-                   let sol = match vars with 
-                    | [] -> t2
-                    | _ -> mk_Typ_lam(vars, t2) k t1.pos in
-                   //let _ = if debug env then printfn "Fast solution for %s \t -> \t %s" (Print.typ_to_string t1) (Print.typ_to_string sol) in
-                   solve top env (extend_subst (UT((uv,k), sol)) probs)
-              else if check_head fvs1 t2 
-              then (if debug env High then Util.fprint3 "Pattern %s with fvars=%s failed fvar check: %s" (Print.typ_to_string t1) (Print.freevars_to_string fvs1) (Print.freevars_to_string fvs2);
-                    imitate_or_project (List.length args_lhs) (subterms args_lhs) (-1))
-              else giveup env "head-symbol is free" orig probs
-            | None -> if check_head (Util.freevars_typ t1) t2
-                      then (if debug env High then Util.fprint1 "Not a pattern (%s) ... imitating" (Print.typ_to_string t1);
-                            imitate_or_project (List.length args_lhs) (subterms args_lhs) (imitate (Util.freevars_typ t1) t2))
-                      else giveup env "head-symbol is free" orig probs
-        end
 
+   match maybe_pat_vars with 
+     | Some vars -> 
+            let t2 = sn env t2 in 
+            let fvs1 = Util.freevars_typ t1 in
+            let fvs2 = Util.freevars_typ t2 in
+            let uvs = Util.uvars_in_typ t2 in 
+            let occurs_ok = not (Util.set_mem (uv,k) uvs.uvars_t) in 
+            if not occurs_ok 
+            then giveup env (Util.format2 "occurs-check failed (%s occurs in {%s})" (Print.uvar_t_to_string (uv,k)) (Util.set_elements uvs.uvars_t |> List.map Print.uvar_t_to_string |> String.concat ", "))
+                        orig probs
+            else if Util.fvs_included fvs2 fvs1
+            then //fast solution for flex-pattern/rigid case
+                let sol = match vars with 
+                | [] -> t2
+                | _ -> mk_Typ_lam(vars, t2) k t1.pos in
+                //let _ = if debug env then printfn "Fast solution for %s \t -> \t %s" (Print.typ_to_string t1) (Print.typ_to_string sol) in
+                solve top env (extend_subst (UT((uv,k), sol)) probs)
+            else if check_head fvs1 t2 
+            then (if debug env High then Util.fprint3 "Pattern %s with fvars=%s failed fvar check: %s" (Print.typ_to_string t1) (Print.freevars_to_string fvs1) (Print.freevars_to_string fvs2);
+                  imitate_or_project (List.length args_lhs) (subterms args_lhs) (-1))
+            else giveup env "fre-variable check failed on a non-redex" orig probs
+    | None ->   
+            if check_head (Util.freevars_typ t1) t2
+            then (if debug env High then Util.fprint1 "Not a pattern (%s) ... imitating" (Print.typ_to_string t1);
+                imitate_or_project (List.length args_lhs) (subterms args_lhs) (imitate (Util.freevars_typ t1) t2))
+            else giveup env "head-symbol is free" orig probs
+   
   
 and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist) : solution = 
     if Util.physical_equality t1 t2 then solve top env probs else
     let t1 = compress env probs.subst t1 in
     let t2 = compress env probs.subst t2 in 
     if Util.physical_equality t1 t2 then solve top env probs else
-    let _ = if debug env Options.Medium then Util.fprint1 "Attempting:\n%s\n" (prob_to_string env (TProb(rel, t1, t2))) in
+    let _ = if debug env (Options.Other "Rel") then Util.fprint2 "Attempting (top level? %s):\n%s\n" (if top then "true" else "false") (prob_to_string env (TProb(rel, t1, t2))) in
 //    printfn "Tag t1 = %s, t2 = %s" (Print.tag_of_typ t1) (Print.tag_of_typ t2);
     if Util.physical_equality t1 t2 then solve top env probs else
     let r = Env.get_range env in
@@ -1175,24 +1181,26 @@ let keq env t k1 k2 : guard_t =
         | Some t -> raise (Error(Tc.Errors.expected_typ_of_kind k2 t k1, r)))
     
 let teq env t1 t2 : guard_t = 
+ if debug env <| Other "Rel" then Util.fprint2 "teq of %s and %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
  let prob = TProb(EQ, t1, t2) in //norm_typ [Beta; Eta] env t1, norm_typ [Beta; Eta] env t2) in
- Util.must <| solve_and_commit env (Some t1) prob (fun _ -> 
-    raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env)))
+ let g = Util.must <| solve_and_commit env (Some t1) prob (fun _ -> 
+    raise (Error(Tc.Errors.basic_type_error None t2 t1, Tc.Env.get_range env))) in
+ if debug env <| Other "Rel" then Util.fprint3 "teq of %s and %s succeeded with guard %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2) (guard_to_string env g);
+ close_guard_predicate g
 
 let subkind env k1 k2 : guard_t = 
+ if debug env <| Other "Rel" then Util.fprint2 "try_subkind of %s and %s\n" (Print.kind_to_string k1) (Print.kind_to_string k2);
  let prob  = KProb(SUB, whnf_k env k1, whnf_k env k2) in
  Util.must <| solve_and_commit env None prob (fun _ -> 
     raise (Error(Tc.Errors.incompatible_kinds k1 k2, Tc.Env.get_range env)))
 
 let try_subtype env t1 t2 = 
- if debug env Medium then
-   Util.fprint4 "try_subtype of %s : %s and %s : %s\n"
-     (Print.typ_to_string t1) (Print.kind_to_string t1.tk)
-     (Print.typ_to_string t2) (Print.kind_to_string t2.tk);
+ if debug env <| Other "Rel" then Util.fprint2 "try_subtype of %s and %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
  let g = solve_and_commit env (Some t1) (TProb(SUB, t1, t2))
  (fun _ -> None) in
- if debug env Options.Medium && Util.is_some g
- then Util.fprint2 "try_subtype succeeded: %s <: %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
+ if debug env <| Options.Other "Rel" 
+    && Util.is_some g
+ then Util.fprint3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2) (guard_to_string env (Util.must g));
  g
 
 let subtype_fail env t1 t2 = 
@@ -1214,5 +1222,11 @@ let trivial_subtype env eopt t1 t2 =
       raise (Error(Tc.Errors.basic_type_error eopt t2 t1, r))
 
 let sub_comp env c1 c2 = 
-  solve_and_commit env None (CProb(SUB, c1, c2))
-  (fun _ -> None)
+  if debug env <| Other "Rel" then Util.fprint2 "sub_comp of %s and %s\n" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2);
+  let gopt = solve_and_commit env None (CProb(SUB, c1, c2))
+     (fun _ -> None) in
+ if debug env <| Options.Other "Rel" 
+    && Util.is_some gopt
+ then Util.fprint3 "sub_compe succeeded: %s <: %s\n\tguard is %s\n" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2) (guard_to_string env (Util.must gopt));
+ gopt
+

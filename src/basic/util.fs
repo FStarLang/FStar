@@ -233,8 +233,8 @@ let unicode_of_string (string:string) = unicodeEncoding.GetBytes(string)
 
 let char_of_int (i:int) = char i
 let int_of_string (s:string) = int_of_string s
-let int_of_char (s:char) = int s
-
+let int_of_char (s:char) = int32 s
+let int_of_uint8 (i:uint8) = int32 i
 let uint16_of_int (i:int) = uint16 i
 
 let float_of_byte (b:byte) = (float)b

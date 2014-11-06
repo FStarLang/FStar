@@ -764,11 +764,16 @@ and desugar_typ env (top:term) : typ =
                 if DesugarEnv.is_effect_name env eff.v
                 then if lid_equals eff.v Const.tot_effect_lid
                      then mk_Total result_typ
-                     else let flags = if lid_equals eff.v Const.ml_effect_lid
-                                      then [MLEFFECT] else [] in
+                     else
+                        let result_typ, args, flags = 
+                            if lid_equals eff.v Const.lemma_lid
+                            then Util.ftv Const.unit_lid ktype, args, [LEMMA]
+                            else if lid_equals eff.v Const.ml_effect_lid
+                            then result_typ, rest, [MLEFFECT]
+                            else result_typ, rest, [] in
                           mk_Comp ({effect_name=eff.v;
                                     result_typ=result_typ;
-                                    effect_args=rest; 
+                                    effect_args=args; 
                                     flags=flags})
                 else env.default_result_effect t top.range 
               | _ -> env.default_result_effect t top.range in 

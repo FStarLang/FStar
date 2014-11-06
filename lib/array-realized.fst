@@ -41,7 +41,7 @@ let rec __index__ (a:Type) c i = match c with
   | Append s1 s2 -> if i < length s1 then __index__ (Seq.c s1) i else __index__ (Seq.c s2) (i - length s1)
 
 val index: a:Type -> s:seq a -> i:nat{length s > i} -> Tot a
-let rec index (Seq c j k) i = __index__ c (i + j)
+let index (Seq c j k) i = __index__ c (i + j)
 
 val __update__: a:Type -> contents a -> int -> a -> Tot (contents a)
 let rec __update__ c i v = match c with
@@ -66,6 +66,6 @@ type Equal          : #a:Type -> seq a -> seq a -> Type
 assume SeqEquals:    forall (a:Type) (s1:seq a) (s2:seq a).{:pattern (Equal s1 s2)} 
                      Equal s1 s2
                      <==> (length s1 == length s2
-                           /\ (forall (i:int).{:pattern (__index__ (Seq.c s1) i); (__index__ (Seq.c s2) i)}
+                           /\ (forall (i:int).
                                (0 <= i /\ i < length s1)
                                ==> __index__ (Seq.c s1) i == __index__ (Seq.c s2) i))

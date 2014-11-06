@@ -188,7 +188,6 @@ let flush_scopes () =
     decls
 
 let giveZ3 msg (theory:unit -> decls_t) = 
-    if !Options.debug <> [] then Util.fprint1 "GiveZ3: %s\n" msg;
     let rec aux l = match l with 
         | [] -> failwith "no open scopes"
         | Closed(m, f)::tl -> Closed(m, f)::aux tl
