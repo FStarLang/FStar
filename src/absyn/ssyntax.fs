@@ -605,6 +605,10 @@ let deserialize_qualifier (ast : s_qualifier) : qualifier =
     | S_ExceptionConstructor -> ExceptionConstructor
     | S_Effect -> Effect
 
+type s_tycon = s_lident * s_binders * s_knd
+let serialize_tycon ((lid, bs, k): tycon) :s_tycon = (serialize_lident lid, serialize_binders bs, serialize_knd k)
+let deserialize_tycon ((lid, bs, k):s_tycon) :tycon = (deserialize_lident lid, deserialize_binders bs, deserialize_knd k)
+
 type s_monad_abbrev = 
     { mabbrev : s_lident
       parms : s_binders
@@ -663,7 +667,7 @@ type s_monad_decl =
 and [<KnownType("KnownTypes")>] s_sigelt = 
     | S_Sig_tycon of s_lident * s_binders * s_knd * list<s_lident> * list<s_lident> * list<s_qualifier>
     | S_Sig_typ_abbrev of s_lident * s_binders * s_knd * s_typ * list<s_qualifier>
-    | S_Sig_datacon of s_lident * s_typ * s_lident * list<s_qualifier>
+    | S_Sig_datacon of s_lident * s_typ * s_tycon * list<s_qualifier>
     | S_Sig_val_decl of s_lident * s_typ * list<s_qualifier>
     | S_Sig_assume of s_lident * s_formula * list<s_qualifier>
     | S_Sig_let of s_letbindings * list<s_lident>
@@ -704,8 +708,8 @@ and serialize_sigelt (ast : sigelt) : s_sigelt =
         S_Sig_typ_abbrev
             (serialize_lident lid, serialize_binders bs, serialize_knd k, serialize_typ t, 
              List.map serialize_qualifier qs)
-    | Sig_datacon(lid1, t, lid2, qs, _) -> 
-        S_Sig_datacon(serialize_lident lid1, serialize_typ t, serialize_lident lid2, List.map serialize_qualifier qs)
+    | Sig_datacon(lid1, t, tyc, qs, _) -> 
+        S_Sig_datacon(serialize_lident lid1, serialize_typ t, serialize_tycon tyc, List.map serialize_qualifier qs)
     | Sig_val_decl(lid, t, qs, _) -> 
         S_Sig_val_decl(serialize_lident lid, serialize_typ t, List.map serialize_qualifier qs)
     | Sig_assume(lid, fml, qs, _) -> 
@@ -746,9 +750,9 @@ and deserialize_sigelt (ast : s_sigelt) : sigelt =
         Sig_typ_abbrev
             (deserialize_lident lid, deserialize_binders bs, deserialize_knd k, deserialize_typ t, 
              List.map deserialize_qualifier qs, dummyRange)
-    | S_Sig_datacon(lid1, t, lid2, qs) -> 
+    | S_Sig_datacon(lid1, t, tyc, qs) -> 
         Sig_datacon
-            (deserialize_lident lid1, deserialize_typ t, deserialize_lident lid2, List.map deserialize_qualifier qs, 
+            (deserialize_lident lid1, deserialize_typ t, deserialize_tycon tyc, List.map deserialize_qualifier qs, 
              dummyRange)
     | S_Sig_val_decl(lid, t, qs) -> 
         Sig_val_decl(deserialize_lident lid, deserialize_typ t, List.map deserialize_qualifier qs, dummyRange)
