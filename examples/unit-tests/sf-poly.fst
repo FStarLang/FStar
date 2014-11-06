@@ -25,6 +25,14 @@ val test_length2 : unit -> Fact unit
       (ensures (length [true] = 1))
 let test_length2 () = ()
 
+val length_nil : unit -> Fact unit
+      (ensures (length [] = 0))
+let length_nil () = ()
+
+val length_cons : h:'a -> t:list 'a -> Fact unit
+      (ensures (length (h::t) = 1 + length t))
+let length_cons h t = ()
+
 val app : list 'a -> list 'a -> Tot (list 'a)
 let rec app l1 l2 =
   match l1 with
@@ -41,6 +49,13 @@ let rec app_nil l =
   match l with
   | [] -> ()
   | h::t -> app_nil t
+
+val length_app : l1:list 'a -> l2:list 'a -> Fact unit
+      (ensures (length (app l1 l2) = length l1 + length l2))
+let rec length_app l1 l2 =
+  match l1 with
+  | [] -> ()
+  | h::t -> length_app t l2
 
 val snoc : list 'a -> 'a -> Tot (list 'a)
 let rec snoc l x =
@@ -108,22 +123,9 @@ val test_index_option3 : unit -> Fact unit
       (ensures (index_option [true] 2 = None))
 let test_index_option3 () = ()
 
-assume val impossible : u : unit { False } -> Tot 'a
-(* let impossible = failwith "this won't happen"
-This blows up
-Name not found: failwith
-   at Microsoft.FStar.ToSMT.Encode.lookup_lid(env_t env, LongIdent a) in E:\Proj
-   ects\fstar\pub\src\tosmt\encode.fs:line 169
-Filed as https://github.com/FStarLang/FStar/issues/16 *)
-
-val length_nil : unit -> Fact unit
-      (ensures (length [] = 0))
-let length_nil () = ()
-
 val index : l : list 'a -> n:int{(0 <= n) /\ (n < length l)} -> Tot 'a
 let rec index l n =
   match l with
-  | [] -> length_nil(); impossible()
   | h :: t -> if n = 0 then h else index t (n-1)
 
 (* Functions as Data *)
@@ -150,7 +152,7 @@ let rec index l n =
        I will change this shortly (related to the other
        bugs on matching val-declarations with the corresponding
        definitions).
- *)
+   CH: Some of this is already fixed by now, right? *)
 val prod_curry : (('a * 'b) -> Tot 'c) -> Tot ('a -> 'b -> Tot 'c)
 let prod_curry f x y =  f (x,y)
 
@@ -216,16 +218,6 @@ val test_map2 : unit -> Fact unit
       (ensures (map oddb [2;1;2;5] = [false;true;false;true]))
 let test_map2 () = ()
 
-(* This shouldn't blow up, although I'm using the wrong kind of arrow for fun:
-unknown(0,0-0,0) : Error
-Identifier not found: [Prims.Cons] (Possible clash with related name at ../../lib/prims.fst(477,0-481,6))
-val test_map3 : unit -> Fact unit
-    (ensures (map (fun n -> [evenb n;oddb n]) [2;1;2;5]
-              = [[true;false];[false;true];[true;false];[false;true]]))
-*)
-
-(* F* can't prove this, but it's indeed a bit complex *)
-(* NS: Oh yes, it can! *)
 val test_map3 : unit -> Fact unit
     (ensures (map (fun n -> [evenb n;oddb n]) [2;1;2;5]
               = [[true;false];[false;true];[true;false];[false;true]]))
@@ -269,8 +261,6 @@ val fold_example2 : unit -> Fact unit
       (ensures (fold (fun x y -> x && y) [true;true;false;true] true = false))
 let fold_example2 () = ()
 
-(* CH: This fails, but maybe can't expect so much from Z3? *)
-(* NS: Oh yes, you can! : ) *)
 val fold_example3 : unit -> Fact unit
       (ensures (fold app  [[1];[];[2;3];[4]] [] = [1;2;3;4]))
 let fold_example3 () = ()
@@ -281,10 +271,8 @@ val constfun : 'a -> 'b -> Tot 'a
 let constfun x _ = x
 
 val ftrue : 'b -> Tot bool
-(* This should work, but it doesn't: arrow mismatch
-   Filed this as: https://github.com/FStarLang/FStar/issues/21
-let ftrue = constfun true
-*)
+(* This should work, but it doesn't: causes failed postconditions later on
+let ftrue = constfun true *)
 let ftrue _ = true
 
 (* CH: This causes syntax error at character 12, is override a
@@ -305,6 +293,9 @@ let fmostlytrue x = my_override (my_override ftrue 1 false) 3 false x
 
 (* CH: these fail, too higher order? *)
 (* NS: Not any more ... need to make currying explicit *)
+(* CH: That's counter intuitive. I fail to see the
+   difference between implicit and explicit currying.
+   Isn't one just syntax sugar for the other? *)
 val override_example1 : unit -> Fact unit
       (ensures (fmostlytrue 0 = true))
 let override_example1 () = ()
@@ -365,8 +356,6 @@ let rec fold_map_named_correct f l =
 val fold_length : l:list 'a -> Tot nat
 let fold_length l = fold (fun _ (n:nat) -> n + 1) l 0
 
-(* CH: both cases are supposed to be trivial, but none of them works *)
-(* NS: They do now *)
 val fold_length_correct : l:list 'a -> Fact unit
       (ensures (fold_length l = length l))
 let rec fold_length_correct l =
@@ -378,8 +367,6 @@ let rec fold_length_correct l =
 val fold_map : ('a->Tot 'b) -> list 'a -> Tot (list 'b)
 let fold_map f l= fold (fun x l -> f x :: l) l []
 
-(* CH: again, this should just work *)
-(* NS: And it does. *)
 val fold_map_correct : f:('a->Tot 'b) -> l:list 'a -> Fact unit
       (ensures (fold_map f l = map f l))
 let rec fold_map_correct f l =
@@ -391,6 +378,7 @@ let rec fold_map_correct f l =
 
 (* Using type abbreviation here does not work, even with full annotations
    Problem seems similar to https://github.com/FStarLang/FStar/issues/15
+   and https://github.com/FStarLang/FStar/issues/23
 
 type church 'a = ('a -> 'a) -> 'a -> 'a
 
@@ -438,5 +426,3 @@ val exp : 'a:Type
 let exp n m f x = 
   let n' = m n in (* NS TODO: fix ugly syntax. I should just allow you to write (m n f x) *)
   n' f x
-
-
