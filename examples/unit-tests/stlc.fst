@@ -119,6 +119,7 @@ let rec typing e g =
        end
   | _ -> None
 
+(* This proof should really be trivial (see canonical_forms_fun below) *)
 val canonical_forms_bool : e:exp -> Pure unit
       (requires ((typing e empty = Some TBool) /\ (is_value e = true)))
       (ensures \r -> (e = ETrue) \/ (e = EFalse))
@@ -127,15 +128,15 @@ let canonical_forms_bool e =
   | EVar x -> ()
   | EAbs x' t e1 -> begin
       admit()
-      (* that F* can't prove this simple case, we should get a contradition *)
-      (* This assert fails
-      assert(exists (t1:ty). exists (t2:ty).
-               typing (EAbs x' t e1) empty = Some (TArrow t1 t2) \/
-               typing (EAbs x' t e1) empty = None);  *)
-     (* this causes the whole thing to explode! 3 different bogus errors
+      (* F* can't prove this simple case, we should get a contradition *)
+     (* this causes the whole thing to explode! 3 different bogus errors!
       match typing e1 (extend empty x' t) with
       | Some t' -> admit()
       | None    -> admit() *)
+      (* This assert fails, but it shouldn't
+      assert(exists (t1:ty). exists (t2:ty).
+               typing (EAbs x' t e1) empty = Some (TArrow t1 t2) \/
+               typing (EAbs x' t e1) empty = None);  *)
       (* this doesn't bring much
       match typing e empty with
       | Some (TArrow t1 t2) -> ()
@@ -156,7 +157,7 @@ let canonical_forms_fun e t1 t2 = ()
    No wonder that the first case of progress fails.
    Logic encoding of empty looks reasonable, Z3 should be able to prove this.
    Is the encoding of is_None broken? I wasn't able to find any equations for it.
-   Only Prims.fst and Prims.snd get equations? Really? *)
+   Only Prims.fst and Prims.snd get equations? *)
 val sel_empty : x:int -> Fact unit
       (ensures (is_None (empty x)))
 let sel_empty x = ()
@@ -166,9 +167,7 @@ let sel_empty x = ()
    (= (Prims.op_Equality (Prims.option Stlc.ty)
                          (Stlc.empty x___844)
                          (Prims.None Stlc.ty))
-      (BoxBool true))
-*)
-
+      (BoxBool true)) *)
 val sel_empty' : x:int -> Fact unit
       (ensures (empty x = None))
 let sel_empty' x = ()
@@ -180,7 +179,8 @@ let rec progress e t =
   match e with
   | EVar x ->
       (* assert(typing (EVar x) empty = None);
-         -- this fails and it shouldn't; the case should be trivial *)
+         -- this fails and it shouldn't; the case should be trivial
+         -- spawned it off as a lemma above for further investigation *)
       admit()
   | EApp e1 e2 -> begin
       match typing e1 empty with
@@ -205,7 +205,8 @@ let rec appears_free_in x e =
 type closed e = (forall (x:int). not (appears_free_in x e))
 
 (* Adding the rec keyword on this one makes it blow up,
-   no matter what's inside it, triggered by the function argument? *)
+   no matter what's inside it, triggered by the function argument?
+   Filed as: https://github.com/FStarLang/FStar/issues/43 *)
 val free_in_context : x:int -> e:exp -> t:ty -> g:env -> Pure unit
       (requires (appears_free_in x e /\ typing e g = Some t))
       (ensures \r -> (is_Some (g x)))
@@ -236,6 +237,14 @@ let (* rec *) free_in_context x e t g =
       end
   | _ -> ()
 
+(* Corollary of free_in_context *)
+val typable_empty_closed : x:int -> e:exp -> Pure unit
+      (requires (is_Some (typing e empty)))
+      (ensures \r -> closed e)
+let typable_empty_closed x e =
+  match typing e empty with
+  | Some t -> free_in_context x e t empty
+
 val context_invariance : g:env -> g':env -> e:exp -> t:ty -> Pure unit
       (requires (typing e g = Some t /\
                 (forall (x:int). appears_free_in x e ==> g x = g' x)))
@@ -246,7 +255,9 @@ let rec context_invariance g g' e t =
       (* bogus incomplete patterns error,
          even when I do write the None pattern,
          (I shouldn't have to, because that's unreachable anyway)
-         + equaly bogus bad postcondition error, both branches are admitted! *)
+         + equaly bogus bad postcondition error, both branches are admitted!
+         Simplified and filed as: https://github.com/FStarLang/FStar/issues/44
+         and https://github.com/FStarLang/FStar/issues/45 *)
       match typing e1 (extend g x t) with
       | Some t' ->
           context_invariance (extend g x t) (extend g' x t) e1 t';
@@ -265,19 +276,13 @@ let rec context_invariance g g' e t =
       context_invariance g g' e3 t
   | _ -> ()
 
-(* not sure if this is really needed for substitution proof *)
-val appears_free_in_empty : x:int -> e:exp -> Pure unit
-      (requires (is_Some (typing e empty)))
-      (ensures \r -> (appears_free_in x e))
-let appears_free_in_empty x e = ()
-
 val substitution_preserves_typing :
       g:env -> x:int -> e:exp -> u:ty -> t:ty -> v:exp -> Pure unit
           (requires (typing e (extend g x u) = Some t /\
                      typing v empty = Some u))
           (ensures \r -> (typing (subst x v e) g = Some t))
 let substitution_preserves_typing g x e u t v =
-  appears_free_in_empty x v;
+  typable_empty_closed x v;
   match e with
   | EVar x ->
       admit() (* if x = x' then e else e' *)
@@ -286,7 +291,7 @@ let substitution_preserves_typing g x e u t v =
   | EApp e1 e2 ->
       admit() (* EApp (subst x e e1) (subst x e e2) *)
   | ETrue ->
-      assert(t = TBool); (*  *)
+      assert(t = TBool); (* this should be provable but it currently fails *)
       admit() (* ETrue *)
   | EFalse ->
       admit() (* EFalse *)
