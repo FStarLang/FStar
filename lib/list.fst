@@ -76,6 +76,15 @@ let rec concatMap f = function
     let ftl = concatMap f tl in
     append fa ftl
 
+
+val find: a:Type 
+        -> f:(a -> Tot bool)
+        -> list a
+        -> Tot (option (x:a{f x}))
+let rec find f l = match l with 
+  | [] -> None
+  | hd::tl -> if f hd then Some hd else find f tl
+
 assume val forall2: ('a -> 'b -> bool) -> list 'a -> list 'b -> bool
 assume val mapi: (int -> 'a -> 'b) -> list 'a -> list 'b
 assume val map2: ('a -> 'b -> 'c) -> list 'a -> list 'b -> list 'c

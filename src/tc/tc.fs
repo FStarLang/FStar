@@ -229,8 +229,13 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     let a = {a with sort=k} in
     w k <| mk_Typ_btvar a, k, Trivial
 
-  | Typ_const i when (lid_equals i.v Const.allTyp_lid || lid_equals i.v Const.exTyp_lid) -> 
-    (* Special treatment for ForallTyp and ExistsTyp, giving them polymorphic kinds *)
+  (* Special treatment for ForallTyp, ExistsTyp, EqTyp, giving them polymorphic kinds *)
+  | Typ_const i when (lid_equals i.v Const.eqT_lid) -> 
+    let k = Tc.Util.new_kvar env in
+    let qk = Util.eqT_k k in
+    {t with tk=qk}, qk, Trivial 
+    
+  | Typ_const i when (lid_equals i.v Const.allTyp_lid || lid_equals i.v Const.exTyp_lid || lid_equals i.v Const.eqT_lid) -> 
     let k = Tc.Util.new_kvar env in
     let qk = Util.allT_k k in
     {t with tk=qk}, qk, Trivial 

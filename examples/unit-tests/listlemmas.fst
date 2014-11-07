@@ -121,3 +121,11 @@ let test_map x =
   let g = map plus_one l in
   assert (g == [1;2;3])
 
+
+val find: a:Type 
+        -> f:(a -> Tot bool)
+        -> list a
+        -> Tot (option (x:a{f x}))
+let rec find f l = match l with 
+  | [] -> None
+  | hd::tl -> if f hd then Some hd else find f tl

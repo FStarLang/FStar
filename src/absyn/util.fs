@@ -1134,6 +1134,7 @@ let forall_kind =
 let tforall = ftv Const.forall_lid forall_kind 
 
 let allT_k k = mk_Kind_arrow([null_t_binder <| mk_Kind_arrow([null_t_binder k], ktype) dummyRange], ktype) dummyRange 
+let eqT_k k = mk_Kind_arrow([null_t_binder <| k; null_t_binder k], ktype) dummyRange 
    
 let tforall_typ k = ftv Const.allTyp_lid (allT_k k)
     

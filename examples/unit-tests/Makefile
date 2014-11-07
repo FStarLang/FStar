@@ -8,7 +8,7 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-STDLIB = $(addprefix $(FSTAR_HOME)/lib/, string.fst st.fst partialmap.fst array-realized.fst)
+STDLIB = $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst st.fst partialmap.fst array-realized.fst)
 FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
 
 all: all-lax all-ver
@@ -18,7 +18,7 @@ VERFILES=unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertion
 all-ver: $(VERFILES)
 	$(FSTAR) --verify $^
 
-all-lax: rec.fst pat.fst bug16.fst
+all-lax: rec.fst pat.fst mac.fst bug16.fst
 	$(FSTAR) $^
 
 format: format.fst
