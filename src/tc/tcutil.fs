@@ -104,7 +104,7 @@ let destruct_arrow_kind env tt k args : (Syntax.args * binders * knd) =
               then let imp_arg = match fst b with 
                     | Inl a -> Tc.Rel.new_tvar r vars (Util.subst_kind subst a.sort) |> fst |> (fun x -> Inl x, true) //set the implicit flag
                     | Inr x -> Tc.Rel.new_evar r vars (Util.subst_typ subst x.sort) |> fst |>  (fun x -> Inr x, true) in
-                   let subst = if is_null_binder b then subst else extend_subst (subst_formal b imp_arg) subst in
+                   let subst = if is_null_binder b then subst else  (subst_formal b imp_arg)::subst in
                    let imp_args, bs = mk_implicits vars subst brest in
                    imp_arg::imp_args, bs
               else [], subst_binders subst bs
@@ -379,7 +379,7 @@ let mk_basic_dtuple_type env n =
             | Kind_arrow(bs, k) -> 
               mk_Typ_lam(bs, Rel.new_tvar r vars ktype |> fst) k r
             | _ -> failwith "Impossible" in
-          let subst = extend_subst (Inl(a.v, arg)) subst in 
+          let subst = (Inl(a.v, arg))::subst in 
           (targ arg::out, subst)) ([], []) in
       mk_Typ_app(t, List.rev args) ktype r
 
@@ -527,7 +527,7 @@ let bind env e1opt (c1:comp) ((b, c2):comp_with_binder) : comp =
       let wlp_args = [targ t1; targ t2; targ wlp1; targ (mk_lam wlp2)] in
 //      if debug env
 //      then printfn "Making bind c1=%s\nc2=%s\nlifted to %s\n" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2) (md.mname.str);
-      let k = Util.subst_kind' [Inl(a.v, t2)] kwp in
+      let k = Util.subst_kind [Inl(a.v, t2)] kwp in
       let wp = mk_Typ_app(md.bind_wp, wp_args) k t2.pos in
       let wlp = mk_Typ_app(md.bind_wlp, wlp_args) k t2.pos in
       let c = mk_comp md t2 wp wlp [] in
@@ -538,7 +538,7 @@ let bind env e1opt (c1:comp) ((b, c2):comp_with_binder) : comp =
 let lift_formula env t mk_wp mk_wlp f = 
   let md_pure = Tc.Env.get_monad_decl env Const.pure_effect_lid in
   let a, kwp = Tc.Env.wp_signature env md_pure.mname in 
-  let k = Util.subst_kind' [Inl(a.v, t)] kwp in
+  let k = Util.subst_kind [Inl(a.v, t)] kwp in
   let wp = mk_Typ_app(mk_wp, [targ t; targ f]) k f.pos in
   let wlp = mk_Typ_app(mk_wlp, [targ t; targ f]) k f.pos in
   mk_comp md_pure t_unit wp wlp []
@@ -555,7 +555,7 @@ let lift_assumption env f =
 let lift_pure env t f = 
   let md = Tc.Env.get_monad_decl env Const.pure_effect_lid in
   let a, kwp = Tc.Env.wp_signature env md.mname in 
-  let k = Util.subst_kind' [Inl(a.v, t)] kwp in
+  let k = Util.subst_kind [Inl(a.v, t)] kwp in
   let trivial = mk_Typ_app(md.trivial, [targ t]) k f.pos in
   let wp = mk_Typ_app(md.assert_p, [targ t; targ f; targ trivial]) k f.pos in
   let wlp = mk_Typ_app(md.assume_p, [targ t; targ f; targ trivial]) k f.pos in
@@ -702,14 +702,14 @@ let maybe_instantiate env e t =
         | (Inl a, _)::rest -> 
           let k = Util.subst_kind subst a.sort in
           let t = new_tvar env k in
-          let subst = extend_subst (Inl(a.v, t)) subst in 
+          let subst = (Inl(a.v, t))::subst in 
           let args, bs, subst = aux subst rest in 
           (Inl t, true)::args, bs, subst  
 
         | (Inr x, true)::rest -> 
           let t = Util.subst_typ subst x.sort in 
           let v = new_evar env t in
-          let subst = extend_subst (Inr(x.v, v)) subst in 
+          let subst = (Inr(x.v, v))::subst in 
           let args, bs, subst = aux subst rest in 
           (Inr v, true)::args, bs, subst
 

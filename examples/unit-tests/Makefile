@@ -24,6 +24,9 @@ all-lax: rec.fst pat.fst mac.fst bug16.fst
 format: format.fst
 	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $(FSTAR_HOME)/lib/array-realized.fst format.fst --verify
 
+mac: mac.fst
+	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $(FSTAR_HOME)/lib/list.fst $(FSTAR_HOME)/lib/array-realized.fst mac.fst --verify
+
 vector: vectors.fst
 	$(FSTAR) --verify --full_context_dependency vectors.fst
 

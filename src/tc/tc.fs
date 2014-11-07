@@ -72,20 +72,20 @@ let maybe_make_subst = function
 let maybe_alpha_subst s b1 b2 = 
     if is_null_binder b1 then s 
     else match fst b1, fst b2 with 
-        | Inl a, Inl b -> if Util.bvar_eq a b then s else extend_subst (Inl(a.v, btvar_to_typ b)) s
-        | Inr x, Inr y -> if Util.bvar_eq x y then s else extend_subst (Inr(x.v, bvar_to_exp y)) s
+        | Inl a, Inl b -> if Util.bvar_eq a b then s else  (Inl(a.v, btvar_to_typ b))::s
+        | Inr x, Inr y -> if Util.bvar_eq x y then s else  (Inr(x.v, bvar_to_exp y))::s
         | _ -> failwith "impossible"
 
 let maybe_extend_subst s b v =  
     if is_null_binder b then s 
     else match fst b, v with
-          | Inl a, Inl t -> extend_subst (Inl(a.v,t)) s
-          | Inr x, Inr e -> extend_subst (Inr(x.v,e)) s
+          | Inl a, Inl t ->  (Inl(a.v,t))::s
+          | Inr x, Inr e ->  (Inr(x.v,e))::s
           | _ -> failwith "Impossible"
 
 let value_check_expected_typ env e tc : exp * comp =
   let c = match tc with 
-    | Inl t -> (match t.n with 
+    | Inl t -> (match (Util.compress_typ t).n with 
                   | Typ_fun _ -> mk_Total t
                   | _ -> Tc.Util.return_value env t e)
     | Inr c -> c in
@@ -397,7 +397,7 @@ and tc_value env e : exp * comp =
         | Some t -> 
            let t = compress_typ t in
            let rec as_function_typ norm t =
-               match t.n with 
+               match (Util.compress_typ t).n with 
                 | Typ_uvar _
                 | Typ_app({n=Typ_uvar _}, _) -> (* expected a uvar; build a function type from the term and unify with it *)
                   let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
@@ -688,7 +688,7 @@ and tc_exp env e : exp * comp =
                 | Kind_type -> Tc.Util.new_tvar env k       
                 | _ -> fst <| Tc.Rel.new_tvar e.pos vars k in (* TODO: remove case split? *)
               if debug env Options.Extreme then Util.fprint2 "Instantiating %s to %s" (Print.strBvd a.v) (Print.typ_to_string targ);
-              let subst = extend_subst (Inl(a.v, targ)) subst in
+              let subst = (Inl(a.v, targ))::subst in
               let arg = Inl targ, true in
               tc_args (subst, arg::outargs, arg::arg_rets, comps, g, fvs) rest cres args
 
@@ -696,7 +696,7 @@ and tc_exp env e : exp * comp =
               let t = Util.subst_typ subst x.sort in
               fxv_check env (Inr t) fvs;
               let varg = Tc.Util.new_evar env t in
-              let subst = extend_subst (Inr(x.v, varg)) subst in
+              let subst = (Inr(x.v, varg))::subst in
               let arg = Inr varg, true in
               tc_args (subst, arg::outargs, arg::arg_rets, comps, g, fvs) rest cres args
 
@@ -1154,7 +1154,7 @@ and tc_decl env se = match se with
       let lat = mlat |> List.map (fun (o:monad_order) -> 
         let a, kwp_a_src = a_kwp_a env o.source (Tc.Env.lookup_typ_lid menv o.source) in
         let b, kwp_b_tgt = a_kwp_a env o.target (Tc.Env.lookup_typ_lid menv o.target) in
-        let kwp_a_tgt = Util.subst_kind' [Inl(b.v, Util.btvar_to_typ a)] kwp_b_tgt in
+        let kwp_a_tgt = Util.subst_kind [Inl(b.v, Util.btvar_to_typ a)] kwp_b_tgt in
         let expected_k = r |> mk_Kind_arrow([t_binder a; null_t_binder kwp_a_src], kwp_a_tgt) in
         let lift = tc_typ_check_trivial menv o.lift expected_k in
         {source=o.source; 

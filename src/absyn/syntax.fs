@@ -68,7 +68,7 @@ type typ' =
   | Typ_ascribed of typ * knd                                (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
   | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
-  | Typ_delayed  of typ * subst * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
+  | Typ_delayed  of typ * subst_t * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
 and arg = either<typ,exp> * bool                                        (* bool marks an explicitly provided implicit arg *)
 and args = list<arg>
@@ -110,7 +110,7 @@ and exp' =
   | Exp_ascribed   of exp * typ 
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Exp_uvar       of uvar_e * typ                               (* not present after 1st round tc *)
-  | Exp_delayed    of exp * subst * memo<exp>                    (* A delayed substitution --- always force it before inspecting the first arg *)
+  | Exp_delayed    of exp * subst_t * memo<exp>                    (* A delayed substitution --- always force it before inspecting the first arg *)
   | Exp_meta       of meta_e                                     (* No longer tag every expression with info, only selectively *)
 and exp = syntax<exp',typ>
 and meta_e = 
@@ -141,7 +141,7 @@ and knd' =
   | Kind_arrow of binders * knd                           (* (ai:ki|xi:ti) => k' *)
   | Kind_uvar of uvar_k_app                               (* not present after 1st round tc *)
   | Kind_lam of binders * knd                             (* not present after 1st round tc *)
-  | Kind_delayed of knd * subst * memo<knd>               (* delayed substitution --- always force before inspecting first element *)
+  | Kind_delayed of knd * subst_t * memo<knd>               (* delayed substitution --- always force before inspecting first element *)
   | Kind_unknown                                          (* not present after 1st round tc *)
 and knd = syntax<knd', unit>
 and uvar_k_app = uvar_k * args
@@ -149,7 +149,7 @@ and kabbrev = lident * args
 and uvar_k = Unionfind.uvar<uvar_basis<knd,unit>>
 and lbname = either<bvvdef, lident>
 and letbindings = bool * list<(lbname * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
-and subst = list<subst_elt>
+and subst_t = list<list<subst_elt>>
 and subst_map = Util.smap<either<typ, exp>>
 and subst_elt = either<(btvdef*typ), (bvvdef*exp)>
 and fvar = either<btvdef, bvvdef>
@@ -174,6 +174,7 @@ and bvvar = bvar<exp,typ>
 and ftvar = var<knd>
 and fvvar = var<typ>
 
+type subst = list<subst_elt>
 type either_var = either<btvar, bvvar>
 type freevars_l = list<either_var>
 type formula = typ
@@ -348,7 +349,7 @@ let mk_Kind_lam ((vs:binders), (k:knd)) p = {
     tk=();
     uvs=mk_uvs(); fvs=mk_fvs();
 }
-let mk_Kind_delayed ((k:knd),(s:subst),(m:memo<knd>)) p = {
+let mk_Kind_delayed ((k:knd),(s:subst_t),(m:memo<knd>)) p = {
     n=Kind_delayed(k, s, m);
     pos=p;
     tk=();
@@ -430,7 +431,7 @@ let mk_Typ_uvar'     ((u:uvar_t),(k:knd)) (k':knd) (p:range) = {
     
 }
 let mk_Typ_uvar (u, k) p = mk_Typ_uvar' (u, k) k p 
-let mk_Typ_delayed  ((t:typ),(s:subst),(m:memo<typ>)) (k:knd) (p:range) = {
+let mk_Typ_delayed  ((t:typ),(s:subst_t),(m:memo<typ>)) (k:knd) (p:range) = {
     n=Typ_delayed(t, s, m);
     tk=k;
     pos=p;
@@ -553,7 +554,7 @@ let mk_Exp_uvar' ((u:uvar_e),(t:typ)) (t':typ) p = {
 }
 let mk_Exp_uvar  ((u:uvar_e),(t:typ)) p = mk_Exp_uvar' (u, t) t p
 
-let mk_Exp_delayed ((e:exp),(s:subst),(m:memo<exp>)) (t:typ) p = {
+let mk_Exp_delayed ((e:exp),(s:subst_t),(m:memo<exp>)) (t:typ) p = {
     n=Exp_delayed(e, s, m);
     tk=t;
     pos=p;
