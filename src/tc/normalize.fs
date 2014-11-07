@@ -309,7 +309,7 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
 
                 | Typ_meta(Meta_pattern(t, ps)) -> (* no reduction in patterns *)
                   if unmeta config then
-                    sn tcenv {config with code=t}
+                    sn tcenv ({config with code=t})
                   else
                     let pat t = 
                         let ps = sn_args tcenv config.environment config.steps ps in
@@ -318,7 +318,7 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
     
                 | Typ_meta(Meta_labeled(t, l, b)) -> 
                   if unmeta config then
-                    sn tcenv {config with code=t}
+                    sn tcenv ({config with code=t})
                   else
                     let lab t =
                       match config.environment |> List.tryFind (function LabelSuffix _ -> true | _ -> false) with
@@ -332,7 +332,7 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
 
                 | Typ_meta(Meta_refresh_label(t, b, r)) -> 
                   if unmeta config then
-                    sn tcenv {config with code=t}
+                    sn tcenv ({config with code=t})
                   else
                    let sfx = if not b then Util.format1 " (call at %s)" <| Range.string_of_range r else "" in
                    let config = {config with code=t; environment=LabelSuffix (b, sfx)::config.environment} in
