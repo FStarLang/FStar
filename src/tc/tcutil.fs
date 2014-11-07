@@ -856,7 +856,7 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp =
           let xexp = Util.bvd_to_exp x t in
           let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) k xexp.pos  in
           let cret = mk_comp md t wp wp ct.flags in
-          let eq_ret = strengthen_precondition (Some <| Errors.subtyping_check env tc t) (Env.set_range env e.pos) cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
+          let eq_ret = strengthen_precondition (Some <| Errors.subtyping_failed env tc t) (Env.set_range env e.pos) cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
           let eq_ret = 
             if Util.is_pure_comp c 
             then weaken_precondition env eq_ret (NonTrivial (Util.mk_eq xexp e))
