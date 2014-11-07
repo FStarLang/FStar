@@ -387,7 +387,7 @@ and tc_value env e : exp * comp =
     value_check_expected_typ env ({e with tk=t}) (Inl t)
 
   | Exp_abs(bs, body) ->  (* This is the dual of the treatment of application ... see the Exp_app case below. *)
-    let fail : typ -> 'a = fun t -> raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function env t top, top.pos)) in
+    let fail :string -> typ -> 'a = fun msg t -> raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function env msg t top, top.pos)) in
     let expected_function_typ env t0 = match t0 with 
         | None -> (* no expected type; just build a function type from the binders in the term *)
             let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
@@ -451,15 +451,15 @@ and tc_value env e : exp * comp =
                               let subst = maybe_alpha_subst subst hdannot b in 
                               tc_binders (b::out, env, g, subst) tl_annot c tl 
 
-                            | _ -> fail t
+                            | _ -> fail (Util.format2 "Annotated %s; given %s" (Print.binder_to_string hdannot) (Print.binder_to_string hd)) t
                       end
                   
                     | [], _ -> (* the expected type is explicitly curried *)
                         if Util.is_total_comp c 
-                        then match (Util.comp_result c |> whnf env).n with
-                            | Typ_fun(bs_annot, c') ->  tc_binders(out, env, g, subst) bs_annot c' bs
-                            | _ -> fail t
-                        else fail t
+                        then match (Util.comp_result c |> whnf env) with
+                            | {n=Typ_fun(bs_annot, c')} ->  tc_binders(out, env, g, subst) bs_annot c' bs
+                            | t -> fail (Util.format1 "More arguments than annotated type (%s)" (Print.tag_of_typ t)) t
+                        else fail "Curried function, but not total" t
 
                     | _, [] -> (* more expected args; expect the body to return a total function *)
                        let c = Util.total_comp (mk_Typ_fun(bs_annot, c) ktype c.pos) c.pos in
@@ -507,7 +507,7 @@ and tc_value env e : exp * comp =
                 | _ -> (* expected type is not a function; try normalizing it before giving up *)
                   if not norm
                   then as_function_typ true (whnf env t) 
-                  else fail t in
+                  else fail "Annotated type is not a function" t in
            as_function_typ false t in
 
     let env, topt = Tc.Env.clear_expected_typ env in

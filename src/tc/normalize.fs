@@ -173,7 +173,11 @@ let rec is_head_symbol t = match (compress_typ t).n with
     | Typ_meta(Meta_refresh_label(t, _, _)) -> is_head_symbol t
     | _ -> false
 
-let rec sn tcenv (cfg:config<typ>) : config<typ> =
+let rec sn tcenv cfg =
+    let cfg = sn' tcenv cfg in
+    {cfg with code=Util.compress_typ cfg.code}
+
+and sn' tcenv (cfg:config<typ>) : config<typ> =
   let rebuild config  = 
     let rebuild_stack config = 
         if is_stack_empty config then config
@@ -492,7 +496,7 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
 (************************************************************************************)
 let norm_kind steps tcenv k = 
   let c = snk tcenv (ke_config k [] steps) in
-  c.code
+  Util.compress_kind c.code
 
 let norm_typ steps tcenv t = 
   let c = sn tcenv (t_config t [] steps) in
@@ -508,7 +512,7 @@ let whnf tcenv t =
         | Typ_uvar _
         | Typ_app({n=Typ_const _}, _)
         | Typ_app({n=Typ_btvar _}, _)
-        | Typ_app({n=Typ_uvar _}, _) -> eta_expand tcenv t
+        | Typ_app({n=Typ_uvar _}, _) -> eta_expand tcenv t |> Util.compress_typ
         | _ -> norm_typ [WHNF;Beta;Eta] tcenv t
 
 let rec weak_norm_comp env comp =

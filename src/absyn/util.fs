@@ -178,6 +178,8 @@ let rec subst_typ' s t = match s with
              | _ -> t0 in
              aux s
     
+        | Typ_uvar _ -> t0
+
         | _ -> mk_Typ_delayed(t, s, Util.mk_ref None) t.tk t.pos
 
 and subst_exp' s e = match s with 
@@ -194,6 +196,9 @@ and subst_exp' s e = match s with
                         | _ -> aux rest)
                  | _ -> e0 in
                  aux s
+        
+        | Exp_uvar _ -> e0
+
         | _ -> mk_Exp_delayed (e0, s, Util.mk_ref None) e0.tk e0.pos
 
 and subst_kind' s k = match s with 
@@ -387,6 +392,7 @@ and compress_typ t =
   match t.n with
       | Typ_delayed (t', s, m) ->
         let res = fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp subst_ctrl [] t' in
+        let res = compress_typ res in
         m := Some res;
         //printfn "Compressing %A ... got %A\n" t' res;
         res
@@ -397,8 +403,9 @@ and compress_exp e =
   match e.n with
   | Exp_delayed (e',s, m) ->
     let e = fst <| Visit.reduce_exp (map_knd s) (map_typ s) (visit_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp subst_ctrl [] e' in
-    m := Some e;
-    e
+    let res = compress_exp e in
+    m := Some res;
+    res
   | _ -> e
 
 let rec unmeta_exp e =
