@@ -118,20 +118,24 @@ and uvar_t_to_string (uv, k) =
    "U" ^ (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
 
 and imp_to_string s = function
-  | true -> if !Options.print_implicits then "#" ^ s else ""
+  | true -> "#" ^ s
   | false -> s
 
 and binder_to_string b = match b with 
     | Inl a, imp -> if is_null_binder b then kind_to_string a.sort else imp_to_string ((strBvd a.v) ^ ":" ^ (kind_to_string a.sort)) imp
     | Inr x, imp -> if is_null_binder b then typ_to_string x.sort else imp_to_string ((strBvd x.v) ^ ":" ^ (typ_to_string x.sort)) imp
    
-and binders_to_string sep bs = bs |> List.map binder_to_string |> String.concat sep
+and binders_to_string sep bs =
+    let bs = if !Options.print_implicits then bs else List.filter (fun (_,i) -> not i) bs in
+    bs |> List.map binder_to_string |> String.concat sep
 
 and arg_to_string = function 
    | Inl a, imp -> imp_to_string (typ_to_string a) imp
    | Inr x, imp -> imp_to_string (exp_to_string x) imp
 
-and args_to_string args = args |> List.map arg_to_string |> String.concat " "
+and args_to_string args =
+    let args = if !Options.print_implicits then args else List.filter (fun (_,i) -> not i) args in
+    args |> List.map arg_to_string |> String.concat " "
 
 and comp_typ_to_string c =
   match c.n with
