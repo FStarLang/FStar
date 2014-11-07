@@ -115,7 +115,7 @@ and typ_to_string x =
       | t -> t|> typ_to_string)
 
 and uvar_t_to_string (uv, k) =
-   Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)) 
+   "U" ^ (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
 
 and imp_to_string s = function
   | true -> if !Options.print_implicits then "#" ^ s else ""
@@ -224,7 +224,8 @@ and exp_to_string x = match (compress_exp x).n with
     (lbs_to_string lbs)
     (e|> exp_to_string)
 
-and uvar_e_to_string (uv, _) = Util.format1 "'e%s" (Util.string_of_int (Unionfind.uvar_id uv))
+and uvar_e_to_string (uv, _) =
+    "'e" ^ (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
 
 and lbs_to_string lbs = 
     Util.format2 "let %s %s"
@@ -262,10 +263,11 @@ and kind_to_string x = match (compress_kind x).n with
   | Kind_unknown -> "_"
 
 and uvar_k_to_string uv =
-    format1 "'k_%s" (Util.string_of_int (Unionfind.uvar_id uv)) 
+    "'k_" ^ (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
 
 and uvar_k_to_string' (uv,args) =
-    format2 "('k_%s %s)" (uvar_k_to_string uv) (args_to_string args)
+   let str = if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv) in
+   format2 "('k_%s %s)" str (args_to_string args)
 
 and pat_to_string x = match x.v with
   | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (sli l.v) (List.map pat_to_string pats |> String.concat " ") 

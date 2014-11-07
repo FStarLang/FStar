@@ -68,6 +68,7 @@ let trace_error = Util.mk_ref false
 let verify = Util.mk_ref false
 let full_context_dependency = Util.mk_ref false
 let print_implicits = Util.mk_ref false
+let hide_uvar_nums = Util.mk_ref false
 
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
@@ -126,6 +127,7 @@ let specs () : list<Getopt.opt> =
      ( noshort, "print_before_norm", ZeroArgs(fun () -> norm_then_print := false), "Do not normalize types before printing (for debugging)");
      ( noshort, "show_signatures", OneArg((fun x -> show_signatures := x::!show_signatures), "module name"), "Show the checked signatures for all top-level symbols in the module");
      ( noshort, "full_context_dependency", ZeroArgs(fun () -> full_context_dependency := true), "Introduce unification variables that are dependent on the entire context (possibly expensive, but better for type inference)");
-     ( noshort, "print_implicits", ZeroArgs(fun () -> print_implicits := true), "Print implicit arguments")
+     ( noshort, "print_implicits", ZeroArgs(fun () -> print_implicits := true), "Print implicit arguments");
+     ( noshort, "hide_uvar_nums", ZeroArgs(fun () -> hide_uvar_nums := true), "Don't print unification variable numbers")
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs

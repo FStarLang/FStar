@@ -189,11 +189,14 @@ type uvar_inst =  //never a uvar in the co-domain of this map
   | UT of (uvar_t * knd) * typ 
   | UE of (uvar_e * typ) * exp
   | UC of (uvar_t * knd) * typ
-let str_uvi = function 
-  | UK (u, _) -> Unionfind.uvar_id u |> string_of_int |> Util.format1 "UK %s"
-  | UT ((u,_), t) -> Unionfind.uvar_id u |> string_of_int |> (fun x -> Util.format2 "UT %s %s" x (Print.typ_to_string t))
-  | UE ((u,_), _) -> Unionfind.uvar_id u |> string_of_int |> Util.format1 "UE %s"
-  | UC ((u,_), _) -> Unionfind.uvar_id u |> string_of_int |> Util.format1 "UC %s"
+let str_uvi ui =
+  (* CH: F* fails to type check this without the annotation on u, investigate! *)
+  let str (u:Unionfind.uvar<'a>) = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
+  match ui with
+  | UK (u, _) -> str u |> Util.format1 "UK %s"
+  | UT ((u,_), t) -> str u |> (fun x -> Util.format2 "UT %s %s" x (Print.typ_to_string t))
+  | UE ((u,_), _) -> str u |> Util.format1 "UE %s"
+  | UC ((u,_), _) -> str u |> Util.format1 "UC %s"
 
 let print_uvi uvi = Util.fprint1 "%s\n" (str_uvi uvi) 
     
