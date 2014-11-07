@@ -21,9 +21,9 @@ module Microsoft.FStar.Tc.Normalize
 open Microsoft.FStar.Tc
 open Microsoft.FStar.Absyn.Syntax
 
-(* CH: without WHNF, all the strategies reduce under lambdas, right? *)
 type step =
   | WHNF         (* reduce to weak head normal form only -- CH: adding this removes behaviors, quite unintuitive *)
+                 (* without WHNF, all the strategies reduce under lambdas *)
   | Eta          (* eta expansion (of type functions) *)
   | Delta        (* expand type abbreviations only if reduction is blocked *)
   | DeltaHard    (* expand all type abbreviations *)
