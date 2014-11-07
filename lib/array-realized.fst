@@ -61,11 +61,11 @@ let slice (Seq c start_i end_i) i j = Seq c (start_i + i) (start_i + j)
 val append: a:Type -> seq a -> seq a -> Tot (seq a)
 let append s1 s2 = Seq (Append s1 s2) 0 (length s1 + length s2)
 
-type Equal          : #a:Type -> seq a -> seq a -> Type
+(* NS: TODO better notation for implicit parammeters ... requires two steps now *)
+logic type Equals (a:Type) (s1:seq a) (s2:seq a) = 
+          (length s1 == length s2
+           /\ (forall (i:int).
+                 (0 <= i /\ i < length s1)
+               ==> __index__ (Seq.c s1) i == __index__ (Seq.c s2) i))
 
-assume SeqEquals:    forall (a:Type) (s1:seq a) (s2:seq a).{:pattern (Equal s1 s2)} 
-                     Equal s1 s2
-                     <==> (length s1 == length s2
-                           /\ (forall (i:int).
-                               (0 <= i /\ i < length s1)
-                               ==> __index__ (Seq.c s1) i == __index__ (Seq.c s2) i))
+type Equal : #a:Type -> seq a -> seq a -> Type = fun (a:Type) (s1:seq a) (s2:seq a) -> Equals a s1 s2
