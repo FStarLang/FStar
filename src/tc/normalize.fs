@@ -45,6 +45,7 @@ type step =
   | DeltaComp
   | Simplify
   | SNComp
+  | Unmeta
 and steps = list<step>
 
 type config<'a> = {code:'a;
@@ -133,6 +134,7 @@ let rec eta_expand_exp (tcenv:Tc.Env.env) (e:exp) : exp = failwith "NYI"
 let no_eta = List.filter (function Eta -> false | _ -> true)
 let no_eta_cfg c = {c with steps=no_eta c.steps}
 let whnf_only config = config.steps |> List.contains WHNF
+let unmeta config = config.steps |> List.contains Unmeta
 let is_stack_empty config = match config.stack.args with 
     | [] -> true
     | _ -> false
@@ -306,23 +308,32 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
                   end
 
                 | Typ_meta(Meta_pattern(t, ps)) -> (* no reduction in patterns *)
-                  let pat t = 
-                    let ps = sn_args tcenv config.environment config.steps ps in
-                    wk <| mk_Typ_meta'(Meta_pattern(t, ps)) in
-                  sn tcenv ({config with code=t; close=close_with_config config pat})
+                  if unmeta config then
+                    sn tcenv {config with code=t}
+                  else
+                    let pat t = 
+                        let ps = sn_args tcenv config.environment config.steps ps in
+                        wk <| mk_Typ_meta'(Meta_pattern(t, ps)) in
+                    sn tcenv ({config with code=t; close=close_with_config config pat})
     
                 | Typ_meta(Meta_labeled(t, l, b)) -> 
-                  let lab t =
-                    match config.environment |> List.tryFind (function LabelSuffix _ -> true | _ -> false) with
-                            | Some (LabelSuffix(b', sfx)) ->
-                                if b=b'
-                                then (if Tc.Env.debug tcenv Options.Low then Util.fprint2 "Stripping label %s because of enclosing refresh %s\n" l sfx; t)
-                                else (if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Normalizer refreshing label: %s\n" sfx;
-                                      wk <| mk_Typ_meta'(Meta_labeled(t, l ^ sfx, b)))
-                            | _ -> wk <| mk_Typ_meta'(Meta_labeled(t, l, b))  in
-                  sn tcenv ({config with code=t; close=close_with_config config lab})
+                  if unmeta config then
+                    sn tcenv {config with code=t}
+                  else
+                    let lab t =
+                      match config.environment |> List.tryFind (function LabelSuffix _ -> true | _ -> false) with
+                              | Some (LabelSuffix(b', sfx)) ->
+                                  if b=b'
+                                  then (if Tc.Env.debug tcenv Options.Low then Util.fprint2 "Stripping label %s because of enclosing refresh %s\n" l sfx; t)
+                                  else (if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Normalizer refreshing label: %s\n" sfx;
+                                        wk <| mk_Typ_meta'(Meta_labeled(t, l ^ sfx, b)))
+                              | _ -> wk <| mk_Typ_meta'(Meta_labeled(t, l, b))  in
+                    sn tcenv ({config with code=t; close=close_with_config config lab})
 
                 | Typ_meta(Meta_refresh_label(t, b, r)) -> 
+                  if unmeta config then
+                    sn tcenv {config with code=t}
+                  else
                    let sfx = if not b then Util.format1 " (call at %s)" <| Range.string_of_range r else "" in
                    let config = {config with code=t; environment=LabelSuffix (b, sfx)::config.environment} in
                    sn tcenv config
@@ -542,13 +553,15 @@ let normalize tcenv t = norm_typ [DeltaHard;Beta;Eta] tcenv t
 (* Functions for normalization and printing *)
 
 let typ_norm_to_string tcenv t =
-  Print.typ_to_string (norm_typ [Beta;SNComp] tcenv t)
+  "[Before:" ^ Print.typ_to_string t ^ "]" ^
+  "[After:" ^ Print.typ_to_string (norm_typ [Beta;SNComp;Unmeta] tcenv t) ^ "]"
 
 let kind_norm_to_string tcenv k =
-  Print.kind_to_string (norm_kind [Beta;SNComp] tcenv k)
+  Print.kind_to_string (norm_kind [Beta;SNComp;Unmeta] tcenv k)
 
 let formula_norm_to_string tcenv f =
-  Print.formula_to_string (norm_typ [Beta;SNComp] tcenv f)
+  "[Before:" ^ Print.formula_to_string f ^ "]" ^
+  "[After:" ^ Print.formula_to_string (norm_typ [Beta;SNComp;Unmeta] tcenv f) ^ "]"
 
 let comp_typ_norm_to_string tcenv c =
-  Print.comp_typ_to_string (norm_comp [Beta;SNComp] tcenv c)
+  Print.comp_typ_to_string (norm_comp [Beta;SNComp;Unmeta] tcenv c)

@@ -31,6 +31,7 @@ type step =
   | DeltaComp    (* expand computation-type abbreviations *)
   | Simplify     (* simplify formulas while reducing -- experimental -- CH: actually unused *)
   | SNComp       (* normalize computation types also *)
+  | Unmeta       (* remove Metas other than Meta_named -- CH: at the moment Meta_named causes failwith; why? *)
 and steps = list<step>
 
 val eta_expand: Env.env -> typ -> typ
