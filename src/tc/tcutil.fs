@@ -766,9 +766,16 @@ let check_uvars r t =
     let ut = List.map Print.uvar_t_to_string (Util.set_elements uvt.uvars_t) in
     let uk = List.map Print.uvar_k_to_string (Util.set_elements uvt.uvars_k) in
     let union = String.concat ","  (ue @ ut @ uk) in
+    (* ignoring the hide_uvar_nums and print_implicits flags here *)
+    let hide_uvar_nums_saved = !Options.hide_uvar_nums in
+    let print_implicits_saved = !Options.print_implicits in
+    Options.hide_uvar_nums := false;
+    Options.print_implicits := true;
     Tc.Errors.report r
       (format2 "Unconstrained unification variables %s in type signature %s; \
-       please add an annotation" union (Print.typ_to_string t))
+       please add an annotation" union (Print.typ_to_string t));
+    Options.hide_uvar_nums := hide_uvar_nums_saved;
+    Options.print_implicits := print_implicits_saved
 
 let gen env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
   if not <| (Util.for_all (fun (_, c) -> Util.is_pure_comp c) ecs) //No value restriction in F*---generalize the types of pure computations
