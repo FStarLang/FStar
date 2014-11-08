@@ -1,5 +1,5 @@
 
-module Stlc
+module Bug28
 open Prims.PURE
 
 val typing : int

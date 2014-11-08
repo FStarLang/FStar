@@ -37,10 +37,13 @@ let rec sli (l:lident) : string =
 let strBvd bvd = 
     if !Options.print_real_names
     then bvd.ppname.idText ^ bvd.realname.idText
-    else bvd.ppname.idText
+    else 
+        if !Options.hide_genident_nums && starts_with (bvd.ppname.idText) "_" then
+            try
+                let _ = int_of_string (substring_from (bvd.ppname.idText) 1) in "_?"
+            with _ -> bvd.ppname.idText
+        else bvd.ppname.idText
 
-
-                    
 let const_to_string x = match x with
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
