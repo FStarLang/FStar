@@ -6,7 +6,17 @@ let rec length l =
   | [] -> 0
   | _::_ -> (1 + length)
 
-(* Should still make implicits go away
+(* We get different error messages depending on whether the --verify flag is on:
+Without --verify flag:
+  typing-error-expected-expression-of-type.fst(7,17-7,23) : Error
+  Expected expression of type "int";
+  got expression "(length )" of type "(_:(list ('U520 'a)) -> Tot nat)"
+With --verify flag:
+  typing-error-expected-expression-of-type.fst(7,17-7,23) : Error
+  Expected expression of type "int";
+  got expression "(length )" of type "(_:_7896:(list ('U527 'a)){(Precedes   (LexPair   _7896 LexTop) (LexPair   l LexTop))} -> Tot nat)"
+
+(* Here is what we get with the --print_implicits flag (before and after normalization)
 
 Expected expression of type "[Before:int][After:int]";
 got expression "(length #('U531 'a))" of type

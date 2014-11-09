@@ -37,10 +37,13 @@ let rec sli (l:lident) : string =
 let strBvd bvd = 
     if !Options.print_real_names
     then bvd.ppname.idText ^ bvd.realname.idText
-    else bvd.ppname.idText
+    else 
+        if !Options.hide_genident_nums && starts_with (bvd.ppname.idText) "_" then
+            try
+                let _ = int_of_string (substring_from (bvd.ppname.idText) 1) in "_?"
+            with _ -> bvd.ppname.idText
+        else bvd.ppname.idText
 
-
-                    
 let const_to_string x = match x with
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
@@ -51,10 +54,6 @@ let const_to_string x = match x with
   | Const_bytearray _  ->  "<bytearray>"
   | Const_int64 _ -> "<int64>"
   | Const_uint8 _ -> "<uint8>"
-
-let imp_to_string = function 
-  | true -> "#"
-  | _ -> ""
    
 let rec tag_of_typ t = match t.n with 
   | Typ_btvar _ -> "Typ_btvar"
@@ -119,19 +118,27 @@ and typ_to_string x =
       | t -> t|> typ_to_string)
 
 and uvar_t_to_string (uv, k) =
-   Util.format1 "'U%s"  (Util.string_of_int (Unionfind.uvar_id uv)) 
+   "U" ^ (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
+
+and imp_to_string s = function
+  | true -> "#" ^ s
+  | false -> s
 
 and binder_to_string b = match b with 
-    | Inl a, imp -> if is_null_binder b then kind_to_string a.sort else Util.format3 "%s%s:%s" (imp_to_string imp) (strBvd a.v) (kind_to_string a.sort)
-    | Inr x, imp -> if is_null_binder b then typ_to_string x.sort else Util.format3 "%s%s:%s" (imp_to_string imp) (strBvd x.v) (typ_to_string x.sort)
+    | Inl a, imp -> if is_null_binder b then kind_to_string a.sort else imp_to_string ((strBvd a.v) ^ ":" ^ (kind_to_string a.sort)) imp
+    | Inr x, imp -> if is_null_binder b then typ_to_string x.sort else imp_to_string ((strBvd x.v) ^ ":" ^ (typ_to_string x.sort)) imp
    
-and binders_to_string sep bs = bs |> List.map binder_to_string |> String.concat sep
+and binders_to_string sep bs =
+    let bs = if !Options.print_implicits then bs else List.filter (fun (_,i) -> not i) bs in
+    bs |> List.map binder_to_string |> String.concat sep
 
 and arg_to_string = function 
-   | Inl a, imp -> Util.format2 "%s%s" (imp_to_string imp) (typ_to_string a)    
-   | Inr x, imp -> Util.format2 "%s%s" (imp_to_string imp) (exp_to_string x)
+   | Inl a, imp -> imp_to_string (typ_to_string a) imp
+   | Inr x, imp -> imp_to_string (exp_to_string x) imp
 
-and args_to_string args = args |> List.map arg_to_string |> String.concat " "
+and args_to_string args =
+    let args = if !Options.print_implicits then args else List.filter (fun (_,i) -> not i) args in
+    args |> List.map arg_to_string |> String.concat " "
 
 and comp_typ_to_string c =
   match c.n with
@@ -224,7 +231,8 @@ and exp_to_string x = match (compress_exp x).n with
     (lbs_to_string lbs)
     (e|> exp_to_string)
 
-and uvar_e_to_string (uv, _) = Util.format1 "'e%s" (Util.string_of_int (Unionfind.uvar_id uv))
+and uvar_e_to_string (uv, _) =
+    "'e" ^ (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
 
 and lbs_to_string lbs = 
     Util.format2 "let %s %s"
@@ -262,10 +270,11 @@ and kind_to_string x = match (compress_kind x).n with
   | Kind_unknown -> "_"
 
 and uvar_k_to_string uv =
-    format1 "'k_%s" (Util.string_of_int (Unionfind.uvar_id uv)) 
+    "'k_" ^ (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
 
 and uvar_k_to_string' (uv,args) =
-    format2 "('k_%s %s)" (uvar_k_to_string uv) (args_to_string args)
+   let str = if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv) in
+   format2 "('k_%s %s)" str (args_to_string args)
 
 and pat_to_string x = match x.v with
   | Pat_cons(l, pats) -> Util.format2 "(%s %s)" (sli l.v) (List.map pat_to_string pats |> String.concat " ") 
@@ -304,4 +313,3 @@ let rec sigelt_to_string_short x = match x with
 
 let rec modul_to_string (m:modul) = 
   Util.format2 "module %s\n%s" (sli m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
-

@@ -50,9 +50,9 @@ let unexpected_signature_for_monad env m k =
   format2 "Unexpected signature for monad \"%s\". Expected a kind of the form ('a:Type => WP 'a => WP 'a => Type);\ngot %s"
     m.str (Normalize.kind_norm_to_string env k)
 
-let expected_a_term_of_type_t_got_a_function env t e = 
-  format2 "Expected a term of type \"%s\";\ngot a function \"%s\""
-    (Normalize.typ_norm_to_string env t) (Print.exp_to_string e)
+let expected_a_term_of_type_t_got_a_function env msg t e = 
+  format3 "Expected a term of type \"%s\";\ngot a function \"%s\" (%s)"
+    (Normalize.typ_norm_to_string env t) (Print.exp_to_string e) msg
 
 let unexpected_implicit_argument = 
   "Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"

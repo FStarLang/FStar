@@ -862,7 +862,7 @@ and desugar_kind env k : knd =
             let subst = List.map2 (fun ax (t, _) -> match ax with 
               | Inl a -> Inl(a, desugar_typ env t)
               | Inr x -> Inr(x, desugar_exp env t)) binders args in 
-            let k = Util.subst_kind (mk_subst subst) def in 
+            let k = Util.subst_kind subst def in 
             pos <| mk_Kind_abbrev((l, subst |> List.map (function Inl(_, t) -> targ t | Inr(_, e) -> varg e)), k)
       end
     | _ -> error "Unexpected term where kind was expected" k k.range

@@ -13,7 +13,7 @@ FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB)
 
 all: all-lax all-ver
 
-VERFILES=unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst insertionsort-lemma.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst sf-poly.fst format.fst bug34.fst bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst bug28.fst bug35.fst
+VERFILES=unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst insertionsort-lemma.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst sf-poly.fst format.fst mac.fst bug34.fst bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst bug28.fst bug35.fst
 
 all-ver: $(VERFILES)
 	$(FSTAR) --verify $^
@@ -23,6 +23,9 @@ all-lax: rec.fst pat.fst mac.fst bug16.fst
 
 format: format.fst
 	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $(FSTAR_HOME)/lib/array-realized.fst format.fst --verify
+
+mac: mac.fst
+	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $(FSTAR_HOME)/lib/list.fst $(FSTAR_HOME)/lib/array-realized.fst mac.fst --verify
 
 vector: vectors.fst
 	$(FSTAR) --verify --full_context_dependency vectors.fst
