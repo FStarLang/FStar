@@ -4,7 +4,7 @@
 BASIC=prims-fake.fs profiling.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs platform.fsi platform.fs options.fs unionfind.fsi unionfind.fs lazyset.fsi lazyset.fs
 BASIC_SRC=$(addprefix basic/, $(BASIC))
 
-ABSYN=syntax.fs const.fs visit.fs util.fs print.fs 
+ABSYN=syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
 ABSYN_SRC=$(addprefix absyn/, $(ABSYN))
 
 FORMAT=format.fsi format.fs
