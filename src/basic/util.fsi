@@ -95,6 +95,8 @@ val run_proc : string -> string -> string -> (bool * string * string)
 val write_JSON: 'a -> string -> unit
 val read_JSON: string -> 'a
 
+val get_file_extension: string -> string
+
 val int_of_string: string -> int
 val int_of_char:   char -> Tot<int>
 val char_of_int:   int -> Tot<char>

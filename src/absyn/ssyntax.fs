@@ -14,21 +14,24 @@ exception Err of string
 
 (* AST for serialization of modules *)
 
+let serialize_list (f:'a -> 'b) (l: list<'a>) :array<'b> = Array.map f (List.toArray l)
+let deserialize_list (f:'a -> 'b) (a: array<'a>) :list<'b> = Array.toList (Array.map f a)
+
 type s_ident = string
 
 let serialize_ident (ast : ident) : s_ident = ast.idText
 let deserialize_ident (ast : s_ident) : ident = mk_ident (ast, dummyRange)
 
 type s_LongIdent = 
-    { ns : list<s_ident>
+    { ns : array<s_ident>;
       ident : s_ident }
 
 let serialize_LongIdent (ast : LongIdent) : s_LongIdent = 
-    { ns = List.map serialize_ident ast.ns
+    { ns = serialize_list serialize_ident ast.ns;
       ident = serialize_ident ast.ident }
 
 let deserialize_LongIdent (ast : s_LongIdent) : LongIdent = 
-    lid_of_ids (List.map deserialize_ident ast.ns @ [ deserialize_ident ast.ident ])
+    lid_of_ids (deserialize_list deserialize_ident ast.ns @ [ deserialize_ident ast.ident ])
 
 type s_lident = s_LongIdent
 
@@ -36,16 +39,16 @@ let serialize_lident (ast : lident) : s_lident = serialize_LongIdent ast
 let deserialize_lident (ast : s_lident) : lident = deserialize_LongIdent ast
 
 type s_withinfo_t<'sa, 'st> = 
-    { v : 'sa
+    { v : 'sa;
       sort : 'st }
 
 let serialize_withinfo_t (s_v : 'a -> 'sa) (s_sort : 't -> 'st) (ast : withinfo_t<'a, 't>) : s_withinfo_t<'sa, 'st> = 
-    { v = s_v ast.v
+    { v = s_v ast.v;
       sort = s_sort ast.sort }
 
 let deserialize_withinfo_t (ds_v : 'sa -> 'a) (ds_sort : 'st -> 't) (ast : s_withinfo_t<'sa, 'st>) : withinfo_t<'a, 't> = 
-    { v = ds_v ast.v
-      sort = ds_sort ast.sort
+    { v = ds_v ast.v;
+      sort = ds_sort ast.sort;
       p = dummyRange }
 
 type s_var<'st> = s_withinfo_t<s_lident, 'st>
@@ -57,15 +60,15 @@ let deserialize_var (ds_sort : 'st -> 't) (ast : s_var<'st>) : var<'t> =
 type s_fieldname = s_lident
 
 type s_bvdef<'sa> = 
-    { ppname : s_ident
+    { ppname : s_ident;
       realname : s_ident }
 
 let serialize_bvdef (ast : bvdef<'a>) : s_bvdef<'sa> = 
-    { ppname = serialize_ident ast.ppname
+    { ppname = serialize_ident ast.ppname;
       realname = serialize_ident ast.realname }
 
 let deserialize_bvdef (ast : s_bvdef<'sa>) : bvdef<'a> = 
-    { ppname = deserialize_ident ast.ppname
+    { ppname = deserialize_ident ast.ppname;
       realname = deserialize_ident ast.realname }
 
 type s_bvar<'sa, 'st> = s_withinfo_t<s_bvdef<'sa>, 'st>
@@ -163,7 +166,7 @@ type s_typ' =
         typeof<s_typ'>.GetNestedTypes(BindingFlags.Public ||| BindingFlags.NonPublic) |> Array.filter FSharpType.IsUnion
 
 and [<KnownType("KnownTypes")>] s_meta_t = 
-    | S_Meta_pattern of s_typ * list<s_arg>
+    | S_Meta_pattern of s_typ * array<s_arg>
     | S_Meta_named of s_typ * s_lident
     | S_Meta_labeled of s_typ * string * bool
     static member KnownTypes() = 
@@ -172,11 +175,11 @@ and [<KnownType("KnownTypes")>] s_meta_t =
 
 and s_arg = s_either<s_typ, s_exp> * bool
 
-and s_args = list<s_arg>
+and s_args = array<s_arg>
 
 and s_binder = s_either<s_btvar, s_bvvar> * bool
 
-and s_binders = list<s_binder>
+and s_binders = array<s_binder>
 
 and s_typ = s_syntax<s_typ', s_knd>
 
@@ -184,7 +187,7 @@ and s_comp_typ =
     { effect_name : s_lident
       result_typ : s_typ
       effect_args : s_args
-      flags : list<s_cflags> }
+      flags : array<s_cflags> }
 
 and [<KnownType("KnownTypes")>] s_comp' = 
     | S_Total of s_typ
@@ -204,7 +207,7 @@ and [<KnownType("KnownTypes")>] s_exp' =
     | S_Exp_constant of s_sconst
     | S_Exp_abs of s_binders * s_exp
     | S_Exp_app of s_exp * s_args
-    | S_Exp_match of s_exp * list<s_pat * option<s_exp> * s_exp>
+    | S_Exp_match of s_exp * array<s_pat * option<s_exp> * s_exp>
     | S_Exp_ascribed of s_exp * s_typ
     | S_Exp_let of s_letbindings * s_exp
     | S_Exp_meta of s_meta_e
@@ -233,9 +236,9 @@ and s_btvdef = s_bvdef<s_typ>
 and s_bvvdef = s_bvdef<s_exp>
 
 and [<KnownType("KnownTypes")>] s_pat' = 
-    | S_Pat_disj of list<s_pat>
+    | S_Pat_disj of array<s_pat>
     | S_Pat_constant of s_sconst
-    | S_Pat_cons of s_fvvar * list<s_pat>
+    | S_Pat_cons of s_fvvar * array<s_pat>
     | S_Pat_var of s_bvvar
     | S_Pat_tvar of s_btvar
     | S_Pat_wild of s_bvvar
@@ -264,7 +267,7 @@ and s_kabbrev = s_lident * s_args
 
 and s_lbname = s_either<s_bvvdef, s_lident>
 
-and s_letbindings = bool * list<s_lbname * s_typ * s_exp>
+and s_letbindings = bool * array<s_lbname * s_typ * s_exp>
 
 and s_fvar = s_either<s_btvdef, s_bvvdef>
 
@@ -285,6 +288,7 @@ let rec serialize_typ' (ast : typ') : s_typ' =
     | Typ_app(t, ars) -> S_Typ_app(serialize_typ t, serialize_args ars)
     | Typ_lam(bs, t) -> S_Typ_lam(serialize_binders bs, serialize_typ t)
     | Typ_ascribed(t, k) -> S_Typ_ascribed(serialize_typ t, serialize_knd k)
+
     | Typ_meta(m) -> S_Typ_meta(serialize_meta_t m)
     | Typ_unknown -> S_Typ_unknown
     | Typ_uvar(_, _) -> raise (Err "typ not impl:1")
@@ -292,18 +296,18 @@ let rec serialize_typ' (ast : typ') : s_typ' =
 
 and serialize_meta_t (ast : meta_t) : s_meta_t = 
     match ast with
-    | Meta_pattern(t, l) -> S_Meta_pattern(serialize_typ t, List.map serialize_arg l)
+    | Meta_pattern(t, l) -> S_Meta_pattern(serialize_typ t, serialize_list serialize_arg l)
     | Meta_named(t, lid) -> S_Meta_named(serialize_typ t, serialize_lident lid)
     | Meta_labeled(t, s, b) -> S_Meta_labeled(serialize_typ t, s, b)
     | _ -> raise (Err "unimplemented meta_t")
 
 and serialize_arg (ast : arg) : s_arg = (serialize_either serialize_typ serialize_exp (fst ast), (snd ast))
 
-and serialize_args (ast : args) : s_args = List.map serialize_arg ast
+and serialize_args (ast : args) : s_args = serialize_list serialize_arg ast
 
 and serialize_binder (ast : binder) : s_binder = (serialize_either serialize_btvar serialize_bvvar (fst ast), (snd ast))
 
-and serialize_binders (ast : binders) : s_binders = List.map serialize_binder ast
+and serialize_binders (ast : binders) : s_binders = serialize_list serialize_binder ast
 
 and serialize_typ (ast : typ) : s_typ = serialize_syntax serialize_typ' (Util.compress_typ ast)
 
@@ -311,7 +315,7 @@ and serialize_comp_typ (ast : comp_typ) : s_comp_typ =
     { effect_name = serialize_lident ast.effect_name
       result_typ = serialize_typ ast.result_typ
       effect_args = serialize_args ast.effect_args
-      flags = List.map serialize_cflags ast.flags }
+      flags = serialize_list serialize_cflags ast.flags }
 
 and serialize_comp' (ast : comp') : s_comp' = 
     match ast with
@@ -326,6 +330,7 @@ and serialize_cflags (ast : cflags) : s_cflags =
     | MLEFFECT -> "C2"
     | RETURN -> "C3"
     | SOMETRIVIAL -> "C4"
+    | LEMMA -> "C5"
 
 and serialize_exp' (ast : exp') : s_exp' = 
     match ast with
@@ -341,7 +346,7 @@ and serialize_exp' (ast : exp') : s_exp' =
             | None -> None
         
         let f (p, eopt, e) = (serialize_pat p, g eopt, serialize_exp e)
-        S_Exp_match(serialize_exp e, List.map f l)
+        S_Exp_match(serialize_exp e, serialize_list f l)
     | Exp_ascribed(e, t) -> S_Exp_ascribed(serialize_exp e, serialize_typ t)
     | Exp_let(lbs, e) -> S_Exp_let(serialize_letbindings lbs, serialize_exp e)
     | Exp_meta(m) -> S_Exp_meta(serialize_meta_e m)
@@ -370,9 +375,9 @@ and serialize_bvvdef (ast : bvvdef) : s_bvvdef = serialize_bvdef ast
 
 and serialize_pat' (ast : pat') : s_pat' = 
     match ast with
-    | Pat_disj(l) -> S_Pat_disj(List.map serialize_pat l)
+    | Pat_disj(l) -> S_Pat_disj(serialize_list serialize_pat l)
     | Pat_constant(c) -> S_Pat_constant(serialize_sconst c)
-    | Pat_cons(v, l) -> S_Pat_cons(serialize_fvvar v, List.map serialize_pat l)
+    | Pat_cons(v, l) -> S_Pat_cons(serialize_fvvar v, serialize_list serialize_pat l)
     | Pat_var(v) -> S_Pat_var(serialize_bvvar v)
     | Pat_tvar(v) -> S_Pat_tvar(serialize_btvar v)
     | Pat_wild(v) -> S_Pat_wild(serialize_bvvar v)
@@ -402,7 +407,7 @@ and serialize_lbname (ast : lbname) : s_lbname = serialize_either serialize_bvvd
 
 and serialize_letbindings (ast : letbindings) : s_letbindings = 
     let f (n, t, e) = (serialize_lbname n, serialize_typ t, serialize_exp e)
-    (fst ast, List.map f (snd ast))
+    (fst ast, serialize_list f (snd ast))
 
 and serialize_fvar (ast : fvar) : s_fvar = serialize_either serialize_btvdef serialize_bvvdef ast
 
@@ -428,18 +433,18 @@ let rec deserialize_typ' (ast : s_typ') : typ' =
 
 and deserialize_meta_t (ast : s_meta_t) : meta_t = 
     match ast with
-    | S_Meta_pattern(t, l) -> Meta_pattern(deserialize_typ t, List.map deserialize_arg l)
+    | S_Meta_pattern(t, l) -> Meta_pattern(deserialize_typ t, deserialize_list deserialize_arg l)
     | S_Meta_named(t, lid) -> Meta_named(deserialize_typ t, deserialize_lident lid)
     | S_Meta_labeled(t, s, b) -> Meta_labeled(deserialize_typ t, s, b)
 
 and deserialize_arg (ast : s_arg) : arg = (deserialize_either deserialize_typ deserialize_exp (fst ast), (snd ast))
 
-and deserialize_args (ast : s_args) : args = List.map deserialize_arg ast
+and deserialize_args (ast : s_args) : args = deserialize_list deserialize_arg ast
 
 and deserialize_binder (ast : s_binder) : binder = 
     (deserialize_either deserialize_btvar deserialize_bvvar (fst ast), (snd ast))
 
-and deserialize_binders (ast : s_binders) : binders = List.map deserialize_binder ast
+and deserialize_binders (ast : s_binders) : binders = deserialize_list deserialize_binder ast
 
 and deserialize_typ (ast : s_typ) : typ = deserialize_syntax deserialize_typ' mk_Kind_unknown ast
 
@@ -447,7 +452,7 @@ and deserialize_comp_typ (ast : s_comp_typ) : comp_typ =
     { effect_name = deserialize_lident ast.effect_name
       result_typ = deserialize_typ ast.result_typ
       effect_args = deserialize_args ast.effect_args
-      flags = List.map deserialize_cflags ast.flags }
+      flags = deserialize_list deserialize_cflags ast.flags }
 
 and deserialize_comp' (ast : s_comp') : comp' = 
     match ast with
@@ -462,6 +467,7 @@ and deserialize_cflags (ast : s_cflags) : cflags =
     | "C2" -> MLEFFECT
     | "C3" -> RETURN
     | "C4" -> SOMETRIVIAL
+    | "C5" -> LEMMA
     | _ -> raise (Err "unknown cflag")
 
 and deserialize_exp' (ast : s_exp') : exp' = 
@@ -478,7 +484,7 @@ and deserialize_exp' (ast : s_exp') : exp' =
             | None -> None
         
         let f (p, eopt, e) = (deserialize_pat p, g eopt, deserialize_exp e)
-        Exp_match(deserialize_exp e, List.map f l)
+        Exp_match(deserialize_exp e, deserialize_list f l)
     | S_Exp_ascribed(e, t) -> Exp_ascribed(deserialize_exp e, deserialize_typ t)
     | S_Exp_let(lbs, e) -> Exp_let(deserialize_letbindings lbs, deserialize_exp e)
     | S_Exp_meta(m) -> Exp_meta(deserialize_meta_e m)
@@ -506,9 +512,9 @@ and deserialize_bvvdef (ast : s_bvvdef) : bvvdef = deserialize_bvdef ast
 
 and deserialize_pat' (ast : s_pat') : pat' = 
     match ast with
-    | S_Pat_disj(l) -> Pat_disj(List.map deserialize_pat l)
+    | S_Pat_disj(l) -> Pat_disj(deserialize_list deserialize_pat l)
     | S_Pat_constant(c) -> Pat_constant(deserialize_sconst c)
-    | S_Pat_cons(v, l) -> Pat_cons(deserialize_fvvar v, List.map deserialize_pat l)
+    | S_Pat_cons(v, l) -> Pat_cons(deserialize_fvvar v, deserialize_list deserialize_pat l)
     | S_Pat_var(v) -> Pat_var(deserialize_bvvar v)
     | S_Pat_tvar(v) -> Pat_tvar(deserialize_btvar v)
     | S_Pat_wild(v) -> Pat_wild(deserialize_bvvar v)
@@ -536,7 +542,7 @@ and deserialize_lbname (ast : s_lbname) : lbname = deserialize_either deserializ
 
 and deserialize_letbindings (ast : s_letbindings) : letbindings = 
     let f (n, t, e) = (deserialize_lbname n, deserialize_typ t, deserialize_exp e)
-    (fst ast, List.map f (snd ast))
+    (fst ast, deserialize_list f (snd ast))
 
 and deserialize_fvar (ast : s_fvar) : fvar = deserialize_either deserialize_btvdef deserialize_bvvdef ast
 
@@ -564,8 +570,8 @@ type s_qualifier =
     | S_Logic
     | S_Discriminator of s_lident
     | S_Projector of s_lident * s_either<s_btvdef, s_bvvdef>
-    | S_RecordType of list<s_ident>
-    | S_RecordConstructor of list<s_ident>
+    | S_RecordType of array<s_ident>
+    | S_RecordConstructor of array<s_ident>
     | S_ExceptionConstructor
     | S_Effect
     static member KnownTypes() = 
@@ -583,8 +589,8 @@ let serialize_qualifier (ast : qualifier) : s_qualifier =
     | Logic -> S_Logic
     | Discriminator(lid) -> S_Discriminator(serialize_lident lid)
     | Projector(lid, v) -> S_Projector(serialize_lident lid, serialize_either serialize_btvdef serialize_bvvdef v)
-    | RecordType(l) -> S_RecordType(List.map serialize_ident l)
-    | RecordConstructor(l) -> S_RecordConstructor(List.map serialize_ident l)
+    | RecordType(l) -> S_RecordType(serialize_list serialize_ident l)
+    | RecordConstructor(l) -> S_RecordConstructor(serialize_list serialize_ident l)
     | ExceptionConstructor -> S_ExceptionConstructor
     | Effect -> S_Effect
 
@@ -600,8 +606,8 @@ let deserialize_qualifier (ast : s_qualifier) : qualifier =
     | S_Discriminator(lid) -> Discriminator(deserialize_lident lid)
     | S_Projector(lid, v) -> 
         Projector(deserialize_lident lid, deserialize_either deserialize_btvdef deserialize_bvvdef v)
-    | S_RecordType(l) -> RecordType(List.map deserialize_ident l)
-    | S_RecordConstructor(l) -> RecordConstructor(List.map deserialize_ident l)
+    | S_RecordType(l) -> RecordType(deserialize_list deserialize_ident l)
+    | S_RecordConstructor(l) -> RecordConstructor(deserialize_list deserialize_ident l)
     | S_ExceptionConstructor -> ExceptionConstructor
     | S_Effect -> Effect
 
@@ -639,10 +645,10 @@ let deserialize_monad_order (ast : s_monad_order) : monad_order =
       target = deserialize_lident ast.target
       lift = deserialize_typ ast.lift }
 
-type s_monad_lat = list<s_monad_order>
+type s_monad_lat = array<s_monad_order>
 
-let serialize_monad_lat (ast : monad_lat) : s_monad_lat = List.map serialize_monad_order ast
-let deserialize_monad_lat (ast : s_monad_lat) : monad_lat = List.map deserialize_monad_order ast
+let serialize_monad_lat (ast : monad_lat) : s_monad_lat = serialize_list serialize_monad_order ast
+let deserialize_monad_lat (ast : s_monad_lat) : monad_lat = deserialize_list deserialize_monad_order ast
 
 type s_monad_decl = 
     { mname : s_lident
@@ -662,18 +668,19 @@ type s_monad_decl =
       assume_p : s_typ
       null_wp : s_typ
       trivial : s_typ
-      abbrevs : list<s_sigelt> }
+      abbrevs : array<s_sigelt>
+      kind_abbrevs: array<s_lident * array<s_either<s_btvdef, s_bvvdef>> * s_knd> }
 
 and [<KnownType("KnownTypes")>] s_sigelt = 
-    | S_Sig_tycon of s_lident * s_binders * s_knd * list<s_lident> * list<s_lident> * list<s_qualifier>
-    | S_Sig_typ_abbrev of s_lident * s_binders * s_knd * s_typ * list<s_qualifier>
-    | S_Sig_datacon of s_lident * s_typ * s_tycon * list<s_qualifier>
-    | S_Sig_val_decl of s_lident * s_typ * list<s_qualifier>
-    | S_Sig_assume of s_lident * s_formula * list<s_qualifier>
-    | S_Sig_let of s_letbindings * list<s_lident>
+    | S_Sig_tycon of s_lident * s_binders * s_knd * array<s_lident> * array<s_lident> * array<s_qualifier>
+    | S_Sig_typ_abbrev of s_lident * s_binders * s_knd * s_typ * array<s_qualifier>
+    | S_Sig_datacon of s_lident * s_typ * s_tycon * array<s_qualifier>
+    | S_Sig_val_decl of s_lident * s_typ * array<s_qualifier>
+    | S_Sig_assume of s_lident * s_formula * array<s_qualifier>
+    | S_Sig_let of s_letbindings * array<s_lident>
     | S_Sig_main of s_exp
-    | S_Sig_bundle of list<s_sigelt> * list<s_lident>
-    | S_Sig_monads of list<s_monad_decl> * s_monad_lat * list<s_lident>
+    | S_Sig_bundle of array<s_sigelt> * array<s_lident>
+    | S_Sig_monads of array<s_monad_decl> * s_monad_lat * array<s_lident>
     static member KnownTypes() = 
         typeof<s_sigelt>.GetNestedTypes(BindingFlags.Public ||| BindingFlags.NonPublic) 
         |> Array.filter FSharpType.IsUnion
@@ -696,29 +703,35 @@ let rec serialize_monad_decl (ast : monad_decl) : s_monad_decl =
       assume_p = serialize_typ ast.assume_p
       null_wp = serialize_typ ast.null_wp
       trivial = serialize_typ ast.trivial
-      abbrevs = List.map serialize_sigelt ast.abbrevs }
+      abbrevs = serialize_list serialize_sigelt ast.abbrevs
+      kind_abbrevs = serialize_list (fun (lid, l, k) -> serialize_lident lid, serialize_list (fun vdef -> serialize_either serialize_btvdef serialize_bvvdef vdef) l, serialize_knd k) ast.kind_abbrevs }
 
 and serialize_sigelt (ast : sigelt) : s_sigelt = 
     match ast with
     | Sig_tycon(lid, bs, k, l1, l2, qs, _) -> 
         S_Sig_tycon
-            (serialize_lident lid, serialize_binders bs, serialize_knd k, List.map serialize_lident l1, 
-             List.map serialize_lident l2, List.map serialize_qualifier qs)
+            (serialize_lident lid, serialize_binders bs, serialize_knd k, serialize_list serialize_lident l1, 
+             serialize_list serialize_lident l2, serialize_list serialize_qualifier qs)
     | Sig_typ_abbrev(lid, bs, k, t, qs, _) -> 
         S_Sig_typ_abbrev
             (serialize_lident lid, serialize_binders bs, serialize_knd k, serialize_typ t, 
-             List.map serialize_qualifier qs)
-    | Sig_datacon(lid1, t, tyc, qs, _) -> 
-        S_Sig_datacon(serialize_lident lid1, serialize_typ t, serialize_tycon tyc, List.map serialize_qualifier qs)
+             serialize_list serialize_qualifier qs)
+    | Sig_datacon(lid1, t, tyc, qs, _) ->
+      let t' =
+        match Util.function_formals t with 
+        | Some (f, c) -> mk_Typ_fun (f, Syntax.mk_Total  (Util.comp_result c)) t.tk dummyRange
+        | None -> t
+      in
+      S_Sig_datacon(serialize_lident lid1, serialize_typ t', serialize_tycon tyc, serialize_list serialize_qualifier qs)
     | Sig_val_decl(lid, t, qs, _) -> 
-        S_Sig_val_decl(serialize_lident lid, serialize_typ t, List.map serialize_qualifier qs)
+        S_Sig_val_decl(serialize_lident lid, serialize_typ t, serialize_list serialize_qualifier qs)
     | Sig_assume(lid, fml, qs, _) -> 
-        S_Sig_assume(serialize_lident lid, serialize_formula fml, List.map serialize_qualifier qs)
-    | Sig_let(lbs, _, l) -> S_Sig_let(serialize_letbindings lbs, List.map serialize_lident l)
+        S_Sig_assume(serialize_lident lid, serialize_formula fml, serialize_list serialize_qualifier qs)
+    | Sig_let(lbs, _, l) -> S_Sig_let(serialize_letbindings lbs, serialize_list serialize_lident l)
     | Sig_main(e, _) -> S_Sig_main(serialize_exp e)
-    | Sig_bundle(l, _, lids) -> S_Sig_bundle(List.map serialize_sigelt l, List.map serialize_lident lids)
+    | Sig_bundle(l, _, lids) -> S_Sig_bundle(serialize_list serialize_sigelt l, serialize_list serialize_lident lids)
     | Sig_monads(l, lat, _, lids) -> 
-        S_Sig_monads(List.map serialize_monad_decl l, serialize_monad_lat lat, List.map serialize_lident lids)
+        S_Sig_monads(serialize_list serialize_monad_decl l, serialize_monad_lat lat, serialize_list serialize_lident lids)
 
 let rec deserialize_monad_decl (ast : s_monad_decl) : monad_decl = 
     { mname = deserialize_lident ast.mname
@@ -738,37 +751,38 @@ let rec deserialize_monad_decl (ast : s_monad_decl) : monad_decl =
       assume_p = deserialize_typ ast.assume_p
       null_wp = deserialize_typ ast.null_wp
       trivial = deserialize_typ ast.trivial
-      abbrevs = List.map deserialize_sigelt ast.abbrevs }
+      abbrevs = deserialize_list deserialize_sigelt ast.abbrevs
+      kind_abbrevs = deserialize_list (fun (lid, l, k) -> deserialize_lident lid, deserialize_list (fun vdef -> deserialize_either deserialize_btvdef deserialize_bvvdef vdef) l, deserialize_knd k) ast.kind_abbrevs }
 
 and deserialize_sigelt (ast : s_sigelt) : sigelt = 
     match ast with
     | S_Sig_tycon(lid, bs, k, l1, l2, qs) -> 
         Sig_tycon
-            (deserialize_lident lid, deserialize_binders bs, deserialize_knd k, List.map deserialize_lident l1, 
-             List.map deserialize_lident l2, List.map deserialize_qualifier qs, dummyRange)
+            (deserialize_lident lid, deserialize_binders bs, deserialize_knd k, deserialize_list deserialize_lident l1, 
+             deserialize_list deserialize_lident l2, deserialize_list deserialize_qualifier qs, dummyRange)
     | S_Sig_typ_abbrev(lid, bs, k, t, qs) -> 
         Sig_typ_abbrev
             (deserialize_lident lid, deserialize_binders bs, deserialize_knd k, deserialize_typ t, 
-             List.map deserialize_qualifier qs, dummyRange)
+             deserialize_list deserialize_qualifier qs, dummyRange)
     | S_Sig_datacon(lid1, t, tyc, qs) -> 
         Sig_datacon
-            (deserialize_lident lid1, deserialize_typ t, deserialize_tycon tyc, List.map deserialize_qualifier qs, 
+            (deserialize_lident lid1, deserialize_typ t, deserialize_tycon tyc, deserialize_list deserialize_qualifier qs, 
              dummyRange)
     | S_Sig_val_decl(lid, t, qs) -> 
-        Sig_val_decl(deserialize_lident lid, deserialize_typ t, List.map deserialize_qualifier qs, dummyRange)
+        Sig_val_decl(deserialize_lident lid, deserialize_typ t, deserialize_list deserialize_qualifier qs, dummyRange)
     | S_Sig_assume(lid, fml, qs) -> 
-        Sig_assume(deserialize_lident lid, deserialize_formula fml, List.map deserialize_qualifier qs, dummyRange)
-    | S_Sig_let(lbs, l) -> Sig_let(deserialize_letbindings lbs, dummyRange, List.map deserialize_lident l)
+        Sig_assume(deserialize_lident lid, deserialize_formula fml, deserialize_list deserialize_qualifier qs, dummyRange)
+    | S_Sig_let(lbs, l) -> Sig_let(deserialize_letbindings lbs, dummyRange, deserialize_list deserialize_lident l)
     | S_Sig_main(e) -> Sig_main(deserialize_exp e, dummyRange)
-    | S_Sig_bundle(l, lids) -> Sig_bundle(List.map deserialize_sigelt l, dummyRange, List.map deserialize_lident lids)
+    | S_Sig_bundle(l, lids) -> Sig_bundle(deserialize_list deserialize_sigelt l, dummyRange, deserialize_list deserialize_lident lids)
     | S_Sig_monads(l, lat, lids) -> 
         Sig_monads
-            (List.map deserialize_monad_decl l, deserialize_monad_lat lat, dummyRange, List.map deserialize_lident lids)
+            (deserialize_list deserialize_monad_decl l, deserialize_monad_lat lat, dummyRange, deserialize_list deserialize_lident lids)
 
-type s_sigelts = list<s_sigelt>
+type s_sigelts = array<s_sigelt>
 
-let serialize_sigelts (ast : sigelts) : s_sigelts = List.map serialize_sigelt ast
-let deserialize_sigelts (ast : s_sigelts) : sigelts = List.map deserialize_sigelt ast
+let serialize_sigelts (ast : sigelts) : s_sigelts = serialize_list serialize_sigelt ast
+let deserialize_sigelts (ast : s_sigelts) : sigelts = deserialize_list deserialize_sigelt ast
 
 type s_modul = 
     { name : s_lident
@@ -786,4 +800,5 @@ let deserialize_modul (ast : s_modul) : modul =
     { name = deserialize_lident ast.name
       declarations = deserialize_sigelts ast.declarations
       exports = deserialize_sigelts ast.exports
-      is_interface = ast.is_interface }
+      is_interface = ast.is_interface
+      is_deserialized = true }

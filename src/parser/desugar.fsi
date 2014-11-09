@@ -34,3 +34,5 @@ val desugar_file: env -> file -> env * list<modul>
 (* private *) val close : env -> term -> term
 (* private *) val op_as_tylid : range -> string -> option<lident>
 (* private *) val op_as_vlid : env -> int -> range -> string -> option<lident>
+
+val add_modul_to_env: Syntax.modul -> env -> env

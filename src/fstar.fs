@@ -57,7 +57,7 @@ let go _ =
         (* 2. Pre-typing + produce VCs + encode them + prove them, if the option --verify is set *)
         let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
         (* 2b. Pre-typing only (throw away all the VCs) *)
-        let fmods = if !Options.pretype then Tc.Tc.check_modules solver fmods else fmods in
+        let fmods = if !Options.pretype then Tc.Tc.check_modules solver ToSMT.Encode.dummy fmods else fmods in
         (* 3. Code generation, if the flag is set *)
         if !Options.codegen = Some "OCaml" then begin
             try

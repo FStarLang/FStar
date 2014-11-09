@@ -21,15 +21,26 @@ open Microsoft.FStar.Parser
 open Microsoft.FStar.Parser.AST
 open Microsoft.FStar.Parser.Parse
 open Microsoft.FStar.Util
+
+open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 
 let print_error msg r = 
   Util.print_string (Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg)
 
+let is_cache_file (fn: either<string, string>) :(bool * string) = match fn with
+  | Inl(s) -> ((Util.get_file_extension s) = ".cache"), s
+  | _ -> false, ""
+
 let parse env fn =
-  match ParseIt.parse_file fn with 
-    | Inl ast ->
-      Desugar.desugar_file env ast
+  let (b, s) = is_cache_file fn in
+  if b then
+    let full_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ s in
+    let m = SSyntax.deserialize_modul (Util.read_JSON<SSyntax.s_modul> full_name) in
+    Desugar.add_modul_to_env m env, [m]
+  else
+    match ParseIt.parse_file fn with 
+    | Inl ast -> Desugar.desugar_file env ast
     | Inr msg -> 
       Util.print_string msg;
       exit 1

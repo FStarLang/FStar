@@ -161,6 +161,8 @@ let read_JSON<'a> (file: string) :'a =
     let o = (d.ReadObject(fs)) :?> 'a in
     fs.Close(); o
 
+let get_file_extension (fn: string) :string = Path.GetExtension fn
+
 open Prims
 //type set<'a> = Collections.Set<Boxed<'a>> * ('a -> Boxed<'a>)
 //

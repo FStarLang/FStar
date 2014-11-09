@@ -223,7 +223,8 @@ type monad_decl = {
     assume_p:typ;
     null_wp:typ;
     trivial:typ;
-    abbrevs:list<sigelt> 
+    abbrevs:list<sigelt>;
+    kind_abbrevs: list<(lident * list<either<btvdef, bvvdef>> * knd)> 
  }
 and sigelt =
   | Sig_tycon          of lident * binders * knd * list<lident> * list<lident> * list<qualifier> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
@@ -241,7 +242,8 @@ type modul = {
   name: lident;
   declarations: sigelts;
   exports: sigelts;
-  is_interface:bool
+  is_interface:bool;
+  is_deserialized:bool (* flag to indicate that the module was read from disk, and hence need not be type checked*)
 }
 
 type ktec = 

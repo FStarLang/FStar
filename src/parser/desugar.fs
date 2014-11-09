@@ -1393,7 +1393,8 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
          assume_p=lookup "assume_p";
          null_wp=lookup "null_wp";
          trivial=lookup "trivial";
-         abbrevs=m_abbrevs} in
+         abbrevs=m_abbrevs;
+         kind_abbrevs=kabbrevs} in
       let env = DesugarEnv.exit_monad_scope env0 menv in 
       env, msig in
     let env, msigs = List.fold_left (fun (env, msigs) m -> 
@@ -1430,7 +1431,8 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
     name = mname;
     declarations = sigelts;
     exports = [];
-    is_interface=intf
+    is_interface=intf;
+    is_deserialized=false
   } in
   let env = DesugarEnv.finish_module_or_interface env modul in
   env, modul
@@ -1441,3 +1443,20 @@ let desugar_file env (f:file) =
     let env, m = desugar_modul env m in
     env, m::mods) (env, []) ms in
   env, List.rev mods
+
+let add_modul_to_env (m:Syntax.modul) (en: env) :env =
+  let do_sigelt (en: env) (elt: sigelt) :env = match elt with
+    | Sig_monads(decls, lat, _, lids) ->
+      let do_monad_decl (env0: env) (m: monad_decl) :env =
+        let menv = DesugarEnv.enter_monad_scope env0 m.mname.ident in
+        let menv = List.fold_left DesugarEnv.push_kind_abbrev menv m.kind_abbrevs in
+        let menv = DesugarEnv.push_sigelt menv (Sig_tycon(m.mname, [], m.signature, [], [], [], dummyRange)) in
+        let menv = List.fold_left DesugarEnv.push_sigelt menv m.abbrevs in
+        let env = DesugarEnv.exit_monad_scope env0 menv in
+        DesugarEnv.push_sigelt env elt
+      in
+      List.fold_left do_monad_decl en decls
+    | _ -> DesugarEnv.push_sigelt en elt
+  in
+  let en = List.fold_left do_sigelt ({ en with curmodule = Some(m.name) }) m.exports in
+  DesugarEnv.finish en m

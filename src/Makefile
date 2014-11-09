@@ -159,7 +159,7 @@ STDLIB=$(addprefix ../lib/, $(STDFILES))
 
 BOOT_BASICFILES=bytes.fst platform.fsi util.fsi getoptsimple.fst options.fs range.fst unionfind.fst lazyset.fsi lazyset.fs
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
-BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs
+BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs dssyntax.fs
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
 BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fst driver.fs 
 BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))

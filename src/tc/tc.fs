@@ -1040,7 +1040,7 @@ let a_kwp_a env m s = match s.n with
                 (Inl _, _)], _) -> a, wp.sort
   | _ -> raise (Error(Tc.Errors.unexpected_signature_for_monad env m s, range_of_lid m))
 
-let rec tc_monad_decl env m =  
+let rec tc_monad_decl env m deserialized =  
   let mk = tc_kind_trivial env m.signature in 
   let a, kwp_a = a_kwp_a env m.mname mk in 
   let a_typ = Util.btvar_to_typ a in
@@ -1120,7 +1120,7 @@ let rec tc_monad_decl env m =
       tc_typ_check_trivial env m.trivial expected_k |> norm_t env in
   let menv = Tc.Env.push_sigelt env (Sig_tycon(m.mname, [], mk, [], [], [], range_of_lid m.mname)) in
   let menv, abbrevs = m.abbrevs |> List.fold_left (fun (env, out) (ma:sigelt) -> 
-    let ma, env = tc_decl env ma in 
+    let ma, env = tc_decl env ma deserialized in 
      env, ma::out) (menv, []) in 
   let m = { 
     mname=m.mname;
@@ -1140,16 +1140,17 @@ let rec tc_monad_decl env m =
     assert_p=assert_p;
     assume_p=assume_p;
     null_wp=null_wp;
-    trivial=trivial} in 
+    trivial=trivial;
+    kind_abbrevs=m.kind_abbrevs} in 
    let _ = Tc.Env.lookup_typ_lid menv m.mname in
     menv, m 
 
-and tc_decl env se = match se with 
+and tc_decl env se deserialized = match se with 
     | Sig_monads(mdecls, mlat, r, lids) -> 
       let env = Env.set_range env r in 
      //TODO: check downward closure of totality flags
       let menv, mdecls = mdecls |> List.fold_left (fun (env, out) m ->
-        let env, m = tc_monad_decl env m in 
+        let env, m = tc_monad_decl env m deserialized in 
         env, m::out) (env, []) in
       let lat = mlat |> List.map (fun (o:monad_order) -> 
         let a, kwp_a_src = a_kwp_a env o.source (Tc.Env.lookup_typ_lid menv o.source) in
@@ -1242,8 +1243,10 @@ and tc_decl env se = match se with
                 match t.n with 
                   | Typ_unknown -> 
                     false, (Inr l, t', e) //explicit annotation provided; do not generalize
-                  | _ -> 
-                    Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation\n" (Range.string_of_range r);
+                  | _ ->
+                    let _ = if not(deserialized) then
+                      Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation\n" (Range.string_of_range r)
+                    else () in
                     false, (Inr l, t', e) in
              gen, (lb, t, e) in
         gen, lb::lbs) (true, []) in
@@ -1281,10 +1284,10 @@ and tc_decl env se = match se with
                 then Util.format1 "Recursive bindings: %s" (Print.sigelt_to_string_short se)
                 else "" in
       env.solver.push msg; //Push a context in the solver to check the recursively bound definitions
-      let tycons = fst <| tc_decls env tycons in 
-      let recs = fst <| tc_decls env recs in
+      let tycons = fst <| tc_decls env tycons deserialized in 
+      let recs = fst <| tc_decls env recs deserialized in
       let env1 = Tc.Env.push_sigelt env (Sig_bundle(tycons@recs, r, lids)) in
-      let rest = fst <| tc_decls env1 rest in
+      let rest = fst <| tc_decls env1 rest deserialized in
       let abbrevs = List.map2 (fun se t -> match se with 
         | Sig_tycon(lid, tps, k, [], [], [], r) -> 
           let tt = Util.close_with_lam tps (mk_Typ_ascribed(t, k) t.pos) in
@@ -1300,11 +1303,11 @@ and tc_decl env se = match se with
       let env = Tc.Env.push_sigelt env se in
       se, env
 
-and tc_decls env ses = 
+and tc_decls env ses deserialized = 
  let ses, env = List.fold_left (fun (ses, (env:Tc.Env.env)) se ->
   if debug env Options.Low
   then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
-  let se, env = tc_decl env se in
+  let se, env = tc_decl env se deserialized in
   if debug env Options.Low
   then Util.print_string (Util.format1 "Checked sigelt\t%s\n" (Print.sigelt_to_string se));
   if not <| lid_equals env.curmodule Const.prims_lid then env.solver.encode_sig env se; 
@@ -1323,21 +1326,46 @@ let get_exports env modul decls =
 
 let tc_modul env modul = 
   let env = Tc.Env.set_current_module env modul.name in 
-  let ses, env = tc_decls env modul.declarations in 
+  let ses, env = tc_decls env modul.declarations modul.is_deserialized in 
   let exports = get_exports env modul ses in
-  let modul = {name=modul.name; declarations=ses; exports=exports; is_interface=modul.is_interface} in 
+  let modul = {name=modul.name; declarations=ses; exports=exports; is_interface=modul.is_interface; is_deserialized=modul.is_deserialized} in 
   let env = Tc.Env.finish_module env modul in
   modul, env
 
-let check_modules (s:solver_t) mods = 
+let add_modul_to_tcenv (en: env) (m: modul) :env =
+  let do_sigelt (en: env) (elt: sigelt) :env =
+    match elt with
+    | Sig_monads(l, _, _, _) ->
+      let en = List.fold_left (fun en m ->
+                               let en = Tc.Env.push_sigelt en (Sig_tycon(m.mname, [], m.signature, [], [], [], range_of_lid m.mname)) in
+                               List.fold_left Tc.Env.push_sigelt en m.abbrevs) 
+               en l
+      in
+      Tc.Env.push_sigelt en elt
+    | _ -> Tc.Env.push_sigelt en elt
+  in
+  Tc.Env.finish_module (List.fold_left do_sigelt en m.exports) m
+
+let check_modules (s:solver_t) (ds: solver_t) mods = 
    let env = Tc.Env.initial_env s Const.prims_lid in
    s.init env; 
    let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 
     if List.length !Options.debug <> 0
-    then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
+    then Util.fprint2 "Checking %s: %s" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
     let msg = ("Internals for module " ^m.name.str) in
     s.push msg;
-    let m, env = tc_modul env m in 
+    let m, env =
+        if m.is_deserialized then
+          let m, env = tc_modul ({ env with solver = ds }) m in
+          m, { env with solver = s }
+        else
+          let m, env = tc_modul env m in
+          let _ = if !Options.serialize_mods then
+            let c_file_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ (text_of_lid m.name) ^ ".cache" in
+            Util.write_JSON<SSyntax.s_modul> (SSyntax.serialize_modul m) c_file_name
+          else () in
+          m, env
+    in 
     s.pop msg;
     if Options.should_dump m.name.str then Util.fprint1 "%s\n" (Print.modul_to_string m);
     if m.is_interface  //TODO: admit interfaces to the solver also
