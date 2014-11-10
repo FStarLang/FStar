@@ -138,34 +138,27 @@ let rec index l n =
 
 (* NS: Currying in F* is explicit. 
 
-       If you intend to reason logically about partial applications of
-       terms, then you should make currying explicit in types and mark
-       each partially applied arrow with an effect (possibly Tot) in
-       its co-domain.
+   If you intend to reason logically about partial applications of
+   terms, then you should make currying explicit in types and mark
+   each partially applied arrow with an effect (possibly Tot) in
+   its co-domain.
        
-       However, the notation for function application doesn't 
-       distinguish between partial and full applications. 
-
-       OTOH, currently, the notation for introducing functions that
-       are explicitly curried is currently horribly explicit.
-       Hence the weird definitions for prod_curry/prod_uncurry.
-       I will change this shortly (related to the other
-       bugs on matching val-declarations with the corresponding
-       definitions).
-   CH: Some of this is already fixed by now, right? *)
+   However, note, the notation for function definitions and application doesn't 
+   distinguish between partial and full applications. 
+*)
 val prod_curry : (('a * 'b) -> Tot 'c) -> Tot ('a -> 'b -> Tot 'c)
 let prod_curry f x y =  f (x,y)
 
 val prod_uncurry : ('a -> 'b -> Tot 'c) -> Tot (('a * 'b) -> Tot 'c)
 let prod_uncurry f xy = f (fst xy) (snd xy)
 
-val test_prod_curry: f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Fact unit
+val test_prod_uncurry: f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Fact unit
       (ensures ((prod_uncurry f) (x, y) = f x y))
-let test_prod_curry f x y = ()
-
-val test_prod_uncurry: f:(('a * 'b)->Tot 'c) -> x:'a -> y:'b -> Fact unit
-      (ensures ((prod_curry f) x y = f (x, y)))
 let test_prod_uncurry f x y = ()
+
+val test_prod_curry: f:(('a * 'b)->Tot 'c) -> x:'a -> y:'b -> Fact unit
+      (ensures ((prod_curry f) x y = f (x, y)))
+let test_prod_curry f x y = ()
 
 val uncurry_curry : f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Fact unit
       (ensures (prod_curry (prod_uncurry f) x y = f x y))

@@ -57,11 +57,11 @@ let const_to_string x = match x with
    
 let rec tag_of_typ t = match t.n with 
   | Typ_btvar _ -> "Typ_btvar"
-  | Typ_const _ -> "Typ_const"
+  | Typ_const v -> "Typ_const " ^ v.v.str
   | Typ_fun _ -> "Typ_fun"
   | Typ_refine _ -> "Typ_refine"
   | Typ_app(head, args) -> 
-    format2 "Typ_app(%s, [%s args])" (typ_to_string head) (string_of_int <| List.length args)
+    format2 "Typ_app(%s, [%s args])" (tag_of_typ head) (string_of_int <| List.length args)
   | Typ_lam _ -> "Typ_lam"
   | Typ_ascribed _ -> "Typ_ascribed"
   | Typ_meta(Meta_pattern _) -> "Typ_meta_pattern"
@@ -308,7 +308,7 @@ let rec sigelt_to_string x = match x with
   | Sig_monads _ -> "monad_lattice { ... }"
 
 let rec sigelt_to_string_short x = match x with 
-  | Sig_let((_, [(Inr l, t, _)]), _, _) -> Util.format2 "%s : %s" l.str (typ_to_string t) 
+  | Sig_let((_, [(Inr l, t, _)]), _, _) -> Util.format2 "let %s : %s" l.str (typ_to_string t) 
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) = 

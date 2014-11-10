@@ -434,7 +434,7 @@ let mk_Typ_uvar'     ((u:uvar_t),(k:knd)) (k':knd) (p:range) = {
 }
 let mk_Typ_uvar (u, k) p = mk_Typ_uvar' (u, k) k p 
 let mk_Typ_delayed  ((t:typ),(s:subst_t),(m:memo<typ>)) (k:knd) (p:range) = {
-    n=Typ_delayed(t, s, m);
+    n=(match t.n with Typ_delayed _ -> failwith "NESTED DELAYED TYPES!" | _ -> Typ_delayed(t, s, m));
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
@@ -472,13 +472,16 @@ let mk_Exp_constant (s:sconst) (t:typ) p = {
     uvs=mk_uvs(); fvs=mk_fvs();
 } 
 let mk_Exp_abs ((b:binders),(e:exp)) (t':typ) p = {
-    n=Exp_abs(b, e);
+    n=(match b with [] -> failwith "abstraction with no binders!" | _ -> Exp_abs(b, e));
     tk=t';
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Exp_abs' ((b:binders),(e:exp)) (t':typ) p = {
-    n=(match e.n with Exp_abs(binders, body) -> Exp_abs(b@binders, body) | _ -> Exp_abs(b, e));
+    n=(match b, e.n with 
+        | _, Exp_abs(binders, body) -> Exp_abs(b@binders, body) 
+        | [], _ -> failwith "abstraction with no binders!"
+        | _ -> Exp_abs(b, e));
     tk=t';
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();

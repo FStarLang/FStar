@@ -123,26 +123,10 @@ let rec typing e g =
 val canonical_forms_bool : e:exp -> Pure unit
       (requires ((typing e empty = Some TBool) /\ (is_value e = true)))
       (ensures \r -> (e = ETrue) \/ (e = EFalse))
-let canonical_forms_bool e =
+let canonical_forms_bool e = 
   match e with
   | EVar x -> ()
-  | EAbs x' t e1 -> begin
-      admit()
-      (* F* can't prove this simple case, we should get a contradition *)
-     (* this causes the whole thing to explode! 3 different bogus errors!
-      match typing e1 (extend empty x' t) with
-      | Some t' -> admit()
-      | None    -> admit() *)
-      (* This assert fails, but it shouldn't
-      assert(exists (t1:ty). exists (t2:ty).
-               typing (EAbs x' t e1) empty = Some (TArrow t1 t2) \/
-               typing (EAbs x' t e1) empty = None);  *)
-      (* this doesn't bring much
-      match typing e empty with
-      | Some (TArrow t1 t2) -> ()
-      | Some TBool -> admit()
-      | _ -> () *)
-      end
+  | EAbs x' t e1 -> admit() //NS: fishy ...invetigating
   | EApp e1 e2 -> ()
   | ETrue -> ()
   | EFalse -> ()

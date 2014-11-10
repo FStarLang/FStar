@@ -831,9 +831,10 @@ let gen env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
           let t = match Util.comp_result c |> Util.function_formals with 
             | Some (bs, cod) -> mk_Typ_fun(tvars@bs, cod) ktype c.pos 
             | None -> match tvars with [] -> Util.comp_result c | _ -> mk_Typ_fun(tvars, c) ktype c.pos in
-          let e = match e.n with 
-            | Exp_abs(bs, body) -> mk_Exp_abs(tvars@bs, body) t e.pos 
-            | _ -> mk_Exp_abs(tvars, e) t e.pos in
+     
+          let e = match tvars with
+            | [] -> e
+            | _ -> mk_Exp_abs'(tvars, e) t e.pos in
           e, mk_Total t) in
      Some ecs 
 

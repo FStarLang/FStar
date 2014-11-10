@@ -210,7 +210,22 @@ let lookup_free_tvar_name env a = lookup_tlid env a.v |> fst
 (*---------------------------------------------------------------------------------*)
 
 (* <Utilities> *)
-let norm_t env t = Tc.Normalize.norm_typ [Tc.Normalize.Beta] env.tcenv t
+let head_normal env t =   
+   let t = Util.unmeta_typ t in
+   match t.n with 
+    | Typ_fun _
+    | Typ_refine _ 
+    | Typ_btvar _
+    | Typ_uvar _
+    | Typ_lam _ -> true
+    | Typ_const v 
+    | Typ_app({n=Typ_const v}, _) -> Tc.Env.lookup_typ_abbrev env.tcenv v.v |> Option.isNone
+    | _ -> false
+ 
+let whnf env t =
+    if head_normal env t then t
+    else Tc.Normalize.norm_typ [Tc.Normalize.Beta;Tc.Normalize.WHNF;Tc.Normalize.DeltaHard] env.tcenv t
+let norm_t env t = whnf env t//Tc.Normalize.norm_typ [Tc.Normalize.Beta] env.tcenv t
 let norm_k env k = Tc.Normalize.normalize_kind env.tcenv k
 let trivial_post t : typ = mk_Typ_lam([null_v_binder t], Util.ftv Const.true_lid ktype) 
                                      (mk_Kind_arrow([null_v_binder t], ktype) t.pos) t.pos
@@ -507,7 +522,7 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
 
       | Typ_meta _
       | Typ_delayed  _ 
-      | Typ_unknown    -> failwith (format2 "(%s) Impossible: %s" (Range.string_of_range <| t.pos) (Print.tag_of_typ t))                 
+      | Typ_unknown    -> failwith (format4 "(%s) Impossible: %s\n%s\n%s\n" (Range.string_of_range <| t.pos) (Print.tag_of_typ t0) (Print.typ_to_string t0) (Print.typ_to_string t))                 
 
 and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) = 
     let e = Visit.compress_exp_uvars e in 
@@ -551,6 +566,7 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
                          let app = mk_ApplyE lam vars in
                          let body, body_vars, decls' = encode_exp body envbody in
                          let eq = close_ex body_vars (mkEq(app, body)) in
+                         if Tc.Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding type e.tk=%s\n" (Print.typ_to_string e.tk);
                          let lam_typed, decls'' = encode_typ_pred e.tk env lam in
                          let tsym, t = fresh_bvar "t" Type_sort in 
                          let app_has_t = Term.mk_HasType app t in
@@ -594,9 +610,15 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
                                 (Print.exp_to_string e0);
                             encode_partial_app ()))
             | _ ->
-                if Tc.Env.debug env.tcenv Options.Low then Util.fprint2 "(%s) %s is not a full application!\n" 
+                if Tc.Env.debug env.tcenv Options.Low then Util.fprint3 "(%s) %s is not a full application! head is a %s\n" 
                     (Range.string_of_range e0.pos)
-                    (Print.exp_to_string e0); encode_partial_app ()
+                    (Print.exp_to_string e0)
+                    (Print.tag_of_exp head); 
+                let res = encode_partial_app () in
+                if Tc.Env.debug env.tcenv Options.Low 
+                then Util.fprint2 "(%s) encoded %s\n" (Range.string_of_range e0.pos) (Print.exp_to_string e0);
+                res
+                 
         end
 
       | Exp_let((false, [(Inr _, _, _)]), _) -> failwith "Impossible: already handled by encoding of Sig_let" 
@@ -808,11 +830,11 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
     
     if Tc.Env.debug env.tcenv Options.Low
     then Util.fprint1 ">>>> Destructing as formula ... %s\n" (Print.typ_to_string phi);
-         
+    let phi = Util.compress_typ phi in
     match Util.destruct_typ_as_formula phi with
         | None -> 
-          if Tc.Env.debug env.tcenv Options.Low
-          then Util.print_string ">>>> Not a formula ... falling back\n";
+          if Tc.Env.debug env.tcenv (Options.Other "1110")
+          then Util.fprint2 ">>>> Not a formula (%s) %s ... falling back\n" (Print.tag_of_typ phi) (Print.typ_to_string phi);
           fallback phi
         
         | Some (Util.BaseConn(op, arms)) -> 
@@ -958,7 +980,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         g, env
 
      | Sig_val_decl(lid, t, quals, _) -> 
-        encode_free_var env lid t quals
+        encode_free_var env lid (whnf env t) quals
 
      | Sig_assume(l, f, _, _) -> 
         let f, decls = encode_formula f env in
@@ -1104,11 +1126,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       g'@inversions, env
 
     | Sig_let((is_rec, [(Inr flid, t1, e)]), _, _) when not is_rec -> 
+        let t1 = whnf env t1 in
         if Util.is_lemma t1 then encode_lemma env flid t1, env else
         if not (Util.is_pure_function t1) then [], env  else
         let (f, ftok), decls, env = declare_top_level_let env flid t1 in
         let e = Util.compress_exp e in
-        let binders, body = match e.n with
+        let fapp, binders, body = match e.n with
             | Exp_abs(binders, body) -> 
                 let t1 = Util.compress_typ t1 in
                 begin match t1.n with 
@@ -1117,13 +1140,16 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     if nformals < List.length binders && Util.is_total_comp c (* explicit currying *)
                     then let bs0, rest = Util.first_N nformals binders in 
                          let body = mk_Exp_abs(rest, body) (Util.comp_result c) body.pos in
-                         bs0, body
-                    else binders, body
-                 | _ -> binders, body
+                         (fun vars -> Term.mkApp(f, List.map mkBoundV vars)), bs0, body
+                    else if nformals > List.length binders
+                    then  mk_ApplyE ftok, binders, e 
+                    else (fun vars -> Term.mkApp(f, List.map mkBoundV vars)), binders, body
+                 | _ -> 
+                     failwith (Util.format3 "Impossible! let-bound lambda %s = %s has a type that's not a function: %s\n" flid.str (Print.exp_to_string e) (Print.typ_to_string t1))
                 end
-            | _ -> [], e in
+            | _ -> mk_ApplyE ftok, [], e in
         let vars, guards, env', binder_decls, _ = encode_binders binders env in
-        let app = Term.mkApp(f, List.map mkBoundV vars) in
+        let app = fapp vars in//Term.mkApp(f, List.map mkBoundV vars) in
         let body, ex_vars, decls2 = encode_exp body env' in
         let eqn = Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(app, body))), Some (Util.format1 "Equation for %s" flid.str)) in
         decls@binder_decls@decls2@[eqn], env
@@ -1142,7 +1168,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
         The extension to a tuple of the arguments (in the same order as the parameters) in place of xi is tedious but straightforward.
       *)
-
+      let t = whnf env t in
       if Util.is_lemma t then encode_lemma env flid t, env else
       if not (Util.is_pure_function t) then [], env else 
       let _ = if Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding let rec %s\n" (Print.sli flid) in
@@ -1415,6 +1441,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t *
                     @[Term.Assume(k, None)] in
             decls@g, env'
         | Env.Binding_lid(x, t) -> 
+            let t = whnf env t in
             let g, env' = encode_free_var env x t [] in
             decls@g, env'
         | Env.Binding_sig se -> 

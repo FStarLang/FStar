@@ -167,7 +167,9 @@ let rec subst_typ' s t = match s with
     let t0 = Visit.compress_typ t in
     match t0.n with 
         | Typ_delayed(t', s', m) -> 
-            mk_Typ_delayed (t', compose_subst s' s, Util.mk_ref None) t.tk t.pos
+            mk_Typ_delayed (t', compose_subst s' s, Util.mk_ref None) 
+                           (subst_kind' s t.tk)
+                            t.pos
     
         | Typ_btvar a ->
             let rec aux s = match s with
@@ -178,16 +180,22 @@ let rec subst_typ' s t = match s with
              | _ -> t0 in
              aux s
     
+        | Typ_unknown
+        | Typ_const _
         | Typ_uvar _ -> t0
 
-        | _ -> mk_Typ_delayed(t, s, Util.mk_ref None) t.tk t.pos
+        | _ -> mk_Typ_delayed(t0, s, Util.mk_ref None) 
+                             (subst_kind' s t.tk)
+                             t.pos
 
 and subst_exp' s e = match s with 
   | [] -> e
   | _ -> 
     let e0 = Visit.compress_exp e in
     match e0.n with
-        | Exp_delayed(e, s',m) -> mk_Exp_delayed (e, compose_subst s' s, Util.mk_ref None) e.tk e.pos
+        | Exp_delayed(e, s',m) -> 
+          mk_Exp_delayed (e, compose_subst s' s, Util.mk_ref None) 
+                         (subst_typ' s e.tk) e.pos
         | Exp_bvar x -> 
                 let rec aux s = match s with
                  | s0::rest -> 
@@ -197,9 +205,12 @@ and subst_exp' s e = match s with
                  | _ -> e0 in
                  aux s
         
+        | Exp_fvar _
         | Exp_uvar _ -> e0
 
-        | _ -> mk_Exp_delayed (e0, s, Util.mk_ref None) e0.tk e0.pos
+        | _ -> mk_Exp_delayed (e0, s, Util.mk_ref None) 
+                              (subst_typ' s e0.tk)
+                              e0.pos
 
 and subst_kind' s k = match s with 
   | [] -> k 
@@ -387,16 +398,22 @@ and compress_kind k =
         | _ -> k
     end
   | _ -> k
-and compress_typ t = 
+and compress_typ' t = 
   let t = Visit.compress_typ t in
   match t.n with
       | Typ_delayed (t', s, m) ->
         let res = fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp subst_ctrl [] t' in
-        let res = compress_typ res in
+        let res = compress_typ' res in
         m := Some res;
         //printfn "Compressing %A ... got %A\n" t' res;
         res
       | _ -> t
+
+and compress_typ t = 
+    let t = compress_typ' t in 
+    match t.n with 
+        | Typ_delayed _ -> failwith "Impossible: compress returned a delayed type"
+        | _ -> t
 
 and compress_exp e = 
   let e = Visit.compress_exp e in
