@@ -182,10 +182,6 @@ and formula_to_string phi =
                        (Const.iff_lid, bin_top "<==>");
                        (Const.ite_lid, ite);
                        (Const.not_lid, un_op "~");
-                       (Const.lt_lid,  bin_eop "<");
-                       (Const.gt_lid,  bin_eop ">");
-                       (Const.gte_lid, bin_eop ">=");
-                       (Const.lte_lid, bin_eop "<=");
                        (Const.eqT_lid, bin_top "==");
                        (Const.eq2_lid, eq_op);
                        (Const.true_lid, const_op "True");

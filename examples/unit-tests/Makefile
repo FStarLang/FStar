@@ -35,6 +35,12 @@ all-ver: $(VERFILES)
 all-lax: rec.fst pat.fst mac.fst bug16.fst
 	$(FSTAR) $^
 
+%.vv: %.fst
+	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $^ --verify
+
+stlc:
+	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) stlc.fst --verify
+
 format: format.fst
 	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $(FSTAR_HOME)/lib/array-realized.fst format.fst --verify
 

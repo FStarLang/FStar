@@ -62,10 +62,6 @@ let allTyp_lid = pconst "ForallTyp"
 let b2t_lid = pconst "b2t" (* coercion from boolean to type *)
 
 (* Predicates corresponding to binops *)
-let lt_lid    = pconst  "LT"
-let gt_lid    = pconst  "GT"
-let lte_lid   = pconst  "LTE"
-let gte_lid   = pconst  "GTE"
 let eq_lid    = pconst  "Eq"
 let eq2_lid   = pconst  "Eq2"
 let eqA_lid   = pconst  "EqA"

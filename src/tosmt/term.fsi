@@ -60,8 +60,8 @@ type term' =
   | Minus      of term
   | Mod        of term * term
   | ITE        of term * term * term 
-  | Forall     of list<pat> * list<(string * sort)> * term 
-  | Exists     of list<pat> * list<(string * sort)> * term 
+  | Forall     of list<list<pat>> * option<int> * list<(string * sort)> * term 
+  | Exists     of list<list<pat>> * option<int> * list<(string * sort)> * term 
   | Select     of term * term 
   | Update     of term * term * term
   | ConstArray of string * sort * term 
@@ -101,7 +101,7 @@ val mkUpdate: (term * term * term) -> term
 val mkCases : list<term> -> term
 val mkConstArr: (string * sort * term) -> term
 val mkForall: (list<pat> * list<(string * sort)> * term) -> term
-val collapseForall: (list<pat> * list<(string * sort)> * term) -> term
+val mkForall': (list<list<pat>> * option<int> * list<(string * sort)> * term) -> term
 val mkExists: (list<pat> * list<(string * sort)> * term) -> term
 
 type caption = option<string>
@@ -122,6 +122,7 @@ type decl =
   | CheckSat
 type decls_t = list<decl>
 
+val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: constructor_t -> decls_t
 val termToSmt: term -> string
 val declToSmt: string -> decl -> string
@@ -147,7 +148,7 @@ val mk_Term_unit: term
 val mk_PreKind: term -> term
 val mk_PreType: term -> term
 val mk_Valid: term -> term
-val mk_HasType: term -> term -> term
+val mk_HasType: bool -> term -> term -> term
 val mk_HasKind: term -> term -> term
 val mk_tester: string -> term -> term
 val mk_ApplyTE: term -> term -> term

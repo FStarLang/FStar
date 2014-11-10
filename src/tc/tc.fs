@@ -646,7 +646,7 @@ and tc_exp env e : exp * comp =
     let f, cf = tc_exp (no_inst env) f in //Don't instantiate f; instantiations will be computed below, accounting for implicits/explicits
     let tf = Util.comp_result cf in
     if debug env Options.High then Util.fprint2 "(%s) Type of head is %s\n" (Range.string_of_range f.pos) (Print.typ_to_string tf);
-    let rec check_function_app norm tf = match (Util.compress_typ tf).n with 
+    let rec check_function_app norm tf = match (Util.unrefine tf).n with 
         | Typ_uvar _
         | Typ_app({n=Typ_uvar _}, _) ->
           let rec tc_args env args : (Syntax.args * list<comp>) = match args with
@@ -765,23 +765,25 @@ and tc_exp env e : exp * comp =
               raise (Error(Util.format1 "Unexpected type argument (%s)" (Print.exp_to_string top), argpos (List.hd args)))
 
             | [], arg::_ -> (* too many args, except maybe c returns a function *) 
-              let tres = Util.comp_result cres |> Util.compress_typ in 
-              begin match tres.n with 
-                | Typ_fun(bs, cres') -> 
-                  if debug env Options.Low then Util.fprint1 "%s: Warning: Potentially redundant explicit currying of a function type \n" (Range.string_of_range tres.pos);
-                  tc_args (subst, outargs, arg_rets, (None, cres)::comps, g, fvs) bs cres' args
-                | _ -> 
-                  raise (Error(Util.format1 "Too many arguments to function of type %s" (Normalize.typ_norm_to_string env tf), argpos arg))
-              end in
+              let rec aux norm tres = 
+                let tres = Util.compress_typ tres |> Util.unrefine in 
+                match tres.n with 
+                    | Typ_fun(bs, cres') -> 
+                      if debug env Options.Low then Util.fprint1 "%s: Warning: Potentially redundant explicit currying of a function type \n" (Range.string_of_range tres.pos);
+                      tc_args (subst, outargs, arg_rets, (None, cres)::comps, g, fvs) bs cres' args
+                    | _ when (not norm) ->
+                        aux true (whnf env tres)
+                    | _ -> raise (Error(Util.format1 "Too many arguments to function of type %s" (Normalize.typ_norm_to_string env tf), argpos arg)) in
+              aux false (Util.comp_result cres)  in
          
           tc_args ([], [], [], [], Trivial, no_fvs.fxvs) bs c args
                   
         | _ -> 
             if not norm
-            then check_function_app true (Normalize.normalize env tf) //TODO: instead of a full normalization; some way to normalize until head is Typ_fun
+            then check_function_app true (whnf env tf) 
             else raise (Error(Tc.Errors.expected_function_typ env tf, f.pos)) in
 
-    let e, c = check_function_app false tf in
+    let e, c = check_function_app false (Util.unrefine tf) in
     let c = if !Options.verify && (Util.is_primop f || Util.is_total_comp c)
             then Tc.Util.maybe_assume_result_eq_pure_term env e c 
             else c in
@@ -865,9 +867,9 @@ and tc_exp env e : exp * comp =
     let env = instantiate_both env in
     let env0, topt = Env.clear_expected_typ env in 
     let is_inner_let = lbs |> Util.for_some (function (Inl _, _, _) -> true (* inner let *) | _ -> false) in
-    (* build and environment with recursively bound names. refining the types of those names with decreased clauses is done in Exp_abs *)
+    (* build an environment with recursively bound names. refining the types of those names with decreases clauses is done in Exp_abs *)
     let lbs, env' = lbs |> List.fold_left (fun (xts, env) (x, t, e) -> 
-      let e, t = Tc.Util.extract_lb_annotation true env t e in //NS: pull inline annotation to force the ML monad here; remove once we have better termination checks
+      let e, t = Tc.Util.extract_lb_annotation true env t e in 
       let t = 
         if not (is_inner_let) && not(env.generalize)
         then t (* t is already checked *) 
@@ -1351,7 +1353,7 @@ let check_modules (s:solver_t) (ds: solver_t) mods =
    s.init env; 
    let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 
     if List.length !Options.debug <> 0
-    then Util.fprint2 "Checking %s: %s" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
+    then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
     let msg = ("Internals for module " ^m.name.str) in
     s.push msg;
     let m, env =

@@ -72,8 +72,8 @@ type term' =
   | Minus      of term
   | Mod        of term * term
   | ITE        of term * term * term 
-  | Forall     of list<pat> * list<(string * sort)> * term 
-  | Exists     of list<pat> * list<(string * sort)> * term 
+  | Forall     of list<list<pat>> * option<int> * list<(string * sort)> * term 
+  | Exists     of list<list<pat>> * option<int> * list<(string * sort)> * term 
   | Select     of term * term 
   | Update     of term * term * term
   | ConstArray of string * sort * term 
@@ -120,8 +120,8 @@ let rec freevars t = match t.tm with
   | ITE   (t1, t2, t3)
   | Update(t1, t2, t3) -> freevars t1@freevars t2@freevars t3
 
-  | Forall (_, binders, t) 
-  | Exists (_, binders, t) -> 
+  | Forall (_, _, binders, t) 
+  | Exists (_, _, binders, t) -> 
     freevars t |> List.filter (fun (x, _) -> binders |> Util.for_all (fun (y, _) -> x<>y))
 
 let free_variables t = match !t.freevars with 
@@ -136,6 +136,9 @@ let free_variables t = match !t.freevars with
 (*****************************************************)
 let termToSmt t = t.as_str
 let boundvar_prefix = "@"
+let weightToSmt = function
+    | None -> ""
+    | Some i -> Util.format1 ":weight %s\n" (string_of_int i)
 let rec term'ToSmt tm = 
      match tm with
       | True          -> "true"
@@ -192,8 +195,8 @@ let rec term'ToSmt tm =
         format3 "(ite %s\n\t%s\n\t%s)" (termToSmt t1) (termToSmt t2) (termToSmt t3)
       | Cases tms -> 
         format1 "(and %s)" (String.concat " " (List.map termToSmt tms))
-      | Forall(pats,binders',z)
-      | Exists(pats,binders',z) -> 
+      | Forall(pats,wopt,binders',z)
+      | Exists(pats,wopt,binders',z) -> 
         let patsToSmt = function 
           | [] -> ""
           | pats -> format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p -> format1 "%s" (termToSmt p)) pats)) in
@@ -204,8 +207,8 @@ let rec term'ToSmt tm =
                 List.map (fun (a,b) -> format3 "(%s%s %s)" boundvar_prefix a (strSort b)) |>
                 String.concat " " in
             format3 "(%s (%s)\n %s)" (strQuant tm) s
-            (if List.length pats <> 0 
-                then format2 "(! %s\n %s)" (termToSmt z) (patsToSmt pats)
+            (if List.length pats <> 0 || Option.isSome wopt
+                then format3 "(! %s\n %s %s)" (termToSmt z) (weightToSmt wopt) (pats |> List.map patsToSmt |> String.concat "\n")
                 else termToSmt z)
       | ConstArray(s, _, tm) -> 
         format2 "((as const %s) %s)" s (termToSmt tm)
@@ -280,26 +283,17 @@ let mkSelect t   = mk (Select t)
 let mkUpdate t   = mk (Update t) 
 let mkCases t    = mk (Cases t)  
 let mkConstArr t = mk (ConstArray t) 
-let check_pats pats vars = ()
-let mkForall (pats, vars, body) = 
-    check_pats pats vars;
+let mkForall' (pats, wopt, vars, body) = 
     if List.length vars = 0 then body 
     else match body.tm with 
             | True -> body 
-            | _ -> mk (Forall(pats,vars,body)) 
-let collapseForall (pats, vars, body) =
-    check_pats pats vars;
-    if List.length vars = 0 then body 
-    else match body.tm with 
-        | True-> body
-        | Forall(pats', vars', body') -> mkForall(pats@pats', vars@vars', body')
-        | _ -> mkForall(pats, vars, body)
+            | _ -> mk (Forall(pats,wopt,vars,body)) 
+let mkForall (pats, vars, body) = mkForall'([pats], None, vars, body)
 let mkExists (pats, vars, body) = 
-    check_pats pats vars;
     if List.length vars = 0 then body 
     else match body.tm with 
             | True -> body 
-            | _ -> mk (Exists(pats,vars,body)) 
+            | _ -> mk (Exists([pats],None,vars,body)) 
 
 
 type caption = option<string>
@@ -321,7 +315,7 @@ type decl =
 type decls_t = list<decl>
 
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
-let constructor_to_decl (name, projectors, sort, id) =
+let constructor_to_decl_aux disc_inversion (name, projectors, sort, id) =
     let cdecl = DeclFun(name, projectors |> List.map snd, sort, Some "Constructor") in
     let bvar_name i = "x_" ^ string_of_int i in
     let bvar i s = mkBoundV(bvar_name i, s) in
@@ -332,11 +326,30 @@ let constructor_to_decl (name, projectors, sort, id) =
     let disc_name = "is-"^name in
     let xx = ("x", sort) in 
     let disc_app = mkApp(disc_name, [mkBoundV xx]) in
+//    let disc = DefineFun(disc_name, [xx], Bool_sort, 
+//                         mkAnd(mkEq(mkApp(constr_id_of_sort sort, [mkBoundV xx]), mkInteger id),
+//                               mkEq(mkBoundV xx, 
+//                                    mkApp(name, projectors |> List.map (fun (proj, s) -> mkApp(proj, [mkBoundV xx]))))),
+//                         Some "Discriminator definition") in
+    let disc_eq = mkEq(mkApp(constr_id_of_sort sort, [mkBoundV xx]), mkInteger id) in
+    let proj_terms = projectors |> List.map (fun (proj, s) -> mkApp(proj, [mkBoundV xx])) in
+    let disc_inv_body = mkEq(mkBoundV xx, mkApp(name, proj_terms)) in
+    let disc_ax = if disc_inversion 
+                  then mkAnd(disc_eq, disc_inv_body) 
+                  else disc_eq in
     let disc = DefineFun(disc_name, [xx], Bool_sort, 
-                         mkAnd(mkEq(mkApp(constr_id_of_sort sort, [mkBoundV xx]), mkInteger id),
-                               mkEq(mkBoundV xx, 
-                                    mkApp(name, projectors |> List.map (fun (proj, s) -> mkApp(proj, [mkBoundV xx]))))),
+                         disc_ax,
                          Some "Discriminator definition") in
+
+
+    let disc_inv_ax = 
+        if disc_inversion 
+        then []
+        else let destruct_pat = match sort with Type_sort -> [] | _ -> [mkApp("Destruct", [mkBoundV xx])] in
+              [Assume(mkForall'(destruct_pat::(proj_terms |> List.map (fun x -> [x])), 
+                                None,
+                                [xx], 
+                                mkImp(disc_eq, disc_inv_body)), Some ("guarded inversion equality: " ^ name))] in
     let projs = projectors |> List.mapi (fun i (name, s) -> 
         let cproj_app = mkApp(name, [capp]) in
         [DeclFun(name, [sort], s, Some "Projector");
@@ -344,9 +357,9 @@ let constructor_to_decl (name, projectors, sort, id) =
 //    let disc_proj = Assume(mkForall([], [xx], mkImp(disc_app, 
 //                                                    mkEq(mkBoundV xx, 
 //                                                         mkApp(name, projectors |> List.map (fun (proj, s) -> mkApp(proj, [mkBoundV xx])))))), Some "Disc/Proj correspondence") in
-    Caption (format1 "<start constructor %s>" name)::cdecl::cid::projs@[disc;Caption (format1 "</end constructor %s>" name)]
+    Caption (format1 "<start constructor %s>" name)::cdecl::cid::projs@[disc]@disc_inv_ax@[Caption (format1 "</end constructor %s>" name)]
 
-
+let constructor_to_decl f = constructor_to_decl_aux true f
       
 (****************************************************************************)
 (* Standard SMTLib prelude for F* and some term constructors                *)
@@ -427,7 +440,7 @@ and mkPrelude z3options =
                                  ("BoxString",  ["BoxString_proj_0", String_sort], Term_sort, 3);
                                  ("BoxRef",     ["BoxRef_proj_0", Ref_sort], Term_sort, 4);
                                  ("LexPair",    [("LexPair_0", Term_sort); ("LexPair_1", Term_sort)], Term_sort, 5)] in
-   let bcons = constrs |> List.collect constructor_to_decl |> List.map (declToSmt z3options) |> String.concat "\n" in
+   let bcons = constrs |> List.collect (constructor_to_decl_aux true) |> List.map (declToSmt z3options) |> String.concat "\n" in
    let lex_ordering = "\n(define-fun is-Prims.LexPair ((t Term)) Bool \n\
                                    (is-LexPair t))\n\
                        (assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
@@ -467,7 +480,9 @@ let unboxTerm sort t = match sort with
 let mk_PreKind t      = mkApp("PreKind", [t]) 
 let mk_PreType t      = mkApp("PreType", [t]) 
 let mk_Valid t        = mkApp("Valid",   [t])  
-let mk_HasType v t    = mkApp("HasType", [v;t])
+let mk_HasType (b:bool) v t  = 
+    mkApp("HasType", [v;t])
+let mk_Destruct v     = mkApp("Destruct", [v])
 let mk_HasKind t k    = mkApp("HasKind", [t;k])
 let mk_Rank x         = mkApp("Rank", [x])
 let mk_tester n t     = mkApp("is-"^n,   [t])

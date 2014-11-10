@@ -495,11 +495,6 @@ type DTuple2: 'a:Type
 assume val op_Equality : 'a:Type -> 'a -> 'a -> Tot bool
 assume val op_disEquality : 'a:Type -> 'a -> 'a -> Tot bool
 
-logic type LT : int -> int -> Type    (* infix < in concrete syntax *)
-logic type GT : int -> int -> Type    (* infix > in concrete syntax *)
-logic type LTE : int -> int -> Type   (* infix <= in concrete syntax *)
-logic type GTE : int -> int -> Type   (* infix >= in concrete syntax *)
-
 val fst : ('a * 'b) -> Tot 'a
 let fst x = MkTuple2._1 x
 

@@ -162,7 +162,8 @@ let subst_to_string s = s |> List.map (function Inl (b, _) -> b.realname.idText 
 let subst_tvar s a = Util.find_map s (function Inl (b, t) when (bvd_eq b a.v) -> Some t | _ -> None)
 let subst_xvar s a = Util.find_map s (function Inr (b, t) when (bvd_eq b a.v) -> Some t | _ -> None)
 let rec subst_typ' s t = match s with 
-  | [] -> t
+  | []
+  | [[]] -> Visit.compress_typ t
   | _ -> 
     let t0 = Visit.compress_typ t in
     match t0.n with 
@@ -189,7 +190,8 @@ let rec subst_typ' s t = match s with
                              t.pos
 
 and subst_exp' s e = match s with 
-  | [] -> e
+  | []
+  | [[]] -> Visit.compress_exp e
   | _ -> 
     let e0 = Visit.compress_exp e in
     match e0.n with
@@ -212,8 +214,9 @@ and subst_exp' s e = match s with
                               (subst_typ' s e0.tk)
                               e0.pos
 
-and subst_kind' s k = match s with 
-  | [] -> k 
+and subst_kind' s k = match s with
+  | [] 
+  | [[]] -> Visit.compress_kind k 
   | _ -> 
         let k0 = Visit.compress_kind k in
         match k0.n with
@@ -224,23 +227,21 @@ and subst_kind' s k = match s with
             | _ -> mk_Kind_delayed(k0, s, Util.mk_ref None) k0.pos
 
 and subst_comp_typ' s t = match s with 
-  | [] -> t
+  | []
+  | [[]] -> t
   | _ -> 
     {t with result_typ=subst_typ' s t.result_typ; 
             effect_args=List.map (function Inl t, imp -> Inl <| subst_typ' s t, imp | Inr e, imp -> Inr <| subst_exp' s e, imp) t.effect_args}
 
 and subst_comp' s t = match s with 
-  | [] -> t
+  | []
+  | [[]] -> t
   | _ -> 
     match t.n with 
       | Total t -> mk_Total (subst_typ' s t)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
 and compose_subst (s1:subst_t) (s2:subst_t) = s1@s2
-//
-//  mk_subst <| ((s1 |> List.map (function 
-//      | Inl(x, t) -> Inl (x, subst_typ s2 t)
-//      | Inr(x, e) -> Inr (x, subst_exp s2 e)))@s2)
 let mk_subst s = [s]
 let subst_kind s t = subst_kind' (mk_subst s) t
 let subst_typ  s t = subst_typ' (mk_subst s) t
@@ -569,6 +570,7 @@ let rec unrefine t =
   let t = compress_typ t in
   match t.n with
       | Typ_refine(x, _) -> unrefine x.sort
+      | Typ_ascribed(t, _) -> unrefine t
       | _ -> t
 
 let is_fun e = match (compress_exp e).n with 
@@ -1193,10 +1195,6 @@ let destruct_typ_as_formula f : option<connective> =
                             (Const.iff_lid, twoTypes);
                             (Const.ite_lid, threeTys);
                             (Const.not_lid, oneType);
-                            (Const.lt_lid,  twoTerms);
-                            (Const.gt_lid,  twoTerms);
-                            (Const.gte_lid, twoTerms);
-                            (Const.lte_lid, twoTerms);
                             (Const.eqT_lid, twoTypes);
                             (Const.eq2_lid, twoTerms);
                             (Const.eq2_lid, twoTypes@twoTerms);
