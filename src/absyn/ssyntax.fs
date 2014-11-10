@@ -309,7 +309,7 @@ and serialize_binder (ast : binder) : s_binder = (serialize_either serialize_btv
 
 and serialize_binders (ast : binders) : s_binders = serialize_list serialize_binder ast
 
-and serialize_typ (ast : typ) : s_typ = serialize_syntax serialize_typ' (Util.compress_typ ast)
+and serialize_typ (ast : typ) : s_typ = serialize_syntax serialize_typ' (Util.compress_typ ast) 
 
 and serialize_comp_typ (ast : comp_typ) : s_comp_typ = 
     { effect_name = serialize_lident ast.effect_name
@@ -793,12 +793,12 @@ type s_modul =
 let serialize_modul (ast : modul) : s_modul = 
     { name = serialize_lident ast.name
       declarations = serialize_sigelts ast.declarations
-      exports = serialize_sigelts ast.exports
+      exports = serialize_sigelts (*[]*) ast.exports
       is_interface = ast.is_interface }
 
 let deserialize_modul (ast : s_modul) : modul = 
     { name = deserialize_lident ast.name
       declarations = deserialize_sigelts ast.declarations
-      exports = deserialize_sigelts ast.exports
+      exports = deserialize_sigelts (*[||]*) ast.exports
       is_interface = ast.is_interface
       is_deserialized = true }

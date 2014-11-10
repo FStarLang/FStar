@@ -1358,6 +1358,7 @@ let check_modules (s:solver_t) (ds: solver_t) mods =
         if m.is_deserialized then
           let m, env = tc_modul ({ env with solver = ds }) m in
           m, { env with solver = s }
+          (*m, add_modul_to_tcenv env m*)
         else
           let m, env = tc_modul env m in
           let _ = if !Options.serialize_mods then

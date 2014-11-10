@@ -34,6 +34,8 @@ let cleanup () =
     ToSMT.Z3.cleanup();
     Util.kill_all ()
 
+let has_prims_cache (l: list<string>) :bool = List.exists (fun s -> s = "Prims.cache") l
+
 (* Main function *)
 let go _ =    
   let finished (mods:list<Syntax.modul>) = 
@@ -53,7 +55,8 @@ let go _ =
         if not (Option.isNone !Options.codegen) then
             Options.pretype := true;
         (* 1. Parsing the file + desugaring *)
-        let fmods = Parser.Driver.parse_files (Options.prims()::filenames) in
+        let filenames = if has_prims_cache filenames then filenames else (Options.prims()::filenames) in
+        let fmods = Parser.Driver.parse_files filenames in
         (* 2. Pre-typing + produce VCs + encode them + prove them, if the option --verify is set *)
         let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
         (* 2b. Pre-typing only (throw away all the VCs) *)

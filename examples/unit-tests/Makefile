@@ -8,12 +8,26 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-STDLIB = $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst st.fst partialmap.fst array-realized.fst)
+LIB_FILES=list.fst string.fst st.fst partialmap.fst array-realized.fst
+STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
 FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
+
+STDCACHE=Prims.cache List.cache String.cache ST.cache PartialMap.cache Array.cache
+FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(OTHERFLAGS)
 
 all: all-lax all-ver
 
 VERFILES=unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst insertionsort-lemma.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst sf-poly.fst format.fst mac.fst bug34.fst bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst bug28.fst bug35.fst
+
+cache: $(STDLIB)
+	mkdir $(FSTAR_HOME)/cache
+	$(FSTAR) --serialize_mods --verify
+
+ccache:
+	rm -f $(addprefix $(FSTAR_HOME)/cache/, $(STDCACHE))
+
+%.c.ver: %.fst
+	$(FSTARC) --verify $^
 
 all-ver: $(VERFILES)
 	$(FSTAR) --verify $^
