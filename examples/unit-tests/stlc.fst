@@ -150,7 +150,7 @@ val progress : e:exp -> t:ty -> Theorem
 let rec progress e t =
   match e with
   | EApp e1 e2 -> 
-     let (Some (TArrow t1 t2)) = typing e1 empty in
+     let Some (TArrow t1 t2) = typing e1 empty in
      progress e1 (TArrow t1 t2); 
      progress e2 t1
   | EIf e1 e2 e3 ->
@@ -170,9 +170,10 @@ let rec appears_free_in x e =
   | ETrue
   | EFalse -> false (* NS: writing default cases for recursive functions is bad for the solver. TODO: fix *)
 
-val free_in_context : x:int -> e:exp -> g:env -> Theorem 
-      (requires (appears_free_in x e /\ is_Some (typing e g)))
-      (ensures (is_Some (g x)))
+val free_in_context : x:int -> e:exp -> g:env 
+                   -> Theorem 
+                        (requires (appears_free_in x e /\ is_Some (typing e g)))
+                        (ensures (is_Some (g x)))
 let rec free_in_context x e g =
   match e with
   | EAbs y t e1 -> 
@@ -192,8 +193,10 @@ let rec free_in_context x e g =
 
   | _ -> ()
 
-logic type Equal (g1:env) (g2:env) = (forall (x:int). g1 x=g2 x)
-logic type EqualE (e:exp) (g1:env) (g2:env) = (forall (x:int). appears_free_in x e ==> g1 x=g2 x)
+opaque logic type Equal (g1:env) (g2:env) = 
+                 (forall (x:int). g1 x=g2 x)
+opaque logic type EqualE (e:exp) (g1:env) (g2:env) = 
+                 (forall (x:int). appears_free_in x e ==> g1 x=g2 x)
 
 val context_invariance : e:exp -> g:env -> g':env 
                      -> Theorem 
@@ -247,7 +250,7 @@ let rec substitution_preserves_typing x t_x e t_e v g1 g2 =
      else context_invariance e g1xg2 g1g2 (* no substitution, but need to show that x:t_x is removable *)
                              
   | EApp e1 e2 ->
-     let (Some (TArrow t1 t2)) = typing e1 (append (extend g1 x t_x) g2) in
+     let Some (TArrow t1 t2) = typing e1 (append (extend g1 x t_x) g2) in
      substitution_preserves_typing x t_x e1 (TArrow t1 t2) v g1 g2;
      substitution_preserves_typing x t_x e2 t1 v g1 g2
 
@@ -257,7 +260,7 @@ let rec substitution_preserves_typing x t_x e t_e v g1 g2 =
      substitution_preserves_typing x t_x e3 t_e v g1 g2
 
   | EAbs x' t' e1 ->
-     let (TArrow _ t_e1) = t_e in
+     let TArrow _ t_e1 = t_e in
      let g1xg2_x' = extend g1xg2 x' t' in
      let g1g2_x' = extend g1g2 x' t' in
      if x=x'
@@ -274,11 +277,11 @@ val preservation : e:exp -> e':exp -> t:ty
 let rec preservation e e' t =
   match e with
   | EApp e1 e2 -> 
-     let (Some t1) = typing e1 empty in
+     let Some t1 = typing e1 empty in
      if is_value e1 
-     then let (TArrow targ _) = t1 in
+     then let TArrow targ _ = t1 in
           (if is_value e2 
-           then let (EAbs x _ ebody) = e1 in
+           then let EAbs x _ ebody = e1 in
                 typing_extensional (extend empty x targ) (append (extend empty x targ) empty) ebody;
                 substitution_preserves_typing x targ ebody t e2 empty empty;
                 typing_extensional (append empty empty) empty (subst x e2 ebody)

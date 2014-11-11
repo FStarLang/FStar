@@ -62,7 +62,7 @@ val append: a:Type -> seq a -> seq a -> Tot (seq a)
 let append s1 s2 = Seq (Append s1 s2) 0 (length s1 + length s2)
 
 (* NS: TODO better notation for implicit parammeters ... requires two steps now *)
-logic type Equals (a:Type) (s1:seq a) (s2:seq a) = 
+opaque logic type Equals (a:Type) (s1:seq a) (s2:seq a) = 
           (length s1 == length s2
            /\ (forall (i:int).
                  (0 <= i /\ i < length s1)
