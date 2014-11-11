@@ -66,7 +66,7 @@ let go _ =
             try
                 let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
                 let doc   = Backends.OCaml.Code.doc_of_mllib mllib in
-                Util.print_string (FSharp.Format.pretty 120 doc)
+                Util.write_file "ocaml.ml" (FSharp.Format.pretty 120 doc)
             with Backends.OCaml.ASTTrans.OCamlFailure (rg, error) -> begin
                 (* FIXME: register exception and remove this block  *)
                 Util.print_string (* stderr *) <|

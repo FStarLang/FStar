@@ -20,7 +20,7 @@ let text (s : string) = Doc (Engine.string s)
 let break_ (i : int   ) = Doc (Engine.break_ i)
 
 let break0 = break_ 0
-let break1 = break_ 1
+let break1 = text " "
 
 (* -------------------------------------------------------------------- *)
 let enclose (Doc l) (Doc r) (Doc x) =

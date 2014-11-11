@@ -99,12 +99,16 @@ let encode_char c =
     String.concat "" (Array.map ocaml_u8_codepoint bytes)
   else
     match c with
-    | c when Char.IsLetterOrDigit(c) -> System.String (c, 1)
-    | c when Char.IsPunctuation(c)   -> System.String (c, 1)
+    | c when c = '\\'                -> "\\\\"
     | c when c = ' '                 -> " "
+    | c when c = '\b'                -> "\\b"
     | c when c = '\t'                -> "\\t"
     | c when c = '\r'                -> "\\r"
     | c when c = '\n'                -> "\\n"
+    | c when c = '\''                -> "\\'"
+    | c when Char.IsLetterOrDigit(c) -> System.String (c, 1)
+    | c when Char.IsPunctuation(c)   -> System.String (c, 1)
+    | c when Char.IsSymbol(c)        -> System.String (c, 1)
     | _                              -> ocaml_u8_codepoint ((byte)c)
 
 (* -------------------------------------------------------------------- *)
@@ -155,11 +159,11 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
         doc
 
     | MLE_CTor (ctor, []) ->
-        text (ptsym ctor)
+        text (ptctor ctor)
 
     | MLE_CTor (ctor, args) ->
         let args = List.map (doc_of_expr (min_op_prec, NonAssoc)) args in
-        reduce1 [text (ptsym ctor); parens (combine (text ", ") args)]
+        reduce1 [text (ptctor ctor); parens (combine (text ", ") args)]
 
     | MLE_Tuple es ->
         let docs = List.map (doc_of_expr (min_op_prec, NonAssoc)) es in
@@ -169,7 +173,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
     | MLE_Let (rec_, lets, body) ->
         let doc  = doc_of_lets (rec_, lets) in
         let body = doc_of_expr (min_op_prec, NonAssoc) body in
-        combine hardline [doc; reduce1 [text "in"; body]]
+        maybe_paren outer e_bin_prio_letin (combine hardline [doc; reduce1 [text "in"; body]])
 
     | MLE_App (e, args) -> begin
         match e, args with
@@ -231,11 +235,11 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
         maybe_paren outer e_bin_prio_if doc
 
     | MLE_Raise (exn, []) ->
-        reduce1 [text "raise"; text (ptsym exn)]
+        reduce1 [text "raise"; text (ptctor exn)]
 
     | MLE_Raise (exn, args) ->
         let args = List.map (doc_of_expr (min_op_prec, NonAssoc)) args in
-        reduce1 [text "raise"; parens (combine (text ", ") args)]
+        reduce1 [text "raise"; text (ptctor exn); parens (combine (text ", ") args)]
 
     | MLE_Try (e, pats) ->
         combine hardline [
@@ -257,11 +261,11 @@ and doc_of_pattern (pattern : mlpattern) : doc =
         brackets (combine (text "; ") (List.map for1 fields))
 
     | MLP_CTor (p, []) ->
-        text (ptsym p)
+        text (ptctor p)
 
     | MLP_CTor (p, ps) ->
         let ps = List.map doc_of_pattern ps in
-        reduce1 [text (ptsym p); parens (combine (text ", ") ps)]
+        reduce1 [text (ptctor p); parens (combine (text ", ") ps)]
 
     | MLP_Tuple ps ->
         let ps = List.map doc_of_pattern ps in
@@ -373,7 +377,7 @@ let doc_of_mltydecl (decls : mltydecl) =
 
         in
 
-        let doc = reduce1 [tparams; text x] in
+        let doc = reduce1 [tparams; text (ptsym ([], x))] in
 
         match body with
         | None      -> doc

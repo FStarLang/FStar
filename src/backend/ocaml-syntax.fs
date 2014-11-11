@@ -13,7 +13,10 @@ let idsym ((s, _) : mlident) : mlsymbol =
     s
 
 let ptsym ((_, s) : mlpath) : mlsymbol =
-    s
+    if Char.lowercase (String.get s 0) <> String.get s 0 then "l__" ^ s else s
+
+let ptctor ((_, s) : mlpath) : mlsymbol =
+    if Char.uppercase (String.get s 0) <> String.get s 0 then "U__" ^ s else s
 
 (* -------------------------------------------------------------------- *)
 let mlpath_of_lident (x : lident) : mlpath =

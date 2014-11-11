@@ -160,7 +160,7 @@ let as_tprims (id : lident) : option<tprims> =
         | "Tuple4" -> Some (Tuple 4)
         | "Tuple5" -> Some (Tuple 5)
         | "Tuple6" -> Some (Tuple 6)
-        | "Exn"    -> Some Exn
+        | "exn"    -> Some Exn
         | _        -> None
     else
         None
@@ -304,8 +304,8 @@ and maybe_tuple (tenv : tenv) ((rg, ty) : range * typ) =
     let rec unfun n ty =
         if n <= 0 then Some ty else
             match (Absyn.Util.compress_typ ty).n with
-            | Typ_lam(bs, ty) -> unfun (n - List.length bs) ty
-            | Typ_ascribed (ty, _)        -> unfun n ty
+            | Typ_lam (bs, ty) -> unfun (n - List.length bs) ty
+            | Typ_ascribed (ty, _) -> unfun n ty
             | _ -> None
     in
 
@@ -314,19 +314,19 @@ and maybe_tuple (tenv : tenv) ((rg, ty) : range * typ) =
         | Typ_const c -> begin
             match as_tprims c.v with
             | Some (Tuple n) ->
-                let acc = List.choose id (List.mapi unfun acc) in
+                // let acc = List.choose id (List.mapi unfun acc) in
                 if List.length acc <> n then None else
                 Some (List.map (fun ty -> mlty_of_ty tenv (rg, ty)) acc)
             | _ -> None
         end
 
-        | Typ_app(head, args) -> 
-          if args |> Util.for_some (function (Inr _, _) -> true | Inl t, _ -> false)
-          then None
-          else let tys = args |> List.map (function (Inl t, _) -> t | _ -> failwith "impos") in
-               aux (tys@acc) head
+        | Typ_app (head, args) ->
+            if args |> Util.for_some (function (Inr _, _) -> true | Inl t, _ -> false) then None else
+            let tys = args |> List.map (function (Inl t, _) -> t | _ -> failwith "impos") in
+            aux (tys@acc) head
 
-        | Typ_ascribed (ty, _)        -> aux acc ty
+        | Typ_ascribed (ty, _) ->
+            aux acc ty
 
         | _ -> None
     in
@@ -424,19 +424,24 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
         let args = List.collect (function Inl _, _ -> [] | Inr e, _ -> [mlexpr_of_expr rg lenv e]) args in
         MLE_Tuple args
 
-    | Exp_app(e, args) when not (List.isEmpty args) ->
-        let e    = mlexpr_of_expr rg lenv e in
+    | Exp_app(e, args) when not (List.isEmpty args) -> begin
         let args = List.collect (function (Inl _, _) -> [] | Inr e, _ -> [mlexpr_of_expr rg lenv e]) args in
 
-        MLE_App (e, args)
+        match e with
+        | { n = Exp_fvar (c, true) } -> MLE_CTor (mlpath_of_lident c.v, args)
+        | _ -> MLE_App (mlexpr_of_expr rg lenv e, args)
+    end
 
     | _ -> begin
         match e.n with
         | Exp_bvar x ->
             MLE_Var (lresolve lenv x.v.realname)
 
-        | Exp_fvar (x, _) ->
+        | Exp_fvar (x, false) ->
             MLE_Name (mlpath_of_lident x.v)
+
+        | Exp_fvar (x, true) ->
+            MLE_CTor (mlpath_of_lident x.v, [])
 
         | Exp_constant c ->
             MLE_Const (mlconst_of_const rg c)
@@ -446,11 +451,11 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
 
         | Exp_abs ((Inl _, _)::rest, e) ->
           (* FIXME: should only occur after a let-binding *)
-           mlexpr_of_expr rg lenv (mk_Exp_abs(rest, e) tun e.pos)  
+           mlexpr_of_expr rg lenv (if List.isEmpty rest then e else mk_Exp_abs(rest, e) tun e.pos)
 
         | Exp_abs ((Inr x, _)::rest, e) ->
             let lenv, mlid = lpush lenv x.v.realname x.v.ppname in
-            let e = mlexpr_of_expr rg lenv (mk_Exp_abs(rest, e) tun e.pos) in
+            let e = mlexpr_of_expr rg lenv (if List.isEmpty rest then e else mk_Exp_abs(rest, e) tun e.pos) in
             mlfun mlid e
 
         | Exp_match ({n=(Exp_fvar _ | Exp_bvar _)}, [p, None, e]) when Absyn.Util.is_wild_pat p ->
@@ -483,6 +488,7 @@ let rec mlexpr_of_expr (rg : range) (lenv : lenv) (e : exp) =
             MLE_Let (rec_, bindings, body)
 
         | Exp_meta (Meta_desugared (e, Data_app)) ->
+            assert false;
             let (c, args) =
                 match e.n with
                 | Exp_app({n=Exp_fvar (c, true)}, args) -> (c, args)
@@ -579,7 +585,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
                 ((x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) :: types, ctors, abbrvs)
             end
 
-            | Sig_datacon (x, ty, pr, _, rg) ->
+            | Sig_datacon (x, ty, ((tx, _, _) as pr), _, rg) ->
                 (types, (x.ident.idText, (ty, pr)) :: ctors, abbrvs)
 
             | Sig_typ_abbrev (x, tps, k, body, _, rg) ->
@@ -588,7 +594,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
             | _ ->
                 unexpected
                     (Absyn.Util.range_of_sigelt sigelt)
-                    "no-dtype--or-abbrvs-in-bundle"
+                    "no-dtype-or-abbrvs-in-bundle"
         in
 
         let (ts, cs, abbrvs) = List.foldBack fold1 indt ([], [], []) in
@@ -680,16 +686,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
     | Sig_monads (_, _, rg, _) ->
         unsupported rg "mod1-monad"
 
-    | Sig_bundle (indt, _, _) -> begin
-        let aout = mldtype_of_indt mlenv indt in
-        let aout = List.map (fun (x, y, z) -> (x, y, Some z)) aout in
-
-        match mode with
-        | Sig    -> Some (Inl (MLS_Ty aout))
-        | Struct -> Some (Inr (MLM_Ty aout))
-    end
-
-    | Sig_datacon (x, ty, (tx,_,_), _, rg) when as_tprims tx = Some Exn -> begin
+    | Sig_bundle ([Sig_datacon (x, ty, (tx, _, _), _, rg)], _, _) when as_tprims tx = Some Exn -> begin
         let rec aux acc ty =
             match (Absyn.Util.compress_typ ty).n with
             | Typ_fun(bs, c) -> 
@@ -706,6 +703,15 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
         let args = List.map (fun ty -> mlty_of_ty tenv (rg, ty)) args in
 
         Some (mlitem1_exn mode (x.ident.idText, args))
+    end
+
+    | Sig_bundle (indt, _, _) -> begin
+        let aout = mldtype_of_indt mlenv indt in
+        let aout = List.map (fun (x, y, z) -> (x, y, Some z)) aout in
+
+        match mode with
+        | Sig    -> Some (Inl (MLS_Ty aout))
+        | Struct -> Some (Inr (MLM_Ty aout))
     end
 
     | Sig_assume         _ -> None
@@ -745,8 +751,6 @@ let rec mllib_add (MLLib mllib : mllib) ((path : mlpath), sig_, mod_) =
             [snd path, Some (sig_, mod_), mllib_empty]
         | ((name, sigmod, sublibs) as the) :: tl ->
             if name = snd path then begin
-                if Option.isSome sigmod then
-                    failwith ("duplicated-module: " ^ name);
                 (name, Some (sig_, mod_), sublibs) :: tl
             end else
                 the :: (aux tl)
