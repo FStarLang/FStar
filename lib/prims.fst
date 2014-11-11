@@ -506,7 +506,7 @@ assume val admit: unit -> Pure unit True (fun x -> False)
 assume val admitP: 'P:Type -> unit -> Pure unit True (fun x -> 'P)
 assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
 assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> 'P)
-(* assume val Assert : b:bool -> Pure unit (requires $"assertion failed" (b2t b)) (ensures \x -> True) *)
+assume val qintro: a:Type -> p:(a -> Type) -> (x:a -> Fact unit (p x)) -> Fact unit (forall (x:a). p x)
 assume val lemma : 'P:Type -> x:unit{'P} -> z:unit{'P}
 assume val unreachable : x:unit{LBL "unreachable" False} -> 'a
 assume val failwith: string -> 'a (* TODO: refine with the Exn monad *)

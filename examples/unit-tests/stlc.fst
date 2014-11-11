@@ -75,6 +75,12 @@ let empty _ = None
 val extend : env -> int -> ty -> Tot env
 let extend g x t x' = if x = x' then Some t else g x'
 
+val append: env -> env -> Tot env
+let append g1 g2 x = 
+  match g2 x with 
+    | None -> g1 x
+    | found -> found
+
 let x45 = extend (extend empty 42 TBool) 0 (TArrow TBool TBool)
 
 val extend_eq : g:env -> x:int -> a:ty -> Fact unit
@@ -157,7 +163,7 @@ let rec appears_free_in x e =
   | ETrue
   | EFalse -> false
 
-type closed e = (forall (x:int). not (appears_free_in x e))
+logic type closed e = (forall (x:int). not (appears_free_in x e))
 
 val free_in_context : x:int -> e:exp -> g:env -> Pure unit
       (requires (appears_free_in x e /\ is_Some (typing e g)))
@@ -181,17 +187,19 @@ let rec free_in_context x e g =
 
   | _ -> ()
 
+
 (* Corollary of free_in_context *)
 val typable_empty_closed : x:int -> e:exp -> Lemma
       (requires (is_Some (typing e empty) /\ appears_free_in x e))
       (ensures False)
-      ([VPat (is_Some (typing e empty)); 
-        VPat (appears_free_in x e)])
+      ([VPat (appears_free_in x e)])
 let typable_empty_closed x e = free_in_context x e empty
 
+logic type Equal (e:exp) (g1:env) (g2:env) = 
+          (forall (x:int). appears_free_in x e ==> g1 x==g2 x)
+
 val context_invariance : e:exp -> t:ty -> g:env -> g':env -> Pure unit
-      (requires (typing e g = Some t /\
-                (forall (x:int). appears_free_in x e ==> g x = g' x)))
+      (requires (typing e g = Some t /\ Equal e g g'))
       (ensures \r -> (typing e g' = Some t))
 let rec context_invariance e t g g' =
   match e with
@@ -211,48 +219,65 @@ let rec context_invariance e t g g' =
 
   | _ -> ()
 
-(* This is a complete disaster, the typing e (extend g x u) = Some t
-   assumption seems to be not usable at all in the proof *)
+val append_assoc: x:int -> u:ty -> g1:env -> g2:env 
+                -> Lemma (requires True)
+                         (ensures (forall (e:exp). Equal e 
+                                     (extend (append g1 g2) x u)
+                                     (append g1 (extend g2 x u))))
+                         ([VPat (extend (append g1 g2) x u)])
+let append_assoc x u g1 g2 = ()
+  (* (\* let gg = extend (append g1 g2) x u in *\) *)
+  (* (\* let gg' = append g1 (extend g2 x u) in *\) *)
+  (* let proof : y:int -> Fact unit (appears_free_in y e ==> (extend (append g1 g2) x u y == append g1 (extend g2 x u) y)) = fun y ->  *)
+  (*   let gg = extend (append g1 g2) x u in *)
+  (*   let gg' = append g1 (extend g2 x u) in *)
+  (*   if appears_free_in y e *)
+  (*   then () *)
+  (*   else () in *)
+  (* qintro proof *)
+  
+    
+
 val substitution_preserves_typing :
-      x:int -> e:exp -> u:ty -> t:ty -> v:exp -> g:env -> Pure unit
-          (requires (typing e (extend g x u) = Some t /\
-                     typing v empty = Some u))
-          (ensures \r -> (typing (subst x v e) g = Some t))
-let substitution_preserves_typing x e u t v g  =
-  (* typable_empty_closed x v; *)
+      x:int -> e:exp -> u:ty -> t:ty -> v:exp -> g1:env -> g2:env -> Pure unit
+          (requires (typing e (append (extend g1 x u) g2) = Some t
+                     /\ typing v empty = Some u))
+          (ensures \r -> (typing (subst x v e) (append g1 g2) = Some t))
+let rec substitution_preserves_typing x e u t v g1 g2  =
   match e with
-  | EVar x' -> 
-     if x'=x
-     then begin
-         assert (forall (y:int). appears_free_in y v ==> (empty y = g y));
-         admit()
-//       context_invariance v t empty g
-       end
-     else admit()
-     (* (\* (subst x v e) = if x = x' then e else e' *\) *)
-     (*  (\* assert(typing e (extend g x u) = (extend g x u) x); *)
-     (*       -- this should work but it fails (just unfolding definition) *\) *)
-     (*  if x = x' then begin *)
-     (*    extend_eq g x u; *)
-     (*    assert(x = x'); assert(e = EVar x); *)
-     (*    (\* assert(u = t);  -- this should work but it fails *\) *)
-     (*    admit() *)
-     (*  end else begin *)
-     (*    assert(x<>x'); *)
-     (*    extend_neq g x u x'; *)
-     (*    admit() *)
-     (*  end *)
-  | EAbs x' t e1 ->
-      admit() (* EAbs x t (if x = x' then e1 else (subst x e e1)) *)
+  | ETrue -> ()
+  | EFalse -> ()
+  | EVar x' ->
+    let g1g2 = append g1 g2 in
+    if is_None (g2 x) && x'=x
+    then begin
+      assert (Equal v empty g1g2);
+      context_invariance v u empty g1g2;
+      admit()
+    end
+    else begin
+      let g1xg2 = append (extend g1 x u) g2 in
+      assert (Equal e g1xg2 g1g2);
+      context_invariance e t g1xg2 g1g2;
+      admit()
+    end
+
   | EApp e1 e2 ->
-      admit() (* EApp (subst x e e1) (subst x e e2) *)
-  | ETrue ->
-      (* assert(t = TBool); -- this should be provable but it currently fails *)
-      admit() (* ETrue *)
-  | EFalse ->
-      admit() (* EFalse *)
+    let (Some (TArrow t1 t2)) = typing e1 (append (extend g1 x u) g2) in
+    substitution_preserves_typing x e1 u (TArrow t1 t2) v g1 g2;
+    substitution_preserves_typing x e2 u t1 v g1 g2
+
   | EIf e1 e2 e3 ->
-      admit() (* EIf (subst x e e1) (subst x e e2) (subst x e e3) *)
+    substitution_preserves_typing x e1 u TBool v g1 g2;
+    substitution_preserves_typing x e2 u t v g1 g2;
+    substitution_preserves_typing x e3 u t v g1 g2
+
+  | EAbs x' t e1 -> 
+    substitution_preserves_typing x e1 u t v g1 (extend g2 x' t) 
+
+(* (\* Need to strengthen the IH with a context on the right *\) *)
+(*     admit() (\* EAbs x t (if x = x' then e1 else (subst x e e1)) *\) *)
+
 
 (* val preservation : e:exp -> e':exp -> t:ty -> Pure unit *)
 (*       (requires (typing e empty = Some t /\ step e = Some e')) *)

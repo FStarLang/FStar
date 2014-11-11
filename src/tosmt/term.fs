@@ -207,9 +207,9 @@ let rec term'ToSmt tm =
                 List.map (fun (a,b) -> format3 "(%s%s %s)" boundvar_prefix a (strSort b)) |>
                 String.concat " " in
             format3 "(%s (%s)\n %s)" (strQuant tm) s
-            (if List.length pats <> 0 || Option.isSome wopt
-                then format3 "(! %s\n %s %s)" (termToSmt z) (weightToSmt wopt) (pats |> List.map patsToSmt |> String.concat "\n")
-                else termToSmt z)
+            (if pats |> Util.for_some (function [] -> false | _ -> true) || Option.isSome wopt
+             then format3 "(! %s\n %s %s)" (termToSmt z) (weightToSmt wopt) (pats |> List.map patsToSmt |> String.concat "\n")
+             else termToSmt z)
       | ConstArray(s, _, tm) -> 
         format2 "((as const %s) %s)" s (termToSmt tm)
 
