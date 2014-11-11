@@ -137,6 +137,7 @@ let assert_pure_lid = p2l ["Prims"; "PURE"; "assert_p"]
 let assume_pure_lid = p2l ["Prims"; "PURE"; "assume_p"]
 let fact_lid        = pconst "Fact"
 let lemma_lid       = pconst "Lemma"
+let theorem_lid     = pconst "Theorem"
 
 (* relational mode constants *)
 let lproj_lid            = pconst  "L"

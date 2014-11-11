@@ -480,6 +480,9 @@ let unboxTerm sort t = match sort with
 let mk_PreKind t      = mkApp("PreKind", [t]) 
 let mk_PreType t      = mkApp("PreType", [t]) 
 let mk_Valid t        = mkApp("Valid",   [t])  
+//    match t.tm with 
+//        | App("Prims.b2t", [v]) -> unboxBool v
+//        | _ -> mkApp("Valid",   [t])  
 let mk_HasType (b:bool) v t  = 
     mkApp("HasType", [v;t])
 let mk_Destruct v     = mkApp("Destruct", [v])

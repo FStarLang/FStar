@@ -768,6 +768,8 @@ and desugar_typ env (top:term) : typ =
                         let result_typ, args, flags = 
                             if lid_equals eff.v Const.lemma_lid
                             then Util.ftv Const.unit_lid ktype, args, [LEMMA]
+                            else if lid_equals eff.v Const.theorem_lid
+                            then Util.ftv Const.unit_lid ktype, args, []
                             else if lid_equals eff.v Const.ml_effect_lid
                             then result_typ, rest, [MLEFFECT]
                             else result_typ, rest, [] in

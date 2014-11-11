@@ -110,6 +110,7 @@ type pattern =
   | TPat : 'a:Type -> pattern
 
 effect Lemma (_a:Type) (pre:Type) (post:Type) (pats:list pattern) = Pure unit pre (fun r -> post)
+effect Theorem (res:Type) (pre:Type) (post:Type) = Pure res pre (fun r -> post)
 
 type option (a:Type) =
   | None : option a
