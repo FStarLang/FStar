@@ -357,9 +357,11 @@ let lookup_datacons_of_typ env lid =
     
 let lookup_typ_abbrev env lid =
   match lookup_qname env lid with 
-    | Some (Inr (Sig_typ_abbrev (lid, tps, _, t, _, _))) -> 
-      let t = Util.close_with_lam tps t in
-      Some (mk_Typ_meta(Meta_named(t, lid)))
+    | Some (Inr (Sig_typ_abbrev (lid, tps, _, t, quals, _))) -> 
+      if quals |> Util.for_some (function Opaque -> true | _ -> false)
+      then None
+      else let t = Util.close_with_lam tps t in
+           Some (mk_Typ_meta(Meta_named(t, lid)))
     | _ -> None
         
 let lookup_btvdef env (btvd:btvdef): option<knd> = 

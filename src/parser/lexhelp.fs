@@ -189,6 +189,7 @@ let keywords =
     ALWAYS, "open"       ,OPEN;
     ALWAYS, "or"         ,OR;
     FSHARP, "override"   ,OVERRIDE;
+    ALWAYS, "opaque"     ,OPAQUE;
     ALWAYS, "private"    ,PRIVATE;  
     ALWAYS, "prop"       ,PROP;  
     FSHARP, "public"     ,PUBLIC;

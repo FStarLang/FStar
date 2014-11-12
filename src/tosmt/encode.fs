@@ -225,7 +225,7 @@ let head_normal env t =
 let whnf env t =
     if head_normal env t then t
     else Tc.Normalize.norm_typ [Tc.Normalize.Beta;Tc.Normalize.WHNF;Tc.Normalize.DeltaHard] env.tcenv t
-let norm_t env t = whnf env t//Tc.Normalize.norm_typ [Tc.Normalize.Beta] env.tcenv t
+let norm_t env t = Tc.Normalize.norm_typ [Tc.Normalize.Beta] env.tcenv t
 let norm_k env k = Tc.Normalize.normalize_kind env.tcenv k
 let trivial_post t : typ = mk_Typ_lam([null_v_binder t], Util.ftv Const.true_lid ktype) 
                                      (mk_Kind_arrow([null_v_binder t], ktype) t.pos) t.pos
@@ -798,6 +798,7 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
                         (Const.iff_lid, mk_iff);
                         (Const.ite_lid, enc_prop_c [false;true;true] <| tri_op mkITE);
                         (Const.not_lid, enc_prop_c [false] <| un_op mkNot);
+                        
 //                        (Const.lt_lid,  enc (unboxInt_l <| bin_op mkLT));
 //                        (Const.gt_lid,  enc (unboxInt_l <| bin_op mkGT));
 //                        (Const.gte_lid, enc (unboxInt_l <| bin_op mkGTE));
@@ -985,7 +986,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         g, env
 
      | Sig_val_decl(lid, t, quals, _) -> 
-        encode_free_var env lid (whnf env t) quals
+        encode_free_var env lid t (whnf env t) quals
 
      | Sig_assume(l, f, _, _) -> 
         let f, decls = encode_formula f env in
@@ -1003,8 +1004,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         decl::primitive_type_axioms t tsym, push_free_tvar env t tname tsym
 
      | Sig_tycon(t, tps, k, _, datas, quals, _) -> 
+        let is_logical = quals |> Util.for_some (function Logic -> true | _ -> false) in
         let constructor_or_logic_type_decl c = 
-            if quals |> Util.for_some (function Logic -> true | _ -> false) 
+            if is_logical
             then let name, args, _, _ = c in 
                  [Term.DeclFun(name, args |> List.map snd, Type_sort, None)]
             else constructor_to_decl c in
@@ -1065,12 +1067,17 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let kindingAx = 
             let k, decls = encode_knd res env' tapp in
             decls@[Term.Assume(mkForall([tapp], vars, mkImp(guard, k)), Some "kinding")] in
-        let g = decls
-                @binder_decls
-                @kindingAx
+        let aux = 
+            if is_logical 
+            then [] 
+            else kindingAx
                 @(primitive_type_axioms t tapp)
                 @(inversion_axioms tapp vars)
                 @(projection_axioms tapp vars) in
+ 
+        let g = decls
+                @binder_decls
+                @aux in
         g, env
 
     | Sig_datacon(d, _, _, _, _) when (lid_equals d Const.lexpair_lid) -> [], env 
@@ -1132,15 +1139,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       g'@inversions, env
 
     | Sig_let((is_rec, [(Inr flid, t1, e)]), _, _) when not is_rec -> 
-        let t1 = whnf env t1 in
         if Util.is_lemma t1 then encode_lemma env flid t1, env else
+        let t1_norm = whnf env t1 in
         if not (Util.is_pure_function t1) then [], env  else
-        let (f, ftok), decls, env = declare_top_level_let env flid t1 in
+        let (f, ftok), decls, env = declare_top_level_let env flid t1 t1_norm in
         let e = Util.compress_exp e in
         let fapp, binders, body = match e.n with
             | Exp_abs(binders, body) -> 
-                let t1 = Util.compress_typ t1 in
-                begin match t1.n with 
+                let t1_norm = Util.compress_typ t1_norm in
+                begin match t1_norm.n with 
                  | Typ_fun(bs', c) -> 
                     let nformals = List.length bs' in
                     if nformals < List.length binders && Util.is_total_comp c (* explicit currying *)
@@ -1151,7 +1158,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     then  mk_ApplyE ftok, binders, e 
                     else (fun vars -> Term.mkApp(f, List.map mkBoundV vars)), binders, body
                  | _ -> 
-                     failwith (Util.format3 "Impossible! let-bound lambda %s = %s has a type that's not a function: %s\n" flid.str (Print.exp_to_string e) (Print.typ_to_string t1))
+                     failwith (Util.format3 "Impossible! let-bound lambda %s = %s has a type that's not a function: %s\n" flid.str (Print.exp_to_string e) (Print.typ_to_string t1_norm))
                 end
             | _ -> mk_ApplyE ftok, [], e in
         let vars, guards, env', binder_decls, _ = encode_binders false binders env in
@@ -1174,11 +1181,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
         The extension to a tuple of the arguments (in the same order as the parameters) in place of xi is tedious but straightforward.
       *)
-      let t = whnf env t in
       if Util.is_lemma t then encode_lemma env flid t, env else
-      if not (Util.is_pure_function t) then [], env else 
+      let t_norm = whnf env t in
+      if not (Util.is_pure_function t_norm) then [], env else 
       let _ = if Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding let rec %s\n" (Print.sli flid) in
-      let (f, ftok), decls, env = declare_top_level_let env flid t in
+      let (f, ftok), decls, env = declare_top_level_let env flid t t_norm in
       
       let warn why = 
         if env.warn
@@ -1335,10 +1342,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     | Sig_main _
     | Sig_monads _ -> [], env
 
-and declare_top_level_let env x t =
+and declare_top_level_let env x t t_norm =
     match try_lookup_lid env x with 
         | None -> (* Need to introduce a new name decl *)
-            let decls, env = encode_free_var env x t [] in
+            let decls, env = encode_free_var env x t t_norm [] in
             lookup_lid env x, decls, env 
         | Some (n, x) -> (* already declared, only need an equation *)
             (n, x), [], env
@@ -1371,12 +1378,12 @@ and encode_lemma env lid t =
                 Some ("Lemma: " ^ lid.str))
     ::decls@decls@(List.flatten decls')@decls''@decls''')
 
-and encode_free_var env lid t quals = 
-    if not <| Util.is_pure_function t || Util.is_lemma t
+and encode_free_var env lid tt t_norm quals = 
+    if not <| Util.is_pure_function t_norm || Util.is_lemma t_norm
     then [], env
-    else let formals, res = match Util.function_formals t with 
+    else let formals, res = match Util.function_formals t_norm with 
             | Some (args, comp) -> args, Util.comp_result comp 
-            | None -> [], t in
+            | None -> [], t_norm in
 
          let mk_disc_proj_axioms vapp vars = quals |> List.collect (function 
             | Discriminator d -> 
@@ -1409,19 +1416,33 @@ and encode_free_var env lid t quals =
                     (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                     let tok_decl, env = match formals with 
                         | [] -> 
-                            let t, decls2 = encode_typ_pred' true t env (mkFreeV(vname, Term_sort)) in
+                            let t, decls2 = 
+                                if not(head_normal env tt) 
+                                then encode_typ_pred' true tt env (mkFreeV(vname, Term_sort))
+                                else encode_typ_pred' true t_norm env (mkFreeV(vname, Term_sort)) in
                             let tok_typing = Term.Assume(t, Some "function token typing") in 
                             decls2@[tok_typing], push_free_var env lid vname (mkFreeV(vname, Term_sort))
                         | _ -> 
-                            let vtok_decl = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None) in
-                            let t, decls2 = encode_typ_pred' true t env vtok in
-                            let tok_typing = Term.Assume(t, Some "function token typing") in 
-                            let name_tok_corr = Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vapp)), None) in
-                            decls2@[vtok_decl;name_tok_corr;tok_typing], env in
+                              let vtok_decl = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None) in
+                              let name_tok_corr = Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vapp)), None) in
+                              let tok_typing, decls2 = 
+                                if not(head_normal env tt) 
+                                then encode_typ_pred' true tt env vtok 
+                                else encode_typ_pred' true t_norm env vtok in
+                              let tok_typing = Term.Assume(tok_typing, Some "function token typing") in
+                              decls2@[vtok_decl;name_tok_corr;tok_typing], env in
                     vname_decl::tok_decl, env in
         let ty_pred, decls3 = encode_typ_pred' true res env' vapp in
-        let typingAx = Term.Assume(mkForall([vapp], vars, mkImp(guard, ty_pred)), None) in
-        let g = decls1@decls2@decls3@typingAx::mk_disc_proj_axioms vapp vars in
+        let tt_typing, decls4 = 
+            if not(head_normal env tt) 
+            then let tok_typing, decls4 = encode_typ_pred' true tt env vtok in
+                 [Term.Assume(tok_typing, None)], decls4
+            else [], [] in
+            
+//        let tpat_var = varops.fresh "tt", Type_sort in
+//        let pat = Term.mk_HasType false vapp (mkBoundV tpat_var) in
+        let typingAx = Term.Assume(mkForall([vapp], vars, mkImp(guard, ty_pred)), Some "free var typing") in
+        let g = decls1@decls2@decls3@decls4@typingAx::tt_typing@mk_disc_proj_axioms vapp vars in
         g, env
        
 
@@ -1452,8 +1473,8 @@ let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t *
                     @[Term.Assume(k, None)] in
             decls@g, env'
         | Env.Binding_lid(x, t) -> 
-            let t = whnf env t in
-            let g, env' = encode_free_var env x t [] in
+            let t_norm = whnf env t in
+            let g, env' = encode_free_var env x t t_norm [] in
             decls@g, env'
         | Env.Binding_sig se -> 
             let g, env' = encode_sigelt env se in 

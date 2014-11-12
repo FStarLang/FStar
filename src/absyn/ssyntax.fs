@@ -568,6 +568,7 @@ type s_qualifier =
     | S_Query
     | S_Lemma
     | S_Logic
+    | S_Opaque
     | S_Discriminator of s_lident
     | S_Projector of s_lident * s_either<s_btvdef, s_bvvdef>
     | S_RecordType of array<s_ident>
@@ -587,6 +588,7 @@ let serialize_qualifier (ast : qualifier) : s_qualifier =
     | Query -> S_Query
     | Lemma -> S_Lemma
     | Logic -> S_Logic
+    | Opaque -> S_Opaque
     | Discriminator(lid) -> S_Discriminator(serialize_lident lid)
     | Projector(lid, v) -> S_Projector(serialize_lident lid, serialize_either serialize_btvdef serialize_bvvdef v)
     | RecordType(l) -> S_RecordType(serialize_list serialize_ident l)
@@ -603,6 +605,7 @@ let deserialize_qualifier (ast : s_qualifier) : qualifier =
     | S_Query -> Query
     | S_Lemma -> Lemma
     | S_Logic -> Logic
+    | S_Opaque -> Opaque
     | S_Discriminator(lid) -> Discriminator(deserialize_lident lid)
     | S_Projector(lid, v) -> 
         Projector(deserialize_lident lid, deserialize_either deserialize_btvdef deserialize_bvvdef v)

@@ -34,6 +34,7 @@ type token =
   | VIRTUAL
   | ABSTRACT
   | OVERRIDE
+  | OPAQUE
   | DEFAULT
   | CONSTRUCTOR
   | INHERIT
