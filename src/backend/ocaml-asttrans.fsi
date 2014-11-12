@@ -10,8 +10,7 @@ exception OCamlFailure of Range.range * error
 
 val string_of_error : error -> string
 
-type mlenv = 
-  | MLEnv of unit
+type mlenv
 
 val mlmod_of_mod : mlenv -> list<sigelt> -> mlmodule
 val mlsig_of_sig : mlenv -> list<sigelt> -> mlsig

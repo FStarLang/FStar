@@ -454,7 +454,7 @@ let doc_of_mod (m : mlmodule) =
 (* -------------------------------------------------------------------- *)
 let rec doc_of_mllib_r (MLLib mllib : mllib) =
     let rec for1_sig (x, sigmod, MLLib sub) =
-        let head = reduce1 [text "module"; text "type"; text x; text ":"; text "sig"] in
+        let head = reduce1 [text "module"; text x; text ":"; text "sig"] in
         let tail = reduce1 [text "end"] in
         let doc  = Option.map (fun (s, _) -> doc_of_sig s) sigmod in
         let sub  = List.map for1_sig sub in
@@ -468,11 +468,13 @@ let rec doc_of_mllib_r (MLLib mllib : mllib) =
             reduce sub;
             cat tail hardline;
         ]
-    and for1_mod (x, sigmod, MLLib sub) =
-        let head = reduce1 [text "module"; text x; text "="; text "struct"] in
+    and for1_mod istop (x, sigmod, MLLib sub) =
+        let head = reduce1 (if   not istop
+                            then [text "module"; text x; text "="; text "struct"]
+                            else [text "struct"]) in
         let tail = reduce1 [text "end"] in
         let doc  = Option.map (fun (_, m) -> doc_of_mod m) sigmod in
-        let sub  = List.map for1_mod sub in
+        let sub  = List.map (for1_mod false) sub in
         let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
 
         reduce [
@@ -486,20 +488,12 @@ let rec doc_of_mllib_r (MLLib mllib : mllib) =
 
     in
 
-    let sigs, mods = List.map for1_sig mllib, List.map for1_mod mllib in
-    let sigs = List.map (fun x -> reduce [x; hardline; hardline]) sigs in
-    let mods = List.map (fun x -> reduce [x; hardline; hardline]) mods in
+    let docs = List.combine (List.map for1_sig mllib) (List.map (for1_mod true) mllib) in
+    let docs = List.map (fun (sig_, mod_) -> reduce [sig_; text "="; mod_; hardline]) docs in
 
-    match sigs, mods with
-    | [], [] -> empty
-    | [], _ | _, [] -> failwith "impos"
-    | _, _ -> reduce [
-        reduce sigs;
-        reduce [text "="; hardline];
-        reduce mods;
-    ]
+    reduce docs
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mllib mllib =
     let doc = doc_of_mllib_r mllib in
-    reduce [reduce1 [text "include"; text "FStar.Support"; hardline]; hardline; doc]
+    reduce [reduce1 [text "include"; text "Fstar.Support"; hardline]; hardline; doc]
