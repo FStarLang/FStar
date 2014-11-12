@@ -15,7 +15,6 @@
 *)
 
 module Stlc
-open Prims.PURE
 
 type ty =
   | TBool  : ty
@@ -32,8 +31,8 @@ type exp =
 val is_value : exp -> Tot bool
 let is_value e =
   match e with
-  | EAbs _ _ _ -> true
-  | ETrue      -> true
+  | EAbs _ _ _
+  | ETrue
   | EFalse     -> true
   | _          -> false
 
@@ -64,22 +63,20 @@ let rec step e =
           match (step e2) with
           | Some e2' -> Some (EApp e1 e2')
           | None     -> None
-      else begin
-        match (step e1) with
+      else
+        (match (step e1) with
         | Some e1' -> Some (EApp e1' e2)
-        | None     -> None
-      end
+        | None     -> None)
   | EIf e1 e2 e3 ->
       if is_value e1 then
         match e1 with
         | ETrue   -> Some e2
         | EFalse  -> Some e3
         | _       -> None
-      else begin
-        match (step e1) with
+      else
+        (match (step e1) with
         | Some e1' -> Some (EIf e1' e2 e3)
-        | None     -> None
-      end
+        | None     -> None)
   | _ -> None
 
 type env = int -> Tot (option ty)
@@ -105,29 +102,31 @@ val extend_neq : g:env -> x1:int -> a:ty -> x2:int -> Theorem
       (ensures ((extend g x1 a) x2) = g x2)
 let extend_neq g x1 a x2 = ()
 
+val sel_empty : x:int -> Theorem
+      (requires True)
+      (ensures (is_None (empty x)))
+let sel_empty x = ()
+
 (* CH: swapped env and exp args until functions are ignored from the
    lex ordering or until we can write decreasing clauses *)
 val typing : exp -> env -> Tot (option ty)
 let rec typing e g =
   match e with
   | EVar x -> g x
-  | EAbs x t e1 -> begin
-      match typing e1 (extend g x t) with
+  | EAbs x t e1 ->
+      (match typing e1 (extend g x t) with
       | Some t' -> Some (TArrow t t')
-      | None    -> None
-      end
-  | EApp e1 e2 -> begin
-      match typing e1 g, typing e2 g with
+      | None    -> None)
+  | EApp e1 e2 ->
+      (match typing e1 g, typing e2 g with
       | Some (TArrow t11 t12), Some t2 -> if t11 = t2 then Some t12 else None
-      | _                    , _       -> None
-      end
+      | _                    , _       -> None)
   | ETrue  -> Some TBool
   | EFalse -> Some TBool
-  | EIf e1 e2 e3 -> begin
-      match typing e1 g, typing e2 g, typing e3 g with
+  | EIf e1 e2 e3 ->
+      (match typing e1 g, typing e2 g, typing e3 g with
       | Some TBool, Some t2, Some t3 -> if t2 = t3 then Some t2 else None
-      | _         , _      , _       -> None
-       end
+      | _         , _      , _       -> None)
 
 val canonical_forms_bool : e:exp -> Theorem 
       (requires (typing e empty=Some TBool /\ is_value e))
@@ -138,11 +137,6 @@ val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Theorem
       (requires (typing e empty == Some (TArrow t1 t2) /\ is_value e))
       (ensures (is_EAbs e))
 let canonical_forms_fun e t1 t2 = ()
-
-val sel_empty : x:int -> Theorem 
-      (requires True)
-      (ensures (is_None (empty x)))
-let sel_empty x = ()
 
 val progress : e:exp -> t:ty -> Theorem 
       (requires (typing e empty == Some t))
