@@ -92,9 +92,8 @@ let set_bvd_range bvd r = {ppname=mk_ident(bvd.ppname.idText, r);
 let set_lid_range l r = 
   let ids = (l.ns@[l.ident]) |> List.map (fun i -> mk_ident(i.idText, r)) in
   lid_of_ids ids
-let exp_of_lid l t = mk_Exp_fvar (withinfo l t <| range_of_lid l, false) t (range_of_lid l)
 let fv l = withinfo l tun (range_of_lid l)
-let fvar l r = mk_Exp_fvar(fv (set_lid_range l r), false) tun r
+let fvar dc l r = mk_Exp_fvar(fv (set_lid_range l r), dc) tun r
 let ftv l k = mk_Typ_const (withinfo l k (range_of_lid l)) k (range_of_lid l)
 let order_bvd x y = match x, y with 
   | Inl _, Inr _ -> -1
@@ -652,9 +651,9 @@ let mk_exp_app f args =
 let mk_data l args = 
   match args with 
     | [] -> 
-      mk_Exp_meta(Meta_desugared(fvar l (range_of_lid l), Data_app))
+      mk_Exp_meta(Meta_desugared(fvar true l (range_of_lid l), Data_app))
     | _ -> 
-      mk_Exp_meta(Meta_desugared(mk_exp_app (fvar l (range_of_lid l)) args, Data_app))
+      mk_Exp_meta(Meta_desugared(mk_exp_app (fvar true l (range_of_lid l)) args, Data_app))
 
 let mangle_field_name x = mk_ident("^fname^" ^ x.idText, x.idRange) 
 let unmangle_field_name x = 

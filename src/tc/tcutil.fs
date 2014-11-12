@@ -179,7 +179,7 @@ let pat_as_exps env p =
                     let env = b' |> List.fold_left Env.push_local_binding env in
                     env, b'::b, w'::w, o'::o, arg::args) (env, [], [], [], []) in
 
-               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar fv.v fv.p, List.rev args) tun p.p, Data_app)) in
+               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, List.rev args) tun p.p, Data_app)) in
                List.rev b |> List.flatten, 
                List.rev w |> List.flatten, 
                List.rev o |> List.flatten, 
@@ -690,7 +690,7 @@ let refine_data_type env l (formals:binders) (result_t:typ) =
        let r = range_of_lid l in 
        let formals, args = Util.args_of_binders formals in
        let basic_t = mk_Typ_fun(formals, mk_Total result_t) ktype r in
-       let v = mk_Exp_app({Util.fvar l r with tk=basic_t}, args) result_t r in
+       let v = mk_Exp_app({Util.fvar true l r with tk=basic_t}, args) result_t r in
        mk_Typ_fun(formals, return_value env result_t v) ktype r
        
 let maybe_instantiate env e t = 

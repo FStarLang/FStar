@@ -447,7 +447,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       begin match op_as_vlid env (List.length args) top.range s with
         | None -> raise (Error("Unexpected operator: " ^ s, top.range))
         | Some l ->
-          let op = fvar l (range_of_lid l) in
+          let op = fvar false l (range_of_lid l) in
           let args = args |> List.map (fun t -> desugar_typ_or_exp env t, false) in
           setpos <| mk_exp_app op args
       end
@@ -499,12 +499,12 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
                              begin match sc.n, p'.v with 
                                 | Exp_bvar _, _ -> 
                                   let tup = Util.mk_tuple_data_lid 2 top.range in
-                                  let sc = Syntax.mk_Exp_app(Util.fvar tup top.range, [varg sc; varg <| Util.bvar_to_exp b]) tun top.range in
+                                  let sc = Syntax.mk_Exp_app(Util.fvar true tup top.range, [varg sc; varg <| Util.bvar_to_exp b]) tun top.range in
                                   let p = withinfo (Pat_cons(Util.fv tup, [p';p])) (Inr tun) (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | Exp_app(_, args), Pat_cons(_, pats) ->
                                   let tup = Util.mk_tuple_data_lid (1 + List.length args) top.range in
-                                  let sc = Syntax.mk_Exp_app(Util.fvar tup top.range, args@[(varg <| Util.bvar_to_exp b)]) tun top.range in 
+                                  let sc = Syntax.mk_Exp_app(Util.fvar true tup top.range, args@[(varg <| Util.bvar_to_exp b)]) tun top.range in 
                                   let p = withinfo (Pat_cons(Util.fv tup, pats@[p])) (Inr tun) (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | _ -> failwith "Impossible"
@@ -517,7 +517,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
     | App({tm=Var a}, arg, _) when (lid_equals a Const.assert_lid
                                    || lid_equals a Const.assume_lid) ->
       let phi = desugar_formula env arg in
-      pos <| mk_Exp_app(fvar a (range_of_lid a), 
+      pos <| mk_Exp_app(fvar false a (range_of_lid a), 
                         [targ <| phi;
                          varg <| mk_Exp_constant(Const_unit) tun top.range])
 
@@ -1068,7 +1068,7 @@ let mk_simple_projectors env lid formals tconstr =
                 let sigs = [Sig_val_decl(field_name, t, [Assumption; Logic; Projector(lid, Inr y)], range_of_lid field_name)] in
                 let subst = if Util.set_mem x freevs.fxvs
                             then subst
-                            else Inr(x.v, mk_exp_app (fvar field_name (range_of_lid field_name)) (freeterms@[varg <| formal_exp]))::subst in
+                            else Inr(x.v, mk_exp_app (fvar false field_name (range_of_lid field_name)) (freeterms@[varg <| formal_exp]))::subst in
                 projectors (data_ops@sigs) subst rest (i + 1) in
        
     projectors [] [] formals 0
@@ -1080,7 +1080,7 @@ let mk_indexed_projectors env (tc, tps, k) lid (formals:list<binder>) t =
         let arg_typ = mk_Typ_app(Util.ftv tc kun, Util.args_of_non_null_binders binders) kun p in
         let x = Util.gen_bvar arg_typ in 
         let disc_name = Util.mk_discriminator lid in
-        v_binder <| (Util.gen_bvar <| mk_Typ_refine(x, Util.b2t(mk_Exp_app(Util.fvar disc_name p, [varg <| Util.bvar_to_exp x]) tun p)) kun p) in
+        v_binder <| (Util.gen_bvar <| mk_Typ_refine(x, Util.b2t(mk_Exp_app(Util.fvar false disc_name p, [varg <| Util.bvar_to_exp x]) tun p)) kun p) in
       
     let binders = binders@[arg_binder] in
     let arg = Util.arg_of_non_null_binder arg_binder in
@@ -1092,7 +1092,7 @@ let mk_indexed_projectors env (tc, tps, k) lid (formals:list<binder>) t =
 
         | Inr x ->
             let field_name, _ = Util.mk_field_projector_name lid x i in
-            let proj = mk_Exp_app(Util.fvar field_name p, [arg]) tun p in
+            let proj = mk_Exp_app(Util.fvar false field_name p, [arg]) tun p in
             (Inr (x.v, proj))) in
 
     formals |> List.mapi (fun i ax -> match fst ax with 
