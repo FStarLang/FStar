@@ -30,6 +30,7 @@ let e_bin_prio_op1    = (30, Infix Left)
 let e_bin_prio_op2    = (40, Infix Left)
 let e_bin_prio_op3    = (50, Infix Left)
 let e_bin_prio_op4    = (60, Infix Left)
+let e_bin_prio_comb   = (70, Infix Left)
 let e_bin_prio_seq    = (100, Infix Left)
 let e_app_prio        = (10000, Infix Left)
 
@@ -41,9 +42,12 @@ let infix_prim_ops = [
     ("op_Addition"       , e_bin_prio_op1   , "+" );
     ("op_Subtraction"    , e_bin_prio_op1   , "-" );
     ("op_Equality"       , e_bin_prio_eq    , "=" );
+    ("op_ColonEquan"     , e_bin_prio_eq    , ":=");
     ("op_disEquality"    , e_bin_prio_eq    , "<>");
     ("op_AmpAmp"         , e_bin_prio_and   , "&&");
     ("op_BarBar"         , e_bin_prio_or    , "||");
+    ("op_pipe_left"      , e_bin_prio_comb  , "<|");
+    ("op_pipe_right"     , e_bin_prio_comb  , "|>");
 
     ("op_LessThanOrEqual"   , e_bin_prio_order , "<=");
     ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
@@ -53,7 +57,7 @@ let infix_prim_ops = [
 
 (* -------------------------------------------------------------------- *)
 let is_prims_ns (ns : list<mlsymbol>) =
-    ns = ["Prims"]
+    ns = ["Fstar"; "Support"; "Prims"]
 
 (* -------------------------------------------------------------------- *)
 let as_bin_op ((ns, x) : mlpath) =
@@ -454,7 +458,7 @@ let doc_of_mod (m : mlmodule) =
 (* -------------------------------------------------------------------- *)
 let rec doc_of_mllib_r (MLLib mllib : mllib) =
     let rec for1_sig (x, sigmod, MLLib sub) =
-        let head = reduce1 [text "module"; text "type"; text x; text ":"; text "sig"] in
+        let head = reduce1 [text "module"; text x; text ":"; text "sig"] in
         let tail = reduce1 [text "end"] in
         let doc  = Option.map (fun (s, _) -> doc_of_sig s) sigmod in
         let sub  = List.map for1_sig sub in
@@ -468,11 +472,13 @@ let rec doc_of_mllib_r (MLLib mllib : mllib) =
             reduce sub;
             cat tail hardline;
         ]
-    and for1_mod (x, sigmod, MLLib sub) =
-        let head = reduce1 [text "module"; text x; text "="; text "struct"] in
+    and for1_mod istop (x, sigmod, MLLib sub) =
+        let head = reduce1 (if   not istop
+                            then [text "module"; text x; text "="; text "struct"]
+                            else [text "struct"]) in
         let tail = reduce1 [text "end"] in
         let doc  = Option.map (fun (_, m) -> doc_of_mod m) sigmod in
-        let sub  = List.map for1_mod sub in
+        let sub  = List.map (for1_mod false) sub in
         let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
 
         reduce [
@@ -486,20 +492,11 @@ let rec doc_of_mllib_r (MLLib mllib : mllib) =
 
     in
 
-    let sigs, mods = List.map for1_sig mllib, List.map for1_mod mllib in
-    let sigs = List.map (fun x -> reduce [x; hardline; hardline]) sigs in
-    let mods = List.map (fun x -> reduce [x; hardline; hardline]) mods in
+    let docs = List.combine (List.map for1_sig mllib) (List.map (for1_mod true) mllib) in
+    let docs = List.map (fun (sig_, mod_) -> reduce [sig_; text "="; mod_; hardline]) docs in
 
-    match sigs, mods with
-    | [], [] -> empty
-    | [], _ | _, [] -> failwith "impos"
-    | _, _ -> reduce [
-        reduce sigs;
-        reduce [text "="; hardline];
-        reduce mods;
-    ]
+    reduce docs
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mllib mllib =
-    let doc = doc_of_mllib_r mllib in
-    reduce [reduce1 [text "include"; text "FStar.Support"; hardline]; hardline; doc]
+    doc_of_mllib_r mllib
