@@ -193,6 +193,13 @@ let rec free_in_context x e g =
 
   | _ -> ()
 
+(* Corollary of free_in_context -- fed to the SMT solver *)
+val typable_empty_closed : x:int -> e:exp -> Lemma
+      (requires (is_Some (typing e empty) /\ appears_free_in x e))
+      (ensures False)
+      ([VPat (appears_free_in x e)])
+let typable_empty_closed x e = free_in_context x e empty
+
 opaque logic type Equal (g1:env) (g2:env) = 
                  (forall (x:int). g1 x=g2 x)
 opaque logic type EqualE (e:exp) (g1:env) (g2:env) = 
@@ -223,13 +230,6 @@ val typing_extensional : g:env -> g':env -> e:exp
                            (requires (Equal g g'))
                            (ensures (typing e g == typing e g'))
 let typing_extensional g g' e = context_invariance e g g' 
-                        
-(* Corollary of free_in_context *)
-val typable_empty_closed : x:int -> e:exp -> Lemma
-      (requires (is_Some (typing e empty) /\ appears_free_in x e))
-      (ensures False)
-      ([VPat (appears_free_in x e)])
-let typable_empty_closed x e = free_in_context x e empty
 
 val substitution_preserves_typing :
       x:int -> t_x:ty -> e:exp -> t_e:ty -> v:exp -> g1:env -> g2:env 
