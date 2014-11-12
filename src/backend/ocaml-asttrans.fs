@@ -197,6 +197,7 @@ let as_tprims (id : lident) : option<tprims> =
         | "Tuple4" -> Some (Tuple 4)
         | "Tuple5" -> Some (Tuple 5)
         | "Tuple6" -> Some (Tuple 6)
+        | "Tuple7" -> Some (Tuple 7)
         | "exn"    -> Some Exn
         | _        -> None
     else
@@ -211,22 +212,36 @@ let is_xtuple (x : lident) =
         | "MkTuple4" -> Some 4
         | "MkTuple5" -> Some 5
         | "MkTuple6" -> Some 6
+        | "MkTuple7" -> Some 7
         | _          -> None
     else
         None
 
 (* -------------------------------------------------------------------- *)
 let is_etuple (e : exp) =
-    let rec aux e =
-        match (Absyn.Util.compress_exp e).n with
-        | Exp_app({n=Exp_fvar (x, _)}, args) ->
-            begin match is_xtuple x.v with
-            | Some k when k = List.length args -> Some k
-            | _ -> None
-            end
+    match (Absyn.Util.compress_exp e).n with
+    | Exp_app({n=Exp_fvar (x, _)}, args) ->
+        let args = List.collect (function (Inl _, _) -> [] | Inr e, _ -> [e]) args in
+        begin match is_xtuple x.v with
+        | Some k when k = List.length args -> Some k
         | _ -> None
-    in aux e
+        end
+    | _ -> None
 
+(* -------------------------------------------------------------------- *)
+let is_ptuple (p : pat) =
+    match p.v with
+    | Pat_cons (x, args) ->
+        let args = args |> List.collect (fun p -> match p.v with 
+            | Pat_dot_term _ | Pat_dot_typ _ -> []
+            | _ -> [p])
+        in
+        begin match is_xtuple x.v with
+        | Some k -> if k = List.length args then Some k else None
+        | _ -> None
+        end
+    | _ -> None
+    
 (* -------------------------------------------------------------------- *)
 let mlconst_of_const (rg : range) (sctt : sconst) =
   match sctt with
@@ -415,21 +430,19 @@ let mlscheme_of_ty (mlenv : mlenv) (rg : range) (ty : typ) : mltyscheme =
 (* -------------------------------------------------------------------- *)
 let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
     match p.v with
-    | Pat_cons (x, ps) when is_xtuple x.v = Some (List.length ps) ->
+    | Pat_cons (x, ps) -> begin
         let ps = ps |> List.filter (fun p -> match p.v with 
             | Pat_dot_term _ | Pat_dot_typ _ -> false
             | _ -> true)
         in
-        let lenv, ps = Util.fold_map (fun lenv pat -> mlpat_of_pat mlenv pat.p lenv pat) lenv ps in
-        (lenv, MLP_Tuple ps)
 
-    | Pat_cons (x, ps) ->
-        let ps = ps |> List.filter (fun p -> match p.v with 
-            | Pat_dot_term _ | Pat_dot_typ _ -> false
-            | _ -> true)
-        in
-        let lenv, ps = Util.fold_map (mlpat_of_pat mlenv rg) lenv ps in
-        (lenv, MLP_CTor (mlpath_of_lident mlenv x.v, ps))
+        if is_xtuple x.v = Some (List.length ps) then
+            let lenv, ps = Util.fold_map (fun lenv pat -> mlpat_of_pat mlenv pat.p lenv pat) lenv ps in
+            (lenv, MLP_Tuple ps)
+        else
+            let lenv, ps = Util.fold_map (mlpat_of_pat mlenv rg) lenv ps in
+            (lenv, MLP_CTor (mlpath_of_lident mlenv x.v, ps))
+    end
 
     | Pat_var x ->
         let lenv, mlid = lpush lenv x.v.realname x.v.ppname in
@@ -456,16 +469,17 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
     let e = Absyn.Util.compress_exp e in
 
     match e.n with
-    | Exp_app(e, args) when is_etuple e = Some (List.length args) ->
-        let args = List.collect (function Inl _, _ -> [] | Inr e, _ -> [mlexpr_of_expr mlenv rg lenv e]) args in
-        MLE_Tuple args
+    | Exp_app(sube, args) -> begin
+        match is_etuple e with
+        | Some k ->
+            let args = List.collect (function Inl _, _ -> [] | Inr e, _ -> [mlexpr_of_expr mlenv rg lenv e]) args in
+            MLE_Tuple args
+        | _ ->
+            let args = List.collect (function (Inl _, _) -> [] | Inr e, _ -> [mlexpr_of_expr mlenv rg lenv e]) args in
 
-    | Exp_app(e, args) when not (List.isEmpty args) -> begin
-        let args = List.collect (function (Inl _, _) -> [] | Inr e, _ -> [mlexpr_of_expr mlenv rg lenv e]) args in
-
-        match e with
-        | { n = Exp_fvar (c, true) } -> MLE_CTor (mlpath_of_lident mlenv c.v, args)
-        | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv e, args)
+            match sube with
+            | { n = Exp_fvar (c, true) } -> MLE_CTor (mlpath_of_lident mlenv c.v, args)
+            | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args)
     end
 
     | _ -> begin

@@ -30,6 +30,7 @@ let e_bin_prio_op1    = (30, Infix Left)
 let e_bin_prio_op2    = (40, Infix Left)
 let e_bin_prio_op3    = (50, Infix Left)
 let e_bin_prio_op4    = (60, Infix Left)
+let e_bin_prio_comb   = (70, Infix Left)
 let e_bin_prio_seq    = (100, Infix Left)
 let e_app_prio        = (10000, Infix Left)
 
@@ -41,9 +42,12 @@ let infix_prim_ops = [
     ("op_Addition"       , e_bin_prio_op1   , "+" );
     ("op_Subtraction"    , e_bin_prio_op1   , "-" );
     ("op_Equality"       , e_bin_prio_eq    , "=" );
+    ("op_ColonEquan"     , e_bin_prio_eq    , ":=");
     ("op_disEquality"    , e_bin_prio_eq    , "<>");
     ("op_AmpAmp"         , e_bin_prio_and   , "&&");
     ("op_BarBar"         , e_bin_prio_or    , "||");
+    ("op_pipe_left"      , e_bin_prio_comb  , "<|");
+    ("op_pipe_right"     , e_bin_prio_comb  , "|>");
 
     ("op_LessThanOrEqual"   , e_bin_prio_order , "<=");
     ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
@@ -53,7 +57,7 @@ let infix_prim_ops = [
 
 (* -------------------------------------------------------------------- *)
 let is_prims_ns (ns : list<mlsymbol>) =
-    ns = ["Prims"]
+    ns = ["Fstar"; "Support"; "Prims"]
 
 (* -------------------------------------------------------------------- *)
 let as_bin_op ((ns, x) : mlpath) =
@@ -495,5 +499,4 @@ let rec doc_of_mllib_r (MLLib mllib : mllib) =
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mllib mllib =
-    let doc = doc_of_mllib_r mllib in
-    reduce [reduce1 [text "include"; text "Fstar.Support"; hardline]; hardline; doc]
+    doc_of_mllib_r mllib
