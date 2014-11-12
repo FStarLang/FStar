@@ -46,8 +46,8 @@ let infix_prim_ops = [
     ("op_disEquality"    , e_bin_prio_eq    , "<>");
     ("op_AmpAmp"         , e_bin_prio_and   , "&&");
     ("op_BarBar"         , e_bin_prio_or    , "||");
-    ("op_pipe_left"      , e_bin_prio_comb  , "<|");
-    ("op_pipe_right"     , e_bin_prio_comb  , "|>");
+    ("pipe_left"         , e_bin_prio_comb  , "<|");
+    ("pipe_right"        , e_bin_prio_comb  , "|>");
 
     ("op_LessThanOrEqual"   , e_bin_prio_order , "<=");
     ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
