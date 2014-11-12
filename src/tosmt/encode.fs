@@ -191,6 +191,11 @@ let push_free_var env (x:lident) fname ftok =
     {env with bindings=Binding_fvar(x, fname, ftok)::env.bindings}
 let lookup_free_var env a = lookup_lid env a.v |> snd
 let lookup_free_var_name env a = lookup_lid env a.v |> fst
+let lookup_free_var_sym env a = 
+    let name, sym = lookup_lid env a.v in
+    match sym.tm with 
+        | App(g, [fuel]) -> g, [fuel]
+        | _ -> name, []
 
 (* Qualified type names *)
 let gen_free_tvar (env:env_t) (x:lident) =
@@ -594,8 +599,8 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
             mk_ApplyE_args head args, vars'@vars, decls@decls' in
 
         let encode_full_app fv = 
-            let fname = lookup_free_var_name env fv in
-            let tm = Term.mkApp(fname, List.map (function Inl t | Inr t -> t) args) in
+            let fname, fuel_args = lookup_free_var_sym env fv in
+            let tm = Term.mkApp(fname, fuel_args@List.map (function Inl t | Inr t -> t) args) in
             tm, vars, decls in
         
         let head = Util.compress_exp head in
@@ -1167,6 +1172,45 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let eqn = Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(app, body))), Some (Util.format1 "Equation for %s" flid.str)) in
         decls@binder_decls@decls2@[eqn], env
      
+     | Sig_let((true, [(Inr flid, t1, e)]), _, _) ->
+        if Util.is_lemma t1 then encode_lemma env flid t1, env else
+        let t1_norm = whnf env t1 in
+        if not (Util.is_pure_function t1) then [], env  else
+        let (f, ftok), decls, env = declare_top_level_let env flid t1 t1_norm in
+        let g = varops.new_fvar flid in
+        let fuel = varops.fresh "fuel", Term_sort in
+        let fuel_tm = mkBoundV fuel in
+        let env0 = env in 
+        let env = push_free_var env flid g (Term.mkApp(g, [fuel_tm])) in
+        let e = Util.compress_exp e in
+       
+        let binders, body = match e.n with
+            | Exp_abs(binders, body) -> 
+                let t1_norm = Util.compress_typ t1_norm in
+                begin match t1_norm.n with 
+                 | Typ_fun(bs', c) -> 
+                    if List.length bs' = List.length binders
+                    then binders, 
+                         body
+                    else failwith "NYI"
+                 | _ -> 
+                     failwith (Util.format3 "Impossible! let-bound lambda %s = %s has a type that's not a function: %s\n" flid.str (Print.exp_to_string e) (Print.typ_to_string t1_norm))
+                end
+            | _ -> failwith "NYI" in
+
+        let vars, guards, env', binder_decls, _ = encode_binders false binders env in
+        let vars_tm = List.map mkBoundV vars in
+        let app = Term.mkApp(f, vars_tm) in 
+        let gapp = Term.mkApp(g, Term.mkApp("SFuel", [fuel_tm])::vars_tm) in
+        let gmax = Term.mkApp(g, Term.mkFreeV("MaxFuel", Term_sort)::vars_tm) in
+        let body, ex_vars, decls2 = encode_exp body env' in
+        let decl_g = Term.DeclFun(g, Term_sort::List.map snd vars, Term_sort, Some "Fuel-instrumented function name") in
+        let eqn_g = Term.Assume(mkForall([gapp], fuel::vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(gapp, body))), Some (Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.str)) in
+        let eqn_f = Term.Assume(mkForall([app], vars, mkEq(app, gmax)), Some "Correspondence of recursive function to instrumented version") in
+        let eqn_g' = Term.Assume(mkForall([gapp], fuel::vars, mkEq(gapp,  Term.mkApp(g, mkBoundV fuel::vars_tm))), Some "Fuel irrelevance") in
+        decls@binder_decls@decls2@[decl_g;eqn_g;eqn_g';eqn_f], env0
+    
+      
 
     | Sig_let((is_rec, [(Inr flid, t, e)]), _, _) ->
       (* only encoding recursive pure functions defined immediately by cases on some subset of the arguments 
@@ -1549,7 +1593,9 @@ let solve tcenv q =
                     @env_decls
                     @label_prefix
                     @qdecls
-                    @[Term.Caption "<Query>"; Term.Assume(mkNot phi, Some "query"); Term.Caption "</Query>"; Term.CheckSat]
+                    @[Term.Caption "<Query>"; 
+                      Term.Assume(mkEq(mkFreeV("MaxFuel", Term_sort), n_fuel 4), None);
+                      Term.Assume(mkNot phi, Some "query"); Term.Caption "</Query>"; Term.CheckSat]
                     @label_suffix
                     @[Term.Echo "Done!"] in
         decls, labels in

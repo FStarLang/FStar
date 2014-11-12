@@ -160,3 +160,6 @@ val mk_Precedes: term -> term -> term
 val mk_LexPair: term -> term -> term
 val freeV_sym: term -> string
 val boundV_sym:term -> string
+val fuel_2: term
+val fuel_100:term
+val n_fuel: int -> term
