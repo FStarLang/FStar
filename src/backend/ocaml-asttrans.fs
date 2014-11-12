@@ -763,17 +763,49 @@ let rec mllib_add (MLLib mllib : mllib) ((path : mlpath), sig_, mod_) =
         let rec aux = function
         | [] ->
             let sub = mllib_add mllib_empty (subpath, sig_, mod_) in
-            [snd path, Some (sig_, mod_), sub]
+            [x, None, sub]
         | ((name, sigmod, sublibs) as the) :: tl ->
-            if name = snd path then
-                (name, sigmod, mllib_add sublibs (subpath, sig_, mod_)) :: tl
+            if name = x then
+                let aout = (name, sigmod, mllib_add sublibs (subpath, sig_, mod_)) in
+                aout :: tl
             else
                 the :: (aux tl)
                 
         in MLLib (aux mllib)
 
 (* -------------------------------------------------------------------- *)
+let outmod = [
+    ["System"];
+    ["ST"];
+    ["Option"];
+    ["String"];
+    ["List"];
+    ["Diagnostic"];
+    ["Collections"];
+    ["Microsoft"; "FStar"; "Backends"];
+    ["Microsoft"; "FStar"; "Bytes"];
+    ["Microsoft"; "FStar"; "Platform"];
+    ["Microsoft"; "FStar"; "Util"];
+    ["Microsoft"; "FStar"; "Getopt"];
+    ["FSharp"; "Format"];
+]
+
 let mlmod_of_fstars (fmods : list<modul>) =
     let fmods = List.map mlmod_of_fstar fmods in
-    List.fold mllib_add mllib_empty fmods
-    
+    let for1 mllib ((path, sig_, mod_) as the) =
+        let modname = (fst path) @ [snd path] in
+        let rec checkname modname fbd =
+            match modname, fbd with
+            | _, [] -> true
+            | (x1 :: t1), (x2 :: t2) when x1 = x2 -> checkname t1 t2
+            | _ -> false
+        in
+
+        let aout =
+            if List.exists (checkname ((fst path) @ [snd path])) outmod then
+                mllib
+            else
+                mllib_add mllib the
+        in aout
+
+    in List.fold for1 mllib_empty fmods

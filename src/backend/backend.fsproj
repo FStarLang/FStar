@@ -55,8 +55,6 @@
     <Compile Include="ocaml-asttrans.fs" />
     <Compile Include="ocaml-codegen.fsi" />
     <Compile Include="ocaml-codegen.fs" />
-    <Compile Include="ocaml.fsi" />
-    <Compile Include="ocaml.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\absyn\absyn.fsproj">

@@ -392,8 +392,14 @@ let doc_of_mltydecl (decls : mltydecl) =
     doc
 
 (* -------------------------------------------------------------------- *)
-let doc_of_sig1 (s : mlsig1) =
+let rec doc_of_sig1 (s : mlsig1) =
     match s with
+    | MLS_Mod (x, subsig) ->
+        combine hardline
+            [reduce1 [text "module"; text x; text "="];
+             doc_of_sig subsig;
+             reduce1 [text "end"]]
+
     | MLS_Exn (x, []) ->
         reduce1 [text "exception"; text x]
 
@@ -408,6 +414,12 @@ let doc_of_sig1 (s : mlsig1) =
 
     | MLS_Ty decls ->
         doc_of_mltydecl decls
+
+(* -------------------------------------------------------------------- *)
+and doc_of_sig (s : mlsig) =
+    let docs = List.map doc_of_sig1 s in
+    let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
+    reduce docs
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mod1 (m : mlmodule1) =
@@ -434,42 +446,60 @@ let doc_of_mod1 (m : mlmodule1) =
         ]
 
 (* -------------------------------------------------------------------- *)
-let doc_of_sig (s : mlsig) =
-    let docs = List.map doc_of_sig1 s in
-    let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
-    reduce docs
-
-(* -------------------------------------------------------------------- *)
 let doc_of_mod (m : mlmodule) =
     let docs = List.map doc_of_mod1 m in
     let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
     reduce docs
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_mllib (MLLib mllib : mllib) =
-    let for1 (x, sigmod, sub) =
-        let head = reduce1 [text "module"; text x; text ":"; text "sig"] in
-        let mid  = reduce1 [text "end"; text "="; text "struct"] in
+let rec doc_of_mllib_r (MLLib mllib : mllib) =
+    let rec for1_sig (x, sigmod, MLLib sub) =
+        let head = reduce1 [text "module"; text "type"; text x; text ":"; text "sig"] in
         let tail = reduce1 [text "end"] in
-        let doc  = Option.map (fun (s, m) -> (doc_of_sig s, doc_of_mod m)) sigmod in
-        let sub  = doc_of_mllib sub in
+        let doc  = Option.map (fun (s, _) -> doc_of_sig s) sigmod in
+        let sub  = List.map for1_sig sub in
+        let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
 
         reduce [
             cat head hardline;
             (match doc with
-             | None        -> empty
-             | Some (s, m) -> reduce [
-                    cat s   hardline;
-                    cat mid hardline;
-                    cat m   hardline;
-                ]);
-            sub;
+             | None   -> empty
+             | Some s -> cat s hardline);
+            reduce sub;
             cat tail hardline;
         ]
+    and for1_mod (x, sigmod, MLLib sub) =
+        let head = reduce1 [text "module"; text x; text "="; text "struct"] in
+        let tail = reduce1 [text "end"] in
+        let doc  = Option.map (fun (_, m) -> doc_of_mod m) sigmod in
+        let sub  = List.map for1_mod sub in
+        let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
+
+        reduce [
+            cat head hardline;
+            (match doc with
+             | None   -> empty
+             | Some s -> cat s hardline);
+            reduce sub;
+            cat tail hardline;
+        ]
+
     in
 
-    let docs = List.map for1 mllib in
-    let docs = List.map (fun x -> reduce [x; hardline; hardline]) docs in
+    let sigs, mods = List.map for1_sig mllib, List.map for1_mod mllib in
+    let sigs = List.map (fun x -> reduce [x; hardline; hardline]) sigs in
+    let mods = List.map (fun x -> reduce [x; hardline; hardline]) mods in
 
-    reduce docs
+    match sigs, mods with
+    | [], [] -> empty
+    | [], _ | _, [] -> failwith "impos"
+    | _, _ -> reduce [
+        reduce sigs;
+        reduce [text "="; hardline];
+        reduce mods;
+    ]
 
+(* -------------------------------------------------------------------- *)
+let doc_of_mllib mllib =
+    let doc = doc_of_mllib_r mllib in
+    reduce [reduce1 [text "include"; text "FStar.Support"; hardline]; hardline; doc]

@@ -88,11 +88,12 @@ type mlmodule1 =
 type mlmodule = list<mlmodule1>
 
 type mlsig1 =
+| MLS_Mod of mlsymbol * mlsig
 | MLS_Ty  of mltydecl
 | MLS_Val of mlsymbol * mltyscheme
 | MLS_Exn of mlsymbol * list<mlty>
 
-type mlsig = list<mlsig1>
+and mlsig = list<mlsig1>
 
 (* -------------------------------------------------------------------- *)
 type mllib = 
