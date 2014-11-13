@@ -223,7 +223,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
          else
            ptctor ctor in
         let args = List.map (doc_of_expr (min_op_prec, NonAssoc)) args in
-        reduce1 [text name; parens (combine (text ", ") args)]
+        maybe_paren outer e_app_prio (reduce1 [text name; parens (combine (text ", ") args)])
 
     | MLE_Tuple es ->
         let docs = List.map (doc_of_expr (min_op_prec, NonAssoc)) es in
@@ -335,7 +335,7 @@ and doc_of_pattern (pattern : mlpattern) : doc =
            snd (Option.get (as_standard_constructor ctor))
          else
            ptctor ctor in
-        reduce1 [text name; parens (combine (text ", ") ps)]
+       maybe_paren (min_op_prec, NonAssoc) e_app_prio (reduce1 [text name; parens (combine (text ", ") ps)])
 
     | MLP_Tuple ps ->
         let ps = List.map doc_of_pattern ps in
