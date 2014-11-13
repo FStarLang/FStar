@@ -1126,9 +1126,12 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     | Term_sort -> [Term.mk_Precedes (mkBoundV v) dapp]) in
                 [Term.Assume(mkForall([ty_pred], vars, mkImp(guard, mk_and_l prec)), Some "subterm ordering")] in
 
+        let tok_typing, decls3 = encode_typ_pred' true t env ddtok in
         let g = binder_decls
                 @decls2
+                @decls3
                 @[Term.DeclFun(Term.freeV_sym ddtok, [], Term_sort, Some (format1 "data constructor proxy: %s" (Print.sli d)));
+                  Term.Assume(tok_typing, Some "typing for data constructor proxy"); 
                   Term.Assume(mkForall([app], vars, 
                                        mkEq(app, dapp)), Some "equality for proxy");
                   Term.Assume(mkForall([ty_pred], vars, mkIff(guard, ty_pred)), Some "data constructor typing")]
@@ -1145,8 +1148,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     | Sig_let((is_rec, [(Inr flid, t1, e)]), _, _) when not is_rec -> 
         if Util.is_lemma t1 then encode_lemma env flid t1, env else
         let t1_norm = whnf env t1 in
-        if not (Util.is_pure_function t1) then [], env  else
         let (f, ftok), decls, env = declare_top_level_let env flid t1 t1_norm in
+        if not (Util.is_pure_function t1_norm) 
+        then decls, env  else
         let e = Util.compress_exp e in
         let fapp, binders, body = match e.n with
             | Exp_abs(binders, body) -> 
@@ -1174,8 +1178,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_let((true, [(Inr flid, t1, e)]), _, _) ->
         if Util.is_lemma t1 then encode_lemma env flid t1, env else
         let t1_norm = whnf env t1 in
-        if not (Util.is_pure_function t1) then [], env  else
         let (f, ftok), decls, env = declare_top_level_let env flid t1 t1_norm in
+        if not (Util.is_pure_function t1_norm) then decls, env  else
         let g = varops.new_fvar flid in
         let fuel = varops.fresh "fuel", Term_sort in
         let fuel_tm = mkBoundV fuel in
@@ -1279,7 +1283,13 @@ and encode_lemma env lid t =
 
 and encode_free_var env lid tt t_norm quals = 
     if not <| Util.is_pure_function t_norm || Util.is_lemma t_norm
-    then [], env
+    then let vname, vtok, env = gen_free_var env lid in
+         let arg_sorts = match t_norm.n with 
+            | Typ_fun(binders, _) -> binders |> List.map (function (Inl _, _) -> Type_sort | _ -> Term_sort) 
+            | _ -> [] in
+         let d = Term.DeclFun(vname, arg_sorts, Term_sort, Some "Uninterpreted function symbol for impure function or lemma") in
+         let dd = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, Some "Uninterpreted name for impure function or lemma") in
+         [d;dd], env
     else let formals, res = match Util.function_formals t_norm with 
             | Some (args, comp) -> args, Util.comp_result comp 
             | None -> [], t_norm in

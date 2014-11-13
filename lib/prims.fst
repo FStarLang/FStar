@@ -77,7 +77,6 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
               (*     Pure a (wp (fun a -> True)) (fun a -> wlp (fun a' -> a==a')) *)
               and Tot (a:Type) =
                 PURE a (fun (p:Post a) -> (forall (x:a). p x)) (fun (p:Post a) -> (forall (x:a). p x))
-              and Fact (res:Type) (p:Type) = Pure res True (fun r -> p)
 
 }
 open Prims.PURE
@@ -109,8 +108,9 @@ type pattern =
   | VPat : 'a:Type -> 'a -> pattern
   | TPat : 'a:Type -> pattern
 
+effect Fact (_res:Type) (p:Type) = Pure _res True (fun r -> p)
 effect Lemma (_a:Type) (pre:Type) (post:Type) (pats:list pattern) = Pure unit pre (fun r -> post)
-effect Theorem (res:Type) (pre:Type) (post:Type) = Pure res pre (fun r -> post)
+effect Theorem (_res:Type) (pre:Type) (post:Type) = Pure _res pre (fun r -> post)
 
 type option (a:Type) =
   | None : option a

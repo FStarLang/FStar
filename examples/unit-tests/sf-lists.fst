@@ -209,9 +209,7 @@ let rec snoc_app l h = match l with
 val rev_app: tl:ilist -> hd:int -> Fact unit (rev (Cons hd tl) = app (rev tl) (Cons hd Nil))
 let rev_app tl hd = snoc_app (rev tl) hd
 
-let g x l = Cons x l
-
-val fold_left_cons_is_rev: l:ilist -> l':ilist -> Fact unit (fold_left g l l' = app (rev l) l')
+val fold_left_cons_is_rev: l:ilist -> l':ilist -> Fact unit (fold_left Cons l l' = app (rev l) l')
 let rec fold_left_cons_is_rev l l' = match l with
   | Nil -> ()
   | Cons hd tl ->
