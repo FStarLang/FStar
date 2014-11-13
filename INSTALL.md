@@ -43,3 +43,28 @@ At the moment:
           $ source setenv.sh
           $ mono bin/fstar.exe --prims lib/prims.fst examples/unit-tests/utils.fst
           $ mono bin/fstar.exe --prims lib/prims.fst examples/unit-tests/rec.fst
+
+
+# To build the OCaml backend
+
+1. Install opam, initialize it (opam init) and update the path to
+   ocamlfind and the ocaml libraries
+2. Install the following libraries:
+     batteries camlp4 conf-gmp cstruct ctypes fileutils menhir oasis
+     ocaml-data-notation ocamlfind ocamlify ocamlmod ocplib-endian optcomp
+     ounit sexplib sqlite3-ocaml type_conv zarith
+   (opam install [...])
+3. Compile and install the 3rdparty tools (in
+   src/support/ocaml/3rdparty):
+     git submodule init
+     git submodule update
+     make
+4. Compile and install the fstar-lib (in src/support/ocaml/fstar-lib):
+     ./autogen.sh
+     ./configure
+     make
+     make install
+5. Generate the backend (in src):
+     make ocaml
+6. Compile it:
+     ocamlfind ocamlc -package fstar ocaml.ml
