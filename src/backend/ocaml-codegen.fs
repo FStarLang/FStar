@@ -320,12 +320,22 @@ and doc_of_pattern (pattern : mlpattern) : doc =
         let for1 (name, p) = reduce1 [text name; text "="; doc_of_pattern p] in
         brackets (combine (text "; ") (List.map for1 fields))
 
-    | MLP_CTor (p, []) ->
-        text (ptctor p)
+    | MLP_CTor (ctor, []) ->
+       let name =
+         if is_standard_constructor ctor then
+           snd (Option.get (as_standard_constructor ctor))
+         else
+           ptctor ctor in
+        text name
 
-    | MLP_CTor (p, ps) ->
+    | MLP_CTor (ctor, ps) ->
         let ps = List.map doc_of_pattern ps in
-        reduce1 [text (ptctor p); parens (combine (text ", ") ps)]
+       let name =
+         if is_standard_constructor ctor then
+           snd (Option.get (as_standard_constructor ctor))
+         else
+           ptctor ctor in
+        reduce1 [text name; parens (combine (text ", ") ps)]
 
     | MLP_Tuple ps ->
         let ps = List.map doc_of_pattern ps in

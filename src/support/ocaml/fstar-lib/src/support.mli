@@ -5,6 +5,11 @@ module Prims : sig
 end
 
 
+module ST : sig
+  val read : 'a ref -> 'a
+end
+
+
 module Microsoft : sig
   module FStar : sig
     module Util : sig

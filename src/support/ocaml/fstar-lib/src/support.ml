@@ -11,6 +11,11 @@ module Prims = struct
 end
 
 
+module ST = struct
+  let read x = !x
+end
+
+
 module Microsoft = struct
   module FStar = struct
 
