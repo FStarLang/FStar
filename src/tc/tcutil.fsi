@@ -71,3 +71,4 @@ val label_guard: string -> Range.range -> guard_t -> guard_t
 val refresh_comp_label: env -> bool -> comp -> comp
 val check_total: env -> comp -> bool * list<string>
 
+val refine_data_type: env -> lident -> binders -> typ -> typ

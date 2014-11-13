@@ -52,6 +52,11 @@ This section describes the general structure of the F* verifier.
      In order to use F*, you will need to separately download Z3 4.3.1
      binaries and place them in this directory (or somewhere in your
      path). You can fetch these binaries from z3.codeplex.com.
+
+     F* should also be compatible with any theorem prover that implements
+     the SMT2 standard (we use no Z3-specific features). So, you 
+     should be able to use another solver by passing the 
+     "--smt <path to solver exe>" option to F*.
      
      
   examples/

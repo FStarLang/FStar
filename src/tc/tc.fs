@@ -378,9 +378,10 @@ and tc_value env e : exp * comp =
     let e = mk_Exp_fvar({v with sort=t}, dc) t e.pos in
     let e, t = Tc.Util.maybe_instantiate env e t in 
     //printfn "Instantiated type of %s to %s\n" (Print.exp_to_string e) (Print.typ_to_string t);
+    let tc = if !Options.verify then Inl t else Inr (mk_Total t) in
     if dc && not(Env.is_datacon env v.v)
     then raise (Error(Util.format1 "Expected a data constructor; got %s" v.v.str, Tc.Env.get_range env))
-    else value_check_expected_typ env e (Inr (mk_Total t))
+    else value_check_expected_typ env e tc
 
   | Exp_constant c -> 
     let t = Tc.Util.typing_const env c in
@@ -1207,6 +1208,7 @@ and tc_decl env se deserialized = match se with
       let _ = match destruct result_t tname with 
         | Some _ -> ()
         | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar true lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
+      let t = Tc.Util.refine_data_type env lid formals result_t in
       let se = Sig_datacon(lid, t, tycon, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
       if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Print.typ_to_string t);

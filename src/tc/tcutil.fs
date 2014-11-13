@@ -881,3 +881,13 @@ let check_total env c : bool * list<string> =
       match Tc.Rel.sub_comp env c (Util.total_comp (Util.comp_result c) (Env.get_range env)) with 
         | Some g -> try_discharge_guard env g 
         | _ -> false, []
+
+let refine_data_type env l (formals:binders) (result_t:typ) = 
+    match formals with 
+        | [] -> result_t
+        | _ -> 
+            let r = range_of_lid l in 
+            let formals, args = Util.args_of_binders formals in
+            let basic_t = mk_Typ_fun(formals, mk_Total result_t) ktype r in
+            let v = mk_Exp_app({Util.fvar true l r with tk=basic_t}, args) result_t r in
+            mk_Typ_fun(formals, return_value env result_t v) ktype r
