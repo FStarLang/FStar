@@ -56,15 +56,22 @@ At the moment:
    (opam install [...])
 3. Compile and install the 3rdparty tools (in
    src/support/ocaml/3rdparty):
-     git submodule init
-     git submodule update
-     make
+
+         git submodule init
+         git submodule update
+         make
+
 4. Compile and install the fstar-lib (in src/support/ocaml/fstar-lib):
-     ./autogen.sh
-     ./configure
-     make
-     make install
+
+        ./autogen.sh
+        ./configure
+        make
+        make install
+
 5. Generate the backend (in src):
-     make ocaml
+
+        make ocaml
+
 6. Compile it:
-     ocamlfind ocamlc -package fstar ocaml.ml
+
+        ocamlfind ocamlc -package fstar ocaml.ml
