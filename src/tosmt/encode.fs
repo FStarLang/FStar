@@ -1147,30 +1147,52 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_let((is_rec, [(Inr flid, t1, e)]), _, _) when not is_rec -> 
         if Util.is_lemma t1 then encode_lemma env flid t1, env else
-        let t1_norm = whnf env t1 in
+        let t1_norm = whnf env t1 |> Util.compress_typ in
         let (f, ftok), decls, env = declare_top_level_let env flid t1 t1_norm in
         if not (Util.is_pure_function t1_norm) 
         then decls, env  else
         let e = Util.compress_exp e in
-        let fapp, binders, body = match e.n with
+        
+        let eta_expand binders formals body t =
+            let nbinders = List.length binders in
+            let formals, extra_formals = Util.first_N nbinders formals in
+            let subst = List.map2 (fun formal binder -> match fst formal, fst binder with 
+                | Inl a, Inl b -> Inl (a.v, Util.btvar_to_typ b) 
+                | Inr x, Inr y -> Inr (x.v, Util.bvar_to_exp y)) formals binders in
+            let extra_formals = Util.subst_binders subst extra_formals |> Util.name_binders in 
+            let body = Syntax.mk_Exp_app_flat(body, snd <| Util.args_of_binders extra_formals) (Util.subst_typ subst t) body.pos in
+            binders@extra_formals, body in
+                         
+        let binders, body = match e.n with
             | Exp_abs(binders, body) -> 
-                let t1_norm = Util.compress_typ t1_norm in
                 begin match t1_norm.n with 
-                 | Typ_fun(bs', c) -> 
-                    let nformals = List.length bs' in
-                    if nformals < List.length binders && Util.is_total_comp c (* explicit currying *)
+                 | Typ_fun(formals, c) -> 
+                    let nformals = List.length formals in
+                    let nbinders = List.length binders in
+                                        
+                    if nformals < nbinders && Util.is_total_comp c (* explicit currying *)
                     then let bs0, rest = Util.first_N nformals binders in 
                          let body = mk_Exp_abs(rest, body) (Util.comp_result c) body.pos in
-                         (fun vars -> Term.mkApp(f, List.map mkBoundV vars)), bs0, body
-                    else if nformals > List.length binders
-                    then  mk_ApplyE ftok, binders, e 
-                    else (fun vars -> Term.mkApp(f, List.map mkBoundV vars)), binders, body
+                         bs0, body
+                    
+                    else if nformals > nbinders (* eta-expand before translating it *)
+                    then let binders, body = eta_expand binders formals body (Util.comp_result c) in 
+                         binders, body
+                    
+                    else binders, body
                  | _ -> 
                      failwith (Util.format3 "Impossible! let-bound lambda %s = %s has a type that's not a function: %s\n" flid.str (Print.exp_to_string e) (Print.typ_to_string t1_norm))
                 end
-            | _ -> mk_ApplyE ftok, [], e in
+            | _ -> 
+                begin match t1_norm.n with 
+                    | Typ_fun(formals, c) -> 
+                        let binders, body = eta_expand [] formals e (Util.comp_result c) in
+                        binders, body
+                    | _ -> [], e
+                end in
+                
         let vars, guards, env', binder_decls, _ = encode_binders false binders env in
-        let app = fapp vars in
+        let app = match vars with [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkBoundV vars) in
         let body, ex_vars, decls2 = encode_exp body env' in
         let eqn = Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(app, body))), Some (Util.format1 "Equation for %s" flid.str)) in
         decls@binder_decls@decls2@[eqn], env
