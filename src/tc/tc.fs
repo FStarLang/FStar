@@ -1207,7 +1207,6 @@ and tc_decl env se deserialized = match se with
       let _ = match destruct result_t tname with 
         | Some _ -> ()
         | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar true lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
-      let t = Tc.Util.refine_data_type env lid formals result_t in
       let se = Sig_datacon(lid, t, tycon, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
       if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Print.typ_to_string t);

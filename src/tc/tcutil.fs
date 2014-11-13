@@ -683,16 +683,6 @@ let maybe_assume_result_eq_pure_term env (e:exp) (c:comp) : comp =
        let eq_ret = weaken_precondition env ret (NonTrivial (Util.mk_eq xexp e)) in
        comp_set_flags (bind env None c (Some (Env.Binding_var(x, t)), eq_ret)) (comp_flags c)
 
-let refine_data_type env l (formals:binders) (result_t:typ) = 
-   match formals with 
-    | [] -> result_t
-    | _ -> 
-       let r = range_of_lid l in 
-       let formals, args = Util.args_of_binders formals in
-       let basic_t = mk_Typ_fun(formals, mk_Total result_t) ktype r in
-       let v = mk_Exp_app({Util.fvar true l r with tk=basic_t}, args) result_t r in
-       mk_Typ_fun(formals, return_value env result_t v) ktype r
-       
 let maybe_instantiate env e t = 
   let t = compress_typ t in 
   if not (env.instantiate_targs && env.instantiate_vargs) then e, t else
