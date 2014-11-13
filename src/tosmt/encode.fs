@@ -89,7 +89,7 @@ let varops =
     let new_var pp rn = mk_unique <| pp.idText ^ "__" ^ rn.idText in
     let new_fvar lid = mk_unique lid.str in
     let next_id () = incr ctr; !ctr in
-    let fresh sfx = format2 "%s_%s" sfx (string_of_int <| next_id()) in
+    let fresh pfx = format2 "%s_%s" pfx (string_of_int <| next_id()) in
     let string_const s = match Util.find_map !scopes (fun (_, strings) -> Util.smap_try_find strings s) with
         | Some f -> f
         | None -> 
@@ -189,7 +189,14 @@ let lookup_lid env a =
     | Some s -> s
 let push_free_var env (x:lident) fname ftok = 
     {env with bindings=Binding_fvar(x, fname, ftok)::env.bindings}
-let lookup_free_var env a = lookup_lid env a.v |> snd
+let lookup_free_var env a =
+    let name, sym = lookup_lid env a.v in
+    match sym.tm with 
+        | App(_, [fuel]) -> 
+            if (Util.starts_with (Term.boundV_sym fuel) "fuel") 
+            then Term.mk_ApplyEE(Term.mkFreeV (name, Term_sort)) fuel
+            else sym
+        | _ -> sym
 let lookup_free_var_name env a = lookup_lid env a.v |> fst
 let lookup_free_var_sym env a = 
     let name, sym = lookup_lid env a.v in
@@ -1145,7 +1152,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | _ -> true) in
       g'@inversions, env
 
-    | Sig_let((is_rec, [(Inr flid, t1, e)]), _, _) when not is_rec -> 
+    | Sig_let((is_rec, [(Inr flid, t1, e)]), _, _) -> 
         if Util.is_lemma t1 then encode_lemma env flid t1, env else
         let t1_norm = whnf env t1 |> Util.compress_typ in
         let (f, ftok), decls, env = declare_top_level_let env flid t1 t1_norm in
@@ -1163,102 +1170,72 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let body = Syntax.mk_Exp_app_flat(body, snd <| Util.args_of_binders extra_formals) (Util.subst_typ subst t) body.pos in
             binders@extra_formals, body in
                          
-        let binders, body = match e.n with
+        let binders, body, formals, tres = match e.n with
             | Exp_abs(binders, body) -> 
                 begin match t1_norm.n with 
                  | Typ_fun(formals, c) -> 
                     let nformals = List.length formals in
                     let nbinders = List.length binders in
-                                        
+                    let tres = Util.comp_result c in                   
                     if nformals < nbinders && Util.is_total_comp c (* explicit currying *)
                     then let bs0, rest = Util.first_N nformals binders in 
-                         let body = mk_Exp_abs(rest, body) (Util.comp_result c) body.pos in
-                         bs0, body
+                         let body = mk_Exp_abs(rest, body) tres body.pos in
+                         bs0, body, formals, tres
                     
                     else if nformals > nbinders (* eta-expand before translating it *)
-                    then let binders, body = eta_expand binders formals body (Util.comp_result c) in 
-                         binders, body
+                    then let binders, body = eta_expand binders formals body tres in
+                         binders, body, formals, tres
                     
-                    else binders, body
+                    else binders, body, formals, tres
                  | _ -> 
                      failwith (Util.format3 "Impossible! let-bound lambda %s = %s has a type that's not a function: %s\n" flid.str (Print.exp_to_string e) (Print.typ_to_string t1_norm))
                 end
             | _ -> 
                 begin match t1_norm.n with 
                     | Typ_fun(formals, c) -> 
-                        let binders, body = eta_expand [] formals e (Util.comp_result c) in
-                        binders, body
-                    | _ -> [], e
+                        let tres = Util.comp_result c in
+                        let binders, body = eta_expand [] formals e tres in
+                        binders, body, formals, tres
+                    | _ -> [], e, [], t1_norm
                 end in
                 
-        let vars, guards, env', binder_decls, _ = encode_binders false binders env in
-        let app = match vars with [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkBoundV vars) in
-        let body, ex_vars, decls2 = encode_exp body env' in
-        let eqn = Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(app, body))), Some (Util.format1 "Equation for %s" flid.str)) in
-        decls@binder_decls@decls2@[eqn], env
-     
-     | Sig_let((true, [(Inr flid, t1, e)]), _, _) ->
-        if Util.is_lemma t1 then encode_lemma env flid t1, env else
-        let t1_norm = whnf env t1 in
-        let (f, ftok), decls, env = declare_top_level_let env flid t1 t1_norm in
-        if not (Util.is_pure_function t1_norm) then decls, env  else
-        let g = varops.new_fvar flid in
-        let fuel = varops.fresh "fuel", Term_sort in
-        let fuel_tm = mkBoundV fuel in
-        let env0 = env in 
-        let env = push_free_var env flid g (Term.mkApp(g, [fuel_tm])) in
-        let e = Util.compress_exp e in
-       
-        let bopt = match e.n with
-            | Exp_abs(binders, body) -> 
-                let t1_norm = Util.compress_typ t1_norm in
-                begin match t1_norm.n with 
-                 | Typ_fun(bs', c) -> 
-                    let nformals = List.length bs' in
-                    let nbinders = List.length binders in
-                    if nformals = nbinders 
-                    then Some <| (binders, 
-                                  body, 
-                                  bs', 
-                                  Util.comp_result c)
-                    else if nformals < nbinders && Util.is_total_comp c (* explicit currying *)
-                    then let bs0, rest = Util.first_N nformals binders in 
-                         let body = mk_Exp_abs(rest, body) (Util.comp_result c) body.pos in
-                         Some (bs0, body, bs', Util.comp_result c)
-                    else (* This is an odd-pattern where the total function is returned after some computation; I don't support it yet fully *)
-                         (if env.warn 
-                         then (let msg = Util.format1 "Refusing to encode explicitly curried function '%s' to SMT; try hoisting out the returned function" flid.str in
-                               Tc.Errors.warn (range_of_lid flid) msg); 
-                         None) 
-                | _ -> 
-                     failwith (Util.format3 "Impossible! let-bound lambda %s = %s has a type that's not a function: %s\n" flid.str (Print.exp_to_string e) (Print.typ_to_string t1_norm))
-                end
-            | _ -> failwith (Util.format1 "NYI: Recursive function %s is not an abstraction" flid.str) in
-
-        begin match bopt with 
-            | None -> decls, env0
-            | Some (binders, body_exp, t_binders, tres) ->
-                let vars, guards, env', binder_decls, _ = encode_binders false binders env in
+        
+        if is_rec (* guard equation with fuel *)
+        then let g = varops.new_fvar flid in
+             let gtok = varops.new_fvar flid in
+             let fuel = varops.fresh "fuel", Term_sort in
+             let fuel_tm = mkBoundV fuel in
+             let env0 = env in 
+             let env = push_free_var env flid gtok (Term.mkApp(g, [fuel_tm])) in
+             let vars, guards, env', binder_decls, _ = encode_binders false binders env in
+             let vars_tm = List.map mkBoundV vars in
+             let app = Term.mkApp(f, vars_tm) in 
+             let gsapp = Term.mkApp(g, Term.mkApp("SFuel", [fuel_tm])::vars_tm) in
+             let gmax = Term.mkApp(g, Term.mkFreeV("MaxFuel", Term_sort)::vars_tm) in
+             let body_tm, ex_vars, decls2 = encode_exp body env' in
+             let decl_g = Term.DeclFun(g, Term_sort::List.map snd vars, Term_sort, Some "Fuel-instrumented function name") in
+             let decl_g_tok = Term.DeclFun(gtok, [], Term_sort, Some "Token for fuel-instrumented partial applications") in
+             let eqn_g = Term.Assume(mkForall([gsapp], fuel::vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(gsapp, body_tm))), Some (Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.str)) in
+             let eqn_f = Term.Assume(mkForall([app], vars, mkEq(app, gmax)), Some "Correspondence of recursive function to instrumented version") in
+             let eqn_g' = Term.Assume(mkForall([gsapp], fuel::vars, mkEq(gsapp,  Term.mkApp(g, mkBoundV fuel::vars_tm))), Some "Fuel irrelevance") in
+             let g_typing = 
+                let vars, _, env, binder_decls, _ = encode_binders false formals env0 in
                 let vars_tm = List.map mkBoundV vars in
                 let app = Term.mkApp(f, vars_tm) in 
                 let gapp = Term.mkApp(g, fuel_tm::vars_tm) in
-                let gsapp = Term.mkApp(g, Term.mkApp("SFuel", [fuel_tm])::vars_tm) in
-                let gmax = Term.mkApp(g, Term.mkFreeV("MaxFuel", Term_sort)::vars_tm) in
-                let body, ex_vars, decls2 = encode_exp body_exp env' in
-                let decl_g = Term.DeclFun(g, Term_sort::List.map snd vars, Term_sort, Some "Fuel-instrumented function name") in
-                let eqn_g = Term.Assume(mkForall([gsapp], fuel::vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(gsapp, body))), Some (Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.str)) in
-                let eqn_f = Term.Assume(mkForall([app], vars, mkEq(app, gmax)), Some "Correspondence of recursive function to instrumented version") in
-                let eqn_g' = Term.Assume(mkForall([gsapp], fuel::vars, mkEq(gsapp,  Term.mkApp(g, mkBoundV fuel::vars_tm))), Some "Fuel irrelevance") in
-                let g_typing = 
-                    let vars, _, env, binder_decls, _ = encode_binders false t_binders env0 in
-                    let vars_tm = List.map mkBoundV vars in
-                    let app = Term.mkApp(f, vars_tm) in 
-                    let gapp = Term.mkApp(g, fuel_tm::vars_tm) in
-                    let g_typing, d3 = encode_typ_pred' true tres env gapp in
-                    let f_typing, d4 = encode_typ_pred' true tres env app in
-                    binder_decls@d3@d4@[Term.Assume(mkForall([gapp], fuel::vars, mkImp(f_typing, g_typing)), None)] in
-                decls@binder_decls@decls2@[decl_g;eqn_g;eqn_g';eqn_f]@g_typing, env0
-        end
+                let g_typing, d3 = encode_typ_pred' true tres env gapp in
+                let f_typing, d4 = encode_typ_pred' true tres env app in
+                let tok_corr = 
+                    let tok_app = mk_ApplyE (Term.mkFreeV (gtok, Term_sort)) (fuel::vars) in
+                    Term.Assume(mkForall([tok_app], fuel::vars, mkEq(tok_app, gapp)), Some "Fuel token correspondence") in
+                binder_decls@d3@d4@[Term.Assume(mkForall([gapp], fuel::vars, mkImp(f_typing, g_typing)), None); tok_corr] in
+             decls@binder_decls@decls2@[decl_g;decl_g_tok;eqn_g;eqn_g';eqn_f]@g_typing, env0
+        
+        else let vars, guards, env', binder_decls, _ = encode_binders false binders env in
+             let app = match vars with [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkBoundV vars) in
+             let body, ex_vars, decls2 = encode_exp body env' in
+             let eqn = Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(app, body))), Some (Util.format1 "Equation for %s" flid.str)) in
+             decls@binder_decls@decls2@[eqn], env     
                  
     | Sig_let((_,lbs), _, _) -> //TODO: mutual recursion
         let msg = lbs |> List.map (fun (lb, _, _) -> Print.lbname_to_string lb) |> String.concat " and " in
