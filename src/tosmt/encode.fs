@@ -1183,43 +1183,57 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let env = push_free_var env flid g (Term.mkApp(g, [fuel_tm])) in
         let e = Util.compress_exp e in
        
-        let binders, body_exp, t_binders, tres = match e.n with
+        let bopt = match e.n with
             | Exp_abs(binders, body) -> 
                 let t1_norm = Util.compress_typ t1_norm in
                 begin match t1_norm.n with 
                  | Typ_fun(bs', c) -> 
-                    if List.length bs' = List.length binders
-                    then binders, 
-                         body, 
-                         bs', 
-                         Util.comp_result c
-                    else failwith (Util.format3 "NYI: Recursive function %s has %s binders but type %s\n" flid.str (string_of_int <| List.length binders) (Print.typ_to_string t1_norm))
-                 | _ -> 
+                    let nformals = List.length bs' in
+                    let nbinders = List.length binders in
+                    if nformals = nbinders 
+                    then Some <| (binders, 
+                                  body, 
+                                  bs', 
+                                  Util.comp_result c)
+                    else if nformals < nbinders && Util.is_total_comp c (* explicit currying *)
+                    then let bs0, rest = Util.first_N nformals binders in 
+                         let body = mk_Exp_abs(rest, body) (Util.comp_result c) body.pos in
+                         Some (bs0, body, bs', Util.comp_result c)
+                    else (* This is an odd-pattern where the total function is returned after some computation; I don't support it yet fully *)
+                         (if env.warn 
+                         then (let msg = Util.format1 "Refusing to encode explicitly curried function '%s' to SMT; try hoisting out the returned function" flid.str in
+                               Tc.Errors.warn (range_of_lid flid) msg); 
+                         None) 
+                | _ -> 
                      failwith (Util.format3 "Impossible! let-bound lambda %s = %s has a type that's not a function: %s\n" flid.str (Print.exp_to_string e) (Print.typ_to_string t1_norm))
                 end
             | _ -> failwith (Util.format1 "NYI: Recursive function %s is not an abstraction" flid.str) in
 
-        let vars, guards, env', binder_decls, _ = encode_binders false binders env in
-        let vars_tm = List.map mkBoundV vars in
-        let app = Term.mkApp(f, vars_tm) in 
-        let gapp = Term.mkApp(g, fuel_tm::vars_tm) in
-        let gsapp = Term.mkApp(g, Term.mkApp("SFuel", [fuel_tm])::vars_tm) in
-        let gmax = Term.mkApp(g, Term.mkFreeV("MaxFuel", Term_sort)::vars_tm) in
-        let body, ex_vars, decls2 = encode_exp body_exp env' in
-        let decl_g = Term.DeclFun(g, Term_sort::List.map snd vars, Term_sort, Some "Fuel-instrumented function name") in
-        let eqn_g = Term.Assume(mkForall([gsapp], fuel::vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(gsapp, body))), Some (Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.str)) in
-        let eqn_f = Term.Assume(mkForall([app], vars, mkEq(app, gmax)), Some "Correspondence of recursive function to instrumented version") in
-        let eqn_g' = Term.Assume(mkForall([gsapp], fuel::vars, mkEq(gsapp,  Term.mkApp(g, mkBoundV fuel::vars_tm))), Some "Fuel irrelevance") in
-        let g_typing = 
-            let vars, _, env, binder_decls, _ = encode_binders false t_binders env0 in
-            let vars_tm = List.map mkBoundV vars in
-            let app = Term.mkApp(f, vars_tm) in 
-            let gapp = Term.mkApp(g, fuel_tm::vars_tm) in
-            let g_typing, d3 = encode_typ_pred' true tres env gapp in
-            let f_typing, d4 = encode_typ_pred' true tres env app in
-            binder_decls@d3@d4@[Term.Assume(mkForall([gapp], fuel::vars, mkImp(f_typing, g_typing)), None)] in
-        decls@binder_decls@decls2@[decl_g;eqn_g;eqn_g';eqn_f]@g_typing, env0
-         
+        begin match bopt with 
+            | None -> decls, env0
+            | Some (binders, body_exp, t_binders, tres) ->
+                let vars, guards, env', binder_decls, _ = encode_binders false binders env in
+                let vars_tm = List.map mkBoundV vars in
+                let app = Term.mkApp(f, vars_tm) in 
+                let gapp = Term.mkApp(g, fuel_tm::vars_tm) in
+                let gsapp = Term.mkApp(g, Term.mkApp("SFuel", [fuel_tm])::vars_tm) in
+                let gmax = Term.mkApp(g, Term.mkFreeV("MaxFuel", Term_sort)::vars_tm) in
+                let body, ex_vars, decls2 = encode_exp body_exp env' in
+                let decl_g = Term.DeclFun(g, Term_sort::List.map snd vars, Term_sort, Some "Fuel-instrumented function name") in
+                let eqn_g = Term.Assume(mkForall([gsapp], fuel::vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(gsapp, body))), Some (Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.str)) in
+                let eqn_f = Term.Assume(mkForall([app], vars, mkEq(app, gmax)), Some "Correspondence of recursive function to instrumented version") in
+                let eqn_g' = Term.Assume(mkForall([gsapp], fuel::vars, mkEq(gsapp,  Term.mkApp(g, mkBoundV fuel::vars_tm))), Some "Fuel irrelevance") in
+                let g_typing = 
+                    let vars, _, env, binder_decls, _ = encode_binders false t_binders env0 in
+                    let vars_tm = List.map mkBoundV vars in
+                    let app = Term.mkApp(f, vars_tm) in 
+                    let gapp = Term.mkApp(g, fuel_tm::vars_tm) in
+                    let g_typing, d3 = encode_typ_pred' true tres env gapp in
+                    let f_typing, d4 = encode_typ_pred' true tres env app in
+                    binder_decls@d3@d4@[Term.Assume(mkForall([gapp], fuel::vars, mkImp(f_typing, g_typing)), None)] in
+                decls@binder_decls@decls2@[decl_g;eqn_g;eqn_g';eqn_f]@g_typing, env0
+        end
+                 
     | Sig_let((_,lbs), _, _) -> //TODO: mutual recursion
         let msg = lbs |> List.map (fun (lb, _, _) -> Print.lbname_to_string lb) |> String.concat " and " in
         [], env
