@@ -71,6 +71,8 @@ let print_implicits = Util.mk_ref false
 let hide_uvar_nums = Util.mk_ref false
 let hide_genident_nums = Util.mk_ref false
 let serialize_mods = Util.mk_ref false
+let initial_fuel = Util.mk_ref 2
+let max_fuel = Util.mk_ref 8
 
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
@@ -134,6 +136,8 @@ let specs () : list<Getopt.opt> =
      ( noshort, "print_implicits", ZeroArgs(fun () -> print_implicits := true), "Print implicit arguments");
      ( noshort, "hide_uvar_nums", ZeroArgs(fun () -> hide_uvar_nums := true), "Don't print unification variable numbers");
      ( noshort, "hide_genident_nums", ZeroArgs(fun () -> hide_genident_nums := true), "Don't print generated identifier numbers");
-     ( noshort, "serialize_mods", ZeroArgs (fun () -> serialize_mods := true), "Serialize compiled modules")
+     ( noshort, "serialize_mods", ZeroArgs (fun () -> serialize_mods := true), "Serialize compiled modules");
+     ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
+     ( noshort, "max_fuel", OneArg((fun x -> max_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try at most (default 8)");
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
