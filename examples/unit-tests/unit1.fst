@@ -199,3 +199,10 @@ val do_ok: l:mlist -> Pure mlist (requires (pre l)) (ensures (fun l -> zero_list
 let do_ok l = match l with
   | N -> N
   | C(n, l') -> if n = 0 then l else C(0, l')
+
+
+val bad_projector: option 'a -> 'a
+let bad_projector x = Some.v x
+
+val short_circuit1: x:option int{is_Some x /\ Some.v x = 0} -> nat
+let short_circuit1 x = Some.v x

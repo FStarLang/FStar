@@ -345,7 +345,7 @@ let rec encode_knd (k:knd) (env:env_t) (t:term) : term  * decls_t =
             let app = mk_ApplyT t vars in
             let k, decls' = encode_knd k env' app in
             Term.mkAnd(prekind,
-                       Term.mkForall(app::guards, vars, mkImp(mk_and_l guards, k))), 
+                       Term.mkForall([app], vars, mkImp(mk_and_l guards, k))), 
             decls@decls'
 
         | _ -> failwith (Util.format1 "Unknown kind: %s" (Print.kind_to_string k))
@@ -528,7 +528,7 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
         let app = mk_ApplyT tag vars in
         let body, vars_body, decls' = encode_typ_term t env in
         let eq = close_ex vars_body (mkEq(app, body)) in
-        let guard = mkForall(app::guards, vars, mkImp(mk_and_l guards, eq)) in
+        let guard = mkForall([app], vars, mkImp(mk_and_l guards, eq)) in
         tag, [(name, guard)], decls@decls'
 
       | Typ_ascribed(t, _) -> 

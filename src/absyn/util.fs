@@ -979,6 +979,12 @@ let rec close_for_kind t k =
     | Kind_abbrev(_, k) -> close_for_kind t k
     | Kind_delayed _ -> failwith "Impossible"
 
+let rec unabbreviate_kind k = 
+    let k = compress_kind k in
+    match k.n with 
+        | Kind_abbrev(_, k) -> unabbreviate_kind k
+        | _ -> k
+
 let close_with_lam tps t = 
     match tps with 
         | [] -> t
@@ -1096,7 +1102,8 @@ let tand = ftv Const.and_lid kt_kt_kt
 let tor  = ftv Const.or_lid kt_kt_kt
 let timp = ftv Const.imp_lid kt_kt_kt
 let tiff = ftv Const.iff_lid kt_kt_kt
-let b2t_v = ftv Const.b2t_lid kun
+let t_bool = ftv Const.bool_lid ktype
+let b2t_v = ftv Const.b2t_lid (mk_Kind_arrow([null_v_binder <| t_bool], ktype) dummyRange)
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
@@ -1113,7 +1120,7 @@ let mk_disj_l phi = match phi with
     | hd::tl -> List.fold_right mk_disj tl hd
 let mk_imp phi1 phi2  = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
-let b2t e = mk_Typ_app(b2t_v, [varg <| e]) kun e.pos//implicitly coerce a boolean to a type     
+let b2t e = mk_Typ_app(b2t_v, [varg <| e]) ktype e.pos//implicitly coerce a boolean to a type     
 
 let eq_k = 
     let a = bvd_to_bvar_s (new_bvd None) ktype in

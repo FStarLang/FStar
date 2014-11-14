@@ -57,7 +57,8 @@ val return_value: env -> typ -> exp -> comp
 val bind: env -> option<exp> -> comp -> comp_with_binder -> comp
 val bind_cases: env -> typ -> list<(typ * comp)> -> comp
 val weaken_result_typ: env -> exp -> comp -> typ -> exp * comp
-val strengthen_precondition: option<(unit -> string)> -> env -> comp -> guard_t -> comp
+val strengthen_precondition: option<(unit -> string)> -> env -> exp -> comp -> guard_t -> comp
+val weaken_guard: guard_t -> guard_t -> guard_t
 val weaken_precondition: env -> comp -> guard_t -> comp
 val maybe_assume_result_eq_pure_term: env -> exp -> comp -> comp
 val lift_pure: env -> typ -> formula -> comp (* with t as a result type *)
@@ -72,3 +73,4 @@ val refresh_comp_label: env -> bool -> comp -> comp
 val check_total: env -> comp -> bool * list<string>
 
 val refine_data_type: env -> lident -> binders -> typ -> typ
+val short_circuit_guard: Util.either<typ,exp> -> args -> guard_t

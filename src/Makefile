@@ -185,7 +185,7 @@ test: ocaml
 	make -s -C ../examples/unit-tests all-lax 
 	make -s -C ../examples/unit-tests vector
 	-make -s -C ../examples/unit-tests all-ver 
-	@echo "--------Expect 17 errors--------------"
+	@echo "--------Expect 18 errors--------------"
 
 test.diff:
 	@make -s test | grep -v "^make\[" > .test.out

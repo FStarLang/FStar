@@ -468,11 +468,12 @@ let mk_comp md result wp wlp flags =
          flags=flags})
 
 //let return_value env t v = Util.total_comp t (range_of_exp v (Env.get_range env))
-
+let is_function t = match (compress_typ t).n with
+    | Typ_fun _ -> true
+    | _ -> false
+  
 let return_value env t v = 
-  (match (compress_typ t).n with
-    | Typ_fun _ -> failwith (Util.format1 "(%s): Returning a function!" (Range.string_of_range (Env.get_range env)))
-    | _ -> ());
+  if is_function t then failwith (Util.format1 "(%s): Returning a function!" (Range.string_of_range (Env.get_range env)));
   let c = match Tc.Env.monad_decl_opt env Const.pure_effect_lid with 
     | None -> mk_Total t 
     | Some m -> 
@@ -484,7 +485,6 @@ let return_value env t v =
   if debug env Options.High
   then Util.fprint2 "(%s) returning at comp type %s" (Range.string_of_range v.pos) (Print.comp_typ_to_string c);
   c
-
 
 let bind env e1opt (c1:comp) ((b, c2):comp_with_binder) : comp = 
   if debug env Options.Extreme
@@ -588,19 +588,13 @@ let label_opt reason r f = match reason with
 let label_guard reason r g = match g with 
     | Trivial -> g
     | NonTrivial f -> NonTrivial (label reason r f)
-let strengthen_precondition (reason:option<(unit -> string)>) env (c:comp) f = match f with 
-  | Trivial -> c
-  | NonTrivial f -> 
-    if debug env Options.High then Util.fprint2 "\tStrengthening precondition %s with %s" (Print.comp_typ_to_string c) (Print.typ_to_string f);
-    let c = Tc.Normalize.weak_norm_comp env c in
-    let res_t, wp, wlp = destruct_comp c in
-    //if debug env then Util.fprint1 "\tWp is %s" (Print.typ_to_string wp);
-    let md = Tc.Env.get_monad_decl env c.effect_name in 
-    let wp = mk_Typ_app(md.assert_p, [targ res_t; targ <| label_opt reason (Env.get_range env) f; targ wp]) wp.tk wp.pos in
-    let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) wlp.tk wlp.pos in
-    let c2 = mk_comp md res_t wp wlp [] in
-   // if debug env then Util.fprint1 "\tStrengthened precondition is %s" (Print.comp_typ_to_string c2);
-    c2
+
+
+let weaken_guard g1 g2 = match g1, g2 with 
+    | NonTrivial f1, NonTrivial f2 ->
+      let g = (Util.mk_imp f1 f2) in
+      NonTrivial g
+    | _ -> g2
 
 let weaken_precondition env c f = match f with 
   | Trivial -> c
@@ -614,6 +608,27 @@ let weaken_precondition env c f = match f with
       let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) wlp.tk wlp.pos in
       mk_comp md res_t wp wlp c.flags
 
+let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (c:comp) f = match f with 
+  | Trivial -> c
+  | NonTrivial f -> 
+    if debug env Options.High then Util.fprint2 "\tStrengthening precondition %s with %s\n" (Normalize.comp_typ_norm_to_string env c) (Normalize.typ_norm_to_string env f);
+    let c = 
+        if Util.is_pure_comp c && not (is_function (Util.comp_result c))
+        then let x = Util.gen_bvar (Util.comp_result c) in
+             let xexp = Util.bvar_to_exp x in
+             let xret = return_value env x.sort (Util.bvar_to_exp x) in
+             let xbinding = Env.Binding_var(x.v, x.sort) in
+             bind env (Some e) c (Some xbinding, xret)
+        else c in
+    let c = Tc.Normalize.weak_norm_comp env c in
+    let res_t, wp, wlp = destruct_comp c in
+    //if debug env then Util.fprint1 "\tWp is %s" (Print.typ_to_string wp);
+    let md = Tc.Env.get_monad_decl env c.effect_name in 
+    let wp = mk_Typ_app(md.assert_p, [targ res_t; targ <| label_opt reason (Env.get_range env) f; targ wp]) wp.tk wp.pos in
+    let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) wlp.tk wlp.pos in
+    let c2 = mk_comp md res_t wp wlp [] in
+   // if debug env then Util.fprint1 "\tStrengthened precondition is %s" (Print.comp_typ_to_string c2);
+    c2
 let bind_cases env (res_t:typ) (cases:list<(formula * comp)>) : comp =
     if List.length cases = 0 then failwith "Empty cases!"; (* TODO: Fix precedence of semi colon *)
     if debug env Options.Extreme then Util.fprint1 "bind_cases, res_t is %s\n" (Print.typ_to_string res_t);
@@ -854,7 +869,7 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp =
           let xexp = Util.bvd_to_exp x t in
           let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) k xexp.pos  in
           let cret = mk_comp md t wp wp ct.flags in
-          let eq_ret = strengthen_precondition (Some <| Errors.subtyping_failed env tc t) (Env.set_range env e.pos) cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
+          let eq_ret = strengthen_precondition (Some <| Errors.subtyping_failed env tc t) (Env.set_range env e.pos) e cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
           let eq_ret = 
             if Util.is_pure_comp c 
             then weaken_precondition env eq_ret (NonTrivial (Util.mk_eq xexp e))
@@ -891,3 +906,53 @@ let refine_data_type env l (formals:binders) (result_t:typ) =
             let basic_t = mk_Typ_fun(formals, mk_Total result_t) ktype r in
             let v = mk_Exp_app({Util.fvar true l r with tk=basic_t}, args) result_t r in
             mk_Typ_fun(formals, return_value env result_t v) ktype r
+
+
+(* Having already seen_args to head (from right to left), 
+   compute the guard, if any, for the next argument, 
+   if head is a short-circuiting operator *)
+let short_circuit_guard (head:either<typ, exp>) (seen_args:args) : guard_t = 
+    let short_bin_op_e f : args -> guard_t = function
+        | [] -> (* no args seen yet *) Trivial
+        | [(Inr fst, _)] -> f fst
+        | _ -> failwith "Unexpexted args to binary operator" in
+    let short_bin_op_t f : args -> guard_t = function
+        | [] -> (* no args seen yet *) Trivial
+        | [(Inl fst, _)] -> f fst
+        | _ -> failwith "Unexpexted args to binary operator" in
+    
+    let op_and_e e =  Util.b2t e |> NonTrivial in
+    let op_or_e e = Util.mk_neg (Util.b2t e) |> NonTrivial in
+    let op_and_t t = NonTrivial t in
+    let op_or_t t = Util.mk_neg t |> NonTrivial in
+    let op_imp_t t = NonTrivial t in
+    let short_op_ite : args -> guard_t = function 
+        | [] -> Trivial
+        | [(Inl guard, _)] -> NonTrivial guard
+        | [_then;(Inl guard, _)] -> Util.mk_neg guard |> NonTrivial 
+        | _ -> failwith "Unexpected args to ITE" in 
+    let table = 
+        [(Const.op_And,  short_bin_op_e op_and_e);
+         (Const.op_Or,   short_bin_op_e op_or_e);
+         (Const.and_lid, short_bin_op_t op_and_t);
+         (Const.or_lid,  short_bin_op_t op_or_t);
+         (Const.imp_lid, short_bin_op_t op_imp_t);
+         (Const.ite_lid, short_op_ite);] in
+
+    let head_lid = match head with 
+        | Inr ({n=Exp_fvar(fv, _)}) -> Some fv.v
+        | Inl ({n=Typ_const fv}) -> Some fv.v 
+        | _ -> None in
+    match head_lid with 
+        | None -> Trivial
+        | Some lid -> 
+          begin match Util.find_map table (fun (x, mk) -> if lid_equals x lid then Some (mk seen_args) else None) with 
+            | None -> Trivial
+            | Some g -> 
+//                (match g with 
+//                    | NonTrivial f -> 
+//                        Util.fprint3 "Shorted argument #%s of %s with guard %s\n" (string_of_int (List.length seen_args + 1)) lid.str (Print.formula_to_string f);
+//                    | _ -> ());
+                g
+          end
+        

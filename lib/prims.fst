@@ -77,6 +77,7 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
               (*     Pure a (wp (fun a -> True)) (fun a -> wlp (fun a' -> a==a')) *)
               and Tot (a:Type) =
                 PURE a (fun (p:Post a) -> (forall (x:a). p x)) (fun (p:Post a) -> (forall (x:a). p x))
+              and Admit (a:Type) = PURE a (fun 'p -> True) (fun 'p -> True)
 
 }
 open Prims.PURE
@@ -100,13 +101,13 @@ type double = float
 type int32 = int
 
 
-type list 'a =
-  | Nil : list 'a
-  | Cons : hd:'a -> tl:list 'a -> list 'a
+type list (a:Type) =
+  | Nil : list a
+  | Cons : hd:a -> tl:list a -> list a
 
 type pattern = 
-  | VPat : 'a:Type -> 'a -> pattern
-  | TPat : 'a:Type -> pattern
+  | VPat : a:Type -> a -> pattern
+  | TPat : a:Type -> pattern
 
 effect Fact (_res:Type) (p:Type) = Pure _res True (fun r -> p)
 effect Lemma (_a:Type) (pre:Type) (post:Type) (pats:list pattern) = Pure unit pre (fun r -> post)
@@ -176,10 +177,10 @@ logic type Modifies (mods:refs) (h:heap) (h':heap) =
      then True
      else forall 'b (x:ref 'b). (b2t (InHeap h x) /\ ~(InSet (Ref x) (SomeRefs.v mods))) ==> (b2t (InHeap h' x) /\ SelHeap h x==SelHeap h' x))
 
-type result : Type -> Type =
-  | V : 'a:Type -> v:'a -> result 'a
-  | E : 'a:Type -> e:exn -> result 'a
-  | Err : 'a:Type -> msg:string -> result 'a
+type result (a:Type) =
+  | V   : v:a -> result a
+  | E   : e:exn -> result a
+  | Err : msg:string -> result a
 
 monad_lattice { (* STATE a wp wlp *)
   STATE::
@@ -503,7 +504,7 @@ val snd : ('a * 'b) -> Tot 'b
 let snd x = MkTuple2._2 x
 
 assume val Assume: 'P:Type -> unit -> (y:unit{'P})
-assume val admit: unit -> Pure unit True (fun x -> False)
+assume val admit: unit -> Admit unit
 assume val admitP: 'P:Type -> unit -> Pure unit True (fun x -> 'P)
 assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
 assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> 'P)

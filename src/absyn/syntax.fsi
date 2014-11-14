@@ -150,7 +150,7 @@ and knd' =
   | Kind_arrow of binders * knd                           (* (ai:ki|xi:ti) => k' *)
   | Kind_uvar of uvar_k_app                               (* not present after 1st round tc *)
   | Kind_lam of binders * knd                             (* not present after 1st round tc *)
-  | Kind_delayed of knd * subst_t * memo<knd>               (* delayed substitution --- always force before inspecting first element *)
+  | Kind_delayed of knd * subst_t * memo<knd>             (* delayed substitution --- always force before inspecting first element *)
   | Kind_unknown                                          (* not present after 1st round tc *)
 and knd = syntax<knd', unit>
 and uvar_k_app = uvar_k * args

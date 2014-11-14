@@ -1020,80 +1020,33 @@ let mk_data_discriminators env t tps k datas =
         //Util.fprint1 "Making discriminator %s\n" disc_name.str;
         Sig_val_decl(disc_name, disc_type, [Assumption; Logic; Discriminator d], range_of_lid disc_name))
 
-let mk_simple_projectors env lid formals tconstr = 
-    //Printf.printf "Collecting formals from type %s; got %s with args %s\n" (Print.typ_to_string t) (Print.typ_to_string tconstr) (Print.binders_to_string ", " formals);
-    let argpats = formals |> List.map (fun b -> match b with
-      | Inr x, _ -> if is_null_binder b 
-                    then Pat_var (bvd_to_bvar_s (new_bvd (Some (range_of_lid lid))) tun)
-                    else Pat_var x
-      | Inl a, _ -> Pat_tvar a) in
-    let freevs = freevars_typ tconstr in
-    let freevars = formals 
-        |> List.collect (function
-          | Inl a, imp -> 
-            if Util.set_mem a freevs.ftvs
-            then [Inl a, imp (*true*)] // implicit
-            else []
-          | Inr x, imp -> 
-            if Util.set_mem x freevs.fxvs
-            then [Inr x, imp (*true*)] //implicit
-            else []) in
-    let freeterms = freevars |> List.map (function 
-      | Inl a, _ -> targ <| btvar_to_typ a
-      | Inr x, _ -> varg <| bvar_to_exp x) in
-    let r = range_of_lid lid in
-    let formal = Util.gen_bvar_p r tconstr in
-    let formal_exp = bvar_to_exp formal in
-    let binders = freevars@[v_binder formal] in
-    let rec build_typ t = mk_Typ_fun(binders, mk_Total t) kun r in
-    let rec build_kind k = mk_Kind_arrow'(binders, k) k.pos in         
-    let rec projectors data_ops subst formals i = match formals with 
-      | [] -> data_ops
-      | b::rest -> 
-        match fst b with 
-            | Inl a -> 
-                let field_name, b = Util.mk_field_projector_name lid a i in
-                let kk = build_kind (Util.subst_kind subst a.sort) in
-                let sigs = [Sig_tycon(field_name, [], kk, [], [], [Logic; Projector(lid, Inl b)], range_of_lid field_name)] in
-                //let _ = Util.print_string (Util.format2 "adding type projector %s at type %s\n" field_name.str (Print.kind_to_string kk)) in 
-                let subst = if Util.set_mem a freevs.ftvs
-                            then subst
-                            else Inl(a.v, mk_typ_app (ftv field_name kun) (freeterms@[varg <| formal_exp]))::subst in
-                projectors (data_ops@sigs) subst rest (i + 1)
-
-            | Inr x -> 
-                let field_name, y = Util.mk_field_projector_name lid x i in 
-  //              Util.fprint1 "Adding projector %s\n" (field_name.str);
-                let t = build_typ (Util.subst_typ subst x.sort) in
-                let sigs = [Sig_val_decl(field_name, t, [Assumption; Logic; Projector(lid, Inr y)], range_of_lid field_name)] in
-                let subst = if Util.set_mem x freevs.fxvs
-                            then subst
-                            else Inr(x.v, mk_exp_app (fvar false field_name (range_of_lid field_name)) (freeterms@[varg <| formal_exp]))::subst in
-                projectors (data_ops@sigs) subst rest (i + 1) in
-       
-    projectors [] [] formals 0
-
-let mk_indexed_projectors env (tc, tps, k) lid (formals:list<binder>) t = 
+let mk_indexed_projectors is_record env (tc, tps, k) lid (formals:list<binder>) t = 
     let binders = gather_tc_binders tps k in 
     let p = range_of_lid lid in
     let arg_binder = 
-        let arg_typ = mk_Typ_app(Util.ftv tc kun, Util.args_of_non_null_binders binders) kun p in
+        let arg_typ = mk_Typ_app'(Util.ftv tc kun, Util.args_of_non_null_binders binders) kun p in
         let x = Util.gen_bvar arg_typ in 
-        let disc_name = Util.mk_discriminator lid in
-        v_binder <| (Util.gen_bvar <| mk_Typ_refine(x, Util.b2t(mk_Exp_app(Util.fvar false disc_name p, [varg <| Util.bvar_to_exp x]) tun p)) kun p) in
+        if is_record
+        then v_binder x //records have only one constructor; no point refining the domain
+        else let disc_name = Util.mk_discriminator lid in
+             v_binder <| (Util.gen_bvar <| mk_Typ_refine(x, Util.b2t(mk_Exp_app(Util.fvar false disc_name p, [varg <| Util.bvar_to_exp x]) tun p)) kun p) in
       
     let binders = binders@[arg_binder] in
     let arg = Util.arg_of_non_null_binder arg_binder in
     let subst = formals |> List.mapi (fun i f -> match fst f with
         | Inl a -> 
-            let field_name, _ = Util.mk_field_projector_name lid a i in
-            let proj = mk_Typ_app(Util.ftv field_name kun, [arg]) kun p in
-            (Inl (a.v, proj))
+            if binders |> Util.for_some (function (Inl b, _) -> bvd_eq a.v b.v | _ -> false)
+            then []
+            else let field_name, _ = Util.mk_field_projector_name lid a i in
+                 let proj = mk_Typ_app(Util.ftv field_name kun, [arg]) kun p in
+                 [Inl (a.v, proj)]
 
         | Inr x ->
-            let field_name, _ = Util.mk_field_projector_name lid x i in
-            let proj = mk_Exp_app(Util.fvar false field_name p, [arg]) tun p in
-            (Inr (x.v, proj))) in
+            if binders |> Util.for_some (function (Inr y, _) -> bvd_eq x.v y.v | _ -> false)
+            then []
+            else let field_name, _ = Util.mk_field_projector_name lid x i in
+                 let proj = mk_Exp_app(Util.fvar false field_name p, [arg]) tun p in
+                 [Inr (x.v, proj)]) |> List.flatten in
 
     formals |> List.mapi (fun i ax -> match fst ax with 
         | Inl a -> 
@@ -1107,24 +1060,14 @@ let mk_indexed_projectors env (tc, tps, k) lid (formals:list<binder>) t =
             Sig_val_decl(field_name, t, [Assumption; Logic; Projector(lid, Inr x.v)], range_of_lid field_name))
 
 let mk_data_projectors env = function
-  | Sig_datacon(lid, t, tycon, _, _) when (not env.iface && not (lid_equals lid Const.lexpair_lid)) ->
+  | Sig_datacon(lid, t, tycon, quals, _) when (not env.iface && not (lid_equals lid Const.lexpair_lid)) ->
     begin match Util.function_formals t with
         | Some(formals, cod) -> 
           let cod = Util.comp_result cod in 
-          begin match cod.n with 
-            | Typ_app(_, args) -> 
-                if args |> Util.for_all (fun a -> match fst a with 
-                    | Inl ({n=Typ_btvar _})
-                    | Inr ({n=Exp_bvar _}) -> true
-                    | _ -> false)
-                then mk_simple_projectors env lid formals cod
-                else mk_indexed_projectors env tycon lid formals cod
-
-            | _ -> mk_simple_projectors env lid formals cod
-          end
+          mk_indexed_projectors (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false)) env tycon lid formals cod
 
         | _ -> [] //no fields to project
-   end
+    end
 
   | _ -> []
 
@@ -1322,8 +1265,8 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let env = push_sigelt env se' in
     let data_ops = mk_data_projectors env se in
     let discs = mk_data_discriminators env  Const.exn_lid [] ktype [l] in
-    let env = List.fold_left push_sigelt env (data_ops@discs) in
-    env, se'::data_ops@discs
+    let env = List.fold_left push_sigelt env (discs@data_ops) in
+    env, se'::discs@data_ops
         
   | Exception(id, Some term) ->
     let t = desugar_typ env term in
@@ -1334,8 +1277,8 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let env = push_sigelt env se' in
     let data_ops = mk_data_projectors env se in
     let discs = mk_data_discriminators env Const.exn_lid [] ktype [l] in
-    let env = List.fold_left push_sigelt env (data_ops@discs) in
-    env, se'::data_ops@discs
+    let env = List.fold_left push_sigelt env (discs@data_ops) in
+    env, se'::discs@data_ops
    
   | KindAbbrev(id, binders, k) ->
     let env, _ = desugar_kind_abbrev d.drange env id binders k in 

@@ -76,9 +76,9 @@ let maybe_alpha_subst s b1 b2 =
         | Inr x, Inr y -> if Util.bvar_eq x y then s else  (Inr(x.v, bvar_to_exp y))::s
         | _ -> failwith "impossible"
 
-let maybe_extend_subst s b v =  
+let maybe_extend_subst s b v : subst =  
     if is_null_binder b then s 
-    else match fst b, v with
+    else match fst b, fst v with
           | Inl a, Inl t ->  (Inl(a.v,t))::s
           | Inr x, Inr e ->  (Inr(x.v,e))::s
           | _ -> failwith "Impossible"
@@ -94,12 +94,10 @@ let value_check_expected_typ env e tc : exp * comp =
    | None -> e, c
    | Some t' -> 
      let e, g = Tc.Util.check_and_ascribe env e t t' in
-     if debug env Options.Low
-     then Util.fprint1 "Strengthening pre-condition with guard = %s\n" (Rel.guard_to_string env g);
-     let c = Tc.Util.strengthen_precondition (Some <| Errors.subtyping_failed env t t') env c g in
+     let c = Tc.Util.strengthen_precondition (Some <| Errors.subtyping_failed env t t') env e c g in
      e, Util.set_result_typ c t' in
   if debug env Options.Low 
-  then Util.fprint1 "Return comp type is %s\n" (Print.comp_typ_to_string <| snd res);
+  then Util.fprint1 "Return comp type is %s\n" (Print.comp_typ_to_string <| (norm_c env  (snd res)));
   res
 
 
@@ -267,53 +265,84 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
         (Util.string_of_int <| List.length args)
         (Print.typ_to_string top);
     let head, k1, f1 = tc_typ env head in 
-    if debug env Options.Extreme then Util.fprint2 "(%s) Destructing arrow kind: %s\n" (Range.string_of_range top.pos) (Print.kind_to_string k1);
-    let args, f2 = tc_args env args in
-    let imps, formals, kres = Tc.Util.destruct_arrow_kind env head k1 args in
-    let rec check_args outargs subst g formals args = match formals, args with 
-      | [], [] -> g, Util.subst_kind subst kres, List.rev outargs
-      | formal::formals, actual::actuals -> 
-        begin match formal, actual with 
-            | (Inl a, _), (Inl t, _) -> 
-              let env = Env.set_range env t.pos in 
-              let g' = Tc.Rel.subkind env t.tk (Util.subst_kind subst a.sort) in
-              let subst = maybe_extend_subst subst formal (Inl t) in
-              check_args (actual::outargs) subst (Rel.conj_guard g g') formals actuals
+    let k1 = Normalize.norm_kind [Normalize.WHNF; Normalize.Beta] env k1 in 
+    let check_app () = match k1.n with
+       | Kind_uvar _ -> (* intantiate k1 = 'u1 x1 ... xm; instantiate 'u1 to  \x1...xm. t1 => ... tn => 'u2 x1 .. xm, where argi:ti, and *)
+         let args, g = tc_args env args in
+         let fvs = Util.freevars_kind k1 in
+         let binders = Util.binders_of_freevars fvs in 
+         let kres = Tc.Rel.new_kvar k1.pos binders |> fst in
+         let bs = null_binders_of_args args in
+         let kar = mk_Kind_arrow(bs, kres) k1.pos in
+         trivial <| keq env None k1 kar;
+         g, kres, args
+       
+       | Kind_arrow(formals, kres) -> 
 
-            | (Inr x, _), (Inr v, _) -> 
-              let env = Env.set_range env t.pos in 
-              let tx = Util.subst_typ subst x.sort in
-              if debug env Options.Extreme then Util.fprint4 "(%s) Checking arg %s:%s against type %s" (Range.string_of_range v.pos) (Print.exp_to_string v) (Print.typ_to_string v.tk) (Print.typ_to_string tx); 
-              let _, g' = Tc.Util.check_and_ascribe env v v.tk tx in
-              let subst = maybe_extend_subst subst formal (Inr v) in
-              check_args (actual::outargs) subst (Rel.conj_guard g g') formals actuals
+          let add_implicits formals args = match formals, args with 
+            | (_, true)::_, (_, false)::_ -> (* a prefix of formals are implicit args are to be instantiated *)
+              let rec aux subst formals implicits = match formals with 
+                | []
+                | (_, false)::_ -> subst, formals, implicits 
+                | formal::formals -> 
+                  let implicit = match fst formal with 
+                    | Inl a -> Inl (Tc.Util.new_tvar env (Util.subst_kind subst a.sort)), true
+                    | Inr x -> Inr (Tc.Util.new_evar env (Util.subst_typ subst x.sort)), true in
+                  let subst = maybe_extend_subst subst formal implicit in
+                  aux subst formals (implicit::implicits) in
+              aux [] formals [] 
+           | _ -> [], formals, [] in
+           
+          let rec check_explicit_args outargs subst g formals args = match formals, args with 
+              | [], [] -> g, Util.subst_kind subst kres, List.rev outargs
+              | formal::formals, actual::actuals -> 
+                begin match formal, actual with 
+                    | (Inl a, _), (Inl t, imp) -> (* explicit type argument *)
+                      let formal_k = Util.subst_kind subst a.sort in
+                      if Env.debug env Options.Low then Util.fprint2 "Checking argument %s against expected kind %s\n" (Print.arg_to_string actual) (Print.kind_to_string formal_k);
+                      let t, g' = tc_typ_check env t formal_k in
+                      let actual = Inl t, imp in
+                      let g' = Tc.Util.weaken_guard (Tc.Util.short_circuit_guard (Inl head) outargs) g' in
+                      let subst = maybe_extend_subst subst formal actual in
+                      check_explicit_args (actual::outargs) subst (Rel.conj_guard g g') formals actuals
 
-            | (Inl a, _), (Inr v, _) ->
-               let fail () = raise (Error("Expected a type; got an expression", v.pos)) in
-              (match a.sort.n with
-                | Kind_type ->
-                    begin match try_subtype env v.tk Tc.Util.t_bool with 
-                        | Some Trivial -> (* implicitly promote it to a Type using b2t *)
-                           begin match Tc.Env.lookup_typ_abbrev env Const.b2t_lid with 
-                            | None -> fail ()
-                            | Some b2t -> 
-                              let tv = mk_Typ_app(b2t, [varg v]) ktype v.pos in
-                              check_args outargs subst g (formal::formals) (targ tv::actuals)
-                           end
-                        | _ -> fail ()
-                    end
-                | _ -> 
-                  raise (Error("Expected a type; got an expression", v.pos)))
+                    | (Inr x, _), (Inr v, imp) -> (* explicit term argument *)
+                      let tx = Util.subst_typ subst x.sort in
+                      let env' = Env.set_expected_typ env tx in
+                      let v, _, g' = tc_total_exp env' v in
+                      let actual = Inr v, imp in
+                      let g' = Tc.Util.weaken_guard (Tc.Util.short_circuit_guard (Inl head) outargs) g' in
+                      let subst = maybe_extend_subst subst formal actual in
+                      check_explicit_args (actual::outargs) subst (Rel.conj_guard g g') formals actuals
+
+                    | (Inl a, _), (Inr v, imp) -> (* bool-to-type promotion *)
+                       begin match a.sort.n with
+                            | Kind_type ->
+                                let tv = Util.b2t v in 
+                                check_explicit_args outargs subst g (formal::formals) (targ tv::actuals)
+                            | _ ->
+                              raise (Error("Expected a type; got an expression", v.pos))
+                       end
             
-            | (Inr _, _), (Inl t, _) ->
-              raise (Error("Expected an expression; got a type", t.pos)) 
-        end 
+                    | (Inr _, _), (Inl t, _) ->
+                      raise (Error("Expected an expression; got a type", t.pos)) 
+                end 
 
-      | _, [] -> g, Util.subst_kind subst (mk_Kind_arrow(formals, kres) kres.pos), List.rev outargs //partial app
+             | _, [] -> g, Util.subst_kind subst (mk_Kind_arrow(formals, kres) kres.pos), List.rev outargs //partial app
 
-      | [], _ -> raise (Error("Too many arguments to type", top.pos)) in
-    let g, k, args = check_args [] [] (Rel.conj_guard f1 f2) formals args in
-    let t = mk_Typ_app(head, imps@args) k top.pos in
+             | [], _ -> raise (Error(Util.format3 "Too many arguments to type: head is %s, seen args = %s, more args = %s\n" 
+                                        (Print.typ_to_string head) (Print.args_to_string (List.rev outargs)) (Print.args_to_string args), 
+                                    top.pos)) in
+
+         let subst, formals, implicits = add_implicits formals args in
+         check_explicit_args implicits subst f1 formals args
+      
+      
+       | _ -> raise (Error(Tc.Errors.expected_tcon_kind env top k1, top.pos)) in
+      
+      
+    let g, k, args = check_app () in
+    let t = mk_Typ_app(head, args) k top.pos in
     t, k, g
   
   | Typ_ascribed(t1, k1) -> 
@@ -554,7 +583,7 @@ and tc_exp env e : exp * comp =
   | Exp_ascribed(e1, t1) -> 
     let t1, f = tc_typ_check env t1 ktype in 
     let e1, c = tc_exp (Env.set_expected_typ env t1) e1 in
-    comp_check_expected_typ env (w c <| mk_Exp_ascribed'(e1, t1)) (Tc.Util.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t1.pos) c f)
+    comp_check_expected_typ env (w c <| mk_Exp_ascribed'(e1, t1)) (Tc.Util.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t1.pos) e1 c f)
 
   | Exp_meta(Meta_desugared(e, Data_app)) -> 
     (* These are (potentially) values, but constructor types 
@@ -639,14 +668,14 @@ and tc_exp env e : exp * comp =
     end;
     dc, c_dc (* NB: Removed the Meta_datainst tag on the way up---no other part of the compiler sees Meta_datainst *)
 
-  | Exp_app(f, args) ->
+  | Exp_app(head, args) ->
     let env0 = env in
     let env = Tc.Env.clear_expected_typ env |> fst |> instantiate_both in 
     if debug env Options.High then Util.fprint2 "(%s) Checking app %s\n" (Range.string_of_range top.pos) (Print.exp_to_string top);
-    let head_is_atom = Util.is_atom f in 
-    let f, cf = tc_exp (no_inst env) f in //Don't instantiate f; instantiations will be computed below, accounting for implicits/explicits
-    let tf = Util.comp_result cf in
-    if debug env Options.High then Util.fprint2 "(%s) Type of head is %s\n" (Range.string_of_range f.pos) (Print.typ_to_string tf);
+    let head_is_atom = Util.is_atom head in 
+    let head, chead = tc_exp (no_inst env) head in //Don't instantiate f; instantiations will be computed below, accounting for implicits/explicits
+    let thead = Util.comp_result chead in
+    if debug env Options.High then Util.fprint2 "(%s) Type of head is %s\n" (Range.string_of_range head.pos) (Print.typ_to_string thead);
     let rec check_function_app norm tf = match (Util.unrefine tf).n with 
         | Typ_uvar _
         | Typ_app({n=Typ_uvar _}, _) ->
@@ -658,16 +687,15 @@ and tc_exp env e : exp * comp =
                   let e, c = tc_exp env e in 
                   let args, comps = tc_args env tl in 
                   (Inr e, imp)::args, c::comps in
-          (* Infer: t1 -> ... -> tn -> ML ('u 'a1 ... 'am), 
+          (* Infer: t1 -> ... -> tn -> ML ('u x1...xm), 
                     where ti are the result types of each arg
-                    and  'ai are the free type variables in the environment *)
+                    and   xi are the free type/term variables in the environment *)
           let args, comps = tc_args env args in 
           let bs = null_binders_of_args args in
-          let ai = Env.t_binders env in
           let cres = Util.ml_comp (Tc.Util.new_tvar env ktype) top.pos in
           trivial <| Rel.teq env tf (mk_Typ_fun(bs, cres) ktype tf.pos);
-          let comp = List.fold_right (fun c out -> Tc.Util.bind env None c (None, out)) (cf::comps) cres in
-          mk_Exp_app(f, args) (Util.comp_result comp) top.pos, comp
+          let comp = List.fold_right (fun c out -> Tc.Util.bind env None c (None, out)) (chead::comps) cres in
+          mk_Exp_app(head, args) (Util.comp_result comp) top.pos, comp
 
         | Typ_fun(bs, c) -> 
           let vars = Tc.Env.binders env in
@@ -705,9 +733,10 @@ and tc_exp env e : exp * comp =
               let k = Util.subst_kind subst a.sort in 
               fxv_check env (Inl k) fvs;
               let t, g' = tc_typ_check env t k in
+              let g' = Tc.Util.weaken_guard (Tc.Util.short_circuit_guard (Inr head) outargs) g' in
               let g' = Tc.Util.label_guard Errors.ill_kinded_type t.pos g' in
-              let subst = maybe_extend_subst subst (List.hd bs) (Inl t) in
               let arg = targ t in 
+              let subst = maybe_extend_subst subst (List.hd bs) arg in
               tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard g g', fvs) rest cres rest'
 
             | (Inr x, _)::rest, (Inr e, _)::rest' -> (* a concrete exp argument *)
@@ -718,16 +747,16 @@ and tc_exp env e : exp * comp =
               let env = Tc.Env.set_expected_typ env targ in
               if debug env Options.High then  Util.fprint3 "Checking arg (%s) %s at type %s\n" (Print.tag_of_exp e) (Print.exp_to_string e) (Print.typ_to_string targ);
               let e, c = tc_exp env e in 
+              let c = Tc.Util.weaken_precondition env c (Tc.Util.short_circuit_guard (Inr head) outargs) in
               if Util.is_total_comp c 
-              then let subst = maybe_extend_subst subst (List.hd bs) (Inr e) in
-                   let arg = varg e in 
+              then let arg = varg e in 
+                   let subst = maybe_extend_subst subst (List.hd bs) arg in
                    tc_args (subst, arg::outargs, arg::arg_rets, comps, g, fvs) rest cres rest'
               else if Tc.Util.is_pure env c 
               then let g' = Util.must <| Tc.Rel.sub_comp env c (mk_Total (Util.comp_result c)) in
                    if debug env Options.Low then Util.fprint1 "Guard is %s\n" (Tc.Rel.guard_to_string env g');
-                 //  let g' = Tc.Util.label_guard Errors.totality_check e.pos g' in
-                   let subst = maybe_extend_subst subst (List.hd bs) (Inr e) in
                    let arg = varg e in
+                   let subst = maybe_extend_subst subst (List.hd bs) arg in
                    tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard g g', fvs) rest cres rest'
               else if is_null_binder (List.hd bs)
               then let newx = Util.gen_bvar_p e.pos (Util.comp_result c) in
@@ -748,19 +777,20 @@ and tc_exp env e : exp * comp =
                     let cres = if Util.is_total_comp cres 
                                && head_is_atom 
                                && comps |> Util.for_some (fun (_, c) -> not (Util.is_pure env c))
-                               then Util.maybe_assume_result_eq_pure_term env (mk_Exp_app_flat(f, List.rev arg_rets) (Util.comp_result cres) top.pos) cres
+                               then Util.maybe_assume_result_eq_pure_term env (mk_Exp_app_flat(head, List.rev arg_rets) (Util.comp_result cres) top.pos) cres
                                else (if Env.debug env Options.Low
-                                     then Util.fprint3 "Not refining result: f=%s; cres=%s; head_is_atom?=%s\n" (Print.exp_to_string f) (if head_is_atom then "yes" else "no") (Print.comp_typ_to_string cres); 
+                                     then Util.fprint3 "Not refining result: f=%s; cres=%s; head_is_atom?=%s\n" (Print.exp_to_string head) (Print.comp_typ_to_string <| norm_c env cres) (if head_is_atom then "yes" else "no"); 
                                      cres) in
                     (* relabeling the labeled sub-terms in cres to report failing pre-conditions at this call-site *)
                     Tc.Util.refresh_comp_label env false cres 
                 | _ -> mk_Total  (Util.subst_typ subst <| mk_Typ_fun(bs, cres) ktype top.pos) (* partial app *) in
-              if debug env Options.Low then Util.fprint1 "\t Type of result cres is %s\n" (Print.comp_typ_to_string cres);
+              if debug env Options.Low then Util.fprint1 "\t Type of result cres is %s\n" (Print.comp_typ_to_string <| norm_c env cres);
               let comp = List.fold_left (fun out c -> Tc.Util.bind env None (snd c) (fst c, out)) cres comps in
-              let comp = Tc.Util.bind env None cf (None, comp) in
-              let comp = Tc.Util.strengthen_precondition None env comp g in //Each conjunct in g is already labeled
-              if debug env Options.Low then Util.fprint1 "\t Type of app term is %s\n" (Print.comp_typ_to_string comp);
-              mk_Exp_app_flat(f, List.rev outargs) (Util.comp_result comp) top.pos, comp
+              let comp = Tc.Util.bind env None chead (None, comp) in
+              let app =  mk_Exp_app_flat(head, List.rev outargs) (Util.comp_result comp) top.pos in
+              let comp = Tc.Util.strengthen_precondition None env app comp g in //Each conjunct in g is already labeled
+              if debug env Options.Low then Util.fprint1 "\t Type of app term is %s\n" (Print.comp_typ_to_string <| norm_c env comp);
+              app, comp
                
             | (Inr _, _)::_, (Inl _, _)::_ ->
               raise (Error(Util.format1 "Unexpected type argument (%s)" (Print.exp_to_string top), argpos (List.hd args)))
@@ -782,10 +812,10 @@ and tc_exp env e : exp * comp =
         | _ -> 
             if not norm
             then check_function_app true (whnf env tf) 
-            else raise (Error(Tc.Errors.expected_function_typ env tf, f.pos)) in
+            else raise (Error(Tc.Errors.expected_function_typ env tf, head.pos)) in
 
-    let e, c = check_function_app false (Util.unrefine tf) in
-    let c = if !Options.verify && (Util.is_primop f || Util.is_total_comp c)
+    let e, c = check_function_app false (Util.unrefine thead) in
+    let c = if !Options.verify && (Util.is_primop head || Util.is_total_comp c)
             then Tc.Util.maybe_assume_result_eq_pure_term env e c 
             else c in
     if debug env Options.Extreme then  Util.fprint3 "(%s) About to check %s against expected typ %s" (Range.string_of_range e.pos) (Print.typ_to_string (Util.comp_result (Tc.Normalize.normalize_comp env0 c))) (Env.expected_typ env0 |> (fun x -> match x with None -> "None" | Some t-> Print.typ_to_string t));
@@ -829,7 +859,7 @@ and tc_exp env e : exp * comp =
                  f, env1 in
 
     let e1, c1 = tc_exp env1 e1 in 
-    let c1 = Tc.Util.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t.pos) c1 f in
+    let c1 = Tc.Util.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t.pos) e1 c1 f in
     begin match x with 
         | Inr _ -> (* top-level let, always ends with e2=():unit *)
           begin if !Options.verify
@@ -1313,7 +1343,7 @@ and tc_decls env ses deserialized =
   let se, env = tc_decl env se deserialized in
   if debug env Options.Low
   then Util.print_string (Util.format1 "Checked sigelt\t%s\n" (Print.sigelt_to_string se));
-  if not <| lid_equals env.curmodule Const.prims_lid then env.solver.encode_sig env se; 
+  env.solver.encode_sig env se; 
   se::ses, env) ([], env) ses in
   List.rev ses, env 
 
