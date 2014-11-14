@@ -21,7 +21,6 @@ let rec black_height t = match t with
     let hha = black_height a in
     let hhb = black_height b in
     match (hha, hhb) with
-      (*match (black_height a, black_height b) with *)
       | Some ha, Some hb ->
 	if ha = hb then
 	  if c = R then Some ha else Some (ha + 1)
@@ -39,6 +38,19 @@ let rec c_inv t = match t with
   | T B a _ b -> c_inv a && c_inv b
 
 type r_inv (t:rbtree) = is_E t \/ (is_T t /\ T.col t = B)
+
+val key_order: t:rbtree -> Tot bool
+let rec key_order t = match t with
+  | E -> true
+  | T _ a x b ->
+    let k_ok = match (a, b) with
+      | E, E -> true
+      | E, T _ _ y _ -> x < y
+      | T _ _ y _, E -> x > y
+      | T _ _ y _, T _ _ z _ -> x > y && x < z
+    in
+    key_order a && key_order b && k_ok
+
 
 type balanced_rbtree (t:rbtree) = r_inv t /\ h_inv t /\ c_inv t
 
@@ -106,7 +118,7 @@ val make_black: t:rbtree -> Pure rbtree (requires (c_inv t /\ is_T t /\ h_inv t)
                             (ensures (fun r -> c_inv r /\ (is_T r /\ T.col r = B) /\ h_inv r))
 let make_black t = match t with
   | T _ a x b -> T B a x b
-  | _ -> assert(false); E
+  | _ -> assert(false); E3
 
 val insert: t:rbtree -> nat -> Pure rbtree
                                (requires (balanced_rbtree t))
