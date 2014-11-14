@@ -500,7 +500,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
            mlexpr_of_expr mlenv rg lenv e 
 
         | Exp_abs ((Inl _, _)::rest, e) ->
-          (* FIXME: should only occur after a let-binding *)
+           (* FIXME: should only occur after a let-binding *)
            mlexpr_of_expr mlenv rg lenv (if List.isEmpty rest then e else mk_Exp_abs(rest, e) tun e.pos)
 
         | Exp_abs ((Inr x, _)::rest, e) ->
@@ -634,11 +634,15 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
                 ((x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) :: types, ctors, abbrvs)
             end
 
-            | Sig_datacon (x, ty, ((tx, _, _) as pr), _, rg) ->
+            | Sig_datacon (x, ty, pr, _, rg) ->
                 (types, (x.ident.idText, (ty, pr)) :: ctors, abbrvs)
 
             | Sig_typ_abbrev (x, tps, k, body, _, rg) ->
-                (types, ctors, abbrvs) (* FIXME *)
+                let ar =
+                    match mlkind_of_kind tps k with
+                    | None    -> unsupported rg "not-an-ML-kind"
+                    | Some ar -> ar in
+                (types, ctors, (x.ident.idText, body, tenv_of_tvmap ar, rg) :: abbrvs)
 
             | _ ->
                 unexpected
@@ -651,37 +655,45 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
         (ts, Map.ofList cs, abbrvs)
     in
 
-    let fortype (x, tcs, tparams, rg) =
-        let mldcons_of_cons cname =
-            let (c, _) = Map.find cname.ident.idText cs in
-            let cparams, rgty, c = strip_polymorphism [] rg c in
+    let fortype ty =
+        match ty with
+        | Inl (x, tcs, tparams, rg) -> begin
+            let mldcons_of_cons cname =
+                let (c, _) = Map.find cname.ident.idText cs in
+                let cparams, rgty, c = strip_polymorphism [] rg c in
 
-            if List.length cparams <> List.length tparams then
-                unexpected rg "invalid-number-of-ctor-params";
+                if List.length cparams <> List.length tparams then
+                    unexpected rg "invalid-number-of-ctor-params";
 
-            let cparams = List.map (fun (x, _) -> x.idText) cparams in
+                let cparams = List.map (fun (x, _) -> x.idText) cparams in
 
-            let tenv = List.zip cparams tparams in
-            let tenv = TEnv (Map.ofList tenv) in
+                let tenv = List.zip cparams tparams in
+                let tenv = TEnv (Map.ofList tenv) in
 
-            let c = mlty_of_ty mlenv tenv (rgty, c) in
-            let (args, name) = mltycons_of_mlty c in
+                let c = mlty_of_ty mlenv tenv (rgty, c) in
+                let (args, name) = mltycons_of_mlty c in
 
-            match name with
-            | MLTY_Named (tyargs, name) when snd name = x ->
-                let check x mty = match mty with | MLTY_Var mtyx -> x = mtyx | _ -> false in
+                match name with
+                | MLTY_Named (tyargs, name) when snd name = x ->
+                    let check x mty = match mty with | MLTY_Var mtyx -> x = mtyx | _ -> false in
 
-                if List.length tyargs <> List.length cparams then
-                    unexpected rg "dtype-invalid-ctor-result";
-                if not (List.forall2 check tparams tyargs) then
-                    unsupported rg "dtype-invalid-ctor-result";
-                (cname.ident.idText, args)
+                    if List.length tyargs <> List.length cparams then
+                        unexpected rg "dtype-invalid-ctor-result";
+                    if not (List.forall2 check tparams tyargs) then
+                        unsupported rg "dtype-invalid-ctor-result";
+                    (cname.ident.idText, args)
 
-            | _ -> unexpected rg "dtype-invalid-ctor-result"   
+                | _ -> unexpected rg "dtype-invalid-ctor-result"   
+            in (x, tparams, MLTD_DType (List.map mldcons_of_cons tcs))
+        end
 
-        in (x, tparams, MLTD_DType (List.map mldcons_of_cons tcs))
+        | Inr (x, body, (tenv, tparams), rg) -> begin
+            let body = mlty_of_ty mlenv tenv (rg, body) in
+            (x, tparams, MLTD_Abbrev body)
+        end
 
-    in List.map fortype ts
+    in List.map fortype (List.concat [List.map (fun x -> Inl x) ts;
+                                      List.map (fun x -> Inr x) abbrvs])
 
 (* -------------------------------------------------------------------- *)
 let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
