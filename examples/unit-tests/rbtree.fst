@@ -14,23 +14,19 @@ let color_of t = match t with
   | E -> B
   | T c _ _ _ -> c
 
-val black_root: t:rbtree -> Tot bool
-let black_root t = color_of t = B
-
-val left_black_height: t:rbtree -> nat -> Tot nat
-let rec left_black_height t n = match t with
-  | E -> n
-  | T B a _ _ -> left_black_height a (n + 1)
-  | T R a _ _ -> left_black_height a n
-
-val right_black_height: t:rbtree -> nat -> Tot nat
-let rec right_black_height t n = match t with
-  | E -> n
-  | T B _ _ b -> right_black_height b (n + 1)
-  | T R _ _ b -> right_black_height b n
+val black_height: t:rbtree -> Tot (option nat)
+let rec black_height t = match t with
+  | E -> Some 0
+  | T c a _ b -> match (black_height a, black_height b) with
+      | Some ha, Some hb ->
+	if ha = hb then
+	  if c = R then Some ha else Some (ha + 1)
+	else
+	  None
+      | _, _ -> None
 
 val h_inv: t:rbtree -> Tot bool
-let h_inv t = (left_black_height t 0) = (right_black_height t 0)
+let h_inv t = is_Some (black_height t)
 
 val c_inv: t:rbtree -> Tot bool
 let rec c_inv t = match t with
@@ -54,42 +50,58 @@ type not_c_inv (t:rbtree) =
 type lr_c_inv (t:rbtree) = c_inv (T.left t) /\ c_inv (T.right t)
 
 type pre_balance (c:color) (lt:rbtree) (rt:rbtree) =
-    (c = B /\ not_c_inv lt /\ lr_c_inv lt /\ c_inv rt) \/
+    (h_inv lt /\ h_inv rt /\ Some.v (black_height lt) = Some.v (black_height rt))
+
+    /\
+
+    ((c = B /\ not_c_inv lt /\ lr_c_inv lt /\ c_inv rt) \/
     (c = B /\ not_c_inv rt /\ lr_c_inv rt /\ c_inv lt) \/
-    (c_inv lt /\ c_inv rt)
+    (c_inv lt /\ c_inv rt))
     
 val balance: c:color -> lt:rbtree -> ky:nat -> rt:rbtree ->
              Pure rbtree
-                        (requires (pre_balance c lt rt))
-			(ensures (fun r -> (is_T r) /\ (c_inv r \/
-			                   (T.col r = R /\ c = R /\ not_c_inv r /\ lr_c_inv r)))
+             (requires (pre_balance c lt rt))
+	     (ensures (fun r -> (is_T r)  /\
+	                        ((h_inv r) /\
+                                 ((c = B /\ Some.v(black_height r) = Some.v(black_height lt) + 1) \/
+                                  (c = R /\ Some.v(black_height r) = Some.v(black_height lt)))) /\              
+                                (c_inv r  \/
+			        (T.col r = R /\ c = R /\ not_c_inv r /\ lr_c_inv r)))
 			)
 let balance c lt ky rt =
   match (c, lt, ky, rt) with
-    | (B, (T R (T R a x b) y c), z, d)
-    | (B, (T R a x (T R b y c)), z, d)
-    | (B, a, x, (T R (T R b y c) z d))
-    | (B, a, x, (T R b y (T R c z d))) -> T R (T B a x b) y (T B c z d)	
+      (* combining the patterns below does not verify *)
+    | (B, (T R (T R a x b) y c), z, d) -> T R (T B a x b) y (T B c z d)
+    | (B, (T R a x (T R b y c)), z, d) -> T R (T B a x b) y (T B c z d)
+    | (B, a, x, (T R (T R b y c) z d)) -> T R (T B a x b) y (T B c z d)
+    | (B, a, x, (T R b y (T R c z d))) -> T R (T B a x b) y (T B c z d)
     | _ -> T c lt ky rt
 
-val ins: t:rbtree -> k:nat -> Pure rbtree
-                              (requires (c_inv t))
-			      (ensures (fun r -> (is_T r) /\ (c_inv r \/			      
-			                         (is_T t /\ T.col r = R /\ T.col t = R /\ not_c_inv r /\ lr_c_inv r)))) (* why is is_T necessary in the second clause of disjunction ? T.col r = R should mean is_T t itself ? *)
+val ins: t:rbtree -> k:nat ->
+         Pure rbtree
+         (requires (c_inv t /\ h_inv t))
+	 (ensures (fun r -> (is_T r) /\
 
-let rec ins t x = match t with
-  | E -> T R E x E    
-  | T c a y b ->
-    if x < y then
-      (* without this let binding, fails to verify ? *)
-      let lt = ins a x in
-      balance c lt y b
-    else if x = y then
-      t
-    else
-      let rt = ins b x in
-      balance c a y rt
+                            (h_inv r /\ black_height r = black_height t)
+          
+                            /\
 
+                            (c_inv r \/
+		            (is_T t /\ T.col r = R /\ T.col t = R /\ not_c_inv r /\ lr_c_inv r))))
+
+let rec ins t x =
+  match t with
+    | E -> let _ = T R E x E
+    | T c a y b ->
+      if x < y then	
+	let lt = ins a x in
+	balance c lt y b
+      else if x = y then
+	t
+      else
+	let rt = ins b x in	
+	balance c a y rt
+(*
 val insert: t:rbtree -> nat -> Pure rbtree
                                (requires (balanced_rbtree t))
 			       (ensures (fun x -> True))
@@ -98,3 +110,4 @@ let insert t x =
   let r' = make_black r in
   assert(is_T r' /\ T.col r' = B /\ c_inv r');
   r'
+*)
