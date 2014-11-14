@@ -17,7 +17,11 @@ let color_of t = match t with
 val black_height: t:rbtree -> Tot (option nat)
 let rec black_height t = match t with
   | E -> Some 0
-  | T c a _ b -> match (black_height a, black_height b) with
+  | T c a _ b -> 
+    let hha = black_height a in
+    let hhb = black_height b in
+    match (hha, hhb) with
+      (*match (black_height a, black_height b) with *)
       | Some ha, Some hb ->
 	if ha = hb then
 	  if c = R then Some ha else Some (ha + 1)
@@ -34,14 +38,10 @@ let rec c_inv t = match t with
   | T R a _ b -> color_of a = B && color_of b = B && c_inv a && c_inv b
   | T B a _ b -> c_inv a && c_inv b
 
-type balanced_rbtree (t:rbtree) = (is_E t \/ (is_T t && T.col t = B)) /\ h_inv t /\ c_inv t
+type r_inv (t:rbtree) = is_E t \/ (is_T t /\ T.col t = B)
 
+type balanced_rbtree (t:rbtree) = r_inv t /\ h_inv t /\ c_inv t
 
-val make_black: t:rbtree -> Pure rbtree (requires (c_inv t /\ is_T t))
-                            (ensures (fun r -> c_inv r /\ (is_T r && T.col r = B)))
-let make_black t = match t with
-  | T _ a x b -> T B a x b
-  | _ -> assert(false); E
 
 type not_c_inv (t:rbtree) =
    (T.col t = R /\ T.col (T.left t) = R) \/
@@ -91,9 +91,9 @@ val ins: t:rbtree -> k:nat ->
 
 let rec ins t x =
   match t with
-    | E -> let _ = T R E x E
+    | E -> T R E x E
     | T c a y b ->
-      if x < y then	
+      if x < y then
 	let lt = ins a x in
 	balance c lt y b
       else if x = y then
@@ -101,13 +101,17 @@ let rec ins t x =
       else
 	let rt = ins b x in	
 	balance c a y rt
-(*
+
+val make_black: t:rbtree -> Pure rbtree (requires (c_inv t /\ is_T t /\ h_inv t))
+                            (ensures (fun r -> c_inv r /\ (is_T r /\ T.col r = B) /\ h_inv r))
+let make_black t = match t with
+  | T _ a x b -> T B a x b
+  | _ -> assert(false); E
+
 val insert: t:rbtree -> nat -> Pure rbtree
                                (requires (balanced_rbtree t))
-			       (ensures (fun x -> True))
+			       (ensures (fun r -> balanced_rbtree r))
 let insert t x = 
   let r = ins t x in  
   let r' = make_black r in
-  assert(is_T r' /\ T.col r' = B /\ c_inv r');
   r'
-*)
