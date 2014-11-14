@@ -58,12 +58,16 @@ let infix_prim_ops = [
 (* -------------------------------------------------------------------- *)
 let prim_uni_ops = [
     ("op_Negation", "not");
+    ("exit", "exit");
 ]
 
 (* -------------------------------------------------------------------- *)
 let prim_types = [
+    ("bool", "bool");
     ("string", "string");
     ("option", "option");
+    ("int32", "Int32.t");
+    ("int64", "Int64.t");
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -260,7 +264,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
         let ids  = List.map (fun (x, _) -> text x) ids in
         let body = doc_of_expr (min_op_prec, NonAssoc) body in
         let doc  = reduce1 [text "fun"; reduce1 ids; text "->"; body] in
-        maybe_paren outer e_bin_prio_lambda doc
+        parens doc
 
     | MLE_If (cond, e1, None) ->
         let cond = doc_of_expr (min_op_prec, NonAssoc) cond in
