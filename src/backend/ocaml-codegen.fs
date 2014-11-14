@@ -66,6 +66,7 @@ let prim_types = [
     ("char", "char");
     ("bool", "bool");
     ("string", "string");
+    ("unit", "unit");
     ("ref", "ref");
     ("array", "array");
     ("option", "option");

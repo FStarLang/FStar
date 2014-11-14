@@ -43,6 +43,10 @@ module Microsoft = struct
 
 
     module Util = struct
+      type 'a set = 'a Prims.list * ('a -> 'a -> bool)
+
+      type 'v smap = (string, 'v) BatHashtbl.t
+
       let format (fmt:string) (args:string list) =
         let frags = BatString.nsplit fmt "%s" in
         if BatList.length frags <> BatList.length args + 1 then
@@ -60,6 +64,10 @@ module Microsoft = struct
       let print_string s = pr "%s" s
 
       let int_of_string (s:string) = int_of_string s
+
+      type ('a,'b) either =
+        | Inl of 'a
+        | Inr of 'b
 
       let for_some p l = BatList.exists p (Prims.nl2l l)
 

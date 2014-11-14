@@ -34,11 +34,18 @@ end
 module Microsoft : sig
   module FStar : sig
     module Util : sig
+      type 'a set = 'a Prims.list * ('a -> 'a -> bool)
+
+      type 'v smap = (string, 'v) BatHashtbl.t
+
       val format1: string -> string -> string
       val format2: string -> string -> string -> string
       val format3: string -> string -> string -> string -> string
       val print_string : string -> unit
       val int_of_string : string -> int
+      type ('a,'b) either =
+        | Inl of 'a
+        | Inr of 'b
       val for_some : ('a -> bool) -> 'a Prims.list -> bool
       val mk_ref : 'a -> 'a ref
       val expand_environment_variable : string -> string
