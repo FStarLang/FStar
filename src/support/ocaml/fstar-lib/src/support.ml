@@ -1,4 +1,6 @@
 module Prims = struct
+  type byte = char
+  type double  = float
   type 'a list =
     | Nil
     | Cons of 'a * 'a list
@@ -11,6 +13,8 @@ module Prims = struct
   let pipe_left f = f
   let pipe_right x f = f x
   let ignore _ = ()
+  let fst = fst
+  let snd = snd
 end
 
 
@@ -26,6 +30,11 @@ end
 
 module List = struct
   let iter f nl = BatList.iter f (Prims.nl2l nl)
+  let partition p nl =
+    let (l1,l2) = BatList.partition p (Prims.nl2l nl) in
+    (Prims.l2nl l1, Prims.l2nl l2)
+  let append l1 l2 = Prims.l2nl ((Prims.nl2l l1)@(Prims.nl2l l2))
+  let fold_left f a l = BatList.fold_left f a (Prims.nl2l l)
 end
 
 
@@ -51,6 +60,8 @@ module Microsoft = struct
       let print_string s = pr "%s" s
 
       let int_of_string (s:string) = int_of_string s
+
+      let for_some p l = BatList.exists p (Prims.nl2l l)
 
       let mk_ref x = ref x
       let expand_environment_variable = Sys.getenv

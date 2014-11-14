@@ -63,8 +63,11 @@ let prim_uni_ops = [
 
 (* -------------------------------------------------------------------- *)
 let prim_types = [
+    ("char", "char");
     ("bool", "bool");
     ("string", "string");
+    ("ref", "ref");
+    ("array", "array");
     ("option", "option");
     ("int32", "Int32.t");
     ("int64", "Int64.t");
