@@ -43,13 +43,15 @@ val key_order: t:rbtree -> Tot bool
 let rec key_order t = match t with
   | E -> true
   | T _ a x b ->
-    let k_ok = match (a, b) with
-      | E, E -> true
-      | E, T _ _ y _ -> x < y
-      | T _ _ y _, E -> x > y
-      | T _ _ y _, T _ _ z _ -> x > y && x < z
+    let a_ok = match a with
+      | E -> true
+      | T _ _ y _ -> x > y
     in
-    key_order a && key_order b && k_ok
+    let b_ok = match b with
+      | E -> true
+      | T _ _ y _ -> y > x
+    in
+    key_order a && key_order b && a_ok && b_ok
 
 
 type balanced_rbtree (t:rbtree) = r_inv t /\ h_inv t /\ c_inv t
@@ -118,7 +120,7 @@ val make_black: t:rbtree -> Pure rbtree (requires (c_inv t /\ is_T t /\ h_inv t)
                             (ensures (fun r -> c_inv r /\ (is_T r /\ T.col r = B) /\ h_inv r))
 let make_black t = match t with
   | T _ a x b -> T B a x b
-  | _ -> assert(false); E3
+  | _ -> assert(false); t
 
 val insert: t:rbtree -> nat -> Pure rbtree
                                (requires (balanced_rbtree t))
