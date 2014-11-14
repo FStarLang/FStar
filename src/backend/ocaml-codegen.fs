@@ -58,7 +58,6 @@ let infix_prim_ops = [
 (* -------------------------------------------------------------------- *)
 let prim_uni_ops = [
     ("op_Negation", "not");
-    ("exit", "exit");
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -177,7 +176,8 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Bool     false -> "false"
   | MLC_Char     c     -> sprintf "'%s'" (encode_char c)
   | MLC_Byte     c     -> sprintf "'%s'" (ocaml_u8_codepoint c)
-  | MLC_Int      i     -> sprintf "%d" i // FIXME
+  | MLC_Int32    i     -> sprintf "%dl" i
+  | MLC_Int64    i     -> sprintf "%dL" i
   | MLC_Float    d     -> sprintf "%f" d
 
   | MLC_Bytes bytes ->

@@ -41,7 +41,8 @@ type mlconstant =
 | MLC_Unit
 | MLC_Bool   of bool
 | MLC_Byte   of byte
-| MLC_Int    of int64
+| MLC_Int32  of int32
+| MLC_Int64  of int64
 | MLC_Float  of float
 | MLC_Char   of char
 | MLC_String of string

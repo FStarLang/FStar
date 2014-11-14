@@ -10,6 +10,7 @@ module Prims : sig
   val ignore : 'a -> unit
   val fst : 'a * 'b -> 'a
   val snd : 'a * 'b -> 'b
+  val exit : BatInt32.t -> 'a
 end
 
 
@@ -42,7 +43,7 @@ module Microsoft : sig
       val format2: string -> string -> string -> string
       val format3: string -> string -> string -> string -> string
       val print_string : string -> unit
-      val int_of_string : string -> int
+      val int_of_string : string -> BatInt32.t
       type ('a,'b) either =
         | Inl of 'a
         | Inr of 'b

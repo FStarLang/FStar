@@ -15,6 +15,7 @@ module Prims = struct
   let ignore _ = ()
   let fst = fst
   let snd = snd
+  let exit i = exit (Int32.to_int i)
 end
 
 
@@ -63,7 +64,7 @@ module Microsoft = struct
       let fpr = Printf.fprintf
       let print_string s = pr "%s" s
 
-      let int_of_string (s:string) = int_of_string s
+      let int_of_string (s:string) = BatInt32.of_string s
 
       type ('a,'b) either =
         | Inl of 'a
