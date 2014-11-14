@@ -58,10 +58,10 @@ type balanced_rbtree (t:rbtree) = r_inv t /\ h_inv t /\ c_inv t
 
 
 type not_c_inv (t:rbtree) =
-   (T.col t = R /\ T.col (T.left t) = R) \/
-   (T.col t = R /\ T.col (T.right t) = R)
+    (is_T t) /\  ((T.col t = R /\ (is_T (T.left t) /\ T.col (T.left t) = R)) \/
+                  (T.col t = R /\ (is_T (T.right t) /\ T.col (T.right t) = R)))
 
-type lr_c_inv (t:rbtree) = c_inv (T.left t) /\ c_inv (T.right t)
+type lr_c_inv (t:rbtree) = is_T t /\ c_inv (T.left t) /\ c_inv (T.right t)
 
 type pre_balance (c:color) (lt:rbtree) (rt:rbtree) =
     (h_inv lt /\ h_inv rt /\ Some.v (black_height lt) = Some.v (black_height rt))
@@ -75,13 +75,14 @@ type pre_balance (c:color) (lt:rbtree) (rt:rbtree) =
 val balance: c:color -> lt:rbtree -> ky:nat -> rt:rbtree ->
              Pure rbtree
              (requires (pre_balance c lt rt))
-	     (ensures (fun r -> (is_T r)  /\
-	                        ((h_inv r) /\
-                                 ((c = B /\ Some.v(black_height r) = Some.v(black_height lt) + 1) \/
-                                  (c = R /\ Some.v(black_height r) = Some.v(black_height lt)))) /\              
-                                (c_inv r  \/
-			        (T.col r = R /\ c = R /\ not_c_inv r /\ lr_c_inv r)))
-			)
+	     (ensures (fun r -> is_Some (black_height lt) ==>
+                                  ((is_T r)  
+	                           /\ ((h_inv r) 
+                                       /\ ((c = B /\ Some.v(black_height r) = Some.v(black_height lt) + 1) \/
+                                             (c = R /\ Some.v(black_height r) = Some.v(black_height lt)))) 
+                                   /\ (c_inv r  \/
+			                 (T.col r = R /\ c = R /\ not_c_inv r /\ lr_c_inv r))))
+	     )
 let balance c lt ky rt =
   match (c, lt, ky, rt) with
       (* combining the patterns below does not verify *)
@@ -117,10 +118,8 @@ let rec ins t x =
 	balance c a y rt
 
 val make_black: t:rbtree -> Pure rbtree (requires (c_inv t /\ is_T t /\ h_inv t))
-                            (ensures (fun r -> c_inv r /\ (is_T r /\ T.col r = B) /\ h_inv r))
-let make_black t = match t with
-  | T _ a x b -> T B a x b
-  | _ -> assert(false); t
+                            (ensures (fun r -> c_inv r /\ (is_T r ==> T.col r = B) /\ h_inv r))
+let make_black (T _ a x b) = T B a x b
 
 val insert: t:rbtree -> nat -> Pure rbtree
                                (requires (balanced_rbtree t))
