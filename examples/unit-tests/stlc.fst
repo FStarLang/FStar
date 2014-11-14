@@ -92,21 +92,6 @@ let append g1 g2 x = match g2 x with
   | None -> g1 x
   | found -> found
 
-val extend_eq : g:env -> x:int -> a:ty -> Theorem 
-      (requires True)
-      (ensures ((extend g x a) x) = Some a)
-let extend_eq g x a = ()
-
-val extend_neq : g:env -> x1:int -> a:ty -> x2:int -> Theorem 
-      (requires (x1 <> x2))
-      (ensures ((extend g x1 a) x2) = g x2)
-let extend_neq g x1 a x2 = ()
-
-val sel_empty : x:int -> Theorem
-      (requires True)
-      (ensures (is_None (empty x)))
-let sel_empty x = ()
-
 (* CH: swapped env and exp args until functions are ignored from the
    lex ordering or until we can write decreasing clauses *)
 val typing : exp -> env -> Tot (option ty)

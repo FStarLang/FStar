@@ -24,3 +24,8 @@ type vector 'a : nat -> Type =
 val head: n:pos -> vector 'a n -> 'a
 let head n v = match v with
   | VCons x m xs -> x
+
+val nth : n:nat -> m:(m:nat{m > n}) -> vector 'a m -> 'a
+let rec nth n m v =
+  match v with
+    | VCons x m' xs -> if n = 0 then x else nth (n-1) m' xs

@@ -178,10 +178,10 @@ boot: $(BOOT_ALL)
 	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug_level Low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
 ocaml: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --fstar_home .. --trace_error $(FSTAROPTS) --codegen OCaml --debug_level Low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --codegen OCaml --debug_level Low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 	@echo "Compile the obtained module with: ocamlfind ocamlc -package fstar ocaml.ml"
 
-test: boot
+test: ocaml
 	make -s -C ../examples/unit-tests all-lax 
 	make -s -C ../examples/unit-tests vector
 	-make -s -C ../examples/unit-tests all-ver 

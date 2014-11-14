@@ -152,11 +152,11 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
         begin match se with 
           | Sig_typ_abbrev _
           | Sig_tycon _ -> Some <| Typ_name(OSig se, ftv lid kun)      
-          | Sig_datacon _
-          | Sig_let _ -> Some <| Exp_name(OSig se,  fvar lid (range_of_lid lid))
+          | Sig_datacon _ ->  Some <| Exp_name(OSig se,  fvar true lid (range_of_lid lid))
+          | Sig_let _ -> Some <| Exp_name(OSig se,  fvar false lid (range_of_lid lid))
           | Sig_val_decl(_, _, quals, _) ->
             if any_val || quals |> Util.for_some (function Assumption -> true | _ -> false)
-            then Some <| Exp_name(OSig se, fvar lid (range_of_lid lid))
+            then Some <| Exp_name(OSig se, fvar false lid (range_of_lid lid))
             else None
           | _ -> None
         end in
@@ -168,7 +168,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
         | None -> 
           let recname = qualify env lid.ident in
           Util.find_map env.recbindings (function
-            | Binding_let l when lid_equals l recname -> Some (Exp_name(ORec l, Util.fvar recname (range_of_lid recname)))
+            | Binding_let l when lid_equals l recname -> Some (Exp_name(ORec l, Util.fvar false recname (range_of_lid recname)))
             | Binding_tycon l when lid_equals l recname  -> Some(Typ_name(ORec l, ftv recname kun))
             | _ -> None)
       end
@@ -214,7 +214,7 @@ let try_lookup_module env path =
 let try_lookup_let env (lid:lident) = 
   let find_in_sig lid = 
     match Util.smap_try_find env.sigmap lid.str with 
-      | Some (Sig_let _, _) -> Some (fvar lid (range_of_lid lid))
+      | Some (Sig_let _, _) -> Some (fvar false lid (range_of_lid lid))
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
           

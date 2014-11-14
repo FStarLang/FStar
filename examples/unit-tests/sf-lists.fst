@@ -151,3 +151,69 @@ val foo4 : n : int -> l1 : ilist -> l2 : ilist -> Pure unit
       (requires (snoc l1 n = l2))
       (ensures \r -> 0 < length l2)
 let foo4 n l1 l2 = ()
+
+
+
+
+val snoc_cons: l:ilist -> h:int -> Lemma True (rev (snoc l h) = Cons h (rev l)) [VPat (ilist -> Tot ilist) rev; VPat (ilist -> int -> Tot ilist) snoc]
+let rec snoc_cons l h = match l with
+  | Nil -> ()
+  | Cons hd tl ->
+    let ih = snoc_cons tl h in
+    ()
+
+val rev_involutive: l:ilist -> Lemma True (rev (rev l) = l) []
+let rec rev_involutive l = match l with
+  | Nil -> ()
+  | Cons h t ->
+    let ih = rev_involutive t in
+    let lem = snoc_cons (rev t) h in
+    ()
+
+val snoc_injective: l1:ilist -> h1:int -> l2:ilist -> h2:int -> Fact unit (snoc l1 h1 = snoc l2 h2 ==> l1 = l2 /\ h1 = h2)
+let rec snoc_injective l1 h1 l2 h2 = match (l1, l2) with
+  | Nil, Nil -> ()
+  | Cons hd1 tl1, Cons hd2 tl2 ->
+    let ih = snoc_injective tl1 h1 tl2 h2 in
+    ()
+  | _, _ -> ()
+
+val rev_injective: l1:ilist -> l2:ilist -> Fact unit (rev l1 = rev l2 ==> l1 = l2)
+let rec rev_injective l1 l2 = match (l1, l2) with
+  | Nil, Nil -> ()
+  | Cons hd1 tl1, Cons hd2 tl2 ->
+    let ih = rev_injective tl1 tl2 in
+    let lem = snoc_injective (rev tl1) hd1 (rev tl2) hd2 in
+    ()
+  | _, _ -> ()
+
+val fold_left: 'a:Type -> f:(int -> 'a -> Tot 'a) -> l:ilist -> 'a -> Tot 'a
+let rec fold_left f l a = match l with
+  | Nil -> a
+  | Cons hd tl -> fold_left f tl (f hd a)
+
+val app_cons: l:ilist -> hd:int -> tl:ilist -> Fact unit (app l (Cons hd tl) = app (app l (Cons hd Nil)) (tl))
+let rec app_cons l hd tl = match l with
+  | Nil -> ()
+  | Cons hd' tl' ->
+    let ih = app_cons tl' hd tl in
+    ()
+
+val snoc_app: l:ilist -> h:int -> Fact unit (snoc l h = app l (Cons h Nil))
+let rec snoc_app l h = match l with
+  | Nil -> ()
+  | Cons hd tl ->
+    let _ = snoc_app tl h in
+    ()
+
+val rev_app: tl:ilist -> hd:int -> Fact unit (rev (Cons hd tl) = app (rev tl) (Cons hd Nil))
+let rev_app tl hd = snoc_app (rev tl) hd
+
+val fold_left_cons_is_rev: l:ilist -> l':ilist -> Fact unit (fold_left Cons l l' = app (rev l) l')
+let rec fold_left_cons_is_rev l l' = match l with
+  | Nil -> ()
+  | Cons hd tl ->
+    let _ = fold_left_cons_is_rev tl (Cons hd l') in
+    let _ = app_cons (rev tl) hd l' in
+    let _ = rev_app tl hd in
+    ()

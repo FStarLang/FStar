@@ -196,6 +196,22 @@ let giveZ3 msg (theory:unit -> decls_t) =
             Pending(m, b, g)::tl in
     scopes := aux !scopes
 
+let ask bg_theory label_messages qry =
+  let theory = bg_theory@[Term.Push]@qry@[Term.Pop] in
+  let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
+    if !Options.logQueries then Util.append_to_file (get_qfile()) input; (* append flushes *)
+    let status, lblnegs = doZ3Exe input in
+  let result = match status with 
+        | UNSAT -> true, []
+        | _ -> 
+          if !Options.debug <> [] then print_string <| format1 "Z3 says: %s\n" (status_to_string status);
+          let failing_assertions = lblnegs |> List.collect (fun l -> 
+            match label_messages |> List.tryFind (fun (m, _) -> fst m = l) with
+                | None -> []
+                | Some (_, msg) -> [msg]) in
+          false, failing_assertions in
+    result
+
 let queryAndPop query_and_labels pop_fn =
   let bg_theory = flush_scopes() in
   let qry, label_messages = query_and_labels () in

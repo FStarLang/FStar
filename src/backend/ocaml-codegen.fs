@@ -42,17 +42,41 @@ let infix_prim_ops = [
     ("op_Addition"       , e_bin_prio_op1   , "+" );
     ("op_Subtraction"    , e_bin_prio_op1   , "-" );
     ("op_Equality"       , e_bin_prio_eq    , "=" );
-    ("op_ColonEquan"     , e_bin_prio_eq    , ":=");
+    ("op_ColonEquals"    , e_bin_prio_eq    , ":=");
     ("op_disEquality"    , e_bin_prio_eq    , "<>");
     ("op_AmpAmp"         , e_bin_prio_and   , "&&");
     ("op_BarBar"         , e_bin_prio_or    , "||");
-    ("pipe_left"         , e_bin_prio_comb  , "<|");
-    ("pipe_right"        , e_bin_prio_comb  , "|>");
+    (* ("pipe_left"      , e_bin_prio_comb  , "<|"); *)
+    (* ("pipe_right"     , e_bin_prio_comb  , "|>"); *)
 
     ("op_LessThanOrEqual"   , e_bin_prio_order , "<=");
     ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
     ("op_LessThan"          , e_bin_prio_order , "<" );
     ("op_GreaterThan"       , e_bin_prio_order , ">" );
+]
+
+(* -------------------------------------------------------------------- *)
+let prim_uni_ops = [
+    ("op_Negation", "not");
+    ("exit", "exit");
+]
+
+(* -------------------------------------------------------------------- *)
+let prim_types = [
+    ("char", "char");
+    ("bool", "bool");
+    ("string", "string");
+    ("ref", "ref");
+    ("array", "array");
+    ("option", "option");
+    ("int32", "Int32.t");
+    ("int64", "Int64.t");
+]
+
+(* -------------------------------------------------------------------- *)
+let prim_constructors = [
+    ("Some", "Some");
+    ("None", "None");
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -71,8 +95,37 @@ let is_bin_op (p : mlpath) =
     as_bin_op p <> None
 
 (* -------------------------------------------------------------------- *)
-let is_uni_op ((ns, x) : mlpath) =
-    is_prims_ns ns && (x = "op_Negation")
+let as_uni_op ((ns, x) : mlpath) =
+    if is_prims_ns ns then
+        List.tryFind (fun (y, _) -> x = y) prim_uni_ops
+    else
+        None
+
+(* -------------------------------------------------------------------- *)
+let is_uni_op (p : mlpath) =
+    as_uni_op p <> None
+
+(* -------------------------------------------------------------------- *)
+let as_standard_type ((ns, x) : mlpath) =
+    if is_prims_ns ns then
+        List.tryFind (fun (y, _) -> x = y) prim_types
+    else
+        None
+
+(* -------------------------------------------------------------------- *)
+let is_standard_type (p : mlpath) =
+  as_standard_type p <> None
+
+(* -------------------------------------------------------------------- *)
+let as_standard_constructor ((ns, x) : mlpath) =
+    if is_prims_ns ns then
+        List.tryFind (fun (y, _) -> x = y) prim_constructors
+    else
+        None
+
+(* -------------------------------------------------------------------- *)
+let is_standard_constructor (p : mlpath) =
+  as_standard_constructor p <> None
 
 (* -------------------------------------------------------------------- *)
 let maybe_paren (outer, side) inner doc =
@@ -163,11 +216,21 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
         doc
 
     | MLE_CTor (ctor, []) ->
-        text (ptctor ctor)
+       let name =
+         if is_standard_constructor ctor then
+           snd (Option.get (as_standard_constructor ctor))
+         else
+           ptctor ctor in
+        text name
 
     | MLE_CTor (ctor, args) ->
+       let name =
+         if is_standard_constructor ctor then
+           snd (Option.get (as_standard_constructor ctor))
+         else
+           ptctor ctor in
         let args = List.map (doc_of_expr (min_op_prec, NonAssoc)) args in
-        reduce1 [text (ptctor ctor); parens (combine (text ", ") args)]
+        maybe_paren outer e_app_prio (reduce1 [text name; parens (combine (text ", ") args)])
 
     | MLE_Tuple es ->
         let docs = List.map (doc_of_expr (min_op_prec, NonAssoc)) es in
@@ -189,9 +252,9 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
             maybe_paren outer prio doc
 
         | (MLE_Name p, [e1]) when is_uni_op p ->
-            (* FIXME *)
-            let e1  = doc_of_expr (min_op_prec, NonAssoc) e1 in
-            let doc = reduce1 [text "not"; parens e1] in
+            let (_, txt) = Option.get (as_uni_op p) in
+            let e1  = doc_of_expr (min_op_prec, NonAssoc ) e1 in
+            let doc = reduce1 [text txt; parens e1] in
             maybe_paren outer e_app_prio doc
 
         | _ ->
@@ -204,7 +267,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
         let ids  = List.map (fun (x, _) -> text x) ids in
         let body = doc_of_expr (min_op_prec, NonAssoc) body in
         let doc  = reduce1 [text "fun"; reduce1 ids; text "->"; body] in
-        maybe_paren outer e_bin_prio_lambda doc
+        parens doc
 
     | MLE_If (cond, e1, None) ->
         let cond = doc_of_expr (min_op_prec, NonAssoc) cond in
@@ -264,12 +327,22 @@ and doc_of_pattern (pattern : mlpattern) : doc =
         let for1 (name, p) = reduce1 [text name; text "="; doc_of_pattern p] in
         brackets (combine (text "; ") (List.map for1 fields))
 
-    | MLP_CTor (p, []) ->
-        text (ptctor p)
+    | MLP_CTor (ctor, []) ->
+       let name =
+         if is_standard_constructor ctor then
+           snd (Option.get (as_standard_constructor ctor))
+         else
+           ptctor ctor in
+        text name
 
-    | MLP_CTor (p, ps) ->
+    | MLP_CTor (ctor, ps) ->
         let ps = List.map doc_of_pattern ps in
-        reduce1 [text (ptctor p); parens (combine (text ", ") ps)]
+       let name =
+         if is_standard_constructor ctor then
+           snd (Option.get (as_standard_constructor ctor))
+         else
+           ptctor ctor in
+       maybe_paren (min_op_prec, NonAssoc) e_app_prio (reduce1 [text name; parens (combine (text ", ") ps)])
 
     | MLP_Tuple ps ->
         let ps = List.map doc_of_pattern ps in
@@ -331,7 +404,15 @@ let rec doc_of_mltype (outer : level) (ty : mlty) =
                 let args = List.map (doc_of_mltype (min_op_prec, NonAssoc)) args in
                 parens (hbox (combine (text ", ") args))
 
-        in hbox (reduce1 [args; text (ptsym name)])
+        in
+
+        let name =
+          if is_standard_type name then
+            snd (Option.get (as_standard_type name))
+          else
+            ptsym name
+
+        in hbox (reduce1 [args; text name])
     end
 
     | MLTY_Fun (t1, t2) ->

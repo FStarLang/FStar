@@ -1,13 +1,21 @@
 module Bug21 
 
-val constfun : 'a -> 'b -> Tot 'a
-let constfun x _ = x
+val constfun0 : bool -> int -> Tot bool
+let constfun0 x k = x
 
-val ftrue_int : int -> Tot bool
-let ftrue_int = constfun true
+let ftrue0 = constfun0 true
+
+val test0 : int -> Tot unit
+let test0 x = assert (ftrue0 x = true)
+
+val constfun : 'a -> 'b -> Tot 'a
+let constfun x k = x
 
 val ftrue : 'b -> Tot bool
 let ftrue = constfun true
+
+val test : int -> Tot unit
+let test x = assert (ftrue x = true)
 
 val my_override : ('a -> Tot 'b) -> 'a -> 'b -> Tot ('a -> Tot 'b)
 let my_override f k x k' = if k = k' then x else f k'

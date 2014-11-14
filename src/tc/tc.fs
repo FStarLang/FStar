@@ -378,9 +378,10 @@ and tc_value env e : exp * comp =
     let e = mk_Exp_fvar({v with sort=t}, dc) t e.pos in
     let e, t = Tc.Util.maybe_instantiate env e t in 
     //printfn "Instantiated type of %s to %s\n" (Print.exp_to_string e) (Print.typ_to_string t);
+    let tc = if !Options.verify then Inl t else Inr (mk_Total t) in
     if dc && not(Env.is_datacon env v.v)
     then raise (Error(Util.format1 "Expected a data constructor; got %s" v.v.str, Tc.Env.get_range env))
-    else value_check_expected_typ env e (Inr (mk_Total t))
+    else value_check_expected_typ env e tc
 
   | Exp_constant c -> 
     let t = Tc.Util.typing_const env c in
@@ -471,8 +472,8 @@ and tc_value env e : exp * comp =
                      let r = Env.get_range env in
                      let env = {env with letrecs=[]} in 
                      let mk_lex_tuple args = 
-                        let lexpair = Util.fvar Const.lexpair_lid r in
-                        let top = Util.fvar Const.lextop_lid r in
+                        let lexpair = Util.fvar true Const.lexpair_lid r in
+                        let top = Util.fvar true Const.lextop_lid r in
                         List.fold_right (fun arg out -> match arg with 
                             | Inl _, _ -> out (* skip the type arguments from the ordering *)
                             | _ -> Syntax.mk_Exp_app(lexpair, [arg; varg out]) tun r) args top in
@@ -966,7 +967,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
     Tc.Util.close_comp env bindings c in
 
   let discriminate scrutinee f = 
-    let disc = Util.fvar (Util.mk_discriminator f.v) <| range_of_lid f.v in 
+    let disc = Util.fvar false (Util.mk_discriminator f.v) <| range_of_lid f.v in 
     let disc = mk_Exp_app(disc, [varg <| scrutinee]) tun scrutinee.pos in
     let e, _, _ = tc_total_exp (Env.set_expected_typ scrutinee_env Tc.Util.t_bool) disc in
     Util.mk_eq e Const.exp_true_bool in
@@ -986,7 +987,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
                 | Inl _ -> (* no patterns on type arguments *) []
                 | Inr ei ->
                     let projector = Tc.Env.lookup_projector env f.v i in
-                    let sub_term = mk_Exp_app(Util.fvar projector f.p, [varg scrutinee]) tun f.p in
+                    let sub_term = mk_Exp_app(Util.fvar false projector f.p, [varg scrutinee]) tun f.p in
                     let sub_term, _, _ = tc_total_exp scrutinee_env sub_term in
                     [mk_guard sub_term ei]) |> List.flatten in
             Util.mk_conj_l (head::sub_term_guards)
@@ -1206,7 +1207,7 @@ and tc_decl env se deserialized = match se with
       (* TODO: check that the tps in tname are the same as here *)
       let _ = match destruct result_t tname with 
         | Some _ -> ()
-        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
+        | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar true lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
       let t = Tc.Util.refine_data_type env lid formals result_t in
       let se = Sig_datacon(lid, t, tycon, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 

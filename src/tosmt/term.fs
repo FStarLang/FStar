@@ -404,7 +404,9 @@ and mkPrelude z3options =
                 \n\
                 (declare-sort Term)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
-                \n\
+                (declare-fun ZFuel () Term)\n\
+                (declare-fun SFuel (Term) Term)\n\
+                (declare-fun MaxFuel () Term)\n\
                 (declare-fun PreKind (Type) Kind)\n\
                 (declare-fun PreType (Term) Type)\n\
                 (declare-fun Valid (Type) Bool)\n\
@@ -501,8 +503,11 @@ let mk_Closure i vars   =
     | Term_sort -> mkApp("ConsTerm", [mkBoundV v; out])
     | Type_sort -> mkApp("ConsType", [mkBoundV v; out])) (boxInt <| mkInteger i) in
     mkApp("Closure", [vars])
-
-
+let rec n_fuel n = 
+    if n = 0 then mkFreeV("ZFuel", Term_sort)
+    else mkApp("SFuel", [n_fuel (n - 1)])
+let fuel_2 = n_fuel 2
+let fuel_100 = n_fuel 100
 
 let mk_and_opt p1 p2 = match p1, p2  with
   | Some p1, Some p2 -> Some (mkAnd(p1, p2))

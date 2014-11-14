@@ -180,3 +180,22 @@ val unsafe_slice: message -> i:nat -> j:nat{i<=j} -> Tot message
 let unsafe_slice (Seq c _ _) n m = Seq c n m
 val test_impure: l:nat{l > 0} -> m:message{length m==l} -> int
 let test_impure l m =  lm_corr (l - 1) (unsafe_slice (impure m) 1 l)
+
+
+type mlist =
+  | N 
+  | C of (nat * mlist)
+
+val zero_list: l:mlist -> Tot bool
+let rec zero_list l = match l with
+  | N -> true
+  | C (n, l') -> n = 0 && zero_list l'
+
+(* this is saying: either l is a zerolist, or if first element of l is not 0, then its tail is a zero list *) 
+type pre (l:mlist) = (forall (n:nat) l'. ((l = C(n, l') /\ not (n = 0)) ==> zero_list l') /\ ((l = C(0, l') \/ l = N) ==> zero_list l))
+
+(* this function promises to return a zero list *)
+val do_ok: l:mlist -> Pure mlist (requires (pre l)) (ensures (fun l -> zero_list l)) 
+let do_ok l = match l with
+  | N -> N
+  | C(n, l') -> if n = 0 then l else C(0, l')

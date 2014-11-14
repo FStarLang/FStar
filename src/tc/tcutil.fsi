@@ -64,7 +64,6 @@ val lift_pure: env -> typ -> formula -> comp (* with t as a result type *)
 val close_guard: binders -> guard_t -> guard_t
 val close_comp: env -> list<binding> -> comp -> comp
 val check_comp: env -> exp -> comp -> comp -> exp * comp * guard_t
-val refine_data_type: env -> lident -> binders -> typ -> typ
 
 val discharge_guard: env -> guard_t -> unit
 val label: string -> Range.range -> typ -> typ
@@ -72,3 +71,4 @@ val label_guard: string -> Range.range -> guard_t -> guard_t
 val refresh_comp_label: env -> bool -> comp -> comp
 val check_total: env -> comp -> bool * list<string>
 
+val refine_data_type: env -> lident -> binders -> typ -> typ
