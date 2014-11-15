@@ -63,7 +63,7 @@ and env_entry =
   | V of (bvvdef * vclos * memo<exp>)
   | TDummy of btvar
   | VDummy of bvvar
-  | LabelSuffix of bool * string
+  | LabelSuffix of option<bool> * string
 and tclos = (typ * environment)
 and vclos = (exp * environment)
 and memo<'a> = ref<option<'a>>
@@ -327,7 +327,7 @@ and sn' tcenv (cfg:config<typ>) : config<typ> =
                     let lab t =
                       match config.environment |> List.tryFind (function LabelSuffix _ -> true | _ -> false) with
                               | Some (LabelSuffix(b', sfx)) ->
-                                  if b=b'
+                                  if b'=None || Some b=b'
                                   then (if Tc.Env.debug tcenv Options.Low then Util.fprint2 "Stripping label %s because of enclosing refresh %s\n" l sfx; t)
                                   else (if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Normalizer refreshing label: %s\n" sfx;
                                         wk <| mk_Typ_meta'(Meta_labeled(t, l ^ sfx, b)))
@@ -338,7 +338,7 @@ and sn' tcenv (cfg:config<typ>) : config<typ> =
                   if unmeta config then
                     sn tcenv ({config with code=t})
                   else
-                   let sfx = if not b then Util.format1 " (call at %s)" <| Range.string_of_range r else "" in
+                   let sfx = match b with Some false -> Util.format1 " (call at %s)" <| Range.string_of_range r | _ -> "" in
                    let config = {config with code=t; environment=LabelSuffix (b, sfx)::config.environment} in
                    sn tcenv config
 

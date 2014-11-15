@@ -75,7 +75,7 @@ type pre_balance (c:color) (lt:rbtree) (rt:rbtree) =
 val balance: c:color -> lt:rbtree -> ky:nat -> rt:rbtree ->
              Pure rbtree
              (requires (pre_balance c lt rt))
-	     (ensures (fun r -> is_Some (black_height lt) ==>
+	     (ensures (fun r -> is_Some (black_height lt) /\
                                   ((is_T r)  
 	                           /\ ((h_inv r) 
                                        /\ ((c = B /\ Some.v(black_height r) = Some.v(black_height lt) + 1) \/
@@ -118,7 +118,7 @@ let rec ins t x =
 	balance c a y rt
 
 val make_black: t:rbtree -> Pure rbtree (requires (c_inv t /\ is_T t /\ h_inv t))
-                            (ensures (fun r -> c_inv r /\ (is_T r ==> T.col r = B) /\ h_inv r))
+                            (ensures (fun r -> c_inv r /\ is_T r /\ T.col r = B /\ h_inv r))
 let make_black (T _ a x b) = T B a x b
 
 val insert: t:rbtree -> nat -> Pure rbtree

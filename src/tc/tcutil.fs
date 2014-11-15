@@ -561,6 +561,8 @@ let lift_pure env t f =
   let wlp = mk_Typ_app(md.assume_p, [targ t; targ f; targ trivial]) k f.pos in
   mk_comp md t wp wlp []
 
+let unlabel t = mk_Typ_meta(Meta_refresh_label(t, None, t.pos))
+
 let refresh_comp_label env b c = 
     if Util.is_ml_comp c then c
     else match c.n with 
@@ -572,8 +574,8 @@ let refresh_comp_label env b c =
       if not <| lid_equals ct.effect_name c'.effect_name && Tc.Env.debug env Options.Low
       then Util.fprint2 "To refresh, normalized\n\t%s\nto\n\t%s\n" (Print.comp_typ_to_string c) (Print.comp_typ_to_string <| mk_Comp c');
       let t, wp, wlp = destruct_comp c' in 
-      let wp = mk_Typ_meta(Meta_refresh_label(wp, b, Env.get_range env)) in
-      let wlp = mk_Typ_meta(Meta_refresh_label(wlp, b, Env.get_range env)) in
+      let wp = mk_Typ_meta(Meta_refresh_label(wp, Some b, Env.get_range env)) in
+      let wlp = mk_Typ_meta(Meta_refresh_label(wlp, Some b, Env.get_range env)) in
       Syntax.mk_Comp ({c' with effect_args=[targ wp; targ wlp]; flags=c'.flags})
 
 let label reason r f = 
@@ -923,9 +925,9 @@ let short_circuit_guard (head:either<typ, exp>) (seen_args:args) : guard_t =
     
     let op_and_e e =  Util.b2t e |> NonTrivial in
     let op_or_e e = Util.mk_neg (Util.b2t e) |> NonTrivial in
-    let op_and_t t = NonTrivial t in
-    let op_or_t t = Util.mk_neg t |> NonTrivial in
-    let op_imp_t t = NonTrivial t in
+    let op_and_t t = unlabel t |> NonTrivial in
+    let op_or_t t =  unlabel t |> Util.mk_neg |> NonTrivial in
+    let op_imp_t t = unlabel t |> NonTrivial in
     let short_op_ite : args -> guard_t = function 
         | [] -> Trivial
         | [(Inl guard, _)] -> NonTrivial guard
