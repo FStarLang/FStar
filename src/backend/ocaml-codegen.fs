@@ -444,7 +444,7 @@ let doc_of_mltydecl (decls : mltydecl) =
                     let ty   = doc_of_mltype (min_op_prec, NonAssoc) ty in
                     reduce1 [name; text ":"; ty]
 
-                in brackets (combine (text "; ") (List.map forfield fields))
+                in cbrackets (combine (text "; ") (List.map forfield fields))
             end
 
             | MLTD_DType ctors ->

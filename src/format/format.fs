@@ -27,6 +27,7 @@ let enclose (Doc l) (Doc r) (Doc x) =
     Doc (Combinators.enclose l r x)
 
 let brackets (Doc d : doc) = Doc (Combinators.brackets d)
+let cbrackets (d : doc) = enclose (text "{") (text "}") d
 let parens   (Doc d : doc) = Doc (Combinators.parens d)
 
 (* -------------------------------------------------------------------- *)

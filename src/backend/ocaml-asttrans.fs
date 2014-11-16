@@ -622,27 +622,39 @@ let mlitem1_exn mode args =
 (* -------------------------------------------------------------------- *)
 type mldtype = mlsymbol * mlidents * mltybody
 
+type fstypes = DT of string * list<lident> * list<mlident> * range | Rec of string * list<ident> * list<lident> * list<mlident> * range | Abb of string * typ * (tenv * list<mlident>) * range
+
 let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
-    let (ts, cs, abbrvs) =
-        let fold1 sigelt (types, ctors, abbrvs) =
+  let rec getRecordFieldsFromType = function
+    | [] -> None
+    | (RecordType f)::_ -> Some f
+    | _::qualif -> getRecordFieldsFromType qualif in
+
+    let (ts, cs) =
+        let fold1 sigelt (types, ctors) =
             match sigelt with
-            | Sig_tycon (x, tps, k, ts, cs, _, rg) -> begin
+            | Sig_tycon (x, tps, k, ts, cs, qualif, rg) -> begin
                 let ar =
                     match mlkind_of_kind tps k with
                     | None    -> unsupported rg "not-an-ML-kind"
                     | Some ar -> ar in
-                ((x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) :: types, ctors, abbrvs)
+                let ty =
+                  match getRecordFieldsFromType qualif with
+                    | Some f when List.length cs = 1 ->
+                       Rec (x.ident.idText, f, cs, snd (tenv_of_tvmap ar), rg)
+                    | _ -> DT (x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) in
+                (ty :: types, ctors)
             end
 
-            | Sig_datacon (x, ty, pr, _, rg) ->
-                (types, (x.ident.idText, (ty, pr)) :: ctors, abbrvs)
+            | Sig_datacon (x, ty, pr, qualif, rg) ->
+               (types, (x.ident.idText, (ty, pr)) :: ctors)
 
             | Sig_typ_abbrev (x, tps, k, body, _, rg) ->
                 let ar =
                     match mlkind_of_kind tps k with
                     | None    -> unsupported rg "not-an-ML-kind"
                     | Some ar -> ar in
-                (types, ctors, (x.ident.idText, body, tenv_of_tvmap ar, rg) :: abbrvs)
+                ((Abb (x.ident.idText, body, tenv_of_tvmap ar, rg)) :: types, ctors)
 
             | _ ->
                 unexpected
@@ -650,50 +662,64 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
                     "no-dtype-or-abbrvs-in-bundle"
         in
 
-        let (ts, cs, abbrvs) = List.foldBack fold1 indt ([], [], []) in
+        let (ts, cs) = List.foldBack fold1 indt ([], []) in
 
-        (ts, Map.ofList cs, abbrvs)
+        (ts, Map.ofList cs)
     in
+
+    let cons_args cname tparams rg x =
+      let (c, _) = Map.find cname.ident.idText cs in
+      let cparams, rgty, c = strip_polymorphism [] rg c in
+
+      if List.length cparams <> List.length tparams then
+        unexpected rg "invalid-number-of-ctor-params";
+
+      let cparams = List.map (fun (x, _) -> x.idText) cparams in
+
+      let tenv = List.zip cparams tparams in
+      let tenv = TEnv (Map.ofList tenv) in
+
+      let c = mlty_of_ty mlenv tenv (rgty, c) in
+      let (args, name) = mltycons_of_mlty c in
+
+      match name with
+        | MLTY_Named (tyargs, name) when snd name = x ->
+           let check x mty = match mty with | MLTY_Var mtyx -> x = mtyx | _ -> false in
+
+           if List.length tyargs <> List.length cparams then
+             unexpected rg "dtype-invalid-ctor-result";
+           if not (List.forall2 check tparams tyargs) then
+             unsupported rg "dtype-invalid-ctor-result";
+           args
+
+        | _ -> unexpected rg "dtype-invalid-ctor-result" in
 
     let fortype ty =
         match ty with
-        | Inl (x, tcs, tparams, rg) -> begin
+        | DT (x, tcs, tparams, rg) -> begin
             let mldcons_of_cons cname =
-                let (c, _) = Map.find cname.ident.idText cs in
-                let cparams, rgty, c = strip_polymorphism [] rg c in
-
-                if List.length cparams <> List.length tparams then
-                    unexpected rg "invalid-number-of-ctor-params";
-
-                let cparams = List.map (fun (x, _) -> x.idText) cparams in
-
-                let tenv = List.zip cparams tparams in
-                let tenv = TEnv (Map.ofList tenv) in
-
-                let c = mlty_of_ty mlenv tenv (rgty, c) in
-                let (args, name) = mltycons_of_mlty c in
-
-                match name with
-                | MLTY_Named (tyargs, name) when snd name = x ->
-                    let check x mty = match mty with | MLTY_Var mtyx -> x = mtyx | _ -> false in
-
-                    if List.length tyargs <> List.length cparams then
-                        unexpected rg "dtype-invalid-ctor-result";
-                    if not (List.forall2 check tparams tyargs) then
-                        unsupported rg "dtype-invalid-ctor-result";
-                    (cname.ident.idText, args)
-
-                | _ -> unexpected rg "dtype-invalid-ctor-result"   
+              let args = cons_args cname tparams rg x in
+              (cname.ident.idText, args)
             in (x, tparams, MLTD_DType (List.map mldcons_of_cons tcs))
         end
 
-        | Inr (x, body, (tenv, tparams), rg) -> begin
+        | Rec (x, f, tcs, tparams, rg) -> begin
+          let args =
+            match tcs with
+              | [cname] -> cons_args cname tparams rg x
+              | _ -> unexpected rg "records-should-have-one-single-constructor" in
+
+          let mldproj_of_proj name c : (mlsymbol * mlty) = (name.idText, c) in
+
+          (x, tparams, MLTD_Record (List.map2 mldproj_of_proj f args))
+        end
+
+        | Abb (x, body, (tenv, tparams), rg) -> begin
             let body = mlty_of_ty mlenv tenv (rg, body) in
             (x, tparams, MLTD_Abbrev body)
         end
 
-    in List.map fortype (List.concat [List.map (fun x -> Inl x) ts;
-                                      List.map (fun x -> Inr x) abbrvs])
+    in List.map fortype ts
 
 (* -------------------------------------------------------------------- *)
 let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
