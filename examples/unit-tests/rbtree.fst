@@ -39,19 +39,31 @@ let rec c_inv t = match t with
 
 type r_inv (t:rbtree) = is_E t \/ (is_T t /\ T.col t = B)
 
-val key_order: t:rbtree -> Tot bool
-let rec key_order t = match t with
+(* these functions cause verification to break *)
+(*val min_elt: t:rbtree -> Pure nat (requires (is_T t)) (ensures (fun r -> True))
+let rec min_elt (T _ a x _) = match a with
+  | E -> x
+  | _ -> min_elt a
+
+val max_elt: t:rbtree -> Pure nat (requires (is_T t)) (ensures (fun r -> True))
+let rec max_elt (T _ _ x b) = match b with
+  | E -> x
+  | _ -> max_elt b
+
+val k_inv: t:rbtree -> Tot bool
+let rec k_inv t = match t with
   | E -> true
+  | T _ E x E -> true
+  | T _ E x b  ->
+    let b_min = min_elt b in
+    k_inv b && b_min > x
+  | T _ a x E ->
+    let a_max = max_elt a in
+    k_inv a && x > a_max
   | T _ a x b ->
-    let a_ok = match a with
-      | E -> true
-      | T _ _ y _ -> x > y
-    in
-    let b_ok = match b with
-      | E -> true
-      | T _ _ y _ -> y > x
-    in
-    key_order a && key_order b && a_ok && b_ok
+    let a_max = max_elt a in
+    let b_min = min_elt b in
+    k_inv a && k_inv b && x > a_max && b_min > x*)
 
 
 type balanced_rbtree (t:rbtree) = r_inv t /\ h_inv t /\ c_inv t
@@ -86,9 +98,9 @@ val balance: c:color -> lt:rbtree -> ky:nat -> rt:rbtree ->
 let balance c lt ky rt =
   match (c, lt, ky, rt) with
       (* combining the patterns below does not verify *)
-    | (B, (T R (T R a x b) y c), z, d) -> T R (T B a x b) y (T B c z d)
-    | (B, (T R a x (T R b y c)), z, d) -> T R (T B a x b) y (T B c z d)
-    | (B, a, x, (T R (T R b y c) z d)) -> T R (T B a x b) y (T B c z d)
+    | (B, (T R (T R a x b) y c), z, d)
+    | (B, (T R a x (T R b y c)), z, d)
+    | (B, a, x, (T R (T R b y c) z d))
     | (B, a, x, (T R b y (T R c z d))) -> T R (T B a x b) y (T B c z d)
     | _ -> T c lt ky rt
 
