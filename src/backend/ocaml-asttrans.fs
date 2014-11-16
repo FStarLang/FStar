@@ -464,9 +464,18 @@ let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (lenv : lenv) (p : pat) : lenv
     | Pat_twild    _ -> unsupported rg "pattern-type-wild"
 
 (* -------------------------------------------------------------------- *)
+(* A table to remember the names of the fields of constructors *)
+let record_constructors = new HashMultiMap<string, list<ident>>(17, HashIdentity.Structural)
+(* -------------------------------------------------------------------- *)
+
 let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
     let rg = e.pos in
     let e = Absyn.Util.compress_exp e in
+
+    let mkCTor c args =
+      match record_constructors.TryFind (c.ident.idText) with
+        | Some f -> MLE_Record (mlpath_of_lident mlenv c, List.zip (List.map (fun x -> x.idText) f) args)
+        | None -> MLE_CTor (mlpath_of_lident mlenv c, args) in
 
     match e.n with
     | Exp_app(sube, args) -> begin
@@ -478,7 +487,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             let args = List.collect (function (Inl _, _) -> [] | Inr e, _ -> [mlexpr_of_expr mlenv rg lenv e]) args in
 
             match sube with
-            | { n = Exp_fvar (c, true) } -> MLE_CTor (mlpath_of_lident mlenv c.v, args)
+            | { n = Exp_fvar (c, true) } -> mkCTor c.v args (* MLE_CTor (mlpath_of_lident mlenv c.v, args) *)
             | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args)
     end
 
@@ -491,7 +500,8 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             MLE_Name (mlpath_of_lident mlenv x.v)
 
         | Exp_fvar (x, true) ->
-            MLE_CTor (mlpath_of_lident mlenv x.v, [])
+           mkCTor x.v []
+            (* MLE_CTor (mlpath_of_lident mlenv x.v, []) *)
 
         | Exp_constant c ->
             MLE_Const (mlconst_of_const rg c)
@@ -548,7 +558,8 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             let args = args |> List.collect (function Inr e, _ -> [e] | _ -> [])in
             let args = List.map (mlexpr_of_expr mlenv rg lenv) args in
 
-            MLE_CTor (mlpath_of_lident mlenv c.v, args)
+            mkCTor c.v args
+            (* MLE_CTor (mlpath_of_lident mlenv c.v, args) *)
             
         | Exp_meta (Meta_desugared (e, Sequence)) -> begin
             match e.n with
@@ -639,14 +650,15 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
                     | None    -> unsupported rg "not-an-ML-kind"
                     | Some ar -> ar in
                 let ty =
-                  match getRecordFieldsFromType qualif with
-                    | Some f when List.length cs = 1 ->
-                       Rec (x.ident.idText, f, cs, snd (tenv_of_tvmap ar), rg)
-                    | _ -> DT (x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) in
+                  match getRecordFieldsFromType qualif, cs with
+                    | Some f, [c] ->
+                       (Hashtbl.add record_constructors c.ident.idText f;
+                        Rec (x.ident.idText, f, cs, snd (tenv_of_tvmap ar), rg))
+                    | _, _ -> DT (x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) in
                 (ty :: types, ctors)
             end
 
-            | Sig_datacon (x, ty, pr, qualif, rg) ->
+            | Sig_datacon (x, ty, pr, _, rg) ->
                (types, (x.ident.idText, (ty, pr)) :: ctors)
 
             | Sig_typ_abbrev (x, tps, k, body, _, rg) ->

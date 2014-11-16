@@ -210,11 +210,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
             let doc = doc_of_expr (min_op_prec, NonAssoc) e in
             reduce1 [text name; text "="; doc] in
 
-        let doc = List.map for1 fields in
-        let doc = List.map (fun d -> cat d (text ";")) doc in
-        let doc = reduce [text "{"; reduce1 doc; text "}"] in
-
-        doc
+        cbrackets (combine (text "; ") (List.map for1 fields))
 
     | MLE_CTor (ctor, []) ->
        let name =
