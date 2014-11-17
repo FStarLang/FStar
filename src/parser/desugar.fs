@@ -43,7 +43,7 @@ let rec unlabel t = match t.tm with
 let kind_star r = mk_term (Name (lid_of_path ["Type"] r)) r Kind
 
 let op_as_vlid env arity r s =
-  let r l = Some <| set_lid_range l r in
+  let r l = Some (set_lid_range l r) in
   match s, env.phase with
     | "=", _ ->    r Const.op_Eq
     | ":=", _ ->   r Const.op_ColonEq
@@ -69,7 +69,7 @@ let op_as_vlid env arity r s =
     | _ -> None
 
 let op_as_tylid r s =
-  let r l = Some <| set_lid_range l r in
+  let r l = Some (set_lid_range l r) in
   match s with
     | "~"   ->  r Const.not_lid
     | "=="  ->  r Const.eq2_lid
@@ -255,10 +255,10 @@ let as_binder env imp = function
   | Inr(None, t) -> null_v_binder t, env
   | Inl(Some a, k) -> 
     let env, a = DesugarEnv.push_local_tbinding env a in
-    (Inl <| bvd_to_bvar_s a k, imp), env
+    (Inl (bvd_to_bvar_s a k), imp), env
   | Inr(Some x, t) ->
     let env, x = DesugarEnv.push_local_vbinding env x in 
-    (Inr <| bvd_to_bvar_s x t, imp), env
+    (Inr (bvd_to_bvar_s x t), imp), env
      
 type env_t = DesugarEnv.env
 type lenv_t = list<either<btvdef,bvvdef>>
@@ -432,8 +432,8 @@ and desugar_match_pat env p = desugar_match_pat_maybe_top false env p
 
 and desugar_typ_or_exp (env:env_t) (t:term) : either<typ,exp> =
   if is_type env t
-  then Inl <| desugar_typ env t
-  else Inr <| desugar_exp env t
+  then Inl (desugar_typ env t)
+  else Inr (desugar_exp env t)
 
 and desugar_exp env e = desugar_exp_maybe_top false env e 
 
@@ -606,7 +606,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
         let env, pat = desugar_match_pat env pat in
         let wopt = match wopt with
           | None -> None
-          | Some e -> Some <| desugar_exp env e in
+          | Some e -> Some (desugar_exp env e) in
         let b = desugar_exp env b in
         (pat, wopt, b) in
       pos <| mk_Exp_match(desugar_exp env e, List.map desugar_branch branches)

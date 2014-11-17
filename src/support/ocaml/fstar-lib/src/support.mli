@@ -9,6 +9,7 @@ module Prims : sig
   val ignore : 'a -> unit
   val fst : 'a * 'b -> 'a
   val snd : 'a * 'b -> 'b
+  val try_with : (unit -> 'a) -> (exn -> 'a) -> 'a
 end
 
 
@@ -21,6 +22,8 @@ module String : sig
   val strcat : string -> string -> string
   val split : char list -> string -> string list
   val compare : string -> string -> Prims.int32
+  val concat : string -> string list -> string
+  val length : string -> int
 end
 
 
@@ -30,12 +33,20 @@ module List : sig
   val length : 'a list -> int
   val rev : 'a list -> 'a list
   val map : ('a -> 'b) -> 'a list -> 'b list
+  val mapi : (int -> 'a -> 'b) -> 'a list -> 'b list
+  val map2 : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
   val map3 : ('a -> 'b -> 'c -> 'd) -> 'a list -> 'b list -> 'c list -> 'd list
   val iter : ('a -> unit) -> 'a list -> unit
   val partition : ('a -> bool) -> 'a list -> 'a list * 'a list
   val append : 'a list -> 'a list -> 'a list
   val fold_left : ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
+  val fold_right : ('a -> 'b -> 'b) -> 'a list -> 'b -> 'b
   val collect : ('a -> 'b list) -> 'a list -> 'b list
+  val unzip : ('a * 'b) list -> ('a list) * ('b list)
+  val filter : ('a -> bool) -> 'a list -> 'a list
+  val sortWith : ('a -> 'a -> int) -> 'a list -> 'a list
+  val forall2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
+  val tryFind : ('a -> bool) -> 'a list -> 'a option
 end
 
 
@@ -165,6 +176,8 @@ module Microsoft : sig
       exception Impos
       val uvar_id : 'a uvar -> Prims.int32
       val find : 'a uvar -> 'a
+      val change : 'a uvar -> 'a -> unit
+      val equivalent : 'a uvar -> 'a uvar -> bool
     end
     module Platform : sig
       val exe : string -> string

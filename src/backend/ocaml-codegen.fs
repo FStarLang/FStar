@@ -170,6 +170,7 @@ let encode_char c =
     | c when c = '\r'                -> "\\r"
     | c when c = '\n'                -> "\\n"
     | c when c = '\''                -> "\\'"
+    | c when c = '\"'                -> "\\\""
     | c when Char.IsLetterOrDigit(c) -> System.String (c, 1)
     | c when Char.IsPunctuation(c)   -> System.String (c, 1)
     | c when Char.IsSymbol(c)        -> System.String (c, 1)

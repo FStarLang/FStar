@@ -82,7 +82,7 @@ let bvd_to_typ bvd k = btvar_to_typ (bvd_to_bvar_s bvd k)
 let bvar_to_exp bv   =  mk_Exp_bvar bv bv.sort bv.p
 let bvd_to_exp bvd t = bvar_to_exp (bvd_to_bvar_s bvd t)
 let new_bvd ropt = let id = genident ropt in mkbvd (id,id)
-let freshen_bvd bvd' = mkbvd(bvd'.ppname, genident (Some <| range_of_bvd bvd'))
+let freshen_bvd bvd' = mkbvd(bvd'.ppname, genident (Some (range_of_bvd bvd')))
 let freshen_bvar b =  bvd_to_bvar_s (freshen_bvd b.v) b.sort
 let gen_bvar sort = let bvd = (new_bvd None) in bvd_to_bvar_s bvd sort
 let gen_bvar_p r sort = let bvd = (new_bvd (Some r)) in bvd_to_bvar_s bvd sort
@@ -113,10 +113,10 @@ let args_of_binders (binders:Syntax.binders) : (Syntax.binders * args) =
     if is_null_binder b 
     then let b = match fst b with
             | Inl a -> 
-              Inl <| gen_bvar a.sort, snd b 
+              Inl (gen_bvar a.sort), snd b 
 
             | Inr x -> 
-              Inr <| gen_bvar x.sort, snd b 
+              Inr (gen_bvar x.sort), snd b 
         in
          b, arg_of_non_null_binder b 
     else b, arg_of_non_null_binder b) |> List.unzip 
@@ -236,7 +236,7 @@ and subst_comp_typ' s t = match s with
   | _ -> 
     {t with result_typ=subst_typ' s t.result_typ; 
             flags=subst_flags' s t.flags;
-            effect_args=List.map (function Inl t, imp -> Inl <| subst_typ' s t, imp | Inr e, imp -> Inr <| subst_exp' s e, imp) t.effect_args}
+            effect_args=List.map (function Inl t, imp -> Inl (subst_typ' s t), imp | Inr e, imp -> Inr (subst_exp' s e), imp) t.effect_args}
 
 and subst_comp' s t = match s with 
   | []
@@ -300,7 +300,7 @@ and map_exp s mk me ve descend binders e =
   subst_exp' (restrict_subst binders s) e, descend
 and map_flags s map_exp descend binders flags = 
     flags |> List.map (function 
-        | DECREASES e -> map_exp descend binders e |> fst |> DECREASES 
+        | DECREASES e -> DECREASES (map_exp descend binders e |> fst)
         | f -> f)
 and map_comp s mk map_typ map_exp descend binders c = match c.n with 
     | Total t -> 
@@ -583,8 +583,8 @@ let rec unascribe_typ t = match t.n with
   | _ -> t
 
 let unascribe_either = function 
-    | Inl t -> Inl <| unascribe_typ (compress_typ t)
-    | Inr e -> Inr <| unascribe (compress_exp e)
+    | Inl t -> Inl (unascribe_typ (compress_typ t))
+    | Inr e -> Inr (unascribe (compress_exp e))
 
 let rec unrefine t = 
   let t = compress_typ t in
@@ -730,10 +730,10 @@ let sub_fv (fvs, uvs) (tvars, vvars) =
 
 let tbinder = function 
     | None -> None
-    | Some x -> Some <| Inl x
+    | Some x -> Some (Inl x)
 let vbinder = function 
     | None -> None
-    | Some x -> Some <| Inr x
+    | Some x -> Some (Inr x)
 
 let stash (uvonly:bool) (s:syntax<'a,'b>) ((fvs:freevars), (uvs:uvars)) = 
     s.uvs := Some uvs;
@@ -1128,7 +1128,7 @@ let b2t_v = ftv Const.b2t_lid (mk_Kind_arrow([null_v_binder <| t_bool], ktype) d
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
-  | Some phi1 -> Some <| mk_Typ_app(tand, [(Inl phi1, false); (Inl phi2, false)]) ktype (Range.union_ranges phi1.pos phi2.pos)
+  | Some phi1 -> Some (mk_Typ_app(tand, [(Inl phi1, false); (Inl phi2, false)]) ktype (Range.union_ranges phi1.pos phi2.pos))
 let mk_binop op_t phi1 phi2 = mk_Typ_app(op_t, [(Inl phi1, false); (Inl phi2, false)]) ktype (Range.union_ranges phi1.pos phi2.pos)
 let mk_neg phi = mk_Typ_app(ftv Const.not_lid kt_kt, [Inl phi, false]) ktype phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
@@ -1248,7 +1248,7 @@ let destruct_typ_as_formula f : option<connective> =
                 && List.forall2 (fun arg flag -> match arg with 
                 | Inl _, _ -> flag=type_sort
                 | Inr _, _ -> flag=term_sort) args arity
-            then Some <| BaseConn(lid, args)
+            then Some (BaseConn(lid, args))
             else None in
         Util.find_map connectives (aux f) in
 
@@ -1262,8 +1262,8 @@ let destruct_typ_as_formula f : option<connective> =
         let is_q : bool -> lident -> Tot<bool> = fun fa l -> if fa then is_forall l else is_exists l in 
         let flat t = 
             let t, args = head_and_args t in 
-            t, args |> List.map (function (Inl t, imp) -> Inl <| compress_typ t, imp
-                                        | (Inr e, imp) -> Inr <| compress_exp e, imp) in
+            t, args |> List.map (function (Inl t, imp) -> Inl (compress_typ t), imp
+                                        | (Inr e, imp) -> Inr (compress_exp e), imp) in
         let rec aux qopt out t = match qopt, flat t with
             | Some fa, ({n=Typ_const tc}, [(Inl {n=Typ_lam([b], t2)}, _)])  
             | Some fa, ({n=Typ_const tc}, [_; (Inl {n=Typ_lam([b], t2)}, _)])  
@@ -1273,7 +1273,7 @@ let destruct_typ_as_formula f : option<connective> =
             | None, ({n=Typ_const tc}, [(Inl {n=Typ_lam([b], t2)}, _)])  
             | None, ({n=Typ_const tc}, [_; (Inl {n=Typ_lam([b], t2)}, _)])  
                 when (is_qlid tc.v) -> 
-              aux (Some <| is_forall tc.v) (b::out) t2
+              aux (Some (is_forall tc.v)) (b::out) t2
             
             | Some true, _ -> 
               let pats, body = patterns t in 

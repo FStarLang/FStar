@@ -111,7 +111,7 @@ let unmangleOpName (id:ident) =
     
 let try_lookup_id' env (id:ident) =
   match unmangleOpName id with 
-    | Some l -> Some <|  (l, mk_Exp_fvar(fv l, false) tun id.idRange)
+    | Some l -> Some (l, mk_Exp_fvar(fv l, false) tun id.idRange)
     | _ -> 
       let found = find_map env.localbindings (function 
         | Inl _, Binding_typ_var id' when (id'.idText=id.idText) -> Some (Inl ())
@@ -151,12 +151,12 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
       | Some (se, _) -> 
         begin match se with 
           | Sig_typ_abbrev _
-          | Sig_tycon _ -> Some <| Typ_name(OSig se, ftv lid kun)      
-          | Sig_datacon _ ->  Some <| Exp_name(OSig se,  fvar true lid (range_of_lid lid))
-          | Sig_let _ -> Some <| Exp_name(OSig se,  fvar false lid (range_of_lid lid))
+          | Sig_tycon _ -> Some (Typ_name(OSig se, ftv lid kun))
+          | Sig_datacon _ ->  Some (Exp_name(OSig se,  fvar true lid (range_of_lid lid)))
+          | Sig_let _ -> Some (Exp_name(OSig se,  fvar false lid (range_of_lid lid)))
           | Sig_val_decl(_, _, quals, _) ->
             if any_val || quals |> Util.for_some (function Assumption -> true | _ -> false)
-            then Some <| Exp_name(OSig se, fvar false lid (range_of_lid lid))
+            then Some (Exp_name(OSig se, fvar false lid (range_of_lid lid)))
             else None
           | _ -> None
         end in
@@ -234,9 +234,9 @@ let try_lookup_datacon env (lid:lident) =
     match Util.smap_try_find env.sigmap lid.str with 
       | Some (Sig_val_decl(_, _, quals, _), _) -> 
         if quals |> Util.for_some (function Assumption -> true | _ -> false)
-        then Some <| fv lid
+        then Some (fv lid)
         else None
-      | Some (Sig_datacon _, _) -> Some <| fv lid
+      | Some (Sig_datacon _, _) -> Some (fv lid)
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
@@ -494,7 +494,7 @@ let fail_or env lookup lid = match lookup lid with
     let r = match try_lookup_name true false env lid with 
       | None -> None
       | Some (Typ_name(o, _)) 
-      | Some (Exp_name(o, _)) -> Some <| range_of_occurrence o in
+      | Some (Exp_name(o, _)) -> Some (range_of_occurrence o) in
     let msg = match r with 
       | None -> ""
       | Some r -> Util.format1 "(Possible clash with related name at %s)" (Range.string_of_range r) in

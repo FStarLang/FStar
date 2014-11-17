@@ -9,6 +9,7 @@ module Prims = struct
   let ignore _ = ()
   let fst = fst
   let snd = snd
+  let try_with f1 f2 = try f1 () with | e -> f2 e
 end
 
 
@@ -27,6 +28,8 @@ module String = struct
          repeat_split l seps in
     repeat_split [s] seps
   let compare x y = BatString.compare x y
+  let concat = BatString.concat
+  let length = BatString.length
 end
 
 
@@ -36,6 +39,8 @@ module List = struct
   let length = BatList.length
   let rev = BatList.rev
   let map = BatList.map
+  let mapi = BatList.mapi
+  let map2 = BatList.map2
   let rec map3 f l1 l2 l3 =
     match l1, l2, l3 with
       | [], [], [] -> []
@@ -45,7 +50,13 @@ module List = struct
   let partition = BatList.partition
   let append = BatList.append
   let fold_left = BatList.fold_left
+  let fold_right = BatList.fold_right
   let collect f l = BatList.flatten (BatList.map f l)
+  let unzip =  BatList.split
+  let filter = BatList.filter
+  let sortWith = BatList.sort
+  let forall2 = BatList.for_all2
+  let tryFind f l = try Some (BatList.find f l) with | Not_found -> None
 end
 
 
