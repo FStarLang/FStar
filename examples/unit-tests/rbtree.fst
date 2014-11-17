@@ -98,6 +98,18 @@ let rec k_inv t = match t with
     let b_min = min_elt b in
     k_inv a && k_inv b && x > a_max && b_min > x
 
+val in_tree: t:rbtree' -> k:nat -> Tot bool
+let rec in_tree t k = match t with
+  | E -> false
+  | T _ a x b -> in_tree a k || k = x || in_tree b k
+(* TODO: should try to make it (verify insert) using following code for in_tree *)
+(*if k < x then
+      in_tree a k
+    else if k = x then
+      true
+    else
+      in_tree b k*)
+
 (*
  * Okasaki's insertion algorithm inserts the element at its bst place
  * in a red node, and then uses a balance function to re-establish
@@ -196,7 +208,13 @@ val balance: c:color -> lt:rbtree' -> ky:nat -> rt:rbtree' ->
 	       * if it doesn't, it must be the case that c (and hence T.col r) = R
 	       *)
 	      (c_inv r  \/
-	      (T.col r = R /\ c = R /\ not_c_inv r /\ lr_c_inv r)))
+	      (T.col r = R /\ c = R /\ not_c_inv r /\ lr_c_inv r)) /\
+	      
+              (*
+	       * resulting tree contains all elements from lt, ly, and rt, and
+	       * nothing else
+	       *)
+              (forall k. in_tree r k <==> (in_tree lt k \/ k = ky \/ in_tree rt k)))
 	     )
 (* it's pretty cool that the spec is proved easily without any hints ! *)	     
 let balance c lt ky rt =
@@ -242,12 +260,20 @@ val ins: t:rbtree' -> k:nat ->
 	   * these are copied from post condition of balance
 	   *)
 	  (c_inv r \/
-	  (is_T t /\ T.col r = R /\ T.col t = R /\ not_c_inv r /\ lr_c_inv r))))
+	  (is_T t /\ T.col r = R /\ T.col t = R /\ not_c_inv r /\ lr_c_inv r)) /\
+	  
+          (*
+           * returned tree has all the elements of t and k and nothing else
+	   *)
+          (forall k'. (in_tree t k' ==> in_tree r k') /\
+	              (in_tree r k' ==> (in_tree t k' \/ k' = k)))
+          
+          ))
 (* once again, very cool that spec is verified without any hints in the code *)
 let rec ins t x =
   match t with
     | E -> T R E x E
-    | T c a y b ->      
+    | T c a y b ->
       if x < y then
 	(* TODO: ideally we would have inlined this call in the balance call *)
 	let lt = ins a x in
@@ -268,14 +294,21 @@ type balanced_rbtree' (t:rbtree') = r_inv t /\ h_inv t /\ c_inv t /\ k_inv t
  *)
 val make_black: t:rbtree' -> Pure rbtree'
                             (requires (is_T t /\ c_inv t /\ h_inv t /\ k_inv t))
-                            (ensures (fun r -> balanced_rbtree' r))
+                            (ensures (fun r -> balanced_rbtree' r
+                            /\ (forall k. in_tree t k <==> in_tree r k)))
 let make_black (T _ a x b) = T B a x b
 
 (*
  * and finally, the beautiful spec of insert function :)
  *)
-val insert: t:rbtree' -> nat -> Pure rbtree' (requires (balanced_rbtree' t)) 
-                                             (ensures (fun r -> balanced_rbtree' r))
+val insert: t:rbtree' -> x:nat -> Pure rbtree'
+                                  (requires (balanced_rbtree' t)) 
+                                  (ensures (fun r -> balanced_rbtree' r /\
+                                  (forall k'.
+                                  (in_tree t k' ==> in_tree r k') /\
+	                          (in_tree r k' ==> (in_tree t k' \/ k' = x))
+                                  )))
+
 let insert t x =
   let r = ins t x in  
   let r' = make_black r in
