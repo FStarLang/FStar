@@ -33,7 +33,7 @@ let tail = function
   | hd::tl -> tl
   | _ -> failwith "tail of empty list"
 
-val mem: 'a -> list 'a -> bool //x:'a -> l:list 'a -> b:bool{b==true <==> In x l}
+val mem: 'a -> list 'a -> Tot bool //x:'a -> l:list 'a -> b:bool{b==true <==> In x l}
 let rec mem x = function
   | [] -> false
   | hd::tl -> if hd = x then true else mem x tl
@@ -63,7 +63,7 @@ let rec assoc a x = match x with
   | [] -> None
   | (a', b)::tl -> if a=a' then Some b else assoc a tl
 
-val append: list 'a -> list 'a -> list 'a //x:list 'a -> y:list 'a -> z:list 'a { forall (a:'a). In a z <==> In a x \/ In a y }
+val append: list 'a -> list 'a -> Tot (list 'a)
 let rec append x y = match x with
   | [] -> y
   | a::tl -> a::append tl y
@@ -85,6 +85,11 @@ let rec find f l = match l with
   | [] -> None
   | hd::tl -> if f hd then Some hd else find f tl
 
+val length: list 'a -> PURE.Tot nat
+let rec length = function 
+  | [] -> 0
+  | _::tl -> 1 + length tl
+
 assume val forall2: ('a -> 'b -> bool) -> list 'a -> list 'b -> bool
 assume val mapi: (int -> 'a -> 'b) -> list 'a -> list 'b
 assume val map2: ('a -> 'b -> 'c) -> list 'a -> list 'b -> list 'c
@@ -97,7 +102,6 @@ assume val map3: ('a -> 'b -> 'c -> 'd) -> list 'a -> list 'b -> list 'c -> list
 assume val rev: list 'a -> PURE.Tot (list 'a)
 assume val collect: ('a -> list 'b) -> list 'a -> list 'b
 assume val tl: list 'a -> list 'a
-assume val length: list 'a -> PURE.Tot int
 assume val tryFind: ('a -> bool) -> list 'a -> option 'b
 assume val concat: list (list 'a) -> PURE.Tot (list 'a)
 assume val sortWith: ('a -> 'a -> int) -> list 'a -> list 'a

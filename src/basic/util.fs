@@ -346,9 +346,12 @@ let find_opt f l =
 let sort_with f l = List.sortWith f l 
 
 let set_eq f l1 l2 = 
-  let l1 = sort_with f l1 in
-  let l2 = sort_with f l2 in
-  List.forall2 (fun l1 l2 -> f l1 l2 = 0) l1 l2
+  let eq x y = f x y = 0 in 
+  let l1 = sort_with f l1 |> remove_dups eq in
+  let l2 = sort_with f l2 |> remove_dups eq in
+  if List.length l1 <> List.length l2 
+  then false
+  else List.forall2 eq l1 l2
 
 let bind_opt opt f = 
     match opt with 
