@@ -473,7 +473,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
     let e = Absyn.Util.compress_exp e in
 
     let mkCTor c args =
-      match record_constructors.TryFind (c.ident.idText) with
+      match record_constructors.TryFind c.ident.idText with
         | Some f -> MLE_Record (mlpath_of_lident mlenv c, List.zip (List.map (fun x -> x.idText) f) args)
         | None -> MLE_CTor (mlpath_of_lident mlenv c, args) in
 
@@ -488,6 +488,14 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
 
             match sube with
             | { n = Exp_fvar (c, true) } -> mkCTor c.v args (* MLE_CTor (mlpath_of_lident mlenv c.v, args) *)
+            | { n = Exp_fvar (c, false) } ->
+               (match List.rev c.v.ns with
+                  | con::_ -> (* FIXME: take care of paths for the names of the fields *)
+                     (match record_constructors.TryFind con.idText, args with
+                        | Some f, [arg] -> assert (List.mem c.v.ident.idText (List.map (fun x -> x.idText) f)); MLE_Proj (arg, c.v.ident.idText)
+                        | _, _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args))
+                  | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args))
+
             | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args)
     end
 

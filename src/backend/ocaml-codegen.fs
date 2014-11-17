@@ -260,6 +260,11 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
             maybe_paren outer e_app_prio (reduce1 (e :: args))
     end
 
+    | MLE_Proj (e, f) ->
+       let e = doc_of_expr (min_op_prec, NonAssoc) e in
+       let doc = reduce [e; text "."; text f] in
+       doc
+
     | MLE_Fun (ids, body) ->
         let ids  = List.map (fun (x, _) -> text x) ids in
         let body = doc_of_expr (min_op_prec, NonAssoc) body in

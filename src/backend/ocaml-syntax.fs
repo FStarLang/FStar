@@ -62,11 +62,12 @@ type mlexpr =
 | MLE_Const  of mlconstant
 | MLE_Var    of mlident
 | MLE_Name   of mlpath
-| MLE_Record of mlpath * list<(mlsymbol * mlexpr)>
+| MLE_Record of mlpath * list<(mlsymbol * mlexpr)> (* FIXME: take care of paths for the names of the fields *)
 | MLE_CTor   of mlpath * list<mlexpr>
 | MLE_Tuple  of mlexpr list
 | MLE_Let    of bool * list<(mlident * mlidents * mlexpr)> * mlexpr
 | MLE_App    of mlexpr * list<mlexpr>
+| MLE_Proj   of mlexpr * mlsymbol (* FIXME: take care of paths for the names of the fields *)
 | MLE_Fun    of mlidents * mlexpr
 | MLE_If     of mlexpr * mlexpr * option<mlexpr>
 | MLE_Match  of mlexpr * list<mlbranch>
