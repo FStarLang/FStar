@@ -331,6 +331,7 @@ and serialize_cflags (ast : cflags) : s_cflags =
     | RETURN -> "C3"
     | SOMETRIVIAL -> "C4"
     | LEMMA -> "C5"
+    | DECREASES _ -> failwith "NYI: Decreases"
 
 and serialize_exp' (ast : exp') : s_exp' = 
     match ast with

@@ -486,7 +486,7 @@ let is_pure_comp c = match c.n with
     | Total _ -> true
     | Comp ct -> is_total_comp c 
                  || Util.starts_with ct.effect_name.str "Prims.PURE"
-                 || List.contains LEMMA ct.flags
+                 || ct.flags |> Util.for_some (function LEMMA -> true | _ -> false)
                  
 let is_pure_function t = match (compress_typ t).n with 
     | Typ_fun(_, c) -> is_pure_comp c
@@ -507,7 +507,9 @@ let is_smt_lemma t = match (compress_typ t).n with
     | _ -> false
 
 let is_ml_comp c = match c.n with
-  | Comp c -> lid_equals c.effect_name Const.ml_effect_lid || List.contains MLEFFECT c.flags
+  | Comp c -> lid_equals c.effect_name Const.ml_effect_lid 
+              || c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
+               
   | _ -> false
 
 let comp_result c = match c.n with 
@@ -1140,6 +1142,21 @@ let eq_k =
 
 let teq = ftv Const.eq2_lid eq_k
 let mk_eq e1 e2 = mk_Typ_app(teq, [(Inr e1, false); (Inr e2, false)]) ktype (Range.union_ranges e1.pos e2.pos)
+
+let lex_t = ftv Const.lex_t_lid ktype
+let lex_top = 
+    let lexnil = withinfo Const.lextop_lid lex_t dummyRange in
+    mk_Exp_fvar(lexnil, true) lexnil.sort dummyRange
+    
+let lex_pair = 
+    let a = gen_bvar ktype in 
+    let lexcons = withinfo Const.lexcons_lid (mk_Typ_fun([t_binder a; null_v_binder (btvar_to_typ a); null_v_binder lex_t], mk_Total lex_t) ktype dummyRange) dummyRange in
+    mk_Exp_fvar(lexcons, true) lexcons.sort dummyRange
+     
+let mk_lex_list vs =
+    List.fold_right (fun v tl -> 
+        let r = if tl.pos = dummyRange then v.pos else Range.union_ranges v.pos tl.pos in
+        mk_Exp_app(lex_pair, [targ v.tk; varg v; varg tl]) lex_t r) vs lex_top
 
 let forall_kind =
   let a = bvd_to_bvar_s (new_bvd None) ktype in

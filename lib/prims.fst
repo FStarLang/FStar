@@ -314,8 +314,8 @@ monad_lattice { (* STATE a wp wlp *)
 }
 
 type lex_t =
-  | LexPair : 'a:Type -> 'b:Type -> 'a -> 'b -> lex_t
-  | LexTop : lex_t
+  | LexTop  : lex_t
+  | LexCons : a:Type -> a -> lex_t -> lex_t
 
 type Tuple2 'a 'b =
   | MkTuple2: _1:'a

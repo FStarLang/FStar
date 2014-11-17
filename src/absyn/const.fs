@@ -36,7 +36,8 @@ let num_lid    = pconst  "number"
 let float_lid  = pconst  "float" 
 let exn_lid    = pconst  "exn" 
 let precedes_lid = pconst "Precedes"
-let lexpair_lid  = pconst "LexPair"
+let lex_t_lid    = pconst "lex_t"
+let lexcons_lid  = pconst "LexCons"
 let lextop_lid   = pconst "LexTop"
 
 (* Logical connectives and operators *)
@@ -72,12 +73,6 @@ let neq2_lid  = pconst  "neq2"
 (* Common logical functions for various theories *)
 let typeof_lid = pconst "TypeOf" 
 let kindof_lid = pconst "KindOf" 
-let add_lid    = pconst  "Add"
-let sub_lid    = pconst  "Sub"
-let mul_lid    = pconst  "Mul"
-let div_lid    = pconst  "Div"
-let minus_lid  = pconst  "Minus"
-let modulo_lid = pconst  "Modulo"
 
 (* Some common term constructors *)
 let exp_true_bool  = mk_Exp_constant (Const_bool true) tun dummyRange
@@ -88,10 +83,10 @@ let nil_lid        = pconst  "Nil"
 let ref_lid        = pconst  "ref"
 let assume_lid     = pconst  "Assume"
 let assert_lid     = pconst  "Assert"
-let pipe_right_lid    = pconst "pipe_right"
-let pipe_left_lid     = pconst "pipe_left"
-let list_append_lid   = p2l ["List"; "append"]
-let strcat_lid = p2l ["String"; "strcat"]
+let pipe_right_lid = pconst "pipe_right"
+let pipe_left_lid  = pconst "pipe_left"
+let list_append_lid = p2l ["List"; "append"]
+let strcat_lid     = p2l ["String"; "strcat"]
 
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
@@ -135,9 +130,8 @@ let all_bind_lid    = p2l ["Prims";"ALL";"bind"]
 let ml_effect_lid   = p2l ["Prims"; "ALL"; "ML"]
 let assert_pure_lid = p2l ["Prims"; "PURE"; "assert_p"]
 let assume_pure_lid = p2l ["Prims"; "PURE"; "assume_p"]
-let fact_lid        = pconst "Fact"
 let lemma_lid       = pconst "Lemma"
-let theorem_lid     = pconst "Theorem"
+let decreases_lid   = pconst "decreases"
 
 (* relational mode constants *)
 let lproj_lid            = pconst  "L"
