@@ -94,49 +94,49 @@ let append g1 g2 x = match g2 x with
 
 (* CH: swapped env and exp args until functions are ignored from the
    lex ordering or until we can write decreasing clauses *)
-val typing : exp -> env -> Tot (option ty)
-let rec typing e g =
+val typing : env -> exp -> Tot (option ty)
+let rec typing g e =
   match e with
   | EVar x -> g x
   | EAbs x t e1 ->
-      (match typing e1 (extend g x t) with
+      (match typing (extend g x t) e1 with
       | Some t' -> Some (TArrow t t')
       | None    -> None)
   | EApp e1 e2 ->
-      (match typing e1 g, typing e2 g with
+      (match typing g e1, typing g e2 with
       | Some (TArrow t11 t12), Some t2 -> if t11 = t2 then Some t12 else None
       | _                    , _       -> None)
   | ETrue  -> Some TBool
   | EFalse -> Some TBool
   | EIf e1 e2 e3 ->
-      (match typing e1 g, typing e2 g, typing e3 g with
+      (match typing g e1, typing g e2, typing g e3 with
       | Some TBool, Some t2, Some t3 -> if t2 = t3 then Some t2 else None
       | _         , _      , _       -> None)
 
-val canonical_forms_bool : e:exp -> Lemma 
-      (requires (typing e empty=Some TBool /\ is_value e))
+val canonical_forms_bool : e:exp -> Lemma
+      (requires (typing empty e=Some TBool /\ is_value e))
       (ensures (is_ETrue e \/ is_EFalse e))
 let canonical_forms_bool e = ()
 
-val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Lemma 
-      (requires (typing e empty == Some (TArrow t1 t2) /\ is_value e))
+val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Lemma
+      (requires (typing empty e == Some (TArrow t1 t2) /\ is_value e))
       (ensures (is_EAbs e))
 let canonical_forms_fun e t1 t2 = ()
 
-val progress : e:exp -> t:ty -> Lemma 
-      (requires (typing e empty == Some t))
+val progress : e:exp -> t:ty -> Lemma
+      (requires (typing empty e == Some t))
       (ensures (is_value e \/ (is_Some (step e))))
 let rec progress e t =
   match e with
-  | EApp e1 e2 -> 
-     let Some (TArrow t1 t2) = typing e1 empty in
-     progress e1 (TArrow t1 t2); 
+  | EApp e1 e2 ->
+     let Some (TArrow t1 t2) = typing empty e1 in
+     progress e1 (TArrow t1 t2);
      progress e2 t1
   | EIf e1 e2 e3 ->
      progress e1 TBool;
-     progress e2 t; 
+     progress e2 t;
      progress e3 t
-  | _ -> () 
+  | _ -> ()
 
 val appears_free_in : x:int -> e:exp -> Tot bool
 let rec appears_free_in x e =
@@ -149,23 +149,23 @@ let rec appears_free_in x e =
   | ETrue
   | EFalse -> false (* NS: writing default cases for recursive functions is bad for the solver. TODO: fix *)
 
-val free_in_context : x:int -> e:exp -> g:env 
-                   -> Lemma 
-                        (requires (appears_free_in x e /\ is_Some (typing e g)))
+val free_in_context : x:int -> e:exp -> g:env
+                   -> Lemma
+                        (requires (appears_free_in x e /\ is_Some (typing g e)))
                         (ensures (is_Some (g x)))
 let rec free_in_context x e g =
   match e with
-  | EAbs y t e1 -> 
-     if x = y 
+  | EAbs y t e1 ->
+     if x = y
      then ()
      else free_in_context x e1 (extend g y t)
 
-  | EApp e1 e2 -> 
+  | EApp e1 e2 ->
      if appears_free_in x e1
      then free_in_context x e1 g
      else free_in_context x e2 g
 
-  | EIf e1 e2 e3 -> 
+  | EIf e1 e2 e3 ->
      if      appears_free_in x e1 then free_in_context x e1 g
      else if appears_free_in x e2 then free_in_context x e2 g
      else                              free_in_context x e3 g
@@ -174,26 +174,26 @@ let rec free_in_context x e g =
 
 (* Corollary of free_in_context -- fed to the SMT solver *)
 val typable_empty_closed : x:int -> e:exp -> Lemma
-      (requires (is_Some (typing e empty) /\ appears_free_in x e))
+      (requires (is_Some (typing empty e) /\ appears_free_in x e))
       (ensures False)
       [SMTPat (appears_free_in x e)]
 let typable_empty_closed x e = free_in_context x e empty
 
-opaque logic type Equal (g1:env) (g2:env) = 
+opaque logic type Equal (g1:env) (g2:env) =
                  (forall (x:int). g1 x=g2 x)
-opaque logic type EqualE (e:exp) (g1:env) (g2:env) = 
+opaque logic type EqualE (e:exp) (g1:env) (g2:env) =
                  (forall (x:int). appears_free_in x e ==> g1 x=g2 x)
 
-val context_invariance : e:exp -> g:env -> g':env 
-                     -> Lemma 
+val context_invariance : e:exp -> g:env -> g':env
+                     -> Lemma
                           (requires (EqualE e g g'))
-                          (ensures (typing e g == typing e g'))
+                          (ensures (typing g e == typing g' e))
 let rec context_invariance e g g' =
   match e with
-  | EAbs x t e1 -> 
-     context_invariance e1 (extend g x t) (extend g' x t) 
+  | EAbs x t e1 ->
+     context_invariance e1 (extend g x t) (extend g' x t)
 
-  | EApp e1 e2 -> 
+  | EApp e1 e2 ->
      context_invariance e1 g g';
      context_invariance e2 g g'
 
@@ -204,19 +204,19 @@ let rec context_invariance e g g' =
 
   | _ -> ()
 
-val typing_extensional : g:env -> g':env -> e:exp 
-                      -> Lemma 
+val typing_extensional : g:env -> g':env -> e:exp
+                      -> Lemma
                            (requires (Equal g g'))
-                           (ensures (typing e g == typing e g'))
-let typing_extensional g g' e = context_invariance e g g' 
+                           (ensures (typing g e == typing g' e))
+let typing_extensional g g' e = context_invariance e g g'
 
 val substitution_preserves_typing :
-      x:int -> t_x:ty -> e:exp -> t_e:ty -> v:exp -> g1:env -> g2:env 
-      -> Lemma 
-          (requires ((typing e (append (extend g1 x t_x) g2) == Some t_e)
+      x:int -> t_x:ty -> e:exp -> t_e:ty -> v:exp -> g1:env -> g2:env
+      -> Lemma
+          (requires ((typing (append (extend g1 x t_x) g2) e == Some t_e)
                      /\ is_None (g2 x)
-                     /\ typing v empty == Some t_x))
-          (ensures  (typing (subst x v e) (append g1 g2) == Some t_e))
+                     /\ typing empty v == Some t_x))
+          (ensures  (typing (append g1 g2) (subst x v e) == Some t_e))
 let rec substitution_preserves_typing x t_x e t_e v g1 g2 =
   let g1g2 = append g1 g2 in
   let g1xg2 = append (extend g1 x t_x) g2 in
@@ -229,7 +229,7 @@ let rec substitution_preserves_typing x t_x e t_e v g1 g2 =
      else context_invariance e g1xg2 g1g2 (* no substitution, but need to show that x:t_x is removable *)
                              
   | EApp e1 e2 ->
-     let Some (TArrow t1 t2) = typing e1 (append (extend g1 x t_x) g2) in
+     let Some (TArrow t1 t2) = typing (append (extend g1 x t_x) g2) e1 in
      substitution_preserves_typing x t_x e1 (TArrow t1 t2) v g1 g2;
      substitution_preserves_typing x t_x e2 t1 v g1 g2
 
@@ -249,17 +249,17 @@ let rec substitution_preserves_typing x t_x e t_e v g1 g2 =
         substitution_preserves_typing x t_x e1 t_e1 v g1 (extend g2 x' t');
         typing_extensional (append g1 (extend g2 x' t')) g1g2_x' (subst x v e1))
               
-val preservation : e:exp -> e':exp -> t:ty 
-                -> Lemma 
-                     (requires (typing e empty == Some t /\ step e == Some e'))
-                     (ensures (typing e' empty == Some t))
+val preservation : e:exp -> e':exp -> t:ty
+                -> Lemma
+                     (requires (typing empty e == Some t /\ step e == Some e'))
+                     (ensures (typing empty e' == Some t))
 let rec preservation e e' t =
   match e with
-  | EApp e1 e2 -> 
-     let Some t1 = typing e1 empty in
-     if is_value e1 
+  | EApp e1 e2 ->
+     let Some t1 = typing empty e1 in
+     if is_value e1
      then let TArrow targ _ = t1 in
-          (if is_value e2 
+          (if is_value e2
            then let EAbs x _ ebody = e1 in
                 typing_extensional (extend empty x targ) (append (extend empty x targ) empty) ebody;
                 substitution_preserves_typing x targ ebody t e2 empty empty;
@@ -268,6 +268,6 @@ let rec preservation e e' t =
      else preservation e1 (Some.v (step e1)) t1
                        
   | EIf e1 _ _ ->
-      if is_value e1 
+      if is_value e1
       then ()
       else preservation e1 (Some.v (step e1)) TBool

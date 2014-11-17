@@ -34,6 +34,12 @@ let rec ackermann m n =
   else if n = 0 then ackermann (m - 1) 1
   else ackermann (m - 1) (ackermann m (n - 1))
 
+val ack_swap: n:nat -> m:nat -> Tot nat (decreases %[m;n])
+let rec ack_swap n m =
+  if m=0 then n + 1
+  else if n = 0 then ack_swap 1 (m - 1)
+  else ack_swap (ack_swap (n - 1) m) (m - 1)
+
 val ackermann_bad: m:int -> n:int -> Tot int
 let rec ackermann_bad m n = (* expected failure *)
   if m=0 then n + 1

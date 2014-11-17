@@ -516,8 +516,8 @@ and tc_value env e : exp * comp =
                                     | _ -> [e])) in
                                                        
                      let precedes = Util.ftv Const.precedes_lid kun in
-                     let letrecs = letrecs |> List.map (fun (l, t) -> 
-                        let t = Util.alpha_typ t in
+                     let letrecs = letrecs |> List.map (fun (l, t0) -> 
+                        let t = Util.alpha_typ t0 in
                         match (Util.compress_typ t).n with 
                           | Typ_fun(formals, c) -> 
                               begin match Util.prefix formals with 

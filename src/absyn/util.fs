@@ -225,11 +225,17 @@ and subst_kind' s k = match s with
             | Kind_delayed(k, s',m) -> mk_Kind_delayed(k, compose_subst s' s, Util.mk_ref None) k0.pos
             | _ -> mk_Kind_delayed(k0, s, Util.mk_ref None) k0.pos
 
+and subst_flags' s flags = 
+    flags |> List.map (function 
+        | DECREASES a -> DECREASES (subst_exp' s a)
+        | f -> f)
+
 and subst_comp_typ' s t = match s with 
   | []
   | [[]] -> t
   | _ -> 
     {t with result_typ=subst_typ' s t.result_typ; 
+            flags=subst_flags' s t.flags;
             effect_args=List.map (function Inl t, imp -> Inl <| subst_typ' s t, imp | Inr e, imp -> Inr <| subst_exp' s e, imp) t.effect_args}
 
 and subst_comp' s t = match s with 
@@ -245,6 +251,7 @@ let mk_subst s = [s]
 let subst_kind s t = subst_kind' (mk_subst s) t
 let subst_typ  s t = subst_typ' (mk_subst s) t
 let subst_exp  s t = subst_exp' (mk_subst s) t
+let subst_flags s t = subst_flags' (mk_subst s) t
 let subst_comp s t = subst_comp' (mk_subst s) t
 let subst_binder s = function
     | Inl a, imp -> Inl ({a with sort=subst_kind s a.sort}), imp
@@ -291,6 +298,10 @@ and map_typ s mk vt me descend binders t =
   subst_typ' (restrict_subst binders s) t, descend
 and map_exp s mk me ve descend binders e =
   subst_exp' (restrict_subst binders s) e, descend
+and map_flags s map_exp descend binders flags = 
+    flags |> List.map (function 
+        | DECREASES e -> map_exp descend binders e |> fst |> DECREASES 
+        | f -> f)
 and map_comp s mk map_typ map_exp descend binders c = match c.n with 
     | Total t -> 
       let t, descend = map_typ descend binders t in
@@ -298,7 +309,7 @@ and map_comp s mk map_typ map_exp descend binders c = match c.n with
     | Comp ct ->
       let t, descend = map_typ descend binders ct.result_typ in
       let args, descend = Visit.map_args map_typ map_exp descend binders ct.effect_args in 
-      mk_Comp ({ct with result_typ=t; effect_args=args}), descend 
+      mk_Comp ({ct with result_typ=t; effect_args=args; flags=map_flags s map_exp descend binders ct.flags}), descend 
 and visit_knd s vk mt me ctrl binders k = 
   let k = Visit.compress_kind k in 
   if ctrl.descend 

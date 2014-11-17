@@ -798,7 +798,7 @@ and desugar_typ env (top:term) : typ =
                         end) in
                 let decreases_clause = dec |> List.map (function (Inl t, _) -> match t.n with Typ_app(_, [(Inr arg, _)]) -> DECREASES arg | _ -> failwith "impos") in
                 if DesugarEnv.is_effect_name env eff.v
-                then if lid_equals eff.v Const.tot_effect_lid && List.length rest=0
+                then if lid_equals eff.v Const.tot_effect_lid && List.length decreases_clause=0
                      then mk_Total result_typ
                      else
                         let flags = 
@@ -806,11 +806,14 @@ and desugar_typ env (top:term) : typ =
                             else if lid_equals eff.v Const.tot_effect_lid then [TOTAL]
                             else if lid_equals eff.v Const.ml_effect_lid  then [MLEFFECT]
                             else [] in
+//                        decreases_clause |> List.iter (function 
+//                            | DECREASES arg -> Util.fprint1 "Added decreases clause %s\n" (Print.exp_to_string arg);
+//                            | _ -> ());
                           mk_Comp ({effect_name=eff.v;
                                     result_typ=result_typ;
                                     effect_args=rest; 
                                     flags=flags@decreases_clause})
-                else env.default_result_effect t top.range 
+                else env.default_result_effect t top.range
               | _ -> env.default_result_effect t top.range in 
           pos <| mk_Typ_fun(List.rev bs, cod)
         | hd::tl -> 

@@ -196,7 +196,10 @@ and reduce_typ
     | Comp ct ->
       let t, env = map_typ env binders ct.result_typ in
       let args, env = map_args map_typ map_exp env binders ct.effect_args in
-      mk_Comp ({ct with result_typ=t; effect_args=args}), env 
+      let env, flags = ct.flags |> Util.fold_map (fun env flag -> match flag with  
+        | DECREASES arg -> let arg, env = map_exp env binders arg in env, DECREASES arg
+        | f -> env, f) env in
+      mk_Comp ({ct with result_typ=t; effect_args=args; flags=flags}), env 
 
   and visit_typ env binders t = 
     let components, env = match (compress_typ t).n with 

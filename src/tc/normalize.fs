@@ -384,25 +384,26 @@ and sncomp tcenv (cfg:config<comp>) : config<comp> =
            with_new_code keffect cfg (mk_Total t.code)
 
 and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> = 
-  let remake l r eargs = 
-    let c = {effect_name=l; result_typ=r; effect_args=eargs; flags=cfg.code.flags} in
+  let remake l r eargs flags = 
+    let c = {effect_name=l; result_typ=r; effect_args=eargs; flags=flags} in
     {cfg with code=c} in
   let m = cfg.code in 
   let res = (sn tcenv (with_new_code m.result_typ.tk cfg m.result_typ)).code in
+  let s = subst_of_env cfg.environment in
   let args = 
     if List.contains SNComp cfg.steps 
-    then sn_args tcenv cfg.environment cfg.steps m.effect_args 
-    else let s = subst_of_env cfg.environment in
-         m.effect_args |> Util.subst_args s in
+    then sn_args tcenv cfg.environment cfg.steps m.effect_args
+    else m.effect_args |> Util.subst_args s in
+  let flags = Util.subst_flags s m.flags in
   if not <| List.contains DeltaComp cfg.steps
-  then remake m.effect_name res args
+  then remake m.effect_name res args flags
   else match Tc.Env.lookup_typ_abbrev tcenv m.effect_name with
-        | None -> remake m.effect_name res args
+        | None -> remake m.effect_name res args flags
         | Some t -> 
           let t = mk_Typ_app(t, (Inl res, false)::args) keffect res.pos in
           let c = sn tcenv (with_new_code keffect cfg t) in
           match c.code.n with
-            | Typ_app({n=Typ_const fv}, (Inl res, _)::args) -> remake fv.v res args
+            | Typ_app({n=Typ_const fv}, (Inl res, _)::args) -> remake fv.v res args flags
             | _ ->  failwith (Util.format2 "Got a computation %s, normalized unexpectedly to %s" (Print.sli m.effect_name) (Print.typ_to_string c.code))
        
 and sn_args tcenv env steps args = 
