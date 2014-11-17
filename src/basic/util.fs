@@ -36,30 +36,30 @@ exception Failure of string
 
 open System.Collections.Generic
 
-type weakmap<'a> =
-    | Dummy of 'a
-    | Map of Dictionary<int, list<WeakReference>>
+(* type weakmap<'a> = *)
+(*     | Dummy of 'a *)
+(*     | Map of Dictionary<int, list<WeakReference>> *)
 
-let new_weakmap () = Map (new Dictionary<int,list<WeakReference>>())
+(* let new_weakmap () = Map (new Dictionary<int,list<WeakReference>>()) *)
 
-let weakmap_insert (map:weakmap<'a>) key (value:'a) = 
-  let w = new WeakReference(value) in
-  match map with 
-    | Map m ->
-        let (exists, value) = m.TryGetValue(key) in
-        if exists
-        then (m.Remove(key) |> ignore; m.Add(key, w::value))
-        else m.Add(key, [w])
-    | _ -> failwith "impossible"
+(* let weakmap_insert (map:weakmap<'a>) key (value:'a) =  *)
+(*   let w = new WeakReference(value) in *)
+(*   match map with  *)
+(*     | Map m -> *)
+(*         let (exists, value) = m.TryGetValue(key) in *)
+(*         if exists *)
+(*         then (m.Remove(key) |> ignore; m.Add(key, w::value)) *)
+(*         else m.Add(key, [w]) *)
+(*     | _ -> failwith "impossible" *)
 
-let weakmap_lookup (map:weakmap<'a>) key = 
-   match map with 
-    | Map m -> 
-        let (ok, value) = m.TryGetValue(key) in
-        if ok 
-        then Some (value |> List.map (fun v -> v.Target :?> 'a))
-        else None
-    | _ -> failwith "impossible"
+(* let weakmap_lookup (map:weakmap<'a>) key =  *)
+(*    match map with  *)
+(*     | Map m ->  *)
+(*         let (ok, value) = m.TryGetValue(key) in *)
+(*         if ok  *)
+(*         then Some (value |> List.map (fun v -> v.Target :?> 'a)) *)
+(*         else None *)
+(*     | _ -> failwith "impossible" *)
 
 
 
@@ -283,15 +283,15 @@ let fprint3 a b c d = print_string <| format3 a b c d
 let fprint4 a b c d e = print_string <| format4 a b c d e
 let fprint5 a b c d e f = print_string <| format5 a b c d e f
         
-let err_out : option<System.IO.StreamWriter> ref = ref None 
-let open_err_out (s:string) = (err_out := Some (new System.IO.StreamWriter(s)))
-let flush_err_out () = match !err_out with None -> () | Some e -> (e.Flush(); e.Close())
+(* let err_out : option<System.IO.StreamWriter> ref = ref None  *)
+(* let open_err_out (s:string) = (err_out := Some (new System.IO.StreamWriter(s))) *)
+(* let flush_err_out () = match !err_out with None -> () | Some e -> (e.Flush(); e.Close()) *)
 
-let try_find_position matcher f = 
-  let rec aux pos = function
-    | [] -> None
-    | a::tl -> if (matcher a) then Some pos else aux (pos+1us) tl
-  in aux 0us f
+(* let try_find_position matcher f =  *)
+(*   let rec aux pos = function *)
+(*     | [] -> None *)
+(*     | a::tl -> if (matcher a) then Some pos else aux (pos+1us) tl *)
+(*   in aux 0us f *)
       
 type either<'a,'b> =
   | Inl of 'a

@@ -60,6 +60,7 @@ let prim_uni_ops = [
     ("op_Negation", "not");
     ("op_Minus", "-");
     ("exit", "exit");
+    ("failwith", "failwith");
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -71,6 +72,7 @@ let prim_types = [
     ("ref", "ref");
     ("array", "array");
     ("option", "option");
+    ("list", "list");
     (* ("int32", "Int32.t"); *)
     ("int64", "Int64.t");
 ]
@@ -79,6 +81,8 @@ let prim_types = [
 let prim_constructors = [
     ("Some", "Some");
     ("None", "None");
+    ("Nil", "[]");
+    ("Cons", "::");
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -229,7 +233,12 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
          else
            ptctor ctor in
         let args = List.map (doc_of_expr (min_op_prec, NonAssoc)) args in
-        maybe_paren outer e_app_prio (reduce1 [text name; parens (combine (text ", ") args)])
+        let doc =
+          match name, args with
+            (* Special case for Cons *)
+            | "::", [x;xs] -> reduce [x; text "::"; xs]
+            | _, _ -> reduce1 [text name; parens (combine (text ", ") args)] in
+        maybe_paren outer e_app_prio doc
 
     | MLE_Tuple es ->
         let docs = List.map (doc_of_expr (min_op_prec, NonAssoc)) es in
@@ -303,7 +312,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
         let doc  = reduce1 [text "match"; parens cond; text "with"] :: pats in
         let doc  = combine hardline doc in
 
-        maybe_paren outer e_bin_prio_if doc
+        parens doc
 
     | MLE_Raise (exn, []) ->
         reduce1 [text "raise"; text (ptctor exn)]
@@ -346,7 +355,12 @@ and doc_of_pattern (pattern : mlpattern) : doc =
            snd (Option.get (as_standard_constructor ctor))
          else
            ptctor ctor in
-       maybe_paren (min_op_prec, NonAssoc) e_app_prio (reduce1 [text name; parens (combine (text ", ") ps)])
+       let doc =
+         match name, ps with
+           (* Special case for Cons *)
+           | "::", [x;xs] -> reduce [x; text "::"; xs]
+           | _, _ -> reduce1 [text name; parens (combine (text ", ") ps)] in
+       maybe_paren (min_op_prec, NonAssoc) e_app_prio doc
 
     | MLP_Tuple ps ->
         let ps = List.map doc_of_pattern ps in

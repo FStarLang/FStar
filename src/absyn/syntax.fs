@@ -318,7 +318,7 @@ let freevars_of_list l =
         | Inl btv -> {out with ftvs=Util.set_add btv out.ftvs}
         | Inr bxv -> {out with fxvs=Util.set_add bxv out.fxvs}) no_fvs
 let list_of_freevars fvs = 
-   (Util.set_elements fvs.ftvs |> List.map Inl)@(Util.set_elements fvs.fxvs |> List.map Inr)
+   (Util.set_elements fvs.ftvs |> List.map (fun x -> Inl x))@(Util.set_elements fvs.fxvs |> List.map (fun x -> Inr x))
 
 let mk_Kind_type = {n=Kind_type; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs=mk_fvs()}
 let mk_Kind_effect = {n=Kind_effect; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs=mk_fvs()}
