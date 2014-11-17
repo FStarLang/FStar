@@ -61,6 +61,7 @@ let prim_uni_ops = [
     ("op_Minus", "-");
     ("exit", "exit");
     ("failwith", "failwith");
+    ("raise", "raise");
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -211,10 +212,10 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
     | MLE_Name path ->
         text (ptsym path)
 
-    | MLE_Record (_, fields) ->
+    | MLE_Record (path, fields) ->
         let for1 (name, e) =
             let doc = doc_of_expr (min_op_prec, NonAssoc) e in
-            reduce1 [text name; text "="; doc] in
+            reduce1 [text (ptsym (path, name)); text "="; doc] in
 
         cbrackets (combine (text "; ") (List.map for1 fields))
 
@@ -273,7 +274,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
 
     | MLE_Proj (e, f) ->
        let e = doc_of_expr (min_op_prec, NonAssoc) e in
-       let doc = reduce [e; text "."; text f] in
+       let doc = reduce [e; text "."; text (ptsym f)] in
        doc
 
     | MLE_Fun (ids, body) ->
@@ -336,9 +337,9 @@ and doc_of_pattern (pattern : mlpattern) : doc =
     | MLP_Const  c -> text (string_of_mlconstant c)
     | MLP_Var    x -> text (fst x)
 
-    | MLP_Record (_, fields) ->
-        let for1 (name, p) = reduce1 [text name; text "="; doc_of_pattern p] in
-        brackets (combine (text "; ") (List.map for1 fields))
+    | MLP_Record (path, fields) ->
+        let for1 (name, p) = reduce1 [text (ptsym (path, name)); text "="; doc_of_pattern p] in
+        cbrackets (combine (text "; ") (List.map for1 fields))
 
     | MLP_CTor (ctor, []) ->
        let name =

@@ -38,9 +38,8 @@ let outmod = [
 ]
 
 (* -------------------------------------------------------------------- *)
-let mlpath_of_lident (mlenv : mlenv) (x : lident) : mlpath =
-    let ns = List.map (fun x -> x.idText) x.ns in
-    let x  = x.ident.idText in
+let path_of_ns mlenv ns =
+    let ns = List.map (fun x -> x.idText) ns in
 
     let rec insupport = function
     | [], _ -> true
@@ -52,8 +51,13 @@ let mlpath_of_lident (mlenv : mlenv) (x : lident) : mlpath =
     | _, p -> p
 
     in match List.tryPick (fun sns -> if insupport (sns, ns) then Some sns else None) outmod with
-    | None -> (outsupport ((fst mlenv.mle_name) @ [snd mlenv.mle_name], ns), x)
-    | Some sns -> ("Fstar" :: "Support" :: ns, x)
+    | None -> outsupport ((fst mlenv.mle_name) @ [snd mlenv.mle_name], ns)
+    | Some sns -> "Fstar" :: "Support" :: ns
+
+let mlpath_of_lident (mlenv : mlenv) (x : lident) : mlpath =
+    let ns = x.ns in
+    let x  = x.ident.idText in
+    (path_of_ns mlenv ns, x)
 
 (* -------------------------------------------------------------------- *)
 type error =
@@ -429,6 +433,10 @@ let mlscheme_of_ty (mlenv : mlenv) (rg : range) (ty : typ) : mltyscheme =
     (tparams, mlty_of_ty mlenv tenv (rg, ty))
 
 (* -------------------------------------------------------------------- *)
+(* A table to remember the names of the fields of constructors *)
+let record_constructors = new HashMultiMap<string, list<ident>>(17, HashIdentity.Structural)
+
+(* -------------------------------------------------------------------- *)
 let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (lenv : lenv) (p : pat) : lenv * mlpattern =
     match p.v with
     | Pat_cons (x, ps) -> begin
@@ -441,8 +449,12 @@ let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (lenv : lenv) (p : pat) : lenv
             let lenv, ps = Util.fold_map (fun lenv pat -> mlpat_of_pat mlenv pat.p lenv pat) lenv ps in
             (lenv, MLP_Tuple ps)
         else
-            let lenv, ps = Util.fold_map (mlpat_of_pat mlenv rg) lenv ps in
-            (lenv, MLP_CTor (mlpath_of_lident mlenv x.v, ps))
+          let lenv, ps = Util.fold_map (mlpat_of_pat mlenv rg) lenv ps in
+          let p =
+            match record_constructors.TryFind x.v.ident.idText with
+              | Some f -> MLP_Record (path_of_ns mlenv x.v.ns, List.zip (List.map (fun x -> x.idText) f) ps)
+              | None -> MLP_CTor (mlpath_of_lident mlenv x.v, ps) in
+          (lenv, p)
     end
 
     | Pat_var x ->
@@ -465,17 +477,13 @@ let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (lenv : lenv) (p : pat) : lenv
     | Pat_twild    _ -> unsupported rg "pattern-type-wild"
 
 (* -------------------------------------------------------------------- *)
-(* A table to remember the names of the fields of constructors *)
-let record_constructors = new HashMultiMap<string, list<ident>>(17, HashIdentity.Structural)
-(* -------------------------------------------------------------------- *)
-
 let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
     let rg = e.pos in
     let e = Absyn.Util.compress_exp e in
 
     let mkCTor c args =
       match record_constructors.TryFind c.ident.idText with
-        | Some f -> MLE_Record (mlpath_of_lident mlenv c, List.zip (List.map (fun x -> x.idText) f) args)
+        | Some f -> MLE_Record (path_of_ns mlenv c.ns, List.zip (List.map (fun x -> x.idText) f) args)
         | None -> MLE_CTor (mlpath_of_lident mlenv c, args) in
 
     match e.n with
@@ -491,9 +499,9 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             | { n = Exp_fvar (c, true) } -> mkCTor c.v args (* MLE_CTor (mlpath_of_lident mlenv c.v, args) *)
             | { n = Exp_fvar (c, false) } ->
                (match List.rev c.v.ns with
-                  | con::_ -> (* FIXME: take care of paths for the names of the fields *)
+                  | con::cons ->
                      (match record_constructors.TryFind con.idText, args with
-                        | Some f, [arg] -> assert (List.mem c.v.ident.idText (List.map (fun x -> x.idText) f)); MLE_Proj (arg, c.v.ident.idText)
+                        | Some f, [arg] -> assert (List.mem c.v.ident.idText (List.map (fun x -> x.idText) f)); MLE_Proj (arg, (path_of_ns mlenv (List.rev cons), c.v.ident.idText))
                         | _, _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args))
                   | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args))
 
