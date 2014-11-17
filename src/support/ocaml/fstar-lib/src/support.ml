@@ -31,11 +31,14 @@ end
 
 
 module List = struct
+  let hd = BatList.hd
+  let tl = BatList.tl
   let map = BatList.map
   let iter = BatList.iter
   let partition = BatList.partition
   let append = BatList.append
   let fold_left = BatList.fold_left
+  let collect f l = BatList.flatten (BatList.map f l)
 end
 
 

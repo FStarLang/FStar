@@ -25,11 +25,14 @@ end
 
 
 module List : sig
+  val hd : 'a list -> 'a
+  val tl : 'a list -> 'a list
   val map : ('a -> 'b) -> 'a list -> 'b list
   val iter : ('a -> unit) -> 'a list -> unit
   val partition : ('a -> bool) -> 'a list -> 'a list * 'a list
   val append : 'a list -> 'a list -> 'a list
   val fold_left : ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
+  val collect : ('a -> 'b list) -> 'a list -> 'b list
 end
 
 
