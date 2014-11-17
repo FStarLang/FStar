@@ -79,6 +79,7 @@ let mk_wire (a:Type) m x =
     | Par -> with_mode m f
     | Sec -> f ()
 
+val concat_wires: a:Type -> w1:wire a -> w2:wire a -> Pure (wire a) (requires (DisjointDom prin a w1 w2)) (ensures \r -> r = Concat w1 w2)
 let concat_wires (a:Type) (w1:wire a) (w2:wire a) =
   assert (DisjointDom prin a w1 w2);
   Concat w1 w2
@@ -89,9 +90,15 @@ logic type proj_ok (a:Type) (w:wire a) (p:prin) (cur:mode) =
      then InSet p cur.prins
      else SetEqual cur.prins (Singleton p))
 
-(* no need to annotate, unless you want to check this 
-   val project_wire: a:Type -> w:wire a -> p:prin -> Wys a (proj_ok a w p) (fun m1 a m2 -> a==Sel w p /\ m1==m2) 
-*)
+kind Pre = mode -> Type
+kind Post (a:Type) = mode -> a -> mode -> Type
+effect Wys (a:Type) (pre:Pre) (post:Post a) =
+      STATE a 
+         (fun 'p h0 -> pre (SelHeap h0 moderef) /\ (forall x h1. post (SelHeap h0 moderef) x (SelHeap h1 moderef) ==> 'p x h1))
+         (fun 'p h0 -> (forall x h1. (pre (SelHeap h0 moderef) /\ post (SelHeap h0 moderef) x (SelHeap h1 moderef)) ==> 'p x h1))
+
+val project_wire: a:Type -> w:wire a -> p:prin -> Wys a (proj_ok a w p)
+                                                        (fun m1 a m2 -> a==Sel w p /\ m1==m2) 
 let project_wire (a:Type) (w:wire a) (p:prin) =
   assert (InDom p w);
   let cur = get_mode () in
@@ -101,12 +108,6 @@ let project_wire (a:Type) (w:wire a) (p:prin) =
   Sel w p
 
 
-kind Pre = mode -> Type
-kind Post (a:Type) = mode -> a -> mode -> Type
-effect Wys (a:Type) (pre:Pre) (post:Post a) =
-      STATE a 
-         (fun 'p h0 -> pre (SelHeap h0 moderef) /\ (forall x h1. post (SelHeap h0 moderef) x (SelHeap h1 moderef) ==> 'p x h1))
-         (fun 'p h0 -> (forall x h1. (pre (SelHeap h0 moderef) /\ post (SelHeap h0 moderef) x (SelHeap h1 moderef)) ==> 'p x h1))
                                 
 (*--------------------------------------------------------------------------------*)
 

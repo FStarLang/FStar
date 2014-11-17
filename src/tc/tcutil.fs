@@ -436,7 +436,7 @@ type comp_with_binder = option<Env.binding> * comp
 let destruct_comp c : (typ * typ * typ) = 
   let wp, wlp = match c.effect_args with 
     | [(Inl wp, _); (Inl wlp, _)] -> wp, wlp
-    | _ -> failwith (Util.format2 "Impossible: Got a computation %s with effect args %s" c.effect_name.str 
+    | _ -> failwith (Util.format2 "Impossible: Got a computation %s with effect args [%s]" c.effect_name.str 
       (List.map Print.arg_to_string c.effect_args |> String.concat ", ")) in
   c.result_typ, wp, wlp
 

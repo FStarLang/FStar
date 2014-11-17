@@ -109,7 +109,7 @@ and monad_sig = {
   mon_name:ident;
   mon_total:bool;
   mon_decls:list<decl>;
-  mon_abbrevs:list<(ident * list<binder> * typ)>
+  mon_abbrevs:list<(bool * ident * list<binder> * typ)>
  }
 and lift = {
   msource: ident;

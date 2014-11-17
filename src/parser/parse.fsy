@@ -289,8 +289,12 @@ monad_decls:
   | monad_decl monad_decls { $1::$2 }
 
 monad_abbrev: 
-  | name typars EQUALS typ
-      { ($1, $2, $4) }
+  | maybe_default name typars EQUALS typ
+      { ($1, $2, $3, $5) }
+
+maybe_default:
+  | DEFAULT { true }
+  |         { false }
 
 monad_abbrevs:
   | monad_abbrev more_monad_abbrevs 

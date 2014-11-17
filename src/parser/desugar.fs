@@ -1353,10 +1353,11 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
         | Some t -> t in
       let m_decl = Sig_tycon(qualify env0 m.mon_name, [], kmon, [], [], [], d.drange) in
       let menv = DesugarEnv.push_sigelt menv m_decl in
-      let menv, abbrevs = m.mon_abbrevs |> List.fold_left (fun (menv, out) (id, binders, t) -> 
+      let menv, abbrevs = m.mon_abbrevs |> List.fold_left (fun (menv, out) (def, id, binders, t) -> 
           let menv, ses = desugar_tycon menv d.drange [Effect] [TyconAbbrev(id, binders, None, t)] in
           menv, List.hd ses::out) (menv, []) in
       let m_abbrevs = List.rev abbrevs in
+      let def_monad = Util.find_map m.mon_abbrevs (function (true, id, _, _) -> Some (qualify menv id) | _ -> None) in
       let msig = {mname=qualify env m.mon_name;
          total=m.mon_total;
          signature=kmon;
@@ -1375,7 +1376,8 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
          null_wp=lookup "null_wp";
          trivial=lookup "trivial";
          abbrevs=m_abbrevs;
-         kind_abbrevs=kabbrevs} in
+         kind_abbrevs=kabbrevs;
+         default_monad=def_monad} in
       let env = DesugarEnv.exit_monad_scope env0 menv in 
       env, msig in
     let env, msigs = List.fold_left (fun (env, msigs) m -> 

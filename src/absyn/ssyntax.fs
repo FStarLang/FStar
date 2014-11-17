@@ -756,7 +756,8 @@ let rec deserialize_monad_decl (ast : s_monad_decl) : monad_decl =
       null_wp = deserialize_typ ast.null_wp
       trivial = deserialize_typ ast.trivial
       abbrevs = deserialize_list deserialize_sigelt ast.abbrevs
-      kind_abbrevs = deserialize_list (fun (lid, l, k) -> deserialize_lident lid, deserialize_list (fun vdef -> deserialize_either deserialize_btvdef deserialize_bvvdef vdef) l, deserialize_knd k) ast.kind_abbrevs }
+      kind_abbrevs = deserialize_list (fun (lid, l, k) -> deserialize_lident lid, deserialize_list (fun vdef -> deserialize_either deserialize_btvdef deserialize_bvvdef vdef) l, deserialize_knd k) ast.kind_abbrevs;
+      default_monad = None } //FIXME!
 
 and deserialize_sigelt (ast : s_sigelt) : sigelt = 
     match ast with

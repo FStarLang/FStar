@@ -245,7 +245,8 @@ type monad_decl = {
     null_wp:typ;
     trivial:typ;
     abbrevs:list<sigelt>;
-    kind_abbrevs:list<(lident * list<either<btvdef, bvvdef>> * knd)> 
+    kind_abbrevs:list<(lident * list<either<btvdef, bvvdef>> * knd)>;
+    default_monad:option<lident>;
  }
 and sigelt =
   | Sig_tycon          of lident * binders * knd * list<lident> * list<lident> * list<qualifier> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)

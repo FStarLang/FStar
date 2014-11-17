@@ -19,10 +19,8 @@ let partial_app f x y =
 let unit_id x = ()
 let unit_pattern () = ()
 
-val assert_0_eq_0: unit -> Tot unit
 let assert_0_eq_0 x = assert (0==0)
 
-val assert_0_eq_1: unit -> Tot unit
 let assert_0_eq_1 () = assert (0==1) //should fail
 
 type zero = x:int{x==0}
@@ -39,11 +37,11 @@ let list_zero_to_zero l = match l with
   | [] -> 0
   | hd::tl -> hd
 
-val hd_int_inexhaustive : x:list int -> int
+(* val hd_int_inexhaustive : x:list int -> int *)
 let hd_int_inexhaustive l = match l with
   | hd::_ -> hd //should fail
 
-val hd_int_impure : x:list int -> int
+(* val hd_int_impure : x:list int -> int *)
 let hd_int_impure l = match l with
   | hd::_ -> hd
   | [] -> failwith "Empty list"

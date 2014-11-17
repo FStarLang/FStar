@@ -69,15 +69,13 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              type assume_p (a:Type) (q:Type) (wp:WP a) (p:Post a) = (q ==> wp p)
              type null_wp (a:Type) (p:Post a) = (forall (x:a). p x)
              type trivial (a:Type) (wp:WP a) = wp (fun x -> True)
-                                               with Pure (a:Type) (pre:Pre) (post:Post a) =
-                                                      PURE a
-                                                           (fun (p:Post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
-                                                           (fun (p:Post a) -> forall a. pre /\ post a ==> p a)   (* WLP *)
-              (* and PURE (a:Type) (wp:WP a) (wlp:WP a) =  *)
-              (*     Pure a (wp (fun a -> True)) (fun a -> wlp (fun a' -> a==a')) *)
-              and Tot (a:Type) =
-                PURE a (fun (p:Post a) -> (forall (x:a). p x)) (fun (p:Post a) -> (forall (x:a). p x))
-              and Admit (a:Type) = PURE a (fun 'p -> True) (fun 'p -> True)
+             with Pure (a:Type) (pre:Pre) (post:Post a) =
+                    PURE a
+                         (fun (p:Post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
+                         (fun (p:Post a) -> forall a. pre /\ post a ==> p a)   (* WLP *)
+             and Admit (a:Type) = PURE a (fun 'p -> True) (fun 'p -> True)
+             and default Tot (a:Type) =
+               PURE a (fun (p:Post a) -> (forall (x:a). p x)) (fun (p:Post a) -> (forall (x:a). p x))
 
 }
 open Prims.PURE
@@ -227,6 +225,7 @@ monad_lattice { (* STATE a wp wlp *)
                  STATE 'a
                    (fun ('p:Post 'a) (h:heap) -> 'pre h /\ (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1)) (* WP *)
                    (fun ('p:Post 'a) (h:heap) -> (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1))           (* WLP *)
+             and St (a:Type) = ST a (fun h -> True) (fun h0 r h1 -> True)
 ;
   EXN::
              kind Pre  = Type
@@ -265,7 +264,9 @@ monad_lattice { (* STATE a wp wlp *)
              with Exn ('a:Type) ('pre:Pre) ('post:Post 'a) =
                  EXN 'a
                    (fun 'p -> 'pre /\ (forall (r:result 'a). ('pre /\ 'post r) ==> 'p r)) (* WP *)
+
                    (fun 'p -> (forall (r:result 'a). ('pre /\ 'post r) ==> 'p r))         (* WLP *)
+             and default Ex (a:Type) = Exn a True (fun v -> True)
  ;
   ALL::
              kind Pre  = heap -> Type
@@ -302,7 +303,7 @@ monad_lattice { (* STATE a wp wlp *)
                  ALL 'a
                    (fun ('p:Post 'a) (h:heap) -> 'pre h /\ (forall ra h1. (Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)) (* WP *)
                    (fun ('p:Post 'a) (h:heap) -> forall ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)             (* WLP *)
-             and ML ('a:Type) =
+             and default ML ('a:Type) =
                  ALL 'a (fun 'p h0 -> forall (a:result 'a) (h:heap). 'p a h) 
                         (fun 'p h0 -> forall (a:result 'a) (h:heap). 'p a h)
 

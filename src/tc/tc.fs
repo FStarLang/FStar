@@ -108,18 +108,34 @@ let comp_check_expected_typ env e c : exp * comp =
      Tc.Util.weaken_result_typ env e c t
 
 let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard_t = 
-  match copt with 
+  let expected_c_opt = match copt with 
+    | Some c' -> Some c'
+    | None -> 
+        let c1 = Tc.Normalize.weak_norm_comp env c in
+        let md = Tc.Env.get_monad_decl env c1.effect_name in
+        match md.default_monad with 
+            | None -> None
+            | Some l ->
+                let flags = 
+                    if lid_equals l Const.tot_effect_lid then [TOTAL]
+                    else if lid_equals l Const.ml_effect_lid then [MLEFFECT]
+                    else [] in
+                let def = mk_Comp ({effect_name=l;
+                                    result_typ=c1.result_typ;
+                                    effect_args=[];
+                                    flags=flags})  in
+                Some def in 
+
+  match expected_c_opt with 
     | None -> e, norm_c env c, Trivial
-    | Some c' -> //expected effects should already be normalized
+    | Some expected_c -> //expected effects should already be normalized
        if debug env Options.Low then Util.fprint3 "(%s) About to check\n\t%s\nagainst expected effect\n\t%s\n" 
-                                  (Range.string_of_range e.pos) (Print.comp_typ_to_string c) (Print.comp_typ_to_string c');
+                                  (Range.string_of_range e.pos) (Print.comp_typ_to_string c) (Print.comp_typ_to_string expected_c);
        let c = norm_c env c in 
-       let c' = Tc.Util.refresh_comp_label env true c' in
-       if debug env Options.Low then Util.fprint2 "(%s) After normalization, c is %s\n" 
-                                  (Range.string_of_range e.pos) (Print.comp_typ_to_string c);
-       let e, c, g = Tc.Util.check_comp env e c c' in
+       let expected_c' = Tc.Util.refresh_comp_label env true expected_c in
+       let e, _, g = Tc.Util.check_comp env e c expected_c' in
        if debug env Options.Low then Util.fprint2 "(%s) DONE check_expected_effect; guard is: %s\n" (Range.string_of_range e.pos) (Rel.guard_to_string env g);
-       e, c, g//res 
+       e, expected_c, g//res 
     
 let no_guard env (te, kt, f) = match f with
   | Trivial -> te, kt
@@ -576,7 +592,7 @@ and tc_value env e : exp * comp =
     let body, cbody = tc_exp envbody body in 
     if Env.debug env Options.Medium
     then Util.fprint2 "!!!!!!!!!!!!!!!body %s has type %s\n" (Print.exp_to_string body) (Print.comp_typ_to_string cbody);
-    let body, _, guard = check_expected_effect envbody c_opt (body, cbody) in
+    let body, cbody, guard = check_expected_effect envbody c_opt (body, cbody) in
     Tc.Util.discharge_guard envbody (Rel.conj_guard g guard);
     let tfun = match tfun_opt with 
         | Some t -> 
@@ -1179,13 +1195,25 @@ let rec tc_monad_decl env m deserialized =
   let null_wp = 
       let expected_k = w <| mk_Kind_arrow([t_binder a], kwp_a) in
       tc_typ_check_trivial env m.null_wp expected_k |> norm_t env in
-  let trivial =
+  let trivial_wp =
       let expected_k = w <| mk_Kind_arrow([t_binder a; null_t_binder kwp_a], ktype) in
       tc_typ_check_trivial env m.trivial expected_k |> norm_t env in
   let menv = Tc.Env.push_sigelt env (Sig_tycon(m.mname, [], mk, [], [], [], range_of_lid m.mname)) in
   let menv, abbrevs = m.abbrevs |> List.fold_left (fun (env, out) (ma:sigelt) -> 
     let ma, env = tc_decl env ma deserialized in 
      env, ma::out) (menv, []) in 
+  let default_monad = match m.default_monad with 
+    | None -> None
+    | Some m ->
+        if abbrevs |> Util.for_some (function 
+         | Sig_typ_abbrev(m', binders, k, _, _, _) when lid_equals m m' -> 
+            let k = Util.close_kind binders k in
+            let expect = mk_Kind_arrow([null_t_binder ktype], keffect) (range_of_lid m) in
+            Tc.Util.discharge_guard env <| keq env None k expect;
+            true
+         | _ -> false)
+        then Some m
+        else raise (Error(Util.format1 "Default monad %s is not found, or has the wrong kind (expect 'a -> Effect)" m.str, range_of_lid m)) in
   let m = { 
     mname=m.mname;
     total=m.total; 
@@ -1204,8 +1232,9 @@ let rec tc_monad_decl env m deserialized =
     assert_p=assert_p;
     assume_p=assume_p;
     null_wp=null_wp;
-    trivial=trivial;
-    kind_abbrevs=m.kind_abbrevs} in 
+    trivial=trivial_wp;
+    kind_abbrevs=m.kind_abbrevs;
+    default_monad=default_monad} in 
    let _ = Tc.Env.lookup_typ_lid menv m.mname in
     menv, m 
 
@@ -1319,7 +1348,7 @@ and tc_decl env se deserialized = match se with
       let se = match tc_exp ({env with generalize=generalize}) e with 
         | {n=Exp_let(lbs, _)}, _ -> Sig_let(lbs, r, lids)
         | _ -> failwith "impossible" in
-      if show env then Util.fprint1 "%s\n" <| Print.sigelt_to_string_short se;
+      if log env then Util.fprint1 "%s\n" <| Print.sigelt_to_string_short se;
       let env = Tc.Env.push_sigelt env se in 
       se, env
 
