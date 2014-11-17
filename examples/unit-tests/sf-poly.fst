@@ -17,19 +17,19 @@ let rec length l =
   | [] -> 0
   | hd::tl -> 1 + length tl
 
-val test_length1 : unit -> Fact unit
+val test_length1 : unit -> Lemma
       (ensures (length [1;2] = 2))
 let test_length1 () = ()
 
-val test_length2 : unit -> Fact unit
+val test_length2 : unit -> Lemma
       (ensures (length [true] = 1))
 let test_length2 () = ()
 
-val length_nil : unit -> Fact unit
+val length_nil : unit -> Lemma
       (ensures (length [] = 0))
 let length_nil () = ()
 
-val length_cons : h:'a -> t:list 'a -> Fact unit
+val length_cons : h:'a -> t:list 'a -> Lemma
       (ensures (length (h::t) = 1 + length t))
 let length_cons h t = ()
 
@@ -39,18 +39,18 @@ let rec app l1 l2 =
   | []   -> l2
   | h::t -> h :: app t l2
 
-val nil_app : l : list 'a -> Fact unit
+val nil_app : l : list 'a -> Lemma
       (ensures (app [] l = l))
 let nil_app l = ()
 
-val app_nil : l : list 'a -> Fact unit
+val app_nil : l : list 'a -> Lemma
       (ensures (app l [] = l))
 let rec app_nil l =
   match l with
   | [] -> ()
   | h::t -> app_nil t
 
-val length_app : l1:list 'a -> l2:list 'a -> Fact unit
+val length_app : l1:list 'a -> l2:list 'a -> Lemma
       (ensures (length (app l1 l2) = length l1 + length l2))
 let rec length_app l1 l2 =
   match l1 with
@@ -63,7 +63,7 @@ let rec snoc l x =
   | []   -> [x]
   | h::t -> h :: snoc t x
 
-val snoc_with_append : l1:list 'a -> l2:list 'a -> a:'a -> Fact unit
+val snoc_with_append : l1:list 'a -> l2:list 'a -> a:'a -> Lemma
       (ensures (snoc (app l1 l2) a = app l1 (snoc l2 a)))
 let rec snoc_with_append l1 l2 a =
   match l1 with
@@ -76,14 +76,14 @@ let rec rev l =
   | []   -> []
   | h::t -> snoc (rev t) h
 
-val rev_snoc : a:'a -> l:list 'a -> Fact unit
+val rev_snoc : a:'a -> l:list 'a -> Lemma
       (ensures (rev (snoc l a) = a :: (rev l)))
 let rec rev_snoc a l =
   match l with
   | []   -> ()
   | h::t -> rev_snoc a t
 
-val rev_involutive : l:list 'a -> Fact unit
+val rev_involutive : l:list 'a -> Lemma
       (ensures (rev (rev l)) = l)
 let rec rev_involutive l =
   match l with
@@ -111,15 +111,15 @@ let rec index_option l n =
   | [] -> None
   | h :: t -> if n = 0 then Some h else index_option t (n-1)
 
-val test_index_option1 : unit -> Fact unit
+val test_index_option1 : unit -> Lemma
       (ensures (index_option [4;5;6;7] 0 = Some 4))
 let test_index_option1 () = ()
 
-val test_index_option2 : unit -> Fact unit
+val test_index_option2 : unit -> Lemma
       (ensures (index_option [[1];[2]] 1 = Some [2]))
 let test_index_option2 () = ()
 
-val test_index_option3 : unit -> Fact unit
+val test_index_option3 : unit -> Lemma
       (ensures (index_option [true] 2 = None))
 let test_index_option3 () = ()
 
@@ -152,19 +152,19 @@ let prod_curry f x y =  f (x,y)
 val prod_uncurry : ('a -> 'b -> Tot 'c) -> Tot (('a * 'b) -> Tot 'c)
 let prod_uncurry f xy = f (fst xy) (snd xy)
 
-val test_prod_uncurry: f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Fact unit
+val test_prod_uncurry: f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Lemma
       (ensures ((prod_uncurry f) (x, y) = f x y))
 let test_prod_uncurry f x y = ()
 
-val test_prod_curry: f:(('a * 'b)->Tot 'c) -> x:'a -> y:'b -> Fact unit
+val test_prod_curry: f:(('a * 'b)->Tot 'c) -> x:'a -> y:'b -> Lemma
       (ensures ((prod_curry f) x y = f (x, y)))
 let test_prod_curry f x y = ()
 
-val uncurry_curry : f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Fact unit
+val uncurry_curry : f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Lemma
       (ensures (prod_curry (prod_uncurry f) x y = f x y))
 let uncurry_curry f x y = ()
 
-val curry_uncurry : f:(('a*'b)->Tot 'c) -> xy:('a*'b) -> Fact unit
+val curry_uncurry : f:(('a*'b)->Tot 'c) -> xy:('a*'b) -> Lemma
       (ensures (prod_uncurry (prod_curry f) xy = f xy))
 let curry_uncurry f xy = ()
 
@@ -191,7 +191,7 @@ let evenb i = i%2 = 0
 val oddb : nat -> Tot bool
 let oddb n = not (evenb n)
 
-val test_filter1 : unit -> Fact unit
+val test_filter1 : unit -> Lemma
       (ensures (filter evenb [1;2;3;4] = [2;4]))
 let test_filter1 () = ()
 
@@ -203,27 +203,27 @@ let rec map f l =
   | []     -> []
   | h :: t -> (f h) :: (map f t)
 
-val test_map1 : unit -> Fact unit
+val test_map1 : unit -> Lemma
       (ensures (map (fun n -> n + 3) [2;0;2] = [5;3;5]))
 let test_map1 () = ()
 
-val test_map2 : unit -> Fact unit
+val test_map2 : unit -> Lemma
       (ensures (map oddb [2;1;2;5] = [false;true;false;true]))
 let test_map2 () = ()
 
-val test_map3 : unit -> Fact unit
+val test_map3 : unit -> Lemma
     (ensures (map (fun n -> [evenb n;oddb n]) [2;1;2;5]
               = [[true;false];[false;true];[true;false];[false;true]]))
 let test_map3 () = ()
 
-val map_snoc : f:('a->Tot 'b) -> x:'a -> l:list 'a -> Fact unit
+val map_snoc : f:('a->Tot 'b) -> x:'a -> l:list 'a -> Lemma
       (ensures (map f (snoc l x) = snoc (map f l) (f x)))
 let rec map_snoc f x l =
   match l with
   | [] -> ()
   | h::t -> map_snoc f x t
 
-val map_rev : f:('a->Tot 'b) -> l:(list 'a) -> Fact unit
+val map_rev : f:('a->Tot 'b) -> l:(list 'a) -> Lemma
       (ensures (map f (rev l) = rev (map f l)))
 let rec map_rev f l =
   match l with
@@ -246,15 +246,15 @@ let rec fold f l b =
   | []   -> b
   | h::t -> f h (fold f t b)
 
-val fold_example1 : unit -> Fact unit 
+val fold_example1 : unit -> Lemma 
       (ensures (fold (fun x y -> x * y) [1;2;3;4] 1 = 24))
 let fold_example1 () = ()
 
-val fold_example2 : unit -> Fact unit
+val fold_example2 : unit -> Lemma
       (ensures (fold (fun x y -> x && y) [true;true;false;true] true = false))
 let fold_example2 () = ()
 
-val fold_example3 : unit -> Fact unit
+val fold_example3 : unit -> Lemma
       (ensures (fold app  [[1];[];[2;3];[4]] [] = [1;2;3;4]))
 let fold_example3 () = ()
 
@@ -289,23 +289,23 @@ let fmostlytrue x = my_override (my_override ftrue 1 false) 3 false x
 (* CH: That's counter intuitive. I fail to see the
    difference between implicit and explicit currying.
    Isn't one just syntax sugar for the other? *)
-val override_example1 : unit -> Fact unit
+val override_example1 : unit -> Lemma
       (ensures (fmostlytrue 0 = true))
 let override_example1 () = ()
 
-val override_example2 : unit -> Fact unit
+val override_example2 : unit -> Lemma
       (ensures (fmostlytrue 1 = false))
 let override_example2 () = ()
 
-val override_example3 : unit -> Fact unit
+val override_example3 : unit -> Lemma
       (ensures (fmostlytrue 2 = true))
 let override_example3 () = ()
 
-val override_example4 : unit -> Fact unit
+val override_example4 : unit -> Lemma
       (ensures (fmostlytrue 3 = false))
 let override_example4 () = ()
 
-val override_eq : x:'a -> k:'b -> f:('b->Tot 'a) -> Fact unit
+val override_eq : x:'a -> k:'b -> f:('b->Tot 'a) -> Lemma
       (ensures ((my_override f k x) k = x))
 let override_eq x k f = ()
 
@@ -321,7 +321,7 @@ let plus_one m n = n + 1
 val fold_length_named : l:list 'a -> Tot nat
 let fold_length_named l = fold plus_one l 0
 
-val fold_length_named_correct : l:list 'a -> Fact unit
+val fold_length_named_correct : l:list 'a -> Lemma
       (ensures (fold_length_named l = length l))
 let rec fold_length_named_correct l =
   match l with
@@ -337,7 +337,7 @@ val fold_map_named : ('a->Tot 'b) -> list 'a -> Tot (list 'b)
 let fold_map_named f l= fold (fcons f) l []
 
 (* But it works *)
-val fold_map_named_correct : f:('a->Tot 'b) -> l:list 'a -> Fact unit
+val fold_map_named_correct : f:('a->Tot 'b) -> l:list 'a -> Lemma
       (ensures (fold_map_named f l = map f l))
 let rec fold_map_named_correct f l =
   match l with
@@ -349,7 +349,7 @@ let rec fold_map_named_correct f l =
 val fold_length : l:list 'a -> Tot nat
 let fold_length l = fold (fun _ (n:nat) -> n + 1) l 0
 
-val fold_length_correct : l:list 'a -> Fact unit
+val fold_length_correct : l:list 'a -> Lemma
       (ensures (fold_length l = length l))
 let rec fold_length_correct l =
   match l with
@@ -360,7 +360,7 @@ let rec fold_length_correct l =
 val fold_map : ('a->Tot 'b) -> list 'a -> Tot (list 'b)
 let fold_map f l= fold (fun x l -> f x :: l) l []
 
-val fold_map_correct : f:('a->Tot 'b) -> l:list 'a -> Fact unit
+val fold_map_correct : f:('a->Tot 'b) -> l:list 'a -> Lemma
       (ensures (fold_map f l = map f l))
 let rec fold_map_correct f l =
   match l with

@@ -27,7 +27,7 @@ type msg (l:nat) = m:message{length m==l}
 val append_inj: #l:nat
                -> b1:msg l -> b2:message
                -> c1:msg l -> c2:message{append b1 b2==append c1 c2}
-               -> Fact unit
+               -> Lemma
                       (ensures (Equal b1 c1 /\ Equal b2 c2))
 let rec append_inj l b1 b2 c1 c2 = match l with
   | 0 -> ()
@@ -42,7 +42,7 @@ val append_inj_lemma: l:nat (* NS: should eventually be able to drop this argume
                -> c1:message -> c2:message
                -> Lemma (requires (length b1==l /\ length b1==length c1 /\ append b1 b2==append c1 c2))
                         (ensures (Equal b1 c1 /\ Equal b2 c2))
-                        [] (* VPat (append b1 b2); VPat (append c1 c2)] once we remove l:nat, adding these patterns will improve solver performance *)
+                 //(*[ SMTPat (append b1 b2); SMTPat (append c1 c2)] once we remove l:nat, adding these patterns will improve solver performance *)
 let rec append_inj_lemma l b1 b2 c1 c2 (* {decreases (length b1)} *) = 
   match length b1 with
   | 0 -> ()
@@ -74,10 +74,10 @@ let response s t =
                               (utf8 t)))
 
 val req_resp_distinct: s:string -> s':string16 -> t':string
-                     -> Fact unit (ensures (~(Equal (request s) (response s' t'))))
+                     -> Lemma (ensures (~(Equal (request s) (response s' t'))))
 let req_resp_distinct s s' t' = ()
 
-val req_inj: s1:string -> s2:string{request s1=request s2} -> Fact unit (ensures (s1==s2))
+val req_inj: s1:string -> s2:string{request s1=request s2} -> Lemma (ensures (s1==s2))
 let req_inj s1 s2 = ()
 
 val resp_components_corr: s1:string16 
@@ -86,12 +86,12 @@ val resp_components_corr: s1:string16
                        -> t2:string
                        -> Lemma (requires (response s1 t1 == response s2 t2))
                                 (ensures  (s1==s2 /\ t1==t2))
-                                [VPat (response s1 t1); VPat (response s2 t2)]
+                                [SMTPat (response s1 t1); SMTPat (response s2 t2)]
 let resp_components_corr s1 t1 s2 t2 = ()
 
 val req_components_corr: s1:string
                       -> s2:string
                       -> Lemma (requires (request s1 == request s2))
                                (ensures  (s1==s2))
-                               [VPat (request s1); VPat (request s2)]
+                               [SMTPat (request s1); SMTPat (request s2)]
 let req_components_corr s1 s2 = ()

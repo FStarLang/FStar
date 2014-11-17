@@ -113,17 +113,17 @@ let rec typing e g =
       | Some TBool, Some t2, Some t3 -> if t2 = t3 then Some t2 else None
       | _         , _      , _       -> None)
 
-val canonical_forms_bool : e:exp -> Theorem 
+val canonical_forms_bool : e:exp -> Lemma 
       (requires (typing e empty=Some TBool /\ is_value e))
       (ensures (is_ETrue e \/ is_EFalse e))
 let canonical_forms_bool e = ()
 
-val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Theorem 
+val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Lemma 
       (requires (typing e empty == Some (TArrow t1 t2) /\ is_value e))
       (ensures (is_EAbs e))
 let canonical_forms_fun e t1 t2 = ()
 
-val progress : e:exp -> t:ty -> Theorem 
+val progress : e:exp -> t:ty -> Lemma 
       (requires (typing e empty == Some t))
       (ensures (is_value e \/ (is_Some (step e))))
 let rec progress e t =
@@ -150,7 +150,7 @@ let rec appears_free_in x e =
   | EFalse -> false (* NS: writing default cases for recursive functions is bad for the solver. TODO: fix *)
 
 val free_in_context : x:int -> e:exp -> g:env 
-                   -> Theorem 
+                   -> Lemma 
                         (requires (appears_free_in x e /\ is_Some (typing e g)))
                         (ensures (is_Some (g x)))
 let rec free_in_context x e g =
@@ -176,7 +176,7 @@ let rec free_in_context x e g =
 val typable_empty_closed : x:int -> e:exp -> Lemma
       (requires (is_Some (typing e empty) /\ appears_free_in x e))
       (ensures False)
-      ([VPat (appears_free_in x e)])
+      [SMTPat (appears_free_in x e)]
 let typable_empty_closed x e = free_in_context x e empty
 
 opaque logic type Equal (g1:env) (g2:env) = 
@@ -185,7 +185,7 @@ opaque logic type EqualE (e:exp) (g1:env) (g2:env) =
                  (forall (x:int). appears_free_in x e ==> g1 x=g2 x)
 
 val context_invariance : e:exp -> g:env -> g':env 
-                     -> Theorem 
+                     -> Lemma 
                           (requires (EqualE e g g'))
                           (ensures (typing e g == typing e g'))
 let rec context_invariance e g g' =
@@ -205,14 +205,14 @@ let rec context_invariance e g g' =
   | _ -> ()
 
 val typing_extensional : g:env -> g':env -> e:exp 
-                      -> Theorem 
+                      -> Lemma 
                            (requires (Equal g g'))
                            (ensures (typing e g == typing e g'))
 let typing_extensional g g' e = context_invariance e g g' 
 
 val substitution_preserves_typing :
       x:int -> t_x:ty -> e:exp -> t_e:ty -> v:exp -> g1:env -> g2:env 
-      -> Theorem 
+      -> Lemma 
           (requires ((typing e (append (extend g1 x t_x) g2) == Some t_e)
                      /\ is_None (g2 x)
                      /\ typing v empty == Some t_x))
@@ -250,7 +250,7 @@ let rec substitution_preserves_typing x t_x e t_e v g1 g2 =
         typing_extensional (append g1 (extend g2 x' t')) g1g2_x' (subst x v e1))
               
 val preservation : e:exp -> e':exp -> t:ty 
-                -> Theorem 
+                -> Lemma 
                      (requires (typing e empty == Some t /\ step e == Some e'))
                      (ensures (typing e' empty == Some t))
 let rec preservation e e' t =

@@ -29,7 +29,7 @@ let rec sorted l = match l with
     | Cons x Nil -> true
     | Cons x (Cons y xs) -> (x <= y) && (sorted (Cons y xs))
 
-val test_sorted: x:int -> l:intlist -> Fact unit ((sorted (Cons x l) /\ is_Cons l) ==> x <= Cons.hd l)
+val test_sorted: x:int -> l:intlist -> Lemma ((sorted (Cons x l) /\ is_Cons l) ==> x <= Cons.hd l)
 let test_sorted x l = ()
 
 val test_sorted2: unit -> Tot (m:intlist{sorted m})
@@ -46,7 +46,7 @@ val sorted_smaller: x:int
                 ->  l:intlist 
                 ->  Lemma (requires (sorted (Cons x l) /\ mem y l))
                           (ensures (x <= y))
-                          [VPat (sorted (Cons x l)); VPat (mem y l)]
+                          [SMTPat (sorted (Cons x l)); SMTPat (mem y l)]
 let rec sorted_smaller x y l = match l with
     | Nil -> ()
     | Cons z zs -> if z=y then () else sorted_smaller x y zs

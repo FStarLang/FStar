@@ -20,7 +20,7 @@ let rec length l =
   | [] -> 0
   | hd::tl -> 1 + length tl
 
-val length_nil : unit -> Fact unit
+val length_nil : unit -> Lemma
       (ensures (length [] == 0))
 let length_nil () = ()
 
