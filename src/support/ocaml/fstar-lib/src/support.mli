@@ -27,7 +27,10 @@ end
 module List : sig
   val hd : 'a list -> 'a
   val tl : 'a list -> 'a list
+  val length : 'a list -> int
+  val rev : 'a list -> 'a list
   val map : ('a -> 'b) -> 'a list -> 'b list
+  val map3 : ('a -> 'b -> 'c -> 'd) -> 'a list -> 'b list -> 'c list -> 'd list
   val iter : ('a -> unit) -> 'a list -> unit
   val partition : ('a -> bool) -> 'a list -> 'a list * 'a list
   val append : 'a list -> 'a list -> 'a list
@@ -161,6 +164,7 @@ module Microsoft : sig
       type 'a uvar = 'a cell
       exception Impos
       val uvar_id : 'a uvar -> Prims.int32
+      val find : 'a uvar -> 'a
     end
     module Platform : sig
       val exe : string -> string
@@ -170,6 +174,25 @@ module Microsoft : sig
       type opt_variant =
         | ZeroArgs of (unit -> unit)
         | OneArg of (string -> unit) * string
+    end
+    module Range : sig
+      type range = BatInt64.t
+      type file_idx = Prims.int32
+      type pos = Prims.int32
+      val mk_pos: int -> int -> pos
+      val mk_file_idx_range:file_idx -> int -> int -> range
+      val mk_range: string -> int -> int -> range
+      val encode_file:string -> string
+      val decode_file_idx:string -> int
+      val file_of_file_idx:file_idx -> string
+      val union_ranges: range -> range -> range
+      val string_of_range: range -> string
+      val file_of_range: range -> string
+      val string_of_pos: pos -> string
+      val start_of_range: range -> pos
+      val end_of_range: range -> pos
+      val line_of_pos: pos -> int
+      val end_range: range -> range
     end
   end
 end

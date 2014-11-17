@@ -106,10 +106,10 @@ let push_vbinder binders = function
 let bvd_to_bvar_s bvd sort = {v=bvd; sort=sort; p=bvd.ppname.idRange}
 let tbinder_opt aopt k = match aopt with 
     | None -> []
-    | Some a -> [Inl <| bvd_to_bvar_s a k]
+    | Some a -> [Inl (bvd_to_bvar_s a k)]
 let vbinder_opt aopt t = match aopt with 
     | None -> []
-    | Some a -> [Inr <| bvd_to_bvar_s a t]
+    | Some a -> [Inr (bvd_to_bvar_s a t)]
 
 
 type knd_components = binders * list<knd> * list<typ> * list<arg>

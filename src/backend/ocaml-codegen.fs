@@ -258,18 +258,18 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
             let e1  = doc_of_expr (prio, Left ) e1 in
             let e2  = doc_of_expr (prio, Right) e2 in
             let doc = reduce1 [e1; text txt; e2] in
-            maybe_paren outer prio doc
+            parens doc
 
         | (MLE_Name p, [e1]) when is_uni_op p ->
             let (_, txt) = Option.get (as_uni_op p) in
             let e1  = doc_of_expr (min_op_prec, NonAssoc ) e1 in
             let doc = reduce1 [text txt; parens e1] in
-            maybe_paren outer e_app_prio doc
+            parens doc
 
         | _ ->
             let e    = doc_of_expr (e_app_prio, ILeft) e in
             let args = List.map (doc_of_expr (e_app_prio, IRight)) args in
-            maybe_paren outer e_app_prio (reduce1 (e :: args))
+            parens (reduce1 (e :: args))
     end
 
     | MLE_Proj (e, f) ->
