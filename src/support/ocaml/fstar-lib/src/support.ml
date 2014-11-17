@@ -26,10 +26,19 @@ end
 
 module String = struct
   let strcat s t = s^t
+  let split seps s =
+    let rec repeat_split acc = function
+      | [] -> acc
+      | sep::seps ->
+         let l = BatList.flatten (BatList.map (fun x -> BatString.nsplit x (BatString.make 1 sep)) acc) in
+         repeat_split l seps in
+    Prims.l2nl (repeat_split [s] (Prims.nl2l seps))
+  let compare x y = BatInt32.of_int (BatString.compare x y)
 end
 
 
 module List = struct
+  let map f nl = Prims.l2nl (BatList.map f (Prims.nl2l nl))
   let iter f nl = BatList.iter f (Prims.nl2l nl)
   let partition p nl =
     let (l1,l2) = BatList.partition p (Prims.nl2l nl) in
@@ -45,6 +54,7 @@ module Microsoft = struct
 
     module Util = struct
       type 'a set = 'a Prims.list * ('a -> 'a -> bool)
+      let new_set cmp _ = (Prims.Nil, fun x y -> cmp x y = 0l)
 
       type 'v smap = (string, 'v) BatHashtbl.t
 
@@ -64,6 +74,8 @@ module Microsoft = struct
       let fpr = Printf.fprintf
       let print_string s = pr "%s" s
 
+      let concat_l sep l = BatString.concat sep (Prims.nl2l l)
+
       let int_of_string (s:string) = BatInt32.of_string s
 
       type ('a,'b) either =
@@ -71,6 +83,11 @@ module Microsoft = struct
         | Inr of 'b
 
       let for_some p l = BatList.exists p (Prims.nl2l l)
+
+      let prefix l =
+        match BatList.rev (Prims.nl2l l) with
+          | hd::tl -> (Prims.l2nl (BatList.rev tl), hd)
+          | _ -> failwith "impossible"
 
       let mk_ref x = ref x
       let expand_environment_variable = Sys.getenv

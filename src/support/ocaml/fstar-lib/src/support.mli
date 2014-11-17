@@ -21,10 +21,13 @@ end
 
 module String : sig
   val strcat : string -> string -> string
+  val split : char Prims.list -> string -> string Prims.list
+  val compare : string -> string -> BatInt32.t
 end
 
 
 module List : sig
+  val map : ('a -> 'b) -> 'a Prims.list -> 'b Prims.list
   val iter : ('a -> unit) -> 'a Prims.list -> unit
   val partition : ('a -> bool) -> 'a Prims.list -> 'a Prims.list * 'a Prims.list
   val append : 'a Prims.list -> 'a Prims.list -> 'a Prims.list
@@ -36,6 +39,7 @@ module Microsoft : sig
   module FStar : sig
     module Util : sig
       type 'a set = 'a Prims.list * ('a -> 'a -> bool)
+      val new_set: ('a -> 'a -> BatInt32.t) -> ('a -> BatInt32.t) -> 'a set
 
       type 'v smap = (string, 'v) BatHashtbl.t
 
@@ -43,11 +47,13 @@ module Microsoft : sig
       val format2: string -> string -> string -> string
       val format3: string -> string -> string -> string -> string
       val print_string : string -> unit
+      val concat_l : string -> string Prims.list -> string
       val int_of_string : string -> BatInt32.t
       type ('a,'b) either =
         | Inl of 'a
         | Inr of 'b
       val for_some : ('a -> bool) -> 'a Prims.list -> bool
+      val prefix: 'a Prims.list -> 'a Prims.list * 'a
       val mk_ref : 'a -> 'a ref
       val expand_environment_variable : string -> string
     end
