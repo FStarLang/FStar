@@ -33,6 +33,7 @@ let outmod = [
     ["Microsoft"; "FStar"; "Platform"];
     ["Microsoft"; "FStar"; "Util"];
     ["Microsoft"; "FStar"; "Getopt"];
+    ["Microsoft"; "FStar"; "Unionfind"];
     ["FSharp"; "Format"];
 ]
 

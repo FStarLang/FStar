@@ -1,6 +1,9 @@
 module Prims = struct
-  type byte = char
+  (* Fix this... *)
   type double  = float
+  type int32 = int
+
+  type byte = char
   type 'a list =
     | Nil
     | Cons of 'a * 'a list
@@ -15,7 +18,6 @@ module Prims = struct
   let ignore _ = ()
   let fst = fst
   let snd = snd
-  let exit i = exit (Int32.to_int i)
 end
 
 
@@ -33,7 +35,7 @@ module String = struct
          let l = BatList.flatten (BatList.map (fun x -> BatString.nsplit x (BatString.make 1 sep)) acc) in
          repeat_split l seps in
     Prims.l2nl (repeat_split [s] (Prims.nl2l seps))
-  let compare x y = BatInt32.of_int (BatString.compare x y)
+  let compare x y = BatString.compare x y
 end
 
 
@@ -54,7 +56,7 @@ module Microsoft = struct
 
     module Util = struct
       type 'a set = 'a Prims.list * ('a -> 'a -> bool)
-      let new_set cmp _ = (Prims.Nil, fun x y -> cmp x y = 0l)
+      let new_set cmp _ = (Prims.Nil, fun x y -> cmp x y = 0)
 
       type 'v smap = (string, 'v) BatHashtbl.t
 
@@ -76,7 +78,9 @@ module Microsoft = struct
 
       let concat_l sep l = BatString.concat sep (Prims.nl2l l)
 
-      let int_of_string (s:string) = BatInt32.of_string s
+      let int_of_string s = BatInt.of_string s
+      let hashcode s = BatHashtbl.hash s
+      let compare s1 s2 = BatString.compare s1 s2
 
       type ('a,'b) either =
         | Inl of 'a
@@ -91,6 +95,65 @@ module Microsoft = struct
 
       let mk_ref x = ref x
       let expand_environment_variable = Sys.getenv
+    end
+
+
+    module Unionfind = struct
+    (* Unionfind with path compression but without ranks *)
+
+      type 'a cell = {mutable contents : 'a contents}
+       and 'a contents =
+         | Data of 'a list * Prims.int32
+         | Fwd of 'a cell
+      type 'a uvar = 'a cell
+
+      exception Impos
+
+      let counter = ref 0
+
+      let fresh x = counter := !counter + 1; {contents = Data ([x], !counter) }
+
+      let rec rep cell = match cell.contents with
+          | Data _ -> cell
+          | Fwd cell' ->
+             if cell == cell' then
+               failwith "YIKES! Cycle in unionfind graph"
+             else
+               rep cell'
+
+      let find x =
+        let y = rep x in
+        if not (x == y) then x.contents <- Fwd y; (* path compression *)
+        match y.contents with
+          | Data ((hd::tl), _) -> hd
+          | _ -> failwith "impossible"
+
+      let uvar_id uv = match (rep uv).contents with
+          | Data (_, id) -> id
+          | _ -> failwith "impossible"
+
+      let union x y =
+        let cellX = rep x in
+        let cellY = rep y in
+        if cellX == cellY then
+          ()
+        else
+          match cellX.contents, cellY.contents with
+            | Data (dx, ctrx), Data (dy,_) ->
+               cellX.contents <- Data ((dx@dy), ctrx);
+               cellY.contents <- Fwd cellX
+            | _ -> failwith "impossible"
+
+      let change x a =
+        let cellX = rep x in
+        match cellX.contents with
+	  | Data (_, ctrX) ->
+	     cellX.contents <- Data ([a],ctrX)
+          | _ -> failwith "impossible"
+
+      let equivalent x y =
+        (rep x) == (rep y)
+
     end
 
 

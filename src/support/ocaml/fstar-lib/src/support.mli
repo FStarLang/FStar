@@ -1,7 +1,9 @@
 module Prims : sig
-  type byte = char
   (* Fix this... *)
   type double  = float
+  type int32 = int
+
+  type byte = char
   type 'a list =
     | Nil
     | Cons of 'a * 'a list
@@ -10,7 +12,6 @@ module Prims : sig
   val ignore : 'a -> unit
   val fst : 'a * 'b -> 'a
   val snd : 'a * 'b -> 'b
-  val exit : BatInt32.t -> 'a
 end
 
 
@@ -22,7 +23,7 @@ end
 module String : sig
   val strcat : string -> string -> string
   val split : char Prims.list -> string -> string Prims.list
-  val compare : string -> string -> BatInt32.t
+  val compare : string -> string -> Prims.int32
 end
 
 
@@ -39,7 +40,7 @@ module Microsoft : sig
   module FStar : sig
     module Util : sig
       type 'a set = 'a Prims.list * ('a -> 'a -> bool)
-      val new_set: ('a -> 'a -> BatInt32.t) -> ('a -> BatInt32.t) -> 'a set
+      val new_set: ('a -> 'a -> Prims.int32) -> ('a -> Prims.int32) -> 'a set
 
       type 'v smap = (string, 'v) BatHashtbl.t
 
@@ -48,7 +49,9 @@ module Microsoft : sig
       val format3: string -> string -> string -> string -> string
       val print_string : string -> unit
       val concat_l : string -> string Prims.list -> string
-      val int_of_string : string -> BatInt32.t
+      val int_of_string : string -> Prims.int32
+      val hashcode: string -> Prims.int32
+      val compare: string -> string -> Prims.int32
       type ('a,'b) either =
         | Inl of 'a
         | Inr of 'b
@@ -56,6 +59,15 @@ module Microsoft : sig
       val prefix: 'a Prims.list -> 'a Prims.list * 'a
       val mk_ref : 'a -> 'a ref
       val expand_environment_variable : string -> string
+    end
+    module Unionfind : sig
+      type 'a cell = {mutable contents : 'a contents}
+       and 'a contents =
+         | Data of 'a list * Prims.int32
+         | Fwd of 'a cell
+      type 'a uvar = 'a cell
+      exception Impos
+      val uvar_id : 'a uvar -> Prims.int32
     end
     module Platform : sig
       val exe : string -> string
