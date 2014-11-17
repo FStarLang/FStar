@@ -212,7 +212,7 @@ let ask bg_theory label_messages qry =
           false, failing_assertions in
     result
 
-let queryAndPop query_and_labels pop_fn =
+let     queryAndPop query_and_labels pop_fn =
   let bg_theory = flush_scopes() in
   let qry, label_messages = query_and_labels () in
   let theory = bg_theory@[Term.Push]@qry@[Term.Pop] in

@@ -609,10 +609,10 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
               | _ -> failwith "Impossible"
             end
 
-      | Exp_app({n=Exp_fvar(l, _)}, [(Inl _, _); (Inl _, _); (Inr v1, _); (Inr v2, _)]) when (lid_equals l.v Const.lexpair_lid) -> 
+      | Exp_app({n=Exp_fvar(l, _)}, [(Inl _, _); (Inr v1, _); (Inr v2, _)]) when (lid_equals l.v Const.lexcons_lid) -> 
          let v1, vars1, decls1 = encode_exp v1 env in 
          let v2, vars2, decls2 = encode_exp v2 env in
-         Term.mk_LexPair v1 v2, vars1@vars2, decls1@decls2
+         Term.mk_LexCons v1 v2, vars1@vars2, decls1@decls2
 
       | Exp_app(head, args) -> 
         let args, vars, decls = encode_args args env in
@@ -1108,7 +1108,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 @aux in
         g, env
 
-    | Sig_datacon(d, _, _, _, _) when (lid_equals d Const.lexpair_lid) -> [], env 
+    | Sig_datacon(d, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env 
 
     | Sig_datacon(d, t, _, quals, _) -> 
         let ddconstrsym, ddtok, env = gen_free_var env d in //Print.sli d in
@@ -1126,23 +1126,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let dapp =  mkApp(ddconstrsym, xvars) in
         let ty_pred, decls2 = encode_typ_pred' false t_res env' dapp in
         let precedence = 
-            if lid_equals d Const.lexpair_lid
-            then let vars', guards', env', decls1 ,_ = encode_binders false formals env' in
-                 let yvars = List.map mkBoundV vars' in
-                 let dapp' = mkApp(ddconstrsym, yvars) in
-                 let [_; _; x1; x2] = xvars in
-                 let [_; _; y1; y2] = yvars in  
-                 let prec = mkForall([Term.mk_Precedes dapp dapp'], 
-                                     vars@vars', 
-                                     mkImp(mk_and_l (guards@guards'), 
-                                           mkIff(Term.mk_Precedes dapp dapp', 
-                                                 mkOr(Term.mk_Precedes x1 y1, 
-                                                      mkAnd(Term.mkEq(x1, y1), Term.mk_Precedes x2 y2))))) in
-                decls1@[Term.Assume(prec, Some "Ordering on lex pairs")]
-            else if lid_equals d Const.lextop_lid
+            if lid_equals d Const.lextop_lid
             then let x = varops.fresh "x", Term_sort in
                  let xtm = mkBoundV x in
-                 [Term.Assume(mkForall([Term.mk_Precedes xtm dapp], [x], mkImp(mk_tester "LexPair" xtm, Term.mk_Precedes xtm dapp)), Some "lextop is top")]
+                 [Term.Assume(mkForall([Term.mk_Precedes xtm dapp], [x], mkImp(mk_tester "LexCons" xtm, Term.mk_Precedes xtm dapp)), Some "lextop is top")]
             else (* subterm ordering *)
                 let prec = vars |> List.collect (fun v -> match snd v with 
                     | Type_sort -> []

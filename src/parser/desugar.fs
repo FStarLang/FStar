@@ -766,6 +766,10 @@ and desugar_typ env (top:term) : typ =
             | Name lemma when (lemma.ident.idText = "Lemma") -> 
               let unit = mk_term (Name Const.unit_lid) t.range Type, false in 
               let nil_pat = mk_term (Name Const.nil_lid) t.range Expr, false in
+              let decreases_clause, args = args |> List.partition (fun (arg, _) -> 
+                  match (unparen arg).tm with 
+                    | App({tm=Var d}, _, _) -> d.ident.idText = "decreases"
+                    | _ -> false) in 
               let args = match args with 
                     | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
                     | [ens] -> (* a single ensures clause *)
@@ -773,7 +777,7 @@ and desugar_typ env (top:term) : typ =
                       [unit;req_true;ens;nil_pat]
                     | [req;ens] -> [unit;req;ens;nil_pat]
                     | more -> unit::more in
-              mk_term (Construct(lemma, args)) t.range t.level
+              mk_term (Construct(lemma, args@decreases_clause)) t.range t.level
             | _ -> t
         in
 
@@ -785,6 +789,14 @@ and desugar_typ env (top:term) : typ =
           let head, args = Util.head_and_args t in 
           let cod = match (compress_typ head).n, args with 
               | Typ_const eff, (Inl result_typ, _)::rest -> 
+                let dec, rest = rest |> List.partition (function 
+                    | (Inr _, _) -> false 
+                    | (Inl t, _) -> 
+                        begin match t.n with
+                            | Typ_app({n=Typ_const fv}, [(Inr _,_)]) -> lid_equals fv.v Const.decreases_lid
+                            | _ -> false
+                        end) in
+                let decreases_clause = dec |> List.map (function (Inl t, _) -> match t.n with Typ_app(_, [(Inr arg, _)]) -> DECREASES arg | _ -> failwith "impos") in
                 if DesugarEnv.is_effect_name env eff.v
                 then if lid_equals eff.v Const.tot_effect_lid && List.length rest=0
                      then mk_Total result_typ
@@ -797,7 +809,7 @@ and desugar_typ env (top:term) : typ =
                           mk_Comp ({effect_name=eff.v;
                                     result_typ=result_typ;
                                     effect_args=rest; 
-                                    flags=flags})
+                                    flags=flags@decreases_clause})
                 else env.default_result_effect t top.range 
               | _ -> env.default_result_effect t top.range in 
           pos <| mk_Typ_fun(List.rev bs, cod)
@@ -1081,7 +1093,7 @@ let mk_indexed_projectors is_record env (tc, tps, k) lid (formals:list<binder>) 
             Sig_val_decl(field_name, t, [Assumption; Logic; Projector(lid, Inr x.v)], range_of_lid field_name))
 
 let mk_data_projectors env = function
-  | Sig_datacon(lid, t, tycon, quals, _) when (not env.iface && not (lid_equals lid Const.lexpair_lid)) ->
+  | Sig_datacon(lid, t, tycon, quals, _) when (not env.iface && not (lid_equals lid Const.lexcons_lid)) ->
     begin match Util.function_formals t with
         | Some(formals, cod) -> 
           let cod = Util.comp_result cod in 

@@ -100,6 +100,7 @@ and cflags =
   | RETURN 
   | SOMETRIVIAL
   | LEMMA
+  | DECREASES of exp
 and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pattern of typ * list<arg>

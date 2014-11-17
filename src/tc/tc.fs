@@ -212,9 +212,15 @@ and tc_comp env c =
       let res, args = match args with 
         | (Inl res, _)::args -> res, args
         | _ -> failwith "Impossible" in
+      let flags, guards = c.flags |> List.map (function
+        | DECREASES e -> 
+            let env, _ = Env.clear_expected_typ env in 
+            let e, _, g = tc_total_exp env e in 
+            DECREASES e, g
+        | f -> f, Trivial) |> List.unzip in
       mk_Comp ({c with 
           result_typ=res;
-          effect_args=args}), f
+          effect_args=args}), List.fold_left Rel.conj_guard f guards
 
 and tc_typ env (t:typ) : typ * knd * guard_t = 
   let env = Tc.Env.set_range env t.pos in
@@ -500,33 +506,58 @@ and tc_value env e : exp * comp =
                     | letrecs ->
                      let r = Env.get_range env in
                      let env = {env with letrecs=[]} in 
-                     let mk_lex_tuple args = 
-                        let lexpair = Util.fvar true Const.lexpair_lid r in
-                        let top = Util.fvar true Const.lextop_lid r in
-                        List.fold_right (fun arg out -> match arg with 
-                            | Inl _, _ -> out (* skip the type arguments from the ordering *)
-                            | _ -> Syntax.mk_Exp_app(lexpair, [arg; varg out]) tun r) args top in
-                     let actual_args = Util.args_of_binders actuals |> snd |> mk_lex_tuple in
+                   
+                     let filter_types_and_functions args = 
+                        args |> List.collect (function 
+                            | Inl _, _ -> [] (* skip the type arguments from the ordering *)
+                            | Inr e, _ -> 
+                               (match (whnf env e.tk).n with 
+                                    | Typ_fun _ -> []
+                                    | _ -> [e])) in
+                                                       
                      let precedes = Util.ftv Const.precedes_lid kun in
                      let letrecs = letrecs |> List.map (fun (l, t) -> 
                         let t = Util.alpha_typ t in
                         match (Util.compress_typ t).n with 
-                        | Typ_fun(bs, c) -> 
-                          let t = match Util.prefix bs with 
-                            | bs, (Inr x, imp) -> 
-                              let y = Util.gen_bvar_p x.p x.sort in
-                              let formal_args = Util.args_of_binders (bs@[v_binder y]) |> snd |> mk_lex_tuple in
-                              let refined_domain = mk_Typ_refine(y, Syntax.mk_Typ_app(precedes, [varg formal_args; varg actual_args]) kun r) kun r in
-                              let bs = bs@[Inr({x with sort=refined_domain}), imp] in
-                              let t' = mk_Typ_fun(bs, c) kun r in
-                              if debug env Options.Low
-                              then Util.fprint3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n" 
-                                    (Print.lbname_to_string l) (Print.typ_to_string t) (Print.typ_to_string t');
-                              let t', _, _ = tc_typ (Tc.Env.clear_expected_typ env |> fst) t' in
-                              t'
-                            | _ -> failwith "Impossible" in
-                          (l, t)
-                        | _ -> failwith "Impossible") in
+                          | Typ_fun(formals, c) -> 
+                              begin match Util.prefix formals with 
+                                | bs, (Inr x, imp) -> 
+                                    let y = Util.gen_bvar_p x.p x.sort in
+                                    let ct = Util.comp_to_comp_typ c in
+                                    let precedes = match ct.flags |> List.tryFind (function DECREASES _ -> true | _ -> false) with 
+                                         | Some (DECREASES dec) -> 
+                                            let dec = match dec.tk.n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
+                                                | Typ_const fv when lid_equals fv.v Const.lex_t_lid -> dec
+                                                | _ -> Util.mk_lex_list [dec] in
+                                            let prev_dec = 
+                                                let subst = List.map2 (fun b a -> match b, a with 
+                                                    | (Inl formal, _), (Inl actual, _) -> Inl (formal.v, Util.btvar_to_typ actual)
+                                                    | (Inr formal, _), (Inr actual, _) -> Inr (formal.v, Util.bvar_to_exp actual)
+                                                    | _ -> failwith "impossible") formals actuals in
+                                                Util.subst_exp subst dec in 
+                                            let dec = 
+                                                let subst = [Inr(x.v, Util.bvar_to_exp y)] in
+                                                Util.subst_exp subst dec in
+                                            Syntax.mk_Typ_app(precedes, [varg dec; varg prev_dec]) kun r
+
+                                        | _ -> (* default measure is lex-tuple of non-type and non-function-typed arguments, in order *)
+                                            let actual_args = Util.args_of_binders actuals |> snd |> filter_types_and_functions |> Util.mk_lex_list in
+                                            let formal_args = Util.args_of_binders (bs@[v_binder y]) |> snd |> filter_types_and_functions |> Util.mk_lex_list in
+                                            Syntax.mk_Typ_app(precedes, [varg formal_args; varg actual_args]) kun r in
+
+                                    let refined_domain = mk_Typ_refine(y, precedes) kun r in
+                                    let bs = bs@[Inr({x with sort=refined_domain}), imp] in
+                                    let t' = mk_Typ_fun(bs, c) kun r in
+                                    if debug env Options.Low
+                                    then Util.fprint3 "Refined let rec %s\n\tfrom type %s\n\tto type %s\n" 
+                                        (Print.lbname_to_string l) (Print.typ_to_string t) (Print.typ_to_string t');
+                                    let t', _, _ = tc_typ (Tc.Env.clear_expected_typ env |> fst) t' in
+                                   l, t'
+                                | _ -> failwith "Impossible"
+                              end 
+                        
+                          | _ -> failwith "Impossible") in
+
                      letrecs |> List.fold_left (fun env (x,t) -> Env.push_local_binding env (binding_of_lb x t)) env in
                 
                  let bs, envbody, g, c = tc_binders ([], env, Trivial, []) bs' c bs in

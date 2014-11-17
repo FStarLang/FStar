@@ -157,7 +157,7 @@ val mk_ApplyET: term -> term -> term
 val mk_ApplyEE: term -> term -> term
 val mk_String_const: int -> term
 val mk_Precedes: term -> term -> term
-val mk_LexPair: term -> term -> term
+val mk_LexCons: term -> term -> term
 val freeV_sym: term -> string
 val boundV_sym:term -> string
 val fuel_2: term

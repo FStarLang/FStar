@@ -144,11 +144,11 @@ and comp_typ_to_string c =
   match c.n with
     | Total t -> Util.format1 "Tot %s" (typ_to_string t)
     | Comp c ->
-      if List.contains TOTAL c.flags && not !Options.print_effect_args 
+      if c.flags |> Util.for_some (function TOTAL -> true | _ -> false) && not !Options.print_effect_args 
       then Util.format1 "Tot %s" (typ_to_string c.result_typ)
       else if not !Options.print_effect_args && (lid_equals c.effect_name Const.ml_effect_lid)//  || List.contains MLEFFECT c.flags) 
       then typ_to_string c.result_typ
-      else if not !Options.print_effect_args && List.contains MLEFFECT c.flags
+      else if not !Options.print_effect_args && c.flags |> Util.for_some (function MLEFFECT -> true | _ -> false)
       then Util.format1 "ALL %s" (typ_to_string c.result_typ)
       else if !Options.print_effect_args 
       then Util.format3 "%s (%s) %s" (sli c.effect_name) (typ_to_string c.result_typ) (c.effect_args |> List.map effect_arg_to_string |> String.concat ", ")//match c.effect_args with hd::_ -> effect_arg_to_string hd | _ ->"")

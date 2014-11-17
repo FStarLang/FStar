@@ -441,12 +441,12 @@ and mkPrelude z3options =
                                  ("BoxBool",    ["BoxBool_proj_0", Bool_sort], Term_sort, 2);
                                  ("BoxString",  ["BoxString_proj_0", String_sort], Term_sort, 3);
                                  ("BoxRef",     ["BoxRef_proj_0", Ref_sort], Term_sort, 4);
-                                 ("LexPair",    [("LexPair_0", Term_sort); ("LexPair_1", Term_sort)], Term_sort, 5)] in
+                                 ("LexCons",    [("LexCons_0", Term_sort); ("LexCons_1", Term_sort)], Term_sort, 5)] in
    let bcons = constrs |> List.collect (constructor_to_decl_aux true) |> List.map (declToSmt z3options) |> String.concat "\n" in
-   let lex_ordering = "\n(define-fun is-Prims.LexPair ((t Term)) Bool \n\
-                                   (is-LexPair t))\n\
+   let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
+                                   (is-LexCons t))\n\
                        (assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n\
-                                    (iff (Valid (Precedes (LexPair x1 x2) (LexPair y1 y2)))\n\
+                                    (iff (Valid (Precedes (LexCons x1 x2) (LexCons y1 y2)))\n\
                                          (or (Valid (Precedes x1 y1))\n\
                                              (and (= x1 y1)\n\
                                                   (Valid (Precedes x2 y2)))))))\n" in
@@ -497,7 +497,7 @@ let mk_ApplyET e t    = mkApp("ApplyET", [e;t])
 let mk_ApplyEE e e'   = mkApp("ApplyEE", [e;e'])
 let mk_String_const i = mkApp("String_const", [ mkInteger i ])
 let mk_Precedes x1 x2 = mkApp("Precedes", [x1;x2]) |> mk_Valid
-let mk_LexPair x1 x2  = mkApp("LexPair", [x1;x2])
+let mk_LexCons x1 x2  = mkApp("LexCons", [x1;x2])
 let mk_Closure i vars   = 
    let vars = vars |> List.fold_left (fun out v -> match snd v with 
     | Term_sort -> mkApp("ConsTerm", [mkBoundV v; out])
