@@ -22,9 +22,6 @@
 module ListLemmas
 open Prims.PURE
 
-(* An effect abbreviation for a lemma *)
-(*ghost*) effect Fact ('res:Type) ('p:Type) = Pure 'res True (fun r -> 'p)
-
 val hd: list 'a -> Tot bool
 let hd l = match l with
   | [] -> false
@@ -70,7 +67,7 @@ For contrast, in old F*/F7, you'd have to write:
    let rec append = ...
 *)
 
-(* assume val ignore: unit -> Fact unit False *)
+(* assume val ignore: unit -> Lemma False *)
 
 (* You can also prove lemmas about pure functions "after the fact", i.e., extrinsically.
    Here's an inductive proofs relating append and mem.
@@ -82,7 +79,7 @@ For contrast, in old F*/F7, you'd have to write:
 val append_mem:  l1:list 'a
               -> l2:list 'a
               -> a:'a
-              -> Fact unit (ensures (mem a (append l1 l2) <==>  mem a l1 \/ mem a l2))
+              -> Lemma (ensures (mem a (append l1 l2) <==>  mem a l1 \/ mem a l2))
 let rec append_mem l1 l2 a = match l1 with
   | [] -> ()
   | hd::tl ->

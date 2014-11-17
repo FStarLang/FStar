@@ -1,4 +1,4 @@
-(* Expect 5 intentional failures *)
+(* Expect 6 intentional failures *)
 module Unit1
 open Prims.PURE
 open Prims.ALL
@@ -202,7 +202,7 @@ let do_ok l = match l with
 
 
 val bad_projector: option 'a -> 'a
-let bad_projector x = Some.v x
+let bad_projector x = Some.v x (* should fail *)
 
 val short_circuit1: x:option int{is_Some x /\ Some.v x = 0} -> nat
 let short_circuit1 x = Some.v x

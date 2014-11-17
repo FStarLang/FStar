@@ -7,7 +7,7 @@ type env = int -> Tot (option int)
 val empty : env
 let empty _ = None
 
-assume val xxx : g:env -> Fact unit (ensures (is_Some (g 45)))
+assume val xxx : g:env -> Lemma (ensures (is_Some (g 45)))
 
 val yyy : unit -> Tot unit
 let yyy () =

@@ -318,6 +318,22 @@ type pattern = {
  }
 exception Let_rec_unencodeable of string
 
+let is_smt_lemma env t = match (Util.compress_typ t).n with 
+    | Typ_fun(_, c) -> (match c.n with 
+        | Comp ct when (lid_equals ct.effect_name Const.lemma_lid) ->
+            begin match ct.effect_args with
+                | _req::_ens::(Inr pats, _)::_ ->
+                  if Tc.Env.debug env.tcenv Options.Low
+                  then Util.fprint1 "Inspecting lemma patterns: %s\n" (Print.exp_to_string pats);
+                  begin match (Util.unmeta_exp pats).n with 
+                    | Exp_app({n=Exp_fvar(fv, _)}, _) -> lid_equals fv.v Const.cons_lid
+                    | _ -> false
+                  end
+                | _ -> false
+            end
+        | _ -> false)
+    | _ -> false
+
 let encode_const = function 
     | Const_unit -> mk_Term_unit
     | Const_bool true -> boxBool mkTrue
@@ -1153,7 +1169,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       g'@inversions, env
 
     | Sig_let((is_rec, [(Inr flid, t1, e)]), _, _) -> 
-        if Util.is_lemma t1 then encode_lemma env flid t1, env else
+        if is_smt_lemma env t1 then encode_smt_lemma env flid t1, env else
         let t1_norm = whnf env t1 |> Util.compress_typ in
         let (f, ftok), decls, env = declare_top_level_let env flid t1 t1_norm in
         if not (Util.is_pure_function t1_norm) 
@@ -1252,7 +1268,7 @@ and declare_top_level_let env x t t_norm =
         | Some (n, x) -> (* already declared, only need an equation *)
             (n, x), [], env
 
-and encode_lemma env lid t = 
+and encode_smt_lemma env lid t = 
     let v_or_t_pat p = match (Util.unmeta_exp p).n with
         | Exp_app(_, [(Inl _, _); (Inr e, _)]) -> varg e
         | Exp_app(_, [(Inl t, _)]) -> targ t
@@ -1281,7 +1297,7 @@ and encode_lemma env lid t =
     ::decls@decls@(List.flatten decls')@decls''@decls''')
 
 and encode_free_var env lid tt t_norm quals = 
-    if not <| Util.is_pure_function t_norm || Util.is_lemma t_norm
+    if not <| Util.is_pure_function t_norm || is_smt_lemma env t_norm
     then let vname, vtok, env = gen_free_var env lid in
          let arg_sorts = match t_norm.n with 
             | Typ_fun(binders, _) -> binders |> List.map (function (Inl _, _) -> Type_sort | _ -> Term_sort) 

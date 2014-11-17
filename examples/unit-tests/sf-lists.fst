@@ -30,26 +30,26 @@ let rec app l1 l2 =
   | Nil    -> l2
   | Cons h t -> Cons h (app t l2)
 
-val test_app1 : unit -> Fact unit
+val test_app1 : unit -> Lemma
       (ensures (app (Cons 1 (Cons 2 (Cons 3 Nil))) (Cons 4 (Cons 5 Nil))
                 = (Cons 1 (Cons 2 (Cons 3 (Cons 4 (Cons 5 Nil)))))))
 let test_app1 () = ()
 
-val test_app2 : unit -> Fact unit
+val test_app2 : unit -> Lemma
       (ensures (app Nil (Cons 4 (Cons 5 Nil))
                 = (Cons 4 (Cons 5 Nil))))
 let test_app2 () = ()
 
-val test_app3 : unit -> Fact unit
+val test_app3 : unit -> Lemma
       (ensures (app (Cons 1 (Cons 2 (Cons 3 Nil))) Nil)
                 = (Cons 1 (Cons 2 (Cons 3 Nil))))
 let test_app3 () = ()
 
-val nil_app : l:ilist -> Fact unit
+val nil_app : l:ilist -> Lemma
                               (ensures (app Nil l = l))
 let nil_app l = ()
 
-val app_nil : l:ilist -> Fact unit
+val app_nil : l:ilist -> Lemma
                               (ensures (app l Nil = l))
 let rec app_nil l =
   match l with
@@ -69,11 +69,11 @@ let tl_strange l =
   | Nil -> Nil
   | Cons h t -> t
 
-val tl_strange_length_pred : l:ilist{l =!= Nil} -> Fact unit
+val tl_strange_length_pred : l:ilist{l =!= Nil} -> Lemma
       (ensures ((length l) - 1 = length (tl_strange l)))
 let tl_strange_length_pred l = ()
 
-val tl_strange_length_pred_equiv : l:ilist{is_Cons l} -> Fact unit
+val tl_strange_length_pred_equiv : l:ilist{is_Cons l} -> Lemma
       (ensures ((length l) - 1 = length (tl_strange l)))
 let tl_strange_length_pred_equiv l = ()
 
@@ -82,18 +82,18 @@ let tl l =
   match l with
   | Cons h t -> t
 
-val tl_length_pred : l:ilist{l =!= Nil} -> Fact unit
+val tl_length_pred : l:ilist{l =!= Nil} -> Lemma
       (ensures ((length l) - 1 = length (tl l)))
 let tl_length_pred l = ()
 
-val app_assoc : l1 : ilist -> l2 : ilist -> l3 : ilist -> Fact unit
+val app_assoc : l1 : ilist -> l2 : ilist -> l3 : ilist -> Lemma
       (ensures (app (app l1 l2) l3) = app l1 (app l2 l3))
 let rec app_assoc l1 l2 l3 =
   match l1 with
   | Nil -> ()
   | Cons h t -> app_assoc t l2 l3
 
-val app_length : l1 : ilist -> l2 : ilist -> Fact unit
+val app_length : l1 : ilist -> l2 : ilist -> Lemma
       (ensures (length (app l1 l2) = (length l1) + (length l2)))
 let rec app_length l1 l2 =
   match l1 with
@@ -112,14 +112,14 @@ let rec rev l =
   | Nil -> Nil
   | Cons h t -> snoc (rev t) h
 
-val length_snoc : n : int -> l : ilist -> Fact unit
+val length_snoc : n : int -> l : ilist -> Lemma
       (ensures (length (snoc l n) = length l + 1))
 let rec length_snoc n l =
   match l with
   | Nil -> ()
   | Cons h t -> length_snoc n t
 
-val rev_length : l : ilist -> Fact unit
+val rev_length : l : ilist -> Lemma
       (ensures (length (rev l) = length l))
 let rec rev_length l =
   match l with
@@ -155,14 +155,14 @@ let foo4 n l1 l2 = ()
 
 
 
-val snoc_cons: l:ilist -> h:int -> Lemma True (rev (snoc l h) = Cons h (rev l)) [VPat (ilist -> Tot ilist) rev; VPat (ilist -> int -> Tot ilist) snoc]
+val snoc_cons: l:ilist -> h:int -> Lemma (rev (snoc l h) = Cons h (rev l)) 
 let rec snoc_cons l h = match l with
   | Nil -> ()
   | Cons hd tl ->
     let ih = snoc_cons tl h in
     ()
 
-val rev_involutive: l:ilist -> Lemma True (rev (rev l) = l) []
+val rev_involutive: l:ilist -> Lemma (rev (rev l) = l)
 let rec rev_involutive l = match l with
   | Nil -> ()
   | Cons h t ->
@@ -170,7 +170,7 @@ let rec rev_involutive l = match l with
     let lem = snoc_cons (rev t) h in
     ()
 
-val snoc_injective: l1:ilist -> h1:int -> l2:ilist -> h2:int -> Fact unit (snoc l1 h1 = snoc l2 h2 ==> l1 = l2 /\ h1 = h2)
+val snoc_injective: l1:ilist -> h1:int -> l2:ilist -> h2:int -> Lemma (snoc l1 h1 = snoc l2 h2 ==> l1 = l2 /\ h1 = h2)
 let rec snoc_injective l1 h1 l2 h2 = match (l1, l2) with
   | Nil, Nil -> ()
   | Cons hd1 tl1, Cons hd2 tl2 ->
@@ -178,7 +178,7 @@ let rec snoc_injective l1 h1 l2 h2 = match (l1, l2) with
     ()
   | _, _ -> ()
 
-val rev_injective: l1:ilist -> l2:ilist -> Fact unit (rev l1 = rev l2 ==> l1 = l2)
+val rev_injective: l1:ilist -> l2:ilist -> Lemma (rev l1 = rev l2 ==> l1 = l2)
 let rec rev_injective l1 l2 = match (l1, l2) with
   | Nil, Nil -> ()
   | Cons hd1 tl1, Cons hd2 tl2 ->
@@ -192,24 +192,24 @@ let rec fold_left f l a = match l with
   | Nil -> a
   | Cons hd tl -> fold_left f tl (f hd a)
 
-val app_cons: l:ilist -> hd:int -> tl:ilist -> Fact unit (app l (Cons hd tl) = app (app l (Cons hd Nil)) (tl))
+val app_cons: l:ilist -> hd:int -> tl:ilist -> Lemma (app l (Cons hd tl) = app (app l (Cons hd Nil)) (tl))
 let rec app_cons l hd tl = match l with
   | Nil -> ()
   | Cons hd' tl' ->
     let ih = app_cons tl' hd tl in
     ()
 
-val snoc_app: l:ilist -> h:int -> Fact unit (snoc l h = app l (Cons h Nil))
+val snoc_app: l:ilist -> h:int -> Lemma (snoc l h = app l (Cons h Nil))
 let rec snoc_app l h = match l with
   | Nil -> ()
   | Cons hd tl ->
     let _ = snoc_app tl h in
     ()
 
-val rev_app: tl:ilist -> hd:int -> Fact unit (rev (Cons hd tl) = app (rev tl) (Cons hd Nil))
+val rev_app: tl:ilist -> hd:int -> Lemma (rev (Cons hd tl) = app (rev tl) (Cons hd Nil))
 let rev_app tl hd = snoc_app (rev tl) hd
 
-val fold_left_cons_is_rev: l:ilist -> l':ilist -> Fact unit (fold_left Cons l l' = app (rev l) l')
+val fold_left_cons_is_rev: l:ilist -> l':ilist -> Lemma (fold_left Cons l l' = app (rev l) l')
 let rec fold_left_cons_is_rev l l' = match l with
   | Nil -> ()
   | Cons hd tl ->

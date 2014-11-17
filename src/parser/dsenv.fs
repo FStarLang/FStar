@@ -193,6 +193,10 @@ let is_effect_name env lid =
         if Util.for_some (function Effect -> true | _ -> false) tags
         then Some (ftv lid kun)
         else None 
+      | Some (Sig_monads(_, _, _, lids), _) -> 
+        if lids |> Util.for_some (lid_equals lid)
+        then Some (ftv lid kun)
+        else None
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig |> Util.is_some
 

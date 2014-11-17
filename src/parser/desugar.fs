@@ -667,6 +667,12 @@ and desugar_typ env (top:term) : typ =
   let pos (t:knd -> Range.range -> 'a) : 'a = t kun top.range in
   let setpos t = {t with pos=top.range} in
   let top = unparen top in  
+  let head_and_args t =
+    let rec aux args t = match (unparen t).tm with 
+        | App(t, arg, imp) -> aux ((arg,imp)::args) t
+        | Construct(l, args') -> {tm=Name l; range=t.range; level=t.level}, args'@args
+        | _ -> t, args in
+    aux [] t in
   match top.tm with
     | Wild -> setpos tun
 
@@ -754,28 +760,43 @@ and desugar_typ env (top:term) : typ =
       failwith "Impossible: product with no binders"
       
     | Product(binders, t) ->
+      let pre_process_comp_typ t = 
+        let head, args = head_and_args t in 
+        match head.tm with 
+            | Name lemma when (lemma.ident.idText = "Lemma") -> 
+              let unit = mk_term (Name Const.unit_lid) t.range Type, false in 
+              let nil_pat = mk_term (Name Const.nil_lid) t.range Expr, false in
+              let args = match args with 
+                    | [] -> raise (Error("Not enough arguments to 'Lemma'", t.range))
+                    | [ens] -> (* a single ensures clause *)
+                      let req_true = mk_term (Requires (mk_term (Name Const.true_lid) t.range Formula, None)) t.range Type, false in
+                      [unit;req_true;ens;nil_pat]
+                    | [req;ens] -> [unit;req;ens;nil_pat]
+                    | more -> unit::more in
+              mk_term (Construct(lemma, args)) t.range t.level
+            | _ -> t
+        in
+
       let bs, t = uncurry binders t in
       let rec aux env bs = function 
         | [] ->   
+          let t = pre_process_comp_typ t in
           let t = desugar_typ env t in 
           let head, args = Util.head_and_args t in 
           let cod = match (compress_typ head).n, args with 
               | Typ_const eff, (Inl result_typ, _)::rest -> 
                 if DesugarEnv.is_effect_name env eff.v
-                then if lid_equals eff.v Const.tot_effect_lid
+                then if lid_equals eff.v Const.tot_effect_lid && List.length rest=0
                      then mk_Total result_typ
                      else
-                        let result_typ, args, flags = 
-                            if lid_equals eff.v Const.lemma_lid
-                            then Util.ftv Const.unit_lid ktype, args, [LEMMA]
-                            else if lid_equals eff.v Const.theorem_lid
-                            then Util.ftv Const.unit_lid ktype, args, []
-                            else if lid_equals eff.v Const.ml_effect_lid
-                            then result_typ, rest, [MLEFFECT]
-                            else result_typ, rest, [] in
+                        let flags = 
+                            if      lid_equals eff.v Const.lemma_lid      then [LEMMA]
+                            else if lid_equals eff.v Const.tot_effect_lid then [TOTAL]
+                            else if lid_equals eff.v Const.ml_effect_lid  then [MLEFFECT]
+                            else [] in
                           mk_Comp ({effect_name=eff.v;
                                     result_typ=result_typ;
-                                    effect_args=args; 
+                                    effect_args=rest; 
                                     flags=flags})
                 else env.default_result_effect t top.range 
               | _ -> env.default_result_effect t top.range in 

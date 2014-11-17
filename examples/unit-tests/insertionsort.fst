@@ -25,7 +25,7 @@ let rec sorted l = match l with
     | [x] -> true
     | x::y::xs -> x <= y && sorted (y::xs)
 
-val test_sorted: x:int -> l:list int -> Fact unit ((sorted (x::l) /\ is_Cons l) ==> x <= Cons.hd l)
+val test_sorted: x:int -> l:list int -> Lemma ((sorted (x::l) /\ is_Cons l) ==> x <= Cons.hd l)
 let test_sorted x l = ()
 
 val test_sorted2: unit -> Tot (m:list int{sorted m})
@@ -38,7 +38,7 @@ let rec mem a l = match l with
   | hd::tl -> hd=a || mem a tl
 
 val sorted_smaller: x:int -> y:int -> l:list int ->
-                    Fact unit (sorted (x::l) /\ mem y l ==> x <= y)
+                    Lemma (sorted (x::l) /\ mem y l ==> x <= y)
 let rec sorted_smaller x y l = match l with
     | [] -> ()
     | z::zs -> if z=y then () else sorted_smaller x y zs

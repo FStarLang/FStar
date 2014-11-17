@@ -24,9 +24,6 @@
 module Recursion
 open Prims.PURE
 
-(* An effect abbreviation for a lemma *)
-(*ghost*) effect Fact ('res:Type) ('p:Type) = Pure 'res True (fun r => 'p)
-
 (* An elaborate way of computing zero *)
 type z = i:int{i==0}
 val zero: list 'a -> Tot z
@@ -84,7 +81,7 @@ let rec append l1 l2 =  match l1 with
 val append_mem:  l1:list 'a
               -> l2:list 'a
               -> a:'a
-              -> Fact unit (mem a (append l1 l2) <==>  mem a l1 \/ mem a l2)
+              -> Lemma (mem a (append l1 l2) <==>  mem a l1 \/ mem a l2)
 let rec append_mem l1 l2 a = match l1 with
   | [] -> ()
   | hd::tl -> 

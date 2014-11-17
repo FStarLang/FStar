@@ -106,12 +106,21 @@ type list (a:Type) =
   | Cons : hd:a -> tl:list a -> list a
 
 type pattern = 
-  | VPat : a:Type -> a -> pattern
-  | TPat : a:Type -> pattern
+  | SMTPat  : a:Type -> a -> pattern
+  | SMTPatT : a:Type -> pattern
 
-effect Fact (_res:Type) (p:Type) = Pure _res True (fun r -> p)
-effect Lemma (_a:Type) (pre:Type) (post:Type) (pats:list pattern) = Pure unit pre (fun r -> post)
-effect Theorem (_res:Type) (pre:Type) (post:Type) = Pure _res pre (fun r -> post)
+assume type decreases : #a:Type -> a -> Type
+
+effect Lemma (a:Type) (pre:Type) (post:Type) (pats:list pattern) = Pure a pre (fun r -> post)
+(* 
+   Lemma is desugared specially. You can write:
+
+     Lemma phi                 for   Lemma unit (requires True) phi []
+     Lemma t1..tn              for   Lemma unit t1..tn
+
+   You should never explicitly write the result type.
+*)
+
 
 type option (a:Type) =
   | None : option a
@@ -508,7 +517,7 @@ assume val admit: unit -> Admit unit
 assume val admitP: 'P:Type -> unit -> Pure unit True (fun x -> 'P)
 assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
 assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> 'P)
-assume val qintro: a:Type -> p:(a -> Type) -> (x:a -> Fact unit (p x)) -> Fact unit (forall (x:a). p x)
+assume val qintro: a:Type -> p:(a -> Type) -> (x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 assume val lemma : 'P:Type -> x:unit{'P} -> z:unit{'P}
 assume val unreachable : x:unit{LBL "unreachable" False} -> 'a
 assume val failwith: string -> 'a (* TODO: refine with the Exn monad *)
