@@ -118,7 +118,7 @@ let rec in_tree t k = match t with
  * not_c_inv represents violation of c_inv property, i.e. when a red node
  * may have a red child either on left branch or right branch.
  *)
-type not_c_inv (t:rbtree') =
+opaque type not_c_inv (t:rbtree') =
     (is_T t) /\ (T.col t = R) /\ (((is_T (T.left t) /\ T.col (T.left t) = R)) \/
                                   ((is_T (T.right t) /\ T.col (T.right t) = R)))
 
@@ -127,12 +127,12 @@ type not_c_inv (t:rbtree') =
  * bottom up, meaning although the invariants may be violated at top,
  * the subtrees still satisfy c_inv.
  *)
-type lr_c_inv (t:rbtree') = is_T t /\ c_inv (T.left t) /\ c_inv (T.right t)
+opaque type lr_c_inv (t:rbtree') = is_T t /\ c_inv (T.left t) /\ c_inv (T.right t)
 
 (*
  * this is the predicate satisfied by a tree before call to balance
  *)
-type pre_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') =
+opaque type pre_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') =
     (* 
      * lt satisfies k_inv, rt satisfies k_inv, and key is a candidate root key for
      * a tree with lt as left branch and rt as right.
@@ -287,7 +287,7 @@ let rec ins t x =
 (*
  * a red black tree is balanced if it satisfies r_inv, h_inv, c_inv, and k_inv
  *)
-type balanced_rbtree' (t:rbtree') = r_inv t /\ h_inv t /\ c_inv t /\ k_inv t
+opaque type balanced_rbtree' (t:rbtree') = r_inv t /\ h_inv t /\ c_inv t /\ k_inv t
 
 (*
  * make black blackens the root of a tree
