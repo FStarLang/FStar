@@ -1479,7 +1479,7 @@ let solve tcenv q =
         else let ok, _ = retry !Options.max_fuel in 
              if ok then ok, []
              else match errs with 
-                    | [] -> retry 1 (* don't have an error message .. try with less fuel *)
+                    | [] -> retry !Options.min_fuel (* don't have an error message .. try with less fuel *)
                     | _ -> false, errs  in
 
     let result = check () in 

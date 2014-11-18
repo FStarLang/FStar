@@ -85,11 +85,7 @@ let rec find f l = match l with
   | [] -> None
   | hd::tl -> if f hd then Some hd else find f tl
 
-val length: list 'a -> PURE.Tot nat
-let rec length = function 
-  | [] -> 0
-  | _::tl -> 1 + length tl
-
+assume val length: list 'a -> PURE.Tot int
 assume val forall2: ('a -> 'b -> bool) -> list 'a -> list 'b -> bool
 assume val mapi: (int -> 'a -> 'b) -> list 'a -> list 'b
 assume val map2: ('a -> 'b -> 'c) -> list 'a -> list 'b -> list 'c

@@ -73,6 +73,7 @@ let hide_genident_nums = Util.mk_ref false
 let serialize_mods = Util.mk_ref false
 let initial_fuel = Util.mk_ref 2
 let max_fuel = Util.mk_ref 8
+let min_fuel = Util.mk_ref 1
 
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
@@ -139,5 +140,6 @@ let specs () : list<Getopt.opt> =
      ( noshort, "serialize_mods", ZeroArgs (fun () -> serialize_mods := true), "Serialize compiled modules");
      ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
      ( noshort, "max_fuel", OneArg((fun x -> max_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try at most (default 8)");
+     ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs

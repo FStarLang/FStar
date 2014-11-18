@@ -78,14 +78,12 @@ For contrast, in old F*/F7, you'd have to write:
  *)
 val append_mem:  l1:list 'a
               -> l2:list 'a
-              -> a:'a
-              -> Lemma (ensures (mem a (append l1 l2) <==>  mem a l1 \/ mem a l2))
-let rec append_mem l1 l2 a = match l1 with
+              -> Lemma (requires True)
+                       (ensures (forall a. mem a (l1@l2) = (mem a l1 || mem a l2)))
+                       [SMTPat (l1@l2)]
+let rec append_mem l1 l2 = match l1 with
   | [] -> ()
-  | hd::tl ->
-    if hd=a
-    then ()
-    else append_mem tl l2 a
+  | hd::tl -> append_mem tl l2
   
 (*
    Such an extrinsic proof would have been impossible in old F*/F7. You'd have to
