@@ -489,7 +489,14 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
         | None -> MLE_CTor (mlpath_of_lident mlenv c, args) in
 
     match e.n with
-    | Exp_app(sube, args) -> begin
+    | Exp_app(sube, args) ->
+       (match sube.n, args with
+          | Exp_fvar (c, false), [_;_;(Inr a1,_);a2] when c.v.ident.idText = "pipe_left" ->
+             mlexpr_of_expr mlenv rg lenv {e with n = Exp_app (a1, [a2])}
+          | Exp_fvar (c, false), [_;_;a1;(Inr a2,_)] when c.v.ident.idText = "pipe_right" ->
+             mlexpr_of_expr mlenv rg lenv {e with n = Exp_app (a2, [a1])}
+          | _, _ ->
+       begin
         match is_etuple e with
         | Some k ->
             let args = List.collect (function Inl _, _ -> [] | Inr e, _ -> [mlexpr_of_expr mlenv rg lenv e]) args in
@@ -509,7 +516,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
                   | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args))
 
             | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args)
-    end
+       end)
 
     | _ -> begin
         match e.n with

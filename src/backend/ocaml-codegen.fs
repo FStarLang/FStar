@@ -253,7 +253,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
     | MLE_Let (rec_, lets, body) ->
         let doc  = doc_of_lets (rec_, lets) in
         let body = doc_of_expr (min_op_prec, NonAssoc) body in
-        maybe_paren outer e_bin_prio_letin (combine hardline [doc; reduce1 [text "in"; body]])
+        parens (combine hardline [doc; reduce1 [text "in"; body]])
 
     | MLE_App (e, args) -> begin
         match e, args with

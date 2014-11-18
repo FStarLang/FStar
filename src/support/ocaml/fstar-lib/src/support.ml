@@ -5,8 +5,8 @@ module Prims = struct
   type int32 = int
 
   type byte = char
-  let pipe_left f = f
-  let pipe_right x f = f x
+  (* let pipe_left f = f *)
+  (* let pipe_right x f = f x *)
   let ignore _ = ()
   let fst = fst
   let snd = snd
@@ -37,6 +37,7 @@ end
 module List = struct
   let hd = BatList.hd
   let tl = BatList.tl
+  let nth = BatList.nth
   let length = BatList.length
   let rev = BatList.rev
   let map = BatList.map
@@ -61,6 +62,7 @@ module List = struct
   let flatten = BatList.flatten
   let split = unzip
   let choose = BatList.filter_map
+  let contains x l = BatList.exists (fun y -> x = y) l
 end
 
 

@@ -5,8 +5,8 @@ module Prims : sig
   type int32 = int
 
   type byte = char
-  val pipe_left : ('a -> 'b) -> 'a -> 'b
-  val pipe_right : 'a -> ('a -> 'b) -> 'b
+  (* val pipe_left : ('a -> 'b) -> 'a -> 'b *)
+  (* val pipe_right : 'a -> ('a -> 'b) -> 'b *)
   val ignore : 'a -> unit
   val fst : 'a * 'b -> 'a
   val snd : 'a * 'b -> 'b
@@ -31,6 +31,7 @@ end
 module List : sig
   val hd : 'a list -> 'a
   val tl : 'a list -> 'a list
+  val nth : 'a list -> int -> 'a
   val length : 'a list -> int
   val rev : 'a list -> 'a list
   val map : ('a -> 'b) -> 'a list -> 'b list
@@ -51,6 +52,7 @@ module List : sig
   val flatten : ('a list) list -> 'a list
   val split : ('a * 'b) list -> ('a list) * ('b list)
   val choose : ('a -> 'b option) -> 'a list -> 'b list
+  val contains : 'a -> 'a list -> bool
 end
 
 
@@ -184,6 +186,7 @@ module Microsoft : sig
       val find : 'a uvar -> 'a
       val change : 'a uvar -> 'a -> unit
       val equivalent : 'a uvar -> 'a uvar -> bool
+      val fresh : 'a -> 'a uvar
     end
     module Platform : sig
       val exe : string -> string
