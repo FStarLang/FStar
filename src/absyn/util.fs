@@ -463,7 +463,13 @@ let alpha_typ t =
     | Typ_fun(bs, _) -> if Util.for_all is_null_binder bs then t else doit t
     | Typ_refine _  -> doit t
     | _ -> t
-    
+
+let formals_for_actuals formals actuals = 
+    List.map2 (fun formal actual -> match fst formal, fst actual with 
+                | Inl a, Inl b -> Inl (a.v, b) 
+                | Inr x, Inr y -> Inr (x.v, y)
+                | _ -> failwith "Ill-typed substitution") formals actuals
+   
 let compress_typ_opt = function
     | None -> None
     | Some t -> Some (compress_typ t)

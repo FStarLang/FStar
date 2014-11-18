@@ -136,20 +136,13 @@ let rec index l n =
 
 (* Currying *)
 
-(* NS: Currying in F* is explicit. 
-
-   If you intend to reason logically about partial applications of
-   terms, then you should make currying explicit in types and mark
-   each partially applied arrow with an effect (possibly Tot) in
-   its co-domain.
-       
-   However, note, the notation for function definitions and application doesn't 
-   distinguish between partial and full applications. 
-*)
-val prod_curry : (('a * 'b) -> Tot 'c) -> Tot ('a -> 'b -> Tot 'c)
+(* NS: it used to be that if you intended to partially apply 
+       a function, then you had to indicate it as such in the type.
+       Not so any more. *)
+val prod_curry : (('a * 'b) -> Tot 'c) -> 'a -> 'b -> Tot 'c
 let prod_curry f x y =  f (x,y)
 
-val prod_uncurry : ('a -> 'b -> Tot 'c) -> Tot (('a * 'b) -> Tot 'c)
+val prod_uncurry : ('a -> 'b -> Tot 'c) -> ('a * 'b) -> Tot 'c
 let prod_uncurry f xy = f (fst xy) (snd xy)
 
 val test_prod_uncurry: f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Lemma
@@ -278,7 +271,7 @@ let ftrue _ = true
 val override : ('a -> Tot 'b) -> 'a -> 'b -> 'a -> Tot 'b
  *)
 
-val my_override : ('a -> Tot 'b) -> 'a -> 'b -> Tot ('a -> Tot 'b)
+val my_override : ('a -> Tot 'b) -> 'a -> 'b -> 'a -> Tot 'b
 let my_override f k x k' = if k = k' then x else f k'
 
 val fmostlytrue : int -> Tot bool
@@ -330,7 +323,7 @@ let rec fold_length_named_correct l =
 
 (* NS: But, with named functions, you have to explicitly closure-convert ...
        and the closure arguments have to be explicitly curried ... yuck *)
-val fcons : ('a -> Tot 'b) -> Tot ('a -> list 'b -> Tot (list 'b))
+val fcons : ('a -> Tot 'b) -> 'a -> list 'b -> Tot (list 'b)
 let fcons f x l = f x :: l
 
 val fold_map_named : ('a->Tot 'b) -> list 'a -> Tot (list 'b)

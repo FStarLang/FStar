@@ -614,12 +614,22 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
          let v2, vars2, decls2 = encode_exp v2 env in
          Term.mk_LexCons v1 v2, vars1@vars2, decls1@decls2
 
-      | Exp_app(head, args) -> 
-        let args, vars, decls = encode_args args env in
+      | Exp_app(head, args_e) -> 
+        let args, vars, decls = encode_args args_e env in
     
-        let encode_partial_app () = 
+        let encode_partial_app ht_opt = 
             let head, vars', decls' = encode_exp head env in
-            mk_ApplyE_args head args, vars'@vars, decls@decls' in
+            let app_tm = mk_ApplyE_args head args in
+            begin match ht_opt with
+                | None -> app_tm, vars'@vars, decls@decls'
+                | Some (formals, c) ->
+                  let formals, rest = Util.first_N (List.length args_e) formals in
+                  let subst = Util.formals_for_actuals formals args_e in
+                  let ty = mk_Typ_fun(rest, c) ktype e0.pos |> Util.subst_typ subst in
+                  let esym, partial_app = fresh_bvar "partial_app" Term_sort in
+                  let has_type, decls'' = encode_typ_pred' true ty env partial_app in
+                  partial_app, (vars'@vars@[((esym, Term_sort), Term.mkAnd(Term.mkEq(partial_app, app_tm), has_type))]), decls@decls'@decls''
+            end in
 
         let encode_full_app fv = 
             let fname, fuel_args = lookup_free_var_sym env fv in
@@ -627,30 +637,21 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
             tm, vars, decls in
         
         let head = Util.compress_exp head in
-        begin match head.n with 
-            | Exp_fvar(fv, _) -> 
-                (match Util.function_formals (whnf env head.tk) with 
+        let head_type = whnf env (Util.unrefine head.tk) in
+        begin match Util.function_formals head_type with
                     | None -> failwith (Util.format3 "(%s) term is %s; head type is %s\n" 
                                         (Range.string_of_range e0.pos) (Print.exp_to_string e0) (Print.typ_to_string head.tk))
-                    | Some (formals, _) -> 
-                        if List.length formals = List.length args
-                        then encode_full_app fv
-                        else (if Tc.Env.debug env.tcenv Options.Low then Util.fprint2 "(%s) %s is not a full application!\n" 
-                                (Range.string_of_range e0.pos)
-                                (Print.exp_to_string e0);
-                            encode_partial_app ()))
-            | _ ->
-                if Tc.Env.debug env.tcenv Options.Low then Util.fprint3 "(%s) %s is not a full application! head is a %s\n" 
-                    (Range.string_of_range e0.pos)
-                    (Print.exp_to_string e0)
-                    (Print.tag_of_exp head); 
-                let res = encode_partial_app () in
-                if Tc.Env.debug env.tcenv Options.Low 
-                then Util.fprint2 "(%s) encoded %s\n" (Range.string_of_range e0.pos) (Print.exp_to_string e0);
-                res
-                 
-        end
+                    | Some (formals, c) -> 
+                        begin match head.n with
+                            | Exp_fvar (fv, _) when (List.length formals = List.length args) -> encode_full_app fv
+                            | _ -> 
+                                if List.length formals > List.length args
+                                then encode_partial_app (Some (formals, c))
+                                else encode_partial_app None
 
+                        end
+       end
+        
       | Exp_let((false, [(Inr _, _, _)]), _) -> failwith "Impossible: already handled by encoding of Sig_let" 
 
       | Exp_let((false, [(Inl x, t1, e1)]), e2) ->
@@ -806,7 +807,6 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
              let l2, labs2, decls2 = encode_formula_with_labels lhs (negate env) in
              Term.mkImp(l2, l1), labs1@labs2, decls1@decls2
           end in
-  
     let mk_iff : args -> term * labels * decls_t = function 
         | [(Inl lhs, _); (Inl rhs, _)] -> 
           let l1, labs1, decls1 = encode_formula_with_labels lhs (negate env) in
@@ -824,13 +824,8 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
                         (Const.or_lid,  enc_prop_c [true;true]  <| bin_op mkOr);
                         (Const.imp_lid, mk_imp);
                         (Const.iff_lid, mk_iff);
-                        (Const.ite_lid, enc_prop_c [false;true;true] <| tri_op mkITE);
+                        (Const.ite_lid, enc_prop_c [true;true;true] <| tri_op mkITE); //NS: The guard appears both positively and negatively; scratching my head about this one. REVIEW!
                         (Const.not_lid, enc_prop_c [false] <| un_op mkNot);
-                        
-//                        (Const.lt_lid,  enc (unboxInt_l <| bin_op mkLT));
-//                        (Const.gt_lid,  enc (unboxInt_l <| bin_op mkGT));
-//                        (Const.gte_lid, enc (unboxInt_l <| bin_op mkGTE));
-//                        (Const.lte_lid, enc (unboxInt_l <| bin_op mkLTE));
                         (Const.eqT_lid, enc <| bin_op mkEq);
                         (Const.eq2_lid, eq_op);
                         (Const.true_lid, const_op mkTrue);
@@ -1447,6 +1442,7 @@ let encode_modul tcenv modul =
        if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Done encoding module externals %s\n" (modul.name.str);
        res in
    Z3.giveZ3 ("encoding module externals " ^ modul.name.str)  doit
+
 let solve tcenv q =
     push (Util.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
     let bg = Z3.flush_scopes () in
@@ -1466,15 +1462,15 @@ let solve tcenv q =
     
     let bg = bg@prefix in
     
-    let q_with_fuel n = 
-        [Term.Caption (Util.format1 "<Query fuel='%s'>" (string_of_int n)); 
+    let with_fuel n = 
+        [Term.Caption (Util.format1 "<fuel='%s'>" (string_of_int n)); 
          Term.Assume(mkEq(mkFreeV("MaxFuel", Term_sort), n_fuel n), None);
          qry;
          Term.CheckSat]@suffix in
     
     let check () =
-        let ok, errs = Z3.ask bg labels (q_with_fuel !Options.initial_fuel) in
-        let retry n = Z3.ask [] labels (q_with_fuel n) in
+        let ok, errs = Z3.ask bg labels (with_fuel !Options.initial_fuel) in
+        let retry n = Z3.ask [] labels (with_fuel n) in
         if ok then ok, errs
         else let ok, _ = retry !Options.max_fuel in 
              if ok then ok, []

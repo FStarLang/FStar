@@ -2,7 +2,7 @@ module Quicksort
 open List
 
 (* Specification of sortedness according to some comparison function f *)
-val sorted: ('a -> Tot ('a -> Tot bool)) -> list 'a -> Tot bool
+val sorted: ('a -> 'a -> Tot bool) -> list 'a -> Tot bool
 let rec sorted f = function
   | []
   | [_] -> true
@@ -25,13 +25,13 @@ let rec partition_lemma f l = match l with
   | hd::tl -> partition_lemma f tl
 
 
-opaque logic type total_order (a:Type) (f: (a -> Tot (a -> Tot bool))) =
+opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a. f a a)                                           (* reflexivity   *)
     /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
 
 val sorted_concat_lemma:  a:Type
-               ->  f:(a -> Tot (a -> Tot bool))
+               ->  f:(a -> a -> Tot bool)
                ->  l1:list a{sorted f l1}
                ->  l2:list a{sorted f l2}
                ->  pivot:a
@@ -45,8 +45,8 @@ let rec sorted_concat_lemma f l1 l2 pivot = match l1 with
   | hd::tl -> sorted_concat_lemma f tl l2 pivot
 
 
-(* The implemntation of quicksort: happily, the code is completely unpolluted by proof. *)
-val sort: f:('a -> Tot ('a -> Tot bool)) //Currying is explicit
+(* The implementation of quicksort: happily, the code is completely unpolluted by proof. *)
+val sort: f:('a -> 'a -> Tot bool)
       ->  l:list 'a
       ->  Pure (list 'a)
                (requires (total_order 'a f))
