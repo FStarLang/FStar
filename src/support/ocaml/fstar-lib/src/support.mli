@@ -5,11 +5,11 @@ module Prims : sig
   type int32 = int
 
   type byte = char
-  (* val pipe_left : ('a -> 'b) -> 'a -> 'b *)
-  (* val pipe_right : 'a -> ('a -> 'b) -> 'b *)
+  type uint8 = char
   val ignore : 'a -> unit
   val fst : 'a * 'b -> 'a
   val snd : 'a * 'b -> 'b
+  val failwith : string -> 'a
   val try_with : (unit -> 'a) -> (exn -> 'a) -> 'a
 end
 
@@ -45,6 +45,7 @@ module List : sig
   val fold_right : ('a -> 'b -> 'b) -> 'a list -> 'b -> 'b
   val collect : ('a -> 'b list) -> 'a list -> 'b list
   val unzip : ('a * 'b) list -> ('a list) * ('b list)
+  val unzip3 : ('a * 'b * 'c) list -> ('a list) * ('b list) * ('c list)
   val filter : ('a -> bool) -> 'a list -> 'a list
   val sortWith : ('a -> 'a -> int) -> 'a list -> 'a list
   val forall2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
@@ -53,6 +54,12 @@ module List : sig
   val split : ('a * 'b) list -> ('a list) * ('b list)
   val choose : ('a -> 'b option) -> 'a list -> 'b list
   val contains : 'a -> 'a list -> bool
+end
+
+
+module Option : sig
+  val isSome : 'a option -> bool
+  val isNone : 'a option -> bool
 end
 
 
@@ -99,13 +106,25 @@ module Microsoft : sig
       val print_any : 'a -> unit
       val strcat : string -> string -> string
       val concat_l : string -> string list -> string
+      type file_handle = out_channel
+      val open_file_for_writing: string -> file_handle
+      val append_to_file: file_handle -> string -> unit
+      val close_file: file_handle -> unit
+      val write_file: string -> string -> unit
+      val flush_file: file_handle -> unit
+      type proc = unit (* FIXME *)
+      val start_process: string -> string -> (string -> bool) -> proc
+      val ask_process: proc -> string -> string
+      val kill_process: proc -> unit
+      val kill_all: unit -> unit
+      val run_proc : string -> string -> string -> (bool * string * string)
       val write_JSON: 'a -> string -> unit
       val read_JSON: string -> 'a
       val get_file_extension: string -> string
       val int_of_string: string -> int
       val int_of_char: char -> int
       val char_of_int: int -> char
-      (* val int_of_uint8: uint8 -> int *)
+      val int_of_uint8: Prims.uint8 -> int
       val uint16_of_int: int -> Prims.uint16
       val float_of_byte: char -> float
       val float_of_int32: Prims.int32 -> float

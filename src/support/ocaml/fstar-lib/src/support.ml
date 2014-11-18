@@ -5,11 +5,11 @@ module Prims = struct
   type int32 = int
 
   type byte = char
-  (* let pipe_left f = f *)
-  (* let pipe_right x f = f x *)
+  type uint8 = char
   let ignore _ = ()
   let fst = fst
   let snd = snd
+  let failwith = failwith
   let try_with f1 f2 = try f1 () with | e -> f2 e
 end
 
@@ -54,7 +54,12 @@ module List = struct
   let fold_left = BatList.fold_left
   let fold_right = BatList.fold_right
   let collect f l = BatList.flatten (BatList.map f l)
-  let unzip =  BatList.split
+  let unzip = BatList.split
+  let rec unzip3 = function
+    | [] -> ([],[],[])
+    | (x,y,z)::xyzs ->
+       let (xs,ys,zs) = unzip3 xyzs in
+       (x::xs,y::ys,z::zs)
   let filter = BatList.filter
   let sortWith = BatList.sort
   let forall2 = BatList.for_all2
@@ -63,6 +68,14 @@ module List = struct
   let split = unzip
   let choose = BatList.filter_map
   let contains x l = BatList.exists (fun y -> x = y) l
+end
+
+
+module Option = struct
+  let isSome = function
+    | Some _ -> true
+    | None -> false
+  let isNone o = not (isSome o)
 end
 
 
@@ -243,7 +256,7 @@ module Microsoft = struct
       let char_of_int = char_of_int
       let int_of_string = int_of_string
       let int_of_char = int_of_char
-      (* let int_of_uint8 (i:uint8) = int32 i *)
+      let int_of_uint8 = int_of_char
       let uint16_of_int (i:int) = i
 
       let float_of_byte b = float_of_int (int_of_char b)
