@@ -1,6 +1,7 @@
 module Prims = struct
   (* Fix this... *)
   type double  = float
+  type uint16 = int
   type int32 = int
 
   type byte = char
@@ -59,6 +60,7 @@ module List = struct
   let tryFind f l = try Some (BatList.find f l) with | Not_found -> None
   let flatten = BatList.flatten
   let split = unzip
+  let choose = BatList.filter_map
 end
 
 
@@ -240,7 +242,7 @@ module Microsoft = struct
       let int_of_string = int_of_string
       let int_of_char = int_of_char
       (* let int_of_uint8 (i:uint8) = int32 i *)
-      (* let uint16_of_int (i:int) = uint16 i *)
+      let uint16_of_int (i:int) = i
 
       let float_of_byte b = float_of_int (int_of_char b)
       let float_of_int32 = float_of_int

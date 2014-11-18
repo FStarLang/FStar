@@ -1,6 +1,7 @@
 module Prims : sig
   (* Fix this... *)
   type double  = float
+  type uint16 = int
   type int32 = int
 
   type byte = char
@@ -49,6 +50,7 @@ module List : sig
   val tryFind : ('a -> bool) -> 'a list -> 'a option
   val flatten : ('a list) list -> 'a list
   val split : ('a * 'b) list -> ('a list) * ('b list)
+  val choose : ('a -> 'b option) -> 'a list -> 'b list
 end
 
 
@@ -95,12 +97,14 @@ module Microsoft : sig
       val print_any : 'a -> unit
       val strcat : string -> string -> string
       val concat_l : string -> string list -> string
+      val write_JSON: 'a -> string -> unit
+      val read_JSON: string -> 'a
       val get_file_extension: string -> string
       val int_of_string: string -> int
       val int_of_char: char -> int
       val char_of_int: int -> char
       (* val int_of_uint8: uint8 -> int *)
-      (* val uint16_of_int: int -> uint16 *)
+      val uint16_of_int: int -> Prims.uint16
       val float_of_byte: char -> float
       val float_of_int32: Prims.int32 -> float
       val float_of_int64: BatInt64.t -> float

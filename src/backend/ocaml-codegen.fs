@@ -41,6 +41,8 @@ let max_op_prec = (System.Int32.MaxValue, Infix NonAssoc)
 let infix_prim_ops = [
     ("op_Addition"       , e_bin_prio_op1   , "+" );
     ("op_Subtraction"    , e_bin_prio_op1   , "-" );
+    ("op_Multiply"       , e_bin_prio_op1   , "*" );
+    ("op_Division"       , e_bin_prio_op1   , "/" );
     ("op_Equality"       , e_bin_prio_eq    , "=" );
     ("op_ColonEquals"    , e_bin_prio_eq    , ":=");
     ("op_disEquality"    , e_bin_prio_eq    , "<>");
@@ -53,6 +55,7 @@ let infix_prim_ops = [
     ("op_GreaterThanOrEqual", e_bin_prio_order , ">=");
     ("op_LessThan"          , e_bin_prio_order , "<" );
     ("op_GreaterThan"       , e_bin_prio_order , ">" );
+    ("op_Modulus"           , e_bin_prio_order , "mod" );
 ]
 
 (* -------------------------------------------------------------------- *)
