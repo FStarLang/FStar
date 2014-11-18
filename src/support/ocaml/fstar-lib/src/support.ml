@@ -91,91 +91,46 @@ module Microsoft = struct
       exception NYI of string
       exception Failure of string
 
-      type proc = unit
-      (* type proc = {m:BatConcurrent.lock; *)
-      (*              outbuf:StringBuilder; *)
-      (*              proc:Process; *)
-      (*              killed:bool ref} *)
+      type proc =
+          {inc : in_channel;
+           outc : out_channel;
+           mutable killed : bool}
+
       let all_procs : (proc list) ref = ref []
 
-      let start_process (prog:string) (args:string) (cond:string -> bool) : proc = ()
-      (* let signal = new Object() in *)
-      (* let with_sig f = *)
-      (*     System.Threading.Monitor.Enter(signal); *)
-      (*     let res = f() in *)
-      (*     System.Threading.Monitor.Exit(signal); *)
-      (*     res in *)
-      (* let startInfo = new ProcessStartInfo() in *)
-      (* let driverOutput = new StringBuilder() in *)
-      (* let killed = ref false in *)
-      (* let proc = new Process() in *)
-      (*     startInfo.FileName <- prog; *)
-      (*     startInfo.Arguments <- args; *)
-      (*     startInfo.UseShellExecute <- false; *)
-      (*     startInfo.RedirectStandardOutput <- true; *)
-      (*     startInfo.RedirectStandardInput <- true; *)
-      (*     proc.EnableRaisingEvents <- true; *)
-      (*     proc.OutputDataReceived.AddHandler( *)
-      (*          DataReceivedEventHandler(fun _ args -> *)
-      (*             if !killed then () *)
-      (*             else with_sig(fun () -> *)
-      (*                        ignore <| driverOutput.Append(args.Data); *)
-      (*                        ignore <| driverOutput.Append("\n"); *)
-      (*                        if null = args.Data *)
-      (*                        then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString())); *)
-      (*                        if null = args.Data || cond args.Data *)
-      (*                        then System.Threading.Monitor.Pulse(signal)))); *)
-      (*     proc.Exited.AddHandler( *)
-      (*          EventHandler(fun _ _ -> *)
-      (*             if !killed then () *)
-      (*             else *)
-      (*                 System.Threading.Monitor.Enter(signal); *)
-      (*                 killed := true; *)
-      (*                 Printf.fprintf stdout "%s exited inadvertently\n%s\n" prog (driverOutput.ToString()); *)
-      (*                 stdout.Flush(); *)
-      (*                 System.Threading.Monitor.Exit(signal); *)
-      (*                 exit(1))); *)
-      (*     proc.StartInfo <- startInfo; *)
-      (*     proc.Start() |> ignore; *)
-      (*     proc.BeginOutputReadLine(); *)
-      (*     let proc = {m=signal; *)
-      (*                 outbuf=driverOutput; *)
-      (*                 proc=proc; *)
-      (*                 killed=killed} in *)
-      (*     all_procs := proc::!all_procs; *)
-      (*     proc *)
+      let start_process (prog:string) (args:string) (cond:string -> bool) : proc =
+        let command = prog^" "^args in
+        let (inc,outc) = Unix.open_process command in
+        let proc = {inc = inc; outc = outc; killed = false} in
+        all_procs := proc::!all_procs;
+        proc
 
-      let ask_process (p:proc) (stdin:string) : string = "Not implemented yet"
-      (* ignore <| p.outbuf.Clear(); *)
-      (* System.Threading.Monitor.Enter(p.m); *)
-      (* p.proc.StandardInput.WriteLine(stdin); *)
-      (* ignore <| System.Threading.Monitor.Wait(p.m); *)
-      (* System.Threading.Monitor.Exit(p.m); *)
-      (* p.outbuf.ToString() *)
+      let ask_process (p:proc) (stdin:string) : string =
+        output_string p.outc stdin;
+        flush p.outc;
+        input_line p.inc
 
-      let kill_process (p:proc) = ()
-      (* p.killed := true; *)
-      (* System.Threading.Monitor.Enter(p.m); *)
-      (* p.proc.StandardInput.Close(); *)
-      (* System.Threading.Monitor.Exit(p.m); *)
-      (* p.proc.WaitForExit() *)
+      let kill_process (p:proc) =
+        let _ = Unix.close_process (p.inc, p.outc) in
+        p.killed <- true
 
-      let kill_all () = ()
-      (* List.iter (fun p -> if not !p.killed then kill_process p) !all_procs *)
+      let kill_all () =
+        List.iter (fun p -> if not p.killed then kill_process p) !all_procs
 
-      let run_proc (name:string) (args:string) (stdin:string) : bool * string * string = (true, "Not implemented yet", "Not implemented yet")
-      (* let pinfo = new ProcessStartInfo(name, args) in *)
-      (* pinfo.RedirectStandardOutput <- true; *)
-      (* pinfo.RedirectStandardError <- true; *)
-      (* pinfo.UseShellExecute <- false; *)
-      (* pinfo.RedirectStandardInput <- true; *)
-      (* let proc = new Process() in *)
-      (* proc.StartInfo <- pinfo; *)
-      (* let result = proc.Start() in *)
-      (* proc.StandardInput.Write(stdin); *)
-      (* let stdout = proc.StandardOutput.ReadToEnd() in *)
-      (* let stderr = proc.StandardError.ReadToEnd() in *)
-      (* result, stdout, stderr *)
+      let run_proc (name:string) (args:string) (stdin:string) : bool * string * string =
+        let command = name^" "^args in
+        let (inc,outc) = Unix.open_process command in
+        output_string outc stdin;
+        let stdout = ref "" in
+        try
+          while true do
+            let l = input_line inc in
+            stdout := !stdout^l^"\n"
+          done;
+          assert false
+        with
+          | End_of_file ->
+             (true, !stdout, "")
 
       let write_JSON (o :'a) (file: string) :unit = ()
       (* let s = new DataContractJsonSerializerSettings((\*EmitTypeInformation = EmitTypeInformation.Never*\)) in *)

@@ -112,7 +112,10 @@ module Microsoft : sig
       val close_file: file_handle -> unit
       val write_file: string -> string -> unit
       val flush_file: file_handle -> unit
-      type proc = unit (* FIXME *)
+      type proc =
+          {inc : in_channel;
+           outc : out_channel;
+           mutable killed : bool}
       val start_process: string -> string -> (string -> bool) -> proc
       val ask_process: proc -> string -> string
       val kill_process: proc -> unit
