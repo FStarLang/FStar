@@ -327,12 +327,14 @@ lift:
         }
       }
 
+qualifier:
+  | LOGIC        { Logic }
+  | ASSUME       { Assumption }
+  | OPAQUE       { Opaque }
+
 qualifiers:
-  |              { [] }
-  | LOGIC        { [Logic] }
-  | ASSUME       { [Assumption] }
-  | ASSUME LOGIC { [Assumption; Logic] }
-  | OPAQUE LOGIC { [Opaque; Logic] }
+  |                      { [] }
+  | qualifier qualifiers { $1::$2 }
 
 assumeTag:
   | ASSUME { [Assumption] }

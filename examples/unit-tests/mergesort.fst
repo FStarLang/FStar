@@ -33,14 +33,14 @@ let rec app l1 l2 = match l1 with
     x::r
 
 
-type permutation (l1:mlist) (l2:mlist) = length l1 = length l2 /\
+opaque type permutation (l1:mlist) (l2:mlist) = length l1 = length l2 /\
                                          (forall n. in_list l1 n <==> in_list l2 n)
 
-type permutation_2 (l:mlist) (l1:mlist) (l2:mlist) =
+opaque type permutation_2 (l:mlist) (l1:mlist) (l2:mlist) =
     (forall n. in_list l n <==> (in_list l1 n \/ in_list l2 n)) /\
     length l = length l1 + length l2
 
-type split_inv (l:mlist) (l1:mlist) (l2:mlist) =
+opaque type split_inv (l:mlist) (l1:mlist) (l2:mlist) =
     permutation_2 l l1 l2 /\
     (* needed for decreases clause in mergesort function *)
     length l > length l1 /\ length l > length l2
