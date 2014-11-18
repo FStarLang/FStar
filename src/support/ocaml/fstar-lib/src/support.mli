@@ -47,6 +47,8 @@ module List : sig
   val sortWith : ('a -> 'a -> int) -> 'a list -> 'a list
   val forall2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
   val tryFind : ('a -> bool) -> 'a list -> 'a option
+  val flatten : ('a list) list -> 'a list
+  val split : ('a * 'b) list -> ('a list) * ('b list)
 end
 
 
@@ -206,6 +208,27 @@ module Microsoft : sig
       val end_of_range: range -> pos
       val line_of_pos: pos -> int
       val end_range: range -> range
+    end
+    module Bytes : sig
+      type bytes = (* abstract *)
+          char array   (* except in F# *)
+      val length : bytes -> int
+      val get: bytes -> int -> int
+      val zero_create : int -> bytes
+      val of_intarray: int array -> bytes
+      val string_as_unicode_bytes: string -> bytes
+      val unicode_bytes_as_string: bytes -> string
+      val utf8_bytes_as_string: bytes -> string
+      val append: bytes -> bytes -> bytes
+      val make: (int -> int) -> int -> bytes
+
+      type bytebuf = (* abstract *)
+          { mutable bbArray: bytes;  (* except in F# *)
+            mutable bbCurrent: int }
+      val create: int -> bytebuf
+      val close : bytebuf -> bytes
+      val emit_int_as_byte: bytebuf -> int -> unit
+      val emit_bytes: bytebuf -> bytes -> unit
     end
   end
 end

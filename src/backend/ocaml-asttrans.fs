@@ -503,6 +503,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
                   | con::cons ->
                      (match record_constructors.TryFind con.idText, args with
                         | Some f, [arg] -> assert (List.mem c.v.ident.idText (List.map (fun x -> x.idText) f)); MLE_Proj (arg, (path_of_ns mlenv (List.rev cons), c.v.ident.idText))
+                        | Some f, arg::args -> assert (List.mem c.v.ident.idText (List.map (fun x -> x.idText) f)); MLE_App (MLE_Proj (arg, (path_of_ns mlenv (List.rev cons), c.v.ident.idText)), args)
                         | _, _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args))
                   | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args))
 

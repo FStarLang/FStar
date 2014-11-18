@@ -981,11 +981,11 @@ and desugar_formula' env (f:term) : typ =
 
     | QForall((_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
-      desugar_formula env (push_quant QForall binders pats body)
+      desugar_formula env (push_quant (fun x -> QForall x) binders pats body)
 
     | QExists((_1::_2::_3), pats, body) ->
       let binders = _1::_2::_3 in
-      desugar_formula env (push_quant QExists binders pats body)
+      desugar_formula env (push_quant (fun x -> QExists x) binders pats body)
         
     | QForall([b], pats, body) ->
       desugar_quant Const.forall_lid Const.allTyp_lid b pats body
