@@ -933,5 +933,12 @@ module Microsoft = struct
     end
 
 
+    module Parser = struct
+      module ParseIt = struct
+        let parse_file _ = assert false
+      end
+    end
+
+
   end
 end

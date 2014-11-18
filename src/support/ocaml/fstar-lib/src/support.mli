@@ -234,5 +234,11 @@ module Microsoft : sig
       val emit_int_as_byte: bytebuf -> int -> unit
       val emit_bytes: bytebuf -> bytes -> unit
     end
+    module Parser : sig
+      module ParseIt : sig
+        (* FIXME *)
+        val parse_file: (string,string) Util.either -> ('a,string) Util.either
+      end
+    end
   end
 end
