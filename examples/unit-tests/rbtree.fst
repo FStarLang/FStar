@@ -315,10 +315,9 @@ let insert t x =
   r'
 
 (* TODO: make rbtree polymorphic *)
-(*
+
 type rbtree =
   | Mk: tr:rbtree'{balanced_rbtree' tr} -> rbtree
 
 val proj: rbtree -> Pure rbtree' (requires True) (ensures (fun r -> balanced_rbtree' r))
 let proj tr = Mk.tr tr
-*)

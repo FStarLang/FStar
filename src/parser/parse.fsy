@@ -609,7 +609,7 @@ atomicKind:
   | atomicTerm { let tm:term = $1 in {tm with level=Kind} }
       
 typ:
-  | simpleTerm { {$1 with level=Type} }
+  | simpleTerm { $1 }
 
 term:
   | noSeqTerm 

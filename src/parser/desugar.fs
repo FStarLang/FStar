@@ -1174,7 +1174,13 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
               then mk_Kind_effect
               else kun
             | Some k -> desugar_kind env' k in
+        let t0 = t in
         let t = desugar_typ env' t in
+        let quals = if quals |> Util.for_some (function Logic -> true | _ -> false)
+                    then quals
+                    else if t0.level = Formula
+                    then Logic::quals
+                    else quals in
         let se = Sig_typ_abbrev(qualify env id, typars, k, t, quals, rng) in
         let env = push_sigelt env se in
         env, [se]
