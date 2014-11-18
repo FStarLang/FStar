@@ -56,6 +56,4 @@ let rec sort f = function
   | [] -> []
   | pivot::tl -> 
     let hi', lo' = partition (f pivot) tl in 
-    let lo = sort f lo' in
-    let hi = sort f hi' in
-    lo@(pivot::hi) 
+    sort f lo'@(pivot::sort f hi')

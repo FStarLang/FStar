@@ -167,15 +167,8 @@ opaque type pre_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') =
     (c_inv lt /\ c_inv rt)
     )
 
-(*
- * balance function
- * similar to pre_balance, post condition specifies invariants for
- * k_inv, h_inv, and c_inv
- *)
-val balance: c:color -> lt:rbtree' -> ky:nat -> rt:rbtree' ->
-             Pure rbtree'
-             (requires (pre_balance c lt ky rt))
-	     (ensures (fun r ->
+(* Somehow, making post-balance opaque, makes it take WAY longer *)
+(* opaque *) type post_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') (r:rbtree') =
 	      (* TODO: this should come from requires *)
 	      is_Some (black_height lt) /\
               
@@ -214,8 +207,17 @@ val balance: c:color -> lt:rbtree' -> ky:nat -> rt:rbtree' ->
 	       * resulting tree contains all elements from lt, ly, and rt, and
 	       * nothing else
 	       *)
-              (forall k. in_tree r k <==> (in_tree lt k \/ k = ky \/ in_tree rt k)))
-	     )
+              (forall k. in_tree r k <==> (in_tree lt k \/ k = ky \/ in_tree rt k))
+
+(*
+ * balance function
+ * similar to pre_balance, post condition specifies invariants for
+ * k_inv, h_inv, and c_inv
+ *)
+val balance: c:color -> lt:rbtree' -> ky:nat -> rt:rbtree' ->
+             Pure rbtree'
+             (requires (pre_balance c lt ky rt))
+	     (ensures (fun r -> post_balance c lt ky rt r))
 (* it's pretty cool that the spec is proved easily without any hints ! *)	     
 let balance c lt ky rt =
   match (c, lt, ky, rt) with
@@ -276,7 +278,9 @@ let rec ins t x =
     | T c a y b ->
       if x < y then
 	(* TODO: ideally we would have inlined this call in the balance call *)
-	let lt = ins a x in
+	(* NS: You can write it this way. We're generating a semantically correct VC, but the shape of it causes Z3 to blowup *)
+        (* balance c (ins a x) y b *)
+        let lt = ins a x in
 	balance c lt y b
       else if x = y then
 	t

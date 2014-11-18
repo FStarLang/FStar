@@ -800,11 +800,17 @@ and tc_exp env e : exp * comp =
                    let subst = maybe_extend_subst subst (List.hd bs) arg in
                    tc_args (subst, arg::outargs, arg::arg_rets, comps, g, fvs) rest cres rest'
               else if Tc.Util.is_pure env c 
-              then let g' = Util.must <| Tc.Rel.sub_comp env c (mk_Total (Util.comp_result c)) in
-                   if debug env Options.Low then Util.fprint1 "Guard is %s\n" (Tc.Rel.guard_to_string env g');
+              then let t_e = Util.comp_result c in
                    let arg = varg e in
                    let subst = maybe_extend_subst subst (List.hd bs) arg in
-                   tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard g g', fvs) rest cres rest'
+                   let comps, guard =
+                     if is_null_binder (List.hd bs)
+                     then let g' = Util.must <| Tc.Rel.sub_comp env c (mk_Total t_e) in
+                          comps, Rel.conj_guard g g'
+                     else let c = Tc.Util.maybe_assume_result_eq_pure_term env e c in
+                          let comps = (Some (Env.Binding_var(x.v, x.sort)), c)::comps in
+                          comps, g in
+                   tc_args (subst, arg::outargs, arg::arg_rets, comps, guard, fvs) rest cres rest'
               else if is_null_binder (List.hd bs)
               then let newx = Util.gen_bvar_p e.pos (Util.comp_result c) in
                    let arg = varg <| bvar_to_exp newx in
@@ -821,9 +827,12 @@ and tc_exp env e : exp * comp =
                        then refine the result to be equal to f x1 x2, 
                        where xi is the result of ei. (See the last two tests in examples/unit-tests/unit1.fst)
                     *)
+                    let refine_with_equality = match g with 
+                        | Trivial -> comps |> Util.for_some (fun (_, c) -> not (Util.is_total_comp c)) (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
+                        | _ -> comps |> Util.for_some (fun (_, c) -> not (Util.is_pure env c)) in (* if the guard is non-trivial, strengthen pre-condition WILL add an equality, but only if all the terms are pure; if not, add it here *)
                     let cres = if Util.is_total_comp cres 
                                && head_is_atom 
-                               && comps |> Util.for_some (fun (_, c) -> not (Util.is_pure env c))
+                               && refine_with_equality 
                                then Util.maybe_assume_result_eq_pure_term env (mk_Exp_app_flat(head, List.rev arg_rets) (Util.comp_result cres) top.pos) cres
                                else (if Env.debug env Options.Low
                                      then Util.fprint3 "Not refining result: f=%s; cres=%s; head_is_atom?=%s\n" (Print.exp_to_string head) (Print.comp_typ_to_string <| norm_c env cres) (if head_is_atom then "yes" else "no"); 
@@ -831,6 +840,7 @@ and tc_exp env e : exp * comp =
                     (* relabeling the labeled sub-terms in cres to report failing pre-conditions at this call-site *)
                     Tc.Util.refresh_comp_label env false cres 
                 | _ -> mk_Total  (Util.subst_typ subst <| mk_Typ_fun(bs, cres) ktype top.pos) (* partial app *) in
+            
               if debug env Options.Low then Util.fprint1 "\t Type of result cres is %s\n" (Print.comp_typ_to_string <| norm_c env cres);
               let comp = List.fold_left (fun out c -> Tc.Util.bind env None (snd c) (fst c, out)) cres comps in
               let comp = Tc.Util.bind env None chead (None, comp) in
@@ -1298,7 +1308,7 @@ and tc_decl env se deserialized = match se with
       let _ = match destruct result_t tname with 
         | Some _ -> ()
         | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar true lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
-      let t = Tc.Util.refine_data_type env lid formals result_t in
+//      let t = Tc.Util.refine_data_type env lid formals result_t in
       let se = Sig_datacon(lid, t, tycon, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
       if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Print.typ_to_string t);

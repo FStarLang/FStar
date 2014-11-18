@@ -204,3 +204,52 @@ let bad_projector x = Some.v x (* should fail *)
 
 val short_circuit1: x:option int{is_Some x /\ Some.v x = 0} -> nat
 let short_circuit1 x = Some.v x
+
+
+(* TESTING skolem variables for lambdas *)
+
+val apply : (int -> Tot int) -> int -> Tot int
+let apply f x = f x
+
+let test_skolem_app (x:int) =
+  assert (apply (fun x -> x) 0 = 0)
+
+let test_skolem_match (x:int) =
+  match apply (fun x -> x) 0  with
+  | 0 -> 0
+
+logic type T = (apply (fun x -> x) 0 == 1)
+
+val test_skolem_refinement: x:int{T} -> Tot unit
+let test_skolem_refinement x = assert false
+
+val find: f:('a -> Tot bool) -> list 'a -> Tot (option (x:'a{f x}))
+let rec find f = function 
+  | [] -> None
+  | hd::tl -> if f hd then Some hd else find f tl
+
+val test_skolem_let: x:int -> Tot (b:bool{b ==> x=0})
+let test_skolem_let x = 
+  let found = find (fun y -> x=0) [x] in
+  is_Some found
+
+
+(* TESTING implicit binding of conditionally total function arguments *)
+
+assume val id_wrap1: x:int -> Pure int (requires True) (ensures (fun y -> x=y))
+assume val id_wrap2: x:int -> Pure int (requires True) (ensures (fun y -> x=y))
+
+val use_id_wrap: l:int -> Pure int (requires True) (ensures (fun m -> m = l))
+let use_id_wrap l = id_wrap1 (id_wrap2 l)
+
+val xy_y : int -> int -> Tot int
+let xy_y x y = y
+
+val idl: l:list int -> Pure (list int) (requires True) (ensures (fun m -> l=m))
+let rec idl l = match l with
+  | [] -> []
+  | hd::tl -> [(fun x -> xy_y hd x) hd] @ idl tl
+
+assume val st_id_wrap: x:int -> ST int (requires (fun h -> True)) (ensures (fun h0 y h1 -> x=y))
+val st_f: l:int -> ST int (requires (fun h -> True)) (ensures (fun h0 m h1 -> m = l))
+let st_f l = st_id_wrap (st_id_wrap l)

@@ -39,7 +39,7 @@ all-ver: $(VERFILES)
 all-lax: rec.fst pat.fst mac.fst bug16.fst
 	$(FSTAR) $^
 
-%.vv: %.fst
+%.vv: list.fst %.fst
 	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $^ --verify
 
 stlc:
