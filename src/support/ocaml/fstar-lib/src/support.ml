@@ -121,16 +121,8 @@ module Microsoft = struct
         let command = name^" "^args in
         let (inc,outc) = Unix.open_process command in
         output_string outc stdin;
-        let stdout = ref "" in
-        try
-          while true do
-            let l = input_line inc in
-            stdout := !stdout^l^"\n"
-          done;
-          assert false
-        with
-          | End_of_file ->
-             (true, !stdout, "")
+        flush outc;
+        (true, BatPervasives.input_all inc, "")
 
       let write_JSON (o :'a) (file: string) :unit = ()
       (* let s = new DataContractJsonSerializerSettings((\*EmitTypeInformation = EmitTypeInformation.Never*\)) in *)
