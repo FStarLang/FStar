@@ -80,7 +80,6 @@ val append_mem:  l1:list 'a
               -> l2:list 'a
               -> Lemma (requires True)
                        (ensures (forall a. mem a (l1@l2) = (mem a l1 || mem a l2)))
-                       [SMTPat (l1@l2)]
 let rec append_mem l1 l2 = match l1 with
   | [] -> ()
   | hd::tl -> append_mem tl l2
