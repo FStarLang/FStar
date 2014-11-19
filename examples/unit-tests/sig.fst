@@ -14,43 +14,51 @@
    limitations under the License.
 *)
 
-module MacIdeal 
+module SigIdeal
 open Array
 type bytes    = list byte
 type text     = bytes
 type nbytes (n:nat) = b:bytes{List.length b == n}
-let macsize = 20
-let keysize = 16
-type mac_t = nbytes macsize
-type key   = nbytes keysize
-assume val hmac_sha1: key -> text -> Tot mac_t
+let sigsize = 256
+let sksize = 256
+let pksize = 256
+type sig_t = nbytes sigsize
+type pk   = nbytes pksize
+type sk   = nbytes sksize
 
-type key_prop : key -> text -> Type
-type pkey (p:(text -> Type)) = k:key{key_prop k == p}
+assume val fdh_rsa: sk -> text -> Tot sig_t
 
-assume val new_key: p:(text -> Type) -> pkey p
+type key_prop : pk -> text -> Type
+type prop_pk (p:(text -> Type)) = k:pk{key_prop k == p}
 
-type entry = 
-  | Entry : k:key
+assume val sk_to_pk : sk -> Tot pk
+
+
+type pk_sk (p:pk) = s:sk{sk_to_pk s == p}
+
+assume val keygen: p:(text -> Type) -> k:prop_pk p * pk_sk k
+
+type entry =
+  | Entry : k:pk
          -> t:text{key_prop k t}
-         -> m:mac_t
+         -> m:sig_t
          -> entry
 
 assume val log : ref (list entry)
 
-val mac: k:key
-      -> t:text{key_prop k t}
-      -> mac_t
-let mac k t = 
-  let m = hmac_sha1 k t in
-  log := Entry k t m :: !log;
+val sign: p:pk
+      -> s:pk_sk p
+      -> t:text{key_prop p t}
+      -> sig_t
+let sign p s t = 
+  let m = fdh_rsa s t in
+  log := Entry p t m :: !log;
   m
 
-val verify: k:key
+val verify: p:pk
          -> t:text 
-         -> mac_t 
-         -> b:bool{b ==> key_prop k t}
-let verify k t m = 
-  let found = List.find (function (Entry k' t' _) -> k=k' && t=t') !log in
+         -> sig_t 
+         -> b:bool{b ==> key_prop p t}
+let verify p t m = 
+  let found = List.find (function (Entry p' t' _) -> p=p' && t=t') !log in
   is_Some found
-
