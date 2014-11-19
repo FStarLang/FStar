@@ -118,6 +118,8 @@ let rec typing g e =
       | Some TBool, Some t2, Some t3 -> if t2 = t3 then Some t2 else None
       | _         , _      , _       -> None)
 
+(* These canonical forms lemmas are traditionally used for manual
+   progress proofs; they are not used by the automated proof below *)
 val canonical_forms_bool : e:exp -> Lemma
       (requires (typing empty e=Some TBool /\ is_value e))
       (ensures (is_ETrue e \/ is_EFalse e))
@@ -133,13 +135,8 @@ val progress : e:exp -> Lemma
       (ensures (is_value e \/ (is_Some (step e))))
 let rec progress e =
   match e with
-  | EApp e1 e2 ->
-     progress e1;
-     progress e2
-  | EIf e1 e2 e3 ->
-     progress e1;
-     progress e2;
-     progress e3
+  | EApp e1 e2 -> progress e1; progress e2
+  | EIf e1 e2 e3 -> progress e1; progress e2; progress e3
   | _ -> ()
 
 val appears_free_in : x:int -> e:exp -> Tot bool
@@ -153,10 +150,9 @@ let rec appears_free_in x e =
   | ETrue
   | EFalse -> false (* NS: writing default cases for recursive functions is bad for the solver. TODO: fix *)
 
-val free_in_context : x:int -> e:exp -> g:env
-                   -> Lemma
-                        (requires (appears_free_in x e /\ is_Some (typing g e)))
-                        (ensures (is_Some (g x)))
+val free_in_context : x:int -> e:exp -> g:env -> Lemma
+      (requires (appears_free_in x e /\ is_Some (typing g e)))
+      (ensures (is_Some (g x)))
 let rec free_in_context x e g =
   match e with
   | EAbs y t e1 ->
@@ -175,6 +171,25 @@ let rec free_in_context x e g =
      else                              free_in_context x e3 g
 
   | _ -> ()
+
+(* The proof above can be made smaller if we move the quantification
+   of x and the appears_free_in x e premise to the conclusion, since
+   there is less manual instantiation left to do.  This kind of
+   optimization might become irrelevant once we have automatic
+   induction. *)
+val free_in_context' : e:exp -> g:env -> Lemma
+      (requires (is_Some (typing g e)))
+      (ensures (forall (x:int). appears_free_in x e ==> is_Some (g x)))
+let rec free_in_context' e g =
+  match e with
+  | EAbs y t e1 -> free_in_context' e1 (extend g y t)
+  | EApp e1 e2 -> free_in_context' e1 g; free_in_context' e2 g
+  | EIf e1 e2 e3 ->
+      free_in_context' e1 g;
+      free_in_context' e2 g;
+      free_in_context' e3 g
+  | _ -> ()
+
 
 (* Corollary of free_in_context -- fed to the SMT solver *)
 val typable_empty_closed : x:int -> e:exp -> Lemma
