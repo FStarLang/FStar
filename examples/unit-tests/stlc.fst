@@ -262,20 +262,13 @@ let rec substitution_preserves_typing x t_x e t_e v g =
      let gx'x = extend gx' x t_x in
      if x=x'
      then typing_extensional gxx' gx' e1
-     else
-       assert(x<>x');
-(*       assert (Equal gxx' gx'x); -- this should work *)
-(* We should at least get the admit by swap, but somehow F* gets
-   really confused here and can't prove x<>x' altough it could one
-   line above:
-       swap x x' t_x t' g;
-*)
-       (* admitting this and continuing proof, the rest works *)
-       admitP #(Equal gxx' gx'x) ();
-       assert(typing gxx' e1 == Some t_e1);
-       typing_extensional gxx' gx'x e1;
-       assert(typing gx'x e1 == Some t_e1);
-       substitution_preserves_typing x t_x e1 t_e1 v gx'
+     else (* used to be:
+             assert (x<>x');  <-- THAT SEMI_COLON ENDS THE if block!
+          *)
+       begin
+         typing_extensional gxx' gx'x e1;
+         substitution_preserves_typing x t_x e1 t_e1 v gx'
+       end
 
 val preservation : e:exp -> e':exp -> t:ty
                 -> Lemma
