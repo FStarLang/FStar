@@ -217,3 +217,39 @@ let rec fold_left_cons_is_rev l l' = match l with
     let _ = app_cons (rev tl) hd l' in
     let _ = rev_app tl hd in
     ()
+
+
+
+(*****)
+
+val forallb: l:ilist -> f:(int -> Tot bool) -> Tot bool
+let rec forallb l f = match l with
+  | Nil -> true
+  | Cons x l' ->
+    let b1 = f x in
+    let b2 = forallb l' f in
+    b1 && b2
+
+val existsb: l:ilist -> f:(int -> Tot bool) -> Tot bool
+let rec existsb l f = match l with
+  | Nil -> false
+  | Cons x l' ->
+    let b1 = f x in
+    let b2 = existsb l' f in
+    b1 || b2
+
+val existsb': l:ilist -> f:(int -> Tot bool) -> Tot bool
+let existsb' l f =
+  let g x = not (f x) in
+  let b = forallb l g in
+  not b
+
+(* this is a 4 star exercise in SF !*)
+val existsb_existsb': l:ilist -> f:(int -> Tot bool) -> Lemma
+                      (ensures (existsb l f = existsb' l f))
+let rec existsb_existsb' l f = match l with
+  | Nil -> ()
+  | Cons x l' ->
+    let _ = existsb_existsb' l' f in
+    ()
+
