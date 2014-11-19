@@ -190,8 +190,7 @@ let rec free_in_context' e g =
       free_in_context' e3 g
   | _ -> ()
 
-
-(* Corollary of free_in_context -- fed to the SMT solver *)
+(* Corollary of free_in_context when g=empty -- fed to the SMT solver *)
 val typable_empty_closed : x:int -> e:exp -> Lemma
       (requires (is_Some (typing empty e) /\ appears_free_in x e))
       (ensures False)
@@ -229,51 +228,59 @@ val typing_extensional : g:env -> g':env -> e:exp
                            (ensures (typing g e == typing g' e))
 let typing_extensional g g' e = context_invariance e g g'
 
-(* CH: TODO: Try to simplify substitution lemma and get rid of append*)
-val append: env -> env -> Tot env
-let append g1 g2 x = match g2 x with
-  | None -> g1 x
-  | found -> found
+val swap : x:int -> x':int -> t:ty -> t':ty -> g:env -> Lemma
+      (requires (x<>x'))
+      (ensures (Equal (extend (extend g x t) x' t') (extend (extend g x' t') x t)))
+let swap x x' t t' g = ()
 
 val substitution_preserves_typing :
-      x:int -> t_x:ty -> e:exp -> t_e:ty -> v:exp -> g1:env -> g2:env
+      x:int -> t_x:ty -> e:exp -> t_e:ty -> v:exp -> g:env
       -> Lemma
-          (requires ((typing (append (extend g1 x t_x) g2) e == Some t_e)
-                     /\ is_None (g2 x)
+          (requires ((typing (extend g x t_x) e == Some t_e)
                      /\ typing empty v == Some t_x))
-          (ensures  (typing (append g1 g2) (subst x v e) == Some t_e))
-let rec substitution_preserves_typing x t_x e t_e v g1 g2 =
-  let g1g2 = append g1 g2 in
-  let g1xg2 = append (extend g1 x t_x) g2 in
+          (ensures  (typing g (subst x v e) == Some t_e))
+let rec substitution_preserves_typing x t_x e t_e v g =
+  let gx = extend g x t_x in
   match e with
   | ETrue -> ()
   | EFalse -> ()
   | EVar x' ->
      if x=x'
-     then context_invariance v empty (append g1 g2) (* uses lemma typable_empty_closed *)
-     else context_invariance e g1xg2 g1g2 (* no substitution, but need to show that x:t_x is removable *)
-                             
+     then context_invariance v empty g (* uses lemma typable_empty_closed *)
+     else context_invariance e gx g (* no substitution, but need to show that x:t_x is removable *)
+
   | EApp e1 e2 ->
-     let Some (TArrow t1 t2) = typing (append (extend g1 x t_x) g2) e1 in
-     substitution_preserves_typing x t_x e1 (TArrow t1 t2) v g1 g2;
-     substitution_preserves_typing x t_x e2 t1 v g1 g2
+     let Some (TArrow t1 t2) = typing (extend g x t_x) e1 in
+     substitution_preserves_typing x t_x e1 (TArrow t1 t2) v g;
+     substitution_preserves_typing x t_x e2 t1 v g
 
   | EIf e1 e2 e3 ->
-     substitution_preserves_typing x t_x e1 TBool v g1 g2;
-     substitution_preserves_typing x t_x e2 t_e v g1 g2;
-     substitution_preserves_typing x t_x e3 t_e v g1 g2
+     substitution_preserves_typing x t_x e1 TBool v g;
+     substitution_preserves_typing x t_x e2 t_e v g;
+     substitution_preserves_typing x t_x e3 t_e v g
 
   | EAbs x' t' e1 ->
      let TArrow _ t_e1 = t_e in
-     let g1xg2_x' = extend g1xg2 x' t' in
-     let g1g2_x' = extend g1g2 x' t' in
+     let gxx' = extend gx x' t' in
+     let gx' = extend g x' t' in
+     let gx'x = extend gx' x t_x in
      if x=x'
-     then typing_extensional g1xg2_x' g1g2_x' e1
+     then typing_extensional gxx' gx' e1
      else
-       (typing_extensional g1xg2_x' (append (extend g1 x t_x) (extend g2 x' t')) e1;
-        substitution_preserves_typing x t_x e1 t_e1 v g1 (extend g2 x' t');
-        typing_extensional (append g1 (extend g2 x' t')) g1g2_x' (subst x v e1))
-              
+       assert(x<>x');
+(*       assert (Equal gxx' gx'x); -- this should work *)
+(* We should at least get the admit by swap, but somehow F* gets
+   really confused here and can't prove x<>x' altough it could one
+   line above:
+       swap x x' t_x t' g;
+*)
+       (* admitting this and continuing proof, the rest works *)
+       admitP #(Equal gxx' gx'x) ();
+       assert(typing gxx' e1 == Some t_e1);
+       typing_extensional gxx' gx'x e1;
+       assert(typing gx'x e1 == Some t_e1);
+       substitution_preserves_typing x t_x e1 t_e1 v gx'
+
 val preservation : e:exp -> e':exp -> t:ty
                 -> Lemma
                      (requires (typing empty e == Some t /\ step e == Some e'))
@@ -286,12 +293,12 @@ let rec preservation e e' t =
      then let TArrow targ _ = t1 in
           (if is_value e2
            then let EAbs x _ ebody = e1 in
-                typing_extensional (extend empty x targ) (append (extend empty x targ) empty) ebody;
-                substitution_preserves_typing x targ ebody t e2 empty empty;
-                typing_extensional (append empty empty) empty (subst x e2 ebody)
+                typing_extensional (extend empty x targ) (extend empty x targ) ebody;
+                substitution_preserves_typing x targ ebody t e2 empty;
+                typing_extensional empty empty (subst x e2 ebody)
            else preservation e2 (Some.v (step e2)) targ)
      else preservation e1 (Some.v (step e1)) t1
-                       
+
   | EIf e1 _ _ ->
       if is_value e1
       then ()
