@@ -205,7 +205,6 @@ let bad_projector x = Some.v x (* should fail *)
 val short_circuit1: x:option int{is_Some x /\ Some.v x = 0} -> nat
 let short_circuit1 x = Some.v x
 
-
 (* TESTING skolem variables for lambdas *)
 
 val apply : (int -> Tot int) -> int -> Tot int
@@ -233,9 +232,7 @@ let test_skolem_let x =
   let found = find (fun y -> x=0) [x] in
   is_Some found
 
-
 (* TESTING implicit binding of conditionally total function arguments *)
-
 assume val id_wrap1: x:int -> Pure int (requires True) (ensures (fun y -> x=y))
 assume val id_wrap2: x:int -> Pure int (requires True) (ensures (fun y -> x=y))
 
@@ -253,3 +250,23 @@ let rec idl l = match l with
 assume val st_id_wrap: x:int -> ST int (requires (fun h -> True)) (ensures (fun h0 y h1 -> x=y))
 val st_f: l:int -> ST int (requires (fun h -> True)) (ensures (fun h0 m h1 -> m = l))
 let st_f l = st_id_wrap (st_id_wrap l)
+
+(* Auto-induction *)
+val factorial: nat -> Tot nat
+let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
+
+val factorial_is_positive: x:nat -> Lemma (ensures (factorial x > 0))
+let rec factorial_is_positive x = using_induction_hyp factorial_is_positive
+
+val length: list 'a -> Tot int
+let rec length = function
+  | [] -> 0
+  | _::tl -> 1 + length tl
+
+val length_is_nat: l:list int -> Lemma (ensures (length l >= 0))
+let rec length_is_nat l = using_induction_hyp length_is_nat
+
+val poly_length_is_nat: l:list 'a -> Lemma (ensures (length l >= 0))
+let rec poly_length_is_nat 'a l = using_induction_hyp (poly_length_is_nat 'a)
+
+

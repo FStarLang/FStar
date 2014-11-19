@@ -318,6 +318,12 @@ type pattern = {
  }
 exception Let_rec_unencodeable of string
 
+let is_lemma t =  match (Util.compress_typ t).n with 
+    | Typ_fun(_, c) -> (match c.n with 
+        | Comp ct -> lid_equals ct.effect_name Const.lemma_lid
+        | _ -> false)
+    | _ -> false
+
 let is_smt_lemma env t = match (Util.compress_typ t).n with 
     | Typ_fun(_, c) -> (match c.n with 
         | Comp ct when (lid_equals ct.effect_name Const.lemma_lid) ->
@@ -526,8 +532,11 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
                    let t = mk_ApplyT_args head args in
                    t, vars, decls
 
-            | Typ_uvar _ -> 
-              encode_typ_term head env  
+            | Typ_uvar(uv, _) -> 
+               let ttm = Term.mk_Typ_uvar (Unionfind.uvar_id uv) in
+               let t_has_k, decls = encode_knd t.tk env ttm in //TODO: skip encoding this if it has already been encoded before
+               let d = Term.Assume(t_has_k, None) in
+               ttm, [], d::decls  
 
             | _ -> 
               let t = norm_t env t in
@@ -769,7 +778,50 @@ and encode_formula (phi:typ) (env:env_t) : term * decls_t =
     match vars with
         | [] -> t, decls
         | _ -> failwith "Unexpected labels in formula"
-        
+  
+and encode_function_type_as_formula (use_decreasing_pat:bool) (t:typ) (env:env_t) : term * decls_t = 
+    let v_or_t_pat p = match (Util.unmeta_exp p).n with
+        | Exp_app(_, [(Inl _, _); (Inr e, _)]) -> varg e
+        | Exp_app(_, [(Inl t, _)]) -> targ t
+        | _ -> failwith "Unexpected pattern term"  in
+ 
+    let rec lemma_pats p = match (Util.unmeta_exp p).n with 
+        | Exp_app(_, [_; (Inr hd, _); (Inr tl, _)]) -> v_or_t_pat hd::lemma_pats tl
+        | _ -> [] in
+
+    let binders, pre, post, patterns = match (Util.compress_typ t).n with 
+        | Typ_fun(binders, {n=Comp ct}) -> 
+           (match ct.effect_args with 
+            | [(Inl pre, _); (Inl post, _); (Inr pats, _)] -> 
+              binders, pre, post, lemma_pats pats
+            | _ -> failwith "impos")
+            
+        | _ -> failwith "Impos" in
+  
+    let vars, guards, env, decls, _ = encode_binders false binders env in 
+   
+
+    let pats, decls' = patterns |> List.map (function 
+        | Inl t, _ -> encode_formula t env
+        | Inr e, _ -> let t, _, decls = encode_exp e env in t, decls) |> List.unzip in 
+  
+  
+    let pats = 
+        if use_decreasing_pat 
+        then let rec prec_subterm (g:term) = match g.tm with 
+                | And tms -> List.collect prec_subterm tms
+                | _ -> if Util.starts_with g.as_str "(Valid (Prims.Precedes" then [g] else [] in
+            let dec_pat = guards |> List.collect prec_subterm in
+            dec_pat@pats 
+        else pats in
+
+    let env = {env with nolabels=true} in
+    let pre, decls'' = encode_formula (Util.unmeta_typ pre) env in
+    let post, decls''' = encode_formula (Util.unmeta_typ post) env in
+    let decls = decls@(List.flatten decls')@decls''@decls''' in 
+
+    mkForall(pats, vars, mkImp(mk_and_l (pre::guards), post)), decls
+
 and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t = (* expects phi to be normalized; the existential variables are all labels *)
     let enc (f:list<term> -> term) : args -> term * labels * decls_t = fun l -> 
         let (vars, decls), args = Util.fold_map (fun (vars, decls) x -> match fst x with 
@@ -842,6 +894,12 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
                let lphi = Term.mkOr(lterm, phi) in
                lphi, (lvar, msg)::labs, decls
         
+        | Typ_app({n=Typ_const ih}, [(Inl phi, _)]) when lid_equals ih.v Const.using_IH -> 
+            if is_lemma phi
+            then let f, decls = encode_function_type_as_formula true phi env in
+                 f, [], decls
+            else Term.mkTrue, [], []
+            
         | _ -> 
             let tt, ex_vars, decls = encode_typ_term phi env in
             close env ex_vars <| Term.mk_Valid tt, [], decls in
@@ -859,8 +917,6 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
     let phi = Util.compress_typ phi in
     match Util.destruct_typ_as_formula phi with
         | None -> 
-          if Tc.Env.debug env.tcenv (Options.Other "1110")
-          then Util.fprint2 ">>>> Not a formula (%s) %s ... falling back\n" (Print.tag_of_typ phi) (Print.typ_to_string phi);
           fallback phi
         
         | Some (Util.BaseConn(op, arms)) -> 
@@ -952,7 +1008,10 @@ let primitive_type_axioms : lident -> term -> list<decl> =
          Term.Assume(mkForall([Term.boxInt b], [bb], Term.mk_HasType false (Term.boxInt b) tt),    Some "int typing");
          Term.Assume(mkForall([precedes], [aa;bb], mkIff(precedes, mk_and_l [Term.mkGTE(a, Term.mkInteger 0);
                                                                              Term.mkGTE(b, Term.mkInteger 0);
-                                                                             Term.mkLT(a, b)])), Some "Well-founded ordering on nats")] in
+                                                                             Term.mkLT(a, b)])), Some "Well-founded ordering on nats");
+         Term.Assume(mkForall([typing_pred], [xx], mkImp(Term.mkAnd(typing_pred, Term.mkGT (Term.unboxInt x, Term.mkInteger 0)),
+                                                         Term.mk_Valid <| mkApp("Precedes", [Term.boxInt <| Term.mkSub(Term.unboxInt x, Term.mkInteger 1); x]))), 
+                                                            Some "well-founded ordering on nat (alt)")] in
     let mk_int_alias : term -> decls_t = fun tt -> 
         [Term.Assume(mkEq(tt, mkFreeV(Const.int_lid.str, Type_sort)), Some "mapping to int; for now")] in
     let mk_str : term -> decls_t  = fun tt -> 
@@ -1251,32 +1310,8 @@ and declare_top_level_let env x t t_norm =
             (n, x), [], env
 
 and encode_smt_lemma env lid t = 
-    let v_or_t_pat p = match (Util.unmeta_exp p).n with
-        | Exp_app(_, [(Inl _, _); (Inr e, _)]) -> varg e
-        | Exp_app(_, [(Inl t, _)]) -> targ t
-        | _ -> failwith "Unexpected pattern term"  in
-    let rec lemma_pats p = match (Util.unmeta_exp p).n with 
-        | Exp_app(_, [_; (Inr hd, _); (Inr tl, _)]) -> v_or_t_pat hd::lemma_pats tl
-        | _ -> [] in
-
-    let binders, pre, post, patterns = match (Util.compress_typ t).n with 
-        | Typ_fun(binders, {n=Comp ct}) -> 
-           (match ct.effect_args with 
-            | [(Inl pre, _); (Inl post, _); (Inr pats, _)] -> 
-              binders, pre, post, lemma_pats pats
-            | _ -> failwith "impos")
-            
-        | _ -> failwith "Impos" in
-    let vars, guards, env, decls, _ = encode_binders false binders env in 
-    let pats, decls' = patterns |> List.map (function 
-        | Inl t, _ -> encode_formula t env
-        | Inr e, _ -> let t, _, decls = encode_exp e env in t, decls) |> List.unzip in 
-    let env = {env with nolabels=true} in
-    let pre, decls'' = encode_formula (Util.unmeta_typ pre) env in
-    let post, decls''' = encode_formula (Util.unmeta_typ post) env in
-    (Term.Assume(mkForall(pats, vars, mkImp(mk_and_l (pre::guards), post)),
-                Some ("Lemma: " ^ lid.str))
-    ::decls@decls@(List.flatten decls')@decls''@decls''')
+    let form, decls = encode_function_type_as_formula false t env in 
+    decls@[Term.Assume(form, Some ("Lemma: " ^ lid.str))]
 
 and encode_free_var env lid tt t_norm quals = 
     if not <| Util.is_pure_function t_norm || is_smt_lemma env t_norm

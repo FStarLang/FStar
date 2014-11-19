@@ -557,9 +557,12 @@ and tc_value env e : exp * comp =
                                             Syntax.mk_Typ_app(precedes, [varg dec; varg prev_dec]) kun r
 
                                         | _ -> (* default measure is lex-tuple of non-type and non-function-typed arguments, in order *)
-                                            let actual_args = Util.args_of_binders actuals |> snd |> filter_types_and_functions |> Util.mk_lex_list in
-                                            let formal_args = Util.args_of_binders (bs@[v_binder y]) |> snd |> filter_types_and_functions |> Util.mk_lex_list in
-                                            Syntax.mk_Typ_app(precedes, [varg formal_args; varg actual_args]) kun r in
+                                            let actual_args = Util.args_of_binders actuals |> snd |> filter_types_and_functions in 
+                                            let formal_args = Util.args_of_binders (bs@[v_binder y]) |> snd |> filter_types_and_functions in
+                                            let lhs, rhs = match formal_args, actual_args with 
+                                                | [f], [a] -> f, a
+                                                | _ -> Util.mk_lex_list formal_args, Util.mk_lex_list actual_args in
+                                            Syntax.mk_Typ_app(precedes, [varg lhs; varg rhs]) kun r in
 
                                     let refined_domain = mk_Typ_refine(y, precedes) kun r in
                                     let bs = bs@[Inr({x with sort=refined_domain}), imp] in

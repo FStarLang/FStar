@@ -133,11 +133,7 @@ let canonical_forms_fun e t1 t2 = ()
 val progress : e:exp -> Lemma
       (requires (is_Some (typing empty e)))
       (ensures (is_value e \/ (is_Some (step e))))
-let rec progress e =
-  match e with
-  | EApp e1 e2 -> progress e1; progress e2
-  | EIf e1 e2 e3 -> progress e1; progress e2; progress e3
-  | _ -> ()
+let rec progress e = using_induction_hyp progress
 
 val appears_free_in : x:int -> e:exp -> Tot bool
 let rec appears_free_in x e =

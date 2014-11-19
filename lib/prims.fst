@@ -513,14 +513,14 @@ let fst x = MkTuple2._1 x
 val snd : ('a * 'b) -> Tot 'b
 let snd x = MkTuple2._2 x
 
+logic type InductionHyp : Type -> Type
+assume val using_induction_hyp: 'a -> Lemma (ensures (InductionHyp 'a))
 assume val Assume: 'P:Type -> unit -> (y:unit{'P})
 assume val admit: unit -> Admit unit
 assume val admitP: 'P:Type -> unit -> Pure unit True (fun x -> 'P)
 assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
 assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> 'P)
 assume val qintro: a:Type -> p:(a -> Type) -> (x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
-assume val lemma : 'P:Type -> x:unit{'P} -> z:unit{'P}
-assume val unreachable : x:unit{LBL "unreachable" False} -> 'a
 assume val failwith: string -> 'a (* TODO: refine with the Exn monad *)
 assume val raise: exn -> 'a       (* TODO: refine with the Exn monad *)
 assume val pipe_right: 'a -> ('a -> 'b) -> 'b
