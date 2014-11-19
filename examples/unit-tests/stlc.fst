@@ -20,6 +20,8 @@ type ty =
   | TBool  : ty
   | TArrow : ty -> ty -> ty
 
+let tidbool = TArrow TBool TBool
+
 type exp =
   | EVar   : int -> exp
   | EApp   : exp -> exp -> exp
@@ -28,6 +30,10 @@ type exp =
   | EFalse : exp
   | EIf    : exp -> exp -> exp -> exp
 
+let eidbool = EAbs 0 TBool (EVar 0)
+let eappidbool = EApp eidbool ETrue
+let enot = EAbs 0 TBool (EIf (EVar 0) EFalse ETrue)
+
 val is_value : exp -> Tot bool
 let is_value e =
   match e with
@@ -35,6 +41,9 @@ let is_value e =
   | ETrue
   | EFalse     -> true
   | _          -> false
+
+let a1 = assert(is_value eidbool)
+let a2 = assert(not (is_value eappidbool))
 
 (* Because we only consider call-by-value reduction, we will ever only
    substitute closed values, so this definition of substitution is
@@ -79,6 +88,9 @@ let rec step e =
         | None     -> None)
   | _ -> None
 
+let a3 = assert (step eappidbool = Some ETrue)
+let a4 = assert (step (EApp ETrue ETrue) = None)
+
 type env = int -> Tot (option ty)
 
 val empty : env
@@ -87,13 +99,6 @@ let empty _ = None
 val extend : env -> int -> ty -> Tot env
 let extend g x t x' = if x = x' then Some t else g x'
 
-val append: env -> env -> Tot env
-let append g1 g2 x = match g2 x with 
-  | None -> g1 x
-  | found -> found
-
-(* CH: swapped env and exp args until functions are ignored from the
-   lex ordering or until we can write decreasing clauses *)
 val typing : env -> exp -> Tot (option ty)
 let rec typing g e =
   match e with
@@ -123,19 +128,18 @@ val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Lemma
       (ensures (is_EAbs e))
 let canonical_forms_fun e t1 t2 = ()
 
-val progress : e:exp -> t:ty -> Lemma
-      (requires (typing empty e == Some t))
+val progress : e:exp -> Lemma
+      (requires (is_Some (typing empty e)))
       (ensures (is_value e \/ (is_Some (step e))))
-let rec progress e t =
+let rec progress e =
   match e with
   | EApp e1 e2 ->
-     let Some (TArrow t1 t2) = typing empty e1 in
-     progress e1 (TArrow t1 t2);
-     progress e2 t1
+     progress e1;
+     progress e2
   | EIf e1 e2 e3 ->
-     progress e1 TBool;
-     progress e2 t;
-     progress e3 t
+     progress e1;
+     progress e2;
+     progress e3
   | _ -> ()
 
 val appears_free_in : x:int -> e:exp -> Tot bool
@@ -209,6 +213,12 @@ val typing_extensional : g:env -> g':env -> e:exp
                            (requires (Equal g g'))
                            (ensures (typing g e == typing g' e))
 let typing_extensional g g' e = context_invariance e g g'
+
+(* CH: TODO: Try to simplify substitution lemma and get rid of append*)
+val append: env -> env -> Tot env
+let append g1 g2 x = match g2 x with
+  | None -> g1 x
+  | found -> found
 
 val substitution_preserves_typing :
       x:int -> t_x:ty -> e:exp -> t_e:ty -> v:exp -> g1:env -> g2:env
