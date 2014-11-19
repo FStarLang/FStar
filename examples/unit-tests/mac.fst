@@ -15,7 +15,6 @@
 *)
 
 module MacIdeal 
-open Array
 type bytes    = list byte
 type text     = bytes
 type nbytes (n:nat) = b:bytes{List.length b == n}
