@@ -28,7 +28,6 @@ val app: l1:mlist -> l2:mlist -> Pure mlist
 let rec app l1 l2 = match l1 with
   | [] -> l2
   | x::tl1 ->
-    (* TODO: inlining function call doesn't verify *)
     let r = app tl1 l2 in
     x::r
 
@@ -45,8 +44,16 @@ opaque type split_inv (l:mlist) (l1:mlist) (l2:mlist) =
     (* needed for decreases clause in mergesort function *)
     length l > length l1 /\ length l > length l2
 
-assume val split: l:mlist -> Pure (mlist * mlist) (requires True)
-	                     (ensures (fun r -> split_inv l (fst r) (snd r)))
+val split: l:mlist -> Pure (mlist * mlist)
+                           (requires (is_Cons l /\ is_Cons (Cons.tl l)))
+	                   (ensures (fun r -> split_inv l (fst r) (snd r)))
+let rec split (x::y::l) =
+  match l with
+    | [] -> [x], [y]
+    | [x'] -> x::[x'], [y]
+    | _ ->
+      let l1, l2 = split l in
+      x::l1, y::l2
 
 type merge_inv (l1:mlist) (l2:mlist) (l:mlist) = (is_Cons l1 /\ is_Cons l /\ Cons.hd l1 = Cons.hd l) \/
                                                  (is_Cons l2 /\ is_Cons l /\ Cons.hd l2 = Cons.hd l) \/
@@ -78,3 +85,4 @@ let rec mergesort l = match l with
     let sl1 = mergesort l1 in
     let sl2 = mergesort l2 in
     merge sl1 sl2
+
