@@ -1472,10 +1472,10 @@ let solve tcenv q =
         let ok, errs = Z3.ask bg labels (with_fuel !Options.initial_fuel) in
         let retry n = Z3.ask [] labels (with_fuel n) in
         if ok then ok, errs
-        else let ok, _ = retry !Options.max_fuel in 
+        else let ok, _ = if !Options.max_fuel > !Options.initial_fuel then retry !Options.max_fuel else false, [] in 
              if ok then ok, []
              else match errs with 
-                    | [] -> retry !Options.min_fuel (* don't have an error message .. try with less fuel *)
+                    | [] -> if !Options.min_fuel <> !Options.initial_fuel then retry !Options.min_fuel else false, [] (* don't have an error message .. try with less fuel *)
                     | _ -> false, errs  in
 
     let result = check () in 

@@ -55,14 +55,15 @@ let rec split (x::y::l) =
       let l1, l2 = split l in
       x::l1, y::l2
 
-type merge_inv (l1:mlist) (l2:mlist) (l:mlist) = (is_Cons l1 /\ is_Cons l /\ Cons.hd l1 = Cons.hd l) \/
-                                                 (is_Cons l2 /\ is_Cons l /\ Cons.hd l2 = Cons.hd l) \/
-                                                 (is_Nil l1 /\ is_Nil l2 /\ is_Nil l)
+opaque type merge_inv (l1:mlist) (l2:mlist) (l:mlist) = (is_Cons l1 /\ is_Cons l /\ Cons.hd l1 = Cons.hd l) \/
+                                                        (is_Cons l2 /\ is_Cons l /\ Cons.hd l2 = Cons.hd l) \/
+                                                        (is_Nil l1 /\ is_Nil l2 /\ is_Nil l)
 
 val merge: l1:mlist -> l2:mlist -> Pure mlist
                                    (requires (sorted l1 /\ sorted l2))
-                                   (ensures (fun l -> sorted l /\ permutation_2 l l1 l2 /\
-                                    merge_inv l1 l2 l))
+                                   (ensures (fun l -> sorted l 
+                                                      /\ permutation_2 l l1 l2 
+                                                      /\ merge_inv l1 l2 l))
 let rec merge l1 l2 = match (l1, l2) with
   | [], _ -> l2
   | _, [] -> l1
