@@ -1226,14 +1226,16 @@ let subtype env t1 t2 : guard_t =
     | None -> subtype_fail env t1 t2
 
 let trivial_subtype env eopt t1 t2 = 
-  let f = try_subtype env t1 t2 in 
-  match f with 
-    | Some Trivial -> ()
-    | None 
-    | Some (NonTrivial _) ->  
-      let r = Tc.Env.get_range env in
-      raise (Error(Tc.Errors.basic_type_error env eopt t2 t1, r))
-
+ if debug env <| Other "Rel" then Util.fprint2 "try_subtype of %s and %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
+ let err () =
+    let r = Tc.Env.get_range env in
+    raise (Error(Tc.Errors.basic_type_error env eopt t2 t1, r)) in
+ let sol = solve env (singleton (TProb(true, SUB, t1, t2)) (Some t1)) in
+ match sol with 
+    | Success (s, Trivial) -> commit env s 
+    | Success _ -> err()
+    | Failed d -> explain env d; err()
+        
 let sub_comp env c1 c2 = 
   if debug env <| Other "Rel" then Util.fprint2 "sub_comp of %s and %s\n" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2);
   let gopt = solve_and_commit env None (CProb(true, SUB, c1, c2))
