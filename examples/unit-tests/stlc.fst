@@ -29,6 +29,7 @@ type exp =
   | ETrue  : exp
   | EFalse : exp
   | EIf    : exp -> exp -> exp -> exp
+  | ELet  : int -> exp -> exp -> exp
 
 let eidbool = EAbs 0 TBool (EVar 0)
 let eappidbool = EApp eidbool ETrue
@@ -58,6 +59,7 @@ let rec subst x e e' =
   | ETrue -> ETrue
   | EFalse -> EFalse
   | EIf e1 e2 e3 -> EIf (subst x e e1) (subst x e e2) (subst x e e3)
+  | ELet x' e1 e2 -> ELet x e1 (if x = x' then e2 else subst x e e2)
 
 val step : exp -> Tot (option exp)
 let rec step e =
@@ -86,6 +88,12 @@ let rec step e =
         (match (step e1) with
         | Some e1' -> Some (EIf e1' e2 e3)
         | None     -> None)
+  | ELet x e1 e2 ->
+      if is_value e1 then Some (subst x e1 e2)
+      else
+        (match step e1 with
+        | Some e1' -> Some (ELet x e1' e2)
+        | None     -> None)
   | _ -> None
 
 let a3 = assert (step eappidbool = Some ETrue)
@@ -111,12 +119,16 @@ let rec typing g e =
       (match typing g e1, typing g e2 with
       | Some (TArrow t11 t12), Some t2 -> if t11 = t2 then Some t12 else None
       | _                    , _       -> None)
-  | ETrue  -> Some TBool
+  | ETrue
   | EFalse -> Some TBool
   | EIf e1 e2 e3 ->
       (match typing g e1, typing g e2, typing g e3 with
       | Some TBool, Some t2, Some t3 -> if t2 = t3 then Some t2 else None
       | _         , _      , _       -> None)
+  | ELet x e1 e2 ->
+      (match typing g e1 with
+      | Some t -> typing (extend g x t) e2
+      | None -> None)
 
 (* These canonical forms lemmas are traditionally used for manual
    progress proofs; they are not used by the automated proof below *)
@@ -143,6 +155,7 @@ let rec appears_free_in x e =
   | EAbs y _ e1 -> x <> y && appears_free_in x e1
   | EIf e1 e2 e3 ->
       appears_free_in x e1 || appears_free_in x e2 || appears_free_in x e3
+  | ELet y e1 e2 -> appears_free_in x e1 || (x <> y && appears_free_in x e2)
   | ETrue
   | EFalse -> false (* NS: writing default cases for recursive functions is bad for the solver. TODO: fix *)
 
@@ -174,6 +187,11 @@ let rec free_in_context x e g =
      else if appears_free_in x e2 then free_in_context x e2 g
      else                              free_in_context x e3 g
 
+  | ELet y e1 e2 ->
+     if appears_free_in x e1 then free_in_context x e1 g
+     else if x = y then ()
+          else  free_in_context x e2 (extend g y (Some.v (typing g e1)))
+
   | _ -> ()
 
 (* The proof above can be made smaller if we move the quantification
@@ -191,6 +209,9 @@ let rec free_in_context' e g =
       free_in_context' e1 g;
       free_in_context' e2 g;
       free_in_context' e3 g
+  | ELet y e1 e2 ->
+      free_in_context' e1 g;  
+      free_in_context' e2 (extend g y (Some.v (typing g e1)))
   | _ -> ()
 
 (* Corollary of free_in_context when g=empty -- fed to the SMT solver *)
@@ -233,6 +254,11 @@ let rec context_invariance e g g' =
      context_invariance e1 g g';
      context_invariance e2 g g';
      context_invariance e3 g g'
+
+  | ELet x e1 e2 ->
+     (context_invariance e1 g g';
+     let Some t = typing g e1 in   
+     context_invariance e2 (extend g x t) (extend g' x t))
 
   | _ -> ()
 
@@ -281,6 +307,8 @@ let rec substitution_preserves_typing x t_x e t_e v g =
          substitution_preserves_typing x t_x e1 t_e1 v gx'
        end
 
+  | ELet x e1 e2 -> admit()
+
 val preservation : e:exp -> e':exp -> t:ty
                 -> Lemma
                      (requires (typing empty e == Some t /\ step e == Some e'))
@@ -301,3 +329,5 @@ let rec preservation e e' t =
       if is_value e1
       then ()
       else preservation e1 (Some.v (step e1)) TBool
+
+  | ELet x e1 e2 -> admit()
