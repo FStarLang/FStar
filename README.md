@@ -79,7 +79,7 @@ This section describes the general structure of the F* verifier.
                using the command line.
      
      VS/FStar.sln:
-        A Visual Studio (2012) solution file for all the F* sources.
+        A Visual Studio (2013) solution file for all the F* sources.
 
      fstar.fs: The top-level file in the source tree that launches the
                verification tool.
