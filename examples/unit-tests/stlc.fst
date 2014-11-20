@@ -59,7 +59,7 @@ let rec subst x e e' =
   | ETrue -> ETrue
   | EFalse -> EFalse
   | EIf e1 e2 e3 -> EIf (subst x e e1) (subst x e e2) (subst x e e3)
-  | ELet x' e1 e2 -> ELet x e1 (if x = x' then e2 else subst x e e2)
+  | ELet x' e1 e2 -> ELet x' (subst x e e1) (if x = x' then e2 else subst x e e2)
 
 val step : exp -> Tot (option exp)
 let rec step e =
@@ -294,20 +294,27 @@ let rec substitution_preserves_typing x t_x e t_e v g =
      substitution_preserves_typing x t_x e2 t_e v g;
      substitution_preserves_typing x t_x e3 t_e v g
 
-  | EAbs x' t' e1 ->
-     let TArrow _ t_e1 = t_e in
-     let gxx' = extend gx x' t' in
-     let gx' = extend g x' t' in
-     let gx'x = extend gx' x t_x in
-     if x=x'
-     then typing_extensional gxx' gx' e1
+  | EAbs y t_y e1 ->
+     let gxy = extend gx y t_y in
+     let gy = extend g y t_y in
+     if x=y
+     then typing_extensional gxy gy e1
      else
-       begin
-         typing_extensional gxx' gx'x e1;
-         substitution_preserves_typing x t_x e1 t_e1 v gx'
-       end
+       (let gyx = extend gy x t_x in
+        typing_extensional gxy gyx e1;
+        let TArrow _ t_e1 = t_e in
+        substitution_preserves_typing x t_x e1 t_e1 v gy)
 
-  | ELet x e1 e2 -> admit()
+  | ELet y e1 e2 ->
+     (let Some t1 = typing gx e1 in
+     let gxy = extend gx y t1 in
+     let gy = extend g y t1 in
+     substitution_preserves_typing x t_x e1 t1 v g;
+     if x=y then typing_extensional gxy gy e2
+     else
+       (let gyx = extend gy x t_x in
+        typing_extensional gxy gyx e2;
+        substitution_preserves_typing x t_x e2 t_e v gy))
 
 val preservation : e:exp -> e':exp -> t:ty
                 -> Lemma
@@ -330,4 +337,7 @@ let rec preservation e e' t =
       then ()
       else preservation e1 (Some.v (step e1)) TBool
 
-  | ELet x e1 e2 -> admit()
+  | ELet x e1 e2 ->
+      (let Some t_e1 = typing empty e1 in
+       if is_value e1 then substitution_preserves_typing x t_e1 e2 t e1 empty
+       else preservation e1 (Some.v (step e1)) t_e1)
