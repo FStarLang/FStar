@@ -146,10 +146,18 @@ let rec appears_free_in x e =
   | ETrue
   | EFalse -> false (* NS: writing default cases for recursive functions is bad for the solver. TODO: fix *)
 
+(* Didn't manage to use auto-induction for free_in_context: 
+   WARNING: pattern does not contain all quantified variables.
+   + Z3 didn't manage to prove easy cases automatically.
+   Any way we can specify the pattern by hand? What would be a good one here?
+   I've tried adding 
+      [SMTPat (appears_free_in x e); SMTPat (is_Some (typing g e))]
+   to the whole lemma. That removed the warning, but EApp case still failed. *)
 val free_in_context : x:int -> e:exp -> g:env -> Lemma
       (requires (appears_free_in x e /\ is_Some (typing g e)))
       (ensures (is_Some (g x)))
 let rec free_in_context x e g =
+(*  using_induction_hyp free_in_context;*)
   match e with
   | EAbs y t e1 ->
      if x = y
@@ -171,8 +179,7 @@ let rec free_in_context x e g =
 (* The proof above can be made smaller if we move the quantification
    of x and the appears_free_in x e premise to the conclusion, since
    there is less manual instantiation left to do.  This kind of
-   optimization might become irrelevant once we have automatic
-   induction. *)
+   optimization might become irrelevant with automatic induction? *)
 val free_in_context' : e:exp -> g:env -> Lemma
       (requires (is_Some (typing g e)))
       (ensures (forall (x:int). appears_free_in x e ==> is_Some (g x)))
@@ -198,11 +205,22 @@ opaque logic type Equal (g1:env) (g2:env) =
 opaque logic type EqualE (e:exp) (g1:env) (g2:env) =
                  (forall (x:int). appears_free_in x e ==> g1 x=g2 x)
 
+(* Didn't manage to use auto-induction for context_invariance: 
+   WARNING: pattern does not contain all quantified variables.
+   + Z3 didn't manage to prove easy things automatically.
+   Any way we can specify the pattern by hand? What would be a good one here? *)
 val context_invariance : e:exp -> g:env -> g':env
                      -> Lemma
                           (requires (EqualE e g g'))
                           (ensures (typing g e == typing g' e))
+(* Tried this pattern for the whole lemma
+      [SMTPat (EqualE e g g')]
+   but got this error:
+      Expected type "pattern";
+      got type "(_1:(EqualE e g g') -> Tot pattern)"
+*)
 let rec context_invariance e g g' =
+(*  using_induction_hyp context_invariance; *)
   match e with
   | EAbs x t e1 ->
      context_invariance e1 (extend g x t) (extend g' x t)
@@ -223,11 +241,6 @@ val typing_extensional : g:env -> g':env -> e:exp
                            (requires (Equal g g'))
                            (ensures (typing g e == typing g' e))
 let typing_extensional g g' e = context_invariance e g g'
-
-val swap : x:int -> x':int -> t:ty -> t':ty -> g:env -> Lemma
-      (requires (x<>x'))
-      (ensures (Equal (extend (extend g x t) x' t') (extend (extend g x' t') x t)))
-let swap x x' t t' g = ()
 
 val substitution_preserves_typing :
       x:int -> t_x:ty -> e:exp -> t_e:ty -> v:exp -> g:env
@@ -262,9 +275,7 @@ let rec substitution_preserves_typing x t_x e t_e v g =
      let gx'x = extend gx' x t_x in
      if x=x'
      then typing_extensional gxx' gx' e1
-     else (* used to be:
-             assert (x<>x');  <-- THAT SEMI_COLON ENDS THE if block!
-          *)
+     else
        begin
          typing_extensional gxx' gx'x e1;
          substitution_preserves_typing x t_x e1 t_e1 v gx'
