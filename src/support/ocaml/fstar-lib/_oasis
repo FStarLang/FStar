@@ -10,7 +10,7 @@ Plugins: DevFiles(0.4), META(0.4)
 Library fstar
   Path: src
   FindLibName: fstar
-  Modules: Maps, Sets, Utf8, Types, Support
+  Modules: Utf8, Types, Support
   BuildDepends: batteries
   Pack: true
   CompiledObject: best
