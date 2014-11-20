@@ -19,6 +19,7 @@ module Stlc
 type ty =
   | TBool  : ty
   | TArrow : ty -> ty -> ty
+  | TPair  : ty -> ty -> ty
 
 let tidbool = TArrow TBool TBool
 
@@ -29,19 +30,23 @@ type exp =
   | ETrue  : exp
   | EFalse : exp
   | EIf    : exp -> exp -> exp -> exp
-  | ELet  : int -> exp -> exp -> exp
+  | EPair  : exp -> exp -> exp
+  | EFst   : exp -> exp
+  | ESnd   : exp -> exp
+  | ELet   : int -> exp -> exp -> exp
 
 let eidbool = EAbs 0 TBool (EVar 0)
 let eappidbool = EApp eidbool ETrue
 let enot = EAbs 0 TBool (EIf (EVar 0) EFalse ETrue)
 
 val is_value : exp -> Tot bool
-let is_value e =
+let rec is_value e =
   match e with
   | EAbs _ _ _
   | ETrue
-  | EFalse     -> true
-  | _          -> false
+  | EFalse      -> true
+  | EPair e1 e2 -> is_value e1 && is_value e2
+  | _           -> false
 
 let a1 = assert(is_value eidbool)
 let a2 = assert(not (is_value eappidbool))
@@ -59,6 +64,9 @@ let rec subst x e e' =
   | ETrue -> ETrue
   | EFalse -> EFalse
   | EIf e1 e2 e3 -> EIf (subst x e e1) (subst x e e2) (subst x e e3)
+  | EPair e1 e2 -> EPair (subst x e e1) (subst x e e2)
+  | EFst e1 -> EFst (subst x e e1)
+  | ESnd e1 -> ESnd (subst x e e1)
   | ELet x' e1 e2 -> ELet x' (subst x e e1) (if x = x' then e2 else subst x e e2)
 
 val step : exp -> Tot (option exp)
@@ -87,6 +95,35 @@ let rec step e =
       else
         (match (step e1) with
         | Some e1' -> Some (EIf e1' e2 e3)
+        | None     -> None)
+  | EPair e1 e2 ->
+      if is_value e1 then
+        if is_value e2 then None
+        else
+          (match (step e2) with
+          | Some e2' -> Some (EPair e1 e2')
+          | None     -> None)
+      else
+        (match (step e1) with
+        | Some e1' -> Some (EPair e1' e2)
+        | None     -> None)
+  | EFst e1 ->
+      if is_value e1 then
+        (match e1 with
+        | EPair v1 v2 -> Some v1
+        | _           -> None)
+      else
+        (match (step e1) with
+        | Some e1' -> Some (EFst e1')
+        | None     -> None)
+  | ESnd e1 ->
+      if is_value e1 then
+        (match e1 with
+        | EPair v1 v2 -> Some v2
+        | _           -> None)
+      else
+        (match (step e1) with
+        | Some e1' -> Some (ESnd e1')
         | None     -> None)
   | ELet x e1 e2 ->
       if is_value e1 then Some (subst x e1 e2)
@@ -125,6 +162,18 @@ let rec typing g e =
       (match typing g e1, typing g e2, typing g e3 with
       | Some TBool, Some t2, Some t3 -> if t2 = t3 then Some t2 else None
       | _         , _      , _       -> None)
+  | EPair e1 e2 ->
+      (match typing g e1, typing g e2 with
+      | Some t1, Some t2 -> Some (TPair t1 t2)
+      | _      , _       -> None)
+  | EFst e1 ->
+      (match typing g e1 with
+      | Some (TPair t1 t2) -> Some t1
+      | _                  -> None)
+  | ESnd e1 ->
+      (match typing g e1 with
+      | Some (TPair t1 t2) -> Some t2
+      | _                  -> None)
   | ELet x e1 e2 ->
       (match typing g e1 with
       | Some t -> typing (extend g x t) e2
@@ -155,9 +204,12 @@ let rec appears_free_in x e =
   | EAbs y _ e1 -> x <> y && appears_free_in x e1
   | EIf e1 e2 e3 ->
       appears_free_in x e1 || appears_free_in x e2 || appears_free_in x e3
-  | ELet y e1 e2 -> appears_free_in x e1 || (x <> y && appears_free_in x e2)
   | ETrue
-  | EFalse -> false (* NS: writing default cases for recursive functions is bad for the solver. TODO: fix *)
+  | EFalse -> false (* NS: writing default cases for recursive functions is bad for the solver. TODO: fix CH: Agreed, although in this case it's better not to have a default *)
+  | EPair e1 e2 -> appears_free_in x e1 || appears_free_in x e2
+  | EFst e1 -> appears_free_in x e1
+  | ESnd e1 -> appears_free_in x e1
+  | ELet y e1 e2 -> appears_free_in x e1 || (x <> y && appears_free_in x e2)
 
 (* Didn't manage to use auto-induction for free_in_context: 
    WARNING: pattern does not contain all quantified variables.
@@ -187,6 +239,13 @@ let rec free_in_context x e g =
      else if appears_free_in x e2 then free_in_context x e2 g
      else                              free_in_context x e3 g
 
+  | EPair e1 e2 ->
+      if appears_free_in x e1 then free_in_context x e1 g
+      else free_in_context x e2 g
+
+  | EFst e1
+  | ESnd e1 -> free_in_context x e1 g
+
   | ELet y e1 e2 ->
      if appears_free_in x e1 then free_in_context x e1 g
      else if x = y then ()
@@ -209,6 +268,11 @@ let rec free_in_context' e g =
       free_in_context' e1 g;
       free_in_context' e2 g;
       free_in_context' e3 g
+  | EPair e1 e2 ->
+      free_in_context' e1 g;
+      free_in_context' e2 g
+  | EFst e1
+  | ESnd e1 -> free_in_context' e1 g
   | ELet y e1 e2 ->
       free_in_context' e1 g;  
       free_in_context' e2 (extend g y (Some.v (typing g e1)))
@@ -255,11 +319,19 @@ let rec context_invariance e g g' =
      context_invariance e2 g g';
      context_invariance e3 g g'
 
+  | EPair e1 e2 ->
+     context_invariance e1 g g';
+     context_invariance e2 g g'
+ 
+  | EFst e1
+  | ESnd e1 -> context_invariance e1 g g'
+
   | ELet x e1 e2 ->
      (context_invariance e1 g g';
      match typing g e1 with
      | Some t -> context_invariance e2 (extend g x t) (extend g' x t)
      | None -> ())
+
   | _ -> ()
 
 val typing_extensional : g:env -> g':env -> e:exp
@@ -282,10 +354,10 @@ let rec substitution_preserves_typing x t_x e t_e v g =
   | EVar x' ->
      if x=x'
      then context_invariance v empty g (* uses lemma typable_empty_closed *)
-     else context_invariance e gx g (* no substitution, but need to show that x:t_x is removable *)
+     else context_invariance e gx g
 
   | EApp e1 e2 ->
-     let Some (TArrow t1 t2) = typing (extend g x t_x) e1 in
+     let Some (TArrow t1 t2) = typing gx e1 in
      substitution_preserves_typing x t_x e1 (TArrow t1 t2) v g;
      substitution_preserves_typing x t_x e2 t1 v g
 
@@ -304,6 +376,14 @@ let rec substitution_preserves_typing x t_x e t_e v g =
         typing_extensional gxy gyx e1;
         let TArrow _ t_e1 = t_e in
         substitution_preserves_typing x t_x e1 t_e1 v gy)
+
+  | EPair e1 e2 ->
+     (substitution_preserves_typing x t_x e1 (Some.v (typing gx e1)) v g;
+      substitution_preserves_typing x t_x e2 (Some.v (typing gx e2)) v g)
+
+  | EFst e1
+  | ESnd e1 ->
+      substitution_preserves_typing x t_x e1 (Some.v (typing gx e1)) v g
 
   | ELet y e1 e2 ->
      (let Some t1 = typing gx e1 in
@@ -333,9 +413,20 @@ let rec preservation e e' t =
      else preservation e1 (Some.v (step e1)) t1
 
   | EIf e1 _ _ ->
-      if is_value e1
-      then ()
+      if is_value e1 then ()
       else preservation e1 (Some.v (step e1)) TBool
+
+  | EPair e1 e2 ->
+      (match is_value e1, is_value e2 with
+      | false, _    -> preservation e1 (Some.v (step e1))
+                                       (Some.v (typing empty e1))
+      | true, false -> preservation e2 (Some.v (step e2))
+                                       (Some.v (typing empty e2)))
+
+  | EFst e1
+  | ESnd e1 ->
+      if is_value e1 then ()
+      else preservation e1 (Some.v (step e1)) (Some.v (typing empty e1))
 
   | ELet x e1 e2 ->
       (let Some t_e1 = typing empty e1 in
