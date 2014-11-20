@@ -29,6 +29,7 @@ end
 
 
 module List : sig
+  val mem : 'a -> 'a list -> bool
   val hd : 'a list -> 'a
   val tl : 'a list -> 'a list
   val nth : 'a list -> int -> 'a
@@ -218,6 +219,12 @@ module Microsoft : sig
       type opt_variant =
         | ZeroArgs of (unit -> unit)
         | OneArg of (string -> unit) * string
+      type opt = char * string * opt_variant * string
+      type parse_cmdline_res =
+        | Help
+        | Die of string
+        | GoOn
+      val parse_cmdline: opt list -> (string -> 'a) -> parse_cmdline_res
     end
     module Range : sig
       type range = BatInt64.t
