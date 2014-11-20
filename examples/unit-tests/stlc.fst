@@ -293,9 +293,7 @@ let rec preservation e e' t =
      then let TArrow targ _ = t1 in
           (if is_value e2
            then let EAbs x _ ebody = e1 in
-                typing_extensional (extend empty x targ) (extend empty x targ) ebody;
-                substitution_preserves_typing x targ ebody t e2 empty;
-                typing_extensional empty empty (subst x e2 ebody)
+                substitution_preserves_typing x targ ebody t e2 empty
            else preservation e2 (Some.v (step e2)) targ)
      else preservation e1 (Some.v (step e1)) t1
 
