@@ -24,7 +24,7 @@ let tail = function
   | hd::tl -> tl
   | _ -> failwith "tail of empty list"
 
-val mem: 'a -> list 'a -> Tot bool //x:'a -> l:list 'a -> b:bool{b==true <==> In x l}
+val mem: 'a -> list 'a -> Tot bool 
 let rec mem x = function
   | [] -> false
   | hd::tl -> hd=x || mem x tl

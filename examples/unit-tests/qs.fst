@@ -55,5 +55,5 @@ val sort: f:('a -> 'a -> Tot bool)
 let rec sort f = function
   | [] -> []
   | pivot::tl -> 
-    let hi', lo' = partition (f pivot) tl in 
-    sort f lo'@(pivot::sort f hi')
+    let hi, lo  = partition (f pivot) tl in 
+    sort f lo@(pivot::sort f hi)

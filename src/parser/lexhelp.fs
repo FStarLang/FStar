@@ -224,7 +224,7 @@ let keywords =
 (*------- reserved keywords which are ml-compatibility ids *) 
   @ List.map (fun s -> (FSHARP,s,RESERVED)) 
     [ "atomic"; "break"; 
-      "checked"; "component"; "const"; "constraint"; "constructor"; "continue"; 
+      "checked"; "component"; "constraint"; "constructor"; "continue"; 
       "eager"; 
       "fixed"; "functor"; "global"; 
       "include";  (* "instance"; *)

@@ -15,9 +15,39 @@
 *)
 module ST
 open Prims.STATE
+open Set
+open Heap
 
-(* stateful primitives in F*, currently just simply typed; soon to be monadically typed *)
+opaque type Modifies (mods:refs) (h:heap) (h':heap) =
+           is_SomeRefs mods ==> (Heap.equal (restrict h  (complement (SomeRefs.v mods)))
+                                            (restrict h' (complement (SomeRefs.v mods))) 
+                                 /\ (exists h''. h' == concat (restrict h (complement (SomeRefs.v mods)))
+                                                              (restrict h'' (SomeRefs.v mods))))
 
-assume val alloc: 'a -> ref 'a
-assume val read: r:ref 'a -> State 'a (fun 'p h -> forall x. x==SelHeap h r ==> 'p x h)
-assume val write: r:ref 'a -> v:'a -> State unit (fun 'p h -> forall h1. h1==UpdHeap h r v ==> 'p () h1) 
+let modifies (r:refs) = r
+kind Pre  = heap -> Type
+kind Post (a:Type) = a -> heap -> Type
+effect ST (a:Type) (pre:Pre) (post: (heap -> Post a)) (mods:refs) =
+        STATE a
+              (fun (p:Post a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ Modifies mods h h1 /\ post h a h1) ==> p a h1)) (* WP *)
+              (fun (p:Post a) (h:heap) -> (forall a h1. (pre h /\ Modifies mods h h1 /\ post h a h1) ==> p a h1))          (* WLP *)
+
+(* signatures WITHOUT permissions *)
+assume val alloc: a:Type -> init:a -> ST (ref a) 
+                                         (fun h -> True) 
+                                         (fun h0 r h1 -> not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)
+                                         (modifies no_refs)
+
+assume val read: a:Type -> r:ref a -> ST a 
+                                         (fun h -> True)
+                                         (fun h0 x h1 -> h0==h1 /\ x==sel h0 r)
+                                         (modifies no_refs)
+
+assume val write: a:Type -> r:ref a -> v:a -> ST unit 
+                                                 (fun h -> True)
+                                                 (fun h0 x h1 -> h1==upd h0 r v)
+                                                 (modifies (a_ref r))
+
+
+(* signatures WITH permissions *)
+assume logic type Perm : #a:Type -> ref a -> heap -> Type

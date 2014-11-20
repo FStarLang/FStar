@@ -129,60 +129,6 @@ type either 'a 'b =
   | Inr : v:'b -> either 'a 'b
 
 assume type heap
-assume logic val SelHeap : #'a:Type -> heap -> ref 'a -> Tot 'a
-assume logic val UpdHeap : #'a:Type -> heap -> ref 'a -> 'a -> Tot heap
-assume logic val EmpHeap : heap
-assume logic val InHeap  : #'a:Type -> heap -> ref 'a -> Tot bool
-logic type HeapEq : heap -> heap -> Type
-assume SelUpd1: forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (SelHeap (UpdHeap h x v) x)} SelHeap (UpdHeap h x v) x == v
-assume SelUpd2: forall ('a:Type) ('b:Type) (h:heap) (x:ref 'a) (y:ref 'b) (v:'b).{:pattern (SelHeap (UpdHeap h y v) x)} y=!=x ==> SelHeap (UpdHeap h y v) x == SelHeap h x
-assume InHeap1:  forall ('a:Type) (h:heap) (x:ref 'a) (v:'a).{:pattern (InHeap (UpdHeap h x v) x)} InHeap (UpdHeap h x v) x == true
-assume InHeap2:  forall ('a:Type) ('b:Type) (h:heap) (x:ref 'a) (y:ref 'b) (v:'b).{:pattern (InHeap (UpdHeap h y v) x)} y=!=x ==> InHeap (UpdHeap h y v) x == InHeap h x
-assume HeapEqDef:    forall (h1:heap) (h2:heap).{:pattern HeapEq h1 h2} (forall ('a:Type) (r:ref 'a). SelHeap h1 r == SelHeap h2 r) ==> HeapEq h1 h2
-assume HeapEqExt:    forall (h1:heap) (h2:heap).{:pattern HeapEq h1 h2} HeapEq h1 h2 ==> h1==h2
-assume HeapEqRefl:   forall (h:heap).{:pattern HeapEq h h} HeapEq h h
-
-assume type set : Type -> Type
-assume logic val EmptySet : 'a:Type -> Tot (set 'a)
-assume logic val Singleton : 'a:Type -> 'a -> Tot (set 'a)
-assume logic val Union : 'a:Type -> set 'a -> set 'a -> Tot (set 'a)
-assume logic val Intersection : 'a:Type -> set 'a -> set 'a -> Tot (set 'a)
-logic type InSet : #'a:Type -> 'a -> set 'a -> Type
-logic type SetEqual : #'a:Type -> set 'a -> set 'a -> Type
-logic type Subset : #'a:Type -> set 'a -> set 'a -> Type
-logic type SubsetEq : #'a:Type -> set 'a -> set 'a -> Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) -> (SetEqual s1 s2 \/ Subset s1 s2)
-logic type Supset   : #'a:Type -> set 'a -> set 'a -> Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) -> Subset s2 s1
-logic type SupsetEq : #'a:Type -> set 'a -> set 'a -> Type = fun ('a:Type) (s1:set 'a) (s2:set 'a) -> (SetEqual s1 s2 \/ Supset s1 s2)
-assume InEmptySet:     forall 'a (a:'a).{:pattern InSet a EmptySet} ~(InSet a EmptySet)
-assume InSingleton:    forall 'a (a:'a).{:pattern InSet a (Singleton a)} InSet a (Singleton a)
-assume InSingletonInv: forall 'a (a:'a) (b:'a).{:pattern InSet a (Singleton b)} InSet a (Singleton b) <==> a==b
-assume InUnion:        forall 'a s1 s2 (a:'a).{:pattern InSet a (Union s1 s2)} InSet a (Union s1 s2) <==> (InSet a s1 \/ InSet a s2)
-assume InUnionL:       forall 'a s1 s2 (a:'a).{:pattern InSet a (Union s1 s2)} InSet a s1 ==> InSet a (Union s1 s2)
-assume InUnionR:       forall 'a s1 s2 (a:'a).{:pattern InSet a (Union s1 s2)} InSet a s2 ==> InSet a (Union s1 s2)
-assume UnionIdemL:     forall 'a (s1:set 'a) (s2:set 'a).{:pattern Union (Union s1 s2) s2} Union (Union s1 s2) s2 == Union s1 s2
-assume UnionIdemR:     forall 'a (s1:set 'a) (s2:set 'a).{:pattern Union s1 (Union s1 s2)} Union s1 (Union s1 s2) == Union s1 s2
-(* assume InInter:        forall 'a s1 s2 (a:'a). {:pattern InSet a (Intersection s1 s2)} InSet a (Intersection s1 s2) <==> (InSet a s1 /\ InSet a s2) *)
-assume InInter:        forall 'a s1 s2 (a:'a). InSet a (Intersection s1 s2) <==> (InSet a s1 /\ InSet a s2)
-assume InterIdemL:     forall 'a (s1:set 'a) (s2:set 'a).{:pattern Intersection (Intersection s1 s2) s2}  Intersection (Intersection s1 s2) s2 == Intersection s1 s2
-assume InterdemR:      forall 'a (s1:set 'a) (s2:set 'a).{:pattern Intersection s1 (Intersection s1 s2)} Intersection s1 (Intersection s1 s2) == Intersection s1 s2
-assume SetEqualDef:    forall 'a (s1:set 'a) (s2:set 'a).{:pattern SetEqual s1 s2} (forall (a:'a). InSet a s1 <==> InSet a s2) ==> SetEqual s1 s2 
-assume SetEqualExt:    forall 'a (s1:set 'a) (s2:set 'a).{:pattern SetEqual s1 s2} SetEqual s1 s2 ==> s1==s2
-assume SetEqualExt:    forall 'a (s:set 'a).{:pattern SetEqual s s} SetEqual s s
-assume SubsetDef:      forall 'a (s1:set 'a) (s2:set 'a).{:pattern Subset s1 s2} (forall (a:'a).{:pattern InSet a s1} InSet a s1 ==> InSet a s2) ==> Subset s1 s2 
-
-type aref = 
-  | Ref : 'a:Type -> r:ref 'a -> aref
-
-type refs =
-  | AllRefs : refs
-  | SomeRefs : v:set aref -> refs
-
-                               (* let oneref (r:ref 'a) = Singleton (Ref r) *)
-
-logic type Modifies (mods:refs) (h:heap) (h':heap) =
-    (if b2t (is_AllRefs mods)
-     then True
-     else forall 'b (x:ref 'b). (b2t (InHeap h x) /\ ~(InSet (Ref x) (SomeRefs.v mods))) ==> (b2t (InHeap h' x) /\ SelHeap h x==SelHeap h' x))
 
 type result (a:Type) =
   | V   : v:a -> result a
@@ -258,10 +204,6 @@ monad_lattice {
                  STATE 'a
                    (fun ('p:Post 'a) (h:heap) -> 'pre h /\ (forall a h1. ('pre h /\ 'post h a h1) ==> 'p a h1)) (* WP *)
                    (fun ('p:Post 'a) (h:heap) -> (forall a h1. ('pre h /\ 'post h a h1) ==> 'p a h1))           (* WLP *)
-             and ST2 ('a:Type) ('pre:Pre) ('post: heap -> Post 'a) (mods:refs) =
-                 STATE 'a
-                   (fun ('p:Post 'a) (h:heap) -> 'pre h /\ (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1)) (* WP *)
-                   (fun ('p:Post 'a) (h:heap) -> (forall a h1. ('pre h /\ Modifies mods h h1 /\ 'post h a h1) ==> 'p a h1))           (* WLP *)
              and St (a:Type) = ST a (fun h -> True) (fun h0 r h1 -> True)
 ;
   EXN::
@@ -336,10 +278,10 @@ monad_lattice {
              type assume_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) (h:heap) = ('P ==> 'wp 'p h)
              type null_wp ('a:Type) ('p:Post 'a) (h0:heap) = (forall (a:result 'a) (h:heap). 'p a h)
              type trivial ('a:Type) ('wp:WP 'a) = (forall (h0:heap). 'wp (fun r h1 -> True) h0)
-             with All ('a:Type) ('pre:Pre) ('post: heap -> Post 'a) (mods:refs) =
+             with All ('a:Type) ('pre:Pre) ('post: heap -> Post 'a) =
                  ALL 'a
-                   (fun ('p:Post 'a) (h:heap) -> 'pre h /\ (forall ra h1. (Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)) (* WP *)
-                   (fun ('p:Post 'a) (h:heap) -> forall ra h1. ('pre h /\ Modifies mods h h1 /\ 'post h ra h1) ==> 'p ra h1)             (* WLP *)
+                   (fun ('p:Post 'a) (h:heap) -> 'pre h /\ (forall ra h1. 'post h ra h1 ==> 'p ra h1)) (* WP *)
+                   (fun ('p:Post 'a) (h:heap) -> forall ra h1. ('pre h /\ 'post h ra h1) ==> 'p ra h1)             (* WLP *)
              and default ML ('a:Type) =
                  ALL 'a (fun 'p h0 -> forall (a:result 'a) (h:heap). 'p a h) 
                         (fun 'p h0 -> forall (a:result 'a) (h:heap). 'p a h)
