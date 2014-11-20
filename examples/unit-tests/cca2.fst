@@ -73,7 +73,7 @@ let cca2 (ideal:bool) : (RSA.pkey * (Plain.t -> RSA.cipher) * (RSA.cipher -> opt
     if ideal 
     then match List.find (function Entry _ _ c' _ -> c=c') !log with
       | Some t  -> Some(Entry.p t)
-      | _       -> None
+      | _       -> None 
     else match RSA.dec sk c with
        | Some(t') -> forget (Plain.plain t')
        | None     -> None in
