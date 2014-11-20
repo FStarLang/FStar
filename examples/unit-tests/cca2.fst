@@ -42,14 +42,14 @@ module CCA2  (* intuitively, parameterized by both Plain and RSA *)
 open List
 
 type cipher = RSA.cipher
-type entry (ideal:bool) (pk:RSA.pkey) = 
-    entry:(RSA.cipher * Plain.t){forall sk. (RSA.generated (pk,sk) && not ideal)
-                                  ==> RSA.dec sk (fst entry) = Some (Plain.repr (snd entry))}
-                                                           (* may consider making plain/repr identities to simplify this *)
-
-val foo : int -> Tot int
-let foo : int -> Tot int = failwith ""
-
+type entry = (* indexing entry with ideal and pk triggers some bugs; meanwhile, using a simple type *)
+  | Entry : ideal':bool
+         -> pk':RSA.pkey
+         -> c:RSA.cipher
+         -> p:Plain.t{forall sk. (RSA.generated (pk',sk) && not ideal')
+                       ==> RSA.dec sk c = Some (Plain.repr p)} (* may consider making plain/repr identities to simplify this *)
+         -> entry
+                                                           
 val forget: t:Type
             -> p:(t -> Type)
             -> option (x:t{p x}) 
@@ -58,23 +58,23 @@ let forget = function
   | Some x -> Some x
   | None -> None
 
-
-let cca2 (ideal:bool) = 
+let cca2 (ideal:bool) : (RSA.pkey * (Plain.t -> RSA.cipher) * (RSA.cipher -> option (Plain.t))) =
   (* the next step will be to deal with multiple keys. *)
   let pk, sk = RSA.gen ()  in
-  let log : ref (list (entry ideal pk)) = ST.alloc [] in
+  let log : ref (list entry) = ST.alloc [] in
 
   let enc : Plain.t -> RSA.cipher = fun t -> 
     let t' = if ideal then RSA.dummy else Plain.repr t in
     let c = RSA.enc pk t' in
-    (* log := (c,t)::!log;   *)
+    log := Entry ideal pk c t::!log;
     c  in
 
-  let dec : RSA.cipher -> option (Plain.t) = fun c ->  
-    match (* assoc c !log *) None with
-    | Some t when ideal -> Some(t) 
-    | _       -> 
-       match RSA.dec sk c with 
+  let dec : RSA.cipher -> option (Plain.t) = fun c -> 
+    if ideal 
+    then match List.find (function Entry _ _ c' _ -> c=c') !log with
+      | Some t  -> Some(Entry.p t)
+      | _       -> None
+    else match RSA.dec sk c with
        | Some(t') -> forget (Plain.plain t')
        | None     -> None in
 
