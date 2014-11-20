@@ -257,9 +257,9 @@ let rec context_invariance e g g' =
 
   | ELet x e1 e2 ->
      (context_invariance e1 g g';
-     let Some t = typing g e1 in   
-     context_invariance e2 (extend g x t) (extend g' x t))
-
+     match typing g e1 with
+     | Some t -> context_invariance e2 (extend g x t) (extend g' x t)
+     | None -> ())
   | _ -> ()
 
 val typing_extensional : g:env -> g':env -> e:exp
