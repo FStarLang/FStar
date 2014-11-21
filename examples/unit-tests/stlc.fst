@@ -433,54 +433,36 @@ let rec preservation e e' t =
        if is_value e1 then substitution_preserves_typing x t_e1 e2 t e1 empty
        else preservation e1 (Some.v (step e1)) t_e1)
 
-(* CH: Unfolded all nested patterns because otherwise was getting
-       problems with the is_value refinement. This roughly doubled code size.
-       TODO: should return to this problem at some point *)
 (* CH: Any way to say that the only effect of eval is non-termination? *)
-val eval : exp -> ML (option (e:exp{is_value e}))
+val eval : e:exp{is_Some (typing empty e)} ->
+           ML (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval e =
+  let Some t = typing empty e in
   match e with
-  | EVar x -> None
   | EApp e1 e2 ->
-     (match eval e1 with
-      | Some v1 ->
-         (match v1 with
-          | EAbs x t e' ->
-             (match eval e2 with
-              | Some v2 -> eval (subst x v2 e')
-              | None    -> None)
-          | _           -> None)
-      | None    -> None)
+     (let Some (TArrow t_e2 _) = typing empty e1 in
+      let EAbs x _ e' = eval e1 in
+      let v = eval e2 in
+      substitution_preserves_typing x t_e2 e' t v empty;
+      eval (subst x v e'))
   | EAbs _ _ _
   | ETrue
-  | EFalse     -> Some e
+  | EFalse     -> e
   | EIf e1 e2 e3 ->
      (match eval e1 with
-      | Some v1 ->
-         (match v1 with
-          | ETrue  -> eval e2
-          | EFalse -> eval e3
-          | _      -> None)
-      | None    -> None)
+      | ETrue  -> eval e2
+      | EFalse -> eval e3)
   | EPair e1 e2 ->
-     (match eval e1, eval e2 with
-      | Some v1, Some v2 -> Some (EPair v1 v2)
-      | _      , _       -> None)
+     (match eval e1, eval e2  with
+      | v1, v2 -> EPair v1 v2)
   | EFst e1 ->
      (match eval e1 with
-      | Some v1 ->
-         (match v1 with
-          | EPair v1 v2 -> Some v1
-          | _           -> None)
-      | None    -> None)
+      | EPair v1 v2 -> v1)
   | ESnd e1 ->
      (match eval e1 with
-      | Some v1 ->
-         (match v1 with
-          | EPair v1 v2 -> Some v2
-          | _           -> None)
-      | None    -> None)
+      | EPair v1 v2 -> v2)
   | ELet x e1 e2 ->
-     (match eval e1 with
-      | Some v -> eval (subst x v e2)
-      | None   -> None)
+     (let Some t_e1 = typing empty e1 in
+      let v = eval e1 in
+      substitution_preserves_typing x t_e1 e2 t v empty;
+      eval (subst x v e2))
