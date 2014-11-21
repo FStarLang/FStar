@@ -49,7 +49,7 @@ This section describes the general structure of the F* verifier.
 
      All these binaries are available separately. 
 
-     In order to use F*, you will need to separately download Z3 4.3.1
+     In order to use F*, you will need to download Z3 4.3.1 or 4.3.2
      binaries and place them in this directory (or somewhere in your
      path). You can fetch these binaries from z3.codeplex.com.
 
