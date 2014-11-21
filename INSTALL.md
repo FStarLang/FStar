@@ -21,16 +21,12 @@ At the moment:
 
           $ mozroots --import --sync
 
-  - Install Z3 4.3.1 from sources
+  - Get Z3 4.3.2 binaries from here: https://z3.codeplex.com/releases/view/101911 and add them to your PATH.
+    For instance, for a 64bit architecture you can do
 
-          $ wget "https://download-codeplex.sec.s-msft.com/Download/SourceControlFileDownload.ashx?ProjectName=z3&changeSetId=89c1785b73225a1b363c0e485f854613121b70a7" -O z3-4.3.1-89c1785b-src.zip
-          $ unzip z3-4.3.1-89c1785b-src.zip -d z3-4.3.1-89c1785b-src
-          $ cd z3-4.3.1-89c1785b-src
-          $ autoconf
-          $ ./configure
-          $ python scripts/mk_make.py
-          $ cd build
-          $ make -j4
+          $ wget "https://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=z3&DownloadId=891122&FileTime=130523828556400000&Build=20941" -O z3-4.3.2.5a45711f22d9-x64-ubuntu-13.10.zip
+          $ unzip z3-4.3.2.5a45711f22d9-x64-ubuntu-13.10.zip
+          $ export PATH=z3-4.3.2.5a45711f22d9-x64-ubuntu-13.10:$PATH
 
   - Compile F* from sources
 
