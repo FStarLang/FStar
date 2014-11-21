@@ -66,7 +66,7 @@ let go _ =
             try
                 let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
                 let doc   = Backends.OCaml.Code.doc_of_mllib mllib in
-                Util.write_file "ocaml.ml" (FSharp.Format.pretty 120 doc)
+                List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) doc
             with Backends.OCaml.ASTTrans.OCamlFailure (rg, error) -> begin
                 (* FIXME: register exception and remove this block  *)
                 Util.print_string (* stderr *) <|
@@ -91,6 +91,7 @@ let go _ =
           else if not !Options.silent then
             print_string "All verification conditions discharged successfully\n"
         end
+
 let () =
     try 
       go ();
