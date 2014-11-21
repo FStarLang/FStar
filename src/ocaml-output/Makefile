@@ -13,6 +13,18 @@ FSTAR_OBJS=Microsoft_FStar_Options.cmo Microsoft_FStar_LazySet.cmo Microsoft_FSt
 
 all: fstarml
 
+parser:
+	cat ../parser/parse.fsy | sed ':a;N;$$!ba;s/^%[{][^%]*%[}]//g' > parse.mly
+	ocamlyacc parse.mly
+	echo "open Fstar.Support.Microsoft.FStar.Util" > Microsoft_FStar_Parser_Parse.ml
+	echo "open Fstar.Support.Microsoft.FStar.Range" >> Microsoft_FStar_Parser_Parse.ml
+	echo "open Microsoft_FStar_Absyn_Syntax" >> Microsoft_FStar_Parser_Parse.ml
+	echo "open Microsoft_FStar_Absyn_Const" >> Microsoft_FStar_Parser_Parse.ml
+	echo "open Microsoft_FStar_Absyn_Util" >> Microsoft_FStar_Parser_Parse.ml
+	echo "open Microsoft_FStar_Parser_AST" >> Microsoft_FStar_Parser_Parse.ml
+	echo "open Fstar.Support.Microsoft.FStar.Parser.Util" >> Microsoft_FStar_Parser_Parse.ml
+	cat parse.ml >> Microsoft_FStar_Parser_Parse.ml
+
 fstarml: $(FSTAR_OBJS)
 	ocamlfind ocamlc -package fstar -o fstarml $(FSTAR_OBJS) ../fstarml.ml -linkpkg
 
@@ -32,6 +44,9 @@ fstarml: $(FSTAR_OBJS)
 clean:
 	rm -f fstarml
 	rm -f *.cm[iox]
+
+.depend:
+	touch .depend
 
 # Dependencies
 depend:

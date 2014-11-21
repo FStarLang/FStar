@@ -22,103 +22,18 @@
 
 *)
 // (c) Microsoft Corporation. All rights reserved
-open Microsoft.FSharp.Compatibility
-open Microsoft.FSharp.Compatibility.OCaml.Pervasives
-open Microsoft.FSharp.Text.Parsing
-open System
-open Microsoft.FStar
-open Microsoft.FStar.Util
 open Microsoft.FStar.Range
-open Microsoft.FStar.Absyn
+open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Const
 open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Parser
-open Microsoft.FStar.Parser.AST 
+open Microsoft.FStar.Parser.AST
+open Microsoft.FStar.Parser.Util
 
-let pos_of_lexpos (p:Microsoft.FSharp.Text.Lexing.Position) =
-    mk_pos p.Line p.Column
-
-let mksyn_range (p1:Microsoft.FSharp.Text.Lexing.Position) p2 =
-    mk_file_idx_range (decode_file_idx p1.FileName) (pos_of_lexpos p1) (pos_of_lexpos p2)
-
-let GetLexerRange (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char>) = (* UnicodeLexing.Lexbuf) = *)
-  mksyn_range lexbuf.StartPos lexbuf.EndPos
-
-(* Get the range corresponding to the result of a grammar rule while it is being reduced *)
-let lhs (parseState: Microsoft.FSharp.Text.Parsing.IParseState) =
-  let p1,p2 = parseState.ResultRange in
-  mksyn_range p1 p2
-    
-(* Get the position corresponding to the start of one of the r.h.s. symbols of a grammar rule while it is being reduced *)
-let rhspos (parseState: Microsoft.FSharp.Text.Parsing.IParseState) n =
-  pos_of_lexpos (fst (parseState.InputRange(n)))
-
-(* /// Get the range covering two of the r.h.s. symbols of a grammar rule while it is being reduced *)
-let rhs2 (parseState: Microsoft.FSharp.Text.Parsing.IParseState) n m =
-  let p1 = parseState.InputRange(n) |> fst in
-  let p2 = parseState.InputRange(m) |> snd in
-  mksyn_range p1 p2
-
-(* /// Get the range corresponding to one of the r.h.s. symbols of a grammar rule while it is being reduced *)
-let rhs (parseState: Microsoft.FSharp.Text.Parsing.IParseState) n =
-  let p1,p2 = parseState.InputRange(n) in
-  mksyn_range p1 p2
-
-exception WrappedError of exn * range
-exception ReportedError
-exception StopProcessing
-let warningHandler = ref (fun (e:exn) -> Util.print_string "no warning handler installed\n" ; Util.print_any e; ())
-let errorHandler = ref (fun (e:exn) -> Util.print_string "no warning handler installed\n" ; Util.print_any e; ())
-let errorAndWarningCount = ref 0
-let errorR  exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !errorHandler exn
-let warning exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !warningHandler exn
-
-let consPat r hd tl = PatApp(mk_pattern (PatName Const.cons_lid) r, [hd;tl])
-
-let consTerm r hd tl = mk_term (Construct(Const.cons_lid, [(hd, false);(tl, false)])) r Expr
-let lexConsTerm r hd tl = mk_term (Construct(Const.lexcons_lid, [(hd, false);(tl, false)])) r Expr
-
-let mkConsList r elts =  
-  let nil = mk_term (Construct(Const.nil_lid, [])) r Expr in
-    List.fold_right (fun e tl -> consTerm r e tl) elts nil
-
-let mkLexList r elts = 
-  let nil = mk_term (Construct(Const.lextop_lid, [])) r Expr in
-  List.fold_right (fun e tl -> lexConsTerm r e tl) elts nil
-
-let mkApp t args r = match args with 
-  | [] -> t 
-  | _ -> match t.tm with 
-      | Name s -> mk_term (Construct(s, args)) r Un
-      | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
-
-let mkExplicitApp t args r = match args with 
-  | [] -> t 
-  | _ -> match t.tm with 
-      | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, false)) args))) r Un
-      | _ -> List.fold_left (fun t a -> mk_term (App(t, a, false)) r Un) t args
-          
-let mkTuple args r = 
-  let cons = Util.mk_tuple_data_lid (List.length args) r in 
-  mkExplicitApp (mk_term (Name cons) r Expr) args r
-
-let mkDTuple args r = 
-  let cons = Util.mk_dtuple_data_lid (List.length args) r in 
-  mkExplicitApp (mk_term (Name cons) r Expr) args r
-    
-let mkRefinedBinder id t refopt m implicit = 
-  let b = mk_binder (Annotated(id, t)) m Type implicit in
-  match refopt with 
-    | None -> b 
-    | Some t -> mk_binder (Annotated(id, mk_term (Refine(b, t)) m Type)) m Type implicit
-
-let newline (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<_>) = 
-    lexbuf.EndPos <- lexbuf.EndPos.NextLine
 %} 
 
-%token <byte[]> BYTEARRAY
-%token <byte[]> STRING 
+%token <bytes> BYTEARRAY
+%token <bytes> STRING 
 %token <string> IDENT 
 %token <string> IDENT_LESS
 %token <string> NAME
@@ -154,8 +69,8 @@ let newline (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<_>) =
 %token <single> IEEE32
 %token <double> IEEE64
 %token <char> CHAR
-%token <System.Decimal> DECIMAL 
-%token <byte[]> BIGINT BIGNUM
+%token <decimal> DECIMAL 
+%token <bytes> BIGINT BIGNUM
 %token <bool> LET YIELD YIELD_BANG
 %token <string> SPLICE_SYMBOL PERCENT_OP BINDER 
 %token <string * bool> LQUOTE RQUOTE 
@@ -226,9 +141,9 @@ decls:
       { ($1::$2) }
 
 decl:
-  | decl' { mk_decl $1 (rhs parseState 1) }
+  | decl2 { mk_decl $1 (rhs parseState 1) }
 
-decl':
+decl2:
   | OPEN qname
       { Open $2 }
   | kind_abbrev 
@@ -436,7 +351,7 @@ appPattern:
         let r = rhs parseState 1 in 
         match $2 with 
           | [] -> hd
-          | _ -> mk_pattern (PatApp(hd, $2)) (Range.union_ranges r (rhs parseState 1))
+          | _ -> mk_pattern (PatApp(hd, $2)) (union_ranges r (rhs parseState 1))
       }
 
 compositePattern:
@@ -452,16 +367,16 @@ atomicPatterns:
   | atomicPattern atomicPatterns { $1::$2 }
 
 atomicPattern: 
-  | atomicPattern' { mk_pattern $1 (rhs parseState 1) }
+  | atomicPattern2 { mk_pattern $1 (rhs parseState 1) }
 
-atomicPattern':
-  | nonTvarPattern' { $1 }
+atomicPattern2:
+  | nonTvarPattern2 { $1 }
   | tvar  { PatTvar $1 }
 
 nonTvarPattern:
-  | nonTvarPattern' { mk_pattern $1 (rhs parseState 1) }
+  | nonTvarPattern2 { mk_pattern $1 (rhs parseState 1) }
 
-nonTvarPattern':      
+nonTvarPattern2:
   | UNDERSCORE { PatWild }
   | constant { PatConst $1 }
   | ident { PatVar $1 }
@@ -552,11 +467,11 @@ of_typ:
   | OF typ { Some $2 }
 
 eitherQname: 
-  | eitherQname' { lid_of_ids $1 }
+  | eitherQname2 { lid_of_ids $1 }
 
-eitherQname': 
+eitherQname2: 
   | eitherName { [$1] }
-  | name DOT eitherQname' { $1::$3 }
+  | name DOT eitherQname2 { $1::$3 }
 
 lid:
   | idpath { lid_of_ids $1 }
@@ -570,19 +485,19 @@ eitherName:
 
 ident:
   | IDENT 
-      { Syntax.mk_ident($1, rhs parseState 1)}
+      { mk_ident($1, rhs parseState 1)}
 
 name:
   | NAME 
-      { Syntax.mk_ident($1, rhs parseState 1) }
+      { mk_ident($1, rhs parseState 1) }
 
 tvars:
-  | TVAR                { [Syntax.mk_ident($1, rhs parseState 1)] }
-  | TVAR COMMA tvars    { Syntax.mk_ident($1, rhs parseState 1) ::$3 }
+  | TVAR                { [mk_ident($1, rhs parseState 1)] }
+  | TVAR COMMA tvars    { mk_ident($1, rhs parseState 1) ::$3 }
 
 tvar:
   | TVAR 
-      { Syntax.mk_ident($1, rhs parseState 1) }
+      { mk_ident($1, rhs parseState 1) }
 
 namepath:
   | name 
@@ -646,7 +561,7 @@ noSeqTerm:
 
   | IF noSeqTerm THEN noSeqTerm
       {
-	    let e = mk_term (Const Syntax.Const_unit) (rhs2 parseState 4 4) Expr in
+	    let e = mk_term (Const Const_unit) (rhs2 parseState 4 4) Expr in
         mk_term (If($2, $4, e)) (rhs2 parseState 1 4) Expr
       } 
 
@@ -677,17 +592,17 @@ noSeqTerm:
 
   | FUNCTION firstPatternBranch patternBranches 
       { 
-        AST.mk_function ($2::$3) (lhs parseState) (rhs2 parseState 1 3)
+        mk_function ($2::$3) (lhs parseState) (rhs2 parseState 1 3)
       }
 
   | ASSUME atomicTerm 
-      { mkExplicitApp (mk_term (Var Const.assume_lid) (rhs parseState 1) Expr) [$2]
+      { mkExplicitApp (mk_term (Var assume_lid) (rhs parseState 1) Expr) [$2]
           (rhs2 parseState 1 2)
       }
 
   | PRINT atomicTerm atomicTerms
       { mkExplicitApp
-		  (mk_term (Var Const.print_lid) (rhs parseState 1) Expr)
+		  (mk_term (Var print_lid) (rhs parseState 1) Expr)
 		  ($2 :: $3) (rhs2 parseState 1 3) }
 
 reqEnsBinders:
@@ -696,7 +611,7 @@ reqEnsBinders:
 
 label_opt:
   |                        { None }
-  | DOLLAR STRING          { Some (Util.string_of_bytes $2) }
+  | DOLLAR STRING          { Some (string_of_bytes $2) }
 
 qpat: 
   |   { [] }
@@ -968,7 +883,7 @@ formula:
 
 atomicTerm:
   | UNDERSCORE { mk_term Wild (rhs parseState 1) Un }
-  | ASSERT   { mk_term (Var Const.assert_lid) (rhs parseState 1) Expr }
+  | ASSERT   { mk_term (Var assert_lid) (rhs parseState 1) Expr }
   | tvar     { mk_term (Tvar($1)) (rhs parseState 1) Type }
   /* | qname    { mk_term (Name $1) (rhs parseState 1) Un } */
   | constant { mk_term (Const $1) (rhs parseState 1) Expr }
@@ -1014,13 +929,13 @@ maybeInsts:
   | TYP_APP_LESS targs GREATER 
       {
         (fun (x:term) -> mkExplicitApp x $2
-          (Range.union_ranges x.range (rhs2 parseState 1 3)))
+          (union_ranges x.range (rhs2 parseState 1 3)))
       }
 
 projectionLHS:
   | eitherQname maybeInsts
       { 
-        let t = if Util.is_name $1 then Name $1 else Var $1 in
+        let t = if is_name $1 then Name $1 else Var $1 in
         $2 (mk_term t (rhs parseState 1) Un) 
       }
   | LPAREN term maybeWithSort RPAREN 
@@ -1028,7 +943,7 @@ projectionLHS:
   | LBRACK_BAR semiColonTermList BAR_RBRACK
       {
         let l = mkConsList (rhs2 parseState 1 3) $2 in 
-        mkExplicitApp (mk_term (Var (Const.array_mk_array_lid)) (rhs2 parseState 1 3) Expr) 
+        mkExplicitApp (mk_term (Var (array_mk_array_lid)) (rhs2 parseState 1 3) Expr) 
               [l] (rhs2 parseState 1 3)
       }
   | LBRACK semiColonTermList RBRACK
@@ -1064,13 +979,13 @@ recordExp:
 recordExpRest:
   | WITH recordFieldAssignment recordFieldAssignments
       {
-        (fun e r -> mk_term (Record(Some e, $2::$3)) (Range.union_ranges r (rhs2 parseState 1 3)) Expr)
+        (fun e r -> mk_term (Record(Some e, $2::$3)) (union_ranges r (rhs2 parseState 1 3)) Expr)
       }
 
   | EQUALS tmTuple recordFieldAssignments
       {
         (fun e r -> match e.tm with 
-          | Var l -> mk_term (Record(None, (l,$2)::$3)) (Range.union_ranges r (rhs2 parseState 1 3)) Expr
+          | Var l -> mk_term (Record(None, (l,$2)::$3)) (union_ranges r (rhs2 parseState 1 3)) Expr
           | _ -> errorR(Error("Record field names must be constant identifiers", lhs(parseState)));
             mk_term (Record(None, $3)) (rhs2 parseState 1 3) Expr)
       }
@@ -1088,7 +1003,7 @@ recordFieldAssignments:
 maybeWithSort:
   |     { fun x r -> x }
   | hasSort simpleTerm
-        { fun x r -> mk_term (Ascribed(x,{$2 with level=$1})) (Range.union_ranges r (rhs2 parseState 1 2)) $1 }
+        { fun x r -> mk_term (Ascribed(x,{$2 with level=$1})) (union_ranges r (rhs2 parseState 1 2)) $1 }
 hasSort:
   | SUBTYPE { Expr }
   | SUBKIND { Type }
@@ -1119,7 +1034,7 @@ tupleN:
   | tmEq COMMA tupleN       { $1::$3 }
 
 constant:  
-  | LPAREN_RPAREN { Syntax.Const_unit }
+  | LPAREN_RPAREN { Const_unit }
   | INT32 
       { 
         if snd $1 then 

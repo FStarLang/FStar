@@ -278,3 +278,34 @@ let kwd_or_id args (r:Range.range) s =
           STRING (Bytes.string_as_unicode_bytes (string_of_int (Range.line_of_pos (Range.start_of_range r))))
         | _ ->
           IDENT (intern_string(s))
+
+type delimiters = {
+  angle:ref<int>;
+  paren:ref<int>
+}
+
+let is_typ_app (args:lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) = 
+ try
+   let char_ok = new System.Text.RegularExpressions.Regex(@"\w|\s|\(|\)|<|>|\*|-|'|,|\.") in
+   let balanced (contents : string) pos =
+    if Util.char_at contents pos <> '<' then 
+      (printfn "Unexpected position"; failwith "die!");
+    let d = {angle=ref 1; paren=ref 0} in
+    let upd i = match Util.char_at contents i with
+      | '(' -> incr d.paren
+      | ')' -> decr d.paren
+      | '<' -> incr d.angle
+      | '>' -> decr d.angle 
+      | _ -> () in 
+    let ok () = !d.angle >= 0 && !d.paren >= 0 in
+    let rec aux i = 
+      if !d.angle=0 && !d.paren=0 then true
+      else if i >= String.length contents || not (ok ()) 
+      then ((* printfn "False 1: %d, %A" i (!d.angle, !d.paren);  *)false)
+      else if (not <| char_ok.IsMatch(contents, i)) || (contents.IndexOf("then", i)=i)
+      then ((* printfn "False 2: %A\n" (Util.char_at contents i);  *)false)
+      else (upd i; aux (i + 1)) in
+      aux (pos + 1) in
+   let res = balanced args.contents lexbuf.StartPos.AbsoluteOffset in
+   res
+ with e -> printfn "Resolving typ_app<...> syntax failed: %A" e; false 

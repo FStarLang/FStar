@@ -240,4 +240,41 @@ let error msg tm r =
  let tm = tm |> term_to_string in
   let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in 
   raise (Error(msg^"\n"^tm, r))
+
+let consPat r hd tl = PatApp(mk_pattern (PatName Const.cons_lid) r, [hd;tl])
+let consTerm r hd tl = mk_term (Construct(Const.cons_lid, [(hd, false);(tl, false)])) r Expr
+let lexConsTerm r hd tl = mk_term (Construct(Const.lexcons_lid, [(hd, false);(tl, false)])) r Expr
+
+let mkConsList r elts =  
+  let nil = mk_term (Construct(Const.nil_lid, [])) r Expr in
+    List.fold_right (fun e tl -> consTerm r e tl) elts nil
+
+let mkLexList r elts = 
+  let nil = mk_term (Construct(Const.lextop_lid, [])) r Expr in
+  List.fold_right (fun e tl -> lexConsTerm r e tl) elts nil
+
+let mkApp t args r = match args with 
+  | [] -> t 
+  | _ -> match t.tm with 
+      | Name s -> mk_term (Construct(s, args)) r Un
+      | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
+
+let mkExplicitApp t args r = match args with 
+  | [] -> t 
+  | _ -> match t.tm with 
+      | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, false)) args))) r Un
+      | _ -> List.fold_left (fun t a -> mk_term (App(t, a, false)) r Un) t args
+          
+let mkTuple args r = 
+  let cons = Util.mk_tuple_data_lid (List.length args) r in 
+  mkExplicitApp (mk_term (Name cons) r Expr) args r
+
+let mkDTuple args r = 
+  let cons = Util.mk_dtuple_data_lid (List.length args) r in 
+  mkExplicitApp (mk_term (Name cons) r Expr) args r
     
+let mkRefinedBinder id t refopt m implicit = 
+  let b = mk_binder (Annotated(id, t)) m Type implicit in
+  match refopt with 
+    | None -> b 
+    | Some t -> mk_binder (Annotated(id, mk_term (Refine(b, t)) m Type)) m Type implicit

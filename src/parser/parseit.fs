@@ -25,7 +25,7 @@ let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char
     pos_lnum=1 }
 
 let parse_file fn = 
-  Parse.warningHandler := (function
+  Parser.Util.warningHandler := (function
     | Lexhelp.ReservedKeyword(m,s) -> Printf.printf "%s:%s" (Range.string_of_range s) m
     | e -> Printf.printf "Warning: %A\n" e);
   

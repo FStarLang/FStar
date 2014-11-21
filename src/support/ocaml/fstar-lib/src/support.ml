@@ -941,6 +941,63 @@ let parse_cmdline specs others =
       module ParseIt = struct
         let parse_file _ = assert false
       end
+
+      module Util = struct
+        open Range
+        open Lexing
+
+        type byte = char
+        type sbyte = char
+        type bytes = char array
+        type decimal = float
+        type int16 = int
+        type int32 = int
+        type uint16 = int
+        type uint32 = int
+        type uint64 = int64
+        type single = float
+        type double = float
+
+        let parseState = ()
+
+        let newline (lexbuf:lexbuf) =
+          let pos = lexbuf.lex_curr_p in
+          lexbuf.lex_curr_p <- { pos with
+            pos_lnum = pos.pos_lnum + 1;
+            pos_bol = pos.pos_cnum;
+          }
+
+        let pos_of_lexpos (p:position) =
+          mk_pos p.pos_lnum p.pos_bol
+
+        let mksyn_range (p1:position) p2 =
+          mk_file_idx_range (decode_file_idx p1.pos_fname) (pos_of_lexpos p1) (pos_of_lexpos p2)
+
+        let getLexerRange (lexbuf:lexbuf) =
+          mksyn_range lexbuf.lex_start_p lexbuf.lex_curr_p
+
+        let lhs () =
+          mksyn_range (Parsing.symbol_start_pos ()) (Parsing.symbol_end_pos ())
+
+        let rhs () n =
+          mksyn_range (Parsing.rhs_start_pos n) (Parsing.rhs_end_pos n)
+
+        let rhspos () n =
+          pos_of_lexpos (Parsing.rhs_start_pos n)
+
+        let rhs2 () n m =
+          mksyn_range (Parsing.rhs_start_pos n) (Parsing.rhs_end_pos m)
+
+        exception WrappedError of exn * range
+        exception ReportedError
+        exception StopProcessing
+
+        let warningHandler = ref (fun (e:exn) -> Util.print_string "no warning handler installed\n" ; Util.print_any e; ())
+        let errorHandler = ref (fun (e:exn) -> Util.print_string "no warning handler installed\n" ; Util.print_any e; ())
+        let errorAndWarningCount = ref 0
+        let errorR  exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !errorHandler exn
+        let warning exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !warningHandler exn
+      end
     end
 
 
