@@ -16,9 +16,9 @@ BACKEND_SRC=$(addprefix backend/, $(BACKEND))
 JSBACKEND=ast.fs print.fs translate.fs
 JSBACKEND_SRC=$(addprefix jsbackend/, $(JSBACKEND))
 
-PARSER=ast.fs parse.fs lexhelp.fs lex.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parseit.fsi parseit.fs driver.fs
+PARSER=ast.fs parseutil.fs parse.fs lexhelp.fs lex.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parseit.fsi parseit.fs driver.fs
 PARSER_SRC=$(addprefix parser/, $(PARSER))
-PARSER_NOGEN=ast.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
+PARSER_NOGEN=ast.fs parseutil.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
 PARSER_NOGEN_SRC=$(addprefix parser/, $(PARSER_NOGEN))
 
 TOSMT=term.fsi term.fs z3.fs encode.fs
