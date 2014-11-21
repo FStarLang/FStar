@@ -46,7 +46,7 @@ At the moment:
 
 # To build the OCaml backend
 
-0. Install OCaml (version 4.0 or newer)
+0. Install OCaml (version 4.01.x or 4.02.x)
 1. Install opam, initialize it (opam init) and update the path to
    ocamlfind and the ocaml libraries
 2. Install the following libraries:
@@ -74,6 +74,7 @@ At the moment:
 
 6. Compile it (in src):
 
+        make
         make ocaml.built
         cd ocaml-output
         make parser
