@@ -123,7 +123,7 @@ let char        = '\'' ( [^'\\''\n''\r''\t''\b'] | escape_char) '\''
 (* -------------------------------------------------------------------- *)
 let constructor_start_char = upper
 let ident_start_char       = lower  | '_'
-let ident_char             = letter | digit  | ['\'']
+let ident_char             = letter | digit  | ['\'' '_']
 let tvar_char              = letter | digit 
 
 let constructor = constructor_start_char ident_char*  
