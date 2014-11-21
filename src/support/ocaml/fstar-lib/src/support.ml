@@ -938,10 +938,6 @@ let parse_cmdline specs others =
 
 
     module Parser = struct
-      module ParseIt = struct
-        let parse_file _ = assert false
-      end
-
       module Util = struct
         open Range
         open Lexing

@@ -422,7 +422,6 @@ module Microsoft :
           end
         module Parser :
           sig
-            module ParseIt : sig val parse_file : 'a -> 'b end
             module Util :
               sig
                 type byte = char
