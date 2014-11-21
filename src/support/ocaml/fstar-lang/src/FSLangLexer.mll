@@ -219,7 +219,7 @@ rule token = parse
      { token lexbuf }
 
  | '"' 
-     { string lexbuf }
+     { string (Buffer.create 0) lexbuf }
 
  | truewhite+  
      { token lexbuf }
@@ -239,45 +239,36 @@ rule token = parse
 
  | eof { EOF }
 
-and string = parse
- |  '\\' newline anywhite* 
-    { L.new_line lexbuf; string lexbuf; }
+and string buffer = parse
+ |  '\\' (newline as x) anywhite* 
+    { Buffer.add_string buffer x;
+      L.new_line lexbuf;
+      string buffer lexbuf; }
 
- | newline
-    { L.new_line lexbuf; string lexbuf; }
+ | newline as x
+    { Buffer.add_string buffer x;
+      L.new_line lexbuf;
+      string buffer lexbuf; }
 
- | escape_char
-    { string lexbuf } 
-
- | trigraph
-    { string lexbuf }
-
- | hexgraph_short
-    { string lexbuf  }
-      
- | unicodegraph_short
-    { string lexbuf  }
-     
- | unicodegraph_long
-    { string lexbuf  }
+ | escape_char as c
+    { (match c.[1] with
+       | '\\' -> Buffer.add_char buffer '\\'
+       | 'n'  -> Buffer.add_char buffer '\n'
+       | 't'  -> Buffer.add_char buffer '\t'
+       | 'b'  -> Buffer.add_char buffer '\b'
+       | 'r'  -> Buffer.add_char buffer '\r'
+       | _    -> assert false);
+      string buffer lexbuf }
      
  |  '"' 
-    { STRING "" }
+    { STRING (Buffer.contents buffer) }
 
  |  '"''B' 
-    { BYTEARRAY "" }
+    { BYTEARRAY (Buffer.contents buffer) }
 
- | ident  
-    { string lexbuf }
-
- | xinteger
-    { string lexbuf }
-
- | anywhite+  
-    { string lexbuf }
-
- | _ 
-    { string lexbuf }
+ | _ as c
+    { Buffer.add_char buffer c;
+      string buffer lexbuf }
 
  | eof  
     { failwith "unterminated string" }
