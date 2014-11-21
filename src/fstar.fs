@@ -34,7 +34,7 @@ let cleanup () =
     ToSMT.Z3.cleanup();
     Util.kill_all ()
 
-let has_prims_cache (l: list<string>) :bool = List.exists (fun s -> s = "Prims.cache") l
+let has_prims_cache (l: list<string>) :bool = List.mem "Prims.cache" l
 
 (* Main function *)
 let go _ =    

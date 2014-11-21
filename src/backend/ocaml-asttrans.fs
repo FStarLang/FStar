@@ -48,10 +48,12 @@ let path_of_ns mlenv ns =
     | x1::t1, x2::t2 when x1 = x2 -> insupport (t1, t2)
     | _, _ -> false
 
-    and outsupport = function
+    and outsupport = fun (ns1,ns2) ->  if ns1 = ns2 then [] else [String.concat "_" ns2]
+    
+    (*function
     | x1 :: p1, x2 :: p2 when x1 = x2 -> outsupport (p1, p2)
     | _, p -> p
-
+    *)
     in match List.tryPick (fun sns -> if insupport (sns, ns) then Some sns else None) outmod with
     | None -> outsupport ((fst mlenv.mle_name) @ [snd mlenv.mle_name], ns)
     | Some sns -> "Fstar" :: "Support" :: ns
@@ -771,8 +773,13 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
 
     match modx with
     | Sig_val_decl (x, ty, qal, rg) when export_val qal && mode = Sig ->
+(*        Printf.printf "translating val decl %s\n" x.ident.idText; *)
         let tparams, ty = mlscheme_of_ty mlenv rg ty in
         Some (Inl (MLS_Val (x.ident.idText, (tparams, ty))))
+
+    | Sig_val_decl (x, ty, qal, rg) when mode = Sig ->
+(*        Printf.printf "skipping val decl %s\n" x.ident.idText; *)
+        None
 
     | Sig_let ((rec_, lbs), rg, _) when mode = Struct ->
         let downct (x, _, e) =
@@ -787,6 +794,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
         in
 
         Some (Inr (MLM_Let (rec_, lbs)))
+
 
     | Sig_main (e, rg) when mode = Struct ->
         let lenv = lenv_of_mlenv mlenv in
@@ -848,9 +856,9 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
     end
 
     | Sig_assume         _ -> None
-    | Sig_val_decl       _ -> None
     | Sig_tycon          _ -> None
     | Sig_datacon        _ -> None
+    | Sig_val_decl       _ -> None
     | Sig_let            _ -> None
     | Sig_main           _ -> None
 
@@ -878,6 +886,25 @@ let mllib_empty : mllib =
 
 (* -------------------------------------------------------------------- *)
 let rec mllib_add (MLLib mllib : mllib) ((path : mlpath), sig_, mod_) =
+    let n = String.concat "_" ((fst path)@[snd path]) in
+    let rec aux = function
+        | [] ->
+            [n, Some (sig_, mod_), mllib_empty]
+        | ((name, None, sublibs) as the) :: tl ->
+            if name = snd path then begin
+                (name, Some (sig_, mod_), sublibs) :: tl
+            end else
+                the :: (aux tl)
+        | ((name, Some (ssig, mmod), sublibs) as the) :: tl ->
+            if name = snd path then begin
+                (name, Some (ssig, mod_), sublibs) :: tl
+            end else
+                the :: (aux tl)
+
+        in MLLib (aux mllib)
+   
+
+(*
     match fst path with
     | [] ->
         let rec aux = function
@@ -906,7 +933,7 @@ let rec mllib_add (MLLib mllib : mllib) ((path : mlpath), sig_, mod_) =
                 the :: (aux tl)
                 
         in MLLib (aux mllib)
-
+*)
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstars (fmods : list<modul>) =
     let fmods = List.map mlmod_of_fstar fmods in
