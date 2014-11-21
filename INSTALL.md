@@ -76,6 +76,7 @@ At the moment:
 
         make ocaml.built
         cd ocaml-output
+        make parser
         touch .depend
         make depend
         make
