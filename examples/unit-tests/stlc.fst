@@ -433,9 +433,8 @@ let rec preservation e e' t =
        if is_value e1 then substitution_preserves_typing x t_e1 e2 t e1 empty
        else preservation e1 (Some.v (step e1)) t_e1)
 
-(* CH: Any way to say that the only effect of eval is non-termination? *)
 val eval : e:exp{is_Some (typing empty e)} ->
-           ML (v:exp{is_value v && typing empty v = typing empty e})
+           Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval e =
   let Some t = typing empty e in
   match e with

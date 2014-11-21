@@ -189,8 +189,45 @@ type result (a:Type) =
   | E   : e:exn -> result a
   | Err : msg:string -> result a
 
-monad_lattice { (* STATE a wp wlp *)
-  STATE::
+monad_lattice {
+  DIV::
+             kind Pre = Type
+             kind Post (a:Type) = a -> Type
+             kind WP (a:Type) = Post a -> Pre
+             type return (a:Type) (x:a) (p:Post a) = p x
+             type bind_wp  (a:Type) (b:Type) (wp1:WP a) (wlp1:WP a) 
+                                              (wp2: (a -> WP b)) (wlp2: (a -> WP b))
+                                               (p:Post b) = wp1 (fun a -> wp2 a p)
+             type bind_wlp (a:Type) (b:Type) (wlp1:WP a) 
+                                             (wlp2:(a -> WP b))
+                                             (p:Post b) = wlp1 (fun a -> wlp2 a p)
+             type if_then_else (a:Type) (p:Type) (wp_then:WP a) (wp_else:WP a) (post:Post a) = 
+                 (if p 
+                  then wp_then post
+                  else wp_else post)
+             type ite_wlp (a:Type) (wlp_cases:WP a) (post:Post a) =
+                 (forall (a:a). wlp_cases (fun a' -> a=!=a') \/ post a)
+             type ite_wp (a:Type) (wlp_cases:WP a) (wp_cases:WP a) (post:Post a) =
+                 (forall (a:a). wlp_cases (fun a' -> a=!=a') \/ post a)
+                 /\ (wp_cases (fun a -> True))
+             type wp_binop (a:Type) (wp1:WP a) (op:(Type -> Type -> Type)) (wp2:WP a) (p:Post a) =
+                 op (wp1 p) (wp2 p)
+             type wp_as_type (a:Type) (wp:WP a) = (forall (p:Post a). wp p)
+             type close_wp (a:Type) (b:Type) (wp:(b -> WP a)) (p:Post a) = (forall (b:b). wp b p)
+             type close_wp_t (a:Type) (wp:(Type -> WP a)) (p:Post a) = (forall (b:Type). wp b p)
+             type assert_p (a:Type) (q:Type) (wp:WP a) (p:Post a) = (q /\ wp p)
+             type assume_p (a:Type) (q:Type) (wp:WP a) (p:Post a) = (q ==> wp p)
+             type null_wp (a:Type) (p:Post a) = (forall (x:a). p x)
+             type trivial (a:Type) (wp:WP a) = wp (fun x -> True)
+             with Div (a:Type) (pre:Pre) (post:Post a) =
+                    DIV a
+                         (fun (p:Post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
+                         (fun (p:Post a) -> forall a. pre /\ post a ==> p a)   (* WLP *)
+             and Admit (a:Type) = DIV a (fun 'p -> True) (fun 'p -> True)
+             and default Dv (a:Type) =
+               DIV a (fun (p:Post a) -> (forall (x:a). p x)) (fun (p:Post a) -> (forall (x:a). p x))
+;
+  STATE:: (* STATE a wp wlp *)
              kind Pre     = heap -> Type
              kind Post ('a:Type) = 'a -> heap -> Type
              kind WP ('a:Type) = Post 'a -> Pre
@@ -308,6 +345,8 @@ monad_lattice { (* STATE a wp wlp *)
                         (fun 'p h0 -> forall (a:result 'a) (h:heap). 'p a h)
 
   with
+  PURE  ~> DIV   = (fun ('a:Type) ('wp:PURE.WP 'a) ('p:DIV.Post 'a) -> 'wp (fun a -> 'p a));
+  DIV   ~> ALL  =  (fun ('a:Type) ('wp:DIV.WP 'a) ('p:ALL.Post 'a) (h:heap) -> 'wp (fun a -> 'p (V a) h));
   PURE  ~> STATE = (fun ('a:Type) ('wp:PURE.WP 'a) ('p:STATE.Post 'a) (h:heap) -> 'wp (fun a -> 'p a h));
   STATE ~> ALL   = (fun ('a:Type) ('wp:STATE.WP 'a) ('p:ALL.Post 'a) -> 'wp (fun a -> 'p (V a)));
   PURE  ~> EXN   = (fun ('a:Type) ('wp:PURE.WP 'a) ('p:EXN.Post 'a) -> 'wp (fun a -> 'p (V a)));
