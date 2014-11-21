@@ -2,8 +2,8 @@ Prerequisites for building F* from sources (work in progress)
 
 At the moment:
 
-- On Windows 8 with .NET framework 4.5 and F# v3.0 :
-  - Either using VisualStudio 2012, open FStar/VS/FStar.sln and build solution.
+- On Windows 7/8 with .NET framework 4.5 and F# v3.0 :
+  - Either using VisualStudio 2013, open FStar/VS/FStar.sln and build solution.
   - or, with Cygwin's GNU make (4.0), run "make" from FStar/src
 
 - On Linux using Mono:
@@ -47,6 +47,7 @@ At the moment:
 
 # To build the OCaml backend
 
+0. Install OCaml (version 4.0 or newer)
 1. Install opam, initialize it (opam init) and update the path to
    ocamlfind and the ocaml libraries
 2. Install the following libraries:
@@ -72,6 +73,10 @@ At the moment:
 
         make ocaml
 
-6. Compile it:
+6. Compile it (in src):
 
-        ocamlfind ocamlc -package fstar ocaml.ml
+        make ocaml.built
+        cd ocaml-output
+        touch .depend
+        make depend
+        make
