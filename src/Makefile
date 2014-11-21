@@ -191,9 +191,11 @@ fstarml: ocaml.built
 
 
 
-test: 
+test:   boot
 	make -s -C ../examples/unit-tests all-lax 
 	make -s -C ../examples/unit-tests vector
+	make -s -C ../examples/unit-tests mergesort.vv
+	make -s -C ../examples/unit-tests rpc
 	-make -s -C ../examples/unit-tests all-ver 
 	@echo "--------Expect 18 errors--------------"
 

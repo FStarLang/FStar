@@ -8,7 +8,7 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-LIB_FILES=string.fst st.fst partialmap.fst array-realized.fst
+LIB_FILES=string.fst partialmap.fst st.fst array-realized.fst
 STDLIB = list.fst $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
 FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
 
@@ -18,7 +18,7 @@ FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(O
 all: all-lax all-ver
 
 # removed rbtree.fst from this list for now as it takes more z3 time
-VERFILES=unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst insertionsort-lemma.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst sf-poly.fst format.fst mac.fst sig.fst stlc.fst qs.fst mergesort.fst cca2.fst bug34.fst bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst bug28.fst bug35.fst bug52.fst bug23.fst bug21.fst
+VERFILES=unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst insertionsort-lemma.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst sf-poly.fst format.fst mac.fst sig.fst stlc.fst qs.fst cca2.fst bug34.fst bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst bug28.fst bug35.fst bug52.fst bug23.fst bug21.fst
 
 cache: $(STDLIB)
 	mkdir $(FSTAR_HOME)/cache
@@ -26,6 +26,10 @@ cache: $(STDLIB)
 
 ccache:
 	rm -f $(addprefix $(FSTAR_HOME)/cache/, $(STDCACHE))
+
+rpc: 
+	$(FSTAR) $(OTHERFLAGS) mac.fst format.fst rpc.fst --verify
+
 
 rbt:
 	$(FSTAR) --z3timeout 10 --verify rbtree.fst

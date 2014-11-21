@@ -54,7 +54,8 @@ let tag1 = create 1 1uy
 logic type UInt16 (i:int) = (0 <= i /\ i < 65536)
 type uint16 = i:int{UInt16 i}
 
-assume val utf8: s:string -> Tot (m:message{length m <= strlen s}) (* this spec is accurate for ASCII strings *)
+assume val utf8:  s:string  -> Tot (m:message{length m <= strlen s}) (* this spec is accurate for ASCII strings *)
+assume val iutf8: m:message -> s:string{utf8 s == m}
 assume UTF8_inj: forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}  Equal (utf8 s0) (utf8 s1) ==> s0==s1
 
 assume val uint16_to_bytes: uint16 -> Tot (msg 2)
@@ -74,7 +75,9 @@ let response s t =
                               (utf8 t)))
 
 val req_resp_distinct: s:string -> s':string16 -> t':string
-                     -> Lemma (ensures (~(Equal (request s) (response s' t'))))
+                     -> Lemma (requires True)
+                              (ensures (request s <> response s' t'))
+                              [SMTPat (request s); SMTPat (response s' t')]
 let req_resp_distinct s s' t' = ()
 
 val req_inj: s1:string -> s2:string{request s1=request s2} -> Lemma (ensures (s1==s2))
@@ -86,12 +89,12 @@ val resp_components_corr: s1:string16
                        -> t2:string
                        -> Lemma (requires (response s1 t1 == response s2 t2))
                                 (ensures  (s1==s2 /\ t1==t2))
-                                [SMTPat (response s1 t1); SMTPat (response s2 t2)]
+                                (* [SMTPat (response s1 t1); SMTPat (response s2 t2)] *)
 let resp_components_corr s1 t1 s2 t2 = ()
 
 val req_components_corr: s1:string
                       -> s2:string
                       -> Lemma (requires (request s1 == request s2))
                                (ensures  (s1==s2))
-                               [SMTPat (request s1); SMTPat (request s2)]
+                               (* [SMTPat (request s1); SMTPat (request s2)] *)
 let req_components_corr s1 s2 = ()

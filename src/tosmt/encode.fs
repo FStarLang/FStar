@@ -1143,7 +1143,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 | _ -> 
                         let ttok_decl = Term.DeclFun(Term.freeV_sym ttok, [], Type_sort, Some "token") in
                         let ttok_app = mk_ApplyT ttok vars in 
-                        let name_tok_corr = Term.Assume(mkForall([ttok_app], vars, mkEq(ttok_app, tapp)), Some "name-token correspondence") in
+                        let pats = if not is_logical && quals |> Util.for_some (function Opaque -> true | _ -> false)
+                                   then [[ttok_app]; [tapp]]
+                                   else [[ttok_app]] in
+                        let name_tok_corr = Term.Assume(mkForall'(pats, None, vars, mkEq(ttok_app, tapp)), Some "name-token correspondence") in
                         [ttok_decl;name_tok_corr], env in
             tname_decl@tok_decls, env in
         let kindingAx = 
