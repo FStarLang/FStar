@@ -10,6 +10,8 @@ all: $(PACKAGES:%=ocaml-%)
 
 update: $(PACKAGES:%=update-%)
 
+clean: $(PACKAGES:%=clean-%)
+
 ocaml-%: __force__
 	cd ocaml-$* && ( ocamlfind remove $* || true )
 	make -C ocaml-$*
@@ -21,3 +23,6 @@ update-%: __force__
 	  git reset --hard HEAD; \
 	  git pull --all --prune \
 	)
+
+clean-%:  __force__
+	make distclean -C ocaml-$*
