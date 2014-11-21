@@ -46,7 +46,7 @@ fstarml: $(FSTAR_OBJS)
 # Clean up
 clean:
 	rm -f fstarml
-	rm -f *.cm[iox]
+	rm -f Microsoft_FStar_*.ml Microsoft_FStar_*.cm[iox] parse.ml[iy] parse.ml
 
 # Dependencies
 depend:
