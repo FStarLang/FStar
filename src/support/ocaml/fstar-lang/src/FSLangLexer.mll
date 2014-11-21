@@ -16,6 +16,16 @@
       (lexeme_start_p lexbuf, lexeme_end_p lexbuf)
   end
 
+  let char_of_ec = function
+    | '\'' -> '\''
+    | '\"' -> '"'
+    | '\\' -> '\\'
+    | 'n'  -> '\n'
+    | 't'  -> '\t'
+    | 'b'  -> '\b'
+    | 'r'  -> '\r'
+    | _    -> assert false
+
   let keywords = Hashtbl.create 0
 
   let () =
@@ -111,14 +121,8 @@ let xieee32    = xinteger 'l' 'f'
 let xieee64    = xinteger 'L' 'F'
 
 (* -------------------------------------------------------------------- *)
-let trigraph           = '\\' digit digit digit
-let hexgraph_short     = '\\' 'x' hex hex 
-let unicodegraph_short = '\\' 'u' hex hex hex hex
-let unicodegraph_long  = '\\' 'U' hex hex hex hex hex hex hex hex
-
-(* -------------------------------------------------------------------- *)
 let escape_char = ('\\' ( '\\' | "\"" | '\'' | 'n' | 't' | 'b' | 'r'))
-let char        = '\'' ( [^'\\''\n''\r''\t''\b'] | escape_char) '\''
+let char        = [^'\\''\n''\r''\t''\b'] | escape_char
 
 (* -------------------------------------------------------------------- *)
 let constructor_start_char = upper
@@ -142,24 +146,21 @@ rule token = parse
      { NAME id }
  | tvar as id
      { TVAR id }
- | xint | int | xint32 | int32 
-     { INT32 (Int32.zero, false) }
- | int64 
-     { INT64 (Int64.zero, false) }
- | ieee64 | xieee64     
-     { IEEE64 0. }
+ | (xint | int | xint32 | int32) as x
+     { INT32 (Int32.of_string x, false) }
+ | int64 as x
+     { INT64 (Int64.of_string x, false) }
+ | (ieee64 | xieee64) as x
+     { IEEE64 (float_of_string x) }
  | (int | xint | float) ident_char+
      { failwith "This is not a valid numeric literal." }
- | char
-     { CHAR '\000' }
- | char 'B' 
-     { CHAR '\000' }
- | '\'' trigraph '\''
-     { CHAR '\000' }
-
- | '\'' hexgraph_short     '\'' { CHAR '\000' }
- | '\'' unicodegraph_short '\'' { CHAR '\000' }
- | '\'' unicodegraph_long  '\'' { CHAR '\000' }
+ | '\'' (char as c) '\''
+ | '\'' (char as c) '\'' 'B'
+     { let c =
+         match c.[0] with
+         | '\\' -> char_of_ec c.[1]
+         | _    -> c.[0]
+       in CHAR c }
 
  | "~"         { TILDE (L.lexeme lexbuf) }
  | "/\\"       { CONJUNCTION }
@@ -251,13 +252,7 @@ and string buffer = parse
       string buffer lexbuf; }
 
  | escape_char as c
-    { (match c.[1] with
-       | '\\' -> Buffer.add_char buffer '\\'
-       | 'n'  -> Buffer.add_char buffer '\n'
-       | 't'  -> Buffer.add_char buffer '\t'
-       | 'b'  -> Buffer.add_char buffer '\b'
-       | 'r'  -> Buffer.add_char buffer '\r'
-       | _    -> assert false);
+    { Buffer.add_char buffer (char_of_ec c.[1]);
       string buffer lexbuf }
      
  |  '"' 
@@ -309,10 +304,6 @@ and comment_string = parse
      { () }
 
  | escape_char
- | trigraph
- | hexgraph_short
- | unicodegraph_short
- | unicodegraph_long
  | ident  
  | xinteger
  | anywhite+
