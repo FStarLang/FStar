@@ -1,7 +1,7 @@
 module Bug56
 
-val g : x:'a -> Lemma (ensures True)
+val g : x:'a -> Tot unit
 let g x = ()
 
-val xxx : x:nat -> y:nat -> Lemma (ensures (x=y))
+val xxx : x:int -> y:int -> Lemma (ensures (x > 0))
 let rec xxx x y = g (xxx y)
