@@ -44,24 +44,22 @@ At the moment:
           $ make test -C src
 
 
-# To build the OCaml backend
+# To bootstrap the compiler in OCaml
 
-0. Install OCaml (version 4.01.x or 4.02.x)
+0. Install OCaml (version 4.01.x or newer)
 1. Install opam, initialize it (opam init) and update the path to
-   ocamlfind and the ocaml libraries
-2. Install the following libraries:
-     batteries camlp4 conf-gmp cstruct ctypes fileutils menhir oasis
-     ocaml-data-notation ocamlfind ocamlify ocamlmod ocplib-endian optcomp
-     ounit sexplib sqlite3-ocaml type_conv zarith
-   (opam install [...])
-3. Compile and install the 3rdparty tools (in
-   src/support/ocaml/3rdparty):
+   ocamlfind and the ocaml libraries (if you allow opam init to edit your ~/.bashrc, it is done automatically; otherwise, use: eval $(opam config env)).
+2. Install the required OCaml libraries:
+
+         opam install batteries camlp4 conf-gmp cstruct ctypes fileutils menhir oasis ocaml-data-notation ocamlfind ocamlify ocamlmod ocplib-endian optcomp ounit sexplib sqlite3-ocaml type_conv zarith
+
+3. Compile and install the 3rdparty tools (in src/support/ocaml/3rdparty):
 
          git submodule init
          git submodule update
          make
 
-4. Compile and install the fstar-lib (in src/support/ocaml/fstar-lib):
+4. Compile and install the fstar OCaml package (in src/support/ocaml/fstar-lib):
 
         ./autogen.sh
         ./configure
@@ -72,12 +70,3 @@ At the moment:
 
         make ocaml
 
-6. Compile it (in src):
-
-        make
-        make ocaml.built
-        cd ocaml-output
-        make parser
-        touch .depend
-        make depend
-        make
