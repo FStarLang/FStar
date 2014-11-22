@@ -1,6 +1,6 @@
-# Building F* from sources
+# Binary releases (coming soon)
 
-At the moment:
+# Building F* from sources
 
 - On Windows 7/8 with .NET framework 4.5 and F# v3.0 :
   - Either using VisualStudio 2013, open FStar/VS/FStar.sln and build solution.
@@ -10,17 +10,17 @@ At the moment:
   - Install mono 3.10.x and fsharp 3.1.x
     - On Debian/Ubuntu
 
-          $ sudo apt-get install mono-complete fsharp
+            $ sudo apt-get install mono-complete fsharp
 
     - On Arch
 
-          $ pacman -S mono
-          $ aura -A fsharp
+            $ pacman -S mono
+            $ aura -A fsharp
 
     - For other Linux distributions check out these links:
       http://www.mono-project.com/download/#download-lin
       http://fsharp.org/use/linux/
-    - For Mac OS X install the MRE
+    - For Mac OS X install the MRE:
       http://www.mono-project.com/download/#download-mac
 
   - Import certificates
@@ -29,7 +29,7 @@ At the moment:
 
   - Get a Z3 4.3.2 binary and add it to your PATH
 
-    - On Linux (any distribution) get it from here:
+    - On Linux (any distribution) get binary from here:
       https://z3.codeplex.com/releases/view/101911
     
       For instance, for a 64bit architecture you can do
@@ -38,7 +38,7 @@ At the moment:
           $ unzip z3-4.3.2.5a45711f22d9-x64-ubuntu-13.10.zip
           $ export PATH=z3-4.3.2.5a45711f22d9-x64-ubuntu-13.10/bin:$PATH
 
-    - On Mac OS X get it from here:
+    - On Mac OS X get binary from here:
       https://z3.codeplex.com/releases/view/101918
 
   - Compile F* from sources
@@ -51,7 +51,6 @@ At the moment:
 
           $ source setenv.sh
           $ mono bin/fstar.exe --prims lib/prims.fst examples/unit-tests/utils.fst
-          $ mono bin/fstar.exe --prims lib/prims.fst examples/unit-tests/rec.fst
           $ make test -C src
 
   - If `make test` (`make boot` in fact) causes stack overflow try
@@ -61,14 +60,14 @@ At the moment:
 
 0. Prerequisite: OCaml (version 4.01.0 or newer)
 
-1. Prerequisite: OPAM (version 1.2.x)
-   (Installation instructions available in various places:
-    https://github.com/realworldocaml/book/wiki/Installation-Instructions#getting-opam
-    http://opam.ocaml.org/doc/Install.html
-    You need to initialize it by running `opam init` and update the PATH
-    variable to the `ocamlfind` and the OCaml libraries. If you allow
-    `opam init` to edit your `~/.bashrc` or `~/.profile`, it is done
-    automatically; otherwise, use: `eval $(opam config env)`.)
+1. Prerequisite: OPAM (version 1.2.x).
+   - Installation instructions available at various places
+     (e.g., https://github.com/realworldocaml/book/wiki/Installation-Instructions#getting-opam
+     or http://opam.ocaml.org/doc/Install.html).
+     You need to initialize it by running `opam init` and update the `PATH`
+     variable to the `ocamlfind` and the OCaml libraries. If you allow
+     `opam init` to edit your `~/.bashrc` or `~/.profile`, it is done
+     automatically; otherwise, use: `eval $(opam config env)`.
 
 2. Install the required OCaml libraries:
 
@@ -89,7 +88,7 @@ At the moment:
 
    If the `make install` fails with
    `ocamlfind: Package fstar is already installed`
-   you need to remove first the previous package then rerun `make install`
+   you need to remove first the previous package then re-run `make install`
 
         $ ocamlfind remove fstar
         $ make install
