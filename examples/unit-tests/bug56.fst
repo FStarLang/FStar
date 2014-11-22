@@ -1,4 +1,4 @@
-module BugXX
+module Bug56
 
 val g : x:'a -> Lemma (ensures True)
 let g x = ()
