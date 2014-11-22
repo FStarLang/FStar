@@ -211,6 +211,9 @@ let rec term_to_string (x:term) = match x.tm with
     Util.format2 "%s:{%s}" (b|> binder_to_string) (t|> term_to_string)      
   | Paren t -> Util.format1 "(%s)" (t|> term_to_string)
   | Affine t -> Util.format1 "!%s" (t|> term_to_string)
+  | Product(bs, t) ->
+        Util.format2 "Unidentified product: [%s] %s"
+          (bs |> List.map binder_to_string |> String.concat ",") (t|> term_to_string)
   | t -> failwith "Missing case in term_to_string"
 
 and binder_to_string x = 

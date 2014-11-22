@@ -344,7 +344,7 @@ let typing_extensional g g' e = context_invariance e g g'
 
 val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
       g:env{is_Some (typing empty v) &&
-        is_Some (typing (extend g x (Some.v (typing empty v))) e)} ->
+            is_Some (typing (extend g x (Some.v (typing empty v))) e)} ->
       Tot (u:unit{typing g (subst x v e) ==
                   typing (extend g x (Some.v (typing empty v))) e})
 let rec substitution_preserves_typing x e v g =
@@ -359,7 +359,6 @@ let rec substitution_preserves_typing x e v g =
      else context_invariance e gx g
 
   | EApp e1 e2 ->
-     let Some (TArrow t1 t2) = typing gx e1 in
      substitution_preserves_typing x e1 v g;
      substitution_preserves_typing x e2 v g
 
