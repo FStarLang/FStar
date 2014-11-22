@@ -18,19 +18,19 @@
             $ aura -A fsharp
 
     - For other Linux distributions check out these links:
-      http://www.mono-project.com/download/#download-lin
-      http://fsharp.org/use/linux/
+      - http://www.mono-project.com/download/#download-lin
+      - http://fsharp.org/use/linux/
     - For Mac OS X install the MRE:
-      http://www.mono-project.com/download/#download-mac
+      - http://www.mono-project.com/download/#download-mac
 
-  - Import certificates
+  - Import certificates for Mono
 
           $ mozroots --import --sync
 
   - Get a Z3 4.3.2 binary and add it to your PATH
 
-    - On Linux (any distribution) get binary from here:
-      https://z3.codeplex.com/releases/view/101911
+    - On Linux (any distribution, not just Ubuntu) get binary from here:
+      - https://z3.codeplex.com/releases/view/101911
     
       For instance, for a 64bit architecture you can do
 
@@ -39,7 +39,7 @@
           $ export PATH=z3-4.3.2.5a45711f22d9-x64-ubuntu-13.10/bin:$PATH
 
     - On Mac OS X get binary from here:
-      https://z3.codeplex.com/releases/view/101918
+      - https://z3.codeplex.com/releases/view/101918
 
   - Compile F* from sources
 
