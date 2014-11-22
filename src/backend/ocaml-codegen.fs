@@ -238,7 +238,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
         let doc =
           match name, args with
             (* Special case for Cons *)
-            | "::", [x;xs] -> reduce [x; text "::"; xs]
+            | "::", [x;xs] -> reduce [parens x; text "::"; xs]
             | _, _ -> reduce1 [text name; parens (combine (text ", ") args)] in
         maybe_paren outer e_app_prio doc
 

@@ -11,7 +11,7 @@ OCAMLOPTFLAGS=$(INCLUDES) # add other options for ocamlopt here
 # The list of object files for prog1
 FSTAR_OBJS=Microsoft_FStar_Options.cmo Microsoft_FStar_LazySet.cmo Microsoft_FStar_Absyn_Syntax.cmo Microsoft_FStar_Absyn_Const.cmo Microsoft_FStar_Absyn_Visit.cmo Microsoft_FStar_Absyn_Util.cmo Microsoft_FStar_Absyn_Print.cmo Microsoft_FStar_Absyn_SSyntax.cmo Microsoft_FStar_Parser_AST.cmo Microsoft_FStar_Parser_DesugarEnv.cmo Microsoft_FStar_Parser_Desugar.cmo Microsoft_FStar_Parser_Parse.cmo Microsoft_FStar_Parser_Lexhelp.cmo Microsoft_FStar_Parser_LexFStar.cmo Microsoft_FStar_Parser_ParseIt.cmo Microsoft_FStar_Parser_Driver.cmo Microsoft_FStar_Tc_Env.cmo Microsoft_FStar_Tc_Normalize.cmo Microsoft_FStar_Tc_Errors.cmo Microsoft_FStar_Tc_Rel.cmo Microsoft_FStar_Tc_Util.cmo Microsoft_FStar_Tc_Tc.cmo Microsoft_FStar_ToSMT_Term.cmo Microsoft_FStar_ToSMT_Z3.cmo Microsoft_FStar_ToSMT_Encode.cmo
 
-all: parser depend fstarml
+all: fstarml
 
 parser:
 	cat ../parser/parse.fsy | sed ':a;N;$$!ba;s/^%[{][^%]*%[}]//g' > parse.mly
@@ -27,6 +27,7 @@ parser:
 #	cp ../support/ocaml/fstar-lang/src/FSLangLexer.mll lex.mll
 	ocamllex ../lex.mll -o Microsoft_FStar_Parser_LexFStar.ml
 	cp ../parseit.ml Microsoft_FStar_Parser_ParseIt.ml
+	$(OCAMLDEP) $(INCLUDES) *.ml > .depend
 
 fstarml: $(FSTAR_OBJS)
 	ocamlfind ocamlc -package fstar -o fstarml $(FSTAR_OBJS) ../fstarml.ml -linkpkg -g
