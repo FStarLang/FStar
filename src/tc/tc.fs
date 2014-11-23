@@ -1032,7 +1032,10 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
   let pattern, bindings, pat_env, disj_exps = tc_pat pat_t env pattern in //disj_exps, an exp for each arm of a disjunctive pattern
   let when_clause = match when_clause with 
     | None -> None
-    | Some e -> Some (fst <| (no_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e)) in
+    | Some e -> 
+        if !Options.verify
+        then Some (fst <| (no_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e))
+        else Some (fst <| tc_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e) in
   let when_condition = match when_clause with 
         | None -> None 
         | Some w -> Some <| Util.mk_eq w Const.exp_true_bool in
@@ -1461,7 +1464,7 @@ let check_modules (s:solver_t) (ds: solver_t) mods =
     if List.length !Options.debug <> 0
     then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
     let msg = ("Internals for module " ^m.name.str) in
-    s.push msg;
+    // s.push msg;
     let m, env =
         if m.is_deserialized then
           let m, env = tc_modul ({ env with solver = ds }) m in
@@ -1475,9 +1478,10 @@ let check_modules (s:solver_t) (ds: solver_t) mods =
           else () in
           m, env
     in 
-    s.pop msg;
+    // s.pop msg;
     if Options.should_dump m.name.str then Util.fprint1 "%s\n" (Print.modul_to_string m);
     if m.is_interface  //TODO: admit interfaces to the solver also
     then mods, env
-    else (s.encode_modul env m; m::mods, env)) ([], env) in
+    else (//s.encode_modul env m; 
+          m::mods, env)) ([], env) in
    List.rev fmods
