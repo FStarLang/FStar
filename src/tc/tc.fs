@@ -596,7 +596,7 @@ and tc_value env e : exp * comp =
     if Env.debug env Options.Medium
     then Util.fprint2 "!!!!!!!!!!!!!!!body %s has type %s\n" (Print.exp_to_string body) (Print.comp_typ_to_string cbody);
     let body, cbody, guard = check_expected_effect envbody c_opt (body, cbody) in
-    let guard = if env.top_level then (Tc.Util.discharge_guard envbody (Rel.conj_guard g guard); Trivial)
+    let guard = if env.top_level || not(!Options.verify) then (Tc.Util.discharge_guard envbody (Rel.conj_guard g guard); Trivial)
                 else let guard = Tc.Util.close_guard bs guard in Rel.conj_guard g guard in 
     let tfun = match tfun_opt with 
         | Some t -> 

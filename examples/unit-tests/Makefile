@@ -31,9 +31,6 @@ counters: list.fst $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst stp
 test: $(addprefix $(FSTAR_HOME)/lib/, partialmap.fst st.fst) test.fst
 	../../bin/fstar --fstar_home $(FSTAR_HOME) $^ --verify $(OTHERFLAGS)
 
-rpc: 
-	$(FSTAR) mac.fst format.fst rpc.fs 
-
 cache: $(STDLIB)
 	mkdir $(FSTAR_HOME)/cache
 	$(FSTAR) --serialize_mods --verify
