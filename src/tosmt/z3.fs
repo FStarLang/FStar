@@ -99,8 +99,8 @@ let z3proc =
 
  
 
-let doZ3Exe (input:string) = Util.fprint1 "INPUT %s\n" input; 
-  let parse (z3out:string) = Util.fprint1 "OUTPUT %s\n" z3out;
+let doZ3Exe (input:string) = 
+  let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map Util.trim_string in
     let rec lblnegs lines = match lines with 
       | lname::"false"::rest -> lname::lblnegs rest
