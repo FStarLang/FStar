@@ -211,79 +211,58 @@ let rec appears_free_in x e =
   | ESnd e1 -> appears_free_in x e1
   | ELet y e1 e2 -> appears_free_in x e1 || (x <> y && appears_free_in x e2)
 
-(* Didn't manage to use auto-induction for free_in_context: 
-   WARNING: pattern does not contain all quantified variables.
-   + Z3 didn't manage to prove easy cases automatically.
-   Any way we can specify the pattern by hand? What would be a good one here?
-   I've tried adding 
-      [SMTPat (appears_free_in x e); SMTPat (is_Some (typing g e))]
-   to the whole lemma. That removed the warning, but EApp case still failed. *)
 val free_in_context : x:int -> e:exp -> g:env -> Lemma
-      (requires (appears_free_in x e /\ is_Some (typing g e)))
-      (ensures (is_Some (g x)))
-let rec free_in_context x e g =
-(*  using_induction_hyp free_in_context;*)
-  match e with
-  | EAbs y t e1 ->
-     if x = y
-     then ()
-     else free_in_context x e1 (extend g y t)
-
-  | EApp e1 e2 ->
-     if appears_free_in x e1
-     then free_in_context x e1 g
-     else free_in_context x e2 g
-
-  | EIf e1 e2 e3 ->
-     if      appears_free_in x e1 then free_in_context x e1 g
-     else if appears_free_in x e2 then free_in_context x e2 g
-     else                              free_in_context x e3 g
-
-  | EPair e1 e2 ->
-      if appears_free_in x e1 then free_in_context x e1 g
-      else free_in_context x e2 g
-
-  | EFst e1
-  | ESnd e1 -> free_in_context x e1 g
-
-  | ELet y e1 e2 ->
-     if appears_free_in x e1 then free_in_context x e1 g
-     else if x = y then ()
-          else  free_in_context x e2 (extend g y (Some.v (typing g e1)))
-
-  | _ -> ()
-
-(* The proof above can be made smaller if we move the quantification
-   of x and the appears_free_in x e premise to the conclusion, since
-   there is less manual instantiation left to do. This kind of
-   optimization might become irrelevant with automatic induction?
-val free_in_context' : g:env -> e:exp -> x:int -> Lemma
       (requires (is_Some (typing g e)))
       (ensures (appears_free_in x e ==> is_Some (g x)))
-(* This removes pattern warning, but things still fail
-      [SMTPat (appears_free_in x e); SMTPat (is_Some (typing g e))]*)
-let rec free_in_context' g e x =
+let rec free_in_context x e g =
   match e with
   | EVar _
   | ETrue
   | EFalse -> ()
-  | EAbs y t e1 -> free_in_context' (extend g y t) e1 x
+  | EAbs y t e1 -> free_in_context x e1 (extend g y t)
+  | EApp e1 e2 -> free_in_context x e1 g; free_in_context x e2 g
+  | EIf e1 e2 e3 -> free_in_context x e1 g;
+                    free_in_context x e2 g; free_in_context x e3 g
+  | EPair e1 e2 -> free_in_context x e1 g; free_in_context x e2 g
+  | EFst e1 
+  | ESnd e1 -> free_in_context x e1 g
+  | ELet y e1 e2 ->
+      (free_in_context x e1 g;
+      free_in_context x e2 (extend g y (Some.v (typing g e1))))
+
+(* I also tried to changed the order of arguments employ
+   using_induction_hyp with a partially applied induction
+   hypothesis. For some obscure to me reason
+   this requires the --full_context_dependency flag even to
+   pre-type-check and then it doesn't really help verifying this
+   more automatically (left some admits there).
+val free_in_context' : g:env -> x:int -> e:exp -> Lemma
+      (requires (is_Some (typing g e)))
+      (ensures (appears_free_in x e ==> is_Some (g x)))
+      [SMTPat (appears_free_in x e); SMTPat (is_Some (typing g e))]
+let rec free_in_context' g x e =
+  match e with
+  | EVar _
+  | ETrue
+  | EFalse -> ()
+  | EAbs y t e1 -> free_in_context' (extend g y t) x e1
   | EApp _ _
-  | EIf _ _ _ -> let f = (free_in_context' g) in using_induction_hyp f
+  | EIf _ _ _ -> using_induction_hyp (free_in_context' g x); admit()
     (* Tried partially applying free_in_context' to g, but that
-       lead to strange error message: expected type U1430 got ... *)
+       lead to strange error message: expected type U1430 got ...
+       Setting the --full_context_dependency fixed this problem. *)
   | EPair _ _
   | EFst _
-  | ESnd _ -> using_induction_hyp free_in_context'
+  | ESnd _ -> using_induction_hyp (free_in_context' g x); admit()
   | ELet y e1 e2 ->
-      (free_in_context' g e1 x;
-      free_in_context' (extend g y (Some.v (typing g e1))) e2 x)
+      (free_in_context' g x e1;
+      free_in_context' (extend g y (Some.v (typing g e1))) x e2)
 *)
 
 (* Corollary of free_in_context when g=empty -- fed to the SMT solver *)
 val typable_empty_closed : x:int -> e:exp -> Lemma
-      (requires (is_Some (typing empty e) /\ appears_free_in x e))
-      (ensures False)
+      (requires (is_Some (typing empty e)))
+      (ensures (not(appears_free_in x e)))
       [SMTPat (appears_free_in x e)]
 let typable_empty_closed x e = free_in_context x e empty
 
