@@ -110,7 +110,12 @@ module Microsoft = struct
       let ask_process (p:proc) (stdin:string) : string =
         output_string p.outc stdin;
         flush p.outc;
-        input_line p.inc
+        let r = ref "" in
+        let l = ref "" in
+        while !l <> "Done!" do
+         r := (!r)^(!l)^"\n";
+         l := input_line p.inc;
+        done; !r
 
       let kill_process (p:proc) =
         let _ = Unix.close_process (p.inc, p.outc) in
