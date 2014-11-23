@@ -46,7 +46,7 @@ let publicfile f =
   if f = "C:/public/README" then assume (PublicFile f)
   else failwith "not a public file"
 
-assume ReadablePublic: forall x. PublicFile x -> CanRead x
+assume ReadablePublic: forall x. PublicFile x ==> CanRead x //NS: ==> is implication
 
 let test() = 
   delete tmp; (* ok *)
@@ -63,8 +63,9 @@ val rc: file:string{CanRead(file)} -> unit -> string
 
 let rc file : unit -> string = fun () -> read file
 
+val test_higher_order: unit -> unit
 let test_higher_order() =
-  let reader: unit -> string = 
+  let reader = 
     (publicfile readme; (fun () -> read readme)) in
 //let v4 = read readme in (* type error *)
   let v5 = reader () in   (* ok *)
@@ -94,8 +95,8 @@ val readable: file:string -> u:unit{ CanRead(file) }
 
 let readable file = 
   match List.assoc file acls with
-  | Some(Readable f) when (f = file) -> ()
-  | Some(Writable f) when (f = file) -> () 
+  | Some(Readable f) -> if file = f then () else failwith "unreadable"
+  | Some(Writable f) -> if file = f then () else failwith "unreasable"
   | _ -> failwith "unreadable"
 
 
