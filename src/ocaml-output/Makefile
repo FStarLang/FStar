@@ -1,5 +1,5 @@
-OCAMLC=ocamlfind ocamlc -package fstar -linkpkg -g
-OCAMLOPT=ocamlopt
+OCAMLC=ocamlfind ocamlopt -p -package fstar -linkpkg -g
+OCAMLOPT=ocamlfind ocamlopt -p -package fstar -linkpkg -g
 OCAMLDEP=ocamldep
 INCLUDES=                 # all relevant -I options here
 OCAMLFLAGS=$(INCLUDES)    # add other options for ocamlc here
@@ -9,7 +9,7 @@ OCAMLOPTFLAGS=$(INCLUDES) # add other options for ocamlopt here
 # units: mod1, mod2 and mod3.
 
 # The list of object files for prog1
-FSTAR_OBJS=Microsoft_FStar_Options.cmo Microsoft_FStar_LazySet.cmo Microsoft_FStar_Absyn_Syntax.cmo Microsoft_FStar_Absyn_Const.cmo Microsoft_FStar_Absyn_Visit.cmo Microsoft_FStar_Absyn_Util.cmo Microsoft_FStar_Absyn_Print.cmo Microsoft_FStar_Absyn_SSyntax.cmo Microsoft_FStar_Parser_AST.cmo Microsoft_FStar_Parser_DesugarEnv.cmo Microsoft_FStar_Parser_Desugar.cmo Microsoft_FStar_Parser_Parse.cmo Microsoft_FStar_Parser_Lexhelp.cmo Microsoft_FStar_Parser_LexFStar.cmo Microsoft_FStar_Parser_ParseIt.cmo Microsoft_FStar_Parser_Driver.cmo Microsoft_FStar_Tc_Env.cmo Microsoft_FStar_Tc_Normalize.cmo Microsoft_FStar_Tc_Errors.cmo Microsoft_FStar_Tc_Rel.cmo Microsoft_FStar_Tc_Util.cmo Microsoft_FStar_Tc_Tc.cmo Microsoft_FStar_ToSMT_Term.cmo Microsoft_FStar_ToSMT_Z3.cmo Microsoft_FStar_ToSMT_Encode.cmo
+FSTAR_OBJS=Microsoft_FStar_Options.cmx Microsoft_FStar_LazySet.cmx Microsoft_FStar_Absyn_Syntax.cmx Microsoft_FStar_Absyn_Const.cmx Microsoft_FStar_Absyn_Visit.cmx Microsoft_FStar_Absyn_Util.cmx Microsoft_FStar_Absyn_Print.cmx Microsoft_FStar_Absyn_SSyntax.cmx Microsoft_FStar_Parser_AST.cmx Microsoft_FStar_Parser_DesugarEnv.cmx Microsoft_FStar_Parser_Desugar.cmx Microsoft_FStar_Parser_Parse.cmx Microsoft_FStar_Parser_Lexhelp.cmx Microsoft_FStar_Parser_LexFStar.cmx Microsoft_FStar_Parser_ParseIt.cmx Microsoft_FStar_Parser_Driver.cmx Microsoft_FStar_Tc_Env.cmx Microsoft_FStar_Tc_Normalize.cmx Microsoft_FStar_Tc_Errors.cmx Microsoft_FStar_Tc_Rel.cmx Microsoft_FStar_Tc_Util.cmx Microsoft_FStar_Tc_Tc.cmx Microsoft_FStar_ToSMT_Term.cmx Microsoft_FStar_ToSMT_Z3.cmx Microsoft_FStar_ToSMT_Encode.cmx
 
 all: fstarml
 
@@ -47,7 +47,7 @@ lparser:
 	$(OCAMLDEP) $(INCLUDES) *.ml > .depend
 
 fstarml: $(FSTAR_OBJS)
-	ocamlfind ocamlc -package fstar -o fstarml $(FSTAR_OBJS) ../fstarml.ml -linkpkg -g
+	ocamlfind ocamlopt -p -package fstar -o fstarml $(FSTAR_OBJS) ../fstarml.ml -linkpkg -g
 
 # Common rules
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
