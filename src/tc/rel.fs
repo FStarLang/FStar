@@ -224,7 +224,7 @@ let singleton prob tk = {empty_worklist with attempting=[prob]; top_t=tk}
 
 let reattempt (_, p, _) = p
 let giveup env reason prob probs = 
-    if debug env High
+    if debug env <| Options.Other "Rel"
     then Util.fprint2 "Failed %s: %s" reason (prob_to_string env prob);
     Failed <| (probs.ctr, prob, reason)::probs.deferred
 let giveup_noex probs = Failed probs.deferred
@@ -899,7 +899,7 @@ and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist
                 solve env (attempt subprobs probs)
 
             | Failed reasons -> 
-                giveup env "Failed on goal: " p probs
+                giveup env (reasons |> List.map (fun (_, _, r) -> r) |> String.concat ", ")  p probs
         end in 
 
     match t1.n, t2.n with
@@ -1040,7 +1040,7 @@ and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist
 
 and solve_c (top:bool) (env:Env.env) (rel:rel) (c1:comp) (c2:comp) (probs:worklist) : solution =
     if Util.physical_equality c1 c2 then solve env probs
-    else let _ = if debug env High then Util.fprint2 "solve_c %s and %s" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2) in
+    else let _ = if debug env <| Options.Other "Rel" then Util.fprint2 "solve_c %s and %s" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2) in
          let r = Env.get_range env in
          match c1.n, c2.n with
                | Total t1, Total t2 -> //rigid-rigid 1
@@ -1057,6 +1057,7 @@ and solve_c (top:bool) (env:Env.env) (rel:rel) (c1:comp) (c2:comp) (probs:workli
                      let c1_0, c2_0 = c1, c2 in
                      let c1 = Normalize.weak_norm_comp env c1 in
                      let c2 = Normalize.weak_norm_comp env c2 in
+                     if debug env <| Options.Other "Rel" then Util.fprint2 "solve_c for %s and %s" (c1.effect_name.str) (c2.effect_name.str);
                      let has_uvars t = 
                         let uvs = Util.uvars_in_typ t in
                         Util.set_count uvs.uvars_t > 0 in
@@ -1073,7 +1074,7 @@ and solve_c (top:bool) (env:Env.env) (rel:rel) (c1:comp) (c2:comp) (probs:workli
                             if Util.physical_equality wpc1 wpc2 
                             then (//printfn "Physical equality of wps ... done";
                                   solve env (attempt [res_t_prob] probs))
-                            else if rel=EQ  
+                            else if rel=EQ  && lid_equals (Util.comp_to_comp_typ c1_0).effect_name (Util.comp_to_comp_typ c2_0).effect_name
                                  then let prob = TProb(false, EQ, wpc1, wpc2) in
                                       solve env (attempt [res_t_prob; prob] probs)
                                  else //rel=SUB
@@ -1169,7 +1170,7 @@ and solve_e (top:bool) (env:Env.env) (rel:rel) (e1:exp) (e2:exp) (probs:worklist
      solve env (guard env top (NonTrivial <| Util.mk_eq e1 e2) probs)  
           
 let explain env d = 
-    if debug env Options.Low
+    if debug env <| Options.Other "Rel"
     then  d |> List.iter (fun (_, p, reason) -> 
                     Util.fprint2 "Problem:\n%s\nFailed because: %s\n" (prob_to_string env p) reason)
 

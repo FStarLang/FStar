@@ -146,16 +146,16 @@ val test: unit -> Wys unit
 let test _ =
   let x = with_mode par_A (mk_box 2) in
   let y = with_mode par_B (mk_box 3) in
-  let z = concat_wires (mk_wire par_A x) (mk_wire par_B y) in ()
-  (* assert (Box.v x == 2); *)
-  (* assert (Box.v y == 3); *)
-  (* assert (z == Map.concat (Map.const (Set.singleton pA) 2) (Map.const (Set.singleton pB) 3))(\* ; *\) *)
-  (* assert (Map.sel z pA == 2); *)
-  (* assert (Map.sel z pB == 3); *)
-  (* assert (Map.contains z pA); *)
-  (* let x = Map.sel z pA > Map.sel z pB in *)
-  (* assert (x == false); *)
-  (* assert (proj_ok int z pA sec_AB) *)
+  let z = concat_wires (mk_wire par_A x) (mk_wire par_B y) in 
+  assert (Box.v x == 2);
+  assert (Box.v y == 3);
+  assert (z == Map.concat (Map.const_on (Set.singleton pA) 2) (Map.const_on (Set.singleton pB) 3));
+  assert (Map.sel z pA == 2);
+  assert (Map.sel z pB == 3);
+  assert (Map.contains z pA);
+  let x = Map.sel z pA > Map.sel z pB in
+  assert (x == false);
+  assert (proj_ok int z pA sec_AB)
 
 let wire_ab = Map.concat (Map.const_on (Set.singleton pA) 2)
                          (Map.const_on (Set.singleton pB) 3)

@@ -19,10 +19,7 @@ open Set
 open Heap
 
 opaque type Modifies (mods:refs) (h:heap) (h':heap) =
-           is_SomeRefs mods ==> (Heap.equal (restrict h  (complement (SomeRefs.v mods)))
-                                            (restrict h' (complement (SomeRefs.v mods))) 
-                                 /\ (exists h''. h' == concat (restrict h (complement (SomeRefs.v mods)))
-                                                              (restrict h'' (SomeRefs.v mods))))
+           is_SomeRefs mods ==> (Heap.equal h' (concat h' (restrict h (complement (SomeRefs.v mods)))))
 
 let modifies (r:refs) = r
 kind Pre  = heap -> Type
@@ -43,11 +40,11 @@ assume val read: a:Type -> r:ref a -> ST a
                                          (fun h0 x h1 -> h0==h1 /\ x==sel h0 r)
                                          (modifies no_refs)
 
-assume val write: a:Type -> r:ref a -> v:a -> ST unit 
+assume val write: a:Type -> r:ref a -> v:a -> Prims.STATE.ST unit 
                                                  (fun h -> True)
                                                  (fun h0 x h1 -> h1==upd h0 r v)
-                                                 (modifies (a_ref r))
+                                                 (* (modifies (a_ref r)) *)
 
 
-(* signatures WITH permissions *)
-assume logic type Perm : #a:Type -> ref a -> heap -> Type
+assume val get: unit -> ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h=h1) (modifies no_refs)
+

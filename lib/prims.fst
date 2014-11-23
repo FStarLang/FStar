@@ -500,9 +500,9 @@ assume val Assume: 'P:Type -> unit -> (y:unit{'P})
 assume val admit: unit -> Admit unit
 assume val admitP: 'P:Type -> unit -> Pure unit True (fun x -> 'P)
 assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
-assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> 'P)
+assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (fun x -> 'P)
 assume val qintro: a:Type -> p:(a -> Type) -> (x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
-assume val failwith: string -> 'a (* TODO: refine with the Exn monad *)
+assume val failwith: string -> ALL.All 'a (fun h -> True) (fun h a h' -> h==h')
 assume val raise: exn -> 'a       (* TODO: refine with the Exn monad *)
 assume val pipe_right: 'a -> ('a -> 'b) -> 'b
 assume val pipe_left: ('a -> 'b) -> 'a -> 'b
@@ -534,7 +534,7 @@ type nonzero = i:int{i<>0}
    OCaml's big_ints (for which the modulus is always positive).  So
    we'll need to return to this point anyway, when we discuss how to
    soundly map F* ints to something in F#/OCaml. *)
-assume val op_Modulus            : nat -> nonzero -> Tot int
+assume val op_Modulus            : int -> nonzero -> Tot int
 assume val op_Division           : nat -> nonzero -> Tot int
 
 (* Unrefined specifications for these functions for typing ML code *)

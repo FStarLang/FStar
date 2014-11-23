@@ -19,28 +19,28 @@ let rec length l = match l with
   | [] -> 0
   | x::l' -> 1 + length l'
 
-val app: l1:mlist -> l2:mlist -> Pure mlist
-                                 (requires True)
-                                 (ensures (fun r ->
-				 (forall n.
-                                  in_list r n <==> (in_list l1 n \/ in_list l2 n)
-                                 )))
-let rec app l1 l2 = match l1 with
-  | [] -> l2
-  | x::tl1 ->
-    let r = app tl1 l2 in
-    x::r
+(* val app: l1:mlist -> l2:mlist -> Pure mlist *)
+(*                                  (requires True) *)
+(*                                  (ensures (fun r -> *)
+(* 				 (forall n. *)
+(*                                   in_list r n <==> (in_list l1 n \/ in_list l2 n) *)
+(*                                  ))) *)
+(* let rec app l1 l2 = match l1 with *)
+(*   | [] -> l2 *)
+(*   | x::tl1 -> *)
+(*     let r = app tl1 l2 in *)
+(*     x::r *)
 
 
 opaque type permutation (l1:mlist) (l2:mlist) = length l1 = length l2 /\
-                                         (forall n. in_list l1 n <==> in_list l2 n)
+                                         (forall n. in_list l1 n == in_list l2 n)
 
 opaque type permutation_2 (l:mlist) (l1:mlist) (l2:mlist) =
-    (forall n. in_list l n <==> (in_list l1 n \/ in_list l2 n)) /\
+    (forall n. in_list l n == (in_list l1 n || in_list l2 n)) /\
     length l = length l1 + length l2
 
 opaque type split_inv (l:mlist) (l1:mlist) (l2:mlist) =
-    permutation_2 l l1 l2 /\
+    permutation_2 l l1 l2 /\ (* is_Cons l1 /\ is_Cons l2 *)
     (* needed for decreases clause in mergesort function *)
     length l > length l1 /\ length l > length l2
 

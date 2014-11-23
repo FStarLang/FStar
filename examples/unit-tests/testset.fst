@@ -5,25 +5,26 @@ assume logic val A : elt
 assume logic val B : elt
 assume logic val C : elt
 assume AB_distinct: A=!=B
+open Set
 
 val should_succeed: unit -> Tot unit
 let should_succeed u =
-  assert (InSet B (Union (Singleton A) (Singleton B)));
-  assert (InSet A (Union (Singleton A) (Singleton B)));
-  assert (Subset (Singleton A) (Union (Singleton A) (Singleton B)));
-  assert (Subset (Singleton B) (Union (Singleton A) (Singleton B)));
-  assert (SetEqual (Union (Singleton A) (Singleton B))
-                   (Union (Singleton B) (Singleton A)))
+  assert (mem B (union (singleton A) (singleton B)));
+  assert (mem A (union (singleton A) (singleton B)));
+  assert (Subset (singleton A) (union (singleton A) (singleton B)));
+  assert (Subset (singleton B) (union (singleton A) (singleton B)));
+  assert (equal (union (singleton A) (singleton B))
+                (union (singleton B) (singleton A)))
 
 val should_fail1: unit -> Tot unit
 let should_fail1 u =
-  assert (InSet B (Singleton A))
+  assert (mem B (singleton A))
 
 val should_fail2: unit -> Tot unit
 let should_fail2 u = 
-  assert (Subset (Union (Singleton A) (Singleton B)) (Singleton A))
+  assert (Subset (union (singleton A) (singleton B)) (singleton A))
 
 val should_fail3: unit -> Tot unit
 let should_fail3 u =
-  assert (InSet C (Union (Singleton A) (Singleton B)))
+  assert (mem C (union (singleton A) (singleton B)))
             

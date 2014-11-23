@@ -984,20 +984,20 @@ let prims =
     {mk=mk;
      is=is}
 
-let primitive_type_axioms : lident -> term -> list<decl> = 
+let primitive_type_axioms : lident -> string -> term -> list<decl> = 
     let xx = ("x", Term_sort) in
     let x = mkBoundV xx in
-    let mk_unit : term -> decls_t = fun tt -> 
+    let mk_unit : string -> term -> decls_t = fun _ tt -> 
         let typing_pred = Term.mk_HasType false x tt in
         [Term.Assume(Term.mk_HasType false Term.mk_Term_unit tt,    Some "unit typing");
          Term.Assume(mkForall([typing_pred], [xx], mkImp(typing_pred, mkEq(x, Term.mk_Term_unit))),  Some "unit inversion")] in
-    let mk_bool : term -> decls_t = fun tt -> 
+    let mk_bool : string -> term -> decls_t = fun _ tt -> 
         let typing_pred = Term.mk_HasType false x tt in
         let bb = ("b", Bool_sort) in
         let b = mkBoundV bb in
         [Term.Assume(mkForall([typing_pred], [xx], mkImp(typing_pred, Term.mk_tester "BoxBool" x)),    Some "bool inversion");
          Term.Assume(mkForall([Term.boxBool b], [bb], Term.mk_HasType false (Term.boxBool b) tt),    Some "bool typing")] in
-    let mk_int : term -> decls_t  = fun tt -> 
+    let mk_int : string -> term -> decls_t  = fun _ tt -> 
         let typing_pred = Term.mk_HasType false x tt in
         let aa = ("a", Int_sort) in
         let a = mkBoundV aa in
@@ -1012,25 +1012,37 @@ let primitive_type_axioms : lident -> term -> list<decl> =
          Term.Assume(mkForall([typing_pred], [xx], mkImp(Term.mkAnd(typing_pred, Term.mkGT (Term.unboxInt x, Term.mkInteger 0)),
                                                          Term.mk_Valid <| mkApp("Precedes", [Term.boxInt <| Term.mkSub(Term.unboxInt x, Term.mkInteger 1); x]))), 
                                                             Some "well-founded ordering on nat (alt)")] in
-    let mk_int_alias : term -> decls_t = fun tt -> 
+    let mk_int_alias : string -> term -> decls_t = fun _ tt -> 
         [Term.Assume(mkEq(tt, mkFreeV(Const.int_lid.str, Type_sort)), Some "mapping to int; for now")] in
-    let mk_str : term -> decls_t  = fun tt -> 
+    let mk_str : string -> term -> decls_t  = fun _ tt -> 
         let typing_pred = Term.mk_HasType false x tt in
         let bb = ("b", String_sort) in
         let b = mkBoundV bb in
         [Term.Assume(mkForall([typing_pred], [xx], mkImp(typing_pred, Term.mk_tester "BoxString" x)),    Some "string inversion");
          Term.Assume(mkForall([Term.boxString b], [bb], Term.mk_HasType false (Term.boxString b) tt),    Some "string typing")] in
+    let mk_ref : string -> term -> decls_t = fun reft_name _ -> 
+        let r = ("r", Ref_sort) in
+        let aa = ("a", Type_sort) in
+        let bb = ("b", Type_sort) in
+        let refa = Term.mkApp(reft_name, [mkBoundV aa]) in
+        let refb = Term.mkApp(reft_name, [mkBoundV bb]) in
+        let typing_pred = Term.mk_HasType false x refa in
+        let typing_pred_b = Term.mk_HasType false x refb in
+        [Term.Assume(mkForall([typing_pred], [xx;aa], mkImp(typing_pred, Term.mk_tester "BoxRef" x)), Some "ref inversion");
+         Term.Assume(mkForall([typing_pred; typing_pred_b], [xx;aa;bb], mkImp(mkAnd(typing_pred, typing_pred_b), mkEq(mkBoundV aa, mkBoundV bb))), Some "ref typing is injective")] in
+
     let prims = [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
                  (Const.int_lid,    mk_int);
                  (Const.string_lid, mk_str);
+                 (Const.ref_lid,    mk_ref);
                  (Const.char_lid,   mk_int_alias);
                  (Const.uint8_lid,  mk_int_alias);
                 ] in
-    (fun (t:lident) (tt:term) -> 
+    (fun (t:lident) (s:string) (tt:term) -> 
         match Util.find_opt (fun (l, _) -> lid_equals l t) prims with 
             | None -> []
-            | Some(_, f) -> f tt)
+            | Some(_, f) -> f s tt)
 
 let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) = 
     if Tc.Env.debug env.tcenv Options.Low
@@ -1083,7 +1095,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let tname = t.str in
         let tsym = mkFreeV(tname, Type_sort) in
         let decl = Term.DeclFun(tname, [], Type_sort, None) in
-        decl::primitive_type_axioms t tsym, push_free_tvar env t tname tsym
+        decl::primitive_type_axioms t tname tsym, push_free_tvar env t tname tsym
 
      | Sig_tycon(t, tps, k, _, datas, quals, _) -> 
         let is_logical = quals |> Util.for_some (function Logic -> true | _ -> false) in
@@ -1119,21 +1131,31 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     let xx_has_type = mk_HasType false xx tapp in
                     decls@[Term.Assume(mkForall([xx_has_type], (xxsym, Term_sort)::vars,
                                         mkImp(xx_has_type, data_ax)), Some "inversion axiom")] in
-
-        let projection_axioms tapp vars = 
-            match quals |> Util.find_opt (function Projector _ -> true | _ -> false) with
-            | Some (Projector(d, Inl a)) -> 
-                let _, xx = Util.prefix vars in
-                let dproj_app = Term.mkApp(mk_typ_projector_name d a, [mkBoundV xx]) in
-                [Term.Assume(mkForall([tapp], vars, mkEq(tapp, dproj_app)), Some "projector axiom")]
-            | _ -> [] in
-
-        let tname, ttok, env = gen_free_tvar env t in
+        
         let k = Util.close_kind tps k in 
         let formals, res = match (Util.compress_kind k).n with 
             | Kind_arrow(bs, res) -> bs, res
             | _ -> [], k in
         let vars, guards, env', binder_decls, _ = encode_binders false formals env in
+        
+        let projection_axioms tapp vars = 
+            match quals |> Util.find_opt (function Projector _ -> true | _ -> false) with
+            | Some (Projector(d, Inl a)) -> 
+                let rec projectee i = function 
+                    | [] -> i
+                    | f::tl -> 
+                        (match fst f with 
+                            | Inl _ -> projectee (i + 1) tl
+                            | Inr x -> if x.v.ppname.idText="projectee" 
+                                       then i 
+                                       else projectee (i + 1) tl) in
+                let projectee_pos = projectee 0 formals in          
+                let _, (xx::suffix) = Util.first_N projectee_pos vars in            
+                let dproj_app = mk_ApplyT (Term.mkApp(mk_typ_projector_name d a, [mkBoundV xx])) suffix in
+                [Term.Assume(mkForall([tapp], vars, mkEq(tapp, dproj_app)), Some "projector axiom")]
+            | _ -> [] in
+
+        let tname, ttok, env = gen_free_tvar env t in
         let guard = mk_and_l guards in
         let tapp = Term.mkApp(tname, List.map mkBoundV vars) in
         let decls, env =
@@ -1154,9 +1176,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             decls@[Term.Assume(mkForall([tapp], vars, mkImp(guard, k)), Some "kinding")] in
         let aux = 
             if is_logical 
-            then [] 
+            then projection_axioms tapp vars 
             else kindingAx
-                @(primitive_type_axioms t tapp)
+                @(primitive_type_axioms t tname tapp)
                 @(inversion_axioms tapp vars)
                 @(projection_axioms tapp vars) in
  

@@ -592,11 +592,12 @@ and tc_value env e : exp * comp =
 
     let env, topt = Tc.Env.clear_expected_typ env in
     let tfun_opt, bs, c_opt, envbody, g = expected_function_typ env topt in
-    let body, cbody = tc_exp envbody body in 
+    let body, cbody = tc_exp ({envbody with top_level=false}) body in 
     if Env.debug env Options.Medium
     then Util.fprint2 "!!!!!!!!!!!!!!!body %s has type %s\n" (Print.exp_to_string body) (Print.comp_typ_to_string cbody);
     let body, cbody, guard = check_expected_effect envbody c_opt (body, cbody) in
-    Tc.Util.discharge_guard envbody (Rel.conj_guard g guard);
+    let guard = if env.top_level then (Tc.Util.discharge_guard envbody (Rel.conj_guard g guard); Trivial)
+                else let guard = Tc.Util.close_guard bs guard in Rel.conj_guard g guard in 
     let tfun = match tfun_opt with 
         | Some t -> 
            let t = Util.compress_typ t in
@@ -611,7 +612,8 @@ and tc_value env e : exp * comp =
         | None -> mk_Typ_fun(bs, cbody) ktype top.pos in
     if Env.debug env Options.Low
     then Util.fprint2 "!!!!!!!!!!!!!!!Annotating lambda with type %s (%s)\n" (Print.typ_to_string tfun) (Print.tag_of_typ tfun);
-    syn e.pos tfun <| mk_Exp_abs(bs, body), mk_Total tfun
+    let e = syn e.pos tfun <| mk_Exp_abs(bs, body) in
+    e,  Tc.Util.strengthen_precondition None env e (mk_Total tfun) guard
 
   | _ -> 
     failwith (Util.format1 "Unexpected value: %s" (Print.exp_to_string e))
@@ -918,7 +920,7 @@ and tc_exp env e : exp * comp =
                  let env1 = Tc.Env.set_expected_typ env1 t in
                  f, env1 in
 
-    let e1, c1 = tc_exp env1 e1 in 
+    let e1, c1 = tc_exp ({env1 with top_level=top_level}) e1 in 
     let c1 = Tc.Util.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t.pos) e1 c1 f in
     begin match x with 
         | Inr _ -> (* top-level let, always ends with e2=():unit *)

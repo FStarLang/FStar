@@ -1061,11 +1061,13 @@ let mk_indexed_projectors is_record env (tc, tps, k) lid (formals:list<binder>) 
     let p = range_of_lid lid in
     let arg_binder = 
         let arg_typ = mk_Typ_app'(Util.ftv tc kun, Util.args_of_non_null_binders binders) kun p in
-        let x = Util.gen_bvar arg_typ in 
+        let projectee = {ppname=Syntax.mk_ident ("projectee", p);
+                       realname=Util.genident (Some p)} in
         if is_record
-        then v_binder x //records have only one constructor; no point refining the domain
+        then v_binder (Util.bvd_to_bvar_s projectee arg_typ) //records have only one constructor; no point refining the domain
         else let disc_name = Util.mk_discriminator lid in
-             v_binder <| (Util.gen_bvar <| mk_Typ_refine(x, Util.b2t(mk_Exp_app(Util.fvar false disc_name p, [varg <| Util.bvar_to_exp x]) tun p)) kun p) in
+             let x = Util.gen_bvar arg_typ in
+             v_binder <| (Util.bvd_to_bvar_s projectee <| mk_Typ_refine(x, Util.b2t(mk_Exp_app(Util.fvar false disc_name p, [varg <| Util.bvar_to_exp x]) tun p)) kun p) in
       
     let binders = binders@[arg_binder] in
     let arg = Util.arg_of_non_null_binder arg_binder in
