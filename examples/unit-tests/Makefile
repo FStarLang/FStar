@@ -72,7 +72,7 @@ mac: mac.fst
 vector: vectors.fst
 	$(FSTAR) --verify --full_context_dependency vectors.fst
 
-wc-ver: $(STDLIB) $(VERFILES) rbtree.fst
+wc-ver: $(STDLIB) $(VERFILES) rbtree.fst rpc.fst ../sep/counters.fst acls.fst acls2.fst
 	wc -l $^
 
 %.tc: %.fst

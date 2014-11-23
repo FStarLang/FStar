@@ -501,7 +501,8 @@ let mk_LexCons x1 x2  = mkApp("LexCons", [x1;x2])
 let mk_Closure i vars   = 
    let vars = vars |> List.fold_left (fun out v -> match snd v with 
     | Term_sort -> mkApp("ConsTerm", [mkBoundV v; out])
-    | Type_sort -> mkApp("ConsType", [mkBoundV v; out])) (boxInt <| mkInteger i) in
+    | Type_sort -> mkApp("ConsType", [mkBoundV v; out])
+    | _ -> failwith "unexpected sort") (boxInt <| mkInteger i) in
     mkApp("Closure", [vars])
 let rec n_fuel n = 
     if n = 0 then mkFreeV("ZFuel", Term_sort)

@@ -796,7 +796,7 @@ and desugar_typ env (top:term) : typ =
                             | Typ_app({n=Typ_const fv}, [(Inr _,_)]) -> lid_equals fv.v Const.decreases_lid
                             | _ -> false
                         end) in
-                let decreases_clause = dec |> List.map (function (Inl t, _) -> match t.n with Typ_app(_, [(Inr arg, _)]) -> DECREASES arg | _ -> failwith "impos") in
+                let decreases_clause = dec |> List.map (function (Inl t, _) -> (match t.n with Typ_app(_, [(Inr arg, _)]) -> DECREASES arg | _ -> failwith "impos") | _ -> failwith "impos") in
                 if DesugarEnv.is_effect_name env eff.v
                 then if lid_equals eff.v Const.tot_effect_lid && List.length decreases_clause=0
                      then mk_Total result_typ
@@ -1399,10 +1399,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let lids = msigs |> List.map (fun m -> m.mname) in
     let se = Sig_monads(List.rev msigs, order, d.drange, lids) in
     push_sigelt env se, [se]
-   
-
-  | _ -> raise (Error("Unexpected declaration", d.drange))
-        
+         
 
 (* Most important function: from AST to a module
    Keeps track of the name of variables and so on (in the context)

@@ -670,7 +670,7 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
         let ee2, vars2, decls2 = encode_exp e2 env' in
         ee2, vars1@[(xvar, Term_sort), mkAnd(guard, mkEq(x, ee1))]@vars2, decls@decls1@decls2 
   
-      | Exp_let((true, _), _) -> 
+      | Exp_let _ -> 
         let name = varops.fresh "Expression", Term_sort in
         let sym = mkBoundV name in
         Tc.Errors.warn e.pos "Nested 'let rec' is not yet fully encoded to the SMT solver; you may not be able to prove some facts";
@@ -858,7 +858,8 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
             | _ -> 
              let l2, labs2, decls2 = encode_formula_with_labels lhs (negate env) in
              Term.mkImp(l2, l1), labs1@labs2, decls1@decls2
-          end in
+          end
+         | _ -> failwith "impossible" in
     let mk_iff : args -> term * labels * decls_t = function 
         | [(Inl lhs, _); (Inl rhs, _)] -> 
           let l1, labs1, decls1 = encode_formula_with_labels lhs (negate env) in
@@ -1150,7 +1151,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                        then i 
                                        else projectee (i + 1) tl) in
                 let projectee_pos = projectee 0 formals in          
-                let _, (xx::suffix) = Util.first_N projectee_pos vars in            
+                let xx, suffix = match Util.first_N projectee_pos vars with 
+                                    | _, xx::suffix -> xx, suffix
+                                    | _ -> failwith "impossible" in
                 let dproj_app = mk_ApplyT (Term.mkApp(mk_typ_projector_name d a, [mkBoundV xx])) suffix in
                 [Term.Assume(mkForall([tapp], vars, mkEq(tapp, dproj_app)), Some "projector axiom")]
             | _ -> [] in
@@ -1212,7 +1215,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             else (* subterm ordering *)
                 let prec = vars |> List.collect (fun v -> match snd v with 
                     | Type_sort -> []
-                    | Term_sort -> [Term.mk_Precedes (mkBoundV v) dapp]) in
+                    | Term_sort -> [Term.mk_Precedes (mkBoundV v) dapp]
+                    | _ -> failwith "unexpected sort") in
                 [Term.Assume(mkForall([ty_pred], vars, mkImp(guard, mk_and_l prec)), Some "subterm ordering")] in
 
         let tok_typing, decls3 = encode_typ_pred' true t env ddtok in
@@ -1247,7 +1251,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let formals, extra_formals = Util.first_N nbinders formals in
             let subst = List.map2 (fun formal binder -> match fst formal, fst binder with 
                 | Inl a, Inl b -> Inl (a.v, Util.btvar_to_typ b) 
-                | Inr x, Inr y -> Inr (x.v, Util.bvar_to_exp y)) formals binders in
+                | Inr x, Inr y -> Inr (x.v, Util.bvar_to_exp y)
+                | _ -> failwith "Impossible") formals binders in
             let extra_formals = Util.subst_binders subst extra_formals |> Util.name_binders in 
             let body = Syntax.mk_Exp_app_flat(body, snd <| Util.args_of_binders extra_formals) (Util.subst_typ subst t) body.pos in
             binders@extra_formals, body in
