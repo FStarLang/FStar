@@ -1,4 +1,4 @@
-OCAMLC=ocamlfind ocamlc -package fstar -linkpkg
+OCAMLC=ocamlfind ocamlc -package fstar -linkpkg -g
 OCAMLOPT=ocamlopt
 OCAMLDEP=ocamldep
 INCLUDES=                 # all relevant -I options here
@@ -15,6 +15,23 @@ all: fstarml
 
 parser:
 	cat ../parser/parse.fsy | sed ':a;N;$$!ba;s/^%[{][^%]*%[}]//g' > parse.mly
+	ocamlyacc parse.mly
+	echo "open Fstar.Support.Microsoft.FStar.Util" > Microsoft_FStar_Parser_Parse.ml
+	echo "open Fstar.Support.Microsoft.FStar.Range" >> Microsoft_FStar_Parser_Parse.ml
+	echo "open Microsoft_FStar_Absyn_Syntax" >> Microsoft_FStar_Parser_Parse.ml
+	echo "open Microsoft_FStar_Absyn_Const" >> Microsoft_FStar_Parser_Parse.ml
+	echo "open Microsoft_FStar_Absyn_Util" >> Microsoft_FStar_Parser_Parse.ml
+	echo "open Microsoft_FStar_Parser_AST" >> Microsoft_FStar_Parser_Parse.ml
+	echo "open Fstar.Support.Microsoft.FStar.Parser.Util" >> Microsoft_FStar_Parser_Parse.ml
+	cat parse.ml >> Microsoft_FStar_Parser_Parse.ml
+#	cp ../support/ocaml/fstar-lang/src/FSLangLexer.mll lex.mll
+	ocamllex ../lex.mll -o Microsoft_FStar_Parser_LexFStar.ml
+	cp ../parseit.ml Microsoft_FStar_Parser_ParseIt.ml
+	$(OCAMLDEP) $(INCLUDES) *.ml > .depend
+
+
+# The following uses a local parser.mly to avoid issues with Mac OS X sed version.
+lparser:
 	ocamlyacc parse.mly
 	echo "open Fstar.Support.Microsoft.FStar.Util" > Microsoft_FStar_Parser_Parse.ml
 	echo "open Fstar.Support.Microsoft.FStar.Range" >> Microsoft_FStar_Parser_Parse.ml
@@ -51,6 +68,6 @@ clean:
 
 # Dependencies
 depend:
-	$(OCAMLDEP) $(INCLUDES) *.ml > .depend
+	$(OCAMLDEP) $(INCLUDES) *.ml ../fstarml.ml > .depend
 
 -include .depend
