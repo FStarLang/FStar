@@ -29,10 +29,10 @@ module SymEnc (* a multi-key symmetric variant; for simplicity: (1) only using A
 
 assume type keyval (p:Type) (r:Type) (i:int)
 
-(* TODO ???
+(* TODO: I need something like this, can't get it accepted 
 opaque type keyval (p:Type) (r:Type) (i:int) = 
-  | Ideal    : (plain: r -> p) -> (repr: p -> r) -> AES.key -> keyval p r i   (* maybe no need to keep plain/repr around *)
-  | Concrete : (plain: r -> p) -> (repr: p -> r) -> AES.key -> keyval p r i 
+  | Ideal    : plain: (r -> p) -> repr: (p -> r) -> AES.key -> keyval p r i   (* maybe no need to keep plain/repr around *)
+  | Concrete : plain: (r -> p) -> repr: (p -> r) -> AES.key -> keyval p r i 
  *)
 
 type key (p:Type) (r:Type) = i:int * keyval p r i (* so that the index i can be kept implicit *)
@@ -96,33 +96,32 @@ let test() =
 
 module EncryptThenMAC 
 
-logic type EncText: #p: Type -> #r: Type -> SymEnc.key p r -> MacIdeal.text -> Type (* an opaque predicate, keeping track of honest encryptions *)
+logic type EncText: #p: Type -> #r: Type -> SymEnc.key p r -> MAC.text -> Type (* an opaque predicate, keeping track of honest encryptions *)
+
+(* TODO I don't understand this; I need to instantiate MAC as 
+        MAC.pkey (fun c -> SymEnc.Encrypted ke c) to *)
 
 type key (p:Type) (r:Type) = 
-  | Key:  ke:SymEnc.key p r -> MacIdeal.pkey (EncText ke) -> key p r 
+  | Key:  ke:SymEnc.key p r -> MAC.pkey (fun c -> SymEnc.Encrypted ke c) -> key p r 
 
+type cipher = AES.cipher * MAC.tag
 
-type cipher = AES.cipher * MacIdeal.tag
+val decrypt: #p:Type -> #r:Type -> k:key p r -> cipher -> Tot (option p)
+let decrypt (ke,ka) plain = 
+  let c = SymEnc.encrypt ke plain in
+  (c, MAC.mac ka c)
 
-assume val decrypt: #p:Type -> #r:Type -> k:key p r -> cipher -> Tot (option p)
-assume val encrypt: #p:Type -> #r:Type -> k:key p r -> plain: p -> c:cipher { decrypt #p #r k c = Some plain }
+val encrypt: #p:Type -> #r:Type -> k:key p r -> plain: p -> c:cipher { decrypt #p #r k c = Some plain }
+
+// TODO (restored) I'd like to have c:cipher { decrypt #p #r k c = Some plain } but we need something more general as decrypt depends on the state
 
 val keygen:  p:Type -> r:Type -> plain: (r -> p) -> repr:(p -> r) -> key p r 
 let keygen plain repr = 
   let ke = SymEnc.keygen plain repr in
-  let ka = MacIdeal.new_key (EncText ke) in
+  let ka = MAC.keygen (fun c -> SymEnc.Encrypted ke c) in
   Key ke ka
 
-(*
 let encrypt (ke,ka) plain = 
   let c = SymEnc.encrypt ke plain in
-  (c, MacIdeal.mac ka c)
+  (c, MAC.mac ka c)
 
-let decrypt (ke,ka) plain = 
-  let c = SymEnc.encrypt ke plain in
-  (c, MacIdeal.mac ka c)
-
-
-
-
- *)

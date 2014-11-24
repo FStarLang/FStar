@@ -32,7 +32,6 @@ let rec append_inj l b1 b2 c1 c2 = match l with
   | 0 -> ()
   | _ -> append_inj #(l - 1) (slice b1 1 l) b2 (slice c1 1 l) c2
 
-
 (* The same proof again, 
    But, if you give it a "Lemma" type the solver 
    will use the lemma as needed to prove other goals. *)
@@ -59,10 +58,9 @@ assume val iutf8: m:message -> s:string{utf8 s == m}
 assume UTF8_inj: forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}  Equal (utf8 s0) (utf8 s1) ==> s0==s1
 
 assume val uint16_to_bytes: uint16 -> Tot (msg 2)
-assume UINT16_inj: forall s0 s1. Equal (uint16_to_bytes s0) (uint16_to_bytes s1)
-                             ==> s0==s1
+assume UINT16_inj: forall s0 s1. Equal (uint16_to_bytes s0) (uint16_to_bytes s1) ==> s0==s1
 
-type string16 = s:string{UInt16 (length (utf8 s))}
+type string16 = s:string{UInt16 (length (utf8 s))} (* up to 65K *)
 
 val request : string -> Tot message
 let request s = append tag0 (utf8 s)
@@ -70,9 +68,17 @@ let request s = append tag0 (utf8 s)
 val response: string16 -> string -> Tot message
 let response s t =
   let lb = uint16_to_bytes (length (utf8 s)) in
-  append tag1 (append lb
-                      (append (utf8 s)
-                              (utf8 t)))
+  append tag1 (append lb (append (utf8 s) (utf8 t)))
+
+
+(* 3 lemmas on message formats: 
+   - requests are injective on their argument
+   - responses are injective on both their arguments
+   - requests and responses are distinct 
+
+   Note that we do not export a "spec" of the request and response
+   functions---they just return messages---so these three lemmas are
+   sufficient *) 
 
 val req_resp_distinct: s:string -> s':string16 -> t':string
                      -> Lemma (requires True)
@@ -80,21 +86,22 @@ val req_resp_distinct: s:string -> s':string16 -> t':string
                               [SMTPat (request s); SMTPat (response s' t')]
 let req_resp_distinct s s' t' = ()
 
-val req_inj: s1:string -> s2:string{request s1=request s2} -> Lemma (ensures (s1==s2))
-let req_inj s1 s2 = ()
+(*
+val req_inj: s0:string -> s1:string{request s0=request s1} -> Lemma (ensures (s0==s1))
+let req_inj s0 s1 = ()
+ *)
 
-val resp_components_corr: s1:string16 
-                       -> t1:string 
-                       -> s2:string16
-                       -> t2:string
-                       -> Lemma (requires (response s1 t1 == response s2 t2))
-                                (ensures  (s1==s2 /\ t1==t2))
-                                (* [SMTPat (response s1 t1); SMTPat (response s2 t2)] *)
-let resp_components_corr s1 t1 s2 t2 = ()
+val req_components_corr: s0:string
+                      -> s1:string
+                      -> Lemma (requires (request s0 == request s1))
+                               (ensures  (s0==s1))
+                               (* [SMTPat (request s0); SMTPat (request s1)] *)
+let req_components_corr s0 s1 = ()
 
-val req_components_corr: s1:string
-                      -> s2:string
-                      -> Lemma (requires (request s1 == request s2))
-                               (ensures  (s1==s2))
-                               (* [SMTPat (request s1); SMTPat (request s2)] *)
-let req_components_corr s1 s2 = ()
+val resp_components_corr: s0:string16 -> t0:string 
+                       -> s1:string16 -> t1:string
+                       -> Lemma (requires (response s0 t0 == response s1 t1))
+                                (ensures  (s0==s1 /\ t0==t1))
+                                (* [SMTPat (response s0 t0); SMTPat (response s1 t1)] *)
+let resp_components_corr s0 t0 s1 t1 = ()
+
