@@ -19,35 +19,47 @@ open Array
 type bytes    = seq byte
 type text     = bytes
 type nbytes (n:nat) = b:bytes{length b == n}
-let macsize = 20
-let keysize = 16
-type mac_t = nbytes macsize
-type key   = nbytes keysize
-assume val hmac_sha1: key -> text -> Tot mac_t
+
+let keysize = 16 (* these are the sizes for SHA1 *) 
+let macsize = 20  
+type key = nbytes keysize
+type tag = nbytes macsize
+
+(* we rely on some external crypto library for SHA1 *)
+
+assume val sha1: key -> text -> Tot tag 
+
+(* TODO make keys abstract *) 
+
+(* we attach authenticated properties to keys *) 
+
 opaque type key_prop : key -> text -> Type
 type pkey (p:(text -> Type)) = k:key{key_prop k == p}
 
 assume val new_key: p:(text -> Type) -> pkey p
 
+
+(* to model authentication, we log all genuine calls to MACs *) 
+
 type entry = 
   | Entry : k:key
          -> t:text{key_prop k t}
-         -> m:mac_t
+         -> m:tag
          -> entry
 
 assume val log : ref (list entry)
 
 val mac: k:key
       -> t:text{key_prop k t}
-      -> mac_t
+      -> tag
 let mac k t = 
-  let m = hmac_sha1 k t in
+  let m = sha1 k t in
   log := Entry k t m :: !log;
   m
 
 val verify: k:key
          -> t:text 
-         -> mac_t 
+         -> tag 
          -> b:bool{b ==> key_prop k t}
 let verify k t m = 
   let found = List.find (function (Entry k' t' _) -> k=k' && t=t') !log in
