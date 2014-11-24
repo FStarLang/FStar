@@ -106,8 +106,8 @@ type cipher = AES.cipher * MAC.tag
 
 val decrypt: #p:Type -> #r:Type -> k:key p r -> c:cipher -> option p
 
-let decrypt (Key ke ka) (c,t) =
-  if MAC.verify ka t c 
+let decrypt (Key ke ka) (c,tag) =
+  if MAC.verify ka c tag 
   then Some(SymEnc.decrypt ke c) 
   else None
 
