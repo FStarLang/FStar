@@ -53,24 +53,24 @@ let rec cons_mem l i j = match l with
 
 val append : list 'a -> list 'a -> Tot (list 'a)
 let rec append l1 l2 = match l1 with
-    | [] -> []
+    | [] -> l2
     | x::xs -> x::(append xs l2)
 
-val append_sorted:
-  l1: list int -> l2: list int ->
-    Lemma (requires (sorted l1 /\ (sorted l2)))
-          (ensures (sorted (append l1 l2)))
-          [SMTPat (sorted l1); SMTPat (sorted l2)]
-let rec append_sorted l1 l2 = match l1 with
-    | [] -> ()
-    | x::xs -> append_sorted xs l2
+(* val append_sorted: *)
+(*   l1: list int -> l2: list int -> *)
+(*     Lemma (requires (sorted l1 /\ (sorted l2))) *)
+(*           (ensures (sorted (append l1 l2))) *)
+(*           [SMTPat (sorted l1); SMTPat (sorted l2)] *)
+(* let rec append_sorted l1 l2 = match l1 with *)
+(*     | [] -> () *)
+(*     | x::xs -> append_sorted xs l2 *)
 
 val append_mem:
-  l1: list int -> l2: list int -> i: int ->
+  l1:list int -> l2:list int -> i:int ->
     Lemma (ensures ((mem i (append l1 l2)) <==> ((mem i l1) \/ (mem i l2))))
 let rec append_mem l1 l2 i = match l1 with
     | [] -> ()
-    | x::xs -> if x = i then () else append_mem xs l2 i
+    | x::xs -> if i = x then () else append_mem xs l2 i
 
 val split: i:int -> l:list int -> Tot (list int * list int)
 let rec split i l = match l with
@@ -105,16 +105,20 @@ let rec sort l = match l with
        let (xs1,xs2) = split x xs in
        append (sort xs1) (x::(sort xs2))
 
-(* val sort_mem: *)
-(*   l:list int -> i:int -> *)
-(*     Lemma (ensures (mem i l) <==> (mem i (sort l))) *)
-(* let rec sort_mem l i = match l with *)
-(*     | [] -> [] *)
-(*     | x::xs -> *)
-(*        let (xs1,xs2) = split x xs in *)
-(*        if i = x then *)
-(*          () *)
-(*        else ( *)
-(*          sort_mem xs1 i; *)
-(*          sort_mem xs2 i *)
-(*        ) *)
+val sort_mem:
+  l:list int -> i:int ->
+    Lemma (ensures (mem i l) <==> (mem i (sort l)))
+let rec sort_mem l i = match l with
+    | [] -> ()
+    | x::xs ->
+       let (xs1,xs2) = split x xs in
+       if i = x then
+         ()
+       else (
+         append_mem (sort xs1) (x::(sort xs2)) i;
+         cons_mem (sort xs2) x i;
+         sort_mem xs1 i;
+         sort_mem xs2 i;
+         split_mem x xs i;
+         cons_mem xs x i
+       )
