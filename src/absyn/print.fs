@@ -92,6 +92,21 @@ let is_b2t (t:typ) = is_type_op [Const.b2t_lid] t
 let is_quant (t:typ) = is_type_op (fst (List.split quants)) t
 let is_ite (t:typ) = is_type_op [Const.ite_lid] t
 
+let is_lex_cons (f:exp) = is_prim_op [Const.lexcons_lid] f
+let is_lex_top (f:exp) = is_prim_op [Const.lextop_lid] f
+let is_inr = function Inl _ -> false | Inr _ -> true
+let rec reconstruct_lex (e:exp) =
+  match (compress_exp e).n with
+  | Exp_app (f, args) ->
+      let args = List.filter (fun (a:arg) -> not (snd a) && is_inr (fst a)) args in
+      let exps = List.map (function Inl _, _ -> failwith "impossible" | Inr x, _ -> x) args in
+      if is_lex_cons f && List.length exps = 2 then
+        match reconstruct_lex (List.nth exps 1) with
+        | Some xs -> Some (List.nth exps 0 :: xs)
+        | None    -> None
+      else None
+  | _ -> if is_lex_top e then Some [] else None
+
 (* CH: F# List.find has a different type from find in list.fst ... so just a hack for now *)
 let rec find f l = match l with 
   | [] -> failwith "blah"
@@ -318,7 +333,7 @@ and formula_to_string_old_now_unused phi =
         | Some (QEx(vars, _, body)) -> 
           format2 "(exists %s. %s)" (binders_to_string " " vars) (formula_to_string body)
          
-and exp_to_string x = match (compress_exp x).n with 
+and exp_to_string x = match (compress_exp x).n with
   | Exp_delayed _ -> failwith "Impossible"
   | Exp_meta(Meta_datainst(e,_))
   | Exp_meta(Meta_desugared(e, _)) -> exp_to_string e
@@ -328,17 +343,19 @@ and exp_to_string x = match (compress_exp x).n with
   | Exp_constant c -> c |> const_to_string
   | Exp_abs(binders, e) -> Util.format2 "(fun %s -> %s)" (binders_to_string " " binders) (e|> exp_to_string)
   | Exp_app(e, args) ->
-      let is_inr = function Inl _ -> false | Inr _ -> true in
-      let args' = List.filter (fun (a:arg) -> not (snd a) && is_inr (fst a)) args in
-          (* drop implicit and type arguments for prim operators (e.g equality) *)
-          (* we drop the type arguments because they should all be implicits,
-             but somehow the type-checker/elaborator doesn't always mark them as such
-             (TODO: should file this as a bug) *)
-      if is_infix_prim_op e && List.length args' = 2 then
-        Util.format3 "(%s %s %s)" (List.nth args' 0 |> arg_to_string) (e|> infix_prim_op_to_string) (List.nth args' 1 |> arg_to_string)
-      else if is_unary_prim_op e && List.length args' = 1 then
-        Util.format2 "(%s %s)" (e|> unary_prim_op_to_string) (List.nth args' 0 |> arg_to_string)
-      else Util.format2 "(%s %s)" (e|> exp_to_string) (args_to_string args)
+      (match reconstruct_lex x with
+      | Some es -> "%[" ^ (String.concat "; " (List.map exp_to_string es)) ^ "]"
+      | None ->
+          let args' = List.filter (fun (a:arg) -> not (snd a) && is_inr (fst a)) args in
+            (* drop implicit and type arguments for prim operators (e.g equality) *)
+            (* we drop the type arguments because they should all be implicits,
+               but somehow the type-checker/elaborator doesn't always mark them as such
+               (TODO: should file this as a bug) *)
+          if is_infix_prim_op e && List.length args' = 2 then
+            Util.format3 "(%s %s %s)" (List.nth args' 0 |> arg_to_string) (e|> infix_prim_op_to_string) (List.nth args' 1 |> arg_to_string)
+          else if is_unary_prim_op e && List.length args' = 1 then
+            Util.format2 "(%s %s)" (e|> unary_prim_op_to_string) (List.nth args' 0 |> arg_to_string)
+          else Util.format2 "(%s %s)" (e|> exp_to_string) (args_to_string args))
   | Exp_match(e, pats) -> Util.format2 "(match %s with %s)" 
     (e |> exp_to_string) 
     (Util.concat_l "\n\t" (pats |> List.map (fun (p,wopt,e) -> Util.format3 "%s %s -> %s" 
