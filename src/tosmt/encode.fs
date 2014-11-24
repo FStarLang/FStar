@@ -914,7 +914,7 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
             vars, pats, mk_and_l guards, body, labs, decls@List.flatten decls'@decls'' in
     
     if Tc.Env.debug env.tcenv Options.Low
-    then Util.fprint1 ">>>> Destructing as formula ... %s\n" (Print.typ_to_string phi);
+    then Util.fprint1 ">>>> Destructing as formula ... %s\n" (Print.formula_to_string phi);
     let phi = Util.compress_typ phi in
     match Util.destruct_typ_as_formula phi with
         | None -> 
