@@ -18,51 +18,47 @@
 module IntList_InsertionSortLemma
 open Prims.PURE
 
-type intlist = 
-  | Nil
-  | Cons : hd:int -> tl:intlist -> intlist
-
 (* Check that a list is sorted *)
-val sorted: intlist -> Tot bool
+val sorted: list int -> Tot bool
 let rec sorted l = match l with
-    | Nil -> true
-    | Cons x Nil -> true
-    | Cons x (Cons y xs) -> (x <= y) && (sorted (Cons y xs))
+    | [] -> true
+    | [x] -> true
+    | x::y::xs -> (x <= y) && (sorted (y::xs))
 
-val test_sorted: x:int -> l:intlist -> Lemma ((sorted (Cons x l) /\ is_Cons l) ==> x <= Cons.hd l)
+val test_sorted: x:int -> l:list int -> Lemma ((sorted (x::l) /\ is_Cons l) ==> x <= Cons.hd l)
 let test_sorted x l = ()
 
-val test_sorted2: unit -> Tot (m:intlist{sorted m})
+val test_sorted2: unit -> Tot (m:list int{sorted m})
 let test_sorted2 () = Nil
 
 (* Fact about sorted *)
-val mem: int -> intlist -> Tot bool
+val mem: int -> list int -> Tot bool
 let rec mem a l = match l with
-  | Nil -> false
-  | Cons hd tl -> hd=a || mem a tl
+  | [] -> false
+  | hd::tl -> hd=a || mem a tl
 
 val sorted_smaller: x:int 
                 ->  y:int 
-                ->  l:intlist 
-                ->  Lemma (requires (sorted (Cons x l) /\ mem y l))
+                ->  l:list int 
+                ->  Lemma (requires (sorted (x::l) /\ mem y l))
                           (ensures (x <= y))
-                          [SMTPat (sorted (Cons x l)); SMTPat (mem y l)]
+                          [SMTPat (sorted (x::l)); SMTPat (mem y l)]
 let rec sorted_smaller x y l = match l with
-    | Nil -> ()
-    | Cons z zs -> if z=y then () else sorted_smaller x y zs
+    | [] -> ()
+    | z::zs -> if z=y then () else sorted_smaller x y zs
 
-val insert : i:int -> l:intlist{sorted l} -> Tot (m:intlist{sorted m /\ (forall x. mem x m <==> x==i \/ mem x l)})
+val insert : i:int -> l:list int{sorted l} -> Tot (m:list int{sorted m /\ (forall x. mem x m <==> x==i \/ mem x l)})
 let rec insert i l = match l with
-  | Nil -> Cons i Nil
-  | Cons hd tl ->
-     if i <= hd
-     then Cons i l
-     else let i_tl = insert i tl in 
-          (* Solver implicitly uses the lemma: sorted_smaller hd (Cons.hd i_tl) tl *)
-          Cons hd i_tl
-               
+  | [] -> [i]
+  | hd::tl ->
+     if i <= hd then
+       i::l
+     else
+       (* Solver implicitly uses the lemma: sorted_smaller hd (Cons.hd i_tl) tl *)
+       hd::(insert i tl)
+
 (* Insertion sort *)
-val sort : l:intlist -> Tot (m:intlist{sorted m /\ (forall x. mem x l == mem x m)})
+val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x m)})
 let rec sort l = match l with
-    | Nil -> Nil
-    | Cons x xs -> insert x (sort xs)
+    | [] -> []
+    | x::xs -> insert x (sort xs)
