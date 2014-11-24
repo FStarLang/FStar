@@ -26,6 +26,11 @@ let rec sorted l = match l with
     | x::y::xs -> (x <= y) && (sorted (y::xs))
 
 (* Fact about sorted *)
+val length: list int -> Tot nat
+let rec length l = match l with
+    | [] -> 0
+    | _::xs -> 1+(length xs)
+
 val mem: int -> list int -> Tot bool
 let rec mem a l = match l with
   | [] -> false
@@ -77,6 +82,13 @@ let rec split i l = match l with
        else
          (xs1,x::xs2)
 
+val split_decreases :
+  i:int -> l:list int ->
+    Lemma (ensures (length (fst (split i l)) <= length l) /\ (length (snd (split i l)) <= length l))
+let rec split_decreases i l = match l with
+    | [] -> ()
+    | x::xs -> split_decreases i xs
+
 val split_mem:
   j:int -> l:list int -> i:int ->
     Lemma (ensures (mem i l <==> ((mem i (fst (split j l))) \/ (mem i (snd (split j l))))))
@@ -85,10 +97,11 @@ let rec split_mem j l i = match l with
     | x::xs -> if x = i then () else split_mem j xs i
 
 (* Quick sort *)
-val sort : list int -> list int
+val sort : l:list int -> Pure (list int) (requires True) (ensures (fun i -> True)) (decreases (length l))
 let rec sort l = match l with
     | [] -> []
     | x::xs ->
+       split_decreases x xs;
        let (xs1,xs2) = split x xs in
        append (sort xs1) (x::(sort xs2))
 
