@@ -2,12 +2,13 @@
 module AES (* concrete implementation of a one-block symmetric cipher *)
 open Array
 
-type bytes = seq byte
+type bytes = MAC.bytes // TODO unclear why we need this instead of seq byte
 type nbytes (n:nat) = b:bytes{length b == n}
 
 let blocksize = 32 (* 256 bits *)
 
 type plain  = nbytes blocksize
+
 type cipher = nbytes (2 * blocksize)  (* including IV *)
 
 let keysize = 16 (* 128 bits *)
@@ -24,6 +25,8 @@ assume val enc: k:key -> p:plain -> c:cipher { dec k c = p }  (* this function i
 
 module SymEnc (* a multi-key symmetric variant; for simplicity: (1) only using AES above; and (2) parsing is complete *)
 
+type bytes = MAC.bytes
+
 (* TODO: we get the index from a counter; 
    In the crypto argument, we rely on the fact that we only construct keys once for each i. *)
 
@@ -39,9 +42,9 @@ type key (p:Type) (r:Type) = i:int * keyval p r i (* so that the index i can be 
 
 (* CPA variant: *) 
 
-logic type Encrypted: #p: Type -> #r: Type -> key p r -> AES.cipher -> Type (* an opaque predicate, keeping track of honest encryptions *)
+logic type Encrypted: #p: Type -> #r: Type -> key p r -> MAC.bytes -> Type (* an opaque predicate, keeping track of honest encryptions *)
 
-type cipher (p:Type) (r:Type) (k: key p r) = c: AES.cipher { Encrypted #p #r k c }    (* TODO why do I need explicit implicits? *)
+type cipher (p:Type) (r:Type) (k: key p r) = c: MAC.bytes (* should be: AES.cipher *) { Encrypted #p #r k c }    (* TODO why do I need explicit implicits? *)
 
 assume val keygen:  #p:Type -> #r:Type -> plain:(r -> p) -> repr:(p -> r) -> key p r 
 assume val decrypt: #p:Type -> #r:Type -> k:key p r -> cipher p r k -> Tot p
@@ -96,24 +99,25 @@ let test() =
 
 module EncryptThenMAC 
 
-logic type EncText: #p: Type -> #r: Type -> SymEnc.key p r -> MAC.text -> Type (* an opaque predicate, keeping track of honest encryptions *)
-
-(* TODO I don't understand this; I need to instantiate MAC as 
-        MAC.pkey (fun c -> SymEnc.Encrypted ke c) to *)
-
 type key (p:Type) (r:Type) = 
   | Key:  ke:SymEnc.key p r -> MAC.pkey (fun c -> SymEnc.Encrypted ke c) -> key p r 
 
 type cipher = AES.cipher * MAC.tag
 
-val decrypt: #p:Type -> #r:Type -> k:key p r -> cipher -> Tot (option p)
-let decrypt (ke,ka) plain = 
-  let c = SymEnc.encrypt ke plain in
-  (c, MAC.mac ka c)
+val decrypt: #p:Type -> #r:Type -> k:key p r -> c:cipher -> option p
 
-val encrypt: #p:Type -> #r:Type -> k:key p r -> plain: p -> c:cipher { decrypt #p #r k c = Some plain }
+let decrypt (Key ke ka) (c,t) =
+  if MAC.verify ka t c 
+  then Some(SymEnc.decrypt ke c) 
+  else None
 
-// TODO (restored) I'd like to have c:cipher { decrypt #p #r k c = Some plain } but we need something more general as decrypt depends on the state
+// to get functional corretness for EncryptThenMAC, 
+// we'd also need it for MACs. For later.
+// logic type EncText: #p: Type -> #r: Type -> SymEnc.key p r -> MAC.text -> Type (* an opaque predicate, keeping track of honest encryptions *)
+// val encrypt ... { EncText #p #r k plain c } 
+// val decrypt ... { forall plain. EncText #p #r k plain c ==> o = Some plain } 
+
+val encrypt: #p:Type -> #r:Type -> k:key p r -> plain: p -> cipher 
 
 val keygen:  p:Type -> r:Type -> plain: (r -> p) -> repr:(p -> r) -> key p r 
 let keygen plain repr = 
@@ -121,7 +125,7 @@ let keygen plain repr =
   let ka = MAC.keygen (fun c -> SymEnc.Encrypted ke c) in
   Key ke ka
 
-let encrypt (ke,ka) plain = 
+let encrypt (Key ke ka) plain = 
   let c = SymEnc.encrypt ke plain in
   (c, MAC.mac ka c)
 
