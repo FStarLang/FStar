@@ -23,6 +23,58 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 
+(* CH: This should later be shared with ocaml-codegen.fs and util.fs *)
+let infix_prim_ops = [
+    (Const.op_Addition    , "+" );
+    (Const.op_Subtraction , "-" );
+    (Const.op_Multiply    , "*" );
+    (Const.op_Division    , "/" );
+    (Const.op_Eq          , "=" );
+    (Const.op_ColonEq     , ":=");
+    (Const.op_notEq       , "<>");
+    (Const.op_And         , "&&");
+    (Const.op_Or          , "||");
+    (Const.op_LTE         , "<=");
+    (Const.op_GTE         , ">=");
+    (Const.op_LT          , "<" );
+    (Const.op_GT          , ">" );
+    (Const.op_Modulus     , "mod" );
+]
+(* CH: What about the Lex ordering, doesn't that belong here too?
+[6:23:30 PM] Nikhil Swamy: are you including printing Precedes as <<
+[6:23:45 PM] Nikhil Swamy: and LexCons ... as %[v1;..vn]?
+[6:23:52 PM] Catalin Hritcu: yes
+ *)
+
+let prim_uni_ops = [
+    (Const.op_Negation, "not");
+    (Const.op_Minus, "-")
+]
+
+let is_op ps f = match f.n with 
+  | Exp_fvar(fv,_) -> ps |> Util.for_some (lid_equals fv.v)
+  | _ -> false
+
+let get_lid f = match f.n with 
+  | Exp_fvar(fv,_) -> fv.v
+  | _ -> failwith "get_lid"
+
+let is_infix_prim_op = is_op (fst (List.split infix_prim_ops))
+
+let is_uni_prim_op (e:exp) = is_op (fst (List.split prim_uni_ops)) e
+
+(* CH: F# List.find has a different type from find in list.fst ... so just a hack for now *)
+let rec find f l = match l with 
+  | [] -> failwith "blah"
+  | hd::tl -> if f hd then hd else find f tl
+
+let find_lid (x:lident) xs : string =
+  snd (find (fun p -> lid_equals x (fst p)) xs)
+
+let infix_prim_op_to_string e = find_lid (get_lid e) infix_prim_ops
+
+let uni_prim_op_to_string e = find_lid (get_lid e) prim_uni_ops
+
 let rec sli (l:lident) : string = 
   if !Options.print_real_names
   then match l.ns with 
@@ -218,7 +270,12 @@ and exp_to_string x = match (compress_exp x).n with
   | Exp_fvar(fv, _) ->  sli fv.v
   | Exp_constant c -> c |> const_to_string
   | Exp_abs(binders, e) -> Util.format2 "(fun %s -> %s)" (binders_to_string " " binders) (e|> exp_to_string)
-  | Exp_app(e, args) -> Util.format2 "(%s %s)" (e|> exp_to_string) (args_to_string args)
+  | Exp_app(e, args) ->
+      if is_infix_prim_op e && List.length args = 2 then
+        Util.format3 "(%s %s %s)" (List.nth args 0 |> arg_to_string) (e|> infix_prim_op_to_string) (List.nth args 1 |> arg_to_string)
+      else if is_uni_prim_op e && List.length args = 1 then
+        Util.format2 "(%s %s)" (e|> uni_prim_op_to_string) (List.nth args 0 |> arg_to_string)
+      else Util.format2 "(%s %s)" (e|> exp_to_string) (args_to_string args)
   | Exp_match(e, pats) -> Util.format2 "(match %s with %s)" 
     (e |> exp_to_string) 
     (Util.concat_l "\n\t" (pats |> List.map (fun (p,wopt,e) -> Util.format3 "%s %s -> %s" 
@@ -295,11 +352,18 @@ let freevars_to_string (fvs:freevars) =
     let f (l:set<bvar<'a,'b>>) = l |> Util.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
     Util.format2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs) 
 
+let qual_to_string = function
+    | Logic -> "logic"
+    | Opaque -> "opaque"
+    | Discriminator _ -> "discriminator"
+    | Projector _ -> "projector"
+    | _ -> "other"
+let quals_to_string quals = quals |> List.map qual_to_string |> String.concat " " 
 let rec sigelt_to_string x = match x with 
-  | Sig_tycon(lid, tps, k, _, _, _, _) -> Util.format3 "type %s %s : %s" lid.str (binders_to_string " " tps) (kind_to_string k)
+  | Sig_tycon(lid, tps, k, _, _, quals, _) -> Util.format4 "%s type %s %s : %s" (quals_to_string quals) lid.str (binders_to_string " " tps) (kind_to_string k)
   | Sig_typ_abbrev(lid, tps, k, t, _, _) ->  Util.format4 "type %s %s : %s = %s" lid.str (binders_to_string " " tps) (kind_to_string k) (typ_to_string t)
   | Sig_datacon(lid, t, _, _, _) -> Util.format2 "datacon %s : %s" lid.str (typ_to_string t)
-  | Sig_val_decl(lid, t, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string t)
+  | Sig_val_decl(lid, t, quals, _) -> Util.format3 "%s val %s : %s" (quals_to_string quals) lid.str (typ_to_string t)
   | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string f)
   | Sig_let(lbs, _, _) -> lbs_to_string lbs
   | Sig_main(e, _) -> Util.format1 "let _ = %s" (exp_to_string e)

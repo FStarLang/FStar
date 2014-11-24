@@ -15,16 +15,16 @@
 *)
 
 module MacIdeal 
-type bytes    = list byte
+open Array
+type bytes    = seq byte
 type text     = bytes
-type nbytes (n:nat) = b:bytes{List.length b == n}
+type nbytes (n:nat) = b:bytes{length b == n}
 let macsize = 20
 let keysize = 16
 type mac_t = nbytes macsize
 type key   = nbytes keysize
 assume val hmac_sha1: key -> text -> Tot mac_t
-
-type key_prop : key -> text -> Type
+opaque type key_prop : key -> text -> Type
 type pkey (p:(text -> Type)) = k:key{key_prop k == p}
 
 assume val new_key: p:(text -> Type) -> pkey p

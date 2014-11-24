@@ -5,4 +5,4 @@ open Microsoft.FStar.Backends.OCaml.Syntax
 
 open FSharp.Format
 
-val doc_of_mllib : mllib -> doc
+val doc_of_mllib : mllib -> (string * doc) list

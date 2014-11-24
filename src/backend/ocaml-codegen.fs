@@ -238,7 +238,7 @@ let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
         let doc =
           match name, args with
             (* Special case for Cons *)
-            | "::", [x;xs] -> reduce [x; text "::"; xs]
+            | "::", [x;xs] -> reduce [parens x; text "::"; xs]
             | _, _ -> reduce1 [text name; parens (combine (text ", ") args)] in
         maybe_paren outer e_app_prio doc
 
@@ -576,8 +576,8 @@ let rec doc_of_mllib_r (MLLib mllib : mllib) =
     and for1_mod istop (x, sigmod, MLLib sub) =
         let head = reduce1 (if   not istop
                             then [text "module"; text x; text "="; text "struct"]
-                            else [text "struct"]) in
-        let tail = reduce1 [text "end"] in
+                            else []) in
+        let tail = if not istop then reduce1 [text "end"] else reduce1 [] in
         let doc  = Option.map (fun (_, m) -> doc_of_mod m) sigmod in
         let sub  = List.map (for1_mod false) sub in
         let sub  = List.map (fun x -> reduce [x; hardline; hardline]) sub in
@@ -593,10 +593,13 @@ let rec doc_of_mllib_r (MLLib mllib : mllib) =
 
     in
 
+    let docs = List.map (fun (x,s,m) -> (x,for1_mod true (x,s,m))) mllib in
+
+(* was:
     let docs = List.combine (List.map for1_sig mllib) (List.map (for1_mod true) mllib) in
     let docs = List.map (fun (sig_, mod_) -> reduce [sig_; text "="; mod_; hardline]) docs in
-
-    reduce docs
+*)
+    docs
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mllib mllib =

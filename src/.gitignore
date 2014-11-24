@@ -3,3 +3,5 @@ basic/obj/
 parser/obj/
 tc/obj/
 obj
+ocaml.ml
+fstarml.cm[io]

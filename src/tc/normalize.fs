@@ -72,19 +72,24 @@ let empty_stack k = {
     args=[];
     k=k
 }
-let rec subst_of_env env = 
-    env |> List.collect (function
-        | T (a, (t,env'), m) -> 
-            [begin match !m with
+
+(* Explicit tail recursion for OCaml backend -- do not use List.collect! *)
+let rec subst_of_env env =
+    let rec aux acc =
+        function
+        | T (a, (t,env'), m) :: r ->
+             let n = match !m with
                 | Some t -> Inl(a, t)
                 | None -> Inl(a, Util.subst_typ (subst_of_env env') t)
-             end]
-        | V (x, (v,env'), m) -> 
-            [begin match !m with 
+             in aux (n::acc) r
+        | V (x, (v,env'), m) :: r ->
+             let n = match !m with
                 | Some v -> Inr(x, v)
                 | None -> Inr(x, Util.subst_exp (subst_of_env env') v)
-             end]
-        | _ -> []) 
+             in aux (n::acc) r
+        | _ :: r -> aux acc r
+        | [] -> acc
+    in aux [] env
 
 let with_new_code k c e = {
     code=e; 

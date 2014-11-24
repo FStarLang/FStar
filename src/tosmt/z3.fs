@@ -100,7 +100,7 @@ let z3proc =
  
 
 let doZ3Exe (input:string) = 
-  let parse (z3out:string) = 
+  let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map Util.trim_string in
     let rec lblnegs lines = match lines with 
       | lname::"false"::rest -> lname::lblnegs rest
@@ -162,14 +162,14 @@ let open_scope m  = Pending (m, false, (fun () -> []))
 let scopes : ref<list<scope>> = Util.mk_ref [open_scope "top"]
 let push msg f =
     let b = !scopes in
-    let hd = Pending (msg, true, (fun () -> [Term.Push; Term.Caption ("push" ^ msg)]@f())) in
+    let hd = Pending (msg, true, (fun () -> let u = [Term.Push; Term.Caption ("push" ^ msg)] in let v = f() in u@v)) in
     scopes := hd::b
 let pop msg f =
     let rec aux l = match l with
         | [] -> failwith "Too many pops"
         | Closed(m,g)::tl -> Closed(m,g)::aux tl
         | Pending(_, true, _)::tl -> tl   // top of the stack contains a push that was never given to the solver; so, don't add a pop
-        | Pending(m, false, _)::tl -> Closed ("popped" ^m, (fun () -> f()@[Term.Pop; Term.Caption ("Pop " ^ msg)]))::tl in
+        | Pending(m, false, _)::tl -> Closed ("popped" ^m, (fun () -> let u = f() in let v = [Term.Pop; Term.Caption ("Pop " ^ msg)] in u@v))::tl in
     scopes := aux (!scopes) 
 let flush_scopes () = 
     let close_all closed = 
@@ -178,10 +178,10 @@ let flush_scopes () =
             | _ -> failwith "impossible") in
     let flush_pending pending = 
         List.fold_right (fun p decls -> match p with
-            | Pending (_, _, f) -> decls@f()
+            | Pending (_, _, f) -> let v = f() in decls@v
             | _ -> decls) pending [] in
     let pending, closed = !scopes |> List.partition (function Closed _ -> false | _ -> true) in
-    let decls = close_all closed @ flush_pending pending in 
+    let decls = let u = close_all closed in let v = flush_pending pending in u@v in 
     scopes := pending |> List.map (function 
         | Closed _ -> failwith (Util.format1 "impos!!!:\n\t%s\n" (print_scopes !scopes))  
         | Pending(m, _, _) -> open_scope m);
@@ -192,7 +192,10 @@ let giveZ3 msg (theory:unit -> decls_t) =
         | [] -> failwith "no open scopes"
         | Closed(m, f)::tl -> Closed(m, f)::aux tl
         | Pending(m, b, f)::tl -> 
-            let g () = f()@theory() in 
+            let g () =
+              let u = f() in
+              let v = theory() in
+              u @ v in
             Pending(m, b, g)::tl in
     scopes := aux !scopes
 

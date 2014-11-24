@@ -16,9 +16,9 @@ BACKEND_SRC=$(addprefix backend/, $(BACKEND))
 JSBACKEND=ast.fs print.fs translate.fs
 JSBACKEND_SRC=$(addprefix jsbackend/, $(JSBACKEND))
 
-PARSER=ast.fs parse.fs lexhelp.fs lex.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parseit.fsi parseit.fs driver.fs
+PARSER=ast.fs parseutil.fs parse.fs lexhelp.fs lex.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parseit.fsi parseit.fs driver.fs
 PARSER_SRC=$(addprefix parser/, $(PARSER))
-PARSER_NOGEN=ast.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
+PARSER_NOGEN=ast.fs parseutil.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
 PARSER_NOGEN_SRC=$(addprefix parser/, $(PARSER_NOGEN))
 
 TOSMT=term.fsi term.fs z3.fs encode.fs
@@ -154,7 +154,7 @@ clean:
 # Bootstrapping
 # --------------------------------------------------------------------
 
-STDFILES=system.fst st.fst list.fst option.fst string.fst
+STDFILES=system.fst stboot.fst list.fst option.fst string.fst
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 
 BOOT_BASICFILES=bytes.fst platform.fsi util.fsi getoptsimple.fst options.fs range.fst unionfind.fst lazyset.fsi lazyset.fs
@@ -175,17 +175,27 @@ BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_BACKEND) $(BOOT_JSBACKEND)
 
 boot: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug_level Low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+	$(RUNTIME) ../bin/fstar.exe --lax --fstar_home .. $(FSTAROPTS) --debug_level Low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
 ocaml: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --codegen OCaml --debug_level Low --trace_error --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
-	@echo "Compile the obtained module with: ocamlfind ocamlc -package fstar ocaml.ml"
+	$(RUNTIME) ../bin/fstar.exe --odir ocaml-output --fstar_home .. $(FSTAROPTS) --codegen OCaml --debug_level Low --trace_error --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+	@echo "Building parser and lexer filex..."
+	make -C ocaml-output parser
+	make -s -C ocaml-output fstarml
 
-test: ocaml
+OCAML_FILES= Microsoft_FStar_Options.ml Microsoft_FStar_LazySet.ml Microsoft_FStar_Absyn_Syntax.ml Microsoft_FStar_Absyn_Const.ml Microsoft_FStar_Absyn_Visit.ml Microsoft_FStar_Absyn_Util.ml Microsoft_FStar_Absyn_Print.ml Microsoft_FStar_Absyn_SSyntax.ml Microsoft_FStar_Parser_AST.ml Microsoft_FStar_Parser_DesugarEnv.ml Microsoft_FStar_Parser_Desugar.ml Microsoft_FStar_Parser_Parse.ml Microsoft_FStar_Parser_Lexhelp.ml Microsoft_FStar_Parser_Driver.ml Microsoft_FStar_Tc_Env.ml Microsoft_FStar_Tc_Normalize.ml Microsoft_FStar_Tc_Errors.ml Microsoft_FStar_Tc_Rel.ml Microsoft_FStar_Tc_Util.ml Microsoft_FStar_Tc_Tc.ml Microsoft_FStar_ToSMT_Term.ml Microsoft_FStar_ToSMT_Z3.ml Microsoft_FStar_ToSMT_Encode.ml 
+OCAML_ALL=$(addprefix ocaml-output/, $(OCAML_FILES))
+
+test:   boot
 	make -s -C ../examples/unit-tests all-lax 
 	make -s -C ../examples/unit-tests vector
+	make -s -C ../examples/unit-tests mergesort.vv
+	make -s -C ../examples/unit-tests rpc
+	make -s -C ../examples/unit-tests acls2
+	make -s -C ../examples/unit-tests counters
 	-make -s -C ../examples/unit-tests all-ver 
-	@echo "--------Expect 18 errors--------------"
+	@echo "--------Expect 20 errors--------------"
+
 
 test.diff:
 	@make -s test | grep -v "^make\[" > .test.out

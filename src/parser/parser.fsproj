@@ -75,6 +75,7 @@
       <OtherFlags>--unicode</OtherFlags>
     </FsLex>
     <Compile Include="ast.fs" />
+    <Compile Include="parseutil.fs" />
     <Compile Include="parse.fs" />
     <Compile Include="lexhelp.fs" />
     <Compile Include="lex.fs" />

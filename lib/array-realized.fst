@@ -58,6 +58,9 @@ let update (Seq c j k) i v = Seq (__update__ c (i + j) v) j k
 val slice: a:Type -> s:seq a -> i:nat -> j:nat{(i <= j /\ j <= length s)} -> Tot (seq a)
 let slice (Seq c start_i end_i) i j = Seq c (start_i + i) (start_i + j)
 
+val split: a:Type -> s:seq a -> i:nat{(0 <= i /\ i < length s)} -> Tot (seq a * seq a)
+let split s i = slice s 0 i, slice s i (length s)
+  
 val append: a:Type -> seq a -> seq a -> Tot (seq a)
 let append s1 s2 = Seq (Append s1 s2) 0 (length s1 + length s2)
 

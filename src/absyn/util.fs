@@ -961,9 +961,13 @@ let is_free axs (fvs:freevars) =
     | Inl a -> Util.set_mem a fvs.ftvs
     | Inr x -> Util.set_mem x fvs.fxvs)
 
+type syntax_sum =
+   | SynSumKind of knd
+   | SynSumType of typ
+   | SynSumExp of exp
+   | SynSumComp of syntax<comp', unit>
 
-(* FYI: using polymorphic mutual recursion here ... need to annotate result type *)
-let rec update_uvars (s:syntax<'a,'b>) (uvs:uvars) : uvars =
+let rec update_uvars (s:syntax_sum) (uvs:uvars) : uvars =
   let out = (Util.set_elements uvs.uvars_k) |> List.fold_left (fun out u -> 
         match Unionfind.find u with 
             | Fixed k -> union_uvs (uvars_in_kind k) out
@@ -976,20 +980,24 @@ let rec update_uvars (s:syntax<'a,'b>) (uvs:uvars) : uvars =
         match Unionfind.find u with 
             | Fixed e -> union_uvs (uvars_in_exp e) out
             | _ -> {out with uvars_e=set_add (u,t) out.uvars_e}) out in
-  s.uvs := Some out;
+  (match s with
+    | SynSumKind k -> k.uvs := Some out
+    | SynSumType t -> t.uvs := Some out
+    | SynSumExp e -> e.uvs := Some out
+    | SynSumComp c -> c.uvs := Some out);
   out
 
 and uvars_in_kind k : uvars = 
-  update_uvars k <| vs_kind k true (fun (_,x) -> x) 
+  update_uvars (SynSumKind k) <| vs_kind k true (fun (_,x) -> x) 
   
 and uvars_in_typ t : uvars = 
-  update_uvars t <| vs_typ t true (fun (_,x) -> x)
+  update_uvars (SynSumType t) <| vs_typ t true (fun (_,x) -> x)
 
 and uvars_in_exp e : uvars = 
-  update_uvars e <| vs_exp e true (fun (_,x) -> x) 
+  update_uvars (SynSumExp e) <| vs_exp e true (fun (_,x) -> x) 
 
 and uvars_in_comp c : uvars = 
-  update_uvars c <| vs_comp c true (fun (_,x) -> x) 
+  update_uvars (SynSumComp c) <| vs_comp c true (fun (_,x) -> x) 
   
 (***********************************************************************************************)
 (* closing types and terms *)

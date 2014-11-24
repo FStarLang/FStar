@@ -18,7 +18,7 @@ let ptsym ((p, s) : mlpath) : mlsymbol =
 
 let ptctor ((p, s) : mlpath) : mlsymbol =
     let s = if Char.uppercase (String.get s 0) <> String.get s 0 then "U__" ^ s else s in
-    String.concat "." (p @ [s])
+    String.concat "." (p @ [s]) 
 
 (* -------------------------------------------------------------------- *)
 let mlpath_of_lident (x : lident) : mlpath =

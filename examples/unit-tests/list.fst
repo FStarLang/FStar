@@ -24,7 +24,7 @@ let tail = function
   | hd::tl -> tl
   | _ -> failwith "tail of empty list"
 
-val mem: 'a -> list 'a -> Tot bool //x:'a -> l:list 'a -> b:bool{b==true <==> In x l}
+val mem: 'a -> list 'a -> Tot bool 
 let rec mem x = function
   | [] -> false
   | hd::tl -> hd=x || mem x tl
@@ -98,7 +98,12 @@ assume val concat: list (list 'a) -> PURE.Tot (list 'a)
 assume val sortWith: ('a -> 'a -> int) -> list 'a -> list 'a
 assume val choose: ('a -> option 'b) -> list 'a -> list 'b
 assume val flatten: list (list 'a) -> PURE.Tot (list 'a)
-assume val filter: ('a -> bool) -> list 'a -> list 'a
+
+val filter: f:('a -> Tot bool) -> list 'a -> Tot (m:list 'a{forall x. mem x m ==> f x})
+let rec filter f = function 
+  | [] -> []
+  | hd::tl -> if f hd then hd::(filter f tl) else filter f tl
+
 assume val contains: 'a -> list 'a -> PURE.Tot bool
 assume val fold_left2: ('s -> 'a -> 'b -> 's) -> 's -> list 'a -> list 'b -> 's
 assume val nth: list 'a -> int -> 'a

@@ -182,7 +182,7 @@ let rec typing g e =
 (* These canonical forms lemmas are traditionally used for manual
    progress proofs; they are not used by the automated proof below *)
 val canonical_forms_bool : e:exp -> Lemma
-      (requires (typing empty e=Some TBool /\ is_value e))
+      (requires (typing empty e == Some TBool /\ is_value e))
       (ensures (is_ETrue e \/ is_EFalse e))
 let canonical_forms_bool e = ()
 
@@ -211,77 +211,58 @@ let rec appears_free_in x e =
   | ESnd e1 -> appears_free_in x e1
   | ELet y e1 e2 -> appears_free_in x e1 || (x <> y && appears_free_in x e2)
 
-(* Didn't manage to use auto-induction for free_in_context: 
-   WARNING: pattern does not contain all quantified variables.
-   + Z3 didn't manage to prove easy cases automatically.
-   Any way we can specify the pattern by hand? What would be a good one here?
-   I've tried adding 
-      [SMTPat (appears_free_in x e); SMTPat (is_Some (typing g e))]
-   to the whole lemma. That removed the warning, but EApp case still failed. *)
 val free_in_context : x:int -> e:exp -> g:env -> Lemma
-      (requires (appears_free_in x e /\ is_Some (typing g e)))
-      (ensures (is_Some (g x)))
-let rec free_in_context x e g =
-(*  using_induction_hyp free_in_context;*)
-  match e with
-  | EAbs y t e1 ->
-     if x = y
-     then ()
-     else free_in_context x e1 (extend g y t)
-
-  | EApp e1 e2 ->
-     if appears_free_in x e1
-     then free_in_context x e1 g
-     else free_in_context x e2 g
-
-  | EIf e1 e2 e3 ->
-     if      appears_free_in x e1 then free_in_context x e1 g
-     else if appears_free_in x e2 then free_in_context x e2 g
-     else                              free_in_context x e3 g
-
-  | EPair e1 e2 ->
-      if appears_free_in x e1 then free_in_context x e1 g
-      else free_in_context x e2 g
-
-  | EFst e1
-  | ESnd e1 -> free_in_context x e1 g
-
-  | ELet y e1 e2 ->
-     if appears_free_in x e1 then free_in_context x e1 g
-     else if x = y then ()
-          else  free_in_context x e2 (extend g y (Some.v (typing g e1)))
-
-  | _ -> ()
-
-(* The proof above can be made smaller if we move the quantification
-   of x and the appears_free_in x e premise to the conclusion, since
-   there is less manual instantiation left to do.  This kind of
-   optimization might become irrelevant with automatic induction? *)
-val free_in_context' : e:exp -> g:env -> Lemma
       (requires (is_Some (typing g e)))
-      (ensures (forall (x:int). appears_free_in x e ==> is_Some (g x)))
-let rec free_in_context' e g =
+      (ensures (appears_free_in x e ==> is_Some (g x)))
+let rec free_in_context x e g =
   match e with
-  | EAbs y t e1 -> free_in_context' e1 (extend g y t)
-  | EApp e1 e2 -> free_in_context' e1 g; free_in_context' e2 g
-  | EIf e1 e2 e3 ->
-      free_in_context' e1 g;
-      free_in_context' e2 g;
-      free_in_context' e3 g
-  | EPair e1 e2 ->
-      free_in_context' e1 g;
-      free_in_context' e2 g
-  | EFst e1
-  | ESnd e1 -> free_in_context' e1 g
+  | EVar _
+  | ETrue
+  | EFalse -> ()
+  | EAbs y t e1 -> free_in_context x e1 (extend g y t)
+  | EApp e1 e2 -> free_in_context x e1 g; free_in_context x e2 g
+  | EIf e1 e2 e3 -> free_in_context x e1 g;
+                    free_in_context x e2 g; free_in_context x e3 g
+  | EPair e1 e2 -> free_in_context x e1 g; free_in_context x e2 g
+  | EFst e1 
+  | ESnd e1 -> free_in_context x e1 g
   | ELet y e1 e2 ->
-      free_in_context' e1 g;  
-      free_in_context' e2 (extend g y (Some.v (typing g e1)))
-  | _ -> ()
+      (free_in_context x e1 g;
+      free_in_context x e2 (extend g y (Some.v (typing g e1))))
+
+(* I also tried to changed the order of arguments employ
+   using_induction_hyp with a partially applied induction
+   hypothesis. For some obscure to me reason
+   this requires the --full_context_dependency flag even to
+   pre-type-check and then it doesn't really help verifying this
+   more automatically (left some admits there).
+val free_in_context' : g:env -> x:int -> e:exp -> Lemma
+      (requires (is_Some (typing g e)))
+      (ensures (appears_free_in x e ==> is_Some (g x)))
+      [SMTPat (appears_free_in x e); SMTPat (is_Some (typing g e))]
+let rec free_in_context' g x e =
+  match e with
+  | EVar _
+  | ETrue
+  | EFalse -> ()
+  | EAbs y t e1 -> free_in_context' (extend g y t) x e1
+  | EApp _ _
+  | EIf _ _ _ -> using_induction_hyp (free_in_context' g x); admit()
+    (* Tried partially applying free_in_context' to g, but that
+       lead to strange error message: expected type U1430 got ...
+       Setting the --full_context_dependency fixed this problem. *)
+  | EPair _ _
+  | EFst _
+  | ESnd _ -> using_induction_hyp (free_in_context' g x); admit()
+  | ELet y e1 e2 ->
+      (free_in_context' g x e1;
+      free_in_context' (extend g y (Some.v (typing g e1))) x e2)
+*)
 
 (* Corollary of free_in_context when g=empty -- fed to the SMT solver *)
 val typable_empty_closed : x:int -> e:exp -> Lemma
-      (requires (is_Some (typing empty e) /\ appears_free_in x e))
-      (ensures False)
+      (requires (is_Some (typing empty e)))
+      (ensures (not(appears_free_in x e)))
       [SMTPat (appears_free_in x e)]
 let typable_empty_closed x e = free_in_context x e empty
 
@@ -340,31 +321,30 @@ val typing_extensional : g:env -> g':env -> e:exp
                            (ensures (typing g e == typing g' e))
 let typing_extensional g g' e = context_invariance e g g'
 
-val substitution_preserves_typing :
-      x:int -> t_x:ty -> e:exp -> t_e:ty -> v:exp -> g:env
-      -> Lemma
-          (requires ((typing (extend g x t_x) e == Some t_e)
-                     /\ typing empty v == Some t_x))
-          (ensures  (typing g (subst x v e) == Some t_e))
-let rec substitution_preserves_typing x t_x e t_e v g =
+val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
+      g:env{is_Some (typing empty v) &&
+            is_Some (typing (extend g x (Some.v (typing empty v))) e)} ->
+      Tot (u:unit{typing g (subst x v e) ==
+                  typing (extend g x (Some.v (typing empty v))) e})
+let rec substitution_preserves_typing x e v g =
+  let Some t_x = typing empty v in
   let gx = extend g x t_x in
   match e with
   | ETrue -> ()
   | EFalse -> ()
-  | EVar x' ->
-     if x=x'
+  | EVar y ->
+     if x=y
      then context_invariance v empty g (* uses lemma typable_empty_closed *)
      else context_invariance e gx g
 
   | EApp e1 e2 ->
-     let Some (TArrow t1 t2) = typing gx e1 in
-     substitution_preserves_typing x t_x e1 (TArrow t1 t2) v g;
-     substitution_preserves_typing x t_x e2 t1 v g
+     substitution_preserves_typing x e1 v g;
+     substitution_preserves_typing x e2 v g
 
   | EIf e1 e2 e3 ->
-     substitution_preserves_typing x t_x e1 TBool v g;
-     substitution_preserves_typing x t_x e2 t_e v g;
-     substitution_preserves_typing x t_x e3 t_e v g
+     substitution_preserves_typing x e1 v g;
+     substitution_preserves_typing x e2 v g;
+     substitution_preserves_typing x e3 v g
 
   | EAbs y t_y e1 ->
      let gxy = extend gx y t_y in
@@ -374,61 +354,85 @@ let rec substitution_preserves_typing x t_x e t_e v g =
      else
        (let gyx = extend gy x t_x in
         typing_extensional gxy gyx e1;
-        let TArrow _ t_e1 = t_e in
-        substitution_preserves_typing x t_x e1 t_e1 v gy)
+        substitution_preserves_typing x e1 v gy)
 
   | EPair e1 e2 ->
-     (substitution_preserves_typing x t_x e1 (Some.v (typing gx e1)) v g;
-      substitution_preserves_typing x t_x e2 (Some.v (typing gx e2)) v g)
+     (substitution_preserves_typing x e1 v g;
+      substitution_preserves_typing x e2 v g)
 
   | EFst e1
   | ESnd e1 ->
-      substitution_preserves_typing x t_x e1 (Some.v (typing gx e1)) v g
+      substitution_preserves_typing x e1 v g
 
   | ELet y e1 e2 ->
      (let Some t1 = typing gx e1 in
      let gxy = extend gx y t1 in
      let gy = extend g y t1 in
-     substitution_preserves_typing x t_x e1 t1 v g;
+     substitution_preserves_typing x e1 v g;
      if x=y then typing_extensional gxy gy e2
      else
        (let gyx = extend gy x t_x in
         typing_extensional gxy gyx e2;
-        substitution_preserves_typing x t_x e2 t_e v gy))
+        substitution_preserves_typing x e2 v gy))
 
-val preservation : e:exp -> e':exp -> t:ty
-                -> Lemma
-                     (requires (typing empty e == Some t /\ step e == Some e'))
-                     (ensures (typing empty e' == Some t))
-let rec preservation e e' t =
+val preservation : e:exp{is_Some (typing empty e) /\ is_Some (step e)} ->
+      Tot (u:unit{typing empty (Some.v (step e)) == typing empty e})
+let rec preservation e =
   match e with
   | EApp e1 e2 ->
-     let Some t1 = typing empty e1 in
      if is_value e1
-     then let TArrow targ _ = t1 in
-          (if is_value e2
+     then (if is_value e2
            then let EAbs x _ ebody = e1 in
-                substitution_preserves_typing x targ ebody t e2 empty
-           else preservation e2 (Some.v (step e2)) targ)
-     else preservation e1 (Some.v (step e1)) t1
+                substitution_preserves_typing x ebody e2 empty
+           else preservation e2)
+     else preservation e1
 
   | EIf e1 _ _ ->
       if is_value e1 then ()
-      else preservation e1 (Some.v (step e1)) TBool
+      else preservation e1
 
   | EPair e1 e2 ->
       (match is_value e1, is_value e2 with
-      | false, _    -> preservation e1 (Some.v (step e1))
-                                       (Some.v (typing empty e1))
-      | true, false -> preservation e2 (Some.v (step e2))
-                                       (Some.v (typing empty e2)))
+      | false, _     -> preservation e1
+      | true , false -> preservation e2)
 
   | EFst e1
   | ESnd e1 ->
       if is_value e1 then ()
-      else preservation e1 (Some.v (step e1)) (Some.v (typing empty e1))
+      else preservation e1
 
   | ELet x e1 e2 ->
-      (let Some t_e1 = typing empty e1 in
-       if is_value e1 then substitution_preserves_typing x t_e1 e2 t e1 empty
-       else preservation e1 (Some.v (step e1)) t_e1)
+      (if is_value e1 then substitution_preserves_typing x e2 e1 empty
+       else preservation e1)
+
+val typed_step : e:exp{is_Some (typing empty e) /\ not(is_value e)} ->
+                 Tot (e':exp{typing empty e' = typing empty e})
+let typed_step e =
+  progress e; preservation e; Some.v (step e)
+
+val eval : e:exp{is_Some (typing empty e)} ->
+           Dv (v:exp{is_value v && typing empty v = typing empty e})
+let rec eval e =
+  let Some t = typing empty e in
+  match e with
+  | EApp e1 e2 ->
+     (let EAbs x _ e' = eval e1 in
+      let v = eval e2 in
+      substitution_preserves_typing x e' v empty;
+      eval (subst x v e'))
+  | EAbs _ _ _
+  | ETrue
+  | EFalse     -> e
+  | EIf e1 e2 e3 ->
+     (match eval e1 with
+      | ETrue  -> eval e2
+      | EFalse -> eval e3)
+  | EPair e1 e2 -> EPair (eval e1) (eval e2)
+  | EFst e1 ->
+     let EPair v1 _ = eval e1 in v1
+  | ESnd e1 ->
+     let EPair _ v2 = eval e1 in v2
+  | ELet x e1 e2 ->
+     (let v = eval e1 in
+      substitution_preserves_typing x e2 v empty;
+      eval (subst x v e2))

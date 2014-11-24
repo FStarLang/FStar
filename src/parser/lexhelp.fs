@@ -224,7 +224,7 @@ let keywords =
 (*------- reserved keywords which are ml-compatibility ids *) 
   @ List.map (fun s -> (FSHARP,s,RESERVED)) 
     [ "atomic"; "break"; 
-      "checked"; "component"; "const"; "constraint"; "constructor"; "continue"; 
+      "checked"; "component"; "constraint"; "constructor"; "continue"; 
       "eager"; 
       "fixed"; "functor"; "global"; 
       "include";  (* "instance"; *)
@@ -250,13 +250,15 @@ let kwd s = Util.smap_try_find kwd_table s
 exception ReservedKeyword of string * range
 exception IndentationProblem of string * range
 
-type lexargs =  
-    { getSourceDirectory: (unit -> string); 
-      contents:string}
+type lexargs = {
+  getSourceDirectory: (unit -> string); 
+  contents:string
+}
 
-let mkLexargs (srcdir,filename,(contents:string)) =
-    { getSourceDirectory=srcdir;
-      contents=contents}
+let mkLexargs (srcdir,filename,(contents:string)) = {
+  getSourceDirectory = srcdir;
+  contents = contents
+}
 
 let kwd_or_id args (r:Range.range) s =
   match kwd s with 

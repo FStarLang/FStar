@@ -29,21 +29,21 @@ effect ST (a:Type) (pre:Pre) (post: (heap -> Post a)) (mods:refs) =
               (fun (p:Post a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ Modifies mods h h1 /\ post h a h1) ==> p a h1)) (* WP *)
               (fun (p:Post a) (h:heap) -> (forall a h1. (pre h /\ Modifies mods h h1 /\ post h a h1) ==> p a h1))          (* WLP *)
 
-(* signatures WITHOUT permissions *)
-assume val alloc: a:Type -> init:a -> ST (ref a) 
+(* signatures WITH permissions *)
+assume val alloc: a:Type -> init:a -> Prims.STATE.ST (ref a) 
                                          (fun h -> True) 
                                          (fun h0 r h1 -> not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)
-                                         (modifies no_refs)
+                                         (* (modifies no_refs) *)
 
 assume val read: a:Type -> r:ref a -> ST a 
-                                         (fun h -> True)
-                                         (fun h0 x h1 -> h0==h1 /\ x==sel h0 r)
+                                         (requires (fun h -> contains h r))
+                                         (ensures (fun h0 x h1 -> h0==h1 /\ x==sel h0 r))
                                          (modifies no_refs)
 
-assume val write: a:Type -> r:ref a -> v:a -> Prims.STATE.ST unit 
-                                                 (fun h -> True)
-                                                 (fun h0 x h1 -> h1==upd h0 r v)
-                                                 (* (modifies (a_ref r)) *)
+assume val write: a:Type -> r:ref a -> v:a -> ST unit 
+                                                 (requires (fun h -> contains h r))
+                                                 (ensures (fun h0 x h1 -> h1==upd h0 r v))
+                                                 (modifies (a_ref r))
 
 
 assume val get: unit -> ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h=h1) (modifies no_refs)

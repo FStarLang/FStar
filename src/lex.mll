@@ -1,5 +1,7 @@
 {
-  open FSLangParser
+  open Microsoft_FStar_Parser_Parse
+  open Fstar.Support.Microsoft.FStar
+  open Lexing
 
   module Option  = BatOption
   module String  = BatString
@@ -29,44 +31,106 @@
   let keywords = Hashtbl.create 0
 
   let () =
+    Hashtbl.add keywords "abstract"      ABSTRACT    ;
     Hashtbl.add keywords "and"           AND         ;
+    Hashtbl.add keywords "as"            AS          ;
     Hashtbl.add keywords "assert"        ASSERT      ;
+    Hashtbl.add keywords "asr"           (INFIX_STAR_STAR_OP "asr");
     Hashtbl.add keywords "assume"        ASSUME      ;
+    Hashtbl.add keywords "base"          BASE        ;
     Hashtbl.add keywords "begin"         BEGIN       ;
+    Hashtbl.add keywords "class"         CLASS       ;
+    Hashtbl.add keywords "default"       DEFAULT     ;
     Hashtbl.add keywords "define"        DEFINE      ;
+    Hashtbl.add keywords "do"            DO          ;
+    Hashtbl.add keywords "done"          DONE        ;
+    Hashtbl.add keywords "downto"        DOWNTO      ;
     Hashtbl.add keywords "effect"        EFFECT      ;
     Hashtbl.add keywords "else"          ELSE        ;
     Hashtbl.add keywords "end"           END         ;
+    Hashtbl.add keywords "ensures"       ENSURES     ;
     Hashtbl.add keywords "exception"     EXCEPTION   ;
     Hashtbl.add keywords "exists"        EXISTS      ;
     Hashtbl.add keywords "false"         FALSE       ;
+    Hashtbl.add keywords "finally"       FINALLY     ;
+    Hashtbl.add keywords "for"           FOR         ;
     Hashtbl.add keywords "forall"        FORALL      ;
     Hashtbl.add keywords "fun"           FUN         ;
     Hashtbl.add keywords "function"      FUNCTION    ;
     Hashtbl.add keywords "if"            IF          ;
-    Hashtbl.add keywords "in"            IN          ;
     Hashtbl.add keywords "kind"          KIND        ;
-    Hashtbl.add keywords "let"           LET         ;
+    Hashtbl.add keywords "in"            IN          ;
+    Hashtbl.add keywords "inherit"       INHERIT     ;
+    Hashtbl.add keywords "land"          (INFIX_STAR_DIV_MOD_OP "land");
+    Hashtbl.add keywords "lazy"          LAZY        ;
+    Hashtbl.add keywords "let"           (LET false) ;
+    Hashtbl.add keywords "lor"           (INFIX_STAR_DIV_MOD_OP "lor");
     Hashtbl.add keywords "logic"         LOGIC       ;
+    Hashtbl.add keywords "lsl"           (INFIX_STAR_STAR_OP "lsl");
+    Hashtbl.add keywords "lsr"           (INFIX_STAR_STAR_OP "lsr");
+    Hashtbl.add keywords "lxor"          (INFIX_STAR_STAR_OP "lxor");
     Hashtbl.add keywords "match"         MATCH       ;
+    Hashtbl.add keywords "method"        METHOD      ;
+    Hashtbl.add keywords "mod"           (INFIX_STAR_DIV_MOD_OP "mod");
     Hashtbl.add keywords "module"        MODULE      ;
     Hashtbl.add keywords "monad_lattice" MONADLATTICE;
+    Hashtbl.add keywords "new"           NEW         ;
     Hashtbl.add keywords "of"            OF          ;
     Hashtbl.add keywords "open"          OPEN        ;
+    Hashtbl.add keywords "or"            OR          ;
+    Hashtbl.add keywords "opaque"        OPAQUE      ;
     Hashtbl.add keywords "print"         PRINT       ;
+    Hashtbl.add keywords "private"       PRIVATE     ;
+    Hashtbl.add keywords "public"        PUBLIC      ;
     Hashtbl.add keywords "query"         QUERY       ;
     Hashtbl.add keywords "rec"           REC         ;
+    Hashtbl.add keywords "requires"      REQUIRES    ;
+    Hashtbl.add keywords "sig"           SIG         ;
+    Hashtbl.add keywords "struct"        STRUCT      ;
+    Hashtbl.add keywords "terminating"   TOTAL       ;
     Hashtbl.add keywords "then"          THEN        ;
+    Hashtbl.add keywords "to"            TO          ;
     Hashtbl.add keywords "total"         TOTAL       ;
     Hashtbl.add keywords "true"          TRUE        ;
     Hashtbl.add keywords "try"           TRY         ;
     Hashtbl.add keywords "type"          TYPE        ;
-    Hashtbl.add keywords "underscore"    UNDERSCORE  ;
     Hashtbl.add keywords "val"           VAL         ;
+    Hashtbl.add keywords "virtual"       VIRTUAL     ;
     Hashtbl.add keywords "when"          WHEN        ;
-    Hashtbl.add keywords "with"          WITH
+    Hashtbl.add keywords "while"         WHILE       ;
+    Hashtbl.add keywords "with"          WITH        ;
+    Hashtbl.add keywords "_"             UNDERSCORE
 
-  let is_typ_app = fun _ -> false
+  type delimiters = { angle:int ref; paren:int ref; }
+
+  (** XXX TODO This is an unacceptable hack. Needs to be redone ASAP  **)
+  let ba_of_string s = Array.init (String.length s) (String.get s)
+  let is_typ_app lexbuf =
+  try
+   let char_ok = function
+     | '(' | ')' | '<' | '>' | '*' | '-' | '\'' | ',' | '.' | '_' -> true
+     | c when c >= 'A' && c <= 'Z' -> true
+     | c when c >= 'a' && c <= 'z' -> true
+     | c when c >= '0' && c <= '9' -> true
+     | _ -> false in
+   let balanced (contents:string) pos =
+    if Util.char_at contents pos <> '<' then
+      (failwith  "Unexpected position in is_typ_lapp");
+    let d = {angle=ref 1; paren=ref 0} in
+    let upd i = match Util.char_at contents i with
+      | '(' -> incr d.paren | ')' -> decr d.paren
+      | '<' -> incr d.angle | '>' -> decr d.angle
+      | _ -> () in
+    let ok () = !(d.angle) >= 0 && !(d.paren) >= 0 in
+    let rec aux i =
+      if !(d.angle)=0 && !(d.paren)=0 then true
+      else if i >= String.length contents || not (ok ()) || (not (char_ok (Util.char_at contents i))) || (Util.starts_with (Util.substring_from contents i) "then") then false
+      else (upd i; aux (i + 1)) in
+      aux (pos + 1) in
+   balanced lexbuf.lex_buffer (lexbuf.lex_curr_pos - 1)
+  with e -> Printf.printf "Resolving typ_app<...> syntax failed.\n"; false
+
+ let clean_number x = String.strip ~chars:"uyslLUnIN" x
 }
 
 (* -------------------------------------------------------------------- *)
@@ -128,7 +192,7 @@ let char        = [^'\\''\n''\r''\t''\b'] | escape_char
 let constructor_start_char = upper
 let ident_start_char       = lower  | '_'
 let ident_char             = letter | digit  | ['\'' '_']
-let tvar_char              = letter | digit 
+let tvar_char              = letter | digit | ['\'' '_'] 
 
 let constructor = constructor_start_char ident_char*  
 let ident       = ident_start_char ident_char*
@@ -146,10 +210,16 @@ rule token = parse
      { NAME id }
  | tvar as id
      { TVAR id }
- | (xint | int | xint32 | int32) as x
-     { INT32 (Int32.of_string x, false) }
- | int64 as x
-     { INT64 (Int64.of_string x, false) }
+ | uint8 as x
+     { UINT8 (char_of_int (int_of_string (clean_number x))) }
+ | (int8 | xint8) as x
+     { INT8 (char_of_int (int_of_string (clean_number x)), false) }
+ | (uint16 | int16 | xint16) as x
+     { INT16 (int_of_string (clean_number x), false) }
+ | (uint32l | uint32 | xint | xint32 | int | int32) as x
+     { INT32 (int_of_string (clean_number x), false) }
+ | (uint64 | int64) as x
+     { INT64 (Int64.of_string (clean_number x), false) }
  | (ieee64 | xieee64) as x
      { IEEE64 (float_of_string x) }
  | (int | xint | float) ident_char+
@@ -183,7 +253,7 @@ rule token = parse
  | "<==>"      { IFF }
  | "==>"       { IMPLIES }
  | "."         { DOT }
- | "{:pattern" { LBRACE_COLON_PTN }
+ | "{:pattern" { LBRACE_COLON_PATTERN }
  | ":"         { COLON }
  | "::"        { COLON_COLON }
  | "@"         { ATSIGN }
@@ -209,6 +279,8 @@ rule token = parse
  | "|"         { BAR }
  | "}"         { RBRACE }
  | "!"         { BANG (L.lexeme lexbuf) }
+ | "$"         { DOLLAR }
+ | "\\"        { BACKSLASH }
 
  | ('/' | '%') as op { DIV_MOD_OP    (String.of_char op) }
  | ('+' | '-') as op { PLUS_MINUS_OP (String.of_char op) }
@@ -256,10 +328,10 @@ and string buffer = parse
       string buffer lexbuf }
      
  |  '"' 
-    { STRING (Buffer.contents buffer) }
+    { STRING (ba_of_string (Buffer.contents buffer)) }
 
  |  '"''B' 
-    { BYTEARRAY (Buffer.contents buffer) }
+    { BYTEARRAY (ba_of_string (Buffer.contents buffer)) }
 
  | _ as c
     { Buffer.add_char buffer c;

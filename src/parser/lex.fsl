@@ -21,57 +21,36 @@
  * (c) Microsoft Corporation. All rights reserved 
  *-----------------------------------------------------------------------*)
 
-open System
-open Microsoft.FSharp.Compatibility
-open Microsoft.FSharp.Compatibility.OCaml.Pervasives
-open Microsoft.FSharp.Text.Lexing
-open Microsoft.FStar
 open Microsoft.FStar.Range
 open Microsoft.FStar.Parser
 open Microsoft.FStar.Parser.Parse
 open Microsoft.FStar.Parser.AST
-(* open Microsoft.FStar.Parser.Lexhelp *)
+open Microsoft.FStar.Parser.Util
 
-let lexeme (lexbuf : Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) = 
-    Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*).LexemeString(lexbuf)
-let ulexeme lexbuf = lexeme lexbuf
-
-let adjust_lexbuf_start_pos (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) p =  lexbuf.StartPos <- p 
-
-let string_trim_both s n m = String.sub s n (String.length s - (n+m))
+let string_trim_both s n m = Util.substring s n (String.length s - (n+m))
 let trim_both   lexbuf n m = string_trim_both (ulexeme lexbuf) n m
 let trim_right  lexbuf n = trim_both lexbuf 0 n
 let trim_left   lexbuf n = trim_both lexbuf n 0
 
 let fail lexbuf msg dflt =
-     let m = GetLexerRange  lexbuf in 
+     let m = getLexerRange lexbuf in 
      errorR(Absyn.Syntax.Error(msg,m));
      dflt
         
-
 let trim_to_i32 lexbuf n = 
-    try int32 (trim_right lexbuf n)
+    try Util.int_of_string (trim_right lexbuf n)
     with _ -> fail lexbuf "This number is outside the allowable range for this integer type" 0
 
-let CheckExprOp lexbuf = 
+let checkExprOp lexbuf = 
   if String.contains (ulexeme lexbuf)  ':' 
-  then errorR(Absyn.Syntax.Error("':' is no longer permitted as a character in operator names" , GetLexerRange lexbuf))
+  then errorR(Absyn.Syntax.Error("':' is no longer permitted as a character in operator names" , getLexerRange lexbuf))
 
-let quote_op_is_raw s = String.length s >= 1 && s.[0] = '@'
-
-let rev_string s = 
-  let n = String.length s in 
-  let res = Buffer.create n in 
-  for i = n - 1 downto 0 do Buffer.add_char res s.[i] done;
-  Buffer.contents res
-  
 let unexpected_char lexbuf =
-    LEX_FAILURE ("Unexpected character '"^(lexeme lexbuf)^"'")
-
+    failwith ("Unexpected character '"^(lexeme lexbuf)^"'")
 
 let start_string (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) =
     let buf = Bytes.create 100 in 
-    let m = GetLexerRange  lexbuf in
+    let m = getLexerRange  lexbuf in
     let startp = lexbuf.StartPos in  
     let fin = (fun m2 b s -> 
                      let endp = lexbuf.EndPos in  
@@ -87,8 +66,7 @@ let start_string (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*Unicode
                      else
                         STRING s)  in
     buf,fin,m
-
-
+    
 type delimiters = {
   angle:ref<int>;
   paren:ref<int>
@@ -119,7 +97,7 @@ let is_typ_app (args:Lexhelp.lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBu
    let res = balanced args.contents lexbuf.StartPos.AbsoluteOffset in
    res
  with e -> printfn "Resolving typ_app<...> syntax failed: %A" e; false 
-                        
+	                    
 } 
 
 let letter = '\Lu' | '\Ll' | '\Lt' | '\Lm' | '\Lo' | '\Nl'
@@ -202,7 +180,7 @@ let basekind = '*' | 'A' | 'E' | "Prop"
 
 rule token args = parse
  | ident 
-     { Lexhelp.kwd_or_id args (GetLexerRange lexbuf) (ulexeme lexbuf) }
+     { Lexhelp.kwd_or_id args (getLexerRange lexbuf) (ulexeme lexbuf) }
  | constructor
      { NAME(ulexeme lexbuf) }
  | tvar 
@@ -386,7 +364,7 @@ rule token args = parse
  | "(*)"            { LPAREN_STAR_RPAREN }
 
  | "(*"
-     { let m = GetLexerRange  lexbuf in 
+     { let m = getLexerRange  lexbuf in 
        comment(1,m,args) lexbuf }
 
  | '"' 
@@ -493,11 +471,11 @@ rule token args = parse
  | "\\" { BACKSLASH }
  | ('/' | '%')                                          { DIV_MOD_OP(ulexeme lexbuf) }
  | ('+'|'-')                                            { PLUS_MINUS_OP(ulexeme lexbuf) }
- | ignored_op_char* '*' '*'                    op_char* { CheckExprOp lexbuf; INFIX_STAR_STAR_OP(ulexeme lexbuf) }
- | ignored_op_char* ('=' | "!=" | '<' | '>' | '$')  op_char* { CheckExprOp lexbuf; INFIX_COMPARE_OP(ulexeme lexbuf) }
- | ignored_op_char* ('&')                      op_char* { CheckExprOp lexbuf; INFIX_AMP_OP(ulexeme lexbuf) }
- | ignored_op_char* '|'                        op_char* { CheckExprOp lexbuf; INFIX_BAR_OP(ulexeme lexbuf) }
- | ignored_op_char* ('?' | '~' )         op_char* { CheckExprOp lexbuf; PREFIX_OP(ulexeme lexbuf) }
+ | ignored_op_char* '*' '*'                    op_char* { checkExprOp lexbuf; INFIX_STAR_STAR_OP(ulexeme lexbuf) }
+ | ignored_op_char* ('=' | "!=" | '<' | '>' | '$')  op_char* { checkExprOp lexbuf; INFIX_COMPARE_OP(ulexeme lexbuf) }
+ | ignored_op_char* ('&')                      op_char* { checkExprOp lexbuf; INFIX_AMP_OP(ulexeme lexbuf) }
+ | ignored_op_char* '|'                        op_char* { checkExprOp lexbuf; INFIX_BAR_OP(ulexeme lexbuf) }
+ | ignored_op_char* ('?' | '~' )         op_char* { checkExprOp lexbuf; PREFIX_OP(ulexeme lexbuf) }
  | ".[]"  | ".[]<-" | ".[,]<-" | ".[,,]<-" | ".[,,]" | ".[,]" | ".[..]" | ".[..,..]" 
  | ".()"  | ".()<-" | ".(,)<-" | ".(,,)<-" | ".(,,)" | ".(,)" | ".(..)" | ".(..,..)" { FUNKY_OPERATOR_NAME(ulexeme lexbuf) }
  | _ { unexpected_char lexbuf }     
@@ -542,12 +520,12 @@ and string sargs = parse
      
  |  '"' 
     { let (buf,fin,m,args) = sargs in 
-      let m2 = GetLexerRange lexbuf in 
+      let m2 = getLexerRange lexbuf in 
       Lexhelp.call_string_finish fin buf m2 false }
 
  |  '"''B' 
     { let (buf,fin,m,args) = sargs in 
-      let m2 = GetLexerRange lexbuf in 
+      let m2 = getLexerRange lexbuf in 
       Lexhelp.call_string_finish fin buf m2 true }
 
  | newline
@@ -588,12 +566,12 @@ and vstring sargs = parse
 
  |  '"' 
     { let (buf,fin,m,args) = sargs in 
-      let m2 = GetLexerRange lexbuf in 
+      let m2 = getLexerRange lexbuf in 
       Lexhelp.call_string_finish fin buf m2 false }
 
  |  '"''B' 
     { let (buf,fin,m,args) = sargs in 
-      let m2 = GetLexerRange lexbuf in 
+      let m2 = getLexerRange lexbuf in 
       Lexhelp.call_string_finish fin buf m2 true }
 
  | newline 
