@@ -20,6 +20,8 @@ assume val dec: key -> cipher -> Tot plain                    (* this function i
 assume val enc: k:key -> p:plain -> c:cipher { dec k c = p }  (* this function is not pure (IV); the refinement captures functional correctness *) 
 
 
+(* -------------------------------------------------------------------------------- *)
+
 module SymEnc (* a multi-key symmetric variant; for simplicity: (1) only using AES above; and (2) parsing is complete *)
 
 (* TODO: we get the index from a counter; 
@@ -41,7 +43,7 @@ logic type Encrypted: #p: Type -> #r: Type -> key p r -> AES.cipher -> Type (* a
 
 type cipher (p:Type) (r:Type) (k: key p r) = c: AES.cipher { Encrypted #p #r k c }    (* TODO why do I need explicit implicits? *)
 
-assume val keygen:  #p:Type -> #r:Type -> (plain: r -> p) -> (repr: p -> r) -> key p r 
+assume val keygen:  #p:Type -> #r:Type -> plain:(r -> p) -> repr:(p -> r) -> key p r 
 assume val decrypt: #p:Type -> #r:Type -> k:key p r -> cipher p r k -> Tot p
 assume val encrypt: #p:Type -> #r:Type -> k:key p r -> plain: p -> c:cipher p r k { decrypt k c = plain }
 
@@ -75,6 +77,7 @@ assume val decrypt: p:Type -> r:Type -> k:skey p r -> c: cipher p r k -> option 
 assume val encrypt: p:Type -> r:Type -> k:skey p r -> plain: p -> c:cipher p r k { decrypt p r k c = plain }
 *)
 
+(* -------------------------------------------------------------------------------- *)
 module SampleEncrypt
 
 let plain (x:AES.plain) = x 
@@ -93,18 +96,21 @@ let test() =
 
 module EncryptThenMAC 
 
+logic type EncText: #p: Type -> #r: Type -> SymEnc.key p r -> MacIdeal.text -> Type (* an opaque predicate, keeping track of honest encryptions *)
+
 type key (p:Type) (r:Type) = 
-  | Key:  ke:SymEnc.key p r -> MacIdeal.pkey (fun c -> SymEnc.Encrypted ke c) -> key p r 
+  | Key:  ke:SymEnc.key p r -> MacIdeal.pkey (EncText ke) -> key p r 
+
 
 type cipher = AES.cipher * MacIdeal.tag
 
-val keygen:  #p:Type -> #r:Type -> (plain: r -> p) -> (repr: p -> r) -> key p r 
 assume val decrypt: #p:Type -> #r:Type -> k:key p r -> cipher -> Tot (option p)
-val encrypt: #p:Type -> #r:Type -> k:key p r -> plain: p -> c:cipher { decrypt #p #r k c = Some plain }
+assume val encrypt: #p:Type -> #r:Type -> k:key p r -> plain: p -> c:cipher { decrypt #p #r k c = Some plain }
 
+val keygen:  p:Type -> r:Type -> plain: (r -> p) -> repr:(p -> r) -> key p r 
 let keygen plain repr = 
   let ke = SymEnc.keygen plain repr in
-  let ka = MacIdeal.new_key (fun c -> SymEnc.Encrypted ke c) in 
+  let ka = MacIdeal.new_key (EncText ke) in
   Key ke ka
 
 (*
