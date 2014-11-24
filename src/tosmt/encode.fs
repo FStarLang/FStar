@@ -906,7 +906,8 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
             close env ex_vars <| Term.mk_Valid tt, [], decls in
 
     let encode_q_body env (bs:Syntax.binders) (ps:args) body = 
-        let vars, guards, env, decls, _ = encode_binders true bs env in 
+        let vars, guards, env, decls, _ = encode_binders true bs (negate env) in 
+        let env = negate env in
         let pats, decls' = ps |> List.map (function 
             | Inl t, _ -> encode_formula t env
             | Inr e, _ -> let t, _, decls = encode_exp e env in t, decls) |> List.unzip in 

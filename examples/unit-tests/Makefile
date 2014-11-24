@@ -45,7 +45,7 @@ rpc:
 	$(FSTAR) $(OTHERFLAGS) mac.fst format.fst rpc.fst --verify
 
 encrypt:
-	$(FSTAR) $(OTHERFLAGS) mac.fst encrypt.fst
+	$(FSTAR) mac.fst encrypt.fst
 
 rbt:
 	$(FSTAR) --z3timeout 10 --verify rbtree.fst
