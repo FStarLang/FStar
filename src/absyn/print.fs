@@ -38,30 +38,62 @@ let infix_prim_ops = [
     (Const.op_GTE         , ">=");
     (Const.op_LT          , "<" );
     (Const.op_GT          , ">" );
-    (Const.op_Modulus     , "mod" );
+    (Const.op_Modulus     , "mod");
 ]
-(* CH: What about the Lex ordering, doesn't that belong here too?
-[6:23:30 PM] Nikhil Swamy: are you including printing Precedes as <<
-[6:23:45 PM] Nikhil Swamy: and LexCons ... as %[v1;..vn]?
-[6:23:52 PM] Catalin Hritcu: yes
- *)
 
-let prim_uni_ops = [
+let unary_prim_ops = [
     (Const.op_Negation, "not");
     (Const.op_Minus, "-")
 ]
 
-let is_op ps f = match f.n with 
+let infix_type_ops = [
+  (Const.and_lid     , "/\\");
+  (Const.or_lid      , "\\/");
+  (Const.imp_lid     , "==>");
+  (Const.iff_lid     , "<==>");
+  (Const.precedes_lid, "<<");
+  (Const.eq2_lid     , "==");
+  (Const.eqT_lid     , "==");
+]
+
+let unary_type_ops = [
+  (Const.not_lid, "~")
+]
+
+(*logic type b2t (b:bool) = b==true -- just don't print?
+let b2t_lid    = pconst "b2t" -- coercion from boolean to type *)
+(* TODO: deal with these special cases at some point
+logic type Forall : #a:Type -> (a -> Type) -> Type -- IMPORTANT
+logic type Exists : #a:Type -> (a -> Type) -> Type -- IMPORTANT
+logic type ForallTyp : (Type -> Type) -> Type -- Handled specially to support quantification over types of arbitrary kinds
+logic type ExistsTyp : (Type -> Type) -> Type -- Handled specially to support quantification over types of arbitrary kinds
+logic type ITE : Type -> Type -> Type -> Type -- written if/then/else in concrete syntax
+let exists_lid = pconst "Exists"  
+let forall_lid = pconst "Forall"  
+let exTyp_lid  = pconst "ExistsTyp"
+let allTyp_lid = pconst "ForallTyp"
+*)
+
+let is_prim_op ps f = match f.n with 
   | Exp_fvar(fv,_) -> ps |> Util.for_some (lid_equals fv.v)
+  | _ -> false
+
+let is_type_op ps t = match t.n with 
+  | Typ_const ftv -> ps |> Util.for_some (lid_equals ftv.v)
   | _ -> false
 
 let get_lid f = match f.n with 
   | Exp_fvar(fv,_) -> fv.v
   | _ -> failwith "get_lid"
 
-let is_infix_prim_op = is_op (fst (List.split infix_prim_ops))
+let get_type_lid t = match t.n with 
+  | Typ_const ftv -> ftv.v
+  | _ -> failwith "get_type_lid"
 
-let is_uni_prim_op (e:exp) = is_op (fst (List.split prim_uni_ops)) e
+let is_infix_prim_op = is_prim_op (fst (List.split infix_prim_ops))
+let is_unary_prim_op = is_prim_op (fst (List.split unary_prim_ops))
+let is_infix_type_op = is_type_op (fst (List.split infix_type_ops))
+let is_unary_type_op = is_type_op (fst (List.split unary_type_ops))
 
 (* CH: F# List.find has a different type from find in list.fst ... so just a hack for now *)
 let rec find f l = match l with 
@@ -71,9 +103,10 @@ let rec find f l = match l with
 let find_lid (x:lident) xs : string =
   snd (find (fun p -> lid_equals x (fst p)) xs)
 
-let infix_prim_op_to_string e = find_lid (get_lid e) infix_prim_ops
-
-let uni_prim_op_to_string e = find_lid (get_lid e) prim_uni_ops
+let infix_prim_op_to_string e = find_lid (get_lid e)      infix_prim_ops
+let unary_prim_op_to_string e = find_lid (get_lid e)      unary_prim_ops
+let infix_type_op_to_string t = find_lid (get_type_lid t) infix_type_ops
+let unary_type_op_to_string t = find_lid (get_type_lid t) unary_type_ops
 
 let rec sli (l:lident) : string = 
   if !Options.print_real_names
@@ -158,7 +191,13 @@ and typ_to_string x =
   | Typ_const v -> sli v.v //Util.format2 "%s:%s" (sli v.v) (kind_to_string x.tk)
   | Typ_fun(binders, c) ->     Util.format2 "(%s -> %s)"  (binders_to_string " -> " binders) (comp_typ_to_string c)
   | Typ_refine(xt, f) ->       Util.format3 "%s:%s{%s}" (strBvd xt.v) (xt.sort |> typ_to_string) (f|> formula_to_string)
-  | Typ_app(t, args) ->        Util.format2 "(%s %s)"   (t |> typ_to_string) (args |> args_to_string)
+  | Typ_app(t, args) ->
+      let args' = List.filter (fun a -> not (snd a)) args in (* drop implicit arguments for type operators *)
+      if is_infix_type_op t && List.length args' = 2 then
+        Util.format3 "(%s %s %s)" (List.nth args' 0 |> arg_to_string) (t |> infix_type_op_to_string) (List.nth args' 1 |> arg_to_string)
+      else if is_unary_type_op t && List.length args' = 1 then
+        Util.format2 "(%s %s)" (t|> unary_type_op_to_string) (List.nth args' 0 |> arg_to_string)
+      else Util.format2 "(%s %s)"   (t |> typ_to_string) (args |> args_to_string)
   | Typ_lam(binders, t2) ->      Util.format2 "(fun %s => %s)" (binders_to_string " " binders) (t2|> typ_to_string)
   | Typ_ascribed(t, k) ->
     if !Options.print_real_names  
@@ -273,8 +312,8 @@ and exp_to_string x = match (compress_exp x).n with
   | Exp_app(e, args) ->
       if is_infix_prim_op e && List.length args = 2 then
         Util.format3 "(%s %s %s)" (List.nth args 0 |> arg_to_string) (e|> infix_prim_op_to_string) (List.nth args 1 |> arg_to_string)
-      else if is_uni_prim_op e && List.length args = 1 then
-        Util.format2 "(%s %s)" (e|> uni_prim_op_to_string) (List.nth args 0 |> arg_to_string)
+      else if is_unary_prim_op e && List.length args = 1 then
+        Util.format2 "(%s %s)" (e|> unary_prim_op_to_string) (List.nth args 0 |> arg_to_string)
       else Util.format2 "(%s %s)" (e|> exp_to_string) (args_to_string args)
   | Exp_match(e, pats) -> Util.format2 "(match %s with %s)" 
     (e |> exp_to_string) 

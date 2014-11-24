@@ -14,7 +14,7 @@ FSTAR_OBJS=Microsoft_FStar_Options.cmx Microsoft_FStar_LazySet.cmx Microsoft_FSt
 all: fstarml
 
 parser:
-	cat ../parser/parse.fsy | sed ':a;N;$$!ba;s/^%[{][^%]*%[}]//g' > parse.mly
+	cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
 	ocamlyacc parse.mly
 	echo "open Fstar.Support.Microsoft.FStar.Util" > Microsoft_FStar_Parser_Parse.ml
 	echo "open Fstar.Support.Microsoft.FStar.Range" >> Microsoft_FStar_Parser_Parse.ml

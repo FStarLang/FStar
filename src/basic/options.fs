@@ -65,7 +65,7 @@ let pretype = Util.mk_ref true
 let codegen = Util.mk_ref None
 let admit_fsi = Util.mk_ref []
 let trace_error = Util.mk_ref false
-let verify = Util.mk_ref false
+let verify = Util.mk_ref true
 let full_context_dependency = Util.mk_ref false
 let print_implicits = Util.mk_ref false
 let hide_uvar_nums = Util.mk_ref false
@@ -115,7 +115,7 @@ let specs () : list<Getopt.opt> =
   let specs =   
     [( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
      ( noshort, "codegen", OneArg ((fun s -> codegen := Some s), "OCaml|F#|JS"), "Generate code for execution");
-     ( noshort, "pretype", ZeroArgs (fun () -> pretype := true), "Run the pre-type checker");
+     ( noshort, "lax", ZeroArgs (fun () -> pretype := true; verify := false), "Run the lax-type checker only (admit all verification conditions)");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
      ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
      ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");

@@ -175,10 +175,10 @@ BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_BACKEND) $(BOOT_JSBACKEND)
 
 boot: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --fstar_home .. $(FSTAROPTS) --debug_level Low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+	$(RUNTIME) ../bin/fstar.exe --lax --fstar_home .. $(FSTAROPTS) --debug_level Low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
 ocaml: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --odir ocaml-output --fstar_home .. $(FSTAROPTS) --codegen OCaml --debug_level Low --trace_error --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+	$(RUNTIME) ../bin/fstar.exe --lax --odir ocaml-output --fstar_home .. $(FSTAROPTS) --codegen OCaml --debug_level Low --trace_error --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 	@echo "Building parser and lexer filex..."
 	make -C ocaml-output parser
 	make -s -C ocaml-output fstarml
@@ -194,7 +194,7 @@ test:   boot
 	make -s -C ../examples/unit-tests acls2
 	make -s -C ../examples/unit-tests counters
 	-make -s -C ../examples/unit-tests all-ver 
-	@echo "--------Expect 18 errors--------------"
+	@echo "--------Expect 20 errors--------------"
 
 
 test.diff:
