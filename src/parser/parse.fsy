@@ -921,8 +921,20 @@ maybeFieldProjections:
       { $1@[$3] }
 
 targs:
-  | atomicTerm { [$1] }
-  | atomicTerm COMMA targs { $1::$3 }
+  | atomicProductTerm { [$1] }
+  | atomicProductTerm COMMA targs { $1::$3 }
+
+atomicProductTerm:
+  | atomicTerm STAR atomicProductTerm
+      {
+        let sum_type = $3 in
+        let binders, final = match sum_type.tm with
+          | Sum(binders, final) -> binders, final
+          | _ -> [], sum_type in
+        let b = mk_binder (NoName $1) (rhs parseState 1) Type false in
+        mk_term (Sum(b::binders, final)) (rhs2 parseState 1 3) Type
+      }
+  | atomicTerm {$1}
 
 maybeInsts:
   |    { (fun x -> x) }
