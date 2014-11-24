@@ -23,20 +23,20 @@ all: all-lax all-ver
 VERFILES=unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst insertionsort-lemma.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst sf-poly.fst format.fst mac.fst sig.fst stlc.fst qs.fst cca2.fst bug34.fst bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst bug28.fst bug35.fst bug52.fst bug23.fst bug21.fst
 
 acls2: list.fst $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst st.fst) acls2.fst
-	../../bin/fstar --fstar_home $(FSTAR_HOME) $^ --verify
+	$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $^ --verify
 
 counters: list.fst $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst stperm.fst) ../sep/counters.fst
-	../../bin/fstar --fstar_home $(FSTAR_HOME) $^ --verify
+	$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $^ --verify
 
 test: $(addprefix $(FSTAR_HOME)/lib/, partialmap.fst st.fst) test.fst
-	../../bin/fstar --fstar_home $(FSTAR_HOME) $^ --verify $(OTHERFLAGS)
+	$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $^ --verify $(OTHERFLAGS)
 
 cache: $(STDLIB)
 	mkdir $(FSTAR_HOME)/cache
 	$(FSTAR) --serialize_mods --verify
 
 map:
-	../../bin/fstar $(OTHERFLAGS) --fstar_home ../../ $(FSTAR_HOME)/lib/partialmap.fst --verify --logQueries
+	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home ../../ $(FSTAR_HOME)/lib/partialmap.fst --verify --logQueries
 
 ccache:
 	rm -f $(addprefix $(FSTAR_HOME)/cache/, $(STDCACHE))
@@ -55,7 +55,7 @@ all-ver: $(VERFILES)
 	$(FSTAR) --verify $^
 
 all-lax: rec.fst pat.fst mac.fst bug16.fst
-	$(FSTAR) $^
+	$(FSTAR) --lax $^
 
 %.vv: list.fst %.fst
 	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $^ --verify
