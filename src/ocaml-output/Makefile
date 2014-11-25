@@ -9,7 +9,7 @@ OCAMLOPTFLAGS=$(INCLUDES) # add other options for ocamlopt here
 # units: mod1, mod2 and mod3.
 
 # The list of object files for prog1
-FSTAR_OBJS=Microsoft_FStar_Options.cmx Microsoft_FStar_LazySet.cmx Microsoft_FStar_Absyn_Syntax.cmx Microsoft_FStar_Absyn_Const.cmx Microsoft_FStar_Absyn_Visit.cmx Microsoft_FStar_Absyn_Util.cmx Microsoft_FStar_Absyn_Print.cmx Microsoft_FStar_Absyn_SSyntax.cmx Microsoft_FStar_Parser_AST.cmx Microsoft_FStar_Parser_DesugarEnv.cmx Microsoft_FStar_Parser_Desugar.cmx Microsoft_FStar_Parser_Parse.cmx Microsoft_FStar_Parser_Lexhelp.cmx Microsoft_FStar_Parser_LexFStar.cmx Microsoft_FStar_Parser_ParseIt.cmx Microsoft_FStar_Parser_Driver.cmx Microsoft_FStar_Tc_Env.cmx Microsoft_FStar_Tc_Normalize.cmx Microsoft_FStar_Tc_Errors.cmx Microsoft_FStar_Tc_Rel.cmx Microsoft_FStar_Tc_Util.cmx Microsoft_FStar_Tc_Tc.cmx Microsoft_FStar_ToSMT_Term.cmx Microsoft_FStar_ToSMT_Z3.cmx Microsoft_FStar_ToSMT_Encode.cmx
+FSTAR_OBJS=Microsoft_FStar_Options.cmx Microsoft_FStar_LazySet.cmx Microsoft_FStar_Absyn_Syntax.cmx Microsoft_FStar_Absyn_Const.cmx Microsoft_FStar_Absyn_Visit.cmx Microsoft_FStar_Absyn_Util.cmx Microsoft_FStar_Absyn_Print.cmx Microsoft_FStar_Absyn_SSyntax.cmx Microsoft_FStar_Parser_AST.cmx Microsoft_FStar_Parser_DesugarEnv.cmx Microsoft_FStar_Parser_Desugar.cmx Microsoft_FStar_Parser_Parse.cmx Microsoft_FStar_Parser_Lexhelp.cmx Microsoft_FStar_Parser_LexFStar.cmx Microsoft_FStar_Parser_ParseIt.cmx Microsoft_FStar_Parser_Driver.cmx Microsoft_FStar_Tc_Env.cmx Microsoft_FStar_Tc_Normalize.cmx Microsoft_FStar_Tc_Errors.cmx Microsoft_FStar_Tc_Rel.cmx Microsoft_FStar_Tc_Util.cmx Microsoft_FStar_Tc_Tc.cmx Microsoft_FStar_ToSMT_Term.cmx Microsoft_FStar_ToSMT_Z3.cmx Microsoft_FStar_ToSMT_Encode.cmx FSharp_Format.cmx Microsoft_FStar_Backends_NameEnv.cmx Microsoft_FStar_Backends_OCaml_Syntax.cmx Microsoft_FStar_Backends_OCaml_ASTTrans.cmx Microsoft_FStar_Backends_OCaml_Code.cmx
 
 all: fstarml
 
@@ -60,7 +60,7 @@ fstarml: $(FSTAR_OBJS)
 clean:
 	rm -fr package
 	rm -f fstarml
-	rm -f Microsoft_FStar_*.ml Microsoft_FStar_*.cm[iox] parse.ml[iy] parse.ml
+	rm -f Microsoft_FStar_*.cm[iox] FSharp_Format.cm[iox] parse.ml *.o
 
 # Dependencies
 depend:
