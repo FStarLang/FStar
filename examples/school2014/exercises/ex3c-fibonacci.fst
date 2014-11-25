@@ -1,4 +1,4 @@
-module Ex3dFibonacci
+module Ex3cFibonacci
 
 (* Try proving a monotonicity property for the fibonacci function. *)
 
