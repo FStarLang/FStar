@@ -283,7 +283,7 @@ let mlkind_of_kind (tps : list<binder>) (k : knd) =
         | Inl ({v=x; sort={n=Kind_type}}), _ -> Some (x.realname, x.ppname)
 //        | Inr ({v=x}), _ -> Some (x.realname, x.ppname)
 //        | Inr ({sort={n=Typ_const {v=x; sort={n=Kind_type}}}}), _ -> Some (x.ident, x.ident)
-        | x -> Util.print_any x; None
+        | x -> None // Util.print_any x; None
     in
 
     let rec aux acc (k : knd) =
@@ -524,11 +524,14 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
 
     match e.n with
     | Exp_app(sube, args) ->
+(*       (match sube.n with Exp_fvar (c, false) -> Util.print_string (c.v.str^"\n") | _ -> ()); *)
        (match sube.n, args with
           | Exp_fvar (c, false), [_;_;(Inr a1,_);a2] when (c.v.ident.idText = "pipe_left") ->
              mlexpr_of_expr mlenv rg lenv ({e with n = Exp_app (a1, [a2])})
           | Exp_fvar (c, false), [_;_;a1;(Inr a2,_)] when (c.v.ident.idText = "pipe_right") ->
              mlexpr_of_expr mlenv rg lenv ({e with n = Exp_app (a2, [a1])})
+          | Exp_fvar (c, false), _ when (c.v.str = "Prims.Assume" || c.v.str = "Prims.Assert" || Util.starts_with c.v.ident.idText "l__") ->
+             MLE_Const (MLC_Unit)
           | _, _ ->
        begin
         match is_etuple e with
@@ -713,7 +716,9 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
     let (ts, cs) =
         let fold1 sigelt (types, ctors) =
             match sigelt with
-            | Sig_tycon (x, tps, k, ts, cs, qualif, rg) -> begin
+            | Sig_tycon (x, tps, k, ts, cs, qualif, rg) ->
+              if List.contains Logic qualif then (types, ctors)
+              else begin
                 let ar =
                     match mlkind_of_kind tps k with
                     | None    -> unsupported rg "not-an-ML-kind"
@@ -725,7 +730,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
                         Rec (x.ident.idText, f, cs, snd (tenv_of_tvmap ar), rg))
                     | _, _ -> DT (x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) in
                 (ty :: types, ctors)
-            end
+              end
 
             | Sig_datacon (x, ty, pr, _, rg) ->
                (types, (x.ident.idText, (ty, pr)) :: ctors)
@@ -840,6 +845,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
         let lenv = lenv_of_mlenv mlenv in
         Some (Inr (MLM_Top (mlexpr_of_expr mlenv rg lenv e)))
 
+    | Sig_typ_abbrev (_, _, _, _, qal, _) when (not (export_val qal)) -> None
     | Sig_typ_abbrev (t, tps, k, ty, _, rg) -> begin
         let ar =
             match mlkind_of_kind tps k with
@@ -867,7 +873,8 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
     | Sig_monads (_, _, rg, _) ->
         unsupported rg "mod1-monad"
 
-    | Sig_bundle ([Sig_datacon (x, ty, (tx, _, _), _, rg)], _, _) when (as_tprims tx = Some Exn) -> begin
+    | Sig_bundle ([Sig_datacon (_, _, _, qal, _)], _, _) when (not (export_val qal)) -> None
+    | Sig_bundle ([Sig_datacon (x, ty, (tx, _, _), qal, rg)], _, _) when (as_tprims tx = Some Exn) -> begin
         let rec aux acc ty =
             match (Absyn.Util.compress_typ ty).n with
             | Typ_fun(bs, c) -> 
