@@ -14,6 +14,20 @@ module Prims :
     val try_with : (unit -> 'a) -> (exn -> 'a) -> 'a
     val l__Assert : 'a -> unit
   end
+module Tcp :
+  sig
+    type stream = Unix.file_descr
+    type listener = Unix.file_descr
+    val listen : 'a -> int -> Unix.file_descr
+    val accept : Unix.file_descr -> Unix.file_descr
+    val stop : Unix.file_descr -> unit
+    val connect : string -> int -> Unix.file_descr
+    val sock_send : Unix.file_descr -> string -> int
+    val sock_recv : Unix.file_descr -> int -> string
+    val read : Unix.file_descr -> int -> string option
+    val write : Unix.file_descr -> string -> unit option
+    val close : Unix.file_descr -> unit
+  end
 module ST : sig val read : 'a ref -> 'a end
 module String :
   sig

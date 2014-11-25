@@ -16,6 +16,59 @@ module Prims = struct
   let l__Assert x = ()
 end
 
+module Tcp = struct
+  open Unix
+  type stream = file_descr
+  type listener = file_descr
+  let listen s i = 
+    let server_sock = socket PF_INET SOCK_STREAM 0 in
+    (setsockopt server_sock SO_REUSEADDR true ;
+     let address = (Array.get (gethostbyname(gethostname())).h_addr_list 0) in 
+     bind server_sock (ADDR_INET (address, i)) ;
+     listen server_sock 10 ;
+     server_sock)
+
+  let accept s = 
+    let (client_sock, client_addr) = accept s in
+    client_sock
+
+  let stop s = shutdown s SHUTDOWN_ALL
+
+  let connect s i = 
+    let client_sock = socket PF_INET SOCK_STREAM 0 in
+    let hentry = gethostbyname s in
+    connect client_sock (ADDR_INET (hentry.h_addr_list.(0), i)) ; 
+    client_sock
+
+  let sock_send sock str =
+    let len = String.length str in
+    send sock str 0 len []
+
+  let sock_recv sock maxlen =
+    let str = String.create maxlen in
+    let recvlen = recv sock str 0 maxlen [] in
+    String.sub str 0 recvlen
+
+  let read s i = 
+    try Some (sock_recv s i) 
+    with Unix_error (e,s1,s2) ->
+      None
+    (* Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2) *)
+
+
+  let write s b = 
+    try (let n = sock_send s b in if n < Bytes.length b then  None
+    (* Error(Printf.sprintf "Network error, wrote %d bytes" n) *) 
+    else Some())
+    with Unix_error (e,s1,s2) ->
+     None
+     (* Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2) *)
+
+  let close s = 
+    close s        
+
+end
+
 module ST = struct
   let read x = !x
 end
@@ -1037,6 +1090,7 @@ let parse_cmdline specs others =
   end
 end
 
+
 module Array = struct
   type 'a contents =
     | Const of 'a
@@ -1115,3 +1169,4 @@ module Heap = struct
   let restrict h dom = BatMap.filter (fun k v -> Set.mem k dom) h
   let concat  = Map.concat
 end
+
