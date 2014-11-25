@@ -14,11 +14,17 @@
    limitations under the License.
 *)
 
+(* This file implements message authentication codes based on keyed
+   hashes, namely HMAC-SHA1, and their idealization under the INT-CMA
+   computational assumption *)
+
 module MAC 
+
 open Array
-type bytes    = seq byte
-type text     = bytes
-type nbytes (n:nat) = b:bytes{length b == n}
+type bytes = seq byte (* concrete byte arrays *) 
+type text  = bytes    (* a type abbreviation, for clarity *)
+
+type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
 
 let keysize = 16 (* these are the sizes for SHA1 *) 
 let macsize = 20  
@@ -28,17 +34,23 @@ type tag = nbytes macsize
 (* we rely on some external crypto library implementing HMAC-SHA1 *)
 
 assume val sha1: key -> text -> Tot tag 
+
+(* to verify, we simply recompute & compare *) 
+
 val sha1verify: key -> text -> tag -> Tot bool
 let sha1verify k txt tag = (sha1 k txt = tag)
 
-(* we attach an authenticated properties to each key *) 
+(* we attach an authenticated properties to each key, 
+   used as a pre-condition for MACing and 
+   a postcondition of MAC verification *)
 
 opaque type key_prop : key -> text -> Type
 type pkey (p:(text -> Type)) = k:key{key_prop k == p}
 
 
 assume val leak: k:key { forall t. key_prop k t } -> bytes 
-assume val leaked: k:key -> b:bool { b ==> (forall t. key_prop k t) }   // TODO why do I need parentheses?
+assume val leaked: k:key -> b:bool { b ==> (forall t. key_prop k t) }   
+// TODO why do I need parentheses?
 
 (* this function returns the key bytes, and marks the key as corrupted *)
 
@@ -46,13 +58,15 @@ assume val leaked: k:key -> b:bool { b ==> (forall t. key_prop k t) }   // TODO 
 
 assume val keygen: p:(text -> Type) -> pkey p
 
-(* to model authentication, we log all genuine calls to MACs *) 
-
 val mac:    k:key -> t:text{key_prop k t} -> tag
 val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
 
+(* to model authentication, we log all genuine calls to MACs *) 
 
 (* the ideal implementation below uses a global log *)
+
+(* TODO Can we use a constructor instead of an attached property? *)
+(* TODO make keys abstract except within this module *) 
 
 (* TODO provide a concrete implementation of keygen, aka sample 16
    random bytes + maybe a counter it would be better to avoid assuming
@@ -76,9 +90,21 @@ let mac k t =
 let verify k text tag =
   let verified = sha1verify k text tag in 
   let found    = is_Some(List.find (function (Entry k' text' tag') -> k=k' && text=text' (*CTXT: && tag=tag' *) ) !log) in 
-//verified           (* concrete: we never read the log *) 
-  verified && (found || leaked k ) (* ideal: we correct errors. *)
-//(if verified && not (found || leaked k) then winner:= Some(k,text,tag)) verified (* winning condition against for INT-CPA *)
+
+  (* plain, concrete implementation (ignoring the log) *) 
+//verified           
+
+  (* ideal, error-correcting implementation *) 
+  verified && (found || leaked k ) 
+
+  (* error-detecting implementation for the INT-CMA-LEAK game
+//if verified && not (found || leaked k) then win:= Some(k,text,tag);
+//verified 
 
 (* VARIANT CTXT vs CPA: is the tag authenticated? 
    otherwise do not include m:tag in the entry *)
+
+  let found    = is_Some(List.find (function (Entry k' text' tag') -> k=k' && text=text' (*CTXT: && tag=tag' *) ) !log) in 
+//verified           (* concrete: we never read the log *) 
+  verified && (found || leaked k ) (* ideal: we correct errors. *)
+//(if verified && not (found || leaked k) then winner:= Some(k,text,tag)) verified (* winning condition against for INT-CPA *)

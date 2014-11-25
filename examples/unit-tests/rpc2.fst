@@ -44,7 +44,7 @@ let client a b (s:string16) =
       if verify k (response s t) m'
       then assert (Corrupt a \/ Corrupt b \/ Response a b s t))
 
-let server a b =
+let server a b service =
   recv (fun msg ->
     if length msg < macsize then failwith "Too short"
     else
@@ -56,8 +56,23 @@ let server a b =
         if verify k (request s) m 
         then  
           ( assert (Corrupt a \/ Corrupt b \/ Request a b s);
-            let t = "22" in
+            let t = service s in
             assume (Response a b s t);
             send (append (utf8 t) (mac k (response s t)))))
     
 (* let test () = server(); client "2 + 2?" *)
+
+(* what we give to the adversary: note all types are unrefined *) 
+
+(*
+let adversary = 
+  let kgen a b = 
+    let k = keygen (reqresp a b) in
+    keys := ((a,b),k)::keys in
+  let corrupt c = 
+    assume (Corrupt c);
+    List.fold_right (fun leaked ((a,b),k) -> if a=c || b=c then ((a,b),leak k)::leaked else leaked) keys in
+
+  client, server, send, recv, kgen, corrupt
+
+ *)
