@@ -14,6 +14,8 @@ type cipher = nbytes (2 * blocksize)  (* including IV *)
 let keysize = 16 (* 128 bits *)
 type key = nbytes keysize 
 
+assume val dummy: plain
+
 assume val generated : key -> Tot bool
 
 assume val gen: unit -> key 
@@ -30,42 +32,52 @@ type bytes = MAC.bytes
 (* TODO: we get the index from a counter; 
    In the crypto argument, we rely on the fact that we only construct keys once for each i. *)
 
-assume type keyval (p:Type) (r:Type) (i:int)
+type key (p:Type) (r:Type) = 
+  | Ideal    : plain: (r -> p) -> repr: (p -> r) -> AES.key -> i:int -> key p r (* maybe no need to keep plain/repr around *)
+  | Concrete : plain: (r -> p) -> repr: (p -> r) -> AES.key -> i:int -> key p r  
 
-(* TODO: I need something like this, can't get it accepted 
-opaque type keyval (p:Type) (r:Type) (i:int) = 
-  | Ideal    : plain: (r -> p) -> repr: (p -> r) -> AES.key -> keyval p r i   (* maybe no need to keep plain/repr around *)
-  | Concrete : plain: (r -> p) -> repr: (p -> r) -> AES.key -> keyval p r i 
- *)
-
-type key (p:Type) (r:Type) = i:int * keyval p r i (* so that the index i can be kept implicit *)
+// type key (p:Type) (r:Type) = i:int * keyval p r i (* so that the index i can be kept implicit *)
     
 (* CPA variant: *) 
 opaque type Encrypted: #p: Type -> #r: Type -> key p r -> MAC.bytes -> Type    (* an opaque predicate, keeping track of honest encryptions *)
 
 type cipher (p:Type) (r:Type) (k: key p r) = c:AES.cipher { Encrypted k c }    (* TODO why do I need explicit implicits?; NS: you don't seem to need it *)
 
-assume val keygen:  #p:Type -> #r:Type -> plain:(r -> p) -> repr:(p -> r) -> key p r 
-assume val decrypt: #p:Type -> #r:Type -> k:key p r -> cipher p r k -> Tot p
-assume val encrypt: #p:Type -> #r:Type -> k:key p r -> plain: p -> c:cipher p r k { decrypt k c = plain }
+val keygen:  #p:Type -> bool -> plain:(AES.plain -> p) -> repr:(p -> AES.plain) -> key p AES.plain
+val decrypt: #p:Type -> k:key p AES.plain -> cipher p AES.plain k -> p
+val encrypt: #p:Type -> k:key p AES.plain -> plain: p -> cipher p AES.plain k 
 
 
 (* TODO: implementation *)
 
-(* //let c = ref 0 *)
+let c = ST.alloc 0
 
-(* let keygen safe plain repr =  *)
-(* //let i = !c in *)
-(* //c := !c + 1;  *)
-(*   let i = 3 in *)
-(*   let k = AES.gen() in  *)
-(*   if safe  *)
-(*   then i, Ideal   (plain,repr,k)  *)
-(*   else i, Concrete(plain,repr,k) *)
+let keygen safe plain repr =
+  let i = !c in
+  c := !c + 1;
+  let k = AES.gen() in
+  if safe
+  then Ideal    plain repr k i 
+  else Concrete plain repr k i
 
-(* let decrypt (i,Ideal(plain,repr,kv)) c = AES.dec kv c *)
-(* let encrypt (i,Ideal(plain,repr,kv)) p = AES.enc kv p *)
+type entry = 
+  | Entry : p:Type -> k:key p AES.plain -> c:cipher p AES.plain k -> plain:p -> entry
 
+let log : ref (list entry) = ST.alloc [] 
+
+let encrypt k text = 
+  match k with 
+  | Ideal plain repr kv _ -> let c = AES.enc kv AES.dummy in
+                           log := Entry k c text :: !log; 
+                           c
+  | Concrete plain repr kv _ -> AES.enc kv (repr text)
+
+let decrypt k c = 
+  match k with 
+  | Ideal plain repr kv _ -> (match List.find (fun (Entry k' c' _) -> k=k' && c= c') !log with 
+                             | Some(Entry _ _ p) -> p 
+                             | _ -> failwith "never")
+  | Concrete plain repr kv _ -> plain (AES.dec kv c)
 
 (* (\* below is for CCA2, with just bytes as ciphers. *\) *)
 
@@ -85,11 +97,11 @@ let repr (x:AES.plain) = x
 
 let test() =
   let p = failwith "nice bytes" in
-  let k0 = SymEnc.keygen plain repr in
-  let k1 = SymEnc.keygen plain repr in
+  let k0 = SymEnc.keygen true plain repr in
+  let k1 = SymEnc.keygen true plain repr in
   let c = SymEnc.encrypt k0 p in
   let p' = SymEnc.decrypt k0 c in
-  assert( p == p');                   // this succeeds, by functional correctness
+//assert( p == p');                   // this succeeds, by functional correctness
   (* let p'' = SymEnc.decrypt k1 c in  // this rightfully triggers an error *)
   ()
 
@@ -101,7 +113,8 @@ type key (p:Type) (r:Type) =
 
 type cipher = (AES.cipher * MAC.tag)
 
-val decrypt: #p:Type -> #r:Type -> k:key p r -> c:cipher -> option p
+
+val decrypt: #p:Type -> k:key p AES.plain -> c:cipher -> option p
 let decrypt (Key ke ka) (c,tag) =
   if MAC.verify ka c tag
   then Some(SymEnc.decrypt ke c)
@@ -113,13 +126,13 @@ let decrypt (Key ke ka) (c,tag) =
 (* val encrypt ... { EncText #p #r k plain c } *)
 (* val decrypt ... { forall plain. EncText #p #r k plain c ==> o = Some plain } *)
 
-val keygen:  p:Type -> r:Type -> plain: (r -> p) -> repr:(p -> r) -> key p r
+val keygen:  p:Type -> plain: (AES.plain -> p) -> repr:(p -> AES.plain) -> key p AES.plain
 let keygen plain repr =
-  let ke = SymEnc.keygen plain repr in
+  let ke = SymEnc.keygen true plain repr in
   let ka = MAC.keygen (SymEnc.Encrypted ke) in
   Key ke ka
 
-val encrypt: #p:Type -> #r:Type -> k:key p r -> plain:p -> cipher
+val encrypt: #p:Type -> k:key p AES.plain -> plain:p -> cipher
 let encrypt (Key ke ka) plain =
   let c = SymEnc.encrypt ke plain in
   (c, MAC.mac ka c)
