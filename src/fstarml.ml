@@ -97,7 +97,8 @@
                               (Fstar.Support.List.tail fmods) in
                           let doc =
                             Microsoft_FStar_Backends_OCaml_Code.doc_of_mllib mllib
-                          in ())
+                          in 
+                            List.iter (fun (n,d) -> Fstar.Support.Microsoft.FStar.Util.write_file (Microsoft_FStar_Options.prependOutputDir (n^".ml")) (FSharp_Format.pretty 120 d)) doc)
                    (fun _20210 ->
                       match _20210 with
                       | Microsoft_FStar_Backends_OCaml_ASTTrans.OCamlFailure (rg, error) ->
