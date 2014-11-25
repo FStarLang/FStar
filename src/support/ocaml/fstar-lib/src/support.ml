@@ -20,7 +20,6 @@ module ST = struct
   let read x = !x
 end
 
-
 module String = struct
   let strcat s t = s^t
   let split seps s =
@@ -1077,5 +1076,26 @@ module Array = struct
 
   let split = (fun s i -> ((slice s 0 i), (slice s i (length s))))
   let append = (fun s1 s2 -> Seq (Append (s1, s2), 0, ((length s1) + (length s2))))
+end
+
+module Set = struct
+  type 'a set = 'a BatSet.t
+  let empty = BatSet.empty
+  let singleton = BatSet.singleton
+  let union = BatSet.union
+  let intersect = BatSet.intersect
+  let complement x = BatSet.empty
+  let mem = BatSet.mem
+  let equal x y = BatSet.subset x y && BatSet.subset y x
+end
+
+module Map = struct
+  type ('a, 'b) t =  ('a, 'b) BatMap.t
+  let sel = BatMap.find
+  let upd m k v = BatMap.add k v m
+  let const x = BatMap.empty
+  let concat = BatMap.union
+  let equal x y =
+    (BatMap.is_empty x && BatMap.is_empty y) || (BatMap.is_empty (BatMap.filter (fun k v -> try BatMap.find k x<>v with Not_found -> true) y))
 end
 

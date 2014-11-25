@@ -500,3 +500,23 @@ module Array :
     val split : 'a seq -> int -> 'a seq * 'a seq
     val append : 'a seq -> 'a seq -> 'a seq
   end
+module Set :
+  sig
+    type 'a set = 'a BatSet.t
+    val empty : 'a BatSet.t
+    val singleton : 'a -> 'a BatSet.t
+    val union : 'a BatSet.t -> 'a BatSet.t -> 'a BatSet.t
+    val intersect : 'a BatSet.t -> 'a BatSet.t -> 'a BatSet.t
+    val complement : 'a -> 'b BatSet.t
+    val mem : 'a -> 'a BatSet.t -> bool
+    val equal : 'a BatSet.t -> 'a BatSet.t -> bool
+  end
+module Map :
+  sig
+    type ('a, 'b) t = ('a, 'b) BatMap.t
+    val sel : 'a -> ('a, 'b) BatMap.t -> 'b
+    val upd : ('a, 'b) BatMap.t -> 'a -> 'b -> ('a, 'b) BatMap.t
+    val const : 'a -> ('b, 'c) BatMap.t
+    val concat : ('a, 'b) BatMap.t -> ('a, 'b) BatMap.t -> ('a, 'b) BatMap.t
+    val equal : ('a, 'b) BatMap.t -> ('a, 'b) BatMap.t -> bool
+  end
