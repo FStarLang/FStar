@@ -28,6 +28,12 @@ let outmod = [
     ["String"];
     ["Char"];
     ["List"];
+    ["Array"];
+    ["Set"];
+    ["Map"];
+    ["Heap"];
+    ["DST"];
+    ["JS"];
     ["Collections"];
     ["Microsoft"; "FStar"; "Bytes"];
     ["Microsoft"; "FStar"; "Platform"];
@@ -36,8 +42,6 @@ let outmod = [
     ["Microsoft"; "FStar"; "Unionfind"];
     ["Microsoft"; "FStar"; "Range"];
     ["Microsoft"; "FStar"; "Parser"; "Util"];
-//    ["Microsoft"; "FStar"; "Parser"; "ParseIt"];
-//    ["FSharp"; "Format"];
 ]
 
 (* -------------------------------------------------------------------- *)
@@ -188,7 +192,7 @@ let tvar_of_btvar (TEnv tenv) (x : bvar<typ, knd>) =
     let name = x.v.realname.idText in
 
     match smap_try_find tenv name with
-    | None   -> unbound_ty_var x.p x.v.ppname
+    | None   -> ("",0) //unbound_ty_var x.p x.v.ppname
     | Some x -> x
 
 (* -------------------------------------------------------------------- *)
@@ -277,7 +281,9 @@ let mlconst_of_const (rg : range) (sctt : sconst) =
 let mlkind_of_kind (tps : list<binder>) (k : knd) =
     let mltparam_of_tparam = function
         | Inl ({v=x; sort={n=Kind_type}}), _ -> Some (x.realname, x.ppname)
-        | _ -> None
+//        | Inr ({v=x}), _ -> Some (x.realname, x.ppname)
+//        | Inr ({sort={n=Typ_const {v=x; sort={n=Kind_type}}}}), _ -> Some (x.ident, x.ident)
+        | x -> Util.print_any x; None
     in
 
     let rec aux acc (k : knd) =
@@ -301,9 +307,9 @@ let mlkind_of_kind (tps : list<binder>) (k : knd) =
 
     let aout = List.choose mltparam_of_tparam tps in
 
-    if List.length aout <> List.length tps then
-        None
-    else
+//    if List.length aout <> List.length tps then
+//        None
+//    else
         let some x = Some x in
         aux (List.rev (List.map some aout)) k
 
@@ -323,7 +329,6 @@ let rec mlty_of_ty_core (mlenv : mlenv) (tenv : tenv) ((rg, ty) : range * typ) =
 
     | Typ_fun([], c) -> 
        mlty_of_ty mlenv tenv (rg, comp_result c)
-
     | Typ_fun ((Inr {v=x; sort=t1},  _)::rest, c) -> 
         let t2 = match rest with 
             | [] -> comp_result c 
@@ -331,10 +336,30 @@ let rec mlty_of_ty_core (mlenv : mlenv) (tenv : tenv) ((rg, ty) : range * typ) =
         let mlt1 = mlty_of_ty mlenv tenv (rg, t1) in
         let mlt2 = mlty_of_ty mlenv tenv (rg, t2) in
         MLTY_Fun (mlt1, mlt2)
+    | Typ_fun((Inl _, _)::rest, c) ->
+        let r = match rest with
+            | [] -> comp_result c
+            | _ -> mk_Typ_fun(rest, c) ktype ty.pos in
+        mlty_of_ty mlenv tenv (rg, r)
 
-    | Typ_fun((Inl _, _)::_, _) ->  unsupported rg "type-universe"
     | Typ_const   _ -> unexpected  rg "type-constant"
-    | Typ_app     _ -> unsupported rg "type-application"
+
+    | Typ_app(t, []) ->
+       mlty_of_ty mlenv tenv (rg, t)
+    | Typ_app (t1, (Inl t2,  _)::rest) ->
+        let t2 = match rest with
+            | [] -> t2
+            | _ -> mk_Typ_app(t2,rest) ktype ty.pos in
+
+        let mlt1 = mlty_of_ty mlenv tenv (rg, t1) in
+        let mlt2 = mlty_of_ty mlenv tenv (rg, t2) in
+        MLTY_App (mlt1, mlt2)
+    | Typ_app (t, (Inr _,  _)::rest) -> 
+        let r = match rest with
+            | [] -> t
+            | _ -> mk_Typ_app(t,rest) ktype ty.pos in
+        mlty_of_ty mlenv tenv (rg, r)
+
     | Typ_lam     _ -> unsupported rg "type-fun"
     | Typ_meta    _ -> unexpected  rg "type-meta"
     | Typ_uvar    _ -> unexpected  rg "type-uvar"
@@ -953,6 +978,8 @@ let rec mllib_add (MLLib mllib) ((path : mlpath), sig_, mod_) =
 *)
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstars (fmods : list<modul>) =
+    let stdlib = List.map (fun x -> Util.concat_l "." x) outmod in
+    let fmods = List.filter (fun x -> not (List.contains x.name.str stdlib)) fmods in
     let fmods = List.map mlmod_of_fstar fmods in
     let for1 mllib the = 
         let (path, sig_, mod_) = the in
@@ -965,9 +992,11 @@ let mlmod_of_fstars (fmods : list<modul>) =
         in
 
         let aout =
+(*
             if List.filter (checkname ((fst path) @ [snd path])) outmod <> [] then (* want to use List.exists here, but "exists" is a keyword in f* *)
                 mllib
             else
+*)
                 mllib_add mllib the
         in aout
 
