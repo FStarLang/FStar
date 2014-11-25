@@ -204,5 +204,6 @@ let rec preservation e =
       if is_value e1 then ()
       else preservation e1
 
+(* Exercise: implement this function *)
 val eval : e:exp{is_Some (typing empty e)} ->
            Dv (v:exp{is_value v && typing empty v = typing empty e})

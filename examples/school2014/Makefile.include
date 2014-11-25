@@ -8,10 +8,11 @@ RUNTIME = mono
 MSBUILD = xbuild
 endif
 
-FSTAR_HOME = ../..
+# This will be called from subdirs
+FSTAR_HOME = ../../..
 
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
-FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB)
+FSTAR  = $(RUNTIME) $(FSTAR_HOME)/bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB)
 
 EXERCISES =\
   ex7a-stlc-typed-step\
@@ -20,6 +21,3 @@ EXERCISES =\
   ex7d-stlc-eval
 
 all: $(EXERCISES:%=verify-%)
-
-verify-%: __force__
-	-$(FSTAR) $*.fst
