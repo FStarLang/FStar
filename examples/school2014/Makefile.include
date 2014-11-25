@@ -21,6 +21,9 @@ EXERCISES =\
   ex3a-factorial-types\
   ex3b-fibonacci\
   ex3c-fibonacci\
+  ex4a-append-sum-lengths\
+  ex4b-append-sum-lengths\
+  ex4c-mem\
   ex7a-stlc-typed-step\
   ex7b-stlc-pairs\
   ex7c-stlc-let\
