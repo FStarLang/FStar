@@ -13,6 +13,16 @@ FSTAR_OBJS=Microsoft_FStar_Options.cmx Microsoft_FStar_LazySet.cmx Microsoft_FSt
 
 all: fstarml
 
+package: fstarml
+	mkdir package
+	mkdir package/bin
+	cp -R ../../lib package/
+	cp ../../bin/z3* package/bin || true
+	cp ../../bin/libz3* package/bin || true
+	cp -R ../../examples/school2014 package/tutorial
+	tar czvf fstar_`git log --pretty=format:'%h' -n 1`_`uname`_`uname -m`.tar.gz --strip-components=1 package/
+	rm -fr package
+
 parser:
 	cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
 	ocamlyacc parse.mly
@@ -32,6 +42,8 @@ parser:
 fstarml: $(FSTAR_OBJS)
 	ocamlfind ocamlopt -p -package fstar -o fstarml $(FSTAR_OBJS) ../fstarml.ml -linkpkg -g
 
+
+
 # Common rules
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
 
@@ -46,6 +58,7 @@ fstarml: $(FSTAR_OBJS)
 
 # Clean up
 clean:
+	rm -fr package
 	rm -f fstarml
 	rm -f Microsoft_FStar_*.ml Microsoft_FStar_*.cm[iox] parse.ml[iy] parse.ml
 
