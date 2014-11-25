@@ -59,6 +59,7 @@ module Microsoft :
       sig
         module Util :
           sig
+            val max_int : int
             val return_all : 'a -> 'a
             exception Impos
             exception NYI of string
