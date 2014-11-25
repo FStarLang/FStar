@@ -17,3 +17,4 @@ assume val create: int -> bytebuf
 assume val close : bytebuf -> bytes
 assume val emit_int_as_byte: bytebuf -> int -> unit
 assume val emit_bytes: bytebuf -> bytes -> unit
+assume val f_encode: (byte -> string) -> bytes -> string

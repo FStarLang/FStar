@@ -19,3 +19,5 @@ val create: int -> bytebuf
 val close : bytebuf -> bytes
 val emit_int_as_byte: bytebuf -> int -> unit
 val emit_bytes: bytebuf -> bytes -> unit
+
+val f_encode: (byte -> string) -> bytes -> string
