@@ -27,6 +27,8 @@ EXERCISES =\
   ex4d-reverse\
   ex4e-find\
   ex4f-fold-left\
+  ex4g-hd-tl\
+  ex4h-nth\
   ex7a-stlc-typed-step\
   ex7b-stlc-pairs\
   ex7c-stlc-let\
