@@ -1,6 +1,7 @@
 module Prims :
   sig
-    type double = float
+    type double = float 
+    type float = double
     type uint16 = int
     type int32 = int
     type byte = char
@@ -20,6 +21,7 @@ module String :
     val concat : string -> string list -> string
     val length : string -> int
     val sub : string -> int -> int -> string
+    val get : string -> int -> char
   end
 module List :
   sig
@@ -114,6 +116,8 @@ module Microsoft :
             val char_of_int : int -> char
             val int_of_string : string -> int
             val int_of_char : char -> int
+            val int_of_byte : char -> int
+            val byte_of_char: char -> char
             val int_of_uint8 : char -> int
             val uint16_of_int : int -> int
             val float_of_byte : char -> float

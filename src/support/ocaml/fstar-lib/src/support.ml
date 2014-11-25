@@ -1,6 +1,7 @@
 module Prims = struct
   (* Fix this... *)
   type double  = float
+  type float  = double
   type uint16 = int
   type int32 = int
 
@@ -33,6 +34,7 @@ module String = struct
   let length = BatString.length
   let sub = String.sub
   let get = String.get
+  let collect = BatString.replace_chars
 end
 
 module Char = struct
@@ -89,6 +91,9 @@ module Option = struct
   let map f = function
     | Some x -> Some (f x) 
     | None -> None
+  let get = function
+    | Some x -> x 
+    | None -> failwith "Option.get called on None"
 end
 
 
@@ -232,8 +237,10 @@ module Microsoft = struct
       let char_of_int = char_of_int
       let int_of_string = int_of_string
       let int_of_char = int_of_char
+      let int_of_byte = int_of_char
       let int_of_uint8 = int_of_char
       let uint16_of_int (i:int) = i
+      let byte_of_char (c:char) = c
 
       let float_of_byte b = float_of_int (int_of_char b)
       let float_of_int32 = float_of_int
