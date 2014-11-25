@@ -16,6 +16,9 @@ FSTAR  = $(RUNTIME) $(FSTAR_HOME)/bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STD
 
 EXERCISES =\
   ex1a-safe-read-write\
+  ex2a-can-read-write-types\
+  ex3a-factorial-types\
+  ex3b-fibonacci\
   ex7a-stlc-typed-step\
   ex7b-stlc-pairs\
   ex7c-stlc-let\
