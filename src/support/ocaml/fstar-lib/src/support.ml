@@ -223,8 +223,8 @@ module Microsoft = struct
       let spr = Printf.sprintf
       let fpr = Printf.fprintf
 
-      let print_string s = pr "%s" s
-      let print_any s = output_value stdout s
+      let print_string s = pr "%s" s; flush stdout
+      let print_any s = output_value stdout s; flush stdout
       let strcat s1 s2 = s1 ^ s2
       let concat_l sep (l:string list) = BatString.concat sep l
 
