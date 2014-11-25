@@ -29,23 +29,6 @@ parser:
 	cp ../parseit.ml Microsoft_FStar_Parser_ParseIt.ml
 	$(OCAMLDEP) $(INCLUDES) *.ml > .depend
 
-
-# The following uses a local parser.mly to avoid issues with Mac OS X sed version.
-lparser:
-	ocamlyacc parse.mly
-	echo "open Fstar.Support.Microsoft.FStar.Util" > Microsoft_FStar_Parser_Parse.ml
-	echo "open Fstar.Support.Microsoft.FStar.Range" >> Microsoft_FStar_Parser_Parse.ml
-	echo "open Microsoft_FStar_Absyn_Syntax" >> Microsoft_FStar_Parser_Parse.ml
-	echo "open Microsoft_FStar_Absyn_Const" >> Microsoft_FStar_Parser_Parse.ml
-	echo "open Microsoft_FStar_Absyn_Util" >> Microsoft_FStar_Parser_Parse.ml
-	echo "open Microsoft_FStar_Parser_AST" >> Microsoft_FStar_Parser_Parse.ml
-	echo "open Fstar.Support.Microsoft.FStar.Parser.Util" >> Microsoft_FStar_Parser_Parse.ml
-	cat parse.ml >> Microsoft_FStar_Parser_Parse.ml
-#	cp ../support/ocaml/fstar-lang/src/FSLangLexer.mll lex.mll
-	ocamllex ../lex.mll -o Microsoft_FStar_Parser_LexFStar.ml
-	cp ../parseit.ml Microsoft_FStar_Parser_ParseIt.ml
-	$(OCAMLDEP) $(INCLUDES) *.ml > .depend
-
 fstarml: $(FSTAR_OBJS)
 	ocamlfind ocamlopt -p -package fstar -o fstarml $(FSTAR_OBJS) ../fstarml.ml -linkpkg -g
 
