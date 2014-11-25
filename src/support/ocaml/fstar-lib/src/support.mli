@@ -4,6 +4,7 @@ module Prims :
     type float = double
     type uint16 = int
     type int32 = int
+    type nat = int
     type byte = char
     type uint8 = char
     val ignore : 'a -> unit
@@ -385,7 +386,7 @@ module Microsoft :
             val dWw1 : int64 -> int
             val dWw0 : int64 -> int
             type bytes = char array
-            val f_encode: (char -> string) -> bytes -> string
+            val f_encode : (char -> string) -> bytes -> string
             val length : bytes -> int
             val get : bytes -> int -> int
             val make : (int -> int) -> int -> char array
@@ -481,4 +482,21 @@ module Microsoft :
               end
           end
       end
+  end
+module Array :
+  sig
+    type 'a contents =
+        Const of 'a
+      | Upd of int * 'a * 'a contents
+      | Append of 'a seq * 'a seq
+    and 'a seq = Seq of 'a contents * Prims.nat * Prims.nat
+    val create : Prims.nat -> 'a -> 'a seq
+    val length : 'a seq -> int
+    val __index__ : 'a contents -> int -> 'a
+    val index : 'a seq -> int -> 'a
+    val __update__ : 'a contents -> int -> 'a -> 'a contents
+    val update : 'a seq -> int -> 'a -> 'a seq
+    val slice : 'a seq -> int -> int -> 'a seq
+    val split : 'a seq -> int -> 'a seq * 'a seq
+    val append : 'a seq -> 'a seq -> 'a seq
   end

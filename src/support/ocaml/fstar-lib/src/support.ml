@@ -1,10 +1,11 @@
+
 module Prims = struct
   (* Fix this... *)
   type double  = float
   type float  = double
   type uint16 = int
   type int32 = int
-
+  type nat = int
   type byte = char
   type uint8 = char
   let ignore _ = ()
@@ -14,7 +15,6 @@ module Prims = struct
   let try_with f1 f2 = try f1 () with | e -> f2 e
   let l__Assert x = ()
 end
-
 
 module ST = struct
   let read x = !x
@@ -1037,3 +1037,45 @@ let parse_cmdline specs others =
 
   end
 end
+
+module Array = struct
+  type 'a contents =
+    | Const of 'a
+    | Upd of int * 'a * 'a contents
+    | Append of 'a seq * 'a seq
+   and 'a seq =
+    | Seq of 'a contents * Prims.nat * Prims.nat
+
+  let create = (fun n init -> Seq (Const (init), 0, n))
+  let length (Seq(x,s,e)) = e - s
+
+  let rec __index__ c i = match (c) with
+  | Const (v) -> v
+  | Upd (j, v, tl) -> if i = j then v else (__index__ tl i)
+  | Append (Seq(a1,s1,e1), Seq(a2,s2,e2)) ->
+      let l1 = e1 - s1 in
+      if i < l1 then __index__ a1 i else __index__ a2 (i-l1)
+
+  let index x i = match x with
+    | Seq (c, j, k) -> __index__ c (i + j)
+
+  let rec __update__ c i v = match c with
+    | (Const (_)) | (Upd (_, _, _)) -> Upd (i, v, c)
+    | Append (s1, s2) ->
+        match (s1, s2) with
+        | Seq(a1,b1,e1), Seq(a2,b2,e2) ->
+          if (i < e1 - b1) then
+            Append (Seq ((__update__ a1 i v), b1, e1), s2)
+          else
+            Append (s1, Seq ((__update__ a2 (i - (length s1)) v), b2, e2))
+
+  let update x i v = match x with
+    | Seq (c, j, k) -> Seq ((__update__ c (i + j) v), j, k)
+
+  let slice x i j = match x with
+    | Seq (c, start_i, end_i) -> Seq (c, (start_i + i), (start_i + j))
+
+  let split = (fun s i -> ((slice s 0 i), (slice s i (length s))))
+  let append = (fun s1 s2 -> Seq (Append (s1, s2), 0, ((length s1) + (length s2))))
+end
+

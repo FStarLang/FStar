@@ -20,7 +20,7 @@ package: fstarml
 	cp ../../bin/z3* package/bin || true
 	cp ../../bin/libz3* package/bin || true
 	cp -R ../../examples/school2014 package/tutorial
-	tar czvf fstar_`git log --pretty=format:'%h' -n 1`_`uname`_`uname -m`.tar.gz --strip-components=1 package/
+	tar czvf fstar_`git log --pretty=format:'%h' -n 1`_`uname`_`uname -m`.tar.gz -C package/ *
 	rm -fr package
 
 parser:
