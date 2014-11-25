@@ -520,13 +520,6 @@ assume logic val op_LessThanOrEqual    : int -> int -> Tot bool
 assume logic val op_GreaterThan        : int -> int -> Tot bool
 assume logic val op_GreaterThanOrEqual : int -> int -> Tot bool
 assume logic val op_LessThan           : int -> int -> Tot bool
-val mul_assoc: x:int -> y:int -> z:int -> Lemma (requires True) 
-                                                (ensures ((x * (y * z) = (x * y) * z))) [SMTPat (x * (y * z))]
-let mul_assoc x y z = admit ()
-
-val plus_assoc: x:int -> y:int -> z:int -> Lemma (requires True) 
-                                                 (ensures ((x + (y + z) = (x + y) + z))) [SMTPat (x + (y + z))]
-let plus_assoc x y z = admit ()
 
 type nat = i:int{i >= 0}
 type pos = i:int{i > 0}
