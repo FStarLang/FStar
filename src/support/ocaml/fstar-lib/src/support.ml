@@ -32,10 +32,16 @@ module String = struct
   let concat = BatString.concat
   let length = BatString.length
   let sub = String.sub
+  let get = String.get
 end
 
+module Char = struct
+  let lowercase = BatChar.lowercase
+  let uppercase = BatChar.uppercase
+end
 
 module List = struct
+  let isEmpty l = l = []
   let mem = List.mem
   let hd = BatList.hd
   let tl = BatList.tl
@@ -64,8 +70,10 @@ module List = struct
        (x::xs,y::ys,z::zs)
   let filter = BatList.filter
   let sortWith = BatList.sort
+  let for_all = BatList.for_all
   let forall2 = BatList.for_all2
   let tryFind f l = try Some (BatList.find f l) with | Not_found -> None
+  let tryPick f l = try f (BatList.find (fun x -> f x <> None) l) with | Not_found -> None
   let flatten = BatList.flatten
   let split = unzip
   let choose = BatList.filter_map
@@ -78,6 +86,9 @@ module Option = struct
     | Some _ -> true
     | None -> false
   let isNone o = not (isSome o)
+  let map f = function
+    | Some x -> Some (f x) 
+    | None -> None
 end
 
 
@@ -86,6 +97,11 @@ module Microsoft = struct
 
 
     module Util = struct
+
+      let max_int = max_int
+      let is_letter_or_digit c = (BatChar.is_digit c) || (BatChar.is_letter c)
+      let is_punctuation c = c = ',' || c = ';' || c = '.'
+      let is_sybmol c = BatChar.is_symbol c
 
       let return_all x = x
 
@@ -185,6 +201,10 @@ module Microsoft = struct
       let smap_create (i:int) : 'value smap = BatHashtbl.create i
       let smap_clear (s:('value smap)) = BatHashtbl.clear s
       let smap_add (m:'value smap) k (v:'value) = BatHashtbl.add m k v
+      let smap_of_list (l: (string * 'value) list) = 
+          let s = smap_create (List.length l) in
+          List.iter (fun (x,y) -> smap_add s x y) l;
+          s
       let smap_try_find (m:'value smap) k = BatHashtbl.find_option m k
       let smap_fold (m:'value smap) f a = BatHashtbl.fold f m a
       let smap_remove (m:'value smap) k = BatHashtbl.remove m k
@@ -222,6 +242,7 @@ module Microsoft = struct
       let string_of_int = string_of_int
       let string_of_float = string_of_float
       let string_of_char  (i:char) = spr "%c" i
+      let hex_string_of_char (i:char) = spr "%x" (int_of_char i)
       let string_of_bytes = string_of_unicode
       let starts_with = BatString.starts_with
       let trim_string = BatString.trim
@@ -860,6 +881,7 @@ let parse_cmdline specs others =
           done;
           b.pos <- b.pos + n;
           !res
+        let f_encode f (b:bytes) = Array.fold_left (fun x y -> x ^ y) "" (Array.map f b)
       end
 
       type bytebuf =
