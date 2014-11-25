@@ -46,9 +46,13 @@ ccache:
 
 rpc: 
 	$(FSTAR) $(OTHERFLAGS) mac.fst format.fst rpc.fst --verify
+rpc2: 
+	$(FSTAR) $(OTHERFLAGS) mac2.fst format.fst rpc2.fst --verify
 
 encrypt:
-	$(FSTAR) mac.fst encrypt.fst
+	$(FSTAR) mac.fst encrypt.fs
+encrypt3:
+	$(FSTAR) mac.fst encrypt3.fst
 
 rbt:
 	$(FSTAR) --z3timeout 10 --verify rbtree.fst
