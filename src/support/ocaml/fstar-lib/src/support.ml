@@ -1091,7 +1091,7 @@ end
 
 module Map = struct
   type ('a, 'b) t =  ('a, 'b) BatMap.t
-  let sel = BatMap.find
+  let sel m k = BatMap.find k m
   let upd m k v = BatMap.add k v m
   let const x = BatMap.empty
   let concat = BatMap.union
@@ -1099,3 +1099,19 @@ module Map = struct
     (BatMap.is_empty x && BatMap.is_empty y) || (BatMap.is_empty (BatMap.filter (fun k v -> try BatMap.find k x<>v with Not_found -> true) y))
 end
 
+module Heap = struct
+  type 'a heap = ('a ref, 'a) Map.t
+  type 'a aref = 'a ref
+  type 'a refs =
+  | AllRefs
+  | SomeRefs of 'a ref Set.set
+  let no_refs = SomeRefs Set.empty
+  let a_ref x = SomeRefs (Set.singleton (ref x))
+  let sel = Map.sel
+  let upd = Map.upd
+  let emp : 'a heap = BatMap.empty
+  let contains h k = BatMap.mem k h
+  let equal = Map.equal
+  let restrict h dom = BatMap.filter (fun k v -> Set.mem k dom) h
+  let concat  = Map.concat
+end

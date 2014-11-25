@@ -514,9 +514,24 @@ module Set :
 module Map :
   sig
     type ('a, 'b) t = ('a, 'b) BatMap.t
-    val sel : 'a -> ('a, 'b) BatMap.t -> 'b
+    val sel : ('a, 'b) BatMap.t -> 'a -> 'b
     val upd : ('a, 'b) BatMap.t -> 'a -> 'b -> ('a, 'b) BatMap.t
     val const : 'a -> ('b, 'c) BatMap.t
     val concat : ('a, 'b) BatMap.t -> ('a, 'b) BatMap.t -> ('a, 'b) BatMap.t
     val equal : ('a, 'b) BatMap.t -> ('a, 'b) BatMap.t -> bool
+  end
+module Heap :
+  sig
+    type 'a heap = ('a ref, 'a) Map.t
+    type 'a aref = 'a ref
+    type 'a refs = AllRefs | SomeRefs of 'a ref Set.set
+    val no_refs : 'a refs
+    val a_ref : 'a -> 'a refs
+    val sel : ('a, 'b) BatMap.t -> 'a -> 'b
+    val upd : ('a, 'b) BatMap.t -> 'a -> 'b -> ('a, 'b) BatMap.t
+    val emp : 'a heap
+    val contains : ('a, 'b) BatMap.t -> 'a -> bool
+    val equal : ('a, 'b) BatMap.t -> ('a, 'b) BatMap.t -> bool
+    val restrict : ('a, 'b) BatMap.t -> 'a BatSet.t -> ('a, 'b) BatMap.t
+    val concat : ('a, 'b) BatMap.t -> ('a, 'b) BatMap.t -> ('a, 'b) BatMap.t
   end
