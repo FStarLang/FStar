@@ -24,3 +24,4 @@ assume val length:  string -> Tot nat
 
 (* may fail with index out of bounds *)
 assume val substring: string -> int -> int -> string
+assume val get: string -> int -> char 

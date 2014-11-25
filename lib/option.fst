@@ -17,3 +17,4 @@ module Option
 
 assume val isNone: option 'a -> bool
 assume val isSome: option 'a -> bool
+assume val map: ('a -> 'b) -> option 'a -> option 'b

@@ -33,7 +33,11 @@ assume Equals:        forall (key:Type) (s1:set key) (s2:set key).         {:pat
 
 (* derived forms *)
 let minus      (a:Type) (s1:set a) (s2:set a)  = intersect s1 (complement s2)
-opaque type Subset' (a:Type) (s1:set a) (s2:set a) = (forall (x:a).{:pattern mem x s1} mem x s1 ==> mem x s2)
+
+opaque type Subset' (a:Type) (s1:set a) (s2:set a) = 
+       (forall (x:a).{:pattern mem x s1} mem x s1 ==> mem x s2)
+
+
 type Subset : #a:Type -> set a -> set a -> Type = 
     fun (a:Type) (s1:set a) (s2:set a) -> Subset' a s1 s2
 

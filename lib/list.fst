@@ -98,7 +98,8 @@ assume val map3: ('a -> 'b -> 'c -> 'd) -> list 'a -> list 'b -> list 'c -> list
 assume val rev: list 'a -> PURE.Tot (list 'a)
 assume val collect: ('a -> list 'b) -> list 'a -> list 'b
 assume val tl: list 'a -> list 'a
-assume val tryFind: ('a -> bool) -> list 'a -> option 'b
+assume val tryFind: ('a -> bool) -> list 'a -> option 'a
+assume val tryPick: ('a -> option 'b) -> list 'a -> option 'b 
 assume val concat: list (list 'a) -> PURE.Tot (list 'a)
 assume val sortWith: ('a -> 'a -> int) -> list 'a -> list 'a
 assume val choose: ('a -> option 'b) -> list 'a -> list 'b
@@ -108,3 +109,5 @@ assume val partition: ('a -> bool) -> list 'a -> (list 'a * list 'a)
 assume val contains: 'a -> list 'a -> PURE.Tot bool
 assume val fold_left2: ('s -> 'a -> 'b -> 's) -> 's -> list 'a -> list 'b -> 's
 assume val nth: list 'a -> int -> 'a
+assume val isEmpty: list 'a -> bool
+assume val for_all: ('a -> bool) -> list 'a -> bool
