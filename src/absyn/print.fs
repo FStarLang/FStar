@@ -188,6 +188,7 @@ and meta_e_to_string = function
     | Data_app -> "Data_app"
     | Sequence -> "Sequence"                  
     | Primop   -> "Primop"
+    | MaskedEffect -> "MaskedEffect"
 
 (* This function prints the type it gets as argument verbatim.
    For already type-checked types use the typ_norm_to_string
@@ -445,13 +446,13 @@ let rec sigelt_to_string x = match x with
   | Sig_datacon(lid, t, _, _, _) -> Util.format2 "datacon %s : %s" lid.str (typ_to_string t)
   | Sig_val_decl(lid, t, quals, _) -> Util.format3 "%s val %s : %s" (quals_to_string quals) lid.str (typ_to_string t)
   | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string f)
-  | Sig_let(lbs, _, _) -> lbs_to_string lbs
+  | Sig_let(lbs, _, _, b) -> lbs_to_string lbs
   | Sig_main(e, _) -> Util.format1 "let _ = %s" (exp_to_string e)
   | Sig_bundle(ses, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
   | Sig_monads _ -> "monad_lattice { ... }"
 
 let rec sigelt_to_string_short x = match x with 
-  | Sig_let((_, [(Inr l, t, _)]), _, _) -> Util.format2 "let %s : %s" l.str (typ_to_string t) 
+  | Sig_let((_, [(Inr l, t, _)]), _, _, _) -> Util.format2 "let %s : %s" l.str (typ_to_string t) 
   | _ -> lids_of_sigelt x |> List.map (fun l -> l.str) |> String.concat ", "
 
 let rec modul_to_string (m:modul) = 

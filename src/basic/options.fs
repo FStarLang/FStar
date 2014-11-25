@@ -74,6 +74,7 @@ let serialize_mods = Util.mk_ref false
 let initial_fuel = Util.mk_ref 2
 let max_fuel = Util.mk_ref 8
 let min_fuel = Util.mk_ref 1
+let warn_top_level_effects = Util.mk_ref false
 
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
@@ -141,5 +142,6 @@ let specs () : list<Getopt.opt> =
      ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
      ( noshort, "max_fuel", OneArg((fun x -> max_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try at most (default 8)");
      ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
+     ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens")
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs

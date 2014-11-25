@@ -130,6 +130,7 @@ and meta_source_info =
   | Data_app
   | Sequence                   
   | Primop                                  (* ... add more cases here as needed for better code generation *)
+  | MaskedEffect
 and uvar_e = Unionfind.uvar<uvar_basis<exp,typ>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
@@ -254,7 +255,7 @@ and sigelt =
   | Sig_datacon        of lident * typ * tycon * list<qualifier> * Range.range  (* second lident is the name of the type this constructs *)
   | Sig_val_decl       of lident * typ * list<qualifier> * Range.range 
   | Sig_assume         of lident * formula * list<qualifier> * Range.range 
-  | Sig_let            of letbindings * Range.range * list<lident>
+  | Sig_let            of letbindings * Range.range * list<lident> * bool       (* flag indicates masked effect *)
   | Sig_main           of exp * Range.range 
   | Sig_bundle         of list<sigelt> * Range.range * list<lident> (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
   | Sig_monads         of list<monad_decl> * monad_lat * Range.range * list<lident>

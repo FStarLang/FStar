@@ -607,6 +607,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
         | Exp_ascribed (e, _) ->
             mlexpr_of_expr mlenv rg lenv e
 
+        | Exp_meta (Meta_desugared (e, MaskedEffect)) 
         | Exp_meta (Meta_datainst (e, _)) ->
             mlexpr_of_expr mlenv rg lenv e
 
@@ -782,7 +783,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
 (*        Printf.printf "skipping val decl %s\n" x.ident.idText; *)
         None
 
-    | Sig_let ((rec_, lbs), rg, _) when mode = Struct ->
+    | Sig_let ((rec_, lbs), rg, _, _) when mode = Struct ->
         let downct (x, _, e) =
             match x with
             | Inr x -> (x, e)

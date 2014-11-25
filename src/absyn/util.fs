@@ -618,7 +618,7 @@ let destruct typ lid =
     | _ -> None
 
 let rec lids_of_sigelt se = match se with 
-  | Sig_let(_, _, lids) 
+  | Sig_let(_, _, lids, _) 
   | Sig_bundle(_, _, lids)
   | Sig_monads(_, _, _, lids) -> lids
   | Sig_tycon (lid, _, _,  _, _, _, _)    
@@ -639,7 +639,7 @@ let range_of_sigelt x = match x with
   | Sig_datacon (_, _, _, _, r)
   | Sig_val_decl (_, _, _, r) 
   | Sig_assume (_, _, _, r)
-  | Sig_let(_, r, _) 
+  | Sig_let(_, r, _, _) 
   | Sig_main(_, r) 
   | Sig_monads(_, _, r, _) -> r
 

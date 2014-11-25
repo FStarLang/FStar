@@ -924,11 +924,15 @@ and tc_exp env e : exp * comp =
     let c1 = Tc.Util.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t.pos) e1 c1 f in
     begin match x with 
         | Inr _ -> (* top-level let, always ends with e2=():unit *)
-          begin if !Options.verify
-                then let ok, errs = Tc.Util.check_total env c1 in
-                     if not ok 
-                     then raise (Error(Tc.Errors.top_level_effect errs, Tc.Env.get_range env))
-          end;
+          let e2 = if !Options.verify
+                   then let ok, errs = Tc.Util.check_total env c1 in
+                        if not ok 
+                        then let t = Util.comp_result c1 in 
+                             if !Options.warn_top_level_effects
+                             then Tc.Errors.warn (Tc.Env.get_range env) (Tc.Errors.top_level_effect errs);
+                             mk_Exp_meta(Meta_desugared(e2, MaskedEffect)) 
+                        else e2
+                   else e2 in
           let _, e1, c1 = if env.generalize 
                           then List.hd <| Tc.Util.generalize env1 [x, e1, c1] (* only generalize top-level lets, when there is no val decl *)
                           else x, e1, c1 in
@@ -1339,7 +1343,7 @@ and tc_decl env se deserialized = match se with
       let env = Tc.Env.push_sigelt env se in 
       se, env
    
-    | Sig_let(lbs, r, lids) -> 
+    | Sig_let(lbs, r, lids, _) -> 
       //let is_rec = fst lbs in
       let env = Tc.Env.set_range env r in
       let generalize, lbs' = snd lbs |> List.fold_left (fun (gen, lbs) lb -> 
@@ -1364,7 +1368,11 @@ and tc_decl env se deserialized = match se with
       let lbs' = List.rev lbs' in
       let e = mk_Exp_let((fst lbs, lbs'), syn' env Tc.Util.t_unit <| mk_Exp_constant(Syntax.Const_unit)) tun r in
       let se = match tc_exp ({env with generalize=generalize}) e with 
-        | {n=Exp_let(lbs, _)}, _ -> Sig_let(lbs, r, lids)
+        | {n=Exp_let(lbs, e)}, _ -> 
+            let b = match e.n with 
+                | Exp_meta(Meta_desugared(_, MaskedEffect)) -> true
+                | _ -> false in 
+            Sig_let(lbs, r, lids, b)
         | _ -> failwith "impossible" in
       if log env then Util.fprint1 "%s\n" <| Print.sigelt_to_string_short se;
       let env = Tc.Env.push_sigelt env se in 

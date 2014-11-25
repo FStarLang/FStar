@@ -240,7 +240,7 @@ and js_of_exports isrec (id,typ,expr) : source_t =
 
 let rec js_of_singl (p:sigelt) : list<source_t> =
     match p with
-    | Sig_let((isrec, bind),range, _) -> List.map (js_of_exports isrec) bind
+    | Sig_let((isrec, bind),range, _, _) -> List.map (js_of_exports isrec) bind
     | Sig_bundle(defs, range, _) -> List.iter compile_def defs; []
     | _ -> []
 

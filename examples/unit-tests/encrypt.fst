@@ -38,12 +38,10 @@ opaque type keyval (p:Type) (r:Type) (i:int) =
   | Concrete : plain: (r -> p) -> repr: (p -> r) -> AES.key -> keyval p r i 
  *)
 
-type key (p:Type) (r:Type) = 
-  | Key : i:int -> keyval p r i -> key p r (* so that the index i can be kept implicit *)
+type key (p:Type) (r:Type) = i:int * keyval p r i (* so that the index i can be kept implicit *)
     
 (* CPA variant: *) 
-
-opaque type Encrypted: #p: Type -> #r: Type -> key p r -> MAC.bytes -> Type (* an opaque predicate, keeping track of honest encryptions *)
+opaque type Encrypted: #p: Type -> #r: Type -> key p r -> MAC.bytes -> Type    (* an opaque predicate, keeping track of honest encryptions *)
 
 type cipher (p:Type) (r:Type) (k: key p r) = c:AES.cipher { Encrypted k c }    (* TODO why do I need explicit implicits?; NS: you don't seem to need it *)
 
@@ -51,35 +49,33 @@ assume val keygen:  #p:Type -> #r:Type -> plain:(r -> p) -> repr:(p -> r) -> key
 assume val decrypt: #p:Type -> #r:Type -> k:key p r -> cipher p r k -> Tot p
 assume val encrypt: #p:Type -> #r:Type -> k:key p r -> plain: p -> c:cipher p r k { decrypt k c = plain }
 
-(*
 
 (* TODO: implementation *)
 
-//let c = ref 0
+(* //let c = ref 0 *)
 
-let keygen safe plain repr = 
-//let i = !c in
-//c := !c + 1; 
-  let i = 3 in
-  let k = AES.gen() in 
-  if safe 
-  then i, Ideal   (plain,repr,k) 
-  else i, Concrete(plain,repr,k)
+(* let keygen safe plain repr =  *)
+(* //let i = !c in *)
+(* //c := !c + 1;  *)
+(*   let i = 3 in *)
+(*   let k = AES.gen() in  *)
+(*   if safe  *)
+(*   then i, Ideal   (plain,repr,k)  *)
+(*   else i, Concrete(plain,repr,k) *)
 
-let decrypt (i,Ideal(plain,repr,kv)) c = AES.dec kv c
-let encrypt (i,Ideal(plain,repr,kv)) p = AES.enc kv p
+(* let decrypt (i,Ideal(plain,repr,kv)) c = AES.dec kv c *)
+(* let encrypt (i,Ideal(plain,repr,kv)) p = AES.enc kv p *)
 
 
-(* below is for CCA2, with just bytes as ciphers. *)
+(* (\* below is for CCA2, with just bytes as ciphers. *\) *)
 
-assume val decrypt: p:Type -> r:Type -> k:key p r -> c: cipher -> option p 
-assume val encrypt: p:Type -> r:Type -> k:key p r -> plain: p -> c:cipher { decrypt p r k c = Some plain }
+(* assume val decrypt: p:Type -> r:Type -> k:key p r -> c: cipher -> option p  *)
+(* assume val encrypt: p:Type -> r:Type -> k:key p r -> plain: p -> c:cipher { decrypt p r k c = Some plain } *)
 
-(* for CPA, ciphers should not be forgeable, but we need to be able to treat sbytes as cipher after checking e.g. a MAC *)
+(* (\* for CPA, ciphers should not be forgeable, but we need to be able to treat sbytes as cipher after checking e.g. a MAC *\) *)
 
-assume val decrypt: p:Type -> r:Type -> k:skey p r -> c: cipher p r k -> option p 
-assume val encrypt: p:Type -> r:Type -> k:skey p r -> plain: p -> c:cipher p r k { decrypt p r k c = plain }
-*)
+(* assume val decrypt: p:Type -> r:Type -> k:skey p r -> c: cipher p r k -> option p  *)
+(* assume val encrypt: p:Type -> r:Type -> k:skey p r -> plain: p -> c:cipher p r k { decrypt p r k c = plain } *)
 
 (* -------------------------------------------------------------------------------- *)
 module SampleEncrypt
@@ -111,24 +107,17 @@ let decrypt (Key ke ka) (c,tag) =
   then Some(SymEnc.decrypt ke c)
   else None
 
-// to get functional corretness for EncryptThenMAC, 
-// we'd also need it for MACs. For later.
-// logic type EncText: #p: Type -> #r: Type -> SymEnc.key p r -> MAC.text -> Type (* an opaque predicate, keeping track of honest encryptions *)
-// val encrypt ... { EncText #p #r k plain c } 
-// val decrypt ... { forall plain. EncText #p #r k plain c ==> o = Some plain } 
-
-
+(* to get functional corretness for EncryptThenMAC, *)
+(* we'd also need it for MACs. For later. *)
+(* logic type EncText: #p: Type -> #r: Type -> SymEnc.key p r -> MAC.text -> Type (\* an opaque predicate, keeping track of honest encryptions *\) *)
+(* val encrypt ... { EncText #p #r k plain c } *)
+(* val decrypt ... { forall plain. EncText #p #r k plain c ==> o = Some plain } *)
 
 val keygen:  p:Type -> r:Type -> plain: (r -> p) -> repr:(p -> r) -> key p r
 let keygen plain repr =
   let ke = SymEnc.keygen plain repr in
   let ka = MAC.keygen (SymEnc.Encrypted ke) in
   Key ke ka
-
-val test: #p:Type -> #r:Type -> k:key p r -> AES.cipher -> unit
-let test (Key ke ka) (c:AES.cipher) =
-  admitP (SymEnc.Encrypted ke c) ();
-  assert (MAC.key_prop ka c)
 
 val encrypt: #p:Type -> #r:Type -> k:key p r -> plain:p -> cipher
 let encrypt (Key ke ka) plain =

@@ -103,7 +103,7 @@ and uvar_basis<'a,'b> =
   | Fixed of 'a
 and exp' =
   | Exp_bvar       of bvvar
-  | Exp_fvar       of fvvar * bool                            (* flag indicates a constructor *)
+  | Exp_fvar       of fvvar * bool                               (* flag indicates a constructor *)
   | Exp_constant   of sconst
   | Exp_abs        of binders * exp 
   | Exp_app        of exp * args                                 (* args in order from left to right *)
@@ -111,7 +111,7 @@ and exp' =
   | Exp_ascribed   of exp * typ 
   | Exp_let        of letbindings * exp                          (* let (rec?) x1 = e1 AND ... AND xn = en in e *)
   | Exp_uvar       of uvar_e * typ                               (* not present after 1st round tc *)
-  | Exp_delayed    of exp * subst_t * memo<exp>                    (* A delayed substitution --- always force it before inspecting the first arg *)
+  | Exp_delayed    of exp * subst_t * memo<exp>                  (* A delayed substitution --- always force it before inspecting the first arg *)
   | Exp_meta       of meta_e                                     (* No longer tag every expression with info, only selectively *)
 and exp = syntax<exp',typ>
 and meta_e = 
@@ -121,6 +121,7 @@ and meta_source_info =
   | Data_app
   | Sequence                   
   | Primop                                  (* ... add more cases here as needed for better code generation *)
+  | MaskedEffect                            
 and uvar_e = Unionfind.uvar<uvar_basis<exp,typ>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
@@ -236,7 +237,7 @@ and sigelt =
   | Sig_datacon        of lident * typ * tycon * list<qualifier> * Range.range  
   | Sig_val_decl       of lident * typ * list<qualifier> * Range.range 
   | Sig_assume         of lident * formula * list<qualifier> * Range.range 
-  | Sig_let            of letbindings * Range.range * list<lident>
+  | Sig_let            of letbindings * Range.range * list<lident> * bool (* flag indicates masked effect *)
   | Sig_main           of exp * Range.range 
   | Sig_bundle         of list<sigelt> * Range.range * list<lident> (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
   | Sig_monads         of list<monad_decl> * monad_lat * Range.range * list<lident>

@@ -19,7 +19,7 @@ val partition_lemma: f:('a -> Tot bool)
                                       /\ (forall x. mem x l = (mem x l1 || mem x l2))))
                                         (fst (partition f l))
                                         (snd (partition f l))))
-                           [SMTPat (partition f l)] (* injected to the solver *)
+                           (* [SMTPat (partition f l)] (\* injected to the solver *\) *)
 let rec partition_lemma f l = match l with 
   | [] -> ()
   | hd::tl -> partition_lemma f tl
@@ -37,23 +37,22 @@ val sorted_concat_lemma:  a:Type
                ->  pivot:a
                ->  Lemma (requires (total_order a f
                                     /\ (forall y. mem y l1 ==> not(f pivot y))
-                                    /\ (forall y. mem y l2 ==> f pivot y)))
-                         (ensures (sorted f (l1@(pivot::l2))))
-                         [SMTPat (sorted f (l1@(pivot::l2)))]
+                                    /\ (forall y. mem y l2 ==> f pivot y))
+)                         (ensures (sorted f (l1@(pivot::l2))))
+                          [SMTPat (sorted f (l1@(pivot::l2)))]
 let rec sorted_concat_lemma f l1 l2 pivot = match l1 with 
   | [] -> ()
   | hd::tl -> sorted_concat_lemma f tl l2 pivot
 
 
 (* The implementation of quicksort: happily, the code is completely unpolluted by proof. *)
-val sort: f:('a -> 'a -> Tot bool)
+val sort: f:('a -> 'a -> Tot bool){total_order 'a f}
       ->  l:list 'a
-      ->  Pure (list 'a)
-               (requires (total_order 'a f))
-               (ensures (fun m -> sorted f m /\ (forall x. mem x l = mem x m)))
-               (decreases (length l))
+      ->  Tot (m:list 'a{sorted f m /\ (forall x. mem x l = mem x m)})
+              (decreases (length l))
 let rec sort f = function
   | [] -> []
   | pivot::tl -> 
     let hi, lo  = partition (f pivot) tl in 
+    partition_lemma (f pivot) tl;
     sort f lo@(pivot::sort f hi)

@@ -1239,11 +1239,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | _ -> true) in
       g'@inversions, env
 
-    | Sig_let((is_rec, [(Inr flid, t1, e)]), _, _) -> 
+    | Sig_let((is_rec, [(Inr flid, t1, e)]), _, _, masked_effect) -> 
         if is_smt_lemma env t1 then encode_smt_lemma env flid t1, env else
         let t1_norm = whnf env t1 |> Util.compress_typ in
         let (f, ftok), decls, env = declare_top_level_let env flid t1 t1_norm in
-        if not (Util.is_pure_function t1_norm) 
+        if not (Util.is_pure_function t1_norm) || masked_effect
         then decls, env  else
         let e = Util.compress_exp e in
         
@@ -1325,7 +1325,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              let eqn = Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(app, body))), Some (Util.format1 "Equation for %s" flid.str)) in
              decls@binder_decls@decls2@[eqn], env     
                  
-    | Sig_let((_,lbs), _, _) -> //TODO: mutual recursion
+    | Sig_let((_,lbs), _, _, _) -> //TODO: mutual recursion
         let msg = lbs |> List.map (fun (lb, _, _) -> Print.lbname_to_string lb) |> String.concat " and " in
         [], env
 
