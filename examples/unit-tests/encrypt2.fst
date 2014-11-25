@@ -9,8 +9,9 @@ let blocksize = 32 (* 256 bits *)
 
 type plain  = nbytes blocksize
 
-type cipher = nbytes (2 * blocksize)  (* including IV *)
+let ciphersize = 2 * blocksize  (* including IV *)
 
+type cipher = nbytes ciphersize
 let keysize = 16 (* 128 bits *)
 type key = nbytes keysize 
 
@@ -51,7 +52,7 @@ opaque type Encrypted: key -> bytes -> Type (* an opaque predicate, keeping trac
 type cipher (k: key) = c:AES.cipher { Encrypted k c }
 
 val keygen:  b:bool -> k:key { Key.ideal k = b } 
-val keyrepr: k:key { Key.ideal k = false } -> AES.key
+val keyrepr: k:key { Key.ideal k = false } -> Tot AES.key
 val decrypt: k:key -> cipher k -> p
 val encrypt: k:key -> plain: p -> cipher k 
 
@@ -102,6 +103,10 @@ type key = | Key:  ke:SymEnc.key -> MAC.pkey (SymEnc.Encrypted ke) -> key
 type plain = SymEnc.p
 type cipher = (AES.cipher * MAC.tag)
 
+val keygen: unit -> key 
+val encrypt: k:key -> plain -> cipher
+val decrypt: k:key -> cipher -> option plain
+
 let decrypt (Key ke ka) (c,tag) =
   if MAC.verify ka c tag
   then Some(SymEnc.decrypt ke c)
@@ -113,9 +118,6 @@ let decrypt (Key ke ka) (c,tag) =
 (* val encrypt ... { EncText #p #r k plain c } *)
 (* val decrypt ... { forall plain. EncText #p #r k plain c ==> o = Some plain } *)
 
-val keygen: unit -> key 
-val encrypt: k:key -> plain -> cipher
-val decrypt: k:key -> cipher -> option plain
 
 let keygen () =
   let ke = SymEnc.keygen true in

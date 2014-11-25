@@ -8,6 +8,7 @@
    increasing mutable lists, possibly too advanced for a tutorial *)
 
 module RSA
+
 assume type pkey
 assume type skey
 type bytes = list byte
@@ -26,6 +27,7 @@ assume val enc: pk:pkey -> t:plain -> c:cipher { forall sk. generated (pk, sk) =
 assume val pkbytes: pkey -> bytes
 assume val dummy: plain 
 
+
 module Plain 
          
 (* private  *)type t = RSA.plain
@@ -38,11 +40,13 @@ let repr t = t       (* a pure function from t to RSA.plain *)
 val plain: x:r -> Tot (option (y:t{repr y = x}))
 let plain t = Some t (* a partial function from RSA.plain to t *)
 
+
 module CCA2  (* intuitively, parameterized by both Plain and RSA *)
 open List
 
 type cipher = RSA.cipher
-type entry = (* indexing entry with ideal and pk triggers some bugs; meanwhile, using a simple type *)
+type entry = 
+(* indexing entry with ideal and pk triggers some bugs; meanwhile, using a simple type *)
   | Entry : ideal':bool
          -> pk':RSA.pkey
          -> c:RSA.cipher
