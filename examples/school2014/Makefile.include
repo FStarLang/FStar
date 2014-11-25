@@ -15,6 +15,7 @@ STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
 FSTAR  = $(RUNTIME) $(FSTAR_HOME)/bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB)
 
 EXERCISES =\
+  ex1a-safe-read-write\
   ex7a-stlc-typed-step\
   ex7b-stlc-pairs\
   ex7c-stlc-let\
