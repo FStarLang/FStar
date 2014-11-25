@@ -35,7 +35,7 @@ BIN=../bin
 PLATFORM       =
 RELEASE       ?= Debug
 BUILD_VERSION  =
-OTHERFLAGS    := --optimize+ --debug:full --nologo -g -O 
+OTHERFLAGS    := --optimize+ --debug:full --nologo -g -O
 OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
 RUNTIMEFLAGS   = -g --nowarn:62
 
@@ -154,7 +154,7 @@ clean:
 # Bootstrapping
 # --------------------------------------------------------------------
 
-STDFILES=system.fst stboot.fst list.fst option.fst string.fst char.fst
+STDFILES=system.fst stboot.fst list.fst option.fst string.fst
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 
 BOOT_BASICFILES=bytes.fst platform.fsi util.fsi getoptsimple.fst options.fs range.fst unionfind.fst lazyset.fsi lazyset.fs
@@ -165,22 +165,20 @@ BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexh
 BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))
 BOOT_TCFILES=tcenv.fsi tcenv.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
-BOOT_FORMATFILES=format.fsi formatml.fs
+BOOT_FORMATFILES=format.fsi format.fs
 BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
-BOOT_BACKENDFILES=nameenv.fsi nameenv.fs ocaml-syntax.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs 
-BOOT_BACKEND=$(addprefix backend/, $(BOOT_BACKENDFILES))
+BOOT_BACKENDFILES=nameenv.fsi nameenv.fs syntax.fs ocaml-asttrans.fsi ocaml-asttrans.fs ocaml-codegen.fsi ocaml-codegen.fs oaml.fsi ocaml.fs
+BOOT_BACKEND=$(addprefix backend/, ocaml-backend-stub.fst)
 BOOT_JSBACKENDFILES=ast.fs translate.fs
 BOOT_JSBACKEND=$(addprefix jsbackend/, $(BOOT_JSBACKENDFILES))
 BOOT_MAIN=fstar.fs
-BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_BACKEND) 
+BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_BACKEND) $(BOOT_JSBACKEND)
 
 boot: $(BOOT_ALL)
 	$(RUNTIME) ../bin/fstar.exe --lax --fstar_home .. $(FSTAROPTS) --debug_level Low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
 ocaml: $(BOOT_ALL)
 	$(RUNTIME) ../bin/fstar.exe --lax --odir ocaml-output --fstar_home .. $(FSTAROPTS) --codegen OCaml --debug_level Low --trace_error --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
-
-fstarml:
 	@echo "Building parser and lexer filex..."
 	make -C ocaml-output parser
 	make -s -C ocaml-output fstarml
