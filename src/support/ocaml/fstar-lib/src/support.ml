@@ -1,6 +1,7 @@
 module Prims = struct
   (* Fix this... *)
   type double  = float
+  type float  = double
   type uint16 = int
   type int32 = int
 
@@ -11,6 +12,7 @@ module Prims = struct
   let snd = snd
   let failwith = failwith
   let try_with f1 f2 = try f1 () with | e -> f2 e
+  let l__Assert x = ()
 end
 
 
@@ -33,6 +35,7 @@ module String = struct
   let length = BatString.length
   let sub = String.sub
   let get = String.get
+  let collect = BatString.replace_chars
 end
 
 module Char = struct
@@ -45,6 +48,7 @@ module List = struct
   let mem = List.mem
   let hd = BatList.hd
   let tl = BatList.tl
+  let tail = BatList.tl
   let nth = BatList.nth
   let length = BatList.length
   let rev = BatList.rev
@@ -78,6 +82,7 @@ module List = struct
   let split = unzip
   let choose = BatList.filter_map
   let contains x l = BatList.exists (fun y -> x = y) l
+  let zip = BatList.combine
 end
 
 
@@ -89,6 +94,9 @@ module Option = struct
   let map f = function
     | Some x -> Some (f x) 
     | None -> None
+  let get = function
+    | Some x -> x 
+    | None -> failwith "Option.get called on None"
 end
 
 
@@ -101,7 +109,7 @@ module Microsoft = struct
       let max_int = max_int
       let is_letter_or_digit c = (BatChar.is_digit c) || (BatChar.is_letter c)
       let is_punctuation c = c = ',' || c = ';' || c = '.'
-      let is_sybmol c = BatChar.is_symbol c
+      let is_symbol c = BatChar.is_symbol c
 
       let return_all x = x
 
@@ -215,8 +223,8 @@ module Microsoft = struct
       let spr = Printf.sprintf
       let fpr = Printf.fprintf
 
-      let print_string s = pr "%s" s
-      let print_any s = output_value stdout s
+      let print_string s = pr "%s" s; flush stdout
+      let print_any s = output_value stdout s; flush stdout
       let strcat s1 s2 = s1 ^ s2
       let concat_l sep (l:string list) = BatString.concat sep l
 
@@ -232,17 +240,20 @@ module Microsoft = struct
       let char_of_int = char_of_int
       let int_of_string = int_of_string
       let int_of_char = int_of_char
+      let int_of_byte = int_of_char
       let int_of_uint8 = int_of_char
       let uint16_of_int (i:int) = i
+      let byte_of_char (c:char) = c
 
       let float_of_byte b = float_of_int (int_of_char b)
       let float_of_int32 = float_of_int
       let float_of_int64 = BatInt64.to_float
 
       let string_of_int = string_of_int
+      let string_of_int64 = BatInt64.to_string 
       let string_of_float = string_of_float
       let string_of_char  (i:char) = spr "%c" i
-      let hex_string_of_char (i:char) = spr "%x" (int_of_char i)
+      let hex_string_of_byte (i:char) = spr "%x" (int_of_char i)
       let string_of_bytes = string_of_unicode
       let starts_with = BatString.starts_with
       let trim_string = BatString.trim
@@ -803,6 +814,7 @@ let parse_cmdline specs others =
 
       type bytes = char array
 
+      let f_encode f (b:bytes) = Array.fold_left (fun x y -> x ^ y) "" (Array.map f b)
       let length (b:bytes) = BatArray.length b
       let get (b:bytes) n = int_of_char (BatArray.get b n)
       let make (f : _ -> int) n = BatArray.init n (fun i -> char_of_int (f i))
@@ -881,7 +893,6 @@ let parse_cmdline specs others =
           done;
           b.pos <- b.pos + n;
           !res
-        let f_encode f (b:bytes) = Array.fold_left (fun x y -> x ^ y) "" (Array.map f b)
       end
 
       type bytebuf =

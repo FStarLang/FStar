@@ -1,6 +1,7 @@
 module Prims :
   sig
     type double = float
+    type float = double
     type uint16 = int
     type int32 = int
     type byte = char
@@ -10,6 +11,7 @@ module Prims :
     val snd : 'a * 'b -> 'b
     val failwith : string -> 'a
     val try_with : (unit -> 'a) -> (exn -> 'a) -> 'a
+    val l__Assert : 'a -> unit
   end
 module ST : sig val read : 'a ref -> 'a end
 module String :
@@ -20,12 +22,18 @@ module String :
     val concat : string -> string list -> string
     val length : string -> int
     val sub : string -> int -> int -> string
+    val get : string -> int -> char
+    val collect : (char -> string) -> string -> string
   end
+module Char :
+  sig val lowercase : char -> char val uppercase : char -> char end
 module List :
   sig
+    val isEmpty : 'a list -> bool
     val mem : 'a -> 'a list -> bool
     val hd : 'a list -> 'a
     val tl : 'a list -> 'a list
+    val tail : 'a list -> 'a list
     val nth : 'a list -> int -> 'a
     val length : 'a list -> int
     val rev : 'a list -> 'a list
@@ -44,15 +52,23 @@ module List :
     val unzip3 : ('a * 'b * 'c) list -> 'a list * 'b list * 'c list
     val filter : ('a -> bool) -> 'a list -> 'a list
     val sortWith : ('a -> 'a -> int) -> 'a list -> 'a list
+    val for_all : ('a -> bool) -> 'a list -> bool
     val forall2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool
     val tryFind : ('a -> bool) -> 'a list -> 'a option
+    val tryPick : ('a -> 'b option) -> 'a list -> 'b option
     val flatten : 'a list list -> 'a list
     val split : ('a * 'b) list -> 'a list * 'b list
     val choose : ('a -> 'b option) -> 'a list -> 'b list
     val contains : 'a -> 'a list -> bool
+    val zip : 'a list -> 'b list -> ('a * 'b) list
   end
 module Option :
-  sig val isSome : 'a option -> bool val isNone : 'a option -> bool end
+  sig
+    val isSome : 'a option -> bool
+    val isNone : 'a option -> bool
+    val map : ('a -> 'b) -> 'a option -> 'b option
+    val get : 'a option -> 'a
+  end
 module Microsoft :
   sig
     module FStar :
@@ -60,6 +76,9 @@ module Microsoft :
         module Util :
           sig
             val max_int : int
+            val is_letter_or_digit : char -> bool
+            val is_punctuation : char -> bool
+            val is_symbol : char -> bool
             val return_all : 'a -> 'a
             exception Impos
             exception NYI of string
@@ -96,6 +115,7 @@ module Microsoft :
             val smap_create : int -> 'value smap
             val smap_clear : 'value smap -> unit
             val smap_add : 'value smap -> string -> 'value -> unit
+            val smap_of_list : (string * 'value) list -> 'value smap
             val smap_try_find : 'value smap -> string -> 'value option
             val smap_fold :
               'value smap -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
@@ -114,14 +134,18 @@ module Microsoft :
             val char_of_int : int -> char
             val int_of_string : string -> int
             val int_of_char : char -> int
+            val int_of_byte : char -> int
             val int_of_uint8 : char -> int
             val uint16_of_int : int -> int
+            val byte_of_char : char -> char
             val float_of_byte : char -> float
             val float_of_int32 : int -> float
             val float_of_int64 : int64 -> float
             val string_of_int : int -> string
+            val string_of_int64 : int64 -> string
             val string_of_float : float -> string
             val string_of_char : char -> string
+            val hex_string_of_byte : char -> string
             val string_of_bytes : char array -> string
             val starts_with : string -> string -> bool
             val trim_string : string -> string
@@ -361,6 +385,7 @@ module Microsoft :
             val dWw1 : int64 -> int
             val dWw0 : int64 -> int
             type bytes = char array
+            val f_encode: (char -> string) -> bytes -> string
             val length : bytes -> int
             val get : bytes -> int -> int
             val make : (int -> int) -> int -> char array

@@ -1,5 +1,10 @@
 .depend
 Microsoft_FStar_*.cm[iox]
 Microsoft_FStar_*.ml
+Microsoft_FStar_*.o
+FSharp_Format.cmi
+FSharp_Format.cmx
+FSharp_Format.ml
+FSharp_Format.o
 parse.ml[iy]
 parse.ml

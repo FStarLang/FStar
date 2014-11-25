@@ -13,12 +13,17 @@ FSTAR_HOME = ../../..
 
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
 FSTAR  = $(RUNTIME) $(FSTAR_HOME)/bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB)
+# FSTAR = $(FSTAR_HOME)/src/ocaml-output/fstarml $(STDLIB)
 
 EXERCISES =\
   ex1a-safe-read-write\
+  ex2a-can-read-write-types\
+  ex3a-factorial-types\
+  ex3b-fibonacci\
   ex7a-stlc-typed-step\
   ex7b-stlc-pairs\
   ex7c-stlc-let\
-  ex7d-stlc-eval
+  ex7d-stlc-eval\
+#  ex3c-factorial  - this doesn't work even with --z3timeout 600, with both Z3 4.3.1 and 4.3.2
 
 all: $(EXERCISES:%=verify-%)

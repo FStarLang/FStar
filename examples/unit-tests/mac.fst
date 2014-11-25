@@ -93,7 +93,7 @@ let verify k text tag =
   (* ideal, error-correcting implementation *) 
   verified && found  
 
-  (* error-detecting implementation for the INT-CMA game
+  (* error-detecting implementation for the INT-CMA game *)
 //(if verified && not found then win := Some(k,text,tag)); 
 //verified
 
