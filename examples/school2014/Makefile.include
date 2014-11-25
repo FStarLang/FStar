@@ -25,6 +25,7 @@ EXERCISES =\
   ex4b-append-extrinsic\
   ex4c-mem\
   ex4d-reverse\
+  ex4e-find\
   ex7a-stlc-typed-step\
   ex7b-stlc-pairs\
   ex7c-stlc-let\
