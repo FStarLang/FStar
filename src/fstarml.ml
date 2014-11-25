@@ -82,6 +82,36 @@
                      Microsoft_FStar_Tc_Tc.check_modules solver
                        Microsoft_FStar_ToSMT_Encode.dummy fmods
                    else fmods in
+
+             let _20222 =
+               if
+                 (Fstar.Support.ST.read Microsoft_FStar_Options.codegen) =
+                   (Some "OCaml")
+               then
+                 Fstar.Support.Prims.try_with
+                   (fun _20211 ->
+                      match _20211 with
+                      | () ->
+                          let mllib =
+                            Microsoft_FStar_Backends_OCaml_ASTTrans.mlmod_of_fstars
+                              (Fstar.Support.List.tail fmods) in
+                          let doc =
+                            Microsoft_FStar_Backends_OCaml_Code.doc_of_mllib mllib
+                          in ())
+                   (fun _20210 ->
+                      match _20210 with
+                      | Microsoft_FStar_Backends_OCaml_ASTTrans.OCamlFailure (rg, error) ->
+                          let _20217 =
+                            Fstar.Support.Microsoft.FStar.Util.print_string
+                              (Fstar.Support.Microsoft.FStar.Util.format2
+                                 "OCaml Backend Error: %s %s\n"
+                                 (Fstar.Support.Microsoft.FStar.Range.
+                                    string_of_range rg)
+                                 (Microsoft_FStar_Backends_OCaml_ASTTrans.string_of_error error))
+                          in exit 1)
+               else () in
+
+
                  let _20065 = finished fmods in
                  let errs = Microsoft_FStar_Tc_Errors.get_err_count ()
                  in

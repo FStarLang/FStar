@@ -12,6 +12,7 @@ module Prims = struct
   let snd = snd
   let failwith = failwith
   let try_with f1 f2 = try f1 () with | e -> f2 e
+  let l__Assert x = ()
 end
 
 
@@ -47,6 +48,7 @@ module List = struct
   let mem = List.mem
   let hd = BatList.hd
   let tl = BatList.tl
+  let tail = BatList.tl
   let nth = BatList.nth
   let length = BatList.length
   let rev = BatList.rev
@@ -80,6 +82,7 @@ module List = struct
   let split = unzip
   let choose = BatList.filter_map
   let contains x l = BatList.exists (fun y -> x = y) l
+  let zip = BatList.combine
 end
 
 
@@ -106,7 +109,7 @@ module Microsoft = struct
       let max_int = max_int
       let is_letter_or_digit c = (BatChar.is_digit c) || (BatChar.is_letter c)
       let is_punctuation c = c = ',' || c = ';' || c = '.'
-      let is_sybmol c = BatChar.is_symbol c
+      let is_symbol c = BatChar.is_symbol c
 
       let return_all x = x
 
@@ -247,9 +250,10 @@ module Microsoft = struct
       let float_of_int64 = BatInt64.to_float
 
       let string_of_int = string_of_int
+      let string_of_int64 = BatInt64.to_string 
       let string_of_float = string_of_float
       let string_of_char  (i:char) = spr "%c" i
-      let hex_string_of_char (i:char) = spr "%x" (int_of_char i)
+      let hex_string_of_byte (i:char) = spr "%x" (int_of_char i)
       let string_of_bytes = string_of_unicode
       let starts_with = BatString.starts_with
       let trim_string = BatString.trim
@@ -810,6 +814,7 @@ let parse_cmdline specs others =
 
       type bytes = char array
 
+      let f_encode f (b:bytes) = Array.fold_left (fun x y -> x ^ y) "" (Array.map f b)
       let length (b:bytes) = BatArray.length b
       let get (b:bytes) n = int_of_char (BatArray.get b n)
       let make (f : _ -> int) n = BatArray.init n (fun i -> char_of_int (f i))
@@ -888,7 +893,6 @@ let parse_cmdline specs others =
           done;
           b.pos <- b.pos + n;
           !res
-        let f_encode f (b:bytes) = Array.fold_left (fun x y -> x ^ y) "" (Array.map f b)
       end
 
       type bytebuf =
