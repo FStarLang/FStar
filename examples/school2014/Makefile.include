@@ -26,6 +26,7 @@ EXERCISES =\
   ex4c-mem\
   ex4d-reverse\
   ex4e-find\
+  ex4f-fold-left\
   ex7a-stlc-typed-step\
   ex7b-stlc-pairs\
   ex7c-stlc-let\
