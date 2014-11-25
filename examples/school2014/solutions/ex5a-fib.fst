@@ -14,11 +14,8 @@ val fib_is_ok_aux : i:nat -> n:nat{i<=n} ->
       Tot (u:unit{fib (fibonacci i) (fibonacci (i+1)) (n-i) = fibonacci n})
       (decreases (n-i))
 let rec fib_is_ok_aux i n =
-  match i with
-  | n -> assert(n=i);
-         assert(fib (fibonacci i) (fibonacci (i+1)) (n-i) = fibonacci n);
-         admit()
-  | _ -> fib_is_ok_aux (i+1) n
+  if i=n then ()
+  else fib_is_ok_aux (i+1) n
 
 val fib_is_ok : n:nat -> Lemma (fib 1 1 n = fibonacci n)
 let fib_is_ok n = fib_is_ok_aux 0 n
