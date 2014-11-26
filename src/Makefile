@@ -183,7 +183,7 @@ ocaml: $(BOOT_ALL)
 fstarml:
 	@echo "Building parser and lexer filex..."
 	make -C ocaml-output parser
-	make -s -C ocaml-output fstarml
+	make -s -C ocaml-output
 
 OCAML_FILES= Microsoft_FStar_Options.ml Microsoft_FStar_LazySet.ml Microsoft_FStar_Absyn_Syntax.ml Microsoft_FStar_Absyn_Const.ml Microsoft_FStar_Absyn_Visit.ml Microsoft_FStar_Absyn_Util.ml Microsoft_FStar_Absyn_Print.ml Microsoft_FStar_Absyn_SSyntax.ml Microsoft_FStar_Parser_AST.ml Microsoft_FStar_Parser_DesugarEnv.ml Microsoft_FStar_Parser_Desugar.ml Microsoft_FStar_Parser_Parse.ml Microsoft_FStar_Parser_Lexhelp.ml Microsoft_FStar_Parser_Driver.ml Microsoft_FStar_Tc_Env.ml Microsoft_FStar_Tc_Normalize.ml Microsoft_FStar_Tc_Errors.ml Microsoft_FStar_Tc_Rel.ml Microsoft_FStar_Tc_Util.ml Microsoft_FStar_Tc_Tc.ml Microsoft_FStar_ToSMT_Term.ml Microsoft_FStar_ToSMT_Z3.ml Microsoft_FStar_ToSMT_Encode.ml 
 OCAML_ALL=$(addprefix ocaml-output/, $(OCAML_FILES))
