@@ -24,10 +24,12 @@ val inj: a: text -> b: text -> u:unit
 
 let inj a b = ()
 
+assume val tonat: b:uint8 -> nat
+
 let decode (b:block) = 
-  let padsize = Array.index b (blocksize - 1) + 1 in
+  let padsize = tonat(Array.index b (blocksize - 1)) + 1 in
   if op_LessThan padsize blocksize then 
-    let (plain,padding) = split (blocksize - padsize) b in
+    let (plain,padding) = split b (blocksize - padsize) in
     if padding = pad padsize
     then 
       (assert(b = encode plain); Some(plain))
@@ -66,7 +68,7 @@ val mac:    k:key -> t:text{key_prop k t} -> tag
 val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
 
 type bspec (spec: (text -> Type)) (b:block) = 
-  (exists (t:text). spec t /\ block = encode t)
+  (exists (t:text). spec t /\ b = encode t)
 
 let keygen p spec = 
   let k = BMAC.keygen (bspec spec) in
