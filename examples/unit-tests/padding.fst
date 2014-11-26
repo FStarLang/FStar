@@ -85,49 +85,51 @@ let mac (p:text -> Type) k t = BMAC.mac k (encode t)
 let verify k t tag = BMAC.verify k (encode t) tag
 
 
-(*
 module MAC2
 open Array
 open Pad 
 
-type text2 = b:bytes { op_LessThan (length b) (blocksize + 1) } 
+type text2 = b:bytes { length b <=  blocksize } 
 
 let keysize = 2 * BMAC.keysize
 let macsize = BMAC.macsize
-type key = BMAC.key * BMAC.key
+type key = | Keys: k0:BMAC.key -> k1:BMAC.key -> key
 type tag = BMAC.tag
 
-type bspec0 (spec: (blocktext -> Type)) (b:block) = 
-  (exists (t:text). spec t /\ b = encode t)
+opaque type bspec0 (spec: (text2 -> Type)) (b:block) =
+  (forall (t:text). b = encode t ==> spec t)
 
-type bspec1 (spec: (text -> Type)) (b:block) = 
-  (exists (t:text). spec t /\ b = encode t)
+opaque type bspec1 (spec: (text2 -> Type)) (b:block) = 
+  spec b
 
-opaque type key_prop : key -> text -> Type
-type pkey (p:(text -> Type)) = 
-  k:key{ BMAC.key_prop (fst k) == bspec0 p
-      /\ BMAC.key_prop (snd k) == bspec1 p }
+opaque type key_prop : key -> text2 -> Type
 
-val keygen: p:(text -> Type) -> pkey p
-val mac:    k:key -> t:text{key_prop k t} -> tag
-val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
+type pkey (p:(text2 -> Type)) = 
+  k:key{ key_prop k == p
+      /\ BMAC.key_prop (Keys.k0 k) == bspec0 p
+      /\ BMAC.key_prop (Keys.k1 k) == bspec1 p }
 
-(*
-let keygen spec = 
+val keygen: p:(text2 -> Type) -> pkey p
+val mac:    p:(text2 -> Type) -> k:pkey p -> t:text2{p  t} -> tag
+val verify: p:(text2 -> Type) -> k:pkey p -> t:text2 -> tag -> b:bool{b ==> p t}
+
+(* not verified yet:
+let keygen (spec: text -> Type) = 
   let k0 = BMAC.keygen (bspec0 spec) in
   let k1 = BMAC.keygen (bspec1 spec) in
-  let k = (k0,k1) in
-  not typing:  assume (key_prop k spec);
+  let k = Keys k0 k1 in
+  assert (BMAC.key_prop k0 == bspec0 spec);
+  assert (BMAC.key_prop k1 == bspec1 spec);
+  assume (key_prop k == spec);
   k
  *)
 
-let mac (k0,k1) t = 
+let mac (Keys k0 k1) t = 
   if length t < blocksize 
   then BMAC.mac k0 (encode t)
   else BMAC.mac k1 t
 
-let verify (k0,k1) t tag =   
+let verify (Keys k0 k1) t tag =   
   if length t < blocksize
   then BMAC.verify k0 (encode t) tag
-  else BMAC.verify k1 (encode t) tag
- *)
+  else BMAC.verify k1 t tag
