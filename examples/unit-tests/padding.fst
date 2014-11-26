@@ -63,7 +63,7 @@ type tag = BMAC.tag
 // assume type bspec: (text -> Type) -> (block -> Type)
 
 type bspec (spec: (text -> Type)) (b:block) = 
-  (exists (t:text). spec t /\ b = encode t)
+  (exists (t:text).spec t /\ b = encode t)
 
 opaque type key_prop : key -> text -> Type
 type pkey (p:(text -> Type)) = 
@@ -73,20 +73,22 @@ val keygen: p:(text -> Type) -> pkey p
 val mac:    k:key -> t:text{key_prop k t} -> tag
 val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
 
+(*
 let keygen (spec: text -> Type) = 
   let k = BMAC.keygen (bspec spec) in
-  assume (key_prop k spec);
+  not typing:  assume (key_prop k spec);
   k
+*)
 
 let mac k t = BMAC.mac k (encode t)
 let verify k t tag = BMAC.verify k (encode t) tag
 
-(* work in progress
 
 module MAC2
+open Array
 open Pad 
 
-type text2 = b:bytes { op_LessThanEqual (length b) block } 
+type text2 = b:bytes { op_LessThan (length b) (blocksize + 1) } 
 
 let keysize = 2 * BMAC.keysize
 let macsize = BMAC.macsize
@@ -101,19 +103,21 @@ type bspec1 (spec: (text -> Type)) (b:block) =
 
 opaque type key_prop : key -> text -> Type
 type pkey (p:(text -> Type)) = 
-  k:key{ BMAC.key_prop (fst k) == p
-      /\ BMAC.key_prop (snd k) == bspec p }
+  k:key{ BMAC.key_prop (fst k) == bspec0 p
+      /\ BMAC.key_prop (snd k) == bspec1 p }
 
 val keygen: p:(text -> Type) -> pkey p
 val mac:    k:key -> t:text{key_prop k t} -> tag
 val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
 
+(*
 let keygen spec = 
   let k0 = BMAC.keygen (bspec0 spec) in
   let k1 = BMAC.keygen (bspec1 spec) in
-  let k = (k0,k1) 
-  assume (key_prop k spec);
+  let k = (k0,k1) in
+  not typing:  assume (key_prop k spec);
   k
+ *)
 
 let mac (k0,k1) t = 
   if length t < blocksize 
@@ -123,6 +127,4 @@ let mac (k0,k1) t =
 let verify (k0,k1) t tag =   
   if length t < blocksize
   then BMAC.verify k0 (encode t) tag
-  then BMAC.verify k1 (encode t) tag
-
- *)
+  else BMAC.verify k1 (encode t) tag
