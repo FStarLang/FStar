@@ -75,7 +75,7 @@ all-lax: rec.fst pat.fst mac.fst bug16.fst
 	$(FSTAR) --codegen OCaml $^ 
 
 %.run: %.ml
-	ocamlopt -o $@ -I ../../mllib/ unix.cmxa nums.cmxa bigarray.cmxa str.cmxa bytes.cmxa batteries.cmxa evp.cmxa fstar.cmxa $^
+	../../bin/fsocamlrun ../../bin/ocamlopt -o $@ -I ../../mllib/ unix.cmxa nums.cmxa bigarray.cmxa str.cmxa bytes.cmxa batteries.cmxa evp.cmxa fstar.cmxa $^
 
 stlc:
 	$(FSTAR) stlc.fst --verify
