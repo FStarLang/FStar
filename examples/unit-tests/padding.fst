@@ -1,6 +1,10 @@
 module Pad
 open Array
 
+(* a coercion; avoid it? *)
+assume val n2b: n:nat {( n < 256 )} -> Tot uint8
+assume val b2n: b:uint8 -> Tot (n:nat { (n < 256) /\ n2b n = b })
+
 type bytes = seq byte (* concrete byte arrays *) 
 type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
 
@@ -8,31 +12,33 @@ let blocksize = 32
 type block = nbytes blocksize
 type text = b:bytes {(length b < blocksize)}
 
-assume val pad: n:nat {(n < blocksize)} -> Tot (nbytes (n+1))
+val pad: n:nat { 1 <= n /\ n <= blocksize } -> Tot (nbytes n)
 
-// let pad p = Array.create p (byte(p-1))  
+let pad n = 
+  Array.create n (n2b (n-1))  
+
 (* pad 1 = [| 0 |]; pad 2 = [| 1; 1 |]; ... *)
 
 
 val encode: a: text -> Tot block 
-let encode a = append a (pad (blocksize - (length a + 1)))
+let encode a = append a (pad (blocksize - length a))
 
-val inj: a: text -> b: text -> Lemma (requires (encode a = encode b))
-                                     (ensures (a = b))
+val inj: a: text -> b: text -> Lemma (requires (Array.Equal (encode a) (encode b)))
+                                     (ensures (Array.Equal a b))
                                      [SMTPat (encode a); SMTPat (encode b)]
 let inj a b = ()
 
-assume val tonat: b:uint8 -> nat
 
 val decode: b:block -> option (t:text { b = encode t })
 let decode (b:block) = 
-  let padsize = tonat(Array.index b (blocksize - 1)) + 1 in
+  let padsize = b2n(index b (blocksize - 1)) + 1 in
   if op_LessThan padsize blocksize then 
     let (plain,padding) = split b (blocksize - padsize) in
     if padding = pad padsize
     then Some plain
     else None   
   else None
+
 
 
 module BMAC
@@ -58,15 +64,12 @@ let macsize = BMAC.macsize
 type key = BMAC.key
 type tag = BMAC.tag
 
-// assume type bspec: (text -> Type) -> (block -> Type)
-
 opaque type bspec (spec: (text -> Type)) (b:block) = 
   (forall (t:text). b = encode t ==> spec t)
 
 opaque type key_prop : key -> text -> Type
 type pkey (p:(text -> Type)) = 
-  k:key{(key_prop k == p) /\ 
-        (BMAC.key_prop k == bspec p)}
+  k:key{key_prop k == p /\ BMAC.key_prop k == bspec p}
 
 val keygen: p:(text -> Type) -> pkey p
 val mac:    p:(text -> Type) -> k:pkey p -> t:text{p t} -> tag
@@ -82,6 +85,7 @@ let mac (p:text -> Type) k t = BMAC.mac k (encode t)
 let verify k t tag = BMAC.verify k (encode t) tag
 
 
+(*
 module MAC2
 open Array
 open Pad 
@@ -93,7 +97,7 @@ let macsize = BMAC.macsize
 type key = BMAC.key * BMAC.key
 type tag = BMAC.tag
 
-type bspec0 (spec: (text -> Type)) (b:block) = 
+type bspec0 (spec: (blocktext -> Type)) (b:block) = 
   (exists (t:text). spec t /\ b = encode t)
 
 type bspec1 (spec: (text -> Type)) (b:block) = 
@@ -126,3 +130,4 @@ let verify (k0,k1) t tag =
   if length t < blocksize
   then BMAC.verify k0 (encode t) tag
   else BMAC.verify k1 (encode t) tag
+ *)
