@@ -27,13 +27,16 @@ let outmod = [
     ["Option"];
     ["String"];
     ["Char"];
+    ["Bytes"];
     ["List"];
     ["Array"];
     ["Set"];
     ["Map"];
     ["Heap"];
     ["DST"];
-    ["JS"];
+    ["IO"];
+    ["Tcp"];
+    ["Crypto"];
     ["Collections"];
     ["Microsoft"; "FStar"; "Bytes"];
     ["Microsoft"; "FStar"; "Platform"];
