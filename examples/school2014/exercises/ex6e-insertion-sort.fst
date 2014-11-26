@@ -14,5 +14,5 @@ let rec mem a l = match l with
   | [] -> false
   | hd::tl -> hd=a || mem a tl
 
-(* Exercide: implement insertion sort and prove its partial correctness *)
+(* Exercise: implement insertion sort and prove its partial correctness *)
 val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x m)})
