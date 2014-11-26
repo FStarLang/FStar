@@ -1,0 +1,11 @@
+F*: An ML-like language with a type system for program verification
+===================================================================
+
+This is a binary distribution package of the F* compiler bootstrapped 
+in OCaml. This package includes Z3 version 4.3.2 and the ocamlrun binary
+and support libraries from OCaml 4.01.0, which are only provided to
+generate executable versions of F* programs.
+
+Remember to set up the F* environment variables by running
+    $ source setenv.sh
+

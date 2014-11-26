@@ -23,12 +23,15 @@ all: $(FSTARML)
 
 package: $(FSTARML)
 	mkdir fstar || true
+	cp ../../LICENSE fstar/ || true
 	mkdir fstar/bin || true
+	cp README fstar/ || true
+	cp /usr/bin/ocamlopt fstar/bin/ocamlopt || true
+	cp /usr/bin/ocamlrun fstar/bin/fsocamlrun || true
 	cp ../../setenv.sh fstar/
 	cp -R ../../lib fstar/ || true
 	cp $(FSTARML) fstar/bin/ || true
 	cp ../../bin/z3* fstar/bin || true
-	cp ../../bin/libz3* fstar/bin || true
 	mkdir fstar/code || true
 	cp -R ../../examples/school2014 fstar/code/tutorial || true
 	cp -R ../../examples/unit-tests fstar/code/examples || true
