@@ -14,20 +14,6 @@ module Prims :
     val try_with : (unit -> 'a) -> (exn -> 'a) -> 'a
     val l__Assert : 'a -> unit
   end
-module Tcp :
-  sig
-    type stream = Unix.file_descr
-    type listener = Unix.file_descr
-    val listen : 'a -> int -> Unix.file_descr
-    val accept : Unix.file_descr -> Unix.file_descr
-    val stop : Unix.file_descr -> unit
-    val connect : string -> int -> Unix.file_descr
-    val sock_send : Unix.file_descr -> string -> int
-    val sock_recv : Unix.file_descr -> int -> string
-    val read : Unix.file_descr -> int -> string option
-    val write : Unix.file_descr -> string -> unit option
-    val close : Unix.file_descr -> unit
-  end
 module ST : sig val read : 'a ref -> 'a end
 module String :
   sig
@@ -497,6 +483,67 @@ module Microsoft :
           end
       end
   end
+module Crypto :
+  sig
+    val s2b : string -> char array
+    val b2s : char array -> string
+    val sha1 : char array -> char array
+    val hmac_sha1 : char array -> char array -> char array
+    val hmac_sha1_verify : char array -> char array -> char array -> bool
+    val hmac_sha1_keygen : unit -> char array
+    val aes_128_keygen : unit -> char array
+    val aes_128_ivgen : unit -> char array
+    val aes_128 :
+      bool -> char array option -> char array -> char array -> char array
+    val aes_128_decrypt : char array -> char array -> char array
+    val aes_128_encrypt : char array -> char array -> char array
+    val aes_128_cbc_decrypt :
+      char array -> char array -> char array -> char array
+    val aes_128_cbc_encrypt :
+      char array -> char array -> char array -> char array
+    type rsa_pkey = { modulus : char array; exponent : char array; }
+    type rsa_skey = rsa_pkey * char array
+    val rsa_keygen : unit -> rsa_pkey * string option
+    val rsa_pk : 'a * 'b -> 'a
+    val rsa_pkcs1_encrypt : rsa_pkey -> char array -> char array
+    val rsa_pkcs1_decrypt : rsa_pkey * char array -> char array -> char array
+  end
+module IO :
+  sig
+    exception EOF
+    type fd_read = in_channel
+    type fd_write = out_channel
+    val print_string : string -> unit
+    val print_any : 'a -> unit
+    val format : string -> string list -> string
+    val hex_string_of_byte : char -> string
+    val string_of_char : char -> string
+    val string_of_float : float -> string
+    val string_of_int : int -> string
+    val string_of_int64 : int64 -> string
+    val int_of_string : string -> int
+    val input_line : unit -> string
+    val input_int : unit -> int
+    val input_float : unit -> float
+    val open_read_file : string -> in_channel
+    val open_write_file : string -> out_channel
+    val close_read_file : in_channel -> unit
+    val close_write_file : out_channel -> unit
+    val read_line : in_channel -> string
+    val write_string : out_channel -> string -> unit
+  end
+module Tcp :
+  sig
+    type stream = Unix.file_descr
+    type listener = Unix.file_descr
+    val listen : 'a -> int -> Unix.file_descr
+    val accept : Unix.file_descr -> Unix.file_descr
+    val stop : Unix.file_descr -> unit
+    val connect : string -> int -> Unix.file_descr
+    val read : Unix.file_descr -> int -> char array option
+    val write : Unix.file_descr -> char array -> unit option
+    val close : Unix.file_descr -> unit
+  end
 module Array :
   sig
     type 'a contents =
@@ -548,4 +595,78 @@ module Heap :
     val equal : ('a, 'b) BatMap.t -> ('a, 'b) BatMap.t -> bool
     val restrict : ('a, 'b) BatMap.t -> 'a BatSet.t -> ('a, 'b) BatMap.t
     val concat : ('a, 'b) BatMap.t -> ('a, 'b) BatMap.t -> ('a, 'b) BatMap.t
+  end
+module Bytes :
+  sig
+    val b0 : int -> int
+    val b1 : int -> int
+    val b2 : int -> int
+    val b3 : int -> int
+    val dWw1 : int64 -> int
+    val dWw0 : int64 -> int
+    type bytes = char array
+    val f_encode : (char -> string) -> bytes -> string
+    val length : bytes -> int
+    val get : bytes -> int -> int
+    val make : (int -> int) -> int -> char array
+    val zero_create : int -> bytes
+    val really_input : in_channel -> int -> string
+    val maybe_input : in_channel -> int -> string
+    val output : out_channel -> string -> unit
+    val sub : bytes -> int -> int -> char array
+    val set : char array -> int -> Prims.int32 -> unit
+    val blit : bytes -> int -> char array -> int -> int -> unit
+    val string_as_unicode_bytes : string -> char array
+    val utf8_bytes_as_string : bytes -> string
+    val unicode_bytes_as_string : bytes -> string
+    val compare : bytes -> bytes -> int
+    val to_intarray : bytes -> int array
+    val of_intarray : int array -> char array
+    val string_as_utf8_bytes : string -> char array
+    val append : bytes -> bytes -> char array
+    val string_as_utf8_bytes_null_terminated : string -> char array
+    val string_as_unicode_bytes_null_terminated : string -> char array
+    module Bytestream :
+      sig
+        type t =
+          Microsoft.FStar.Bytes.Bytestream.t = {
+          bytes : bytes;
+          mutable pos : int;
+          max : int;
+        }
+        val of_bytes : bytes -> int -> int -> t
+        val read_byte : t -> int
+        val read_bytes : t -> int -> char array
+        val position : t -> int
+        val clone_and_seek : t -> int -> t
+        val skip : t -> int -> unit
+        val read_unicode_bytes_as_string : t -> int -> string
+        val read_utf8_bytes_as_string : t -> int -> string
+      end
+    type bytebuf =
+      Microsoft.FStar.Bytes.bytebuf = {
+      mutable bbArray : bytes;
+      mutable bbCurrent : int;
+    }
+    module Bytebuf :
+      sig
+        val create : int -> bytebuf
+        val ensure_bytebuf : bytebuf -> int -> unit
+        val close : bytebuf -> char array
+        val emit_int_as_byte : bytebuf -> Prims.int32 -> unit
+        val emit_byte : bytebuf -> char -> unit
+        val emit_bool_as_byte : bytebuf -> bool -> unit
+        val emit_bytes : bytebuf -> bytes -> unit
+        val emit_i32_as_u16 : bytebuf -> int -> unit
+        val fixup_i32 : bytebuf -> int -> int -> unit
+        val emit_i32 : bytebuf -> int -> unit
+        val emit_i64 : bytebuf -> int64 -> unit
+        val emit_intarray_as_bytes : bytebuf -> Prims.int32 array -> unit
+        val length : bytebuf -> int
+        val position : bytebuf -> int
+      end
+    val create : int -> bytebuf
+    val close : bytebuf -> char array
+    val emit_int_as_byte : bytebuf -> Prims.int32 -> unit
+    val emit_bytes : bytebuf -> bytes -> unit
   end

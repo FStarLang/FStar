@@ -16,59 +16,6 @@ module Prims = struct
   let l__Assert x = ()
 end
 
-module Tcp = struct
-  open Unix
-  type stream = file_descr
-  type listener = file_descr
-  let listen s i = 
-    let server_sock = socket PF_INET SOCK_STREAM 0 in
-    (setsockopt server_sock SO_REUSEADDR true ;
-     let address = (Array.get (gethostbyname(gethostname())).h_addr_list 0) in 
-     bind server_sock (ADDR_INET (address, i)) ;
-     listen server_sock 10 ;
-     server_sock)
-
-  let accept s = 
-    let (client_sock, client_addr) = accept s in
-    client_sock
-
-  let stop s = shutdown s SHUTDOWN_ALL
-
-  let connect s i = 
-    let client_sock = socket PF_INET SOCK_STREAM 0 in
-    let hentry = gethostbyname s in
-    connect client_sock (ADDR_INET (hentry.h_addr_list.(0), i)) ; 
-    client_sock
-
-  let sock_send sock str =
-    let len = String.length str in
-    send sock str 0 len []
-
-  let sock_recv sock maxlen =
-    let str = String.create maxlen in
-    let recvlen = recv sock str 0 maxlen [] in
-    String.sub str 0 recvlen
-
-  let read s i = 
-    try Some (sock_recv s i) 
-    with Unix_error (e,s1,s2) ->
-      None
-    (* Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2) *)
-
-
-  let write s b = 
-    try (let n = sock_send s b in if n < Bytes.length b then  None
-    (* Error(Printf.sprintf "Network error, wrote %d bytes" n) *) 
-    else Some())
-    with Unix_error (e,s1,s2) ->
-     None
-     (* Error (Printf.sprintf "%s: %s(%s)" (error_message e) s1 s2) *)
-
-  let close s = 
-    close s        
-
-end
-
 module ST = struct
   let read x = !x
 end
@@ -154,8 +101,6 @@ end
 
 module Microsoft = struct
   module FStar = struct
-
-
     module Util = struct
 
       let max_int = max_int
@@ -1085,11 +1030,123 @@ let parse_cmdline specs others =
         let warning exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !warningHandler exn
       end
     end
-
-
   end
 end
 
+module Crypto = struct
+  open Evp
+  open Evp.RSA
+  open Microsoft.FStar.Util
+  let s2b = unicode_of_string
+  let b2s = string_of_unicode
+  let sha1 b =
+    let sha = MD.sha1 () in
+    let ctx = MD.create sha in
+    MD.update ctx (b2s b);
+    let res = s2b (MD.final ctx) in
+    MD.fini ctx; res
+  let hmac_sha1 k b = s2b (HMAC.hmac (MD.sha1 ()) (b2s k) (b2s b))
+  let hmac_sha1_verify k b m =
+    let h = hmac_sha1 k b in b2s h = b2s m
+  let hmac_sha1_keygen () = s2b (RANDOM.bytes 16)
+  let aes_128_keygen = hmac_sha1_keygen
+  let aes_128_ivgen = hmac_sha1_keygen
+  let aes_128 dec iv k c =
+    let aes = match iv with None -> CIPHER.aes_128_ecb () | Some x -> CIPHER.aes_128_cbc () in
+    let ctx = CIPHER.create aes dec in
+    CIPHER.set_key ctx (b2s k);
+    (match iv with Some x -> CIPHER.set_iv ctx (b2s x) | None -> ());
+    let res = CIPHER.process ctx (b2s c) in
+    CIPHER.fini ctx; s2b res
+  let aes_128_decrypt = aes_128 true None
+  let aes_128_encrypt = aes_128 false None
+  let aes_128_cbc_decrypt k iv c = aes_128 true (Some iv) k c
+  let aes_128_cbc_encrypt k iv c = aes_128 false (Some iv) k c
+  type rsa_pkey = {modulus: char array; exponent: char array}
+  type rsa_skey = rsa_pkey * char array
+  let rsa_keygen () =
+    let {k_mod = n; k_pub_exp = e; k_prv_exp = d} = RSA.genkey 1024 65537 in
+    ({modulus = s2b n; exponent = s2b e;}, d)
+  let rsa_pk (pub,priv) = pub
+  let rsa_pkcs1_encrypt pub b =
+    let rsa = create () in
+    setkey rsa {k_mod=b2s pub.modulus; k_pub_exp = b2s pub.exponent; k_prv_exp = None};
+    let r = encrypt rsa false PD_PKCS1 (b2s b) in
+    fini rsa; s2b r
+  let rsa_pkcs1_decrypt (pub,d) b =
+    let rsa = create () in
+    setkey rsa {k_mod=b2s pub.modulus; k_pub_exp = b2s pub.exponent; k_prv_exp = Some (b2s d)};
+    let r = decrypt rsa false PD_PKCS1 (b2s b) in
+    fini rsa; s2b r
+end
+
+module IO = struct
+  open Microsoft.FStar.Util
+  exception EOF
+  type fd_read = in_channel
+  type fd_write = out_channel
+  let print_string = print_string
+  let print_any = print_any
+  let format = format
+  let hex_string_of_byte = hex_string_of_byte
+  let string_of_char = string_of_char
+  let string_of_float = string_of_float
+  let string_of_int = string_of_int
+  let string_of_int64 = string_of_int64
+  let int_of_string = int_of_string
+  let input_line = read_line
+  let input_int = read_int
+  let input_float = read_float
+  let open_read_file = open_in
+  let open_write_file = open_out
+  let close_read_file = close_in
+  let close_write_file = close_out
+  let read_line fd = try Pervasives.input_line fd with End_of_file -> raise EOF
+  let write_string = output_string
+end
+
+module Tcp = struct
+  open Unix
+  type stream = file_descr
+  type listener = file_descr
+  let listen s i =
+    let server_sock = socket PF_INET SOCK_STREAM 0 in
+    (setsockopt server_sock SO_REUSEADDR true ;
+     let address = (Array.get (gethostbyname(gethostname())).h_addr_list 0) in
+     bind server_sock (ADDR_INET (address, i)) ;
+     listen server_sock 10 ;
+     server_sock)
+
+  let accept s =
+    let (client_sock, client_addr) = accept s in
+    client_sock
+
+  let stop s = shutdown s SHUTDOWN_ALL
+
+  let connect s i =
+    let client_sock = socket PF_INET SOCK_STREAM 0 in
+    let hentry = gethostbyname s in
+    connect client_sock (ADDR_INET (hentry.h_addr_list.(0), i)) ;
+    client_sock
+
+  let read s i =
+    let sock_recv sock maxlen =
+      let str = Bytes.create maxlen in
+      let recvlen = recv sock str 0 maxlen [] in
+      Microsoft.FStar.Util.unicode_of_string (Bytes.sub str 0 recvlen) in
+    try Some (sock_recv s i)
+    with Unix_error (e,s1,s2) -> None
+
+  let write s b =
+    let b = Microsoft.FStar.Util.string_of_unicode b in
+    let sock_send sock str =
+      let len = Bytes.length str in
+      send sock str 0 len [] in
+    try (let n = sock_send s b in if n < Bytes.length b then None else Some())
+    with Unix_error (e,s1,s2) -> None
+
+  let close s = close s
+end
 
 module Array = struct
   type 'a contents =
@@ -1170,3 +1227,4 @@ module Heap = struct
   let concat  = Map.concat
 end
 
+module Bytes = Microsoft.FStar.Bytes
