@@ -11,7 +11,7 @@ Library fstar
   Path: src
   FindLibName: fstar
   Modules: Utf8, Types, Support
-  BuildDepends: batteries
+  BuildDepends: batteries, fstar.evp
   Pack: true
   CompiledObject: native
 
