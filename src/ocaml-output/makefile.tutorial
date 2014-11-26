@@ -1,19 +1,16 @@
 .PHONY: all verify-% __force__
 
 ifeq ($(OS),Windows_NT)
-RUNTIME =
-MSBUILD = msbuild
+SUFFIX = .exe
 else
-RUNTIME = mono
-MSBUILD = xbuild
+SUFFIX =
 endif
 
 # This will be called from subdirs
 FSTAR_HOME = ../../..
 
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
-FSTAR  = $(RUNTIME) $(FSTAR_HOME)/bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB)
-# FSTAR = $(FSTAR_HOME)/src/ocaml-output/fstarml $(STDLIB)
+FSTAR  = $(FSTAR_HOME)/bin/fstarml$(SUFFIX) --fstar_home $(FSTAR_HOME) $(STDLIB)
 
 EXERCISES =\
   ex1a-safe-read-write\

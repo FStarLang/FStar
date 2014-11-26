@@ -34,6 +34,7 @@ type mlty =
 | MLTY_Fun   of mlty * mlty
 | MLTY_Named of list<mlty> * mlpath
 | MLTY_Tuple of list<mlty>
+| MLTY_App   of mlty * mlty
 
 type mltyscheme = mlidents * mlty
 
