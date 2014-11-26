@@ -32,8 +32,8 @@ package: $(FSTARML)
 	mkdir fstar/code || true
 	cp -R ../../examples/school2014 fstar/code/tutorial || true
 	cp -R ../../examples/unit-tests fstar/code/examples || true
-	cp makefile.ml fstar/code/examples/Makefile || true
-	cp makefile.tutorial.ml fstar/code/tutorial/Makefile.include || true
+	cp makefile.examples fstar/code/examples/Makefile || true
+	cp makefile.tutorial fstar/code/tutorial/Makefile.include || true
 	mkdir fstar/mllib || true
 	cp ~/.opam/system/lib/num/* fstar/mllib || true
 	cp ~/.opam/system/lib/bytes/* fstar/mllib || true
