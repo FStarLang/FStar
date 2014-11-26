@@ -8,16 +8,6 @@ let rec sorted f = function
   | [_] -> true
   | x::y::tl -> f x y && sorted f (y::tl)
 
-(* "partition" in the lib is not proved to be total *)
-val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
-let rec partition f = function
-  | [] -> [], []
-  | hd::tl ->
-     let l1, l2 = partition f tl in
-     if f hd
-     then hd::l1, l2
-     else l1, hd::l2
-
 (* A lemma about List.partition ... duh *)
 val partition_lemma: f:('a -> Tot bool)
                   -> l:list 'a
