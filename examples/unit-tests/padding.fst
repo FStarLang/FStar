@@ -47,9 +47,8 @@ opaque type key_prop : key -> block -> Type
 type pkey (p:(block -> Type)) = k:key{key_prop k == p}
 
 assume val keygen: p:(block -> Type) -> pkey p
-assume val mac: k:key -> t:block{key_prop k t} -> tag
+assume val mac:    k:key -> t:block{key_prop k t} -> tag
 assume val verify: k:key -> t:block -> tag -> b:bool{b ==> key_prop k t}
-
 
 module TMAC
 open Pad 
@@ -62,9 +61,9 @@ type tag = BMAC.tag
 opaque type key_prop : key -> text -> Type
 type pkey (p:(text -> Type)) = k:key{key_prop k == p}
 
-val keygen: p:(block -> Type) -> pkey p
-val mac: k:key -> t:block{key_prop k t} -> tag
-val verify: k:key -> t:block -> tag -> b:bool{b ==> key_prop k t}
+val keygen: p:(text -> Type) -> pkey p
+val mac:    k:key -> t:text{key_prop k t} -> tag
+val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
 
 type bspec (spec: (text -> Type)) (b:block) = 
   (exists (t:text). spec t /\ block = encode t)
