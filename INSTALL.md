@@ -1,4 +1,5 @@
-# Binary releases (coming soon)
+# Binary releases
+- https://github.com/FStarLang/FStar/releases
 
 # Building F* from sources
 
