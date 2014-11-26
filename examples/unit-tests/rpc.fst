@@ -3,6 +3,7 @@
 module RPC
 open Array
 open Format
+open SHA1
 open MAC
 
 (* some basic, untrusted network controlled by the adversary *)
@@ -39,7 +40,7 @@ let server () =
     if length msg < macsize then failwith "Too short"
     else
       let (v,m) = split msg (length msg - macsize) in
-      if length v > 65535 then failwith "Too long" // we need this check to ensure a well-formed response
+      if length v > 65535 then failwith "Too long" 
       else
         let s = iutf8 v in
         if verify k (request s) m 
@@ -48,5 +49,8 @@ let server () =
             let t = "22" in
             assume (Response s t);
             send (append (utf8 t) (mac k (response s t)))))
-    
-(* let test () = server(); client "2 + 2?" *)
+  
+(* 
+let test () = 
+  server(); 
+  client "2 + 2? *)
