@@ -6,22 +6,20 @@ type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
 
 let blocksize = 32 
 type block = nbytes blocksize
-type text = b:bytes {op_LessThan (length b) blocksize}
+type text = b:bytes {(length b < blocksize)}
 
-assume val pad: n:nat {op_LessThan n blocksize} -> Tot (nbytes (n+1))
+assume val pad: n:nat {(n < blocksize)} -> Tot (nbytes (n+1))
 
 // let pad p = Array.create p (byte(p-1))  
 (* pad 1 = [| 0 |]; pad 2 = [| 1; 1 |]; ... *)
 
 
-val encode: a: text -> 
-  Tot (b: block { b = append a (pad (blocksize - length a)) })
+val encode: a: text -> Tot block 
+let encode a = append a (pad (blocksize - (length a + 1)))
 
-let encode a = append a (pad (blocksize - length a))
-
-val inj: a: text -> b: text -> u:unit 
-  { encode a = encode b ==> a = b }
-
+val inj: a: text -> b: text -> Lemma (requires (encode a = encode b))
+                                     (ensures (a = b))
+                                     [SMTPat (encode a); SMTPat (encode b)]
 let inj a b = ()
 
 assume val tonat: b:uint8 -> nat
@@ -62,25 +60,25 @@ type tag = BMAC.tag
 
 // assume type bspec: (text -> Type) -> (block -> Type)
 
-type bspec (spec: (text -> Type)) (b:block) = 
-  (exists (t:text).spec t /\ b = encode t)
+opaque type bspec (spec: (text -> Type)) (b:block) = 
+  (forall (t:text). b = encode t ==> spec t)
 
 opaque type key_prop : key -> text -> Type
 type pkey (p:(text -> Type)) = 
-  k:key{key_prop k == p /\ BMAC.key_prop k == bspec p}
+  k:key{(key_prop k == p) /\ 
+        (BMAC.key_prop k == bspec p)}
 
 val keygen: p:(text -> Type) -> pkey p
-val mac:    k:key -> t:text{key_prop k t} -> tag
-val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
+val mac:    p:(text -> Type) -> k:pkey p -> t:text{p t} -> tag
+val verify: p:(text -> Type) -> k:pkey p -> t:text -> tag -> b:bool{b ==> p t}
 
-(*
 let keygen (spec: text -> Type) = 
   let k = BMAC.keygen (bspec spec) in
-  not typing:  assume (key_prop k spec);
+  assume (key_prop k == spec);
   k
-*)
 
-let mac k t = BMAC.mac k (encode t)
+let mac (p:text -> Type) k t = BMAC.mac k (encode t)
+
 let verify k t tag = BMAC.verify k (encode t) tag
 
 
