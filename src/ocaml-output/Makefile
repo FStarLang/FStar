@@ -60,7 +60,7 @@ parser:
 	$(OCAMLDEP) $(INCLUDES) *.ml > .depend
 
 $(FSTARML): $(FSTAR_OBJS)
-	ocamlfind ocamlopt -p -package fstar -o fstarml $(FSTAR_OBJS) ../fstarml.ml -linkpkg -g
+	ocamlfind ocamlopt -package fstar -o fstarml $(FSTAR_OBJS) ../fstarml.ml -linkpkg -g
 	cp $(FSTARML) ../../bin/
 
 
