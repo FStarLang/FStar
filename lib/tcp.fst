@@ -1,4 +1,5 @@
 module Tcp
+open Bytes
 
 type stream
 type listener

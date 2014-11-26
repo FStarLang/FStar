@@ -90,7 +90,6 @@ assume type string
 assume type array : Type -> Type
 assume type ref : Type -> Type
 assume logic type LBL : string -> Type -> Type
-assume type bytes
 assume type exn
 assume type HashMultiMap : Type -> Type -> Type
 assume type uint8
