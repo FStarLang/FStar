@@ -409,29 +409,37 @@ val typed_step : e:exp{is_Some (typing empty e) /\ not(is_value e)} ->
                  Tot (e':exp{typing empty e' = typing empty e})
 let typed_step e = progress e; preservation e; Some.v (step e)
 
+(* Here is a solution that only uses typed_step (suggested by Santiago) *)
 val eval : e:exp{is_Some (typing empty e)} ->
            Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval e =
+  if is_value e then e
+  else eval (typed_step e)
+
+(* Here is a solution that only uses the substitution lemma *)
+val eval' : e:exp{is_Some (typing empty e)} ->
+            Dv (v:exp{is_value v && typing empty v = typing empty e})
+let rec eval' e =
   let Some t = typing empty e in
   match e with
   | EApp e1 e2 ->
-     (let EAbs x _ e' = eval e1 in
-      let v = eval e2 in
+     (let EAbs x _ e' = eval' e1 in
+      let v = eval' e2 in
       substitution_preserves_typing x e' v empty;
-      eval (subst x v e'))
+      eval' (subst x v e'))
   | EAbs _ _ _
   | ETrue
   | EFalse     -> e
   | EIf e1 e2 e3 ->
-     (match eval e1 with
-      | ETrue  -> eval e2
-      | EFalse -> eval e3)
-  | EPair e1 e2 -> EPair (eval e1) (eval e2)
+     (match eval' e1 with
+      | ETrue  -> eval' e2
+      | EFalse -> eval' e3)
+  | EPair e1 e2 -> EPair (eval' e1) (eval' e2)
   | EFst e1 ->
-     let EPair v1 _ = eval e1 in v1
+     let EPair v1 _ = eval' e1 in v1
   | ESnd e1 ->
-     let EPair _ v2 = eval e1 in v2
+     let EPair _ v2 = eval' e1 in v2
   | ELet x e1 e2 ->
-     (let v = eval e1 in
+     (let v = eval' e1 in
       substitution_preserves_typing x e2 v empty;
-      eval (subst x v e2))
+      eval' (subst x v e2))
