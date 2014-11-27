@@ -29,6 +29,8 @@ EXERCISES =\
   ex4f-fold-left\
   ex4g-hd-tl\
   ex4h-nth\
+  ex5a-rev\
+  ex5b-fib\
   ex7a-stlc-typed-step\
   ex7b-stlc-pairs\
   ex7c-stlc-let\

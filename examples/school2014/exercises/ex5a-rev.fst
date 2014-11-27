@@ -24,5 +24,4 @@ let rec append_assoc xs ys zs =
   | [] -> ()
   | x::xs' -> append_assoc xs' ys zs
 
-val rev_is_ok : l1:list 'a -> l2:list 'a -> Lemma
-      (ensures (rev l1 l2 = append (reverse l2) l1)) (decreases l2)
+val rev_is_ok : l:list 'a -> Lemma (rev [] l = reverse l)
