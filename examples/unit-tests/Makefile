@@ -8,12 +8,14 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-LIB_FILES= string.fst partialmap.fst st.fst array-realized.fst
+LIB_FILES= string.fst partialmap.fst st.fst 
+# array-realized.fst
 STDLIB = list.fst $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
-#FSTAR      = $(RUNTIME) ../../bin/fstar.exe --codegen OCaml --odir ocaml-gen --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
+FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
 
 #Use the following to test the bootstrapped ocaml version: fstarml
-FSTAR      = ../../src/ocaml-output/fstarml --debug_level LOW --prims ../../lib/prims.fst --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
+#FSTAR      = ../../src/ocaml-output/fstarml --prims ../../lib/prims.fst --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
+#FSTAR      = fstarml --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
 
 STDCACHE=Prims.cache List.cache String.cache ST.cache PartialMap.cache Array.cache
 FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(OTHERFLAGS)
@@ -46,6 +48,10 @@ ccache:
 
 rpc: 
 	$(FSTAR) $(OTHERFLAGS) mac.fst format.fst rpc.fst --verify
+
+padding: 
+	$(FSTAR) $(OTHERFLAGS) format.fst padding.fst --verify
+
 rpc2: 
 	$(FSTAR) $(OTHERFLAGS) mac2.fst format.fst rpc2.fst --verify
 
@@ -73,7 +79,7 @@ stlc:
 	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) stlc.fst --verify
 
 format: format.fst
-	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $(FSTAR_HOME)/lib/array-realized.fst format.fst --verify
+	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) format.fst --verify
 
 mac: mac.fst
 	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $(FSTAR_HOME)/lib/list.fst $(FSTAR_HOME)/lib/array-realized.fst mac.fst --verify

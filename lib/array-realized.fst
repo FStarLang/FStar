@@ -72,3 +72,4 @@ opaque logic type Equals (a:Type) (s1:seq a) (s2:seq a) =
                ==> __index__ (Seq.c s1) i == __index__ (Seq.c s2) i))
 
 type Equal : #a:Type -> seq a -> seq a -> Type = fun (a:Type) (s1:seq a) (s2:seq a) -> Equals a s1 s2
+assume val eq: a:Type -> s1:seq a -> s2:seq a -> Tot (b:bool{b ==> Equal s1 s2})

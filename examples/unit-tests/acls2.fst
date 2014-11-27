@@ -60,16 +60,13 @@ assume val acls: ref db
 type CanRead f h  = canRead  (Heap.sel h acls) f == true
 type CanWrite f h = canWrite (Heap.sel h acls) f == true
 
-val grant : e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> sel h' acls == e::sel h acls))
-                               (modifies (a_ref acls))
-let grant e = ST.write acls (e::ST.read acls)
+let grant e = 
+  let a = ST.read acls in 
+  ST.write acls (e::a)
 
-val revoke: e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> not(List.mem e (sel h' acls))))
-                               (modifies (a_ref acls))
 let revoke e = 
-  let db = List.filter (fun e' -> e<>e') (ST.read acls) in
+  let a = ST.read acls in
+  let db = List.filter (fun e' -> e<>e') a in
   ST.write acls db
 
 (* two dangerous primitives *)
