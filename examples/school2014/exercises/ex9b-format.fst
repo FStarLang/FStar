@@ -34,6 +34,74 @@ val append_inj_lemma: b1:message -> b2:message
 let rec append_inj_lemma b1 b2 c1 c2 =
   let l = length b1 in 
   match l with
-  | _ -> admit() (* prove this lemma *)
+  | 0 -> ()
+  | _ -> append_inj_lemma (slice b1 1 l) b2 (slice c1 1 l) c2
 
-              
+
+(* ----- from strings to bytestring and back *)
+
+logic type UInt16 (i:int) = (0 <= i /\ i < 65536)
+type uint16 = i:int{UInt16 i}
+
+assume val utf8:
+  s:string  -> Tot (m:message{length m <= strlen s}) 
+  (* this spec is accurate for ASCII strings *)
+
+assume val iutf8: m:message -> s:string{utf8 s == m}
+
+assume UTF8_inj: 
+  forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
+    Equal (utf8 s0) (utf8 s1) ==> s0==s1
+
+assume val uint16_to_bytes: uint16 -> Tot (msg 2)
+assume UINT16_inj: forall s0 s1. Equal (uint16_to_bytes s0) (uint16_to_bytes s1) ==> s0==s1
+
+type string16 = s:string{UInt16 (length (utf8 s))} (* up to 65K *)
+
+
+(* =============== the formatting we use for authenticated RPCs *) 
+
+val request : string -> Tot message
+val response: string16 -> string -> Tot message
+
+
+(* -------- implementation *)
+
+let tag0 = create 1 0uy
+let tag1 = create 1 1uy
+
+let request s = append tag0 (utf8 s)
+
+let response s t =
+  let lb = uint16_to_bytes (length (utf8 s)) in
+  append tag1 (append lb (append (utf8 s) (utf8 t)))
+
+
+(* ------- 3 lemmas on message formats: 
+
+   - requests are injective on their argument
+   - responses are injective on both their arguments
+   - requests and responses are distinct 
+
+   Note that we do not export a "spec" of the request and response
+   functions---they just return messages---so these three lemmas are
+   sufficient *) 
+
+val req_resp_distinct: 
+  s:string -> s':string16 -> t':string -> 
+  Lemma (requires True)
+        (ensures (request s <> response s' t'))
+        [SMTPat (request s); SMTPat (response s' t')]
+(*prove this lemma*)        
+
+val req_components_corr: 
+  s0:string -> s1:string -> 
+  Lemma (requires (request s0 == request s1))
+        (ensures  (s0==s1))
+(*prove this lemma*)
+        
+val resp_components_corr: 
+  s0:string16 -> t0:string -> s1:string16 -> t1:string -> 
+  Lemma (requires (response s0 t0 == response s1 t1))
+        (ensures  (s0==s1 /\ t0==t1))
+(*prove this lemma*)
