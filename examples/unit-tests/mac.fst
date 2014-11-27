@@ -62,6 +62,9 @@ val keygen: p:(text -> Type) -> pkey p
 val mac:    k:key -> t:text{key_prop k t} -> tag
 val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
 
+
+
+
 (* ---- implementation *)
 
 let keygen (p: (text -> Type)) = 
@@ -103,6 +106,20 @@ let verify k text tag =
   (* error-detecting implementation for the INT-CMA game *)
 //(if verified && not found then win := Some(k,text,tag)); 
 //verified
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 (* VARIANT CTXT vs CPA: is the tag authenticated?

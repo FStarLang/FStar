@@ -2,7 +2,7 @@
 module AES (* concrete implementation of a one-block symmetric cipher *)
 open Array
 
-type bytes = MAC.bytes // TODO unclear why we need this instead of seq byte
+type bytes = seq byte 
 type nbytes (n:nat) = b:bytes{length b == n}
 
 let blocksize = 32 (* 256 bits *)
@@ -23,9 +23,10 @@ assume val gen: unit -> key
 assume val dec: key -> cipher -> Tot plain                    (* this function is pure & complete *)  
 assume val enc: k:key -> p:plain -> c:cipher { dec k c = p }  (* this function is not pure (IV); the refinement captures functional correctness *) 
 
-(* -------------------------------------------------------------------------------- *)
+
 
 module SymEnc (* a multi-key symmetric variant; for simplicity, we fix (p, r, plain, repr) and use AES above *)
+open Array
 
 (* parametric in these: *)
 
@@ -40,16 +41,20 @@ let plain (x:AES.plain) = x
 let repr (x:AES.plain) = x 
 *)
 
-type bytes = MAC.bytes
+type bytes = seq byte
 
 (* we get the index from a counter; In the crypto argument, we rely on
    the fact that we only construct keys once for each i. *)
 
 (*private*) type key = | Key: ideal: bool -> i:int -> kv:AES.key -> key 
+
+(* an predicate keeping track of honest encryptions *)
     
-opaque type Encrypted: key -> bytes -> Type (* an opaque predicate, keeping track of honest encryptions *)
+opaque type Encrypted: key -> bytes -> Type 
 
 type cipher (k: key) = c:AES.cipher { Encrypted k c }
+val ciphersize: nat
+let ciphersize = AES.ciphersize
 
 val keygen:  b:bool -> k:key { Key.ideal k = b } 
 val keyrepr: k:key { Key.ideal k = false } -> Tot AES.key
@@ -57,7 +62,6 @@ val decrypt: k:key -> cipher k -> p
 val encrypt: k:key -> plain: p -> cipher k 
 
 let c = ST.alloc 0
-
 let keygen safe =
   let i = !c in
   c := !c + 1;
@@ -82,7 +86,9 @@ let decrypt k c =
   | Some e -> Entry.plain e 
   | _ -> failwith "never actually decrypting" 
 
-(* -------------------------------------------------------------------------------- *)
+(* typing this function relies on --full_context_dependency *)
+
+
 
 module SampleEncrypt
 
@@ -96,12 +102,15 @@ let test() =
   (* let p'' = SymEnc.decrypt k1 c in  // this rightfully triggers an error *)
   ()
 
+
 module EncryptThenMAC 
 
-type key = | Key:  ke:SymEnc.key -> MAC.pkey (SymEnc.Encrypted ke) -> key 
+type key = | Key: 
+  ke: SymEnc.key -> 
+  ka: MAC.pkey (SymEnc.Encrypted ke) -> key 
 
 type plain = SymEnc.p
-type cipher = (AES.cipher * MAC.tag)
+type cipher = (AES.cipher * SHA1.tag)
 
 val keygen: unit -> key 
 val encrypt: k:key -> plain -> cipher
@@ -111,13 +120,6 @@ let decrypt (Key ke ka) (c,tag) =
   if MAC.verify ka c tag
   then Some(SymEnc.decrypt ke c)
   else None
-
-(* to get functional corretness for EncryptThenMAC, *)
-(* we'd also need it for MACs. For later. *)
-(* logic type EncText: #p: Type -> #r: Type -> SymEnc.key p r -> MAC.text -> Type (\* an opaque predicate, keeping track of honest encryptions *\) *)
-(* val encrypt ... { EncText #p #r k plain c } *)
-(* val decrypt ... { forall plain. EncText #p #r k plain c ==> o = Some plain } *)
-
 
 let keygen () =
   let ke = SymEnc.keygen true in
