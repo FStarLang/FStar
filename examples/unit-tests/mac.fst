@@ -18,6 +18,14 @@
    hashes, namely HMAC-SHA1, and their idealization under the INT-CMA
    computational assumption *)
 
+
+
+
+
+
+
+
+
 module SHA1 
 open Array
 
@@ -45,6 +53,12 @@ val sha1verify: key -> text -> tag -> Tot bool
 let sha1verify k txt tag = (sha1 k txt = tag)
 
 
+
+
+
+
+
+
 module MAC 
 open Array
 open SHA1
@@ -61,6 +75,24 @@ type pkey (p:(text -> Type)) = k:key{key_prop k == p}
 val keygen: p:(text -> Type) -> pkey p
 val mac:    k:key -> t:text{key_prop k t} -> tag
 val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

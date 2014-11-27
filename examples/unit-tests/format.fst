@@ -10,7 +10,17 @@
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the :nat) = m:message{length m==l}
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
+module Format
+open Prims.PURE
+open String
+open Array
+
+type message = seq byte
+type msg (l:nat) = m:message{length m==l}
 
 (* ----- two lemmas on array append *) 
 
@@ -65,15 +75,19 @@ assume UINT16_inj: forall s0 s1. Equal (uint16_to_bytes s0) (uint16_to_bytes s1)
 type string16 = s:string{UInt16 (length (utf8 s))} (* up to 65K *)
 
 
-(* ----- the formatting we use for authenticated RPCs *) 
+(* =============== the formatting we use for authenticated RPCs *) 
+
+val request : string -> Tot message
+val response: string16 -> string -> Tot message
+
+
+(* -------- implementation *)
 
 let tag0 = create 1 0uy
 let tag1 = create 1 1uy
 
-val request : string -> Tot message
 let request s = append tag0 (utf8 s)
 
-val response: string16 -> string -> Tot message
 let response s t =
   let lb = uint16_to_bytes (length (utf8 s)) in
   append tag1 (append lb (append (utf8 s) (utf8 t)))
@@ -94,17 +108,18 @@ val req_resp_distinct:
   Lemma (requires True)
         (ensures (request s <> response s' t'))
         [SMTPat (request s); SMTPat (response s' t')]
-let req_resp_distinct s s' t' = ()
 
 val req_components_corr: 
   s0:string -> s1:string -> 
   Lemma (requires (request s0 == request s1))
         (ensures  (s0==s1))
-let req_components_corr s0 s1 = ()
 
 val resp_components_corr: 
   s0:string16 -> t0:string -> s1:string16 -> t1:string -> 
   Lemma (requires (response s0 t0 == response s1 t1))
         (ensures  (s0==s1 /\ t0==t1))
+
+let req_resp_distinct s s' t' = ()
+let req_components_corr s0 s1 = ()
 let resp_components_corr s0 t0 s1 t1 = ()
 
