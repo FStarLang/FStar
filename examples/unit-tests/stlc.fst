@@ -409,7 +409,7 @@ val typed_step : e:exp{is_Some (typing empty e) /\ not(is_value e)} ->
                  Tot (e':exp{typing empty e' = typing empty e})
 let typed_step e = progress e; preservation e; Some.v (step e)
 
-(* Here is a solution that only uses typed_step (suggested by Santiago) *)
+(* Here is a solution that only uses typed_step (suggested by Santiago Zanella) *)
 val eval : e:exp{is_Some (typing empty e)} ->
            Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval e =
