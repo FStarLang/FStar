@@ -1,4 +1,4 @@
-module Test
+module Bug52
 
 val trivial_a: x:nat -> y:nat -> Lemma (x + y = y + x) 
 let trivial_a x y = ()

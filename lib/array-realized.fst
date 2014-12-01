@@ -15,7 +15,7 @@
 *)
 
 (* A logical theory of integer-indexed arrays, from [0, n) *)
-module Array
+module ArrayRealized
 
 type contents (a:Type) =
   | Const : v:a -> contents a

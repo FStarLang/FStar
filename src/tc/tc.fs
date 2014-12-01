@@ -1323,7 +1323,7 @@ and tc_decl env se deserialized = match se with
 //      let t = Tc.Util.refine_data_type env lid formals result_t in
       let se = Sig_datacon(lid, t, tycon, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
-      if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Print.typ_to_string t);
+      if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Tc.Normalize.typ_norm_to_string env t);
       se, env
   
     | Sig_val_decl(lid, t, quals, r) -> 
@@ -1332,7 +1332,7 @@ and tc_decl env se deserialized = match se with
       Tc.Util.check_uvars r t;
       let se = Sig_val_decl(lid, t, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
-      if log env then Util.print_string <| Util.format2 "val %s : %s\n" lid.str (Print.typ_to_string t);
+      if log env then Util.print_string <| Util.format2 "val %s : %s\n" lid.str (Tc.Normalize.typ_norm_to_string env t);
       se, env
   
     | Sig_assume(lid, phi, quals, r) ->
@@ -1367,14 +1367,15 @@ and tc_decl env se deserialized = match se with
         gen, lb::lbs) (true, []) in
       let lbs' = List.rev lbs' in
       let e = mk_Exp_let((fst lbs, lbs'), syn' env Tc.Util.t_unit <| mk_Exp_constant(Syntax.Const_unit)) tun r in
-      let se = match tc_exp ({env with generalize=generalize}) e with 
+      let se, lbs = match tc_exp ({env with generalize=generalize}) e with 
         | {n=Exp_let(lbs, e)}, _ -> 
             let b = match e.n with 
                 | Exp_meta(Meta_desugared(_, MaskedEffect)) -> true
                 | _ -> false in 
-            Sig_let(lbs, r, lids, b)
+            Sig_let(lbs, r, lids, b), lbs
         | _ -> failwith "impossible" in
-      if log env then Util.fprint1 "%s\n" <| Print.sigelt_to_string_short se;
+      if log env 
+      then Util.fprint1 "%s\n" (snd lbs |> List.map (fun (lbname, t, _) -> Util.format2 "let %s : %s" (Print.lbname_to_string lbname) (Tc.Normalize.typ_norm_to_string env t)) |> String.concat "\n");
       let env = Tc.Env.push_sigelt env se in 
       se, env
 

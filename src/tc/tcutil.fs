@@ -828,12 +828,14 @@ let gen env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
      let ecs = uvars |> List.map (fun (uvs, e, c) -> 
           let tvars = uvs |> List.map (fun (u, k) -> 
             let a = match Unionfind.find u with 
-              | Fixed ({n=Typ_btvar a}) -> a.v 
+              | Fixed ({n=Typ_btvar a}) -> Util.bvd_to_bvar_s a.v k
               | _ -> 
                   let a = Util.new_bvd (Some <| Tc.Env.get_range env) in
-                  let t = Util.bvd_to_typ a k in
-                  unchecked_unify u t; a in
-            t_binder <| Util.bvd_to_bvar_s a k) in
+                  let t = Util.close_for_kind (Util.bvd_to_typ a ktype) k in
+                  //let t = Util.bvd_to_typ a k in
+                  unchecked_unify u t; 
+                  Util.bvd_to_bvar_s a ktype in
+            t_binder a) in
     
           let t = match Util.comp_result c |> Util.function_formals with 
             | Some (bs, cod) -> mk_Typ_fun(tvars@bs, cod) ktype c.pos 

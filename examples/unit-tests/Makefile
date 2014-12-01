@@ -25,7 +25,7 @@ all: all-lax all-ver
 # removed rbtree.fst from this list for now as it takes more z3 time
 # removed mergsort from this list for the same reason 
 
-VERFILES=unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst insertionsort-lemma.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst cca2.fst sf-poly.fst format.fst mac.fst sig.fst stlc.fst qs.fst cca2.fst bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst bug28.fst bug35.fst bug52.fst bug23.fst bug21.fst
+VERFILES=$(FSTAR_HOME)/lib/array-realized.fst unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst insertionsort-lemma.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst cca2.fst sf-poly.fst format.fst mac.fst sig.fst stlc.fst qs.fst cca2.fst bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst bug28.fst bug35.fst bug52.fst bug23.fst bug21.fst bug34.fst
 
 acls2: list.fst $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst st.fst) acls2.fst
 	$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $^ --verify
