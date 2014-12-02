@@ -69,7 +69,7 @@ rbt:
 all-ver: $(VERFILES)
 	$(FSTAR) --verify $^
 
-all-lax: rec.fst pat.fst mac.fst bug16.fst
+all-lax: rec.fst pat.fst mac.fst
 	$(FSTAR) --lax $^
 
 %.vv: list.fst %.fst
