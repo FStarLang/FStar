@@ -17,9 +17,9 @@ val partition_lemma: f:('a -> Tot bool)
                                       /\ (forall x. mem x l1 ==> f x)
                                       /\ (forall x. mem x l2 ==> not (f x))
                                       /\ (forall x. mem x l = (mem x l1 || mem x l2))))
-                                        (fst (partition f l))
-                                        (snd (partition f l))))
-                           (* [SMTPat (partition f l)] (\* injected to the solver *\) *)
+                                        (fst (partitionT f l))
+                                        (snd (partitionT f l))))
+                           (* [SMTPat (partitionT f l)] (\* injected to the solver *\) *)
 let rec partition_lemma f l = match l with 
   | [] -> ()
   | hd::tl -> partition_lemma f tl
@@ -53,6 +53,6 @@ val sort: f:('a -> 'a -> Tot bool){total_order 'a f}
 let rec sort f = function
   | [] -> []
   | pivot::tl -> 
-    let hi, lo  = partition (f pivot) tl in 
+    let hi, lo  = partitionT (f pivot) tl in 
     partition_lemma (f pivot) tl;
     sort f lo@(pivot::sort f hi)
