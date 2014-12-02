@@ -136,14 +136,15 @@ let rec reduce_kind
         | Kind_effect
         | Kind_unknown -> 
           leaf_k, env
-        | Kind_uvar(_, args) -> 
-          let args, env = map_args map_typ map_exp env binders args in 
+        | Kind_uvar(_, args) ->
+          let map_typ2 = map_typ in
+          let args, env = map_args map_typ2 map_exp env binders args in
           ([], [], [], args), env
-        | Kind_abbrev(kabr, k) -> 
+        | Kind_abbrev(kabr, k) ->
           let k, env = map_kind env binders k in
           let args, env = map_args map_typ map_exp env binders (snd kabr) in
           ([], [k], [], args), env
-        | Kind_arrow(bs, k) -> 
+        | Kind_arrow(bs, k) ->
           let bs, binders, env = map_binders map_kind map_typ env binders bs in
           let k, env = map_kind env binders k in
           (bs, [k], [], []), env

@@ -239,8 +239,13 @@ and typ_to_string x =
       | t -> t|> typ_to_string)
 
 and uvar_t_to_string (uv, k) =
-   "U" ^ (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
-
+   if !Options.print_real_names 
+   then 
+       Util.format2 "(U%s : %s)"
+       (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
+       (kind_to_string k)
+   else Util.format1 "U%s"  (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
+     
 and imp_to_string s = function
   | true -> "#" ^ s
   | false -> s

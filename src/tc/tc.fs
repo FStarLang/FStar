@@ -93,6 +93,8 @@ let value_check_expected_typ env e tc : exp * comp =
   let res = match Env.expected_typ env with 
    | None -> e, c
    | Some t' -> 
+     if debug env Options.High
+     then Util.fprint2 "Computed return type %s; expected type %s\n" (Print.typ_to_string t) (Print.typ_to_string t');
      let e, g = Tc.Util.check_and_ascribe env e t t' in
      let c = Tc.Util.strengthen_precondition (Some <| Errors.subtyping_failed env t t') env e c g in
      e, Util.set_result_typ c t' in
@@ -494,6 +496,7 @@ and tc_value env e : exp * comp =
                               let t, g = match (Util.unmeta_typ y.sort).n with 
                                 | Typ_unknown -> tx, g
                                 | _ -> 
+                                    if Tc.Env.debug env Options.High then Util.fprint1 "Checking binder %s\n" (Print.binder_to_string hd);
                                     let t, _, g1 = tc_typ env y.sort in
                                     let g2 = Rel.teq env tx t in
                                     let g = Rel.conj_guard g (Rel.conj_guard g1 g2) in
@@ -977,6 +980,8 @@ and tc_exp env e : exp * comp =
       (x, t, e)::xts, env) ([],env)  in 
     
     let lbs = (lbs |> List.rev) |> List.map (fun (x, t, e) -> 
+        let t =  Tc.Normalize.norm_typ [Normalize.Beta] env t in
+        if Tc.Env.debug env Options.High then Util.fprint3 "Checking %s = %s against type %s\n" (Print.lbname_to_string x) (Print.exp_to_string e) (Print.typ_to_string t);
         let env' = Env.set_expected_typ env' t in
         let e, t = no_guard env <| tc_total_exp env' e in 
         (x, t, e)) in  

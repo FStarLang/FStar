@@ -80,7 +80,11 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
         let g = apply_guard f e in
         if debug env <| Options.Other "Rel"
         then Util.fprint1 "Applied guard is %s\n" <| guard_to_string env g;
-        {e with tk=t2}, g
+        let e = Util.compress_exp e in
+        let e = match e.n with 
+            | Exp_bvar x -> mk_Exp_bvar (Util.bvd_to_bvar_s x.v t2) t2 e.pos 
+            | _ -> {e with tk=t2} in
+        e, g
 
 let env_binders env = 
     if !Options.full_context_dependency 
@@ -419,7 +423,7 @@ let extract_lb_annotation (is_rec:bool) env t e = match t.n with
         let e, res = aux scope e in 
         let c = Util.ml_comp res r in
         let t = mk_Typ_fun(bs, c) ktype e.pos in
-        if debug env Options.High then Util.fprint2 "(%s) Using type %s" (Range.string_of_range r) (Print.typ_to_string t);
+        if debug env Options.High then Util.fprint2 "(%s) Using type %s\n" (Range.string_of_range r) (Print.typ_to_string t);
         mk_Exp_abs(bs, e) e.tk e.pos, t
 
       | _ -> e, Rel.new_tvar r vars ktype |> fst in
@@ -483,7 +487,7 @@ let return_value env t v =
        let wlp = wp in
        mk_comp m t wp wlp [RETURN] in
   if debug env Options.High
-  then Util.fprint2 "(%s) returning at comp type %s" (Range.string_of_range v.pos) (Print.comp_typ_to_string c);
+  then Util.fprint2 "(%s) returning at comp type %s\n" (Range.string_of_range v.pos) (Print.comp_typ_to_string c);
   c
 
 let bind env e1opt (c1:comp) ((b, c2):comp_with_binder) : comp = 
@@ -828,7 +832,9 @@ let gen env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
      let ecs = uvars |> List.map (fun (uvs, e, c) -> 
           let tvars = uvs |> List.map (fun (u, k) -> 
             let a = match Unionfind.find u with 
-              | Fixed ({n=Typ_btvar a}) -> Util.bvd_to_bvar_s a.v k
+              | Fixed ({n=Typ_btvar a})
+              | Fixed ({n=Typ_lam(_, {n=Typ_btvar a})}) -> Util.bvd_to_bvar_s a.v k
+              | Fixed _ -> failwith "Unexpected instantiation of mutually recursive uvar"
               | _ -> 
                   let a = Util.new_bvd (Some <| Tc.Env.get_range env) in
                   let t = Util.close_for_kind (Util.bvd_to_typ a ktype) k in

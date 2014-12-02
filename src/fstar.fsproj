@@ -25,8 +25,8 @@
     </DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
-    <StartWorkingDirectory>G:\FStar\src\</StartWorkingDirectory>
-    <StartArguments>G:\FStar\bin\fstar.exe --fstar_home G:\FStar  --trace_error  --codegen OCaml --debug_level Low --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform ..\lib\system.fst</StartArguments>
+    <StartWorkingDirectory>C:\Users\nswamy\workspace\new\FStar\examples\unit-tests\</StartWorkingDirectory>
+    <StartArguments>--fstar_home ../.. test.fst --verify --full_context_dependency</StartArguments>
     <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
