@@ -18,7 +18,9 @@ module List
 
 (** Base operations **)
 
-assume val isEmpty: list 'a -> bool
+val isEmpty: list 'a -> Tot bool
+let isEmpty l = match l with | [] -> true | _ -> false
+let isEmptyT = isEmpty
 
 (* val hd: list 'a -> 'a *)
 let hd = function
@@ -34,23 +36,50 @@ val length: list 'a -> Tot nat
 let rec length = function
   | [] -> 0
   | _::tl -> 1 + length tl
+let lengthT = length
 
-assume val nth: list 'a -> int -> 'a
+val nth: list 'a -> int -> 'a
+let rec nth l n =
+  if n < 0 then
+    failwith "nth takes a non-negative integer as input"
+  else
+    if n = 0 then
+      match l with
+        | [] -> failwith "not enough elements"
+        | hd::_ -> hd
+    else
+      match l with
+        | [] -> failwith "not enough elements"
+        | _::tl -> nth tl n
 
 val count: 'a -> list 'a -> Tot nat
 let rec count x = function
   | [] -> 0
   | hd::tl -> if x=hd then 1 + (count x tl) else count x tl
+let countT = count
 
-assume val rev: list 'a -> Tot (list 'a)
+val rev_acc: list 'a -> list 'a -> Tot (list 'a)
+let rec rev_acc l acc = match l with
+    | [] -> acc
+    | hd::tl -> rev_acc tl (hd::acc)
+
+val rev: list 'a -> Tot (list 'a)
+let rev l = rev_acc l []
+let revT = rev
 
 val append: list 'a -> list 'a -> Tot (list 'a)
 let rec append x y = match x with
   | [] -> y
   | a::tl -> a::append tl y
+let appendT = append
 
-assume val flatten: list (list 'a) -> Tot (list 'a)
+val flatten: list (list 'a) -> Tot (list 'a)
+let rec flatten l = match l with
+    | [] -> []
+    | hd::tl -> append hd (flatten tl)
+let flattenT = flatten
 let concat = flatten
+let concatT = flattenT
 
 
 (** Iterators **)
@@ -60,12 +89,36 @@ let rec iter f x = match x with
   | [] -> ()
   | a::tl -> let _ = f a in iter f tl
 
+val iterT: ('a -> Tot unit) -> list 'a -> Tot unit
+let rec iterT f x = match x with
+  | [] -> ()
+  | a::tl -> let _ = f a in iterT f tl
+
 val map: ('a -> 'b) -> list 'a -> list 'b
 let rec map f x = match x with
   | [] -> []
   | a::tl -> f a::map f tl
 
-assume val mapi: (int -> 'a -> 'b) -> list 'a -> list 'b
+val mapT: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
+let rec mapT f x = match x with
+  | [] -> []
+  | a::tl -> f a::mapT f tl
+
+val mapi_init: (int -> 'a -> 'b) -> list 'a -> int -> list 'b
+let rec mapi_init f l i = match l with
+    | [] -> []
+    | hd::tl -> (f i hd)::(mapi_init f tl (i+1))
+
+val mapi_initT: (int -> 'a -> Tot 'b) -> list 'a -> int -> Tot (list 'b)
+let rec mapi_initT f l i = match l with
+    | [] -> []
+    | hd::tl -> (f i hd)::(mapi_initT f tl (i+1))
+
+val mapi: (int -> 'a -> 'b) -> list 'a -> list 'b
+let mapi f l = mapi_init f l 0
+
+val mapiT: (int -> 'a -> Tot 'b) -> list 'a -> Tot (list 'b)
+let mapiT f l = mapi_initT f l 0
 
 val concatMap: ('a -> list 'b) -> list 'a -> list 'b
 let rec concatMap f = function
@@ -75,21 +128,51 @@ let rec concatMap f = function
     let ftl = concatMap f tl in
     append fa ftl
 
-assume val map2: ('a -> 'b -> 'c) -> list 'a -> list 'b -> list 'c
+val concatMapT: ('a -> Tot (list 'b)) -> list 'a -> Tot (list 'b)
+let rec concatMapT f = function
+  | [] -> []
+  | a::tl ->
+    let fa = f a in
+    let ftl = concatMapT f tl in
+    appendT fa ftl
 
-assume val map3: ('a -> 'b -> 'c -> 'd) -> list 'a -> list 'b -> list 'c -> list 'd
+val map2: ('a -> 'b -> 'c) -> list 'a -> list 'b -> list 'c
+let rec map2 f l1 l2 = match l1, l2 with
+    | [], [] -> []
+    | hd1::tl1, hd2::tl2 -> (f hd1 hd2)::(map2 f tl1 tl2)
+    | _, _ -> failwith "The lists do not have the same length"
+
+val map3: ('a -> 'b -> 'c -> 'd) -> list 'a -> list 'b -> list 'c -> list 'd
+let rec map3 f l1 l2 l3 = match l1, l2, l3 with
+    | [], [], [] -> []
+    | hd1::tl1, hd2::tl2, hd3::tl3 -> (f hd1 hd2 hd3)::(map3 f tl1 tl2 tl3)
+    | _, _, _ -> failwith "The lists do not have the same length"
 
 val fold_left: ('a -> 'b -> 'a) -> 'a -> list 'b -> 'a
 let rec fold_left f x y = match y with
   | [] -> x
   | hd::tl -> fold_left f (f x hd) tl
 
-assume val fold_left2: ('s -> 'a -> 'b -> 's) -> 's -> list 'a -> list 'b -> 's
+val fold_leftT: ('a -> 'b -> Tot 'a) -> 'a -> l:list 'b -> Tot 'a (decreases %[l])
+let rec fold_leftT f x y = match y with
+  | [] -> x
+  | hd::tl -> fold_leftT f (f x hd) tl
+
+val fold_left2: ('s -> 'a -> 'b -> 's) -> 's -> list 'a -> list 'b -> 's
+let rec fold_left2 f a l1 l2 = match l1, l2 with
+    | [], [] -> a
+    | hd1::tl1, hd2::tl2 -> fold_left2 f (f a hd1 hd2) tl1 tl2
+    | _, _ -> failwith "The lists do not have the same length"
 
 val fold_right: ('a -> 'b -> 'b) -> list 'a -> 'b -> 'b
 let rec fold_right f l x = match l with
   | [] -> x
   | hd::tl -> fold_right f tl (f hd x)
+
+val fold_rightT: ('a -> 'b -> Tot 'b) -> list 'a -> 'b -> Tot 'b
+let rec fold_rightT f l x = match l with
+  | [] -> x
+  | hd::tl -> fold_rightT f tl (f hd x)
 
 
 (** List searching **)
@@ -98,7 +181,9 @@ val mem: 'a -> list 'a -> Tot bool //x:'a -> l:list 'a -> b:bool{b==true <==> In
 let rec mem x = function
   | [] -> false
   | hd::tl -> if hd = x then true else mem x tl
+let memT = mem
 let contains = mem
+let containsT = memT
 
 val find: a:Type
         -> f:(a -> Tot bool)
@@ -107,23 +192,94 @@ val find: a:Type
 let rec find f l = match l with
   | [] -> None
   | hd::tl -> if f hd then Some hd else find f tl
+let findT = find
 
-assume val filter: ('a -> bool) -> list 'a -> list 'a
+val filter: ('a -> bool) -> list 'a -> list 'a
+let rec filter f = function
+  | [] -> []
+  | hd::tl -> if f hd then hd::(filter f tl) else filter f tl
 
 val filterT: f:('a -> Tot bool) -> list 'a -> Tot (m:list 'a{forall x. mem x m ==> f x})
 let rec filterT f = function
   | [] -> []
   | hd::tl -> if f hd then hd::(filterT f tl) else filterT f tl
 
-assume val for_all: ('a -> bool) -> list 'a -> bool
-assume val forall2: ('a -> 'b -> bool) -> list 'a -> list 'b -> bool
+val for_all: ('a -> bool) -> list 'a -> bool
+let rec for_all f l = match l with
+    | [] -> true
+    | hd::tl -> if f hd then for_all f tl else false
 
-assume val collect: ('a -> list 'b) -> list 'a -> list 'b
-assume val tryFind: ('a -> bool) -> list 'a -> option 'a
-assume val tryPick: ('a -> option 'b) -> list 'a -> option 'b
-assume val choose: ('a -> option 'b) -> list 'a -> list 'b
+val for_allT: ('a -> Tot bool) -> list 'a -> Tot bool
+let rec for_allT f l = match l with
+    | [] -> true
+    | hd::tl -> if f hd then for_allT f tl else false
 
-assume val partition: ('a -> bool) -> list 'a -> (list 'a * list 'a)
+val forall2: ('a -> 'b -> bool) -> list 'a -> list 'b -> bool
+let rec forall2 f l1 l2 = match l1,l2 with
+    | [], [] -> true
+    | hd1::tl1, hd2::tl2 -> if f hd1 hd2 then forall2 f tl1 tl2 else false
+    | _, _ -> failwith "The lists do not have the same length"
+
+val collect: ('a -> list 'b) -> list 'a -> list 'b
+let rec collect f l = match l with
+    | [] -> []
+    | hd::tl -> append (f hd) (collect f tl)
+
+val collectT: ('a -> Tot (list 'b)) -> list 'a -> Tot (list 'b)
+let rec collectT f l = match l with
+    | [] -> []
+    | hd::tl -> appendT (f hd) (collectT f tl)
+
+val tryFind: ('a -> bool) -> list 'a -> option 'a
+let rec tryFind p l = match l with
+    | [] -> None
+    | hd::tl -> if p hd then Some hd else tryFind p tl
+
+val tryFindT: ('a -> Tot bool) -> list 'a -> Tot (option 'a)
+let rec tryFindT p l = match l with
+    | [] -> None
+    | hd::tl -> if p hd then Some hd else tryFindT p tl
+
+val tryPick: ('a -> option 'b) -> list 'a -> option 'b
+let rec tryPick f l = match l with
+    | [] -> None
+    | hd::tl ->
+       match f hd with
+         | Some x -> Some x
+         | None -> tryPick f tl
+
+val tryPickT: ('a -> Tot (option 'b)) -> list 'a -> Tot (option 'b)
+let rec tryPickT f l = match l with
+    | [] -> None
+    | hd::tl ->
+       match f hd with
+         | Some x -> Some x
+         | None -> tryPickT f tl
+
+val choose: ('a -> option 'b) -> list 'a -> list 'b
+let rec choose f l = match l with
+    | [] -> []
+    | hd::tl ->
+       match f hd with
+         | Some x -> x::(choose f tl)
+         | None -> choose f tl
+
+val chooseT: ('a -> Tot (option 'b)) -> list 'a -> Tot (list 'b)
+let rec chooseT f l = match l with
+    | [] -> []
+    | hd::tl ->
+       match f hd with
+         | Some x -> x::(chooseT f tl)
+         | None -> chooseT f tl
+
+val partition: ('a -> bool) -> list 'a -> (list 'a * list 'a)
+let rec partition f = function
+  | [] -> [], []
+  | hd::tl ->
+     let l1, l2 = partition f tl in
+     if f hd
+     then hd::l1, l2
+     else l1, hd::l2
 
 val partitionT: f:('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
 let rec partitionT f = function
@@ -137,16 +293,41 @@ let rec partitionT f = function
 
 (** List of tuples **)
 
-val assoc: 'a -> list ('a*'b) -> option 'b
+val assoc: 'a -> list ('a*'b) -> Tot (option 'b)
 let rec assoc a x = match x with
   | [] -> None
   | (a', b)::tl -> if a=a' then Some b else assoc a tl
+let assocT = assoc
 
-assume val split: list ('a * 'b) -> PURE.Tot (list 'a * list 'b)
-assume val unzip: list ('a * 'b) -> PURE.Tot (list 'a * list 'b)
-assume val unzip3: list ('a * 'b * 'c) -> PURE.Tot (list 'a * list 'b * list 'c)
-assume val zip: list 'a -> list 'b -> PURE.Tot (list ('a * 'b))
-assume val zip3: list 'a -> list 'b -> list 'c -> PURE.Tot (list ('a * 'b * 'c))
+val split: list ('a * 'b) -> Tot (list 'a * list 'b)
+let rec split l = match l with
+    | [] -> ([],[])
+    | (hd1,hd2)::tl ->
+       let (tl1,tl2) = split tl in
+       (hd1::tl1,hd2::tl2)
+let splitT = split
+let unzip = split
+let unzipT = splitT
+
+val unzip3: list ('a * 'b * 'c) -> Tot (list 'a * list 'b * list 'c)
+let rec unzip3 l = match l with
+    | [] -> ([],[],[])
+    | (hd1,hd2,hd3)::tl ->
+       let (tl1,tl2,tl3) = unzip3 tl in
+       (hd1::tl1,hd2::tl2,hd3::tl3)
+let unzip3T = unzip3
+
+val zip: list 'a -> list 'b -> list ('a * 'b)
+let rec zip l1 l2 = match l1,l2 with
+    | [], [] -> []
+    | hd1::tl1, hd2::tl2 -> (hd1,hd2)::(zip tl1 tl2)
+    | _, _ -> failwith "The lists do not have the same length"
+
+val zip3: list 'a -> list 'b -> list 'c -> list ('a * 'b * 'c)
+let rec zip3 l1 l2 l3 = match l1, l2, l3 with
+    | [], [], [] -> []
+    | hd1::tl1, hd2::tl2, hd3::tl3 -> (hd1,hd2,hd3)::(zip3 tl1 tl2 tl3)
+    | _, _, _ -> failwith "The lists do not have the same length"
 
 
 (** Sorting **)
