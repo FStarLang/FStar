@@ -538,7 +538,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
         | None ->
           begin
             match smap_try_find algebraic_constructors c.ident.idText with
-            | Some n when n > List.length args -> eta_expand_dataconst (mlpath_of_lident mlenv c) args (n-List.length args)
+            | Some n when (n > List.length args) -> eta_expand_dataconst (mlpath_of_lident mlenv c) args (n-List.length args)
             | _ -> MLE_CTor (mlpath_of_lident mlenv c, args)
           end
       in

@@ -87,9 +87,6 @@ assume InDomConcat:   forall (key:Type) (value:Type) (m1:t key value) (m2:t key 
 assume InDomRestrict: forall (key:Type) (value:Type) (m:t key value) (ks:set key) (k:key).       {:pattern contains (restrict ks m) k}
                       contains (restrict ks m) k == mem k ks
 
-assume ContainsConst: forall (key:Type) (value:Type) (v:value) (k:key).                          {:pattern contains (const v) k}
-                      not (contains (const v) k)
-
 assume Extensional:   forall (key:Type) (value:Type) (m1:t key value) (m2:t key value).          {:pattern (equal m1 m2)}
                       equal m1 m2 <==> m1 == m2
 
