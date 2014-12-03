@@ -154,3 +154,67 @@ val partition_length: f:('a -> Tot bool)
                   -> Lemma (requires True)
                            (ensures (length (fst (partitionT f l)) + length (snd (partitionT f l)) = length l))
 let partition_length f l = List.partition_length f l
+
+val partition_mem: f:('a -> Tot bool)
+                  -> l:list 'a
+                  -> Lemma (requires True)
+                           (ensures ((fun l1 l2 ->
+                                     (forall x. mem x l1 ==> f x)
+                                      /\ (forall x. mem x l2 ==> not (f x))
+                                      /\ (forall x. mem x l = (mem x l1 || mem x l2))))
+                                        (fst (partitionT f l))
+                                        (snd (partitionT f l)))
+let rec partition_mem f l = match l with
+  | [] -> ()
+  | hd::tl -> partition_mem f tl
+
+val partition_count: f:('a -> Tot bool)
+                  -> l:list 'a
+                  -> Lemma (requires True)
+                           (ensures (forall x. count x l = (count x (fst (partitionT f l)) + count x (snd (partitionT f l)))))
+let rec partition_count f l = match l with
+  | [] -> ()
+  | hd::tl -> partition_count f tl
+
+
+(** Correctness of quicksort **)
+val sorted: ('a -> 'a -> Tot int) -> list 'a -> Tot bool
+let rec sorted f = function
+  | []
+  | [_] -> true
+  | x::y::tl -> f x y > 0 && sorted f (y::tl)
+
+opaque type total_order (a:Type) (f: (a -> a -> Tot int)) =
+    (forall a. f a a = 0)                                           (* reflexivity   *)
+    /\ (forall a1 a2. (f a1 a2 > 0) <==> (f a2 a1 < 0))   (* anti-symmetry *)
+    /\ (forall a1 a2 a3. f a1 a2 >= 0 /\ f a2 a3 >= 0 ==> f a1 a3 >= 0)        (* transitivity  *)
+    /\ (forall a1 a2. f a1 a2 = 0 ==> a1 <> a2) (* Totality *)
+
+val append_sorted:  a:Type
+               ->  f:(a -> a -> Tot int)
+               ->  l1:list a{sorted f l1}
+               ->  l2:list a{sorted f l2}
+               ->  pivot:a
+               ->  Lemma (requires (total_order a f)
+                                    /\ (forall y. mem y l1 ==> f pivot y <= 0)
+                                    /\ (forall y. mem y l2 ==> f pivot y > 0))
+                         (ensures (sorted f (l1@(pivot::l2))))
+let rec append_sorted f l1 l2 pivot = match l1 with
+  | [] -> ()
+  | hd::tl -> append_sorted f tl l2 pivot
+
+val sortWithT_sorted: f:('a -> 'a -> Tot int) ->  l:list 'a ->
+  Lemma (requires (total_order 'a f))
+        (ensures (sorted f (sortWithT f l) /\ (forall x. count x l = count x (sortWithT f l))))
+        (decreases (length l))
+let rec sortWithT_sorted f = function
+  | [] -> ()
+  | pivot::tl ->
+     let hi, lo  = partitionT (bool_of_compare f pivot) tl in
+     partition_length (bool_of_compare f pivot) tl;
+     (* How can it work with these two lines commented? *)
+     (* partition_mem (bool_of_compare f pivot) tl; *)
+     (* partition_count (bool_of_compare f pivot) tl; *)
+     sortWithT_sorted f lo;
+     sortWithT_sorted f hi;
+     append_sorted _ f (sortWithT f lo) (sortWithT f hi) pivot
