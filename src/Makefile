@@ -154,7 +154,7 @@ clean:
 # Bootstrapping
 # --------------------------------------------------------------------
 
-STDFILES=system.fst stboot.fst list.fst option.fst string.fst char.fst
+STDFILES=system.fst stboot.fst listboot-TEMPORARY-FILE.fst option.fst string.fst char.fst
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 
 BOOT_BASICFILES=bytes.fst platform.fsi util.fsi getoptsimple.fst options.fs range.fst unionfind.fst lazyset.fsi lazyset.fs
@@ -196,7 +196,7 @@ test:   boot
 	make -s -C ../examples/unit-tests acls2
 	make -s -C ../examples/unit-tests counters
 	-make -s -C ../examples/unit-tests all-ver 
-	@echo "--------Expect 20 errors--------------"
+	@echo "--------Expect 19 errors--------------"
 
 
 test.diff:

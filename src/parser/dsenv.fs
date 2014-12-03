@@ -240,6 +240,13 @@ let try_lookup_datacon env (lid:lident) =
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
+let find_all_datacons env (lid:lident) = 
+  let find_in_sig lid = 
+    match Util.smap_try_find env.sigmap lid.str with 
+      | Some (Sig_tycon(_, _, _, _, datas, _, _), _) -> Some datas
+      | _ -> None in
+  resolve_in_open_namespaces env lid find_in_sig
+
 type record = {
   typename: lident;
   constrname: lident;

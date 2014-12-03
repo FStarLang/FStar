@@ -722,11 +722,14 @@ let union_uvs uvs1 uvs2 =
         uvars_e=Util.set_union uvs1.uvars_e uvs2.uvars_e;
     }
 
-let union_fvs (fvs1, uvs1) (fvs2, uvs2) = 
+let union_fvs fvs1 fvs2 = 
     {
         ftvs=Util.set_union fvs1.ftvs fvs2.ftvs;
         fxvs=Util.set_union fvs1.fxvs fvs2.fxvs;
-    }, 
+    }
+
+let union_fvs_uvs (fvs1, uvs1) (fvs2, uvs2) = 
+    union_fvs fvs1 fvs2, 
     union_uvs uvs1 uvs2
 
 let sub_fv (fvs, uvs) (tvars, vvars) = 
@@ -768,22 +771,22 @@ let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Typ_fun(bs, c) -> 
           vs_binders bs uvonly (fun (bvs, vs1) -> 
           vs_comp c uvonly (fun vs2 -> 
-          cont (sub_fv (union_fvs vs1 vs2) bvs)))
+          cont (sub_fv (union_fvs_uvs vs1 vs2) bvs)))
 
         | Typ_lam(bs, t) -> 
           vs_binders bs uvonly (fun (bvs, vs1) -> 
           vs_typ t uvonly (fun vs2 -> 
-          cont (sub_fv (union_fvs vs1 vs2) bvs)))
+          cont (sub_fv (union_fvs_uvs vs1 vs2) bvs)))
 
         | Typ_refine(x, t) -> 
           vs_binders [Inr x, false] uvonly (fun (bvs, vs1) -> 
           vs_typ t uvonly (fun vs2 -> 
-          cont (sub_fv (union_fvs vs1 vs2) bvs)))
+          cont (sub_fv (union_fvs_uvs vs1 vs2) bvs)))
 
         | Typ_app(t, args) -> 
           vs_typ t uvonly (fun vs1 -> 
           vs_args args uvonly (fun vs2 ->
-          cont (union_fvs vs1 vs2)))
+          cont (union_fvs_uvs vs1 vs2)))
 
         | Typ_ascribed(t, _) -> 
           vs_typ t uvonly cont        
@@ -802,12 +805,12 @@ and vs_binders (bs:binders) (uvonly:bool) (cont:(bvars * (freevars * uvars)) -> 
         | (Inl a, _)::rest -> 
            vs_kind a.sort uvonly (fun vs -> 
            vs_binders rest uvonly (fun ((tvars, vvars), vs2) -> 
-           cont ((Util.set_add a tvars, vvars), union_fvs vs vs2)))
+           cont ((Util.set_add a tvars, vvars), union_fvs_uvs vs vs2)))
 
         | (Inr x, _)::rest -> 
            vs_typ x.sort uvonly (fun vs -> 
            vs_binders rest uvonly (fun ((tvars, vvars), vs2) -> 
-           cont ((tvars, Util.set_add x vvars), union_fvs vs vs2)))
+           cont ((tvars, Util.set_add x vvars), union_fvs_uvs vs vs2)))
 
 and vs_args (args:args) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
     match args with 
@@ -816,12 +819,12 @@ and vs_args (args:args) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | (Inl t, _)::tl -> 
           vs_typ t uvonly (fun ft1 -> 
           vs_args tl uvonly (fun ft2 -> 
-          cont (union_fvs ft1 ft2)))
+          cont (union_fvs_uvs ft1 ft2)))
 
         | (Inr e, _)::tl -> 
           vs_exp e uvonly (fun ft1 -> 
           vs_args tl uvonly (fun ft2 -> 
-          cont (union_fvs ft1 ft2)))
+          cont (union_fvs_uvs ft1 ft2)))
 
 
 and vs_typ (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
@@ -853,7 +856,7 @@ and vs_kind' (k:knd) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Kind_arrow(bs, k) -> 
           vs_binders bs uvonly (fun (bvs, vs1) -> 
           vs_kind k uvonly (fun vs2 -> 
-          cont (sub_fv (union_fvs vs1 vs2) bvs)))
+          cont (sub_fv (union_fvs_uvs vs1 vs2) bvs)))
 
 and vs_kind (k:knd) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
     match !k.fvs, !k.uvs with 
@@ -886,12 +889,12 @@ and vs_exp' (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
       | Exp_abs(bs, e) -> 
         vs_binders bs uvonly (fun (bvs, vs1) -> 
         vs_exp e uvonly (fun vs2 -> 
-        cont (sub_fv (union_fvs vs1 vs2) bvs)))
+        cont (sub_fv (union_fvs_uvs vs1 vs2) bvs)))
 
       | Exp_app(e, args) -> 
         vs_exp e uvonly (fun ft1 -> 
         vs_args args uvonly (fun ft2 ->
-        cont (union_fvs ft1 ft2)))
+        cont (union_fvs_uvs ft1 ft2)))
 
       | Exp_match _       
       | Exp_let _ -> cont (no_fvs, no_uvs) //failwith "NYI"
@@ -919,7 +922,7 @@ and vs_comp' (c:comp) (uvonly:bool) (k:(freevars * uvars) -> 'res) : 'res =
           then vs_typ ct.result_typ uvonly k
           else vs_typ ct.result_typ uvonly (fun vs1 -> 
                vs_args ct.effect_args uvonly (fun vs2 -> 
-               k (union_fvs vs1 vs2)))
+               k (union_fvs_uvs vs1 vs2)))
 
 and vs_comp (c:comp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
     match !c.fvs, !c.uvs with 
@@ -942,7 +945,7 @@ and vs_either_l (tes:list<either<typ,exp>>) (uvonly:bool) (cont:(freevars * uvar
         | hd::tl -> 
           vs_either hd uvonly (fun ft1 -> 
           vs_either_l tl uvonly (fun ft2 -> 
-          cont (union_fvs ft1 ft2)))
+          cont (union_fvs_uvs ft1 ft2)))
 
 let freevars_kind (k:knd) : freevars = 
    vs_kind k false (fun (x,_) -> x)
@@ -955,6 +958,11 @@ let freevars_exp (e:exp) : freevars =
  
 let freevars_comp c : freevars = 
    vs_comp c false (fun (x,_) -> x)
+
+let freevars_args args : freevars = 
+    args |> List.fold_left (fun out a -> match fst a with 
+        | Inl t -> union_fvs out <| freevars_typ t
+        | Inr e -> union_fvs out <| freevars_exp e) no_fvs
 
 let is_free axs (fvs:freevars) = 
   axs |> Util.for_some (function 

@@ -1056,14 +1056,14 @@ let mk_data_discriminators env t tps k datas =
         //Util.fprint1 "Making discriminator %s\n" disc_name.str;
         Sig_val_decl(disc_name, disc_type, [Assumption; Logic; Discriminator d], range_of_lid disc_name))
 
-let mk_indexed_projectors is_record env (tc, tps, k) lid (formals:list<binder>) t = 
+let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binder>) t = 
     let binders = gather_tc_binders tps k in 
     let p = range_of_lid lid in
     let arg_binder = 
         let arg_typ = mk_Typ_app'(Util.ftv tc kun, Util.args_of_non_null_binders binders) kun p in
         let projectee = {ppname=Syntax.mk_ident ("projectee", p);
-                       realname=Util.genident (Some p)} in
-        if is_record
+                         realname=Util.genident (Some p)} in
+        if not refine_domain
         then v_binder (Util.bvd_to_bvar_s projectee arg_typ) //records have only one constructor; no point refining the domain
         else let disc_name = Util.mk_discriminator lid in
              let x = Util.gen_bvar arg_typ in
@@ -1099,10 +1099,17 @@ let mk_indexed_projectors is_record env (tc, tps, k) lid (formals:list<binder>) 
 
 let mk_data_projectors env = function
   | Sig_datacon(lid, t, tycon, quals, _) when (not env.iface && not (lid_equals lid Const.lexcons_lid)) ->
-    begin match Util.function_formals t with
+    let refine_domain = 
+        if (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false))
+        then false
+        else let l, _, _ = tycon in 
+             match DesugarEnv.find_all_datacons env l with 
+                | Some l -> List.length l > 1
+                | _ -> true in
+        begin match Util.function_formals t with
         | Some(formals, cod) -> 
           let cod = Util.comp_result cod in 
-          mk_indexed_projectors (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false)) env tycon lid formals cod
+          mk_indexed_projectors refine_domain env tycon lid formals cod
 
         | _ -> [] //no fields to project
     end

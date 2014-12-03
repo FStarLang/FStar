@@ -156,7 +156,7 @@ let rec reduce_kind
   in
   map_kind env binders k
       
-and map_args (map_typ:imap<'env, typ>) (map_exp:imap<'env,exp>) (env:'env) binders args =
+and map_args (map_typ:imap<'env, typ>) (map_exp:imap<'env,exp>) (env:'env) binders arguments : (args * 'env) =
     let args', env = List.fold_left (fun (out, env) (arg, imp) ->
         match arg with
         | Inl t ->
@@ -164,10 +164,10 @@ and map_args (map_typ:imap<'env, typ>) (map_exp:imap<'env,exp>) (env:'env) binde
             ((Inl t, imp)::out, env)
         | Inr e -> 
             let e, env = map_exp env binders e in 
-            ((Inr e, imp)::out, env)) ([], env) args in
+            ((Inr e, imp)::out, env)) ([], env) arguments in
     List.rev args', env 
   
-and map_binders (map_kind:imap<'env,knd>) (map_typ:imap<'env,typ>) (env:'env) binders (bs:Syntax.binders) =
+and map_binders (map_kind:imap<'env,knd>) (map_typ:imap<'env,typ>) (env:'env) binders (bs:Syntax.binders) : (Syntax.binders * boundvars * 'env) =
     let bs, binders, env = bs |> List.fold_left (fun (bs, binders, env) b -> match b with
         | Inl a, imp ->
             let k, env = map_kind env binders a.sort in

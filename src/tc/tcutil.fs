@@ -180,7 +180,7 @@ let pat_as_exps env p =
            | Pat_cons(fv, pats) -> 
                let _, b, w, o, args = pats |> List.fold_left (fun (env, b, w, o, args) p -> 
                     let b', w', o', arg = pat_as_arg env p in 
-                    let env = b' |> List.fold_left Env.push_local_binding env in
+                    let env = (b'@w') |> List.fold_left Env.push_local_binding env in
                     env, b'::b, w'::w, o'::o, arg::args) (env, [], [], [], []) in
 
                let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, List.rev args) tun p.p, Data_app)) in
@@ -487,7 +487,7 @@ let return_value env t v =
        let wlp = wp in
        mk_comp m t wp wlp [RETURN] in
   if debug env Options.High
-  then Util.fprint2 "(%s) returning at comp type %s\n" (Range.string_of_range v.pos) (Print.comp_typ_to_string c);
+  then Util.fprint2 "(%s) returning at comp type %s\n" (Range.string_of_range v.pos) (Normalize.comp_typ_norm_to_string env c);
   c
 
 let bind env e1opt (c1:comp) ((b, c2):comp_with_binder) : comp = 

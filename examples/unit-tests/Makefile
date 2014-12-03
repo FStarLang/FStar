@@ -11,7 +11,7 @@ FSTAR_HOME = ../..
 LIB_FILES= list.fst string.fst partialmap.fst st.fst 
 # array-realized.fst
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
-FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
+FSTAR      = $(RUNTIME) ../../bin/fstar.exe --full_context_dependency --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
 
 #Use the following to test the bootstrapped ocaml version: fstarml
 #FSTAR      = ../../src/ocaml-output/fstarml --prims ../../lib/prims.fst --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
@@ -20,23 +20,25 @@ FSTAR      = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDLIB)
 STDCACHE=Prims.cache List.cache String.cache ST.cache PartialMap.cache Array.cache
 FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(OTHERFLAGS)
 
-all: all-lax all-ver
+all: all-lax vector mergesort.vv rpc acls2 counters all-ver
 
 # removed rbtree.fst from this list for now as it takes more z3 time
 # removed mergsort from this list for the same reason 
 
 BUGFILES=$(addprefix $(FSTAR_HOME)/examples/bug-reports/, bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst bug28.fst bug35.fst bug52.fst bug23.fst bug21.fst bug34.fst)
-
 VERFILES=$(FSTAR_HOME)/lib/array-realized.fst unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst insertionsort-lemma.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst cca2.fst sf-poly.fst format.fst mac.fst sig.fst stlc.fst cca2.fst $(BUGFILES)
 
 acls2: $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst st.fst) acls2.fst
-	$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $^ --verify
+	$(RUNTIME) ../../bin/fstar.exe --full_context_dependency --fstar_home $(FSTAR_HOME) $^ --verify
 
 counters: $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst stperm.fst) ../sep/counters.fst
-	$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $^ --verify
+	$(RUNTIME) ../../bin/fstar.exe --full_context_dependency --fstar_home $(FSTAR_HOME) $^ --verify
 
 test: test.fst
 	$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $^ --verify $(OTHERFLAGS)
+
+unif: unif.fst
+	$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $^ --verify $(OTHERFLAGS) --full_context_dependency
 
 cache: $(STDLIB)
 	mkdir $(FSTAR_HOME)/cache
@@ -75,7 +77,7 @@ all-lax: rec.fst pat.fst mac.fst
 	$(FSTAR) --lax $^
 
 %.vv: $(FSTAR_HOME)/lib/list.fst %.fst
-	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $^ --verify
+	$(RUNTIME) ../../bin/fstar.exe --full_context_dependency $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $^ --verify
 
 stlc:
 	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) stlc.fst --verify

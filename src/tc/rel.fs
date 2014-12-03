@@ -230,7 +230,7 @@ let singleton prob tk = {empty_worklist with attempting=[prob]; top_t=tk}
 let reattempt (_, p, _) = p
 let giveup env reason prob probs = 
     if debug env <| Options.Other "Rel"
-    then Util.fprint2 "Failed %s: %s" reason (prob_to_string env prob);
+    then Util.fprint2 "Failed %s:\n%s\n" reason (prob_to_string env prob);
     Failed <| (probs.ctr, prob, reason)::probs.deferred
 let giveup_noex probs = Failed probs.deferred
 let extend_subst ui wl = 
@@ -522,6 +522,17 @@ let rec decompose_typ env t : (list<ktec> -> typ) * (typ -> bool) * list<(binder
             | _ -> false in
           rebuild, matches, b_ktecs
 
+        | Typ_refine(x, phi) -> 
+          let rebuild, b_ktecs = 
+              decompose_binder [v_binder x] (T phi) (fun bs tt -> match bs, tt with 
+                | [(Inr y, _)], T phi' -> mk_Typ_refine(y, phi') ktype t.pos
+                | _ -> failwith "Bad reconstruction") in
+          let matches t = match (Util.compress_typ t).n with 
+            | Typ_refine _ -> true
+            | _ -> false in
+          rebuild, matches, b_ktecs
+        
+
         | _ -> 
           let rebuild = function
             | [] -> t
@@ -532,14 +543,27 @@ type flex_t = (typ * uvar_t * knd * args)
 type im_or_proj_t = ((uvar_t * knd) * list<arg> * binders * ((list<ktec> -> typ) * (typ -> bool) * list<(binders * ktec)>))
 type im_or_proj_k = (uvar_k * list<arg> * binders * ((list<ktec> -> knd) *  list<(binders * ktec)>))
 
-let occurs_check uk t = 
+let occurs_check env uk t = 
     let uvs = Util.uvars_in_typ t in 
     let occurs_ok = not (Util.set_mem uk uvs.uvars_t) in
     let msg = 
         if occurs_ok then None
-        else Some (Util.format2 "occurs-check failed (%s occurs in {%s})" 
+        else Some (Util.format4 "occurs-check failed (%s occurs in {%s} uvars of %s normalized to %s)" 
                         (Print.uvar_t_to_string uk) 
-                        (Util.set_elements uvs.uvars_t |> List.map Print.uvar_t_to_string |> String.concat ", ")) in
+                        (Util.set_elements uvs.uvars_t |> List.map Print.uvar_t_to_string |> String.concat ", ")
+                        (Print.typ_to_string t)
+                        (Normalize.typ_norm_to_string env t)) in
+    occurs_ok, msg
+
+let occurs_check_e env ut e = 
+    let uvs = Util.uvars_in_exp e in 
+    let occurs_ok = not (Util.set_mem ut uvs.uvars_e) in
+    let msg = 
+        if occurs_ok then None
+        else Some (Util.format3 "occurs-check failed (%s occurs in {%s} uvars of %s normalized to %s)" 
+                        (Print.uvar_e_to_string ut) 
+                        (Util.set_elements uvs.uvars_e |> List.map Print.uvar_e_to_string |> String.concat ", ")
+                        (Print.exp_to_string e)) in
     occurs_ok, msg
 
 let rec solve (env:Tc.Env.env) (probs:worklist) : solution = 
@@ -630,7 +654,7 @@ and imitate (env:Tc.Env.env) (probs:worklist) (p:im_or_proj_t) : solution =
     let im = match xs with 
         | [] -> h gs_xs
         | _ -> mk_Typ_lam(xs, h gs_xs) k r in
-//    printfn "Imitating %s (%s)" (Print.typ_to_string im) (Print.tag_of_typ im);
+    if Tc.Env.debug env <| Options.Other "Rel" then Util.fprint2 "Imitating %s (%s)\n" (Print.typ_to_string im) (Print.tag_of_typ im);
     let probs = extend_subst (UT((u,k), im)) probs in
     solve env (attempt (List.flatten sub_probs) probs)
 
@@ -797,18 +821,65 @@ and solve_t_flex_flex (top:bool) (env:Tc.Env.env) (orig:prob)
     let maybe_pat_vars1 = pat_vars env [] args1 in
     let maybe_pat_vars2 = pat_vars env [] args2 in
     let r = t2.pos in
-    begin match maybe_pat_vars1, maybe_pat_vars2 with 
-        | None, _
-        | _, None -> (* not patterns; Instead of giving up, revert to solving with a simple type (breaking generality) *)
-            let u, _ = new_tvar (Env.get_range env) [] ktype in 
-            let sol = [UT((u1, k1), Util.close_for_kind u k1); 
+    let warn s1 s2 = 
+        if Tc.Env.debug env <| Options.Other "Rel"
+        then Util.fprint4 "Breaking generality in flex/flex case solving %s = %s by setting lhs=%s and rhs=%s\n" 
+            (Normalize.typ_norm_to_string env t1) (Normalize.typ_norm_to_string env t2)
+            (Normalize.typ_norm_to_string env s1) (Normalize.typ_norm_to_string env s2) in
+                  
+    let solve_simple () = 
+        let u, _ = new_tvar (Env.get_range env) [] ktype in 
+        let sol = if Unionfind.equivalent u1 u2
+                  then let rec aux sub args1 args2 = match args1, args2 with  
+                        | [], [] -> solve env ({probs with attempting=sub; deferred=[]; top_t=None; guard=Trivial; ctr=0})
+                        | (Inl t1, _)::rest1, (Inl t2, _)::rest2 -> aux (TProb(false, EQ, t1, t2)::sub) rest1 rest2 
+                        | (Inr e1, _)::rest1, (Inr e2, _)::rest2 -> aux (EProb(false, EQ, e1, e2)::sub) rest1 rest2 
+                        | _ -> solve env (defer "flex/flex unequal arity" orig probs) in //defer  ...can this ever be solved?
+                       begin match aux [] args1 args2 with
+                                | Failed _ 
+                                | Success (_, NonTrivial _) -> 
+                                    let t1 = Util.close_for_kind u k1 in
+                                    warn t1 t2; [UT((u1, k1), t1)]
+                                | Success (sol, _) -> sol 
+                       end
+                  else  (* neither side is an applicable pattern; Instead of giving up, revert to solving with a simple type (breaking generality) *)
+                       let t1 = Util.close_for_kind u k1 in
+                       let t2 = Util.close_for_kind u k2 in
+                       let _ = warn t1 t2 in
+                       [UT((u1, k1), Util.close_for_kind u k1); 
                         UT((u2, k2), Util.close_for_kind u k2)] in
-            let probs = extend_subst' sol probs in
-            solve env probs
-                    //solve env (defer "flex/flex not patterns" orig probs) //defer 
-          
-//          let sub = [TProb(false, EQ, mk_Typ_uvar(u1, k1) t1.pos, mk_Typ_uvar(u2, k2) t2.pos)] in
-//          aux sub args1 args2
+        let probs = extend_subst' sol probs in
+        solve env probs in
+
+    let solve_one_pat (t1, u1, k1, xs) (t2, _, _, _) = 
+        if Tc.Env.debug env <| Options.Other "Rel"
+        then Util.fprint2 "Trying flex-flex one pattern (%s) with %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
+        let t2 = sn env t2 in
+        let rhs_vars = Util.freevars_typ t2 in
+        let occurs_ok, _ = occurs_check env (u1,k1) t2 in
+        if not <| Util.fvs_included rhs_vars (freevars_of_binders xs) || not occurs_ok
+        then solve_simple()
+        else (* solve by instantiating u1 to imitate t2 *)
+             let sol = [UT((u1, k1), mk_Typ_lam(xs, t2) k1 t1.pos)] in
+             let probs = extend_subst' sol probs in
+             solve env probs in
+
+//    if Unionfind.equivalent u1 u2
+//    then let rec aux sub args1 args2 = match args1, args2 with  
+//            | [], [] -> solve env (attempt sub probs)
+//            | (Inl t1, _)::rest1, (Inl t2, _)::rest2 -> aux (TProb(false, EQ, t1, t2)::sub) rest1 rest2 
+//            | (Inr e1, _)::rest1, (Inr e2, _)::rest2 -> aux (EProb(false, EQ, e1, e2)::sub) rest1 rest2 
+//            | _ -> solve env (defer "flex/flex unequal arity" orig probs) in //defer  ...can this ever be solved?
+//         aux [] args1 args2 
+//    else 
+    begin match maybe_pat_vars1, maybe_pat_vars2 with 
+        | None, None -> solve_simple ()
+
+        | Some xs, None -> 
+            solve_one_pat (t1, u1, k1, xs) rhs
+
+        | None, Some ys -> 
+            solve_one_pat (t2, u2, k2, ys) lhs
 
         | Some xs, Some ys -> 
             let extend_and_solve sols probs = 
@@ -834,7 +905,7 @@ and solve_t_flex_flex (top:bool) (env:Tc.Env.env) (orig:prob)
                     | [] -> u_zs 
                     | _ -> mk_Typ_lam(xs, u_zs) k1 r in
                 let sub1 = norm_targ env sub1 in
-                let occurs_ok, msg = occurs_check (u1,k1) sub1 in
+                let occurs_ok, msg = occurs_check env (u1,k1) sub1 in
                 if not occurs_ok
                 then giveup env (Option.get msg) orig probs
                 else let sol1 = [UT((u1, k1), sub1)] in
@@ -844,7 +915,7 @@ and solve_t_flex_flex (top:bool) (env:Tc.Env.env) (orig:prob)
                             | [] -> u_zs
                             | _ -> mk_Typ_lam(ys, u_zs) k2 r in
                           let sub2 = norm_targ env sub2 in
-                          let occurs_ok, msg = occurs_check (u2,k2) sub2 in
+                          let occurs_ok, msg = occurs_check env (u2,k2) sub2 in
                           if not occurs_ok 
                           then giveup env (Option.get msg) orig probs
                           else let sol = sol1@[UT((u2,k2), sub2)] in
@@ -898,7 +969,7 @@ and solve_t_flex_rigid (top:bool) (env:Tc.Env.env) (orig:prob) (lhs:flex_t) (t2:
             let t2 = sn env t2 in 
             let fvs1 = Util.freevars_typ t1 in
             let fvs2 = Util.freevars_typ t2 in
-            let occurs_ok, msg = occurs_check (uv,k) t2 in
+            let occurs_ok, msg = occurs_check env (uv,k) t2 in
             if not occurs_ok 
             then giveup env (Option.get msg) orig probs
             else if Util.fvs_included fvs2 fvs1
@@ -910,8 +981,12 @@ and solve_t_flex_rigid (top:bool) (env:Tc.Env.env) (orig:prob) (lhs:flex_t) (t2:
                 //let _ = if debug env then printfn "Fast solution for %s \t -> \t %s" (Print.typ_to_string t1) (Print.typ_to_string sol) in
                 solve env (extend_subst (UT((uv,k), sol)) probs)
             else if check_head fvs1 t2 
-            then (if debug env <| Options.Other "Rel" then Util.fprint3 "Pattern %s with fvars=%s failed fvar check: %s" (Print.typ_to_string t1) (Print.freevars_to_string fvs1) (Print.freevars_to_string fvs2);
-                  imitate_or_project (List.length args_lhs) (subterms args_lhs) (-1))
+            then (let im_ok = -1 in //imitate_ok t2 in
+                  if debug env <| Options.Other "Rel" 
+                  then Util.fprint4 "Pattern %s with fvars=%s failed fvar check: %s ... %s\n" 
+                            (Print.typ_to_string t1) (Print.freevars_to_string fvs1) 
+                            (Print.freevars_to_string fvs2) (if im_ok < 0 then "imitating" else "projecting");
+                  imitate_or_project (List.length args_lhs) (subterms args_lhs) im_ok)
             else giveup env "fre-variable check failed on a non-redex" orig probs
     | None ->   
             if check_head (Util.freevars_typ t1) t2
@@ -1175,21 +1250,53 @@ and solve_e (top:bool) (env:Env.env) (rel:rel) (e1:exp) (e2:exp) (probs:worklist
               solve env (extend_subst (UE((u1,t1), sub1)) probs |> extend_subst (UE((u2,t2), sub2))) 
       end
 
-    | Exp_app({n=Exp_uvar(u1,t1); pos=r1}, args1), _ -> //flex-rigid: solve only patterns
-      let maybe_vars1 = pat_vars env [] args1 in
-      begin match maybe_vars1 with 
-        | None -> solve env (defer "flex/rigid not a pattern" (EProb(top, rel, e1, e2)) probs)
+    | Exp_app({n=Exp_uvar(u1,t1); pos=r1}, args1), _ -> //flex-rigid: patterns or imitation; no projections
+        let maybe_vars1 = pat_vars env [] args1 in
+        let imitate_e () = 
+        //u1 p1..pn =?= h a1..am
+        //if h not occurs in u1 and h not free
+        //u1 = \x1..xn. h (G1(x1...xn), ..., Gm(x1..xn))
+        //and Gi(p1..pn) =?= ai
+        if Tc.Env.debug env <| Options.Other "Rel"
+        then Util.fprint2 "Imitating expressions: %s =?= %s\n" (Print.exp_to_string e1) (Print.exp_to_string e2);
+        let head2, args2 = Util.head_and_args_e e2 in
+        let fvhead = Util.freevars_exp head2 in
+        let occurs_ok, _ = occurs_check_e env (u1, t1) head2 in
+        if Util.fvs_included fvhead Syntax.no_fvs && occurs_ok
+        then let xs, tres = match Util.function_formals t1 with
+                    | None -> [], t1
+                    | Some (xs, c) -> xs, Util.comp_result c in
+                let gi_xi, gi_pi = args2 |> List.map (function 
+                | Inl t, imp -> 
+                    let gi_xi, gi = new_tvar t.pos xs t.tk in
+                    let gi_pi = mk_Typ_app(gi, args1) t.tk t.pos in
+                    (Inl gi_xi, imp), TProb(false, EQ, gi_pi, t)
+                | Inr v, imp ->
+                    let gi_xi, gi = new_evar v.pos xs v.tk in 
+                    let gi_pi = mk_Exp_app(gi, args1) v.tk v.pos in
+                    (Inr gi_xi, imp), EProb(false, EQ, gi_pi, v)) |> List.unzip in
+            let sol = mk_Exp_abs(xs, mk_Exp_app(head2, gi_xi) tres e1.pos) t1 e1.pos in
+            if Tc.Env.debug env <| Options.Other "Rel"
+            then Util.fprint3 "Imitated: %s -> %s\nSubprobs=\n%s\n" (Print.uvar_e_to_string (u1,t1)) (Print.exp_to_string sol) (gi_pi |> List.map (prob_to_string env) |> String.concat "\n");
+            solve env (attempt gi_pi (extend_subst (UE((u1, t1), sol)) probs))
+        else giveup env "flex-rigid: not a pattern; free variable/occurs check failed---refusing to use projection to expressions" (EProb(top, rel, e1, e2)) probs in
+      
+
+        begin match maybe_vars1 with 
+        | None -> imitate_e ()
         | Some xs -> 
-          let fvs1 = freevars_of_binders xs in 
-          let fvs2 = Util.freevars_exp e2 in 
-          if Util.set_is_subset_of fvs2.ftvs fvs1.ftvs 
-             && Util.set_is_subset_of fvs2.fxvs fvs1.fxvs 
-          then // U1 xs =?= e2
-               // U1 = \xs. e2
-               let sol = mk_Exp_abs(xs, e2) t1 r1 in
-               solve env (extend_subst (UE((u1,t1), sol)) probs)
-          else giveup env "flex-rigid: free variable/occurs check failed" (EProb(top, rel, e1, e2)) probs
-      end
+            let fvs1 = freevars_of_binders xs in 
+            let fvs2 = Util.freevars_exp e2 in 
+            let occurs_ok, _ = occurs_check_e env (u1, t1) e2 in
+            if Util.set_is_subset_of fvs2.ftvs fvs1.ftvs 
+                && Util.set_is_subset_of fvs2.fxvs fvs1.fxvs 
+                && occurs_ok
+            then // U1 xs =?= e2
+                // U1 = \xs. e2
+                let sol = mk_Exp_abs(xs, e2) t1 r1 in
+                solve env (extend_subst (UE((u1,t1), sol)) probs)
+            else imitate_e ()
+        end
 
     | _, Exp_uvar _ 
     | _, Exp_app({n=Exp_uvar _}, _) -> //rigid-flex ... reorient
@@ -1238,12 +1345,12 @@ let subkind env k1 k2 : guard_t =
     raise (Error(Tc.Errors.incompatible_kinds env k1 k2, Tc.Env.get_range env)))
 
 let try_subtype env t1 t2 = 
- if debug env <| Other "Rel" then Util.fprint2 "try_subtype of %s and %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
+ if debug env <| Other "Rel" then Util.fprint2 "try_subtype of %s and %s\n" (Normalize.typ_norm_to_string env t1) (Normalize.typ_norm_to_string env t2);
  let g = solve_and_commit env (Some t1) (TProb(true, SUB, t1, t2))
  (fun _ -> None) in
  if debug env <| Options.Other "Rel" 
     && Util.is_some g
- then Util.fprint3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2) (guard_to_string env (Util.must g));
+ then Util.fprint3 "try_subtype succeeded: %s <: %s\n\tguard is %s\n" (Normalize.typ_norm_to_string env t1) (Normalize.typ_norm_to_string env t2) (guard_to_string env (Util.must g));
  g
 
 let subtype_fail env t1 t2 = 
