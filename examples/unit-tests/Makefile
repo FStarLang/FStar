@@ -35,7 +35,7 @@ acls2: $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst st.fst
 counters: $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst stperm.fst) ../sep/counters.fst
 	$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $^ --verify
 
-test: $(addprefix $(FSTAR_HOME)/lib/, partialmap.fst st.fst) test.fst
+test: test.fst
 	$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $^ --verify $(OTHERFLAGS)
 
 cache: $(STDLIB)

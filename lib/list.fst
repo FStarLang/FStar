@@ -329,7 +329,6 @@ let rec zip3 l1 l2 l3 = match l1, l2, l3 with
     | hd1::tl1, hd2::tl2, hd3::tl3 -> (hd1,hd2,hd3)::(zip3 tl1 tl2 tl3)
     | _, _, _ -> failwith "The lists do not have the same length"
 
-
 (** Sorting (implemented as quicksort) **)
 
 val sortWith: ('a -> 'a -> int) -> list 'a -> list 'a

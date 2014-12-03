@@ -566,6 +566,7 @@ and imitate (env:Tc.Env.env) (probs:worklist) (p:im_or_proj_t) : solution =
     let ((u,k), ps, xs, (h, _, qs)) = p in
     let xs = sn_binders env xs in
 //U p1..pn =?= h q1..qm
+//if h is not a free variable
 //extend_subst: (U -> \x1..xn. h (G1(x1..xn), ..., Gm(x1..xm)))
 //sub-problems: Gi(p1..pn) =?= qi
     let r = Env.get_range env in
@@ -629,7 +630,7 @@ and imitate (env:Tc.Env.env) (probs:worklist) (p:im_or_proj_t) : solution =
     let im = match xs with 
         | [] -> h gs_xs
         | _ -> mk_Typ_lam(xs, h gs_xs) k r in
-    //printfn "Imitating %s (%s)" (Print.typ_to_string im) (Print.tag_of_typ im);
+//    printfn "Imitating %s (%s)" (Print.typ_to_string im) (Print.tag_of_typ im);
     let probs = extend_subst (UT((u,k), im)) probs in
     solve env (attempt (List.flatten sub_probs) probs)
 
@@ -702,8 +703,8 @@ and project (env:Tc.Env.env) (probs:worklist) (i:int) (p:im_or_proj_t) : solutio
             else let g_xs, g_ps = gs xi.sort in 
                  let xi = btvar_to_typ xi in
                  let proj = mk_Typ_lam(xs, mk_Typ_app'(xi, g_xs) ktype r) (snd u) r in
-                 let sub = TProb(false, EQ, mk_Typ_app'(xi, g_ps) ktype r, h <| List.map snd qs) in
-                 if debug env High then Util.fprint1 "Projecting %s" (Print.typ_to_string proj);
+                 let sub = TProb(false, EQ, mk_Typ_app'(proj, ps) ktype r, h <| List.map snd qs) in
+                 if debug env <| Options.Other "Rel" then Util.fprint2 "Projecting %s\n\tsubprob=%s\n" (Print.typ_to_string proj) (prob_to_string env sub);
                  let probs = extend_subst (UT(u, proj)) probs in
                  solve env ({probs with attempting=sub::probs.attempting})
         | _ -> giveup_noex probs
@@ -885,12 +886,11 @@ and solve_t_flex_rigid (top:bool) (env:Tc.Env.env) (orig:prob) (lhs:flex_t) (t2:
                 then true
                 else (Util.fprint1 "Free variables are %s" (Print.freevars_to_string fvs_hd); false) in
             
-    let imitate fvs1 t2 = (* -1 means begin by imitating *)
+    let imitate_ok t2 = (* -1 means begin by imitating *)
         let fvs_hd = Util.head_and_args t2 |> fst |> Util.freevars_typ in
-        if Util.fvs_included fvs_hd fvs1
-        then -1
-        else 0 in
-
+        if Util.set_is_empty fvs_hd.ftvs
+        then -1 (* yes, start by imitating *)
+        else 0 (* no, start by projecting *) in
 
    match maybe_pat_vars with 
      | Some vars -> 
@@ -915,8 +915,9 @@ and solve_t_flex_rigid (top:bool) (env:Tc.Env.env) (orig:prob) (lhs:flex_t) (t2:
             else giveup env "fre-variable check failed on a non-redex" orig probs
     | None ->   
             if check_head (Util.freevars_typ t1) t2
-            then (if debug env <| Options.Other "Rel" then Util.fprint1 "Not a pattern (%s) ... imitating" (Print.typ_to_string t1);
-                imitate_or_project (List.length args_lhs) (subterms args_lhs) (imitate (Util.freevars_typ t1) t2))
+            then (let im_ok = imitate_ok t2 in
+                  if debug env <| Options.Other "Rel" then Util.fprint2 "Not a pattern (%s) ... %s\n" (Print.typ_to_string t1) (if im_ok < 0 then "imitating" else "projecting");
+                  imitate_or_project (List.length args_lhs) (subterms args_lhs) im_ok)
             else giveup env "head-symbol is free" orig probs
    
   
