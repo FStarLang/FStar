@@ -153,7 +153,7 @@ let rec fold_left f x y = match y with
   | [] -> x
   | hd::tl -> fold_left f (f x hd) tl
 
-val fold_leftT: ('a -> 'b -> Tot 'a) -> 'a -> l:list 'b -> Tot 'a (decreases %[l])
+val fold_leftT: ('a -> 'b -> Tot 'a) -> 'a -> l:list 'b -> Tot 'a (decreases l)
 let rec fold_leftT f x y = match y with
   | [] -> x
   | hd::tl -> fold_leftT f (f x hd) tl
@@ -330,29 +330,30 @@ let rec zip3 l1 l2 l3 = match l1, l2, l3 with
     | _, _, _ -> failwith "The lists do not have the same length"
 
 
-(** Sorting **)
+(** Sorting (implemented as quicksort) **)
 
-assume val sortWith: ('a -> 'a -> int) -> list 'a -> list 'a
+val sortWith: ('a -> 'a -> int) -> list 'a -> list 'a
+let rec sortWith f = function
+  | [] -> []
+  | pivot::tl ->
+     let hi, lo  = partition (fun x -> f pivot x > 0) tl in
+     sortWith f lo@(pivot::sortWith f hi)
 
-
-(** Lemmas **)
-
-val append_mem:  l1:list 'a
-              -> l2:list 'a
-              -> a:'a
-              -> Lemma (requires True)
-                       (ensures (mem a (l1@l2) = (mem a l1 || mem a l2)))
-                       [SMTPat (mem a (l1@l2))]
-let rec append_mem l1 l2 a = match l1 with
+val partition_length: f:('a -> Tot bool)
+                  -> l:list 'a
+                  -> Lemma (requires True)
+                           (ensures (length (fst (partitionT f l)) + length (snd (partitionT f l)) = length l))
+let rec partition_length f l = match l with
   | [] -> ()
-  | hd::tl -> append_mem tl l2 a
+  | hd::tl -> partition_length f tl
 
-val append_count:  l1:list 'a
-              -> l2:list 'a
-              -> a:'a
-              -> Lemma (requires True)
-                       (ensures (count a (l1@l2) = (count a l1 + count a l2)))
-                       [SMTPat (count a (l1@l2))]
-let rec append_count l1 l2 a = match l1 with
-  | [] -> ()
-  | hd::tl -> append_count tl l2 a
+val bool_of_compare : ('a -> 'a -> Tot int) -> 'a -> 'a -> Tot bool
+let bool_of_compare f x y = f x y > 0
+
+val sortWithT: ('a -> 'a -> Tot int) -> l:list 'a -> Tot (list 'a) (decreases (length l))
+let rec sortWithT f = function
+  | [] -> []
+  | pivot::tl ->
+     let hi, lo  = partitionT (bool_of_compare f pivot) tl in
+     partition_length (bool_of_compare f pivot) tl;
+     sortWithT f lo@(pivot::sortWithT f hi)
