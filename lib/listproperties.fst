@@ -147,6 +147,66 @@ let rec append_inv_tail l l1 l2 = match l1, l2 with
        )
 
 
+(** Properties mixing rev and append **)
+
+val rev': list 'a -> Tot (list 'a)
+let rec rev' = function
+  | [] -> []
+  | hd::tl -> (rev' tl)@[hd]
+let rev'T = rev'
+
+val rev_acc_rev': l:list 'a -> acc:list 'a ->
+  Lemma (requires (True))
+        (ensures ((rev_acc l acc) = ((rev' l)@acc)))
+let rec rev_acc_rev' l acc = match l with
+    | [] -> ()
+    | hd::tl -> rev_acc_rev' tl (hd::acc); append_l_cons hd acc (rev' tl)
+
+val rev_rev': l:list 'a ->
+  Lemma (requires True)
+        (ensures ((rev l) = (rev' l)))
+let rev_rev' l = rev_acc_rev' l []; append_l_nil (rev' l)
+
+val rev'_append: l1:list 'a -> l2:list 'a ->
+  Lemma (requires True)
+        (ensures ((rev' (l1@l2)) = ((rev' l2)@(rev' l1))))
+let rec rev'_append l1 l2 = match l1 with
+    | [] -> append_l_nil (rev' l2)
+    | hd::tl -> rev'_append tl l2; append_assoc (rev' l2) (rev' tl) [hd]
+
+val rev_append: l1:list 'a -> l2:list 'a ->
+  Lemma (requires True)
+        (ensures ((rev (l1@l2)) = ((rev l2)@(rev l1))))
+let rev_append l1 l2 = rev_rev' l1; rev_rev' l2; rev_rev' (l1@l2); rev'_append l1 l2
+
+val rev'_involutive : l:list 'a ->
+  Lemma (requires True)
+        (ensures (rev' (rev' l) = l))
+let rec rev'_involutive = function
+  | [] -> ()
+  | hd::tl -> rev'_append (rev' tl) [hd]; rev'_involutive tl
+
+val rev_involutive : l:list 'a ->
+  Lemma (requires True)
+        (ensures (rev (rev l) = l))
+let rev_involutive l = rev_rev' l; rev_rev' (rev' l); rev'_involutive l
+
+
+(** Reverse induction principle **)
+
+val rev'_list_ind: p:(list 'a -> Tot bool) -> l:list 'a ->
+  Lemma (requires ((p []) /\ (forall hd tl. p (rev' tl) ==> p (rev' (hd::tl)))))
+        (ensures (p (rev' l)))
+let rec rev'_list_ind p = function
+  | [] -> ()
+  | hd::tl -> rev'_list_ind p tl
+
+val rev_ind: p:(list 'a -> Tot bool) -> l:list 'a ->
+  Lemma (requires ((p []) /\ (forall hd tl. p hd ==> p (hd@[tl]))))
+        (ensures (p l))
+let rev_ind p l = rev'_involutive l; rev'_list_ind p (rev' l)
+
+
 (** Properties about partition **)
 
 val partition_length: f:('a -> Tot bool)
@@ -178,6 +238,7 @@ let rec partition_count f l = match l with
 
 
 (** Correctness of quicksort **)
+
 val sorted: ('a -> 'a -> Tot int) -> list 'a -> Tot bool
 let rec sorted f = function
   | []
@@ -212,7 +273,7 @@ let rec sortWithT_sorted f = function
   | pivot::tl ->
      let hi, lo  = partitionT (bool_of_compare f pivot) tl in
      partition_length (bool_of_compare f pivot) tl;
-     (* How can it work with these two lines commented? *)
+     (* How can it work with these two lines commented out? *)
      (* partition_mem (bool_of_compare f pivot) tl; *)
      (* partition_count (bool_of_compare f pivot) tl; *)
      sortWithT_sorted f lo;
