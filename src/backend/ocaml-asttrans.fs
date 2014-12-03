@@ -474,6 +474,8 @@ let mlscheme_of_ty (mlenv : mlenv) (rg : range) (ty : typ) : mltyscheme =
 (* -------------------------------------------------------------------- *)
 (* A table to remember the names of the fields of constructors *)
 let record_constructors = smap_create<list<ident>>(17)
+(* A table to remember the arity of algebraic constructors *)
+let algebraic_constructors = smap_create<int>(40)
 
 (* -------------------------------------------------------------------- *)
 let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (le : lenv) (p : pat) : lenv * mlpattern =
@@ -520,10 +522,26 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
     let rg = e.pos in
     let e = Absyn.Util.compress_exp e in
 
+    let rec eta_expand_dataconst ct args nvars =
+      let ctr = mk_ref 0 in
+      let rec bvs = function
+        | 0 -> []
+        | n -> incr ctr; (("__dataconst_"^(Util.string_of_int !ctr)), !ctr) :: (bvs (n-1)) in
+      let vs = bvs nvars in
+      let fapp = MLE_CTor (ct, args @ (List.map (fun x -> MLE_Var(x)) vs)) in
+      MLE_Fun(vs, fapp)
+    in
+
     let mkCTor c args =
       match smap_try_find record_constructors c.ident.idText with
         | Some f -> MLE_Record (path_of_ns mlenv c.ns, List.zip (List.map (fun x -> x.idText) f) args)
-        | None -> MLE_CTor (mlpath_of_lident mlenv c, args) in
+        | None ->
+          begin
+            match smap_try_find algebraic_constructors c.ident.idText with
+            | Some n when n > List.length args -> eta_expand_dataconst (mlpath_of_lident mlenv c) args (n-List.length args)
+            | _ -> MLE_CTor (mlpath_of_lident mlenv c, args)
+          end
+      in
 
     match e.n with
     | Exp_app(sube, args) ->
@@ -716,6 +734,24 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
     | (RecordType f)::_ -> Some f
     | _::qualif -> getRecordFieldsFromType qualif in
 
+  let rec comp_vars ct = match ct with
+    | Total(t) -> type_vars t.n
+    | Comp(ct) -> type_vars ct.result_typ.n
+
+  and type_vars ty = match ty with
+    | Typ_fun(bs,c) -> (bs |> List.collect (function 
+       | Inr x, _ -> 
+        let tl = type_vars x.sort.n in
+        let hd = if is_null_binder (Inr x, false) then None else Some x.v in
+        hd::tl
+       | _ -> [])) @ (comp_vars c.n)
+    | Typ_lam(_,t) | Typ_refine({sort=t}, _) | Typ_app(t, _) 
+    | Typ_ascribed(t,_)
+    | Typ_meta(Meta_pattern(t,_))
+    | Typ_meta(Meta_named(t,_)) -> type_vars t.n
+    | _ -> []
+   in
+
     let (ts, cs) =
         let fold1 sigelt (types, ctors) =
             match sigelt with
@@ -736,6 +772,8 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
               end
 
             | Sig_datacon (x, ty, pr, _, rg) ->
+               let arity = List.length (type_vars ty.n) in
+               smap_add algebraic_constructors x.ident.idText arity;
                (types, (x.ident.idText, (ty, pr)) :: ctors)
 
             | Sig_typ_abbrev (x, tps, k, body, _, rg) ->
