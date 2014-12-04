@@ -270,3 +270,10 @@ val poly_length_is_nat: l:list 'a -> Lemma (ensures (length l >= 0))
 let rec poly_length_is_nat 'a l = using_induction_hyp (poly_length_is_nat 'a)
 
 
+let plus_one x = x + 1
+let test_map1 () =
+  let l = [0;1;2] in
+  let g = map plus_one l in
+  assert (g == [1;2;3])
+
+let test_map2 x = assert (map (fun x -> x + 1) [0;1;2] = [1;2;3])
