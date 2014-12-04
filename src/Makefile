@@ -189,14 +189,7 @@ OCAML_FILES= Microsoft_FStar_Options.ml Microsoft_FStar_LazySet.ml Microsoft_FSt
 OCAML_ALL=$(addprefix ocaml-output/, $(OCAML_FILES))
 
 test:   boot
-	make -s -C ../examples/unit-tests all-lax 
-	make -s -C ../examples/unit-tests mergesort.vv OTHERFLAGS='--z3timeout 10'
-	make -s -C ../examples/unit-tests rpc
-	make -s -C ../examples/unit-tests acls2
-	make -s -C ../examples/unit-tests counters
-	-make -s -C ../examples/unit-tests all-ver 
-	@echo "--------Expect 20 errors--------------"
-
+	make -s -C ../examples 
 
 test.diff:
 	@make -s test | grep -v "^make\[" > .test.out

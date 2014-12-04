@@ -1,125 +1,25 @@
-# --------------------------------------------------------------------
-ifeq ($(OS),Windows_NT)
-RUNTIME =
-MSBUILD = msbuild
-else
-RUNTIME = mono
-MSBUILD = xbuild
-endif
+include ../Makefile.include
 
-FSTAR_HOME = ../..
-LIB_FILES= list.fst string.fst partialmap.fst st.fst 
-# array-realized.fst
-STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
-FSTAR      = $(RUNTIME) ../../bin/fstar.exe --full_context_dependency --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
+all: all-lax all-ver all-neg
 
-#Use the following to test the bootstrapped ocaml version: fstarml
-#FSTAR      = ../../src/ocaml-output/fstarml --prims ../../lib/prims.fst --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
-#FSTAR      = fstarml --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
-
-STDCACHE=Prims.cache List.cache String.cache ST.cache PartialMap.cache Array.cache
-FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(OTHERFLAGS)
-
-all: all-lax vector mergesort.vv rpc acls2 counters all-ver
-
-# removed rbtree.fst from this list for now as it takes more z3 time
-# removed mergsort from this list for the same reason 
-
-BUGFILES=$(addprefix $(FSTAR_HOME)/examples/bug-reports/, bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst bug28.fst bug35.fst bug52.fst bug23.fst bug21.fst bug34.fst)
-VERFILES=$(FSTAR_HOME)/lib/array-realized.fst unit1.fst testset.fst vectors.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst insertionsort-lemma.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst cca2.fst sf-poly.fst format.fst mac.fst sig.fst stlc.fst cca2.fst $(BUGFILES)
-
-acls2: $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst st.fst) acls2.fst
-	$(RUNTIME) ../../bin/fstar.exe --full_context_dependency --fstar_home $(FSTAR_HOME) $^ --verify
-
-counters: $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst stperm.fst) ../sep/counters.fst
-	$(RUNTIME) ../../bin/fstar.exe --full_context_dependency --fstar_home $(FSTAR_HOME) $^ --verify
-
-test: test.fst
-	$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $^ --verify $(OTHERFLAGS)
-
-unif: unif.fst
-	$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $^ --verify $(OTHERFLAGS) --full_context_dependency
-
-cache: $(STDLIB)
-	mkdir $(FSTAR_HOME)/cache
-	$(FSTAR) --serialize_mods --verify
-
-map:
-	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home ../../ $(FSTAR_HOME)/lib/partialmap.fst --verify --logQueries
-
-ccache:
-	rm -f $(addprefix $(FSTAR_HOME)/cache/, $(STDCACHE))
-
-rpc: 
-	$(FSTAR) $(OTHERFLAGS) mac.fst format.fst rpc.fst --verify
-
-padding: 
-	$(FSTAR) $(OTHERFLAGS) format.fst padding.fst --verify
-
-rpc2: 
-	$(FSTAR) $(OTHERFLAGS) mac2.fst format.fst rpc2.fst --verify
-
-encrypt:
-	$(FSTAR) mac.fst encrypt.fs
-encrypt3:
-	$(FSTAR) mac.fst encrypt3.fst
-
-rbt:
-	$(FSTAR) --z3timeout 10 --verify rbtree.fst
-
-%.c.ver: %.fst
-	$(FSTARC) --verify $^
+VERFILES=unit1.fst testset.fst unif.fst
+LAXFILES=rec.fst pat.fst 
+NEGFILES=negative-tests.fst
 
 all-ver: $(VERFILES)
-	$(FSTAR) --verify $^
+	$(FSTAR) $(STDLIB) $^
 
-all-lax: rec.fst pat.fst mac.fst
-	$(FSTAR) --lax $^
+all-lax: rec.fst pat.fst 
+	$(FSTAR) $(STDLIB) --lax $^
 
-%.vv: %.fst
-	$(RUNTIME) ../../bin/fstar.exe --full_context_dependency $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $^ --verify
+all-neg: $(NEGFILES)
+	-$(FSTAR) $(STDLIB) $^
+	echo "EXPECT 20 FAILURES<------------------------------------"
 
-stlc:
-	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) stlc.fst --verify
-
-format: format.fst
-	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) format.fst --verify
-
-mac: mac.fst
-	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) --fstar_home $(FSTAR_HOME) $(FSTAR_HOME)/lib/list.fst $(FSTAR_HOME)/lib/array-realized.fst mac.fst --verify
-
-vector: vectors.fst
-	$(FSTAR) --verify --full_context_dependency vectors.fst
-
-wc-ver: $(STDLIB) $(VERFILES) rbtree.fst rpc.fst ../sep/counters.fst acls.fst acls2.fst
-	wc -l $^
-
-%.tc: %.fst
-	$(FSTAR) $^
-
-%.ver: %.fst
-	$(FSTAR) --verify $^
-
-prims: 
-	$(FSTAR)  
-
-
+#DO WE REALLY NEED THESE HERE?
 utils:
 	$(FSTAR) --codegen OCaml --prims prims.fst utils.fst
 
 stdlib:
 	$(FSTAR) --codegen OCaml $(STDLIB)
 
-#NS: Moved the specifics from here to the mitls repo. 
-#This target remains here just to not suprise anyone ... we should remove it soon.
-
-# # Change the following line to the location of the top MITLS directory "lang-sec/msrc/cvk/samples/protocols/tls"
-MITLS=../../../mitls
-mitls:
-	make -C $(MITLS)/ML mitls
-
-wc-mitls:
-	make -C $(MITLS)/ML wc
-
-clean:
-	rm *~ 

@@ -40,21 +40,10 @@ let rec ack_swap n m =
   else if n = 0 then ack_swap 1 (m - 1)
   else ack_swap (ack_swap (n - 1) m) (m - 1)
 
-val ackermann_bad: m:int -> n:int -> Tot int
-let rec ackermann_bad m n = (* expected failure *)
-  if m=0 then n + 1
-  else if n = 0 then ackermann_bad (m - 1) 1
-  else ackermann_bad (m - 1) (ackermann_bad m (n - 1))
-
 val length: list 'a -> Tot nat
 let rec length l = match l with
   | [] -> 0
   | _::tl -> 1 + length tl
-
-val length_bad: list 'a -> Tot nat
-let rec length_bad l = match l with (* expect failure *)
-  | [] -> 0
-  | _::tl -> 1 + length_bad l
 
 val half_length: list 'a -> Tot nat
 let rec half_length l = match l with
@@ -75,12 +64,6 @@ let rec strangeZero v =
   if v = 0
   then 0
   else sumto (v-1) strangeZero
-
-val strangeZeroBad: nat -> Tot nat
-let rec strangeZeroBad v = (* expect failure *)
-  if v = 0
-  then 0
-  else sumto v strangeZeroBad
 
 (* map and treemap *)
 
