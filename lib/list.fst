@@ -188,9 +188,12 @@ let containsT = memT
 val find: a:Type
         -> f:(a -> Tot bool)
         -> list a
-        -> Tot (option a)
-        (* -> Tot (option (x:a{f x})) *)
-        (* This currently does not typecheck *)
+        -> Tot (option (x:a{f x}))
+        (* This currently does not typecheck; 
+           NS: it does typecheck ... you need the --full_context_dependency flag. 
+               FYI: Lots of the unit tests depend on this type. 
+                    Changing it causes the "make -C src test" target to fail
+        *)
 let rec find f l = match l with
   | [] -> None
   | hd::tl -> if f hd then Some hd else find f tl
