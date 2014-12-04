@@ -438,7 +438,6 @@ and snk tcenv (cfg:config<knd>) : config<knd> =
     | Kind_unknown -> 
       failwith "Impossible"
 
-(* The type checker never attempts to reduce expressions itself; but still need to do substitutions *)
 and wne tcenv (cfg:config<exp>) : config<exp> = 
   let e = compress_exp cfg.code in
   let w f = f cfg.code.tk cfg.code.pos in
@@ -506,6 +505,10 @@ let norm_kind steps tcenv k =
 
 let norm_typ steps tcenv t = 
   let c = sn tcenv (t_config t [] steps) in
+  c.code
+
+let norm_exp steps tcenv e = 
+  let c = wne tcenv (ke_config e [] steps) in
   c.code
 
 let whnf tcenv t = 

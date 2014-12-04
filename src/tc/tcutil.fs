@@ -133,7 +133,13 @@ let destruct_arrow_kind env tt k args : (Syntax.args * binders * knd) =
 
     aux ktop
 
-let pat_as_exps env p = 
+(*
+    Turns a disjunctive pattern p into a triple:
+ *)
+let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may appear in the branch of match) *)
+                         * list<binding>   (* pattern-bound wild-card variables (may not appear in the branch, but do appear in expresions corresponding to the pattern) *)
+                         * list<exp>       (* expressions corresponding to each arm of the disjunct *)
+                         ) = 
      let pvar_eq x y = match x, y with 
           | Inl a, Inl b -> bvd_eq a.v b.v
           | Inr x, Inr y -> bvd_eq x.v y.v

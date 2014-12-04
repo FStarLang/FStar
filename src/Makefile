@@ -190,7 +190,6 @@ OCAML_ALL=$(addprefix ocaml-output/, $(OCAML_FILES))
 
 test:   boot
 	make -s -C ../examples/unit-tests all-lax 
-	make -s -C ../examples/unit-tests vector
 	make -s -C ../examples/unit-tests mergesort.vv OTHERFLAGS='--z3timeout 10'
 	make -s -C ../examples/unit-tests rpc
 	make -s -C ../examples/unit-tests acls2

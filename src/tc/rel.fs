@@ -1252,34 +1252,72 @@ and solve_e (top:bool) (env:Env.env) (rel:rel) (e1:exp) (e2:exp) (probs:worklist
 
     | Exp_app({n=Exp_uvar(u1,t1); pos=r1}, args1), _ -> //flex-rigid: patterns or imitation; no projections
         let maybe_vars1 = pat_vars env [] args1 in
+        let sub_problems xs args =
+            let gi_xi, gi_pi = args |> List.map (function 
+            | Inl t, imp -> 
+                let gi_xi, gi = new_tvar t.pos xs t.tk in
+                let gi_pi = mk_Typ_app(gi, args1) t.tk t.pos in
+                (Inl gi_xi, imp), TProb(false, EQ, gi_pi, t)
+            | Inr v, imp ->
+                let gi_xi, gi = new_evar v.pos xs v.tk in 
+                let gi_pi = mk_Exp_app(gi, args1) v.tk v.pos in
+                (Inr gi_xi, imp), EProb(false, EQ, gi_pi, v)) |> List.unzip in
+          gi_xi, gi_pi in
+         
+        let project_e head2 args2 = 
+            //u p1..pn =?= y a1 .. am
+            //if pi = y  
+            //u = \x1..xn. xi (G1 (x1..xn), ..., Gm (x1..xn))
+            //Gi(p1..pn) =?= ai 
+            let giveup () = giveup env "flex-rigid: refusing to project expressions" (EProb(top, rel, e1, e2)) probs in
+            match (Util.compress_exp head2).n with 
+                | Exp_bvar y -> 
+                    let xs, tres = match Util.function_formals t1 with
+                        | None -> [], t1
+                        | Some (xs, c) -> xs, Util.comp_result c in
+                    if List.length xs <> List.length args1
+                    then giveup()
+                    else let rec aux xs args = match xs, args with 
+                            | [], [] -> giveup () //couldn't find the term to project
+                            | (Inl _, _)::xs, (Inl _, _)::args -> aux xs args
+                            | (Inr xi, _)::xs, (Inr arg, _)::args -> 
+                                begin match (Util.compress_exp arg).n with 
+                                       | Exp_bvar z -> 
+                                          if Util.bvar_eq y z (* found the variable to project *)
+                                          then let gi_xi, gi_pi = sub_problems xs args2 in
+                                               let sol = mk_Exp_abs(xs, mk_Exp_app(Util.bvar_to_exp xi, gi_xi) tres e1.pos) t1 e1.pos in
+                                               if Tc.Env.debug env <| Options.Other "Rel"
+                                               then Util.fprint3 "Projected: %s -> %s\nSubprobs=\n%s\n" (Print.uvar_e_to_string (u1,t1)) (Print.exp_to_string sol) (gi_pi |> List.map (prob_to_string env) |> String.concat "\n");
+                                               solve env (attempt gi_pi (extend_subst (UE((u1, t1), sol)) probs))
+                                          else aux xs args
+                                       | _ -> aux xs args
+                                end
+                            | _ -> giveup () in
+                          aux xs args2
+                | _ -> giveup () in
+
         let imitate_e () = 
-        //u1 p1..pn =?= h a1..am
-        //if h not occurs in u1 and h not free
-        //u1 = \x1..xn. h (G1(x1...xn), ..., Gm(x1..xn))
-        //and Gi(p1..pn) =?= ai
-        if Tc.Env.debug env <| Options.Other "Rel"
-        then Util.fprint2 "Imitating expressions: %s =?= %s\n" (Print.exp_to_string e1) (Print.exp_to_string e2);
-        let head2, args2 = Util.head_and_args_e e2 in
-        let fvhead = Util.freevars_exp head2 in
-        let occurs_ok, _ = occurs_check_e env (u1, t1) head2 in
-        if Util.fvs_included fvhead Syntax.no_fvs && occurs_ok
-        then let xs, tres = match Util.function_formals t1 with
-                    | None -> [], t1
-                    | Some (xs, c) -> xs, Util.comp_result c in
-                let gi_xi, gi_pi = args2 |> List.map (function 
-                | Inl t, imp -> 
-                    let gi_xi, gi = new_tvar t.pos xs t.tk in
-                    let gi_pi = mk_Typ_app(gi, args1) t.tk t.pos in
-                    (Inl gi_xi, imp), TProb(false, EQ, gi_pi, t)
-                | Inr v, imp ->
-                    let gi_xi, gi = new_evar v.pos xs v.tk in 
-                    let gi_pi = mk_Exp_app(gi, args1) v.tk v.pos in
-                    (Inr gi_xi, imp), EProb(false, EQ, gi_pi, v)) |> List.unzip in
-            let sol = mk_Exp_abs(xs, mk_Exp_app(head2, gi_xi) tres e1.pos) t1 e1.pos in
+            //u1 p1..pn =?= h a1..am
+            //if h not occurs in u1 and h not free
+            //u1 = \x1..xn. h (G1(x1...xn), ..., Gm(x1..xn))
+            //and Gi(p1..pn) =?= ai
             if Tc.Env.debug env <| Options.Other "Rel"
-            then Util.fprint3 "Imitated: %s -> %s\nSubprobs=\n%s\n" (Print.uvar_e_to_string (u1,t1)) (Print.exp_to_string sol) (gi_pi |> List.map (prob_to_string env) |> String.concat "\n");
-            solve env (attempt gi_pi (extend_subst (UE((u1, t1), sol)) probs))
-        else giveup env "flex-rigid: not a pattern; free variable/occurs check failed---refusing to use projection to expressions" (EProb(top, rel, e1, e2)) probs in
+            then Util.fprint2 "Imitating expressions: %s =?= %s\n" (Print.exp_to_string e1) (Print.exp_to_string e2);
+            let head2, args2 = Util.head_and_args_e e2 in
+            let fvhead = Util.freevars_exp head2 in
+            let occurs_ok, _ = occurs_check_e env (u1, t1) head2 in
+            if Util.fvs_included fvhead Syntax.no_fvs && occurs_ok
+            then let xs, tres = match Util.function_formals t1 with
+                        | None -> [], t1
+                        | Some (xs, c) -> xs, Util.comp_result c in
+                 let gi_xi, gi_pi = sub_problems xs args2 in
+                 let sol = mk_Exp_abs(xs, mk_Exp_app(head2, gi_xi) tres e1.pos) t1 e1.pos in
+                 if Tc.Env.debug env <| Options.Other "Rel"
+                 then Util.fprint3 "Imitated: %s -> %s\nSubprobs=\n%s\n" (Print.uvar_e_to_string (u1,t1)) (Print.exp_to_string sol) (gi_pi |> List.map (prob_to_string env) |> String.concat "\n");
+                 solve env (attempt gi_pi (extend_subst (UE((u1, t1), sol)) probs))
+            else if occurs_ok 
+            then project_e head2 args2
+            else giveup env "flex-rigid: occurs check failed" (EProb(top, rel, e1, e2)) probs in
       
 
         begin match maybe_vars1 with 

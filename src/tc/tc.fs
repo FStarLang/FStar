@@ -689,37 +689,27 @@ and tc_exp env e : exp * comp =
 
   | Exp_meta(Meta_datainst(dc, topt)) -> 
     (* This is where we process the type annotation on data constructors populated by the Data_app case above. *) 
-    
-    (* For compatibility with ML: dtuples without a type annotation default to their non-dependent versions *)
-    let maybe_default_dtuple_type env tres topt  = 
-      let tconstr, args = Util.head_and_args tres in
-      if Util.is_dtuple_constructor tconstr 
-      then let tup = Tc.Util.mk_basic_dtuple_type env (List.length args) in
-            let _ = match topt with 
-                    | None -> ()
-                    | Some t -> Tc.Rel.trivial_subtype env None t tup in
-            Tc.Rel.trivial_subtype env None tres tup in
-     
     let dc, c_dc = tc_value (instantiate_both env) dc in 
     let t_dc = Util.comp_result c_dc in
     let tres = match Util.function_formals t_dc with 
         | Some (_, c) -> Util.comp_result c
         | _ -> t_dc in
     begin match topt with 
-      | None -> 
-       (* There's no type annotation from the context ... not much to do, except in the case of tuples.
-          For dependent tuples, default to a simple (non-dependent) tuple type. *)
-        maybe_default_dtuple_type env tres None
+      | None -> ()    (* There's no type annotation from the context ... not much to do *)
        
       | Some t_expected -> 
-        let t = Tc.Normalize.norm_typ [Normalize.Beta] env t_expected in
+        let t = Util.unrefine t_expected |> Tc.Normalize.norm_typ [Normalize.Beta] env in
         match t.n with 
-            | Typ_uvar _ -> (* We have a type from the context; but it is non-informative. So, default tuples if applicable *)
-              maybe_default_dtuple_type env tres (Some t_expected)
+            | Typ_uvar _
+            | Typ_app({n=Typ_uvar _}, _) -> (* We have a type from the context; but it is non-informative. *) 
+              ()
        
             | _ -> (* Finally, we have some useful info from the context; use it to instantiate the result type of dc *)
-              if debug env Options.Low then Util.fprint2 "Expected = %s\n Unrefined = %s\n" (Print.typ_to_string t_expected) (Print.typ_to_string <| Util.unrefine t_expected);
-              Tc.Rel.trivial_subtype env None tres (Util.unrefine t_expected)
+              let _, args = Util.head_and_args t in
+              if args |> Util.for_all (fun arg -> match fst arg with Inl _ -> true | _ -> false) //if all the args are types then try to get some useful instantiation from it
+              then let _ = if debug env Options.Low then Util.fprint2 "Expected = %s\n Unrefined = %s\n" (Print.typ_to_string t_expected) (Print.typ_to_string <| Util.unrefine t_expected) in
+                   ignore <| Tc.Rel.subtype env tres t
+              else () (* we have a value-dependent type; compute a type and then check it for compatibility later *)
     end;
     dc, c_dc (* NB: Removed the Meta_datainst tag on the way up---no other part of the compiler sees Meta_datainst *)
 
@@ -1078,7 +1068,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
 
   let rec mk_guard scrutinee pat_exp : typ = 
     if not !Options.verify then Util.ftv Const.true_lid ktype else //NS: TODO ... seem to be hitting a bug when type-checking visit.fs
-        let pat_exp = compress_exp pat_exp in
+        let pat_exp = Util.compress_exp pat_exp in
         match pat_exp.n with 
           | Exp_uvar _
           | Exp_app({n=Exp_uvar _}, _) 
@@ -1100,7 +1090,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
   let guard = 
 //    if !Options.verify     (* Annotate the pattern with its corresponding expression and guard; consumed downstream by the encoding to SMT *)
 //    then 
-    let guard = disj_exps |> List.map (mk_guard scrutinee) |> Util.mk_disj_l  in
+    let guard = disj_exps |> List.map (fun e -> mk_guard scrutinee (Normalize.norm_exp [Normalize.Beta] env e)) |> Util.mk_disj_l  in
          let guard = match when_condition with 
             | None -> guard
             | Some w -> Util.mk_conj guard w in
