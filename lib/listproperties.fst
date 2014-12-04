@@ -97,9 +97,18 @@ val append_mem:  l1:list 'a
               -> a:'a
               -> Lemma (requires True)
                        (ensures (mem a (l1@l2) = (mem a l1 || mem a l2)))
+                       (* [SMTPat (mem a (l1@l2))] *)
 let rec append_mem l1 l2 a = match l1 with
   | [] -> ()
   | hd::tl -> append_mem tl l2 a
+
+val append_mem_forall:  l1:list 'a
+              -> l2:list 'a
+              -> Lemma (requires True)
+                       (ensures (forall a. mem a (l1@l2) = (mem a l1 || mem a l2)))
+let rec append_mem_forall l1 l2 = match l1 with
+  | [] -> ()
+  | hd::tl -> append_mem_forall tl l2
 
 val append_count:  l1:list 'a
               -> l2:list 'a
@@ -109,6 +118,15 @@ val append_count:  l1:list 'a
 let rec append_count l1 l2 a = match l1 with
   | [] -> ()
   | hd::tl -> append_count tl l2 a
+
+val append_count_forall:  l1:list 'a
+              -> l2:list 'a
+              -> Lemma (requires True)
+                       (ensures (forall a. count a (l1@l2) = (count a l1 + count a l2)))
+                       (* [SMTPat (l1@l2)] *)
+let rec append_count_forall l1 l2 = match l1 with
+  | [] -> ()
+  | hd::tl -> append_count_forall tl l2
 
 val append_eq_nil: l1:list 'a -> l2:list 'a ->
   Lemma (requires (l1@l2 = []))
@@ -213,69 +231,120 @@ val partition_length: f:('a -> Tot bool)
                   -> l:list 'a
                   -> Lemma (requires True)
                            (ensures (length (fst (partitionT f l)) + length (snd (partitionT f l)) = length l))
+                           (* [SMTPat (length l)] *)
 let partition_length f l = List.partition_length f l
 
 val partition_mem: f:('a -> Tot bool)
                   -> l:list 'a
+                  -> x:'a
                   -> Lemma (requires True)
                            (ensures ((fun l1 l2 ->
-                                     (forall x. mem x l1 ==> f x)
-                                      /\ (forall x. mem x l2 ==> not (f x))
-                                      /\ (forall x. mem x l = (mem x l1 || mem x l2))))
+                                     (mem x l = (mem x l1 || mem x l2)))
                                         (fst (partitionT f l))
-                                        (snd (partitionT f l)))
-let rec partition_mem f l = match l with
+                                        (snd (partitionT f l))))
+let rec partition_mem f l x = match l with
   | [] -> ()
-  | hd::tl -> partition_mem f tl
+  | hd::tl -> partition_mem f tl x
+
+val partition_mem_forall: f:('a -> Tot bool)
+                  -> l:list 'a
+                  -> Lemma (requires True)
+                           (ensures ((fun l1 l2 ->
+                                     (forall x. mem x l = (mem x l1 || mem x l2)))
+                                        (fst (partitionT f l))
+                                        (snd (partitionT f l))))
+let rec partition_mem_forall f l = match l with
+  | [] -> ()
+  | hd::tl -> partition_mem_forall f tl
+
+val partition_mem_p_forall: p:('a -> Tot bool)
+                  -> l:list 'a
+                  -> Lemma (requires True)
+                           (ensures ((fun l1 l2 ->
+                                     ((forall x. mem x l1 ==> p x) /\ (forall x. mem x l2 ==> not (p x))))
+                                        (fst (partitionT p l))
+                                        (snd (partitionT p l))))
+let rec partition_mem_p_forall p l = match l with
+  | [] -> ()
+  | hd::tl -> partition_mem_p_forall p tl
 
 val partition_count: f:('a -> Tot bool)
                   -> l:list 'a
+                  -> x:'a
+                  -> Lemma (requires True)
+                           (ensures (count x l = (count x (fst (partitionT f l)) + count x (snd (partitionT f l)))))
+let rec partition_count f l x = match l with
+  | [] -> ()
+  | hd::tl -> partition_count f tl x
+
+val partition_count_forall: f:('a -> Tot bool)
+                  -> l:list 'a
                   -> Lemma (requires True)
                            (ensures (forall x. count x l = (count x (fst (partitionT f l)) + count x (snd (partitionT f l)))))
-let rec partition_count f l = match l with
+                           (* [SMTPat (partitionT f l)] *)
+let rec partition_count_forall f l= match l with
   | [] -> ()
-  | hd::tl -> partition_count f tl
+  | hd::tl -> partition_count_forall f tl
 
 
 (** Correctness of quicksort **)
 
-val sorted: ('a -> 'a -> Tot int) -> list 'a -> Tot bool
+val sortWithT_permutation: f:('a -> 'a -> Tot int) -> l:list 'a ->
+  Lemma (requires True)
+        (ensures (forall x. count x l = count x (sortWithT f l)))
+        (decreases (length l))
+let rec sortWithT_permutation f l = match l with
+    | [] -> ()
+    | pivot::tl ->
+       let hi, lo  = partitionT (bool_of_compare f pivot) tl in
+       partition_length (bool_of_compare f pivot) tl;
+       partition_count_forall (bool_of_compare f pivot) tl;
+       sortWithT_permutation f lo;
+       sortWithT_permutation f hi;
+       append_count_forall (sortWithT f lo) (pivot::sortWithT f hi)
+
+val sorted: ('a -> 'a -> Tot bool) -> list 'a -> Tot bool
 let rec sorted f = function
   | []
   | [_] -> true
-  | x::y::tl -> f x y > 0 && sorted f (y::tl)
+  | x::y::tl -> f x y && sorted f (y::tl)
 
-opaque type total_order (a:Type) (f: (a -> a -> Tot int)) =
-    (forall a. f a a = 0)                                           (* reflexivity   *)
-    /\ (forall a1 a2. (f a1 a2 > 0) <==> (f a2 a1 < 0))   (* anti-symmetry *)
-    /\ (forall a1 a2 a3. f a1 a2 >= 0 /\ f a2 a3 >= 0 ==> f a1 a3 >= 0)        (* transitivity  *)
-    /\ (forall a1 a2. f a1 a2 = 0 ==> a1 <> a2) (* Totality *)
+(* opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) = *)
+(*     (forall a. f a a)                                           (\* reflexivity   *\) *)
+(*     /\ (forall a1 a2. f a1 a2 /\ f a2 a1  ==> a1 = a2)          (\* anti-symmetry *\) *)
+(*     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (\* transitivity  *\) *)
+
+opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
+    (forall a. f a a)                                           (* reflexivity   *)
+    /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
+    /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
 
 val append_sorted:  a:Type
-               ->  f:(a -> a -> Tot int)
+               ->  f:(a -> a -> Tot bool)
                ->  l1:list a{sorted f l1}
                ->  l2:list a{sorted f l2}
                ->  pivot:a
-               ->  Lemma (requires (total_order a f)
-                                    /\ (forall y. mem y l1 ==> f pivot y <= 0)
-                                    /\ (forall y. mem y l2 ==> f pivot y > 0))
-                         (ensures (sorted f (l1@(pivot::l2))))
+               ->  Lemma (requires (total_order a f
+                                    /\ (forall y. mem y l1 ==> not(f pivot y))
+                                    /\ (forall y. mem y l2 ==> f pivot y))
+)                         (ensures (sorted f (l1@(pivot::l2))))
+                          [SMTPat (sorted f (l1@(pivot::l2)))]
 let rec append_sorted f l1 l2 pivot = match l1 with
   | [] -> ()
   | hd::tl -> append_sorted f tl l2 pivot
 
-val sortWithT_sorted: f:('a -> 'a -> Tot int) ->  l:list 'a ->
-  Lemma (requires (total_order 'a f))
-        (ensures (sorted f (sortWithT f l) /\ (forall x. count x l = count x (sortWithT f l))))
+val sortWithT_sorted: 'a:Type -> f:('a -> 'a -> Tot int) -> l:list 'a ->
+  Lemma (requires (total_order 'a (bool_of_compare f)))
+        (ensures ((sorted (bool_of_compare f) (sortWithT f l)) /\ (forall x. mem x l = mem x (sortWithT f l))))
         (decreases (length l))
-let rec sortWithT_sorted f = function
-  | [] -> ()
-  | pivot::tl ->
-     let hi, lo  = partitionT (bool_of_compare f pivot) tl in
-     partition_length (bool_of_compare f pivot) tl;
-     (* How can it work with these two lines commented out? *)
-     (* partition_mem (bool_of_compare f pivot) tl; *)
-     (* partition_count (bool_of_compare f pivot) tl; *)
-     sortWithT_sorted f lo;
-     sortWithT_sorted f hi;
-     append_sorted _ f (sortWithT f lo) (sortWithT f hi) pivot
+let rec sortWithT_sorted f l = match l with
+    | [] -> ()
+    | pivot::tl ->
+       let hi, lo  = partitionT (bool_of_compare f pivot) tl in
+       partition_length (bool_of_compare f pivot) tl;
+       partition_mem_forall (bool_of_compare f pivot) tl;
+       partition_mem_p_forall (bool_of_compare f pivot) tl;
+       sortWithT_sorted f lo;
+       sortWithT_sorted f hi;
+       append_mem_forall (sortWithT f lo) (pivot::sortWithT f hi);
+       append_sorted (bool_of_compare f) (sortWithT f lo) (sortWithT f hi) pivot

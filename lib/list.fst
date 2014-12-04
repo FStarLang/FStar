@@ -188,7 +188,9 @@ let containsT = memT
 val find: a:Type
         -> f:(a -> Tot bool)
         -> list a
-        -> Tot (option (x:a{f x}))
+        -> Tot (option a)
+        (* -> Tot (option (x:a{f x})) *)
+        (* This currently does not typecheck *)
 let rec find f l = match l with
   | [] -> None
   | hd::tl -> if f hd then Some hd else find f tl
@@ -328,6 +330,7 @@ let rec zip3 l1 l2 l3 = match l1, l2, l3 with
     | [], [], [] -> []
     | hd1::tl1, hd2::tl2, hd3::tl3 -> (hd1,hd2,hd3)::(zip3 tl1 tl2 tl3)
     | _, _, _ -> failwith "The lists do not have the same length"
+
 
 (** Sorting (implemented as quicksort) **)
 
