@@ -75,3 +75,11 @@ let rec test_flex_flex_equiv_non_patterns (a:Type) (g:a -> unit) : unit =
   ()
     
 and test_flex_flex_equiv_non_patterns' (y:'b) = failwith "stub"
+
+type t (a:Type) = 
+  | A of a
+let h x =
+  let x1 = 
+    let x2 = failwith "" in A 0
+  in match x1 with 
+    | A a -> ()

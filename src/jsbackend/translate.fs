@@ -136,7 +136,7 @@ and js_of_match (e:exp) (cases:list<(pat * option<exp> * exp)>) =
                 fun (cur, b, i) p -> let (next, nb) = aux (id^".v["^(Util.string_of_int i)^"]") p in
                 (and_cond cur next, b @ nb, i+1)
             ) (JSE_Bool(true), [], 0) l in (and_cond tagcond valcond, valbinds)
-        | Pat_var(bv) -> (JSE_Bool(true), [JSP_Property(bv.v.ppname.idText, JSE_Identifier(id))])
+        | Pat_var(bv, _) -> (JSE_Bool(true), [JSP_Property(bv.v.ppname.idText, JSE_Identifier(id))])
         | Pat_tvar(_) -> failwith "fail..."
         | Pat_constant(c) -> (JSE_Sequal(JSE_Identifier(id), js_of_const c), [])
         | Pat_disj(l) -> List.fold_left (fun (cur,b) p->

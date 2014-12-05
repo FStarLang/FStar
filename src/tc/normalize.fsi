@@ -45,6 +45,7 @@ val norm_kind: steps -> Env.env -> knd -> knd
 val norm_typ:  steps -> Env.env -> typ -> typ
 val norm_exp:  steps -> Env.env -> exp -> exp
 val whnf: Env.env -> typ -> typ
+val exp_norm_to_string: Env.env -> exp -> string
 val typ_norm_to_string : Env.env -> typ -> string
 val kind_norm_to_string : Env.env -> knd -> string
 val formula_norm_to_string : Env.env -> typ -> string

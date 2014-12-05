@@ -738,7 +738,7 @@ and encode_one_pat (env:env_t) pat : (env_t * pattern) =
             | Pat_disj _ -> failwith "Impossible"
             
             | Pat_dot_term (x, _)
-            | Pat_var x
+            | Pat_var (x, _)
             | Pat_wild x -> [Inr x, scrutinee] 
 
             | Pat_dot_typ (a, _)

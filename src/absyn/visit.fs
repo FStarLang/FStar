@@ -317,7 +317,7 @@ and reduce_exp
             | Pat_wild _
             | Pat_twild _
             | Pat_constant _ -> b
-            | Pat_var x -> push_vbinder b (Some x.v)
+            | Pat_var (x, _) -> push_vbinder b (Some x.v)
             | Pat_tvar t -> push_tbinder b (Some t.v)
             | Pat_cons(_, pats) -> List.fold_left pat_binders b pats
             | Pat_disj(p::_) -> pat_binders b p

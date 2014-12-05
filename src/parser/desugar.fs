@@ -235,9 +235,9 @@ let rec destruct_app_pattern env is_top_level p = match p.pat with
   | PatAscribed(p,t) ->
     let (name, args, _) = destruct_app_pattern env is_top_level p in
     (name, args, Some t)
-  | PatApp({pat=PatVar id}, args) when is_top_level ->
+  | PatApp({pat=PatVar (id, _)}, args) when is_top_level ->
     (Inr (qualify env id), args, None)
-  | PatApp({pat=PatVar id}, args) ->
+  | PatApp({pat=PatVar (id, _)}, args) ->
     (Inl id, args, None)
   | _ ->
     failwith "Not an app pattern"
@@ -320,7 +320,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         let p = if is_kind env t 
                 then match p.pat with 
                         | PatTvar _ -> p
-                        | PatVar x -> {p with pat=PatTvar x}
+                        | PatVar (x, _) -> {p with pat=PatTvar x}
                         | _ -> raise (Error ("Unexpected pattern", p.prange))
                 else p in
         let loc, env', binder, p = aux loc env p in
@@ -347,9 +347,9 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         let x = new_bvd (Some p.prange) in
         loc, env, VBinder(x, tun), pos <| Pat_constant c
 
-      | PatVar x ->
+      | PatVar (x, imp) ->
         let loc, env, xbvd = resolvex loc env x in 
-        loc, env, VBinder(xbvd, tun), pos <| Pat_var (bvd_to_bvar_s xbvd tun)
+        loc, env, VBinder(xbvd, tun), pos <| Pat_var (bvd_to_bvar_s xbvd tun, imp)
 
       | PatName l ->
         let l = fail_or env (try_lookup_datacon env) l in
@@ -410,8 +410,8 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
 and desugar_binding_pat_maybe_top top env p : (env_t * bnd * option<pat>) =
   if top 
   then match p.pat with 
-    | PatVar x -> (env, LetBinder(qualify env x, tun), None)
-    | PatAscribed({pat=PatVar x}, t) -> 
+    | PatVar (x, _) -> (env, LetBinder(qualify env x, tun), None)
+    | PatAscribed({pat=PatVar (x, _)}, t) -> 
       (env, LetBinder(qualify env x, desugar_typ env t), None)
     | _ -> raise (Error("Unexpected pattern at the top-level", p.prange)) 
   else
@@ -645,7 +645,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
           let record = Construct(record.constrname,
                                  record.fields |> List.map (fun (f, _) ->
                                     get_field (Some xterm) f, false)) in
-          Let(false, [(mk_pattern (PatVar x) x.idRange, e)], mk_term record top.range top.level) in
+          Let(false, [(mk_pattern (PatVar (x, false)) x.idRange, e)], mk_term record top.range top.level) in
       let recterm = mk_term recterm top.range top.level in
       desugar_exp env recterm
         

@@ -1,22 +1,14 @@
+VERFILES=unit1.fst testset.fst unif.fst pat.fst rec.fst 
 include ../Makefile.include
-
-all: all-lax all-ver all-neg
-
-VERFILES=unit1.fst testset.fst unif.fst
-LAXFILES=rec.fst pat.fst 
 NEGFILES=negative-tests.fst
 
-all-ver: $(VERFILES)
-	$(FSTAR) $(STDLIB) $^
-
-all-lax: rec.fst pat.fst 
-	$(FSTAR) $(STDLIB) --lax $^
+all: .all.ver all-neg
 
 all-neg: $(NEGFILES)
 	-$(FSTAR) $(STDLIB) $^
 	echo "EXPECT 20 FAILURES<------------------------------------"
 
-#DO WE REALLY NEED THESE HERE?
+#DO WE REALLY NEED THESE TARGETS HERE?
 utils:
 	$(FSTAR) --codegen OCaml --prims prims.fst utils.fst
 

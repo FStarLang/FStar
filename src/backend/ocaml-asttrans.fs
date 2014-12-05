@@ -498,7 +498,7 @@ let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (le : lenv) (p : pat) : lenv *
           (le, p)
     end
 
-    | Pat_var x ->
+    | Pat_var (x, _) ->
         let le, mlid = lpush le x.v.realname x.v.ppname in
         (le, MLP_Var mlid)
 

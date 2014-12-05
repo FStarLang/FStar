@@ -323,7 +323,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
                 begin match formal, actual with 
                     | (Inl a, _), (Inl t, imp) -> (* explicit type argument *)
                       let formal_k = Util.subst_kind subst a.sort in
-                      if Env.debug env Options.Low then Util.fprint2 "Checking argument %s against expected kind %s\n" (Print.arg_to_string actual) (Print.kind_to_string formal_k);
+                      if Env.debug env Options.High then Util.fprint2 "Checking argument %s against expected kind %s\n" (Print.arg_to_string actual) (Print.kind_to_string formal_k);
                       let t, g' = tc_typ_check env t formal_k in
                       let actual = Inl t, imp in
                       let g' = Tc.Util.weaken_guard (Tc.Util.short_circuit_guard (Inl head) outargs) g' in
@@ -333,6 +333,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
                     | (Inr x, _), (Inr v, imp) -> (* explicit term argument *)
                       let tx = Util.subst_typ subst x.sort in
                       let env' = Env.set_expected_typ env tx in
+                      if Env.debug env Options.High then Util.fprint2 "Checking argument %s against expected kind %s\n" (Print.arg_to_string actual) (Print.typ_to_string tx);
                       let v, _, g' = tc_total_exp env' v in
                       let actual = Inr v, imp in
                       let g' = Tc.Util.weaken_guard (Tc.Util.short_circuit_guard (Inl head) outargs) g' in
@@ -942,7 +943,8 @@ and tc_exp env e : exp * comp =
             let e = w cres <| mk_Exp_let((false, [(x, Util.comp_result c1, e1)]), e2) in
             match topt with
               | None -> (* no expected type; check that x doesn't escape it's scope *)
-                 let tres = norm_t env (Util.comp_result cres) in 
+                 let cres = Normalize.norm_comp [Normalize.Beta] env cres in
+                 let tres = Util.comp_result cres in 
                  let fvs = Util.freevars_typ tres in
                  if Util.set_mem (bvd_to_bvar_s bvd t) fvs.fxvs 
                  then raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres bvd, rng env))
@@ -1012,17 +1014,19 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
   *)
   (*<tc_pat>*)
   let rec tc_pat (pat_t:typ) env p : pat * list<Env.binding> * Env.env * list<exp> = 
-    let bindings, w, exps = Tc.Util.pat_as_exps env p in
+    let bindings, w, exps, p = Tc.Util.pat_as_exps env p in
     let pat_env = List.fold_left Env.push_local_binding env bindings in
     let env1, _ = Tc.Env.clear_expected_typ pat_env in 
     let env1 = {env1 with Env.is_pattern=true} in //{(Tc.Env.set_expected_typ pat_env pat_t) with Env.is_pattern=true} in
     let env1 = List.fold_left Env.push_local_binding env1 w in
     let exps = exps |> List.map (fun e -> 
-        let e, t = no_guard env1 <| tc_total_exp env1 e in
-        //printfn "Trying pattern subtype %s <: %s" (Print.typ_to_string pat_t) (Print.typ_to_string t);
+        if Tc.Env.debug env Options.High
+        then Util.fprint1 "Checking pattern expression %s\n" (Print.exp_to_string e);
+        let e, t, _ =  tc_total_exp env1 e in
         (match Tc.Rel.try_subtype env1 pat_t t with
             | None -> Tc.Rel.subtype_fail env1 pat_t t
             | Some _ -> ());//the type of the pattern must be pre-compatible with the type of the scrutinee
+//        printfn "Checked pattern expression %s\n" (Normalize.exp_norm_to_string env e);
         e) in
     let p = Tc.Util.decorate_pattern p exps in
     p, bindings@w, pat_env, exps in

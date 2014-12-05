@@ -15,14 +15,22 @@
 *)
 
 module Patterns
-  
-let test (a,b)  = 
+
+type t = 
+  | A : int -> t
+  | B : int -> t
+
+let test_disj t = match t with 
+  | A i 
+  | B i -> i
+
+let test (a,b)  =
   let _ = true, b in
   Cons 0 a
 
 let rec f x = f x + 1
 
-type T = 
+type T =
   | MkT of int * int
 let test_impure x = MkT (f x, 0)
 

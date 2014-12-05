@@ -19,17 +19,17 @@ module Vector
 type vector 'a : nat -> Type =
   | VNil : vector 'a 0 
   | VCons : hd:'a 
-         -> n:nat     (* TODO: make this implicit *)
+         -> #n:nat     
          -> tl:vector 'a n 
          -> vector 'a (n + 1) 
 
 val head: #n:pos -> vector 'a n -> 'a
 let head n v = match v with
-  | VCons x m xs -> x
+  | VCons x xs -> x
 
 val nth : n:nat -> #m:nat{m > n} -> vector 'a m -> Tot 'a
 let rec nth n m v =
-  let VCons x m xs = v in
+  let VCons x xs = v in
   if n = 0
   then x
   else nth (n-1) xs
@@ -38,32 +38,32 @@ val append: #n1:nat -> #n2:nat -> l:vector 'a n1 -> vector 'a n2 ->  Tot (vector
 let rec append n1 n2 v1 v2 =
   match v1 with
     | VNil -> v2
-    | VCons hd m tl -> VCons hd (m + n2) (append tl v2)
+    | VCons hd tl -> VCons hd (append tl v2)
 
 val reverse: #n:nat -> vector 'a n -> Tot (vector 'a n) //the implicitly computed n decreases
 let rec reverse n v = match v with
   | VNil -> VNil
-  | VCons hd m tl -> append (reverse tl) (VCons hd 0 VNil)
+  | VCons hd tl -> append (reverse tl) (VCons hd VNil)
 
 val mapT: ('a -> Tot 'b) -> #n:nat -> vector 'a n -> Tot (vector 'b n)
 let rec mapT f n v = match v with
   | VNil -> VNil
-  | VCons hd m tl -> VCons (f hd) m (mapT f tl)
+  | VCons hd tl -> VCons (f hd) (mapT f tl)
 
 val fold_left: ('acc -> 'a -> Tot 'acc) -> 'acc -> #n:nat -> vector 'a n -> Tot 'acc (decreases n)
 let rec fold_left f acc n v = match v with
   | VNil -> acc
-  | VCons hd m tl -> fold_left f (f acc hd) tl
+  | VCons hd tl -> fold_left f (f acc hd) tl
                      
 val fold_right: ('a -> 'acc -> Tot 'acc) -> #n:nat -> vector 'a n -> 'acc -> Tot 'acc
 let rec fold_right f n v acc = match v with
   | VNil -> acc
-  | VCons hd m tl -> f hd (fold_right f tl acc)
+  | VCons hd tl -> f hd (fold_right f tl acc)
 
 val find: f:('a -> Tot bool) -> #n:nat -> vector 'a n -> Tot (option (x:'a{f x}))
 let rec find f n v = match v with
   | VNil -> None
-  | VCons hd m tl ->
+  | VCons hd tl ->
     if f hd
     then Some hd
     else find f tl

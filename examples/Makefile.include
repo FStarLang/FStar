@@ -19,6 +19,9 @@ FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(O
 %.ver: %.fst
 	$(FSTAR) $(STDLIB) $^
 
+%.vv: %.fst
+	$(FSTAR) $^
+
 %.lax: %.fst
 	$(FSTAR) $(STDLIB) --lax $^
 

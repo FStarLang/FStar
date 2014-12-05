@@ -240,7 +240,7 @@ and [<KnownType("KnownTypes")>] s_pat' =
     | S_Pat_disj of array<s_pat>
     | S_Pat_constant of s_sconst
     | S_Pat_cons of s_fvvar * array<s_pat>
-    | S_Pat_var of s_bvvar
+    | S_Pat_var of s_bvvar * bool
     | S_Pat_tvar of s_btvar
     | S_Pat_wild of s_bvvar
     | S_Pat_twild of s_btvar
@@ -381,7 +381,7 @@ and serialize_pat' (ast : pat') : s_pat' =
     | Pat_disj(l) -> S_Pat_disj(serialize_list serialize_pat l)
     | Pat_constant(c) -> S_Pat_constant(serialize_sconst c)
     | Pat_cons(v, l) -> S_Pat_cons(serialize_fvvar v, serialize_list serialize_pat l)
-    | Pat_var(v) -> S_Pat_var(serialize_bvvar v)
+    | Pat_var(v, b) -> S_Pat_var(serialize_bvvar v, b)
     | Pat_tvar(v) -> S_Pat_tvar(serialize_btvar v)
     | Pat_wild(v) -> S_Pat_wild(serialize_bvvar v)
     | Pat_twild(v) -> S_Pat_tvar(serialize_btvar v)
@@ -519,7 +519,7 @@ and deserialize_pat' (ast : s_pat') : pat' =
     | S_Pat_disj(l) -> Pat_disj(deserialize_list deserialize_pat l)
     | S_Pat_constant(c) -> Pat_constant(deserialize_sconst c)
     | S_Pat_cons(v, l) -> Pat_cons(deserialize_fvvar v, deserialize_list deserialize_pat l)
-    | S_Pat_var(v) -> Pat_var(deserialize_bvvar v)
+    | S_Pat_var(v, b) -> Pat_var(deserialize_bvvar v, b)
     | S_Pat_tvar(v) -> Pat_tvar(deserialize_btvar v)
     | S_Pat_wild(v) -> Pat_wild(deserialize_bvvar v)
     | S_Pat_twild(v) -> Pat_tvar(deserialize_btvar v)

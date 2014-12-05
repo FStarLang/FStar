@@ -129,7 +129,7 @@ and pat' =
   | Pat_disj     of list<pat>
   | Pat_constant of sconst
   | Pat_cons     of fvvar * list<pat>
-  | Pat_var      of bvvar
+  | Pat_var      of bvvar * bool                          (* flag marks an explicitly provided implicit *)
   | Pat_tvar     of btvar
   | Pat_wild     of bvvar                                 (* need stable names for even the wild patterns *)
   | Pat_twild    of btvar
@@ -513,7 +513,7 @@ let rec pat_vars p = match p.v with
       | _ -> false) 
     then vars
     else raise (Error("Pattern variables may not occur more than once", p.p))
-  | Pat_var x -> [Inr x.v]
+  | Pat_var (x, _) -> [Inr x.v]
   | Pat_tvar a -> [Inl a.v]
   | Pat_disj ps -> 
     let vars = List.map pat_vars ps in 

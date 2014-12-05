@@ -564,6 +564,8 @@ let normalize_comp tcenv c =
 let normalize tcenv t = norm_typ [DeltaHard;Beta;Eta] tcenv t
 
 (* Functions for normalization and printing *)
+let exp_norm_to_string tcenv e = 
+  Print.exp_to_string (norm_exp [Beta;SNComp;Unmeta] tcenv e)
 
 let typ_norm_to_string tcenv t =
   Print.typ_to_string (norm_typ [Beta;SNComp;Unmeta] tcenv t)
