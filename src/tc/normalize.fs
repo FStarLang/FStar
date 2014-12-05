@@ -188,9 +188,10 @@ and sn' tcenv (cfg:config<typ>) : config<typ> =
         if is_stack_empty config then config
         else let s' = no_eta config.steps in
              let args = 
-                 if whnf_only config
-                 then config.stack.args |> List.map (fun (arg, env) -> Util.subst_arg (subst_of_env env) arg) 
-                 else config.stack.args |> List.map (function 
+//                 if whnf_only config
+//                 then config.stack.args |> List.map (fun (arg, env) -> Util.subst_arg (subst_of_env env) arg) 
+//                 else 
+                 config.stack.args |> List.map (function 
                     | (Inl t, imp), env -> Inl <| (sn  tcenv (t_config t env s')).code, imp
                     | (Inr v, imp), env -> Inr <| (wne tcenv (ke_config v env s')).code, imp) in
              {config with code=mk_Typ_app(config.code, args) config.stack.k config.code.pos} in
@@ -259,9 +260,11 @@ and sn' tcenv (cfg:config<typ>) : config<typ> =
     | Typ_lam(binders, t2) -> 
       begin match config.stack.args with 
         | [] -> 
-          if whnf_only config (* only want WHNF ... don't enter *)
-          then {config with code=Util.subst_typ (subst_of_env config.environment) config.code}
-          else (* Want full normal: reduce under lambda and return *)
+//          if whnf_only config (* only want WHNF ... don't enter *)
+//          then {config with code=Util.subst_typ (subst_of_env config.environment) config.code}
+//          else
+//          
+               (* Want full normal: reduce under lambda and return *)
                let binders, environment = sn_binders tcenv binders config.environment config.steps in
                let mk_lam t = wk <| mk_Typ_lam(binders, t) in
                sn tcenv ({config with close=close_with_config config mk_lam; 
@@ -299,9 +302,10 @@ and sn' tcenv (cfg:config<typ>) : config<typ> =
       sn tcenv ({config with code=t})
 
     | _ -> 
-        if whnf_only config
-        then {config with code=Util.subst_typ (subst_of_env config.environment) config.code}
-        else match config.code.n with
+//        if whnf_only config
+//        then {config with code=Util.subst_typ (subst_of_env config.environment) config.code}
+//        else 
+        match config.code.n with
                 (* In all remaining cases, the stack should be empty *)
                 | Typ_fun(bs, comp) -> 
                   let binders, environment = sn_binders tcenv bs config.environment config.steps in
