@@ -145,12 +145,99 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
           | Inl a, Inl b -> bvd_eq a.v b.v
           | Inr x, Inr y -> bvd_eq x.v y.v
           | _ -> false in
+
+     let rec pat_env env (p:pat) : list<Env.binding> * list<Env.binding> * env = 
+        match p.v with 
+           | Pat_dot_term _
+           | Pat_dot_typ _ 
+           | Pat_constant _ -> [], [], env
+           | Pat_wild x -> 
+                let w = Env.Binding_var(x.v, new_tvar env ktype) in
+                let env = Env.push_local_binding env w in
+                [], [w], env
+           | Pat_var (x, _) ->
+                let b = Env.Binding_var(x.v, new_tvar env ktype) in
+                let env = Env.push_local_binding env b in
+                [b], [], env
+           | Pat_twild a -> 
+                let w = Env.Binding_typ(a.v, new_kvar env) in
+                let env = Env.push_local_binding env w in
+                [], [w], env
+           | Pat_tvar a ->      
+                let b = Env.Binding_typ(a.v, new_kvar env) in
+                let env = Env.push_local_binding env b in 
+                [b], [], env
+           | Pat_cons(fv, pats) -> 
+               let b, w, env = pats |> List.fold_left (fun (b, w, env) p -> 
+                    let b', w', env = pat_env env p in
+                    b'::b, w'::w, env)  ([], [], env) in
+               List.rev b |> List.flatten, 
+               List.rev w |> List.flatten, 
+               env
+           | Pat_disj _ -> failwith "impossible" in
+
+     let rec pat_arg env (p:pat) : arg * pat = match p.v with
+           | Pat_dot_term (x, _) -> 
+                let t = new_tvar env ktype in
+                let e = fst <| Rel.new_evar p.p [] t in //TODO: why empty vars?
+                let p = {p with v=Pat_dot_term(x, e)} in
+                varg e, p
+
+           | Pat_dot_typ (a, _) -> 
+                let k = new_kvar env in
+                let t = new_tvar env k in
+                let p = {p with v=Pat_dot_typ(a, t)} in
+                (Inl t, true), p
+
+           | Pat_constant c -> 
+                let e = mk_Exp_constant c tun p.p in
+                varg e, p
+
+           | Pat_wild x -> 
+                let e = mk_Exp_bvar x tun p.p in
+                varg e, p
+
+           | Pat_var (x, imp) -> 
+                let e = mk_Exp_bvar x tun p.p in
+                (Inr e, imp), p
+ 
+           | Pat_twild a -> 
+                let t = mk_Typ_btvar a kun p.p in
+                targ t, p
+
+           | Pat_tvar a ->      
+                let t = mk_Typ_btvar a kun p.p in
+                targ t, p
+
+           | Pat_cons(fv, pats) -> 
+               let args, pats = pats |> List.map (pat_arg env) |> List.unzip in
+               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, args) tun p.p, Data_app)) in
+               varg e,
+               {p with v=Pat_cons(fv, List.rev pats)}
+
+           | Pat_disj _ -> failwith "impossible" in
+
+
+
+
      let rec pat_as_args env (p:pat) : (list<Env.binding>                    (* pattern bound variables *)
                                         * list<Env.binding>                  (* pattern-bound wild variables *)
                                         * list<either<btvar,bvvar>>          (* the variables in the first field, for checking disjunctive patterns *)
                                         * list<arg>                          (* pattern sub-terms *)
                                         * pat) =                             (* decorated pattern *)
         match p.v with 
+           | Pat_disj [] -> failwith "impossible"
+
+           | Pat_disj (q::pats) -> 
+              let b, w, o, arg, q = pat_as_arg env q in
+              let w, args, pats = List.fold_right (fun p (w, args, pats) -> 
+                  let _, w', o', arg, p = pat_as_arg env p in
+                  if not (Util.multiset_equiv pvar_eq o o')
+                  then raise (Error(Tc.Errors.disjunctive_pattern_vars o o', Tc.Env.get_range env))
+                  else (w'@w, arg::args, p::pats)) 
+                  pats (w, [], []) in
+              b, w, o, arg::args, {p with v=Pat_disj(q::pats)}
+
            | Pat_dot_term (x, _) -> 
                 let t = new_tvar env ktype in
                 let e = fst <| Rel.new_evar p.p [] t in //TODO: why empty vars?
