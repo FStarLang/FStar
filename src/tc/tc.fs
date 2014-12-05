@@ -275,6 +275,8 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
   | Typ_lam(bs, t) -> 
     let bs, env, g = tc_binders env bs in
     let t, k, f = tc_typ env t in
+    if debug env Options.Extreme 
+    then Util.fprint3 "Checked body %s, decorated with kind %s, computed kind = %s\n" (Print.typ_to_string t) (Print.kind_to_string t.tk) (Print.kind_to_string k);
     let k = mk_Kind_arrow(bs, k) top.pos in
     w k <| mk_Typ_lam(bs, t), k, Rel.conj_guard g <| Tc.Util.close_guard bs f
  
@@ -410,7 +412,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
 and tc_typ_check env t (k:knd) : typ * guard_t = 
   let t, k', f = tc_typ env t in
   let env = Env.set_range env t.pos in
-  let f' = Rel.subkind env k' k in
+  let f' = Rel.subkind env k' k in 
   t, Rel.conj_guard f f'       
 
 and tc_value env e : exp * comp = 
@@ -645,14 +647,25 @@ and tc_exp env e : exp * comp =
     (* These are (potentially) values, but constructor types 
        already have an (Tot) effect annotation on their co-domain. 
        So, we can treat them as normal applications. Except ...  *)
-    let d, args = Util.head_and_args_e e in (* if there are no user-provided type applications, try to infer them as below ... *)
-    begin match args with 
-        | (Inl _, _)::_ -> (* user provided typ argument *)
-            let e, c = tc_exp env e in 
-            mk_Exp_meta(Meta_desugared(e, Data_app)), c
+    let d, args = Util.head_and_args_e e in 
+    (* if there are no user-provided type applications or implicit arguments, 
+       and the expected type is non-indexed, 
+       try to infer the instantiation of type arguments as below. Otherwise, fallback. *)
+    
+    let fallback env = 
+          let e, c = tc_exp env e in 
+          mk_Exp_meta(Meta_desugared(e, Data_app)), c in
 
-        | _ -> 
-        let env1, topt = Env.clear_expected_typ env in 
+    let is_indexed t = 
+       let t = Util.unrefine t |> Tc.Normalize.norm_typ [Normalize.Beta] env in
+       let _, args = Util.head_and_args t in
+       args |> Util.for_some (fun arg -> match fst arg with Inr _ -> true | _ -> false), t in
+ 
+    let user_provided_implicits args = 
+        args |> Util.for_some (fun arg -> match fst arg with Inl _ -> true | _ -> snd arg) in
+
+    let infer_instantiation t env = 
+        let env1, _ = Env.clear_expected_typ env in 
     
         (* The main subtlety with bidirectional typing is here:
             Consider typing (e1, e2) as (x:t * t')
@@ -660,17 +673,29 @@ and tc_exp env e : exp * comp =
             The idea is to push the result type (Tuple2 t (\x:t. t')) down to the constructor MkTuple2
             and then instantiating MkTuple2's arguments using the expected type.
             That's what the Meta_datainst(d, topt) does ... below. 
-            Once we compute good instantiations for '_u1 and '_u2, the rest follows as usual. *)
-        let d = mk_Exp_meta(Meta_datainst(d, topt)) in
-        let e = match args with 
-            | [] -> d 
-            | _ -> mk_Exp_app(d, args) tun top.pos in
+            Once we compute good instantiations for '_u1 and '_u2, the rest follows as usual.
+            
+            This is also useful for computing instantiations for (Some 'u v), 
+            when the expected type is like (option (x:t{phi})). 
+            This forces v to be checked at type (x:t{phi}). 
+        *)
+        let d = mk_Exp_meta(Meta_datainst(d, Some t)) in
+        let e = mk_Exp_app'(d, args) tun top.pos in 
         let e, c = tc_exp env1 e in
         let e = match e.n with  //reassociate inferred targs
             | Exp_app({n=Exp_app(hd, targs)}, args) -> mk_Exp_app(hd, targs@args) e.tk e.pos 
             | _ -> e in
-        comp_check_expected_typ env (mk_Exp_meta(Meta_desugared(e, Data_app))) c
-    end
+        comp_check_expected_typ env (mk_Exp_meta(Meta_desugared(e, Data_app))) c in
+
+    let t = Env.expected_typ env in
+    if Option.isNone t 
+    then fallback env
+    else let indexed, t = is_indexed <| Option.get t in
+         if indexed 
+         then fallback env //Don't try to infer type args in this case
+         else if user_provided_implicits args 
+              then fallback env
+              else infer_instantiation t env
 
   | Exp_meta(Meta_desugared(e, Sequence)) -> 
     begin match (compress_exp e).n with 
@@ -696,21 +721,16 @@ and tc_exp env e : exp * comp =
         | Some (_, c) -> Util.comp_result c
         | _ -> t_dc in
     begin match topt with 
-      | None -> ()    (* There's no type annotation from the context ... not much to do *)
+      | None -> failwith "Impossible" 
        
-      | Some t_expected -> 
-        let t = Util.unrefine t_expected |> Tc.Normalize.norm_typ [Normalize.Beta] env in
+      | Some t -> 
         match t.n with 
             | Typ_uvar _
             | Typ_app({n=Typ_uvar _}, _) -> (* We have a type from the context; but it is non-informative. *) 
               ()
        
-            | _ -> (* Finally, we have some useful info from the context; use it to instantiate the result type of dc *)
-              let _, args = Util.head_and_args t in
-              if args |> Util.for_all (fun arg -> match fst arg with Inl _ -> true | _ -> false) //if all the args are types then try to get some useful instantiation from it
-              then let _ = if debug env Options.Low then Util.fprint2 "Expected = %s\n Unrefined = %s\n" (Print.typ_to_string t_expected) (Print.typ_to_string <| Util.unrefine t_expected) in
-                   ignore <| Tc.Rel.subtype env tres t
-              else () (* we have a value-dependent type; compute a type and then check it for compatibility later *)
+            | _ -> (* We have some useful info from the context; use it to instantiate the result type of dc *)
+              ignore <| Tc.Rel.subtype env tres t
     end;
     dc, c_dc (* NB: Removed the Meta_datainst tag on the way up---no other part of the compiler sees Meta_datainst *)
 
@@ -1427,8 +1447,8 @@ and tc_decls env ses deserialized =
   if debug env Options.Low
   then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
   let se, env = tc_decl env se deserialized in
-  if debug env Options.Low
-  then Util.print_string (Util.format1 "Checked sigelt\t%s\n" (Print.sigelt_to_string se));
+  if debug env <| Options.Other "Progress"
+  then Util.print_string (Util.format1 "Checked sigelt\t%s\n" (Print.sigelt_to_string_short se));
   env.solver.encode_sig env se; 
   se::ses, env) ([], env) ses in
   List.rev ses, env 

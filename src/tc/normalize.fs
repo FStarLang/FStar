@@ -264,7 +264,11 @@ and sn' tcenv (cfg:config<typ>) : config<typ> =
           else (* Want full normal: reduce under lambda and return *)
                let binders, environment = sn_binders tcenv binders config.environment config.steps in
                let mk_lam t = wk <| mk_Typ_lam(binders, t) in
-               sn tcenv ({config with close=close_with_config config mk_lam; code=t2; environment=environment; steps=no_eta config.steps})
+               sn tcenv ({config with close=close_with_config config mk_lam; 
+                                      code=t2; 
+                                      stack=empty_stack t2.tk;
+                                      environment=environment; 
+                                      steps=no_eta config.steps})
         | args -> (* beta *)
 //          if debug tcenv then printfn "(%s) beta-redex: \n\tbinders=%s\n\targs=%s" 
 //                                (Range.string_of_range config.code.pos) 

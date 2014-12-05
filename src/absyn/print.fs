@@ -228,7 +228,7 @@ and typ_to_string x =
       else
         (* the normal way of printing applications *)
         Util.format2 "(%s %s)" (t |> typ_to_string) (args |> args_to_string)
-  | Typ_lam(binders, t2) ->      Util.format2 "(fun %s => %s)" (binders_to_string " " binders) (t2|> typ_to_string)
+  | Typ_lam(binders, t2) ->      Util.format2 "(fun %s -> %s)" (binders_to_string " " binders) (t2|> typ_to_string)
   | Typ_ascribed(t, k) ->
     if !Options.print_real_names  
     then Util.format2 "(%s <: %s)" (typ_to_string t) (kind_to_string k)
@@ -408,7 +408,7 @@ and kind_to_string x = match (compress_kind x).n with
     if !Options.print_real_names
     then kind_to_string k
     else Util.format2 "%s %s" (sli n) (args_to_string args)
-  | Kind_arrow(binders, k) -> Util.format2 "(%s => %s)" (binders_to_string " => " binders) (k |> kind_to_string)
+  | Kind_arrow(binders, k) -> Util.format2 "(%s -> %s)" (binders_to_string " -> " binders) (k |> kind_to_string)
   | Kind_unknown -> "_"
 
 and uvar_k_to_string uv =

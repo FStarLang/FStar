@@ -10,6 +10,7 @@ endif
 FSTAR_HOME = ../..
 LIB_FILES= list.fst string.fst partialmap.fst 
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst)
+FULL_LIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst listproperties.fst)
 PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)
 FSTAR = $(RUNTIME) ../../bin/fstar.exe --full_context_dependency --fstar_home $(FSTAR_HOME) $(OTHERFLAGS)
 
@@ -18,6 +19,9 @@ FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(O
 
 %.ver: %.fst
 	$(FSTAR) $(STDLIB) $^
+
+%.fulllib.ver: %.fst
+	$(FSTAR) $(FULL_LIB) $^
 
 %.vv: %.fst
 	$(FSTAR) $^

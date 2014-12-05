@@ -6,7 +6,7 @@ all: .all.ver all-neg
 
 all-neg: $(NEGFILES)
 	-$(FSTAR) $(STDLIB) $^
-	echo "EXPECT 20 FAILURES<------------------------------------"
+	echo "EXPECT 23 FAILURES<------------------------------------"
 
 #DO WE REALLY NEED THESE TARGETS HERE?
 utils:

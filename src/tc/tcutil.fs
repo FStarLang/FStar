@@ -189,28 +189,40 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
 
            | Pat_cons(fv, pats) -> 
                let t = Tc.Env.lookup_datacon env fv.v in
+               //printfn "Decorating pattern %s\n" (Print.pat_to_string p);
                let pats = match Util.function_formals t with 
                     | None -> []
                     | Some(f, _) -> 
                       let rec aux formals pats = match formals, pats with 
                         | [], [] -> []
                         | [], _::_ -> raise (Error("Too many pattern arguments", range_of_lid fv.v))
-                        | f::formals', _ -> 
-                            begin match f, pats with 
-                                | (Inl _, _), ({v=Pat_tvar _}::pats') -> p::aux formals' pats'
+                        | _::_, [] -> 
+                          formals |> List.map (fun f -> match f with 
+                            | Inl t, _ -> 
+                              let a = Util.bvd_to_bvar_s (Util.new_bvd None) kun in
+                              withinfo (Pat_dot_typ (a, tun)) (Inl kun) (Syntax.range_of_lid fv.v)
+
+                            | Inr _, true ->
+                              let a = Util.gen_bvar tun in
+                              withinfo (Pat_var(a, true)) (Inr tun) (Syntax.range_of_lid fv.v)
+
+                            | _ -> raise (Error("Insufficient pattern arguments", range_of_lid fv.v)))
+
+                        | f::formals', p::pats' -> 
+                            begin match f, p.v with 
+                                | (Inl _, _), Pat_tvar _ -> p::aux formals' pats'
                                 | (Inl _, _), _ -> 
                                     let a = Util.bvd_to_bvar_s (Util.new_bvd None) kun in
                                     let p = withinfo (Pat_dot_typ (a, tun)) (Inl kun) (Syntax.range_of_lid fv.v) in
                                     p::aux formals' pats
-                                | (Inr _, true), ({v=Pat_var(_, true)}::pats') -> 
+                                | (Inr _, true), Pat_var(_, true) -> 
                                     p::aux formals' pats'
                                 | (Inr _, true), _ ->
                                     let a = Util.gen_bvar tun in
                                     let p = withinfo (Pat_var(a, true)) (Inr tun) (Syntax.range_of_lid fv.v) in
                                     p::aux formals' pats
-                                | (Inr _, false), p::pats' ->
+                                | (Inr _, false), _ ->
                                   p::aux formals' pats' 
-                                | _ -> raise (Error("Insufficient pattern arguments", range_of_lid fv.v))
                             end in
                       aux f pats in
 

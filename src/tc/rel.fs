@@ -974,7 +974,8 @@ and solve_t_flex_rigid (top:bool) (env:Tc.Env.env) (orig:prob) (lhs:flex_t) (t2:
             then giveup env (Option.get msg) orig probs
             else if Util.fvs_included fvs2 fvs1
             then //fast solution for flex-pattern/rigid case
-                let _  = if debug env <| Options.Other "Rel" then Util.fprint3 "Pattern %s with fvars=%s succeeded fvar check: %s" (Print.typ_to_string t1) (Print.freevars_to_string fvs1) (Print.freevars_to_string fvs2) in
+                let _  = if debug env <| Options.Other "Rel" 
+                         then Util.fprint3 "Pattern %s with fvars=%s succeeded fvar check: %s\n" (Print.typ_to_string t1) (Print.freevars_to_string fvs1) (Print.freevars_to_string fvs2) in
                 let sol = match vars with 
                 | [] -> t2
                 | _ -> mk_Typ_lam(sn_binders env vars, t2) k t1.pos in
@@ -991,7 +992,8 @@ and solve_t_flex_rigid (top:bool) (env:Tc.Env.env) (orig:prob) (lhs:flex_t) (t2:
     | None ->   
             if check_head (Util.freevars_typ t1) t2
             then (let im_ok = imitate_ok t2 in
-                  if debug env <| Options.Other "Rel" then Util.fprint2 "Not a pattern (%s) ... %s\n" (Print.typ_to_string t1) (if im_ok < 0 then "imitating" else "projecting");
+                  if debug env <| Options.Other "Rel" 
+                  then Util.fprint2 "Not a pattern (%s) ... %s\n" (Print.typ_to_string t1) (if im_ok < 0 then "imitating" else "projecting");
                   imitate_or_project (List.length args_lhs) (subterms args_lhs) im_ok)
             else giveup env "head-symbol is free" orig probs
    
@@ -1058,7 +1060,12 @@ and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist
 
       | Typ_lam(bs1, t1'), Typ_lam(bs2, t2') -> 
         solve_binders env bs1 bs2 rel (TProb(top, rel, t1, t2)) probs
-        (fun subst subprobs -> solve env (attempt (TProb(false, rel, t1', Util.subst_typ subst t2')::subprobs) probs))
+        (fun subst subprobs -> 
+            let prob = TProb(false, rel, t1', Util.subst_typ subst t2') in
+            if Env.debug env <| Options.Other "Rel"
+            then (Util.fprint3 "Kind of lhs is %s body type %s is %s\n" (Normalize.kind_norm_to_string env t1.tk) (Normalize.typ_norm_to_string env t1') (Normalize.kind_norm_to_string env t1'.tk);
+                  Util.fprint1 "Sub-problems from Typ_lam:\n%s\n" ((prob::subprobs) |> List.map (prob_to_string env) |> String.concat "\n"));
+            solve env (attempt (prob::subprobs) probs))
         //NS: Why not close? TODO ... something fishy to resolve here. Closing it produces strange VCs
         //(fun subst subprobs -> solve_and_close false env bs1 subprobs probs (TProb(rel, t1', Util.subst_typ subst t2')))
 
@@ -1120,7 +1127,7 @@ and solve_t (top:bool) (env:Env.env) (rel:rel) (t1:typ) (t2:typ) (probs:worklist
                probs |> solve_t top env rel t1 t2
 
             | (_, None) -> //head matches head'
-                if debug env Options.Medium then Util.fprint2 "Head matches: %s and %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
+                if debug env <| Options.Other "Rel" then Util.fprint2 "Head matches: %s and %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
                 let head, args = Util.head_and_args t1 in
                 let head', args' = Util.head_and_args t2 in
                 if List.length args = List.length args'
