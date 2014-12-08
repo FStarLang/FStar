@@ -65,25 +65,22 @@ let rec contains k t key =
        || (is_Some right && contains (Some.v right) key)
 
 val in_order_opt: #k:int -> t:option (tree k) -> Tot (list int) (decreases t)
-let rec in_order_opt k t = match t with 
+let rec in_order_opt k t = match t with
   | None -> []
-  | Some t ->  (* todo: nested patterns don't work with tree ... yet *)
-     let Node left i right = t in
+  | Some (Node left i right) ->
      in_order_opt left@[i]@in_order_opt right
 
 val index_is_max : #max:int
                 -> t:option (tree max)
-                -> x:int 
+                -> x:int
                 -> Pure unit True (fun u -> List.mem x (in_order_opt t) ==> x <= max) (decreases t)
 let rec index_is_max max t x = match t with
   | None -> ()
-  | Some s -> (* todo: nested patterns don't work with tree ... yet *)
-     let Node #l left i #r right = s in 
+  | Some (Node #l left i #r right) -> (* writing the implicit arguments explicitly ... to workaround a bad exponential blowup in normalization. TODO... fix! *)
      ListProperties.append_mem (in_order_opt #l left @ [i]) (in_order_opt #r right) x;
      ListProperties.append_mem (in_order_opt #l left) [i] x;
      index_is_max #l left x;
      index_is_max #r right x
-
 
 type t = (|l:int * tree l|)                        (* The lens-bracketed tuple is sugar for DTuple2 int (fun (l:int) -> tree l) *)
 val ins : lt:t -> n:int -> Tot t

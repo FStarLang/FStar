@@ -134,19 +134,24 @@ let destruct_arrow_kind env tt k args : (Syntax.args * binders * knd) =
     aux ktop
 
 (*
-    Turns a disjunctive pattern p into a triple:
+    Turns a disjunctive pattern p into a quadruple:
  *)
 let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may appear in the branch of match) *)
                          * list<binding>   (* pattern-bound wild-card variables (may not appear in the branch, but do appear in expresions corresponding to the pattern) *)
                          * list<exp>       (* expressions corresponding to each arm of the disjunct *)
                          * pat) =          (* decorated pattern, with all the missing implicit args in p filled in *)
-                        
      let pvar_eq x y = match x, y with 
-          | Inl a, Inl b -> bvd_eq a.v b.v
-          | Inr x, Inr y -> bvd_eq x.v y.v
+          | Env.Binding_var(x, _), Env.Binding_var(y, _) -> bvd_eq x y
+          | Env.Binding_typ(x, _), Env.Binding_typ(y, _) -> bvd_eq x y
           | _ -> false in
-
-     let rec pat_env env (p:pat) : list<Env.binding> * list<Env.binding> * env = 
+  
+     let vars_of_bindings bs =
+        bs |> List.map (function 
+           | Env.Binding_var(x, _) -> Inr x
+           | Env.Binding_typ(x, _) -> Inl x
+           | _ -> failwith "impos") in
+  
+     let rec pat_env env (p:pat) : list<Env.binding> * list<Env.binding> * Env.env = 
         match p.v with 
            | Pat_dot_term _
            | Pat_dot_typ _ 
@@ -176,7 +181,7 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
                env
            | Pat_disj _ -> failwith "impossible" in
 
-     let rec pat_arg env (p:pat) : arg * pat = match p.v with
+     let rec pat_as_arg env (p:pat) : arg * pat = match p.v with
            | Pat_dot_term (x, _) -> 
                 let t = new_tvar env ktype in
                 let e = fst <| Rel.new_evar p.p [] t in //TODO: why empty vars?
@@ -210,73 +215,18 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
                 targ t, p
 
            | Pat_cons(fv, pats) -> 
-               let args, pats = pats |> List.map (pat_arg env) |> List.unzip in
+               let args, pats = pats |> List.map (pat_as_arg env) |> List.unzip in
                let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, args) tun p.p, Data_app)) in
                varg e,
-               {p with v=Pat_cons(fv, List.rev pats)}
+               {p with v=Pat_cons(fv, pats)}
 
-           | Pat_disj _ -> failwith "impossible" in
+           | Pat_disj _ -> failwith "impossible: nested disjunctive pattern" in
 
-
-
-
-     let rec pat_as_args env (p:pat) : (list<Env.binding>                    (* pattern bound variables *)
-                                        * list<Env.binding>                  (* pattern-bound wild variables *)
-                                        * list<either<btvar,bvvar>>          (* the variables in the first field, for checking disjunctive patterns *)
-                                        * list<arg>                          (* pattern sub-terms *)
-                                        * pat) =                             (* decorated pattern *)
+    let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
         match p.v with 
-           | Pat_disj [] -> failwith "impossible"
-
-           | Pat_disj (q::pats) -> 
-              let b, w, o, arg, q = pat_as_arg env q in
-              let w, args, pats = List.fold_right (fun p (w, args, pats) -> 
-                  let _, w', o', arg, p = pat_as_arg env p in
-                  if not (Util.multiset_equiv pvar_eq o o')
-                  then raise (Error(Tc.Errors.disjunctive_pattern_vars o o', Tc.Env.get_range env))
-                  else (w'@w, arg::args, p::pats)) 
-                  pats (w, [], []) in
-              b, w, o, arg::args, {p with v=Pat_disj(q::pats)}
-
-           | Pat_dot_term (x, _) -> 
-                let t = new_tvar env ktype in
-                let e = fst <| Rel.new_evar p.p [] t in //TODO: why empty vars?
-                let p = {p with v=Pat_dot_term(x, e)} in
-                [], [], [], [varg e], p
-
-           | Pat_dot_typ (a, _) -> 
-                let k = new_kvar env in
-                let t = new_tvar env k in
-                let p = {p with v=Pat_dot_typ(a, t)} in
-                [], [], [], [(Inl t, true)], p
-
-           | Pat_constant c -> 
-                let e = mk_Exp_constant c tun p.p in
-                [], [], [], [varg e], p
-
-           | Pat_wild x -> 
-                let w = Env.Binding_var(x.v, new_tvar env ktype) in
-                let e = mk_Exp_bvar x tun p.p in
-                [], [w], [], [varg e], p
-
-           | Pat_var (x, imp) -> 
-                let b = Env.Binding_var(x.v, new_tvar env ktype) in
-                let e = mk_Exp_bvar x tun p.p in
-                [b], [], [Inr x], [Inr e, imp], p
- 
-           | Pat_twild a -> 
-                let w = Env.Binding_typ(a.v, new_kvar env) in
-                let t = mk_Typ_btvar a kun p.p in
-                [], [w], [], [targ t], p
-
-           | Pat_tvar a ->      
-                let b = Env.Binding_typ(a.v, new_kvar env) in
-                let t = mk_Typ_btvar a kun p.p in
-                [b], [], [Inl a], [targ t], p
-
            | Pat_cons(fv, pats) -> 
+               let pats = List.map (elaborate_pat env) pats in
                let t = Tc.Env.lookup_datacon env fv.v in
-               //printfn "Decorating pattern %s\n" (Print.pat_to_string p);
                let pats = match Util.function_formals t with 
                     | None -> []
                     | Some(f, _) -> 
@@ -312,47 +262,48 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
                                   p::aux formals' pats' 
                             end in
                       aux f pats in
+               {p with v=Pat_cons(fv, pats)} 
 
-               let _, b, w, o, args, pats = pats |> List.fold_left (fun (env, b, w, o, args, pats) p -> 
-                    let b', w', o', arg, p = pat_as_arg env p in 
-                    let env = (b'@w') |> List.fold_left Env.push_local_binding env in
-                    env, b'::b, w'::w, o'::o, arg::args, p::pats) (env, [], [], [], [], []) in
+        | _ -> p in
 
-               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, List.rev args) tun p.p, Data_app)) in
-               List.rev b |> List.flatten, 
-               List.rev w |> List.flatten, 
-               List.rev o |> List.flatten, 
-               [varg e],
-               {p with v=Pat_cons(fv, List.rev pats)}
+    let one_pat env p = 
+        let p = elaborate_pat env p in
+        let b, w, env = pat_env env p in
+        let arg, p = pat_as_arg env p in
+        match b |> Util.find_dup pvar_eq with 
+            | Some (Env.Binding_var(x, _)) -> raise (Error(Tc.Errors.nonlinear_pattern_variable (Inr x), p.p))
+            | Some (Env.Binding_typ(x, _)) -> raise (Error(Tc.Errors.nonlinear_pattern_variable (Inl x), p.p))
+            | _ -> b, w, arg, p in
 
+
+   let top_level_pat_as_args env (p:pat) : (list<Env.binding>                    (* pattern bound variables *)
+                                            * list<Env.binding>                  (* pattern-bound wild variables *)
+                                            * list<arg>                          (* pattern sub-terms *)
+                                            * pat) =                             (* decorated pattern *)
+        match p.v with 
            | Pat_disj [] -> failwith "impossible"
 
            | Pat_disj (q::pats) -> 
-              let b, w, o, arg, q = pat_as_arg env q in
+              let b, w, arg, q = one_pat env q in
               let w, args, pats = List.fold_right (fun p (w, args, pats) -> 
-                  let _, w', o', arg, p = pat_as_arg env p in
-                  if not (Util.multiset_equiv pvar_eq o o')
-                  then raise (Error(Tc.Errors.disjunctive_pattern_vars o o', Tc.Env.get_range env))
+                  let b', w', arg, p = one_pat env p in
+                  if not (Util.multiset_equiv pvar_eq b b')
+                  then raise (Error(Tc.Errors.disjunctive_pattern_vars (vars_of_bindings b) (vars_of_bindings b'), Tc.Env.get_range env))
                   else (w'@w, arg::args, p::pats)) 
                   pats (w, [], []) in
-              b, w, o, arg::args, {p with v=Pat_disj(q::pats)}
+              b, w, arg::args, {p with v=Pat_disj(q::pats)}
 
-      and pat_as_arg env p = 
-        let b, w, o, args, p = pat_as_args env p in
-        match o |> Util.find_dup pvar_eq with 
-            | Some x -> raise (Error(Tc.Errors.nonlinear_pattern_variable x, p.p))
-            | _ ->
-                match args with
-                    | [a] -> b, w, o, a, p
-                    | _ -> failwith "Impossible: nested disjunctive pattern" in
+           | _ -> 
+             let b, w, arg, p = one_pat env p in 
+             b, w, [arg], p in
 
-    let b, w, _, args, p = pat_as_args env p in
+    let b, w, args, p = top_level_pat_as_args env p in
     let exps = args |> List.map (function 
         | Inl _, _ -> failwith "Impossible: top-level pattern must be an expression"
         | Inr e, _ -> e) in
     b, w, exps, p 
 
-let decorate_pattern p exps = 
+let decorate_pattern env p exps = 
     let rec aux p e = 
         let pkg q t = withinfo q (Inr t) p.p in
         let e = Util.unmeta_exp e in
@@ -362,7 +313,10 @@ let decorate_pattern p exps =
             | Pat_var (x,imp), Exp_bvar y -> 
               if Util.bvar_eq x y |> not
               then failwith (Util.format2 "Expected pattern variable %s; got %s" (Print.strBvd x.v) (Print.strBvd y.v));
-              let x = {x with sort=e.tk} in
+              if Env.debug env <| Options.Other "Pat"
+              then Util.fprint2 "Pattern variable %s introduced at type %s\n" (Print.strBvd x.v) (Normalize.typ_norm_to_string env y.sort);
+              let s = Normalize.norm_typ [Normalize.Beta] env y.sort in
+              let x = {x with sort=s} in
               pkg (Pat_var (x, imp)) e.tk
 
             | Pat_wild x, Exp_bvar y -> 

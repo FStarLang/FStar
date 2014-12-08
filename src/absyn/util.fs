@@ -1010,17 +1010,22 @@ and uvars_in_comp c : uvars =
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)
-let rec close_for_kind t k = 
-    let k = compress_kind k in 
-    match k.n with 
-    | Kind_lam _ -> failwith "Impossible"
-    | Kind_unknown
-    | Kind_type
-    | Kind_effect
-    | Kind_uvar _ -> t
-    | Kind_arrow(bs, _) -> mk_Typ_lam(bs, t) k t.pos
-    | Kind_abbrev(_, k) -> close_for_kind t k
-    | Kind_delayed _ -> failwith "Impossible"
+let close_for_kind t k = 
+    let rec aux k = 
+        let k = compress_kind k in 
+        match k.n with 
+        | Kind_lam _ -> failwith "Impossible"
+        | Kind_unknown
+        | Kind_type
+        | Kind_effect
+        | Kind_uvar _ -> []
+        | Kind_arrow(bs, k) -> bs@aux k
+        | Kind_abbrev(_, k) -> aux k
+        | Kind_delayed _ -> failwith "Impossible" in
+    let bs = aux k in 
+    match bs with 
+        | [] -> t
+        | _ -> mk_Typ_lam(bs, t) k t.pos
 
 let rec unabbreviate_kind k = 
     let k = compress_kind k in

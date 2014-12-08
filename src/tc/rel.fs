@@ -654,7 +654,8 @@ and imitate (env:Tc.Env.env) (probs:worklist) (p:im_or_proj_t) : solution =
     let im = match xs with 
         | [] -> h gs_xs
         | _ -> mk_Typ_lam(xs, h gs_xs) k r in
-    if Tc.Env.debug env <| Options.Other "Rel" then Util.fprint2 "Imitating %s (%s)\n" (Print.typ_to_string im) (Print.tag_of_typ im);
+    if Tc.Env.debug env <| Options.Other "Rel" 
+    then Util.fprint3 "Imitating %s (%s)\nsub_probs = %s\n" (Print.typ_to_string im) (Print.tag_of_typ im) (List.map (prob_to_string env) (List.flatten sub_probs) |> String.concat ", ");
     let probs = extend_subst (UT((u,k), im)) probs in
     solve env (attempt (List.flatten sub_probs) probs)
 
@@ -823,9 +824,10 @@ and solve_t_flex_flex (top:bool) (env:Tc.Env.env) (orig:prob)
     let r = t2.pos in
     let warn s1 s2 = 
         if Tc.Env.debug env <| Options.Other "Rel"
-        then Util.fprint4 "Breaking generality in flex/flex case solving %s = %s by setting lhs=%s and rhs=%s\n" 
+        then Util.fprint6 "Breaking generality in flex/flex case solving %s = %s by setting lhs=%s :: %s and rhs=%s :: %s\n" 
             (Normalize.typ_norm_to_string env t1) (Normalize.typ_norm_to_string env t2)
-            (Normalize.typ_norm_to_string env s1) (Normalize.typ_norm_to_string env s2) in
+            (Normalize.typ_norm_to_string env s1) (Print.kind_to_string s1.tk)
+            (Normalize.typ_norm_to_string env s2) (Print.kind_to_string s2.tk) in
                   
     let solve_simple () = 
         let u, _ = new_tvar (Env.get_range env) [] ktype in 
@@ -846,8 +848,8 @@ and solve_t_flex_flex (top:bool) (env:Tc.Env.env) (orig:prob)
                        let t1 = Util.close_for_kind u k1 in
                        let t2 = Util.close_for_kind u k2 in
                        let _ = warn t1 t2 in
-                       [UT((u1, k1), Util.close_for_kind u k1); 
-                        UT((u2, k2), Util.close_for_kind u k2)] in
+                       [UT((u1, k1), t1); 
+                        UT((u2, k2), t2)] in
         let probs = extend_subst' sol probs in
         solve env probs in
 
@@ -1209,55 +1211,9 @@ and solve_c (top:bool) (env:Env.env) (rel:rel) (c1:comp) (c2:comp) (probs:workli
 and solve_e (top:bool) (env:Env.env) (rel:rel) (e1:exp) (e2:exp) (probs:worklist) : solution = 
     let e1 = compress_e env probs.subst e1 in 
     let e2 = compress_e env probs.subst e2 in
-    let _ = if debug env Options.Medium then Util.fprint1 "Attempting:\n%s\n" (prob_to_string env (EProb(top, rel, e1, e2))) in
-    match e1.n, e2.n with 
-    | Exp_bvar x1, Exp_bvar x1' -> 
-      if Util.bvd_eq x1.v x1'.v
-      then solve env probs
-      else solve env (guard env top (NonTrivial <| Util.mk_eq e1 e2) probs)
-
-    | Exp_fvar (fv1, _), Exp_fvar (fv1', _) -> 
-      if lid_equals fv1.v fv1'.v
-      then solve env probs
-      else giveup env "free-variables unequal" (EProb(top, rel, e1, e2)) probs //distinct top-level free vars are never provably equal
-
-    | Exp_constant s1, Exp_constant s1' -> 
-      let const_eq s1 s2 = match s1, s2 with 
-          | Const_bytearray(b1, _), Const_bytearray(b2, _) -> b1=b2
-          | Const_string(b1, _), Const_string(b2, _) -> b1=b2
-          | _ -> s1=s2 in
-      if const_eq s1 s1'
-      then solve env probs
-      else giveup env "constants unequal" (EProb(top, rel, e1, e2)) probs
-
-    | Exp_ascribed(e1, _), _ -> 
-      solve_e top env rel e1 e2 probs
-
-    | _, Exp_ascribed(e2, _) -> 
-      solve_e top env rel e1 e2 probs
-
-    | Exp_app({n=Exp_uvar(u1,t1); pos=r1}, args1), Exp_app({n=Exp_uvar(u2, t2); pos=r2}, args2) -> //flex-flex: solve only patterns
-      let maybe_vars1 = pat_vars env [] args1 in
-      let maybe_vars2 = pat_vars env [] args2 in
-      begin match maybe_vars1, maybe_vars2 with 
-        | None, _
-        | _, None -> solve env (defer "flex/flex not a pattern" (EProb(top, rel, e1, e2)) probs) //refuse to solve non-patterns
-        | Some xs, Some ys -> 
-          if (Unionfind.equivalent u1 u2 && binders_eq xs ys)
-          then solve env probs
-          else 
-              //U1 xs =?= U2 ys
-              //zs = xs intersect ys, U fresh
-              //U1 = \x1 x2. U zs
-              //U2 = \y1 y2 y3. U zs 
-              let zs = intersect_vars xs ys in 
-              let u, _ = new_evar (Env.get_range env) zs e2.tk in
-              let sub1 = mk_Exp_abs(xs, u) t1 r1 in
-              let sub2 = mk_Exp_abs(ys, u) t2 r2 in
-              solve env (extend_subst (UE((u1,t1), sub1)) probs |> extend_subst (UE((u2,t2), sub2))) 
-      end
-
-    | Exp_app({n=Exp_uvar(u1,t1); pos=r1}, args1), _ -> //flex-rigid: patterns or imitation; no projections
+    let _ = if debug env <| Options.Other "Rel" then Util.fprint1 "Attempting:\n%s\n" (prob_to_string env (EProb(top, rel, e1, e2))) in
+  
+    let solve_flex_rigid (u1, t1) r1 args1 e2 = 
         let maybe_vars1 = pat_vars env [] args1 in
         let sub_problems xs args =
             let gi_xi, gi_pi = args |> List.map (function 
@@ -1341,7 +1297,68 @@ and solve_e (top:bool) (env:Env.env) (rel:rel) (e1:exp) (e2:exp) (probs:worklist
                 let sol = mk_Exp_abs(xs, e2) t1 r1 in
                 solve env (extend_subst (UE((u1,t1), sol)) probs)
             else imitate_e ()
-        end
+        end in
+
+    let solve_flex_flex (u1, t1) r1 args1 (u2, t2) r2 args2 = //flex-flex: solve only patterns
+      let maybe_vars1 = pat_vars env [] args1 in
+      let maybe_vars2 = pat_vars env [] args2 in
+      begin match maybe_vars1, maybe_vars2 with 
+        | None, _
+        | _, None -> solve env (defer "flex/flex not a pattern" (EProb(top, rel, e1, e2)) probs) //refuse to solve non-patterns
+        | Some xs, Some ys -> 
+          if (Unionfind.equivalent u1 u2 && binders_eq xs ys)
+          then solve env probs
+          else 
+              //U1 xs =?= U2 ys
+              //zs = xs intersect ys, U fresh
+              //U1 = \x1 x2. U zs
+              //U2 = \y1 y2 y3. U zs 
+              let zs = intersect_vars xs ys in 
+              let u, _ = new_evar (Env.get_range env) zs e2.tk in
+              let sub1 = mk_Exp_abs(xs, u) t1 r1 in
+              let sub2 = mk_Exp_abs(ys, u) t2 r2 in
+              solve env (extend_subst (UE((u1,t1), sub1)) probs |> extend_subst (UE((u2,t2), sub2))) 
+      end in
+
+    match e1.n, e2.n with 
+    | Exp_bvar x1, Exp_bvar x1' -> 
+      if Util.bvd_eq x1.v x1'.v
+      then solve env probs
+      else solve env (guard env top (NonTrivial <| Util.mk_eq e1 e2) probs)
+
+    | Exp_fvar (fv1, _), Exp_fvar (fv1', _) -> 
+      if lid_equals fv1.v fv1'.v
+      then solve env probs
+      else giveup env "free-variables unequal" (EProb(top, rel, e1, e2)) probs //distinct top-level free vars are never provably equal
+
+    | Exp_constant s1, Exp_constant s1' -> 
+      let const_eq s1 s2 = match s1, s2 with 
+          | Const_bytearray(b1, _), Const_bytearray(b2, _) -> b1=b2
+          | Const_string(b1, _), Const_string(b2, _) -> b1=b2
+          | _ -> s1=s2 in
+      if const_eq s1 s1'
+      then solve env probs
+      else giveup env "constants unequal" (EProb(top, rel, e1, e2)) probs
+
+    | Exp_ascribed(e1, _), _ -> 
+      solve_e top env rel e1 e2 probs
+
+    | _, Exp_ascribed(e2, _) -> 
+      solve_e top env rel e1 e2 probs
+
+    | Exp_uvar(u1, t1), Exp_uvar(u2, t2) -> 
+      solve_flex_flex (u1, t1) e1.pos [] (u2, t2) e2.pos []
+    | Exp_app({n=Exp_uvar(u1,t1); pos=r1}, args1), Exp_uvar(u2, t2) -> 
+      solve_flex_flex (u1, t1) r1 args1 (u2, t2) e2.pos []
+    | Exp_uvar(u1, t1), Exp_app({n=Exp_uvar(u2, t2); pos=r2}, args2) -> 
+      solve_flex_flex (u1, t1) e1.pos [] (u2, t2) e2.pos args2
+    | Exp_app({n=Exp_uvar(u1,t1); pos=r1}, args1), Exp_app({n=Exp_uvar(u2, t2); pos=r2}, args2) -> 
+      solve_flex_flex (u1, t1) r1 args1 (u2, t2) r2 args2
+
+    | Exp_uvar(u1, t1), _ ->
+      solve_flex_rigid (u1, t1) e1.pos [] e2
+    | Exp_app({n=Exp_uvar(u1,t1); pos=r1}, args1), _ -> //flex-rigid: patterns or imitation; no projections
+      solve_flex_rigid (u1, t1) r1 args1 e2 
 
     | _, Exp_uvar _ 
     | _, Exp_app({n=Exp_uvar _}, _) -> //rigid-flex ... reorient

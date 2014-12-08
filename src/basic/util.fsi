@@ -71,6 +71,7 @@ val fprint2: string -> string -> string -> unit
 val fprint3: string -> string -> string -> string -> unit
 val fprint4: string -> string -> string -> string -> string -> unit
 val fprint5: string -> string -> string -> string -> string -> string -> unit
+val fprint6: string -> string -> string -> string -> string -> string -> string -> unit
 val print_string : string -> unit
 val print_any : 'a -> unit
 val strcat : string -> string -> string
