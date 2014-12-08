@@ -191,15 +191,10 @@ val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Lemma
       (ensures (is_EAbs e))
 let canonical_forms_fun e t1 t2 = ()
 
-assume val progress : e:exp -> Lemma
+val progress : e:exp -> Lemma
       (requires (is_Some (typing empty e)))
       (ensures (is_value e \/ (is_Some (step e))))
-(* CH: This fails now:
 let rec progress e = using_induction_hyp progress
-stlc.fst(197,41-197,49) : Error
-Expected expression of type "U760";
-got expression "progress" of type "(e:_43029:exp{(_43029 << e)} -> Lemma (unit))"
- *)
 
 val appears_free_in : x:int -> e:exp -> Tot bool
 let rec appears_free_in x e =
