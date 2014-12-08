@@ -51,7 +51,6 @@
   - Try out
 
           $ source setenv.sh
-          $ mono bin/fstar.exe --prims lib/prims.fst examples/unit-tests/utils.fst
           $ make test -C src
 
   - If `make test` (`make boot` in fact) causes stack overflow try
