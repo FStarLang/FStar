@@ -5,24 +5,85 @@ open Prims
 open Stlc
 
 (* need to define the reflexive-transitive closure of step, somehow *)
-assume type steps : exp -> exp -> Type
 
-type halts e = (exists (e':exp). (steps e e' /\ is_value e'))
+kind Relation (a:Type) = a -> a -> Type
 
-assume val value_halts : v:exp ->
+(* CH: for failed attempts to define this see below *)
+assume type multi (a:Type) (r:Relation a) : Relation a
+
+assume val multi_refl : #a:Type -> x:a -> r:Relation a -> Lemma (multi a r x x)
+
+(*
+Kinds "(_:a -> _:a -> Type)" and "Type" are incompatible
+
+type multi (a:Type) (r:Relation a) : Relation a =
+  | Multi_refl : x:a -> multi a r x x
+  | Multi_step : x:a -> y:a -> z:a -> r x y -> multi a r y z -> multi a r x z
+
+same error below (non-uniform args):
+Kinds "(_:'a -> _:'a -> Type)" and "Type" are incompatible
+
+type multi : 'a:Type -> ('a -> 'a -> Type) -> 'a -> 'a -> Type =
+  | Multi_refl : x:'a -> r:('a -> 'a -> Type) -> multi r x x
+  | Multi_step : x:'a -> y:'a -> z:'a -> r:('a -> 'a -> Type) -> r x y -> multi r y z -> multi r x z
+*)
+
+(*
+norm.fst(10,4-10,14) : Error
+Expected expression of type "(multi #(U811 a r) #(U812 a r _2 _3 _954) #('e813 a r) #('e814 a r))";
+got expression "_954" of type "(multi #a #r #_2 #_3)"
+
+type multi (a:Type) (r:(a -> a -> Type)) : a -> a -> Type =
+  | Multi_refl : x:a -> multi a r x x
+  | Multi_step : x:a -> y:a -> z:a -> r x y -> multi a r y z -> multi a r x z
+*)
+
+(* The Coq definition for multi
+Inductive multi {X:Type} (R: relation X) : relation X :=
+  | multi_refl  : forall (x : X), multi R x x
+  | multi_step : forall (x y z : X),
+                    R x y ->
+                    multi R y z ->
+                    multi R x z.
+*)
+
+type step_rel (e:exp) (e':exp) : Type = step e == Some e'
+
+type steps : exp -> exp -> Type = multi exp step_rel
+
+type halts (e:exp) : Type = (exists (e':exp). (steps e e' /\ is_value e'))
+
+val value_halts : v:exp ->
   Lemma (requires (is_value v))
         (ensures (halts v))
+let value_halts v =
+  multi_refl v step_rel
+
+(*
+Expected expression of type "(red #('e818 a r) #('e819 a r))";
+got expression "_964" of type "(red #_0 #_1)"
+*)
+type red : ty -> exp -> Type =
+  | R_bool : e:exp -> red TBool e
+  | R_boolp : e:exp -> red TBool e
+(*
+  | R_arrow : t1:ty -> t2:ty
+               -> e:exp (* {typing empty e = Some (TArrow t1 t2) /\ halts e} *)
+(*               -> (e':exp -> R t1 e' -> Tot (R t2 (EApp e e'))) *)
+               -> red (TArrow t1 t2) e
+*)
 
 (* This has a negative occurrence of R that makes Coq succumb,
    although this definition is just fine (the type decreases);
-   we have similar problems in F* at this point *)
+   F* should have similar problems at this point
 type R : ty -> exp -> Type =
   | R_bool : e:exp{typing empty e = Some TBool /\ halts e} -> R TBool e
   | R_arrow : t1:ty -> t2:ty
                -> e:exp{typing empty e = Some (TArrow t1 t2) /\ halts e}
                -> (e':exp -> R t1 e' -> Tot (R t2 (EApp e e')))
                -> R (TArrow t1 t2) e
-(* I agree we should get a negative occurrence error;
+*)
+(* I agree we should get a negative occurrence error for the above;
    but the 10(!) errors we get are incomprehensible:
 time ../../bin/fstar.exe --fstar_home ../.. stlc.fst norm.fst --print_implicits
 Error norm.fst(20,13-20,14): The following problems were found:
