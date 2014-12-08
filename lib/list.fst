@@ -353,7 +353,7 @@ let rec partition_length f l = match l with
   | hd::tl -> partition_length f tl
 
 val bool_of_compare : ('a -> 'a -> Tot int) -> 'a -> 'a -> Tot bool
-let bool_of_compare f x y = f x y > 0
+let bool_of_compare f x y = f x y >= 0
 
 val sortWithT: ('a -> 'a -> Tot int) -> l:list 'a -> Tot (list 'a) (decreases (length l))
 let rec sortWithT f = function
