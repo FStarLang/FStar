@@ -703,7 +703,7 @@ and tc_exp env e : exp * comp =
     let t = Env.expected_typ env in
     if Option.isNone t 
     then fallback env
-    else let indexed, value_indexed, t = is_indexed_with_value <| Option.get t in
+    else let _, value_indexed, t = is_indexed_with_value <| Option.get t in
          if value_indexed
          then fallback env //Don't try to infer type args in this case
          else infer_instantiation t env
