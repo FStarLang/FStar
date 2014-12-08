@@ -82,12 +82,16 @@ let btvar_to_typ bv  = mk_Typ_btvar bv bv.sort bv.p
 let bvd_to_typ bvd k = btvar_to_typ (bvd_to_bvar_s bvd k)
 let bvar_to_exp bv   =  mk_Exp_bvar bv bv.sort bv.p
 let bvd_to_exp bvd t = bvar_to_exp (bvd_to_bvar_s bvd t)
-let new_bvd (*: option<Range.range> -> bvdef<'a>*) = fun ropt -> let id = genident ropt in mkbvd (id,id)
+let new_bvd ropt = 
+  let f : option<Range.range> -> bvdef<'a> = fun ropt -> let id = genident ropt in mkbvd (id,id) in
+  f ropt
 let freshen_bvd bvd' = mkbvd(bvd'.ppname, genident (Some (range_of_bvd bvd')))
 let freshen_bvar b =  bvd_to_bvar_s (freshen_bvd b.v) b.sort
 let gen_bvar sort = let bvd = (new_bvd None) in bvd_to_bvar_s bvd sort
 let gen_bvar_p r sort = let bvd = (new_bvd (Some r)) in bvd_to_bvar_s bvd sort
-let bvdef_of_str (*: string -> bvdef<'a>*) = fun s -> let id = id_of_text s in mkbvd(id, id)
+let bvdef_of_str s = 
+  let f : string -> bvdef<'a> = fun s -> let id = id_of_text s in mkbvd(id, id) in
+  f s
 let set_bvd_range bvd r = {ppname=mk_ident(bvd.ppname.idText, r);
                            realname=mk_ident(bvd.realname.idText, r)}
 let set_lid_range l r = 
@@ -689,11 +693,11 @@ let unmangle_field_name x =
     then mk_ident(Util.substring_from x.idText 7, x.idRange)
     else x
 
-let mk_field_projector_name lid x i = 
+let mk_field_projector_name lid (x:bvar<'a,'b>) i = 
     let nm = if Syntax.is_null_bvar x
              then Syntax.mk_ident("_" ^ Util.string_of_int i, x.p)
              else x.v.ppname in
-    let y = {x.v with ppname=nm} in
+    let y : bvdef<'a> = {x.v with ppname=nm} in
     lid_of_ids (ids_of_lid lid @ [unmangle_field_name nm]), y
 
 let unchecked_unify uv t = 

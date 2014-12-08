@@ -242,8 +242,8 @@ and pat_to_string x = match x.pat with
   
 let error msg tm r =
  let tm = tm |> term_to_string in
-  let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in 
-  raise (Error(msg^"\n"^tm, r))
+ let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in 
+ raise (Error(msg^"\n"^tm, r))
 
 let consPat r hd tl = PatApp(mk_pattern (PatName Const.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(Const.cons_lid, [(hd, false);(tl, false)])) r Expr

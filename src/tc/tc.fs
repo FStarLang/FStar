@@ -940,6 +940,7 @@ and tc_exp env e : exp * comp =
 
   | Exp_let((false, [(x, t, e1)]), e2) -> 
     let env = instantiate_both env in
+    let env0 = env in
     let topt = Env.expected_typ env in
     let top_level = match x with Inr _ -> true | _ -> false in
     let env1, _ = Env.clear_expected_typ env in
@@ -989,7 +990,10 @@ and tc_exp env e : exp * comp =
                  let tres = Util.comp_result cres in 
                  let fvs = Util.freevars_typ tres in
                  if Util.set_mem (bvd_to_bvar_s bvd t) fvs.fxvs 
-                 then raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres bvd, rng env))
+                 then let t = Tc.Util.new_tvar env0 ktype in
+                      match Tc.Rel.teq env tres t with 
+                        | Trivial -> e, cres
+                        | _ -> raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres bvd, rng env))
                  else e, cres
               | _ -> e, cres
      end       
@@ -1035,7 +1039,8 @@ and tc_exp env e : exp * comp =
              let env = Env.push_local_binding env b in
              b::bindings, env) ([], env) in
          let e1, cres = tc_exp env e1 in 
-         let cres = Tc.Util.close_comp env bindings cres in
+         let cres = Tc.Util.close_comp env bindings cres in          
+         let cres = Normalize.norm_comp [Normalize.Beta] env cres in
          let e = w cres <| mk_Exp_let((true, lbs), e1) in
          begin match topt with 
           | Some _ -> e, cres
@@ -1044,7 +1049,11 @@ and tc_exp env e : exp * comp =
              match lbs |> List.tryFind (function 
                     | (Inr _, _, _) -> false
                     | (Inl x, _, _) -> Util.set_mem (bvd_to_bvar_s x tun) fvs.fxvs) with
-                | Some (Inl y, _, _) -> raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env (Util.comp_result cres) y, rng env))
+                | Some (Inl y, _, _) ->
+                  let t' = Tc.Util.new_tvar env0 ktype in 
+                  (match Tc.Rel.teq env (Util.comp_result cres) t' with 
+                    | Trivial -> e, cres
+                    | _ -> raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env (Util.comp_result cres) y, rng env)))
                 | _ -> e, cres
          end
 
@@ -1065,7 +1074,6 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
         | _ -> ());
     let env1, _ = Tc.Env.clear_expected_typ pat_env in 
     let env1 = {env1 with Env.is_pattern=true} in 
-//    let env1 = List.fold_left Env.push_local_binding env1 w in
     let env1 = Tc.Env.set_expected_typ env1 pat_t in
     let exps = exps |> List.map (fun e -> 
         if Tc.Env.debug env Options.High
