@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module Evens
+module Counters
 open Heap
 open Set
 open ST
@@ -47,7 +47,7 @@ val mk_counter: unit
 let mk_counter _ =
   let x = ST.alloc 0 in
   let y = ST.alloc 0 in
-  let evens () =
+  let evens _ =
     let rx = ST.read x in
     let ry = ST.read y in
     ST.write x (rx + 1);
@@ -65,7 +65,7 @@ val mk_counter_2: unit
                        (modifies no_refs)
 let mk_counter_2 _ =
   let x = ST.alloc 0 in
-  let evens = fun _ ->
+  let evens _ =
     let rx = ST.read x in
     ST.write x (rx + 1);
     2 * rx in

@@ -341,7 +341,8 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
 
       | PatWild ->
         let x = new_bvd (Some p.prange) in
-        loc, env, VBinder(x, tun), pos <| Pat_wild (bvd_to_bvar_s x tun)
+        let y = new_bvd (Some p.prange) in
+        loc, env, VBinder(x, tun), pos <| Pat_wild (bvd_to_bvar_s y tun)
         
       | PatConst c ->
         let x = new_bvd (Some p.prange) in
@@ -418,7 +419,8 @@ and desugar_binding_pat_maybe_top top env p : (env_t * bnd * option<pat>) =
     let (env, binder, p) = desugar_data_pat env p in
     let p = match p.v with
       | Pat_var _
-      | Pat_tvar _ -> None
+      | Pat_tvar _ 
+      | Pat_wild _ -> None
       | _ -> Some p in
     (env, binder, p)
 

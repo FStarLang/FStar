@@ -126,9 +126,9 @@ let rec reduce_kind
     (combine_typ: (typ -> typ_components -> 'env -> (typ * 'env)))
     (combine_exp: (exp -> exp_components -> 'env -> (exp * 'env))) 
     (env:'env) binders k: (knd * 'env) =
-  let rec visit_kind env binders k =
+  let rec visit_kind env binders k : (knd * 'env) =
     let k = compress_kind k in
-    let components, env =   
+    let components, env : (knd_components * 'env) =   
       match k.n with 
         | Kind_delayed _ -> failwith "Impossible"
         | Kind_lam _ 
@@ -137,8 +137,7 @@ let rec reduce_kind
         | Kind_unknown -> 
           leaf_k, env
         | Kind_uvar(_, args) ->
-          let map_typ2 = map_typ in
-          let args, env = map_args map_typ2 map_exp env binders args in
+          let args, env = map_args map_typ map_exp env binders args in
           ([], [], [], args), env
         | Kind_abbrev(kabr, k) ->
           let k, env = map_kind env binders k in
@@ -202,7 +201,7 @@ and reduce_typ
         | f -> env, f) env in
       mk_Comp ({ct with result_typ=t; effect_args=args; flags=flags}), env 
 
-  and visit_typ env binders t = 
+  and visit_typ env binders t : (typ * 'env) = 
     let components, env = match (compress_typ t).n with 
       | Typ_delayed _ -> failwith "Impossible"
       | Typ_unknown
@@ -281,7 +280,7 @@ and reduce_exp
   and map_kind env binders k = reduce_kind map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders k 
   and map_typ env binders t = reduce_typ map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders t 
   and map_exp env binders e = map_exp' map_kind map_typ visit_exp env binders e
-  and visit_exp env binders e = 
+  and visit_exp env binders e : (exp * 'env) = 
      let e = compress_exp_uvars e in 
      let components, env = match e.n with 
         | Exp_delayed _

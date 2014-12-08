@@ -55,7 +55,7 @@ let rec gensyms x = match x with
   | 0 -> []
   | n -> gensym ()::gensyms (n-1)
     
-let genident r = 
+let genident : option<Range.range> -> ident = fun r ->
   let sym = gensym () in
   match r with 
     | None -> mk_ident(sym, dummyRange)
@@ -63,7 +63,8 @@ let genident r =
 
 let bvd_eq bvd1 bvd2 = bvd1.realname.idText=bvd2.realname.idText
 let range_of_bvd x = x.ppname.idRange
-let mkbvd (x,y) = {ppname=x;realname=y}
+let mkbvd (*: (ident * ident) -> bvdef<'a>*) = 
+   fun (x,y) -> {ppname=x;realname=y}
 let setsort w t = {v=w.v; sort=t; p=w.p}
 let withinfo e s r = {v=e; sort=s; p=r}
 let withsort e s   = withinfo e s dummyRange
@@ -81,12 +82,12 @@ let btvar_to_typ bv  = mk_Typ_btvar bv bv.sort bv.p
 let bvd_to_typ bvd k = btvar_to_typ (bvd_to_bvar_s bvd k)
 let bvar_to_exp bv   =  mk_Exp_bvar bv bv.sort bv.p
 let bvd_to_exp bvd t = bvar_to_exp (bvd_to_bvar_s bvd t)
-let new_bvd ropt = let id = genident ropt in mkbvd (id,id)
+let new_bvd (*: option<Range.range> -> bvdef<'a>*) = fun ropt -> let id = genident ropt in mkbvd (id,id)
 let freshen_bvd bvd' = mkbvd(bvd'.ppname, genident (Some (range_of_bvd bvd')))
 let freshen_bvar b =  bvd_to_bvar_s (freshen_bvd b.v) b.sort
 let gen_bvar sort = let bvd = (new_bvd None) in bvd_to_bvar_s bvd sort
 let gen_bvar_p r sort = let bvd = (new_bvd (Some r)) in bvd_to_bvar_s bvd sort
-let bvdef_of_str s = let id = id_of_text s in mkbvd(id, id)
+let bvdef_of_str (*: string -> bvdef<'a>*) = fun s -> let id = id_of_text s in mkbvd(id, id)
 let set_bvd_range bvd r = {ppname=mk_ident(bvd.ppname.idText, r);
                            realname=mk_ident(bvd.realname.idText, r)}
 let set_lid_range l r = 

@@ -80,6 +80,7 @@ type env = {
   generalize:bool;               (* generalize let-binding *)
   letrecs:list<(lbname * typ)>;  (* mutually recursive names and their types (for termination checking) *)
   top_level:bool;                (* is this a top-level term? if so, then discharge guards *)
+  check_uvars:bool;
 } 
 and solver_t = {
     init: env -> unit;
@@ -122,6 +123,7 @@ let initial_env solver module_lid =
     generalize=true;
     letrecs=[];
     top_level=true;
+    check_uvars=false;
   }
 
 let monad_decl_opt env l = 

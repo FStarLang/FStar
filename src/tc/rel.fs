@@ -1401,7 +1401,9 @@ let teq env t1 t2 : guard_t =
  close_guard_predicate g
 
 let subkind env k1 k2 : guard_t = 
- if debug env <| Other "Rel" then Util.fprint2 "try_subkind of %s and %s\n" (Print.kind_to_string k1) (Print.kind_to_string k2);
+ if debug env <| Other "Rel" 
+   || debug env Options.High 
+ then Util.fprint2 "try_subkind of %s and %s\n" (Print.kind_to_string k1) (Print.kind_to_string k2);
  let prob  = KProb(true, SUB, whnf_k env k1, whnf_k env k2) in
  Util.must <| solve_and_commit env None prob (fun _ -> 
     raise (Error(Tc.Errors.incompatible_kinds env k1 k2, Tc.Env.get_range env)))

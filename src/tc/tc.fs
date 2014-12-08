@@ -377,15 +377,27 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     let t1, f2 = tc_typ_check env t1 k1 in
     w k1 <| mk_Typ_ascribed'(t1, k1), k1, Rel.conj_guard f1 f2
 
-  | Typ_uvar(u, k1) -> 
+  | Typ_uvar(u, k1) when (env.check_uvars) ->
     let s = compress_typ t in 
     (match s.n with 
-        | Typ_uvar _ -> 
-          if Tc.Env.debug env <| Options.Extreme
-          then Util.fprint2 "Checking kind of uvar %s:    %s\n" (Print.uvar_t_to_string (u,k1)) (Print.kind_to_string k1);
+        | Typ_uvar(u,k1) -> 
           let k1, g = tc_kind env k1 in
-          w k1 <| mk_Typ_uvar'(u, k1), k1, g
+          let _, u' = Tc.Rel.new_tvar s.pos [] k1 in
+          Util.unchecked_unify u u'; //replace all occurrences of this unchecked uvar with its checked variant
+          u', k1, g
         | _ -> tc_typ env s)
+  
+  | Typ_uvar(_, k1) -> 
+    let s = compress_typ t in 
+    (match s.n with 
+        | Typ_uvar(u,k1) -> 
+            if Tc.Env.debug env <| Options.High
+            then Util.fprint2 "Admitting uin-instantiated uvar %s at kind %s\n" (Print.typ_to_string s) (Print.kind_to_string k1);
+            w k1 <| mk_Typ_uvar'(u, k1), k1, Trivial
+        | _ -> 
+            if Tc.Env.debug env <| Options.High
+            then Util.fprint2 "Admitting instantiated uvar %s at kind %s\n" (Print.typ_to_string s) (Print.kind_to_string k1);
+            s, k1, Trivial)
    
   | Typ_meta(Meta_refresh_label(t, b, r)) -> 
     let t, k, f = tc_typ env t in 
@@ -923,6 +935,7 @@ and tc_exp env e : exp * comp =
       Tc.Util.bind_cases env res_t cases in (* bind_cases adds an exhaustiveness check *)
     if debug env Options.Extreme then Util.fprint3 "(%s) comp\n\tscrutinee: %s\n\tbranches: %s\n" (Range.string_of_range top.pos) (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c_branches);
     let cres = Tc.Util.bind env (Some e1) c1 (Some <| Env.Binding_var(guard_x, Util.comp_result c1), c_branches) in
+    let cres = Normalize.norm_comp [Normalize.Beta] env cres in
     w cres <| mk_Exp_match(e1, List.map (fun (f, _, _) -> f) t_eqns), cres
 
   | Exp_let((false, [(x, t, e1)]), e2) -> 
@@ -993,8 +1006,9 @@ and tc_exp env e : exp * comp =
       let e, t = Tc.Util.extract_lb_annotation true env t e in 
       let t = 
         if not (is_inner_let) && not(env.generalize)
-        then t (* t is already checked *) 
-        else tc_typ_check_trivial env0 t ktype |> norm_t env in
+        then (if Env.debug env <| Options.High then Util.fprint1 "Type %s is marked as no-generalize\n" (Print.typ_to_string t); 
+              t) (* t is already checked *) 
+        else tc_typ_check_trivial ({env0 with check_uvars=true}) t ktype |> norm_t env in
       let env = if Util.is_pure_function t && !Options.verify (* store the let rec names separately for termination checks *)
                 then {env with letrecs=(x,t)::env.letrecs}
                 else Env.push_local_binding env (binding_of_lb x t) in
@@ -1042,25 +1056,21 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
               comp            -- the computation type of the branch
   *)
   (*<tc_pat>*)
-  let rec tc_pat (pat_t:typ) env p : pat * list<Env.binding> * Env.env * list<exp> = 
+  let tc_pat (pat_t:typ) env p : pat * list<Env.binding> * Env.env * list<exp> = 
     let bindings, w, exps, p = Tc.Util.pat_as_exps env p in
-    let pat_env = List.fold_left Env.push_local_binding env bindings in
+    let pat_env = List.fold_left Env.push_local_binding env (bindings@w) in
     if debug env <| Options.Other "Pat" 
     then bindings |> List.iter (function 
         | Env.Binding_var(x, t) -> Util.fprint2 "Before tc ... pattern var %s  : %s\n" (Print.strBvd x) (Normalize.typ_norm_to_string env t)
         | _ -> ());
     let env1, _ = Tc.Env.clear_expected_typ pat_env in 
-    let env1 = {env1 with Env.is_pattern=true} in //{(Tc.Env.set_expected_typ pat_env pat_t) with Env.is_pattern=true} in
+    let env1 = {env1 with Env.is_pattern=true} in 
+//    let env1 = List.fold_left Env.push_local_binding env1 w in
     let env1 = Tc.Env.set_expected_typ env1 pat_t in
-    let env1 = List.fold_left Env.push_local_binding env1 w in
     let exps = exps |> List.map (fun e -> 
         if Tc.Env.debug env Options.High
         then Util.fprint2 "Checking pattern expression %s against expected type %s\n" (Print.exp_to_string e) (Print.typ_to_string pat_t);
-        let e, t, _ =  tc_total_exp env1 e in
-//        (match Tc.Rel.try_subtype env1 pat_t t with
-//            | None -> Tc.Rel.subtype_fail env1 pat_t t
-//            | Some _ -> ());//the type of the pattern must be pre-compatible with the type of the scrutinee
-////        printfn "Checked pattern expression %s\n" (Normalize.exp_norm_to_string env e);
+        let e, _, _ =  tc_total_exp env1 e in
         e) in
     let p = Tc.Util.decorate_pattern env p exps in
     if debug env <| Options.Other "Pat" 
@@ -1396,10 +1406,9 @@ and tc_decl env se deserialized = match se with
                   | Typ_unknown -> 
                     false, (Inr l, t', e) //explicit annotation provided; do not generalize
                   | _ ->
-                    let _ = if not(deserialized) then
-                      Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation\n" (Range.string_of_range r)
-                    else () in
-                    false, (Inr l, t', e) in
+                   if not(deserialized) 
+                   then Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation\n" (Range.string_of_range r);
+                   false, (Inr l, t', e) in
              gen, (lb, t, e) in
         gen, lb::lbs) (true, []) in
       let lbs' = List.rev lbs' in
