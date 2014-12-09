@@ -1082,7 +1082,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         g, env
 
      | Sig_val_decl(lid, t, quals, _) -> 
-        encode_free_var env lid t (whnf env t) quals
+        let tt = whnf env t in
+        encode_free_var env lid t tt quals
 
      | Sig_assume(l, f, _, _) -> 
         let f, decls = encode_formula f env in

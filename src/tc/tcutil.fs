@@ -88,8 +88,16 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
 
 let env_binders env = 
     if !Options.full_context_dependency 
-    then Env.binders env
-    else Env.t_binders env
+    then let binders = Env.binders env in
+         if !Options.verify
+         then binders
+         else binders |> List.filter (function 
+                | Inl _, _ -> true
+                | Inr x, _ -> begin match x.sort.n with 
+                                 | Typ_fun _ -> false
+                                 | _ -> true
+                              end)
+         else Env.t_binders env
 let new_kvar env   = Rel.new_kvar (Env.get_range env) (env_binders env)   |> fst
 let new_tvar env t = Rel.new_tvar (Env.get_range env) (env_binders env) t |> fst
 let new_evar env t = Rel.new_evar (Env.get_range env) (env_binders env) t |> fst

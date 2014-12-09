@@ -666,7 +666,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
   end
   
 and desugar_typ env (top:term) : typ =
-  let pos (t:knd -> Range.range -> 'a) : 'a = t kun top.range in
+  let wpos t = t kun top.range in
   let setpos t = {t with pos=top.range} in
   let top = unparen top in  
   let head_and_args t =
@@ -738,7 +738,7 @@ and desugar_typ env (top:term) : typ =
       let rec aux env bs = function 
         | [] -> 
           let body = desugar_typ env body in 
-          pos <| mk_Typ_lam(List.rev bs, body) 
+          wpos <| mk_Typ_lam(List.rev bs, body) 
         | hd::tl -> 
           let env, bnd, pat = desugar_binding_pat env hd in
           match pat with
@@ -755,7 +755,7 @@ and desugar_typ env (top:term) : typ =
           aux (arg::args) e
         | _ -> 
           let head = desugar_typ env e in
-          pos <| mk_Typ_app(head, args) in
+          wpos <| mk_Typ_app(head, args) in
       aux [] top
        
     | Product([], t) -> 
@@ -817,9 +817,11 @@ and desugar_typ env (top:term) : typ =
                                     flags=flags@decreases_clause})
                 else env.default_result_effect t top.range
               | _ -> env.default_result_effect t top.range in 
-          pos <| mk_Typ_fun(List.rev bs, cod)
+          wpos <| mk_Typ_fun(List.rev bs, cod)
         | hd::tl -> 
-          let b, env = desugar_binder (ml env) hd |> as_binder env hd.implicit in
+          let mlenv = ml env in 
+          let bb = desugar_binder mlenv hd in
+          let b, env = as_binder env hd.implicit bb in
           aux env (b::bs) tl in
       aux env [] bs
 
@@ -831,14 +833,14 @@ and desugar_typ env (top:term) : typ =
             | (Inr x, _), env -> x, env
             | _ -> failwith "impossible" in
           let f = if is_type env f then desugar_formula env f else desugar_exp env f |> Util.b2t in
-          pos <| mk_Typ_refine(b, f)
+          wpos <| mk_Typ_refine(b, f)
       end
 
     | Paren t ->
       desugar_typ env t
 
     | Ascribed(t,k) ->
-      pos <| mk_Typ_ascribed'(desugar_typ env t, desugar_kind env k)
+      wpos <| mk_Typ_ascribed'(desugar_typ env t, desugar_kind env k)
 
     | Sum(binders, t) -> 
       if contains_binder binders
@@ -850,7 +852,7 @@ and desugar_typ env (top:term) : typ =
              (env, tparams@[Inr (bvd_to_bvar_s x t), false], typs@[targ <| close_with_lam tparams t]))
              (env, [], []) (binders@[mk_binder (NoName t) t.range Type false]) in
            let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_dtuple_lid (List.length targs) top.range) in
-           pos <| mk_Typ_app(tup, targs)
+           wpos <| mk_Typ_app(tup, targs)
            
       else let env, targs = List.fold_left (fun (env, typs) b ->
               let xopt, t = desugar_exp_binder env b in
@@ -860,7 +862,7 @@ and desugar_typ env (top:term) : typ =
               (env, typs@[targ t]))
               (env, []) (binders@[mk_binder (NoName t) t.range Type false]) in
            let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_tuple_lid (List.length targs) top.range) in
-           pos <| mk_Typ_app(tup, targs)
+           wpos <| mk_Typ_app(tup, targs)
    
     | Record _ -> failwith "Unexpected record type"
 

@@ -195,7 +195,10 @@ type uvar_inst =  //never a uvar in the co-domain of this map
   | UE of (uvar_e * typ) * exp
   | UC of (uvar_t * knd) * typ
 let str_uvi ui =
-  (* CH: F* fails to type check this without the annotation on u, investigate! *)
+  (* 
+     CH: F* fails to type check this without the annotation on u.
+     NS: Yes, this is by design. F* does not generalize inner lets by default. 
+  *)
   let str (u:Unionfind.uvar<'a>) = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
   match ui with
   | UK (u, _) -> str u |> Util.format1 "UK %s"
