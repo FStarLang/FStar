@@ -76,11 +76,23 @@ val index_is_max : #max:int
                 -> Pure unit True (fun u -> List.mem x (in_order_opt t) ==> x <= max) (decreases t)
 let rec index_is_max max t x = match t with
   | None -> ()
-  | Some (Node #l left i #r right) -> (* writing the implicit arguments explicitly ... to workaround a bad exponential blowup in normalization. TODO... fix! *)
+  | Some (Node left i right) -> 
+     ListProperties.append_mem (in_order_opt left @ [i]) (in_order_opt right) x;
+     ListProperties.append_mem (in_order_opt left) [i] x;
+     index_is_max left x;
+     index_is_max right x
+
+val index_is_max2 : #max:int
+                -> t:option (tree max)
+                -> x:int
+                -> Pure unit True (fun u -> List.mem x (in_order_opt t) ==> x <= max) (decreases t)
+let rec index_is_max2 max t x = match t with
+  | None -> ()
+  | Some (Node #l left i #r right) -> (* You can also writing the implicit arguments explicitly ... just testing it *)
      ListProperties.append_mem (in_order_opt #l left @ [i]) (in_order_opt #r right) x;
      ListProperties.append_mem (in_order_opt #l left) [i] x;
-     index_is_max #l left x;
-     index_is_max #r right x
+     index_is_max2 #l left x;
+     index_is_max2 #r right x
 
 type t = (|l:int * tree l|)                        (* The lens-bracketed tuple is sugar for DTuple2 int (fun (l:int) -> tree l) *)
 val ins : lt:t -> n:int -> Tot t
