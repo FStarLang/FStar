@@ -254,57 +254,47 @@ and sn' tcenv (cfg:config<typ>) : config<typ> =
 
     | Typ_app(head, args) -> (* TODO: optimize for the case where head is a lam ... beta directly? *)
 //      if debug tcenv then printfn "(%s) app node: %s" (Range.string_of_range config.code.pos) (Print.typ_to_string config.code);
-      let stack = {config.stack with args=(args |> List.map (fun a -> a, config.environment)) @ config.stack.args} in 
+      let args = List.fold_right (fun a out -> (a, config.environment)::out) args config.stack.args in
+      let stack = {config.stack with args=args} in
       sn tcenv ({config with code=head; stack=stack})
       
     | Typ_lam(binders, t2) -> 
       begin match config.stack.args with 
         | [] -> 
-//          if whnf_only config (* only want WHNF ... don't enter *)
-//          then {config with code=Util.subst_typ (subst_of_env config.environment) config.code}
-//          else
-//          
-               (* Want full normal: reduce under lambda and return *)
-               let binders, environment = sn_binders tcenv binders config.environment config.steps in
-               let mk_lam t = wk <| mk_Typ_lam(binders, t) in
-               sn tcenv ({config with close=close_with_config config mk_lam; 
-                                      code=t2; 
-                                      stack=empty_stack t2.tk;
-                                      environment=environment; 
-                                      steps=no_eta config.steps})
+          (* Need to substitute under lambdas even if we don't want a full normal form *)
+          let binders, environment = sn_binders tcenv binders config.environment config.steps in
+          let mk_lam t = wk <| mk_Typ_lam(binders, t) in
+          sn tcenv ({config with close=close_with_config config mk_lam; 
+                                code=t2; 
+                                stack=empty_stack t2.tk;
+                                environment=environment; 
+                                steps=no_eta config.steps})
         | args -> (* beta *)
-//          if debug tcenv then printfn "(%s) beta-redex: \n\tbinders=%s\n\targs=%s" 
-//                                (Range.string_of_range config.code.pos) 
-//                                (Print.binders_to_string ", " binders) 
-//                                (Print.args_to_string (List.map fst args));
-            let rec beta env binders args = match binders, args with 
-                | [], _ -> (* fully applied, or more actuals (extra currying) *)
-                  sn tcenv ({config with code=t2; environment=env; stack={config.stack with args=args}})
+          let rec beta env binders args = match binders, args with 
+            | [], _ -> (* fully applied, or more actuals (extra currying) *)
+                sn tcenv ({config with code=t2; environment=env; stack={config.stack with args=args}})
 
-                | _, [] -> (* more formals (partially applied) *)
-                  let t = mk_Typ_lam(binders, t2) (mk_Kind_arrow(binders, t2.tk) t2.pos) t2.pos in
-                  sn tcenv ({config with code=t; environment=env; stack=empty_stack config.stack.k})
+            | _, [] -> (* more formals (partially applied) *)
+                let t = mk_Typ_lam(binders, t2) (mk_Kind_arrow(binders, t2.tk) t2.pos) t2.pos in
+                sn tcenv ({config with code=t; environment=env; stack=empty_stack config.stack.k})
   
-                | formal::rest, actual::rest' -> 
-                  let m = match formal, actual with 
-                    | (Inl a, _), ((Inl t, _), env) -> T(a.v, (t,env), Util.mk_ref None)
-                    | (Inr x, _), ((Inr v, _), env) -> V(x.v, (v,env), Util.mk_ref None)
-                    | _ -> failwith (Util.format3 "(%s) Impossible: ill-typed redex\n formal is %s\nactual is %s\n" 
-                                                (Range.string_of_range (argpos <| fst actual))
-                                                (Print.binder_to_string formal)
-                                                (Print.arg_to_string <| fst actual)) in
-                  beta (m::env) rest rest' in
+            | formal::rest, actual::rest' -> 
+                let m = match formal, actual with 
+                | (Inl a, _), ((Inl t, _), env) -> T(a.v, (t,env), Util.mk_ref None)
+                | (Inr x, _), ((Inr v, _), env) -> V(x.v, (v,env), Util.mk_ref None)
+                | _ -> failwith (Util.format3 "(%s) Impossible: ill-typed redex\n formal is %s\nactual is %s\n" 
+                                            (Range.string_of_range (argpos <| fst actual))
+                                            (Print.binder_to_string formal)
+                                            (Print.arg_to_string <| fst actual)) in
+                beta (m::env) rest rest' in
 
-           beta config.environment binders args
+          beta config.environment binders args
       end
 
     | Typ_ascribed(t, _) -> 
       sn tcenv ({config with code=t})
 
     | _ -> 
-//        if whnf_only config
-//        then {config with code=Util.subst_typ (subst_of_env config.environment) config.code}
-//        else 
         match config.code.n with
                 (* In all remaining cases, the stack should be empty *)
                 | Typ_fun(bs, comp) -> 

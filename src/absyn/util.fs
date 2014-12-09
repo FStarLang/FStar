@@ -49,7 +49,7 @@ let handleable = function
 
 let gensym : unit -> string = 
   let ctr = mk_ref 0 in 
-  (fun () -> Util.format1 "_%s" (Util.string_of_int (incr ctr; !ctr)))
+  (fun () -> "_" ^ (Util.string_of_int (incr ctr; !ctr)))
     
 let rec gensyms x = match x with
   | 0 -> []
@@ -280,14 +280,6 @@ let subst_of_list (formals:binders) (actuals:args) : subst =
     then List.map2 subst_formal formals actuals 
     else failwith "Ill-formed substitution"
 
-let restrict_subst axs (s:subst_t) = 
-  s |> List.map (List.filter (fun b ->
-        let r = match b with 
-        | Inl(a, _) -> not (axs |> Util.for_some (function Inr _ -> false | Inl b -> bvd_eq a b))
-        | Inr(x, _) -> not (axs |> Util.for_some (function Inl _ -> false | Inr y -> bvd_eq x y)) in
-        //if not r then printfn "Filtering %s\n" (match b with Inl (b, _) -> b.realname.idText | Inr (x, _) -> x.realname.idText);
-        r))
-
 type red_ctrl = {
     stop_if_empty_subst:bool;
     descend:bool
@@ -298,11 +290,11 @@ let null_ctrl = {stop_if_empty_subst=true; descend=false}
 let extend_subst e s = s@[mk_subst e]
 
 let rec map_knd s vk mt me descend binders k = 
-  subst_kind' (restrict_subst binders s) k, descend
+  subst_kind' s k, descend
 and map_typ s mk vt me descend binders t = 
-  subst_typ' (restrict_subst binders s) t, descend
+  subst_typ' s t, descend
 and map_exp s mk me ve descend binders e =
-  subst_exp' (restrict_subst binders s) e, descend
+  subst_exp' s e, descend
 and map_flags s map_exp descend binders flags = 
     flags |> List.map (function 
         | DECREASES e -> DECREASES (map_exp descend binders e |> fst)
@@ -330,7 +322,6 @@ and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
           then (Inl a, imp)::bs, boundvars, s
           else 
               let boundvars' = Inl a.v::boundvars in
-              let s = restrict_subst boundvars' s in
               let b, s, boundvars = match s with 
                 | [] when ctrl.stop_if_empty_subst -> Inl a, s, boundvars'
                 | _ -> 
@@ -346,7 +337,6 @@ and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
           then (Inr x, imp)::bs, boundvars, s
           else 
               let boundvars' = Inr x.v::boundvars in
-              let s = restrict_subst boundvars' s in
               let b, s, boundvars = match s with 
                 | [] when ctrl.stop_if_empty_subst -> Inr x, s, boundvars'
                 | _ -> 
@@ -365,7 +355,7 @@ and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
   match t0.n with
     | Typ_btvar _ -> 
       //printfn "Trying to subst. %s with [%s]\n" (a.v.realname.idText) (s |> subst_to_string);
-      compress_typ <| subst_typ' (restrict_subst boundvars s) t0, ctrl
+      compress_typ <| subst_typ' s t0, ctrl
     
     | _ when (not ctrl.descend) -> map_typ s mk vt me null_ctrl boundvars t
 
@@ -389,7 +379,7 @@ and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
 and visit_exp s mk me ve ctrl binders e =
   let e = Visit.compress_exp e in 
   match e.n with 
-    | Exp_bvar _ -> compress_exp <| subst_exp' (restrict_subst binders s) e, ctrl
+    | Exp_bvar _ -> compress_exp <| subst_exp' s e, ctrl
     | _ when (not ctrl.descend) -> map_exp s mk me ve ctrl binders e
     | _ -> let e, _ = ve null_ctrl binders e in e, ctrl
 
