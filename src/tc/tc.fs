@@ -39,7 +39,7 @@ let whnf env t = Tc.Normalize.norm_typ [Normalize.WHNF; Normalize.DeltaHard; Nor
 let norm_t env t = Tc.Normalize.norm_typ steps env t
 let norm_k env k = Tc.Normalize.norm_kind steps env k
 let norm_c env c = Tc.Normalize.norm_comp steps env c
-let fxv_check env kt fvs =
+let fxv_check head env kt fvs =
     let rec aux norm kt = 
         if Util.set_is_empty fvs then ()
         else let fvs' = match kt with 
@@ -49,9 +49,26 @@ let fxv_check env kt fvs =
                 if Util.set_is_empty a then ()
                 else if not norm 
                 then aux true kt
-                else let escaping = Util.set_elements a |> List.map (fun x -> Print.strBvd x.v) |> String.concat ", " in
-                    raise (Error(Util.format1 "Variables %s escape because of impure applications; add explicit let-bindings" escaping, 
-                                    Env.get_range env)) in
+                else 
+                    let fail () =
+                        let escaping = Util.set_elements a |> List.map (fun x -> Print.strBvd x.v) |> String.concat ", " in
+                        let msg = if Util.set_count a > 1
+                                    then Util.format2 "Bound variables '{%s}' in the type of '%s' escape because of impure applications; add explicit let-bindings" escaping (Normalize.exp_norm_to_string env head)
+                                    else Util.format2 "Bound variable '%s' in the type of '%s' escapes because of impure applications; add explicit let-bindings" escaping (Normalize.exp_norm_to_string env head) in
+                        raise (Error(msg, Env.get_range env)) in
+                    match kt with 
+                        | Inl k -> 
+                          let s = Util.new_kvar env in
+                          begin match Tc.Rel.try_keq env k s with 
+                            | Some Trivial -> ()
+                            | _ -> fail ()
+                          end 
+                        | Inr t -> 
+                          let s = Util.new_tvar env ktype in
+                          begin match Tc.Rel.try_teq env t s with
+                            | Some Trivial -> ()
+                            | _ -> fail ()
+                          end in
     aux false kt
         
 let maybe_push_binding env b =
@@ -800,7 +817,7 @@ and tc_exp env e : exp * comp =
            match bs, args with 
             | (Inl a, _)::rest, (Inr e, _)::_ -> (* instantiate a type argument *) 
               let k = Util.subst_kind subst a.sort in
-              fxv_check env (Inl k) fvs;
+              fxv_check head env (Inl k) fvs;
               let targ = match k.n with 
                 | Kind_type -> Tc.Util.new_tvar env k       
                 | _ -> fst <| Tc.Rel.new_tvar e.pos vars k in (* TODO: remove case split? *)
@@ -811,7 +828,7 @@ and tc_exp env e : exp * comp =
 
             | (Inr x, true)::rest, (_, false)::_ -> (* instantiate an implicit value arg *)
               let t = Util.subst_typ subst x.sort in
-              fxv_check env (Inr t) fvs;
+              fxv_check head env (Inr t) fvs;
               let varg = Tc.Util.new_evar env t in
               let subst = (Inr(x.v, varg))::subst in
               let arg = Inr varg, true in
@@ -819,7 +836,7 @@ and tc_exp env e : exp * comp =
 
             | (Inl a, _)::rest, (Inl t, _)::rest' -> (* a concrete type argument *)
               let k = Util.subst_kind subst a.sort in 
-              fxv_check env (Inl k) fvs;
+              fxv_check head env (Inl k) fvs;
               let t, g' = tc_typ_check env t k in
               let g' = Tc.Util.weaken_guard (Tc.Util.short_circuit_guard (Inr head) outargs) g' in
               let g' = Tc.Util.label_guard Errors.ill_kinded_type t.pos g' in
@@ -831,7 +848,7 @@ and tc_exp env e : exp * comp =
               if debug env Options.Extreme then Util.fprint2 "\tType of arg (before subst (%s)) = %s\n" (Print.subst_to_string subst) (Print.typ_to_string x.sort);
               let targ = Util.subst_typ subst x.sort in 
               if debug env Options.Extreme then  Util.fprint1 "\tType of arg (after subst) = %s\n" (Print.typ_to_string targ);
-              fxv_check env (Inr targ) fvs;
+              fxv_check head env (Inr targ) fvs;
               let env = Tc.Env.set_expected_typ env targ in
               if debug env Options.High then  Util.fprint3 "Checking arg (%s) %s at type %s\n" (Print.tag_of_exp e) (Print.exp_to_string e) (Print.typ_to_string targ);
               let e, c = tc_exp env e in 
@@ -860,6 +877,7 @@ and tc_exp env e : exp * comp =
               else tc_args (subst, (varg e)::outargs, (varg <| bvar_to_exp x)::arg_rets, (Some <| Env.Binding_var(x.v, x.sort), c)::comps, g, Util.set_add x fvs) rest cres rest'
 
             | _, [] -> (* full or partial application *) 
+              fxv_check head env (Inr (Util.comp_result cres)) fvs;
               let cres = match bs with 
                 | [] -> (* full app *)
                     let cres = Util.subst_comp subst cres in 

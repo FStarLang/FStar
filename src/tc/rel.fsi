@@ -35,8 +35,10 @@ val new_evar: Range.range -> binders -> typ -> exp * exp
 val guard_to_string : env -> guard_t -> string
 val trivial : guard_t -> unit
 val conj_guard: guard_t -> guard_t -> guard_t
+val try_keq: env -> knd -> knd -> option<guard_t>
 val keq : env -> option<typ> -> knd -> knd -> guard_t
 val subkind: env -> knd -> knd -> guard_t
+val try_teq: env -> typ -> typ -> option<guard_t>
 val teq : env -> typ -> typ -> guard_t
 val try_subtype: env -> typ -> typ -> option<guard_t>
 val subtype: env -> typ -> typ -> guard_t

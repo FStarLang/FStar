@@ -1385,23 +1385,37 @@ let solve_and_commit env top_t prob err =
         explain env d;
         err d
 
-let keq env t k1 k2 : guard_t = 
+let try_keq env k1 k2 : option<guard_t> = 
   let prob = KProb(true, EQ, norm_kind [Beta] env k1, norm_kind [Beta] env k2) in
-  Util.must <| solve_and_commit env None prob (fun _ -> 
+  solve_and_commit env None prob (fun _ -> None)
+
+let keq env t k1 k2 : guard_t = 
+  match try_keq env k1 k2 with 
+    | None -> 
       let r = match t with 
         | None -> Tc.Env.get_range env
         | Some t -> t.pos in
-      match t with 
+      begin match t with 
         | None -> raise (Error(Tc.Errors.incompatible_kinds env k2 k1, r))
-        | Some t -> raise (Error(Tc.Errors.expected_typ_of_kind env k2 t k1, r)))
-    
-let teq env t1 t2 : guard_t = 
+        | Some t -> raise (Error(Tc.Errors.expected_typ_of_kind env k2 t k1, r))
+      end
+    | Some g -> g
+
+let try_teq env t1 t2 : option<guard_t> = 
  if debug env <| Other "Rel" then Util.fprint2 "teq of %s and %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
  let prob = TProb(true, EQ, t1, t2) in //norm_typ [Beta; Eta] env t1, norm_typ [Beta; Eta] env t2) in
- let g = Util.must <| solve_and_commit env (Some t1) prob (fun _ -> 
-    raise (Error(Tc.Errors.basic_type_error env None t2 t1, Tc.Env.get_range env))) in
- if debug env <| Other "Rel" then Util.fprint3 "teq of %s and %s succeeded with guard %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2) (guard_to_string env g);
- close_guard_predicate g
+ let g = solve_and_commit env (Some t1) prob (fun _ -> None) in
+ let g = match g with 
+    | None -> None
+    | Some g -> Some (close_guard_predicate g) in
+ g
+    
+let teq env t1 t2 : guard_t = 
+ match try_teq env t1 t2 with
+    | None -> raise (Error(Tc.Errors.basic_type_error env None t2 t1, Tc.Env.get_range env))
+    | Some g ->
+      if debug env <| Other "Rel" then Util.fprint3 "teq of %s and %s succeeded with guard %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2) (guard_to_string env g);
+      g
 
 let subkind env k1 k2 : guard_t = 
  if debug env <| Other "Rel" 
