@@ -20,6 +20,8 @@ assume type emulti (a:Type) (r:Relation a) : a -> a -> Type
 assume val emulti_refl : (forall (a:Type) (r:Relation a) (x:a). emulti a r x x)
 assume val emulti_step : (forall (a:Type) (r:Relation a) (x:a) (y:a) (z:a).
   r x y ==> emulti a r y z ==> emulti a r x z)
+assume val emulti_inv : (forall (a:Type) (r:Relation a) (x:a) (z:a).
+  emulti a r x z ==> (x = z \/ (exists (y:a). r x y /\ emulti a r y z)))
 assume val emulti_ind : (forall (a:Type) (r:Relation a) (p:Relation a).
   (forall (x:a). p x x) ==>
   (forall (x:a) (y:a) (z:a). r x y ==> emulti a r y z ==> p y z ==> p x z) ==>
@@ -33,6 +35,9 @@ assume val multi_refl : a:Type -> r:Relation a -> x:a -> Lemma (multi a r x x)
 assume val multi_step : a:Type -> r:Relation a -> x:a -> y:a -> z:a -> Lemma
       (requires (r x y /\ multi a r y z))
       (ensures (multi a r x z))
+assume val multi_inv : a:Type -> r:Relation a -> x:a -> z:a -> Lemma
+      (requires (emulti a r x z))
+      (ensures (x = z \/ (exists (y:a). r x y /\ multi a r y z)))
 assume val multi_ind : a:Type -> r:Relation a -> p:Relation a ->
       (x:a -> Tot (p x x)) ->
       (x:a -> y:a -> z:a{r x y /\ multi a r y z /\ p y z} -> Tot (p x z)) ->
@@ -75,6 +80,12 @@ type red : ty -> exp -> Type =
                -> e:exp{typing empty e = Some (TArrow t1 t2) /\ halts e}
                -> (e':exp -> red t1 e' -> Tot (red t2 (EApp e e')))
                -> red (TArrow t1 t2) e
+  | R_pair : t1:ty -> t2:ty
+               -> e:exp{typing empty e = Some (TPair t1 t2) /\ halts e}
+               -> red t1 (EFst e)
+               -> red t2 (ESnd e)
+               -> red (TPair t1 t2) e
+
 assume val r_bool : e:exp -> Lemma
   (requires (typing empty e = Some TBool /\ halts e))
   (ensures (red TBool e))
@@ -82,6 +93,20 @@ assume val r_arrow : t1:ty -> t2:ty -> e:exp ->
   (e':exp{red t1 e'} -> Tot (red t2 (EApp e e'))) -> Lemma
   (requires (typing empty e = Some (TArrow t1 t2) /\ halts e))
   (ensures (red (TArrow t1 t2) e))
+assume val r_pair : t1:ty -> t2:ty -> e:exp -> Lemma
+  (requires (typing empty e = Some (TPair t1 t2) /\ halts e
+             /\ red t1 (EFst e) /\ red t2 (ESnd e)))
+  (ensures (red (TPair t1 t2) e))
+
+(* CH: might want to still get rid of the existentials *)
+assume val red_inv : t:ty -> e:exp -> Lemma
+  (requires (red t e))
+  (ensures (typing empty e = Some t /\ halts e /\
+             (t = TBool \/
+             (exists (t1:ty) (t2:ty). t = TArrow t1 t2 /\
+               (forall (e':exp). red t1 e' ==> red t2 (EApp e e')) \/
+             (exists (t1:ty) (t2:ty). t = TPair t1 t2 /\
+               red t1 (EFst e) /\ red t2 (ESnd e))))))
 
 (* My original attempt -- red' called recursively only in refinement *)
 type red' : ty -> exp -> Type =
@@ -104,3 +129,22 @@ Fixpoint R (T:ty) (t:tm) {struct T} : Prop :=
    | TProd T1 T2 => (R T1 (tfst t)) /\ (R T2 (tsnd t)) 
    end).
 *)
+
+assume val step_preserves_halting : e:exp -> e':exp -> Lemma
+  (requires (step e = Some e'))
+  (ensures (halts e <==> halts e'))
+(* let step_preserves_halting e e' = () *)
+(* CH: no way to do a split to prove implication (or conjunction) *)
+
+val step_preserves_R : e:exp -> e':exp -> t:ty -> Lemma
+  (requires (step e = Some e' /\ red t e))
+  (ensures (red t e'))
+let step_preserves_R e e' t =
+  match t with
+  | TBool ->
+      (red_inv t e;
+      preservation e;
+      step_preserves_halting e e';
+      admit())
+  | TArrow t1 t2 -> admit()
+  | TPair t1 t2 -> admit()
