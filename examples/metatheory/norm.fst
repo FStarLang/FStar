@@ -36,7 +36,7 @@ assume val multi_step : a:Type -> r:Relation a -> x:a -> y:a -> z:a -> Lemma
       (requires (r x y /\ multi a r y z))
       (ensures (multi a r x z))
 assume val multi_inv : a:Type -> r:Relation a -> x:a -> z:a -> Lemma
-      (requires (emulti a r x z))
+      (requires (multi a r x z))
       (ensures (x = z \/ (exists (y:a). r x y /\ multi a r y z)))
 assume val multi_ind : a:Type -> r:Relation a -> p:Relation a ->
       (x:a -> Tot (p x x)) ->
@@ -133,9 +133,15 @@ Fixpoint R (T:ty) (t:tm) {struct T} : Prop :=
    end).
 *)
 
-assume val step_preserves_halting_ltr : e:exp -> e':exp -> Lemma
-  (requires (step e = Some e' /\ halts e))
-  (ensures (halts e'))
+val red_halts : t:ty -> e:exp -> Lemma
+  (requires (red t e))
+  (ensures (halts e))
+let red_halts t e = red_inv t e
+
+val red_typing : t:ty -> e:exp -> Lemma
+  (requires (red t e))
+  (ensures (typing empty e = Some t))
+let red_typing t e = red_inv t e
 
 (* this can only be axiom, can't prove this in F*;
    in particular this brings in non-constructive reasoning from Z3 *)
@@ -146,21 +152,21 @@ val exists_intro: a:Type -> p:(a -> Type) ->
     x:a{p x} -> Tot (u':unit{exists (x:a). p x})
 let exists_intro (a:Type) (p:(a->Type)) x = ()
 
+val step_preserves_halting_ltr : e:exp -> e':exp -> Lemma
+  (requires (step e = Some e' /\ halts e))
+  (ensures (halts e'))
+let step_preserves_halting_ltr e e' =
+  let eh = exists_elim exp (fun eh -> steps e eh /\ is_value eh) in
+  multi_inv exp step_rel e eh
+
 val step_preserves_halting_rtl : e:exp -> e':exp -> Lemma
   (requires (step_rel e e' /\ halts e'))
   (ensures (halts e))
 let step_preserves_halting_rtl e e' =
-  let eh = exists_elim exp (fun eh -> (steps e' eh /\ is_value eh)) in
-  assert(step_rel e e');
-  assert(steps e' eh);
-  assert(multi exp step_rel e' eh);
-  multi_step exp steps e e' eh; (* this fails with bogus error *)
-  exists_intro exp (fun eh -> steps e eh) eh
-(*
-assume val multi_step : a:Type -> r:Relation a -> x:a -> y:a -> z:a -> Lemma
-      (requires (r x y /\ multi a r y z))
-      (ensures (multi a r x z))
-*)
+  let eh = exists_elim exp (fun eh -> steps e' eh /\ is_value eh) in
+  multi_step exp step_rel e e' eh
+(* ; exists_intro exp (fun eh -> steps e eh /\ is_value eh) eh
+   -- not required, F* can figure this out *)
 
 (* Trying to prove equivalence: 1st try (failed)
 val iff_split : #p1:Type -> #p2:Type ->
