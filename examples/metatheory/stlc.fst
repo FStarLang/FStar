@@ -18,8 +18,8 @@ module Stlc
 
 type ty =
   | TBool  : ty
-  | TArrow : ty -> ty -> ty
-  | TPair  : ty -> ty -> ty
+  | TArrow : t1:ty -> t2:ty -> ty
+  | TPair  : t1:ty -> t2:ty -> ty
 
 let tidbool = TArrow TBool TBool
 

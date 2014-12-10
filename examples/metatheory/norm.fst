@@ -42,6 +42,8 @@ assume val multi_ind : a:Type -> r:Relation a -> p:Relation a ->
       (x:a -> Tot (p x x)) ->
       (x:a -> y:a -> z:a{r x y /\ multi a r y z /\ p y z} -> Tot (p x z)) ->
       x:a -> y:a -> Lemma (requires (multi a r x y)) (ensures (p x y))
+(* let rec multi_ind (a:Type) (r:Relation a) (p:Relation a) h1 h2 x y = ()
+   don't have anything to recurse over, multi a r x y is not proper argument *)
 
 (*
 Kinds "(_:a -> _:a -> Type)" and "Type" are incompatible
@@ -98,7 +100,8 @@ assume val r_pair : t1:ty -> t2:ty -> e:exp -> Lemma
              /\ red t1 (EFst e) /\ red t2 (ESnd e)))
   (ensures (red (TPair t1 t2) e))
 
-(* CH: might want to still get rid of the existentials *)
+(* CH: might want to still get rid of the existentials
+   CH: Doesn't the converse direction also hold? *)
 assume val red_inv : t:ty -> e:exp -> Lemma
   (requires (red t e))
   (ensures (typing empty e = Some t /\ halts e /\
@@ -130,11 +133,70 @@ Fixpoint R (T:ty) (t:tm) {struct T} : Prop :=
    end).
 *)
 
-assume val step_preserves_halting : e:exp -> e':exp -> Lemma
+assume val step_preserves_halting_ltr : e:exp -> e':exp -> Lemma
+  (requires (step e = Some e' /\ halts e))
+  (ensures (halts e'))
+
+(* this can only be axiom, can't prove this in F*;
+   in particular this brings in non-constructive reasoning from Z3 *)
+assume val exists_elim : a:Type -> p:(a->Type) ->
+  Pure a (requires (exists (x:a). p x)) (fun x -> ensures (p x))
+
+val exists_intro: a:Type -> p:(a -> Type) ->
+    x:a{p x} -> Tot (u':unit{exists (x:a). p x})
+let exists_intro (a:Type) (p:(a->Type)) x = ()
+
+val step_preserves_halting_rtl : e:exp -> e':exp -> Lemma
+  (requires (step_rel e e' /\ halts e'))
+  (ensures (halts e))
+let step_preserves_halting_rtl e e' =
+  let eh = exists_elim exp (fun eh -> (steps e' eh /\ is_value eh)) in
+  assert(step_rel e e');
+  assert(steps e' eh);
+  assert(multi exp step_rel e' eh);
+  multi_step exp steps e e' eh; (* this fails with bogus error *)
+  exists_intro exp (fun eh -> steps e eh) eh
+(*
+assume val multi_step : a:Type -> r:Relation a -> x:a -> y:a -> z:a -> Lemma
+      (requires (r x y /\ multi a r y z))
+      (ensures (multi a r x z))
+*)
+
+(* Trying to prove equivalence: 1st try (failed)
+val iff_split : #p1:Type -> #p2:Type ->
+  u1:unit{p1 ==> p2} -> u2:unit{p2 ==> p1} -> Lemma (p1 <==> p2)
+let iff_split (p1:Type) (p2:Type) u1 u2 = ()
+
+assume val impl_intro: #p1:Type -> #p2:Type ->
+  (u1:unit{p1} -> u2:unit{p2}) -> Tot (u:unit{p1 ==> p2})
+*)
+
+(* 2nd try (failed)
+assume val impl_intro: #p:Type -> #p1:Type -> #p2:Type ->
+  (unit -> Lemma (requires (p/\p1)) (ensures p2)) ->
+  Lemma (requires p) (ensures (p1 ==> p2))
+
+val iff_split : #p:Type -> #p1:Type -> #p2:Type ->
+  (unit -> Lemma (requires (p/\p1)) (ensures p2)) ->
+  (unit -> Lemma (requires (p/\p2)) (ensures p1)) ->
+  Lemma (requires p) (ensures (p1 <==> p2))
+let iff_split (p:Type) (p1:Type) (p2:Type) u1 u2 =
+  impl_intro u1; impl_intro u2
+*)
+
+val step_preserves_halting : e:exp -> e':exp -> Lemma
   (requires (step e = Some e'))
   (ensures (halts e <==> halts e'))
+let step_preserves_halting e e' =
+  admit()
+(*
+  iff_split
+    (fun () -> step_preserves_halting_ltr e e')
+    (fun () -> step_preserves_halting_ltr e' e)
+*)
+(*  iff_split (impl_intro (fun _ -> admit())) (admit())*)
 (* let step_preserves_halting e e' = () *)
-(* CH: no way to do a split to prove implication (or conjunction) *)
+(* CH: no way to do a split to prove equivalence (or conjunction) *)
 
 val step_preserves_R : e:exp -> e':exp -> t:ty -> Lemma
   (requires (step e = Some e' /\ red t e))
