@@ -12,7 +12,7 @@ LIB_FILES= list.fst string.fst partialmap.fst
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst)
 FULL_LIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst listproperties.fst)
 PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)
-FSTAR = $(RUNTIME) ../../bin/fstar.exe --full_context_dependency --fstar_home $(FSTAR_HOME) $(OTHERFLAGS)
+FSTAR = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(OTHERFLAGS)
 
 STDCACHE=Prims.cache List.cache String.cache ST.cache PartialMap.cache Array.cache
 FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(OTHERFLAGS)
