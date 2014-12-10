@@ -261,3 +261,17 @@ let test_map1 () =
   assert (g == [1;2;3])
 
 let test_map2 x = assert (map (fun x -> x + 1) [0;1;2] = [1;2;3])
+
+
+assume val test_pred: a:Type -> a -> a -> Tot bool
+assume val test_pred_lemma_1: a:Type -> x:a -> Lemma (forall (bad:a). test_pred x bad)
+
+let test_pred_lemma_2    (a:Type) = qintro a (fun x -> forall (y:a). test_pred x y) (test_pred_lemma_1 a)
+let test_pred_lemma_unif (a:Type) = qintro (test_pred_lemma_1 a)
+
+val test_pred_lemma_2' : a:Type -> Lemma (ensures (forall (x:a) (y:a). test_pred x y))
+let test_pred_lemma_2'  (a:Type) = qintro a (fun x -> forall (y:a). test_pred x y) (test_pred_lemma_1 a)
+
+val test_pred_lemma_unif' : a:Type -> Lemma (ensures (forall (x:a) (y:a). test_pred x y))
+let test_pred_lemma_unif'  (a:Type) = qintro (test_pred_lemma_1 a)
+ 
