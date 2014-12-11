@@ -45,16 +45,16 @@ assume val multi_ind : a:Type -> r:Relation a -> p:Relation a ->
 (* let rec multi_ind (a:Type) (r:Relation a) (p:Relation a) h1 h2 x y = ()
    don't have anything to recurse over, multi a r x y is not proper argument *)
 
-(* This causes blow up: https://github.com/FStarLang/FStar/issues/96
-   Free variables are ftvs={r}, fxvs={}Bound term variable not found: x
+(* This still fails, see https://github.com/FStarLang/FStar/issues/96
 val multi_ind_provable : a:Type -> r:Relation a -> p:Relation a ->
-      (x:a -> Tot (p x x)) ->
-      (x:a -> y:a -> z:a{r x y /\ p y z} -> multi a r y z -> Tot (p x z)) ->
+      (x:a -> Lemma (p x x)) ->
+      (x:a -> y:a -> z:a{r x y /\ p y z} -> multi a r y z -> Lemma (p x z)) ->
       x:a -> y:a -> multi a r x y -> Lemma (p x y)
 let rec multi_ind_provable (a:Type) (r:Relation a) (p:Relation a) h1 h2 x y h =
   match h with
-  | Multi_refl x' -> admit()
-  | Multi_step x' y' z' hr hm -> admit()
+  | Multi_refl x' -> h1 x'
+  | Multi_step x' y' z' hr hm ->
+      h2 x' y' z' (multi_ind_provable a r p h1 h2 y' z' hm)
 *)
 
 (*
