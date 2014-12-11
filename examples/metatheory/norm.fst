@@ -246,10 +246,17 @@ let step_preserves_halting e e' =
 (* this seems reasonable, not provable?
    also pre and post not properly inferred *)
 assume val real_cut : #pre:Type -> #post:Type -> p:Type ->
-  (unit -> Tot (u:unit{p})) ->
+  (unit -> Tot unit p) ->
   (unit -> Pure unit (pre/\p) (fun _ -> post)) ->
   Pure unit pre (fun _ -> post)
 (* let real_cut (pre:Type) (post:Type) (p:Type) h1 h2 = h1(); h2() -- this fails *)
+
+assume val forall_intro : #a:Type -> #p:(a -> Type) ->
+  (x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
+
+assume val impl_intro' : #p1:Type -> #p2:Type ->
+  (u:unit{p1} -> Lemma (ensures p2)) ->
+  Lemma (p1 ==> p2)
 
 val step_preserves_R : e:exp -> e':exp -> t:ty -> Lemma
   (requires (step e = Some e' /\ red t e))
@@ -264,10 +271,11 @@ let rec step_preserves_R e e' t =
   | TArrow t1 t2 ->
      real_cut #(step e = Some e' /\ red t e) #(red t e')
        (forall (e'':exp). red t1 e'' ==> red t2 (EApp e' e''))
-       (fun _ -> admit())
+       (fun _ -> forall_intro #exp #(fun e'' -> red t1 e'' ==> red t2 (EApp e' e''))
+                 (fun e'' -> impl_intro' #(red t1 e'') #(red t2 (EApp e' e''))
+                 (fun _ -> step_preserves_R (EApp e e'') (EApp e' e'') t2)))
        (fun _ -> r_arrow t1 t2 e')
   | TPair t1 t2 ->
       step_preserves_R (EFst e) (EFst e') t1;
       step_preserves_R (ESnd e) (ESnd e') t2;
       r_pair t1 t2 e' )
-  (*; red_fwd t e' -- can also replace r_* on each branch with this *)
