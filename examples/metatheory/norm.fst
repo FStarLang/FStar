@@ -155,10 +155,16 @@ val red_typing : t:ty -> e:exp -> Lemma
   (ensures (typing empty e = Some t))
 let red_typing t e = red_inv t e
 
-(* this can only be axiom, can't prove this in F*;
-   in particular this brings in non-constructive reasoning from Z3 *)
-assume val exists_elim : a:Type -> p:(a->Type) ->
-  Pure a (requires (exists (x:a). p x)) (fun x -> ensures (p x))
+(* CH: we need to make pre, post, and maybe also a implicit;
+   without that this is a complete pain to use;
+   unfortunately F* can't properly infer these things currently *)
+(* CH: I would also write the {exists (x:a). p x} refinement directly
+   on f instead of adding a spurious unit, unfortunately that causes
+   a bogus error *)
+assume val exists_elim :
+  #pre:Type -> #post:(unit->Type) -> #a:Type -> p:(a->Type) ->
+  u:unit{exists (x:a). p x} -> f:(x:a{p x} -> Pure unit pre post) ->
+  Pure unit pre post
 
 val exists_intro: a:Type -> p:(a -> Type) ->
     x:a{p x} -> Tot (u':unit{exists (x:a). p x})
@@ -168,15 +174,17 @@ val step_preserves_halting_ltr : e:exp -> e':exp -> Lemma
   (requires (step e = Some e' /\ halts e))
   (ensures (halts e'))
 let step_preserves_halting_ltr e e' =
-  let eh = exists_elim exp (fun eh -> steps e eh /\ is_value eh) in
-  multi_inv exp step_rel e eh
+  exists_elim #(step e = Some e' /\ halts e) #(fun _ -> halts e') #exp
+  (fun (eh:exp) -> steps e eh /\ is_value eh) ()
+  (fun eh -> multi_inv exp step_rel e eh)
 
 val step_preserves_halting_rtl : e:exp -> e':exp -> Lemma
   (requires (step_rel e e' /\ halts e'))
   (ensures (halts e))
 let step_preserves_halting_rtl e e' =
-  let eh = exists_elim exp (fun eh -> steps e' eh /\ is_value eh) in
-  multi_step exp step_rel e e' eh
+  exists_elim #(step_rel e e' /\ halts e') #(fun _ -> halts e) #exp
+  (fun (eh:exp) -> steps e' eh /\ is_value eh) ()
+  (fun eh -> multi_step exp step_rel e e' eh)
 (* ; exists_intro exp (fun eh -> steps e eh /\ is_value eh) eh
    -- not required, F* can figure this out *)
 
