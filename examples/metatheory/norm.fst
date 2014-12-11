@@ -166,7 +166,7 @@ assume val exists_elim :
   u:unit{exists (x:a). p x} -> f:(x:a{p x} -> Pure unit pre post) ->
   Pure unit pre post
 
-val exists_intro: a:Type -> p:(a -> Type) ->
+val exists_intro: #a:Type -> p:(a -> Type) ->
     x:a{p x} -> Tot (u':unit{exists (x:a). p x})
 let exists_intro (a:Type) (p:(a->Type)) x = ()
 
@@ -188,41 +188,48 @@ let step_preserves_halting_rtl e e' =
 (* ; exists_intro exp (fun eh -> steps e eh /\ is_value eh) eh
    -- not required, F* can figure this out *)
 
-(* Trying to prove equivalence: 1st try (failed)
-val iff_split : #p1:Type -> #p2:Type ->
-  u1:unit{p1 ==> p2} -> u2:unit{p2 ==> p1} -> Lemma (p1 <==> p2)
-let iff_split (p1:Type) (p2:Type) u1 u2 = ()
+assume val impl_intro : #pre:Type -> #p1:Type -> #p2:Type ->
+  (unit -> Pure unit (pre/\p1) (fun _ -> p2)) ->
+  Pure unit pre (fun _ -> p1 ==> p2)
 
-assume val impl_intro: #p1:Type -> #p2:Type ->
-  (u1:unit{p1} -> u2:unit{p2}) -> Tot (u:unit{p1 ==> p2})
-*)
+(* F* can't infer pre, p1, and p2 (see iff_intro below) *)
+val iff_split : #pre:Type -> #p1:Type -> #p2:Type ->
+  (unit -> Pure unit pre (fun _ -> p1 ==> p2)) ->
+  (unit -> Pure unit pre (fun _ -> p2 ==> p1)) ->
+  Pure unit pre (fun _ -> p1 <==> p2)
+let iff_split u1 u2 = u1(); u2()
 
-(* 2nd try (failed)
-assume val impl_intro: #p:Type -> #p1:Type -> #p2:Type ->
-  (unit -> Lemma (requires (p/\p1)) (ensures p2)) ->
-  Lemma (requires p) (ensures (p1 ==> p2))
+(* F* can't infer pre, p1, and p2 (see step_preserves_halting below) *)
+val iff_intro : #pre:Type -> #p1:Type -> #p2:Type ->
+  (unit -> Pure unit (pre/\p1) (fun _ -> p2)) ->
+  (unit -> Pure unit (pre/\p2) (fun _ -> p1)) ->
+  Pure unit pre (fun _ -> p1 <==> p2)
+let iff_intro (pre:Type) (p1:Type) (p2:Type) u1 u2 =
+  iff_split #pre #p1 #p2 (fun () -> impl_intro u1) (fun () -> impl_intro u2)
 
-val iff_split : #p:Type -> #p1:Type -> #p2:Type ->
-  (unit -> Lemma (requires (p/\p1)) (ensures p2)) ->
-  (unit -> Lemma (requires (p/\p2)) (ensures p1)) ->
-  Lemma (requires p) (ensures (p1 <==> p2))
-let iff_split (p:Type) (p1:Type) (p2:Type) u1 u2 =
-  impl_intro u1; impl_intro u2
+(* One more variant, still no inference
+assume val impl_intro : #pre:Type -> #p1:Type -> #p2:Type ->
+  (u:unit{p1} -> Pure unit pre (fun _ -> p2)) ->
+  Pure unit pre (fun _ -> p1 ==> p2)
+
+(* F* can't infer pre, p1, and p2 (see step_preserves_halting below) *)
+val iff_intro : #pre:Type -> #p1:Type -> #p2:Type ->
+  (u:unit{p1} -> Pure unit pre (fun _ -> p2)) ->
+  (u:unit{p2} -> Pure unit pre (fun _ -> p1)) ->
+  Pure unit pre (fun _ -> p1 <==> p2)
+let iff_intro (pre:Type) (p1:Type) (p2:Type) u1 u2 =
+  iff_split #pre #p1 #p2
+    (fun () -> impl_intro #pre #p1 #p2 u1)
+    (fun () -> impl_intro #pre #p2 #p1 u2)
 *)
 
 val step_preserves_halting : e:exp -> e':exp -> Lemma
   (requires (step e = Some e'))
   (ensures (halts e <==> halts e'))
 let step_preserves_halting e e' =
-  admit()
-(*
-  iff_split
+  iff_intro #(b2t (step e = Some e')) #(halts e) #(halts e')
     (fun () -> step_preserves_halting_ltr e e')
-    (fun () -> step_preserves_halting_ltr e' e)
-*)
-(*  iff_split (impl_intro (fun _ -> admit())) (admit())*)
-(* let step_preserves_halting e e' = () *)
-(* CH: no way to do a split to prove equivalence (or conjunction) *)
+    (fun () -> step_preserves_halting_rtl e e')
 
 val step_preserves_R : e:exp -> e':exp -> t:ty -> Lemma
   (requires (step e = Some e' /\ red t e))
