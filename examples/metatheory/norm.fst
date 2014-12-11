@@ -103,17 +103,15 @@ type red : ty -> exp -> Type =
 assume val r_bool : e:exp -> Lemma
   (requires (typing empty e = Some TBool /\ halts e))
   (ensures (red TBool e))
-assume val r_arrow : t1:ty -> t2:ty -> e:exp ->
-  (e':exp{red t1 e'} -> Tot (red t2 (EApp e e'))) -> Lemma
+assume val r_arrow : t1:ty -> t2:ty ->
+  e:exp{forall (e':exp). red t1 e' ==> red t2 (EApp e e')} -> Lemma
   (requires (typing empty e = Some (TArrow t1 t2) /\ halts e))
   (ensures (red (TArrow t1 t2) e))
 assume val r_pair : t1:ty -> t2:ty -> e:exp -> Lemma
   (requires (typing empty e = Some (TPair t1 t2) /\ halts e
              /\ red t1 (EFst e) /\ red t2 (ESnd e)))
   (ensures (red (TPair t1 t2) e))
-
-(* CH: might want to still get rid of the existentials
-   CH: Doesn't the converse direction also hold? *)
+(* CH: might want to still get rid of the existentials *)
 assume val red_inv : t:ty -> e:exp -> Lemma
   (requires (red t e))
   (ensures (typing empty e = Some t /\ halts e /\
@@ -122,6 +120,20 @@ assume val red_inv : t:ty -> e:exp -> Lemma
                (forall (e':exp). red t1 e' ==> red t2 (EApp e e')) \/
              (exists (t1:ty) (t2:ty). t = TPair t1 t2 /\
                red t1 (EFst e) /\ red t2 (ESnd e))))))
+(* The converse direction is provable from r_bool, r_arrow, and r_pair *)
+val red_fwd : t:ty -> e:exp -> Lemma
+  (requires (typing empty e = Some t /\ halts e /\
+             (t = TBool \/
+             (exists (t1:ty) (t2:ty). t = TArrow t1 t2 /\
+               (forall (e':exp). red t1 e' ==> red t2 (EApp e e')) \/
+             (exists (t1:ty) (t2:ty). t = TPair t1 t2 /\
+               red t1 (EFst e) /\ red t2 (ESnd e))))))
+  (ensures (red t e))
+let red_fwd t e =
+  match t with
+  | TBool -> r_bool e
+  | TArrow t1 t2 -> r_arrow t1 t2 e
+  | TPair t1 t2 -> r_pair t1 t2 e
 
 (* My original attempt -- red' called recursively only in refinement *)
 type red' : ty -> exp -> Type =
@@ -231,15 +243,31 @@ let step_preserves_halting e e' =
     (fun () -> step_preserves_halting_ltr e e')
     (fun () -> step_preserves_halting_rtl e e')
 
+(* this seems reasonable, not provable?
+   also pre and post not properly inferred *)
+assume val real_cut : #pre:Type -> #post:Type -> p:Type ->
+  (unit -> Tot (u:unit{p})) ->
+  (unit -> Pure unit (pre/\p) (fun _ -> post)) ->
+  Pure unit pre (fun _ -> post)
+(* let real_cut (pre:Type) (post:Type) (p:Type) h1 h2 = h1(); h2() -- this fails *)
+
 val step_preserves_R : e:exp -> e':exp -> t:ty -> Lemma
   (requires (step e = Some e' /\ red t e))
   (ensures (red t e'))
-let step_preserves_R e e' t =
-  match t with
-  | TBool ->
-      (red_inv t e;
-      preservation e;
-      step_preserves_halting e e';
-      admit())
-  | TArrow t1 t2 -> admit()
-  | TPair t1 t2 -> admit()
+  (decreases t)
+let rec step_preserves_R e e' t =
+  red_inv t e;
+  preservation e;
+  step_preserves_halting e e';
+  (match t with
+  | TBool -> r_bool e'
+  | TArrow t1 t2 ->
+     real_cut #(step e = Some e' /\ red t e) #(red t e')
+       (forall (e'':exp). red t1 e'' ==> red t2 (EApp e' e''))
+       (fun _ -> admit())
+       (fun _ -> r_arrow t1 t2 e')
+  | TPair t1 t2 ->
+      step_preserves_R (EFst e) (EFst e') t1;
+      step_preserves_R (ESnd e) (ESnd e') t2;
+      r_pair t1 t2 e' )
+  (*; red_fwd t e' -- can also replace r_* on each branch with this *)
