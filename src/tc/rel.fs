@@ -318,7 +318,7 @@ let commit env uvi =
         | UK(u,k) -> Unionfind.change u (Fixed k)
         | UT((u,k),t) -> //ignore <| pre_kind_compat k t.tk; 
                          if debug env (Options.Other "Rel")
-                         then Util.fprint2 "Commiting %s to %s\n" (Print.uvar_t_to_string (u,k)) (Print.typ_to_string t);
+                         then Util.fprint2 "Commiting %s to %s\n" (Print.uvar_t_to_string (u,k)) (Normalize.typ_norm_to_string env t);
                          Unionfind.change u (Fixed t)
         | UE((u,_),e) -> Unionfind.change u (Fixed e)
         | UC((u,_),c) -> Unionfind.change u (Fixed c))
@@ -412,8 +412,8 @@ let rec head_matches env t1 t2 : match_result =
      
     | Typ_uvar (uv, _),  Typ_uvar (uv', _) -> if Unionfind.equivalent uv uv' then FullMatch else MisMatch
 
-    | Typ_lam _, Typ_lam _ -> HeadMatch
-
+    | _, Typ_lam _ -> HeadMatch
+   
     | _ -> MisMatch
 
 let head_matches_delta env t1 t2 : (match_result * option<(typ*typ)>) =
@@ -871,7 +871,7 @@ and solve_t_flex_flex (top:bool) (env:Tc.Env.env) (orig:prob)
         else let lhs_vars = freevars_of_binders xs in
              if Util.fvs_included rhs_vars lhs_vars
              then (* solve by instantiating u1 to imitate t2 *)
-                  let sol = [UT((u1, k1), mk_Typ_lam(xs, t2) k1 t1.pos)] in
+                  let sol = [UT((u1, k1), mk_Typ_lam'(xs, t2) k1 t1.pos)] in
                   let probs = extend_subst' sol probs in
                   solve env probs
              else let zs, _ = Util.kind_formals k2 in
@@ -879,44 +879,57 @@ and solve_t_flex_flex (top:bool) (env:Tc.Env.env) (orig:prob)
                   then (if Tc.Env.debug env <| Options.Other "Rel"
                         then Util.print_string "Arity check failed on RHS: kind uOccurs check failed... breaking generality\n";
                         solve_neither_pat()) //unexpected arity; default by breaking generality
-                  else  
+                  else let _ = if Tc.Env.debug env <| Options.Other "DoubleI"
+                               then Util.fprint1 "Trying double imitation on %s\n" (prob_to_string env orig) in
+                      //Double imitation: should not break generality
                       //U1 x1..xn =?= U2 t1..tm
-                      //ys = {xi} intersect FV(t1..tm)
+                      //ys = {xi} intersect vars(t1..tm)
                       //U1 -> \x1..xn. U y1..yk
                       //U2 -> \z1...zm. U (G1 z1..zm) ... (Gk z1..zm)
                       //Gi(t1..tm) =?= yi
-                      let ys = binders_of_freevars ({ftvs=Util.set_intersect rhs_vars.ftvs lhs_vars.ftvs; 
-                                                     fxvs=Util.set_intersect rhs_vars.fxvs lhs_vars.fxvs}) in
+                      let ys =
+                          let rhs_vars = 
+                            let arg_vars = args2 |> List.filter (fun (a:arg) -> match fst a with 
+                                | Inl t -> 
+                                    (match (norm_targ env t).n with 
+                                        | Typ_btvar _
+                                        | Typ_lam _
+                                        | Typ_app({n=Typ_uvar _}, _) -> true
+                                        | _ -> false) //no point keeping the others around, since you can't extract a var from them
+                                | Inr e -> 
+                                    (match (compress_e env probs.subst e).n with 
+                                        | Exp_bvar _
+                                        | Exp_abs _
+                                        | Exp_app({n=Exp_uvar _}, _) -> true
+                                        | _ -> false)) in //no point keeping the others around, since you can't extract a var from them
+                            if Tc.Env.debug env <| Options.Other "DoubleI"
+                            then Util.fprint1 "Double imitation retained rhs args %s\n" (Print.args_to_string arg_vars);
+                            arg_vars |> Util.freevars_args in
+                          binders_of_freevars ({ftvs=Util.set_intersect rhs_vars.ftvs lhs_vars.ftvs; 
+                                                fxvs=Util.set_intersect rhs_vars.fxvs lhs_vars.fxvs}) in
+                      let _ = if Tc.Env.debug env <| Options.Other "DoubleI"
+                              then Util.fprint1 "Double imitation picking common variables %s\n" (Print.binders_to_string ", " ys) in
                       let u_yi, u = new_tvar t1.pos ys ktype in
-                      let u1_inst = UT((u1, k1), mk_Typ_lam(xs, u_yi) k1 t1.pos) in
+                      let u1_inst = UT((u1, k1), mk_Typ_lam'(xs, u_yi) k1 t1.pos) in
                       let r = t2.pos in
                       let gi_zi, sub_probs = List.map (fun yi -> match fst yi with 
                         | Inl ai -> 
                             let gi_zs, gi = new_tvar r zs ai.sort in
-                            let gi_ps = mk_Typ_app(gi, args2) ai.sort r in
+                            let gi_ps = mk_Typ_app'(gi, args2) ai.sort r in
                             targ gi_zs, TProb(false, EQ, gi_ps, Util.btvar_to_typ ai)
 
                         | Inr xi -> 
                             let gi_zs, gi = new_evar r zs xi.sort in
-                            let gi_ps = mk_Exp_app(gi, args2) xi.sort r in
+                            let gi_ps = mk_Exp_app'(gi, args2) xi.sort r in
                             varg gi_zs, EProb(false, EQ, gi_ps, Util.bvar_to_exp xi)) ys |> List.unzip in
-                      let u2_inst = UT((u2,k2), mk_Typ_lam(zs, mk_Typ_app(u, gi_zi) ktype r) k2 r) in
+                      let u2_inst = UT((u2,k2), mk_Typ_lam'(zs, mk_Typ_app'(u, gi_zi) ktype r) k2 r) in
                       let sol = [u1_inst; u2_inst] in
                       let _ = if Tc.Env.debug env <| Options.Other "Rel"
                               then Util.fprint2 "Flex-Flex: double imitation\n\tsols = %s\nsubprobs=\n%s\n" 
                                                 (List.map (str_uvi env) sol |> String.concat "\n\t") 
                                                 (List.map (prob_to_string env) sub_probs |> String.concat "\n") in
                       solve env (attempt sub_probs (extend_subst' sol probs)) in
-             
-        
-//    if Unionfind.equivalent u1 u2
-//    then let rec aux sub args1 args2 = match args1, args2 with  
-//            | [], [] -> solve env (attempt sub probs)
-//            | (Inl t1, _)::rest1, (Inl t2, _)::rest2 -> aux (TProb(false, EQ, t1, t2)::sub) rest1 rest2 
-//            | (Inr e1, _)::rest1, (Inr e2, _)::rest2 -> aux (EProb(false, EQ, e1, e2)::sub) rest1 rest2 
-//            | _ -> solve env (defer "flex/flex unequal arity" orig probs) in //defer  ...can this ever be solved?
-//         aux [] args1 args2 
-//    else 
+
     begin match maybe_pat_vars1, maybe_pat_vars2 with 
         | None, None -> solve_neither_pat () //neither is a pattern; break generality
 
@@ -1293,7 +1306,7 @@ and solve_e (top:bool) (env:Env.env) (rel:rel) (e1:exp) (e2:exp) (probs:worklist
                                        | _ -> aux xs args
                                 end
                             | x::xs, arg::args -> giveup (Util.format2 "type incorrect term---impossible: expected %s; got %s\n" (Print.binder_to_string x) (Print.arg_to_string arg)) in
-                          aux all_xs args1
+                          aux (List.rev all_xs) (List.rev args1)
                 | _ -> giveup "rhs head term is not a variable" in
 
         let imitate_e () = 

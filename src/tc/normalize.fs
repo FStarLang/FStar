@@ -256,13 +256,13 @@ and sn' tcenv (cfg:config<typ>) : config<typ> =
               sn tcenv ({config with code=t; environment=e}) 
             | None -> 
               if is_stack_empty config
-              then let c = sn tcenv ({config with steps=no_eta config.steps; code=t; environment=e; stack=empty_stack (Inl t.tk)}) in
+              then let c = sn tcenv ({config with steps=no_eta config.steps; close=None; code=t; environment=e; stack=empty_stack (Inl t.tk)}) in
                    m := Some c.code;
-                   c |> rebuild
+                   rebuild ({config with code=c.code})
               else if is_head_symbol t 
               then  (* already a head symbol; no need to memoize further *)
                     sn tcenv ({config with code=t; environment=e})
-              else let c = sn tcenv ({config with close=None; steps=no_eta config.steps; code=t; environment=e; stack=empty_stack (Inl t.tk)}) in
+              else let c = sn tcenv ({config with close=None;  steps=no_eta config.steps; code=t; environment=e; stack=empty_stack (Inl t.tk)}) in
                    m := Some c.code;
                    if Tc.Env.debug tcenv Options.Low && c.environment |> Util.for_some (function LabelSuffix _ -> true | _ -> false) (* Double labeling ... bad! *)
                    then (Util.fprint3 "Label suffix available; \n\toriginal code=%s;\n\tnormalize code=%s\n stack is:\n\t%s\n" 

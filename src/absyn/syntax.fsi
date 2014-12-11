@@ -320,6 +320,7 @@ val mk_Typ_refine: (bvvar * formula) -> knd -> range -> typ
 val mk_Typ_app: (typ * args) -> knd -> range -> typ
 val mk_Typ_app': (typ * args) -> knd -> range -> typ
 val mk_Typ_lam: (binders * typ) -> knd -> range -> typ
+val mk_Typ_lam': (binders * typ) -> knd -> range -> typ
 val mk_Typ_ascribed': (typ * knd) -> knd -> range -> typ
 val mk_Typ_ascribed: (typ * knd) -> range -> typ
 val mk_Typ_meta': meta_t -> knd -> range -> typ

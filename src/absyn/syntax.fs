@@ -401,13 +401,11 @@ let mk_Typ_lam      ((b:binders),(t:typ)) (k:knd) (p:range) = {
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
-let mk_Typ_lam'      ((b:binder), (t2:typ)) (k:knd) (p:range) = {
-    n=(match t2.n with Typ_lam(binders, body) -> Typ_lam(b::binders, body) | _ -> Typ_lam([b], t2));
-    tk=k;
-    pos=p;
-    uvs=mk_uvs(); fvs=mk_fvs();
-    
-}
+let mk_Typ_lam'      ((bs:binders), (t:typ)) (k:knd) (p:range) = 
+    match bs with 
+        | [] -> t
+        | _ -> mk_Typ_lam (bs, t) k p
+
 let mk_Typ_ascribed' ((t:typ),(k:knd)) (k':knd) (p:range) = {
     n=Typ_ascribed(t, k);
     tk=k';

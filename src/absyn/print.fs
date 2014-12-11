@@ -239,7 +239,7 @@ and typ_to_string x =
       | t -> t|> typ_to_string)
 
 and uvar_t_to_string (uv, k) =
-   if !Options.print_real_names 
+   if false && !Options.print_real_names 
    then 
        Util.format2 "(U%s : %s)"
        (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
