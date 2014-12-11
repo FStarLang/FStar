@@ -135,7 +135,20 @@ let is_var t = match Util.compress_typ t with
     | {n=Typ_btvar _} -> true
     | _ -> false
 
-let rec eta_expand_exp (tcenv:Tc.Env.env) (e:exp) : exp = failwith "NYI"
+let rec eta_expand_exp (tcenv:Tc.Env.env) (e:exp) : exp = 
+    match (Util.compress_typ e.tk).n with
+        | Typ_fun(bs, c) -> 
+            begin match (Util.compress_exp e).n with 
+                | Exp_abs(bs', body) -> 
+                    if (List.length bs = List.length bs')
+                    then e
+                    else failwith "NYI"
+                | _ -> 
+                  let bs, args = Util.args_of_binders bs in
+                  mk_Exp_abs(bs, mk_Exp_app(e, args) (Util.comp_result c) e.pos) e.tk e.pos
+            end
+        | _ -> e
+
 let no_eta = List.filter (function Eta -> false | _ -> true)
 let no_eta_cfg c = {c with steps=no_eta c.steps}
 let whnf_only config = config.steps |> List.contains WHNF
@@ -243,13 +256,13 @@ and sn' tcenv (cfg:config<typ>) : config<typ> =
               sn tcenv ({config with code=t; environment=e}) 
             | None -> 
               if is_stack_empty config
-              then let c = sn tcenv ({config with code=t; environment=e; stack=empty_stack (Inl t.tk)}) in
-                    m := Some c.code;
-                    c
+              then let c = sn tcenv ({config with steps=no_eta config.steps; code=t; environment=e; stack=empty_stack (Inl t.tk)}) in
+                   m := Some c.code;
+                   c |> rebuild
               else if is_head_symbol t 
               then  (* already a head symbol; no need to memoize further *)
                     sn tcenv ({config with code=t; environment=e})
-              else let c = sn tcenv ({config with close=None; code=t; environment=e; stack=empty_stack (Inl t.tk)}) in
+              else let c = sn tcenv ({config with close=None; steps=no_eta config.steps; code=t; environment=e; stack=empty_stack (Inl t.tk)}) in
                    m := Some c.code;
                    if Tc.Env.debug tcenv Options.Low && c.environment |> Util.for_some (function LabelSuffix _ -> true | _ -> false) (* Double labeling ... bad! *)
                    then (Util.fprint3 "Label suffix available; \n\toriginal code=%s;\n\tnormalize code=%s\n stack is:\n\t%s\n" 
@@ -557,8 +570,8 @@ let whnf tcenv t =
         | Typ_const _ 
         | Typ_uvar _
         | Typ_app({n=Typ_const _}, _)
-        | Typ_app({n=Typ_btvar _}, _)
-        | Typ_app({n=Typ_uvar _}, _) -> eta_expand tcenv t |> Util.compress_typ
+        | Typ_app({n=Typ_btvar _}, _) -> eta_expand tcenv t |> Util.compress_typ 
+        | Typ_app({n=Typ_uvar _}, _) 
         | _ -> norm_typ [WHNF;Beta;Eta] tcenv t
 
 let rec weak_norm_comp env comp =

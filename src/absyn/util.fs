@@ -1012,13 +1012,15 @@ let rec kind_formals k =
         | Kind_unknown
         | Kind_type
         | Kind_effect
-        | Kind_uvar _ -> []
-        | Kind_arrow(bs, k) -> bs@kind_formals k
+        | Kind_uvar _ -> [], k
+        | Kind_arrow(bs, k) -> 
+            let bs', k = kind_formals k in 
+            bs@bs', k
         | Kind_abbrev(_, k) -> kind_formals k
         | Kind_delayed _ -> failwith "Impossible"
 
 let close_for_kind t k = 
-    let bs = kind_formals k in 
+    let bs, _ = kind_formals k in 
     match bs with 
         | [] -> t
         | _ -> mk_Typ_lam(bs, t) k t.pos

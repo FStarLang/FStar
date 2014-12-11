@@ -185,8 +185,17 @@ type prob =
   | CProb of bool * rel * comp * comp  //the bool in each case records whether or not it is a 'top-level' problem
 let prob_to_string env = function 
   | KProb(_, rel, k1, k2) -> Util.format3 "\t%s\n\t\t%s\n\t%s" (Print.kind_to_string k1) (rel_to_string rel) (Print.kind_to_string k2)
-  | TProb(_, rel, t1, t2) -> Util.format5 "\t%s (%s) \n\t\t%s\n\t%s (%s)" (Normalize.typ_norm_to_string env t1) (Print.tag_of_typ t1) (rel_to_string rel) (Normalize.typ_norm_to_string env t2) (Print.tag_of_typ t2)
-  | EProb(_, rel, k1, k2) -> Util.format3 "\t%s \n\t\t%s\n\t%s" (Print.exp_to_string k1) (rel_to_string rel) (Print.exp_to_string k2)
+  | TProb(_, rel, t1, t2) -> 
+    Util.format "\t%s : %s (%s) \n\t\t%s\n\t%s : %s (%s)" 
+        [//(Normalize.typ_norm_to_string env t1);
+         Print.typ_to_string t1;
+         Print.kind_to_string t1.tk;
+         (Print.tag_of_typ t1) ;
+         (rel_to_string rel);
+         (Normalize.typ_norm_to_string env t2) ;
+         (Print.kind_to_string t2.tk);
+         (Print.tag_of_typ t2)]
+  | EProb(_, rel, k1, k2) -> Util.format3 "\t%s \n\t\t%s\n\t%s" (Normalize.exp_norm_to_string env k1) (rel_to_string rel) (Normalize.exp_norm_to_string env k2)
   | CProb(_, rel, k1, k2) -> 
     Util.format3 "\t%s \n\t\t%s\n\t%s" (Normalize.comp_typ_norm_to_string env k1) (rel_to_string rel) (Normalize.comp_typ_norm_to_string env k2)
 type uvar_inst =  //never a uvar in the co-domain of this map
@@ -194,7 +203,7 @@ type uvar_inst =  //never a uvar in the co-domain of this map
   | UT of (uvar_t * knd) * typ 
   | UE of (uvar_e * typ) * exp
   | UC of (uvar_t * knd) * typ
-let str_uvi ui =
+let str_uvi env ui =
   (* 
      CH: F* fails to type check this without the annotation on u.
      NS: Yes, this is by design. F* does not generalize inner lets by default. 
@@ -202,11 +211,11 @@ let str_uvi ui =
   let str (u:Unionfind.uvar<'a>) = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
   match ui with
   | UK (u, _) -> str u |> Util.format1 "UK %s"
-  | UT ((u,_), t) -> str u |> (fun x -> Util.format2 "UT %s %s" x (Print.typ_to_string t))
+  | UT ((u,_), t) -> str u |> (fun x -> Util.format2 "UT %s %s" x (Normalize.typ_norm_to_string env t))
   | UE ((u,_), _) -> str u |> Util.format1 "UE %s"
   | UC ((u,_), _) -> str u |> Util.format1 "UC %s"
 
-let print_uvi uvi = Util.fprint1 "%s\n" (str_uvi uvi) 
+let print_uvi env uvi = Util.fprint1 "%s\n" (str_uvi env uvi) 
     
 type reason = string
 type worklist = {
@@ -304,7 +313,7 @@ let commit env uvi =
       false in
 
     uvi |> List.iter (fun uv -> 
-        if debug env Extreme then print_uvi uv;
+        if debug env Extreme then (print_uvi env) uv;
         match uv with 
         | UK(u,k) -> Unionfind.change u (Fixed k)
         | UT((u,k),t) -> //ignore <| pre_kind_compat k t.tk; 
@@ -344,7 +353,7 @@ let rec compress env s t =
     match t.n with 
         | Typ_uvar (uv, _) ->
            (match find_uvar_t uv s with 
-                | None -> t
+                | None -> whnf env t
                 | Some t -> compress env s t)   
         | Typ_app({n=Typ_uvar(uv, k)}, args) -> 
             (match find_uvar_t uv s with 
@@ -354,7 +363,7 @@ let rec compress env s t =
                   let t''' = whnf env t'' in
                   if debug env Extreme then Util.fprint3 "Resolving uvar %s to\n\t%s\n\tnorm to %s\n" (Print.typ_to_string t) (Print.typ_to_string t'') (Print.typ_to_string t''');
                   t'''
-                | _ -> t)
+                | _ -> whnf env t)
         | _ -> whnf env t
 
 let rec compress_e (env:env) s e = 
@@ -693,17 +702,10 @@ and project (env:Tc.Env.env) (probs:worklist) (i:int) (p:im_or_proj_t) : solutio
 //sub-problems: pi(G1(p1..pn)..Gk(p1..pn)) =?= h q1..qm
     let r = Env.get_range env in
     let pi = List.nth ps i in
-    let rec gs k = match (Util.compress_kind k).n with 
-        | Kind_delayed _
-        | Kind_lam _
-        | Kind_unknown
-        | Kind_effect -> failwith "Impossible"
-        | Kind_uvar((uv,_)) -> failwith "Impossible" //??? TODO ...what to do here ... default to Kind_type and proceed?
-        | Kind_type -> [], []
-        | Kind_abbrev(_, k) -> gs k
-        | Kind_arrow(bs, k) -> 
-          let rec aux subst bs = match bs with 
-            | [] -> gs (Util.subst_kind subst k)
+    let rec gs k = 
+        let bs, k = Util.kind_formals k in
+        let rec aux subst bs = match bs with 
+            | [] -> [], [] //gs (Util.subst_kind subst k)
             | hd::tl -> 
                 let gi_xs, gi_ps, subst = match fst hd with 
                     | Inl a -> 
@@ -872,7 +874,7 @@ and solve_t_flex_flex (top:bool) (env:Tc.Env.env) (orig:prob)
                   let sol = [UT((u1, k1), mk_Typ_lam(xs, t2) k1 t1.pos)] in
                   let probs = extend_subst' sol probs in
                   solve env probs
-             else let zs = Util.kind_formals k2 in
+             else let zs, _ = Util.kind_formals k2 in
                   if List.length zs <> List.length args2
                   then (if Tc.Env.debug env <| Options.Other "Rel"
                         then Util.print_string "Arity check failed on RHS: kind uOccurs check failed... breaking generality\n";
@@ -882,30 +884,28 @@ and solve_t_flex_flex (top:bool) (env:Tc.Env.env) (orig:prob)
                       //ys = {xi} intersect FV(t1..tm)
                       //U1 -> \x1..xn. U y1..yk
                       //U2 -> \z1...zm. U (G1 z1..zm) ... (Gk z1..zm)
-                      //Gi(x1..xm) =?= yi
+                      //Gi(t1..tm) =?= yi
                       let ys = binders_of_freevars ({ftvs=Util.set_intersect rhs_vars.ftvs lhs_vars.ftvs; 
                                                      fxvs=Util.set_intersect rhs_vars.fxvs lhs_vars.fxvs}) in
                       let u_yi, u = new_tvar t1.pos ys ktype in
                       let u1_inst = UT((u1, k1), mk_Typ_lam(xs, u_yi) k1 t1.pos) in
                       let r = t2.pos in
-                      let gi_zi, sub_probs = List.map2 (fun (zi, _) (argi, _) -> match zi, argi with 
-                        | Inl ai, Inl ti -> 
-                            let gi_xs, gi = new_tvar r zs ai.sort in
+                      let gi_zi, sub_probs = List.map (fun yi -> match fst yi with 
+                        | Inl ai -> 
+                            let gi_zs, gi = new_tvar r zs ai.sort in
                             let gi_ps = mk_Typ_app(gi, args2) ai.sort r in
-                            targ gi_xs, TProb(false, EQ, gi_ps, ti)
+                            targ gi_zs, TProb(false, EQ, gi_ps, Util.btvar_to_typ ai)
 
-                        | Inr xi, Inr vi -> 
-                            let gi_xs, gi = new_evar r zs xi.sort in
+                        | Inr xi -> 
+                            let gi_zs, gi = new_evar r zs xi.sort in
                             let gi_ps = mk_Exp_app(gi, args2) xi.sort r in
-                            varg gi_xs, EProb(false, EQ, gi_ps, vi)
-
-                        | _ -> failwith "Impossible") zs args2 |> List.unzip in
+                            varg gi_zs, EProb(false, EQ, gi_ps, Util.bvar_to_exp xi)) ys |> List.unzip in
                       let u2_inst = UT((u2,k2), mk_Typ_lam(zs, mk_Typ_app(u, gi_zi) ktype r) k2 r) in
                       let sol = [u1_inst; u2_inst] in
                       let _ = if Tc.Env.debug env <| Options.Other "Rel"
-                              then Util.fprint2 "Flex-Flex: double imitation\n\tsols = %s\nsubprobs=%s\n" 
-                                                (List.map str_uvi sol |> String.concat ", ") 
-                                                (List.map (prob_to_string env) sub_probs |> String.concat ",") in
+                              then Util.fprint2 "Flex-Flex: double imitation\n\tsols = %s\nsubprobs=\n%s\n" 
+                                                (List.map (str_uvi env) sol |> String.concat "\n\t") 
+                                                (List.map (prob_to_string env) sub_probs |> String.concat "\n") in
                       solve env (attempt sub_probs (extend_subst' sol probs)) in
              
         
@@ -928,7 +928,7 @@ and solve_t_flex_flex (top:bool) (env:Tc.Env.env) (orig:prob)
 
         | Some xs, Some ys -> 
             let extend_and_solve sols probs = 
-                if debug env High then Util.fprint1 "Flex-flex: %s" (sols |> List.map str_uvi |> String.concat ", ");
+                if debug env High then Util.fprint1 "Flex-flex: %s" (sols |> List.map (str_uvi env) |> String.concat ", ");
                 let probs = extend_subst' sols probs in
                 solve env probs in
                      
@@ -971,12 +971,8 @@ and solve_t_flex_rigid (top:bool) (env:Tc.Env.env) (orig:prob) (lhs:flex_t) (t2:
     let (t1, uv, k, args_lhs) = lhs in
     let maybe_pat_vars = pat_vars env [] args_lhs in
     let subterms ps = 
-        let xs = match (Util.compress_kind k).n with 
-            | Kind_arrow(binders, _) -> binders
-            | _ -> [] in 
-//            ps |> List.map (function 
-//            | Inl pi, imp -> Inl <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk, imp
-//            | Inr pi, imp -> Inr <| Util.bvd_to_bvar_s (Util.new_bvd None) pi.tk, imp) in
+        let xs = Util.kind_formals k |> fst in
+        let xs = Util.name_binders xs in
         (uv,k), ps, xs, decompose_typ env t2 in
 
     let rec imitate_or_project n st i = 
@@ -1271,32 +1267,34 @@ and solve_e (top:bool) (env:Env.env) (rel:rel) (e1:exp) (e2:exp) (probs:worklist
             //if pi = y  
             //u = \x1..xn. xi (G1 (x1..xn), ..., Gm (x1..xn))
             //Gi(p1..pn) =?= ai 
-            let giveup () = giveup env "flex-rigid: refusing to project expressions" (EProb(top, rel, e1, e2)) probs in
+            let giveup reason = giveup env (Util.format1 "flex-rigid: refusing to project expressions (%s)" reason) (EProb(top, rel, e1, e2)) probs in
             match (Util.compress_exp head2).n with 
                 | Exp_bvar y -> 
-                    let xs, tres = match Util.function_formals t1 with
+                    let all_xs, tres = match Util.function_formals t1 with
                         | None -> [], t1
                         | Some (xs, c) -> xs, Util.comp_result c in
-                    if List.length xs <> List.length args1
-                    then giveup()
+                    if List.length all_xs <> List.length args1
+                    then giveup (Util.format2 "unequal arity:\n\texpetced binders %s\n\tgot args {%s}" (Print.binders_to_string ", " all_xs) (Print.args_to_string args2))
                     else let rec aux xs args = match xs, args with 
-                            | [], [] -> giveup () //couldn't find the term to project
+                            | [], [] -> giveup "variable to project not found"
+                            | [], _
+                            | _, [] -> failwith "impossible"
                             | (Inl _, _)::xs, (Inl _, _)::args -> aux xs args
                             | (Inr xi, _)::xs, (Inr arg, _)::args -> 
                                 begin match (Util.compress_exp arg).n with 
                                        | Exp_bvar z -> 
                                           if Util.bvar_eq y z (* found the variable to project *)
-                                          then let gi_xi, gi_pi = sub_problems xs args2 in
-                                               let sol = mk_Exp_abs(xs, mk_Exp_app(Util.bvar_to_exp xi, gi_xi) tres e1.pos) t1 e1.pos in
+                                          then let gi_xi, gi_pi = sub_problems all_xs args2 in
+                                               let sol = mk_Exp_abs(all_xs, mk_Exp_app'(Util.bvar_to_exp xi, gi_xi) tres e1.pos) t1 e1.pos in
                                                if Tc.Env.debug env <| Options.Other "Rel"
                                                then Util.fprint3 "Projected: %s -> %s\nSubprobs=\n%s\n" (Print.uvar_e_to_string (u1,t1)) (Print.exp_to_string sol) (gi_pi |> List.map (prob_to_string env) |> String.concat "\n");
                                                solve env (attempt gi_pi (extend_subst (UE((u1, t1), sol)) probs))
                                           else aux xs args
                                        | _ -> aux xs args
                                 end
-                            | _ -> giveup () in
-                          aux xs args2
-                | _ -> giveup () in
+                            | x::xs, arg::args -> giveup (Util.format2 "type incorrect term---impossible: expected %s; got %s\n" (Print.binder_to_string x) (Print.arg_to_string arg)) in
+                          aux all_xs args1
+                | _ -> giveup "rhs head term is not a variable" in
 
         let imitate_e () = 
             //u1 p1..pn =?= h a1..am
