@@ -13,6 +13,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
+//////////////////////////////////////////////////////////////////////////
+//Refinement subtyping with higher-order unification 
+//with special treatment for higher-order patterns 
+//////////////////////////////////////////////////////////////////////////
+
 #light "off"
 module Microsoft.FStar.Tc.Rel
 
@@ -26,15 +31,12 @@ open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Tc.Normalize
 open Microsoft.FStar.Absyn.Syntax
 
-let destruct_flex_t t = match t.n with
-    | Typ_uvar(uv, k) -> (t, uv, k, [])
-    | Typ_app({n=Typ_uvar(uv, k)}, args) -> (t, uv, k, args)
-    | _ -> failwith "Not a flex-uvar"
+
 
 //////////////////////////////////////////////////////////////////////////
 //Making substitutions for alpha-renaming 
 //////////////////////////////////////////////////////////////////////////
-let subst_binder b1 b2 s = 
+let mk_subst_binder b1 b2 s = 
     if is_null_binder b1 || is_null_binder b2 then s
     else match fst b1, fst b2 with 
         | Inl a, Inl b -> 
@@ -48,9 +50,9 @@ let subst_binder b1 b2 s =
         | _ -> failwith "Impossible"
 
 
-//////////////////////////////////////////////////////////////////////////
-//Generating new unification variables/patterns
-//////////////////////////////////////////////////////////////////////////
+(* --------------------------------------------------------- *)
+(* <new_uvar> Generating new unification variables/patterns  *)
+(* --------------------------------------------------------- *)
 let new_kvar r binders =
   let wf k () = true in
   let u = Unionfind.fresh (Uvar wf) in
@@ -88,11 +90,13 @@ let new_evar r binders t =
         | [] -> uv, uv
         | _ -> mk_Exp_app(uv, args) t r, uv
 
-//////////////////////////////////////////////////////////////////////////
-//Refinement subtyping with higher-order unification 
-//with special treatment for higher-order patterns 
-//////////////////////////////////////////////////////////////////////////
+(* --------------------------------------------------------- *)
+(* </new_uvar>                                               *)
+(* --------------------------------------------------------- *)
 
+(* --------------------------------------------------------- *)
+(* <type defs> The main types of the constraint solver       *)
+(* --------------------------------------------------------- *)
 type rel = 
   | EQ 
   | SUB
@@ -121,8 +125,9 @@ type guard_formula =
   | NonTrivial of formula
 
 type guard_t = {
-  guard_f:  guard_formula;
-  carry:    probs
+  guard_f: guard_formula;
+  carry:   probs;
+  slack:   list<typ>;
 }
 
 (* Instantiation of unification variables *)
@@ -139,11 +144,16 @@ type worklist = {
     subst:      list<uvi>;           //the partial solution derived so far
     guard:      guard_formula;       //the logical condition gathered so far
     ctr:        int;                 //a counter incremented each time we extend subst, used to detect if we've made progress
+    slack_vars: list<typ>;           //all the slack variables introduced so far
+    defer_ok:   bool;                //whether or not carrying constraints is ok---at the top-level, this flag is false
 }
 
 type solution = 
     | Success of list<uvi> * guard_t
     | Failed  of prob * string
+(* --------------------------------------------------------- *)
+(* </type defs>                                              *)
+(* --------------------------------------------------------- *)
 
 (* ------------------------------------------------*)
 (* <Printing> (mainly for debugging) *)
@@ -188,7 +198,6 @@ let uvi_to_string env uvi =
 (* </Printing> *)
 (* ------------------------------------------------*)
 
-
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
 (* ------------------------------------------------*)
@@ -201,21 +210,20 @@ let conj_guard g1 g2 = match g1, g2 with
   | g, Trivial -> g
   | NonTrivial f1, NonTrivial f2 -> NonTrivial (Util.mk_conj f1 f2)
 
-let rec close_forall bs f = match bs with 
-    | [] -> f
-    | b::rest -> 
-      let body = mk_Typ_lam([b], close rest f) (mk_Kind_arrow([b], ktype) f.pos) f.pos in
-      match fst b with 
-        | Inl a ->
+let rec close_forall bs f = 
+  List.fold_right (fun b f -> 
+    let body = mk_Typ_lam([b], f) (mk_Kind_arrow([b], ktype) f.pos) f.pos in
+    match fst b with 
+       | Inl a -> 
           mk_Typ_app(Util.tforall_typ a.sort, [targ body]) ktype f.pos
-        | Inr x -> 
-          mk_Typ_app(Util.tforall, [(Inl x.sort, true); targ body]) ktype f.pos
+       | Inr x -> 
+          mk_Typ_app(Util.tforall, [(Inl x.sort, true); targ body]) ktype f.pos) bs f
 
 let close_guard binders g = match g with 
     | Trivial -> g
     | NonTrivial f -> close_forall binders f |> NonTrivial
 
-let mk_guard g ps = {guard_f=g; carry=List.map snd ps}
+let mk_guard g ps slack = {guard_f=g; carry=List.map snd ps; slack=slack}
 
 (* ------------------------------------------------*)
 (* </guard_formula ops>                            *)
@@ -272,6 +280,8 @@ let empty_worklist = {
     subst=[];
     guard=Trivial;
     ctr=0;
+    slack_vars=[];
+    defer_ok=true;
 }
 let singleton prob         = {empty_worklist with attempting=[prob]}
 let extend_subst' uis wl   = {wl with subst=uis@wl.subst; ctr=wl.ctr + 1}
@@ -279,6 +289,7 @@ let extend_subst ui wl     = {wl with subst=ui::wl.subst; ctr=wl.ctr + 1}
 let defer prob wl          = {wl with deferred=(wl.ctr, prob)::wl.deferred}
 let attempt probs wl       = {wl with attempting=probs@wl.attempting}
 let guard (env:env) g wl   = {wl with guard=conj_guard g wl.guard}   
+let add_slack slack wl     = {wl with slack_vars=slack@wl.slack_vars}
 let giveup env reason prob = 
     if debug env <| Options.Other "Rel"
     then Util.fprint2 "Failed %s:\n%s\n" reason (prob_to_string env prob);
@@ -374,6 +385,49 @@ let rec compress_e (env:env) wl e =
            end
         | _ -> e
 
+let normalize_refinement env wl t0 = 
+   let t = Normalize.norm_typ [Normalize.DeltaHard] env (compress env wl t0) in
+   let rec aux t = 
+    let t = Util.compress_typ t in
+    match t.n with
+       | Typ_refine(x, phi) -> 
+            let t0 = aux x.sort in
+            begin match t0.n with 
+              | Typ_refine(y, phi1) ->
+                mk_Typ_refine(y, Util.mk_conj phi1 (Util.subst_typ [Inr(x.v, Util.bvar_to_exp y)] phi)) ktype t0.pos
+              | _ -> t
+            end
+       | _ -> t in
+   aux t
+
+let base_and_refinement env wl t1 =
+   let rec aux norm t1 =
+        match t1.n with 
+        | Typ_refine(x, phi) -> 
+            if norm 
+            then (x.sort, Some(x, phi))
+            else begin match normalize_refinement env wl t1 with
+                | {n=Typ_refine(x, phi)} -> (x.sort, Some(x, phi))
+                | _ -> failwith "impossible"
+            end
+
+        | Typ_const _
+        | Typ_app _ -> 
+            if norm 
+            then (t1, None)
+            else aux true (normalize_refinement env wl t1)
+
+        | Typ_btvar _
+        | Typ_fun _
+        | Typ_lam _ -> (t1, None)
+
+        | Typ_ascribed _
+        | Typ_uvar _
+        | Typ_delayed _
+        | Typ_meta _
+        | Typ_unknown -> failwith "impossible" in
+   aux false t1
+
 (* ------------------------------------------------ *)
 (* </normalization>                                 *)
 (* ------------------------------------------------ *)
@@ -392,6 +446,11 @@ let occurs_check env uk t =
                         (Print.typ_to_string t)
                         (Normalize.typ_norm_to_string env t)) in
     occurs_ok, msg
+
+let occurs_and_freevars_check env uk fvs t = 
+    let fvs_t = Util.freevars_typ t in
+    let occurs_ok, msg = occurs_check env uk t in
+    occurs_ok && Util.fvs_included fvs_t fvs
 
 let occurs_check_e env ut e = 
     let uvs = Util.uvars_in_exp e in 
@@ -437,6 +496,10 @@ let rec pat_vars env seen args : option<binders> = match args with
 
             | _ -> None) //not a pattern
 
+let destruct_flex_t t = match t.n with
+    | Typ_uvar(uv, k) -> (t, uv, k, [])
+    | Typ_app({n=Typ_uvar(uv, k)}, args) -> (t, uv, k, args)
+    | _ -> failwith "Not a flex-uvar"
 (* ------------------------------------------------ *)
 (* </variable ops>                                  *)
 (* ------------------------------------------------ *)
@@ -445,24 +508,27 @@ let rec pat_vars env seen args : option<binders> = match args with
 (* ------------------------------------------------ *)
 (* <decomposition> of a type/kind with its binders  *)
 (* ------------------------------------------------ *)
-(*
-    It simplifies the unification algorithm to view every F* term/type/kind
-    as either a lambda, a variable, or the application of a constructor to some arguments.
+(* ///////////////////////////////////////////////////
+   A summary of type decomposition
+   ///////////////////////////////////////////////////
+   
+   It simplifies the unification algorithm to view every F* term/type/kind
+   as either a lambda, a variable, or the application of a constructor to some arguments.
     
-    For the built-in term formers, i.e., Typ_fun, Typ_refine, and Kind_arrow, 
-    we need a way to decompose them into their sub-terms so that they 
-    appear in the form (C arg1 ... argn), for some constructor C.
+   For the built-in term formers, i.e., Typ_fun, Typ_refine, and Kind_arrow, 
+   we need a way to decompose them into their sub-terms so that they 
+   appear in the form (C arg1 ... argn), for some constructor C.
      
-    We call this operation 'decomposition'.
+   We call this operation 'decomposition'.
 
-    To illustrate, take:
+   To illustrate, take:
 
-    val decompose_typ: env -> typ 
+   val decompose_typ: env -> typ 
                     -> (list<ktec> -> typ) 
                         * (typ -> bool) 
                         * list<(binders * ktec)>
 
-    let recompose, matches, components = decompose_typ env t
+   let recompose, matches, components = decompose_typ env t
         
         1. The components are the immediate sub-terms of t, 
            with their contexts provided as a binders
@@ -488,8 +554,8 @@ let rec pat_vars env seen args : option<binders> = match args with
            where t matches t' 
               if t head matches t'
               or t full matches t'
-            
- *)
+*)
+
 type match_result = 
   | MisMatch
   | HeadMatch
@@ -628,6 +694,242 @@ let head_matches_delta env t1 t2 : (match_result * option<(typ*typ)>) =
 (* ------------------------------------------------ *)
 
 (* ------------------------------------------------ *)
+(* <slack> Destructing formulas for slack variables *)
+(* ------------------------------------------------ *)
+
+(* /////////////////////////////////////////////////////
+   A summary of the treatment of slack 
+   /////////////////////////////////////////////////////
+
+   When solving a refinement subtyping constraint involving a unification variable U, 
+   we solve U with a type of the shape x:t{slack_formula x}
+   where slack_formula x has the shape
+
+       (F \/ p+ xs) /\ (G /\ q* xs)
+
+   We call the left conjunct a lower bound---it reflects the strongest logical 
+   property we obtain for U, and is built from subtyping constraints of the form t <: U.
+   We call p+ an additive slack variable.
+
+   The right conjunct is an upper bound---it reflects the weakest logical property
+   that must hold for U. It is build from subtyping constraints of the form U <: t.
+   We call q* a multiplicative slack variable.
+
+   Subtyping constraints involving unification variables and refinement formulas introduce 
+   and propagate slack variables in a manner that ensures that the subtyping constraints are satisfiable, 
+   given the validity of a logical guard.
+
+   At the top-level of a derivation, all the remaining uninstantiated slack variables are collected. 
+   Every positive variable p+ is instantiated to \xs.False
+   Every negative variable q* is instantiated to \xs.True
+
+   An invariant of the system is, given the validity of the logical constraints emitted, the 
+   lower bound of the system always implies the upper bound.
+
+   For readability, we will write a slack formula as
+   
+          Lower(F, p xs) /\ Upper(G, q xs)
+   
+   
+1. Slack-intro-T-flex: Given a subtyping problem, with a uvar on the right:
+           
+            t <: u xs
+
+    if t is not an arrow, not a lambda, then normalize the problem to the form
+
+            x:t'{phi x} <: u xs
+
+    where t' has no non-trivial super types.
+    
+    Then set 
+            u = \xs. x:t'{Lower(phi x, p x) /\ Upper(True /\ q x)})
+ 
+    Solve it by imitating the rhs, while introducing a slack formula, 
+    recording phi as a lower bound.
+
+2. Slack-intro-fun-flex: Given 
+
+        t <: u ys , where t is an arrow type
+
+   Normalize it to 
+
+        f:(x:t1 -> M (t2 x)){phi f} <: u ys
+   
+   And solve it using
+
+        u = \ys. f:(x:u1 ys -> M (u2 ys x)){Lower(phi, p ys f) /\ Upper(True /\ q ys f)}
+   
+   producing subtyping constraints
+
+          u1 ys <: t1
+    and   t2 x  <: u2 ys x
+       
+   This rule would enable the inferring types for constructs like:
+        
+        [f:nat -> Tot int;
+         g:int -> Tot nat;
+         h:pos -> Tot pos] : list (pos -> Tot int)
+
+   A similar rule applies for type-lambdas
+ 
+3. Slack-intro-flex-T: Given 
+    
+        u xs <: t    where t is not an arrow type
+        
+   Normalize t and solve
+
+        u xs <: x:t'{phi}
+   
+   by imitating 
+
+        u xs = \xs. x:t'{Lower(False \/ p xs x) /\ Upper(phi x, q xs x)}
+
+4. Slack-intro-flex-fun: Given
+
+      u ys <: t      where t is an arrow type
+
+   Normalize t and solve
+
+      u ys <: f:(x:t1 -> M (t2 x)){phi f}
+   
+   by imitating
+
+      u = \ys. f:(x:u1 ys -> M (u2 ys x){Lower(False \/ p xs f) /\ Upper(phi f, q xs f)} 
+               
+
+5. Slack-refine: Given
+
+          x:t{Lower(phi1, p xs) /\ Upper(phi2, q xs)} <: t'
+
+   Normalize the RHS, where psi is slack-free:
+   
+          x:t{Lower(phi1, p xs) /\ Upper(phi2, q xs)} <: y:s{psi}
+
+   And solve by:
+
+    1. t <: s
+
+    2. Generate phi ==> psi[x/y]
+
+    3. Instantiate q = \xs. psi[x/y] /\ q' xs, for a fresh slack variable q'
+
+6. Refine-Slack: Given
+
+         t' <: x:t{Lower(phi1, p xs) /\ Upper(phi2, q xs)} 
+
+   Normalize the RHS, where psi is slack-free:
+   
+         y:s{psi} <: x:t{Lower(phi1, p xs) /\ Upper(phi2, q xs)}
+
+   And solve by:
+
+   1. s <: t
+
+   2. Generate psi[x/y] ==> phi2
+
+   3. Instantiate p = \xs. psi[x/y] \/ p' xs, for fresh slack variable p'
+
+7. Slack-Slack:
+
+      x:t1{Lower(phi1, p1 xs) /\ Upper(psi1, q1 xs)} <: y:t2{Lower(phi2, p2 xs) /\ Upper(psi2, q2 xs)}
+
+   1. t1 <: t2
+
+   2 a. p1 = \xs. phi2 \/ p xs
+   2 b. p2 = \xs. phi1 \/ p xs
+
+   3 a. q1 = \xs. psi2 /\ q xs
+   3 b. q2 = \xs. psi1 /\ q xs
+
+   4 a. phi1 ==> psi2
+   4 b. phi2 ==> psi1
+
+
+
+3 a. Slack-elim-L-pos: Given
+            x:t{Pos(phi \/ slack x)}  <: x:t{phi'} 
+       where phi' may or may not have slack
+               
+       Solve by:
+            slack = \x. Neg(phi' /\ slack' x) 
+
+       And producing the logical constraint:
+            forall x. phi x ==> phi' x
+
+       Intuitively, by flipping the polarity of the slack and guarding it with phi', 
+       we ensure that any further weakening instantiations of the slack cannot weaken it 
+       beyond the desired bound phi'.
+
+3 b. Slack-elim-L-neg: Given
+            x:t{Neg(phi \/ (psi /\ slack x))}  <: x:t{phi'} 
+       where phi' may or may not have slack
+               
+       Solve by:
+            slack = \x. Neg(phi' /\ slack' x) 
+
+       And producing the logical constraint:
+            forall x. phi x ==> phi' x
+
+4. Slack-reintro-R: Given
+           x:t{phi} <: x:t{slack x \/ phi'}
+       where phi does not have slack
+
+       Solve by setting
+           slack = \x. slack' x \/ phi x
+       for fresh slack'
+
+5. No-Slack-L: Given
+      
+       u <: t
+
+   Solve it by setting u = t
+
+   No point in leaving slack on the LHS, since t is a lower-bound anyway
+
+We carry all slack variables to the top-level. After solving all constraints,
+if there are any remaining slack variables, we set them all to \xs.False.
+
+Note, the case where both side have slack, is covered by case 3:
+       Consider:
+           x:t{slack1 x \/ phi1} <: x:t2{slack2 \/ phi2}
+        
+       Solve by:
+           slack1 = \x. slack2 x \/ phi2
+
+       And 
+           forall x. phi1 x ==> (slack2 x \/ phi2 x) *)
+
+
+(* 
+  A refinement formula phi may include a slack variable
+  If it does, phi always has the shape:
+      ((u x1..xn \/ phi1) \/ phi2 ... \/ phin)
+  where u is the slack variable
+  For such a phi, destruct slack returns
+  Some (u x1..xn, (phi1 \/ phi2 \/ ... \/ phin))
+*)
+let destruct_slack env wl (phi:typ) : option<(typ * typ)> = 
+   let rec aux disjuncts phi = 
+      match (compress env wl phi).n with
+        | Typ_app({n=Typ_const tc}, [(Inl lhs, _);(Inl rhs, _)]) 
+            when (lid_equals tc.v Const.or_lid) -> 
+            let lhs = compress env wl lhs in
+            begin match lhs.n with
+                | Typ_uvar _ 
+                | Typ_app({n=Typ_uvar _}, _) -> 
+                  //found slack variable
+                  Some (lhs, Util.mk_disj_l (rhs::disjuncts))
+                | _ ->
+                  aux (rhs::disjuncts) lhs
+            end
+        | _ -> None in
+    aux [] phi
+
+(* ------------------------------------------------ *)
+(* </slack>                                         *)
+(* ------------------------------------------------ *)
+
+(* ------------------------------------------------ *)
 (* <solver> The main solving algorithm              *)
 (* ------------------------------------------------ *)
 type flex_t = (typ * uvar_t * knd * args)
@@ -646,11 +948,11 @@ let rec solve (env:Tc.Env.env) (probs:worklist) : solution =
          end
        | [] ->
          match probs.deferred with 
-            | [] -> Success (probs.subst, mk_guard probs.guard []) //Yay ... done!
+            | [] -> Success (probs.subst, mk_guard probs.guard [] probs.slack_vars) //Yay ... done!
             | _ -> 
               let attempt, rest = probs.deferred |> List.partition (fun (c, _) -> c < probs.ctr) in
               match attempt with 
-                 | [] -> Success(probs.subst, mk_guard probs.guard probs.deferred) //can't solve yet; defer the rest
+                 | [] -> Success(probs.subst, mk_guard probs.guard probs.deferred probs.slack_vars) //can't solve yet; defer the rest
                  | _ -> solve env ({probs with attempting=attempt |> List.map snd; deferred=rest})
 
 
@@ -665,11 +967,11 @@ and solve_binders (env:Tc.Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:w
             begin match fst hd1, fst hd2 with 
                 | Inl a, Inl b -> 
                   let prob = KProb <| mk_problem orig (Util.subst_kind subst b.sort) (p_rel orig) a.sort None prefix "Formal type parameter" in
-                  aux (prob::subprobs) (prefix@[hd1]) (subst_binder hd1 hd2 subst) tl1 tl2
+                  aux (prob::subprobs) (prefix@[hd1]) (mk_subst_binder hd1 hd2 subst) tl1 tl2
 
                 | Inr x, Inr y ->
                   let prob = TProb <| mk_problem orig (Util.subst_typ subst y.sort) (p_rel orig) x.sort None prefix "Formal value parameter" in
-                  aux (prob::subprobs) (prefix@[hd1]) (subst_binder hd1 hd2 subst) tl1 tl2
+                  aux (prob::subprobs) (prefix@[hd1]) (mk_subst_binder hd1 hd2 subst) tl1 tl2
 
                 | _ -> giveup env "non-corresponding binders" orig
             end
@@ -777,7 +1079,177 @@ and solve_k (env:Env.env) (problem:problem<knd,typ>) (wl:worklist) : solution =
 
      | _ -> giveup env "head mismatch (k-1)" (KProb problem)
 
-and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution = 
+and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
+    let orig = TProb problem in
+    let giveup_or_defer msg = 
+        if wl.defer_ok
+        then solve env (defer orig wl)
+        else giveup env msg orig in 
+
+
+    (* <flex-rigid> *)
+    let solve_t_flex_rigid (lhs:flex_t) (t2:typ) = 
+        let (t1, uv, k, args_lhs) = lhs in
+        let maybe_pat_vars = pat_vars env [] args_lhs in
+        let subterms ps = 
+            let xs = Util.kind_formals k |> fst in
+            let xs = Util.name_binders xs in
+            (uv,k), ps, xs, decompose_typ env t2 in
+
+        let rec imitate_or_project n st i = 
+            if i >= n then giveup env "flex-rigid case failed all backtracking attempts" orig probs
+            else if i = -1 
+            then match imitate env probs st with
+                    | Failed _ -> imitate_or_project n st (i + 1) //backtracking point
+                    | sol -> sol
+            else match project env probs i st with
+                    | Failed _ -> imitate_or_project n st (i + 1) //backtracking point
+                    | sol -> sol in
+
+        let check_head fvs1 t2 =
+            let hd, _ = Util.head_and_args t2 in 
+            match hd.n with 
+                | Typ_fun _
+                | Typ_refine _ 
+                | Typ_const _
+                | Typ_lam _  -> true
+                | _ ->             
+                    let fvs_hd = Util.freevars_typ hd in
+                    if Util.fvs_included fvs_hd fvs1
+                    then true
+                    else (Util.fprint1 "Free variables are %s" (Print.freevars_to_string fvs_hd); false) in
+            
+        let imitate_ok t2 = (* -1 means begin by imitating *)
+            let fvs_hd = Util.head_and_args t2 |> fst |> Util.freevars_typ in
+            if Util.set_is_empty fvs_hd.ftvs
+            then -1 (* yes, start by imitating *)
+            else 0 (* no, start by projecting *) in
+
+        match maybe_pat_vars with 
+          | Some vars -> 
+                let t1 = sn env t1 in
+                let t2 = sn env t2 in 
+                let fvs1 = Util.freevars_typ t1 in
+                let fvs2 = Util.freevars_typ t2 in
+                let occurs_ok, msg = occurs_check env (uv,k) t2 in
+                if not occurs_ok 
+                then giveup env (Option.get msg) orig probs
+                else if Util.fvs_included fvs2 fvs1
+                then //fast solution for flex-pattern/rigid case
+                    let _  = if debug env <| Options.Other "Rel" 
+                             then Util.fprint3 "Pattern %s with fvars=%s succeeded fvar check: %s\n" (Print.typ_to_string t1) (Print.freevars_to_string fvs1) (Print.freevars_to_string fvs2) in
+                    let sol = match vars with 
+                                | [] -> t2
+                                | _ -> mk_Typ_lam(sn_binders env vars, t2) k t1.pos in
+                                //let _ = if debug env then printfn "Fast solution for %s \t -> \t %s" (Print.typ_to_string t1) (Print.typ_to_string sol) in
+                    solve env (extend_subst (UT((uv,k), sol)) probs)
+                else if check_head fvs1 t2 
+                then (let im_ok = -1 in //imitate_ok t2 in
+                      if debug env <| Options.Other "Rel" 
+                      then Util.fprint4 "Pattern %s with fvars=%s failed fvar check: %s ... %s\n" 
+                                (Print.typ_to_string t1) (Print.freevars_to_string fvs1) 
+                                (Print.freevars_to_string fvs2) (if im_ok < 0 then "imitating" else "projecting");
+                      imitate_or_project (List.length args_lhs) (subterms args_lhs) im_ok)
+                else giveup env "fre-variable check failed on a non-redex" orig probs
+        | None ->   
+                if check_head (Util.freevars_typ t1) t2
+                then (let im_ok = imitate_ok t2 in
+                      if debug env <| Options.Other "Rel" 
+                      then Util.fprint2 "Not a pattern (%s) ... %s\n" (Print.typ_to_string t1) (if im_ok < 0 then "imitating" else "projecting");
+                      imitate_or_project (List.length args_lhs) (subterms args_lhs) im_ok)
+                else giveup env "head-symbol is free" orig probs in
+   (* </flex-rigid> *)
+
+   (* <flex-flex>: 
+      Always interpret a flex-flex constraint as an equality, even if it is tagged as SUB/SUBINV
+      This causes a loss of generality. Consider:
+
+        nat <: u1 <: u2
+        int <: u2
+        u1 <: nat
+
+      By collapsing u1 and u2, the constraints become unsolveable, since we then have
+        nat <: u <: nat and int <: u
+
+      However, it seems unlikely that this would arise in practice. TBD.
+ 
+      The alternative is to delay all flex-flex subtyping constraints, even the pattern cases. 
+      But, it seems that performance would suffer greatly then. TBD.
+   *)
+   let flex_flex (lhs:flex_t) (rhs:flex_t) : solution = 
+        let (t1, u1, k1, args1) = lhs in
+        let (t2, u2, k2, args2) = rhs in 
+        let maybe_pat_vars1 = pat_vars env [] args1 in
+        let maybe_pat_vars2 = pat_vars env [] args2 in
+        let r = t2.pos in
+        let solve_one_pat (t1, u1, k1, xs) (t2, u2, k2, args2) = 
+            if Tc.Env.debug env <| Options.Other "Rel"
+            then Util.fprint2 "Trying flex-flex one pattern (%s) with %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
+            let t2 = sn env t2 in
+            let rhs_vars = Util.freevars_typ t2 in
+            let occurs_ok, _ = occurs_check env (u1,k1) t2 in
+            let lhs_vars = freevars_of_binders xs in
+            if occurs_ok && Util.fvs_included rhs_vars lhs_vars
+            then let sol = UT((u1, k1), mk_Typ_lam'(xs, t2) k1 t1.pos) in
+                 solve env (extend_subst sol wl)
+            else giveup_or_defer "flex-flex (one pattern) occurs-check or free variable check" in
+     
+        let solve_both_pats xs ys = 
+            if Unionfind.equivalent u1 u2 && binders_eq xs ys
+            then solve env wl
+            else //U1 xs =?= U2 ys
+                 //zs = xs intersect ys, U fresh
+                 //U1 = \x1 x2. U zs
+                 //U2 = \y1 y2 y3. U zs
+                let xs = sn_binders env xs in
+                let ys = sn_binders env ys in
+                let zs = intersect_vars xs ys in
+                let u_zs, _ = new_tvar r zs t2.tk in
+                let sub1 = mk_Typ_lam'(xs, u_zs) k1 r in
+                let occurs_ok, msg = occurs_check env (u1,k1) sub1 in
+                if not occurs_ok
+                then giveup_or_defer "flex-flex: failed occcurs check" 
+                else let sol1 = UT((u1, k1), sub1) in
+                     if Unionfind.equivalent u1 u2
+                     then solve env (extend_subst sol1 wl)
+                     else let sub2 = mk_Typ_lam'(ys, u_zs) k2 r in
+                          let occurs_ok, msg = occurs_check env (u2,k2) sub2 in
+                          if not occurs_ok 
+                          then giveup_or_defer "flex-flex: failed occurs check"
+                          else let sol2 = UT((u2,k2), sub2) in
+                               solve env (extend_subst' [sol1;sol2] wl) in
+
+      
+         match maybe_pat_vars1, maybe_pat_vars2 with 
+            | Some xs, Some ys -> solve_both_pats xs ys
+            | Some xs, None -> solve_one_pat (t1, u1, k1, xs) rhs
+            | None, Some ys -> solve_one_pat (t2, u2, k2, ys) lhs
+            | _ -> 
+              if wl.defer_ok
+              then solve env (defer orig wl)
+              else giveup env "flex-flex constraint" orig in
+    (* </flex-flex> *)
+
+    (* <slack-intro-1> *)
+    let slack_intro_1 (x, phi) (rhs, u, k, args) =
+        let maybe_pat_vars = pat_vars env [] args in
+        match maybe_pat_vars with 
+            | None -> 
+              if wl.defer_ok
+              then solve env (defer orig wl)
+              else solve_t env (invert ({problem with relation=EQ})) wl  //it's not a pattern; rather than giving up, try solving it as a flex-rigid equality
+
+            | Some xs -> 
+              let slack_pat, slack_var = new_tvar problem.rhs.pos (v_binder x::xs) ktype in
+              let imitate = mk_Typ_refine(x, Util.mk_disj phi slack_pat) ktype problem.rhs.pos in
+              if occurs_and_freevars_check env (u,k) (freevars_of_binders xs) imitate 
+              then let sol = UT((u,k), mk_Typ_lam(xs, imitate) k problem.rhs.pos) in
+                   solve env (extend_subst sol wl)
+              else if wl.defer_ok
+              then solve env (defer orig wl)
+              else solve_t env (invert ({problem with relation=EQ})) wl  in //it's not a pattern; rather than giving up, try solving it as a flex-rigid equality
+    (* </slack-intro-1> *)
+
     if Util.physical_equality problem.lhs problem.rhs then solve env wl else
     let t1 = compress env wl problem.lhs in
     let t2 = compress env wl problem.rhs in 
@@ -786,20 +1258,7 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         if debug env (Options.Other "Rel") 
         then Util.fprint1 "Attempting %s\n" (prob_to_string env <| TProb problem) in
     let r = Env.get_range env in
-    let orig = TProb problem in
-//    let solve_and_close env binders subprobs probs p = 
-//        let sol = match p with 
-//            | TProb(top, rel, t1, t2) -> solve_t top env rel t1 t2 empty_worklist 
-//            | CProb(top, rel, c1, c2) -> solve_c top env rel c1 c2 empty_worklist
-//            | _ -> failwith "impos" in
-//        begin match sol with 
-//            | Success (subst, guard_f) -> 
-//                let probs = extend_subst' subst probs |> guard env false (close_guard binders guard_f) in
-//                solve env (attempt subprobs probs)
-//
-//            | Failed reasons -> 
-//                giveup env (reasons |> List.map (fun (_, _, r) -> r) |> String.concat ", ")  p probs
-//        end in 
+ 
     let match_num_binders (bs1, mk_cod1) (bs2, mk_cod2) =
         let curry n bs mk_cod = 
             let bs, rest = Util.first_N n bs in
@@ -845,65 +1304,120 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
             let t2' = Util.subst_typ subst t2' in
             TProb <| mk_problem orig t1 problem.relation t2' None binders "lambda co-domain")
 
-      | Typ_refine(x1, phi1), Typ_refine(x2, phi2) -> 
-        begin match problem.relation with
-            | EQ -> 
-              solve_binders env [v_binder x1] [v_binder x2] orig wl
-              (fun subst binders -> 
-                let phi2' = Util.subst_typ subst phi2 in
-                TProb <| mk_problem orig phi1 EQ phi2' None binders "refinemnt formula")
+      | Typ_refine _, Typ_refine _ -> 
+        let t1 = normalize_refinement env wl t1 in
+        let t2 = normalize_refinement env wl t2 in
+        begin match t1.n, t2.n with 
+            | Typ_refine(x1, phi1), Typ_refine(x2, phi2) -> 
+              let base_prob = TProb <| mk_problem orig x1.sort problem.relation x2.sort problem.element [] "refinement base type" in
+              let x1_for_x2 = mk_subst_binder (v_binder x1) (v_binder x2) [] in
+              let mk_imp imp phi1 phi2 = 
+                let phi2' = Util.subst_typ x1_for_x2 phi2 in
+                let phi1_imp_phi2 = imp phi1 phi2 in
+                let imp = match problem.element with 
+                    | None -> close_forall (v_binder x1::problem.closing_context) phi1_imp_phi2
+                    | Some e -> close_forall problem.closing_context <| Util.subst_typ ([Inr(x1.v, e)]) phi1_imp_phi2 in
+                imp, phi2' in
+             
+              begin match problem.relation with
+                  | EQ -> 
+                    let impl, _ = mk_imp Util.mk_iff phi1 phi2 in
+                    let wl = guard env (NonTrivial impl) wl in
+                    solve env (attempt [base_prob] wl)
 
-            | SUB -> 
-              let base_prob = mk_problem orig x1.sort SUB x2.sort problem.element [] "refinement base type" in
-              let guard = Util.mk_imp phi1 <|Util.subst_typ (subst_binder (v_binder x1) (v_binder x2) []) phi2 in
-              let guard = match problem.element with 
-                | None -> 
-                    
-                    close_forall [v_binder x1] (Util.mk_imp phi1 phi2)
-                | Some e ->
-                
-                  in
-            ()
+                  | SUB -> 
+                    begin match (destruct_slack env wl phi1, destruct_slack env wl phi2) with
+                        | None, None ->  (* standard refinement subtyping; no slack on either side *)
+                          let impl, _ = mk_imp Util.mk_imp phi1 phi2 in
+                          let wl = guard env (NonTrivial impl) wl in
+                          solve env (attempt [base_prob] wl)
 
-            | SUBINV -> failwith "impossible"
-        end
+                        | Some (slack1, phi1), _ ->  (* slack on the-left: use Slack-elim-L *)  
+                          let impl, phi2' = mk_imp Util.mk_imp phi1 phi2 in
+                          let wl = guard env (NonTrivial impl) wl in 
+                          let slack_prob = TProb <| mk_problem orig slack1 EQ phi2' None [v_binder x1] "slack variable (Slack-elim-L)" in
+                          solve env (attempt [base_prob; slack_prob] wl)
+
+                        | None, Some(slack2, phi2) -> (* slack on the right but not on the left: use Slack-reintro-R *)
+                          let _, u, k, args = destruct_flex_t slack2 in
+                          begin match pat_vars env [] args with 
+                            | None -> giveup env "slack variable is not a pattern" orig
+                            | Some xs ->
+                              let slack2_1, slack_var_1 = new_tvar slack2.pos xs ktype in
+                              let slack2_2, slack_var_2 = new_tvar slack2.pos xs ktype in
+                              let sol = UT((u,k), mk_Typ_lam(xs, Util.mk_disj slack2_1 slack2_2) k slack2.pos) in
+                              let sub_prob = 
+                                let phi1 = Util.subst_typ (mk_subst_binder (v_binder x2) (v_binder x1) []) phi1 in
+                                TProb <| mk_problem orig slack2_2 EQ phi2 None [v_binder x2] "slack variable (Slack-reintro-R)" in
+                              let wl = add_slack [slack_var_1; slack_var_2] wl |> extend_subst sol in
+                              solve env (attempt [base_prob; sub_prob] wl)
+                          end
+                    end
+    
+                | SUBINV -> failwith "impossible"
+            end
+          | _ -> failwith "impossible"
+       end
          
-        let base_prob = TProb(top, rel, x1.sort, x2.sort) in
-        let subst = [Inr(x2.v, Util.bvar_to_exp x1)] in
-        let phi2 = Util.subst_typ subst phi2 in
-        begin match rel with 
-            | EQ -> 
-              solve_and_close env [v_binder x1] [base_prob] wl (TProb(false, EQ, phi1, phi2))
-               
-            | SUB -> 
-              let g = NonTrivial <| mk_Typ_lam([v_binder x1], Util.mk_imp phi1 phi2) (mk_Kind_arrow([v_binder x1], ktype) r) r in
-              let probs = guard env top g wl in
-              solve env (attempt [base_prob] probs)
-        end
-
       (* flex-flex *)
-      | Typ_uvar _, Typ_uvar _
+      | Typ_uvar _,                 Typ_uvar _
       | Typ_app({n=Typ_uvar _}, _), Typ_uvar _ 
-      | Typ_uvar _, Typ_app({n=Typ_uvar _}, _)
+      | Typ_uvar _,                 Typ_app({n=Typ_uvar _}, _)
       | Typ_app({n=Typ_uvar _}, _), Typ_app({n=Typ_uvar _}, _) -> 
-        solve_t_flex_flex top env (TProb(top, rel, t1, t2)) (destruct_flex_t t1) (destruct_flex_t t2) wl
+        flex_flex (destruct_flex_t t1) (destruct_flex_t t2) 
    
       (* flex-rigid *)
       | Typ_uvar _, _
       | Typ_app({n=Typ_uvar _}, _), _ -> 
-        solve_t_flex_rigid top env (TProb(top, rel, t1, t2)) (destruct_flex_t t1) t2 wl
+        (* Even if this is a subtyping constraint, solve it as an equality, without loss of generality, 
+           since the rigid type on the RHS is already a lower bound *)
+        solve_t_flex_rigid (destruct_flex_t t1) t2 
 
-      (* rigid-flex ... reorient *)
+      (* rigid-flex: reorient if it is an equality constraint *)
       | _, Typ_uvar _ 
-      | _, Typ_app({n=Typ_uvar _}, _) ->
-        solve_t top env EQ t2 t1 wl 
+      | _, Typ_app({n=Typ_uvar _}, _) when (problem.relation = EQ) ->
+        solve_t env (invert problem) wl
 
+      (* rigid-flex: subtyping *)
+      | _, Typ_uvar _ 
+      | _, Typ_app({n=Typ_uvar _}, _) when (problem.relation = EQ) ->
+        let t_base, refinement = base_and_refinement env wl t1 in
+        begin match refinement with 
+             | None -> 
+               (* 
+                  No interesting refinement on t1; default to using solve using Rigid-flex-SUBEQ 
+                   i.e., t1 <: t1' <==> t1' = t1; (except for the caveat of function types). 
+                  So, in this case, we may as well treat the constraint as an equality and reorient. 
+               *)
+               solve_t env ({problem with lhs=t2; rhs=t_base; relation=EQ}) wl
+
+             | Some (x, phi) ->  
+               slack_intro_1 (x, phi) (destruct_flex_t t2)
+        end
+
+ 
       | Typ_refine(x, phi1), _ ->
-        if rel=EQ
-        then giveup env "refinement subtyping is not applicable" (TProb(top, rel, t1, t2)) wl //but t2 may be able to take delta steps
-        else solve_t top env rel x.sort t2 wl
+        begin match base_and_refinement env wl t2 with 
+            | (t_base, None) -> 
+               solve_t env ({problem with lhs=x.sort; rhs=t_base}) wl
+
+            | (_, Some (y, phi2)) ->
+               let rhs = mk_Typ_refine(y, phi2) ktype t2.pos in
+               solve_t env ({problem with rhs=rhs}) wl
+        end
 
       | _, Typ_refine(x, phi2) -> 
+        begin match base_and_refinement env wl t1 with 
+            | (t_base, None) -> 
+
+               solve_t env ({problem with lhs=x.sort; rhs=t_base}) wl
+
+            | (_, Some (y, phi1)) ->
+               let lhs = mk_Typ_refine(y, phi1) ktype t1.pos in
+               solve_t env ({problem with lhs=lhs}) wl
+        end
+
+
         if rel=EQ
         then giveup env "refinement subtyping is not applicable" (TProb(top, rel, t1, t2)) wl //but t1 may be able to take delta steps
         else let g = NonTrivial <| mk_Typ_lam([v_binder (bvd_to_bvar_s x.v t1)], phi2) (mk_Kind_arrow([null_v_binder t1], ktype) r) r in
@@ -1244,7 +1758,6 @@ and imitate (env:Tc.Env.env) (probs:worklist) (p:im_or_proj_t) : solution =
     let probs = extend_subst (UT((u,k), im)) probs in
     solve env (attempt (List.flatten sub_probs) probs)
 
-and 
 and project (env:Tc.Env.env) (probs:worklist) (i:int) (p:im_or_proj_t) : solution = 
     let (u, ps, xs, (h, matches, qs)) = p in
 //U p1..pn =?= h q1..qm
@@ -1291,237 +1804,9 @@ and project (env:Tc.Env.env) (probs:worklist) (i:int) (p:im_or_proj_t) : solutio
 
 
 
-and solve_t_flex_flex (top:bool) (env:Tc.Env.env) (orig:prob) 
-                      (lhs:flex_t) (rhs:flex_t) (probs:worklist) : solution = 
-    let (t1, u1, k1, args1) = lhs in
-    let (t2, u2, k2, args2) = rhs in 
-    let maybe_pat_vars1 = pat_vars env [] args1 in
-    let maybe_pat_vars2 = pat_vars env [] args2 in
-    let r = t2.pos in
-    let warn s1 s2 = 
-        if Tc.Env.debug env <| Options.Other "Rel"
-        then Util.fprint6 "Breaking generality in flex/flex case solving %s = %s by setting lhs=%s :: %s and rhs=%s :: %s\n" 
-            (Normalize.typ_norm_to_string env t1) (Normalize.typ_norm_to_string env t2)
-            (Normalize.typ_norm_to_string env s1) (Print.kind_to_string s1.tk)
-            (Normalize.typ_norm_to_string env s2) (Print.kind_to_string s2.tk) in
-                  
-    let solve_neither_pat () = 
-        let u, _ = new_tvar (Env.get_range env) [] ktype in 
-        let sol = if Unionfind.equivalent u1 u2
-                  then let rec aux sub args1 args2 = match args1, args2 with  
-                        | [], [] -> solve env ({probs with attempting=sub; deferred=[]; top_t=None; guard=Trivial; ctr=0})
-                        | (Inl t1, _)::rest1, (Inl t2, _)::rest2 -> aux (TProb(false, EQ, t1, t2)::sub) rest1 rest2 
-                        | (Inr e1, _)::rest1, (Inr e2, _)::rest2 -> aux (EProb(false, EQ, e1, e2)::sub) rest1 rest2 
-                        | _ -> solve env (defer "flex/flex unequal arity" orig probs) in //defer  ...can this ever be solved?
-                       begin match aux [] args1 args2 with
-                                | Failed _ 
-                                | Success (_, NonTrivial _) -> 
-                                    let t1 = Util.close_for_kind u k1 in
-                                    warn t1 t2; [UT((u1, k1), t1)]
-                                | Success (sol, _) -> sol 
-                       end
-                  else  (* neither side is an applicable pattern; Instead of giving up, revert to solving with a simple type (breaking generality) *)
-                       let t1 = Util.close_for_kind u k1 in
-                       let t2 = Util.close_for_kind u k2 in
-                       let _ = warn t1 t2 in
-                       [UT((u1, k1), t1); 
-                        UT((u2, k2), t2)] in
-        let probs = extend_subst' sol probs in
-        solve env probs in
 
-    let solve_one_pat (t1, u1, k1, xs) (t2, u2, k2, args2) = 
-        if Tc.Env.debug env <| Options.Other "Rel"
-        then Util.fprint2 "Trying flex-flex one pattern (%s) with %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
-        let t2 = sn env t2 in
-        let rhs_vars = Util.freevars_typ t2 in
-        let occurs_ok, _ = occurs_check env (u1,k1) t2 in
-        if not occurs_ok
-        then (if Tc.Env.debug env <| Options.Other "Rel"
-              then Util.print_string "Occurs check failed... breaking generality\n";
-              solve_neither_pat()) //occurs check failed; default by breaking generality
-        else let lhs_vars = freevars_of_binders xs in
-             if Util.fvs_included rhs_vars lhs_vars
-             then (* solve by instantiating u1 to imitate t2 *)
-                  let sol = [UT((u1, k1), mk_Typ_lam'(xs, t2) k1 t1.pos)] in
-                  let probs = extend_subst' sol probs in
-                  solve env probs
-             else let zs, _ = Util.kind_formals k2 in
-                  if List.length zs <> List.length args2
-                  then (if Tc.Env.debug env <| Options.Other "Rel"
-                        then Util.print_string "Arity check failed on RHS: kind uOccurs check failed... breaking generality\n";
-                        solve_neither_pat()) //unexpected arity; default by breaking generality
-                  else let _ = if Tc.Env.debug env <| Options.Other "DoubleI"
-                               then Util.fprint1 "Trying double imitation on %s\n" (prob_to_string env orig) in
-                      //Double imitation: should not break generality
-                      //U1 x1..xn =?= U2 t1..tm
-                      //ys = {xi} intersect vars(t1..tm)
-                      //U1 -> \x1..xn. U y1..yk
-                      //U2 -> \z1...zm. U (G1 z1..zm) ... (Gk z1..zm)
-                      //Gi(t1..tm) =?= yi
-                      let ys =
-                          let rhs_vars = 
-                            let arg_vars = args2 |> List.filter (fun (a:arg) -> match fst a with 
-                                | Inl t -> 
-                                    (match (norm_targ env t).n with 
-                                        | Typ_btvar _
-                                        | Typ_lam _
-                                        | Typ_app({n=Typ_uvar _}, _) -> true
-                                        | _ -> false) //no point keeping the others around, since you can't extract a var from them
-                                | Inr e -> 
-                                    (match (compress_e env probs.subst e).n with 
-                                        | Exp_bvar _
-                                        | Exp_abs _
-                                        | Exp_app({n=Exp_uvar _}, _) -> true
-                                        | _ -> false)) in //no point keeping the others around, since you can't extract a var from them
-                            if Tc.Env.debug env <| Options.Other "DoubleI"
-                            then Util.fprint1 "Double imitation retained rhs args %s\n" (Print.args_to_string arg_vars);
-                            arg_vars |> Util.freevars_args in
-                          binders_of_freevars ({ftvs=Util.set_intersect rhs_vars.ftvs lhs_vars.ftvs; 
-                                                fxvs=Util.set_intersect rhs_vars.fxvs lhs_vars.fxvs}) in
-                      let _ = if Tc.Env.debug env <| Options.Other "DoubleI"
-                              then Util.fprint1 "Double imitation picking common variables %s\n" (Print.binders_to_string ", " ys) in
-                      let u_yi, u = new_tvar t1.pos ys ktype in
-                      let u1_inst = UT((u1, k1), mk_Typ_lam'(xs, u_yi) k1 t1.pos) in
-                      let r = t2.pos in
-                      let gi_zi, sub_probs = List.map (fun yi -> match fst yi with 
-                        | Inl ai -> 
-                            let gi_zs, gi = new_tvar r zs ai.sort in
-                            let gi_ps = mk_Typ_app'(gi, args2) ai.sort r in
-                            targ gi_zs, TProb(false, EQ, gi_ps, Util.btvar_to_typ ai)
 
-                        | Inr xi -> 
-                            let gi_zs, gi = new_evar r zs xi.sort in
-                            let gi_ps = mk_Exp_app'(gi, args2) xi.sort r in
-                            varg gi_zs, EProb(false, EQ, gi_ps, Util.bvar_to_exp xi)) ys |> List.unzip in
-                      let u2_inst = UT((u2,k2), mk_Typ_lam'(zs, mk_Typ_app'(u, gi_zi) ktype r) k2 r) in
-                      let sol = [u1_inst; u2_inst] in
-                      let _ = if Tc.Env.debug env <| Options.Other "Rel"
-                              then Util.fprint2 "Flex-Flex: double imitation\n\tsols = %s\nsubprobs=\n%s\n" 
-                                                (List.map (str_uvi env) sol |> String.concat "\n\t") 
-                                                (List.map (prob_to_string env) sub_probs |> String.concat "\n") in
-                      solve env (attempt sub_probs (extend_subst' sol probs)) in
 
-    begin match maybe_pat_vars1, maybe_pat_vars2 with 
-        | None, None -> solve_neither_pat () //neither is a pattern; break generality
-
-        | Some xs, None -> 
-            solve_one_pat (t1, u1, k1, xs) rhs
-
-        | None, Some ys -> 
-            solve_one_pat (t2, u2, k2, ys) lhs
-
-        | Some xs, Some ys -> 
-            let extend_and_solve sols probs = 
-                if debug env High then Util.fprint1 "Flex-flex: %s" (sols |> List.map (str_uvi env) |> String.concat ", ");
-                let probs = extend_subst' sols probs in
-                solve env probs in
-                     
-            if (Unionfind.equivalent u1 u2 && binders_eq xs ys)
-            then begin 
-                 if Tc.Env.debug env <| Options.Other "Rel"
-                 then Util.fprint1 "Solved %s ... identity\n" (prob_to_string env orig);
-                 solve env probs
-            end
-            else //U1 xs =?= U2 ys
-                 //zs = xs intersect ys, U fresh
-                 //U1 = \x1 x2. U zs
-                 //U2 = \y1 y2 y3. U zs
-                let xs = sn_binders env xs in
-                let ys = sn_binders env ys in
-                let zs = intersect_vars xs ys in
-                let u_zs, _ = new_tvar r zs t2.tk in
-                let sub1 = match xs with 
-                    | [] -> u_zs 
-                    | _ -> mk_Typ_lam(xs, u_zs) k1 r in
-                let sub1 = norm_targ env sub1 in
-                let occurs_ok, msg = occurs_check env (u1,k1) sub1 in
-                if not occurs_ok
-                then giveup env (Option.get msg) orig probs
-                else let sol1 = [UT((u1, k1), sub1)] in
-                     if Unionfind.equivalent u1 u2
-                     then extend_and_solve sol1 probs
-                     else let sub2 = match ys with 
-                            | [] -> u_zs
-                            | _ -> mk_Typ_lam(ys, u_zs) k2 r in
-                          let sub2 = norm_targ env sub2 in
-                          let occurs_ok, msg = occurs_check env (u2,k2) sub2 in
-                          if not occurs_ok 
-                          then giveup env (Option.get msg) orig probs
-                          else let sol = sol1@[UT((u2,k2), sub2)] in
-                               extend_and_solve sol probs
-    end
-
-and solve_t_flex_rigid (top:bool) (env:Tc.Env.env) (orig:prob) (lhs:flex_t) (t2:typ) (probs:worklist) = 
-    let (t1, uv, k, args_lhs) = lhs in
-    let maybe_pat_vars = pat_vars env [] args_lhs in
-    let subterms ps = 
-        let xs = Util.kind_formals k |> fst in
-        let xs = Util.name_binders xs in
-        (uv,k), ps, xs, decompose_typ env t2 in
-
-    let rec imitate_or_project n st i = 
-        if i >= n then giveup env "flex-rigid case failed all backtracking attempts" orig probs
-        else if i = -1 
-        then match imitate env probs st with
-                | Failed _ -> imitate_or_project n st (i + 1) //backtracking point
-                | sol -> sol
-        else match project env probs i st with
-                | Failed _ -> imitate_or_project n st (i + 1) //backtracking point
-                | sol -> sol in
-
-    let check_head fvs1 t2 =
-        let hd, _ = Util.head_and_args t2 in 
-        match hd.n with 
-            | Typ_fun _
-            | Typ_refine _ 
-            | Typ_const _
-            | Typ_lam _  -> true
-            | _ ->             
-                let fvs_hd = Util.freevars_typ hd in
-                if Util.fvs_included fvs_hd fvs1
-                then true
-                else (Util.fprint1 "Free variables are %s" (Print.freevars_to_string fvs_hd); false) in
-            
-    let imitate_ok t2 = (* -1 means begin by imitating *)
-        let fvs_hd = Util.head_and_args t2 |> fst |> Util.freevars_typ in
-        if Util.set_is_empty fvs_hd.ftvs
-        then -1 (* yes, start by imitating *)
-        else 0 (* no, start by projecting *) in
-
-   match maybe_pat_vars with 
-     | Some vars -> 
-            let t1 = sn env t1 in
-            let t2 = sn env t2 in 
-            let fvs1 = Util.freevars_typ t1 in
-            let fvs2 = Util.freevars_typ t2 in
-            let occurs_ok, msg = occurs_check env (uv,k) t2 in
-            if not occurs_ok 
-            then giveup env (Option.get msg) orig probs
-            else if Util.fvs_included fvs2 fvs1
-            then //fast solution for flex-pattern/rigid case
-                let _  = if debug env <| Options.Other "Rel" 
-                         then Util.fprint3 "Pattern %s with fvars=%s succeeded fvar check: %s\n" (Print.typ_to_string t1) (Print.freevars_to_string fvs1) (Print.freevars_to_string fvs2) in
-                let sol = match vars with 
-                | [] -> t2
-                | _ -> mk_Typ_lam(sn_binders env vars, t2) k t1.pos in
-                //let _ = if debug env then printfn "Fast solution for %s \t -> \t %s" (Print.typ_to_string t1) (Print.typ_to_string sol) in
-                solve env (extend_subst (UT((uv,k), sol)) probs)
-            else if check_head fvs1 t2 
-            then (let im_ok = -1 in //imitate_ok t2 in
-                  if debug env <| Options.Other "Rel" 
-                  then Util.fprint4 "Pattern %s with fvars=%s failed fvar check: %s ... %s\n" 
-                            (Print.typ_to_string t1) (Print.freevars_to_string fvs1) 
-                            (Print.freevars_to_string fvs2) (if im_ok < 0 then "imitating" else "projecting");
-                  imitate_or_project (List.length args_lhs) (subterms args_lhs) im_ok)
-            else giveup env "fre-variable check failed on a non-redex" orig probs
-    | None ->   
-            if check_head (Util.freevars_typ t1) t2
-            then (let im_ok = imitate_ok t2 in
-                  if debug env <| Options.Other "Rel" 
-                  then Util.fprint2 "Not a pattern (%s) ... %s\n" (Print.typ_to_string t1) (if im_ok < 0 then "imitating" else "projecting");
-                  imitate_or_project (List.length args_lhs) (subterms args_lhs) im_ok)
-            else giveup env "head-symbol is free" orig probs
-   
   
           
 let explain env d = 
