@@ -715,21 +715,21 @@ let head_matches_delta env t1 t2 : (match_result * option<(typ*typ)>) =
    that must hold for U. It is build from subtyping constraints of the form U <: t.
    We call q* a multiplicative slack variable.
 
+   For readability, we will write a slack formula as
+   
+          Lower(F, p xs) /\ Upper(G, q xs)
+   
    Subtyping constraints involving unification variables and refinement formulas introduce 
    and propagate slack variables in a manner that ensures that the subtyping constraints are satisfiable, 
    given the validity of a logical guard.
 
    At the top-level of a derivation, all the remaining uninstantiated slack variables are collected. 
-   Every positive variable p+ is instantiated to \xs.False
-   Every negative variable q* is instantiated to \xs.True
+   Every additive variable p+ is instantiated to \xs.False
+   Every multiplicative variable q* is instantiated to \xs.True
 
    An invariant of the system is, given the validity of the logical constraints emitted, the 
    lower bound of the system always implies the upper bound.
 
-   For readability, we will write a slack formula as
-   
-          Lower(F, p xs) /\ Upper(G, q xs)
-   
    
 1. Slack-intro-T-flex: Given a subtyping problem, with a uvar on the right:
            
@@ -741,10 +741,10 @@ let head_matches_delta env t1 t2 : (match_result * option<(typ*typ)>) =
 
     where t' has no non-trivial super types.
     
-    Then set 
+    Then set: 
             u = \xs. x:t'{Lower(phi x, p x) /\ Upper(True /\ q x)})
  
-    Solve it by imitating the rhs, while introducing a slack formula, 
+    i.e., solve it by imitating the rhs, while introducing a slack formula, 
     recording phi as a lower bound.
 
 2. Slack-intro-fun-flex: Given 
@@ -833,72 +833,58 @@ let head_matches_delta env t1 t2 : (match_result * option<(typ*typ)>) =
 
       x:t1{Lower(phi1, p1 xs) /\ Upper(psi1, q1 xs)} <: y:t2{Lower(phi2, p2 xs) /\ Upper(psi2, q2 xs)}
 
-   1. t1 <: t2
+    1. t1 <: t2
 
-   2 a. p1 = \xs. phi2 \/ p xs
-   2 b. p2 = \xs. phi1 \/ p xs
+    2. p2 = \xs. (phi1 \/ p1 xs) \/ p2' xs    (moving lower bound up)
+    
+    3. q1 = \xs. (psi2 /\ q2 xs) /\ q2'. xs   (moving upper bound down)
 
-   3 a. q1 = \xs. psi2 /\ q xs
-   3 b. q2 = \xs. psi1 /\ q xs
+    4. phi1 ==> psi2                          (perserving invariant)
 
-   4 a. phi1 ==> psi2
-   4 b. phi2 ==> psi1
-
+    i.e., someting analogous to doing both Slack-Refine and Refine-Slack
 
 
-3 a. Slack-elim-L-pos: Given
-            x:t{Pos(phi \/ slack x)}  <: x:t{phi'} 
-       where phi' may or may not have slack
-               
-       Solve by:
-            slack = \x. Neg(phi' /\ slack' x) 
+Some alternatives:
 
-       And producing the logical constraint:
-            forall x. phi x ==> phi' x
+   2* a. p2 = \xs. phi1 \/ p xs   for fresh p
+   3* a. phi1 ==> psi2
 
-       Intuitively, by flipping the polarity of the slack and guarding it with phi', 
-       we ensure that any further weakening instantiations of the slack cannot weaken it 
-       beyond the desired bound phi'.
+   Note, you might consider an alternative strategy:
 
-3 b. Slack-elim-L-neg: Given
-            x:t{Neg(phi \/ (psi /\ slack x))}  <: x:t{phi'} 
-       where phi' may or may not have slack
-               
-       Solve by:
-            slack = \x. Neg(phi' /\ slack' x) 
+   2* b. q1 = \xs. phi2 /\ q xs   for fresh q
+   3* b. phi1 ==> phi2
 
-       And producing the logical constraint:
-            forall x. phi x ==> phi' x
+   2* c. 
+   However, the (b) strategy is not complete. For example:
 
-4. Slack-reintro-R: Given
-           x:t{phi} <: x:t{slack x \/ phi'}
-       where phi does not have slack
+   nat <: u1 <: u2 <: int
+   pos <: u2
 
-       Solve by setting
-           slack = \x. slack' x \/ phi x
-       for fresh slack'
+   Using the (a) strategy, we solve with the following steps:
+     1. u1 = x:int{Lower(x>=0, p1 x), Upper(q1 x)}                 [Slack-intro-T-flex]
+     2. u2 = x:int{Lower(x>0, p2 x),  Upper(q2 x)}                 [Slack-intro-T-flex]
+     3. u2 = x:int{Lower(x>0 \/ x>=0, p2' x), Upper(q2 x)}         [Slack-slack-a]
+     4. u2 = x:int{Lower(x>0 \/ x>=0, p2' x), Upper(true, q2' x)}  [Slack-refine]
 
-5. No-Slack-L: Given
-      
-       u <: t
+   Using the (b) strategy, we have:
+     1. u1 = x:int{Lower(x>=0, p1 x), Upper(q1 x)}
+     2. u2 = x:int{Lower(x>0, p2 x),  Upper(q2 x)}
+     3. u1 = x:int{Lower(x>=0, p1 x), Upper(x>0, q2' x)}         //Which is unsatisfiable
+     4. u2 = x:int{Lower(x>0, p2 x),  Upper(true, q2' x)}
 
-   Solve it by setting u = t
+   But (a) is unsound:
+  
+     nat <: u1 <: u2 <: nat
+     pos <: u2
+     neg <: u1
+     
+   Using the (a) strategy, we solve with use the first three steps above, then:
+     4. u2 = x:int{Lower(x>0 \/ x>=0, p2' x), Upper(x>=0, q2' x)}  [Slack-refine]
+     5. u1 = x:int{Lower(x>=0 \/ x<0, p1' x), Upper(q1 x)}  ... but u1 </: u2
+   
+       
 
-   No point in leaving slack on the LHS, since t is a lower-bound anyway
-
-We carry all slack variables to the top-level. After solving all constraints,
-if there are any remaining slack variables, we set them all to \xs.False.
-
-Note, the case where both side have slack, is covered by case 3:
-       Consider:
-           x:t{slack1 x \/ phi1} <: x:t2{slack2 \/ phi2}
-        
-       Solve by:
-           slack1 = \x. slack2 x \/ phi2
-
-       And 
-           forall x. phi1 x ==> (slack2 x \/ phi2 x) *)
-
+*)
 
 (* 
   A refinement formula phi may include a slack variable
