@@ -439,16 +439,6 @@ let rec unmeta_exp e =
         | Exp_ascribed(e, _) -> unmeta_exp e
         | _ -> e
 
-let rec unmeta_typ t =
-    let t = compress_typ t in
-    match t.n with 
-        | Typ_ascribed(t, _) 
-        | Typ_meta(Meta_named(t, _))
-        | Typ_meta(Meta_pattern(t, _))
-        | Typ_meta(Meta_labeled(t, _, _))
-        | Typ_meta(Meta_refresh_label(t, _, _)) -> unmeta_typ t
-        | _ -> t
-
 let alpha_typ t = 
    let t = compress_typ t in
    let s = mk_subst [] in
@@ -785,6 +775,11 @@ let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
 
         | Typ_ascribed(t, _) -> 
           vs_typ t uvonly cont        
+
+        | Typ_meta(Meta_slack_formula(t1, t2, _)) ->
+           vs_typ t1 uvonly (fun vs1 -> 
+           vs_typ t2 uvonly (fun vs2 -> 
+           cont (union_fvs_uvs vs1 vs2)))
 
         | Typ_meta(Meta_refresh_label(t, _, _))
         | Typ_meta(Meta_labeled(t, _, _))
@@ -1149,6 +1144,8 @@ let tor  = ftv Const.or_lid kt_kt_kt
 let timp = ftv Const.imp_lid kt_kt_kt
 let tiff = ftv Const.iff_lid kt_kt_kt
 let t_bool = ftv Const.bool_lid ktype
+let t_false = ftv Const.false_lid ktype
+let t_true = ftv Const.true_lid ktype
 let b2t_v = ftv Const.b2t_lid (mk_Kind_arrow([null_v_binder <| t_bool], ktype) dummyRange)
 
 let mk_conj_opt phi1 phi2 = match phi1 with
@@ -1167,6 +1164,18 @@ let mk_disj_l phi = match phi with
 let mk_imp phi1 phi2  = mk_binop timp phi1 phi2
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 let b2t e = mk_Typ_app(b2t_v, [varg <| e]) ktype e.pos//implicitly coerce a boolean to a type     
+
+let rec unmeta_typ t =
+    let t = compress_typ t in
+    match t.n with 
+        | Typ_ascribed(t, _) 
+        | Typ_meta(Meta_named(t, _))
+        | Typ_meta(Meta_pattern(t, _))
+        | Typ_meta(Meta_labeled(t, _, _))
+        | Typ_meta(Meta_refresh_label(t, _, _)) -> unmeta_typ t
+        | Typ_meta(Meta_slack_formula(t1, t2, _)) -> mk_conj t1 t2
+        | _ -> t
+
 
 let eq_k = 
     let a = bvd_to_bvar_s (new_bvd None) ktype in

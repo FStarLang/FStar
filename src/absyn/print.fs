@@ -167,6 +167,7 @@ let rec tag_of_typ t = match t.n with
   | Typ_meta(Meta_named _) -> "Typ_meta_named"
   | Typ_meta(Meta_labeled _) -> "Typ_meta_labeled"
   | Typ_meta(Meta_refresh_label _) -> "Typ_meta_refresh_label"
+  | Typ_meta(Meta_slack_formula _) -> "Typ_meta_slack_formula"
   | Typ_uvar _ -> "Typ_uvar"   
   | Typ_delayed _ -> "Typ_delayed"
   | Typ_unknown -> "Typ_unknown"
@@ -397,6 +398,7 @@ and meta_to_string x = match x with
   | Meta_labeled(t, l, _) -> Util.format2 "(labeled \"%s\") %s" l (typ_to_string t)
   | Meta_named(_, l) -> sli l
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (args_to_string ps) (t |> typ_to_string) 
+  | Meta_slack_formula(t1, t2, _) -> Util.format2 "%s /\ %s" (formula_to_string t1) (formula_to_string t2)
 
 and kind_to_string x = match (compress_kind x).n with 
   | Kind_lam _ -> failwith "Impossible"
