@@ -100,8 +100,9 @@ let () =
     with 
     | e -> 
         if Util.handleable e then Util.handle_err false () e;
-        if !Options.trace_error then Util.fprint2 "%s\n%s\n" e.Message e.StackTrace;
-        if not (Util.handleable e || !Options.trace_error)
-        then Util.print_string "Unexpected error; use the --trace_error option for more details\n";
+        if not (Util.handleable e)
+        then Util.print_string "\nUnexpected error; please file a bug report\n";
+        if not (Util.handleable e) || !Options.trace_error
+        then Util.fprint2 "%s\n%s\n" e.Message e.StackTrace;
         cleanup ();
         exit 1

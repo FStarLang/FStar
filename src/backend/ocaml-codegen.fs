@@ -6,12 +6,14 @@ module Microsoft.FStar.Backends.OCaml.Code
 open System
 open System.Text
 
+open Microsoft.FStar.Util
+
 open Microsoft.FStar.Backends.OCaml.Syntax
 open FSharp.Format
 
 (* -------------------------------------------------------------------- *)
-type assoc  = ILeft | IRight | Left | Right | NonAssoc
-type fixity = Prefix | Postfix | Infix of assoc
+type assoc  = | ILeft | IRight | Left | Right | NonAssoc
+type fixity = | Prefix | Postfix | Infix of assoc
 type opprec = int * fixity
 type level  = opprec * assoc
 
@@ -35,7 +37,7 @@ let e_bin_prio_seq    = (100, Infix Left)
 let e_app_prio        = (10000, Infix Left)
 
 let min_op_prec = (-1, Infix NonAssoc)
-let max_op_prec = (System.Int32.MaxValue, Infix NonAssoc)
+let max_op_prec = (max_int, Infix NonAssoc)
 
 (* -------------------------------------------------------------------- *)
 let infix_prim_ops = [
@@ -136,9 +138,11 @@ let is_standard_constructor (p : mlpath) =
 
 (* -------------------------------------------------------------------- *)
 let maybe_paren (outer, side) inner doc =
-  let noparens ((pi, fi) as _inner) ((po, fo) as _outer) side =
+  let noparens _inner _outer side =
+    let (pi, fi) = _inner in
+    let (po, fo) = _outer in
     (pi > po) ||
-      match fi, side with
+     (match (fi, side) with
       | Postfix    , Left     -> true
       | Prefix     , Right    -> true
       | Infix Left , Left     -> (pi = po) && (fo = Infix Left )
@@ -146,35 +150,35 @@ let maybe_paren (outer, side) inner doc =
       | Infix Left , ILeft    -> (pi = po) && (fo = Infix Left )
       | Infix Right, IRight   -> (pi = po) && (fo = Infix Right)
       | _          , NonAssoc -> (pi = po) && (fi = fo)
-      | _          , _        -> false
+      | _          , _        -> false)
   in
 
   if noparens inner outer side then doc else parens doc
 
 (* -------------------------------------------------------------------- *)
 let ocaml_u8_codepoint (i : byte) =
-  if (int)i = 0 then "" else sprintf "\\x%x" i
+  if (int_of_byte i) = 0 then "" else "\\x"^(hex_string_of_byte i)
 
 (* -------------------------------------------------------------------- *)
 let encode_char c =
-  if (int)c > 127 then // Use UTF-8 encoding
-    let bytes = System.String (c, 1) in
-    let bytes = (new UTF8Encoding (false, true)).GetBytes(bytes) in
-    String.concat "" (Array.map ocaml_u8_codepoint bytes)
+  if (int_of_char c) > 127 then // Use UTF-8 encoding
+    let bytes = string_of_char c in
+    let bytes = unicode_of_string bytes in
+    Microsoft.FStar.Bytes.f_encode ocaml_u8_codepoint bytes
   else
-    match c with
-    | c when c = '\\'                -> "\\\\"
-    | c when c = ' '                 -> " "
-    | c when c = '\b'                -> "\\b"
-    | c when c = '\t'                -> "\\t"
-    | c when c = '\r'                -> "\\r"
-    | c when c = '\n'                -> "\\n"
-    | c when c = '\''                -> "\\'"
-    | c when c = '\"'                -> "\\\""
-    | c when Char.IsLetterOrDigit(c) -> System.String (c, 1)
-    | c when Char.IsPunctuation(c)   -> System.String (c, 1)
-    | c when Char.IsSymbol(c)        -> System.String (c, 1)
-    | _                              -> ocaml_u8_codepoint ((byte)c)
+   (match c with
+    | c when (c = '\\')              -> "\\\\"
+    | c when (c = ' ')               -> " "
+    | c when (c = '\b')              -> "\\b"
+    | c when (c = '\t')              -> "\\t"
+    | c when (c = '\r')              -> "\\r"
+    | c when (c = '\n')              -> "\\n"
+    | c when (c = '\'')              -> "\\'"
+    | c when (c = '\"')              -> "\\\""
+    | c when is_letter_or_digit(c) -> string_of_char c 
+    | c when is_punctuation(c)   -> string_of_char c 
+    | c when is_symbol(c)        -> string_of_char c 
+    | _                          -> ocaml_u8_codepoint (byte_of_char c))
 
 (* -------------------------------------------------------------------- *)
 let string_of_mlconstant (sctt : mlconstant) =
@@ -182,19 +186,19 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Unit           -> "()"
   | MLC_Bool     true  -> "true"
   | MLC_Bool     false -> "false"
-  | MLC_Char     c     -> sprintf "'%s'" (encode_char c)
-  | MLC_Byte     c     -> sprintf "'%s'" (ocaml_u8_codepoint c)
-  | MLC_Int32    i     -> sprintf "%d" i
-  | MLC_Int64    i     -> sprintf "%dL" i
-  | MLC_Float    d     -> sprintf "%f" d
+  | MLC_Char     c     -> "'"^(encode_char c)^"'"
+  | MLC_Byte     c     -> "'"^(ocaml_u8_codepoint c)^"'"
+  | MLC_Int32    i     -> string_of_int  i
+  | MLC_Int64    i     -> (string_of_int64 i)^"L"
+  | MLC_Float    d     -> string_of_float d
 
   | MLC_Bytes bytes ->
-      let bytes = Array.map ocaml_u8_codepoint bytes in
-      sprintf "\"%s\"" (String.concat "" bytes)
+      let bytes = Microsoft.FStar.Bytes.f_encode ocaml_u8_codepoint bytes in
+      "\""^bytes^"\""
 
   | MLC_String chars ->
       let chars = String.collect encode_char chars in
-      sprintf "\"%s\"" chars
+      "\""^chars^"\"" 
 
 (* -------------------------------------------------------------------- *)
 let rec doc_of_expr (outer : level) (e : mlexpr) : doc =
@@ -441,6 +445,12 @@ let rec doc_of_mltype (outer : level) (ty : mlty) =
 
         maybe_paren outer t_prio_fun (hbox (reduce1 [d1; text " -> "; d2]))
 
+    | MLTY_App (t1, t2) ->
+        let d1 = doc_of_mltype (t_prio_fun, Left ) t1 in
+        let d2 = doc_of_mltype (t_prio_fun, Right) t2 in
+
+        maybe_paren outer t_prio_fun (hbox (reduce1 [d2; text " "; d1]))
+
 (* -------------------------------------------------------------------- *)
 let doc_of_mltydecl (decls : mltydecl) =
     let for1 (x, tparams, body) =
@@ -557,7 +567,7 @@ let doc_of_mod (m : mlmodule) =
     reduce docs
 
 (* -------------------------------------------------------------------- *)
-let rec doc_of_mllib_r (MLLib mllib : mllib) =
+let rec doc_of_mllib_r (MLLib mllib) =
     let rec for1_sig (x, sigmod, MLLib sub) =
         let head = reduce1 [text "module"; text x; text ":"; text "sig"] in
         let tail = reduce1 [text "end"] in
@@ -574,6 +584,7 @@ let rec doc_of_mllib_r (MLLib mllib : mllib) =
             cat tail hardline;
         ]
     and for1_mod istop (x, sigmod, MLLib sub) =
+        fprint1 "Gen Code: %s\n" x;
         let head = reduce1 (if   not istop
                             then [text "module"; text x; text "="; text "struct"]
                             else []) in

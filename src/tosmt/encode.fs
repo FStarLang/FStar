@@ -738,7 +738,7 @@ and encode_one_pat (env:env_t) pat : (env_t * pattern) =
             | Pat_disj _ -> failwith "Impossible"
             
             | Pat_dot_term (x, _)
-            | Pat_var x
+            | Pat_var (x, _)
             | Pat_wild x -> [Inr x, scrutinee] 
 
             | Pat_dot_typ (a, _)
@@ -906,7 +906,8 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
             close env ex_vars <| Term.mk_Valid tt, [], decls in
 
     let encode_q_body env (bs:Syntax.binders) (ps:args) body = 
-        let vars, guards, env, decls, _ = encode_binders true bs env in 
+        let vars, guards, env, decls, _ = encode_binders true bs (negate env) in 
+        let env = negate env in
         let pats, decls' = ps |> List.map (function 
             | Inl t, _ -> encode_formula t env
             | Inr e, _ -> let t, _, decls = encode_exp e env in t, decls) |> List.unzip in 
@@ -914,7 +915,7 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
             vars, pats, mk_and_l guards, body, labs, decls@List.flatten decls'@decls'' in
     
     if Tc.Env.debug env.tcenv Options.Low
-    then Util.fprint1 ">>>> Destructing as formula ... %s\n" (Print.typ_to_string phi);
+    then Util.fprint1 ">>>> Destructing as formula ... %s\n" (Print.formula_to_string phi);
     let phi = Util.compress_typ phi in
     match Util.destruct_typ_as_formula phi with
         | None -> 
@@ -1081,7 +1082,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         g, env
 
      | Sig_val_decl(lid, t, quals, _) -> 
-        encode_free_var env lid t (whnf env t) quals
+        let tt = whnf env t in
+        encode_free_var env lid t tt quals
 
      | Sig_assume(l, f, _, _) -> 
         let f, decls = encode_formula f env in
@@ -1238,11 +1240,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | _ -> true) in
       g'@inversions, env
 
-    | Sig_let((is_rec, [(Inr flid, t1, e)]), _, _) -> 
+    | Sig_let((is_rec, [(Inr flid, t1, e)]), _, _, masked_effect) -> 
         if is_smt_lemma env t1 then encode_smt_lemma env flid t1, env else
         let t1_norm = whnf env t1 |> Util.compress_typ in
         let (f, ftok), decls, env = declare_top_level_let env flid t1 t1_norm in
-        if not (Util.is_pure_function t1_norm) 
+        if not (Util.is_pure_function t1_norm) || masked_effect
         then decls, env  else
         let e = Util.compress_exp e in
         
@@ -1324,7 +1326,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              let eqn = Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(app, body))), Some (Util.format1 "Equation for %s" flid.str)) in
              decls@binder_decls@decls2@[eqn], env     
                  
-    | Sig_let((_,lbs), _, _) -> //TODO: mutual recursion
+    | Sig_let((_,lbs), _, _, _) -> //TODO: mutual recursion
         let msg = lbs |> List.map (fun (lb, _, _) -> Print.lbname_to_string lb) |> String.concat " and " in
         [], env
 
@@ -1514,7 +1516,7 @@ let solve tcenv q =
     let prefix, labels, qry, suffix =
         let env = get_env tcenv in
         let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) tcenv.gamma) in
-        if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);
+        if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Normalize.formula_norm_to_string tcenv q);
         let phi, labels, qdecls = encode_formula_with_labels q (negate env) in
         let label_prefix, label_suffix = encode_labels labels in
         let query_prelude = 

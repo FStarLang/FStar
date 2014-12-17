@@ -19,6 +19,7 @@ exception Impos
 exception NYI of string
 exception Failure of string
 
+val max_int: int
 val return_all: 'a -> 'a
 
 
@@ -43,6 +44,7 @@ type smap<'value> = HashMultiMap<string,'value> (* not relying on representation
 val smap_create: int -> smap<'value>
 val smap_clear:smap<'value> -> unit
 val smap_add: smap<'value> -> string -> 'value -> unit
+val smap_of_list: list<string*'value> -> smap<'value>
 val smap_try_find: smap<'value> -> string -> option<'value>
 val smap_fold: smap<'value> -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
 val smap_remove: smap<'value> -> string -> unit
@@ -69,6 +71,7 @@ val fprint2: string -> string -> string -> unit
 val fprint3: string -> string -> string -> string -> unit
 val fprint4: string -> string -> string -> string -> string -> unit
 val fprint5: string -> string -> string -> string -> string -> string -> unit
+val fprint6: string -> string -> string -> string -> string -> string -> string -> unit
 val print_string : string -> unit
 val print_any : 'a -> unit
 val strcat : string -> string -> string
@@ -99,6 +102,8 @@ val get_file_extension: string -> string
 
 val int_of_string: string -> int
 val int_of_char:   char -> Tot<int>
+val int_of_byte:   byte -> Tot<int>
+val byte_of_char: char -> Tot<byte>
 val char_of_int:   int -> Tot<char>
 val int_of_uint8: uint8 -> Tot<int>
 val uint16_of_int: int -> Tot<uint16>
@@ -106,8 +111,10 @@ val float_of_byte: byte -> Tot<float>
 val float_of_int32: int32 -> Tot<float>
 val float_of_int64: int64 -> Tot<float>
 val string_of_int:   int -> Tot<string>
+val string_of_int64:   int64 -> Tot<string>
 val string_of_float: float -> Tot<string>
 val string_of_char:  char -> Tot<string>
+val hex_string_of_byte:  byte -> Tot<string>
 val string_of_bytes: array<byte> -> Tot<string>
 val starts_with: string -> string -> Tot<bool>
 val trim_string: string -> Tot<string>
@@ -178,3 +185,7 @@ val expand_environment_variable: string -> string
 
 val physical_equality: 'a -> 'a -> bool
 val check_sharing: 'a -> 'a -> string -> unit
+
+val is_letter_or_digit: char -> bool
+val is_punctuation: char -> bool
+val is_symbol: char -> bool

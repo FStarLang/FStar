@@ -225,6 +225,7 @@ and [<KnownType("KnownTypes")>] s_meta_source_info =
     | S_Data_app
     | S_Sequence
     | S_Primop
+    | S_MaskedEffect
     static member KnownTypes() = 
         typeof<s_meta_source_info>.GetNestedTypes(BindingFlags.Public ||| BindingFlags.NonPublic) 
         |> Array.filter FSharpType.IsUnion
@@ -239,7 +240,7 @@ and [<KnownType("KnownTypes")>] s_pat' =
     | S_Pat_disj of array<s_pat>
     | S_Pat_constant of s_sconst
     | S_Pat_cons of s_fvvar * array<s_pat>
-    | S_Pat_var of s_bvvar
+    | S_Pat_var of s_bvvar * bool
     | S_Pat_tvar of s_btvar
     | S_Pat_wild of s_bvvar
     | S_Pat_twild of s_btvar
@@ -367,6 +368,7 @@ and serialize_meta_source_info (ast : meta_source_info) : s_meta_source_info =
     | Data_app -> S_Data_app
     | Sequence -> S_Sequence
     | Primop -> S_Primop
+    | MaskedEffect -> S_MaskedEffect
 
 and serialize_exp (ast : exp) : s_exp = serialize_syntax serialize_exp' (Util.compress_exp ast)
 
@@ -379,7 +381,7 @@ and serialize_pat' (ast : pat') : s_pat' =
     | Pat_disj(l) -> S_Pat_disj(serialize_list serialize_pat l)
     | Pat_constant(c) -> S_Pat_constant(serialize_sconst c)
     | Pat_cons(v, l) -> S_Pat_cons(serialize_fvvar v, serialize_list serialize_pat l)
-    | Pat_var(v) -> S_Pat_var(serialize_bvvar v)
+    | Pat_var(v, b) -> S_Pat_var(serialize_bvvar v, b)
     | Pat_tvar(v) -> S_Pat_tvar(serialize_btvar v)
     | Pat_wild(v) -> S_Pat_wild(serialize_bvvar v)
     | Pat_twild(v) -> S_Pat_tvar(serialize_btvar v)
@@ -504,6 +506,7 @@ and deserialize_meta_source_info (ast : s_meta_source_info) : meta_source_info =
     | S_Data_app -> Data_app
     | S_Sequence -> Sequence
     | S_Primop -> Primop
+    | S_MaskedEffect -> MaskedEffect
 
 and deserialize_exp (ast : s_exp) : exp = deserialize_syntax deserialize_exp' mk_Typ_unknown ast
 
@@ -516,7 +519,7 @@ and deserialize_pat' (ast : s_pat') : pat' =
     | S_Pat_disj(l) -> Pat_disj(deserialize_list deserialize_pat l)
     | S_Pat_constant(c) -> Pat_constant(deserialize_sconst c)
     | S_Pat_cons(v, l) -> Pat_cons(deserialize_fvvar v, deserialize_list deserialize_pat l)
-    | S_Pat_var(v) -> Pat_var(deserialize_bvvar v)
+    | S_Pat_var(v, b) -> Pat_var(deserialize_bvvar v, b)
     | S_Pat_tvar(v) -> Pat_tvar(deserialize_btvar v)
     | S_Pat_wild(v) -> Pat_wild(deserialize_bvvar v)
     | S_Pat_twild(v) -> Pat_tvar(deserialize_btvar v)
@@ -681,7 +684,7 @@ and [<KnownType("KnownTypes")>] s_sigelt =
     | S_Sig_datacon of s_lident * s_typ * s_tycon * array<s_qualifier>
     | S_Sig_val_decl of s_lident * s_typ * array<s_qualifier>
     | S_Sig_assume of s_lident * s_formula * array<s_qualifier>
-    | S_Sig_let of s_letbindings * array<s_lident>
+    | S_Sig_let of s_letbindings * array<s_lident> * bool
     | S_Sig_main of s_exp
     | S_Sig_bundle of array<s_sigelt> * array<s_lident>
     | S_Sig_monads of array<s_monad_decl> * s_monad_lat * array<s_lident>
@@ -731,7 +734,7 @@ and serialize_sigelt (ast : sigelt) : s_sigelt =
         S_Sig_val_decl(serialize_lident lid, serialize_typ t, serialize_list serialize_qualifier qs)
     | Sig_assume(lid, fml, qs, _) -> 
         S_Sig_assume(serialize_lident lid, serialize_formula fml, serialize_list serialize_qualifier qs)
-    | Sig_let(lbs, _, l) -> S_Sig_let(serialize_letbindings lbs, serialize_list serialize_lident l)
+    | Sig_let(lbs, _, l, b) -> S_Sig_let(serialize_letbindings lbs, serialize_list serialize_lident l, b)
     | Sig_main(e, _) -> S_Sig_main(serialize_exp e)
     | Sig_bundle(l, _, lids) -> S_Sig_bundle(serialize_list serialize_sigelt l, serialize_list serialize_lident lids)
     | Sig_monads(l, lat, _, lids) -> 
@@ -777,7 +780,7 @@ and deserialize_sigelt (ast : s_sigelt) : sigelt =
         Sig_val_decl(deserialize_lident lid, deserialize_typ t, deserialize_list deserialize_qualifier qs, dummyRange)
     | S_Sig_assume(lid, fml, qs) -> 
         Sig_assume(deserialize_lident lid, deserialize_formula fml, deserialize_list deserialize_qualifier qs, dummyRange)
-    | S_Sig_let(lbs, l) -> Sig_let(deserialize_letbindings lbs, dummyRange, deserialize_list deserialize_lident l)
+    | S_Sig_let(lbs, l, b) -> Sig_let(deserialize_letbindings lbs, dummyRange, deserialize_list deserialize_lident l, b)
     | S_Sig_main(e) -> Sig_main(deserialize_exp e, dummyRange)
     | S_Sig_bundle(l, lids) -> Sig_bundle(deserialize_list deserialize_sigelt l, dummyRange, deserialize_list deserialize_lident lids)
     | S_Sig_monads(l, lat, lids) -> 

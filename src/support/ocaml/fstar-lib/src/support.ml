@@ -1,9 +1,11 @@
+
 module Prims = struct
   (* Fix this... *)
   type double  = float
+  type float  = double
   type uint16 = int
   type int32 = int
-
+  type nat = int
   type byte = char
   type uint8 = char
   let ignore _ = ()
@@ -11,13 +13,12 @@ module Prims = struct
   let snd = snd
   let failwith = failwith
   let try_with f1 f2 = try f1 () with | e -> f2 e
+  let l__Assert x = ()
 end
-
 
 module ST = struct
   let read x = !x
 end
-
 
 module String = struct
   let strcat s t = s^t
@@ -32,13 +33,21 @@ module String = struct
   let concat = BatString.concat
   let length = BatString.length
   let sub = String.sub
+  let get = String.get
+  let collect = BatString.replace_chars
 end
 
+module Char = struct
+  let lowercase = BatChar.lowercase
+  let uppercase = BatChar.uppercase
+end
 
 module List = struct
+  let isEmpty l = l = []
   let mem = List.mem
   let hd = BatList.hd
   let tl = BatList.tl
+  let tail = BatList.tl
   let nth = BatList.nth
   let length = BatList.length
   let rev = BatList.rev
@@ -64,12 +73,15 @@ module List = struct
        (x::xs,y::ys,z::zs)
   let filter = BatList.filter
   let sortWith = BatList.sort
+  let for_all = BatList.for_all
   let forall2 = BatList.for_all2
   let tryFind f l = try Some (BatList.find f l) with | Not_found -> None
+  let tryPick f l = try f (BatList.find (fun x -> f x <> None) l) with | Not_found -> None
   let flatten = BatList.flatten
   let split = unzip
   let choose = BatList.filter_map
   let contains x l = BatList.exists (fun y -> x = y) l
+  let zip = BatList.combine
 end
 
 
@@ -78,14 +90,23 @@ module Option = struct
     | Some _ -> true
     | None -> false
   let isNone o = not (isSome o)
+  let map f = function
+    | Some x -> Some (f x) 
+    | None -> None
+  let get = function
+    | Some x -> x 
+    | None -> failwith "Option.get called on None"
 end
 
 
 module Microsoft = struct
   module FStar = struct
-
-
     module Util = struct
+
+      let max_int = max_int
+      let is_letter_or_digit c = (BatChar.is_digit c) || (BatChar.is_letter c)
+      let is_punctuation c = c = ',' || c = ';' || c = '.'
+      let is_symbol c = BatChar.is_symbol c
 
       let return_all x = x
 
@@ -185,6 +206,10 @@ module Microsoft = struct
       let smap_create (i:int) : 'value smap = BatHashtbl.create i
       let smap_clear (s:('value smap)) = BatHashtbl.clear s
       let smap_add (m:'value smap) k (v:'value) = BatHashtbl.add m k v
+      let smap_of_list (l: (string * 'value) list) = 
+          let s = smap_create (List.length l) in
+          List.iter (fun (x,y) -> smap_add s x y) l;
+          s
       let smap_try_find (m:'value smap) k = BatHashtbl.find_option m k
       let smap_fold (m:'value smap) f a = BatHashtbl.fold f m a
       let smap_remove (m:'value smap) k = BatHashtbl.remove m k
@@ -195,8 +220,8 @@ module Microsoft = struct
       let spr = Printf.sprintf
       let fpr = Printf.fprintf
 
-      let print_string s = pr "%s" s
-      let print_any s = output_value stdout s
+      let print_string s = pr "%s" s; flush stdout
+      let print_any s = output_value stdout s; flush stdout
       let strcat s1 s2 = s1 ^ s2
       let concat_l sep (l:string list) = BatString.concat sep l
 
@@ -212,16 +237,20 @@ module Microsoft = struct
       let char_of_int = char_of_int
       let int_of_string = int_of_string
       let int_of_char = int_of_char
+      let int_of_byte = int_of_char
       let int_of_uint8 = int_of_char
       let uint16_of_int (i:int) = i
+      let byte_of_char (c:char) = c
 
       let float_of_byte b = float_of_int (int_of_char b)
       let float_of_int32 = float_of_int
       let float_of_int64 = BatInt64.to_float
 
       let string_of_int = string_of_int
+      let string_of_int64 = BatInt64.to_string 
       let string_of_float = string_of_float
       let string_of_char  (i:char) = spr "%c" i
+      let hex_string_of_byte (i:char) = spr "%x" (int_of_char i)
       let string_of_bytes = string_of_unicode
       let starts_with = BatString.starts_with
       let trim_string = BatString.trim
@@ -782,6 +811,7 @@ let parse_cmdline specs others =
 
       type bytes = char array
 
+      let f_encode f (b:bytes) = Array.fold_left (fun x y -> x ^ y) "" (Array.map f b)
       let length (b:bytes) = BatArray.length b
       let get (b:bytes) n = int_of_char (BatArray.get b n)
       let make (f : _ -> int) n = BatArray.init n (fun i -> char_of_int (f i))
@@ -1000,7 +1030,201 @@ let parse_cmdline specs others =
         let warning exn = incr errorAndWarningCount; match exn with StopProcessing | ReportedError -> raise exn | _ -> !warningHandler exn
       end
     end
-
-
   end
 end
+
+module Crypto = struct
+  open Evp
+  open Evp.RSA
+  open Microsoft.FStar.Util
+  let s2b = unicode_of_string
+  let b2s = string_of_unicode
+  let sha1 b =
+    let sha = MD.sha1 () in
+    let ctx = MD.create sha in
+    MD.update ctx (b2s b);
+    let res = s2b (MD.final ctx) in
+    MD.fini ctx; res
+  let hmac_sha1 k b = s2b (HMAC.hmac (MD.sha1 ()) (b2s k) (b2s b))
+  let hmac_sha1_verify k b m =
+    let h = hmac_sha1 k b in b2s h = b2s m
+  let hmac_sha1_keygen () = s2b (RANDOM.bytes 16)
+  let aes_128_keygen = hmac_sha1_keygen
+  let aes_128_ivgen = hmac_sha1_keygen
+  let aes_128 dec iv k c =
+    let aes = match iv with None -> CIPHER.aes_128_ecb () | Some x -> CIPHER.aes_128_cbc () in
+    let ctx = CIPHER.create aes dec in
+    CIPHER.set_key ctx (b2s k);
+    (match iv with Some x -> CIPHER.set_iv ctx (b2s x) | None -> ());
+    let res = CIPHER.process ctx (b2s c) in
+    CIPHER.fini ctx; s2b res
+  let aes_128_decrypt = aes_128 true None
+  let aes_128_encrypt = aes_128 false None
+  let aes_128_cbc_decrypt k iv c = aes_128 true (Some iv) k c
+  let aes_128_cbc_encrypt k iv c = aes_128 false (Some iv) k c
+  type rsa_pkey = {modulus: char array; exponent: char array}
+  type rsa_skey = rsa_pkey * char array
+  let rsa_keygen () =
+    let {k_mod = n; k_pub_exp = e; k_prv_exp = d} = RSA.genkey 1024 65537 in
+    ({modulus = s2b n; exponent = s2b e;}, d)
+  let rsa_pk (pub,priv) = pub
+  let rsa_pkcs1_encrypt pub b =
+    let rsa = create () in
+    setkey rsa {k_mod=b2s pub.modulus; k_pub_exp = b2s pub.exponent; k_prv_exp = None};
+    let r = encrypt rsa false PD_PKCS1 (b2s b) in
+    fini rsa; s2b r
+  let rsa_pkcs1_decrypt (pub,d) b =
+    let rsa = create () in
+    setkey rsa {k_mod=b2s pub.modulus; k_pub_exp = b2s pub.exponent; k_prv_exp = Some (b2s d)};
+    let r = decrypt rsa false PD_PKCS1 (b2s b) in
+    fini rsa; s2b r
+end
+
+module IO = struct
+  open Microsoft.FStar.Util
+  exception EOF
+  type fd_read = in_channel
+  type fd_write = out_channel
+  let print_string = print_string
+  let print_any = print_any
+  let format = format
+  let hex_string_of_byte = hex_string_of_byte
+  let string_of_char = string_of_char
+  let string_of_float = string_of_float
+  let string_of_int = string_of_int
+  let string_of_int64 = string_of_int64
+  let int_of_string = int_of_string
+  let input_line = read_line
+  let input_int = read_int
+  let input_float = read_float
+  let open_read_file = open_in
+  let open_write_file = open_out
+  let close_read_file = close_in
+  let close_write_file = close_out
+  let read_line fd = try Pervasives.input_line fd with End_of_file -> raise EOF
+  let write_string = output_string
+end
+
+module Tcp = struct
+  open Unix
+  type stream = file_descr
+  type listener = file_descr
+  let listen s i =
+    let server_sock = socket PF_INET SOCK_STREAM 0 in
+    (setsockopt server_sock SO_REUSEADDR true ;
+     let address = (Array.get (gethostbyname(gethostname())).h_addr_list 0) in
+     bind server_sock (ADDR_INET (address, i)) ;
+     listen server_sock 10 ;
+     server_sock)
+
+  let accept s =
+    let (client_sock, client_addr) = accept s in
+    client_sock
+
+  let stop s = shutdown s SHUTDOWN_ALL
+
+  let connect s i =
+    let client_sock = socket PF_INET SOCK_STREAM 0 in
+    let hentry = gethostbyname s in
+    connect client_sock (ADDR_INET (hentry.h_addr_list.(0), i)) ;
+    client_sock
+
+  let read s i =
+    let sock_recv sock maxlen =
+      let str = Bytes.create maxlen in
+      let recvlen = recv sock str 0 maxlen [] in
+      Microsoft.FStar.Util.unicode_of_string (Bytes.sub str 0 recvlen) in
+    try Some (sock_recv s i)
+    with Unix_error (e,s1,s2) -> None
+
+  let write s b =
+    let b = Microsoft.FStar.Util.string_of_unicode b in
+    let sock_send sock str =
+      let len = Bytes.length str in
+      send sock str 0 len [] in
+    try (let n = sock_send s b in if n < Bytes.length b then None else Some())
+    with Unix_error (e,s1,s2) -> None
+
+  let close s = close s
+end
+
+module Array = struct
+  type 'a contents =
+    | Const of 'a
+    | Upd of int * 'a * 'a contents
+    | Append of 'a seq * 'a seq
+   and 'a seq =
+    | Seq of 'a contents * Prims.nat * Prims.nat
+
+  let create = (fun n init -> Seq (Const (init), 0, n))
+  let length (Seq(x,s,e)) = e - s
+
+  let rec __index__ c i = match (c) with
+  | Const (v) -> v
+  | Upd (j, v, tl) -> if i = j then v else (__index__ tl i)
+  | Append (Seq(a1,s1,e1), Seq(a2,s2,e2)) ->
+      let l1 = e1 - s1 in
+      if i < l1 then __index__ a1 i else __index__ a2 (i-l1)
+
+  let index x i = match x with
+    | Seq (c, j, k) -> __index__ c (i + j)
+
+  let rec __update__ c i v = match c with
+    | (Const (_)) | (Upd (_, _, _)) -> Upd (i, v, c)
+    | Append (s1, s2) ->
+        match (s1, s2) with
+        | Seq(a1,b1,e1), Seq(a2,b2,e2) ->
+          if (i < e1 - b1) then
+            Append (Seq ((__update__ a1 i v), b1, e1), s2)
+          else
+            Append (s1, Seq ((__update__ a2 (i - (length s1)) v), b2, e2))
+
+  let update x i v = match x with
+    | Seq (c, j, k) -> Seq ((__update__ c (i + j) v), j, k)
+
+  let slice x i j = match x with
+    | Seq (c, start_i, end_i) -> Seq (c, (start_i + i), (start_i + j))
+
+  let split = (fun s i -> ((slice s 0 i), (slice s i (length s))))
+  let append = (fun s1 s2 -> Seq (Append (s1, s2), 0, ((length s1) + (length s2))))
+end
+
+module Set = struct
+  type 'a set = 'a BatSet.t
+  let empty = BatSet.empty
+  let singleton = BatSet.singleton
+  let union = BatSet.union
+  let intersect = BatSet.intersect
+  let complement x = BatSet.empty
+  let mem = BatSet.mem
+  let equal x y = BatSet.subset x y && BatSet.subset y x
+end
+
+module Map = struct
+  type ('a, 'b) t =  ('a, 'b) BatMap.t
+  let sel m k = BatMap.find k m
+  let upd m k v = BatMap.add k v m
+  let const x = BatMap.empty
+  let concat = BatMap.union
+  let equal x y =
+    (BatMap.is_empty x && BatMap.is_empty y) || (BatMap.is_empty (BatMap.filter (fun k v -> try BatMap.find k x<>v with Not_found -> true) y))
+end
+
+module Heap = struct
+  type 'a heap = ('a ref, 'a) Map.t
+  type 'a aref = 'a ref
+  type 'a refs =
+  | AllRefs
+  | SomeRefs of 'a ref Set.set
+  let no_refs = SomeRefs Set.empty
+  let a_ref x = SomeRefs (Set.singleton (ref x))
+  let sel = Map.sel
+  let upd = Map.upd
+  let emp : 'a heap = BatMap.empty
+  let contains h k = BatMap.mem k h
+  let equal = Map.equal
+  let restrict h dom = BatMap.filter (fun k v -> Set.mem k dom) h
+  let concat  = Map.concat
+end
+
+module Bytes = Microsoft.FStar.Bytes

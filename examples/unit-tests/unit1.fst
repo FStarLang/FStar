@@ -1,4 +1,3 @@
-(* Expect 6 intentional failures *)
 module Unit1
 open Prims.PURE
 open Prims.ALL
@@ -21,8 +20,6 @@ let unit_pattern () = ()
 
 let assert_0_eq_0 x = assert (0==0)
 
-let assert_0_eq_1 () = assert (0==1) //should fail
-
 type zero = x:int{x==0}
 val z: unit -> Tot zero
 let z x = 0
@@ -36,10 +33,6 @@ val list_zero_to_zero : list zero -> Tot zero
 let list_zero_to_zero l = match l with
   | [] -> 0
   | hd::tl -> hd
-
-(* val hd_int_inexhaustive : x:list int -> int *)
-let hd_int_inexhaustive l = match l with
-  | hd::_ -> hd //should fail
 
 (* val hd_int_impure : x:list int -> int *)
 let hd_int_impure l = match l with
@@ -127,22 +120,7 @@ let record_f_exhaustive r = match r.f with (* should be able to prove that the p
   | Some i -> i
   | None -> 0
     
-val test_label: x:int -> Pure int (requires (x > 0)) (ensures \y -> y > 0)
-let test_label x = x
 
-val test_precondition_label: x:int -> Tot int
-let test_precondition_label x = test_label x //should fail
-
-val test_postcondition_label: x:int -> Pure int (requires True) (ensures \y -> y > 0)
-let test_postcondition_label x = x //should fail
-
-
-(* Expected: should fails termination check *)
-val repeat_diverge : int -> int -> Tot int
-let rec repeat_diverge n count =
-  match count with
-  | 0 -> 0
-  | _ -> repeat_diverge n (count-1)
 
 val repeat : int -> nat -> Tot int
 let rec repeat n count =
@@ -168,15 +146,21 @@ let rec ackermann m n =
   else if n = 0 then ackermann (m - 1) 1
   else ackermann (m - 1) (ackermann m (n - 1))
 
-open Array
+assume type contents : Type -> Type
+type seq (a:Type) = 
+  | Seq : c:contents a
+          -> start_i:nat
+          -> end_i:nat{end_i >= start_i}
+          -> seq a
 type message = seq char
+let slength s = Seq.end_i s - Seq.start_i s
 assume val impure: m:message -> ST message
                                  (requires \h -> True)
-                                 (ensures \h0 n h1 -> length n == length m)
-assume val lm_corr: l:nat -> m:message{length m==l} -> int
+                                 (ensures \h0 n h1 -> slength n == slength m)
+assume val lm_corr: l:nat -> m:message{slength m==l} -> int
 val unsafe_slice: message -> i:nat -> j:nat{i<=j} -> Tot message
 let unsafe_slice (Seq c _ _) n m = Seq c n m
-val test_impure: l:nat{l > 0} -> m:message{length m==l} -> int
+val test_impure: l:nat{l > 0} -> m:message{slength m==l} -> int
 let test_impure l m =  lm_corr (l - 1) (unsafe_slice (impure m) 1 l)
 
 
@@ -197,10 +181,6 @@ val do_ok: l:mlist -> Pure mlist (requires (pre l)) (ensures (fun l -> zero_list
 let do_ok l = match l with
   | N -> N
   | C(n, l') -> if n = 0 then l else C(0, l')
-
-
-val bad_projector: option 'a -> 'a
-let bad_projector x = Some.v x (* should fail *)
 
 val short_circuit1: x:option int{is_Some x /\ Some.v x = 0} -> nat
 let short_circuit1 x = Some.v x
@@ -270,3 +250,28 @@ val poly_length_is_nat: l:list 'a -> Lemma (ensures (length l >= 0))
 let rec poly_length_is_nat 'a l = using_induction_hyp (poly_length_is_nat 'a)
 
 
+val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
+let rec map f = function 
+  | [] -> []
+  | hd::tl -> f hd::map f tl
+let plus_one x = x + 1
+let test_map1 () =
+  let l = [0;1;2] in
+  let g = map plus_one l in
+  assert (g == [1;2;3])
+
+let test_map2 x = assert (map (fun x -> x + 1) [0;1;2] = [1;2;3])
+
+
+assume val test_pred: a:Type -> a -> a -> Tot bool
+assume val test_pred_lemma_1: a:Type -> x:a -> Lemma (forall (bad:a). test_pred x bad)
+
+let test_pred_lemma_2    (a:Type) = qintro a (fun x -> forall (y:a). test_pred x y) (test_pred_lemma_1 a)
+let test_pred_lemma_unif (a:Type) = qintro (test_pred_lemma_1 a)
+
+val test_pred_lemma_2' : a:Type -> Lemma (ensures (forall (x:a) (y:a). test_pred x y))
+let test_pred_lemma_2'  (a:Type) = qintro a (fun x -> forall (y:a). test_pred x y) (test_pred_lemma_1 a)
+
+val test_pred_lemma_unif' : a:Type -> Lemma (ensures (forall (x:a) (y:a). test_pred x y))
+let test_pred_lemma_unif'  (a:Type) = qintro (test_pred_lemma_1 a)
+ 

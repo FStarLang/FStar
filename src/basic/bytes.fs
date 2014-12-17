@@ -66,7 +66,7 @@ let maybe_input (is:TextReader) n =
 
 let output (os:TextWriter) b =
   Pervasives.output os b 0 (Array.length b) 
-  
+
 let sub ( b:byte[]) s l = Array.sub b s l   
 let set bb n (b:int32) = Array.set bb n (byte b) 
 let blit (a:byte[]) b c d e = Array.blit a b c d e 
@@ -197,3 +197,5 @@ let close t = Bytebuf.close t
 let emit_int_as_byte t i = Bytebuf.emit_int_as_byte t i
 let emit_bytes t b = Bytebuf.emit_bytes t b
 
+let f_encode f (b:bytes) : string = 
+    String.concat "" (Array.map f b)

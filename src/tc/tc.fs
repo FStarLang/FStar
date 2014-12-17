@@ -39,7 +39,7 @@ let whnf env t = Tc.Normalize.norm_typ [Normalize.WHNF; Normalize.DeltaHard; Nor
 let norm_t env t = Tc.Normalize.norm_typ steps env t
 let norm_k env k = Tc.Normalize.norm_kind steps env k
 let norm_c env c = Tc.Normalize.norm_comp steps env c
-let fxv_check env kt fvs =
+let fxv_check head env kt fvs =
     let rec aux norm kt = 
         if Util.set_is_empty fvs then ()
         else let fvs' = match kt with 
@@ -49,9 +49,26 @@ let fxv_check env kt fvs =
                 if Util.set_is_empty a then ()
                 else if not norm 
                 then aux true kt
-                else let escaping = Util.set_elements a |> List.map (fun x -> Print.strBvd x.v) |> String.concat ", " in
-                    raise (Error(Util.format1 "Variables %s escape because of impure applications; add explicit let-bindings" escaping, 
-                                    Env.get_range env)) in
+                else 
+                    let fail () =
+                        let escaping = Util.set_elements a |> List.map (fun x -> Print.strBvd x.v) |> String.concat ", " in
+                        let msg = if Util.set_count a > 1
+                                    then Util.format2 "Bound variables '{%s}' in the type of '%s' escape because of impure applications; add explicit let-bindings" escaping (Normalize.exp_norm_to_string env head)
+                                    else Util.format2 "Bound variable '%s' in the type of '%s' escapes because of impure applications; add explicit let-bindings" escaping (Normalize.exp_norm_to_string env head) in
+                        raise (Error(msg, Env.get_range env)) in
+                    match kt with 
+                        | Inl k -> 
+                          let s = Util.new_kvar env in
+                          begin match Tc.Rel.try_keq env k s with 
+                            | Some Trivial -> ()
+                            | _ -> fail ()
+                          end 
+                        | Inr t -> 
+                          let s = Util.new_tvar env ktype in
+                          begin match Tc.Rel.try_teq env t s with
+                            | Some Trivial -> ()
+                            | _ -> fail ()
+                          end in
     aux false kt
         
 let maybe_push_binding env b =
@@ -93,6 +110,8 @@ let value_check_expected_typ env e tc : exp * comp =
   let res = match Env.expected_typ env with 
    | None -> e, c
    | Some t' -> 
+     if debug env Options.High
+     then Util.fprint2 "Computed return type %s; expected type %s\n" (Print.typ_to_string t) (Print.typ_to_string t');
      let e, g = Tc.Util.check_and_ascribe env e t t' in
      let c = Tc.Util.strengthen_precondition (Some <| Errors.subtyping_failed env t t') env e c g in
      e, Util.set_result_typ c t' in
@@ -273,6 +292,8 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
   | Typ_lam(bs, t) -> 
     let bs, env, g = tc_binders env bs in
     let t, k, f = tc_typ env t in
+    if debug env Options.Extreme 
+    then Util.fprint3 "Checked body %s, decorated with kind %s, computed kind = %s\n" (Print.typ_to_string t) (Print.kind_to_string t.tk) (Print.kind_to_string k);
     let k = mk_Kind_arrow(bs, k) top.pos in
     w k <| mk_Typ_lam(bs, t), k, Rel.conj_guard g <| Tc.Util.close_guard bs f
  
@@ -321,7 +342,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
                 begin match formal, actual with 
                     | (Inl a, _), (Inl t, imp) -> (* explicit type argument *)
                       let formal_k = Util.subst_kind subst a.sort in
-                      if Env.debug env Options.Low then Util.fprint2 "Checking argument %s against expected kind %s\n" (Print.arg_to_string actual) (Print.kind_to_string formal_k);
+                      if Env.debug env Options.High then Util.fprint2 "Checking argument %s against expected kind %s\n" (Print.arg_to_string actual) (Print.kind_to_string formal_k);
                       let t, g' = tc_typ_check env t formal_k in
                       let actual = Inl t, imp in
                       let g' = Tc.Util.weaken_guard (Tc.Util.short_circuit_guard (Inl head) outargs) g' in
@@ -331,6 +352,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
                     | (Inr x, _), (Inr v, imp) -> (* explicit term argument *)
                       let tx = Util.subst_typ subst x.sort in
                       let env' = Env.set_expected_typ env tx in
+                      if Env.debug env Options.High then Util.fprint2 "Checking argument %s against expected type %s\n" (Print.arg_to_string actual) (Print.typ_to_string tx);
                       let v, _, g' = tc_total_exp env' v in
                       let actual = Inr v, imp in
                       let g' = Tc.Util.weaken_guard (Tc.Util.short_circuit_guard (Inl head) outargs) g' in
@@ -372,13 +394,27 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     let t1, f2 = tc_typ_check env t1 k1 in
     w k1 <| mk_Typ_ascribed'(t1, k1), k1, Rel.conj_guard f1 f2
 
-  | Typ_uvar(u, k1) -> 
+  | Typ_uvar(u, k1) when (env.check_uvars) ->
     let s = compress_typ t in 
     (match s.n with 
-        | Typ_uvar _ -> 
+        | Typ_uvar(u,k1) -> 
           let k1, g = tc_kind env k1 in
-          w k1 <| mk_Typ_uvar'(u, k1), k1, g
+          let _, u' = Tc.Rel.new_tvar s.pos [] k1 in
+          Util.unchecked_unify u u'; //replace all occurrences of this unchecked uvar with its checked variant
+          u', k1, g
         | _ -> tc_typ env s)
+  
+  | Typ_uvar(_, k1) -> 
+    let s = compress_typ t in 
+    (match s.n with 
+        | Typ_uvar(u,k1) -> 
+            if Tc.Env.debug env <| Options.High
+            then Util.fprint2 "Admitting uin-instantiated uvar %s at kind %s\n" (Print.typ_to_string s) (Print.kind_to_string k1);
+            w k1 <| mk_Typ_uvar'(u, k1), k1, Trivial
+        | _ -> 
+            if Tc.Env.debug env <| Options.High
+            then Util.fprint2 "Admitting instantiated uvar %s at kind %s\n" (Print.typ_to_string s) (Print.kind_to_string k1);
+            s, k1, Trivial)
    
   | Typ_meta(Meta_refresh_label(t, b, r)) -> 
     let t, k, f = tc_typ env t in 
@@ -407,7 +443,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
 and tc_typ_check env t (k:knd) : typ * guard_t = 
   let t, k', f = tc_typ env t in
   let env = Env.set_range env t.pos in
-  let f' = Rel.subkind env k' k in
+  let f' = Rel.subkind env k' k in 
   t, Rel.conj_guard f f'       
 
 and tc_value env e : exp * comp = 
@@ -494,6 +530,7 @@ and tc_value env e : exp * comp =
                               let t, g = match (Util.unmeta_typ y.sort).n with 
                                 | Typ_unknown -> tx, g
                                 | _ -> 
+                                    if Tc.Env.debug env Options.High then Util.fprint1 "Checking binder %s\n" (Print.binder_to_string hd);
                                     let t, _, g1 = tc_typ env y.sort in
                                     let g2 = Rel.teq env tx t in
                                     let g = Rel.conj_guard g (Rel.conj_guard g1 g2) in
@@ -641,32 +678,64 @@ and tc_exp env e : exp * comp =
     (* These are (potentially) values, but constructor types 
        already have an (Tot) effect annotation on their co-domain. 
        So, we can treat them as normal applications. Except ...  *)
-    let d, args = Util.head_and_args_e e in (* if there are no user-provided type applications, try to infer them as below ... *)
-    begin match args with 
-        | (Inl _, _)::_ -> (* user provided typ argument *)
-            let e, c = tc_exp env e in 
-            mk_Exp_meta(Meta_desugared(e, Data_app)), c
-
-        | _ -> 
-        let env1, topt = Env.clear_expected_typ env in 
+    let d, args = Util.head_and_args_e e in 
+    (* if there are no user-provided type applications or implicit arguments, 
+       and the expected type is non-indexed, 
+       try to infer the instantiation of type arguments as below. Otherwise, fallback. *)
     
+    let fallback env = 
+          let e, c = tc_exp env e in 
+          mk_Exp_meta(Meta_desugared(e, Data_app)), c in
+
+    let is_indexed_with_value t = 
+       let t = Util.unrefine t |> Tc.Normalize.norm_typ [Normalize.Beta] env in
+       let _, args = Util.head_and_args t in
+       List.length args <> 0, args |> Util.for_some (fun arg -> match fst arg with Inr _ -> true | _ -> false), t in
+ 
+    let user_provided_implicits args = 
+        args |> Util.for_some (fun arg -> match fst arg with Inl _ -> true | _ -> snd arg) in
+
+    let infer_instantiation t env = 
+        let env1, _ = Env.clear_expected_typ env in 
+
+        let dinst, args = 
+            let rec targs out args = match args with 
+                | [] -> List.rev out, args
+                | arg::args' -> 
+                    begin match fst arg with 
+                        | Inl _ -> targs (arg::out) args'
+                        | _ -> List.rev out, args
+                    end in
+            let targs, args = targs [] args in
+            let dinst = mk_Exp_app'(d, targs) tun top.pos in
+            mk_Exp_meta(Meta_datainst(dinst, Some t)), args in
+
         (* The main subtlety with bidirectional typing is here:
             Consider typing (e1, e2) as (x:t * t')
             It is desugared to (MkTuple2 '_u1 '_u2 e1 e2), and we have to compute the instantiations for '_u1 and '_u2.
             The idea is to push the result type (Tuple2 t (\x:t. t')) down to the constructor MkTuple2
             and then instantiating MkTuple2's arguments using the expected type.
             That's what the Meta_datainst(d, topt) does ... below. 
-            Once we compute good instantiations for '_u1 and '_u2, the rest follows as usual. *)
-        let d = mk_Exp_meta(Meta_datainst(d, topt)) in
-        let e = match args with 
-            | [] -> d 
-            | _ -> mk_Exp_app(d, args) tun top.pos in
+            Once we compute good instantiations for '_u1 and '_u2, the rest follows as usual.
+            
+            This is also useful for computing instantiations for (Some 'u v), 
+            when the expected type is like (option (x:t{phi})). 
+            This forces v to be checked at type (x:t{phi}). 
+        *)
+        let e = mk_Exp_app'(dinst, args) tun top.pos in 
         let e, c = tc_exp env1 e in
         let e = match e.n with  //reassociate inferred targs
             | Exp_app({n=Exp_app(hd, targs)}, args) -> mk_Exp_app(hd, targs@args) e.tk e.pos 
             | _ -> e in
-        comp_check_expected_typ env (mk_Exp_meta(Meta_desugared(e, Data_app))) c
-    end
+        comp_check_expected_typ env (mk_Exp_meta(Meta_desugared(e, Data_app))) c in
+
+    let t = Env.expected_typ env in
+    if Option.isNone t 
+    then fallback env
+    else let _, value_indexed, t = is_indexed_with_value <| Option.get t in
+         if value_indexed
+         then fallback env //Don't try to infer type args in this case
+         else infer_instantiation t env
 
   | Exp_meta(Meta_desugared(e, Sequence)) -> 
     begin match (compress_exp e).n with 
@@ -686,37 +755,22 @@ and tc_exp env e : exp * comp =
 
   | Exp_meta(Meta_datainst(dc, topt)) -> 
     (* This is where we process the type annotation on data constructors populated by the Data_app case above. *) 
-    
-    (* For compatibility with ML: dtuples without a type annotation default to their non-dependent versions *)
-    let maybe_default_dtuple_type env tres topt  = 
-      let tconstr, args = Util.head_and_args tres in
-      if Util.is_dtuple_constructor tconstr 
-      then let tup = Tc.Util.mk_basic_dtuple_type env (List.length args) in
-            let _ = match topt with 
-                    | None -> ()
-                    | Some t -> Tc.Rel.trivial_subtype env None t tup in
-            Tc.Rel.trivial_subtype env None tres tup in
-     
-    let dc, c_dc = tc_value (instantiate_both env) dc in 
+    let dc, c_dc = tc_exp (instantiate_both env) dc in 
     let t_dc = Util.comp_result c_dc in
     let tres = match Util.function_formals t_dc with 
         | Some (_, c) -> Util.comp_result c
         | _ -> t_dc in
     begin match topt with 
-      | None -> 
-       (* There's no type annotation from the context ... not much to do, except in the case of tuples.
-          For dependent tuples, default to a simple (non-dependent) tuple type. *)
-        maybe_default_dtuple_type env tres None
+      | None -> failwith "Impossible" 
        
-      | Some t_expected -> 
-        let t = Tc.Normalize.norm_typ [Normalize.Beta] env t_expected in
+      | Some t -> 
         match t.n with 
-            | Typ_uvar _ -> (* We have a type from the context; but it is non-informative. So, default tuples if applicable *)
-              maybe_default_dtuple_type env tres (Some t_expected)
+            | Typ_uvar _
+            | Typ_app({n=Typ_uvar _}, _) -> (* We have a type from the context; but it is non-informative. *) 
+              ()
        
-            | _ -> (* Finally, we have some useful info from the context; use it to instantiate the result type of dc *)
-              if debug env Options.Low then Util.fprint2 "Expected = %s\n Unrefined = %s\n" (Print.typ_to_string t_expected) (Print.typ_to_string <| Util.unrefine t_expected);
-              Tc.Rel.trivial_subtype env None tres (Util.unrefine t_expected)
+            | _ -> (* We have some useful info from the context; use it to instantiate the result type of dc *)
+              ignore <| Tc.Rel.subtype env tres t
     end;
     dc, c_dc (* NB: Removed the Meta_datainst tag on the way up---no other part of the compiler sees Meta_datainst *)
 
@@ -724,7 +778,6 @@ and tc_exp env e : exp * comp =
     let env0 = env in
     let env = Tc.Env.clear_expected_typ env |> fst |> instantiate_both in 
     if debug env Options.High then Util.fprint2 "(%s) Checking app %s\n" (Range.string_of_range top.pos) (Print.exp_to_string top);
-    let head_is_atom = Util.is_atom head in 
     let head, chead = tc_exp (no_inst env) head in //Don't instantiate f; instantiations will be computed below, accounting for implicits/explicits
     let thead = Util.comp_result chead in
     if debug env Options.High then Util.fprint2 "(%s) Type of head is %s\n" (Range.string_of_range head.pos) (Print.typ_to_string thead);
@@ -764,7 +817,7 @@ and tc_exp env e : exp * comp =
            match bs, args with 
             | (Inl a, _)::rest, (Inr e, _)::_ -> (* instantiate a type argument *) 
               let k = Util.subst_kind subst a.sort in
-              fxv_check env (Inl k) fvs;
+              fxv_check head env (Inl k) fvs;
               let targ = match k.n with 
                 | Kind_type -> Tc.Util.new_tvar env k       
                 | _ -> fst <| Tc.Rel.new_tvar e.pos vars k in (* TODO: remove case split? *)
@@ -775,7 +828,7 @@ and tc_exp env e : exp * comp =
 
             | (Inr x, true)::rest, (_, false)::_ -> (* instantiate an implicit value arg *)
               let t = Util.subst_typ subst x.sort in
-              fxv_check env (Inr t) fvs;
+              fxv_check head env (Inr t) fvs;
               let varg = Tc.Util.new_evar env t in
               let subst = (Inr(x.v, varg))::subst in
               let arg = Inr varg, true in
@@ -783,7 +836,7 @@ and tc_exp env e : exp * comp =
 
             | (Inl a, _)::rest, (Inl t, _)::rest' -> (* a concrete type argument *)
               let k = Util.subst_kind subst a.sort in 
-              fxv_check env (Inl k) fvs;
+              fxv_check head env (Inl k) fvs;
               let t, g' = tc_typ_check env t k in
               let g' = Tc.Util.weaken_guard (Tc.Util.short_circuit_guard (Inr head) outargs) g' in
               let g' = Tc.Util.label_guard Errors.ill_kinded_type t.pos g' in
@@ -795,7 +848,7 @@ and tc_exp env e : exp * comp =
               if debug env Options.Extreme then Util.fprint2 "\tType of arg (before subst (%s)) = %s\n" (Print.subst_to_string subst) (Print.typ_to_string x.sort);
               let targ = Util.subst_typ subst x.sort in 
               if debug env Options.Extreme then  Util.fprint1 "\tType of arg (after subst) = %s\n" (Print.typ_to_string targ);
-              fxv_check env (Inr targ) fvs;
+              fxv_check head env (Inr targ) fvs;
               let env = Tc.Env.set_expected_typ env targ in
               if debug env Options.High then  Util.fprint3 "Checking arg (%s) %s at type %s\n" (Print.tag_of_exp e) (Print.exp_to_string e) (Print.typ_to_string targ);
               let e, c = tc_exp env e in 
@@ -824,6 +877,7 @@ and tc_exp env e : exp * comp =
               else tc_args (subst, (varg e)::outargs, (varg <| bvar_to_exp x)::arg_rets, (Some <| Env.Binding_var(x.v, x.sort), c)::comps, g, Util.set_add x fvs) rest cres rest'
 
             | _, [] -> (* full or partial application *) 
+              fxv_check head env (Inr (Util.comp_result cres)) fvs;
               let cres = match bs with 
                 | [] -> (* full app *)
                     let cres = Util.subst_comp subst cres in 
@@ -836,11 +890,10 @@ and tc_exp env e : exp * comp =
                         | Trivial -> comps |> Util.for_some (fun (_, c) -> not (Util.is_total_comp c)) (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
                         | _ -> comps |> Util.for_some (fun (_, c) -> not (Util.is_pure env c)) in (* if the guard is non-trivial, strengthen pre-condition WILL add an equality, but only if all the terms are pure; if not, add it here *)
                     let cres = if Util.is_total_comp cres 
-                               && head_is_atom 
                                && refine_with_equality 
                                then Util.maybe_assume_result_eq_pure_term env (mk_Exp_app_flat(head, List.rev arg_rets) (Util.comp_result cres) top.pos) cres
                                else (if Env.debug env Options.Low
-                                     then Util.fprint3 "Not refining result: f=%s; cres=%s; head_is_atom?=%s\n" (Print.exp_to_string head) (Print.comp_typ_to_string <| norm_c env cres) (if head_is_atom then "yes" else "no"); 
+                                     then Util.fprint2 "Not refining result: f=%s; cres=%s\n" (Print.exp_to_string head) (Print.comp_typ_to_string <| norm_c env cres); 
                                      cres) in
                     (* relabeling the labeled sub-terms in cres to report failing pre-conditions at this call-site *)
                     Tc.Util.refresh_comp_label env false cres 
@@ -866,7 +919,7 @@ and tc_exp env e : exp * comp =
                       tc_args (subst, outargs, arg_rets, (None, cres)::comps, g, fvs) bs cres' args
                     | _ when (not norm) ->
                         aux true (whnf env tres)
-                    | _ -> raise (Error(Util.format1 "Too many arguments to function of type %s" (Normalize.typ_norm_to_string env tf), argpos arg)) in
+                    | _ -> raise (Error(Util.format2 "Too many arguments to function of type %s; got %s" (Normalize.typ_norm_to_string env tf) (Print.exp_to_string top), argpos arg)) in
               aux false (Util.comp_result cres)  in
          
           tc_args ([], [], [], [], Trivial, no_fvs.fxvs) bs c args
@@ -900,10 +953,12 @@ and tc_exp env e : exp * comp =
       Tc.Util.bind_cases env res_t cases in (* bind_cases adds an exhaustiveness check *)
     if debug env Options.Extreme then Util.fprint3 "(%s) comp\n\tscrutinee: %s\n\tbranches: %s\n" (Range.string_of_range top.pos) (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c_branches);
     let cres = Tc.Util.bind env (Some e1) c1 (Some <| Env.Binding_var(guard_x, Util.comp_result c1), c_branches) in
+    let cres = Normalize.norm_comp [Normalize.Beta] env cres in
     w cres <| mk_Exp_match(e1, List.map (fun (f, _, _) -> f) t_eqns), cres
 
   | Exp_let((false, [(x, t, e1)]), e2) -> 
     let env = instantiate_both env in
+    let env0 = env in
     let topt = Env.expected_typ env in
     let top_level = match x with Inr _ -> true | _ -> false in
     let env1, _ = Env.clear_expected_typ env in
@@ -924,11 +979,15 @@ and tc_exp env e : exp * comp =
     let c1 = Tc.Util.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t.pos) e1 c1 f in
     begin match x with 
         | Inr _ -> (* top-level let, always ends with e2=():unit *)
-          begin if !Options.verify
-                then let ok, errs = Tc.Util.check_total env c1 in
-                     if not ok 
-                     then raise (Error(Tc.Errors.top_level_effect errs, Tc.Env.get_range env))
-          end;
+          let e2 = if !Options.verify
+                   then let ok, errs = Tc.Util.check_total env c1 in
+                        if not ok 
+                        then let t = Util.comp_result c1 in 
+                             if !Options.warn_top_level_effects
+                             then Tc.Errors.warn (Tc.Env.get_range env) (Tc.Errors.top_level_effect errs);
+                             mk_Exp_meta(Meta_desugared(e2, MaskedEffect)) 
+                        else e2
+                   else e2 in
           let _, e1, c1 = if env.generalize 
                           then List.hd <| Tc.Util.generalize env1 [x, e1, c1] (* only generalize top-level lets, when there is no val decl *)
                           else x, e1, c1 in
@@ -945,10 +1004,14 @@ and tc_exp env e : exp * comp =
             let e = w cres <| mk_Exp_let((false, [(x, Util.comp_result c1, e1)]), e2) in
             match topt with
               | None -> (* no expected type; check that x doesn't escape it's scope *)
-                 let tres = norm_t env (Util.comp_result cres) in 
+                 let cres = Normalize.norm_comp [Normalize.Beta] env cres in
+                 let tres = Util.comp_result cres in 
                  let fvs = Util.freevars_typ tres in
                  if Util.set_mem (bvd_to_bvar_s bvd t) fvs.fxvs 
-                 then raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres bvd, rng env))
+                 then let t = Tc.Util.new_tvar env0 ktype in
+                      match Tc.Rel.teq env tres t with 
+                        | Trivial -> e, cres
+                        | _ -> raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres bvd, rng env))
                  else e, cres
               | _ -> e, cres
      end       
@@ -965,14 +1028,17 @@ and tc_exp env e : exp * comp =
       let e, t = Tc.Util.extract_lb_annotation true env t e in 
       let t = 
         if not (is_inner_let) && not(env.generalize)
-        then t (* t is already checked *) 
-        else tc_typ_check_trivial env0 t ktype |> norm_t env in
+        then (if Env.debug env <| Options.High then Util.fprint1 "Type %s is marked as no-generalize\n" (Print.typ_to_string t); 
+              t) (* t is already checked *) 
+        else tc_typ_check_trivial ({env0 with check_uvars=true}) t ktype |> norm_t env in
       let env = if Util.is_pure_function t && !Options.verify (* store the let rec names separately for termination checks *)
                 then {env with letrecs=(x,t)::env.letrecs}
                 else Env.push_local_binding env (binding_of_lb x t) in
       (x, t, e)::xts, env) ([],env)  in 
     
     let lbs = (lbs |> List.rev) |> List.map (fun (x, t, e) -> 
+        let t =  Tc.Normalize.norm_typ [Normalize.Beta] env t in
+        if Tc.Env.debug env Options.High then Util.fprint3 "Checking %s = %s against type %s\n" (Print.lbname_to_string x) (Print.exp_to_string e) (Print.typ_to_string t);
         let env' = Env.set_expected_typ env' t in
         let e, t = no_guard env <| tc_total_exp env' e in 
         (x, t, e)) in  
@@ -991,7 +1057,8 @@ and tc_exp env e : exp * comp =
              let env = Env.push_local_binding env b in
              b::bindings, env) ([], env) in
          let e1, cres = tc_exp env e1 in 
-         let cres = Tc.Util.close_comp env bindings cres in
+         let cres = Tc.Util.close_comp env bindings cres in          
+         let cres = Normalize.norm_comp [Normalize.Beta] env cres in
          let e = w cres <| mk_Exp_let((true, lbs), e1) in
          begin match topt with 
           | Some _ -> e, cres
@@ -1000,7 +1067,11 @@ and tc_exp env e : exp * comp =
              match lbs |> List.tryFind (function 
                     | (Inr _, _, _) -> false
                     | (Inl x, _, _) -> Util.set_mem (bvd_to_bvar_s x tun) fvs.fxvs) with
-                | Some (Inl y, _, _) -> raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env (Util.comp_result cres) y, rng env))
+                | Some (Inl y, _, _) ->
+                  let t' = Tc.Util.new_tvar env0 ktype in 
+                  (match Tc.Rel.teq env (Util.comp_result cres) t' with 
+                    | Trivial -> e, cres
+                    | _ -> raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env (Util.comp_result cres) y, rng env)))
                 | _ -> e, cres
          end
 
@@ -1012,20 +1083,26 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
               comp            -- the computation type of the branch
   *)
   (*<tc_pat>*)
-  let rec tc_pat (pat_t:typ) env p : pat * list<Env.binding> * Env.env * list<exp> = 
-    let bindings, w, exps = Tc.Util.pat_as_exps env p in
-    let pat_env = List.fold_left Env.push_local_binding env bindings in
+  let tc_pat (pat_t:typ) env p : pat * list<Env.binding> * Env.env * list<exp> = 
+    let bindings, w, exps, p = Tc.Util.pat_as_exps env p in
+    let pat_env = List.fold_left Env.push_local_binding env (bindings@w) in
+    if debug env <| Options.Other "Pat" 
+    then bindings |> List.iter (function 
+        | Env.Binding_var(x, t) -> Util.fprint2 "Before tc ... pattern var %s  : %s\n" (Print.strBvd x) (Normalize.typ_norm_to_string env t)
+        | _ -> ());
     let env1, _ = Tc.Env.clear_expected_typ pat_env in 
-    let env1 = {env1 with Env.is_pattern=true} in //{(Tc.Env.set_expected_typ pat_env pat_t) with Env.is_pattern=true} in
-    let env1 = List.fold_left Env.push_local_binding env1 w in
+    let env1 = {env1 with Env.is_pattern=true} in 
+    let env1 = Tc.Env.set_expected_typ env1 pat_t in
     let exps = exps |> List.map (fun e -> 
-        let e, t = no_guard env1 <| tc_total_exp env1 e in
-        //printfn "Trying pattern subtype %s <: %s" (Print.typ_to_string pat_t) (Print.typ_to_string t);
-        (match Tc.Rel.try_subtype env1 pat_t t with
-            | None -> Tc.Rel.subtype_fail env1 pat_t t
-            | Some _ -> ());//the type of the pattern must be pre-compatible with the type of the scrutinee
+        if Tc.Env.debug env Options.High
+        then Util.fprint2 "Checking pattern expression %s against expected type %s\n" (Print.exp_to_string e) (Print.typ_to_string pat_t);
+        let e, _, _ =  tc_total_exp env1 e in
         e) in
-    let p = Tc.Util.decorate_pattern p exps in
+    let p = Tc.Util.decorate_pattern env p exps in
+    if debug env <| Options.Other "Pat" 
+    then bindings |> List.iter (function 
+        | Env.Binding_var(x, t) -> Util.fprint2 "Pattern var %s  : %s\n" (Print.strBvd x) (Print.typ_to_string t)//(Normalize.typ_norm_to_string env t)
+        | _ -> ());
     p, bindings@w, pat_env, exps in
   (*</tc_pat>*)
 
@@ -1069,7 +1146,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
 
   let rec mk_guard scrutinee pat_exp : typ = 
     if not !Options.verify then Util.ftv Const.true_lid ktype else //NS: TODO ... seem to be hitting a bug when type-checking visit.fs
-        let pat_exp = compress_exp pat_exp in
+        let pat_exp = Util.compress_exp pat_exp in
         match pat_exp.n with 
           | Exp_uvar _
           | Exp_app({n=Exp_uvar _}, _) 
@@ -1091,7 +1168,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
   let guard = 
 //    if !Options.verify     (* Annotate the pattern with its corresponding expression and guard; consumed downstream by the encoding to SMT *)
 //    then 
-    let guard = disj_exps |> List.map (mk_guard scrutinee) |> Util.mk_disj_l  in
+    let guard = disj_exps |> List.map (fun e -> mk_guard scrutinee (Normalize.norm_exp [Normalize.Beta] env e)) |> Util.mk_disj_l  in
          let guard = match when_condition with 
             | None -> guard
             | Some w -> Util.mk_conj guard w in
@@ -1319,7 +1396,7 @@ and tc_decl env se deserialized = match se with
 //      let t = Tc.Util.refine_data_type env lid formals result_t in
       let se = Sig_datacon(lid, t, tycon, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
-      if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Print.typ_to_string t);
+      if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Tc.Normalize.typ_norm_to_string env t);
       se, env
   
     | Sig_val_decl(lid, t, quals, r) -> 
@@ -1328,7 +1405,7 @@ and tc_decl env se deserialized = match se with
       Tc.Util.check_uvars r t;
       let se = Sig_val_decl(lid, t, quals, r) in 
       let env = Tc.Env.push_sigelt env se in 
-      if log env then Util.print_string <| Util.format2 "val %s : %s\n" lid.str (Print.typ_to_string t);
+      if log env then Util.print_string <| Util.format2 "val %s : %s\n" lid.str (Tc.Normalize.typ_norm_to_string env t);
       se, env
   
     | Sig_assume(lid, phi, quals, r) ->
@@ -1339,7 +1416,7 @@ and tc_decl env se deserialized = match se with
       let env = Tc.Env.push_sigelt env se in 
       se, env
    
-    | Sig_let(lbs, r, lids) -> 
+    | Sig_let(lbs, r, lids, _) -> 
       //let is_rec = fst lbs in
       let env = Tc.Env.set_range env r in
       let generalize, lbs' = snd lbs |> List.fold_left (fun (gen, lbs) lb -> 
@@ -1355,18 +1432,22 @@ and tc_decl env se deserialized = match se with
                   | Typ_unknown -> 
                     false, (Inr l, t', e) //explicit annotation provided; do not generalize
                   | _ ->
-                    let _ = if not(deserialized) then
-                      Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation\n" (Range.string_of_range r)
-                    else () in
-                    false, (Inr l, t', e) in
+                   if not(deserialized) 
+                   then Util.print_string <| Util.format1 "%s: Warning: Annotation from val declaration overrides inline type annotation\n" (Range.string_of_range r);
+                   false, (Inr l, t', e) in
              gen, (lb, t, e) in
         gen, lb::lbs) (true, []) in
       let lbs' = List.rev lbs' in
       let e = mk_Exp_let((fst lbs, lbs'), syn' env Tc.Util.t_unit <| mk_Exp_constant(Syntax.Const_unit)) tun r in
-      let se = match tc_exp ({env with generalize=generalize}) e with 
-        | {n=Exp_let(lbs, _)}, _ -> Sig_let(lbs, r, lids)
+      let se, lbs = match tc_exp ({env with generalize=generalize}) e with 
+        | {n=Exp_let(lbs, e)}, _ -> 
+            let b = match e.n with 
+                | Exp_meta(Meta_desugared(_, MaskedEffect)) -> true
+                | _ -> false in 
+            Sig_let(lbs, r, lids, b), lbs
         | _ -> failwith "impossible" in
-      if log env then Util.fprint1 "%s\n" <| Print.sigelt_to_string_short se;
+      if log env 
+      then Util.fprint1 "%s\n" (snd lbs |> List.map (fun (lbname, t, _) -> Util.format2 "let %s : %s" (Print.lbname_to_string lbname) (Tc.Normalize.typ_norm_to_string env t)) |> String.concat "\n");
       let env = Tc.Env.push_sigelt env se in 
       se, env
 
@@ -1419,8 +1500,8 @@ and tc_decls env ses deserialized =
   if debug env Options.Low
   then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
   let se, env = tc_decl env se deserialized in
-  if debug env Options.Low
-  then Util.print_string (Util.format1 "Checked sigelt\t%s\n" (Print.sigelt_to_string se));
+  if debug env <| Options.Other "Progress"
+  then Util.print_string (Util.format1 "Checked sigelt\t%s\n" (Print.sigelt_to_string_short se));
   env.solver.encode_sig env se; 
   se::ses, env) ([], env) ses in
   List.rev ses, env 

@@ -34,6 +34,7 @@ type mlty =
 | MLTY_Fun   of mlty * mlty
 | MLTY_Named of list<mlty> * mlpath
 | MLTY_Tuple of list<mlty>
+| MLTY_App   of mlty * mlty
 
 type mltyscheme = mlidents * mlty
 
@@ -46,7 +47,7 @@ type mlconstant =
 | MLC_Float  of float
 | MLC_Char   of char
 | MLC_String of string
-| MLC_Bytes  of byte array
+| MLC_Bytes  of array<byte>
 
 type mlpattern =
 | MLP_Wild
@@ -64,7 +65,7 @@ type mlexpr =
 | MLE_Name   of mlpath
 | MLE_Record of list<mlsymbol> * list<(mlsymbol * mlexpr)>
 | MLE_CTor   of mlpath * list<mlexpr>
-| MLE_Tuple  of mlexpr list
+| MLE_Tuple  of list<mlexpr>
 | MLE_Let    of bool * list<(mlident * mlidents * mlexpr)> * mlexpr
 | MLE_App    of mlexpr * list<mlexpr>
 | MLE_Proj   of mlexpr * mlpath

@@ -49,13 +49,13 @@ let handleable = function
 
 let gensym : unit -> string = 
   let ctr = mk_ref 0 in 
-  (fun () -> Util.format1 "_%s" (Util.string_of_int (incr ctr; !ctr)))
+  (fun () -> "_" ^ (Util.string_of_int (incr ctr; !ctr)))
     
 let rec gensyms x = match x with
   | 0 -> []
   | n -> gensym ()::gensyms (n-1)
     
-let genident r = 
+let genident : option<Range.range> -> ident = fun r ->
   let sym = gensym () in
   match r with 
     | None -> mk_ident(sym, dummyRange)
@@ -63,7 +63,8 @@ let genident r =
 
 let bvd_eq bvd1 bvd2 = bvd1.realname.idText=bvd2.realname.idText
 let range_of_bvd x = x.ppname.idRange
-let mkbvd (x,y) = {ppname=x;realname=y}
+let mkbvd (*: (ident * ident) -> bvdef<'a>*) = 
+   fun (x,y) -> {ppname=x;realname=y}
 let setsort w t = {v=w.v; sort=t; p=w.p}
 let withinfo e s r = {v=e; sort=s; p=r}
 let withsort e s   = withinfo e s dummyRange
@@ -81,12 +82,16 @@ let btvar_to_typ bv  = mk_Typ_btvar bv bv.sort bv.p
 let bvd_to_typ bvd k = btvar_to_typ (bvd_to_bvar_s bvd k)
 let bvar_to_exp bv   =  mk_Exp_bvar bv bv.sort bv.p
 let bvd_to_exp bvd t = bvar_to_exp (bvd_to_bvar_s bvd t)
-let new_bvd ropt = let id = genident ropt in mkbvd (id,id)
+let new_bvd ropt = 
+  let f : option<Range.range> -> bvdef<'a> = fun ropt -> let id = genident ropt in mkbvd (id,id) in
+  f ropt
 let freshen_bvd bvd' = mkbvd(bvd'.ppname, genident (Some (range_of_bvd bvd')))
 let freshen_bvar b =  bvd_to_bvar_s (freshen_bvd b.v) b.sort
 let gen_bvar sort = let bvd = (new_bvd None) in bvd_to_bvar_s bvd sort
 let gen_bvar_p r sort = let bvd = (new_bvd (Some r)) in bvd_to_bvar_s bvd sort
-let bvdef_of_str s = let id = id_of_text s in mkbvd(id, id)
+let bvdef_of_str s = 
+  let f : string -> bvdef<'a> = fun s -> let id = id_of_text s in mkbvd(id, id) in
+  f s
 let set_bvd_range bvd r = {ppname=mk_ident(bvd.ppname.idText, r);
                            realname=mk_ident(bvd.realname.idText, r)}
 let set_lid_range l r = 
@@ -275,14 +280,6 @@ let subst_of_list (formals:binders) (actuals:args) : subst =
     then List.map2 subst_formal formals actuals 
     else failwith "Ill-formed substitution"
 
-let restrict_subst axs (s:subst_t) = 
-  s |> List.map (List.filter (fun b ->
-        let r = match b with 
-        | Inl(a, _) -> not (axs |> Util.for_some (function Inr _ -> false | Inl b -> bvd_eq a b))
-        | Inr(x, _) -> not (axs |> Util.for_some (function Inl _ -> false | Inr y -> bvd_eq x y)) in
-        //if not r then printfn "Filtering %s\n" (match b with Inl (b, _) -> b.realname.idText | Inr (x, _) -> x.realname.idText);
-        r))
-
 type red_ctrl = {
     stop_if_empty_subst:bool;
     descend:bool
@@ -293,11 +290,11 @@ let null_ctrl = {stop_if_empty_subst=true; descend=false}
 let extend_subst e s = s@[mk_subst e]
 
 let rec map_knd s vk mt me descend binders k = 
-  subst_kind' (restrict_subst binders s) k, descend
+  subst_kind' s k, descend
 and map_typ s mk vt me descend binders t = 
-  subst_typ' (restrict_subst binders s) t, descend
+  subst_typ' s t, descend
 and map_exp s mk me ve descend binders e =
-  subst_exp' (restrict_subst binders s) e, descend
+  subst_exp' s e, descend
 and map_flags s map_exp descend binders flags = 
     flags |> List.map (function 
         | DECREASES e -> DECREASES (map_exp descend binders e |> fst)
@@ -325,7 +322,6 @@ and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
           then (Inl a, imp)::bs, boundvars, s
           else 
               let boundvars' = Inl a.v::boundvars in
-              let s = restrict_subst boundvars' s in
               let b, s, boundvars = match s with 
                 | [] when ctrl.stop_if_empty_subst -> Inl a, s, boundvars'
                 | _ -> 
@@ -341,7 +337,6 @@ and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
           then (Inr x, imp)::bs, boundvars, s
           else 
               let boundvars' = Inr x.v::boundvars in
-              let s = restrict_subst boundvars' s in
               let b, s, boundvars = match s with 
                 | [] when ctrl.stop_if_empty_subst -> Inr x, s, boundvars'
                 | _ -> 
@@ -360,7 +355,7 @@ and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
   match t0.n with
     | Typ_btvar _ -> 
       //printfn "Trying to subst. %s with [%s]\n" (a.v.realname.idText) (s |> subst_to_string);
-      compress_typ <| subst_typ' (restrict_subst boundvars s) t0, ctrl
+      compress_typ <| subst_typ' s t0, ctrl
     
     | _ when (not ctrl.descend) -> map_typ s mk vt me null_ctrl boundvars t
 
@@ -384,7 +379,7 @@ and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
 and visit_exp s mk me ve ctrl binders e =
   let e = Visit.compress_exp e in 
   match e.n with 
-    | Exp_bvar _ -> compress_exp <| subst_exp' (restrict_subst binders s) e, ctrl
+    | Exp_bvar _ -> compress_exp <| subst_exp' s e, ctrl
     | _ when (not ctrl.descend) -> map_exp s mk me ve ctrl binders e
     | _ -> let e, _ = ve null_ctrl binders e in e, ctrl
 
@@ -618,7 +613,7 @@ let destruct typ lid =
     | _ -> None
 
 let rec lids_of_sigelt se = match se with 
-  | Sig_let(_, _, lids) 
+  | Sig_let(_, _, lids, _) 
   | Sig_bundle(_, _, lids)
   | Sig_monads(_, _, _, lids) -> lids
   | Sig_tycon (lid, _, _,  _, _, _, _)    
@@ -639,7 +634,7 @@ let range_of_sigelt x = match x with
   | Sig_datacon (_, _, _, _, r)
   | Sig_val_decl (_, _, _, r) 
   | Sig_assume (_, _, _, r)
-  | Sig_let(_, r, _) 
+  | Sig_let(_, r, _, _) 
   | Sig_main(_, r) 
   | Sig_monads(_, _, r, _) -> r
 
@@ -688,17 +683,17 @@ let unmangle_field_name x =
     then mk_ident(Util.substring_from x.idText 7, x.idRange)
     else x
 
-let mk_field_projector_name lid x i = 
+let mk_field_projector_name lid (x:bvar<'a,'b>) i = 
     let nm = if Syntax.is_null_bvar x
              then Syntax.mk_ident("_" ^ Util.string_of_int i, x.p)
              else x.v.ppname in
-    let y = {x.v with ppname=nm} in
+    let y : bvdef<'a> = {x.v with ppname=nm} in
     lid_of_ids (ids_of_lid lid @ [unmangle_field_name nm]), y
 
 let unchecked_unify uv t = 
   match Unionfind.find uv with 
-    | Fixed _ -> failwith "Changing a fixed uvar!"
-    | _ -> Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here *)
+    | Fixed _ -> failwith (Util.format1 "Changing a fixed uvar! U%s\n" (Util.string_of_int <| Unionfind.uvar_id uv))
+    | _ -> Unionfind.change uv (Fixed t) (* used to be an alpha-convert t here; but we now have an invariant that t is closed *)
 
 
 (********************************************************************************)
@@ -722,11 +717,14 @@ let union_uvs uvs1 uvs2 =
         uvars_e=Util.set_union uvs1.uvars_e uvs2.uvars_e;
     }
 
-let union_fvs (fvs1, uvs1) (fvs2, uvs2) = 
+let union_fvs fvs1 fvs2 = 
     {
         ftvs=Util.set_union fvs1.ftvs fvs2.ftvs;
         fxvs=Util.set_union fvs1.fxvs fvs2.fxvs;
-    }, 
+    }
+
+let union_fvs_uvs (fvs1, uvs1) (fvs2, uvs2) = 
+    union_fvs fvs1 fvs2, 
     union_uvs uvs1 uvs2
 
 let sub_fv (fvs, uvs) (tvars, vvars) = 
@@ -768,22 +766,22 @@ let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Typ_fun(bs, c) -> 
           vs_binders bs uvonly (fun (bvs, vs1) -> 
           vs_comp c uvonly (fun vs2 -> 
-          cont (sub_fv (union_fvs vs1 vs2) bvs)))
+          cont (sub_fv (union_fvs_uvs vs1 vs2) bvs)))
 
         | Typ_lam(bs, t) -> 
           vs_binders bs uvonly (fun (bvs, vs1) -> 
           vs_typ t uvonly (fun vs2 -> 
-          cont (sub_fv (union_fvs vs1 vs2) bvs)))
+          cont (sub_fv (union_fvs_uvs vs1 vs2) bvs)))
 
         | Typ_refine(x, t) -> 
           vs_binders [Inr x, false] uvonly (fun (bvs, vs1) -> 
           vs_typ t uvonly (fun vs2 -> 
-          cont (sub_fv (union_fvs vs1 vs2) bvs)))
+          cont (sub_fv (union_fvs_uvs vs1 vs2) bvs)))
 
         | Typ_app(t, args) -> 
           vs_typ t uvonly (fun vs1 -> 
           vs_args args uvonly (fun vs2 ->
-          cont (union_fvs vs1 vs2)))
+          cont (union_fvs_uvs vs1 vs2)))
 
         | Typ_ascribed(t, _) -> 
           vs_typ t uvonly cont        
@@ -802,12 +800,12 @@ and vs_binders (bs:binders) (uvonly:bool) (cont:(bvars * (freevars * uvars)) -> 
         | (Inl a, _)::rest -> 
            vs_kind a.sort uvonly (fun vs -> 
            vs_binders rest uvonly (fun ((tvars, vvars), vs2) -> 
-           cont ((Util.set_add a tvars, vvars), union_fvs vs vs2)))
+           cont ((Util.set_add a tvars, vvars), union_fvs_uvs vs vs2)))
 
         | (Inr x, _)::rest -> 
            vs_typ x.sort uvonly (fun vs -> 
            vs_binders rest uvonly (fun ((tvars, vvars), vs2) -> 
-           cont ((tvars, Util.set_add x vvars), union_fvs vs vs2)))
+           cont ((tvars, Util.set_add x vvars), union_fvs_uvs vs vs2)))
 
 and vs_args (args:args) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
     match args with 
@@ -816,12 +814,12 @@ and vs_args (args:args) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | (Inl t, _)::tl -> 
           vs_typ t uvonly (fun ft1 -> 
           vs_args tl uvonly (fun ft2 -> 
-          cont (union_fvs ft1 ft2)))
+          cont (union_fvs_uvs ft1 ft2)))
 
         | (Inr e, _)::tl -> 
           vs_exp e uvonly (fun ft1 -> 
           vs_args tl uvonly (fun ft2 -> 
-          cont (union_fvs ft1 ft2)))
+          cont (union_fvs_uvs ft1 ft2)))
 
 
 and vs_typ (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
@@ -853,7 +851,7 @@ and vs_kind' (k:knd) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
         | Kind_arrow(bs, k) -> 
           vs_binders bs uvonly (fun (bvs, vs1) -> 
           vs_kind k uvonly (fun vs2 -> 
-          cont (sub_fv (union_fvs vs1 vs2) bvs)))
+          cont (sub_fv (union_fvs_uvs vs1 vs2) bvs)))
 
 and vs_kind (k:knd) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
     match !k.fvs, !k.uvs with 
@@ -886,12 +884,12 @@ and vs_exp' (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
       | Exp_abs(bs, e) -> 
         vs_binders bs uvonly (fun (bvs, vs1) -> 
         vs_exp e uvonly (fun vs2 -> 
-        cont (sub_fv (union_fvs vs1 vs2) bvs)))
+        cont (sub_fv (union_fvs_uvs vs1 vs2) bvs)))
 
       | Exp_app(e, args) -> 
         vs_exp e uvonly (fun ft1 -> 
         vs_args args uvonly (fun ft2 ->
-        cont (union_fvs ft1 ft2)))
+        cont (union_fvs_uvs ft1 ft2)))
 
       | Exp_match _       
       | Exp_let _ -> cont (no_fvs, no_uvs) //failwith "NYI"
@@ -919,7 +917,7 @@ and vs_comp' (c:comp) (uvonly:bool) (k:(freevars * uvars) -> 'res) : 'res =
           then vs_typ ct.result_typ uvonly k
           else vs_typ ct.result_typ uvonly (fun vs1 -> 
                vs_args ct.effect_args uvonly (fun vs2 -> 
-               k (union_fvs vs1 vs2)))
+               k (union_fvs_uvs vs1 vs2)))
 
 and vs_comp (c:comp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 
     match !c.fvs, !c.uvs with 
@@ -942,7 +940,7 @@ and vs_either_l (tes:list<either<typ,exp>>) (uvonly:bool) (cont:(freevars * uvar
         | hd::tl -> 
           vs_either hd uvonly (fun ft1 -> 
           vs_either_l tl uvonly (fun ft2 -> 
-          cont (union_fvs ft1 ft2)))
+          cont (union_fvs_uvs ft1 ft2)))
 
 let freevars_kind (k:knd) : freevars = 
    vs_kind k false (fun (x,_) -> x)
@@ -955,6 +953,11 @@ let freevars_exp (e:exp) : freevars =
  
 let freevars_comp c : freevars = 
    vs_comp c false (fun (x,_) -> x)
+
+let freevars_args args : freevars = 
+    args |> List.fold_left (fun out a -> match fst a with 
+        | Inl t -> union_fvs out <| freevars_typ t
+        | Inr e -> union_fvs out <| freevars_exp e) no_fvs
 
 let is_free axs (fvs:freevars) = 
   axs |> Util.for_some (function 
@@ -1002,17 +1005,25 @@ and uvars_in_comp c : uvars =
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)
-let rec close_for_kind t k = 
+let rec kind_formals k = 
     let k = compress_kind k in 
     match k.n with 
-    | Kind_lam _ -> failwith "Impossible"
-    | Kind_unknown
-    | Kind_type
-    | Kind_effect
-    | Kind_uvar _ -> t
-    | Kind_arrow(bs, _) -> mk_Typ_lam(bs, t) k t.pos
-    | Kind_abbrev(_, k) -> close_for_kind t k
-    | Kind_delayed _ -> failwith "Impossible"
+        | Kind_lam _ -> failwith "Impossible"
+        | Kind_unknown
+        | Kind_type
+        | Kind_effect
+        | Kind_uvar _ -> [], k
+        | Kind_arrow(bs, k) -> 
+            let bs', k = kind_formals k in 
+            bs@bs', k
+        | Kind_abbrev(_, k) -> kind_formals k
+        | Kind_delayed _ -> failwith "Impossible"
+
+let close_for_kind t k = 
+    let bs, _ = kind_formals k in 
+    match bs with 
+        | [] -> t
+        | _ -> mk_Typ_lam(bs, t) k t.pos
 
 let rec unabbreviate_kind k = 
     let k = compress_kind k in

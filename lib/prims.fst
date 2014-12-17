@@ -90,7 +90,6 @@ assume type string
 assume type array : Type -> Type
 assume type ref : Type -> Type
 assume logic type LBL : string -> Type -> Type
-assume type bytes
 assume type exn
 assume type HashMultiMap : Type -> Type -> Type
 assume type uint8
@@ -485,8 +484,8 @@ type DTuple2: 'a:Type
 
 (* Primitive (structural) equality.
    What about for function types? *)
-assume val op_Equality : 'a:Type -> 'a -> 'a -> Tot bool
-assume val op_disEquality : 'a:Type -> 'a -> 'a -> Tot bool
+assume val op_Equality : #'a:Type -> 'a -> 'a -> Tot bool
+assume val op_disEquality : #'a:Type -> 'a -> 'a -> Tot bool
 
 val fst : ('a * 'b) -> Tot 'a
 let fst x = MkTuple2._1 x
@@ -498,7 +497,7 @@ logic type InductionHyp : Type -> Type
 assume val using_induction_hyp: 'a -> Lemma (ensures (InductionHyp 'a))
 assume val Assume: 'P:Type -> unit -> (y:unit{'P})
 assume val admit: unit -> Admit unit
-assume val admitP: 'P:Type -> unit -> Pure unit True (fun x -> 'P)
+assume val admitP: 'P:Type -> Pure unit True (fun x -> 'P)
 assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
 assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (fun x -> 'P)
 assume val qintro: a:Type -> p:(a -> Type) -> (x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
@@ -506,7 +505,8 @@ assume val failwith: string -> ALL.All 'a (fun h -> True) (fun h a h' -> h==h')
 assume val raise: exn -> 'a       (* TODO: refine with the Exn monad *)
 assume val pipe_right: 'a -> ('a -> 'b) -> 'b
 assume val pipe_left: ('a -> 'b) -> 'a -> 'b
-assume val ignore: 'a -> unit
+val ignore: 'a -> Tot unit
+let ignore x = ()
 assume val exit: int -> 'a
 assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
 assume logic val op_AmpAmp             : bool -> bool -> Tot bool
@@ -520,6 +520,7 @@ assume logic val op_LessThanOrEqual    : int -> int -> Tot bool
 assume logic val op_GreaterThan        : int -> int -> Tot bool
 assume logic val op_GreaterThanOrEqual : int -> int -> Tot bool
 assume logic val op_LessThan           : int -> int -> Tot bool
+
 type nat = i:int{i >= 0}
 type pos = i:int{i > 0}
 type nonzero = i:int{i<>0}

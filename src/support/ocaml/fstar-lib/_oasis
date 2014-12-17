@@ -11,9 +11,9 @@ Library fstar
   Path: src
   FindLibName: fstar
   Modules: Utf8, Types, Support
-  BuildDepends: batteries
+  BuildDepends: batteries, fstar.evp
   Pack: true
-  CompiledObject: best
+  CompiledObject: native
 
 Library db
   Path: src/db
@@ -21,7 +21,7 @@ Library db
   FindlibParent: fstar
   Modules: DB, DBMap
   BuildDepends: batteries, fileutils, sqlite3
-  CompiledObject: best
+  CompiledObject: native
 
 Library evp
   Path: src/evp
@@ -30,8 +30,8 @@ Library evp
   Modules: Evp
   CSources: evp_stub.c
   CCLib: -lcrypto
-  CCOpt: -Wall -W -Wno-deprecated-declarations -O2 -ggdb
-  CompiledObject: best
+  CCOpt: -Wl,-Bstatic -Wall -W -Wno-deprecated-declarations -O2 -ggdb
+  CompiledObject: native
 
 Flag runtests
   Description: Build and run tests
@@ -42,7 +42,7 @@ Executable test
   Install: false
   Build$: flag(runtests)
   BuildDepends: batteries, fstar, fstar.evp, fstar.db
-  CompiledObject: best
+  CompiledObject: native
   
 Test main
   Run$: flag(runtests)

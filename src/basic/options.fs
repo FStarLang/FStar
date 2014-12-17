@@ -66,7 +66,7 @@ let codegen = Util.mk_ref None
 let admit_fsi = Util.mk_ref []
 let trace_error = Util.mk_ref false
 let verify = Util.mk_ref true
-let full_context_dependency = Util.mk_ref false
+let full_context_dependency = Util.mk_ref true
 let print_implicits = Util.mk_ref false
 let hide_uvar_nums = Util.mk_ref false
 let hide_genident_nums = Util.mk_ref false
@@ -74,6 +74,7 @@ let serialize_mods = Util.mk_ref false
 let initial_fuel = Util.mk_ref 2
 let max_fuel = Util.mk_ref 8
 let min_fuel = Util.mk_ref 1
+let warn_top_level_effects = Util.mk_ref false
 
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
@@ -114,7 +115,7 @@ let display_usage specs =
 let specs () : list<Getopt.opt> = 
   let specs =   
     [( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
-     ( noshort, "codegen", OneArg ((fun s -> codegen := Some s), "OCaml|F#|JS"), "Generate code for execution");
+     ( noshort, "codegen", OneArg ((fun s -> codegen := Some s; verify := false), "OCaml|F#|JavaScript"), "Generate code for execution");
      ( noshort, "lax", ZeroArgs (fun () -> pretype := true; verify := false), "Run the lax-type checker only (admit all verification conditions)");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
      ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
@@ -133,7 +134,8 @@ let specs () : list<Getopt.opt> =
      ( noshort, "smt", OneArg ((fun x -> z3_exe := x), "path"), "Path to the SMT solver (usually Z3, but could be any SMT2-compatible solver)");
      ( noshort, "print_before_norm", ZeroArgs(fun () -> norm_then_print := false), "Do not normalize types before printing (for debugging)");
      ( noshort, "show_signatures", OneArg((fun x -> show_signatures := x::!show_signatures), "module name"), "Show the checked signatures for all top-level symbols in the module");
-     ( noshort, "full_context_dependency", ZeroArgs(fun () -> full_context_dependency := true), "Introduce unification variables that are dependent on the entire context (possibly expensive, but better for type inference)");
+     ( noshort, "full_context_dependency", ZeroArgs(fun () -> full_context_dependency := true), "Introduce unification variables that are dependent on the entire context (possibly expensive, but better for type inference (on, by default)");
+     ( noshort, "MLish", ZeroArgs(fun () -> full_context_dependency := false), "Introduce unification variables that are only dependent on the type variables in the context");
      ( noshort, "print_implicits", ZeroArgs(fun () -> print_implicits := true), "Print implicit arguments");
      ( noshort, "hide_uvar_nums", ZeroArgs(fun () -> hide_uvar_nums := true), "Don't print unification variable numbers");
      ( noshort, "hide_genident_nums", ZeroArgs(fun () -> hide_genident_nums := true), "Don't print generated identifier numbers");
@@ -141,5 +143,6 @@ let specs () : list<Getopt.opt> =
      ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
      ( noshort, "max_fuel", OneArg((fun x -> max_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try at most (default 8)");
      ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
+     ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens")
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs

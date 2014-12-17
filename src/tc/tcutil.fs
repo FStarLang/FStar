@@ -80,12 +80,24 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
         let g = apply_guard f e in
         if debug env <| Options.Other "Rel"
         then Util.fprint1 "Applied guard is %s\n" <| guard_to_string env g;
-        {e with tk=t2}, g
+        let e = Util.compress_exp e in
+        let e = match e.n with 
+            | Exp_bvar x -> mk_Exp_bvar (Util.bvd_to_bvar_s x.v t2) t2 e.pos 
+            | _ -> {e with tk=t2} in
+        e, g
 
 let env_binders env = 
     if !Options.full_context_dependency 
-    then Env.binders env
-    else Env.t_binders env
+    then let binders = Env.binders env in
+         if !Options.verify
+         then binders
+         else binders |> List.filter (function 
+                | Inl _, _ -> true
+                | Inr x, _ -> begin match x.sort.n with 
+                                 | Typ_fun _ -> false
+                                 | _ -> true
+                              end)
+         else Env.t_binders env
 let new_kvar env   = Rel.new_kvar (Env.get_range env) (env_binders env)   |> fst
 let new_tvar env t = Rel.new_tvar (Env.get_range env) (env_binders env) t |> fst
 let new_evar env t = Rel.new_evar (Env.get_range env) (env_binders env) t |> fst
@@ -129,101 +141,191 @@ let destruct_arrow_kind env tt k args : (Syntax.args * binders * knd) =
 
     aux ktop
 
-let pat_as_exps env p = 
+(*
+    Turns a disjunctive pattern p into a quadruple:
+ *)
+let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may appear in the branch of match) *)
+                         * list<binding>   (* pattern-bound wild-card variables (may not appear in the branch, but do appear in expresions corresponding to the pattern) *)
+                         * list<exp>       (* expressions corresponding to each arm of the disjunct *)
+                         * pat) =          (* decorated pattern, with all the missing implicit args in p filled in *)
      let pvar_eq x y = match x, y with 
-          | Inl a, Inl b -> bvd_eq a.v b.v
-          | Inr x, Inr y -> bvd_eq x.v y.v
+          | Env.Binding_var(x, _), Env.Binding_var(y, _) -> bvd_eq x y
+          | Env.Binding_typ(x, _), Env.Binding_typ(y, _) -> bvd_eq x y
           | _ -> false in
-     let rec pat_as_args env (p:pat) : (list<Env.binding>                    (* pattern bound variables *)
-                                        * list<Env.binding>                  (* pattern-bound wild variables *)
-                                        * list<either<btvar,bvvar>>          (* the variables in the first field, for checking disjunctive patterns *)
-                                        * list<arg>) =                       (* pattern sub-terms *)
+  
+     let vars_of_bindings bs =
+        bs |> List.map (function 
+           | Env.Binding_var(x, _) -> Inr x
+           | Env.Binding_typ(x, _) -> Inl x
+           | _ -> failwith "impos") in
+  
+     let rec pat_env env (p:pat) : list<Env.binding> * list<Env.binding> * Env.env = 
         match p.v with 
-           | Pat_dot_term _ -> 
+           | Pat_dot_term _
+           | Pat_dot_typ _ 
+           | Pat_constant _ -> [], [], env
+           | Pat_wild x -> 
+                let w = Env.Binding_var(x.v, new_tvar env ktype) in
+                let env = Env.push_local_binding env w in
+                [], [w], env
+           | Pat_var (x, _) ->
+                let b = Env.Binding_var(x.v, new_tvar env ktype) in
+                let env = Env.push_local_binding env b in
+                [b], [], env
+           | Pat_twild a -> 
+                let w = Env.Binding_typ(a.v, new_kvar env) in
+                let env = Env.push_local_binding env w in
+                [], [w], env
+           | Pat_tvar a ->      
+                let b = Env.Binding_typ(a.v, new_kvar env) in
+                let env = Env.push_local_binding env b in 
+                [b], [], env
+           | Pat_cons(fv, pats) -> 
+               let b, w, env = pats |> List.fold_left (fun (b, w, env) p -> 
+                    let b', w', env = pat_env env p in
+                    b'::b, w'::w, env)  ([], [], env) in
+               List.rev b |> List.flatten, 
+               List.rev w |> List.flatten, 
+               env
+           | Pat_disj _ -> failwith "impossible" in
+
+     let rec pat_as_arg env (p:pat) : arg * pat = match p.v with
+           | Pat_dot_term (x, _) -> 
                 let t = new_tvar env ktype in
                 let e = fst <| Rel.new_evar p.p [] t in //TODO: why empty vars?
-                [], [], [], [varg e]
+                let p = {p with v=Pat_dot_term(x, e)} in
+                varg e, p
 
-           | Pat_dot_typ _ -> 
+           | Pat_dot_typ (a, _) -> 
                 let k = new_kvar env in
                 let t = new_tvar env k in
-                [], [], [], [targ t]
+                let p = {p with v=Pat_dot_typ(a, t)} in
+                (Inl t, true), p
 
            | Pat_constant c -> 
                 let e = mk_Exp_constant c tun p.p in
-                [], [], [], [varg e]
+                varg e, p
 
            | Pat_wild x -> 
-                let w = Env.Binding_var(x.v, new_tvar env ktype) in
                 let e = mk_Exp_bvar x tun p.p in
-                [], [w], [], [varg e]
+                varg e, p
 
-           | Pat_var x -> 
-                let b = Env.Binding_var(x.v, new_tvar env ktype) in
+           | Pat_var (x, imp) -> 
                 let e = mk_Exp_bvar x tun p.p in
-                [b], [], [Inr x], [varg e]
+                (Inr e, imp), p
  
            | Pat_twild a -> 
-                let w = Env.Binding_typ(a.v, new_kvar env) in
                 let t = mk_Typ_btvar a kun p.p in
-                [], [w], [], [targ t]
+                targ t, p
 
            | Pat_tvar a ->      
-                let b = Env.Binding_typ(a.v, new_kvar env) in
                 let t = mk_Typ_btvar a kun p.p in
-                [b], [], [Inl a], [targ t]
+                targ t, p
 
            | Pat_cons(fv, pats) -> 
-               let _, b, w, o, args = pats |> List.fold_left (fun (env, b, w, o, args) p -> 
-                    let b', w', o', arg = pat_as_arg env p in 
-                    let env = b' |> List.fold_left Env.push_local_binding env in
-                    env, b'::b, w'::w, o'::o, arg::args) (env, [], [], [], []) in
+               let args, pats = pats |> List.map (pat_as_arg env) |> List.unzip in
+               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, args) tun p.p, Data_app)) in
+               varg e,
+               {p with v=Pat_cons(fv, pats)}
 
-               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, List.rev args) tun p.p, Data_app)) in
-               List.rev b |> List.flatten, 
-               List.rev w |> List.flatten, 
-               List.rev o |> List.flatten, 
-               [varg e]
+           | Pat_disj _ -> failwith "impossible: nested disjunctive pattern" in
 
+    let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
+        match p.v with 
+           | Pat_cons(fv, pats) -> 
+               let pats = List.map (elaborate_pat env) pats in
+               let t = Tc.Env.lookup_datacon env fv.v in
+               let pats = match Util.function_formals t with 
+                    | None -> []
+                    | Some(f, _) -> 
+                      let rec aux formals pats = match formals, pats with 
+                        | [], [] -> []
+                        | [], _::_ -> raise (Error("Too many pattern arguments", range_of_lid fv.v))
+                        | _::_, [] -> 
+                          formals |> List.map (fun f -> match f with 
+                            | Inl t, _ -> 
+                              let a = Util.bvd_to_bvar_s (Util.new_bvd None) kun in
+                              withinfo (Pat_dot_typ (a, tun)) (Inl kun) (Syntax.range_of_lid fv.v)
+
+                            | Inr _, true ->
+                              let a = Util.gen_bvar tun in
+                              withinfo (Pat_var(a, true)) (Inr tun) (Syntax.range_of_lid fv.v)
+
+                            | _ -> raise (Error("Insufficient pattern arguments", range_of_lid fv.v)))
+
+                        | f::formals', p::pats' -> 
+                            begin match f, p.v with 
+                                | (Inl _, _), Pat_tvar _ -> p::aux formals' pats'
+                                | (Inl _, _), _ -> 
+                                    let a = Util.bvd_to_bvar_s (Util.new_bvd None) kun in
+                                    let p = withinfo (Pat_dot_typ (a, tun)) (Inl kun) (Syntax.range_of_lid fv.v) in
+                                    p::aux formals' pats
+                                | (Inr _, true), Pat_var(_, true) -> 
+                                    p::aux formals' pats'
+                                | (Inr _, true), _ ->
+                                    let a = Util.gen_bvar tun in
+                                    let p = withinfo (Pat_var(a, true)) (Inr tun) (Syntax.range_of_lid fv.v) in
+                                    p::aux formals' pats
+                                | (Inr _, false), _ ->
+                                  p::aux formals' pats' 
+                            end in
+                      aux f pats in
+               {p with v=Pat_cons(fv, pats)} 
+
+        | _ -> p in
+
+    let one_pat env p = 
+        let p = elaborate_pat env p in
+        let b, w, env = pat_env env p in
+        let arg, p = pat_as_arg env p in
+        match b |> Util.find_dup pvar_eq with 
+            | Some (Env.Binding_var(x, _)) -> raise (Error(Tc.Errors.nonlinear_pattern_variable (Inr x), p.p))
+            | Some (Env.Binding_typ(x, _)) -> raise (Error(Tc.Errors.nonlinear_pattern_variable (Inl x), p.p))
+            | _ -> b, w, arg, p in
+
+
+   let top_level_pat_as_args env (p:pat) : (list<Env.binding>                    (* pattern bound variables *)
+                                            * list<Env.binding>                  (* pattern-bound wild variables *)
+                                            * list<arg>                          (* pattern sub-terms *)
+                                            * pat) =                             (* decorated pattern *)
+        match p.v with 
            | Pat_disj [] -> failwith "impossible"
 
-           | Pat_disj (p::pats) -> 
-              let b, w, o, arg = pat_as_arg env p in
-              let w, args = List.fold_right (fun p (w, args) -> 
-                  let _, w', o', arg = pat_as_arg env p in
-                  if not (Util.multiset_equiv pvar_eq o o')
-                  then raise (Error(Tc.Errors.disjunctive_pattern_vars o o', Tc.Env.get_range env))
-                  else (w'@w, arg::args)) 
-                  pats (w, []) in
-              b, w, o, arg::args 
+           | Pat_disj (q::pats) -> 
+              let b, w, arg, q = one_pat env q in
+              let w, args, pats = List.fold_right (fun p (w, args, pats) -> 
+                  let b', w', arg, p = one_pat env p in
+                  if not (Util.multiset_equiv pvar_eq b b')
+                  then raise (Error(Tc.Errors.disjunctive_pattern_vars (vars_of_bindings b) (vars_of_bindings b'), Tc.Env.get_range env))
+                  else (w'@w, arg::args, p::pats)) 
+                  pats (w, [], []) in
+              b, w, arg::args, {p with v=Pat_disj(q::pats)}
 
-      and pat_as_arg env p = 
-        let b, w, o, args = pat_as_args env p in
-        match o |> Util.find_dup pvar_eq with 
-            | Some x -> raise (Error(Tc.Errors.nonlinear_pattern_variable x, p.p))
-            | _ ->
-                match args with
-                    | [a] -> b, w, o, a
-                    | _ -> failwith "Impossible: nested disjunctive pattern" in
+           | _ -> 
+             let b, w, arg, p = one_pat env p in 
+             b, w, [arg], p in
 
-    let b, w, _, args = pat_as_args env p in
+    let b, w, args, p = top_level_pat_as_args env p in
     let exps = args |> List.map (function 
         | Inl _, _ -> failwith "Impossible: top-level pattern must be an expression"
         | Inr e, _ -> e) in
-    b, w, exps 
+    b, w, exps, p 
 
-let decorate_pattern p exps = 
+let decorate_pattern env p exps = 
     let rec aux p e = 
         let pkg q t = withinfo q (Inr t) p.p in
         let e = Util.unmeta_exp e in
         match p.v, e.n with 
             | Pat_constant _, Exp_constant _ -> pkg p.v e.tk
 
-            | Pat_var x, Exp_bvar y -> 
+            | Pat_var (x,imp), Exp_bvar y -> 
               if Util.bvar_eq x y |> not
               then failwith (Util.format2 "Expected pattern variable %s; got %s" (Print.strBvd x.v) (Print.strBvd y.v));
-              let x = {x with sort=e.tk} in
-              pkg (Pat_var x) e.tk
+              if Env.debug env <| Options.Other "Pat"
+              then Util.fprint2 "Pattern variable %s introduced at type %s\n" (Print.strBvd x.v) (Normalize.typ_norm_to_string env y.sort);
+              let s = Normalize.norm_typ [Normalize.Beta] env y.sort in
+              let x = {x with sort=s} in
+              pkg (Pat_var (x, imp)) e.tk
 
             | Pat_wild x, Exp_bvar y -> 
               if Util.bvar_eq x y |> not
@@ -321,7 +423,7 @@ let decorate_pattern p exps =
             [], mk_Exp_constant c |> pkg
 
         | Pat_wild x
-        | Pat_var x  ->
+        | Pat_var (x, _)  ->
             [Inr x], mk_Exp_bvar x |> pkg
 
         | Pat_cons(fv, pats) -> 
@@ -419,7 +521,7 @@ let extract_lb_annotation (is_rec:bool) env t e = match t.n with
         let e, res = aux scope e in 
         let c = Util.ml_comp res r in
         let t = mk_Typ_fun(bs, c) ktype e.pos in
-        if debug env Options.High then Util.fprint2 "(%s) Using type %s" (Range.string_of_range r) (Print.typ_to_string t);
+        if debug env Options.High then Util.fprint2 "(%s) Using type %s\n" (Range.string_of_range r) (Print.typ_to_string t);
         mk_Exp_abs(bs, e) e.tk e.pos, t
 
       | _ -> e, Rel.new_tvar r vars ktype |> fst in
@@ -483,7 +585,7 @@ let return_value env t v =
        let wlp = wp in
        mk_comp m t wp wlp [RETURN] in
   if debug env Options.High
-  then Util.fprint2 "(%s) returning at comp type %s" (Range.string_of_range v.pos) (Print.comp_typ_to_string c);
+  then Util.fprint2 "(%s) returning at comp type %s\n" (Range.string_of_range v.pos) (Normalize.comp_typ_norm_to_string env c);
   c
 
 let bind env e1opt (c1:comp) ((b, c2):comp_with_binder) : comp = 
@@ -828,12 +930,16 @@ let gen env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
      let ecs = uvars |> List.map (fun (uvs, e, c) -> 
           let tvars = uvs |> List.map (fun (u, k) -> 
             let a = match Unionfind.find u with 
-              | Fixed ({n=Typ_btvar a}) -> a.v 
+              | Fixed ({n=Typ_btvar a})
+              | Fixed ({n=Typ_lam(_, {n=Typ_btvar a})}) -> Util.bvd_to_bvar_s a.v k
+              | Fixed _ -> failwith "Unexpected instantiation of mutually recursive uvar"
               | _ -> 
                   let a = Util.new_bvd (Some <| Tc.Env.get_range env) in
-                  let t = Util.bvd_to_typ a k in
-                  unchecked_unify u t; a in
-            t_binder <| Util.bvd_to_bvar_s a k) in
+                  let t = Util.close_for_kind (Util.bvd_to_typ a ktype) k in
+                  //let t = Util.bvd_to_typ a k in
+                  unchecked_unify u t; 
+                  Util.bvd_to_bvar_s a ktype in
+            t_binder a) in
     
           let t = match Util.comp_result c |> Util.function_formals with 
             | Some (bs, cod) -> mk_Typ_fun(tvars@bs, cod) ktype c.pos 

@@ -70,7 +70,7 @@ and pattern' =
   | PatWild
   | PatConst    of Syntax.sconst 
   | PatApp      of pattern * list<pattern> 
-  | PatVar      of ident
+  | PatVar      of ident * bool         (* flag marks an explicitly provided implicit *)
   | PatName     of lid
   | PatTvar     of ident
   | PatList     of list<pattern>
@@ -135,7 +135,7 @@ let un_curry_abs ps body = match body.tm with
     | _ -> Abs(ps, body)
 let mk_function branches r1 r2 = 
   let x = Util.genident (Some r1) in
-  mk_term (Abs([mk_pattern (PatVar x) r1],
+  mk_term (Abs([mk_pattern (PatVar(x,false)) r1],
                mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, branches)) r2 Expr))
     r2 Expr
 let un_function p tm = match p.pat, tm.tm with 
@@ -230,7 +230,8 @@ and pat_to_string x = match x.pat with
   | PatConst c -> Print.const_to_string c
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
   | PatTvar i 
-  | PatVar i -> i.idText
+  | PatVar (i, true) -> Util.format1 "#%s" i.idText
+  | PatVar (i, false) -> i.idText
   | PatName l -> Print.sli l
   | PatList l -> Util.format1 "[%s]" (to_string_l "; " pat_to_string l)
   | PatTuple (l, false) -> Util.format1 "(%s)" (to_string_l ", " pat_to_string l)
@@ -241,8 +242,8 @@ and pat_to_string x = match x.pat with
   
 let error msg tm r =
  let tm = tm |> term_to_string in
-  let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in 
-  raise (Error(msg^"\n"^tm, r))
+ let tm = if String.length tm >= 80 then Util.substring tm 0 77 ^ "..." else tm in 
+ raise (Error(msg^"\n"^tm, r))
 
 let consPat r hd tl = PatApp(mk_pattern (PatName Const.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(Const.cons_lid, [(hd, false);(tl, false)])) r Expr

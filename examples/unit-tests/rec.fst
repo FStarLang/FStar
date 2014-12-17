@@ -70,12 +70,14 @@ and visit_pats1 pat cont = visit_pat1 pat (fun (_,_) -> visit_pats1 pat (fun z -
 
 let rec visit_pat2 pat cont = cont (0, pat)
 and visit_pats2 pats cont = match pats with
+  | [] -> failwith ""
   | hd::tl -> visit_pat2 hd (fun (_, hd) ->
     visit_pats2 tl (fun _ ->
       cont (hd::tl)))
 
 let rec visit_pat3 env pat cont = cont (env, pat)
 and visit_pats3 env pats cont = match pats with
+  | [] -> failwith ""
   | hd::tl -> visit_pat3 env  hd (fun (env, hd) ->
     visit_pats3 env tl (fun (env, tl) ->
       cont (env, hd::tl)))

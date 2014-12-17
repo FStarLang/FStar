@@ -62,6 +62,7 @@ open System.Collections.Generic
 (*     | _ -> failwith "impossible" *)
 
 
+let max_int: int = System.Int32.MaxValue
 
 type proc = {m:Object; 
              outbuf:StringBuilder;
@@ -211,6 +212,10 @@ type smap<'value>=HashMultiMap<string, 'value>
 let smap_create<'value> (i:int) = new HashMultiMap<string,'value>(i, HashIdentity.Structural)
 let smap_clear<'value> (s:smap<'value>) = s.Clear()
 let smap_add (m:smap<'value>) k (v:'value) = m.Add(k,v)
+let smap_of_list<'value> (l:list<string*'value>) = 
+    let s = smap_create (List.length l) in
+    List.iter (fun (x,y) -> smap_add s x y) l;
+    s
 let smap_try_find (m:smap<'value>) k = m.TryFind(k)
 let smap_fold (m:smap<'value>) f a = m.Fold f a
 let smap_remove (m:smap<'value>) k = m.Remove k
@@ -236,15 +241,19 @@ let unicode_of_string (string:string) = unicodeEncoding.GetBytes(string)
 let char_of_int (i:int) = char i
 let int_of_string (s:string) = int_of_string s
 let int_of_char (s:char) = int32 s
+let int_of_byte (s:byte) = int32 s
 let int_of_uint8 (i:uint8) = int32 i
 let uint16_of_int (i:int) = uint16 i
+let byte_of_char (s:char) = byte s
 
 let float_of_byte (b:byte) = (float)b
 let float_of_int32 (n:int32) = (float)n
 let float_of_int64 (n:int64) = (float)n
 
 let string_of_int   i = string_of_int i
+let string_of_int64  (i:int64) = i.ToString()
 let string_of_float i = string_of_float i
+let hex_string_of_byte  (i:byte) = spr "%x" i
 let string_of_char  (i:char) = spr "%c" i
 let string_of_bytes (i:byte[]) = string_of_unicode i
 let starts_with (s1:string) (s2:string) = s1.StartsWith(s2)
@@ -276,12 +285,15 @@ let format2 f a b = format f [a;b]
 let format3 f a b c = format f [a;b;c]
 let format4 f a b c d = format f [a;b;c;d]
 let format5 f a b c d e = format f [a;b;c;d;e]
+let format6 f a b c d e g = format f [a;b;c;d;e;g]
+
 
 let fprint1 a b = print_string <| format1 a b
 let fprint2 a b c = print_string <| format2 a b c
 let fprint3 a b c d = print_string <| format3 a b c d
 let fprint4 a b c d e = print_string <| format4 a b c d e
 let fprint5 a b c d e f = print_string <| format5 a b c d e f
+let fprint6 a b c d e f g = print_string <| format6 a b c d e f g
         
 (* let err_out : option<System.IO.StreamWriter> ref = ref None  *)
 (* let open_err_out (s:string) = (err_out := Some (new System.IO.StreamWriter(s))) *)
@@ -495,3 +507,7 @@ let expand_environment_variable s =
 
 let physical_equality (x:'a) (y:'a) = LanguagePrimitives.PhysicalEquality (box x) (box y)
 let check_sharing a b msg = if physical_equality a b then fprint1 "Sharing OK: %s\n" msg else fprint1 "Sharing broken in %s\n" msg
+
+let is_letter_or_digit = Char.IsLetterOrDigit
+let is_punctuation = Char.IsPunctuation
+let is_symbol = Char.IsSymbol

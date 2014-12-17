@@ -126,9 +126,9 @@ let rec reduce_kind
     (combine_typ: (typ -> typ_components -> 'env -> (typ * 'env)))
     (combine_exp: (exp -> exp_components -> 'env -> (exp * 'env))) 
     (env:'env) binders k: (knd * 'env) =
-  let rec visit_kind env binders k =
+  let rec visit_kind env binders k : (knd * 'env) =
     let k = compress_kind k in
-    let components, env =   
+    let components, env : (knd_components * 'env) =   
       match k.n with 
         | Kind_delayed _ -> failwith "Impossible"
         | Kind_lam _ 
@@ -136,14 +136,14 @@ let rec reduce_kind
         | Kind_effect
         | Kind_unknown -> 
           leaf_k, env
-        | Kind_uvar(_, args) -> 
-          let args, env = map_args map_typ map_exp env binders args in 
+        | Kind_uvar(_, args) ->
+          let args, env = map_args map_typ map_exp env binders args in
           ([], [], [], args), env
-        | Kind_abbrev(kabr, k) -> 
+        | Kind_abbrev(kabr, k) ->
           let k, env = map_kind env binders k in
           let args, env = map_args map_typ map_exp env binders (snd kabr) in
           ([], [k], [], args), env
-        | Kind_arrow(bs, k) -> 
+        | Kind_arrow(bs, k) ->
           let bs, binders, env = map_binders map_kind map_typ env binders bs in
           let k, env = map_kind env binders k in
           (bs, [k], [], []), env
@@ -155,7 +155,7 @@ let rec reduce_kind
   in
   map_kind env binders k
       
-and map_args (map_typ:imap<'env, typ>) (map_exp:imap<'env,exp>) (env:'env) binders args =
+and map_args (map_typ:imap<'env, typ>) (map_exp:imap<'env,exp>) (env:'env) binders arguments : (args * 'env) =
     let args', env = List.fold_left (fun (out, env) (arg, imp) ->
         match arg with
         | Inl t ->
@@ -163,10 +163,10 @@ and map_args (map_typ:imap<'env, typ>) (map_exp:imap<'env,exp>) (env:'env) binde
             ((Inl t, imp)::out, env)
         | Inr e -> 
             let e, env = map_exp env binders e in 
-            ((Inr e, imp)::out, env)) ([], env) args in
+            ((Inr e, imp)::out, env)) ([], env) arguments in
     List.rev args', env 
   
-and map_binders (map_kind:imap<'env,knd>) (map_typ:imap<'env,typ>) (env:'env) binders (bs:Syntax.binders) =
+and map_binders (map_kind:imap<'env,knd>) (map_typ:imap<'env,typ>) (env:'env) binders (bs:Syntax.binders) : (Syntax.binders * boundvars * 'env) =
     let bs, binders, env = bs |> List.fold_left (fun (bs, binders, env) b -> match b with
         | Inl a, imp ->
             let k, env = map_kind env binders a.sort in
@@ -201,7 +201,7 @@ and reduce_typ
         | f -> env, f) env in
       mk_Comp ({ct with result_typ=t; effect_args=args; flags=flags}), env 
 
-  and visit_typ env binders t = 
+  and visit_typ env binders t : (typ * 'env) = 
     let components, env = match (compress_typ t).n with 
       | Typ_delayed _ -> failwith "Impossible"
       | Typ_unknown
@@ -280,7 +280,7 @@ and reduce_exp
   and map_kind env binders k = reduce_kind map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders k 
   and map_typ env binders t = reduce_typ map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders t 
   and map_exp env binders e = map_exp' map_kind map_typ visit_exp env binders e
-  and visit_exp env binders e = 
+  and visit_exp env binders e : (exp * 'env) = 
      let e = compress_exp_uvars e in 
      let components, env = match e.n with 
         | Exp_delayed _
@@ -316,7 +316,7 @@ and reduce_exp
             | Pat_wild _
             | Pat_twild _
             | Pat_constant _ -> b
-            | Pat_var x -> push_vbinder b (Some x.v)
+            | Pat_var (x, _) -> push_vbinder b (Some x.v)
             | Pat_tvar t -> push_tbinder b (Some t.v)
             | Pat_cons(_, pats) -> List.fold_left pat_binders b pats
             | Pat_disj(p::_) -> pat_binders b p

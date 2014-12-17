@@ -32,8 +32,8 @@ val new_tvar : env -> knd -> typ
 val new_evar : env -> typ -> exp
 val check_uvars: Range.range -> typ -> unit
 val check_and_ascribe : env -> exp -> typ -> typ -> exp * Rel.guard_t
-val pat_as_exps: env -> pat -> list<Env.binding> * list<Env.binding> * list<exp>
-val decorate_pattern: pat -> list<exp> -> pat
+val pat_as_exps: env -> pat -> list<Env.binding> * list<Env.binding> * list<exp> * pat
+val decorate_pattern: env -> pat -> list<exp> -> pat
 val decorated_pattern_as_exp: pat -> list<either_var> * exp
 val decorated_pattern_as_typ: pat -> list<either_var> * typ
 val decorated_pattern_as_either: pat -> list<either_var> * Util.either<typ,exp>
