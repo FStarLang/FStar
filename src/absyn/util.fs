@@ -274,6 +274,18 @@ let subst_formal (f:binder) (a:arg) = match f, a with
     | (Inl a, _), (Inl t, _) -> Inl(a.v, t)
     | (Inr x, _), (Inr v, _) -> Inr(x.v, v)
     | _ -> failwith "Ill-formed substitution"
+let mk_subst_binder b1 b2 s = 
+    if is_null_binder b1 || is_null_binder b2 then s
+    else match fst b1, fst b2 with 
+        | Inl a, Inl b -> 
+          if bvar_eq a b 
+          then s
+          else Inl(b.v, btvar_to_typ a)::s
+        | Inr x, Inr y -> 
+          if bvar_eq x y 
+          then s
+          else Inr(y.v, bvar_to_exp x)::s 
+        | _ -> failwith "Impossible"
 
 let subst_of_list (formals:binders) (actuals:args) : subst = 
     if (List.length formals = List.length actuals)
@@ -586,6 +598,10 @@ let rec unrefine t =
 
 let is_fun e = match (compress_exp e).n with 
   | Exp_abs _ -> true
+  | _ -> false
+
+let is_function_typ t = match (compress_typ t).n with 
+  | Typ_fun _ -> true
   | _ -> false
 
 let rec pre_typ t = 

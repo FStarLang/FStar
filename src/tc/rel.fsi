@@ -24,17 +24,46 @@ open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Absyn.Syntax
 
 (* relations on types, kinds, etc. *)
-type guard_t = 
+type rel = 
+  | EQ 
+  | SUB
+  | SUBINV  (* sub-typing/sub-kinding, inverted *)
+
+type problem<'a,'b> = {               //Try to prove: lhs rel rhs ~> guard        
+    lhs:'a;
+    relation:rel;   
+    rhs:'a;
+    element:option<'b>;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard) 
+    closing_context:binders;          //and must be closed by this context
+    reason: list<string>;             //why we generated this problem, for error reporting
+    loc: Range.range;                 //and the source location where this arose
+}
+
+type prob = 
+  | KProb of problem<knd,unit>
+  | TProb of problem<typ,exp>
+  | EProb of problem<exp,unit>
+  | CProb of problem<comp,unit>
+
+type probs = list<prob>
+
+type guard_formula = 
   | Trivial
   | NonTrivial of formula
-  
+
+type guard_t = {
+  guard_f: guard_formula;
+  carry:   probs;
+  slack:   list<(bool * typ)>;
+}
+
 val new_kvar: Range.range -> binders -> knd * uvar_k
 val new_tvar: Range.range -> binders -> knd -> typ * typ
 val new_evar: Range.range -> binders -> typ -> exp * exp
 
 val guard_to_string : env -> guard_t -> string
-val trivial : guard_t -> unit
-val conj_guard: guard_t -> guard_t -> guard_t
+//val trivial : guard_t -> unit
+//val conj_guard: guard_formula -> guard_formula -> guard_t
 val try_keq: env -> knd -> knd -> option<guard_t>
 val keq : env -> option<typ> -> knd -> knd -> guard_t
 val subkind: env -> knd -> knd -> guard_t
