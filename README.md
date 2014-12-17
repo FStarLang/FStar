@@ -7,7 +7,7 @@ F*: An ML-like language with a type system for program verification
 This is a new variant of F* that is still in development and we
 hope will lead to a 1.0 release soon. This new variant is
 incompatible and quite different compared to the previously
-released 0.7 versions.
+released 0.7 versions. 
 
 
 ### License
