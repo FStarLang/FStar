@@ -32,24 +32,6 @@ open Microsoft.FStar.Tc.Normalize
 open Microsoft.FStar.Absyn.Syntax
 
 
-
-//////////////////////////////////////////////////////////////////////////
-//Making substitutions for alpha-renaming 
-//////////////////////////////////////////////////////////////////////////
-let mk_subst_binder b1 b2 s = 
-    if is_null_binder b1 || is_null_binder b2 then s
-    else match fst b1, fst b2 with 
-        | Inl a, Inl b -> 
-          if Util.bvar_eq a b 
-          then s
-          else Inl(b.v, btvar_to_typ a)::s
-        | Inr x, Inr y -> 
-          if Util.bvar_eq x y 
-          then s
-          else Inr(y.v, bvar_to_exp x)::s 
-        | _ -> failwith "Impossible"
-
-
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
@@ -189,9 +171,18 @@ let conj_guard_f g1 g2 = match g1, g2 with
   | g, Trivial -> g
   | NonTrivial f1, NonTrivial f2 -> NonTrivial (Util.mk_conj f1 f2)
 
+let imp_guard_f g1 g2 = match g1, g2 with 
+  | Trivial, g
+  | g, Trivial -> Trivial
+  | NonTrivial f1, NonTrivial f2 -> NonTrivial (Util.mk_imp f1 f2)
+
 let conj_guard g1 g2 = {guard_f=conj_guard_f g1.guard_f g2.guard_f;
                         slack=g1.slack@g2.slack;
                         carry=g1.carry@g2.carry}
+
+let imp_guard g1 g2 = {guard_f=imp_guard_f g1.guard_f g2.guard_f;
+                       slack=g1.slack@g2.slack;
+                       carry=g1.carry@g2.carry}
 
 let rec close_forall bs f = 
   List.fold_right (fun b f -> 
@@ -1099,11 +1090,11 @@ and solve_binders (env:Tc.Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:w
             begin match fst hd1, fst hd2 with 
                 | Inl a, Inl b -> 
                   let prob = KProb <| mk_problem orig (Util.subst_kind subst b.sort) (p_rel orig) a.sort None prefix "Formal type parameter" in
-                  aux (prob::subprobs) (prefix@[hd1]) (mk_subst_binder hd1 hd2 subst) tl1 tl2
+                  aux (prob::subprobs) (prefix@[hd1]) (Util.mk_subst_binder hd1 hd2 subst) tl1 tl2
 
                 | Inr x, Inr y ->
                   let prob = TProb <| mk_problem orig (Util.subst_typ subst y.sort) (p_rel orig) x.sort None prefix "Formal value parameter" in
-                  aux (prob::subprobs) (prefix@[hd1]) (mk_subst_binder hd1 hd2 subst) tl1 tl2
+                  aux (prob::subprobs) (prefix@[hd1]) (Util.mk_subst_binder hd1 hd2 subst) tl1 tl2
 
                 | _ -> giveup env "non-corresponding binders" orig
             end
@@ -1567,7 +1558,7 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         begin match t1.n, t2.n with 
             | Typ_refine(x1, phi1), Typ_refine(x2, phi2) -> 
               let base_prob = TProb <| mk_problem orig x1.sort problem.relation x2.sort problem.element [] "refinement base type" in
-              let x1_for_x2 = mk_subst_binder (v_binder x1) (v_binder x2) [] in
+              let x1_for_x2 = Util.mk_subst_binder (v_binder x1) (v_binder x2) [] in
               let phi2 = Util.subst_typ x1_for_x2 phi2 in
               let mk_imp imp phi1 phi2 = guard_problem problem x1 (imp phi1 phi2) in
 

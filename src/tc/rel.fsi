@@ -66,6 +66,7 @@ val apply_guard: guard_t -> exp -> guard_t
 val trivial_guard: guard_t
 val is_trivial: guard_t -> bool
 val conj_guard: guard_t -> guard_t -> guard_t
+val imp_guard: guard_t -> guard_t -> guard_t
 val guard_of_guard_formula: guard_formula -> guard_t
 val guard_to_string : env -> guard_t -> string
 val try_discharge_guard: env -> guard_t -> (bool * list<string>)

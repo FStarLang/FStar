@@ -694,21 +694,24 @@ let weaken_guard g1 g2 = match g1, g2 with
       NonTrivial g
     | _ -> g2
 
-let weaken_precondition env c f = match f with 
+let weaken_precondition env c (f:guard_formula) : comp =
+  match f with 
   | Trivial -> c
-  | NonTrivial f -> 
-    if Util.is_ml_comp c then c
-    else
-      let c = Tc.Normalize.weak_norm_comp env c in
-      let res_t, wp, wlp = destruct_comp c in
-      let md = Tc.Env.get_monad_decl env c.effect_name in 
-      let wp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wp]) wp.tk wp.pos in
-      let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) wlp.tk wlp.pos in
-      mk_comp md res_t wp wlp c.flags
+  | NonTrivial f ->
+    if Util.is_ml_comp c 
+    then c
+    else let c = Tc.Normalize.weak_norm_comp env c in
+         let res_t, wp, wlp = destruct_comp c in
+         let md = Tc.Env.get_monad_decl env c.effect_name in 
+         let wp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wp]) wp.tk wp.pos in
+         let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) wlp.tk wlp.pos in
+         mk_comp md res_t wp wlp c.flags
 
-let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (c:comp) f = match f with 
-  | Trivial -> c
-  | NonTrivial f -> 
+let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (c:comp) (g:guard_t) : comp * guard_t = 
+ match g.guard_f with 
+  | Trivial -> c, g
+  | NonTrivial f ->
+    let g = {g with guard_f=Trivial} in 
     if debug env Options.High then Util.fprint2 "\tStrengthening precondition %s with %s\n" (Normalize.comp_typ_norm_to_string env c) (Normalize.typ_norm_to_string env f);
     let c = 
         if Util.is_pure_comp c && not (is_function (Util.comp_result c))
@@ -726,7 +729,8 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (c:com
     let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) wlp.tk wlp.pos in
     let c2 = mk_comp md res_t wp wlp [] in
    // if debug env then Util.fprint1 "\tStrengthened precondition is %s" (Print.comp_typ_to_string c2);
-    c2
+    c2, g
+
 let bind_cases env (res_t:typ) (cases:list<(formula * comp)>) : comp =
     if List.length cases = 0 then failwith "Empty cases!"; (* TODO: Fix precedence of semi colon *)
     if debug env Options.Extreme then Util.fprint1 "bind_cases, res_t is %s\n" (Print.typ_to_string res_t);
@@ -965,7 +969,9 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp * guard_t =
                   let xexp = Util.bvd_to_exp x t in
                   let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) k xexp.pos  in
                   let cret = mk_comp md t wp wp ct.flags in
-                  let eq_ret = strengthen_precondition (Some <| Errors.subtyping_failed env tc t) (Env.set_range env e.pos) e cret (NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
+                  let eq_ret, _trivial_so_ok_to_discard = 
+                    strengthen_precondition (Some <| Errors.subtyping_failed env tc t) (Env.set_range env e.pos) e cret
+                                            (guard_of_guard_formula <| NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
                   let eq_ret = 
                     if Util.is_pure_comp c 
                     then weaken_precondition env eq_ret (NonTrivial (Util.mk_eq xexp e))
@@ -984,14 +990,14 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp * guard_t =
       end
     | Some ecg -> ecg
 
-let check_total env c : bool * list<string> = 
+let check_total env g c : bool * list<string> = 
   if Util.is_total_comp c 
   then true, []
   else
       let steps = [Normalize.Beta; Normalize.SNComp] in
       let c = Tc.Normalize.norm_comp steps env c in
       match Tc.Rel.sub_comp env c (Util.total_comp (Util.comp_result c) (Env.get_range env)) with 
-        | Some g -> try_discharge_guard env g 
+        | Some g' -> try_discharge_guard env (Rel.conj_guard g g') 
         | _ -> false, []
 
 let refine_data_type env l (formals:binders) (result_t:typ) = 
@@ -1008,7 +1014,7 @@ let refine_data_type env l (formals:binders) (result_t:typ) =
 (* Having already seen_args to head (from right to left), 
    compute the guard, if any, for the next argument, 
    if head is a short-circuiting operator *)
-let short_circuit_guard (head:either<typ, exp>) (seen_args:args) : guard_t = 
+let short_circuit_guard (head:either<typ, exp>) (seen_args:args) : guard_formula = 
     let short_bin_op_e f : args -> guard_formula = function
         | [] -> (* no args seen yet *) Trivial
         | [(Inr fst, _)] -> f fst
@@ -1041,10 +1047,10 @@ let short_circuit_guard (head:either<typ, exp>) (seen_args:args) : guard_t =
         | Inl ({n=Typ_const fv}) -> Some fv.v 
         | _ -> None in
     match head_lid with 
-        | None -> Rel.guard_of_guard_formula Trivial
+        | None -> Trivial
         | Some lid -> 
           begin match Util.find_map table (fun (x, mk) -> if lid_equals x lid then Some (mk seen_args) else None) with 
-            | None -> Rel.guard_of_guard_formula Trivial
-            | Some g -> Rel.guard_of_guard_formula g
+            | None ->   Trivial
+            | Some g -> g
           end
         
