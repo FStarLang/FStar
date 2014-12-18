@@ -1177,7 +1177,16 @@ let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_disj_l phi = match phi with 
     | [] -> ftv Const.false_lid ktype
     | hd::tl -> List.fold_right mk_disj tl hd
-let mk_imp phi1 phi2  = mk_binop timp phi1 phi2
+let mk_imp phi1 phi2  = 
+    match (compress_typ phi1).n with 
+        | Typ_const tc when (lid_equals tc.v Const.false_lid) -> t_true
+        | Typ_const tc when (lid_equals tc.v Const.true_lid) -> phi2
+        | _ -> 
+            begin match (compress_typ phi2).n with
+                | Typ_const tc when (lid_equals tc.v Const.true_lid 
+                                  || lid_equals tc.v Const.false_lid) -> phi2
+                | _ -> mk_binop timp phi1 phi2
+            end
 let mk_iff phi1 phi2  = mk_binop tiff phi1 phi2
 let b2t e = mk_Typ_app(b2t_v, [varg <| e]) ktype e.pos//implicitly coerce a boolean to a type     
 

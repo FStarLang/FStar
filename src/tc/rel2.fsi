@@ -52,9 +52,10 @@ type guard_formula =
   | NonTrivial of formula
 
 type guard_t = {
-  guard_f: guard_formula;
-  carry:   probs;
-  slack:   list<(bool * typ)>;
+  guard_f:    guard_formula;
+  carry:      list<(string * prob)>;
+  slack:      list<(bool * typ)>;
+  locs:       list<Range.range>
 }
 
 val new_kvar: Range.range -> binders -> knd * uvar_k

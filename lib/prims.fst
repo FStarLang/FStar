@@ -46,8 +46,8 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              kind WP (a:Type) = Post a -> Pre
              type return (a:Type) (x:a) (p:Post a) = p x
              type bind_wp  (a:Type) (b:Type) (wp1:WP a) (wlp1:WP a) 
-                                              (wp2: (a -> WP b)) (wlp2: (a -> WP b))
-                                               (p:Post b) = wp1 (fun a -> wp2 a p)
+                                             (wp2: (a -> WP b)) (wlp2: (a -> WP b))
+                                             (p:Post b) = wp1 (fun a -> wp2 a p)
              type bind_wlp (a:Type) (b:Type) (wlp1:WP a) 
                                              (wlp2:(a -> WP b))
                                              (p:Post b) = wlp1 (fun a -> wlp2 a p)
@@ -134,6 +134,10 @@ type result (a:Type) =
   | E   : e:exn -> result a
   | Err : msg:string -> result a
 
+assume type T : (result int -> Type) -> Type
+assume TEST: T (fun ri -> V.v ri == 0)
+
+
 monad_lattice {
   DIV::
              kind Pre = Type
@@ -210,6 +214,10 @@ monad_lattice {
              kind Post ('a:Type) = result 'a -> Type
              kind WP   ('a:Type) = Post 'a -> Pre
              type return ('a:Type) (x:'a) ('p:Post 'a) = 'p (V x)
+             type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) ('wlp2:'a -> WP 'b) ('p:Post 'b) =
+                 (forall (rb:result 'b). 'p rb \/ 'wlp1 (fun ra1 -> if b2t (is_V ra1)
+                                                                    then 'wlp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
+                                                                    else  ra1 =!= rb))
              type bind_wp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a -> WP 'b) ('wlp2:'a -> WP 'b) ('p:Post 'b) =
                  (forall (rb:result 'b). 'p rb \/ 'wlp1 (fun ra1 -> if b2t (is_V ra1)
                                                                     then 'wlp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
@@ -217,10 +225,6 @@ monad_lattice {
                  /\ 'wp1 (fun ra1 -> (ITE (b2t (is_V ra1))
                                           ('wp2 (V.v ra1) (fun rb2 -> True))
                                            True))
-             type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) ('wlp2:'a -> WP 'b) ('p:Post 'b) =
-                 (forall (rb:result 'b). 'p rb \/ 'wlp1 (fun ra1 -> if b2t (is_V ra1)
-                                                                    then 'wlp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
-                                                                    else  ra1 =!= rb))
              type if_then_else ('a:Type) ('p:Type) ('wp_then:WP 'a) ('wp_else:WP 'a) ('post:Post 'a) =
                  (if 'p 
                   then 'wp_then 'post
