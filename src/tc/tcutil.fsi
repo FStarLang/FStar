@@ -56,19 +56,19 @@ val is_pure: env -> comp -> bool
 val return_value: env -> typ -> exp -> comp
 val bind: env -> option<exp> -> comp -> comp_with_binder -> comp
 val bind_cases: env -> typ -> list<(typ * comp)> -> comp
-val weaken_result_typ: env -> exp -> comp -> typ -> exp * comp
-val strengthen_precondition: option<(unit -> string)> -> env -> exp -> comp -> guard_t -> comp
-val weaken_guard: guard_t -> guard_t -> guard_t
-val weaken_precondition: env -> comp -> guard_t -> comp
+
+val weaken_result_typ: env -> exp -> comp -> typ -> exp * comp * guard_t
+val strengthen_precondition: option<(unit -> string)> -> env -> exp -> comp -> guard_formula -> comp
+val weaken_guard: guard_formula -> guard_formula -> guard_formula
+val weaken_precondition: env -> comp -> guard_formula -> comp
 val maybe_assume_result_eq_pure_term: env -> exp -> comp -> comp
 val lift_pure: env -> typ -> formula -> comp (* with t as a result type *)
-val close_guard: binders -> guard_t -> guard_t
 val close_comp: env -> list<binding> -> comp -> comp
 val check_comp: env -> exp -> comp -> comp -> exp * comp * guard_t
-
+val force_trivial: env -> guard_t -> unit
 val discharge_guard: env -> guard_t -> unit
 val label: string -> Range.range -> typ -> typ
-val label_guard: string -> Range.range -> guard_t -> guard_t
+val label_guard: string -> Range.range -> guard_formula -> guard_formula
 val refresh_comp_label: env -> bool -> comp -> comp
 val check_total: env -> comp -> bool * list<string>
 

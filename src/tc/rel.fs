@@ -159,6 +159,14 @@ type solution =
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
 (* ------------------------------------------------*)
+let guard_of_guard_formula g = {guard_f=g; slack=[]; carry=[]}
+
+let is_trivial g = match g with 
+    | {guard_f=Trivial; carry=[]; slack=[]} -> true
+    | _ -> false
+
+let trivial_guard = {guard_f=Trivial; carry=[]; slack=[]}
+
 let abstract_guard x g = match g with 
     | None 
     | Some ({guard_f=Trivial}) -> g
@@ -168,14 +176,22 @@ let abstract_guard x g = match g with
         | _ -> failwith "impossible" in
       Some ({g with guard_f=NonTrivial <| mk_Typ_lam([v_binder x], f) (mk_Kind_arrow([null_v_binder x.sort], ktype) f.pos) f.pos})
 
+let apply_guard g e = match g.guard_f with 
+  | Trivial -> g
+  | NonTrivial f -> {g with guard_f=NonTrivial (syn f.pos ktype <| mk_Typ_app(f, [varg e]))}
+
 let trivial t = match t with 
   | Trivial -> ()
   | NonTrivial _ -> failwith "impossible"
 
-let conj_guard g1 g2 = match g1, g2 with 
+let conj_guard_f g1 g2 = match g1, g2 with 
   | Trivial, g
   | g, Trivial -> g
   | NonTrivial f1, NonTrivial f2 -> NonTrivial (Util.mk_conj f1 f2)
+
+let conj_guard g1 g2 = {guard_f=conj_guard_f g1.guard_f g2.guard_f;
+                        slack=g1.slack@g2.slack;
+                        carry=g1.carry@g2.carry}
 
 let rec close_forall bs f = 
   List.fold_right (fun b f -> 
@@ -186,9 +202,9 @@ let rec close_forall bs f =
        | Inr x -> 
           mk_Typ_app(Util.tforall, [(Inl x.sort, true); targ body]) ktype f.pos) bs f
 
-let close_guard binders g = match g with 
+let close_guard binders g = match g.guard_f with 
     | Trivial -> g
-    | NonTrivial f -> close_forall binders f |> NonTrivial
+    | NonTrivial f -> {g with guard_f=close_forall binders f |> NonTrivial}
 
 let mk_guard g ps slack = {guard_f=g; carry=List.map snd ps; slack=slack}
 
@@ -315,12 +331,13 @@ let empty_worklist = {
     defer_ok=true;
 }
 let singleton prob         = {empty_worklist with attempting=[prob]}
+let wl_of_guard g          = {empty_worklist with defer_ok=false; attempting=g.carry; slack_vars=g.slack}
 let extend_subst' uis wl   = {wl with subst=uis@wl.subst; ctr=wl.ctr + 1}
 let extend_subst ui wl     = {wl with subst=ui::wl.subst; ctr=wl.ctr + 1}
 let defer prob wl          = {wl with deferred=(wl.ctr, prob)::wl.deferred}
 let attempt probs wl       = {wl with attempting=probs@wl.attempting}
 let close_and_guard p g wl = {wl with guard=close_forall p.closing_context g |> NonTrivial}
-let guard (env:env) g wl   = {wl with guard=conj_guard g wl.guard}   
+let guard (env:env) g wl   = {wl with guard=conj_guard_f g wl.guard}   
 let add_slack_mul slack wl = {wl with slack_vars=(true, slack)::wl.slack_vars}
 let add_slack_add slack wl = {wl with slack_vars=(false, slack)::wl.slack_vars}
 
@@ -959,13 +976,22 @@ type slack = {lower:(typ * typ);
               flag:ref<bool>}  //second component of each pair is a flex term
 
 (* removing slack *)
+let fix_slack_uv (uv,k) mul = 
+    let inst = if mul
+                then Util.close_for_kind Util.t_true k  
+                else Util.close_for_kind Util.t_false k in
+    Util.unchecked_unify uv inst
+
+let fix_slack_vars slack = 
+    slack |> List.iter (fun (mul, s) -> match (Util.compress_typ s).n with 
+        | Typ_uvar(uv, k) -> fix_slack_uv (uv,k) mul
+        | _ -> ())
+
 let fix_slack slack = 
     let (_, ul, kl, _) = destruct_flex_t <| snd slack.lower in
     let (_, uh, kh, _) = destruct_flex_t <| snd slack.upper in
-    let inst_ul = Util.close_for_kind (Util.ftv Const.false_lid ktype) kl  in
-    let inst_uh = Util.close_for_kind (Util.ftv Const.true_lid ktype) kh in
-    Util.unchecked_unify ul inst_ul;
-    Util.unchecked_unify uh inst_uh;
+    fix_slack_uv (ul,kl) false;
+    fix_slack_uv (uh,kh) true;
     slack.flag := true;
     Util.mk_conj (fst slack.lower) (fst slack.upper)
 
@@ -2110,3 +2136,20 @@ let sub_comp env c1 c2 =
   then Util.fprint3 "sub_compe succeeded: %s <: %s\n\tguard is %s\n" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2) (guard_to_string env (Util.must gopt));
   gopt
 
+let try_discharge_guard env (g:guard_t) = 
+   let gopt = solve_and_commit env (wl_of_guard g) (fun _ -> None) in 
+   match gopt with 
+    | Some ({guard_f=Trivial; carry=[]; slack=slack}) -> 
+      fix_slack_vars slack;
+      if not (!Options.verify) then true, []
+      else begin match g.guard_f with 
+        | Trivial -> true, []
+        | NonTrivial vc -> 
+            let vc = Normalize.norm_typ [Delta; Beta; Eta] env vc in
+            if Tc.Env.debug env Options.High then Tc.Errors.diag (Tc.Env.get_range env) (Util.format1 "Checking VC=\n%s\n" (Print.formula_to_string vc));
+            env.solver.solve env vc
+      end
+    | Some ({guard_f=NonTrivial _}) -> (false, ["Non-trivial logical guard from a delayed subtyping constraint"])
+    | _ -> (false, [])
+   
+   

@@ -145,7 +145,7 @@ let computed_computation_type_does_not_match_annotation env e c c' =
       (Normalize.typ_norm_to_string env r1) f1 (Normalize.typ_norm_to_string env r2) f2
 
 let unexpected_non_trivial_precondition_on_term env f =
-  Util.format1 "Term has an unexpected non-trivial pre-condition: %s" (Normalize.formula_norm_to_string env f)
+ "Term has an unexpected non-trivial pre-condition" //(Normalize.formula_norm_to_string env f)
 
 let expected_pure_expression e c =
   format2 "Expected a pure expression;\ngot an expression \"%s\" with effect \"%s\"" (Print.exp_to_string e) (fst <| name_and_result c)
