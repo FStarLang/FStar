@@ -76,6 +76,10 @@ Colorizer     : fstar
      For included code snippets:
      -- The snippets must be derived from files that are stored in the same subtree of the git repo
         i.e, all the samples should be in sub-directories of FStarLang/FStar/doc/tutorial/
+        
+     Note: in this mode (i.e., github instead of dropbox), the document will not live update
+           with the changes that anyone else may be making to the document concurrently. You
+           will only see others' changes when you synchronize with github.
 --> 
 
 <!-- Daan's hints: -->
