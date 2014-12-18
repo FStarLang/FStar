@@ -394,7 +394,7 @@ let combine_typ t (tc:typ_components) env =
     | Typ_meta(Meta_pattern _), (_, _, [t], _, args) ->            w <| mk_Typ_meta'(Meta_pattern(t, args))
     | Typ_meta(Meta_labeled(_, l, p)), (_, _, [t], _, _) ->        w <| mk_Typ_meta'(Meta_labeled(t, l, p))
     | Typ_meta(Meta_refresh_label(_, b, r)), (_, _, [t], _, _)  -> w <| mk_Typ_meta'(Meta_refresh_label(t, b, r))
-    | Typ_meta(Meta_slack_formula(_, _, _)), (_, _, [t1;t2], _, _) -> w <| mk_Typ_meta'(Meta_slack_formula(t1, t2, ref false))
+    | Typ_meta(Meta_slack_formula(_, _, _)), (_, _, [t1;t2], _, _) -> w <| mk_Typ_meta'(Meta_slack_formula(t1, t2, Util.mk_ref false))
     | _ -> failwith "impossible" in
   t', env
 

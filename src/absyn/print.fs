@@ -212,8 +212,8 @@ and typ_to_string x =
         | Inl t -> let t = Util.compress_typ t in
             (match t.n with
              | Typ_lam ([b],t) -> k (b,t)
-             | _ -> failwith "q_to_string")
-        | _ -> failwith "q_to_string" in
+             | _ -> Util.format2 "<Expected a type-lambda! got %s>%s" (tag_of_typ t) (typ_to_string t))
+        | Inr e -> Util.format1 "(<Expected a type!>%s)" (exp_to_string e) in
       let qbinder_to_string = q_to_string (fun x -> binder_to_string (fst x)) in
       let qbody_to_string = q_to_string (fun x -> typ_to_string (snd x)) in
       let args' = List.filter (fun a -> not (snd a)) args in (* drop implicit arguments for type operators *)
