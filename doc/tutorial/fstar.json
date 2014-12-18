@@ -1,0 +1,151 @@
+{
+  "displayName": "F*",
+  "name": "fstar",
+  "mimeTypes": ["text/fstar"],
+  "fileExtensions": ["fst","fsi"],
+  
+  "editorOptions": { "tabSize": 2, "insertSpaces": true },
+
+  "lineComment":      "//",   
+  "blockCommentStart": "(*",
+  "blockCommentEnd":   "*)",
+
+  "keywords": [
+    "and", "assert", "assume", "begin", "define", 
+    "effect", "else", "end", "ensures", "exception", "exists", 
+    "false", "forall", "fun", "function", "if", "in", 
+    "let", "logic", "match", "mod", "module", "namespace",
+    "of", "open", "or", "private", "query", "rec", "requires", 
+    "then", "to", "true", "try", "type", "val", "when", 
+    "with", "monad_lattice", "terminating", "kind", 
+    "Lemma", "Theorem", "SMTLemma", "modifies", "opaque"
+  ],
+
+  "typeKeywords": [
+    "forall", "exists",
+    "Lemma", "Theorem", "SMTLemma"
+  ],
+
+  "typeStart": [
+    "type","cotype","rectype","alias","struct","enum"
+  ],
+
+  "moduleKeywords": [
+    "module","import","as","qualified"
+  ],
+
+  "kindConstants": [
+    "E","P","H","V","X"
+  ],
+
+  "escapes" :  "\\\\(?:[nrt\\\\\"'\\?]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{6})",
+  "symbols0": "[\\$%&\\*\\+@!\\/\\\\\\^~=\\.:\\-\\?]",
+  "symbols" : "(?:@symbols0|[\\|<>])+",
+  "idchars" : "[\\w']*", 
+
+  "tokenizer": {
+    "root": [
+      ["((?:[a-z]@idchars\\/)+)([a-z]@idchars)", ["identifier.namespace","identifier"]],
+      
+      ["[a-z]@idchars(?!\\/)", 
+        { "cases":{ "@keywords": { 
+                    "cases": { "alias"  : { "token": "keyword", "next": "@alias_type" },
+                             "struct" : { "token": "keyword", "next": "@struct_type" },
+                             "type|cotype|rectype": { "token": "keyword", "next": "@type" }, 
+                             "@default": "keyword" } 
+                  },
+                  "@default" : "identifier" }
+        }
+      ],
+           
+      ["[A-Z]@idchars", "identifier.constructor" ],
+
+      ["_@idchars", "identifier.wildcard"],
+      ["([a-z]@idchars\\/)+", "identifier.namespace" ],
+      { "include": "@whitespace" },
+      
+      ["[{}()\\[\\]]", "@brackets"],
+      ["[;,`]", "delimiter"],
+      ["[<>](?![<>|]*@symbols0)", "@brackets" ],
+      ["->(?!@symbols0|[>\\|])", "keyword" ],
+      [":(?!@symbols0)", "type.operator", "@type"],
+      ["@\"", { "token": "string.quote", "bracket": "@open", "next": "@litstring" } ],
+      ["@symbols", { "cases": { "\\-": "operator.minus",
+                              "@keywords": "keyword.operator",
+                              "@default": "operator" }}
+      ],
+      ["[0-9]+\\.[0-9]+([eE][\\-+]?[0-9]+)?", "number.float"],
+      ["0[xX][0-9a-fA-F]+", "number.hex"],
+      ["[0-9]+", "number"],
+      ["\"([^\"\\\\]|\\\\.)*$", "string.invalid" ],  
+      ["\"",  { "token": "string.quote", "bracket": "@open", "next": "@string" } ],
+      ["'[^\\\\']'", "string"],
+      ["(')(@escapes)(')", ["string","string.escape","string"]],
+      ["'", "string.invalid"],
+      ["^[ ]*#.*", "namespace"]
+    ],
+
+    "whitespace": [
+      ["[ \\r\\n]+", "white"],
+      ["\\(\\*", "comment", "@comment" ],
+      ["//.*", "comment" ]
+    ],
+
+    "comment": [
+      ["[^\\(\\*]+", "comment" ],
+      ["\\(\\*",  "comment", "@push" ],
+      ["\\*\\)",  "comment", "@pop"  ],
+      ["[\\(\\*]", "comment"]
+    ],  
+
+    "string": [
+      ["[^\\\\\"]+",  "string"],
+      ["@escapes", "string.escape"],
+      ["\\\\.",      "string.escape.invalid"],
+      ["\"",        { "token": "string.quote", "bracket": "@close", "next": "@pop" } ]
+    ],
+
+    "litstring": [
+      ["[^\"]+",    "string"],
+      ["\"\"",       "string.escape"],
+      ["\"",        { "token": "string.quote", "bracket": "@close", "next": "@pop" } ]
+    ],
+    "alias_type": [
+      ["=", "keyword.operator"],                
+      { "include": "@type" }
+    ],
+
+    "struct_type": [
+      [ "\\((?!\\*|,*\\))", "@brackets", "@pop"],    
+      { "include": "@type" }
+    ],
+
+    "type": [
+      [ "\\((?!\\*)|[\\[\\{]", { "token": "@brackets.type" }, "@type_nested"],
+      { "include": "@type_content" }
+    ],
+
+    "type_nested": [
+      ["[)\\]\\}]", { "token": "@brackets.type" }, "@pop" ],
+      ["[(\\[\\{]", { "token": "@brackets.type" }, "@push"],
+      [",", "delimiter.type"],
+      ["([a-z]@idchars)(\\s*)(:)(?!:)",["type.identifier.typeparam","white","type.operator"]],
+      { "include": "@type_content" }
+    ],
+
+    "type_content": [
+      { "include": "@whitespace" },
+      ["[*!](?!@symbols)", "type.kind.identifier"],           
+      ["'@idchars", "identifier.type.typevar" ],             
+      ["[\\w]@idchars", 
+        { "cases": { "@typeKeywords": "type.keyword",
+                   "@keywords": { "token": "@rematch", "next": "@pop" },
+                   "@default": "type.identifier"
+        }}
+      ],
+      
+      ["\\/\\\\|\\\\\\/|\\\\|::|->|=>|==>|==|<==>|>=|<=|[\\.:>=\\+\\-\\d]", "type.keyword.operator"],
+      ["","","@pop"]  
+    ]
+  }
+}
