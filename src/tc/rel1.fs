@@ -238,7 +238,7 @@ let print_uvi env uvi = Util.fprint1 "%s\n" (str_uvi env uvi)
 type reason = string
 type worklist = {
     attempting: list<prob>;
-    deferred: list<(int * prob * reason)>;
+    deferred_probs: list<(int * prob * reason)>;
     subst: list<uvar_inst>;
     top_t: option<typ>;      //the guard is either trivial; or a type of kind top_t => Type, where None => Type = Type and (Some t) => Type = t => Type
     guard: guard_f;
@@ -249,7 +249,7 @@ type solution =
     | Failed of list<(int * prob * reason)>
 let empty_worklist = {
     attempting=[];
-    deferred=[];
+    deferred_probs=[];
     subst=[];
     top_t=None;
     guard=Trivial;
@@ -261,15 +261,15 @@ let reattempt (_, p, _) = p
 let giveup env reason prob probs = 
     if debug env <| Options.Other "Rel"
     then Util.fprint2 "Failed %s:\n%s\n" reason (prob_to_string env prob);
-    Failed <| (probs.ctr, prob, reason)::probs.deferred
-let giveup_noex probs = Failed probs.deferred
+    Failed <| (probs.ctr, prob, reason)::probs.deferred_probs
+let giveup_noex probs = Failed probs.deferred_probs
 let extend_subst ui wl = 
     //Util.print_string "Extending subst ... "; print_uvi ui;
    {wl with subst=ui::wl.subst; ctr=wl.ctr + 1}
 let extend_subst' uis wl = 
    {wl with subst=uis@wl.subst; ctr=wl.ctr + 1}
 
-let defer reason prob wl = {wl with deferred=(wl.ctr, prob, reason)::wl.deferred}
+let defer reason prob wl = {wl with deferred_probs=(wl.ctr, prob, reason)::wl.deferred_probs}
 let attempt probs wl = {wl with attempting=probs@wl.attempting}
 
 let close_predicate f = match (Util.compress_typ f).n with
@@ -615,14 +615,14 @@ let rec solve (env:Tc.Env.env) (probs:worklist) : solution =
             | EProb (top, rel, e1, e2) -> solve_e top env rel e1 e2 probs
             | CProb (top, rel, c1, c2) -> solve_c top env rel c1 c2 probs)
        | [] ->
-         match probs.deferred with 
+         match probs.deferred_probs with 
             | [] -> Success (probs.subst, probs.guard) //Yay ... done!
             | _ -> 
               let ctr = List.length probs.subst in 
-              let attempt, rest = probs.deferred |> List.partition (fun (c, t, _) -> c < ctr) in
+              let attempt, rest = probs.deferred_probs |> List.partition (fun (c, t, _) -> c < ctr) in
               match attempt with 
-                 | [] -> Failed probs.deferred //no progress made to help with solving deferred problems; fail
-                 | _ -> solve env ({probs with attempting=attempt |> List.map reattempt; deferred=rest})
+                 | [] -> Failed probs.deferred_probs //no progress made to help with solving deferred problems; fail
+                 | _ -> solve env ({probs with attempting=attempt |> List.map reattempt; deferred_probs=rest})
 
 and imitate (env:Tc.Env.env) (probs:worklist) (p:im_or_proj_t) : solution =
     let ((u,k), ps, xs, (h, _, qs)) = p in
@@ -864,7 +864,7 @@ and solve_t_flex_flex (top:bool) (env:Tc.Env.env) (orig:prob)
         let u, _ = new_tvar (Env.get_range env) [] ktype in 
         let sol = if Unionfind.equivalent u1 u2
                   then let rec aux sub args1 args2 = match args1, args2 with  
-                        | [], [] -> solve env ({probs with attempting=sub; deferred=[]; top_t=None; guard=Trivial; ctr=0})
+                        | [], [] -> solve env ({probs with attempting=sub; deferred_probs=[]; top_t=None; guard=Trivial; ctr=0})
                         | (Inl t1, _)::rest1, (Inl t2, _)::rest2 -> aux (TProb(false, EQ, t1, t2)::sub) rest1 rest2 
                         | (Inr e1, _)::rest1, (Inr e2, _)::rest2 -> aux (EProb(false, EQ, e1, e2)::sub) rest1 rest2 
                         | _ -> solve env (defer "flex/flex unequal arity" orig probs) in //defer  ...can this ever be solved?

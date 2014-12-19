@@ -274,24 +274,30 @@ let subst_formal (f:binder) (a:arg) = match f, a with
     | (Inl a, _), (Inl t, _) -> Inl(a.v, t)
     | (Inr x, _), (Inr v, _) -> Inr(x.v, v)
     | _ -> failwith "Ill-formed substitution"
-let mk_subst_binder b1 b2 s = 
-    if is_null_binder b1 || is_null_binder b2 then s
-    else match fst b1, fst b2 with 
-        | Inl a, Inl b -> 
-          if bvar_eq a b 
-          then s
-          else Inl(b.v, btvar_to_typ a)::s
-        | Inr x, Inr y -> 
-          if bvar_eq x y 
-          then s
-          else Inr(y.v, bvar_to_exp x)::s 
-        | _ -> failwith "Impossible"
-
+let mk_subst_one_binder b1 b2 = 
+     if is_null_binder b1 || is_null_binder b2 
+     then []
+     else match fst b1, fst b2 with 
+       | Inl a, Inl b -> 
+            if bvar_eq a b 
+            then []
+            else [Inl(b.v, btvar_to_typ a)]
+       | Inr x, Inr y -> 
+            if bvar_eq x y 
+            then []
+            else [Inr(y.v, bvar_to_exp x)]
+       | _ -> []
+let mk_subst_binder bs1 bs2 = 
+    let rec aux out bs1 bs2 = match bs1, bs2 with 
+        | [], [] -> Some out
+        | b1::bs1, b2::bs2 -> 
+          aux (mk_subst_one_binder b1 b2 @ out) bs1 bs2
+       | _ -> None in
+    aux [] bs1 bs2
 let subst_of_list (formals:binders) (actuals:args) : subst = 
     if (List.length formals = List.length actuals)
     then List.map2 subst_formal formals actuals 
     else failwith "Ill-formed substitution"
-
 type red_ctrl = {
     stop_if_empty_subst:bool;
     descend:bool
@@ -1243,12 +1249,19 @@ let eqT_k k = mk_Kind_arrow([null_t_binder <| k; null_t_binder k], ktype) dummyR
 let tforall_typ k = ftv Const.allTyp_lid (allT_k k)
     
 let mk_forallT a b = 
-  mk_Typ_app(tforall_typ a.sort, [targ <| mk_Typ_lam([t_binder a], b) (mk_Kind_arrow([null_t_binder a.sort], ktype) dummyRange) dummyRange]) ktype dummyRange
+  mk_Typ_app(tforall_typ a.sort, [targ <| mk_Typ_lam([t_binder a], b) (mk_Kind_arrow([null_t_binder a.sort], ktype) b.pos) b.pos]) ktype b.pos
 
 let mk_forall (x:bvvar) (body:typ) : typ =
   let r = dummyRange in
   mk_Typ_app(tforall, [(targ <| mk_Typ_lam([v_binder x], body) (mk_Kind_arrow([null_v_binder x.sort], ktype) r) r)]) ktype r
   
+let rec close_forall bs f = 
+  List.fold_right (fun b f -> 
+    let body = mk_Typ_lam([b], f) (mk_Kind_arrow([b], ktype) f.pos) f.pos in
+    match fst b with 
+       | Inl a -> mk_Typ_app(tforall_typ a.sort, [targ body]) ktype f.pos
+       | Inr x -> mk_Typ_app(tforall, [(Inl x.sort, true); targ body]) ktype f.pos) bs f
+
 let rec is_wild_pat p =
     match p.v with
     | Pat_wild _ -> true

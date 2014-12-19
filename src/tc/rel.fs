@@ -32,11 +32,7 @@ open Microsoft.FStar.Tc.Rel2
 type guard_formula = Rel2.guard_formula
 type guard_t = Rel2.guard_t
 
-let rel1_g g = 
-    {guard_f=g;
-     carry=[];
-     slack=[];
-     locs=[]}
+let rel1_g g = Rel2.guard_of_guard_formula g
 
 let rel1_g_opt = function
     | None -> None

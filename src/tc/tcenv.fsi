@@ -110,6 +110,7 @@ val expected_typ : env -> option<typ>
 val clear_expected_typ : env -> env*option<typ>
 
 val fold_env : env -> ('a -> binding -> 'a) -> 'a -> 'a 
+val binding_of_binder: binder -> binding
 val idents : env -> freevars
 val binders: env -> binders
 val t_binders : env -> Microsoft.FStar.Absyn.Syntax.binders
