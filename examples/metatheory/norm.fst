@@ -1,8 +1,17 @@
++33 140 14 00 11
 
 module Norm
 
 open Prims
 open Stlc
+
+(* Ideas for trying to fix the logical reasoning mess:
+0. Improve our type-checker to the point it can do the right inference?
+   It's unclear to me whether that's possible or even desirable.
+1. Stop using Lemma, use refinements instead since those
+   might make inference for _intro and _elim things easier.
+2. Give a constructive/inductive interpretation to logical
+   connectives like /\, \/, Exists ... *)
 
 (* Reflexive-transitive closure of step *)
 
@@ -16,16 +25,15 @@ type multi (a:Type) (r:(a -> a -> Type)) : a -> a -> Type =
 
 (* CH: without "logic" qualifier the definition above is useless for Z3,
    doing encoding by hand for now *)
-assume type emulti (a:Type) (r:Relation a) : a -> a -> Type
-assume val emulti_refl : (forall (a:Type) (r:Relation a) (x:a). emulti a r x x)
+assume val emulti_refl : (forall (a:Type) (r:Relation a) (x:a). multi a r x x)
 assume val emulti_step : (forall (a:Type) (r:Relation a) (x:a) (y:a) (z:a).
-  r x y ==> emulti a r y z ==> emulti a r x z)
+  r x y ==> multi a r y z ==> multi a r x z)
 assume val emulti_inv : (forall (a:Type) (r:Relation a) (x:a) (z:a).
-  emulti a r x z ==> (x = z \/ (exists (y:a). r x y /\ emulti a r y z)))
+  multi a r x z ==> (x = z \/ (exists (y:a). r x y /\ multi a r y z)))
 assume val emulti_ind : (forall (a:Type) (r:Relation a) (p:Relation a).
   (forall (x:a). p x x) ==>
-  (forall (x:a) (y:a) (z:a). r x y ==> emulti a r y z ==> p y z ==> p x z) ==>
-  (forall (x:a) (y:a). emulti a r x y ==> p x y))
+  (forall (x:a) (y:a) (z:a). r x y ==> multi a r y z ==> p y z ==> p x z) ==>
+  (forall (x:a) (y:a). multi a r x y ==> p x y))
 
 (* CH: Another encoding, produces lemmas instead of formulas, this
    allows these things to be used both manually and automatically
