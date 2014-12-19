@@ -317,6 +317,8 @@ let no_uvs = {
     uvars_t=new_uvt_set(); 
     uvars_e=new_uvt_set(); 
 }
+let memo_no_uvs = Util.mk_ref (Some no_uvs)
+let memo_no_fvs = Util.mk_ref (Some no_fvs)
 let freevars_of_list l = 
     l |> List.fold_left (fun out -> function
         | Inl btv -> {out with ftvs=Util.set_add btv out.ftvs}
@@ -366,7 +368,7 @@ let mk_Kind_delayed ((k:knd),(s:subst_t),(m:memo<knd>)) p = {
 let mk_Kind_unknown  = {n=Kind_unknown; pos=dummyRange; tk=(); uvs=mk_uvs(); fvs=mk_fvs()}
 
 let mk_Typ_btvar    (x:btvar) (k:knd) (p:range) = {n=Typ_btvar x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs();}
-let mk_Typ_const    (x:ftvar) (k:knd) (p:range) = {n=Typ_const x; tk=k; pos=p; uvs=mk_uvs(); fvs=mk_fvs()}
+let mk_Typ_const    (x:ftvar) (k:knd) (p:range) = {n=Typ_const x; tk=k; pos=p; uvs=memo_no_uvs; fvs=memo_no_fvs}
 let rec check_fun (bs:binders) (c:comp) p = 
     match bs with 
         | [] -> failwith "Empty binders"

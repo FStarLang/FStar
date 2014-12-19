@@ -367,6 +367,13 @@ and sn' tcenv (cfg:config<typ>) : config<typ> =
                    let config = {config with code=t; environment=LabelSuffix (b, sfx)::config.environment} in
                    sn tcenv config
 
+                | Typ_meta(Meta_slack_formula(t1, t2, flag)) -> 
+                  if !flag
+                  then sn tcenv ({config with code=Util.mk_conj t1 t2})
+                  else let c1 = sn tcenv (t_config t1 config.environment config.steps) in
+                       let c2 = sn tcenv (t_config t2 config.environment config.steps) in
+                       rebuild ({config with code=mk_Typ_meta (Meta_slack_formula(c1.code, c2.code, flag))})
+
                 | Typ_meta(Meta_named _)    
                 | Typ_unknown
                 | _ -> failwith (Util.format3 "(%s) Unexpected type (%s): %s" (Env.get_range tcenv |> Range.string_of_range) (Print.tag_of_typ config.code) (Print.typ_to_string config.code))

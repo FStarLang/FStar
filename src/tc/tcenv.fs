@@ -435,6 +435,10 @@ let clear_expected_typ env = {env with expected_typ=None}, expected_typ env
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 
+let binding_of_binder (b:binder) = match fst b with
+    | Inl a -> Binding_typ(a.v, a.sort)
+    | Inr x -> Binding_var(x.v, x.sort)
+
 let binders env : binders = 
   List.fold_left (fun out b -> match b with 
     | Binding_var(x, t) -> (v_binder <| bvd_to_bvar_s x t)::out

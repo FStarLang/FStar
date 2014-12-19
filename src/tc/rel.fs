@@ -32,44 +32,39 @@ open Microsoft.FStar.Tc.Rel2
 type guard_formula = Rel2.guard_formula
 type guard_t = Rel2.guard_t
 
-let rel1_g g = 
-    {guard_f=g;
-     carry=[];
-     slack=[]}
+let rel1_g g = Rel2.guard_of_guard_formula g
 
 let rel1_g_opt = function
     | None -> None
     | Some g -> Some (rel1_g g)
 
-let rel2 = false
-
 let new_kvar r b = 
-    if rel2
+    if !Options.rel2
     then Rel2.new_kvar r b
     else Rel1.new_kvar r b
 
 let new_tvar r b k = 
-    if rel2
+    if !Options.rel2
     then Rel2.new_tvar r b k
     else Rel1.new_tvar r b k
    
 let new_evar r b t = 
-    if rel2 
+    if !Options.rel2 
     then Rel2.new_evar r b t
     else Rel1.new_evar r b t
 
 let close_guard b g =
-    if rel2 
+    if !Options.rel2 
     then Rel2.close_guard b g
     else Rel1.close_guard b (g.guard_f) |> rel1_g
 
 let apply_guard g e =
-    if rel2 
+    if !Options.rel2 
     then Rel2.apply_guard g e
     else Rel1.apply_guard g.guard_f e |> rel1_g
 
 let trivial_guard =
-    if rel2
+    if !Options.rel2
     then Rel2.trivial_guard
     else Trivial |> rel1_g
 
@@ -82,63 +77,63 @@ let guard_of_guard_formula g = Rel2.guard_of_guard_formula g
 let guard_f g = g.guard_f
 
 let guard_to_string env g = 
-    if rel2
+    if !Options.rel2
     then Rel2.guard_to_string env g
     else Rel1.guard_to_string env g.guard_f
 
 let try_discharge_guard e g = 
-    if rel2
+    if !Options.rel2
     then Rel2.try_discharge_guard e g
     else Rel1.try_discharge_guard e g.guard_f
 
 let try_keq env k k' =
-    if rel2
+    if !Options.rel2
     then Rel2.try_keq env k k'
     else Rel1.try_keq env k k' |> rel1_g_opt
 
 let keq env topt k1 k2 = 
-    if rel2
+    if !Options.rel2
     then Rel2.keq env topt k1 k2
     else Rel1.keq env topt k1 k2 |> rel1_g
 
 let subkind env k1 k2 = 
-    if rel2
+    if !Options.rel2
     then Rel2.subkind env k1 k2
     else Rel1.subkind env k1 k2 |> rel1_g
 
 let try_teq env t1 t2 = 
-    if rel2
+    if !Options.rel2
     then Rel2.try_teq env t1 t2
     else Rel1.try_teq env t1 t2 |> rel1_g_opt
 
 let teq env t1 t2 = 
-    if rel2
+    if !Options.rel2
     then Rel2.teq env t1 t2
     else Rel1.teq env t1 t2 |> rel1_g
 
 let try_subtype env t1 t2 = 
-    if rel2
+    if !Options.rel2
     then Rel2.try_subtype env t1 t2
     else Rel1.try_subtype env t1 t2 |> rel1_g_opt
     
 let subtype env t1 t2 = 
-    if rel2
+    if !Options.rel2
     then Rel2.subtype env t1 t2
     else Rel1.subtype env t1 t2 |> rel1_g
 
 let subtype_fail env t1 t2 = 
-    if rel2
+    if !Options.rel2
     then Rel2.subtype_fail env t1 t2
     else Rel1.subtype_fail env t1 t2 
 
 let trivial_subtype env eopt t1 t2 =
-    if rel2
+    if !Options.rel2
     then Rel2.trivial_subtype env eopt t1 t2
     else Rel1.trivial_subtype env eopt t1 t2 
 
 
 let sub_comp e c1 c2 = 
-    if rel2 
+    if !Options.rel2 
     then Rel2.sub_comp e c1 c2
     else Rel1.sub_comp e c1 c2 |> rel1_g_opt
 

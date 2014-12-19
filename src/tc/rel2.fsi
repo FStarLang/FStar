@@ -34,7 +34,8 @@ type problem<'a,'b> = {               //Try to prove: lhs rel rhs ~> guard
     relation:rel;   
     rhs:'a;
     element:option<'b>;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard) 
-    closing_context:binders;          //and must be closed by this context
+    logical_guard:(typ * typ);        //the condition under which this problem is solveable
+    scope:binders;                    //the set of names permissible in the guard of this formula
     reason: list<string>;             //why we generated this problem, for error reporting
     loc: Range.range;                 //and the source location where this arose
 }
@@ -51,10 +52,14 @@ type guard_formula =
   | Trivial
   | NonTrivial of formula
 
-type guard_t = {
-  guard_f: guard_formula;
-  carry:   probs;
+type deferred = {
+  carry:   list<(string * prob)>;
   slack:   list<(bool * typ)>;
+}
+
+type guard_t = {
+  guard_f:  guard_formula;
+  deferred: deferred;
 }
 
 val new_kvar: Range.range -> binders -> knd * uvar_k
