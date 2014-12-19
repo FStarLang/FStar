@@ -198,7 +198,15 @@ and [<KnownType("KnownTypes")>] s_comp' =
 
 and s_comp = s_syntax<s_comp', unit>
 
-and s_cflags = string
+and [<KnownType("KnownTypes")>] s_cflags =
+    | S_TOTAL
+    | S_MLEFFECT
+    | S_RETURN
+    | S_SOMETRIVIAL
+    | S_LEMMA
+    | S_DECREASES of s_exp
+    static member KnownTypes() = 
+        typeof<s_cflags>.GetNestedTypes(BindingFlags.Public ||| BindingFlags.NonPublic) |> Array.filter FSharpType.IsUnion
 
 (* this is an enum *)
 and [<KnownType("KnownTypes")>] s_exp' = 
@@ -327,12 +335,12 @@ and serialize_comp (ast : comp) : s_comp = serialize_syntax serialize_comp' ast
 
 and serialize_cflags (ast : cflags) : s_cflags = 
     match ast with
-    | TOTAL -> "C1"
-    | MLEFFECT -> "C2"
-    | RETURN -> "C3"
-    | SOMETRIVIAL -> "C4"
-    | LEMMA -> "C5"
-    | DECREASES _ -> failwith "NYI: Decreases"
+    | TOTAL -> S_TOTAL
+    | MLEFFECT -> S_MLEFFECT
+    | RETURN -> S_RETURN
+    | SOMETRIVIAL -> S_SOMETRIVIAL
+    | LEMMA -> S_LEMMA
+    | DECREASES e -> S_DECREASES(serialize_exp e)
 
 and serialize_exp' (ast : exp') : s_exp' = 
     match ast with
@@ -466,12 +474,12 @@ and deserialize_comp (ast : s_comp) : comp = deserialize_syntax deserialize_comp
 
 and deserialize_cflags (ast : s_cflags) : cflags = 
     match ast with
-    | "C1" -> TOTAL
-    | "C2" -> MLEFFECT
-    | "C3" -> RETURN
-    | "C4" -> SOMETRIVIAL
-    | "C5" -> LEMMA
-    | _ -> raise (Err "unknown cflag")
+    | S_TOTAL -> TOTAL
+    | S_MLEFFECT -> MLEFFECT
+    | S_RETURN -> RETURN
+    | S_SOMETRIVIAL -> SOMETRIVIAL
+    | S_LEMMA -> LEMMA
+    | S_DECREASES e -> DECREASES(deserialize_exp e)
 
 and deserialize_exp' (ast : s_exp') : exp' = 
     match ast with
@@ -676,7 +684,8 @@ type s_monad_decl =
       null_wp : s_typ
       trivial : s_typ
       abbrevs : array<s_sigelt>
-      kind_abbrevs: array<s_lident * array<s_either<s_btvdef, s_bvvdef>> * s_knd> }
+      kind_abbrevs: array<s_lident * array<s_either<s_btvdef, s_bvvdef>> * s_knd>
+      default_monad: option<s_lident> }
 
 and [<KnownType("KnownTypes")>] s_sigelt = 
     | S_Sig_tycon of s_lident * s_binders * s_knd * array<s_lident> * array<s_lident> * array<s_qualifier>
@@ -711,7 +720,16 @@ let rec serialize_monad_decl (ast : monad_decl) : s_monad_decl =
       null_wp = serialize_typ ast.null_wp
       trivial = serialize_typ ast.trivial
       abbrevs = serialize_list serialize_sigelt ast.abbrevs
-      kind_abbrevs = serialize_list (fun (lid, l, k) -> serialize_lident lid, serialize_list (fun vdef -> serialize_either serialize_btvdef serialize_bvvdef vdef) l, serialize_knd k) ast.kind_abbrevs }
+      kind_abbrevs = 
+          serialize_list 
+              (fun (lid, l, k) -> 
+              serialize_lident lid, 
+              serialize_list (fun vdef -> serialize_either serialize_btvdef serialize_bvvdef vdef) l, serialize_knd k) 
+              ast.kind_abbrevs
+      default_monad = 
+          match ast.default_monad with
+          | None -> None
+          | Some(lid) -> Some(serialize_lident lid) }
 
 and serialize_sigelt (ast : sigelt) : s_sigelt = 
     match ast with
@@ -759,8 +777,17 @@ let rec deserialize_monad_decl (ast : s_monad_decl) : monad_decl =
       null_wp = deserialize_typ ast.null_wp
       trivial = deserialize_typ ast.trivial
       abbrevs = deserialize_list deserialize_sigelt ast.abbrevs
-      kind_abbrevs = deserialize_list (fun (lid, l, k) -> deserialize_lident lid, deserialize_list (fun vdef -> deserialize_either deserialize_btvdef deserialize_bvvdef vdef) l, deserialize_knd k) ast.kind_abbrevs;
-      default_monad = None } //FIXME!
+      kind_abbrevs = 
+          deserialize_list 
+              (fun (lid, l, k) -> 
+              deserialize_lident lid, 
+              deserialize_list (fun vdef -> deserialize_either deserialize_btvdef deserialize_bvvdef vdef) l, 
+              deserialize_knd k) ast.kind_abbrevs
+      default_monad = 
+          match ast.default_monad with
+          | None -> None
+          | Some(lid) -> Some(deserialize_lident lid) }
+
 
 and deserialize_sigelt (ast : s_sigelt) : sigelt = 
     match ast with

@@ -7,6 +7,8 @@ RUNTIME = mono
 MSBUILD = xbuild
 endif
 
+OTHERFLAGS=--trace_error
+
 FSTAR_HOME = ../..
 LIB_FILES= list.fst string.fst partialmap.fst 
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst)
@@ -14,7 +16,7 @@ FULL_LIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst listproperties.fs
 PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)
 FSTAR = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(OTHERFLAGS)
 
-STDCACHE=Prims.cache List.cache String.cache ST.cache PartialMap.cache Array.cache
+STDCACHE=Prims.cache List.cache String.cache ST.cache Set.cache Map.cache Heap.cache Array.cache
 FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(OTHERFLAGS)
 
 %.ver: %.fst
@@ -33,11 +35,11 @@ FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(O
 	$(FSTAR) $(PERMLIB) $^
 
 %.c.ver: %.fst
-	$(FSTARC) $(STDLIB) $^
+	$(FSTARC) $^
 
 .cache: $(STDLIB)
-	mkdir $(FSTAR_HOME)/cache
-	$(FSTAR) --serialize_mods $(STDLIB)
+	mkdir -p $(FSTAR_HOME)/cache
+	$(FSTAR) --serialize_mods $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst)
 
 .ccache:
 	rm -f $(addprefix $(FSTAR_HOME)/cache/, $(STDCACHE))
