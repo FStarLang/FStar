@@ -1,3 +1,4 @@
+// BEGIN: ModuleACLs
 module ACLs
   type filename = string
 
@@ -11,6 +12,7 @@ module ACLs
   let canRead f = 
     canWrite f               (* writeable files are also readable *)
     || f="C:/public/README"  (* and so is this file *)
+// END: ModuleACLs
 
 module System.IO
   open ACLs

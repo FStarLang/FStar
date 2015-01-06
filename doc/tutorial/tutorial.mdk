@@ -170,20 +170,9 @@ expression.
 Here's a module called `ACLs` (for Access-Control Lists), that defines
 our policy:
 
-    module ACLs
-    type filename = string
-    
-    (* canWrite is a function specifying whether or not a file f can be written *)
-    let canWrite f = 
-      match f with 
-        | "C:/temp/tempfile" -> true
-        | _ -> false
-    
-    (* canRead is also a function ... *)
-    let canRead f = 
-      canWrite f               (* writeable files are also readable *)
-      || f="C:/public/README"  (* and so is this file *)
-
+```
+[INCLUDE=code/solutions/ex1a-safe-read-write.fst:ModuleACLs]
+```
 
 Our first module begins by defining a type synonym: we'll use
 `string`s to model `filename`s.
@@ -1255,6 +1244,7 @@ will generate names automatically (although these names are derived from
 the position of the arguments and their form is unspecified; so, it's
 good practice to name the arguments yourself).
 
+<!--
 ~ Remark
 F\* also generates projectors corresponding to the type arguments of each
 constructor. We show them below for completeness, although you may have
@@ -1269,6 +1259,7 @@ The projectors for more complex inductive types have more complex
 signatures---we will see this in the section on indexed types
 ([#sec-indexed-types]).
 ~
+-->
 
 ~Exercise
 Write functions (call them `hd` and `tl`) whose types match
