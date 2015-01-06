@@ -75,12 +75,15 @@ Colorizer     : fstar
      
      For included code snippets:
      -- The snippets must be derived from files that are stored in the same subtree of the git repo
-        i.e, all the samples should be in sub-directories of FStarLang/FStar/doc/tutorial/
+        i.e, all the samples should be in sub-directories of FStarLang/FStar/doc/tutorial/code
         
      Note: in this mode (i.e., github instead of dropbox), the document will not live update
            with the changes that anyone else may be making to the document concurrently. You
            will only see others' changes when you synchronize with github.
---> 
+
+     If you use Emacs to edit this you can use the markdown-mode
+     (http://jblevins.org/projects/markdown-mode/) for syntax highlighting.
+-->
 
 <!-- Daan's hints: -->
 <!-- * Refer to Section [#sec-getstarted]. -->
@@ -171,7 +174,7 @@ Here's a module called `ACLs` (for Access-Control Lists), that defines
 our policy:
 
 ```
-[INCLUDE=code/solutions/ex1a-safe-read-write.fst:ModuleACLs]
+[INCLUDE=code/solutions/ex1a-safe-read-write.fst:ACLs]
 ```
 
 Our first module begins by defining a type synonym: we'll use
@@ -196,10 +199,9 @@ input/output are implemented by the operating system and made available
 to F\* programs via the underlying framework, e.g., .NET or OCaml. We can
 describe the interface provided by the framework like as follows:
 
-    module System.IO
-      open ACLs
-      assume val read:   f:filename{canRead f}  -> string
-      assume val write:  f:filename{canWrite f} -> string -> unit
+```
+[INCLUDE=code/solutions/ex1a-safe-read-write.fst:SystemIO]
+```
 
 Here, we've defined an *interface* called `System.IO`, which uses the
 `ACLs` module (indicated by the `open` keyword). More importantly,
@@ -242,25 +244,28 @@ some common file names, and then a function called `doit`, which tries
 read and write a few files. Does this program comply with our security
 policy?
 
-    module UntrustedClientCode
-      open System.IO
-      let passwd  = "C:/etc/password"
-      let readme  = "C:/public/README"
-      let tmp     = "C:/temp/tempfile"
-      
-      let doit () =
-        let v_1 = read tmp in
-        let v_2 = read readme in
-        let v_3 = read passwd in
-        write tmp "hello!";
-        write passwd "junk";
-        ()
+```
+[INCLUDE=code/solutions/ex1a-safe-read-write.fst:UntrustedClientCode]
+
+[INCLUDE=code/solutions/doit.fst:DoIt]
+```
 
 No, of course not. It tries to write `"junk"` to the `passwd` file,
 which, according to our `canWrite` policy is not writable. If you try
 type-checking this code with F\*, it complains issuing a
 compile-time error: the `passwd` file does not have the type
-`:f:filename{canRead f}`. You'll understand more about what that
+`:f:filename{canRead f}`.
+
+<!-- mono ../../bin/fstar.exe --fstar_home ../.. code/solutions/ex1a-safe-read-write.fst code/solutions/doit.fst -->
+```html
+Error code/solutions/doit.fst(8,2-16,0): The following problems were found:
+	Subtyping check failed; expected type f:filename{(canWrite f)}; got type string (code/solutions/doit.fst(13,10-13,16))
+```
+<!-- CH: It would be nice if at some point such error messages were
+     "real", coming directly from the type-checker without being
+     touched by human hands. -->
+
+You'll understand more about what that
 message means as you work through this tutorial, but, for now, take it
 to mean that F\* expected `canRead passwd` to be `true`, which isn't
 the case.
@@ -277,19 +282,13 @@ should return a default string.
 Write a function analogous to `safeRead` called `safeWrite`. Use it
 so that F\* no longer reports a type-checking error for `doitSafe`.
 Is the `doitSafe` function secure? Why?
-
-    let doitSafe () =
-      let v_1 = safeRead tmp in
-      let v_2 = safeRead readme in
-      let v_3 = safeRead passwd in (* your safeRead should do something safe here *)
-      safeWrite tmp "hello!";
-      safeWrite passwd "junk"; (* your safeWrite should do something safe here *)
-      ()
-
-
+```
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:DoItSafe]
+```
 ~~ Answer
-    let safeRead f = if ACLs.canRead f then System.IO.read f else "unreadable"
-    let safeWrite f s = if ACLs.canWrite f then System.IO.write f s else ()
+```
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:SafeReadWrite]
+```
 `safeRead` and `safeWrite` defer to runtime the same checks that
 were performed at compile time by F\*, and perform the IO actions
 only if those checks succeed.

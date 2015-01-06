@@ -1,4 +1,4 @@
-// BEGIN: ModuleACLs
+// BEGIN: ACLs
 module ACLs
   type filename = string
 
@@ -12,21 +12,27 @@ module ACLs
   let canRead f = 
     canWrite f               (* writeable files are also readable *)
     || f="C:/public/README"  (* and so is this file *)
-// END: ModuleACLs
+// END: ACLs
 
+// BEGIN: SystemIO
 module System.IO
   open ACLs
   assume val read:   f:filename{canRead f}  -> string
   assume val write:  f:filename{canWrite f} -> string -> unit
+// END: SystemIO
 
+// BEGIN: UntrustedClientCode
 module UntrustedClientCode
   open System.IO
   let passwd  = "C:/etc/password"
   let readme  = "C:/public/README"
   let tmp     = "C:/temp/tempfile"
+// END: UntrustedClientCode
 
+// BEGIN: SafeReadWrite
   let safeRead f = if ACLs.canRead f then System.IO.read f else "unreadable"
   let safeWrite f s = if ACLs.canWrite f then System.IO.write f s else ()
+// END: SafeReadWrite
 
   let doitSafe () =
     let v1 = safeRead tmp in

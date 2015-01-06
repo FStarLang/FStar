@@ -26,6 +26,7 @@ module UntrustedClientCode
   let safeRead f = read f       (* Exercise: make safeRead safe! *)
   let safeWrite f s = write f s (* Exercise: make safeWrite safe! *)
 
+// BEGIN: DoItSafe
   let doitSafe () =
     let v1 = safeRead tmp in
     let v2 = safeRead readme in
@@ -33,3 +34,4 @@ module UntrustedClientCode
     safeWrite tmp "hello!";
     safeWrite passwd "junk"; (* your safeWrite should do something safe here *)
     ()
+// END: DoItSafe

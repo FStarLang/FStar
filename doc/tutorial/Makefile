@@ -1,10 +1,10 @@
 
 # This uses Madoko (https://madoko.codeplex.com/)
 
-tutorial.html: tutorial.mdk fstar.json code/solutions/*.fst
+tutorial.html: tutorial.mdk fstar.json code/exercises/*.fst code/solutions/*.fst
 	madoko -v tutorial.mdk
 
-tutorial.pdf: tutorial.mdk fstar.json code/solutions/*.fst
+tutorial.pdf: tutorial.mdk fstar.json code/exercises/*.fst code/solutions/*.fst
 	madoko -v --pdf tutorial.mdk
 
 clean:
