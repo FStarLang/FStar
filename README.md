@@ -9,12 +9,22 @@ hope will lead to a 1.0 release soon. This new variant is
 incompatible and quite different compared to the previously
 released 0.7 versions. 
 
+### Installation
+
+See [INSTALL.md]
+
+[INSTALL.md]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
+
+### Tutorial
+
+The [tutorial] provides a first taste of verified programming in F*.
+
+[tutorial]: http://prosecco.gforge.inria.fr/tutorial.html
 
 ### License
 
 This new variant of F* is released under the Apache 2.0 license;
 see LICENSE for more details.
-
 
 ### Code structure
 

@@ -93,35 +93,53 @@ Colorizer     : fstar
 # Introduction
 
 F\* is a verification-oriented programming language developed at
-[Microsoft Research][msr], MSR-Inria, Inria, and IMDEA.  It follows in
-the tradition of the ML family of languages in that it is a typed,
-strict, higher-order programming language. However, its type system is
+[Microsoft Research], [MSR-Inria], [Inria], and [IMDEA Software].
+It follows in
+the tradition of the [ML] family of languages in that it is a typed,
+strict, functional programming language. However, its type system is
 significantly richer than ML's, allowing functional correctness
 specifications to be stated and checked semi-automatically. This
 tutorial provides a first taste of verified programming in F\*. To
 learn more, visit [the F\* website][fstar].
 
+[Microsoft Research]: http://research.microsoft.com/en-us
+[MSR-Inria]: http://www.msr-inria.fr/
+[Inria]: https://www.inria.fr/
+[IMDEA Software]: http://software.imdea.org/
+[ML]: https://en.wikipedia.org/wiki/ML_%28programming_language%29
+[fstar]: http://research.microsoft.com/fstar
+
 It will help if you are already familiar with functional programming
-languages in the ML family, e.g., Ocaml, F#, Standard ML, or
-Haskell---we provide a quick review of basic concepts if you're a
-little rusty. If you lack this background, there are several useful
-resources freely available on the web, e.g.,
-[TryF#], [F# for fun and profit][fsfff],
-this [introduction to Caml][camlintro], or [the Real World OCaml
-book][realworldocaml].
+languages in the ML family (e.g., [OCaml], [F#], [Standard ML]), or
+with [Haskell]---we provide a quick review of basic concepts if you're
+a little rusty. If you lack this background, there are several useful
+resources freely available on the web, e.g., [TryF#],
+[F# for fun and profit], [Introduction to Caml], or the
+[Real World OCaml] book.
+
+[OCaml]: http://caml.inria.fr/ocaml/
+[F#]: http://fsharp.org/
+[Standard ML]: http://sml-family.org/
+[Haskell]: https://www.haskell.org
+
+[F# for fun and profit]: http://fsharpforfunandprofit.com/
+[TryF#]: http://tryfsharp.org
+[Introduction to Caml]: http://www.cs.jhu.edu/~scott/pl/lectures/caml-intro.html
+[Real World OCaml]: https://realworldocaml.org/
 
 If you're working through this tutorial on your local machine, you
-will need an installation of F\*. Get it from [github] and follow the
-installation instructions there. We assume you have the `fstar.exe`
+will need an installation of F\*. F\* is open source and
+cross-platform. Get it from [github] and follow the
+[installation instructions] there. We assume you have the F\*
 executable available in your path.
 
-[camlintro]: http://www.cs.jhu.edu/~scott/pl/lectures/caml-intro.html
-[tryF#]: http://tryfsharp.org
-[fsfff]: http://fsharpforfunandprofit.com/
-[realworldocaml]: https://realworldocaml.org/
-[msr]: http://research.microsoft.com/en-us
-[fstar]: http://research.microsoft.com/fstar
+~CH
+Soon installation should be optional and the online version of F\*
+should be the preferred way to try it out.
+~
+
 [github]: http://github.com/FStarLang/FStar
+[installation instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
 [Z3]: http://z3.codeplex.com/
 
 **A note on compatibility with F\#**: The syntax of F\* and F\#
@@ -145,7 +163,7 @@ Let's say we want to model a simple access control discipline on
 files---certain files are readable or writable, whereas others may be
 inaccessible. We'd like to write a policy to describe the privileges
 on each file, and we'd like to write programs whose file access
-patterns are checked against this policy, guaranteeing that an
+patterns are checked against this policy, guaranteeing statically that an
 inaccessible file is never accessed mistakenly.
 
 Our model of this scenario (which we'll make more realistic in later
@@ -158,7 +176,8 @@ sections) proceeds in three easy steps.
      and protect them with the policy. 
    
      
-  3. Write the rest of the program, resting assured that F\* will check
+  3. Write the rest of the program, resting assured that the F\*
+     type-checker will verify statically
      that the policy-protected primitives are never improperly accessed.
 
 
@@ -170,7 +189,7 @@ begins with a `module` declaration, defining the name of the module. Its
 body includes a number of definitions, and optionally includes a 'main'
 expression.
 
-Here's a module called `ACLs` (for Access-Control Lists), that defines
+Here is a module called `ACLs` (for Access-Control Lists), that defines
 our policy:
 
 ```
@@ -182,10 +201,10 @@ Our first module begins by defining a type synonym: we'll use
 
 Next, we define `canWrite`, a function which inspects its argument `f`
 using a *pattern matching expression*: it returns the boolean `true`
-when `f=C:/temp/tempfile` and `false` otherwise. The function
+when `f="C:/temp/tempfile"` and `false` otherwise. The function
 `canRead` is similar---a file is readable if it is writeable, or if it
-is the `"README"` file. The boolean functions `canWrite` and `canRead`
-specify our policy.
+is the `"C:/public/README"` file. The boolean functions `canWrite` and
+`canRead` specify our policy.
 
 ### Tying the policy to the file-access primitives
 
@@ -211,21 +230,23 @@ presumably implement the corresponding operations on files.
 By using the `assume val` notation, we *declare* that `System.IO` provides
 the `read` and `write` operations (they are *values*), but that we are
 *_not_ defining* those values here---they will be provided by an external
-module. For those of you familiar with languages like `C`, our use of
-`assume val` is much like the `extern` keyword in `C`.
+module. For those of you familiar with languages like C, our use of
+`assume val` is much like the `extern` keyword in C.
 
 As with the use of `extern`, when declaring a value, we also provide its type
 signature. 
 
-* The type of `read` says that it is a function from `filename`
-  arguments `f` for which `canRead f` is `true`
-  to `string`-typed results.
+* The type of `read` says that it is a function expecting a `filename`
+  argument `f` for which `canRead f` is `true` and returning a
+  `string`-typed result. Thus the type-checker prevents any calls to
+  `read` for which the `canRead` predicate can't be statically proved
+  for the argument.
 
 * The type of `write` says that is a function of two arguments: the
   first is a `filename` `f`, such that `canWrite f` is true; the second
   is a `string`, the data to be written to the file `f`. The `write`
-    function returns `unit`, very roughly analogous to the `void` type in
-    C. The type `unit` has only a single value, written `()`. 
+  function returns `unit`, very roughly analogous to the `void` type in
+  C. The type `unit` has only a single value, written `()`. 
 
 The crucial bits of these declarations are, of course, the use of the
 `canRead` and `canWrite` functions in the signature, which allow us to
@@ -233,14 +254,14 @@ connect the types of these security-sensitive functions to our policy.
 
 ### Writing programs and verifying their security
 
-Trying to check that a piece of code conforms to a access-control policy
-is a tedious and error-prone process. How do we know that every access is
-guarded by a security check---and even if it is guarded by a check, can
-we be sure that the check is adequate? We can use F\*'s type-checker to
-automate this kind of code review.
+Trying to check that a piece of code conforms to a access-control
+policy is a tedious and error-prone process. Even if every access is
+guarded by a security check, how can we make sure that each check is
+adequate? We can use F\*'s type-checker to automate this kind of code
+review.
 
 Here's some simple, untrusted client code. It uses `System.IO`, defines
-some common file names, and then a function called `doit`, which tries
+some common file names, and then a function called `doit`, which tries to
 read and write a few files. Does this program comply with our security
 policy?
 
@@ -250,11 +271,11 @@ policy?
 [INCLUDE=code/solutions/doit.fst:DoIt]
 ```
 
-No, of course not. It tries to write `"junk"` to the `passwd` file,
-which, according to our `canWrite` policy is not writable. If you try
-type-checking this code with F\*, it complains issuing a
-compile-time error: the `passwd` file does not have the type
-`:f:filename{canRead f}`.
+No, of course not. It tries to read the `passwd` file and then write
+`"junk"` to it, although according to our policy the `passwd` file is
+neither readable nor writable. If you try type-checking this code with
+F\*, it complains issuing a compile-time error: the `passwd` file does
+not have the type `:f:filename{canWrite f}`.
 
 <!-- mono ../../bin/fstar.exe --fstar_home ../.. code/solutions/ex1a-safe-read-write.fst code/solutions/doit.fst -->
 ```html
@@ -267,21 +288,21 @@ Error code/solutions/doit.fst(8,2-16,0): The following problems were found:
 
 You'll understand more about what that
 message means as you work through this tutorial, but, for now, take it
-to mean that F\* expected `canRead passwd` to be `true`, which isn't
+to mean that F\* expected `canWrite passwd` to be `true`, which isn't
 the case.
 
-Our first model of access control illustrates how F\* can be used to
-specify a security policy, and enforce complete and correct mediation
-of that policy via type-checking.
+This first access control example illustrates how F\* can be used to
+specify a security policy, and statically enforce complete and correct
+mediation of that policy via type-checking.
 
 ~Exercise
-Write a function called `safeRead` that takes a filename `f`
-argument, and attempts to read file `f` after checking the policy to
-make sure it is readable. If the file is not readable your `safeRead`
-should return a default string.
+Write a function called `safeRead` that takes a filename `f` argument,
+checks the policy to make sure the file `f` is readable, and only if
+that is the case reads `f`. If the file is not readable your
+`safeRead` should return a default string.
 Write a function analogous to `safeRead` called `safeWrite`. Use it
-so that F\* no longer reports a type-checking error for `doitSafe`.
-Is the `doitSafe` function secure? Why?
+so that F\* no longer reports a type-checking error for the `doitSafe`
+function below. Is the `doitSafe` function secure? Why?
 ```
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:DoItSafe]
 ```
@@ -294,7 +315,6 @@ were performed at compile time by F\*, and perform the IO actions
 only if those checks succeed.
 ~~
 ~
-
 # Basics: Types and effects
 
 You may not have noticed them all, but our first example already covers
@@ -313,8 +333,7 @@ ML-like langugaes, such types are inexpressible.
 In general, a refinement type in F\* has the form `x:t{phi(x)}`, a
 refinement of the type `t` to those elements `x` that satisfy the formula
 `phi(x)`. For now, you can think of `phi(x)` as any boolean valued
-expression. We will see, shortly, that the full story is somewhat more
-general.
+expression. We will see, shortly, that the full story is more general.
 
 ## Inferred types and effects for computations
 
@@ -326,8 +345,8 @@ can be expressed in ML. For instance, in addition to inferring a type,
 F\* also infers the *side-effects* of an expression (e.g., exceptions,
 state, etc).
 
-In ML, `(canRead "foo.txt")` is inferred to have type `:bool`;
-etc. However, in F\*, we infer `(canRead "foo.txt" : Tot bool)`. This
+For instance, in ML `(canRead "foo.txt")` is inferred to have type `:bool`.
+However, in F\*, we infer `(canRead "foo.txt" : Tot bool)`. This
 indicates that `canRead "foo.txt"` is a total expression, which always
 evaluates to an boolean. For that matter, any expression that is
 inferred to have type-and-effect `:Tot t`, is guaranteed (provided the
@@ -371,17 +390,26 @@ From now on, we'll just refer to a type-and-effect pair (e.g.,
 
 ## Function types
 
-F\* is a call-by-value language, i.e., arguments to functions are
-fully evaluated before being passed to the function. Fully evaluated
-terms have no effect at all. Thus, a function's arguments have no
-effect annotation---they only have a type. On the other hand, the
-body of a function may perform some non-trivial computation and so is
-always given both a type and an effect. As such, every function value
+F\* is a functional language, so functions are first-class values
+that are assigned function types, denoted using the arrow type
+operator (`->`).
+F\* is a _call-by-value_ functional language (like OCaml and F\#, and
+unlike Haskell and Coq), so function arguments are
+fully evaluated to values before being passed to the function. Values
+have no effect at all. Thus, the types of a function's arguments
+have no effect annotation. On the other hand, the
+body of a function may perform some non-trivial computation and so
+the result is always given both a type and an effect.
+As such, every function value
 has a type of the form `:t1 -> ... -> tn -> E t`, where `:t1 .. tn`
 are the types of each of the arguments; `:E` is the effect of its body;
 and `:t` is the type of its result, if any. (*Note to the experts: We
 will generalize this to dependent functions and indexed effects
 progressively.*)
+
+~CH
+Why not start with the unary arrow and move to n-ary a bit later?
+~
 
 To illustrate, take the function `max` below:
 
