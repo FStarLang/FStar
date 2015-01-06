@@ -64,12 +64,12 @@ Colorizer     : fstar
 .fstar .token.type.keyword.operator { color: teal; }
 </style>
 
-<!-- How to edit this document: 
+<!-- How to edit this document:
      1. Go to madoko.net in a web browser
-     2. Select the folder icon in the top-left corner
+     2. Select the folder icon in the top-left corner, then "Open ... (Alt-O)"
      3. Select the "GitHub" icon
-     4. Provide madoko.net with your GitHub credentials
-     5. Select FStarLang/FStar/doc/tutorial/tutorial.mdk and start editing.
+     4. Authorize the Madoko application to access your GitHub repositories
+     5. Open <github>/FStarLang/FStar/doc/tutorial/tutorial.mdk and start editing.
      6. Ctrl+S (or Synchronize from the folder tab) will bring up a dialog to 
         commit and push this file to GitHub after merging with the latest changes there.
      
