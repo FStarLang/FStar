@@ -33,20 +33,20 @@ let norm_then_print = Util.mk_ref true
 let z3_exe = Util.mk_ref (Platform.exe "z3")
 let silent=Util.mk_ref false
 let debug=Util.mk_ref []
-let debug_level = Util.mk_ref Low 
+let debug_level = Util.mk_ref []
 let dlevel = function 
     | "Low" -> Low
     | "Medium" -> Medium
     | "High" -> High
     | "Extreme" -> Extreme
     | s -> Other s
-let debug_level_geq l1 l2 = match l1 with 
+let one_debug_level_geq l1 l2 = match l1 with 
     | Other _ 
     | Low -> l1 = l2
     | Medium -> (l2 = Low || l2 = Medium)
     | High -> (l2 = Low || l2 = Medium || l2 = High)
     | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
-    
+let debug_level_geq l2 = !debug_level |> Util.for_some (fun l1 -> one_debug_level_geq l1 l2)
 let log_types = Util.mk_ref false
 let print_effect_args=Util.mk_ref false
 let print_real_names = Util.mk_ref false
@@ -123,7 +123,7 @@ let specs () : list<Getopt.opt> =
      ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
      ( noshort, "prn", ZeroArgs (fun () -> print_real_names := true), "Print real names---you may want to use this in conjunction with logQueries");
      ( noshort, "debug", OneArg ((fun x -> debug := x::!debug), "module name"), "Print LOTS of debugging information while checking module [arg]");
-     ( noshort, "debug_level", OneArg ((fun x -> debug_level := dlevel x), "Low|Medium|High|Extreme"), "Control the verbosity of debugging info");
+     ( noshort, "debug_level", OneArg ((fun x -> debug_level := dlevel x::!debug_level), "Low|Medium|High|Extreme"), "Control the verbosity of debugging info");
      ( noshort, "log_types", ZeroArgs (fun () -> log_types := true), "Print types computed for data/val/let-bindings");
      ( noshort, "print_effect_args", ZeroArgs (fun () -> print_effect_args := true), "Print inferred predicate transformers for all computation types");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");

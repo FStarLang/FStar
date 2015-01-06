@@ -8,8 +8,8 @@ all-neg: $(NEGFILES)
 	-$(FSTAR) $(STDLIB) $^
 	echo "EXPECT 23 FAILURES<------------------------------------"
 
-prims: 
-	$(FSTAR) --prims prims-test.fst
+rel2: 
+	$(FSTAR) --rel2 pm.fst
 
 #DO WE REALLY NEED THESE TARGETS HERE?
 utils:

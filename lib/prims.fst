@@ -30,7 +30,7 @@ logic type ForallTyp : (Type -> Type) -> Type (* Handled specially to support qu
 logic type ExistsTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
 logic type True 
 logic type False
-logic type EqTyp : Type -> Type -> Type                    (* infix binary '==' *)
+logic type EqTyp : Type -> Type -> Type                (* infix binary '==' *)
 logic type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
 logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
 logic type ITE : Type -> Type -> Type -> Type (* written if/then/else in concrete syntax *)

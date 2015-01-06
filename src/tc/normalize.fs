@@ -406,8 +406,10 @@ and sn' tcenv (cfg:config<typ>) : config<typ> =
                   if unmeta config then
                     sn tcenv ({config with code=t})
                   else
-                    let lab t =
-                      match config.environment |> List.tryFind (function LabelSuffix _ -> true | _ -> false) with
+                    let lab t = match t.n with 
+                        | Typ_const fv when (lid_equals fv.v Const.true_lid && config.steps |> List.contains Simplify) -> t
+                        | _ -> 
+                          match config.environment |> List.tryFind (function LabelSuffix _ -> true | _ -> false) with
                               | Some (LabelSuffix(b', sfx)) ->
                                   if b'=None || Some b=b'
                                   then (if Tc.Env.debug tcenv Options.Low then Util.fprint2 "Stripping label %s because of enclosing refresh %s\n" l sfx; t)

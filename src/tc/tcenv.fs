@@ -104,7 +104,7 @@ let has_interface env l =
 
 let debug env (l:Options.debug_level_t) = 
        !Options.debug |> Util.for_some (fun x -> env.curmodule.str = x) 
-    && Options.debug_level_geq !Options.debug_level l
+    && Options.debug_level_geq l
 let show env = !Options.show_signatures |> Util.for_some (fun x -> env.curmodule.str = x)
 
 let initial_env solver module_lid =

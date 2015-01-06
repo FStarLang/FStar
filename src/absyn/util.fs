@@ -1218,6 +1218,8 @@ let eq_k =
 
 let teq = ftv Const.eq2_lid eq_k
 let mk_eq e1 e2 = mk_Typ_app(teq, [(Inr e1, false); (Inr e2, false)]) ktype (Range.union_ranges e1.pos e2.pos)
+let eq_typ = ftv Const.eqT_lid kun
+let mk_eq_typ t1 t2 = mk_Typ_app(eq_typ, [targ t1; targ t2]) ktype (Range.union_ranges t1.pos t2.pos)
 
 let lex_t = ftv Const.lex_t_lid ktype
 let lex_top = 

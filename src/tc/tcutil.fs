@@ -235,9 +235,9 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
                       let rec aux formals pats = match formals, pats with 
                         | [], [] -> []
                         | [], _::_ -> raise (Error("Too many pattern arguments", range_of_lid fv.v))
-                        | _::_, [] -> 
+                        | _::_, [] -> //fill the rest with dot patterns, if all the remaining formals are implicit
                           formals |> List.map (fun f -> match f with 
-                            | Inl t, _ -> 
+                            | Inl t, _ -> //type arguments are implicit by default
                               let a = Util.bvd_to_bvar_s (Util.new_bvd None) kun in
                               withinfo (Pat_dot_typ (a, tun)) (Inl kun) (Syntax.range_of_lid fv.v)
 

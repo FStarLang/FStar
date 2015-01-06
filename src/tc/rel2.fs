@@ -253,12 +253,12 @@ let rel_to_string = function
 let prob_to_string env = function 
   | KProb p -> Util.format3 "\t%s\n\t\t%s\n\t%s" (Print.kind_to_string p.lhs) (rel_to_string p.relation) (Print.kind_to_string p.rhs)
   | TProb p -> 
-    Util.format "\t%s (%s) \n\t\t%s\n\t%s (%s)" 
+    Util.format "\t%s \n\t\t%s(%s)\n\t%s (guard %s)" 
         [(Normalize.typ_norm_to_string env p.lhs);
-         (Print.tag_of_typ p.lhs) ;
          (rel_to_string p.relation);
+         (p.reason |> List.hd);
          (Normalize.typ_norm_to_string env p.rhs);
-         (Print.tag_of_typ p.rhs)]
+         (Normalize.formula_norm_to_string env (fst p.logical_guard))]
   | EProb p -> Util.format3 "\t%s \n\t\t%s\n\t%s" (Normalize.exp_norm_to_string env p.lhs) (rel_to_string p.relation) (Normalize.exp_norm_to_string env p.rhs)
   | CProb p -> Util.format3 "\t%s \n\t\t%s\n\t%s" (Normalize.comp_typ_norm_to_string env p.lhs) (rel_to_string p.relation) (Normalize.comp_typ_norm_to_string env p.rhs)
 
@@ -747,7 +747,7 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
 
         | _, variance, T ti -> 
             let gi_xs, gi = new_tvar r scope  ti.tk in
-            let gi_ps = mk_Typ_app(gi, args) ti.tk r in
+            let gi_ps = mk_Typ_app'(gi, args) ti.tk r in
             T gi_xs, 
             TProb <| mk_problem scope orig gi_ps (vary_rel rel variance) ti None "type subterm"
  
@@ -796,7 +796,7 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
                 let f = match bopt with 
                     | None -> Util.mk_conj_l (f:: (probs |> List.map (fun prob -> p_guard prob |> fst)))
                     | Some b -> Util.mk_conj_l (close_forall [b] f:: (probs |> List.map (fun prob -> p_guard prob |> fst))) in
-                sub_probs, ktec::ktecs, f in
+                probs@sub_probs, ktec::ktecs, f in
    
    aux scope ps qs 
 
@@ -1251,7 +1251,10 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         let sub_probs, gs_xs, formula = imitation_sub_probs orig env xs ps qs in
         let im = mk_Typ_lam'(xs, h gs_xs) k r in
         if Tc.Env.debug env <| Options.Other "Rel" 
-        then Util.fprint3 "Imitating %s (%s)\nsub_probs = %s\n" (Print.typ_to_string im) (Print.tag_of_typ im) (List.map (prob_to_string env) sub_probs |> String.concat ", ");
+        then Util.fprint4 "Imitating %s (%s)\nsub_probs = %s\nformula=%s\n" 
+            (Print.typ_to_string im) (Print.tag_of_typ im) 
+            (List.map (prob_to_string env) sub_probs |> String.concat ", ") 
+            (Normalize.formula_norm_to_string env formula);
         let wl = solve_prob orig (Some formula) [UT((u,k), im)] wl in
         solve env (attempt sub_probs wl) in
     (* </imitate_t> *)
@@ -1384,23 +1387,25 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
    (* </flex-rigid> *)
 
    (* <flex-flex>: 
-      Always interpret a flex-flex constraint as an equality, even if it is tagged as SUB/SUBINV
-      This causes a loss of generality. Consider:
+      Always delay flex-flex constraints, if possible. 
+      Then, if it delaying is not an option, interpret a flex-flex constraint as an equality, even if it is tagged as SUB/SUBINV
+      This may cause a loss of generality. Consider:
 
         nat <: u1 <: u2
-        int <: u2
-        u1 <: nat
+               int <: u2
+               u1 <: nat
 
       By collapsing u1 and u2, the constraints become unsolveable, since we then have
         nat <: u <: nat and int <: u
 
-      However, it seems unlikely that this would arise in practice. TBD.
+      However, it seems unlikely that this would arise in practice, 
+      since all the other non-flex-flex constraints would be attempted first. 
  
       The alternative is to delay all flex-flex subtyping constraints, even the pattern cases. 
       But, it seems that performance would suffer greatly then. TBD.
    *)
    let flex_flex (lhs:flex_t) (rhs:flex_t) : solution = 
-        if wl.defer_ok then solve env (defer "flex-flex non pattern" orig wl) else
+        if wl.defer_ok then solve env (defer "flex-flex deferred" orig wl) else
         let (t1, u1, k1, args1) = lhs in
         let (t2, u2, k2, args2) = rhs in 
         let maybe_pat_vars1 = pat_vars env [] args1 in
@@ -1485,7 +1490,7 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
       | Typ_btvar a, Typ_btvar b -> 
         if Util.bvd_eq a.v b.v 
         then solve env (solve_prob orig None [] wl)
-        else giveup env "unequal type variables" orig(* TODO: They may be equal by refinement, though *)
+        else solve env (solve_prob orig (Some <| Util.mk_eq_typ t1 t2) [] wl)  
          
       | Typ_fun(bs1, c1), Typ_fun(bs2, c2) ->
         let mk_c c = function
@@ -1583,7 +1588,14 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
          let m, o = head_matches_delta env wl t1 t2 in
          begin match m, o  with 
             | (MisMatch, _) -> //heads definitely do not match
-              giveup env "head mismatch" orig        
+              let head1 = Util.head_and_args t1 |> fst in 
+              let head2 = Util.head_and_args t2 |> fst in 
+              begin match head1.n, head2.n with 
+                | Typ_btvar _, _
+                | _, Typ_btvar _ -> (* may match by refinement *) 
+                  solve env (solve_prob orig (Some <| Util.mk_eq_typ t1 t2) [] wl)  
+                | _ -> giveup env "head mismatch" orig        
+              end
 
             | (_, Some (t1, t2)) -> //heads match after some delta steps
               solve_t env ({problem with lhs=t1; rhs=t2}) wl
@@ -1896,8 +1908,8 @@ let guard_to_string (env:env) g =
           if debug env <| Options.Other "Rel" 
           then Normalize.formula_norm_to_string env f
           else "non-trivial" in
-  let carry = List.map (fun (_, x) -> prob_to_string env x) g.deferred.carry |> String.concat ", " in
-  Util.format2 "\n\t{guard_f=%s;\n\t deferred={%s};}\n" form carry
+  let carry = List.map (fun (_, x) -> prob_to_string env x) g.deferred.carry |> String.concat ",\n" in
+  Util.format2 "\n\t{guard_f=%s;\n\t deferred={\n%s};}\n" form carry
 
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
@@ -2028,17 +2040,17 @@ let subkind env k1 k2 : guard_t =
  let prob = KProb <| new_k_problem env (whnf_k env k1) SUB (whnf_k env k2) None (Env.get_range env) in
  let res = Util.must (with_guard env prob <| solve_and_commit env (singleton prob) (fun _ -> 
     raise (Error(Tc.Errors.incompatible_kinds env k1 k2, Tc.Env.get_range env)))) in
- if debug env <| Other "Rel" 
- then Util.fprint4 "(%s) subkind of %s and %s solved with %s\n" 
-    (Range.string_of_range <| Env.get_range env) (Print.kind_to_string k1) (Print.kind_to_string k2) (guard_to_string env res);
+// if debug env <| Other "Rel" 
+// then Util.fprint4 "(%s) subkind of %s and %s solved with %s\n" 
+//    (Range.string_of_range <| Env.get_range env) (Print.kind_to_string k1) (Print.kind_to_string k2) (guard_to_string env res);
  res
 
 let try_teq env t1 t2 : option<guard_t> = 
  if debug env <| Other "Rel" 
  then Util.fprint2 "try_teq of %s and %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
- let prob, x = new_t_prob env t1 EQ t2 in
+ let prob = TProb<| new_t_problem env t1 EQ t2 None (Env.get_range env) in 
  let g = with_guard env prob <| solve_and_commit env (singleton prob) (fun _ -> None) in
- abstract_guard x g
+ g
    
 let teq env t1 t2 : guard_t = 
  match try_teq env t1 t2 with
@@ -2088,7 +2100,8 @@ let try_discharge_guard env (g:guard_t) =
    && List.length g.deferred.carry <> 0
    then begin 
     Util.print_string "Trying to solve carried problems:\n";
-    g.deferred.carry |> List.map (fun (msg, x) -> Util.format3 "(At %s) %s\n%s\n\n" (Range.string_of_range <| p_loc x) msg (prob_to_string env x)) |> String.concat "\n" |> Util.print_string
+    g.deferred.carry |> List.map (fun (msg, x) -> Util.format4 "(At %s) %s\n%s\nguard is %s\n" 
+        (Range.string_of_range <| p_loc x) msg (prob_to_string env x) (Normalize.formula_norm_to_string env (p_guard x |> fst))) |> String.concat "\n" |> Util.print_string
    end;
    let gopt = solve_and_commit env (wl_of_guard g.deferred) fail in
    match gopt with 
@@ -2098,9 +2111,13 @@ let try_discharge_guard env (g:guard_t) =
       else begin match g.guard_f with 
         | Trivial -> true, []
         | NonTrivial vc -> 
-            let vc = Normalize.norm_typ [Delta; Beta; Eta] env vc in
-            if Tc.Env.debug env <| Options.Other "Rel" then Tc.Errors.diag (Tc.Env.get_range env) (Util.format1 "Checking VC=\n%s\n" (Print.formula_to_string vc));
-            env.solver.solve env vc
+            let vc = Normalize.norm_typ [Delta; Beta; Eta; Simplify] env vc in
+            begin match check_trivial vc with 
+                | Trivial -> (true, [])
+                | NonTrivial vc -> 
+                  if Tc.Env.debug env <| Options.Other "Rel" then Tc.Errors.diag (Tc.Env.get_range env) (Util.format1 "Checking VC=\n%s\n" (Print.formula_to_string vc));
+                  env.solver.solve env vc
+            end
       end
     | _ -> failwith "impossible"
    
