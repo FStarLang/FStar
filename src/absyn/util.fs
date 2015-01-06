@@ -1257,10 +1257,12 @@ let mk_forall (x:bvvar) (body:typ) : typ =
   
 let rec close_forall bs f = 
   List.fold_right (fun b f -> 
-    let body = mk_Typ_lam([b], f) (mk_Kind_arrow([b], ktype) f.pos) f.pos in
-    match fst b with 
-       | Inl a -> mk_Typ_app(tforall_typ a.sort, [targ body]) ktype f.pos
-       | Inr x -> mk_Typ_app(tforall, [(Inl x.sort, true); targ body]) ktype f.pos) bs f
+    if Syntax.is_null_binder b 
+    then f
+    else let body = mk_Typ_lam([b], f) (mk_Kind_arrow([b], ktype) f.pos) f.pos in
+         match fst b with 
+           | Inl a -> mk_Typ_app(tforall_typ a.sort, [targ body]) ktype f.pos
+           | Inr x -> mk_Typ_app(tforall, [(Inl x.sort, true); targ body]) ktype f.pos) bs f
 
 let rec is_wild_pat p =
     match p.v with

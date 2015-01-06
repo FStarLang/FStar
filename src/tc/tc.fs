@@ -211,22 +211,25 @@ and tc_vbinder env x =
     x, env', g 
 
 and tc_binders env bs = 
-  let bs, env, g = bs |> List.fold_left (fun (bs, env, g) (b, imp) -> match b with 
-    | Inl a -> 
-      let k, g' = tc_kind env a.sort in
-      let b = Inl ({a with sort=k}), imp in
-      let env' = maybe_push_binding env b in
-      if debug env Options.Extreme 
-      then Util.fprint1 "Introducing binder: %s\n" (Print.binder_to_string b);
-      b::bs, env', Tc.Rel.conj_guard g g'
+    let rec aux env bs = match bs with 
+        | [] -> [], env, Rel.trivial_guard
+        | (b, imp)::bs -> 
+          begin match b with 
+                | Inl a -> 
+                  let k, g = tc_kind env a.sort in
+                  let b = Inl ({a with sort=k}), imp in
+                  let env' = maybe_push_binding env b in
+                  let bs, env', g' = aux env' bs in
+                  b::bs, env', Tc.Rel.conj_guard g (Rel.close_guard [b] g') 
 
-    | Inr x ->
-      let x, env, g' = tc_vbinder env x in
-      let b = (Inr x, imp) in
-      b::bs, env, Tc.Rel.conj_guard g g') ([], env, Rel.trivial_guard) in
- let bs = List.rev bs in
- bs, env, Rel.close_guard bs g
-
+                | Inr x -> 
+                  let x, env', g = tc_vbinder env x in
+                  let b = (Inr x, imp) in
+                  let bs, env', g' = aux env' bs in 
+                  b::bs, env', Tc.Rel.conj_guard g (Rel.close_guard [b] g')
+          end  in
+   aux env bs
+                    
 and tc_args env args : Syntax.args * guard_t = 
    List.fold_right (fun (arg, imp) (args, g) -> match arg with 
     | Inl t -> 

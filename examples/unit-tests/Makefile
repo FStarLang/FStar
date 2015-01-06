@@ -8,6 +8,9 @@ all-neg: $(NEGFILES)
 	-$(FSTAR) $(STDLIB) $^
 	echo "EXPECT 23 FAILURES<------------------------------------"
 
+prims: 
+	$(FSTAR) --prims prims-test.fst
+
 #DO WE REALLY NEED THESE TARGETS HERE?
 utils:
 	$(FSTAR) --codegen OCaml --prims prims.fst utils.fst

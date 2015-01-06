@@ -7,8 +7,6 @@ RUNTIME = mono
 MSBUILD = xbuild
 endif
 
-OTHERFLAGS=--trace_error
-
 FSTAR_HOME = ../..
 LIB_FILES= list.fst string.fst partialmap.fst 
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst)

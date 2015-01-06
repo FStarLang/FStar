@@ -197,6 +197,63 @@ let rec is_head_symbol t = match (compress_typ t).n with
     | Typ_meta(Meta_refresh_label(t, _, _)) -> is_head_symbol t
     | _ -> false
 
+let simplify_then_apply steps head args k pos = 
+    let fallback () = mk_Typ_app(head, args) k pos in
+    let simp_t t = match t.n with 
+        | Typ_const fv when lid_equals fv.v Const.true_lid ->  Some true
+        | Typ_const fv when lid_equals fv.v Const.false_lid -> Some false
+        | _ -> None in
+    let simplify arg = match fst arg with 
+        | Inl t -> (simp_t t, arg)
+        | _ -> (None, arg) in
+    if not <| List.contains Simplify steps
+    then fallback()
+    else match head.n with 
+            | Typ_const fv ->
+              if lid_equals fv.v Const.and_lid
+              then match args |> List.map simplify with 
+                     | [(Some true, _); (_, (Inl arg, _))] 
+                     | [(_, (Inl arg, _)); (Some true, _)] -> arg
+                     | [(Some false, _); _]
+                     | [_; (Some false, _)] -> Util.t_false
+                     | _ -> fallback()
+              else if lid_equals fv.v Const.or_lid
+              then match args |> List.map simplify with 
+                     | [(Some true, _); _]  
+                     | [_; (Some true, _)] -> Util.t_true
+                     | [(Some false, _); (_, (Inl arg, _))]
+                     | [(_, (Inl arg, _)); (Some false, _)] -> arg
+                     | _ -> fallback()
+              else if lid_equals fv.v Const.imp_lid
+              then match args |> List.map simplify with 
+                     | [_; (Some true, _)] 
+                     | [(Some false, _); _] -> Util.t_true
+                     | [(Some true, _); (_, (Inl arg, _))] -> arg  
+                     | _ -> fallback()
+              else if lid_equals fv.v Const.not_lid
+              then match args |> List.map simplify with 
+                     | [(Some true, _)] -> Util.t_false
+                     | [(Some false, _)] -> Util.t_true
+                     | _ -> fallback ()
+              else if  lid_equals fv.v Const.forall_lid
+                    || lid_equals fv.v Const.allTyp_lid
+                    || lid_equals fv.v Const.exists_lid 
+                    || lid_equals fv.v Const.exTyp_lid 
+              then match args with 
+                     | [(Inl t, _)]
+                     | [_; (Inl t, _)] -> 
+                       begin match (Util.compress_typ t).n with 
+                                | Typ_lam([_], body) -> 
+                                   (match simp_t body with 
+                                        | Some true -> Util.t_true
+                                        | Some false -> Util.t_false
+                                        | _ -> fallback())
+                                | _ -> fallback()
+                       end
+                    | _ -> fallback()
+              else fallback()
+            | _ -> fallback()
+
 let rec sn tcenv cfg =
     let cfg = sn' tcenv cfg in
     {cfg with code=Util.compress_typ cfg.code}
@@ -216,7 +273,7 @@ and sn' tcenv (cfg:config<typ>) : config<typ> =
              let k = match config.stack.k with
                 | Inl k -> k
                 | Inr _ -> failwith "impos" in
-             {config with code=mk_Typ_app(config.code, args) k config.code.pos} in
+             {config with code=simplify_then_apply config.steps config.code args k config.code.pos} in
     
     let config = rebuild_stack config in 
     let t = match config.close with 

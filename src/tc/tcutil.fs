@@ -94,7 +94,7 @@ let new_evar env t = Rel.new_evar (Env.get_range env) (env_binders env) t |> fst
 let force_trivial env g = 
     if Rel.is_trivial g 
     then ()
-    else raise (Error("Unexpected non-trivial guard", Env.get_range env))
+    else raise (Error(Util.format1 "Unexpected non-trivial guard: %s" (Rel.guard_to_string env g), Env.get_range env))
     
 let destruct_arrow_kind env tt k args : (Syntax.args * binders * knd) = 
     let ktop = compress_kind k |> Normalize.norm_kind [WHNF; Beta; Eta] env in 

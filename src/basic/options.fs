@@ -145,6 +145,6 @@ let specs () : list<Getopt.opt> =
      ( noshort, "max_fuel", OneArg((fun x -> max_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try at most (default 8)");
      ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
      ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
-     ( noshort, "slack", ZeroArgs (fun () -> rel2 := true), "Use the new implementation of type relations")
+     ( noshort, "rel2", ZeroArgs (fun () -> rel2 := true), "Use the new implementation of type relations")
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs

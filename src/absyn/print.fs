@@ -123,15 +123,16 @@ let unary_type_op_to_string t = find_lid (get_type_lid t) unary_type_ops
 let quant_to_string t = find_lid (get_type_lid t) quants
 
 let rec sli (l:lident) : string = 
-  if !Options.print_real_names
-  then match l.ns with 
+   match l.ns with 
       | hd::tl when (hd.idText="Prims") ->
         begin match tl with 
           | [] -> l.ident.idText
           | _ -> (List.map (fun i -> i.idText) tl |> String.concat ".") ^  "." ^ l.ident.idText
         end
-      | _ -> l.str
-   else l.ident.idText
+      | _ -> 
+        if !Options.print_real_names
+        then l.str
+        else l.ident.idText
 
 let strBvd bvd = 
     if !Options.print_real_names
