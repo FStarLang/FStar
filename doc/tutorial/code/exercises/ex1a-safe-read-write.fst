@@ -23,8 +23,8 @@ module UntrustedClientCode
   let readme  = "C:/public/README"
   let tmp     = "C:/temp/tempfile"
 
-  val safeRead : f:filename -> string
-  val safeWrite : f:filename -> string -> unit
+  val safeRead : filename -> string
+  val safeWrite : filename -> string -> unit
   let safeRead f = read f       (* Exercise: make safeRead safe! *)
   let safeWrite f s = write f s (* Exercise: make safeWrite safe! *)
 

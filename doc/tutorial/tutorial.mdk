@@ -348,12 +348,15 @@ Would `checkedRead` be a better name for `safeRead`?
 `dynamicallyCheckedRead`?
 `defensiveRead`?
 `checkThenRead`?
+`staticallyCheckedRead` vs `dynamicallyCheckedRead`?
 In the end, in F\*, there is _nothing_ unsafe about `read`, just that
 it is statically checked (it has a strong precondition), while the
 function below is dynamically checked (and thus has no precondition)
+[The explanations in the code/exercise file are thus off by a mile
+and should also be fixed.]
 
 Also rename `doit` (horrible name). Wanted to propose to call it `main`,
-but then we would also have `safeMain`?
+but then we would also have `checkedMain`?
 ~
 
 ~CH
@@ -362,6 +365,12 @@ and note that they have no preconditions!
 ```
 [INCLUDE=code/solutions/ex1a-safe-read-write.fst:SafeReadWriteTypes]
 ```
+~
+
+~CH
+There is nothing idiomatic about returning a default string on
+a failed read, and even less about silently failing on a failed
+write. Is there any reason we wouldn't use exceptions here?
 ~
 
 ~Exercise
@@ -393,16 +402,17 @@ several distinctive features of F\*. Let's take a closer look.
 
 One distinctive feature of F\* is its use of refinement types. We have
 already seen two uses of this feature, e.g, the type
-`:f:filename{canRead f}` is a *refinement* of the type `filename`. It's
-a refinement because only a subset of the `filename` values have this
+`:f:filename{canRead f}` is a *refinement* of the type `:filename`. It's
+a refinement because only a subset of the `:filename` values have this
 type, namely those that satisfy the `canRead` predicate. The
-refinement in the type of `System.IO.write` is similar. In most other
-ML-like langugaes, such types are inexpressible.
+refinement in the type of `System.IO.write` is similar. In traditional
+ML-like languages, such types are inexpressible.
 
-In general, a refinement type in F\* has the form `x:t{phi(x)}`, a
-refinement of the type `t` to those elements `x` that satisfy the formula
+In general, a refinement type in F\* has the form `:x:t{phi(x)}`, a
+refinement of the type `:t` to those elements `x` that satisfy the formula
 `phi(x)`. For now, you can think of `phi(x)` as any boolean valued
-expression. We will see, shortly, that the full story is more general.
+expression. We will see, shortly ([#sec-bool-versus-type]),
+that the full story is more general.
 
 ## Inferred types and effects for computations
 
@@ -419,7 +429,7 @@ However, in F\*, we infer `(canRead "foo.txt" : Tot bool)`. This
 indicates that `canRead "foo.txt"` is a total expression, which always
 evaluates to an boolean. For that matter, any expression that is
 inferred to have type-and-effect `:Tot t`, is guaranteed (provided the
-computer has enough resources) to evaluate to a `t`-typed result,
+computer has enough resources) to evaluate to a `:t`-typed result,
 without entering an infinite loop; reading or writing the program's
 state; throwing exceptions; performing input or output; or, having any
 other effect whatsoever.
@@ -451,35 +461,67 @@ this feature *sub-effecting*.
 In fact, you can configure F\* with your own family of effects and effect
 ordering and have F\* infer those effects for your programs---but that's
 more advanced and we'll see how to do that later.
+~CH
+Previous claim seems too strong to me. It misses the point that F\*
+effects are primitive and fixed, and in a way the lattice of effects
+is also fixed (the powerset of effects), one can only choose which
+points in this fixed lattice one finds interesting. So at the level of
+detail things were explain so far, this claim seems wrong.
+Am I missing anything?
 
-From now on, we'll just refer to a type-and-effect pair (e.g.,
-`:Tot int`) as a type, or sometimes as a *computation* type, where
-`:Tot` is the effect and `:int` is the result type.
+Also the reference to the latter explanation is at the moment broken.
+~
 
+From now on, we'll just refer to a type-and-effect pair (e.g. `:Tot int`
+where `:Tot` is the effect and `:int` is the result type), as a
+type<!-- unused: , or sometimes as a *computation* type -->.
 
 ## Function types
 
-F\* is a functional language, so functions are first-class values
-that are assigned function types, denoted using the arrow type
-operator (`->`).
+~CH
+Where do we want to explain higher-order functions? Maybe here?
+Could start by explaining currying, then function taking functions
+as arguments (e.g. sorting).
+~
+
+F\* is a functional language, so functions are first-class values that
+are assigned function types. For instance, in ML the function
+testing whether an integer is positive is given type `:int -> bool`,
+i.e. it is a function taking an integer argument and producing a
+boolean result. Similarly, a maximum function on integers is given
+type `:int -> int -> int`, i.e. it is a function taking two integers
+and producing an integer. Function types in F\* are more precise and
+capture not just the types of the arguments and the result, but also
+the effect of the function's body. As such, every function value has a
+type of the form `:t1 -> ... -> tn -> E t`, where `:t1 .. tn` are the
+types of each of the arguments; `:E` is the effect of its body; and
+`:t` is the type of its result. So while the pure functions
+above are given a type using effect `Tot` in F\*:
+```
+val is_positive : int -> Tot bool
+let is_positive i = i > 0
+
+val max : int -> int -> Tot int
+let max i1 i2 = if i1 > i2 then i1 else i2
+```
+impure functions are given corresponding effects:
+```
+val read : filename -> ML string
+```
+
 F\* is a _call-by-value_ functional language (like OCaml and F\#, and
-unlike Haskell and Coq), so function arguments are
-fully evaluated to values before being passed to the function. Values
-have no effect at all. Thus, the types of a function's arguments
-have no effect annotation. On the other hand, the
-body of a function may perform some non-trivial computation and so
-the result is always given both a type and an effect.
-As such, every function value
-has a type of the form `:t1 -> ... -> tn -> E t`, where `:t1 .. tn`
-are the types of each of the arguments; `:E` is the effect of its body;
-and `:t` is the type of its result, if any. (*Note to the experts: We
+unlike Haskell and Coq), so function arguments are fully evaluated to
+values before being passed to the function. Values have no effect,
+thus the types of a function's arguments have no effect annotation. On
+the other hand, the body of a function may perform some non-trivial
+computation and so the result is always given both a type and an
+effect, as explained above. (*Note to the experts: We
 will generalize this to dependent functions and indexed effects
 progressively.*)
 
 ~CH
-Why not start with the unary arrow and move to n-ary a bit later?
-~
-
+[The rest already captured above; the remark should come where val is
+  first used in previous section.]
 To illustrate, take the function `max` below:
 
     let max i j = if i > j then i else j
@@ -488,13 +530,14 @@ The type inferred for `max` is `:int -> int -> Tot int`, the type of a
 total function that returns an integer when given two integer
 arguments.
 
-~Remark
+~~Remark
 By the way, you can also ask F\* to check that a definition has a certain
 expected type. For example, you can precede the definition of `max` (in
 the same file) with the following line, instructing F\* to check that it
 infers what you expect:
 
     val max: int -> int -> Tot int
+~~
 ~
 
 ~Exercise
@@ -905,7 +948,7 @@ causes F\* to encode the induction hypothesis as a quantified logical
 formula and feed it to Z3, which is simple examples can take care of
 the rest.
 
-## Under the hood: `:bool` versus `:Type`
+## Under the hood: `:bool` versus `:Type` { #sec-bool-versus-type }
 
 _You can probably skip this section on a first reading, if the title
 sounds mysterious to you. However, as you start to use quantified

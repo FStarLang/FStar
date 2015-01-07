@@ -31,8 +31,8 @@ module UntrustedClientCode
 // END: UntrustedClientCode
 
 // BEGIN: SafeReadWriteTypes
-  val safeRead : f:filename -> string
-  val safeWrite : f:filename -> string -> unit
+  val safeRead : filename -> string
+  val safeWrite : filename -> string -> unit
 // END: SafeReadWriteTypes
 // BEGIN: SafeReadWrite
   let safeRead f = if ACLs.canRead f then System.IO.read f else "unreadable"
