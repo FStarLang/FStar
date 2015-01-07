@@ -23,12 +23,17 @@ module System.IO
 
 // BEGIN: UntrustedClientCode
 module UntrustedClientCode
+  open ACLs
   open System.IO
   let passwd  = "C:/etc/password"
   let readme  = "C:/public/README"
   let tmp     = "C:/temp/tempfile"
 // END: UntrustedClientCode
 
+// BEGIN: SafeReadWriteTypes
+  val safeRead : f:filename -> string
+  val safeWrite : f:filename -> string -> unit
+// END: SafeReadWriteTypes
 // BEGIN: SafeReadWrite
   let safeRead f = if ACLs.canRead f then System.IO.read f else "unreadable"
   let safeWrite f s = if ACLs.canWrite f then System.IO.write f s else ()

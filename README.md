@@ -17,9 +17,9 @@ See [INSTALL.md]
 
 ### Tutorial
 
-The [tutorial] provides a first taste of verified programming in F*.
+The [F\* tutorial] provides a first taste of verified programming in F*.
 
-[tutorial]: http://prosecco.gforge.inria.fr/tutorial.html
+[F\* tutorial]: http://prosecco.gforge.inria.fr/tutorial.html
 
 ### License
 

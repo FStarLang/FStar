@@ -134,7 +134,7 @@ cross-platform. Get it from [github] and follow the
 executable available in your path.
 
 ~CH
-Soon installation should be optional and the online version of F\*
+Soon installation should be optional/advanced and the online version of F\*
 should be the preferred way to try it out.
 ~
 
@@ -189,7 +189,7 @@ begins with a `module` declaration, defining the name of the module. Its
 body includes a number of definitions, and optionally includes a 'main'
 expression.
 
-Here is a module called `ACLs` (for Access-Control Lists), that defines
+Here is a module called `ACLs` (for Access-Control Lists) that defines
 our policy:
 
 ```
@@ -197,9 +197,9 @@ our policy:
 ```
 
 Our first module begins by defining a type synonym: we'll use
-`string`s to model `filename`s.
+`:string`s to model `:filename`s.
 
-Next, we define `canWrite`, a function which inspects its argument `f`
+Next, we define `canWrite`, a function that inspects its argument `f`
 using a *pattern matching expression*: it returns the boolean `true`
 when `f="C:/temp/tempfile"` and `false` otherwise. The function
 `canRead` is similar---a file is readable if it is writeable, or if it
@@ -216,7 +216,7 @@ F\* provides a facility to specify interfaces to external modules that
 are implemented elsewhere. For example, operations that perform file
 input/output are implemented by the operating system and made available
 to F\* programs via the underlying framework, e.g., .NET or OCaml. We can
-describe the interface provided by the framework like as follows:
+describe a simple interface provided by the framework as follows:
 
 ```
 [INCLUDE=code/solutions/ex1a-safe-read-write.fst:SystemIO]
@@ -230,22 +230,22 @@ presumably implement the corresponding operations on files.
 By using the `assume val` notation, we *declare* that `System.IO` provides
 the `read` and `write` operations (they are *values*), but that we are
 *_not_ defining* those values here---they will be provided by an external
-module. For those of you familiar with languages like C, our use of
-`assume val` is much like the `extern` keyword in C.
+module. Our use of `assume val` is much like the
+`extern`{language=csharp} keyword in C and other programming languages.
 
-As with the use of `extern`, when declaring a value, we also provide its type
-signature. 
+As with `extern`{language=csharp}, when declaring a value, we also
+provide its type signature.
 
 * The type of `read` says that it is a function expecting a `filename`
-  argument `f` for which `canRead f` is `true` and returning a
+  argument `f` for which `canRead f` evaluates to `true` and returning a
   `string`-typed result. Thus the type-checker prevents any calls to
   `read` for which the `canRead` predicate can't be statically proved
   for the argument.
 
 * The type of `write` says that is a function of two arguments: the
-  first is a `filename` `f`, such that `canWrite f` is true; the second
-  is a `string`, the data to be written to the file `f`. The `write`
-  function returns `unit`, very roughly analogous to the `void` type in
+  first is a `filename` `f`, such that `canWrite f` evaluates to `true`;
+  the second is a `string`, the data to be written to the file `f`. The `write`
+  function returns `unit`, roughly analogous to the `void` type in
   C. The type `unit` has only a single value, written `()`. 
 
 The crucial bits of these declarations are, of course, the use of the
@@ -271,11 +271,16 @@ policy?
 [INCLUDE=code/solutions/doit.fst:DoIt]
 ```
 
+~CH
+Now UntrustedClientCode imports ACLs and that's silly in the case of
+doItSafe?
+~
+
 No, of course not. It tries to read the `passwd` file and then write
 `"junk"` to it, although according to our policy the `passwd` file is
 neither readable nor writable. If you try type-checking this code with
-F\*, it complains issuing a compile-time error: the `passwd` file does
-not have the type `:f:filename{canWrite f}`.
+F\*, it complains that the `passwd` file does not have the type
+`:f:filename{canWrite f}`.
 
 <!-- mono ../../bin/fstar.exe --fstar_home ../.. code/solutions/ex1a-safe-read-write.fst code/solutions/doit.fst -->
 ```html
@@ -286,14 +291,78 @@ Error code/solutions/doit.fst(8,2-16,0): The following problems were found:
      "real", coming directly from the type-checker without being
      touched by human hands. -->
 
-You'll understand more about what that
-message means as you work through this tutorial, but, for now, take it
-to mean that F\* expected `canWrite passwd` to be `true`, which isn't
-the case.
+You'll understand more about what that message means as you work
+through this tutorial, but, for now, take it to mean that F\* expected
+`canWrite passwd` to evaluate to `true`, which isn't the case.
+
+~CH
+How about also presenting a fix for the example above (e.g.
+removing the bad read and bad write) and say it type-checks that
+way. Without this fix it seems that the exercise below is **the** fix
+for the problem above. It's **not** the only or the simplest fix though!
+
+[We could add this:]
+If we comment out the lines `let v3 = read passwd in` and `write
+passwd "junk"` type-checking `doit` succeeds, because all the
+remaining reads and writes can be shown statically to comply
+with the policy.
+
+Alternatively, we could start with the correct version where the ill-typed
+lines are commented out, explain that the non-commented code does type-check,
+and only then explain what happens when we un-comment the rest. I think I
+like this alternative more. I generally like it when we can show
+only well-typed code.
+~
 
 This first access control example illustrates how F\* can be used to
 specify a security policy, and statically enforce complete and correct
 mediation of that policy via type-checking.
+
+
+~CH
+There is a conceptual gap to the next exercise. First, we don't
+properly explain the static vs dynamic checking issue in the text (it
+only becomes clearer at the end for those who actually understood the
+exercise). Second, we didn't show at all how F\* deals with
+conditionals / dynamic checks.  Given that this is the first exercise
+in the tutorial let's try to be more gentle.
+
+[I would add this:]
+The next exercise illustrates that checking of the policy doesn't
+have to happen all statically, but that the dynamic checks added
+by the programmer are taken into account by the type system.
+[separate example for this would be better].
+[I would also remove the two questions at the end of the exercise,
+it's silly to ask the students to do our work and explain such things
+to themselves.]
+
+[Another idea for making this exercise more gentle:]
+Give them `safeRead`, ask them to write `safeWrite` (or the other way around).
+Yes, this would make this exercise almost trivial, but given
+that it's the first exercise that's not really a problem,
+on the contrary!
+~
+
+~CH
+Would `checkedRead` be a better name for `safeRead`?
+`dynamicallyCheckedRead`?
+`defensiveRead`?
+`checkThenRead`?
+In the end, in F\*, there is _nothing_ unsafe about `read`, just that
+it is statically checked (it has a strong precondition), while the
+function below is dynamically checked (and thus has no precondition)
+
+Also rename `doit` (horrible name). Wanted to propose to call it `main`,
+but then we would also have `safeMain`?
+~
+
+~CH
+We should give them the types of `checkedRead` and `checkedWrite`
+and note that they have no preconditions!
+```
+[INCLUDE=code/solutions/ex1a-safe-read-write.fst:SafeReadWriteTypes]
+```
+~
 
 ~Exercise
 Write a function called `safeRead` that takes a filename `f` argument,
@@ -324,7 +393,7 @@ several distinctive features of F\*. Let's take a closer look.
 
 One distinctive feature of F\* is its use of refinement types. We have
 already seen two uses of this feature, e.g, the type
-`f:filename{canRead f}` is a *refinement* of the type `filename`. It's
+`:f:filename{canRead f}` is a *refinement* of the type `filename`. It's
 a refinement because only a subset of the `filename` values have this
 type, namely those that satisfy the `canRead` predicate. The
 refinement in the type of `System.IO.write` is similar. In most other
@@ -505,6 +574,14 @@ properties of simple functions on integers.
 
 
 ## Statically checked assertions
+
+~CH
+These example assertions are horrible because
+(1) they are in fact lemmas, while that's usually not the case
+    for assertions and
+(2) they don't really work in F\*, which doesn't support top level assertions.
+I'll try to fix this.
+~
 
 The simplest way to prove properties about your code is to write assertions.
 
