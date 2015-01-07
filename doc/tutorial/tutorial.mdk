@@ -478,12 +478,6 @@ type<!-- unused: , or sometimes as a *computation* type -->.
 
 ## Function types
 
-~CH
-Where do we want to explain higher-order functions? Maybe here?
-Could start by explaining currying, then function taking functions
-as arguments (e.g. sorting).
-~
-
 F\* is a functional language, so functions are first-class values that
 are assigned function types. For instance, in ML the function
 testing whether an integer is positive is given type `:int -> bool`,
@@ -495,7 +489,9 @@ capture not just the types of the arguments and the result, but also
 the effect of the function's body. As such, every function value has a
 type of the form `:t1 -> ... -> tn -> E t`, where `:t1 .. tn` are the
 types of each of the arguments; `:E` is the effect of its body; and
-`:t` is the type of its result. So while the pure functions
+`:t` is the type of its result. (*Note to the experts: We
+will generalize this to dependent functions and indexed effects
+progressively.*) The pure functions
 above are given a type using effect `Tot` in F\*:
 ```
 val is_positive : int -> Tot bool
@@ -504,7 +500,8 @@ let is_positive i = i > 0
 val max : int -> int -> Tot int
 let max i1 i2 = if i1 > i2 then i1 else i2
 ```
-impure functions are given corresponding effects:
+Impure functions, like reading the contents of a file,
+are given corresponding effects:
 ```
 val read : filename -> ML string
 ```
@@ -515,13 +512,11 @@ values before being passed to the function. Values have no effect,
 thus the types of a function's arguments have no effect annotation. On
 the other hand, the body of a function may perform some non-trivial
 computation and so the result is always given both a type and an
-effect, as explained above. (*Note to the experts: We
-will generalize this to dependent functions and indexed effects
-progressively.*)
+effect, as explained above.
 
 ~CH
-[The rest already captured above; the remark should come where val is
-  first used in previous section.]
+[The rest already captured above; the remark and exercise
+ should come where val is first used in previous section.] 
 To illustrate, take the function `max` below:
 
     let max i j = if i > j then i else j
@@ -551,11 +546,19 @@ to check it for you.
 ~~
 ~
 
+~CH
+Too much back and forth about type and effect _inference_ seems to be
+obscuring the explanation. How about:
+(1) effects (just remove every reference to inference,
+  e.g. replace "is inferred to have effect E" with "has effect E"),
+(2) function types,
+(3) effect inference
+~
 
 ### The default effect is `ML`
 
 Without further annotation, F\* (sometimes conservatively) infers
-functions that may perform IO, or for functions that are not
+functions that may perform IO or functions that are not
 provably terminating to have the `:ML` effect. So, both
 functions below are inferred to have the type `:(int -> ML int)`.
 _(Note: Recursive functions are defined using the `let rec`
@@ -580,6 +583,12 @@ is just a synonym for the more explicit `:(int -> ML int)`.
 
     val hello_incr: int -> int
     val loop: int -> int
+
+~CH
+This seems like the right place to explain higher-order functions.
+Could start by explaining currying, then function taking functions
+as arguments (e.g. sorting).
+~
 
 ### Computing functions
 
