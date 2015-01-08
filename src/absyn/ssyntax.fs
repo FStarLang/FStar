@@ -202,6 +202,7 @@ and [<KnownType("KnownTypes")>] s_cflags =
     | S_TOTAL
     | S_MLEFFECT
     | S_RETURN
+    | S_PARTIAL_RETURN
     | S_SOMETRIVIAL
     | S_LEMMA
     | S_DECREASES of s_exp
@@ -338,6 +339,7 @@ and serialize_cflags (ast : cflags) : s_cflags =
     | TOTAL -> S_TOTAL
     | MLEFFECT -> S_MLEFFECT
     | RETURN -> S_RETURN
+    | PARTIAL_RETURN -> S_PARTIAL_RETURN
     | SOMETRIVIAL -> S_SOMETRIVIAL
     | LEMMA -> S_LEMMA
     | DECREASES e -> S_DECREASES(serialize_exp e)
@@ -477,6 +479,7 @@ and deserialize_cflags (ast : s_cflags) : cflags =
     | S_TOTAL -> TOTAL
     | S_MLEFFECT -> MLEFFECT
     | S_RETURN -> RETURN
+    | S_PARTIAL_RETURN -> PARTIAL_RETURN
     | S_SOMETRIVIAL -> SOMETRIVIAL
     | S_LEMMA -> LEMMA
     | S_DECREASES e -> DECREASES(deserialize_exp e)

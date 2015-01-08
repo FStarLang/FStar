@@ -98,6 +98,7 @@ and cflags =
   | TOTAL 
   | MLEFFECT 
   | RETURN 
+  | PARTIAL_RETURN
   | SOMETRIVIAL
   | LEMMA
   | DECREASES of exp

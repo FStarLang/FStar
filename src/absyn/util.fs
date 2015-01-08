@@ -501,7 +501,7 @@ let comp_flags c = match c.n with
   | Comp ct -> ct.flags
 
 let is_total_comp c = comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
-
+let is_partial_return c = comp_flags c |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 let is_pure_comp c = match c.n with 
     | Total _ -> true
     | Comp ct -> is_total_comp c 

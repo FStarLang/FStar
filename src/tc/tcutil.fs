@@ -591,7 +591,7 @@ let return_value env t v =
        let wlp = wp in
        mk_comp m t wp wlp [RETURN] in
   if debug env Options.High
-  then Util.fprint2 "(%s) returning at comp type %s\n" (Range.string_of_range v.pos) (Normalize.comp_typ_norm_to_string env c);
+  then Util.fprint3 "(%s) returning %s at comp type %s\n" (Range.string_of_range v.pos)  (Print.exp_to_string v) (Normalize.comp_typ_norm_to_string env c);
   c
 
 let bind env e1opt (c1:comp) ((b, c2):comp_with_binder) : comp = 
@@ -726,7 +726,9 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (c:com
     let g = {g with Rel2.guard_f=Rel2.Trivial} in 
     if debug env Options.High then Util.fprint2 "\tStrengthening precondition %s with %s\n" (Normalize.comp_typ_norm_to_string env c) (Normalize.typ_norm_to_string env f);
     let c = 
-        if Util.is_pure_comp c && not (is_function (Util.comp_result c))
+        if Util.is_pure_comp c 
+        && not (is_function (Util.comp_result c))
+        && not (Util.is_partial_return c)
         then let x = Util.gen_bvar (Util.comp_result c) in
              let xexp = Util.bvar_to_exp x in
              let xret = return_value env x.sort (Util.bvar_to_exp x) in
@@ -739,7 +741,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (c:com
     let md = Tc.Env.get_monad_decl env c.effect_name in 
     let wp = mk_Typ_app(md.assert_p, [targ res_t; targ <| label_opt reason (Env.get_range env) f; targ wp]) wp.tk wp.pos in
     let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) wlp.tk wlp.pos in
-    let c2 = mk_comp md res_t wp wlp [] in
+    let c2 = mk_comp md res_t wp wlp (c.flags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> [])) in
    // if debug env then Util.fprint1 "\tStrengthened precondition is %s" (Print.comp_typ_to_string c2);
     c2, g
 
@@ -800,6 +802,8 @@ let check_comp env (e:exp) (c:comp) (c':comp) : exp * comp * guard_t =
 
 let maybe_assume_result_eq_pure_term env (e:exp) (c:comp) : comp = 
   if not (is_pure env c) then c
+  else if Util.is_partial_return c 
+  then c
   else match (compress_typ (Util.comp_result c)).n with 
     | Typ_fun _ -> c (* no need to include equalities for functions *)
     | _ -> 

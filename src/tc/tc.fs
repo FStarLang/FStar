@@ -897,6 +897,9 @@ and tc_exp env e : exp * comp * guard_t =
                      if is_null_binder (List.hd bs)
                      then let g' = Util.must <| Tc.Rel.sub_comp env c (mk_Total t_e) in
                           comps, Rel.conj_guard g g'
+                     else if Absyn.Util.is_partial_return c
+                     then let comps = (Some (Env.Binding_var(x.v, x.sort)), c)::comps in
+                          comps, g 
                      else let c = Tc.Util.maybe_assume_result_eq_pure_term env e c in
                           let comps = (Some (Env.Binding_var(x.v, x.sort)), c)::comps in
                           comps, g in
