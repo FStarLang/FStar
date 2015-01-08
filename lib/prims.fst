@@ -36,7 +36,6 @@ logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
 logic type ITE : Type -> Type -> Type -> Type (* written if/then/else in concrete syntax *)
 logic type Precedes : #a:Type -> #b:Type -> a -> b -> Type  (* a built-in well-founded partial order over all terms *)
 assume type bool
-logic type b2t (b:bool) = b==true
 
 monad_lattice { (* The definition of the PURE effect is fixed; no user should ever change this *)
   PURE::
@@ -47,19 +46,19 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              type return (a:Type) (x:a) (p:Post a) = p x
              type bind_wp  (a:Type) (b:Type) (wp1:WP a) (wlp1:WP a) 
                                              (wp2: (a -> WP b)) (wlp2: (a -> WP b))
-                                             (p:Post b) = wp1 (fun a -> wp2 a p)
+                                             (p:Post b) = wp1 (fun (x:a) -> wp2 x p)
              type bind_wlp (a:Type) (b:Type) (wlp1:WP a) 
                                              (wlp2:(a -> WP b))
-                                             (p:Post b) = wlp1 (fun a -> wlp2 a p)
+                                             (p:Post b) = wlp1 (fun (x:a) -> wlp2 x p)
              type if_then_else (a:Type) (p:Type) (wp_then:WP a) (wp_else:WP a) (post:Post a) = 
                  (if p 
                   then wp_then post
                   else wp_else post)
              type ite_wlp (a:Type) (wlp_cases:WP a) (post:Post a) =
-                 (forall (x:a). wlp_cases (fun (x':a) -> x=!=x') \/ post x)
+                 (forall (x:a). wlp_cases (fun (x':a) -> ~(Eq2 #a #a x x')) \/ post x)
              type ite_wp (a:Type) (wlp_cases:WP a) (wp_cases:WP a) (post:Post a) =
-                 (forall (x:a). wlp_cases (fun (x':a) -> x=!=x') \/ post x)
-                 /\ (wp_cases (fun a -> True))
+                 (forall (x:a). wlp_cases (fun (x':a) -> ~(Eq2 #a #a x x')) \/ post x)
+                 /\ (wp_cases (fun (x:a) -> True))
              type wp_binop (a:Type) (wp1:WP a) (op:(Type -> Type -> Type)) (wp2:WP a) (p:Post a) =
                  op (wp1 p) (wp2 p)
              type wp_as_type (a:Type) (wp:WP a) = (forall (p:Post a). wp p)
@@ -68,18 +67,18 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              type assert_p (a:Type) (q:Type) (wp:WP a) (p:Post a) = (q /\ wp p)
              type assume_p (a:Type) (q:Type) (wp:WP a) (p:Post a) = (q ==> wp p)
              type null_wp (a:Type) (p:Post a) = (forall (x:a). p x)
-             type trivial (a:Type) (wp:WP a) = wp (fun x -> True)
+             type trivial (a:Type) (wp:WP a) = wp (fun (x:a) -> True)
              with Pure (a:Type) (pre:Pre) (post:Post a) =
                     PURE a
-                         (fun (p:Post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
-                         (fun (p:Post a) -> forall a. pre /\ post a ==> p a)   (* WLP *)
-             and Admit (a:Type) = PURE a (fun 'p -> True) (fun 'p -> True)
+                         (fun (p:Post a) -> pre /\ (forall (x:a). post x ==> p x)) (* WP *)
+                         (fun (p:Post a) -> forall (x:a). pre /\ post x ==> p x)   (* WLP *)
+             and Admit (a:Type) = PURE a (fun (p:Post a) -> True) (fun (p:Post a) -> True)
              and default Tot (a:Type) =
                PURE a (fun (p:Post a) -> (forall (x:a). p x)) (fun (p:Post a) -> (forall (x:a). p x))
 
 }
 open Prims.PURE
-
+logic type b2t (b:bool) = b==true
 assume type unit
 assume type int
 assume type char
@@ -133,10 +132,6 @@ type result (a:Type) =
   | V   : v:a -> result a
   | E   : e:exn -> result a
   | Err : msg:string -> result a
-
-assume type T : (result int -> Type) -> Type
-assume TEST: T (fun ri -> V.v ri == 0)
-
 
 monad_lattice {
   DIV::

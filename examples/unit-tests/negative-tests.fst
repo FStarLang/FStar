@@ -1,4 +1,4 @@
-(* EXPECT 23 FAILURES *)
+(* EXPECT 25 FAILURES *)
 (* ******************************************************************************** *)
 module Neg
 assume val g : 'a -> Tot 'b
@@ -23,6 +23,13 @@ let test_postcondition_label x = x //should fail
 
 val bad_projector: option 'a -> 'a
 let bad_projector x = Some.v x (* should fail *)
+
+assume type T : (result int -> Type) -> Type
+assume TEST: T (fun ri -> V.v ri == 0)//should fail: not (is_V ri)
+
+assume val f1: (x:int -> Tot unit) -> Tot unit
+assume val g1: nat -> Tot unit
+let h1 = f1 (fun x -> g1 x) //should fail; x is not nat
 
 (* ******************************************************************************** *)
 

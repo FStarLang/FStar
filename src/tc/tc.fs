@@ -60,13 +60,19 @@ let fxv_check head env kt fvs =
                         | Inl k -> 
                           let s = Util.new_kvar env in
                           begin match Tc.Rel.try_keq env k s with 
-                            | Some g when (Rel.is_trivial g) -> ()
+                            | Some g ->
+                              if fst <| Tc.Rel.try_discharge_guard env g 
+                              then ()
+                              else fail()
                             | _ -> fail ()
                           end 
                         | Inr t -> 
                           let s = Util.new_tvar env ktype in
                           begin match Tc.Rel.try_teq env t s with
-                            | Some g when (Rel.is_trivial g) -> ()
+                            | Some g -> 
+                              if fst <| Tc.Rel.try_discharge_guard env g
+                              then ()
+                              else fail()
                             | _ -> fail ()
                           end in
     aux false kt
@@ -346,8 +352,10 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
                 begin match formal, actual with 
                     | (Inl a, _), (Inl t, imp) -> (* explicit type argument *)
                       let formal_k = Util.subst_kind subst a.sort in
-                      if Env.debug env Options.High then Util.fprint2 "Checking argument %s against expected kind %s\n" (Print.arg_to_string actual) (Print.kind_to_string formal_k);
                       let t, g' = tc_typ_check env t formal_k in
+                      if Env.debug env Options.High 
+                      then Util.fprint3 "Checking argument %s against expected kind %s\n>>>Got guard %s\n"
+                             (Print.arg_to_string actual) (Print.kind_to_string formal_k) (Rel.guard_to_string env g');
                       let actual = Inl t, imp in
                       let g' = Rel.imp_guard (Rel.guard_of_guard_formula <| Tc.Util.short_circuit_guard (Inl head) outargs) g' in
                       let subst = maybe_extend_subst subst formal actual in
@@ -399,6 +407,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
        
         | _ ->
           let g, k, args = check_app () in
+
           let t = mk_Typ_app(head, args) k top.pos in
           t, k, g
     end
@@ -458,7 +467,8 @@ and tc_typ_check env t (k:knd) : typ * guard_t =
   let t, k', f = tc_typ env t in
   let env = Env.set_range env t.pos in
   let f' = Rel.subkind env k' k in 
-  t, Rel.conj_guard f f'       
+  let f = Rel.conj_guard f f' in
+  t, f
 
 and tc_value env e : exp * comp * guard_t = 
   let env = Env.set_range env e.pos in
@@ -1036,7 +1046,7 @@ and tc_exp env e : exp * comp * guard_t =
                  let fvs = Util.freevars_typ tres in
                  if Util.set_mem (bvd_to_bvar_s bvd t) fvs.fxvs 
                  then let t = Tc.Util.new_tvar env0 ktype in
-                      if Rel.is_trivial <| Tc.Rel.teq env tres t
+                      if fst (Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env tres t)
                       then e, cres, guard
                       else raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres bvd, rng env))
                  else e, cres, guard
@@ -1103,7 +1113,7 @@ and tc_exp env e : exp * comp * guard_t =
                     | (Inl x, _, _) -> Util.set_mem (bvd_to_bvar_s x tun) fvs.fxvs) with
                 | Some (Inl y, _, _) ->
                   let t' = Tc.Util.new_tvar env0 ktype in 
-                  if Rel.is_trivial <| Tc.Rel.teq env (Util.comp_result cres) t'
+                  if fst (Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env (Util.comp_result cres) t')
                   then e, cres, guard
                   else raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env (Util.comp_result cres) y, rng env))
                 | _ -> e, cres, guard

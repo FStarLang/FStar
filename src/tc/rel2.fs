@@ -189,6 +189,7 @@ let p_invert = function
    | TProb p -> TProb <| invert p
    | EProb p -> EProb <| invert p
    | CProb p -> CProb <| invert p
+let is_top_level_prob p = p_reason p |> List.length = 1
 
 let mk_problem scope orig lhs rel rhs elt reason = {     
      lhs=lhs;
@@ -1405,7 +1406,7 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
       But, it seems that performance would suffer greatly then. TBD.
    *)
    let flex_flex (lhs:flex_t) (rhs:flex_t) : solution = 
-        if wl.defer_ok then solve env (defer "flex-flex deferred" orig wl) else
+        if wl.defer_ok && p_rel orig <> EQ then solve env (defer "flex-flex deferred" orig wl) else
         let (t1, u1, k1, args1) = lhs in
         let (t2, u2, k2, args2) = rhs in 
         let maybe_pat_vars1 = pat_vars env [] args1 in
@@ -1550,33 +1551,40 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
       (* flex-rigid: subtyping *)
       | Typ_uvar _, _
       | Typ_app({n=Typ_uvar _}, _), _ -> (* equate with the base type of the refinement on the RHS, and add a logical guard for the refinement formula *)
-        let t_base, ref_opt = base_and_refinement env wl t2 in
-        begin match ref_opt with 
-            | None -> //no useful refinement on the RHS, so just equate and solve
-              solve_t_flex_rigid (TProb <| {problem with relation=EQ}) (destruct_flex_pattern env t1) t_base wl
+        if wl.defer_ok
+        then solve env (defer "flex-rigid subtyping deferred" orig wl) 
+        else 
+        if not <| is_top_level_prob orig //If it's not top-level and t2 is refined, then we should not try to prove that t2's refinement is saturated
+        then solve_t_flex_rigid (TProb <| {problem with relation=EQ}) (destruct_flex_pattern env t1) t2 wl
+        else let t_base, ref_opt = base_and_refinement env wl t2 in
+             begin match ref_opt with 
+                    | None -> //no useful refinement on the RHS, so just equate and solve
+                      solve_t_flex_rigid (TProb <| {problem with relation=EQ}) (destruct_flex_pattern env t1) t_base wl
                 
-            | Some (y, phi) -> 
-              let y' = {y with sort = t1} in
-              let impl = guard_on_element problem y' phi in
-              let base_prob = 
-                TProb <| mk_problem problem.scope orig t1 EQ y.sort problem.element "flex-rigid: base type" in
-              let guard = Util.mk_conj (p_guard base_prob |> fst) impl in
-              let wl = solve_prob orig (Some guard) [] wl in
-              solve env (attempt [base_prob] wl)
-        end
+                    | Some (y, phi) -> 
+                      let y' = {y with sort = t1} in
+                      let impl = guard_on_element problem y' phi in
+                      let base_prob = 
+                        TProb <| mk_problem problem.scope orig t1 EQ y.sort problem.element "flex-rigid: base type" in
+                      let guard = Util.mk_conj (p_guard base_prob |> fst) impl in
+                      let wl = solve_prob orig (Some guard) [] wl in
+                      solve env (attempt [base_prob] wl)
+             end
               
       (* rigid-flex: subtyping *)
       | _, Typ_uvar _ 
       | _, Typ_app({n=Typ_uvar _}, _) -> (* widen immediately, by forgetting the top-level refinement and equating *)
-        let t_base, _ = base_and_refinement env wl t1 in 
-        solve_t env ({problem with lhs=t_base; relation=EQ}) wl
+        if wl.defer_ok
+        then solve env (defer "rigid-flex subtyping deferred" orig wl) 
+        else let t_base, _ = base_and_refinement env wl t1 in 
+             solve_t env ({problem with lhs=t_base; relation=EQ}) wl
  
       | Typ_refine _, _ ->
         let t2 = force_refinement <| base_and_refinement env wl t2 in
         solve_t env ({problem with rhs=t2}) wl
 
       | _, Typ_refine _ -> 
-        let t1 = force_refinement <| base_and_refinement env wl t2 in
+        let t1 = force_refinement <| base_and_refinement env wl t1 in
         solve_t env ({problem with lhs=t1}) wl
 
       | Typ_btvar _, _
@@ -1849,12 +1857,12 @@ and solve_e (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution =
     match e1.n, e2.n with 
     | Exp_bvar x1, Exp_bvar x1' -> 
       if Util.bvd_eq x1.v x1'.v
-      then solve env wl
+      then solve env (solve_prob orig None [] wl)
       else solve env (solve_prob orig (Some <| Util.mk_eq e1 e2) [] wl)
 
     | Exp_fvar (fv1, _), Exp_fvar (fv1', _) -> 
       if lid_equals fv1.v fv1'.v
-      then solve env wl
+      then solve env (solve_prob orig None [] wl)
       else giveup env "free-variables unequal" orig //distinct top-level free vars are never provably equal
 
     | Exp_constant s1, Exp_constant s1' -> 
@@ -1863,7 +1871,7 @@ and solve_e (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution =
           | Const_string(b1, _), Const_string(b2, _) -> b1=b2
           | _ -> s1=s2 in
       if const_eq s1 s1'
-      then solve env wl
+      then solve env (solve_prob orig None [] wl)
       else giveup env "constants unequal" orig
 
     | Exp_ascribed(e1, _), _ -> 
@@ -1949,7 +1957,7 @@ let check_trivial t = match t.n with
     | _ -> NonTrivial t
 
 let imp_guard_f g1 g2 = match g1, g2 with 
-  | Trivial, g
+  | Trivial, g -> g
   | g, Trivial -> Trivial
   | NonTrivial f1, NonTrivial f2 ->
     let imp = Util.mk_imp f1 f2 in check_trivial imp

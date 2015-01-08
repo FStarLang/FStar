@@ -28,6 +28,22 @@ open Microsoft.FStar.Tc.Normalize
 open Microsoft.FStar.Tc.Rel
 open Microsoft.FStar.Absyn.Syntax
 
+(**************************************************************************************)
+(* Calling the solver *)
+(**************************************************************************************)
+let try_solve env f = env.solver.solve env f 
+let report env errs = 
+    Tc.Errors.report (Tc.Env.get_range env)
+                     (Tc.Errors.failed_to_prove_specification errs)
+
+let discharge_guard env (g:guard_t) = 
+    let ok, errs = Rel.try_discharge_guard env g in
+    if not ok then report env errs
+
+let force_trivial env g = discharge_guard env g
+
+(**************************************************************************************)
+
 let t_unit   = syn dummyRange ktype <| mk_Typ_const (Util.withsort Const.unit_lid   ktype)
 let t_bool   = syn dummyRange ktype <| mk_Typ_const (Util.withsort Const.bool_lid   ktype)
 let t_uint8  = syn dummyRange ktype <| mk_Typ_const (Util.withsort Const.uint8_lid  ktype)
@@ -91,11 +107,7 @@ let new_kvar env   = Rel.new_kvar (Env.get_range env) (env_binders env)   |> fst
 let new_tvar env t = Rel.new_tvar (Env.get_range env) (env_binders env) t |> fst
 let new_evar env t = Rel.new_evar (Env.get_range env) (env_binders env) t |> fst
 
-let force_trivial env g = 
-    if Rel.is_trivial g 
-    then ()
-    else raise (Error(Util.format1 "Unexpected non-trivial guard: %s" (Rel.guard_to_string env g), Env.get_range env))
-    
+
 let destruct_arrow_kind env tt k args : (Syntax.args * binders * knd) = 
     let ktop = compress_kind k |> Normalize.norm_kind [WHNF; Beta; Eta] env in 
     let r = Env.get_range env in
@@ -838,18 +850,6 @@ let maybe_instantiate env e t =
 
   | _ -> e, t
 
-
-(**************************************************************************************)
-(* Calling the solver *)
-(**************************************************************************************)
-let try_solve env f = env.solver.solve env f 
-let report env errs = 
-    Tc.Errors.report (Tc.Env.get_range env)
-                     (Tc.Errors.failed_to_prove_specification errs)
-
-let discharge_guard env (g:guard_t) = 
-    let ok, errs = Rel.try_discharge_guard env g in
-    if not ok then report env errs
 
 (**************************************************************************************)
 (* Generalizing types *)

@@ -26,9 +26,9 @@ let rec flex_flex_same_var_patterns (a:Type) (env:a) n binders  =
   | Z -> flex_flex_same_var_patterns a env n binders
   | S m -> flex_flex_same_var_patterns a env m binders
 
-let rec resolve_flex_flex_non_pattern a b =
-  let f x y = () in
-  f a b
+(* let resolve_flex_flex_non_pattern a b = *)
+(*   let f x y = () in *)
+(*   f a b *)
 
 let rec test_dependent_subeffect x : int =
   let id t = t in
