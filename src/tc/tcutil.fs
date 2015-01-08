@@ -76,20 +76,22 @@ let is_tvar_free (a:btvdef) t =
 
 let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
   let env = Env.set_range env e.pos in
-  match try_subtype env t1 t2 with
-    | None -> 
-        if env.is_pattern
-        then raise (Error(Tc.Errors.expected_pattern_of_type env t2 e t1, Tc.Env.get_range env))
-        else raise (Error(Tc.Errors.expected_expression_of_type env t2 e t1, Tc.Env.get_range env))
-    | Some f -> 
-        let g = apply_guard f e in
-        if debug env <| Options.Other "Rel"
-        then Util.fprint1 "Applied guard is %s\n" <| guard_to_string env g;
-        let e = Util.compress_exp e in
-        let e = match e.n with 
-            | Exp_bvar x -> mk_Exp_bvar (Util.bvd_to_bvar_s x.v t2) t2 e.pos 
-            | _ -> {e with tk=t2} in
-        e, g
+  if env.is_pattern
+  then match Rel.try_teq env t1 t2 with
+        | None -> raise (Error(Tc.Errors.expected_pattern_of_type env t2 e t1, Tc.Env.get_range env))
+        | Some g -> e, g
+  else match try_subtype env t1 t2 with
+        | None -> 
+          raise (Error(Tc.Errors.expected_expression_of_type env t2 e t1, Tc.Env.get_range env))
+        | Some f -> 
+           let g = apply_guard f e in
+           if debug env <| Options.Other "Rel"
+           then Util.fprint1 "Applied guard is %s\n" <| guard_to_string env g;
+           let e = Util.compress_exp e in
+           let e = match e.n with 
+               | Exp_bvar x -> mk_Exp_bvar (Util.bvd_to_bvar_s x.v t2) t2 e.pos 
+               | _ -> {e with tk=t2} in
+           e, g
 
 let env_binders env = 
     if !Options.full_context_dependency 
@@ -521,7 +523,7 @@ let extract_lb_annotation (is_rec:bool) env t e = match t.n with
               scope, bs
             | Inr x -> 
               let b = (Inr (mk_v_binder scope x), snd b) in
-              let scope = if !Options.full_context_dependency then scope@[b] else scope in//don't introduce dependent types, if there's no annotation, by default
+              let scope = if !Options.full_context_dependency then scope@[b] else scope in//don't introduce dependent types, if there's no annotation and the flag is not set
               scope, bs@[b]) (vars,[]) in
 
         let e, res = aux scope e in 
