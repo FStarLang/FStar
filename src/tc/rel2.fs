@@ -418,7 +418,7 @@ let base_and_refinement env wl t1 =
             then (x.sort, Some(x, phi))
             else begin match normalize_refinement env wl t1 with
                 | {n=Typ_refine(x, phi)} -> (x.sort, Some(x, phi))
-                | _ -> failwith "impossible"
+                | tt -> failwith (Util.format2 "impossible: Got %s ... %s\n" (Print.typ_to_string tt) (Print.tag_of_typ tt))
             end
 
         | Typ_const _
@@ -433,15 +433,17 @@ let base_and_refinement env wl t1 =
 
         | Typ_btvar _
         | Typ_fun _
-        | Typ_lam _ -> (t1, None)
+        | Typ_lam _ 
+        | Typ_uvar _ -> (t1, None)
 
         | Typ_ascribed _ 
-        | Typ_uvar _
         | Typ_delayed _
         | Typ_meta _
-        | Typ_unknown -> failwith "impossible" in
-   aux false t1
+        | Typ_unknown -> failwith (Util.format2 "impossible (outer): Got %s ... %s\n" (Print.typ_to_string t1) (Print.tag_of_typ t1)) in
+   aux false (compress env wl t1)
 
+let unrefine env t = base_and_refinement env empty_worklist t |> fst
+    
 let trivial_refinement t = Util.gen_bvar_p t.pos t, Util.t_true
 
 let as_refinement env wl t = 

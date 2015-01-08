@@ -961,7 +961,8 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp * guard_t =
   let aux e c = 
       let ct = Tc.Normalize.weak_norm_comp env c in
       let tc, _, _ = destruct_comp ct in
-      match Tc.Rel.try_subtype env tc t with
+      let gopt = if env.is_pattern then Tc.Rel.try_teq env tc t else Tc.Rel.try_subtype env tc t in
+      match gopt with 
         | None -> None
         | Some g -> 
            begin match guard_f g with 

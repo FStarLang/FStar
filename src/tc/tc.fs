@@ -965,7 +965,9 @@ and tc_exp env e : exp * comp * guard_t =
             else raise (Error(Tc.Errors.expected_function_typ env tf, head.pos)) in
 
     let e, c, g = check_function_app false (Util.unrefine thead) in
-    let c = if !Options.verify && (Util.is_primop head || Util.is_total_comp c)
+    let c = if !Options.verify 
+            && not (Util.is_partial_return c)
+            && (Util.is_primop head || Util.is_total_comp c)
             then Tc.Util.maybe_assume_result_eq_pure_term env e c 
             else c in
     if debug env Options.Extreme then  Util.fprint3 "(%s) About to check %s against expected typ %s" (Range.string_of_range e.pos) (Print.typ_to_string (Util.comp_result (Tc.Normalize.normalize_comp env0 c))) (Env.expected_typ env0 |> (fun x -> match x with None -> "None" | Some t-> Print.typ_to_string t));
@@ -1139,11 +1141,13 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
         | _ -> ());
     let env1, _ = Tc.Env.clear_expected_typ pat_env in 
     let env1 = {env1 with Env.is_pattern=true} in 
-    let env1 = Tc.Env.set_expected_typ env1 pat_t in
+    let env1 = Tc.Env.set_expected_typ env1 (Tc.Rel2.unrefine env pat_t) in
     let exps, gs = exps |> List.map (fun e -> 
         if Tc.Env.debug env Options.High
         then Util.fprint2 "Checking pattern expression %s against expected type %s\n" (Print.exp_to_string e) (Print.typ_to_string pat_t);
         let e, _, g =  tc_total_exp env1 e in //only keep the unification/subtyping constraints; discard the logical guard for patterns
+        if Tc.Env.debug env Options.High
+        then Util.fprint1 "Done checking pattern expression %s\n" (Print.exp_to_string e);
         e, {g with Rel2.guard_f=Rel2.Trivial}) |> List.unzip in
     let p = Tc.Util.decorate_pattern env p exps in
     if debug env <| Options.Other "Pat" 
