@@ -21,13 +21,17 @@ Colorizer     : fstar
                 margin-top=-1em tight 
 ~AnswerContent: border-style=solid border-width=1px border-color=black padding=0.5ex
 
-~Code,~Pre    : language=fstar
+~OldPre       : input=pre .para-block border-style=none
+~Code,~OldPre : language=fstar
                 replace=/([a-zA-Z])([12])\b/\(\1\2|\1~\2~\)/g
                 replace=/([a-zA-Z])_([\dnm])\b/\(\1_\2|\1~\2~\)/g
                 replace=/_n1\b/\(_n1|~n-1~\)/g
-                
+
+~Pre          : input=normal
+                replace="~Begin OldPre&nl;&source;&nl;~End OldPre&nl;*[Load in editor](&link;)*"
+                border-style=solid border-width=1px border-color=black padding=0.5ex
+
 ~Code         : replace=/^:/\(:|\)/
-~Pre          : padding-left=1em
 
 <style>
 .answer.view .answercontent, 
@@ -192,7 +196,7 @@ expression.
 Here is a module called `ACLs` (for Access-Control Lists) that defines
 our policy:
 
-```
+``` {link="code/solutions/ex1a-safe-read-write.fst"}
 [INCLUDE=code/solutions/ex1a-safe-read-write.fst:ACLs]
 ```
 
@@ -283,7 +287,7 @@ F\*, it complains that the `passwd` file does not have the type
 `:f:filename{canWrite f}`.
 
 <!-- mono ../../bin/fstar.exe --fstar_home ../.. code/solutions/ex1a-safe-read-write.fst code/solutions/doit.fst -->
-```html
+``` {language=""}
 Error code/solutions/doit.fst(8,2-16,0): The following problems were found:
 	Subtyping check failed; expected type f:filename{(canWrite f)}; got type string (code/solutions/doit.fst(13,10-13,16))
 ```
@@ -632,7 +636,9 @@ These example assertions are horrible because
 (1) they are in fact lemmas, while that's usually not the case
     for assertions and
 (2) they don't really work in F\*, which doesn't support top level assertions.
-I'll try to fix this.
+How can we fix this?
+We could introduce asserts as just a way to check facts in lemmas
+or as a way to check facts within (effectful) code.
 ~
 
 The simplest way to prove properties about your code is to write assertions.
