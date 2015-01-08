@@ -7,5 +7,5 @@ all:
 	make -C termination
 	make -C software_foundations
 	make -C metatheory
-	make -C school2014/solutions
+	make -C ../doc/tutorial/code/solutions
 	make -C unit-tests
