@@ -2071,10 +2071,11 @@ ex6e-insertion-sort.fst, that's still missing things.
 ~
 
 ~Exercise 
-Generalize `sort` so that it works on lists with an arbitrary element
-type, instead of just lists of integers. Prove it correct.
+Starting from this implementation (given below), generalize `sort` so
+that it works on lists with an arbitrary element type, instead of just
+lists of integers. Prove it correct.
 ~~ ExerciseFragment {exname=ex6b-sort-poly}
-(* Write your code here *)
+(* Start from the code in the "Load in editor" link *)
 ~~
 
 ~~ AnswerFragment {exname=ex6b-sort-poly}

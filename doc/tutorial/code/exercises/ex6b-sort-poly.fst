@@ -1,4 +1,4 @@
-module QuickSort
+module QuickSortPoly
 
 
 val mem: 'a -> list 'a -> Tot bool
