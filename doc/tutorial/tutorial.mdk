@@ -1843,7 +1843,7 @@ pivot in the middle before returning.
       | [] -> []
       | pivot::tl -> 
         let hi, lo  = partition (fun x -> pivot <= x) tl in 
-        sort lo@(pivot::sort hi)
+        sort (append lo (pivot::sort hi))
 
 
 ~Exercise
@@ -1854,17 +1854,20 @@ val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
 ~~Answer
 
 The following definition is included in F\*'s list library. 
-
 ~~~ SolutionFragment {exname=ex6a-partition}
-val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
-let rec partition f = function 
-  | [] -> [], []
-  | hd::tl -> 
-    let l1, l2 = partition f tl in
-    if f hd 
-    then hd::l1, l2
-    else l1, hd::l2
+[INCLUDE=code/solutions/ex6a-partition.fst:Partition]
 ~~~
+
+<!-- ~~~ SolutionFragment {exname=ex6a-partition} -->
+<!-- val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a) -->
+<!-- let rec partition f = function  -->
+<!--   | [] -> [], [] -->
+<!--   | hd::tl ->  -->
+<!--     let l1, l2 = partition f tl in -->
+<!--     if f hd  -->
+<!--     then hd::l1, l2 -->
+<!--     else l1, hd::l2 -->
+<!-- ~~~ -->
 ~~
 ~
 
@@ -1925,10 +1928,22 @@ machinery.
                            -> pivot:int
                            -> Lemma (requires ((forall y. mem y l1 ==> not (pivot <= y))
                                             /\ (forall y. mem y l2 ==> pivot <= y)))
-                                    (ensures (sorted (l1@(pivot::l2))))
+                                    (ensures (sorted (append l1 (pivot::l2))))
      let rec sorted_concat_lemma l1 l2 pivot = match l1 with  
       | [] -> ()
       | hd::tl -> sorted_concat_lemma tl l2 pivot
+
+Finally, we also need a universally quantified variant of the
+`append_mem` lemma presented in a previous exercise:
+
+     val append_mem:  l1:list 'a
+                   -> l2:list 'a
+                   -> Lemma (requires True)
+                            (ensures (forall a. mem a (append l1 l2) = (mem a l1 || mem a l2)))
+     let rec append_mem l1 l2 = match l1 with
+       | [] -> ()
+       | hd::tl -> append_mem tl l2
+
 
 Armed with these lemmas, let's return to our implementation of
 quicksort. Unfortunately, with the lemmas as they are, we still can't
@@ -1948,8 +1963,9 @@ calling the lemmas to make the proof go through.
         partition_lemma (cmp pivot) tl; 
         let hi = sort_tweaked hi' in
         let lo = sort_tweaked lo' in
+        append_mem lo (pivot::hi);
         sorted_concat_lemma lo hi pivot;
-        lo@(pivot::hi)
+        append lo (pivot::hi)
 
 That works, but it's pretty ugly. Not only did we have to pollute our
 implementation with calls to the lemmas, in order to make those calls,
@@ -2000,7 +2016,7 @@ property proven by the lemma.
 Likewise, here's a revised type for `sorted_concat_lemma`. This time,
 we instruct F\* and the SMT solver to associate the lemma property
 only with very specific terms: just those that have the shape 
-`sorted (11@(pivot::l2))`. The more specific a pattern you can provide, 
+`sorted (append 11 (pivot::l2))`. The more specific a pattern you can provide, 
 the more discriminating the SMT solver will be in applying lemmas, 
 keeping your verification times acceptable. 
 
@@ -2009,8 +2025,19 @@ keeping your verification times acceptable.
                           -> pivot:int
                           -> Lemma (requires ((forall y. mem y l1 ==> not (pivot <= y))
                                            /\ (forall y. mem y l2 ==> pivot <= y)))
-                                   (ensures (sorted (l1@(pivot::l2))))
-                             [SMTPat (sorted (l1@(pivot::l2)))]
+                                   (ensures (sorted (append l1 (pivot::l2))))
+                             [SMTPat (sorted (append l1 (pivot::l2)))]
+
+Finally, we also revise the type for `append_mem` in the same way:
+
+    val append_mem:  l1:list 'a
+                  -> l2:list 'a
+                  -> Lemma (requires True)
+                           (ensures (forall a. mem a (append l1 l2) = (mem a l1 || mem a l2)))
+                           [SMTPat (append l1 l2)]
+    let rec append_mem l1 l2 = match l1 with
+      | [] -> ()
+      | hd::tl -> append_mem tl l2
 
 
 ~Remark 
@@ -2025,13 +2052,14 @@ With these revised signatures, we can write `sort` just as we
 originally did, and give it the type we want. The SMT solver implicitly
 derives the properties it needs from the lemmas that we have provided.
 
-    val sort: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l == mem i m)})
+    let cmp i j = i <= j
+    val sort: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l = mem i m)})
                                 (decreases (length l))
     let rec sort l = match l with
-        | [] -> []
-        | pivot::tl -> 
-            let hi, lo  = partition (fun x -> pivot <= x) tl in 
-            sort lo@(pivot::sort hi)
+      | [] -> []
+      | pivot::tl ->
+        let hi, lo = partition (cmp pivot) tl in
+        append (sort lo) (pivot::sort hi)
 
 
 ### Exercises
