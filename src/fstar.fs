@@ -52,7 +52,7 @@ let go _ =
     | Die msg ->
       Util.print_string msg
     | GoOn ->
-        if not (Option.isNone !Options.codegen) then
+        if Option.isSome !Options.codegen then
             Options.pretype := true;
         (* 1. Parsing the file + desugaring *)
         let filenames = if has_prims_cache filenames then filenames else (Options.prims()::filenames) in
