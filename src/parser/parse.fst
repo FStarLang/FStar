@@ -138,6 +138,7 @@ type token =
   | BAR_BAR
   | LEQ
   | GEQ
+  | LESSLESS
   | LESS
   | GREATER
   | LESSGREATER

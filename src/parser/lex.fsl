@@ -450,6 +450,7 @@ rule token args = parse
  | "%[" { PERCENT_LBRACK }
  | "[" { LBRACK }
  | "[|" { LBRACK_BAR }
+ | "<<" {  LESSLESS }
  | "<=" { LEQ }
  | ">=" { GEQ }
  | "<>" { LESSGREATER }
