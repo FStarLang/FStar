@@ -7,6 +7,7 @@ Colorizer     : fstar
 
 .Comment      : before="**&author;**:&nbsp;" font-style=italic
 ~CH           : .comment color=green author=CH
+~CK           : .comment color=blue author=Chantal
 ~BB           : .comment color=purple author="Benjamin Beurdouch"
 ~NS           : .comment color=red author="Nik"
 ~Todo         : .comment author="Todo"
@@ -2083,21 +2084,26 @@ lists of integers. Prove it correct.
 ~~
 ~
 
+~CK
+I do not write an exercise file for this one since it is exactly the
+same as before, and would thus duplicate code.
+~
+
 ~Exercise {exname=ex6c-break-sort-spec}
 Our specification for `sort` is incomplete. Why? Can you write a
 variation of `sort` that has the same specification as the one above,
 but discards some elements of the list? 
-~~ ExerciseFragment {exname=ex6c-break-sort-spec}
-(* Write your code here *)
+~~ ExerciseFragment {exname=ex6b-sort-poly}
+(* Start from the code in the "Load in editor" link *)
 ~~
 
 ~~ Answer
 The specification does not ensure that the resulting list is a
 permutation of the initial list: it could discard or repeat some
 elements.
-~~
-~~CH
-Answer code missing, should go in ex6c-break-sort-spec.fst.
+~~~ SolutionFragment {exname=ex6c-break-sort-spec}
+[INCLUDE=code/solutions/ex6c-break-sort-spec.fst]
+~~~
 ~~
 ~
 
