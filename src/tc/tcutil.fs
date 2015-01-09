@@ -996,16 +996,6 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp * guard_t =
       end
     | Some ecg -> ecg
 
-//let check_total env g c : option<(bool * list<string>)> = 
-//  if Util.is_total_comp c 
-//  then Some (true, [])
-//  else
-//      let steps = [Normalize.Beta; Normalize.SNComp] in
-//      let c = Tc.Normalize.norm_comp steps env c in
-//      match Tc.Rel.sub_comp env c (Util.total_comp (Util.comp_result c) (Env.get_range env)) with 
-//        | Some g' -> Some <| try_discharge_guard env (Rel.conj_guard g g') 
-//        | _ -> None
-
 let check_top_level env g c : bool =
   if Util.is_total_comp c 
   then true
