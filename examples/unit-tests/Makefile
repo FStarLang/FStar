@@ -6,7 +6,7 @@ all: .all.ver all-neg
 
 all-neg: $(NEGFILES)
 	-$(FSTAR) $(STDLIB) $^
-	echo "EXPECT 25 FAILURES<------------------------------------"
+	echo "EXPECT 27 FAILURES<------------------------------------"
 
 rel2: 
 	$(FSTAR) --rel2 ../../lib/list.fst

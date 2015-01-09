@@ -161,6 +161,5 @@ let failed_to_prove_specification lbls =
     | [] -> "An unknown assertion in the term at this location was not provable"
     | _ -> format1 "The following problems were found:\n\t%s" (lbls |> String.concat "\n\t")
 
-let top_level_effect errs = match errs with 
-    | [] -> "Top-level let-bindings must be total; this term may have effects"
-    | _ -> format1 "Top-level let-bindings must be total; this term may have effects because of the following problems\n\t%s" (errs |> String.concat "\n\t")
+let top_level_effect = "Top-level let-bindings must be total; this term may have effects"
+    

@@ -573,9 +573,9 @@ let is_pure env c =
 
 let mk_comp md result wp wlp flags = 
   mk_Comp ({effect_name=md.mname;
-         result_typ=result;
-         effect_args=[targ wp; targ wlp];
-         flags=flags})
+             result_typ=result;
+             effect_args=[targ wp; targ wlp];
+             flags=flags})
 
 //let return_value env t v = Util.total_comp t (range_of_exp v (Env.get_range env))
 let is_function t = match (compress_typ t).n with
@@ -732,7 +732,6 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (c:com
         && not (is_function (Util.comp_result c))
         && not (Util.is_partial_return c)
         then let x = Util.gen_bvar (Util.comp_result c) in
-             let xexp = Util.bvar_to_exp x in
              let xret = return_value env x.sort (Util.bvar_to_exp x) in
              let xbinding = Env.Binding_var(x.v, x.sort) in
              bind env (Some e) c (Some xbinding, xret)
@@ -881,7 +880,7 @@ let check_uvars r t =
     Options.hide_uvar_nums := hide_uvar_nums_saved;
     Options.print_implicits := print_implicits_saved
 
-let gen env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
+let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
   if not <| (Util.for_all (fun (_, c) -> Util.is_pure_comp c) ecs) //No value restriction in F*---generalize the types of pure computations
   then None
   else
@@ -912,7 +911,7 @@ let gen env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
                let t = ct.result_typ in
                let uvt = Util.uvars_in_typ t in
                let uvs = gen_uvars uvt.uvars_t in 
-               if !Options.verify && not <| Util.is_total_comp c
+               if !Options.verify && verify && not <| Util.is_total_comp c
                then begin
                   let _, wp, _ = destruct_comp ct in 
                   let binder = [null_v_binder t] in
@@ -947,9 +946,9 @@ let gen env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
      Some ecs 
 
 
-let generalize env (lecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) = 
+let generalize verify env (lecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*comp)>) = 
   if debug env Options.Low then Util.fprint1 "Generalizing: %s" (List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs |> String.concat ", ");
-  match gen env (lecs |> List.map (fun (_, e, c) -> (e, c))) with 
+  match gen verify env (lecs |> List.map (fun (_, e, c) -> (e, c))) with 
     | None -> lecs
     | Some ecs -> 
       List.map2 (fun (l, _, _) (e, c) -> 
@@ -991,22 +990,35 @@ let weaken_result_typ env (e:exp) (c:comp) (t:typ) : exp * comp * guard_t =
     | None -> subtype_fail env (Util.comp_result c) t in
   match aux e c with
     | None -> (* before giving up, try again after generalizing the type of e, if possible *)
-      begin match gen env [e,c] with 
+      begin match gen false env [e,c] with 
         | Some ([(e,c)]) -> aux e c |> must
         | _ -> Rel.subtype_fail env (Util.comp_result c) t
       end
     | Some ecg -> ecg
 
-let check_total env g c : bool * list<string> = 
-  if Util.is_total_comp c 
-  then true, []
-  else
-      let steps = [Normalize.Beta; Normalize.SNComp] in
-      let c = Tc.Normalize.norm_comp steps env c in
-      match Tc.Rel.sub_comp env c (Util.total_comp (Util.comp_result c) (Env.get_range env)) with 
-        | Some g' -> try_discharge_guard env (Rel.conj_guard g g') 
-        | _ -> false, []
+//let check_total env g c : option<(bool * list<string>)> = 
+//  if Util.is_total_comp c 
+//  then Some (true, [])
+//  else
+//      let steps = [Normalize.Beta; Normalize.SNComp] in
+//      let c = Tc.Normalize.norm_comp steps env c in
+//      match Tc.Rel.sub_comp env c (Util.total_comp (Util.comp_result c) (Env.get_range env)) with 
+//        | Some g' -> Some <| try_discharge_guard env (Rel.conj_guard g g') 
+//        | _ -> None
 
+let check_top_level env g c : bool =
+  if Util.is_total_comp c 
+  then true
+  else let steps = [Normalize.Beta; Normalize.SNComp; Normalize.DeltaComp] in
+       let c = Tc.Normalize.norm_comp steps env c |> Util.comp_to_comp_typ in
+       let md = Tc.Env.get_monad_decl env c.effect_name in
+       let t, wp, _ = destruct_comp c in
+       let vc = mk_Typ_app(md.trivial, [targ t; targ wp]) ktype (Env.get_range env) in
+       let g = Rel.conj_guard g (Rel.guard_of_guard_formula <| Rel2.NonTrivial vc) in
+       let ok, errs = try_discharge_guard env g in
+       if not ok then report env errs;
+       lid_equals c.effect_name Const.pure_effect_lid && ok
+       
 let refine_data_type env l (formals:binders) (result_t:typ) = 
     match formals with 
         | [] -> result_t

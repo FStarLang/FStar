@@ -1,11 +1,17 @@
-(* EXPECT 25 FAILURES *)
+(* EXPECT 27 FAILURES *)
 (* ******************************************************************************** *)
 module Neg
+
 assume val g : 'a -> Tot 'b
 assume val h : 'a:Type -> 'b:Type -> a:'a -> Tot (b:'b{b == g a})
 assume val length: list 'a -> Tot int
 assume val length_nil : unit -> Lemma
       (ensures (length int [] == 0))
+
+val x:nat
+let x = -1 //should fail reporting 1 error
+
+let y:nat = -1 //should also fail reporting only 1 error
 
 let assert_0_eq_1 () = assert (0==1) //should fail
 

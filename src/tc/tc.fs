@@ -1019,18 +1019,16 @@ and tc_exp env e : exp * comp * guard_t =
     let c1, guard_f = Tc.Util.strengthen_precondition (Some (fun () -> Errors.ill_kinded_type)) (Env.set_range env t.pos) e1 c1 f in
     begin match x with 
         | Inr _ -> (* top-level let, always ends with e2=():unit *)
-          let e2 = if !Options.verify
-                   then let ok, errs = Tc.Util.check_total env (Rel.conj_guard g1 guard_f) c1 in
-                        if not ok 
-                        then let t = Util.comp_result c1 in 
-                             if !Options.warn_top_level_effects
-                             then Tc.Errors.warn (Tc.Env.get_range env) (Tc.Errors.top_level_effect errs);
-                             mk_Exp_meta(Meta_desugared(e2, MaskedEffect)) 
-                        else e2
+          let e2 = if !Options.verify 
+                   then if Tc.Util.check_top_level env (Rel.conj_guard g1 guard_f) c1 
+                        then e2
+                        else (if !Options.warn_top_level_effects
+                              then Tc.Errors.warn (Tc.Env.get_range env) Tc.Errors.top_level_effect;
+                              mk_Exp_meta(Meta_desugared(e2, MaskedEffect))) 
                    else (Tc.Util.discharge_guard env (Rel.conj_guard g1 guard_f);  //still need to solve remaining unification/subtyping constraints
                          e2) in
           let _, e1, c1 = if env.generalize 
-                          then List.hd <| Tc.Util.generalize env1 [x, e1, c1] (* only generalize top-level lets, when there is no val decl *)
+                          then List.hd <| Tc.Util.generalize false env1 [x, e1, c1] (* only generalize top-level lets, when there is no val decl *)
                           else x, e1, c1 in
           let cres = Util.ml_comp Tc.Util.t_unit top.pos in
           let cres = if Util.is_total_comp c1 
@@ -1092,7 +1090,7 @@ and tc_exp env e : exp * comp * guard_t =
         then lbs, g_lbs
         else begin 
              Tc.Util.discharge_guard env g_lbs;
-             let ecs = Tc.Util.generalize env (lbs |> List.map (fun (x, t, e) -> (x, e, Util.total_comp t <| range_of_lb (x,t,e)))) in 
+             let ecs = Tc.Util.generalize true env (lbs |> List.map (fun (x, t, e) -> (x, e, Util.total_comp t <| range_of_lb (x,t,e)))) in 
              List.map (fun (x, e, c) -> x, Util.comp_result c, e) ecs, Rel.trivial_guard
         end in
 

@@ -38,15 +38,9 @@ val decorated_pattern_as_exp: pat -> list<either_var> * exp
 val decorated_pattern_as_typ: pat -> list<either_var> * typ
 val decorated_pattern_as_either: pat -> list<either_var> * Util.either<typ,exp>
 
-val generalize: env -> list<(lbname*exp*comp)> -> (list<(lbname*exp*comp)>)
+val generalize: bool -> env -> list<(lbname*exp*comp)> -> (list<(lbname*exp*comp)>)
 val maybe_instantiate : env -> exp -> typ -> (exp * typ)
 val destruct_comp: comp_typ -> (typ * typ * typ)
-//val new_function_typ: env -> option<bvvdef> -> option<lident> -> typ
-//val new_poly_typ: env -> btvdef -> typ
-//val uvar_as_function_typ: env -> option<typ> -> option<bvvdef> -> option<lident> -> typ
-
-//val destruct_function_typ : env -> typ -> option<bvvdef> -> option<exp> -> bool -> option<lident> -> (typ * option<exp>)
-//val destruct_poly_typ: env -> typ -> exp -> typ -> (typ*exp) 
 val destruct_arrow_kind: env -> typ -> knd -> args -> (args * binders * knd)
 val mk_basic_dtuple_type: env -> int -> typ
 val extract_lb_annotation: bool -> env -> typ -> exp -> (exp * typ)
@@ -70,7 +64,7 @@ val discharge_guard: env -> guard_t -> unit
 val label: string -> Range.range -> typ -> typ
 val label_guard: string -> Range.range -> guard_formula -> guard_formula
 val refresh_comp_label: env -> bool -> comp -> comp
-val check_total: env -> guard_t -> comp -> bool * list<string>
+val check_top_level: env -> guard_t -> comp -> bool
 
 val refine_data_type: env -> lident -> binders -> typ -> typ
 val short_circuit_guard: Util.either<typ,exp> -> args -> guard_formula
