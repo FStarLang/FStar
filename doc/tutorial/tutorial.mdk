@@ -2067,8 +2067,19 @@ derives the properties it needs from the lemmas that we have provided.
 
 ~CH
 New solution files don't yet compile.
-Exercise files still missing other than an old file:
-ex6e-insertion-sort.fst, that's still missing things.
+~
+
+~CK
+Now solved.
+~
+
+~CH
+Exercise files still missing.
+~
+
+~CK
+I do not write an exercise file Exercises 6c and 6d since it is exactly
+the same as for Exercide 6b, and would thus duplicate code.
 ~
 
 ~Exercise 
@@ -2082,11 +2093,6 @@ lists of integers. Prove it correct.
 ~~ AnswerFragment {exname=ex6b-sort-poly}
 [INCLUDE=code/solutions/ex6b-sort-poly.fst]
 ~~
-~
-
-~CK
-I do not write an exercise file for the next two since it is exactly the
-same as before, and would thus duplicate code.
 ~
 
 ~Exercise {exname=ex6c-break-sort-spec}
