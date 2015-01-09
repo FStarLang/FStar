@@ -21,17 +21,15 @@ Colorizer     : fstar
                 margin-top=-1em tight 
 ~AnswerContent: border-style=solid border-width=1px border-color=black padding=0.5ex
 
-~OldPre       : input=pre .para-block border-style=none
-~Code,~OldPre : language=fstar
+~Code,~Pre : language=fstar
                 replace=/([a-zA-Z])([12])\b/\(\1\2|\1~\2~\)/g
                 replace=/([a-zA-Z])_([\dnm])\b/\(\1_\2|\1~\2~\)/g
                 replace=/_n1\b/\(_n1|~n-1~\)/g
 
-~Pre          : input=normal
-                replace="~Begin OldPre&nl;&source;&nl;~End OldPre&nl;*[Load in editor](&link;)*"
-                border-style=solid border-width=1px border-color=black padding=0.5ex
+~Fragment     : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[Load in editor](&link;){float=right}&br;&nl;"
+.pre-fragment : margin-bottom=0pt .framed padding=0.5ex              
 
-~Code         : replace=/^:/\(:|\)/
+~Code         : replace=/^:/\(:|\)/ 
 
 <style>
 .answer.view .answercontent, 
@@ -58,7 +56,6 @@ Colorizer     : fstar
   margin-bottom: 0em;
 }
 </style>
-
 
 [TITLE]
 [TOC]
@@ -196,9 +193,9 @@ expression.
 Here is a module called `ACLs` (for Access-Control Lists) that defines
 our policy:
 
-``` {link="code/solutions/ex1a-safe-read-write.fst"}
+~ Fragment {link="code/solutions/ex1a-safe-read-write.fst"}
 [INCLUDE=code/solutions/ex1a-safe-read-write.fst:ACLs]
-```
+~
 
 Our first module begins by defining a type synonym: we'll use
 `:string`s to model `:filename`s.
