@@ -29,9 +29,9 @@ Colorizer     : fstar
 ~Fragment     : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[Load in editor](&link;){float=right}&br;&nl;"
 .pre-fragment : margin-bottom=0pt .framed padding=0.5ex
 
-~ExerciseFragment : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[Load in editor](code/exercises/&exname;.fst){float=right}&br;&nl;"
+~ExerciseFragment : replace="~Begin Fragment {link=code/exercises/&exname;.fst}&nl;&source;&nl;~End Fragment&nl;"
 
-~SolutionFragment : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[Load in editor](code/solutions/&exname;.fst){float=right}&br;&nl;"
+~SolutionFragment : replace="~Begin Fragment {link=code/solutions/&exname;.fst}&nl;&source;&nl;~End Fragment&nl;"
 
 ~AnswerFragment : replace="~Begin Answer&nl;~Begin SolutionFragment {exname=&exname;}&nl;&source;&nl;~End SolutionFragment&nl;~End Answer&nl;"
 
@@ -1157,57 +1157,58 @@ I don't understand either, it is certainly wrong
 ~
 -->
 
-Here's the `append` function that concatenates two lists. 
-
-    let rec append l1 l2 = match l1 with
-      | [] -> l2
-      | hd :: tl -> hd :: append tl l2
 
 ~ Exercise
+Here's the `append` function that concatenates two lists. 
+~~ ExerciseFragment {exname=ex4a-append-intrinsic}
+let rec append l1 l2 = match l1 with
+  | [] -> l2
+  | hd :: tl -> hd :: append tl l2
+~~
 Give `append` a type that proves it always returns a list
 whose length is the sum of the lengths of its arguments.
 
-~~ Answer
+~~ AnswerFragment {exname=ex4a-append-intrinsic}
     l1:list 'a -> l2:list 'a -> Tot (l:list 'a{length l = length l1 + length l2})
 ~~
 ~
 
 ~ Exercise
-Give `append` the type `:list 'a -> list 'a -> Tot (list 'a)`.
-Then prove the same property as in the previous exercise using a lemma.
-~~ Answer
-```
-     val append_len: l1:list 'a -> l2:list 'a 
-                  -> Lemma (requires True)
-                           (ensures (length (append l1 l2) = length l1 + length l2)))              
-     let rec append_len l1 l2 = match l1 with 
-         | [] -> ()
-         | hd::tl -> append_len tl l2
-```
+Give `append` the weak type below,
+then prove the same property as in the previous exercise using a lemma.
+~~ ExerciseFragment {exname=ex4b-append-extrinsic}
+val append:list 'a -> list 'a -> Tot (list 'a)
+~~
+~~ AnswerFragment {exname=ex4b-append-extrinsic}
+val append_len: l1:list 'a -> l2:list 'a 
+             -> Lemma (requires True)
+                      (ensures (length (append l1 l2) = length l1 + length l2)))
+let rec append_len l1 l2 = match l1 with 
+    | [] -> ()
+    | hd::tl -> append_len tl l2
 ~~
 ~
 
 ~ Exercise
 Define a function `mem: x:'a -> l:list 'a -> Tot bool` that 
-decides whether `x` is present in the `l` or not.
-and prove it satisfies the
+decides whether `x` is present in the `l` or not, then prove it satisfies the
 following property:
+~~ ExerciseFragment {exname=ex4c-mem}
+val append_mem:  l1:list 'a -> l2:list 'a -> a:'a
+        -> Lemma (ensures (mem a (append l1 l2) <==>  mem a l1 || mem a l2))
+~~
+~~ AnswerFragment {exname=ex4c-mem}
 
-    mem x (append l1 l2) <==> mem x l1 || mem x l2
+val mem: 'a -> list 'a -> Tot bool
+let rec mem a l = match l with
+  | [] -> false
+  | hd::tl -> hd=a || mem a tl
 
-~~ Answer
-
-    val mem: 'a -> list 'a -> Tot bool
-    let rec mem a l = match l with
-      | [] -> false
-      | hd::tl -> hd=a || mem a tl
-```
 val append_mem:  l1:list 'a -> l2:list 'a -> a:'a
                   -> Lemma (ensures (mem a (append l1 l2) <==>  mem a l1 || mem a l2))
 let rec append_mem l1 l2 a = match l1 with
   | [] -> ()
   | hd::tl -> append_mem tl l2 a
-```
 ~~
 ~
 
@@ -1261,12 +1262,14 @@ In the `Cons` case of `rev_involutive` we are explicitly applying not just
 the induction hypothesis but also the `snoc_cons` lemma we proved above.
 
 ~Exercise
-Prove that reverse is injective, i.e., `reverse l1 = reverse l2 ==> l1 = l2`. 
-
+Prove that reverse is injective, i.e.,
+~~ ExerciseFragment {exname=ex4d-reverse}
+val rev_injective_1: l1:list 'a -> l2:list 'a 
+                -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
+~~
 ~~ Answer
-
 Perhaps you did it like this:
-
+~~~ SolutionFragment {exname=ex4d-reverse}
     val snoc_injective: l1:list 'a -> h1:'a -> l2:list 'a -> h2:'a 
                      -> Lemma (snoc l1 h1 = snoc l2 h2 ==> l1 = l2 && h1 = h2)
     let rec snoc_injective l1 h1 l2 h2 = match l1, l2 with
@@ -1280,13 +1283,13 @@ Perhaps you did it like this:
         rev_injective_1 tl1 tl2;
         snoc_injective (reverse tl1) hd1 (reverse tl2) hd2
       | _ -> ()
-
+~~~
 That's quite a tedious proof, isn't it. Here's a simpler proof.
-
+~~~ SolutionFragment {exname=ex4d-reverse}
     val rev_injective_2: l1:list 'a -> l2:list 'a 
                      -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
     let rev_injective_2 l1 l2 = rev_involutive l1; rev_involutive l2
-
+~~~
 The `rev_injective_2` proof is based on the idea that every involutive
 function is injective. We've already proven that `reverse` is
 involutive. So, we invoke our lemma, once for `l1` and once for `l2`.
