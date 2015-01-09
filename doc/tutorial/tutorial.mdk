@@ -2085,7 +2085,7 @@ lists of integers. Prove it correct.
 ~
 
 ~CK
-I do not write an exercise file for this one since it is exactly the
+I do not write an exercise file for the next two since it is exactly the
 same as before, and would thus duplicate code.
 ~
 
@@ -2110,8 +2110,8 @@ elements.
 ~ Exercise 
 Fix the specification to ensure that `sort` cannot discard any
 elements in the list. Prove that `sort` meets the specification.
-~~ ExerciseFragment {exname=ex6d-no-discard}
-(* Write your code here *)
+~~ ExerciseFragment {exname=ex6b-sort-poly}
+(* Start from either the problem or the solution of exercise 6b *)
 ~~
 ~~ AnswerFragment {exname=ex6d-no-discard}
 [INCLUDE=code/solutions/ex6d-no-discard.fst]
