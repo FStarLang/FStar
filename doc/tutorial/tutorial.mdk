@@ -27,7 +27,13 @@ Colorizer     : fstar
                 replace=/_n1\b/\(_n1|~n-1~\)/g
 
 ~Fragment     : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[Load in editor](&link;){float=right}&br;&nl;"
-.pre-fragment : margin-bottom=0pt .framed padding=0.5ex              
+.pre-fragment : margin-bottom=0pt .framed padding=0.5ex
+
+~ExerciseFragment : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[Load in editor](code/exercises/&exname;.fst){float=right}&br;&nl;"
+
+~SolutionFragment : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[Load in editor](code/solutions/&exname;.fst){float=right}&br;&nl;"
+
+~AnswerFragment : replace="~Begin Answer&nl;~Begin SolutionFragment {exname=&exname;}&nl;&source;&nl;~End SolutionFragment&nl;~End Answer&nl;"
 
 ~Code         : replace=/^:/\(:|\)/ 
 
@@ -193,7 +199,7 @@ expression.
 Here is a module called `ACLs` (for Access-Control Lists) that defines
 our policy:
 
-~ Fragment {link="code/solutions/ex1a-safe-read-write.fst"}
+~ Fragment {link="code/exercises/ex1a-safe-read-write.fst"}
 [INCLUDE=code/solutions/ex1a-safe-read-write.fst:ACLs]
 ~
 
@@ -219,9 +225,9 @@ input/output are implemented by the operating system and made available
 to F\* programs via the underlying framework, e.g., .NET or OCaml. We can
 describe a simple interface provided by the framework as follows:
 
-```
+~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
 [INCLUDE=code/solutions/ex1a-safe-read-write.fst:SystemIO]
-```
+~
 
 Here, we've defined an *interface* called `System.IO`, which uses the
 `ACLs` module (indicated by the `open` keyword). More importantly,
@@ -266,11 +272,11 @@ some common file names, and then a function called `doit`, which tries to
 read and write a few files. Does this program comply with our security
 policy?
 
-```
+~ Fragment {link=code/solutions/doit.fst}
 [INCLUDE=code/solutions/ex1a-safe-read-write.fst:UntrustedClientCode]
 
 [INCLUDE=code/solutions/doit.fst:DoIt]
-```
+~
 
 ~CH
 Now UntrustedClientCode imports ACLs and that's silly in the case of
@@ -363,9 +369,9 @@ but then we would also have `checkedMain`?
 ~CH
 We should give them the types of `checkedRead` and `checkedWrite`
 and note that they have no preconditions!
-```
+~~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
 [INCLUDE=code/solutions/ex1a-safe-read-write.fst:SafeReadWriteTypes]
-```
+~~
 ~
 
 ~CH
@@ -382,13 +388,13 @@ that is the case reads `f`. If the file is not readable your
 Write a function analogous to `safeRead` called `safeWrite`. Use it
 so that F\* no longer reports a type-checking error for the `doitSafe`
 function below. Is the `doitSafe` function secure? Why?
-```
+~~ ExerciseFragment {exname=ex1a-safe-read-write}
 [INCLUDE=code/exercises/ex1a-safe-read-write.fst:DoItSafe]
-```
+~~
 ~~ Answer
-```
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:SafeReadWrite]
-```
+~~~ SolutionFragment {exname=ex1a-safe-read-write}
+[INCLUDE=code/solutions/ex1a-safe-read-write.fst:SafeReadWrite]
+~~~
 `safeRead` and `safeWrite` defer to runtime the same checks that
 were performed at compile time by F\*, and perform the IO actions
 only if those checks succeed.
@@ -540,10 +546,13 @@ infers what you expect:
 
 Write down the expected types for `canRead` and `canWrite` and ask F\*
 to check it for you.
+~~ ExerciseFragment {exname=ex2a-can-read-write-types}
+[INCLUDE=code/exercises/ex2a-can-read-write-types.fst]
+~~
 
-~~ Answer
-    val canRead: filename -> Tot bool
-    val canWrite: filename -> Tot bool
+~~ AnswerFragment {exname=ex2a-can-read-write-types}
+val canRead: filename -> Tot bool
+val canWrite: filename -> Tot bool
 ~~
 ~
 
@@ -587,7 +596,7 @@ is just a synonym for the more explicit `:(int -> ML int)`.
 
 ~CH
 This seems like the right place to explain higher-order functions.
-Could start by explaining currying, then function taking functions
+Could start by explaining currying, then functions taking functions
 as arguments (e.g. sorting).
 ~
 
@@ -723,32 +732,34 @@ this for you in its standard prelude).
 ~ Exercise
 What are some other types you can give to `factorial`? Try
 writing them and see if F\* agrees with you.
+~~ ExerciseFragment {exname=ex3a-factorial-types}
+[INCLUDE=code/exercises/ex3a-factorial-types.fst:FactorialTypes]
+~~
 ~~ Answer
 
 There are many possible types for `factorial`. Here are a few.
-
-    val factorial: nat -> Tot int
-    val factorial: nat -> Tot nat
-    val factorial: nat -> Tot (x:int{x > 0})
-    val factorial: int -> int
-    val factorial: int -> x:int{x > 0}    
-
+~~~ SolutionFragment {exname=ex3a-factorial-types}
+val factorial: nat -> Tot int
+val factorial: nat -> Tot nat
+val factorial: nat -> Tot (x:int{x > 0})
+val factorial: int -> int
+val factorial: int -> x:int{x > 0}
+~~~
+~~
 Try describing in words what each of those types mean. Rank the types
 in order of increasing precision. Is it a total order?
-
+~~CH
+We're missing a solution here
 ~~
 ~
 
 ~ Exercise
 Write the fibonacci function and several types for it.
-~~ Answer
-```
-(* val fibonacci : nat -> Tot nat *)
-(* val fibonacci : int -> int *)
-(* val fibonacci : int -> ML int (same as above) *)
-let rec fibonacci n =
-  if n <= 1 then n else fibonacci (n - 1) + fibonacci (n - 2)
-```
+~~ ExerciseFragment {exname=ex3b-fibonacci}
+module Fibonacci
+~~
+~~ AnswerFragment {exname=ex3b-fibonacci}
+[INCLUDE=code/solutions/ex3b-fibonacci.fst]
 ~~
 ~
 
@@ -903,8 +914,12 @@ from our use of the induction hypothesis: again, Z3 proves this easily.
 
 ~ Exercise
 Prove the following monotonicity property for the fibonacci function:
-
-    val fibonacci_monotone : n:nat{n >= 2} -> Lemma (fibonacci n >= n)
+~~ ExerciseFragment {exname=ex3c-fibonacci}
+[INCLUDE=code/exercises/ex3c-fibonacci.fst:FibonacciMonotone]
+~~
+~~ AnswerFragment {exname=ex3c-fibonacci}
+[INCLUDE=code/solutions/ex3c-fibonacci.fst]
+~~
 ~
 
 <!--
