@@ -1160,8 +1160,9 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
     | None -> None, Rel.trivial_guard
     | Some e -> 
         if !Options.verify
-        then let e, c, g = no_logical_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e in
-             Some e, g
+        then raise (Error("When clauses are not yet supported in --verify mode; they soon will be", e.pos))
+//             let e, c, g = no_logical_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e in
+//             Some e, g
         else let e, c, g = tc_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e in
              Some e, g in
   let when_condition = match when_clause with 
