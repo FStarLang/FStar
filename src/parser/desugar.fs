@@ -74,7 +74,7 @@ let op_as_tylid r s =
     | "~"   ->  r Const.not_lid
     | "=="  ->  r Const.eq2_lid
     | "=!=" ->  r Const.neq2_lid
-//    | "<" ->    r Const.lt_lid
+    | "<<" ->   r Const.precedes_lid
 //    | "<=" ->   r Const.lte_lid
 //    | ">" ->    r Const.gt_lid
 //    | ">=" ->   r Const.gte_lid
@@ -96,11 +96,8 @@ let rec is_type env (t:term) =
     | Op("/\\", _)
     | Op("\\/", _)
     | Op("==>", _)
-    | Op("<==>", _)  -> true               (* negation predicate *)
-//    | Op("<", _)
-//    | Op("<=", _)
-//    | Op(">", _)
-//    | Op(">=", _) -> env.phase = Formula
+    | Op("<==>", _)  
+    | Op("<<", _) -> true              
     | Op(s, _) -> (match op_as_tylid t.range s with
         | None -> false
         | _ -> true)

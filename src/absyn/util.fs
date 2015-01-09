@@ -305,7 +305,7 @@ type red_ctrl = {
 let alpha_ctrl = {stop_if_empty_subst=false; descend=true} 
 let subst_ctrl = {stop_if_empty_subst=true; descend=true} 
 let null_ctrl = {stop_if_empty_subst=true; descend=false} 
-let extend_subst e s = s@[mk_subst e]
+let extend_subst e s = [mk_subst e]@s
 
 let rec map_knd s vk mt me descend binders k = 
   subst_kind' s k, descend
