@@ -124,7 +124,7 @@ can be found at the [F\* website].
 It will help if you are already familiar with functional programming
 languages in the ML family (e.g., [OCaml], [F#], [Standard ML]), or
 with [Haskell]---we provide a quick review of basic concepts if you're
-a little rusty. If you lack this background, there are several useful
+a little rusty. If you feel you need more background, there are many useful
 resources freely available on the web, e.g., [TryF#],
 [F# for fun and profit], [Introduction to Caml], or the
 [Real World OCaml] book.
@@ -139,20 +139,25 @@ resources freely available on the web, e.g., [TryF#],
 [Introduction to Caml]: http://www.cs.jhu.edu/~scott/pl/lectures/caml-intro.html
 [Real World OCaml]: https://realworldocaml.org/
 
-If you're working through this tutorial on your local machine, you
-will need an installation of F\*. F\* is open source and
-cross-platform. Get it from [github] and follow the
-[installation instructions] there. We assume you have the F\*
-executable available in your path.
+The easiest way to try F\* and solve the exercises in this tutorial is
+directly in your browser by using the [online F\* editor]. You can
+load the boilerplate code needed for each exercise into the online
+editor by clicking the "Load in editor" link in the body of each
+exercise. Your progress on each exercise will be stored in browser
+local storage, so you can return to your code later (e.g. if your
+browser crashes, etc).
 
-~CH
-Soon installation should be optional/advanced and the online version of F\*
-should be the preferred way to try it out.
-~
+You can also do this tutorial by installing F\* locally on your
+machine.  F\* is open source and cross-platform, and you can get
+[binary packages] for Windows, Linux, and MacOS X or compile F\* from
+the [source code on github] using these [instructions]. You can use
+your favourite text editor (for instance Emacs with ocaml-mode or
+tuareg-mode) to edit F\* files locally.
 
-[github]: http://github.com/FStarLang/FStar
-[installation instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
-[Z3]: http://z3.codeplex.com/
+[online F\* editor]: http://fstar-lang.org/editor?
+[binary packages]: http://fstar-lang.org
+[source code on github]: http://github.com/FStarLang/FStar
+[instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
 
 **A note on compatibility with F\#**: The syntax of F\* and F\#
 overlap on a common subset. In fact, the F\* compiler is currently
@@ -696,6 +701,8 @@ covers, F\* translates the definition of `max` and the asserted property
 to a theorem prover called [Z3], which then proves the property
 automatically.
 
+[Z3]: http://z3.codeplex.com/
+
 We can assert and automatically check a more general property about `max`. For example:
 
     assert (forall x y. max x y >= x 
@@ -989,11 +996,11 @@ Since type-checking this succeeds we know
 that the base case of the induction is trivially proved and need
 to focus our effort on the inductive case.
 
-## Auto-induction
+## Automatic induction { #auto-ind }
 
 Many of these proofs by induction are quite boring. You simply do case
 analysis and call the induction hypothesis as needed. Surely, we should
-automate this for you---and we do, in many cases using an experimental
+automate this for you---and we do, in many cases using an **experimental**
 _automatic induction_ feature. 
 
 Here's another proof of `factorial_is_monotone`:
