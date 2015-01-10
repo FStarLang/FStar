@@ -207,17 +207,23 @@ let rec preservation e =
 val eval : e:exp{is_Some (typing empty e)} ->
            Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval e =
+  if is_value e then e
+  else eval (typed_step e)
+
+val eval' : e:exp{is_Some (typing empty e)} ->
+           Dv (v:exp{is_value v && typing empty v = typing empty e})
+let rec eval' e =
   let Some t = typing empty e in
   match e with
   | EApp e1 e2 ->
-     (let EAbs x _ e' = eval e1 in
-      let v = eval e2 in
+     (let EAbs x _ e' = eval' e1 in
+      let v = eval' e2 in
       substitution_preserves_typing x e' v empty;
-      eval (subst x v e'))
+      eval' (subst x v e'))
   | EAbs _ _ _
   | ETrue
   | EFalse     -> e
   | EIf e1 e2 e3 ->
-     (match eval e1 with
-      | ETrue  -> eval e2
-      | EFalse -> eval e3)
+     (match eval' e1 with
+      | ETrue  -> eval' e2
+      | EFalse -> eval' e3)

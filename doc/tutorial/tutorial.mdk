@@ -2170,16 +2170,17 @@ val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x
 [sf-stlc]: http://www.cis.upenn.edu/~bcpierce/sf/current/Stlc.html
 [sf-stlc-prop]: http://www.cis.upenn.edu/~bcpierce/sf/current/StlcProp.html
 
-We now give a larger case study: proving the soundness of a type-checker
-for the simply-typed lambda-calculus (STLC). If you're not familiar with
-STLC, please have a look at the [Software Foundations book][sf-stlc] for
+We now look at a larger case study: proving the soundness of a type-checker
+for the simply-typed $\lambda$-calculus (STLC). If you're not familiar with
+STLC, you can have a look at the [Software Foundations book][sf-stlc] for
 a gentle introduction given by the textual explanations (you can ignore
 the Coq parts there). The formalization and proof here closely follows
-the one in [Software Foundations][sf-stlc-prop].
+the one in [Software Foundations][sf-stlc-prop]. Our proofs are, however,
+shorter and much more readable than Coq proofs.
 
 ## Syntax
 
-We represent STLC types by the F* inductive type `ty`.
+We represent STLC types by the F* inductive datatype `ty`.
 ```
 type ty =
   | TBool  : ty
@@ -2192,7 +2193,7 @@ of functions taking a Boolean argument and returning a Boolean result.
 This would be written as `bool -> bool` in F* syntax, and
 $\mathsf{bool} \to \mathsf{bool}$ in paper notation.
 
-We represent the expressions of STLC by the type `exp`. 
+We represent the expressions of STLC by the datatype `exp`. 
 ```
 type exp =
   | EVar   : int -> exp
@@ -2229,7 +2230,7 @@ We define a standard small-step call-by-value interpreter for STLC.
 The final result of succesfully evaluating an expression is
 called a _value_. We postulate that functions and the Boolean
 constants are values by defining `is_value`,
-a boolean predicate on expressions:
+a boolean predicate on expressions (a total function):
 ```
 val is_value : exp -> Tot bool
 let is_value e =
@@ -2239,7 +2240,7 @@ let is_value e =
   | EFalse     -> true
   | _          -> false
 ```
-The `EAbs`, `ETrue`, and `EFalse` cases share the same right-hand-side,
+The `EAbs`, `ETrue`, and `EFalse` cases share the same right-hand-side (`false`),
 which is a way to prevent duplication in definitions.
 
 In order to give a semantics to function applications we define a
@@ -2272,14 +2273,15 @@ it is shadowed by the local `x`. The other cases are straightforward.
   expressions (closed values in fact), and this naive definition of
   substitution is good enough. Substitution would become trickier to define
   or the representation of variables would have to change if we were considering
-  the case where e, the expression being substituted for a variable in
+  the case where e, the expression replacing a variable in
   some other expression, may itself contain free variables._
 
 Given the definition of values and of substitution we can now define
-a single-step interpreter, as a function `step` that takes an expression `e`
+a small-step interpreter, as a function `step` that takes an expression `e`
 and it either returns the expression to which `e` reduces in
 a single step computation step, or it returns `None` in case of an error
-(all errors in this language are dynamic typing errors).
+(all errors in this language are typing errors, and will be prevented
+ statically by the type system).
 ```
 val step : exp -> Tot (option exp)
   let rec step e =
@@ -2329,9 +2331,10 @@ assert (step (EApp ETrue ETrue) = None)
 ## Type-checker
 
 In order to assign a type to a term, we need to know what assumptions
-we should make about the types of its free variables. So our typing happens
-with respect to a typing environment---a mapping from the variables in
-scope to their types. We represent such partial maps as functions:
+we should make about the types of its free variables. So typing
+happens with respect to a typing environment---a mapping from the
+variables in scope to their types. We represent such partial maps as
+functions taking an integer variable name and returning an optional type:
 ```
 type env = int -> Tot (option ty)
 ```
@@ -2346,10 +2349,10 @@ When we move under a binder we extend the typing environment environment.
 val extend : env -> int -> ty -> Tot env
 let extend g x t x' = if x = x' then Some t else g x'
 ```
-For instance we type-check `EAbs x t e` in environment `g` by first type-checking
-the body `e` in the environment `extend g x t`.
+For instance we type-check `EAbs x t e` in typing environment `g` by
+first type-checking the body `e` in the environment `extend g x t`.
 
-The type-checker is a function taking an environment `g` and an expression `e`
+The type-checker is a total function taking an environment `g` and an expression `e`
 and producing either the type of `e` or `None` if `e` is not well-typed.
 
 ```
@@ -2391,7 +2394,7 @@ the two branches have the same type, which is also the type of the conditional.
 
 We prove progress and preservation for STLC.
 The **progress** theorem tells us that closed, well-typed terms do not produce
-dynamic typing errors: either a well-typed term is a value,
+(immediate) dynamic typing errors: either a well-typed term is a value,
 or it can take an evaluation step.
 The proof is a relatively straightforward induction.
 ```
@@ -2434,8 +2437,8 @@ hypothesis `(is_value e1 \/ (is_Some (step e1)))`.
 
 The intuitive proof of the `EIf` case is similar.
 
-Using the _experimental_ support for automatic induction, the proof above
-can be written as just:
+Using the _experimental_ support for automatic induction ([#auto-ind]),
+the proof above can be written as just:
 ```
 let rec progress e = using_induction_hyp progress
 ```
@@ -2458,8 +2461,8 @@ to be well-typed in some context `g` and consider the same expression `e` in a
 slightly different context `g'`. For this we prove a **context invariance** lemma,
 showing that typing is preserved under "inessential changes" to the context `g`---in
 particular, changes that do not affect any of the free variables of the expression.
-For this, we need a careful definition of the free variables of an expression---i.e.,
-the variables occuring in the expression that are not bound by an abstraction.
+For this, we need a definition of the free variables of an expression---i.e.,
+the variables occurring in the expression that are not bound by an abstraction.
 
 A variable `x` appears free in `e` if `e` contains some occurrence of `x`
 that is not under an abstraction labeled `x`:
@@ -2513,20 +2516,22 @@ We still need to define formally when two environments are equivalent.
 A natural definition is extensional equivalence of functions: 
 ```
 opaque logic type Equal (g1:env) (g2:env) =
-                 (forall (x:int). g1 x=g2 x)
+                 (forall (x:int). g1 x = g2 x)
 ```
-According to this definition two environments are equivalent if they map
-all variables to the same (optional) type.
+According to this definition two environments are equivalent if have
+the same domain and they map all variables in the domain to the same type.
 We remark `Equal` in particular and logical formulas in general
 are "types" in F\*, thus the different syntax for this definition. 
-(CH: What does opaque do exactly?)
+~CH
+What does opaque do exactly?
+~
 
 The context invariance lemma uses in fact a weaker variant of this equivalence
-in which the environments only need to agree on the variables that appear free
+in which the two environments only need to agree on the variables that appear free
 in an expression `e`:
 ```
 opaque logic type EqualE (e:exp) (g1:env) (g2:env) =
-                 (forall (x:int). appears_free_in x e ==> g1 x=g2 x)
+                 (forall (x:int). appears_free_in x e ==> g1 x = g2 x)
 ```
 The context invariance lemma is then easily proved by induction:
 ```
@@ -2643,13 +2648,12 @@ let rec preservation e =
      else preservation e1
 
   | EIf e1 _ _ ->
-      if is_value e1 then ()
-      else preservation e1
+      if not (is_value e1) then preservation e1
 ```
 We only have two cases to consider, since only applications and conditionals
-can take succesful evaluation steps. The case for `e = EIf e1 e2 e3` is simple:
+can take successful execution steps. The case for `e = EIf e1 e2 e3` is simple:
 either `e1` is a value and thus the conditional reduces to `e2` or `e3` which
-by the typing hypothesis also have type `t`, or `e1` takes a succesful step and
+by the typing hypothesis also have type `t`, or `e1` takes a successful step and
 we can apply the induction hypothesis. We use the `Some.v` projector for options
 with the following type:
 ```
@@ -2675,21 +2679,20 @@ well-typed expression `e` that is not a value and
 produces the expression to which `e` steps. Give `typed_step`
 the following strong type
 (basically this type captures both progress and preservation):
-```
+~~ ExerciseFragment {exname=ex7a-stlc-typed-step}
   val typed_step : e:exp{is_Some (typing empty e) /\ not(is_value e)} ->
                    Tot (e':exp{typing empty e' = typing empty e})
-```
-(Hint: the solution to this exercise fits on one line)
-~~Answer
+~~
+(Hint: the most direct solution to this exercise fits on one line)
+~~ AnswerFragment {exname=ex7a-stlc-typed-step}
     let typed_step e = progress e; preservation e; Some.v (step e)
 ~~
 ~
 
 ~ Exercise
-Add pairs to this formal development. Use `ex7b-stlc-pairs.fst`
-where we add the following to the definition of types, expressions, values,
-substitution, and step:
-```
+To add pairs to this formal development we add the following to the
+definition of types, expressions, values, substitution, and step:
+~~ ExerciseFragment {exname=ex7b-stlc-pairs}
 type ty =
   ...
   | TPair : ty -> ty -> ty
@@ -2699,9 +2702,9 @@ type exp =
   | EPair  : exp -> exp -> exp
   | EFst   : exp -> exp
   | ESnd   : exp -> exp
-```
-(please note the extra rec in `is_value`!)
-```
+~~
+(note the extra rec in `is_value` below!)
+~~ ExerciseFragment {exname=ex7b-stlc-pairs}
 let rec is_value e =
   match e with
   ...
@@ -2745,8 +2748,97 @@ let rec step e =
         (match (step e1) with
         | Some e1' -> Some (ESnd e1')
         | None     -> None)
-```
-then add cases to `typing` for the new constructs and fix all the proofs.
+~~
+Add cases to `typing` for the new constructs and fix all the proofs.
+
+~~ Answer
+We extend the `typing` and `appears_free_in` functions with cases
+for `EPair`, `EFst`, and `ESnd`:
+~~~ SolutionFragment {exname=ex7b-stlc-pairs}
+val typing : env -> exp -> Tot (option ty)
+let rec typing g e =
+...
+  | EPair e1 e2 ->
+      (match typing g e1, typing g e2 with
+      | Some t1, Some t2 -> Some (TPair t1 t2)
+      | _      , _       -> None)
+  | EFst e1 ->
+      (match typing g e1 with
+      | Some (TPair t1 t2) -> Some t1
+      | _                  -> None)
+  | ESnd e1 ->
+      (match typing g e1 with
+      | Some (TPair t1 t2) -> Some t2
+      | _                  -> None)
+
+val appears_free_in : x:int -> e:exp -> Tot bool
+...
+  | EPair e1 e2 -> appears_free_in x e1 || appears_free_in x e2
+  | EFst e1 -> appears_free_in x e1
+  | ESnd e1 -> appears_free_in x e1
+~~~
+The proofs of the lemmas are also easy to extend by just calling
+the induction hypothesis:
+~~~ SolutionFragment {exname=ex7b-stlc-pairs}
+val free_in_context : x:int -> e:exp -> g:env -> Lemma
+      (requires (is_Some (typing g e)))
+      (ensures (appears_free_in x e ==> is_Some (g x)))
+let rec free_in_context x e g =
+...
+  | EPair e1 e2 -> free_in_context x e1 g; free_in_context x e2 g
+  | EFst e1 
+  | ESnd e1 -> free_in_context x e1 g
+
+val context_invariance : e:exp -> g:env -> g':env
+                     -> Lemma
+                          (requires (EqualE e g g'))
+                          (ensures (typing g e == typing g' e))
+let rec context_invariance e g g' =
+...
+| EPair e1 e2 ->
+     context_invariance e1 g g';
+     context_invariance e2 g g'
+ 
+  | EFst e1
+  | ESnd e1 -> context_invariance e1 g g'
+
+val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
+      g:env{is_Some (typing empty v) &&
+            is_Some (typing (extend g x (Some.v (typing empty v))) e)} ->
+      Tot (u:unit{typing g (subst x v e) ==
+                  typing (extend g x (Some.v (typing empty v))) e})
+let rec substitution_preserves_typing x e v g =
+...
+  | EPair e1 e2 ->
+     (substitution_preserves_typing x e1 v g;
+      substitution_preserves_typing x e2 v g)
+
+  | EFst e1
+  | ESnd e1 ->
+      substitution_preserves_typing x e1 v g
+~~~
+As for the other cases, the preservation proof when `e = EPair e1 e2`
+follows the structure of the `step` function. If `e1` is not a value
+then it further evaluates, so we apply the induction hypothesis to
+`e1`.  If `e1` is a value, then since we know that the pair evaluates,
+it must be the case that `e2` is not a value and further evaluates, so
+we apply the induction hypothesis to it. The cases for `EFst` and
+`ESnd` are similar.
+~~~ SolutionFragment {exname=ex7b-stlc-pairs}
+val preservation : e:exp{is_Some (typing empty e) /\ is_Some (step e)} ->
+      Tot (u:unit{typing empty (Some.v (step e)) == typing empty e})
+let rec preservation e =
+...
+  | EPair e1 e2 ->
+      (match is_value e1, is_value e2 with
+      | false, _     -> preservation e1
+      | true , false -> preservation e2)
+
+  | EFst e1
+  | ESnd e1 ->
+      if not (is_value e1) then preservation e1
+~~~
+~~
 ~
 
 <!--
@@ -2775,14 +2867,20 @@ None of them is very interesting from a proof point of view.)
 -->
 
 ~ Exercise
-Add a let construct to this formal development. Use `ex7c-stlc-let.fst`
-where we added the following to the definition of expressions:
-```
+We want to add a let construct to this formal development.
+We add the following to the definition of expressions:
+~~ ExerciseFragment {exname=ex7c-stlc-let}
 type exp =
   ...
   | ELet  : int -> exp -> exp -> exp
-```
-then add cases for `ELet` to all definitions and proofs.
+~~
+Add cases for `ELet` to all definitions and proofs.
+
+[Load answer in editor](code/exercises/ex7c-stlc-let.fst)
+~~ CH
+Make the prev kind of link a macro of some sorts. It doesn't have a
+proper body so it's not an environment, but what is it? Entity?
+~~
 ~
 
 ~ Exercise
@@ -2792,25 +2890,25 @@ either produces the well-typed value `v` to which `e` evaluates
 or it diverges if the evaluation of `e` loops. Give `eval` the following
 strong type ensuring that `v` has the same type as `e`
 (basically this type captures both progress and preservation):
-```
+~~ ExerciseFragment {exname=ex7d-stlc-eval}
   val eval : e:exp{is_Some (typing empty e)} ->
              Dv (v:exp{is_value v && typing empty v = typing empty e})
-```
+~~
 The `Dv` effect is that of potentially divergent computations.
 We cannot mark this as `Tot` since a priori STLC computations could loop,
 and it is hard to prove that well-typed ones don't, while defining an
 interpreter.
 ~~Answer
 Here is a solution that only uses `typed_step` (suggested by Santiago Zanella):
-```
+~~~ SolutionFragment {exname=ex7d-stlc-eval}
 val eval : e:exp{is_Some (typing empty e)} ->
            Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval e =
   if is_value e then e
   else eval (typed_step e)
-```
+~~~
 Here is another solution that only uses the substitution lemma:
-```
+~~~ SolutionFragment {exname=ex7d-stlc-eval}
 val eval' : e:exp{is_Some (typing empty e)} ->
             Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval' e =
@@ -2837,7 +2935,7 @@ let rec eval' e =
      (let v = eval' e1 in
       substitution_preserves_typing x e2 v empty;
       eval' (subst x v e2))
-```
+~~~
 ~~
 ~
 
