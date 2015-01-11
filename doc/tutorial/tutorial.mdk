@@ -154,7 +154,7 @@ the [source code on github] using these [instructions]. You can use
 your favourite text editor (for instance Emacs with ocaml-mode or
 tuareg-mode) to edit F\* files locally.
 
-[online F\* editor]: http://fstar-lang.org/editor?
+[online F\* editor]: https://www.fstar-lang.org/run.php
 [binary packages]: http://fstar-lang.org
 [source code on github]: http://github.com/FStarLang/FStar
 [instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md

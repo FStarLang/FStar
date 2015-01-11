@@ -204,6 +204,10 @@ let rec preservation e =
       if is_value e1 then ()
       else preservation e1
 
+val typed_step : e:exp{is_Some (typing empty e) /\ not(is_value e)} ->
+                 Tot (e':exp{typing empty e' = typing empty e})
+let typed_step e = progress e; preservation e; Some.v (step e)
+
 val eval : e:exp{is_Some (typing empty e)} ->
            Dv (v:exp{is_value v && typing empty v = typing empty e})
 let rec eval e =
