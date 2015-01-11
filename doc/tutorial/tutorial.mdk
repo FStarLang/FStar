@@ -103,7 +103,7 @@ CatalinComment : replace="Can't understand why this doesn't work (it eats up the
 
 # Introduction
 
-F\* is a verification-oriented programming language developed at
+F\* is a verification-oriented programming language developed at 
 [Microsoft Research], [MSR-Inria], [Inria], and [IMDEA Software].
 It follows in
 the tradition of the [ML] family of languages in that it is a typed,
