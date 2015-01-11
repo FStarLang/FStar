@@ -277,36 +277,30 @@ guarded by a security check, how can we make sure that each check is
 adequate? We can use F\*'s type-checker to automate this kind of code
 review.
 
-Here's some simple, untrusted client code. It uses `System.IO`, defines
-some common file names, and then a function called `doit`, which tries to
-read and write a few files. Does this program comply with our security
-policy?
+Here's some simple, untrusted client code. It uses `System.IO`,
+defines some common file names, and then a function called
+`staticChecking`, which tries to read and write a few files.
 
 ~ Fragment {link=code/solutions/doit.fst}
 [INCLUDE=code/solutions/ex1a-safe-read-write.fst:UntrustedClientCode]
 
-[INCLUDE=code/solutions/doit.fst:DoIt]
+[INCLUDE=code/solutions/ex1a-safe-read-write.fst:StaticChecking]
 ~
 
-~CH
-Now UntrustedClientCode imports ACLs and that's silly in the case of
-doItSafe?
-~
+The type-checker ensures statically that this untrusted code complies
+with the security policy. The reads to `tmp` and `readme`, and the
+write to `tmp` are allowed by the policy, so the program successfully
+type-checks. On the other hand, if we uncomment the lines that read
+or write `"junk"` to the `password` file, the F\* type-checker complains 
+complains that the `passwd` file does not have the type
+`:f:filename{canRead f}`, respectively `:f:filename{canWrite f}`.
+For instance, if we uncomment the `write` we get the following error message:
 
-~NS
-Why does it need to open ACLs?
-~
-
-No, of course not. It tries to read the `passwd` file and then write
-`"junk"` to it, although according to our policy the `passwd` file is
-neither readable nor writable. If you try type-checking this code with
-F\*, it complains that the `passwd` file does not have the type
-`:f:filename{canWrite f}`.
-
-<!-- mono ../../bin/fstar.exe --fstar_home ../.. code/solutions/ex1a-safe-read-write.fst code/solutions/doit.fst -->
+<!-- mono ../../bin/fstar.exe --fstar_home ../.. code/solutions/ex1a-safe-read-write.fst -->
 ``` {language=""}
-Error code/solutions/doit.fst(8,2-16,0): The following problems were found:
-	Subtyping check failed; expected type f:filename{(canWrite f)}; got type string (code/solutions/doit.fst(13,10-13,16))
+Error ex1a-safe-read-write.fst(38,2-47,5): The following problems were found:
+	Subtyping check failed; expected type f:filename{(canWrite f)};
+    got type string (ex1a-safe-read-write.fst(43,17-43,23))
 ```
 <!-- CH: It would be nice if at some point such error messages were
      "real", coming directly from the type-checker without being
@@ -316,43 +310,21 @@ You'll understand more about what that message means as you work
 through this tutorial, but, for now, take it to mean that F\* expected
 `canWrite passwd` to evaluate to `true`, which isn't the case.
 
-~CH
-How about also presenting a fix for the example above (e.g.
-removing the bad read and bad write) and say it type-checks that
-way. Without this fix it seems that the exercise below is **the** fix
-for the problem above. It's **not** the only or the simplest fix though!
-
-[We could add this:]
-If we comment out the lines `let v3 = read passwd in` and `write
-passwd "junk"` type-checking `doit` succeeds, because all the
-remaining reads and writes can be shown statically to comply
-with the policy.
-
-Alternatively, we could start with the correct version where the ill-typed
-lines are commented out, explain that the non-commented code does type-check,
-and only then explain what happens when we un-comment the rest. I think I
-like this alternative more. I generally like it when we can show
-only well-typed code.
-~
-
-This first access control example illustrates how F\* can be used to
+The `staticChecking` function above illustrates how F\* can be used to
 specify a security policy, and statically enforce complete and correct
-mediation of that policy via type-checking.
+mediation of that policy via type-checking. We will now illustrate
+that checking of the policy doesn't have to happen all statically, but
+that the dynamic checks added by the programmer are taken into account
+by the type system.
+[separate example for this would be better].
+
 
 
 ~CH
-There is a conceptual gap to the next exercise. First, we don't
-properly explain the static vs dynamic checking issue in the text (it
-only becomes clearer at the end for those who actually understood the
-exercise). Second, we didn't show at all how F\* deals with
+Second, we didn't show at all how F\* deals with
 conditionals / dynamic checks.  Given that this is the first exercise
 in the tutorial let's try to be more gentle.
 
-[I would add this:]
-The next exercise illustrates that checking of the policy doesn't
-have to happen all statically, but that the dynamic checks added
-by the programmer are taken into account by the type system.
-[separate example for this would be better].
 [I would also remove the two questions at the end of the exercise,
 it's silly to ask the students to do our work and explain such things
 to themselves.]
@@ -365,43 +337,11 @@ on the contrary!
 ~
 
 ~CH
-Would `checkedRead` be a better name for `safeRead`?
-`dynamicallyCheckedRead`?
-`defensiveRead`?
-`checkThenRead`?
-`staticallyCheckedRead` vs `dynamicallyCheckedRead`?
-In the end, in F\*, there is _nothing_ unsafe about `read`, just that
-it is statically checked (it has a strong precondition), while the
-function below is dynamically checked (and thus has no precondition)
-[The explanations in the code/exercise file are thus off by a mile
-and should also be fixed.]
-
-Also rename `doit` (horrible name). Wanted to propose to call it `main`,
-but then we would also have `checkedMain`?
-~
-~NS
-I think you may be anticipating more problems than are actually present. I don't 
-think any student had trouble with section 1 in our last round. So, I'm happy
-leaving this part unchanged
-
-On the other hand, if you feel strongly about all these comments, please 
-feel free to change the text.  
-~
-~CH
 We should give them the types of `checkedRead` and `checkedWrite`
 and note that they have no preconditions!
 ~~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
-[INCLUDE=code/solutions/ex1a-safe-read-write.fst:SafeReadWriteTypes]
+[INCLUDE=code/solutions/ex1a-safe-read-write.fst:CheckedReadWriteTypes]
 ~~
-~
-
-~CH
-There is nothing idiomatic about returning a default string on
-a failed read, and even less about silently failing on a failed
-write. Is there any reason we wouldn't use exceptions here?
-~
-~NS
-Yes, of course. This is section 1 a. We haven't introduced those concepts yet.
 ~
 
 ~Exercise
@@ -417,7 +357,7 @@ function below. Is the `doitSafe` function secure? Why?
 ~~
 ~~ Answer
 ~~~ SolutionFragment {exname=ex1a-safe-read-write}
-[INCLUDE=code/solutions/ex1a-safe-read-write.fst:SafeReadWrite]
+[INCLUDE=code/solutions/ex1a-safe-read-write.fst:CheckedReadWrite]
 ~~~
 `safeRead` and `safeWrite` defer to runtime the same checks that
 were performed at compile time by F\*, and perform the IO actions

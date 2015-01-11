@@ -1,5 +1,8 @@
-module ACLs
+module FileName
   type filename = string
+
+module ACLs
+  open FileName
 
   (* canWrite is a function specifying whether or not a file f can be written *)
   let canWrite (f:filename) = 
