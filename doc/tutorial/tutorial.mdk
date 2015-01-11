@@ -110,15 +110,16 @@ the tradition of the [ML] family of languages in that it is a typed,
 strict, functional programming language. However, its type system is
 significantly richer than ML's, allowing functional correctness
 specifications to be stated and checked semi-automatically. This
-tutorial provides a first taste of verified programming in F\*. To
-learn more, visit [the F\* website][fstar].
+tutorial provides a first taste of verified programming in F\*. More
+information about F\*, including papers and technical reports, 
+can be found at the [F\* website].
 
 [Microsoft Research]: http://research.microsoft.com/en-us
 [MSR-Inria]: http://www.msr-inria.fr/
 [Inria]: https://www.inria.fr/
 [IMDEA Software]: http://software.imdea.org/
 [ML]: https://en.wikipedia.org/wiki/ML_%28programming_language%29
-[fstar]: http://research.microsoft.com/fstar
+[F\* website]: http://www.fstar-lang.org
 
 It will help if you are already familiar with functional programming
 languages in the ML family (e.g., [OCaml], [F#], [Standard ML]), or
@@ -287,6 +288,10 @@ Now UntrustedClientCode imports ACLs and that's silly in the case of
 doItSafe?
 ~
 
+~NS
+Why does it need to open ACLs?
+~
+
 No, of course not. It tries to read the `passwd` file and then write
 `"junk"` to it, although according to our policy the `passwd` file is
 neither readable nor writable. If you try type-checking this code with
@@ -369,7 +374,14 @@ and should also be fixed.]
 Also rename `doit` (horrible name). Wanted to propose to call it `main`,
 but then we would also have `checkedMain`?
 ~
+~NS
+I think you may be anticipating more problems than are actually present. I don't 
+think any student had trouble with section 1 in our last round. So, I'm happy
+leaving this part unchanged
 
+On the other hand, if you feel strongly about all these comments, please 
+feel free to change the text.  
+~
 ~CH
 We should give them the types of `checkedRead` and `checkedWrite`
 and note that they have no preconditions!
@@ -382,6 +394,9 @@ and note that they have no preconditions!
 There is nothing idiomatic about returning a default string on
 a failed read, and even less about silently failing on a failed
 write. Is there any reason we wouldn't use exceptions here?
+~
+~NS
+Yes, of course. This is section 1 a. We haven't introduced those concepts yet.
 ~
 
 ~Exercise
@@ -471,7 +486,7 @@ this feature *sub-effecting*.
 
 In fact, you can configure F\* with your own family of effects and effect
 ordering and have F\* infer those effects for your programs---but that's
-more advanced and we'll see how to do that later.
+more advanced and beyond the scope of this tutorial. 
 ~CH
 Previous claim seems too strong to me. It misses the point that F\*
 effects are primitive and fixed, and in a way the lattice of effects
@@ -479,8 +494,14 @@ is also fixed (the powerset of effects), one can only choose which
 points in this fixed lattice one finds interesting. So at the level of
 detail things were explain so far, this claim seems wrong.
 Am I missing anything?
+~
 
-Also the reference to the latter explanation is at the moment broken.
+~NS
+Yes, effects are primitive. But, the lattice is not fixed nor is the powerset, 
+since the effects themselves can be arbitrarily fine-grained. For example, 
+you can take {Pure, Div, RD, WR, ALLOC, ST, EXN, ALL}. You could also
+split RD/WR into very precise ones, recording a subset of the state that
+may be written, etc. 
 ~
 
 From now on, we'll just refer to a type-and-effect pair (e.g. `:Tot int`
@@ -649,6 +670,11 @@ These example assertions are horrible because
 How can we fix this?
 We could introduce asserts as just a way to check facts in lemmas
 or as a way to check facts within (effectful) code.
+~
+
+~NS
+I don't see the distinction you're making between lemmas and assertions.
+You can write `let test = assert (max 0 1 = 1)`. Is that so bad as to be horrible?
 ~
 
 The simplest way to prove properties about your code is to write assertions.
@@ -959,7 +985,7 @@ as follows:
       | 3 -> ()
       | _ -> admit()
 ```
-Since type-checking this succeeds (with a warning about the `admit`) we know
+Since type-checking this succeeds we know
 that the base case of the induction is trivially proved and need
 to focus our effort on the inductive case.
 
@@ -1088,23 +1114,12 @@ We note some important conventions for the constructors of a data type in F\*.
 + When not writing effects in constructor types,
   the default effect on the result is `Tot`
   (as opposed to function types in general).
-  So, when we write `Cons: 'a -> list 'a -> list 'a`, F\* desugars it to
+  So, when we write `Cons: 'a -> list 'a -> list 'a`,  F\* desugars it to
   `Cons: 'a -> Tot (list 'a -> Tot (list 'a))`.
   
 + Constructors can be curried. So, we usually define our inductive
   types as above so that we write `Cons hd tl` (curried)
   rather than `Cons(hd,tl)` (uncurried).
-
-  For compatibility with the syntax of F#, we can also define lists
-  with uncurried constructors:
-
-      type list<'a> = 
-        | Nil
-        | Cons of 'a * list<'a>
-  
-  In this tutorial, we will use the curried form: even though it is slightly
-  more verbose, as we will see, the notation is more general and is the
-  preferred syntax of F\*.
 
 + Constructors can be partially applied, so `Cons hd` is legal and has
   type `:list 'a -> Tot (list 'a)` when `hd:'a`.
@@ -1345,6 +1360,10 @@ We can use assertions to test expected properties of programs. For example:
 
 ~CH
 Again, this is not real code
+~
+~NS
+We are showing code snippets throughout, not complete programs. So, I don't get it ... 
+are you upset because this line is not a valid top-level expression?
 ~
 
 ### Finding
