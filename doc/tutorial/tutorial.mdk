@@ -210,7 +210,7 @@ Here is a module called `ACLs` (for Access-Control Lists) that defines
 our policy:
 
 ~ Fragment {link="code/exercises/ex1a-safe-read-write.fst"}
-[INCLUDE=code/solutions/ex1a-safe-read-write.fst:ACLs]
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:ACLs]
 ~
 
 Our first module begins by defining a type synonym: we'll use
@@ -236,7 +236,7 @@ to F\* programs via the underlying framework, e.g., .NET or OCaml. We can
 describe a simple interface provided by the framework as follows:
 
 ~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
-[INCLUDE=code/solutions/ex1a-safe-read-write.fst:SystemIO]
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:SystemIO]
 ~
 
 Here, we've defined an *interface* called `System.IO`, which uses the
@@ -281,10 +281,10 @@ Here's some simple, untrusted client code. It uses `System.IO`,
 defines some common file names, and then a function called
 `staticChecking`, which tries to read and write a few files.
 
-~ Fragment {link=code/solutions/doit.fst}
-[INCLUDE=code/solutions/ex1a-safe-read-write.fst:UntrustedClientCode]
+~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:UntrustedClientCode]
 
-[INCLUDE=code/solutions/ex1a-safe-read-write.fst:StaticChecking]
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:StaticChecking]
 ~
 
 The type-checker ensures statically that this untrusted code complies
@@ -296,7 +296,7 @@ complains that the `passwd` file does not have the type
 `:f:filename{canRead f}`, respectively `:f:filename{canWrite f}`.
 For instance, if we uncomment the `write` we get the following error message:
 
-<!-- mono ../../bin/fstar.exe --fstar_home ../.. code/solutions/ex1a-safe-read-write.fst -->
+<!-- mono ../../bin/fstar.exe --fstar_home ../.. code/exercises/ex1a-safe-read-write.fst -->
 ``` {language=""}
 Error ex1a-safe-read-write.fst(38,2-47,5): The following problems were found:
 	Subtyping check failed; expected type f:filename{(canWrite f)};
@@ -315,55 +315,41 @@ specify a security policy, and statically enforce complete and correct
 mediation of that policy via type-checking. We will now illustrate
 that checking of the policy doesn't have to happen all statically, but
 that the dynamic checks added by the programmer are taken into account
-by the type system.
-[separate example for this would be better].
-
-
-
-~CH
-Second, we didn't show at all how F\* deals with
-conditionals / dynamic checks.  Given that this is the first exercise
-in the tutorial let's try to be more gentle.
-
-[I would also remove the two questions at the end of the exercise,
-it's silly to ask the students to do our work and explain such things
-to themselves.]
-
-[Another idea for making this exercise more gentle:]
-Give them `safeRead`, ask them to write `safeWrite` (or the other way around).
-Yes, this would make this exercise almost trivial, but given
-that it's the first exercise that's not really a problem,
-on the contrary!
+by the type system. In particular we implement a `checkedRead` function
+that consults the policy and only performs the `read` if the policy
+allows it, otherwise it raises an exception.
+~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:CheckedRead]
 ~
-
-~CH
-We should give them the types of `checkedRead` and `checkedWrite`
-and note that they have no preconditions!
-~~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
-[INCLUDE=code/solutions/ex1a-safe-read-write.fst:CheckedReadWriteTypes]
-~~
-~
+Please note that the type of `checkRead` imposes no condition on the
+the input file `f`. When the `ACLs.canRead f` check succeeds the
+type-checker knows that the `System.IO.read f` is safe.
 
 ~Exercise
-Write a function called `safeRead` that takes a filename `f` argument,
-checks the policy to make sure the file `f` is readable, and only if
-that is the case reads `f`. If the file is not readable your
-`safeRead` should return a default string.
-Write a function analogous to `safeRead` called `safeWrite`. Use it
-so that F\* no longer reports a type-checking error for the `doitSafe`
-function below. Is the `doitSafe` function secure? Why?
+Write a function called `checkedWrite` that takes a filename `f` and a
+string `s` as argument, checks the policy to make sure the file `f` is
+writable, and only if that is the case writes `s` to `f`. If the file
+is not readable your `checkedWrite` should raise an exception. As for
+`checkedRead`, your `checkedRead` should have no preconditions.
 ~~ ExerciseFragment {exname=ex1a-safe-read-write}
-[INCLUDE=code/exercises/ex1a-safe-read-write.fst:DoItSafe]
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:CheckedWriteType]
 ~~
 ~~ Answer
 ~~~ SolutionFragment {exname=ex1a-safe-read-write}
-[INCLUDE=code/solutions/ex1a-safe-read-write.fst:CheckedReadWrite]
+[INCLUDE=code/solutions/ex1a-safe-read-write.fst:CheckedWrite]
 ~~~
-`safeRead` and `safeWrite` defer to runtime the same checks that
-were performed at compile time by F\*, and perform the IO actions
-only if those checks succeed.
 ~~
 ~
+You can use `checkedRead` and your `checkedWrite` to replace `read`
+and `write` in the original in `staticChecking`, so that now even
+the accesses to `passwd` are well-typed.
+~ ExerciseFragment {exname=ex1a-safe-read-write}
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:DynamicChecking]
+~
+This is secure because `checkedRead` and `checkedWrite` defer to
+runtime the same checks that were performed at compile time by F\*,
+and perform the IO actions only if those checks succeed.
+
 # Basics: Types and effects
 
 You may not have noticed them all, but our first example already covers
