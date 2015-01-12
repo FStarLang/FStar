@@ -20,6 +20,16 @@ Package       : semantic
 ##### Karthik Bhargavan, Cedric Fournet, Catalin Hritcu, Aseem Rastogi, **Nikhil Swamy**
 
 Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
+
+
+
+
+
+* Check that you can access [http://fstar-lang.org/tutorial] 
+* Get binaries from [http://fstar-lang.org]
+
+[http://fstar-lang.org/tutorial]: http://fstar-lang.org/tutorial
+[http://fstar-lang.org]: http://fstar-lang.org
 ~
 
 <!-------------------------------------------------------------------------------->
@@ -113,19 +123,21 @@ $\Gamma_{\mbox{prelude}} \vdash \mbox{\texttt{let factorial n = e}} : t \Leftarr
 
 ![timeline]
 
-* A type-preserving compiler to dependently typed .NET bytecode (Fine)
+* A type-preserving compiler to .NET bytecode (Fine)
 
 * Security of an implementation of the TLS 1.2 standard (F7)
 
-* Self-certification: Proving the correctness of the F* type-checker
-  itself using F\* and Coq  (POPL '12)
+* Self-certification: Certifying F\* using F\* and Coq (POPL '12)
 
-* Proving a compiler from F\* to JavaScript fully abstract (POPL '13)
+* A fully abstract compiler from F\* to JavaScript (POPL '13)
 
-* Proving the safety of an embedded, security-oriented sublanguage of
-  TypeScript (POPL '14)
+* TS*: An embedded, secure subset of TypeScript (POPL '14)
 
 * Probablistic relational logic for verified crypto (POPL '14)
+
+* F\* v1.0: Open source, programmed entirely in F\*, bootsrapped in
+  OCaml and F\#.  More streamlined, expressive, and efficient than
+  prior versions.
 
 [timeline]: timeline.png
 ~
@@ -145,7 +157,7 @@ $\Gamma_{\mbox{prelude}} \vdash \mbox{\texttt{let factorial n = e}} : t \Leftarr
   
   -- Refinement types, dependent functions, indexed effects
 
-  -- Proving properties about pure functions on ints and lists
+  -- Proving properties about pure functions on `int`s and `list`s
 
 * You should learn enough to try out more advanced parts of the tutorial independently
 
@@ -179,8 +191,8 @@ $\Gamma_{\mbox{prelude}} \vdash \mbox{\texttt{let factorial n = e}} : t \Leftarr
 
 Expressions
 ```fstar
-e ::= x | () | true | false | if e then e1 else e2 | fun (x:t) -> e 
-   | e1 e2 | !e | e1 := e2 | let x = e1 in e2 
+e ::= x | () | true | false | if e then e1 else e2 
+   | fun (x:t) -> e | e1 e2 | !e | e1 := e2 | let x = e1 in e2 
 ```
 
 Operational semantics: 
@@ -198,12 +210,15 @@ Operational semantics:
 Types
 
 ```fstar
-phi,wp,t ::= a                         //type variables 
-         | unit | bool | ref bool | T  //some constants
-         | x:t1 -> M t2 wp             //Co-domain is an indexed monadic effect, M t2 wp
-         | t e | t t'                  //dependent types and type application
-         | fun (a:k) -> t              //type-to-type functions
-         | fun (x:t) -> t              //term-to-type functions
+types  wp,t ::= unit | bool | ref bool     //some constants
+             | x:t1 -> M t2 wp             //Co-domain is an effect, type and spec
+             (* rest only for logical specs in Tiny F* *)
+             | a | t e | t t               //variables, dependent types and type appl.
+             | fun (a:k) -> t              //type-to-type functions
+             | fun (x:t) -> t              //term-to-type functions
+             | t /\ t | t \/ t | ~t        //logical connectives ... 
+             | t ==> t | forall (x:t). t
+             | ...                        
 ```
 
 Kinds
@@ -221,14 +236,18 @@ k ::= Type | x:t -> k | a:k -> k'
 
 For every expression `e`, F* computes a triple `M t wp`
 
-1. `M` is a label, drawn from: `{PURE, STATE}`. It
-represents an upper bound on the effect of `e`.
+1. `M` is a label, drawn from: `{PURE, STATE}`, is an upper bound on
+the effect of `e`.
 
 2. `t` is the type of the value returned by `e` (if any)
 
-3. `wp` is the weakest pre-condition corresponding to the semantics of
-`e`, including its effects 
+3. `wp` is the weakest pre-condition corresponding to the semantics of `e`
 
+For example:
+```fstar
+factorial i : PURE int wp_1 
+e1 := e2    : STATE unit wp_2
+```
 ~
 
 ~Slide
@@ -237,32 +256,51 @@ represents an upper bound on the effect of `e`.
 
 * {.fragment} The `PURE` effect
 ```fstar
-    kind Pre = Type
-    kind Post (a:Type) = a -> Type
+    kind Pre = Type                     
+    kind Post (a:Type) = a -> Type      
+    kind WP   (a:Type) = Post a -> Pre  
+    type return a x post = post x
+    type bind a wp1 wp2 post = wp1 (fun x -> wp2 x post)
+```
+
+* {.fragment} For example:
+```fstar
+factorial x : PURE int (fun (p:PURE.Post int) -> //for any post-condition p
+                               x >= 0  //prove that argument is non-negative
+                            /\ forall y. y > 0 ==> p y) //assume the result is positive
+```
+
+~
+
+~Slide 
+###Specifying effects
+
+* The `STATE` effect
+```fstar
+    kind Pre = heap -> Type  //a predicate on the input heap
+    kind Post (a:Type) = a -> heap -> Type //relates the result to the output heap
     kind WP   (a:Type) = Post a -> Pre
     type return a x post = post x
     type bind a wp1 wp2 post = wp1 (fun x -> wp2 x post)
 ```
 
-* {.fragment} Syntactic sugar: The type of total computations
+* {.fragment} Sub-effects: Lifting `PURE` to `STATE`
+```fstar
+   type lift : a:Type -> PURE.WP a -> STATE.WP a =
+     fun (a:Type) (wp:PURE.WP a) (post:STATE.Post a) (h:heap) -> wp (fun x -> post x h)
+```
+~
+
+
+~Slide
+### Syntactic sugar 
+
+* {.fragment} The type of total computations
 ```fstar
 Tot t = PURE t (fun post -> forall (x:t). post x)
 ```
 
-* {.fragment} The `STATE` effect
-```fstar
-    kind Pre = heap -> Type
-    kind Post (a:Type) = a -> heap -> Type
-    kind WP   (a:Type) = Post a -> Pre
-    type return a x post h = post x h
-    type bind a wp1 wp2 post = wp1 (fun x -> wp2 x post)
-```
-~
-
-~Slide
-### Syntactic sugar for function types
-
-* Curried functions are total at each arrow, by default
+* {.fragment} Curried functions are total at each arrow, by default
 ```fstar
     x1:t1 -> x2:t2 -> ... -> xn:tn -> M t wp =
     x:t1 -> Tot (x2:t2 -> ... -> Tot (xn:tn -> M t wp))
@@ -270,7 +308,7 @@ Tot t = PURE t (fun post -> forall (x:t). post x)
 
 * {.fragment} The last arrow has default `ML` effect
 ```fstar
-    x1:t1 -> x2:t2 -> ... -> xn:tn -> t = 
+    x1:t1 -> x2:t2 -> ... -> xn:tn -> t =
     x1:t1 -> x2:t2 -> ... -> xn:tn -> ML t
 ```
 For tiny F*: 
@@ -280,16 +318,6 @@ For tiny F*:
 For full F*, `ML` includes other effects too, like exceptions.
 ~
 
-
-~Slide
-### Sub-effects 
-
-* Lifting `PURE` to `STATE`
-```fstar
-   type lift : a:Type -> PURE.WP a -> STATE.WP a =
-     fun (a:Type) (wp:PURE.WP a) (post:STATE.Post a) (h:heap) -> wp (fun x -> post x h)
-```
-~
 
 ~Slide
 ### Specifying effectful primitives
@@ -334,22 +362,16 @@ assume val (:=): r:ref bool
     PURE a (fun p -> pre /\ forall x. post x ==> p x)
 ```
 
-* {.fragment} Logical connectives are encoded as types, e.g., 
-```fstar
-type (==>): Type -> Type -> Type
-type Forall : a:Type -> (a -> Type) -> Type
-where forall (x:t). phi = Forall t (fun (x:t) -> phi)
-```
 ~
 
 
 ~Slide
-### An example program and its type
+### A stateful program and its type
 
 ```fstar
 let swap x y = 
     let tmp = !x in 
-    x := y; 
+    x := !y; 
     y := tmp
 ```
 
@@ -374,6 +396,14 @@ $\begin{scriptsize}
 \inference{\Gamma(x) = t}
           {\Gamma \vdash x : t}
 \end{scriptsize}$
+
+* Constants
+
+$\begin{scriptsize}
+\inference{e=\mbox{\tt true} \vee \mbox{\tt false}}
+          {\Gamma \vdash e : bool}
+\end{scriptsize}$
+
 
 * Lambdas
 
@@ -403,7 +433,7 @@ $\begin{scriptsize}
 \end{scriptsize}$
 
 
-* Let bindings
+* Let bindings using `bind`
 
 $\begin{scriptsize}
 \inference{\Gamma \vdash e_1 : M~t_1~wp_1 &
@@ -418,13 +448,13 @@ $\begin{scriptsize}
 \inference{\Gamma \vdash e_1 : M~\mbox{\it bool}~wp_1 \\
            \\Gamma \vdash e_2 : M~t~wp_2 &
            \Gamma \vdash e_3 : M~t~wp_3}
-         {\Gamma \vdash \mbox{\it if}~e_1~\mbox{\it then}~e_2~\mbox{\it else}~e_3 : M.\ite~t~wp_1~wp_2~wp_3}[T-If]
+         {\Gamma \vdash \mbox{\it if}~e_1~\mbox{\it then}~e_2~\mbox{\it else}~e_3 : M.\ite~t~wp_1~wp_2~wp_3}
 \end{scriptsize}$
 
 
 ```fstar
-STATE.ITE t wp1 wp2 wp3 post h = 
-  wp1 (fun i h1 -> if (i=true) then wp2 post h1 else wp3 post h2) h
+STATE.ITE t wp1 wp2 wp3 post = 
+  STATE.bind wp1 (fun i h1 -> i=true ==> wp2 post h1 /\ i=false ==> wp3 post h1)
 
 PURE.ITE = ...
 ```
@@ -459,13 +489,13 @@ $\begin{scriptsize}
 \end{scriptsize}$
 
 ```fstar
-PURE.strengthen wp wp' = forall post. wp' post ==> wp post
-STATE.strengthen wp wp'   = forall post h. wp' post h ==> wp post h
+PURE.strengthen wp wp'  = forall post. wp' post ==> wp post
+STATE.strengthen wp wp' = forall post h. wp' post h ==> wp post h
 ```
 ~
 
 ~Slide
-### Scaling to a usable, full-fledged language F*
+### Scaling to a usable, full-fledged language 
 
 * A generic lattice of monadic effects
 
@@ -488,8 +518,6 @@ type nat = x:int{x >= 0}
 ~Slide
 
 ### Plan
-
-* Tiny F*: A quick tour through the type system
 
 * Work through [http://www.fstar-lang.org/tutorial/]
 
