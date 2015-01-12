@@ -573,6 +573,16 @@ for `:int -> Tot (unit -> ML int)`.
 
 # First proofs about functions on integers { #sec-firstproofs }
 
+Main ideas in this section:
+
+* F\* provides several ways of specifying and statically verifying
+  properties of programs:
+  - assertions
+  - refinement types
+  - predicate transformers (e.g. Lemma)
+* F\* types allow for two complementary verification styles:
+  - intrinsic vs extrinsic (ie. at definition time vs. after the fact)
+
 Our first example on access control lists illustrated how F\*'s type
 system can be used to automatically check useful security properties for
 us. But, before we can do more interesting security-related programming
@@ -651,6 +661,13 @@ as the type of this function, which is a shorthand for
 automatically prove that `factorial` (or any recursive function, for that
 matter) is in fact a pure, total function. It actually is not a total
 function on arbitrary integers! Think about `factorial (-1)`.
+
+~ CH
+Sorry to keep bringing this up, but if integers are indeed 32-bit
+as you say below then factorial is a total function even for negative
+numbers because of wrap-around. This issue came up in Nik's group at
+the school, but I don't remember what the resolution was.
+~
 
 ~ Remark
 Integers (values of the `int` type) in F\* are represented by

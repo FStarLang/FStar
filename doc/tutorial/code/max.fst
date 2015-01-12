@@ -8,7 +8,7 @@ val max_with_assert : x:int -> y:int -> Tot int
 let max_with_assert x y =
   let i = if x > y then x else y in
   assert (i >= x && i >= y && (i = x || i = y));
-  i (* returns i *)
+  i  (* return i *)
 
 (* intensional using refinement types *)
 val max_ref_type : x:int -> y:int ->
