@@ -1,13 +1,9 @@
 F*: An ML-like language with a type system for program verification
 ===================================================================
 
+### F\* website
 
-### Version 1.0
-
-This is a new variant of F* that is still in development and we
-hope will lead to a 1.0 release soon. This new variant is
-incompatible and quite different compared to the previously
-released 0.7 versions. 
+More information on F\* can be found on www.fstar-lang.org
 
 ### Installation
 
@@ -25,6 +21,13 @@ The [F\* tutorial] provides a first taste of verified programming in F*.
 
 This new variant of F* is released under the Apache 2.0 license;
 see LICENSE for more details.
+
+### Version 1.0
+
+This is a new variant of F* that is still in development and we
+hope will lead to a 1.0 release soon. This new variant is
+incompatible and quite different compared to the previously
+released 0.7 versions.
 
 ### Code structure
 
