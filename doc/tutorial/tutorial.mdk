@@ -573,6 +573,7 @@ for `:int -> Tot (unit -> ML int)`.
 
 # First proofs about functions on integers { #sec-firstproofs }
 
+<!--
 Main ideas in this section:
 
 * F\* provides several ways of specifying and statically verifying
@@ -582,6 +583,7 @@ Main ideas in this section:
   - predicate transformers (e.g. Lemma)
 * F\* types allow for two complementary verification styles:
   - intrinsic vs extrinsic (ie. at definition time vs. after the fact)
+-->
 
 Our first example on access control lists illustrated how F\*'s type
 system can be used to automatically check useful security properties for
@@ -788,6 +790,15 @@ in detail in the remainder of this section.
 
 ### Dependent function types
 
+~CH
+Lemmas don't seem like the most intuitive way of introducing dependent functions.
+Can we find a more computationally relevant thing first? See `max_ref_type`
+in `code/max.fst`? How about
+```
+    val factorial_monotone: x:int{x>2} -> Tot (y:nat{y > x})
+```
+~
+
 Let's start by looking a little closer at the statement of the lemma.
 
     val factorial_is_positive: x:nat -> Tot (u:unit{factorial x > 0})
@@ -832,7 +843,7 @@ type of the lemmas which include a refinement of the
 `:unit` type. To make this lighter, F\* provides the `:Lemma` keyword which 
 can be used in place of the `:Tot` effect. 
 
-For example, the type of `factorial_is_monotone` is equivalent to the
+For example, the type of `factorial_is_monotone_2` is equivalent to the
 type of `factorial_is_monotone_3` (below), which is just a little
 easier to read and write.
 
@@ -902,7 +913,7 @@ Prove the following monotonicity property for the fibonacci function:
 [INCLUDE=code/exercises/ex3c-fibonacci.fst:FibonacciMonotone]
 ~~
 ~~ AnswerFragment {exname=ex3c-fibonacci}
-[INCLUDE=code/solutions/ex3c-fibonacci.fst]
+[INCLUDE=code/solutions/ex3c-fibonacci.fst:FibonacciMonotoneProof]
 ~~
 ~
 

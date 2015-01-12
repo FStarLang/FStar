@@ -4,13 +4,13 @@ val max : int -> int -> Tot int
 let max x y = if x > y then x else y
 
 (* intensional using assert *)
-val max_with_assert : x:int -> y:int -> Tot int
+val max_with_assert : int -> int -> Tot int (* type as before *)
 let max_with_assert x y =
   let i = if x > y then x else y in
   assert (i >= x && i >= y && (i = x || i = y));
   i  (* return i *)
 
-(* intensional using refinement types *)
+(* intensional using refinement types (dependent function type) *)
 val max_ref_type : x:int -> y:int ->
                      Tot (i:int{i >= x && i >= y && (i = x || i = y)})
 let max_ref_type x y = if x > y then x else y
