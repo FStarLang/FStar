@@ -5,7 +5,7 @@ Author        : The F* Team
 Affiliation   : MSR, MSR-Inria, Inria, IMDEA
 Colorizer     : fstar
 
-.Comment      : before="**&author;**:&nbsp;" font-style=italic
+.Comment      : replace=""
 ~CH           : .comment color=green author=CH
 ~CK           : .comment color=blue author=Chantal
 ~BB           : .comment color=purple author="Benjamin Beurdouch"
@@ -1558,8 +1558,10 @@ relations below):
     an inductive type `T`, if `v=D e1 ... en` we include `e_i << e`, for
     all `i`. That is, the sub-terms of a well-typed constructed term
     precede the constructed term. (The exception to this rule is if `T`
-    is an instance of `lexPair`).(CH: I guess there is also an exception
-    for types with negative occurrences, right?)
+    is an instance of `lexPair`).
+~CH
+I guess there is also an exception for types with negative occurrences, right?
+~
     
 3. **The lexicographic ordering on lex_t**, as described below.
 
