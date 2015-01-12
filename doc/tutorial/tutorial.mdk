@@ -198,7 +198,7 @@ sections) proceeds in three easy steps.
      that the policy-protected primitives are never improperly accessed.
 
 
-### Describing a policy
+### Describing a policy { #policy }
 
 The syntax of F\* is based closely on the OCaml syntax and the non-light
 syntax of F\#. An F\* program is composed of several modules. Each module
@@ -373,6 +373,15 @@ that the full story is more general.
 
 ## Inferred types and effects for computations
 
+~CH
+Too much back and forth about type and effect _inference_ seems to be
+obscuring the explanation. How about:
+(1) effects (just remove every reference to inference,
+  e.g. replace "is inferred to have effect E" with "has effect E"),
+(2) function types,
+(3) (type and) effect inference
+~
+
 Although we didn't write down any types for functions like `canRead`
 or `canWrite`, F\* (like other languages in the ML family) infers
 types for your program (if F\* believes it is indeed type
@@ -435,6 +444,17 @@ split RD/WR into very precise ones, recording a subset of the state that
 may be written, etc. 
 ~
 
+~CH
+I think the word effect is overloaded and this makes this discussion
+(and the text above) a bit confusing. There is an intuitive notion of
+effect as in non-termination, exceptions, state (there are very few
+such effects and they are all primitive) and there is the technical
+notion of an effect in F\* (which includes things like a wp and can be
+a lot more fine-grained; these are the things that are actually
+configurable). The explanation above seems to start with the first
+point of view and end up with the second.
+~
+
 From now on, we'll just refer to a type-and-effect pair (e.g. `:Tot int`
 where `:Tot` is the effect and `:int` is the result type), as a
 type<!-- unused: , or sometimes as a *computation* type -->.
@@ -442,10 +462,10 @@ type<!-- unused: , or sometimes as a *computation* type -->.
 ## Function types
 
 F\* is a functional language, so functions are first-class values that
-are assigned function types. For instance, in ML the function
+are assigned function types. For instance, in ML the function `is_positive`
 testing whether an integer is positive is given type `:int -> bool`,
 i.e. it is a function taking an integer argument and producing a
-boolean result. Similarly, a maximum function on integers is given
+boolean result. Similarly, a maximum function on integers `max` is given
 type `:int -> int -> int`, i.e. it is a function taking two integers
 and producing an integer. Function types in F\* are more precise and
 capture not just the types of the arguments and the result, but also
@@ -471,37 +491,16 @@ val read : filename -> ML string
 
 F\* is a _call-by-value_ functional language (like OCaml and F\#, and
 unlike Haskell and Coq), so function arguments are fully evaluated to
-values before being passed to the function. Values have no effect,
+values before being passed to the function. Values have no (immediate) effect,
 thus the types of a function's arguments have no effect annotation. On
 the other hand, the body of a function may perform some non-trivial
 computation and so the result is always given both a type and an
 effect, as explained above.
 
-~CH
-[The rest already captured above; the remark and exercise
- should come where val is first used in previous section.] 
-To illustrate, take the function `max` below:
-
-    let max i j = if i > j then i else j
-
-The type inferred for `max` is `:int -> int -> Tot int`, the type of a
-total function that returns an integer when given two integer
-arguments.
-
-~~Remark
-By the way, you can also ask F\* to check that a definition has a certain
-expected type. For example, you can precede the definition of `max` (in
-the same file) with the following line, instructing F\* to check that it
-infers what you expect:
-
-    val max: int -> int -> Tot int
-~~
-~
-
 ~Exercise
-
-Write down the expected types for `canRead` and `canWrite` and ask F\*
-to check it for you.
+As you could see above, we use `val` to ask F\* to check that a
+definition has a certain expected type.  Write down the expected types
+for `canRead` and `canWrite` from [#policy] and ask F\* to check it for you.
 ~~ ExerciseFragment {exname=ex2a-can-read-write-types}
 [INCLUDE=code/exercises/ex2a-can-read-write-types.fst]
 ~~
@@ -510,15 +509,6 @@ to check it for you.
 val canRead: filename -> Tot bool
 val canWrite: filename -> Tot bool
 ~~
-~
-
-~CH
-Too much back and forth about type and effect _inference_ seems to be
-obscuring the explanation. How about:
-(1) effects (just remove every reference to inference,
-  e.g. replace "is inferred to have effect E" with "has effect E"),
-(2) function types,
-(3) effect inference
 ~
 
 ### The default effect is `ML`
