@@ -18,11 +18,11 @@
     "of", "open", "or", "private", "query", "rec", "requires", 
     "then", "to", "true", "try", "type", "val", "when", 
     "with", "monad_lattice", "terminating", "kind", 
-    "Lemma", "Theorem", "SMTLemma", "modifies", "opaque"
+    "Lemma", "Theorem", "SMTLemma", "modifies", "opaque", "Type"
   ],
 
   "typeKeywords": [
-    "forall", "exists",
+    "forall", "exists", 
     "Lemma", "Theorem", "SMTLemma"
   ],
 
@@ -35,7 +35,6 @@
   ],
 
   "kindConstants": [
-    "E","P","H","V","X"
   ],
 
   "escapes" :  "\\\\(?:[nrt\\\\\"'\\?]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{6})",

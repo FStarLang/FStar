@@ -1,0 +1,484 @@
+[INCLUDE=presentation]
+
+Title         : Verified Programming in F*
+Sub Title     : Tutorial at POPL '15
+Author        : Nik Swamy, Karthik Bhargavan, Cedric Fournet, Catalin Hritcu, Aseem Rastogi
+Affiliation   : Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
+Reveal Theme  : solarized
+Beamer Theme  : singapore
+Reveal Url    : ./reveal
+Colorizer     : fstar
+Reveal Transition : None
+
+~Slide
+##Verified Programming in F*
+#### Tutorial at POPL '15
+
+##### Karthik Bhargavan, Cedric Fournet, Catalin Hritcu, Aseem Rastogi, **Nikhil Swamy**
+
+Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
+~
+
+<!-------------------------------------------------------------------------------->
+
+## Many semi-automated verifiers 
+### For first-order programming languages
+
+![fo-verifiers]
+
+[fo-verifiers]: fo-verifiers.png
+
+<!-------------------------------------------------------------------------------->
+
+## But, what about lambdas?
+
+![ho-langs]
+
+### Modern languages use higher-order constructs pervasively
+
+[ho-langs]: ho-langs.png
+
+<!-------------------------------------------------------------------------------->
+
+## 
+
+![fstar-logo]
+
+### Semi-automated verification for ML-like languages
+
+* Higher order
+* Effectful
+* Call by value
+
+[fstar-logo]: fstar.png
+
+<!-------------------------------------------------------------------------------->
+
+## A first taste 
+
+#### Write idiomatic functional code
+
+```fstar
+let rec factorial n = 
+    if n = 0 then 1 
+    else n * factorial (n - 1)
+```
+
+## A first taste 
+
+#### Write idiomatic functional code
+
+```fstar
+let rec factorial n = 
+    if n = 0 then 1 
+    else n * factorial (n - 1)
+```
+
+#### Give it a specification
+
+```fstar
+val factorial: n:int{n >= 0} -> Tot (i:int{i >= 1})
+```
+
+* Claiming that `factorial` is a total function from non-negative
+to positive integers.
+
+<!-------------------------------------------------------------------------------->
+
+## A first taste
+
+#### Write idiomatic functional code
+
+```fstar
+let rec factorial n = 
+    if n = 0 then 1 
+    else n * factorial (n - 1)
+```
+
+#### Give it a specification
+
+```fstar
+val factorial: n:int{n >= 0} -> Tot (i:int{i >= 0})
+```
+
+#### Ask F* to check it
+
+```
+fstar factorial.fst
+Verified module: Factorial
+All verification conditions discharged successfully
+```
+
+<!-------------------------------------------------------------------------------->
+
+~Slide
+```
+fstar factorial.fst
+Verified module: Factorial
+All verification conditions discharged successfully
+```
+
+#### F* builds a typing derivation of the form:
+
+$\Gamma_{\mbox{prelude}} \vdash \mbox{\texttt{let factorial n = e}} : t \Leftarrow \phi$
+
+- In a context $\Gamma_{\mbox{prelude}}$ including definitions of F* primitives
+
+- The program `let factorial n = e` has type $t$, given the validity of a logical formula $\phi$
+
+- $\phi$ is passed to [Z3] (an automated theorem
+  prover/SMT solver) to check for validity
+
+- If the check succeds, then, from the metatheory of F*, the program is
+  safe at type $t$
+
+[Z3]: http://research.microsoft.com/z3
+~
+
+<!-------------------------------------------------------------------------------->
+
+~Slide
+
+#### A brief history of an evolving line of languages ...
+
+![timeline]
+
+* A type-preserving compiler to dependently typed .NET bytecode (Fine)
+
+* Security of an implementation of the TLS 1.2 standard (F7)
+
+* Self-certification: Proving the correctness of the F* type-checker
+  itself using F\* and Coq  (POPL '12)
+
+* Proving a compiler from F\* to JavaScript fully abstract (POPL '13)
+
+* Proving the safety of an embedded, security-oriented sublanguage of
+  TypeScript (POPL '14)
+
+* Probablistic relational logic for verified crypto (POPL '14)
+
+[timeline]: timeline.png
+~
+
+<!-------------------------------------------------------------------------------->
+<!-- consumed 10 mins so far --> 
+
+~Slide
+
+### Plan
+
+* Tiny F*: A quick tour through the type system
+
+* Work through [http://www.fstar-lang.org/tutorial/]
+
+* We hope to cover: Sections 1.1, 3.2, 3.3, 4.0, 4.1, 4.2
+  
+  -- Refinement types, dependent functions, indexed effects
+
+  -- Proving properties about pure functions on ints and lists
+
+* You should learn enough to try out more advanced parts of the tutorial independently
+
+<!--
+  1.1 Basic ACLs  (15 mins)
+
+  3.2 Factorial, dependent functions and the fibonacci exercise (15 mins)
+
+  3.3 Lemmas (10 mins)
+  
+  4.0, 4.1, 4.2: Simple list programs (20 mins)
+
+(+ 10  ;intro                     Nik
+   20  ;Tiny F*                   Nik 
+   15  ;basic acls + setup        Nik
+   15  ;factorial and fibonacci   Catalin
+   10  ;lemmas                    Catalin
+   20  ;list functions            Catalin
+   )
+--> 
+
+[http://www.fstar-lang.org/tutorial/]: http://www.fstar-lang.org/tutorial/
+
+~
+
+<!-------------------------------------------------------------------------------->
+
+~Slide
+
+### Syntax of tiny-F*
+
+Expressions
+```fstar
+e ::= x | () | true | false | if e then e1 else e2 | fun (x:t) -> e 
+   | e1 e2 | !e | e1 := e2 | let x = e1 in e2 
+```
+
+Operational semantics: 
+
+- Standard call-by-value
+- State is primitive 
+
+~
+
+<!-------------------------------------------------------------------------------->
+~Slide
+
+### Syntax of tiny-F*
+
+Types
+
+```fstar
+phi,wp,t ::= a                         //type variables 
+         | unit | bool | ref bool | T  //some constants
+         | x:t1 -> M t2 wp             //Co-domain is an indexed monadic effect, M t2 wp
+         | t e | t t'                  //dependent types and type application
+         | fun (a:k) -> t              //type-to-type functions
+         | fun (x:t) -> t              //term-to-type functions
+```
+
+Kinds
+
+```fstar
+k ::= Type | x:t -> k | a:k -> k'
+```
+~
+
+<!-------------------------------------------------------------------------------->
+
+~Slide 
+
+### Types, effects, and weakest pre-conditions
+
+For every expression `e`, F* computes a triple `M t wp`
+
+1. `M` is a label, drawn from: `{PURE, STATE}`. It
+represents an upper bound on the effect of `e`.
+
+2. `t` is the type of the value returned by `e` (if any)
+
+3. `wp` is the weakest pre-condition corresponding to the semantics of
+`e`, including its effects 
+
+~
+
+~Slide
+
+###Specifying effects
+
+* {.fragment} The `PURE` effect
+```fstar
+    kind Pre = Type
+    kind Post (a:Type) = a -> Type
+    kind WP   (a:Type) = Post a -> Pre
+    type return a x post = post x
+    type bind a wp1 wp2 post = wp1 (fun x -> wp2 x post)
+```
+
+* {.fragment} Syntactic sugar: The type of total computations
+```fstar
+Tot t = PURE t (fun post -> forall (x:t). post x)
+```
+
+* {.fragment} The `STATE` effect
+```fstar
+    kind Pre = heap -> Type
+    kind Post (a:Type) = a -> heap -> Type
+    kind WP   (a:Type) = Post a -> Pre
+    type return a x post h = post x h
+    type bind a wp1 wp2 post = wp1 (fun x -> wp2 x post)
+```
+~
+
+~Slide
+### Syntactic sugar for function types
+
+* Curried functions are total at each arrow, by default
+```fstar
+    x1:t1 -> x2:t2 -> ... -> xn:tn -> M t wp =
+    x:t1 -> Tot (x2:t2 -> ... -> Tot (xn:tn -> M t wp))
+```
+
+* {.fragment} The last arrow has default `ML` effect
+```fstar
+    x1:t1 -> x2:t2 -> ... -> xn:tn -> t = 
+    x1:t1 -> x2:t2 -> ... -> xn:tn -> ML t
+```
+For tiny F*: 
+```fstar
+    ML t = STATE t (fun post h -> forall x h'. post x h')
+```
+For full F*, `ML` includes other effects too, like exceptions.
+~
+
+
+~Slide
+### Sub-effects 
+
+* Lifting `PURE` to `STATE`
+```fstar
+   type lift : a:Type -> PURE.WP a -> STATE.WP a =
+     fun (a:Type) (wp:PURE.WP a) (post:STATE.Post a) (h:heap) -> wp (fun x -> post x h)
+```
+~
+
+~Slide
+### Specifying effectful primitives
+
+```fstar
+assume val (!): r:ref bool
+             -> STATE bool (fun post h -> post (sel h r) h)
+
+assume val (:=): r:ref bool
+              -> v:bool
+              -> STATE unit (fun post h -> post () (upd h r v))
+```
+
+* where, we model `heap` as a map, using the functions:
+```fstar
+val sel: heap -> ref bool -> Tot bool
+val upd: heap -> ref bool -> bool -> Tot heap
+```
+
+~
+
+~Slide
+### As Hoare triples
+
+```fstar
+assume val (!): r:ref bool
+              -> ST bool (requires (fun h -> True))
+                         (ensures (fun h x h' -> h=h' /\ x=sel h r))
+
+assume val (:=): r:ref bool
+              -> v:bool
+              -> ST unit (requires (fun h -> True)
+                         (ensures (fun h x h' -> h'=upd h r v))
+```
+
+* In general, 
+```fstar
+    ST a (requires pre) (ensures post) = 
+    STATE a (fun p h -> pre h /\ forall x h'. post h x h' ==> p x h')
+
+    Pure a (requires pre) (ensures post) = 
+    PURE a (fun p -> pre /\ forall x. post x ==> p x)
+```
+
+* {.fragment} Logical connectives are encoded as types, e.g., 
+```fstar
+type (==>): Type -> Type -> Type
+type Forall : a:Type -> (a -> Type) -> Type
+where forall (x:t). phi = Forall t (fun (x:t) -> phi)
+```
+~
+
+
+~Slide
+### An example program and its type
+
+```fstar
+let swap x y = 
+    let tmp = !x in 
+    x := y; 
+    y := tmp
+```
+
+```fstar
+val swap: x:ref bool 
+       -> r:ref bool 
+       -> ST unit (requires (fun h -> True))
+                  (ensures (fun h x h' -> h'=upd (upd h x (sel h y)) y (sel h x)))
+```
+~
+
+~Slide
+### A few selected typing judgments
+
+$\Gamma \vdash e : M~t~wp$
+
+${\Gamma(x) = t}
+ {\Gamma \vdash x : \mbox{\textit{PURE t (PURE.return x)}}}$
+
+$
+{\Gamma \vdash e_1 : M~t_1~wp_1}
+{\Gamma,x:t_1 \vdash e_2 : M~t_2~wp_2}
+{\Gamma \vdash \mbox{\it let}~x = e_1~\mbox{\it in}~e_2 : M~t_2~(M.\mbox{\it bind}~wp_2~(\mbox{\it fun}~x \rightarrow wp_2))} ~~ (x \not\in FV(t2))
+$
+
+
+$
+{\Gamma \vdash e_1 : M~\mbox{\it bool}~wp_1}
+{\Gamma \vdash e_2 : M~t~wp_2}
+{\Gamma \vdash e_3 : M~t~wp_3}
+{\Gamma \vdash \mbox{\it if}~e_1~\mbox{\it then}~e_2~\mbox{\it else}~e_3 : M.{\mbox \it ITE}~t~wp_1~wp_2~wp_3}
+$
+
+```fstar
+STATE.ITE t wp1 wp2 wp3 post h = 
+  wp1 (fun i h1 -> if (i=true) then wp2 post h1 else wp3 post h2) h
+
+PURE.ITE = ...
+```
+~
+
+~Slide
+### Subsumption and proof obligations
+
+$\Gamma \vdash M~t~wp \leq M'~t'~wp' \Leftarrow \phi$
+
+$
+{\Gamma \vdash e : M~t'~wp'}
+{\Gamma \vdash M~t'~wp' \leq M~t~wp \Leftarrow \phi}
+{\Gamma \vdash \phi~\mbox{valid}}
+{\Gamma \vdash e : M~t~wp}$
+
+${\Gamma \vdash M~t~wp \leq M'~t~(\mbox{\it lift}_{M,M'}~t~wp) \Leftarrow True}$
+
+${\Gamma \vdash t <: t' \Leftarrow \phi}
+{\Gamma \vdash M~t~wp \leq M~t'~wp' \Leftarrow \phi~\wedge~M.\mbox{\it strengthen}~wp~wp'}$
+
+```fstar
+PURE.strengthen wp wp' = forall post. wp' post ==> wp post
+STATE.strengthen wp wp'   = forall post h. wp' post h ==> wp post h
+```
+~
+
+~Slide
+### Scaling to a usable, full-fledged language F*
+
+* A generic lattice of monadic effects
+
+* Refinement types, e.g, 
+```fstar
+type nat = x:int{x >= 0}
+```
+
+* Inductive data types and dependent pattern matching
+
+* Semantic termination checks 
+
+* Type inference mixing higher-order unification and subtyping
+
+* Encoding higher-order VCs in a first-order logic for Z3
+
+* Several compiler backends (OCaml, F#, JavaScript)
+~
+
+~Slide
+
+### Plan
+
+* Tiny F*: A quick tour through the type system
+
+* Work through [http://www.fstar-lang.org/tutorial/]
+
+* We hope to cover: Sections 1.1, 3.2, 3.3, 4.0, 4.1, 4.2
+  
+  -- Refinement types, dependent functions, indexed effects
+
+  -- Proving properties about pure functions on ints and lists
+
+* You should learn enough to try out more advanced parts of the tutorial independently
+
+~
+

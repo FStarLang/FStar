@@ -1,6 +1,10 @@
 
 # This uses Madoko (https://madoko.codeplex.com/)
 
+deck:
+	madoko intro-tiny-fstar.mdk
+	cp madoko2.css madoko.css
+
 tutorial.html: tutorial.mdk fstar.json code/exercises/*.fst code/solutions/*.fst
 	madoko -v tutorial.mdk
 
