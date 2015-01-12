@@ -198,7 +198,7 @@ sections) proceeds in three easy steps.
      that the policy-protected primitives are never improperly accessed.
 
 
-### Describing a policy { #policy }
+### Describing a policy { #sec-policy }
 
 The syntax of F\* is based closely on the OCaml syntax and the non-light
 syntax of F\#. An F\* program is composed of several modules. Each module
@@ -500,7 +500,7 @@ effect, as explained above.
 ~Exercise
 As you could see above, we use `val` to ask F\* to check that a
 definition has a certain expected type.  Write down the expected types
-for `canRead` and `canWrite` from [#policy] and ask F\* to check it for you.
+for `canRead` and `canWrite` from [#sec-policy] and ask F\* to check it for you.
 ~~ ExerciseFragment {exname=ex2a-can-read-write-types}
 [INCLUDE=code/exercises/ex2a-can-read-write-types.fst]
 ~~
@@ -598,7 +598,21 @@ I don't see the distinction you're making between lemmas and assertions.
 You can write `let test = assert (max 0 1 = 1)`. Is that so bad as to be horrible?
 ~
 
-The simplest way to prove properties about your code is to write assertions.
+~CH
+(1) In almost about any other language asserts are used to check
+_intensional_ properties of (usually stateful) programs by decorating
+code. Here you use assert to prove some lemmas (extensional
+properties) after the fact. Moreover, this doesn't even seem like the
+recommended way to prove lemmas in F\*, given that we have better
+support for this described below.
+(2) How is someone reading this tutorial supposed to find out that
+they need to add a let? Why not make the tutorial match reality
+by allowing top level asserts in F\* or by adding lets in the tutorial?
+Generally we should strive to make all the code in this tutorial be valid F\*
+code that we can directly load in the editor.
+~
+
+One way to prove properties about your code in F\* is to write assertions.
 
     assert (max 0 1 = 1)
 
@@ -668,9 +682,9 @@ The line above says several things:
 Once we write this down, F\* automatically proves that `factorial`
 satisfies all these properties. The main interesting bit to prove, of
 course, is that `factorial x` actually does terminate when `x` is
-non-negative. We'll get into the details of how this is done in a later
-section: but, for now, it suffices to know that in this case
-F\* is able to prove that every recursive call is
+non-negative. We'll get into the details of how this is done in
+section [#sec-termination], but, for now, it suffices to know that in
+this case F\* is able to prove that every recursive call is
 on a non-negative number that is strictly smaller than the argument of
 the previous call. Since this cannot go on forever (we'll eventually hit
 the base case `0`), F\* agrees with our claim about the type of
@@ -1480,7 +1494,7 @@ This is equivalent to the following, more verbose, source program:
       
     let f x = MkTriple.fst x + MkTriple.snd x + MkTriple.third x 
 
-# Proving termination
+# Proving termination { #sec-termination }
 
 Every total function is proved terminating in F\*. Termination proofs in
 F\* are based entirely on semantic criteria, not syntactic conditions. We
