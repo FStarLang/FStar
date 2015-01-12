@@ -51,7 +51,7 @@ module UntrustedClientCode
 // END: CheckedRead
 
 // BEGIN: CheckedWriteType
-  val checkedWrite : filename -> string -> unit
+  assume val checkedWrite : filename -> string -> unit
 // END: CheckedWriteType
 
 // BEGIN: DynamicChecking
