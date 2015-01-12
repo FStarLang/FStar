@@ -1,5 +1,4 @@
 [INCLUDE=presentation]
-
 Title         : Verified Programming in F*
 Sub Title     : Tutorial at POPL '15
 Author        : Nik Swamy, Karthik Bhargavan, Cedric Fournet, Catalin Hritcu, Aseem Rastogi
@@ -8,7 +7,11 @@ Reveal Theme  : solarized
 Beamer Theme  : singapore
 Reveal Url    : ./reveal
 Colorizer     : fstar
-Reveal Transition : None
+Package       : semantic
+
+~ MathDefs
+[INCLUDE=sem.tex]
+~
 
 ~Slide
 ##Verified Programming in F*
@@ -56,53 +59,20 @@ Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
 
 ## A first taste 
 
-#### Write idiomatic functional code
-
+* {.fragment} Write idiomatic code
 ```fstar
 let rec factorial n = 
     if n = 0 then 1 
     else n * factorial (n - 1)
 ```
 
-## A first taste 
-
-#### Write idiomatic functional code
-
-```fstar
-let rec factorial n = 
-    if n = 0 then 1 
-    else n * factorial (n - 1)
+* {.fragment} Give it a specification, claiming that `factorial` is a
+total function from non-negative to positive integers.  
+```fstar 
+val factorial: n:int{n >= 0} -> Tot (i:int{i >= 1}) 
 ```
 
-#### Give it a specification
-
-```fstar
-val factorial: n:int{n >= 0} -> Tot (i:int{i >= 1})
-```
-
-* Claiming that `factorial` is a total function from non-negative
-to positive integers.
-
-<!-------------------------------------------------------------------------------->
-
-## A first taste
-
-#### Write idiomatic functional code
-
-```fstar
-let rec factorial n = 
-    if n = 0 then 1 
-    else n * factorial (n - 1)
-```
-
-#### Give it a specification
-
-```fstar
-val factorial: n:int{n >= 0} -> Tot (i:int{i >= 0})
-```
-
-#### Ask F* to check it
-
+* {.fragment} Ask F* to check it
 ```
 fstar factorial.fst
 Verified module: Factorial
@@ -392,26 +362,65 @@ val swap: x:ref bool
 ~
 
 ~Slide
-### A few selected typing judgments
+### Typing values (selected judgments)
 
-$\Gamma \vdash e : M~t~wp$
+$\begin{scriptsize}
+{\Gamma \vdash e : t}
+\end{scriptsize}$
 
-${\Gamma(x) = t}
- {\Gamma \vdash x : \mbox{\textit{PURE t (PURE.return x)}}}$
+* Variables
 
-$
-{\Gamma \vdash e_1 : M~t_1~wp_1}
-{\Gamma,x:t_1 \vdash e_2 : M~t_2~wp_2}
-{\Gamma \vdash \mbox{\it let}~x = e_1~\mbox{\it in}~e_2 : M~t_2~(M.\mbox{\it bind}~wp_2~(\mbox{\it fun}~x \rightarrow wp_2))} ~~ (x \not\in FV(t2))
-$
+$\begin{scriptsize}
+\inference{\Gamma(x) = t}
+          {\Gamma \vdash x : t}
+\end{scriptsize}$
+
+* Lambdas
+
+$\begin{scriptsize}
+\inference{\Gamma,x:t \vdash e : M~t~wp}
+          {\Gamma \vdash \mbox{\it fun}~(x:t) \rightarrow e ~:~ x\!:\!t \rightarrow M~t~wp}
+\end{scriptsize}$
 
 
-$
-{\Gamma \vdash e_1 : M~\mbox{\it bool}~wp_1}
-{\Gamma \vdash e_2 : M~t~wp_2}
-{\Gamma \vdash e_3 : M~t~wp_3}
-{\Gamma \vdash \mbox{\it if}~e_1~\mbox{\it then}~e_2~\mbox{\it else}~e_3 : M.{\mbox \it ITE}~t~wp_1~wp_2~wp_3}
-$
+
+~
+
+~Slide
+### Typing expressions (selected judgments)
+
+$\begin{scriptsize}
+{\Gamma \vdash e : M~t~wp}
+\end{scriptsize}$
+
+
+* Lifting values with `return`
+
+
+$\begin{scriptsize}
+\inference{\Gamma \vdash e : t}
+          {\Gamma \vdash e :  \pure~t~(\pure.\retern~e)}
+\end{scriptsize}$
+
+
+* Let bindings
+
+$\begin{scriptsize}
+\inference{\Gamma \vdash e_1 : M~t_1~wp_1 &
+            \Gamma,x:t_1 \vdash e_2 : M~t_2~wp_2 & 
+            x \not\in FV(t_2)}
+          {\Gamma \vdash \mbox{\it let}~x = e_1~\mbox{\it in}~e_2 : M~t_2~(M.\mbox{\it bind}~wp_2~(\mbox{\it fun}~x \rightarrow wp_2))}
+\end{scriptsize}$
+
+* Conditionals
+
+$\begin{scriptsize}
+\inference{\Gamma \vdash e_1 : M~\mbox{\it bool}~wp_1 \\
+           \\Gamma \vdash e_2 : M~t~wp_2 &
+           \Gamma \vdash e_3 : M~t~wp_3}
+         {\Gamma \vdash \mbox{\it if}~e_1~\mbox{\it then}~e_2~\mbox{\it else}~e_3 : M.\ite~t~wp_1~wp_2~wp_3}[T-If]
+\end{scriptsize}$
+
 
 ```fstar
 STATE.ITE t wp1 wp2 wp3 post h = 
@@ -426,16 +435,28 @@ PURE.ITE = ...
 
 $\Gamma \vdash M~t~wp \leq M'~t'~wp' \Leftarrow \phi$
 
-$
-{\Gamma \vdash e : M~t'~wp'}
-{\Gamma \vdash M~t'~wp' \leq M~t~wp \Leftarrow \phi}
-{\Gamma \vdash \phi~\mbox{valid}}
-{\Gamma \vdash e : M~t~wp}$
+* Subsumption for expressions
 
-${\Gamma \vdash M~t~wp \leq M'~t~(\mbox{\it lift}_{M,M'}~t~wp) \Leftarrow True}$
+$\begin{scriptsize}
+\inference{\Gamma \vdash e : M~t'~wp' &
+           \Gamma \vdash M~t'~wp' \leq M~t~wp \Leftarrow \phi &
+           \Gamma \vdash \phi~\mbox{valid}}
+          {\Gamma \vdash e : M~t~wp}
+\end{scriptsize}$
 
-${\Gamma \vdash t <: t' \Leftarrow \phi}
-{\Gamma \vdash M~t~wp \leq M~t'~wp' \Leftarrow \phi~\wedge~M.\mbox{\it strengthen}~wp~wp'}$
+* Sub-effects
+
+$\begin{scriptsize}
+\inference{}
+          {\Gamma \vdash M~t~wp \leq M'~t~(\mbox{\it lift}_{M,M'}~t~wp) \Leftarrow True}
+\end{scriptsize}$
+
+* Weakening result, strengthening pre-conditions
+
+$\begin{scriptsize}
+\inference{\Gamma \vdash t \leq t' \Leftarrow \phi}
+          {\Gamma \vdash M~t~wp \leq M~t'~wp' \Leftarrow \phi~\wedge~M.\mbox{\it strengthen}~wp~wp'}
+\end{scriptsize}$
 
 ```fstar
 PURE.strengthen wp wp' = forall post. wp' post ==> wp post
