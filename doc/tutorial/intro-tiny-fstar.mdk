@@ -1,7 +1,7 @@
 [INCLUDE=presentation]
 Title         : Verified Programming in F*
 Sub Title     : Tutorial at POPL '15
-Author        : Nik Swamy, Karthik Bhargavan, Cedric Fournet, Catalin Hritcu, Aseem Rastogi
+Author        : Karthik Bhargavan, Cedric Fournet, Catalin Hritcu, Aseem Rastogi, _Nikhil Swamy_
 Affiliation   : Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
 Reveal Theme  : solarized
 Beamer Theme  : singapore
@@ -13,20 +13,17 @@ Package       : semantic
 [INCLUDE=sem.tex]
 ~
 
+
 ~Slide
 ##Verified Programming in F*
 #### Tutorial at POPL '15
 
-##### Karthik Bhargavan, Cedric Fournet, Catalin Hritcu, Aseem Rastogi, **Nikhil Swamy**
-
-Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
-
-
-
-
+##### Karthik Bhargavan, C&eacute;dric Fournet, Catalin Hritcu, Aseem Rastogi, _Nikhil Swamy_
+##### Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
 
 * Check that you can access [http://fstar-lang.org/tutorial] 
 * Get binaries from [http://fstar-lang.org]
+
 
 [http://fstar-lang.org/tutorial]: http://fstar-lang.org/tutorial
 [http://fstar-lang.org]: http://fstar-lang.org
@@ -104,7 +101,8 @@ $\Gamma_{\mbox{prelude}} \vdash \mbox{\texttt{let factorial n = e}} : t \Leftarr
 
 - In a context $\Gamma_{\mbox{prelude}}$ including definitions of F* primitives
 
-- The program `let factorial n = e` has type $t$, given the validity of a logical formula $\phi$
+- The program $\mbox{\texttt{let factorial n = e}}$ has type $t$,
+  given the validity of a logical formula $\phi$
 
 - $\phi$ is passed to [Z3] (an automated theorem
   prover/SMT solver) to check for validity
@@ -135,7 +133,7 @@ $\Gamma_{\mbox{prelude}} \vdash \mbox{\texttt{let factorial n = e}} : t \Leftarr
 
 * Probablistic relational logic for verified crypto (POPL '14)
 
-* F\* v1.0: Open source, programmed entirely in F\*, bootsrapped in
+* {.fragment} F\* v1.0: Open source, programmed entirely in F\*, bootstrapped in
   OCaml and F\#.  More streamlined, expressive, and efficient than
   prior versions.
 
@@ -149,7 +147,7 @@ $\Gamma_{\mbox{prelude}} \vdash \mbox{\texttt{let factorial n = e}} : t \Leftarr
 
 ### Plan
 
-* Tiny F*: A quick tour through the type system
+* Tiny F*: A tour of (a tiny fragment of) the type system
 
 * Work through [http://www.fstar-lang.org/tutorial/]
 
@@ -191,7 +189,7 @@ $\Gamma_{\mbox{prelude}} \vdash \mbox{\texttt{let factorial n = e}} : t \Leftarr
 
 Expressions
 ```fstar
-e ::= x | () | true | false | if e then e1 else e2 
+e ::= x | () | if0 e then e1 else e2 | ... | -1 | 0 | 1 | ...
    | fun (x:t) -> e | e1 e2 | !e | e1 := e2 | let x = e1 in e2 
 ```
 
@@ -207,18 +205,18 @@ Operational semantics:
 
 ### Syntax of tiny-F*
 
-Types
+Types `t` and logical specs `wp`
 
 ```fstar
-types  wp,t ::= unit | bool | ref bool     //some constants
-             | x:t1 -> M t2 wp             //Co-domain is an effect, type and spec
-             (* rest only for logical specs in Tiny F* *)
-             | a | t e | t t               //variables, dependent types and type appl.
-             | fun (a:k) -> t              //type-to-type functions
-             | fun (x:t) -> t              //term-to-type functions
-             | t /\ t | t \/ t | ~t        //logical connectives ... 
-             | t ==> t | forall (x:t). t
-             | ...                        
+wp,t ::= unit | int | ref int       //some constants
+      | x:t1 -> M t2 wp             //Co-domain is an effect, type and spec
+                                    //rest only for logical specs in Tiny F* 
+      | a | t e | t t               //variables, dependent types and type application
+      | fun (a:k) -> t              //type-to-type functions
+      | fun (x:t) -> t              //term-to-type functions
+      | t /\ t | t \/ t | ~t        //logical connectives ... 
+      | t ==> t | forall (x:t). t
+      | ...                        
 ```
 
 Kinds
@@ -254,6 +252,9 @@ e1 := e2    : STATE unit wp_2
 
 ###Specifying effects
 
+* `(PURE t wp)` is the type of a pure computation that always returns
+  `(v:t)` satisfying `(p v)` if `(wp p)` is valid.
+
 * {.fragment} The `PURE` effect
 ```fstar
     kind Pre = Type                     
@@ -269,13 +270,20 @@ factorial x : PURE int (fun (p:PURE.Post int) -> //for any post-condition p
                                x >= 0  //prove that argument is non-negative
                             /\ forall y. y > 0 ==> p y) //assume the result is positive
 ```
+F\* can also reason about total terms by their definitions; e.g., F\* 
+proves `factorial 3 = 6` simply by unfolding definitions.
 
 ~
 
 ~Slide 
 ###Specifying effects
 
-* The `STATE` effect
+* `(STATE t wp)` is the type of a computation which, when run in heap
+  `h0`, may _**read**_ or _**write**_ the state, and then
+  _**diverges**_ or returns a value `(v:t)` in heap `h1` satisfying
+  `(p v h1)` if `(wp p h0)` is valid.
+
+* {.fragment} The `STATE` effect
 ```fstar
     kind Pre = heap -> Type  //a predicate on the input heap
     kind Post (a:Type) = a -> heap -> Type //relates the result to the output heap
@@ -306,16 +314,16 @@ Tot t = PURE t (fun post -> forall (x:t). post x)
     x:t1 -> Tot (x2:t2 -> ... -> Tot (xn:tn -> M t wp))
 ```
 
-* {.fragment} The last arrow has default `ML` effect
+* {.fragment} The last arrow has default `All` effect
 ```fstar
     x1:t1 -> x2:t2 -> ... -> xn:tn -> t =
-    x1:t1 -> x2:t2 -> ... -> xn:tn -> ML t
+    x1:t1 -> x2:t2 -> ... -> xn:tn -> All t
 ```
 For tiny F*: 
 ```fstar
-    ML t = STATE t (fun post h -> forall x h'. post x h')
+    All t = STATE t (fun post h -> forall x h'. post x h')
 ```
-For full F*, `ML` includes other effects too, like exceptions.
+For full F*, `All=ML`, which includes other effects too, like exceptions and IO.
 ~
 
 
@@ -323,18 +331,20 @@ For full F*, `ML` includes other effects too, like exceptions.
 ### Specifying effectful primitives
 
 ```fstar
-assume val (!): r:ref bool
-             -> STATE bool (fun post h -> post (sel h r) h)
+assume val (!): r:ref int
+             -> STATE int (fun post h -> post (sel h r) h)
 
-assume val (:=): r:ref bool
-              -> v:bool
+assume val (:=): r:ref int
+              -> v:int
               -> STATE unit (fun post h -> post () (upd h r v))
 ```
 
 * where, we model `heap` as a map, using the functions:
 ```fstar
-val sel: heap -> ref bool -> Tot bool
-val upd: heap -> ref bool -> bool -> Tot heap
+val sel: heap -> ref int -> Tot int
+val upd: heap -> ref int -> int -> Tot heap
+assume forall h x v. sel (upd h x v) x = v
+assume forall h x y v. x<>y ==> sel (upd h x v) y = sel h y
 ```
 
 ~
@@ -343,12 +353,12 @@ val upd: heap -> ref bool -> bool -> Tot heap
 ### As Hoare triples
 
 ```fstar
-assume val (!): r:ref bool
-              -> ST bool (requires (fun h -> True))
-                         (ensures (fun h x h' -> h=h' /\ x=sel h r))
+assume val (!): r:ref int
+              -> ST int (requires (fun h -> True))
+                        (ensures (fun h x h' -> h=h' /\ x=sel h r))
 
-assume val (:=): r:ref bool
-              -> v:bool
+assume val (:=): r:ref int
+              -> v:int
               -> ST unit (requires (fun h -> True)
                          (ensures (fun h x h' -> h'=upd h r v))
 ```
@@ -376,8 +386,8 @@ let swap x y =
 ```
 
 ```fstar
-val swap: x:ref bool 
-       -> r:ref bool 
+val swap: x:ref int 
+       -> r:ref int 
        -> ST unit (requires (fun h -> True))
                   (ensures (fun h x h' -> h'=upd (upd h x (sel h y)) y (sel h x)))
 ```
@@ -400,8 +410,8 @@ $\begin{scriptsize}
 * Constants
 
 $\begin{scriptsize}
-\inference{e=\mbox{\tt true} \vee \mbox{\tt false}}
-          {\Gamma \vdash e : bool}
+\inference{e\in\{\ldots,-1,0,1,\ldots\}}
+          {\Gamma \vdash e : int}
 \end{scriptsize}$
 
 
@@ -439,24 +449,25 @@ $\begin{scriptsize}
 \inference{\Gamma \vdash e_1 : M~t_1~wp_1 &
             \Gamma,x:t_1 \vdash e_2 : M~t_2~wp_2 & 
             x \not\in FV(t_2)}
-          {\Gamma \vdash \mbox{\it let}~x = e_1~\mbox{\it in}~e_2 : M~t_2~(M.\mbox{\it bind}~wp_2~(\mbox{\it fun}~x \rightarrow wp_2))}
+          {\Gamma \vdash \mbox{\it let}~x = e_1~\mbox{\it in}~e_2 : M~t_2~(M.\mbox{\it bind}~wp_1~(\mbox{\it fun}~x \rightarrow wp_2))}
 \end{scriptsize}$
 
 * Conditionals
 
 $\begin{scriptsize}
-\inference{\Gamma \vdash e_1 : M~\mbox{\it bool}~wp_1 \\
+\inference{\Gamma \vdash e_1 : M~\mbox{\it int}~wp_1 \\
            \\Gamma \vdash e_2 : M~t~wp_2 &
            \Gamma \vdash e_3 : M~t~wp_3}
-         {\Gamma \vdash \mbox{\it if}~e_1~\mbox{\it then}~e_2~\mbox{\it else}~e_3 : M.\ite~t~wp_1~wp_2~wp_3}
+         {\Gamma \vdash \mbox{\it if0}~e_1~\mbox{\it then}~e_2~\mbox{\it else}~e_3 : M.\ite~t~wp_1~wp_2~wp_3}
 \end{scriptsize}$
 
 
 ```fstar
-STATE.ITE t wp1 wp2 wp3 post = 
-  STATE.bind wp1 (fun i h1 -> i=true ==> wp2 post h1 /\ i=false ==> wp3 post h1)
+PURE.ITE t wp1 wp2 wp3 post = 
+  PURE.bind wp1 (fun i -> i=0 ==> wp2 post /\ i<>0 ==> wp3 post)
 
-PURE.ITE = ...
+STATE.ITE t wp1 wp2 wp3 post = 
+  STATE.bind wp1 (fun i h1 -> i=0 ==> wp2 post h1 /\ i<>0 ==> wp3 post h1)
 ```
 ~
 
@@ -470,11 +481,11 @@ $\Gamma \vdash M~t~wp \leq M'~t'~wp' \Leftarrow \phi$
 $\begin{scriptsize}
 \inference{\Gamma \vdash e : M~t'~wp' &
            \Gamma \vdash M~t'~wp' \leq M~t~wp \Leftarrow \phi &
-           \Gamma \vdash \phi~\mbox{valid}}
+           \mybox{\Gamma \vdash \phi~\mbox{valid}}}
           {\Gamma \vdash e : M~t~wp}
 \end{scriptsize}$
 
-* Sub-effects
+* Sub-effects using lift
 
 $\begin{scriptsize}
 \inference{}
