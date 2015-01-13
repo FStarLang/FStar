@@ -9,7 +9,26 @@ type nat = x:int{x >= 0}
 // val factorial : nat -> Tot int // need to restrict domain to prove totality
 // val factorial : nat -> Tot nat // stronger result type
 // val factorial : nat -> Tot (x:int{x >= 1}) // even stronger result type
-let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
+let rec factorial n =
+  if n = 0 then 1
+  else n * factorial (n - 1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 (* We can also prove factorial_monotone intrinsically *)
 (* using refinements; note we needed to change the code, not just the type! *)

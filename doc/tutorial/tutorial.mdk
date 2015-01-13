@@ -1221,6 +1221,14 @@ It's possible to
 
     val reverse: f:(list 'a -> Tot (list 'a)){forall l. l = f (f l)}
 
+~CH
+This signature doesn't work:
+append.fst(21,0-27,0) : Error
+Expected a term of type "f:(_:(list 'a) -> Tot (list 'a)){(forall (l:(list 'a)). ((l = (f (f l))) == true))}";
+got a function "(fun _682:<UNKNOWN> -> (match _682 with (Nil )  -> Nil
+	(Cons hd tl)  -> (append (reverse tl) (Cons hd Nil))))" (More arguments than annotated type (Typ_refine))
+~
+
 However, F\* refuses to accept this as a valid type for `reverse`:
 proving this property requires two separate induction steps, neither of
 which F\* can perform automatically.
