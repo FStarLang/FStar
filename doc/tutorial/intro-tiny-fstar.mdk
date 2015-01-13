@@ -390,7 +390,7 @@ let swap x y =
 val swap: x:ref int 
        -> r:ref int 
        -> ST unit (requires (fun h -> True))
-                  (ensures (fun h x h' -> h'=upd (upd h x (sel h y)) y (sel h x)))
+                  (ensures (fun h x h' -> h' = upd (upd h x (sel h y)) y (sel h x)))
 ```
 ~
 
@@ -480,10 +480,10 @@ $\Gamma \vdash M~t~wp \leq M'~t'~wp' \Leftarrow \phi$
 * Subsumption for expressions
 
 $\begin{scriptsize}
-\inference{\Gamma \vdash e : M~t'~wp' &
-           \Gamma \vdash M~t'~wp' \leq M~t~wp \Leftarrow \phi &
+\inference{\Gamma \vdash e : M~t~wp &
+           \Gamma \vdash M~t~wp \leq M'~t'~wp' \Leftarrow \phi &
            \mybox{\Gamma \vdash \phi~\mbox{valid}}}
-          {\Gamma \vdash e : M~t~wp}
+          {\Gamma \vdash e : M'~t'~wp'}
 \end{scriptsize}$
 
 * Sub-effects using lift
