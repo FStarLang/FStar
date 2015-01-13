@@ -1,4 +1,6 @@
 module Fibonacci
 
-(* Write the fibonacci function and several types for it. *)
+(* Provide several types for the fibonacci function *)
+let rec fibonacci n =
+  if n <= 1 then 1 else fibonacci (n - 1) + fibonacci (n - 2)
 
