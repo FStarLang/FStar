@@ -740,7 +740,7 @@ We're missing a solution here
 ~
 
 ~ Exercise
-Write the fibonacci function and several types for it.
+Give several types for the fibonacci function.
 ~~ ExerciseFragment {exname=ex3b-fibonacci}
 let rec fibonacci n =
   if n <= 1 then 1 else fibonacci (n - 1) + fibonacci (n - 2)
