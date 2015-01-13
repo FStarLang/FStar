@@ -8,6 +8,7 @@ Beamer Theme  : singapore
 Reveal Url    : ./reveal
 Colorizer     : fstar
 Package       : semantic
+Logo          : False
 
 ~ MathDefs
 [INCLUDE=sem.tex]
