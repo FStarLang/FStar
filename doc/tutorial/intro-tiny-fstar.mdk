@@ -14,17 +14,22 @@ Logo          : False
 [INCLUDE=sem.tex]
 ~
 
+~Slide
+Nothing
+
+~
 
 ~Slide
 ##Verified Programming in F*
-#### Tutorial at POPL '15
+Tutorial at POPL '15
 
 ##### Karthik Bhargavan, C&eacute;dric Fournet, Catalin Hritcu, Aseem Rastogi, _Nikhil Swamy_
-##### Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
+##### Antoine Delignat-Lavaud, Chantal Keller, Pierre-Yves Strub
+  
+Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
 
 * Check that you can access [http://fstar-lang.org/tutorial] 
-* Get binaries from [http://fstar-lang.org]
-
+* Special thanks to Antoine for the website.
 
 [http://fstar-lang.org/tutorial]: http://fstar-lang.org/tutorial
 [http://fstar-lang.org]: http://fstar-lang.org
@@ -141,6 +146,32 @@ $\Gamma_{\mbox{prelude}} \vdash \mbox{\texttt{let factorial n = e}} : t \Leftarr
 [timeline]: timeline.png
 ~
 
+~Slide
+
+![arch]
+
+[arch]: arch.png
+~
+
+~Slide
+
+### In the works
+
+* A high-efficiency implementation of TLS (and other crypto)
+ - Drop-in replacement for OpenSSL
+
+* Compiling to native code and small TCBs 
+ - Certifying the F\* implementation (again)
+ - Compiling to CompCert, Coq-x86, IronClad
+ - Compiling to ASM.js
+
+* F\* as a proof assistant 
+ 
+ - Software foundations
+ - Formalizing F\* in F\*
+
+~
+
 <!-------------------------------------------------------------------------------->
 <!-- consumed 10 mins so far --> 
 
@@ -158,7 +189,11 @@ $\Gamma_{\mbox{prelude}} \vdash \mbox{\texttt{let factorial n = e}} : t \Leftarr
 
   -- Proving properties about pure functions on `int`s and `list`s
 
-* You should learn enough to try out more advanced parts of the tutorial independently
+* Try out the rest of the tutorial yourself
+  - Ask questions, report bugs!
+  - [http://github.com/FStarLang/FStar/issues]
+
+[http://github.com/FStarLang/FStar/issues]: http://github.com/FStarLang/FStar/issues
 
 <!--
   1.1 Basic ACLs  (15 mins)
@@ -190,8 +225,8 @@ $\Gamma_{\mbox{prelude}} \vdash \mbox{\texttt{let factorial n = e}} : t \Leftarr
 
 Expressions
 ```fstar
-e ::= x | () | if0 e then e1 else e2 | ... | -1 | 0 | 1 | ...
-   | fun (x:t) -> e | e1 e2 | !e | e1 := e2 | let x = e1 in e2 
+e ::= x | () | -1 | 0 | 1 | ... | if0 e then e1 else e2 | let x = e1 in e2  
+   | fun (x:t) -> e | e1 e2 | !e | e1 := e2 
 ```
 
 Operational semantics: 
@@ -206,18 +241,18 @@ Operational semantics:
 
 ### Syntax of tiny-F*
 
-Types `t` and logical specs `wp`
+Types `t` and logical specs `phi`
 
 ```fstar
-wp,t ::= unit | int | ref int       //some constants
-      | x:t1 -> M t2 wp             //Co-domain is an effect, type and spec
-                                    //rest only for logical specs in Tiny F* 
-      | a | t e | t t               //variables, dependent types and type application
-      | fun (a:k) -> t              //type-to-type functions
-      | fun (x:t) -> t              //term-to-type functions
-      | t /\ t | t \/ t | ~t        //logical connectives ... 
-      | t ==> t | forall (x:t). t
-      | ...                        
+phi,t ::= unit | int | ref int           
+        | x:t1 -> M t2 phi                //Co-domain is an effect, type and spec
+                                          //rest only for logical specs in Tiny F* 
+        | phi /\ phi | phi \/ phi | ~phi    
+        | phi ==> phi | forall (x:t). phi
+        | a | phi e | phi t               //variables, predicate applications
+        | fun (a:k) -> phi                //type-to-type functions
+        | fun (x:t) -> phi                //term-to-type functions
+        | ...                        
 ```
 
 Kinds
@@ -225,6 +260,13 @@ Kinds
 ```fstar
 k ::= Type | x:t -> k | a:k -> k'
 ```
+
+For example:
+```fstar
+val factorial:  x:int -> PURE int (fun (post:int->Type) ->
+                                        x>=0 /\ forall y. y>0 ==> post y)
+```
+
 ~
 
 <!-------------------------------------------------------------------------------->
@@ -240,7 +282,7 @@ the effect of `e`.
 
 2. `t` is the type of the value returned by `e` (if any)
 
-3. `wp` is the weakest pre-condition corresponding to the semantics of `e`
+3. `wp` is a predicate transformer corresponding to the semantics of `e`
 
 For example:
 ```fstar
@@ -254,7 +296,7 @@ e1 := e2    : STATE unit wp_2
 ###Specifying effects
 
 * `(PURE t wp)` is the type of a pure computation that always returns
-  `(v:t)` satisfying `(p v)` if `(wp p)` is valid.
+  `(v:t)` such that, for all `post`, we have `wp post ==> post v`.
 
 * {.fragment} The `PURE` effect
 ```fstar
@@ -262,14 +304,15 @@ e1 := e2    : STATE unit wp_2
     kind Post (a:Type) = a -> Type      
     kind WP   (a:Type) = Post a -> Pre  
     type return a x post = post x
-    type bind a wp1 wp2 post = wp1 (fun x -> wp2 x post)
+    type bind (a:Type) (wp1:WP a) (wp2: a -> WP b) (post:Post b) = 
+    wp1 (fun x -> wp2 x post)
 ```
 
 * {.fragment} For example:
 ```fstar
-factorial x : PURE int (fun (p:PURE.Post int) -> //for any post-condition p
+factorial x : PURE int (fun (ppst:PURE.Post int) -> //for any post-condition post
                                x >= 0  //prove that argument is non-negative
-                            /\ forall y. y > 0 ==> p y) //assume the result is positive
+                            /\ forall y. y > 0 ==> post y) //assume the result is positive
 ```
 F\* can also reason about total terms by their definitions; e.g., F\* 
 proves `factorial 3 = 6` simply by unfolding definitions.
@@ -282,7 +325,7 @@ proves `factorial 3 = 6` simply by unfolding definitions.
 * `(STATE t wp)` is the type of a computation which, when run in heap
   `h0`, may _**read**_ or _**write**_ the state, and then
   _**diverges**_ or returns a value `(v:t)` in heap `h1` satisfying
-  `(p v h1)` if `(wp p h0)` is valid.
+  `(post v h1)` if `(wp post h0)` is valid (for all `post`).
 
 * {.fragment} The `STATE` effect
 ```fstar
@@ -401,29 +444,27 @@ $\begin{scriptsize}
 {\Gamma \vdash e : t}
 \end{scriptsize}$
 
-* Variables
+- T-Var
 
 $\begin{scriptsize}
 \inference{\Gamma(x) = t}
           {\Gamma \vdash x : t}
 \end{scriptsize}$
 
-* Constants
+- T-Const
+   
 
 $\begin{scriptsize}
 \inference{e\in\{\ldots,-1,0,1,\ldots\}}
           {\Gamma \vdash e : int}
 \end{scriptsize}$
 
-
-* Lambdas
+- T-Abs
 
 $\begin{scriptsize}
 \inference{\Gamma,x:t \vdash e : M~t~wp}
           {\Gamma \vdash \mbox{\it fun}~(x:t) \rightarrow e ~:~ x\!:\!t \rightarrow M~t~wp}
 \end{scriptsize}$
-
-
 
 ~
 
@@ -435,7 +476,7 @@ $\begin{scriptsize}
 \end{scriptsize}$
 
 
-* Lifting values with `return`
+- T-Ret
 
 
 $\begin{scriptsize}
@@ -444,7 +485,7 @@ $\begin{scriptsize}
 \end{scriptsize}$
 
 
-* Let bindings using `bind`
+- T-Let
 
 $\begin{scriptsize}
 \inference{\Gamma \vdash e_1 : M~t_1~wp_1 &
@@ -453,7 +494,7 @@ $\begin{scriptsize}
           {\Gamma \vdash \mbox{\it let}~x = e_1~\mbox{\it in}~e_2 : M~t_2~(M.\mbox{\it bind}~wp_1~(\mbox{\it fun}~x \rightarrow wp_2))}
 \end{scriptsize}$
 
-* Conditionals
+- T-If
 
 $\begin{scriptsize}
 \inference{\Gamma \vdash e_1 : M~\mbox{\it int}~wp_1 \\
@@ -509,7 +550,10 @@ STATE.strengthen wp wp' = forall post h. wp' post h ==> wp post h
 ~Slide
 ### Scaling to a usable, full-fledged language 
 
-* A generic lattice of monadic effects
+* A generic lattice of monadic effects; by default:
+```fstar
+{PURE, DIV, STATE, EXN, ALL}
+```
 
 * Refinement types, e.g, 
 ```fstar
@@ -518,7 +562,7 @@ type nat = x:int{x >= 0}
 
 * Inductive data types and dependent pattern matching
 
-* Semantic termination checks 
+* Recursive functions and semantic termination checks 
 
 * Type inference mixing higher-order unification and subtyping
 
