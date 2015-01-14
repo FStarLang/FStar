@@ -6,6 +6,8 @@ type list 'a =
   | Cons : hd:'a -> tl:list 'a -> list 'a
 *)
 
+// type nat = x:int{x>=0}
+
 val length: list 'a -> Tot nat
 let rec length l = match l with
   | [] -> 0
@@ -15,6 +17,14 @@ val append : list 'a -> list 'a -> Tot (list 'a)
 let rec append l1 l2 = match l1 with
   | [] -> l2
   | hd :: tl -> hd :: append tl l2
+
+val append_len: l1:list 'a -> l2:list 'a ->
+      Tot (u:unit{length (append l1 l2) = length l1 + length l2})
+(*    Lemma (requires True)
+            (ensures (length (append l1 l2) = length l1 + length l2)) *)
+let rec append_len l1 l2 = match l1 with
+    | [] -> ()
+    | hd::tl -> append_len tl l2
 
 // ex 4a, 4b: types for append
 // ex 4c: list membership

@@ -824,6 +824,11 @@ the variables `:x_1 ... x_m` may appear free in `:t`.
 
 ### Some syntactic sugar for refinement types and lemmas
 
+~CH
+This is not really monotonicity, as Giuseppe Castagna remarked
+during our POPL tutorial. `factorial_increases`?
+~
+
 How shall we specify that `factorial` is strictly monotone when it's
 argument is greater than 2? Here's a first cut:
 
