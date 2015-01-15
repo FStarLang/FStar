@@ -104,7 +104,7 @@ let has_interface env l =
 
 let debug env (l:Options.debug_level_t) = 
        !Options.debug |> Util.for_some (fun x -> env.curmodule.str = x) 
-    && Options.debug_level_geq !Options.debug_level l
+    && Options.debug_level_geq l
 let show env = !Options.show_signatures |> Util.for_some (fun x -> env.curmodule.str = x)
 
 let initial_env solver module_lid =
@@ -434,6 +434,10 @@ let expected_typ env = match env.expected_typ with
 let clear_expected_typ env = {env with expected_typ=None}, expected_typ env
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
+
+let binding_of_binder (b:binder) = match fst b with
+    | Inl a -> Binding_typ(a.v, a.sort)
+    | Inr x -> Binding_var(x.v, x.sort)
 
 let binders env : binders = 
   List.fold_left (fun out b -> match b with 

@@ -30,13 +30,12 @@ logic type ForallTyp : (Type -> Type) -> Type (* Handled specially to support qu
 logic type ExistsTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
 logic type True 
 logic type False
-logic type EqTyp : Type -> Type -> Type                    (* infix binary '==' *)
+logic type EqTyp : Type -> Type -> Type                (* infix binary '==' *)
 logic type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
 logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
 logic type ITE : Type -> Type -> Type -> Type (* written if/then/else in concrete syntax *)
 logic type Precedes : #a:Type -> #b:Type -> a -> b -> Type  (* a built-in well-founded partial order over all terms *)
 assume type bool
-logic type b2t (b:bool) = b==true
 
 monad_lattice { (* The definition of the PURE effect is fixed; no user should ever change this *)
   PURE::
@@ -46,20 +45,20 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              kind WP (a:Type) = Post a -> Pre
              type return (a:Type) (x:a) (p:Post a) = p x
              type bind_wp  (a:Type) (b:Type) (wp1:WP a) (wlp1:WP a) 
-                                              (wp2: (a -> WP b)) (wlp2: (a -> WP b))
-                                               (p:Post b) = wp1 (fun a -> wp2 a p)
+                                             (wp2: (a -> WP b)) (wlp2: (a -> WP b))
+                                             (p:Post b) = wp1 (fun (x:a) -> wp2 x p)
              type bind_wlp (a:Type) (b:Type) (wlp1:WP a) 
                                              (wlp2:(a -> WP b))
-                                             (p:Post b) = wlp1 (fun a -> wlp2 a p)
+                                             (p:Post b) = wlp1 (fun (x:a) -> wlp2 x p)
              type if_then_else (a:Type) (p:Type) (wp_then:WP a) (wp_else:WP a) (post:Post a) = 
                  (if p 
                   then wp_then post
                   else wp_else post)
              type ite_wlp (a:Type) (wlp_cases:WP a) (post:Post a) =
-                 (forall (a:a). wlp_cases (fun a' -> a=!=a') \/ post a)
+                 (forall (x:a). wlp_cases (fun (x':a) -> ~(Eq2 #a #a x x')) \/ post x)
              type ite_wp (a:Type) (wlp_cases:WP a) (wp_cases:WP a) (post:Post a) =
-                 (forall (a:a). wlp_cases (fun a' -> a=!=a') \/ post a)
-                 /\ (wp_cases (fun a -> True))
+                 (forall (x:a). wlp_cases (fun (x':a) -> ~(Eq2 #a #a x x')) \/ post x)
+                 /\ (wp_cases (fun (x:a) -> True))
              type wp_binop (a:Type) (wp1:WP a) (op:(Type -> Type -> Type)) (wp2:WP a) (p:Post a) =
                  op (wp1 p) (wp2 p)
              type wp_as_type (a:Type) (wp:WP a) = (forall (p:Post a). wp p)
@@ -68,18 +67,18 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              type assert_p (a:Type) (q:Type) (wp:WP a) (p:Post a) = (q /\ wp p)
              type assume_p (a:Type) (q:Type) (wp:WP a) (p:Post a) = (q ==> wp p)
              type null_wp (a:Type) (p:Post a) = (forall (x:a). p x)
-             type trivial (a:Type) (wp:WP a) = wp (fun x -> True)
+             type trivial (a:Type) (wp:WP a) = wp (fun (x:a) -> True)
              with Pure (a:Type) (pre:Pre) (post:Post a) =
                     PURE a
-                         (fun (p:Post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
-                         (fun (p:Post a) -> forall a. pre /\ post a ==> p a)   (* WLP *)
-             and Admit (a:Type) = PURE a (fun 'p -> True) (fun 'p -> True)
+                         (fun (p:Post a) -> pre /\ (forall (x:a). post x ==> p x)) (* WP *)
+                         (fun (p:Post a) -> forall (x:a). pre /\ post x ==> p x)   (* WLP *)
+             and Admit (a:Type) = PURE a (fun (p:Post a) -> True) (fun (p:Post a) -> True)
              and default Tot (a:Type) =
                PURE a (fun (p:Post a) -> (forall (x:a). p x)) (fun (p:Post a) -> (forall (x:a). p x))
 
 }
 open Prims.PURE
-
+logic type b2t (b:bool) = b==true
 assume type unit
 assume type int
 assume type char
@@ -210,6 +209,10 @@ monad_lattice {
              kind Post ('a:Type) = result 'a -> Type
              kind WP   ('a:Type) = Post 'a -> Pre
              type return ('a:Type) (x:'a) ('p:Post 'a) = 'p (V x)
+             type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) ('wlp2:'a -> WP 'b) ('p:Post 'b) =
+                 (forall (rb:result 'b). 'p rb \/ 'wlp1 (fun ra1 -> if b2t (is_V ra1)
+                                                                    then 'wlp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
+                                                                    else  ra1 =!= rb))
              type bind_wp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a -> WP 'b) ('wlp2:'a -> WP 'b) ('p:Post 'b) =
                  (forall (rb:result 'b). 'p rb \/ 'wlp1 (fun ra1 -> if b2t (is_V ra1)
                                                                     then 'wlp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
@@ -217,10 +220,6 @@ monad_lattice {
                  /\ 'wp1 (fun ra1 -> (ITE (b2t (is_V ra1))
                                           ('wp2 (V.v ra1) (fun rb2 -> True))
                                            True))
-             type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) ('wlp2:'a -> WP 'b) ('p:Post 'b) =
-                 (forall (rb:result 'b). 'p rb \/ 'wlp1 (fun ra1 -> if b2t (is_V ra1)
-                                                                    then 'wlp2 (V.v ra1) (fun rb2 -> rb2=!=rb)
-                                                                    else  ra1 =!= rb))
              type if_then_else ('a:Type) ('p:Type) ('wp_then:WP 'a) ('wp_else:WP 'a) ('post:Post 'a) =
                  (if 'p 
                   then 'wp_then 'post
@@ -392,95 +391,6 @@ type DTuple2: 'a:Type
 (*            -> _4:'d _1 _2 _3 *)
 (*            -> DTuple4 'a 'b 'c 'd *)
 
-(*  type Tuple5: 'a:Type *)
-(*           -> 'b:('a -> Type) *)
-(*           -> 'c:(x:'a -> 'b x -> Type) *)
-(*           -> 'd:(x:'a -> y:'b x -> z:'c x y -> Type) *)
-(*           -> 'e:(x:'a -> y:'b x -> z:'c x y -> w:'d x y z -> Type) *)
-(*           -> Type = *)
-(*   | MkTuple5: 'a:Type *)
-(*            -> 'b:('a -> Type) *)
-(*            -> 'c:(x:'a -> 'b x -> Type) *)
-(*            -> 'd:(x:'a -> y:'b x -> z:'c x y -> Type) *)
-(*            -> 'e:(x:'a -> y:'b x -> z:'c x y -> w:'d x y z -> Type) *)
-(*            -> _1:'a *)
-(*            -> _2:'b _1 *)
-(*            -> _3:'c _1 _2 *)
-(*            -> _4:'d _1 _2 _3 *)
-(*            -> _5:'e _1 _2 _3 _4 *)
-(*            -> Tuple5 'a 'b 'c 'd 'e *)
-
-(*  type Tuple6: 'a:Type *)
-(*           -> 'b:('a -> Type) *)
-(*           -> 'c:(x:'a -> 'b x -> Type) *)
-(*           -> 'd:(x:'a -> y:'b x -> z:'c x y -> Type) *)
-(*           -> 'e:(x:'a -> y:'b x -> z:'c x y -> w:'d x y z -> Type) *)
-(*           -> 'f:(x:'a -> y:'b x -> z:'c x y -> w:'d x y z -> u:'e x y z w -> Type) *)
-(*           -> Type = *)
-(*   | MkTuple6: 'a:Type *)
-(*            -> 'b:('a -> Type) *)
-(*            -> 'c:(x:'a -> 'b x -> Type) *)
-(*            -> 'd:(x:'a -> y:'b x -> z:'c x y -> Type) *)
-(*            -> 'e:(x:'a -> y:'b x -> z:'c x y -> w:'d x y z -> Type) *)
-(*            -> 'f:(x:'a -> y:'b x -> z:'c x y -> w:'d x y z -> v:'e x y z w -> Type) *)
-(*            -> _1:'a *)
-(*            -> _2:'b _1 *)
-(*            -> _3:'c _1 _2 *)
-(*            -> _4:'d _1 _2 _3 *)
-(*            -> _5:'e _1 _2 _3 _4 *)
-(*            -> _6:'f _1 _2 _3 _4 _5 *)
-(*            -> Tuple6 'a 'b 'c 'd 'e 'f *)
-
-(*  type Tuple7: 'a:Type *)
-(*           -> 'b:('a -> Type) *)
-(*           -> 'c:(x:'a -> 'b x -> Type) *)
-(*           -> 'd:(x:'a -> y:'b x -> z:'c x y -> Type) *)
-(*           -> 'e:(x:'a -> y:'b x -> z:'c x y -> w:'d x y z -> Type) *)
-(*           -> 'f:(x:'a -> y:'b x -> z:'c x y -> w:'d x y z -> u:'e x y z w -> Type) *)
-(*           -> 'g:(x:'a -> y:'b x -> z:'c x y -> w:'d x y z -> u:'e x y z w -> v:'f x y z w u -> Type) *)
-(*           -> Type = *)
-(*   | MkTuple7: 'a:Type *)
-(*            -> 'b:('a -> Type) *)
-(*            -> 'c:(x:'a -> 'b x -> Type) *)
-(*            -> 'd:(x:'a -> y:'b x -> z:'c x y -> Type) *)
-(*            -> 'e:(x:'a -> y:'b x -> z:'c x y -> w:'d x y z -> Type) *)
-(*            -> 'f:(x:'a -> y:'b x -> z:'c x y -> w:'d x y z -> u:'e x y z w -> Type) *)
-(*            -> 'g:(x:'a -> y:'b x -> z:'c x y -> w:'d x y z -> u:'e x y z w -> v:'f x y z w u -> Type) *)
-(*            -> _1:'a *)
-(*            -> _2:'b _1 *)
-(*            -> _3:'c _1 _2 *)
-(*            -> _4:'d _1 _2 _3 *)
-(*            -> _5:'e _1 _2 _3 _4 *)
-(*            -> _6:'f _1 _2 _3 _4 _5 *)
-(*            -> _7:'g _1 _2 _3 _4 _5 _6 *)
-(*            -> Tuple7 'a 'b 'c 'd 'e 'f 'g *)
-
-(*  type Tuple8: 'a:Type *)
-(*           -> 'b:('a -> Type) *)
-(*           -> 'c:(a:'a -> 'b a -> Type) *)
-(*           -> 'd:(a:'a -> b:'b a -> c:'c a b -> Type) *)
-(*           -> 'e:(a:'a -> b:'b a -> c:'c a b -> d:'d a b c -> Type) *)
-(*           -> 'f:(a:'a -> b:'b a -> c:'c a b -> d:'d a b c -> e:'e a b c d -> Type) *)
-(*           -> 'g:(a:'a -> b:'b a -> c:'c a b -> d:'d a b c -> e:'e a b c d -> f:'f a b c d e -> Type) *)
-(*           -> 'h:(a:'a -> b:'b a -> c:'c a b -> d:'d a b c -> e:'e a b c d -> f:'f a b c d e -> g:'g a b c d e f -> Type) *)
-(*           -> Type = *)
-(*   | MkTuple8: 'a:Type *)
-(*            -> 'b:('a -> Type) *)
-(*            -> 'c:(a:'a -> 'b a -> Type) *)
-(*            -> 'd:(a:'a -> b:'b a -> c:'c a b -> Type) *)
-(*            -> 'e:(a:'a -> b:'b a -> c:'c a b -> d:'d a b c -> Type) *)
-(*            -> 'f:(a:'a -> b:'b a -> c:'c a b -> d:'d a b c -> e:'e a b c d -> Type) *)
-(*            -> 'g:(a:'a -> b:'b a -> c:'c a b -> d:'d a b c -> e:'e a b c d -> f:'f a b c d e -> Type) *)
-(*            -> 'h:(a:'a -> b:'b a -> c:'c a b -> d:'d a b c -> e:'e a b c d -> f:'f a b c d e -> g:'g a b c d e f -> Type) *)
-(*            -> _1:'a *)
-(*            -> _2:'b _1 *)
-(*            -> _3:'c _1 _2 *)
-(*            -> _4:'d _1 _2 _3 *)
-(*            -> _5:'e _1 _2 _3 _4 *)
-(*            -> _6:'f _1 _2 _3 _4 _5 *)
-(*            -> _7:'g _1 _2 _3 _4 _5 _6 *)
-(*            -> _8:'h _1 _2 _3 _4 _5 _6 _7 *)
-(*            -> Tuple8 'a 'b 'c 'd 'e 'f 'g 'h *)
 
 (* Primitive (structural) equality.
    What about for function types? *)

@@ -52,7 +52,7 @@ let go _ =
     | Die msg ->
       Util.print_string msg
     | GoOn ->
-        if not (Option.isNone !Options.codegen) then
+        if Option.isSome !Options.codegen then
             Options.pretype := true;
         (* 1. Parsing the file + desugaring *)
         let filenames = if has_prims_cache filenames then filenames else (Options.prims()::filenames) in
@@ -100,9 +100,9 @@ let () =
     with 
     | e -> 
         if Util.handleable e then Util.handle_err false () e;
-        if not (Util.handleable e)
-        then Util.print_string "\nUnexpected error; please file a bug report\n";
-        if not (Util.handleable e) || !Options.trace_error
-        then Util.fprint2 "%s\n%s\n" e.Message e.StackTrace;
+        if !Options.trace_error
+        then Util.fprint2 "\nUnexpected error\n%s\n%s\n" e.Message e.StackTrace
+        else if not (Util.handleable e)
+        then Util.fprint1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" e.Message;
         cleanup ();
         exit 1

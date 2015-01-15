@@ -1,0 +1,353 @@
+Description: 
+    Include this file to create slide shows using [Reveal.js] for HTML and
+    the [Beamer] package for LaTeX.
+    * Slides are started on a level 1 `#` or 2 `##` header.
+      You can also a `~ Slide` custom block.
+    * Use the `.fragment` class to create overlays that appear one by one.
+    * Use the `.fragmented` class on a list to have each item appear in order.
+    * Use a `~ Notes` custom block for speaker notes (only for HTML for now).
+    * Use a `~ Vertical` custom block to create a set of vertical slides (only for HTML).
+    \
+    Notes for Reveal.js:
+    * It expects the reveal.js library to be in a subdirectory "reveal.js".
+      You can use another url by setting the `Reveal Url` metadata key.
+    * Select another default theme by setting the `Reveal Theme`, like `sky` for example.
+    * The "revealConfig" variable contains the default configuration options
+        and can be extended inside `<script>` tags.
+    \
+    Notes for the beamer package:
+    * Set the `Beamer Theme` metadata key to select anther theme.
+    * Set the `Beamer Theme Options` for different options for the theme.
+    * Use the `.pause` class to insert pauses.
+    \
+    [Reveal.js]: http://lab.hakim.se/reveal-js/#/
+    [Beamer]: http://en.wikibooks.org/wiki/LaTeX/Presentations
+Reveal Url    : https://cdn.jsdelivr.net/reveal.js/2.6.2        
+Reveal Theme  : default
+Beamer Theme  : default
+Beamer Theme Options: 
+Reveal Long   : false
+Reveal Details: false
+Reveal SlideNumber: true
+Document Class: [xcolor=table]beamer
+Css           : &reveal-url;/css/reveal.min.css
+Css           : &reveal-url;/css/theme/&reveal-theme;.css
+Script        : &reveal-url;/lib/js/head.min.js { .preview }
+Script        : &reveal-url;/js/reveal.js { .preview }
+Heading Depth : 0
+Toc Depth     : 2
+Section Base  : 2
+Section Depth : 2
+.MadokoLogo   : font-size=50%
+~Notes        : html-elem=aside .notes
+.Author       : font-size=xx-large
+.Affiliation  : font-size=x-large
+.Email        : font-size=x-large
+~Body         : before="~ Begin Reveal { data-long=&reveal-long; data-details=&reveal-details; &reveal-attrs; line-adjust=0}&nl;~ Begin Slides {line-adjust=0}&nl;"
+                after="~ End Slides&nl;~ End Reveal&nl;" 
+~Slide        : .section html-elem=section tex-elem=mdSection
+~Vertical     : .section html-elem=section
+.smaller      : data-smaller
+.long         : data-long
+@tex ~Notes   : display=none
+@tex ~Vertical: notag
+Tex Header    :
+    \ifbeamer\relax\else
+      \providecommand{\usetheme}[2][]{}
+      \providecommand{\usecolortheme}[2][]{}
+      \providecommand{\usefonttheme}[2][]{}
+      \providecommand{\pause}[1][]{}
+      \providecommand{\AtBeginSection}[2][]{}
+      \providecommand{\AtBeginSubsection}[2][]{}
+      \providecommand{\AtBeginSubsubsection}[2][]{}
+      \providecommand{\AtBeginPart}[2][]{}
+      \providecommand{\AtBeginLecture}[2][]{}
+      \providecommand{\theoremstyle}[2][]{}
+      \makeatletter
+      \def\newtheorem{\@ifstar\newtheoremx\newtheoremx}
+      \makeatother
+      \providecommand{\newtheoremx}[3][]{}{}
+    \fi
+Tex Header*   :
+    \ifbeamer\usetheme[&beamer-theme-options;]{&beamer-theme;}\fi
+Html Header   :         
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="&reveal-url;/css/theme/&reveal-theme;.css" id="theme">    
+    <!--[if lt IE 9]>
+    <script src="&reveal-url;/lib/js/html5shiv.js"></script>
+    <![endif]-->
+    <style>
+    body.madoko {
+      margin: 0pt;
+      padding: 0pt;      
+    }
+    .madoko .reveal h1 {
+        font-size: 3.7em;
+    }
+    .madoko .reveal h2 {
+        font-size: 2.1em;
+    }
+    .reveal .authorblock .author {
+        font-size: 120%;
+        margin-bottom: 1ex;
+    }
+    .reveal p { 
+        text-align: center; 
+    }    
+    .reveal table {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .reveal li p {
+        text-align: left;
+    }
+    .reveal h2 {
+        margin-bottom: 0.7em;
+    }
+    .reveal section ul,
+    .reveal section ol {
+        margin-top: 0.35em;
+        margin-bottom: 0.35em;
+    }
+    .reveal section img.math-display {
+        padding: 1em;
+        box-shadow: none;
+        border: none;
+    }
+    .reveal section img.math-inline {
+        margin: 0pt;
+        padding: 0pt;
+        background-color: none;
+        box-shadow: none;
+        border: none;
+    }
+    .reveal section img {
+        box-shadow: none;
+        border: none;
+    }
+    .madoko .reveal pre {
+        border: 1px solid black;
+        word-wrap: normal;
+        background-color: white;
+        font-size: 0.7em;
+        padding: 0.7em;
+        line-height: 100%;
+        width: 100%;
+    }      
+    .reveal pre code, .reveal code {
+        padding: 0pt;
+    }
+    .reveal nav.toc {
+        line-height: 1em;
+        font-size: 60%;
+        overflow-y: auto;
+    }    
+    .reveal .tocitem {
+        text-align: left;
+    }
+    .reveal .toc>.tocblock .tocblock {
+        margin-left: 0.5em;
+    }   
+    .reveal .toc>.tocblock .tocblock .tocblock {
+        margin-left: 1em;
+    }
+    .reveal .bibliography {
+      height: 15em;
+      overflow-y: auto;
+      font-size: 0.8em;
+    }
+    .reveal section[data-smaller=""],
+    .reveal section[data-smaller="true"] {
+      font-size: 80%;
+      width: 110%;
+      left: -55%;
+    }
+    .reveal .details {
+      display: none;
+    }
+    .reveal[data-details=""] .details,
+    .reveal[data-details="true"] .details {
+      display: initial;
+    }
+    /* Display in the preview window */
+    html, body.madoko.preview, body.madoko.preview-full {
+      height  : 100% !important;
+      width   : auto!important;
+      padding : 0pt !important;
+      overflow: hidden !important;
+    }            
+    body.preview .reveal .slides .fragment {
+      visibility: visible;
+      opacity: 0.5;
+    }
+    body.preview .reveal .slides .fragment.visible {
+      opacity: 1.0;
+    }
+    .preview .reveal div.notes,
+    .preview .reveal aside.notes {
+      display  : block;
+      position : absolute;
+      width    : 30%;
+      left     : 70%;
+      top      : -15%;
+      font-size: 50%;
+      border   : 1px solid black;
+      border-radius   : 10px;
+      background-color: white;
+    }
+    /* 'static' display in the preview window, unused for now */
+    body.preview.static div.reveal, 
+    body.preview.static div.ticreveal .slides, 
+    body.preview.static div.reveal section {
+      display: block !important;
+      position: relative !important;
+      width: auto !important;      
+    }
+    body.preview.static div.reveal section {
+      border: solid 1px black;
+      padding: 1em !important;
+      margin-top: 1em;
+      min-height: 15em;
+      top: 0pt;
+    }
+    body.madoko.preview.static section {
+      font-size: 75%;
+    }
+    body.madoko.preview.static {
+      padding: 0em 1em 0em 1em !important;
+    }
+    body.madoko.preview.static .reveal pre {
+      width: 95%;
+    }    
+    body.preview .reveal[data-details="false"] .details {
+      display: initial;
+      color: gray;
+    }
+    body.preview .reveal[data-long="false"] section[data-long] {
+      border-left: 2px black solid;
+    }
+    </style>
+    <script>    
+    // Full list of configuration options available here:
+    // https://github.com/hakimel/reveal.js#configuration
+    window.revealConfig = {
+        controls: true,
+        progress: true,
+        history: false,
+        center: true,
+        slideNumber: /^\s*(true|1)\s*$/i.test("&reveal-slidenumber;"),
+        dependencies: [
+          { src: '&reveal-url;/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: '&reveal-url;/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+          { src: '&reveal-url;/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+        ],
+    };
+    function revealAddFragments() {
+      [].forEach.call(document.querySelectorAll( ".fragmented" ), function(elem0) {
+        var elem = (/^H\d$/.test(elem0.nodeName) ? elem0.parentNode : elem0);
+        [].forEach.call(elem.children, function(item) {
+          if (item==elem0) return;
+          if (item && !/\bfragment(ed)?\b/.test(item.className) && item.nodeType===1) {
+            item.className = item.className + " fragment";
+          }
+        });
+      });
+    }
+    function revealQuotedList(listType) {
+      //compatibility with Rmarkdown slides
+      [].forEach.call( document.querySelectorAll("blockquote>" + listType), function(ul) {
+        if (!/\bfragmented\b/.test(ul.className)) {
+          ul.className = ul.className + " fragmented";
+        }        
+        var quote = ul.parentNode;
+        if (quote.childElementCount===1) {
+          quote.parentNode.replaceChild(ul,quote);
+        }
+      });
+    }
+    function revealBuildToFragmented() {
+      [].forEach.call(document.querySelectorAll( ".build" ), function(elem) {
+        if (elem && !/\bfragmented\b/.test(elem.className) && elem.nodeType===1) {
+          elem.className = elem.className + " fragmented";
+        }
+      });
+    }
+    function revealDivNotesToAside() {
+      [].forEach.call(document.querySelectorAll("div.notes"), function(elem) {
+        var aside = document.createElement("ASIDE");
+        if (elem.id) aside.id = elem.id;
+        aside.className = elem.className;
+        [].forEach.call(elem.attributes, function(attr) {
+          aside.setAttribute( attr.name, attr.value );
+        });
+        aside.innerHTML = elem.innerHTML;
+        elem.parentNode.replaceChild(aside,elem);
+      });
+    }
+    function revealDataQuery() {
+      var reveal = document.querySelector(".reveal");
+      if (!reveal) return;
+      window.location.search.replace(/\bdata-(\w+)(?:=(\w+))?\b/g, function(matched,key,value) {
+        reveal.setAttribute("data-" + key, (value ? value : ""));
+        return matched;
+      });
+    }
+    function revealRemoveLong() {
+      // remove parts for 'long' presentation
+      if (/\bpreview(?![\w\-])/.test(document.body.className)) return;
+      var reveal = document.querySelector(".reveal");
+      if (!reveal) return;
+      var value = reveal.hasAttribute("data-long") ? reveal.getAttribute("data-long") : null;
+      if (value==null || value=="false" || value=="0") {
+        [].forEach.call( document.querySelectorAll("section[data-long]"), function(elem) {
+          elem.parentNode.removeChild(elem);
+        });
+      }
+    }
+    revealConfig.onLoad = function() {
+      revealDataQuery();
+      revealRemoveLong();
+      revealQuotedList("ul");
+      revealQuotedList("ol");
+      revealBuildToFragmented();
+      revealDivNotesToAside();
+      revealAddFragments();
+    };
+    document.addEventListener("load",revealConfig.onLoad);    
+    document.addEventListener("DOMContentLoaded", function() {
+      if (typeof Reveal !== "undefined" && !Reveal.isReady()) {
+        revealConfig.onLoad();
+        Reveal.initialize(revealConfig);
+      }
+    });    
+    // add support for printing:
+    // use  ?print-pdf to get a pdf-printable version (in Chrome)
+    // use  ?print-paper to get a paper-printable version.
+    revealConfig.initPrint = function() {
+      var cssLink = null;
+      var bodyClass = null;
+      var cap = window.location.search.match(/\bprint-(\w+)\b/);
+      if (cap) {
+        bodyClass = cap[0];
+        cssLink = "&reveal-url;/css/print/" + cap[1] + ".css";
+      }
+      if (cssLink) {
+        var link  = document.createElement( "link" );
+        link.rel  = "stylesheet";
+        link.type = "text/css";
+        link.href = cssLink;
+        var head = document.getElementsByTagName( 'head' )[0];
+        if (head) head.appendChild( link );
+      }
+      if (bodyClass) {
+        document.body.className = document.body.className + " " + bodyClass;
+      }
+    };
+    </script>
+HTML Footer:
+    <script>
+    // initialize printing
+    revealConfig.initPrint();
+    </script>

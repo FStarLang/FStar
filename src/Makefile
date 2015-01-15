@@ -24,7 +24,7 @@ PARSER_NOGEN_SRC=$(addprefix parser/, $(PARSER_NOGEN))
 TOSMT=term.fsi term.fs z3.fs encode.fs
 TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
 
-TC=tcenv.fsi tcenv.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
+TC=tcenv.fsi tcenv.fs normalize.fsi normalize.fs errors.fs rel2.fsi rel2.fs rel1.fsi rel1.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 TC_SRC=$(addprefix tc/, $(TC))
 
 # --------------------------------------------------------------------
@@ -163,7 +163,7 @@ BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs dssynta
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
 BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fst driver.fs 
 BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))
-BOOT_TCFILES=tcenv.fsi tcenv.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
+BOOT_TCFILES=tcenv.fsi tcenv.fs normalize.fsi normalize.fs errors.fs rel2.fsi rel2.fs rel1.fsi rel1.fs rel2.fsi rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
 BOOT_FORMATFILES=format.fsi formatml.fs
 BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
@@ -175,10 +175,10 @@ BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_BACKEND) 
 
 boot: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --debug yes --lax --fstar_home .. $(FSTAROPTS) --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+	$(RUNTIME) ../bin/fstar.exe --debug yes --fs_typ_app --lax --fstar_home .. $(FSTAROPTS) --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
 ocaml: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --lax --odir ocaml-output --fstar_home .. $(FSTAROPTS) --codegen OCaml --debug_level Low --trace_error --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+	$(RUNTIME) ../bin/fstar.exe --lax --fs_typ_app --odir ocaml-output --fstar_home .. $(FSTAROPTS) --codegen OCaml --debug_level Low --trace_error --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
 fstarml:
 	@echo "Building parser and lexer filex..."

@@ -73,6 +73,7 @@ type delimiters = {
 }
 
 let is_typ_app (args:Lexhelp.lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) = 
+ if not !Options.fs_typ_app then false else
  try
    let char_ok = new System.Text.RegularExpressions.Regex(@"\w|\s|\(|\)|<|>|\*|-|'|,|\.") in
    let balanced (contents : string) pos =
@@ -449,6 +450,7 @@ rule token args = parse
  | "%[" { PERCENT_LBRACK }
  | "[" { LBRACK }
  | "[|" { LBRACK_BAR }
+ | "<<" {  LESSLESS }
  | "<=" { LEQ }
  | ">=" { GEQ }
  | "<>" { LESSGREATER }

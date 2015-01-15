@@ -123,15 +123,16 @@ let unary_type_op_to_string t = find_lid (get_type_lid t) unary_type_ops
 let quant_to_string t = find_lid (get_type_lid t) quants
 
 let rec sli (l:lident) : string = 
-  if !Options.print_real_names
-  then match l.ns with 
+   match l.ns with 
       | hd::tl when (hd.idText="Prims") ->
         begin match tl with 
           | [] -> l.ident.idText
           | _ -> (List.map (fun i -> i.idText) tl |> String.concat ".") ^  "." ^ l.ident.idText
         end
-      | _ -> l.str
-   else l.ident.idText
+      | _ -> 
+        if !Options.print_real_names
+        then l.str
+        else l.ident.idText
 
 let strBvd bvd = 
     if !Options.print_real_names
@@ -167,6 +168,7 @@ let rec tag_of_typ t = match t.n with
   | Typ_meta(Meta_named _) -> "Typ_meta_named"
   | Typ_meta(Meta_labeled _) -> "Typ_meta_labeled"
   | Typ_meta(Meta_refresh_label _) -> "Typ_meta_refresh_label"
+  | Typ_meta(Meta_slack_formula _) -> "Typ_meta_slack_formula"
   | Typ_uvar _ -> "Typ_uvar"   
   | Typ_delayed _ -> "Typ_delayed"
   | Typ_unknown -> "Typ_unknown"
@@ -211,8 +213,8 @@ and typ_to_string x =
         | Inl t -> let t = Util.compress_typ t in
             (match t.n with
              | Typ_lam ([b],t) -> k (b,t)
-             | _ -> failwith "q_to_string")
-        | _ -> failwith "q_to_string" in
+             | _ -> Util.format2 "<Expected a type-lambda! got %s>%s" (tag_of_typ t) (typ_to_string t))
+        | Inr e -> Util.format1 "(<Expected a type!>%s)" (exp_to_string e) in
       let qbinder_to_string = q_to_string (fun x -> binder_to_string (fst x)) in
       let qbody_to_string = q_to_string (fun x -> typ_to_string (snd x)) in
       let args' = List.filter (fun a -> not (snd a)) args in (* drop implicit arguments for type operators *)
@@ -397,6 +399,7 @@ and meta_to_string x = match x with
   | Meta_labeled(t, l, _) -> Util.format2 "(labeled \"%s\") %s" l (typ_to_string t)
   | Meta_named(_, l) -> sli l
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (args_to_string ps) (t |> typ_to_string) 
+  | Meta_slack_formula(t1, t2, _) -> Util.format2 "%s /\ %s" (formula_to_string t1) (formula_to_string t2)
 
 and kind_to_string x = match (compress_kind x).n with 
   | Kind_lam _ -> failwith "Impossible"

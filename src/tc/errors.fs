@@ -145,7 +145,7 @@ let computed_computation_type_does_not_match_annotation env e c c' =
       (Normalize.typ_norm_to_string env r1) f1 (Normalize.typ_norm_to_string env r2) f2
 
 let unexpected_non_trivial_precondition_on_term env f =
-  Util.format1 "Term has an unexpected non-trivial pre-condition: %s" (Normalize.formula_norm_to_string env f)
+ format1 "Term has an unexpected non-trivial pre-condition: %s" (Normalize.formula_norm_to_string env f)
 
 let expected_pure_expression e c =
   format2 "Expected a pure expression;\ngot an expression \"%s\" with effect \"%s\"" (Print.exp_to_string e) (fst <| name_and_result c)
@@ -161,6 +161,5 @@ let failed_to_prove_specification lbls =
     | [] -> "An unknown assertion in the term at this location was not provable"
     | _ -> format1 "The following problems were found:\n\t%s" (lbls |> String.concat "\n\t")
 
-let top_level_effect errs = match errs with 
-    | [] -> "Top-level let-bindings must be total; this term may have effects"
-    | _ -> format1 "Top-level let-bindings must be total; this term may have effects because of the following problems\n\t%s" (errs |> String.concat "\n\t")
+let top_level_effect = "Top-level let-bindings must be total; this term may have effects"
+    

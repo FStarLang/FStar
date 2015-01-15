@@ -598,15 +598,19 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
                     let nformals = List.length bs' in
                     if nformals < List.length bs && Util.is_total_comp c (* explicit currying *)
                     then let bs0, rest = Util.first_N nformals bs in 
-                         let e = mk_Exp_abs(bs0, mk_Exp_abs(rest, body) (Util.comp_result c) body.pos) t e0.pos in
+                         let res_t = match Util.mk_subst_binder bs0 bs' with 
+                            | Some s -> Util.subst_typ s (Util.comp_result c) 
+                            | _ -> failwith "Impossible" in
+                         let e = mk_Exp_abs(bs0, mk_Exp_abs(rest, body) res_t body.pos) t e0.pos in
                          //Util.fprint1 "Explicitly currying %s\n" (Print.exp_to_string e);
                          encode_exp e env
                     else let vars, _, envbody, decls, _ = encode_binders false bs env in 
                          let app = mk_ApplyE lam vars in
                          let body, body_vars, decls' = encode_exp body envbody in
                          let eq = close_ex body_vars (mkEq(app, body)) in
-                         if Tc.Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding type e.tk=%s\n" (Print.typ_to_string e.tk);
-                         let lam_typed, decls'' = encode_typ_pred' false e.tk env lam in
+                         let t_fun = e.tk in
+                         if Tc.Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding type e.tk=%s\n" (Print.typ_to_string t_fun);
+                         let lam_typed, decls'' = encode_typ_pred' false t_fun env lam in
                          let tsym, t = fresh_bvar "t" Type_sort in 
                          let app_has_t = Term.mk_HasType false app t in
                          let app_is_typed = Term.mkExists([app_has_t], [(tsym, Type_sort)], app_has_t) in
@@ -1268,6 +1272,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     let tres = Util.comp_result c in                   
                     if nformals < nbinders && Util.is_total_comp c (* explicit currying *)
                     then let bs0, rest = Util.first_N nformals binders in 
+                         let tres = match Util.mk_subst_binder bs0 formals with
+                            | Some s -> Util.subst_typ s tres 
+                            | _ -> failwith "impossible" in
                          let body = mk_Exp_abs(rest, body) tres body.pos in
                          bs0, body, formals, tres
                     

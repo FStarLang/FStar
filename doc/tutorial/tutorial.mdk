@@ -1,0 +1,3617 @@
+Title         : Verified programming in F\*
+Sub title     : A tutorial
+Heading Base  : 2
+Author        : The F* Team
+Affiliation   : MSR, MSR-Inria, Inria, IMDEA
+Colorizer     : fstar
+
+.Comment      : replace=""
+~CH           : .comment color=green author=CH
+~CK           : .comment color=blue author=Chantal
+~BB           : .comment color=purple author="Benjamin Beurdouch"
+~NS           : .comment color=red author="Nik"
+~Todo         : .comment author="Todo"
+
+~Remark       : font-style=italic padding-left=1em
+
+~Exercise     : @h1-exercise=lower-case @h1-exercise label="@h1@h1-exercise"
+                margin-left=1em
+                before="[**Exercise &label;: **]{margin-left=-1em}&br;" 
+                
+~Answer       : replace="[answer]{.answer-link}&br;~Begin AnswerContent&nl;&source;&nl;~End AnswerContent&nl;"
+                margin-top=-1em tight 
+~AnswerContent: border-style=solid border-width=1px border-color=black padding=0.5ex
+
+~Code,~Pre : language=fstar
+                replace=/([a-zA-Z])([12])\b/\(\1\2|\1~\2~\)/g
+                replace=/([a-zA-Z])_([\dnm])\b/\(\1_\2|\1~\2~\)/g
+                replace=/_n1\b/\(_n1|~n-1~\)/g
+
+~Fragment     : replace="```{.pre-fragment}&nl;&source;&nl;```&nl;&nl;[Load in editor](&link;){float=right}&br;&nl;"
+.pre-fragment : margin-bottom=0pt .framed padding=0.5ex
+
+~ExerciseFragment : replace="~Begin Fragment {link=code/exercises/&exname;.fst}&nl;&source;&nl;~End Fragment&nl;"
+
+CatalinComment : replace="Can't understand why this doesn't work (it eats up the following solution. Also, why can't I write a proper <!-- comment here?"
+~EmptyExerciseFragment : replace="~Begin Fragment {link=code/exercises/&exname;.fst}&nl;(* Write your code here *)&nl;~End Fragment&nl;"
+
+~SolutionFragment : replace="~Begin Fragment {link=code/solutions/&exname;.fst}&nl;&source;&nl;~End Fragment&nl;"
+
+~AnswerFragment : replace="~Begin Answer&nl;~Begin SolutionFragment {exname=&exname;}&nl;&source;&nl;~End SolutionFragment&nl;~End Answer&nl;"
+
+~Code         : replace=/^:/\(:|\)/ 
+
+<style>
+.answer.view .answercontent, 
+.preview[data-view=full] .answer.view .answercontent, 
+.preview .answer .answercontent { 
+  display: block;
+}
+.answer .answercontent, .preview[data-view=full] .answer .answercontent {
+  display:none;
+}
+
+.answer-link {
+  cursor:pointer;
+  text-decoration: underline;
+  color: blue;
+}
+.answer.view .answer-link:before {
+  content: "hide ";
+}
+.answercontent p:first-child {
+  margin-top: 0em;
+}
+.answercontent p:last-child {
+  margin-bottom: 0em;
+}
+</style>
+
+[TITLE]
+[TOC]
+
+<style>
+.fstar .token.keyword { color: blue; }
+.fstar .token.type.keyword.operator { color: teal; }
+</style>
+
+<!-- How to edit this document:
+     1. Go to madoko.net in a web browser
+     2. Select the folder icon in the top-left corner, then "Open ... (Alt-O)"
+     3. Select the "GitHub" icon
+     4. Authorize the Madoko application to access your GitHub repositories
+     5. Open <github>/FStarLang/FStar/doc/tutorial/tutorial.mdk and start editing.
+     6. Ctrl+S (or Synchronize from the folder tab) will bring up a dialog to 
+        commit and push this file to GitHub after merging with the latest changes there.
+     
+     For included code snippets:
+     -- The snippets must be derived from files that are stored in the same subtree of the git repo
+        i.e, all the samples should be in sub-directories of FStarLang/FStar/doc/tutorial/code
+        
+     Note: in this mode (i.e., github instead of dropbox), the document will not live update
+           with the changes that anyone else may be making to the document concurrently. You
+           will only see others' changes when you synchronize with github.
+
+     If you use Emacs to edit this you can use the markdown-mode
+     (http://jblevins.org/projects/markdown-mode/) for syntax highlighting.
+-->
+
+<!-- Daan's hints: -->
+<!-- * Refer to Section [#sec-getstarted]. -->
+<!-- * Use `Alt-Q` to reformat paragraphs. -->
+<!-- * Drag&Drop a `.bib` file on the editor and start including citations. -->
+
+# Introduction
+
+F\* is a verification-oriented programming language developed at 
+[Microsoft Research], [MSR-Inria], [Inria], and [IMDEA Software].
+It follows in
+the tradition of the [ML] family of languages in that it is a typed,
+strict, functional programming language. However, its type system is
+significantly richer than ML's, allowing functional correctness
+specifications to be stated and checked semi-automatically. This
+tutorial provides a first taste of verified programming in F\*. More
+information about F\*, including papers and technical reports, 
+can be found at the [F\* website].
+
+[Microsoft Research]: http://research.microsoft.com/en-us
+[MSR-Inria]: http://www.msr-inria.fr/
+[Inria]: https://www.inria.fr/
+[IMDEA Software]: http://software.imdea.org/
+[ML]: https://en.wikipedia.org/wiki/ML_%28programming_language%29
+[F\* website]: http://www.fstar-lang.org
+
+It will help if you are already familiar with functional programming
+languages in the ML family (e.g., [OCaml], [F#], [Standard ML]), or
+with [Haskell]---we provide a quick review of basic concepts if you're
+a little rusty. If you feel you need more background, there are many useful
+resources freely available on the web, e.g., [TryF#],
+[F# for fun and profit], [Introduction to Caml], or the
+[Real World OCaml] book.
+
+[OCaml]: http://caml.inria.fr/ocaml/
+[F#]: http://fsharp.org/
+[Standard ML]: http://sml-family.org/
+[Haskell]: https://www.haskell.org
+
+[F# for fun and profit]: http://fsharpforfunandprofit.com/
+[TryF#]: http://tryfsharp.org
+[Introduction to Caml]: http://www.cs.jhu.edu/~scott/pl/lectures/caml-intro.html
+[Real World OCaml]: https://realworldocaml.org/
+
+The easiest way to try F\* and solve the exercises in this tutorial is
+directly in your browser by using the [online F\* editor]. You can
+load the boilerplate code needed for each exercise into the online
+editor by clicking the "Load in editor" link in the body of each
+exercise. Your progress on each exercise will be stored in browser
+local storage, so you can return to your code later (e.g. if your
+browser crashes, etc).
+
+You can also do this tutorial by installing F\* locally on your
+machine.  F\* is open source and cross-platform, and you can get
+[binary packages] for Windows, Linux, and MacOS X or compile F\* from
+the [source code on github] using these [instructions]. You can use
+your favourite text editor (for instance Emacs with ocaml-mode or
+tuareg-mode) to edit F\* files locally.
+
+[online F\* editor]: https://www.fstar-lang.org/run.php
+[binary packages]: http://fstar-lang.org
+[source code on github]: http://github.com/FStarLang/FStar
+[instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
+
+**A note on compatibility with F\#**: The syntax of F\* and F\#
+overlap on a common subset. In fact, the F\* compiler is currently
+programmed entirely in this intersection. Aside from this, the
+languages and their implementations are entirely distinct. In this
+tutorial, we will use the full syntax of F\*, even when it is possible
+to express the same program in the fragment shared with F\#. The F\*
+compiler sources are a good resource to turn to when trying to figure
+out the syntax of this shared fragment.
+
+<!-- # Getting started  { #sec-getstarted } -->
+
+## Your first F\* program: a simple model of access control
+
+Let's get started by diving into a simple model of access control on
+files. Along the way, we'll see some basic concepts from functional
+programming in general and a couple of F\*-specific features.
+
+Let's say we want to model a simple access control discipline on
+files---certain files are readable or writable, whereas others may be
+inaccessible. We'd like to write a policy to describe the privileges
+on each file, and we'd like to write programs whose file access
+patterns are checked against this policy, guaranteeing statically that an
+inaccessible file is never accessed mistakenly.
+
+Our model of this scenario (which we'll make more realistic in later
+sections) proceeds in three easy steps.
+
+  1. Describe the policy using simple pure functions.
+   
+   
+  2. Identify the security-sensitive primitives in the program 
+     and protect them with the policy. 
+   
+     
+  3. Write the rest of the program, resting assured that the F\*
+     type-checker will verify statically
+     that the policy-protected primitives are never improperly accessed.
+
+
+### Describing a policy { #sec-policy }
+
+The syntax of F\* is based closely on the OCaml syntax and the non-light
+syntax of F\#. An F\* program is composed of several modules. Each module
+begins with a `module` declaration, defining the name of the module. Its
+body includes a number of definitions, and optionally includes a 'main'
+expression.
+
+Here is a module called `ACLs` (for Access-Control Lists) that defines
+our policy:
+
+~ Fragment {link="code/exercises/ex1a-safe-read-write.fst"}
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:ACLs]
+~
+
+Our first module begins by defining a type synonym: we'll use
+`:string`s to model `:filename`s.
+
+Next, we define `canWrite`, a function that inspects its argument `f`
+using a *pattern matching expression*: it returns the boolean `true`
+when `f="C:/temp/tempfile"` and `false` otherwise. The function
+`canRead` is similar---a file is readable if it is writeable, or if it
+is the `"C:/public/README"` file. The boolean functions `canWrite` and
+`canRead` specify our policy.
+
+### Tying the policy to the file-access primitives
+
+To enforce the policy, we need to connect the policy to the primitives
+in our programs that actually implement the file reading and writing
+operations.
+
+F\* provides a facility to specify interfaces to external modules that
+are implemented elsewhere. For example, operations that perform file
+input/output are implemented by the operating system and made available
+to F\* programs via the underlying framework, e.g., .NET or OCaml. We can
+describe a simple interface provided by the framework as follows:
+
+~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:SystemIO]
+~
+
+Here, we've defined an *interface* called `System.IO`, which uses the
+`ACLs` module (indicated by the `open` keyword). More importantly,
+`System.IO` provides two functions, `read` and `write`, which
+presumably implement the corresponding operations on files.
+
+By using the `assume val` notation, we *declare* that `System.IO` provides
+the `read` and `write` operations (they are *values*), but that we are
+*_not_ defining* those values here---they will be provided by an external
+module. Our use of `assume val` is much like the
+`extern`{language=csharp} keyword in C and other programming languages.
+
+As with `extern`{language=csharp}, when declaring a value, we also
+provide its type signature.
+
+* The type of `read` says that it is a function expecting a `filename`
+  argument `f` for which `canRead f` evaluates to `true` and returning a
+  `string`-typed result. Thus the type-checker prevents any calls to
+  `read` for which the `canRead` predicate can't be statically proved
+  for the argument.
+
+* The type of `write` says that is a function of two arguments: the
+  first is a `filename` `f`, such that `canWrite f` evaluates to `true`;
+  the second is a `string`, the data to be written to the file `f`. The `write`
+  function returns `unit`, roughly analogous to the `void` type in
+  C. The type `unit` has only a single value, written `()`. 
+
+The crucial bits of these declarations are, of course, the use of the
+`canRead` and `canWrite` functions in the signature, which allow us to
+connect the types of these security-sensitive functions to our policy.
+
+### Writing programs and verifying their security
+
+Trying to check that a piece of code conforms to a access-control
+policy is a tedious and error-prone process. Even if every access is
+guarded by a security check, how can we make sure that each check is
+adequate? We can use F\*'s type-checker to automate this kind of code
+review.
+
+Here's some simple, untrusted client code. It uses `System.IO`,
+defines some common file names, and then a function called
+`staticChecking`, which tries to read and write a few files.
+
+~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:UntrustedClientCode]
+
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:StaticChecking]
+~
+
+The type-checker ensures statically that this untrusted code complies
+with the security policy. The reads to `tmp` and `readme`, and the
+write to `tmp` are allowed by the policy, so the program successfully
+type-checks. On the other hand, if we uncomment the lines that read
+or write `"junk"` to the `password` file, the F\* type-checker complains 
+complains that the `passwd` file does not have the type
+`:f:filename{canRead f}`, respectively `:f:filename{canWrite f}`.
+For instance, if we uncomment the `write` we get the following error message:
+
+<!-- mono ../../bin/fstar.exe --fstar_home ../.. code/exercises/ex1a-safe-read-write.fst -->
+``` {language=""}
+Error ex1a-safe-read-write.fst(38,2-47,5): The following problems were found:
+	Subtyping check failed; expected type f:filename{(canWrite f)};
+    got type string (ex1a-safe-read-write.fst(43,17-43,23))
+```
+<!-- CH: It would be nice if at some point such error messages were
+     "real", coming directly from the type-checker without being
+     touched by human hands. -->
+
+You'll understand more about what that message means as you work
+through this tutorial, but, for now, take it to mean that F\* expected
+`canWrite passwd` to evaluate to `true`, which isn't the case.
+
+The `staticChecking` function above illustrates how F\* can be used to
+specify a security policy, and statically enforce complete and correct
+mediation of that policy via type-checking. We will now illustrate
+that checking of the policy doesn't have to happen all statically, but
+that the dynamic checks added by the programmer are taken into account
+by the type system. In particular we implement a `checkedRead` function
+that consults the policy and only performs the `read` if the policy
+allows it, otherwise it raises an exception.
+~ Fragment {link=code/exercises/ex1a-safe-read-write.fst}
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:CheckedRead]
+~
+Please note that the type of `checkRead` imposes no condition on the
+the input file `f`. When the `ACLs.canRead f` check succeeds the
+type-checker knows that the `System.IO.read f` is safe.
+
+~Exercise
+Write a function called `checkedWrite` that takes a filename `f` and a
+string `s` as argument, checks the policy to make sure the file `f` is
+writable, and only if that is the case writes `s` to `f`. If the file
+is not readable your `checkedWrite` should raise an exception. As for
+`checkedRead`, your `checkedRead` should have no preconditions.
+~~ ExerciseFragment {exname=ex1a-safe-read-write}
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:CheckedWriteType]
+~~
+~~ Answer
+~~~ SolutionFragment {exname=ex1a-safe-read-write}
+[INCLUDE=code/solutions/ex1a-safe-read-write.fst:CheckedWrite]
+~~~
+~~
+~
+You can use `checkedRead` and your `checkedWrite` to replace `read`
+and `write` in the original in `staticChecking`, so that now even
+the accesses to `passwd` are well-typed.
+~ ExerciseFragment {exname=ex1a-safe-read-write}
+[INCLUDE=code/exercises/ex1a-safe-read-write.fst:DynamicChecking]
+~
+This is secure because `checkedRead` and `checkedWrite` defer to
+runtime the same checks that were performed at compile time by F\*,
+and perform the IO actions only if those checks succeed.
+
+# Basics: Types and effects
+
+You may not have noticed them all, but our first example already covers
+several distinctive features of F\*. Let's take a closer look.
+
+## Refinement types
+
+One distinctive feature of F\* is its use of refinement types. We have
+already seen two uses of this feature, e.g, the type
+`:f:filename{canRead f}` is a *refinement* of the type `:filename`. It's
+a refinement because only a subset of the `:filename` values have this
+type, namely those that satisfy the `canRead` predicate. The
+refinement in the type of `System.IO.write` is similar. In traditional
+ML-like languages, such types are inexpressible.
+
+In general, a refinement type in F\* has the form `:x:t{phi(x)}`, a
+refinement of the type `:t` to those elements `x` that satisfy the formula
+`phi(x)`. For now, you can think of `phi(x)` as any boolean valued
+expression. We will see, shortly ([#sec-bool-versus-type]),
+that the full story is more general.
+
+## Inferred types and effects for computations
+
+~CH
+Too much back and forth about type and effect _inference_ seems to be
+obscuring the explanation. How about:
+(1) effects (just remove every reference to inference,
+  e.g. replace "is inferred to have effect E" with "has effect E"),
+(2) function types,
+(3) (type and) effect inference
+~
+
+Although we didn't write down any types for functions like `canRead`
+or `canWrite`, F\* (like other languages in the ML family) infers
+types for your program (if F\* believes it is indeed type
+correct). However, what is inferred by F\* is more precise than what
+can be expressed in ML. For instance, in addition to inferring a type,
+F\* also infers the *side-effects* of an expression (e.g., exceptions,
+state, etc).
+
+For instance, in ML `(canRead "foo.txt")` is inferred to have type `:bool`.
+However, in F\*, we infer `(canRead "foo.txt" : Tot bool)`. This
+indicates that `canRead "foo.txt"` is a total expression, which always
+evaluates to an boolean. For that matter, any expression that is
+inferred to have type-and-effect `:Tot t`, is guaranteed (provided the
+computer has enough resources) to evaluate to a `:t`-typed result,
+without entering an infinite loop; reading or writing the program's
+state; throwing exceptions; performing input or output; or, having any
+other effect whatsoever.
+
+On the other hand, an expression like `(System.IO.read "foo.txt")` is
+inferred to have type-and-effect `:ML string`, meaning that this term
+may have arbitrary effects (it may loop, do IO, throw exceptions,
+mutate the heap, etc.), but if it returns, it always returns a
+string. The effect name `:ML` is chosen to represent the default,
+implicit effect in all ML programs.
+
+`:Tot` and `:ML` are just two of the possible effects. Some others
+include:
+
+* `:Dv`, the effect of a computation that may diverge;
+* `:ST`, the effect of a computation that may diverge, read,
+  write or allocate new references in the heap;
+* `:Exn`, the effect of a computation that may diverge
+  or raise an exception.
+
+The effects `:{Tot, Dv, ST, Exn, ML}` are arranged in a lattice,
+with `:Tot` at the
+bottom (less than all the others), `:ML` at the top (greater than all
+the others), and with `:ST` unrelated to `:Exn`. This means that a
+computation with a particular effect can be treated as having any
+other effect that is greater than it in the effect ordering---we call
+this feature *sub-effecting*.
+
+In fact, you can configure F\* with your own family of effects and effect
+ordering and have F\* infer those effects for your programs---but that's
+more advanced and beyond the scope of this tutorial. 
+~CH
+Previous claim seems too strong to me. It misses the point that F\*
+effects are primitive and fixed, and in a way the lattice of effects
+is also fixed (the powerset of effects), one can only choose which
+points in this fixed lattice one finds interesting. So at the level of
+detail things were explain so far, this claim seems wrong.
+Am I missing anything?
+~
+
+~NS
+Yes, effects are primitive. But, the lattice is not fixed nor is the powerset, 
+since the effects themselves can be arbitrarily fine-grained. For example, 
+you can take {Pure, Div, RD, WR, ALLOC, ST, EXN, ALL}. You could also
+split RD/WR into very precise ones, recording a subset of the state that
+may be written, etc. 
+~
+
+~CH
+I think the word effect is overloaded and this makes this discussion
+(and the text above) a bit confusing. There is an intuitive notion of
+effect as in non-termination, exceptions, state (there are very few
+such effects and they are all primitive) and there is the technical
+notion of an effect in F\* (which includes things like a wp and can be
+a lot more fine-grained; these are the things that are actually
+configurable). The explanation above seems to start with the first
+point of view and end up with the second.
+~
+
+From now on, we'll just refer to a type-and-effect pair (e.g. `:Tot int`
+where `:Tot` is the effect and `:int` is the result type), as a
+type<!-- unused: , or sometimes as a *computation* type -->.
+
+## Function types
+
+F\* is a functional language, so functions are first-class values that
+are assigned function types. For instance, in ML the function `is_positive`
+testing whether an integer is positive is given type `:int -> bool`,
+i.e. it is a function taking an integer argument and producing a
+boolean result. Similarly, a maximum function on integers `max` is given
+type `:int -> int -> int`, i.e. it is a function taking two integers
+and producing an integer. Function types in F\* are more precise and
+capture not just the types of the arguments and the result, but also
+the effect of the function's body. As such, every function value has a
+type of the form `:t1 -> ... -> tn -> E t`, where `:t1 .. tn` are the
+types of each of the arguments; `:E` is the effect of its body; and
+`:t` is the type of its result. (*Note to the experts: We
+will generalize this to dependent functions and indexed effects
+progressively.*) The pure functions
+above are given a type using effect `Tot` in F\*:
+```
+val is_positive : int -> Tot bool
+let is_positive i = i > 0
+
+val max : int -> int -> Tot int
+let max i1 i2 = if i1 > i2 then i1 else i2
+```
+Impure functions, like reading the contents of a file,
+are given corresponding effects:
+```
+val read : filename -> ML string
+```
+
+F\* is a _call-by-value_ functional language (like OCaml and F\#, and
+unlike Haskell and Coq), so function arguments are fully evaluated to
+values before being passed to the function. Values have no (immediate) effect,
+thus the types of a function's arguments have no effect annotation. On
+the other hand, the body of a function may perform some non-trivial
+computation and so the result is always given both a type and an
+effect, as explained above.
+
+~Exercise
+As you could see above, we use `val` to ask F\* to check that a
+definition has a certain expected type.  Write down the expected types
+for `canRead` and `canWrite` from [#sec-policy] and ask F\* to check it for you.
+~~ ExerciseFragment {exname=ex2a-can-read-write-types}
+[INCLUDE=code/exercises/ex2a-can-read-write-types.fst]
+~~
+
+~~ AnswerFragment {exname=ex2a-can-read-write-types}
+val canRead: filename -> Tot bool
+val canWrite: filename -> Tot bool
+~~
+~
+
+### The default effect is `ML`
+
+Without further annotation, F\* (sometimes conservatively) infers
+functions that may perform IO or functions that are not
+provably terminating to have the `:ML` effect. So, both
+functions below are inferred to have the type `:(int -> ML int)`.
+_(Note: Recursive functions are defined using the `let rec`
+notation.)_
+
+    let hello_incr i = Print.print_string "hello"; i + 1
+    let rec loop i = i + loop (i - 1)
+
+If we provide explicit annotations we can give these functions more
+precise types:
+
+    val hello_incr i : int -> IO int
+    let hello_incr i = Print.print_string "hello"; i + 1
+
+    val loop : int -> Dv int
+    let rec loop i = i + loop (i - 1)
+
+Since we often port programs from ML to F\*, we choose the default effect
+to be `ML` and typically don't even write it. So, you could have written
+the usual ML signature for `hello_incr` and `loop` as shown below, which
+is just a synonym for the more explicit `:(int -> ML int)`. 
+
+    val hello_incr: int -> int
+    val loop: int -> int
+
+~CH
+This seems like the right place to explain higher-order functions.
+Could start by explaining currying, then functions taking functions
+as arguments (e.g. sorting).
+~
+
+### Computing functions
+
+_Skip this section on a first read, if you are new to functional programming._
+
+Sometimes it is useful to return a function after performing some
+computation. For example, here is a function that makes a new counter,
+initializing it to `init`.
+
+    let new_counter init =
+      let c = Util.mk_ref init in
+      fun () -> c := c + 1; !c 
+
+F\* infers that `new_counter` has type `:int -> ST (unit -> ST int)`,
+the type of a function that given an integer, may read, write or
+allocate references, and then returns a `:unit -> ST unit`
+function. You can write down this type and have F\* check it; or,
+using sub-effecting, you can write the type below and F\* will check
+that `new_counter` has that type as well.
+
+    val new_counter: int -> ML (unit -> int)
+
+Note, the type above, a shorthand for `:int -> ML (unit -> ML int)`,
+is *not* the same as `:int -> unit -> int`. The latter is a shorthand
+for `:int -> Tot (unit -> ML int)`.
+
+# First proofs about functions on integers { #sec-firstproofs }
+
+<!--
+Main ideas in this section:
+
+* F\* provides several ways of specifying and statically verifying
+  properties of programs:
+  - assertions
+  - refinement types
+  - predicate transformers (e.g. Lemma)
+* F\* types allow for two complementary verification styles:
+  - intrinsic vs extrinsic (ie. at definition time vs. after the fact)
+-->
+
+Our first example on access control lists illustrated how F\*'s type
+system can be used to automatically check useful security properties for
+us. But, before we can do more interesting security-related programming
+and verification, we will need to understand more about the basics of
+F\*. We'll shift back a gear now and look at programming and proving
+properties of simple functions on integers.
+
+
+## Statically checked assertions
+
+~CH
+These example assertions are horrible because
+(1) they are in fact lemmas, while that's usually not the case
+    for assertions and
+(2) they don't really work in F\*, which doesn't support top level assertions.
+How can we fix this?
+We could introduce asserts as just a way to check facts in lemmas
+or as a way to check facts within (effectful) code.
+~
+
+~NS
+I don't see the distinction you're making between lemmas and assertions.
+You can write `let test = assert (max 0 1 = 1)`. Is that so bad as to be horrible?
+~
+
+~CH
+(1) In almost about any other language asserts are used to check
+_intensional_ properties of (usually stateful) programs by decorating
+code. Here you use assert to prove some lemmas (extensional
+properties) after the fact. Moreover, this doesn't even seem like the
+recommended way to prove lemmas in F\*, given that we have better
+support for this described below.
+(2) How is someone reading this tutorial supposed to find out that
+they need to add a let? Why not make the tutorial match reality
+by allowing top level asserts in F\* or by adding lets in the tutorial?
+Generally we should strive to make all the code in this tutorial be valid F\*
+code that we can directly load in the editor.
+~
+
+One way to prove properties about your code in F\* is to write assertions.
+
+    assert (max 0 1 = 1)
+
+Our first assertion is an obious property about `max`. You may have seen
+a construct called `assert` in other languages---typically, it is used to
+check a property of your code *at runtime*, raising an assertion-failed
+exception if the asserted condition is not `true`.
+
+In F\*, assertions have no runtime significance. Instead, F\* tries to
+prove statically (i.e., before compiling your program) that the asserted
+condition is true, and hence, could never fail even if it were tested at
+runtime.
+
+In this case, the proof that `max 0 1 = 1` is fairly easy. Under the
+covers, F\* translates the definition of `max` and the asserted property
+to a theorem prover called [Z3], which then proves the property
+automatically.
+
+[Z3]: http://z3.codeplex.com/
+
+We can assert and automatically check a more general property about `max`. For example:
+
+    assert (forall x y. max x y >= x 
+                     && max x y >= y
+                     && (max x y = x || max x y = y))
+
+## `:nat` is a refinement of `:int`
+
+Let's take a look at the factorial function:
+
+    let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
+
+As we said earlier, without further annotation, F\* infers `:int -> int`
+as the type of this function, which is a shorthand for
+`:int -> ML int`---meaning that F\* does not attempt to
+automatically prove that `factorial` (or any recursive function, for that
+matter) is in fact a pure, total function. It actually is not a total
+function on arbitrary integers! Think about `factorial (-1)`.
+
+~ CH
+Sorry to keep bringing this up, but if integers are indeed 32-bit
+as you say below then factorial is a total function even for negative
+numbers because of wrap-around. This issue came up in Nik's group at
+the school, but I don't remember what the resolution was.
+~
+
+~ Remark
+Integers (values of the `int` type) in F\* are represented by
+32-bit integers when you're using the F\# backend and 31-bit integers
+when compiling to OCaml. At the moment, we do not yet check for
+overflow. We plan to add overflow checks in a platform-specific way,
+soon. 
+~
+
+The `factorial` function is, however, a total function on non-negative
+integers. We can ask F\* to check that this is indeed the case by
+writing:
+
+    val factorial: x:int{x>=0} -> Tot int
+
+The line above says several things:
+
+* `factorial` is a value (that's the '`val factorial`' part) 
+
+* It is a *function* (that's the arrow type '`->`')
+
+* It can only be applied to integers `x` that are greater than or
+  equal to `0` (that's the refinement type '`x:int{x>=0}`')
+
+* When applied to `x` it always terminates and has no observable effects
+(the '`:Tot`' part), except for returning an integer (the result type
+'`:int`')
+
+Once we write this down, F\* automatically proves that `factorial`
+satisfies all these properties. The main interesting bit to prove, of
+course, is that `factorial x` actually does terminate when `x` is
+non-negative. We'll get into the details of how this is done in
+section [#sec-termination], but, for now, it suffices to know that in
+this case F\* is able to prove that every recursive call is
+on a non-negative number that is strictly smaller than the argument of
+the previous call. Since this cannot go on forever (we'll eventually hit
+the base case `0`), F\* agrees with our claim about the type of
+`factorial`.
+
+The type of non-negative integers (or natural numbers) is common enough
+that you can define an abbreviation for it (in fact, F\* already does
+this for you in its standard prelude).
+
+    type nat = x:int{x>=0}
+
+~ Exercise
+What are some other types you can give to `factorial`? Try
+writing them and see if F\* agrees with you.
+~~ ExerciseFragment {exname=ex3a-factorial-types}
+[INCLUDE=code/exercises/ex3a-factorial-types.fst:FactorialTypes]
+~~
+~~ Answer
+
+There are many possible types for `factorial`. Here are a few.
+~~~ SolutionFragment {exname=ex3a-factorial-types}
+val factorial: nat -> Tot int
+val factorial: nat -> Tot nat
+val factorial: nat -> Tot (x:int{x > 0})
+val factorial: int -> int
+val factorial: int -> x:int{x > 0}
+~~~
+~~
+Try describing in words what each of those types mean. Rank the types
+in order of increasing precision. Is it a total order?
+~~CH
+We're missing a solution here
+~~
+~
+
+~ Exercise
+Give several types for the fibonacci function.
+~~ ExerciseFragment {exname=ex3b-fibonacci}
+let rec fibonacci n =
+  if n <= 1 then 1 else fibonacci (n - 1) + fibonacci (n - 2)
+~~
+~~ AnswerFragment {exname=ex3b-fibonacci}
+[INCLUDE=code/solutions/ex3b-fibonacci.fst]
+~~
+~
+
+## Lemmas
+
+Let's say you wrote the `factorial` function and gave it the type
+`:(nat -> Tot nat)`. Later, you care about some other property about
+`factorial`, e.g., that if `x > 2` then `factorial x > x`. One option is
+to revise the type you wrote for `factorial` and get F\* to reprove that
+it has this type. But this isn't always feasible. What if you also wanted
+to prove that if `x > 3` then `factorial x > 2 * x`: clearly, polluting
+the type of `factorial` with all these properties that you may or may not
+care about is impractical.
+
+However, F\* will allow you to write other functions (we call them
+lemmas) to prove more properties about `factorial`, after you've defined
+`factorial` and given it some generally useful type like
+`:nat -> Tot nat`. 
+
+A lemma is a total function that always returns the single `:unit` value
+`()`. As such, computationally, lemmas are useless---they have no effect
+and always return the same value, so what's the point? The point is that
+the type of the value returned by the lemma carries some useful
+properties about your program.
+
+As a first lemma about `factorial`, let's prove that it always
+returns a positive number.
+
+    val factorial_is_positive: x:nat -> Tot (u:unit{factorial x > 0})
+    let rec factorial_is_positive x =
+      match x with
+      | 0 -> ()
+      | _ -> factorial_is_positive (x - 1)
+
+The statement of the lemma is the type given to `factorial_is_positive`,
+a total function on `x:nat` which returns a unit, but with the refinement
+that `factorial x > 0`. The next three lines define
+`factorial_is_positive` and proves the lemma using a proof by induction
+on `x`. The basic concept here is that by programming total functions, we
+can write proofs about other program fragments. We'll discuss such proofs
+in detail in the remainder of this section.
+
+### Dependent function types
+
+~CH
+Lemmas don't seem like the most intuitive way of introducing dependent functions.
+Can we find a more computationally relevant thing first? See `max_ref_type`
+in `code/max.fst`? How about
+```
+    val factorial_monotone: x:int{x>2} -> Tot (y:nat{y > x})
+```
+~
+
+Let's start by looking a little closer at the statement of the lemma.
+
+    val factorial_is_positive: x:nat -> Tot (u:unit{factorial x > 0})
+
+This is your first *dependent function type* in F\*. Why *dependent*?
+Well, the type of the result depends on the _value_ of the parameter
+`x:nat`. For example, `factorial_is_positive 0` has the type
+`:Tot (u:unit{factorial 0 > 0))` which is different from the type of
+`factorial_is_positive 1`.
+
+Now that we've seen dependent functions, we can elaborate a bit more
+on the general form of function types, which have the following form:
+
+~ Center
+`:x_1:t_1 -> ... -> x_n:t_n[x_1 ... x_{n-1}] -> E t[x_1 ... x_n]`
+~
+
+This is to say that each of a function's formal parameters are named
+`:x_i`; and each of these names is in scope to the right of the first
+arrow that follows it. The notation `:t[x_1 ... x_m]` indicates that
+the variables `:x_1 ... x_m` may appear free in `:t`.
+
+### Some syntactic sugar for refinement types and lemmas
+
+~CH
+This is not really monotonicity, as Giuseppe Castagna remarked
+during our POPL tutorial. `factorial_increases`?
+~
+
+How shall we specify that `factorial` is strictly monotone when it's
+argument is greater than 2? Here's a first cut:
+
+    val factorial_is_monotone_1: x:(y:nat{y > 2}) -> Tot (u:unit{factorial x > x})
+
+This does the job, but the type of the function's argument is a bit
+clumsy, since we needed two names: `y` to restrict the domain to natural
+numbers greater than `2` and `x` to speak about the argument in the
+result type. This pattern is common enough that F\* provides some
+syntactic sugar for it---we have seen it already in passing in the first
+type we gave to `factorial`. Using it, we can write the following type,
+which is equivalent to, but more concise than, the type above.
+
+    val factorial_is_monotone_2: x:nat{x > 2} -> Tot (u:unit{factorial x > x})
+
+Another bit of clumsiness that you have no doubt noticed is the result
+type of the lemmas which include a refinement of the
+`:unit` type. To make this lighter, F\* provides the `:Lemma` keyword which 
+can be used in place of the `:Tot` effect. 
+
+For example, the type of `factorial_is_monotone_2` is equivalent to the
+type of `factorial_is_monotone_3` (below), which is just a little
+easier to read and write.
+
+    val factorial_is_monotone_3: x:nat{x > 2} -> Lemma (factorial x > x)
+
+We can also write it in the following way, when that's more convenient:
+
+    val factorial_is_monotone_4: x:nat -> Lemma (requires (x > 2))
+                                                (ensures (factorial x > x))
+
+The formula after `requires` is the _pre-condition_ of the
+function/lemma, while the one after `ensures` is its _post-condition_. 
+
+### A simple lemma proved by induction, in detail
+
+Now, let's look at a proof of `factorial_is_monotone` in detail. Here it is:    
+
+    let rec factorial_is_monotone x =
+      match x with
+      | 3 -> ()
+      | _ -> factorial_is_monotone (x - 1)
+
+The proof is a recursive function (as indicated by the `let rec`); the
+function is defined by cases on `x`.
+
+In the first case, the argument is `3`; so, we need to prove that
+`factorial 3 > 3`. F\* generates a proof obligation corresponding to this
+property and asks [Z3] to see if it can prove it, given the definition of
+`factorial` that we provided earlier---Z3 figures out that by
+`factorial 3 = 6` and, of course, `6 > 3`, and the proof for this case is
+done. This is the base case of the induction.
+
+The cases are taken in order, so if we reach the second case, then we
+know that the first case is inapplicable, i.e., in the second case, we
+know from the type for `factorial_is_monotone` that `x:nat{x > 2}`, and
+from the inapplicability of the previous case that `x <> 3`. In other
+words, the second case is the induction step and handles the proof when
+`x > 3`. 
+
+Informally, the proof in this case works by using the induction
+hypothesis, which gives us that `forall n, 2 < n < x ==> factorial n > n`,
+and our goal is to prove `factorial x > x`. Or, equivalently, that
+`x * factorial (x - 1) > x`, knowing that `factorial (x - 1) > x - 1`; or
+that `x*x - x > x`---which is true for `x > 3`.
+Let's see how this works formally in F\*.
+
+When defining a total recursive function, the function being defined
+(`factorial_is_monotone` in this case) is available for use in the body
+of the definition, but only at a type that ensures that the recursive
+call will terminate. In this case, the type of `factorial_is_monotone` in
+the body of the definition is:
+
+    n:nat{2 < n && n < x} -> Lemma (factorial n > n)
+
+This is, of course, exactly our induction hypothesis. By calling
+`factorial_is_monotone (x - 1)` in the second case, we, in effect, make
+use of the induction hypothesis to prove that
+`factorial (x - 1) > x - 1`, provided we can prove that
+`2 < x - 1 && x - 1 < x`---we give this to Z3 to prove, which it can,
+since in this case we know that `x > 3`. Finally, we have to prove the
+goal `factorial x > x` from the `x > 3` and the property we obtained
+from our use of the induction hypothesis: again, Z3 proves this easily.
+
+~ Exercise
+Prove the following monotonicity property for the fibonacci function:
+~~ ExerciseFragment {exname=ex3c-fibonacci}
+[INCLUDE=code/exercises/ex3c-fibonacci.fst:FibonacciMonotone]
+~~
+~~ AnswerFragment {exname=ex3c-fibonacci}
+[INCLUDE=code/solutions/ex3c-fibonacci.fst:FibonacciMonotoneProof]
+~~
+~
+
+<!--
+~ Exercise
+Try proving that if `x >= 3` then `factorial x >= 2*x`.
+~
+
+~ Exercise
+Try proving that if `x >= 4` then `factorial x > x*x`.
+~
+
+~ Exercise 
+Try proving that if `x >= 6` then `factorial x > x*x*x`.
+~
+Without learning a lot more about F\*, it's unlikely that you will
+succeed at that last exercise. Proving properties about non-linear
+arithmetic is quite difficult and Z3, as most other theorem provers, are
+not great at doing it unassisted.
+-->
+
+## Admit
+
+When constructing proofs it is often useful to assume parts of proofs,
+and focus on other parts. For instance, when doing case analysis we
+often want to know which cases are trivial and are automatically solved
+by F\*, and which ones need manual work. We can achieve this by admitting
+all but one case, if F\* can prove the lemma automatically, then the case
+is trivial. For this F\* provides an `admit` function, that can be used
+as follows:
+```
+    let rec factorial_is_monotone x =
+      match x with
+      | 3 -> ()
+      | _ -> admit()
+```
+Since type-checking this succeeds we know
+that the base case of the induction is trivially proved and need
+to focus our effort on the inductive case.
+
+## Automatic induction { #auto-ind }
+
+Many of these proofs by induction are quite boring. You simply do case
+analysis and call the induction hypothesis as needed. Surely, we should
+automate this for you---and we do, in many cases using an **experimental**
+_automatic induction_ feature. 
+
+Here's another proof of `factorial_is_monotone`:
+
+    let rec factorial_is_monotone n = using_induction_hyp factorial_is_monotone
+
+Calling `using_induction_hyp` with `factorial_is_monotone` as argument
+causes F\* to encode the induction hypothesis as a quantified logical
+formula and feed it to Z3, which is simple examples can take care of
+the rest.
+
+## Under the hood: `:bool` versus `:Type` { #sec-bool-versus-type }
+
+_You can probably skip this section on a first reading, if the title
+sounds mysterious to you. However, as you start to use quantified
+formulas in refinement types, you should make sure you understand this
+section._
+
+We mentioned earlier that a refinement type has the form `:x:t{phi(x)}`.
+In its primitive form, `phi` is in fact a type, a predicate on the value
+`x:t`. We allow you to use a boolean function in place of a type: under
+the covers, we implicitly coerce the boolean to a type, by adding the
+coercion `b2t (b:bool) : Type = (b == true)`. The type '`==`' is the type
+constructor for the equality predicate; it is different from '`=`', which
+is a boolean function comparing a pair of values. Additionally, '`==`' is
+heterogenous: you can speak about equality between any pair of values,
+regardless of their type. In contrast, '`=`' is homogenous.
+
+The propostional connectives, `:/\`, `:\/`, and `:~`, for conjunction,
+disjunction and negations are type constructors. We also include `:==>`
+and `:<==>` for single and bidirectional impliciation. In contrast,
+`:&&`, `:||`, and `:not` are boolean functions.
+
+Often, because of the implicit conversion from `:bool` to `:Type`, you
+can almost ignore the disctinction between the two. However, when you
+start to write refinement formulas with quantifiers, the distinction
+between the two will become apparent.
+
+Both the universal quantifier `forall`, and the existential quantifier
+`exists`, are only available at `:Type`. When you mix refinements that
+include boolean function and the quantifiers, you need to use the 
+propositional connectives. For example, the following formula
+is well-formed: 
+
+    canRead e /\ forall x. canWrite x ==> canRead x
+
+It is a shorthand for the following, more elaborate form:
+
+    b2t(canRead e) /\ forall x. b2t(canWrite x) ==> b2t(canRead x)
+
+On the other hand, the following formula is not well-formed; F\* will
+reject it:
+
+    canRead e && forall x. canWrite x ==> canRead x
+
+The reason is that the quantifier is a type, whereas the `:&&` expects a
+boolean. While a boolean can be coerced to a type, there is no coercion
+in the other direction.
+
+
+<!--
+module FirstProofs
+
+val factorial: nat -> Tot nat
+let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
+
+val factorial_is_positive: x:nat -> Tot (u:unit{factorial x > 0})
+let rec factorial_is_positive = function 
+  | 0 -> ()
+  | x -> factorial_is_positive (x - 1)
+
+val factorial_is_monotone: x:nat{x >= 2} -> Tot (u:unit{factorial x >= x})
+let rec factorial_is_monotone = function 
+  | 2 -> ()
+  | x -> factorial_is_monotone (x - 1)
+
+val factorial_is_doubling: x:nat{x >= 3} -> Tot (u:unit{factorial x >= 2 * x})
+let rec factorial_is_doubling = function 
+  | 3 -> ()
+  | x -> factorial_is_doubling (x - 1)
+
+val factorial_is_squaring: x:nat{x >= 4} -> Tot (u:unit{factorial x > x * x})
+let rec factorial_is_squaring = function
+  | 4 -> ()
+  | x -> factorial_is_squaring (x - 1)
+
+(* (\* This is getting to be a bit much for Z3 *\) *)
+(* val factorial_is_cubing: x:nat{x > 5} -> Tot (u:unit{factorial x >= x * x * x}) *)
+(* let rec factorial_is_cubing = function *)
+(*   | 6 -> () *)
+(*   | x -> factorial_is_cubing (x - 1) *)
+
+val fibonacci: nat -> Tot nat
+let rec fibonacci = function 
+  | 0
+  | 1 -> 1
+  | n -> fibonacci (n - 1) + fibonacci (n - 2)
+
+val fibonacci_is_monotone: n:nat -> Lemma (requires True) 
+                                          (ensures (fibonacci n >= n))
+                                          []
+let rec fibonacci_is_monotone n = if n > 1 then fibonacci_is_monotone (n - 1) else ()
+
+-->
+
+# Simple inductive types
+
+Here's the standard definition of (immutable) lists in F\*.
+
+    type list 'a = 
+      | Nil  : list 'a
+      | Cons : hd:'a -> tl:list 'a -> list 'a
+
+We note some important conventions for the constructors of a data type in F\*.
+
++ Constructor names must begin with a captial letter.
+
++ When not writing effects in constructor types,
+  the default effect on the result is `Tot`
+  (as opposed to function types in general).
+  So, when we write `Cons: 'a -> list 'a -> list 'a`,  F\* desugars it to
+  `Cons: 'a -> Tot (list 'a -> Tot (list 'a))`.
+  
++ Constructors can be curried. So, we usually define our inductive
+  types as above so that we write `Cons hd tl` (curried)
+  rather than `Cons(hd,tl)` (uncurried).
+
++ Constructors can be partially applied, so `Cons hd` is legal and has
+  type `:list 'a -> Tot (list 'a)` when `hd:'a`.
+  
+<!-- XXX -->
+  
+The `list` type is defined in F\*'s standard prelude and is available
+implicitly in all F\* programs. We provide special (but standard) syntax
+for the list constructors: 
+
+* `[]` is `Nil`
+* `[v1;...;vn]` is `Cons v1 ... (Cons vn Nil)`
+* `hd::tl` is `Cons hd tl`. 
+
+You can always just write out the constructors like `Nil` and `Cons`
+explicitly, if you find that useful (e.g., to partially apply `Cons`).
+
+<!--
+The prelude also defines the `option` type, shown below:
+
+```
+  type option (a:Type) =
+      | None : option a
+      | Some : v:a -> option a
+```
+-->
+
+## Proofs about basic functions on lists { #sec-basic-lists }
+
+The usual functions on lists are programmed in F\* just as in any other ML dialect. 
+Here is the `length` function:
+
+    val length: list 'a -> Tot nat
+    let rec length l = match l with
+      | [] -> 0
+      | _ :: tl -> 1 + length tl
+
+The type of `length` proves it is a total function on lists of `:'a`-typed
+values, returning a non-negative integer.
+
+<!--
+~Remark
+Like in ML, you could have written the type of `length` as
+`:list 'a -> Tot nat`. The 'ticked'-variable `:'a` is implicitly a type
+variable that is bound at the top-level of the enclosing function type
+~
+~CH
+Don't understand this comment. That's exactly what you already
+ wrote. Do you actually mean to say that this could also have been written as
+ `a:Type -> list a -> Tot nat`?
+~
+~BB
+I don't understand either, it is certainly wrong
+~
+-->
+
+
+~ Exercise
+Here's the `append` function that concatenates two lists. 
+~~ ExerciseFragment {exname=ex4a-append-intrinsic}
+let rec append l1 l2 = match l1 with
+  | [] -> l2
+  | hd :: tl -> hd :: append tl l2
+~~
+Give `append` a type that proves it always returns a list
+whose length is the sum of the lengths of its arguments.
+
+~~ AnswerFragment {exname=ex4a-append-intrinsic}
+    l1:list 'a -> l2:list 'a -> Tot (l:list 'a{length l = length l1 + length l2})
+~~
+~
+
+~ Exercise
+Give `append` the weak type below,
+then prove the same property as in the previous exercise using a lemma.
+~~ ExerciseFragment {exname=ex4b-append-extrinsic}
+val append:list 'a -> list 'a -> Tot (list 'a)
+~~
+~~ AnswerFragment {exname=ex4b-append-extrinsic}
+val append_len: l1:list 'a -> l2:list 'a 
+             -> Lemma (requires True)
+                      (ensures (length (append l1 l2) = length l1 + length l2)))
+let rec append_len l1 l2 = match l1 with 
+    | [] -> ()
+    | hd::tl -> append_len tl l2
+~~
+~
+
+~ Exercise
+Define a function `mem: x:'a -> l:list 'a -> Tot bool` that 
+decides whether `x` is present in the `l` or not, then prove it satisfies the
+following property:
+~~ ExerciseFragment {exname=ex4c-mem}
+val append_mem:  l1:list 'a -> l2:list 'a -> a:'a
+        -> Lemma (ensures (mem a (append l1 l2) <==>  mem a l1 || mem a l2))
+~~
+~~ AnswerFragment {exname=ex4c-mem}
+
+val mem: 'a -> list 'a -> Tot bool
+let rec mem a l = match l with
+  | [] -> false
+  | hd::tl -> hd=a || mem a tl
+
+val append_mem:  l1:list 'a -> l2:list 'a -> a:'a
+                  -> Lemma (ensures (mem a (append l1 l2) <==>  mem a l1 || mem a l2))
+let rec append_mem l1 l2 a = match l1 with
+  | [] -> ()
+  | hd::tl -> append_mem tl l2 a
+~~
+~
+
+
+## To type intrinsically, or to prove lemmas?
+
+As the previous exercises illustrate, you can prove properties either
+by enriching the type of a function or by writing a separate lemma
+about it---we call these the 'intrinsic' and 'extrinsic' styles,
+respectively. Which style to prefer is a matter of taste and
+convenience: generally useful properties are often good candidates for
+intrinsic specification (e.g, that `length` returns a `nat`); more
+specific properties are better stated and proven as lemmas. However,
+in some cases, as in the following example, it may be impossible to
+prove a property of a function directly in its type---you must resort
+to a lemma.
+
+    val reverse: list 'a -> Tot (list 'a)
+    let rec reverse = function 
+      | [] -> []
+      | hd::tl -> append (reverse tl) [hd]
+
+Let's try proving that reversing a list twice is the identity function.
+It's possible to 
+*specify* this property in the type of `reverse` using a refinement type.
+
+    val reverse: f:(list 'a -> Tot (list 'a)){forall l. l = f (f l)}
+
+~CH
+This signature doesn't work:
+append.fst(21,0-27,0) : Error
+Expected a term of type "f:(_:(list 'a) -> Tot (list 'a)){(forall (l:(list 'a)). ((l = (f (f l))) == true))}";
+got a function "(fun _682:<UNKNOWN> -> (match _682 with (Nil )  -> Nil
+	(Cons hd tl)  -> (append (reverse tl) (Cons hd Nil))))" (More arguments than annotated type (Typ_refine))
+~
+
+However, F\* refuses to accept this as a valid type for `reverse`:
+proving this property requires two separate induction steps, neither of
+which F\* can perform automatically.
+
+Instead, one can use two lemmas to prove the property we care about. Here
+it is:
+
+    let snoc l h = append l [h]
+    
+    val snoc_cons: l:list 'a -> h:'a -> Lemma (reverse (snoc l h) = h::reverse l)
+    let rec snoc_cons l h = match l with
+      | [] -> ()
+      | hd::tl -> snoc_cons tl h 
+    
+    val rev_involutive: l:list 'a -> Lemma (reverse (reverse l) = l)
+    let rec rev_involutive l = match l with
+      | [] -> ()
+      | hd::tl -> rev_involutive tl; snoc_cons (reverse tl) hd
+
+In the `Cons` case of `rev_involutive` we are explicitly applying not just
+the induction hypothesis but also the `snoc_cons` lemma we proved above.
+In the `Cons` case of `rev_involutive` we are explicitly applying not just
+the induction hypothesis but also the `snoc_cons` lemma we proved above.
+
+~Exercise
+Prove that reverse is injective, i.e.,
+~~ ExerciseFragment {exname=ex4d-reverse}
+val rev_injective_1: l1:list 'a -> l2:list 'a 
+                -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
+~~
+~~ Answer
+Perhaps you did it like this:
+~~~ SolutionFragment {exname=ex4d-reverse}
+    val snoc_injective: l1:list 'a -> h1:'a -> l2:list 'a -> h2:'a 
+                     -> Lemma (snoc l1 h1 = snoc l2 h2 ==> l1 = l2 && h1 = h2)
+    let rec snoc_injective l1 h1 l2 h2 = match l1, l2 with
+      | _::tl1, _::tl2 -> snoc_injective tl1 h1 tl2 h2
+      | _ -> ()
+
+    val rev_injective_1: l1:list 'a -> l2:list 'a 
+                    -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
+    let rec rev_injective_1 l1 l2 = match (l1, l2) with
+      | hd1::tl1, hd2::tl2 ->
+        rev_injective_1 tl1 tl2;
+        snoc_injective (reverse tl1) hd1 (reverse tl2) hd2
+      | _ -> ()
+~~~
+That's quite a tedious proof, isn't it. Here's a simpler proof.
+~~~ SolutionFragment {exname=ex4d-reverse}
+    val rev_injective_2: l1:list 'a -> l2:list 'a 
+                     -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
+    let rev_injective_2 l1 l2 = rev_involutive l1; rev_involutive l2
+~~~
+The `rev_injective_2` proof is based on the idea that every involutive
+function is injective. We've already proven that `reverse` is
+involutive. So, we invoke our lemma, once for `l1` and once for `l2`.
+This gives to the SMT solver the information that `reverse (reverse
+l1) = l1` and `reverse (reverse l2) = l2`, which suffices to complete
+the proof. As usual, when structuring proofs, lemmas are your friends!
+~~
+~
+
+## Higher-order functions on lists
+
+### Mapping
+
+We can write higher-order functions on lists,
+i.e., functions taking other functions as arguments.
+Here is the familiar `map`:
+
+      let rec map f l = match l with
+        | [] -> []
+        | hd::tl -> f hd :: map f tl
+
+It takes a function `f` and a list `l` and it applies `f` to each element in `l`
+producing a new list. More precisely `map f [a1; ...; a_n]` produces the list
+`[f a1; ...; f a_n]`.
+
+As usual, without any specification, F\* will infer for `map` type
+`:('a -> 'b) -> list 'a -> list 'b`. Written explicitly, the type of
+`map` is `:('a -> ML 'b) -> Tot (list 'a -> ML (list 'b))`.  Notice
+that the type of `f` also defaults to a function with `:ML` effect.
+
+By adding a type annotation we can give a _different_ type to `map`:
+
+    val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
+
+This type is neither a subtype nor a supertype of the type F\*
+inferred on its own. 
+
+>**No parametric polymorphism on effects**: You might hope to give
+`map` a very general type, one that accepts a function with any effect
+`E` and returns a function with that same effect. This would require a
+kind of effect polymorphism, which *F\* does not support*. This may
+lead to some code duplication. We plan to address this by allowing you
+to write more than one type for a value, an ad hoc overloading
+mechanism.
+
+We can use assertions to test expected properties of programs. For example:
+
+    assert (map (fun x -> x + 1) [0;1;2] = [1;2;3]);
+
+~CH
+Again, this is not real code
+~
+~NS
+We are showing code snippets throughout, not complete programs. So, I don't get it ... 
+are you upset because this line is not a valid top-level expression?
+~
+
+### Finding
+
+~ Exercise
+
+We define a `find` function that given a boolean function `f` and a list
+`l` returns the first element in `l` for which `f` holds. If no element
+is found `find` returns `None`; for this we use the usual `:option` type (shown
+below and available in F\*'s standard prelude).
+
+~~ ExerciseFragment {exname=ex4e-find}
+    type option 'a =
+       | None : option 'a
+       | Some : 'a -> option 'a
+
+    let rec find f l = match l with 
+      | [] -> None
+      | hd::tl -> if f hd then Some hd else find f tl
+~~
+
+Prove that if `find` returns `Some x` then `f x = true`. 
+Is it better to do this intrinsically or extrinsically? Do it both ways.
+
+~~ AnswerFragment {exname=ex4e-find}
+[INCLUDE=code/solutions/ex4e-find.fst]
+~~
+~
+
+~Exercise
+Define the `fold_left` function on lists, so that
+`fold_left f a [b1; ...; bn]` computes `f (... (f (f a b1) b2) ...) bn`.
+Prove that `(fold_left Cons [] l = reverse l)`.
+(The proof is a level harder from what we've done so far) 
+~~ ExerciseFragment {exname=ex4f-fold-left}
+val fold_left_cons_is_reverse: l:list 'a -> l':list 'a ->
+      Lemma (fold_left Cons l l' = append (reverse l) l')
+~~
+~~ AnswerFragment {exname=ex4f-fold-left}
+[INCLUDE=code/solutions/ex4f-fold-left.fst:FoldLeftInteresting]
+~~
+~
+
+<!-- too many similar exercises
+~Exercise
+Define the `fold_right` function on lists, so that
+`fold_right f [a1; ...; an] b` computes `f a1 (f a2 (... (f an b) ...))`.
+Prove that `(fold_right Cons [] l = l)`.
+~
+-->
+
+## Implicitly defined functions on inductive types
+
+For each definition of an inductive type, F\* automatically introduces a
+number of utility functions: for each constructor, we have a
+*discriminator*; and for each argument of each constructor, we have a
+*projector*. We describe these next, using the list type (repeated below)
+as a running example.
+
+    type list 'a = 
+      | Nil  : list 'a
+      | Cons : hd:'a -> tl:list 'a -> list 'a
+
+### Discriminators
+
+A discriminator is a boolean-valued total function that tests whether a
+term is the application of a particular constructor. For the `list` type,
+we have two discriminators:
+
+    val is_Nil: list 'a -> Tot bool
+    let is_Nil = function [] -> true | _ -> false
+    
+    val is_Cons: list 'a -> Tot bool
+    let is_Cons = function _::_-> true | _ -> false
+
+### Projectors
+
+From the type of the `Cons` constructor, F\* generates the following
+signatures:
+
+    val Cons.hd : l:list 'a{is_Cons l} -> Tot 'a
+    val Cons.tl : l:list 'a{is_Cons l} -> Tot (list 'a)
+
+(here `Cons.hd` is a qualified name)
+
+This indicates why the names `hd` and `tl` in the types of `Cons` are
+significant: they correspond to the names of the auto-generated
+projectors. If you don't name the arguments of a data constructor, F\*
+will generate names automatically (although these names are derived from
+the position of the arguments and their form is unspecified; so, it's
+good practice to name the arguments yourself).
+
+<!--
+~ Remark
+F\* also generates projectors corresponding to the type arguments of each
+constructor. We show them below for completeness, although you may have
+trouble understanding what these signatures mean until you've read a bit
+more about higher kinds in Section [#sec-indexed-types]. Besides, for the
+list type, these type projectors are not particularly useful.
+
+    type Nil.a : a:Type -> l:list a{is_Nil l} -> Type
+    type Cons.a : a:Type -> l:list a{is_Cons l} -> Type
+
+The projectors for more complex inductive types have more complex
+signatures---we will see this in the section on indexed types
+([#sec-indexed-types]).
+~
+-->
+
+~Exercise
+Write functions (call them `hd` and `tl`) whose types match
+those of `Cons.hd` and `Cons.tl`.
+~~ ExerciseFragment {exname=ex4g-hd-tl}
+[INCLUDE=code/exercises/ex4g-hd-tl.fst]
+~~
+~~Answer
+~~~ SolutionFragment {exname=ex4g-hd-tl}
+val hd : l:list 'a{is_Cons l} -> Tot 'a
+let hd l =
+  match l with
+  | h :: t -> h
+
+val tl : l:list 'a{is_Cons l} -> Tot (list 'a)
+let tl l =
+  match l with
+  | h :: t -> t
+~~~
+~~
+~
+
+~CH
+The Next exercise seems easy, why does it come up so late?
+Anyway, it's too late to switch later now, we can do such things
+when we have an automatic way ;)
+~
+
+~Exercise
+Write a function that returns the `n`th element of a list. Give a
+type that ensures it is total.
+~~ ExerciseFragment {exname=ex4h-nth}
+(* Write your code here *)
+~~
+~~ AnswerFragment {exname=ex4h-nth}
+val nth : l:list 'a -> n:nat{n < length l} -> 'a
+let rec nth l n =
+  match l with
+  | h :: t -> if n = 0 then h else nth t (n-1)
+~~
+~
+
+<!--
+## Exhaustiveness of pattern matching
+
+Whenever you pattern match a term (to analyze it by cases), F\* insists
+on proving that you have handled all the cases. We call this the
+`exhaustiveness check`, and unlike in F\# or Ocaml, it is implemented
+semantically.
+-->
+
+## Tuples and records
+
+F\* provides syntactic sugar for tuples. Under the covers, tuples are
+just inductive types: tuples of size 2--8 are defined in the standard
+prelude. (You can add to this, if you like.) Here's the definition of
+pairs from the prelude:
+
+    type tuple2 'a 'b =
+      | MkTuple2: _1:'a -> _2:'b -> tuple2 'a 'b
+
+You can write `(5, 7)` instead of `MkTuple2 5 7`, and give it the type
+`(int * int)` as a shorthand for `tuple2 int int`.
+
+This notation generalizes to tuples of arbitrary size, so long as the
+corresponding `tupleN` data type is defined in the prelude.
+
+F\* also provides syntax for records, although internally records (like
+tuples) boil down to data types with a single constructor. Here's an
+example:
+
+
+    type triple 'a 'b 'c = {fst:'a; snd:'b; third:'c}
+    let f x = x.fst + x.snd + x.third
+
+F\* accepts this program, giving `f` the type `:(triple int int int -> Tot int)`.
+
+This is equivalent to the following, more verbose, source program: 
+
+
+    type triple 'a 'b 'c = 
+      | MkTriple: fst:'a -> snd:'b -> third:'c -> triple 'a 'b 'c
+      
+    let f x = MkTriple.fst x + MkTriple.snd x + MkTriple.third x 
+
+# Proving termination { #sec-termination }
+
+Every total function is proved terminating in F\*. Termination proofs in
+F\* are based entirely on semantic criteria, not syntactic conditions. We
+quickly sketch the basic structure of these termination proofs---you'll
+need to understand a bit of this in order to write more interesting
+programs.
+
+## A well-founded partial order on all terms
+
+The basic idea behind all termination proofs is to define a measure, some
+function on the program's state, and to show that this measure strictly
+decreases as the program reduces. For this to guarantee termination, we
+need the measure to be a function into a set equipped with a well-founded
+partial order. An relation `R` is a well-founded partial order on a set
+`S` if, and only if, `R` is a partial order on `S` and there are no
+infinite descending chains in `S` related by `R`. For example, taking `S`
+to be `nat`, the set of natural numbers, the integer ordering `<` is a
+well-founded partial order (in fact, it is a total order). Since the
+measure strictly decreases each time the program takes a step, and there
+are no infinite descending chains, this guarantees that the program eventually 
+can take no more steps, i.e., it terminates.
+
+The type system of F\* is parameterized by the choice of a well-founded
+partial order on terms. We call this the *precedes* relation, a binary
+relation on F\* terms. We write `e1 << e2` when `e1` precedes `e2`. At
+each recursive call, we check that the arguments of the call precede the
+formal parameters of the previous call according to this relation: thus
+ensuring that the no infinitely deep recursion is possible.
+
+
+## The precedes relation: default axioms
+
+At the moment, by default, F\* instantiates the *precedes* relation to
+include the following properties (i.e., it is the union of the three
+relations below):
+
+1. **The ordering on integers**: Given `i, j : nat`,
+   we have `i << j <==> i < j`.
+   
+   _Note_: Negative integers are not related by the `<<` relation,
+   which is only a _partial_ order.
+
+2. **The subterm ordering on inductive types**: For any pure term `e` of
+    an inductive type `T`, if `v=D e1 ... en` we include `e_i << e`, for
+    all `i`. That is, the sub-terms of a well-typed constructed term
+    precede the constructed term. (The exception to this rule is if `T`
+    is an instance of `lexPair`).
+~CH
+I guess there is also an exception for types with negative occurrences, right?
+~
+    
+3. **The lexicographic ordering on lex_t**, as described below.
+
+
+### Lexically ordered pairs
+
+Take a look at the classic function, `ackermann`:
+
+    val ackermann: m:nat -> n:nat -> Tot nat
+    let rec ackermann m n =
+      if m=0 then n + 1
+      else if n = 0 then ackermann (m - 1) 1
+      else ackermann (m - 1) (ackermann m (n - 1))
+
+Why does it terminate? At each recursive call, it is *not* the case that
+all the arguments are strictly less than the arguments at the previous
+call, e.g, in the second branch, `n` increases from `0` to `1`. However,
+this function does in fact terminate, and F\* proves that it does.
+
+The reason is that although each argument does not decrease in every
+recursive call, when taken together, the ordered pair of arguments `m, n`
+does decrease according to a *lexical ordering* on pairs.
+
+In its standard prelude, F\* defines the following inductive type:
+
+    type lex_t = 
+      | LexCons: 'a -> lex_t -> lex_t
+      | LexTop : lex_t 'a 'b
+
+
+**The lexicographic ordering on `lex_t`** is the following:
+
+* Given well-typed pure terms `v1, v2, v1', v2'`,
+    `LexCons v1 v2 << LexCons v1' v2'`, if and only if, either
+    `v1 << v1'`; or `v1=v1'` and `v2 << v2'`.
+
+    
+* If `v:lex_t` and `v <> LexTop`, then `v << LexTop`.
+
+**We include the following syntactic sugar**: 
+
+>>`%[v1;...;vn]` is shorthand for `(LexCons v1 ... (LexCons vn LexTop))`
+
+## A termination proof in detail
+
+Suppose we are defining a function by recursion, using the following form:
+
+
+    val f: y1:t1 -> .. -> yn:tn -> Tot t
+    let rec f x1 .. xn = e
+
+Usually, in ML, when type-checking `e`, the recursively bound function
+`f` is available for use in `e` at the type
+`y1:t1 -> .. -> yn:tn -> Tot t`, exactly the type written by the
+programmer. This type is, however, not sufficient to guarantee that an
+invocation of `f` does not trigger an infinite chain of recursive calls.
+
+To prove termination (i.e., to rule out infinitely deep recursive calls), F\* 
+uses a different rule for type-checking recursive functions. The recursively bound name `f` 
+is available for use in `e`, but only at the more restrictive type shown below: 
+
+       y1:t1
+    -> ...
+    -> yn:tn{%[y1;...;yn] << %[x1;...;xn]}
+    -> Tot t
+
+That is, by default, F\* requires the function's parameters to decrease
+according to the lexical ordering of the parameters (in the order in
+which they appear, excluding all function-typed parameters). (There is a
+way to override this default---see Section [#sec-decreases-clause].)
+
+Let's see how this works on a couple of examples.
+
+### Ackermann
+
+When type-checking `ackermann`, F\* includes the recursively bound function 
+at the following type for use in the body:
+
+    ackermann: m':nat
+            -> n':nat{%[m';n'] << %[m;n]}
+            -> Tot nat
+
+At each of three recursive calls to `ackermann`, we need to prove, not
+only that the arguments are non-negative, but that they precede the
+previous arguments according to the refinement formula above.
+
+    1.  let rec ackermann m n =
+    2.    if m=0 then n + 1
+    3.    else if n = 0 then ackermann (m - 1) 1
+    4.    else ackermann (m - 1) 
+    5.                   (ackermann m (n - 1))
+
+* For the call at line 3, we have to show that `%[(m - 1);1] << %[m;n]`.
+This works out, since `m - 1 << m` according to the integer ordering, and
+we can diregard the rest of the terms.
+
+* The call at line 4 verifies for the same reason---the first argument
+decreases.
+
+* For the call at line 5, we have to show that `%[m; (n-1)] << %[m; n]`.
+Here, the first elements of each pair are equal, so we look at the second
+element, and there `n - 1 << n`, and we're done.
+
+### Decreases clauses {#sec-decreases-clause}
+
+Of course, sometimes you will need to override the default measure for 
+recursive functions. If we just swap the arguments of the `ackermann`
+function the default measure no longer works and we need to add a
+`decreases` clause explicitly choosing a lexicographic ordering that
+first compares `m` and then `n`:
+
+    val ackermann_swap: n:nat -> m:nat -> Tot nat (decreases %[m;n])
+    let rec ackermann_swap n m =
+       if m=0 then n + 1
+       else if n = 0 then ackermann_swap 1 (m - 1)
+       else ackermann_swap (ackermann_swap (n - 1) m)
+                           (m - 1)
+
+The optional `decreases` clause is a second argument to the `Tot` effect.
+It is, in general, a total expression over the arguments of the function.
+
+<!-- this is messed up because of mult_assoc
+~Exercise 
+Program a tail-recursive version of `factorial` and prove it
+total. Also, prove that it is functionally equivalent to `factorial`.
+
+~~Answer
+    val fact: a:nat -> n:nat -> Tot nat (decreases n)
+    let rec fact a n =
+      if n = 0 then a
+      else fact (a * n) (n - 1)
+
+    val fact_is_ok: a:nat 
+                 -> n:nat 
+                 -> Lemma (ensures (fact a n = a * factorial n)) 
+                          (decreases n)
+    let rec fact_is_ok a = function
+      | 0 -> ()
+      | n -> fact_is_ok (a * n) (n - 1)
+~~
+~
+-->
+
+~Exercise
+Here is a more efficient (tail-recursive) variant of the list
+reverse function.
+~~ ExerciseFragment {exname=ex5a-rev}
+val rev : l1:list 'a -> l2:list 'a -> Tot (list 'a) (decreases l2)
+let rec rev l1 l2 =
+  match l2 with
+  | []     -> l1
+  | hd::tl -> rev (hd::l1) tl
+~~
+Prove the following lemma showing the correctness of this
+efficient implementation with respect to the previous simple
+implementation:
+~~ ExerciseFragment {exname=ex5a-rev}
+val rev_is_ok : l:list 'a -> Lemma (rev [] l = reverse l)
+~~
+~~ AnswerFragment {exname=ex5a-rev}
+val append_assoc : xs:list 'a -> ys:list 'a -> zs:list 'a -> Lemma
+      (ensures (append (append xs ys) zs = append xs (append ys zs)))
+let rec append_assoc xs ys zs =
+  match xs with
+  | [] -> ()
+  | x::xs' -> append_assoc xs' ys zs
+
+val rev_is_ok_aux : l1:list 'a -> l2:list 'a -> Lemma
+      (ensures (rev l1 l2 = append (reverse l2) l1)) (decreases l2)
+let rec rev_is_ok_aux l1 l2 =
+  match l2 with
+  | [] -> ()
+  | hd::tl  -> rev_is_ok_aux (hd::l1) tl; append_assoc (reverse tl) [hd] l1
+
+val append_nil : xs:list 'a -> Lemma
+      (ensures (append xs [] = xs))
+let rec append_nil xs =
+  match xs with
+  | [] -> ()
+  | _::tl  -> append_nil tl
+
+val rev_is_ok : l:list 'a -> Lemma (rev [] l = reverse l)
+let rev_is_ok l = rev_is_ok_aux [] l; append_nil (reverse l)
+~~
+~
+
+~Exercise
+(**Challenge!**) Here is a more efficient (tail-recursive)
+variant of the Fibonacci function.
+~~ ExerciseFragment {exname=ex5b-fib}
+val fib : nat -> nat -> n:nat -> Tot nat (decreases n)
+let rec fib a b n =
+  match n with
+  | 0 -> a
+  | _ -> fib b (a+b) (n-1)
+~~
+Prove the following lemma showing the correctness of this
+efficient implementation with respect to the previous simple
+implementation:
+~~ ExerciseFragment {exname=ex5b-fib}
+val fib_is_ok : n:nat -> Lemma (fib 1 1 n = fibonacci n)
+~~
+~~ AnswerFragment {exname=ex5b-fib}
+val fib_is_ok_aux : i:nat -> n:nat{i<=n} ->
+      Tot (u:unit{fib (fibonacci i) (fibonacci (i+1)) (n-i) = fibonacci n})
+      (decreases (n-i))
+let rec fib_is_ok_aux i n =
+  if i=n then ()
+  else fib_is_ok_aux (i+1) n
+
+val fib_is_ok : n:nat -> Lemma (fib 1 1 n = fibonacci n)
+let fib_is_ok n = fib_is_ok_aux 0 n
+~~
+~
+
+# Putting the pieces together
+
+We now look at two complete programs that exercise the various
+features we have learned about so far. In each case, there are some
+exercises to modify or generalize the programs.
+
+## Quicksort on lists
+
+A canonical example for program verification is proving various
+sorting algorithms correct. 
+
+We'll start with lists of integers and describe some properties that
+we'd like to hold true of a sorting algorithm, starting with a
+function `sorted`, which decides when a list of integers is sorted in
+increasing order.
+
+```
+  val sorted: list int -> Tot bool
+  let rec sorted l = match l with
+      | [] -> true
+      | [x] -> true
+      | x::y::xs -> x <= y && sorted (y::xs)
+```
+
+Given a sorting algorithm `sort`, we would like to prove the following
+property, where `mem` is the list membership function from the earlier
+exercise on lists (Section [#sec-basic-lists]).
+
+    sorted (sort l) /\ forall i. mem i l <==> mem i (sort l)
+
+### Implementing Quicksort
+
+Here's a simple implementation of the quicksort algorithm. It always
+picks the first element of the list as the pivot; partitions the rest
+of the list into those elements greater than or equal to the the
+pivot, and the rest; recursive sorts the partitions; and slots the
+pivot in the middle before returning.
+
+    let rec sort l = match l with
+      | [] -> []
+      | pivot::tl -> 
+        let hi, lo  = partition (fun x -> pivot <= x) tl in 
+        sort (append lo (pivot::sort hi))
+
+
+~Exercise
+Write the partition function and prove it total.
+~~ExerciseFragment {exname=ex6a-partition}
+val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
+~~
+~~Answer
+
+The following definition is included in F\*'s list library. 
+~~~ SolutionFragment {exname=ex6a-partition}
+[INCLUDE=code/solutions/ex6a-partition.fst:Partition]
+~~~
+
+<!-- ~~~ SolutionFragment {exname=ex6a-partition} -->
+<!-- val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a) -->
+<!-- let rec partition f = function  -->
+<!--   | [] -> [], [] -->
+<!--   | hd::tl ->  -->
+<!--     let l1, l2 = partition f tl in -->
+<!--     if f hd  -->
+<!--     then hd::l1, l2 -->
+<!--     else l1, hd::l2 -->
+<!-- ~~~ -->
+~~
+~
+
+### Specifying `sort` 
+
+
+We'll verify `sort` intrinsically, although we'll have to use some
+additional lemmas. Here's a first-cut at a specification. Try asking
+F\* to prove it.
+
+    val sort_0: l:list int -> Tot (m:list int{sorted m /\  forall i. mem i l <==> mem i m})
+
+~CH
+Is this an exercise or not? :)
+~
+
+Unsurprisingly, it fails, on several counts: 
+
+1. We fail to prove the function total. On what grounds can we claim
+   that each recursive call to `sort` is on a smaller argument?
+   Intuitively, at each recursive call, the length of the list passed
+   as an argument is strictly smaller, since it is a partition of
+   `tl`. To express this, we'll need to add a decreases clause.
+
+
+2. We fail to prove both the sortedness property and the membership
+   property---we need some lemmas about `partition` and also about the
+   `sorted` function.
+
+Let's try again: 
+
+    val sort: l:list int -> Tot (m:list int{sorted m /\ forall i. mem i l <==> mem i m})
+                                (decreases (length l))
+
+And here are a couple of lemmas about `partition` and `sorted`:
+
+
+     val partition_lemma: f:('a -> Tot bool)
+                        -> l:list 'a
+                        -> Lemma (requires True)
+                                 (ensures ((length (fst (partition f l)) + length (snd (partition f l)) = length l
+                                      /\ (forall x. mem x (fst (partition f l)) ==> f x)
+                                      /\ (forall x. mem x (snd (partition f l)) ==> not (f x))
+                                      /\ (forall x. mem x l = (mem x (fst (partition f l)) || mem x (snd (partition f l)))))))
+     let rec partition_lemma f l = match l with 
+       | [] -> ()
+       | hd::tl -> partition_lemma f tl
+
+~Remark
+The repeated sub-terms like `fst (partition f l)` in specifications
+call for a `let`-binding construct in types. We will see how
+to do that in a later section---once we have introduced some additional
+machinery.
+~
+
+     val sorted_concat_lemma: l1:list int{sorted l1}
+                           -> l2:list int{sorted l2}
+                           -> pivot:int
+                           -> Lemma (requires ((forall y. mem y l1 ==> not (pivot <= y))
+                                            /\ (forall y. mem y l2 ==> pivot <= y)))
+                                    (ensures (sorted (append l1 (pivot::l2))))
+     let rec sorted_concat_lemma l1 l2 pivot = match l1 with  
+      | [] -> ()
+      | hd::tl -> sorted_concat_lemma tl l2 pivot
+
+Finally, we also need a universally quantified variant of the
+`append_mem` lemma presented in a previous exercise:
+
+     val append_mem:  l1:list 'a
+                   -> l2:list 'a
+                   -> Lemma (requires True)
+                            (ensures (forall a. mem a (append l1 l2) = (mem a l1 || mem a l2)))
+     let rec append_mem l1 l2 = match l1 with
+       | [] -> ()
+       | hd::tl -> append_mem tl l2
+
+
+Armed with these lemmas, let's return to our implementation of
+quicksort. Unfortunately, with the lemmas as they are, we still can't
+prove our original implementation of quicksort correct. As we saw with
+our proofs of `rev_injective` (Section [#sec-basic-lists]), we need to
+explicilty invoke our lemmas in order to use their properties. We'll
+be able to do better in a minute, but lets see how to modify `sort` by
+calling the lemmas to make the proof go through.
+
+    let cmp i j = i <= j 
+    val sort_tweaked: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l = mem i m)})
+                                        (decreases (length l))
+    let rec sort_tweaked l = match l with
+      | [] -> []
+      | pivot::tl -> 
+        let hi', lo' = partition (cmp pivot) tl in 
+        partition_lemma (cmp pivot) tl; 
+        let hi = sort_tweaked hi' in
+        let lo = sort_tweaked lo' in
+        append_mem lo (pivot::hi);
+        sorted_concat_lemma lo hi pivot;
+        append lo (pivot::hi)
+
+That works, but it's pretty ugly. Not only did we have to pollute our
+implementation with calls to the lemmas, in order to make those calls,
+we had to further rewrite our ccode so that we could bind names for
+the arguments to those lemmas. We can do much better. 
+
+
+### SMT Lemmas: Bridging the gap between intrinsic and extrinsic proofs
+
+If only we had given `partition` and `sorted` richer intrinsic types,
+types that captured the properties that we proved using lemmas, we
+wouldn't have had to pollute out implementation of quicksort. This is
+a significant advantage of using the intrinsic proof style---every
+call of a function like `partition (fun x -> pivot <= x) tl`
+immediately carries all the properties that were proven intrinsically
+about the function. 
+
+However, polluting the type of a general-purpose function with a very
+application-specific type would also be awful. Consider enriching the
+type of `sorted` with the property proven by
+`sorted_concat_lemma`. The lemma is highly specialized for the
+quicksort algorithm, whereas `sorted` is a nice, general specification
+of sortedness that would work for insertion sort or merge sort, just
+as well. Polluting its type is a non-starter. So, it seems we are
+caught in a bind.
+
+Wouldn't it be nice if there were some way to retroactively associate
+a property provern about a function `f` by a lemma directly with `f`,
+so that every application `f x` immediately carries the lemma
+properties? F\* provides exactly such a mechanism, which provides a
+way to bridge the gap between extrinsic and intrinsic proofs.
+
+Let's say we wrote the type of `partition_lemma` as below---the only
+difference is in the very last line, the addition of `[SMTPat
+(partition f l)]`. That line instructs F\* and the SMT solver to
+associate with every occurrence of the term `partition f l` the
+property proven by the lemma.
+
+    val partition_lemma: f:('a -> Tot bool)
+                      -> l:list 'a
+                      -> Lemma (requires True)
+                               (ensures ((length (fst (partition f l)) + length (snd (partition f l)) = length l
+                                    /\ (forall x. mem x (fst (partition f l)) ==> f x)
+                                    /\ (forall x. mem x (snd (partition f l)) ==> not (f x))
+                                    /\ (forall x. mem x l = (mem x (fst (partition f l)) || mem x (snd (partition f l)))))))
+                         [SMTPat (partition f l)]
+
+Likewise, here's a revised type for `sorted_concat_lemma`. This time,
+we instruct F\* and the SMT solver to associate the lemma property
+only with very specific terms: just those that have the shape 
+`sorted (append 11 (pivot::l2))`. The more specific a pattern you can provide, 
+the more discriminating the SMT solver will be in applying lemmas, 
+keeping your verification times acceptable. 
+
+    val sorted_concat_lemma: l1:list int{sorted l1}
+                          -> l2:list int{sorted l2}
+                          -> pivot:int
+                          -> Lemma (requires ((forall y. mem y l1 ==> not (pivot <= y))
+                                           /\ (forall y. mem y l2 ==> pivot <= y)))
+                                   (ensures (sorted (append l1 (pivot::l2))))
+                             [SMTPat (sorted (append l1 (pivot::l2)))]
+
+Finally, we also revise the type for `append_mem` in the same way:
+
+    val append_mem:  l1:list 'a
+                  -> l2:list 'a
+                  -> Lemma (requires True)
+                           (ensures (forall a. mem a (append l1 l2) = (mem a l1 || mem a l2)))
+                           [SMTPat (append l1 l2)]
+    let rec append_mem l1 l2 = match l1 with
+      | [] -> ()
+      | hd::tl -> append_mem tl l2
+
+
+~Remark 
+ Use `SMTPat` with care! If you specify a bad pattern, you will get
+ very unpredictable performance from the verification engine. To
+ understand the details behind `SMTPat`, you should read up a bit on
+ patterns (aka triggers) for quantifiers in SMT solvers.
+
+~
+
+With these revised signatures, we can write `sort` just as we
+originally did, and give it the type we want. The SMT solver implicitly
+derives the properties it needs from the lemmas that we have provided.
+
+    let cmp i j = i <= j
+    val sort: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l = mem i m)})
+                                (decreases (length l))
+    let rec sort l = match l with
+      | [] -> []
+      | pivot::tl ->
+        let hi, lo = partition (cmp pivot) tl in
+        append (sort lo) (pivot::sort hi)
+
+
+### Exercises
+
+~CH
+New solution files don't yet compile.
+~
+
+~CK
+Now solved.
+~
+
+~CH
+Exercise files still missing.
+~
+
+~CK
+I do not write an exercise file Exercises 6c and 6d since it is exactly
+the same as for Exercide 6b, and would thus duplicate code.
+~
+
+~Exercise 
+Starting from this implementation (given below), generalize `sort` so
+that it works on lists with an arbitrary element type, instead of just
+lists of integers. Prove it correct.
+~~ ExerciseFragment {exname=ex6b-sort-poly}
+(* Start from the code in the "Load in editor" link *)
+~~
+
+~~ AnswerFragment {exname=ex6b-sort-poly}
+[INCLUDE=code/solutions/ex6b-sort-poly.fst]
+~~
+~
+
+~Exercise {exname=ex6c-break-sort-spec}
+Our specification for `sort` is incomplete. Why? Can you write a
+variation of `sort` that has the same specification as the one above,
+but discards some elements of the list? 
+~~ ExerciseFragment {exname=ex6b-sort-poly}
+(* Start from the code in the "Load in editor" link *)
+~~
+
+~~ Answer
+The specification does not ensure that the resulting list is a
+permutation of the initial list: it could discard or repeat some
+elements.
+~~~ SolutionFragment {exname=ex6c-break-sort-spec}
+[INCLUDE=code/solutions/ex6c-break-sort-spec.fst]
+~~~
+~~
+~
+
+~ Exercise 
+Fix the specification to ensure that `sort` cannot discard any
+elements in the list. Prove that `sort` meets the specification.
+~~ ExerciseFragment {exname=ex6b-sort-poly}
+(* Start from either the problem or the solution of exercise 6b *)
+~~
+~~ AnswerFragment {exname=ex6d-no-discard}
+[INCLUDE=code/solutions/ex6d-no-discard.fst]
+~~
+~
+
+~ Exercise
+Implement insertion sort and prove the same properties.
+~~ ExerciseFragment {exname=ex6e-insertion-sort}
+val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x m)})
+~~
+~~ AnswerFragment {exname=ex6e-insertion-sort}
+[INCLUDE=code/solutions/ex6e-insertion-sort.fst]
+~~
+~
+
+
+# Case study: simply-typed lambda-calculus
+
+<!-- (CH: Any way I could have imported the exising code here without duplicating it? -->
+<!--   Without a way to do this maintaining this document and keeping it consistent -->
+<!--   will be a nightmare.) -->
+
+[sf-stlc]: http://www.cis.upenn.edu/~bcpierce/sf/current/Stlc.html
+[sf-stlc-prop]: http://www.cis.upenn.edu/~bcpierce/sf/current/StlcProp.html
+
+We now look at a larger case study: proving the soundness of a type-checker
+for the simply-typed $\lambda$-calculus (STLC). If you're not familiar with
+STLC, you can have a look at the [Software Foundations book][sf-stlc] for
+a gentle introduction given by the textual explanations (you can ignore
+the Coq parts there). The formalization and proof here closely follows
+the one in [Software Foundations][sf-stlc-prop]. Our proofs are, however,
+shorter and much more readable than Coq proofs.
+
+## Syntax
+
+We represent STLC types by the F* inductive datatype `ty`.
+```
+type ty =
+  | TBool  : ty
+  | TArrow : ty -> ty -> ty
+```
+We consider Booleans as the only base type (`TBool`).
+Function types are represented by the `TArrow` constructor taking two
+type arguments. For instance we write `TArrow TBool TBool` for the type
+of functions taking a Boolean argument and returning a Boolean result.
+This would be written as `bool -> bool` in F* syntax, and
+$\mathsf{bool} \to \mathsf{bool}$ in paper notation.
+
+We represent the expressions of STLC by the datatype `exp`. 
+```
+type exp =
+  | EVar   : int -> exp
+  | EApp   : exp -> exp -> exp
+  | EAbs   : int -> ty -> exp -> exp
+  | ETrue  : exp
+  | EFalse : exp
+  | EIf    : exp -> exp -> exp -> exp
+```
+Variables are represented as integer "names" decorated by the constructor `EVar`.
+Variables are "bound" by lambda abstractions (`EAbs`).
+For instance the identity function on Booleans is written `EAbs 0 TBool (EVar 0)`.
+In paper notation one would write this function as $(\lambda x:\mathsf{bool}.~x)$.
+The type annotation on the argument (`TBool`) allows for very simple type-checking.
+We are not considering type inference here, to keep things simple.
+The expression that applies the identity function to the `ETrue` constant is written
+```
+EApp (EAbs 0 TBool (EVar 0)) ETrue
+```
+(in paper notation $(\lambda x:\mathsf{bool}.~x)~\mathsf{true}$).
+
+The language also has a conditional construct (if-then-else).
+For instance, the Boolean "not"
+function can be written as
+```
+EAbs 0 TBool (EIf (EVar 0) EFalse ETrue)
+```
+(in paper notation
+$\lambda x:\mathsf{bool}.~\mathsf{if }~x~\mathsf{ then~false~else~true}$).
+
+## Operational semantics
+
+We define a standard small-step call-by-value interpreter for STLC.
+The final result of succesfully evaluating an expression is
+called a _value_. We postulate that functions and the Boolean
+constants are values by defining `is_value`,
+a boolean predicate on expressions (a total function):
+```
+val is_value : exp -> Tot bool
+let is_value e =
+  match e with
+  | EAbs _ _ _
+  | ETrue
+  | EFalse     -> true
+  | _          -> false
+```
+The `EAbs`, `ETrue`, and `EFalse` cases share the same right-hand-side (`false`),
+which is a way to prevent duplication in definitions.
+
+In order to give a semantics to function applications we define a
+function `subst x e e'` that substitutes `x` with `e` in `e'`: 
+```
+val subst : int -> exp -> exp -> Tot exp
+let rec subst x e e' =
+  match e' with
+  | EVar x' -> if x = x' then e else e'
+  | EAbs x' t e1 ->
+      EAbs x' t (if x = x' then e1 else (subst x e e1))
+  | EApp e1 e2 -> EApp (subst x e e1) (subst x e e2)
+  | ETrue -> ETrue
+  | EFalse -> EFalse
+  | EIf e1 e2 e3 -> EIf (subst x e e1) (subst x e e2) (subst x e e3)
+```
+We traverse the expression and
+when we reach a variable `(EVar x')` we check whether this is the variable
+`x` we want to substitute, and if it is we replace it by `e`.
+For lambda abstractions `(EAbs x' t e1)` we only substitute inside the body
+`e1` if `x` and `x'` are different; if they are the same we leave the body unchanged.
+The reason for this is that the `x` in `e1` is bound by the abstraction:
+it is a new, local name that just happens to be spelled the same as some
+global name `x`. The global `x` is no longer accessible in this scope, since
+it is shadowed by the local `x`. The other cases are straightforward.
+
+> _Note for experts: Because we will only reduce closed expressions,
+  where all variables
+  are bound by previous lambdas, we will ever only substitute closed
+  expressions (closed values in fact), and this naive definition of
+  substitution is good enough. Substitution would become trickier to define
+  or the representation of variables would have to change if we were considering
+  the case where e, the expression replacing a variable in
+  some other expression, may itself contain free variables._
+
+Given the definition of values and of substitution we can now define
+a small-step interpreter, as a function `step` that takes an expression `e`
+and it either returns the expression to which `e` reduces in
+a single step computation step, or it returns `None` in case of an error
+(all errors in this language are typing errors, and will be prevented
+ statically by the type system).
+```
+val step : exp -> Tot (option exp)
+  let rec step e =
+  match e with
+  | EApp e1 e2 ->
+      if is_value e1 then
+        if is_value e2 then
+          match e1 with
+          | EAbs x t e' -> Some (subst x e2 e')
+          | _           -> None
+        else
+          match (step e2) with
+          | Some e2' -> Some (EApp e1 e2')
+          | None     -> None
+      else
+        (match (step e1) with
+        | Some e1' -> Some (EApp e1' e2)
+        | None     -> None)
+  | EIf e1 e2 e3 ->
+      if is_value e1 then
+        match e1 with
+        | ETrue   -> Some e2
+        | EFalse  -> Some e3
+        | _       -> None
+      else
+        (match (step e1) with
+        | Some e1' -> Some (EIf e1' e2 e3)
+        | None     -> None)
+  | _ -> None
+
+```
+We execute an application expression `EApp e1 e2` in multiple steps by first reducing
+`e1` to a value, then reducing `e2` to a value, and if additionally `e1`
+is an abstraction `EAbs x t e' `we continue by substituting the formal
+argument `x` by the actual argument `e2`. If not we signal a dynamic typing error
+(a non-functional value is applied to arguments) by returning `None`.
+For `EIf e1 e2 e3` we first reduce the guard `e1`: if the guard reduces to `true`
+then we continue with `e2`, if the guard reduces to `false` we continue with `e3`,
+and if the guard reduces to something else (e.g. a function) we report a
+dynamic typing error. The `None -> None` cases simply propagate errors to
+the top level.
+```
+assert (step (EApp (EAbs 0 TBool (EVar 0))) ETrue)) = Some ETrue)
+assert (step (EApp ETrue ETrue) = None)
+```
+
+## Type-checker
+
+In order to assign a type to a term, we need to know what assumptions
+we should make about the types of its free variables. So typing
+happens with respect to a typing environment---a mapping from the
+variables in scope to their types. We represent such partial maps as
+functions taking an integer variable name and returning an optional type:
+```
+type env = int -> Tot (option ty)
+```
+We start type-checking closed terms in the empty environment,
+i.e. initially no variables are in scope.
+```
+val empty : env
+let empty _ = None
+```
+When we move under a binder we extend the typing environment environment.
+```
+val extend : env -> int -> ty -> Tot env
+let extend g x t x' = if x = x' then Some t else g x'
+```
+For instance we type-check `EAbs x t e` in typing environment `g` by
+first type-checking the body `e` in the environment `extend g x t`.
+
+The type-checker is a total function taking an environment `g` and an expression `e`
+and producing either the type of `e` or `None` if `e` is not well-typed.
+
+```
+val typing : env -> exp -> Tot (option ty)
+let rec typing g e =
+  match e with
+  | EVar x -> g x
+  | EAbs x t e1 ->
+      (match typing (extend g x t) e1 with
+      | Some t' -> Some (TArrow t t')
+      | None    -> None)
+  | EApp e1 e2 ->
+      (match typing g e1, typing g e2 with
+      | Some (TArrow t11 t12), Some t2 -> if t11 = t2 then Some t12 else None
+      | _                    , _       -> None)
+  | ETrue  -> Some TBool
+  | EFalse -> Some TBool
+  | EIf e1 e2 e3 ->
+      (match typing g e1, typing g e2, typing g e3 with
+      | Some TBool, Some t2, Some t3 -> if t2 = t3 then Some t2 else None
+      | _         , _      , _       -> None)
+```
+Variables are simply looked up in the environment.
+For abstractions `EAbs x t e1` we type-check the body `e1` under the
+environment `extend g x t`, as explained above. If that succeeds and
+produces a type `t'`, then the whole abstraction is given type `TArrow t t'`.
+For applications `EApp e1 e2` we type-check `e1` and `e2` separately, and
+if `e1` has a function type `TArrow t11 t12` and
+`e2` has type `t11`, then the whole application has type `t12`. 
+`ETrue` and `EFalse` have type `TBool`.
+For conditionals, we require that the guard has type `TBool` and
+the two branches have the same type, which is also the type of the conditional.
+
+## Soundness proof
+
+<!-- (CH: I generally find giving people finished proofs uninformative and unhelpful. -->
+<!-- This seems like something to do from scratch in an emacs buffer. Trying to capture -->
+<!-- that kind of interaction in the current format seems very hard.) -->
+
+We prove progress and preservation for STLC.
+The **progress** theorem tells us that closed, well-typed terms do not produce
+(immediate) dynamic typing errors: either a well-typed term is a value,
+or it can take an evaluation step.
+The proof is a relatively straightforward induction.
+```
+val progress : e:exp -> Lemma
+      (requires (is_Some (typing empty e)))
+      (ensures (is_value e \/ (is_Some (step e))))
+let rec progress e =
+  match e with
+  | EApp e1 e2 -> progress e1; progress e2
+  | EIf e1 e2 e3 -> progress e1; progress e2; progress e3
+  | _ -> ()
+```
+Variables are not well-typed in the empty environment,
+so the theorem holds vacuously for variables.
+Boolean constants and abstractions are values,
+so the theorem holds trivialy for these.
+All these simple cases are proved automatically by F\*.
+For the remaining cases we need to use the induction hypothesis,
+but otherwise the proofs are fully automated.
+Under the hood F\* and Z3 are doing quite a bit of work though.
+
+In case `e = (EApp e1 e2)` F\* and Z3 automate the following intuitive argument:
+We case split on the first instance of the induction
+hypothesis `(is_value e1 \/ (is_Some (step e1)))`.
+
+* If `e1` steps to `e1'` then, by the definition of `step`,
+`(EApp e1 e2)` steps to `(EApp e1' e2)`.
+* If `e1` is a value, we case split on the second induction hypothesis instance,
+``(is_value e2 \/ (is_Some (step e2)))``.
+  * If `e2` steps to `e2'` then `(EApp e1 e2)` steps to `(EApp e1 e2')`,
+  since `e1` is a value.
+  * If `e2` is also a value, then we need to obtain that `e1` has
+    a function type and from this that it is an abstraction.
+    Expression `e1` has a function type because, by the definition of `typing`,
+    an application is well-typed only when the first expression is a function.
+    The remaining step is usually done as a separate "canonical forms" lemma, stating
+    that any value that has a function type is actually an abstraction.
+    Z3 can prove this fact automatically from the definitions of `typing`
+    and `is_value`.
+
+The intuitive proof of the `EIf` case is similar.
+
+Using the _experimental_ support for automatic induction ([#auto-ind]),
+the proof above can be written as just:
+```
+let rec progress e = using_induction_hyp progress
+```
+
+The **preservation** theorem (sometimes also called "subject reduction") states that 
+when a well-typed expression takes a step, the result is a well-typed expression
+of the same type.
+In order to show preservation we need to prove a couple of auxiliary results
+for reasoning about variables and substitution.
+
+The case for function application has to reason about "beta reduction" steps,
+i.e. substituting the formal argument of a function with an actual value.
+To see that this step preserves typing, we need to know that the
+substitution itself does. So we prove a **substitution** lemma, stating that
+substituting a (closed) term `v` for a variable `x` in an expression `e` preserves
+the type of `e`. The tricky cases in the substitution proof
+are the ones for variables and for function abstractions.
+In both cases, we discover that we need to take an expression `e` that has been shown
+to be well-typed in some context `g` and consider the same expression `e` in a
+slightly different context `g'`. For this we prove a **context invariance** lemma,
+showing that typing is preserved under "inessential changes" to the context `g`---in
+particular, changes that do not affect any of the free variables of the expression.
+For this, we need a definition of the free variables of an expression---i.e.,
+the variables occurring in the expression that are not bound by an abstraction.
+
+A variable `x` appears free in `e` if `e` contains some occurrence of `x`
+that is not under an abstraction labeled `x`:
+```
+val appears_free_in : x:int -> e:exp -> Tot bool
+let rec appears_free_in x e =
+  match e with
+  | EVar y -> x = y
+  | EApp e1 e2 -> appears_free_in x e1 || appears_free_in x e2
+  | EAbs y _ e1 -> x <> y && appears_free_in x e1
+  | EIf e1 e2 e3 ->
+      appears_free_in x e1 || appears_free_in x e2 || appears_free_in x e3
+  | ETrue
+  | EFalse -> false
+```
+
+We also need a technical lemma connecting free variables and typing contexts.
+If a variable `x` appears free in an expression `e`,
+and if we know that `e` is well typed in context `g`,
+then it must be the case that `g` assigns some type to `x`.
+```
+val free_in_context : x:int -> e:exp -> g:env -> Lemma
+      (requires (is_Some (typing g e)))
+      (ensures (appears_free_in x e ==> is_Some (g x)))
+let rec free_in_context x e g =
+  match e with
+  | EVar _
+  | ETrue
+  | EFalse -> ()
+  | EAbs y t e1 -> free_in_context x e1 (extend g y t)
+  | EApp e1 e2 -> free_in_context x e1 g; free_in_context x e2 g
+  | EIf e1 e2 e3 -> free_in_context x e1 g;
+                    free_in_context x e2 g; free_in_context x e3 g
+```
+The proof is a straightforward induction.
+As a corollary for `g=empty` we obtain that expressions typable
+in the empty environment have no free variables.
+```
+val typable_empty_closed : x:int -> e:exp -> Lemma
+      (requires (is_Some (typing empty e)))
+      (ensures (not(appears_free_in x e)))
+      [SMTPat (appears_free_in x e)]
+let typable_empty_closed x e = free_in_context x e empty
+```
+The quantifier pattern `[SMTPat (appears_free_in x e)]` signals F\*
+that it should feed this lemma to the SMT solver using this pattern.
+
+Sometimes, when know that `typing g e = Some t`,
+and we will need to replace `g` by an "equivalent" context `g'`.
+We still need to define formally when two environments are equivalent.
+A natural definition is extensional equivalence of functions: 
+```
+opaque logic type Equal (g1:env) (g2:env) =
+                 (forall (x:int). g1 x = g2 x)
+```
+According to this definition two environments are equivalent if have
+the same domain and they map all variables in the domain to the same type.
+We remark `Equal` in particular and logical formulas in general
+are "types" in F\*, thus the different syntax for this definition. 
+~CH
+What does opaque do exactly?
+~
+
+The context invariance lemma uses in fact a weaker variant of this equivalence
+in which the two environments only need to agree on the variables that appear free
+in an expression `e`:
+```
+opaque logic type EqualE (e:exp) (g1:env) (g2:env) =
+                 (forall (x:int). appears_free_in x e ==> g1 x = g2 x)
+```
+The context invariance lemma is then easily proved by induction:
+```
+val context_invariance : e:exp -> g:env -> g':env
+                     -> Lemma
+                          (requires (EqualE e g g'))
+                          (ensures (typing g e == typing g' e))
+let rec context_invariance e g g' =
+  match e with
+  | EAbs x t e1 ->
+     context_invariance e1 (extend g x t) (extend g' x t)
+
+  | EApp e1 e2 ->
+     context_invariance e1 g g';
+     context_invariance e2 g g'
+
+  | EIf e1 e2 e3 ->
+     context_invariance e1 g g';
+     context_invariance e2 g g';
+     context_invariance e3 g g'
+
+  | _ -> ()
+```
+Because `Equal` is a stronger relation than `EqualE` we obtain the same property
+for `Equal`:
+```
+val typing_extensional : g:env -> g':env -> e:exp
+                      -> Lemma
+                           (requires (Equal g g'))
+                           (ensures (typing g e == typing g' e))
+let typing_extensional g g' e = context_invariance e g g'
+```
+We can use these results to show the following substitution lemma:
+```
+val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
+      g:env{is_Some (typing empty v) &&
+            is_Some (typing (extend g x (Some.v (typing empty v))) e)} ->
+      Tot (u:unit{typing g (subst x v e) ==
+                  typing (extend g x (Some.v (typing empty v))) e})
+let rec substitution_preserves_typing x e v g =
+  let Some t_x = typing empty v in
+  let gx = extend g x t_x in
+  match e with
+  | ETrue -> ()
+  | EFalse -> ()
+  | EVar y ->
+     if x=y
+     then context_invariance v empty g (* uses lemma typable_empty_closed *)
+     else context_invariance e gx g
+
+  | EApp e1 e2 ->
+     substitution_preserves_typing x e1 v g;
+     substitution_preserves_typing x e2 v g
+
+  | EIf e1 e2 e3 ->
+     substitution_preserves_typing x e1 v g;
+     substitution_preserves_typing x e2 v g;
+     substitution_preserves_typing x e3 v g
+
+  | EAbs y t_y e1 ->
+     let gxy = extend gx y t_y in
+     let gy = extend g y t_y in
+     if x=y
+     then typing_extensional gxy gy e1
+     else
+       (let gyx = extend gy x t_x in
+        typing_extensional gxy gyx e1;
+        substitution_preserves_typing x e1 v gy)
+```
+The proof proceeds by induction on the expression `e`;
+we give the intuition of the two most interesting cases:
+
+* Case `e = EVar y`
+  * Case `x = y`: We have `subst x v e = v` and we already know that
+    `typing empty v == Some t_x`. However, what we need to show is
+    `typing g v == Some t_x` for some arbitray environment `g`.
+    From the `typable_empty_closed` lemma we obtain that `v` contains
+    no free variables, so we have `EqualE v empty g`. This allows us
+    to apply the `context_invariance` lemma to obtain that
+    `typing empty v = typing g v` and complete the proof of this case.
+  * Case `x <> y`: We have `subst x v e = e` and 
+    `typing gx e = Some t_e` and need to show that `typing g e = Some t_e`.
+    We have that `EquivE (EVar y) gx g` since `x <> y` so we can apply
+    the `context_invariance` lemma to conclude.
+* Case `e = EAbs y t_y e1`:
+  We have that `typing gxy e1 = Some t_e1`,
+  and need to show that `typing gy e1 = Some t_e1`.
+  * Case `x = y`: We have `subst x v e = EAbs y t_y e1`.
+    Since `x = y` the `x` binder in `gxy` is spurious (we have `Equal gy gxy`)
+    and can apply the `typing_extensional` lemma.
+  * Case `x <> y`: We have `subst x v e = EAbs y t_y (subst x v e1)`.
+    Since `x <> y` (and since we are in a simply typed calculus, not
+    a dependenty typed one) we can swap the `x` and `y` binding to show
+    that `Equal gxy xyx`. By the `typing_extensional` lemma we obtain that
+    `typing gxy e1 == typing gyx e1`. By the induction hypothesis we thus
+    obtain that `typing gy (subst x v e1) == Some t_e1`, and by the definition
+    of `typing` we conclude that `typing g (EAbs y t_y (subst x v e)) = t_e`.
+
+We now have the tools we need to prove preservation:
+if a closed expression `e` has type `t` and takes an evaluation step to `e'`,
+then `e'` is also a closed expression with type `t`.
+In other words, the small-step evaluation relation preserves types.
+```
+val preservation : e:exp{is_Some (typing empty e) /\ is_Some (step e)} ->
+      Tot (u:unit{typing empty (Some.v (step e)) == typing empty e})
+let rec preservation e =
+  match e with
+  | EApp e1 e2 ->
+     if is_value e1
+     then (if is_value e2
+           then let EAbs x _ ebody = e1 in
+                substitution_preserves_typing x ebody e2 empty
+           else preservation e2)
+     else preservation e1
+
+  | EIf e1 _ _ ->
+      if not (is_value e1) then preservation e1
+```
+We only have two cases to consider, since only applications and conditionals
+can take successful execution steps. The case for `e = EIf e1 e2 e3` is simple:
+either `e1` is a value and thus the conditional reduces to `e2` or `e3` which
+by the typing hypothesis also have type `t`, or `e1` takes a successful step and
+we can apply the induction hypothesis. We use the `Some.v` projector for options
+with the following type:
+```
+  Some.v : x:(option 'a){is_Some x} -> Tot 'a
+```
+which requires F\* to prove that indeed `e1` can take a step;
+this is immediate since we know that the whole conditional takes a step
+and we know that `e1` is not a value.
+
+The case for `e = EApp e1 e2` is a bit more complex. If `e1` steps or if `e1` is
+a value and `e2` steps then we just apply the induction hypothesis.
+If both `e1` and `e2` are values it needs to be the case that `e1` is
+an abstraction `EAbs x targ ebody` and `step e = subst x e2 ebody`.
+From the typing assumption we have `typing (extend empty x tags) ebody = Some t`
+and `typing empty e2 = Some targ`, so we can use the substitution lemma
+to obtain that `typing empty (subst x e2 ebody) = Some t`, which concludes the proof.
+
+## Exercises for STLC
+
+~ Exercise
+Define a `typed_step` step function that takes a
+well-typed expression `e` that is not a value and
+produces the expression to which `e` steps. Give `typed_step`
+the following strong type
+(basically this type captures both progress and preservation):
+~~ ExerciseFragment {exname=ex7a-stlc-typed-step}
+  val typed_step : e:exp{is_Some (typing empty e) /\ not(is_value e)} ->
+                   Tot (e':exp{typing empty e' = typing empty e})
+~~
+(Hint: the most direct solution to this exercise fits on one line)
+~~ AnswerFragment {exname=ex7a-stlc-typed-step}
+    let typed_step e = progress e; preservation e; Some.v (step e)
+~~
+~
+
+~ Exercise
+To add pairs to this formal development we add the following to the
+definition of types, expressions, values, substitution, and step:
+~~ ExerciseFragment {exname=ex7b-stlc-pairs}
+type ty =
+  ...
+  | TPair : ty -> ty -> ty
+  
+type exp =
+  ...
+  | EPair  : exp -> exp -> exp
+  | EFst   : exp -> exp
+  | ESnd   : exp -> exp
+~~
+(note the extra rec in `is_value` below!)
+~~ ExerciseFragment {exname=ex7b-stlc-pairs}
+let rec is_value e =
+  match e with
+  ...
+  | EPair e1 e2 -> is_value e1 && is_value e2
+  
+let rec subst x e e' =
+  match e' with
+  ...
+  | EPair e1 e2 -> EPair (subst x e e1) (subst x e e2)
+  | EFst e1 -> EFst (subst x e e1)
+  | ESnd e1 -> ESnd (subst x e e1)
+  
+let rec step e =
+  ...
+  | EPair e1 e2 ->
+      if is_value e1 then
+        if is_value e2 then None
+        else
+          (match (step e2) with
+          | Some e2' -> Some (EPair e1 e2')
+          | None     -> None)
+      else
+        (match (step e1) with
+        | Some e1' -> Some (EPair e1' e2)
+        | None     -> None)
+  | EFst e1 ->
+      if is_value e1 then
+        (match e1 with
+        | EPair v1 v2 -> Some v1
+        | _           -> None)
+      else
+        (match (step e1) with
+        | Some e1' -> Some (EFst e1')
+        | None     -> None)
+  | ESnd e1 ->
+      if is_value e1 then
+        (match e1 with
+        | EPair v1 v2 -> Some v2
+        | _           -> None)
+      else
+        (match (step e1) with
+        | Some e1' -> Some (ESnd e1')
+        | None     -> None)
+~~
+Add cases to `typing` for the new constructs and fix all the proofs.
+
+~~ Answer
+We extend the `typing` and `appears_free_in` functions with cases
+for `EPair`, `EFst`, and `ESnd`:
+~~~ SolutionFragment {exname=ex7b-stlc-pairs}
+val typing : env -> exp -> Tot (option ty)
+let rec typing g e =
+...
+  | EPair e1 e2 ->
+      (match typing g e1, typing g e2 with
+      | Some t1, Some t2 -> Some (TPair t1 t2)
+      | _      , _       -> None)
+  | EFst e1 ->
+      (match typing g e1 with
+      | Some (TPair t1 t2) -> Some t1
+      | _                  -> None)
+  | ESnd e1 ->
+      (match typing g e1 with
+      | Some (TPair t1 t2) -> Some t2
+      | _                  -> None)
+
+val appears_free_in : x:int -> e:exp -> Tot bool
+...
+  | EPair e1 e2 -> appears_free_in x e1 || appears_free_in x e2
+  | EFst e1 -> appears_free_in x e1
+  | ESnd e1 -> appears_free_in x e1
+~~~
+The proofs of the lemmas are also easy to extend by just calling
+the induction hypothesis:
+~~~ SolutionFragment {exname=ex7b-stlc-pairs}
+val free_in_context : x:int -> e:exp -> g:env -> Lemma
+      (requires (is_Some (typing g e)))
+      (ensures (appears_free_in x e ==> is_Some (g x)))
+let rec free_in_context x e g =
+...
+  | EPair e1 e2 -> free_in_context x e1 g; free_in_context x e2 g
+  | EFst e1 
+  | ESnd e1 -> free_in_context x e1 g
+
+val context_invariance : e:exp -> g:env -> g':env
+                     -> Lemma
+                          (requires (EqualE e g g'))
+                          (ensures (typing g e == typing g' e))
+let rec context_invariance e g g' =
+...
+| EPair e1 e2 ->
+     context_invariance e1 g g';
+     context_invariance e2 g g'
+ 
+  | EFst e1
+  | ESnd e1 -> context_invariance e1 g g'
+
+val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
+      g:env{is_Some (typing empty v) &&
+            is_Some (typing (extend g x (Some.v (typing empty v))) e)} ->
+      Tot (u:unit{typing g (subst x v e) ==
+                  typing (extend g x (Some.v (typing empty v))) e})
+let rec substitution_preserves_typing x e v g =
+...
+  | EPair e1 e2 ->
+     (substitution_preserves_typing x e1 v g;
+      substitution_preserves_typing x e2 v g)
+
+  | EFst e1
+  | ESnd e1 ->
+      substitution_preserves_typing x e1 v g
+~~~
+As for the other cases, the preservation proof when `e = EPair e1 e2`
+follows the structure of the `step` function. If `e1` is not a value
+then it further evaluates, so we apply the induction hypothesis to
+`e1`.  If `e1` is a value, then since we know that the pair evaluates,
+it must be the case that `e2` is not a value and further evaluates, so
+we apply the induction hypothesis to it. The cases for `EFst` and
+`ESnd` are similar.
+~~~ SolutionFragment {exname=ex7b-stlc-pairs}
+val preservation : e:exp{is_Some (typing empty e) /\ is_Some (step e)} ->
+      Tot (u:unit{typing empty (Some.v (step e)) == typing empty e})
+let rec preservation e =
+...
+  | EPair e1 e2 ->
+      (match is_value e1, is_value e2 with
+      | false, _     -> preservation e1
+      | true , false -> preservation e2)
+
+  | EFst e1
+  | ESnd e1 ->
+      if not (is_value e1) then preservation e1
+~~~
+~~
+~
+
+<!--
+(CH: Quite a lot of stuff to add to the definitions, maybe just
+ give them all that code, or at least the step extension.
+ Otherwise they can get it wrong (I did) and have a hard time in the proofs.)
+-->
+
+<!--
+_Exercise: Add arithmetic expressions to this formal development.
+Copy the stlc.fst file and add the following to the definition of
+types and expressions (`EIf0` tests if a number is zero or not):_
+```
+type ty =
+  ...
+  | TNat : ty
+  
+type exp =
+  ...
+  | ENat  : nat -> exp
+  | EPlus : exp -> exp -> exp
+  | EIf0  : exp -> exp -> exp -> exp
+```
+(CH: The pairs and arithmetic exercises are rather similar, so just do one of them.
+None of them is very interesting from a proof point of view.)
+-->
+
+~ Exercise
+We want to add a let construct to this formal development.
+We add the following to the definition of expressions:
+~~ ExerciseFragment {exname=ex7c-stlc-let}
+type exp =
+  ...
+  | ELet  : int -> exp -> exp -> exp
+~~
+Add cases for `ELet` to all definitions and proofs.
+
+[Load answer in editor](code/exercises/ex7c-stlc-let.fst)
+~~ CH
+Make the prev kind of link a macro of some sorts. It doesn't have a
+proper body so it's not an environment, but what is it? Entity?
+~~
+~
+
+~ Exercise
+Define a big-step interpreter for STLC as a recursive
+function `eval` that given a well-typed expression `e`
+either produces the well-typed value `v` to which `e` evaluates
+or it diverges if the evaluation of `e` loops. Give `eval` the following
+strong type ensuring that `v` has the same type as `e`
+(basically this type captures both progress and preservation):
+~~ ExerciseFragment {exname=ex7d-stlc-eval}
+  val eval : e:exp{is_Some (typing empty e)} ->
+             Dv (v:exp{is_value v && typing empty v = typing empty e})
+~~
+The `Dv` effect is that of potentially divergent computations.
+We cannot mark this as `Tot` since a priori STLC computations could loop,
+and it is hard to prove that well-typed ones don't, while defining an
+interpreter.
+~~Answer
+Here is a solution that only uses `typed_step` (suggested by Santiago Zanella):
+~~~ SolutionFragment {exname=ex7d-stlc-eval}
+val eval : e:exp{is_Some (typing empty e)} ->
+           Dv (v:exp{is_value v && typing empty v = typing empty e})
+let rec eval e =
+  if is_value e then e
+  else eval (typed_step e)
+~~~
+Here is another solution that only uses the substitution lemma:
+~~~ SolutionFragment {exname=ex7d-stlc-eval}
+val eval' : e:exp{is_Some (typing empty e)} ->
+            Dv (v:exp{is_value v && typing empty v = typing empty e})
+let rec eval' e =
+  let Some t = typing empty e in
+  match e with
+  | EApp e1 e2 ->
+     (let EAbs x _ e' = eval' e1 in
+      let v = eval' e2 in
+      substitution_preserves_typing x e' v empty;
+      eval' (subst x v e'))
+  | EAbs _ _ _
+  | ETrue
+  | EFalse     -> e
+  | EIf e1 e2 e3 ->
+     (match eval' e1 with
+      | ETrue  -> eval' e2
+      | EFalse -> eval' e3)
+  | EPair e1 e2 -> EPair (eval' e1) (eval' e2)
+  | EFst e1 ->
+     let EPair v1 _ = eval' e1 in v1
+  | ESnd e1 ->
+     let EPair _ v2 = eval' e1 in v2
+  | ELet x e1 e2 ->
+     (let v = eval' e1 in
+      substitution_preserves_typing x e2 v empty;
+      eval' (subst x v e2))
+~~~
+~~
+~
+
+<!-- Relating small step and big step is hard and boring
+val steps_n : nat -> exp -> Tot (option exp)
+let rec steps_n n e =
+  match n with
+  | 0 -> Some e
+  | _ -> (match step e with
+          | Some e' -> steps_n (n-1) e'
+          | _       -> None)
+
+opaque logic type Steps (e:exp) (e':exp) =
+  (exists (n:nat). steps_n n e == Some e')
+
+assume val step_last : e:exp -> e':exp -> e'':exp -> Lemma
+             (requires (Steps e e' /\ step e' = Some e''))
+             (ensures (Steps e e''))
+
+val eval : e:exp{is_Some (typing empty e)} ->
+           Dv (v:exp{is_value v && typing empty v = typing empty e
+                     /\ Steps e v}) --- added this
+-->
+<!--
+_Exercise: Extend the type-checker so that it produces error messages in case
+of ill-typed terms, instead of just `None`_
+(CH: boring programming exercise? nothing to do with proving/verifying)
+
+_Exercise: Change the step and typing functions to use primitive exceptions
+instead of options_ (CH: Not sure this is solvable with the current F\*,
+but it seems quite interesting)
+-->
+
+
+#State and other effects
+
+## Stateful access control
+
+```
+module DynACLs
+open Heap
+open ST
+type file = string
+      
+(* using dynamic ACLs in some database *)
+type entry = 
+  | Readable of string
+  | Writable of string
+type db = list entry 
+assume val acls: ref db
+
+let canWrite db file = 
+  is_Some (List.find (function Writable x -> x=file | _ -> false) db)
+
+let canRead db file = 
+  is_Some (List.find (function Readable x | Writable x -> x=file) db)
+  
+
+type CanRead f h  = canRead  (Heap.sel h acls) f == true
+type CanWrite f h = canWrite (Heap.sel h acls) f == true
+
+(* F* infers precise specifications for all non-recursive effectful computations *)
+let grant e = 
+  let a = ST.read acls in 
+  ST.write acls (e::a)
+
+let revoke e = 
+  let a = ST.read acls in
+  let db = List.filter (fun e' -> e<>e') a in
+  ST.write acls db
+
+(* two dangerous primitives *)
+assume val read:   file:string -> ST string 
+                                     (requires (CanRead file))
+                                     (ensures (fun h s h' -> h=h'))
+                                     (modifies no_refs)
+
+assume val delete: file:string -> ST unit
+                                     (requires (CanWrite file))
+                                     (ensures (fun h s h' -> h=h'))
+                                     (modifies no_refs)
+
+val safe_delete: file -> All unit (fun h -> True) (fun h x h' -> h==h')
+let safe_delete file = 
+  if canWrite !acls file 
+  then delete file
+  else failwith "unwritable"
+
+val test_acls: file -> unit
+let test_acls f = 
+  grant (Readable f);     (* ok *)
+  let _ = read f in       (* ok --- it's in the acl *)
+  (* delete f;               not ok --- we're only allowed to read it *)
+  safe_delete f;          (* ok, but fails dynamically *)
+  revoke (Readable f);
+  (* let _ = read f in    (* not ok any more *)
+  ()
+```
+
+~Exercise
+Write down some types for `canRead` and `canWrite` that are sufficiently 
+precise to allow the program to continue to type-check.
+~~Answer
+```
+val grant : e:entry -> ST unit (requires (fun h -> True))
+                               (ensures (fun h x h' -> sel h' acls == e::sel h acls))
+                               (modifies (a_ref acls))
+let grant e = ST.write acls (e::ST.read acls)
+
+val revoke: e:entry -> ST unit (requires (fun h -> True))
+                               (ensures (fun h x h' -> not(List.mem e (sel h' acls))))
+                               (modifies (a_ref acls))
+let revoke e = 
+  let db = List.filter (fun e' -> e<>e') (ST.read acls) in
+  ST.write acls db
+```
+~~
+~
+
+## Local state in two counters
+
+```
+module Evens
+open Heap
+open Set
+open ST
+type even (x:int) = x%2=0
+
+effect InvST (t:Type) (inv:(heap -> Type)) (fp:set aref) (post:(heap -> t -> heap -> Type)) =
+             ST t (fun h -> On fp inv h)
+                  (fun h i h' -> post h i h' /\ On fp inv h')
+                  (SomeRefs fp)
+    
+type even_post (h:heap) (i:int) (h':heap) = even i
+
+
+type t =
+  | Evens : inv:(heap -> Type)
+          -> fp:set aref
+          -> (unit -> InvST int inv fp even_post)
+          -> t
+
+opaque type inv1 (r1:ref int) (r2:ref int) (h:heap) =
+           Heap.sel h r1 = Heap.sel h r2
+           /\ contains h r1
+           /\ contains h r2
+
+val mk_counter: unit
+             -> ST t (requires (fun h -> True))
+                     (ensures  (fun h v h' ->
+                             On  (Evens.fp v) (Evens.inv v) h'
+                             /\ Heap.fresh h (Evens.fp v)))
+                     (modifies no_refs)
+let mk_counter _ =
+  let x = ST.alloc 0 in
+  let y = ST.alloc 0 in
+  let evens () =
+    let rx = ST.read x in
+    let ry = ST.read y in
+    ST.write x (rx + 1);
+    ST.write y (ry + 1);
+    rx + ry in
+  Evens (inv1 x y) (Set.union (Set.singleton (Ref x)) (Set.singleton (Ref y))) evens
+
+
+val mk_counter_2: unit
+               -> ST t (requires (fun h -> True))
+                       (ensures  (fun h v h' ->
+                         On  (Evens.fp v) (Evens.inv v) h'
+                         /\ Heap.fresh h (Evens.fp v)))
+                       (modifies no_refs)
+let mk_counter_2 _ =
+  let x = ST.alloc 0 in
+  let evens = fun _ ->
+    let rx = ST.read x in
+    ST.write x (rx + 1);
+    2 * rx in
+  Evens (fun h -> b2t(contains h r)) (Set.singleton (Ref x)) evens
+```
+
+
+
+# Cryptography examples
+
+## Cryptographic Capabilities for Accessing Files
+
+We extend the acls2.fst example with cryptographic capabilities, so that our trusted ACLs library can now issue and 
+accept HMACSHA1 tags as evidence that a given file is readable.
+
+What is the advantage of capabilities over the refinements already provided in acls2.fst? 
+
+~ Exercise
+Relying on acls2.fst and mac.fst, implement a pair of functions with the following specification, 
+and verify them by typing under the security assumption that HMACSHA1 is 
+INT-CPA. 
+
+```
+val issue:  f:file{ canRead f } -> SHA1.tag 
+val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
+
+```
+
+To this end, assume given a UTF8 encoding function from strings to bytes, with the following specification:
+
+```
+assume val utf8: s:string  -> Tot (seq byte) 
+
+assume UTF8_inj: 
+  forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
+    equal (utf8 s0) (utf8 s1) ==> s0==s1
+
+
+```
+
+~~ Answer
+```
+(* to be used with mac.fst and acls2.fst *)
+
+module Cap (* capabilities *) 
+open Array
+open UTF8
+open ACLs
+open MAC 
+
+opaque logic type CapRead (msg:seq byte) =
+    (forall f. msg = utf8 f ==> canRead f)
+
+let k = keygen CapRead
+
+val issue: f:file{ canRead f } -> SHA1.tag 
+val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
+
+let issue f = MAC.mac k (utf8 f)
+let redeem f t = if MAC.verify k (utf8 f) t then () else failwith "bad capability"
+
+```
+~~
+
+How would we extend it to also cover CanWrite access? 
+~ 
+   
+## Secure RPC
+
+We describe a simple secure RPC implementation, which consists of three 
+modules: `Mac`, a library for MACs, `Format`, a module for message 
+formatting, and `RPC`, a module for the rest of the protocol code. 
+(Placing the formatting functions request and response in a separate 
+module is convenient to illustrate modular programming and verification.)
+
+### MAC
+
+We begin with our cryptographic library. 
+
+```
+module MAC
+open Array
+open SHA1
+```
+
+Message authentication codes 
+(MACs) provide integrity protection based on keyed cryptographic hashes. 
+We define an F* module that implements this functionality. 
+
+We attach an authenticated property to each key 
+used as a pre-condition for MACing and a postcondition of MAC verification.
+
+```
+opaque type key_prop : key -> text -> Type
+type pkey (p:(text -> Type)) = k:key{key_prop k == p}
+```
+
+(In the RPC example below we will use a key of type `pkey reqresp` where 
+```
+opaque logic type reqresp (msg:text) =
+    (exists s. msg = request s /\ Request s)
+ \/ (exists s t. msg = response s t /\ Response s t)
+```
+)
+
+Next, we define the types of functions that a MAC library is supposed to 
+provide:
+
+```
+val keygen: p:(text -> Type) -> pkey p
+val mac:    k:key -> t:text{key_prop k t} -> tag
+val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
+```
+
+### Secure RPC protocol
+
+To start with we consider a single client and server. The security goals of 
+our RPC protocol are that (1) whenever the server accepts a
+request message `s` from the client, the client has indeed sent the message to 
+the server and, conversely,
+(2) whenever the client accepts a response message `t` from the server, 
+the server has indeed sent the
+message in response to a matching request from the client. 
+
+To this end, the protocol uses message authentication codes (MACs) computed as
+keyed hashes, such that each symmetric MAC key kab is associated with (and known
+to) the pair of principals a and b. Our protocol may be informally described as follows.
+An Authenticated RPC Protocol:
+
+    1. client->server  utf8 s | (mac kab (request s))
+    2. server->client  utf8 t | (mac kab (response s t))
+
+In the protocol narration, each line indicates an intended communication of data
+from one principal to another. 
+
+`utf8` marshalls strings such as `s` and `t` into byte arrays 
+that can be send over the network. `|` written also `append` 
+is a function concatenating `bytes`. `request` and `response` build
+message digests (the authenticated values). These functions may for 
+instance be implemented as tagged concatenations of their utf8-encoded 
+arguments. These funcions will be detailed in the `Format` module.
+
+Below we give an implementation of the protocol using these functions, 
+the functions of the 'Mac' module, and networking functions
+
+```
+assume val send: message -> unit
+assume val recv: (message -> unit) -> unit
+```
+
+These functions model an untrusted network controlled by the adversary, who decides 
+through their implementation when to deliver messages.
+
+Two events, record genuine requests and responses
+```
+logic type Request : string -> Type
+logic type Response : string -> string -> Type
+```
+in the following protocol
+
+```
+let client (s:string16) =
+  assume (Request s);
+  send (append (utf8 s) (mac k (request s))); 
+  recv (fun msg ->
+    if length msg < macsize then failwith "Too short"
+    else
+      let (v, m') = split msg (length msg - macsize) in
+      let t = iutf8 v in
+      if verify k (response s t) m'
+      then assert (Response s t))
+
+let server () =
+  recv (fun msg ->
+    if length msg < macsize then failwith "Too short"
+    else
+      let (v,m) = split msg (length msg - macsize) in
+      if length v > 65535 then failwith "Too long" 
+      else
+        let s = iutf8 v in
+        if verify k (request s) m 
+        then  
+          ( assert (Request s);
+            let t = "22" in
+            assume (Response s t);
+            send (append (utf8 t) (mac k (response s t)))))
+```
+
+The `assert` guarantee that messages that are received by a party have been sent by its peer. 
+
+### Formating code
+
+The Format module used by the protocol implementation 
+exports among others the following types and functions.
+
+```
+type message = seq byte
+type msg (l:nat) = m:message{length m==l}
+
+val request : string -> Tot message
+let request s = append tag0 (utf8 s)
+
+val response: string16 -> string -> Tot message
+let response s t =
+  let lb = uint16_to_bytes (length (utf8 s)) in
+  append tag1 (append lb (append (utf8 s) (utf8 t)))
+```
+
+We require 3 lemmas on message formats: 
+
+* requests are injective on their argument
+* responses are injective on both their arguments
+* requests and responses are distinct 
+
+For authentication properties, we require both functions to be 
+injective, so that authenticating the bytes unambiguously 
+authenticate the text before marshalling.
+
+~Exercise
+Try to state this formally as three lemmas.
+~~Answer
+```
+val req_resp_distinct: 
+  s:string -> s':string16 -> t':string -> 
+  Lemma (requires True)
+        (ensures (request s <> response s' t'))
+        [SMTPat (request s); SMTPat (response s' t')]
+
+val req_components_corr: 
+  s0:string -> s1:string -> 
+  Lemma (requires (request s0 == request s1))
+        (ensures  (s0==s1))
+
+val resp_components_corr: 
+  s0:string16 -> t0:string -> s1:string16 -> t1:string -> 
+  Lemma (requires (response s0 t0 == response s1 t1))
+        (ensures  (s0==s1 /\ t0==t1))
+```
+~~ 
+~
+
+~ Exercise
+Prove these three lemmas.
+~
+
+~~ Answer
+```
+let req_resp_distinct s s' t' =
+  assert (Array.index (request s) 0 <> Array.index (response s' t') 0)
+let req_components_corr s0 s1 = ()
+let resp_components_corr s0 t0 s1 t1 = ()
+```
+~~
+
+<!--
+These lemmas rely on more powerful lemmas about the 
+injectivity of append:
+
+```
+val append_inj: #l:nat
+               -> b1:msg l -> b2:message
+               -> c1:msg l -> c2:message{append b1 b2==append c1 c2}
+               -> Lemma (ensures (equal b1 c1 /\ equal b2 c2))
+
+val append_inj_lemma: b1:message -> b2:message
+                   -> c1:message -> c2:message
+                   -> Lemma (requires (length b1==length c1 /\ append b1 b2==append c1 c2))
+                            (ensures (equal b1 c1 /\ equal b2 c2))
+                            (decreases (length b1))
+                            [SMTPat (append b1 b2); SMTPat (append c1 c2)] 
+```
+
+~ Exercise
+The proof of the second lemma contain currently contains an 'admit'.
+Try to fix this proof.
+~
+
+~~ Answer
+```
+let rec append_inj_lemma b1 b2 c1 c2 =
+  let l = length b1 in 
+  match l with
+  | 0 -> ()
+  | _ -> append_inj_lemma (slice b1 1 l) b2 (slice c1 1 l) c2  
+```
+~~
+-->
+
+~ Remark
+In the lecture we also saw an extended protocol where we have a population of principals, represented as concrete strings ranged over by a
+and b, that intend to perform various remote procedure calls (RPCs) over a public network.
+The RPCs consist of requests and responses, both also represented as strings.
+The security goals of our RPC protocol are that (1) whenever a principal b accepts a
+request message s from a, principal a has indeed sent the message to b and, conversely,
+(2) whenever a accepts a response message t from b, principal b has indeed sent the
+message in response to a matching request from a.
+~
+
+<!--
+## Signing Email
+
+The purpose of this exercise is to program and verify functions for 
+signing email messages and verifying their signatures.
+-->
+
+## Verified Padding
+
+We intend to MAC and/or encrypt plaintexts of variable sizes using 
+fixed-sized algorithms, such as those that operate on 256-bit blocks, such as AES. 
+
+To this end, we use the following classic padding scheme (used for instance in TLS).
+
+```
+module Pad
+open Array
+
+(* two coercions from uint8 <--> n:int { 0 <= n < 255 } *)
+assume val n2b: n:nat {( n < 256 )} -> Tot uint8
+assume val b2n: b:uint8 -> Tot (n:nat { (n < 256) /\ n2b n = b })
+
+type bytes = seq byte (* concrete byte arrays *) 
+type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
+
+let blocksize = 32 
+type block = nbytes blocksize
+type text = b:bytes {(length b < blocksize)}
+
+let pad n = Array.create n (n2b (n-1))  
+
+let encode (a:text) = append a (pad (blocksize - length a))
+
+let decode (b:block) = 
+  let padsize = b2n(index b (blocksize - 1)) + 1 in
+  if op_LessThan padsize blocksize then 
+    let (plain,padding) = split b (blocksize - padsize) in
+    if padding = pad padsize
+    then Some plain
+    else None   
+  else None
+```
+
+~ Exercise
+What do these function do? Write as precise as possible
+typed specifications for these functions. In particular
+show that decoding cancels out encoding.
+
+~~ Answer
+
+```
+val pad: n:nat { 1 <= n /\ n <= blocksize } -> Tot (nbytes n)
+val encode: a: text -> Tot block 
+val decode: b:block -> Tot (option (t:text { Array.equal b (encode t)}))
+```
+~~
+~
+
+
+~ Exercise
+Is it a good padding scheme? What are its main properties?
+
+Prove a lemma that expresses its injectivity.
+
+Provide examples of other schemes, both good and bad.
+
+~~ Answer
+
+A padding scheme should be invertible. For authentication properties, we require it to be injective, so that authenticating a padded text unambiguously authenticate the text before padding. For instance:
+
+```
+val inj: a: text -> b: text -> Lemma (requires (Array.equal (encode a) (encode b)))
+                                     (ensures (Array.equal a b))
+                                     [SMTPat (encode a); SMTPat (encode b)]
+                                     (decreases (length a))
+let inj a b =
+  if length a = length b
+  then () 
+  else let aa = encode a in
+       let bb = encode b in
+       cut (Array.index aa 31 =!= Array.index bb 31)
+```
+
+In this context, another good padding scheme is to append a 1 then enough zeros to fill the block. One could also format the message by explicitly including its length.
+A bad scheme is to fill the rest of the block with zeros (or random values), as the same padded text may then be parsed into several texts ending with 0s.  
+~~
+~
+
+~ Exercise
+Relying on that specification, implement and verify a MAC interface for messages
+of type `text`, i.e., of less than `blocksize` bytes,  using the MAC interface below, which only supports messages of
+type `block`.
+
+To this end, we assume given an implementation of the following module (adapted from mac.fst)
+
+```
+module BMAC
+open Pad 
+
+let keysize = 16 (* these are the sizes for SHA1 *) 
+let macsize = 20
+type key = nbytes keysize
+type tag = nbytes macsize
+
+opaque type key_prop : key -> block -> Type
+type pkey (p:(block -> Type)) = k:key{key_prop k == p}
+
+assume val keygen: p:(block -> Type) -> pkey p
+assume val mac:    k:key -> t:block{key_prop k t} -> tag
+assume val verify: k:key -> t:block -> tag -> b:bool{b ==> key_prop k t}
+```
+
+Write a similar module that accepts texts instead of blocks: 
+first the implementations for keygen, mac, and verify,
+then type annotations to derive their authentication property (on texts) from the one of BMAC (on blocks).
+
+~~ Answer
+```
+module TMAC
+open Pad 
+
+let keysize = BMAC.keysize
+let macsize = BMAC.macsize
+type key = BMAC.key
+type tag = BMAC.tag
+
+opaque type bspec (spec: (text -> Type)) (b:block) = 
+  (forall (t:text). b = encode t ==> spec t)
+
+opaque type key_prop : key -> text -> Type
+type pkey (p:(text -> Type)) = 
+  k:key{key_prop k == p /\ BMAC.key_prop k == bspec p}
+
+val keygen: p:(text -> Type) -> pkey p
+val mac:    p:(text -> Type) -> k:pkey p -> t:text{p t} -> tag
+val verify: p:(text -> Type) -> k:pkey p -> t:text -> tag -> b:bool{b ==> p t}
+
+let keygen (spec: text -> Type) = 
+  let k = BMAC.keygen (bspec spec) in
+  assume (key_prop k == spec);
+  k
+
+let mac (p:text -> Type) k t = BMAC.mac k (encode t)
+let verify k t tag = BMAC.verify k (encode t) tag
+```
+~~
+~
+
+~ Exercise
+(1) Can we similarly construct a MAC scheme for texts with type `text:bytes {length text <= n}`?
+(2) Implement, then verify this construction.
+
+~~ Answer
+(1) Yes, using two keys: one for `text:bytes {length b = n}` 
+and another for `text:bytes {length b}`.
+
+(2) Code:
+```
+module MAC2
+open Array
+open Pad 
+
+type text2 = b:bytes { length b <=  blocksize } 
+
+let keysize = 2 * BMAC.keysize
+let macsize = BMAC.macsize
+type key = | Keys: k0:BMAC.key -> k1:BMAC.key -> key
+type tag = BMAC.tag
+
+opaque type bspec0 (spec: (text2 -> Type)) (b:block) =
+  (forall (t:text). b = encode t ==> spec t)
+
+opaque type bspec1 (spec: (text2 -> Type)) (b:block) = 
+  spec b
+
+opaque type key_prop : key -> text2 -> Type
+
+type pkey (p:(text2 -> Type)) = 
+  k:key{ key_prop k == p
+      /\ BMAC.key_prop (Keys.k0 k) == bspec0 p
+      /\ BMAC.key_prop (Keys.k1 k) == bspec1 p }
+
+val keygen: p:(text2 -> Type) -> pkey p
+val mac:    p:(text2 -> Type) -> k:pkey p -> t:text2{p  t} -> tag
+val verify: p:(text2 -> Type) -> k:pkey p -> t:text2 -> tag -> b:bool{b ==> p t}
+
+let keygen (spec: text2 -> Type) = 
+  let k0 = BMAC.keygen (bspec0 spec) in
+  let k1 = BMAC.keygen (bspec1 spec) in
+  let k = Keys k0 k1 in
+  assert (BMAC.key_prop k0 == bspec0 spec);
+  assert (BMAC.key_prop k1 == bspec1 spec);
+  assume (key_prop k == spec);
+  k
+
+let mac (Keys k0 k1) t = 
+  if length t < blocksize 
+  then BMAC.mac k0 (encode t)
+  else BMAC.mac k1 t
+
+let verify (Keys k0 k1) t tag =   
+  if length t < blocksize
+  then BMAC.verify k0 (encode t) tag
+  else BMAC.verify k1 t tag
+
+```
+~~
+
+~
+
+~ Exercise 
+What about MAC schemes for texts of arbitrary lengths?
+Hint: have a look e.g. at the HMAC construction.
+~
+
+[Title          A]: http://Title_A.com "Title          A title"
+
+
+<script>
+// show answers when clicked upon.
+[].forEach.call( document.getElementsByClassName("answer-link"), function(answerLink) {
+  answerLink.addEventListener("click", function(ev) {
+    var answer = answerLink.parentNode;
+    var cls = answer.className;
+    if (/\bview\b/.test(cls)) {
+      answer.className = cls.replace(/\s*view\s*/,"");
+    }
+    else {
+      answer.className = cls + " view";
+    } 
+  });
+});
+</script>

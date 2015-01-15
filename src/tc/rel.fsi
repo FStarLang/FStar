@@ -22,19 +22,25 @@ open Microsoft.FStar.Tc
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Absyn.Syntax
+open Microsoft.FStar.Tc.Rel2
+type guard_t = Rel2.guard_t
+type guard_formula = Rel2.guard_formula
 
-(* relations on types, kinds, etc. *)
-type guard_t = 
-  | Trivial
-  | NonTrivial of formula
-  
 val new_kvar: Range.range -> binders -> knd * uvar_k
 val new_tvar: Range.range -> binders -> knd -> typ * typ
 val new_evar: Range.range -> binders -> typ -> exp * exp
 
-val guard_to_string : env -> guard_t -> string
-val trivial : guard_t -> unit
+val close_guard: binders -> guard_t -> guard_t
+val apply_guard: guard_t -> exp -> guard_t
+val trivial_guard: guard_t
+val is_trivial: guard_t -> bool
 val conj_guard: guard_t -> guard_t -> guard_t
+val imp_guard: guard_t -> guard_t -> guard_t
+val guard_of_guard_formula: guard_formula -> guard_t
+val guard_f: guard_t -> guard_formula
+val guard_to_string : env -> guard_t -> string
+val try_discharge_guard: env -> guard_t -> (bool * list<string>)
+
 val try_keq: env -> knd -> knd -> option<guard_t>
 val keq : env -> option<typ> -> knd -> knd -> guard_t
 val subkind: env -> knd -> knd -> guard_t

@@ -74,7 +74,7 @@ let op_as_tylid r s =
     | "~"   ->  r Const.not_lid
     | "=="  ->  r Const.eq2_lid
     | "=!=" ->  r Const.neq2_lid
-//    | "<" ->    r Const.lt_lid
+    | "<<" ->   r Const.precedes_lid
 //    | "<=" ->   r Const.lte_lid
 //    | ">" ->    r Const.gt_lid
 //    | ">=" ->   r Const.gte_lid
@@ -96,11 +96,8 @@ let rec is_type env (t:term) =
     | Op("/\\", _)
     | Op("\\/", _)
     | Op("==>", _)
-    | Op("<==>", _)  -> true               (* negation predicate *)
-//    | Op("<", _)
-//    | Op("<=", _)
-//    | Op(">", _)
-//    | Op(">=", _) -> env.phase = Formula
+    | Op("<==>", _)  
+    | Op("<<", _) -> true              
     | Op(s, _) -> (match op_as_tylid t.range s with
         | None -> false
         | _ -> true)
@@ -222,6 +219,17 @@ let close env t =
        let result = mk_term (Product(binders, t)) t.range t.level in
        result
 
+let close_fun env t =
+  let ftv = sort_ftv <| free_type_vars env t in
+  if List.length ftv = 0
+  then t
+  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type false) in
+       let t = match (unlabel t).tm with 
+        | Product _ -> t
+        | _ -> mk_term (App(mk_term (Name Const.tot_effect_lid) t.range t.level, t, false)) t.range t.level in
+       let result = mk_term (Product(binders, t)) t.range t.level in
+       result
+
 let rec uncurry bs t = match t.tm with
     | Product(binders, t) -> uncurry (bs@binders) t 
     | _ -> bs, t
@@ -328,7 +336,7 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
             | LetBinder _ -> failwith "impossible"
             | TBinder(x, _) -> TBinder(x, desugar_kind env t)
             | VBinder(x, _) ->  
-                let t = close env t in
+                let t = close_fun env t in
                 VBinder(x, desugar_typ env t) in
         loc, env', binder, p
 
@@ -1306,8 +1314,8 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let f = desugar_formula env t in
     env, [Sig_assume(qualify env id, f, [Public; Assumption], d.drange)]
 
-  | Val(quals, id, t) -> 
-    let t = desugar_typ env (close env t) in
+  | Val(quals, id, t) ->
+    let t = desugar_typ env (close_fun env t) in
     let se = Sig_val_decl(qualify env id, t, quals, d.drange) in
     let env = push_sigelt env se in
     env, [se]

@@ -33,20 +33,20 @@ let norm_then_print = Util.mk_ref true
 let z3_exe = Util.mk_ref (Platform.exe "z3")
 let silent=Util.mk_ref false
 let debug=Util.mk_ref []
-let debug_level = Util.mk_ref Low 
+let debug_level = Util.mk_ref []
 let dlevel = function 
     | "Low" -> Low
     | "Medium" -> Medium
     | "High" -> High
     | "Extreme" -> Extreme
     | s -> Other s
-let debug_level_geq l1 l2 = match l1 with 
+let one_debug_level_geq l1 l2 = match l1 with 
     | Other _ 
     | Low -> l1 = l2
     | Medium -> (l2 = Low || l2 = Medium)
     | High -> (l2 = Low || l2 = Medium || l2 = High)
     | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
-    
+let debug_level_geq l2 = !debug_level |> Util.for_some (fun l1 -> one_debug_level_geq l1 l2)
 let log_types = Util.mk_ref false
 let print_effect_args=Util.mk_ref false
 let print_real_names = Util.mk_ref false
@@ -75,6 +75,8 @@ let initial_fuel = Util.mk_ref 2
 let max_fuel = Util.mk_ref 8
 let min_fuel = Util.mk_ref 1
 let warn_top_level_effects = Util.mk_ref false
+let rel2 = Util.mk_ref false
+let fs_typ_app = Util.mk_ref false
 
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
@@ -122,7 +124,7 @@ let specs () : list<Getopt.opt> =
      ( noshort, "prims", OneArg ((fun x -> prims_ref := Some x), "file"), "");
      ( noshort, "prn", ZeroArgs (fun () -> print_real_names := true), "Print real names---you may want to use this in conjunction with logQueries");
      ( noshort, "debug", OneArg ((fun x -> debug := x::!debug), "module name"), "Print LOTS of debugging information while checking module [arg]");
-     ( noshort, "debug_level", OneArg ((fun x -> debug_level := dlevel x), "Low|Medium|High|Extreme"), "Control the verbosity of debugging info");
+     ( noshort, "debug_level", OneArg ((fun x -> debug_level := dlevel x::!debug_level), "Low|Medium|High|Extreme"), "Control the verbosity of debugging info");
      ( noshort, "log_types", ZeroArgs (fun () -> log_types := true), "Print types computed for data/val/let-bindings");
      ( noshort, "print_effect_args", ZeroArgs (fun () -> print_effect_args := true), "Print inferred predicate transformers for all computation types");
      ( noshort, "dump_module", OneArg ((fun x -> dump_module := Some x), "module name"), "");
@@ -143,6 +145,8 @@ let specs () : list<Getopt.opt> =
      ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
      ( noshort, "max_fuel", OneArg((fun x -> max_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try at most (default 8)");
      ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
-     ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens")
+     ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
+     ( noshort, "rel2", ZeroArgs (fun () -> rel2 := true), "Use the new implementation of type relations");
+     ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator")
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs

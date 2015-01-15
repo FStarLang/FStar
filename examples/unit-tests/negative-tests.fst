@@ -1,11 +1,17 @@
-(* EXPECT 23 FAILURES *)
+(* EXPECT 27 FAILURES *)
 (* ******************************************************************************** *)
 module Neg
+
 assume val g : 'a -> Tot 'b
 assume val h : 'a:Type -> 'b:Type -> a:'a -> Tot (b:'b{b == g a})
 assume val length: list 'a -> Tot int
 assume val length_nil : unit -> Lemma
       (ensures (length int [] == 0))
+
+val x:nat
+let x = -1 //should fail reporting 1 error
+
+let y:nat = -1 //should also fail reporting only 1 error
 
 let assert_0_eq_1 () = assert (0==1) //should fail
 
@@ -23,6 +29,13 @@ let test_postcondition_label x = x //should fail
 
 val bad_projector: option 'a -> 'a
 let bad_projector x = Some.v x (* should fail *)
+
+assume type T : (result int -> Type) -> Type
+assume TEST: T (fun ri -> V.v ri == 0)//should fail: not (is_V ri)
+
+assume val f1: (x:int -> Tot unit) -> Tot unit
+assume val g1: nat -> Tot unit
+let h1 = f1 (fun x -> g1 x) //should fail; x is not nat
 
 (* ******************************************************************************** *)
 
