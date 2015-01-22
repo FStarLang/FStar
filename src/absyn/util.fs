@@ -750,13 +750,6 @@ let sub_fv (fvs, uvs) (tvars, vvars) =
             fxvs=Util.set_difference fvs.fxvs vvars}, 
     uvs
 
-let tbinder = function 
-    | None -> None
-    | Some x -> Some (Inl x)
-let vbinder = function 
-    | None -> None
-    | Some x -> Some (Inr x)
-
 let stash (uvonly:bool) (s:syntax<'a,'b>) ((fvs:freevars), (uvs:uvars)) = 
     s.uvs := Some uvs;
     if uvonly then ()

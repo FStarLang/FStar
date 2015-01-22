@@ -888,7 +888,8 @@ and tc_exp env e : exp * lcomp * guard_t =
               let e, c, g_e = tc_exp env e in 
               let c = Tc.Util.weaken_precondition env c (Tc.Util.short_circuit_guard (Inr head) outargs) in
               let g = Rel.conj_guard g g_e in
-              if lid_equals c.eff_name Const.tot_effect_lid
+              if debug env Options.High then Util.fprint2 "Guard on this arg is %s;\naccumulated guard is %s\n" (Rel.guard_to_string env g_e) (Rel.guard_to_string env g);
+              if Util.is_total_lcomp c 
               then let arg = varg e in 
                    let subst = maybe_extend_subst subst (List.hd bs) arg in
                    tc_args (subst, arg::outargs, arg::arg_rets, comps, g, fvs) rest cres rest'
@@ -896,7 +897,12 @@ and tc_exp env e : exp * lcomp * guard_t =
               then let arg = varg e in
                    let subst = maybe_extend_subst subst (List.hd bs) arg in
                    let comps, guard =
-                     if c.cflags |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
+//                     if is_null_binder (List.hd bs)
+//                     then let c' = c.comp() in
+//                          let g' = Util.must <| Tc.Rel.sub_comp env c' (mk_Total c.res_typ) in
+//                          comps, Rel.conj_guard g g'
+//                     else 
+                     if Util.is_lcomp_partial_return c 
                      then let comps = (Some (Env.Binding_var(x.v, x.sort)), c)::comps in
                           comps, g 
                      else let c = Tc.Util.maybe_assume_result_eq_pure_term env e c in
@@ -921,17 +927,22 @@ and tc_exp env e : exp * lcomp * guard_t =
                        where xi is the result of ei. (See the last two tests in examples/unit-tests/unit1.fst)
                     *)
                     let g = Rel.conj_guard g_head g in
-//                    let refine_with_equality = match guard_f g with 
-//                        | Rel2.Trivial -> 
-//                            if debug env <| Options.Other "Refine"
-//                            then Util.print_string "Guard is trivial\n";
-//                            comps |> Util.for_some (fun (_, c) -> not (Util.is_total_lcomp c)) (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
-//                        | _ -> 
-//                            if debug env <| Options.Other "Refine"
-//                            then Util.print_string "Guard is non-trivial\n";
-//                            comps |> Util.for_some (fun (_, c) -> not (Util.is_pure_lcomp c)) in (* if the guard is non-trivial, strengthen pre-condition WILL add an equality, but only if all the terms are pure; if not, add it here *)
-//                 
-                    let cres = Util.maybe_assume_result_eq_pure_term env (mk_Exp_app_flat(head, List.rev arg_rets) cres.res_typ top.pos) cres in
+                    let refine_with_equality = match guard_f g with 
+                        | Rel2.Trivial -> 
+                            comps |> Util.for_some (fun (_, c) -> not (Util.is_total_lcomp c)) (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
+                        | _ -> 
+                            comps |> Util.for_some (fun (_, c) -> not (Util.is_pure_lcomp c)) in (* if the guard is non-trivial, strengthen pre-condition WILL add an equality, but only if all the terms are pure; if not, add it here *)
+                    
+                    let cres = //NS: Choosing when to add an equality refinement is VERY important for performance. Adding it unconditionally impacts run time by >5x
+                        if Util.is_total_lcomp cres 
+                        && refine_with_equality 
+                        then Util.maybe_assume_result_eq_pure_term env (mk_Exp_app_flat(head, List.rev arg_rets) cres.res_typ top.pos) cres
+                        else (if Env.debug env Options.Low
+                              then Util.fprint3 "Not refining result: f=%s; cres=%s; guard=%s\n" (Print.exp_to_string head) (Print.lcomp_typ_to_string cres) (Rel.guard_to_string env g);
+                              cres) in
+                  
+
+//                    let cres = Util.maybe_assume_result_eq_pure_term env (mk_Exp_app_flat(head, List.rev arg_rets) cres.res_typ top.pos) cres in
                     (* relabeling the labeled sub-terms in cres to report failing pre-conditions at this call-site *)
                     Tc.Util.refresh_comp_label env false cres, g
                 

@@ -253,8 +253,8 @@ and imp_to_string s = function
   | false -> s
 
 and binder_to_string b = match b with 
-    | Inl a, imp -> if is_null_binder b then kind_to_string a.sort else imp_to_string ((strBvd a.v) ^ ":" ^ (kind_to_string a.sort)) imp
-    | Inr x, imp -> if is_null_binder b then typ_to_string x.sort else imp_to_string ((strBvd x.v) ^ ":" ^ (typ_to_string x.sort)) imp
+    | Inl a, imp -> if is_null_binder b then kind_to_string a.sort else strBvd a.v// imp_to_string ((strBvd a.v) ^ ":" ^ (kind_to_string a.sort)) imp
+    | Inr x, imp -> if is_null_binder b then typ_to_string x.sort else strBvd x.v //imp_to_string ((strBvd x.v) ^ ":" ^ (typ_to_string x.sort)) imp
    
 and binders_to_string sep bs =
     let bs = if !Options.print_implicits then bs else List.filter (fun (_,i) -> not i) bs in

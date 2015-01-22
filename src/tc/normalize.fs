@@ -603,8 +603,52 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
 
       beta config.environment binders config.stack.args
 
-    | Exp_match _
-    | Exp_let  _ -> 
+    | Exp_let((false, [(Inl x, t, e1)]), e2) -> 
+      let c_e1 = wne tcenv ({config with code=e1; stack=empty_stack (Inr e1.tk)}) in
+      let binders, env = sn_binders tcenv [v_binder (Util.bvd_to_bvar_s x t)] config.environment config.steps in
+      let c_e2 = wne tcenv ({config with code=e2; stack=empty_stack (Inr e2.tk); environment=env}) in
+      let e = match binders with
+        | [(Inr x, _)] -> mk_Exp_let((false, [(Inl x.v, x.sort, c_e1.code)]), c_e2.code) c_e2.code.tk e.pos 
+        | _ -> failwith "Impossible" in
+      {config with code=e} |> rebuild
+
+    | Exp_match(e1, eqns) -> 
+      let c_e1 = wne tcenv ({config with code=e1; stack=empty_stack (Inr e1.tk)}) in
+      let wn_eqn (pat, w, body) = 
+        let rec pat_vars p = match p.v with 
+            | Pat_disj [] -> []
+            | Pat_disj (p::_) -> pat_vars p
+            | Pat_cons (_, pats) -> List.collect pat_vars pats
+            | Pat_var(x, _) -> [v_binder x]
+            | Pat_tvar a -> [t_binder a]
+            | Pat_wild _
+            | Pat_twild _ 
+            | Pat_constant _ 
+            | Pat_dot_term _
+            | Pat_dot_typ _ -> [] in
+        let vars = pat_vars pat in //Not alpha-converting patterns. TODO: OK?
+        let env = List.fold_left (fun env b -> match fst b with 
+            | Inl a -> 
+              let atyp = Util.btvar_to_typ a in
+              let memo = Util.mk_ref (Some atyp) in
+              T(a.v, (atyp,[]), memo)::env
+
+            | Inr x -> 
+              let xexp = Util.bvar_to_exp x in
+              let memo = Util.mk_ref (Some xexp) in
+              V(x.v, (xexp,[]), memo)::env) config.environment vars in 
+        let w = match w with 
+            | None -> None
+            | Some w -> 
+              let c_w = wne tcenv ({config with code=w; environment=env; stack=empty_stack (Inr w.tk)}) in
+              Some (c_w.code) in
+        let c_body = wne tcenv ({config with code=body; environment=env; stack=empty_stack (Inr body.tk)}) in
+        (pat, w, c_body.code) in
+    let eqns = List.map wn_eqn eqns in
+    let e = mk_Exp_match(c_e1.code, eqns) e.tk e.pos in
+    {config with code=e} |> rebuild
+
+    | Exp_let  _ -> //top-level lets or let recs
       let s = subst_of_env config.environment in
       let e = subst_exp s e in
       {config with code=e} |> rebuild

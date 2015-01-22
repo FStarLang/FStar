@@ -1507,7 +1507,7 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         solve_binders env bs1 bs2 orig wl
         (fun scope env subst  -> 
             let c2 = Util.subst_comp subst c2 in
-            let rel = if !Options.verify then EQ else problem.relation in
+            let rel = if !Options.verify then EQ else problem.relation in //TODO: Too restrictive! Need a better way to decide when to prove equality
             CProb <| mk_problem scope orig c1 rel c2 None "function co-domain")
 
       | Typ_lam(bs1, t1'), Typ_lam(bs2, t2') -> 
@@ -1675,7 +1675,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
         fun t1 rel t2 reason -> mk_problem (p_scope orig) orig t1 rel t2 None reason in
     if Util.physical_equality c1 c2 
     then solve env (solve_prob orig None [] wl)
-    else let _ = if debug env <| Options.Other "Rel" then Util.fprint2 "solve_c %s and %s\n" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2) in
+    else let _ = if debug env <| Options.Other "Rel" then Util.fprint3 "solve_c %s %s %s\n" (Print.comp_typ_to_string c1) (rel_to_string problem.relation) (Print.comp_typ_to_string c2) in
          let r = Env.get_range env in
          let c1_0, c2_0 = c1, c2 in
          match c1.n, c2.n with

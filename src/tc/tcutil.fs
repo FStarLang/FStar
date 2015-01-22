@@ -551,21 +551,34 @@ let lift_comp c m lift =
    effect_args=[targ (lift c.result_typ wp); targ (lift c.result_typ wlp)]; 
    flags=[]}
 
-let rec norm_eff_name env l = 
-   match Tc.Env.lookup_typ_abbrev env l with
-    | None -> l
-    | Some t -> 
-      let rec aux t = match (Util.unmeta_typ t).n with
-        | Typ_const l -> norm_eff_name env l.v
-        | Typ_app _ -> Util.head_and_args t |> fst |> aux
-        | Typ_lam(_, body) -> Util.head_and_args body |> fst |> aux
-        | _ -> l in
-      aux t
+let norm_eff_name env (l:lident) = 
+   let cache = Util.smap_create 20 in
+   let rec find l = 
+       match Tc.Env.lookup_typ_abbrev env l with
+        | None -> l
+        | Some t -> 
+          let rec aux t = match (Util.unmeta_typ t).n with
+            | Typ_const l -> find l.v
+            | Typ_app _ -> Util.head_and_args t |> fst |> aux
+            | Typ_lam(_, body) -> Util.head_and_args body |> fst |> aux
+            | _ -> l in
+          aux t in
+    match Util.smap_try_find cache l.str with 
+        | Some l -> l
+        | None -> 
+          let m = find l in 
+          Util.smap_add cache l.str m;
+          m
+            
 
 let join_effects env l1 l2 = 
   let m, _, _ = Tc.Env.join env (norm_eff_name env l1) (norm_eff_name env l2) in
   m
-let join_lcomp env c1 c2 = join_effects env c1.eff_name c2.eff_name
+let join_lcomp env c1 c2 = 
+  if lid_equals c1.eff_name Const.tot_effect_lid
+  && lid_equals c2.eff_name Const.tot_effect_lid
+  then Const.tot_effect_lid
+  else join_effects env c1.eff_name c2.eff_name
 
 let lift_and_destruct env c1 c2 = 
   let c1 = Tc.Normalize.weak_norm_comp env c1 in
@@ -733,37 +746,34 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
   {lc with comp=weaken}
 
 let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (lc:lcomp) (g0:guard_t) : lcomp * guard_t = 
- match guard_f g0 with 
-  | Rel2.Trivial -> lc, g0
-  | Rel2.NonTrivial _ ->
-    let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
-    let strengthen () = 
-        let c = lc.comp () in
-        let g0 = Rel.simplify_guard env g0 in 
-        match guard_f g0 with
-            | Rel2.Trivial -> c
-            | Rel2.NonTrivial f -> 
-//            Util.fprint1 "Strengthening precondition with: %s\n" (Normalize.typ_norm_to_string env f);
-            if debug env <| Options.Other "Strengthen" then Util.fprint2 "\tStrengthening precondition %s with %s\n" (Normalize.comp_typ_norm_to_string env c) (Normalize.typ_norm_to_string env f);
-            let c = 
-                if Util.is_pure_comp c 
-                && not (is_function (Util.comp_result c))
-                && not (Util.is_partial_return c)
-                then let x = Util.gen_bvar (Util.comp_result c) in
-                     let xret = return_value env x.sort (Util.bvar_to_exp x) in
-                     let xbinding = Env.Binding_var(x.v, x.sort) in
-                     let lc = bind env (Some e) (lcomp_of_comp c) (Some xbinding, lcomp_of_comp xret) in
-                     lc.comp()
-                else c in
-            let c = Tc.Normalize.weak_norm_comp env c in
-            let res_t, wp, wlp = destruct_comp c in
-            let md = Tc.Env.get_monad_decl env c.effect_name in 
-            let wp = mk_Typ_app(md.assert_p, [targ res_t; targ <| label_opt reason (Env.get_range env) f; targ wp]) wp.tk wp.pos in
-            let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) wlp.tk wlp.pos in
-            let c2 = mk_comp md res_t wp wlp flags in 
-            c2 in
-    {lc with cflags=flags; comp=strengthen},  
-    {g0 with Rel2.guard_f=Rel2.Trivial} 
+    if Rel.is_trivial g0 then lc, g0
+    else
+        let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
+        let strengthen () = 
+            let c = lc.comp () in
+            let g0 = Rel.simplify_guard env g0 in 
+            match guard_f g0 with
+                | Rel2.Trivial -> c
+                | Rel2.NonTrivial f -> 
+                let c = 
+                    if Util.is_pure_comp c 
+                    && not (is_function (Util.comp_result c))
+                    && not (Util.is_partial_return c)
+                    then let x = Util.gen_bvar (Util.comp_result c) in
+                         let xret = return_value env x.sort (Util.bvar_to_exp x) in
+                         let xbinding = Env.Binding_var(x.v, x.sort) in
+                         let lc = bind env (Some e) (lcomp_of_comp c) (Some xbinding, lcomp_of_comp xret) in
+                         lc.comp()
+                    else c in
+                let c = Tc.Normalize.weak_norm_comp env c in
+                let res_t, wp, wlp = destruct_comp c in
+                let md = Tc.Env.get_monad_decl env c.effect_name in 
+                let wp = mk_Typ_app(md.assert_p, [targ res_t; targ <| label_opt reason (Env.get_range env) f; targ wp]) wp.tk wp.pos in
+                let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) wlp.tk wlp.pos in
+                let c2 = mk_comp md res_t wp wlp flags in 
+                c2 in
+       {lc with eff_name=norm_eff_name env lc.eff_name; cflags=[]; comp=strengthen},
+       {g0 with Rel2.guard_f=Rel2.Trivial} 
 
 
 let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
