@@ -268,6 +268,9 @@ and args_to_string args =
     let args = if !Options.print_implicits then args else List.filter (fun (_,i) -> not i) args in
     args |> List.map arg_to_string |> String.concat " "
 
+and lcomp_typ_to_string lc = 
+    Util.format2 "%s %s" (sli lc.eff_name) (typ_to_string lc.res_typ)
+
 and comp_typ_to_string c =
   match c.n with
     | Total t -> Util.format1 "Tot %s" (typ_to_string t)

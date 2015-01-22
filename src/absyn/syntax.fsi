@@ -193,6 +193,12 @@ type ktec =
     | E of exp
     | C of comp
 
+type lcomp = {
+    eff_name: lident;
+    res_typ: typ;
+    cflags: list<cflags>;
+    comp: unit -> comp //a lazy computation
+    }
 type either_var = either<btvar, bvvar>
 type freevars_l = list<either_var>
 type formula = typ

@@ -501,12 +501,18 @@ let comp_flags c = match c.n with
   | Comp ct -> ct.flags
 
 let is_total_comp c = comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
+let is_total_lcomp c = lid_equals c.eff_name Const.tot_effect_lid || c.cflags |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
 let is_partial_return c = comp_flags c |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
+let is_lcomp_partial_return c = c.cflags |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
 let is_pure_comp c = match c.n with 
     | Total _ -> true
     | Comp ct -> is_total_comp c 
                  || Util.starts_with ct.effect_name.str "Prims.PURE"
                  || ct.flags |> Util.for_some (function LEMMA -> true | _ -> false)
+let is_pure_lcomp lc = 
+    is_total_lcomp lc
+    || Util.starts_with lc.eff_name.str "Prims.PURE"
+    || lc.cflags |> Util.for_some (function LEMMA -> true | _ -> false)
                  
 let is_pure_function t = match (compress_typ t).n with 
     | Typ_fun(_, c) -> is_pure_comp c

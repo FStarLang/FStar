@@ -74,6 +74,7 @@ val conj_guard: guard_t -> guard_t -> guard_t
 val imp_guard: guard_t -> guard_t -> guard_t
 val guard_of_guard_formula: guard_formula -> guard_t
 val guard_to_string : env -> guard_t -> string
+val solve_deferred_constraints: env -> guard_t -> guard_t
 val try_discharge_guard: env -> guard_t -> (bool * list<string>)
 val unrefine: env -> typ -> typ
 val try_keq: env -> knd -> knd -> option<guard_t>
@@ -86,3 +87,4 @@ val subtype: env -> typ -> typ -> guard_t
 val subtype_fail: env -> typ -> typ -> 'a
 val trivial_subtype: env -> option<exp> -> typ -> typ -> unit
 val sub_comp: env -> comp -> comp -> option<guard_t>
+val simplify_guard: env -> guard_t -> guard_t

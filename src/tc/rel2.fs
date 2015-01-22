@@ -131,7 +131,10 @@ type deferred = {
   carry:   list<(string * prob)>;
   slack:   list<(bool * typ)>;
 }
-
+let no_deferred = {
+    carry=[];
+    slack=[];
+}
 type solution = 
   | Success of list<uvi> * deferred
   | Failed  of prob * string
@@ -2102,7 +2105,7 @@ let sub_comp env c1 c2 =
   let prob = CProb <| new_problem env c1 SUB c2 None (Env.get_range env) in
   with_guard env prob <| solve_and_commit env (singleton prob)  (fun _ -> None) 
 
-let try_discharge_guard env (g:guard_t) = 
+let solve_deferred_constraints env (g:guard_t) =
    let fail (d,s) = 
       let msg = explain env d s in
       raise (Error(msg, p_loc d)) in
@@ -2117,18 +2120,19 @@ let try_discharge_guard env (g:guard_t) =
    match gopt with 
     | Some ({slack=slack}) -> 
       fix_slack_vars slack;
-      if not (!Options.verify) then true, []
-      else begin match g.guard_f with 
-        | Trivial -> true, []
-        | NonTrivial vc -> 
-            let vc = Normalize.norm_typ [Delta; Beta; Eta; Simplify] env vc in
-            begin match check_trivial vc with 
-                | Trivial -> (true, [])
-                | NonTrivial vc -> 
-                  if Tc.Env.debug env <| Options.Other "Rel" then Tc.Errors.diag (Tc.Env.get_range env) (Util.format1 "Checking VC=\n%s\n" (Print.formula_to_string vc));
-                  env.solver.solve env vc
-            end
-      end
+      {g with deferred=no_deferred}
     | _ -> failwith "impossible"
-   
-   
+
+let try_discharge_guard env (g:guard_t) = 
+   let g = solve_deferred_constraints env g in
+   if not (!Options.verify) then true, []
+   else match g.guard_f with 
+    | Trivial -> true, []
+    | NonTrivial vc -> 
+        let vc = Normalize.norm_typ [Delta; Beta; Eta; Simplify] env vc in
+        begin match check_trivial vc with 
+            | Trivial -> (true, [])
+            | NonTrivial vc -> 
+                if Tc.Env.debug env <| Options.Other "Rel" then Tc.Errors.diag (Tc.Env.get_range env) (Util.format1 "Checking VC=\n%s\n" (Print.formula_to_string vc));
+                env.solver.solve env vc
+        end

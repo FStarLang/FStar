@@ -40,6 +40,8 @@ val guard_of_guard_formula: guard_formula -> guard_t
 val guard_f: guard_t -> guard_formula
 val guard_to_string : env -> guard_t -> string
 val try_discharge_guard: env -> guard_t -> (bool * list<string>)
+val solve_deferred_constraints: env -> guard_t -> guard_t
+val simplify_guard: env -> guard_t -> guard_t
 
 val try_keq: env -> knd -> knd -> option<guard_t>
 val keq : env -> option<typ> -> knd -> knd -> guard_t

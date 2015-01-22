@@ -259,6 +259,12 @@ type ktec =
     | E of exp
     | C of comp
 
+type lcomp = {
+    eff_name: lident;
+    res_typ: typ;
+    cflags: list<cflags>;
+    comp: unit -> comp //a lazy computation
+    }
 (*********************************************************************************)
 (* Identifiers to/from strings *)    
 (*********************************************************************************)
