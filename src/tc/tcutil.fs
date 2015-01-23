@@ -904,7 +904,7 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
     | Some g -> 
       match guard_f g with 
         | Rel2.Trivial -> (e, lc, g)
-        | Rel2.NonTrivial f -> 
+        | Rel2.NonTrivial f ->
           let g = {g with Rel2.guard_f=Rel2.Trivial} in
           let strengthen () = 
             let c = lc.comp() in
@@ -925,7 +925,8 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
                 else eq_ret in 
             let c = bind env (Some e) (lcomp_of_comp <| mk_Comp ct) (Some(Env.Binding_var(x, lc.res_typ)), eq_ret) in
             c.comp() in
-          let lc = {lc with res_typ=t; comp=strengthen} in
+          let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
+          let lc = {lc with res_typ=t; comp=strengthen; cflags=flags; eff_name=norm_eff_name env lc.eff_name} in
           (e, lc, g)
 
 
