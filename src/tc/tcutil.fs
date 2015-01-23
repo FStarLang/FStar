@@ -772,7 +772,9 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (lc:lc
                 let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) wlp.tk wlp.pos in
                 let c2 = mk_comp md res_t wp wlp flags in 
                 c2 in
-       {lc with eff_name=norm_eff_name env lc.eff_name; cflags=[]; comp=strengthen},
+       {lc with eff_name=norm_eff_name env lc.eff_name; 
+                cflags=(if Util.is_pure_lcomp lc && not <| Util.is_function_typ lc.res_typ then flags else []); 
+                comp=strengthen},
        {g0 with Rel2.guard_f=Rel2.Trivial} 
 
 
@@ -838,8 +840,7 @@ let maybe_assume_result_eq_pure_term env (e:exp) (lc:lcomp) : lcomp =
   let refine () = 
       let c = lc.comp() in
       if not (is_pure_effect env lc.eff_name) then c
-      else if Util.is_partial_return c 
-      then c
+      else if Util.is_partial_return c then c
       else match (compress_typ (Util.comp_result c)).n with 
         | Typ_fun _ -> c (* no need to include equalities for functions *)
         | _ -> 
@@ -850,8 +851,14 @@ let maybe_assume_result_eq_pure_term env (e:exp) (lc:lcomp) : lcomp =
            let xexp = Util.bvd_to_exp x t in
            let ret = lcomp_of_comp <| return_value env t xexp in
            let eq_ret = weaken_precondition env ret (Rel2.NonTrivial (Util.mk_eq xexp e)) in
-           comp_set_flags ((bind env None (lcomp_of_comp c) (Some (Env.Binding_var(x, t)), eq_ret)).comp()) (comp_flags c) in
-  {lc with comp=refine}
+           comp_set_flags ((bind env None (lcomp_of_comp c) (Some (Env.Binding_var(x, t)), eq_ret)).comp()) (PARTIAL_RETURN::comp_flags c) in
+  let flags = 
+    if not (Util.is_function_typ lc.res_typ)
+    && Util.is_pure_lcomp lc
+    && not (Util.is_lcomp_partial_return lc)
+    then PARTIAL_RETURN::lc.cflags
+    else lc.cflags in
+  {lc with comp=refine; cflags=flags}
 
 let check_comp env (e:exp) (c:comp) (c':comp) : exp * comp * guard_t = 
   //printfn "Checking sub_comp:\n%s has type %s\n\t<:\n%s\n" (Print.exp_to_string e) (Print.comp_typ_to_string c) (Print.comp_typ_to_string c');

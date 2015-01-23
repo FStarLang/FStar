@@ -897,17 +897,7 @@ and tc_exp env e : exp * lcomp * guard_t =
               then let arg = varg e in
                    let subst = maybe_extend_subst subst (List.hd bs) arg in
                    let comps, guard =
-//                     if is_null_binder (List.hd bs)
-//                     then let c' = c.comp() in
-//                          let g' = Util.must <| Tc.Rel.sub_comp env c' (mk_Total c.res_typ) in
-//                          comps, Rel.conj_guard g g'
-//                     else 
-                     if Util.is_lcomp_partial_return c 
-                     then let comps = (Some (Env.Binding_var(x.v, x.sort)), c)::comps in
-                          comps, g 
-                     else let c = Tc.Util.maybe_assume_result_eq_pure_term env e c in
-                          let comps = (Some (Env.Binding_var(x.v, x.sort)), c)::comps in
-                          comps, g in
+                      (Some (Env.Binding_var(x.v, x.sort)), c)::comps, g in
                    tc_args (subst, arg::outargs, arg::arg_rets, comps, guard, fvs) rest cres rest'
               else if is_null_binder (List.hd bs)
               then let newx = Util.gen_bvar_p e.pos c.res_typ in
@@ -927,22 +917,20 @@ and tc_exp env e : exp * lcomp * guard_t =
                        where xi is the result of ei. (See the last two tests in examples/unit-tests/unit1.fst)
                     *)
                     let g = Rel.conj_guard g_head g in
-                    let refine_with_equality = match guard_f g with 
-                        | Rel2.Trivial -> 
-                            comps |> Util.for_some (fun (_, c) -> not (Util.is_total_lcomp c)) (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
-                        | _ -> 
-                            comps |> Util.for_some (fun (_, c) -> not (Util.is_pure_lcomp c)) in (* if the guard is non-trivial, strengthen pre-condition WILL add an equality, but only if all the terms are pure; if not, add it here *)
-                    
+
+                    let refine_with_equality = 
+                        //if the function is pure, but its arguments are not, then add an equality refinement here
+                        //OW, for pure applications we always add an equality at the end; see ADD_EQ_REFINEMENT below
+                        Util.is_pure_lcomp cres
+                        && comps |> Util.for_some (fun (_, c) -> not (Util.is_pure_lcomp c)) in (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
+                      
                     let cres = //NS: Choosing when to add an equality refinement is VERY important for performance. Adding it unconditionally impacts run time by >5x
-                        if Util.is_total_lcomp cres 
-                        && refine_with_equality 
+                        if refine_with_equality 
                         then Util.maybe_assume_result_eq_pure_term env (mk_Exp_app_flat(head, List.rev arg_rets) cres.res_typ top.pos) cres
                         else (if Env.debug env Options.Low
                               then Util.fprint3 "Not refining result: f=%s; cres=%s; guard=%s\n" (Print.exp_to_string head) (Print.lcomp_typ_to_string cres) (Rel.guard_to_string env g);
                               cres) in
-                  
 
-//                    let cres = Util.maybe_assume_result_eq_pure_term env (mk_Exp_app_flat(head, List.rev arg_rets) cres.res_typ top.pos) cres in
                     (* relabeling the labeled sub-terms in cres to report failing pre-conditions at this call-site *)
                     Tc.Util.refresh_comp_label env false cres, g
                 
@@ -983,7 +971,7 @@ and tc_exp env e : exp * lcomp * guard_t =
     let e, c, g = check_function_app false (Util.unrefine thead) in
     let c = if !Options.verify 
             && not (Util.is_lcomp_partial_return c)
-            && (Util.is_primop head || Util.is_total_lcomp c)
+            && Util.is_pure_lcomp c //ADD_EQ_REFINEMENT for pure applications
             then Tc.Util.maybe_assume_result_eq_pure_term env e c 
             else c in
     if debug env Options.Extreme 
