@@ -173,13 +173,13 @@ let rec filter test l =
 val evenb : nat -> Tot bool
 let evenb i = i%2 = 0
 
-(* NS: Note: induction over non-inductive types like int *)
-(*     doesn't generate good patterns for the solver *)
-(* let rec evenb i = *)
-(*   match i with *)
-(*   | 0 -> true *)
-(*   | 1 -> false *)
-(*   | _ -> evenb (i-2) *)
+(* NS: Note: induction over non-inductive types like int is also fine *)
+val evenb' : nat -> Tot bool
+let rec evenb' i =
+  match i with
+  | 0 -> true
+  | 1 -> false
+  | _ -> evenb' (i-2)
 
 val oddb : nat -> Tot bool
 let oddb n = not (evenb n)
@@ -187,6 +187,10 @@ let oddb n = not (evenb n)
 val test_filter1 : unit -> Lemma
       (ensures (filter evenb [1;2;3;4] = [2;4]))
 let test_filter1 () = ()
+
+val test_filter2 : unit -> Lemma
+      (ensures (filter evenb' [1;2;3;4] = [2;4]))
+let test_filter2 () = ()
 
 (* Map *)
 
@@ -205,7 +209,7 @@ val test_map2 : unit -> Lemma
 let test_map2 () = ()
 
 val test_map3 : unit -> Lemma
-    (ensures (map (fun n -> [evenb n;oddb n]) [2;1;2;5]
+    (ensures (map (fun (n:nat) -> [evenb n;oddb n]) [2;1;2;5]
               = [[true;false];[false;true];[true;false];[false;true]]))
 let test_map3 () = ()
 

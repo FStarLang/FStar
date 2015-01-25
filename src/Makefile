@@ -192,8 +192,10 @@ test:   boot
 	make -s -C ../examples 
 
 test.rel2:
-	make -C ../examples/unit-tests OTHERFLAGS=--rel2 
 	make -C ../examples/data_structures OTHERFLAGS=--rel2 
+	make -C ../examples/software_foundations OTHERFLAGS=--rel2 
+	make -C ../examples/unit-tests unit2.vv OTHERFLAGS=--rel2 
+	make -C ../examples/unit-tests OTHERFLAGS=--rel2 
 
 test.diff:
 	@make -s test | grep -v "^make\[" > .test.out

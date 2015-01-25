@@ -1092,11 +1092,12 @@ let destruct_slack env wl (phi:typ) : either<typ, slack> =
 type flex_t = (typ * uvar_t * knd * args)
 type im_or_proj_t = ((uvar_t * knd) * list<arg> * binders * ((list<ktec> -> typ) * (typ -> bool) * list<(option<binder> * variance * ktec)>))
 
-let rigid_rigid     = 0
-let flex_rigid_eq   = 1
-let flex_base_rigid = 2
-let flex_rigid      = 3
-let flex_flex       = 4
+let rigid_rigid       = 0
+let flex_rigid_eq     = 1
+let flex_refine_inner = 2
+let flex_base_rigid   = 3
+let flex_rigid        = 4
+let flex_flex         = 5
 let compress_prob wl p = match p with 
     | KProb p -> {p with lhs=compress_k wl.tcenv wl p.lhs; rhs=compress_k wl.tcenv wl p.rhs} |> KProb
     | TProb p -> {p with lhs=compress   wl.tcenv wl p.lhs; rhs=compress   wl.tcenv wl p.rhs} |> TProb
@@ -1128,7 +1129,12 @@ let rank wl prob =
           let b, ref_opt = base_and_refinement wl.tcenv wl tp.rhs in
           begin match ref_opt with 
             | None -> flex_base_rigid, prob 
-            | _ -> flex_rigid, {tp with rhs=force_refinement (b, ref_opt)} |> TProb
+            | _ -> 
+              let rank = 
+                if is_top_level_prob prob
+                then flex_rigid
+                else flex_refine_inner in
+              rank, {tp with rhs=force_refinement (b, ref_opt)} |> TProb
           end
 
         | _, Typ_uvar _ -> 
