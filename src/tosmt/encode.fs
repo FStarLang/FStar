@@ -476,7 +476,10 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
             | None -> doit binders res 
         end
       
-      | Typ_refine(x, f) ->
+      | Typ_refine _ -> 
+        let x, f = match Tc.Normalize.normalize_refinement env.tcenv t0 with 
+            | {n=Typ_refine(x, f)} -> x, f
+            | _ -> failwith "impossible" in
         let xsym = "this", Term_sort in 
         let xtm = mkBoundV xsym in 
         let base_pred, decls = encode_typ_pred' false x.sort env xtm in 

@@ -191,6 +191,10 @@ OCAML_ALL=$(addprefix ocaml-output/, $(OCAML_FILES))
 test:   boot
 	make -s -C ../examples 
 
+test.rel2:
+	make -C ../examples/unit-tests OTHERFLAGS=--rel2 
+	make -C ../examples/data_structures OTHERFLAGS=--rel2 
+
 test.diff:
 	@make -s test | grep -v "^make\[" > .test.out
 	@diff .test.out expected-test-output

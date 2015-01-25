@@ -252,17 +252,25 @@ and imp_to_string s = function
   | true -> "#" ^ s
   | false -> s
 
-and binder_to_string b = match b with 
-    | Inl a, imp -> if is_null_binder b then kind_to_string a.sort 
-                    else if not (!Options.print_implicits) then imp_to_string (strBvd a.v) imp
+and binder_to_string' is_arrow b = match b with 
+    | Inl a, imp -> if is_null_binder b || (!Options.print_real_names |> not && is_null_pp a.v) 
+                    then kind_to_string a.sort 
+                    else if not is_arrow && not (!Options.print_implicits) then imp_to_string (strBvd a.v) imp
                     else imp_to_string ((strBvd a.v) ^ ":" ^ (kind_to_string a.sort)) imp
-    | Inr x, imp -> if is_null_binder b then typ_to_string x.sort 
-                    else if not (!Options.print_implicits) then imp_to_string (strBvd x.v) imp
+    | Inr x, imp -> if is_null_binder b || (!Options.print_real_names |> not && is_null_pp x.v) 
+                    then typ_to_string x.sort 
+                    else if not is_arrow && not (!Options.print_implicits) then imp_to_string (strBvd x.v) imp
                     else imp_to_string ((strBvd x.v) ^ ":" ^ (typ_to_string x.sort)) imp
+
+and binder_to_string b =  binder_to_string' false b
+
+and arrow_binder_to_string b = binder_to_string' true b
    
 and binders_to_string sep bs =
     let bs = if !Options.print_implicits then bs else List.filter (fun (_,i) -> not i) bs in
-    bs |> List.map binder_to_string |> String.concat sep
+    if sep = " -> "
+    then bs |> List.map arrow_binder_to_string |> String.concat sep
+    else bs |> List.map binder_to_string |> String.concat sep
 
 and arg_to_string = function 
    | Inl a, imp -> imp_to_string (typ_to_string a) imp

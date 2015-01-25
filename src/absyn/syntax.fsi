@@ -369,6 +369,7 @@ val null_t_binder: knd -> binder
 val null_v_binder: typ -> binder
 val targ: typ -> arg
 val varg: exp -> arg
+val is_null_pp: bvdef<'a> -> bool 
 val is_null_bvd: bvdef<'a> -> bool
 val is_null_bvar: bvar<'a,'b> -> bool
 val is_null_binder: binder -> bool

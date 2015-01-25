@@ -405,20 +405,7 @@ let rec compress_e (env:env) wl e =
            end
         | _ -> e
 
-let normalize_refinement env wl t0 = 
-   let t = Normalize.norm_typ [Normalize.Beta; Normalize.WHNF; Normalize.DeltaHard] env (compress env wl t0) in
-   let rec aux t = 
-    let t = Util.compress_typ t in
-    match t.n with
-       | Typ_refine(x, phi) -> 
-            let t0 = aux x.sort in
-            begin match t0.n with 
-              | Typ_refine(y, phi1) ->
-                mk_Typ_refine(y, Util.mk_conj phi1 (Util.subst_typ [Inr(x.v, Util.bvar_to_exp y)] phi)) ktype t0.pos
-              | _ -> t
-            end
-       | _ -> t in
-   aux t 
+let normalize_refinement env wl t0 = Normalize.normalize_refinement env (compress env wl t0)
 
 let base_and_refinement env wl t1 =
    let rec aux norm t1 =
@@ -1104,19 +1091,100 @@ let destruct_slack env wl (phi:typ) : either<typ, slack> =
 (* ------------------------------------------------ *)
 type flex_t = (typ * uvar_t * knd * args)
 type im_or_proj_t = ((uvar_t * knd) * list<arg> * binders * ((list<ktec> -> typ) * (typ -> bool) * list<(option<binder> * variance * ktec)>))
-         
+
+let rigid_rigid     = 0
+let flex_rigid_eq   = 1
+let flex_base_rigid = 2
+let flex_rigid      = 3
+let flex_flex       = 4
+let compress_prob wl p = match p with 
+    | KProb p -> {p with lhs=compress_k wl.tcenv wl p.lhs; rhs=compress_k wl.tcenv wl p.rhs} |> KProb
+    | TProb p -> {p with lhs=compress   wl.tcenv wl p.lhs; rhs=compress   wl.tcenv wl p.rhs} |> TProb
+    | EProb p -> {p with lhs=compress_e wl.tcenv wl p.lhs; rhs=compress_e wl.tcenv wl p.rhs} |> EProb
+    | CProb _ -> p
+
+let rank wl prob = 
+   let prob = compress_prob wl prob in
+   match prob with
+    | KProb kp ->
+      let rank = begin match kp.lhs.n, kp.rhs.n with 
+        | Kind_uvar _, Kind_uvar _ -> flex_flex
+        | Kind_uvar _, _
+        | _, Kind_uvar _ -> if kp.relation = EQ then flex_rigid_eq else flex_base_rigid 
+        | _, _ -> rigid_rigid
+        end in
+      rank, prob
+
+    | TProb tp -> 
+      let lh, _ = Util.head_and_args tp.lhs in
+      let rh, _ = Util.head_and_args tp.rhs in
+      begin match lh.n, rh.n with 
+        | Typ_uvar _, Typ_uvar _ -> flex_flex, prob
+        
+        | Typ_uvar _, _ 
+        | _, Typ_uvar _ when (tp.relation=EQ) -> flex_rigid_eq, prob
+
+        | Typ_uvar _, _ ->
+          let b, ref_opt = base_and_refinement wl.tcenv wl tp.rhs in
+          begin match ref_opt with 
+            | None -> flex_base_rigid, prob 
+            | _ -> flex_rigid, {tp with rhs=force_refinement (b, ref_opt)} |> TProb
+          end
+
+        | _, Typ_uvar _ -> 
+          let b, ref_opt = base_and_refinement wl.tcenv wl tp.lhs in
+          begin match ref_opt with 
+            | None -> flex_base_rigid, prob
+            | _ -> flex_rigid, {tp with lhs=force_refinement (b, ref_opt)} |> TProb
+          end
+
+        | _, _ -> rigid_rigid, prob 
+      end
+      
+    | EProb ep -> 
+      let lh, _ = Util.head_and_args_e ep.lhs in
+      let rh, _ = Util.head_and_args_e ep.rhs in
+      begin match lh.n, rh.n with 
+        | Exp_uvar _, Exp_uvar _ -> flex_flex, prob
+        | Exp_uvar _, _
+        | _, Exp_uvar _ -> flex_rigid_eq, prob
+        | _, _ -> rigid_rigid, prob
+      end
+
+    | CProb cp -> rigid_rigid, prob 
+
+let next_prob wl = 
+//    match wl.attempting with 
+//        | hd::tl -> Some <| compress_prob wl hd, tl
+//        | _ -> None, []
+    let rec aux (min_rank, min, out) probs = match probs with 
+        | [] -> min, out
+        | hd::tl -> 
+          let rank, hd = rank wl hd in 
+          if rank <= flex_rigid_eq
+          then match min with 
+            | None -> Some hd, out@tl
+            | Some m -> Some hd, out@m::tl
+          else if rank < min_rank
+          then match min with 
+                | None -> aux (rank, Some hd, out) tl
+                | Some m -> aux (rank, Some hd, m::out) tl
+          else aux (min_rank, min, hd::out) tl in
+   
+   aux (flex_flex + 1, None, []) wl.attempting
+
 let rec solve (env:Tc.Env.env) (probs:worklist) : solution = 
 //    printfn "Solving TODO:\n%s;;" (List.map prob_to_string probs.attempting |> String.concat "\n\t");
-    match probs.attempting with 
-       | hd::tl -> 
+    match next_prob probs with 
+       | Some hd, tl -> 
          let probs = {probs with attempting=tl} in
          begin match hd with 
-            | KProb kp -> solve_k env (maybe_invert kp) probs
-            | TProb tp -> solve_t env (maybe_invert tp) probs
-            | EProb ep -> solve_e env (maybe_invert ep) probs
+            | KProb kp -> solve_k' env (maybe_invert kp) probs
+            | TProb tp -> solve_t' env (maybe_invert tp) probs
+            | EProb ep -> solve_e' env (maybe_invert ep) probs
             | CProb cp -> solve_c env (maybe_invert cp) probs
          end
-       | [] ->
+       | None, _ ->
          match probs.deferred with 
             | [] -> Success (probs.subst, {carry=[]; slack=probs.slack_vars}) //Yay ... done!
             | _ -> 
@@ -1164,13 +1232,16 @@ and solve_binders (env:Tc.Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:w
       let wl = solve_prob orig (Some phi) [] wl in
       solve env (attempt sub_probs wl)
 
-and solve_k (env:Env.env) (problem:problem<knd,unit>) (wl:worklist) : solution =
+and solve_k env problem wl = 
+    match compress_prob wl (KProb problem) with
+        | KProb p -> solve_k' env p wl
+        | _ -> failwith "impossible"
+
+and solve_k' (env:Env.env) (problem:problem<knd,unit>) (wl:worklist) : solution =
     let orig = KProb problem in
     if Util.physical_equality problem.lhs problem.rhs then solve env (solve_prob orig None [] wl) else
-    let k1 = compress_k env wl problem.lhs in 
-    let k2 = compress_k env wl problem.rhs in
-    let problem = {problem with lhs=k1; rhs=k2} in
-    let orig = KProb problem in
+    let k1 = problem.lhs in 
+    let k2 = problem.rhs in 
     if Util.physical_equality k1 k2 then solve env (solve_prob orig None [] wl) else
     let r = Env.get_range env in 
    
@@ -1248,6 +1319,12 @@ and solve_k (env:Env.env) (problem:problem<knd,unit>) (wl:worklist) : solution =
      | _ -> giveup env "head mismatch (k-1)" (KProb problem)
 
 and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
+    let p = compress_prob wl (TProb problem) in
+    match p with 
+        | TProb p -> solve_t' env p wl
+        | _ -> failwith "Impossible"
+
+and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
     let giveup_or_defer orig msg = 
         if wl.defer_ok
         then solve env (defer msg orig wl)
@@ -1369,7 +1446,7 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                 if not occurs_ok 
                 then giveup_or_defer orig ("occurs-check failed: " ^ (Option.get msg))
                 else if Util.fvs_included fvs2 fvs1 
-                then (if Util.is_function_typ t2 //function types have structural subtyping and have to be imitated
+                then (if Util.is_function_typ t2 && p_rel orig <> EQ //function types have structural subtyping and have to be imitated
                       then imitate_t orig env wl (subterms args_lhs)
                       else //fast solution, pattern equality
                            let _  = if debug env <| Options.Other "Rel" 
@@ -1476,10 +1553,8 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
 
     let orig = TProb problem in
     if Util.physical_equality problem.lhs problem.rhs then solve env (solve_prob orig None [] wl) else
-    let t1 = compress env wl problem.lhs in
-    let t2 = compress env wl problem.rhs in 
-    let problem = {problem with lhs=t1; rhs=t2} in
-    let orig = TProb problem in
+    let t1 = problem.lhs in 
+    let t2 = problem.rhs in 
     if Util.physical_equality t1 t2 then solve env (solve_prob orig None [] wl) else
     let _ = 
         if debug env (Options.Other "Rel") 
@@ -1539,14 +1614,27 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         let x1_for_x2 = Util.mk_subst_one_binder (v_binder x1) (v_binder x2) in
         let phi2 = Util.subst_typ x1_for_x2 phi2 in
         let mk_imp imp phi1 phi2 = imp phi1 phi2 |> guard_on_element problem x1 in
-        let impl = 
-            if problem.relation = EQ
-            then mk_imp Util.mk_iff phi1 phi2 
-            else mk_imp Util.mk_imp phi1 phi2 in
-        let guard = Util.mk_conj (p_guard base_prob |> fst) impl in
-        let wl = solve_prob orig (Some guard) [] wl in
-        solve env (attempt [base_prob] wl)
- 
+        let fallback () = 
+            let impl = 
+                if problem.relation = EQ
+                then mk_imp Util.mk_iff phi1 phi2 
+                else mk_imp Util.mk_imp phi1 phi2 in
+            let guard = Util.mk_conj (p_guard base_prob |> fst) impl in
+            let wl = solve_prob orig (Some guard) [] wl in
+            solve env (attempt [base_prob] wl) in
+        if problem.relation = EQ
+        then let ref_prob = TProb <| mk_problem (p_scope orig) orig phi1 EQ phi2 None "refinement formula" in
+             begin match solve env ({wl with defer_ok=false; attempting=[ref_prob]; deferred=[]}) with 
+                    | Failed _ -> fallback()
+                    | Success (subst, _) -> 
+//                      if Tc.Env.debug env <| Options.Other "RefEq"
+//                      then Util.fprint1 "Got guard %s\n" (Normalize.formula_norm_to_string env <| (fst <| p_guard ref_prob));
+                      let guard = Util.mk_conj (p_guard base_prob |> fst) (p_guard ref_prob |> fst |> guard_on_element problem x1) in
+                      let wl = solve_prob orig (Some guard) [] wl in
+                      solve env (attempt [base_prob] wl)
+             end
+        else fallback()
+
       (* flex-flex *)
       | Typ_uvar _,                 Typ_uvar _
       | Typ_app({n=Typ_uvar _}, _), Typ_uvar _ 
@@ -1741,12 +1829,15 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                   solve env (attempt [base_prob] wl)
                          end
 
-                                
-and solve_e (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution = 
+and solve_e env problem wl = 
+    match compress_prob wl (EProb problem) with 
+        | EProb p -> solve_e' env p wl
+        | _ -> failwith "Impossible
+        "                
+and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution = 
     let problem = {problem with relation=EQ} in //expression problems are always equalities
-    let e1 = compress_e env wl problem.lhs in
-    let e2 = compress_e env wl problem.rhs in
-    let problem = {problem with lhs=e1; rhs=e2} in
+    let e1 = problem.lhs in 
+    let e2 = problem.rhs in 
     let orig = EProb problem in
     let sub_prob : 'a -> 'a -> string -> problem_t<'a,'b> = 
         fun lhs rhs reason -> mk_problem (p_scope orig) orig lhs EQ rhs None reason in
