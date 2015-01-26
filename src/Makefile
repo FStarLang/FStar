@@ -194,6 +194,7 @@ test:   boot
 test.rel2:
 	make -C ../examples/data_structures OTHERFLAGS=--rel2 
 	make -C ../examples/software_foundations OTHERFLAGS=--rel2 
+	make -C ../examples/security OTHERFLAGS=--rel2 
 	make -C ../examples/unit-tests unit2.vv OTHERFLAGS=--rel2 
 	make -C ../examples/unit-tests OTHERFLAGS=--rel2 
 

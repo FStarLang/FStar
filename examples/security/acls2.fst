@@ -80,14 +80,15 @@ assume val delete: file:string -> ST unit
                                      (ensures (fun h s h' -> h=h'))
                                      (modifies no_refs)
 
-val safe_delete: file -> All unit (fun h -> True) (fun h x h' -> h==h')
+val safe_delete: file -> All unit (requires (fun h -> True)) 
+                                  (ensures (fun h x h' -> h=h'))
 let safe_delete file = 
   if canWrite !acls file 
   then delete file
   else failwith "unwritable"
 
 val test_acls: file -> unit
-let test_acls f = 
+let test_acls f =
   grant (Readable f);     (* ok *)
   let _ = read f in       (* ok --- it's in the acl *)
   (* delete f;               (\* not ok --- we're only allowed to read it *\) *)
