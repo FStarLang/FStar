@@ -1836,7 +1836,7 @@ exercise on lists (Section [#sec-basic-lists]).
 
 Here's a simple implementation of the quicksort algorithm. It always
 picks the first element of the list as the pivot; partitions the rest
-of the list into those elements greater than or equal to the the
+of the list into those elements greater than or equal to the
 pivot, and the rest; recursive sorts the partitions; and slots the
 pivot in the middle before returning.
 
