@@ -259,7 +259,7 @@ provide its type signature.
   `read` for which the `canRead` predicate can't be statically proved
   for the argument.
 
-* The type of `write` says that is a function of two arguments: the
+* The type of `write` says that it is a function of two arguments: the
   first is a `filename` `f`, such that `canWrite f` evaluates to `true`;
   the second is a `string`, the data to be written to the file `f`. The `write`
   function returns `unit`, roughly analogous to the `void` type in
