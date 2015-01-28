@@ -70,6 +70,7 @@ let sha1verify k txt tag = (sha1 k txt = tag)
 module MAC 
 open Array
 open SHA1
+open ST
 
 (* ---- specification *)
 
