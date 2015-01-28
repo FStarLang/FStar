@@ -2498,6 +2498,8 @@ We remark `Equal` in particular and logical formulas in general
 are "types" in F\*, thus the different syntax for this definition. 
 ~CH
 What does opaque do exactly?
+What does logic do?
+Hints for the SMT solver / logical encoding only?
 ~
 
 The context invariance lemma uses in fact a weaker variant of this equivalence
@@ -2947,6 +2949,9 @@ but it seems quite interesting)
 #State and other effects
 
 ## Stateful access control
+~ CH
+Should change name of safe_delete as in Section 1
+~
 
 ```
 module DynACLs
