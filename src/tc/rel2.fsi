@@ -38,6 +38,7 @@ type problem<'a,'b> = {               //Try to prove: lhs rel rhs ~> guard
     scope:binders;                    //the set of names permissible in the guard of this formula
     reason: list<string>;             //why we generated this problem, for error reporting
     loc: Range.range;                 //and the source location where this arose
+    rank: option<int>;
 }
 
 type prob = 

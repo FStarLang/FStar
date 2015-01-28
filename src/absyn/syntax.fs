@@ -62,13 +62,13 @@ type typ' =
   | Typ_btvar    of btvar
   | Typ_const    of ftvar 
   | Typ_fun      of binders * comp                           (* (ai:ki|xi:ti) -> M t' wp *)
-  | Typ_refine   of bvvar * typ                             (* x:t{phi} *)
+  | Typ_refine   of bvvar * typ                              (* x:t{phi} *)
   | Typ_app      of typ * args                               (* args in reverse order *)
   | Typ_lam      of binders * typ                            (* fun (ai|xi:tau_i) => T *)
   | Typ_ascribed of typ * knd                                (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
   | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
-  | Typ_delayed  of typ * subst_t * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
+  | Typ_delayed  of typ * subst_t * memo<typ>                (* A delayed substitution---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
 and arg = either<typ,exp> * bool                                        (* bool marks an explicitly provided implicit arg *)
 and args = list<arg>
