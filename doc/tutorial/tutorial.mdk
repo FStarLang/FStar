@@ -3094,74 +3094,7 @@ let mk_counter_2 _ =
 
 # Cryptography examples
 
-## Cryptographic Capabilities for Accessing Files
-
-We extend the acls2.fst example with cryptographic capabilities, so
-that our trusted ACLs library can now issue and accept HMACSHA1 tags
-as evidence that a given file is readable.
-
-What is the advantage of capabilities over the refinements already
-provided in acls2.fst?
-
-~ Exercise
-Relying on acls2.fst and mac.fst, implement a pair of functions with
-the following specification, and verify them by typing under the
-security assumption that HMACSHA1 is INT-CPA.
-
-~~ ExerciseFragment {exname=ex9a-acls-cap}
-val issue:  f:file{ canRead f } -> SHA1.tag 
-val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
-~~
-
-To this end, assume given a UTF8 encoding function from strings to
-bytes, with the following specification:
-
-```
-assume val utf8: s:string  -> Tot (seq byte) 
-
-assume UTF8_inj: 
-  forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
-    equal (utf8 s0) (utf8 s1) ==> s0==s1
-
-
-```
-
-~~ Answer
-```
-(* to be used with mac.fst and acls2.fst *)
-
-module Cap (* capabilities *) 
-open Array
-open UTF8
-open ACLs
-open MAC 
-
-opaque logic type CapRead (msg:seq byte) =
-    (forall f. msg = utf8 f ==> canRead f)
-
-let k = keygen CapRead
-
-val issue: f:file{ canRead f } -> SHA1.tag 
-val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
-
-let issue f = MAC.mac k (utf8 f)
-let redeem f t = if MAC.verify k (utf8 f) t then () else failwith "bad capability"
-
-```
-~~
-
-How would we extend it to also cover CanWrite access? 
-~ 
-   
-## Secure RPC
-
-We describe a simple secure RPC implementation, which consists of three 
-modules: `Mac`, a library for MACs, `Format`, a module for message 
-formatting, and `RPC`, a module for the rest of the protocol code. 
-(Placing the formatting functions request and response in a separate 
-module is convenient to illustrate modular programming and verification.)
-
-### MAC
+## MAC
 
 We begin with our cryptographic library. 
 
@@ -3199,6 +3132,60 @@ val keygen: p:(text -> Type) -> pkey p
 val mac:    k:key -> t:text{key_prop k t} -> tag
 val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
 ```
+
+## Cryptographic Capabilities for Accessing Files
+
+We extend the acls2.fst example with cryptographic capabilities, so
+that our trusted ACLs library can now issue and accept HMACSHA1 tags
+as evidence that a given file is readable.
+
+What is the advantage of capabilities over the refinements already
+provided in acls2.fst?
+
+~ Exercise
+Relying on acls2.fst and mac.fst, implement a pair of functions with
+the following specification, and verify them by typing under the
+security assumption that HMACSHA1 is INT-CPA.
+
+~~ ExerciseFragment {exname=ex9a-acls-cap}
+val issue:  f:file{ canRead f } -> SHA1.tag 
+val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
+~~
+
+To this end, assume given a UTF8 encoding function from strings to
+bytes, with the following specification:
+
+```
+assume val utf8: s:string  -> Tot (seq byte) 
+
+assume UTF8_inj: 
+  forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
+    equal (utf8 s0) (utf8 s1) ==> s0==s1
+
+
+```
+
+~~ Answer
+```
+val issue: f:file{ canRead f } -> SHA1.tag 
+val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
+
+let issue f = MAC.mac k (utf8 f)
+let redeem f t = if MAC.verify k (utf8 f) t then () else failwith "bad capability"
+
+```
+~~
+
+How would we extend it to also cover CanWrite access? 
+~ 
+   
+## Secure RPC
+
+We describe a simple secure RPC implementation, which consists of three 
+modules: `Mac`, our library for MACs, `Format`, a module for message 
+formatting, and `RPC`, a module for the rest of the protocol code. 
+(Placing the formatting functions request and response in a separate 
+module is convenient to illustrate modular programming and verification.)
 
 ### Secure RPC protocol
 
@@ -3306,6 +3293,8 @@ authenticate the text before marshalling.
 
 ~Exercise
 Try to state this formally as three lemmas.
+
+
 ~~Answer
 ```
 val req_resp_distinct: 
