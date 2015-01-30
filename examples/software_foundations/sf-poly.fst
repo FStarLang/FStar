@@ -209,7 +209,7 @@ val test_map2 : unit -> Lemma
 let test_map2 () = ()
 
 val test_map3 : unit -> Lemma
-    (ensures (map (fun (n:nat) -> [evenb n;oddb n]) [2;1;2;5]
+    (ensures (map (fun n -> [evenb n;oddb n]) [2;1;2;5]
               = [[true;false];[false;true];[true;false];[false;true]]))
 let test_map3 () = ()
 

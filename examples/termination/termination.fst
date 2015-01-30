@@ -1,5 +1,3 @@
-(* Expect 3 intentional failures *)
-
 (*
    Copyright 2008-2014 Nikhil Swamy, Chantal Keller, Microsoft Research and Inria
 
@@ -77,20 +75,13 @@ let rec mem a l = match l with
   | [] -> false
   | hd::tl -> hd=a || mem a tl
 
-(* TODO: Writing the spec with refinements fails *)
-(* val list_subterm_ordering: l:list 'a  *)
-(*                         -> bound:'b{Precedes l bound} *)
-(*                         -> Tot (m:list 'a{l==m /\ (forall (x:'a). mem x m ==> Precedes x bound)}) *)
 val list_subterm_ordering_coercion: l:list 'a
-                        -> bound:'b
-                        -> Pure (list 'a)
-                                (requires (Precedes l bound))
-                                (ensures \m -> (forall (x:'a). mem x m ==> Precedes x bound) /\ l==m)
+                        -> bound:'b{Precedes l bound}
+                        -> Tot (m:list 'a{l==m /\ (forall (x:'a). mem x m ==> Precedes x bound)})
 let rec list_subterm_ordering_coercion l bound = match l with
-  | [] -> l (* TODO: writing [] here causes it to fail because the [] doesn't appear in the VC *)
+  | [] -> [] 
   | hd::tl ->
-    let tl' = list_subterm_ordering_coercion tl bound in (* TODO: without the eplicit let-binding, this fails *)
-    hd::tl'
+    hd::list_subterm_ordering_coercion tl bound
 
 val list_subterm_ordering_lemma: l:list 'a 
                         -> bound:'b
@@ -117,17 +108,9 @@ val treeMap : 'a:Type -> 'b:Type -> ('a -> Tot 'b) -> T 'a -> Tot (T 'b)
 let rec treeMap 'a 'b f v = match v with
   | Leaf a -> Leaf (f a)
   | Node l ->
-    list_subterm_ordering_lemma l v; (* TODO: eliminate this explicit call by encoding the lemma to the solver *)
-
+    list_subterm_ordering_lemma l v; 
     (* NS: this next call seems to be unavoidable. We need to move the refinement "inside" the list. 
            An alternative would be to give map a different type accouting for this "outside" refinement. 
            But, it's seeems nicer to give map its normal type *)
-
-    let l = (* ghost *) 
-      move_refinement (* Two type parameteres inferred
-                         1. (T 'a) -- inferred
-                         2. (fun aa -> Precedes (LexPair f (LexPair aa LexTop)) (LexPair f (LexPair v LexTop)))  --inferred by higher-order unification!
-                      *) 
-        l in
-
+    let l = move_refinement #_ #(fun aa -> aa << v) l in (* ghost *) 
     Node (map (treeMap f) l)

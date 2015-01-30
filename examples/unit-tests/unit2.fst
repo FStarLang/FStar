@@ -1,14 +1,14 @@
 module Unit2
 
-(* (\* GADTs *\) *)
-(* type t : Type -> Type = *)
-(*   | Int : i:int -> t int *)
-(*   | Bool : b:bool -> t bool *)
+(* GADTs *)
+type t : Type -> Type =
+  | Int : i:int -> t int
+  | Bool : b:bool -> t bool
 
-(* let f (a:Type) (x:t a) : a = *)
-(*   match x with *)
-(*   | Int i -> i + 1 *)
-(*   | Bool b -> not b *)
+let f (a:Type) (x:t a) : a =
+  match x with
+  | Int i -> i + 1
+  | Bool b -> not b
 
   
 (* Strategies: *)
@@ -49,38 +49,24 @@ module Unit2
 
 
 (* Some simple tests that require --rel2 to succeed; to be expanded *)
-(* let f1 (l:list nat) = 0::l    //succeeds with both 1 and 2 *)
-(* let f2 (x:nat) (y:int) = x=y *)
-(* let f3 : list nat = *)
-(*   let y = [0;1] in *)
-(*   y *)
+let f1 (l:list nat) = 0::l    //succeeds with both 1 and 2
+let f2 (x:nat) (y:int) = x=y
+let f3 : list nat =
+  let y = [0;1] in
+  y
 
 assume val f4 : nat -> Tot bool
-(* let eta_f4 x = f4 x //fails under 1; succeeds under 2 *)
+let eta_f4 x = f4 x //fails under 1; succeeds under 2
 
-(* assume val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b) *)
-(* let eta_f4' = map (fun n -> f4 n) [2] //needs n:nat under strategy 1; works as is under 2 *)
+assume val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
+let eta_f4' = map (fun n -> f4 n) [2] //needs n:nat under strategy 1; works as is under 2
 
 (*
    under strategy 1, infers x:int -> Tot bool
    under strategy 2, infers x:nat -> Tot bool
  *)
 let test x = if x >= 0 then f4 x else false
+(* let test2 (x:int) = test x //succeeds only using 1 (and 3), not 2. *)
 
-(* let test2 x = test x //succeeds only using 1 (and 3), not 2. *)
-
-(* type pos = x:int{x>0} *)
-(* let f g (l:list pos) (m:list nat) = map g l; map g m *)
-(* assume val h: x:int -> u:unit{x > 0} *)
-
-(* (\*  *)
-(*     x:int -> bool  (1) *)
-(*     x:nat -> bool  (2) *)
-(*  *\) *)
-(* let g x = h x; f4 x *)
-
-(* (\* works under (1) *\) *)
-(* (\* fails under (2) *\) *)
-(* (\* let g' x = g (-1) *\) *)
-
-
+type pos = x:int{x>0}
+let f5 g (l:list pos) (m:list nat) = let _ = map g l in map g m
