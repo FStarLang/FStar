@@ -27,7 +27,7 @@ let minus_l eq l1 l2     = l1 |> List.partition (fun x -> l2 |> Util.for_some (e
 let intersect_l eq l1 l2 = l1 |> List.partition (fun x -> l2 |> Util.for_some (eq x)) |> fst
 let union_l eq l1 l2     = (minus_l eq l1 l2)@l2
 
-let rec claim eq (f:set<'a>) = match !f with 
+let rec claim eq (f:set<'a>) : list<'a> = match !f with 
   | Set l -> l
   | Delayed fs -> 
     let l = fs eq |> List.fold_left (fun out f -> union_l eq (claim eq f) out) [] in

@@ -1611,15 +1611,24 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
             begin
                 if Tc.Env.debug env <| Options.Other "Rel"
                 then Util.fprint2 "Trying flex-flex one pattern (%s) with %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
-                let t2 = sn env t2 in
-                let rhs_vars = Util.freevars_typ t2 in
-                let occurs_ok, _ = occurs_check env (u1,k1) t2 in
-                let lhs_vars = freevars_of_binders xs in
-                if occurs_ok && Util.fvs_included rhs_vars lhs_vars
-                then let sol = UT((u1, k1), mk_Typ_lam'(xs, t2) k1 t1.pos) in
-                        let wl = solve_prob orig None [sol] wl in
-                        solve env wl
-                else giveup_or_defer orig "flex-flex (one pattern) occurs-check or free variable check"
+                if Unionfind.equivalent u1 u2
+                then let sub_probs = List.map2 (fun a b ->  match fst a, fst b with 
+                                | Inl t1, Inl t2 -> mk_problem (p_scope orig) orig t1 EQ t2 None "flex-flex index" |> TProb
+                                | Inr t1, Inr t2 -> mk_problem (p_scope orig) orig t1 EQ t2 None "flex-flex index" |> EProb
+                                | _ -> failwith "Impossible") args1 args2 in
+                     let guard = Util.mk_conj_l (List.map (fun p -> p_guard p |> fst) sub_probs) in
+                     let wl = solve_prob orig (Some guard) [] wl in
+                     solve env (attempt sub_probs wl)
+                else
+                     let t2 = sn env t2 in
+                     let rhs_vars = Util.freevars_typ t2 in
+                     let occurs_ok, _ = occurs_check env (u1,k1) t2 in
+                     let lhs_vars = freevars_of_binders xs in
+                     if occurs_ok && Util.fvs_included rhs_vars lhs_vars
+                     then let sol = UT((u1, k1), mk_Typ_lam'(xs, t2) k1 t1.pos) in
+                          let wl = solve_prob orig None [sol] wl in
+                          solve env wl
+                     else giveup_or_defer orig "flex-flex (one pattern) occurs-check or free variable check"
             end in
      
         let solve_both_pats xs ys = 

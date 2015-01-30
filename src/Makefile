@@ -157,7 +157,7 @@ clean:
 STDFILES=system.fst stboot.fst listboot-TEMPORARY-FILE.fst option.fst string.fst char.fst
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 
-BOOT_BASICFILES=bytes.fst platform.fsi util.fsi getoptsimple.fst options.fs range.fst unionfind.fst lazyset.fsi lazyset.fs
+BOOT_BASICFILES=bytes.fst platform.fsi util.fsi getoptsimple.fst options.fs range.fst unionfind.fst #lazyset.fsi lazyset.fs
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
 BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs dssyntax.fs
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
