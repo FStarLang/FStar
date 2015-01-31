@@ -79,7 +79,7 @@ let cca2 (ideal:bool) : (RSA.pkey * (Plain.t -> RSA.cipher) * (RSA.cipher -> opt
       | Some t  -> Some(Entry.p t)
       | _       -> None 
     else match RSA.dec sk c with
-       | Some(t') -> forget (Plain.plain t')
+       | Some(t') -> forget #Plain.t #_ (Plain.plain t')
        | None     -> None in
 
   pk, enc, dec

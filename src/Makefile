@@ -189,7 +189,20 @@ OCAML_FILES= Microsoft_FStar_Options.ml Microsoft_FStar_LazySet.ml Microsoft_FSt
 OCAML_ALL=$(addprefix ocaml-output/, $(OCAML_FILES))
 
 test:   boot
-	make -s -C ../examples 
+	make test.rel2
+
+test.rel2:
+	make -C ../examples/data_structures OTHERFLAGS='--rel2 --slack'
+	make -C ../examples/algorithms OTHERFLAGS='--z3timeout 10 --rel2 --slack'
+	make -C ../examples/crypto OTHERFLAGS='--rel2 --slack'
+	make -C ../examples/security OTHERFLAGS='--rel2 --slack'
+	make -C ../examples/termination OTHERFLAGS='--rel2 --slack'
+	make -C ../examples/software_foundations OTHERFLAGS='--rel2 --slack'
+	make -C ../examples/metatheory OTHERFLAGS='--rel2 --slack'
+	make -C ../doc/tutorial/code/solutions OTHERFLAGS='--rel2 --slack'
+	make -C ../examples/unit-tests unit2.vv OTHERFLAGS='--rel2 --slack'
+	make -C ../examples/unit-tests OTHERFLAGS='--rel2 --slack'
+
 
 test.diff:
 	@make -s test | grep -v "^make\[" > .test.out

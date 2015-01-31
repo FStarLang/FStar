@@ -76,6 +76,7 @@ let max_fuel = Util.mk_ref 8
 let min_fuel = Util.mk_ref 1
 let warn_top_level_effects = Util.mk_ref false
 let rel2 = Util.mk_ref false
+let slack = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
 
 let set_fstar_home () = 
@@ -147,6 +148,7 @@ let specs () : list<Getopt.opt> =
      ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
      ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
      ( noshort, "rel2", ZeroArgs (fun () -> rel2 := true), "Use the new implementation of type relations");
+     ( noshort, "slack", ZeroArgs (fun () -> slack := true), "Use the flow-insensitive variant of --rel2");
      ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator")
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs

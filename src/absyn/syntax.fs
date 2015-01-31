@@ -62,13 +62,13 @@ type typ' =
   | Typ_btvar    of btvar
   | Typ_const    of ftvar 
   | Typ_fun      of binders * comp                           (* (ai:ki|xi:ti) -> M t' wp *)
-  | Typ_refine   of bvvar * typ                             (* x:t{phi} *)
+  | Typ_refine   of bvvar * typ                              (* x:t{phi} *)
   | Typ_app      of typ * args                               (* args in reverse order *)
   | Typ_lam      of binders * typ                            (* fun (ai|xi:tau_i) => T *)
   | Typ_ascribed of typ * knd                                (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
   | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
-  | Typ_delayed  of typ * subst_t * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
+  | Typ_delayed  of typ * subst_t * memo<typ>                (* A delayed substitution---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
 and arg = either<typ,exp> * bool                                        (* bool marks an explicitly provided implicit arg *)
 and args = list<arg>
@@ -259,6 +259,12 @@ type ktec =
     | E of exp
     | C of comp
 
+type lcomp = {
+    eff_name: lident;
+    res_typ: typ;
+    cflags: list<cflags>;
+    comp: unit -> comp //a lazy computation
+    }
 (*********************************************************************************)
 (* Identifiers to/from strings *)    
 (*********************************************************************************)
@@ -603,6 +609,7 @@ let null_t_binder t : binder = Inl (null_bvar t), false
 let null_v_binder t : binder = Inr (null_bvar t), false
 let targ t : arg = Inl t, false
 let varg v : arg = Inr v, false
+let is_null_pp (b:bvdef<'a>) = b.ppname.idText = null_id.idText
 let is_null_bvd (b:bvdef<'a>) = b.realname.idText = null_id.idText
 let is_null_bvar (b:bvar<'a,'b>) = is_null_bvd b.v
 let is_null_binder (b:binder) = match b with

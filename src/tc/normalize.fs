@@ -74,22 +74,28 @@ let empty_stack k = {
 }
 
 (* Explicit tail recursion for OCaml backend -- do not use List.collect! *)
-let rec subst_of_env env =
+let rec subst_of_env' env =
     let rec aux acc =
         function
         | T (a, (t,env'), m) :: r ->
              let n = match !m with
                 | Some t -> Inl(a, t)
-                | None -> Inl(a, Util.subst_typ (subst_of_env env') t)
+                | None -> Inl(a, Util.subst_typ (subst_of_env' env') t)
              in aux (n::acc) r
         | V (x, (v,env'), m) :: r ->
              let n = match !m with
                 | Some v -> Inr(x, v)
-                | None -> Inr(x, Util.subst_exp (subst_of_env env') v)
+                | None -> Inr(x, Util.subst_exp (subst_of_env' env') v)
              in aux (n::acc) r
         | _ :: r -> aux acc r
         | [] -> acc
     in aux [] env
+let subst_of_env tcenv env = subst_of_env' env
+//    let ctr = Util.mk_ref 0 in 
+//    (fun tcenv env ->  
+//        Util.fprint2 "(%s) CALLING subst_of_env (%s)!!!\n" (string_of_int !ctr) (Print.sli <| Tc.Env.current_module tcenv);
+//        incr ctr;
+//        subst_of_env' env)
 
 let with_new_code k c e = {
     code=e; 
@@ -264,9 +270,6 @@ and sn' tcenv (cfg:config<typ>) : config<typ> =
         if is_stack_empty config then config
         else let s' = no_eta config.steps in
              let args = 
-//                 if whnf_only config
-//                 then config.stack.args |> List.map (fun (arg, env) -> Util.subst_arg (subst_of_env env) arg) 
-//                 else 
                  config.stack.args |> List.map (function 
                     | (Inl t, imp), env -> Inl <| (sn  tcenv (t_config t env s')).code, imp
                     | (Inr v, imp), env -> Inr <| (wne tcenv (e_config v env s')).code, imp) in
@@ -481,12 +484,17 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
     {cfg with code=c} in
   let m = cfg.code in 
   let res = (sn tcenv (with_new_code (Inl m.result_typ.tk) cfg m.result_typ)).code in
-  let s = subst_of_env cfg.environment in
-  let args = 
-    if List.contains SNComp cfg.steps 
-    then sn_args tcenv cfg.environment cfg.steps m.effect_args
-    else m.effect_args |> Util.subst_args s in
-  let flags = Util.subst_flags s m.flags in
+  let sn_flags flags = 
+    flags |> List.map (function 
+        | DECREASES e -> 
+          let e = (wne tcenv (e_config e cfg.environment cfg.steps)).code in
+          DECREASES e
+        | f -> f) in
+  let flags, args = 
+    if !Options.rel2 || List.contains SNComp cfg.steps //TODO: REMOVE THIS GUARD ON --rel2
+    then sn_flags m.flags, sn_args tcenv cfg.environment cfg.steps m.effect_args 
+    else let s = subst_of_env tcenv cfg.environment in
+         Util.subst_flags s m.flags, m.effect_args |> Util.subst_args s in
   if not <| List.contains DeltaComp cfg.steps
   then remake m.effect_name res args flags
   else match Tc.Env.lookup_typ_abbrev tcenv m.effect_name with
@@ -603,9 +611,53 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
 
       beta config.environment binders config.stack.args
 
-    | Exp_match _
-    | Exp_let  _ -> 
-      let s = subst_of_env config.environment in
+    | Exp_let((false, [(Inl x, t, e1)]), e2) -> 
+      let c_e1 = wne tcenv ({config with code=e1; stack=empty_stack (Inr e1.tk)}) in
+      let binders, env = sn_binders tcenv [v_binder (Util.bvd_to_bvar_s x t)] config.environment config.steps in
+      let c_e2 = wne tcenv ({config with code=e2; stack=empty_stack (Inr e2.tk); environment=env}) in
+      let e = match binders with
+        | [(Inr x, _)] -> mk_Exp_let((false, [(Inl x.v, x.sort, c_e1.code)]), c_e2.code) c_e2.code.tk e.pos 
+        | _ -> failwith "Impossible" in
+      {config with code=e} |> rebuild
+
+    | Exp_match(e1, eqns) -> 
+      let c_e1 = wne tcenv ({config with code=e1; stack=empty_stack (Inr e1.tk)}) in
+      let wn_eqn (pat, w, body) = 
+        let rec pat_vars p = match p.v with 
+            | Pat_disj [] -> []
+            | Pat_disj (p::_) -> pat_vars p
+            | Pat_cons (_, pats) -> List.collect pat_vars pats
+            | Pat_var(x, _) -> [v_binder x]
+            | Pat_tvar a -> [t_binder a]
+            | Pat_wild _
+            | Pat_twild _ 
+            | Pat_constant _ 
+            | Pat_dot_term _
+            | Pat_dot_typ _ -> [] in
+        let vars = pat_vars pat in //Not alpha-converting patterns. TODO: OK?
+        let env = List.fold_left (fun env b -> match fst b with 
+            | Inl a -> 
+              let atyp = Util.btvar_to_typ a in
+              let memo = Util.mk_ref (Some atyp) in
+              T(a.v, (atyp,[]), memo)::env
+
+            | Inr x -> 
+              let xexp = Util.bvar_to_exp x in
+              let memo = Util.mk_ref (Some xexp) in
+              V(x.v, (xexp,[]), memo)::env) config.environment vars in 
+        let w = match w with 
+            | None -> None
+            | Some w -> 
+              let c_w = wne tcenv ({config with code=w; environment=env; stack=empty_stack (Inr w.tk)}) in
+              Some (c_w.code) in
+        let c_body = wne tcenv ({config with code=body; environment=env; stack=empty_stack (Inr body.tk)}) in
+        (pat, w, c_body.code) in
+    let eqns = List.map wn_eqn eqns in
+    let e = mk_Exp_match(c_e1.code, eqns) e.tk e.pos in
+    {config with code=e} |> rebuild
+
+    | Exp_let  _ -> //top-level lets or let recs
+      let s = subst_of_env tcenv config.environment in
       let e = subst_exp s e in
       {config with code=e} |> rebuild
         
@@ -695,3 +747,18 @@ let formula_norm_to_string tcenv f =
 
 let comp_typ_norm_to_string tcenv c =
   Print.comp_typ_to_string (norm_comp [Beta;SNComp;Unmeta] tcenv c)
+
+let normalize_refinement env t0 = 
+   let t = norm_typ [Beta; WHNF; DeltaHard] env t0 in
+   let rec aux t = 
+    let t = Util.compress_typ t in
+    match t.n with
+       | Typ_refine(x, phi) -> 
+            let t0 = aux x.sort in
+            begin match t0.n with 
+              | Typ_refine(y, phi1) ->
+                mk_Typ_refine(y, Util.mk_conj phi1 (Util.subst_typ [Inr(x.v, Util.bvar_to_exp y)] phi)) ktype t0.pos
+              | _ -> t
+            end
+       | _ -> t in
+   aux t

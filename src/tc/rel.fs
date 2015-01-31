@@ -81,6 +81,11 @@ let guard_to_string env g =
     then Rel2.guard_to_string env g
     else Rel1.guard_to_string env g.guard_f
 
+let solve_deferred_constraints e g = 
+    if !Options.rel2
+    then Rel2.solve_deferred_constraints e g
+    else g
+
 let try_discharge_guard e g = 
     if !Options.rel2
     then Rel2.try_discharge_guard e g
@@ -131,6 +136,10 @@ let trivial_subtype env eopt t1 t2 =
     then Rel2.trivial_subtype env eopt t1 t2
     else Rel1.trivial_subtype env eopt t1 t2 
 
+let simplify_guard env g = 
+    if !Options.rel2
+    then Rel2.simplify_guard env g
+    else g
 
 let sub_comp e c1 c2 = 
     if !Options.rel2 

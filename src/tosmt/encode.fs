@@ -448,13 +448,13 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
         lookup_free_tvar env fv, [], []
 
       | Typ_fun(binders, res) -> (* TODO: add sharing *)
-        let doit binders res =
+        let doit binders (res:comp) =
             let tsym, ttm, fsym, f = fresh_vars "funtype" "f" in
             let pretype = mk_tester "Typ_fun" (mk_PreType f) in
             let t_has_kind = mk_HasKind ttm Term.mk_Kind_type in
             let f_hastype_t = mk_HasType false f ttm in
             let guard, decls = 
-                if not <| Util.is_pure env.tcenv res 
+                if not <| Absyn.Util.is_pure_comp res
                 then pretype, [] 
                 else let vars, guards, env', decls, _ = encode_binders false binders env in 
                      let app = mk_ApplyE f vars in
@@ -476,7 +476,10 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
             | None -> doit binders res 
         end
       
-      | Typ_refine(x, f) ->
+      | Typ_refine _ -> 
+        let x, f = match Tc.Normalize.normalize_refinement env.tcenv t0 with 
+            | {n=Typ_refine(x, f)} -> x, f
+            | _ -> failwith "impossible" in
         let xsym = "this", Term_sort in 
         let xtm = mkBoundV xsym in 
         let base_pred, decls = encode_typ_pred' false x.sort env xtm in 

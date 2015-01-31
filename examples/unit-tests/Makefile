@@ -8,8 +8,8 @@ all-neg: $(NEGFILES)
 	-$(FSTAR) $(STDLIB) $^
 	echo "EXPECT 27 FAILURES<------------------------------------"
 
-rel2: 
-	$(FSTAR) --rel2 ../../lib/list.fst
+test: 
+	$(FSTAR) ../../lib/partialmap.fst ../../lib/st.fst test.fst
 
 #DO WE REALLY NEED THESE TARGETS HERE?
 utils:
