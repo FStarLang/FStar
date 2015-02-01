@@ -393,7 +393,7 @@ state, etc).
 For instance, in ML `(canRead "foo.txt")` is inferred to have type `:bool`.
 However, in F\*, we infer `(canRead "foo.txt" : Tot bool)`. This
 indicates that `canRead "foo.txt"` is a total expression, which always
-evaluates to an boolean. For that matter, any expression that is
+evaluates to a boolean. For that matter, any expression that is
 inferred to have type-and-effect `:Tot t`, is guaranteed (provided the
 computer has enough resources) to evaluate to a `:t`-typed result,
 without entering an infinite loop; reading or writing the program's
