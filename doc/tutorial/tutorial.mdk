@@ -8,7 +8,7 @@ Colorizer     : fstar
 .Comment      : replace=""
 ~CH           : .comment color=green author=CH
 ~CK           : .comment color=blue author=Chantal
-~BB           : .comment color=purple author="Benjamin Beurdouch"
+~BB           : .comment color=purple author="Benjamin Beurdouche"
 ~NS           : .comment color=red author="Nik"
 ~Todo         : .comment author="Todo"
 
