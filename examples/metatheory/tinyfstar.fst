@@ -52,7 +52,6 @@ let t_nat    = TConst 1
 let t_refint = TConst 2
 let t_heap   = TConst 3
 let t_forall = TConst 4
-let t_forall_post_pure = TConst 4
 let t_and    = TConst 5
 let t_imp    = TConst 6
 let t_neg    = TConst 7

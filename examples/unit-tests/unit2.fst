@@ -68,11 +68,11 @@ let eta_f4' = map (fun n -> f4 n) [2] //needs n:nat under strategy 1; works as i
 let test x = if x >= 0 then f4 x else false
 (* let test2 (x:int) = test x //succeeds only using 1 (and 3), not 2. *)
 
-type pos = x:int{x>0}
-let f5 g (l:list pos) (m:list nat) = let _ = map g l in map g m
+(* type pos = x:int{x>0} *)
+(* let f5 g (l:list pos) (m:list nat) = let _ = map g l in map g m *)
 
 
-assume val f: (int -> ML (int -> int)) -> int
-assume val g: (int -> int -> int) -> int
-let brittle_1 x = f x + g x //this program checks under rel1
-let brittle_2 x = g x + f x //but this program fails under rel1
+(* assume val f: (int -> ML (int -> int)) -> int *)
+(* assume val g: (int -> int -> int) -> int *)
+(* let brittle_1 x = f x + g x //this program checks under rel1 *)
+(* let brittle_2 x = g x + f x //but this program fails under rel1 *)
