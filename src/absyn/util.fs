@@ -307,17 +307,17 @@ let subst_ctrl = {stop_if_empty_subst=true; descend=true}
 let null_ctrl = {stop_if_empty_subst=true; descend=false} 
 let extend_subst e s = [mk_subst e]@s
 
-let rec map_knd s vk mt me descend binders k = 
+let map_knd s vk mt me descend binders k = 
   subst_kind' s k, descend
-and map_typ s mk vt me descend binders t = 
+let map_typ s mk vt me descend binders t = 
   subst_typ' s t, descend
-and map_exp s mk me ve descend binders e =
+let map_exp s mk me ve descend binders e =
   subst_exp' s e, descend
-and map_flags s map_exp descend binders flags = 
+let map_flags s map_exp descend binders flags = 
     flags |> List.map (function 
         | DECREASES e -> DECREASES (map_exp descend binders e |> fst)
         | f -> f)
-and map_comp s mk map_typ map_exp descend binders c = match c.n with 
+let map_comp s mk map_typ map_exp descend binders c = match c.n with 
     | Total t -> 
       let t, descend = map_typ descend binders t in
       mk_Total t, descend
@@ -325,13 +325,38 @@ and map_comp s mk map_typ map_exp descend binders c = match c.n with
       let t, descend = map_typ descend binders ct.result_typ in
       let args, descend = Visit.map_args map_typ map_exp descend binders ct.effect_args in 
       mk_Comp ({ct with result_typ=t; effect_args=args; flags=map_flags s map_exp descend binders ct.flags}), descend 
-and visit_knd s vk mt me ctrl binders k = 
-  let k = Visit.compress_kind k in 
-  if ctrl.descend 
+
+let visit_knd s vk mt me ctrl binders k =
+  let k = Visit.compress_kind k in
+  if ctrl.descend
   then let k, _ = vk null_ctrl binders k in k, ctrl
   else map_knd s vk mt me null_ctrl binders k
-and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t = 
-  let visit_prod (bs:binders) tc = 
+
+let rec compress_kind k =
+  let k = Visit.compress_kind k in
+  match k.n with
+  | Kind_delayed (k',s, m) ->
+    let k' = fst <| Visit.reduce_kind (visit_knd s) (map_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp subst_ctrl [] k' in
+    let k' = compress_kind k' in
+    m := Some k';
+    k'
+  | Kind_uvar(uv, actuals) ->
+    begin match Unionfind.find uv with
+        | Fixed k ->
+            (match k.n with
+                | Kind_lam(formals, k') ->
+                  compress_kind (subst_kind (subst_of_list formals actuals) k')
+                | _ ->
+                    if List.length actuals = 0
+                    then k
+                    else failwith "Wrong arity for kind unifier")
+        | _ -> k
+    end
+  | _ -> k
+
+
+let rec visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
+  let visit_prod (bs:binders) tc =
     let bs, boundvars, s = bs |> List.fold_left (fun (bs, boundvars, s) b -> match b with
         | Inl a, imp -> 
           let k, _ = map_knd s mk vt me null_ctrl boundvars a.sort in
@@ -394,35 +419,8 @@ and visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
             | _ -> failwith "Impossible")
         
     | _ -> let t, _ = vt null_ctrl boundvars t in t, ctrl
-and visit_exp s mk me ve ctrl binders e =
-  let e = Visit.compress_exp e in 
-  match e.n with 
-    | Exp_bvar _ -> compress_exp <| subst_exp' s e, ctrl
-    | _ when (not ctrl.descend) -> map_exp s mk me ve ctrl binders e
-    | _ -> let e, _ = ve null_ctrl binders e in e, ctrl
 
-and compress_kind k = 
-  let k = Visit.compress_kind k in
-  match k.n with 
-  | Kind_delayed (k',s, m) ->
-    let k' = fst <| Visit.reduce_kind (visit_knd s) (map_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp subst_ctrl [] k' in
-    let k' = compress_kind k' in
-    m := Some k'; 
-    k'
-  | Kind_uvar(uv, actuals) -> 
-    begin match Unionfind.find uv with 
-        | Fixed k -> 
-            (match k.n with
-                | Kind_lam(formals, k') -> 
-                  compress_kind (subst_kind (subst_of_list formals actuals) k')
-                | _ -> 
-                    if List.length actuals = 0
-                    then k
-                    else failwith "Wrong arity for kind unifier")
-        | _ -> k
-    end
-  | _ -> k
-and compress_typ' t = 
+and compress_typ' t =
   let t = Visit.compress_typ t in
   match t.n with
       | Typ_delayed (t', s, m) ->
@@ -439,7 +437,14 @@ and compress_typ t =
         | Typ_delayed _ -> failwith "Impossible: compress returned a delayed type"
         | _ -> t
 
-and compress_exp e = 
+let rec visit_exp s mk me ve ctrl binders e = 
+  let e = Visit.compress_exp e in
+  match e.n with
+    | Exp_bvar _ -> compress_exp <| subst_exp' s e, ctrl
+    | _ when (not ctrl.descend) -> map_exp s mk me ve ctrl binders e
+    | _ -> let e, _ = ve null_ctrl binders e in e, ctrl
+
+and compress_exp e =
   let e = Visit.compress_exp e in
   match e.n with
   | Exp_delayed (e',s, m) ->
@@ -726,6 +731,11 @@ let fvs_included fvs1 fvs2 =
 let eq_fvars v1 v2 = match v1, v2 with 
     | Inl a, Inl b -> Syntax.bvd_eq a b
     | Inr x, Inr y -> Syntax.bvd_eq x y
+    | _ -> false
+
+let eq_binder b1 b2 = match fst b1, fst b2 with 
+    | Inl x, Inl y -> Syntax.bvd_eq x.v y.v
+    | Inr x, Inr y -> Syntax.bvd_eq x.v y.v
     | _ -> false
 
 let uv_eq (uv1,_) (uv2,_) = Unionfind.equivalent uv1 uv2

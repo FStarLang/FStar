@@ -115,8 +115,8 @@ let vbinder_opt aopt t = match aopt with
 type knd_components = binders * list<knd> * list<typ> * list<arg>
 type typ_components = binders * list<knd> * list<typ> * list<comp> * list<arg>
 type exp_components = binders * list<knd> * list<typ> * list<exp> * list<arg>
-let leaf_k = ([], [], [], [])
-let leaf_te = ([], [], [], [], [])
+let leaf_k () = ([], [], [], [])
+let leaf_te () = ([], [], [], [], [])
 
 let rec reduce_kind 
     (map_kind': mapper<'env, knd, knd>)
@@ -135,7 +135,7 @@ let rec reduce_kind
         | Kind_type 
         | Kind_effect
         | Kind_unknown -> 
-          leaf_k, env
+          leaf_k(), env
         | Kind_uvar(_, args) ->
           let args, env = map_args map_typ map_exp env binders args in
           ([], [], [], args), env
@@ -207,7 +207,7 @@ and reduce_typ
       | Typ_unknown
       | Typ_btvar _   
       | Typ_const _ -> 
-        leaf_te, env
+        leaf_te(), env
 
       | Typ_app(t, args) -> 
         let t, env = map_typ env binders t in
@@ -298,7 +298,7 @@ and reduce_exp
         | Exp_bvar _  
         | Exp_fvar _ 
         | Exp_constant _ -> 
-          leaf_te, env
+          leaf_te(), env
 
         | Exp_uvar(_, t) ->  
           let t, env = map_typ env binders t in

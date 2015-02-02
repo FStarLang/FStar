@@ -260,11 +260,7 @@ let simplify_then_apply steps head args k pos =
               else fallback()
             | _ -> fallback()
 
-let rec sn tcenv cfg =
-    let cfg = sn' tcenv cfg in
-    {cfg with code=Util.compress_typ cfg.code}
-
-and sn' tcenv (cfg:config<typ>) : config<typ> =
+let rec sn tcenv (cfg:config<typ>) : config<typ> =
   let rebuild config  = 
     let rebuild_stack config = 
         if is_stack_empty config then config

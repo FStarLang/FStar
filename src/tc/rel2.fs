@@ -289,6 +289,7 @@ let solve_prob' resolve_ok prob logical_guard uvis wl =
         then Util.fprint1 "Extending solution: %s\n" (List.map (uvi_to_string wl.tcenv) uvis |> String.concat ", ");
         {wl with subst=uvis@wl.subst; ctr=wl.ctr + 1}
 
+let extend_solution sol wl = {wl with subst=sol::wl.subst; ctr=wl.ctr+1}
 let solve_prob prob logical_guard uvis wl = solve_prob' false prob logical_guard uvis wl
 let explain env d s = 
     Util.format4 "(%s) Failed to solve the sub-problem\n%s\nWhich arose because:\n\t%s\nFailed because:%s\n" 
@@ -515,25 +516,32 @@ let binders_eq v1 v2 =
         | Inr x, Inr y -> Util.bvar_eq x y
         | _ -> false) v1 v2
 
+let pat_var_opt env seen arg = 
+   let hd = norm_arg env arg in 
+   match fst <| hd with
+    | Inl {n=Typ_btvar a} -> 
+        if seen |> Util.for_some (function 
+                    | Inl b, _ -> bvd_eq a.v b.v
+                    | _ -> false)
+        then None
+        else Some (Inl a, snd hd)
+    
+    | Inr {n=Exp_bvar x} ->
+        if seen |> Util.for_some (function 
+            | Inr y, _ -> bvd_eq x.v y.v
+            | _ -> false)
+        then None
+        else Some (Inr x, snd hd)
+
+    | _ -> None
+
 let rec pat_vars env seen args : option<binders> = match args with 
     | [] -> Some (List.rev seen) 
     | hd::rest -> 
-        (match fst <| norm_arg env hd with
-            | Inl {n=Typ_btvar a} -> 
-               if seen |> Util.for_some (function 
-                        | Inl b, _ -> bvd_eq a.v b.v
-                        | _ -> false)
-               then None //not a pattern
-               else pat_vars env ((Inl a, snd hd)::seen) rest
-
-            | Inr {n=Exp_bvar x} ->
-                if seen |> Util.for_some (function 
-                    | Inr y, _ -> bvd_eq x.v y.v
-                    | _ -> false)
-                then None //not a pattern
-                else pat_vars env ((Inr x, snd hd)::seen) rest
-
-            | _ -> None) //not a pattern
+        begin match pat_var_opt env seen hd with 
+            | None -> if Tc.Env.debug env <| Options.Other "Rel" then Util.fprint1 "Not a pattern: %s\n" (Print.arg_to_string hd); None //not a pattern
+            | Some x -> pat_vars env (x::seen) rest
+        end
 
 let destruct_flex_t t = match t.n with
     | Typ_uvar(uv, k) -> (t, uv, k, [])
@@ -1634,20 +1642,73 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
    *)
    let flex_flex orig (lhs:flex_t) (rhs:flex_t) : solution = 
         if wl.defer_ok && p_rel orig <> EQ then solve env (defer "flex-flex deferred" orig wl) else
-        let (t1, u1, k1, args1) = lhs in
-        let (t2, u2, k2, args2) = rhs in 
-        let maybe_pat_vars1 = pat_vars env [] args1 in
-        let maybe_pat_vars2 = pat_vars env [] args2 in
-        let r = t2.pos in
+        
+        let force_quasi_pattern xs (t, u, k, args) = 
+            let rec aux binders ys args = match args with 
+                | [] -> 
+                    let ys = List.rev ys in
+                    let binders = List.rev binders in 
+                    let t', _ = new_tvar t.pos ys t.tk in
+                    let u1_ys, u1, k1, _ = destruct_flex_t t' in
+                    let sol = UT((u,k), mk_Typ_lam(binders, u1_ys) t.tk t.pos) in
+                    sol, (u, k1, ys)
+
+                | hd::tl -> 
+                  let new_binder hd = match fst hd with 
+                        | Inl a -> Util.gen_bvar a.tk |> Syntax.t_binder
+                        | Inr x -> Util.gen_bvar x.tk |> Syntax.v_binder in
+
+                  let binder, ys = match pat_var_opt env ys hd with 
+                    | None -> new_binder hd, ys
+                        
+                    | Some y -> 
+                      if xs |> Util.for_some (Util.eq_binder y) 
+                      then y, y::ys  //this is a variable in the intersection with xs
+                      else new_binder hd, ys in
+
+                    aux (binder::binders) ys tl in
+
+           aux [] [] args in
+
+
+        let solve_both_pats (u1, k1, xs) (u2, k2, ys) k r = 
+            if Unionfind.equivalent u1 u2 && binders_eq xs ys
+            then solve env (solve_prob orig None [] wl)
+            else //U1 xs =?= U2 ys
+                 //zs = xs intersect ys, U fresh
+                 //U1 = \x1 x2. U zs
+                 //U2 = \y1 y2 y3. U zs
+                let xs = sn_binders env xs in
+                let ys = sn_binders env ys in
+                let zs = intersect_vars xs ys in
+                let u_zs, _ = new_tvar r zs k in
+                let sub1 = mk_Typ_lam'(xs, u_zs) k1 r in
+                let occurs_ok, msg = occurs_check env (u1,k1) sub1 in
+                if not occurs_ok
+                then giveup_or_defer orig "flex-flex: failed occcurs check" 
+                else let sol1 = UT((u1, k1), sub1) in
+                        if Unionfind.equivalent u1 u2
+                        then let wl = solve_prob orig None [sol1] wl in
+                                solve env wl
+                        else let sub2 = mk_Typ_lam'(ys, u_zs) k2 r in
+                                let occurs_ok, msg = occurs_check env (u2,k2) sub2 in
+                                if not occurs_ok 
+                                then giveup_or_defer orig "flex-flex: failed occurs check"
+                                else let sol2 = UT((u2,k2), sub2) in
+                                    let wl = solve_prob orig None [sol1;sol2] wl in
+                                    solve env wl in
+
         let solve_one_pat (t1, u1, k1, xs) (t2, u2, k2, args2) = 
             begin
                 if Tc.Env.debug env <| Options.Other "Rel"
                 then Util.fprint2 "Trying flex-flex one pattern (%s) with %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
                 if Unionfind.equivalent u1 u2
-                then let sub_probs = List.map2 (fun a b ->  match fst a, fst b with 
+                then let sub_probs = List.map2 (fun a b ->  
+                               let a = Util.arg_of_non_null_binder a in
+                               match fst a, fst b with 
                                 | Inl t1, Inl t2 -> mk_problem (p_scope orig) orig t1 EQ t2 None "flex-flex index" |> TProb
                                 | Inr t1, Inr t2 -> mk_problem (p_scope orig) orig t1 EQ t2 None "flex-flex index" |> EProb
-                                | _ -> failwith "Impossible") args1 args2 in
+                                | _ -> failwith "Impossible") xs args2 in
                      let guard = Util.mk_conj_l (List.map (fun p -> p_guard p |> fst) sub_probs) in
                      let wl = solve_prob orig (Some guard) [] wl in
                      solve env (attempt sub_probs wl)
@@ -1660,38 +1721,18 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                      then let sol = UT((u1, k1), mk_Typ_lam'(xs, t2) k1 t1.pos) in
                           let wl = solve_prob orig None [sol] wl in
                           solve env wl
-                     else giveup_or_defer orig "flex-flex (one pattern) occurs-check or free variable check"
+                     else let sol, (u2, k2, ys) = force_quasi_pattern xs (t2, u2, k2, args2) in
+                          let wl = extend_solution sol wl in
+                          solve_both_pats (u1, k1, xs) (u2, k2, ys) t2.tk t2.pos                         
             end in
-     
-        let solve_both_pats xs ys = 
-            if Unionfind.equivalent u1 u2 && binders_eq xs ys
-            then solve env (solve_prob orig None [] wl)
-            else //U1 xs =?= U2 ys
-                 //zs = xs intersect ys, U fresh
-                 //U1 = \x1 x2. U zs
-                 //U2 = \y1 y2 y3. U zs
-                let xs = sn_binders env xs in
-                let ys = sn_binders env ys in
-                let zs = intersect_vars xs ys in
-                let u_zs, _ = new_tvar r zs t2.tk in
-                let sub1 = mk_Typ_lam'(xs, u_zs) k1 r in
-                let occurs_ok, msg = occurs_check env (u1,k1) sub1 in
-                if not occurs_ok
-                then giveup_or_defer orig "flex-flex: failed occcurs check" 
-                else let sol1 = UT((u1, k1), sub1) in
-                        if Unionfind.equivalent u1 u2
-                        then let wl = solve_prob orig None [sol1] wl in
-                             solve env wl
-                        else let sub2 = mk_Typ_lam'(ys, u_zs) k2 r in
-                             let occurs_ok, msg = occurs_check env (u2,k2) sub2 in
-                             if not occurs_ok 
-                             then giveup_or_defer orig "flex-flex: failed occurs check"
-                             else let sol2 = UT((u2,k2), sub2) in
-                                  let wl = solve_prob orig None [sol1;sol2] wl in
-                                  solve env wl in
 
-            match maybe_pat_vars1, maybe_pat_vars2 with 
-            | Some xs, Some ys -> solve_both_pats xs ys
+        let (t1, u1, k1, args1) = lhs in
+        let (t2, u2, k2, args2) = rhs in 
+        let maybe_pat_vars1 = pat_vars env [] args1 in
+        let maybe_pat_vars2 = pat_vars env [] args2 in
+        let r = t2.pos in
+        match maybe_pat_vars1, maybe_pat_vars2 with 
+            | Some xs, Some ys -> solve_both_pats (u1, k1, xs) (u2, k2, ys) t2.tk t2.pos
             | Some xs, None -> solve_one_pat (t1, u1, k1, xs) rhs
             | None, Some ys -> solve_one_pat (t2, u2, k2, ys) lhs
             | _ -> giveup env "flex-flex constraint" orig in
