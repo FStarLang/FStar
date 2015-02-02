@@ -70,3 +70,9 @@ let test x = if x >= 0 then f4 x else false
 
 type pos = x:int{x>0}
 let f5 g (l:list pos) (m:list nat) = let _ = map g l in map g m
+
+
+assume val f: (int -> ML (int -> int)) -> int
+assume val g: (int -> int -> int) -> int
+let brittle_1 x = f x + g x //this program checks under rel1
+let brittle_2 x = g x + f x //but this program fails under rel1

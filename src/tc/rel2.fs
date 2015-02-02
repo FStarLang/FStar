@@ -1193,41 +1193,64 @@ let next_prob wl =
    aux (flex_flex + 1, None, []) wl.attempting
 
 let is_flex_rigid rank = flex_refine_inner <= rank && rank <= flex_rigid
-
 let rec solve_flex_rigid_join env tp wl = 
     if Tc.Env.debug env <| Options.Other "Rel" 
     then Util.fprint1 "Trying to solve by joining refinements:%s\n" (prob_to_string env (TProb tp));
     let u, args = Util.head_and_args tp.lhs in
-   
+    let ok, partial_match, fallback, failed_match = 0,1,2,3 in
+    let max i j = if i < j then j else i in
+
     let base_types_match t1 t2 =
         let h1, _ = Util.head_and_args t1 in
         let h2, _ = Util.head_and_args t2 in 
         match h1.n, h2.n with 
-        | Typ_const tc1, Typ_const tc2 -> lid_equals tc1.v tc2.v
-        //| Typ_fun _, Typ_fun _ -> true
-        | _ -> false in
+        | Typ_const tc1, Typ_const tc2 -> 
+          if lid_equals tc1.v tc2.v
+          then ok
+          else fallback
+
+        | Typ_btvar a, Typ_btvar b -> 
+          if bvar_eq a b
+          then ok
+          else fallback
+       
+        | Typ_fun(bs1, c1), Typ_fun(bs2, c2) ->  
+          if List.length bs1 = List.length bs2
+          then let c1 = Util.comp_to_comp_typ c1 in
+               let c2 = Util.comp_to_comp_typ c2 in 
+               if lid_equals c1.effect_name c2.effect_name
+               then partial_match
+               else failed_match
+          else failed_match
+                 
+        | _ -> fallback in
 
     let conjoin t1 t2 = match t1.n, t2.n with 
         | Typ_refine(x, phi1), Typ_refine(y, phi2) -> 
-          if base_types_match x.sort y.sort 
+          let m = base_types_match x.sort y.sort in
+          if m=ok
           then let phi2 = Util.subst_typ (Util.mk_subst_one_binder (Syntax.v_binder x) (Syntax.v_binder y)) phi2 in
-               mk_Typ_refine(x, Util.mk_conj phi1 phi2) t1.tk t1.pos |> Some
-          else None
+               mk_Typ_refine(x, Util.mk_conj phi1 phi2) t1.tk t1.pos |> Some, ok
+          else None, m
 
-        | _, Typ_refine(y, phi2) -> 
-          if base_types_match t1 y.sort
-          then Some t2
-          else None
+        | _, Typ_refine(y, _) -> 
+          let m = base_types_match t1 y.sort in
+          if m=ok
+          then Some t2, ok
+          else None, m
 
-        | Typ_refine(x, phi1), _ -> 
-          if base_types_match x.sort t2
-          then Some t1
-          else None
+        | Typ_refine(x, _), _ -> 
+          let m = base_types_match x.sort t2 in
+          if m=ok 
+          then Some t1, ok
+          else None, m
 
         | _ -> 
-          if base_types_match t1 t2
-          then Some t1
-          else None in
+          let m = base_types_match t1 t2 in
+          if m=ok
+          then Some t1, ok
+          else None, m in
+
    let tt = u in//compress env wl u in
     match tt.n with 
         | Typ_uvar(uv, _) -> 
@@ -1244,34 +1267,42 @@ let rec solve_flex_rigid_join env tp wl =
                     | _ -> false // should be unreachable
                 end
            | _ -> false) in
-          let rec make_upper_bound bound tps = match tps with 
-            | [] -> Some bound
+          
+          let rec make_upper_bound (bound, m) tps = match tps with 
+            | [] -> Some bound, m
             | (TProb hd)::tl -> 
               begin match conjoin bound (compress env wl hd.rhs) with
-                    | Some bound -> make_upper_bound bound tl
-                    | None -> None
+                    | Some bound, m' -> make_upper_bound (bound, max m m') tl
+                    | None, m -> None, m
               end
-            | _ -> None in
-          begin match make_upper_bound (compress env wl tp.rhs) upper_bounds with 
-            | None -> 
+            | _ -> None, failed_match in
+
+          begin match make_upper_bound (compress env wl tp.rhs, ok) upper_bounds with 
+            | None, m -> 
               if Tc.Env.debug env <| Options.Other "Rel" 
               then Util.print_string "No upper bounds\n";
-              None
-            | Some rhs ->
-              let eq_prob = new_problem env tp.lhs EQ rhs None tp.loc "joining refinements" in
+              Inr (m=fallback)
+
+            | Some rhs_bound, weak when (weak<>ok) -> 
+              let eq_prob = new_problem env tp.lhs EQ rhs_bound None tp.loc "joining refinements" in
+              begin match solve_t env eq_prob ({wl with attempting=[]}) with 
+                | Success (subst, _) ->
+                  Inl ({wl with subst=subst})
+                | _ -> Inr true
+              end
+
+            | Some rhs_bound, _ -> 
+              let eq_prob = new_problem env tp.lhs EQ rhs_bound None tp.loc "joining refinements" in
               match solve_t env eq_prob ({wl with attempting=[]}) with 
                 | Success (subst, _) ->
                   let wl = {wl with attempting=rest; subst=[]} in
                   let wl = solve_prob (TProb tp) None subst wl in
                   let _ = List.fold_left (fun wl p -> solve_prob' true p None [] wl) wl upper_bounds in
-                  Some wl
-                | _ -> None
+                  Inl wl
+                | _ -> Inr true
           end
 
-      | _ -> 
-           if Tc.Env.debug env <| Options.Other "Rel" 
-           then Util.fprint1 "Not a uvar %s\n" (Print.typ_to_string tt); 
-           None
+      | _ -> failwith "Impossible: Not a flex-rigid"
 
 and solve (env:Tc.Env.env) (probs:worklist) : solution = 
 //    printfn "Solving TODO:\n%s;;" (List.map prob_to_string probs.attempting |> String.concat "\n\t");
@@ -1283,8 +1314,9 @@ and solve (env:Tc.Env.env) (probs:worklist) : solution =
             | TProb tp -> 
               if not probs.defer_ok && flex_refine_inner <= rank && rank <= flex_rigid && !Options.slack
               then begin match solve_flex_rigid_join env tp probs with 
-                            | None -> solve_t' env (maybe_invert tp) probs
-                            | Some wl -> solve env wl
+                            | Inr true -> solve_t' env (maybe_invert tp) probs
+                            | Inr false -> giveup env "joining function types" hd
+                            | Inl wl -> solve env wl
                    end
               else solve_t' env (maybe_invert tp) probs
             | EProb ep -> solve_e' env (maybe_invert ep) probs
