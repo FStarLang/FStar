@@ -77,7 +77,7 @@ type typ' =
   | Typ_ascribed of typ * knd                                (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
   | Typ_uvar     of uvar_t * knd                             (* Unification variables, not present after 1st round tc *)
-  | Typ_delayed  of typ * subst_t * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
+  | Typ_delayed  of either<(typ * subst_t), (unit -> typ)> * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
 and arg = either<typ,exp> * bool                             (* bool marks an explicitly provided implicit arg *)
 and args = list<arg>
@@ -336,6 +336,8 @@ val mk_Typ_meta: meta_t -> typ
 val mk_Typ_uvar': (uvar_t * knd) -> knd -> range -> typ
 val mk_Typ_uvar: (uvar_t * knd) -> range -> typ
 val mk_Typ_delayed: (typ * subst_t * memo<typ>) -> knd -> range -> typ
+val mk_Typ_delayed': either<(typ * subst_t), (unit -> typ)> -> knd -> range -> typ
+
 val extend_typ_app: (typ * arg) -> knd -> range -> typ
 
 val mk_Total: typ -> comp

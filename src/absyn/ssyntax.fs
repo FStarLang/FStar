@@ -302,7 +302,7 @@ let rec serialize_typ' (ast : typ') : s_typ' =
     | Typ_meta(m) -> S_Typ_meta(serialize_meta_t m)
     | Typ_unknown -> S_Typ_unknown
     | Typ_uvar(_, _) -> raise (Err "typ not impl:1")
-    | Typ_delayed(_, _, _) -> raise (Err "typ not impl:2")
+    | Typ_delayed(_, _) -> raise (Err "typ not impl:2")
 
 and serialize_meta_t (ast : meta_t) : s_meta_t = 
     match ast with

@@ -26,7 +26,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <OtherFlags>--mlcompatibility</OtherFlags>
     <StartWorkingDirectory>C:\Users\nswamy\workspace\FStar\src</StartWorkingDirectory>
-    <StartArguments>--debug yes --fs_typ_app --lax --fstar_home .. --rel2 --slack --debug_level ExplainRel --debug TEST --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform ../lib/system.fst ../lib/stboot.fst ../lib/listboot-TEMPORARY-FILE.fst ../lib/option.fst ../lib/string.fst ../lib/char.fst basic/bytes.fst basic/platform.fsi basic/util.fsi basic/getoptsimple.fst basic/options.fs basic/range.fst basic/unionfind.fst basic/lazyset.fsi basic/lazyset.fs absyn/syntax.fsi absyn/syntax.fs absyn/const.fs absyn/visit.fs absyn/util-test.fs</StartArguments>
+    <StartArguments>--debug yes --fs_typ_app --lax --fstar_home .. --rel2 --slack --debug_level ExplainRel --debug TEST --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform ../lib/system.fst ../lib/stboot.fst ../lib/listboot-TEMPORARY-FILE.fst ../lib/option.fst ../lib/string.fst ../lib/char.fst basic/bytes.fst basic/platform.fsi basic/util.fsi basic/getoptsimple.fst basic/options.fs basic/range.fst basic/unionfind.fst basic/lazyset.fsi basic/lazyset.fs absyn/syntax.fsi absyn/syntax.fs absyn/const.fs absyn/visit.fs</StartArguments>
     <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">

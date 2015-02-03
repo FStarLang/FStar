@@ -171,11 +171,16 @@ let rec subst_typ' s t = match s with
   | _ -> 
     let t0 = Visit.compress_typ t in
     match t0.n with 
-        | Typ_delayed(t', s', m) -> 
+        | Typ_delayed(Inl(t', s'), m) -> 
             mk_Typ_delayed (t', compose_subst s' s, Util.mk_ref None) 
                            (subst_kind' s t.tk)
                             t.pos
-    
+
+        | Typ_delayed(Inr mk_t, m) -> 
+          let t = mk_t () in
+          m := Some t;
+          subst_typ' s t
+
         | Typ_btvar a ->
             let rec aux s = match s with
              | s0::rest -> 
@@ -423,12 +428,18 @@ let rec visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
 and compress_typ' t =
   let t = Visit.compress_typ t in
   match t.n with
-      | Typ_delayed (t', s, m) ->
+      | Typ_delayed (Inl(t', s), m) ->
         let res = fst <| Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) Visit.combine_kind Visit.combine_typ Visit.combine_exp subst_ctrl [] t' in
         let res = compress_typ' res in
         m := Some res;
         //printfn "Compressing %A ... got %A\n" t' res;
         res
+      
+      | Typ_delayed (Inr mk_t, m) ->
+        let t = compress_typ' (mk_t ()) in 
+        m := Some t;
+        t
+      
       | _ -> t
 
 and compress_typ t = 

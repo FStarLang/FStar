@@ -1671,7 +1671,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
            aux [] [] args in
 
 
-        let solve_both_pats (u1, k1, xs) (u2, k2, ys) k r = 
+        let solve_both_pats wl (u1, k1, xs) (u2, k2, ys) k r = 
             if Unionfind.equivalent u1 u2 && binders_eq xs ys
             then solve env (solve_prob orig None [] wl)
             else //U1 xs =?= U2 ys
@@ -1721,9 +1721,11 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                      then let sol = UT((u1, k1), mk_Typ_lam'(xs, t2) k1 t1.pos) in
                           let wl = solve_prob orig None [sol] wl in
                           solve env wl
-                     else let sol, (u2, k2, ys) = force_quasi_pattern xs (t2, u2, k2, args2) in
+                     else if occurs_ok && not <| wl.defer_ok 
+                     then let sol, (u2, k2, ys) = force_quasi_pattern xs (t2, u2, k2, args2) in
                           let wl = extend_solution sol wl in
-                          solve_both_pats (u1, k1, xs) (u2, k2, ys) t2.tk t2.pos                         
+                          solve_both_pats wl (u1, k1, xs) (u2, k2, ys) t2.tk t2.pos                         
+                     else giveup_or_defer orig "flex-flex constraint"
             end in
 
         let (t1, u1, k1, args1) = lhs in
@@ -1732,7 +1734,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         let maybe_pat_vars2 = pat_vars env [] args2 in
         let r = t2.pos in
         match maybe_pat_vars1, maybe_pat_vars2 with 
-            | Some xs, Some ys -> solve_both_pats (u1, k1, xs) (u2, k2, ys) t2.tk t2.pos
+            | Some xs, Some ys -> solve_both_pats wl (u1, k1, xs) (u2, k2, ys) t2.tk t2.pos
             | Some xs, None -> solve_one_pat (t1, u1, k1, xs) rhs
             | None, Some ys -> solve_one_pat (t2, u2, k2, ys) lhs
             | _ -> giveup env "flex-flex constraint" orig in

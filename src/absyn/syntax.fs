@@ -68,7 +68,7 @@ type typ' =
   | Typ_ascribed of typ * knd                                (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
   | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
-  | Typ_delayed  of typ * subst_t * memo<typ>                (* A delayed substitution---always force it before inspecting the first arg *)
+  | Typ_delayed  of either<(typ * subst_t), (unit -> typ)> * memo<typ>                (* A delayed substitution or suspended type---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
 and arg = either<typ,exp> * bool                                        (* bool marks an explicitly provided implicit arg *)
 and args = list<arg>
@@ -447,7 +447,13 @@ let mk_Typ_uvar'     ((u:uvar_t),(k:knd)) (k':knd) (p:range) = {
 }
 let mk_Typ_uvar (u, k) p = mk_Typ_uvar' (u, k) k p 
 let mk_Typ_delayed  ((t:typ),(s:subst_t),(m:memo<typ>)) (k:knd) (p:range) = {
-    n=(match t.n with Typ_delayed _ -> failwith "NESTED DELAYED TYPES!" | _ -> Typ_delayed(t, s, m));
+    n=(match t.n with Typ_delayed _ -> failwith "NESTED DELAYED TYPES!" | _ -> Typ_delayed(Inl(t, s), m));
+    tk=k;
+    pos=p;
+    uvs=mk_uvs(); fvs=mk_fvs();
+}
+let mk_Typ_delayed' st (k:knd) p = {
+    n=Typ_delayed(st, Util.mk_ref None);
     tk=k;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
