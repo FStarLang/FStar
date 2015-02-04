@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Tc.Rel2
+module Microsoft.FStar.Tc.Rel
 
 open Microsoft.FStar
 open Microsoft.FStar.Util
@@ -74,6 +74,7 @@ val is_trivial: guard_t -> bool
 val conj_guard: guard_t -> guard_t -> guard_t
 val imp_guard: guard_t -> guard_t -> guard_t
 val guard_of_guard_formula: guard_formula -> guard_t
+val guard_f: guard_t -> guard_formula
 val guard_to_string : env -> guard_t -> string
 val solve_deferred_constraints: env -> guard_t -> guard_t
 val try_discharge_guard: env -> guard_t -> (bool * list<string>)

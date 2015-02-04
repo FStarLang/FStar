@@ -475,11 +475,7 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
           let e = (wne tcenv (e_config e cfg.environment cfg.steps)).code in
           DECREASES e
         | f -> f) in
-  let flags, args = 
-    if !Options.rel2 || List.contains SNComp cfg.steps //TODO: REMOVE THIS GUARD ON --rel2
-    then sn_flags m.flags, sn_args true tcenv cfg.environment cfg.steps m.effect_args 
-    else let s = subst_of_env tcenv cfg.environment in
-         Util.subst_flags s m.flags, m.effect_args |> Util.subst_args s in
+  let flags, args = sn_flags m.flags, sn_args true tcenv cfg.environment cfg.steps m.effect_args in
   if not <| List.contains DeltaComp cfg.steps
   then remake m.effect_name res args flags
   else match Tc.Env.lookup_typ_abbrev tcenv m.effect_name with

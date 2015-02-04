@@ -1,4 +1,4 @@
-VERFILES=unit1.fst testset.fst 
+VERFILES=unit1.fst unit2.fst testset.fst 
 include ../Makefile.include
 NEGFILES=negative-tests.fst
 

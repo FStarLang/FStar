@@ -165,8 +165,8 @@ let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard_t 
 
 let no_logical_guard env (te, kt, f) = 
   match guard_f f with 
-    | Rel2.Trivial -> te, kt, f
-    | Rel2.NonTrivial f -> raise (Error(Tc.Errors.unexpected_non_trivial_precondition_on_term env f, Env.get_range env)) 
+    | Rel.Trivial -> te, kt, f
+    | Rel.NonTrivial f -> raise (Error(Tc.Errors.unexpected_non_trivial_precondition_on_term env f, Env.get_range env)) 
 
 let binding_of_lb x t = match x with 
   | Inl bvd -> Env.Binding_var(bvd, t)
@@ -763,7 +763,7 @@ and tc_exp env e : exp * lcomp * guard_t =
         e, c, Rel.conj_guard guard_e g in
 
     let t = Env.expected_typ env in
-    if !Options.rel2 || Option.isNone t 
+    if Option.isNone t 
     then fallback env
     else let _, value_indexed, t = is_indexed_with_value <| Option.get t in
          if value_indexed
@@ -804,7 +804,7 @@ and tc_exp env e : exp * lcomp * guard_t =
        
             | _ -> (* We have some useful info from the context; use it to instantiate the result type of dc *)
               let g = Tc.Rel.subtype env tres t in 
-              {g with Rel2.guard_f=Rel2.Trivial} in
+              {g with Rel.guard_f=Rel.Trivial} in
     dc, c_dc, Rel.conj_guard g_dc g_i (* NB: Removed the Meta_datainst tag on the way up---no other part of the compiler sees Meta_datainst *)
 
   | Exp_app(head, args) ->
@@ -873,7 +873,7 @@ and tc_exp env e : exp * lcomp * guard_t =
               let t, g' = tc_typ_check env t k in
               let g' = Tc.Rel.imp_guard (Rel.guard_of_guard_formula <| Tc.Util.short_circuit_guard (Inr head) outargs) g' in
               let f = Tc.Util.label_guard Errors.ill_kinded_type t.pos (guard_f g') in
-              let g' = {g' with Rel2.guard_f=f} in
+              let g' = {g' with Rel.guard_f=f} in
               let arg = targ t in 
               let subst = maybe_extend_subst subst (List.hd bs) arg in
               tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard g g', fvs) rest cres rest'
@@ -1151,14 +1151,14 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
         | _ -> ());
     let env1, _ = Tc.Env.clear_expected_typ pat_env in 
     let env1 = {env1 with Env.is_pattern=true} in 
-    let env1 = Tc.Env.set_expected_typ env1 (Tc.Rel2.unrefine env pat_t) in
+    let env1 = Tc.Env.set_expected_typ env1 (Tc.Rel.unrefine env pat_t) in
     let exps, gs = exps |> List.map (fun e -> 
         if Tc.Env.debug env Options.High
         then Util.fprint2 "Checking pattern expression %s against expected type %s\n" (Print.exp_to_string e) (Print.typ_to_string pat_t);
         let e, _, g =  tc_total_exp env1 e in //only keep the unification/subtyping constraints; discard the logical guard for patterns
         if Tc.Env.debug env Options.High
         then Util.fprint1 "Done checking pattern expression %s\n" (Print.exp_to_string e);
-        e, {g with Rel2.guard_f=Rel2.Trivial}) |> List.unzip in
+        e, {g with Rel.guard_f=Rel.Trivial}) |> List.unzip in
     let p = Tc.Util.decorate_pattern env p exps in
     if debug env <| Options.Other "Pat" 
     then bindings |> List.iter (function 
@@ -1197,9 +1197,9 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
                  | Some f -> Some <| Util.mk_disj clause f) None in 
     let c = match eqs, when_condition with
       | None, None -> c
-      | Some f, None -> Tc.Util.weaken_precondition env c (Rel2.NonTrivial f)
-      | Some f, Some w -> Tc.Util.weaken_precondition env c (Rel2.NonTrivial <| Util.mk_conj f w)
-      | None, Some w -> Tc.Util.weaken_precondition env c (Rel2.NonTrivial w) in
+      | Some f, None -> Tc.Util.weaken_precondition env c (Rel.NonTrivial f)
+      | Some f, Some w -> Tc.Util.weaken_precondition env c (Rel.NonTrivial <| Util.mk_conj f w)
+      | None, Some w -> Tc.Util.weaken_precondition env c (Rel.NonTrivial w) in
     Tc.Util.close_comp env bindings c in
 
   let discriminate scrutinee f = 

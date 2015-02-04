@@ -154,7 +154,7 @@ clean:
 # Bootstrapping
 # --------------------------------------------------------------------
 
-STDFILES=system.fst stboot.fst listboot-TEMPORARY-FILE.fst option.fst string.fst char.fst
+STDFILES=system.fst stboot.fst list.fst option.fst string.fst char.fst
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 
 BOOT_BASICFILES=bytes.fst platform.fsi util.fsi getoptsimple.fst options.fs range.fst unionfind.fst lazyset.fsi lazyset.fs
@@ -163,7 +163,7 @@ BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs dssynta
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
 BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fst driver.fs 
 BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))
-BOOT_TCFILES=tcenv.fsi tcenv.fs normalize.fsi normalize.fs errors.fs rel2.fsi rel2.fs rel1.fsi rel1.fs rel2.fsi rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
+BOOT_TCFILES=tcenv.fsi tcenv.fs normalize.fsi normalize.fs errors.fs rel2.fsi rel2.fs tcutil.fsi tcutil.fs tc.fs
 BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
 BOOT_FORMATFILES=format.fsi formatml.fs
 BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
@@ -175,7 +175,7 @@ BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_BACKEND) 
 
 boot: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --rel2 --slack --debug yes --fs_typ_app --lax --fstar_home .. $(FSTAROPTS) --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+	$(RUNTIME) ../bin/fstar.exe --debug yes --fs_typ_app --lax --fstar_home .. $(FSTAROPTS) --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
 ocaml: $(BOOT_ALL)
 	$(RUNTIME) ../bin/fstar.exe --lax --fs_typ_app --odir ocaml-output --fstar_home .. $(FSTAROPTS) --codegen OCaml --debug_level Low --trace_error --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
@@ -189,19 +189,7 @@ OCAML_FILES= Microsoft_FStar_Options.ml Microsoft_FStar_LazySet.ml Microsoft_FSt
 OCAML_ALL=$(addprefix ocaml-output/, $(OCAML_FILES))
 
 test:   boot
-	make test.rel2
-
-test.rel2:
-	make -C ../examples/data_structures OTHERFLAGS='--rel2 --slack'
-	make -C ../examples/algorithms OTHERFLAGS='--z3timeout 10 --rel2 --slack'
-	make -C ../examples/crypto OTHERFLAGS='--rel2 --slack'
-	make -C ../examples/security OTHERFLAGS='--rel2 --slack'
-	make -C ../examples/termination OTHERFLAGS='--rel2 --slack'
-	make -C ../examples/software_foundations OTHERFLAGS='--rel2 --slack'
-	make -C ../examples/metatheory OTHERFLAGS='--rel2 --slack'
-	make -C ../doc/tutorial/code/solutions OTHERFLAGS='--rel2 --slack'
-	make -C ../examples/unit-tests unit2.vv OTHERFLAGS='--rel2 --slack'
-	make -C ../examples/unit-tests OTHERFLAGS='--rel2 --slack'
+	make -C ../examples 
 
 
 test.diff:

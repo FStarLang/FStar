@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 #light "off"
-module Microsoft.FStar.Tc.Rel
+module Microsoft.FStar.Tc.RelOld
 
 open Microsoft.FStar
 open Microsoft.FStar.Util

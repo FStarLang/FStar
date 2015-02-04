@@ -19,7 +19,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #light "off"
-module Microsoft.FStar.Tc.Rel2
+module Microsoft.FStar.Tc.Rel
 
 open Microsoft.FStar
 open Microsoft.FStar.Options
@@ -1320,7 +1320,7 @@ and solve (env:Tc.Env.env) (probs:worklist) : solution =
          begin match hd with 
             | KProb kp -> solve_k' env (maybe_invert kp) probs
             | TProb tp -> 
-              if not probs.defer_ok && flex_refine_inner <= rank && rank <= flex_rigid && !Options.slack
+              if not probs.defer_ok && flex_refine_inner <= rank && rank <= flex_rigid && not (!Options.no_slack)
               then begin match solve_flex_rigid_join env tp probs with 
                             | Inr true -> solve_t' env (maybe_invert tp) probs
                             | Inr false -> giveup env "joining function types" hd
@@ -1862,7 +1862,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         if wl.defer_ok
         then solve env (defer "flex-rigid subtyping deferred" orig wl) 
         else 
-            let new_rel = if !Options.slack then problem.relation else EQ in
+            let new_rel = if !Options.no_slack then EQ else problem.relation in
             if not <| is_top_level_prob orig //If it's not top-level and t2 is refined, then we should not try to prove that t2's refinement is saturated
             then solve_t_flex_rigid (TProb <| {problem with relation=new_rel}) (destruct_flex_pattern env t1) t2 wl
             else let t_base, ref_opt = base_and_refinement env wl t2 in
@@ -2236,6 +2236,8 @@ let guard_to_string (env:env) g =
 (* <guard_formula ops> Operations on guard_formula *)
 (* ------------------------------------------------*)
 let guard_of_guard_formula g = {guard_f=g; deferred={slack=[]; carry=[]}}
+
+let guard_f g = g.guard_f
 
 let is_trivial g = match g with 
     | {guard_f=Trivial; deferred={carry=[]; slack=[]}} -> true
