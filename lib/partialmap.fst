@@ -3,11 +3,11 @@ open Prims.PURE
 
 (*private extensional*) type set (a:Type) = a -> Tot bool
 
-assume type Equal : a:Type -> set a -> set a -> Type
+assume type Equal : #a:Type -> set a -> set a -> Type
 
-(* private *) assume EqualDef : (forall (a:Type) (s1:set a) (s2:set a). Equal a s1 s2 <==> (forall x. s1 x = s2 x))
+(* private *) assume EqualDef : (forall (a:Type) (s1:set a) (s2:set a). Equal s1 s2 <==> (forall x. s1 x = s2 x))
 
-(* private *) assume Extensionality : (forall (a:Type) (s1:set a) (s2:set a). Equal a s1 s2 <==> s1 = s2)
+(* private *) assume Extensionality : (forall (a:Type) (s1:set a) (s2:set a). Equal s1 s2 <==> s1 = s2)
 
 val empty : a:Type -> Tot (set a)
 (* private *) let empty = (fun _ -> false)
@@ -42,10 +42,10 @@ val memIntersect : a:Type -> s1:set a -> s2:set a -> x:a -> Lemma (requires True
 val memComplement : a:Type -> s:set a -> x:a -> Lemma (requires True) (ensures (mem x (complement s) = not (mem x s))) [SMTPat (mem x (complement s))]
 (* private *) let memComplement (a:Type) (s:set a) (x:a) = ()
 
-val extensional : a:Type -> s1:set a -> s2:set a -> Lemma (requires True) (ensures (Equal a s1 s2 <==> s1 = s2)) (* error: [SMTPat (Equal a s1 s2)] *)
+val extensional : a:Type -> s1:set a -> s2:set a -> Lemma (requires True) (ensures (Equal s1 s2 <==> s1 = s2)) (* error: [SMTPat (Equal a s1 s2)] *)
 (* private *) let extensional (a:Type) (s1:set a) (s2:set a) = ()
 
-val equals : a:Type -> s1:set a -> s2:set a -> Lemma (requires True) (ensures (Equal a s1 s2 <==> (forall x. (* error: {:pattern (mem x s1); (mem x s2)}*) mem x s1 = mem x s2))) (* error: [SMTPat (Equal a s1 s2)] *)
+val equals : a:Type -> s1:set a -> s2:set a -> Lemma (requires True) (ensures (Equal s1 s2 <==> (forall x. (* error: {:pattern (mem x s1); (mem x s2)}*) mem x s1 = mem x s2))) (* error: [SMTPat (Equal a s1 s2)] *)
 (* private *) let equals (a:Type) (s1:set a) (s2:set a) = ()
 
 let minus (a:Type) (s1:set a) (s2:set a) = intersect s1 (complement s2)

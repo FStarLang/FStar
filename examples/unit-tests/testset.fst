@@ -13,8 +13,8 @@ let should_succeed u =
   assert (mem A (union (singleton A) (singleton B)));
   assert (Subset (singleton A) (union (singleton A) (singleton B)));
   assert (Subset (singleton B) (union (singleton A) (singleton B)));
-  assert (Equal elt (union (singleton A) (singleton B))
-                    (union (singleton B) (singleton A)))
+  assert (Equal (union (singleton A) (singleton B))
+                (union (singleton B) (singleton A)))
 
 
 module TestHeap
