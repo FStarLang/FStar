@@ -468,8 +468,7 @@ and compress_exp e =
 let rec unmeta_exp e =
     let e = compress_exp e in 
     match e.n with 
-        | Exp_meta(Meta_desugared(e, _)) 
-        | Exp_meta(Meta_datainst(e, _)) -> unmeta_exp e
+        | Exp_meta(Meta_desugared(e, _)) -> unmeta_exp e
         | Exp_ascribed(e, _) -> unmeta_exp e
         | _ -> e
 
@@ -572,8 +571,7 @@ let rec is_atom e = match (compress_exp e).n with
     | Exp_bvar _ 
     | Exp_fvar _ 
     | Exp_constant _ -> true
-    | Exp_meta (Meta_desugared(e, _))
-    | Exp_meta (Meta_datainst(e, _)) -> is_atom e
+    | Exp_meta (Meta_desugared(e, _)) -> is_atom e
     | _ -> false
      
 let primops = 
@@ -931,8 +929,7 @@ and vs_exp' (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
       | Exp_match _       
       | Exp_let _ -> cont (no_fvs, no_uvs) //failwith "NYI"
                                
-      | Exp_meta(Meta_desugared(e, _))
-      | Exp_meta(Meta_datainst(e, _)) -> 
+      | Exp_meta(Meta_desugared(e, _)) -> 
         vs_exp e uvonly cont
 
 and vs_exp (e:exp) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res = 

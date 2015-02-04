@@ -288,8 +288,7 @@ and reduce_exp
   and visit_exp env binders e : (exp * 'env) = 
      let e = compress_exp_uvars e in 
      let components, env = match e.n with 
-        | Exp_delayed _
-        | Exp_meta(Meta_datainst _) -> failwith "impossible"
+        | Exp_delayed _ -> failwith "impossible"
 
         | Exp_meta(Meta_desugared(e, _)) -> 
           let e, env = map_exp env binders e in 

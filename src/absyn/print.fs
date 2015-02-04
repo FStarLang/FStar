@@ -185,7 +185,6 @@ and tag_of_exp e = match e.n with
   | Exp_uvar _ -> "Exp_uvar"
   | Exp_delayed _ -> "Exp_delayed"
   | Exp_meta(Meta_desugared(_, m)) -> "Exp_meta_desugared " ^ (meta_e_to_string m)
-  | Exp_meta(Meta_datainst(_, _)) -> "Exp_meta_datainst"
 and meta_e_to_string = function 
     | Data_app -> "Data_app"
     | Sequence -> "Sequence"                  
@@ -361,7 +360,6 @@ and formula_to_string_old_now_unused phi =
          
 and exp_to_string x = match (compress_exp x).n with
   | Exp_delayed _ -> failwith "Impossible"
-  | Exp_meta(Meta_datainst(e,_))
   | Exp_meta(Meta_desugared(e, _)) -> exp_to_string e
   | Exp_uvar(uv, t) -> uvar_e_to_string (uv, t)
   | Exp_bvar bvv -> strBvd bvv.v //Util.format2 "%s : %s" (strBvd bvv.v) (typ_to_string bvv.sort)

@@ -709,70 +709,6 @@ and tc_exp env e : exp * lcomp * guard_t =
     let e, c, f2 = comp_check_expected_typ env (w c <| mk_Exp_ascribed'(e1, t1)) c in
     e, c, Rel.conj_guard f (Rel.conj_guard g f2)
 
-  | Exp_meta(Meta_desugared(e, Data_app)) -> 
-    (* These are (potentially) values, but constructor types 
-       already have an (Tot) effect annotation on their co-domain. 
-       So, we can treat them as normal applications. Except ...  *)
-    let d, args = Util.head_and_args_e e in 
-    (* if there are no user-provided type applications or implicit arguments, 
-       and the expected type is non-indexed, 
-       try to infer the instantiation of type arguments as below. Otherwise, fallback. *)
-    
-    let fallback env = 
-          let e, c, g = tc_exp env e in 
-          mk_Exp_meta(Meta_desugared(e, Data_app)), c, g in
-
-    let is_indexed_with_value t = 
-       let t = Util.unrefine t |> Tc.Normalize.norm_typ [Normalize.Beta] env in
-       let _, args = Util.head_and_args t in
-       List.length args <> 0, args |> Util.for_some (fun arg -> match fst arg with Inr _ -> true | _ -> false), t in
- 
-    let user_provided_implicits args = 
-        args |> Util.for_some (fun arg -> match fst arg with Inl _ -> true | _ -> snd arg) in
-
-    let infer_instantiation t env = 
-        let env1, _ = Env.clear_expected_typ env in 
-
-        let dinst, args = 
-            let rec targs out args = match args with 
-                | [] -> List.rev out, args
-                | arg::args' -> 
-                    begin match fst arg with 
-                        | Inl _ -> targs (arg::out) args'
-                        | _ -> List.rev out, args
-                    end in
-            let targs, args = targs [] args in
-            let dinst = mk_Exp_app'(d, targs) tun top.pos in
-            mk_Exp_meta(Meta_datainst(dinst, Some t)), args in
-
-        (* The main subtlety with bidirectional typing is here:
-            Consider typing (e1, e2) as (x:t * t')
-            It is desugared to (MkDTuple2 '_u1 '_u2 e1 e2), and we have to compute the instantiations for '_u1 and '_u2.
-            The idea is to push the result type (DTuple2 t (\x:t. t')) down to the constructor MkTuple2
-            and then instantiating MkDTuple2's arguments using the expected type.
-            That's what the Meta_datainst(d, topt) does ... below. 
-            Once we compute good instantiations for '_u1 and '_u2, the rest follows as usual.
-            
-            This is also useful for computing instantiations for (Some 'u v), 
-            when the expected type is like (option (x:t{phi})). 
-            This forces v to be checked at type (x:t{phi}). 
-        *)
-        let e = mk_Exp_app'(dinst, args) tun top.pos in 
-        let e, c, guard_e = tc_exp env1 e in
-        let e = match e.n with  //reassociate inferred targs
-            | Exp_app({n=Exp_app(hd, targs)}, args) -> mk_Exp_app(hd, targs@args) e.tk e.pos 
-            | _ -> e in
-        let e, c, g = comp_check_expected_typ env (mk_Exp_meta(Meta_desugared(e, Data_app))) c in
-        e, c, Rel.conj_guard guard_e g in
-
-    let t = Env.expected_typ env in
-    if Option.isNone t 
-    then fallback env
-    else let _, value_indexed, t = is_indexed_with_value <| Option.get t in
-         if value_indexed
-         then fallback env //Don't try to infer type args in this case
-         else infer_instantiation t env
-
   | Exp_meta(Meta_desugared(e, Sequence)) -> 
     begin match (compress_exp e).n with 
         | Exp_let((_,[(x, _, e1)]), e2) -> 
@@ -788,27 +724,6 @@ and tc_exp env e : exp * lcomp * guard_t =
   | Exp_meta(Meta_desugared(e, i)) -> 
     let e, c, g = tc_exp env e in
     mk_Exp_meta(Meta_desugared(e, i)), c, g
-
-  | Exp_meta(Meta_datainst(dc, topt)) -> 
-    (* This is where we process the type annotation on data constructors populated by the Data_app case above. *) 
-    let dc, c_dc, g_dc = tc_exp (instantiate_both env) dc in 
-    let t_dc = c_dc.res_typ in
-    let tres = match Util.function_formals t_dc with 
-        | Some (_, c) -> Util.comp_result c
-        | _ -> t_dc in
-    let g_i = match topt with 
-      | None -> failwith "Impossible" 
-       
-      | Some t -> 
-        match t.n with 
-            | Typ_uvar _
-            | Typ_app({n=Typ_uvar _}, _) -> (* We have a type from the context; but it is non-informative. *) 
-              Rel.trivial_guard
-       
-            | _ -> (* We have some useful info from the context; use it to instantiate the result type of dc *)
-              let g = Tc.Rel.subtype env tres t in 
-              {g with Rel.guard_f=Rel.Trivial} in
-    dc, c_dc, Rel.conj_guard g_dc g_i (* NB: Removed the Meta_datainst tag on the way up---no other part of the compiler sees Meta_datainst *)
 
   | Exp_app(head, args) ->
     let env0 = env in

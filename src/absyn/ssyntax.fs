@@ -225,7 +225,6 @@ and [<KnownType("KnownTypes")>] s_exp' =
 
 and [<KnownType("KnownTypes")>] s_meta_e = 
     | S_Meta_desugared of s_exp * s_meta_source_info
-    | S_Meta_datainst of s_exp * s_typ option
     static member KnownTypes() = 
         typeof<s_meta_e>.GetNestedTypes(BindingFlags.Public ||| BindingFlags.NonPublic) 
         |> Array.filter FSharpType.IsUnion
@@ -367,12 +366,7 @@ and serialize_exp' (ast : exp') : s_exp' =
 and serialize_meta_e (ast : meta_e) : s_meta_e = 
     match ast with
     | Meta_desugared(e, s) -> S_Meta_desugared(serialize_exp e, serialize_meta_source_info s)
-    | Meta_datainst(e, topt) -> 
-        S_Meta_datainst(serialize_exp e, 
-                        match topt with
-                        | None -> None
-                        | Some(t) -> Some(serialize_typ t))
-
+   
 and serialize_meta_source_info (ast : meta_source_info) : s_meta_source_info = 
     match ast with
     | Data_app -> S_Data_app
@@ -506,12 +500,7 @@ and deserialize_exp' (ast : s_exp') : exp' =
 and deserialize_meta_e (ast : s_meta_e) : meta_e = 
     match ast with
     | S_Meta_desugared(e, s) -> Meta_desugared(deserialize_exp e, deserialize_meta_source_info s)
-    | S_Meta_datainst(e, topt) -> 
-        Meta_datainst(deserialize_exp e, 
-                      match topt with
-                      | None -> None
-                      | Some(t) -> Some(deserialize_typ t))
-
+  
 and deserialize_meta_source_info (ast : s_meta_source_info) : meta_source_info = 
     match ast with
     | S_Data_app -> Data_app

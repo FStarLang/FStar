@@ -669,8 +669,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
         | Exp_ascribed (e, _) ->
             mlexpr_of_expr mlenv rg lenv e
 
-        | Exp_meta (Meta_desugared (e, MaskedEffect)) 
-        | Exp_meta (Meta_datainst (e, _)) ->
+        | Exp_meta (Meta_desugared (e, MaskedEffect)) ->
             mlexpr_of_expr mlenv rg lenv e
 
         | Exp_app     _ -> unexpected rg "expr-app"
@@ -838,6 +837,8 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
 
           let mldproj_of_proj name c : (mlsymbol * mlty) = (name.idText, c) in
 
+          if List.length f <> List.length args
+          then unexpected rg (Util.format4 "%s, %s, %s fields, %s args" x (List.hd tcs).str (List.map (fun f -> f.idText) f |> String.concat ", ") (List.length args |> Util.string_of_int));
           (x, tparams, MLTD_Record (List.map2 mldproj_of_proj f args))
         end
 

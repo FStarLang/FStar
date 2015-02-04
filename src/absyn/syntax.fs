@@ -593,8 +593,7 @@ let mk_Exp_meta' (m:meta_e) (t:typ) p =
         uvs=mk_uvs(); fvs=mk_fvs();//fvs;
     }
 let mk_Exp_meta (m:meta_e) = match m with
-      | Meta_desugared(e, _)  
-      | Meta_datainst(e, _)  -> mk_Exp_meta' m e.tk e.pos
+      | Meta_desugared(e, _) -> mk_Exp_meta' m e.tk e.pos
 
 let mk_subst (s:subst) = s
 let extend_subst x s : subst = x::s

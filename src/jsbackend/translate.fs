@@ -175,8 +175,7 @@ and js_of_expr (binder:option<string>) (expr:exp) : expression_t =
             ), [])
         | Exp_ascribed(e,_) -> js_of_expr binder e
         | Exp_meta(m) -> (match m with
-            | Meta_desugared(e, _) -> js_of_expr binder e
-            | Meta_datainst(e, _) -> js_of_expr binder e)
+            | Meta_desugared(e, _) -> js_of_expr binder e)
         | _ -> Util.print_any expr; JSE_Elision)
 
 and untype_expr (e:exp) =
@@ -187,8 +186,7 @@ and untype_expr (e:exp) =
     match e.n with
     | Exp_app(ee, args) -> mk_Exp_app(untype_expr ee, args |> List.filter (function Inl _, _ -> false | _ -> true)) tun e.pos
     | Exp_meta(m) -> (match m with
-        | Meta_desugared(exp, _) -> untype_expr exp
-        | Meta_datainst(exp, _) -> untype_expr exp)
+        | Meta_desugared(exp, _) -> untype_expr exp)
     | Exp_abs(bs, ee) -> syn e.pos tun <| mk_Exp_abs(bs |> List.filter (function Inl _, _ -> false | _ -> true), untype_expr ee)
     | Exp_let((b,binds), e) -> syn e.pos tun <| mk_Exp_let((b,List.map unt_bnd binds), untype_expr e)
     | Exp_match(e, pl) -> syn e.pos tun <| mk_Exp_match(untype_expr e, List.map unt_pat pl)
