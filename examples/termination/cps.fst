@@ -2,25 +2,21 @@
 (*** A simple CPS function: adding the elements of a list. ***)
 (*************************************************************)
 
-(** First standard try: got a strange error message from F* **)
-(* module SimpleCPS *)
-(* open List *)
+(** Standard implementation **)
+module SimpleCPS
+open List
 
-(* (\* *)
-(* Expected a term of type "_9491:(int -> Tot (U377 'a l k hd tl)){(tl << l)}"; *)
-(* got a function "(fun r -> (k (hd + r)))" (Annotated type is not a function) *)
-(*  *\) *)
-(* val add_cps : list int -> (int -> Tot 'a) -> Tot 'a *)
-(* let rec add_cps l k = match l with *)
-(*   | [] -> k 0 *)
-(*   | hd::tl -> add_cps tl (fun (r:int) -> k (hd + r)) *)
+val add_cps : list int -> (int -> Tot 'a) -> Tot 'a
+let rec add_cps l k = match l with
+  | [] -> k 0
+  | hd::tl -> add_cps tl (fun (r:int) -> k (hd + r))
 
-(* val add : list int -> Tot int *)
-(* let add l = add_cps l (fun x -> x) *)
+val add : list int -> Tot int
+let add l = add_cps l (fun x -> x)
 
 
 
-(** Second try with λ-lifting: works well **)
+(** Second implementation with λ-lifting **)
 module SimpleCPSLambdaLifting
 open List
 
@@ -64,26 +60,22 @@ let add l = add_cps l C0
 (*** A more complex CPS function: adding the elements of a tree. ***)
 (*******************************************************************)
 
-(** First standard try: got the same strange error message from F* as before **)
-(* module DoubleCPS *)
+(** Standard implementation **)
+module DoubleCPS
 
-(* type expr = *)
-(*   | Const : int -> expr *)
-(*   | Plus : expr -> expr -> expr *)
+type expr =
+  | Const : int -> expr
+  | Plus : expr -> expr -> expr
 
-(* (\* *)
-(* Expected a term of type "_11817:(int -> Tot (U404 'a e k e1 e2)){(e1 << e)}"; *)
-(* got a function "(fun r1 -> (eval_cps e2 (fun r2 -> (k (r1 + r2)))))" (Annotated type is not a function) *)
-(* *\) *)
-(* val eval_cps : expr -> (int -> Tot 'a) -> Tot 'a *)
-(* let rec eval_cps e k = *)
-(*   match e with *)
-(*     | Const n -> k n *)
-(*     | Plus e1 e2 -> eval_cps e1 (fun r1 -> eval_cps e2 (fun r2 -> k (r1 + r2))) *)
+val eval_cps : expr -> (int -> Tot 'a) -> Tot 'a
+let rec eval_cps e k =
+  match e with
+    | Const n -> k n
+    | Plus e1 e2 -> eval_cps e1 (fun r1 -> eval_cps e2 (fun r2 -> k (r1 + r2)))
 
 
 
-(** Second try with λ-lifting: involves a mutual recursion whose termination cannot be figured out by F* **)
+(** With λ-lifting: involves a mutual recursion whose termination cannot be figured out by F* **)
 (* module DoubleCPSLambdaLifting *)
 
 (* type expr = *)
@@ -108,7 +100,7 @@ let add l = add_cps l C0
 
 
 
-(** Third try with greadier λ-lifting that removes mutual recursion: ok for F* **)
+(** With greadier λ-lifting that removes mutual recursion: ok for F* **)
 module DoubleCPSLambdaLifting2
 
 type expr =
@@ -129,6 +121,30 @@ let rec eval_cps e k =
 
 val eval : expr -> Tot int
 let eval e = eval_cps e (fun x -> x)
+
+
+
+(** We have to be careful when λ-lifting not to delay the strictly decreasing recursive call **)
+(* module DoubleCPSLambdaLifting3 *)
+
+(* type expr = *)
+(*   | Const : int -> expr *)
+(*   | Plus : expr -> expr -> expr *)
+
+(* val eval_cps1 : (int -> Tot 'a) -> int -> int -> Tot 'a *)
+(* let eval_cps1 k r1 r2 = k (r1 + r2) *)
+
+(* val eval_cps2 : (int -> Tot 'a) -> expr -> (expr -> (int -> Tot 'a) -> Tot 'a) -> int -> Tot 'a *)
+(* let eval_cps2 k e2 eval_cps r1 = eval_cps e2 (eval_cps1 k r1) *)
+
+(* val eval_cps : expr -> (int -> Tot 'a) -> Tot 'a *)
+(* let rec eval_cps e k = *)
+(*   match e with *)
+(*     | Const n -> k n *)
+(*     | Plus e1 e2 -> eval_cps e1 (eval_cps2 k e2 eval_cps) *)
+
+(* val eval : expr -> Tot int *)
+(* let eval e = eval_cps e (fun x -> x) *)
 
 
 

@@ -647,6 +647,9 @@ and tc_value env e : exp * lcomp * guard_t =
                  let envbody = Tc.Env.set_expected_typ envbody (Util.comp_result c) in
                  Some t, bs, Some c, envbody, g
 
+                (* CK: add this case since the type may be f:(a -> M b wp){φ}, in which case I drop the refinement *)
+                | Typ_refine (b, _) -> as_function_typ norm b.sort
+
                 | _ -> (* expected type is not a function; try normalizing it before giving up *)
                   if not norm
                   then as_function_typ true (whnf env t) 
