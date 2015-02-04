@@ -24,7 +24,7 @@ PARSER_NOGEN_SRC=$(addprefix parser/, $(PARSER_NOGEN))
 TOSMT=term.fsi term.fs z3.fs encode.fs
 TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
 
-TC=tcenv.fsi tcenv.fs normalize.fsi normalize.fs errors.fs rel2.fsi rel2.fs rel1.fsi rel1.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
+TC=tcenv.fsi tcenv.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 TC_SRC=$(addprefix tc/, $(TC))
 
 # --------------------------------------------------------------------
