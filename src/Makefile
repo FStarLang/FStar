@@ -163,7 +163,7 @@ BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs dssynta
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
 BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fst driver.fs 
 BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))
-BOOT_TCFILES=tcenv.fsi tcenv.fs normalize.fsi normalize.fs errors.fs rel2.fsi rel2.fs tcutil.fsi tcutil.fs tc.fs
+BOOT_TCFILES=tcenv.fsi tcenv.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
 BOOT_FORMATFILES=format.fsi formatml.fs
 BOOT_FORMAT=$(addprefix format/, $(BOOT_FORMATFILES))
@@ -178,7 +178,7 @@ boot: $(BOOT_ALL)
 	$(RUNTIME) ../bin/fstar.exe --debug yes --fs_typ_app --lax --fstar_home .. $(FSTAROPTS) --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
 ocaml: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --lax --fs_typ_app --odir ocaml-output --fstar_home .. $(FSTAROPTS) --codegen OCaml --debug_level Low --trace_error --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+	$(RUNTIME) ../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output --fstar_home .. $(FSTAROPTS) --codegen OCaml --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
 
 fstarml:
 	@echo "Building parser and lexer filex..."
@@ -188,9 +188,8 @@ fstarml:
 OCAML_FILES= Microsoft_FStar_Options.ml Microsoft_FStar_LazySet.ml Microsoft_FStar_Absyn_Syntax.ml Microsoft_FStar_Absyn_Const.ml Microsoft_FStar_Absyn_Visit.ml Microsoft_FStar_Absyn_Util.ml Microsoft_FStar_Absyn_Print.ml Microsoft_FStar_Absyn_SSyntax.ml Microsoft_FStar_Parser_AST.ml Microsoft_FStar_Parser_DesugarEnv.ml Microsoft_FStar_Parser_Desugar.ml Microsoft_FStar_Parser_Parse.ml Microsoft_FStar_Parser_Lexhelp.ml Microsoft_FStar_Parser_Driver.ml Microsoft_FStar_Tc_Env.ml Microsoft_FStar_Tc_Normalize.ml Microsoft_FStar_Tc_Errors.ml Microsoft_FStar_Tc_Rel.ml Microsoft_FStar_Tc_Util.ml Microsoft_FStar_Tc_Tc.ml Microsoft_FStar_ToSMT_Term.ml Microsoft_FStar_ToSMT_Z3.ml Microsoft_FStar_ToSMT_Encode.ml 
 OCAML_ALL=$(addprefix ocaml-output/, $(OCAML_FILES))
 
-test:   boot
+test:   boot ocaml
 	make -C ../examples 
-
 
 test.diff:
 	@make -s test | grep -v "^make\[" > .test.out

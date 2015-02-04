@@ -189,9 +189,9 @@ val find: a:Type
         -> f:(a -> Tot bool)
         -> list a
         -> Tot (option (x:a{f x}))
-let rec find f l = match l with
-  | [] -> None
-  | hd::tl -> if f hd then Some hd else find f tl
+let rec find (a:Type) f l = match l with
+  | [] -> None #(x:a{f x}) //These type annotations are only present because it makes bootstrapping go much faster
+  | hd::tl -> if f hd then Some #(x:a{f x}) hd else find f tl
 let findT = find
 
 val filter: ('a -> bool) -> list 'a -> list 'a
