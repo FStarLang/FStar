@@ -267,15 +267,19 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
   let rebuild config  = 
     let rebuild_stack config = 
         if is_stack_empty config then config
-        else let s' = no_eta config.steps in
-             let args = 
-                 config.stack.args |> List.map (function 
-                    | (Inl t, imp), env -> Inl <| (mk_Typ_delayed'(Inr(fun () -> (sn  tcenv (t_config t env s')).code)) t.tk t.pos), imp
-                    | (Inr v, imp), env -> Inr <| (wne tcenv (e_config v env s')).code, imp) in
-             let k = match config.stack.k with
-                | Inl k -> k
-                | Inr _ -> failwith "impos" in
-             {config with code=simplify_then_apply config.steps config.code args k config.code.pos} in
+        else let k = match config.stack.k with
+                    | Inl k -> k
+                    | Inr _ -> failwith "impos" in
+             let aux () = 
+                let s' = no_eta config.steps in
+                let args = 
+                     config.stack.args |> List.map (function 
+                        | (Inl t, imp), env -> 
+                            //Inl <| mk_Typ_delayed'(Inr(fun () -> let cfg = sn tcenv (t_config t env s') in cfg.code)) t.tk t.pos, imp
+                          Inl <| (sn tcenv (t_config t env s')).code, imp
+                        | (Inr v, imp), env -> Inr <| (wne tcenv (e_config v env s')).code, imp) in
+                 simplify_then_apply config.steps config.code args k config.code.pos in
+             {config with code=mk_Typ_delayed'(Inr aux) k config.code.pos} in
     
     let config = rebuild_stack config in 
     let t = match config.close with 
@@ -480,7 +484,7 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
         | Some t -> 
           let t = mk_Typ_app(t, (Inl res, false)::args) keffect res.pos in
           let c = sn tcenv (with_new_code (Inl keffect) cfg t) in
-          match c.code.n with
+          match (Util.compress_typ c.code).n with
             | Typ_app({n=Typ_const fv}, (Inl res, _)::args) -> remake fv.v res args flags
             | _ ->  failwith (Util.format2 "Got a computation %s, normalized unexpectedly to %s" (Print.sli m.effect_name) (Print.typ_to_string c.code))
        

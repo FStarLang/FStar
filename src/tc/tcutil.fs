@@ -651,7 +651,8 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                         then Some c2
                         else None
                     | _ -> None
-            else if Util.is_ml_comp c1 && Util.is_ml_comp c2 then Some c2
+            else if Util.is_ml_comp c1 && Util.is_ml_comp c2 
+            then Some c2
             else None in
         match e1opt, b with 
             | Some e, Some (Env.Binding_var(x,_)) -> 
@@ -660,7 +661,10 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
                 else aux ()
             | _ -> aux () in
       match try_simplify () with 
-        | Some c -> c
+        | Some c -> 
+          if Tc.Env.debug env <| Options.Other "bind"
+          then Util.fprint3 "bind %s and %s simplified to %s\n" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2) (Print.comp_typ_to_string c);
+          c
         | None -> 
           let (md, a, kwp), (t1, wp1, wlp1), (t2, wp2, wlp2) = lift_and_destruct env c1 c2 in 
           let bs = match b with 
@@ -909,6 +913,7 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
   match gopt with 
     | None -> subtype_fail env lc.res_typ t 
     | Some g -> 
+      let g = Rel.simplify_guard env g in 
       match guard_f g with 
         | Rel2.Trivial -> (e, lc, g)
         | Rel2.NonTrivial f ->
@@ -922,7 +927,7 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
             let x = new_bvd None in
             let xexp = Util.bvd_to_exp x t in
             let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) k xexp.pos  in
-            let cret = lcomp_of_comp <| mk_comp md t wp wp ct.flags in
+            let cret = lcomp_of_comp <| mk_comp md t wp wp [] in//ct.flags in
             let eq_ret, _trivial_so_ok_to_discard = 
             strengthen_precondition (Some <| Errors.subtyping_failed env lc.res_typ t) (Env.set_range env e.pos) e cret
                                     (guard_of_guard_formula <| Rel2.NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
