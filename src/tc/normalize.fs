@@ -259,7 +259,12 @@ let simplify_then_apply steps head args k pos =
               else fallback()
             | _ -> fallback()
 
-let rec sn tcenv (cfg:config<typ>) : config<typ> =
+let rec sn_delay tcenv (cfg:config<typ>) : config<typ> =
+    let aux () = (sn tcenv cfg).code in
+    let t = mk_Typ_delayed' (Inr aux) cfg.code.tk cfg.code.pos in
+    {cfg with code=t}
+        
+and sn tcenv (cfg:config<typ>) : config<typ> =
   let close cfg t = match cfg.close with 
     | None -> t
     | Some f -> f t in
@@ -270,16 +275,12 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
         else let k = match config.stack.k with
                     | Inl k -> k
                     | Inr _ -> failwith "impos" in
-             let aux () = 
-                let s' = no_eta config.steps in
-                let args = 
-                     config.stack.args |> List.map (function 
-                        | (Inl t, imp), env -> 
-                            //Inl <| mk_Typ_delayed'(Inr(fun () -> let cfg = sn tcenv (t_config t env s') in cfg.code)) t.tk t.pos, imp
-                          Inl <| (sn tcenv (t_config t env s')).code, imp
-                        | (Inr v, imp), env -> Inr <| (wne tcenv (e_config v env s')).code, imp) in
-                 simplify_then_apply config.steps config.code args k config.code.pos in
-             {config with code=mk_Typ_delayed'(Inr aux) k config.code.pos} in
+             let s' = no_eta config.steps in
+             let args = config.stack.args |> List.map (function 
+                    | (Inl t, imp), env -> Inl <| (sn tcenv (t_config t env s')).code, imp
+                    | (Inr v, imp), env -> Inr <| (wne tcenv (e_config v env s')).code, imp) in
+             let t = simplify_then_apply config.steps config.code args k config.code.pos in
+             {config with code=t} in
     
     let config = rebuild_stack config in 
     let t = match config.close with 
@@ -330,11 +331,13 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
           (* Need to substitute under lambdas even if we don't want a full normal form *)
           let binders, environment = sn_binders tcenv binders config.environment config.steps in
           let mk_lam t = wk <| mk_Typ_lam(binders, t) in
-          sn tcenv ({config with close=close_with_config config mk_lam; 
-                                code=t2; 
-                                stack=empty_stack (Inl t2.tk);
-                                environment=environment; 
-                                steps=no_eta config.steps})
+          let t2_cfg = sn_delay tcenv ({config with //close=close_with_config config mk_lam; 
+                                        code=t2; 
+                                        stack=empty_stack (Inl t2.tk);
+                                        environment=environment; 
+                                        steps=no_eta config.steps}) in
+          {t2_cfg with code=mk_lam t2_cfg.code}
+
         | args -> (* beta *)
           let rec beta env_entries binders args = match binders, args with 
             | [], _ -> (* fully applied, or more actuals (extra currying) *)
@@ -388,7 +391,7 @@ let rec sn tcenv (cfg:config<typ>) : config<typ> =
                     sn tcenv ({config with code=t})
                   else
                     let pat t = 
-                        let ps = sn_args tcenv config.environment config.steps ps in
+                        let ps = sn_args true tcenv config.environment config.steps ps in
                         wk <| mk_Typ_meta'(Meta_pattern(t, ps)) in
                     sn tcenv ({config with code=t; close=close_with_config config pat})
     
@@ -438,7 +441,7 @@ and sn_binders tcenv binders env steps =
        aux ((Inl b, imp)::out) (extend_env' env b_for_a) rest
 
     | (Inr x, imp)::rest -> 
-       let c = sn tcenv (t_config x.sort env steps) in
+       let c = sn_delay tcenv (t_config x.sort env steps) in
        let y = Util.bvd_to_bvar_s (Util.freshen_bvd x.v) c.code in
        let yexp = Util.bvar_to_exp y in
        let y_for_x = V(x.v, (yexp, empty_env)) in
@@ -474,7 +477,7 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
         | f -> f) in
   let flags, args = 
     if !Options.rel2 || List.contains SNComp cfg.steps //TODO: REMOVE THIS GUARD ON --rel2
-    then sn_flags m.flags, sn_args tcenv cfg.environment cfg.steps m.effect_args 
+    then sn_flags m.flags, sn_args true tcenv cfg.environment cfg.steps m.effect_args 
     else let s = subst_of_env tcenv cfg.environment in
          Util.subst_flags s m.flags, m.effect_args |> Util.subst_args s in
   if not <| List.contains DeltaComp cfg.steps
@@ -488,8 +491,9 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
             | Typ_app({n=Typ_const fv}, (Inl res, _)::args) -> remake fv.v res args flags
             | _ ->  failwith (Util.format2 "Got a computation %s, normalized unexpectedly to %s" (Print.sli m.effect_name) (Print.typ_to_string c.code))
        
-and sn_args tcenv env steps args = 
+and sn_args delay tcenv env steps args = 
    args |> List.map (function 
+     | Inl t, imp when delay -> Inl <| (sn_delay tcenv (t_config t env steps)).code, imp
      | Inl t, imp -> Inl <| (sn tcenv (t_config t env steps)).code, imp
      | Inr e, imp -> Inr <| (wne tcenv (e_config e env steps)).code, imp)
 
@@ -501,7 +505,7 @@ and snk tcenv (cfg:config<knd>) : config<knd> =
     | Kind_type
     | Kind_effect -> cfg
     | Kind_uvar(uv, args) -> 
-      let args = sn_args tcenv cfg.environment (no_eta cfg.steps) args in
+      let args = sn_args false tcenv cfg.environment (no_eta cfg.steps) args in
       {cfg with code=w <| mk_Kind_uvar(uv, args)}  
     | Kind_abbrev(_, k) -> 
       snk tcenv ({cfg with code=k}) 

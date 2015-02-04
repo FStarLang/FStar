@@ -1643,7 +1643,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
    let flex_flex orig (lhs:flex_t) (rhs:flex_t) : solution = 
         if wl.defer_ok && p_rel orig <> EQ then solve env (defer "flex-flex deferred" orig wl) else
         
-        let force_quasi_pattern xs (t, u, k, args) = 
+        let force_quasi_pattern xs_opt (t, u, k, args) = 
             let rec aux binders ys args = match args with 
                 | [] -> 
                     let ys = List.rev ys in
@@ -1651,7 +1651,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                     let t', _ = new_tvar t.pos ys t.tk in
                     let u1_ys, u1, k1, _ = destruct_flex_t t' in
                     let sol = UT((u,k), mk_Typ_lam(binders, u1_ys) t.tk t.pos) in
-                    sol, (u, k1, ys)
+                    sol, (t', u, k1, ys)
 
                 | hd::tl -> 
                   let new_binder hd = match fst hd with 
@@ -1662,9 +1662,13 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                     | None -> new_binder hd, ys
                         
                     | Some y -> 
-                      if xs |> Util.for_some (Util.eq_binder y) 
-                      then y, y::ys  //this is a variable in the intersection with xs
-                      else new_binder hd, ys in
+                      begin match xs_opt with 
+                        | None -> y, y::ys
+                        | Some xs -> 
+                          if xs |> Util.for_some (Util.eq_binder y) 
+                          then y, y::ys  //this is a variable in the intersection with xs
+                          else new_binder hd, ys
+                      end in
 
                     aux (binder::binders) ys tl in
 
@@ -1722,9 +1726,12 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                           let wl = solve_prob orig None [sol] wl in
                           solve env wl
                      else if occurs_ok && not <| wl.defer_ok 
-                     then let sol, (u2, k2, ys) = force_quasi_pattern xs (t2, u2, k2, args2) in
+                     then let sol, (_, u2, k2, ys) = force_quasi_pattern (Some xs) (t2, u2, k2, args2) in
                           let wl = extend_solution sol wl in
-                          solve_both_pats wl (u1, k1, xs) (u2, k2, ys) t2.tk t2.pos                         
+                          let _ = if Tc.Env.debug env <| Options.Other "QuasiPattern" then Util.fprint1 "flex-flex quasi pattern (2): %s\n" (uvi_to_string env sol) in
+                          match orig with 
+                            | TProb p -> solve_t env p wl
+                            | _ -> giveup env "impossible" orig
                      else giveup_or_defer orig "flex-flex constraint"
             end in
 
@@ -1737,7 +1744,15 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
             | Some xs, Some ys -> solve_both_pats wl (u1, k1, xs) (u2, k2, ys) t2.tk t2.pos
             | Some xs, None -> solve_one_pat (t1, u1, k1, xs) rhs
             | None, Some ys -> solve_one_pat (t2, u2, k2, ys) lhs
-            | _ -> giveup env "flex-flex constraint" orig in
+            | _ -> 
+              if wl.defer_ok
+              then giveup_or_defer orig "flex-flex: neither side is a pattern"
+              else let sol, _ = force_quasi_pattern None (t1, u1, k1, args1) in
+                   let wl = extend_solution sol wl in 
+                   let _ = if Tc.Env.debug env <| Options.Other "QuasiPattern" then Util.fprint1 "flex-flex quasi pattern (1): %s\n" (uvi_to_string env sol) in
+                   match orig with 
+                    | TProb p -> solve_t env p wl
+                    | _ -> giveup env "impossible" orig  in
     (* </flex-flex> *)
 
     let orig = TProb problem in
@@ -2307,6 +2322,7 @@ let simplify_guard env g = match g.guard_f with
       {g with guard_f=f}
 
 let solve_and_commit env probs err = 
+  let probs = if !Options.eager_inference then {probs with defer_ok=false} else probs in 
   let sol = solve env probs in
   match sol with 
     | Success (s, deferred) -> 

@@ -499,8 +499,17 @@ let extract_lb_annotation env t e = match t.n with
     let mk_v_binder scope x = match x.sort.n with 
         | Typ_unknown -> 
           let t = Rel.new_tvar e.pos scope ktype |> fst in
-          {x with sort=t}, false
-        | _ -> x, true in 
+          begin match Syntax.null_v_binder t with 
+            | Inr x, _ -> x, false
+            | _ -> failwith "impos"
+          end
+          //{x with sort=t}, false
+        | _ -> 
+          begin match Syntax.null_v_binder x.sort with 
+            | Inr x, _ -> x, true
+            | _ -> failwith "impos"
+          end in 
+        //x, true in 
 
     let rec aux vars e = match e.n with 
       | Exp_meta(Meta_desugared(e, _)) -> aux vars e 
@@ -517,7 +526,7 @@ let extract_lb_annotation env t e = match t.n with
             | Inr x -> 
               let vb, c = mk_v_binder scope x in 
               let b = (Inr vb, snd b) in
-              let scope = if !Options.full_context_dependency then scope@[b] else scope in//don't introduce dependent types, if there's no annotation and the flag is not set
+              //let scope = if !Options.full_context_dependency then scope@[b] else scope in//don't introduce dependent types, if there's no annotation and the flag is not set
               scope, bs@[b], c || check) (vars,[],false) in
 
         let res, check_res = aux scope e in 
