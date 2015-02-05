@@ -2,7 +2,7 @@
 ***       Types       ***
 *************************)
 
-module Term
+module Bug60
 
 type symbol_cat = 
   | Tuple : symbol_cat

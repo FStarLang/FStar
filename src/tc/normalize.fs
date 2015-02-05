@@ -104,8 +104,44 @@ let with_new_code k c e = {
     close=None
 }
 
+let rec recompute_kind tcenv t = 
+    match t.n with 
+        | Typ_delayed _ -> recompute_kind tcenv (Util.compress_typ t)
+        | Typ_btvar a -> a.sort
+        | Typ_const tc -> tc.sort
+        | Typ_fun _
+        | Typ_refine _ -> ktype
+        | Typ_ascribed (_, k) 
+        | Typ_uvar(_, k) -> k
+        | Typ_meta(Meta_labeled _) 
+        | Typ_meta(Meta_slack_formula _) 
+        | Typ_meta(Meta_pattern _) -> ktype
+        | Typ_meta(Meta_named(t, _)) -> recompute_kind tcenv t
+        | Typ_meta(Meta_refresh_label(t, _, _)) -> recompute_kind tcenv t
+        | Typ_lam(binders, body) -> mk_Kind_arrow(binders, recompute_kind tcenv body) t.pos 
+        | Typ_app(t1, args) -> 
+          begin match t1.n with 
+            | Typ_const tc when (lid_equals tc.v Const.forall_lid 
+                                || lid_equals tc.v Const.exists_lid 
+                                || lid_equals tc.v Const.allTyp_lid
+                                || lid_equals tc.v Const.exTyp_lid) -> ktype
+            | _ -> 
+              let k1 = recompute_kind tcenv t1 in
+              let bs, k = Util.kind_formals k1 in
+              let rec aux subst bs args = match bs, args with
+                | [], [] -> Util.subst_kind subst k
+                | _, [] -> (mk_Kind_arrow(bs, k) t.pos) |> Util.subst_kind subst 
+                | b::bs, a::args -> 
+                    let subst = Util.subst_formal b a :: subst in 
+                    aux subst bs args
+                | _ -> failwith (Util.format4 "Head kind is %s\nToo many arguments in type %s; result kind is %s\nwith %s remaining args\n" (Print.kind_to_string k1) (Print.tag_of_typ t) (Print.kind_to_string k) (List.length args |> string_of_int)) in
+              aux [] bs args
+           end
+        | Typ_unknown -> kun
+
+
 let rec eta_expand tcenv t = 
-    let k = Util.compress_kind t.tk in
+    let k = recompute_kind tcenv t |> Util.compress_kind in
     match k.n with 
     | Kind_type 
     | Kind_effect

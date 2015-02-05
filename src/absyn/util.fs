@@ -182,7 +182,7 @@ let rec subst_typ' s t = match s with
           subst_typ' s t
 
         | Typ_btvar a ->
-            let rec aux s = match s with
+            let rec aux s' = match s' with
              | s0::rest -> 
                 (match subst_tvar s0 a with 
                     | Some t  -> subst_typ' rest t
@@ -195,7 +195,7 @@ let rec subst_typ' s t = match s with
         | Typ_uvar _ -> t0
 
         | _ -> mk_Typ_delayed(t0, s, Util.mk_ref None) 
-                             (subst_kind' s t.tk)
+                             (subst_kind' s t0.tk)
                              t.pos
 
 and subst_exp' s e = match s with 

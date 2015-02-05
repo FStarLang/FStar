@@ -1,10 +1,11 @@
-module Fail
+module Bug101
 
-type Any (a:Type) : a -> Type = fun (x:a) -> True
-assume type t (a:Type) (p:(a -> Type)) : Type
+type Any (zz:Type) = fun (x:zz) -> True
+assume type t (bb:Type) (p:(bb -> Type)) : Type
 
-type node (a:Type) : Type =
-  | Node : v: (t (node a) (Any (node a))) -> node a
+type node (gg:Type) = 
+  | Node : v:t (node gg) (Any (node gg)) -> node gg
 
-val nodev : node 'a ->  (t (node 'a) (Any (node 'a)) )
-let nodev n = match n with | Node v -> v
+val nodev : a:Type -> node a ->  t (node a) (Any (node a))
+let nodev (n:node 'a) = match n with 
+  | Node v -> v

@@ -283,13 +283,15 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
   | Typ_const i when (lid_equals i.v Const.eqT_lid) -> 
     let k = Tc.Util.new_kvar env in
     let qk = Util.eqT_k k in
-    {t with tk=qk}, qk, Rel.trivial_guard 
+    let i = {i with sort=k} in
+    mk_Typ_const i qk t.pos, qk, Rel.trivial_guard
     
   | Typ_const i when (lid_equals i.v Const.allTyp_lid || lid_equals i.v Const.exTyp_lid) -> 
     let k = Tc.Util.new_kvar env in
     let qk = Util.allT_k k in
-    {t with tk=qk}, qk, Rel.trivial_guard 
-    
+    let i = {i with sort=k} in
+    mk_Typ_const i qk t.pos, qk, Rel.trivial_guard
+
   | Typ_const i -> 
     let k = Env.lookup_typ_lid env i.v in 
     let i = {i with sort=k} in
