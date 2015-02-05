@@ -49,3 +49,10 @@ let a:good_symbol =
 (** Does not type check *)
 let a':good_symbol = { name = "enc" ; arity = 2; cat = Constructor [n;n] n }
 (* *)
+
+
+let pair : (x:nat * y:nat{y > x}) =
+    let z = (|0, 1|) in 
+    z
+
+let pair2 : (x:nat * y:nat{y > x}) = (|0, 1|)

@@ -267,7 +267,7 @@ let replace_char (s:string) (c1:char) (c2:char) = s.Replace(c1,c2)
 let replace_string (s:string) (s1:string) (s2:string) = s.Replace(s1, s2)
 let hashcode (s:string) = s.GetHashCode()
 let compare (s1:string) (s2:string) = s1.CompareTo(s2)
-let splitlines (s:string) = Array.toList (s.Split([|Environment.NewLine|], StringSplitOptions.None))
+let splitlines (s:string) = Array.toList (s.Split([|Environment.NewLine;"\n"|], StringSplitOptions.None))
 let split (s1:string) (s2:string) = Array.toList (s1.Split([|s2|], StringSplitOptions.None))
 
 let iof = int_of_float

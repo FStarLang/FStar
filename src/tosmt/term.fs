@@ -366,12 +366,17 @@ let constructor_to_decl f = constructor_to_decl_aux true f
 (****************************************************************************)
 let caption_to_string = function 
     | None -> ""
-    | Some c -> format1 ";;;;;;;;;;;;;;;;%s\n" c
+    | Some c -> 
+        let hd::tl = Util.splitlines c in
+        let suffix = match tl with
+            | [] -> ""
+            | _ -> "..." in
+        format2 ";;;;;;;;;;;;;;;;%s%s\n" hd suffix
 
 let rec declToSmt z3options decl = match decl with
   | DefPrelude -> mkPrelude z3options
   | Caption c -> 
-    format1 "\n; %s" c
+    format1 "\n; %s" (Util.splitlines c |> List.hd)
   | DeclFun(f,argsorts,retsort,c) ->
     let l = List.map strSort argsorts in
     format4 "%s(declare-fun %s (%s) %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort)
