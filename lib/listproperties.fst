@@ -61,7 +61,7 @@ let append_nil_l l = ()
 
 val append_l_nil: l:list 'a ->
   Lemma (requires True)
-        (ensures (l@[] = l))
+        (ensures (l@[] = l)) [SMTPat (l@[])]
 let rec append_l_nil = function
   | [] -> ()
   | hd::tl -> append_l_nil tl
@@ -87,7 +87,7 @@ let rec append_assoc l1 l2 l3 = match l1 with
 
 val append_length: l1:list 'a -> l2:list 'a ->
   Lemma (requires True)
-        (ensures (length (l1@l2) = length l1 + length l2))
+        (ensures (length (l1@l2) = length l1 + length l2)) [SMTPat (length (l1 @ l2))]
 let rec append_length l1 l2 = match l1 with
   | [] -> ()
   | hd::tl -> append_length tl l2

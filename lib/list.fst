@@ -52,6 +52,11 @@ let rec nth l n =
         | [] -> failwith "not enough elements"
         | _::tl -> nth tl n
 
+val total_nth: list 'a -> nat -> Tot (option 'a)
+let rec total_nth l n = match l with
+  | []     -> None
+  | hd::tl -> if n = 0 then Some hd else total_nth tl (n - 1)
+
 val count: 'a -> list 'a -> Tot nat
 let rec count x = function
   | [] -> 0

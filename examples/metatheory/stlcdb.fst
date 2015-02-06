@@ -49,7 +49,7 @@ let rec substitute e j e' = match e with
 
 val subst_zero_lem: e1:exp -> e2:exp{not (free_zero e2 0)} ->
                     Lemma (requires True)
-                          (ensures (not (free_zero (substitute e1 0 e2) 0))) [SMTPat (substitute e1 0 e2)]
+                          (ensures (not (free_zero (substitute e1 0 e2) 0))) (decreases e1) [SMTPat (substitute e1 0 e2)]
 let rec subst_zero_lem e1 e2 = match e1 with
   | EVar k       -> ()
   | EAbs _ _     -> ()
@@ -77,13 +77,7 @@ let rec step = function
 
 type env = list typ
 
-let len = List.length
-
-val lookup: g:env -> n:nat -> Tot (option typ)
-let rec lookup l n =
-  match l with
-    | [] -> None
-    | hd::tl -> if n = 0 then Some hd else lookup tl (n - 1)
+let lookup = List.total_nth
 
 val typing: g:env -> e:exp -> Tot (option typ) (decreases e)
 let rec typing g e = match e with
@@ -97,25 +91,21 @@ let rec typing g e = match e with
      | Some (TArrow t1 t2), Some t1' -> if t1 = t1' then Some t2 else None
      | _, _ -> None
 
-(* length (g1 @ g2) = length g1 + length g2 *)
-val app_len: g1:env -> g2:env -> Lemma (requires True)
-                                       (ensures (len (g1 @ g2) = len g1 + len g2)) [SMTPat (len (g1 @ g2))]
-let rec app_len g1 g2 = match g1 with
-  | [] -> ()
-  | hd::tl -> app_len tl g2
+val progress: e:exp{is_Some (typing [] e)} ->
+              Lemma (requires True) (ensures (is_value e \/ is_Some (step e)))
+let rec progress e = using_induction_hyp progress
 
-(* g @ [] = g *)
-val app_nil: g:env -> Lemma (requires True) (ensures (g @ [] = g))
-let rec app_nil = function
-  | []     -> ()
-  | hd::tl -> app_nil tl
+let len = List.length
 
-val list_assoc: g1:env -> g2:env -> g3:env -> Lemma (requires True) (ensures ((g1 @ (g2 @ g3)) = ((g1 @ g2) @ g3)))
-let list_assoc g1 g2 g3 = admit ()
+let app_len = ListProperties.append_length
+
+let app_nil = ListProperties.append_l_nil
+
+let list_assoc = ListProperties.append_assoc
 
 (* g' @ (t::g) = (g' @ [t]) @ g /\ lookup (g' @ (t::g)) (len g') = t *)
 val list_assoc_a: g:env -> g':env -> t:typ -> Lemma (requires True) (ensures ((g' @ (t::g)) = ((g' @ [t]) @ g) /\
-                                                                             lookup (g' @ (t::g)) (len g') = Some t)) (decreases g')
+                                                                              lookup (g' @ (t::g)) (len g') = Some t)) (decreases g')
 let rec list_assoc_a g g' t = match g' with
   | []     -> ()
   | hd::tl -> list_assoc_a g tl t
