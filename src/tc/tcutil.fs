@@ -43,28 +43,7 @@ let discharge_guard env (g:guard_t) =
 let force_trivial env g = discharge_guard env g
 
 (**************************************************************************************)
-
-let t_unit   = syn dummyRange ktype <| mk_Typ_const (Util.withsort Const.unit_lid   ktype)
-let t_bool   = syn dummyRange ktype <| mk_Typ_const (Util.withsort Const.bool_lid   ktype)
-let t_uint8  = syn dummyRange ktype <| mk_Typ_const (Util.withsort Const.uint8_lid  ktype)
-let t_int    = syn dummyRange ktype <| mk_Typ_const (Util.withsort Const.int_lid    ktype)
-let t_int64  = syn dummyRange ktype <| mk_Typ_const (Util.withsort Const.int64_lid  ktype)
-let t_string = syn dummyRange ktype <| mk_Typ_const (Util.withsort Const.string_lid ktype)
-let t_float  = syn dummyRange ktype <| mk_Typ_const (Util.withsort Const.float_lid  ktype)
-let t_char   = syn dummyRange ktype <| mk_Typ_const (Util.withsort Const.char_lid   ktype)
-
 let syn' env k = syn (Tc.Env.get_range env) k
-
-let typing_const env (s:sconst) = match s with 
-  | Const_unit -> t_unit 
-  | Const_bool _ -> t_bool
-  | Const_int32 _ -> t_int
-  | Const_string _ -> t_string
-  | Const_float _ -> t_float
-  | Const_char _ -> t_char
-  | Const_int64 _ -> t_int64
-  | Const_uint8 _ -> t_uint8
-  | _ -> raise (Error("Unsupported constant", Tc.Env.get_range env))
 
 let is_xvar_free (x:bvvdef) t = 
   let f = Util.freevars_typ t in
@@ -89,8 +68,8 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
            then Util.fprint1 "Applied guard is %s\n" <| guard_to_string env g;
            let e = Util.compress_exp e in
            let e = match e.n with 
-               | Exp_bvar x -> mk_Exp_bvar (Util.bvd_to_bvar_s x.v t2) t2 e.pos 
-               | _ -> {e with tk=t2} in
+               | Exp_bvar x -> mk_Exp_bvar (Util.bvd_to_bvar_s x.v t2) (Some t2) e.pos 
+               | _ -> {e with tk=Util.mk_ref (Some t2)} in
            e, g
 
 let env_binders env = 
@@ -100,9 +79,15 @@ let env_binders env =
 let new_kvar env   = Rel.new_kvar (Env.get_range env) (env_binders env)   |> fst
 let new_tvar env k = Rel.new_tvar (Env.get_range env) (env_binders env) k |> fst
 let new_evar env t = Rel.new_evar (Env.get_range env) (env_binders env) t |> fst
+let force_tk s = match !s.tk with 
+    | None -> failwith (Util.format1 "Impossible: Forced tk not present (%s)" (Range.string_of_range s.pos))
+    | Some tk -> tk
+let tks_of_args (args:args) =
+    args |> List.map (function 
+        | Inl t, imp -> Inl (force_tk t), imp
+        | Inr v, imp -> Inr (force_tk v), imp)
 
-
-let destruct_arrow_kind env tt k args : (Syntax.args * binders * knd) = 
+let destruct_arrow_kind env tt k (args:args) : (Syntax.args * binders * knd) = 
     let ktop = compress_kind k |> Normalize.norm_kind [WHNF; Beta; Eta] env in 
     let r = Env.get_range env in
     let rec aux k = match k.n with 
@@ -132,7 +117,7 @@ let destruct_arrow_kind env tt k args : (Syntax.args * binders * knd) =
          let fvs = Util.freevars_kind k in
          let binders = Util.binders_of_freevars fvs in 
          let kres = Tc.Rel.new_kvar r binders |> fst in
-         let bs = null_binders_of_args args in
+         let bs = null_binders_of_tks (tks_of_args args) in
          let kar = mk_Kind_arrow(bs, kres) r in
          force_trivial env <| keq env None k kar;
          [], bs, kres
@@ -203,28 +188,28 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
                 (Inl t, true), p
 
            | Pat_constant c -> 
-                let e = mk_Exp_constant c tun p.p in
+                let e = mk_Exp_constant c None p.p in
                 varg e, p
 
            | Pat_wild x -> 
-                let e = mk_Exp_bvar x tun p.p in
+                let e = mk_Exp_bvar x None p.p in
                 varg e, p
 
            | Pat_var (x, imp) -> 
-                let e = mk_Exp_bvar x tun p.p in
+                let e = mk_Exp_bvar x None p.p in
                 (Inr e, imp), p
  
            | Pat_twild a -> 
-                let t = mk_Typ_btvar a kun p.p in
+                let t = mk_Typ_btvar a None p.p in
                 targ t, p
 
            | Pat_tvar a ->      
-                let t = mk_Typ_btvar a kun p.p in
+                let t = mk_Typ_btvar a None p.p in
                 targ t, p
 
            | Pat_cons(fv, pats) -> 
                let args, pats = pats |> List.map (pat_as_arg env) |> List.unzip in
-               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, args) tun p.p, Data_app)) in
+               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, args) None p.p, Data_app)) in
                varg e,
                {p with v=Pat_cons(fv, pats)}
 
@@ -312,11 +297,11 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
     b, w, exps, p 
 
 let decorate_pattern env p exps = 
-    let rec aux p e = 
+    let rec aux p e : pat  = 
         let pkg q t = withinfo q (Inr t) p.p in
         let e = Util.unmeta_exp e in
         match p.v, e.n with 
-            | Pat_constant _, Exp_constant _ -> pkg p.v e.tk
+            | Pat_constant _, Exp_constant _ -> pkg p.v (force_tk e)
 
             | Pat_var (x,imp), Exp_bvar y -> 
               if Util.bvar_eq x y |> not
@@ -325,39 +310,38 @@ let decorate_pattern env p exps =
               then Util.fprint2 "Pattern variable %s introduced at type %s\n" (Print.strBvd x.v) (Normalize.typ_norm_to_string env y.sort);
               let s = Normalize.norm_typ [Normalize.Beta] env y.sort in
               let x = {x with sort=s} in
-              pkg (Pat_var (x, imp)) e.tk
+              pkg (Pat_var (x, imp)) (force_tk e)
 
             | Pat_wild x, Exp_bvar y -> 
               if Util.bvar_eq x y |> not
               then failwith (Util.format2 "Expected pattern variable %s; got %s" (Print.strBvd x.v) (Print.strBvd y.v));
-              let x = {x with sort=e.tk} in
-              pkg (Pat_wild x) e.tk
+              let x = {x with sort=force_tk e} in
+              pkg (Pat_wild x) x.sort
             
             | Pat_dot_term(x, _), _ -> 
-              let x = {x with sort=e.tk} in
-              pkg (Pat_dot_term(x, e)) e.tk 
+              let x = {x with sort=force_tk e} in
+              pkg (Pat_dot_term(x, e)) x.sort
 
             | Pat_cons(fv, []), Exp_fvar (fv',_) -> 
               if Util.fvar_eq fv fv' |> not
               then failwith (Util.format2 "Expected pattern constructor %s; got %s" fv.v.str fv'.v.str);
-              let fv = {fv with sort=e.tk} in
-              pkg (Pat_cons(fv, [])) e.tk
+              pkg (Pat_cons(fv', [])) fv'.sort
 
-            | Pat_cons(fv, argpats), Exp_app({n=Exp_fvar(fv', _);tk=t}, args) -> 
+            | Pat_cons(fv, argpats), Exp_app({n=Exp_fvar(fv', _)}, args) -> 
               if Util.fvar_eq fv fv' |> not
               then failwith (Util.format2 "Expected pattern constructor %s; got %s" fv.v.str fv'.v.str);
-              let fv = {fv with sort=t} in
+              let fv = fv' in
 
               let rec match_args matched_pats args argpats = match args, argpats with 
-                | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats)) e.tk
+                | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats)) (force_tk e)
                 | (Inl t, true)::args, _ -> (* implicit type argument *)
-                  let x = Util.gen_bvar_p p.p t.tk in
-                  let q = withinfo (Pat_dot_typ(x, t)) (Inl t.tk) p.p in
+                  let x = Util.gen_bvar_p p.p (force_tk t) in
+                  let q = withinfo (Pat_dot_typ(x, t)) (Inl x.sort) p.p in
                   match_args (q::matched_pats) args argpats
                  
                 | (Inr e, true)::args, _ -> (* implicit value argument *)  
-                  let x = Util.gen_bvar_p p.p e.tk in
-                  let q = withinfo (Pat_dot_term(x, e)) (Inr e.tk) p.p in
+                  let x = Util.gen_bvar_p p.p (force_tk e) in
+                  let q = withinfo (Pat_dot_term(x, e)) (Inr x.sort) p.p in
                   match_args (q::matched_pats) args argpats
                   
                 | (Inl t, _)::args, pat::argpats -> 
@@ -374,25 +358,24 @@ let decorate_pattern env p exps =
 
            | _ -> failwith (Util.format3 "(%s) Impossible: pattern to decorate is %s; expression is %s\n" (Range.string_of_range p.p) (Print.pat_to_string p) (Print.exp_to_string e))
         
-    and aux_t p t =
+    and aux_t p t0 =
        let pkg q k = withinfo q (Inl k) p.p in
-       let t = Util.compress_typ t in
+       let t = Util.compress_typ t0 in
        match p.v, t.n with
          | Pat_twild a, Typ_btvar b -> 
             if Util.bvar_eq a b |> not
             then failwith (Util.format2 "Expected pattern variable %s; got %s" (Print.strBvd a.v) (Print.strBvd b.v));
-            let a = {a with sort=t.tk} in
-            pkg (Pat_twild a) t.tk
+            pkg (Pat_twild b) b.sort
 
          | Pat_tvar a, Typ_btvar b -> 
             if Util.bvar_eq a b |> not
             then failwith (Util.format2 "Expected pattern variable %s; got %s" (Print.strBvd a.v) (Print.strBvd b.v));
-            let a = {a with sort=t.tk} in
-            pkg (Pat_tvar a) t.tk
+            pkg (Pat_tvar b) b.sort
 
          | Pat_dot_typ(a, _), _ -> 
-            let a = {a with sort=t.tk} in
-            pkg (Pat_dot_typ(a, t)) t.tk
+            let k0 = force_tk t0 in
+            let a = {a with sort=k0} in
+            pkg (Pat_dot_typ(a, t)) a.sort
             
          | _ -> failwith (Util.format3 "(%s) Impossible: pattern to decorate is %s; expression is %s\n" (Range.string_of_range p.p) (Print.pat_to_string p) (Print.typ_to_string t)) in
 
@@ -410,7 +393,8 @@ let decorate_pattern env p exps =
     let t = match pat.sort with 
         | Inr t -> t 
         | Inl _ -> failwith "top-level pattern should be decorated with a type" in
-    let pkg f = f t pat.p in
+
+    let pkg f = f (Some t) pat.p in
 
     let pat_as_arg p = 
         let vars, te = decorated_pattern_as_either p in 
@@ -429,7 +413,7 @@ let decorate_pattern env p exps =
         | Pat_cons(fv, pats) -> 
             let vars, args = pats |> List.map pat_as_arg |> List.unzip in
             let vars = List.flatten vars in
-            vars,  mk_Exp_app'(mk_Exp_fvar(fv, true) fv.sort fv.p, args) |> pkg
+            vars,  mk_Exp_app'(mk_Exp_fvar(fv, true) (Some fv.sort) fv.p, args) |> pkg
 
         | Pat_dot_term(x, e) -> 
             [], e
@@ -441,7 +425,7 @@ let decorate_pattern env p exps =
 and decorated_pattern_as_typ (p:pat) : list<either_var> * typ = match p.v with 
     | Pat_twild a
     | Pat_tvar a -> 
-        [Inl a], mk_Typ_btvar a a.sort p.p
+        [Inl a], mk_Typ_btvar a (Some a.sort) p.p
 
     | Pat_dot_typ(a, t) ->
         [], t 
@@ -479,11 +463,11 @@ let mk_basic_dtuple_type env n =
             | Kind_type -> 
               Rel.new_tvar r vars ktype |> fst 
             | Kind_arrow(bs, k) -> 
-              mk_Typ_lam(bs, Rel.new_tvar r vars ktype |> fst) k r
+              mk_Typ_lam(bs, Rel.new_tvar r vars ktype |> fst) (Some k) r
             | _ -> failwith "Impossible" in
           let subst = (Inl(a.v, arg))::subst in 
           (targ arg::out, subst)) ([], []) in
-      mk_Typ_app(t, List.rev args) ktype r
+      mk_Typ_app(t, List.rev args) (Some ktype) r
 
     | _ -> failwith "Impossible" 
 
@@ -530,7 +514,7 @@ let extract_lb_annotation env t e = match t.n with
 
         let res, check_res = aux scope e in 
         let c = Util.ml_comp res r in
-        let t = mk_Typ_fun(bs, c) ktype e.pos in
+        let t = mk_Typ_fun(bs, c) (Some ktype) e.pos in
         if debug env Options.High then Util.fprint2 "(%s) Using type %s\n" (Range.string_of_range r) (Print.typ_to_string t);
         t, check_res || check
 
@@ -630,7 +614,7 @@ let return_value env t v =
     | Some m -> 
        let a, kwp = Env.wp_signature env Const.pure_effect_lid in
        let k = Util.subst_kind [Inl(a.v, t)] kwp in
-       let wp = Tc.Normalize.norm_typ [Beta] env <| mk_Typ_app(m.ret, [targ t; varg v]) k v.pos in
+       let wp = Tc.Normalize.norm_typ [Beta] env <| mk_Typ_app(m.ret, [targ t; varg v]) (Some k) v.pos in
        let wlp = wp in
        mk_comp m t wp wlp [RETURN] in
   if debug env Options.High
@@ -680,12 +664,12 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             | Some (Env.Binding_var(x, t1)) -> [v_binder (bvd_to_bvar_s x t1)]
             | Some (Env.Binding_lid(l, t1)) -> [null_v_binder t1]
             | _ -> failwith "Unexpected type-variable binding" in
-          let mk_lam wp = mk_Typ_lam(bs, wp) (mk_Kind_arrow(bs, wp.tk) wp.pos) wp.pos in
+          let mk_lam wp = mk_Typ_lam(bs, wp) None wp.pos in
           let wp_args = [targ t1; targ t2; targ wp1; targ wlp1; targ (mk_lam wp2); targ (mk_lam wlp2)] in
           let wlp_args = [targ t1; targ t2; targ wlp1; targ (mk_lam wlp2)] in
           let k = Util.subst_kind [Inl(a.v, t2)] kwp in
-          let wp = mk_Typ_app(md.bind_wp, wp_args) k t2.pos in
-          let wlp = mk_Typ_app(md.bind_wlp, wlp_args) k t2.pos in
+          let wp = mk_Typ_app(md.bind_wp, wp_args) None t2.pos in
+          let wlp = mk_Typ_app(md.bind_wlp, wlp_args) None t2.pos in
           let c = mk_comp md t2 wp wlp [] in
           c in
     {eff_name=join_lcomp env lc1 lc2;
@@ -697,9 +681,9 @@ let lift_formula env t mk_wp mk_wlp f =
   let md_pure = Tc.Env.get_monad_decl env Const.pure_effect_lid in
   let a, kwp = Tc.Env.wp_signature env md_pure.mname in 
   let k = Util.subst_kind [Inl(a.v, t)] kwp in
-  let wp = mk_Typ_app(mk_wp, [targ t; targ f]) k f.pos in
-  let wlp = mk_Typ_app(mk_wlp, [targ t; targ f]) k f.pos in
-  mk_comp md_pure t_unit wp wlp []
+  let wp = mk_Typ_app(mk_wp, [targ t; targ f]) (Some k) f.pos in
+  let wlp = mk_Typ_app(mk_wlp, [targ t; targ f]) (Some k) f.pos in
+  mk_comp md_pure Recheck.t_unit wp wlp []
 
 let unlabel t = mk_Typ_meta(Meta_refresh_label(t, None, t.pos))
 
@@ -752,8 +736,8 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
         else let c = Tc.Normalize.weak_norm_comp env c in
              let res_t, wp, wlp = destruct_comp c in
              let md = Tc.Env.get_monad_decl env c.effect_name in 
-             let wp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wp]) wp.tk wp.pos in
-             let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) wlp.tk wlp.pos in
+             let wp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wp]) None wp.pos in
+             let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) None wlp.pos in
              mk_comp md res_t wp wlp c.flags in
   {lc with comp=weaken}
 
@@ -780,8 +764,8 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (lc:lc
                 let c = Tc.Normalize.weak_norm_comp env c in
                 let res_t, wp, wlp = destruct_comp c in
                 let md = Tc.Env.get_monad_decl env c.effect_name in 
-                let wp = mk_Typ_app(md.assert_p, [targ res_t; targ <| label_opt reason (Env.get_range env) f; targ wp]) wp.tk wp.pos in
-                let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) wlp.tk wlp.pos in
+                let wp = mk_Typ_app(md.assert_p, [targ res_t; targ <| label_opt reason (Env.get_range env) f; targ wp]) None wp.pos in
+                let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) None wlp.pos in
                 let c2 = mk_comp md res_t wp wlp flags in 
                 c2 in
        {lc with eff_name=norm_eff_name env lc.eff_name; 
@@ -795,13 +779,13 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
         | [] -> failwith "Empty cases!"
         | hd::tl -> List.fold_left (fun eff (_, lc) -> join_effects env eff lc.eff_name) (snd hd).eff_name tl in
     let bind_cases () = 
-        let ifthenelse md res_t g wp_t wp_e = mk_Typ_app(md.if_then_else, [targ res_t; targ g; targ wp_t; targ wp_e]) wp_t.tk (Range.union_ranges wp_t.pos wp_e.pos) in
+        let ifthenelse md res_t g wp_t wp_e = mk_Typ_app(md.if_then_else, [targ res_t; targ g; targ wp_t; targ wp_e]) None (Range.union_ranges wp_t.pos wp_e.pos) in
         let default_case = 
             let post_k = mk_Kind_arrow([null_v_binder res_t], ktype) res_t.pos in
             let kwp = mk_Kind_arrow([null_t_binder post_k], ktype) res_t.pos in
             let post = Util.bvd_to_bvar_s (Util.new_bvd None) post_k in
-            let wp = mk_Typ_lam([t_binder post], label Errors.exhaustiveness_check (Env.get_range env) <| Util.ftv Const.false_lid ktype) kwp res_t.pos in
-            let wlp = mk_Typ_lam([t_binder post], Util.ftv Const.true_lid ktype) kwp res_t.pos in
+            let wp = mk_Typ_lam([t_binder post], label Errors.exhaustiveness_check (Env.get_range env) <| Util.ftv Const.false_lid ktype) (Some kwp) res_t.pos in
+            let wlp = mk_Typ_lam([t_binder post], Util.ftv Const.true_lid ktype) (Some kwp) res_t.pos in
             let md = Tc.Env.get_monad_decl env Const.pure_effect_lid in
             mk_comp md res_t wp wlp [] in 
         let comp = List.fold_right (fun (g, cthen) celse ->
@@ -810,8 +794,8 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
         let comp = comp_to_comp_typ comp in
         let md = Tc.Env.get_monad_decl env comp.effect_name in
         let res_t, wp, wlp = destruct_comp comp in
-        let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) wp.tk wp.pos in
-        let wlp = mk_Typ_app(md.ite_wlp, [targ res_t; targ wlp]) wlp.tk wlp.pos in
+        let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) None wp.pos in
+        let wlp = mk_Typ_app(md.ite_wlp, [targ res_t; targ wlp]) None wlp.pos in
         mk_comp md res_t wp wlp [] in
     {eff_name=eff;
      res_typ=res_t;
@@ -827,13 +811,13 @@ let close_comp env bindings (lc:lcomp) =
           List.fold_right (fun b wp -> match b with 
             | Env.Binding_var(x, t) -> 
               let bs = [v_binder <| bvd_to_bvar_s x t] in
-              let wp = mk_Typ_lam(bs, wp) (mk_Kind_arrow(bs, wp0.tk) wp0.pos) wp.pos in
-              mk_Typ_app(md.close_wp, [targ res_t; targ t; targ wp]) wp0.tk wp0.pos
+              let wp = mk_Typ_lam(bs, wp) None wp.pos in
+              mk_Typ_app(md.close_wp, [targ res_t; targ t; targ wp]) None wp0.pos
 
             | Env.Binding_typ(a, k) -> //A bit sloppy here: close_wp_t is only for Type; overloading it here for all kinds
               let bs = [t_binder <| bvd_to_bvar_s a k] in
-              let wp = mk_Typ_lam(bs, wp) (mk_Kind_arrow(bs, wp0.tk) wp0.pos) wp.pos in
-              mk_Typ_app(md.close_wp_t, [targ res_t; targ wp]) wp0.tk wp0.pos 
+              let wp = mk_Typ_lam(bs, wp) None wp.pos in
+              mk_Typ_app(md.close_wp_t, [targ res_t; targ wp]) None wp0.pos 
 
             | Env.Binding_lid(l, t) -> 
               (* TODO: replace every occurrence of l in wp with a fresh bound var, abstract over the bound var and then close it.
@@ -907,11 +891,11 @@ let maybe_instantiate env e t =
         | [] -> 
             if Util.is_total_comp c
             then let t = Util.subst_typ subst (Util.comp_result c) in
-                 mk_exp_app e args t, t
+                 mk_exp_app e args (Some t), t
             else e, t //don't instantiate implicitly, if it has an effect
         | _ -> 
-            let t = mk_Typ_fun(bs, c) ktype e.pos |> Util.subst_typ subst in 
-            mk_exp_app e args t, t
+            let t = mk_Typ_fun(bs, c) (Some ktype) e.pos |> Util.subst_typ subst in 
+            mk_exp_app e args (Some t), t
      end
 
   | _ -> e, t
@@ -934,11 +918,11 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
             let md = Tc.Env.get_monad_decl env ct.effect_name in
             let x = new_bvd None in
             let xexp = Util.bvd_to_exp x t in
-            let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) k xexp.pos  in
+            let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) (Some k) xexp.pos in
             let cret = lcomp_of_comp <| mk_comp md t wp wp [] in//ct.flags in
             let eq_ret, _trivial_so_ok_to_discard = 
             strengthen_precondition (Some <| Errors.subtyping_failed env lc.res_typ t) (Env.set_range env e.pos) e cret
-                                    (guard_of_guard_formula <| Rel.NonTrivial (mk_Typ_app(f, [varg xexp]) ktype f.pos)) in
+                                    (guard_of_guard_formula <| Rel.NonTrivial (mk_Typ_app(f, [varg xexp]) (Some ktype) f.pos)) in
             let eq_ret = 
                 if Util.is_pure_comp c 
                 then weaken_precondition env eq_ret (Rel.NonTrivial (Util.mk_eq xexp e))
@@ -1009,8 +993,8 @@ let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
                then begin
                   let _, wp, _ = destruct_comp ct in 
                   let binder = [null_v_binder t] in
-                  let post = mk_Typ_lam(binder, Util.ftv Const.true_lid ktype) (mk_Kind_arrow(binder, ktype) t.pos) t.pos in
-                  let vc = Normalize.norm_typ [Delta; Beta] env (syn wp.pos ktype <| mk_Typ_app(wp, [targ post])) in
+                  let post = mk_Typ_lam(binder, Util.ftv Const.true_lid ktype) (Some (mk_Kind_arrow(binder, ktype) t.pos)) t.pos in
+                  let vc = Normalize.norm_typ [Delta; Beta] env (syn wp.pos (Some ktype) <| mk_Typ_app(wp, [targ post])) in
                   discharge_guard env (Rel.guard_of_guard_formula <| Rel.NonTrivial vc)
                end;
                uvs, e, c) in 
@@ -1030,12 +1014,12 @@ let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
             t_binder a) in
     
           let t = match Util.comp_result c |> Util.function_formals with 
-            | Some (bs, cod) -> mk_Typ_fun(tvars@bs, cod) ktype c.pos 
-            | None -> match tvars with [] -> Util.comp_result c | _ -> mk_Typ_fun(tvars, c) ktype c.pos in
+            | Some (bs, cod) -> mk_Typ_fun(tvars@bs, cod) (Some ktype) c.pos 
+            | None -> match tvars with [] -> Util.comp_result c | _ -> mk_Typ_fun(tvars, c) (Some ktype) c.pos in
      
           let e = match tvars with
             | [] -> e
-            | _ -> mk_Exp_abs'(tvars, e) t e.pos in
+            | _ -> mk_Exp_abs'(tvars, e) (Some t) e.pos in
           e, mk_Total t) in
      Some ecs 
 
@@ -1061,20 +1045,10 @@ let check_top_level env g lc : (bool * comp) =
        let c = Tc.Normalize.norm_comp steps env c |> Util.comp_to_comp_typ in
        let md = Tc.Env.get_monad_decl env c.effect_name in
        let t, wp, _ = destruct_comp c in
-       let vc = mk_Typ_app(md.trivial, [targ t; targ wp]) ktype (Env.get_range env) in
+       let vc = mk_Typ_app(md.trivial, [targ t; targ wp]) (Some ktype) (Env.get_range env) in
        let g = Rel.conj_guard g (Rel.guard_of_guard_formula <| Rel.NonTrivial vc) in
        discharge g, mk_Comp c
        
-let refine_data_type env l (formals:binders) (result_t:typ) = 
-    match formals with 
-        | [] -> result_t
-        | _ -> 
-            let r = range_of_lid l in 
-            let formals, args = Util.args_of_binders formals in
-            let basic_t = mk_Typ_fun(formals, mk_Total result_t) ktype r in
-            let v = mk_Exp_app({Util.fvar true l r with tk=basic_t}, args) result_t r in
-            mk_Typ_fun(formals, return_value env result_t v) ktype r
-
 
 (* Having already seen_args to head (from right to left), 
    compute the guard, if any, for the next argument, 

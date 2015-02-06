@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="tcenv.fsi" />
     <Compile Include="tcenv.fs" />
+    <Compile Include="recheck.fs" />
     <Compile Include="normalize.fsi" />
     <Compile Include="normalize.fs" />
     <Compile Include="errors.fs" />

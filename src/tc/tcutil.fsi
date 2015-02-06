@@ -24,9 +24,6 @@ open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Tc.Rel
 open Microsoft.FStar.Absyn.Syntax
 
-val t_bool : typ
-val t_unit : typ
-val typing_const : env -> sconst -> typ
 val new_kvar : env -> knd          
 val new_tvar : env -> knd -> typ
 val new_evar : env -> typ -> exp
@@ -69,6 +66,7 @@ val force_trivial: env -> guard_t -> unit
 val discharge_guard: env -> guard_t -> unit
 val label: string -> Range.range -> typ -> typ
 val label_guard: string -> Range.range -> guard_formula -> guard_formula
-val refine_data_type: env -> lident -> binders -> typ -> typ
 val short_circuit_guard: Util.either<typ,exp> -> args -> guard_formula
 
+val force_tk: syntax<'a,'b> -> 'b
+val tks_of_args: args -> list<(Util.either<knd,typ> * bool)>

@@ -146,7 +146,7 @@ let serialize_syntax (s_a : 'a -> 'sa) (ast : syntax<'a, 'b>) : s_syntax<'sa, 's
 
 let deserialize_syntax (ds_a : 'sa -> 'a) (ds_b : 'b) (ast : s_syntax<'sa, 'sb>) : syntax<'a, 'b> = 
     { n = ds_a ast.n
-      tk = ds_b
+      tk = Util.mk_ref None
       pos = dummyRange
       fvs = ref None
       uvs = ref None }
@@ -736,7 +736,7 @@ and serialize_sigelt (ast : sigelt) : s_sigelt =
     | Sig_datacon(lid1, t, tyc, qs, _) ->
       let t' =
         match Util.function_formals t with 
-        | Some (f, c) -> mk_Typ_fun (f, Syntax.mk_Total  (Util.comp_result c)) t.tk dummyRange
+        | Some (f, c) -> mk_Typ_fun (f, Syntax.mk_Total  (Util.comp_result c)) None dummyRange
         | None -> t
       in
       S_Sig_datacon(serialize_lident lid1, serialize_typ t', serialize_tycon tyc, serialize_list serialize_qualifier qs)

@@ -240,7 +240,7 @@ let whnf env t =
 let norm_t env t = Tc.Normalize.norm_typ [Tc.Normalize.Beta] env.tcenv t
 let norm_k env k = Tc.Normalize.normalize_kind env.tcenv k
 let trivial_post t : typ = mk_Typ_lam([null_v_binder t], Util.ftv Const.true_lid ktype) 
-                                     (mk_Kind_arrow([null_v_binder t], ktype) t.pos) t.pos
+                                     None t.pos
 
 let mk_ApplyE e vars =  
     vars |> List.fold_left (fun out var -> match snd var with 
@@ -470,7 +470,7 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
               begin match t_binders with 
                 | [] -> doit binders res
                 | _ -> 
-                  let res = mk_Typ_fun(first_v_binder::rest, res) ktype t0.pos |> Syntax.mk_Total in
+                  let res = mk_Typ_fun(first_v_binder::rest, res) (Some ktype) t0.pos |> Syntax.mk_Total in
                   doit t_binders res
              end
             | None -> doit binders res 
@@ -507,16 +507,17 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
                      ttm, [(tsym, Term.mkAnd(t_has_kind, Term.mkForall([x_has_t], [xsym], mkIff(x_has_t, encoding))))], decls@decls'
         end
 
-      | Typ_uvar (uv, _) ->
+      | Typ_uvar (uv, k) ->
         let ttm = Term.mk_Typ_uvar (Unionfind.uvar_id uv) in
-        let t_has_k, decls = encode_knd t.tk env ttm in //TODO: skip encoding this if it has already been encoded before
+        let t_has_k, decls = encode_knd k env ttm in //TODO: skip encoding this if it has already been encoded before
         let d = Term.Assume(t_has_k, None) in
         ttm, [], d::decls
 
       | Typ_app(head, args) -> (* this is in head normal form; so t must be a type variable; unification variable; or a constant *)
-        let is_full_app () = match (Util.compress_kind head.tk).n with
-            | Kind_arrow(formals, _) -> List.length formals = List.length args
-            | _ -> false in
+        let is_full_app () = 
+            let kk = Tc.Recheck.recompute_kind head in //so, this should be very cheap to recompute
+            let formals, _ = Util.kind_formals kk in
+            List.length formals = List.length args in
         let head = Util.compress_typ head in
         begin match head.n with
             | Typ_btvar a -> 
@@ -535,9 +536,9 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
                    let t = mk_ApplyT_args head args in
                    t, vars, decls
 
-            | Typ_uvar(uv, _) -> 
+            | Typ_uvar(uv, k) -> 
                let ttm = Term.mk_Typ_uvar (Unionfind.uvar_id uv) in
-               let t_has_k, decls = encode_knd t.tk env ttm in //TODO: skip encoding this if it has already been encoded before
+               let t_has_k, decls = encode_knd k env ttm in //TODO: skip encoding this if it has already been encoded before
                let d = Term.Assume(t_has_k, None) in
                ttm, [], d::decls  
 
@@ -582,7 +583,10 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
       | Exp_constant c -> 
         encode_const c, [], []
       
-      | Exp_ascribed(e, _)
+      | Exp_ascribed(e, t) -> 
+        e.tk := Some t;
+        encode_exp e env
+
       | Exp_meta(Meta_desugared(e, _)) -> 
         encode_exp e env
 
@@ -593,10 +597,11 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
  
       | Exp_abs(bs, body) -> 
         let esym, lam = fresh_bvar "lambda" Term_sort in
-        if not <| Util.is_pure_function e.tk 
+        let tfun = Tc.Util.force_tk e in
+        if not <| Util.is_pure_function tfun
         then lam, [(esym, Term_sort), Term.mkTrue], []
-        else let t = whnf env e.tk |> Util.compress_typ in
-             begin match t.n with 
+        else let tfun = whnf env tfun |> Util.compress_typ in
+             begin match tfun.n with 
                 | Typ_fun(bs', c) -> 
                     let nformals = List.length bs' in
                     if nformals < List.length bs && Util.is_total_comp c (* explicit currying *)
@@ -604,16 +609,15 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
                          let res_t = match Util.mk_subst_binder bs0 bs' with 
                             | Some s -> Util.subst_typ s (Util.comp_result c) 
                             | _ -> failwith "Impossible" in
-                         let e = mk_Exp_abs(bs0, mk_Exp_abs(rest, body) res_t body.pos) t e0.pos in
+                         let e = mk_Exp_abs(bs0, mk_Exp_abs(rest, body) (Some res_t) body.pos) (Some tfun) e0.pos in
                          //Util.fprint1 "Explicitly currying %s\n" (Print.exp_to_string e);
                          encode_exp e env
                     else let vars, _, envbody, decls, _ = encode_binders false bs env in 
                          let app = mk_ApplyE lam vars in
                          let body, body_vars, decls' = encode_exp body envbody in
                          let eq = close_ex body_vars (mkEq(app, body)) in
-                         let t_fun = e.tk in
-                         if Tc.Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding type e.tk=%s\n" (Print.typ_to_string t_fun);
-                         let lam_typed, decls'' = encode_typ_pred' false t_fun env lam in
+                         if Tc.Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding type e.tk=%s\n" (Print.typ_to_string tfun);
+                         let lam_typed, decls'' = encode_typ_pred' false tfun env lam in
                          let tsym, t = fresh_bvar "t" Type_sort in 
                          let app_has_t = Term.mk_HasType false app t in
                          let app_is_typed = Term.mkExists([app_has_t], [(tsym, Type_sort)], app_has_t) in
@@ -641,7 +645,7 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
                 | Some (formals, c) ->
                   let formals, rest = Util.first_N (List.length args_e) formals in
                   let subst = Util.formals_for_actuals formals args_e in
-                  let ty = mk_Typ_fun(rest, c) ktype e0.pos |> Util.subst_typ subst in
+                  let ty = mk_Typ_fun(rest, c) (Some ktype) e0.pos |> Util.subst_typ subst in
                   let esym, partial_app = fresh_bvar "partial_app" Term_sort in
                   let has_type, decls'' = encode_typ_pred' true ty env partial_app in
                   partial_app, (vars'@vars@[((esym, Term_sort), Term.mkAnd(Term.mkEq(partial_app, app_tm), has_type))]), decls@decls'@decls''
@@ -653,10 +657,12 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
             tm, vars, decls in
         
         let head = Util.compress_exp head in
-        let head_type = whnf env (Util.unrefine head.tk) in
+        let head_type = whnf env (Util.unrefine (Tc.Recheck.recompute_typ head)) in //head should be a variable, so this should be fast to recompute
+        if Tc.Env.debug env.tcenv <| Options.Other "Encoding"
+        then Util.fprint3 "Recomputed type of head %s (%s) to be %s\n" (Print.exp_to_string head) (Print.tag_of_exp head) (Print.typ_to_string head_type);
         begin match Util.function_formals head_type with
                     | None -> failwith (Util.format3 "(%s) term is %s; head type is %s\n" 
-                                        (Range.string_of_range e0.pos) (Print.exp_to_string e0) (Print.typ_to_string head.tk))
+                                        (Range.string_of_range e0.pos) (Print.exp_to_string e0) (Print.typ_to_string head_type))
                     | Some (formals, c) -> 
                         begin match head.n with
                             | Exp_fvar (fv, _) when (List.length formals = List.length args) -> encode_full_app fv
@@ -1263,10 +1269,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 | Inr x, Inr y -> Inr (x.v, Util.bvar_to_exp y)
                 | _ -> failwith "Impossible") formals binders in
             let extra_formals = Util.subst_binders subst extra_formals |> Util.name_binders in 
-            let body = Syntax.mk_Exp_app_flat(body, snd <| Util.args_of_binders extra_formals) (Util.subst_typ subst t) body.pos in
+            let body = Syntax.mk_Exp_app_flat(body, snd <| Util.args_of_binders extra_formals) (Some <| Util.subst_typ subst t) body.pos in
             binders@extra_formals, body in
                          
         let binders, body, formals, tres = match e.n with
+            | Exp_ascribed({n=Exp_abs(binders, body)}, _)
             | Exp_abs(binders, body) -> 
                 begin match t1_norm.n with 
                  | Typ_fun(formals, c) -> 
@@ -1278,7 +1285,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                          let tres = match Util.mk_subst_binder bs0 formals with
                             | Some s -> Util.subst_typ s tres 
                             | _ -> failwith "impossible" in
-                         let body = mk_Exp_abs(rest, body) tres body.pos in
+                         let body = mk_Exp_abs(rest, body) (Some tres) body.pos in
                          bs0, body, formals, tres
                     
                     else if nformals > nbinders (* eta-expand before translating it *)

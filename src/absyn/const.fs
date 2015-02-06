@@ -72,9 +72,9 @@ let neq_lid    = pconst  "neq"
 let neq2_lid   = pconst  "neq2"
 
 (* Some common term constructors *)
-let exp_true_bool   = mk_Exp_constant (Const_bool true) tun dummyRange
-let exp_false_bool  = mk_Exp_constant (Const_bool false) tun dummyRange
-let exp_unit        = mk_Exp_constant (Const_unit) tun dummyRange
+let exp_true_bool   = mk_Exp_constant (Const_bool true) None dummyRange
+let exp_false_bool  = mk_Exp_constant (Const_bool false) None dummyRange
+let exp_unit        = mk_Exp_constant (Const_unit) None dummyRange
 let cons_lid        = pconst  "Cons"
 let nil_lid         = pconst  "Nil"
 let ref_lid         = pconst  "ref"

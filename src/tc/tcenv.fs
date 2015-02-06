@@ -23,7 +23,6 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Absyn.Const
 open Microsoft.FStar.Util
-open Microsoft.FStar.Profiling 
 open Microsoft.FStar.Absyn.Util
    
 type binding =
@@ -166,7 +165,7 @@ let build_lattice env se = match se with
   | Sig_monads(decls0, order, p, _) -> 
     let mk_lift b k2 lift_t r wp1 =
       let k2 = Util.subst_kind [Inl(b.v, r)] k2 in
-      mk_Typ_app(lift_t, [targ r; targ wp1]) k2 p in
+      mk_Typ_app(lift_t, [targ r; targ wp1]) None p in
     let decls = env.lattice.decls@decls0 in
     let kwp l = wp_sig_aux decls l in
     let order = order |> List.map (fun mo -> 

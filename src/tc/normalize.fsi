@@ -34,7 +34,6 @@ type step =
   | Unmeta       (* remove Metas other than Meta_named -- CH: at the moment Meta_named causes failwith; why? *)
 and steps = list<step>
 
-val recompute_kind: Env.env -> typ -> knd
 val eta_expand: Env.env -> typ -> typ
 val eta_expand_exp: Env.env -> exp -> exp
 val normalize: Env.env -> typ -> typ

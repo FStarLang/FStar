@@ -448,7 +448,7 @@ and desugar_typ_or_exp (env:env_t) (t:term) : either<typ,exp> =
 and desugar_exp env e = desugar_exp_maybe_top false env e 
 
 and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
-  let pos e = e tun top.range in
+  let pos e = e None top.range in
   let setpos e = {e with pos=top.range} in
   begin match (unparen top).tm with
     | Const c -> pos <| mk_Exp_constant c
@@ -491,9 +491,9 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
             | [] -> 
               let body = desugar_exp env body in 
               let body = match sc_pat_opt with 
-                | Some (sc, pat) -> mk_Exp_match(sc, [(pat, None, body)]) tun body.pos
+                | Some (sc, pat) -> mk_Exp_match(sc, [(pat, None, body)]) None body.pos
                 | None -> body in 
-              mk_Exp_abs'(List.rev bs, body) tun top.range
+              mk_Exp_abs'(List.rev bs, body) None top.range
 
             | p::rest -> 
               let env, b, pat = desugar_binding_pat env p in
@@ -509,12 +509,12 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
                              begin match sc.n, p'.v with 
                                 | Exp_bvar _, _ -> 
                                   let tup = Util.mk_tuple_data_lid 2 top.range in
-                                  let sc = Syntax.mk_Exp_app(Util.fvar true tup top.range, [varg sc; varg <| Util.bvar_to_exp b]) tun top.range in
+                                  let sc = Syntax.mk_Exp_app(Util.fvar true tup top.range, [varg sc; varg <| Util.bvar_to_exp b]) None top.range in
                                   let p = withinfo (Pat_cons(Util.fv tup, [p';p])) (Inr tun) (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | Exp_app(_, args), Pat_cons(_, pats) ->
                                   let tup = Util.mk_tuple_data_lid (1 + List.length args) top.range in
-                                  let sc = Syntax.mk_Exp_app(Util.fvar true tup top.range, args@[(varg <| Util.bvar_to_exp b)]) tun top.range in 
+                                  let sc = Syntax.mk_Exp_app(Util.fvar true tup top.range, args@[(varg <| Util.bvar_to_exp b)]) None top.range in 
                                   let p = withinfo (Pat_cons(Util.fv tup, pats@[p])) (Inr tun) (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | _ -> failwith "Impossible"
@@ -529,7 +529,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       let phi = desugar_formula env arg in
       pos <| mk_Exp_app(fvar false a (range_of_lid a), 
                         [targ <| phi;
-                         varg <| mk_Exp_constant(Const_unit) tun top.range])
+                         varg <| mk_Exp_constant(Const_unit) None top.range])
 
     | App _ -> 
       let rec aux args e = match (unparen e).tm with
@@ -590,7 +590,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
             let body = match pat with
               | None 
               | Some ({v=Pat_wild _}) -> body
-              | Some pat -> mk_Exp_match(bvd_to_exp x t, [(pat, None, body)]) tun body.pos in
+              | Some pat -> mk_Exp_match(bvd_to_exp x t, [(pat, None, body)]) None body.pos in
             pos <| mk_Exp_let((false, [(Inl x, t, t1)]), body)
         end in
 
@@ -674,7 +674,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
   end
   
 and desugar_typ env (top:term) : typ =
-  let wpos t = t kun top.range in
+  let wpos t = t None top.range in
   let setpos t = {t with pos=top.range} in
   let top = unparen top in  
   let head_and_args t =
@@ -925,7 +925,7 @@ and desugar_formula' env (f:term) : typ =
     | "<==>" -> Some Const.iff_lid
     | "~"    -> Some Const.not_lid
     | _ -> None in
-  let pos t = t kun f.range in
+  let pos t = t None f.range in
   let setpos t = {t with pos=f.range} in
   let desugar_quant (q:lident) (qt:lident) b pats body =
     let tk = desugar_binder env ({b with blevel=Formula}) in
@@ -1061,8 +1061,8 @@ let mk_data_discriminators env t tps k datas =
     if env.iface then [] else
     let binders = gather_tc_binders tps k in 
     let p = range_of_lid t in 
-    let binders = binders@[null_v_binder <| mk_Typ_app'(Util.ftv t kun, Util.args_of_non_null_binders binders) kun p] in
-    let disc_type = mk_Typ_fun(binders, Util.total_comp (Util.ftv Const.bool_lid ktype) p) ktype p in
+    let binders = binders@[null_v_binder <| mk_Typ_app'(Util.ftv t kun, Util.args_of_non_null_binders binders) None p] in
+    let disc_type = mk_Typ_fun(binders, Util.total_comp (Util.ftv Const.bool_lid ktype) p) None p in
     datas |> List.map (fun d -> 
         let disc_name = Util.mk_discriminator d in
         //Util.fprint1 "Making discriminator %s\n" disc_name.str;
@@ -1072,14 +1072,14 @@ let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binde
     let binders = gather_tc_binders tps k in 
     let p = range_of_lid lid in
     let arg_binder = 
-        let arg_typ = mk_Typ_app'(Util.ftv tc kun, Util.args_of_non_null_binders binders) kun p in
+        let arg_typ = mk_Typ_app'(Util.ftv tc kun, Util.args_of_non_null_binders binders) None p in
         let projectee = {ppname=Syntax.mk_ident ("projectee", p);
                          realname=Util.genident (Some p)} in
         if not refine_domain
         then v_binder (Util.bvd_to_bvar_s projectee arg_typ) //records have only one constructor; no point refining the domain
         else let disc_name = Util.mk_discriminator lid in
              let x = Util.gen_bvar arg_typ in
-             v_binder <| (Util.bvd_to_bvar_s projectee <| mk_Typ_refine(x, Util.b2t(mk_Exp_app(Util.fvar false disc_name p, [varg <| Util.bvar_to_exp x]) tun p)) kun p) in
+             v_binder <| (Util.bvd_to_bvar_s projectee <| mk_Typ_refine(x, Util.b2t(mk_Exp_app(Util.fvar false disc_name p, [varg <| Util.bvar_to_exp x]) None p)) None p) in
       
     let binders = binders@[arg_binder] in
     let arg = Util.arg_of_non_null_binder arg_binder in
@@ -1088,14 +1088,14 @@ let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binde
             if binders |> Util.for_some (function (Inl b, _) -> bvd_eq a.v b.v | _ -> false)
             then []
             else let field_name, _ = Util.mk_field_projector_name lid a i in
-                 let proj = mk_Typ_app(Util.ftv field_name kun, [arg]) kun p in
+                 let proj = mk_Typ_app(Util.ftv field_name kun, [arg]) None p in
                  [Inl (a.v, proj)]
 
         | Inr x ->
             if binders |> Util.for_some (function (Inr y, _) -> bvd_eq x.v y.v | _ -> false)
             then []
             else let field_name, _ = Util.mk_field_projector_name lid x i in
-                 let proj = mk_Exp_app(Util.fvar false field_name p, [arg]) tun p in
+                 let proj = mk_Exp_app(Util.fvar false field_name p, [arg]) None p in
                  [Inr (x.v, proj)]) |> List.flatten in
 
     formals |> List.mapi (fun i ax -> match fst ax with 
@@ -1106,7 +1106,7 @@ let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binde
                
         | Inr x ->
             let field_name, _ = Util.mk_field_projector_name lid x i in
-            let t = mk_Typ_fun(binders, Util.total_comp (Util.subst_typ subst x.sort) p) kun p in 
+            let t = mk_Typ_fun(binders, Util.total_comp (Util.subst_typ subst x.sort) p) None p in 
             Sig_val_decl(field_name, t, [Assumption; Logic; Projector(lid, Inr x.v)], range_of_lid field_name))
 
 let mk_data_projectors env = function
@@ -1333,7 +1333,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
         
   | Exception(id, Some term) ->
     let t = desugar_typ env term in
-    let t = mk_Typ_fun([null_v_binder t], mk_Total (fail_or env (try_lookup_typ_name env) Const.exn_lid)) kun d.drange in
+    let t = mk_Typ_fun([null_v_binder t], mk_Total (fail_or env (try_lookup_typ_name env) Const.exn_lid)) None d.drange in
     let l = qualify env id in
     let se = Sig_datacon(l, t, (Const.exn_lid,[],ktype), [ExceptionConstructor], d.drange) in
     let se' = Sig_bundle([se], d.drange, [l]) in

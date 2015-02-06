@@ -111,7 +111,7 @@ let unmangleOpName (id:ident) =
     
 let try_lookup_id' env (id:ident) =
   match unmangleOpName id with 
-    | Some l -> Some (l, mk_Exp_fvar(fv l, false) tun id.idRange)
+    | Some l -> Some (l, mk_Exp_fvar(fv l, false) None id.idRange)
     | _ -> 
       let found = find_map env.localbindings (function 
         | Inl _, Binding_typ_var id' when (id'.idText=id.idText) -> Some (Inl ())

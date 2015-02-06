@@ -42,7 +42,7 @@ let rec compress_typ_aux pos typ = match typ.n with
   | Typ_app({n=Typ_uvar(uv, _)}, args) ->
        begin 
           match Unionfind.find uv with 
-            | Fixed t' -> compress_typ_aux pos <| mk_Typ_app(t', args) typ.tk typ.pos
+            | Fixed t' -> compress_typ_aux pos <| mk_Typ_app(t', args) None typ.pos
             | _ -> typ
        end
   | _ -> typ
@@ -60,11 +60,11 @@ let rec compress_exp_aux meta exp = match exp.n with
     (match !m with 
       | None -> exp
       | Some e -> let e' = compress_exp_aux meta e in m := Some e'; e')
-  | Exp_ascribed(e, _)
+  //| Exp_ascribed(e, _)
   | Exp_meta(Meta_desugared(e, _)) when meta -> compress_exp_aux meta e
   | Exp_app({n=Exp_uvar(uv, _)}, args) -> 
        begin match Unionfind.find uv with 
-        | Fixed e' -> mk_Exp_app(e', args) exp.tk exp.pos
+        | Fixed e' -> mk_Exp_app(e', args) None exp.pos
         | _ -> exp
        end
   | _ -> exp
@@ -378,7 +378,7 @@ let combine_kind k (kc:knd_components) env =
     
 let combine_typ t (tc:typ_components) env =
   let t = compress_typ t in 
-  let w f = f t.tk t.pos in
+  let w f = f None t.pos in
   let t' = match t.n, tc with
     | Typ_unknown, _
     | Typ_btvar _, _
@@ -399,7 +399,7 @@ let combine_typ t (tc:typ_components) env =
 
 let combine_exp e (ec:exp_components) env = 
   let e = compress_exp e in 
-  let w f = f e.tk e.pos in
+  let w f = f None e.pos in
   let e' = match e.n, ec with 
     | Exp_bvar _, _
     | Exp_fvar _, _

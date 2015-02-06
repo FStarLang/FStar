@@ -46,14 +46,14 @@ let new_tvar r binders k =
   match binders with 
     | [] -> 
       let uv = Unionfind.fresh (Uvar wf) in 
-      let uv = mk_Typ_uvar'(uv,k) k r in
+      let uv = mk_Typ_uvar'(uv,k) None r in
       uv, uv
     | _ -> 
       let args = Util.args_of_non_null_binders binders in 
       let uv = Unionfind.fresh (Uvar wf) in 
       let k' = mk_Kind_arrow(binders, k) r in
-      let uv = mk_Typ_uvar'(uv,k') k' r in
-      mk_Typ_app(uv, args) k r, uv
+      let uv = mk_Typ_uvar'(uv,k') None r in
+      mk_Typ_app(uv, args) None r, uv
 
 let new_evar r binders t =
   let wf e t = true in 
@@ -61,16 +61,16 @@ let new_evar r binders t =
   match binders with 
     | [] -> 
       let uv = Unionfind.fresh (Uvar wf) in 
-      let uv = mk_Exp_uvar'(uv,t) t r in
+      let uv = mk_Exp_uvar'(uv,t) None r in
       uv, uv
     | _ ->
       let args = Util.args_of_non_null_binders binders in 
       let uv = Unionfind.fresh (Uvar wf) in 
-      let t' = mk_Typ_fun(binders, mk_Total t) ktype r in
-      let uv = mk_Exp_uvar'(uv, t') t' r in
+      let t' = mk_Typ_fun(binders, mk_Total t) None r in
+      let uv = mk_Exp_uvar'(uv, t') None r in
       match args with 
         | [] -> uv, uv
-        | _ -> mk_Exp_app(uv, args) t r, uv
+        | _ -> mk_Exp_app(uv, args) None r, uv
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -394,7 +394,7 @@ let rec compress env wl t =
         | Typ_app({n=Typ_uvar(uv, _)}, args) -> 
             (match find_uvar_t uv wl.subst with 
                 | Some t' -> 
-                  let t = mk_Typ_app(t', args) t.tk t.pos in 
+                  let t = mk_Typ_app(t', args) None t.pos in 
                   compress env wl t
                 | _ -> t)
         | _ -> t
@@ -412,7 +412,7 @@ let rec compress_e (env:env) wl e =
             | None -> e
             | Some e' -> 
                 let e' = compress_e env wl e' in
-                mk_Exp_app(e', args) e.tk e.pos //TODO: whnf for expressions?
+                mk_Exp_app(e', args) None e.pos //TODO: whnf for expressions?
            end
         | _ -> e
 
@@ -466,7 +466,7 @@ let force_refinement (t_base, refopt) =
     let y, phi = match refopt with
         | Some (y, phi) -> y, phi 
         | None -> trivial_refinement t_base in
-    mk_Typ_refine(y, phi) ktype t_base.pos
+    mk_Typ_refine(y, phi) None t_base.pos
     
 (* ------------------------------------------------ *)
 (* </normalization>                                 *)
@@ -718,7 +718,7 @@ let rec decompose_typ env t : (list<ktec> -> typ) * (typ -> bool) * list<(option
                 | (Inl _, imp), T (t, _) -> Inl t, imp
                 | (Inr _, imp), E e -> Inr e, imp
                 | _ -> failwith "Bad reconstruction") args args' in
-            mk_Typ_app(hd, args) t.tk t.pos in
+            mk_Typ_app(hd, args) None t.pos in
         
           let b_ktecs = //each argument in order, with empty binders
             args |> List.map (function (Inl t, _) -> None, INVARIANT, T (t, None) | (Inr e, _) -> None, INVARIANT, E e) in
@@ -728,7 +728,7 @@ let rec decompose_typ env t : (list<ktec> -> typ) * (typ -> bool) * list<(option
         | Typ_fun(bs, c) -> 
           let rebuild, b_ktecs = 
               decompose_binder bs (C c) (fun bs -> function 
-                | C c -> mk_Typ_fun(bs, c) ktype t.pos
+                | C c -> mk_Typ_fun(bs, c) None t.pos
                 | _ -> failwith "Bad reconstruction") in
           
           rebuild, matches, b_ktecs
@@ -766,15 +766,16 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
         | _, variance, T (ti, kopt) -> 
             let k = match kopt with 
                 | Some k -> k
-                | None -> Normalize.recompute_kind env ti in
+                | None -> Recheck.recompute_kind ti in
             let gi_xs, gi = new_tvar r scope k in
-            let gi_ps = mk_Typ_app'(gi, args) ti.tk r in
+            let gi_ps = mk_Typ_app'(gi, args) None r in
             T (gi_xs, Some k), 
             TProb <| mk_problem scope orig gi_ps (vary_rel rel variance) ti None "type subterm"
  
         | _, variance, E ei -> 
-            let gi_xs, gi = new_evar r scope ei.tk in
-            let gi_ps = mk_Exp_app'(gi, args) ei.tk r in
+            let t = Recheck.recompute_typ ei in
+            let gi_xs, gi = new_evar r scope t in
+            let gi_ps = mk_Exp_app'(gi, args) (Some t) r in
             E gi_xs, 
             EProb <| mk_problem scope orig gi_ps (vary_rel rel variance) ei None "expression subterm"
 
@@ -1241,7 +1242,7 @@ let rec solve_flex_rigid_join env tp wl =
           let m = base_types_match x.sort y.sort in
           if m=ok
           then let phi2 = Util.subst_typ (Util.mk_subst_one_binder (Syntax.v_binder x) (Syntax.v_binder y)) phi2 in
-               mk_Typ_refine(x, Util.mk_conj phi1 phi2) t1.tk t1.pos |> Some, ok
+               mk_Typ_refine(x, Util.mk_conj phi1 phi2) (Some ktype) t1.pos |> Some, ok
           else None, m
 
         | _, Typ_refine(y, _) -> 
@@ -1489,7 +1490,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         //sub-problems: Gi(p1..pn) REL' qi, where REL' = vary_rel REL (variance h i)
         let r = Env.get_range env in
         let sub_probs, gs_xs, formula = imitation_sub_probs orig env xs ps qs in
-        let im = mk_Typ_lam'(xs, h gs_xs) k r in
+        let im = mk_Typ_lam'(xs, h gs_xs) None r in
         if Tc.Env.debug env <| Options.Other "Rel" 
         then Util.fprint4 "Imitating %s (%s)\nsub_probs = %s\nformula=%s\n" 
             (Print.typ_to_string im) (Print.tag_of_typ im) 
@@ -1517,7 +1518,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                             let k_a = Util.subst_kind subst a.sort in
                             let gi_xs, gi = new_tvar r xs k_a in
                             let gi_xs = Tc.Normalize.eta_expand env gi_xs in
-                            let gi_ps = mk_Typ_app(gi, ps) k_a r in
+                            let gi_ps = mk_Typ_app(gi, ps) (Some k_a) r in
                             let subst = if is_null_binder hd then subst else Inl(a.v, gi_xs)::subst in
                             targ gi_xs, targ gi_ps, subst
 
@@ -1525,7 +1526,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                             let t_x = Util.subst_typ subst x.sort in 
                             let gi_xs, gi = new_evar r xs t_x in
                             let gi_xs = Tc.Normalize.eta_expand_exp env gi_xs in
-                            let gi_ps = mk_Exp_app(gi, ps) t_x r in
+                            let gi_ps = mk_Exp_app(gi, ps) (Some t_x) r in
                             let subst = if is_null_binder hd then subst else Inr(x.v, gi_xs)::subst in
                             varg gi_xs, varg gi_ps, subst in
                     let gi_xs', gi_ps' = aux subst tl in
@@ -1538,9 +1539,9 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                 then None
                 else let g_xs, _ = gs xi.sort in 
                      let xi = btvar_to_typ xi in
-                     let proj = mk_Typ_lam(xs, mk_Typ_app'(xi, g_xs) ktype r) (snd u) r in
+                     let proj = mk_Typ_lam(xs, mk_Typ_app'(xi, g_xs) (Some ktype) r) None r in
                      let sub = 
-                        TProb <| mk_problem (p_scope orig) orig (mk_Typ_app'(proj, ps) ktype r) (p_rel orig) (h <| List.map (fun (_, _, y) -> y) qs) None "projection" in
+                        TProb <| mk_problem (p_scope orig) orig (mk_Typ_app'(proj, ps) (Some ktype) r) (p_rel orig) (h <| List.map (fun (_, _, y) -> y) qs) None "projection" in
                      if debug env <| Options.Other "Rel" then Util.fprint2 "Projecting %s\n\tsubprob=%s\n" (Print.typ_to_string proj) (prob_to_string env sub);
                      let wl = solve_prob orig (Some (fst <| p_guard sub)) [UT(u, proj)] wl in
                      Some <| solve env (attempt [sub] wl)
@@ -1601,7 +1602,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                                     then Util.fprint3 "Pattern %s with fvars=%s succeeded fvar check: %s\n" (Print.typ_to_string t1) (Print.freevars_to_string fvs1) (Print.freevars_to_string fvs2) in
                            let sol = match vars with 
                                 | [] -> t2
-                                | _ -> mk_Typ_lam(sn_binders env vars, t2) k t1.pos in
+                                | _ -> mk_Typ_lam(sn_binders env vars, t2) None t1.pos in
                            let wl = solve_prob orig None [UT((uv,k), sol)] wl in
                            solve env wl)
                 else if wl.defer_ok
@@ -1651,16 +1652,16 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                 | [] -> 
                     let ys = List.rev ys in
                     let binders = List.rev binders in 
-                    let kk = Normalize.recompute_kind env t in
+                    let kk = Recheck.recompute_kind t in
                     let t', _ = new_tvar t.pos ys kk in 
                     let u1_ys, u1, k1, _ = destruct_flex_t t' in
-                    let sol = UT((u,k), mk_Typ_lam(binders, u1_ys) t.tk t.pos) in
+                    let sol = UT((u,k), mk_Typ_lam(binders, u1_ys) (Some k) t.pos) in
                     sol, (t', u, k1, ys)
 
                 | hd::tl -> 
                   let new_binder hd = match fst hd with 
-                        | Inl a -> Util.gen_bvar a.tk |> Syntax.t_binder
-                        | Inr x -> Util.gen_bvar x.tk |> Syntax.v_binder in
+                        | Inl a -> Recheck.recompute_kind a |> Util.gen_bvar_p a.pos |> Syntax.t_binder
+                        | Inr x -> Recheck.recompute_typ  x |> Util.gen_bvar_p x.pos |> Syntax.v_binder in
 
                   let binder, ys = match pat_var_opt env ys hd with 
                     | None -> new_binder hd, ys
@@ -1673,7 +1674,8 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                           then y, y::ys  //this is a variable in the intersection with xs
                           else new_binder hd, ys
                       end in
-
+                    
+                    
                     aux (binder::binders) ys tl in
 
            aux [] [] args in
@@ -1690,7 +1692,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                 let ys = sn_binders env ys in
                 let zs = intersect_vars xs ys in
                 let u_zs, _ = new_tvar r zs k in
-                let sub1 = mk_Typ_lam'(xs, u_zs) k1 r in
+                let sub1 = mk_Typ_lam'(xs, u_zs) (Some k1) r in
                 let occurs_ok, msg = occurs_check env (u1,k1) sub1 in
                 if not occurs_ok
                 then giveup_or_defer orig "flex-flex: failed occcurs check" 
@@ -1698,7 +1700,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                         if Unionfind.equivalent u1 u2
                         then let wl = solve_prob orig None [sol1] wl in
                                 solve env wl
-                        else let sub2 = mk_Typ_lam'(ys, u_zs) k2 r in
+                        else let sub2 = mk_Typ_lam'(ys, u_zs) (Some k2) r in
                                 let occurs_ok, msg = occurs_check env (u2,k2) sub2 in
                                 if not occurs_ok 
                                 then giveup_or_defer orig "flex-flex: failed occurs check"
@@ -1726,7 +1728,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                      let occurs_ok, _ = occurs_check env (u1,k1) t2 in
                      let lhs_vars = freevars_of_binders xs in
                      if occurs_ok && Util.fvs_included rhs_vars lhs_vars
-                     then let sol = UT((u1, k1), mk_Typ_lam'(xs, t2) k1 t1.pos) in
+                     then let sol = UT((u1, k1), mk_Typ_lam'(xs, t2) (Some k1) t1.pos) in
                           let wl = solve_prob orig None [sol] wl in
                           solve env wl
                      else if occurs_ok && not <| wl.defer_ok 
@@ -1745,7 +1747,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         let maybe_pat_vars2 = pat_vars env [] args2 in
         let r = t2.pos in
         match maybe_pat_vars1, maybe_pat_vars2 with 
-            | Some xs, Some ys -> solve_both_pats wl (u1, k1, xs) (u2, k2, ys) t2.tk t2.pos
+            | Some xs, Some ys -> solve_both_pats wl (u1, k1, xs) (u2, k2, ys) (Recheck.recompute_kind t2) t2.pos
             | Some xs, None -> solve_one_pat (t1, u1, k1, xs) rhs
             | None, Some ys -> solve_one_pat (t2, u2, k2, ys) lhs
             | _ -> 
@@ -1795,7 +1797,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
       | Typ_fun(bs1, c1), Typ_fun(bs2, c2) ->
         let mk_c c = function
             | [] -> c
-            | bs -> mk_Total(mk_Typ_fun(bs, c) ktype c.pos) in
+            | bs -> mk_Total(mk_Typ_fun(bs, c) None c.pos) in
         let (bs1, c1), (bs2, c2) = 
             match_num_binders (bs1, mk_c c1) (bs2, mk_c c2) in
         solve_binders env bs1 bs2 orig wl
@@ -1807,7 +1809,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
       | Typ_lam(bs1, t1'), Typ_lam(bs2, t2') -> 
         let mk_t t = function
             | [] -> t
-            | bs -> mk_Typ_lam(bs, t) (mk_Kind_arrow(bs, t.tk) t.pos) t.pos in
+            | bs -> mk_Typ_lam(bs, t) None t.pos in
         let (bs1, t1'), (bs2, t2') = 
             match_num_binders (bs1, mk_t t1') (bs2, mk_t t2') in
         solve_binders env bs1 bs2 orig wl
@@ -2026,13 +2028,13 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                   let g = 
                                     if is_null_wp_2 
                                     then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
-                                         mk_Typ_app(c2_decl.trivial, [targ c1.result_typ; targ <| edge.mlift c1.result_typ wpc1]) ktype r 
+                                         mk_Typ_app(c2_decl.trivial, [targ c1.result_typ; targ <| edge.mlift c1.result_typ wpc1]) (Some ktype) r 
                                     else let wp2_imp_wp1 = mk_Typ_app(c2_decl.wp_binop, 
                                                                       [targ c2.result_typ; 
                                                                        targ wpc2; 
                                                                        targ <| Util.ftv Const.imp_lid (Const.kbin ktype ktype ktype); 
-                                                                       targ <| edge.mlift c1.result_typ wpc1]) wpc2.tk r in
-                                         mk_Typ_app(c2_decl.wp_as_type, [targ c2.result_typ; targ wp2_imp_wp1]) ktype r  in
+                                                                       targ <| edge.mlift c1.result_typ wpc1]) None r in
+                                         mk_Typ_app(c2_decl.wp_as_type, [targ c2.result_typ; targ wp2_imp_wp1]) (Some ktype) r  in
                                   let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
                                   let wl = solve_prob orig (Some <| Util.mk_conj (p_guard base_prob |> fst) g) [] wl in
                                   solve env (attempt [base_prob] wl)
@@ -2059,13 +2061,14 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
         let sub_problems xs args2 =
             let gi_xi, gi_pi = args2 |> List.map (function 
             | Inl t, imp -> 
-                let kk = Normalize.recompute_kind env t in
+                let kk = Recheck.recompute_kind t in
                 let gi_xi, gi = new_tvar t.pos xs kk in 
-                let gi_pi = mk_Typ_app(gi, args1) t.tk t.pos in
+                let gi_pi = mk_Typ_app(gi, args1) (Some kk) t.pos in
                 (Inl gi_xi, imp), TProb <| sub_prob gi_pi t "type index"
             | Inr v, imp ->
-                let gi_xi, gi = new_evar v.pos xs v.tk in 
-                let gi_pi = mk_Exp_app(gi, args1) v.tk v.pos in
+                let tt = Recheck.recompute_typ v in
+                let gi_xi, gi = new_evar v.pos xs tt in 
+                let gi_pi = mk_Exp_app(gi, args1) (Some tt) v.pos in
                 (Inr gi_xi, imp), EProb <| sub_prob gi_pi v "expression index") |> List.unzip in
         let formula = Util.mk_conj_l (List.map (fun p -> p_guard p |> fst) gi_pi) in
         gi_xi, gi_pi, formula in
@@ -2093,7 +2096,7 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
                                        | Exp_bvar z -> 
                                           if Util.bvar_eq y z (* found the variable to project *)
                                           then let gi_xi, gi_pi, f = sub_problems all_xs args2 in
-                                               let sol = mk_Exp_abs(all_xs, mk_Exp_app'(Util.bvar_to_exp xi, gi_xi) tres e1.pos) t1 e1.pos in
+                                               let sol = mk_Exp_abs(all_xs, mk_Exp_app'(Util.bvar_to_exp xi, gi_xi) None e1.pos) None e1.pos in
                                                if Tc.Env.debug env <| Options.Other "Rel"
                                                then Util.fprint3 "Projected: %s -> %s\nSubprobs=\n%s\n" (Print.uvar_e_to_string (u1,t1)) (Print.exp_to_string sol) (gi_pi |> List.map (prob_to_string env) |> String.concat "\n");
                                                solve env (attempt gi_pi (solve_prob orig (Some f) [UE((u1, t1), sol)] wl))
@@ -2122,7 +2125,7 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
                             | None -> [], t1
                             | Some (xs, c) -> xs, Util.comp_result c in
                      let gi_xi, gi_pi, f = sub_problems xs args2 in
-                     let sol = mk_Exp_abs(xs, mk_Exp_app(head2, gi_xi) tres e1.pos) t1 e1.pos in
+                     let sol = mk_Exp_abs(xs, mk_Exp_app(head2, gi_xi) None e1.pos) None e1.pos in
                      if Tc.Env.debug env <| Options.Other "Rel"
                      then Util.fprint3 "Imitated: %s -> %s\nSubprobs=\n%s\n" (Print.uvar_e_to_string (u1,t1)) (Print.exp_to_string sol) (gi_pi |> List.map (prob_to_string env) |> String.concat "\n");
                      solve env (attempt gi_pi (solve_prob orig (Some f) [UE((u1, t1), sol)] wl))
@@ -2142,7 +2145,7 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
                     && occurs_ok
                 then // U1 xs =?= e2
                      // U1 = \xs. e2
-                    let sol = mk_Exp_abs(xs, e2) t1 e1.pos in
+                    let sol = mk_Exp_abs(xs, e2) None e1.pos in
                     solve env (solve_prob orig None [UE((u1,t1), sol)] wl)
                 else imitate_or_project_e ()
         end in
@@ -2166,9 +2169,10 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
               //U1 = \x1 x2. U zs
               //U2 = \y1 y2 y3. U zs 
               let zs = intersect_vars xs ys in 
-              let u, _ = new_evar (Env.get_range env) zs e2.tk in
-              let sub1 = mk_Exp_abs(xs, u) t1 e1.pos in
-              let sub2 = mk_Exp_abs(ys, u) t2 e1.pos in
+              let tt = Recheck.recompute_typ e2 in
+              let u, _ = new_evar (Env.get_range env) zs tt in
+              let sub1 = mk_Exp_abs(xs, u) (Some t1) e1.pos in
+              let sub2 = mk_Exp_abs(ys, u) (Some t2) e1.pos in
               solve env (solve_prob orig None [UE((u1,t1), sub1); UE((u2,t2), sub2)] wl)
       end in
 
@@ -2257,11 +2261,11 @@ let abstract_guard x g = match g with
       let f = match g.guard_f with 
         | NonTrivial f -> f
         | _ -> failwith "impossible" in
-      Some ({g with guard_f=NonTrivial <| mk_Typ_lam([v_binder x], f) (mk_Kind_arrow([null_v_binder x.sort], ktype) f.pos) f.pos})
+      Some ({g with guard_f=NonTrivial <| mk_Typ_lam([v_binder x], f) None f.pos})
 
 let apply_guard g e = match g.guard_f with 
   | Trivial -> g
-  | NonTrivial f -> {g with guard_f=NonTrivial (syn f.pos ktype <| mk_Typ_app(f, [varg e]))}
+  | NonTrivial f -> {g with guard_f=NonTrivial (syn f.pos (Some ktype) <| mk_Typ_app(f, [varg e]))}
 
 let trivial t = match t with 
   | Trivial -> ()

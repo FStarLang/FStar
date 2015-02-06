@@ -335,14 +335,14 @@ let rec mlty_of_ty_core (mlenv : mlenv) (tenv : tenv) ((rg, ty) : range * typ) =
     | Typ_fun ((Inr {v=x; sort=t1},  _)::rest, c) -> 
         let t2 = match rest with 
             | [] -> comp_result c 
-            | _ -> mk_Typ_fun(rest, c) ktype ty.pos in
+            | _ -> mk_Typ_fun(rest, c) None ty.pos in
         let mlt1 = mlty_of_ty mlenv tenv (rg, t1) in
         let mlt2 = mlty_of_ty mlenv tenv (rg, t2) in
         MLTY_Fun (mlt1, mlt2)
     | Typ_fun((Inl _, _)::rest, c) ->
         let r = match rest with
             | [] -> comp_result c
-            | _ -> mk_Typ_fun(rest, c) ktype ty.pos in
+            | _ -> mk_Typ_fun(rest, c) None ty.pos in
         mlty_of_ty mlenv tenv (rg, r)
 
     | Typ_const   _ -> unexpected  rg "type-constant"
@@ -352,7 +352,7 @@ let rec mlty_of_ty_core (mlenv : mlenv) (tenv : tenv) ((rg, ty) : range * typ) =
     | Typ_app (t1, (Inl t2,  _)::rest) ->
         let t2 = match rest with
             | [] -> t2
-            | _ -> mk_Typ_app(t2,rest) ktype ty.pos in
+            | _ -> mk_Typ_app(t2,rest) None ty.pos in
 
         let mlt1 = mlty_of_ty mlenv tenv (rg, t1) in
         let mlt2 = mlty_of_ty mlenv tenv (rg, t2) in
@@ -360,7 +360,7 @@ let rec mlty_of_ty_core (mlenv : mlenv) (tenv : tenv) ((rg, ty) : range * typ) =
     | Typ_app (t, (Inr _,  _)::rest) -> 
         let r = match rest with
             | [] -> t
-            | _ -> mk_Typ_app(t,rest) ktype ty.pos in
+            | _ -> mk_Typ_app(t,rest) None ty.pos in
         mlty_of_ty mlenv tenv (rg, r)
 
     | Typ_lam     _ -> unsupported rg "type-fun"
@@ -457,7 +457,7 @@ let rec strip_polymorphism acc rg ty =
         match vs, c.n with
         | [], Total ty -> ts, rg, ty
         | [], Comp c   -> ts, rg, c.result_typ
-        | _ , _        -> ts, rg, mk_Typ_fun(vs, c) ktype ty.pos
+        | _ , _        -> ts, rg, mk_Typ_fun(vs, c) None ty.pos
     end
     
     | _ ->
@@ -600,11 +600,11 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
 
         | Exp_abs ((Inl _, _)::rest, e) ->
            (* FIXME: should only occur after a let-binding *)
-           mlexpr_of_expr mlenv rg lenv (if List.isEmpty rest then e else mk_Exp_abs(rest, e) tun e.pos)
+           mlexpr_of_expr mlenv rg lenv (if List.isEmpty rest then e else mk_Exp_abs(rest, e) None e.pos)
 
         | Exp_abs ((Inr x, _)::rest, e) ->
             let lenv, mlid = lpush lenv x.v.realname x.v.ppname in
-            let e = mlexpr_of_expr mlenv rg lenv (if List.isEmpty rest then e else mk_Exp_abs(rest, e) tun e.pos) in
+            let e = mlexpr_of_expr mlenv rg lenv (if List.isEmpty rest then e else mk_Exp_abs(rest, e) None e.pos) in
             mlfun mlid e
 
         | Exp_match (x, [(p, None, e)]) when (Absyn.Util.is_wild_pat p) ->
