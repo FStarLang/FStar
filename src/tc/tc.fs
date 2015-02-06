@@ -771,9 +771,9 @@ and tc_exp env e : exp * lcomp * guard_t =
             | (Inl a, _)::rest, (Inr e, _)::_ -> (* instantiate a type argument *) 
               let k = Util.subst_kind subst a.sort in
               fxv_check head env (Inl k) fvs;
-              let targ = match k.n with 
-                | Kind_type -> Tc.Util.new_tvar env k       
-                | _ -> fst <| Tc.Rel.new_tvar e.pos vars k in (* TODO: remove case split? *)
+              let targ = 
+              
+              fst <| Tc.Rel.new_tvar e.pos vars k in 
               if debug env Options.Extreme then Util.fprint2 "Instantiating %s to %s" (Print.strBvd a.v) (Print.typ_to_string targ);
               let subst = (Inl(a.v, targ))::subst in
               let arg = Inl targ, true in

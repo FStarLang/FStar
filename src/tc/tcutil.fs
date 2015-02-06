@@ -98,7 +98,7 @@ let env_binders env =
     then Env.binders env 
     else Env.t_binders env
 let new_kvar env   = Rel.new_kvar (Env.get_range env) (env_binders env)   |> fst
-let new_tvar env t = Rel.new_tvar (Env.get_range env) (env_binders env) t |> fst
+let new_tvar env k = Rel.new_tvar (Env.get_range env) (env_binders env) k |> fst
 let new_evar env t = Rel.new_evar (Env.get_range env) (env_binders env) t |> fst
 
 

@@ -104,7 +104,7 @@ let with_new_code k c e = {
     close=None
 }
 
-let rec recompute_kind tcenv t = 
+let rec recompute_kind (tcenv:Env.env) t = 
     match t.n with 
         | Typ_delayed _ -> recompute_kind tcenv (Util.compress_typ t)
         | Typ_btvar a -> a.sort

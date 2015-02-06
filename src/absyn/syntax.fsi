@@ -189,7 +189,7 @@ and fvvar = var<typ>
 
 type ktec = 
     | K of knd
-    | T of typ
+    | T of typ * option<knd>
     | E of exp
     | C of comp
 

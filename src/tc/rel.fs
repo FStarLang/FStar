@@ -669,7 +669,7 @@ let decompose_binder (bs:binders) v_ktec (rebuild_base:binders -> ktec -> 'a) : 
         let rec aux new_bs bs ktecs = match bs, ktecs with 
             | [], [ktec] -> rebuild_base (List.rev new_bs) ktec
             | (Inl a, imp)::rest, K k::rest' -> aux ((Inl ({a with sort=k}), imp)::new_bs) rest rest'
-            | (Inr x, imp)::rest, T t::rest' -> aux ((Inr ({x with sort=t}), imp)::new_bs) rest rest'
+            | (Inr x, imp)::rest, T (t, _)::rest' -> aux ((Inr ({x with sort=t}), imp)::new_bs) rest rest'
             | _ -> fail () in
         aux [] bs ktecs in
           
@@ -679,7 +679,7 @@ let decompose_binder (bs:binders) v_ktec (rebuild_base:binders -> ktec -> 'a) : 
             let bopt = if is_null_binder hd then None else Some hd in 
             let b_ktec = match fst hd with 
                 | Inl a -> (bopt, CONTRAVARIANT, K a.sort)
-                | Inr x -> (bopt, CONTRAVARIANT, T x.sort) in
+                | Inr x -> (bopt, CONTRAVARIANT, T (x.sort, Some ktype)) in
             let binders' = match bopt with None -> binders | Some hd -> binders@[hd] in
             mk_b_ktecs (binders', b_ktec::b_ktecs) rest in
 
@@ -715,13 +715,13 @@ let rec decompose_typ env t : (list<ktec> -> typ) * (typ -> bool) * list<(option
         | Typ_app(hd, args) -> (* easy case: it's already in the form we want *)
           let rebuild args' = 
             let args = List.map2 (fun x y -> match x, y with
-                | (Inl _, imp), T t -> Inl t, imp
+                | (Inl _, imp), T (t, _) -> Inl t, imp
                 | (Inr _, imp), E e -> Inr e, imp
                 | _ -> failwith "Bad reconstruction") args args' in
             mk_Typ_app(hd, args) t.tk t.pos in
         
           let b_ktecs = //each argument in order, with empty binders
-            args |> List.map (function (Inl t, _) -> None, INVARIANT, T t | (Inr e, _) -> None, INVARIANT, E e) in
+            args |> List.map (function (Inl t, _) -> None, INVARIANT, T (t, None) | (Inr e, _) -> None, INVARIANT, E e) in
         
           rebuild, matches, b_ktecs
 
@@ -741,10 +741,10 @@ let rec decompose_typ env t : (list<ktec> -> typ) * (typ -> bool) * list<(option
           rebuild, (fun t -> true), []
 
 let un_T = function 
-    | T x -> x
+    | T (x, _) -> x
     | _ -> failwith "impossible"
 let arg_of_ktec = function 
-    | T t -> targ t
+    | T (t, _) -> targ  t
     | E e -> varg e
     | _ -> failwith "Impossible"
 
@@ -763,10 +763,13 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
             K gi_xs, 
             KProb <| mk_problem scope orig gi_ps (vary_rel rel variance) ki None "kind subterm"
 
-        | _, variance, T ti -> 
-            let gi_xs, gi = new_tvar r scope  ti.tk in
+        | _, variance, T (ti, kopt) -> 
+            let k = match kopt with 
+                | Some k -> k
+                | None -> Normalize.recompute_kind env ti in
+            let gi_xs, gi = new_tvar r scope k in
             let gi_ps = mk_Typ_app'(gi, args) ti.tk r in
-            T gi_xs, 
+            T (gi_xs, Some k), 
             TProb <| mk_problem scope orig gi_ps (vary_rel rel variance) ti None "type subterm"
  
         | _, variance, E ei -> 
@@ -783,16 +786,16 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
             | q::qs -> 
                 let ktec, probs = match q with 
                      | bopt, variance, C ({n=Total ti}) -> 
-                       begin match sub_prob scope args (bopt, variance, T ti) with 
-                            | T gi_xs, prob -> C <| mk_Total gi_xs, [prob]
+                       begin match sub_prob scope args (bopt, variance, T (ti, Some ktype)) with 
+                            | T (gi_xs, _), prob -> C <| mk_Total gi_xs, [prob]
                             | _ -> failwith "impossible"
                        end
 
                     |_, _, C ({n=Comp c}) -> 
                        let components = c.effect_args |> List.map (function 
-                            | Inl t, _ -> (None, INVARIANT, T t)
+                            | Inl t, _ -> (None, INVARIANT, T (t, None))
                             | Inr e, _ -> (None, INVARIANT, E e)) in
-                       let components = (None, COVARIANT, T c.result_typ)::components in 
+                       let components = (None, COVARIANT, T (c.result_typ, Some ktype))::components in 
                        let ktecs, sub_probs = List.map (sub_prob scope args) components |> List.unzip in
                        let gi_xs = mk_Comp <| {
                             effect_name=c.effect_name;
@@ -1648,7 +1651,8 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                 | [] -> 
                     let ys = List.rev ys in
                     let binders = List.rev binders in 
-                    let t', _ = new_tvar t.pos ys t.tk in
+                    let kk = Normalize.recompute_kind env t in
+                    let t', _ = new_tvar t.pos ys kk in 
                     let u1_ys, u1, k1, _ = destruct_flex_t t' in
                     let sol = UT((u,k), mk_Typ_lam(binders, u1_ys) t.tk t.pos) in
                     sol, (t', u, k1, ys)
@@ -2037,8 +2041,8 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
 and solve_e env problem wl = 
     match compress_prob wl (EProb problem) with 
         | EProb p -> solve_e' env p wl
-        | _ -> failwith "Impossible
-        "                
+        | _ -> failwith "Impossible"
+
 and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution = 
     let problem = {problem with relation=EQ} in //expression problems are always equalities
     let e1 = problem.lhs in 
@@ -2055,7 +2059,8 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
         let sub_problems xs args2 =
             let gi_xi, gi_pi = args2 |> List.map (function 
             | Inl t, imp -> 
-                let gi_xi, gi = new_tvar t.pos xs t.tk in
+                let kk = Normalize.recompute_kind env t in
+                let gi_xi, gi = new_tvar t.pos xs kk in 
                 let gi_pi = mk_Typ_app(gi, args1) t.tk t.pos in
                 (Inl gi_xi, imp), TProb <| sub_prob gi_pi t "type index"
             | Inr v, imp ->
