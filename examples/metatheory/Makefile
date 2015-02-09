@@ -1,3 +1,3 @@
-VERFILES=stlc.fst
+VERFILES=stlc.fst 
 include ../Makefile.include
-all: .all.ver tinyfstar.vv
+all: .all.ver tinyfstar.vv stlcdb.fulllib.ver
