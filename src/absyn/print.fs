@@ -367,7 +367,8 @@ and exp_to_string x = match (compress_exp x).n with
   | Exp_constant c -> c |> const_to_string
   | Exp_abs(binders, e) -> Util.format2 "(fun %s -> %s)" (binders_to_string " " binders) (e|> exp_to_string)
   | Exp_app(e, args) ->
-      (match reconstruct_lex x with
+      let lex = if !Options.print_implicits then None else reconstruct_lex x in 
+      (match lex with
       | Some es -> "%[" ^ (String.concat "; " (List.map exp_to_string es)) ^ "]"
       | None ->
           let args' = List.filter (fun (a:arg) -> not (snd a) && is_inr (fst a)) args in

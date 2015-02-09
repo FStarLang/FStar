@@ -275,3 +275,7 @@ let test_pred_lemma_2'  (a:Type) = qintro a (fun x -> forall (y:a). test_pred x 
 val test_pred_lemma_unif' : a:Type -> Lemma (ensures (forall (x:a) (y:a). test_pred x y))
 let test_pred_lemma_unif'  (a:Type) = qintro (test_pred_lemma_1 a)
  
+val even: nat -> Tot bool
+val odd: nat -> Tot bool
+let rec even x = if x=0 then true else odd (x - 1)
+and odd x = if x=0 then false else even (x - 1)
