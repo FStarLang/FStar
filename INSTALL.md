@@ -32,7 +32,7 @@
 
     - On Linux (any distribution, not just Ubuntu) get binary from here:
       - https://z3.codeplex.com/releases/view/101911
-    
+
       For instance, for a 64bit architecture you can do
 
           $ wget "https://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=z3&DownloadId=891122&FileTime=130523828556400000&Build=20941" -O z3-4.3.2.5a45711f22d9-x64-ubuntu-13.10.zip
@@ -71,7 +71,7 @@
 
 2. Install the required OCaml libraries:
 
-        $ opam install batteries camlp4 conf-gmp cstruct ctypes fileutils menhir oasis ocaml-data-notation ocamlfind ocamlify ocamlmod ocplib-endian optcomp ounit sexplib sqlite3-ocaml type_conv zarith
+        $ opam install batteries camlp4 conf-gmp cstruct ctypes fileutils menhir oasis ocaml-data-notation ocamlfind ocamlify ocamlmod ocplib-endian optcomp ounit sexplib sqlite3 type_conv zarith
 
 3. Compile and install the 3rdparty tools (in src/support/ocaml/3rdparty):
 
