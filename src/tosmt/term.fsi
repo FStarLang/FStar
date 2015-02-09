@@ -148,7 +148,9 @@ val mk_Term_unit: term
 val mk_PreKind: term -> term
 val mk_PreType: term -> term
 val mk_Valid: term -> term
-val mk_HasType: bool -> term -> term -> term
+val mk_HasType: term -> term -> term
+val mk_HasTypeFuel: term -> term -> term -> term
+val mk_HasTypeWithFuel: option<term> -> term -> term -> term 
 val mk_HasKind: term -> term -> term
 val mk_tester: string -> term -> term
 val mk_ApplyTE: term -> term -> term

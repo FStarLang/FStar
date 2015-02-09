@@ -417,6 +417,7 @@ and mkPrelude z3options =
                 (declare-fun Valid (Type) Bool)\n\
                 (declare-fun HasKind (Type Kind) Bool)\n\
                 (declare-fun HasType (Term Type) Bool)\n\
+                (declare-fun HasTypeFuel (Term Term Type) Bool)\n\
                 (declare-fun ApplyEE (Term Term) Term)\n\
                 (declare-fun ApplyET (Term Type) Term)\n\
                 (declare-fun ApplyTE (Type Term) Type)\n\
@@ -426,6 +427,16 @@ and mkPrelude z3options =
                 (declare-fun ConsTerm (Term Term) Term)\n\
                 (declare-fun ConsType (Type Term) Term)\n\
                 (declare-fun Precedes (Term Term) Type)\n\
+                (assert (= (Term_constr_id ZFuel) -1))\n\
+                (assert (forall ((f Term)) (= (Term_constr_id (SFuel f)) -2)))\n\
+                (assert (forall ((e Term) (t Type))\n\
+                           (!  (= (HasType e t)\n\
+                                  (HasTypeFuel MaxFuel e t))\n\
+                               :pattern ((HasType e t)))))\n\
+                (assert (forall ((f Term) (e Term) (t Type)) \n\
+                                (! (= (HasTypeFuel (SFuel f) e t)\n\
+                                      (HasTypeFuel f e t))\n\
+                                    :pattern ((HasTypeFuel (SFuel f) e t)))))\n\
                 (assert (forall ((t1 Term) (t2 Term))\n\
                      (! (iff (Valid (Precedes t1 t2)) \n\
                              (< (Rank t1) (Rank t2)))\n\
@@ -490,8 +501,14 @@ let mk_Valid t        = mkApp("Valid",   [t])
 //    match t.tm with 
 //        | App("Prims.b2t", [v]) -> unboxBool v
 //        | _ -> mkApp("Valid",   [t])  
-let mk_HasType (b:bool) v t  = 
-    mkApp("HasType", [v;t])
+let mk_HasType v t = mkApp("HasType", [v;t])
+let mk_HasTypeFuel f v t = 
+   if not !Options.fuel_inductives
+   then mk_HasType v t
+   else mkApp("HasTypeFuel", [f;v;t])
+let mk_HasTypeWithFuel f v t = match f with
+    | None -> mk_HasType v t
+    | Some f -> mk_HasTypeFuel f v t
 let mk_Destruct v     = mkApp("Destruct", [v])
 let mk_HasKind t k    = mkApp("HasKind", [t;k])
 let mk_Rank x         = mkApp("Rank", [x])

@@ -77,6 +77,7 @@ let min_fuel = Util.mk_ref 1
 let warn_top_level_effects = Util.mk_ref false
 let no_slack = Util.mk_ref false
 let eager_inference = Util.mk_ref false
+let fuel_inductives = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
 
 let set_fstar_home () = 
@@ -149,6 +150,7 @@ let specs () : list<Getopt.opt> =
      ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
      ( noshort, "no_slack", ZeroArgs (fun () -> no_slack := true), "Use the partially flow-insensitive variant of --rel2 (experimental)");
      ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
+     ( noshort, "fuel_inductives", ZeroArgs (fun () -> fuel_inductives := true), "Throttle the unfoldings of inductive datatypes with fuel");
      ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator")
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
