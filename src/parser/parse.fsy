@@ -368,7 +368,17 @@ nonTvarPattern2:
       }
 
 ascriptionOrPattern:
-  |  nonTvarPattern COLON typ { PatAscribed($1, $3) }
+  |  nonTvarPattern COLON typ refineOpt 
+      { 
+		match $4 with
+		  | None -> PatAscribed($1, $3)
+			  | Some phi ->
+				let t = match $1.pat with 
+				  | PatVar(x, _) -> 
+					mk_term (Refine(mk_binder (Annotated(x, $3)) (rhs2 parseState 1 3) Type false, phi)) (rhs2 parseState 1 4) Type 
+				  | _ -> errorR(Error("Not a valid refinement type", lhs(parseState))); $3 in
+				PatAscribed($1, t)
+      }
   |  tvar COLON  kind        { PatAscribed(mk_pattern (PatTvar $1) (rhs parseState 1), $3) }
   |  pattern { $1.pat }
 

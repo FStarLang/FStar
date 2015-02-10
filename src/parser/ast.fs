@@ -51,7 +51,6 @@ type term' =
   | QExists   of list<binder> * list<term> * term 
   | Refine    of binder * term 
   | Paren     of term
-  | Affine    of term
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
   | Labeled   of term * string * bool
@@ -210,7 +209,6 @@ let rec term_to_string (x:term) = match x.tm with
   | Refine(b, t) -> 
     Util.format2 "%s:{%s}" (b|> binder_to_string) (t|> term_to_string)      
   | Paren t -> Util.format1 "(%s)" (t|> term_to_string)
-  | Affine t -> Util.format1 "!%s" (t|> term_to_string)
   | Product(bs, t) ->
         Util.format2 "Unidentified product: [%s] %s"
           (bs |> List.map binder_to_string |> String.concat ",") (t|> term_to_string)

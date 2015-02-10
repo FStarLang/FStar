@@ -199,13 +199,14 @@ and free_type_vars env t = match (unparen t).tm with
       env, f@free) (env, []) binders in
     free@free_type_vars env body
 
+  | Project(t, _) -> free_type_vars env t
+  
+
   | Abs _  (* not closing implicitly over free vars in type-level functions *)
   | If _
   | QForall _
   | QExists _ -> [] (* not closing implicitly over free vars in formulas *)
   | Let _
-  | Affine _
-  | Project  _
   | Record _
   | Match _
   | TryWith _
