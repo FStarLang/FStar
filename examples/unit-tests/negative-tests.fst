@@ -1,4 +1,4 @@
-(* EXPECT 27 FAILURES *)
+(* EXPECT 28 FAILURES *)
 (* ******************************************************************************** *)
 module Neg
 
@@ -77,6 +77,12 @@ let test10 (x:ref int) (y:ref int) (h0:heap) (h1:heap) (h2:heap) =
 
 (* ******************************************************************************** *)
 module NegTermination
+val bug15 : m : int -> z : int -> 
+            Lemma (ensures False)
+let rec bug15 m =
+  match m with
+  | _ -> (fun l -> bug15 m l)
+
 val repeat_diverge : int -> int -> Tot int
 let rec repeat_diverge n count =
   match count with
