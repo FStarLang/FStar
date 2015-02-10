@@ -279,3 +279,10 @@ val even: nat -> Tot bool
 val odd: nat -> Tot bool
 let rec even x = if x=0 then true else odd (x - 1)
 and odd x = if x=0 then false else even (x - 1)
+
+let test_even1 = assert (even 4 = true)
+let test_even2 = assert (even 5 = false)
+
+let test_odd1 = assert (odd 4 = false)
+let test_odd2 = assert (odd 5 = true)
+
