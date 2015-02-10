@@ -100,21 +100,19 @@ let bump_subst = function
   | EForX e x -> EForX (bump_exp 1 e) (x + 1)
   | TForA t a -> TForA (bump_typ 1 t) (a + 1)
 
-assume val subst_knd: subst -> k:knd -> Tot knd (decreases k)
 assume val subst_exp: subst -> e:exp -> Tot exp (decreases e)
 assume val subst_cmp: subst -> c:cmp -> Tot cmp (decreases c)
+val subst_knd: subst -> k:knd -> Tot knd (decreases k)
 val subst_typ: subst -> t:typ -> Tot typ (decreases t) 
 
-(* Mutually recursive Tot-definitions don't work yet *)
-(* let rec subst_knd (s:subst) (k:knd) = match k with  *)
-(*   | KType -> KType *)
-(*   | KTArr t1 k2 -> KTArr (subst_typ s t1)  *)
-(*                          (subst_knd (bump_subst s) k2) *)
-(*   | KKArr k1 k2 -> KKArr (subst_knd s k1) *)
-(*                          (subst_knd (bump_subst s) k2) *)
+let rec subst_knd (s:subst) (k:knd) = match k with
+  | KType -> KType
+  | KTArr t1 k2 -> KTArr (subst_typ s t1)
+                         (subst_knd (bump_subst s) k2)
+  | KKArr k1 k2 -> KKArr (subst_knd s k1)
+                         (subst_knd (bump_subst s) k2)
 
-(* and *) 
-let rec subst_typ s t = match t with
+and subst_typ s t = match t with
   | TVar a ->
     begin match s with
       | TForA t' b -> if b=a then t' else t

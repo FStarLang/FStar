@@ -603,14 +603,16 @@ and tc_value env e : exp * lcomp * guard_t =
                                     | _ -> [Util.bvar_to_exp x])) in
                                                        
                      let precedes = Util.ftv Const.precedes_lid kun in
+                     let as_lex_list dec = 
+                          let head, _ = Util.head_and_args_e dec in 
+                          match head.n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
+                            | Exp_fvar (fv, _) when lid_equals fv.v Const.lexcons_lid -> dec
+                            | _ -> mk_lex_list [dec] in
                      let prev_dec = 
                         let ct = Util.comp_to_comp_typ c in
                         match ct.flags |> List.tryFind (function DECREASES _ -> true | _ -> false) with 
                             | Some (DECREASES dec) -> 
-                               let head, _ = Util.head_and_args_e dec in 
-                               let dec = match head.n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
-                                    | Exp_fvar (fv, _) when lid_equals fv.v Const.lexcons_lid -> dec
-                                    | _ -> mk_lex_list [dec] in
+                                let dec = as_lex_list dec in 
                                 let subst = List.map2 (fun b a -> match b, a with 
                                     | (Inl formal, _), (Inl actual, _) -> Inl (formal.v, Util.btvar_to_typ actual)
                                     | (Inr formal, _), (Inr actual, _) -> Inr (formal.v, Util.bvar_to_exp actual)
@@ -619,7 +621,9 @@ and tc_value env e : exp * lcomp * guard_t =
 
                             | _ -> 
                                 let actual_args = actuals |> filter_types_and_functions in 
-                                mk_lex_list actual_args  in
+                                match actual_args with 
+                                    | [i] -> i
+                                    | _ -> mk_lex_list actual_args  in
 
                      let letrecs = letrecs |> List.map (fun (l, t0) -> 
                         let t = Util.alpha_typ t0 in
@@ -631,28 +635,17 @@ and tc_value env e : exp * lcomp * guard_t =
                                     let ct = Util.comp_to_comp_typ c in
                                     let precedes = match ct.flags |> List.tryFind (function DECREASES _ -> true | _ -> false) with 
                                          | Some (DECREASES dec) -> 
-                                            let head, _ = Util.head_and_args_e dec in 
-                                            let dec = match head.n with (* The decreases clause is always an expression of type lex_t; promote if it isn't *)
-                                                | Exp_fvar (fv, _) when lid_equals fv.v Const.lexcons_lid -> dec
-                                                | _ -> mk_lex_list [dec] in
-//                                            let prev_dec = 
-//                                                let subst = List.map2 (fun b a -> match b, a with 
-//                                                    | (Inl formal, _), (Inl actual, _) -> Inl (formal.v, Util.btvar_to_typ actual)
-//                                                    | (Inr formal, _), (Inr actual, _) -> Inr (formal.v, Util.bvar_to_exp actual)
-//                                                    | _ -> failwith "impossible") formals actuals in
-//                                                Util.subst_exp subst dec in 
+                                            let dec = as_lex_list dec in
                                             let dec = 
                                                 let subst = [Inr(x.v, Util.bvar_to_exp y)] in
                                                 Util.subst_exp subst dec in
                                             Syntax.mk_Typ_app(precedes, [varg dec; varg prev_dec]) None r
 
                                         | _ -> (* default measure is lex-tuple of non-type and non-function-typed arguments, in order *)
-//                                            let actual_args = actuals |> filter_types_and_functions in 
                                             let formal_args = (bs@[v_binder y]) |> filter_types_and_functions in
-                                            let lhs = mk_lex_list formal_args in
-//                                            let lhs, rhs = match formal_args, actual_args with 
-//                                                | [f], [a] -> f, a
-//                                                | _ -> mk_lex_list formal_args, mk_lex_list actual_args in
+                                            let lhs = match formal_args with 
+                                                | [i] -> i
+                                                | _ -> mk_lex_list formal_args in
                                             Syntax.mk_Typ_app(precedes, [varg lhs; varg prev_dec]) None r in
 
                                     let refined_domain = mk_Typ_refine(y, precedes) None r in
