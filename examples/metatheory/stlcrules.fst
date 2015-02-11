@@ -17,7 +17,6 @@
 module StlcRules
 
 type ty =
-  | TBool  : ty
   | TArrow : t1:ty -> t2:ty -> ty
 
 type exp =
@@ -66,23 +65,46 @@ let empty _ = None
 val extend : env -> int -> ty -> Tot env
 let extend g x t x' = if x = x' then Some t else g x'
 
-val typing : env -> exp -> Tot (option ty)
-let rec typing g e =
-  match e with
-  | EVar x -> g x
-  | EAbs x t e1 ->
-      (match typing (extend g x t) e1 with
-      | Some t' -> Some (TArrow t t')
-      | None    -> None)
-  | EApp e1 e2 ->
-      (match typing g e1, typing g e2 with
-      | Some (TArrow t11 t12), Some t2 -> if t11 = t2 then Some t12 else None
-      | _                    , _       -> None)
+type rtyping : env -> exp -> ty -> Type =
+  | TyVar : g:env ->
+            x:int{is_Some (g x)} ->
+              rtyping g (EVar x) (Some.v (g x))
+  | TyAbs : g:env ->
+            x:int ->
+            t:ty ->
+            e1:exp ->
+            t':ty ->
+            rtyping (extend g x t) e1 t' ->
+            rtyping g (EAbs x t e1) (TArrow t t')
+  | TyApp : g:env ->
+            e1:exp ->
+            e2:exp ->
+            t11:ty ->
+            t12:ty ->
+            rtyping g e1 (TArrow t11 t12) ->
+            rtyping g e2 t11 ->
+            rtyping g (EApp e1 e2) t12
 
-val progress : e:exp -> Lemma
-      (requires (is_Some (typing empty e)))
+(* trivial with only arrow types, all values are lambdas *)
+val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Lemma
+      (requires (rtyping empty e (TArrow t1 t2) /\ is_value e))
+      (ensures (is_EAbs e))
+let canonical_forms_fun e t1 t2 = ()
+
+val progress : e:exp -> t:ty -> Lemma
+      (requires (rtyping empty e t))
       (ensures (is_value e \/ (is_Some (step e))))
-let rec progress e = using_induction_hyp progress
+      (decreases e)
+let rec progress e t =
+  match e with
+  | EVar x -> (assert(is_Some (empty x)); (* F* can't invert rules *)
+                admit())
+  | EApp e1 e2 ->
+     admit()
+     (* progress e1; progress e2 *)
+  | _ -> admit()
+
+(*
 
 val appears_free_in : x:int -> e:exp -> Tot bool
 let rec appears_free_in x e =
@@ -91,32 +113,36 @@ let rec appears_free_in x e =
   | EApp e1 e2 -> appears_free_in x e1 || appears_free_in x e2
   | EAbs y _ e1 -> x <> y && appears_free_in x e1
 
-val free_in_context : x:int -> e:exp -> g:env -> Lemma
-      (requires (is_Some (typing g e)))
+val free_in_context : x:int -> e:exp -> g:env -> t:ty -> Lemma
+      (requires (rtyping g e t))
       (ensures (appears_free_in x e ==> is_Some (g x)))
-let rec free_in_context x e g =
+      (decreases e)
+let rec free_in_context x e g t =
   match e with
   | EVar _ -> ()
-  | EAbs y t e1 -> free_in_context x e1 (extend g y t)
-  | EApp e1 e2 -> free_in_context x e1 g; free_in_context x e2 g
+  | EAbs y t_y e1 -> 
+     admit()
+     (* free_in_context x e1 (extend g y t_y) (TArrow t_y t) *)
+  | EApp e1 e2 -> admit()
+     (* free_in_context x e1 g; free_in_context x e2 g *)
 
 (* Corollary of free_in_context when g=empty -- fed to the SMT solver *)
-val typable_empty_closed : x:int -> e:exp -> Lemma
-      (requires (is_Some (typing empty e)))
+val typable_empty_closed : x:int -> e:exp -> t:ty -> Lemma
+      (requires (rtyping empty e t))
       (ensures (not(appears_free_in x e)))
       [SMTPat (appears_free_in x e)]
-let typable_empty_closed x e = free_in_context x e empty
+let typable_empty_closed x e t = free_in_context x e empty t
 
 opaque logic type Equal (g1:env) (g2:env) =
                  (forall (x:int). g1 x=g2 x)
 opaque logic type EqualE (e:exp) (g1:env) (g2:env) =
                  (forall (x:int). appears_free_in x e ==> g1 x=g2 x)
 
-val context_invariance : e:exp -> g:env -> g':env
+val context_invariance : e:exp -> g:env -> g':env -> t:ty
                      -> Lemma
                           (requires (EqualE e g g'))
-                          (ensures (typing g e == typing g' e))
-let rec context_invariance e g g' =
+                          (ensures (rtyping g e t <==> rtyping g' e t))
+let rec context_invariance e g g' t =
   match e with
   | EAbs x t e1 ->
      context_invariance e1 (extend g x t) (extend g' x t)
@@ -127,19 +153,17 @@ let rec context_invariance e g g' =
 
   | EVar _ -> ()
 
-val typing_extensional : g:env -> g':env -> e:exp
+val typing_extensional : g:env -> g':env -> e:exp -> t:ty
                       -> Lemma
                            (requires (Equal g g'))
-                           (ensures (typing g e == typing g' e))
-let typing_extensional g g' e = context_invariance e g g'
+                           (ensures (rtyping g e t <==> rtyping g' e t))
+let typing_extensional g g' e t = context_invariance e g g' t
 
-val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
-      g:env{is_Some (typing empty v) &&
-            is_Some (typing (extend g x (Some.v (typing empty v))) e)} ->
-      Tot (u:unit{typing g (subst x v e) ==
-                  typing (extend g x (Some.v (typing empty v))) e})
-let rec substitution_preserves_typing x e v g =
-  let Some t_x = typing empty v in
+val substitution_preserves_typing : x:int -> e:exp -> v:exp -> t_x:ty -> t:ty ->
+      g:env{rtyping empty v t_x &&
+            rtyping (extend g x t_x) e t} ->
+      Tot (u:unit{rtyping g (subst x v e) t})
+let rec substitution_preserves_typing x e v g t_x t =
   let gx = extend g x t_x in
   match e with
   | EVar y ->
@@ -161,9 +185,9 @@ let rec substitution_preserves_typing x e v g =
         typing_extensional gxy gyx e1;
         substitution_preserves_typing x e1 v gy)
 
-val preservation : e:exp{is_Some (typing empty e) /\ is_Some (step e)} ->
-      Tot (u:unit{typing empty (Some.v (step e)) == typing empty e})
-let rec preservation e =
+val preservation : e:exp -> t:ty{rtyping empty e t /\ is_Some (step e)} ->
+      Tot (u:unit{rtyping empty (Some.v (step e)) t})
+let rec preservation e t =
   match e with
   | EApp e1 e2 ->
      if is_value e1
@@ -172,3 +196,5 @@ let rec preservation e =
                 substitution_preserves_typing x ebody e2 empty
            else preservation e2)
      else preservation e1
+
+*)
