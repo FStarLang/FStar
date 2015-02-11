@@ -66,21 +66,21 @@ val extend : env -> int -> ty -> Tot env
 let extend g x t x' = if x = x' then Some t else g x'
 
 type rtyping : env -> exp -> ty -> Type =
-  | TyVar : g:env ->
+  | TyVar : #g:env ->
             x:int{is_Some (g x)} ->
               rtyping g (EVar x) (Some.v (g x))
-  | TyAbs : g:env ->
+  | TyAbs : #g:env ->
             x:int ->
             t:ty ->
-            e1:exp ->
-            t':ty ->
+            #e1:exp ->
+            #t':ty ->
             rtyping (extend g x t) e1 t' ->
             rtyping g (EAbs x t e1) (TArrow t t')
-  | TyApp : g:env ->
-            e1:exp ->
-            e2:exp ->
-            t11:ty ->
-            t12:ty ->
+  | TyApp : #g:env ->
+            #e1:exp ->
+            #e2:exp ->
+            #t11:ty ->
+            #t12:ty ->
             rtyping g e1 (TArrow t11 t12) ->
             rtyping g e2 t11 ->
             rtyping g (EApp e1 e2) t12
@@ -89,9 +89,9 @@ val progress : #e:exp -> #t:ty -> h:rtyping empty e t ->
       Lemma (ensures (is_value e \/ (is_Some (step e)))) (decreases h)
 let rec progress e t h =
   match h with
-  | TyVar g x -> ()
-  | TyAbs g x t e1 t' h1 -> ()
-  | TyApp g e1 e2 t11 t12 h1 h2 -> progress h1; progress h2
+  | TyVar x -> ()
+  | TyAbs x t h1 -> ()
+  | TyApp h1 h2 -> progress h1; progress h2
 
 val appears_free_in : x:int -> e:exp -> Tot bool
 let rec appears_free_in x e =
@@ -104,9 +104,9 @@ val free_in_context : x:int -> #e:exp -> #g:env -> #t:ty -> h:rtyping g e t ->
       Lemma (ensures (appears_free_in x e ==> is_Some (g x))) (decreases h)
 let rec free_in_context x e g t h =
   match h with
-  | TyVar g x -> ()
-  | TyAbs g y t e1 t' h1 -> free_in_context x h1
-  | TyApp g e1 e2 t11 t12 h1 h2 -> free_in_context x h1; free_in_context x h2
+  | TyVar x -> ()
+  | TyAbs y t h1 -> free_in_context x h1
+  | TyApp h1 h2 -> free_in_context x h1; free_in_context x h2
 
 val typable_empty_closed : x:int -> #e:exp -> #t:ty -> rtyping empty e t ->
       Lemma (ensures (not(appears_free_in x e)))
@@ -127,12 +127,11 @@ val context_invariance : #e:exp -> #g:env -> #t:ty ->
       Tot (rtyping g' e t) (decreases h)
 let rec context_invariance e g t h g' =
   match h with
-  | TyVar g x -> TyVar g' x
-  | TyAbs g  y t_y e1 t' h1 ->
-    TyAbs g' y t_y e1 t' (context_invariance h1 (extend g' y t_y))
-  | TyApp g  e1 e2 t11 t12 h1 h2 ->
-    TyApp g' e1 e2 t11 t12 (context_invariance h1 g')
-                           (context_invariance h2 g')
+  | TyVar x -> TyVar x
+  | TyAbs y t_y h1 ->
+    TyAbs y t_y (context_invariance h1 (extend g' y t_y))
+  | TyApp h1 h2 ->
+    TyApp (context_invariance h1 g') (context_invariance h2 g')
 
 val typing_extensional : #e:exp -> #g:env -> #t:ty ->
       h:(rtyping g e t) -> g':env{Equal g g'} ->
@@ -147,30 +146,29 @@ val substitution_preserves_typing :
       Tot (rtyping g (subst x v e) t) (decreases e)
 let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   match h2 with
-  | TyVar g' y ->
+  | TyVar y ->
      if x=y
      then (typable_empty_closed' h1; context_invariance h1 g)
      else context_invariance h2 g
-  | TyAbs g' y t_y e1 t' h21 ->
+  | TyAbs y t_y h21 ->
      let gy = extend g y t_y in
      if x=y
-     then TyAbs g y t_y e1 t' (typing_extensional h21 gy)
+     then TyAbs y t_y (typing_extensional h21 gy)
      else
        (let h21' = typing_extensional h21 (extend gy x t_x) in
-        TyAbs g y t_y (subst x v e1) t'
-              (substitution_preserves_typing x h1 h21'))
-  | TyApp g' e1 e2 t11 t12 h21 h22 ->
-     TyApp g (subst x v e1) (subst x v e2) t11 t12
+        TyAbs y t_y (substitution_preserves_typing x h1 h21'))
+  | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 -> (* CH: implicits don't work here *)
+     TyApp #g #(subst x v e1) #(subst x v e2) #t11 #t12
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22)
 
 val preservation : #e:exp{is_Some (step e)} -> #t:ty -> h:(rtyping empty e t) ->
       Tot (rtyping empty (Some.v (step e)) t) (decreases e)
 let rec preservation e t h =
-  let TyApp g e1 e2 t11 t12 h1 h2 = h in
+  let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = h in
      if is_value e1
      then (if is_value e2
-           then let TyAbs g x t_x ebody t' hbody = h1 in
+           then let TyAbs x t_x hbody = h1 in
                 substitution_preserves_typing x h2 hbody
-           else TyApp g e1 (Some.v (step e2)) t11 t12 h1 (preservation h2))
-     else TyApp g (Some.v (step e1)) e2 t11 t12 (preservation h1) h2
+           else TyApp h1 (preservation h2))
+     else TyApp (preservation h1) h2
