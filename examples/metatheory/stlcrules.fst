@@ -113,17 +113,17 @@ val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Lemma
       (ensures (is_EAbs e))
 let canonical_forms_fun e t1 t2 = ()
 
-assume val exists_elim :
-  #pre:Type -> #post:(unit->Type) -> #a:Type -> p:(a->Type) ->
-  u:unit{exists (x:a). p x} -> f:(x:a{p x} -> Pure unit pre post) ->
-  Pure unit pre post
-
 (* CH: we need to make pre, post, and maybe also a implicit;
    without that this is a complete pain to use;
    unfortunately F* can't properly infer these things currently *)
 (* CH: I would also write the {exists (x:a). p x} refinement directly
    on f instead of adding a spurious unit, unfortunately that causes
    a bogus error *)
+assume val exists_elim :
+  #pre:Type -> #post:(unit->Type) -> #a:Type -> p:(a->Type) ->
+  u:unit{exists (x:a). p x} -> f:(x:a{p x} -> Pure unit pre post) ->
+  Pure unit pre post
+
 val progress : e:exp -> t:ty -> Lemma
       (requires (rtyping empty e t))
       (ensures (is_value e \/ (is_Some (step e))))
