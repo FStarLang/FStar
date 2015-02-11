@@ -535,7 +535,7 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
 
     | Exp_bvar x -> 
       begin match lookup_env config.environment x.v.realname.idText with
-        | None -> config  |> rebuild
+        | None -> config  |> rebuild (* possible for open terms, or for let-rec bound names *)
         | Some (V(_, (vc, env))) -> wne tcenv ({config with code=vc; environment=env})
         | _ -> failwith "Impossible: ill-typed term"
       end
@@ -575,14 +575,14 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
 
       beta [] binders config.stack.args
 
-    | Exp_let((false, [(Inl x, t, e1)]), e2) -> 
-      let c_e1 = wne tcenv ({config with code=e1; stack=empty_stack}) in
-      let binders, env = sn_binders tcenv [v_binder (Util.bvd_to_bvar_s x t)] config.environment config.steps in
-      let c_e2 = wne tcenv ({config with code=e2; stack=empty_stack; environment=env}) in
-      let e = match binders with
-        | [(Inr x, _)] -> mk_Exp_let((false, [(Inl x.v, x.sort, c_e1.code)]), c_e2.code) None e.pos 
-        | _ -> failwith "Impossible" in
-      {config with code=e} |> rebuild
+//    | Exp_let((false, [(Inl x, t, e1)]), e2) -> 
+//      let c_e1 = wne tcenv ({config with code=e1; stack=empty_stack}) in
+//      let binders, env = sn_binders tcenv [v_binder (Util.bvd_to_bvar_s x t)] config.environment config.steps in
+//      let c_e2 = wne tcenv ({config with code=e2; stack=empty_stack; environment=env}) in
+//      let e = match binders with
+//        | [(Inr x, _)] -> mk_Exp_let((false, [(Inl x.v, x.sort, c_e1.code)]), c_e2.code) None e.pos 
+//        | _ -> failwith "Impossible" in
+//      {config with code=e} |> rebuild
 
     | Exp_match(e1, eqns) -> 
       let c_e1 = wne tcenv ({config with code=e1; stack=empty_stack}) in
@@ -615,14 +615,31 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
               Some (c_w.code) in
         let c_body = wne tcenv ({config with code=body; environment=env; stack=empty_stack}) in
         (pat, w, c_body.code) in
-    let eqns = List.map wn_eqn eqns in
-    let e = mk_Exp_match(c_e1.code, eqns) None e.pos in
-    {config with code=e} |> rebuild
-
-    | Exp_let  _ -> //top-level lets or let recs
-      let s = subst_of_env tcenv config.environment in
-      let e = subst_exp s e in
+      let eqns = List.map wn_eqn eqns in
+      let e = mk_Exp_match(c_e1.code, eqns) None e.pos in
       {config with code=e} |> rebuild
+
+    | Exp_let((is_rec, lbs), body) -> 
+      let env, lbs = lbs |> List.fold_left (fun (env, lbs) (x, t, e) -> 
+        let c = wne tcenv ({config with code=e; stack=empty_stack}) in
+        let t = sn tcenv (t_config t config.environment config.steps) in
+        let env = match x with 
+            | Inl x ->
+              let y = Util.bvd_to_bvar_s (if is_rec then x else Util.freshen_bvd x) t.code in
+              let yexp = Util.bvar_to_exp y in
+              let y_for_x = V(x, (yexp, empty_env)) in
+              extend_env' env y_for_x 
+            | _ -> env in 
+        env, (x, t.code, c.code)::lbs) (config.environment, []) in 
+      let lbs = List.rev lbs in
+      let c_body = wne tcenv ({config with code=body; stack=empty_stack; environment=env}) in
+      let e = mk_Exp_let((is_rec, lbs), c_body.code) None e.pos in
+      {config with code=e} |> rebuild
+
+//    | Exp_let  _ -> //top-level lets or let recs
+//      let s = subst_of_env tcenv config.environment in
+//      let e = subst_exp s e in
+//      {config with code=e} |> rebuild
         
     | Exp_ascribed (e, t) -> 
       let c = wne tcenv ({config with code=e}) in
@@ -631,7 +648,13 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
            rebuild ({config with code=mk_Exp_ascribed(c.code, t.code) e.pos})
       else c
 
-    | Exp_meta _  -> failwith "impossible"
+    | Exp_meta(Meta_desugared(e, info)) -> 
+      let c = wne tcenv ({config with code=e}) in
+      if is_stack_empty config
+      then rebuild ({config with code=mk_Exp_meta(Meta_desugared(c.code, info))})
+      else c
+    
+    | Exp_meta(Meta_datainst _) -> failwith "impossible"
 
 (************************************************************************************)
 (* External interface *)
@@ -647,6 +670,20 @@ let norm_typ steps tcenv t =
 let norm_exp steps tcenv e = 
   let c = wne tcenv (e_config e empty_env steps) in
   c.code
+
+let norm_sigelt tcenv = function 
+    | Sig_let(lbs, r, l, b) -> 
+      let e = mk_Exp_let(lbs, mk_Exp_constant(Syntax.Const_unit) None r) None r in
+      let e = norm_exp [Beta] tcenv e in
+      begin match e.n with 
+        | Exp_let(lbs, _) -> Sig_let(lbs, r, l, b)
+        | _ -> failwith "Impossible"
+      end
+    | s -> s
+          
+let norm_module tcenv (m:modul) =
+    let decls = m.declarations |> List.map (norm_sigelt tcenv) in
+    {m with declarations=decls}
 
 let whnf tcenv t = 
     let t = Util.compress_typ t in

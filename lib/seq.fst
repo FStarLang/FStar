@@ -63,6 +63,24 @@ let test_index_app1    (a:Type) (s1:seq a) (s2:seq a) (i:nat{i < length s1})    
 let test_index_app2    (a:Type) (s1:seq a) (s2:seq a) (i:nat{length s1 <= i && i < length s1 + length s2}) = assert (index  (append s1 s2) i = index s2 (i - s1.length))
 let test_index_slice   (a:Type) (s:seq a) (i:nat) (j:nat{i <= j && j <= length s}) (k:nat{k < (j - i)})    = assert (index  (slice s i j) k  = index s (i + k))
 
+
+val lemma_slice_append: a:Type -> s1:seq a{length s1 >= 1} -> s2:seq a -> Lemma (ensures (Equal (append s1 s2) (append (slice s1 0 1) (append (slice s1 1 (length s1)) s2))))
+let lemma_slice_append s1 s2 = ()
+
+val test_append_inj :   a:Type -> b1:seq a -> b2:seq a -> c1:seq a -> c2:seq a -> Lemma (requires ((length b1 = length c1)
+                                                                                                   /\ Equal (append b1 b2) (append c1 c2)))
+                                                                                        (ensures (Equal b1 c1 /\ Equal b2 c2))
+                                                                                        (decreases (length b1))
+let rec test_append_inj b1 b2 c1 c2 =
+  if length b1 = 0
+  then admit()
+  else (//assert (index (append b1 b2) 0 = index (append c1 c2) 0);
+        assert (index b1 0 = index c1 0);
+        admit ())
+        (* assert (append b1 b2 = append (slice b1 0 1) (append (slice b1 1 (length b1)) b2)); *)
+//        test_append_inj (slice b1 1 (length b1)) b2 (slice c1 1 (length c1)) c2)
+  
+
 (* let test_append_inj    (a:Type) (b1:seq a) (b2:seq a) (c1:seq a) (c2:seq a) =  *)
 (*   assert (length b1 = length c1 /\ Equal (append b1 b2) (append c1 c2) *)
 (*           ==> (Equal b1 c1 /\ Equal b2 c2)) *)

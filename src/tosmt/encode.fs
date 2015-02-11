@@ -337,28 +337,6 @@ type pattern = {
  }
 exception Let_rec_unencodeable 
 
-let is_lemma t =  match (Util.compress_typ t).n with 
-    | Typ_fun(_, c) -> (match c.n with 
-        | Comp ct -> lid_equals ct.effect_name Const.lemma_lid
-        | _ -> false)
-    | _ -> false
-
-let is_smt_lemma env t = match (Util.compress_typ t).n with 
-    | Typ_fun(_, c) -> (match c.n with 
-        | Comp ct when (lid_equals ct.effect_name Const.lemma_lid) ->
-            begin match ct.effect_args with
-                | _req::_ens::(Inr pats, _)::_ ->
-                  if Tc.Env.debug env.tcenv Options.Low
-                  then Util.fprint1 "Inspecting lemma patterns: %s\n" (Print.exp_to_string pats);
-                  begin match (Util.unmeta_exp pats).n with 
-                    | Exp_app({n=Exp_fvar(fv, _)}, _) -> lid_equals fv.v Const.cons_lid
-                    | _ -> false
-                  end
-                | _ -> false
-            end
-        | _ -> false)
-    | _ -> false
-
 let encode_const = function 
     | Const_unit -> mk_Term_unit
     | Const_bool true -> boxBool mkTrue
@@ -926,7 +904,7 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
                lphi, (lvar, msg)::labs, decls
         
         | Typ_app({n=Typ_const ih}, [(Inl phi, _)]) when lid_equals ih.v Const.using_IH -> 
-            if is_lemma phi
+            if Util.is_lemma phi
             then let f, decls = encode_function_type_as_formula true phi env in
                  f, [], decls
             else Term.mkTrue, [], []
@@ -1331,18 +1309,18 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 end in
       
         begin try 
-            if   bindings |> Util.for_all (fun (_, t, _) -> is_smt_lemma env t) 
+            if   bindings |> Util.for_all (fun (_, t, _) -> Util.is_smt_lemma t) 
             then bindings |> List.collect (fun (flid, t, _) -> encode_smt_lemma env (right flid) t), env 
             else let toks, typs, decls, env = 
                     bindings |> List.fold_left (fun (toks, typs, decls, env) (flid, t, _) -> 
-                        if is_smt_lemma env t then raise Let_rec_unencodeable;
+                        if Util.is_smt_lemma t then raise Let_rec_unencodeable;
                         let t_norm = whnf env t |> Util.compress_typ in
                         let tok, decl, env = declare_top_level_let env (right flid) t t_norm in
                         (right flid, tok)::toks, t_norm::typs, decl::decls, env) ([], [], [], env) in
                  let toks = List.rev toks in 
                  let decls = List.rev decls |> List.flatten in
                  let typs = List.rev typs in
-                 if   masked_effect || typs |> Util.for_some (fun t -> not <| Util.is_pure_function t) 
+                 if   masked_effect || typs |> Util.for_some (fun t -> Util.is_lemma t || not <| Util.is_pure_function t) 
                  then decls, env
                  else if not is_rec
                  then match bindings, typs, toks with 
@@ -1412,13 +1390,13 @@ and encode_smt_lemma env lid t =
     decls@[Term.Assume(form, Some ("Lemma: " ^ lid.str))]
 
 and encode_free_var env lid tt t_norm quals = 
-    if not <| Util.is_pure_function t_norm || is_smt_lemma env t_norm
+    if not <| Util.is_pure_function t_norm 
     then let vname, vtok, env = gen_free_var env lid in
          let arg_sorts = match t_norm.n with 
             | Typ_fun(binders, _) -> binders |> List.map (function (Inl _, _) -> Type_sort | _ -> Term_sort) 
             | _ -> [] in
-         let d = Term.DeclFun(vname, arg_sorts, Term_sort, Some "Uninterpreted function symbol for impure function or lemma") in
-         let dd = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, Some "Uninterpreted name for impure function or lemma") in
+         let d = Term.DeclFun(vname, arg_sorts, Term_sort, Some "Uninterpreted function symbol for impure function") in
+         let dd = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, Some "Uninterpreted name for impure function") in
          [d;dd], env
     else let formals, res = match Util.function_formals t_norm with 
             | Some (args, comp) -> args, Util.comp_result comp 

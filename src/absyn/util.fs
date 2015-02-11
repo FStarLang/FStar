@@ -533,11 +533,17 @@ let is_pure_function t = match (compress_typ t).n with
     | Typ_fun(_, c) -> is_pure_comp c
     | _ -> true
 
+let is_lemma t =  match (compress_typ t).n with 
+    | Typ_fun(_, c) -> (match c.n with 
+        | Comp ct -> lid_equals ct.effect_name Const.lemma_lid
+        | _ -> false)
+    | _ -> false
+
 let is_smt_lemma t = match (compress_typ t).n with 
     | Typ_fun(_, c) -> (match c.n with 
         | Comp ct when (lid_equals ct.effect_name Const.lemma_lid) ->
             begin match ct.effect_args with
-                | _u::_req::_ens::(Inr pats, _)::_ ->
+                | _req::_ens::(Inr pats, _)::_ ->
                   begin match (unmeta_exp pats).n with 
                     | Exp_app({n=Exp_fvar(fv, _)}, _) -> lid_equals fv.v Const.cons_lid
                     | _ -> false

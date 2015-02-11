@@ -1436,7 +1436,7 @@ and tc_decl env se deserialized = match se with
               | None -> gen, lb 
               | Some t' -> 
                 if debug env Options.Medium
-                then Util.fprint2 "Using annotation %s for let binding %s\n" (Print.typ_to_string t') (Print.sli l);
+                then Util.fprint2 "Using annotation %s for let binding %s\n" (Print.typ_to_string t') l.str;
                 match t.n with 
                   | Typ_unknown -> 
                     false, (Inr l, t', e) //explicit annotation provided; do not generalize
@@ -1487,10 +1487,10 @@ and tc_decl env se deserialized = match se with
                 then Util.format1 "Recursive bindings: %s" (Print.sigelt_to_string_short se)
                 else "" in
       env.solver.push msg; //Push a context in the solver to check the recursively bound definitions
-      let tycons = fst <| tc_decls env tycons deserialized in 
-      let recs = fst <| tc_decls env recs deserialized in
+      let tycons, _, _ = tc_decls false env tycons deserialized in 
+      let recs, _, _ = tc_decls false env recs deserialized in
       let env1 = Tc.Env.push_sigelt env (Sig_bundle(tycons@recs, r, lids)) in
-      let rest = fst <| tc_decls env1 rest deserialized in
+      let rest, _, _ = tc_decls false env1 rest deserialized in
       let abbrevs = List.map2 (fun se t -> match se with 
         | Sig_tycon(lid, tps, k, [], [], [], r) -> 
           let tt = Util.close_with_lam tps (mk_Typ_ascribed(t, k) t.pos) in
@@ -1506,16 +1506,37 @@ and tc_decl env se deserialized = match se with
       let env = Tc.Env.push_sigelt env se in
       se, env
 
-and tc_decls env ses deserialized = 
- let ses, env = List.fold_left (fun (ses, (env:Tc.Env.env)) se ->
+and tc_decls for_export env ses deserialized = 
+ let ses, exports, env = List.fold_left (fun (ses, all_exports, (env:Tc.Env.env)) se ->
   if debug env Options.Low
   then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
+  let env0 = env in 
   let se, env = tc_decl env se deserialized in
   if debug env <| Options.Other "Progress"
   then Util.print_string (Util.format1 "Checked sigelt\t%s\n" (Print.sigelt_to_string_short se));
-  env.solver.encode_sig env se; 
-  se::ses, env) ([], env) ses in
-  List.rev ses, env 
+
+  let exports = as_exports env0 se in   //TODO: Revise this once we add the private qualifier
+  exports |> List.iter (env.solver.encode_sig env);
+  se::ses, exports::all_exports, env) ([], [], env) ses in
+  List.rev ses, List.rev exports |> List.flatten, env 
+
+and as_exports env se : list<sigelt> = match se with 
+    | Sig_let(lbs, r, l, b) -> 
+      let pure_funs, rest = snd lbs |> List.partition (fun (_, t, _) -> Util.is_pure_function t && not <| Util.is_lemma t) in
+      let val_decls_for_rest = rest |> List.collect (fun (x, t, _) -> match x with 
+        | Inl _ -> failwith "impossible"
+        | Inr l -> 
+            match Tc.Env.try_lookup_val_decl env l with
+                | Some _ -> []
+                | None -> 
+                  if Tc.Env.debug env Options.Low then Util.fprint1 "Exporting only the signature of %s\n" l.str; 
+                  [Sig_val_decl(l, t, [Assumption], range_of_lid l)]) in
+      let ses = match pure_funs with 
+        | [] -> val_decls_for_rest
+        | _ -> val_decls_for_rest@[Sig_let((fst lbs, pure_funs), r, l, b)] in
+      ses |> List.map (Tc.Normalize.norm_sigelt env)
+
+    | s -> [Tc.Normalize.norm_sigelt env se]
 
 let get_exports env modul decls = 
     if modul.is_interface then decls
@@ -1529,8 +1550,8 @@ let get_exports env modul decls =
 
 let tc_modul env modul = 
   let env = Tc.Env.set_current_module env modul.name in 
-  let ses, env = tc_decls env modul.declarations modul.is_deserialized in 
-  let exports = get_exports env modul ses in
+  let ses, exports, env = tc_decls true env modul.declarations modul.is_deserialized in 
+  let exports = get_exports env modul exports in
   let modul = {name=modul.name; declarations=ses; exports=exports; is_interface=modul.is_interface; is_deserialized=modul.is_deserialized} in 
   let env = Tc.Env.finish_module env modul in
   modul, env
