@@ -139,7 +139,7 @@ val typing_extensional : #e:exp -> #g:env -> #t:ty ->
       Tot (rtyping g' e t)
 let typing_extensional e g t h g' = context_invariance h g'
 
-(* CH: would it be possible to prove this with x implicit? *)
+(* CH: would it be possible to prove this with x implicit? maybe not ... *)
 val substitution_preserves_typing :
       x:int -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
       h1:rtyping empty v t_x ->
@@ -150,19 +150,27 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   | TyVar g' y ->
      if x=y
      then (typable_empty_closed' h1; context_invariance h1 g)
-     else (assert(subst x v e = EVar y); context_invariance h2 g)
+     else context_invariance h2 g
   | TyAbs g' y t_y e1 t' h21 ->
-     let gx = extend g x t_x in
-     let gxy = extend gx y t_y in
      let gy = extend g y t_y in
      if x=y
      then TyAbs g y t_y e1 t' (typing_extensional h21 gy)
      else
-       (let gyx = extend gy x t_x in
-        let h21' = typing_extensional h21 gyx in
+       (let h21' = typing_extensional h21 (extend gy x t_x) in
         TyAbs g y t_y (subst x v e1) t'
               (substitution_preserves_typing x h1 h21'))
   | TyApp g' e1 e2 t11 t12 h21 h22 ->
      TyApp g (subst x v e1) (subst x v e2) t11 t12
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22)
+
+val preservation : #e:exp{is_Some (step e)} -> #t:ty -> h:(rtyping empty e t) ->
+      Tot (rtyping empty (Some.v (step e)) t) (decreases e)
+let rec preservation e t h =
+  let TyApp g e1 e2 t11 t12 h1 h2 = h in
+     if is_value e1
+     then (if is_value e2
+           then let TyAbs g x t_x ebody t' hbody = h1 in
+                substitution_preserves_typing x h2 hbody
+           else TyApp g e1 (Some.v (step e2)) t11 t12 h1 (preservation h2))
+     else TyApp g (Some.v (step e1)) e2 t11 t12 (preservation h1) h2
