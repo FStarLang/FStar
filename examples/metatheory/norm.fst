@@ -1,5 +1,3 @@
-+33 140 14 00 11
-
 module Norm
 
 open Prims

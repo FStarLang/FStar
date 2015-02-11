@@ -85,24 +85,67 @@ type rtyping : env -> exp -> ty -> Type =
             rtyping g e2 t11 ->
             rtyping g (EApp e1 e2) t12
 
+(* CH: writing this by hand for now *)
+assume val rtyping_app : g:env ->
+            e1:exp ->
+            e2:exp ->
+            t11:ty ->
+            t12:ty -> Lemma
+  (requires (rtyping g e1 (TArrow t11 t12) /\ rtyping g e2 t11))
+  (ensures (rtyping g (EApp e1 e2) t12))
+assume val rtyping_inv : g:env -> e:exp -> t:ty ->
+  Lemma (requires (rtyping g e t))
+        (ensures ((exists (x:int). e = EVar x /\ is_Some (g x)
+                                /\ t = (Some.v (g x))) \/
+                  (exists (x:int). exists (t_x:ty). exists (e1:exp). exists (t':ty).
+                          e = EAbs x t e1 /\ t = TArrow t_x t' /\
+                          rtyping (extend g x t_x) e1 t') \/
+                  (exists (e1:exp). exists (e2:exp). exists (t11:ty).
+                          e = EApp e1 e2 /\ rtyping g e1 (TArrow t11 t) /\
+                                            rtyping g e2 t11)))
+(* 
+  [SMTPat (rtyping g e t)] -- causes "Failed to solve the sub-problem ..."
+*)
+
 (* trivial with only arrow types, all values are lambdas *)
 val canonical_forms_fun : e:exp -> t1:ty -> t2:ty -> Lemma
       (requires (rtyping empty e (TArrow t1 t2) /\ is_value e))
       (ensures (is_EAbs e))
 let canonical_forms_fun e t1 t2 = ()
 
+assume val exists_elim :
+  #pre:Type -> #post:(unit->Type) -> #a:Type -> p:(a->Type) ->
+  u:unit{exists (x:a). p x} -> f:(x:a{p x} -> Pure unit pre post) ->
+  Pure unit pre post
+
+(* CH: we need to make pre, post, and maybe also a implicit;
+   without that this is a complete pain to use;
+   unfortunately F* can't properly infer these things currently *)
+(* CH: I would also write the {exists (x:a). p x} refinement directly
+   on f instead of adding a spurious unit, unfortunately that causes
+   a bogus error *)
 val progress : e:exp -> t:ty -> Lemma
       (requires (rtyping empty e t))
       (ensures (is_value e \/ (is_Some (step e))))
       (decreases e)
 let rec progress e t =
+  rtyping_inv empty e t;
   match e with
-  | EVar x -> (assert(is_Some (empty x)); (* F* can't invert rules *)
-                admit())
+  | EVar _
+  | EAbs _ _ _ -> ()
   | EApp e1 e2 ->
-     admit()
-     (* progress e1; progress e2 *)
-  | _ -> admit()
+     exists_elim
+       #(rtyping empty e t)
+       #(fun _ -> is_value e \/ (is_Some (step e)))
+       #ty
+       (fun (t11:ty) -> rtyping empty e1 (TArrow t11 t)) ()
+       (fun t11 ->
+          progress e1 (TArrow t11 t);
+          (* assert(rtyping empty e2 t11);
+             -- it can't prove this (needed for calling progress e2 t11)
+               but it can prove the above one, very strange *)
+          admit()
+       )
 
 (*
 
