@@ -12,6 +12,8 @@ type exp =
   | EApp: exp -> exp -> exp
 
 (* returns true if the expression contains a free 0 *)
+(* CH: passing around the c recursively is strange,
+   it's only used at the top level *)
 val free_zero: exp -> nat -> Tot bool
 let rec free_zero e c =
   if c > 0 then false else
