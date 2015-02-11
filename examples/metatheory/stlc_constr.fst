@@ -85,12 +85,84 @@ type rtyping : env -> exp -> ty -> Type =
             rtyping g e2 t11 ->
             rtyping g (EApp e1 e2) t12
 
-val progress : #e:exp -> #t:ty ->
-               rtyping empty e t ->
-               Lemma (ensures (is_value e \/ (is_Some (step e))))
+val progress : #e:exp -> #t:ty -> h:rtyping empty e t ->
+      Lemma (ensures (is_value e \/ (is_Some (step e)))) (decreases h)
 let rec progress e t h =
   match h with
   | TyVar g x -> ()
   | TyAbs g x t e1 t' h1 -> ()
   | TyApp g e1 e2 t11 t12 h1 h2 -> progress h1; progress h2
 
+val appears_free_in : x:int -> e:exp -> Tot bool
+let rec appears_free_in x e =
+  match e with
+  | EVar y -> x = y
+  | EApp e1 e2 -> appears_free_in x e1 || appears_free_in x e2
+  | EAbs y _ e1 -> x <> y && appears_free_in x e1
+
+val free_in_context : x:int -> #e:exp -> #g:env -> #t:ty -> h:rtyping g e t ->
+      Lemma (ensures (appears_free_in x e ==> is_Some (g x))) (decreases h)
+let rec free_in_context x e g t h =
+  match h with
+  | TyVar g x -> ()
+  | TyAbs g y t e1 t' h1 -> free_in_context x h1
+  | TyApp g e1 e2 t11 t12 h1 h2 -> free_in_context x h1; free_in_context x h2
+
+val typable_empty_closed : x:int -> #e:exp -> #t:ty -> rtyping empty e t ->
+      Lemma (ensures (not(appears_free_in x e)))
+(*      [SMTPat (appears_free_in x e)] -- adding this makes it fail *)
+let typable_empty_closed x e t h = free_in_context x h
+
+val typable_empty_closed' : #e:exp -> #t:ty -> rtyping empty e t ->
+      Lemma (ensures (forall (x:int). (not(appears_free_in x e))))
+let typable_empty_closed' e t h = admit() (* CH: need forall_intro? *)
+
+opaque logic type Equal (g1:env) (g2:env) =
+                 (forall (x:int). g1 x=g2 x)
+opaque logic type EqualE (e:exp) (g1:env) (g2:env) =
+                 (forall (x:int). appears_free_in x e ==> g1 x=g2 x)
+
+val context_invariance : #e:exp -> #g:env -> #t:ty -> 
+      h:(rtyping g e t) -> g':env{EqualE e g g'} ->
+      Tot (rtyping g' e t) (decreases h)
+let rec context_invariance e g t h g' =
+  match h with
+  | TyVar g x -> TyVar g' x
+  | TyAbs g  y t_y e1 t' h1 ->
+    TyAbs g' y t_y e1 t' (context_invariance h1 (extend g' y t_y))
+  | TyApp g  e1 e2 t11 t12 h1 h2 ->
+    TyApp g' e1 e2 t11 t12 (context_invariance h1 g')
+                           (context_invariance h2 g')
+
+val typing_extensional : #e:exp -> #g:env -> #t:ty ->
+      h:(rtyping g e t) -> g':env{Equal g g'} ->
+      Tot (rtyping g' e t)
+let typing_extensional e g t h g' = context_invariance h g'
+
+(* CH: would it be possible to prove this with x implicit? *)
+val substitution_preserves_typing :
+      x:int -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
+      h1:rtyping empty v t_x ->
+      h2:rtyping (extend g x t_x) e t ->
+      Tot (rtyping g (subst x v e) t) (decreases e)
+let rec substitution_preserves_typing x e v t_x t g h1 h2 =
+  match h2 with
+  | TyVar g' y ->
+     if x=y
+     then (typable_empty_closed' h1; context_invariance h1 g)
+     else (assert(subst x v e = EVar y); context_invariance h2 g)
+  | TyAbs g' y t_y e1 t' h21 ->
+     let gx = extend g x t_x in
+     let gxy = extend gx y t_y in
+     let gy = extend g y t_y in
+     if x=y
+     then TyAbs g y t_y e1 t' (typing_extensional h21 gy)
+     else
+       (let gyx = extend gy x t_x in
+        let h21' = typing_extensional h21 gyx in
+        TyAbs g y t_y (subst x v e1) t'
+              (substitution_preserves_typing x h1 h21'))
+  | TyApp g' e1 e2 t11 t12 h21 h22 ->
+     TyApp g (subst x v e1) (subst x v e2) t11 t12
+       (substitution_preserves_typing x h1 h21)
+       (substitution_preserves_typing x h1 h22)
