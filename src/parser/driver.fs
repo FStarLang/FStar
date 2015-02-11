@@ -25,6 +25,8 @@ open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 
+open System.IO
+
 let print_error msg r = 
   Util.print_string (Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg)
 
@@ -36,7 +38,8 @@ let parse env fn =
   let (b, s) = is_cache_file fn in
   if b then
     let full_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ s in
-    let m = SSyntax.deserialize_modul (Util.read_JSON<SSyntax.s_modul> full_name) in
+    let m = SSyntax.deserialize_modul_ext full_name in
+    (*let m = SSyntax.deserialize_modul (Util.read_JSON<SSyntax.s_modul> full_name) in*)
     Desugar.add_modul_to_env m env, [m]
   else
     match ParseIt.parse_file fn with 

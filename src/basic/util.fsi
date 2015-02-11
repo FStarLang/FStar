@@ -15,6 +15,8 @@
 *)
 module Microsoft.FStar.Util
 
+open System.IO
+
 exception Impos
 exception NYI of string
 exception Failure of string
@@ -94,9 +96,6 @@ val kill_process: proc -> unit
 val kill_all: unit -> unit
 
 val run_proc : string -> string -> string -> (bool * string * string)
-
-val write_JSON: 'a -> string -> unit
-val read_JSON: string -> 'a
 
 val get_file_extension: string -> string
 

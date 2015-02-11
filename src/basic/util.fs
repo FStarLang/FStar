@@ -27,7 +27,6 @@ open Profiling
 open System.Runtime.Serialization
 open System.Runtime.Serialization.Json
 
-
 let return_all x = x
 
 exception Impos
@@ -148,19 +147,29 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   let stderr = proc.StandardError.ReadToEnd() in 
   result, stdout, stderr
 
-let write_JSON<'a> (o :'a) (file: string) :unit =
-    let s = new DataContractJsonSerializerSettings((*EmitTypeInformation = EmitTypeInformation.Never*)) in
+(*let write_JSON (file: string) :BinaryWriter =
+    new BinaryWriter(File.Open(file, FileMode.Create))*)
+    (*let stwriter = File.CreateText file in
+    let s = JsonSerializer.Create(new JsonSerializerSettings(NullValueHandling = NullValueHandling.Ignore )) in
+    let _ = s.Serialize(stwriter, o) in
+    stwriter.Close()*)
+    (*let s = new DataContractJsonSerializerSettings(EmitTypeInformation = EmitTypeInformation.Never) in
     let d = new DataContractJsonSerializer(typeof<'a>, s) in
     let fs = new FileStream(file, FileMode.Create)
     d.WriteObject(fs, o)
-    fs.Close()
+    fs.Close()*)
 
-let read_JSON<'a> (file: string) :'a =
-    let s = new DataContractJsonSerializerSettings((*EmitTypeInformation = EmitTypeInformation.Never*)) in
+(*let read_JSON (file: string) :BinaryReader =
+    new BinaryReader(File.Open(file, FileMode.Open))*)
+    (*let streader = new JsonTextReader(File.OpenText(file)) in
+    let s = JsonSerializer.Create(new JsonSerializerSettings(NullValueHandling = NullValueHandling.Ignore )) in
+    let o = s.Deserialize<'a>(streader) in
+    streader.Close(); o*)
+    (*let s = new DataContractJsonSerializerSettings(EmitTypeInformation = EmitTypeInformation.Never) in
     let d = new DataContractJsonSerializer(typeof<'a>, s) in
     let fs = new FileStream(file, FileMode.Open)
     let o = (d.ReadObject(fs)) :?> 'a in
-    fs.Close(); o
+    fs.Close(); o*)
 
 let get_file_extension (fn: string) :string = Path.GetExtension fn
 

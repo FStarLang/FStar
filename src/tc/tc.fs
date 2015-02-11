@@ -25,6 +25,8 @@ open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Tc.Rel
 open Microsoft.FStar.Absyn.Syntax
 
+open System.IO
+
 let syn' env k = syn (Tc.Env.get_range env) (Some k)
 let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_module env))
 let rng env = Tc.Env.get_range env
@@ -1564,7 +1566,9 @@ let check_modules (s:solver_t) (ds: solver_t) mods =
           let m, env = tc_modul env m in
           let _ = if !Options.serialize_mods then
             let c_file_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ (text_of_lid m.name) ^ ".cache" in
-            Util.write_JSON<SSyntax.s_modul> (SSyntax.serialize_modul m) c_file_name
+            (*Util.write_JSON<SSyntax.s_modul> (SSyntax.serialize_modul m) c_file_name*)
+            print_string ("Serializing module " ^ (text_of_lid m.name) ^ "\n\n");
+            SSyntax.serialize_modul_ext c_file_name m
           else () in
           m, env
     in 
