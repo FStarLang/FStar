@@ -1,5 +1,5 @@
-(* A logical theory of integer-indexed arrays, from [0, n) *)
-module Array
+(* A logical theory of integer-indexed sequences, from [0, n) *)
+module Seq
 
 type seq (a:Type) = { 
   contents: nat -> Tot a;
