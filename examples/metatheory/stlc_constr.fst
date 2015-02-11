@@ -25,10 +25,7 @@ type exp =
   | EAbs   : int -> ty -> exp -> exp
 
 val is_value : exp -> Tot bool
-let rec is_value e =
-  match e with
-  | EAbs _ _ _  -> true
-  | _           -> false
+let is_value = is_EAbs
 
 val subst : int -> exp -> exp -> Tot exp
 let rec subst x e e' =
@@ -87,10 +84,10 @@ type rtyping : env -> exp -> ty -> Type =
 
 val progress : #e:exp -> #t:ty -> h:rtyping empty e t ->
       Lemma (ensures (is_value e \/ (is_Some (step e)))) (decreases h)
-let rec progress e t h =
+let rec progress _ _ h =
   match h with
-  | TyVar x -> ()
-  | TyAbs x t h1 -> ()
+  | TyVar _     -> ()
+  | TyAbs _ _ _ -> ()
   | TyApp h1 h2 -> progress h1; progress h2
 
 val appears_free_in : x:int -> e:exp -> Tot bool
@@ -102,7 +99,7 @@ let rec appears_free_in x e =
 
 val free_in_context : x:int -> #e:exp -> #g:env -> #t:ty -> h:rtyping g e t ->
       Lemma (ensures (appears_free_in x e ==> is_Some (g x))) (decreases h)
-let rec free_in_context x e g t h =
+let rec free_in_context x _ _ _ h =
   match h with
   | TyVar x -> ()
   | TyAbs y t h1 -> free_in_context x h1
@@ -110,12 +107,12 @@ let rec free_in_context x e g t h =
 
 val typable_empty_closed : x:int -> #e:exp -> #t:ty -> rtyping empty e t ->
       Lemma (ensures (not(appears_free_in x e)))
-(*      [SMTPat (appears_free_in x e)] -- adding this makes it fail *)
-let typable_empty_closed x e t h = free_in_context x h
+(*      [SMTPat (appears_free_in x e)] -- CH: adding this makes it fail! *)
+let typable_empty_closed x _ _ h = free_in_context x h
 
 val typable_empty_closed' : #e:exp -> #t:ty -> rtyping empty e t ->
       Lemma (ensures (forall (x:int). (not(appears_free_in x e))))
-let typable_empty_closed' e t h = admit() (* CH: need forall_intro? *)
+let typable_empty_closed' _ _ h = admit() (* CH: need forall_intro for showing this *)
 
 opaque logic type Equal (g1:env) (g2:env) =
                  (forall (x:int). g1 x=g2 x)
@@ -125,7 +122,7 @@ opaque logic type EqualE (e:exp) (g1:env) (g2:env) =
 val context_invariance : #e:exp -> #g:env -> #t:ty -> 
       h:(rtyping g e t) -> g':env{EqualE e g g'} ->
       Tot (rtyping g' e t) (decreases h)
-let rec context_invariance e g t h g' =
+let rec context_invariance _ _ _ h g' =
   match h with
   | TyVar x -> TyVar x
   | TyAbs y t_y h1 ->
@@ -136,7 +133,7 @@ let rec context_invariance e g t h g' =
 val typing_extensional : #e:exp -> #g:env -> #t:ty ->
       h:(rtyping g e t) -> g':env{Equal g g'} ->
       Tot (rtyping g' e t)
-let typing_extensional e g t h g' = context_invariance h g'
+let typing_extensional _ _ _ h g' = context_invariance h g'
 
 (* CH: would it be possible to prove this with x implicit? maybe not ... *)
 val substitution_preserves_typing :
@@ -144,7 +141,7 @@ val substitution_preserves_typing :
       h1:rtyping empty v t_x ->
       h2:rtyping (extend g x t_x) e t ->
       Tot (rtyping g (subst x v e) t) (decreases e)
-let rec substitution_preserves_typing x e v t_x t g h1 h2 =
+let rec substitution_preserves_typing x _ v t_x t g h1 h2 =
   match h2 with
   | TyVar y ->
      if x=y
@@ -157,7 +154,7 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
      else
        (let h21' = typing_extensional h21 (extend gy x t_x) in
         TyAbs y t_y (substitution_preserves_typing x h1 h21'))
-  | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 -> (* CH: implicits don't work here *)
+  | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 -> (* CH: implicits don't work here, why? *)
      TyApp #g #(subst x v e1) #(subst x v e2) #t11 #t12
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22)
