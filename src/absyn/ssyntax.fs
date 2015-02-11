@@ -658,7 +658,7 @@ and serialize_pat' (writer:Writer) (ast:pat') :unit =
     | Pat_dot_typ(v, t) -> writer.Write('i'); serialize_btvar writer v; serialize_typ writer t
 
 and serialize_pat (writer:Writer) (ast:pat) :unit = 
-    serialize_withinfo_t writer serialize_pat' (fun w kt -> serialize_either w serialize_knd serialize_typ kt) ast
+    serialize_withinfo_t writer serialize_pat' (fun w kt -> () (* serialize_either w serialize_knd serialize_typ kt*)) ast
 
 and serialize_knd' (writer:Writer) (ast:knd') :unit = 
     match ast with
@@ -924,7 +924,7 @@ and deserialize_pat' (reader:Reader) :pat' =
     | 'i' -> Pat_dot_typ(deserialize_btvar reader, deserialize_typ reader)
 
 and deserialize_pat (reader:Reader) :pat = 
-    deserialize_withinfo_t reader deserialize_pat' (fun r -> deserialize_either r deserialize_knd deserialize_typ)
+    deserialize_withinfo_t reader deserialize_pat' (fun r -> None)// deserialize_either r deserialize_knd deserialize_typ)
 
 and deserialize_knd' (reader:Reader) :knd' = 
     match (reader.ReadChar()) with
@@ -1264,6 +1264,7 @@ and serialize_sigelt (writer:Writer) (ast:sigelt) :unit =
         writer.Write('e');
         serialize_lident writer lid; serialize_formula writer fml; serialize_list writer serialize_qualifier qs
     | Sig_let(lbs, _, l, b) ->
+        Util.fprint1 (">>>>>>Serializing %s\n") (Print.sigelt_to_string_short ast);
         writer.Write('f');
         serialize_letbindings writer lbs; serialize_list writer serialize_lident l; writer.Write(b)
     | Sig_main(e, _) -> writer.Write('g'); serialize_exp writer e
@@ -1414,16 +1415,17 @@ let deserialize_sigelts (reader:Reader) :sigelts = deserialize_list reader deser
 
 let serialize_modul (writer:Writer) (ast:modul) :unit =
     serialize_lident writer ast.name;
-    serialize_sigelts writer ast.declarations;
+    serialize_sigelts writer [];//ast.declarations;
     serialize_sigelts writer ast.exports;
     writer.Write(ast.is_interface)
 
 let deserialize_modul (reader) :modul =
-    { name = deserialize_lident reader
-      declarations = deserialize_sigelts reader
-      exports = deserialize_sigelts (*[||]*) reader
-      is_interface = reader.ReadBoolean()
-      is_deserialized = true }
+    let m = { name = deserialize_lident reader;
+      declarations = deserialize_sigelts reader;
+      exports = deserialize_sigelts (*[||]*) reader;
+      is_interface = reader.ReadBoolean();
+      is_deserialized = true } in
+    {m with declarations=m.exports}//; exports=[]}
 
 let serialize_modul_ext (file:string) (ast:modul) :unit = serialize_modul (new BinaryWriter(File.Open(file, FileMode.Create))) ast
 

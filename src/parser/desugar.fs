@@ -312,8 +312,8 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         let e, a = push_local_tbinding e a in
         (Inl a::l), e, a in
   let rec aux (loc:lenv_t) env (p:pattern) =
-    let pos q = Syntax.withinfo q (Inr tun) p.prange in
-    let pos_r r q = Syntax.withinfo q (Inr tun) r in
+    let pos q = Syntax.withinfo q None (*Inr tun*) p.prange in
+    let pos_r r q = Syntax.withinfo q  None (*Inr tun*) r in
     match p.pat with
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
@@ -511,12 +511,12 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
                                 | Exp_bvar _, _ -> 
                                   let tup = Util.mk_tuple_data_lid 2 top.range in
                                   let sc = Syntax.mk_Exp_app(Util.fvar true tup top.range, [varg sc; varg <| Util.bvar_to_exp b]) None top.range in
-                                  let p = withinfo (Pat_cons(Util.fv tup, [p';p])) (Inr tun) (Range.union_ranges p'.p p.p) in
+                                  let p = withinfo (Pat_cons(Util.fv tup, [p';p])) (*Inr tun*) None (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | Exp_app(_, args), Pat_cons(_, pats) ->
                                   let tup = Util.mk_tuple_data_lid (1 + List.length args) top.range in
                                   let sc = Syntax.mk_Exp_app(Util.fvar true tup top.range, args@[(varg <| Util.bvar_to_exp b)]) None top.range in 
-                                  let p = withinfo (Pat_cons(Util.fv tup, pats@[p])) (Inr tun) (Range.union_ranges p'.p p.p) in
+                                  let p = withinfo (Pat_cons(Util.fv tup, pats@[p])) (*Inr tun*) None (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | _ -> failwith "Impossible"
                               end in
@@ -601,8 +601,8 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       
     | If(t1, t2, t3) ->
       pos <| mk_Exp_match(desugar_exp env t1,
-                          [(withinfo (Pat_constant (Const_bool true)) (Inr tun) t2.range, None, desugar_exp env t2);
-                           (withinfo (Pat_constant (Const_bool false)) (Inr tun) t3.range, None, desugar_exp env t3)])
+                          [(withinfo (Pat_constant (Const_bool true)) (*Inr tun*) None t2.range, None, desugar_exp env t2);
+                           (withinfo (Pat_constant (Const_bool false)) (*Inr tun*) None t3.range, None, desugar_exp env t3)])
 
     | TryWith(e, branches) -> 
       let r = top.range in 

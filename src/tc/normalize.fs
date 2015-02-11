@@ -598,7 +598,43 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
             | Pat_constant _ 
             | Pat_dot_term _
             | Pat_dot_typ _ -> [] in
+
         let vars = pat_vars pat in //Not alpha-converting patterns. TODO: OK?
+        let norm_bvvar x = 
+            let t = sn tcenv (t_config x.sort config.environment config.steps) in
+            {x with sort=t.code} in
+
+        let norm_btvar a =
+            let k = snk tcenv (k_config a.sort config.environment config.steps) in
+            {a with sort=k.code} in
+        
+        let rec norm_pat p : pat = match p.v with 
+            | Pat_disj pats -> withinfo (Pat_disj (List.map norm_pat pats)) None p.p
+            
+            | Pat_cons (fv, pats) -> withinfo (Pat_cons(fv, List.map norm_pat pats)) None p.p
+            
+            | Pat_var(x, b) ->
+              withinfo (Pat_var(norm_bvvar x, b)) None p.p
+
+            | Pat_tvar a -> 
+              withinfo (Pat_tvar (norm_btvar a)) None p.p
+            
+            | Pat_wild x  -> 
+              withinfo (Pat_wild(norm_bvvar x)) None p.p
+            
+            | Pat_twild a -> 
+              withinfo (Pat_twild (norm_btvar a)) None p.p
+
+            | Pat_constant _ -> p
+            
+            | Pat_dot_term(x, e) -> 
+              let e = wne tcenv (e_config e config.environment config.steps) in
+              withinfo (Pat_dot_term(norm_bvvar x, e.code)) None p.p
+                
+            | Pat_dot_typ(a, t) -> 
+              let t = sn tcenv (t_config t config.environment config.steps) in
+              withinfo (Pat_dot_typ(norm_btvar a, t.code)) None p.p in
+
         let env_entries = List.fold_left (fun entries b -> match fst b with 
             | Inl a -> 
               let atyp = Util.btvar_to_typ a in
@@ -614,7 +650,7 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
               let c_w = wne tcenv ({config with code=w; environment=env; stack=empty_stack}) in
               Some (c_w.code) in
         let c_body = wne tcenv ({config with code=body; environment=env; stack=empty_stack}) in
-        (pat, w, c_body.code) in
+        (norm_pat pat, w, c_body.code) in
       let eqns = List.map wn_eqn eqns in
       let e = mk_Exp_match(c_e1.code, eqns) None e.pos in
       {config with code=e} |> rebuild
@@ -623,14 +659,14 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
       let env, lbs = lbs |> List.fold_left (fun (env, lbs) (x, t, e) -> 
         let c = wne tcenv ({config with code=e; stack=empty_stack}) in
         let t = sn tcenv (t_config t config.environment config.steps) in
-        let env = match x with 
+        let y, env = match x with 
             | Inl x ->
               let y = Util.bvd_to_bvar_s (if is_rec then x else Util.freshen_bvd x) t.code in
               let yexp = Util.bvar_to_exp y in
               let y_for_x = V(x, (yexp, empty_env)) in
-              extend_env' env y_for_x 
-            | _ -> env in 
-        env, (x, t.code, c.code)::lbs) (config.environment, []) in 
+              Inl y.v, extend_env' env y_for_x 
+            | _ -> x, env in 
+        env, (y, t.code, c.code)::lbs) (config.environment, []) in 
       let lbs = List.rev lbs in
       let c_body = wne tcenv ({config with code=body; stack=empty_stack; environment=env}) in
       let e = mk_Exp_let((is_rec, lbs), c_body.code) None e.pos in

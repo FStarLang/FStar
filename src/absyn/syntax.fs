@@ -137,7 +137,7 @@ and pat' =
   | Pat_twild    of btvar
   | Pat_dot_term of bvvar * exp
   | Pat_dot_typ  of btvar * typ
-and pat = withinfo_t<pat',either<knd,typ>>                (* the meta-data is a typ, except for Pat_dot_typ and Pat_tvar, where it is a kind (not strictly needed) *)
+and pat = withinfo_t<pat',option<either<knd,typ>>>                (* the meta-data is a typ, except for Pat_dot_typ and Pat_tvar, where it is a kind (not strictly needed) *)
 and knd' =
   | Kind_type
   | Kind_effect

@@ -1057,7 +1057,7 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
 let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) = 
     if Tc.Env.debug env.tcenv Options.Low
     then Util.fprint1 ">>>>Encoding [%s]\n" 
-         <| (Print.sigelt_to_string_short se);//Util.lids_of_sigelt se |> List.map Print.sli |> String.concat ", ");
+         <| (Print.sigelt_to_string se);//Util.lids_of_sigelt se |> List.map Print.sli |> String.concat ", ");
     let nm = match Util.lid_of_sigelt se with 
         | None -> ""
         | Some l -> l.str in

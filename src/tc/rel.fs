@@ -1209,16 +1209,18 @@ let rec solve_flex_rigid_join env tp wl =
     if Tc.Env.debug env <| Options.Other "Rel" 
     then Util.fprint1 "Trying to solve by joining refinements:%s\n" (prob_to_string env (TProb tp));
     let u, args = Util.head_and_args tp.lhs in
-    let ok, partial_match, fallback, failed_match = 0,1,2,3 in
+    let ok, head_match, partial_match, fallback, failed_match = 0,1,2,3,4 in
     let max i j = if i < j then j else i in
 
     let base_types_match t1 t2 =
-        let h1, _ = Util.head_and_args t1 in
+        let h1, args1 = Util.head_and_args t1 in
         let h2, _ = Util.head_and_args t2 in 
         match h1.n, h2.n with 
         | Typ_const tc1, Typ_const tc2 -> 
           if lid_equals tc1.v tc2.v
-          then ok
+          then (if List.length args1 = 0 
+                then ok
+                else head_match)
           else fallback
 
         | Typ_btvar a, Typ_btvar b -> 
@@ -1240,7 +1242,7 @@ let rec solve_flex_rigid_join env tp wl =
     let conjoin t1 t2 = match t1.n, t2.n with 
         | Typ_refine(x, phi1), Typ_refine(y, phi2) -> 
           let m = base_types_match x.sort y.sort in
-          if m=ok
+          if m<=head_match
           then let phi2 = Util.subst_typ (Util.mk_subst_one_binder (Syntax.v_binder x) (Syntax.v_binder y)) phi2 in
                mk_Typ_refine(x, Util.mk_conj phi1 phi2) (Some ktype) t1.pos |> Some, ok
           else None, m

@@ -230,11 +230,11 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
                           formals |> List.map (fun f -> match f with 
                             | Inl t, _ -> //type arguments are implicit by default
                               let a = Util.bvd_to_bvar_s (Util.new_bvd None) kun in
-                              withinfo (Pat_dot_typ (a, tun)) (Inl kun) (Syntax.range_of_lid fv.v)
+                              withinfo (Pat_dot_typ (a, tun)) None (* Inl kun *) (Syntax.range_of_lid fv.v)
 
                             | Inr _, true ->
                               let a = Util.gen_bvar tun in
-                              withinfo (Pat_var(a, true)) (Inr tun) (Syntax.range_of_lid fv.v)
+                              withinfo (Pat_var(a, true)) None (*Inr tun*) (Syntax.range_of_lid fv.v)
 
                             | _ -> raise (Error("Insufficient pattern arguments", range_of_lid fv.v)))
 
@@ -243,13 +243,13 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
                                 | (Inl _, _), Pat_tvar _ -> p::aux formals' pats'
                                 | (Inl _, _), _ -> 
                                     let a = Util.bvd_to_bvar_s (Util.new_bvd None) kun in
-                                    let p = withinfo (Pat_dot_typ (a, tun)) (Inl kun) (Syntax.range_of_lid fv.v) in
+                                    let p = withinfo (Pat_dot_typ (a, tun)) None (*Inl kun*) (Syntax.range_of_lid fv.v) in
                                     p::aux formals' pats
                                 | (Inr _, true), Pat_var(_, true) -> 
                                     p::aux formals' pats'
                                 | (Inr _, true), _ ->
                                     let a = Util.gen_bvar tun in
-                                    let p = withinfo (Pat_var(a, true)) (Inr tun) (Syntax.range_of_lid fv.v) in
+                                    let p = withinfo (Pat_var(a, true)) None (*Inr tun*) (Syntax.range_of_lid fv.v) in
                                     p::aux formals' pats
                                 | (Inr _, false), _ ->
                                   p::aux formals' pats' 
@@ -298,7 +298,7 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
 
 let decorate_pattern env p exps = 
     let rec aux p e : pat  = 
-        let pkg q t = withinfo q (Inr t) p.p in
+        let pkg q t = withinfo q (Some <| Inr t) p.p in
         let e = Util.unmeta_exp e in
         match p.v, e.n with 
             | Pat_constant _, Exp_constant _ -> pkg p.v (force_tk e)
@@ -336,12 +336,12 @@ let decorate_pattern env p exps =
                 | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats)) (force_tk e)
                 | (Inl t, true)::args, _ -> (* implicit type argument *)
                   let x = Util.gen_bvar_p p.p (force_tk t) in
-                  let q = withinfo (Pat_dot_typ(x, t)) (Inl x.sort) p.p in
+                  let q = withinfo (Pat_dot_typ(x, t)) (Some<| Inl x.sort) p.p in
                   match_args (q::matched_pats) args argpats
                  
                 | (Inr e, true)::args, _ -> (* implicit value argument *)  
                   let x = Util.gen_bvar_p p.p (force_tk e) in
-                  let q = withinfo (Pat_dot_term(x, e)) (Inr x.sort) p.p in
+                  let q = withinfo (Pat_dot_term(x, e)) (Some <| Inr x.sort) p.p in
                   match_args (q::matched_pats) args argpats
                   
                 | (Inl t, _)::args, pat::argpats -> 
@@ -359,7 +359,7 @@ let decorate_pattern env p exps =
            | _ -> failwith (Util.format3 "(%s) Impossible: pattern to decorate is %s; expression is %s\n" (Range.string_of_range p.p) (Print.pat_to_string p) (Print.exp_to_string e))
         
     and aux_t p t0 =
-       let pkg q k = withinfo q (Inl k) p.p in
+       let pkg q k = withinfo q (Some <| Inl k) p.p in
        let t = Util.compress_typ t0 in
        match p.v, t.n with
          | Pat_twild a, Typ_btvar b -> 
@@ -382,7 +382,7 @@ let decorate_pattern env p exps =
     match p.v, exps with 
         | Pat_disj ps, _ when (List.length ps = List.length exps) -> 
           let ps = List.map2 aux ps exps in
-          withinfo (Pat_disj ps) (Inr tun) p.p
+          withinfo (Pat_disj ps) (Some <| Inr tun) p.p
 
         | _, [e] ->
           aux p e
@@ -390,11 +390,12 @@ let decorate_pattern env p exps =
         | _ -> failwith "Unexpected number of patterns"
  
  let rec decorated_pattern_as_exp (pat:pat) : list<either_var> * exp = 
-    let t = match pat.sort with 
-        | Inr t -> t 
-        | Inl _ -> failwith "top-level pattern should be decorated with a type" in
+    let topt = match pat.sort with 
+        | (Some (Inr t)) -> Some t 
+        | None -> None
+        | _ -> failwith "top-level pattern should be decorated with a type" in
 
-    let pkg f = f (Some t) pat.p in
+    let pkg f = f topt pat.p in
 
     let pat_as_arg p = 
         let vars, te = decorated_pattern_as_either p in 
