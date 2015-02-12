@@ -1092,7 +1092,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_val_decl(lid, t, quals, _) -> 
         let tt = whnf env t in
         let decls, env = encode_free_var env lid t tt quals in
-        if Util.is_lemma t && quals |> List.contains Assumption
+        if Util.is_smt_lemma t && quals |> List.contains Assumption
         then decls@encode_smt_lemma env lid t, env
         else decls, env
 
@@ -1265,7 +1265,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | _ -> true) in
       g'@inversions, env
 
-     | Sig_let((is_rec, bindings), _, _, masked_effect) ->
+    | Sig_let((is_rec, bindings), _, _, masked_effect) ->
         let eta_expand binders formals body t =
             let nbinders = List.length binders in
             let formals, extra_formals = Util.first_N nbinders formals in
@@ -1312,7 +1312,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 end in
              
         begin try 
-//                 if   bindings |> Util.for_all (fun (_, t, _) -> Util.is_smt_lemma t) 
                  if   bindings |> Util.for_some (fun (_, t, _) -> Util.is_smt_lemma t) 
                  then bindings |> List.collect (fun (flid, t, _) -> 
                         if Util.is_smt_lemma t
@@ -1397,7 +1396,7 @@ and encode_smt_lemma env lid t =
     decls@[Term.Assume(form, Some ("Lemma: " ^ lid.str))]
 
 and encode_free_var env lid tt t_norm quals = 
-    if not <| Util.is_pure_function t_norm 
+    if not <| Util.is_pure_function t_norm || Util.is_lemma t_norm
     then let vname, vtok, env = gen_free_var env lid in
          let arg_sorts = match t_norm.n with 
             | Typ_fun(binders, _) -> binders |> List.map (function (Inl _, _) -> Type_sort | _ -> Term_sort) 
