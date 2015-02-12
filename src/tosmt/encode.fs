@@ -1091,7 +1091,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
      | Sig_val_decl(lid, t, quals, _) -> 
         let tt = whnf env t in
-        encode_free_var env lid t tt quals
+        let decls, env = encode_free_var env lid t tt quals in
+        if Util.is_lemma t && quals |> List.contains Assumption
+        then decls@encode_smt_lemma env lid t, env
+        else decls, env
 
      | Sig_assume(l, f, _, _) -> 
         let f, decls = encode_formula f env in
@@ -1307,11 +1310,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         binders, body, formals, tres
                     | _ -> [], e, [], t_norm
                 end in
-      
+             
         begin try 
-            if   bindings |> Util.for_all (fun (_, t, _) -> Util.is_smt_lemma t) 
-            then bindings |> List.collect (fun (flid, t, _) -> encode_smt_lemma env (right flid) t), env 
-            else let toks, typs, decls, env = 
+//                 if   bindings |> Util.for_all (fun (_, t, _) -> Util.is_smt_lemma t) 
+                 if   bindings |> Util.for_some (fun (_, t, _) -> Util.is_smt_lemma t) 
+                 then bindings |> List.collect (fun (flid, t, _) -> 
+                        if Util.is_smt_lemma t
+                        then encode_smt_lemma env (right flid) t
+                        else raise Let_rec_unencodeable), env
+                 else let toks, typs, decls, env = 
                     bindings |> List.fold_left (fun (toks, typs, decls, env) (flid, t, _) -> 
                         if Util.is_smt_lemma t then raise Let_rec_unencodeable;
                         let t_norm = whnf env t |> Util.compress_typ in

@@ -539,6 +539,7 @@ let is_lemma t =  match (compress_typ t).n with
         | _ -> false)
     | _ -> false
 
+
 let is_smt_lemma t = match (compress_typ t).n with 
     | Typ_fun(_, c) -> (match c.n with 
         | Comp ct when (lid_equals ct.effect_name Const.lemma_lid) ->

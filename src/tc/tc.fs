@@ -1515,28 +1515,38 @@ and tc_decls for_export env ses deserialized =
   if debug env <| Options.Other "Progress"
   then Util.print_string (Util.format1 "Checked sigelt\t%s\n" (Print.sigelt_to_string_short se));
 
-  let exports = as_exports env0 se in   //TODO: Revise this once we add the private qualifier
-  exports |> List.iter (env.solver.encode_sig env);
+  let exports, to_encode = as_exports env0 se in   //TODO: Revise this once we add the private qualifier
+  to_encode |> List.iter (env.solver.encode_sig env);
   se::ses, exports::all_exports, env) ([], [], env) ses in
   List.rev ses, List.rev exports |> List.flatten, env 
 
-and as_exports env se : list<sigelt> = match se with 
+and as_exports env se : (list<sigelt> * list<sigelt>) = match se with 
+    | Sig_val_decl(_, _, quals, _) -> 
+      let exports = if quals |> Util.for_some (function Assumption -> true | _ -> false)
+                    then [se]
+                    else [] in
+      exports, [se]
+//      if Util.is_lemma t || not (Util.is_pure_function t) 
+//      then [Sig_val_decl(l, t, Assumption::quals, r)] //we'll leave out the let-binding in the export; so mark this as assumed
+//      else [se]
+//  
     | Sig_let(lbs, r, l, b) -> 
       let pure_funs, rest = snd lbs |> List.partition (fun (_, t, _) -> Util.is_pure_function t && not <| Util.is_lemma t) in
       let val_decls_for_rest = rest |> List.collect (fun (x, t, _) -> match x with 
         | Inl _ -> failwith "impossible"
         | Inr l -> 
-            match Tc.Env.try_lookup_val_decl env l with
-                | Some _ -> []
-                | None -> 
+//            match Tc.Env.try_lookup_val_decl env l with
+//                | Some _ -> []
+//                | None -> 
                   if Tc.Env.debug env Options.Low then Util.fprint1 "Exporting only the signature of %s\n" l.str; 
                   [Sig_val_decl(l, t, [Assumption], range_of_lid l)]) in
       let ses = match pure_funs with 
         | [] -> val_decls_for_rest
         | _ -> val_decls_for_rest@[Sig_let((fst lbs, pure_funs), r, l, b)] in
-      ses |> List.map (Tc.Normalize.norm_sigelt env)
+      let exports = ses |> List.map (Tc.Normalize.norm_sigelt env) in
+      exports, [se]
 
-    | s -> [Tc.Normalize.norm_sigelt env se]
+    | _ -> let exports = [Tc.Normalize.norm_sigelt env se] in exports, exports
 
 let get_exports env modul decls = 
     if modul.is_interface then decls
