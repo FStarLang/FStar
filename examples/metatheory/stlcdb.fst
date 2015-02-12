@@ -11,24 +11,23 @@ type exp =
   | EAbs: typ -> exp -> exp (* no names *)
   | EApp: exp -> exp -> exp
 
-(* returns true if the expression contains a free 0 *)
-(* CH: passing around the c recursively is strange,
-   it's only used at the top level *)
-val free_zero: exp -> nat -> Tot bool
-let rec free_zero e c =
-  if c > 0 then false else
-    match e with
-    | EVar k     -> k = 0
-    | EAbs _ _   -> false
-    | EApp e1 e2 -> free_zero e1 c || free_zero e2 c
+(* returns true if the expression contains a (CH: top-level) free 0 *)
+val free_zero: exp -> Tot bool
+let rec free_zero e =
+  match e with
+  | EVar k     -> k = 0
+  | EAbs _ _   -> false (* CH: I find it surprising that you're not
+                               searching for a 1 inside the body;
+                               this function only makes sense in shift _ _ -1, right? *)
+  | EApp e1 e2 -> free_zero e1 || free_zero e2
 
 (*
  * d is the number of units shifted by, c is the number of seen binders
  * since d can be -1, refinement ensures that indices remain nats
  *)
 val shift: e:exp -> c:nat ->
-           d:int{d >= -1 /\ (d = -1 ==> not (free_zero e c))}
-           -> Tot exp
+           d:int{d >= -1 /\ (d = -1 ==> (not (free_zero e) \/ c > 0))}
+           -> Tot exp (decreases e)
 let rec shift e c d = match e with
   | EVar k       -> if k < c then EVar k else EVar (k + d)
   | EAbs t e1    -> EAbs t (shift e1 (c + 1) d)
@@ -43,15 +42,15 @@ let rec consec_shifts_lem e c d1 d2 = match e with
   | EApp e1 e2 -> consec_shifts_lem e1 c d1 d2; consec_shifts_lem e2 c d1 d2
 
 (* [j |-> e'] e *)
-val substitute: e:exp -> j:nat -> e':exp -> Tot exp
+val substitute: e:exp -> j:nat -> e':exp -> Tot exp (decreases e)
 let rec substitute e j e' = match e with
   | EVar k       -> if j = k then e' else EVar k
   | EAbs t e1    -> EAbs t (substitute e1 (j + 1) (shift e' 0 1))
   | EApp e1 e2   -> EApp (substitute e1 j e') (substitute e2 j e')
 
-val subst_zero_lem: e1:exp -> e2:exp{not (free_zero e2 0)} ->
+val subst_zero_lem: e1:exp -> e2:exp{not (free_zero e2)} ->
                     Lemma (requires True)
-                          (ensures (not (free_zero (substitute e1 0 e2) 0))) (decreases e1) [SMTPat (substitute e1 0 e2)]
+                          (ensures (not (free_zero (substitute e1 0 e2)))) (decreases e1) [SMTPat (substitute e1 0 e2)]
 let rec subst_zero_lem e1 e2 = match e1 with
   | EVar k       -> ()
   | EAbs _ _     -> ()
@@ -175,7 +174,7 @@ let rec strengthening g g' t e = match e with
   | EApp e1 e2 -> strengthening g g' t e1; strengthening g g' t e2
 
 (* some invariants for shift and free: a bit hacky *)
-val shift_free: e:exp -> c:nat -> d:int{d >= -1 /\ (d = -1 ==> not (free_zero e c))} -> x:nat{x >= c} ->
+val shift_free: e:exp -> c:nat -> d:int{d >= -1 /\ (d = -1 ==> (not (free_zero e) \/ c > 0))} -> x:nat{x >= c} ->
                      Lemma (requires True)
 			   (ensures (((d >= 0 ==> (free_in e x <==> free_in (shift e c d) (x + d)))) /\
 				     (x < d + c ==> not (free_in (shift e c d) x))                   /\
