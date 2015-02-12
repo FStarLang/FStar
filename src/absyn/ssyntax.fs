@@ -558,9 +558,9 @@ let rec serialize_typ' (writer:Writer) (ast:typ') :unit =
     | Typ_refine(v, t) -> writer.Write('d'); serialize_bvvar writer v; serialize_typ writer t
     | Typ_app(t, ars) ->
         writer.Write('e'); serialize_typ writer t; serialize_args writer ars;
-        (match t.n with
-        | Typ_lam (_, _) -> print_string "type application node with lam\n"
-        | _ -> ())
+//        (match t.n with
+//        | Typ_lam (_, _) -> print_string "type application node with lam\n"
+//        | _ -> ())
     | Typ_lam(bs, t) -> writer.Write('f'); serialize_binders writer bs; serialize_typ writer t
     | Typ_ascribed(t, k) -> writer.Write('g'); serialize_typ writer t; serialize_knd writer k
     | Typ_meta(m) -> writer.Write('h'); serialize_meta_t writer m
@@ -1263,8 +1263,7 @@ and serialize_sigelt (writer:Writer) (ast:sigelt) :unit =
     | Sig_assume(lid, fml, qs, _) ->
         writer.Write('e');
         serialize_lident writer lid; serialize_formula writer fml; serialize_list writer serialize_qualifier qs
-    | Sig_let(lbs, _, l, b) ->
-        Util.fprint1 (">>>>>>Serializing %s\n") (Print.sigelt_to_string_short ast);
+    | Sig_let(lbs, _, l, b) -> 
         writer.Write('f');
         serialize_letbindings writer lbs; serialize_list writer serialize_lident l; writer.Write(b)
     | Sig_main(e, _) -> writer.Write('g'); serialize_exp writer e
@@ -1392,7 +1391,7 @@ and deserialize_sigelt (reader:Reader) :sigelt =
 (* let deserialize_sigelts (ast : s_sigelts) : sigelts = deserialize_list deserialize_sigelt ast *)
 
 let serialize_sigelts (writer:Writer) (ast:sigelts) :unit = serialize_list writer serialize_sigelt ast
-let deserialize_sigelts (reader:Reader) :sigelts = deserialize_list reader deserialize_sigelt
+let deserialize_sigelts (reader:Reader) :sigelts = deserialize_list reader deserialize_sigelt 
 
 (* type s_modul =  *)
 (*     { n : s_lident (\* name *\) *)

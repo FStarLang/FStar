@@ -19,19 +19,6 @@ let rec length l = match l with
   | [] -> 0
   | x::l' -> 1 + length l'
 
-(* val app: l1:mlist -> l2:mlist -> Pure mlist *)
-(*                                  (requires True) *)
-(*                                  (ensures (fun r -> *)
-(* 				 (forall n. *)
-(*                                   in_list r n <==> (in_list l1 n \/ in_list l2 n) *)
-(*                                  ))) *)
-(* let rec app l1 l2 = match l1 with *)
-(*   | [] -> l2 *)
-(*   | x::tl1 -> *)
-(*     let r = app tl1 l2 in *)
-(*     x::r *)
-
-
 opaque type permutation (l1:mlist) (l2:mlist) = length l1 = length l2 /\
                                          (forall n. in_list l1 n == in_list l2 n)
 

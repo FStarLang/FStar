@@ -1521,8 +1521,9 @@ and tc_decls for_export env ses deserialized =
   List.rev ses, List.rev exports |> List.flatten, env 
 
 and as_exports env se : (list<sigelt> * list<sigelt>) = match se with 
-    | Sig_val_decl(_, _, quals, _) -> 
+    | Sig_val_decl(_, t, quals, _) -> 
       let exports = if quals |> Util.for_some (function Assumption -> true | _ -> false)
+                    || (Util.is_pure_function t && not (Util.is_lemma t))
                     then [se]
                     else [] in
       exports, [se]
@@ -1568,7 +1569,7 @@ let tc_modul env modul =
 
 let add_modul_to_tcenv (en: env) (m: modul) :env =
   let do_sigelt (en: env) (elt: sigelt) :env =
-    match elt with
+    let env = match elt with
     | Sig_monads(l, _, _, _) ->
       let en = List.fold_left (fun en m ->
                                let en = Tc.Env.push_sigelt en (Sig_tycon(m.mname, [], m.signature, [], [], [], range_of_lid m.mname)) in
@@ -1576,7 +1577,9 @@ let add_modul_to_tcenv (en: env) (m: modul) :env =
                en l
       in
       Tc.Env.push_sigelt en elt
-    | _ -> Tc.Env.push_sigelt en elt
+    | _ -> Tc.Env.push_sigelt en elt in
+    env.solver.encode_sig env elt;
+    env
   in
   Tc.Env.finish_module (List.fold_left do_sigelt en m.exports) m
 
@@ -1591,14 +1594,14 @@ let check_modules (s:solver_t) (ds: solver_t) mods =
     let m, env =
         if m.is_deserialized then
           let env' = add_modul_to_tcenv env m in
-          List.iter (env'.solver.encode_sig env') m.declarations;
+       //   List.iter (env'.solver.encode_sig env') m.declarations;
           m, env'
         else
           let m, env = tc_modul env m in
           let _ = if !Options.serialize_mods then
             let c_file_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ (text_of_lid m.name) ^ ".cache" in
             (*Util.write_JSON<SSyntax.s_modul> (SSyntax.serialize_modul m) c_file_name*)
-            print_string ("Serializing module " ^ (text_of_lid m.name) ^ "\n\n");
+            print_string ("Serializing module " ^ (text_of_lid m.name) ^ "\n");
             SSyntax.serialize_modul_ext c_file_name m
           else () in
           m, env

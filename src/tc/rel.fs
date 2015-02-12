@@ -1335,7 +1335,7 @@ and solve (env:Tc.Env.env) (probs:worklist) : solution =
               if not probs.defer_ok && flex_refine_inner <= rank && rank <= flex_rigid && not (!Options.no_slack)
               then begin match solve_flex_rigid_join env tp probs with 
 //                            | Inr true -> solve_t' env (maybe_invert tp) probs
-                            | None -> giveup env "join doesn't exist" hd
+                            | None -> solve_t' env (maybe_invert tp) probs//giveup env "join doesn't exist" hd
                             | Some wl -> solve env wl
                    end
               else solve_t' env (maybe_invert tp) probs

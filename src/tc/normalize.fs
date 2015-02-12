@@ -608,7 +608,7 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
             let k = snk tcenv (k_config a.sort config.environment config.steps) in
             {a with sort=k.code} in
         
-        let rec norm_pat p : pat = match p.v with 
+        let rec norm_pat p = match p.v with 
             | Pat_disj pats -> withinfo (Pat_disj (List.map norm_pat pats)) None p.p
             
             | Pat_cons (fv, pats) -> withinfo (Pat_cons(fv, List.map norm_pat pats)) None p.p

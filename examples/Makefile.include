@@ -10,7 +10,10 @@ endif
 FSTAR_HOME = ../..
 LIB_FILES= list.fst string.fst partialmap.fst 
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst)
+
 FULL_LIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst listproperties.fst)
+STDLIB_CACHE = Prims.cache List.cache Set.cache Map.cache Heap.cache Array.cache String.cache ST.cache 
+FULL_LIB_CACHE = $(STDLIB_CACHE) ListProperties.cache
 PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)
 FSTAR = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(OTHERFLAGS)
 
@@ -19,6 +22,9 @@ FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(O
 
 %.ver: %.fst
 	$(FSTAR) $(STDLIB) $^
+
+%.cache.ver: %.fst
+	$(FSTAR) $(STDLIB_CACHE) $^
 
 %.fulllib.ver: %.fst
 	$(FSTAR) $(FULL_LIB) $^
@@ -44,3 +50,6 @@ FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(O
 
 .all.ver: $(VERFILES)
 	$(FSTAR) $(STDLIB) $^
+
+.all.cache.ver: $(VERFILES)
+	$(FSTAR) $(STDLIB_CACHE) $^
