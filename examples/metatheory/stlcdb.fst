@@ -18,7 +18,14 @@ let rec free_zero e =
   | EVar k     -> k = 0
   | EAbs _ _   -> false (* CH: I find it surprising that you're not
                                searching for a 1 inside the body;
-                               this function only makes sense in shift _ _ -1, right? *)
+                               this function only makes sense in shift _ _ -1, right?
+			   AR: Yes, that's right. The indices are type nat, and so,
+			       when shifting with -1, we need to show that there are
+			       no free top level zeros. The general case of looking up
+			       0 as free variable, where we would look for 1 inside a
+			       lambda, is covered by free_in (these fns
+			       could have some better names).
+			*)
   | EApp e1 e2 -> free_zero e1 || free_zero e2
 
 (*
