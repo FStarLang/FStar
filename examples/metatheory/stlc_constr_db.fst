@@ -67,7 +67,7 @@ type env = var -> Tot (option ty)
 val empty : env
 let empty _ = None
 
-val extend : env ->var -> ty -> Tot env
+val extend : env -> var -> ty -> Tot env
 let extend g x t y = if y < x then g y 
                      else if y = x then Some t
                      else g (y-1)
@@ -146,11 +146,17 @@ let typing_extensional _ _ _ h g' = context_invariance h g'
 
 assume val admit: unit -> Pure 'a (requires True) (ensures (fun _ -> False))
 
+(* A bit of defunctionalization to work around a limitation in F*
+   [Nik:] F* does equate syntactically equal closures
+          but it's not equating types that are equal by expanding abbreviations *)
+val subst_gen_aux : var -> exp -> Tot sub
+let subst_gen_aux x v = fun y -> if y < x then (EVar y)
+                                 else if y = x then v
+                                 else (EVar (y-1+x))
+
+(* This is a generalization of subst_beta, when we've under x binders *)
 val subst_gen : var -> exp -> exp -> Tot exp
-let subst_gen x v e =
-  subst e (fun y -> if y < x then (EVar y)
-                    else if y = x then v
-                    else (EVar (y-1+x)))
+let subst_gen x v e = subst e (subst_gen_aux x v)
 
 (* Proof of this will probably rely on an extensionality property of subst *)
 val subst_beta_gen : v:exp -> e:exp -> Lemma 
@@ -161,21 +167,7 @@ let subst_beta_gen v e =
   | EAbs _ _ -> admit()
   | EApp _ _  -> admit()
 
-val subst_gen_var_eq : x:var -> v:exp -> Lemma
-  (ensures (subst_gen x v (EVar x) = v))
-let subst_gen_var_eq x v = admit()
-
-val subst_gen_var_neq : x:var -> y:var -> v:exp -> Lemma
-  (ensures (subst_gen x v (EVar y) = (EVar y)))
-let subst_gen_var_neq x y v = admit()
-
-(* F* can prove this trivial fact *)
-val subst_eapp : e1:exp -> e2:exp -> s:sub -> Lemma
-      (ensures (subst (EApp e1 e2) s = EApp (subst e1 s) (subst e2 s)))
-let subst_eapp e1 e2 s = ()
-
-(* but F* cannot prove this equally trivial fact, even using the first;
- 
+(* [some comment that might help if I want to prove subst_beta_gen]
    NS: The trouble is that you need extensionality for this proof to go through. 
    F* will try to prove that 
       EApp (subst e1 s1) (subst e2 s1) = EApp (subst e1 s2) (subst e2 s3) 
@@ -225,19 +217,18 @@ let subst_eapp e1 e2 s = ()
       And then call it just in the scope where you want the solver to make use of it.
       
  *)
-val subst_gen_eapp : x:var -> v:exp -> e1:exp -> e2:exp -> Lemma
-      (ensures (subst_gen x v (EApp e1 e2) = EApp (subst_gen x v e1) (subst_gen x v e2)))
-let subst_gen_eapp x v e1 e2 = subst_eapp e1 e2 (fun y -> if y < x then (EVar y)
-                                                          else if y = x then v
-                                                          else (EVar (y-1+x))); admit()
+
+val subst_gen_var_eq : x:var -> v:exp -> Lemma
+  (ensures (subst_gen x v (EVar x) = v))
+let subst_gen_var_eq x v = admit()
+
+val subst_gen_var_neq : x:var -> y:var -> v:exp -> Lemma
+  (ensures (subst_gen x v (EVar y) = (EVar y)))
+let subst_gen_var_neq x y v = admit()
 
 val extend_neq : x:var -> y:var{x <> y} -> g:env -> t_x:ty -> Lemma
      (ensures (extend g x t_x) y = g y)
 let extend_neq x y g t_x = admit()
-
-val subst_gen_eabs : x:var -> v:exp -> e:exp -> t_y:ty -> Lemma
-      (ensures (subst_gen x v (EAbs t_y e) = EAbs t_y (subst_gen x v e)))
-let subst_gen_eabs x v e t_y = admit()
 
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
@@ -261,19 +252,16 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
      if x=0
      then admit() (* TyAbs t_y (typing_extensional h21 gy) *)
      else
-       (subst_gen_eabs x v e t_y; admit())
+       admit()
 (*
         let h21' = typing_extensional h21 (extend gy x t_x) in
         TyAbs t_y (substitution_preserves_typing x h1 h21'))
 *)
-  | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 -> (* admit() *)
+  | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 ->
      (* CH: implicits don't work here, why? *)
-    (assert(t = t12); assert(e = EApp e1 e2);
-     subst_gen_eapp x v e1 e2;
-     TyApp #g #(subst_gen x v e1) #(subst_gen x v e2) #t11 #t12
+    (TyApp #g #(subst_gen x v e1) #(subst_gen x v e2) #t11 #t12
        (substitution_preserves_typing x h1 h21)
-       (substitution_preserves_typing x h1 h22)
-     )
+       (substitution_preserves_typing x h1 h22))
 
 assume val subst_beta_preserves_typing :
       #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
