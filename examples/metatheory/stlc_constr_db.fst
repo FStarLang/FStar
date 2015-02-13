@@ -39,9 +39,15 @@ let rec subst e s =
   | EAbs t e1 -> EAbs t (subst e1 (fun x -> if x = 0 then EVar x else s (x+1)))
   | EApp e1 e2 -> EApp (subst e1 s) (subst e2 s)
 
-val subst_beta : exp -> exp -> Tot exp
-let subst_beta v e =
-  subst e (fun x -> if x = 0 then v else EVar (x-1))
+(* This is a generalization of the substition we do for the beta rule,
+   when we've under x binders (useful for the substitution lemma) *)
+val subst_beta_gen : var -> exp -> exp -> Tot exp
+let subst_beta_gen x v e =
+  subst e (fun y -> if y < x then (EVar y)
+                    else if y = x then v
+                    else (EVar (y-1)))
+
+let subst_beta v e = subst_beta_gen 0 v e
 
 val step : exp -> Tot (option exp)
 let rec step e =
@@ -146,23 +152,28 @@ let typing_extensional _ _ _ h g' = context_invariance h g'
 
 assume val admit: unit -> Pure 'a (requires True) (ensures (fun _ -> False))
 
-(* This is a generalization of subst_beta, when we've under x binders *)
-val subst_gen : var -> exp -> exp -> Tot exp
-let subst_gen x v e =
-  subst e (fun y -> if y < x then (EVar y)
-                    else if y = x then v
-                    else (EVar (y-1)))
+val subst_gen_var_lt : x:var -> y:var{y < x} -> v:exp -> Lemma
+  (ensures (subst_beta_gen x v (EVar y) = (EVar y)))
+let subst_gen_var_lt x y v = ()
 
-(* Proof of this will probably rely on an extensionality property of subst *)
-val subst_beta_gen : v:exp -> e:exp -> Lemma 
-  (ensures (subst_beta v e = subst_gen 0 v e)) (decreases e)
-let subst_beta_gen v e =
-  match e with
-  | EVar _ -> admit()
-  | EAbs _ _ -> admit()
-  | EApp _ _  -> admit()
+val extend_lt : x:var -> y:var{y < x} -> g:env -> t_x:ty -> Lemma
+     (ensures (extend g x t_x) y = g y)
+let extend_lt x y g t_x = ()
 
-(* [some comment that might help if I want to prove subst_beta_gen]
+val extend_gt : x:var -> y:var{y > x} -> g:env -> t_x:ty -> Lemma
+     (ensures (extend g x t_x) y = g (y-1))
+let extend_gt x y g t_x = ()
+
+val extend_twice : x:var -> g:env -> t_x:ty -> t_y:ty -> Lemma
+      (ensures (Equal (extend (extend g x t_x) 0     t_y)
+                      (extend (extend g 0 t_y) (x+1) t_x)))
+let extend_twice x g t_x t_y = ()
+
+val subst_gen_eabs : x:var -> v:exp -> t_y:ty -> e':exp -> Lemma
+      (ensures (subst_beta_gen x v (EAbs t_y e') = EAbs t_y (subst_beta_gen (x+1) v e')))
+let subst_gen_eabs x v t_y e' = admit() (* this also extensionality of sub *)
+
+(* [some comment that might help here]
    NS: The trouble is that you need extensionality for this proof to go through. 
    F* will try to prove that 
       EApp (subst e1 s1) (subst e2 s1) = EApp (subst e1 s2) (subst e2 s3) 
@@ -213,28 +224,11 @@ let subst_beta_gen v e =
       
  *)
 
-val subst_gen_var_lt : x:var -> y:var{y < x} -> v:exp -> Lemma
-  (ensures (subst_gen x v (EVar y) = (EVar y)))
-let subst_gen_var_lt x y v = ()
-
-val extend_lt : x:var -> y:var{y < x} -> g:env -> t_x:ty -> Lemma
-     (ensures (extend g x t_x) y = g y)
-let extend_lt x y g t_x = ()
-
-val extend_gt : x:var -> y:var{y > x} -> g:env -> t_x:ty -> Lemma
-     (ensures (extend g x t_x) y = g (y-1))
-let extend_gt x y g t_x = ()
-
-val extend_twice : x:var -> g:env -> t_x:ty -> t_y:ty -> Lemma
-      (ensures (Equal (extend (extend g x t_x) 0     t_y)
-                      (extend (extend g 0 t_y) (x+1) t_x)))
-let extend_twice x g t_x t_y = ()
-
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
       h1:rtyping empty v t_x ->
       h2:rtyping (extend g x t_x) e t ->
-      Tot (rtyping g (subst_gen x v e) t) (decreases e)
+      Tot (rtyping g (subst_beta_gen x v e) t) (decreases e)
 let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   match h2 with
   | TyVar y ->
@@ -242,23 +236,14 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
      else if y<x then context_invariance h2 g
      else             TyVar (y-1)
   | TyAbs #g' t_y #e' #t' h21 ->
-     (assert(g'=(extend g x t_x));
-      extend_twice x g t_x t_y;
-      let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
-      admit())
-(*      TyAbs t_y (substitution_preserves_typing x h1 h21')
-        -- off by one problem expected x got x+1 in type of h21' *)
+     (let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
+      subst_gen_eabs x v t_y e';
+      TyAbs t_y (substitution_preserves_typing (x+1) h1 h21'))
   | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 ->
      (* CH: implicits don't work here, why? *)
-    (TyApp #g #(subst_gen x v e1) #(subst_gen x v e2) #t11 #t12
+    (TyApp #g #(subst_beta_gen x v e1) #(subst_beta_gen x v e2) #t11 #t12
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22))
-
-assume val subst_beta_preserves_typing :
-      #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
-      h1:rtyping empty v t_x ->
-      h2:rtyping (extend g 0 t_x) e t ->
-      Tot (rtyping g (subst_beta v e) t) (decreases e)
 
 (*
 val preservation : #e:exp{is_Some (step e)} -> #t:ty -> h:(rtyping empty e t) ->
@@ -267,8 +252,8 @@ let rec preservation e t h =
   let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = h in
      if is_value e1
      then (if is_value e2
-           then let TyAbs x t_x hbody = h1 in
-                substitution_preserves_typing x h2 hbody
+           then let TyAbs #g' t_x #ebody #t' hbody = h1 in
+                (substitution_preserves_typing 0 h2 hbody)
            else TyApp h1 (preservation h2))
      else TyApp (preservation h1) h2
 *)
