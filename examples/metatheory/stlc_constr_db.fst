@@ -172,6 +172,18 @@ let extend_gen x g t y = if y < x then g y
                          else if y = x then Some t
                          else g (y-1)
 
+(* F* can prove this trivial fact *)
+val subst_eapp : e1:exp -> e2:exp -> s:sub -> Lemma
+  (ensures (subst (EApp e1 e2) s = EApp (subst e1 s) (subst e2 s)))
+let subst_eapp e1 e2 s = ()
+
+(* but F* cannot prove this equally trivial fact, even using the first *)
+val subst_gen_eapp : x:var -> v:exp -> e1:exp -> e2:exp -> Lemma
+  (ensures (subst_gen x v (EApp e1 e2) = EApp (subst_gen x v e1) (subst_gen x v e2)))
+let subst_gen_eapp x v e1 e2 = subst_eapp e1 e2 (fun y -> if y < x then (EVar y)
+                                                          else if y = x then v
+                                                          else (EVar (y-1+x))); admit()
+
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
       h1:rtyping empty v t_x ->
@@ -197,13 +209,14 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
        (let h21' = typing_extensional h21 (extend gy t_x) in
         TyAbs t_y (substitution_preserves_typing x h1 h21'))
 *)
-  | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 -> admit()
-(*
+  | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 -> (* admit() *)
      (* CH: implicits don't work here, why? *)
+    (assert(t = t12); assert(e = EApp e1 e2);
+     subst_gen_eapp x v e1 e2;
      TyApp #g #(subst_gen x v e1) #(subst_gen x v e2) #t11 #t12
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22)
-*)
+     )
 
 assume val subst_beta_preserves_typing :
       #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
