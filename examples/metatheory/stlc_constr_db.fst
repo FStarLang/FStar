@@ -67,8 +67,10 @@ type env = var -> Tot (option ty)
 val empty : env
 let empty _ = None
 
-val extend : env -> ty -> Tot env
-let extend g t x = if x = 0 then Some t else g (x-1)
+val extend : env ->var -> ty -> Tot env
+let extend g x t y = if y < x then g y 
+                     else if y = x then Some t
+                     else g (y-1)
 
 type rtyping : env -> exp -> ty -> Type =
   | TyVar : #g:env ->
@@ -78,7 +80,7 @@ type rtyping : env -> exp -> ty -> Type =
             t:ty ->
             #e1:exp ->
             #t':ty ->
-            rtyping (extend g t) e1 t' ->
+            rtyping (extend g 0 t) e1 t' ->
             rtyping g (EAbs t e1) (TArrow t t')
   | TyApp : #g:env ->
             #e1:exp ->
@@ -133,7 +135,7 @@ let rec context_invariance _ _ _ h g' =
   match h with
   | TyVar x -> TyVar x
   | TyAbs t_y h1 ->
-    TyAbs t_y (context_invariance h1 (extend g' t_y))
+    TyAbs t_y (context_invariance h1 (extend g' 0 t_y))
   | TyApp h1 h2 ->
     TyApp (context_invariance h1 g') (context_invariance h2 g')
 
@@ -167,27 +169,30 @@ val subst_gen_var_neq : x:var -> y:var -> v:exp -> Lemma
   (ensures (subst_gen x v (EVar y) = (EVar y)))
 let subst_gen_var_neq x y v = admit()
 
-val extend_gen : var -> env -> ty -> Tot env
-let extend_gen x g t y = if y < x then g y 
-                         else if y = x then Some t
-                         else g (y-1)
-
 (* F* can prove this trivial fact *)
 val subst_eapp : e1:exp -> e2:exp -> s:sub -> Lemma
-  (ensures (subst (EApp e1 e2) s = EApp (subst e1 s) (subst e2 s)))
+      (ensures (subst (EApp e1 e2) s = EApp (subst e1 s) (subst e2 s)))
 let subst_eapp e1 e2 s = ()
 
 (* but F* cannot prove this equally trivial fact, even using the first *)
 val subst_gen_eapp : x:var -> v:exp -> e1:exp -> e2:exp -> Lemma
-  (ensures (subst_gen x v (EApp e1 e2) = EApp (subst_gen x v e1) (subst_gen x v e2)))
+      (ensures (subst_gen x v (EApp e1 e2) = EApp (subst_gen x v e1) (subst_gen x v e2)))
 let subst_gen_eapp x v e1 e2 = subst_eapp e1 e2 (fun y -> if y < x then (EVar y)
                                                           else if y = x then v
                                                           else (EVar (y-1+x))); admit()
 
+val extend_neq : x:var -> y:var{x <> y} -> g:env -> t_x:ty -> Lemma
+     (ensures (extend g x t_x) y = g y)
+let extend_neq x y g t_x = admit()
+
+val subst_gen_eabs : x:var -> v:exp -> e:exp -> t_y:ty -> Lemma
+      (ensures (subst_gen x v (EAbs t_y e) = EAbs t_y (subst_gen x v e)))
+let subst_gen_eabs x v e t_y = admit()
+
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
       h1:rtyping empty v t_x ->
-      h2:rtyping (extend_gen x g t_x) e t ->
+      h2:rtyping (extend g x t_x) e t ->
       Tot (rtyping g (subst_gen x v e) t) (decreases e)
 let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   match h2 with
@@ -197,16 +202,18 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
            subst_gen_var_eq x v;
            context_invariance h1 g)
      else (subst_gen_var_neq x y v;
-           (*assert(EqualE e (extend_gen x g t_x) g);
-             -- this assert fails, so we can't call context_invariance *)
-           admit() (*context_invariance h2 g*))
-  | TyAbs t_y h21 -> admit()
-(*
-     let gy = extend g t_y in
+           extend_neq x y g t_x;
+           assert((extend g x t_x) y = g y);
+           assert(EqualE (EVar y) (extend g x t_x) g);
+           context_invariance h2 g)
+  | TyAbs #g' t_y #e #t' h21 ->
+     let gy = extend g 0 t_y in
      if x=0
-     then TyAbs t_y (typing_extensional h21 gy)
+     then admit() (* TyAbs t_y (typing_extensional h21 gy) *)
      else
-       (let h21' = typing_extensional h21 (extend gy t_x) in
+       (subst_gen_eabs x v e t_y; admit())
+(*
+        let h21' = typing_extensional h21 (extend gy x t_x) in
         TyAbs t_y (substitution_preserves_typing x h1 h21'))
 *)
   | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 -> (* admit() *)
@@ -221,7 +228,7 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
 assume val subst_beta_preserves_typing :
       #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
       h1:rtyping empty v t_x ->
-      h2:rtyping (extend g t_x) e t ->
+      h2:rtyping (extend g 0 t_x) e t ->
       Tot (rtyping g (subst_beta v e) t) (decreases e)
 
 (*
