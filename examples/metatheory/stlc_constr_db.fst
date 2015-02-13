@@ -124,9 +124,9 @@ val typable_empty_closed' : #e:exp -> #t:ty -> rtyping empty e t ->
 let typable_empty_closed' _ _ h = admit() (* CH: need forall_intro for showing this *)
 
 opaque logic type Equal (g1:env) (g2:env) =
-                 (forall (x:var). g1 x=g2 x)
+                 (forall (x:var). g1 x = g2 x)
 opaque logic type EqualE (e:exp) (g1:env) (g2:env) =
-                 (forall (x:var). appears_free_in x e ==> g1 x=g2 x)
+                 (forall (x:var). appears_free_in x e ==> g1 x = g2 x)
 
 val context_invariance : #e:exp -> #g:env -> #t:ty -> 
       h:(rtyping g e t) -> g':env{EqualE e g g'} ->
@@ -146,21 +146,13 @@ let typing_extensional _ _ _ h g' = context_invariance h g'
 
 assume val admit: unit -> Pure 'a (requires True) (ensures (fun _ -> False))
 
-(* A bit of defunctionalization to work around a limitation in F*
-   [Nik:] F* does equate syntactically equal closures
-          but it's not equating types that are equal by expanding abbreviations
-   NS: Fixed now. *)
-val subst_gen_aux : var -> exp -> Tot sub
-let subst_gen_aux x v = fun y -> if y < x then (EVar y)
-                                 else if y = x then v
-                                 else (EVar (y-1+x))
-
 (* This is a generalization of subst_beta, when we've under x binders *)
 val subst_gen : var -> exp -> exp -> Tot exp
 let subst_gen x v e =
   subst e (fun y -> if y < x then (EVar y)
                     else if y = x then v
-                    else (EVar (y-1+x)))
+                    else (EVar (y-1)))
+
 (* Proof of this will probably rely on an extensionality property of subst *)
 val subst_beta_gen : v:exp -> e:exp -> Lemma 
   (ensures (subst_beta v e = subst_gen 0 v e)) (decreases e)
@@ -220,13 +212,6 @@ let subst_beta_gen v e =
       And then call it just in the scope where you want the solver to make use of it.
       
  *)
-val subst_gen_eapp : x:var -> v:exp -> e1:exp -> e2:exp -> Lemma
-      (ensures (subst_gen x v (EApp e1 e2) = EApp (subst_gen x v e1) (subst_gen x v e2)))
-let subst_gen_eapp x v e1 e2 = ()
-
-val subst_gen_var_eq : x:var -> v:exp -> Lemma
-  (ensures (subst_gen x v (EVar x) = v))
-let subst_gen_var_eq x v = ()
 
 val subst_gen_var_lt : x:var -> y:var{y < x} -> v:exp -> Lemma
   (ensures (subst_gen x v (EVar y) = (EVar y)))
@@ -236,6 +221,15 @@ val extend_lt : x:var -> y:var{y < x} -> g:env -> t_x:ty -> Lemma
      (ensures (extend g x t_x) y = g y)
 let extend_lt x y g t_x = ()
 
+val extend_gt : x:var -> y:var{y > x} -> g:env -> t_x:ty -> Lemma
+     (ensures (extend g x t_x) y = g (y-1))
+let extend_gt x y g t_x = ()
+
+val extend_twice : x:var -> g:env -> t_x:ty -> t_y:ty -> Lemma
+      (ensures (Equal (extend (extend g x t_x) 0     t_y)
+                      (extend (extend g 0 t_y) (x+1) t_x)))
+let extend_twice x g t_x t_y = ()
+
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
       h1:rtyping empty v t_x ->
@@ -244,27 +238,16 @@ val substitution_preserves_typing :
 let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   match h2 with
   | TyVar y ->
-     if x=y
-     then (typable_empty_closed' h1;
-           subst_gen_var_eq x v;
-           context_invariance h1 g)
-     else if y<x
-     then (subst_gen_var_lt x y v;
-           extend_lt x y g t_x;
-           assert((extend g x t_x) y = g y);
-           assert(EqualE (EVar y) (extend g x t_x) g);
-           context_invariance h2 g)
-     else admit()
-  | TyAbs #g' t_y #e #t' h21 ->
-     let gy = extend g 0 t_y in
-     if x=0
-     then admit() (* TyAbs t_y (typing_extensional h21 gy) *)
-     else
-       admit()
-(*
-        let h21' = typing_extensional h21 (extend gy x t_x) in
-        TyAbs t_y (substitution_preserves_typing x h1 h21'))
-*)
+     if x=y then      (typable_empty_closed' h1; context_invariance h1 g)
+     else if y<x then context_invariance h2 g
+     else             TyVar (y-1)
+  | TyAbs #g' t_y #e' #t' h21 ->
+     (assert(g'=(extend g x t_x));
+      extend_twice x g t_x t_y;
+      let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
+      admit())
+(*      TyAbs t_y (substitution_preserves_typing x h1 h21')
+        -- off by one problem expected x got x+1 in type of h21' *)
   | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 ->
      (* CH: implicits don't work here, why? *)
     (TyApp #g #(subst_gen x v e1) #(subst_gen x v e2) #t11 #t12
