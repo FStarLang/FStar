@@ -148,7 +148,8 @@ assume val admit: unit -> Pure 'a (requires True) (ensures (fun _ -> False))
 
 (* A bit of defunctionalization to work around a limitation in F*
    [Nik:] F* does equate syntactically equal closures
-          but it's not equating types that are equal by expanding abbreviations *)
+          but it's not equating types that are equal by expanding abbreviations
+   NS: Fixed now. *)
 val subst_gen_aux : var -> exp -> Tot sub
 let subst_gen_aux x v = fun y -> if y < x then (EVar y)
                                  else if y = x then v
@@ -156,8 +157,10 @@ let subst_gen_aux x v = fun y -> if y < x then (EVar y)
 
 (* This is a generalization of subst_beta, when we've under x binders *)
 val subst_gen : var -> exp -> exp -> Tot exp
-let subst_gen x v e = subst e (subst_gen_aux x v)
-
+let subst_gen x v e =
+  subst e (fun y -> if y < x then (EVar y)
+                    else if y = x then v
+                    else (EVar (y-1+x)))
 (* Proof of this will probably rely on an extensionality property of subst *)
 val subst_beta_gen : v:exp -> e:exp -> Lemma 
   (ensures (subst_beta v e = subst_gen 0 v e)) (decreases e)
@@ -217,6 +220,9 @@ let subst_beta_gen v e =
       And then call it just in the scope where you want the solver to make use of it.
       
  *)
+val subst_gen_eapp : x:var -> v:exp -> e1:exp -> e2:exp -> Lemma
+      (ensures (subst_gen x v (EApp e1 e2) = EApp (subst_gen x v e1) (subst_gen x v e2)))
+let subst_gen_eapp x v e1 e2 = ()
 
 val subst_gen_var_eq : x:var -> v:exp -> Lemma
   (ensures (subst_gen x v (EVar x) = v))

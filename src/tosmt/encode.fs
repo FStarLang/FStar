@@ -1083,10 +1083,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     tok_decl;
                     Term.Assume(mkForall([tok_app], vars, mkEq(tok_app, app)), Some "name-token correspondence")] in
         let def, (body, ex_vars, decls1) = 
-            if tags |> Util.for_some (function Logic -> true | _ -> false) (* REVIEW: This code is dead, given the previous pattern *)
+            if tags |> Util.for_some (function Logic -> true | _ -> false) 
             then mk_Valid app, (let f, decls = encode_formula t env' in f, [], decls)
             else app, encode_typ_term t env' in 
-        let g = binder_decls@decls@decls1@[Term.Assume(mkForall([def], vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(def, body))), None)] in 
+        let elim = Term.Assume(mkForall([def], vars, mkImp(mk_and_l guards, close_ex ex_vars <| mkEq(def, body))), Some "abbrev. elimination") in
+        let intro = if tags |> Util.for_some (function Logic -> true | _ -> false) 
+                    then []
+                    else let xxsym, x = fresh_bvar "x" Term_sort in
+                         [Term.Assume(mkForall([mk_HasType x def], (xxsym, Term_sort)::vars, mkImp(close_ex ex_vars mkTrue, mk_HasType x def)), Some "abbrev. intro")] in
+        let g = binder_decls@decls@decls1@[elim]@intro in
         g, env
 
      | Sig_val_decl(lid, t, quals, _) -> 
