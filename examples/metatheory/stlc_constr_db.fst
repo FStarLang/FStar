@@ -174,7 +174,57 @@ val subst_eapp : e1:exp -> e2:exp -> s:sub -> Lemma
       (ensures (subst (EApp e1 e2) s = EApp (subst e1 s) (subst e2 s)))
 let subst_eapp e1 e2 s = ()
 
-(* but F* cannot prove this equally trivial fact, even using the first *)
+(* but F* cannot prove this equally trivial fact, even using the first;
+ 
+   NS: The trouble is that you need extensionality for this proof to go through. 
+   F* will try to prove that 
+      EApp (subst e1 s1) (subst e2 s1) = EApp (subst e1 s2) (subst e2 s3) 
+
+   Now, s1, s2 and s3 are all extensionally equal. But F* doesn't know
+   that. A good way to solve this would be to use the same recipe
+   that is being used in partialmap.fst for set, map etc. 
+
+   -- Ideally, we would implement Map in the same style as Set, using
+       functions (rather than axioms).
+
+   -- Then, define Map.Equal to be extensional equality on maps, and
+       admit one axiom, i.e, Extensional, allowing extensional maps to
+       be treated as syntactically equal.
+ 
+   -- Define type sub = Map.map var exp
+
+   -- Then, prove a lemma:
+        val subst_extensional: s1:sub -> s2:sub -> e:exp -> Lemma (ensures (Map.Equal s1 s2) ==> (subst e s1 = subst e s2))
+                                                                  [SMTPat [subst e s1; subst e s2])
+
+        let subst_extensional s1 s2 e = () //the proof should be trivial with the extensionality axiom
+
+   -- With this, your proof should just go through trivially.
+     
+      Be aware that you will really need that SMTPat. 
+      Let's look at the goal again:
+
+         EApp (subst e1 s1) (subst e2 s1) = EApp (subst e1 s2) (subst e2 s3) 
+
+      You really don't have a way to get your hands on s1, s2,
+      s3. These are terms that come up as Z3 tries to search for a
+      proof. Since you can't get your hands on it, you will not be
+      able to call subst_extensional yourself. The SMT pat lets solver
+      call it when it needs to.
+
+      It would be nice if you could get your hands on s1, s2, s3
+      somehow ... but I don't know of a way to do it at the moment.
+
+      One improvement: maybe you don't want subst_extensional
+      polluting the proof context at the top-level. You could instead
+      write something like:
+
+      val use_subst_extensional: unit -> Lemma (ensures (forall s1 s2 e.{:pattern subst e s1; subst e s2}
+                                                               (Map.Equal s1 s2) ==> (subst e s1 = subst e s2)))
+
+      And then call it just in the scope where you want the solver to make use of it.
+      
+ *)
 val subst_gen_eapp : x:var -> v:exp -> e1:exp -> e2:exp -> Lemma
       (ensures (subst_gen x v (EApp e1 e2) = EApp (subst_gen x v e1) (subst_gen x v e2)))
 let subst_gen_eapp x v e1 e2 = subst_eapp e1 e2 (fun y -> if y < x then (EVar y)
