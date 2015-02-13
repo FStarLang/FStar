@@ -240,7 +240,9 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
 
                         | f::formals', p::pats' -> 
                             begin match f, p.v with 
-                                | (Inl _, _), Pat_tvar _ -> p::aux formals' pats'
+                                | (Inl _, _), Pat_tvar _
+                                | (Inl _, _), Pat_dot_typ _
+                                | (Inl _, _), Pat_twild _ -> p::aux formals' pats'
                                 | (Inl _, _), _ -> 
                                     let a = Util.bvd_to_bvar_s (Util.new_bvd None) kun in
                                     let p = withinfo (Pat_dot_typ (a, tun)) None (*Inl kun*) (Syntax.range_of_lid fv.v) in

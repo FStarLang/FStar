@@ -1460,11 +1460,11 @@ let add_modul_to_env (m:Syntax.modul) (en: env) :env =
         let menv = List.fold_left DesugarEnv.push_kind_abbrev menv m.kind_abbrevs in
         let menv = DesugarEnv.push_sigelt menv (Sig_tycon(m.mname, [], m.signature, [], [], [], dummyRange)) in
         let menv = List.fold_left DesugarEnv.push_sigelt menv m.abbrevs in
-        let env = DesugarEnv.exit_monad_scope env0 menv in
-        DesugarEnv.push_sigelt env elt
-      in
-      List.fold_left do_monad_decl en decls
+        DesugarEnv.exit_monad_scope env0 menv in
+      let env = List.fold_left do_monad_decl en decls in
+      DesugarEnv.push_sigelt env elt
     | _ -> DesugarEnv.push_sigelt en elt
   in
+  let en = DesugarEnv.prepare_module_or_interface false en m.name in
   let en = List.fold_left do_sigelt ({ en with curmodule = Some(m.name) }) m.exports in
-  DesugarEnv.finish en m
+  DesugarEnv.finish_module_or_interface en m

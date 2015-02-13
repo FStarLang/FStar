@@ -1566,7 +1566,7 @@ let solve tcenv q =
     let prefix, labels, qry, suffix =
         let env = get_env tcenv in
         let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) tcenv.gamma) in
-        if debug tcenv <| Options.Other "Weird" then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);//(Normalize.formula_norm_to_string tcenv q);
+        if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);//(Normalize.formula_norm_to_string tcenv q);
         let phi, labels, qdecls = encode_formula_with_labels q (negate env) in
         let label_prefix, label_suffix = encode_labels labels in
         let query_prelude = 

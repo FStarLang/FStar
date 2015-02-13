@@ -1515,7 +1515,10 @@ and tc_decls for_export env ses deserialized =
   if debug env <| Options.Other "Progress"
   then Util.print_string (Util.format1 "Checked sigelt\t%s\n" (Print.sigelt_to_string_short se));
 
-  let exports, to_encode = as_exports env0 se in   //TODO: Revise this once we add the private qualifier
+  let exports, to_encode = 
+    if for_export
+    then as_exports env0 se
+    else [], [se] in   //TODO: Revise this once we add the private qualifier
   to_encode |> List.iter (env.solver.encode_sig env);
   se::ses, exports::all_exports, env) ([], [], env) ses in
   List.rev ses, List.rev exports |> List.flatten, env 
@@ -1527,20 +1530,13 @@ and as_exports env se : (list<sigelt> * list<sigelt>) = match se with
                     then [se]
                     else [] in
       exports, [se]
-//      if Util.is_lemma t || not (Util.is_pure_function t) 
-//      then [Sig_val_decl(l, t, Assumption::quals, r)] //we'll leave out the let-binding in the export; so mark this as assumed
-//      else [se]
-//  
     | Sig_let(lbs, r, l, b) -> 
       let pure_funs, rest = snd lbs |> List.partition (fun (_, t, _) -> Util.is_pure_function t && not <| Util.is_lemma t) in
       let val_decls_for_rest = rest |> List.collect (fun (x, t, _) -> match x with 
         | Inl _ -> failwith "impossible"
         | Inr l -> 
-//            match Tc.Env.try_lookup_val_decl env l with
-//                | Some _ -> []
-//                | None -> 
-                  if Tc.Env.debug env Options.Low then Util.fprint1 "Exporting only the signature of %s\n" l.str; 
-                  [Sig_val_decl(l, t, [Assumption], range_of_lid l)]) in
+          if Tc.Env.debug env Options.Low then Util.fprint1 "Exporting only the signature of %s\n" l.str; 
+          [Sig_val_decl(l, t, [Assumption], range_of_lid l)]) in
       let ses = match pure_funs with 
         | [] -> val_decls_for_rest
         | _ -> val_decls_for_rest@[Sig_let((fst lbs, pure_funs), r, l, b)] in
@@ -1581,6 +1577,7 @@ let add_modul_to_tcenv (en: env) (m: modul) :env =
     env.solver.encode_sig env elt;
     env
   in
+  let en = Tc.Env.set_current_module en m.name in 
   Tc.Env.finish_module (List.fold_left do_sigelt en m.exports) m
 
 let check_modules (s:solver_t) (ds: solver_t) mods = 
@@ -1590,26 +1587,21 @@ let check_modules (s:solver_t) (ds: solver_t) mods =
     if List.length !Options.debug <> 0
     then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
     let msg = ("Internals for module " ^m.name.str) in
-    // s.push msg;
     let m, env =
         if m.is_deserialized then
           let env' = add_modul_to_tcenv env m in
-       //   List.iter (env'.solver.encode_sig env') m.declarations;
           m, env'
         else
           let m, env = tc_modul env m in
           let _ = if !Options.serialize_mods then
             let c_file_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ (text_of_lid m.name) ^ ".cache" in
-            (*Util.write_JSON<SSyntax.s_modul> (SSyntax.serialize_modul m) c_file_name*)
             print_string ("Serializing module " ^ (text_of_lid m.name) ^ "\n");
             SSyntax.serialize_modul_ext c_file_name m
           else () in
           m, env
     in 
-    // s.pop msg;
     if Options.should_dump m.name.str then Util.fprint1 "%s\n" (Print.modul_to_string m);
-    if m.is_interface  //TODO: admit interfaces to the solver also
-    then mods, env
-    else (//s.encode_modul env m; 
-          m::mods, env)) ([], env) in
+    if m.is_interface  //TODO: admit interfaces to the solver also?
+    then    mods, env
+    else m::mods, env) ([], env) in
    List.rev fmods

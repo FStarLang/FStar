@@ -61,8 +61,8 @@ and stack = {
     args:list<(arg * environment)>;
 }
 and env_entry = 
-  | T of (btvdef * tclos)// * option<memo<typ>>)
-  | V of (bvvdef * vclos)// * option<memo<exp>>)
+  | T of (btvdef * tclos)
+  | V of (bvvdef * vclos)
 and tclos = (typ * environment)
 and vclos = (exp * environment)
 and memo<'a> = ref<option<'a>>
@@ -203,7 +203,7 @@ let rec is_head_symbol t = match (compress_typ t).n with
 
 let simplify_then_apply steps head args pos = 
     let fallback () = mk_Typ_app(head, args) None pos in
-    let simp_t t = match t.n with 
+    let simp_t t = match t.n with
         | Typ_const fv when lid_equals fv.v Const.true_lid ->  Some true
         | Typ_const fv when lid_equals fv.v Const.false_lid -> Some false
         | _ -> None in
@@ -261,30 +261,26 @@ let simplify_then_apply steps head args pos =
 let rec sn_delay tcenv (cfg:config<typ>) : config<typ> =
     let aux () = (sn tcenv cfg).code in
     let t = mk_Typ_delayed' (Inr aux) None cfg.code.pos in
-    {cfg with code=t}
+    {cfg with code=t; stack=empty_stack}
         
 and sn tcenv (cfg:config<typ>) : config<typ> =
-  let close cfg t = match cfg.close with 
-    | None -> t
-    | Some f -> f t in
-
-  let rebuild config  = 
-    let rebuild_stack config = 
-        if is_stack_empty config then config
-        else let s' = no_eta config.steps in
-             let args = config.stack.args |> List.map (function 
-                    | (Inl t, imp), env -> Inl <| (sn tcenv (t_config t env s')).code, imp
-                    | (Inr v, imp), env -> Inr <| (wne tcenv (e_config v env s')).code, imp) in
-             let t = simplify_then_apply config.steps config.code args config.code.pos in
-             {config with code=t} in
+    let rebuild config  = 
+        let rebuild_stack config = 
+            if is_stack_empty config then config
+            else let s' = no_eta config.steps in
+                 let args = config.stack.args |> List.map (function 
+                        | (Inl t, imp), env -> Inl <| (sn tcenv (t_config t env s')).code, imp
+                        | (Inr v, imp), env -> Inr <| (wne tcenv (e_config v env s')).code, imp) in
+                 let t = simplify_then_apply config.steps config.code args config.code.pos in
+                 {config with code=t; stack=empty_stack} in
     
-    let config = rebuild_stack config in 
-    let t = match config.close with 
-        | None -> config.code
-        | Some f -> f config.code in
-    if has_eta config 
-    then {config with code=eta_expand tcenv t}
-    else {config with code=t} in
+        let config = rebuild_stack config in 
+        let t = match config.close with 
+            | None -> config.code
+            | Some f -> f config.code in
+        if has_eta config 
+        then {config with code=eta_expand tcenv t}
+        else {config with code=t} in
         
   
   let wk f = match !cfg.code.tk with
@@ -295,7 +291,6 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
   let is_flex u = match Unionfind.find u with 
     | Fixed _ -> false
     | _ -> true in
-  //if debug tcenv then printfn "Norm: %s" (Print.typ_to_string config.code);
   begin match config.code.n with
     | Typ_delayed _ -> failwith "Impossible"
      
@@ -328,9 +323,13 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
         | [] -> 
           (* Need to substitute under lambdas even if we don't want a full normal form *)
           let binders, environment = sn_binders tcenv binders config.environment config.steps in
-          let mk_lam t = wk <| mk_Typ_lam(binders, t) in
-          let t2_cfg = sn_delay tcenv ({config with //close=close_with_config config mk_lam; 
-                                        code=t2; 
+          let mk_lam t = 
+            let lam = wk <| mk_Typ_lam(binders, t) in
+            match cfg.close with
+                | None -> lam
+                | Some f -> f lam in
+          let t2_cfg = sn_delay tcenv ({code=t2; 
+                                        close=None;
                                         stack=empty_stack;
                                         environment=environment; 
                                         steps=no_eta config.steps}) in
@@ -515,7 +514,6 @@ and snk tcenv (cfg:config<knd>) : config<knd> =
 
 and wne tcenv (cfg:config<exp>) : config<exp> = 
   let e = compress_exp cfg.code in
-  let w f = f cfg.code.tk cfg.code.pos in
   let config = {cfg with code = e} in
    let rebuild config  = 
         if is_stack_empty config then config
@@ -574,15 +572,6 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
             beta (m::entries) rest rest' in
 
       beta [] binders config.stack.args
-
-//    | Exp_let((false, [(Inl x, t, e1)]), e2) -> 
-//      let c_e1 = wne tcenv ({config with code=e1; stack=empty_stack}) in
-//      let binders, env = sn_binders tcenv [v_binder (Util.bvd_to_bvar_s x t)] config.environment config.steps in
-//      let c_e2 = wne tcenv ({config with code=e2; stack=empty_stack; environment=env}) in
-//      let e = match binders with
-//        | [(Inr x, _)] -> mk_Exp_let((false, [(Inl x.v, x.sort, c_e1.code)]), c_e2.code) None e.pos 
-//        | _ -> failwith "Impossible" in
-//      {config with code=e} |> rebuild
 
     | Exp_match(e1, eqns) -> 
       let c_e1 = wne tcenv ({config with code=e1; stack=empty_stack}) in
@@ -671,11 +660,6 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
       let c_body = wne tcenv ({config with code=body; stack=empty_stack; environment=env}) in
       let e = mk_Exp_let((is_rec, lbs), c_body.code) None e.pos in
       {config with code=e} |> rebuild
-
-//    | Exp_let  _ -> //top-level lets or let recs
-//      let s = subst_of_env tcenv config.environment in
-//      let e = subst_exp s e in
-//      {config with code=e} |> rebuild
         
     | Exp_ascribed (e, t) -> 
       let c = wne tcenv ({config with code=e}) in
@@ -716,10 +700,6 @@ let norm_sigelt tcenv = function
         | _ -> failwith "Impossible"
       end
     | s -> s
-          
-let norm_module tcenv (m:modul) =
-    let decls = m.declarations |> List.map (norm_sigelt tcenv) in
-    {m with declarations=decls}
 
 let whnf tcenv t = 
     let t = Util.compress_typ t in
