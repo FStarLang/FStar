@@ -220,15 +220,15 @@ let subst_beta_gen v e =
 
 val subst_gen_var_eq : x:var -> v:exp -> Lemma
   (ensures (subst_gen x v (EVar x) = v))
-let subst_gen_var_eq x v = admit()
+let subst_gen_var_eq x v = ()
 
-val subst_gen_var_neq : x:var -> y:var -> v:exp -> Lemma
+val subst_gen_var_lt : x:var -> y:var{y < x} -> v:exp -> Lemma
   (ensures (subst_gen x v (EVar y) = (EVar y)))
-let subst_gen_var_neq x y v = admit()
+let subst_gen_var_lt x y v = ()
 
-val extend_neq : x:var -> y:var{x <> y} -> g:env -> t_x:ty -> Lemma
+val extend_lt : x:var -> y:var{y < x} -> g:env -> t_x:ty -> Lemma
      (ensures (extend g x t_x) y = g y)
-let extend_neq x y g t_x = admit()
+let extend_lt x y g t_x = ()
 
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
@@ -242,11 +242,13 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
      then (typable_empty_closed' h1;
            subst_gen_var_eq x v;
            context_invariance h1 g)
-     else (subst_gen_var_neq x y v;
-           extend_neq x y g t_x;
+     else if y<x
+     then (subst_gen_var_lt x y v;
+           extend_lt x y g t_x;
            assert((extend g x t_x) y = g y);
            assert(EqualE (EVar y) (extend g x t_x) g);
            context_invariance h2 g)
+     else admit()
   | TyAbs #g' t_y #e #t' h21 ->
      let gy = extend g 0 t_y in
      if x=0
