@@ -44,7 +44,15 @@ let subst_eabs subst_f s =
 (* It would be fun to show this terminating;
    the usual way is to replace the subst_f part by a "renaming"
    (function from vars to vars), but we have a super flexible termination
-   machanism, can't we prove this directly?  *)
+   machanism, can't we prove this directly? Probably not, one would normally
+   use lexicographic ordering composed of:
+   1) an _undecidable_ well-founded order on substitutions that equates
+      all renamings, equates all non-renamings, and makes renamings
+      strictly smaller than non-renamings; given that our order has to
+      be on values, for which we are constructive, we can't write down
+      a function mapping substitutions (infinite objects)
+      to 0 (renaming) or 1 (non-renaming)
+   2) the structure of the expression e *)
 val subst : e:exp -> sub -> Tot exp
 let rec subst e s =
   match e with
@@ -270,7 +278,17 @@ val subst_extensional: s1:sub -> s2:sub{SubEqual s1 s2} -> e:exp -> Lemma
       (subst e s1 = subst e s2) (decreases e)
 (*      [SMTPat [subst e s1; subst e s2]] -- fails type-checking *)
 (* the proof should be trivial with the extensionality axiom *)
-let subst_extensional s1 s2 e = admit()
+let rec subst_extensional s1 s2 e =
+  match e with
+  | EVar x -> ()
+  | EAbs t e1 -> subst_extensional (subst_eabs subst s1)
+                                   (subst_eabs subst s2) e1;
+(*                 assert(subst (EAbs t e1) s1 =
+                          EAbs t (subst e1 (subst_eabs subst s1)));
+                   -- again, this is just the definition
+*)
+                 admit()
+  | EApp e1 e2 -> (subst_extensional s1 s2 e1; subst_extensional s1 s2 e2)
 
 val subst_gen_eabs : x:var -> v:exp{closed v} -> t_y:ty -> e':exp -> Lemma
       (ensures (subst_beta_gen x v (EAbs t_y e') =
