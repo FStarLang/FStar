@@ -29,37 +29,19 @@ type exp =
 val is_value : exp -> Tot bool
 let is_value = is_EAbs
 
-type sub = var -> Tot exp
-
-(* Parallel substitution operation `subst` *)
-
-val subst_eabs : (e:exp -> sub -> Tot exp) -> sub -> Tot sub
-let subst_eabs subst_f s =
-  fun y -> if y = 0 then EVar y
-           else subst_f (s (y-1)) (fun y' -> EVar (y'+1))
-
-(* It would be fun to show this terminating;
-   the usual way is to replace the subst_f part by a "renaming"
-   (function from vars to vars), but we have a super flexible termination
-   machanism, can't we prove this directly?  *)
-val subst : e:exp -> sub -> Tot exp
-let rec subst e s =
-  match e with
-  | EVar x -> s x
-  | EAbs t e1 -> EAbs t (subst e1 (subst_eabs subst s))
-  | EApp e1 e2 -> EApp (subst e1 s) (subst e2 s)
-
-(* subst_beta_gen is a generalization of the substitution we do for the beta rule,
+(* subst_beta is a generalization of the substitution we do for the beta rule,
    when we've under x binders (useful for the substitution lemma) *)
-val subst_beta_gen_aux : var -> exp -> Tot sub
-let subst_beta_gen_aux x v = fun y -> if y < x then (EVar y)
-                                      else if y = x then v
-                                      else (EVar (y-1))
-
-val subst_beta_gen : var -> exp -> exp -> Tot exp
-let subst_beta_gen x v e = subst e (subst_beta_gen_aux x v)
-
-let subst_beta v e = subst_beta_gen 0 v e
+(* This definition only works right for substituting _closed_ things
+   (otherwise it captures the variables in v, giving a wrong semantics);
+   this will be a problem when moving away from STLC! *)
+val subst_beta : x:var -> v:exp -> e:exp -> Tot exp (decreases e)
+let rec subst_beta x v e =
+  match e with
+  | EVar y ->      if y = x then v
+              else if y < x then EVar y
+              else               EVar (y-1)
+  | EAbs t e1 -> EAbs t (subst_beta (x+1) v e1)
+  | EApp e1 e2 -> EApp (subst_beta x v e1) (subst_beta x v e2)
 
 val step : exp -> Tot (option exp)
 let rec step e =
@@ -68,7 +50,7 @@ let rec step e =
       if is_value e1 then
         if is_value e2 then
           match e1 with
-          | EAbs t e' -> Some (subst_beta e2 e')
+          | EAbs t e' -> Some (subst_beta 0 e2 e')
           | _         -> None
         else
           match (step e2) with
@@ -164,100 +146,11 @@ let typing_extensional _ _ _ h g' = context_invariance h g'
 
 assume val admit: unit -> Pure 'a (requires True) (ensures (fun _ -> False))
 
-val subst_gen_var_lt : x:var -> y:var{y < x} -> v:exp -> Lemma
-  (ensures (subst_beta_gen x v (EVar y) = (EVar y)))
-let subst_gen_var_lt x y v = ()
-
-val extend_lt : x:var -> y:var{y < x} -> g:env -> t_x:ty -> Lemma
-     (ensures (extend g x t_x) y = g y)
-let extend_lt x y g t_x = ()
-
-val extend_gt : x:var -> y:var{y > x} -> g:env -> t_x:ty -> Lemma
-     (ensures (extend g x t_x) y = g (y-1))
-let extend_gt x y g t_x = ()
-
-val extend_twice : x:var -> g:env -> t_x:ty -> t_y:ty -> Lemma
-      (ensures (Equal (extend (extend g x t_x) 0     t_y)
-                      (extend (extend g 0 t_y) (x+1) t_x)))
-let extend_twice x g t_x t_y = ()
-
-opaque logic type SubEqual (s1:sub) (s2:sub) =
-                 (forall (x:var). s1 x = s2 x)
-
-val subst_extensional: s1:sub -> s2:sub{SubEqual s1 s2} -> e:exp -> Lemma
-      (subst e s1 = subst e s2) (decreases e)
-(*      [SMTPat [subst e s1; subst e s2]] -- fails type-checking *)
-(* the proof should be trivial with the extensionality axiom *)
-let subst_extensional s1 s2 e = admit()
-
-val subst_gen_eabs_aux : x:var -> y:var -> v:exp -> Lemma
-      (ensures ((subst_eabs subst (subst_beta_gen_aux  x    v)) y =
-                                  (subst_beta_gen_aux (x+1) v)  y))
-let subst_gen_eabs_aux x y v = admit()
-
-val subst_gen_eabs : x:var -> v:exp -> t_y:ty -> e':exp -> Lemma
-      (ensures (subst_beta_gen x v (EAbs t_y e') =
-                EAbs t_y (subst_beta_gen (x+1) v e')))
-let subst_gen_eabs x v t_y e' =
-(* can't apply this without something along the lines of subst_gen_eabs_aux
-  subst_extensional (subst_eabs subst (subst_beta_gen_aux  x    v))
-                                      (subst_beta_gen_aux (x+1) v)  e';
-*)
-  admit()
-
-(* [some comment that might help here]
-   NS: The trouble is that you need extensionality for this proof to go through. 
-   [snip]
-   A good way to solve this would be to use the same recipe
-   that is being used in partialmap.fst for set, map etc. 
-
-   -- Ideally, we would implement Map in the same style as Set, using
-       functions (rather than axioms).
-
-   -- Then, define Map.Equal to be extensional equality on maps, and
-       admit one axiom, i.e, Extensional, allowing extensional maps to
-       be treated as syntactically equal.
- 
-   -- Define type sub = Map.map var exp
-
-   -- Then, prove a lemma:
-        val subst_extensional: s1:sub -> s2:sub -> e:exp -> Lemma (ensures (Map.Equal s1 s2) ==> (subst e s1 = subst e s2))
-                                                                  [SMTPat [subst e s1; subst e s2])
-
-        let subst_extensional s1 s2 e = () //the proof should be trivial with the extensionality axiom
-
-   -- With this, your proof should just go through trivially.
-     
-      Be aware that you will really need that SMTPat. 
-      Let's look at the goal again:
-
-         EApp (subst e1 s1) (subst e2 s1) = EApp (subst e1 s2) (subst e2 s3) 
-
-      You really don't have a way to get your hands on s1, s2,
-      s3. These are terms that come up as Z3 tries to search for a
-      proof. Since you can't get your hands on it, you will not be
-      able to call subst_extensional yourself. The SMT pat lets solver
-      call it when it needs to.
-
-      It would be nice if you could get your hands on s1, s2, s3
-      somehow ... but I don't know of a way to do it at the moment.
-
-      One improvement: maybe you don't want subst_extensional
-      polluting the proof context at the top-level. You could instead
-      write something like:
-
-      val use_subst_extensional: unit -> Lemma (ensures (forall s1 s2 e.{:pattern subst e s1; subst e s2}
-                                                               (Map.Equal s1 s2) ==> (subst e s1 = subst e s2)))
-
-      And then call it just in the scope where you want the solver to make use of it.
-      
- *)
-
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
       h1:rtyping empty v t_x ->
       h2:rtyping (extend g x t_x) e t ->
-      Tot (rtyping g (subst_beta_gen x v e) t) (decreases e)
+      Tot (rtyping g (subst_beta x v e) t) (decreases e)
 let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   match h2 with
   | TyVar y ->
@@ -266,11 +159,10 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
      else             TyVar (y-1)
   | TyAbs #g' t_y #e' #t' h21 ->
      (let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
-      subst_gen_eabs x v t_y e';
       TyAbs t_y (substitution_preserves_typing (x+1) h1 h21'))
   | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 ->
      (* CH: implicits don't work here, why? *)
-    (TyApp #g #(subst_beta_gen x v e1) #(subst_beta_gen x v e2) #t11 #t12
+    (TyApp #g #(subst_beta x v e1) #(subst_beta x v e2) #t11 #t12
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22))
 
@@ -280,7 +172,7 @@ let rec preservation e t h =
   let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = h in
      if is_value e1
      then (if is_value e2
-           then let TyAbs #g' t_x #ebody #t' hbody = h1 in
+           then let TyAbs t_x hbody = h1 in
                 substitution_preserves_typing 0 h2 hbody
            else TyApp h1 (preservation h2))
      else TyApp (preservation h1) h2
