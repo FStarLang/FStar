@@ -96,8 +96,6 @@ module Microsoft :
             val kill_all : unit -> unit
             val run_proc :
               string -> string -> string -> bool * string * string
-            val write_JSON : 'a -> string -> unit
-            val read_JSON : string -> 'a
             val get_file_extension : string -> string
             type 'a set = 'a list * ('a -> 'a -> bool)
             val set_is_empty : 'a set -> bool
@@ -248,6 +246,34 @@ module Microsoft :
             val expand_environment_variable : string -> string
             val physical_equality : 'a -> 'a -> bool
             val check_sharing : 'a -> 'a -> string -> unit
+            type OWriter = {
+		write_byte: byte -> unit;
+		write_bool: bool -> unit;
+		write_int32: int -> unit;
+		write_int64: int64 -> unit;
+		write_char: char -> unit;
+		write_double: double -> unit;
+		write_bytearray: byte[] -> unit;
+		write_string: string -> unit;
+
+		close: unit -> unit
+	    }
+
+	    type OReader = {
+		read_byte: unit -> byte;
+		read_bool: unit -> bool;
+		read_int32: unit -> int;
+		read_int64: unit -> int64;
+		read_char: unit -> char;
+		read_double: unit -> double;
+		read_bytearray: unit -> byte[];
+		read_string: unit -> string;
+
+		close: unit -> unit
+	    }
+
+            val get_owriter: string -> OWriter
+            val get_oreader: string -> OReader
           end
         module Unionfind :
           sig

@@ -1596,7 +1596,7 @@ let check_modules (s:solver_t) (ds: solver_t) mods =
           let _ = if !Options.serialize_mods then
             let c_file_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ (text_of_lid m.name) ^ ".cache" in
             print_string ("Serializing module " ^ (text_of_lid m.name) ^ "\n");
-            SSyntax.serialize_modul_ext c_file_name m
+            SSyntax.serialize_modul (get_owriter c_file_name) m
           else () in
           m, env
     in 

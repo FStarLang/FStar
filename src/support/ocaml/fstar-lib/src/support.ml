@@ -154,20 +154,6 @@ module Microsoft = struct
         let _ = Unix.close_process (inc, outc) in
         (true, res, "")
 
-      let write_JSON (o :'a) (file: string) :unit = ()
-      (* let s = new DataContractJsonSerializerSettings((\*EmitTypeInformation = EmitTypeInformation.Never*\)) in *)
-      (* let d = new DataContractJsonSerializer(typeof<'a>, s) in *)
-      (* let fs = new FileStream(file, FileMode.Create) *)
-      (* d.WriteObject(fs, o) *)
-      (* fs.Close() *)
-
-      let read_JSON (file: string) :'a = assert false
-      (* let s = new DataContractJsonSerializerSettings((\*EmitTypeInformation = EmitTypeInformation.Never*\)) in *)
-      (* let d = new DataContractJsonSerializer(typeof<'a>, s) in *)
-      (* let fs = new FileStream(file, FileMode.Open) *)
-      (* let o = (d.ReadObject(fs)) :?> 'a in *)
-      (* fs.Close(); o *)
-
       let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
 
       type 'a set = ('a list) * ('a -> 'a -> bool)
@@ -491,6 +477,59 @@ module Microsoft = struct
       let physical_equality (x:'a) (y:'a) = x == y
       let check_sharing a b msg = if physical_equality a b then fprint1 "Sharing OK: %s\n" msg else fprint1 "Sharing broken in %s\n" msg
 
+      type OWriter = {
+	  write_byte: byte -> unit;
+	  write_bool: bool -> unit;
+	  write_int32: int -> unit;
+	  write_int64: int64 -> unit;
+	  write_char: char -> unit;
+	  write_double: double -> unit;
+	  write_bytearray: byte[] -> unit;
+	  write_string: string -> unit;
+
+	  close: unit -> unit
+      }
+
+      type OReader = {
+	  read_byte: unit -> byte;
+	  read_bool: unit -> bool;
+	  read_int32: unit -> int;
+	  read_int64: unit -> int64;
+	  read_char: unit -> char;
+	  read_double: unit -> double;
+	  read_bytearray: unit -> byte[];
+	  read_string: unit -> string;
+
+	  close: unit -> unit
+      }
+      
+      (*
+       * TODO: these functions need to be filled in
+       *)
+      let get_owriter (filename:string) :OWriter = {
+	  write_byte = fun _ -> ()
+	  write_bool = fun _ -> ()
+	  write_int32 = fun _ -> ()
+	  write_int64 = fun _ -> ()
+	  write_char = fun _ -> ()
+	  write_double = fun _ -> ()
+	  write_bytearray = fun _ -> ()
+	  write_string = fun _ -> ()
+
+	  close = fun _ -> ()
+      }
+      let get_oreader (filename:string) :OReader = {
+	  read_byte = fun _ -> 'a'
+	  read_bool = fun _ -> true
+	  read_int32 = fun _ -> 0
+	  read_int64 = fun _ -> 0
+	  read_char = fun _ -> 'a'
+	  read_double = fun _ -> 0.0
+	  read_bytearray = fun _ -> [||]
+	  read_string = fun _ -> ""
+
+	  close = fun _ -> ()
+      }
 
     end
 

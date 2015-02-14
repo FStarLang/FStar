@@ -68,6 +68,8 @@ let rec rev_acc l acc = match l with
     | [] -> acc
     | hd::tl -> rev_acc tl (hd::acc)
 
+let rev_append = rev_acc
+
 val rev: list 'a -> Tot (list 'a)
 let rev l = rev_acc l []
 let revT = rev

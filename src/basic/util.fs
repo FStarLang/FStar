@@ -24,9 +24,6 @@ open System.IO
 open System.IO.Compression
 open Profiling
 
-open System.Runtime.Serialization
-open System.Runtime.Serialization.Json
-
 let return_all x = x
 
 exception Impos
@@ -146,30 +143,6 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
   let stdout = proc.StandardOutput.ReadToEnd() in
   let stderr = proc.StandardError.ReadToEnd() in 
   result, stdout, stderr
-
-(*let write_JSON (file: string) :BinaryWriter =
-    new BinaryWriter(File.Open(file, FileMode.Create))*)
-    (*let stwriter = File.CreateText file in
-    let s = JsonSerializer.Create(new JsonSerializerSettings(NullValueHandling = NullValueHandling.Ignore )) in
-    let _ = s.Serialize(stwriter, o) in
-    stwriter.Close()*)
-    (*let s = new DataContractJsonSerializerSettings(EmitTypeInformation = EmitTypeInformation.Never) in
-    let d = new DataContractJsonSerializer(typeof<'a>, s) in
-    let fs = new FileStream(file, FileMode.Create)
-    d.WriteObject(fs, o)
-    fs.Close()*)
-
-(*let read_JSON (file: string) :BinaryReader =
-    new BinaryReader(File.Open(file, FileMode.Open))*)
-    (*let streader = new JsonTextReader(File.OpenText(file)) in
-    let s = JsonSerializer.Create(new JsonSerializerSettings(NullValueHandling = NullValueHandling.Ignore )) in
-    let o = s.Deserialize<'a>(streader) in
-    streader.Close(); o*)
-    (*let s = new DataContractJsonSerializerSettings(EmitTypeInformation = EmitTypeInformation.Never) in
-    let d = new DataContractJsonSerializer(typeof<'a>, s) in
-    let fs = new FileStream(file, FileMode.Open)
-    let o = (d.ReadObject(fs)) :?> 'a in
-    fs.Close(); o*)
 
 let get_file_extension (fn: string) :string = Path.GetExtension fn
 
@@ -520,3 +493,60 @@ let check_sharing a b msg = if physical_equality a b then fprint1 "Sharing OK: %
 let is_letter_or_digit = Char.IsLetterOrDigit
 let is_punctuation = Char.IsPunctuation
 let is_symbol = Char.IsSymbol
+
+type OWriter = {
+    write_byte: byte -> unit;
+    write_bool: bool -> unit;
+    write_int32: int -> unit;
+    write_int64: int64 -> unit;
+    write_char: char -> unit;
+    write_double: double -> unit;
+    write_bytearray: array<byte> -> unit;
+    write_string: string -> unit;
+
+    close: unit -> unit
+}
+
+type OReader = {
+    read_byte: unit -> byte;
+    read_bool: unit -> bool;
+    read_int32: unit -> int;
+    read_int64: unit -> int64;
+    read_char: unit -> char;
+    read_double: unit -> double;
+    read_bytearray: unit -> array<byte>;
+    read_string: unit -> string;
+
+    close: unit -> unit
+}
+
+let get_owriter (file:string) :OWriter =
+    let w = new BinaryWriter(File.Open(file, FileMode.Create)) in
+    {
+        write_byte = w.Write;
+        write_bool = w.Write;
+        write_int32 = w.Write;
+        write_int64 = w.Write;
+        write_char = w.Write;
+        write_double = w.Write;
+        write_bytearray = fun a -> w.Write(a.Length); w.Write(a);
+        write_string = w.Write;
+
+        close = w.Close;
+    }
+
+let get_oreader (file:string) :OReader =
+    let r = new BinaryReader(File.Open(file, FileMode.Open)) in
+    {
+        read_byte = r.ReadByte;
+        read_bool = r.ReadBoolean;
+        read_int32 = r.ReadInt32;
+        read_int64 = r.ReadInt64;
+        read_char = r.ReadChar;
+        read_double = r.ReadDouble;
+        read_bytearray = fun _ -> let n = r.ReadInt32() in r.ReadBytes(n)
+        read_string = r.ReadString;
+
+        close = r.Close
+    }
+
