@@ -33,14 +33,6 @@ type sub = var -> Tot exp
 
 (* Parallel substitution operation `subst` *)
 
-val inc_var : var -> Tot exp
-let inc_var y = EVar (y+1)
-
-val subst_eabs : (e:exp -> sub -> Tot exp) -> sub -> Tot sub
-let subst_eabs subst_f s =
-  fun y -> if y = 0 then EVar y
-           else subst_f (s (y-1)) inc_var
-
 (* It would be fun to show this terminating;
    the usual way is to replace the subst_f part by a "renaming"
    (function from vars to vars), but we have a super flexible termination
@@ -53,12 +45,33 @@ let subst_eabs subst_f s =
       a function mapping substitutions (infinite objects)
       to 0 (renaming) or 1 (non-renaming)
    2) the structure of the expression e *)
-val subst : e:exp -> sub -> Tot exp
+
+(* My proposal would be to put this in Classic not Tot *)
+assume val excluded_middle : p:Type -> Tot (b:bool{b = true <==> p})
+
+type renaming (s:sub) = (forall (x:var). is_EVar (s x))
+
+val is_renaming : s:sub -> Tot (n:int{(renaming s ==> n=0) /\
+                                      (~(renaming s) ==> n=1)})
+let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
+(* Patterns are incomplete? WTF? Filed as #122 *)
+
+val inc_var : var -> Tot exp
+let inc_var y = EVar (y+1)
+
+val renaming_inc_var : unit -> Lemma (renaming (inc_var))
+let renaming_inc_var _ = ()
+
+val subst : e:exp -> s:sub -> Tot exp (decreases %[is_renaming s; e])
+val subst_eabs : s:sub -> Tot sub
 let rec subst e s =
   match e with
   | EVar x -> s x
-  | EAbs t e1 -> EAbs t (subst e1 (subst_eabs subst s))
+  | EAbs t e1 -> EAbs t (subst e1 (subst_eabs s))
   | EApp e1 e2 -> EApp (subst e1 s) (subst e2 s)
+and subst_eabs s =
+  fun y -> if y = 0 then EVar y
+           else subst (s (y-1)) inc_var
 
 (* subst_beta_gen is a generalization of the substitution we do for the beta rule,
    when we've under x binders (useful for the substitution lemma) *)
@@ -239,10 +252,10 @@ let rec subst_below x v s =
   match v with
   | EVar y     -> ()
   | EApp e1 e2 -> subst_below x e1 s; subst_below x e2 s
-  | EAbs t e   -> (subst_below (x+1) e (subst_eabs subst s);
-                   assert(e = subst e (subst_eabs subst s));
+  | EAbs t e   -> (subst_below (x+1) e (subst_eabs s);
+                   assert(e = subst e (subst_eabs s));
                    assert(v = EAbs t e);
-(*                   assert(subst v s = EAbs t (subst e (subst_eabs subst s)));*)
+(*                   assert(subst v s = EAbs t (subst e (subst_eabs s)));*)
 (*                   -- this should be provable, it's the definition! *)
                    admit()) 
 
@@ -251,12 +264,12 @@ val subst_closed : v:exp{closed v} -> s:sub ->
 let rec subst_closed v s = subst_below 0 v s
 
 val subst_gen_eabs_aux : x:var -> v:exp{closed v} -> y:var -> Lemma
-      (ensures ((subst_eabs subst (subst_beta_gen_aux  x    v)) y =
-                                  (subst_beta_gen_aux (x+1) v)  y))
+      (ensures ((subst_eabs (subst_beta_gen_aux  x    v)) y =
+                            (subst_beta_gen_aux (x+1) v)  y))
 let subst_gen_eabs_aux x v y =
   if y = 0 then ()
   else
-    (assert((subst_eabs subst (subst_beta_gen_aux x v)) y =
+    (assert((subst_eabs (subst_beta_gen_aux x v)) y =
            (subst (subst_beta_gen_aux x v (y-1)) inc_var));
           if y-1 < x then ()
      else if y-1 = x then
@@ -269,7 +282,7 @@ opaque logic type SubEqual (s1:sub) (s2:sub) =
                  (forall (x:var). s1 x = s2 x)
 
 val subst_gen_eabs_aux_forall : x:var -> v:exp{closed v} -> Lemma
-      (ensures (SubEqual (subst_eabs subst (subst_beta_gen_aux  x    v))
+      (ensures (SubEqual (subst_eabs (subst_beta_gen_aux  x    v))
                                            (subst_beta_gen_aux (x+1) v)))
 let subst_gen_eabs_aux_forall x v = admit()
 (* should follow from subst_gen_eabs_aux and forall_intro *)
@@ -281,10 +294,10 @@ val subst_extensional: s1:sub -> s2:sub{SubEqual s1 s2} -> e:exp -> Lemma
 let rec subst_extensional s1 s2 e =
   match e with
   | EVar x -> ()
-  | EAbs t e1 -> subst_extensional (subst_eabs subst s1)
-                                   (subst_eabs subst s2) e1;
+  | EAbs t e1 -> subst_extensional (subst_eabs s1)
+                                   (subst_eabs s2) e1;
 (*                 assert(subst (EAbs t e1) s1 =
-                          EAbs t (subst e1 (subst_eabs subst s1)));
+                          EAbs t (subst e1 (subst_eabs s1)));
                    -- again, this is just the definition
 *)
                  admit()
@@ -295,10 +308,10 @@ val subst_gen_eabs : x:var -> v:exp{closed v} -> t_y:ty -> e':exp -> Lemma
                 EAbs t_y (subst_beta_gen (x+1) v e')))
 let subst_gen_eabs x v t_y e' =
   subst_gen_eabs_aux_forall x v;
-  subst_extensional (subst_eabs subst (subst_beta_gen_aux  x    v))
+  subst_extensional (subst_eabs (subst_beta_gen_aux  x    v))
                                       (subst_beta_gen_aux (x+1) v)  e';
 (*  assert(subst_beta_gen x v (EAbs t_y e')
-           = EAbs t_y (subst e' (subst_eabs subst (subst_beta_gen_aux x v))));
+           = EAbs t_y (subst e' (subst_eabs (subst_beta_gen_aux x v))));
     -- again this should be provable from the definition *)
   admit()
 
