@@ -33,10 +33,13 @@ type sub = var -> Tot exp
 
 (* Parallel substitution operation `subst` *)
 
+val inc_var : var -> Tot exp
+let inc_var y = EVar (y+1)
+
 val subst_eabs : (e:exp -> sub -> Tot exp) -> sub -> Tot sub
 let subst_eabs subst_f s =
   fun y -> if y = 0 then EVar y
-           else subst_f (s (y-1)) (fun y' -> EVar (y'+1))
+           else subst_f (s (y-1)) inc_var
 
 (* It would be fun to show this terminating;
    the usual way is to replace the subst_f part by a "renaming"
@@ -132,14 +135,53 @@ let rec free_in_context x _ _ _ h =
   | TyAbs t h1 -> free_in_context (x+1) h1
   | TyApp h1 h2 -> free_in_context x h1; free_in_context x h2
 
-val typable_empty_closed : x:var -> #e:exp -> #t:ty -> rtyping empty e t ->
-      Lemma (ensures (not(appears_free_in x e)))
+val typable_empty_not_free : x:var -> #e:exp -> #t:ty -> rtyping empty e t ->
+      Lemma (ensures (not (appears_free_in x e)))
 (*      [SMTPat (appears_free_in x e)] -- CH: adding this makes it fail! *)
-let typable_empty_closed x _ _ h = free_in_context x h
+let typable_empty_not_free x _ _ h = free_in_context x h
 
-val typable_empty_closed' : #e:exp -> #t:ty -> rtyping empty e t ->
-      Lemma (ensures (forall (x:var). (not(appears_free_in x e))))
-let typable_empty_closed' _ _ h = admit() (* CH: need forall_intro for showing this *)
+val below : x:var -> e:exp -> Tot bool (decreases e)
+let rec below x e =
+  match e with
+  | EVar y -> y < x
+  | EApp e1 e2 -> below x e1 && below x e2
+  | EAbs _ e1 -> below (x+1) e1
+
+val closed : exp -> Tot bool
+let closed = below 0
+
+(* at some point we could try again to relate closed and appears_free *)
+assume val forall_intro : #a:Type -> #p:(a -> Type) ->
+  (x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
+(* this didn't work for some reason
+  forall_intro #var #(fun (x:var) -> not (appears_free_in x e))
+    (fun (x:var) -> typable_empty_closed x h)
+*)
+type pclosed (e:exp) = (forall (x:var). not (appears_free_in x e))
+assume val closed_appears_free : e:exp{closed e} -> Lemma (ensures (pclosed e))
+assume val appears_free_closed : e:exp{pclosed e} -> Lemma (ensures (closed e))
+(*
+let rec appears_free_closed e =
+  match e with
+  | EVar _ -> ()
+  | EApp e1 e2 -> appears_free_closed e1; appears_free_closed e2
+  | EAbs _ e1 -> appears_free_closed e1
+*)
+
+type below_env (x:var) (g:env) = (forall (y:var). y >= x ==> g y = None)
+
+val typable_below : x:var -> #g:env{below_env x g} -> #e:exp -> #t:ty
+                          -> h:rtyping g e t ->
+      Lemma (ensures (below x e)) (decreases h)
+let rec typable_below x g _ _ h =
+  match h with
+  | TyVar y -> ()
+  | TyApp h1 h2 -> typable_below x h1; typable_below x h2
+  | TyAbs _y h1 -> typable_below (x+1) h1
+
+val typable_empty_closed : #e:exp -> #t:ty -> h:rtyping empty e t ->
+      Lemma (ensures (closed e))
+let typable_empty_closed e t h = typable_below 0 h
 
 opaque logic type Equal (g1:env) (g2:env) =
                  (forall (x:var). g1 x = g2 x)
@@ -181,8 +223,48 @@ val extend_twice : x:var -> g:env -> t_x:ty -> t_y:ty -> Lemma
                       (extend (extend g 0 t_y) (x+1) t_x)))
 let extend_twice x g t_x t_y = ()
 
+type sub_below (x:var) (s:sub) = (forall (y:var). y<x ==> s y = EVar y)
+
+val subst_below : x:var -> v:exp{below x v} -> s:sub{sub_below x s} -> 
+  Lemma (ensures (v = subst v s)) (decreases v)
+let rec subst_below x v s =
+  match v with
+  | EVar y     -> ()
+  | EApp e1 e2 -> subst_below x e1 s; subst_below x e2 s
+  | EAbs t e   -> (subst_below (x+1) e (subst_eabs subst s);
+                   assert(e = subst e (subst_eabs subst s));
+                   assert(v = EAbs t e);
+(*                   assert(subst v s = EAbs t (subst e (subst_eabs subst s)));*)
+(*                   -- this should be provable, it's the definition! *)
+                   admit()) 
+
+val subst_closed : v:exp{closed v} -> s:sub -> 
+  Lemma (ensures (v = subst v s)) (decreases v)
+let rec subst_closed v s = subst_below 0 v s
+
+val subst_gen_eabs_aux : x:var -> v:exp{closed v} -> y:var -> Lemma
+      (ensures ((subst_eabs subst (subst_beta_gen_aux  x    v)) y =
+                                  (subst_beta_gen_aux (x+1) v)  y))
+let subst_gen_eabs_aux x v y =
+  if y = 0 then ()
+  else
+    (assert((subst_eabs subst (subst_beta_gen_aux x v)) y =
+           (subst (subst_beta_gen_aux x v (y-1)) inc_var));
+          if y-1 < x then ()
+     else if y-1 = x then
+            (assert(subst_beta_gen_aux x v (y-1) = v);
+             assert(subst_beta_gen_aux (x+1) v y = v);
+             subst_closed v inc_var)
+     else ())
+
 opaque logic type SubEqual (s1:sub) (s2:sub) =
                  (forall (x:var). s1 x = s2 x)
+
+val subst_gen_eabs_aux_forall : x:var -> v:exp{closed v} -> Lemma
+      (ensures (SubEqual (subst_eabs subst (subst_beta_gen_aux  x    v))
+                                           (subst_beta_gen_aux (x+1) v)))
+let subst_gen_eabs_aux_forall x v = admit()
+(* should follow from subst_gen_eabs_aux and forall_intro *)
 
 val subst_extensional: s1:sub -> s2:sub{SubEqual s1 s2} -> e:exp -> Lemma
       (subst e s1 = subst e s2) (decreases e)
@@ -190,19 +272,16 @@ val subst_extensional: s1:sub -> s2:sub{SubEqual s1 s2} -> e:exp -> Lemma
 (* the proof should be trivial with the extensionality axiom *)
 let subst_extensional s1 s2 e = admit()
 
-val subst_gen_eabs_aux : x:var -> y:var -> v:exp -> Lemma
-      (ensures ((subst_eabs subst (subst_beta_gen_aux  x    v)) y =
-                                  (subst_beta_gen_aux (x+1) v)  y))
-let subst_gen_eabs_aux x y v = admit()
-
-val subst_gen_eabs : x:var -> v:exp -> t_y:ty -> e':exp -> Lemma
+val subst_gen_eabs : x:var -> v:exp{closed v} -> t_y:ty -> e':exp -> Lemma
       (ensures (subst_beta_gen x v (EAbs t_y e') =
                 EAbs t_y (subst_beta_gen (x+1) v e')))
 let subst_gen_eabs x v t_y e' =
-(* can't apply this without something along the lines of subst_gen_eabs_aux
+  subst_gen_eabs_aux_forall x v;
   subst_extensional (subst_eabs subst (subst_beta_gen_aux  x    v))
                                       (subst_beta_gen_aux (x+1) v)  e';
-*)
+(*  assert(subst_beta_gen x v (EAbs t_y e')
+           = EAbs t_y (subst e' (subst_eabs subst (subst_beta_gen_aux x v))));
+    -- again this should be provable from the definition *)
   admit()
 
 (* [some comment that might help here]
@@ -261,11 +340,14 @@ val substitution_preserves_typing :
 let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   match h2 with
   | TyVar y ->
-     if x=y then      (typable_empty_closed' h1; context_invariance h1 g)
+     if x=y then      (typable_empty_closed h1;
+                       closed_appears_free v;
+                       context_invariance h1 g)
      else if y<x then context_invariance h2 g
      else             TyVar (y-1)
   | TyAbs #g' t_y #e' #t' h21 ->
      (let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
+      typable_empty_closed h1;
       subst_gen_eabs x v t_y e';
       TyAbs t_y (substitution_preserves_typing (x+1) h1 h21'))
   | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 ->
@@ -280,7 +362,7 @@ let rec preservation e t h =
   let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = h in
      if is_value e1
      then (if is_value e2
-           then let TyAbs #g' t_x #ebody #t' hbody = h1 in
+           then let TyAbs t_x hbody = h1 in
                 substitution_preserves_typing 0 h2 hbody
            else TyApp h1 (preservation h2))
      else TyApp (preservation h1) h2
