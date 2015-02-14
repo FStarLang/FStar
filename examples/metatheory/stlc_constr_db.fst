@@ -31,21 +31,33 @@ let is_value = is_EAbs
 
 type sub = var -> Tot exp
 
-(* Parallel substitution operation *)
-val subst : e:exp -> sub -> Tot exp (decreases e)
+(* Parallel substitution operation `subst` *)
+
+val subst_eabs : (e:exp -> sub -> Tot exp) -> sub -> Tot sub
+let subst_eabs subst_f s =
+  fun y -> if y = 0 then EVar y
+           else subst_f (s (y-1)) (fun y' -> EVar (y'+1))
+
+(* It would be fun to show this terminating;
+   the usual way is to replace the subst_f part by a "renaming"
+   (function from vars to vars), but we have a super flexible termination
+   machanism, can't we prove this directly?  *)
+val subst : e:exp -> sub -> Tot exp
 let rec subst e s =
   match e with
   | EVar x -> s x
-  | EAbs t e1 -> EAbs t (subst e1 (fun x -> if x = 0 then EVar x else s (x+1)))
+  | EAbs t e1 -> EAbs t (subst e1 (subst_eabs subst s))
   | EApp e1 e2 -> EApp (subst e1 s) (subst e2 s)
 
-(* This is a generalization of the substition we do for the beta rule,
+(* subst_beta_gen is a generalization of the substitution we do for the beta rule,
    when we've under x binders (useful for the substitution lemma) *)
+val subst_beta_gen_aux : var -> exp -> Tot sub
+let subst_beta_gen_aux x v = fun y -> if y < x then (EVar y)
+                                      else if y = x then v
+                                      else (EVar (y-1))
+
 val subst_beta_gen : var -> exp -> exp -> Tot exp
-let subst_beta_gen x v e =
-  subst e (fun y -> if y < x then (EVar y)
-                    else if y = x then v
-                    else (EVar (y-1)))
+let subst_beta_gen x v e = subst e (subst_beta_gen_aux x v)
 
 let subst_beta v e = subst_beta_gen 0 v e
 
@@ -56,7 +68,7 @@ let rec step e =
       if is_value e1 then
         if is_value e2 then
           match e1 with
-          | EAbs t e' -> Some (subst_beta e' e2)
+          | EAbs t e' -> Some (subst_beta e2 e')
           | _         -> None
         else
           match (step e2) with
@@ -169,17 +181,34 @@ val extend_twice : x:var -> g:env -> t_x:ty -> t_y:ty -> Lemma
                       (extend (extend g 0 t_y) (x+1) t_x)))
 let extend_twice x g t_x t_y = ()
 
+opaque logic type SubEqual (s1:sub) (s2:sub) =
+                 (forall (x:var). s1 x = s2 x)
+
+val subst_extensional: s1:sub -> s2:sub{SubEqual s1 s2} -> e:exp -> Lemma
+      (subst e s1 = subst e s2) (decreases e)
+(*      [SMTPat [subst e s1; subst e s2]] -- fails type-checking *)
+(* the proof should be trivial with the extensionality axiom *)
+let subst_extensional s1 s2 e = admit()
+
+val subst_gen_eabs_aux : x:var -> y:var -> v:exp -> Lemma
+      (ensures ((subst_eabs subst (subst_beta_gen_aux  x    v)) y =
+                                  (subst_beta_gen_aux (x+1) v)  y))
+let subst_gen_eabs_aux x y v = admit()
+
 val subst_gen_eabs : x:var -> v:exp -> t_y:ty -> e':exp -> Lemma
-      (ensures (subst_beta_gen x v (EAbs t_y e') = EAbs t_y (subst_beta_gen (x+1) v e')))
-let subst_gen_eabs x v t_y e' = admit() (* this also extensionality of sub *)
+      (ensures (subst_beta_gen x v (EAbs t_y e') =
+                EAbs t_y (subst_beta_gen (x+1) v e')))
+let subst_gen_eabs x v t_y e' =
+(* can't apply this without something along the lines of subst_gen_eabs_aux
+  subst_extensional (subst_eabs subst (subst_beta_gen_aux  x    v))
+                                      (subst_beta_gen_aux (x+1) v)  e';
+*)
+  admit()
 
 (* [some comment that might help here]
    NS: The trouble is that you need extensionality for this proof to go through. 
-   F* will try to prove that 
-      EApp (subst e1 s1) (subst e2 s1) = EApp (subst e1 s2) (subst e2 s3) 
-
-   Now, s1, s2 and s3 are all extensionally equal. But F* doesn't know
-   that. A good way to solve this would be to use the same recipe
+   [snip]
+   A good way to solve this would be to use the same recipe
    that is being used in partialmap.fst for set, map etc. 
 
    -- Ideally, we would implement Map in the same style as Set, using
@@ -245,7 +274,6 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22))
 
-(*
 val preservation : #e:exp{is_Some (step e)} -> #t:ty -> h:(rtyping empty e t) ->
       Tot (rtyping empty (Some.v (step e)) t) (decreases e)
 let rec preservation e t h =
@@ -253,7 +281,6 @@ let rec preservation e t h =
      if is_value e1
      then (if is_value e2
            then let TyAbs #g' t_x #ebody #t' hbody = h1 in
-                (substitution_preserves_typing 0 h2 hbody)
+                substitution_preserves_typing 0 h2 hbody
            else TyApp h1 (preservation h2))
      else TyApp (preservation h1) h2
-*)
