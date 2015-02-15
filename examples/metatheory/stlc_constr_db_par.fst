@@ -255,9 +255,7 @@ let rec subst_below x v s =
   | EAbs t e   -> (subst_below (x+1) e (subst_eabs s);
                    assert(e = subst e (subst_eabs s));
                    assert(v = EAbs t e);
-(*                   assert(subst v s = EAbs t (subst e (subst_eabs s)));*)
-(*                   -- this should be provable, it's the definition! *)
-                   admit()) 
+                   assert(subst v s = EAbs t (subst e (subst_eabs s)))) 
 
 val subst_closed : v:exp{closed v} -> s:sub -> 
   Lemma (ensures (v = subst v s)) (decreases v)
@@ -283,7 +281,7 @@ opaque logic type SubEqual (s1:sub) (s2:sub) =
 
 val subst_gen_eabs_aux_forall : x:var -> v:exp{closed v} -> Lemma
       (ensures (SubEqual (subst_eabs (subst_beta_gen_aux  x    v))
-                                           (subst_beta_gen_aux (x+1) v)))
+                                     (subst_beta_gen_aux (x+1) v)))
 let subst_gen_eabs_aux_forall x v = admit()
 (* should follow from subst_gen_eabs_aux and forall_intro *)
 
@@ -296,11 +294,8 @@ let rec subst_extensional s1 s2 e =
   | EVar x -> ()
   | EAbs t e1 -> subst_extensional (subst_eabs s1)
                                    (subst_eabs s2) e1;
-(*                 assert(subst (EAbs t e1) s1 =
-                          EAbs t (subst e1 (subst_eabs s1)));
-                   -- again, this is just the definition
-*)
-                 admit()
+                 assert(subst (EAbs t e1) s1 =
+                          EAbs t (subst e1 (subst_eabs s1)))
   | EApp e1 e2 -> (subst_extensional s1 s2 e1; subst_extensional s1 s2 e2)
 
 val subst_gen_eabs : x:var -> v:exp{closed v} -> t_y:ty -> e':exp -> Lemma
@@ -310,10 +305,8 @@ let subst_gen_eabs x v t_y e' =
   subst_gen_eabs_aux_forall x v;
   subst_extensional (subst_eabs (subst_beta_gen_aux  x    v))
                                       (subst_beta_gen_aux (x+1) v)  e';
-(*  assert(subst_beta_gen x v (EAbs t_y e')
-           = EAbs t_y (subst e' (subst_eabs (subst_beta_gen_aux x v))));
-    -- again this should be provable from the definition *)
-  admit()
+  assert(subst_beta_gen x v (EAbs t_y e')
+           = EAbs t_y (subst e' (subst_eabs (subst_beta_gen_aux x v))))
 
 (* [some comment that might help here]
    NS: The trouble is that you need extensionality for this proof to go through. 
