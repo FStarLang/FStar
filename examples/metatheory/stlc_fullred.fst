@@ -47,3 +47,50 @@ let rec progress _ _ h =
      | EAbs t e1' -> ExIntro (subst_beta e2 e1') (SBeta t e1' e2)
      | _          -> (match progress h1 with
                       | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1'))
+
+val substitution_preserves_typing :
+      x:var -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
+      h1:rtyping g v t_x ->
+      h2:rtyping (extend g x t_x) e t ->
+      Tot (rtyping g (subst_beta_gen x v e) t) (decreases e)
+let rec substitution_preserves_typing x e v t_x t g h1 h2 =
+  match h2 with
+  | TyVar y ->
+     if x=y then h1
+     else if y<x then context_invariance h2 g
+     else             TyVar (y-1)
+  | TyAbs #g' t_y #e' #t' h21 ->
+     (let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
+      TyAbs t_y (substitution_preserves_typing (x+1) h1 h21'))
+
+(* Not sure I understand this
+Have: (rtyping (extend (extend g 0 t_y) (x + 1) t_x) e' t')
+TS:   (rtyping (extend g (x + 1) t_x) e' t'){(%[e'] << %[e])}
+*)
+
+
+
+
+
+
+
+
+
+
+
+  | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 ->
+     (* CH: implicits don't work here, why? *)
+    (TyApp #g #(subst_beta_gen x v e1) #(subst_beta_gen x v e2) #t11 #t12
+       (substitution_preserves_typing x h1 h21)
+       (substitution_preserves_typing x h1 h22))
+
+val preservation : #e:exp -> #e':exp -> hs:rstep e e' ->
+                   #g:env -> #t:ty -> ht:(rtyping g e t) ->
+                   Tot (rtyping g e' t) (decreases ht)
+let rec preservation e e' hs g t ht =
+  let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = ht in
+    match hs with
+    | SBeta t e1' e2' -> let TyAbs t_x hbody = h1 in
+                         substitution_preserves_typing 0 h2 hbody
+    | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
+    | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2)
