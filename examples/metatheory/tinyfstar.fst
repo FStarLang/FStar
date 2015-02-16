@@ -40,18 +40,19 @@ and cmp =
   | CST   : t:typ -> wp:typ -> cmp
 
 and exp = 
+  | EVar   : x:var   -> exp
+  | EConst : c:const -> exp
   | ELoc   : l:int   -> exp
   | ENat   : l:int   -> exp
-  | EConst : c:const -> exp
-  | EVar   : x:var   -> exp
   | ELam   : t:typ   -> e:exp -> exp
   | EApp   : e1:exp  -> e2:exp -> exp
-  | ELet   : t:typ   -> e1:exp -> e2:exp -> exp
+  | ELet   : t:typ   -> e1:exp -> e2:exp -> exp (* CH: if I remember correctly this was to simulate the other contexts? *)
   | EIf0   : e0:exp  -> e1:exp -> e2:exp -> exp
+  | EFix   : ed:exp  -> t:typ  -> e:exp  -> exp (* CH: added this, but we're still missing the rules for it *)
 
 (* Constants *)
 let t_unit   = TConst 0
-let t_nat    = TConst 1
+let t_int    = TConst 1
 let t_refint = TConst 2
 let t_heap   = TConst 3
 let t_forall = TConst 4
@@ -68,6 +69,8 @@ let e_bang   = EConst 100
 let e_assign = EConst 101
 let e_sel    = EConst 102
 let e_upd    = EConst 103
+let e_unit   = EConst 104
+(* CH: still missing the integer constants *)
 
 (********************************************************)
 (* Substitutions and de Bruijn index manipulations      *)
@@ -211,13 +214,13 @@ let neg phi            = TTApp t_neg phi
 
 val bind_pure_if : exp -> c1:cmp{is_CPure c1} -> c2:cmp{is_CPure c2} -> Tot cmp
 let bind_pure_if e (CPure t wp1) (CPure _ wp2) =
-  let guard = mk_eq t_nat e (ENat 0) in
+  let guard = mk_eq t_int e (ENat 0) in
   let wp = op_CPure t t_and (op_CPure t t_imp (up_CPure t guard) wp1) (op_CPure t t_imp (up_CPure t (neg guard)) wp2) in
   CPure t wp
     
 val bind_st_if : exp -> c1:cmp{is_CST c1} -> c2:cmp{is_CST c2} -> Tot cmp
 let bind_st_if e (CST t wp1) (CST _ wp2) =
-  let guard = mk_eq t_nat e (ENat 0) in
+  let guard = mk_eq t_int e (ENat 0) in
   let wp = op_CST t t_and (op_CST t t_imp (up_CST t guard) wp1) (op_CST t t_imp (up_CST t (neg guard)) wp2) in
   CST t wp
 
@@ -265,7 +268,7 @@ type constants = int -> Tot (option const_binding)
 val signature : constants 
 let signature = function 
   | 0 -> Some (B_t KType) //t_unit
-  | 1 -> Some (B_t KType) //t_nat
+  | 1 -> Some (B_t KType) //t_int
   | 2 -> Some (B_t KType) //t_refint
   | _ -> None (* TODO: fill this in *)
 
@@ -399,7 +402,7 @@ type typing : env -> exp -> cmp -> Type =
             -> e2:exp
             -> c1:cmp
             -> c2:cmp{result_typ c1 = result_typ c2}
-            -> typing g e0 (tot t_nat)
+            -> typing g e0 (tot t_int)
             -> typing g e1 c1
             -> typing g e2 c2
             -> typing g (EIf0 e0 e1 e2) (bind_if e0 c1 c2)
@@ -495,3 +498,7 @@ and kind_ok : env -> knd -> Type =
            -> kind_ok g k1
            -> kind_ok (extend g (B_a k1)) k2
            -> kind_ok g (KKArr k1 k2)
+
+(* CH: still missing the operational semantics;
+   it needs to be a relation because of allocation,
+   and of full reduction in types, right? *)
