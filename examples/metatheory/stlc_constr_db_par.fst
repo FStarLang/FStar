@@ -63,7 +63,7 @@ val renaming_inc_var : unit -> Lemma (renaming (inc_var))
 let renaming_inc_var _ = ()
 
 val subst : e:exp -> s:sub -> Tot exp (decreases %[is_renaming s; e])
-val subst_eabs : s:sub -> Tot sub
+val subst_eabs : sub -> Tot sub
 let rec subst e s =
   match e with
   | EVar x -> s x
