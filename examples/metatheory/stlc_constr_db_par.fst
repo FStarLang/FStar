@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module StlcConstrDeBruijn
+module StlcConstrDeBruijnParallelSub
 
 type ty =
   | TArrow : t1:ty -> t2:ty -> ty
@@ -137,7 +137,7 @@ val progress : #e:exp -> #t:ty -> h:rtyping empty e t ->
       Lemma (ensures (is_value e \/ (is_Some (step e)))) (decreases h)
 let rec progress _ _ h =
   match h with
-  | TyVar _     -> ()
+  | TyVar _   -> ()
   | TyAbs _ _ -> ()
   | TyApp h1 h2 -> progress h1; progress h2
 
