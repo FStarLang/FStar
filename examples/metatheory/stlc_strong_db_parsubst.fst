@@ -65,8 +65,10 @@ let sub_inc y = EVar (y+1)
 val renaming_sub_inc : unit -> Lemma (renaming (sub_inc))
 let renaming_sub_inc _ = ()
 
-val subst : e:exp -> s:sub -> Tot exp (decreases %[is_renaming s; e])
-val subst_eabs : sub -> Tot sub
+val subst : e:exp -> s:sub -> Tot exp
+    (decreases e(*(if is_EVar e then LexTop else %[is_renaming s; e])*))
+val subst_eabs : s:sub -> Tot (sub(*{renaming s ==> renaming s'}*))
+      (*decreases (is_renaming s)*)
 let rec subst e s =
   match e with
   | EVar x -> s x
@@ -171,7 +173,6 @@ let rec subst_extensional s1 s2 e =
   | EApp e1 e2 -> (subst_extensional s1 s2 e1; subst_extensional s1 s2 e2)
 
 (* Typing extensional (weaker) and context invariance (stronger) lemmas;
-   they entail lemmas like weakening, strengthening, swapping, etc.
    Context invariance is actually used in a single place within substitution,
    for in a specific form of weakening when typing variables. *)
 
@@ -196,6 +197,7 @@ let rec context_invariance _ _ _ h g' =
   | TyApp h1 h2 ->
     TyApp (context_invariance h1 g') (context_invariance h2 g')
 
+(* This one would follow just by functional extensionality *)
 opaque logic type EnvEqual (g1:env) (g2:env) =
                  (forall (x:var). g1 x = g2 x)
 
@@ -245,20 +247,20 @@ val shift_up_above_abs : n:nat -> t:ty -> e:exp -> Lemma
 let shift_up_above_abs n t e =
   subst_extensional (subst_eabs (sub_inc_above n)) (sub_inc_above (n+1)) e
 
-(* Shifting preserves typing *)
+(* Weakening or shifting preserves typing *)
 
-val typing_shift_up_above : n:nat -> #g:env -> #v:exp -> #t:ty -> t':ty ->
-      h:rtyping g v t -> Tot (rtyping (extend g n t') (shift_up_above n v) t)
+val weakening : x:nat -> #g:env -> #e:exp -> #t:ty -> t':ty ->
+      h:rtyping g e t -> Tot (rtyping (extend g x t') (shift_up_above x e) t)
       (decreases h)
-let rec typing_shift_up_above n g v t t' h =
+let rec weakening n g v t t' h =
   match h with
   | TyVar y -> if y<n then TyVar y else TyVar (y+1)
   | TyAbs #g t_y #e' #t'' h21 ->
       (shift_up_above_abs n t_y e';
-       let h21 = typing_shift_up_above (n+1) t' h21 in
+       let h21 = weakening (n+1) t' h21 in
        TyAbs t_y (typing_extensional h21 (extend (extend g n t') 0 t_y)))
-  | TyApp h21 h22 -> TyApp (typing_shift_up_above n t' h21)
-                           (typing_shift_up_above n t' h22)
+  | TyApp h21 h22 -> TyApp (weakening n t' h21)
+                           (weakening n t' h22)
 
 (* Substitution preserves typing *)
 
@@ -275,14 +277,12 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
      else             TyVar (y-1)
   | TyAbs #g' t_y #e' #t' h21 ->
      (let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
-      let h1' = typing_shift_up_above 0 t_y h1 in
+      let h1' = weakening 0 t_y h1 in
       subst_gen_eabs x v t_y e';
       TyAbs t_y (substitution_preserves_typing (x+1) h1' h21'))
-  | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 ->
-     (* CH: implicits don't work here, why? *)
-    (TyApp #g #(subst_beta_gen x v e1) #(subst_beta_gen x v e2) #t11 #t12
-       (substitution_preserves_typing x h1 h21)
-       (substitution_preserves_typing x h1 h22))
+  | TyApp h21 h22 ->
+    (TyApp (substitution_preserves_typing x h1 h21)
+           (substitution_preserves_typing x h1 h22))
 
 (* Type preservation *)
 
