@@ -122,7 +122,7 @@ val extend_gt : x:var -> y:var{y > x} -> g:env -> t_x:ty -> Lemma
 let extend_gt x y g t_x = ()
 
 val extend_twice : x:var -> g:env -> t_x:ty -> t_y:ty -> Lemma
-      (ensures (Equal (extend (extend g x t_x) 0     t_y)
+      (ensures (EnvEqual (extend (extend g x t_x) 0     t_y)
                       (extend (extend g 0 t_y) (x+1) t_x)))
 let extend_twice x g t_x t_y = ()
 
@@ -144,23 +144,23 @@ val subst_closed : v:exp{closed v} -> s:sub ->
 let rec subst_closed v s = subst_below 0 v s
 
 val subst_gen_eabs_aux : x:var -> v:exp{closed v} -> y:var -> Lemma
-      (ensures ((subst_eabs (subst_beta_gen_aux  x    v)) y =
-                            (subst_beta_gen_aux (x+1) v)  y))
+      (ensures ((subst_eabs (sub_beta_gen  x    v)) y =
+                            (sub_beta_gen (x+1) v)  y))
 let subst_gen_eabs_aux x v y =
   if y = 0 then ()
   else
-    (assert((subst_eabs (subst_beta_gen_aux x v)) y =
-           (subst (subst_beta_gen_aux x v (y-1)) inc_var));
+    (assert((subst_eabs (sub_beta_gen x v)) y =
+           (subst (sub_beta_gen x v (y-1)) sub_inc));
           if y-1 < x then ()
      else if y-1 = x then
-            (assert(subst_beta_gen_aux x v (y-1) = v);
-             assert(subst_beta_gen_aux (x+1) v y = v);
-             subst_closed v inc_var)
+            (assert(sub_beta_gen x v (y-1) = v);
+             assert(sub_beta_gen (x+1) v y = v);
+             subst_closed v sub_inc)
      else ())
 
 val subst_gen_eabs_aux_forall : x:var -> v:exp{closed v} -> Lemma
-      (ensures (SubEqual (subst_eabs (subst_beta_gen_aux  x    v))
-                                     (subst_beta_gen_aux (x+1) v)))
+      (ensures (SubEqual (subst_eabs (sub_beta_gen  x    v))
+                                     (sub_beta_gen (x+1) v)))
 let subst_gen_eabs_aux_forall x v = admit()
 (* should follow from subst_gen_eabs_aux and forall_intro *)
 
@@ -169,10 +169,10 @@ val subst_gen_eabs : x:var -> v:exp{closed v} -> t_y:ty -> e':exp -> Lemma
                 EAbs t_y (subst_beta_gen (x+1) v e')))
 let subst_gen_eabs x v t_y e' =
   subst_gen_eabs_aux_forall x v;
-  subst_extensional (subst_eabs (subst_beta_gen_aux  x    v))
-                                      (subst_beta_gen_aux (x+1) v)  e';
+  subst_extensional (subst_eabs (sub_beta_gen  x    v))
+                                      (sub_beta_gen (x+1) v)  e';
   assert(subst_beta_gen x v (EAbs t_y e')
-           = EAbs t_y (subst e' (subst_eabs (subst_beta_gen_aux x v))))
+           = EAbs t_y (subst e' (subst_eabs (sub_beta_gen x v))))
 
 (* [some comment that might help here]
    NS: The trouble is that you need extensionality for this proof to go through. 
