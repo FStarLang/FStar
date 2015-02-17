@@ -251,7 +251,7 @@ val extend: env -> var_binding -> Tot env
 let extend env var_binding = function
   | 0 -> Some var_binding
   | i -> 
-    match env (i + 1) with 
+    match env (i - 1) with 
       | None -> None
       | Some (B_a k) -> Some (B_a (bump_knd 1 k))
       | Some (B_x t) -> Some (B_x (bump_typ 1 t))

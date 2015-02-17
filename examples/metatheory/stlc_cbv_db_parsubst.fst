@@ -42,7 +42,7 @@ let rec step e =
         | None     -> None)
   | _ -> None
 
-val progress : #e:exp -> #t:typ -> h:rtyping empty e t ->
+val progress : #e:exp -> #t:typ -> h:typing empty e t ->
       Lemma (ensures (is_value e \/ (is_Some (step e)))) (decreases h)
 let rec progress _ _ h =
   match h with
@@ -51,7 +51,7 @@ let rec progress _ _ h =
   | TyApp h1 h2 -> progress h1; progress h2
 
 
-val free_in_context : x:var -> #e:exp -> #g:env -> #t:typ -> h:rtyping g e t ->
+val free_in_context : x:var -> #e:exp -> #g:env -> #t:typ -> h:typing g e t ->
       Lemma (ensures (appears_free_in x e ==> is_Some (g x))) (decreases h)
 let rec free_in_context x _ _ _ h =
   match h with
@@ -59,7 +59,7 @@ let rec free_in_context x _ _ _ h =
   | TyAbs t h1 -> free_in_context (x+1) h1
   | TyApp h1 h2 -> free_in_context x h1; free_in_context x h2
 
-val typable_empty_not_free : x:var -> #e:exp -> #t:typ -> rtyping empty e t ->
+val typable_empty_not_free : x:var -> #e:exp -> #t:typ -> typing empty e t ->
       Lemma (ensures (not (appears_free_in x e)))
 (*      [SMTPat (appears_free_in x e)] -- CH: adding this makes it fail! *)
 let typable_empty_not_free x _ _ h = free_in_context x h
@@ -95,7 +95,7 @@ let rec appears_free_closed e =
 type below_env (x:var) (g:env) = (forall (y:var). y >= x ==> g y = None)
 
 val typable_below : x:var -> #g:env{below_env x g} -> #e:exp -> #t:typ
-                          -> h:rtyping g e t ->
+                          -> h:typing g e t ->
       Lemma (ensures (below x e)) (decreases h)
 let rec typable_below x g _ _ h =
   match h with
@@ -103,7 +103,7 @@ let rec typable_below x g _ _ h =
   | TyApp h1 h2 -> typable_below x h1; typable_below x h2
   | TyAbs _y h1 -> typable_below (x+1) h1
 
-val typable_empty_closed : #e:exp -> #t:typ -> h:rtyping empty e t ->
+val typable_empty_closed : #e:exp -> #t:typ -> h:typing empty e t ->
       Lemma (ensures (closed e))
 let typable_empty_closed e t h = typable_below 0 h
 
@@ -224,9 +224,9 @@ let subst_gen_elam x v t_y e' =
 
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
-      h1:rtyping empty v t_x ->
-      h2:rtyping (extend g x t_x) e t ->
-      Tot (rtyping g (subst_beta_gen x v e) t) (decreases e)
+      h1:typing empty v t_x ->
+      h2:typing (extend g x t_x) e t ->
+      Tot (typing g (subst_beta_gen x v e) t) (decreases e)
 let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   match h2 with
   | TyVar y ->
@@ -246,8 +246,8 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22))
 
-val preservation : #e:exp{is_Some (step e)} -> #t:typ -> h:(rtyping empty e t) ->
-      Tot (rtyping empty (Some.v (step e)) t) (decreases e)
+val preservation : #e:exp{is_Some (step e)} -> #t:typ -> h:(typing empty e t) ->
+      Tot (typing empty (Some.v (step e)) t) (decreases e)
 let rec preservation e t h =
   let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = h in
      if is_value e1

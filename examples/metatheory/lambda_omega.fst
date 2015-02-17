@@ -21,8 +21,8 @@ module LambdaOmega
 type var = nat
 
 type knd =
-  | KTyp
-  | KArr : knd -> knd
+  | KTyp : knd
+  | KArr : knd -> knd -> knd
 
 type typ =
   | TVar : var -> typ
@@ -57,6 +57,19 @@ and esubst_lam s =
   fun y -> if y = 0 then EVar y
            else esubst (s (y-1)) esub_inc
 
+(* subst_beta_gen is a generalization of the substitution we do for
+   the beta rule, when we've under x binders
+   (useful for the substitution lemma) *)
+val esub_beta_gen : var -> exp -> Tot esub
+let esub_beta_gen x e = fun y -> if y < x then (EVar y)
+                                      else if y = x then e
+                                      else (EVar (y-1))
+
+val esubst_beta_gen : var -> exp -> exp -> Tot exp
+let esubst_beta_gen x e' e = esubst e (esub_beta_gen x e')
+
+let esubst_beta e' e = esubst_beta_gen 0 e' e
+
 (* Substitution on types is very much analogous *)
 
 type tsub = var -> Tot typ
@@ -75,3 +88,175 @@ let rec tsubst t s =
 and tsubst_lam s =
   fun y -> if y = 0 then TVar y
            else tsubst (s (y-1)) tsub_inc
+
+(* ... and so is tsubst_beta *)
+
+val tsub_beta_gen : var -> typ -> Tot tsub
+let tsub_beta_gen x t = fun y -> if y < x then (TVar y)
+                                      else if y = x then t
+                                      else (TVar (y-1))
+
+val tsubst_beta_gen : var -> typ -> typ -> Tot typ
+let tsubst_beta_gen x v e = tsubst e (tsub_beta_gen x v)
+
+let tsubst_beta v e = tsubst_beta_gen 0 v e
+
+(* Step relation -- going for strong reduction, just because we can *)
+
+type step : exp -> exp -> Type =
+  | SBeta : t:typ ->
+            e1:exp ->
+            e2:exp ->
+            step (EApp (ELam t e1) e2) (esubst_beta e2 e1)
+  | SApp1 : #e1:exp ->
+            e2:exp ->
+            #e1':exp ->
+            step e1 e1' ->
+            step (EApp e1 e2) (EApp e1' e2)
+  | SApp2 : e1:exp ->
+            #e2:exp ->
+            #e2':exp ->
+            step e2 e2' ->
+            step (EApp e1 e2) (EApp e1 e2')
+
+(* Typing environments *)
+
+type bnd =
+  | B_x : t:typ -> bnd
+  | B_a : k:knd -> bnd
+
+val is_a : option bnd -> Tot bool
+let is_a ob = is_Some ob && is_B_a (Some.v ob)
+
+val get_knd : ob:(option bnd){is_a ob} -> Tot knd
+let get_knd ob = B_a.k (Some.v ob)
+
+val is_x : option bnd -> Tot bool
+let is_x ob = is_Some ob && is_B_x (Some.v ob)
+
+val get_typ : ob:(option bnd){is_x ob} -> Tot typ
+let get_typ ob = B_x.t (Some.v ob)
+
+type env = var -> Tot (option bnd)
+
+val empty : env
+let empty _ = None
+
+val omap : ('a -> Tot 'b) -> option 'a -> Tot (option 'b)
+let omap f o =
+  match o with
+  | Some a -> Some (f a)
+  | None   -> None
+
+val tmap : (typ -> Tot typ) -> bnd -> Tot bnd
+let tmap f b =
+  match b with
+  | B_x t -> B_x (f t)
+  | B_a k -> B_a k
+
+val tsub_inc_above : nat -> var -> Tot typ
+let tsub_inc_above x y = if y<x then TVar y else TVar (y+1)
+
+val tshift_up_above : nat -> typ -> Tot typ
+let tshift_up_above x t = tsubst t (tsub_inc_above x)
+
+val tshift_up : typ -> Tot typ
+let tshift_up = tshift_up_above 0
+
+val extend : env -> var -> bnd -> Tot env
+let extend g x b y = if y < x then g y
+                     else if y = x then Some b
+                     else omap (tmap tshift_up) (g (y-1))
+
+(* Kinding, type equivalence, and typing rules;
+   first 3 kinding and typing rules are analogous *)
+
+type kinding : env -> typ -> knd -> Type =
+  | KiVar : #g:env ->
+            a:var{is_a (g a)} ->
+            kinding g (TVar a) (get_knd (g a))
+  | KiAbs : #g:env ->
+            k:knd ->
+            #t1:typ ->
+            #k':knd ->
+            kinding (extend g 0 (B_a k)) t1 k' ->
+            kinding g (TLam k t1) (KArr k k')
+  | KiApp : #g:env ->
+            #t1:typ ->
+            #t2:typ ->
+            #k11:knd ->
+            #k12:knd ->
+            kinding g t1 (KArr k11 k12) ->
+            kinding g t2 k11 ->
+            kinding g (TApp t1 t2) k12
+  | KiArr : #g:env ->
+            #t1:typ ->
+            #t2:typ ->
+            kinding g t1 KTyp ->
+            kinding g t2 KTyp ->
+            kinding g (TArr t1 t2) KTyp
+
+type tequiv : typ -> typ -> Type =
+  | EqRefl : t:typ ->
+             tequiv t t
+  | EqSymm : #t1:typ ->
+             #t2:typ ->
+             tequiv t1 t2 ->
+             tequiv t2 t1
+  | EqTran : #t1:typ ->
+             #t2:typ ->
+             #t3:typ ->
+             tequiv t1 t2 ->
+             tequiv t2 t3 ->
+             tequiv t1 t3
+  | EqLam : #t :typ ->
+            #t':typ ->
+            k :knd ->
+            tequiv t t' ->
+            tequiv (TLam k t) (TLam k t')
+  | EqApp : #t1 :typ ->
+            #t1':typ ->
+            #t2 :typ ->
+            #t2':typ ->
+            tequiv t1 t1' ->
+            tequiv t2 t2' ->
+            tequiv (TApp t1 t2) (TApp t1' t2')
+  | EqBeta :k:knd ->
+            t1:typ ->
+            t2:typ ->
+            tequiv (TApp (TLam k t1) t2) (tsubst_beta t2 t1)
+  | EqArr : #t1 :typ ->
+            #t1':typ ->
+            #t2 :typ ->
+            #t2':typ ->
+            tequiv t1 t1' ->
+            tequiv t2 t2' ->
+            tequiv (TArr t1 t2) (TArr t1' t2')
+
+type typing : env -> exp -> typ -> Type =
+  | TyVar : #g:env ->
+            x:var{is_x (g x)} ->
+            typing g (EVar x) (get_typ (g x))
+  | TyAbs : #g:env ->
+            t:typ ->
+            #e1:exp ->
+            #t':typ ->
+            kinding g t KTyp ->
+            typing (extend g 0 (B_x t)) e1 t' ->
+            typing g (ELam t e1) (TArr t t')
+  | TyApp : #g:env ->
+            #e1:exp ->
+            #e2:exp ->
+            #t11:typ ->
+            #t12:typ ->
+            typing g e1 (TArr t11 t12) ->
+            typing g e2 t11 ->
+            typing g (EApp e1 e2) t12
+  | TyEqu : #g:env ->
+            #e:exp ->
+            #t1:typ ->
+            #t2:typ ->
+            typing g e t1 ->
+            tequiv t1 t2 ->
+            kinding g t2 KTyp ->
+            typing g e t2

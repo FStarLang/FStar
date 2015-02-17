@@ -20,7 +20,7 @@ module StlcStrongDbParSubst
    strong reduction, using deBruijn indices and parallel substitution. *)
 
 type typ =
-  | TArrow : typ -> typ -> typ
+  | TArr : typ -> typ -> typ
 
 type var = nat
 
@@ -91,21 +91,21 @@ let subst_beta v e = subst_beta_gen 0 v e
 (* Small-step operational semantics;
    non-deterministic, so necessarily in inductive form *)
 
-type rstep : exp -> exp -> Type =
+type step : exp -> exp -> Type =
   | SBeta : t:typ ->
             e1:exp ->
             e2:exp ->
-            rstep (EApp (ELam t e1) e2) (subst_beta e2 e1)
+            step (EApp (ELam t e1) e2) (subst_beta e2 e1)
   | SApp1 : #e1:exp ->
             e2:exp ->
             #e1':exp ->
-            rstep e1 e1' ->
-            rstep (EApp e1 e2) (EApp e1' e2)
+            step e1 e1' ->
+            step (EApp e1 e2) (EApp e1' e2)
   | SApp2 : e1:exp ->
             #e2:exp ->
             #e2':exp ->
-            rstep e2 e2' ->
-            rstep (EApp e1 e2) (EApp e1 e2')
+            step e2 e2' ->
+            step (EApp e1 e2) (EApp e1 e2')
 
 (* Type system; in inductive form (not strictly necessary for STLC) *)
 
@@ -119,24 +119,24 @@ let extend g x t y = if y < x then g y
                      else if y = x then Some t
                      else g (y-1)
 
-type rtyping : env -> exp -> typ -> Type =
+type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
             x:var{is_Some (g x)} ->
-              rtyping g (EVar x) (Some.v (g x))
+              typing g (EVar x) (Some.v (g x))
   | TyAbs : #g:env ->
             t:typ ->
             #e1:exp ->
             #t':typ ->
-            rtyping (extend g 0 t) e1 t' ->
-            rtyping g (ELam t e1) (TArrow t t')
+            typing (extend g 0 t) e1 t' ->
+            typing g (ELam t e1) (TArr t t')
   | TyApp : #g:env ->
             #e1:exp ->
             #e2:exp ->
             #t11:typ ->
             #t12:typ ->
-            rtyping g e1 (TArrow t11 t12) ->
-            rtyping g e2 t11 ->
-            rtyping g (EApp e1 e2) t12
+            typing g e1 (TArr t11 t12) ->
+            typing g e2 t11 ->
+            typing g (EApp e1 e2) t12
 
 (* Progress proof, a bit larger in constructive style *)
 
@@ -147,8 +147,8 @@ type ex : #a:Type -> (a -> Type) -> Type =
 val is_value : exp -> Tot bool
 let is_value = is_ELam
 
-val progress : #e:exp{not (is_value e)} -> #t:typ -> h:rtyping empty e t ->
-               Tot (ex (fun e' -> rstep e e')) (decreases h)
+val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
+               Tot (ex (fun e' -> step e e')) (decreases h)
 let rec progress _ _ h =
   match h with
   | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
@@ -187,8 +187,8 @@ opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
                  (forall (x:var). appears_free_in x e ==> g1 x = g2 x)
 
 val context_invariance : #e:exp -> #g:env -> #t:typ -> 
-      h:(rtyping g e t) -> g':env{EnvEqualE e g g'} ->
-      Tot (rtyping g' e t) (decreases h)
+      h:(typing g e t) -> g':env{EnvEqualE e g g'} ->
+      Tot (typing g' e t) (decreases h)
 let rec context_invariance _ _ _ h g' =
   match h with
   | TyVar x -> TyVar x
@@ -202,8 +202,8 @@ opaque logic type EnvEqual (g1:env) (g2:env) =
                  (forall (x:var). g1 x = g2 x)
 
 val typing_extensional : #e:exp -> #g:env -> #t:typ ->
-      h:(rtyping g e t) -> g':env{EnvEqual g g'} ->
-      Tot (rtyping g' e t)
+      h:(typing g e t) -> g':env{EnvEqual g g'} ->
+      Tot (typing g' e t)
 let typing_extensional _ _ _ h g' = context_invariance h g'
 
 (* Lemmas about substitution bellow lambdas and shifting *)
@@ -250,7 +250,7 @@ let shift_up_above_abs n t e =
 (* Weakening or shifting preserves typing *)
 
 val weakening : x:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
-      h:rtyping g e t -> Tot (rtyping (extend g x t') (shift_up_above x e) t)
+      h:typing g e t -> Tot (typing (extend g x t') (shift_up_above x e) t)
       (decreases h)
 let rec weakening n g v t t' h =
   match h with
@@ -266,9 +266,9 @@ let rec weakening n g v t t' h =
 
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
-      h1:rtyping g v t_x ->
-      h2:rtyping (extend g x t_x) e t ->
-      Tot (rtyping g (subst_beta_gen x v e) t) (decreases e)
+      h1:typing g v t_x ->
+      h2:typing (extend g x t_x) e t ->
+      Tot (typing g (subst_beta_gen x v e) t) (decreases e)
 let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   match h2 with
   | TyVar y ->
@@ -286,9 +286,9 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
 
 (* Type preservation *)
 
-val preservation : #e:exp -> #e':exp -> hs:rstep e e' ->
-                   #g:env -> #t:typ -> ht:(rtyping g e t) ->
-                   Tot (rtyping g e' t) (decreases ht)
+val preservation : #e:exp -> #e':exp -> hs:step e e' ->
+                   #g:env -> #t:typ -> ht:(typing g e t) ->
+                   Tot (typing g e' t) (decreases ht)
 let rec preservation e e' hs g t ht =
   let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = ht in
     match hs with
