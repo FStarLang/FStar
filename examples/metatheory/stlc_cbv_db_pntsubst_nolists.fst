@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module StlcConstrDeBruijn
+module StlcCbvDbPntSubstNoLists
 
 type ty =
   | TArrow : t1:ty -> t2:ty -> ty

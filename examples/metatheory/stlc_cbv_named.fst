@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Stlc
+module StlcCbvNamed
 
 type ty =
   | TBool  : ty

@@ -1,4 +1,4 @@
-module STLC
+module StlcCbvPntSubstLists
 
 (* de Bruijn indices based STLC *)
 

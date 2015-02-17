@@ -14,14 +14,14 @@
    limitations under the License.
 *)
 
-module StlcConstrDeBruijnParallelSub
+module StlcCbvDbParSubst
 
 (* Constructive style progress and preservation proof for STLC with
    CBV reduction, using deBruijn indices and parallel substitution.
    An awkward special case pf stlc_strongred.fst; in fact this proof
    is _more_ complex than the one in stlc_strongred.fst! *)
 
-open StlcStrongRed
+open StlcStrongDbParSubst
 
 val step : exp -> Tot (option exp)
 let rec step e =

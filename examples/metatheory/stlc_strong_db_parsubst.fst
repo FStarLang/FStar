@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module StlcStrongRed
+module StlcStrongDbParSubst
 
 (* Constructive-style progress and preservation proof for STLC with
    strong reduction, using deBruijn indices and parallel substitution. *)
