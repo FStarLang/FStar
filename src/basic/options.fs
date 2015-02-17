@@ -79,6 +79,7 @@ let warn_top_level_effects = Util.mk_ref false
 let no_slack = Util.mk_ref false
 let eager_inference = Util.mk_ref false
 let unthrottle_inductives = Util.mk_ref false
+let use_eq_at_higher_order = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
 
 let set_fstar_home () = 
@@ -153,6 +154,7 @@ let specs () : list<Getopt.opt> =
      ( noshort, "no_slack", ZeroArgs (fun () -> no_slack := true), "Use the partially flow-insensitive variant of --rel2 (experimental)");
      ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
      ( noshort, "unthrottle_inductives", ZeroArgs (fun () -> unthrottle_inductives := true), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
+     ( noshort, "use_eq_at_higher_order", ZeroArgs (fun () -> use_eq_at_higher_order := true), "Use equality constraints when comparing higher-order types; temporary");
      ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator")
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
