@@ -549,11 +549,12 @@ and encode_typ_term (t:typ) (env:env_t) : (term       (* encoding of t, expects 
         let vars, guards, env, decls, _ = encode_binders None bs env in
         let name = varops.fresh (Print.tag_of_typ t0), Type_sort in 
         let tag = mkBoundV name in 
+        let ktm, decls'' = encode_knd (Tc.Recheck.recompute_kind t0) env tag in
         let app = mk_ApplyT tag vars in
         let body, vars_body, decls' = encode_typ_term t env in
         let eq = close_ex vars_body (mkEq(app, body)) in
         let guard = mkForall([app], vars, mkImp(mk_and_l guards, eq)) in
-        tag, [(name, guard)], decls@decls'
+        tag, [(name, Term.mkAnd(ktm, guard))], decls@decls''@decls'
 
       | Typ_ascribed(t, _) -> 
         encode_typ_term t env
