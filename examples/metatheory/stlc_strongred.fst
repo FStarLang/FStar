@@ -59,11 +59,11 @@ val is_renaming : s:sub -> Tot (n:int{(renaming s ==> n=0) /\
 let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
 (* Patterns are incomplete? WTF? Filed as #122 *)
 
-val inc_var : var -> Tot exp
-let inc_var y = EVar (y+1)
+val sub_inc : var -> Tot exp
+let sub_inc y = EVar (y+1)
 
-val renaming_inc_var : unit -> Lemma (renaming (inc_var))
-let renaming_inc_var _ = ()
+val renaming_sub_inc : unit -> Lemma (renaming (sub_inc))
+let renaming_sub_inc _ = ()
 
 val subst : e:exp -> s:sub -> Tot exp (decreases %[is_renaming s; e])
 val subst_eabs : sub -> Tot sub
@@ -74,22 +74,23 @@ let rec subst e s =
   | EApp e1 e2 -> EApp (subst e1 s) (subst e2 s)
 and subst_eabs s =
   fun y -> if y = 0 then EVar y
-           else subst (s (y-1)) inc_var
+           else subst (s (y-1)) sub_inc
 
 (* subst_beta_gen is a generalization of the substitution we do for
-   the beta rule, when we've under x binders (useful for the
-   substitution lemma) *)
-val subst_beta_gen_aux : var -> exp -> Tot sub
-let subst_beta_gen_aux x v = fun y -> if y < x then (EVar y)
+   the beta rule, when we've under x binders
+   (useful for the substitution lemma) *)
+val sub_beta_gen : var -> exp -> Tot sub
+let sub_beta_gen x v = fun y -> if y < x then (EVar y)
                                       else if y = x then v
                                       else (EVar (y-1))
 
 val subst_beta_gen : var -> exp -> exp -> Tot exp
-let subst_beta_gen x v e = subst e (subst_beta_gen_aux x v)
+let subst_beta_gen x v e = subst e (sub_beta_gen x v)
 
 let subst_beta v e = subst_beta_gen 0 v e
 
-(* Operational semantics; non-deterministic, so necessarily in inductive form *)
+(* Small-step operational semantics;
+   non-deterministic, so necessarily in inductive form *)
 
 type rstep : exp -> exp -> Type =
   | SBeta : t:ty ->
@@ -107,7 +108,7 @@ type rstep : exp -> exp -> Type =
             rstep e2 e2' ->
             rstep (EApp e1 e2) (EApp e1 e2')
 
-(* Type system; in inductive form (but not strictly necessary for STLC) *)
+(* Type system; in inductive form (not strictly necessary for STLC) *)
 
 type env = var -> Tot (option ty)
 
@@ -138,7 +139,9 @@ type rtyping : env -> exp -> ty -> Type =
             rtyping g e2 t11 ->
             rtyping g (EApp e1 e2) t12
 
-(* Defining my own constructive existential *)
+(* Progress proof, a bit larger in constructive style *)
+
+(* defining my own constructive existential *)
 type ex : #a:Type -> (a -> Type) -> Type =
   | ExIntro : #a:Type -> #p:(a -> Type) -> x:a -> p x -> ex p
 
@@ -152,7 +155,7 @@ let rec progress _ _ h =
      | _          -> (match progress h1 with
                       | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1'))
 
-(* Subtyping extensional
+(* Substitution extensional
    the proof would be trivial with the extensionality axiom *)
 
 opaque logic type SubEqual (s1:sub) (s2:sub) =
@@ -164,13 +167,10 @@ val subst_extensional: s1:sub -> s2:sub{SubEqual s1 s2} -> e:exp -> Lemma
 let rec subst_extensional s1 s2 e =
   match e with
   | EVar x -> ()
-  | EAbs t e1 -> subst_extensional (subst_eabs s1)
-                                   (subst_eabs s2) e1;
-                 assert(subst (EAbs t e1) s1 =
-                          EAbs t (subst e1 (subst_eabs s1)))
+  | EAbs t e1 -> subst_extensional (subst_eabs s1) (subst_eabs s2) e1
   | EApp e1 e2 -> (subst_extensional s1 s2 e1; subst_extensional s1 s2 e2)
 
-(* Typing extensional (weaker) and context invariance (stronger);
+(* Typing extensional (weaker) and context invariance (stronger) lemmas;
    they entail lemmas like weakening, strengthening, swapping, etc.
    Context invariance is actually used in a single place within substitution,
    for in a specific form of weakening when typing variables. *)
@@ -182,13 +182,11 @@ let rec appears_free_in x e =
   | EApp e1 e2 -> appears_free_in x e1 || appears_free_in x e2
   | EAbs _ e1 -> appears_free_in (x+1) e1
 
-opaque logic type EqualE (e:exp) (g1:env) (g2:env) =
+opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
                  (forall (x:var). appears_free_in x e ==> g1 x = g2 x)
-opaque logic type Equal (g1:env) (g2:env) =
-                 (forall (x:var). g1 x = g2 x)
 
 val context_invariance : #e:exp -> #g:env -> #t:ty -> 
-      h:(rtyping g e t) -> g':env{EqualE e g g'} ->
+      h:(rtyping g e t) -> g':env{EnvEqualE e g g'} ->
       Tot (rtyping g' e t) (decreases h)
 let rec context_invariance _ _ _ h g' =
   match h with
@@ -198,61 +196,71 @@ let rec context_invariance _ _ _ h g' =
   | TyApp h1 h2 ->
     TyApp (context_invariance h1 g') (context_invariance h2 g')
 
+opaque logic type EnvEqual (g1:env) (g2:env) =
+                 (forall (x:var). g1 x = g2 x)
+
 val typing_extensional : #e:exp -> #g:env -> #t:ty ->
-      h:(rtyping g e t) -> g':env{Equal g g'} ->
+      h:(rtyping g e t) -> g':env{EnvEqual g g'} ->
       Tot (rtyping g' e t)
 let typing_extensional _ _ _ h g' = context_invariance h g'
 
 (* Lemmas about substitution bellow lambdas and shifting *)
 
-val inc_var_above : nat -> var -> Tot exp
-let inc_var_above n y = if y<n then EVar y else EVar (y+1)
+val sub_inc_above : nat -> var -> Tot exp
+let sub_inc_above n y = if y<n then EVar y else EVar (y+1)
 
-val shift_up : nat -> exp -> Tot exp
-let shift_up n e = subst e (inc_var_above n)
+val shift_up_above : nat -> exp -> Tot exp
+let shift_up_above n e = subst e (sub_inc_above n)
 
-val shift_up_subst_inc_var : v:exp -> Lemma
-      (ensures (shift_up 0 v = subst v inc_var))
-let shift_up_subst_inc_var v = subst_extensional (inc_var_above 0) inc_var v
+val shift_up : exp -> Tot exp
+let shift_up = shift_up_above 0
 
-val subst_gen_eabs_aux : x:var -> v:exp -> y:var -> Lemma
-      (ensures ((subst_eabs (subst_beta_gen_aux  x                v)) y =
-                            (subst_beta_gen_aux (x+1) (shift_up 0 v)) y))
-let subst_gen_eabs_aux x v y =
-  if y>0 && x = y-1 then shift_up_subst_inc_var v
+val shift_up_subst_sub_inc : v:exp -> Lemma
+      (ensures (shift_up v = subst v sub_inc))
+let shift_up_subst_sub_inc v =
+  subst_extensional (sub_inc_above 0) sub_inc v
+
+val sub_beta_gen_eabs : x:var -> v:exp -> y:var -> Lemma
+      (ensures ((subst_eabs (sub_beta_gen  x              v)) y =
+                            (sub_beta_gen (x+1) (shift_up v)) y))
+let sub_beta_gen_eabs x v y =
+  if y>0 && x = y-1 then shift_up_subst_sub_inc v
 
 val subst_gen_eabs_aux_forall : x:var -> v:exp -> Lemma
-      (ensures (SubEqual (subst_eabs (subst_beta_gen_aux  x                v))
-                                     (subst_beta_gen_aux (x+1) (shift_up 0 v))))
+      (ensures (SubEqual (subst_eabs (sub_beta_gen  x              v))
+                                     (sub_beta_gen (x+1) (shift_up v))))
 let subst_gen_eabs_aux_forall x v = admit()
 (* should follow from subst_gen_eabs_aux and forall_intro *)
 
 val subst_gen_eabs : x:var -> v:exp -> t_y:ty -> e':exp -> Lemma
       (ensures (subst_beta_gen x v (EAbs t_y e') =
-                EAbs t_y (subst_beta_gen (x+1) (shift_up 0 v) e')))
+                EAbs t_y (subst_beta_gen (x+1) (shift_up v) e')))
 let subst_gen_eabs x v t_y e' =
   subst_gen_eabs_aux_forall x v;
-  subst_extensional (subst_eabs (subst_beta_gen_aux  x    v))
-                                (subst_beta_gen_aux (x+1) (shift_up 0 v))  e'
+  subst_extensional (subst_eabs (sub_beta_gen  x                v))
+                                (sub_beta_gen (x+1) (shift_up v))  e'
 
-val shift_up_abs : n:nat -> t:ty -> e:exp -> Lemma
-  (ensures (shift_up n (EAbs t e) = EAbs t (shift_up (n+1) e)))
-let shift_up_abs n t e =
-  subst_extensional (subst_eabs (inc_var_above n)) (inc_var_above (n+1)) e
+val shift_up_above_abs : n:nat -> t:ty -> e:exp -> Lemma
+  (ensures (shift_up_above n (EAbs t e) = EAbs t (shift_up_above (n+1) e)))
+let shift_up_above_abs n t e =
+  subst_extensional (subst_eabs (sub_inc_above n)) (sub_inc_above (n+1)) e
 
-val typing_shift_up : n:nat -> #g:env -> #v:exp -> #t:ty -> t':ty ->
-      h:rtyping g v t -> Tot (rtyping (extend g n t') (shift_up n v) t)
+(* Shifting preserves typing *)
+
+val typing_shift_up_above : n:nat -> #g:env -> #v:exp -> #t:ty -> t':ty ->
+      h:rtyping g v t -> Tot (rtyping (extend g n t') (shift_up_above n v) t)
       (decreases h)
-let rec typing_shift_up n g v t t' h =
+let rec typing_shift_up_above n g v t t' h =
   match h with
   | TyVar y -> if y<n then TyVar y else TyVar (y+1)
   | TyAbs #g t_y #e' #t'' h21 ->
-      (shift_up_abs n t_y e';
-       let h21 = typing_shift_up (n+1) t' h21 in
+      (shift_up_above_abs n t_y e';
+       let h21 = typing_shift_up_above (n+1) t' h21 in
        TyAbs t_y (typing_extensional h21 (extend (extend g n t') 0 t_y)))
-  | TyApp h21 h22 -> TyApp (typing_shift_up n t' h21) (typing_shift_up n t' h22)
+  | TyApp h21 h22 -> TyApp (typing_shift_up_above n t' h21)
+                           (typing_shift_up_above n t' h22)
 
-(* Substitution lemma *)
+(* Substitution preserves typing *)
 
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
@@ -267,7 +275,7 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
      else             TyVar (y-1)
   | TyAbs #g' t_y #e' #t' h21 ->
      (let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
-      let h1' = typing_shift_up 0 t_y h1 in
+      let h1' = typing_shift_up_above 0 t_y h1 in
       subst_gen_eabs x v t_y e';
       TyAbs t_y (substitution_preserves_typing (x+1) h1' h21'))
   | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 ->
@@ -276,7 +284,7 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22))
 
-(* Preservation *)
+(* Type preservation *)
 
 val preservation : #e:exp -> #e':exp -> hs:rstep e e' ->
                    #g:env -> #t:ty -> ht:(rtyping g e t) ->
