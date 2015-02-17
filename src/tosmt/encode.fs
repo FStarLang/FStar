@@ -1199,7 +1199,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             decls@[Term.Assume(mkForall([tapp], vars, mkImp(guard, k)), Some "kinding")] in
         let aux = 
             if is_logical 
-            then projection_axioms tapp vars 
+            then kindingAx@projection_axioms tapp vars 
             else kindingAx
                 @(primitive_type_axioms t tname tapp)
                 @(inversion_axioms tapp vars)
