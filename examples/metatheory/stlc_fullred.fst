@@ -54,19 +54,39 @@ let inc_var_above n y = if y<n then EVar y else EVar (y+1)
 val shift_up : nat -> exp -> Tot exp
 let shift_up n e = subst e (inc_var_above n)
 
-assume val subst_gen_eabs_new : x:var -> v:exp -> t_y:ty -> e':exp -> Lemma
+val shift_up_subst_inc_var : v:exp -> Lemma
+      (ensures (shift_up 0 v = subst v inc_var))
+let shift_up_subst_inc_var v = subst_extensional (inc_var_above 0) inc_var v
+
+val subst_gen_eabs_aux : x:var -> v:exp -> y:var -> Lemma
+      (ensures ((subst_eabs (subst_beta_gen_aux  x                v)) y =
+                            (subst_beta_gen_aux (x+1) (shift_up 0 v)) y))
+let subst_gen_eabs_aux x v y =
+  if y>0 && x = y-1 then shift_up_subst_inc_var v
+
+val subst_gen_eabs_aux_forall : x:var -> v:exp -> Lemma
+      (ensures (SubEqual (subst_eabs (subst_beta_gen_aux  x                v))
+                                     (subst_beta_gen_aux (x+1) (shift_up 0 v))))
+let subst_gen_eabs_aux_forall x v = admit()
+(* should follow from subst_gen_eabs_aux and forall_intro *)
+
+val subst_gen_eabs : x:var -> v:exp -> t_y:ty -> e':exp -> Lemma
       (ensures (subst_beta_gen x v (EAbs t_y e') =
                 EAbs t_y (subst_beta_gen (x+1) (shift_up 0 v) e')))
+let subst_gen_eabs x v t_y e' =
+  subst_gen_eabs_aux_forall x v;
+  subst_extensional (subst_eabs (subst_beta_gen_aux  x    v))
+                                (subst_beta_gen_aux (x+1) (shift_up 0 v))  e'
 
 val shift_up_abs : n:nat -> t:ty -> e:exp -> Lemma
   (ensures (shift_up n (EAbs t e) = EAbs t (shift_up (n+1) e)))
-let shift_up_abs n t e = admit()
+let shift_up_abs n t e =
+  subst_extensional (subst_eabs (inc_var_above n)) (inc_var_above (n+1)) e
 
 val typing_shift_up : n:nat -> #g:env -> #v:exp -> #t:ty -> t':ty ->
       h:rtyping g v t -> Tot (rtyping (extend g n t') (shift_up n v) t)
       (decreases h)
-let rec typing_shift_up n g v t t' h = admit()
-(*
+let rec typing_shift_up n g v t t' h =
   match h with
   | TyVar y -> if y<n then TyVar y else TyVar (y+1)
   | TyAbs #g t_y #e' #t'' h21 ->
@@ -74,7 +94,6 @@ let rec typing_shift_up n g v t t' h = admit()
        let h21 = typing_shift_up (n+1) t' h21 in
        TyAbs t_y (typing_extensional h21 (extend (extend g n t') 0 t_y)))
   | TyApp h21 h22 -> TyApp (typing_shift_up n t' h21) (typing_shift_up n t' h22)
-*)
 
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
@@ -90,7 +109,7 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   | TyAbs #g' t_y #e' #t' h21 ->
      (let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
       let h1' = typing_shift_up 0 t_y h1 in
-      subst_gen_eabs_new x v t_y e';
+      subst_gen_eabs x v t_y e';
       TyAbs t_y (substitution_preserves_typing (x+1) h1' h21'))
   | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 ->
      (* CH: implicits don't work here, why? *)
