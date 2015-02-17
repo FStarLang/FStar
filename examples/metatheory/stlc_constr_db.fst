@@ -144,8 +144,6 @@ val typing_extensional : #e:exp -> #g:env -> #t:ty ->
       Tot (rtyping g' e t)
 let typing_extensional _ _ _ h g' = context_invariance h g'
 
-assume val admit: unit -> Pure 'a (requires True) (ensures (fun _ -> False))
-
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
       h1:rtyping empty v t_x ->

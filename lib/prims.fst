@@ -168,7 +168,6 @@ monad_lattice {
                     DIV a
                          (fun (p:Post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
                          (fun (p:Post a) -> forall a. pre /\ post a ==> p a)   (* WLP *)
-             and Admit (a:Type) = DIV a (fun 'p -> True) (fun 'p -> True)
              and default Dv (a:Type) =
                DIV a (fun (p:Post a) -> (forall (x:a). p x)) (fun (p:Post a) -> (forall (x:a). p x))
 ;
@@ -406,7 +405,7 @@ let snd x = MkTuple2._2 x
 logic type InductionHyp : Type -> Type
 assume val using_induction_hyp: 'a -> Lemma (ensures (InductionHyp 'a))
 assume val Assume: 'P:Type -> unit -> (y:unit{'P})
-assume val admit: unit -> Admit unit
+assume val admit: unit -> Admit 'a
 assume val admitP: 'P:Type -> Pure unit True (fun x -> 'P)
 assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
 assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (fun x -> 'P)

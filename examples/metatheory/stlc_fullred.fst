@@ -65,7 +65,8 @@ let shift_up_abs n t e = admit()
 val typing_shift_up : n:nat -> #g:env -> #v:exp -> #t:ty -> t':ty ->
       h:rtyping g v t -> Tot (rtyping (extend g n t') (shift_up n v) t)
       (decreases h)
-let rec typing_shift_up n g v t t' h =
+let rec typing_shift_up n g v t t' h = admit()
+(*
   match h with
   | TyVar y -> if y<n then TyVar y else TyVar (y+1)
   | TyAbs #g t_y #e' #t'' h21 ->
@@ -73,6 +74,7 @@ let rec typing_shift_up n g v t t' h =
        let h21 = typing_shift_up (n+1) t' h21 in
        TyAbs t_y (typing_extensional h21 (extend (extend g n t') 0 t_y)))
   | TyApp h21 h22 -> TyApp (typing_shift_up n t' h21) (typing_shift_up n t' h22)
+*)
 
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
