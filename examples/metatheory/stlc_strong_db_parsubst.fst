@@ -27,7 +27,7 @@ type var = nat
 type exp =
   | EVar   : var -> exp
   | EApp   : exp -> exp -> exp
-  | EAbs   : typ -> exp -> exp
+  | ELam   : typ -> exp -> exp
 
 (* Parallel substitution operation `subst` *)
 
@@ -64,14 +64,14 @@ let renaming_sub_inc _ = ()
 
 val subst : e:exp -> s:sub -> Tot exp
     (decreases e(*(if is_EVar e then LexTop else %[is_renaming s; e])*))
-val subst_eabs : s:sub -> Tot (sub(*{renaming s ==> renaming s'}*))
+val subst_elam : s:sub -> Tot (sub(*{renaming s ==> renaming s'}*))
       (*decreases (is_renaming s)*)
 let rec subst e s =
   match e with
   | EVar x -> s x
-  | EAbs t e1 -> EAbs t (subst e1 (subst_eabs s))
+  | ELam t e1 -> ELam t (subst e1 (subst_elam s))
   | EApp e1 e2 -> EApp (subst e1 s) (subst e2 s)
-and subst_eabs s =
+and subst_elam s =
   fun y -> if y = 0 then EVar y
            else subst (s (y-1)) sub_inc
 
@@ -95,7 +95,7 @@ type rstep : exp -> exp -> Type =
   | SBeta : t:typ ->
             e1:exp ->
             e2:exp ->
-            rstep (EApp (EAbs t e1) e2) (subst_beta e2 e1)
+            rstep (EApp (ELam t e1) e2) (subst_beta e2 e1)
   | SApp1 : #e1:exp ->
             e2:exp ->
             #e1':exp ->
@@ -128,7 +128,7 @@ type rtyping : env -> exp -> typ -> Type =
             #e1:exp ->
             #t':typ ->
             rtyping (extend g 0 t) e1 t' ->
-            rtyping g (EAbs t e1) (TArrow t t')
+            rtyping g (ELam t e1) (TArrow t t')
   | TyApp : #g:env ->
             #e1:exp ->
             #e2:exp ->
@@ -145,7 +145,7 @@ type ex : #a:Type -> (a -> Type) -> Type =
   | ExIntro : #a:Type -> #p:(a -> Type) -> x:a -> p x -> ex p
 
 val is_value : exp -> Tot bool
-let is_value = is_EAbs
+let is_value = is_ELam
 
 val progress : #e:exp{not (is_value e)} -> #t:typ -> h:rtyping empty e t ->
                Tot (ex (fun e' -> rstep e e')) (decreases h)
@@ -153,7 +153,7 @@ let rec progress _ _ h =
   match h with
   | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
      match e1 with
-     | EAbs t e1' -> ExIntro (subst_beta e2 e1') (SBeta t e1' e2)
+     | ELam t e1' -> ExIntro (subst_beta e2 e1') (SBeta t e1' e2)
      | _          -> (match progress h1 with
                       | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1'))
 
@@ -169,7 +169,7 @@ val subst_extensional: s1:sub -> s2:sub{SubEqual s1 s2} -> e:exp -> Lemma
 let rec subst_extensional s1 s2 e =
   match e with
   | EVar x -> ()
-  | EAbs t e1 -> subst_extensional (subst_eabs s1) (subst_eabs s2) e1
+  | ELam t e1 -> subst_extensional (subst_elam s1) (subst_elam s2) e1
   | EApp e1 e2 -> (subst_extensional s1 s2 e1; subst_extensional s1 s2 e2)
 
 (* Typing extensional (weaker) and context invariance (stronger) lemmas;
@@ -181,7 +181,7 @@ let rec appears_free_in x e =
   match e with
   | EVar y -> x = y
   | EApp e1 e2 -> appears_free_in x e1 || appears_free_in x e2
-  | EAbs _ e1 -> appears_free_in (x+1) e1
+  | ELam _ e1 -> appears_free_in (x+1) e1
 
 opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
                  (forall (x:var). appears_free_in x e ==> g1 x = g2 x)
@@ -222,30 +222,30 @@ val shift_up_subst_sub_inc : v:exp -> Lemma
 let shift_up_subst_sub_inc v =
   subst_extensional (sub_inc_above 0) sub_inc v
 
-val sub_beta_gen_eabs : x:var -> v:exp -> y:var -> Lemma
-      (ensures ((subst_eabs (sub_beta_gen  x              v)) y =
+val sub_beta_gen_elam : x:var -> v:exp -> y:var -> Lemma
+      (ensures ((subst_elam (sub_beta_gen  x              v)) y =
                             (sub_beta_gen (x+1) (shift_up v)) y))
-let sub_beta_gen_eabs x v y =
+let sub_beta_gen_elam x v y =
   if y>0 && x = y-1 then shift_up_subst_sub_inc v
 
-val subst_gen_eabs_aux_forall : x:var -> v:exp -> Lemma
-      (ensures (SubEqual (subst_eabs (sub_beta_gen  x              v))
+val subst_gen_elam_aux_forall : x:var -> v:exp -> Lemma
+      (ensures (SubEqual (subst_elam (sub_beta_gen  x              v))
                                      (sub_beta_gen (x+1) (shift_up v))))
-let subst_gen_eabs_aux_forall x v = admit()
-(* should follow from subst_gen_eabs_aux and forall_intro *)
+let subst_gen_elam_aux_forall x v = admit()
+(* should follow from subst_gen_elam_aux and forall_intro *)
 
-val subst_gen_eabs : x:var -> v:exp -> t_y:typ -> e':exp -> Lemma
-      (ensures (subst_beta_gen x v (EAbs t_y e') =
-                EAbs t_y (subst_beta_gen (x+1) (shift_up v) e')))
-let subst_gen_eabs x v t_y e' =
-  subst_gen_eabs_aux_forall x v;
-  subst_extensional (subst_eabs (sub_beta_gen  x                v))
+val subst_gen_elam : x:var -> v:exp -> t_y:typ -> e':exp -> Lemma
+      (ensures (subst_beta_gen x v (ELam t_y e') =
+                ELam t_y (subst_beta_gen (x+1) (shift_up v) e')))
+let subst_gen_elam x v t_y e' =
+  subst_gen_elam_aux_forall x v;
+  subst_extensional (subst_elam (sub_beta_gen  x                v))
                                 (sub_beta_gen (x+1) (shift_up v))  e'
 
 val shift_up_above_abs : n:nat -> t:typ -> e:exp -> Lemma
-  (ensures (shift_up_above n (EAbs t e) = EAbs t (shift_up_above (n+1) e)))
+  (ensures (shift_up_above n (ELam t e) = ELam t (shift_up_above (n+1) e)))
 let shift_up_above_abs n t e =
-  subst_extensional (subst_eabs (sub_inc_above n)) (sub_inc_above (n+1)) e
+  subst_extensional (subst_elam (sub_inc_above n)) (sub_inc_above (n+1)) e
 
 (* Weakening or shifting preserves typing *)
 
@@ -278,7 +278,7 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   | TyAbs #g' t_y #e' #t' h21 ->
      (let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
       let h1' = weakening 0 t_y h1 in
-      subst_gen_eabs x v t_y e';
+      subst_gen_elam x v t_y e';
       TyAbs t_y (substitution_preserves_typing (x+1) h1' h21'))
   | TyApp h21 h22 ->
     (TyApp (substitution_preserves_typing x h1 h21)

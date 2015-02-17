@@ -27,30 +27,51 @@ type knd =
 type typ =
   | TVar : var -> typ
   | TLam : knd -> typ -> typ 
-  | TApp : typ -> typ
+  | TApp : typ -> typ -> typ
   | TArr : typ -> typ -> typ
 
 type exp =
   | EVar   : var -> exp
   | EApp   : exp -> exp -> exp
-  | EAbs   : typ -> exp -> exp
+  | ELam   : typ -> exp -> exp
 
 val is_value : exp -> Tot bool
-let is_value = is_EAbs
+let is_value = is_ELam
 
-(* Substitution *)
+(* Substitution on expressions and types;
+   they don't really interact in this calculus *)
 
-type sub =
-  | ESub : var -> Tot exp
-  | TSub : var -> Tot typ
+type esub = var -> Tot exp
 
-val subst_in_exp : e:exp -> s:sub -> Tot exp (decreases e)
-val subst_eabs : s:sub -> Tot sub
-let rec subst_in_exp e s =
+val esub_inc : var -> Tot exp
+let esub_inc y = EVar (y+1)
+
+val esubst : e:exp -> s:esub -> Tot exp
+val esubst_lam : s:esub -> Tot esub
+let rec esubst e s =
   match e with
   | EVar x -> s x
-  | EAbs t e1 -> EAbs t (subst_in_exp e1 (subst_eabs s))
-  | EApp e1 e2 -> EApp (subst_in_exp e1 s) (subst_in_exp e2 s)
-and subst_eabs s =
+  | ELam t e1 -> ELam t (esubst e1 (esubst_lam s))
+  | EApp e1 e2 -> EApp (esubst e1 s) (esubst e2 s)
+and esubst_lam s =
   fun y -> if y = 0 then EVar y
-           else subst_in_exp (s (y-1)) sub_inc
+           else esubst (s (y-1)) esub_inc
+
+(* Substitution on types is very much analogous *)
+
+type tsub = var -> Tot typ
+
+val tsub_inc : var -> Tot typ
+let tsub_inc y = TVar (y+1)
+
+val tsubst : t:typ -> s:tsub -> Tot typ
+val tsubst_lam : s:tsub -> Tot tsub
+let rec tsubst t s =
+  match t with
+  | TVar x -> s x
+  | TLam t t1 -> TLam t (tsubst t1 (tsubst_lam s))
+  | TApp t1 t2 -> TApp (tsubst t1 s) (tsubst t2 s)
+  | TArr t1 t2 -> TArr (tsubst t1 s) (tsubst t2 s)
+and tsubst_lam s =
+  fun y -> if y = 0 then TVar y
+           else tsubst (s (y-1)) tsub_inc

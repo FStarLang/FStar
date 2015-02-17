@@ -30,7 +30,7 @@ let rec step e =
       if is_value e1 then
         if is_value e2 then
           match e1 with
-          | EAbs t e' -> Some (subst_beta e2 e')
+          | ELam t e' -> Some (subst_beta e2 e')
           | _         -> None
         else
           match (step e2) with
@@ -42,7 +42,7 @@ let rec step e =
         | None     -> None)
   | _ -> None
 
-val progress : #e:exp -> #t:ty -> h:rtyping empty e t ->
+val progress : #e:exp -> #t:typ -> h:rtyping empty e t ->
       Lemma (ensures (is_value e \/ (is_Some (step e)))) (decreases h)
 let rec progress _ _ h =
   match h with
@@ -51,7 +51,7 @@ let rec progress _ _ h =
   | TyApp h1 h2 -> progress h1; progress h2
 
 
-val free_in_context : x:var -> #e:exp -> #g:env -> #t:ty -> h:rtyping g e t ->
+val free_in_context : x:var -> #e:exp -> #g:env -> #t:typ -> h:rtyping g e t ->
       Lemma (ensures (appears_free_in x e ==> is_Some (g x))) (decreases h)
 let rec free_in_context x _ _ _ h =
   match h with
@@ -59,7 +59,7 @@ let rec free_in_context x _ _ _ h =
   | TyAbs t h1 -> free_in_context (x+1) h1
   | TyApp h1 h2 -> free_in_context x h1; free_in_context x h2
 
-val typable_empty_not_free : x:var -> #e:exp -> #t:ty -> rtyping empty e t ->
+val typable_empty_not_free : x:var -> #e:exp -> #t:typ -> rtyping empty e t ->
       Lemma (ensures (not (appears_free_in x e)))
 (*      [SMTPat (appears_free_in x e)] -- CH: adding this makes it fail! *)
 let typable_empty_not_free x _ _ h = free_in_context x h
@@ -69,7 +69,7 @@ let rec below x e =
   match e with
   | EVar y -> y < x
   | EApp e1 e2 -> below x e1 && below x e2
-  | EAbs _ e1 -> below (x+1) e1
+  | ELam _ e1 -> below (x+1) e1
 
 val closed : exp -> Tot bool
 let closed = below 0
@@ -89,12 +89,12 @@ let rec appears_free_closed e =
   match e with
   | EVar _ -> ()
   | EApp e1 e2 -> appears_free_closed e1; appears_free_closed e2
-  | EAbs _ e1 -> appears_free_closed e1
+  | ELam _ e1 -> appears_free_closed e1
 *)
 
 type below_env (x:var) (g:env) = (forall (y:var). y >= x ==> g y = None)
 
-val typable_below : x:var -> #g:env{below_env x g} -> #e:exp -> #t:ty
+val typable_below : x:var -> #g:env{below_env x g} -> #e:exp -> #t:typ
                           -> h:rtyping g e t ->
       Lemma (ensures (below x e)) (decreases h)
 let rec typable_below x g _ _ h =
@@ -103,7 +103,7 @@ let rec typable_below x g _ _ h =
   | TyApp h1 h2 -> typable_below x h1; typable_below x h2
   | TyAbs _y h1 -> typable_below (x+1) h1
 
-val typable_empty_closed : #e:exp -> #t:ty -> h:rtyping empty e t ->
+val typable_empty_closed : #e:exp -> #t:typ -> h:rtyping empty e t ->
       Lemma (ensures (closed e))
 let typable_empty_closed e t h = typable_below 0 h
 
@@ -113,15 +113,15 @@ val subst_gen_var_lt : x:var -> y:var{y < x} -> v:exp -> Lemma
   (ensures (subst_beta_gen x v (EVar y) = (EVar y)))
 let subst_gen_var_lt x y v = ()
 
-val extend_lt : x:var -> y:var{y < x} -> g:env -> t_x:ty -> Lemma
+val extend_lt : x:var -> y:var{y < x} -> g:env -> t_x:typ -> Lemma
      (ensures (extend g x t_x) y = g y)
 let extend_lt x y g t_x = ()
 
-val extend_gt : x:var -> y:var{y > x} -> g:env -> t_x:ty -> Lemma
+val extend_gt : x:var -> y:var{y > x} -> g:env -> t_x:typ -> Lemma
      (ensures (extend g x t_x) y = g (y-1))
 let extend_gt x y g t_x = ()
 
-val extend_twice : x:var -> g:env -> t_x:ty -> t_y:ty -> Lemma
+val extend_twice : x:var -> g:env -> t_x:typ -> t_y:typ -> Lemma
       (ensures (EnvEqual (extend (extend g x t_x) 0     t_y)
                       (extend (extend g 0 t_y) (x+1) t_x)))
 let extend_twice x g t_x t_y = ()
@@ -134,22 +134,22 @@ let rec subst_below x v s =
   match v with
   | EVar y     -> ()
   | EApp e1 e2 -> subst_below x e1 s; subst_below x e2 s
-  | EAbs t e   -> (subst_below (x+1) e (subst_eabs s);
-                   assert(e = subst e (subst_eabs s));
-                   assert(v = EAbs t e);
-                   assert(subst v s = EAbs t (subst e (subst_eabs s)))) 
+  | ELam t e   -> (subst_below (x+1) e (subst_elam s);
+                   assert(e = subst e (subst_elam s));
+                   assert(v = ELam t e);
+                   assert(subst v s = ELam t (subst e (subst_elam s)))) 
 
 val subst_closed : v:exp{closed v} -> s:sub -> 
   Lemma (ensures (v = subst v s)) (decreases v)
 let rec subst_closed v s = subst_below 0 v s
 
-val subst_gen_eabs_aux : x:var -> v:exp{closed v} -> y:var -> Lemma
-      (ensures ((subst_eabs (sub_beta_gen  x    v)) y =
+val subst_gen_elam_aux : x:var -> v:exp{closed v} -> y:var -> Lemma
+      (ensures ((subst_elam (sub_beta_gen  x    v)) y =
                             (sub_beta_gen (x+1) v)  y))
-let subst_gen_eabs_aux x v y =
+let subst_gen_elam_aux x v y =
   if y = 0 then ()
   else
-    (assert((subst_eabs (sub_beta_gen x v)) y =
+    (assert((subst_elam (sub_beta_gen x v)) y =
            (subst (sub_beta_gen x v (y-1)) sub_inc));
           if y-1 < x then ()
      else if y-1 = x then
@@ -158,21 +158,21 @@ let subst_gen_eabs_aux x v y =
              subst_closed v sub_inc)
      else ())
 
-val subst_gen_eabs_aux_forall : x:var -> v:exp{closed v} -> Lemma
-      (ensures (SubEqual (subst_eabs (sub_beta_gen  x    v))
+val subst_gen_elam_aux_forall : x:var -> v:exp{closed v} -> Lemma
+      (ensures (SubEqual (subst_elam (sub_beta_gen  x    v))
                                      (sub_beta_gen (x+1) v)))
-let subst_gen_eabs_aux_forall x v = admit()
-(* should follow from subst_gen_eabs_aux and forall_intro *)
+let subst_gen_elam_aux_forall x v = admit()
+(* should follow from subst_gen_elam_aux and forall_intro *)
 
-val subst_gen_eabs : x:var -> v:exp{closed v} -> t_y:ty -> e':exp -> Lemma
-      (ensures (subst_beta_gen x v (EAbs t_y e') =
-                EAbs t_y (subst_beta_gen (x+1) v e')))
-let subst_gen_eabs x v t_y e' =
-  subst_gen_eabs_aux_forall x v;
-  subst_extensional (subst_eabs (sub_beta_gen  x    v))
+val subst_gen_elam : x:var -> v:exp{closed v} -> t_y:typ -> e':exp -> Lemma
+      (ensures (subst_beta_gen x v (ELam t_y e') =
+                ELam t_y (subst_beta_gen (x+1) v e')))
+let subst_gen_elam x v t_y e' =
+  subst_gen_elam_aux_forall x v;
+  subst_extensional (subst_elam (sub_beta_gen  x    v))
                                       (sub_beta_gen (x+1) v)  e';
-  assert(subst_beta_gen x v (EAbs t_y e')
-           = EAbs t_y (subst e' (subst_eabs (sub_beta_gen x v))))
+  assert(subst_beta_gen x v (ELam t_y e')
+           = ELam t_y (subst e' (subst_elam (sub_beta_gen x v))))
 
 (* [some comment that might help here]
    NS: The trouble is that you need extensionality for this proof to go through. 
@@ -223,7 +223,7 @@ let subst_gen_eabs x v t_y e' =
  *)
 
 val substitution_preserves_typing :
-      x:var -> #e:exp -> #v:exp -> #t_x:ty -> #t:ty -> #g:env ->
+      x:var -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
       h1:rtyping empty v t_x ->
       h2:rtyping (extend g x t_x) e t ->
       Tot (rtyping g (subst_beta_gen x v e) t) (decreases e)
@@ -238,7 +238,7 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   | TyAbs #g' t_y #e' #t' h21 ->
      (let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
       typable_empty_closed h1;
-      subst_gen_eabs x v t_y e';
+      subst_gen_elam x v t_y e';
       TyAbs t_y (substitution_preserves_typing (x+1) h1 h21'))
   | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 ->
      (* CH: implicits don't work here, why? *)
@@ -246,7 +246,7 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22))
 
-val preservation : #e:exp{is_Some (step e)} -> #t:ty -> h:(rtyping empty e t) ->
+val preservation : #e:exp{is_Some (step e)} -> #t:typ -> h:(rtyping empty e t) ->
       Tot (rtyping empty (Some.v (step e)) t) (decreases e)
 let rec preservation e t h =
   let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = h in
