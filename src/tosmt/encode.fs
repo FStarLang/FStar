@@ -1103,7 +1103,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     then []
                     else let xxsym, x = fresh_bvar "x" Term_sort in
                          [Term.Assume(mkForall([mk_HasType x def], (xxsym, Term_sort)::vars, mkImp(close_ex ex_vars mkTrue, mk_HasType x def)), Some "abbrev. intro")] in
-        let g = binder_decls@decls@decls1@[elim]@intro in
+        let kindingAx = 
+            let k, decls = encode_knd (Recheck.recompute_kind t) env' app in
+            decls@[Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, k)), Some "abbrev. kinding")] in
+        let g = binder_decls@decls@decls1@[elim]@intro@kindingAx in
         g, env
 
      | Sig_val_decl(lid, t, quals, _) -> 

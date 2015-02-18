@@ -46,7 +46,7 @@ type exp =
 
 type sub = var -> Tot exp
 
-type renaming (s:sub) = (forall (x:var). is_EVar (s x))
+opaque type renaming (s:sub) = (forall (x:var). is_EVar (s x))
 
 (* My proposal would be to put this in Classic not Tot *)
 assume val excluded_middle : p:Type -> Tot (b:bool{b = true <==> p})
@@ -62,18 +62,49 @@ let sub_inc y = EVar (y+1)
 val renaming_sub_inc : unit -> Lemma (renaming (sub_inc))
 let renaming_sub_inc _ = ()
 
-val subst : e:exp -> s:sub -> Tot exp
-    (decreases e(*(if is_EVar e then LexTop else %[is_renaming s; e])*))
-val subst_elam : s:sub -> Tot (sub(*{renaming s ==> renaming s'}*))
-      (*decreases (is_renaming s)*)
+let is_var (e:exp) : int = if is_EVar e then 0 else 1
+
+val subst : e:exp -> s:sub -> Pure exp (requires True) 
+                                       (ensures (fun e' -> renaming s /\ is_EVar e ==> is_EVar e'))
+                                       (decreases %[is_var e; is_renaming s; e])
 let rec subst e s =
   match e with
   | EVar x -> s x
-  | ELam t e1 -> ELam t (subst e1 (subst_elam s))
+
+  | ELam t e1 -> 
+     let subst_eabs : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) = fun y ->
+       if y=0 
+       then EVar y 
+       else ((* renaming_sub_inc (); --unnecessary hint *)
+             (* Why does the next recursive call terminate?
+                1. If s is a renaming, we're done; since e is not a var, and s (y - 1) is, the lex ordering strictly decreases.
+                2. If s is not a renaming, then since e is not a var, the first component of the lex order remains the same;
+                   But, sub_inc is a renaming, so the second component decreases and we're done again.
+              *)
+             subst (s (y - 1)) sub_inc) in
+     (* assert (renaming s ==> renaming subst_eabs); --unnecessary hint *)
+     (* Why does the next recursive call terminate?
+        1. If e1 is a var, we're done since e is not a var and so the first component decreases
+        2. If not, e1 is a non-var proper sub-term of e; so the first component remains the same; the third component strictly decreases;
+                   We have to show that the second comonent remains the same; i.e., subst_eabs is a renaming if s is a renaming.
+                   Which we have done above.
+      *)
+     ELam t (subst e1 subst_eabs)
+     
   | EApp e1 e2 -> EApp (subst e1 s) (subst e2 s)
-and subst_elam s =
-  fun y -> if y = 0 then EVar y
-           else subst (s (y-1)) sub_inc
+ 
+(* 
+   The above proof is nice, but you really want to use subst_eabs at the top-level.
+   So, hoist it by hand ...
+*)
+val subst_elam: s:sub -> Tot sub
+let subst_elam s y =
+  if y = 0 then EVar y
+  else subst (s (y-1)) sub_inc
+
+(* And, you can prove the property you want using functional extensionality *)
+assume Subst_extensional: forall (e:exp) (s1:sub) (s2:sub).{:pattern subst e s1; subst e s2}
+                                                           (forall (x:var). s1 x = s2 x) ==> (subst e s1 = subst e s2)
 
 (* subst_beta_gen is a generalization of the substitution we do for
    the beta rule, when we've under x binders
