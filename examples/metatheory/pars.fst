@@ -93,29 +93,17 @@ let rec subst e s =
      EAbs t (subst e1 subst_eabs)
      
   | EApp e1 e2 -> EApp (subst e1 s) (subst e2 s)
+ 
+(* 
+   The above proof is nice, but you really want to use subst_eabs at the top-level.
+   So, hoist it by hand ...
+*)
+val subst_eabs: s:sub -> Tot sub
+let subst_eabs s y =
+  if y = 0 then EVar y
+  else subst (s (y-1)) sub_inc
 
-(* (\* The above proof is nice, but you really want to use subst_eabs at the top-level.  *)
-(*    Trying to hoist it by hand ...  *)
-(*  *\) *)
-(* val subst_eabs: s:sub -> Tot sub *)
-(* let subst_eabs s y = *)
-(*   if y = 0 then EVar y  *)
-(*   else subst (s (y-1)) sub_inc *)
-
-(* (\* But, you can't prove the property you want about it.  *)
-(*    Since that property relies on functional extensionality *\) *)
-(* let test_hoist_1 (t:ty) (e:exp) (s:sub) = assert (subst (EAbs t e) s = EAbs t (subst e (subst_eabs s))) *)
-
-(* opaque logic type Equals (s1:sub) (s2:sub) = (forall (x:var). s1 x = s2 x) *)
-(* assume Subst_extensional: forall (e:exp) (s1:sub) (s2:sub).{:pattern subst e s1; subst e s2; Equals s1 s2} *)
-(*                                                             Equals s1 s2 ==> (subst e s1 = subst e s2) *)
-
-
-(* let test_hoist_2 (t:ty) (e:exp) (s:sub) =  *)
-(*     assert (exists s'. subst (EAbs t e) s = EAbs t (subst e s')  *)
-(*                                             /\ Equals s' (subst_eabs s) *)
-(*                                             /\ subst (EAbs t e) s = EAbs t (subst e (subst_eabs s))) *)
-
-
-
-
+(* And, you can prove the property you want using functional extensionality *)
+assume Subst_extensional: forall (e:exp) (s1:sub) (s2:sub).{:pattern subst e s1; subst e s2}
+                                                           (forall (x:var). s1 x = s2 x) ==> (subst e s1 = subst e s2)
+let test_hoist (t:ty) (e:exp) (s:sub) = assert (subst (EAbs t e) s = EAbs t (subst e (subst_eabs s)))

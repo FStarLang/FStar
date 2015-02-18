@@ -115,7 +115,7 @@ let varops =
 type binding = 
     | Binding_var   of bvvdef * term
     | Binding_tvar  of btvdef * term
-    | Binding_fvar  of lident * string * term (* free variables, depending on whether or not they are fully applied ...  *)
+    | Binding_fvar  of lident * string * term * option<term> (* free variables, depending on whether or not they are fully applied ...  *)
     | Binding_ftvar of lident * string * term (* ... are mapped either to SMT2 functions, or to nullary term/type tokens *)
    
 type env_t = {bindings:list<binding>;
@@ -123,14 +123,15 @@ type env_t = {bindings:list<binding>;
               warn:bool;
               polarity:bool;
               refinements:Util.smap<(term * list<decl>)>;
-              nolabels:bool
+              nolabels:bool;
+              use_zfuel_name:bool;
               }
 let negate env = {env with polarity=not env.polarity}
 let print_env e = 
     e.bindings |> List.map (function 
         | Binding_var (x, t) -> Print.strBvd x
         | Binding_tvar (a, t) -> Print.strBvd a
-        | Binding_fvar(l, s, t) -> Print.sli l
+        | Binding_fvar(l, s, t, _) -> Print.sli l
         | Binding_ftvar(l, s, t) -> Print.sli l) |> String.concat ", "
 
 let lookup_binding env f = Util.find_map env.bindings f 
@@ -180,29 +181,39 @@ let push_typ_var (env:env_t) (x:btvdef) (t:term) =
 let gen_free_var (env:env_t) (x:lident) =
     let fname = varops.new_fvar x in
     let ftok = mkFreeV(varops.new_fvar x , Term_sort) in
-    fname, ftok, {env with bindings=Binding_fvar(x, fname, ftok)::env.bindings}
+    fname, ftok, {env with bindings=Binding_fvar(x, fname, ftok, None)::env.bindings}
 let try_lookup_lid env a = 
-    lookup_binding env (function Binding_fvar(b, t1, t2) when lid_equals b a -> Some (t1, t2) | _ -> None) 
+    lookup_binding env (function Binding_fvar(b, t1, t2, t3) when lid_equals b a -> Some (t1, t2, t3) | _ -> None) 
 let lookup_lid env a = 
-    match lookup_binding env (function Binding_fvar(b, t1, t2) when lid_equals b a -> Some (t1, t2) | _ -> None) with
+    match lookup_binding env (function Binding_fvar(b, t1, t2, t3) when lid_equals b a -> Some (t1, t2, t3) | _ -> None) with
     | None -> failwith (format1 "Name not found: %s" (Print.sli a))
     | Some s -> s
 let push_free_var env (x:lident) fname ftok = 
-    {env with bindings=Binding_fvar(x, fname, ftok)::env.bindings}
+    {env with bindings=Binding_fvar(x, fname, ftok, None)::env.bindings}
+let push_zfuel_name env (x:lident) f = 
+    let t1, t2, _ = lookup_lid env x in
+    let t3 = Term.mkApp(f, [Term.mkFreeV("ZFuel", Term.Fuel_sort)]) in
+    {env with bindings=Binding_fvar(x, t1, t2, Some t3)::env.bindings}
 let lookup_free_var env a =
-    let name, sym = lookup_lid env a.v in
-    match sym.tm with 
-        | App(_, [fuel]) -> 
-            if (Util.starts_with (Term.boundV_sym fuel) "fuel") 
-            then Term.mk_ApplyEF(Term.mkFreeV (name, Term_sort)) fuel
-            else sym
-        | _ -> sym
-let lookup_free_var_name env a = lookup_lid env a.v |> fst
+    let name, sym, zf_opt = lookup_lid env a.v in
+    match zf_opt with 
+        | Some f when (env.use_zfuel_name) -> f
+        | _ -> 
+          match sym.tm with 
+            | App(_, [fuel]) -> 
+                if (Util.starts_with (Term.boundV_sym fuel) "fuel") 
+                then Term.mk_ApplyEF(Term.mkFreeV (name, Term_sort)) fuel
+                else sym
+            | _ -> sym
+let lookup_free_var_name env a = let x, _, _ = lookup_lid env a.v in x
 let lookup_free_var_sym env a = 
-    let name, sym = lookup_lid env a.v in
-    match sym.tm with 
-        | App(g, [fuel]) -> g, [fuel]
-        | _ -> name, []
+    let name, sym, zf_opt = lookup_lid env a.v in
+    match zf_opt with 
+        | Some({tm=App(g, zf)}) when env.use_zfuel_name -> g, zf
+        | _ -> 
+            match sym.tm with 
+                | App(g, [fuel]) -> g, [fuel]
+                | _ -> name, []
 
 (* Qualified type names *)
 let gen_free_tvar (env:env_t) (x:lident) =
@@ -812,7 +823,7 @@ and encode_function_type_as_formula (use_decreasing_pat:bool) (t:typ) (env:env_t
 
     let pats, decls' = patterns |> List.map (function 
         | Inl t, _ -> encode_formula t env
-        | Inr e, _ -> let t, _, decls = encode_exp e env in t, decls) |> List.unzip in 
+        | Inr e, _ -> let t, _, decls = encode_exp e env (*{env with use_zfuel_name=true}*) in t, decls) |> List.unzip in 
   
   
     let pats = 
@@ -919,7 +930,7 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
         let env = negate env in
         let pats, decls' = ps |> List.map (function 
             | Inl t, _ -> encode_formula t env
-            | Inr e, _ -> let t, _, decls = encode_exp e env in t, decls) |> List.unzip in 
+            | Inr e, _ -> let t, _, decls = encode_exp e ({env with use_zfuel_name=true}) in t, decls) |> List.unzip in 
         let body, labs, decls'' = encode_formula_with_labels body env in
             vars, pats, mk_and_l guards, body, labs, decls@List.flatten decls'@decls'' in
     
@@ -1353,10 +1364,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                          let env = push_free_var env flid gtok (Term.mkApp(g, [fuel_tm])) in
                          (flid, f, ftok, g, gtok)::gtoks, env) ([], env) in
                       let gtoks = List.rev gtoks in
-                      let encode_one_binding (flid, f, ftok, g, gtok) t_norm (_, _, e) = 
+                      let encode_one_binding env0 (flid, f, ftok, g, gtok) t_norm (_, _, e) = 
                          let binders, body, formals, tres = destruct_bound_function flid t_norm e in
                          let vars, guards, env', binder_decls, _ = encode_binders None binders env in
                          let decl_g = Term.DeclFun(g, Fuel_sort::List.map snd vars, Term_sort, Some "Fuel-instrumented function name") in
+                         let env0 = push_zfuel_name env0 flid g in
                          let decl_g_tok = Term.DeclFun(gtok, [], Term_sort, Some "Token for fuel-instrumented partial applications") in
                          let vars_tm = List.map mkBoundV vars in
                          let app = Term.mkApp(f, vars_tm) in 
@@ -1377,9 +1389,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                 let tok_app = mk_ApplyE (Term.mkFreeV (gtok, Term_sort)) (fuel::vars) in
                                 Term.Assume(mkForall([tok_app], fuel::vars, mkEq(tok_app, gapp)), Some "Fuel token correspondence") in
                             binder_decls@d3@d4@[Term.Assume(mkForall([gapp], fuel::vars, mkImp(f_typing, g_typing)), None); tok_corr] in
-                        binder_decls@[decl_g;decl_g_tok], decls2@[eqn_g;eqn_g';eqn_f]@g_typing in
-                        let prefix_decls, eqns = List.map3 encode_one_binding gtoks typs bindings |> List.split in
-                        (List.flatten prefix_decls)@(List.flatten eqns), env0
+                        binder_decls@[decl_g;decl_g_tok], decls2@[eqn_g;eqn_g';eqn_f]@g_typing, env0 in
+                        let decls, eqns, env0 = List.fold_left (fun (decls, eqns, env0) (gtok, ty, bs) -> 
+                            let decls', eqns', env0 = encode_one_binding env0 gtok ty bs in
+                            decls'@decls, eqns'@eqns, env0) ([], [], env0) (List.zip3 gtoks typs bindings) in
+                        let prefix_decls = List.rev decls in
+                        let eqns = List.rev eqns in
+                        ( prefix_decls)@( eqns), env0
         with Let_rec_unencodeable -> 
              let msg = bindings |> List.map (fun (lb, _, _) -> Print.lbname_to_string lb) |> String.concat " and " in
              let decl = Caption ("let rec unencodeable: Skipping: " ^msg) in
@@ -1393,8 +1409,9 @@ and declare_top_level_let env x t t_norm =
     match try_lookup_lid env x with 
         | None -> (* Need to introduce a new name decl *)
             let decls, env = encode_free_var env x t t_norm [] in
-            lookup_lid env x, decls, env 
-        | Some (n, x) -> (* already declared, only need an equation *)
+            let n, x, _ = lookup_lid env x in
+            (n, x), decls, env 
+        | Some (n, x, _) -> (* already declared, only need an equation *)
             (n, x), [], env
 
 and encode_smt_lemma env lid t = 
@@ -1518,7 +1535,7 @@ let encode_labels labs =
 (* caching encodings of the environment and the top-level API to the encoding *)
 open Microsoft.FStar.Tc.Env
 let last_env : ref<list<env_t>> = Util.mk_ref []
-let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; polarity=true; refinements=Util.smap_create 20; nolabels=false}]
+let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; polarity=true; refinements=Util.smap_create 20; nolabels=false; use_zfuel_name=false}]
 let get_env tcenv = match !last_env with 
     | [] -> failwith "No env; call init first!"
     | e::_ -> {e with tcenv=tcenv}
