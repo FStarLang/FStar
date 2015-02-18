@@ -54,8 +54,8 @@ let erenaming_sub_inc _ = ()
 let is_evar (e:exp) : int = if is_EVar e then 0 else 1
 
 val esubst : e:exp -> s:esub -> Pure exp (requires True) 
-                                         (ensures (fun e' -> erenaming s /\ is_EVar e ==> is_EVar e'))
-                                         (decreases %[is_evar e; is_erenaming s; e])
+      (ensures (fun e' -> erenaming s /\ is_EVar e ==> is_EVar e'))
+      (decreases %[is_evar e; is_erenaming s; e])
 let rec esubst e s =
   match e with
   | EVar x -> s x
@@ -104,8 +104,8 @@ let trenaming_sub_inc _ = ()
 let is_tvar (t:typ) : int = if is_TVar t then 0 else 1
 
 val tsubst : t:typ -> s:tsub -> Pure typ (requires True) 
-                                         (ensures (fun t' -> trenaming s /\ is_TVar t ==> is_TVar t'))
-                                         (decreases %[is_tvar t; is_trenaming s; t])
+      (ensures (fun t' -> trenaming s /\ is_TVar t ==> is_TVar t'))
+      (decreases %[is_tvar t; is_trenaming s; t])
 let rec tsubst t s =
   match t with
   | TVar x -> s x
@@ -319,10 +319,13 @@ let rec progress _ _ h =
 
 opaque logic type SubEqual (s1:esub) (s2:esub) = (forall (x:var). s1 x = s2 x)
 
-(* Surprise: extensionality is _provable_ using the SMT solver! *)
+assume SubstExtensionality:
+  forall (s1:esub) (s2:esub). (forall x. s1 x = s2 x) <==> s1 = s2
+
 val subst_extensional: s1:esub -> s2:esub{SubEqual s1 s2} -> e:exp ->
                        Lemma (esubst e s1 = esubst e s2)
-let subst_extensional s1 s2 e = assert (s1 = s2) (* I have to write this assert ... *)
+let subst_extensional s1 s2 e =
+  assert (s1 = s2) (* have to write this assert ... *)
 
 val tappears_free_in : x:var -> t:typ -> Tot bool (decreases t)
 let rec tappears_free_in x t =
@@ -345,32 +348,34 @@ let rec tcontext_invariance _ _ _ h g' =
   | KiApp h1 h2 -> KiApp (tcontext_invariance h1 g') (tcontext_invariance h2 g')
   | KiArr h1 h2 -> KiArr (tcontext_invariance h1 g') (tcontext_invariance h2 g')
 
+(*
+val lem: #g:env -> #t1:typ -> #t2:typ -> #k:knd -> 
+         h1:(kinding g t1 k) -> h2:(tequiv t1 t2) ->
+         Tot (kinding g t2 k) (decreases h2)
 
-(* val lem: #g:env -> #t1:typ -> #t2:typ -> #k:knd -> h1:(kinding g t1 k) -> h2:(tequiv t1 t2) -> *)
-(*          Tot (kinding g t2 k) (decreases h2) *)
+let rec lem _ _ _ h1 h2 = match h2 with
+  | EqRefl t -> h1
+  | EqSymm h -> lem
+  | _ -> admit ()
 
-(* let rec lem _ _ _ h1 h2 = match h2 with *)
-(*   | EqRefl t -> h1 *)
-(*   | EqSymm h -> lem  *)
-(*   | _ -> admit () *)
+val eappears_free_in : x:var -> e:exp -> Tot bool (decreases e)
+let rec eappears_free_in x e =
+  match e with
+    | EVar y -> x = y
+    | EApp e1 e2 -> eappears_free_in x e1 || eappears_free_in x e2
+    | ELam _ e1 -> eappears_free_in (x+1) e1
 
-(* val eappears_free_in : x:var -> e:exp -> Tot bool (decreases e) *)
-(* let rec eappears_free_in x e = *)
-(*   match e with *)
-(*     | EVar y -> x = y *)
-(*     | EApp e1 e2 -> eappears_free_in x e1 || eappears_free_in x e2 *)
-(*     | ELam _ e1 -> eappears_free_in (x+1) e1 *)
+opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
+		 (forall (x:var). eappears_free_in x e ==> g1 x = g2 x)
 
-(* opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) = *)
-(* 		 (forall (x:var). eappears_free_in x e ==> g1 x = g2 x) *)
-
-(* val econtext_invariance : #e:exp -> #g:env -> #t:typ -> *)
-(*                           h:(typing g e t) -> g':env{EnvEqualE e g g' /\ EnvEqualT t g g'} -> *)
-(*                           Tot (typing g' e t) (decreases h) *)
-(* let rec econtext_invariance _ _ _ h g' = *)
-(*   match h with *)
-(*     | TyVar x -> TyVar x *)
-(*     | TyAbs t_y k h1 -> *)
-(*       TyAbs t_y (tcontext_invariance k g') (econtext_invariance h1 (extend g' 0 (B_x t_y))) *)
-(*     | TyApp h1 h2 -> admit () *)
-(*     | TyEqu h1 eq k -> TyEqu (econtext_invariance h1 g') eq (tcontext_invariance k g') *)
+val econtext_invariance : #e:exp -> #g:env -> #t:typ ->
+                          h:(typing g e t) -> g':env{EnvEqualE e g g' /\ EnvEqualT t g g'} ->
+                          Tot (typing g' e t) (decreases h)
+let rec econtext_invariance _ _ _ h g' =
+  match h with
+    | TyVar x -> TyVar x
+    | TyAbs t_y k h1 ->
+      TyAbs t_y (tcontext_invariance k g') (econtext_invariance h1 (extend g' 0 (B_x t_y)))
+    | TyApp h1 h2 -> admit ()
+    | TyEqu h1 eq k -> TyEqu (econtext_invariance h1 g') eq (tcontext_invariance k g')
+*)
