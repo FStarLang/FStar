@@ -378,11 +378,9 @@ but instead we get this subtyping error for the second conjunct:
 Subtyping check failed; 
 expected type ((kinding _1019 _1023  _1025) -> Tot (kinding _1019 _1021  _1025)); 
      got type ((kinding _1019 _33555 _1025) -> Tot (kinding _1019 _33555 _1025))
-(lambda_omega.fst(372,28-372,45)) *)
+(lambda_omega.fst(372,28-372,45)) 
+   Seems like the same kind of problem as #129 *)
   | _ -> admit ()
-
-(*
-
 
 val eappears_free_in : x:var -> e:exp -> Tot bool (decreases e)
 let rec eappears_free_in x e =
@@ -394,14 +392,29 @@ let rec eappears_free_in x e =
 opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
 		 (forall (x:var). eappears_free_in x e ==> g1 x = g2 x)
 
+(* it seems this can't be proved automatically? *)
+val lemma : t':typ -> g:env -> g':env -> t_y:typ -> Lemma
+       (requires (EnvEqualT t' g g'))
+       (ensures (EnvEqualT t' (extend g 0 (B_x t_y)) (extend g' 0 (B_x t_y))))
+let lemma t' g g' t_y = admit()
+
 val econtext_invariance : #e:exp -> #g:env -> #t:typ ->
-                          h:(typing g e t) -> g':env{EnvEqualE e g g' /\ EnvEqualT t g g'} ->
-                          Tot (typing g' e t) (decreases h)
-let rec econtext_invariance _ _ _ h g' =
+      h:(typing g e t) -> g':env{EnvEqualE e g g' /\ EnvEqualT t g g'} ->
+      Tot (typing g' e t) (decreases h)
+let rec econtext_invariance _ _ t h g' =
   match h with
     | TyVar x -> TyVar x
-    | TyAbs t_y k h1 ->
-      TyAbs t_y (tcontext_invariance k g') (econtext_invariance h1 (extend g' 0 (B_x t_y)))
-    | TyApp h1 h2 -> admit ()
-    | TyEqu h1 eq k -> TyEqu (econtext_invariance h1 g') eq (tcontext_invariance k g')
-*)
+    | TyAbs #g t_y #e1 #t' hk h1 ->
+       (* can prove this *)
+       assert(EnvEqualE e1 (extend g 0 (B_x t_y)) (extend g' 0 (B_x t_y)));
+       assert(t = TArr t_y t');
+       assert(EnvEqualT t' g g');
+       (* but can't prove this without a lemma
+          assert(EnvEqualT t' (extend g 0 (B_x t_y)) (extend g' 0 (B_x t_y))); *)
+       lemma t' g g' t_y;
+       TyAbs t_y (tcontext_invariance hk g')
+                 (econtext_invariance #e1 #(extend g 0 (B_x t_y)) #t'
+                                      h1 (extend g' 0 (B_x t_y)))
+    | TyApp h1 h2 -> admit()
+    | TyEqu h1 eq k -> admit()
+        (*TyEqu (econtext_invariance h1 g') eq (tcontext_invariance k g')*)
