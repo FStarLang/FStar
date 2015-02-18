@@ -281,11 +281,11 @@ type typing : env -> exp -> typ -> Type =
   | TyApp : #g:env ->
             #e1:exp ->
             #e2:exp ->
-            #t11:typ ->
-            #t12:typ ->
-            typing g e1 (TArr t11 t12) ->
-            typing g e2 t11 ->
-            typing g (EApp e1 e2) t12
+            #t1:typ ->
+            #t2:typ ->
+            typing g e1 (TArr t1 t2) ->
+            typing g e2 t1 ->
+            typing g (EApp e1 e2) t2
   | TyEqu : #g:env ->
             #e:exp ->
             #t1:typ ->
@@ -392,7 +392,8 @@ let rec eappears_free_in x e =
 opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
 		 (forall (x:var). eappears_free_in x e ==> g1 x = g2 x)
 
-(* it seems this can't be proved automatically? *)
+(* It seems this can't be proved automatically?
+   It's solely because of the lack of function extensionality *)
 
 val lemma_aux : t':typ -> g:env -> g':env -> t_y:typ ->
                 x:var{tappears_free_in x t'} -> Lemma
@@ -410,6 +411,7 @@ val lemma : t':typ -> g:env -> g':env -> t_y:typ -> Lemma
        (ensures (EnvEqualT t' (extend g 0 (B_x t_y)) (extend g' 0 (B_x t_y))))
 let lemma t' g g' t_y = admit()
 
+(* I don't think this holds, see comments below *)
 val econtext_invariance : #e:exp -> #g:env -> #t:typ ->
       h:(typing g e t) -> g':env{EnvEqualE e g g' /\ EnvEqualT t g g'} ->
       Tot (typing g' e t) (decreases h)
@@ -428,5 +430,13 @@ let rec econtext_invariance _ _ t h g' =
                  (econtext_invariance #e1 #(extend g 0 (B_x t_y)) #t'
                                       h1 (extend g' 0 (B_x t_y)))
     | TyApp h1 h2 -> admit()
+       (* Does this case hold at all? We don't know which variables are used
+          by the domain type of the application (t1 in TyApp); it may
+          clearly use more than just the variables in the result type
+          (t2 in TyApp) *)
+       (* TyApp (econtext_invariance h1 g') (econtext_invariance h2 g') *)
     | TyEqu h1 eq k -> admit()
-        (*TyEqu (econtext_invariance h1 g') eq (tcontext_invariance k g')*)
+       (* Does this case hold at all? Again, because of things like
+          transitivity, the tequiv derivation might use intermediate types
+          with very different variables than the initial and final type *)
+       (* TyEqu (econtext_invariance h1 g') eq (tcontext_invariance k g')*)
