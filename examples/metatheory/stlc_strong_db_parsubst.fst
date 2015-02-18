@@ -31,17 +31,13 @@ type exp =
 
 (* Parallel substitution operation `subst` *)
 
-(* It would be fun to show this terminating;
-   the usual way is to replace the subst_f part by a "renaming"
-   (function from vars to vars), but we have a super flexible termination
-   machanism, can't we prove this directly? Probably not, one would normally
-   use lexicographic ordering composed of:
-   1) an _undecidable_ well-founded order on substitutions that equates
-      all renamings, equates all non-renamings, and makes renamings
-      strictly smaller than non-renamings; given that our order has to
-      be on values, for which we are constructive, we can't write down
-      a function mapping substitutions (infinite objects)
-      to 0 (renaming) or 1 (non-renaming)
+(* The termination argument uses a lexicographic ordering composed of:
+   0) a bit saying whether the expression is a variable or not;
+   1) an _undecidable_ well-founded order on substitutions that
+      equates all renamings, equates all non-renamings, and makes
+      renamings strictly smaller than non-renamings; we write down a
+      non-constructive function mapping substitutions (infinite
+      objects) to 0 (renaming) or 1 (non-renaming)
    2) the structure of the expression e *)
 
 type sub = var -> Tot exp
@@ -54,7 +50,6 @@ assume val excluded_middle : p:Type -> Tot (b:bool{b = true <==> p})
 val is_renaming : s:sub -> Tot (n:int{(renaming s ==> n=0) /\
                                       (~(renaming s) ==> n=1)})
 let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
-(* Patterns are incomplete? WTF? Filed as #122 *)
 
 val sub_inc : var -> Tot exp
 let sub_inc y = EVar (y+1)

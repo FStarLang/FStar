@@ -34,17 +34,13 @@ let is_value = is_EAbs
 
 (* Parallel substitution operation `subst` *)
 
-(* It would be fun to show this terminating;
-   the usual way is to replace the subst_f part by a "renaming"
-   (function from vars to vars), but we have a super flexible termination
-   machanism, can't we prove this directly? Probably not, one would normally
-   use lexicographic ordering composed of:
-   1) an _undecidable_ well-founded order on substitutions that equates
-      all renamings, equates all non-renamings, and makes renamings
-      strictly smaller than non-renamings; given that our order has to
-      be on values, for which we are constructive, we can't write down
-      a function mapping substitutions (infinite objects)
-      to 0 (renaming) or 1 (non-renaming)
+(* The termination argument uses a lexicographic ordering composed of:
+   0) a bit saying whether the expression is a variable or not;
+   1) an _undecidable_ well-founded order on substitutions that
+      equates all renamings, equates all non-renamings, and makes
+      renamings strictly smaller than non-renamings; we write down a
+      non-constructive function mapping substitutions (infinite
+      objects) to 0 (renaming) or 1 (non-renaming)
    2) the structure of the expression e *)
 
 (* My proposal would be to put this in Classic not Tot *)

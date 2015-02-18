@@ -35,9 +35,6 @@ type exp =
   | EApp   : exp -> exp -> exp
   | ELam   : typ -> exp -> exp
 
-val is_value : exp -> Tot bool
-let is_value = is_ELam
-
 (* Substitution on expressions and types;
    they don't really interact in this calculus *)
 
@@ -72,21 +69,10 @@ let rec esubst e s =
      
   | EApp e1 e2 -> EApp (esubst e1 s) (esubst e2 s)
 
-(* type esub = var -> Tot exp *)
-
-(* val esub_inc : var -> Tot exp *)
-(* let esub_inc y = EVar (y+1) *)
-
-(* val esubst : e:exp -> s:esub -> Tot exp *)
-(* val esubst_lam : s:esub -> Tot esub *)
-(* let rec esubst e s = *)
-(*   match e with *)
-(*   | EVar x -> s x *)
-(*   | ELam t e1 -> ELam t (esubst e1 (esubst_lam s)) *)
-(*   | EApp e1 e2 -> EApp (esubst e1 s) (esubst e2 s) *)
-(* and esubst_lam s = *)
-(*   fun y -> if y = 0 then EVar y *)
-(*            else esubst (s (y-1)) esub_inc *)
+val esubst_lam: s:esub -> Tot esub
+let esubst_lam s y =
+  if y = 0 then EVar y
+  else esubst (s (y-1)) esub_inc
 
 (* subst_beta_gen is a generalization of the substitution we do for
    the beta rule, when we've under x binders
@@ -131,28 +117,13 @@ let rec tsubst t s =
        else (tsubst (s (y - 1)) tsub_inc) in
      TLam t (tsubst t1 subst_tabs)
 
-  | TArr t1 t2
+  | TArr t1 t2 -> TArr (tsubst t1 s) (tsubst t2 s)
   | TApp t1 t2 -> TApp (tsubst t1 s) (tsubst t2 s)
 
-
-(* type tsub = var -> Tot typ *)
-
-(* val tsub_inc : var -> Tot typ *)
-(* let tsub_inc y = TVar (y+1) *)
-
-(* val tsubst : t:typ -> s:tsub -> Tot typ *)
-(* val tsubst_lam : s:tsub -> Tot tsub *)
-(* let rec tsubst t s = *)
-(*   match t with *)
-(*   | TVar x -> s x *)
-(*   | TLam t t1 -> TLam t (tsubst t1 (tsubst_lam s)) *)
-(*   | TApp t1 t2 -> TApp (tsubst t1 s) (tsubst t2 s) *)
-(*   | TArr t1 t2 -> TArr (tsubst t1 s) (tsubst t2 s) *)
-(* and tsubst_lam s = *)
-(*   fun y -> if y = 0 then TVar y *)
-(*            else tsubst (s (y-1)) tsub_inc *)
-
-(* (\* ... and so is tsubst_beta *\) *)
+val tsubst_lam: s:tsub -> Tot tsub
+let tsubst_lam s y =
+  if y = 0 then TVar y
+  else tsubst (s (y-1)) tsub_inc
 
 val tsub_beta_gen : var -> typ -> Tot tsub
 let tsub_beta_gen x t = fun y -> if y < x then (TVar y)
@@ -324,8 +295,13 @@ type typing : env -> exp -> typ -> Type =
             kinding g t2 KTyp ->
             typing g e t2
 
+(* Progress proof *)
+
 type ex : #a:Type -> (a -> Type) -> Type =
   | ExIntro : #a:Type -> #p:(a -> Type) -> x:a -> p x -> ex p
+
+val is_value : exp -> Tot bool
+let is_value = is_ELam
 
 val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
                Tot (ex (fun e' -> step e e')) (decreases h)
@@ -333,17 +309,17 @@ let rec progress _ _ h =
   match h with
   | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
     (match e1 with
-      | ELam t e1' -> ExIntro (esubst_beta e2 e1') (SBeta t e1' e2)
-      | _          -> (match progress h1 with
-          | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1')))
-
+     | ELam t e1' -> ExIntro (esubst_beta e2 e1') (SBeta t e1' e2)
+     | _ -> (match progress h1 with
+             | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1')))
   | TyEqu h1 _ _ -> progress h1
 
+(* Substitution extensional
+   the proof would be trivial with the extensionality axiom *)
 
 opaque logic type SubEqual (s1:esub) (s2:esub) = (forall (x:var). s1 x = s2 x)
 
-assume SubstExtensionality: forall (s1:esub) (s2:esub). (forall x. s1 x = s2 x) <==> s1 = s2
-
+(* Surprise: extensionality is _provable_ using the SMT solver! *)
 val subst_extensional: s1:esub -> s2:esub{SubEqual s1 s2} -> e:exp ->
                        Lemma (esubst e s1 = esubst e s2)
 let subst_extensional s1 s2 e = assert (s1 = s2) (* I have to write this assert ... *)
@@ -351,10 +327,10 @@ let subst_extensional s1 s2 e = assert (s1 = s2) (* I have to write this assert 
 val tappears_free_in : x:var -> t:typ -> Tot bool (decreases t)
 let rec tappears_free_in x t =
   match t with
-    | TVar y -> x = y
-    | TArr t1 t2
-    | TApp t1 t2 -> tappears_free_in x t1 || tappears_free_in x t2
-    | TLam _ t1 -> tappears_free_in (x+1) t1
+  | TVar y -> x = y
+  | TArr t1 t2
+  | TApp t1 t2 -> tappears_free_in x t1 || tappears_free_in x t2
+  | TLam _ t1 -> tappears_free_in (x+1) t1
 
 opaque logic type EnvEqualT (t:typ) (g1:env) (g2:env) =
 		 (forall (x:var). tappears_free_in x t ==> g1 x = g2 x)
@@ -362,7 +338,8 @@ opaque logic type EnvEqualT (t:typ) (g1:env) (g2:env) =
 val tcontext_invariance : #t:typ -> #g:env -> #k:knd ->
                           h:(kinding g t k) -> g':env{EnvEqualT t g g'} ->
                           Tot (kinding g' t k) (decreases h)
-let rec tcontext_invariance _ _ _ h g' = match h with
+let rec tcontext_invariance _ _ _ h g' =
+  match h with
   | KiVar a -> KiVar a
   | KiAbs k1 h1 -> KiAbs k1 (tcontext_invariance h1 (extend g' 0 (B_a k1)))
   | KiApp h1 h2 -> KiApp (tcontext_invariance h1 g') (tcontext_invariance h2 g')
