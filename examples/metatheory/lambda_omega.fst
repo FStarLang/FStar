@@ -200,7 +200,7 @@ let tshift_up = tshift_up_above 0
 val extend : env -> var -> bnd -> Tot env
 let extend g x b y = if y < x then g y
                      else if y = x then Some b
-                     else omap (tmap tshift_up) (g (y-1))
+                     else omap (tmap (tshift_up_above x)) (g (y-1))
 
 (* Kinding, type equivalence, and typing rules;
    first 3 kinding and typing rules are analogous *)
@@ -440,3 +440,16 @@ let rec econtext_invariance _ _ t h g' =
           transitivity, the tequiv derivation might use intermediate types
           with very different variables than the initial and final type *)
        (* TyEqu (econtext_invariance h1 g') eq (tcontext_invariance k g')*)
+
+val kinding_weakening : #g:env -> #t:typ -> #k:knd ->
+      h:(kinding g t k) -> x:var -> b:bnd ->
+      kinding (extend g x b) (tshift_up_above x t) k
+let kinding_weakening g t k h x b = admit()
+
+val kinding_strengthening : g:env -> x:var -> t_x:typ -> #t:typ -> #k:knd ->
+      h:(kinding (extend g x (B_x t_x)) (tshift_up_above x t) k) ->
+      Tot (kinding g t k) (decreases h)
+let kinding_strengthening g x t_x t k h =
+  match h with
+  | KiVar #g' a -> assert(is_a (g' a)); assert(x <> a); admit()
+  | _ -> admit()
