@@ -453,3 +453,9 @@ let kinding_strengthening g x t_x t k h =
   match h with
   | KiVar #g' a -> assert(is_a (g' a)); assert(x <> a); admit()
   | _ -> admit()
+
+(* Note: the kind system of LambdaOmega is the same as the type system of STLC.
+   So most we should be able to port most things with little changes.
+   The main difference is in the way extend works: because types in
+   the environment can contain type variables, we need to be a bit
+   more careful with shifting indices when adding things. *)
