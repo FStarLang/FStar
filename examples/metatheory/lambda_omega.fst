@@ -324,7 +324,6 @@ type typing : env -> exp -> typ -> Type =
             kinding g t2 KTyp ->
             typing g e t2
 
-
 type ex : #a:Type -> (a -> Type) -> Type =
   | ExIntro : #a:Type -> #p:(a -> Type) -> x:a -> p x -> ex p
 
@@ -339,3 +338,62 @@ let rec progress _ _ h =
           | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1')))
 
   | TyEqu h1 _ _ -> progress h1
+
+
+opaque logic type SubEqual (s1:esub) (s2:esub) = (forall (x:var). s1 x = s2 x)
+
+assume SubstExtensionality: forall (s1:esub) (s2:esub). (forall x. s1 x = s2 x) <==> s1 = s2
+
+val subst_extensional: s1:esub -> s2:esub{SubEqual s1 s2} -> e:exp ->
+                       Lemma (esubst e s1 = esubst e s2)
+let subst_extensional s1 s2 e = assert (s1 = s2) (* I have to write this assert ... *)
+
+val tappears_free_in : x:var -> t:typ -> Tot bool (decreases t)
+let rec tappears_free_in x t =
+  match t with
+    | TVar y -> x = y
+    | TArr t1 t2
+    | TApp t1 t2 -> tappears_free_in x t1 || tappears_free_in x t2
+    | TLam _ t1 -> tappears_free_in (x+1) t1
+
+opaque logic type EnvEqualT (t:typ) (g1:env) (g2:env) =
+		 (forall (x:var). tappears_free_in x t ==> g1 x = g2 x)
+
+val tcontext_invariance : #t:typ -> #g:env -> #k:knd ->
+                          h:(kinding g t k) -> g':env{EnvEqualT t g g'} ->
+                          Tot (kinding g' t k) (decreases h)
+let rec tcontext_invariance _ _ _ h g' = match h with
+  | KiVar a -> KiVar a
+  | KiAbs k1 h1 -> KiAbs k1 (tcontext_invariance h1 (extend g' 0 (B_a k1)))
+  | KiApp h1 h2 -> KiApp (tcontext_invariance h1 g') (tcontext_invariance h2 g')
+  | KiArr h1 h2 -> KiArr (tcontext_invariance h1 g') (tcontext_invariance h2 g')
+
+
+(* val lem: #g:env -> #t1:typ -> #t2:typ -> #k:knd -> h1:(kinding g t1 k) -> h2:(tequiv t1 t2) -> *)
+(*          Tot (kinding g t2 k) (decreases h2) *)
+
+(* let rec lem _ _ _ h1 h2 = match h2 with *)
+(*   | EqRefl t -> h1 *)
+(*   | EqSymm h -> lem  *)
+(*   | _ -> admit () *)
+
+(* val eappears_free_in : x:var -> e:exp -> Tot bool (decreases e) *)
+(* let rec eappears_free_in x e = *)
+(*   match e with *)
+(*     | EVar y -> x = y *)
+(*     | EApp e1 e2 -> eappears_free_in x e1 || eappears_free_in x e2 *)
+(*     | ELam _ e1 -> eappears_free_in (x+1) e1 *)
+
+(* opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) = *)
+(* 		 (forall (x:var). eappears_free_in x e ==> g1 x = g2 x) *)
+
+(* val econtext_invariance : #e:exp -> #g:env -> #t:typ -> *)
+(*                           h:(typing g e t) -> g':env{EnvEqualE e g g' /\ EnvEqualT t g g'} -> *)
+(*                           Tot (typing g' e t) (decreases h) *)
+(* let rec econtext_invariance _ _ _ h g' = *)
+(*   match h with *)
+(*     | TyVar x -> TyVar x *)
+(*     | TyAbs t_y k h1 -> *)
+(*       TyAbs t_y (tcontext_invariance k g') (econtext_invariance h1 (extend g' 0 (B_x t_y))) *)
+(*     | TyApp h1 h2 -> admit () *)
+(*     | TyEqu h1 eq k -> TyEqu (econtext_invariance h1 g') eq (tcontext_invariance k g') *)
