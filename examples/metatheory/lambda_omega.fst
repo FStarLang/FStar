@@ -393,6 +393,18 @@ opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
 		 (forall (x:var). eappears_free_in x e ==> g1 x = g2 x)
 
 (* it seems this can't be proved automatically? *)
+
+val lemma_aux : t':typ -> g:env -> g':env -> t_y:typ ->
+                x:var{tappears_free_in x t'} -> Lemma
+                  (requires (g x = g' x))
+                  (ensures (extend g 0 (B_x t_y) x = extend g' 0 (B_x t_y) x))
+let lemma_aux t' g g' t_y x =
+  if x = 0 then ()
+  else
+    (assert (extend g 0 (B_x t_y) x = omap (tmap tshift_up) (g (x-1)));
+     assert (extend g' 0 (B_x t_y) x = omap (tmap tshift_up) (g' (x-1)));
+     admit())
+
 val lemma : t':typ -> g:env -> g':env -> t_y:typ -> Lemma
        (requires (EnvEqualT t' g g'))
        (ensures (EnvEqualT t' (extend g 0 (B_x t_y)) (extend g' 0 (B_x t_y))))
