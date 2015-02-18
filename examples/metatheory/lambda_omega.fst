@@ -315,7 +315,7 @@ let rec progress _ _ h =
   | TyEqu h1 _ _ -> progress h1
 
 (* Substitution extensional
-   the proof would be trivial with the extensionality axiom *)
+   is trivial with the extensionality axiom *)
 
 opaque logic type SubEqual (s1:esub) (s2:esub) = (forall (x:var). s1 x = s2 x)
 
@@ -348,15 +348,41 @@ let rec tcontext_invariance _ _ _ h g' =
   | KiApp h1 h2 -> KiApp (tcontext_invariance h1 g') (tcontext_invariance h2 g')
   | KiArr h1 h2 -> KiArr (tcontext_invariance h1 g') (tcontext_invariance h2 g')
 
-(*
-val lem: #g:env -> #t1:typ -> #t2:typ -> #k:knd -> 
-         h1:(kinding g t1 k) -> h2:(tequiv t1 t2) ->
-         Tot (kinding g t2 k) (decreases h2)
+(* Defining my own constructive if-and-only-if *)
+type xand : Type -> Type -> Type =
+  | Conj : #a:Type -> #b:Type -> pa:a -> pb:b -> xand a b
+type xiff (a : Type) (b : Type) = xand (a -> Tot b) (b -> Tot a)
 
-let rec lem _ _ _ h1 h2 = match h2 with
-  | EqRefl t -> h1
-  | EqSymm h -> lem
+val id : 'a -> Tot 'a
+let id x = x
+
+val fcomp : ('a -> Tot 'b) -> ('b -> Tot 'c) -> 'a -> Tot 'c
+let fcomp f1 f2 a = f2 (f1 a)
+
+val kinding_tequiv : #g:env -> #t1:typ -> #t2:typ -> #k:knd -> h:(tequiv t1 t2) ->
+      Tot (xiff (kinding g t1 k) (kinding g t2 k)) (decreases h)
+let rec kinding_tequiv g _ _ k h =
+  match h with
+  | EqRefl t -> Conj id id
+  | EqSymm h ->
+     let Conj ih1 ih2 = kinding_tequiv h in Conj ih2 ih1
+  | EqTran #t1 #t2 #t3 h1 h2 ->
+     let Conj ih11 ih12 = kinding_tequiv h1 in
+     let Conj ih21 ih22 = kinding_tequiv h2 in
+     Conj #(kinding g t1 k -> Tot (kinding g t3 k))
+          #(kinding g t3 k -> Tot (kinding g t1 k))
+          (fcomp ih11 ih21) (fcomp ih22 ih12)
+(* This should work
+     Conj (fcomp ih11 ih21) (fcomp ih22 ih12)
+but instead we get this subtyping error for the second conjunct:
+Subtyping check failed; 
+expected type ((kinding _1019 _1023  _1025) -> Tot (kinding _1019 _1021  _1025)); 
+     got type ((kinding _1019 _33555 _1025) -> Tot (kinding _1019 _33555 _1025))
+(lambda_omega.fst(372,28-372,45)) *)
   | _ -> admit ()
+
+(*
+
 
 val eappears_free_in : x:var -> e:exp -> Tot bool (decreases e)
 let rec eappears_free_in x e =
