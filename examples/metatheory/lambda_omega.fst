@@ -41,21 +41,52 @@ let is_value = is_ELam
 (* Substitution on expressions and types;
    they don't really interact in this calculus *)
 
+(* AR: this is copied from Nik's parallel substitution termination proof *)
 type esub = var -> Tot exp
+type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
+
+assume val is_erenaming : s:esub -> Tot (n:int{(erenaming s ==> n=0) /\
+                                               (~(erenaming s) ==> n=1)})
 
 val esub_inc : var -> Tot exp
 let esub_inc y = EVar (y+1)
 
-val esubst : e:exp -> s:esub -> Tot exp
-val esubst_lam : s:esub -> Tot esub
+val erenaming_sub_inc : unit -> Lemma (erenaming (esub_inc))
+let erenaming_sub_inc _ = ()
+
+let is_evar (e:exp) : int = if is_EVar e then 0 else 1
+
+val esubst : e:exp -> s:esub -> Pure exp (requires True) 
+                                         (ensures (fun e' -> erenaming s /\ is_EVar e ==> is_EVar e'))
+                                         (decreases %[is_evar e; is_erenaming s; e])
 let rec esubst e s =
   match e with
   | EVar x -> s x
-  | ELam t e1 -> ELam t (esubst e1 (esubst_lam s))
+
+  | ELam t e1 -> 
+     let subst_eabs : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) = fun y ->
+       if y=0 
+       then EVar y 
+       else (esubst (s (y - 1)) esub_inc) in
+     ELam t (esubst e1 subst_eabs)
+     
   | EApp e1 e2 -> EApp (esubst e1 s) (esubst e2 s)
-and esubst_lam s =
-  fun y -> if y = 0 then EVar y
-           else esubst (s (y-1)) esub_inc
+
+(* type esub = var -> Tot exp *)
+
+(* val esub_inc : var -> Tot exp *)
+(* let esub_inc y = EVar (y+1) *)
+
+(* val esubst : e:exp -> s:esub -> Tot exp *)
+(* val esubst_lam : s:esub -> Tot esub *)
+(* let rec esubst e s = *)
+(*   match e with *)
+(*   | EVar x -> s x *)
+(*   | ELam t e1 -> ELam t (esubst e1 (esubst_lam s)) *)
+(*   | EApp e1 e2 -> EApp (esubst e1 s) (esubst e2 s) *)
+(* and esubst_lam s = *)
+(*   fun y -> if y = 0 then EVar y *)
+(*            else esubst (s (y-1)) esub_inc *)
 
 (* subst_beta_gen is a generalization of the substitution we do for
    the beta rule, when we've under x binders
@@ -73,23 +104,55 @@ let esubst_beta e' e = esubst_beta_gen 0 e' e
 (* Substitution on types is very much analogous *)
 
 type tsub = var -> Tot typ
+type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
+
+assume val is_trenaming : s:tsub -> Tot (n:int{(trenaming s ==> n=0) /\
+                                               (~(trenaming s) ==> n=1)})
 
 val tsub_inc : var -> Tot typ
 let tsub_inc y = TVar (y+1)
 
-val tsubst : t:typ -> s:tsub -> Tot typ
-val tsubst_lam : s:tsub -> Tot tsub
+val trenaming_sub_inc : unit -> Lemma (trenaming (tsub_inc))
+let trenaming_sub_inc _ = ()
+
+let is_tvar (t:typ) : int = if is_TVar t then 0 else 1
+
+val tsubst : t:typ -> s:tsub -> Pure typ (requires True) 
+                                         (ensures (fun t' -> trenaming s /\ is_TVar t ==> is_TVar t'))
+                                         (decreases %[is_tvar t; is_trenaming s; t])
 let rec tsubst t s =
   match t with
   | TVar x -> s x
-  | TLam t t1 -> TLam t (tsubst t1 (tsubst_lam s))
-  | TApp t1 t2 -> TApp (tsubst t1 s) (tsubst t2 s)
-  | TArr t1 t2 -> TArr (tsubst t1 s) (tsubst t2 s)
-and tsubst_lam s =
-  fun y -> if y = 0 then TVar y
-           else tsubst (s (y-1)) tsub_inc
 
-(* ... and so is tsubst_beta *)
+  | TLam t t1 -> 
+     let subst_tabs : y:var -> Tot (t:typ{trenaming s ==> is_TVar t}) = fun y ->
+       if y=0 
+       then TVar y 
+       else (tsubst (s (y - 1)) tsub_inc) in
+     TLam t (tsubst t1 subst_tabs)
+
+  | TArr t1 t2
+  | TApp t1 t2 -> TApp (tsubst t1 s) (tsubst t2 s)
+
+
+(* type tsub = var -> Tot typ *)
+
+(* val tsub_inc : var -> Tot typ *)
+(* let tsub_inc y = TVar (y+1) *)
+
+(* val tsubst : t:typ -> s:tsub -> Tot typ *)
+(* val tsubst_lam : s:tsub -> Tot tsub *)
+(* let rec tsubst t s = *)
+(*   match t with *)
+(*   | TVar x -> s x *)
+(*   | TLam t t1 -> TLam t (tsubst t1 (tsubst_lam s)) *)
+(*   | TApp t1 t2 -> TApp (tsubst t1 s) (tsubst t2 s) *)
+(*   | TArr t1 t2 -> TArr (tsubst t1 s) (tsubst t2 s) *)
+(* and tsubst_lam s = *)
+(*   fun y -> if y = 0 then TVar y *)
+(*            else tsubst (s (y-1)) tsub_inc *)
+
+(* (\* ... and so is tsubst_beta *\) *)
 
 val tsub_beta_gen : var -> typ -> Tot tsub
 let tsub_beta_gen x t = fun y -> if y < x then (TVar y)
@@ -260,3 +323,19 @@ type typing : env -> exp -> typ -> Type =
             tequiv t1 t2 ->
             kinding g t2 KTyp ->
             typing g e t2
+
+
+type ex : #a:Type -> (a -> Type) -> Type =
+  | ExIntro : #a:Type -> #p:(a -> Type) -> x:a -> p x -> ex p
+
+val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
+               Tot (ex (fun e' -> step e e')) (decreases h)
+let rec progress _ _ h =
+  match h with
+  | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
+    (match e1 with
+      | ELam t e1' -> ExIntro (esubst_beta e2 e1') (SBeta t e1' e2)
+      | _          -> (match progress h1 with
+          | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1')))
+
+  | TyEqu h1 _ _ -> progress h1
