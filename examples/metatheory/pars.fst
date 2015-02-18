@@ -99,7 +99,10 @@ let subst_eabs s y =
   if y = 0 then EVar y
   else subst (s (y-1)) sub_inc
 
-(* And, you can prove the property you want using functional extensionality *)
-assume Subst_extensional: forall (e:exp) (s1:sub) (s2:sub).{:pattern subst e s1; subst e s2}
-                                                           (forall (x:var). s1 x = s2 x) ==> (subst e s1 = subst e s2)
+val subst_extensional: e:exp -> s1:sub -> s2:sub{Extensionality.Eq s1 s2} -> Lemma (requires True)
+                                                                                   (ensures (subst e s1 = subst e s2))
+                                                                                   [SMTPat (subst e s1); 
+                                                                                    SMTPat (subst e s2)]
+let subst_extensional e s1 s2 = ()
+
 let test_hoist (t:ty) (e:exp) (s:sub) = assert (subst (EAbs t e) s = EAbs t (subst e (subst_eabs s)))

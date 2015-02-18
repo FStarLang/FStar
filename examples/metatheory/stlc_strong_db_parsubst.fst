@@ -97,9 +97,11 @@ let subst_elam s y =
   if y = 0 then EVar y
   else subst (s (y-1)) sub_inc
 
-(* And, you can prove the property you want using functional extensionality *)
-assume Subst_extensional: forall (e:exp) (s1:sub) (s2:sub).{:pattern subst e s1; subst e s2}
-                                                           (forall (x:var). s1 x = s2 x) ==> (subst e s1 = subst e s2)
+val subst_extensional: s1:sub -> s2:sub{Extensionality.Eq s1 s2} -> e:exp -> Lemma (requires True)
+                                                                                   (ensures (subst e s1 = subst e s2))
+                                                                                   [SMTPat (subst e s1);
+                                                                                    SMTPat (subst e s2)]
+let subst_extensional s1 s2 e = ()
 
 (* subst_beta_gen is a generalization of the substitution we do for
    the beta rule, when we've under x binders
@@ -186,17 +188,9 @@ let rec progress _ _ h =
 (* Substitution extensional
    the proof would be trivial with the extensionality axiom *)
 
-opaque logic type SubEqual (s1:sub) (s2:sub) =
-                 (forall (x:var). s1 x = s2 x)
+(* opaque logic type SubEqual (s1:sub) (s2:sub) = *)
+(*                  (forall (x:var). s1 x = s2 x) *)
 
-val subst_extensional: s1:sub -> s2:sub{SubEqual s1 s2} -> e:exp -> Lemma
-      (subst e s1 = subst e s2) (decreases e)
-(*      [SMTPat [subst e s1; subst e s2]] -- fails type-checking *)
-let rec subst_extensional s1 s2 e =
-  match e with
-  | EVar x -> ()
-  | ELam t e1 -> subst_extensional (subst_elam s1) (subst_elam s2) e1
-  | EApp e1 e2 -> (subst_extensional s1 s2 e1; subst_extensional s1 s2 e2)
 
 (* Typing extensional (weaker) and context invariance (stronger) lemmas;
    Context invariance is actually used in a single place within substitution,
@@ -255,10 +249,9 @@ let sub_beta_gen_elam x v y =
   if y>0 && x = y-1 then shift_up_subst_sub_inc v
 
 val subst_gen_elam_aux_forall : x:var -> v:exp -> Lemma
-      (ensures (SubEqual (subst_elam (sub_beta_gen  x              v))
-                                     (sub_beta_gen (x+1) (shift_up v))))
-let subst_gen_elam_aux_forall x v = admit()
-(* should follow from subst_gen_elam_aux and forall_intro *)
+      (ensures (Extensionality.Eq (subst_elam (sub_beta_gen  x              v))
+                                  (sub_beta_gen (x+1) (shift_up v))))
+let subst_gen_elam_aux_forall x v = ()
 
 val subst_gen_elam : x:var -> v:exp -> t_y:typ -> e':exp -> Lemma
       (ensures (subst_beta_gen x v (ELam t_y e') =

@@ -823,7 +823,7 @@ and encode_function_type_as_formula (use_decreasing_pat:bool) (t:typ) (env:env_t
 
     let pats, decls' = patterns |> List.map (function 
         | Inl t, _ -> encode_formula t env
-        | Inr e, _ -> let t, _, decls = encode_exp e env (*{env with use_zfuel_name=true}*) in t, decls) |> List.unzip in 
+        | Inr e, _ -> let t, _, decls = encode_exp e ({env with use_zfuel_name=true}) in t, decls) |> List.unzip in 
   
   
     let pats = 
