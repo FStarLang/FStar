@@ -16,6 +16,8 @@
 
 module LambdaOmega
 
+open FunctionalExtensionality
+
 (* Chapter 29 of TAPL: "Type Operators and Kinding" *)
 
 type var = nat
@@ -78,8 +80,8 @@ let esubst_lam s y =
    (useful for the substitution lemma) *)
 val esub_beta_gen : var -> exp -> Tot esub
 let esub_beta_gen x e = fun y -> if y < x then (EVar y)
-                                      else if y = x then e
-                                      else (EVar (y-1))
+                                 else if y = x then e
+                                 else (EVar (y-1))
 
 val esubst_beta_gen : var -> exp -> exp -> Tot exp
 let esubst_beta_gen x e' e = esubst e (esub_beta_gen x e')
@@ -126,8 +128,8 @@ let tsubst_lam s y =
 
 val tsub_beta_gen : var -> typ -> Tot tsub
 let tsub_beta_gen x t = fun y -> if y < x then (TVar y)
-                                      else if y = x then t
-                                      else (TVar (y-1))
+                                 else if y = x then t
+                                 else (TVar (y-1))
 
 val tsubst_beta_gen : var -> typ -> typ -> Tot typ
 let tsubst_beta_gen x v e = tsubst e (tsub_beta_gen x v)
@@ -317,18 +319,11 @@ let rec progress _ _ h = admit()
     | TyEqu h1 _ _ -> progress h1
 *)
 
-(* Substitution extensional
-   is trivial with the extensionality axiom *)
+(* Substitution extensional; trivial with the extensionality axiom *)
 
-opaque logic type SubEqual (s1:esub) (s2:esub) = (forall (x:var). s1 x = s2 x)
-
-assume SubstExtensionality:
-  forall (s1:esub) (s2:esub). (forall x. s1 x = s2 x) <==> s1 = s2
-
-val subst_extensional: s1:esub -> s2:esub{SubEqual s1 s2} -> e:exp ->
+val subst_extensional: s1:esub -> s2:esub{FEq s1 s2} -> e:exp ->
                        Lemma (esubst e s1 = esubst e s2)
-let subst_extensional s1 s2 e =
-  assert (s1 = s2) (* have to write this assert ... *)
+let subst_extensional s1 s2 e = ()
 
 val tappears_free_in : x:var -> t:typ -> Tot bool (decreases t)
 let rec tappears_free_in x t =
@@ -395,17 +390,20 @@ let rec eappears_free_in x e =
     | EApp e1 e2 -> eappears_free_in x e1 || eappears_free_in x e2
     | ELam _ e1 -> eappears_free_in (x+1) e1
 
-(* AR: change in defn. to say that it g1 and g2 are same for type variables *)
+(* g1 and g2 are same for type variables,
+   but they can vary on the unused term variables *)
 opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
 		 (forall (x:var). eappears_free_in x e ==>
                     lookup_evar g1 x = lookup_evar g2 x) /\
-		 (forall (x:var). (lookup_tvar g1 x = lookup_tvar g2 x))
+		 (FEq (MkEnv.a g1) (MkEnv.a g2))
 
 (* g |- t :: k, g and g' are same for type variables, then g' |- t :: k *)
 (* CH: this is a form of "kinding_extensional";
-       it should also follow from functional extensionality *)
+       it doesn't directly follow from functional extensionality,
+       because (MkEnv.x g) and (MkEnv.x g') are completely unrelated;
+       this is just because we pass this useless argument to kinding. *)
 val env_eq_t_k: #g:env -> #t:typ -> #k:knd -> h:(kinding g t k) ->
-                g':env{forall (x:var). (lookup_tvar g x = lookup_tvar g' x)} ->
+                g':env{FEq (MkEnv.a g) (MkEnv.a g')} ->
                 Tot (kinding g' t k) (decreases h)
 let rec env_eq_t_k _ _ _ h g' =
   match h with
@@ -433,8 +431,6 @@ val kinding_weakening_ebnd : #g:env -> #t:typ -> #k:knd ->
       h:(kinding g t k) -> x:var -> t':typ ->
       Tot (kinding (extend_evar g x t') t k)
 let kinding_weakening_ebnd g t k h x t' = env_eq_t_k h (extend_evar g x t')
-
-opaque logic type SubEqualT (s1:tsub) (s2:tsub) = (forall (x:var). s1 x = s2 x)
 
 (* AR: TODO, limitation *)
 val tshift_up_above_abs: n:nat -> k:knd -> t:typ -> Lemma
