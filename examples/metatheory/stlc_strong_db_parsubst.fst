@@ -15,6 +15,7 @@
 *)
 
 module StlcStrongDbParSubst
+open FunctionalExtensionality
 
 (* Constructive-style progress and preservation proof for STLC with
    strong reduction, using deBruijn indices and parallel substitution. *)
@@ -60,8 +61,8 @@ let renaming_sub_inc _ = ()
 let is_var (e:exp) : int = if is_EVar e then 0 else 1
 
 val subst : e:exp -> s:sub -> Pure exp (requires True) 
-                                       (ensures (fun e' -> renaming s /\ is_EVar e ==> is_EVar e'))
-                                       (decreases %[is_var e; is_renaming s; e])
+     (ensures (fun e' -> renaming s /\ is_EVar e ==> is_EVar e'))
+     (decreases %[is_var e; is_renaming s; e])
 let rec subst e s =
   match e with
   | EVar x -> s x
@@ -70,37 +71,20 @@ let rec subst e s =
      let subst_eabs : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) = fun y ->
        if y=0 
        then EVar y 
-       else ((* renaming_sub_inc (); --unnecessary hint *)
-             (* Why does the next recursive call terminate?
-                1. If s is a renaming, we're done; since e is not a var, and s (y - 1) is, the lex ordering strictly decreases.
-                2. If s is not a renaming, then since e is not a var, the first component of the lex order remains the same;
-                   But, sub_inc is a renaming, so the second component decreases and we're done again.
-              *)
-             subst (s (y - 1)) sub_inc) in
-     (* assert (renaming s ==> renaming subst_eabs); --unnecessary hint *)
-     (* Why does the next recursive call terminate?
-        1. If e1 is a var, we're done since e is not a var and so the first component decreases
-        2. If not, e1 is a non-var proper sub-term of e; so the first component remains the same; the third component strictly decreases;
-                   We have to show that the second comonent remains the same; i.e., subst_eabs is a renaming if s is a renaming.
-                   Which we have done above.
-      *)
+       else subst (s (y - 1)) sub_inc in
      ELam t (subst e1 subst_eabs)
      
   | EApp e1 e2 -> EApp (subst e1 s) (subst e2 s)
  
-(* 
-   The above proof is nice, but you really want to use subst_eabs at the top-level.
-   So, hoist it by hand ...
-*)
 val subst_elam: s:sub -> Tot sub
 let subst_elam s y =
   if y = 0 then EVar y
   else subst (s (y-1)) sub_inc
 
-val subst_extensional: s1:sub -> s2:sub{Extensionality.Eq s1 s2} -> e:exp -> Lemma (requires True)
-                                                                                   (ensures (subst e s1 = subst e s2))
-                                                                                   [SMTPat (subst e s1);
-                                                                                    SMTPat (subst e s2)]
+val subst_extensional: s1:sub -> s2:sub{FEq s1 s2} -> e:exp ->
+                       Lemma (requires True)
+                             (ensures (subst e s1 = subst e s2))
+                             [SMTPat (subst e s1); SMTPat (subst e s2)]
 let subst_extensional s1 s2 e = ()
 
 (* subst_beta_gen is a generalization of the substitution we do for
@@ -249,8 +233,8 @@ let sub_beta_gen_elam x v y =
   if y>0 && x = y-1 then shift_up_subst_sub_inc v
 
 val subst_gen_elam_aux_forall : x:var -> v:exp -> Lemma
-      (ensures (Extensionality.Eq (subst_elam (sub_beta_gen  x              v))
-                                  (sub_beta_gen (x+1) (shift_up v))))
+      (ensures (FEq (subst_elam (sub_beta_gen  x  v))
+                    (sub_beta_gen (x+1) (shift_up v))))
 let subst_gen_elam_aux_forall x v = ()
 
 val subst_gen_elam : x:var -> v:exp -> t_y:typ -> e':exp -> Lemma
@@ -258,7 +242,7 @@ val subst_gen_elam : x:var -> v:exp -> t_y:typ -> e':exp -> Lemma
                 ELam t_y (subst_beta_gen (x+1) (shift_up v) e')))
 let subst_gen_elam x v t_y e' =
   subst_gen_elam_aux_forall x v;
-  subst_extensional (subst_elam (sub_beta_gen  x                v))
+  subst_extensional (subst_elam (sub_beta_gen  x              v))
                                 (sub_beta_gen (x+1) (shift_up v))  e'
 
 val shift_up_above_abs : n:nat -> t:typ -> e:exp -> Lemma

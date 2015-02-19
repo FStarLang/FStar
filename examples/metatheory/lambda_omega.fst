@@ -1,6 +1,6 @@
 (*
-   Copyright 2008-2015 Catalin Hritcu, Nikhil Swamy, Microsoft Research and Inria
-
+   Copyright 2008-2015 Catalin Hritcu (Inria), Aseem Rastogi (UMD), and
+   Nikhil Swamy (Microsoft Research)
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -38,7 +38,6 @@ type exp =
 (* Substitution on expressions and types;
    they don't really interact in this calculus *)
 
-(* AR: this is copied from Nik's parallel substitution termination proof *)
 type esub = var -> Tot exp
 type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 
