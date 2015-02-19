@@ -214,10 +214,10 @@ type kinding : env -> typ -> knd -> Type =
             kinding g (TVar a) (Some.v (lookup_tvar g a))
   | KiLam : #g:env ->
             k:knd ->
-            #t1:typ ->
+            #t:typ ->
             #k':knd ->
-            kinding (extend_tvar g 0 k) t1 k' ->
-            kinding g (TLam k t1) (KArr k k')
+            kinding (extend_tvar g 0 k) t k' ->
+            kinding g (TLam k t) (KArr k k')
   | KiApp : #g:env ->
             #t1:typ ->
             #t2:typ ->
@@ -541,33 +541,52 @@ val esubst_gen_elam : x:var -> v:exp -> t_y:typ -> e':exp -> Lemma
 let esubst_gen_elam x v t_y e' = admit () (* AR: TODO *)
 
 
-val substitution_lemma_e: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ ->
+val typing_substitution: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ ->
       #g:env -> h1:(typing g v t_x) -> h2:(typing (extend_evar g x t_x) e t) ->
       Tot (typing g (esubst_beta_gen x v e) t) (decreases %[e;h2])
-let rec substitution_lemma_e x e v t_x t g h1 h2 = match h2 with
+let rec typing_substitution x e v t_x t g h1 h2 = match h2 with
   | TyVar y -> if x = y then h1
                else if y < x then econtext_invariance h2 g
                else TyVar (y - 1)
   | TyLam #g' t_y #e' #t' kh h21 ->
-    let h21' = typing_extensional h21 (extend_evar (extend_evar g 0 t_y) (x + 1) t_x) in
+    let h21' = typing_extensional h21 (extend_evar (extend_evar g 0 t_y) (x+1) t_x) in
     let h1' = typing_weakening_ebnd 0 t_y h1 in
     esubst_gen_elam x v t_y e';
-    TyLam t_y (kinding_extensional kh g) (substitution_lemma_e (x + 1) h1' h21')
+    TyLam t_y (kinding_extensional kh g) (typing_substitution (x + 1) h1' h21')
   | TyApp h21 h22 ->
-    TyApp (substitution_lemma_e x h1 h21) (substitution_lemma_e x h1 h22)
+    TyApp (typing_substitution x h1 h21) (typing_substitution x h1 h22)
   | TyEqu h21 eq kh ->
-    TyEqu (substitution_lemma_e x h1 h21) eq
+    TyEqu (typing_substitution x h1 h21) eq
           (kinding_strengthening_ebnd g x t_x kh)
 
-val substitution_lemma_t: x:nat -> #t1:typ -> #t:typ -> #k_x:knd -> #k1:knd ->
+val tsubst_gen_tlam : x:var -> t:typ -> k_y:knd -> t':typ -> Lemma
+                      (ensures (tsubst_beta_gen x t (TLam k_y t') =
+                       TLam k_y (tsubst_beta_gen (x + 1) (tshift_up t) t')))
+let tsubst_gen_tlam x t k_y t' = admit () (* AR: TODO *)
+
+val kinding_substitution: x:nat -> #t1:typ -> #t:typ -> #k_x:knd -> #k1:knd ->
       #g:env -> h1:(kinding g t k_x) ->
       h2:(kinding (extend_tvar g x k_x) t1 k1) ->
       Tot (kinding g (tsubst_beta_gen x t t1) k1) (decreases t1)
-let rec substitution_lemma_t x t1 t k_x k1 g h1 h2 = match h2 with
-  | _ -> admit ()
+let rec kinding_substitution x t1 t k_x k1 g h1 h2 =
+  match h2 with
+  | KiVar y -> if x=y then h1
+               else if y<x then tcontext_invariance h2 g
+               else KiVar (y-1)
+  | KiLam #g' k_y #t' #k' h21 ->
+     (let h21' = kinding_extensional h21 (extend_tvar (extend_tvar g 0 k_y) (x+1) k_x) in
+      let h1' = kinding_weakening_tbnd h1 0 k_y in
+      let ih = kinding_substitution (x+1) h1' h21' in
+      tsubst_gen_tlam x t k_y t';
+      KiLam k_y ih)
+  | KiApp h21 h22 -> KiApp (kinding_substitution x h1 h21)
+                           (kinding_substitution x h1 h22)
+  | KiArr h21 h22 ->  KiArr (kinding_substitution x h1 h21)
+                            (kinding_substitution x h1 h22)
 
 (* Note: the kind system of LambdaOmega is the same as the type system of STLC.
    So most we should be able to port most things with little changes.
    The main difference is in the way extend works: because types in
    the environment can contain type variables, we need to be a bit
    more careful with shifting indices when adding things. *)
+
