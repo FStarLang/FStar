@@ -16,6 +16,8 @@
 
 module ParallelSubstitution
 
+open FunctionalExtensionality
+
 (* Constructive-style progress and preservation proof for STLC with
    strong reduction, using deBruijn indices and parallel substitution. *)
 
@@ -99,10 +101,10 @@ let subst_eabs s y =
   if y = 0 then EVar y
   else subst (s (y-1)) sub_inc
 
-val subst_extensional: e:exp -> s1:sub -> s2:sub{Extensionality.Eq s1 s2} -> Lemma (requires True)
-                                                                                   (ensures (subst e s1 = subst e s2))
-                                                                                   [SMTPat (subst e s1); 
-                                                                                    SMTPat (subst e s2)]
+val subst_extensional: e:exp -> s1:sub -> s2:sub{FEq s1 s2} ->
+               Lemma (requires True) (ensures (subst e s1 = subst e s2))
+                     [SMTPat (subst e s1);  SMTPat (subst e s2)]
 let subst_extensional e s1 s2 = ()
 
-let test_hoist (t:ty) (e:exp) (s:sub) = assert (subst (EAbs t e) s = EAbs t (subst e (subst_eabs s)))
+let test_hoist (t:ty) (e:exp) (s:sub) =
+  assert (subst (EAbs t e) s = EAbs t (subst e (subst_eabs s)))

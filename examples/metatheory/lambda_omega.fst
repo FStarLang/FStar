@@ -62,11 +62,11 @@ let rec esubst e s =
   | EVar x -> s x
 
   | ELam t e1 -> 
-     let subst_eabs : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) = fun y ->
+     let subst_elam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) = fun y ->
        if y=0 
        then EVar y 
        else (esubst (s (y - 1)) esub_inc) in
-     ELam t (esubst e1 subst_eabs)
+     ELam t (esubst e1 subst_elam)
      
   | EApp e1 e2 -> EApp (esubst e1 s) (esubst e2 s)
 
@@ -212,7 +212,7 @@ type kinding : env -> typ -> knd -> Type =
   | KiVar : #g:env ->
             a:var{is_Some (lookup_tvar g a)} ->
             kinding g (TVar a) (Some.v (lookup_tvar g a))
-  | KiAbs : #g:env ->
+  | KiLam : #g:env ->
             k:knd ->
             #t1:typ ->
             #k':knd ->
@@ -274,7 +274,7 @@ type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
             x:var{is_Some (lookup_evar g x)} ->
             typing g (EVar x) (Some.v (lookup_evar g x))
-  | TyAbs : #g:env ->
+  | TyLam : #g:env ->
             t:typ ->
             #e1:exp ->
             #t':typ ->
@@ -344,7 +344,7 @@ let rec tcontext_invariance _ _ _ h g' = admit()
 (* this takes ~5s to check
   match h with
   | KiVar a -> KiVar a
-  | KiAbs k1 h1 -> KiAbs k1 (tcontext_invariance h1 (extend_tvar g' 0 k1))
+  | KiLam k1 h1 -> KiLam k1 (tcontext_invariance h1 (extend_tvar g' 0 k1))
   | KiApp h1 h2 -> KiApp (tcontext_invariance h1 g') (tcontext_invariance h2 g')
   | KiArr h1 h2 -> KiArr (tcontext_invariance h1 g') (tcontext_invariance h2 g')
 *)
@@ -408,7 +408,7 @@ val kinding_extensional: #g:env -> #t:typ -> #k:knd -> h:(kinding g t k) ->
 let rec kinding_extensional _ _ _ h g' =
   match h with
     | KiVar a -> KiVar a
-    | KiAbs k1 h1 -> KiAbs k1 (kinding_extensional h1 (extend_tvar g' 0 k1))
+    | KiLam k1 h1 -> KiLam k1 (kinding_extensional h1 (extend_tvar g' 0 k1))
     | KiApp h1 h2 -> KiApp (kinding_extensional h1 g') (kinding_extensional h2 g')
     | KiArr h1 h2 -> KiArr (kinding_extensional h1 g') (kinding_extensional h2 g')
 
@@ -418,8 +418,8 @@ val econtext_invariance : #e:exp -> #g:env -> #t:typ ->
 let rec econtext_invariance _ _ t h g' =
   match h with
     | TyVar x -> TyVar x
-    | TyAbs #g t_y #e1 #t' hk h1 ->
-      TyAbs t_y (tcontext_invariance hk g')
+    | TyLam #g t_y #e1 #t' hk h1 ->
+      TyLam t_y (tcontext_invariance hk g')
   	(econtext_invariance #e1 #(extend_evar g 0 t_y) #t' h1
   	   (extend_evar g' 0 t_y))
     | TyApp h1 h2 -> TyApp (econtext_invariance h1 g')
@@ -433,11 +433,11 @@ val kinding_weakening_ebnd : #g:env -> #t:typ -> #k:knd ->
 let kinding_weakening_ebnd g t k h x t' = kinding_extensional h (extend_evar g x t')
 
 (* AR: TODO, limitation *)
-val tshift_up_above_abs: n:nat -> k:knd -> t:typ -> Lemma
+val tshift_up_above_lam: n:nat -> k:knd -> t:typ -> Lemma
   (ensures (tshift_up_above n (TLam k t) = TLam k (tshift_up_above (n + 1) t)))
-let tshift_up_above_abs n k t =
+let tshift_up_above_lam n k t =
   assert(tshift_up_above n (TLam k t) = tsubst (TLam k t) (tsub_inc_above n));
-  assert(tshift_up_above n (TLam k t) = TLam k (tsubst t (tsubst_lam (tsub_inc_above n))));
+(*  assert(tshift_up_above n (TLam k t) = TLam k (tsubst t (tsubst_lam (tsub_inc_above n)))); -- indeed, this seems like the same hoisting that Nik proved in psub.fst *)
   admit()
 
 (* kinding weakening when a type variable binding is added to env *)
@@ -451,10 +451,10 @@ let rec kinding_weakening_tbnd g t k h x k' =
   	KiVar a
       else
   	KiVar (a + 1)
-    | KiAbs #g k'' #t1 #k''' h1 ->
-      tshift_up_above_abs x k'' t1;
+    | KiLam #g k'' #t1 #k''' h1 ->
+      tshift_up_above_lam x k'' t1;
       let h2 = kinding_weakening_tbnd h1 (x + 1) k' in
-      KiAbs k'' (kinding_extensional h2 (extend_tvar (extend_tvar g x k') 0 k''))
+      KiLam k'' (kinding_extensional h2 (extend_tvar (extend_tvar g x k') 0 k''))
     | KiApp h1 h2 ->
       KiApp (kinding_weakening_tbnd h1 x k') (kinding_weakening_tbnd h2 x k')
     | KiArr h1 h2 ->
@@ -476,9 +476,9 @@ let eshift_up_above x e = esubst e (esub_inc_above x)
 val eshift_up : exp -> Tot exp
 let eshift_up = eshift_up_above 0
 
-val eshift_up_above_abs: n:nat -> t:typ -> e:exp -> Lemma
+val eshift_up_above_lam: n:nat -> t:typ -> e:exp -> Lemma
   (ensures (eshift_up_above n (ELam t e) = ELam t (eshift_up_above (n + 1) e)))
-let eshift_up_above_abs n t e = admit () (* AR: TODO *)
+let eshift_up_above_lam n t e = admit () (* AR: TODO *)
 
 (* this folows from functional extensionality *)
 val typing_extensional: #g:env -> #e:exp -> #t:typ -> h:(typing g e t) ->
@@ -494,10 +494,10 @@ val typing_weakening_ebnd: #g:env -> x:var -> t_x:typ -> #e:exp -> #t:typ ->
 let rec typing_weakening_ebnd g x t_x e t h =
   match h with
     | TyVar y -> if y < x then TyVar y else TyVar (y+1)
-    | TyAbs #g t_y #e' #t'' kh h21 ->
-      eshift_up_above_abs x t_y e';
+    | TyLam #g t_y #e' #t'' kh h21 ->
+      eshift_up_above_lam x t_y e';
       let h21 = typing_weakening_ebnd (x+1) t_x h21 in
-      TyAbs t_y (kinding_extensional kh (extend_evar g x t_x))
+      TyLam t_y (kinding_extensional kh (extend_evar g x t_x))
                 (typing_extensional h21 (extend_evar (extend_evar g x t_x) 0 t_y))
     | TyApp h21 h22 -> TyApp (typing_weakening_ebnd x t_x h21)
                              (typing_weakening_ebnd x t_x h22)
@@ -524,8 +524,8 @@ val typing_weakening_tbnd: #g:env -> x:var -> k_x:knd -> #e:exp -> #t:typ ->
 let rec typing_weakening_tbnd g x k_x e t h =
   match h with
     | TyVar y -> TyVar y
-    | TyAbs #g t' #e1 #t'' kh h1 ->
-      TyAbs (tshift_up_above x t') (kinding_weakening_tbnd kh x k_x)
+    | TyLam #g t' #e1 #t'' kh h1 ->
+      TyLam (tshift_up_above x t') (kinding_weakening_tbnd kh x k_x)
             (typing_extensional (typing_weakening_tbnd x k_x h1)
                         (extend_evar (extend_tvar g x k_x) 0
                                      (tshift_up_above x t')))
@@ -548,17 +548,16 @@ let rec substitution_lemma_e x e v t_x t g h1 h2 = match h2 with
   | TyVar y -> if x = y then h1
                else if y < x then econtext_invariance h2 g
                else TyVar (y - 1)
-  | TyAbs #g' t_y #e' #t' kh h21 ->
+  | TyLam #g' t_y #e' #t' kh h21 ->
     let h21' = typing_extensional h21 (extend_evar (extend_evar g 0 t_y) (x + 1) t_x) in
     let h1' = typing_weakening_ebnd 0 t_y h1 in
     esubst_gen_elam x v t_y e';
-    TyAbs t_y (kinding_extensional kh g) (substitution_lemma_e (x + 1) h1' h21')
+    TyLam t_y (kinding_extensional kh g) (substitution_lemma_e (x + 1) h1' h21')
   | TyApp h21 h22 ->
     TyApp (substitution_lemma_e x h1 h21) (substitution_lemma_e x h1 h22)
   | TyEqu h21 eq kh ->
     TyEqu (substitution_lemma_e x h1 h21) eq
           (kinding_strengthening_ebnd g x t_x kh)
-
 
 val substitution_lemma_t: x:nat -> #t1:typ -> #t:typ -> #k_x:knd -> #k1:knd ->
       #g:env -> h1:(kinding g t k_x) ->
