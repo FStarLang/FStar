@@ -68,11 +68,11 @@ let rec subst e s =
   | EVar x -> s x
 
   | ELam t e1 -> 
-     let subst_eabs : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) = fun y ->
+     let subst_elam : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) = fun y ->
        if y=0 
        then EVar y 
        else subst (s (y - 1)) sub_inc in
-     ELam t (subst e1 subst_eabs)
+     ELam t (subst e1 subst_elam)
      
   | EApp e1 e2 -> EApp (subst e1 s) (subst e2 s)
  
@@ -135,7 +135,7 @@ type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
             x:var{is_Some (g x)} ->
               typing g (EVar x) (Some.v (g x))
-  | TyAbs : #g:env ->
+  | TyLam : #g:env ->
             t:typ ->
             #e1:exp ->
             #t':typ ->
@@ -196,8 +196,8 @@ val context_invariance : #e:exp -> #g:env -> #t:typ ->
 let rec context_invariance _ _ _ h g' =
   match h with
   | TyVar x -> TyVar x
-  | TyAbs t_y h1 ->
-    TyAbs t_y (context_invariance h1 (extend g' 0 t_y))
+  | TyLam t_y h1 ->
+    TyLam t_y (context_invariance h1 (extend g' 0 t_y))
   | TyApp h1 h2 ->
     TyApp (context_invariance h1 g') (context_invariance h2 g')
 
@@ -245,9 +245,9 @@ let subst_gen_elam x v t_y e' =
   subst_extensional (subst_elam (sub_beta_gen  x              v))
                                 (sub_beta_gen (x+1) (shift_up v))  e'
 
-val shift_up_above_abs : n:nat -> t:typ -> e:exp -> Lemma
+val shift_up_above_lam : n:nat -> t:typ -> e:exp -> Lemma
   (ensures (shift_up_above n (ELam t e) = ELam t (shift_up_above (n+1) e)))
-let shift_up_above_abs n t e =
+let shift_up_above_lam n t e =
   subst_extensional (subst_elam (sub_inc_above n)) (sub_inc_above (n+1)) e
 
 (* Weakening or shifting preserves typing *)
@@ -258,10 +258,10 @@ val weakening : x:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
 let rec weakening n g v t t' h =
   match h with
   | TyVar y -> if y<n then TyVar y else TyVar (y+1)
-  | TyAbs #g t_y #e' #t'' h21 ->
-      (shift_up_above_abs n t_y e';
+  | TyLam #g t_y #e' #t'' h21 ->
+      (shift_up_above_lam n t_y e';
        let h21 = weakening (n+1) t' h21 in
-       TyAbs t_y (typing_extensional h21 (extend (extend g n t') 0 t_y)))
+       TyLam t_y (typing_extensional h21 (extend (extend g n t') 0 t_y)))
   | TyApp h21 h22 -> TyApp (weakening n t' h21)
                            (weakening n t' h22)
 
@@ -278,11 +278,11 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
      if x=y then h1
      else if y<x then context_invariance h2 g
      else             TyVar (y-1)
-  | TyAbs #g' t_y #e' #t' h21 ->
+  | TyLam #g' t_y #e' #t' h21 ->
      (let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
       let h1' = weakening 0 t_y h1 in
       subst_gen_elam x v t_y e';
-      TyAbs t_y (substitution_preserves_typing (x+1) h1' h21'))
+      TyLam t_y (substitution_preserves_typing (x+1) h1' h21'))
   | TyApp h21 h22 ->
     (TyApp (substitution_preserves_typing x h1 h21)
            (substitution_preserves_typing x h1 h22))
@@ -295,7 +295,7 @@ val preservation : #e:exp -> #e':exp -> hs:step e e' ->
 let rec preservation e e' hs g t ht =
   let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = ht in
     match hs with
-    | SBeta t e1' e2' -> let TyAbs t_x hbody = h1 in
+    | SBeta t e1' e2' -> let TyLam t_x hbody = h1 in
                          substitution_preserves_typing 0 h2 hbody
     | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
     | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2)

@@ -48,7 +48,7 @@ val progress : #e:exp -> #t:typ -> h:typing empty e t ->
 let rec progress _ _ h =
   match h with
   | TyVar _   -> ()
-  | TyAbs _ _ -> ()
+  | TyLam _ _ -> ()
   | TyApp h1 h2 -> progress h1; progress h2
 
 
@@ -57,7 +57,7 @@ val free_in_context : x:var -> #e:exp -> #g:env -> #t:typ -> h:typing g e t ->
 let rec free_in_context x _ _ _ h =
   match h with
   | TyVar x -> ()
-  | TyAbs t h1 -> free_in_context (x+1) h1
+  | TyLam t h1 -> free_in_context (x+1) h1
   | TyApp h1 h2 -> free_in_context x h1; free_in_context x h2
 
 val typable_empty_not_free : x:var -> #e:exp -> #t:typ -> typing empty e t ->
@@ -102,7 +102,7 @@ let rec typable_below x g _ _ h =
   match h with
   | TyVar y -> ()
   | TyApp h1 h2 -> typable_below x h1; typable_below x h2
-  | TyAbs _y h1 -> typable_below (x+1) h1
+  | TyLam _y h1 -> typable_below (x+1) h1
 
 val typable_empty_closed : #e:exp -> #t:typ -> h:typing empty e t ->
       Lemma (ensures (closed e))
@@ -188,11 +188,11 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
                        context_invariance h1 g)
      else if y<x then context_invariance h2 g
      else             TyVar (y-1)
-  | TyAbs #g' t_y #e' #t' h21 ->
+  | TyLam #g' t_y #e' #t' h21 ->
      (let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
       typable_empty_closed h1;
       subst_gen_elam x v t_y e';
-      TyAbs t_y (substitution_preserves_typing (x+1) h1 h21'))
+      TyLam t_y (substitution_preserves_typing (x+1) h1 h21'))
   | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 ->
      (* CH: implicits don't work here, why? *)
     (TyApp #g #(subst_beta_gen x v e1) #(subst_beta_gen x v e2) #t11 #t12
@@ -205,7 +205,7 @@ let rec preservation e t h =
   let TyApp #g #e1 #e2 #t11 #t12 h1 h2 = h in
      if is_value e1
      then (if is_value e2
-           then let TyAbs t_x hbody = h1 in
+           then let TyLam t_x hbody = h1 in
                 substitution_preserves_typing 0 h2 hbody
            else TyApp h1 (preservation h2))
      else TyApp (preservation h1) h2

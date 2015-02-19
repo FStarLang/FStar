@@ -440,6 +440,23 @@ let tshift_up_above_lam n k t =
 (*  assert(tshift_up_above n (TLam k t) = TLam k (tsubst t (tsubst_lam (tsub_inc_above n)))); -- indeed, this seems like the same hoisting that Nik proved in psub.fst *)
   admit()
 
+val esub_inc_above : nat -> var -> Tot exp
+let esub_inc_above x y = if y<x then EVar y else EVar (y+1)
+
+val eshift_up_above : nat -> exp -> Tot exp
+let eshift_up_above x e = esubst e (esub_inc_above x)
+
+val eshift_up : exp -> Tot exp
+let eshift_up = eshift_up_above 0
+
+(* CH: TODO, probably same limitation as above *)
+val eshift_up_above_lam: n:nat -> t:typ -> e:exp -> Lemma
+  (ensures (eshift_up_above n (ELam t e) = ELam t (eshift_up_above (n + 1) e)))
+let eshift_up_above_lam n t e = admit()
+(*
+  subst_extensional (esubst_lam (esub_inc_above n)) (esub_inc_above (n+1)) e
+*)
+
 (* kinding weakening when a type variable binding is added to env *)
 val kinding_weakening_tbnd : #g:env -> #t:typ -> #k:knd ->
       h:(kinding g t k) -> x:var -> k':knd ->
@@ -465,20 +482,6 @@ val kinding_strengthening_ebnd : g:env -> x:var -> t_x:typ -> #t:typ -> #k:knd -
       h:(kinding (extend_evar g x t_x) t k) ->
       Tot (kinding g t k) (decreases h)
 let kinding_strengthening_ebnd g x t_x t k h = kinding_extensional h g
-
-
-val esub_inc_above : nat -> var -> Tot exp
-let esub_inc_above x y = if y<x then EVar y else EVar (y+1)
-
-val eshift_up_above : nat -> exp -> Tot exp
-let eshift_up_above x e = esubst e (esub_inc_above x)
-
-val eshift_up : exp -> Tot exp
-let eshift_up = eshift_up_above 0
-
-val eshift_up_above_lam: n:nat -> t:typ -> e:exp -> Lemma
-  (ensures (eshift_up_above n (ELam t e) = ELam t (eshift_up_above (n + 1) e)))
-let eshift_up_above_lam n t e = admit () (* AR: TODO *)
 
 (* this folows from functional extensionality *)
 val typing_extensional: #g:env -> #e:exp -> #t:typ -> h:(typing g e t) ->
@@ -511,10 +514,32 @@ let rec tshift_up_above_e x e = match e with
   | ELam t e1 -> ELam (tshift_up_above x t) (tshift_up_above_e x e1)
   | EApp e1 e2 -> EApp (tshift_up_above_e x e1) (tshift_up_above_e x e2)
 
-val tshift_eq: #s:typ -> #t:typ -> h:(tequiv s t) -> x:nat ->
-               Tot (tequiv (tshift_up_above x s) (tshift_up_above x t))
+val tshift_up_above_tsubst_beta : x:var -> t1:typ -> t2:typ -> Lemma
+    (ensures (tshift_up_above x (tsubst_beta t2 t1) =
+              tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1)))
+let tshift_up_above_tsubst_beta = admit()
+
+val tequiv_tshift : #t1:typ -> #t2:typ -> h:(tequiv t1 t2) -> x:nat ->
+               Tot (tequiv (tshift_up_above x t1) (tshift_up_above x t2))
 	       (decreases h)
-let tshift_eq s t h = admit () (* AR: TODO *)
+let rec tequiv_tshift t1 t2 h x =
+  match h with
+  | EqRefl t -> EqRefl (tshift_up_above x t)
+  | EqSymm h1 -> EqSymm (tequiv_tshift h1 x)
+  | EqTran h1 h2 -> EqTran (tequiv_tshift h1 x) (tequiv_tshift h2 x)
+(*
+  | EqLam #t #t' k h1 ->
+     tshift_up_above_lam x k t1';
+     EqLam #t #t' k (tequiv_tshift h1 (x+1))
+*)
+  | EqApp h1 h2 -> EqApp (tequiv_tshift h1 x) (tequiv_tshift h2 x)
+(* *)
+  | EqBeta k t1' t2' ->
+     tshift_up_above_lam x k t1';
+     tshift_up_above_tsubst_beta x t1' t2';
+     EqBeta k (tshift_up_above (x+1) t1') (tshift_up_above x t2')
+  | EqArr h1 h2 -> EqArr (tequiv_tshift h1 x) (tequiv_tshift h2 x)
+  | _ -> admit()
 
 (* typing weakening when type variable binding is added to env *)
 val typing_weakening_tbnd: #g:env -> x:var -> k_x:knd -> #e:exp -> #t:typ ->
@@ -532,7 +557,7 @@ let rec typing_weakening_tbnd g x k_x e t h =
     | TyApp h1 h2 -> TyApp (typing_weakening_tbnd x k_x h1)
                            (typing_weakening_tbnd x k_x h2)
     | TyEqu h1 eq kh ->
-      TyEqu (typing_weakening_tbnd x k_x h1) (tshift_eq eq x)
+      TyEqu (typing_weakening_tbnd x k_x h1) (tequiv_tshift eq x)
             (kinding_weakening_tbnd kh x k_x)
 
 val esubst_gen_elam : x:var -> v:exp -> t_y:typ -> e':exp -> Lemma
@@ -564,6 +589,11 @@ val tsubst_gen_tlam : x:var -> t:typ -> k_y:knd -> t':typ -> Lemma
                        TLam k_y (tsubst_beta_gen (x + 1) (tshift_up t) t')))
 let tsubst_gen_tlam x t k_y t' = admit () (* AR: TODO *)
 
+(* The (pleasant) surprise here is that (as opposed to TAPS) we didn't
+   have to also apply the substitution within the MkEnv.x part of the
+   environment. That's because kinding completely ignores that part.
+   So we don't even ensure that it's well formed in any way after
+   substitution. Unfortunately this joy won't last long. *)
 val kinding_substitution: x:nat -> #t1:typ -> #t:typ -> #k_x:knd -> #k1:knd ->
       #g:env -> h1:(kinding g t k_x) ->
       h2:(kinding (extend_tvar g x k_x) t1 k1) ->
