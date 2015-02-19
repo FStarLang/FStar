@@ -361,26 +361,26 @@ let fcomp f1 f2 a = f2 (f1 a)
 
 val kinding_tequiv : #g:env -> #t1:typ -> #t2:typ -> #k:knd -> h:(tequiv t1 t2) ->
       Tot (xiff (kinding g t1 k) (kinding g t2 k)) (decreases h)
-let rec kinding_tequiv g _ _ k h = admit ()
-(*   match h with *)
-(*   | EqRefl t -> Conj id id *)
-(*   | EqSymm h -> *)
-(*      let Conj ih1 ih2 = kinding_tequiv h in Conj ih2 ih1 *)
-(*   | EqTran #t1 #t2 #t3 h1 h2 -> *)
-(*      let Conj ih11 ih12 = kinding_tequiv h1 in *)
-(*      let Conj ih21 ih22 = kinding_tequiv h2 in *)
-(*      Conj #(kinding g t1 k -> Tot (kinding g t3 k)) *)
-(*           #(kinding g t3 k -> Tot (kinding g t1 k)) *)
-(*           (fcomp ih11 ih21) (fcomp ih22 ih12) *)
-(* (\* This should work *)
-(*      Conj (fcomp ih11 ih21) (fcomp ih22 ih12) *)
-(* but instead we get this subtyping error for the second conjunct: *)
-(* Subtyping check failed; *)
-(* expected type ((kinding _1019 _1023  _1025) -> Tot (kinding _1019 _1021  _1025)); *)
-(*      got type ((kinding _1019 _33555 _1025) -> Tot (kinding _1019 _33555 _1025)) *)
-(* (lambda_omega.fst(372,28-372,45)) *)
-(*    Seems like the same kind of problem as #129 *\) *)
-(*   | _ -> admit () *)
+let rec kinding_tequiv g _ _ k h =
+  match h with
+  | EqRefl t -> Conj id id
+  | EqSymm h ->
+     let Conj ih1 ih2 = kinding_tequiv h in Conj ih2 ih1
+  | EqTran #t1 #t2 #t3 h1 h2 ->
+     let Conj ih11 ih12 = kinding_tequiv h1 in
+     let Conj ih21 ih22 = kinding_tequiv h2 in
+     Conj #(kinding g t1 k -> Tot (kinding g t3 k))
+          #(kinding g t3 k -> Tot (kinding g t1 k))
+          (fcomp ih11 ih21) (fcomp ih22 ih12)
+(* This should work
+     Conj (fcomp ih11 ih21) (fcomp ih22 ih12)
+but instead we get this subtyping error for the second conjunct:
+Subtyping check failed;
+expected type ((kinding _1019 _1023  _1025) -> Tot (kinding _1019 _1021  _1025));
+     got type ((kinding _1019 _33555 _1025) -> Tot (kinding _1019 _33555 _1025))
+(lambda_omega.fst(372,28-372,45))
+   Seems like the same kind of problem as #129 *)
+  | _ -> admit ()
 
 val eappears_free_in : x:var -> e:exp -> Tot bool (decreases e)
 let rec eappears_free_in x e =
@@ -399,11 +399,12 @@ opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
 val env_eq_t_k: #g:env -> #t:typ -> #k:knd -> h:(kinding g t k) ->
                 g':env{forall (x:var). (lookup_tvar g x = lookup_tvar g' x)} ->
                 Tot (kinding g' t k) (decreases h)
-let rec env_eq_t_k _ _ _ h g' = match h with
-  | KiVar a -> KiVar a
-  | KiAbs k1 h1 -> KiAbs k1 (env_eq_t_k h1 (extend_tvar g' 0 k1))
-  | KiApp h1 h2 -> KiApp (env_eq_t_k h1 g') (env_eq_t_k h2 g')
-  | KiArr h1 h2 -> KiArr (env_eq_t_k h1 g') (env_eq_t_k h2 g')
+let rec env_eq_t_k _ _ _ h g' =
+  match h with
+    | KiVar a -> KiVar a
+    | KiAbs k1 h1 -> KiAbs k1 (env_eq_t_k h1 (extend_tvar g' 0 k1))
+    | KiApp h1 h2 -> KiApp (env_eq_t_k h1 g') (env_eq_t_k h2 g')
+    | KiArr h1 h2 -> KiArr (env_eq_t_k h1 g') (env_eq_t_k h2 g')
 
 val econtext_invariance : #e:exp -> #g:env -> #t:typ ->
       h:(typing g e t) -> g':env{EnvEqualE e g g'} ->
@@ -413,10 +414,10 @@ let rec econtext_invariance _ _ t h g' =
     | TyVar x -> TyVar x
     | TyAbs #g t_y #e1 #t' hk h1 ->
       TyAbs t_y (tcontext_invariance hk g')
-	(econtext_invariance #e1 #(extend_evar g 0 t_y) #t' h1
-	   (extend_evar g' 0 t_y))
+  	(econtext_invariance #e1 #(extend_evar g 0 t_y) #t' h1
+  	   (extend_evar g' 0 t_y))
     | TyApp h1 h2 -> TyApp (econtext_invariance h1 g') (econtext_invariance h2 g')
-    | TyEqu h1 eq k -> TyEqu (econtext_invariance h1 g') eq (env_eq_t_k k g')    
+    | TyEqu h1 eq k -> TyEqu (econtext_invariance h1 g') eq (env_eq_t_k k g')
 
 (* kinding weakening when a term variable binding is added to env *)
 val kinding_weakening_ebnd : #g:env -> #t:typ -> #k:knd ->
@@ -463,6 +464,9 @@ let esub_inc_above x y = if y<x then EVar y else EVar (y+1)
 
 val eshift_up_above : nat -> exp -> Tot exp
 let eshift_up_above x e = esubst e (esub_inc_above x)
+
+val eshift_up : exp -> Tot exp
+let eshift_up = eshift_up_above 0
 
 val eshift_up_above_abs: n:nat -> t:typ -> e:exp -> Lemma
   (ensures (eshift_up_above n (ELam t e) = ELam t (eshift_up_above (n + 1) e)))
@@ -525,6 +529,27 @@ let rec typing_weakening_tbnd g x k_x e t h =
     | TyEqu h1 eq kh ->
       TyEqu (typing_weakening_tbnd x k_x h1) (tshift_eq eq x) (kinding_weakening_tbnd kh x k_x)
 
+val esubst_gen_elam : x:var -> v:exp -> t_y:typ -> e':exp -> Lemma
+                      (ensures (esubst_beta_gen x v (ELam t_y e') =
+                       ELam t_y (esubst_beta_gen (x + 1) (eshift_up v) e')))
+let esubst_gen_elam x v t_y e' = admit () (* AR: TODO *)
+
+
+val substitution_lemma_e: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
+                          h1:(typing g v t_x) -> h2:(typing (extend_evar g x t_x) e t) ->
+                          Tot (typing g (esubst_beta_gen x v e) t) (decreases %[e; h2])
+let rec substitution_lemma_e x e v t_x t g h1 h2 = match h2 with
+  | TyVar y -> if x = y then h1 else if y < x then econtext_invariance h2 g else TyVar (y - 1)
+  | TyAbs #g' t_y #e' #t' kh h21 ->
+    let h21' = env_eq_e_t h21 (extend_evar (extend_evar g 0 t_y) (x + 1) t_x) in
+    let h1' = typing_weakening_ebnd 0 t_y h1 in
+    esubst_gen_elam x v t_y e';
+    TyAbs t_y (env_eq_t_k kh g) (substitution_lemma_e (x + 1) h1' h21')
+  | TyApp h21 h22 ->
+    TyApp (substitution_lemma_e x h1 h21) (substitution_lemma_e x h1 h22)
+  | TyEqu h21 eq kh ->
+    TyEqu (substitution_lemma_e x h1 h21) eq (kinding_strengthening_ebnd g x t_x kh)
+    
 (* Note: the kind system of LambdaOmega is the same as the type system of STLC.
    So most we should be able to port most things with little changes.
    The main difference is in the way extend works: because types in
