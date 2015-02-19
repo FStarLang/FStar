@@ -63,8 +63,7 @@ let rec esubst e s =
 
   | ELam t e1 -> 
      let subst_elam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) = fun y ->
-       if y=0 
-       then EVar y 
+       if y=0 then EVar y
        else (esubst (s (y - 1)) esub_inc) in
      ELam t (esubst e1 subst_elam)
      
@@ -74,6 +73,19 @@ val esubst_lam: s:esub -> Tot esub
 let esubst_lam s y =
   if y = 0 then EVar y
   else esubst (s (y-1)) esub_inc
+
+(* Substitution extensional; trivial with the extensionality axiom *)
+val esubst_extensional: s1:esub -> s2:esub{FEq s1 s2} -> e:exp ->
+                       Lemma (requires True) (ensures (esubst e s1 = esubst e s2))
+(*                       [SMTPat (esubst e s1);  SMTPat (esubst e s2)]*)
+let esubst_extensional s1 s2 e = ()
+
+(* This only works with the patterns in subst_extensional above;
+   it would be a lot cooler if this worked without, since it increases checking time
+val esubst_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma
+      (ensures (esubst (ELam t e) s = ELam t (esubst e (esubst_lam s))))
+let esubst_lam_hoist t e s = ()
+*)
 
 (* subst_beta_gen is a generalization of the substitution we do for
    the beta rule, when we've under x binders
@@ -126,15 +138,28 @@ let tsubst_lam s y =
   if y = 0 then TVar y
   else tsubst (s (y-1)) tsub_inc
 
+(* Type substitution extensional; trivial with the extensionality axiom *)
+val tsubst_extensional: s1:tsub -> s2:tsub{FEq s1 s2} -> t:typ ->
+                       Lemma (requires True) (ensures (tsubst t s1 = tsubst t s2))
+(*                       [SMTPat (tsubst t s1);  SMTPat (tsubst t s2)]*)
+let tsubst_extensional s1 s2 t = ()
+
+(* This only works with the patterns in tsubst_extensional above;
+   it would be a lot cooler if this worked without, since it increases checking time
+val tsubst_lam_hoist : k:knd -> t:typ -> s:tsub -> Lemma
+      (ensures (tsubst (TLam k t) s = TLam k (tsubst t (tsubst_lam s))))
+let tsubst_lam_hoist k t s = ()
+*)
+
 val tsub_beta_gen : var -> typ -> Tot tsub
 let tsub_beta_gen x t = fun y -> if y < x then (TVar y)
                                  else if y = x then t
                                  else (TVar (y-1))
 
 val tsubst_beta_gen : var -> typ -> typ -> Tot typ
-let tsubst_beta_gen x v e = tsubst e (tsub_beta_gen x v)
+let tsubst_beta_gen x t' t = tsubst t (tsub_beta_gen x t')
 
-let tsubst_beta v e = tsubst_beta_gen 0 v e
+let tsubst_beta t' t = tsubst_beta_gen 0 t' t
 
 (* Step relation -- going for strong reduction, just because we can *)
 
@@ -319,12 +344,6 @@ let rec progress _ _ h = admit()
     | TyEqu h1 _ _ -> progress h1
 *)
 
-(* Substitution extensional; trivial with the extensionality axiom *)
-
-val subst_extensional: s1:esub -> s2:esub{FEq s1 s2} -> e:exp ->
-                       Lemma (esubst e s1 = esubst e s2)
-let subst_extensional s1 s2 e = ()
-
 val tappears_free_in : x:var -> t:typ -> Tot bool (decreases t)
 let rec tappears_free_in x t =
   match t with
@@ -454,7 +473,7 @@ val eshift_up_above_lam: n:nat -> t:typ -> e:exp -> Lemma
   (ensures (eshift_up_above n (ELam t e) = ELam t (eshift_up_above (n + 1) e)))
 let eshift_up_above_lam n t e = admit()
 (*
-  subst_extensional (esubst_lam (esub_inc_above n)) (esub_inc_above (n+1)) e
+  esubst_extensional (esubst_lam (esub_inc_above n)) (esub_inc_above (n+1)) e
 *)
 
 (* kinding weakening when a type variable binding is added to env *)
@@ -517,7 +536,35 @@ let rec tshift_up_above_e x e = match e with
 val tshift_up_above_tsubst_beta : x:var -> t1:typ -> t2:typ -> Lemma
     (ensures (tshift_up_above x (tsubst_beta t2 t1) =
               tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1)))
-let tshift_up_above_tsubst_beta = admit()
+    (decreases t1)
+let rec tshift_up_above_tsubst_beta x t1 t2 =
+
+  (assert(tshift_up_above x (tsubst_beta t2 t1) =
+          tsubst (tsubst_beta t2 t1) (tsub_inc_above x)));
+  (assert(tsubst (tsubst_beta t2 t1) (tsub_inc_above x) =
+
+          tsubst (tsubst t1 (tsub_beta_gen 0 t2)) (tsub_inc_above x)));
+
+  (assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) =
+          tsubst (tshift_up_above (x + 1) t1)
+                 (tsub_beta_gen 0 (tshift_up_above x t2))));
+  (assert(tsubst (tshift_up_above (x + 1) t1)
+                 (tsub_beta_gen 0 (tshift_up_above x t2)) =
+
+          tsubst (tsubst t1 (tsub_inc_above (x+1)))
+                 (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))));
+
+  match t1 with
+  | TVar y -> ()
+  | TLam k t ->
+     tshift_up_above_lam (x+1) k t;
+     tshift_up_above_lam x k (tsubst_beta_gen 1 t2 t); (* this 1 is a bit suspicious *)
+     tshift_up_above_tsubst_beta (x+1) t t2;
+     admit() (* CH: TODO: crazy without proper reasoning about the hoisting *)
+  | TApp t11 t12 -> tshift_up_above_tsubst_beta x t11 t2;
+                    tshift_up_above_tsubst_beta x t12 t2
+  | TArr t11 t12 -> tshift_up_above_tsubst_beta x t11 t2;
+                    tshift_up_above_tsubst_beta x t12 t2
 
 val tequiv_tshift : #t1:typ -> #t2:typ -> h:(tequiv t1 t2) -> x:nat ->
                Tot (tequiv (tshift_up_above x t1) (tshift_up_above x t2))
@@ -527,19 +574,16 @@ let rec tequiv_tshift t1 t2 h x =
   | EqRefl t -> EqRefl (tshift_up_above x t)
   | EqSymm h1 -> EqSymm (tequiv_tshift h1 x)
   | EqTran h1 h2 -> EqTran (tequiv_tshift h1 x) (tequiv_tshift h2 x)
-(*
   | EqLam #t #t' k h1 ->
-     tshift_up_above_lam x k t1';
-     EqLam #t #t' k (tequiv_tshift h1 (x+1))
-*)
+     tshift_up_above_lam x k t;
+     tshift_up_above_lam x k t';
+     EqLam k (tequiv_tshift h1 (x+1))
   | EqApp h1 h2 -> EqApp (tequiv_tshift h1 x) (tequiv_tshift h2 x)
-(* *)
   | EqBeta k t1' t2' ->
      tshift_up_above_lam x k t1';
      tshift_up_above_tsubst_beta x t1' t2';
      EqBeta k (tshift_up_above (x+1) t1') (tshift_up_above x t2')
   | EqArr h1 h2 -> EqArr (tequiv_tshift h1 x) (tequiv_tshift h2 x)
-  | _ -> admit()
 
 (* typing weakening when type variable binding is added to env *)
 val typing_weakening_tbnd: #g:env -> x:var -> k_x:knd -> #e:exp -> #t:typ ->
