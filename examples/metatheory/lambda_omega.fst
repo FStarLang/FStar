@@ -549,6 +549,13 @@ let rec substitution_lemma_e x e v t_x t g h1 h2 = match h2 with
     TyApp (substitution_lemma_e x h1 h21) (substitution_lemma_e x h1 h22)
   | TyEqu h21 eq kh ->
     TyEqu (substitution_lemma_e x h1 h21) eq (kinding_strengthening_ebnd g x t_x kh)
+
+
+val substitution_lemma_t: x:nat -> #t1:typ -> #t:typ -> #k_x:knd -> #k1:knd -> #g:env ->
+                          h1:(kinding g t k_x) -> h2:(kinding (extend_tvar g x k_x) t1 k1) ->
+                          Tot (kinding g (tsubst_beta_gen x t t1) k1) (decreases t1)
+let rec substitution_lemma_t x t1 t k_x k1 g h1 h2 = match h2 with
+  | _ -> admit ()
     
 (* Note: the kind system of LambdaOmega is the same as the type system of STLC.
    So most we should be able to port most things with little changes.
