@@ -28,7 +28,7 @@ type knd =
 
 type typ =
   | TVar : var -> typ
-  | TLam : knd -> typ -> typ 
+  | TLam : knd -> t:typ -> typ 
   | TApp : typ -> typ -> typ
   | TArr : typ -> typ -> typ
 
@@ -569,20 +569,21 @@ let esubst_gen_elam x v t_y e' = admit () (* AR: TODO *)
 val typing_substitution: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ ->
       #g:env -> h1:(typing g v t_x) -> h2:(typing (extend_evar g x t_x) e t) ->
       Tot (typing g (esubst_beta_gen x v e) t) (decreases %[e;h2])
-let rec typing_substitution x e v t_x t g h1 h2 = match h2 with
-  | TyVar y -> if x = y then h1
-               else if y < x then econtext_invariance h2 g
-               else TyVar (y - 1)
-  | TyLam #g' t_y #e' #t' kh h21 ->
-    let h21' = typing_extensional h21 (extend_evar (extend_evar g 0 t_y) (x+1) t_x) in
-    let h1' = typing_weakening_ebnd 0 t_y h1 in
-    esubst_gen_elam x v t_y e';
-    TyLam t_y (kinding_extensional kh g) (typing_substitution (x + 1) h1' h21')
-  | TyApp h21 h22 ->
-    TyApp (typing_substitution x h1 h21) (typing_substitution x h1 h22)
-  | TyEqu h21 eq kh ->
-    TyEqu (typing_substitution x h1 h21) eq
-          (kinding_strengthening_ebnd g x t_x kh)
+let rec typing_substitution x e v t_x t g h1 h2 =
+  match h2 with
+    | TyVar y -> if x = y then h1
+      else if y < x then econtext_invariance h2 g
+      else TyVar (y - 1)
+    | TyLam #g' t_y #e' #t' kh h21 ->
+      let h21' = typing_extensional h21 (extend_evar (extend_evar g 0 t_y) (x+1) t_x) in
+      let h1' = typing_weakening_ebnd 0 t_y h1 in
+      esubst_gen_elam x v t_y e';
+      TyLam t_y (kinding_extensional kh g) (typing_substitution (x + 1) h1' h21')
+    | TyApp h21 h22 ->
+      TyApp (typing_substitution x h1 h21) (typing_substitution x h1 h22)
+    | TyEqu h21 eq kh ->
+      TyEqu (typing_substitution x h1 h21) eq
+        (kinding_strengthening_ebnd g x t_x kh)
 
 val tsubst_gen_tlam : x:var -> t:typ -> k_y:knd -> t':typ -> Lemma
                       (ensures (tsubst_beta_gen x t (TLam k_y t') =
@@ -620,3 +621,195 @@ let rec kinding_substitution x t1 t k_x k1 g h1 h2 =
    the environment can contain type variables, we need to be a bit
    more careful with shifting indices when adding things. *)
 
+type preduction: typ -> typ -> Type =
+  | PRefl: t:typ ->
+           preduction t t
+
+  | PArr:  #t1:typ -> #t2:typ -> #t1':typ -> #t2':typ ->
+           preduction t1 t1' ->
+           preduction t2 t2' ->
+           preduction (TArr t1 t2) (TArr t1' t2')
+
+  | PLam:  #t1:typ -> #t2:typ ->
+           k:knd ->
+           h:preduction t1 t2 ->
+           preduction (TLam k t1) (TLam k t2)
+
+  | PApp:  #t1:typ -> #t2:typ -> #t1':typ -> #t2':typ ->
+           preduction t1 t1' ->
+           preduction t2 t2' ->
+           preduction (TApp t1 t2) (TApp t1' t2')
+
+  | PBeta: #t1:typ -> #t2:typ -> #t1':typ -> #t2':typ ->
+           k:knd ->
+           preduction t1 t1' ->
+           preduction t2 t2' ->
+           preduction (TApp (TLam k t1) t2) (tsubst_beta t2' t1')
+
+
+type preduction_closure: typ -> typ -> Type =
+  | PcBase:  #t1:typ -> #t2:typ ->
+             preduction t1 t2 ->
+             preduction_closure t1 t2
+
+  | PcTrans: #t1:typ -> #t2:typ -> #t3:typ ->
+             preduction         t1 t2 ->
+             preduction_closure t2 t3 ->
+             preduction_closure t1 t3
+
+(* t => t' implies tshift_up_above x t => tshift_up_above x t' *)
+val pred_shiftup_above: #t:typ -> #t':typ -> x:nat -> h:(preduction t t') ->
+                        Tot (preduction (tshift_up_above x t) (tshift_up_above x t'))
+		        (decreases h)
+let rec pred_shiftup_above t t' x h =
+  match h with
+    | PRefl t''  -> PRefl (tshift_up_above x t'')
+    | PArr h1 h2 -> PArr (pred_shiftup_above x h1) (pred_shiftup_above x h2)
+    | PLam #t1 #t2 k h1  ->
+      tshift_up_above_lam x k t1;
+      tshift_up_above_lam x k t2;
+      PLam k (pred_shiftup_above (x + 1) h1)
+    | PApp h1 h2 -> PApp (pred_shiftup_above x h1) (pred_shiftup_above x h2)
+    | PBeta #t1 #t2 #t1' #t2' k h1 h2 ->
+      tshift_up_above_lam x k t1;
+      tshift_up_above_tsubst_beta x t1' t2';
+      PBeta k (pred_shiftup_above (x + 1) h1) (pred_shiftup_above x h2)
+
+(* s => s' implies t[y |-> s] => t[y |-> s'] *)
+val subst_of_pred: #s:typ -> #s':typ -> x:nat -> t:typ ->
+                   h:(preduction s s') ->
+                   Tot (preduction (tsubst_beta_gen x s t) (tsubst_beta_gen x s' t))
+		   (decreases t)
+let rec subst_of_pred s s' x t h =
+  match t with
+    | TVar y ->
+      if y < x then
+  	PRefl t
+      else if y = x then
+  	h
+      else
+  	PRefl (TVar (y - 1))
+    | TLam k t1 ->
+      tsubst_gen_tlam x s k t1;
+      tsubst_gen_tlam x s' k t1;
+      PLam k (subst_of_pred (x + 1) t1 (pred_shiftup_above 0 h))
+    | TApp t1 t2 ->
+      PApp (subst_of_pred x t1 h) (subst_of_pred x t2 h)
+    | TArr t1 t2 ->
+      PArr (subst_of_pred x t1 h) (subst_of_pred x t2 h)
+
+
+val commute_tsubst: t1:typ -> y:nat -> t2:typ -> x:nat -> s:typ -> Lemma (requires True)
+                    (ensures (tsubst_beta_gen x s (tsubst_beta_gen y t2 t1) =
+                              tsubst_beta_gen y (tsubst_beta_gen x s t2) (tsubst_beta_gen (x + 1) (tshift_up_above y s) t1)))
+let commute_tsubst t1 y t2 x s = admit () (* AR: TODO *)
+
+
+(* t => t' and s => s' implies t[x |-> s] => t'[x |-> s'] *)
+val subst_of_pred_pred: #s:typ -> #s':typ -> #t:typ -> #t':typ -> x:nat ->
+                       hs:(preduction s s') -> ht:(preduction t t') ->
+                       Tot (preduction (tsubst_beta_gen x s t) (tsubst_beta_gen x s' t'))
+                       (decreases ht)
+let rec subst_of_pred_pred s s' t t' x hs ht =
+  match ht with
+    | PRefl t1 -> subst_of_pred x t1 hs
+    | PArr ht1 ht2 ->
+      PArr (subst_of_pred_pred x hs ht1) (subst_of_pred_pred x hs ht2)
+    | PLam #t1 #t2 k ht1 ->
+      tsubst_gen_tlam x s k t1;
+      tsubst_gen_tlam x s' k t2;
+      PLam k (subst_of_pred_pred (x + 1) (pred_shiftup_above 0 hs) ht1)
+    | PApp h1 h2 ->
+      PApp (subst_of_pred_pred x hs h1) (subst_of_pred_pred x hs h2)
+    | PBeta #t1 #t2 #t1' #t2' k ht1 ht2 ->
+      tsubst_gen_tlam x s k t1;
+      let ht1' = subst_of_pred_pred (x + 1) (pred_shiftup_above 0 hs) ht1 in
+      let ht2' = subst_of_pred_pred x hs ht2 in
+      commute_tsubst t1' 0 t2' x s';
+      PBeta k ht1' ht2'
+
+type ltup =
+  | MkLTup: #s:typ -> #t:typ -> #u:typ -> (preduction s t) -> (preduction s u) -> ltup
+
+(* single step diamond property of parallel reduction *)
+val pred_diamond: #s:typ -> #t:typ -> #u:typ ->
+                  h1:(preduction s t) -> h2:(preduction s u) ->
+                  Tot (ex (fun v -> xand (preduction t v) (preduction u v)))
+                  (decreases %[h1;h2])
+let rec pred_diamond s t u h1 h2 =
+  match (MkLTup h1 h2) with
+    | MkLTup (PRefl t1) _ -> ExIntro u (Conj h2 (PRefl u))
+    | MkLTup _ (PRefl t1) -> ExIntro t (Conj (PRefl t) h1)
+  (* if one is PLam, the other has to be PLam *)
+    | MkLTup (PLam k h11) (PLam _ h12) ->
+    (* AR: p only has one constructor Conj, but direct pattern matching doesn't work *)
+      let ExIntro t' p = pred_diamond h11 h12 in
+      (match p with
+  	| Conj pa pb -> ExIntro (TLam k t') (Conj (PLam k pa) (PLam k pb)))
+  (* if one is PArr, the other has to be PArr *)
+    | MkLTup (PArr h11 h12) (PArr h21 h22) ->
+      let ExIntro v1 p1 = pred_diamond h11 h21 in
+      let ExIntro v2 p2 = pred_diamond h12 h22 in
+      
+      (match p1 with
+  	| Conj p1a p1b ->
+  	  (match p2 with
+  	    | Conj p2a p2b ->
+  	      ExIntro (TArr v1 v2) (Conj (PArr p1a p2a) (PArr p1b p2b))))
+  (* both PApp *)
+    | MkLTup (PApp h11 h12) (PApp h21 h22) ->
+      let ExIntro v1 p1 = pred_diamond h11 h21 in
+      let ExIntro v2 p2 = pred_diamond h12 h22 in
+      
+      (match p1 with
+  	| Conj p1a p1b ->
+  	  (match p2 with
+  	    | Conj p2a p2b ->
+  	      ExIntro (TApp v1 v2) (Conj (PApp p1a p2a) (PApp p1b p2b))))
+  (* both PBeta *)
+    | MkLTup (PBeta #s1 #s2 #t1' #t2' k h11 h12) (PBeta #s11 #s21 #u1' #u2' k' h21 h22) ->
+      let ExIntro v1 p1 = pred_diamond h11 h21 in
+      let ExIntro v2 p2 = pred_diamond h12 h22 in
+
+      (match p1 with
+  	| Conj p1a p1b ->
+  	  (match p2 with
+  	    | Conj p2a p2b ->
+  	      ExIntro (tsubst_beta_gen 0 v2 v1) (Conj (subst_of_pred_pred 0 p2a p1a) (subst_of_pred_pred 0 p2b p1b))))
+  (* one PBeta and other PApp *)
+    | MkLTup (PBeta #s1 #s2 #t1' #t2' k h11 h12) (PApp #s1' #s2' #lu1' #u2' h21 h22) ->
+    (* AR: does not work without this type annotation *)
+      let h21:(preduction (TLam.t s1') (TLam.t lu1')) = match h21 with
+  	| PLam _ h' -> h'
+  	| PRefl _ -> PRefl (TLam.t s1')
+      in
+      
+      let ExIntro v1 p1 = pred_diamond h11 h21 in
+      let ExIntro v2 p2 = pred_diamond h12 h22 in
+
+      (match p1 with
+  	| Conj p1a p1b ->
+  	  (match p2 with
+  	    | Conj p2a p2b ->
+  	      let v = tsubst_beta_gen 0 v2 v1 in
+  	      ExIntro v (Conj (subst_of_pred_pred 0 p2a p1a) (PBeta k p1b p2b))))
+    | MkLTup (PApp #s1' #s2' #lu1' #u2' h21 h22) (PBeta #s1 #s2 #t1' #t2' k h11 h12) ->
+    (* similar to above case *)
+      admit ()
+
+type lctup =
+  | MkLCTup: #s:typ -> #t:typ -> #u:typ -> (preduction_closure s t) -> (preduction_closure s u) -> lctup
+
+val pred_closure_diamond: #s:typ -> #t:typ -> #u:typ ->
+                          h1:(preduction_closure s t) -> h2:(preduction_closure s u) ->
+                          Tot (ex (fun v -> xand (preduction_closure t v) (preduction_closure u v)))
+                          (decreases %[h1;h2])
+let rec pred_closure_diamond s t u h1 h2 = admit ()
+  (* match (MkLCTup h1 h2) with *)
+  (*   | MkLCTup (PcBase h11) (PcBase h21) -> *)
+  (*     let ExIntro v p = pred_diamond h11 h21 in *)
+  (*     (match p with *)
+  (* 	| Conj pa pb -> ExIntro v (Conj (PcBase pa) (PcBase pb))) *)
+  (*   | MkLCTup (PcBase h11) (PcTrans #s1 #u1 #u2 h21 h22) -> *)
+  (*     admit () *)
+  (*   | _ -> admit () *)
