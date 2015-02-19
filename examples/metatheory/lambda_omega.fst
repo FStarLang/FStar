@@ -187,7 +187,9 @@ let tshift_up = tshift_up_above 0
 
 val extend_tvar: g:env -> n:nat -> k:knd -> Tot env
 let extend_tvar g n k =
-  let a_env = fun a -> if a < n then lookup_tvar g a else if a = n then Some k else lookup_tvar g (a - 1) in
+  let a_env = fun a -> if a < n then lookup_tvar g a
+                       else if a = n then Some k
+                       else lookup_tvar g (a - 1) in
   let x_env = fun x -> match lookup_evar g x with
     | None -> None
     | Some t -> Some (tshift_up_above n t)
@@ -197,7 +199,9 @@ let extend_tvar g n k =
 val extend_evar: g:env -> n:nat -> t:typ -> Tot env
 let extend_evar g n t =
   let a_env = fun a -> lookup_tvar g a in
-  let x_env = fun x -> if x < n then lookup_evar g x else if x = n then Some t else lookup_evar g (x - 1) in
+  let x_env = fun x -> if x < n then lookup_evar g x
+                       else if x = n then Some t
+                       else lookup_evar g (x - 1) in
   MkEnv a_env x_env
 
 (* Kinding, type equivalence, and typing rules;
@@ -301,17 +305,18 @@ type ex : #a:Type -> (a -> Type) -> Type =
 val is_value : exp -> Tot bool
 let is_value = is_ELam
 
-(* AR: commented because of verification timeout *)
 val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
                Tot (ex (fun e' -> step e e')) (decreases h)
-let rec progress _ _ h = admit ()
-  (* match h with *)
-  (*   | TyApp #g #e1 #e2 #t11 #t12 h1 h2 -> *)
-  (*     (match e1 with *)
-  (* 	| ELam t e1' -> ExIntro (esubst_beta e2 e1') (SBeta t e1' e2) *)
-  (* 	| _ -> (match progress h1 with *)
-  (*           | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1'))) *)
-  (*   | TyEqu h1 _ _ -> progress h1 *)
+let rec progress _ _ h = admit()
+(* takes 1s to check
+  match h with
+    | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
+      (match e1 with
+       | ELam t e1' -> ExIntro (esubst_beta e2 e1') (SBeta t e1' e2)
+       | _ -> (match progress h1 with
+                | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1')))
+    | TyEqu h1 _ _ -> progress h1
+*)
 
 (* Substitution extensional
    is trivial with the extensionality axiom *)
@@ -335,20 +340,22 @@ let rec tappears_free_in x t =
   | TLam _ t1 -> tappears_free_in (x+1) t1
 
 opaque logic type EnvEqualT (t:typ) (g1:env) (g2:env) =
-		 (forall (x:var). tappears_free_in x t ==> lookup_tvar g1 x = lookup_tvar g2 x)
+		 (forall (x:var). tappears_free_in x t ==>
+                    lookup_tvar g1 x = lookup_tvar g2 x)
 
-(* AR: commented because of verification timeout *)
 val tcontext_invariance : #t:typ -> #g:env -> #k:knd ->
                           h:(kinding g t k) -> g':env{EnvEqualT t g g'} ->
                           Tot (kinding g' t k) (decreases h)
-let rec tcontext_invariance _ _ _ h g' = admit ()
-  (* match h with *)
-  (* | KiVar a -> KiVar a *)
-  (* | KiAbs k1 h1 -> KiAbs k1 (tcontext_invariance h1 (extend_tvar g' 0 k1)) *)
-  (* | KiApp h1 h2 -> KiApp (tcontext_invariance h1 g') (tcontext_invariance h2 g') *)
-  (* | KiArr h1 h2 -> KiArr (tcontext_invariance h1 g') (tcontext_invariance h2 g') *)
+let rec tcontext_invariance _ _ _ h g' = admit()
+(* this takes ~5s to check
+  match h with
+  | KiVar a -> KiVar a
+  | KiAbs k1 h1 -> KiAbs k1 (tcontext_invariance h1 (extend_tvar g' 0 k1))
+  | KiApp h1 h2 -> KiApp (tcontext_invariance h1 g') (tcontext_invariance h2 g')
+  | KiArr h1 h2 -> KiArr (tcontext_invariance h1 g') (tcontext_invariance h2 g')
+*)
 
-(* Defining my own constructive if-and-only-if *)
+(* Defining constructive if-and-only-if *)
 type xand : Type -> Type -> Type =
   | Conj : #a:Type -> #b:Type -> pa:a -> pb:b -> xand a b
 type xiff (a : Type) (b : Type) = xand (a -> Tot b) (b -> Tot a)
@@ -391,11 +398,13 @@ let rec eappears_free_in x e =
 
 (* AR: change in defn. to say that it g1 and g2 are same for type variables *)
 opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
-		 (forall (x:var). eappears_free_in x e ==> lookup_evar g1 x = lookup_evar g2 x) /\
+		 (forall (x:var). eappears_free_in x e ==>
+                    lookup_evar g1 x = lookup_evar g2 x) /\
 		 (forall (x:var). (lookup_tvar g1 x = lookup_tvar g2 x))
 
-
 (* g |- t :: k, g and g' are same for type variables, then g' |- t :: k *)
+(* CH: this is a form of "kinding_extensional";
+       it should also follow from functional extensionality *)
 val env_eq_t_k: #g:env -> #t:typ -> #k:knd -> h:(kinding g t k) ->
                 g':env{forall (x:var). (lookup_tvar g x = lookup_tvar g' x)} ->
                 Tot (kinding g' t k) (decreases h)
@@ -416,7 +425,8 @@ let rec econtext_invariance _ _ t h g' =
       TyAbs t_y (tcontext_invariance hk g')
   	(econtext_invariance #e1 #(extend_evar g 0 t_y) #t' h1
   	   (extend_evar g' 0 t_y))
-    | TyApp h1 h2 -> TyApp (econtext_invariance h1 g') (econtext_invariance h2 g')
+    | TyApp h1 h2 -> TyApp (econtext_invariance h1 g')
+                           (econtext_invariance h2 g')
     | TyEqu h1 eq k -> TyEqu (econtext_invariance h1 g') eq (env_eq_t_k k g')
 
 (* kinding weakening when a term variable binding is added to env *)
@@ -476,6 +486,8 @@ let eshift_up_above_abs n t e = admit () (* AR: TODO *)
  * g |- e : t, g and g' are same for all type variables and term variables, then
  * g' |- e : t
  *)
+(* CH: this is just typing_extensional;
+       it folows from functional extensionality *)
 val env_eq_e_t: #g:env -> #e:exp -> #t:typ -> h:(typing g e t) ->
                 g':env{(forall (x:var). (lookup_evar g x = lookup_evar g' x)) /\
                        (forall (x:var). (lookup_tvar g x = lookup_tvar g' x))} ->
@@ -483,26 +495,28 @@ val env_eq_e_t: #g:env -> #e:exp -> #t:typ -> h:(typing g e t) ->
 let rec env_eq_e_t _ _ _ h g' =
   match h with
     | TyVar x -> TyVar x
-    | TyAbs t1 k1 h1 -> TyAbs t1 (env_eq_t_k k1 g') (env_eq_e_t h1 (extend_evar g' 0 t1))
+    | TyAbs t1 k1 h1 -> TyAbs t1 (env_eq_t_k k1 g')
+                                 (env_eq_e_t h1 (extend_evar g' 0 t1))
     | TyApp h1 h2 -> TyApp (env_eq_e_t h1 g') (env_eq_e_t h2 g')
     | TyEqu h1 eq k1 -> TyEqu (env_eq_e_t h1 g') eq (env_eq_t_k k1 g')
 
 (* typing weakening when term variable is added to env *)
 val typing_weakening_ebnd: #g:env -> x:var -> t_x:typ -> #e:exp -> #t:typ ->
-                           h:(typing g e t) ->
-                           Tot (typing (extend_evar g x t_x) (eshift_up_above x e) t)
-                           (decreases h)
+      h:(typing g e t) -> Tot (typing (extend_evar g x t_x)
+                                      (eshift_up_above x e) t) (decreases h)
 let rec typing_weakening_ebnd g x t_x e t h =
   match h with
     | TyVar y -> if y < x then TyVar y else TyVar (y+1)
     | TyAbs #g t_y #e' #t'' kh h21 ->
       eshift_up_above_abs x t_y e';
       let h21 = typing_weakening_ebnd (x+1) t_x h21 in
-      TyAbs t_y (env_eq_t_k kh (extend_evar g x t_x)) (env_eq_e_t h21 (extend_evar (extend_evar g x t_x) 0 t_y))
+      TyAbs t_y (env_eq_t_k kh (extend_evar g x t_x))
+                (env_eq_e_t h21 (extend_evar (extend_evar g x t_x) 0 t_y))
     | TyApp h21 h22 -> TyApp (typing_weakening_ebnd x t_x h21)
-      (typing_weakening_ebnd x t_x h22)
+                             (typing_weakening_ebnd x t_x h22)
     | TyEqu h1 eq k1 ->
-      TyEqu (typing_weakening_ebnd x t_x h1) eq (env_eq_t_k k1 (extend_evar g x t_x))
+      TyEqu (typing_weakening_ebnd x t_x h1) eq
+            (env_eq_t_k k1 (extend_evar g x t_x))
 
 val tshift_up_above_e: x:nat -> e:exp -> Tot exp
 let rec tshift_up_above_e x e = match e with
@@ -517,17 +531,22 @@ let tshift_eq s t h = admit () (* AR: TODO *)
 
 (* typing weakening when type variable binding is added to env *)
 val typing_weakening_tbnd: #g:env -> x:var -> k_x:knd -> #e:exp -> #t:typ ->
-                           h:(typing g e t) ->
-                           Tot (typing (extend_tvar g x k_x) (tshift_up_above_e x e) (tshift_up_above x t))
-                           (decreases h)
+      h:(typing g e t) ->
+      Tot (typing (extend_tvar g x k_x) 
+                  (tshift_up_above_e x e) (tshift_up_above x t)) (decreases h)
 let rec typing_weakening_tbnd g x k_x e t h =
   match h with
     | TyVar y -> TyVar y
     | TyAbs #g t' #e1 #t'' kh h1 ->
-      TyAbs (tshift_up_above x t') (kinding_weakening_tbnd kh x k_x) (env_eq_e_t (typing_weakening_tbnd x k_x h1) (extend_evar (extend_tvar g x k_x) 0 (tshift_up_above x t')))
-    | TyApp h1 h2 -> TyApp (typing_weakening_tbnd x k_x h1) (typing_weakening_tbnd x k_x h2)
+      TyAbs (tshift_up_above x t') (kinding_weakening_tbnd kh x k_x)
+            (env_eq_e_t (typing_weakening_tbnd x k_x h1)
+                        (extend_evar (extend_tvar g x k_x) 0
+                                     (tshift_up_above x t')))
+    | TyApp h1 h2 -> TyApp (typing_weakening_tbnd x k_x h1)
+                           (typing_weakening_tbnd x k_x h2)
     | TyEqu h1 eq kh ->
-      TyEqu (typing_weakening_tbnd x k_x h1) (tshift_eq eq x) (kinding_weakening_tbnd kh x k_x)
+      TyEqu (typing_weakening_tbnd x k_x h1) (tshift_eq eq x)
+            (kinding_weakening_tbnd kh x k_x)
 
 val esubst_gen_elam : x:var -> v:exp -> t_y:typ -> e':exp -> Lemma
                       (ensures (esubst_beta_gen x v (ELam t_y e') =
@@ -535,11 +554,13 @@ val esubst_gen_elam : x:var -> v:exp -> t_y:typ -> e':exp -> Lemma
 let esubst_gen_elam x v t_y e' = admit () (* AR: TODO *)
 
 
-val substitution_lemma_e: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
-                          h1:(typing g v t_x) -> h2:(typing (extend_evar g x t_x) e t) ->
-                          Tot (typing g (esubst_beta_gen x v e) t) (decreases %[e; h2])
+val substitution_lemma_e: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ ->
+      #g:env -> h1:(typing g v t_x) -> h2:(typing (extend_evar g x t_x) e t) ->
+      Tot (typing g (esubst_beta_gen x v e) t) (decreases %[e;h2])
 let rec substitution_lemma_e x e v t_x t g h1 h2 = match h2 with
-  | TyVar y -> if x = y then h1 else if y < x then econtext_invariance h2 g else TyVar (y - 1)
+  | TyVar y -> if x = y then h1
+               else if y < x then econtext_invariance h2 g
+               else TyVar (y - 1)
   | TyAbs #g' t_y #e' #t' kh h21 ->
     let h21' = env_eq_e_t h21 (extend_evar (extend_evar g 0 t_y) (x + 1) t_x) in
     let h1' = typing_weakening_ebnd 0 t_y h1 in
@@ -548,15 +569,17 @@ let rec substitution_lemma_e x e v t_x t g h1 h2 = match h2 with
   | TyApp h21 h22 ->
     TyApp (substitution_lemma_e x h1 h21) (substitution_lemma_e x h1 h22)
   | TyEqu h21 eq kh ->
-    TyEqu (substitution_lemma_e x h1 h21) eq (kinding_strengthening_ebnd g x t_x kh)
+    TyEqu (substitution_lemma_e x h1 h21) eq
+          (kinding_strengthening_ebnd g x t_x kh)
 
 
-val substitution_lemma_t: x:nat -> #t1:typ -> #t:typ -> #k_x:knd -> #k1:knd -> #g:env ->
-                          h1:(kinding g t k_x) -> h2:(kinding (extend_tvar g x k_x) t1 k1) ->
-                          Tot (kinding g (tsubst_beta_gen x t t1) k1) (decreases t1)
+val substitution_lemma_t: x:nat -> #t1:typ -> #t:typ -> #k_x:knd -> #k1:knd ->
+      #g:env -> h1:(kinding g t k_x) ->
+      h2:(kinding (extend_tvar g x k_x) t1 k1) ->
+      Tot (kinding g (tsubst_beta_gen x t t1) k1) (decreases t1)
 let rec substitution_lemma_t x t1 t k_x k1 g h1 h2 = match h2 with
   | _ -> admit ()
-    
+
 (* Note: the kind system of LambdaOmega is the same as the type system of STLC.
    So most we should be able to port most things with little changes.
    The main difference is in the way extend works: because types in
