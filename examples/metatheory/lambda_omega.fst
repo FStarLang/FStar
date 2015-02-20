@@ -839,11 +839,11 @@ let rec tred_diamond s t u h1 h2 =
       admit ()
 
 type tred_star: typ -> typ -> Type =
-  | PcBase:  t:typ ->
+  | TsRefl : t:typ ->
              tred_star t t
 
-  | PcTrans: #t1:typ -> #t2:typ -> #t3:typ ->
-             tred         t1 t2 ->
+  | TsStep : #t1:typ -> #t2:typ -> #t3:typ ->
+             tred      t1 t2 ->
              tred_star t2 t3 ->
              tred_star t1 t3
 
@@ -851,14 +851,14 @@ val tred_star_one_loop: #s:typ -> #t:typ -> #u:typ ->
       h:(tred s t) -> hs:(tred_star s u) ->
       Tot (ex (fun v -> cand (tred_star t v) (tred u v))) (decreases hs)
 let rec tred_star_one_loop s t u h hs = match hs with
-  | PcBase _ ->
-    ExIntro t (Conj (PcBase t) h)
-  | PcTrans #s #u1 #u h1 hs' ->
+  | TsRefl _ ->
+    ExIntro t (Conj (TsRefl t) h)
+  | TsStep #s #u1 #u h1 hs' ->
     let ExIntro v1 p1 = tred_diamond h h1 in
     let Conj p1a p1b = p1 in
     let ExIntro v p2 = tred_star_one_loop p1b hs' in
     let Conj p2a p2b = p2 in
-    ExIntro v (Conj (PcTrans p1a p2a) (p2b))
+    ExIntro v (Conj (TsStep p1a p2a) (p2b))
 
 (* aka Church-Rosser *)
 val confluence : #s:typ -> #t:typ -> #u:typ ->
@@ -867,36 +867,47 @@ val confluence : #s:typ -> #t:typ -> #u:typ ->
       (decreases h1)
 let rec confluence s t u h1 h2 =
   match h1 with
-  | PcBase _ ->
-    ExIntro u (Conj h2 (PcBase u))
-  | PcTrans #s #t1 #t h1' hs1 ->
+  | TsRefl _ ->
+    ExIntro u (Conj h2 (TsRefl u))
+  | TsStep #s #t1 #t h1' hs1 ->
      let ExIntro v1 p = tred_star_one_loop h1' h2 in
      let Conj p1 p2 = p in
      let ExIntro v p' = confluence hs1 p1 in
      let Conj p1' p2' = p' in
-     ExIntro v (Conj p1' (PcTrans p2 p2'))
+     ExIntro v (Conj p1' (TsStep p2 p2'))
+
+type tred_star_sym : typ -> typ -> Type =
+  | TssRefl: t:typ ->
+             tred_star_sym t t
+
+  | TssSymm: #t1:typ -> #t2:typ ->
+             tred_star_sym t2 t1 ->
+             tred_star_sym t1 t2
+
+  | TssStep: #t1:typ -> #t2:typ -> #t3:typ ->
+             tred      t1 t2 ->
+             tred_star_sym t2 t3 ->
+             tred_star_sym t1 t3
 
 assume val proposition_30_3_10 : #t:typ -> #s:typ ->
-      tred_star s t ->
-      tred_star t s ->
+      tred_star_sym s t ->
       Tot (ex (fun u -> cand (tred_star s u) (tred_star t u)))
 
 (* the TAPL proof for this is rather informal *)
 val lemma_30_3_5_ltr : #s:typ -> #t:typ -> tequiv s t ->
-      Tot (cand (tred_star s t) (tred_star t s))
-let lemma_30_3_5_ltr s t = admit()
+      Tot (tred_star_sym s t)
+let lemma_30_3_5_ltr s t h = admit()
 
 (* TAPL calls this direction obvious, it's also apparently not used below? *)
 val lemma_30_3_5_rtl : #s:typ -> #t:typ ->
-      tred_star s t -> tred_star t s -> Tot (tequiv s t)
-let lemma_30_3_5_rtl s t hst hts = admit()
+      tred_star_sym s t -> Tot (tequiv s t)
+let lemma_30_3_5_rtl s t h = admit()
 
 val corrolary_30_3_11 : #s:typ -> #t:typ ->
       tequiv s t ->
       Tot (ex (fun u -> cand (tred_star s u) (tred_star t u)))
 let corrolary_30_3_11 s t h =
-  let Conj h1 h2 = lemma_30_3_5_ltr h in
-  proposition_30_3_10 h1 h2
+  proposition_30_3_10 (lemma_30_3_5_ltr h)
 
 assume val tred_tarr_preserved : #s1:typ -> #s2:typ -> #t:typ ->
       tred_star (TArr s1 s2) t ->
