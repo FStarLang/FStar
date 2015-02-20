@@ -370,9 +370,9 @@ let rec tcontext_invariance _ _ _ h g' = admit()
 *)
 
 (* Defining constructive if-and-only-if *)
-type xand : Type -> Type -> Type =
-  | Conj : #a:Type -> #b:Type -> pa:a -> pb:b -> xand a b
-type xiff (a : Type) (b : Type) = xand (a -> Tot b) (b -> Tot a)
+type cand : Type -> Type -> Type =
+  | Conj : #a:Type -> #b:Type -> pa:a -> pb:b -> cand a b
+type ciff (a : Type) (b : Type) = cand (a -> Tot b) (b -> Tot a)
 
 val id : 'a -> Tot 'a
 let id x = x
@@ -381,7 +381,7 @@ val fcomp : ('a -> Tot 'b) -> ('b -> Tot 'c) -> 'a -> Tot 'c
 let fcomp f1 f2 a = f2 (f1 a)
 
 val kinding_tequiv : #g:env -> #t1:typ -> #t2:typ -> #k:knd -> h:(tequiv t1 t2) ->
-      Tot (xiff (kinding g t1 k) (kinding g t2 k)) (decreases h)
+      Tot (ciff (kinding g t1 k) (kinding g t2 k)) (decreases h)
 let rec kinding_tequiv g _ _ k h =
   match h with
   | EqRefl t -> Conj id id
@@ -666,45 +666,45 @@ let rec kinding_substitution x t1 t k_x k1 g h1 h2 =
    the environment can contain type variables, we need to be a bit
    more careful with shifting indices when adding things. *)
 
-type parred: typ -> typ -> Type =
+type tred: typ -> typ -> Type =
   | PRefl: t:typ ->
-           parred t t
+           tred t t
 
   | PArr:  #t1:typ -> #t2:typ -> #t1':typ -> #t2':typ ->
-           parred t1 t1' ->
-           parred t2 t2' ->
-           parred (TArr t1 t2) (TArr t1' t2')
+           tred t1 t1' ->
+           tred t2 t2' ->
+           tred (TArr t1 t2) (TArr t1' t2')
 
   | PLam:  #t1:typ -> #t2:typ ->
            k:knd ->
-           h:parred t1 t2 ->
-           parred (TLam k t1) (TLam k t2)
+           h:tred t1 t2 ->
+           tred (TLam k t1) (TLam k t2)
 
   | PApp:  #t1:typ -> #t2:typ -> #t1':typ -> #t2':typ ->
-           parred t1 t1' ->
-           parred t2 t2' ->
-           parred (TApp t1 t2) (TApp t1' t2')
+           tred t1 t1' ->
+           tred t2 t2' ->
+           tred (TApp t1 t2) (TApp t1' t2')
 
   | PBeta: #t1:typ -> #t2:typ -> #t1':typ -> #t2':typ ->
            k:knd ->
-           parred t1 t1' ->
-           parred t2 t2' ->
-           parred (TApp (TLam k t1) t2) (tsubst_beta t2' t1')
+           tred t1 t1' ->
+           tred t2 t2' ->
+           tred (TApp (TLam k t1) t2) (tsubst_beta t2' t1')
 
 
-type parred_closure: typ -> typ -> Type =
+type tred_star: typ -> typ -> Type =
   | PcBase:  #t1:typ -> #t2:typ ->
-             parred t1 t2 ->
-             parred_closure t1 t2
+             tred t1 t2 ->
+             tred_star t1 t2
 
   | PcTrans: #t1:typ -> #t2:typ -> #t3:typ ->
-             parred         t1 t2 ->
-             parred_closure t2 t3 ->
-             parred_closure t1 t3
+             tred         t1 t2 ->
+             tred_star t2 t3 ->
+             tred_star t1 t3
 
 (* t => t' implies tshift_up_above x t => tshift_up_above x t' *)
-val pred_shiftup_above: #t:typ -> #t':typ -> x:nat -> h:(parred t t') ->
-                        Tot (parred (tshift_up_above x t) (tshift_up_above x t'))
+val pred_shiftup_above: #t:typ -> #t':typ -> x:nat -> h:(tred t t') ->
+                        Tot (tred (tshift_up_above x t) (tshift_up_above x t'))
 		        (decreases h)
 let rec pred_shiftup_above t t' x h =
   match h with
@@ -722,8 +722,8 @@ let rec pred_shiftup_above t t' x h =
 
 (* s => s' implies t[y |-> s] => t[y |-> s'] *)
 val subst_of_pred: #s:typ -> #s':typ -> x:nat -> t:typ ->
-                   h:(parred s s') ->
-                   Tot (parred (tsubst_beta_gen x s t) (tsubst_beta_gen x s' t))
+                   h:(tred s s') ->
+                   Tot (tred (tsubst_beta_gen x s t) (tsubst_beta_gen x s' t))
 		   (decreases t)
 let rec subst_of_pred s s' x t h =
   match t with
@@ -753,8 +753,8 @@ let commute_tsubst t1 y t2 x s = admit () (* AR: TODO *)
 
 (* t => t' and s => s' implies t[x |-> s] => t'[x |-> s'] *)
 val subst_of_pred_pred: #s:typ -> #s':typ -> #t:typ -> #t':typ -> x:nat ->
-                       hs:(parred s s') -> ht:(parred t t') ->
-                       Tot (parred (tsubst_beta_gen x s t) (tsubst_beta_gen x s' t'))
+                       hs:(tred s s') -> ht:(tred t t') ->
+                       Tot (tred (tsubst_beta_gen x s t) (tsubst_beta_gen x s' t'))
                        (decreases ht)
 let rec subst_of_pred_pred s s' t t' x hs ht =
   match ht with
@@ -775,12 +775,12 @@ let rec subst_of_pred_pred s s' t t' x hs ht =
       PBeta k ht1' ht2'
 
 type ltup =
-  | MkLTup: #s:typ -> #t:typ -> #u:typ -> (parred s t) -> (parred s u) -> ltup
+  | MkLTup: #s:typ -> #t:typ -> #u:typ -> (tred s t) -> (tred s u) -> ltup
 
 (* single step diamond property of parallel reduction *)
 val pred_diamond: #s:typ -> #t:typ -> #u:typ ->
-                  h1:(parred s t) -> h2:(parred s u) ->
-                  Tot (ex (fun v -> xand (parred t v) (parred u v)))
+                  h1:(tred s t) -> h2:(tred s u) ->
+                  Tot (ex (fun v -> cand (tred t v) (tred u v)))
                   (decreases %[h1;h2])
 let rec pred_diamond s t u h1 h2 =
   match (MkLTup h1 h2) with
@@ -830,7 +830,7 @@ let rec pred_diamond s t u h1 h2 =
     | MkLTup (PBeta #s1 #s2 #t1' #t2' k h11 h12)
              (PApp #s1' #s2' #lu1' #u2' h21 h22) ->
     (* AR: does not work without this type annotation *)
-      let h21:(parred (TLam.t s1') (TLam.t lu1')) = match h21 with
+      let h21:(tred (TLam.t s1') (TLam.t lu1')) = match h21 with
   	| PLam _ h' -> h'
   	| PRefl _ -> PRefl (TLam.t s1')
       in
@@ -851,14 +851,14 @@ let rec pred_diamond s t u h1 h2 =
 
 type lctup =
   | MkLCTup: #s:typ -> #t:typ -> #u:typ ->
-             (parred_closure s t) -> (parred_closure s u) -> lctup
+             (tred_star s t) -> (tred_star s u) -> lctup
 
-(* confluence *)
-val parred_closure_diamond: #s:typ -> #t:typ -> #u:typ ->
-      h1:(parred_closure s t) -> h2:(parred_closure s u) ->
-      Tot (ex (fun v -> xand (parred_closure t v) (parred_closure u v)))
+(* confluence / Church-Rosser *)
+val tred_star_diamond: #s:typ -> #t:typ -> #u:typ ->
+      h1:(tred_star s t) -> h2:(tred_star s u) ->
+      Tot (ex (fun v -> cand (tred_star t v) (tred_star u v)))
       (decreases %[h1;h2])
-let rec parred_closure_diamond s t u h1 h2 = admit ()
+let rec tred_star_diamond s t u h1 h2 = admit ()
   (* match (MkLCTup h1 h2) with *)
   (*   | MkLCTup (PcBase h11) (PcBase h21) -> *)
   (*     let ExIntro v p = pred_diamond h11 h21 in *)
@@ -869,32 +869,38 @@ let rec parred_closure_diamond s t u h1 h2 = admit ()
   (*   | _ -> admit () *)
 
 assume val proposition_30_3_10 : #t:typ -> #s:typ ->
-      parred_closure s t ->
-      parred_closure t s ->
-      Tot (ex (fun u -> xand (parred_closure s u) (parred_closure t u)))
+      tred_star s t ->
+      tred_star t s ->
+      Tot (ex (fun u -> cand (tred_star s u) (tred_star t u)))
 
-assume val lemma_30_3_4 : s:typ -> t:typ ->
-      Tot (xiff (tequiv s t) (xand (parred_closure s t)(parred_closure t s)))
+(* the TAPL proof for this is rather informal *)
+val lemma_30_3_4_ltr : #s:typ -> #t:typ -> tequiv s t ->
+      Tot (cand (tred_star s t)(tred_star t s))
+let lemma_30_3_4_ltr s t = admit()
+
+(* TAPL calls this direction obvious, it's also apparently not used below? *)
+val lemma_30_3_4_rtl : #s:typ -> #t:typ ->
+      tred_star s t -> tred_star t s -> Tot (tequiv s t)
+let lemma_30_3_4_rtl s t = admit()
 
 val corrolary_30_3_11 : #s:typ -> #t:typ ->
       tequiv s t ->
-      Tot (ex (fun u -> xand (parred_closure s u) (parred_closure t u)))
+      Tot (ex (fun u -> cand (tred_star s u) (tred_star t u)))
 let corrolary_30_3_11 s t h =
-  let Conj h' _ = lemma_30_3_4 s t in
-  let Conj h1 h2 = h' h in
+  let Conj h1 h2 = lemma_30_3_4_ltr h in
   proposition_30_3_10 h1 h2
 
-assume val parred_tarr_preserved : #s1:typ -> #s2:typ -> #t:typ ->
-      parred_closure (TArr s1 s2) t ->
-      Tot (ex (fun t1 -> ex (fun t2 -> xand (t = TArr t1 t2)
-                        (xand (parred_closure s1 t1) (parred_closure s2 t2)))))
+assume val tred_tarr_preserved : #s1:typ -> #s2:typ -> #t:typ ->
+      tred_star (TArr s1 s2) t ->
+      Tot (ex (fun t1 -> ex (fun t2 -> cand (t = TArr t1 t2)
+                        (cand (tred_star s1 t1) (tred_star s2 t2)))))
 
 assume val inversion_elam : #g:env -> s1:typ -> e:exp ->
       #s:typ -> t1:typ -> t2:typ -> typing g (ELam s1 e) s ->
       tequiv s (TArr t1 t2) ->
-      Tot (xand (tequiv t1 s1) (typing (extend_evar g 0 t1) e t2))
+      Tot (cand (tequiv t1 s1) (typing (extend_evar g 0 t1) e t2))
 
-(* this should follow from the above *)
+(* corollary of inversion_elam *)
 val inversion_elam_typing : #g:env -> s1:typ -> e:exp ->
       t1:typ -> t2:typ -> typing g (ELam s1 e) (TArr t1 t2) ->
       Tot (typing (extend_evar g 0 t1) e t2)
