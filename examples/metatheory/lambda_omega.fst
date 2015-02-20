@@ -838,36 +838,43 @@ let rec pred_diamond s t u h1 h2 =
     (* similar to above case *)
       admit ()
 
-(* CH: tred is indeed already reflexive, but it would still be more
-       standard to take reflexivity as the base case *)
 type tred_star: typ -> typ -> Type =
-  | PcBase:  #t1:typ -> #t2:typ ->
-             tred t1 t2 ->
-             tred_star t1 t2
+  | PcBase:  t:typ ->
+             tred_star t t
 
   | PcTrans: #t1:typ -> #t2:typ -> #t3:typ ->
              tred         t1 t2 ->
              tred_star t2 t3 ->
              tred_star t1 t3
 
-type lctup =
-  | MkLCTup: #s:typ -> #t:typ -> #u:typ ->
-             (tred_star s t) -> (tred_star s u) -> lctup
+val tred_star_one_loop: #s:typ -> #t:typ -> #u:typ ->
+      h:(tred s t) -> hs:(tred_star s u) ->
+      Tot (ex (fun v -> cand (tred_star t v) (tred u v))) (decreases hs)
+let rec tred_star_one_loop s t u h hs = match hs with
+  | PcBase _ ->
+    ExIntro t (Conj (PcBase t) h)
+  | PcTrans #s #u1 #u h1 hs' ->
+    let ExIntro v1 p1 = pred_diamond h h1 in
+    let Conj p1a p1b = p1 in
+    let ExIntro v p2 = tred_star_one_loop p1b hs' in
+    let Conj p2a p2b = p2 in
+    ExIntro v (Conj (PcTrans p1a p2a) (p2b))
 
-(* confluence / Church-Rosser *)
-val tred_star_diamond: #s:typ -> #t:typ -> #u:typ ->
+(* aka Church-Rosser *)
+val confluence : #s:typ -> #t:typ -> #u:typ ->
       h1:(tred_star s t) -> h2:(tred_star s u) ->
       Tot (ex (fun v -> cand (tred_star t v) (tred_star u v)))
-      (decreases %[h1;h2])
-let rec tred_star_diamond s t u h1 h2 = admit ()
-  (* match (MkLCTup h1 h2) with *)
-  (*   | MkLCTup (PcBase h11) (PcBase h21) -> *)
-  (*     let ExIntro v p = pred_diamond h11 h21 in *)
-  (*     (match p with *)
-  (* 	| Conj pa pb -> ExIntro v (Conj (PcBase pa) (PcBase pb))) *)
-  (*   | MkLCTup (PcBase h11) (PcTrans #s1 #u1 #u2 h21 h22) -> *)
-  (*     admit () *)
-  (*   | _ -> admit () *)
+      (decreases h1)
+let rec confluence s t u h1 h2 =
+  match h1 with
+  | PcBase _ ->
+    ExIntro u (Conj h2 (PcBase u))
+  | PcTrans #s #t1 #t h1' hs1 ->
+     let ExIntro v1 p = tred_star_one_loop h1' h2 in
+     let Conj p1 p2 = p in
+     let ExIntro v p' = confluence hs1 p1 in
+     let Conj p1' p2' = p' in
+     ExIntro v (Conj p1' (PcTrans p2 p2'))
 
 assume val proposition_30_3_10 : #t:typ -> #s:typ ->
       tred_star s t ->
@@ -875,14 +882,14 @@ assume val proposition_30_3_10 : #t:typ -> #s:typ ->
       Tot (ex (fun u -> cand (tred_star s u) (tred_star t u)))
 
 (* the TAPL proof for this is rather informal *)
-val lemma_30_3_4_ltr : #s:typ -> #t:typ -> tequiv s t ->
-      Tot (cand (tred_star s t)(tred_star t s))
-let lemma_30_3_4_ltr s t = admit()
+val lemma_30_3_5_ltr : #s:typ -> #t:typ -> tequiv s t ->
+      Tot (cand (tred_star s t) (tred_star t s))
+let lemma_30_3_5_ltr s t = admit()
 
 (* TAPL calls this direction obvious, it's also apparently not used below? *)
-val lemma_30_3_4_rtl : #s:typ -> #t:typ ->
+val lemma_30_3_5_rtl : #s:typ -> #t:typ ->
       tred_star s t -> tred_star t s -> Tot (tequiv s t)
-let lemma_30_3_4_rtl s t = admit()
+let lemma_30_3_5_rtl s t = admit()
 
 val corrolary_30_3_11 : #s:typ -> #t:typ ->
       tequiv s t ->
