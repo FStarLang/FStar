@@ -692,29 +692,29 @@ type tred: typ -> typ -> Type =
            tred (TApp (TLam k t1) t2) (tsubst_beta t2' t1')
 
 (* t => t' implies tshift_up_above x t => tshift_up_above x t' *)
-val pred_shiftup_above: #t:typ -> #t':typ -> x:nat -> h:(tred t t') ->
+val tred_shiftup_above: #t:typ -> #t':typ -> x:nat -> h:(tred t t') ->
                         Tot (tred (tshift_up_above x t) (tshift_up_above x t'))
 		        (decreases h)
-let rec pred_shiftup_above t t' x h =
+let rec tred_shiftup_above t t' x h =
   match h with
     | PRefl t''  -> PRefl (tshift_up_above x t'')
-    | PArr h1 h2 -> PArr (pred_shiftup_above x h1) (pred_shiftup_above x h2)
+    | PArr h1 h2 -> PArr (tred_shiftup_above x h1) (tred_shiftup_above x h2)
     | PLam #t1 #t2 k h1  ->
       tshift_up_above_lam x k t1;
       tshift_up_above_lam x k t2;
-      PLam k (pred_shiftup_above (x + 1) h1)
-    | PApp h1 h2 -> PApp (pred_shiftup_above x h1) (pred_shiftup_above x h2)
+      PLam k (tred_shiftup_above (x + 1) h1)
+    | PApp h1 h2 -> PApp (tred_shiftup_above x h1) (tred_shiftup_above x h2)
     | PBeta #t1 #t2 #t1' #t2' k h1 h2 ->
       tshift_up_above_lam x k t1;
       tshift_up_above_tsubst_beta x t1' t2';
-      PBeta k (pred_shiftup_above (x + 1) h1) (pred_shiftup_above x h2)
+      PBeta k (tred_shiftup_above (x + 1) h1) (tred_shiftup_above x h2)
 
 (* s => s' implies t[y |-> s] => t[y |-> s'] *)
-val subst_of_pred: #s:typ -> #s':typ -> x:nat -> t:typ ->
+val subst_of_tred: #s:typ -> #s':typ -> x:nat -> t:typ ->
                    h:(tred s s') ->
                    Tot (tred (tsubst_beta_gen x s t) (tsubst_beta_gen x s' t))
 		   (decreases t)
-let rec subst_of_pred s s' x t h =
+let rec subst_of_tred s s' x t h =
   match t with
     | TVar y ->
       if y < x then
@@ -726,11 +726,11 @@ let rec subst_of_pred s s' x t h =
     | TLam k t1 ->
       tsubst_gen_tlam x s k t1;
       tsubst_gen_tlam x s' k t1;
-      PLam k (subst_of_pred (x + 1) t1 (pred_shiftup_above 0 h))
+      PLam k (subst_of_tred (x + 1) t1 (tred_shiftup_above 0 h))
     | TApp t1 t2 ->
-      PApp (subst_of_pred x t1 h) (subst_of_pred x t2 h)
+      PApp (subst_of_tred x t1 h) (subst_of_tred x t2 h)
     | TArr t1 t2 ->
-      PArr (subst_of_pred x t1 h) (subst_of_pred x t2 h)
+      PArr (subst_of_tred x t1 h) (subst_of_tred x t2 h)
 
 
 val commute_tsubst: t1:typ -> y:nat -> t2:typ -> x:nat -> s:typ -> Lemma
@@ -741,25 +741,25 @@ let commute_tsubst t1 y t2 x s = admit () (* AR: TODO *)
 
 
 (* t => t' and s => s' implies t[x |-> s] => t'[x |-> s'] *)
-val subst_of_pred_pred: #s:typ -> #s':typ -> #t:typ -> #t':typ -> x:nat ->
+val subst_of_tred_tred: #s:typ -> #s':typ -> #t:typ -> #t':typ -> x:nat ->
                        hs:(tred s s') -> ht:(tred t t') ->
                        Tot (tred (tsubst_beta_gen x s t) (tsubst_beta_gen x s' t'))
                        (decreases ht)
-let rec subst_of_pred_pred s s' t t' x hs ht =
+let rec subst_of_tred_tred s s' t t' x hs ht =
   match ht with
-    | PRefl t1 -> subst_of_pred x t1 hs
+    | PRefl t1 -> subst_of_tred x t1 hs
     | PArr ht1 ht2 ->
-      PArr (subst_of_pred_pred x hs ht1) (subst_of_pred_pred x hs ht2)
+      PArr (subst_of_tred_tred x hs ht1) (subst_of_tred_tred x hs ht2)
     | PLam #t1 #t2 k ht1 ->
       tsubst_gen_tlam x s k t1;
       tsubst_gen_tlam x s' k t2;
-      PLam k (subst_of_pred_pred (x + 1) (pred_shiftup_above 0 hs) ht1)
+      PLam k (subst_of_tred_tred (x + 1) (tred_shiftup_above 0 hs) ht1)
     | PApp h1 h2 ->
-      PApp (subst_of_pred_pred x hs h1) (subst_of_pred_pred x hs h2)
+      PApp (subst_of_tred_tred x hs h1) (subst_of_tred_tred x hs h2)
     | PBeta #t1 #t2 #t1' #t2' k ht1 ht2 ->
       tsubst_gen_tlam x s k t1;
-      let ht1' = subst_of_pred_pred (x + 1) (pred_shiftup_above 0 hs) ht1 in
-      let ht2' = subst_of_pred_pred x hs ht2 in
+      let ht1' = subst_of_tred_tred (x + 1) (tred_shiftup_above 0 hs) ht1 in
+      let ht2' = subst_of_tred_tred x hs ht2 in
       commute_tsubst t1' 0 t2' x s';
       PBeta k ht1' ht2'
 
@@ -767,11 +767,11 @@ type ltup =
   | MkLTup: #s:typ -> #t:typ -> #u:typ -> (tred s t) -> (tred s u) -> ltup
 
 (* single step diamond property of parallel reduction *)
-val pred_diamond: #s:typ -> #t:typ -> #u:typ ->
+val tred_diamond: #s:typ -> #t:typ -> #u:typ ->
                   h1:(tred s t) -> h2:(tred s u) ->
                   Tot (ex (fun v -> cand (tred t v) (tred u v)))
                   (decreases %[h1;h2])
-let rec pred_diamond s t u h1 h2 =
+let rec tred_diamond s t u h1 h2 =
   match (MkLTup h1 h2) with
     | MkLTup (PRefl t1) _ -> ExIntro u (Conj h2 (PRefl u))
     | MkLTup _ (PRefl t1) -> ExIntro t (Conj (PRefl t) h1)
@@ -779,13 +779,13 @@ let rec pred_diamond s t u h1 h2 =
     | MkLTup (PLam k h11) (PLam _ h12) ->
     (* AR: p only has one constructor Conj,
            but direct pattern matching doesn't work *)
-      let ExIntro t' p = pred_diamond h11 h12 in
+      let ExIntro t' p = tred_diamond h11 h12 in
       (match p with
   	| Conj pa pb -> ExIntro (TLam k t') (Conj (PLam k pa) (PLam k pb)))
   (* if one is PArr, the other has to be PArr *)
     | MkLTup (PArr h11 h12) (PArr h21 h22) ->
-      let ExIntro v1 p1 = pred_diamond h11 h21 in
-      let ExIntro v2 p2 = pred_diamond h12 h22 in
+      let ExIntro v1 p1 = tred_diamond h11 h21 in
+      let ExIntro v2 p2 = tred_diamond h12 h22 in
       
       (match p1 with
   	| Conj p1a p1b ->
@@ -794,8 +794,8 @@ let rec pred_diamond s t u h1 h2 =
   	      ExIntro (TArr v1 v2) (Conj (PArr p1a p2a) (PArr p1b p2b))))
   (* both PApp *)
     | MkLTup (PApp h11 h12) (PApp h21 h22) ->
-      let ExIntro v1 p1 = pred_diamond h11 h21 in
-      let ExIntro v2 p2 = pred_diamond h12 h22 in
+      let ExIntro v1 p1 = tred_diamond h11 h21 in
+      let ExIntro v2 p2 = tred_diamond h12 h22 in
       
       (match p1 with
   	| Conj p1a p1b ->
@@ -805,16 +805,16 @@ let rec pred_diamond s t u h1 h2 =
   (* both PBeta *)
     | MkLTup (PBeta #s1 #s2 #t1' #t2' k h11 h12)
              (PBeta #s11 #s21 #u1' #u2' k' h21 h22) ->
-      let ExIntro v1 p1 = pred_diamond h11 h21 in
-      let ExIntro v2 p2 = pred_diamond h12 h22 in
+      let ExIntro v1 p1 = tred_diamond h11 h21 in
+      let ExIntro v2 p2 = tred_diamond h12 h22 in
 
       (match p1 with
   	| Conj p1a p1b ->
   	  (match p2 with
   	    | Conj p2a p2b ->
   	      ExIntro (tsubst_beta_gen 0 v2 v1)
-                      (Conj (subst_of_pred_pred 0 p2a p1a)
-                            (subst_of_pred_pred 0 p2b p1b))))
+                      (Conj (subst_of_tred_tred 0 p2a p1a)
+                            (subst_of_tred_tred 0 p2b p1b))))
   (* one PBeta and other PApp *)
     | MkLTup (PBeta #s1 #s2 #t1' #t2' k h11 h12)
              (PApp #s1' #s2' #lu1' #u2' h21 h22) ->
@@ -824,15 +824,15 @@ let rec pred_diamond s t u h1 h2 =
   	| PRefl _ -> PRefl (TLam.t s1')
       in
       
-      let ExIntro v1 p1 = pred_diamond h11 h21 in
-      let ExIntro v2 p2 = pred_diamond h12 h22 in
+      let ExIntro v1 p1 = tred_diamond h11 h21 in
+      let ExIntro v2 p2 = tred_diamond h12 h22 in
 
       (match p1 with
   	| Conj p1a p1b ->
   	  (match p2 with
   	    | Conj p2a p2b ->
   	      let v = tsubst_beta_gen 0 v2 v1 in
-  	      ExIntro v (Conj (subst_of_pred_pred 0 p2a p1a) (PBeta k p1b p2b))))
+  	      ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (PBeta k p1b p2b))))
     | MkLTup (PApp #s1' #s2' #lu1' #u2' h21 h22)
              (PBeta #s1 #s2 #t1' #t2' k h11 h12) ->
     (* similar to above case *)
@@ -854,7 +854,7 @@ let rec tred_star_one_loop s t u h hs = match hs with
   | PcBase _ ->
     ExIntro t (Conj (PcBase t) h)
   | PcTrans #s #u1 #u h1 hs' ->
-    let ExIntro v1 p1 = pred_diamond h h1 in
+    let ExIntro v1 p1 = tred_diamond h h1 in
     let Conj p1a p1b = p1 in
     let ExIntro v p2 = tred_star_one_loop p1b hs' in
     let Conj p2a p2b = p2 in
@@ -889,13 +889,13 @@ let lemma_30_3_5_ltr s t = admit()
 (* TAPL calls this direction obvious, it's also apparently not used below? *)
 val lemma_30_3_5_rtl : #s:typ -> #t:typ ->
       tred_star s t -> tred_star t s -> Tot (tequiv s t)
-let lemma_30_3_5_rtl s t = admit()
+let lemma_30_3_5_rtl s t hst hts = admit()
 
 val corrolary_30_3_11 : #s:typ -> #t:typ ->
       tequiv s t ->
       Tot (ex (fun u -> cand (tred_star s u) (tred_star t u)))
 let corrolary_30_3_11 s t h =
-  let Conj h1 h2 = lemma_30_3_4_ltr h in
+  let Conj h1 h2 = lemma_30_3_5_ltr h in
   proposition_30_3_10 h1 h2
 
 assume val tred_tarr_preserved : #s1:typ -> #s2:typ -> #t:typ ->
