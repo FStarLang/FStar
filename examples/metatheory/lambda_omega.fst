@@ -691,17 +691,6 @@ type tred: typ -> typ -> Type =
            tred t2 t2' ->
            tred (TApp (TLam k t1) t2) (tsubst_beta t2' t1')
 
-
-type tred_star: typ -> typ -> Type =
-  | PcBase:  #t1:typ -> #t2:typ ->
-             tred t1 t2 ->
-             tred_star t1 t2
-
-  | PcTrans: #t1:typ -> #t2:typ -> #t3:typ ->
-             tred         t1 t2 ->
-             tred_star t2 t3 ->
-             tred_star t1 t3
-
 (* t => t' implies tshift_up_above x t => tshift_up_above x t' *)
 val pred_shiftup_above: #t:typ -> #t':typ -> x:nat -> h:(tred t t') ->
                         Tot (tred (tshift_up_above x t) (tshift_up_above x t'))
@@ -848,6 +837,18 @@ let rec pred_diamond s t u h1 h2 =
              (PBeta #s1 #s2 #t1' #t2' k h11 h12) ->
     (* similar to above case *)
       admit ()
+
+(* CH: tred is indeed already reflexive, but it would still be more
+       standard to take reflexivity as the base case *)
+type tred_star: typ -> typ -> Type =
+  | PcBase:  #t1:typ -> #t2:typ ->
+             tred t1 t2 ->
+             tred_star t1 t2
+
+  | PcTrans: #t1:typ -> #t2:typ -> #t3:typ ->
+             tred         t1 t2 ->
+             tred_star t2 t3 ->
+             tred_star t1 t3
 
 type lctup =
   | MkLCTup: #s:typ -> #t:typ -> #u:typ ->
