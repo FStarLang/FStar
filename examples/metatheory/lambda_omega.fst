@@ -18,7 +18,8 @@ module LambdaOmega
 
 open FunctionalExtensionality
 
-(* Chapter 29 of TAPL: "Type Operators and Kinding" *)
+(* Chapter 29 of TAPL: "Type Operators and Kinding",
+   proof follows Chapter 30, but we don't consider polymorphism *)
 
 type var = nat
 
@@ -870,51 +871,47 @@ let rec parred_closure_diamond s t u h1 h2 = admit ()
 assume val proposition_30_3_10 : #t:typ -> #s:typ ->
       parred_closure s t ->
       parred_closure t s ->
-      ex (fun u -> xand (parred_closure s u) (parred_closure t u))
+      Tot (ex (fun u -> xand (parred_closure s u) (parred_closure t u)))
 
-assume val corrolary_30_3_11 : #t:typ -> #s:typ ->
+assume val lemma_30_3_4 : s:typ -> t:typ ->
+      Tot (xiff (tequiv s t) (xand (parred_closure s t)(parred_closure t s)))
+
+val corrolary_30_3_11 : #s:typ -> #t:typ ->
       tequiv s t ->
-      ex (fun u -> xand (parred_closure s u) (parred_closure t u))
+      Tot (ex (fun u -> xand (parred_closure s u) (parred_closure t u)))
+let corrolary_30_3_11 s t h =
+  let Conj h' _ = lemma_30_3_4 s t in
+  let Conj h1 h2 = h' h in
+  proposition_30_3_10 h1 h2
 
 assume val parred_tarr_preserved : #s1:typ -> #s2:typ -> #t:typ ->
       parred_closure (TArr s1 s2) t ->
-      ex (fun t1 -> ex (fun t2 -> xand (t = TArr t1 t2)
-                      (xand (parred_closure s1 t1) (parred_closure s2 t2))))
+      Tot (ex (fun t1 -> ex (fun t2 -> xand (t = TArr t1 t2)
+                        (xand (parred_closure s1 t1) (parred_closure s2 t2)))))
 
-assume val inversion_elam : #g:env -> #s1:typ -> #e:exp ->
-       #s:typ -> #t1:typ -> #t2:typ -> typing g (ELam s1 e) s ->
-       tequiv s (TArr t1 t2) ->
-       xand (tequiv t1 s1) (typing (extend_evar g 0 s1) e t2)
+assume val inversion_elam : #g:env -> s1:typ -> e:exp ->
+      #s:typ -> t1:typ -> t2:typ -> typing g (ELam s1 e) s ->
+      tequiv s (TArr t1 t2) ->
+      Tot (xand (tequiv t1 s1) (typing (extend_evar g 0 t1) e t2))
 
-(* these should all follow from the above,
-   so not sure we need to state them explicitly *)
-assume val inversion_elam_tequiv : #g:env -> #s1:typ -> #e:exp ->
-       #t1:typ -> #t2:typ -> typing g (ELam s1 e) (TArr t1 t2) ->
-       tequiv s1 t1
-
-assume val inversion_elam_typing : #g:env -> #s1:typ -> #e:exp ->
-       #t1:typ -> #t2:typ -> typing g (ELam s1 e) (TArr t1 t2) ->
-       typing (extend_evar g 0 s1) e t2
-
-assume val inversion_elam_kinding : #g:env -> #s1:typ -> #e:exp ->
-       #t1:typ -> #t2:typ -> typing g (ELam s1 e) (TArr t1 t2) ->
-       kinding g s1 KTyp
+(* this should follow from the above *)
+val inversion_elam_typing : #g:env -> s1:typ -> e:exp ->
+      t1:typ -> t2:typ -> typing g (ELam s1 e) (TArr t1 t2) ->
+      Tot (typing (extend_evar g 0 t1) e t2)
+let inversion_elam_typing _ s1 e t1 t2 h =
+  let Conj _ hr = inversion_elam s1 e t1 t2 h (EqRefl (TArr t1 t2)) in hr
 
 (* Type preservation *)
 
 val preservation : #e:exp -> #e':exp -> hs:step e e' ->
                    #g:env -> #t:typ -> ht:(typing g e t) ->
                    Tot (typing g e' t) (decreases ht)
-let rec preservation e e' hs g t ht =
+let rec preservation _ _ hs _ _ ht =
   match ht with
-  | TyApp h1 h2 ->
+  | TyApp #g #e1 #e2 #t1 #t2 h1 h2 ->
     (match hs with
-     | SBeta t e1' e2' ->
-        (match h1 with
-(* bogus insufficient pattern arguments here, with or without the implicits
-         | TyLam #g' t_x #e1' #t' hbody -> typing_substitution 0 h2 hbody
-*)
-         | _ -> admit())
+     | SBeta s1 e11 e12 ->
+        typing_substitution 0 h2 (inversion_elam_typing s1 e11 t1 t2 h1)
      | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
      | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2))
-  | _ -> admit()
+  | TyEqu ht1 he hk -> TyEqu (preservation hs ht1) he hk
