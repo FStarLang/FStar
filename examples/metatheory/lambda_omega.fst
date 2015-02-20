@@ -885,7 +885,7 @@ type tred_star_sym : typ -> typ -> Type =
              tred_star_sym t1 t2
 
   | TssStep: #t1:typ -> #t2:typ -> #t3:typ ->
-             tred      t1 t2 ->
+             tred          t1 t2 ->
              tred_star_sym t2 t3 ->
              tred_star_sym t1 t3
 
@@ -895,10 +895,75 @@ val proposition_30_3_10 : #s:typ -> #t:typ ->
       Tot (ex (fun u -> cand (tred_star s u) (tred_star t u)))
 let proposition_30_3_10 s t h = admit()
 
-(* the TAPL proof for this is rather informal *)
-val lemma_30_3_5_ltr : #s:typ -> #t:typ -> tequiv s t ->
-      Tot (tred_star_sym s t)
-let lemma_30_3_5_ltr s t h = admit()
+val tss_tran : #t1:typ -> #t2:typ -> #t3:typ ->
+      h1:(tred_star_sym t1 t2) -> h2:(tred_star_sym t2 t3) ->
+      Tot (tred_star_sym t1 t3) (decreases h2)
+let tss_tran t1 t2 t3 h12 h23 = admit()
+
+val plam_tss : #t1:typ -> #t2:typ -> k:knd ->
+      h:(tred_star_sym t1 t2) ->
+      Tot (tred_star_sym (TLam k t1) (TLam k t2)) (decreases h)
+let rec plam_tss t1 t2 k h =
+  match h with
+  | TssRefl _ -> TssRefl (TLam k t1)
+  | TssSymm h' -> TssSymm (plam_tss k h')
+  | TssStep h1 hs -> TssStep (PLam k h1) (plam_tss k hs)
+
+val papp_tss_1 : #t1:typ -> t2:typ -> #t1':typ ->
+      h:(tred_star_sym t1 t1') ->
+      Tot (tred_star_sym (TApp t1 t2) (TApp t1' t2)) (decreases h)
+let rec papp_tss_1 t1 t2 t1' h =
+  match h with
+  | TssRefl _ -> TssRefl (TApp t1 t2)
+  | TssSymm h' -> TssSymm (papp_tss_1 t2 h')
+  | TssStep h1 hs -> TssStep (PApp h1 (PRefl t2)) (papp_tss_1 t2 hs)
+
+val papp_tss_2 : t1:typ -> #t2:typ -> #t2':typ ->
+      h:(tred_star_sym t2 t2') ->
+      Tot (tred_star_sym (TApp t1 t2) (TApp t1 t2')) (decreases h)
+let rec papp_tss_2 t1 t2 t2' h =
+  match h with
+  | TssRefl _ -> TssRefl (TApp t1 t2)
+  | TssSymm h' -> TssSymm (papp_tss_2 t1 h')
+  | TssStep h1 hs -> TssStep (PApp (PRefl t1) h1) (papp_tss_2 t1 hs)
+
+(* copy paste from above *)
+val parr_tss_1 : #t1:typ -> t2:typ -> #t1':typ ->
+      h:(tred_star_sym t1 t1') ->
+      Tot (tred_star_sym (TArr t1 t2) (TArr t1' t2)) (decreases h)
+let rec parr_tss_1 t1 t2 t1' h =
+  match h with
+  | TssRefl _ -> TssRefl (TArr t1 t2)
+  | TssSymm h' -> TssSymm (parr_tss_1 t2 h')
+  | TssStep h1 hs -> TssStep (PArr h1 (PRefl t2)) (parr_tss_1 t2 hs)
+
+val parr_tss_2 : t1:typ -> #t2:typ -> #t2':typ ->
+      h:(tred_star_sym t2 t2') ->
+      Tot (tred_star_sym (TArr t1 t2) (TArr t1 t2')) (decreases h)
+let rec parr_tss_2 t1 t2 t2' h =
+  match h with
+  | TssRefl _ -> TssRefl (TArr t1 t2)
+  | TssSymm h' -> TssSymm (parr_tss_2 t1 h')
+  | TssStep h1 hs -> TssStep (PArr (PRefl t1) h1) (parr_tss_2 t1 hs)
+
+(* the TAPL proof for this is informal and unclear *)
+val lemma_30_3_5_ltr : #s:typ -> #t:typ -> h:(tequiv s t) ->
+      Tot (tred_star_sym s t) (decreases h)
+let rec lemma_30_3_5_ltr s t h =
+  match h with
+  | EqRefl _ -> TssRefl s
+  | EqSymm h1 -> TssSymm (lemma_30_3_5_ltr h1)
+  | EqTran h1 h2 -> tss_tran (lemma_30_3_5_ltr h1) (lemma_30_3_5_ltr h2)
+  | EqLam #t #t' k h1 -> tss_tran (plam_tss k (lemma_30_3_5_ltr h1))
+                                  (TssRefl (TLam k t'))
+  | EqBeta k t1' t2' -> TssStep (PBeta k (PRefl t1') (PRefl t2'))
+                                (TssRefl (tsubst_beta t2' t1'))
+  | EqApp #t1 #t1' #t2 #t2' h1 h2 ->
+     tss_tran (papp_tss_1 t2  (lemma_30_3_5_ltr h1))
+              (papp_tss_2 t1' (lemma_30_3_5_ltr h2))
+  | EqArr #t1 #t1' #t2 #t2' h1 h2 ->
+     tss_tran (parr_tss_1 t2  (lemma_30_3_5_ltr h1))
+              (parr_tss_2 t1' (lemma_30_3_5_ltr h2))
 
 val tred_tequiv : #s:typ -> #t:typ -> h:(tred s t) ->
                   Tot (tequiv s t) (decreases h)
