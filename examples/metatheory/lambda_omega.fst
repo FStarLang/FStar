@@ -889,19 +889,36 @@ type tred_star_sym : typ -> typ -> Type =
              tred_star_sym t2 t3 ->
              tred_star_sym t1 t3
 
-assume val proposition_30_3_10 : #t:typ -> #s:typ ->
+(* TAPL has a graphical proof only for this (pg. 561) *)
+val proposition_30_3_10 : #s:typ -> #t:typ ->
       tred_star_sym s t ->
       Tot (ex (fun u -> cand (tred_star s u) (tred_star t u)))
+let proposition_30_3_10 s t h = admit()
 
 (* the TAPL proof for this is rather informal *)
 val lemma_30_3_5_ltr : #s:typ -> #t:typ -> tequiv s t ->
       Tot (tred_star_sym s t)
 let lemma_30_3_5_ltr s t h = admit()
 
-(* TAPL calls this direction obvious, it's also apparently not used below? *)
+val tred_tequiv : #s:typ -> #t:typ -> h:(tred s t) ->
+                  Tot (tequiv s t) (decreases h)
+let rec tred_tequiv s t h =
+  match h with
+  | PRefl _ -> EqRefl s
+  | PArr h1 h2 -> EqArr (tred_tequiv h1) (tred_tequiv h2)
+  | PLam k h1 -> EqLam k (tred_tequiv h1)
+  | PApp h1 h2 -> EqApp (tred_tequiv h1) (tred_tequiv h2)
+  | PBeta #t1 #t2 #t1' #t2' k h1 h2 ->
+     EqTran (EqApp (EqLam k (tred_tequiv h1)) (tred_tequiv h2)) (EqBeta k t1' t2')
+
+(* TAPL calls this direction obvious *)
 val lemma_30_3_5_rtl : #s:typ -> #t:typ ->
-      tred_star_sym s t -> Tot (tequiv s t)
-let lemma_30_3_5_rtl s t h = admit()
+      h:(tred_star_sym s t) -> Tot (tequiv s t) (decreases h)
+let rec lemma_30_3_5_rtl s t h =
+  match h with
+  | TssRefl _ -> EqRefl s
+  | TssSymm h' -> EqSymm (lemma_30_3_5_rtl h')
+  | TssStep h1 hs -> EqTran (tred_tequiv h1) (lemma_30_3_5_rtl hs)
 
 val corrolary_30_3_11 : #s:typ -> #t:typ ->
       tequiv s t ->
