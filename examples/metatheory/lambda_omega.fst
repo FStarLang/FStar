@@ -55,14 +55,14 @@ let erenaming_sub_inc _ = ()
 
 let is_evar (e:exp) : int = if is_EVar e then 0 else 1
 
-val esubst : e:exp -> s:esub -> Pure exp (requires True) 
+val esubst : e:exp -> s:esub -> Pure exp (requires True)
       (ensures (fun e' -> erenaming s /\ is_EVar e ==> is_EVar e'))
       (decreases %[is_evar e; is_erenaming s; e])
 let rec esubst e s =
   match e with
   | EVar x -> s x
 
-  | ELam t e1 -> 
+  | ELam t e1 ->
      let subst_elam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) = fun y ->
        if y=0 then EVar y
        else (esubst (s (y - 1)) esub_inc) in
@@ -117,17 +117,17 @@ let trenaming_sub_inc _ = ()
 
 let is_tvar (t:typ) : int = if is_TVar t then 0 else 1
 
-val tsubst : t:typ -> s:tsub -> Pure typ (requires True) 
+val tsubst : t:typ -> s:tsub -> Pure typ (requires True)
       (ensures (fun t' -> trenaming s /\ is_TVar t ==> is_TVar t'))
       (decreases %[is_tvar t; is_trenaming s; t])
 let rec tsubst t s =
   match t with
   | TVar x -> s x
 
-  | TLam k t1 -> 
+  | TLam k t1 ->
      let tsubst_lam : y:var -> Tot (t:typ{trenaming s ==> is_TVar t}) = fun y ->
-       if y=0 
-       then TVar y 
+       if y=0
+       then TVar y
        else (tsubst (s (y - 1)) tsub_inc) in
      TLam k (tsubst t1 tsubst_lam)
 
@@ -589,7 +589,7 @@ let rec tequiv_tshift t1 t2 h x =
 (* typing weakening when type variable binding is added to env *)
 val typing_weakening_tbnd: #g:env -> x:var -> k_x:knd -> #e:exp -> #t:typ ->
       h:(typing g e t) ->
-      Tot (typing (extend_tvar g x k_x) 
+      Tot (typing (extend_tvar g x k_x)
                   (tshift_up_above_e x e) (tshift_up_above x t)) (decreases h)
 let rec typing_weakening_tbnd g x k_x e t h =
   match h with
@@ -976,6 +976,12 @@ let rec tred_tequiv s t h =
   | PBeta #t1 #t2 #t1' #t2' k h1 h2 ->
      EqTran (EqApp (EqLam k (tred_tequiv h1)) (tred_tequiv h2)) (EqBeta k t1' t2')
 
+val tred_star_tequiv : #s:typ -> #t:typ -> h:(tred_star s t) ->
+                       Tot (tequiv s t) (decreases h)
+let rec tred_star_tequiv s t h = match h with
+  | TsRefl _ -> EqRefl s
+  | TsStep h1 h2 -> EqTran (tred_tequiv h1) (tred_star_tequiv h2)
+
 (* TAPL calls this direction obvious *)
 val lemma_30_3_5_rtl : #s:typ -> #t:typ ->
       h:(tred_star_sym s t) -> Tot (tequiv s t) (decreases h)
@@ -991,15 +997,58 @@ val corrolary_30_3_11 : #s:typ -> #t:typ ->
 let corrolary_30_3_11 s t h =
   proposition_30_3_10 (lemma_30_3_5_ltr h)
 
-assume val tred_tarr_preserved : #s1:typ -> #s2:typ -> #t:typ ->
-      tred_star (TArr s1 s2) t ->
-      Tot (ex (fun t1 -> ex (fun t2 -> cand (t = TArr t1 t2)
-                        (cand (tred_star s1 t1) (tred_star s2 t2)))))
+val tred_tarr_preserved : #s1:typ -> #s2:typ -> #t:typ ->
+                          h:(tred_star (TArr s1 s2) t) ->
+                          Tot (ex (fun t1 -> (ex (fun t2 -> (h:(cand (tred_star s1 t1) (tred_star s2 t2)){t = TArr t1 t2})))))
+                          (decreases h)
+let rec tred_tarr_preserved s1 s2 t h =
+  match h with
+    | TsRefl _ -> ExIntro s1 (ExIntro s2 (Conj (TsRefl s1) (TsRefl s2)))
+    | TsStep #s #u #t h1 hs1 ->
+      match h1 with
+  	| PRefl _ -> tred_tarr_preserved hs1
+  	| PArr #s1 #s2 #u1 #u2 h11 h12 ->
+  	  (* AR: does not work without specifying implicits *)
+  	  let ExIntro t1 p = tred_tarr_preserved #u1 #u2 #t hs1 in
+  	  let ExIntro t2 p = p in
+  	  let Conj p1 p2 = p in
+  	  ExIntro t1 (ExIntro t2 (Conj (TsStep h11 p1) (TsStep h12 p2)))
 
-assume val inversion_elam : #g:env -> s1:typ -> e:exp ->
-      #s:typ -> t1:typ -> t2:typ -> typing g (ELam s1 e) s ->
-      tequiv s (TArr t1 t2) ->
-      Tot (cand (tequiv t1 s1) (typing (extend_evar g 0 t1) e t2))
+val inversion_elam : #g:env -> s1:typ -> e:exp ->
+                     #s:typ -> t1:typ -> t2:typ -> ht:typing g (ELam s1 e) s ->
+                     heq:tequiv s (TArr t1 t2) ->
+                     Tot (cand (tequiv t1 s1) (typing (extend_evar g 0 t1) e t2))
+                     (decreases ht)
+let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
+  | TyEqu #g #e' #u #s ht1 heq1 k1 ->
+    inversion_elam s1 e t1 t2 ht1 (EqTran heq1 heq)
+  | TyLam #g s1 #e #s2 hk ht1 ->
+    let ExIntro u p = corrolary_30_3_11 heq in
+    let Conj p1 p2 = p in
+    
+    (* implicits required *)
+    let ExIntro u1 p = tred_tarr_preserved #s1 #s2 #u p1 in
+    let ExIntro u2 p = p in
+    let Conj psu1 psu2 = p in
+
+    (* AR: implicits required *)
+    let ExIntro u1' p = tred_tarr_preserved #t1 #t2 #u p2 in
+    let ExIntro u2' p = p in
+    let Conj ptu1 ptu2 = p in
+    
+    (*
+     * AR: this I think is a hole in TAPL proof ? we have nothing in the
+     * context to show that t2 has kind KTyp in g. one way to get this is
+     * to ensure that typing judgments result in KTyp kinded types. then,
+     * we can argue that s2 is KTyp in g and so, since s2 equiv t2, t2 
+     * has KTyp kind in g. but to show that all typing judgments result in
+     * KTyp kinded types, we need to fix TyVar rule and add a check there.
+     *)
+       
+    let h'':(kinding g t2 KTyp) = admit () in
+
+    Conj (EqTran (tred_star_tequiv ptu1) (EqSymm (tred_star_tequiv psu1)))
+         (TyEqu ht1 (EqTran (tred_star_tequiv psu2) (EqSymm (tred_star_tequiv ptu2))) h'')
 
 (* corollary of inversion_elam *)
 val inversion_elam_typing : #g:env -> s1:typ -> e:exp ->
