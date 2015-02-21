@@ -279,7 +279,7 @@ let rec step_preserves_R e e' t =
        (forall (e'':exp). red t1 e'' ==> red t2 (EApp e' e''))
        (fun _ -> forall_intro #exp #(fun e'' -> red t1 e'' ==> red t2 (EApp e' e''))
                  (fun e'' -> impl_intro' #(red t1 e'') #(red t2 (EApp e' e''))
-                 (fun _ -> step_preserves_R (EApp e e'') (EApp e' e'') t2)))
+                   (fun _ -> step_preserves_R (EApp e e'') (EApp e' e'') t2)))
        (fun _ -> r_arrow t1 t2 e')
   | TPair t1 t2 ->
       step_preserves_R (EFst e) (EFst e') t1;

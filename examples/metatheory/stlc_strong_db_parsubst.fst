@@ -17,6 +17,7 @@
 module StlcStrongDbParSubst
 
 open Constructive
+open Classical
 open FunctionalExtensionality
 
 (* Constructive-style progress and preservation proof for STLC with
@@ -46,9 +47,6 @@ type exp =
 type sub = var -> Tot exp
 
 opaque type renaming (s:sub) = (forall (x:var). is_EVar (s x))
-
-(* My proposal would be to put this in Classic not Tot *)
-assume val excluded_middle : p:Type -> Tot (b:bool{b = true <==> p})
 
 val is_renaming : s:sub -> Tot (n:int{(renaming s ==> n=0) /\
                                       (~(renaming s) ==> n=1)})

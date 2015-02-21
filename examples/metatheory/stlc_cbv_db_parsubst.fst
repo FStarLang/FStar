@@ -76,8 +76,6 @@ val closed : exp -> Tot bool
 let closed = below 0
 
 (* at some point we could try again to relate closed and appears_free *)
-assume val forall_intro : #a:Type -> #p:(a -> Type) ->
-  (x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 (* this didn't work for some reason
   forall_intro #var #(fun (x:var) -> not (appears_free_in x e))
     (fun (x:var) -> typable_empty_closed x h)
