@@ -233,8 +233,8 @@ let tsubst_lam_hoist k t s = admit()
 val tsub_comp : s1:tsub -> s2:tsub -> Tot tsub
 let tsub_comp s1 s2 x = tsubst (s2 x) s1
 
-assume val tsubst_comp : s1:tsub -> s2:tsub -> e:typ -> Lemma
-      (tsubst (tsubst e s2) s1 = tsubst e (tsub_comp s1 s2))
+assume val tsubst_comp : s1:tsub -> s2:tsub -> t:typ -> Lemma
+      (tsubst (tsubst t s2) s1 = tsubst t (tsub_comp s1 s2))
 assume val tsubst_lam_comp : s1:tsub -> s2:tsub -> x:var -> Lemma
       (tsubst_lam (tsub_comp s1 s2) x = tsub_comp (tsubst_lam s1) (tsubst_lam s2) x)
 
@@ -459,6 +459,7 @@ let id x = x
 val fcomp : ('a -> Tot 'b) -> ('b -> Tot 'c) -> 'a -> Tot 'c
 let fcomp f1 f2 a = f2 (f1 a)
 
+(* TODO: used in inversion_elam, finish this *)
 val kinding_tequiv : #g:env -> #t1:typ -> #t2:typ -> #k:knd -> h:(tequiv t1 t2) ->
       Tot (ciff (kinding g t1 k) (kinding g t2 k)) (decreases h)
 let rec kinding_tequiv g _ _ k h =
@@ -635,38 +636,43 @@ let rec tshift_up_above_e x e = match e with
   | ELam t e1 -> ELam (tshift_up_above x t) (tshift_up_above_e x e1)
   | EApp e1 e2 -> EApp (tshift_up_above_e x e1) (tshift_up_above_e x e2)
 
+type aux_typ (x:var) (t2:typ) (y:var) =
+  (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2) y =
+   tsub_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
+             (tsub_inc_above (x+1)) y)
+
+val aux : x:var -> t2:typ -> y:var -> Lemma (aux_typ x t2 y)
+let aux x t2 y = ()
+
 val tshift_up_above_tsubst_beta : x:var -> t1:typ -> t2:typ -> Lemma
     (ensures (tshift_up_above x (tsubst_beta t2 t1) =
               tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1)))
     (decreases t1)
 let rec tshift_up_above_tsubst_beta x t1 t2 =
 
-  (assert(tshift_up_above x (tsubst_beta t2 t1) =
-          tsubst (tsubst_beta t2 t1) (tsub_inc_above x)));
-  (assert(tsubst (tsubst_beta t2 t1) (tsub_inc_above x) =
+  assert(tshift_up_above x (tsubst_beta t2 t1) =
+         tsubst (tsubst_beta t2 t1) (tsub_inc_above x));
+  assert(tshift_up_above x (tsubst_beta t2 t1) =
+         tsubst (tsubst t1 (tsub_beta_gen 0 t2)) (tsub_inc_above x));
+  tsubst_comp (tsub_inc_above x) (tsub_beta_gen 0 t2) t1;
+  assert(tshift_up_above x (tsubst_beta t2 t1) =
+         tsubst t1 (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2)));
 
-          tsubst (tsubst t1 (tsub_beta_gen 0 t2)) (tsub_inc_above x)));
-
-  (assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) =
-          tsubst (tshift_up_above (x + 1) t1)
-                 (tsub_beta_gen 0 (tshift_up_above x t2))));
-  (assert(tsubst (tshift_up_above (x + 1) t1)
-                 (tsub_beta_gen 0 (tshift_up_above x t2)) =
-
-          tsubst (tsubst t1 (tsub_inc_above (x+1)))
-                 (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))));
-
-  match t1 with
-  | TVar y -> ()
-  | TLam k t ->
-     tshift_up_above_lam (x+1) k t;
-     tshift_up_above_lam x k (tsubst_beta_gen 1 t2 t); (* this 1 is a bit suspicious *)
-     tshift_up_above_tsubst_beta (x+1) t t2;
-     admit() (* CH: TODO: crazy without proper reasoning about the hoisting *)
-  | TApp t11 t12 -> tshift_up_above_tsubst_beta x t11 t2;
-                    tshift_up_above_tsubst_beta x t12 t2
-  | TArr t11 t12 -> tshift_up_above_tsubst_beta x t11 t2;
-                    tshift_up_above_tsubst_beta x t12 t2
+  assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) =
+         tsubst (tshift_up_above (x + 1) t1)
+                (tsub_beta_gen 0 (tshift_up_above x t2)));
+  assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) =
+         tsubst (tsubst t1 (tsub_inc_above (x+1)))
+                (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x))));
+  tsubst_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
+              (tsub_inc_above (x+1)) t1;
+  assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) =
+         tsubst t1 (tsub_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
+                              (tsub_inc_above (x+1))));
+  forall_intro #var #(aux_typ x t2) (aux x t2); (* only for speedup *)
+  tsubst_extensional (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2))
+                     (tsub_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
+                                (tsub_inc_above (x+1))) t1
 
 val tequiv_tshift : #t1:typ -> #t2:typ -> h:(tequiv t1 t2) -> x:nat ->
                Tot (tequiv (tshift_up_above x t1) (tshift_up_above x t2))
