@@ -914,14 +914,27 @@ type tred_star_sym : typ -> typ -> Type =
 
 (* TAPL has a graphical proof only for this (pg. 561) *)
 val proposition_30_3_10 : #s:typ -> #t:typ ->
-      tred_star_sym s t ->
+      h:tred_star_sym s t ->
       Tot (ex (fun u -> cand (tred_star s u) (tred_star t u)))
-let proposition_30_3_10 s t h = admit()
+      (decreases h)
+let rec proposition_30_3_10 s t h = match h with
+  | TssRefl s -> ExIntro s (Conj (TsRefl s) (TsRefl s))
+  | TssSymm h1 ->
+    let ExIntro u p = proposition_30_3_10 h1 in
+    let Conj p1 p2 = p in
+    ExIntro u (Conj p2 p1)
+  | TssStep h1 h2 ->
+    let ExIntro u p = proposition_30_3_10 h2 in
+    let Conj p1 p2 = p in
+    ExIntro u (Conj (TsStep h1 p1) p2)
 
 val tss_tran : #t1:typ -> #t2:typ -> #t3:typ ->
       h1:(tred_star_sym t1 t2) -> h2:(tred_star_sym t2 t3) ->
-      Tot (tred_star_sym t1 t3) (decreases h2)
-let tss_tran t1 t2 t3 h12 h23 = admit()
+      Tot (tred_star_sym t1 t3) (decreases h1)
+let rec tss_tran t1 t2 t3 h12 h23 = match h12 with
+  | TssRefl s -> h23
+  | TssStep h121 h122 -> TssStep h121 (tss_tran h122 h23)
+  | TssSymm h21 -> admit () (* TODO *)
 
 val plam_tss : #t1:typ -> #t2:typ -> k:knd ->
       h:(tred_star_sym t1 t2) ->
@@ -1064,7 +1077,7 @@ let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
      * TyEqu to derive typing judgment with result type t2 (ht1 has result type s2).
      * but, TyEqu also requires that g |- t2 :: KTyp, which means we are stuck.
      * i don't see a way to derive this kinding judgment just given the premises.
-     * 
+     *
      * i am fixing it by making sure that all typing judgments result in types
      * that have kind KTyp. so then, we can derive s2::KTyp, and since tequiv s2 t2,
      * we will get t2::KTyp. to do so, i had to make a small change to TyVar
