@@ -942,11 +942,6 @@ let rec proposition_30_3_10 s t h =
       let Conj pu1w pu2w = p in
       ExIntro w (Conj (ts_tran psu1 pu1w) (ts_tran ptu2 pu2w))
 
-val tss_tran : #t1:typ -> #t2:typ -> #t3:typ ->
-      h1:(tred_star_sym t1 t2) -> h2:(tred_star_sym t2 t3) ->
-      Tot (tred_star_sym t1 t3) (decreases h1)
-let tss_tran t1 t2 t3 h1 h2 = TssTran h1 h2
-
 val plam_tss : #t1:typ -> #t2:typ -> k:knd ->
       h:(tred_star_sym t1 t2) ->
       Tot (tred_star_sym (TLam k t1) (TLam k t2)) (decreases h)
@@ -1000,16 +995,16 @@ let rec lemma_30_3_5_ltr s t h =
   match h with
   | EqRefl _ -> TssBase (PRefl s)
   | EqSymm h1 -> TssSym (lemma_30_3_5_ltr h1)
-  | EqTran h1 h2 -> tss_tran (lemma_30_3_5_ltr h1) (lemma_30_3_5_ltr h2)
-  | EqLam #t #t' k h1 -> tss_tran (plam_tss k (lemma_30_3_5_ltr h1))
-                                  (TssBase (PRefl (TLam k t')))
+  | EqTran h1 h2 -> TssTran (lemma_30_3_5_ltr h1) (lemma_30_3_5_ltr h2)
+  | EqLam #t #t' k h1 -> TssTran (plam_tss k (lemma_30_3_5_ltr h1))
+                                 (TssBase (PRefl (TLam k t')))
   | EqBeta k t1' t2' -> TssBase (PBeta k (PRefl t1') (PRefl t2'))
   | EqApp #t1 #t1' #t2 #t2' h1 h2 ->
-    tss_tran (papp_tss_1 t2  (lemma_30_3_5_ltr h1))
-             (papp_tss_2 t1' (lemma_30_3_5_ltr h2))
+    TssTran (papp_tss_1 t2  (lemma_30_3_5_ltr h1))
+            (papp_tss_2 t1' (lemma_30_3_5_ltr h2))
   | EqArr #t1 #t1' #t2 #t2' h1 h2 ->
-     tss_tran (parr_tss_1 t2  (lemma_30_3_5_ltr h1))
-              (parr_tss_2 t1' (lemma_30_3_5_ltr h2))
+     TssTran (parr_tss_1 t2  (lemma_30_3_5_ltr h1))
+             (parr_tss_2 t1' (lemma_30_3_5_ltr h2))
 
 val tred_tequiv : #s:typ -> #t:typ -> h:(tred s t) ->
                   Tot (tequiv s t) (decreases h)
@@ -1043,9 +1038,10 @@ val corrolary_30_3_11 : #s:typ -> #t:typ ->
 let corrolary_30_3_11 s t h = proposition_30_3_10 (lemma_30_3_5_ltr h)
 
 val tred_tarr_preserved : #s1:typ -> #s2:typ -> #t:typ ->
-                          h:(tred_star (TArr s1 s2) t) ->
-                          Tot (ex (fun t1 -> (ex (fun t2 -> (h:(cand (tred_star s1 t1) (tred_star s2 t2)){t = TArr t1 t2})))))
-                          (decreases h)
+      h:(tred_star (TArr s1 s2) t) ->
+      Tot (ex (fun t1 -> (ex (fun t2 ->
+        (u:(cand (tred_star s1 t1) (tred_star s2 t2)){t = TArr t1 t2})))))
+      (decreases h)
 let rec tred_tarr_preserved s1 s2 t h =
   match h with
     | TsRefl _ -> ExIntro s1 (ExIntro s2 (Conj (TsRefl s1) (TsRefl s2)))
@@ -1100,6 +1096,8 @@ let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
      *)
            
     (* AR: removing this type annotation, verification fails after taking a long time *)
+    (* CH: I can reproduce this, even with z3timeout 100 I get:
+       An unknown assertion in the term at this location was not provable *)
     let d1:(cand (kinding g s1 KTyp) (kinding g s2 KTyp)) =
       kinding_inversion_arrow (typing_gives_well_kinded_types ht) in
     let Conj pa pb = d1 in
@@ -1108,10 +1106,14 @@ let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
     let Conj paa pbb = kinding_tequiv pst2 in
         
     let h'':(kinding g t2 KTyp) = paa pb in
-    (* AR: without this unnecessary admit below, verification fails ... why should it matter. note that we have h'' on the previous line with same type, so we don't need this admit ? *)
+    (* AR: without this unnecessary admit below, verification fails ... 
+       why should it matter. note that we have h'' on the previous line
+       with same type, so we don't need this admit ? *)
+    (* CH: I can reproduce this, it seems like a bug *)
     let h'':(kinding g t2 KTyp) = admit () in
 
-    Conj (EqTran (tred_star_tequiv ptu1) (EqSymm (tred_star_tequiv psu1))) (TyEqu ht1 pst2 h'')
+    Conj (EqTran (tred_star_tequiv ptu1) (EqSymm (tred_star_tequiv psu1)))
+         (TyEqu ht1 pst2 h'')
 
 (* corollary of inversion_elam *)
 val inversion_elam_typing : #g:env -> s1:typ -> e:exp ->
