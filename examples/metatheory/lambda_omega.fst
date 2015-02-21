@@ -908,57 +908,61 @@ let rec subst_of_tred s s' x t h =
     | TArr t1 t2 ->
       PArr (subst_of_tred x t1 h) (subst_of_tred x t2 h)
 
-type commute_aux_type (x:var) (y:var) (t1:typ) (t2:typ) (s:typ) (z:var) =
-  (tsub_comp (tsub_beta_gen x s) (tsub_beta_gen y t2) z =
-     tsub_comp (tsub_beta_gen y (tsubst_beta_gen x s t2))
-               (tsub_beta_gen (x + 1) (tshift_up_above y s)) z)
-val commute_aux : x:var -> y:var -> t1:typ -> t2:typ -> s:typ -> z:var ->
-                    Lemma (commute_aux_type x y t1 t2 s z)
-let commute_aux x y t1 t2 s z =
-  let lhs = tsub_comp (tsub_beta_gen x s) (tsub_beta_gen y t2) z in
-  let rhs = tsub_comp (tsub_beta_gen y (tsubst_beta_gen x s t2))
-                   (tsub_beta_gen (x + 1) (tshift_up_above y s)) z in
-  assert(lhs = tsubst (tsub_beta_gen y t2 z) (tsub_beta_gen x s));
-  assert(rhs = tsubst (tsub_beta_gen (x + 1) (tshift_up_above y s) z)
-                      (tsub_beta_gen y (tsubst_beta_gen x s t2)));
+(* This lemma is hopeless! *)
+type commute_aux_type (x:var) (y:var) (sx:typ) (sy:typ) (z:var) =
+  (tsub_comp (tsub_beta_gen x sx) (tsub_beta_gen y sy) z =
+     tsub_comp (tsub_beta_gen y (tsubst_beta_gen x sx sy))
+               (tsub_beta_gen x sx) z)
+val commute_aux : x:var -> y:var -> sx:typ -> sy:typ -> z:var ->
+                    Lemma (commute_aux_type x y sx sy z)
+let commute_aux x y sx sy z =
+  let lhs = tsub_comp (tsub_beta_gen x sx) (tsub_beta_gen y sy) z in
+  let rhs = tsub_comp (tsub_beta_gen y (tsubst_beta_gen x sx sy))
+                      (tsub_beta_gen x sx) z in
+  assert(lhs = tsubst (tsub_beta_gen y sy z) (tsub_beta_gen x sx));
+  assert(rhs = tsubst (tsub_beta_gen x sx z)
+                      (tsub_beta_gen y (tsubst_beta_gen x sx sy)));
   if x < y then
     (if z < x then ()
      else if z = x then
-       (assert(lhs=s);
-        assert(rhs=tsub_beta_gen y (tsubst_beta_gen x s t2) x); assert(rhs=TVar x);
+       (assert(lhs=sx);
+        assert(rhs=tsubst sx (tsub_beta_gen y (tsubst_beta_gen x sx sy)));
          admit()) (* <-- CH: this is already broken! *)
-     else if z = x+1 then admit()
-     else if z > x+1 && z < y then ()
+     else if z > x && z < y then ()
      else if z = y then admit()
      else if z > y then admit()
      else ())
   else admit()
 
-val commute_tsubst_beta_gen: x:nat -> y:nat -> t:typ -> s1:typ -> s2:typ ->
-          Lemma (ensures (tsubst_beta_gen x s1 (tsubst_beta_gen y s2 t) =
-                          tsubst_beta_gen y (tsubst_beta_gen x s1 s2)
-                            (tsubst_beta_gen (x + 1) (tshift_up_above y s1) t)))
-let commute_tsubst_beta_gen x y t s2 s1 =
-  assert(tsubst_beta_gen x s1 (tsubst_beta_gen y s2 t) =
-           tsubst (tsubst t (tsub_beta_gen y s2)) (tsub_beta_gen x s1));
-  tsubst_comp (tsub_beta_gen x s1) (tsub_beta_gen y s2) t;
-  assert(tsubst_beta_gen x s1 (tsubst_beta_gen y s2 t) =
-           tsubst t (tsub_comp (tsub_beta_gen x s1) (tsub_beta_gen y s2)));
+(* This lemma is hopeless! *)
+val commute_tsubst_beta_gen: x:nat -> y:nat -> t:typ -> sx:typ -> sy:typ ->
+          Lemma (ensures (tsubst_beta_gen x sx (tsubst_beta_gen y sy t) =
+                          tsubst_beta_gen y (tsubst_beta_gen x sx sy)
+                            (tsubst_beta_gen (x + 1) (tshift_up_above y sx) t)))
+let commute_tsubst_beta_gen x y t sx sy =
+  assert(tsubst_beta_gen x sx (tsubst_beta_gen y sy t) =
+           tsubst (tsubst t (tsub_beta_gen y sy)) (tsub_beta_gen x sx));
+  tsubst_comp (tsub_beta_gen x sx) (tsub_beta_gen y sy) t;
+  assert(tsubst_beta_gen x sx (tsubst_beta_gen y sy t) =
+           tsubst t (tsub_comp (tsub_beta_gen x sx) (tsub_beta_gen y sy)));
 
-  assert(tsubst_beta_gen y (tsubst_beta_gen x s1 s2)
-                         (tsubst_beta_gen (x + 1) (tshift_up_above y s1) t) =
-         tsubst (tsubst t (tsub_beta_gen (x + 1) (tshift_up_above y s1)))
-                (tsub_beta_gen y (tsubst_beta_gen x s1 s2)));
-  tsubst_comp (tsub_beta_gen y (tsubst_beta_gen x s1 s2))
-              (tsub_beta_gen (x + 1) (tshift_up_above y s1)) t;
-  assert(tsubst_beta_gen y (tsubst_beta_gen x s1 s2)
-                         (tsubst_beta_gen (x + 1) (tshift_up_above y s1) t) =
-         tsubst t (tsub_comp (tsub_beta_gen y (tsubst_beta_gen x s1 s2))
-                              (tsub_beta_gen (x + 1) (tshift_up_above y s1))));
-  forall_intro #var #(commute_aux_type x y t s2 s1) (commute_aux x y t s2 s1);
-  tsubst_extensional (tsub_comp (tsub_beta_gen x s1) (tsub_beta_gen y s2))
-                     (tsub_comp (tsub_beta_gen y (tsubst_beta_gen x s1 s2))
-                              (tsub_beta_gen (x + 1) (tshift_up_above y s1))) t
+  assert(tsubst_beta_gen y (tsubst_beta_gen x sx sy)
+                         (tsubst_beta_gen (x + 1) (tshift_up_above y sx) t) =
+         tsubst (tsubst t (tsub_beta_gen (x + 1) (tshift_up_above y sx)))
+                (tsub_beta_gen y (tsubst_beta_gen x sx sy)));
+  tsubst_comp (tsub_beta_gen y (tsubst_beta_gen x sx sy))
+              (tsub_beta_gen (x + 1) (tshift_up_above y sx)) t;
+  assert(tsubst_beta_gen y (tsubst_beta_gen x sx sy)
+                         (tsubst_beta_gen (x + 1) (tshift_up_above y sx) t) =
+         tsubst t (tsub_comp (tsub_beta_gen y (tsubst_beta_gen x sx sy))
+                              (tsub_beta_gen (x + 1) (tshift_up_above y sx))));
+  admit()
+(*
+  forall_intro #var #(commute_aux_type x y sx sy) (commute_aux x y sx sy);
+  tsubst_extensional (tsub_comp (tsub_beta_gen x sx) (tsub_beta_gen y sy))
+                     (tsub_comp (tsub_beta_gen y (tsubst_beta_gen x sx sy))
+                              (tsub_beta_gen (x + 1) (tshift_up_above y sx))) t
+*)
 
 (* Lemma 30.3.7: t => t' and s => s' implies t[x |-> s] => t'[x |-> s'] *)
 val subst_of_tred_tred: #s:typ -> #s':typ -> #t:typ -> #t':typ -> x:nat ->
