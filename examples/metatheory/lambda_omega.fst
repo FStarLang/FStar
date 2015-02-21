@@ -29,7 +29,7 @@ type knd =
 
 type typ =
   | TVar : var -> typ
-  | TLam : knd -> t:typ -> typ 
+  | TLam : knd -> t:typ -> typ
   | TApp : typ -> typ -> typ
   | TArr : typ -> typ -> typ
 
@@ -899,16 +899,19 @@ let rec confluence s t u h1 h2 =
      let Conj p1' p2' = p' in
      ExIntro v (Conj p1' (TsStep p2 p2'))
 
+assume val ts_tran: #s:typ -> #t:typ -> #u:typ ->
+	     h1:tred_star s t -> h2:tred_star t u -> Tot (tred_star s u)
+             (decreases h1)
+
 type tred_star_sym : typ -> typ -> Type =
-  | TssRefl: t:typ ->
-             tred_star_sym t t
-
-  | TssSymm: #t1:typ -> #t2:typ ->
-             tred_star_sym t2 t1 ->
+  | TssBase: #t1:typ -> #t2:typ ->
+             tred t1 t2 ->
              tred_star_sym t1 t2
-
-  | TssStep: #t1:typ -> #t2:typ -> #t3:typ ->
-             tred          t1 t2 ->
+  | TssSym: #t1:typ -> #t2:typ ->
+            tred_star_sym t2 t1 ->
+            tred_star_sym t1 t2
+  | TssTran: #t1:typ -> #t2:typ -> #t3:typ ->
+             tred_star_sym t1 t2 ->
              tred_star_sym t2 t3 ->
              tred_star_sym t1 t3
 
@@ -917,51 +920,54 @@ val proposition_30_3_10 : #s:typ -> #t:typ ->
       h:tred_star_sym s t ->
       Tot (ex (fun u -> cand (tred_star s u) (tred_star t u)))
       (decreases h)
-let rec proposition_30_3_10 s t h = match h with
-  | TssRefl s -> ExIntro s (Conj (TsRefl s) (TsRefl s))
-  | TssSymm h1 ->
-    let ExIntro u p = proposition_30_3_10 h1 in
-    let Conj p1 p2 = p in
-    ExIntro u (Conj p2 p1)
-  | TssStep h1 h2 ->
-    let ExIntro u p = proposition_30_3_10 h2 in
-    let Conj p1 p2 = p in
-    ExIntro u (Conj (TsStep h1 p1) p2)
+let rec proposition_30_3_10 s t h =
+  match h with
+    | TssBase h1 -> ExIntro t (Conj (TsStep h1 (TsRefl t)) (TsRefl t))
+    | TssSym h1 ->
+      let ExIntro u p = proposition_30_3_10 h1 in
+      let Conj p1 p2 = p in
+      ExIntro u (Conj p2 p1)
+    | TssTran #s #v #t h1 h2 ->
+      let ExIntro u1 p = proposition_30_3_10 h1 in
+      let Conj psu1 pvu1 = p in
+      let ExIntro u2 p = proposition_30_3_10 h2 in
+      let Conj pvu2 ptu2 = p in
+      
+      let ExIntro w p = confluence pvu1 pvu2 in
+      let Conj pu1w pu2w = p in
+      ExIntro w (Conj (ts_tran psu1 pu1w) (ts_tran ptu2 pu2w))
 
 val tss_tran : #t1:typ -> #t2:typ -> #t3:typ ->
       h1:(tred_star_sym t1 t2) -> h2:(tred_star_sym t2 t3) ->
       Tot (tred_star_sym t1 t3) (decreases h1)
-let rec tss_tran t1 t2 t3 h12 h23 = match h12 with
-  | TssRefl s -> h23
-  | TssStep h121 h122 -> TssStep h121 (tss_tran h122 h23)
-  | TssSymm h21 -> admit () (* TODO *)
+let tss_tran t1 t2 t3 h1 h2 = TssTran h1 h2
 
 val plam_tss : #t1:typ -> #t2:typ -> k:knd ->
       h:(tred_star_sym t1 t2) ->
       Tot (tred_star_sym (TLam k t1) (TLam k t2)) (decreases h)
 let rec plam_tss t1 t2 k h =
   match h with
-  | TssRefl _ -> TssRefl (TLam k t1)
-  | TssSymm h' -> TssSymm (plam_tss k h')
-  | TssStep h1 hs -> TssStep (PLam k h1) (plam_tss k hs)
+    | TssBase h1 -> TssBase (PLam k h1)
+    | TssSym h1 -> TssSym (plam_tss k h1)
+    | TssTran h1 h2 -> TssTran (plam_tss k h1) (plam_tss k h2)
 
 val papp_tss_1 : #t1:typ -> t2:typ -> #t1':typ ->
       h:(tred_star_sym t1 t1') ->
       Tot (tred_star_sym (TApp t1 t2) (TApp t1' t2)) (decreases h)
 let rec papp_tss_1 t1 t2 t1' h =
   match h with
-  | TssRefl _ -> TssRefl (TApp t1 t2)
-  | TssSymm h' -> TssSymm (papp_tss_1 t2 h')
-  | TssStep h1 hs -> TssStep (PApp h1 (PRefl t2)) (papp_tss_1 t2 hs)
+    | TssBase h1 -> TssBase (PApp h1 (PRefl t2))
+    | TssSym h1 -> TssSym (papp_tss_1 t2 h1)
+    | TssTran h1 h2 -> TssTran (papp_tss_1 t2 h1) (papp_tss_1 t2 h2)
 
 val papp_tss_2 : t1:typ -> #t2:typ -> #t2':typ ->
       h:(tred_star_sym t2 t2') ->
       Tot (tred_star_sym (TApp t1 t2) (TApp t1 t2')) (decreases h)
 let rec papp_tss_2 t1 t2 t2' h =
   match h with
-  | TssRefl _ -> TssRefl (TApp t1 t2)
-  | TssSymm h' -> TssSymm (papp_tss_2 t1 h')
-  | TssStep h1 hs -> TssStep (PApp (PRefl t1) h1) (papp_tss_2 t1 hs)
+    | TssBase h1 -> TssBase (PApp (PRefl t1) h1)
+    | TssSym h1 -> TssSym (papp_tss_2 t1 h1)
+    | TssTran h1 h2 -> TssTran (papp_tss_2 t1 h1) (papp_tss_2 t1 h2)
 
 (* copy paste from above *)
 val parr_tss_1 : #t1:typ -> t2:typ -> #t1':typ ->
@@ -969,34 +975,33 @@ val parr_tss_1 : #t1:typ -> t2:typ -> #t1':typ ->
       Tot (tred_star_sym (TArr t1 t2) (TArr t1' t2)) (decreases h)
 let rec parr_tss_1 t1 t2 t1' h =
   match h with
-  | TssRefl _ -> TssRefl (TArr t1 t2)
-  | TssSymm h' -> TssSymm (parr_tss_1 t2 h')
-  | TssStep h1 hs -> TssStep (PArr h1 (PRefl t2)) (parr_tss_1 t2 hs)
+    | TssBase h1 -> TssBase (PArr h1 (PRefl t2))
+    | TssSym h1 -> TssSym (parr_tss_1 t2 h1)
+    | TssTran h1 h2 -> TssTran (parr_tss_1 t2 h1) (parr_tss_1 t2 h2)
 
 val parr_tss_2 : t1:typ -> #t2:typ -> #t2':typ ->
       h:(tred_star_sym t2 t2') ->
       Tot (tred_star_sym (TArr t1 t2) (TArr t1 t2')) (decreases h)
 let rec parr_tss_2 t1 t2 t2' h =
   match h with
-  | TssRefl _ -> TssRefl (TArr t1 t2)
-  | TssSymm h' -> TssSymm (parr_tss_2 t1 h')
-  | TssStep h1 hs -> TssStep (PArr (PRefl t1) h1) (parr_tss_2 t1 hs)
+    | TssBase h1 -> TssBase (PArr (PRefl t1) h1)
+    | TssSym h1 -> TssSym (parr_tss_2 t1 h1)
+    | TssTran h1 h2 -> TssTran (parr_tss_2 t1 h1) (parr_tss_2 t1 h2)
 
 (* the TAPL proof for this is informal and unclear *)
 val lemma_30_3_5_ltr : #s:typ -> #t:typ -> h:(tequiv s t) ->
       Tot (tred_star_sym s t) (decreases h)
 let rec lemma_30_3_5_ltr s t h =
   match h with
-  | EqRefl _ -> TssRefl s
-  | EqSymm h1 -> TssSymm (lemma_30_3_5_ltr h1)
+  | EqRefl _ -> TssBase (PRefl s)
+  | EqSymm h1 -> TssSym (lemma_30_3_5_ltr h1)
   | EqTran h1 h2 -> tss_tran (lemma_30_3_5_ltr h1) (lemma_30_3_5_ltr h2)
   | EqLam #t #t' k h1 -> tss_tran (plam_tss k (lemma_30_3_5_ltr h1))
-                                  (TssRefl (TLam k t'))
-  | EqBeta k t1' t2' -> TssStep (PBeta k (PRefl t1') (PRefl t2'))
-                                (TssRefl (tsubst_beta t2' t1'))
+                                  (TssBase (PRefl (TLam k t')))
+  | EqBeta k t1' t2' -> TssBase (PBeta k (PRefl t1') (PRefl t2'))
   | EqApp #t1 #t1' #t2 #t2' h1 h2 ->
-     tss_tran (papp_tss_1 t2  (lemma_30_3_5_ltr h1))
-              (papp_tss_2 t1' (lemma_30_3_5_ltr h2))
+    tss_tran (papp_tss_1 t2  (lemma_30_3_5_ltr h1))
+             (papp_tss_2 t1' (lemma_30_3_5_ltr h2))
   | EqArr #t1 #t1' #t2 #t2' h1 h2 ->
      tss_tran (parr_tss_1 t2  (lemma_30_3_5_ltr h1))
               (parr_tss_2 t1' (lemma_30_3_5_ltr h2))
@@ -1023,15 +1028,14 @@ val lemma_30_3_5_rtl : #s:typ -> #t:typ ->
       h:(tred_star_sym s t) -> Tot (tequiv s t) (decreases h)
 let rec lemma_30_3_5_rtl s t h =
   match h with
-  | TssRefl _ -> EqRefl s
-  | TssSymm h' -> EqSymm (lemma_30_3_5_rtl h')
-  | TssStep h1 hs -> EqTran (tred_tequiv h1) (lemma_30_3_5_rtl hs)
+    | TssBase h1 -> tred_tequiv h1
+    | TssSym h1 -> EqSymm (lemma_30_3_5_rtl h1)
+    | TssTran h1 h2 -> EqTran (lemma_30_3_5_rtl h1) (lemma_30_3_5_rtl h2)
 
 val corrolary_30_3_11 : #s:typ -> #t:typ ->
       tequiv s t ->
       Tot (ex (fun u -> cand (tred_star s u) (tred_star t u)))
-let corrolary_30_3_11 s t h =
-  proposition_30_3_10 (lemma_30_3_5_ltr h)
+let corrolary_30_3_11 s t h = proposition_30_3_10 (lemma_30_3_5_ltr h)
 
 val tred_tarr_preserved : #s1:typ -> #s2:typ -> #t:typ ->
                           h:(tred_star (TArr s1 s2) t) ->
