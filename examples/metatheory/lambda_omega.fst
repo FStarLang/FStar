@@ -299,6 +299,7 @@ type tequiv : typ -> typ -> Type =
 type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
             x:var{is_Some (lookup_evar g x)} ->
+            kinding g (Some.v (lookup_evar g x)) KTyp ->
             typing g (EVar x) (Some.v (lookup_evar g x))
   | TyLam : #g:env ->
             t:typ ->
@@ -437,7 +438,7 @@ val econtext_invariance : #e:exp -> #g:env -> #t:typ ->
       Tot (typing g' e t) (decreases h)
 let rec econtext_invariance _ _ t h g' =
   match h with
-    | TyVar x -> TyVar x
+    | TyVar x h -> TyVar x (kinding_extensional h g')
     | TyLam #g t_y #e1 #t' hk h1 ->
       TyLam t_y (tcontext_invariance hk g')
   	(econtext_invariance #e1 #(extend_evar g 0 t_y) #t' h1
@@ -445,6 +446,7 @@ let rec econtext_invariance _ _ t h g' =
     | TyApp h1 h2 -> TyApp (econtext_invariance h1 g')
                            (econtext_invariance h2 g')
     | TyEqu h1 eq k -> TyEqu (econtext_invariance h1 g') eq (kinding_extensional k g')
+
 
 (* kinding weakening when a term variable binding is added to env *)
 val kinding_weakening_ebnd : #g:env -> #t:typ -> #k:knd ->
@@ -503,6 +505,23 @@ val kinding_strengthening_ebnd : g:env -> x:var -> t_x:typ -> #t:typ -> #k:knd -
       Tot (kinding g t k) (decreases h)
 let kinding_strengthening_ebnd g x t_x t k h = kinding_extensional h g
 
+val kinding_inversion_arrow: #g:env -> #t1:typ -> #t2:typ ->
+                             h:(kinding g (TArr t1 t2) KTyp) ->
+                             Tot (cand (kinding g t1 KTyp) (kinding g t2 KTyp))
+let rec kinding_inversion_arrow g t1 t2 h = match h with
+  | KiArr h1 h2 -> Conj h1 h2
+
+val typing_gives_well_kinded_types: #g:env -> #e:exp -> #t:typ ->
+                                    h:(typing g e t) ->
+                                    Tot (kinding g t KTyp) (decreases h)
+let rec typing_gives_well_kinded_types g e t h = match h with
+  | TyVar x h -> h
+  | TyLam t' hk h1 -> KiArr hk (kinding_strengthening_ebnd g 0 t' (typing_gives_well_kinded_types h1))
+  | TyApp #g #e1 #e2 #t1 #t2 h1 h2 ->
+    let Conj pa pb = kinding_inversion_arrow #g #t1 #t2 (typing_gives_well_kinded_types h1) in
+    pb
+  | TyEqu h1 eq hk -> hk
+
 (* this folows from functional extensionality *)
 val typing_extensional: #g:env -> #e:exp -> #t:typ -> h:(typing g e t) ->
                 g':env{FEq (MkEnv.x g) (MkEnv.x g') /\
@@ -516,7 +535,9 @@ val typing_weakening_ebnd: #g:env -> x:var -> t_x:typ -> #e:exp -> #t:typ ->
                                       (eshift_up_above x e) t) (decreases h)
 let rec typing_weakening_ebnd g x t_x e t h =
   match h with
-    | TyVar y -> if y < x then TyVar y else TyVar (y+1)
+    | TyVar y h ->
+      let h1 = kinding_weakening_ebnd h x t_x in
+      if y < x then TyVar y h1 else TyVar (y+1) h1
     | TyLam #g t_y #e' #t'' kh h21 ->
       eshift_up_above_lam x t_y e';
       let h21 = typing_weakening_ebnd (x+1) t_x h21 in
@@ -593,7 +614,7 @@ val typing_weakening_tbnd: #g:env -> x:var -> k_x:knd -> #e:exp -> #t:typ ->
                   (tshift_up_above_e x e) (tshift_up_above x t)) (decreases h)
 let rec typing_weakening_tbnd g x k_x e t h =
   match h with
-    | TyVar y -> TyVar y
+    | TyVar y h -> TyVar y (kinding_weakening_tbnd h x k_x)
     | TyLam #g t' #e1 #t'' kh h1 ->
       TyLam (tshift_up_above x t') (kinding_weakening_tbnd kh x k_x)
             (typing_extensional (typing_weakening_tbnd x k_x h1)
@@ -616,9 +637,11 @@ val typing_substitution: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ ->
       Tot (typing g (esubst_beta_gen x v e) t) (decreases %[e;h2])
 let rec typing_substitution x e v t_x t g h1 h2 =
   match h2 with
-    | TyVar y -> if x = y then h1
+    | TyVar y hk ->
+      (*let hk1 = kinding_strengthening_ebnd g x t_x t KTyp hk in*)
+      if x = y then h1
       else if y < x then econtext_invariance h2 g
-      else TyVar (y - 1)
+      else TyVar (y - 1) (kinding_strengthening_ebnd g x t_x hk)
     | TyLam #g' t_y #e' #t' kh h21 ->
       let h21' = typing_extensional h21 (extend_evar (extend_evar g 0 t_y) (x+1) t_x) in
       let h1' = typing_weakening_ebnd 0 t_y h1 in
@@ -1037,18 +1060,36 @@ let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
     let Conj ptu1 ptu2 = p in
     
     (*
-     * AR: this I think is a hole in TAPL proof ? we have nothing in the
-     * context to show that t2 has kind KTyp in g. one way to get this is
-     * to ensure that typing judgments result in KTyp kinded types. then,
-     * we can argue that s2 is KTyp in g and so, since s2 equiv t2, t2 
-     * has KTyp kind in g. but to show that all typing judgments result in
-     * KTyp kinded types, we need to fix TyVar rule and add a check there.
+     * AR: so now we have tequiv s2 t2, and ht1. as TAPL says, we now want to use
+     * TyEqu to derive typing judgment with result type t2 (ht1 has result type s2).
+     * but, TyEqu also requires that g |- t2 :: KTyp, which means we are stuck.
+     * i don't see a way to derive this kinding judgment just given the premises.
+     * 
+     * i am fixing it by making sure that all typing judgments result in types
+     * that have kind KTyp. so then, we can derive s2::KTyp, and since tequiv s2 t2,
+     * we will get t2::KTyp. to do so, i had to make a small change to TyVar
+     * requiring that the lookup type has kind KTyp.
      *)
-       
+    
+    (*
+     * AR: the code below is somewhat unstable. for example, removing type annotations
+     * fails verification, without an unnecessary admit below, the verification
+     * fails, cannot use Conj.pb directly, have to let bind.
+     *)
+           
+    (* AR: removing this type annotation, verification fails after taking a long time *)
+    let d1:(cand (kinding g s1 KTyp) (kinding g s2 KTyp)) =
+      kinding_inversion_arrow (typing_gives_well_kinded_types ht) in
+    let Conj pa pb = d1 in
+
+    let pst2 = EqTran (tred_star_tequiv psu2) (EqSymm (tred_star_tequiv ptu2)) in
+    let Conj paa pbb = kinding_tequiv pst2 in
+        
+    let h'':(kinding g t2 KTyp) = paa pb in
+    (* AR: without this unnecessary admit below, verification fails ... why should it matter. note that we have h'' on the previous line with same type, so we don't need this admit ? *)
     let h'':(kinding g t2 KTyp) = admit () in
 
-    Conj (EqTran (tred_star_tequiv ptu1) (EqSymm (tred_star_tequiv psu1)))
-         (TyEqu ht1 (EqTran (tred_star_tequiv psu2) (EqSymm (tred_star_tequiv ptu2))) h'')
+    Conj (EqTran (tred_star_tequiv ptu1) (EqSymm (tred_star_tequiv psu1))) (TyEqu ht1 pst2 h'')
 
 (* corollary of inversion_elam *)
 val inversion_elam_typing : #g:env -> s1:typ -> e:exp ->
