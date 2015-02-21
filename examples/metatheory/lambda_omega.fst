@@ -885,7 +885,7 @@ let rec tred_shiftup_above t t' x h =
       tshift_up_above_tsubst_beta x t1' t2';
       PBeta k (tred_shiftup_above (x + 1) h1) (tred_shiftup_above x h2)
 
-(* s => s' implies t[y |-> s] => t[y |-> s'] *)
+(* Lemma 30.3.6: s => s' implies t[y |-> s] => t[y |-> s'] *)
 val subst_of_tred: #s:typ -> #s':typ -> x:nat -> t:typ ->
                    h:(tred s s') ->
                    Tot (tred (tsubst_beta_gen x s t) (tsubst_beta_gen x s' t))
@@ -934,33 +934,33 @@ let commute_aux x y t1 t2 s z =
      else ())
   else admit()
 
-val commute_tsubst_beta_gen: x:nat -> y:nat -> t1:typ -> t2:typ -> s:typ ->
-          Lemma (ensures (tsubst_beta_gen x s (tsubst_beta_gen y t2 t1) =
-                          tsubst_beta_gen y (tsubst_beta_gen x s t2)
-                            (tsubst_beta_gen (x + 1) (tshift_up_above y s) t1)))
-let commute_tsubst_beta_gen x y t1 t2 s =
-  assert(tsubst_beta_gen x s (tsubst_beta_gen y t2 t1) =
-           tsubst (tsubst t1 (tsub_beta_gen y t2)) (tsub_beta_gen x s));
-  tsubst_comp (tsub_beta_gen x s) (tsub_beta_gen y t2) t1;
-  assert(tsubst_beta_gen x s (tsubst_beta_gen y t2 t1) =
-           tsubst t1 (tsub_comp (tsub_beta_gen x s) (tsub_beta_gen y t2)));
+val commute_tsubst_beta_gen: x:nat -> y:nat -> t:typ -> s1:typ -> s2:typ ->
+          Lemma (ensures (tsubst_beta_gen x s1 (tsubst_beta_gen y s2 t) =
+                          tsubst_beta_gen y (tsubst_beta_gen x s1 s2)
+                            (tsubst_beta_gen (x + 1) (tshift_up_above y s1) t)))
+let commute_tsubst_beta_gen x y t s2 s1 =
+  assert(tsubst_beta_gen x s1 (tsubst_beta_gen y s2 t) =
+           tsubst (tsubst t (tsub_beta_gen y s2)) (tsub_beta_gen x s1));
+  tsubst_comp (tsub_beta_gen x s1) (tsub_beta_gen y s2) t;
+  assert(tsubst_beta_gen x s1 (tsubst_beta_gen y s2 t) =
+           tsubst t (tsub_comp (tsub_beta_gen x s1) (tsub_beta_gen y s2)));
 
-  assert(tsubst_beta_gen y (tsubst_beta_gen x s t2)
-                         (tsubst_beta_gen (x + 1) (tshift_up_above y s) t1) =
-         tsubst (tsubst t1 (tsub_beta_gen (x + 1) (tshift_up_above y s)))
-                (tsub_beta_gen y (tsubst_beta_gen x s t2)));
-  tsubst_comp (tsub_beta_gen y (tsubst_beta_gen x s t2))
-              (tsub_beta_gen (x + 1) (tshift_up_above y s)) t1;
-  assert(tsubst_beta_gen y (tsubst_beta_gen x s t2)
-                         (tsubst_beta_gen (x + 1) (tshift_up_above y s) t1) =
-         tsubst t1 (tsub_comp (tsub_beta_gen y (tsubst_beta_gen x s t2))
-                              (tsub_beta_gen (x + 1) (tshift_up_above y s))));
-  forall_intro #var #(commute_aux_type x y t1 t2 s) (commute_aux x y t1 t2 s);
-  tsubst_extensional (tsub_comp (tsub_beta_gen x s) (tsub_beta_gen y t2))
-                     (tsub_comp (tsub_beta_gen y (tsubst_beta_gen x s t2))
-                              (tsub_beta_gen (x + 1) (tshift_up_above y s))) t1
+  assert(tsubst_beta_gen y (tsubst_beta_gen x s1 s2)
+                         (tsubst_beta_gen (x + 1) (tshift_up_above y s1) t) =
+         tsubst (tsubst t (tsub_beta_gen (x + 1) (tshift_up_above y s1)))
+                (tsub_beta_gen y (tsubst_beta_gen x s1 s2)));
+  tsubst_comp (tsub_beta_gen y (tsubst_beta_gen x s1 s2))
+              (tsub_beta_gen (x + 1) (tshift_up_above y s1)) t;
+  assert(tsubst_beta_gen y (tsubst_beta_gen x s1 s2)
+                         (tsubst_beta_gen (x + 1) (tshift_up_above y s1) t) =
+         tsubst t (tsub_comp (tsub_beta_gen y (tsubst_beta_gen x s1 s2))
+                              (tsub_beta_gen (x + 1) (tshift_up_above y s1))));
+  forall_intro #var #(commute_aux_type x y t s2 s1) (commute_aux x y t s2 s1);
+  tsubst_extensional (tsub_comp (tsub_beta_gen x s1) (tsub_beta_gen y s2))
+                     (tsub_comp (tsub_beta_gen y (tsubst_beta_gen x s1 s2))
+                              (tsub_beta_gen (x + 1) (tshift_up_above y s1))) t
 
-(* t => t' and s => s' implies t[x |-> s] => t'[x |-> s'] *)
+(* Lemma 30.3.7: t => t' and s => s' implies t[x |-> s] => t'[x |-> s'] *)
 val subst_of_tred_tred: #s:typ -> #s':typ -> #t:typ -> #t':typ -> x:nat ->
                        hs:(tred s s') -> ht:(tred t t') ->
                        Tot (tred (tsubst_beta_gen x s t) (tsubst_beta_gen x s' t'))
@@ -980,7 +980,7 @@ let rec subst_of_tred_tred s s' t t' x hs ht =
       tsubst_gen_tlam x s k t1;
       let ht1' = subst_of_tred_tred (x + 1) (tred_shiftup_above 0 hs) ht1 in
       let ht2' = subst_of_tred_tred x hs ht2 in
-      commute_tsubst_beta_gen x 0 t1' t2' s';
+      commute_tsubst_beta_gen x 0 t1' s' t2';
       PBeta k ht1' ht2'
 
 type ltup =
