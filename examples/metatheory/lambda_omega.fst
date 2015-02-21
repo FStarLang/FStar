@@ -17,6 +17,7 @@
 module LambdaOmega
 
 open Constructive
+open Classical
 open FunctionalExtensionality
 
 (* Chapter 29 of TAPL: "Type Operators and Kinding",
@@ -45,8 +46,9 @@ type exp =
 type esub = var -> Tot exp
 type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 
-assume val is_erenaming : s:esub -> Tot (n:int{(erenaming s ==> n=0) /\
-                                               (~(erenaming s) ==> n=1)})
+val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
+                                        (~(erenaming s) ==> n=1)})
+let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
 
 val esub_inc : var -> Tot exp
 let esub_inc y = EVar (y+1)
@@ -64,10 +66,10 @@ let rec esubst e s =
   | EVar x -> s x
 
   | ELam t e1 ->
-     let subst_elam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) = fun y ->
+     let esubst_lam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) = fun y ->
        if y=0 then EVar y
        else (esubst (s (y - 1)) esub_inc) in
-     ELam t (esubst e1 subst_elam)
+     ELam t (esubst e1 esubst_lam)
      
   | EApp e1 e2 -> EApp (esubst e1 s) (esubst e2 s)
 
@@ -84,11 +86,80 @@ let esubst_extensional s1 s2 e = ()
 
 (* This only works automatically with the patterns in subst_extensional above;
    it would be a lot cooler if this worked without, since that increases checking time.
-   Even worse, there is no way to prove this without the SMTPat (e.g. manually). *)
+   Even worse, there is no way to prove this without the SMTPat (e.g. manually),
+   or to use the SMTPat only locally, in this definition (`using` needed). *)
 val esubst_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
       (ensures (esubst (ELam t e) s = ELam t (esubst e (esubst_lam s))))
 (*      [SMTPat (esubst (ELam t e) s)] -- even this increases running time by 10 secs *)
 let esubst_lam_hoist t e s = admit()
+
+(* Substitution composition *)
+
+val esub_comp : s1:esub -> s2:esub -> Tot esub
+let esub_comp s1 s2 x = esubst (s2 x) s1
+
+val esub_comp_inc : s:esub -> x:var -> Lemma
+      (esub_comp esub_inc s x = esub_comp (esubst_lam s) esub_inc x)
+let esub_comp_inc s x =
+  assert(esub_comp esub_inc s x = esubst (s x) esub_inc);
+  assert(esub_comp (esubst_lam s) esub_inc x = esubst (EVar (x+1)) (esubst_lam s));
+  assert(esub_comp (esubst_lam s) esub_inc x = esubst_lam s (x+1));
+  assert(esub_comp (esubst_lam s) esub_inc x = esubst (s x) esub_inc)
+
+type stupid_annotation (s:esub) (x:var) =
+  (esub_comp esub_inc s x = esub_comp (esubst_lam s) esub_inc x)
+
+val esubst_comp : s1:esub -> s2:esub -> e:exp -> Lemma
+      (esubst (esubst e s2) s1 = esubst e (esub_comp s1 s2))
+      (decreases e) (* <-- not really *)
+val esubst_lam_comp : s1:esub -> s2:esub -> x:var -> Lemma
+      (esubst_lam (esub_comp s1 s2) x = esub_comp (esubst_lam s1) (esubst_lam s2) x)
+
+type silly_annotation (s1:esub) (s2:esub) (x:var) =
+  (esubst_lam (esub_comp s1 s2) x = esub_comp (esubst_lam s1) (esubst_lam s2) x)
+
+let rec esubst_comp s1 s2 e =
+  match e with
+  | EVar x -> ()
+  | EApp e1 e2 -> esubst_comp s1 s2 e1; esubst_comp s1 s2 e2
+  | ELam t e1 ->
+     esubst_lam_hoist t e1 s2;
+     assert(esubst (ELam t e1) s2 = ELam t (esubst e1 (esubst_lam s2)));
+     esubst_lam_hoist t (esubst e1 (esubst_lam s2)) s1;
+     assert(esubst (esubst (ELam t e1) s2) s1 =
+              ELam t (esubst (esubst e1 (esubst_lam s2)) (esubst_lam s1)));
+     esubst_lam_hoist t e1 (esub_comp s1 s2);
+     assert(esubst (ELam t e1) (esub_comp s1 s2) =
+              ELam t (esubst e1 (esubst_lam (esub_comp s1 s2))));
+     esubst_comp (esubst_lam s1) (esubst_lam s2) e1;
+     assert(esubst (esubst (ELam t e1) s2) s1 =
+              ELam t (esubst e1 (esub_comp (esubst_lam s1) (esubst_lam s2))));
+     forall_intro #var #(silly_annotation s1 s2) (esubst_lam_comp s1 s2);
+     esubst_extensional (esubst_lam (esub_comp s1 s2))
+                        (esub_comp (esubst_lam s1) (esubst_lam s2)) e1
+and esubst_lam_comp s1 s2 x =
+  match x with
+  | 0 -> ()
+  | _ ->
+     (assert(esubst_lam (esub_comp s1 s2) x =
+             esubst ((esub_comp s1 s2) (x-1)) esub_inc);
+      assert(esubst_lam (esub_comp s1 s2) x =
+             esubst (esubst (s2 (x-1)) s1) esub_inc);
+      esubst_comp esub_inc s1 (s2 (x-1));
+      assert(esubst_lam (esub_comp s1 s2) x =
+             esubst (s2 (x-1)) (esub_comp esub_inc s1));
+
+      assert(esub_comp (esubst_lam s1) (esubst_lam s2) x =
+             esubst (esubst_lam s2 x) (esubst_lam s1));
+      assert(esub_comp (esubst_lam s1) (esubst_lam s2) x =
+             esubst (esubst (s2 (x-1)) esub_inc) (esubst_lam s1));
+      esubst_comp (esubst_lam s1) esub_inc (s2 (x-1));
+      assert(esub_comp (esubst_lam s1) (esubst_lam s2) x =
+             esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc));
+
+      forall_intro #var #(stupid_annotation s1) (esub_comp_inc s1);
+      esubst_extensional (esub_comp esub_inc s1)
+                         (esub_comp (esubst_lam s1) esub_inc) (s2 (x-1)))
 
 (* subst_beta_gen is a generalization of the substitution we do for
    the beta rule, when we've under x binders
@@ -105,11 +176,13 @@ let esubst_beta e' e = esubst_beta_gen 0 e' e
 
 (* Substitution on types is very much analogous *)
 
+(*
 type tsub = var -> Tot typ
 type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
 
-assume val is_trenaming : s:tsub -> Tot (n:int{(trenaming s ==> n=0) /\
-                                               (~(trenaming s) ==> n=1)})
+val is_trenaming : s:tsub -> Tot (n:int{(  trenaming s  ==> n=0) /\
+                                        (~(trenaming s) ==> n=1)})
+let is_trenaming s = (if excluded_middle (trenaming s) then 0 else 1)
 
 val tsub_inc : var -> Tot typ
 let tsub_inc y = TVar (y+1)
@@ -625,7 +698,7 @@ val esubst_gen_elam : x:var -> e:exp -> t:typ -> e':exp -> Lemma
                        ELam t (esubst_beta_gen (x + 1) (eshift_up e) e')))
 let esubst_gen_elam x e t e' =
   esubst_lam_hoist t e' (esub_beta_gen x e); admit()
-(* can't prove the two substitutions equal
+(* can't prove the two substitutions equal directly
   esubst_extensional (esubst_lam (esub_beta_gen x e))
                      (esub_beta_gen (x + 1) (eshift_up e)) e'
 *)
@@ -1134,3 +1207,4 @@ let rec preservation _ _ hs _ _ ht =
      | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
      | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2))
   | TyEqu ht1 he hk -> TyEqu (preservation hs ht1) he hk
+*)
