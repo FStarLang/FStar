@@ -40,8 +40,8 @@ type exp =
   | EApp   : exp -> exp -> exp
   | ELam   : typ -> exp -> exp
 
-(* Substitution on expressions and types;
-   they don't really interact in this calculus *)
+(* Substitution on expressions
+   (in this calculus doesn't interact with type substitution below) *)
 
 type esub = var -> Tot exp
 type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
@@ -99,16 +99,15 @@ let esubst_lam_hoist t e s = admit()
 val esub_comp : s1:esub -> s2:esub -> Tot esub
 let esub_comp s1 s2 x = esubst (s2 x) s1
 
-val esub_comp_inc : s:esub -> x:var -> Lemma
-      (esub_comp esub_inc s x = esub_comp (esubst_lam s) esub_inc x)
+type esub_comp_inc_type (s:esub) (x:var) =
+  (esub_comp esub_inc s x = esub_comp (esubst_lam s) esub_inc x)
+
+val esub_comp_inc : s:esub -> x:var -> Lemma (esub_comp_inc_type s x)
 let esub_comp_inc s x =
   assert(esub_comp esub_inc s x = esubst (s x) esub_inc);
   assert(esub_comp (esubst_lam s) esub_inc x = esubst (EVar (x+1)) (esubst_lam s));
   assert(esub_comp (esubst_lam s) esub_inc x = esubst_lam s (x+1));
   assert(esub_comp (esubst_lam s) esub_inc x = esubst (s x) esub_inc)
-
-type stupid_annotation (s:esub) (x:var) =
-  (esub_comp esub_inc s x = esub_comp (esubst_lam s) esub_inc x)
 
 assume val esubst_comp : s1:esub -> s2:esub -> e:exp -> Lemma
       (esubst (esubst e s2) s1 = esubst e (esub_comp s1 s2))
@@ -712,15 +711,43 @@ let rec typing_weakening_tbnd g x k_x e t h =
       TyEqu (typing_weakening_tbnd x k_x h1) (tequiv_tshift eq x)
             (kinding_weakening_tbnd kh x k_x)
 
+type eaux_type (e:exp) (x:var) (y:var) =
+  (esubst_lam (esub_beta_gen x e) y = esub_beta_gen (x + 1) (eshift_up e) y)
+val eaux : e:exp -> x:var -> y:var -> Lemma (eaux_type e x y)
+let eaux e x y =
+  match y with
+  | 0 -> ()
+  | _ ->
+     (assert(esubst_lam (esub_beta_gen x e) y =
+               esubst (esub_beta_gen x e (y-1)) esub_inc);
+      assert(esub_beta_gen (x + 1) (eshift_up e) y =
+               esub_beta_gen (x + 1) (esubst e (esub_inc_above 0)) y);
+      if (y-1) < x then ()
+      else if y-1 = x then
+        (assert(esubst_lam (esub_beta_gen x e) y =
+                  esubst e esub_inc);
+         assert(esub_beta_gen (x + 1) (eshift_up e) y =
+                  esubst e (esub_inc_above 0));
+         esubst_extensional esub_inc (esub_inc_above 0) e)
+      else ())
+
 val esubst_gen_elam : x:var -> e:exp -> t:typ -> e':exp -> Lemma
                       (ensures (esubst_beta_gen x e (ELam t e') =
                        ELam t (esubst_beta_gen (x + 1) (eshift_up e) e')))
 let esubst_gen_elam x e t e' =
-  esubst_lam_hoist t e' (esub_beta_gen x e); admit()
-(* can't prove the two substitutions equal directly
+  assert(esubst_beta_gen x e (ELam t e') =
+           esubst (ELam t e') (esub_beta_gen x e));
+  esubst_lam_hoist t e' (esub_beta_gen x e);
+  assert(esubst_beta_gen x e (ELam t e') =
+           ELam t (esubst e' (esubst_lam (esub_beta_gen x e))));
+
+  assert(ELam t (esubst_beta_gen (x + 1) (eshift_up e) e') =
+           ELam t (esubst e' (esub_beta_gen (x + 1) (eshift_up e))));
+  
+  forall_intro #var #(eaux_type e x) (eaux e x);
+
   esubst_extensional (esubst_lam (esub_beta_gen x e))
                      (esub_beta_gen (x + 1) (eshift_up e)) e'
-*)
 
 val typing_substitution: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ ->
       #g:env -> h1:(typing g v t_x) -> h2:(typing (extend_evar g x t_x) e t) ->
@@ -743,10 +770,44 @@ let rec typing_substitution x e v t_x t g h1 h2 =
       TyEqu (typing_substitution x h1 h21) eq
         (kinding_strengthening_ebnd g x t_x kh)
 
-val tsubst_gen_tlam : x:var -> t:typ -> k_y:knd -> t':typ -> Lemma
-                      (ensures (tsubst_beta_gen x t (TLam k_y t') =
-                       TLam k_y (tsubst_beta_gen (x + 1) (tshift_up t) t')))
-let tsubst_gen_tlam x t k_y t' = admit () (* AR: TODO *)
+(* analogous to above *)
+type taux_type (t:typ) (x:var) (y:var) =
+  (tsubst_lam (tsub_beta_gen x t) y = tsub_beta_gen (x + 1) (tshift_up t) y)
+val taux : t:typ -> x:var -> y:var -> Lemma (taux_type t x y)
+let taux t x y =
+  match y with
+  | 0 -> ()
+  | _ ->
+     (assert(tsubst_lam (tsub_beta_gen x t) y =
+               tsubst (tsub_beta_gen x t (y-1)) tsub_inc);
+      assert(tsub_beta_gen (x + 1) (tshift_up t) y =
+               tsub_beta_gen (x + 1) (tsubst t (tsub_inc_above 0)) y);
+      if (y-1) < x then ()
+      else if y-1 = x then
+        (assert(tsubst_lam (tsub_beta_gen x t) y =
+                  tsubst t tsub_inc);
+         assert(tsub_beta_gen (x + 1) (tshift_up t) y =
+                  tsubst t (tsub_inc_above 0));
+         tsubst_extensional tsub_inc (tsub_inc_above 0) t)
+      else ())
+
+val tsubst_gen_tlam : x:var -> t:typ -> k:knd -> t':typ -> Lemma
+                      (ensures (tsubst_beta_gen x t (TLam k t') =
+                       TLam k (tsubst_beta_gen (x + 1) (tshift_up t) t')))
+let tsubst_gen_tlam x t k t' =
+  assert(tsubst_beta_gen x t (TLam k t') =
+           tsubst (TLam k t') (tsub_beta_gen x t));
+  tsubst_lam_hoist k t' (tsub_beta_gen x t);
+  assert(tsubst_beta_gen x t (TLam k t') =
+           TLam k (tsubst t' (tsubst_lam (tsub_beta_gen x t))));
+
+  assert(TLam k (tsubst_beta_gen (x + 1) (tshift_up t) t') =
+           TLam k (tsubst t' (tsub_beta_gen (x + 1) (tshift_up t))));
+  
+  forall_intro #var #(taux_type t x) (taux t x);
+
+  tsubst_extensional (tsubst_lam (tsub_beta_gen x t))
+                     (tsub_beta_gen (x + 1) (tshift_up t)) t'
 
 (* The (pleasant) surprise here is that (as opposed to TAPS) we didn't
    have to also apply the substitution within the MkEnv.x part of the
