@@ -446,13 +446,14 @@ val kinding_weakening_ebnd : #g:env -> #t:typ -> #k:knd ->
       Tot (kinding (extend_evar g x t') t k)
 let kinding_weakening_ebnd g t k h x t' = kinding_extensional h (extend_evar g x t')
 
-(* AR: TODO, limitation *)
 val tshift_up_above_lam: n:nat -> k:knd -> t:typ -> Lemma
   (ensures (tshift_up_above n (TLam k t) = TLam k (tshift_up_above (n + 1) t)))
 let tshift_up_above_lam n k t =
   assert(tshift_up_above n (TLam k t) = tsubst (TLam k t) (tsub_inc_above n));
-(*  assert(tshift_up_above n (TLam k t) = TLam k (tsubst t (tsubst_lam (tsub_inc_above n)))); -- indeed, this seems like the same hoisting that Nik proved in psub.fst *)
-  admit()
+  tsubst_lam_hoist k t (tsub_inc_above n);
+  assert(tshift_up_above n (TLam k t) =
+         TLam k (tsubst t (tsubst_lam (tsub_inc_above n))));
+  tsubst_extensional (tsubst_lam (tsub_inc_above n)) (tsub_inc_above (n+1)) t
 
 val esub_inc_above : nat -> var -> Tot exp
 let esub_inc_above x y = if y<x then EVar y else EVar (y+1)
@@ -463,13 +464,14 @@ let eshift_up_above x e = esubst e (esub_inc_above x)
 val eshift_up : exp -> Tot exp
 let eshift_up = eshift_up_above 0
 
-(* CH: TODO, probably same limitation as above *)
 val eshift_up_above_lam: n:nat -> t:typ -> e:exp -> Lemma
   (ensures (eshift_up_above n (ELam t e) = ELam t (eshift_up_above (n + 1) e)))
-let eshift_up_above_lam n t e = admit()
-(*
+let eshift_up_above_lam n t e =
+  assert(eshift_up_above n (ELam t e) = esubst (ELam t e) (esub_inc_above n));
+  esubst_lam_hoist t e (esub_inc_above n);
+  assert(eshift_up_above n (ELam t e) =
+         ELam t (esubst e (esubst_lam (esub_inc_above n))));
   esubst_extensional (esubst_lam (esub_inc_above n)) (esub_inc_above (n+1)) e
-*)
 
 (* kinding weakening when a type variable binding is added to env *)
 val kinding_weakening_tbnd : #g:env -> #t:typ -> #k:knd ->
@@ -618,11 +620,15 @@ let rec typing_weakening_tbnd g x k_x e t h =
       TyEqu (typing_weakening_tbnd x k_x h1) (tequiv_tshift eq x)
             (kinding_weakening_tbnd kh x k_x)
 
-val esubst_gen_elam : x:var -> v:exp -> t_y:typ -> e':exp -> Lemma
-                      (ensures (esubst_beta_gen x v (ELam t_y e') =
-                       ELam t_y (esubst_beta_gen (x + 1) (eshift_up v) e')))
-let esubst_gen_elam x v t_y e' = admit () (* AR: TODO *)
-
+val esubst_gen_elam : x:var -> e:exp -> t:typ -> e':exp -> Lemma
+                      (ensures (esubst_beta_gen x e (ELam t e') =
+                       ELam t (esubst_beta_gen (x + 1) (eshift_up e) e')))
+let esubst_gen_elam x e t e' =
+  esubst_lam_hoist t e' (esub_beta_gen x e); admit()
+(* can't prove the two substitutions equal
+  esubst_extensional (esubst_lam (esub_beta_gen x e))
+                     (esub_beta_gen (x + 1) (eshift_up e)) e'
+*)
 
 val typing_substitution: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ ->
       #g:env -> h1:(typing g v t_x) -> h2:(typing (extend_evar g x t_x) e t) ->
