@@ -16,6 +16,7 @@
 
 module LambdaOmega
 
+open Constructive
 open FunctionalExtensionality
 
 (* Chapter 29 of TAPL: "Type Operators and Kinding",
@@ -77,16 +78,17 @@ let esubst_lam s y =
 
 (* Substitution extensional; trivial with the extensionality axiom *)
 val esubst_extensional: s1:esub -> s2:esub{FEq s1 s2} -> e:exp ->
-                       Lemma (requires True) (ensures (esubst e s1 = esubst e s2))
-(*                       [SMTPat (esubst e s1);  SMTPat (esubst e s2)]*)
+                        Lemma (requires True) (ensures (esubst e s1 = esubst e s2))
+(*                        [SMTPat (esubst e s1);  SMTPat (esubst e s2)]*)
 let esubst_extensional s1 s2 e = ()
 
-(* This only works with the patterns in subst_extensional above;
-   it would be a lot cooler if this worked without, since it increases checking time
-val esubst_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma
+(* This only works automatically with the patterns in subst_extensional above;
+   it would be a lot cooler if this worked without, since that increases checking time.
+   Even worse, there is no way to prove this without the SMTPat (e.g. manually). *)
+val esubst_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
       (ensures (esubst (ELam t e) s = ELam t (esubst e (esubst_lam s))))
-let esubst_lam_hoist t e s = ()
-*)
+(*      [SMTPat (esubst (ELam t e) s)] -- even this increases running time by 10 secs *)
+let esubst_lam_hoist t e s = admit()
 
 (* subst_beta_gen is a generalization of the substitution we do for
    the beta rule, when we've under x binders
@@ -141,16 +143,14 @@ let tsubst_lam s y =
 
 (* Type substitution extensional; trivial with the extensionality axiom *)
 val tsubst_extensional: s1:tsub -> s2:tsub{FEq s1 s2} -> t:typ ->
-                       Lemma (requires True) (ensures (tsubst t s1 = tsubst t s2))
+                        Lemma (requires True) (ensures (tsubst t s1 = tsubst t s2))
 (*                       [SMTPat (tsubst t s1);  SMTPat (tsubst t s2)]*)
 let tsubst_extensional s1 s2 t = ()
 
-(* This only works with the patterns in tsubst_extensional above;
-   it would be a lot cooler if this worked without, since it increases checking time
+(* Same silly situation as for esubst_lam_hoist *)
 val tsubst_lam_hoist : k:knd -> t:typ -> s:tsub -> Lemma
       (ensures (tsubst (TLam k t) s = TLam k (tsubst t (tsubst_lam s))))
-let tsubst_lam_hoist k t s = ()
-*)
+let tsubst_lam_hoist k t s = admit()
 
 val tsub_beta_gen : var -> typ -> Tot tsub
 let tsub_beta_gen x t = fun y -> if y < x then (TVar y)
@@ -327,14 +327,11 @@ type typing : env -> exp -> typ -> Type =
 
 (* Progress proof *)
 
-type ex : #a:Type -> (a -> Type) -> Type =
-  | ExIntro : #a:Type -> #p:(a -> Type) -> x:a -> p x -> ex p
-
 val is_value : exp -> Tot bool
 let is_value = is_ELam
 
 val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
-               Tot (ex (fun e' -> step e e')) (decreases h)
+               Tot (cexists (fun e' -> step e e')) (decreases h)
 let rec progress _ _ h = admit()
 (* takes 1s to check
   match h with
@@ -369,11 +366,6 @@ let rec tcontext_invariance _ _ _ h g' = admit()
   | KiApp h1 h2 -> KiApp (tcontext_invariance h1 g') (tcontext_invariance h2 g')
   | KiArr h1 h2 -> KiArr (tcontext_invariance h1 g') (tcontext_invariance h2 g')
 *)
-
-(* Defining constructive if-and-only-if *)
-type cand : Type -> Type -> Type =
-  | Conj : #a:Type -> #b:Type -> pa:a -> pb:b -> cand a b
-type ciff (a : Type) (b : Type) = cand (a -> Tot b) (b -> Tot a)
 
 val id : 'a -> Tot 'a
 let id x = x
@@ -792,7 +784,7 @@ type ltup =
 (* single step diamond property of parallel reduction *)
 val tred_diamond: #s:typ -> #t:typ -> #u:typ ->
                   h1:(tred s t) -> h2:(tred s u) ->
-                  Tot (ex (fun v -> cand (tred t v) (tred u v)))
+                  Tot (cexists (fun v -> cand (tred t v) (tred u v)))
                   (decreases %[h1;h2])
 let rec tred_diamond s t u h1 h2 =
   match (MkLTup h1 h2) with
@@ -872,7 +864,7 @@ type tred_star: typ -> typ -> Type =
 
 val tred_star_one_loop: #s:typ -> #t:typ -> #u:typ ->
       h:(tred s t) -> hs:(tred_star s u) ->
-      Tot (ex (fun v -> cand (tred_star t v) (tred u v))) (decreases hs)
+      Tot (cexists (fun v -> cand (tred_star t v) (tred u v))) (decreases hs)
 let rec tred_star_one_loop s t u h hs = match hs with
   | TsRefl _ ->
     ExIntro t (Conj (TsRefl t) h)
@@ -886,7 +878,7 @@ let rec tred_star_one_loop s t u h hs = match hs with
 (* aka Church-Rosser *)
 val confluence : #s:typ -> #t:typ -> #u:typ ->
       h1:(tred_star s t) -> h2:(tred_star s u) ->
-      Tot (ex (fun v -> cand (tred_star t v) (tred_star u v)))
+      Tot (cexists (fun v -> cand (tred_star t v) (tred_star u v)))
       (decreases h1)
 let rec confluence s t u h1 h2 =
   match h1 with
@@ -923,7 +915,7 @@ type tred_star_sym : typ -> typ -> Type =
 (* TAPL has a graphical proof only for this (pg. 561) *)
 val proposition_30_3_10 : #s:typ -> #t:typ ->
       h:tred_star_sym s t ->
-      Tot (ex (fun u -> cand (tred_star s u) (tred_star t u)))
+      Tot (cexists (fun u -> cand (tred_star s u) (tred_star t u)))
       (decreases h)
 let rec proposition_30_3_10 s t h =
   match h with
@@ -1034,12 +1026,12 @@ let rec lemma_30_3_5_rtl s t h =
 
 val corrolary_30_3_11 : #s:typ -> #t:typ ->
       tequiv s t ->
-      Tot (ex (fun u -> cand (tred_star s u) (tred_star t u)))
+      Tot (cexists (fun u -> cand (tred_star s u) (tred_star t u)))
 let corrolary_30_3_11 s t h = proposition_30_3_10 (lemma_30_3_5_ltr h)
 
 val tred_tarr_preserved : #s1:typ -> #s2:typ -> #t:typ ->
       h:(tred_star (TArr s1 s2) t) ->
-      Tot (ex (fun t1 -> (ex (fun t2 ->
+      Tot (cexists (fun t1 -> (cexists (fun t2 ->
         (u:(cand (tred_star s1 t1) (tred_star s2 t2)){t = TArr t1 t2})))))
       (decreases h)
 let rec tred_tarr_preserved s1 s2 t h =

@@ -15,6 +15,8 @@
 *)
 
 module StlcStrongDbParSubst
+
+open Constructive
 open FunctionalExtensionality
 
 (* Constructive-style progress and preservation proof for STLC with
@@ -152,15 +154,11 @@ type typing : env -> exp -> typ -> Type =
 
 (* Progress proof, a bit larger in constructive style *)
 
-(* defining my own constructive existential *)
-type ex : #a:Type -> (a -> Type) -> Type =
-  | ExIntro : #a:Type -> #p:(a -> Type) -> x:a -> p x -> ex p
-
 val is_value : exp -> Tot bool
 let is_value = is_ELam
 
 val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
-               Tot (ex (fun e' -> step e e')) (decreases h)
+               Tot (cexists (fun e' -> step e e')) (decreases h)
 let rec progress _ _ h =
   match h with
   | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
