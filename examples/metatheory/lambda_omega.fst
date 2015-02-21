@@ -899,9 +899,14 @@ let rec confluence s t u h1 h2 =
      let Conj p1' p2' = p' in
      ExIntro v (Conj p1' (TsStep p2 p2'))
 
-assume val ts_tran: #s:typ -> #t:typ -> #u:typ ->
+val ts_tran: #s:typ -> #t:typ -> #u:typ ->
 	     h1:tred_star s t -> h2:tred_star t u -> Tot (tred_star s u)
              (decreases h1)
+let rec ts_tran s t u h1 h2 =
+  match h1 with
+    | TsRefl _ -> h2
+    | TsStep #s #s1 #t h11 h12 ->
+      TsStep h11 (ts_tran h12 h2)
 
 type tred_star_sym : typ -> typ -> Type =
   | TssBase: #t1:typ -> #t2:typ ->
