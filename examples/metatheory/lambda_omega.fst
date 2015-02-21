@@ -46,9 +46,10 @@ type exp =
 type esub = var -> Tot exp
 type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 
-val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
+assume val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
                                         (~(erenaming s) ==> n=1)})
-let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
+(*let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
+  -- this triggers #122 *)
 
 val esub_inc : var -> Tot exp
 let esub_inc y = EVar (y+1)
@@ -109,12 +110,13 @@ let esub_comp_inc s x =
 type stupid_annotation (s:esub) (x:var) =
   (esub_comp esub_inc s x = esub_comp (esubst_lam s) esub_inc x)
 
-val esubst_comp : s1:esub -> s2:esub -> e:exp -> Lemma
+assume val esubst_comp : s1:esub -> s2:esub -> e:exp -> Lemma
       (esubst (esubst e s2) s1 = esubst e (esub_comp s1 s2))
       (decreases e) (* <-- not really *)
-val esubst_lam_comp : s1:esub -> s2:esub -> x:var -> Lemma
+assume val esubst_lam_comp : s1:esub -> s2:esub -> x:var -> Lemma
       (esubst_lam (esub_comp s1 s2) x = esub_comp (esubst_lam s1) (esubst_lam s2) x)
 
+(* commenting this out until we can also prove termination
 type silly_annotation (s1:esub) (s2:esub) (x:var) =
   (esubst_lam (esub_comp s1 s2) x = esub_comp (esubst_lam s1) (esubst_lam s2) x)
 
@@ -160,6 +162,7 @@ and esubst_lam_comp s1 s2 x =
       forall_intro #var #(stupid_annotation s1) (esub_comp_inc s1);
       esubst_extensional (esub_comp esub_inc s1)
                          (esub_comp (esubst_lam s1) esub_inc) (s2 (x-1)))
+*)
 
 (* subst_beta_gen is a generalization of the substitution we do for
    the beta rule, when we've under x binders
@@ -176,13 +179,13 @@ let esubst_beta e' e = esubst_beta_gen 0 e' e
 
 (* Substitution on types is very much analogous *)
 
-(*
 type tsub = var -> Tot typ
 type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
 
-val is_trenaming : s:tsub -> Tot (n:int{(  trenaming s  ==> n=0) /\
+assume val is_trenaming : s:tsub -> Tot (n:int{(  trenaming s  ==> n=0) /\
                                         (~(trenaming s) ==> n=1)})
-let is_trenaming s = (if excluded_middle (trenaming s) then 0 else 1)
+(* let is_trenaming s = (if excluded_middle (trenaming s) then 0 else 1)
+  -- this triggers #122 *)
 
 val tsub_inc : var -> Tot typ
 let tsub_inc y = TVar (y+1)
@@ -224,6 +227,16 @@ let tsubst_extensional s1 s2 t = ()
 val tsubst_lam_hoist : k:knd -> t:typ -> s:tsub -> Lemma
       (ensures (tsubst (TLam k t) s = TLam k (tsubst t (tsubst_lam s))))
 let tsubst_lam_hoist k t s = admit()
+
+(* Type substitution composition (again analogous) *)
+
+val tsub_comp : s1:tsub -> s2:tsub -> Tot tsub
+let tsub_comp s1 s2 x = tsubst (s2 x) s1
+
+assume val tsubst_comp : s1:tsub -> s2:tsub -> e:typ -> Lemma
+      (tsubst (tsubst e s2) s1 = tsubst e (tsub_comp s1 s2))
+assume val tsubst_lam_comp : s1:tsub -> s2:tsub -> x:var -> Lemma
+      (tsubst_lam (tsub_comp s1 s2) x = tsub_comp (tsubst_lam s1) (tsubst_lam s2) x)
 
 val tsub_beta_gen : var -> typ -> Tot tsub
 let tsub_beta_gen x t = fun y -> if y < x then (TVar y)
@@ -1207,4 +1220,3 @@ let rec preservation _ _ hs _ _ ht =
      | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
      | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2))
   | TyEqu ht1 he hk -> TyEqu (preservation hs ht1) he hk
-*)
