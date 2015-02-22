@@ -615,15 +615,16 @@ val kinding_inversion_arrow: #g:env -> #t1:typ -> #t2:typ ->
 let rec kinding_inversion_arrow g t1 t2 h = match h with
   | KiArr h1 h2 -> Conj h1 h2
 
-val typing_gives_well_kinded_types: #g:env -> #e:exp -> #t:typ ->
+val typing_gives_well_kinded_types : #g:env -> #e:exp -> #t:typ ->
                                     h:(typing g e t) ->
                                     Tot (kinding g t KTyp) (decreases h)
 let rec typing_gives_well_kinded_types g e t h = match h with
   | TyVar x h -> h
-  | TyLam t' hk h1 -> KiArr hk (kinding_strengthening_ebnd g 0 t' (typing_gives_well_kinded_types h1))
+  | TyLam t' hk h1 -> KiArr hk (kinding_strengthening_ebnd g 0 t'
+                                  (typing_gives_well_kinded_types h1))
   | TyApp #g #e1 #e2 #t1 #t2 h1 h2 ->
-    let Conj pa pb = kinding_inversion_arrow #g #t1 #t2 (typing_gives_well_kinded_types h1) in
-    pb
+    let Conj pa pb = kinding_inversion_arrow #g #t1 #t2
+                       (typing_gives_well_kinded_types h1) in pb
   | TyEqu h1 eq hk -> hk
 
 (* this folows from functional extensionality *)
@@ -941,6 +942,7 @@ val fcomp : ('a -> Tot 'b) -> ('b -> Tot 'c) -> 'a -> Tot 'c
 let fcomp f1 f2 a = f2 (f1 a)
 
 (* TODO: used in inversion_elam, finish this *)
+(* CH: I'm very skeptical about the beta-expansion case of this *)
 val kinding_tequiv : #t1:typ -> #t2:typ -> h:(tequiv t1 t2) -> g:env -> k:knd ->
       Tot (ciff (kinding g t1 k) (kinding g t2 k)) (decreases h)
 let rec kinding_tequiv _ _ h g k =
@@ -1358,14 +1360,14 @@ let rec tred_tarr_preserved s1 s2 t h =
   	  let Conj p1 p2 = p in
   	  ExIntro t1 (ExIntro t2 (Conj (TsStep h11 p1) (TsStep h12 p2)))
 
-val inversion_elam : #g:env -> s1:typ -> e:exp ->
-                     #s:typ -> t1:typ -> t2:typ -> ht:typing g (ELam s1 e) s ->
-                     heq:tequiv s (TArr t1 t2) ->
-                     Tot (cand (cand (tequiv t1 s1) (typing (extend_evar g 0 s1) e t2)) (kinding g s1 KTyp))
-                     (decreases ht)
-let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
+val inversion_elam : #g:env -> s1:typ -> e:exp -> #s:typ -> t1:typ -> t2:typ ->
+      ht:typing g (ELam s1 e) s -> heq:tequiv s (TArr t1 t2) ->
+      hnew:kinding g t2 KTyp ->
+      Tot (cand (cand (tequiv t1 s1) (typing (extend_evar g 0 s1) e t2))
+                (kinding g s1 KTyp))  (decreases ht)
+let rec inversion_elam g s1 e s t1 t2 ht heq hnew = match ht with
   | TyEqu #g #e' #u #s ht1 heq1 k1 ->
-    inversion_elam s1 e t1 t2 ht1 (EqTran heq1 heq)
+    inversion_elam s1 e t1 t2 ht1 (EqTran heq1 heq) hnew
   | TyLam #g s1 #e #s2 hk ht1 ->
     let ExIntro u p = corrolary_30_3_11 heq in
     let Conj p1 p2 = p in
@@ -1404,8 +1406,8 @@ let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
     let Conj pa pb = d1 in
 
     let pst2 = EqTran (tred_star_tequiv psu2) (EqSymm (tred_star_tequiv ptu2)) in
+(* old stuff:
     let Conj paa _ = kinding_tequiv pst2 g KTyp in
-    
     (*
      * AR: this h'' is not used below, but if I remove this, I get stack overflow
      * (on mac using mono)
@@ -1413,14 +1415,20 @@ let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
     let h'':(kinding g t2 KTyp) = paa pb in
     let h:(typing (extend_evar g 0 s1) e t2) =
       TyEqu ht1 pst2 (kinding_weakening_ebnd (paa pb) 0 s1) in
+*)
+    let h:(typing (extend_evar g 0 s1) e t2) =
+      TyEqu ht1 pst2 (kinding_weakening_ebnd hnew 0 s1) in
     Conj (Conj (EqTran (tred_star_tequiv ptu1) (EqSymm (tred_star_tequiv psu1))) h) hk
 
 (* corollary of inversion_elam *)
 val inversion_elam_typing : #g:env -> s1:typ -> e:exp ->
       t1:typ -> t2:typ -> typing g (ELam s1 e) (TArr t1 t2) ->
-      Tot (cand (cand (tequiv t1 s1) (typing (extend_evar g 0 s1) e t2)) (kinding g s1 KTyp))
-let inversion_elam_typing _ s1 e t1 t2 h =
-  inversion_elam s1 e t1 t2 h (EqRefl (TArr t1 t2))
+      Tot (cand (cand (tequiv t1 s1) (typing (extend_evar g 0 s1) e t2))
+                (kinding g s1 KTyp))
+let inversion_elam_typing g s1 e t1 t2 h =
+  let Conj _ hnew = kinding_inversion_arrow #g #t1 #t2
+                      (typing_gives_well_kinded_types h) in
+  inversion_elam s1 e t1 t2 h (EqRefl (TArr t1 t2)) hnew
 
 (* Type preservation *)
 val preservation : #e:exp -> #e':exp -> hs:step e e' ->
@@ -1431,8 +1439,8 @@ let rec preservation _ _ hs _ _ ht =
   | TyApp #g #e1 #e2 #t1 #t2 h1 h2 ->
     (match hs with
      | SBeta s1 e11 e12 ->
-       let Conj p1 (p3:kinding g s1 KTyp) = inversion_elam_typing s1 e11 t1 t2 h1 in
-       let Conj (p1:tequiv t1 s1) (p2:typing (extend_evar g 0 s1) e11 t2) = p1 in
+       let Conj p12 (p3:kinding g s1 KTyp) = inversion_elam_typing s1 e11 t1 t2 h1 in
+       let Conj (p1:tequiv t1 s1) (p2:typing (extend_evar g 0 s1) e11 t2) = p12 in
        typing_substitution 0 (TyEqu h2 p1 p3) p2
      | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
      | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2))
