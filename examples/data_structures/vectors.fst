@@ -76,7 +76,7 @@ let rec zip' n v1 v2 = match v1 with
     VCons (a, b) (zip' tl1 tl2)
 
 
-val zip: #n:nat -> vector 'a n -> vector 'b n -> Tot (vector ('a * 'b) n)
-let rec zip n v1 v2 = match v1, v2 with
-  | VNil, _ -> VNil
-  | VCons a tl1, VCons b tl2 -> VCons (a, b) (zip tl1 tl2)
+(* val zip: #n:nat -> vector 'a n -> vector 'b n -> Tot (vector ('a * 'b) n) *)
+(* let rec zip n v1 v2 = match v1, v2 with *)
+(*   | VNil, _ -> VNil *)
+(*   | VCons a tl1, VCons b tl2 -> VCons (a, b) (zip tl1 tl2) *)
