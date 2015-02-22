@@ -18,4 +18,7 @@ RUN cd /installs && unzip z3-4.3.2.5a45711f22d9-x64-ubuntu-13.10.zip && export P
 
 RUN apt-fast -y install git
 RUN cd /installs && git clone https://github.com/FStarLang/FStar.git && cd FStar &&  make -C src
-RUN cd /installs/FStar && /bin/bash -c "source setenv.sh && make test -C src"
+
+ENV PATH /installs/z3-4.3.2.5a45711f22d9-x64-ubuntu-13.10/bin:/installs/FStar/bin:$PATH 
+ENV FSTAR_HOME /installs/FStar/
+#RUN cd /installs/FStar && /bin/bash -c "source setenv.sh && make test -C src"
