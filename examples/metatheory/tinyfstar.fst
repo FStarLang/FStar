@@ -41,12 +41,12 @@ and typ =
 
 and cmp =
   | CPure : t:typ -> wp:typ -> cmp
-  | CST   : t:typ -> wp:typ -> cmp
+  | CSt   : t:typ -> wp:typ -> cmp
 
 and exp =
   | EVar   : x:var   -> exp
   | EConst : c:const -> exp
-  | ELoc   : l:int   -> exp
+  | ELoc   : l:int   -> exp (* CH: do we want this, or are they just constants? *)
   | ENat   : l:int   -> exp (* CH: weren't ints just constants? *)
   | ELam   : t:typ   -> e:exp -> exp            (* x:t bound in e *)
   | EApp   : e1:exp  -> e2:exp -> exp
@@ -174,7 +174,7 @@ let bind_pure (CPure t1 wp1) (CPure t2 wp2) = (* bind wp1 wp2 post = wp1 (fun (x
 val lift_pure_st : c1:cmp{is_CPure c1}
                 -> Tot cmp
 let lift_pure_st (CPure t wp) =
-  CST t (TTLam (* post *)
+  CSt t (TTLam (* post *)
            (k_post_st t)
            (TELam (* h *)
               t_heap
@@ -183,12 +183,12 @@ let lift_pure_st (CPure t wp) =
                     t
                     (TEApp (TEApp (TVar 2) (*post*) (EVar 0) (*x*)) (EVar 1)(*h*))))))
 
-val bind_st:  c1:cmp{is_CST c1}
-           -> c2:cmp{is_CST c2}
+val bind_st:  c1:cmp{is_CSt c1}
+           -> c2:cmp{is_CSt c2}
            -> Tot cmp
-let bind_st (CST t1 wp1) (CST t2 wp2) =
+let bind_st (CSt t1 wp1) (CSt t2 wp2) =
   let wp2 = TELam t1 wp2 in
-  CST t2 (TTLam (* post *)
+  CSt t2 (TTLam (* post *)
               (k_post_st t2)  (* don't need to bump t2, since we'll have a side condition ensuring that x:t1 not free in t2 *)
               (TTApp (bump_typ 1 wp1)
                  (TELam (* x *)
@@ -200,24 +200,24 @@ let bind_st (CST t1 wp1) (CST t2 wp2) =
 val bind: c1:cmp -> c2:cmp -> Tot cmp
 let bind c1 c2 = match c1, c2 with
   | CPure _ _, CPure _ _ -> bind_pure c1 c2
-  | CST _ _,   CST _ _   -> bind_st   c1 c2
-  | CST _ _,   CPure _ _ -> bind_st   c1 (lift_pure_st c2)
-  | CPure _ _, CST _ _   -> bind_st   (lift_pure_st c1) c2
+  | CSt _ _,   CSt _ _   -> bind_st   c1 c2
+  | CSt _ _,   CPure _ _ -> bind_st   c1 (lift_pure_st c2)
+  | CPure _ _, CSt _ _   -> bind_st   (lift_pure_st c1) c2
 
 let conj phi1 phi2        = TTApp (TTApp t_and phi1) phi2
 let close_forall t phi    = TTApp (TTApp t_forall t) (TELam t phi)
 
 let down_CPure t wp       = TTApp (TTApp t_forall_post_pure t)
                                   (TTLam (k_post_pure t) (TTApp (bump_typ 1 wp) (TVar 0)))
-let down_CST t wp         = TTApp (TTApp t_forall_post_st t)
+let down_CSt t wp         = TTApp (TTApp t_forall_post_st t)
                                   (TTLam (k_post_st t)
                                      (TELam t_heap (TEApp (TTApp (bump_typ 2 wp) (TVar 1)) (EVar 0))))
 let up_CPure t phi        = TTLam (k_post_pure t) (bump_typ 1 phi)
-let up_CST   t phi        = TTLam (k_post_st t)   (TELam t_heap (bump_typ 2 phi))
+let up_CSt   t phi        = TTLam (k_post_st t)   (TELam t_heap (bump_typ 2 phi))
 let op_CPure t op wp1 wp2 = TTLam (k_post_pure t) (TTApp (TTApp op
                                                             (TTApp (bump_typ 1 wp1) (TVar 0)))
                                                            (TTApp (bump_typ 1 wp2) (TVar 0)))
-let op_CST t op wp1 wp2   = TTLam (k_post_st t)   (TELam t_heap (TTApp (TTApp op
+let op_CSt t op wp1 wp2   = TTLam (k_post_st t)   (TELam t_heap (TTApp (TTApp op
                                                                          (TEApp (TTApp (bump_typ 2 wp1) (TVar 1)) (EVar 0)))
                                                                   (TEApp (TTApp (bump_typ 2 wp2) (TVar 1)) (EVar 0))))
 
@@ -230,26 +230,26 @@ let bind_pure_if e (CPure t wp1) (CPure _ wp2) =
   let wp = op_CPure t t_and (op_CPure t t_imp (up_CPure t guard) wp1) (op_CPure t t_imp (up_CPure t (neg guard)) wp2) in
   CPure t wp
 
-val bind_st_if : exp -> c1:cmp{is_CST c1} -> c2:cmp{is_CST c2} -> Tot cmp
-let bind_st_if e (CST t wp1) (CST _ wp2) =
+val bind_st_if : exp -> c1:cmp{is_CSt c1} -> c2:cmp{is_CSt c2} -> Tot cmp
+let bind_st_if e (CSt t wp1) (CSt _ wp2) =
   let guard = mk_eq t_int e (ENat 0) in
-  let wp = op_CST t t_and (op_CST t t_imp (up_CST t guard) wp1) (op_CST t t_imp (up_CST t (neg guard)) wp2) in
-  CST t wp
+  let wp = op_CSt t t_and (op_CSt t t_imp (up_CSt t guard) wp1) (op_CSt t t_imp (up_CSt t (neg guard)) wp2) in
+  CSt t wp
 
 val bind_if : exp -> cmp -> cmp -> Tot cmp
 let bind_if e c1 c2 = match c1, c2 with
   | CPure _ _, CPure _ _ -> bind_pure_if e c1 c2
-  | CPure _ _, CST _ _   -> bind_st_if e (lift_pure_st c1) c2
-  | CST _ _, CPure _ _   -> bind_st_if e c1 (lift_pure_st c2)
-  | CST _ _, CST _ _     -> bind_st_if e c1 c2
+  | CPure _ _, CSt _ _   -> bind_st_if e (lift_pure_st c1) c2
+  | CSt _ _, CPure _ _   -> bind_st_if e c1 (lift_pure_st c2)
+  | CSt _ _, CSt _ _     -> bind_st_if e c1 c2
 
 let result_typ = function
   | CPure t _
-  | CST t  _   -> t
+  | CSt t  _   -> t
 
 let set_result_typ c t = match c with
   | CPure _ wp ->  CPure t wp
-  | CST _ wp -> CST t wp
+  | CSt _ wp -> CSt t wp
 
 (********************************************************)
 (* Typing environments *)
@@ -275,7 +275,7 @@ let empty x = None
 
 type const_binding =
   | B_l : t:typ -> const_binding (* CH: locations bound in signature?
-                                        aren't they dynamically allocated?
+                                        they seem statically allocated (no ref)
                                         (in the txt they are in environment)
                                         (they anyway all have type ref int) *)
   | B_c : t:typ -> const_binding
@@ -352,8 +352,8 @@ type sub_cmp : env -> cmp -> cmp -> typ -> Type =
            -> t:typ
            -> wp1:typ
            -> wp2:typ
-           -> sub_cmp g (CST t wp1) (CST t wp2)
-                      (down_CST t (op_CST t t_imp wp2 wp1))
+           -> sub_cmp g (CSt t wp1) (CSt t wp2)
+                      (down_CSt t (op_CSt t t_imp wp2 wp1))
 
   | SubRes : g:env
           -> c:cmp
@@ -503,12 +503,12 @@ and c_ok : env -> cmp -> Type =
             -> kinding g wp (k_pure t)
             -> c_ok g (CPure t wp)
 
-  | CSTOK :     g:env
+  | CStOK :     g:env
             ->  t:typ
             -> wp:typ
             -> kinding g t KType
             -> kinding g wp (k_st t)
-            -> c_ok g (CST t wp)
+            -> c_ok g (CSt t wp)
 
 and kind_ok : env -> knd -> Type =
   | KOKType : g:env
@@ -552,30 +552,102 @@ type value = e:exp{is_value e}
 (* Contexts *)
 
 type ectx_ehole =
-  | EETop : ectx_ehole
-  | EEAppL : e2:exp -> ectx_ehole
-  | EEAppR : e1:value -> ectx_ehole
-  | EEIf0 : e1:exp -> e2:exp -> ectx_ehole
+  | CeeTop : ectx_ehole
+  | CeeAppL : e2:exp -> ectx_ehole
+  | CeeAppR : e1:value -> ectx_ehole
+  | CeeIf0 : e1:exp -> e2:exp -> ectx_ehole
+
+val plug_e_in_e : e:exp -> ee:ectx_ehole -> Tot exp
+let plug_e_in_e e ee =
+  match ee with
+  | CeeTop -> e
+  | CeeAppL e2 -> EApp e e2
+  | CeeAppR e1 -> EApp e1 e
+  | CeeIf0 e1 e2 -> EIf0 e e1 e2
 
 type ectx_thole =
-  | ETLam : e:exp -> ectx_thole
-  | ETFix : ed:(option exp) -> e:exp -> ectx_thole
+  | CetLam : e:exp -> ectx_thole
+  | CetFix : ed:(option exp) -> e:exp -> ectx_thole
+
+val plug_t_in_e : t:typ -> et:ectx_thole -> Tot exp
+let plug_t_in_e t et =
+  match et with
+  | CetLam e -> ELam t e
+  | CetFix ed e -> EFix ed t e
 
 type cctx =
-  | CCPureT : wp:typ -> cctx
-  | CCPureWP : t:typ -> cctx
+  | CcPureT : wp:typ -> cctx
+  | CcPureWP : t:typ -> cctx
+  | CcStT : wp:typ -> cctx
+  | CcStWP : t:typ -> cctx
 
 type tctx_thole =
-  | TTTop : tctx_thole
-  | TTArrT : c:cmp -> tctx_thole
-  | TTArrC : t:typ -> c:cctx -> tctx_thole
-  | TTTAppL : t2:typ -> tctx_thole
-  | TTTAppR : t1:typ -> tctx_thole
-  | TTEApp : e:exp -> tctx_thole
-  | TTTLam : k:knd -> tctx_thole
-  | TTELam1 : t2:typ -> tctx_thole
-  | TTELam2 : t1:typ -> tctx_thole
+  | CttTop : tctx_thole
+  | CttArrT : c:cmp -> tctx_thole
+  | CttArrC : t:typ -> cc:cctx -> tctx_thole
+  | CttTAppL : t2:typ -> tctx_thole
+  | CttTAppR : t1:typ -> tctx_thole
+  | CttEApp : e:exp -> tctx_thole
+  | CttTLam : k:knd -> tctx_thole
+  | CttELam1 : t2:typ -> tctx_thole
+  | CttELam2 : t1:typ -> tctx_thole
 
+val plug_t_in_t : t:typ -> tt:tctx_thole -> Tot typ
+let plug_t_in_t t tt =
+  match tt with
+  | CttTop -> t
+  | CttArrT c -> TArr t c
+  | CttArrC t1 (CcPureT wp) -> TArr t1 (CPure t wp)
+  | CttArrC t1 (CcPureWP t2) -> TArr t1 (CPure t2 t)
+  | CttArrC t1 (CcStT wp) -> TArr t1 (CSt t wp)
+  | CttArrC t1 (CcStWP t2) -> TArr t1 (CSt t2 t)
+  | CttTAppL t2 -> TTApp t t2
+  | CttTAppR t1 -> TTApp t1 t
+  | CttEApp e -> TEApp t e
+  | CttTLam k -> TTLam k t
+  | CttELam1 t2 -> TELam t t2
+  | CttELam2 t1 -> TELam t1 t
+
+(* CH: rather degenerate case, consider inlining in rules *)
 type tctx_ehole =
-  | TETEApp : t:typ -> tctx_ehole
+  | CteEApp : t:typ -> tctx_ehole
 
+val plug_e_in_t : e:exp -> te:tctx_ehole -> Tot typ
+let plug_e_in_t e te =
+  match te with
+  | CteEApp t -> TEApp t e
+
+(* Reduction in types and pure expressions *)
+
+type tstep : typ -> typ -> Type =
+  | TsEBeta : t:typ -> tstep t t (* TODO *)
+  | TsTBeta : t:typ -> tstep t t (* TODO *)
+  | TsTCtx : tt:tctx_thole ->
+             #t:typ ->
+             #t':typ ->
+             tstep t t' ->
+             tstep (plug_t_in_t t tt) (plug_t_in_t t' tt)
+  | TsECtx : te:tctx_ehole ->
+             #e:exp ->
+             #e':exp ->
+             epstep e e' ->
+             tstep (plug_e_in_t e te) (plug_e_in_t e' te)
+and epstep : exp -> exp -> Type =
+  | EpsIf0 : e1:exp ->
+             e2:exp ->
+             epstep (EIf0 (ENat 0) e1 e2) e1
+  | EpsIfS : i:int{i<>0} ->
+             e1:exp ->
+             e2:exp ->
+             epstep (EIf0 (ENat i) e1 e2) e2
+  | EpsBeta : t:typ ->
+              e:exp ->
+              v:value ->
+              e':exp ->
+              epstep (EApp (ELam t e) v) e' (* TODO *)
+  | EpsFix : e:exp -> epstep e e (* TODO *)
+  | EpsTCtx : et:ectx_thole ->
+              #t:typ ->
+              #t':typ ->
+              tstep t t' ->
+              epstep (plug_t_in_e t et) (plug_t_in_e t' et)
