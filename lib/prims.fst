@@ -406,6 +406,7 @@ logic type InductionHyp : Type -> Type
 assume val using_induction_hyp: 'a -> Lemma (ensures (InductionHyp 'a))
 assume val Assume: 'P:Type -> unit -> (y:unit{'P})
 assume val admit: unit -> Admit 'a
+assume val magic: unit -> Tot 'a
 assume val admitP: 'P:Type -> Pure unit True (fun x -> 'P)
 assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
 assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (fun x -> 'P)

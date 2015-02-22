@@ -513,31 +513,19 @@ val fcomp : ('a -> Tot 'b) -> ('b -> Tot 'c) -> 'a -> Tot 'c
 let fcomp f1 f2 a = f2 (f1 a)
 
 (* TODO: used in inversion_elam, finish this *)
-val kinding_tequiv : #g:env -> #t1:typ -> #t2:typ -> #k:knd -> h:(tequiv t1 t2) ->
+val kinding_tequiv : #t1:typ -> #t2:typ -> h:(tequiv t1 t2) -> g:env -> k:knd ->
       Tot (ciff (kinding g t1 k) (kinding g t2 k)) (decreases h)
-let rec kinding_tequiv g _ _ k h =
+let rec kinding_tequiv _ _ h g k =
   match h with
   | EqRefl t -> Conj id id
-  | EqSymm h ->
-     let Conj ih1 ih2 = kinding_tequiv h in Conj ih2 ih1
+  | EqSymm h1 ->
+     let Conj ih1 ih2 = kinding_tequiv h1 g k in Conj ih2 ih1
   | EqTran #t1 #t2 #t3 h1 h2 ->
-     let Conj ih11 ih12 = kinding_tequiv h1 in
-     let Conj ih21 ih22 = kinding_tequiv h2 in
+     let Conj ih11 ih12 = kinding_tequiv h1 g k in
+     let Conj ih21 ih22 = kinding_tequiv h2 g k in
      Conj #(kinding g t1 k -> Tot (kinding g t3 k))
           #(kinding g t3 k -> Tot (kinding g t1 k))
           (fcomp ih11 ih21) (fcomp ih22 ih12)
-  | EqLam #t1' #t2' k1 h1 -> admit ()
-    (* AR: following code should work ? *)
-    (* let Conj ih1 ih2 = kinding_tequiv h1 in *)
-    (* Conj #((kinding g (TLam k1 t1') k) -> Tot (kinding g (TLam k1 t2') k)) *)
-    (*      #((kinding g (TLam k1 t2') k) -> Tot (kinding g (TLam k1 t1') k)) *)
-    (*      (fun h -> *)
-    (* 	   let KiLam k1 h1 = h in *)
-    (* 	   KiLam k1 (ih1 h1)) *)
-    (*      (fun h -> *)
-    (* 	   let KiLam k1 h1 = h in *)
-    (* 	   KiLam k1 (ih2 h1)) *)
-
 (* CH:This should work
      Conj (fcomp ih11 ih21) (fcomp ih22 ih12)
 but instead we get this subtyping error for the second conjunct:
@@ -546,8 +534,23 @@ expected type ((kinding _1019 _1023  _1025) -> Tot (kinding _1019 _1021  _1025))
      got type ((kinding _1019 _33555 _1025) -> Tot (kinding _1019 _33555 _1025))
 (lambda_omega.fst(372,28-372,45))
    Seems like the same kind of problem as #129 *)
+
+  | EqLam #t1' #t2' k1 h1 ->
+     let ih_partial = kinding_tequiv h1 (extend_tvar g 0 k1) in
+     Conj #((kinding g (TLam k1 t1') k) -> Tot (kinding g (TLam k1 t2') k))
+          #((kinding g (TLam k1 t2') k) -> Tot (kinding g (TLam k1 t1') k))
+          (fun hk ->
+             let KiLam #g' k1' #t' #k' hk' = hk in
+             let Conj ih1 ih2 = ih_partial k' in
+             KiLam k1 (ih1 hk'))
+          (fun hk ->
+             let KiLam #g' k1' #t' #k' hk' = hk in
+             let Conj ih1 ih2 = ih_partial k' in
+             KiLam k1 (ih2 hk'))
+
   | _ -> admit ()
 
+(*
 val eappears_free_in : x:var -> e:exp -> Tot bool (decreases e)
 let rec eappears_free_in x e =
   match e with
@@ -1427,3 +1430,4 @@ let rec preservation _ _ hs _ _ ht =
      | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
      | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2))
   | TyEqu ht1 he hk -> TyEqu (preservation hs ht1) he hk
+*)
