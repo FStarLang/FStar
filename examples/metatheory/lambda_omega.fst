@@ -44,12 +44,12 @@ type exp =
    (in this calculus doesn't interact with type substitution below) *)
 
 type esub = var -> Tot exp
-type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
+opaque type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 
-assume val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
+val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
                                         (~(erenaming s) ==> n=1)})
-(*let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
-  -- this triggers #122 *)
+let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
+  (* not marking ernameing 'opaque' triggers #122 *)
 
 val esub_inc : var -> Tot exp
 let esub_inc y = EVar (y+1)
@@ -79,10 +79,14 @@ let esubst_lam s y =
   if y = 0 then EVar y
   else esubst (s (y-1)) esub_inc
 
+val esubst_lam_renaming: s:esub -> Lemma 
+  (ensures (forall (x:var). erenaming s ==> is_EVar (esubst_lam s x)))
+let esubst_lam_renaming s = ()
+
 (* Substitution extensional; trivial with the extensionality axiom *)
 val esubst_extensional: s1:esub -> s2:esub{FEq s1 s2} -> e:exp ->
                         Lemma (requires True) (ensures (esubst e s1 = esubst e s2))
-(*                        [SMTPat (esubst e s1);  SMTPat (esubst e s2)]*)
+                       (* [SMTPat (esubst e s1);  SMTPat (esubst e s2)] *)
 let esubst_extensional s1 s2 e = ()
 
 (* This only works automatically with the patterns in subst_extensional above;
@@ -91,7 +95,7 @@ let esubst_extensional s1 s2 e = ()
    or to use the SMTPat only locally, in this definition (`using` needed). *)
 val esubst_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
       (ensures (esubst (ELam t e) s = ELam t (esubst e (esubst_lam s))))
-(*      [SMTPat (esubst (ELam t e) s)] -- even this increases running time by 10 secs *)
+      (* [SMTPat (esubst (ELam t e) s)] (\* -- even this increases running time by 10 secs *\) *)
 let esubst_lam_hoist t e s = admit()
 
 (* Substitution composition *)
@@ -103,65 +107,113 @@ type esub_comp_inc_type (s:esub) (x:var) =
   (esub_comp esub_inc s x = esub_comp (esubst_lam s) esub_inc x)
 
 val esub_comp_inc : s:esub -> x:var -> Lemma (esub_comp_inc_type s x)
-let esub_comp_inc s x =
-  assert(esub_comp esub_inc s x = esubst (s x) esub_inc);
-  assert(esub_comp (esubst_lam s) esub_inc x = esubst (EVar (x+1)) (esubst_lam s));
-  assert(esub_comp (esubst_lam s) esub_inc x = esubst_lam s (x+1));
-  assert(esub_comp (esubst_lam s) esub_inc x = esubst (s x) esub_inc)
+let esub_comp_inc s x = ()
+  (* assert(esub_comp esub_inc s x = esubst (s x) esub_inc); *)
+  (* assert(esub_comp (esubst_lam s) esub_inc x = esubst (EVar (x+1)) (esubst_lam s)); *)
+  (* assert(esub_comp (esubst_lam s) esub_inc x = esubst_lam s (x+1)); *)
+  (* assert(esub_comp (esubst_lam s) esub_inc x = esubst (s x) esub_inc) *)
 
-assume val esubst_comp : s1:esub -> s2:esub -> e:exp -> Lemma
-      (esubst (esubst e s2) s1 = esubst e (esub_comp s1 s2))
-      (decreases e) (* <-- not really *)
-assume val esubst_lam_comp : s1:esub -> s2:esub -> x:var -> Lemma
-      (esubst_lam (esub_comp s1 s2) x = esub_comp (esubst_lam s1) (esubst_lam s2) x)
-
-(* commenting this out until we can also prove termination
-type silly_annotation (s1:esub) (s2:esub) (x:var) =
+type esubst_lam_composes (s1:esub) (s2:esub) (x:var) =
   (esubst_lam (esub_comp s1 s2) x = esub_comp (esubst_lam s1) (esubst_lam s2) x)
 
+val esubst_comp : s1:esub -> s2:esub -> e:exp -> Lemma
+      (ensures (esubst (esubst e s2) s1 = esubst e (esub_comp s1 s2)))
+      (decreases %[is_evar e; 
+                   is_erenaming s1;
+                   is_erenaming s2;
+                   e])
 let rec esubst_comp s1 s2 e =
   match e with
   | EVar x -> ()
-  | EApp e1 e2 -> esubst_comp s1 s2 e1; esubst_comp s1 s2 e2
+  | EApp e1 e2 ->
+    esubst_comp s1 s2 e1;
+    esubst_comp s1 s2 e2
+
   | ELam t e1 ->
-     esubst_lam_hoist t e1 s2;
-     assert(esubst (ELam t e1) s2 = ELam t (esubst e1 (esubst_lam s2)));
-     esubst_lam_hoist t (esubst e1 (esubst_lam s2)) s1;
-     assert(esubst (esubst (ELam t e1) s2) s1 =
-              ELam t (esubst (esubst e1 (esubst_lam s2)) (esubst_lam s1)));
-     esubst_lam_hoist t e1 (esub_comp s1 s2);
-     assert(esubst (ELam t e1) (esub_comp s1 s2) =
-              ELam t (esubst e1 (esubst_lam (esub_comp s1 s2))));
-     esubst_comp (esubst_lam s1) (esubst_lam s2) e1;
-     assert(esubst (esubst (ELam t e1) s2) s1 =
-              ELam t (esubst e1 (esub_comp (esubst_lam s1) (esubst_lam s2))));
-     forall_intro #var #(silly_annotation s1 s2) (esubst_lam_comp s1 s2);
-     esubst_extensional (esubst_lam (esub_comp s1 s2))
-                        (esub_comp (esubst_lam s1) (esubst_lam s2)) e1
-and esubst_lam_comp s1 s2 x =
-  match x with
-  | 0 -> ()
-  | _ ->
-     (assert(esubst_lam (esub_comp s1 s2) x =
-             esubst ((esub_comp s1 s2) (x-1)) esub_inc);
-      assert(esubst_lam (esub_comp s1 s2) x =
-             esubst (esubst (s2 (x-1)) s1) esub_inc);
-      esubst_comp esub_inc s1 (s2 (x-1));
-      assert(esubst_lam (esub_comp s1 s2) x =
-             esubst (s2 (x-1)) (esub_comp esub_inc s1));
+    (* Sketch of the proof:
+               esubst (esubst (ELam t e1) s2) s1
+  def,hoist1=  esubst (ELam t (esubst e1 (esubst_lam s2)) s1
+  def,hoist2=  ELam t (esubst (esubst e1 (esubst_lam s2)) (esubst_lam s1))
+          h1=  ELam t (esubst e1 (esub_comp (esubst_lam s1) (esubst_lam s2)))
+      h2,ext=  ELam t (esubst e1 (esubst_lam (esub_comp s1 s2))
+  def,hoist3=  esubst (ELam t e1) (esubst_comp s1 s2)
+    *)
 
-      assert(esub_comp (esubst_lam s1) (esubst_lam s2) x =
-             esubst (esubst_lam s2 x) (esubst_lam s1));
-      assert(esub_comp (esubst_lam s1) (esubst_lam s2) x =
-             esubst (esubst (s2 (x-1)) esub_inc) (esubst_lam s1));
-      esubst_comp (esubst_lam s1) esub_inc (s2 (x-1));
-      assert(esub_comp (esubst_lam s1) (esubst_lam s2) x =
-             esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc));
+    let esubst_lam_comp : x:var -> Lemma 
+      (esubst_lam_composes s1 s2 x) = fun x ->  
+        match x with 
+          | 0 -> ()
+          | _ ->
+            (* sketch: 
+                     esubst_lam (esub_comp s1 s2) x
+           def=      esubst (esub_comp s1 s2 (x-1)) esub_inc
+           def=      esubst (esubst (s2 (x - 1)) s1) esub_inc
+           ih1=      esubst (s2 (x-1)) (esub_comp esub_inc s1)   
+esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
+           ih2=      esubst (esubst (s2 (x-1)) esub_inc) (esubst_lam s1)   
+           def=      esubst (esubst_lam s2 x) (esubst_lam s1)
+              =      esub_comp (esubst_lam s1) (esubst_lam s2) x
+            *)
+            begin
+            (* terminates because: 
+               1. if s2 is a renaming, then s2 (x - 1) is a var and e is a non-var
+               2. else if s1 is a renaming, then esub_inc is a renaming so 
+               both the first and 2nd components remain the same;
+               but the third component goes down (s1 is a renaming and s2 is not).
+               3. else the second component goes down since esub_inc is a renaming and s1 is not. *)
 
-      forall_intro #var #(stupid_annotation s1) (esub_comp_inc s1);
-      esubst_extensional (esub_comp esub_inc s1)
-                         (esub_comp (esubst_lam s1) esub_inc) (s2 (x-1)))
-*)
+              let ih1 = 
+                erenaming_sub_inc ();
+                esubst_comp esub_inc s1 (s2 (x-1)) in
+
+              let ext = 
+                forall_intro #var #(esub_comp_inc_type s1) (esub_comp_inc s1);
+                esubst_extensional 
+                  (esub_comp esub_inc s1)
+                  (esub_comp (esubst_lam s1) esub_inc) (s2 (x-1)) in
+              
+            (* terminates because: 
+               1. if s2 is a renaming ... easy.
+               2. else if s1 is a renaming, (esubst_lam s1) is a renaming, 
+                  and the third component goes down.
+               3. else the third component goes down. *)
+              let ih2 = 
+                esubst_lam_renaming s1;
+                erenaming_sub_inc ();
+                esubst_comp (esubst_lam s1) esub_inc (s2 (x-1)) in
+              
+              ()
+
+            end in
+    
+
+    let hoist1 = esubst_lam_hoist t e1 s2 in
+    let hoist2 = esubst_lam_hoist t (esubst e1 (esubst_lam s2)) s1 in
+
+    
+    (* terminates because e1 is a sub-term, a (esubst_lam s1/s2) are renamings if s1/s2 are.
+       h1 proves   esubst (esubst e1 (esubst_lam s2)) (esubst_lam s1)
+                 = esubst e1 (esub_comp (esubst_lam s1) (esubst_lam s2))
+    *)
+    let h1 = 
+      esubst_lam_renaming s1;
+      esubst_lam_renaming s2;
+      esubst_comp (esubst_lam s1) (esubst_lam s2) e1 in 
+
+    let h2 = 
+      forall_intro #var #(esubst_lam_composes s1 s2) esubst_lam_comp;
+      cut (FEq (esub_comp (esubst_lam s1) (esubst_lam s2))
+             (esubst_lam (esub_comp s1 s2))) in
+    
+    let ext = esubst_extensional 
+      (esub_comp (esubst_lam s1) (esubst_lam s2)) 
+      (esubst_lam (esub_comp s1 s2))
+      e1 in 
+    
+    let hoist3 = esubst_lam_hoist t e1 (esub_comp s1 s2) in 
+    ()
+
+
 
 (* subst_beta_gen is a generalization of the substitution we do for
    the beta rule, when we've under x binders
@@ -1307,7 +1359,7 @@ let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
     let Conj paa pbb = kinding_tequiv pst2 in
         
     let h'':(kinding g t2 KTyp) = paa pb in
-    (* AR: without this unnecessary admit below, verification fails ... 
+    (* AR: without this unnecessary admit below, verification fails ...
        why should it matter. note that we have h'' on the previous line
        with same type, so we don't need this admit ? *)
     (* CH: I can reproduce this, it seems like a bug *)
