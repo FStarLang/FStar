@@ -526,7 +526,19 @@ let rec kinding_tequiv g _ _ k h =
      Conj #(kinding g t1 k -> Tot (kinding g t3 k))
           #(kinding g t3 k -> Tot (kinding g t1 k))
           (fcomp ih11 ih21) (fcomp ih22 ih12)
-(* This should work
+  | EqLam #t1' #t2' k1 h1 -> admit ()
+    (* AR: following code should work ? *)
+    (* let Conj ih1 ih2 = kinding_tequiv h1 in *)
+    (* Conj #((kinding g (TLam k1 t1') k) -> Tot (kinding g (TLam k1 t2') k)) *)
+    (*      #((kinding g (TLam k1 t2') k) -> Tot (kinding g (TLam k1 t1') k)) *)
+    (*      (fun h -> *)
+    (* 	   let KiLam k1 h1 = h in *)
+    (* 	   KiLam k1 (ih1 h1)) *)
+    (*      (fun h -> *)
+    (* 	   let KiLam k1 h1 = h in *)
+    (* 	   KiLam k1 (ih2 h1)) *)
+
+(* CH:This should work
      Conj (fcomp ih11 ih21) (fcomp ih22 ih12)
 but instead we get this subtyping error for the second conjunct:
 Subtyping check failed;
@@ -1126,7 +1138,7 @@ let rec tred_diamond s t u h1 h2 =
   	      let v = tsubst_beta_gen 0 v2 v1 in
   	      ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (PBeta k p1b p2b))))
     | MkLTup (PApp #s1' #s2' #lu1' #u2' h21 h22)
-             (PBeta #s1 #s2 #t1' #t2' k h11 h12) ->      
+             (PBeta #s1 #s2 #t1' #t2' k h11 h12) ->
       let ExIntro v1 p = tred_diamond h21 (PLam k h11) in
       let Conj (p1:tred lu1' v1) (p2:tred (TLam k t1') v1) = p in
       let ExIntro v2 p = tred_diamond h22 h12 in
