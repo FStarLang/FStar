@@ -863,10 +863,11 @@ let tsubst_gen_tlam x t k t' =
   tsubst_extensional (tsubst_lam (tsub_beta_gen x t))
                      (tsub_beta_gen (x + 1) (tshift_up t)) t'
 
-
+(* short names *)
 let ts  = tsubst_beta_gen
 let tsh = tshift_up_above
 
+(* shift above and substitute is an identity *)
 val shift_above_and_subst: s:typ -> y:nat -> t:typ -> Lemma (requires True)
                            (ensures (ts y t (tsh y s) = s)) (decreases s)
 let rec shift_above_and_subst s y t = match s with
@@ -874,43 +875,44 @@ let rec shift_above_and_subst s y t = match s with
   | TLam k t1' ->
     tshift_up_above_lam y k t1';
     tsubst_gen_tlam y t k (tsh (y + 1) t1');
-    shift_above_and_subst t1' (y + 1) (tsh 0 t);
-    ()
+    shift_above_and_subst t1' (y + 1) (tsh 0 t)
   | TArr t1' t2'
   | TApp t1' t2' ->
     shift_above_and_subst t1' y t; shift_above_and_subst t2' y t  
 
-val lem2: x:nat -> y:nat{y >= x} -> s:typ -> Lemma (requires True)
-          (ensures (tsh x (tsh y s) = tsh (y + 1) (tsh x s)))
-	  (decreases s)
-let rec lem2 x y s = match s with
+(* reordering shifts *)
+val tshifts_reordering: x:nat -> y:nat{y >= x} -> s:typ -> Lemma (requires True)
+                        (ensures (tsh x (tsh y s) = tsh (y + 1) (tsh x s)))
+             	        (decreases s)
+let rec tshifts_reordering x y s = match s with
   | TVar z -> ()
   | TLam k t1' ->
     tshift_up_above_lam y k t1';
     tshift_up_above_lam x k (tsh (y + 1) t1');
-    lem2 (x + 1) (y + 1) t1';
+    tshifts_reordering (x + 1) (y + 1) t1';
     tshift_up_above_lam x k t1';
     tshift_up_above_lam (y + 1) k (tsh (x + 1) t1')
   | TArr t1' t2'
-  | TApp t1' t2' -> lem2 x y t1'; lem2 x y t2'
+  | TApp t1' t2' -> tshifts_reordering x y t1'; tshifts_reordering x y t2'
 
-val lem1: x:nat -> y:nat{x >= y} ->s:typ -> t:typ -> Lemma (requires True)
-                                                     (ensures (tsh y (ts x s t) =
-					                       ts (x + 1) (tsh y s) (tsh y t)))
+(* a helper lemma for proving the commute lemma  *)
+val tsubst_commute_helper: x:nat -> y:nat{x >= y} ->s:typ -> t:typ ->
+          Lemma (requires True)
+                (ensures (tsh y (ts x s t) = ts (x + 1) (tsh y s) (tsh y t)))
          (decreases t)
-let rec lem1 x y s t = match t with
+let rec tsubst_commute_helper x y s t = match t with
   | TVar z -> ()
   | TLam k t1' ->
     tsubst_gen_tlam x s k t1';
     tshift_up_above_lam y k (ts (x + 1) (tsh 0 s) t1');
-    lem1 (x + 1) (y + 1) (tsh 0 s) t1';
+    tsubst_commute_helper (x + 1) (y + 1) (tsh 0 s) t1';
     tshift_up_above_lam y k t1';
     tsubst_gen_tlam (x + 1) (tsh y s) k (tsh (y + 1) t1');
-    lem2 0 y s;
-    ()
+    tshifts_reordering 0 y s
   | TArr t1' t2'
-  | TApp t1' t2' -> lem1 x y s t1'; lem1 x y s t2'
+  | TApp t1' t2' -> tsubst_commute_helper x y s t1'; tsubst_commute_helper x y s t2'
 
+(* commute lemma for tsubstitutions *)
 val tsubst_commute: t1:typ -> y:nat -> t2:typ -> x:nat{x >= y} -> s:typ ->
                     Lemma (requires True)
 		    (ensures (ts x s (ts y t2 t1) =
@@ -918,18 +920,8 @@ val tsubst_commute: t1:typ -> y:nat -> t2:typ -> x:nat{x >= y} -> s:typ ->
                     (decreases t1)
 let rec tsubst_commute t1 y t2 x s = match t1 with
   | TVar z ->
-    if z < y then
-      ()
-    else if z = y then
-      ()
-    else if z > y && z < x then
-      ()
-    else if z > y && z = x then
-      ()
-    else if z > y && z = x + 1 then
+    if z > y && z = x + 1 then
       shift_above_and_subst s y (ts x s t2)
-    else if z > y && z > x + 1 then
-      ()
     else
       ()
   | TLam k t1' ->
@@ -938,12 +930,10 @@ let rec tsubst_commute t1 y t2 x s = match t1 with
     tsubst_commute t1' (y + 1) (tsh 0 t2) (x + 1) (tsh 0 s);
     tsubst_gen_tlam (x + 1) (tsh y s) k t1';
     tsubst_gen_tlam y (ts x s t2) k (ts (x + 2) (tsh 0 (tsh y s)) t1');
-    lem1 x 0 s t2;
-    lem2 0 y s;
-    ()
+    tsubst_commute_helper x 0 s t2;
+    tshifts_reordering 0 y s
   | TArr t1' t2'
   | TApp t1' t2' -> tsubst_commute t1' y t2 x s; tsubst_commute t2' y t2 x s
-
 
 (* The (pleasant) surprise here is that (as opposed to TAPS) we didn't
    have to also apply the substitution within the MkEnv.x part of the
@@ -1375,8 +1365,8 @@ let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
      *)
            
     (* AR: removing this type annotation, verification fails after taking a long time *)
-    (* CH: I can reproduce this, even with z3timeout 100 I get:
-       An unknown assertion in the term at this location was not provable *)
+    (* CH: I can reproduce this, even with z3timeout 100 I get: 
+      An unknown assertion in the term at this location was not provable *)
     let d1:(cand (kinding g s1 KTyp) (kinding g s2 KTyp)) =
       kinding_inversion_arrow (typing_gives_well_kinded_types ht) in
     let Conj pa pb = d1 in
@@ -1402,7 +1392,6 @@ let inversion_elam_typing _ s1 e t1 t2 h =
   let Conj _ hr = inversion_elam s1 e t1 t2 h (EqRefl (TArr t1 t2)) in hr
 
 (* Type preservation *)
-
 val preservation : #e:exp -> #e':exp -> hs:step e e' ->
                    #g:env -> #t:typ -> ht:(typing g e t) ->
                    Tot (typing g e' t) (decreases ht)
