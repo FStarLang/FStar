@@ -701,31 +701,31 @@ val tshift_up_above_tsubst_beta : x:var -> t1:typ -> t2:typ -> Lemma
     (ensures (tshift_up_above x (tsubst_beta t2 t1) =
               tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1)))
     (decreases t1)
-let rec tshift_up_above_tsubst_beta x t1 t2 = admit ()
+let rec tshift_up_above_tsubst_beta x t1 t2 =
 
-  (* assert(tshift_up_above x (tsubst_beta t2 t1) = *)
-  (*        tsubst (tsubst_beta t2 t1) (tsub_inc_above x)); *)
-  (* assert(tshift_up_above x (tsubst_beta t2 t1) = *)
-  (*        tsubst (tsubst t1 (tsub_beta_gen 0 t2)) (tsub_inc_above x)); *)
-  (* tsubst_comp (tsub_inc_above x) (tsub_beta_gen 0 t2) t1; *)
-  (* assert(tshift_up_above x (tsubst_beta t2 t1) = *)
-  (*        tsubst t1 (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2))); *)
+  assert(tshift_up_above x (tsubst_beta t2 t1) =
+         tsubst (tsubst_beta t2 t1) (tsub_inc_above x));
+  assert(tshift_up_above x (tsubst_beta t2 t1) =
+         tsubst (tsubst t1 (tsub_beta_gen 0 t2)) (tsub_inc_above x));
+  tsubst_comp (tsub_inc_above x) (tsub_beta_gen 0 t2) t1;
+  assert(tshift_up_above x (tsubst_beta t2 t1) =
+         tsubst t1 (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2)));
 
-  (* assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) = *)
-  (*        tsubst (tshift_up_above (x + 1) t1) *)
-  (*               (tsub_beta_gen 0 (tshift_up_above x t2))); *)
-  (* assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) = *)
-  (*        tsubst (tsubst t1 (tsub_inc_above (x+1))) *)
-  (*               (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))); *)
-  (* tsubst_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x))) *)
-  (*             (tsub_inc_above (x+1)) t1; *)
-  (* assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) = *)
-  (*        tsubst t1 (tsub_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x))) *)
-  (*                             (tsub_inc_above (x+1)))); *)
-  (* forall_intro #var #(aux_typ x t2) (aux x t2); (\* only for speedup *\) *)
-  (* tsubst_extensional (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2)) *)
-  (*                    (tsub_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x))) *)
-  (*                               (tsub_inc_above (x+1))) t1 *)
+  assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) =
+         tsubst (tshift_up_above (x + 1) t1)
+                (tsub_beta_gen 0 (tshift_up_above x t2)));
+  assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) =
+         tsubst (tsubst t1 (tsub_inc_above (x+1)))
+                (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x))));
+  tsubst_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
+              (tsub_inc_above (x+1)) t1;
+  assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) =
+         tsubst t1 (tsub_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
+                              (tsub_inc_above (x+1))));
+  forall_intro #var #(aux_typ x t2) (aux x t2); (* only for speedup *)
+  tsubst_extensional (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2))
+                     (tsub_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
+                                (tsub_inc_above (x+1))) t1
 
 val tequiv_tshift : #t1:typ -> #t2:typ -> h:(tequiv t1 t2) -> x:nat ->
                Tot (tequiv (tshift_up_above x t1) (tshift_up_above x t2))
@@ -788,20 +788,20 @@ let eaux e x y =
 val esubst_gen_elam : x:var -> e:exp -> t:typ -> e':exp -> Lemma
                       (ensures (esubst_beta_gen x e (ELam t e') =
                        ELam t (esubst_beta_gen (x + 1) (eshift_up e) e')))
-let esubst_gen_elam x e t e' = admit ()
-  (* assert(esubst_beta_gen x e (ELam t e') = *)
-  (*          esubst (ELam t e') (esub_beta_gen x e)); *)
-  (* esubst_lam_hoist t e' (esub_beta_gen x e); *)
-  (* assert(esubst_beta_gen x e (ELam t e') = *)
-  (*          ELam t (esubst e' (esubst_lam (esub_beta_gen x e)))); *)
+let esubst_gen_elam x e t e' =
+  assert(esubst_beta_gen x e (ELam t e') =
+           esubst (ELam t e') (esub_beta_gen x e));
+  esubst_lam_hoist t e' (esub_beta_gen x e);
+  assert(esubst_beta_gen x e (ELam t e') =
+           ELam t (esubst e' (esubst_lam (esub_beta_gen x e))));
 
-  (* assert(ELam t (esubst_beta_gen (x + 1) (eshift_up e) e') = *)
-  (*          ELam t (esubst e' (esub_beta_gen (x + 1) (eshift_up e)))); *)
+  assert(ELam t (esubst_beta_gen (x + 1) (eshift_up e) e') =
+           ELam t (esubst e' (esub_beta_gen (x + 1) (eshift_up e))));
   
-  (* forall_intro #var #(eaux_type e x) (eaux e x); *)
+  forall_intro #var #(eaux_type e x) (eaux e x);
 
-  (* esubst_extensional (esubst_lam (esub_beta_gen x e)) *)
-  (*                    (esub_beta_gen (x + 1) (eshift_up e)) e' *)
+  esubst_extensional (esubst_lam (esub_beta_gen x e))
+                     (esub_beta_gen (x + 1) (eshift_up e)) e'
 
 val typing_substitution: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ ->
       #g:env -> h1:(typing g v t_x) -> h2:(typing (extend_evar g x t_x) e t) ->
@@ -848,20 +848,20 @@ let taux t x y =
 val tsubst_gen_tlam : x:var -> t:typ -> k:knd -> t':typ -> Lemma
                       (ensures (tsubst_beta_gen x t (TLam k t') =
                        TLam k (tsubst_beta_gen (x + 1) (tshift_up t) t')))
-let tsubst_gen_tlam x t k t' = admit ()
-  (* assert(tsubst_beta_gen x t (TLam k t') = *)
-  (*          tsubst (TLam k t') (tsub_beta_gen x t)); *)
-  (* tsubst_lam_hoist k t' (tsub_beta_gen x t); *)
-  (* assert(tsubst_beta_gen x t (TLam k t') = *)
-  (*          TLam k (tsubst t' (tsubst_lam (tsub_beta_gen x t)))); *)
+let tsubst_gen_tlam x t k t' =
+  assert(tsubst_beta_gen x t (TLam k t') =
+           tsubst (TLam k t') (tsub_beta_gen x t));
+  tsubst_lam_hoist k t' (tsub_beta_gen x t);
+  assert(tsubst_beta_gen x t (TLam k t') =
+           TLam k (tsubst t' (tsubst_lam (tsub_beta_gen x t))));
 
-  (* assert(TLam k (tsubst_beta_gen (x + 1) (tshift_up t) t') = *)
-  (*          TLam k (tsubst t' (tsub_beta_gen (x + 1) (tshift_up t)))); *)
+  assert(TLam k (tsubst_beta_gen (x + 1) (tshift_up t) t') =
+           TLam k (tsubst t' (tsub_beta_gen (x + 1) (tshift_up t))));
   
-  (* forall_intro #var #(taux_type t x) (taux t x); *)
+  forall_intro #var #(taux_type t x) (taux t x);
 
-  (* tsubst_extensional (tsubst_lam (tsub_beta_gen x t)) *)
-  (*                    (tsub_beta_gen (x + 1) (tshift_up t)) t' *)
+  tsubst_extensional (tsubst_lam (tsub_beta_gen x t))
+                     (tsub_beta_gen (x + 1) (tshift_up t)) t'
 
 
 let ts  = tsubst_beta_gen
