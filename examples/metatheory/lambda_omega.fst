@@ -79,7 +79,7 @@ let esubst_lam s y =
   if y = 0 then EVar y
   else esubst (s (y-1)) esub_inc
 
-val esubst_lam_renaming: s:esub -> Lemma 
+val esubst_lam_renaming: s:esub -> Lemma
   (ensures (forall (x:var). erenaming s ==> is_EVar (esubst_lam s x)))
 let esubst_lam_renaming s = ()
 
@@ -118,7 +118,7 @@ type esubst_lam_composes (s1:esub) (s2:esub) (x:var) =
 
 val esubst_comp : s1:esub -> s2:esub -> e:exp -> Lemma
       (ensures (esubst (esubst e s2) s1 = esubst e (esub_comp s1 s2)))
-      (decreases %[is_evar e; 
+      (decreases %[is_evar e;
                    is_erenaming s1;
                    is_erenaming s2;
                    e])
@@ -139,45 +139,45 @@ let rec esubst_comp s1 s2 e =
   def,hoist3=  esubst (ELam t e1) (esubst_comp s1 s2)
     *)
 
-    let esubst_lam_comp : x:var -> Lemma 
-      (esubst_lam_composes s1 s2 x) = fun x ->  
-        match x with 
+    let esubst_lam_comp : x:var -> Lemma
+      (esubst_lam_composes s1 s2 x) = fun x ->
+        match x with
           | 0 -> ()
           | _ ->
-            (* sketch: 
+            (* sketch:
                      esubst_lam (esub_comp s1 s2) x
            def=      esubst (esub_comp s1 s2 (x-1)) esub_inc
            def=      esubst (esubst (s2 (x - 1)) s1) esub_inc
-           ih1=      esubst (s2 (x-1)) (esub_comp esub_inc s1)   
+           ih1=      esubst (s2 (x-1)) (esub_comp esub_inc s1)
 esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
-           ih2=      esubst (esubst (s2 (x-1)) esub_inc) (esubst_lam s1)   
+           ih2=      esubst (esubst (s2 (x-1)) esub_inc) (esubst_lam s1)
            def=      esubst (esubst_lam s2 x) (esubst_lam s1)
               =      esub_comp (esubst_lam s1) (esubst_lam s2) x
             *)
             begin
-            (* terminates because: 
+            (* terminates because:
                1. if s2 is a renaming, then s2 (x - 1) is a var and e is a non-var
-               2. else if s1 is a renaming, then esub_inc is a renaming so 
+               2. else if s1 is a renaming, then esub_inc is a renaming so
                both the first and 2nd components remain the same;
                but the third component goes down (s1 is a renaming and s2 is not).
                3. else the second component goes down since esub_inc is a renaming and s1 is not. *)
 
-              let ih1 = 
+              let ih1 =
                 erenaming_sub_inc ();
                 esubst_comp esub_inc s1 (s2 (x-1)) in
 
-              let ext = 
+              let ext =
                 forall_intro #var #(esub_comp_inc_type s1) (esub_comp_inc s1);
-                esubst_extensional 
+                esubst_extensional
                   (esub_comp esub_inc s1)
                   (esub_comp (esubst_lam s1) esub_inc) (s2 (x-1)) in
               
-            (* terminates because: 
+            (* terminates because:
                1. if s2 is a renaming ... easy.
-               2. else if s1 is a renaming, (esubst_lam s1) is a renaming, 
+               2. else if s1 is a renaming, (esubst_lam s1) is a renaming,
                   and the third component goes down.
                3. else the third component goes down. *)
-              let ih2 = 
+              let ih2 =
                 esubst_lam_renaming s1;
                 erenaming_sub_inc ();
                 esubst_comp (esubst_lam s1) esub_inc (s2 (x-1)) in
@@ -195,22 +195,22 @@ esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
        h1 proves   esubst (esubst e1 (esubst_lam s2)) (esubst_lam s1)
                  = esubst e1 (esub_comp (esubst_lam s1) (esubst_lam s2))
     *)
-    let h1 = 
+    let h1 =
       esubst_lam_renaming s1;
       esubst_lam_renaming s2;
-      esubst_comp (esubst_lam s1) (esubst_lam s2) e1 in 
+      esubst_comp (esubst_lam s1) (esubst_lam s2) e1 in
 
-    let h2 = 
+    let h2 =
       forall_intro #var #(esubst_lam_composes s1 s2) esubst_lam_comp;
       cut (FEq (esub_comp (esubst_lam s1) (esubst_lam s2))
              (esubst_lam (esub_comp s1 s2))) in
     
-    let ext = esubst_extensional 
-      (esub_comp (esubst_lam s1) (esubst_lam s2)) 
+    let ext = esubst_extensional
+      (esub_comp (esubst_lam s1) (esubst_lam s2))
       (esubst_lam (esub_comp s1 s2))
-      e1 in 
+      e1 in
     
-    let hoist3 = esubst_lam_hoist t e1 (esub_comp s1 s2) in 
+    let hoist3 = esubst_lam_hoist t e1 (esub_comp s1 s2) in
     ()
 
 
@@ -878,7 +878,7 @@ let rec shift_above_and_subst s y t = match s with
     shift_above_and_subst t1' (y + 1) (tsh 0 t)
   | TArr t1' t2'
   | TApp t1' t2' ->
-    shift_above_and_subst t1' y t; shift_above_and_subst t2' y t  
+    shift_above_and_subst t1' y t; shift_above_and_subst t2' y t
 
 (* reordering shifts *)
 val tshifts_reordering: x:nat -> y:nat{y >= x} -> s:typ -> Lemma (requires True)
@@ -1327,7 +1327,7 @@ let rec tred_tarr_preserved s1 s2 t h =
 val inversion_elam : #g:env -> s1:typ -> e:exp ->
                      #s:typ -> t1:typ -> t2:typ -> ht:typing g (ELam s1 e) s ->
                      heq:tequiv s (TArr t1 t2) ->
-                     Tot (cand (tequiv t1 s1) (typing (extend_evar g 0 t1) e t2))
+                     Tot (cand (cand (tequiv t1 s1) (typing (extend_evar g 0 s1) e t2)) (kinding g s1 KTyp))
                      (decreases ht)
 let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
   | TyEqu #g #e' #u #s ht1 heq1 k1 ->
@@ -1359,11 +1359,9 @@ let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
      *)
     
     (*
-     * AR: the code below is somewhat unstable. for example, removing type annotations
-     * fails verification, without an unnecessary admit below, the verification
-     * fails, cannot use Conj.pb directly, have to let bind.
+     * AR: Cannot use Conj.pb directly below, have to let bind.
      *)
-           
+    
     (* AR: removing this type annotation, verification fails after taking a long time *)
     (* CH: I can reproduce this, even with z3timeout 100 I get: 
       An unknown assertion in the term at this location was not provable *)
@@ -1373,23 +1371,21 @@ let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
 
     let pst2 = EqTran (tred_star_tequiv psu2) (EqSymm (tred_star_tequiv ptu2)) in
     let Conj paa pbb = kinding_tequiv pst2 in
-        
+    
+    (*
+     * AR: this h'' is not used below, but if I remove this, I get stack overflow
+     * (on mac using mono)
+     *)       
     let h'':(kinding g t2 KTyp) = paa pb in
-    (* AR: without this unnecessary admit below, verification fails ...
-       why should it matter. note that we have h'' on the previous line
-       with same type, so we don't need this admit ? *)
-    (* CH: I can reproduce this, it seems like a bug *)
-    let h'':(kinding g t2 KTyp) = admit () in
-
-    Conj (EqTran (tred_star_tequiv ptu1) (EqSymm (tred_star_tequiv psu1)))
-         (TyEqu ht1 pst2 h'')
+    let h:(typing (extend_evar g 0 s1) e t2) = TyEqu ht1 pst2 (kinding_weakening_ebnd (paa pb) 0 s1) in
+    Conj (Conj (EqTran (tred_star_tequiv ptu1) (EqSymm (tred_star_tequiv psu1))) h) hk
 
 (* corollary of inversion_elam *)
 val inversion_elam_typing : #g:env -> s1:typ -> e:exp ->
       t1:typ -> t2:typ -> typing g (ELam s1 e) (TArr t1 t2) ->
-      Tot (typing (extend_evar g 0 t1) e t2)
+      Tot (cand (cand (tequiv t1 s1) (typing (extend_evar g 0 s1) e t2)) (kinding g s1 KTyp))
 let inversion_elam_typing _ s1 e t1 t2 h =
-  let Conj _ hr = inversion_elam s1 e t1 t2 h (EqRefl (TArr t1 t2)) in hr
+  inversion_elam s1 e t1 t2 h (EqRefl (TArr t1 t2))
 
 (* Type preservation *)
 val preservation : #e:exp -> #e':exp -> hs:step e e' ->
@@ -1400,7 +1396,9 @@ let rec preservation _ _ hs _ _ ht =
   | TyApp #g #e1 #e2 #t1 #t2 h1 h2 ->
     (match hs with
      | SBeta s1 e11 e12 ->
-        typing_substitution 0 h2 (inversion_elam_typing s1 e11 t1 t2 h1)
+       let Conj p1 (p3:kinding g s1 KTyp) = inversion_elam_typing s1 e11 t1 t2 h1 in
+       let Conj (p1:tequiv t1 s1) (p2:typing (extend_evar g 0 s1) e11 t2) = p1 in
+       typing_substitution 0 (TyEqu h2 p1 p3) p2
      | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
      | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2))
   | TyEqu ht1 he hk -> TyEqu (preservation hs ht1) he hk
