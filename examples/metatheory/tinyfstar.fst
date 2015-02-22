@@ -19,7 +19,8 @@ module TinyFStar
 (********************************************************)
 (* Syntax *)
 (********************************************************)
-type var = int    //de Bruijn index
+type var = nat    //de Bruijn index
+type loc = nat
 type const = int  // CH: trying to pack all exp and typ constants
                   // and locations in one int seems very unelegant
                   // (and will need quite a complex encoding, since
@@ -46,8 +47,8 @@ and cmp =
 and exp =
   | EVar   : x:var   -> exp
   | EConst : c:const -> exp
-  | ELoc   : l:int   -> exp (* CH: do we want this, or are they just constants? *)
-  | ENat   : l:int   -> exp (* CH: weren't ints just constants? *)
+  | ELoc   : l:loc   -> exp (* CH: do we want this, or are they just constants? *)
+  | EInt   : l:int   -> exp (* CH: weren't ints just constants? *)
   | ELam   : t:typ   -> e:exp -> exp            (* x:t bound in e *)
   | EApp   : e1:exp  -> e2:exp -> exp
   | ELet   : t:typ   -> e1:exp -> e2:exp -> exp (* x:t bound in e2 *)
@@ -91,11 +92,11 @@ type subst =
   | EForX : e:exp -> x:var -> subst
   | TForA : t:typ -> a:var -> subst
 
-assume val bump_knd' : int -> int -> k:knd -> Tot knd (decreases k)
-assume val bump_cmp': int -> int -> c:cmp -> Tot cmp (decreases c)
-assume val bump_exp' : int -> int -> e:exp -> Tot exp (decreases e)
+assume val bump_knd' : var -> var -> k:knd -> Tot knd (decreases k)
+assume val bump_cmp': var -> var -> c:cmp -> Tot cmp (decreases c)
+assume val bump_exp' : var -> var -> e:exp -> Tot exp (decreases e)
 
-val bump_typ' : m:int -> n:int -> t:typ -> Tot typ (decreases t)
+val bump_typ' : m:var -> n:var -> t:typ -> Tot typ (decreases t)
 let rec bump_typ' m n t = match t with
   | TVar a      -> if a >= m then TVar (a + n) else t
   | TConst c    -> t
@@ -226,13 +227,13 @@ let neg phi            = TTApp t_neg phi
 
 val bind_pure_if : exp -> c1:cmp{is_CPure c1} -> c2:cmp{is_CPure c2} -> Tot cmp
 let bind_pure_if e (CPure t wp1) (CPure _ wp2) =
-  let guard = mk_eq t_int e (ENat 0) in
+  let guard = mk_eq t_int e (EInt 0) in
   let wp = op_CPure t t_and (op_CPure t t_imp (up_CPure t guard) wp1) (op_CPure t t_imp (up_CPure t (neg guard)) wp2) in
   CPure t wp
 
 val bind_st_if : exp -> c1:cmp{is_CSt c1} -> c2:cmp{is_CSt c2} -> Tot cmp
 let bind_st_if e (CSt t wp1) (CSt _ wp2) =
-  let guard = mk_eq t_int e (ENat 0) in
+  let guard = mk_eq t_int e (EInt 0) in
   let wp = op_CSt t t_and (op_CSt t t_imp (up_CSt t guard) wp1) (op_CSt t t_imp (up_CSt t (neg guard)) wp2) in
   CSt t wp
 
@@ -528,10 +529,6 @@ and kind_ok : env -> knd -> Type =
            -> kind_ok (extend g (B_a k1)) k2
            -> kind_ok g (KKArr k1 k2)
 
-(* CH: still missing the operational semantics (see txt);
-   it needs to be a relation because of allocation,
-   and of full reduction in types, right? *)
-
 (* Values *)
 
 val is_value : exp -> Tot bool
@@ -540,7 +537,7 @@ let is_value e =
   | EVar _
   | EConst _
   | ELoc _
-  | ENat _
+  | EInt _
   | ELam _ _
   | EFix _ _ _ -> true
   | EApp _ _
@@ -620,8 +617,16 @@ let plug_e_in_t e te =
 (* Reduction in types and pure expressions *)
 
 type tstep : typ -> typ -> Type =
-  | TsEBeta : t:typ -> tstep t t (* TODO *)
-  | TsTBeta : t:typ -> tstep t t (* TODO *)
+  | TsEBeta : tx:typ ->
+              t:typ ->
+              e:exp ->
+              tstep (TEApp (TELam tx t) e) (subst_typ (EForX e 0) t)
+                                    (* TODO: + a shift down actually
+                                       (for all the betas and twice for fix) *)
+  | TsTBeta : k:knd ->
+              t:typ ->
+              t':typ ->
+              tstep (TTApp (TTLam k t) t') (subst_typ (TForA t' 0) t)
   | TsTCtx : tt:tctx_thole ->
              #t:typ ->
              #t':typ ->
@@ -635,19 +640,57 @@ type tstep : typ -> typ -> Type =
 and epstep : exp -> exp -> Type =
   | EpsIf0 : e1:exp ->
              e2:exp ->
-             epstep (EIf0 (ENat 0) e1 e2) e1
+             epstep (EIf0 (EInt 0) e1 e2) e1
   | EpsIfS : i:int{i<>0} ->
              e1:exp ->
              e2:exp ->
-             epstep (EIf0 (ENat i) e1 e2) e2
+             epstep (EIf0 (EInt i) e1 e2) e2
   | EpsBeta : t:typ ->
               e:exp ->
               v:value ->
               e':exp ->
-              epstep (EApp (ELam t e) v) e' (* TODO *)
-  | EpsFix : e:exp -> epstep e e (* TODO *)
+              epstep (EApp (ELam t e) v) (subst_exp (EForX v 0) e)
+  | EpsFix : ed:option exp ->
+             t:typ ->
+             e:exp ->
+             v:value ->
+             epstep (EApp (EFix ed t e) v)
+               (subst_exp (EForX (EFix ed t e) 0) (subst_exp (EForX v 0) e))
   | EpsTCtx : et:ectx_thole ->
               #t:typ ->
               #t':typ ->
               tstep t t' ->
               epstep (plug_t_in_e t et) (plug_t_in_e t' et)
+    (* CH: Is it really on purpose that this doesn't include a EpsECtx rule?
+           How will we get to doing the betas?
+           EisECtx won't really help with that *)
+
+type heap = loc -> Tot value
+
+(* generic function on functional maps, should be in library *)
+val upd_heap : l:loc -> v:value -> h:heap -> Tot heap
+let upd_heap l v h l' = if l = l' then v else h l'
+
+type cfg =
+  | Cfg : h:heap -> e:exp -> cfg
+
+type eistep : cfg -> cfg -> Type =
+  | EisPure : h:heap ->
+              #e:exp ->
+              #e':exp ->
+              epstep e e' ->
+              eistep (Cfg h e) (Cfg h e')
+  | EisECtx : h:heap ->
+              ee:ectx_ehole ->
+              #e:exp ->
+              #e':exp ->
+              epstep e e' ->
+              eistep (Cfg h (plug_e_in_e e ee)) (Cfg h (plug_e_in_e e' ee))
+  | EisRd : h:heap ->
+            l:loc ->
+            eistep (Cfg h (EApp e_bang (ELoc l))) (Cfg h (h l))
+  | EisWr : h:heap ->
+            l:loc ->
+            v:value ->
+            eistep (Cfg h (EApp (EApp e_assign (ELoc l)) v))
+                   (Cfg (upd_heap l v h) e_unit)
