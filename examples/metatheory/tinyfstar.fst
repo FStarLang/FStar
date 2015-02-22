@@ -21,20 +21,23 @@ module TinyFStar
 (********************************************************)
 type var = int    //de Bruijn index
 type const = int  // CH: trying to pack all exp and typ constants
-                  //     in one int seems very unelegant
+                  // and locations in one int seems very unelegant
+                  // (and will need quite a complex encoding, since
+                  //  constants include integers and locations are
+                  //  also an infinite set)
 type knd =
   | KType : knd
-  | KTArr : t:typ -> k:knd -> knd     (* t  bound in k *)
-  | KKArr : k1:knd -> k2:knd -> knd   (* k1 bound in k2 *)
+  | KTArr : t:typ -> k:knd -> knd     (* x:t  bound in k *)
+  | KKArr : k1:knd -> k2:knd -> knd   (* a:k1 bound in k2 *)
 
 and typ =
   | TVar   : a:var   -> typ
   | TConst : c:const -> typ
-  | TArr   : t:typ   -> c:cmp  -> typ (* t  bound in c *)
+  | TArr   : t:typ   -> c:cmp  -> typ (* x:t  bound in c *)
   | TTApp  : t1:typ  -> t2:typ -> typ
   | TEApp  : t:typ   -> e:exp  -> typ
-  | TTLam  : k:knd   -> t:typ  -> typ (* k  bound in t *)
-  | TLam   : t1:typ  -> t2:typ -> typ (* t1 bound in t2 *)
+  | TTLam  : k:knd   -> t:typ  -> typ (* a:k  bound in t *)
+  | TELam  : t1:typ  -> t2:typ -> typ (* x:t1 bound in t2 *)
 
 and cmp =
   | CPure : t:typ -> wp:typ -> cmp
@@ -44,12 +47,16 @@ and exp =
   | EVar   : x:var   -> exp
   | EConst : c:const -> exp
   | ELoc   : l:int   -> exp
-  | ENat   : l:int   -> exp
-  | ELam   : t:typ   -> e:exp -> exp
+  | ENat   : l:int   -> exp (* CH: weren't ints just constants? *)
+  | ELam   : t:typ   -> e:exp -> exp            (* x:t bound in e *)
   | EApp   : e1:exp  -> e2:exp -> exp
-  | ELet   : t:typ   -> e1:exp -> e2:exp -> exp (* CH: if I remember correctly this was to simulate the other contexts? *)
+  | ELet   : t:typ   -> e1:exp -> e2:exp -> exp (* x:t bound in e2 *)
+  (* CH: if I remember correctly let was to simulate the other contexts?
+     Is this part of the language or not? I don't see why we would need it.
+     It also doesn't appear in the txt. *)
   | EIf0   : e0:exp  -> e1:exp -> e2:exp -> exp
-  | EFix   : ed:exp  -> t:typ  -> e:exp  -> exp (* CH: added this, but we're still missing the rules for it *)
+  | EFix   : ed:(option exp) -> t:typ  -> e:exp  -> exp
+             (* f:t and x bound in e *)
 
 (* Constants *)
 let t_unit   = TConst 0
@@ -76,6 +83,10 @@ let e_unit   = EConst 104
 (********************************************************)
 (* Substitutions and de Bruijn index manipulations      *)
 (********************************************************)
+
+(* TODO: finish this up
+   CH: try to reuse parallel substitution style from lambda_omega *)
+
 type subst =
   | EForX : e:exp -> x:var -> subst
   | TForA : t:typ -> a:var -> subst
@@ -92,7 +103,7 @@ let rec bump_typ' m n t = match t with
   | TTApp t1 t2 -> TTApp (bump_typ' m n t1) (bump_typ' m n t2)
   | TEApp t1 e2 -> TEApp (bump_typ' m n t1) (bump_exp' m n e2)
   | TTLam k1 t2 -> TTLam (bump_knd' m n k1) (bump_typ' (m + 1) n t2)
-  | TLam  t1 t2 -> TLam  (bump_typ' m n t1) (bump_typ' (m + 1) n t2)
+  | TELam  t1 t2 -> TELam  (bump_typ' m n t1) (bump_typ' (m + 1) n t2)
 
 let bump_knd n t = bump_knd' 0 n t
 let bump_typ n t = bump_typ' 0 n t
@@ -127,7 +138,7 @@ and subst_typ s t = match t with
   | TTApp t1 t2 -> TTApp (subst_typ s t1) (subst_typ s t2)
   | TEApp t1 e2 -> TEApp (subst_typ s t1) (subst_exp s e2)
   | TTLam k1 t2 -> TTLam (subst_knd s k1) (subst_typ (bump_subst s) t2)
-  | TLam  t1 t2 -> TLam  (subst_typ s t1) (subst_typ (bump_subst s) t2)
+  | TELam  t1 t2 -> TELam  (subst_typ s t1) (subst_typ (bump_subst s) t2)
 
 
 (********************************************************)
@@ -143,17 +154,17 @@ let k_st t        = KKArr (k_post_st t) k_pre_st
 
 let tot t = CPure t (TTLam (k_post_pure t)
                       (TTApp (TTApp t_forall t)
-                         (TLam t (TEApp (TVar 1) (EVar 0)))))
+                         (TELam t (TEApp (TVar 1) (EVar 0)))))
 
 val bind_pure:  c1:cmp{is_CPure c1}
              -> c2:cmp{is_CPure c2}
              -> Tot cmp
 let bind_pure (CPure t1 wp1) (CPure t2 wp2) = (* bind wp1 wp2 post = wp1 (fun (x:t1) -> wp2 x post) *)
-  let wp2 = TLam t1 wp2 in
+  let wp2 = TELam t1 wp2 in
   CPure t2 (TTLam (* post *)
               (k_post_pure t2)  (* don't need to bump t2, since we'll have a side condition ensuring that x:t1 not free in t2 *)
               (TTApp (bump_typ 1 wp1)
-                 (TLam (* x *)
+                 (TELam (* x *)
                     (bump_typ 1 t1)
                     (TTApp
                        (TEApp (bump_typ 2 wp2) (EVar 0))
@@ -165,10 +176,10 @@ val lift_pure_st : c1:cmp{is_CPure c1}
 let lift_pure_st (CPure t wp) =
   CST t (TTLam (* post *)
            (k_post_st t)
-           (TLam (* h *)
+           (TELam (* h *)
               t_heap
               (TTApp (bump_typ 2 wp)
-                 (TLam (* x *)
+                 (TELam (* x *)
                     t
                     (TEApp (TEApp (TVar 2) (*post*) (EVar 0) (*x*)) (EVar 1)(*h*))))))
 
@@ -176,11 +187,11 @@ val bind_st:  c1:cmp{is_CST c1}
            -> c2:cmp{is_CST c2}
            -> Tot cmp
 let bind_st (CST t1 wp1) (CST t2 wp2) =
-  let wp2 = TLam t1 wp2 in
+  let wp2 = TELam t1 wp2 in
   CST t2 (TTLam (* post *)
               (k_post_st t2)  (* don't need to bump t2, since we'll have a side condition ensuring that x:t1 not free in t2 *)
               (TTApp (bump_typ 1 wp1)
-                 (TLam (* x *)
+                 (TELam (* x *)
                     (bump_typ 1 t1)
                     (TTApp
                        (TEApp (bump_typ 2 wp2) (EVar 0))
@@ -194,19 +205,19 @@ let bind c1 c2 = match c1, c2 with
   | CPure _ _, CST _ _   -> bind_st   (lift_pure_st c1) c2
 
 let conj phi1 phi2        = TTApp (TTApp t_and phi1) phi2
-let close_forall t phi    = TTApp (TTApp t_forall t) (TLam t phi)
+let close_forall t phi    = TTApp (TTApp t_forall t) (TELam t phi)
 
 let down_CPure t wp       = TTApp (TTApp t_forall_post_pure t)
                                   (TTLam (k_post_pure t) (TTApp (bump_typ 1 wp) (TVar 0)))
 let down_CST t wp         = TTApp (TTApp t_forall_post_st t)
                                   (TTLam (k_post_st t)
-                                     (TLam t_heap (TEApp (TTApp (bump_typ 2 wp) (TVar 1)) (EVar 0))))
+                                     (TELam t_heap (TEApp (TTApp (bump_typ 2 wp) (TVar 1)) (EVar 0))))
 let up_CPure t phi        = TTLam (k_post_pure t) (bump_typ 1 phi)
-let up_CST   t phi        = TTLam (k_post_st t)   (TLam t_heap (bump_typ 2 phi))
+let up_CST   t phi        = TTLam (k_post_st t)   (TELam t_heap (bump_typ 2 phi))
 let op_CPure t op wp1 wp2 = TTLam (k_post_pure t) (TTApp (TTApp op
                                                             (TTApp (bump_typ 1 wp1) (TVar 0)))
                                                            (TTApp (bump_typ 1 wp2) (TVar 0)))
-let op_CST t op wp1 wp2   = TTLam (k_post_st t)   (TLam t_heap (TTApp (TTApp op
+let op_CST t op wp1 wp2   = TTLam (k_post_st t)   (TELam t_heap (TTApp (TTApp op
                                                                          (TEApp (TTApp (bump_typ 2 wp1) (TVar 1)) (EVar 0)))
                                                                   (TEApp (TTApp (bump_typ 2 wp2) (TVar 1)) (EVar 0))))
 
@@ -243,6 +254,8 @@ let set_result_typ c t = match c with
 (********************************************************)
 (* Typing environments *)
 (********************************************************)
+
+(* CH: where are the location bindings from the txt? *)
 type var_binding =
   | B_a : k:knd -> var_binding
   | B_x : t:typ -> var_binding
@@ -261,7 +274,10 @@ val empty : env
 let empty x = None
 
 type const_binding =
-  | B_l : t:typ -> const_binding
+  | B_l : t:typ -> const_binding (* CH: locations bound in signature?
+                                        aren't they dynamically allocated?
+                                        (in the txt they are in environment)
+                                        (they anyway all have type ref int) *)
   | B_c : t:typ -> const_binding
   | B_t : k:knd -> const_binding
 type constants = int -> Tot (option const_binding)
@@ -313,7 +329,12 @@ let lookup_t t = B_t.k (Some.v (signature t))
 (********************************************************)
 (* Main typing judgments *)
 (********************************************************)
-assume type valid: env -> typ -> Type (* TODO *)
+
+(* TODO: write valid down *)
+(* CH: try to enable the use of SMT automation as much as possible,
+       otherwise we will die using building huge derivations
+       in a low-level deduction system *)
+assume type valid: env -> typ -> Type
 
 type sub_cmp : env -> cmp -> cmp -> typ -> Type =
   | SubLift : g:env
@@ -423,7 +444,8 @@ type typing : env -> exp -> cmp -> Type =
 
 (* CH: Missing the 2 fix rules (see T-Fix and T-FixOmega in txt) *)
 (* CH: Where is the type conversion (typing or subtyping) rule?
-       We will have one, right? *)
+       We will have one, right?
+       Otherwise what's the point of type-level lambdas? *)
 
 and kinding : env -> typ -> knd -> Type =
   | KindingVar   : g:env
@@ -471,7 +493,7 @@ and kinding : env -> typ -> knd -> Type =
                 -> k:knd
                 -> kinding g t1 KType
                 -> kinding (extend g (B_x t1)) t2 k
-                -> kinding g (TLam t1 t2) (KTArr t1 k)
+                -> kinding g (TELam t1 t2) (KTArr t1 k)
 
 and c_ok : env -> cmp -> Type =
   | CPureOK :   g:env
@@ -509,3 +531,51 @@ and kind_ok : env -> knd -> Type =
 (* CH: still missing the operational semantics (see txt);
    it needs to be a relation because of allocation,
    and of full reduction in types, right? *)
+
+(* Values *)
+
+val is_value : exp -> Tot bool
+let is_value e =
+  match e with
+  | EVar _
+  | EConst _
+  | ELoc _
+  | ENat _
+  | ELam _ _
+  | EFix _ _ _ -> true
+  | EApp _ _
+  | ELet _ _ _
+  | EIf0 _ _ _ -> false
+
+type value = e:exp{is_value e}
+
+(* Contexts *)
+
+type ectx_ehole =
+  | EETop : ectx_ehole
+  | EEAppL : e2:exp -> ectx_ehole
+  | EEAppR : e1:value -> ectx_ehole
+  | EEIf0 : e1:exp -> e2:exp -> ectx_ehole
+
+type ectx_thole =
+  | ETLam : e:exp -> ectx_thole
+  | ETFix : ed:(option exp) -> e:exp -> ectx_thole
+
+type cctx =
+  | CCPureT : wp:typ -> cctx
+  | CCPureWP : t:typ -> cctx
+
+type tctx_thole =
+  | TTTop : tctx_thole
+  | TTArrT : c:cmp -> tctx_thole
+  | TTArrC : t:typ -> c:cctx -> tctx_thole
+  | TTTAppL : t2:typ -> tctx_thole
+  | TTTAppR : t1:typ -> tctx_thole
+  | TTEApp : e:exp -> tctx_thole
+  | TTTLam : k:knd -> tctx_thole
+  | TTELam1 : t2:typ -> tctx_thole
+  | TTELam2 : t1:typ -> tctx_thole
+
+type tctx_ehole =
+  | TETEApp : t:typ -> tctx_ehole
+
