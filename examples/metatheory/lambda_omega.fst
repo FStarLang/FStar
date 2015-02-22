@@ -21,7 +21,8 @@ open Classical
 open FunctionalExtensionality
 
 (* Chapter 29 of TAPL: "Type Operators and Kinding",
-   proof follows Chapter 30, but we don't consider polymorphism *)
+   proof follows Chapter 30, but we don't consider polymorphism
+   (extending this to System F omega seems easy though) *)
 
 type var = nat
 
@@ -49,7 +50,7 @@ opaque type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
                                         (~(erenaming s) ==> n=1)})
 let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
-  (* not marking ernameing 'opaque' triggers #122 *)
+  (* not marking erenaming 'opaque' triggers #122 *)
 
 val esub_inc : var -> Tot exp
 let esub_inc y = EVar (y+1)
@@ -109,7 +110,8 @@ type esub_comp_inc_type (s:esub) (x:var) =
 val esub_comp_inc : s:esub -> x:var -> Lemma (esub_comp_inc_type s x)
 let esub_comp_inc s x = ()
   (* assert(esub_comp esub_inc s x = esubst (s x) esub_inc); *)
-  (* assert(esub_comp (esubst_lam s) esub_inc x = esubst (EVar (x+1)) (esubst_lam s)); *)
+  (* assert(esub_comp (esubst_lam s) esub_inc x =
+                                  esubst (EVar (x+1)) (esubst_lam s)); *)
   (* assert(esub_comp (esubst_lam s) esub_inc x = esubst_lam s (x+1)); *)
   (* assert(esub_comp (esubst_lam s) esub_inc x = esubst (s x) esub_inc) *)
 
@@ -160,7 +162,8 @@ esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
                2. else if s1 is a renaming, then esub_inc is a renaming so
                both the first and 2nd components remain the same;
                but the third component goes down (s1 is a renaming and s2 is not).
-               3. else the second component goes down since esub_inc is a renaming and s1 is not. *)
+               3. else the second component goes down since esub_inc is a
+                  renaming and s1 is not. *)
 
               let ih1 =
                 erenaming_sub_inc ();
@@ -191,7 +194,8 @@ esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
     let hoist2 = esubst_lam_hoist t (esubst e1 (esubst_lam s2)) s1 in
 
     
-    (* terminates because e1 is a sub-term, a (esubst_lam s1/s2) are renamings if s1/s2 are.
+    (* terminates because e1 is a sub-term,
+       and (esubst_lam s1/s2) are renamings if s1/s2 are.
        h1 proves   esubst (esubst e1 (esubst_lam s2)) (esubst_lam s1)
                  = esubst e1 (esub_comp (esubst_lam s1) (esubst_lam s2))
     *)
@@ -213,7 +217,20 @@ esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
     let hoist3 = esubst_lam_hoist t e1 (esub_comp s1 s2) in
     ()
 
+(* Identity substitution *)
 
+val esub_id : esub
+let esub_id x = EVar x
+
+val esubst_id : e:exp -> Lemma (esubst e esub_id = e)
+let rec esubst_id e =
+  match e with
+  | EVar _ -> ()
+  | ELam t e1 ->
+     esubst_lam_hoist t e1 esub_id;
+     esubst_extensional esub_id (esubst_lam esub_id) e1;
+     esubst_id e1
+  | EApp e1 e2 -> esubst_id e1; esubst_id e2
 
 (* subst_beta_gen is a generalization of the substitution we do for
    the beta rule, when we've under x binders
@@ -231,12 +248,11 @@ let esubst_beta e' e = esubst_beta_gen 0 e' e
 (* Substitution on types is very much analogous *)
 
 type tsub = var -> Tot typ
-type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
+opaque type trenaming (s:tsub) = (forall (x:var). is_TVar (s x))
 
-assume val is_trenaming : s:tsub -> Tot (n:int{(  trenaming s  ==> n=0) /\
+val is_trenaming : s:tsub -> Tot (n:int{(  trenaming s  ==> n=0) /\
                                         (~(trenaming s) ==> n=1)})
-(* let is_trenaming s = (if excluded_middle (trenaming s) then 0 else 1)
-  -- this triggers #122 *)
+let is_trenaming s = (if excluded_middle (trenaming s) then 0 else 1)
 
 val tsub_inc : var -> Tot typ
 let tsub_inc y = TVar (y+1)
@@ -284,10 +300,29 @@ let tsubst_lam_hoist k t s = admit()
 val tsub_comp : s1:tsub -> s2:tsub -> Tot tsub
 let tsub_comp s1 s2 x = tsubst (s2 x) s1
 
+(* CH: admitting these for now, they are exactly the same as for esubst *)
 assume val tsubst_comp : s1:tsub -> s2:tsub -> t:typ -> Lemma
       (tsubst (tsubst t s2) s1 = tsubst t (tsub_comp s1 s2))
 assume val tsubst_lam_comp : s1:tsub -> s2:tsub -> x:var -> Lemma
       (tsubst_lam (tsub_comp s1 s2) x = tsub_comp (tsubst_lam s1) (tsubst_lam s2) x)
+
+(* Identity substitution *)
+
+val tsub_id : tsub
+let tsub_id x = TVar x
+
+val tsubst_id : t:typ -> Lemma (tsubst t tsub_id = t)
+let rec tsubst_id t =
+  match t with
+  | TVar z -> ()
+  | TLam k t1 ->
+     tsubst_lam_hoist k t1 tsub_id;
+     tsubst_extensional tsub_id (tsubst_lam tsub_id) t1;
+     tsubst_id t1
+  | TArr t1 t2
+  | TApp t1 t2 -> tsubst_id t1; tsubst_id t2
+
+(* Beta *)
 
 val tsub_beta_gen : var -> typ -> Tot tsub
 let tsub_beta_gen x t = fun y -> if y < x then (TVar y)
@@ -471,8 +506,7 @@ let is_value = is_ELam
 
 val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
                Tot (cexists (fun e' -> step e e')) (decreases h)
-let rec progress _ _ h = admit()
-(* takes 1s to check
+let rec progress _ _ h =
   match h with
     | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
       (match e1 with
@@ -480,7 +514,6 @@ let rec progress _ _ h = admit()
        | _ -> (match progress h1 with
                 | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1')))
     | TyEqu h1 _ _ -> progress h1
-*)
 
 val tappears_free_in : x:var -> t:typ -> Tot bool (decreases t)
 let rec tappears_free_in x t =
@@ -497,14 +530,12 @@ opaque logic type EnvEqualT (t:typ) (g1:env) (g2:env) =
 val tcontext_invariance : #t:typ -> #g:env -> #k:knd ->
                           h:(kinding g t k) -> g':env{EnvEqualT t g g'} ->
                           Tot (kinding g' t k) (decreases h)
-let rec tcontext_invariance _ _ _ h g' = admit()
-(* this takes ~5s to check
+let rec tcontext_invariance _ _ _ h g' =
   match h with
   | KiVar a -> KiVar a
   | KiLam k1 h1 -> KiLam k1 (tcontext_invariance h1 (extend_tvar g' 0 k1))
   | KiApp h1 h2 -> KiApp (tcontext_invariance h1 g') (tcontext_invariance h2 g')
   | KiArr h1 h2 -> KiArr (tcontext_invariance h1 g') (tcontext_invariance h2 g')
-*)
 
 val eappears_free_in : x:var -> e:exp -> Tot bool (decreases e)
 let rec eappears_free_in x e =
@@ -513,7 +544,7 @@ let rec eappears_free_in x e =
     | EApp e1 e2 -> eappears_free_in x e1 || eappears_free_in x e2
     | ELam _ e1 -> eappears_free_in (x+1) e1
 
-(* g1 and g2 are same for type variables,
+(* g1 and g2 are the same on the type variables,
    but they can vary on the unused term variables *)
 opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
 		 (forall (x:var). eappears_free_in x e ==>
@@ -548,7 +579,6 @@ let rec econtext_invariance _ _ t h g' =
     | TyApp h1 h2 -> TyApp (econtext_invariance h1 g')
                            (econtext_invariance h2 g')
     | TyEqu h1 eq k -> TyEqu (econtext_invariance h1 g') eq (kinding_extensional k g')
-
 
 (* kinding weakening when a term variable binding is added to env *)
 val kinding_weakening_ebnd : #g:env -> #t:typ -> #k:knd ->
@@ -841,9 +871,11 @@ let tsh = tshift_up_above
 (* shift above and substitute is an identity *)
 val shift_above_and_subst: s:typ -> y:nat -> t:typ -> Lemma (requires True)
                            (ensures (ts y t (tsh y s) = s)) (decreases s)
-let rec shift_above_and_subst s y t = admit()
-(* CH: this _sometimes_ fails on my machine with default z3 timeout *)
-(*
+let rec shift_above_and_subst s y t =
+  tsubst_comp (tsub_beta_gen y t) (tsub_inc_above y) s;
+  tsubst_extensional (tsub_comp (tsub_beta_gen y t) (tsub_inc_above y)) tsub_id s;
+  tsubst_id s
+(* CH: previous proof _sometimes_ fails on my machine with default z3 timeout 
   match s with
   | TVar z -> ()
   | TLam k t1' ->
@@ -855,6 +887,7 @@ let rec shift_above_and_subst s y t = admit()
     shift_above_and_subst t1' y t; shift_above_and_subst t2' y t
 *)
 
+(*
 (* reordering shifts *)
 val tshifts_reordering: x:nat -> y:nat{y >= x} -> s:typ -> Lemma (requires True)
                         (ensures (tsh x (tsh y s) = tsh (y + 1) (tsh x s)))
@@ -1403,3 +1436,4 @@ let rec preservation _ _ hs _ _ ht =
      | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
      | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2))
   | TyEqu ht1 he hk -> TyEqu (preservation hs ht1) he hk
+*)
