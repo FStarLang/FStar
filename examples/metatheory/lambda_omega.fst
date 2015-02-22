@@ -506,51 +506,6 @@ let rec tcontext_invariance _ _ _ h g' = admit()
   | KiArr h1 h2 -> KiArr (tcontext_invariance h1 g') (tcontext_invariance h2 g')
 *)
 
-val id : 'a -> Tot 'a
-let id x = x
-
-val fcomp : ('a -> Tot 'b) -> ('b -> Tot 'c) -> 'a -> Tot 'c
-let fcomp f1 f2 a = f2 (f1 a)
-
-(* TODO: used in inversion_elam, finish this *)
-val kinding_tequiv : #t1:typ -> #t2:typ -> h:(tequiv t1 t2) -> g:env -> k:knd ->
-      Tot (ciff (kinding g t1 k) (kinding g t2 k)) (decreases h)
-let rec kinding_tequiv _ _ h g k =
-  match h with
-  | EqRefl t -> Conj id id
-  | EqSymm h1 ->
-     let Conj ih1 ih2 = kinding_tequiv h1 g k in Conj ih2 ih1
-  | EqTran #t1 #t2 #t3 h1 h2 ->
-     let Conj ih11 ih12 = kinding_tequiv h1 g k in
-     let Conj ih21 ih22 = kinding_tequiv h2 g k in
-     Conj #(kinding g t1 k -> Tot (kinding g t3 k))
-          #(kinding g t3 k -> Tot (kinding g t1 k))
-          (fcomp ih11 ih21) (fcomp ih22 ih12)
-(* CH:This should work
-     Conj (fcomp ih11 ih21) (fcomp ih22 ih12)
-but instead we get this subtyping error for the second conjunct:
-Subtyping check failed;
-expected type ((kinding _1019 _1023  _1025) -> Tot (kinding _1019 _1021  _1025));
-     got type ((kinding _1019 _33555 _1025) -> Tot (kinding _1019 _33555 _1025))
-(lambda_omega.fst(372,28-372,45))
-   Seems like the same kind of problem as #129 *)
-
-  | EqLam #t1' #t2' k1 h1 ->
-     let ih_partial = kinding_tequiv h1 (extend_tvar g 0 k1) in
-     Conj #((kinding g (TLam k1 t1') k) -> Tot (kinding g (TLam k1 t2') k))
-          #((kinding g (TLam k1 t2') k) -> Tot (kinding g (TLam k1 t1') k))
-          (fun hk ->
-             let KiLam #g' k1' #t' #k' hk' = hk in
-             let Conj ih1 ih2 = ih_partial k' in
-             KiLam k1 (ih1 hk'))
-          (fun hk ->
-             let KiLam #g' k1' #t' #k' hk' = hk in
-             let Conj ih1 ih2 = ih_partial k' in
-             KiLam k1 (ih2 hk'))
-
-  | _ -> admit ()
-
-(*
 val eappears_free_in : x:var -> e:exp -> Tot bool (decreases e)
 let rec eappears_free_in x e =
   match e with
@@ -885,7 +840,10 @@ let tsh = tshift_up_above
 (* shift above and substitute is an identity *)
 val shift_above_and_subst: s:typ -> y:nat -> t:typ -> Lemma (requires True)
                            (ensures (ts y t (tsh y s) = s)) (decreases s)
-let rec shift_above_and_subst s y t = match s with
+let rec shift_above_and_subst s y t = admit()
+(* CH: this _sometimes_ fails on my machine with default z3 timeout *)
+(*
+  match s with
   | TVar z -> ()
   | TLam k t1' ->
     tshift_up_above_lam y k t1';
@@ -894,6 +852,7 @@ let rec shift_above_and_subst s y t = match s with
   | TArr t1' t2'
   | TApp t1' t2' ->
     shift_above_and_subst t1' y t; shift_above_and_subst t2' y t
+*)
 
 (* reordering shifts *)
 val tshifts_reordering: x:nat -> y:nat{y >= x} -> s:typ -> Lemma (requires True)
@@ -974,6 +933,53 @@ let rec kinding_substitution x t1 t k_x k1 g h1 h2 =
                            (kinding_substitution x h1 h22)
   | KiArr h21 h22 ->  KiArr (kinding_substitution x h1 h21)
                             (kinding_substitution x h1 h22)
+
+val id : 'a -> Tot 'a
+let id x = x
+
+val fcomp : ('a -> Tot 'b) -> ('b -> Tot 'c) -> 'a -> Tot 'c
+let fcomp f1 f2 a = f2 (f1 a)
+
+(* TODO: used in inversion_elam, finish this *)
+val kinding_tequiv : #t1:typ -> #t2:typ -> h:(tequiv t1 t2) -> g:env -> k:knd ->
+      Tot (ciff (kinding g t1 k) (kinding g t2 k)) (decreases h)
+let rec kinding_tequiv _ _ h g k =
+  match h with
+  | EqRefl t -> Conj id id
+  | EqSymm h1 ->
+     let Conj ih1 ih2 = kinding_tequiv h1 g k in Conj ih2 ih1
+  | EqTran #t1 #t2 #t3 h1 h2 ->
+     let Conj ih11 ih12 = kinding_tequiv h1 g k in
+     let Conj ih21 ih22 = kinding_tequiv h2 g k in
+     Conj #(kinding g t1 k -> Tot (kinding g t3 k))
+          #(kinding g t3 k -> Tot (kinding g t1 k))
+          (fcomp ih11 ih21) (fcomp ih22 ih12)
+(* CH:This should work
+     Conj (fcomp ih11 ih21) (fcomp ih22 ih12)
+but instead we get this subtyping error for the second conjunct:
+Subtyping check failed;
+expected type ((kinding _1019 _1023  _1025) -> Tot (kinding _1019 _1021  _1025));
+     got type ((kinding _1019 _33555 _1025) -> Tot (kinding _1019 _33555 _1025))
+(lambda_omega.fst(372,28-372,45))
+   Seems like the same kind of problem as #129 *)
+
+  | EqLam #t1' #t2' k1 h1 ->
+     let ih_partial = kinding_tequiv h1 (extend_tvar g 0 k1) in
+     Conj #((kinding g (TLam k1 t1') k) -> Tot (kinding g (TLam k1 t2') k))
+          #((kinding g (TLam k1 t2') k) -> Tot (kinding g (TLam k1 t1') k))
+          (fun hk ->
+             let KiLam #g' k1' #t' #k' hk' = hk in
+             let Conj ih1 ih2 = ih_partial k' in
+             KiLam k1 (ih1 hk'))
+          (fun hk ->
+             let KiLam #g' k1' #t' #k' hk' = hk in
+             let Conj ih1 ih2 = ih_partial k' in
+             KiLam k1 (ih2 hk'))
+
+  | EqBeta k1 t1' t1'' ->
+     (admit())
+
+  | _ -> admit ()
 
 (* Note: the kind system of LambdaOmega is the same as the type system of STLC.
    So most we should be able to port most things with little changes.
@@ -1398,14 +1404,15 @@ let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
     let Conj pa pb = d1 in
 
     let pst2 = EqTran (tred_star_tequiv psu2) (EqSymm (tred_star_tequiv ptu2)) in
-    let Conj paa pbb = kinding_tequiv pst2 in
+    let Conj paa _ = kinding_tequiv pst2 g KTyp in
     
     (*
      * AR: this h'' is not used below, but if I remove this, I get stack overflow
      * (on mac using mono)
      *)
     let h'':(kinding g t2 KTyp) = paa pb in
-    let h:(typing (extend_evar g 0 s1) e t2) = TyEqu ht1 pst2 (kinding_weakening_ebnd (paa pb) 0 s1) in
+    let h:(typing (extend_evar g 0 s1) e t2) =
+      TyEqu ht1 pst2 (kinding_weakening_ebnd (paa pb) 0 s1) in
     Conj (Conj (EqTran (tred_star_tequiv ptu1) (EqSymm (tred_star_tequiv psu1))) h) hk
 
 (* corollary of inversion_elam *)
@@ -1430,4 +1437,3 @@ let rec preservation _ _ hs _ _ ht =
      | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
      | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2))
   | TyEqu ht1 he hk -> TyEqu (preservation hs ht1) he hk
-*)
