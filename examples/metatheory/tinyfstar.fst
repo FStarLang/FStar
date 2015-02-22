@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research 
+   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,12 +22,12 @@ module TinyFStar
 type var = int    //de Bruijn index
 type const = int  // CH: trying to pack all exp and typ constants
                   //     in one int seems very unelegant
-type knd = 
+type knd =
   | KType : knd
   | KTArr : t:typ -> k:knd -> knd     (* t  bound in k *)
   | KKArr : k1:knd -> k2:knd -> knd   (* k1 bound in k2 *)
 
-and typ = 
+and typ =
   | TVar   : a:var   -> typ
   | TConst : c:const -> typ
   | TArr   : t:typ   -> c:cmp  -> typ (* t  bound in c *)
@@ -36,11 +36,11 @@ and typ =
   | TTLam  : k:knd   -> t:typ  -> typ (* k  bound in t *)
   | TLam   : t1:typ  -> t2:typ -> typ (* t1 bound in t2 *)
 
-and cmp = 
+and cmp =
   | CPure : t:typ -> wp:typ -> cmp
   | CST   : t:typ -> wp:typ -> cmp
 
-and exp = 
+and exp =
   | EVar   : x:var   -> exp
   | EConst : c:const -> exp
   | ELoc   : l:int   -> exp
@@ -76,7 +76,7 @@ let e_unit   = EConst 104
 (********************************************************)
 (* Substitutions and de Bruijn index manipulations      *)
 (********************************************************)
-type subst = 
+type subst =
   | EForX : e:exp -> x:var -> subst
   | TForA : t:typ -> a:var -> subst
 
@@ -85,7 +85,7 @@ assume val bump_cmp': int -> int -> c:cmp -> Tot cmp (decreases c)
 assume val bump_exp' : int -> int -> e:exp -> Tot exp (decreases e)
 
 val bump_typ' : m:int -> n:int -> t:typ -> Tot typ (decreases t)
-let rec bump_typ' m n t = match t with 
+let rec bump_typ' m n t = match t with
   | TVar a      -> if a >= m then TVar (a + n) else t
   | TConst c    -> t
   | TArr  t1 c2 -> TArr  (bump_typ' m n t1) (bump_cmp' (m + 1) n c2)
@@ -100,14 +100,14 @@ let bump_exp n t = bump_exp' 0 n t
 let bump_cmp n t = bump_cmp' 0 n t
 
 val bump_subst: subst -> Tot subst
-let bump_subst = function 
+let bump_subst = function
   | EForX e x -> EForX (bump_exp 1 e) (x + 1)
   | TForA t a -> TForA (bump_typ 1 t) (a + 1)
 
 assume val subst_exp: subst -> e:exp -> Tot exp (decreases e)
 assume val subst_cmp: subst -> c:cmp -> Tot cmp (decreases c)
 val subst_knd: subst -> k:knd -> Tot knd (decreases k)
-val subst_typ: subst -> t:typ -> Tot typ (decreases t) 
+val subst_typ: subst -> t:typ -> Tot typ (decreases t)
 
 let rec subst_knd (s:subst) (k:knd) = match k with
   | KType -> KType
@@ -141,10 +141,10 @@ let k_pre_st      = KTArr t_heap KType
 let k_post_st t   = KTArr t (KTArr t_heap KType)
 let k_st t        = KKArr (k_post_st t) k_pre_st
 
-let tot t = CPure t (TTLam (k_post_pure t) 
+let tot t = CPure t (TTLam (k_post_pure t)
                       (TTApp (TTApp t_forall t)
                          (TLam t (TEApp (TVar 1) (EVar 0)))))
-    
+
 val bind_pure:  c1:cmp{is_CPure c1}
              -> c2:cmp{is_CPure c2}
              -> Tot cmp
@@ -171,7 +171,7 @@ let lift_pure_st (CPure t wp) =
                  (TLam (* x *)
                     t
                     (TEApp (TEApp (TVar 2) (*post*) (EVar 0) (*x*)) (EVar 1)(*h*))))))
-    
+
 val bind_st:  c1:cmp{is_CST c1}
            -> c2:cmp{is_CST c2}
            -> Tot cmp
@@ -199,7 +199,7 @@ let close_forall t phi    = TTApp (TTApp t_forall t) (TLam t phi)
 let down_CPure t wp       = TTApp (TTApp t_forall_post_pure t)
                                   (TTLam (k_post_pure t) (TTApp (bump_typ 1 wp) (TVar 0)))
 let down_CST t wp         = TTApp (TTApp t_forall_post_st t)
-                                  (TTLam (k_post_st t) 
+                                  (TTLam (k_post_st t)
                                      (TLam t_heap (TEApp (TTApp (bump_typ 2 wp) (TVar 1)) (EVar 0))))
 let up_CPure t phi        = TTLam (k_post_pure t) (bump_typ 1 phi)
 let up_CST   t phi        = TTLam (k_post_st t)   (TLam t_heap (bump_typ 2 phi))
@@ -218,7 +218,7 @@ let bind_pure_if e (CPure t wp1) (CPure _ wp2) =
   let guard = mk_eq t_int e (ENat 0) in
   let wp = op_CPure t t_and (op_CPure t t_imp (up_CPure t guard) wp1) (op_CPure t t_imp (up_CPure t (neg guard)) wp2) in
   CPure t wp
-    
+
 val bind_st_if : exp -> c1:cmp{is_CST c1} -> c2:cmp{is_CST c2} -> Tot cmp
 let bind_st_if e (CST t wp1) (CST _ wp2) =
   let guard = mk_eq t_int e (ENat 0) in
@@ -236,7 +236,7 @@ let result_typ = function
   | CPure t _
   | CST t  _   -> t
 
-let set_result_typ c t = match c with 
+let set_result_typ c t = match c with
   | CPure _ wp ->  CPure t wp
   | CST _ wp -> CST t wp
 
@@ -251,8 +251,8 @@ type env = var -> Tot (option var_binding)
 val extend: env -> var_binding -> Tot env
 let extend env var_binding = function
   | 0 -> Some var_binding
-  | i -> 
-    match env (i - 1) with 
+  | i ->
+    match env (i - 1) with
       | None -> None
       | Some (B_a k) -> Some (B_a (bump_knd 1 k))
       | Some (B_x t) -> Some (B_x (bump_typ 1 t))
@@ -266,15 +266,15 @@ type const_binding =
   | B_t : k:knd -> const_binding
 type constants = int -> Tot (option const_binding)
 
-val signature : constants 
-let signature = function 
+val signature : constants
+let signature = function
   | 0 -> Some (B_t KType) //t_unit
   | 1 -> Some (B_t KType) //t_int
   | 2 -> Some (B_t KType) //t_refint
   | _ -> None (* TODO: fill this in *)
 
 val binds: test:(var_binding -> Tot bool) -> env -> var -> Tot bool
-let binds test g x = match g x with 
+let binds test g x = match g x with
   | Some b -> test b
   | _ -> false
 
@@ -282,8 +282,8 @@ let binds_a   = binds is_B_a
 let binds_x   = binds is_B_x
 
 val lookup: a:Type
-         -> test:(var_binding -> Tot bool) 
-         -> g:env 
+         -> test:(var_binding -> Tot bool)
+         -> g:env
          -> x:var{binds test g x}
          -> project:(b:var_binding{test b} -> Tot a)
          -> Tot a
@@ -293,8 +293,8 @@ let lookup_a    g a = lookup is_B_a g a B_a.k
 let lookup_x    g x = lookup is_B_x g x B_x.t
 
 val binds_const: (const_binding -> Tot bool) -> int -> Tot bool
-let binds_const test c = match signature c with 
-  | Some b -> test b 
+let binds_const test c = match signature c with
+  | Some b -> test b
   | _ -> false
 
 let binds_l = binds_const is_B_l
@@ -315,38 +315,38 @@ let lookup_t t = B_t.k (Some.v (signature t))
 (********************************************************)
 assume type valid: env -> typ -> Type (* TODO *)
 
-type sub_cmp : env -> cmp -> cmp -> typ -> Type = 
-  | SubLift : g:env 
+type sub_cmp : env -> cmp -> cmp -> typ -> Type =
+  | SubLift : g:env
            -> c:cmp{is_CPure c}
            -> sub_cmp g c (lift_pure_st c) t_true
 
-  | SubPure : g:env 
+  | SubPure : g:env
            -> t:typ
-           -> wp1:typ 
+           -> wp1:typ
            -> wp2:typ
            -> sub_cmp g (CPure t wp1) (CPure t wp2)
                       (down_CPure t (op_CPure t t_imp wp2 wp1))
 
-  | SubST   : g:env 
+  | SubST   : g:env
            -> t:typ
-           -> wp1:typ 
+           -> wp1:typ
            -> wp2:typ
            -> sub_cmp g (CST t wp1) (CST t wp2)
                       (down_CST t (op_CST t t_imp wp2 wp1))
-   
-  | SubRes : g:env 
+
+  | SubRes : g:env
           -> c:cmp
           -> t:typ
           -> phi:typ
           -> sub_typ g (result_typ c) t phi
           -> sub_cmp g c (set_result_typ c t) phi
 
-and sub_typ : env -> typ -> typ -> typ -> Type = 
-  | SubTRefl: g:env 
+and sub_typ : env -> typ -> typ -> typ -> Type =
+  | SubTRefl: g:env
            -> t:typ
            -> sub_typ g t t t_true
 
-  | SubTArr: g:env 
+  | SubTArr: g:env
            -> t1:typ
            -> t2:typ
            -> c1:cmp
@@ -410,9 +410,9 @@ type typing : env -> exp -> cmp -> Type =
             -> typing g e2 c2
             -> typing g (EIf0 e0 e1 e2) (bind_if e0 c1 c2)
 
-  | TypingSub: g:env 
-            -> e:exp 
-            -> c:cmp 
+  | TypingSub: g:env
+            -> e:exp
+            -> c:cmp
             -> c':cmp
             -> phi:typ
             -> typing g e c
@@ -426,81 +426,81 @@ type typing : env -> exp -> cmp -> Type =
        We will have one, right? *)
 
 and kinding : env -> typ -> knd -> Type =
-  | KindingVar   : g:env 
+  | KindingVar   : g:env
                 -> a:var{binds_a g a}
                 -> kinding g (TVar a) (lookup_a g a)
 
-  | KindingConst : g:env 
-                -> t:int{binds_t t} 
+  | KindingConst : g:env
+                -> t:int{binds_t t}
                 -> kinding g (TConst t) (lookup_t t)
 
-  | KindingArr   : g:env 
-                -> t:typ 
+  | KindingArr   : g:env
+                -> t:typ
                 -> c:cmp
                 -> kinding g t KType
                 -> c_ok (extend g (B_x t)) c
                 -> kinding g (TArr t c) KType
 
-  | KindingTTApp : g:env 
-                 -> t1:typ 
-                 -> t2:typ 
+  | KindingTTApp : g:env
+                 -> t1:typ
+                 -> t2:typ
                  -> k:knd{is_KKArr k}
                  -> kinding g t1 k
                  -> kinding g t2 (KKArr.k1 k)
                  -> kinding g (TTApp t1 t2) (subst_knd (TForA t2 0) (KKArr.k2 k))
 
-  | KindingTEApp : g:env   
-                 -> t1:typ 
-                 -> e:exp 
+  | KindingTEApp : g:env
+                 -> t1:typ
+                 -> e:exp
                  -> k:knd{is_KTArr k}
                  -> kinding g t1 k
                  -> typing g e (tot (KTArr.t k))
                  -> kinding g (TEApp t1 e) (subst_knd (EForX e 0) (KTArr.k k))
 
-  | KindingTTLam : g:env 
-                -> k:knd 
-                -> t:typ 
+  | KindingTTLam : g:env
+                -> k:knd
+                -> t:typ
                 -> k':knd
                 -> kind_ok g k
                 -> kinding (extend g (B_a k)) t k'
                 -> kinding g (TTLam k t) (KKArr k k')
 
-  | KindingTLam :  g:env 
-                -> t1:typ 
-                -> t2:typ 
+  | KindingTLam :  g:env
+                -> t1:typ
+                -> t2:typ
                 -> k:knd
                 -> kinding g t1 KType
                 -> kinding (extend g (B_x t1)) t2 k
                 -> kinding g (TLam t1 t2) (KTArr t1 k)
 
 and c_ok : env -> cmp -> Type =
-  | CPureOK :   g:env 
-            ->  t:typ 
+  | CPureOK :   g:env
+            ->  t:typ
             -> wp:typ
             -> kinding g t KType
             -> kinding g wp (k_pure t)
             -> c_ok g (CPure t wp)
 
-  | CSTOK :     g:env 
-            ->  t:typ 
+  | CSTOK :     g:env
+            ->  t:typ
             -> wp:typ
             -> kinding g t KType
             -> kinding g wp (k_st t)
             -> c_ok g (CST t wp)
 
 and kind_ok : env -> knd -> Type =
-  | KOKType : g:env 
+  | KOKType : g:env
            -> kind_ok g KType
 
-  | KOKTArr : g:env 
-           -> t:typ 
+  | KOKTArr : g:env
+           -> t:typ
            -> k:knd
            -> kinding g t KType
            -> kind_ok (extend g (B_x t)) k
            -> kind_ok g (KTArr t k)
 
-  | KOKKArr :  g:env 
-           -> k1:knd 
+  | KOKKArr :  g:env
+           -> k1:knd
            -> k2:knd
            -> kind_ok g k1
            -> kind_ok (extend g (B_a k1)) k2

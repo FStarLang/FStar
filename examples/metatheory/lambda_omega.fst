@@ -72,7 +72,7 @@ let rec esubst e s =
        if y=0 then EVar y
        else (esubst (s (y - 1)) esub_inc) in
      ELam t (esubst e1 esubst_lam)
-     
+
   | EApp e1 e2 -> EApp (esubst e1 s) (esubst e2 s)
 
 val esubst_lam: s:esub -> Tot esub
@@ -174,7 +174,7 @@ esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
                 esubst_extensional
                   (esub_comp esub_inc s1)
                   (esub_comp (esubst_lam s1) esub_inc) (s2 (x-1)) in
-              
+
             (* terminates because:
                1. if s2 is a renaming ... easy.
                2. else if s1 is a renaming, (esubst_lam s1) is a renaming,
@@ -184,16 +184,16 @@ esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
                 esubst_lam_renaming s1;
                 erenaming_sub_inc ();
                 esubst_comp (esubst_lam s1) esub_inc (s2 (x-1)) in
-              
+
               ()
 
             end in
-    
+
 
     let hoist1 = esubst_lam_hoist t e1 s2 in
     let hoist2 = esubst_lam_hoist t (esubst e1 (esubst_lam s2)) s1 in
 
-    
+
     (* terminates because e1 is a sub-term,
        and (esubst_lam s1/s2) are renamings if s1/s2 are.
        h1 proves   esubst (esubst e1 (esubst_lam s2)) (esubst_lam s1)
@@ -208,12 +208,12 @@ esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
       forall_intro #var #(esubst_lam_composes s1 s2) esubst_lam_comp;
       cut (FEq (esub_comp (esubst_lam s1) (esubst_lam s2))
              (esubst_lam (esub_comp s1 s2))) in
-    
+
     let ext = esubst_extensional
       (esub_comp (esubst_lam s1) (esubst_lam s2))
       (esubst_lam (esub_comp s1 s2))
       e1 in
-    
+
     let hoist3 = esubst_lam_hoist t e1 (esub_comp s1 s2) in
     ()
 
@@ -801,7 +801,7 @@ let esubst_gen_elam x e t e' =
 
   assert(ELam t (esubst_beta_gen (x + 1) (eshift_up e) e') =
            ELam t (esubst e' (esub_beta_gen (x + 1) (eshift_up e))));
-  
+
   forall_intro #var #(esubst_gen_elam_aux_type e x) (esubst_gen_elam_aux e x);
 
   esubst_extensional (esubst_lam (esub_beta_gen x e))
@@ -863,7 +863,7 @@ let tsubst_gen_tlam x t k t' =
 
   assert(TLam k (tsubst_beta_gen (x + 1) (tshift_up t) t') =
            TLam k (tsubst t' (tsub_beta_gen (x + 1) (tshift_up t))));
-  
+
   forall_intro #var #(tsubst_gen_tlam_aux_type t x) (tsubst_gen_tlam_aux t x);
 
   tsubst_extensional (tsubst_lam (tsub_beta_gen x t))
@@ -1074,7 +1074,7 @@ let rec tred_diamond s t u h1 h2 =
     | MkLTup (TrArr h11 h12) (TrArr h21 h22) ->
       let ExIntro v1 p1 = tred_diamond h11 h21 in
       let ExIntro v2 p2 = tred_diamond h12 h22 in
-      
+
       (match p1 with
   	| Conj p1a p1b ->
   	  (match p2 with
@@ -1084,7 +1084,7 @@ let rec tred_diamond s t u h1 h2 =
     | MkLTup (TrApp h11 h12) (TrApp h21 h22) ->
       let ExIntro v1 p1 = tred_diamond h11 h21 in
       let ExIntro v2 p2 = tred_diamond h12 h22 in
-      
+
       (match p1 with
   	| Conj p1a p1b ->
   	  (match p2 with
@@ -1111,7 +1111,7 @@ let rec tred_diamond s t u h1 h2 =
   	| TrLam _ h' -> h'
   	| TrRefl _ -> TrRefl (TLam.t s1')
       in
-      
+
       let ExIntro v1 p1 = tred_diamond h11 h21 in
       let ExIntro v2 p2 = tred_diamond h12 h22 in
 
@@ -1215,7 +1215,7 @@ let rec tred_star_sym_confluent s t h =
       let Conj psu1 pvu1 = p in
       let ExIntro u2 p = tred_star_sym_confluent h2 in
       let Conj pvu2 ptu2 = p in
-      
+
       let ExIntro w p = confluence pvu1 pvu2 in
       let Conj pu1w pu2w = p in
       ExIntro w (Conj (ts_tran psu1 pu1w) (ts_tran ptu2 pu2w))
@@ -1346,7 +1346,7 @@ let rec inversion_elam g s1 e s t1 t2 ht heq hnew = match ht with
   | TyLam #g s1 #e #s2 hk ht1 ->
     let ExIntro u p = tequiv_tred_tred heq in
     let Conj p1 p2 = p in
-    
+
     (* implicits required *)
     let ExIntro u1 p = tred_tarr_preserved #s1 #s2 #u p1 in
     let ExIntro u2 p = p in
@@ -1356,7 +1356,7 @@ let rec inversion_elam g s1 e s t1 t2 ht heq hnew = match ht with
     let ExIntro u1' p = tred_tarr_preserved #t1 #t2 #u p2 in
     let ExIntro u2' p = p in
     let Conj ptu1 ptu2 = p in
-    
+
     (*
      * AR: so now we have tequiv s2 t2, and ht1. as TAPL says, we now want to use
      * TyEqu to derive typing judgment with result type t2 (ht1 has result type s2).
@@ -1368,11 +1368,11 @@ let rec inversion_elam g s1 e s t1 t2 ht heq hnew = match ht with
      * we will get t2::KTyp. to do so, i had to make a small change to TyVar
      * requiring that the lookup type has kind KTyp.
      *)
-    
+
     (*
      * AR: Cannot use Conj.pb directly below, have to let bind.
      *)
-    
+
     (* AR: removing this type annotation, verification fails after taking a long time *)
     (* CH: I can reproduce this, even with z3timeout 100 I get:
       An unknown assertion in the term at this location was not provable *)

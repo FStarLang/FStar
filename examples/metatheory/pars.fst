@@ -63,17 +63,17 @@ let renaming_sub_inc _ = ()
 let is_var (e:exp) : int = if is_EVar e then 0 else 1
 
 
-val subst : e:exp -> s:sub -> Pure exp (requires True) 
+val subst : e:exp -> s:sub -> Pure exp (requires True)
                                        (ensures (fun e' -> renaming s /\ is_EVar e ==> is_EVar e'))
                                        (decreases %[is_var e; is_renaming s; e])
 let rec subst e s =
   match e with
   | EVar x -> s x
 
-  | EAbs t e1 -> 
+  | EAbs t e1 ->
      let subst_eabs : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) = fun y ->
-       if y=0 
-       then EVar y 
+       if y=0
+       then EVar y
        else ((* renaming_sub_inc (); --unnecessary hint *)
              (* Why does the next recursive call terminate?
                 1. If s is a renaming, we're done; since e is not a var, and s (y - 1) is, the lex ordering strictly decreases.
@@ -89,10 +89,10 @@ let rec subst e s =
                    Which we have done above.
       *)
      EAbs t (subst e1 subst_eabs)
-     
+
   | EApp e1 e2 -> EApp (subst e1 s) (subst e2 s)
- 
-(* 
+
+(*
    The above proof is nice, but you really want to use subst_eabs at the top-level.
    So, hoist it by hand ...
 *)

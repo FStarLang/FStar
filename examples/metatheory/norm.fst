@@ -159,7 +159,7 @@ Fixpoint R (T:ty) (t:tm) {struct T} : Prop :=
   (match T with
    | TBool  => True
    | TArrow T1 T2 => (forall s, R T1 s -> R T2 (tapp t s))
-   | TProd T1 T2 => (R T1 (tfst t)) /\ (R T2 (tsnd t)) 
+   | TProd T1 T2 => (R T1 (tfst t)) /\ (R T2 (tsnd t))
    end).
 *)
 

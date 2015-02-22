@@ -141,7 +141,7 @@ val lookup_ext_f: g:env -> n:nat{is_Some (lookup g n)} -> g':env ->
                   Lemma (requires True) (ensures (is_Some (lookup (g' @ g) (n + len g')) /\
                                                   Some.v  (lookup (g' @ g) (n + len g')) = Some.v (lookup g n)))
                   (decreases g')
-let rec lookup_ext_f g n g' = match g' with  
+let rec lookup_ext_f g n g' = match g' with
   | []    -> ()
   | _::tl -> lookup_ext_f g n tl
 
@@ -155,7 +155,7 @@ let rec weakening g g' g'' e = match e with
        ()
      else
        (lookup_app_inv g (g' @ g'') (k + len g''); list_assoc g' g'' g)
-  | EAbs t1 e1 -> weakening g (t1::g') g'' e1     
+  | EAbs t1 e1 -> weakening g (t1::g') g'' e1
   | EApp e1 e2 -> weakening g g' g'' e1; weakening g g' g'' e2
 
 val free_in: exp -> nat -> Tot bool
@@ -191,7 +191,7 @@ let rec shift_free e c d x = match e with
   | EAbs _ e1  -> shift_free e1 (c + 1) d (x + 1)
   | EApp e1 e2 -> shift_free e1 c d x; shift_free e2 c d x
 
-(* if e2 does not have j free, then e1[j |-> e2] does not have j free *) 
+(* if e2 does not have j free, then e1[j |-> e2] does not have j free *)
 val subst_elims_free: e1:exp -> j:nat -> e2:exp -> Lemma (requires (not (free_in e2 j)))
                                                          (ensures  (not (free_in (substitute e1 j e2) j)))
 let rec subst_elims_free e1 j e2 = match e1 with

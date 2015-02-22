@@ -68,7 +68,7 @@ val empty : env
 let empty _ = None
 
 val extend : env -> var -> ty -> Tot env
-let extend g x t y = if y < x then g y 
+let extend g x t y = if y < x then g y
                      else if y = x then Some t
                      else g (y-1)
 
@@ -128,7 +128,7 @@ opaque logic type Equal (g1:env) (g2:env) =
 opaque logic type EqualE (e:exp) (g1:env) (g2:env) =
                  (forall (x:var). appears_free_in x e ==> g1 x = g2 x)
 
-val context_invariance : #e:exp -> #g:env -> #t:ty -> 
+val context_invariance : #e:exp -> #g:env -> #t:ty ->
       h:(rtyping g e t) -> g':env{EqualE e g g'} ->
       Tot (rtyping g' e t) (decreases h)
 let rec context_invariance _ _ _ h g' =

@@ -60,22 +60,22 @@ let renaming_sub_inc _ = ()
 
 let is_var (e:exp) : int = if is_EVar e then 0 else 1
 
-val subst : e:exp -> s:sub -> Pure exp (requires True) 
+val subst : e:exp -> s:sub -> Pure exp (requires True)
      (ensures (fun e' -> renaming s /\ is_EVar e ==> is_EVar e'))
      (decreases %[is_var e; is_renaming s; e])
 let rec subst e s =
   match e with
   | EVar x -> s x
 
-  | ELam t e1 -> 
+  | ELam t e1 ->
      let subst_elam : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) = fun y ->
-       if y=0 
-       then EVar y 
+       if y=0
+       then EVar y
        else subst (s (y - 1)) sub_inc in
      ELam t (subst e1 subst_elam)
-     
+
   | EApp e1 e2 -> EApp (subst e1 s) (subst e2 s)
- 
+
 val subst_elam: s:sub -> Tot sub
 let subst_elam s y =
   if y = 0 then EVar y
@@ -127,7 +127,7 @@ val empty : env
 let empty _ = None
 
 val extend : env -> var -> typ -> Tot env
-let extend g x t y = if y < x then g y 
+let extend g x t y = if y < x then g y
                      else if y = x then Some t
                      else g (y-1)
 
@@ -186,7 +186,7 @@ let rec appears_free_in x e =
 opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
                  (forall (x:var). appears_free_in x e ==> g1 x = g2 x)
 
-val context_invariance : #e:exp -> #g:env -> #t:typ -> 
+val context_invariance : #e:exp -> #g:env -> #t:typ ->
       h:(typing g e t) -> g':env{EnvEqualE e g g'} ->
       Tot (typing g' e t) (decreases h)
 let rec context_invariance _ _ _ h g' =

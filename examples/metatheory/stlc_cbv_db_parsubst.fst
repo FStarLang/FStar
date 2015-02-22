@@ -127,7 +127,7 @@ let extend_twice x g t_x t_y = ()
 
 type sub_below (x:var) (s:sub) = (forall (y:var). y<x ==> s y = EVar y)
 
-val subst_below : x:var -> v:exp{below x v} -> s:sub{sub_below x s} -> 
+val subst_below : x:var -> v:exp{below x v} -> s:sub{sub_below x s} ->
   Lemma (ensures (v = subst v s)) (decreases v)
 let rec subst_below x v s =
   match v with
@@ -136,9 +136,9 @@ let rec subst_below x v s =
   | ELam t e   -> (subst_below (x+1) e (subst_elam s);
                    assert(e = subst e (subst_elam s));
                    assert(v = ELam t e);
-                   assert(subst v s = ELam t (subst e (subst_elam s)))) 
+                   assert(subst v s = ELam t (subst e (subst_elam s))))
 
-val subst_closed : v:exp{closed v} -> s:sub -> 
+val subst_closed : v:exp{closed v} -> s:sub ->
   Lemma (ensures (v = subst v s)) (decreases v)
 let rec subst_closed v s = subst_below 0 v s
 
