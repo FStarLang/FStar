@@ -5,6 +5,9 @@ all: .all.ver tinyfstar.vv pars stlc_strong_db_parsubst stlc_cbv_db_pntsubst_lis
 pars:
 	$(FSTAR) ../../lib/ext.fst pars.fst --max_fuel 1 --max_ifuel 1
 
+lo:
+	$(FSTAR) ../../lib/constr.fst ../../lib/classical.fst ../../lib/ext.fst lo.fst --max_fuel 1 --max_ifuel 1 
+
 stlc_strong_db_parsubst:
 	$(FSTAR) ../../lib/ext.fst stlc_strong_db_parsubst.fst --max_fuel 1 --max_ifuel 1
 
