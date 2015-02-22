@@ -1126,9 +1126,22 @@ let rec tred_diamond s t u h1 h2 =
   	      let v = tsubst_beta_gen 0 v2 v1 in
   	      ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (PBeta k p1b p2b))))
     | MkLTup (PApp #s1' #s2' #lu1' #u2' h21 h22)
-             (PBeta #s1 #s2 #t1' #t2' k h11 h12) ->
-    (* similar to above case *)
-      admit ()
+             (PBeta #s1 #s2 #t1' #t2' k h11 h12) ->      
+      let ExIntro v1 p = tred_diamond h21 (PLam k h11) in
+      let Conj (p1:tred lu1' v1) (p2:tred (TLam k t1') v1) = p in
+      let ExIntro v2 p = tred_diamond h22 h12 in
+      let Conj (p3:tred u2' v2) (p4:tred t2' v2) = p in
+
+      let h_body:(tred (TLam.t lu1') (TLam.t v1)) = match p1 with
+  	| PLam _ h' -> h'
+  	| PRefl _ -> PRefl (TLam.t lu1')
+      in
+      let h_body2:(tred t1' (TLam.t v1)) = match p2 with
+  	| PLam _ h' -> h'
+  	| PRefl _ -> PRefl t1'
+      in
+
+      ExIntro (tsubst_beta v2 (TLam.t v1)) (Conj (PBeta k h_body p3) (subst_of_tred_tred 0 p4 h_body2))
 
 type tred_star: typ -> typ -> Type =
   | TsRefl : t:typ ->
@@ -1363,7 +1376,7 @@ let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
      *)
     
     (* AR: removing this type annotation, verification fails after taking a long time *)
-    (* CH: I can reproduce this, even with z3timeout 100 I get: 
+    (* CH: I can reproduce this, even with z3timeout 100 I get:
       An unknown assertion in the term at this location was not provable *)
     let d1:(cand (kinding g s1 KTyp) (kinding g s2 KTyp)) =
       kinding_inversion_arrow (typing_gives_well_kinded_types ht) in
@@ -1375,7 +1388,7 @@ let rec inversion_elam g s1 e s t1 t2 ht heq = match ht with
     (*
      * AR: this h'' is not used below, but if I remove this, I get stack overflow
      * (on mac using mono)
-     *)       
+     *)
     let h'':(kinding g t2 KTyp) = paa pb in
     let h:(typing (extend_evar g 0 s1) e t2) = TyEqu ht1 pst2 (kinding_weakening_ebnd (paa pb) 0 s1) in
     Conj (Conj (EqTran (tred_star_tequiv ptu1) (EqSymm (tred_star_tequiv psu1))) h) hk
