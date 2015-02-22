@@ -25,7 +25,9 @@ type const = int  // CH: trying to pack all exp and typ constants
                   // and locations in one int seems very unelegant
                   // (and will need quite a complex encoding, since
                   //  constants include integers and locations are
-                  //  also an infinite set)
+                  //  also an infinite set) 
+                  // NS: What is the alternative? 
+                  //     We need constants at multiple levels
 type knd =
   | KType : knd
   | KTArr : t:typ -> k:knd -> knd     (* x:t  bound in k *)
@@ -47,14 +49,19 @@ and cmp =
 and exp =
   | EVar   : x:var   -> exp
   | EConst : c:const -> exp
-  | ELoc   : l:loc   -> exp (* CH: do we want this, or are they just constants? *)
-  | EInt   : l:int   -> exp (* CH: weren't ints just constants? *)
+  | ELoc   : l:loc   -> exp (* CH: do we want this, or are they just constants? NS: Yes, we can probably collapse this. *)
+  | EInt   : l:int   -> exp (* CH: weren't ints just constants? NS: Yes. But (EInt 0) : int  and (EConst 0) should have some other type depending on the signature *)
   | ELam   : t:typ   -> e:exp -> exp            (* x:t bound in e *)
   | EApp   : e1:exp  -> e2:exp -> exp
   | ELet   : t:typ   -> e1:exp -> e2:exp -> exp (* x:t bound in e2 *)
   (* CH: if I remember correctly let was to simulate the other contexts?
      Is this part of the language or not? I don't see why we would need it.
-     It also doesn't appear in the txt. *)
+     It also doesn't appear in the txt. 
+
+     NS: It appears in the S.R proof in the .txt. 
+         There, it is much easier to have one context rule and one place to think about bind.
+         So, it's addition is actually a simplification that we might consider using here also.
+  *)
   | EIf0   : e0:exp  -> e1:exp -> e2:exp -> exp
   | EFix   : ed:(option exp) -> t:typ  -> e:exp  -> exp
              (* f:t and x bound in e *)
@@ -79,7 +86,10 @@ let e_assign = EConst 101
 let e_sel    = EConst 102
 let e_upd    = EConst 103
 let e_unit   = EConst 104
-(* CH: still missing the integer constants *)
+(* 
+   CH: still missing the integer constants. 
+   NS: (EInt i) are the integer constants
+*)
 
 (********************************************************)
 (* Substitutions and de Bruijn index manipulations      *)
@@ -278,7 +288,10 @@ type const_binding =
   | B_l : t:typ -> const_binding (* CH: locations bound in signature?
                                         they seem statically allocated (no ref)
                                         (in the txt they are in environment)
-                                        (they anyway all have type ref int) *)
+                                        (they anyway all have type ref int). 
+                                    NS: In this calculus, without dynamic allocation, perhaps it is better 
+                                        to have them in the signature rather than the context. 
+                                        I don't have a string preference ... we could move B_l to var_binding *)
   | B_c : t:typ -> const_binding
   | B_t : k:knd -> const_binding
 type constants = int -> Tot (option const_binding)
@@ -334,7 +347,10 @@ let lookup_t t = B_t.k (Some.v (signature t))
 (* TODO: write valid down *)
 (* CH: try to enable the use of SMT automation as much as possible,
        otherwise we will die using building huge derivations
-       in a low-level deduction system *)
+       in a low-level deduction system. 
+
+   NS: Not sure what you mean. Isn't this style similar to λω?
+ *)
 assume type valid: env -> typ -> Type
 
 type sub_cmp : env -> cmp -> cmp -> typ -> Type =
@@ -443,10 +459,22 @@ type typing : env -> exp -> cmp -> Type =
             -> valid g phi
             -> typing g e c'
 
-(* CH: Missing the 2 fix rules (see T-Fix and T-FixOmega in txt) *)
+(* CH: Missing the 2 fix rules (see T-Fix and T-FixOmega in txt) 
+
+   NS: Yes, we should add it. 
+*)
+
 (* CH: Where is the type conversion (typing or subtyping) rule?
        We will have one, right?
-       Otherwise what's the point of type-level lambdas? *)
+       Otherwise what's the point of type-level lambdas?
+
+   NS: We only have sub_cmp in TypingSub (above) now. 
+       We need to write down the 'valid' predicate, written 
+       (G |= phi) in the .txt. 
+       The last two rules in that relation include the reduction 
+       relation on types and terms for definition equality.
+       That's where the lambdas come in. 
+*)
 
 and kinding : env -> typ -> knd -> Type =
   | KindingVar   : g:env
@@ -609,6 +637,12 @@ let plug_t_in_t t tt =
 type tctx_ehole =
   | CteEApp : t:typ -> tctx_ehole
 
+(* 
+   NS: I wonder if formalizing it with contexts is more 
+       pain than gain. It is certainly more convenient in the .txt
+       to use contexts. But, perhaps it is more prudent to 
+       simply do it without contexts here ... not sure. 
+*)
 val plug_e_in_t : e:exp -> te:tctx_ehole -> Tot typ
 let plug_e_in_t e te =
   match te with
@@ -663,7 +697,10 @@ and epstep : exp -> exp -> Type =
               epstep (plug_t_in_e t et) (plug_t_in_e t' et)
     (* CH: Is it really on purpose that this doesn't include a EpsECtx rule?
            How will we get to doing the betas?
-           EisECtx won't really help with that *)
+           EisECtx won't really help with that
+
+       NS: There is an a E-Ctx rule in the .txt which should cover this.
+    *)
 
 type heap = loc -> Tot value
 
