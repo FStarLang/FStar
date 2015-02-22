@@ -20,20 +20,21 @@ module TinyFStar
 (* Syntax *)
 (********************************************************)
 type var = int    //de Bruijn index
-type const = int
+type const = int  // CH: trying to pack all exp and typ constants
+                  //     in one int seems very unelegant
 type knd = 
   | KType : knd
-  | KTArr : t:typ -> k:knd -> knd
-  | KKArr : k1:knd -> k2:knd -> knd
+  | KTArr : t:typ -> k:knd -> knd     (* t  bound in k *)
+  | KKArr : k1:knd -> k2:knd -> knd   (* k1 bound in k2 *)
 
 and typ = 
   | TVar   : a:var   -> typ
   | TConst : c:const -> typ
-  | TArr   : t:typ   -> c:cmp -> typ
+  | TArr   : t:typ   -> c:cmp  -> typ (* t  bound in c *)
   | TTApp  : t1:typ  -> t2:typ -> typ
   | TEApp  : t:typ   -> e:exp  -> typ
-  | TTLam  : k:knd   -> t:typ  -> typ
-  | TLam   : t1:typ  -> t2:typ -> typ
+  | TTLam  : k:knd   -> t:typ  -> typ (* k  bound in t *)
+  | TLam   : t1:typ  -> t2:typ -> typ (* t1 bound in t2 *)
 
 and cmp = 
   | CPure : t:typ -> wp:typ -> cmp
@@ -323,13 +324,15 @@ type sub_cmp : env -> cmp -> cmp -> typ -> Type =
            -> t:typ
            -> wp1:typ 
            -> wp2:typ
-           -> sub_cmp g (CPure t wp1) (CPure t wp2) (down_CPure t (op_CPure t t_imp wp2 wp1))
+           -> sub_cmp g (CPure t wp1) (CPure t wp2)
+                      (down_CPure t (op_CPure t t_imp wp2 wp1))
 
   | SubST   : g:env 
            -> t:typ
            -> wp1:typ 
            -> wp2:typ
-           -> sub_cmp g (CST t wp1) (CST t wp2) (down_CST t (op_CST t t_imp wp2 wp1))
+           -> sub_cmp g (CST t wp1) (CST t wp2)
+                      (down_CST t (op_CST t t_imp wp2 wp1))
    
   | SubRes : g:env 
           -> c:cmp
@@ -352,8 +355,8 @@ and sub_typ : env -> typ -> typ -> typ -> Type =
            -> phi2:typ
            -> sub_typ g t2 t1 phi1
            -> sub_cmp (extend g (B_x t2)) c1 c2 phi2
-           -> sub_typ g (TArr t1 c1) (TArr t2 c2) (conj phi1 (close_forall t2 phi2))
-
+           -> sub_typ g (TArr t1 c1) (TArr t2 c2)
+                      (conj phi1 (close_forall t2 phi2))
 
 type typing : env -> exp -> cmp -> Type =
   | TypingLoc   : g:env
@@ -417,6 +420,10 @@ type typing : env -> exp -> cmp -> Type =
             -> c_ok g c'
             -> valid g phi
             -> typing g e c'
+
+(* CH: Missing the 2 fix rules (see T-Fix and T-FixOmega in txt) *)
+(* CH: Where is the type conversion (typing or subtyping) rule?
+       We will have one, right? *)
 
 and kinding : env -> typ -> knd -> Type =
   | KindingVar   : g:env 
@@ -499,6 +506,6 @@ and kind_ok : env -> knd -> Type =
            -> kind_ok (extend g (B_a k1)) k2
            -> kind_ok g (KKArr k1 k2)
 
-(* CH: still missing the operational semantics;
+(* CH: still missing the operational semantics (see txt);
    it needs to be a relation because of allocation,
    and of full reduction in types, right? *)
