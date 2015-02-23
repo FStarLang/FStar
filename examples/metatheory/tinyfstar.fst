@@ -36,6 +36,7 @@ type tconst =
   | TcForallPostPure
   | TcForallPostSt
   | TcEqT
+  | TcPrecedes
 
 type econst =
   | EcUnit
@@ -91,6 +92,8 @@ and exp =
              (* f:t and x:(TArr.t t) bound in e *)
 
 let mk_eqt t1 t2 = TTApp (TTApp (TConst TcEqT) t1) t2
+
+let t_prec e1 e2 = TEApp (TEApp (TConst TcPrecedes) e1) e2
 
 (********************************************************)
 (* Substitutions and de Bruijn index manipulations      *)
@@ -447,7 +450,8 @@ let tconsts tc =
   | TcAnd    -> KKArr KType (KKArr KType KType)
   | TcImp    -> KKArr KType (KKArr KType KType)
   | TcNeg    -> KKArr KType KType
-  | TcEq     -> KKArr KType (KTArr (TVar 0) (KTArr (TVar 0) KType))
+  | TcEq
+  | TcPrecedes -> KKArr KType (KTArr (TVar 0) (KTArr (TVar 0) KType))
                 (* TODO: please double-check *)
   | TcTrue   -> KType
   | TcForallPostPure 
@@ -664,6 +668,33 @@ and typing : env -> exp -> cmp -> Type =
           -> typing (extend g (B_x t)) e c
           -> typing g (ELam t e) (tot (TArr t c))
 
+  | TyFix : #g:env
+         -> tx:typ
+         -> t':typ
+         -> wp:typ
+         -> #d:exp
+         -> #e:exp
+         -> kinding g (TArr tx (CPure t' wp)) KType
+         -> typing g d (tot (TArr tx (tot t')))
+         -> typing (extend (extend g (B_x tx))
+                           (B_x (TArr tx (CPure t' (op_CPure t' (TConst TcAnd)
+                              (up_CPure t' (t_prec (EApp d (EVar 0))
+                                                   (EApp d (EVar 1)))) wp)))))
+                   e (CPure t' wp)
+         -> typing g (EFix (Some d) (TArr tx (CPure t' wp)) e)
+                               (tot (TArr tx (CPure t' wp)))
+
+  | TyFixOmega : #g:env
+              -> tx:typ
+              -> t':typ
+              -> wp:typ
+              -> #e:exp
+              -> kinding g (TArr tx (CSt t' wp)) KType
+              -> typing (extend (extend g (B_x tx)) (B_x (TArr tx (CSt t' wp))))
+                        e (CSt t' wp)
+              -> typing g (EFix None (TArr tx (CSt t' wp)) e)
+                                (tot (TArr tx (CSt t' wp)))
+
   | TyApp : #g:env
          -> #e1:exp
          -> #e2:exp
@@ -704,8 +735,6 @@ and typing : env -> exp -> cmp -> Type =
         -> c_ok g c'
         -> valid g phi (* valid includes type conversion *)
         -> typing g e c'
-
-(* TODO: Add the 2 missing fix rules (see T-Fix and T-FixOmega in txt) *)
 
 and kinding : env -> typ -> knd -> Type =
   | KindingVar   : g:env
