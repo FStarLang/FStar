@@ -79,7 +79,7 @@ and exp =
          So, it's addition is actually a simplification that we might consider using here also.
 
      CH: I don't understand what this would mean formally.
-         Would we be switching to ANF?
+         Would we be switching to ANF? What about strong reduction?
   *)
   | EIf0   : e0:exp  -> e1:exp -> e2:exp -> exp
   | EFix   : ed:(option exp) -> t:typ  -> e:exp  -> exp
@@ -236,6 +236,8 @@ type tctx_ehole =
        pain than gain. It is certainly more convenient in the .txt
        to use contexts. But, perhaps it is more prudent to 
        simply do it without contexts here ... not sure. 
+  
+   CH: In the tctx_ehole case a small pain, in the other 2 cases a big gain
 *)
 val plug_e_in_t : e:exp -> te:tctx_ehole -> Tot typ
 let plug_e_in_t e te =
@@ -559,16 +561,26 @@ assume val asHeap: heap -> Tot exp
 val upd_heap : l:loc -> v:value -> h:heap -> Tot heap
 let upd_heap l v h l' = if l = l' then v else h l'
 
-(* TODO: write valid down *)
 (* CH: try to enable the use of SMT automation as much as possible,
-       otherwise we will die using building huge derivations
-       in a low-level deduction system. 
+       otherwise we will die building huge derivations in a low-level
+       deduction system.
 
    NS: Not sure what you mean. Isn't this style similar to λω?
 
-   CH: My comment was about valid, which then got moved without it.
- *)
+   CH: My comment was about the logical validity judgment, which then
+       got moved without it. I think I would prefer if we could write
+       valid in shallow embedding style (Tarski semantics), so that we
+       can take advantage of SMT automation. Or maybe as a proper
+       "logic" inductive? In any case, I've found natural deduction /
+       sequent calculus style reasoning highly painful to work with in
+       the past, and the logical formulas I see here (in the WPs) are
+       an order of magnitude bigger than what I had to work
+       with. Maybe we won't need to reason about valid that much,
+       because we only prove very syntactic things? Or otherwise
+       what's the catch? *)
 
+(* Logical validity reasons about types and pure expression up to
+   convertibity / (strong???) reduction *)
 type valid: env -> typ -> Type =
     (* AR: .txt has no refl. ? *)
   | VTEqRefl:    #g:env -> #t:typ ->
@@ -684,25 +696,10 @@ and typing : env -> exp -> cmp -> Type =
             -> typing g e c
             -> sub_cmp g c c' phi
             -> c_ok g c'
-            -> valid g phi
+            -> valid g phi (* this includes type conversion *)
             -> typing g e c'
 
-(* CH: Missing the 2 fix rules (see T-Fix and T-FixOmega in txt) 
-
-   NS: Yes, we should add it. 
-*)
-
-(* CH: Where is the type conversion (typing or subtyping) rule?
-       We will have one, right?
-       Otherwise what's the point of type-level lambdas?
-
-   NS: We only have sub_cmp in TypingSub (above) now. 
-       We need to write down the 'valid' predicate, written 
-       (G |= phi) in the .txt. 
-       The last two rules in that relation include the reduction 
-       relation on types and terms for definition equality.
-       That's where the lambdas come in. 
-*)
+(* TODO: Add the 2 missing fix rules (see T-Fix and T-FixOmega in txt) *)
 
 and kinding : env -> typ -> knd -> Type =
   | KindingVar   : g:env
