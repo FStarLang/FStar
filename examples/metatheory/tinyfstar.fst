@@ -81,11 +81,17 @@ let t_true   = TConst 9
 let t_forall_post_pure = TConst 10
 let t_forall_post_st   = TConst 11
 
+(* AR: adding it *)
+let t_eqt    = TConst 12
+
 let e_bang   = EConst 100
 let e_assign = EConst 101
 let e_sel    = EConst 102
 let e_upd    = EConst 103
 let e_unit   = EConst 104
+
+let mk_eqt t1 t2 = TTApp (TTApp t_eqt t1) t2
+
 (* 
    CH: still missing the integer constants. 
    NS: (EInt i) are the integer constants
@@ -152,6 +158,155 @@ and subst_typ s t = match t with
   | TELam  t1 t2 -> TELam  (subst_typ s t1) (subst_typ (bump_subst s) t2)
 
 
+
+(* Values *)
+
+val is_value : exp -> Tot bool
+let is_value e =
+  match e with
+  | EVar _
+  | EConst _
+  | ELoc _
+  | EInt _
+  | ELam _ _
+  | EFix _ _ _ -> true
+  | EApp _ _
+  | ELet _ _ _
+  | EIf0 _ _ _ -> false
+
+type value = e:exp{is_value e}
+
+type heap = loc -> Tot value
+
+(* Contexts *)
+
+type ectx_ehole =
+  | CeeTop : ectx_ehole
+  | CeeAppL : e2:exp -> ectx_ehole
+  | CeeAppR : e1:value -> ectx_ehole
+  | CeeIf0 : e1:exp -> e2:exp -> ectx_ehole
+
+val plug_e_in_e : e:exp -> ee:ectx_ehole -> Tot exp
+let plug_e_in_e e ee =
+  match ee with
+  | CeeTop -> e
+  | CeeAppL e2 -> EApp e e2
+  | CeeAppR e1 -> EApp e1 e
+  | CeeIf0 e1 e2 -> EIf0 e e1 e2
+
+type ectx_thole =
+  | CetLam : e:exp -> ectx_thole
+  | CetFix : ed:(option exp) -> e:exp -> ectx_thole
+
+val plug_t_in_e : t:typ -> et:ectx_thole -> Tot exp
+let plug_t_in_e t et =
+  match et with
+  | CetLam e -> ELam t e
+  | CetFix ed e -> EFix ed t e
+
+type cctx =
+  | CcPureT : wp:typ -> cctx
+  | CcPureWP : t:typ -> cctx
+  | CcStT : wp:typ -> cctx
+  | CcStWP : t:typ -> cctx
+
+type tctx_thole =
+  | CttTop : tctx_thole
+  | CttArrT : c:cmp -> tctx_thole
+  | CttArrC : t:typ -> cc:cctx -> tctx_thole
+  | CttTAppL : t2:typ -> tctx_thole
+  | CttTAppR : t1:typ -> tctx_thole
+  | CttEApp : e:exp -> tctx_thole
+  | CttTLam : k:knd -> tctx_thole
+  | CttELam1 : t2:typ -> tctx_thole
+  | CttELam2 : t1:typ -> tctx_thole
+
+val plug_t_in_t : t:typ -> tt:tctx_thole -> Tot typ
+let plug_t_in_t t tt =
+  match tt with
+  | CttTop -> t
+  | CttArrT c -> TArr t c
+  | CttArrC t1 (CcPureT wp) -> TArr t1 (CPure t wp)
+  | CttArrC t1 (CcPureWP t2) -> TArr t1 (CPure t2 t)
+  | CttArrC t1 (CcStT wp) -> TArr t1 (CSt t wp)
+  | CttArrC t1 (CcStWP t2) -> TArr t1 (CSt t2 t)
+  | CttTAppL t2 -> TTApp t t2
+  | CttTAppR t1 -> TTApp t1 t
+  | CttEApp e -> TEApp t e
+  | CttTLam k -> TTLam k t
+  | CttELam1 t2 -> TELam t t2
+  | CttELam2 t1 -> TELam t1 t
+
+(* CH: rather degenerate case, consider inlining in rules *)
+type tctx_ehole =
+  | CteEApp : t:typ -> tctx_ehole
+
+(* 
+   NS: I wonder if formalizing it with contexts is more 
+       pain than gain. It is certainly more convenient in the .txt
+       to use contexts. But, perhaps it is more prudent to 
+       simply do it without contexts here ... not sure. 
+*)
+val plug_e_in_t : e:exp -> te:tctx_ehole -> Tot typ
+let plug_e_in_t e te =
+  match te with
+  | CteEApp t -> TEApp t e
+
+(* Reduction in types and pure expressions *)
+
+type tstep : typ -> typ -> Type =
+  | TsEBeta : tx:typ ->
+              t:typ ->
+              e:exp ->
+              tstep (TEApp (TELam tx t) e) (subst_typ (EForX e 0) t)
+                                    (* TODO: + a shift down actually
+                                       (for all the betas and twice for fix) *)
+  | TsTBeta : k:knd ->
+              t:typ ->
+              t':typ ->
+              tstep (TTApp (TTLam k t) t') (subst_typ (TForA t' 0) t)
+  | TsTCtx : tt:tctx_thole ->
+             #t:typ ->
+             #t':typ ->
+             tstep t t' ->
+             tstep (plug_t_in_t t tt) (plug_t_in_t t' tt)
+  | TsECtx : te:tctx_ehole ->
+             #e:exp ->
+             #e':exp ->
+             epstep e e' ->
+             tstep (plug_e_in_t e te) (plug_e_in_t e' te)
+and epstep : exp -> exp -> Type =
+  | EpsIf0 : e1:exp ->
+             e2:exp ->
+             epstep (EIf0 (EInt 0) e1 e2) e1
+  | EpsIfS : i:int{i<>0} ->
+             e1:exp ->
+             e2:exp ->
+             epstep (EIf0 (EInt i) e1 e2) e2
+  | EpsBeta : t:typ ->
+              e:exp ->
+              v:value ->
+              e':exp ->
+              epstep (EApp (ELam t e) v) (subst_exp (EForX v 0) e)
+  | EpsFix : ed:option exp ->
+             t:typ ->
+             e:exp ->
+             v:value ->
+             epstep (EApp (EFix ed t e) v)
+               (subst_exp (EForX (EFix ed t e) 0) (subst_exp (EForX v 0) e))
+  | EpsTCtx : et:ectx_thole ->
+              #t:typ ->
+              #t':typ ->
+              tstep t t' ->
+              epstep (plug_t_in_e t et) (plug_t_in_e t' et)
+    (* CH: Is it really on purpose that this doesn't include a EpsECtx rule?
+           How will we get to doing the betas?
+           EisECtx won't really help with that
+
+       NS: There is an a E-Ctx rule in the .txt which should cover this.
+    *)
+
+
 (********************************************************)
 (* The signatures of Pure and ST and other Monad ops    *)
 (********************************************************)
@@ -163,6 +318,20 @@ let k_pre_st      = KTArr t_heap KType
 let k_post_st t   = KTArr t (KTArr t_heap KType)
 let k_st t        = KKArr (k_post_st t) k_pre_st
 
+(*
+ * TODO: AR: in λω, we use distinct de bruijn indices for types and terms, i.e.
+ * the typing environment is split for types and terms. when one is extended,
+ * lookup domain of the other need not change (the looked up value has to shifted
+ * though). this had the advantage
+ * that reasoning about (y - 1) when looking for y was a bit simpler. but there we
+ * did not have TELam. one way would be to extend tsubst in λω so that when
+ * passing a TELam, it *does not* increment the (type) index to be substituted. if
+ * we do so, we would need to change the below (and at other places) to be
+ * TEApp (TVar 0) (EVar 0).
+ * 
+ * another change we would need to do is to shift_up types and kinds on extend
+ * more uniformly than λω.
+ *)
 let tot t = CPure t (TTLam (k_post_pure t)
                       (TTApp (TTApp t_forall t)
                          (TELam t (TEApp (TVar 1) (EVar 0)))))
@@ -174,6 +343,8 @@ let bind_pure (CPure t1 wp1) (CPure t2 wp2) = (* bind wp1 wp2 post = wp1 (fun (x
   let wp2 = TELam t1 wp2 in
   CPure t2 (TTLam (* post *)
               (k_post_pure t2)  (* don't need to bump t2, since we'll have a side condition ensuring that x:t1 not free in t2 *)
+                                (* AR: we are putting t2 under a TTLam, so don't we need to shift it up ? For example if t2
+                                   is the type variable 0, we need to make it 1 now ? *)
               (TTApp (bump_typ 1 wp1)
                  (TELam (* x *)
                     (bump_typ 1 t1)
@@ -216,6 +387,8 @@ let bind c1 c2 = match c1, c2 with
   | CPure _ _, CSt _ _   -> bind_st   (lift_pure_st c1) c2
 
 let conj phi1 phi2        = TTApp (TTApp t_and phi1) phi2
+
+(* AR: do we handle shifting up etc. here for phi ? *)
 let close_forall t phi    = TTApp (TTApp t_forall t) (TELam t phi)
 
 let down_CPure t wp       = TTApp (TTApp t_forall_post_pure t)
@@ -351,7 +524,6 @@ let lookup_t t = B_t.k (Some.v (signature t))
 
    NS: Not sure what you mean. Isn't this style similar to λω?
  *)
-assume type valid: env -> typ -> Type
 
 type sub_cmp : env -> cmp -> cmp -> typ -> Type =
   | SubLift : g:env
@@ -396,7 +568,67 @@ and sub_typ : env -> typ -> typ -> typ -> Type =
            -> sub_typ g (TArr t1 c1) (TArr t2 c2)
                       (conj phi1 (close_forall t2 phi2))
 
-type typing : env -> exp -> cmp -> Type =
+(* AR: adding it *)
+assume val asHeap: heap -> Tot exp
+
+(* generic function on functional maps, should be in library *)
+val upd_heap : l:loc -> v:value -> h:heap -> Tot heap
+let upd_heap l v h l' = if l = l' then v else h l'
+
+type valid: env -> typ -> Type =
+    (* AR: .txt has no refl. ? *)
+  | VTEqRefl:    #g:env -> #t:typ ->
+                 valid g (mk_eqt t t)
+  | VTEqTran:    #g:env -> #t:typ -> #t1:typ -> #t2:typ ->
+                 valid g (mk_eqt t t1) ->
+                 valid g (mk_eqt t t2) ->   
+                 valid g (mk_eqt t t2)
+  | VTApp:       #g:env -> #t1:typ -> #t2:typ ->
+                 f:typ ->
+                 valid g (mk_eqt t1 t2) ->
+                 valid g (mk_eqt (TTApp f t1) (TTApp f t2))
+  | VTEqValid:   #g:env -> #t1:typ -> #t2:typ ->
+                 valid g (mk_eqt t1 t2) ->
+                 valid g t1 ->
+                 valid g t2
+  | VSelAsHeap:  t:typ -> (* type of the value in heap location *)
+                 g:env ->
+                 h:heap ->
+                 l:loc ->
+                 valid g (mk_eq t (EApp (EApp e_sel (asHeap h)) (ELoc l)) (h l))
+  | VUpdAsHeap:  g:env ->
+                 h:heap ->
+                 l:loc ->
+                 v:value ->
+                 valid g (mk_eq t_heap (EApp (EApp (EApp e_upd (asHeap h)) (ELoc l)) v)
+                                       (asHeap (upd_heap l v h)))  
+  (*
+   * AR: do we need to add next 2 validity rules
+   * sel (upd h l v) = v and the next one.
+   * perhaps they can be derived from VSel and VUpd above
+   *)
+  | VForallT:    #g:env -> #t:typ -> #phi:typ ->
+                 valid (extend g (B_x t)) phi ->
+                 valid g (close_forall t phi)
+
+  (* AR: TODO: forall with kinds ? *)
+
+  | VForallTElim:#g:env -> #t:typ -> #phi:typ -> #e:exp ->
+                 valid g (close_forall t phi) ->
+                 typing g e (tot t) ->
+                 valid g (subst_typ (EForX e 0) phi) (* AR: careful with shifts *)
+
+  (* AR: TODO: forall elim with kinds ? *)
+
+  | VTReduction: #g:env -> #t:typ -> #t':typ ->
+                 tstep t t' ->
+                 valid g (mk_eqt t t')
+		   
+  | VEReduction: #g:env -> t:typ -> #e:exp -> #e':exp ->
+                 epstep e e' ->
+                 valid g (mk_eq t e e')
+
+and typing : env -> exp -> cmp -> Type =
   | TypingLoc   : g:env
                -> l:int{binds_l l /\ lookup_l l = t_refint}
                -> typing g (ELoc l) (tot t_refint)
@@ -557,157 +789,6 @@ and kind_ok : env -> knd -> Type =
            -> kind_ok (extend g (B_a k1)) k2
            -> kind_ok g (KKArr k1 k2)
 
-(* Values *)
-
-val is_value : exp -> Tot bool
-let is_value e =
-  match e with
-  | EVar _
-  | EConst _
-  | ELoc _
-  | EInt _
-  | ELam _ _
-  | EFix _ _ _ -> true
-  | EApp _ _
-  | ELet _ _ _
-  | EIf0 _ _ _ -> false
-
-type value = e:exp{is_value e}
-
-(* Contexts *)
-
-type ectx_ehole =
-  | CeeTop : ectx_ehole
-  | CeeAppL : e2:exp -> ectx_ehole
-  | CeeAppR : e1:value -> ectx_ehole
-  | CeeIf0 : e1:exp -> e2:exp -> ectx_ehole
-
-val plug_e_in_e : e:exp -> ee:ectx_ehole -> Tot exp
-let plug_e_in_e e ee =
-  match ee with
-  | CeeTop -> e
-  | CeeAppL e2 -> EApp e e2
-  | CeeAppR e1 -> EApp e1 e
-  | CeeIf0 e1 e2 -> EIf0 e e1 e2
-
-type ectx_thole =
-  | CetLam : e:exp -> ectx_thole
-  | CetFix : ed:(option exp) -> e:exp -> ectx_thole
-
-val plug_t_in_e : t:typ -> et:ectx_thole -> Tot exp
-let plug_t_in_e t et =
-  match et with
-  | CetLam e -> ELam t e
-  | CetFix ed e -> EFix ed t e
-
-type cctx =
-  | CcPureT : wp:typ -> cctx
-  | CcPureWP : t:typ -> cctx
-  | CcStT : wp:typ -> cctx
-  | CcStWP : t:typ -> cctx
-
-type tctx_thole =
-  | CttTop : tctx_thole
-  | CttArrT : c:cmp -> tctx_thole
-  | CttArrC : t:typ -> cc:cctx -> tctx_thole
-  | CttTAppL : t2:typ -> tctx_thole
-  | CttTAppR : t1:typ -> tctx_thole
-  | CttEApp : e:exp -> tctx_thole
-  | CttTLam : k:knd -> tctx_thole
-  | CttELam1 : t2:typ -> tctx_thole
-  | CttELam2 : t1:typ -> tctx_thole
-
-val plug_t_in_t : t:typ -> tt:tctx_thole -> Tot typ
-let plug_t_in_t t tt =
-  match tt with
-  | CttTop -> t
-  | CttArrT c -> TArr t c
-  | CttArrC t1 (CcPureT wp) -> TArr t1 (CPure t wp)
-  | CttArrC t1 (CcPureWP t2) -> TArr t1 (CPure t2 t)
-  | CttArrC t1 (CcStT wp) -> TArr t1 (CSt t wp)
-  | CttArrC t1 (CcStWP t2) -> TArr t1 (CSt t2 t)
-  | CttTAppL t2 -> TTApp t t2
-  | CttTAppR t1 -> TTApp t1 t
-  | CttEApp e -> TEApp t e
-  | CttTLam k -> TTLam k t
-  | CttELam1 t2 -> TELam t t2
-  | CttELam2 t1 -> TELam t1 t
-
-(* CH: rather degenerate case, consider inlining in rules *)
-type tctx_ehole =
-  | CteEApp : t:typ -> tctx_ehole
-
-(* 
-   NS: I wonder if formalizing it with contexts is more 
-       pain than gain. It is certainly more convenient in the .txt
-       to use contexts. But, perhaps it is more prudent to 
-       simply do it without contexts here ... not sure. 
-*)
-val plug_e_in_t : e:exp -> te:tctx_ehole -> Tot typ
-let plug_e_in_t e te =
-  match te with
-  | CteEApp t -> TEApp t e
-
-(* Reduction in types and pure expressions *)
-
-type tstep : typ -> typ -> Type =
-  | TsEBeta : tx:typ ->
-              t:typ ->
-              e:exp ->
-              tstep (TEApp (TELam tx t) e) (subst_typ (EForX e 0) t)
-                                    (* TODO: + a shift down actually
-                                       (for all the betas and twice for fix) *)
-  | TsTBeta : k:knd ->
-              t:typ ->
-              t':typ ->
-              tstep (TTApp (TTLam k t) t') (subst_typ (TForA t' 0) t)
-  | TsTCtx : tt:tctx_thole ->
-             #t:typ ->
-             #t':typ ->
-             tstep t t' ->
-             tstep (plug_t_in_t t tt) (plug_t_in_t t' tt)
-  | TsECtx : te:tctx_ehole ->
-             #e:exp ->
-             #e':exp ->
-             epstep e e' ->
-             tstep (plug_e_in_t e te) (plug_e_in_t e' te)
-and epstep : exp -> exp -> Type =
-  | EpsIf0 : e1:exp ->
-             e2:exp ->
-             epstep (EIf0 (EInt 0) e1 e2) e1
-  | EpsIfS : i:int{i<>0} ->
-             e1:exp ->
-             e2:exp ->
-             epstep (EIf0 (EInt i) e1 e2) e2
-  | EpsBeta : t:typ ->
-              e:exp ->
-              v:value ->
-              e':exp ->
-              epstep (EApp (ELam t e) v) (subst_exp (EForX v 0) e)
-  | EpsFix : ed:option exp ->
-             t:typ ->
-             e:exp ->
-             v:value ->
-             epstep (EApp (EFix ed t e) v)
-               (subst_exp (EForX (EFix ed t e) 0) (subst_exp (EForX v 0) e))
-  | EpsTCtx : et:ectx_thole ->
-              #t:typ ->
-              #t':typ ->
-              tstep t t' ->
-              epstep (plug_t_in_e t et) (plug_t_in_e t' et)
-    (* CH: Is it really on purpose that this doesn't include a EpsECtx rule?
-           How will we get to doing the betas?
-           EisECtx won't really help with that
-
-       NS: There is an a E-Ctx rule in the .txt which should cover this.
-    *)
-
-type heap = loc -> Tot value
-
-(* generic function on functional maps, should be in library *)
-val upd_heap : l:loc -> v:value -> h:heap -> Tot heap
-let upd_heap l v h l' = if l = l' then v else h l'
-
 type cfg =
   | Cfg : h:heap -> e:exp -> cfg
 
@@ -731,3 +812,20 @@ type eistep : cfg -> cfg -> Type =
             v:value ->
             eistep (Cfg h (EApp (EApp e_assign (ELoc l)) v))
                    (Cfg (upd_heap l v h) e_unit)
+
+
+(* (\* AR: without contexts *\) *)
+
+(* type tstepnc: typ -> typ -> Type = *)
+(*   | TsTBeta : #k:knd -> *)
+(*               #t:typ -> *)
+(*               #t':typ -> *)
+(*               tstepnc (TTApp (TTLam k t) t') (subst_typ (TForA t' 0) t) *)
+(*   | TsEBeta : #tx:typ -> *)
+(*               #t:typ -> *)
+(*               #e:exp -> *)
+(*               tstepnc (TEApp (TELam tx t) e) (subst_typ (EForX e 0) t) *)
+(*                                     (\* TODO: + a shift down actually *\) *)
+(*                                     (\* for all the betas and twice for fix) *\) *)
+(*   | TsTApp_1:  *)
+
