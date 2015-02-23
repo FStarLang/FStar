@@ -19,15 +19,33 @@ module TinyFStar
 (********************************************************)
 (* Syntax *)
 (********************************************************)
-type var = nat    //de Bruijn index
-type loc = nat
-type const = int  // CH: trying to pack all exp and typ constants
-                  // and locations in one int seems very unelegant
-                  // (and will need quite a complex encoding, since
-                  //  constants include integers and locations are
-                  //  also an infinite set) 
-                  // NS: What is the alternative? 
-                  //     We need constants at multiple levels
+type var = nat    // de Bruijn indices
+type loc = nat    // global location names
+
+type tconst = 
+  | TcUnit
+  | TcInt
+  | TcRefInt
+  | TcHeap
+  | TcForall
+  | TcAnd
+  | TcImp
+  | TcNeg
+  | TcEq
+  | TcTrue
+  | TcForallPostPure
+  | TcForallPostSt
+  | TcEqT
+
+type econst =
+  | EcUnit
+  | EcInt : int -> econst
+  | EcLoc : loc -> econst
+  | EcBang
+  | EcAssign
+  | EcSel
+  | EcUpd
+
 type knd =
   | KType : knd
   | KTArr : t:typ -> k:knd -> knd     (* x:t  bound in k *)
@@ -35,7 +53,7 @@ type knd =
 
 and typ =
   | TVar   : a:var   -> typ
-  | TConst : c:const -> typ
+  | TConst : c:tconst -> typ
   | TArr   : t:typ   -> c:cmp  -> typ (* x:t  bound in c *)
   | TTApp  : t1:typ  -> t2:typ -> typ
   | TEApp  : t:typ   -> e:exp  -> typ
@@ -48,9 +66,7 @@ and cmp =
 
 and exp =
   | EVar   : x:var   -> exp
-  | EConst : c:const -> exp
-  | ELoc   : l:loc   -> exp (* CH: do we want this, or are they just constants? NS: Yes, we can probably collapse this. *)
-  | EInt   : l:int   -> exp (* CH: weren't ints just constants? NS: Yes. But (EInt 0) : int  and (EConst 0) should have some other type depending on the signature *)
+  | EConst : c:econst -> exp
   | ELam   : t:typ   -> e:exp -> exp            (* x:t bound in e *)
   | EApp   : e1:exp  -> e2:exp -> exp
   | ELet   : t:typ   -> e1:exp -> e2:exp -> exp (* x:t bound in e2 *)
@@ -64,38 +80,9 @@ and exp =
   *)
   | EIf0   : e0:exp  -> e1:exp -> e2:exp -> exp
   | EFix   : ed:(option exp) -> t:typ  -> e:exp  -> exp
-             (* f:t and x bound in e *)
+             (* f:t and x:(TArr.t t) bound in e *)
 
-(* Constants *)
-let t_unit   = TConst 0
-let t_int    = TConst 1
-let t_refint = TConst 2
-let t_heap   = TConst 3
-let t_forall = TConst 4
-let t_and    = TConst 5
-let t_imp    = TConst 6
-let t_neg    = TConst 7
-let t_eq     = TConst 8
-let t_true   = TConst 9
-
-let t_forall_post_pure = TConst 10
-let t_forall_post_st   = TConst 11
-
-(* AR: adding it *)
-let t_eqt    = TConst 12
-
-let e_bang   = EConst 100
-let e_assign = EConst 101
-let e_sel    = EConst 102
-let e_upd    = EConst 103
-let e_unit   = EConst 104
-
-let mk_eqt t1 t2 = TTApp (TTApp t_eqt t1) t2
-
-(* 
-   CH: still missing the integer constants. 
-   NS: (EInt i) are the integer constants
-*)
+let mk_eqt t1 t2 = TTApp (TTApp (TConst TcEqT) t1) t2
 
 (********************************************************)
 (* Substitutions and de Bruijn index manipulations      *)
@@ -157,7 +144,9 @@ and subst_typ s t = match t with
   | TTLam k1 t2 -> TTLam (subst_knd s k1) (subst_typ (bump_subst s) t2)
   | TELam  t1 t2 -> TELam  (subst_typ s t1) (subst_typ (bump_subst s) t2)
 
-
+(********************************************************)
+(* Operational semantics                                *)
+(********************************************************)
 
 (* Values *)
 
@@ -166,8 +155,6 @@ let is_value e =
   match e with
   | EVar _
   | EConst _
-  | ELoc _
-  | EInt _
   | ELam _ _
   | EFix _ _ _ -> true
   | EApp _ _
@@ -278,11 +265,11 @@ type tstep : typ -> typ -> Type =
 and epstep : exp -> exp -> Type =
   | EpsIf0 : e1:exp ->
              e2:exp ->
-             epstep (EIf0 (EInt 0) e1 e2) e1
+             epstep (EIf0 (EConst (EcInt 0)) e1 e2) e1
   | EpsIfS : i:int{i<>0} ->
              e1:exp ->
              e2:exp ->
-             epstep (EIf0 (EInt i) e1 e2) e2
+             epstep (EIf0 (EConst (EcInt i)) e1 e2) e2
   | EpsBeta : t:typ ->
               e:exp ->
               v:value ->
@@ -314,8 +301,8 @@ let k_pre_pure    = KType
 let k_post_pure t = KTArr t KType
 let k_pure t      = KKArr (k_post_pure t) k_pre_pure
 
-let k_pre_st      = KTArr t_heap KType
-let k_post_st t   = KTArr t (KTArr t_heap KType)
+let k_pre_st      = KTArr (TConst TcHeap) KType
+let k_post_st t   = KTArr t (KTArr (TConst TcHeap) KType)
 let k_st t        = KKArr (k_post_st t) k_pre_st
 
 (*
@@ -333,7 +320,7 @@ let k_st t        = KKArr (k_post_st t) k_pre_st
  * more uniformly than λω.
  *)
 let tot t = CPure t (TTLam (k_post_pure t)
-                      (TTApp (TTApp t_forall t)
+                      (TTApp (TTApp (TConst TcForall) t)
                          (TELam t (TEApp (TVar 1) (EVar 0)))))
 
 val bind_pure:  c1:cmp{is_CPure c1}
@@ -359,7 +346,7 @@ let lift_pure_st (CPure t wp) =
   CSt t (TTLam (* post *)
            (k_post_st t)
            (TELam (* h *)
-              t_heap
+              (TConst TcHeap)
               (TTApp (bump_typ 2 wp)
                  (TELam (* x *)
                     t
@@ -386,38 +373,38 @@ let bind c1 c2 = match c1, c2 with
   | CSt _ _,   CPure _ _ -> bind_st   c1 (lift_pure_st c2)
   | CPure _ _, CSt _ _   -> bind_st   (lift_pure_st c1) c2
 
-let conj phi1 phi2        = TTApp (TTApp t_and phi1) phi2
+let conj phi1 phi2        = TTApp (TTApp (TConst TcAnd) phi1) phi2
 
 (* AR: do we handle shifting up etc. here for phi ? *)
-let close_forall t phi    = TTApp (TTApp t_forall t) (TELam t phi)
+let close_forall t phi    = TTApp (TTApp (TConst TcForall) t) (TELam t phi)
 
-let down_CPure t wp       = TTApp (TTApp t_forall_post_pure t)
+let down_CPure t wp       = TTApp (TTApp (TConst TcForallPostPure) t)
                                   (TTLam (k_post_pure t) (TTApp (bump_typ 1 wp) (TVar 0)))
-let down_CSt t wp         = TTApp (TTApp t_forall_post_st t)
+let down_CSt t wp         = TTApp (TTApp (TConst TcForallPostSt) t)
                                   (TTLam (k_post_st t)
-                                     (TELam t_heap (TEApp (TTApp (bump_typ 2 wp) (TVar 1)) (EVar 0))))
+                                     (TELam (TConst TcHeap) (TEApp (TTApp (bump_typ 2 wp) (TVar 1)) (EVar 0))))
 let up_CPure t phi        = TTLam (k_post_pure t) (bump_typ 1 phi)
-let up_CSt   t phi        = TTLam (k_post_st t)   (TELam t_heap (bump_typ 2 phi))
+let up_CSt   t phi        = TTLam (k_post_st t)   (TELam (TConst TcHeap) (bump_typ 2 phi))
 let op_CPure t op wp1 wp2 = TTLam (k_post_pure t) (TTApp (TTApp op
                                                             (TTApp (bump_typ 1 wp1) (TVar 0)))
                                                            (TTApp (bump_typ 1 wp2) (TVar 0)))
-let op_CSt t op wp1 wp2   = TTLam (k_post_st t)   (TELam t_heap (TTApp (TTApp op
+let op_CSt t op wp1 wp2   = TTLam (k_post_st t)   (TELam (TConst TcHeap) (TTApp (TTApp op
                                                                          (TEApp (TTApp (bump_typ 2 wp1) (TVar 1)) (EVar 0)))
                                                                   (TEApp (TTApp (bump_typ 2 wp2) (TVar 1)) (EVar 0))))
 
-let mk_eq t e1 e2      = TEApp (TEApp (TTApp t_eq t) e1) e2
-let neg phi            = TTApp t_neg phi
+let mk_eq t e1 e2      = TEApp (TEApp (TTApp (TConst TcEq) t) e1) e2
+let neg phi            = TTApp (TConst TcNeg) phi
 
 val bind_pure_if : exp -> c1:cmp{is_CPure c1} -> c2:cmp{is_CPure c2} -> Tot cmp
 let bind_pure_if e (CPure t wp1) (CPure _ wp2) =
-  let guard = mk_eq t_int e (EInt 0) in
-  let wp = op_CPure t t_and (op_CPure t t_imp (up_CPure t guard) wp1) (op_CPure t t_imp (up_CPure t (neg guard)) wp2) in
+  let guard = mk_eq (TConst TcInt) e (EConst (EcInt 0)) in
+  let wp = op_CPure t (TConst TcAnd) (op_CPure t (TConst TcImp) (up_CPure t guard) wp1) (op_CPure t (TConst TcImp) (up_CPure t (neg guard)) wp2) in
   CPure t wp
 
 val bind_st_if : exp -> c1:cmp{is_CSt c1} -> c2:cmp{is_CSt c2} -> Tot cmp
 let bind_st_if e (CSt t wp1) (CSt _ wp2) =
-  let guard = mk_eq t_int e (EInt 0) in
-  let wp = op_CSt t t_and (op_CSt t t_imp (up_CSt t guard) wp1) (op_CSt t t_imp (up_CSt t (neg guard)) wp2) in
+  let guard = mk_eq (TConst TcInt) e (EConst (EcInt 0)) in
+  let wp = op_CSt t (TConst TcAnd) (op_CSt t (TConst TcImp) (up_CSt t guard) wp1) (op_CSt t (TConst TcImp) (up_CSt t (neg guard)) wp2) in
   CSt t wp
 
 val bind_if : exp -> cmp -> cmp -> Tot cmp
@@ -436,10 +423,50 @@ let set_result_typ c t = match c with
   | CSt _ wp -> CSt t wp
 
 (********************************************************)
+(* Signature for constants                              *)
+(********************************************************)
+
+val tconsts : tconst -> Tot knd
+let tconsts tc =
+  match tc with
+  | TcUnit   -> KType
+  | TcInt    -> KType
+  | TcRefInt -> KType
+  | TcHeap   -> KType
+  | TcForall -> KKArr KType (KKArr (KTArr (TVar 0) KType) KType)
+                (* TODO: please double-check *)
+  | TcAnd    -> KKArr KType (KKArr KType KType)
+  | TcImp    -> KKArr KType (KKArr KType KType)
+  | TcNeg    -> KKArr KType KType
+  | TcEq     -> KKArr KType (KTArr (TVar 0) (KTArr (TVar 0) KType))
+                (* TODO: please double-check *)
+  | TcTrue   -> KType
+  | TcForallPostPure 
+  | TcForallPostSt
+  | TcEqT            -> KType (* TODO: finish this *)
+
+val econsts : econst -> Tot typ
+let econsts ec =
+  match ec with
+  | EcUnit   -> TConst TcUnit
+  | EcInt _  -> TConst TcInt
+  | EcLoc _  -> TConst TcRefInt
+  | EcBang   -> TArr (TConst TcRefInt) (tot (TConst TcInt))
+  | EcAssign -> TArr (TConst TcRefInt)
+                     (tot (TArr (TConst TcInt)
+                                (tot (TConst TcUnit))))
+  | EcSel    -> TArr (TConst TcHeap)
+                     (tot (TArr (TConst TcRefInt)
+                                (tot (TConst TcInt))))
+  | EcUpd    -> TArr (TConst TcHeap)
+                     (tot (TArr (TConst TcRefInt)
+                                (tot (TArr (TConst TcInt)
+                                           (tot (TConst TcHeap))))))
+
+(********************************************************)
 (* Typing environments *)
 (********************************************************)
 
-(* CH: where are the location bindings from the txt? *)
 type var_binding =
   | B_a : k:knd -> var_binding
   | B_x : t:typ -> var_binding
@@ -456,25 +483,6 @@ let extend env var_binding = function
 
 val empty : env
 let empty x = None
-
-type const_binding =
-  | B_l : t:typ -> const_binding (* CH: locations bound in signature?
-                                        they seem statically allocated (no ref)
-                                        (in the txt they are in environment)
-                                        (they anyway all have type ref int). 
-                                    NS: In this calculus, without dynamic allocation, perhaps it is better 
-                                        to have them in the signature rather than the context. 
-                                        I don't have a string preference ... we could move B_l to var_binding *)
-  | B_c : t:typ -> const_binding
-  | B_t : k:knd -> const_binding
-type constants = int -> Tot (option const_binding)
-
-val signature : constants
-let signature = function
-  | 0 -> Some (B_t KType) //t_unit
-  | 1 -> Some (B_t KType) //t_int
-  | 2 -> Some (B_t KType) //t_refint
-  | _ -> None (* TODO: fill this in *)
 
 val binds: test:(var_binding -> Tot bool) -> env -> var -> Tot bool
 let binds test g x = match g x with
@@ -495,54 +503,28 @@ let lookup test g x project = let Some b = g x in project b
 let lookup_a    g a = lookup is_B_a g a B_a.k
 let lookup_x    g x = lookup is_B_x g x B_x.t
 
-val binds_const: (const_binding -> Tot bool) -> int -> Tot bool
-let binds_const test c = match signature c with
-  | Some b -> test b
-  | _ -> false
-
-let binds_l = binds_const is_B_l
-let binds_c = binds_const is_B_c
-let binds_t = binds_const is_B_t
-
-val lookup_l: l:int{binds_l l} -> Tot typ
-let lookup_l l = B_l.t (Some.v (signature l))
-
-val lookup_c: c:int{binds_c c} -> Tot typ
-let lookup_c c = B_c.t (Some.v (signature c))
-
-val lookup_t: t:int{binds_t t} -> Tot knd
-let lookup_t t = B_t.k (Some.v (signature t))
-
 (********************************************************)
 (* Main typing judgments *)
 (********************************************************)
 
-(* TODO: write valid down *)
-(* CH: try to enable the use of SMT automation as much as possible,
-       otherwise we will die using building huge derivations
-       in a low-level deduction system. 
-
-   NS: Not sure what you mean. Isn't this style similar to λω?
- *)
-
 type sub_cmp : env -> cmp -> cmp -> typ -> Type =
   | SubLift : g:env
            -> c:cmp{is_CPure c}
-           -> sub_cmp g c (lift_pure_st c) t_true
+           -> sub_cmp g c (lift_pure_st c) (TConst TcTrue)
 
   | SubPure : g:env
            -> t:typ
            -> wp1:typ
            -> wp2:typ
            -> sub_cmp g (CPure t wp1) (CPure t wp2)
-                      (down_CPure t (op_CPure t t_imp wp2 wp1))
+                      (down_CPure t (op_CPure t (TConst TcImp) wp2 wp1))
 
   | SubST   : g:env
            -> t:typ
            -> wp1:typ
            -> wp2:typ
            -> sub_cmp g (CSt t wp1) (CSt t wp2)
-                      (down_CSt t (op_CSt t t_imp wp2 wp1))
+                      (down_CSt t (op_CSt t (TConst TcImp) wp2 wp1))
 
   | SubRes : g:env
           -> c:cmp
@@ -554,7 +536,7 @@ type sub_cmp : env -> cmp -> cmp -> typ -> Type =
 and sub_typ : env -> typ -> typ -> typ -> Type =
   | SubTRefl: g:env
            -> t:typ
-           -> sub_typ g t t t_true
+           -> sub_typ g t t (TConst TcTrue)
 
   | SubTArr: g:env
            -> t1:typ
@@ -574,6 +556,16 @@ assume val asHeap: heap -> Tot exp
 (* generic function on functional maps, should be in library *)
 val upd_heap : l:loc -> v:value -> h:heap -> Tot heap
 let upd_heap l v h l' = if l = l' then v else h l'
+
+(* TODO: write valid down *)
+(* CH: try to enable the use of SMT automation as much as possible,
+       otherwise we will die using building huge derivations
+       in a low-level deduction system. 
+
+   NS: Not sure what you mean. Isn't this style similar to λω?
+
+   CH: My comment was about valid, which then got moved without it.
+ *)
 
 type valid: env -> typ -> Type =
     (* AR: .txt has no refl. ? *)
@@ -595,13 +587,16 @@ type valid: env -> typ -> Type =
                  g:env ->
                  h:heap ->
                  l:loc ->
-                 valid g (mk_eq t (EApp (EApp e_sel (asHeap h)) (ELoc l)) (h l))
+                 valid g (mk_eq t (EApp (EApp (EConst EcSel) (asHeap h))
+                                        (EConst (EcLoc l))) (h l))
   | VUpdAsHeap:  g:env ->
                  h:heap ->
                  l:loc ->
                  v:value ->
-                 valid g (mk_eq t_heap (EApp (EApp (EApp e_upd (asHeap h)) (ELoc l)) v)
-                                       (asHeap (upd_heap l v h)))  
+                 valid g (mk_eq (TConst TcHeap)
+                                (EApp (EApp (EApp (EConst EcUpd) (asHeap h))
+                                            (EConst (EcLoc l))) v)
+                                (asHeap (upd_heap l v h)))
   (*
    * AR: do we need to add next 2 validity rules
    * sel (upd h l v) = v and the next one.
@@ -629,19 +624,18 @@ type valid: env -> typ -> Type =
                  valid g (mk_eq t e e')
 
 and typing : env -> exp -> cmp -> Type =
-  | TypingLoc   : g:env
-               -> l:int{binds_l l /\ lookup_l l = t_refint}
-               -> typing g (ELoc l) (tot t_refint)
-
   | TypingVar   : g:env
                -> x:var{binds_x g x}
                -> kinding g (lookup_x g x) KType
                -> typing g (EVar x) (tot (lookup_x g x))
 
   | TypingConst : g:env
-               -> c:int{binds_c c}
-               -> kinding g (lookup_c c) KType
-               -> typing g (EConst c) (tot (lookup_c c))
+               -> c:econst
+(* 
+               -> kinding g (econsts c) KType
+                  CH: TODO: we can prove once and for all that this holds!
+*)
+               -> typing g (EConst c) (tot (econsts c))
 
   | TypingAbs  : g:env
               -> t:typ
@@ -675,7 +669,7 @@ and typing : env -> exp -> cmp -> Type =
             -> e2:exp
             -> c1:cmp
             -> c2:cmp{result_typ c1 = result_typ c2}
-            -> typing g e0 (tot t_int)
+            -> typing g e0 (tot (TConst TcInt))
             -> typing g e1 c1
             -> typing g e2 c2
             -> typing g (EIf0 e0 e1 e2) (bind_if e0 c1 c2)
@@ -714,8 +708,8 @@ and kinding : env -> typ -> knd -> Type =
                 -> kinding g (TVar a) (lookup_a g a)
 
   | KindingConst : g:env
-                -> t:int{binds_t t}
-                -> kinding g (TConst t) (lookup_t t)
+                -> c:tconst
+                -> kinding g (TConst c) (tconsts c)
 
   | KindingArr   : g:env
                 -> t:typ
@@ -806,13 +800,12 @@ type eistep : cfg -> cfg -> Type =
               eistep (Cfg h (plug_e_in_e e ee)) (Cfg h (plug_e_in_e e' ee))
   | EisRd : h:heap ->
             l:loc ->
-            eistep (Cfg h (EApp e_bang (ELoc l))) (Cfg h (h l))
+            eistep (Cfg h (EApp (EConst EcBang) (EConst (EcLoc l)))) (Cfg h (h l))
   | EisWr : h:heap ->
             l:loc ->
             v:value ->
-            eistep (Cfg h (EApp (EApp e_assign (ELoc l)) v))
-                   (Cfg (upd_heap l v h) e_unit)
-
+            eistep (Cfg h (EApp (EApp (EConst EcAssign) (EConst (EcLoc l))) v))
+                   (Cfg (upd_heap l v h) (EConst EcUnit))
 
 (* (\* AR: without contexts *\) *)
 
