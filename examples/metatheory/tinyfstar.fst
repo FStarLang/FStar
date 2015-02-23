@@ -86,7 +86,11 @@ and exp =
          to be used only for sequencing effects, but not for replacing
          evaluation contexts / switching to ANF, right?
          In any case, we should decide either way, and make this
-         and the txt file consistent. *)
+         and the txt file consistent.
+     CH: After having another look, the gain from the let doesn't seem
+         so big, it only saves us 3 binds (2 in EApp and 1 in EIf0).
+         Is that really worth the pain? *)
+
   | EIf0   : e0:exp  -> e1:exp -> e2:exp -> exp
   | EFix   : ed:(option exp) -> t:typ  -> e:exp  -> exp
              (* f:t and x:(TArr.t t) bound in e *)
