@@ -77,6 +77,9 @@ and exp =
      NS: It appears in the S.R proof in the .txt. 
          There, it is much easier to have one context rule and one place to think about bind.
          So, it's addition is actually a simplification that we might consider using here also.
+
+     CH: I don't understand what this would mean formally.
+         Would we be switching to ANF?
   *)
   | EIf0   : e0:exp  -> e1:exp -> e2:exp -> exp
   | EFix   : ed:(option exp) -> t:typ  -> e:exp  -> exp
@@ -145,7 +148,7 @@ and subst_typ s t = match t with
   | TELam  t1 t2 -> TELam  (subst_typ s t1) (subst_typ (bump_subst s) t2)
 
 (********************************************************)
-(* Operational semantics                                *)
+(* Reduction types and pure expressions                 *)
 (********************************************************)
 
 (* Values *)
@@ -239,7 +242,7 @@ let plug_e_in_t e te =
   match te with
   | CteEApp t -> TEApp t e
 
-(* Reduction in types and pure expressions *)
+(* Reduction of types and pure expressions *)
 
 type tstep : typ -> typ -> Type =
   | TsEBeta : tx:typ ->
@@ -281,17 +284,16 @@ and epstep : exp -> exp -> Type =
              v:value ->
              epstep (EApp (EFix ed t e) v)
                (subst_exp (EForX (EFix ed t e) 0) (subst_exp (EForX v 0) e))
+  | EpsECtx : ee:ectx_ehole ->
+              #e:exp ->
+              #e':exp ->
+              epstep e e' ->
+              epstep (plug_e_in_e e ee) (plug_e_in_e e' ee)
   | EpsTCtx : et:ectx_thole ->
               #t:typ ->
               #t':typ ->
               tstep t t' ->
               epstep (plug_t_in_e t et) (plug_t_in_e t' et)
-    (* CH: Is it really on purpose that this doesn't include a EpsECtx rule?
-           How will we get to doing the betas?
-           EisECtx won't really help with that
-
-       NS: There is an a E-Ctx rule in the .txt which should cover this.
-    *)
 
 
 (********************************************************)
@@ -792,12 +794,6 @@ type eistep : cfg -> cfg -> Type =
               #e':exp ->
               epstep e e' ->
               eistep (Cfg h e) (Cfg h e')
-  | EisECtx : h:heap ->
-              ee:ectx_ehole ->
-              #e:exp ->
-              #e':exp ->
-              epstep e e' ->
-              eistep (Cfg h (plug_e_in_e e ee)) (Cfg h (plug_e_in_e e' ee))
   | EisRd : h:heap ->
             l:loc ->
             eistep (Cfg h (EApp (EConst EcBang) (EConst (EcLoc l)))) (Cfg h (h l))
