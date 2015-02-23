@@ -1812,6 +1812,8 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         (fun scope env subst  -> 
             let c2 = Util.subst_comp subst c2 in
             let rel = if !Options.use_eq_at_higher_order then EQ else problem.relation in 
+            let _ = if Tc.Env.debug env <| Options.Other "EQ"
+                    then Util.fprint2 "(%s) Using relation %s at higher order\n" (Env.get_range env |> Range.string_of_range) (rel_to_string rel) in
             CProb <| mk_problem scope orig c1 rel c2 None "function co-domain")
 
       | Typ_lam(bs1, t1'), Typ_lam(bs2, t2') -> 
@@ -2012,7 +2014,9 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                  else let c1_comp = Util.comp_to_comp_typ c1 in
                       let c2_comp = Util.comp_to_comp_typ c2 in
                       if problem.relation=EQ && lid_equals c1_comp.effect_name c2_comp.effect_name
-                      then let sub_probs = List.map2 (fun arg1 arg2 -> match fst arg1, fst arg2 with 
+                      then let _ = if Tc.Env.debug env <| Options.Other "EQ"
+                                   then Util.print_string "solve_c is using an equality constraint\n" in
+                           let sub_probs = List.map2 (fun arg1 arg2 -> match fst arg1, fst arg2 with 
                             | Inl t1, Inl t2 -> TProb<| sub_prob t1 EQ t2 "effect arg"
                             | Inr e1, Inr e2 -> EProb<| sub_prob e1 EQ e2 "effect arg" 
                             | _ -> failwith "impossible") c1_comp.effect_args c2_comp.effect_args in
@@ -2417,15 +2421,6 @@ let subtype env t1 t2 : guard_t =
   match try_subtype env t1 t2 with
     | Some f -> f
     | None -> subtype_fail env t1 t2
-
-let trivial_subtype env eopt t1 t2 = 
- let err () =
-    let r = Tc.Env.get_range env in
-    raise (Error(Tc.Errors.basic_type_error env eopt t2 t1, r)) in
- let g = subtype env t1 t2 in
- if is_trivial g 
- then ()
- else err()
        
 let sub_comp env c1 c2 = 
   if debug env <| Other "Rel" 

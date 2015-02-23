@@ -144,11 +144,11 @@ let name_binders binders =
 let name_function_binders t = match t.n with 
     | Typ_fun(binders, comp) -> mk_Typ_fun(name_binders binders, comp) None t.pos
     | _ -> t
-let null_binders_of_tks (tks:list<(either<knd,typ> * bool)>) : binders = 
+let null_binders_of_tks (tks:list<(either<knd,typ> * aqual)>) : binders = 
     tks |> List.map (function
         | Inl k, imp -> fst <| null_t_binder k, imp 
         | Inr t, imp -> fst <| null_v_binder t, imp)
-let binders_of_tks (tks:list<(either<knd,typ> * bool)>) : binders = 
+let binders_of_tks (tks:list<(either<knd,typ> * aqual)>) : binders = 
     tks |> List.map (function
         | Inl k, imp -> Inl (gen_bvar_p k.pos k), imp 
         | Inr t, imp -> Inr (gen_bvar_p t.pos t), imp)
@@ -414,7 +414,7 @@ let rec visit_typ s mk vt me ctrl (boundvars:Visit.boundvars) t =
             | _ -> failwith "Impossible")
 
     | Typ_refine(x, t) -> 
-        (match visit_prod [Inr x, false] (Inl t) with 
+        (match visit_prod [Inr x, None] (Inl t) with 
             | [(Inr x, _)], Inl t -> mk_Typ_refine(x, t) None t0.pos, ctrl
             | _ -> failwith "Impossible")
     
@@ -792,7 +792,7 @@ let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
           cont (sub_fv (union_fvs_uvs vs1 vs2) bvs)))
 
         | Typ_refine(x, t) -> 
-          vs_binders [Inr x, false] uvonly (fun (bvs, vs1) -> 
+          vs_binders [Inr x, None] uvonly (fun (bvs, vs1) -> 
           vs_typ t uvonly (fun vs2 -> 
           cont (sub_fv (union_fvs_uvs vs1 vs2) bvs)))
 
@@ -1165,9 +1165,9 @@ let b2t_v = ftv Const.b2t_lid (mk_Kind_arrow([null_v_binder <| t_bool], ktype) d
 
 let mk_conj_opt phi1 phi2 = match phi1 with
   | None -> Some phi2
-  | Some phi1 -> Some (mk_Typ_app(tand, [(Inl phi1, false); (Inl phi2, false)]) None (Range.union_ranges phi1.pos phi2.pos))
-let mk_binop op_t phi1 phi2 = mk_Typ_app(op_t, [(Inl phi1, false); (Inl phi2, false)]) None (Range.union_ranges phi1.pos phi2.pos)
-let mk_neg phi = mk_Typ_app(ftv Const.not_lid kt_kt, [Inl phi, false]) None phi.pos
+  | Some phi1 -> Some (mk_Typ_app(tand, [targ phi1; targ phi2]) None (Range.union_ranges phi1.pos phi2.pos))
+let mk_binop op_t phi1 phi2 = mk_Typ_app(op_t, [targ phi1; targ phi2]) None (Range.union_ranges phi1.pos phi2.pos)
+let mk_neg phi = mk_Typ_app(ftv Const.not_lid kt_kt, [targ phi]) None phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_conj_l phi = match phi with 
     | [] -> ftv Const.true_lid ktype
@@ -1206,11 +1206,11 @@ let eq_k =
     let atyp = btvar_to_typ a in
     let b = bvd_to_bvar_s (new_bvd None) ktype in 
     let btyp = btvar_to_typ b in
-    mk_Kind_arrow([(Inl a, true); (Inl b, true); null_v_binder atyp; null_v_binder btyp],
+    mk_Kind_arrow([(Inl a, Some Implicit); (Inl b, Some Implicit); null_v_binder atyp; null_v_binder btyp],
                   ktype) dummyRange
 
 let teq = ftv Const.eq2_lid eq_k
-let mk_eq e1 e2 = mk_Typ_app(teq, [(Inr e1, false); (Inr e2, false)]) None (Range.union_ranges e1.pos e2.pos)
+let mk_eq e1 e2 = mk_Typ_app(teq, [varg e1; varg e2]) None (Range.union_ranges e1.pos e2.pos)
 let eq_typ = ftv Const.eqT_lid kun
 let mk_eq_typ t1 t2 = mk_Typ_app(eq_typ, [targ t1; targ t2]) None (Range.union_ranges t1.pos t2.pos)
 
@@ -1227,7 +1227,7 @@ let lex_pair =
 let forall_kind =
   let a = bvd_to_bvar_s (new_bvd None) ktype in
   let atyp = btvar_to_typ a in
-  mk_Kind_arrow([(Inl a, true); 
+  mk_Kind_arrow([(Inl a, Some Implicit); 
                  null_t_binder <| mk_Kind_arrow([null_v_binder atyp], ktype) dummyRange], 
                 ktype) 
                 dummyRange
@@ -1252,7 +1252,7 @@ let rec close_forall bs f =
     else let body = mk_Typ_lam([b], f) None f.pos in
          match fst b with 
            | Inl a -> mk_Typ_app(tforall_typ a.sort, [targ body]) None f.pos
-           | Inr x -> mk_Typ_app(tforall, [(Inl x.sort, true); targ body]) None f.pos) bs f
+           | Inr x -> mk_Typ_app(tforall, [(Inl x.sort, Some Implicit); targ body]) None f.pos) bs f
 
 let rec is_wild_pat p =
     match p.v with

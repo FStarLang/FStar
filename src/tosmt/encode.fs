@@ -939,6 +939,12 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
     let phi = Util.compress_typ phi in
     match Util.destruct_typ_as_formula phi with
         | None -> 
+          (if Tc.Env.debug env.tcenv <| Options.Other "EQ"
+           then let _ = Util.fprint1 "Falling back ... %s\n" (Print.tag_of_typ phi) in
+               match phi.n with 
+                | Typ_app(_, args) when (List.length args = 3) -> 
+                  Util.fprint1 "Args are .. %s\n" (Print.args_to_string args)
+                | _ -> ());
           fallback phi
         
         | Some (Util.BaseConn(op, arms)) -> 

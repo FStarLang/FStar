@@ -41,12 +41,11 @@ let lexcons_lid  = pconst "LexCons"
 let lextop_lid   = pconst "LexTop"
 
 (* Logical connectives and operators *)
-let kunary k k'              = mk_Kind_arrow([Inl (null_bvar k), false], k') dummyRange
-let kbin k1 k2 k'            = mk_Kind_arrow([Inl (null_bvar k1), false; 
-                                              Inl (null_bvar k2), false], k') dummyRange
-let ktern k1 k2 k3 k'        = mk_Kind_arrow([Inl (null_bvar k1), false; 
-                                              Inl (null_bvar k2), false;
-                                              Inl (null_bvar k3), false], k') dummyRange
+let kunary k k'              = mk_Kind_arrow([null_t_binder k], k') dummyRange
+let kbin k1 k2 k'            = mk_Kind_arrow([null_t_binder k1; null_t_binder k2], k') dummyRange
+let ktern k1 k2 k3 k'        = mk_Kind_arrow([null_t_binder k1; 
+                                              null_t_binder k2;
+                                              null_t_binder k3], k') dummyRange
 let true_lid   = pconst "True"
 let false_lid  = pconst "False"
 let and_lid    = pconst "l_and"  

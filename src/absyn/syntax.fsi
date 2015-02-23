@@ -67,6 +67,10 @@ type sconst =
   | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
 
 type memo<'a> = ref<option<'a>>
+type arg_qualifier =
+    | Implicit
+    | Equality
+type aqual = option<arg_qualifier>
 type typ' =  
   | Typ_btvar    of btvar
   | Typ_const    of ftvar 
@@ -79,9 +83,9 @@ type typ' =
   | Typ_uvar     of uvar_t * knd                             (* Unification variables, not present after 1st round tc *)
   | Typ_delayed  of either<(typ * subst_t), (unit -> typ)> * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
-and arg = either<typ,exp> * bool                             (* bool marks an explicitly provided implicit arg *)
+and arg = either<typ,exp> * aqual                            (* marks an explicitly provided implicit arg *)
 and args = list<arg>
-and binder = either<btvar,bvvar> * bool                      (* f:   #n:nat -> vector n int -> T; f #17 v *)
+and binder = either<btvar,bvvar> * aqual                     (* f:   #n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                   (* bool marks implicit binder *)
 and typ = syntax<typ',knd>                                   (* A type is a typ' + its kind as metadata *)
 and comp_typ = {
@@ -377,6 +381,8 @@ val is_null_bvar: bvar<'a,'b> -> bool
 val is_null_binder: binder -> bool
 val argpos: arg -> Range.range
 val pat_vars: pat -> list<either<btvdef,bvvdef>>
+val is_implicit: aqual -> bool
+val as_implicit: bool -> aqual
 
 
 

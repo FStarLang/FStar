@@ -220,7 +220,7 @@ and reduce_typ
         (axs, [], [t], [], []), env
 
       | Typ_refine(x, t2) -> 
-        let bs, binders, env = map_binders map_kind map_typ env binders [Inr x, false] in
+        let bs, binders, env = map_binders map_kind map_typ env binders [Inr x, None] in
         let t2, env = map_typ env binders t2 in
         (bs, [], [t2], [], []), env
 
@@ -252,8 +252,8 @@ and reduce_typ
       | Typ_meta(Meta_pattern(t,ps)) ->
         let t,env = map_typ env binders t in
         let pats, env = List.fold_left (fun (pats, env) arg -> match arg with
-          | Inl t, _ -> let t, env = map_typ env binders t in ((Inl t, false)::pats, env)
-          | Inr e, _ -> let e, env = map_exp env binders e in ((Inr e, false)::pats, env)) ([], env) ps in 
+          | Inl t, _ -> let t, env = map_typ env binders t in ((Inl t, None)::pats, env)
+          | Inr e, _ -> let e, env = map_exp env binders e in ((Inr e, None)::pats, env)) ([], env) ps in 
         ([], [], [t], [], List.rev pats), env in
 
     combine_typ t components env

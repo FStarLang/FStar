@@ -58,6 +58,10 @@ type sconst =
   | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
 
 type memo<'a> = ref<option<'a>>
+type arg_qualifier =
+    | Implicit
+    | Equality
+type aqual = option<arg_qualifier>
 type typ' =  
   | Typ_btvar    of btvar
   | Typ_const    of ftvar 
@@ -70,9 +74,9 @@ type typ' =
   | Typ_uvar     of uvar_t * knd                             (* not present after 1st round tc *)
   | Typ_delayed  of either<(typ * subst_t), (unit -> typ)> * memo<typ>                (* A delayed substitution or suspended type---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
-and arg = either<typ,exp> * bool                                        (* bool marks an explicitly provided implicit arg *)
+and arg = either<typ,exp> * aqual                            (* marks an explicitly provided implicit arg *)
 and args = list<arg>
-and binder = either<btvar,bvvar> * bool
+and binder = either<btvar,bvvar> * option<arg_qualifier>
 and binders = list<binder>
 and typ = syntax<typ',knd>
 and comp_typ = {
@@ -608,12 +612,12 @@ let keffect = mk_Kind_effect
 let null_id  = mk_ident("_", dummyRange)
 let null_bvd = {ppname=null_id; realname=null_id}
 let null_bvar k = {v=null_bvd; sort=k; p=dummyRange}
-let t_binder (a:btvar) : binder = Inl a, false
-let v_binder (a:bvvar) : binder = Inr a, false
-let null_t_binder t : binder = Inl (null_bvar t), false
-let null_v_binder t : binder = Inr (null_bvar t), false
-let targ t : arg = Inl t, false
-let varg v : arg = Inr v, false
+let t_binder (a:btvar) : binder = Inl a, None
+let v_binder (a:bvvar) : binder = Inr a, None
+let null_t_binder t : binder = Inl (null_bvar t), None
+let null_v_binder t : binder = Inr (null_bvar t), None
+let targ t : arg = Inl t, None
+let varg v : arg = Inr v, None
 let is_null_pp (b:bvdef<'a>) = b.ppname.idText = null_id.idText
 let is_null_bvd (b:bvdef<'a>) = b.realname.idText = null_id.idText
 let is_null_bvar (b:bvar<'a,'b>) = is_null_bvd b.v
@@ -626,6 +630,8 @@ let freevars_of_binders (bs:binders) : freevars =
         | Inl btv, _ -> {out with ftvs=Util.set_add btv out.ftvs}
         | Inr bxv, _ -> {out with fxvs=Util.set_add bxv out.fxvs}) no_fvs
 
-let binders_of_list fvs : binders = (fvs |> List.map (fun t -> t, false))
+let binders_of_list fvs : binders = (fvs |> List.map (fun t -> t, None))
 let binders_of_freevars fvs = 
    (Util.set_elements fvs.ftvs |> List.map t_binder)@(Util.set_elements fvs.fxvs |> List.map v_binder)
+let is_implicit = function Some Implicit -> true | _ -> false
+let as_implicit = function true -> Some Implicit | _ -> None

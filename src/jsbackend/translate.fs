@@ -200,7 +200,7 @@ and type_vars ty = match ty with
     | Typ_fun(bs,c) -> (bs |> List.collect (function 
        | Inr x, _ -> 
         let tl = type_vars x.sort.n in
-        let hd = if is_null_binder (Inr x, false) then None else Some x.v in
+        let hd = if is_null_binder (Inr x, None) then None else Some x.v in
         hd::tl
        | _ -> [])) @ (comp_vars c.n)
     | Typ_lam(_,t) | Typ_refine({sort=t}, _) | Typ_app(t, _) 

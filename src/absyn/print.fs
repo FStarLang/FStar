@@ -98,7 +98,7 @@ let is_inr = function Inl _ -> false | Inr _ -> true
 let rec reconstruct_lex (e:exp) =
   match (compress_exp e).n with
   | Exp_app (f, args) ->
-      let args = List.filter (fun (a:arg) -> not (snd a) && is_inr (fst a)) args in
+      let args = List.filter (fun (a:arg) ->  snd a <> Some Implicit && is_inr (fst a)) args in
       let exps = List.map (function Inl _, _ -> failwith "impossible" | Inr x, _ -> x) args in
       if is_lex_cons f && List.length exps = 2 then
         match reconstruct_lex (List.nth exps 1) with
@@ -144,6 +144,7 @@ let strBvd bvd =
             with _ -> bvd.ppname.idText
         else bvd.ppname.idText
 
+let filter_imp a = a |> List.filter (function (_, Some Implicit) -> false | _ -> true)
 let const_to_string x = match x with
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
@@ -216,11 +217,11 @@ and typ_to_string x =
         | Inr e -> Util.format1 "(<Expected a type!>%s)" (exp_to_string e) in
       let qbinder_to_string = q_to_string (fun x -> binder_to_string (fst x)) in
       let qbody_to_string = q_to_string (fun x -> typ_to_string (snd x)) in
-      let args' = if !Options.print_implicits && not (is_quant t) then args else List.filter (fun a -> not (snd a)) args in (* drop implicit arguments for type operators *)
+      let args' = if !Options.print_implicits && not (is_quant t) then args else List.filter (function (_, Some Implicit) -> false | _ -> true) args in (* drop implicit arguments for type operators *)
       if is_ite t && List.length args = 3 then
         format3 "if %s then %s else %s" (arg_to_string (List.nth args 0)) (arg_to_string (List.nth args 1)) (arg_to_string (List.nth args 2))
       else if is_b2t t && List.length args = 1 then List.nth args 0 |> arg_to_string
-      else if is_quant t then (* not trying to merge nested quants; the patterns are in a meta and normalization kills those at this point *)
+      else if is_quant t && List.length args <= 2 then (* not trying to merge nested quants; the patterns are in a meta and normalization kills those at this point *)
         Util.format3 "(%s (%s). %s)" (quant_to_string t) (qbinder_to_string (List.nth args' 0)) (qbody_to_string (List.nth args' 0))
       else if is_infix_type_op t && List.length args' = 2 then
         Util.format3 "(%s %s %s)" (List.nth args' 0 |> arg_to_string) (t |> infix_type_op_to_string) (List.nth args' 1 |> arg_to_string)
@@ -248,8 +249,9 @@ and uvar_t_to_string (uv, k) =
    else Util.format1 "U%s"  (if !Options.hide_uvar_nums then "?" else Util.string_of_int (Unionfind.uvar_id uv))
      
 and imp_to_string s = function
-  | true -> "#" ^ s
-  | false -> s
+  | Some Implicit -> "#" ^ s
+  | Some Equality -> "=" ^ s
+  | _ -> s
 
 and binder_to_string' is_arrow b = match b with 
     | Inl a, imp -> if is_null_binder b || (!Options.print_real_names |> not && is_null_pp a.v) 
@@ -266,7 +268,7 @@ and binder_to_string b =  binder_to_string' false b
 and arrow_binder_to_string b = binder_to_string' true b
    
 and binders_to_string sep bs =
-    let bs = if !Options.print_implicits then bs else List.filter (fun (_,i) -> not i) bs in
+    let bs = if !Options.print_implicits then bs else filter_imp bs in 
     if sep = " -> "
     then bs |> List.map arrow_binder_to_string |> String.concat sep
     else bs |> List.map binder_to_string |> String.concat sep
@@ -276,7 +278,7 @@ and arg_to_string = function
    | Inr x, imp -> imp_to_string (exp_to_string x) imp
 
 and args_to_string args =
-    let args = if !Options.print_implicits then args else List.filter (fun (_,i) -> not i) args in
+    let args = if !Options.print_implicits then args else filter_imp args in
     args |> List.map arg_to_string |> String.concat " "
 
 and lcomp_typ_to_string lc = 
@@ -371,7 +373,7 @@ and exp_to_string x = match (compress_exp x).n with
       (match lex with
       | Some es -> "%[" ^ (String.concat "; " (List.map exp_to_string es)) ^ "]"
       | None ->
-          let args' = List.filter (fun (a:arg) -> not (snd a) && is_inr (fst a)) args in
+          let args' = filter_imp args |> List.filter (function (Inr _, _) -> true | _ -> false) in
             (* drop implicit and type arguments for prim operators (e.g equality) *)
             (* we drop the type arguments because they should all be implicits,
                but somehow the type-checker/elaborator doesn't always mark them as such

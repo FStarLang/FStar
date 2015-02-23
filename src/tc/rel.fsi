@@ -87,6 +87,5 @@ val teq : env -> typ -> typ -> guard_t
 val try_subtype: env -> typ -> typ -> option<guard_t>
 val subtype: env -> typ -> typ -> guard_t
 val subtype_fail: env -> typ -> typ -> 'a
-val trivial_subtype: env -> option<exp> -> typ -> typ -> unit
 val sub_comp: env -> comp -> comp -> option<guard_t>
 val simplify_guard: env -> guard_t -> guard_t

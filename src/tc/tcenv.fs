@@ -80,6 +80,7 @@ type env = {
   letrecs:list<(lbname * typ)>;  (* mutually recursive names and their types (for termination checking) *)
   top_level:bool;                (* is this a top-level term? if so, then discharge guards *)
   check_uvars:bool;
+  use_eq:bool                    (* generate an equality constraint, rather than subtyping/subkinding *)
 } 
 and solver_t = {
     init: env -> unit;
@@ -123,6 +124,7 @@ let initial_env solver module_lid =
     letrecs=[];
     top_level=true;
     check_uvars=false;
+    use_eq=false;
   }
 
 let monad_decl_opt env l = 
@@ -426,11 +428,11 @@ let push_module env (m:modul) =
       expected_typ=None}
 
 let set_expected_typ env t = 
-  {env with expected_typ = Some t}
+  {env with expected_typ = Some t; use_eq=false}
 let expected_typ env = match env.expected_typ with 
   | None -> None
   | Some t -> Some t
-let clear_expected_typ env = {env with expected_typ=None}, expected_typ env
+let clear_expected_typ env = {env with expected_typ=None; use_eq=false}, expected_typ env
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 

@@ -478,7 +478,7 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
   else match Tc.Env.lookup_typ_abbrev tcenv m.effect_name with
         | None -> remake m.effect_name res args flags
         | Some t -> 
-          let t = mk_Typ_app(t, (Inl res, false)::args) None res.pos in
+          let t = mk_Typ_app(t, (Inl res, None)::args) None res.pos in
           let c = sn tcenv (with_new_code cfg t) in
           match (Util.compress_typ c.code).n with
             | Typ_app({n=Typ_const fv}, (Inl res, _)::args) -> remake fv.v res args flags

@@ -286,3 +286,6 @@ let test_even2 = assert (even 5 = false)
 let test_odd1 = assert (odd 4 = false)
 let test_odd2 = assert (odd 5 = true)
 
+assume val f_eq: a:Type -> p:(a -> Type) -> =arg:(u:unit -> Pure a (requires True) (ensures p)) -> Tot (x:a{p x})
+assume val g_eq_c: unit -> Pure int (requires True) (ensures (fun x -> x >= 0))
+let h_test_eq :nat = f_eq g_eq_c

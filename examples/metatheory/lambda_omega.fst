@@ -170,7 +170,7 @@ esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
                 esubst_comp esub_inc s1 (s2 (x-1)) in
 
               let ext =
-                forall_intro #var #(esub_comp_inc_type s1) (esub_comp_inc s1);
+                forall_intro (* #var #(esub_comp_inc_type s1) *) (esub_comp_inc s1);
                 esubst_extensional
                   (esub_comp esub_inc s1)
                   (esub_comp (esubst_lam s1) esub_inc) (s2 (x-1)) in
@@ -205,7 +205,7 @@ esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
       esubst_comp (esubst_lam s1) (esubst_lam s2) e1 in
 
     let h2 =
-      forall_intro #var #(esubst_lam_composes s1 s2) esubst_lam_comp;
+      forall_intro (* #var #(esubst_lam_composes s1 s2) *) esubst_lam_comp;
       cut (FEq (esub_comp (esubst_lam s1) (esubst_lam s2))
              (esubst_lam (esub_comp s1 s2))) in
 
@@ -724,7 +724,7 @@ let rec tshift_up_above_tsubst_beta x t1 t2 =
   assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) =
          tsubst t1 (tsub_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
                               (tsub_inc_above (x+1))));
-  forall_intro #var #(tshift_up_above_tsubst_beta_aux_typ x t2)
+  forall_intro (* #var #(tshift_up_above_tsubst_beta_aux_typ x t2) *)
                (tshift_up_above_tsubst_beta_aux x t2); (* only for speedup *)
   tsubst_extensional (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2))
                      (tsub_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
@@ -802,7 +802,7 @@ let esubst_gen_elam x e t e' =
   assert(ELam t (esubst_beta_gen (x + 1) (eshift_up e) e') =
            ELam t (esubst e' (esub_beta_gen (x + 1) (eshift_up e))));
 
-  forall_intro #var #(esubst_gen_elam_aux_type e x) (esubst_gen_elam_aux e x);
+  forall_intro (* #var #(esubst_gen_elam_aux_type e x) *) (esubst_gen_elam_aux e x);
 
   esubst_extensional (esubst_lam (esub_beta_gen x e))
                      (esub_beta_gen (x + 1) (eshift_up e)) e'
@@ -864,7 +864,7 @@ let tsubst_gen_tlam x t k t' =
   assert(TLam k (tsubst_beta_gen (x + 1) (tshift_up t) t') =
            TLam k (tsubst t' (tsub_beta_gen (x + 1) (tshift_up t))));
 
-  forall_intro #var #(tsubst_gen_tlam_aux_type t x) (tsubst_gen_tlam_aux t x);
+  forall_intro (* #var #(tsubst_gen_tlam_aux_type t x) *) (tsubst_gen_tlam_aux t x);
 
   tsubst_extensional (tsubst_lam (tsub_beta_gen x t))
                      (tsub_beta_gen (x + 1) (tshift_up t)) t'

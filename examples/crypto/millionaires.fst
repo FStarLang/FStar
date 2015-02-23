@@ -24,7 +24,7 @@ val with_mode:  a:Type
              -> req_f:(heap -> Type)
              -> ens_f:(heap -> a -> heap -> Type)
              -> m:mode
-             -> f:(unit -> ST a req_f ens_f)
+             -> =f:(unit -> ST a req_f ens_f)
              -> ST a 
                    (requires (fun h0 -> 
                           req_f (Heap.upd h0 moderef m) 

@@ -55,15 +55,20 @@ let is_tvar_free (a:btvdef) t =
 
 let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
   let env = Env.set_range env e.pos in
+  let check env t1 t2 = 
+    if env.use_eq 
+    then Rel.try_teq env t1 t2
+    else match Rel.try_subtype env t1 t2 with 
+            | None -> None
+            | Some f -> Some <| apply_guard f e in
   if env.is_pattern
   then match Rel.try_teq env t1 t2 with
         | None -> raise (Error(Tc.Errors.expected_pattern_of_type env t2 e t1, Tc.Env.get_range env))
         | Some g -> e, g
-  else match try_subtype env t1 t2 with
+  else match check env t1 t2 with
         | None -> 
           raise (Error(Tc.Errors.expected_expression_of_type env t2 e t1, Tc.Env.get_range env))
-        | Some f -> 
-           let g = apply_guard f e in
+        | Some g -> 
            if debug env <| Options.Other "Rel"
            then Util.fprint1 "Applied guard is %s\n" <| guard_to_string env g;
            let e = Util.compress_exp e in
@@ -87,20 +92,21 @@ let tks_of_args (args:args) =
         | Inl t, imp -> Inl (force_tk t), imp
         | Inr v, imp -> Inr (force_tk v), imp)
 
+let is_implicit = function Some Implicit -> true | _ -> false
 let destruct_arrow_kind env tt k (args:args) : (Syntax.args * binders * knd) = 
     let ktop = compress_kind k |> Normalize.norm_kind [WHNF; Beta; Eta] env in 
     let r = Env.get_range env in
     let rec aux k = match k.n with 
         | Kind_arrow(bs, k') -> 
           let imp_follows = match args with 
-            | (_, imp)::_ -> imp
+            | (_, qual)::_ -> is_implicit qual
             | _ -> false in
           let rec mk_implicits vars subst bs = match bs with 
             | b::brest -> 
-              if snd b 
+              if snd b |> is_implicit
               then let imp_arg = match fst b with 
-                    | Inl a -> Tc.Rel.new_tvar r vars (Util.subst_kind subst a.sort) |> fst |> (fun x -> Inl x, true) //set the implicit flag
-                    | Inr x -> Tc.Rel.new_evar r vars (Util.subst_typ subst x.sort) |> fst |>  (fun x -> Inr x, true) in
+                    | Inl a -> Tc.Rel.new_tvar r vars (Util.subst_kind subst a.sort) |> fst |> (fun x -> Inl x, as_implicit true) //set the implicit flag
+                    | Inr x -> Tc.Rel.new_evar r vars (Util.subst_typ subst x.sort) |> fst |>  (fun x -> Inr x, as_implicit true) in
                    let subst = if is_null_binder b then subst else  (subst_formal b imp_arg)::subst in
                    let imp_args, bs = mk_implicits vars subst brest in
                    imp_arg::imp_args, bs
@@ -185,7 +191,7 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
                 let k = new_kvar env in
                 let t = new_tvar env k in
                 let p = {p with v=Pat_dot_typ(a, t)} in
-                (Inl t, true), p
+                (Inl t, as_implicit true), p
 
            | Pat_constant c -> 
                 let e = mk_Exp_constant c None p.p in
@@ -197,7 +203,7 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
 
            | Pat_var (x, imp) -> 
                 let e = mk_Exp_bvar x None p.p in
-                (Inr e, imp), p
+                (Inr e, as_implicit imp), p
  
            | Pat_twild a -> 
                 let t = mk_Typ_btvar a None p.p in
@@ -232,7 +238,7 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
                               let a = Util.bvd_to_bvar_s (Util.new_bvd None) kun in
                               withinfo (Pat_dot_typ (a, tun)) None (* Inl kun *) (Syntax.range_of_lid fv.v)
 
-                            | Inr _, true ->
+                            | Inr _, Some Implicit ->
                               let a = Util.gen_bvar tun in
                               withinfo (Pat_var(a, true)) None (*Inr tun*) (Syntax.range_of_lid fv.v)
 
@@ -247,13 +253,13 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
                                     let a = Util.bvd_to_bvar_s (Util.new_bvd None) kun in
                                     let p = withinfo (Pat_dot_typ (a, tun)) None (*Inl kun*) (Syntax.range_of_lid fv.v) in
                                     p::aux formals' pats
-                                | (Inr _, true), Pat_var(_, true) -> 
+                                | (Inr _, Some Implicit), Pat_var(_, true) -> 
                                     p::aux formals' pats'
-                                | (Inr _, true), _ ->
+                                | (Inr _, Some Implicit), _ ->
                                     let a = Util.gen_bvar tun in
                                     let p = withinfo (Pat_var(a, true)) None (*Inr tun*) (Syntax.range_of_lid fv.v) in
                                     p::aux formals' pats
-                                | (Inr _, false), _ ->
+                                | (Inr _, _), _ ->
                                   p::aux formals' pats' 
                             end in
                       aux f pats in
@@ -336,12 +342,12 @@ let decorate_pattern env p exps =
 
               let rec match_args matched_pats args argpats = match args, argpats with 
                 | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats)) (force_tk e)
-                | (Inl t, true)::args, _ -> (* implicit type argument *)
+                | (Inl t, Some Implicit)::args, _ -> (* implicit type argument *)
                   let x = Util.gen_bvar_p p.p (force_tk t) in
                   let q = withinfo (Pat_dot_typ(x, t)) (Some<| Inl x.sort) p.p in
                   match_args (q::matched_pats) args argpats
                  
-                | (Inr e, true)::args, _ -> (* implicit value argument *)  
+                | (Inr e, Some Implicit)::args, _ -> (* implicit value argument *)  
                   let x = Util.gen_bvar_p p.p (force_tk e) in
                   let q = withinfo (Pat_dot_term(x, e)) (Some <| Inr x.sort) p.p in
                   match_args (q::matched_pats) args argpats
@@ -401,7 +407,7 @@ let decorate_pattern env p exps =
 
     let pat_as_arg p = 
         let vars, te = decorated_pattern_as_either p in 
-        vars, (te, true) in
+        vars, (te, as_implicit true) in
     
     match pat.v with 
         | Pat_disj _ -> failwith "Impossible" (* these are only on top-level patterns *)
@@ -876,14 +882,14 @@ let maybe_instantiate env e t =
           let t = new_tvar env k in
           let subst = (Inl(a.v, t))::subst in 
           let args, bs, subst = aux subst rest in 
-          (Inl t, true)::args, bs, subst  
+          (Inl t, Some Implicit)::args, bs, subst  
 
-        | (Inr x, true)::rest -> 
+        | (Inr x, Some Implicit)::rest -> 
           let t = Util.subst_typ subst x.sort in 
           let v = new_evar env t in
           let subst = (Inr(x.v, v))::subst in 
           let args, bs, subst = aux subst rest in 
-          (Inr v, true)::args, bs, subst
+          (Inr v, Some Implicit)::args, bs, subst
 
         | bs -> [], bs, subst in 
      let args, bs, subst = aux [] bs in
@@ -904,10 +910,12 @@ let maybe_instantiate env e t =
   | _ -> e, t
 
 let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t = 
-  let gopt = if env.is_pattern then Tc.Rel.try_teq env lc.res_typ t else Tc.Rel.try_subtype env lc.res_typ t in
+  let gopt = if env.is_pattern || env.use_eq 
+             then Tc.Rel.try_teq env lc.res_typ t, false 
+             else Tc.Rel.try_subtype env lc.res_typ t, true in
   match gopt with 
-    | None -> subtype_fail env lc.res_typ t 
-    | Some g -> 
+    | None, _ -> subtype_fail env lc.res_typ t 
+    | Some g, apply_guard -> 
       let g = Rel.simplify_guard env g in 
       match guard_f g with 
         | Rel.Trivial -> (e, lc, g)
@@ -923,9 +931,10 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
             let xexp = Util.bvd_to_exp x t in
             let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) (Some k) xexp.pos in
             let cret = lcomp_of_comp <| mk_comp md t wp wp [] in//ct.flags in
+            let guard = if apply_guard then mk_Typ_app(f, [varg xexp]) (Some ktype) f.pos else f in
             let eq_ret, _trivial_so_ok_to_discard = 
             strengthen_precondition (Some <| Errors.subtyping_failed env lc.res_typ t) (Env.set_range env e.pos) e cret
-                                    (guard_of_guard_formula <| Rel.NonTrivial (mk_Typ_app(f, [varg xexp]) (Some ktype) f.pos)) in
+                                    (guard_of_guard_formula <| Rel.NonTrivial guard) in
             let eq_ret = 
                 if Util.is_pure_comp c 
                 then weaken_precondition env eq_ret (Rel.NonTrivial (Util.mk_eq xexp e))

@@ -299,7 +299,7 @@ let mlkind_of_kind (tps : list<binder>) (k : knd) =
         | Kind_arrow((Inl x, _)::rest, k2) -> begin
             match aux [] x.sort with
             | Some [] ->
-                let x = if is_null_binder (Inl x, false)
+                let x = if is_null_binder (Inl x, None)
                         then None
                         else Some (x.v.realname, x.v.ppname) in
                 aux (x  :: acc) (mk_Kind_arrow(rest, k2) k.pos)
@@ -741,7 +741,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
     | Typ_fun(bs,c) -> (bs |> List.collect (function 
        | Inr x, _ -> 
         let tl = type_vars x.sort.n in
-        let hd = if is_null_binder (Inr x, false) then None else Some x.v in
+        let hd = if is_null_binder (Inr x, None) then None else Some x.v in
         hd::tl
        | _ -> [])) @ (comp_vars c.n)
     | Typ_lam(_,t) | Typ_refine({sort=t}, _) | Typ_app(t, _) 

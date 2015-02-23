@@ -375,7 +375,7 @@ ascriptionOrPattern:
 			  | Some phi ->
 				let t = match $1.pat with 
 				  | PatVar(x, _) -> 
-					mk_term (Refine(mk_binder (Annotated(x, $3)) (rhs2 parseState 1 3) Type false, phi)) (rhs2 parseState 1 4) Type 
+					mk_term (Refine(mk_binder (Annotated(x, $3)) (rhs2 parseState 1 3) Type None, phi)) (rhs2 parseState 1 4) Type 
 				  | _ -> errorR(Error("Not a valid refinement type", lhs(parseState))); $3 in
 				PatAscribed($1, t)
       }
@@ -403,18 +403,18 @@ moreFieldPatterns:
   | SEMICOLON lid EQUALS pattern moreFieldPatterns { ($2,$4)::$5 }
 
 binder:
-  | ident { mk_binder (Variable($1)) (rhs parseState 1) Type false }
-  | tvar  { mk_binder (TVariable($1)) (rhs parseState 1) Kind false }
+  | ident { mk_binder (Variable($1)) (rhs parseState 1) Type None }
+  | tvar  { mk_binder (TVariable($1)) (rhs parseState 1) Kind None }
   | LPAREN ident COLON appTerm refineOpt RPAREN 
-      { mkRefinedBinder $2 $4 $5 (rhs2 parseState 1 6) false }
-  | LPAREN tvar COLON  kind RPAREN { mk_binder (TAnnotated($2, $4)) (rhs2 parseState 1 5) Kind false }
+      { mkRefinedBinder $2 $4 $5 (rhs2 parseState 1 6) None }
+  | LPAREN tvar COLON  kind RPAREN { mk_binder (TAnnotated($2, $4)) (rhs2 parseState 1 5) Kind None }
 
 typars:
   | tvarinsts              { $1 }
   | binders                { $1 }
 
 tvarinsts: 
-  | TYP_APP_LESS tvars GREATER    { List.map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind false) $2 }
+  | TYP_APP_LESS tvars GREATER    { List.map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind None) $2 }
 
 binders: 
   | binder binders { $1::$2 }
@@ -752,7 +752,7 @@ product:
 
   | appTerm prodArrow product
       { 
-        let b = mk_binder (NoName $1) (rhs parseState 1) Un false in
+        let b = mk_binder (NoName $1) (rhs parseState 1) Un None in
         let mkProd = $2 in 
         mkProd (Product([b], $3)) (rhs2 parseState 1 3) 
       }
@@ -804,7 +804,7 @@ sumTypeTail:
         let binders, final = match sum_type.tm with 
           | Sum(binders, final) -> binders, final
           | _ -> [], sum_type in
-        let b = mk_binder (NoName $1) (rhs parseState 1) Type false in
+        let b = mk_binder (NoName $1) (rhs parseState 1) Type None in
         mk_term (Sum(b::binders, final)) (rhs2 parseState 1 3) Type 
       }
   | sumType
@@ -814,14 +814,17 @@ sumTypeTail:
 
 productOrSumDomain:
   | ident COLON appTerm refineOpt
-      { mkRefinedBinder $1 $3 $4 (rhs2 parseState 1 4) false } 
-  | HASH ident COLON appTerm refineOpt
-      { mkRefinedBinder $2 $4 $5 (rhs2 parseState 1 4) true } 
+      { mkRefinedBinder $1 $3 $4 (rhs2 parseState 1 4) None } 
+  | aqual ident COLON appTerm refineOpt
+      { mkRefinedBinder $2 $4 $5 (rhs2 parseState 1 5) $1 } 
   | tvar COLON atomicKind
-      { mk_binder (TAnnotated($1, $3)) (rhs2 parseState 1 3) Kind false}
-  | HASH tvar COLON atomicKind
-      { mk_binder (TAnnotated($2, $4)) (rhs2 parseState 1 4) Kind true}
+      { mk_binder (TAnnotated($1, $3)) (rhs2 parseState 1 3) Kind None }
+  | aqual tvar COLON atomicKind
+      { mk_binder (TAnnotated($2, $4)) (rhs2 parseState 1 4) Kind $1 }
 
+aqual:
+  | HASH   { Some Implicit }
+  | EQUALS { Some Equality }
 
 refineOpt:
   |       { None }
@@ -830,7 +833,7 @@ refineOpt:
 refinementTerm:
   | ident COLON appTerm LBRACE formula RBRACE 
       {
-        mk_term (Refine(mk_binder (Annotated($1, $3)) (rhs2 parseState 1 3) Type false, $5)) 
+        mk_term (Refine(mk_binder (Annotated($1, $3)) (rhs2 parseState 1 3) Type None, $5)) 
         (rhs2 parseState 1 6) Type
       }
 
@@ -919,7 +922,7 @@ atomicProductTerm:
         let binders, final = match sum_type.tm with
           | Sum(binders, final) -> binders, final
           | _ -> [], sum_type in
-        let b = mk_binder (NoName $1) (rhs parseState 1) Type false in
+        let b = mk_binder (NoName $1) (rhs parseState 1) Type None in
         mk_term (Sum(b::binders, final)) (rhs2 parseState 1 3) Type
       }
   | atomicTerm {$1}

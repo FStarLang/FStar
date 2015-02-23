@@ -118,7 +118,6 @@ let deserialize_syntax (reader:Reader) (ds_a:Reader -> 'a) (ds_b:'b) :syntax<'a,
       fvs = Util.mk_ref None;
       uvs = Util.mk_ref None}
 
-
 let rec serialize_typ' (writer:Writer) (ast:typ') :unit = 
     match ast with
     | Typ_btvar(v) -> writer.write_char 'a'; serialize_btvar writer v
@@ -146,11 +145,11 @@ and serialize_meta_t (writer:Writer) (ast:meta_t) :unit =
     | Meta_labeled(t, s, b) -> writer.write_char 'c'; serialize_typ writer t; writer.write_string s; writer.write_bool b
     | _ -> raise (Err "unimplemented meta_t")
 
-and serialize_arg (writer:Writer) (ast:arg) :unit = serialize_either writer serialize_typ serialize_exp (fst ast); writer.write_bool (snd ast)
+and serialize_arg (writer:Writer) (ast:arg) :unit = serialize_either writer serialize_typ serialize_exp (fst ast); writer.write_bool (is_implicit <| snd ast)//TODO: Generalize
 
 and serialize_args (writer:Writer) (ast:args) :unit = serialize_list writer serialize_arg ast
 
-and serialize_binder (writer:Writer) (ast:binder) :unit = serialize_either writer serialize_btvar serialize_bvvar (fst ast); writer.write_bool (snd ast)
+and serialize_binder (writer:Writer) (ast:binder) :unit = serialize_either writer serialize_btvar serialize_bvvar (fst ast); writer.write_bool (is_implicit <| snd ast)//TODO: Generalize
 
 and serialize_binders (writer:Writer) (ast:binders) :unit = serialize_list writer serialize_binder ast
 
@@ -283,12 +282,12 @@ and deserialize_meta_t (reader:Reader) :meta_t =
     | 'c' -> Meta_labeled(deserialize_typ reader, reader.read_string (), reader.read_bool ())
     |  _  -> parse_error()
 
-and deserialize_arg (reader:Reader) :arg = (deserialize_either reader deserialize_typ deserialize_exp, reader.read_bool ())
+and deserialize_arg (reader:Reader) :arg = (deserialize_either reader deserialize_typ deserialize_exp, as_implicit <| reader.read_bool ())//TODO: Generalize
 
 and deserialize_args (reader:Reader) :args = deserialize_list reader deserialize_arg
 
 and deserialize_binder (reader:Reader) :binder = 
-    (deserialize_either reader deserialize_btvar deserialize_bvvar, reader.read_bool ())
+    (deserialize_either reader deserialize_btvar deserialize_bvvar, as_implicit <| reader.read_bool ())//TODO: Generalize
 
 and deserialize_binders (reader:Reader) :binders = deserialize_list reader deserialize_binder
 
