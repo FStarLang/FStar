@@ -139,6 +139,23 @@ let t_prec e1 e2 = TEApp (TEApp (TConst TcPrecedes) e1) e2
        unified typing environment seems be simpler, than having 2
        separate but very much interacting ones. *)
 
+(* AR: Not sure. The "trick" should work here too, we will additionally need to
+ * shift the kinds for the type variables env when we add a binding
+ * in term variable env (like we currently do in lambda-omega for types
+ * in the term variables env). As far as the reuse goes, even if we had taken
+ * one numbering approach, we would have to change it substantially
+ * to account for dependent kinds (KTArr and KKArr both were missing in
+ * lambda-omega), so I am not sure if using unified indices
+ * would have made reuse easier. On interactions,
+ * in separate indices approach the interactions are only in shifting the
+ * ranges of the environments, which we have done in lambda-omega
+ * for types.
+ * 
+ * Having said that, if you think unified indices will be simpler, I am
+ * game for trying that out.
+ *)
+
+
 type subst =
   | EForX : e:exp -> x:var -> subst
   | TForA : t:typ -> a:var -> subst
