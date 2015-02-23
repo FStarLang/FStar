@@ -80,7 +80,12 @@ and exp =
 
      CH: I don't understand what this would mean formally.
          Would we be switching to ANF? What about strong reduction?
-  *)
+     CH: Looking at the typing rules in this file (but not the ones
+         in the txt!) I'm starting to see what you mean. You want lets
+         to be used only for sequencing effects, but not for replacing
+         evaluation contexts / switching to ANF, right?
+         In any case, we should decide either way, and make this
+         and the txt file consistent. *)
   | EIf0   : e0:exp  -> e1:exp -> e2:exp -> exp
   | EFix   : ed:(option exp) -> t:typ  -> e:exp  -> exp
              (* f:t and x:(TArr.t t) bound in e *)
@@ -638,66 +643,67 @@ type valid: env -> typ -> Type =
                  valid g (mk_eq t e e')
 
 and typing : env -> exp -> cmp -> Type =
-  | TypingVar   : g:env
-               -> x:var{binds_x g x}
-               -> kinding g (lookup_x g x) KType
-               -> typing g (EVar x) (tot (lookup_x g x))
+  | TyVar   : #g:env
+           -> x:var{binds_x g x}
+           -> kinding g (lookup_x g x) KType
+           -> typing g (EVar x) (tot (lookup_x g x))
 
-  | TypingConst : g:env
-               -> c:econst
+  | TyConst : g:env
+           -> c:econst
 (* 
-               -> kinding g (econsts c) KType
-                  CH: TODO: we can prove once and for all that this holds!
+           -> kinding g (econsts c) KType
+              CH: TODO: prove once and for all that this holds!
 *)
-               -> typing g (EConst c) (tot (econsts c))
+           -> typing g (EConst c) (tot (econsts c))
 
-  | TypingAbs  : g:env
-              -> t:typ
-              -> e:exp
-              -> c:cmp
-              -> kinding g t KType
-              -> typing (extend g (B_x t)) e c
-              -> typing g (ELam t e) (tot (TArr t c))
+  | TyAbs  : #g:env
+          -> #t:typ
+          -> #e:exp
+          -> #c:cmp
+          -> kinding g t KType
+          -> typing (extend g (B_x t)) e c
+          -> typing g (ELam t e) (tot (TArr t c))
 
-  | TypingApp :  g:env
-             -> e1:exp
-             -> e2:exp
-             -> tarr:typ{is_TArr tarr}
-             -> typing g e1 (tot tarr)
-             -> typing g e2 (tot (TArr.t tarr))
-             -> typing g (EApp e1 e2) (subst_cmp (EForX e2 0) (TArr.c tarr))
+  | TyApp : #g:env
+         -> #e1:exp
+         -> #e2:exp
+         -> #t:typ
+         -> #c:cmp
+         -> typing g e1 (tot (TArr t c))
+         -> typing g e2 (tot t)
+         -> typing g (EApp e1 e2) (subst_cmp (EForX e2 0) c)
 
-  | TypingLet : g:env
-             -> e1:exp
-             -> e2:exp
-             -> c1:cmp
-             -> c2:cmp
-             -> typing g e1 c1
-             -> typing (extend g (B_x (result_typ c1))) e2 c2
-             -> kinding g (result_typ c2) KType
-             -> typing g (ELet (result_typ c1) e1 e2) (bind c1 c2)
+  | TyLet : #g:env
+         -> #e1:exp
+         -> #e2:exp
+         -> #c1:cmp
+         -> #c2:cmp
+         -> typing g e1 c1
+         -> typing (extend g (B_x (result_typ c1))) e2 c2
+         -> kinding g (result_typ c2) KType
+         -> typing g (ELet (result_typ c1) e1 e2) (bind c1 c2)
 
-  | TypingIf : g:env
-            -> e0:exp
-            -> e1:exp
-            -> e2:exp
-            -> c1:cmp
-            -> c2:cmp{result_typ c1 = result_typ c2}
-            -> typing g e0 (tot (TConst TcInt))
-            -> typing g e1 c1
-            -> typing g e2 c2
-            -> typing g (EIf0 e0 e1 e2) (bind_if e0 c1 c2)
+  | TyIf : #g:env
+        -> #e0:exp
+        -> #e1:exp
+        -> #e2:exp
+        -> #c1:cmp
+        -> #c2:cmp{result_typ c1 = result_typ c2}
+        -> typing g e0 (tot (TConst TcInt))
+        -> typing g e1 c1
+        -> typing g e2 c2
+        -> typing g (EIf0 e0 e1 e2) (bind_if e0 c1 c2)
 
-  | TypingSub: g:env
-            -> e:exp
-            -> c:cmp
-            -> c':cmp
-            -> phi:typ
-            -> typing g e c
-            -> sub_cmp g c c' phi
-            -> c_ok g c'
-            -> valid g phi (* this includes type conversion *)
-            -> typing g e c'
+  | TySub: #g:env
+        -> #e:exp
+        -> #c:cmp
+        -> #c':cmp
+        -> #phi:typ
+        -> typing g e c
+        -> sub_cmp g c c' phi
+        -> c_ok g c'
+        -> valid g phi (* valid includes type conversion *)
+        -> typing g e c'
 
 (* TODO: Add the 2 missing fix rules (see T-Fix and T-FixOmega in txt) *)
 
