@@ -93,7 +93,8 @@ and exp =
 
   | EIf0   : e0:exp  -> e1:exp -> e2:exp -> exp
   | EFix   : ed:(option exp) -> t:typ  -> e:exp  -> exp
-             (* f:t and x:(TArr.t t) bound in e *)
+             (* x:(TArr.t t) and then f:t bound in e; 
+                i.e. from e index 0 points to x and index 1 to f *)
 
 let mk_eqt t1 t2 = TTApp (TTApp (TConst TcEqT) t1) t2
 
@@ -127,10 +128,16 @@ let t_prec e1 e2 = TEApp (TEApp (TConst TcPrecedes) e1) e2
        you about this before you applied the splitting tricks to
        LambdaOmega, but you didn't listen, which did make LambdaOmega
        a bit easier, I don't deny that, but it also made it less
-       reusable here. I think that going with only one numbering for
-       the bindings + a single environment (as Nik already wrote
-       things here) mixed with parallel substitutions is the best way
-       to go for TinyF*. *)
+       reusable here. A priori, I think that going with only one
+       numbering for the bindings + a single environment (as Nik
+       already wrote things here) mixed with parallel substitutions
+       (separate for substituting expressions and types, they seem
+       hard to mix without getting partial or without some dependent
+       types trick) is the best way to go for TinyF*. *)
+(* CH: In this case, the substitution functions would be more complex
+       than if we used distinct deBruijn indices, but having one
+       unified typing environment seems be simpler, than having 2
+       separate but very much interacting ones. *)
 
 type subst =
   | EForX : e:exp -> x:var -> subst
