@@ -716,13 +716,17 @@ and typing : env -> exp -> cmp -> Type =
           -> typing (extend g (B_x t)) e c
           -> typing g (ELam t e) (tot (TArr t c))
 
+  (*
+   * AR: TODO: the return type of d may not be same as the return type
+   * of fix
+   *)
   | TyFix : #g:env
          -> tx:typ
          -> t':typ
          -> wp:typ
          -> #d:exp
          -> #e:exp
-         -> kinding g (TArr tx (CPure t' wp)) KType
+         -> kinding g (TArr tx (CPure t' wp)) KType   
          -> typing g d (tot (TArr tx (tot t')))
          -> typing (extend (extend g (B_x tx))
                            (B_x (TArr tx (CPure t' (op_CPure t' (TConst TcAnd)
