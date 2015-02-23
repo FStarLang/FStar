@@ -1291,7 +1291,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         | _ -> true) in
       g'@inversions, env
 
-    | Sig_let((is_rec, bindings), _, _, masked_effect) ->
+    | Sig_let((is_rec, bindings), _, _, quals) ->
         let eta_expand binders formals body t =
             let nbinders = List.length binders in
             let formals, extra_formals = Util.first_N nbinders formals in
@@ -1338,7 +1338,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 end in
              
         begin try 
-                 if   bindings |> Util.for_some (fun (_, t, _) -> Util.is_smt_lemma t) 
+                 if quals |> Util.for_some (function Opaque -> true | _ -> false)
+                 then [], env
+                 else if   bindings |> Util.for_some (fun (_, t, _) -> Util.is_smt_lemma t) 
                  then bindings |> List.collect (fun (flid, t, _) -> 
                         if Util.is_smt_lemma t
                         then encode_smt_lemma env (right flid) t
@@ -1352,7 +1354,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  let toks = List.rev toks in 
                  let decls = List.rev decls |> List.flatten in
                  let typs = List.rev typs in
-                 if   masked_effect || typs |> Util.for_some (fun t -> Util.is_lemma t || not <| Util.is_pure_function t) 
+                 if   quals |> Util.for_some (function HasMaskedEffect -> true | _ -> false)
+                 || typs |> Util.for_some (fun t -> Util.is_lemma t || not <| Util.is_pure_function t) 
                  then decls, env
                  else if not is_rec
                  then match bindings, typs, toks with 

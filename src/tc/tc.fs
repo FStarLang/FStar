@@ -1432,7 +1432,7 @@ and tc_decl env se deserialized = match se with
       let env = Tc.Env.push_sigelt env se in 
       se, env
    
-    | Sig_let(lbs, r, lids, _) -> 
+    | Sig_let(lbs, r, lids, quals) -> 
       //let is_rec = fst lbs in
       let env = Tc.Env.set_range env r in
       let generalize, lbs' = snd lbs |> List.fold_left (fun (gen, lbs) lb -> 
@@ -1457,10 +1457,10 @@ and tc_decl env se deserialized = match se with
       let e = mk_Exp_let((fst lbs, lbs'), syn' env Recheck.t_unit <| mk_Exp_constant(Syntax.Const_unit)) None r in
       let se, lbs = match tc_exp ({env with generalize=generalize}) e with 
         | {n=Exp_let(lbs, e)}, _, g when Rel.is_trivial g -> 
-            let b = match e.n with 
-                | Exp_meta(Meta_desugared(_, MaskedEffect)) -> true
-                | _ -> false in 
-            Sig_let(lbs, r, lids, b), lbs
+            let quals = match e.n with 
+                | Exp_meta(Meta_desugared(_, MaskedEffect)) -> HasMaskedEffect::quals
+                | _ -> quals in 
+            Sig_let(lbs, r, lids, quals), lbs
         | _ -> failwith "impossible" in
       if log env 
       then Util.fprint1 "%s\n" (snd lbs |> List.map (fun (lbname, t, _) -> Util.format2 "let %s : %s" (Print.lbname_to_string lbname) (Tc.Normalize.typ_norm_to_string env t)) |> String.concat "\n");
@@ -1523,7 +1523,7 @@ and tc_decls for_export env ses deserialized =
   then Util.print_string (Util.format1 "Checked sigelt\t%s\n" (Print.sigelt_to_string_short se));
 
   let exports, to_encode = 
-    if for_export
+    if for_export && !Options.serialize_mods
     then as_exports env0 se
     else [], [se] in   //TODO: Revise this once we add the private qualifier
   to_encode |> List.iter (env.solver.encode_sig env);

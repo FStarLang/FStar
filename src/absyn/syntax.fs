@@ -202,6 +202,7 @@ type qualifier =
   | RecordConstructor of list<ident>                 (* unmangled field names *)
   | ExceptionConstructor
   | Effect 
+  | HasMaskedEffect
  
 type tycon = lident * binders * knd
 type monad_abbrev = {
@@ -243,7 +244,7 @@ and sigelt =
   | Sig_datacon        of lident * typ * tycon * list<qualifier> * Range.range  
   | Sig_val_decl       of lident * typ * list<qualifier> * Range.range 
   | Sig_assume         of lident * formula * list<qualifier> * Range.range 
-  | Sig_let            of letbindings * Range.range * list<lident> * bool (* flag indicates masked effect *)
+  | Sig_let            of letbindings * Range.range * list<lident> * list<qualifier> (* flag indicates masked effect *)
   | Sig_main           of exp * Range.range 
   | Sig_bundle         of list<sigelt> * Range.range * list<lident> (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
   | Sig_monads         of list<monad_decl> * monad_lat * Range.range * list<lident>

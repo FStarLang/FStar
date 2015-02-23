@@ -209,7 +209,15 @@ let try_resolve_typ_abbrev env lid =
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
 
-       
+let lookup_letbinding_quals env lid = 
+  let find_in_sig lid = 
+    match Util.smap_try_find env.sigmap lid.str with 
+      | Some (Sig_val_decl(lid, _, quals, _), _) -> Some quals
+      | _ -> None in
+  match resolve_in_open_namespaces env lid find_in_sig with 
+    | Some quals -> quals
+    | _ -> []
+
 let try_lookup_module env path = 
   match List.tryFind (fun (mlid, modul) -> path_of_lid mlid = path) env.modules with
     | Some (_, modul) -> Some modul
