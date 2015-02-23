@@ -615,6 +615,7 @@ type valid: env -> typ -> Type =
                  valid g (mk_eqt t t1) ->
                  valid g (mk_eqt t t2) ->   
                  valid g (mk_eqt t t2)
+    (* CH: Isn't VTApp already part of VTReduction? *)
   | VTApp:       #g:env -> #t1:typ -> #t2:typ ->
                  f:typ ->
                  valid g (mk_eqt t1 t2) ->
@@ -637,6 +638,9 @@ type valid: env -> typ -> Type =
                                 (EApp (EApp (EApp (EConst EcUpd) (asHeap h))
                                             (EConst (EcLoc l))) v)
                                 (asHeap (upd_heap l v h)))
+
+  (* CH: There are two more sel-upd rules in the txt. What happened to those? *)
+  
   (*
    * AR: do we need to add next 2 validity rules
    * sel (upd h l v) = v and the next one.
@@ -662,6 +666,9 @@ type valid: env -> typ -> Type =
   | VEReduction: #g:env -> t:typ -> #e:exp -> #e':exp ->
                  epstep e e' ->
                  valid g (mk_eq t e e')
+
+   (* CH: TODO: there are a lot more logical constants that have no
+          rule here, not just the foralls *)
 
 and typing : env -> exp -> cmp -> Type =
   | TyVar   : #g:env
@@ -754,82 +761,86 @@ and typing : env -> exp -> cmp -> Type =
         -> typing g e c'
 
 and kinding : env -> typ -> knd -> Type =
-  | KindingVar   : g:env
-                -> a:var{binds_a g a}
-                -> kinding g (TVar a) (lookup_a g a)
+  | KiVar   : g:env
+           -> a:var{binds_a g a}
+           -> kinding g (TVar a) (lookup_a g a)
 
-  | KindingConst : g:env
-                -> c:tconst
-                -> kinding g (TConst c) (tconsts c)
+  | KiConst : g:env
+           -> c:tconst
+           -> kinding g (TConst c) (tconsts c)
 
-  | KindingArr   : g:env
-                -> t:typ
-                -> c:cmp
-                -> kinding g t KType
-                -> c_ok (extend g (B_x t)) c
-                -> kinding g (TArr t c) KType
+  | KiArr   : #g:env
+           -> #t:typ
+           -> #c:cmp
+           -> kinding g t KType
+           -> c_ok (extend g (B_x t)) c
+           -> kinding g (TArr t c) KType
 
-  | KindingTTApp : g:env
-                 -> t1:typ
-                 -> t2:typ
-                 -> k:knd{is_KKArr k}
-                 -> kinding g t1 k
-                 -> kinding g t2 (KKArr.k1 k)
-                 -> kinding g (TTApp t1 t2) (subst_knd (TForA t2 0) (KKArr.k2 k))
+  | KiTTApp : #g:env
+           -> #t1:typ
+           -> #t2:typ
+           -> #k1:knd
+           -> #k2:knd
+           -> kinding g t1 (KKArr k1 k2)
+           -> kinding g t2 k1
+           -> kinding g (TTApp t1 t2) (subst_knd (TForA t2 0) k2)
 
-  | KindingTEApp : g:env
-                 -> t1:typ
-                 -> e:exp
-                 -> k:knd{is_KTArr k}
-                 -> kinding g t1 k
-                 -> typing g e (tot (KTArr.t k))
-                 -> kinding g (TEApp t1 e) (subst_knd (EForX e 0) (KTArr.k k))
+  | KiTEApp : #g:env
+           -> #t1:typ
+           -> #e:exp
+           -> #t:typ
+           -> #k:knd
+           -> kinding g t1 (KTArr t k)
+           -> typing g e (tot t)
+           -> kinding g (TEApp t1 e) (subst_knd (EForX e 0) k)
 
-  | KindingTTLam : g:env
-                -> k:knd
-                -> t:typ
-                -> k':knd
-                -> kind_ok g k
-                -> kinding (extend g (B_a k)) t k'
-                -> kinding g (TTLam k t) (KKArr k k')
+  | KiTTLam : #g:env
+           -> #k:knd
+           -> #t:typ
+           -> #k':knd
+           -> kind_ok g k
+           -> kinding (extend g (B_a k)) t k'
+           -> kinding g (TTLam k t) (KKArr k k')
 
-  | KindingTLam :  g:env
-                -> t1:typ
-                -> t2:typ
-                -> k:knd
-                -> kinding g t1 KType
-                -> kinding (extend g (B_x t1)) t2 k
-                -> kinding g (TELam t1 t2) (KTArr t1 k)
+  | KiTELam : #g:env
+           -> #t1:typ
+           -> #t2:typ
+           -> #k:knd
+           -> kinding g t1 KType
+           -> kinding (extend g (B_x t1)) t2 k
+           -> kinding g (TELam t1 t2) (KTArr t1 k)
 
 and c_ok : env -> cmp -> Type =
-  | CPureOK :   g:env
-            ->  t:typ
-            -> wp:typ
+  | COkPure :  #g:env
+            -> #t:typ
+            -> #wp:typ
             -> kinding g t KType
             -> kinding g wp (k_pure t)
             -> c_ok g (CPure t wp)
 
-  | CStOK :     g:env
-            ->  t:typ
-            -> wp:typ
+  | COkSt :    #g:env
+            -> #t:typ
+            -> #wp:typ
             -> kinding g t KType
             -> kinding g wp (k_st t)
             -> c_ok g (CSt t wp)
 
+(* kind_ok needed because (as opposed to LambdaOmega) kinds have
+   variable and type bindings *)
 and kind_ok : env -> knd -> Type =
-  | KOKType : g:env
+  | KOkType : g:env
            -> kind_ok g KType
 
-  | KOKTArr : g:env
-           -> t:typ
-           -> k:knd
+  | KOkTArr : #g:env
+           -> #t:typ
+           -> #k:knd
            -> kinding g t KType
            -> kind_ok (extend g (B_x t)) k
            -> kind_ok g (KTArr t k)
 
-  | KOKKArr :  g:env
-           -> k1:knd
-           -> k2:knd
+  | KOkKArr : #g:env
+           -> #k1:knd
+           -> #k2:knd
            -> kind_ok g k1
            -> kind_ok (extend g (B_a k1)) k2
            -> kind_ok g (KKArr k1 k2)
