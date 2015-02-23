@@ -1391,16 +1391,16 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                          let eqn_f = Term.Assume(mkForall([app], vars, mkEq(app, gmax)), Some "Correspondence of recursive function to instrumented version") in
                          let eqn_g' = Term.Assume(mkForall([gsapp], fuel::vars, mkEq(gsapp,  Term.mkApp(g, mkBoundV fuel::vars_tm))), Some "Fuel irrelevance") in
                          let g_typing = 
-                            let vars, _, env, binder_decls, _ = encode_binders None formals env0 in
+                            let vars, v_guards, env, binder_decls, _ = encode_binders None formals env0 in
                             let vars_tm = List.map mkBoundV vars in
-                            let app = Term.mkApp(f, vars_tm) in 
                             let gapp = Term.mkApp(g, fuel_tm::vars_tm) in
-                            let g_typing, d3 = encode_typ_pred' None tres env gapp in
-                            let f_typing, d4 = encode_typ_pred' None tres env app in
                             let tok_corr = 
                                 let tok_app = mk_ApplyE (Term.mkFreeV (gtok, Term_sort)) (fuel::vars) in
                                 Term.Assume(mkForall([tok_app], fuel::vars, mkEq(tok_app, gapp)), Some "Fuel token correspondence") in
-                            binder_decls@d3@d4@[Term.Assume(mkForall([gapp], fuel::vars, mkImp(f_typing, g_typing)), None); tok_corr] in
+                            let typing_corr = 
+                                let g_typing, d3 = encode_typ_pred' None tres env gapp in
+                                d3@[Term.Assume(mkForall([gapp], fuel::vars, mkImp(Term.mk_and_l v_guards, g_typing)), None)] in
+                            binder_decls@typing_corr@[tok_corr] in
                         binder_decls@[decl_g;decl_g_tok], decls2@[eqn_g;eqn_g';eqn_f]@g_typing, env0 in
                         let decls, eqns, env0 = List.fold_left (fun (decls, eqns, env0) (gtok, ty, bs) -> 
                             let decls', eqns', env0 = encode_one_binding env0 gtok ty bs in

@@ -504,7 +504,7 @@ type typing : env -> exp -> typ -> Type =
 val is_value : exp -> Tot bool
 let is_value = is_ELam
 
-val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
+opaque val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
                Tot (cexists (fun e' -> step e e')) (decreases h)
 let rec progress _ _ h =
   match h with
@@ -527,7 +527,7 @@ opaque logic type EnvEqualT (t:typ) (g1:env) (g2:env) =
 		 (forall (x:var). tappears_free_in x t ==>
                     lookup_tvar g1 x = lookup_tvar g2 x)
 
-val tcontext_invariance : #t:typ -> #g:env -> #k:knd ->
+opaque val tcontext_invariance : #t:typ -> #g:env -> #k:knd ->
                           h:(kinding g t k) -> g':env{EnvEqualT t g g'} ->
                           Tot (kinding g' t k) (decreases h)
 let rec tcontext_invariance _ _ _ h g' =
@@ -750,6 +750,7 @@ let rec tequiv_tshift t1 t2 h x =
   | EqArr h1 h2 -> EqArr (tequiv_tshift h1 x) (tequiv_tshift h2 x)
 
 (* typing weakening when type variable binding is added to env *)
+(* NS: This one alone takes ~4-5 secs to prove *)
 opaque val typing_weakening_tbnd: #g:env -> x:var -> k_x:knd -> #e:exp -> #t:typ ->
       h:(typing g e t) ->
       Tot (typing (extend_tvar g x k_x)
