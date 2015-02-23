@@ -61,7 +61,7 @@ and typ =
   | TTLam  : k:knd   -> t:typ  -> typ (* a:k  bound in t *)
   | TELam  : t1:typ  -> t2:typ -> typ (* x:t1 bound in t2 *)
 
-and cmp =
+and cmp = (* CH: factor out commonality? *)
   | CPure : t:typ -> wp:typ -> cmp
   | CSt   : t:typ -> wp:typ -> cmp
 
@@ -101,6 +101,32 @@ let t_prec e1 e2 = TEApp (TEApp (TConst TcPrecedes) e1) e2
 
 (* TODO: finish this up
    CH: try to reuse parallel substitution style from lambda_omega *)
+
+(*
+ * TODO: AR: in λω, we use distinct de bruijn indices for types and terms, i.e.
+ * the typing environment is split for types and terms. when one is extended,
+ * lookup domain of the other need not change (the looked up value has to shifted
+ * though). this had the advantage
+ * that reasoning about (y - 1) when looking for y was a bit simpler. but there we
+ * did not have TELam. one way would be to extend tsubst in λω so that when
+ * passing a TELam, it *does not* increment the (type) index to be substituted. if
+ * we do so, we would need to change the below (and at other places) to be
+ * TEApp (TVar 0) (EVar 0).
+ * 
+ * another change we would need to do is to shift_up types and kinds on extend
+ * more uniformly than λω.
+ *)
+(* CH: I don't think your splitting tricks from LambdaOmega will work
+       here, and that's mostly because of KTArr (dependent kinds): now
+       kinds depend on the value environment, so there is no
+       productive way of splitting the environment. I've tried to tell
+       you about this before you applied the splitting tricks to
+       LambdaOmega, but you didn't listen, which did make LambdaOmega
+       a bit easier, I don't deny that, but it also made it less
+       reusable here. I think that going with only one numbering for
+       the bindings + a single environment (as Nik already wrote
+       things here) mixed with parallel substitutions is the best way
+       to go for TinyF*. *)
 
 type subst =
   | EForX : e:exp -> x:var -> subst
@@ -156,7 +182,7 @@ and subst_typ s t = match t with
   | TELam  t1 t2 -> TELam  (subst_typ s t1) (subst_typ (bump_subst s) t2)
 
 (********************************************************)
-(* Reduction types and pure expressions                 *)
+(* Reduction for types and pure expressions             *)
 (********************************************************)
 
 (* Values *)
@@ -245,7 +271,8 @@ type tctx_ehole =
        to use contexts. But, perhaps it is more prudent to 
        simply do it without contexts here ... not sure. 
   
-   CH: In the tctx_ehole case a small pain, in the other 2 cases a big gain
+   CH: In the tctx_ehole case a small pain,
+       in the other 2 cases I expect a big gain
 *)
 val plug_e_in_t : e:exp -> te:tctx_ehole -> Tot typ
 let plug_e_in_t e te =
@@ -259,8 +286,6 @@ type tstep : typ -> typ -> Type =
               t:typ ->
               e:exp ->
               tstep (TEApp (TELam tx t) e) (subst_typ (EForX e 0) t)
-                                    (* TODO: + a shift down actually
-                                       (for all the betas and twice for fix) *)
   | TsTBeta : k:knd ->
               t:typ ->
               t':typ ->
@@ -317,20 +342,6 @@ let k_pre_st      = KTArr (TConst TcHeap) KType
 let k_post_st t   = KTArr t (KTArr (TConst TcHeap) KType)
 let k_st t        = KKArr (k_post_st t) k_pre_st
 
-(*
- * TODO: AR: in λω, we use distinct de bruijn indices for types and terms, i.e.
- * the typing environment is split for types and terms. when one is extended,
- * lookup domain of the other need not change (the looked up value has to shifted
- * though). this had the advantage
- * that reasoning about (y - 1) when looking for y was a bit simpler. but there we
- * did not have TELam. one way would be to extend tsubst in λω so that when
- * passing a TELam, it *does not* increment the (type) index to be substituted. if
- * we do so, we would need to change the below (and at other places) to be
- * TEApp (TVar 0) (EVar 0).
- * 
- * another change we would need to do is to shift_up types and kinds on extend
- * more uniformly than λω.
- *)
 let tot t = CPure t (TTLam (k_post_pure t)
                       (TTApp (TTApp (TConst TcForall) t)
                          (TELam t (TEApp (TVar 1) (EVar 0)))))
@@ -447,16 +458,18 @@ let tconsts tc =
   | TcHeap   -> KType
   | TcForall -> KKArr KType (KKArr (KTArr (TVar 0) KType) KType)
                 (* TODO: please double-check *)
-  | TcAnd    -> KKArr KType (KKArr KType KType)
-  | TcImp    -> KKArr KType (KKArr KType KType)
+  | TcAnd
+  | TcImp
+  | TcEqT    -> KKArr KType (KKArr KType KType)
+                (* TODO: please double-check (for TcEqT) *)
   | TcNeg    -> KKArr KType KType
   | TcEq
   | TcPrecedes -> KKArr KType (KTArr (TVar 0) (KTArr (TVar 0) KType))
-                (* TODO: please double-check *)
+                 (* TODO: please double-check *)
+
   | TcTrue   -> KType
   | TcForallPostPure 
-  | TcForallPostSt
-  | TcEqT            -> KType (* TODO: finish this *)
+  | TcForallPostSt -> KType (* TODO: finish this *)
 
 val econsts : econst -> Tot typ
 let econsts ec =
@@ -817,6 +830,10 @@ and kind_ok : env -> knd -> Type =
            -> kind_ok (extend g (B_a k1)) k2
            -> kind_ok g (KKArr k1 k2)
 
+(********************************************************)
+(* Impure reduction for types and pure expressions      *)
+(********************************************************)
+
 type cfg =
   | Cfg : h:heap -> e:exp -> cfg
 
@@ -835,6 +852,10 @@ type eistep : cfg -> cfg -> Type =
             eistep (Cfg h (EApp (EApp (EConst EcAssign) (EConst (EcLoc l))) v))
                    (Cfg (upd_heap l v h) (EConst EcUnit))
 
+(********************************************************)
+(* Experiments                                          *)
+(********************************************************)
+
 (* (\* AR: without contexts *\) *)
 
 (* type tstepnc: typ -> typ -> Type = *)
@@ -846,7 +867,4 @@ type eistep : cfg -> cfg -> Type =
 (*               #t:typ -> *)
 (*               #e:exp -> *)
 (*               tstepnc (TEApp (TELam tx t) e) (subst_typ (EForX e 0) t) *)
-(*                                     (\* TODO: + a shift down actually *\) *)
-(*                                     (\* for all the betas and twice for fix) *\) *)
 (*   | TsTApp_1:  *)
-
