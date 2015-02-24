@@ -589,7 +589,7 @@ type valid: env -> typ -> Type =
                  valid g (mk_eqt k t t1) ->
                  valid g (mk_eqt k t t2) ->   
                  valid g (mk_eqt k t t2)
-    (* CH: Isn't VTApp already part of VTReduction? *)
+  (* CH: Isn't VTApp already part of VTReduction? *)
   | VTApp:       #g:env -> #t1:typ -> #t2:typ ->
                  k:knd ->
                  f:typ ->
@@ -639,7 +639,9 @@ type valid: env -> typ -> Type =
                  k:knd ->
                  tstep t t' ->
                  valid g (mk_eqt k t t')
-		   
+  (* AR: this may not be enough, we would also need
+   * either reflexivity of mk_eq e e or make is epstep*
+   *)
   | VEReduction: #g:env -> t:typ -> #e:exp -> #e':exp ->
                  epstep e e' ->
                  valid g (mk_eq t e e')
