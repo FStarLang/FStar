@@ -16,6 +16,8 @@
 
 module TinyFStar
 
+open Constructive
+
 (********************************************************)
 (* Syntax *)
 (********************************************************)
@@ -80,7 +82,11 @@ and exp =
              (* x:(TArr.t t) and then f:t bound in e; 
                 i.e. from e index 0 points to x and index 1 to f *)
 
+
 let mk_eqt k t1 t2 = TTApp (TTApp (TEqT k) t1) t2
+let mk_and t1 t2   = TTApp (TTApp (TConst TcAnd) t1) t2
+let mk_imp t1 t2   = TTApp (TTApp (TConst TcImp) t1) t2
+
 
 let t_prec e1 e2 = TEApp (TEApp (TConst TcPrecedes) e1) e2
 
@@ -88,55 +94,10 @@ let t_prec e1 e2 = TEApp (TEApp (TConst TcPrecedes) e1) e2
 (* Substitutions and de Bruijn index manipulations      *)
 (********************************************************)
 
-(* TODO: finish this up
-   CH: try to reuse parallel substitution style from lambda_omega *)
-
 (*
- * TODO: AR: in λω, we use distinct de bruijn indices for types and terms, i.e.
- * the typing environment is split for types and terms. when one is extended,
- * lookup domain of the other need not change (the looked up value has to shifted
- * though). this had the advantage
- * that reasoning about (y - 1) when looking for y was a bit simpler. but there we
- * did not have TELam. one way would be to extend tsubst in λω so that when
- * passing a TELam, it *does not* increment the (type) index to be substituted. if
- * we do so, we would need to change the below (and at other places) to be
- * TEApp (TVar 0) (EVar 0).
- * 
- * another change we would need to do is to shift_up types and kinds on extend
- * more uniformly than λω.
- *)
-(* CH: I don't think your splitting tricks from LambdaOmega will work
-       here, and that's mostly because of KTArr (dependent kinds): now
-       kinds depend on the value environment, so there is no
-       productive way of splitting the environment. I've tried to tell
-       you about this before you applied the splitting tricks to
-       LambdaOmega, but you didn't listen, which did make LambdaOmega
-       a bit easier, I don't deny that, but it also made it less
-       reusable here. A priori, I think that going with only one
-       numbering for the bindings + a single environment (as Nik
-       already wrote things here) mixed with parallel substitutions
-       (separate for substituting expressions and types, they seem
-       hard to mix without getting partial or without some dependent
-       types trick) is the best way to go for TinyF*. *)
-(* CH: In this case, the substitution functions would be more complex
-       than if we used distinct deBruijn indices, but having one
-       unified typing environment seems be simpler, than having 2
-       separate but very much interacting ones. *)
-
-(* AR: Not sure. The "trick" should work here too, we will additionally need to
- * shift the kinds for the type variables env when we add a binding
- * in term variable env (like we currently do in lambda-omega for types
- * in the term variables env). As far as the reuse goes, even if we had taken
- * one numbering approach, we would have to change it substantially
- * to account for dependent kinds (KTArr and KKArr both were missing in
- * lambda-omega), so I am not sure if using unified indices
- * would have made reuse easier. On interactions,
- * in separate indices approach the interactions are only in shifting the
- * ranges of the environments, which we have done in lambda-omega
- * for types.
- * 
- * Having said that, if you think unified indices will be simpler, I am
- * game for trying that out.
+ * We decided to go ahead with separate substitutions and separate
+ * type environments for now. It remains future work to do it using
+ * single substitution and single type environment.
  *)
 
 
@@ -618,6 +579,7 @@ let upd_heap l v h l' = if l = l' then v else h l'
 (* Logical validity reasons about types and pure expression up to
    convertibity / (strong???) reduction *)
 type valid: env -> typ -> Type =
+  | VTrue:       g:env -> valid g TcTrue
     (* AR: .txt has no refl. ? *)
   | VTEqRefl:    #g:env -> #t:typ ->
                  k:knd ->
@@ -655,7 +617,6 @@ type valid: env -> typ -> Type =
                                 (asHeap (upd_heap l v h)))
 
   (* CH: There are two more sel-upd rules in the txt. What happened to those? *)
-  
   (*
    * AR: do we need to add next 2 validity rules
    * sel (upd h l v) = v and the next one.
@@ -683,6 +644,14 @@ type valid: env -> typ -> Type =
                  epstep e e' ->
                  valid g (mk_eq t e e')
 
+  | VAnd:        #g:env -> #t1:typ -> #t2:typ ->
+                 cand (valid g t1) (valid g t2) ->
+                 valid g (mk_and t1 t2)
+
+  | VImp:        #g:env -> #t1:typ -> #t2:typ ->
+                 cimp (valid g t1) (valid g t2) ->
+                 valid g (mk_imp t1 t2)
+
    (* CH: TODO: there are a lot more logical constants that have no
           rule here, not just the foralls *)
 
@@ -708,25 +677,22 @@ and typing : env -> exp -> cmp -> Type =
           -> typing (extend g (B_x t)) e c
           -> typing g (ELam t e) (tot (TArr t c))
 
-  (*
-   * AR: TODO: the return type of d may not be same as the return type
-   * of fix
-   *)
   | TyFix : #g:env
          -> tx:typ
          -> t':typ
+         -> t'':typ
          -> wp:typ
          -> #d:exp
          -> #e:exp
-         -> kinding g (TArr tx (Cmp CPure t' wp)) KType   
+         -> kinding g (TArr tx (Cmp CPure t'' wp)) KType   
          -> typing g d (tot (TArr tx (tot t')))
          -> typing (extend (extend g (B_x tx))
-                           (B_x (TArr tx (Cmp CPure t' (op_CPure t' (TConst TcAnd)
+                           (B_x (TArr tx (Cmp CPure t'' (op_CPure t'' (TConst TcAnd)
                               (up_CPure t' (t_prec (EApp d (EVar 0))
                                                    (EApp d (EVar 1)))) wp)))))
-                   e (Cmp CPure t' wp)
-         -> typing g (EFix (Some d) (TArr tx (Cmp CPure t' wp)) e)
-                               (tot (TArr tx (Cmp CPure t' wp)))
+                   e (Cmp CPure t'' wp)
+         -> typing g (EFix (Some d) (TArr tx (Cmp CPure t'' wp)) e)
+                               (tot (TArr tx (Cmp CPure t'' wp)))
 
   | TyFixOmega : #g:env
               -> tx:typ
