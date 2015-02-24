@@ -35,7 +35,6 @@ type tconst =
   | TcTrue
   | TcForallPostPure
   | TcForallPostSt
-  | TcEqT
   | TcPrecedes
 
 type econst =
@@ -57,13 +56,16 @@ type knd =
   | KKArr : k1:knd -> k2:knd -> knd   (* a:k1 bound in k2 *)
 
 and typ =
-  | TVar   : a:var   -> typ
+  | TVar   : a:var    -> typ
   | TConst : c:tconst -> typ
-  | TArr   : t:typ   -> c:cmp  -> typ (* x:t  bound in c *)
-  | TTApp  : t1:typ  -> t2:typ -> typ
-  | TEApp  : t:typ   -> e:exp  -> typ
-  | TTLam  : k:knd   -> t:typ  -> typ (* a:k  bound in t *)
-  | TELam  : t1:typ  -> t2:typ -> typ (* x:t1 bound in t2 *)
+  | TArr   : t:typ    -> c:cmp  -> typ (* x:t  bound in c *)
+  | TTApp  : t1:typ   -> t2:typ -> typ
+  | TEApp  : t:typ    -> e:exp  -> typ
+  | TTLam  : k:knd    -> t:typ  -> typ (* a:k  bound in t *)
+  | TELam  : t1:typ   -> t2:typ -> typ (* x:t1 bound in t2 *)
+    
+    (* this is special, since we do not have kind polymorphism *)
+  | TEqT   : k:knd    -> typ
 
 and cmp =
   | Cmp : m:eff -> t:typ -> wp:typ -> cmp
@@ -78,7 +80,7 @@ and exp =
              (* x:(TArr.t t) and then f:t bound in e; 
                 i.e. from e index 0 points to x and index 1 to f *)
 
-let mk_eqt t1 t2 = TTApp (TTApp (TConst TcEqT) t1) t2
+let mk_eqt k t1 t2 = TTApp (TTApp (TEqT k) t1) t2
 
 let t_prec e1 e2 = TEApp (TEApp (TConst TcPrecedes) e1) e2
 
@@ -156,6 +158,8 @@ let rec bump_typ' m n t = match t with
   | TTLam k1 t2 -> TTLam (bump_knd' m n k1) (bump_typ' (m + 1) n t2)
   | TELam  t1 t2 -> TELam  (bump_typ' m n t1) (bump_typ' (m + 1) n t2)
 
+  | _ -> t
+
 let bump_knd n t = bump_knd' 0 n t
 let bump_typ n t = bump_typ' 0 n t
 let bump_exp n t = bump_exp' 0 n t
@@ -190,6 +194,8 @@ and subst_typ s t = match t with
   | TEApp t1 e2 -> TEApp (subst_typ s t1) (subst_exp s e2)
   | TTLam k1 t2 -> TTLam (subst_knd s k1) (subst_typ (bump_subst s) t2)
   | TELam  t1 t2 -> TELam  (subst_typ s t1) (subst_typ (bump_subst s) t2)
+
+  | _ -> t
 
 (********************************************************)
 (* Reduction for types and pure expressions             *)
@@ -468,8 +474,6 @@ let tconsts tc =
                 (* TODO: please double-check *)
   | TcAnd
   | TcImp
-  | TcEqT    -> KKArr KType (KKArr KType KType)
-                (* TODO: please double-check (for TcEqT) *)
   | TcNeg    -> KKArr KType KType
   | TcEq
   | TcPrecedes -> KKArr KType (KTArr (TVar 0) (KTArr (TVar 0) KType))
@@ -616,18 +620,23 @@ let upd_heap l v h l' = if l = l' then v else h l'
 type valid: env -> typ -> Type =
     (* AR: .txt has no refl. ? *)
   | VTEqRefl:    #g:env -> #t:typ ->
-                 valid g (mk_eqt t t)
+                 k:knd ->
+                 valid g (mk_eqt k t t)
   | VTEqTran:    #g:env -> #t:typ -> #t1:typ -> #t2:typ ->
-                 valid g (mk_eqt t t1) ->
-                 valid g (mk_eqt t t2) ->   
-                 valid g (mk_eqt t t2)
+                 k:knd ->
+                 valid g (mk_eqt k t t1) ->
+                 valid g (mk_eqt k t t2) ->   
+                 valid g (mk_eqt k t t2)
     (* CH: Isn't VTApp already part of VTReduction? *)
   | VTApp:       #g:env -> #t1:typ -> #t2:typ ->
+                 k:knd ->
                  f:typ ->
-                 valid g (mk_eqt t1 t2) ->
-                 valid g (mk_eqt (TTApp f t1) (TTApp f t2))
+                 k_f:knd{is_KKArr k_f} ->
+                 valid g (mk_eqt k t1 t2) ->
+                 valid g (mk_eqt (KKArr.k2 k_f) (TTApp f t1) (TTApp f t2))
   | VTEqValid:   #g:env -> #t1:typ -> #t2:typ ->
-                 valid g (mk_eqt t1 t2) ->
+                 k:knd ->
+                 valid g (mk_eqt k t1 t2) ->
                  valid g t1 ->
                  valid g t2
   | VSelAsHeap:  t:typ -> (* type of the value in heap location *)
@@ -666,8 +675,9 @@ type valid: env -> typ -> Type =
   (* AR: TODO: forall elim with kinds ? *)
 
   | VTReduction: #g:env -> #t:typ -> #t':typ ->
+                 k:knd ->
                  tstep t t' ->
-                 valid g (mk_eqt t t')
+                 valid g (mk_eqt k t t')
 		   
   | VEReduction: #g:env -> t:typ -> #e:exp -> #e':exp ->
                  epstep e e' ->
@@ -819,6 +829,11 @@ and kinding : env -> typ -> knd -> Type =
            -> kinding g t1 KType
            -> kinding (extend g (B_x t1)) t2 k
            -> kinding g (TELam t1 t2) (KTArr t1 k)
+
+
+  | KiTEqT  : #k:knd
+           -> g:env
+           -> kinding g (TEqT k) (KKArr k (KKArr k KType))
 
 and c_ok : env -> cmp -> Type =
   | COkPure :  #g:env
