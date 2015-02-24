@@ -17,6 +17,7 @@
 module TinyFStar
 
 open Constructive
+type cimp : Type -> Type -> Type (* CH: somebody forgot to add this? *)
 
 (********************************************************)
 (* Syntax *)
@@ -77,6 +78,7 @@ and exp =
   | EConst : c:econst -> exp
   | ELam   : t:typ   -> e:exp -> exp            (* x:t bound in e *)
   | EApp   : e1:exp  -> e2:exp -> exp
+  | ELet   : t:typ   -> e1:exp -> e2:exp -> exp (* x:t bound in e2 *)
   | EIf0   : e0:exp  -> e1:exp -> e2:exp -> exp
   | EFix   : ed:(option exp) -> t:typ  -> e:exp  -> exp
              (* x:(TArr.t t) and then f:t bound in e; 
@@ -119,7 +121,7 @@ let rec bump_typ' m n t = match t with
   | TTLam k1 t2 -> TTLam (bump_knd' m n k1) (bump_typ' (m + 1) n t2)
   | TELam  t1 t2 -> TELam  (bump_typ' m n t1) (bump_typ' (m + 1) n t2)
 
-  | _ -> t
+  | _ -> t (* CH: I generally find this kind of wildcards looking for trouble *)
 
 let bump_knd n t = bump_knd' 0 n t
 let bump_typ n t = bump_typ' 0 n t
@@ -156,7 +158,7 @@ and subst_typ s t = match t with
   | TTLam k1 t2 -> TTLam (subst_knd s k1) (subst_typ (bump_subst s) t2)
   | TELam  t1 t2 -> TELam  (subst_typ s t1) (subst_typ (bump_subst s) t2)
 
-  | _ -> t
+  | _ -> t (* CH: I generally find this kind of wildcards looking for trouble *)
 
 (********************************************************)
 (* Reduction for types and pure expressions             *)
@@ -172,6 +174,7 @@ let is_value e =
   | ELam _ _
   | EFix _ _ _ -> true
   | EApp _ _
+  | ELet _ _ _
   | EIf0 _ _ _ -> false
 
 type value = e:exp{is_value e}
@@ -179,6 +182,9 @@ type value = e:exp{is_value e}
 type heap = loc -> Tot value
 
 (* Contexts *)
+
+(* CH: TODO: we decided to get rid of contexts and add separate step
+   rules instead *)
 
 type ectx_ehole =
   | CeeTop : ectx_ehole
@@ -237,15 +243,6 @@ let plug_t_in_t t tt =
 type tctx_ehole =
   | CteEApp : t:typ -> tctx_ehole
 
-(* 
-   NS: I wonder if formalizing it with contexts is more 
-       pain than gain. It is certainly more convenient in the .txt
-       to use contexts. But, perhaps it is more prudent to 
-       simply do it without contexts here ... not sure. 
-  
-   CH: In the tctx_ehole case a small pain,
-       in the other 2 cases I expect a big gain
-*)
 val plug_e_in_t : e:exp -> te:tctx_ehole -> Tot typ
 let plug_e_in_t e te =
   match te with
@@ -302,6 +299,7 @@ and epstep : exp -> exp -> Type =
               tstep t t' ->
               epstep (plug_t_in_e t et) (plug_t_in_e t' et)
 
+(* CH: TODO: if we keep the let we will need rules for it *)
 
 (********************************************************)
 (* The signatures of Pure and ST and other Monad ops    *)
@@ -390,13 +388,18 @@ let op_CSt t op wp1 wp2   = TTLam (k_post_st t)   (TELam (TConst TcHeap) (TTApp 
                                                                          (TEApp (TTApp (bump_typ 2 wp1) (TVar 1)) (EVar 0)))
                                                                   (TEApp (TTApp (bump_typ 2 wp2) (TVar 1)) (EVar 0))))
 
-(* CH: unsure about this, especially its asymmetric nature (taking t2 discarding t1) *)
+(* CH: unsure about this, especially its asymmetric nature (taking t2 discarding t1)
+   NS [from review]: The (op op c1 c2) looks a bit fishy. Generally, the op functions have kind:
+                a:Type -> M.WP a -> M.WP a -> M.WP a
+      The result type is the same on both sides. Without it, you can’t apply the
+      same post-condition to both of them.
 let op op c1 c2 =
   match c1, c2 with
   | Cmp CPure _ wp1, Cmp CPure t2 wp2 -> Cmp CPure t2 (op_CPure t2 op wp1 wp2)
   | Cmp CPure _ wp1, Cmp CSt t2 wp2   -> Cmp CPure t2 (op_CSt t2 op (lift_pure_st_wp t2 wp1) wp2)
   | Cmp CSt _ wp1, Cmp CPure t2 wp2   -> Cmp CPure t2 (op_CSt t2 op wp1 (lift_pure_st_wp t2 wp2))
   | Cmp CSt _ wp1, Cmp CSt t2 wp2     -> Cmp CPure t2 (op_CSt t2 op wp1 wp2)
+*)
 
 let mk_eq t e1 e2      = TEApp (TEApp (TTApp (TConst TcEq) t) e1) e2
 let neg phi            = TTApp (TConst TcNeg) phi
@@ -579,7 +582,7 @@ let upd_heap l v h l' = if l = l' then v else h l'
 (* Logical validity reasons about types and pure expression up to
    convertibity / (strong???) reduction *)
 type valid: env -> typ -> Type =
-  | VTrue:       g:env -> valid g TcTrue
+  | VTrue:       g:env -> valid g (TConst TcTrue)
     (* AR: .txt has no refl. ? *)
   | VTEqRefl:    #g:env -> #t:typ ->
                  k:knd ->
@@ -710,6 +713,53 @@ and typing : env -> exp -> cmp -> Type =
   | TyApp : #g:env
          -> #e1:exp
          -> #e2:exp
+         -> #t:typ
+         -> #c:cmp
+         -> typing g e1 (tot (TArr t c))
+         -> typing g e2 (tot t)
+         -> typing g (EApp e1 e2) (subst_cmp (EForX e2 0) c)
+
+  | TyLet : #g:env
+         -> #e1:exp
+         -> #e2:exp
+         -> #c1:cmp
+         -> #c2:cmp
+         -> typing g e1 c1
+         -> typing (extend g (B_x (Cmp.t c1))) e2 c2
+         -> kinding g (Cmp.t c2) KType
+         -> typing g (ELet (Cmp.t c1) e1 e2) (bind c1 c2)
+
+  | TyIf : #g:env
+        -> #e0:exp
+        -> #e1:exp
+        -> #e2:exp
+        -> #c1:cmp
+        -> #c2:cmp{Cmp.t c1 = Cmp.t c2}
+        -> typing g e0 (tot (TConst TcInt))
+        -> typing g e1 c1
+        -> typing g e2 c2
+        -> typing g (EIf0 e0 e1 e2) (bind_if e0 c1 c2)
+
+(* CH: my previous half-assed attempt at getting rid of the let
+   NS [from review]: So, contrary to our Skype chat, I don’t think you
+       can reuse the op_M functions to simulate the compositions of WPs
+       in the App and If rules.
+ 
+For App, I think you want something like what I wrote:
+ 
+G |- e1 : c1
+G |- e2 : c2
+---------------
+G |- e1 e2 : c3
+ 
+Where c1: M (x:t -> M t’ wp) wp1
+                c2: M t wp2
+M t’ wp’  = bind c1 (bump_cmp 1 (bind c2 (M t’ wp)))
+c3 = M (t’[e2/x]) wp’
+
+  | TyApp : #g:env
+         -> #e1:exp
+         -> #e2:exp
          -> #m:eff
          -> #t1:typ
          -> #t2:typ
@@ -736,6 +786,7 @@ and typing : env -> exp -> cmp -> Type =
         -> typing g e2 c2
         -> typing g (EIf0 e0 e1 e2)
              (op (TConst TcAnd) (Cmp m (TConst TcInt) wp0) (bind_if e0 c1 c2))
+*)
 
   | TySub: #g:env
         -> #e:exp
