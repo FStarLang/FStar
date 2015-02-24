@@ -34,6 +34,9 @@ let slice s i j = {
   length=j - i;
 }
 
+val push: a:Type -> a -> seq a -> Tot (seq a)
+let push x s = append (create 1 x) s
+
 val length: a:Type -> seq a -> Tot nat
 let length s = s.length
 
@@ -57,10 +60,22 @@ let test_length_slice  (a:Type) (s:seq a) (i:nat) (j:nat{i <= j && j <= length s
 let test_index_create  (a:Type) (n:nat) (x:a) (i:nat{i<n})                                                 = assert (index  (create n x) i   = x)
 let test_index_upd1    (a:Type) (s:seq a) (i:nat{i < length s}) (x:a)                                      = assert (index  (upd i x s) i    = x)
 let test_index_upd2    (a:Type) (s:seq a) (i:nat{i < length s}) (j:nat{i<>j && j < s.length}) (x:a)        = assert (index  (upd j x s) i    = index s i)
-let test_index_app1    (a:Type) (s1:seq a) (s2:seq a) (i:nat{i < length s1})                               = assert (index  (append s1 s2) i = index s1 i)
-let test_index_app2    (a:Type) (s1:seq a) (s2:seq a) (i:nat{length s1 <= i && i < length s1 + length s2}) = assert (index  (append s1 s2) i = index s2 (i - s1.length))
-let test_index_slice   (a:Type) (s:seq a) (i:nat) (j:nat{i <= j && j <= length s}) (k:nat{k < (j - i)})    = assert (index  (slice s i j) k  = index s (i + k))
 
+val lemma_index_slice: a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s} -> k:nat{k < (j - i)} -> Lemma (requires True)
+                                                                                                                   (ensures (index  (slice s i j) k  = index s (i + k)))
+                                                                                                                   [SMTPat (index  (slice s i j) k)]
+let lemma_index_slice   (a:Type) (s:seq a) (i:nat) (j:nat{i <= j && j <= length s}) (k:nat{k < (j - i)})    = ()//assert (index  (slice s i j) k  = index s (i + k))
+
+val lemma_index_app: a:Type -> s1:seq a -> s2:seq a -> i:nat{i < (length s1 + length s2)} 
+                     -> Lemma (requires True) 
+                              (ensures (   (i < length s1 ==> index (append s1 s2) i = index s1 i))
+                                       /\  (length s1 <= i ==> index (append s1 s2) i = index s2 (i - s1.length)))
+                              [SMTPat (index (append s1 s2) i)]
+let lemma_index_app s1 s2 i = ()
+(* let lemma_index_app    (a:Type) (s1:seq a) (s2:seq a) (i:nat{i < length s1})                               = assert (index  (append s1 s2) i = index s1 i) *)
+(* let lemma_index_app2    (a:Type) (s1:seq a) (s2:seq a) (i:nat{length s1 <= i && i < length s1 + length s2}) = assert (index  (append s1 s2) i = index s2 (i - s1.length)) *)
+
+(* val lemma_index_append  (a:Type) (s1:seq a) (s2:seq (i:nat)  *)
 
 val lemma_slice_append: a:Type -> s1:seq a{length s1 >= 1} -> s2:seq a -> Lemma (ensures (Eq (append s1 s2) (append (slice s1 0 1) (append (slice s1 1 (length s1)) s2))))
 let lemma_slice_append s1 s2 = ()
