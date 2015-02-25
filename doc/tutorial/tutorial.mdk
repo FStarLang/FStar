@@ -3659,12 +3659,14 @@ assume val enc: k:key -> p:plain -> c:cipher
 ~~
 
 ~~ Answer
+
 ```
 assume val enc: k:key -> p:plain -> c:cipher{ dec k c = p }  
 (* this function is not pure (samples IV); 
    the refinement captures functional correctness *)
 ```
 ~~
+
 ~
 
 We model perfect secrecy by typing using type abstraction. As concrete cryptographic 
