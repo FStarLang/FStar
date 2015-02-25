@@ -72,8 +72,11 @@ val is_trenaming : s:tsub -> Tot (n:int{(  trenaming s  ==> n=0) /\
                                         (~(trenaming s) ==> n=1)})
 let is_trenaming s = (if excluded_middle (trenaming s) then 0 else 1)
 
+val tsub_inc_above : nat -> var -> Tot typ
+let tsub_inc_above x y = if y<x then TVar y else TVar (y+1)
+
 val tsub_inc : var -> Tot typ
-let tsub_inc y = TVar (y+1)
+let tsub_inc = tsub_inc_above 0
 
 val trenaming_sub_inc : unit -> Lemma (trenaming (tsub_inc))
 let trenaming_sub_inc _ = ()
@@ -149,6 +152,10 @@ val esubst_extensional: s1:esub -> s2:esub{FEq s1 s2} -> e:exp ->
                         Lemma (requires True) (ensures (esubst e s1 = esubst e s2))
                        (* [SMTPat (esubst e s1);  SMTPat (esubst e s2)] *)
 let esubst_extensional s1 s2 e = ()
+
+val esubst_textensional: s1:tsub -> s2:tsub{FEq s1 s2} -> e:exp ->
+                         Lemma (requires True) (ensures (esubst_t e s1 = esubst_t e s2))
+let esubst_textensional s1 s2 e = ()
 
 (* This only works automatically with the patterns in subst_extensional above;
    it would be a lot cooler if this worked without, since that increases checking time.
@@ -386,9 +393,6 @@ val esubst_tbeta : typ -> exp -> Tot exp
 let esubst_tbeta t e = esubst_tbeta_gen 0 t e
 
 (* Shifting *)
-
-val tsub_inc_above : nat -> var -> Tot typ
-let tsub_inc_above x y = if y<x then TVar y else TVar (y+1)
 
 val tshift_up_above : nat -> typ -> Tot typ
 let tshift_up_above x t = tsubst t (tsub_inc_above x)
@@ -871,12 +875,7 @@ let rec typing_weakening_ebnd g x t_x e t h = admit ()
   (*     TyAppT k h11 hk1 *)
 
 val tshift_up_above_e: x:nat -> e:exp -> Tot exp (decreases e)
-let rec tshift_up_above_e x e = match e with
-  | EVar _ -> e
-  | ELam t e1 -> ELam (tshift_up_above x t) (tshift_up_above_e x e1)
-  | EApp e1 e2 -> EApp (tshift_up_above_e x e1) (tshift_up_above_e x e2)
-  | EForT k e1 -> EForT k (tshift_up_above_e (x + 1) e1)
-  | ETApp e1 t -> ETApp (tshift_up_above_e x e1) (tshift_up_above x t)
+let rec tshift_up_above_e x e = esubst_t e (tsub_inc_above x)
 
 type tshift_up_above_tsubst_beta_aux_typ (x:var) (t2:typ) (y:var) =
   (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2) y =
@@ -961,7 +960,7 @@ let rec typing_weakening_tbnd g x k_x e t h =
     | TyEqu h1 eq kh ->
       TyEqu (typing_weakening_tbnd x k_x h1) (tequiv_tshift eq x)
             (kinding_weakening_tbnd kh x k_x)
-    | _ -> admit ()
+    | _ -> admit () (* AR: finish *)
 
 type esubst_gen_elam_aux_type (e:exp) (x:var) (y:var) =
   (esubst_lam (esub_beta_gen x e) y = esub_beta_gen (x + 1) (eshift_up e) y)
@@ -1010,40 +1009,42 @@ let esubst_gen_efor x v k e = admit ()
   (* esubst_forallt_hoist k e (esub_beta_gen x v); *)
   (* esubst_extensional (esubst_forallt (esub_beta_gen x v)) (esub_beta_gen x (esubst_t v tsub_inc)) e *)
 
+opaque val typing_substitution: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ ->
+      #g:env -> h1:(typing g v t_x) -> h2:(typing (extend_evar g x t_x) e t) ->
+      Tot (typing g (esubst_beta_gen x v e) t) (decreases %[e;h2])
+let rec typing_substitution x e v t_x t g h1 h2 =
+  match h2 with
+    | TyVar y hk ->
+      (*let hk1 = kinding_strengthening_ebnd g x t_x t KTyp hk in*)
+      if x = y then h1
+      else if y < x then econtext_invariance h2 g
+      else TyVar (y - 1) (kinding_strengthening_ebnd g x t_x hk)
+    | TyLam #g' t_y #e' #t' kh h21 ->
+      let h21' = typing_extensional h21
+                   (extend_evar (extend_evar g 0 t_y) (x+1) t_x) in
+      let h1' = typing_weakening_ebnd 0 t_y h1 in
+      esubst_gen_elam x v t_y e';
+      TyLam t_y (kinding_extensional kh g) (typing_substitution (x + 1) h1' h21')
+    | TyApp h21 h22 ->
+      TyApp (typing_substitution x h1 h21) (typing_substitution x h1 h22)
+    | TyEqu h21 eq kh ->
+      TyEqu (typing_substitution x h1 h21) eq
+        (kinding_strengthening_ebnd g x t_x kh)
+    | TyFor #g'' #e1 #t1 k h3 ->
+      let h31 = typing_extensional h3 (extend_evar (extend_tvar g 0 k) x (tshift_up t_x)) in
+      let h11 = typing_weakening_tbnd 0 k h1 in
+      let h32 = typing_substitution x h11 h31 in
+      esubst_gen_efor x v k e1;
+      esubst_textensional tsub_inc (tsub_inc_above 0) v;
+      (* AR: does not work without implicits, try out equality constraint *)
+      TyFor #g #(esubst_beta_gen x (tshift_up_above_e 0 v) e1) #t1 k h32
+    | TyAppT #g' #e1 #t1 #t2 k h3 hk ->
+      let h22 = typing_substitution x h1 h3 in
+      let hk1 = kinding_strengthening_ebnd g x t_x hk in
+      (* AR: again implicits required *)
+      TyAppT #g #(esubst_beta_gen x v e1) #t1 #t2 k h22 hk1
+
 (* AR: Upto here *)
-
-val reorder_kind_bnds: g:env -> k:knd -> x:var -> k_x:knd ->
-                       g':env{g' = extend_tvar (extend_tvar g 0 k) (x + 1) k_x} ->
-                       g'':env{g'' = extend_tvar (extend_tvar g x k_x) 0 k} ->
-                       Lemma (requires True)
-                       (ensures (FEq (MkEnv.a g') (MkEnv.a g'') /\
-                                 FEq (MkEnv.x g') (MkEnv.x g'')))
-let reorder_kind_bnds g k x k_x g' g'' =
-  tshifts_reordering_general 0 x;
-  admit()
-
-(* opaque val typing_substitution: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> *)
-(*       #g:env -> h1:(typing g v t_x) -> h2:(typing (extend_evar g x t_x) e t) -> *)
-(*       Tot (typing g (esubst_beta_gen x v e) t) (decreases %[e;h2]) *)
-(* let rec typing_substitution x e v t_x t g h1 h2 = *)
-(*   match h2 with *)
-(*     | TyVar y hk -> *)
-(*       (\*let hk1 = kinding_strengthening_ebnd g x t_x t KTyp hk in*\) *)
-(*       if x = y then h1 *)
-(*       else if y < x then econtext_invariance h2 g *)
-(*       else TyVar (y - 1) (kinding_strengthening_ebnd g x t_x hk) *)
-(*     | TyLam #g' t_y #e' #t' kh h21 -> *)
-(*       let h21' = typing_extensional h21 *)
-(*                    (extend_evar (extend_evar g 0 t_y) (x+1) t_x) in *)
-(*       let h1' = typing_weakening_ebnd 0 t_y h1 in *)
-(*       esubst_gen_elam x v t_y e'; *)
-(*       TyLam t_y (kinding_extensional kh g) (typing_substitution (x + 1) h1' h21') *)
-(*     | TyApp h21 h22 -> *)
-(*       TyApp (typing_substitution x h1 h21) (typing_substitution x h1 h22) *)
-(*     | TyEqu h21 eq kh -> *)
-(*       TyEqu (typing_substitution x h1 h21) eq *)
-(*         (kinding_strengthening_ebnd g x t_x kh) *)
-(*     |  *)
 
 (* (\* analogous to above *\) *)
 (* type tsubst_gen_tlam_aux_type (t:typ) (x:var) (y:var) = *)
