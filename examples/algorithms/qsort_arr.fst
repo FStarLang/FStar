@@ -61,12 +61,12 @@ let rec sort f i j x =
   else 
     let pivot = partition f i j i (j - 1) x in
     let h1 = ST.get () in
+    assert (sel h1 x = splice (sel h0 x) i (sel h1 x) j);
     sort f i pivot x;
     let h2 = ST.get () in
+    assert (sorted f (slice (sel h2 x) i pivot));
     sort f (pivot + 1) j x;
     let h3 = ST.get () in
-    assert (sel h1 x = splice (sel h0 x) i (sel h1 x) j);
-    assert (sorted f (slice (sel h2 x) i pivot));
     assert (sorted f (slice (sel h3 x) (pivot + 1) j));
     (* assert (Eq (slice (sel h3 x) i j) *)
     (*            (append (slice (sel h2 x) i pivot) *)
