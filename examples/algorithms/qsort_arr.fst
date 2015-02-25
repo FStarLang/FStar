@@ -114,7 +114,7 @@ let rec sort f i j x =
     assert (slice (sel _h3 x) i j 
             = (append l (cons (index (sel _h2 x) pivot) h)));
 
-    assert (p = index (sel _h2 x) pivot);
+    (* assert (p = index (sel _h2 x) pivot); *)
 
     (* assert (forall y. mem y l ==> f y p); *)
     (* assert (forall y. mem y h ==> f p y); *)
