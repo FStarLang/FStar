@@ -48,6 +48,9 @@ assume val enc: k:key -> p:plain -> c:cipher { dec k c = p }  (* this function i
 
 module SymEnc (* a multi-key symmetric variant; for simplicity: (1) only using AES above; and (2) parsing is complete *)
 
+open ST
+open List
+
 type r = AES.plain
 
 (* CPA variant: *) 
