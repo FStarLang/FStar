@@ -1,7 +1,7 @@
-VERFILES=counters.fst insertionsort-lemma.fst insertionsort.fst intlist-insertionsort.fst mergesort.fst
+VERFILES=counters.fst insertionsort-lemma.fst insertionsort.fst intlist-insertionsort.fst mergesort.fst 
 OTHERFLAGS=
 include ../Makefile.include
-all: .all.ver 
+all: .all.ver downgrade
 
 qsort_seq_libs: qsort_seq_props qsort_seq_perm
 	$(FSTAR) 
