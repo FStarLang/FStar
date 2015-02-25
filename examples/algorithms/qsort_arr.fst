@@ -90,8 +90,8 @@ let rec sort f i j x =
     let l = slice (sel _h2 x) i pivot in 
     (* assert (sel _h2 x = splice (sel _h1 x) i (sel _h2 x) pivot); *)
     (* assert (sorted f l); *)
-    let q = index (sel _h2 x) pivot in
-    cut (b2t (p=q));
+    (* let q = index (sel _h2 x) pivot in *)
+    (* cut (b2t (p=q)); *)
 
 
     sort f (pivot + 1) j x;
@@ -114,8 +114,7 @@ let rec sort f i j x =
     assert (slice (sel _h3 x) i j 
             = (append l (cons (index (sel _h2 x) pivot) h)));
 
-    (* assert (slice (sel _h3 x) i j = append l (cons p h)); *)
-    (* admit (); *)
+    assert (p = index (sel _h2 x) pivot);
 
     (* assert (forall y. mem y l ==> f y p); *)
     (* assert (forall y. mem y h ==> f p y); *)
