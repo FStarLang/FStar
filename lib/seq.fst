@@ -34,8 +34,20 @@ let slice s i j = {
   length=j - i;
 }
 
-val push: a:Type -> a -> seq a -> Tot (seq a)
-let push x s = append (create 1 x) s
+val head: a:Type -> s:seq a{s.length > 0} -> Tot a
+let head s = index s 0
+
+val tail: a:Type -> s:seq a{s.length > 0} -> Tot (seq a)
+let tail s = {
+  contents=(fun (n:nat) -> s.contents (n + 1));
+  length=s.length - 1;
+}
+
+val cons: a:Type -> a -> seq a -> Tot (seq a)
+let cons x s = {
+  contents=(fun n -> if n=0 then x else s.contents (n - 1));
+  length=s.length + 1;
+}
 
 val length: a:Type -> seq a -> Tot nat
 let length s = s.length
@@ -80,6 +92,14 @@ let lemma_index_app s1 s2 i = ()
 val lemma_slice_append: a:Type -> s1:seq a{length s1 >= 1} -> s2:seq a -> Lemma (ensures (Eq (append s1 s2) (append (slice s1 0 1) (append (slice s1 1 (length s1)) s2))))
 let lemma_slice_append s1 s2 = ()
 
+val lemma_append_cons: a:Type -> s1:seq a{s1.length > 0} -> s2:seq a -> Lemma 
+  (requires True)
+  (ensures (append s1 s2 = cons (head s1) (append (tail s1) s2)))
+let rec lemma_append_cons s1 s2 = 
+  cut (Eq (append s1 s2) (cons (head s1) (append (tail s1) s2)))
+
+val lemma_tl: a:Type -> hd:a -> tl:seq a -> Lemma (ensures (tail (cons hd tl) = tl))
+let lemma_tl hd tl = cut (Eq (tail (cons hd tl)) tl)
 (* val test_append_inj :   a:Type -> b1:seq a -> b2:seq a -> c1:seq a -> c2:seq a -> Lemma (requires ((length b1 = length c1) *)
 (*                                                                                                    /\ Eq (append b1 b2) (append c1 c2))) *)
 (*                                                                                         (ensures (Eq b1 c1 /\ Eq b2 c2)) *)

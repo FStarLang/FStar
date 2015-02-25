@@ -135,6 +135,7 @@ let rec quicksort (a:Type) f s =
   else let lo, hi = partition f s 0 (s.length - 1) in
        let pivot = index hi 0 in 
        let hi' = slice hi 1 hi.length in
+       let _ = admit () in 
        let l = quicksort f lo in
        let h = quicksort f hi' in 
        let p = Seq.create 1 pivot in
