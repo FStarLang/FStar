@@ -122,16 +122,78 @@ type typing_sp v g a b = infer_sp v g = Some (a,b)
 
 (* Weakening normal forms *)
 
-(* assume val wkSp : g:Con -> s:Ty -> t:Ty -> r:Ty -> *)
-(*           x:Var{typing_var x g s} -> sp:Sp{typing_sp sp (rmv g s x) t r} -> *)
-(*           Tot (sp:Sp{typing_sp sp g t r}) *)
-(* val wkNf : g:Con -> s:Ty -> t:Ty -> *)
-(*           x:Var{typing_var x g s} -> nf:Nf{typing_nf nf (rmv g s x) t} -> *)
-(*           Tot (nf:Nf{typing_nf nf g t}) *)
+val wkNf : g:Con -> s:Ty -> t:Ty ->
+          x:Var{typing_var x g s} -> nf:Nf{typing_nf nf (rmv g s x) t} ->
+          Tot (nf:Nf{typing_nf nf g t}) (decreases %[nf])
+val wkSp : g:Con -> s:Ty -> t:Ty -> r:Ty ->
+          x:Var{typing_var x g s} -> sp:Sp{typing_sp sp (rmv g s x) t r} ->
+          Tot (sp:Sp{typing_sp sp g t r}) (decreases %[sp])
 
-(* let rec wkNf g s t x nf = *)
-(*   match nf, t with *)
-(*     | NLam _ u, A r t -> NLam r (wkNf (r::g) s t (Vs x) u) *)
-(*     | NNeu (NEApp y us), O -> *)
-(*        (match infer_var y (rmv g s x) with *)
-(*           | Some t -> NNeu (NEApp (wkv g s t x y) (wkSp g s t O x us))) *)
+let rec wkNf g s t x nf =
+  match nf, t with
+    | NLam _ u, A r t -> NLam r (wkNf (r::g) s t (Vs x) u)
+    | NNeu (NEApp y us), O ->
+       (match infer_var y (rmv g s x) with
+          | Some t -> NNeu (NEApp (wkv g s t x y) (wkSp g s t O x us)))
+
+and wkSp g s t r x sp =
+  match sp, t with
+    | SEmp _, _ -> SEmp t
+    | SExt u us, A t n -> SExt (wkNf g s t x u) (wkSp g s n r x us)
+
+
+(* Equality between variables *)
+
+type EqV =
+  | Same : EqV
+  | Diff : y:Var -> EqV
+
+val eq : g:Con -> s:Ty -> t:Ty -> x:Var{typing_var x g s} -> y:Var{typing_var y g t} -> Tot (r:EqV{(is_Diff r ==> typing_var (Diff.y r) (rmv g s x) t /\ y = wkv g s t x (Diff.y r)) /\ (is_Same r ==> x = y)})
+let rec eq g s t x y =
+  match g with
+    | a::g ->
+       match x, y with
+         | Vz, Vz -> Same
+         | Vz, Vs y -> Diff y
+         | Vs x, Vz -> Diff Vz
+         | Vs x, Vs y ->
+            match eq g s t x y with
+              | Same -> Same
+              | Diff y -> Diff (Vs y)
+
+
+(* Add a normal form at the end of a spine *)
+
+val appSp : g:Con -> s:Ty -> t:Ty -> r:Ty -> sp:Sp{typing_sp sp g r (A s t)} -> u:Nf{typing_nf u g s} -> Tot (sp':Sp{typing_sp sp' g r t})
+let rec appSp g s t r sp u =
+  match sp, r with
+    | SEmp (A _ t), _ -> SExt u (SEmp t)
+    | SExt x xs, A _ n -> SExt x (appSp g s t n xs u)
+
+
+(* η-expansion of normal forms *)
+
+val nvar : g:Con -> s:Ty -> x:Var{typing_var x g s} -> Tot (nf:Nf{typing_nf nf g s}) (decreases %[s])
+val ne2nf : g:Con -> s:Ty -> ne:Ne{typing_ne ne g s} -> Tot (nf:Nf{typing_nf nf g s}) (decreases %[s])
+
+(* TODO: Make the mutually recursive version work *)
+(* let rec nvar g s x = ne2nf g s (NEApp x (SEmp s)) *)
+
+(* and ne2nf g s xns = *)
+(*   match s with *)
+(*     | O -> NNeu xns *)
+(*     | A s t -> *)
+(*        match xns with *)
+(*          | NEApp x ns -> *)
+(*             match infer_var x g with *)
+(*               | Some r -> NLam s (ne2nf (s::g) t (NEApp (Vs x) (appSp (s::g) s t r (wkSp (s::g) s r (A s t) Vz ns) (nvar (s::g) s Vz)))) *)
+
+let rec ne2nf g s xns =
+  match s with
+    | O -> NNeu xns
+    | A s t ->
+       match xns with
+         | NEApp x ns ->
+            match infer_var x g with
+              | Some r -> NLam s (ne2nf (s::g) t (NEApp (Vs x) (appSp (s::g) s t r (wkSp (s::g) s r (A s t) Vz ns) (ne2nf (s::g) s (NEApp Vz (SEmp s))))))
+let nvar g s x = ne2nf g s (NEApp x (SEmp s))
