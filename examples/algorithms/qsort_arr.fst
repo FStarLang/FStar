@@ -55,8 +55,9 @@ assume val lemma_splice_append: a:Type -> s1:seq a -> i:nat -> s2:seq a{s1.lengt
          -> k:nat{k <= i} -> Lemma 
          (ensures (slice (splice s1 i s2 j) k j = append (slice s1 k i) (slice s2 i j)))
 
-assume val lemma_splice_append_cons: a:Type -> s1:seq a{s1.length > 0} ->  p:nat{0 < p} -> s2:seq a{s1.length = s2.length} -> j:nat{p <= j /\ j <= s1.length} -> Lemma
-         (ensures (splice s2 p s1 j = append (slice s2 0 (p - 1)) (cons (index s2 (p - 1)) (slice s1 p j))))
+assume val lemma_slice_splice_append_cons: a:Type -> s1:seq a{s1.length > 0} -> i:nat ->  p:nat{i < p} -> s2:seq a{s1.length = s2.length} -> j:nat{p <= j /\ j <= s1.length} -> Lemma
+         (ensures (slice (splice s2 p s1 j) i j = 
+             append (slice s2 i (p - 1)) (cons (index s2 (p - 1)) (slice s1 p j))))
 
 val sort: a:Type -> f:(a -> a -> Tot bool){total_order a f} -> i:nat -> j:nat{i <= j} 
           -> x:array a -> ST unit 
@@ -97,6 +98,7 @@ let rec sort f i j x =
 
     let _h3 = ST.get () in
     let h = slice (sel _h3 x) (pivot + 1) j in
+    
     (* assert (sel _h3 x = splice (sel _h2 x) (pivot + 1) (sel _h3 x) j); *)
     (* assert (sorted f h); *)
 
@@ -105,15 +107,20 @@ let rec sort f i j x =
     
     (* assert (j <= length (sel h2 x)); *)
     let r = index (sel _h3 x) pivot in
-    assert (p = r);
+    (* assert (p = r); *)
 
-    lemma_splice_append_cons (sel _h2 x) (pivot + 1) (sel _h3 x) j;
+    lemma_slice_splice_append_cons (sel _h2 x) i (pivot + 1) (sel _h3 x) j;
 
-    assert (sel _h3 x = append l (cons p h));
+    assert (slice (sel _h3 x) i j 
+            = (append l (cons (index (sel _h2 x) pivot) h)));
 
+    (* assert (slice (sel _h3 x) i j = append l (cons p h)); *)
     (* admit (); *)
 
+    (* assert (forall y. mem y l ==> f y p); *)
+    (* assert (forall y. mem y h ==> f p y); *)
     (* sorted_concat_lemma f l p h; *)
+    (* assert (sorted f (append l (cons p h))); *)
 
     (* lemma_append_count l (cons p h); *)
 

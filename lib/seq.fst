@@ -7,6 +7,9 @@ type seq (a:Type) = {
   length:   nat
 }
 
+val length: a:Type -> seq a -> Tot nat
+let length s = s.length
+
 val create:  a:Type -> nat -> a -> Tot (seq a)
 let create len v = {
   contents=(fun i -> v);
@@ -15,12 +18,40 @@ let create len v = {
 
 val index:    a:Type -> s:seq a -> i:nat{i < s.length} -> Tot a
 let index s i = s.contents i
-                                       
+
+(* val lemma_create_len: a:Type -> n:nat -> i:a -> Lemma *)
+(*   (requires True) *)
+(*   (ensures (length (create n i) = n)) *)
+(*   [SMTPat (length (create n i))]                                                *)
+(* let lemma_create_len n i = () *)
+
+(* val lemma_create_index: a:Type -> n:nat -> i:a -> j:nat{j < n} -> Lemma *)
+(*   (requires True) *)
+(*   (ensures (index (create n i) j = i)) *)
+(*   [SMTPat (index (create n i) j)]                                                *)
+(* let lemma_create_index n i = () *)
+
 val upd:    a:Type -> n:nat -> a -> s:seq a{n < s.length} -> Tot (seq a)
 let upd n v s = {
   contents=(fun i -> if i=n then v else s.contents i);
   length=s.length;
 }
+
+(* val lemma_len_upd: a:Type -> n:nat -> v:a -> s:seq a{n < length s} -> Lemma *)
+(*   (requires True) *)
+(*   (ensures (length (upd n v s) = n)) *)
+(*   [SMTPat (length (upd n v s))] *)
+(* let lemma_len_upd n i = () *)
+
+(* val lemma_index_upd1: a:Type -> n:nat -> v:a -> s:seq a{n < length s} -> Lemma *)
+(*   (requires True) *)
+(*   (ensures (index (upd n v s) n = n)) *)
+(* let lemma_index_upd1 n v s = () *)
+
+(* val lemma_index_upd2: a:Type -> n:nat -> v:a -> s:seq a{n < length s} -> i:nat{i<>n /\ i < length s} -> Lemma *)
+(*   (requires True) *)
+(*   (ensures (index (upd n v s) i = index s i)) *)
+(* let lemma_index_upd2 n v s = () *)
 
 val append: a:Type -> seq a -> seq a -> Tot (seq a)
 let append s1 s2 = {
@@ -49,8 +80,6 @@ let cons x s = {
   length=s.length + 1;
 }
 
-val length: a:Type -> seq a -> Tot nat
-let length s = s.length
 
 val split: a:Type -> s:seq a -> i:nat{(0 <= i /\ i < length s)} -> Tot (seq a * seq a)
 let split s i = slice s 0 i, slice s i (length s)
