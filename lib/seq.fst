@@ -97,10 +97,6 @@ val lemma_index_app: a:Type -> s1:seq a -> s2:seq a -> i:nat{i < (length s1 + le
                                        /\  (length s1 <= i ==> index (append s1 s2) i = index s2 (i - s1.length)))
                               [SMTPat (index (append s1 s2) i)]
 let lemma_index_app s1 s2 i = ()
-(* let lemma_index_app    (a:Type) (s1:seq a) (s2:seq a) (i:nat{i < length s1})                               = assert (index  (append s1 s2) i = index s1 i) *)
-(* let lemma_index_app2    (a:Type) (s1:seq a) (s2:seq a) (i:nat{length s1 <= i && i < length s1 + length s2}) = assert (index  (append s1 s2) i = index s2 (i - s1.length)) *)
-
-(* val lemma_index_append  (a:Type) (s1:seq a) (s2:seq (i:nat)  *)
 
 val lemma_slice_append: a:Type -> s1:seq a{length s1 >= 1} -> s2:seq a -> Lemma (ensures (Eq (append s1 s2) (append (slice s1 0 1) (append (slice s1 1 (length s1)) s2))))
 let lemma_slice_append s1 s2 = ()
@@ -113,26 +109,12 @@ let rec lemma_append_cons s1 s2 =
 
 val lemma_tl: a:Type -> hd:a -> tl:seq a -> Lemma (ensures (tail (cons hd tl) = tl))
 let lemma_tl hd tl = cut (Eq (tail (cons hd tl)) tl)
-(* val test_append_inj :   a:Type -> b1:seq a -> b2:seq a -> c1:seq a -> c2:seq a -> Lemma (requires ((length b1 = length c1) *)
-(*                                                                                                    /\ Eq (append b1 b2) (append c1 c2))) *)
-(*                                                                                         (ensures (Eq b1 c1 /\ Eq b2 c2)) *)
-(*                                                                                         (decreases (length b1)) *)
-(* let rec test_append_inj b1 b2 c1 c2 = *)
-(*   if length b1 = 0 *)
-(*   then admit() *)
-(*   else (//assert (index (append b1 b2) 0 = index (append c1 c2) 0); *)
-(*         assert (index b1 0 = index c1 0); *)
-(*         admit ()) *)
-(*         (\* assert (append b1 b2 = append (slice b1 0 1) (append (slice b1 1 (length b1)) b2)); *\) *)
-(* //        test_append_inj (slice b1 1 (length b1)) b2 (slice c1 1 (length c1)) c2) *)
-  
 
-(* let test_append_inj    (a:Type) (b1:seq a) (b2:seq a) (c1:seq a) (c2:seq a) =  *)
-(*   assert (length b1 = length c1 /\ Eq (append b1 b2) (append c1 c2) *)
-(*           ==> (Eq b1 c1 /\ Eq b2 c2)) *)
-
-(* assume TypeInj:     forall (a:Type) (b:Type) (s1:seq a) (s2:seq b). s1==s2 ==> a==b *)
-(* assume AppendInj:   forall (a:Type) (b1:seq a) (b2:seq a) (c1:seq a) (c2:seq a). {:pattern (equal (append b1 b2) (append c1 c2))} *)
-(*                                                                          (length b1 == length c1 /\ equal (append b1 b2) (append c1 c2)) *)
-(*                                                                          ==> (equal b1 c1 /\ equal b2 c2) *)
-(* assume AppendSplit: forall (a:Type) (b:seq a) (i:nat). {:pattern (append (sub b 0 i) (sub b i (length b)))} equal (append (sub b 0 i) (sub b i (length b))) b *)
+val sorted: ('a -> 'a -> Tot bool) 
+          -> s:seq 'a
+          -> Tot bool (decreases (s.length))
+let rec sorted f s =
+  if s.length <= 1
+  then true
+  else let hd = head s in
+       f hd (index s 1) && sorted f (tail s)

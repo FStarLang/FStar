@@ -22,3 +22,17 @@ val lemma_count_slice: a:Type -> s:seq a -> i:nat{i<=s.length} -> Lemma
          (ensures (forall x. count x s = count x (slice s 0 i) + count x (slice s i s.length)))
          (decreases (s.length))
 
+type total_order (a:Type) (f: (a -> a -> Tot bool)) =
+    (forall a. f a a)                                           (* reflexivity   *)
+    /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
+    /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
+
+val sorted_concat_lemma: a:Type
+                      -> f:(a -> a -> Tot bool){total_order a f}
+                      -> lo:seq a{sorted f lo}
+                      -> pivot:a
+                      -> hi:seq a{sorted f hi}
+                      -> Lemma (requires (forall y. (mem y lo ==> f y pivot)
+                                                 /\ (mem y hi ==> f pivot y)))
+                               (ensures (sorted f (append lo (cons pivot hi))))
+                               (decreases (lo.length))

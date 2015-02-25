@@ -17,6 +17,12 @@ qsort_seq: $(addprefix ../../lib/, classical.fst seq.fst seqproperties.fsi seqpe
 
 qsort_seq_full: qsort_seq_libs qsort_seq
 
+qsort_arr: $(addprefix ../../lib/, set.fst heap.fst stperm.fst seq.fst  seqproperties.fsi seqpermutation.fsi arr.fst) qsort_arr.fst
+	$(FSTAR) --admit_fsi SeqProperties --admit_fsi SeqPermutation $^ 
+
+# qsort_arr: $(addprefix ../../lib/, classical.fst seq.fstarr.fst) qsort_arr.fst
+# 	$(FSTAR) --admit_fsi SeqProperties --admit_fsi SeqPermutation $^  --z3timeout 20
+
 qs_seq2: qs_seq2.fst
 	$(FSTAR) ../../lib/classical.fst ../../lib/seq.fst $^  --max_ifuel 1  --max_fuel 2
 
