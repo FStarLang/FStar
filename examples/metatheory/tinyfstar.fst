@@ -169,10 +169,10 @@ and subst_typ s t = match t with
 val is_value : exp -> Tot bool
 let is_value e =
   match e with
-  | EVar _
   | EConst _
   | ELam _ _
   | EFix _ _ _ -> true
+  | EVar _
   | EApp _ _
   | ELet _ _ _
   | EIf0 _ _ _ -> false
@@ -430,10 +430,11 @@ let bind_if e c1 c2 = match c1, c2 with
 val tconsts : tconst -> Tot knd
 let tconsts tc =
   match tc with
-  | TcUnit   -> KType
-  | TcInt    -> KType
-  | TcRefInt -> KType
-  | TcHeap   -> KType
+  | TcUnit
+  | TcInt
+  | TcRefInt
+  | TcHeap
+  | TcTrue   -> KType
   | TcForall -> KKArr KType (KKArr (KTArr (TVar 0) KType) KType)
                 (* TODO: please double-check *)
   | TcAnd
@@ -443,7 +444,6 @@ let tconsts tc =
   | TcPrecedes -> KKArr KType (KTArr (TVar 0) (KTArr (TVar 0) KType))
                  (* TODO: please double-check *)
 
-  | TcTrue   -> KType
   | TcForallPostPure 
   | TcForallPostSt -> KType (* TODO: finish this *)
 
@@ -815,6 +815,22 @@ and kinding : env -> typ -> knd -> Type =
            -> c_ok (extend g (B_x t)) c
            -> kinding g (TArr t c) KType
 
+  | KiTTLam : #g:env
+           -> #k:knd
+           -> #t:typ
+           -> #k':knd
+           -> kind_ok g k
+           -> kinding (extend g (B_a k)) t k'
+           -> kinding g (TTLam k t) (KKArr k k')
+
+  | KiTELam : #g:env
+           -> #t1:typ
+           -> #t2:typ
+           -> #k:knd
+           -> kinding g t1 KType
+           -> kinding (extend g (B_x t1)) t2 k
+           -> kinding g (TELam t1 t2) (KTArr t1 k)
+
   | KiTTApp : #g:env
            -> #t1:typ
            -> #t2:typ
@@ -833,23 +849,6 @@ and kinding : env -> typ -> knd -> Type =
            -> typing g e (tot t)
            -> kinding g (TEApp t1 e) (subst_knd (EForX e 0) k)
 
-  | KiTTLam : #g:env
-           -> #k:knd
-           -> #t:typ
-           -> #k':knd
-           -> kind_ok g k
-           -> kinding (extend g (B_a k)) t k'
-           -> kinding g (TTLam k t) (KKArr k k')
-
-  | KiTELam : #g:env
-           -> #t1:typ
-           -> #t2:typ
-           -> #k:knd
-           -> kinding g t1 KType
-           -> kinding (extend g (B_x t1)) t2 k
-           -> kinding g (TELam t1 t2) (KTArr t1 k)
-
-
   | KiTEqT  : #k:knd
            -> g:env
            -> kinding g (TEqT k) (KKArr k (KKArr k KType))
@@ -862,12 +861,16 @@ and c_ok : env -> cmp -> Type =
             -> kinding g wp (k_pure t)
             -> c_ok g (Cmp CPure t wp)
 
+(* CH: should define a generic variant of k_... taking m as argument
+   and then merge these two rules *)
+
   | COkSt :    #g:env
             -> #t:typ
             -> #wp:typ
             -> kinding g t KType
             -> kinding g wp (k_st t)
             -> c_ok g (Cmp CSt t wp)
+
 
 (* kind_ok needed because (as opposed to LambdaOmega) kinds have
    variable and type bindings *)
