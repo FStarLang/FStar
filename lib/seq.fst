@@ -55,6 +55,19 @@ let length s = s.length
 val split: a:Type -> s:seq a -> i:nat{(0 <= i /\ i < length s)} -> Tot (seq a * seq a)
 let split s i = slice s 0 i, slice s i (length s)
 
+val count : 'a -> s:seq 'a -> Tot nat (decreases s.length)
+let rec count x s = 
+  if s.length = 0 then 0
+  else if head s = x 
+  then 1 + count x (tail s)
+  else count x (tail s)
+
+val mem: 'a -> seq 'a -> Tot bool
+let mem x l = count x l > 0
+
+val swap: a:Type -> s:seq a -> i:nat{i<s.length} -> j:nat{j<s.length} -> Tot (seq a)
+let swap s i j = upd i (index s j) (upd j (index s i) s)
+
 assume type Eq: #a:Type -> seq a -> seq a -> Type
 assume Equals:      forall (a:Type) (s1:seq a) (s2:seq a).             {:pattern (Eq s1 s2)}             Eq s1 s2 <==> 
                             (forall (i:nat{i < s1.length && i < s2.length}).{:pattern (index s1 i); (index s2 i)} 
