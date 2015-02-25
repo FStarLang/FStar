@@ -145,20 +145,20 @@ and wkSp g s t r x sp =
 (* Equality between variables *)
 
 type EqV =
-  | Same : EqV
+  | Same : s:Ty -> EqV
   | Diff : y:Var -> EqV
 
-val eq : g:Con -> s:Ty -> t:Ty -> x:Var{typing_var x g s} -> y:Var{typing_var y g t} -> Tot (r:EqV{(is_Diff r ==> typing_var (Diff.y r) (rmv g s x) t /\ y = wkv g s t x (Diff.y r)) /\ (is_Same r ==> x = y)})
+val eq : g:Con -> s:Ty -> t:Ty -> x:Var{typing_var x g s} -> y:Var{typing_var y g t} -> Tot (r:EqV{(is_Diff r ==> typing_var (Diff.y r) (rmv g s x) t /\ y = wkv g s t x (Diff.y r)) /\ (is_Same r ==> (Same.s r = s) /\ (Same.s r = t) /\ (x = y))})
 let rec eq g s t x y =
   match g with
     | a::g ->
        match x, y with
-         | Vz, Vz -> Same
+         | Vz, Vz -> Same s
          | Vz, Vs y -> Diff y
          | Vs x, Vz -> Diff Vz
          | Vs x, Vs y ->
             match eq g s t x y with
-              | Same -> Same
+              | Same s -> Same s
               | Diff y -> Diff (Vs y)
 
 
@@ -196,4 +196,42 @@ let rec ne2nf g s xns =
          | NEApp x ns ->
             match infer_var x g with
               | Some r -> NLam s (ne2nf (s::g) t (NEApp (Vs x) (appSp (s::g) s t r (wkSp (s::g) s r (A s t) Vz ns) (ne2nf (s::g) s (NEApp Vz (SEmp s))))))
+
 let nvar g s x = ne2nf g s (NEApp x (SEmp s))
+
+
+(* Hereditary substitutions: substitute a variable by a normal form and
+   normalize the result *)
+
+val napp : g:Con -> t:Ty -> s:Ty -> f:Nf{typing_nf f g (A s t)} -> u:Nf{typing_nf u g s} -> fu:Nf{typing_nf fu g t} (*decreases %[s]*)
+val substNf : g:Con -> s:Ty -> t:Ty -> a:Nf{typing_nf a g t} -> x:Var{typing_var x g s} -> b:Nf{typing_nf b (rmv g s x) s} -> c:Nf{typing_nf c (rmv g s x) t} (*decreases %[s;a]*)
+val substSp : g:Con -> s:Ty -> t:Ty -> r:Ty -> a:Sp{typing_sp a g t r} -> x:Var{typing_var x g s} -> b:Nf{typing_nf b (rmv g s x) s} -> c:Sp{typing_sp c (rmv g s x) t r} (*decreases %[s;a]*)
+val appNfSp : g:Con -> t:Ty -> s:Ty -> f:Nf{typing_nf f g s} -> sp:Sp{typing_sp sp g s t} -> c:Nf{typing_nf c g t} (*decreases %[s]*)
+
+let rec napp g t s f u =
+  match f with
+    | NLam _ f -> substNf (s::g) s t f Vz u
+
+and substNf g s t a x b =
+  match t, a with
+    | A r t, NLam _ a -> NLam r (substNf (r::g) s t a (Vs x) (wkNf (r::(rmv g s x)) r s Vz b))
+    | O, NNeu (NEApp y ts) ->
+       match infer_var y g with
+         | Some t ->
+            match eq g s t x y with
+              | Same s -> appNfSp (rmv g s x) O s b (substSp g s s O ts x b)
+              | Diff y -> NNeu (NEApp y (substSp g s t O ts x b))
+
+and substSp g s t r a x b =
+  match a with
+    | SEmp t -> SEmp t
+    | SExt c cs ->
+       match t with
+         | A t n -> SExt (substNf g s t c x b) (substSp g s n r cs x b)
+
+and appNfSp g t s f sp =
+  match sp with
+    | SEmp _ -> f
+    | SExt u us ->
+       match s with
+           | A r s -> appNfSp g t s (napp g s r f u) us

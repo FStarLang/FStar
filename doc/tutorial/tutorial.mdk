@@ -3605,24 +3605,6 @@ What about MAC schemes for texts of arbitrary lengths?
 Hint: have a look e.g. at the HMAC construction.
 ~
 
-[Title          A]: http://Title_A.com "Title          A title"
-
-
-<script>
-// show answers when clicked upon.
-[].forEach.call( document.getElementsByClassName("answer-link"), function(answerLink) {
-  answerLink.addEventListener("click", function(ev) {
-    var answer = answerLink.parentNode;
-    var cls = answer.className;
-    if (/\bview\b/.test(cls)) {
-      answer.className = cls.replace(/\s*view\s*/,"");
-    }
-    else {
-      answer.className = cls + " view";
-    } 
-  });
-});
-</script>
 
 # Advanced cryptographic examples
 
@@ -3659,12 +3641,14 @@ assume val enc: k:key -> p:plain -> c:cipher
 ~~
 
 ~~ Answer
+
 ```
 assume val enc: k:key -> p:plain -> c:cipher{ dec k c = p }  
 (* this function is not pure (samples IV); 
    the refinement captures functional correctness *)
 ```
 ~~
+
 ~
 
 We model perfect secrecy by typing using type abstraction. As concrete cryptographic 
@@ -3771,3 +3755,22 @@ let test() =
   (* let p'' = decrypt k1 c in     // this rightfully triggers an error *)
   ()
 ```
+
+[Title          A]: http://Title_A.com "Title          A title"
+
+
+<script>
+// show answers when clicked upon.
+[].forEach.call( document.getElementsByClassName("answer-link"), function(answerLink) {
+  answerLink.addEventListener("click", function(ev) {
+    var answer = answerLink.parentNode;
+    var cls = answer.className;
+    if (/\bview\b/.test(cls)) {
+      answer.className = cls.replace(/\s*view\s*/,"");
+    }
+    else {
+      answer.className = cls + " view";
+    } 
+  });
+});
+</script>
