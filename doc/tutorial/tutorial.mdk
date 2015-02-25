@@ -3624,13 +3624,15 @@ Hint: have a look e.g. at the HMAC construction.
 });
 </script>
 
+# Advanced cryptographic examples
+
 ## Encryption
 
 The basis of our encryption example is the interface of a symmetric encryption scheme based on a block cipher, say AES.
 It uses a one block initialization vector (IV) that is XORed to the plaintext. The masked value is then enciphered. 
 The ciphertext consists of the IV and this enciphered block. 
 
-~~ ExerciseFragment {exname=ex10a-encrypt}
+```
 module AES
 open Array
 
@@ -3646,25 +3648,43 @@ let keysize = 16 (* 128 bits *)
 type key = nbytes keysize 
 
 assume val gen: unit -> key 
-assume val dec: key -> cipher -> Tot plain                    
-(* this function is pure & complete *)  
+assume val dec: key -> cipher -> Tot plain
+(* this function is pure & complete *)
+```
 
-assume val enc: k:key -> p:plain -> c:cipher { dec k c = p }  
-(* this function is not pure (samples IV); 
-   the refinement captures functional correctness *) 
+~ Exercise
+
+~~ ExerciseFragment {exname=ex10a-encrypt}
+assume val enc: k:key -> p:plain -> c:cipher
 ~~
 
+~~ Answer
 ```
-module SymEnc (* a multi-key symmetric variant; for simplicity: (1) only using AES above; and (2) parsing is complete *)
+assume val enc: k:key -> p:plain -> c:cipher{ dec k c = p }  
+(* this function is not pure (samples IV); 
+   the refinement captures functional correctness *)
+```
+~~
+~
+
+We model perfect secrecy by typing using type abstraction. As concrete cryptographic 
+algorithms such as the one above talk about bytes, we now introduce the notion of a 
+symmetric encryption scheme that enforces type abstraction for `safe` keys.   
+
+```
+module SymEnc (* a multi-key symmetric variant; for simplicity: 
+                 (1) only using AES above; and (2) parsing is complete *)
 
 type r = AES.plain
 
 (* CPA variant: *) 
-opaque type Encrypted: #k: Type -> p:Type -> k -> AES.bytes -> Type         (* an opaque predicate, keeping track of honest encryptions *)
+opaque type Encrypted: #k: Type -> p:Type -> k -> AES.bytes -> Type         
+(* an opaque predicate, keeping track of honest encryptions *)
+
 type cipher (p:Type) (k:Type) (key:k) = c:AES.cipher { Encrypted p key c }  
 
 type keyT: Type -> Type = 
-  | Ideal    : p:Type -> AES.key -> i:int -> keyT p (* maybe no need to keep plain/repr around *)
+  | Ideal    : p:Type -> AES.key -> i:int -> keyT p 
   | Concrete : p:Type -> AES.key -> i:int -> keyT p  
 
 type scheme: Type -> Type =
@@ -3677,8 +3697,19 @@ type scheme: Type -> Type =
 
 type entry (p:Type) (k:Type) = 
   | Entry : key:k -> c:cipher p k key -> plain:p -> entry p k
+  
+```
 
-val create: p: Type -> plain: (r -> p) -> repr: (p -> r) -> scheme p 
+To create a cryptographic scheme one needs to provide a `plain` function 
+for turning `bytes` into the plain type values
+and a `repr` function for turning plain type values into bytes.
+```
+val create: p: Type -> plain: (r -> p) -> repr: (p -> r) -> scheme p
+```
+
+The `create` function instantiates the scheme using the `AES` module.
+ 
+```
 let create (p:Type) plain repr = 
   let c = ST.alloc 0 in
   let log : ref (list (entry p (keyT p))) = ST.alloc [] in
@@ -3705,11 +3736,12 @@ let create (p:Type) plain repr =
        c
 
     | Concrete kv _ -> 
-       let rep = repr text in    (* NS: need the let-binding because repr is impure and we can't substitute it in the type of 'enc' *) 
+       let rep = repr text in    
+       (* NS: need the let-binding because repr is impure and we can't 
+          substitute it in the type of 'enc' *) 
        let c = AES.enc kv rep in
        assume (Encrypted p k c); 
        c in
-    
 
   let decrypt: key:keyT p -> cipher p (keyT p) key -> p = fun k c ->
     match k with 
@@ -3721,6 +3753,7 @@ let create (p:Type) plain repr =
   Scheme p (keyT p) keyrepr keygen encrypt decrypt
 ```
 
+Here is how such a symmetric encryption scheme would be used in an example:
 ```
 module SampleEncrypt
 open SymEnc
