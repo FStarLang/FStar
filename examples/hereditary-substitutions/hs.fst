@@ -173,181 +173,53 @@ let rec appSp g s t r sp u =
 
 (* η-expansion of normal forms *)
 
-val nvar : g:Con -> s:Ty -> x:Var{typing_var x g s} -> Tot (nf:Nf{typing_nf nf g s}) (decreases %[s])
-val ne2nf : g:Con -> s:Ty -> ne:Ne{typing_ne ne g s} -> Tot (nf:Nf{typing_nf nf g s}) (decreases %[s])
+val nvar : g:Con -> s:Ty -> x:Var{typing_var x g s} -> Tot (nf:Nf{typing_nf nf g s}) (decreases %[s;1])
+val ne2nf : g:Con -> s:Ty -> ne:Ne{typing_ne ne g s} -> Tot (nf:Nf{typing_nf nf g s}) (decreases %[s;0])
 
-(* TODO: Make the mutually recursive version work *)
-(* let rec nvar g s x = ne2nf g s (NEApp x (SEmp s)) *)
+let rec nvar g s x = ne2nf g s (NEApp x (SEmp s))
 
-(* and ne2nf g s xns = *)
-(*   match s with *)
-(*     | O -> NNeu xns *)
-(*     | A s t -> *)
-(*        match xns with *)
-(*          | NEApp x ns -> *)
-(*             match infer_var x g with *)
-(*               | Some r -> NLam s (ne2nf (s::g) t (NEApp (Vs x) (appSp (s::g) s t r (wkSp (s::g) s r (A s t) Vz ns) (nvar (s::g) s Vz)))) *)
-
-let rec ne2nf g s xns =
+and ne2nf g s xns =
   match s with
     | O -> NNeu xns
     | A s t ->
        match xns with
          | NEApp x ns ->
             match infer_var x g with
-              | Some r -> NLam s (ne2nf (s::g) t (NEApp (Vs x) (appSp (s::g) s t r (wkSp (s::g) s r (A s t) Vz ns) (ne2nf (s::g) s (NEApp Vz (SEmp s))))))
-
-let nvar g s x = ne2nf g s (NEApp x (SEmp s))
+              | Some r -> NLam s (ne2nf (s::g) t (NEApp (Vs x) (appSp (s::g) s t r (wkSp (s::g) s r (A s t) Vz ns) (nvar (s::g) s Vz))))
 
 
 (* Hereditary substitutions: substitute a variable by a normal form and
    normalize the result *)
 
-(* val napp : g:Con -> t:Ty -> s:Ty -> f:Nf{typing_nf f g (A s t)} -> u:Nf{typing_nf u g s} -> Tot (fu:Nf{typing_nf fu g t}) *)
-(* val substNf : g:Con -> s:Ty -> t:Ty -> a:Nf{typing_nf a g t} -> x:Var{typing_var x g s} -> b:Nf{typing_nf b (rmv g s x) s} -> Tot (c:Nf{typing_nf c (rmv g s x) t}) (decreases %[s;a]) *)
-(* val substSp : g:Con -> s:Ty -> t:Ty -> r:Ty -> a:Sp{typing_sp a g t r} -> x:Var{typing_var x g s} -> b:Nf{typing_nf b (rmv g s x) s} -> Tot (c:Sp{typing_sp c (rmv g s x) t r}) (decreases %[s;a]) *)
-(* val appNfSp : g:Con -> t:Ty -> s:Ty -> f:Nf{typing_nf f g s} -> sp:Sp{typing_sp sp g s t} -> Tot (c:Nf{typing_nf c g t}) (decreases %[s]) *)
+val napp : g:Con -> t:Ty -> s:Ty -> f:Nf{typing_nf f g (A s t)} -> u:Nf{typing_nf u g s} -> Tot (fu:Nf{typing_nf fu g t}) (decreases %[s])
+val substNf : g:Con -> s:Ty -> t:Ty -> a:Nf{typing_nf a g t} -> x:Var{typing_var x g s} -> b:Nf{typing_nf b (rmv g s x) s} -> Tot (c:Nf{typing_nf c (rmv g s x) t}) (decreases %[s;1;a])
+val substSp : g:Con -> s:Ty -> t:Ty -> r:Ty -> a:Sp{typing_sp a g t r} -> x:Var{typing_var x g s} -> b:Nf{typing_nf b (rmv g s x) s} -> Tot (c:Sp{typing_sp c (rmv g s x) t r}) (decreases %[s;1;a])
+val appNfSp : g:Con -> t:Ty -> s:Ty -> f:Nf{typing_nf f g s} -> sp:Sp{typing_sp sp g s t} -> Tot (c:Nf{typing_nf c g t}) (decreases %[s;0])
 
-(* TODO: Make the mutually recursive version work *)
-(* let rec napp g t s f u = *)
-(*   match f with *)
-(*     | NLam _ f -> substNf (s::g) s t f Vz u *)
+let rec napp g t s f u =
+  match f with
+    | NLam _ f -> substNf (s::g) s t f Vz u
 
-(* and substNf g s t a x b = *)
-(*   match t, a with *)
-(*     | A r t, NLam _ a -> NLam r (substNf (r::g) s t a (Vs x) (wkNf (r::(rmv g s x)) r s Vz b)) *)
-(*     | O, NNeu (NEApp y ts) -> *)
-(*        match infer_var y g with *)
-(*          | Some t -> *)
-(*             match eq g s t x y with *)
-(*               | Same s -> appNfSp (rmv g s x) O s b (substSp g s s O ts x b) *)
-(*               | Diff y -> NNeu (NEApp y (substSp g s t O ts x b)) *)
+and substNf g s t a x b =
+  match t, a with
+    | A r t, NLam _ a -> NLam r (substNf (r::g) s t a (Vs x) (wkNf (r::(rmv g s x)) r s Vz b))
+    | O, NNeu (NEApp y ts) ->
+       match infer_var y g with
+         | Some t ->
+            match eq g s t x y with
+              | Same s -> appNfSp (rmv g s x) O s b (substSp g s s O ts x b)
+              | Diff y -> NNeu (NEApp y (substSp g s t O ts x b))
 
-(* and substSp g s t r a x b = *)
-(*   match a with *)
-(*     | SEmp t -> SEmp t *)
-(*     | SExt c cs -> *)
-(*        match t with *)
-(*          | A t n -> SExt (substNf g s t c x b) (substSp g s n r cs x b) *)
-
-(* and appNfSp g t s f sp = *)
-(*   match sp with *)
-(*     | SEmp _ -> f *)
-(*     | SExt u us -> *)
-(*        match s with *)
-(*            | A r s -> appNfSp g t s (napp g s r f u) us *)
-
-type arg =
-  | SubstNf : g:Con -> s:Ty -> t:Ty -> a:Nf{typing_nf a g t} -> x:Var{typing_var x g s} -> b:Nf{typing_nf b (rmv g s x) s} -> arg
-  | SubstSp : g:Con -> s:Ty -> t:Ty -> r:Ty -> a:Sp{typing_sp a g t r} -> x:Var{typing_var x g s} -> b:Nf{typing_nf b (rmv g s x) s} -> arg
-  | AppNfSp : g:Con -> t:Ty -> s:Ty -> f:Nf{typing_nf f g s} -> sp:Sp{typing_sp sp g s t} -> arg
-
-type res = | RNf : nf:Nf -> res | RSp : sp:Sp -> res
-
-val hs : a:arg -> b:res{
-                      (is_SubstNf a ==>
-                         (is_RNf b /\ (typing_nf (RNf.nf b) (rmv (SubstNf.g a) (SubstNf.s a) (SubstNf.x a)) (SubstNf.t a)))) /\
-                      (is_SubstSp a ==>
-                         (is_RSp b /\ (typing_sp (RSp.sp b) (rmv (SubstSp.g a) (SubstSp.s a) (SubstSp.x a)) (SubstSp.t a) (SubstSp.r a)))) /\
-                      (is_AppNfSp a ==>
-                         (is_RNf b /\ (typing_nf (RNf.nf b) (AppNfSp.g a) (AppNfSp.t a))))
-                      }
-
-val ty_measure : Ty -> Tot nat
-let rec ty_measure = function
-  | O -> 0
-  | A a b -> (ty_measure a) + (ty_measure b) + 1
-
-val nf_measure : Nf -> Tot nat
-val ne_measure : Ne -> Tot nat
-val sp_measure : Sp -> Tot nat
-let rec nf_measure = function
-  | NLam _ nf -> (nf_measure nf) + 1
-  | NNeu ne -> (ne_measure ne) + 1
-and ne_measure = function
-  | NEApp _ sp -> (sp_measure sp) + 1
-and sp_measure = function
-  | SEmp _ -> 0
-  | SExt nf sp -> (nf_measure nf) + (sp_measure sp) + 1
-
-(* val measure : arg -> Tot nat *)
-(* let measure = function *)
-(*   | SubstNf g s t a x b -> (s, a, 0/1/2) *)
-(*   | SubstSp g s t r a x b -> (s, a, 0/1/2) *)
-(*   | AppNfSp g t s f sp -> (s, 0/1/2) *)
-
-(* let rec order a1 a2 = *)
-(*   match a1 with *)
-(*     | SubstNf g1 s1 t1 a1 x1 b1 -> *)
-(*        (match a2 with *)
-(*           | SubstNf g2 s2 t2 a2 x2 b2 -> *)
-(*              (ty_measure s1 < ty_measure s2) || *)
-(*                ((ty_measure s1 = ty_measure s2) && (nf_measure a1 < nf_measure a2)) *)
-(*           | SubstSp g2 s2 t2 r2 a2 x2 b2 -> *)
-(*              (ty_measure s1 < ty_measure s2) || *)
-(*                ((ty_measure s1 = ty_measure s2) && (nf_measure a1 < sp_measure a2)) *)
-(*           | AppNfSp g2 t2 s2 f2 sp2 -> *)
-(*              (ty_measure s1 < ty_measure s2) || *)
-(*                ((ty_measure s1 = ty_measure s2) && (nf_measure a1 < sp_measure a2)) *)
-(*        ) *)
-(*     | SubstSp g1 s1 t1 r1 a1 x1 b1 -> *)
-(*        (match a2 with *)
-(*           | SubstNf g2 s2 t2 a2 x2 b2 -> *)
-(*           | SubstSp g2 s2 t2 r2 a2 x2 b2 -> *)
-(*           | AppNfSp g2 t2 s2 f2 sp2 -> *)
-(*        ) *)
-(*     | AppNfSp g1 t1 s1 f1 sp1 -> *)
-(*        (match a2 with *)
-(*           | SubstNf g2 s2 t2 a2 x2 b2 -> *)
-(*           | SubstSp g2 s2 t2 r2 a2 x2 b2 -> *)
-(*           | AppNfSp g2 t2 s2 f2 sp2 -> *)
-(*        ) *)
-
-
-let rec hs a =
+and substSp g s t r a x b =
   match a with
-    | SubstNf g s t a x b ->
-       (match t, a with
-          | A r t, NLam _ a ->
-             (* SubstNf the same, type of the variable the same, the nf decreases *)
-             (match hs (SubstNf (r::g) s t a (Vs x) (wkNf (r::(rmv g s x)) r s Vz b)) with
-                | RNf nf -> RNf (NLam r nf))
-          | O, NNeu (NEApp y ts) ->
-             match infer_var y g with
-               | Some t ->
-                  match eq g s t x y with
-                    | Same s ->
-                       (* From SubstNf to SubstSp, type of the variable the same, the spine is smaller that the neutral term *)
-                       (match hs (SubstSp g s s O ts x b) with
-                          (* From SubstNf to AppNfSp, the type of the variable is the type of the normal form we apply to the spine *)
-                          | RSp sp -> hs (AppNfSp (rmv g s x) O s b sp))
-                    | Diff y ->
-                       (* From SubstNf to SubstSp, type of the variable the same, the spine is smaller that the neutral term *)
-                       (match hs (SubstSp g s t O ts x b) with
-                          | RSp sp -> RNf (NNeu (NEApp y sp))))
-    | SubstSp g s t r a x b ->
-       (match a with
-          | SEmp t -> RSp (SEmp t)
-          | SExt c cs ->
-             match t with
-               | A t n ->
-                  (* 1. From SubstSp to SubstNf, type of the variable the same, the nf is smaller than the spine *)
-                  (* 2. SubstSp the same, type of the variable the same, the spine gets smaller *)
-                  (match hs (SubstNf g s t c x b), hs (SubstSp g s n r cs x b) with
-                     | RNf nf, RSp sp -> RSp (SExt nf sp)))
-    | AppNfSp g t s f sp ->
-       (match sp with
-          | SEmp _ -> RNf f
-          | SExt u us ->
-             match s, f with
-               | A r s, NLam _ f ->
-                  (* From AppNfSp to SubstNf, the type of the normal form that is applied is greater than the type of the variable that is substituted *)
-                  (match hs (SubstNf (r::g) r s f Vz u) with
-                     (* AppNfSp the same, the type of the nf which is substituted becomes smaller *)
-                     | RNf nf -> hs (AppNfSp g t s nf us)))
+    | SEmp t -> SEmp t
+    | SExt c cs ->
+       match t with
+         | A t n -> SExt (substNf g s t c x b) (substSp g s n r cs x b)
 
-
-(* (\* val napp : g:Con -> t:Ty -> s:Ty -> f:Nf{typing_nf f g (A s t)} -> u:Nf{typing_nf u g s} -> Tot (fu:Nf{typing_nf fu g t}) *\) *)
-(* (\* let napp g s r f u = *\) *)
-(* (\*   match f with *\) *)
-(* (\*     | NLam _ f -> substNf (r::g) r s f Vz u *\) *)
+and appNfSp g t s f sp =
+  match sp with
+    | SEmp _ -> f
+    | SExt u us ->
+       match s with
+           | A r s -> appNfSp g t s (napp g s r f u) us
