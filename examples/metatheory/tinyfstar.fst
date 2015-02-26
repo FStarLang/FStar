@@ -186,9 +186,10 @@ type heap = loc -> Tot value
 
 (* CH: TODO: we decided to get rid of contexts and add separate step
    rules instead *)
+(* CH: With the addition of IS-ECtx (which we should also add here)
+   context might save us even more? *)
 
 type ectx_ehole =
-  | CeeTop : ectx_ehole
   | CeeAppL : e2:exp -> ectx_ehole
   | CeeAppR : e1:value -> ectx_ehole
   | CeeIf0 : e1:exp -> e2:exp -> ectx_ehole
@@ -196,7 +197,6 @@ type ectx_ehole =
 val plug_e_in_e : e:exp -> ee:ectx_ehole -> Tot exp
 let plug_e_in_e e ee =
   match ee with
-  | CeeTop -> e
   | CeeAppL e2 -> EApp e e2
   | CeeAppR e1 -> EApp e1 e
   | CeeIf0 e1 e2 -> EIf0 e e1 e2
@@ -216,7 +216,6 @@ type cctx =
   | CcWP : m:eff -> t:typ -> cctx
 
 type tctx_thole =
-  | CttTop : tctx_thole
   | CttArrT : c:cmp -> tctx_thole
   | CttArrC : t:typ -> cc:cctx -> tctx_thole
   | CttTAppL : t2:typ -> tctx_thole
@@ -229,7 +228,6 @@ type tctx_thole =
 val plug_t_in_t : t:typ -> tt:tctx_thole -> Tot typ
 let plug_t_in_t t tt =
   match tt with
-  | CttTop -> t
   | CttArrT c -> TArr t c
   | CttArrC t1 (CcT m wp) -> TArr t1 (Cmp m t wp)
   | CttArrC t1 (CcWP m t2) -> TArr t1 (Cmp m t2 t)
