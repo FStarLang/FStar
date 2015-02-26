@@ -64,7 +64,7 @@ let path_of_ns mlenv ns =
     *)
     in match List.tryPick (fun sns -> if insupport (sns, ns) then Some sns else None) outmod with
     | None -> outsupport ((fst mlenv.mle_name) @ [snd mlenv.mle_name], ns)
-    | Some sns -> "Fstar" :: "Support" :: ns
+    | Some sns -> "Support" :: ns
 
 let mlpath_of_lident (mlenv : mlenv) (x : lident) : mlpath =
     let ns = x.ns in
@@ -743,7 +743,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
        | Inr x, _ -> 
         let tl = type_vars x.sort.n in
         let hd = if is_null_binder (Inr x, false) then None else Some x.v in
-        hd::tl
+        hd::[] (*tl*)
        | _ -> [])) @ (comp_vars c.n)
     | Typ_lam(_,t) | Typ_refine({sort=t}, _) | Typ_app(t, _) 
     | Typ_ascribed(t,_)

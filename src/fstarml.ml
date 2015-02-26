@@ -2,47 +2,47 @@
     let process_args _20038 =
       match _20038 with
       | () ->
-          let file_list = Fstar.Support.Microsoft.FStar.Util.mk_ref [] in
+          let file_list = Support.Microsoft.FStar.Util.mk_ref [] in
           let res =
-            Fstar.Support.Microsoft.FStar.Getopt.parse_cmdline
+            Support.Microsoft.FStar.Getopt.parse_cmdline
               (Microsoft_FStar_Options.specs ())
               (fun i ->
                  file_list :=
-                   Fstar.Support.List.append
-                     (Fstar.Support.ST.read file_list) [ i ]) in
+                   Support.List.append
+                     (Support.ST.read file_list) [ i ]) in
           let _20044 =
             (match res with
-             | Fstar.Support.Microsoft.FStar.Getopt.GoOn ->
-                 Fstar.Support.Prims.ignore
+             | Support.Microsoft.FStar.Getopt.GoOn ->
+                 Support.Prims.ignore
                    (Microsoft_FStar_Options.set_fstar_home ())
              | _ -> ())
-          in (res, (Fstar.Support.ST.read file_list))
+          in (res, (Support.ST.read file_list))
       
     let cleanup _20045 =
       match _20045 with
       | () ->
           let _20046 = Microsoft_FStar_ToSMT_Z3.cleanup ()
-          in Fstar.Support.Microsoft.FStar.Util.kill_all ()
+          in Support.Microsoft.FStar.Util.kill_all ()
       
-    let has_prims_cache l = Fstar.Support.List.mem "Prims.cache" l
+    let has_prims_cache l = Support.List.mem "Prims.cache" l
       
     let go _20048 =
       let finished mods =
-        if Fstar.Support.ST.read Microsoft_FStar_Options.silent
+        if Support.ST.read Microsoft_FStar_Options.silent
         then ()
         else
           (let msg =
-             if Fstar.Support.ST.read Microsoft_FStar_Options.verify
+             if Support.ST.read Microsoft_FStar_Options.verify
              then "Verified"
              else
-               if Fstar.Support.ST.read Microsoft_FStar_Options.pretype
+               if Support.ST.read Microsoft_FStar_Options.pretype
                then "Lax type-checked"
                else "Parsed and desugared"
            in
-             Fstar.Support.List.iter
+             Support.List.iter
                (fun m ->
-                  Fstar.Support.Microsoft.FStar.Util.print_string
-                    (Fstar.Support.Microsoft.FStar.Util.format2
+                  Support.Microsoft.FStar.Util.print_string
+                    (Support.Microsoft.FStar.Util.format2
                        "%s module: %s\n" msg
                        (Microsoft_FStar_Absyn_Syntax.text_of_lid
                           m.Microsoft_FStar_Absyn_Syntax.name)))
@@ -52,17 +52,17 @@
         match _20055 with
         | (res, filenames) ->
             (match res with
-             | Fstar.Support.Microsoft.FStar.Getopt.Help ->
+             | Support.Microsoft.FStar.Getopt.Help ->
                  Microsoft_FStar_Options.display_usage
                    (Microsoft_FStar_Options.specs ())
-             | Fstar.Support.Microsoft.FStar.Getopt.Die msg ->
-                 Fstar.Support.Microsoft.FStar.Util.print_string msg
-             | Fstar.Support.Microsoft.FStar.Getopt.GoOn ->
+             | Support.Microsoft.FStar.Getopt.Die msg ->
+                 Support.Microsoft.FStar.Util.print_string msg
+             | Support.Microsoft.FStar.Getopt.GoOn ->
                  let _20060 =
                    if
                      not
-                       (Fstar.Support.Option.isNone
-                          (Fstar.Support.ST.read Microsoft_FStar_Options.
+                       (Support.Option.isNone
+                          (Support.ST.read Microsoft_FStar_Options.
                              codegen))
                    then Microsoft_FStar_Options.pretype := true
                    else () in
@@ -73,11 +73,11 @@
                  let fmods =
                    Microsoft_FStar_Parser_Driver.parse_files filenames in
                  let solver =
-                   if Fstar.Support.ST.read Microsoft_FStar_Options.verify
+                   if Support.ST.read Microsoft_FStar_Options.verify
                    then Microsoft_FStar_ToSMT_Encode.solver
                    else Microsoft_FStar_ToSMT_Encode.dummy in
                  let fmods =
-                   if Fstar.Support.ST.read Microsoft_FStar_Options.pretype
+                   if Support.ST.read Microsoft_FStar_Options.pretype
                    then
                      Microsoft_FStar_Tc_Tc.check_modules solver
                        Microsoft_FStar_ToSMT_Encode.dummy fmods
@@ -85,28 +85,28 @@
 
              let _20222 =
                if
-                 (Fstar.Support.ST.read Microsoft_FStar_Options.codegen) =
+                 (Support.ST.read Microsoft_FStar_Options.codegen) =
                    (Some "OCaml")
                then
-                 Fstar.Support.Prims.try_with
+                 Support.Prims.try_with
                    (fun _20211 ->
                       match _20211 with
                       | () ->
                           let mllib =
                             Microsoft_FStar_Backends_OCaml_ASTTrans.mlmod_of_fstars
-                              (Fstar.Support.List.tail fmods) in
+                              (Support.List.tail fmods) in
                           let doc =
                             Microsoft_FStar_Backends_OCaml_Code.doc_of_mllib mllib
                           in 
-                            List.iter (fun (n,d) -> Fstar.Support.Microsoft.FStar.Util.write_file (Microsoft_FStar_Options.prependOutputDir (n^".ml")) (FSharp_Format.pretty 120 d)) doc)
+                            List.iter (fun (n,d) -> Support.Microsoft.FStar.Util.write_file (Microsoft_FStar_Options.prependOutputDir (n^".ml")) (FSharp_Format.pretty 120 d)) doc)
                    (fun _20210 ->
                       match _20210 with
                       | Microsoft_FStar_Backends_OCaml_ASTTrans.OCamlFailure (rg, error) ->
                           let _20217 =
-                            Fstar.Support.Microsoft.FStar.Util.print_string
-                              (Fstar.Support.Microsoft.FStar.Util.format2
+                            Support.Microsoft.FStar.Util.print_string
+                              (Support.Microsoft.FStar.Util.format2
                                  "OCaml Backend Error: %s %s\n"
-                                 (Fstar.Support.Microsoft.FStar.Range.
+                                 (Support.Microsoft.FStar.Range.
                                     string_of_range rg)
                                  (Microsoft_FStar_Backends_OCaml_ASTTrans.string_of_error error))
                           in exit 1)
@@ -116,23 +116,23 @@
                  let _20065 = finished fmods in
                  let errs = Microsoft_FStar_Tc_Errors.get_err_count ()
                  in
-                   if Fstar.Support.ST.read Microsoft_FStar_Options.verify
+                   if Support.ST.read Microsoft_FStar_Options.verify
                    then
                      if errs > 0
                      then
                        (let _20067 =
-                          Fstar.Support.Microsoft.FStar.Util.fprint1
+                          Support.Microsoft.FStar.Util.fprint1
                             "Error: %s errors were reported (see above)\n"
-                            (Fstar.Support.Microsoft.FStar.Util.string_of_int
+                            (Support.Microsoft.FStar.Util.string_of_int
                                errs)
                         in exit 1)
                      else
                        if
                          not
-                           (Fstar.Support.ST.read Microsoft_FStar_Options.
+                           (Support.ST.read Microsoft_FStar_Options.
                               silent)
                        then
-                         Fstar.Support.Microsoft.FStar.Util.print_string
+                         Support.Microsoft.FStar.Util.print_string
                            "All verification conditions discharged successfully\n"
                        else ()
                    else ())
@@ -140,7 +140,7 @@
     let x =
       Printexc.record_backtrace true;
       Gc.set { (Gc.get()) with Gc.minor_heap_size = 1048576; Gc.major_heap_increment = 4194304; Gc.space_overhead = 150; };
-      Fstar.Support.Prims.try_with
+      Support.Prims.try_with
         (fun _20069 ->
            match _20069 with
            | () -> let _20077 = go () in let _20078 = cleanup () in exit 0)
@@ -156,7 +156,7 @@
                  if
                    not
                      ((Microsoft_FStar_Absyn_Util.handleable e) ||
-                        (Fstar.Support.ST.read Microsoft_FStar_Options.
+                        (Support.ST.read Microsoft_FStar_Options.
                            trace_error))
                  then
                    Printf.printf "Unexpected error %s:\n%s\n" (Printexc.to_string e) (Printexc.get_backtrace())

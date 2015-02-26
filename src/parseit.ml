@@ -1,5 +1,5 @@
-open Fstar.Support.Microsoft.FStar
-open Fstar.Support.Microsoft.FStar.Util
+open Support.Microsoft.FStar
+open Support.Microsoft.FStar.Util
 open Microsoft_FStar_Absyn_Syntax
 open Lexing
 
