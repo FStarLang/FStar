@@ -1,8 +1,8 @@
 module Bug138
 
 
-val foo : l:list int -> Tot int
-val bar : l:list int -> Tot int
+val foo : l:list int -> Tot int (decreases %[l;0])
+val bar : l:list int -> Tot int (decreases %[l;1])
 let rec foo l = match l with
     | [] -> 0
     | x::xs -> bar xs
