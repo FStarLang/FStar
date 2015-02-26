@@ -22,9 +22,46 @@ open Microsoft.FStar.Tc
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Absyn.Syntax
-open Microsoft.FStar.Tc.Rel2
-type guard_t = Rel2.guard_t
-type guard_formula = Rel2.guard_formula
+
+(* relations on types, kinds, etc. *)
+type rel = 
+  | EQ 
+  | SUB
+  | SUBINV  (* sub-typing/sub-kinding, inverted *)
+
+type problem<'a,'b> = {               //Try to prove: lhs rel rhs ~> guard        
+    lhs:'a;
+    relation:rel;   
+    rhs:'a;
+    element:option<'b>;               //where, guard is a predicate on this term (which appears free in/is a subterm of the guard) 
+    logical_guard:(typ * typ);        //the condition under which this problem is solveable
+    scope:binders;                    //the set of names permissible in the guard of this formula
+    reason: list<string>;             //why we generated this problem, for error reporting
+    loc: Range.range;                 //and the source location where this arose
+    rank: option<int>;
+}
+
+type prob = 
+  | KProb of problem<knd,unit>
+  | TProb of problem<typ,exp>
+  | EProb of problem<exp,unit>
+  | CProb of problem<comp,unit>
+
+type probs = list<prob>
+
+type guard_formula = 
+  | Trivial
+  | NonTrivial of formula
+
+type deferred = {
+  carry:   list<(string * prob)>;
+  slack:   list<(bool * typ)>;
+}
+
+type guard_t = {
+  guard_f:  guard_formula;
+  deferred: deferred;
+}
 
 val new_kvar: Range.range -> binders -> knd * uvar_k
 val new_tvar: Range.range -> binders -> knd -> typ * typ
@@ -39,8 +76,9 @@ val imp_guard: guard_t -> guard_t -> guard_t
 val guard_of_guard_formula: guard_formula -> guard_t
 val guard_f: guard_t -> guard_formula
 val guard_to_string : env -> guard_t -> string
+val solve_deferred_constraints: env -> guard_t -> guard_t
 val try_discharge_guard: env -> guard_t -> (bool * list<string>)
-
+val unrefine: env -> typ -> typ
 val try_keq: env -> knd -> knd -> option<guard_t>
 val keq : env -> option<typ> -> knd -> knd -> guard_t
 val subkind: env -> knd -> knd -> guard_t
@@ -49,5 +87,5 @@ val teq : env -> typ -> typ -> guard_t
 val try_subtype: env -> typ -> typ -> option<guard_t>
 val subtype: env -> typ -> typ -> guard_t
 val subtype_fail: env -> typ -> typ -> 'a
-val trivial_subtype: env -> option<exp> -> typ -> typ -> unit
 val sub_comp: env -> comp -> comp -> option<guard_t>
+val simplify_guard: env -> guard_t -> guard_t

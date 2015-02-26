@@ -24,9 +24,6 @@ open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Tc.Rel
 open Microsoft.FStar.Absyn.Syntax
 
-val t_bool : typ
-val t_unit : typ
-val typing_const : env -> sconst -> typ
 val new_kvar : env -> knd          
 val new_tvar : env -> knd -> typ
 val new_evar : env -> typ -> exp
@@ -38,33 +35,38 @@ val decorated_pattern_as_exp: pat -> list<either_var> * exp
 val decorated_pattern_as_typ: pat -> list<either_var> * typ
 val decorated_pattern_as_either: pat -> list<either_var> * Util.either<typ,exp>
 
-val generalize: bool -> env -> list<(lbname*exp*comp)> -> (list<(lbname*exp*comp)>)
 val maybe_instantiate : env -> exp -> typ -> (exp * typ)
 val destruct_comp: comp_typ -> (typ * typ * typ)
 val destruct_arrow_kind: env -> typ -> knd -> args -> (args * binders * knd)
 val mk_basic_dtuple_type: env -> int -> typ
-val extract_lb_annotation: bool -> env -> typ -> exp -> (exp * typ)
+val extract_lb_annotation: env -> typ -> exp -> typ*bool
 
-type comp_with_binder = option<Env.binding> * comp
-val is_pure: env -> comp -> bool
+(* most operations on computations are lazy *)
+type lcomp_with_binder = option<Env.binding> * lcomp
+val lcomp_of_comp: comp -> lcomp
+val subst_lcomp: subst -> lcomp -> lcomp
+val is_pure_effect: env -> lident -> bool
 val return_value: env -> typ -> exp -> comp
-val bind: env -> option<exp> -> comp -> comp_with_binder -> comp
-val bind_cases: env -> typ -> list<(typ * comp)> -> comp
-
-val weaken_result_typ: env -> exp -> comp -> typ -> exp * comp * guard_t
-val strengthen_precondition: option<(unit -> string)> -> env -> exp -> comp -> guard_t -> comp*guard_t
+val bind: env -> option<exp> -> lcomp -> lcomp_with_binder -> lcomp
+val bind_cases: env -> typ -> list<(typ * lcomp)> -> lcomp
+val weaken_result_typ: env -> exp -> lcomp -> typ -> exp * lcomp * guard_t
+val strengthen_precondition: option<(unit -> string)> -> env -> exp -> lcomp -> guard_t -> lcomp*guard_t
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
-val weaken_precondition: env -> comp -> guard_formula -> comp
-val maybe_assume_result_eq_pure_term: env -> exp -> comp -> comp
-val lift_pure: env -> typ -> formula -> comp (* with t as a result type *)
-val close_comp: env -> list<binding> -> comp -> comp
+val weaken_precondition: env -> lcomp -> guard_formula -> lcomp
+val maybe_assume_result_eq_pure_term: env -> exp -> lcomp -> lcomp
+val close_comp: env -> list<binding> -> lcomp -> lcomp
+val refresh_comp_label: env -> bool -> lcomp -> lcomp
+val check_top_level: env -> guard_t -> lcomp -> bool*comp
+
+(* Except these two, which require fully evaluated comp types *)
 val check_comp: env -> exp -> comp -> comp -> exp * comp * guard_t
+val generalize: bool -> env -> list<(lbname*exp*comp)> -> (list<(lbname*exp*comp)>)
+
 val force_trivial: env -> guard_t -> unit
 val discharge_guard: env -> guard_t -> unit
 val label: string -> Range.range -> typ -> typ
 val label_guard: string -> Range.range -> guard_formula -> guard_formula
-val refresh_comp_label: env -> bool -> comp -> comp
-val check_top_level: env -> guard_t -> comp -> bool
-
-val refine_data_type: env -> lident -> binders -> typ -> typ
 val short_circuit_guard: Util.either<typ,exp> -> args -> guard_formula
+
+val force_tk: syntax<'a,'b> -> 'b
+val tks_of_args: args -> list<(Util.either<knd,typ> * aqual)>

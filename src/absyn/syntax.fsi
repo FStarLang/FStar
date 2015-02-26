@@ -67,6 +67,10 @@ type sconst =
   | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
 
 type memo<'a> = ref<option<'a>>
+type arg_qualifier =
+    | Implicit
+    | Equality
+type aqual = option<arg_qualifier>
 type typ' =  
   | Typ_btvar    of btvar
   | Typ_const    of ftvar 
@@ -77,11 +81,11 @@ type typ' =
   | Typ_ascribed of typ * knd                                (* t <: k *)
   | Typ_meta     of meta_t                                   (* Not really in the type language; a way to stash convenient metadata with types *)
   | Typ_uvar     of uvar_t * knd                             (* Unification variables, not present after 1st round tc *)
-  | Typ_delayed  of typ * subst_t * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
+  | Typ_delayed  of either<(typ * subst_t), (unit -> typ)> * memo<typ>                  (* A delayed substitution---always force it before inspecting the first arg *)
   | Typ_unknown                                              (* not present after 1st round tc *)
-and arg = either<typ,exp> * bool                             (* bool marks an explicitly provided implicit arg *)
+and arg = either<typ,exp> * aqual                            (* marks an explicitly provided implicit arg *)
 and args = list<arg>
-and binder = either<btvar,bvvar> * bool                      (* f:   #n:nat -> vector n int -> T; f #17 v *)
+and binder = either<btvar,bvvar> * aqual                     (* f:   #n:nat -> vector n int -> T; f #17 v *)
 and binders = list<binder>                                   (* bool marks implicit binder *)
 and typ = syntax<typ',knd>                                   (* A type is a typ' + its kind as metadata *)
 and comp_typ = {
@@ -146,7 +150,7 @@ and pat' =
   | Pat_twild    of btvar
   | Pat_dot_term of bvvar * exp
   | Pat_dot_typ  of btvar * typ
-and pat = withinfo_t<pat',either<knd,typ>>                (* the meta-data is a typ, except for Pat_dot_typ and Pat_tvar, where it is a kind (not strictly needed) *)
+and pat = withinfo_t<pat',option<either<knd,typ>>>                (* the meta-data is a typ, except for Pat_dot_typ and Pat_tvar, where it is a kind (not strictly needed) *)
 and knd' =
   | Kind_type
   | Kind_effect
@@ -177,7 +181,7 @@ and uvars = {
 }
 and syntax<'a,'b> = {
     n:'a;
-    tk:'b;
+    tk:memo<'b>;
     pos:Range.range;
     fvs:memo<freevars>;
     uvs:memo<uvars>;
@@ -189,10 +193,16 @@ and fvvar = var<typ>
 
 type ktec = 
     | K of knd
-    | T of typ
+    | T of typ * option<knd>
     | E of exp
     | C of comp
 
+type lcomp = {
+    eff_name: lident;
+    res_typ: typ;
+    cflags: list<cflags>;
+    comp: unit -> comp //a lazy computation
+    }
 type either_var = either<btvar, bvvar>
 type freevars_l = list<either_var>
 type formula = typ
@@ -216,6 +226,7 @@ type qualifier =
   | RecordConstructor of list<ident>                 (* unmangled field names *)
   | ExceptionConstructor
   | Effect 
+  | HasMaskedEffect
 
 type tycon = lident * binders * knd
 type monad_abbrev = {
@@ -257,7 +268,7 @@ and sigelt =
   | Sig_datacon        of lident * typ * tycon * list<qualifier> * Range.range  (* second lident is the name of the type this constructs *)
   | Sig_val_decl       of lident * typ * list<qualifier> * Range.range 
   | Sig_assume         of lident * formula * list<qualifier> * Range.range 
-  | Sig_let            of letbindings * Range.range * list<lident> * bool       (* flag indicates masked effect *)
+  | Sig_let            of letbindings * Range.range * list<lident> * list<qualifier>
   | Sig_main           of exp * Range.range 
   | Sig_bundle         of list<sigelt> * Range.range * list<lident> (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
   | Sig_monads         of list<monad_decl> * monad_lat * Range.range * list<lident>
@@ -314,43 +325,45 @@ val mk_Kind_uvar: uvar_k_app -> range -> knd
 val mk_Kind_lam: (binders * knd) -> range -> knd
 
 val mk_Typ_unknown: typ
-val mk_Typ_btvar: btvar -> knd -> range -> typ
-val mk_Typ_const: ftvar -> knd -> range -> typ
-val mk_Typ_fun: (binders * comp) -> knd -> range -> typ
-//val mk_Typ_fun': (binders * comp) -> knd -> range -> typ
-val mk_Typ_refine: (bvvar * formula) -> knd -> range -> typ
-val mk_Typ_app: (typ * args) -> knd -> range -> typ
-val mk_Typ_app': (typ * args) -> knd -> range -> typ
-val mk_Typ_lam: (binders * typ) -> knd -> range -> typ
-val mk_Typ_lam': (binders * typ) -> knd -> range -> typ
-val mk_Typ_ascribed': (typ * knd) -> knd -> range -> typ
+val mk_Typ_btvar: btvar -> option<knd> -> range -> typ
+val mk_Typ_const: ftvar -> option<knd> -> range -> typ
+val mk_Typ_fun: (binders * comp) -> option<knd> -> range -> typ
+//val mk_Typ_fun': (binders * comp) -> option<knd> -> range -> typ
+val mk_Typ_refine: (bvvar * formula) -> option<knd> -> range -> typ
+val mk_Typ_app: (typ * args) -> option<knd> -> range -> typ
+val mk_Typ_app': (typ * args) -> option<knd> -> range -> typ
+val mk_Typ_lam: (binders * typ) -> option<knd> -> range -> typ
+val mk_Typ_lam': (binders * typ) -> option<knd> -> range -> typ
+val mk_Typ_ascribed': (typ * knd) -> option<knd> -> range -> typ
 val mk_Typ_ascribed: (typ * knd) -> range -> typ
-val mk_Typ_meta': meta_t -> knd -> range -> typ
+val mk_Typ_meta': meta_t -> option<knd> -> range -> typ
 val mk_Typ_meta: meta_t -> typ
-val mk_Typ_uvar': (uvar_t * knd) -> knd -> range -> typ
+val mk_Typ_uvar': (uvar_t * knd) -> option<knd> -> range -> typ
 val mk_Typ_uvar: (uvar_t * knd) -> range -> typ
-val mk_Typ_delayed: (typ * subst_t * memo<typ>) -> knd -> range -> typ
-val extend_typ_app: (typ * arg) -> knd -> range -> typ
+val mk_Typ_delayed: (typ * subst_t * memo<typ>) -> option<knd> -> range -> typ
+val mk_Typ_delayed': either<(typ * subst_t), (unit -> typ)> -> option<knd> -> range -> typ
+
+val extend_typ_app: (typ * arg) -> option<knd> -> range -> typ
 
 val mk_Total: typ -> comp
 val mk_Comp: comp_typ -> comp
 
-val mk_Exp_bvar: bvvar -> typ -> range -> exp
-val mk_Exp_fvar: (fvvar * bool) -> typ -> range -> exp 
-val mk_Exp_constant: sconst -> typ -> range -> exp
-val mk_Exp_abs: (binders * exp) -> typ -> range -> exp
-val mk_Exp_abs': (binders * exp) -> typ -> range -> exp
-val mk_Exp_app: (exp * args) -> typ -> range -> exp
-val mk_Exp_app': (exp * args) -> typ -> range -> exp
-val mk_Exp_app_flat: (exp * args) -> typ -> range -> exp
-val mk_Exp_match: (exp * list<(pat * option<exp> * exp)>) -> typ -> range -> exp
-val mk_Exp_ascribed': (exp * typ) -> typ -> range -> exp
+val mk_Exp_bvar: bvvar -> option<typ> -> range -> exp
+val mk_Exp_fvar: (fvvar * bool) -> option<typ> -> range -> exp 
+val mk_Exp_constant: sconst -> option<typ> -> range -> exp
+val mk_Exp_abs: (binders * exp) -> option<typ> -> range -> exp
+val mk_Exp_abs': (binders * exp) -> option<typ> -> range -> exp
+val mk_Exp_app: (exp * args) -> option<typ> -> range -> exp
+val mk_Exp_app': (exp * args) -> option<typ> -> range -> exp
+val mk_Exp_app_flat: (exp * args) -> option<typ> -> range -> exp
+val mk_Exp_match: (exp * list<(pat * option<exp> * exp)>) -> option<typ> -> range -> exp
+val mk_Exp_ascribed': (exp * typ) -> option<typ> -> range -> exp
 val mk_Exp_ascribed: (exp * typ) -> range -> exp
-val mk_Exp_let: (letbindings * exp) -> typ -> range -> exp
-val mk_Exp_uvar': (uvar_e * typ) -> typ -> range -> exp
+val mk_Exp_let: (letbindings * exp) -> option<typ> -> range -> exp
+val mk_Exp_uvar': (uvar_e * typ) -> option<typ> -> range -> exp
 val mk_Exp_uvar: (uvar_e * typ) -> range -> exp
-val mk_Exp_delayed: (exp * subst_t * memo<exp>) -> typ -> range -> exp
-val mk_Exp_meta' : meta_e -> typ -> range -> exp
+val mk_Exp_delayed: (exp * subst_t * memo<exp>) -> option<typ> -> range -> exp
+val mk_Exp_meta' : meta_e -> option<typ> -> range -> exp
 val mk_Exp_meta: meta_e -> exp
 
 //val mk_subst: subst -> subst
@@ -363,11 +376,14 @@ val null_t_binder: knd -> binder
 val null_v_binder: typ -> binder
 val targ: typ -> arg
 val varg: exp -> arg
+val is_null_pp: bvdef<'a> -> bool 
 val is_null_bvd: bvdef<'a> -> bool
 val is_null_bvar: bvar<'a,'b> -> bool
 val is_null_binder: binder -> bool
 val argpos: arg -> Range.range
 val pat_vars: pat -> list<either<btvdef,bvvdef>>
+val is_implicit: aqual -> bool
+val as_implicit: bool -> aqual
 
 
 

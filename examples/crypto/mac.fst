@@ -23,6 +23,11 @@
 
 
 
+(* module List *)
+(* assume val find: a:Type *)
+(*         -> f:(a -> Tot bool) *)
+(*         -> list a *)
+(*         -> Tot (option (x:a{f x})) *)
 
 
 

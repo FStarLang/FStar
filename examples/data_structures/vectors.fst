@@ -67,3 +67,16 @@ let rec find f n v = match v with
     if f hd
     then Some hd
     else find f tl
+
+val zip': #n:nat -> vector 'a n -> vector 'b n -> Tot (vector ('a * 'b) n)
+let rec zip' n v1 v2 = match v1 with
+  | VNil -> VNil
+  | VCons a tl1 -> 
+    let VCons b tl2 = v2 in  
+    VCons (a, b) (zip' tl1 tl2)
+
+
+(* val zip: #n:nat -> vector 'a n -> vector 'b n -> Tot (vector ('a * 'b) n) *)
+(* let rec zip n v1 v2 = match v1, v2 with *)
+(*   | VNil, _ -> VNil *)
+(*   | VCons a tl1, VCons b tl2 -> VCons (a, b) (zip tl1 tl2) *)

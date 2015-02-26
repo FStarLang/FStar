@@ -24,7 +24,7 @@ val with_mode:  a:Type
              -> req_f:(heap -> Type)
              -> ens_f:(heap -> a -> heap -> Type)
              -> m:mode
-             -> f:(unit -> ST a req_f ens_f)
+             -> =f:(unit -> ST a req_f ens_f)
              -> ST a 
                    (requires (fun h0 -> 
                           req_f (Heap.upd h0 moderef m) 
@@ -95,7 +95,7 @@ logic type proj_ok (a:Type) (w:wire a) (p:prin) (cur:mode) =
     Map.contains w p /\ 
     (if is_Sec cur.p_or_s
      then Set.mem p cur.prins
-     else Set.equal cur.prins (Set.singleton p))
+     else Set.Equal cur.prins (Set.singleton p))
 
 kind Pre = mode -> Type
 kind Post (a:Type) = mode -> a -> mode -> Type
@@ -111,7 +111,7 @@ let project_wire (a:Type) (w:wire a) (p:prin) =
   let cur = get_mode () in
   (match cur.p_or_s with
    | Sec -> assert (Set.mem p cur.prins)
-   | _ -> assert (Set.equal cur.prins (Set.singleton p)));
+   | _ -> assert (Set.Equal cur.prins (Set.singleton p)));
   Map.sel w p
 
 

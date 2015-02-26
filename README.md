@@ -3,7 +3,7 @@ F*: An ML-like language with a type system for program verification
 
 ### F\* website
 
-More information on F\* can be found on www.fstar-lang.org
+More information on F\* can be found at www.fstar-lang.org
 
 ### Installation
 
@@ -15,7 +15,7 @@ See [INSTALL.md]
 
 The [F\* tutorial] provides a first taste of verified programming in F*.
 
-[F\* tutorial]: http://prosecco.gforge.inria.fr/tutorial.html
+[F\* tutorial]: https://www.fstar-lang.org/tutorial/
 
 ### License
 

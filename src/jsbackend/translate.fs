@@ -164,8 +164,8 @@ and js_of_expr (binder:option<string>) (expr:exp) : expression_t =
         | Exp_constant(c) -> js_of_const c
         | Exp_abs([], e) -> js_of_expr binder e
         | Exp_abs((Inl _, _)::rest, e) -> 
-          js_of_expr binder (mk_Exp_abs(rest, e) tun expr.pos)
-        | Exp_abs((Inr x, _)::rest, e) -> js_of_fun binder x.v x.sort (mk_Exp_abs(rest, e) tun e.pos)
+          js_of_expr binder (mk_Exp_abs(rest, e) None expr.pos)
+        | Exp_abs((Inr x, _)::rest, e) -> js_of_fun binder x.v x.sort (mk_Exp_abs(rest, e) None e.pos)
         | Exp_app(e, args) -> JSE_Call(js_of_expr None e, args |> List.collect (function Inr e, _ -> [js_of_expr None e] | _ -> []))
         | Exp_match(e, c) -> js_of_match e c
         | Exp_let((_, bnds), e) -> let (bext, ee) = compress_let expr in
@@ -175,8 +175,7 @@ and js_of_expr (binder:option<string>) (expr:exp) : expression_t =
             ), [])
         | Exp_ascribed(e,_) -> js_of_expr binder e
         | Exp_meta(m) -> (match m with
-            | Meta_desugared(e, _) -> js_of_expr binder e
-            | Meta_datainst(e, _) -> js_of_expr binder e)
+            | Meta_desugared(e, _) -> js_of_expr binder e)
         | _ -> Util.print_any expr; JSE_Elision)
 
 and untype_expr (e:exp) =
@@ -185,13 +184,12 @@ and untype_expr (e:exp) =
         (p, (match cnd with None->None | Some(e)->Some(untype_expr e)), untype_expr v) in
     let unt_bnd (x,t,e) =  (x, t, untype_expr e) in
     match e.n with
-    | Exp_app(ee, args) -> mk_Exp_app(untype_expr ee, args |> List.filter (function Inl _, _ -> false | _ -> true)) tun e.pos
+    | Exp_app(ee, args) -> mk_Exp_app(untype_expr ee, args |> List.filter (function Inl _, _ -> false | _ -> true)) None e.pos
     | Exp_meta(m) -> (match m with
-        | Meta_desugared(exp, _) -> untype_expr exp
-        | Meta_datainst(exp, _) -> untype_expr exp)
-    | Exp_abs(bs, ee) -> syn e.pos tun <| mk_Exp_abs(bs |> List.filter (function Inl _, _ -> false | _ -> true), untype_expr ee)
-    | Exp_let((b,binds), e) -> syn e.pos tun <| mk_Exp_let((b,List.map unt_bnd binds), untype_expr e)
-    | Exp_match(e, pl) -> syn e.pos tun <| mk_Exp_match(untype_expr e, List.map unt_pat pl)
+        | Meta_desugared(exp, _) -> untype_expr exp)
+    | Exp_abs(bs, ee) -> syn e.pos None <| mk_Exp_abs(bs |> List.filter (function Inl _, _ -> false | _ -> true), untype_expr ee)
+    | Exp_let((b,binds), e) -> syn e.pos None <| mk_Exp_let((b,List.map unt_bnd binds), untype_expr e)
+    | Exp_match(e, pl) -> syn e.pos None <| mk_Exp_match(untype_expr e, List.map unt_pat pl)
     | _ -> e
 
 and comp_vars ct = match ct with
@@ -202,7 +200,7 @@ and type_vars ty = match ty with
     | Typ_fun(bs,c) -> (bs |> List.collect (function 
        | Inr x, _ -> 
         let tl = type_vars x.sort.n in
-        let hd = if is_null_binder (Inr x, false) then None else Some x.v in
+        let hd = if is_null_binder (Inr x, None) then None else Some x.v in
         hd::tl
        | _ -> [])) @ (comp_vars c.n)
     | Typ_lam(_,t) | Typ_refine({sort=t}, _) | Typ_app(t, _) 

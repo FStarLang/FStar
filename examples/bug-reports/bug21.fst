@@ -12,7 +12,7 @@ val constfun : 'a -> 'b -> Tot 'a
 let constfun x k = x
 
 val ftrue : 'b -> Tot bool
-let ftrue = constfun true
+let ftrue x = constfun true x
 
 val test : int -> Tot unit
 let test x = assert (ftrue x = true)

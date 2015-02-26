@@ -310,7 +310,7 @@ e1 := e2    : STATE unit wp_2
 
 * {.fragment} For example:
 ```fstar
-factorial x : PURE int (fun (ppst:PURE.Post int) -> //for any post-condition post
+factorial x : PURE int (fun (post:PURE.Post int) -> //for any post-condition post
                                x >= 0  //prove that argument is non-negative
                             /\ forall y. y > 0 ==> post y) //assume the result is positive
 ```
@@ -498,7 +498,7 @@ $\begin{scriptsize}
 
 $\begin{scriptsize}
 \inference{\Gamma \vdash e_1 : M~\mbox{\it int}~wp_1 \\
-           \\Gamma \vdash e_2 : M~t~wp_2 &
+           \Gamma \vdash e_2 : M~t~wp_2 &
            \Gamma \vdash e_3 : M~t~wp_3}
          {\Gamma \vdash \mbox{\it if0}~e_1~\mbox{\it then}~e_2~\mbox{\it else}~e_3 : M.\ite~t~wp_1~wp_2~wp_3}
 \end{scriptsize}$
@@ -511,6 +511,17 @@ PURE.ITE t wp1 wp2 wp3 post =
 STATE.ITE t wp1 wp2 wp3 post = 
   STATE.bind wp1 (fun i h1 -> i=0 ==> wp2 post h1 /\ i<>0 ==> wp3 post h1)
 ```
+~
+
+~Slide
+
+### Typing applications
+
+$\begin{scriptsize}
+\inference{\Gamma \vdash e_1 : M~(x:t \rightarrow M~t'~wp)~wp_1\\
+           \Gamma \vdash e_2 : M~t~wp_2 & \Gamma |- t'[e_2/x] : Type}
+          {\Gamma \vdash e_1~e_2 : M~(t'[e_2/x])~(M.\bind~wp_1~(\fun~f \rightarrow M.\bind~wp_2~(\fun~x \rightarrow wp)))}
+\end{scriptsize}$
 ~
 
 ~Slide
@@ -546,6 +557,53 @@ PURE.strengthen wp wp'  = forall post. wp' post ==> wp post
 STATE.strengthen wp wp' = forall post h. wp' post h ==> wp post h
 ```
 ~
+
+~Slide
+
+### Dynamic semantics
+
+```
+  H ::= . | H, (l -> v)
+  v ::= () |  0 | 1 | ... | fun (x:t) -> e | l
+  e ::= ... | l
+  E ::= o | o e | v o | if0 o then e1 else e2 | !o | o := e2 | v := o
+
+  
+  In general: (H, e) ~> (H, e)
+  For pure steps:  e ~> e
+
+
+  e ~> e'
+
+  if0 0 then e1 else e2 ~> e1
+  if0 v then e1 else e2 ~> e2        when v <> 0
+  (fun (x:t) -> e) v    ~> e[v/x]
+
+  t ~> t'
+
+  (fun (x:t) -> t') v    ~> t'[v/x]
+  (fun (a:k) -> t') t    ~> t'[t/a]
+
+
+  (H, e) ~> (H, e')
+
+   e ~> e'
+  ---------------------
+  (H, e) ~> (H, e')
+
+
+  (H, e) ~> (H', e')
+  ---------------------
+  (H, E[e]) ~> (H', E[e'])
+
+
+  (H, !l) ~> (H, H(l))
+
+  (H, l := v) ~> (H[l <- v], ())
+
+```
+~
+
 
 ~Slide
 ### Scaling to a usable, full-fledged language 

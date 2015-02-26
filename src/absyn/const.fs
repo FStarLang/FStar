@@ -41,12 +41,11 @@ let lexcons_lid  = pconst "LexCons"
 let lextop_lid   = pconst "LexTop"
 
 (* Logical connectives and operators *)
-let kunary k k'              = mk_Kind_arrow([Inl (null_bvar k), false], k') dummyRange
-let kbin k1 k2 k'            = mk_Kind_arrow([Inl (null_bvar k1), false; 
-                                              Inl (null_bvar k2), false], k') dummyRange
-let ktern k1 k2 k3 k'        = mk_Kind_arrow([Inl (null_bvar k1), false; 
-                                              Inl (null_bvar k2), false;
-                                              Inl (null_bvar k3), false], k') dummyRange
+let kunary k k'              = mk_Kind_arrow([null_t_binder k], k') dummyRange
+let kbin k1 k2 k'            = mk_Kind_arrow([null_t_binder k1; null_t_binder k2], k') dummyRange
+let ktern k1 k2 k3 k'        = mk_Kind_arrow([null_t_binder k1; 
+                                              null_t_binder k2;
+                                              null_t_binder k3], k') dummyRange
 let true_lid   = pconst "True"
 let false_lid  = pconst "False"
 let and_lid    = pconst "l_and"  
@@ -72,9 +71,9 @@ let neq_lid    = pconst  "neq"
 let neq2_lid   = pconst  "neq2"
 
 (* Some common term constructors *)
-let exp_true_bool   = mk_Exp_constant (Const_bool true) tun dummyRange
-let exp_false_bool  = mk_Exp_constant (Const_bool false) tun dummyRange
-let exp_unit        = mk_Exp_constant (Const_unit) tun dummyRange
+let exp_true_bool   = mk_Exp_constant (Const_bool true) None dummyRange
+let exp_false_bool  = mk_Exp_constant (Const_bool false) None dummyRange
+let exp_unit        = mk_Exp_constant (Const_unit) None dummyRange
 let cons_lid        = pconst  "Cons"
 let nil_lid         = pconst  "Nil"
 let ref_lid         = pconst  "ref"

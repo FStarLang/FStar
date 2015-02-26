@@ -31,6 +31,7 @@ type sort =
   | Term_sort 
   | String_sort
   | Ref_sort
+  | Fuel_sort
   | Array of sort * sort
   | Arrow of sort * sort
   | Sort of string
@@ -148,13 +149,16 @@ val mk_Term_unit: term
 val mk_PreKind: term -> term
 val mk_PreType: term -> term
 val mk_Valid: term -> term
-val mk_HasType: bool -> term -> term -> term
+val mk_HasType: term -> term -> term
+val mk_HasTypeFuel: term -> term -> term -> term
+val mk_HasTypeWithFuel: option<term> -> term -> term -> term 
 val mk_HasKind: term -> term -> term
 val mk_tester: string -> term -> term
 val mk_ApplyTE: term -> term -> term
 val mk_ApplyTT: term -> term -> term
 val mk_ApplyET: term -> term -> term
 val mk_ApplyEE: term -> term -> term
+val mk_ApplyEF: term -> term -> term
 val mk_String_const: int -> term
 val mk_Precedes: term -> term -> term
 val mk_LexCons: term -> term -> term

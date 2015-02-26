@@ -275,3 +275,17 @@ let test_pred_lemma_2'  (a:Type) = qintro a (fun x -> forall (y:a). test_pred x 
 val test_pred_lemma_unif' : a:Type -> Lemma (ensures (forall (x:a) (y:a). test_pred x y))
 let test_pred_lemma_unif'  (a:Type) = qintro (test_pred_lemma_1 a)
  
+val even: nat -> Tot bool
+val odd: nat -> Tot bool
+let rec even x = if x=0 then true else odd (x - 1)
+and odd x = if x=0 then false else even (x - 1)
+
+let test_even1 = assert (even 4 = true)
+let test_even2 = assert (even 5 = false)
+
+let test_odd1 = assert (odd 4 = false)
+let test_odd2 = assert (odd 5 = true)
+
+assume val f_eq: a:Type -> p:(a -> Type) -> =arg:(u:unit -> Pure a (requires True) (ensures p)) -> Tot (x:a{p x})
+assume val g_eq_c: unit -> Pure int (requires True) (ensures (fun x -> x >= 0))
+let h_test_eq :nat = f_eq g_eq_c

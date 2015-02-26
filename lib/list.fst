@@ -52,6 +52,11 @@ let rec nth l n =
         | [] -> failwith "not enough elements"
         | _::tl -> nth tl n
 
+val total_nth: list 'a -> nat -> Tot (option 'a)
+let rec total_nth l n = match l with
+  | []     -> None
+  | hd::tl -> if n = 0 then Some hd else total_nth tl (n - 1)
+
 val count: 'a -> list 'a -> Tot nat
 let rec count x = function
   | [] -> 0
@@ -62,6 +67,8 @@ val rev_acc: list 'a -> list 'a -> Tot (list 'a)
 let rec rev_acc l acc = match l with
     | [] -> acc
     | hd::tl -> rev_acc tl (hd::acc)
+
+let rev_append = rev_acc
 
 val rev: list 'a -> Tot (list 'a)
 let rev l = rev_acc l []
@@ -189,9 +196,9 @@ val find: a:Type
         -> f:(a -> Tot bool)
         -> list a
         -> Tot (option (x:a{f x}))
-let rec find f l = match l with
-  | [] -> None
-  | hd::tl -> if f hd then Some hd else find f tl
+let rec find (a:Type) f l = match l with
+  | [] -> None #(x:a{f x}) //These type annotations are only present because it makes bootstrapping go much faster
+  | hd::tl -> if f hd then Some #(x:a{f x}) hd else find f tl
 let findT = find
 
 val filter: ('a -> bool) -> list 'a -> list 'a

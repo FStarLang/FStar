@@ -31,6 +31,7 @@ type sort =
   | Term_sort 
   | String_sort
   | Ref_sort
+  | Fuel_sort
   | Array of sort * sort
   | Arrow of sort * sort
   | Sort of string
@@ -43,6 +44,7 @@ let rec strSort x = match x with
   | Term_sort -> "Term" 
   | String_sort -> "String"
   | Ref_sort -> "Ref"
+  | Fuel_sort -> "Fuel"
   | Array(s1, s2) -> format2 "(Array %s %s)" (strSort s1) (strSort s2)
   | Arrow(s1, s2) -> format2 "(%s -> %s)" (strSort s1) (strSort s2)
   | Sort s -> s
@@ -366,12 +368,17 @@ let constructor_to_decl f = constructor_to_decl_aux true f
 (****************************************************************************)
 let caption_to_string = function 
     | None -> ""
-    | Some c -> format1 ";;;;;;;;;;;;;;;;%s\n" c
+    | Some c -> 
+        let hd::tl = Util.splitlines c in
+        let suffix = match tl with
+            | [] -> ""
+            | _ -> "..." in
+        format2 ";;;;;;;;;;;;;;;;%s%s\n" hd suffix
 
 let rec declToSmt z3options decl = match decl with
   | DefPrelude -> mkPrelude z3options
   | Caption c -> 
-    format1 "\n; %s" c
+    format1 "\n; %s" (Util.splitlines c |> List.hd)
   | DeclFun(f,argsorts,retsort,c) ->
     let l = List.map strSort argsorts in
     format4 "%s(declare-fun %s (%s) %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort)
@@ -404,14 +411,18 @@ and mkPrelude z3options =
                 \n\
                 (declare-sort Term)\n\
                 (declare-fun Term_constr_id (Term) Int)\n\
-                (declare-fun ZFuel () Term)\n\
-                (declare-fun SFuel (Term) Term)\n\
-                (declare-fun MaxFuel () Term)\n\
+                (declare-datatypes () ((Fuel \n\
+                                        (ZFuel) \n\
+                                        (SFuel (prec Fuel)))))\n\
+                (declare-fun MaxIFuel () Fuel)\n\
+                (declare-fun MaxFuel () Fuel)\n\
                 (declare-fun PreKind (Type) Kind)\n\
                 (declare-fun PreType (Term) Type)\n\
                 (declare-fun Valid (Type) Bool)\n\
                 (declare-fun HasKind (Type Kind) Bool)\n\
                 (declare-fun HasType (Term Type) Bool)\n\
+                (declare-fun HasTypeFuel (Fuel Term Type) Bool)\n\
+                (declare-fun ApplyEF (Term Fuel) Term)\n\
                 (declare-fun ApplyEE (Term Term) Term)\n\
                 (declare-fun ApplyET (Term Type) Term)\n\
                 (declare-fun ApplyTE (Type Term) Type)\n\
@@ -420,7 +431,16 @@ and mkPrelude z3options =
                 (declare-fun Closure (Term) Term)\n\
                 (declare-fun ConsTerm (Term Term) Term)\n\
                 (declare-fun ConsType (Type Term) Term)\n\
+                (declare-fun ConsFuel (Fuel Term) Term)\n\
                 (declare-fun Precedes (Term Term) Type)\n\
+                (assert (forall ((e Term) (t Type))\n\
+                           (!  (= (HasType e t)\n\
+                                  (HasTypeFuel MaxIFuel e t))\n\
+                               :pattern ((HasType e t)))))\n\
+                (assert (forall ((f Fuel) (e Term) (t Type)) \n\
+                                (! (= (HasTypeFuel (SFuel f) e t)\n\
+                                      (HasTypeFuel f e t))\n\
+                                    :pattern ((HasTypeFuel (SFuel f) e t)))))\n\
                 (assert (forall ((t1 Term) (t2 Term))\n\
                      (! (iff (Valid (Precedes t1 t2)) \n\
                              (< (Rank t1) (Rank t2)))\n\
@@ -485,8 +505,14 @@ let mk_Valid t        = mkApp("Valid",   [t])
 //    match t.tm with 
 //        | App("Prims.b2t", [v]) -> unboxBool v
 //        | _ -> mkApp("Valid",   [t])  
-let mk_HasType (b:bool) v t  = 
-    mkApp("HasType", [v;t])
+let mk_HasType v t = mkApp("HasType", [v;t])
+let mk_HasTypeFuel f v t = 
+   if !Options.unthrottle_inductives
+   then mk_HasType v t
+   else mkApp("HasTypeFuel", [f;v;t])
+let mk_HasTypeWithFuel f v t = match f with
+    | None -> mk_HasType v t
+    | Some f -> mk_HasTypeFuel f v t
 let mk_Destruct v     = mkApp("Destruct", [v])
 let mk_HasKind t k    = mkApp("HasKind", [t;k])
 let mk_Rank x         = mkApp("Rank", [x])
@@ -495,6 +521,7 @@ let mk_ApplyTE t e    = mkApp("ApplyTE", [t;e])
 let mk_ApplyTT t t'   = mkApp("ApplyTT", [t;t'])
 let mk_ApplyET e t    = mkApp("ApplyET", [e;t])
 let mk_ApplyEE e e'   = mkApp("ApplyEE", [e;e'])
+let mk_ApplyEF e f    = mkApp("ApplyEF", [e;f])
 let mk_String_const i = mkApp("String_const", [ mkInteger i ])
 let mk_Precedes x1 x2 = mkApp("Precedes", [x1;x2]) |> mk_Valid
 let mk_LexCons x1 x2  = mkApp("LexCons", [x1;x2])
@@ -502,10 +529,11 @@ let mk_Closure i vars   =
    let vars = vars |> List.fold_left (fun out v -> match snd v with 
     | Term_sort -> mkApp("ConsTerm", [mkBoundV v; out])
     | Type_sort -> mkApp("ConsType", [mkBoundV v; out])
+    | Fuel_sort -> mkApp("ConsFuel", [mkBoundV v; out])
     | _ -> failwith "unexpected sort") (boxInt <| mkInteger i) in
     mkApp("Closure", [vars])
 let rec n_fuel n = 
-    if n = 0 then mkFreeV("ZFuel", Term_sort)
+    if n = 0 then mkFreeV("ZFuel", Fuel_sort)
     else mkApp("SFuel", [n_fuel (n - 1)])
 let fuel_2 = n_fuel 2
 let fuel_100 = n_fuel 100

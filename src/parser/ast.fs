@@ -36,7 +36,7 @@ type term' =
   | Name      of lid
   | Construct of lid * list<(term*bool)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
-  | App       of term * term * bool                    (* bool marks an explicitly provided implicit parameter *)
+  | App       of term * term * bool                    (* aqual marks an explicitly provided implicit parameter *)
   | Let       of bool * list<(pattern * term)> * term  (* bool is for let rec *)
   | Seq       of term * term
   | If        of term * term * term
@@ -51,7 +51,6 @@ type term' =
   | QExists   of list<binder> * list<term> * term 
   | Refine    of binder * term 
   | Paren     of term
-  | Affine    of term
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
   | Labeled   of term * string * bool
@@ -64,7 +63,7 @@ and binder' =
   | Annotated of ident * term 
   | TAnnotated of ident * term 
   | NoName of term
-and binder = {b:binder'; brange:range; blevel:level; implicit:bool}
+and binder = {b:binder'; brange:range; blevel:level; aqual:Syntax.aqual}
 
 and pattern' = 
   | PatWild
@@ -127,7 +126,7 @@ type file = list<pragma> * list<modul>
 
 (********************************************************************************)
 let mk_decl d r = {d=d; drange=r}
-let mk_binder b r l i = {b=b; brange=r; blevel=l; implicit=i}
+let mk_binder b r l i = {b=b; brange=r; blevel=l; aqual=i}
 let mk_term t r l = {tm=t; range=r; level=l}
 let mk_pattern p r = {pat=p; prange=r}
 let un_curry_abs ps body = match body.tm with 
@@ -210,7 +209,6 @@ let rec term_to_string (x:term) = match x.tm with
   | Refine(b, t) -> 
     Util.format2 "%s:{%s}" (b|> binder_to_string) (t|> term_to_string)      
   | Paren t -> Util.format1 "(%s)" (t|> term_to_string)
-  | Affine t -> Util.format1 "!%s" (t|> term_to_string)
   | Product(bs, t) ->
         Util.format2 "Unidentified product: [%s] %s"
           (bs |> List.map binder_to_string |> String.concat ",") (t|> term_to_string)
@@ -223,7 +221,10 @@ and binder_to_string x =
   | TAnnotated(i,t)
   | Annotated(i,t) -> Util.format2 "%s:%s" (i.idText) (t |> term_to_string)
   | NoName t -> t |> term_to_string in
-  if x.implicit then Util.format1 "#%s" s else s
+  match x.aqual with 
+    | Some Implicit -> Util.format1 "#%s" s 
+    | Some Equality -> Util.format1 "=%s" s
+    | _ -> s
 
 and pat_to_string x = match x.pat with 
   | PatWild -> "_"

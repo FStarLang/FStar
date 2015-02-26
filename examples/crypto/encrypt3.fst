@@ -84,7 +84,7 @@ let create (p:Type) plain repr =
     then Ideal    p kv i 
     else Concrete p kv i in
 
-  let keyrepr k = 
+  let keyrepr k : AES.key = 
     match k with 
     | Ideal kv _ -> failwith "no way!"
     | Concrete kv _ -> kv in

@@ -72,6 +72,7 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
                     PURE a
                          (fun (p:Post a) -> pre /\ (forall (x:a). post x ==> p x)) (* WP *)
                          (fun (p:Post a) -> forall (x:a). pre /\ post x ==> p x)   (* WLP *)
+             and PureWP (a:Type) (wp:WP a) = PURE a wp wp
              and Admit (a:Type) = PURE a (fun (p:Post a) -> True) (fun (p:Post a) -> True)
              and default Tot (a:Type) =
                PURE a (fun (p:Post a) -> (forall (x:a). p x)) (fun (p:Post a) -> (forall (x:a). p x))
@@ -167,7 +168,6 @@ monad_lattice {
                     DIV a
                          (fun (p:Post a) -> pre /\ (forall a. post a ==> p a)) (* WP *)
                          (fun (p:Post a) -> forall a. pre /\ post a ==> p a)   (* WLP *)
-             and Admit (a:Type) = DIV a (fun 'p -> True) (fun 'p -> True)
              and default Dv (a:Type) =
                DIV a (fun (p:Post a) -> (forall (x:a). p x)) (fun (p:Post a) -> (forall (x:a). p x))
 ;
@@ -198,6 +198,7 @@ monad_lattice {
              type null_wp ('a:Type) ('p:Post 'a) (h:heap) = (forall (x:'a) (h':heap). 'p x h')
              type trivial ('a:Type) ('wp:WP 'a) = (forall h0. 'wp (fun r h1 -> True) h0)
              with State ('a:Type) ('wp:WP 'a) = STATE 'a 'wp 'wp
+             and STCore (a:Type) (wp:WP a) (wlp:WP a) = STATE a wp wlp
              and ST ('a:Type) ('pre:Pre) ('post: heap -> Post 'a) =
                  STATE 'a
                    (fun ('p:Post 'a) (h:heap) -> 'pre h /\ (forall a h1. ('pre h /\ 'post h a h1) ==> 'p a h1)) (* WP *)
@@ -250,14 +251,13 @@ monad_lattice {
              kind Post ('a:Type) = result 'a -> heap -> Type
              kind WP ('a:Type) = Post 'a -> Pre
              type return ('a:Type) (x:'a) ('p:Post 'a) = 'p (V x)
-
              type bind_wp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a -> WP 'b) ('wlp2:'a -> WP 'b) ('p:Post 'b) (h0:heap) =
-                 ('wp1 (fun ra h1 -> b2t (is_V ra) ==> 'wp2 (V.v ra) 'p h1) h0)
+                 ('wp1 (fun ra h1 -> b2t(is_V ra) ==> 'wp2 (V.v ra) 'p h1) h0)
              type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) ('wlp2:'a -> WP 'b) ('p:Post 'b) (h0:heap) =
                  (forall rb h. 'wlp1 (fun ra h1 -> 
                      if b2t (is_V ra)
-                     then 'wlp2 (V.v ra) (fun rb2 h2 -> rb==rb2 /\ h==h2) h1
-                     else rb==ra /\ h==h1) h0 ==> 'p rb h)
+                     then 'wlp2 (V.v ra) (fun rb2 h2 -> rb=!=rb2 \/ h=!=h2) h1
+                     else rb=!=ra \/ h=!=h1) h0 \/ 'p rb h)
              type if_then_else ('a:Type) ('p:Type) ('wp_then:WP 'a) ('wp_else:WP 'a) ('post:Post 'a) (h0:heap) =
                  (if 'p 
                   then 'wp_then 'post h0
@@ -279,7 +279,7 @@ monad_lattice {
              with All ('a:Type) ('pre:Pre) ('post: heap -> Post 'a) =
                  ALL 'a
                    (fun ('p:Post 'a) (h:heap) -> 'pre h /\ (forall ra h1. 'post h ra h1 ==> 'p ra h1)) (* WP *)
-                   (fun ('p:Post 'a) (h:heap) -> forall ra h1. ('pre h /\ 'post h ra h1) ==> 'p ra h1)             (* WLP *)
+                   (fun ('p:Post 'a) (h:heap) -> forall ra h1. ('pre h /\ 'post h ra h1) ==> 'p ra h1) (* WLP *)
              and default ML ('a:Type) =
                  ALL 'a (fun 'p h0 -> forall (a:result 'a) (h:heap). 'p a h) 
                         (fun 'p h0 -> forall (a:result 'a) (h:heap). 'p a h)
@@ -406,12 +406,13 @@ let snd x = MkTuple2._2 x
 logic type InductionHyp : Type -> Type
 assume val using_induction_hyp: 'a -> Lemma (ensures (InductionHyp 'a))
 assume val Assume: 'P:Type -> unit -> (y:unit{'P})
-assume val admit: unit -> Admit unit
+assume val admit: unit -> Admit 'a
+assume val magic: unit -> Tot 'a
 assume val admitP: 'P:Type -> Pure unit True (fun x -> 'P)
 assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
 assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (fun x -> 'P)
 assume val qintro: a:Type -> p:(a -> Type) -> (x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
-assume val failwith: string -> ALL.All 'a (fun h -> True) (fun h a h' -> h==h')
+assume val failwith: string -> ALL.All 'a (fun h -> True) (fun h a h' -> is_Err a /\ h==h')
 assume val raise: exn -> 'a       (* TODO: refine with the Exn monad *)
 assume val pipe_right: 'a -> ('a -> 'b) -> 'b
 assume val pipe_left: ('a -> 'b) -> 'a -> 'b

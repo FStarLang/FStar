@@ -50,13 +50,10 @@
   <ItemGroup>
     <Compile Include="tcenv.fsi" />
     <Compile Include="tcenv.fs" />
+    <Compile Include="recheck.fs" />
     <Compile Include="normalize.fsi" />
     <Compile Include="normalize.fs" />
     <Compile Include="errors.fs" />
-    <Compile Include="rel2.fsi" />
-    <Compile Include="rel2.fs" />
-    <Compile Include="rel1.fsi" />
-    <Compile Include="rel1.fs" />
     <Compile Include="rel.fsi" />
     <Compile Include="rel.fs" />
     <Compile Include="tcutil.fsi" />

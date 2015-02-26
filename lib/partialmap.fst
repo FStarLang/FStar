@@ -1,45 +1,58 @@
 module Set
 open Prims.PURE
-assume type set : Type -> Type
 
-assume val empty:      a:Type -> Tot (set a)
-assume val singleton : a:Type -> a -> Tot (set a)
-assume val union     : a:Type -> set a -> set a -> Tot (set a)
-assume val intersect : a:Type -> set a -> set a -> Tot (set a)
-assume val complement: a:Type -> set a -> Tot (set a)
-assume val mem:        a:Type -> a -> set a -> Tot bool
-assume val equal:      a:Type -> set a -> set a -> Tot bool
+(*private extensional*) type set (a:Type) = a -> Tot bool
 
-assume MemEmpty:      forall (key:Type) (k:key).                           {:pattern mem k empty}
-                      not (mem k empty)
+assume type Equal : #a:Type -> set a -> set a -> Type
 
-assume MemSingleton:  forall (key:Type) (k:key) (k':key).                  {:pattern mem k (singleton k')}
-                      mem k (singleton k') == (k=k')
+(* private *) assume EqualDef : (forall (a:Type) (s1:set a) (s2:set a). Equal s1 s2 <==> (forall x. s1 x = s2 x))
 
-assume MemUnion:      forall (key:Type) (s1:set key) (s2:set key) (k:key). {:pattern mem k (union s1 s2)}
-                      mem k (union s1 s2) == (mem k s1 || mem k s2)
+(* private *) assume Extensionality : (forall (a:Type) (s1:set a) (s2:set a). Equal s1 s2 <==> s1 = s2)
 
-assume MemIntersect:  forall (key:Type) (s1:set key) (s2:set key) (k:key). {:pattern mem k (intersect s1 s2)}
-                      mem k (intersect s1 s2) == (mem k s1 && mem k s2)
+val empty : a:Type -> Tot (set a)
+(* private *) let empty = (fun _ -> false)
 
-assume MemComplement: forall (key:Type) (s1:set key) (k:key).              {:pattern mem k (complement s1)}
-                      mem k (complement s1) == not(mem k s1)
+val singleton : a:Type -> a -> Tot (set a)
+(* private *) let singleton x = (fun y -> y = x)
 
-assume Extensional:   forall (key:Type) (s1:set key) (s2:set key).         {:pattern (equal s1 s2)}              
-                      equal s1 s2 <==> s1 == s2
+val union : a:Type -> set a -> set a -> Tot (set a)
+(* private *) let union s1 s2 = (fun x -> s1 x || s2 x)
 
-assume Equals:        forall (key:Type) (s1:set key) (s2:set key).         {:pattern (equal s1 s2)}              
-                      equal s1 s2 <==> (forall k.{:pattern (mem k s1); (mem k s2)} mem k s1 == mem k s2)
+val intersect : a:Type -> set a -> set a -> Tot (set a)
+(* private *) let intersect s1 s2 = (fun x -> s1 x && s2 x)
 
-(* derived forms *)
-let minus      (a:Type) (s1:set a) (s2:set a)  = intersect s1 (complement s2)
+val complement : a:Type -> set a -> Tot (set a)
+(* private *) let complement s = (fun x -> not (s x))
 
-opaque type Subset' (a:Type) (s1:set a) (s2:set a) = 
-       (forall (x:a).{:pattern mem x s1} mem x s1 ==> mem x s2)
+val mem : a:Type -> a -> set a -> Tot bool
+(* private *) let mem x s = s x
 
+val memEmpty : a:Type -> x:a -> Lemma (requires True) (ensures (not (mem x empty))) [SMTPat (mem x empty)]
+(* private *) let memEmpty (a:Type) (x:a) = ()
 
-type Subset : #a:Type -> set a -> set a -> Type = 
-    fun (a:Type) (s1:set a) (s2:set a) -> Subset' a s1 s2
+val memSingleton : a:Type -> x:a -> y:a -> Lemma (requires True) (ensures (mem x (singleton y) == (x = y))) [SMTPat (mem x (singleton y))]
+(* private *) let memSingleton (a:Type) (x:a) (y:a) = ()
+
+val memUnion : a:Type -> s1:set a -> s2:set a -> x:a -> Lemma (requires True) (ensures (mem x (union s1 s2) = (mem x s1 || mem x s2))) [SMTPat (mem x (union s1 s2))]
+(* private *) let memUnion (a:Type) (s1:set a) (s2:set a) (x:a) = ()
+
+val memIntersect : a:Type -> s1:set a -> s2:set a -> x:a -> Lemma (requires True) (ensures (mem x (intersect s1 s2) = (mem x s1 && mem x s2))) [SMTPat (mem x (intersect s1 s2))]
+(* private *) let memIntersect (a:Type) (s1:set a) (s2:set a) (x:a) = ()
+
+val memComplement : a:Type -> s:set a -> x:a -> Lemma (requires True) (ensures (mem x (complement s) = not (mem x s))) [SMTPat (mem x (complement s))]
+(* private *) let memComplement (a:Type) (s:set a) (x:a) = ()
+
+val extensional : a:Type -> s1:set a -> s2:set a -> Lemma (requires True) (ensures (Equal s1 s2 <==> s1 = s2)) (* error: [SMTPat (Equal a s1 s2)] *)
+(* private *) let extensional (a:Type) (s1:set a) (s2:set a) = ()
+
+val equals : a:Type -> s1:set a -> s2:set a -> Lemma (requires True) (ensures (Equal s1 s2 <==> (forall x. (* error: {:pattern (mem x s1); (mem x s2)}*) mem x s1 = mem x s2))) (* error: [SMTPat (Equal a s1 s2)] *)
+(* private *) let equals (a:Type) (s1:set a) (s2:set a) = ()
+
+let minus (a:Type) (s1:set a) (s2:set a) = intersect s1 (complement s2)
+
+opaque type Subset' (a:Type) (s1:set a) (s2:set a) = (forall (x:a).{:pattern mem x s1} mem x s1 ==> mem x s2)
+
+type Subset : #a:Type -> set a -> set a -> Type = fun (a:Type) (s1:set a) (s2:set a) -> Subset' a s1 s2
 
 module Map
 open Prims.PURE
@@ -98,7 +111,6 @@ let const_on (key:Type) (value:Type) (dom:set key) (v:value) = restrict dom (con
 opaque type DisjointDom (key:Type) (value:Type) (m1:t key value) (m2:t key value) =
           (forall x.{:pattern (contains m1 x)(* ; (contains m2 x) *)} contains m1 x ==> not (contains m2 x))
 
-
 module Heap
 open Set
 
@@ -153,7 +165,6 @@ assume ContainsConcat:forall (a:Type) (h1:heap) (h2:heap) (a:ref a).       {:pat
 type On (r:set aref) (p:(heap -> Type)) (h:heap) = p (restrict h r)
 opaque type fresh (h:heap) (refs:set aref)       = (forall (a:Type) (a:ref a).{:pattern (contains h a)} mem (Ref a) refs ==> not(contains h a))
 
-  
 (* A logical theory of integer-indexed arrays, from [0, n) *)
 module Array
 

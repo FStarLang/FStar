@@ -42,7 +42,7 @@ let rc file =
 module DynACLs
 open Heap
 open ST
-type file = string
+(* type file = string *)
       
 (* using dynamic ACLs in some database *)
 type entry = 
@@ -80,14 +80,16 @@ assume val delete: file:string -> ST unit
                                      (ensures (fun h s h' -> h=h'))
                                      (modifies no_refs)
 
-val safe_delete: file -> All unit (fun h -> True) (fun h x h' -> h==h')
+(* If you remove the name on this parameter, the verification of ACLs2.test fails, mysteriously *)
+val safe_delete: file:string -> All unit (requires (fun h -> True)) 
+                                  (ensures (fun h x h' -> h=h'))
 let safe_delete file = 
   if canWrite !acls file 
   then delete file
   else failwith "unwritable"
 
-val test_acls: file -> unit
-let test_acls f = 
+val test_acls: file:string -> unit
+let test_acls f =
   grant (Readable f);     (* ok *)
   let _ = read f in       (* ok --- it's in the acl *)
   (* delete f;               (\* not ok --- we're only allowed to read it *\) *)

@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Stlc
+module StlcCbvNamed
 
 type ty =
   | TBool  : ty
@@ -224,7 +224,7 @@ let rec free_in_context x e g =
   | EIf e1 e2 e3 -> free_in_context x e1 g;
                     free_in_context x e2 g; free_in_context x e3 g
   | EPair e1 e2 -> free_in_context x e1 g; free_in_context x e2 g
-  | EFst e1 
+  | EFst e1
   | ESnd e1 -> free_in_context x e1 g
   | ELet y e1 e2 ->
       (free_in_context x e1 g;
@@ -271,7 +271,7 @@ opaque logic type Equal (g1:env) (g2:env) =
 opaque logic type EqualE (e:exp) (g1:env) (g2:env) =
                  (forall (x:int). appears_free_in x e ==> g1 x=g2 x)
 
-(* Didn't manage to use auto-induction for context_invariance: 
+(* Didn't manage to use auto-induction for context_invariance:
    WARNING: pattern does not contain all quantified variables.
    + Z3 didn't manage to prove easy things automatically.
    Any way we can specify the pattern by hand? What would be a good one here? *)
@@ -303,7 +303,7 @@ let rec context_invariance e g g' =
   | EPair e1 e2 ->
      context_invariance e1 g g';
      context_invariance e2 g g'
- 
+
   | EFst e1
   | ESnd e1 -> context_invariance e1 g g'
 

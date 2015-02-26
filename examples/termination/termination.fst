@@ -1,5 +1,3 @@
-(* Expect 3 intentional failures *)
-
 (*
    Copyright 2008-2014 Nikhil Swamy, Chantal Keller, Microsoft Research and Inria
 
@@ -67,7 +65,7 @@ let rec strangeZero v =
 
 (* map and treemap *)
 
-val map : ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
+val map : f:('a -> Tot 'b) -> list 'a -> Tot (list 'b)
 let rec map f l = match l with
   | [] -> []
   | hd::tl -> f hd::map f tl
@@ -77,37 +75,32 @@ let rec mem a l = match l with
   | [] -> false
   | hd::tl -> hd=a || mem a tl
 
-(* TODO: Writing the spec with refinements fails *)
-(* val list_subterm_ordering: l:list 'a  *)
-(*                         -> bound:'b{Precedes l bound} *)
-(*                         -> Tot (m:list 'a{l==m /\ (forall (x:'a). mem x m ==> Precedes x bound)}) *)
 val list_subterm_ordering_coercion: l:list 'a
-                        -> bound:'b
-                        -> Pure (list 'a)
-                                (requires (Precedes l bound))
-                                (ensures \m -> (forall (x:'a). mem x m ==> Precedes x bound) /\ l==m)
+                        -> bound:'b{Precedes l bound}
+                        -> Tot (m:list 'a{l==m /\ (forall (x:'a). mem x m ==> Precedes x bound)})
 let rec list_subterm_ordering_coercion l bound = match l with
-  | [] -> l (* TODO: writing [] here causes it to fail because the [] doesn't appear in the VC *)
+  | [] -> []
   | hd::tl ->
-    let tl' = list_subterm_ordering_coercion tl bound in (* TODO: without the eplicit let-binding, this fails *)
-    hd::tl'
-
+    hd::list_subterm_ordering_coercion tl bound
+ 
 val list_subterm_ordering_lemma: l:list 'a 
                         -> bound:'b
-                        -> Pure unit
-                                (requires (Precedes l bound))
-                                (ensures \m -> (forall (x:'a). mem x l ==> Precedes x bound))
-let rec list_subterm_ordering_lemma l bound = match l with
+                        -> x:'a 
+                        -> Lemma (requires (l << bound))
+                                 (ensures (mem x l ==> x << bound))
+                                 [SMTPat (mem x l);
+                                  SMTPatT (x << bound)]
+let rec list_subterm_ordering_lemma l bound x = match l with
   | [] -> () 
-  | hd::tl -> list_subterm_ordering_lemma tl bound
-      
-val move_refinement: 'a:Type
-                   -> 'P:('a -> Type)
-                   -> l:list 'a{forall z. mem z l ==> 'P z}
-                   -> Tot (list (a:'a{'P a}))
-let rec move_refinement 'a 'P l = match l with
+  | hd::tl -> list_subterm_ordering_lemma tl bound x
+     
+val move_refinement:  a:Type
+                   -> p:(a -> Type)
+                   -> l:list a{forall z. mem z l ==> p z}
+                   -> Tot (list (x:a{p x}))
+let rec move_refinement (a:Type) (p:(a -> Type)) l = match l with
   | [] -> []
-  | hd::tl -> hd::(move_refinement 'a 'P tl)
+  | hd::tl -> hd::move_refinement a p tl
 
 type T 'a =
   | Leaf : 'a -> T 'a
@@ -117,17 +110,8 @@ val treeMap : 'a:Type -> 'b:Type -> ('a -> Tot 'b) -> T 'a -> Tot (T 'b)
 let rec treeMap 'a 'b f v = match v with
   | Leaf a -> Leaf (f a)
   | Node l ->
-    list_subterm_ordering_lemma l v; (* TODO: eliminate this explicit call by encoding the lemma to the solver *)
-
     (* NS: this next call seems to be unavoidable. We need to move the refinement "inside" the list. 
            An alternative would be to give map a different type accouting for this "outside" refinement. 
            But, it's seeems nicer to give map its normal type *)
-
-    let l = (* ghost *) 
-      move_refinement (* Two type parameteres inferred
-                         1. (T 'a) -- inferred
-                         2. (fun aa -> Precedes (LexPair f (LexPair aa LexTop)) (LexPair f (LexPair v LexTop)))  --inferred by higher-order unification!
-                      *) 
-        l in
-
-    Node (map (treeMap f) l)
+    let l = move_refinement #_ #(fun aa -> aa << v) l in (* ghost *) 
+    Node (map (treeMap f) l) //treeMap f: (x:T a{x << v} -> Tot (T b))

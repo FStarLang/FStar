@@ -25,7 +25,8 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Util
 
-let withimp imp t = t, imp
+let as_imp imp =  if imp then Some Implicit else None
+let arg_withimp imp t = t, as_imp imp
 
 let contains_binder binders = 
   binders |> Util.for_some (fun b -> match b.b with  
@@ -199,13 +200,14 @@ and free_type_vars env t = match (unparen t).tm with
       env, f@free) (env, []) binders in
     free@free_type_vars env body
 
+  | Project(t, _) -> free_type_vars env t
+  
+
   | Abs _  (* not closing implicitly over free vars in type-level functions *)
   | If _
   | QForall _
   | QExists _ -> [] (* not closing implicitly over free vars in formulas *)
   | Let _
-  | Affine _
-  | Project  _
   | Record _
   | Match _
   | TryWith _
@@ -215,7 +217,7 @@ let close env t =
   let ftv = sort_ftv <| free_type_vars env t in
   if List.length ftv = 0
   then t
-  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type false) in
+  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type None) in
        let result = mk_term (Product(binders, t)) t.range t.level in
        result
 
@@ -223,7 +225,7 @@ let close_fun env t =
   let ftv = sort_ftv <| free_type_vars env t in
   if List.length ftv = 0
   then t
-  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type false) in
+  else let binders = ftv |> List.map (fun x -> mk_binder (TAnnotated(x, kind_star x.idRange)) x.idRange Type None) in
        let t = match (unlabel t).tm with 
         | Product _ -> t
         | _ -> mk_term (App(mk_term (Name Const.tot_effect_lid) t.range t.level, t, false)) t.range t.level in
@@ -311,8 +313,8 @@ let rec desugar_data_pat env (p:pattern) : (env_t * bnd * Syntax.pat) =
         let e, a = push_local_tbinding e a in
         (Inl a::l), e, a in
   let rec aux (loc:lenv_t) env (p:pattern) =
-    let pos q = Syntax.withinfo q (Inr tun) p.prange in
-    let pos_r r q = Syntax.withinfo q (Inr tun) r in
+    let pos q = Syntax.withinfo q None (*Inr tun*) p.prange in
+    let pos_r r q = Syntax.withinfo q  None (*Inr tun*) r in
     match p.pat with
       | PatOr [] -> failwith "impossible"
       | PatOr (p::ps) ->
@@ -448,7 +450,7 @@ and desugar_typ_or_exp (env:env_t) (t:term) : either<typ,exp> =
 and desugar_exp env e = desugar_exp_maybe_top false env e 
 
 and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
-  let pos e = e tun top.range in
+  let pos e = e None top.range in
   let setpos e = {e with pos=top.range} in
   begin match (unparen top).tm with
     | Const c -> pos <| mk_Exp_constant c
@@ -458,7 +460,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
         | None -> raise (Error("Unexpected operator: " ^ s, top.range))
         | Some l ->
           let op = fvar false l (range_of_lid l) in
-          let args = args |> List.map (fun t -> desugar_typ_or_exp env t, false) in
+          let args = args |> List.map (fun t -> desugar_typ_or_exp env t, None) in
           setpos <| mk_exp_app op args
       end
 
@@ -471,7 +473,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       begin match args with 
         | [] -> dt
         | _ -> 
-          let args = List.map (fun (t, imp) -> withimp imp <| desugar_typ_or_exp env t) args in
+          let args = List.map (fun (t, imp) -> arg_withimp imp <| desugar_typ_or_exp env t) args in
           setpos <| mk_Exp_meta(Meta_desugared(mk_exp_app dt args, Data_app)) 
       end
 
@@ -491,9 +493,9 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
             | [] -> 
               let body = desugar_exp env body in 
               let body = match sc_pat_opt with 
-                | Some (sc, pat) -> mk_Exp_match(sc, [(pat, None, body)]) tun body.pos
+                | Some (sc, pat) -> mk_Exp_match(sc, [(pat, None, body)]) None body.pos
                 | None -> body in 
-              mk_Exp_abs'(List.rev bs, body) tun top.range
+              mk_Exp_abs'(List.rev bs, body) None top.range
 
             | p::rest -> 
               let env, b, pat = desugar_binding_pat env p in
@@ -509,13 +511,13 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
                              begin match sc.n, p'.v with 
                                 | Exp_bvar _, _ -> 
                                   let tup = Util.mk_tuple_data_lid 2 top.range in
-                                  let sc = Syntax.mk_Exp_app(Util.fvar true tup top.range, [varg sc; varg <| Util.bvar_to_exp b]) tun top.range in
-                                  let p = withinfo (Pat_cons(Util.fv tup, [p';p])) (Inr tun) (Range.union_ranges p'.p p.p) in
+                                  let sc = Syntax.mk_Exp_app(Util.fvar true tup top.range, [varg sc; varg <| Util.bvar_to_exp b]) None top.range in
+                                  let p = withinfo (Pat_cons(Util.fv tup, [p';p])) (*Inr tun*) None (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | Exp_app(_, args), Pat_cons(_, pats) ->
                                   let tup = Util.mk_tuple_data_lid (1 + List.length args) top.range in
-                                  let sc = Syntax.mk_Exp_app(Util.fvar true tup top.range, args@[(varg <| Util.bvar_to_exp b)]) tun top.range in 
-                                  let p = withinfo (Pat_cons(Util.fv tup, pats@[p])) (Inr tun) (Range.union_ranges p'.p p.p) in
+                                  let sc = Syntax.mk_Exp_app(Util.fvar true tup top.range, args@[(varg <| Util.bvar_to_exp b)]) None top.range in 
+                                  let p = withinfo (Pat_cons(Util.fv tup, pats@[p])) (*Inr tun*) None (Range.union_ranges p'.p p.p) in
                                   Some(sc, p)
                                 | _ -> failwith "Impossible"
                               end in
@@ -529,12 +531,12 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       let phi = desugar_formula env arg in
       pos <| mk_Exp_app(fvar false a (range_of_lid a), 
                         [targ <| phi;
-                         varg <| mk_Exp_constant(Const_unit) tun top.range])
+                         varg <| mk_Exp_constant(Const_unit) None top.range])
 
     | App _ -> 
       let rec aux args e = match (unparen e).tm with
         | App(e, t, imp) -> 
-          let arg = withimp imp <| desugar_typ_or_exp env t in
+          let arg = arg_withimp imp <| desugar_typ_or_exp env t in
           aux (arg::args) e
         | _ -> 
           let head = desugar_exp env e in 
@@ -590,7 +592,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
             let body = match pat with
               | None 
               | Some ({v=Pat_wild _}) -> body
-              | Some pat -> mk_Exp_match(bvd_to_exp x t, [(pat, None, body)]) tun body.pos in
+              | Some pat -> mk_Exp_match(bvd_to_exp x t, [(pat, None, body)]) None body.pos in
             pos <| mk_Exp_let((false, [(Inl x, t, t1)]), body)
         end in
 
@@ -600,8 +602,8 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       
     | If(t1, t2, t3) ->
       pos <| mk_Exp_match(desugar_exp env t1,
-                          [(withinfo (Pat_constant (Const_bool true)) (Inr tun) t2.range, None, desugar_exp env t2);
-                           (withinfo (Pat_constant (Const_bool false)) (Inr tun) t3.range, None, desugar_exp env t3)])
+                          [(withinfo (Pat_constant (Const_bool true)) (*Inr tun*) None t2.range, None, desugar_exp env t2);
+                           (withinfo (Pat_constant (Const_bool false)) (*Inr tun*) None t3.range, None, desugar_exp env t3)])
 
     | TryWith(e, branches) -> 
       let r = top.range in 
@@ -674,7 +676,7 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
   end
   
 and desugar_typ env (top:term) : typ =
-  let wpos t = t kun top.range in
+  let wpos t = t None top.range in
   let setpos t = {t with pos=top.range} in
   let top = unparen top in  
   let head_and_args t =
@@ -702,7 +704,7 @@ and desugar_typ env (top:term) : typ =
       then let rec flatten t = match t.tm with
             | Op("*", [t1;t2]) -> 
               let binders, final = flatten t2 in
-              let b = mk_binder (NoName t1) t1.range Type false in
+              let b = mk_binder (NoName t1) t1.range Type None in
               b::binders, final
             | Sum(binders, final) -> binders, final 
             | _ -> [], t in 
@@ -718,7 +720,7 @@ and desugar_typ env (top:term) : typ =
       begin match op_as_tylid top.range s with
         | None -> desugar_exp env top |> Util.b2t
         | Some l ->
-          let args = List.map (fun t -> withimp false <| desugar_typ_or_exp env t) args in
+          let args = List.map (fun t -> arg_withimp false <| desugar_typ_or_exp env t) args in
           mk_typ_app (ftv l kun) args
       end
 
@@ -738,7 +740,7 @@ and desugar_typ env (top:term) : typ =
       
     | Construct(l, args) ->
       let t = fail_or env  (try_lookup_typ_name env) l in
-      let args = List.map (fun (t, imp) -> withimp imp <| desugar_typ_or_exp env t) args in
+      let args = List.map (fun (t, imp) -> arg_withimp imp <| desugar_typ_or_exp env t) args in
       mk_typ_app t args
 
   
@@ -759,7 +761,7 @@ and desugar_typ env (top:term) : typ =
     | App _ -> 
       let rec aux args e = match (unparen e).tm with 
         | App(e, arg, imp) ->
-          let arg = withimp imp <| desugar_typ_or_exp env arg in
+          let arg = arg_withimp imp <| desugar_typ_or_exp env arg in
           aux (arg::args) e
         | _ -> 
           let head = desugar_typ env e in
@@ -829,7 +831,7 @@ and desugar_typ env (top:term) : typ =
         | hd::tl -> 
           let mlenv = ml env in 
           let bb = desugar_binder mlenv hd in
-          let b, env = as_binder env hd.implicit bb in
+          let b, env = as_binder env hd.aqual bb in
           aux env (b::bs) tl in
       aux env [] bs
 
@@ -837,7 +839,7 @@ and desugar_typ env (top:term) : typ =
       begin match desugar_exp_binder env b with
         | (None, _) -> failwith "Missing binder in refinement"
         | b -> 
-          let b, env = match as_binder env false (Inr b) with 
+          let b, env = match as_binder env None (Inr b) with 
             | (Inr x, _), env -> x, env
             | _ -> failwith "impossible" in
           let f = if is_type env f then desugar_formula env f else desugar_exp env f |> Util.b2t in
@@ -857,8 +859,8 @@ and desugar_typ env (top:term) : typ =
              let env, x = match xopt with
                           | None -> env, new_bvd (Some top.range)
                           | Some x -> push_local_vbinding env x in
-             (env, tparams@[Inr (bvd_to_bvar_s x t), false], typs@[targ <| close_with_lam tparams t]))
-             (env, [], []) (binders@[mk_binder (NoName t) t.range Type false]) in
+             (env, tparams@[Inr (bvd_to_bvar_s x t), None], typs@[targ <| close_with_lam tparams t]))
+             (env, [], []) (binders@[mk_binder (NoName t) t.range Type None]) in
            let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_dtuple_lid (List.length targs) top.range) in
            wpos <| mk_Typ_app(tup, targs)
            
@@ -868,7 +870,7 @@ and desugar_typ env (top:term) : typ =
                 | None -> ()
                 | Some _ -> failwith "Impossible" in
               (env, typs@[targ t]))
-              (env, []) (binders@[mk_binder (NoName t) t.range Type false]) in
+              (env, []) (binders@[mk_binder (NoName t) t.range Type None]) in
            let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_tuple_lid (List.length targs) top.range) in
            wpos <| mk_Typ_app(tup, targs)
    
@@ -898,7 +900,7 @@ and desugar_kind env k : knd =
         | [] ->   
           pos <| mk_Kind_arrow(List.rev bs, desugar_kind env k)
         | hd::tl -> 
-          let b, env = desugar_binder (ml env) hd |> as_binder env hd.implicit in
+          let b, env = desugar_binder (ml env) hd |> as_binder env hd.aqual in
           aux env (b::bs) tl in
       aux env [] bs
 
@@ -925,14 +927,14 @@ and desugar_formula' env (f:term) : typ =
     | "<==>" -> Some Const.iff_lid
     | "~"    -> Some Const.not_lid
     | _ -> None in
-  let pos t = t kun f.range in
+  let pos t = t None f.range in
   let setpos t = {t with pos=f.range} in
   let desugar_quant (q:lident) (qt:lident) b pats body =
     let tk = desugar_binder env ({b with blevel=Formula}) in
     match tk with
       | Inl(Some a,k) ->
         let env, a = push_local_tbinding env a in
-        let pats = List.map (fun e -> withimp false <| desugar_typ_or_exp env e) pats in
+        let pats = List.map (fun e -> arg_withimp false <| desugar_typ_or_exp env e) pats in
         let body = desugar_formula env body in
         let body = match pats with
           | [] -> body
@@ -942,7 +944,7 @@ and desugar_formula' env (f:term) : typ =
             
       | Inr(Some x,t) ->
         let env, x = push_local_vbinding env x in
-        let pats = List.map (fun e -> withimp false <| desugar_typ_or_exp env e) pats in
+        let pats = List.map (fun e -> arg_withimp false <| desugar_typ_or_exp env e) pats in
         let body = desugar_formula env body in
         let body = match pats with
           | [] -> body
@@ -966,7 +968,7 @@ and desugar_formula' env (f:term) : typ =
 
     | Op("==", ((hd::_args))) ->
       let args = hd::_args in
-      let args = List.map (fun t -> withimp false <| desugar_typ_or_exp env t) args in
+      let args = List.map (fun t -> arg_withimp false <| desugar_typ_or_exp env t) args in
       let eq =
         if is_type env hd
         then ftv (set_lid_range Const.eqT_lid f.range) kun
@@ -1026,10 +1028,10 @@ and typars_of_binders env bs =
         match tk with
             | Inl(Some a, k) -> 
                 let env, a = push_local_tbinding env a in
-                (env, (Inl(bvd_to_bvar_s a k), false)::out)
+                (env, (t_binder (bvd_to_bvar_s a k))::out)
             | Inr(Some x,t) ->
                 let env, x = push_local_vbinding env x in
-                (env, (Inr(bvd_to_bvar_s x t), false)::out)
+                (env, (v_binder (bvd_to_bvar_s x t))::out)
             | _ -> raise (Error ("Unexpected binder", b.brange))) (env, []) bs in
     env, List.rev tpars
 
@@ -1054,15 +1056,15 @@ let gather_tc_binders tps k =
         | Kind_arrow(binders, k) -> aux (bs@binders) k
         | Kind_abbrev(_, k) -> aux bs k
         | _ -> bs in
-    aux tps k |> Util.name_binders |> List.map (fun x -> (fst x, true)) // all implicit
+    aux tps k |> Util.name_binders |> List.map (fun x -> (fst x, Some Implicit)) // all implicit
 
 
 let mk_data_discriminators env t tps k datas = 
     if env.iface then [] else
     let binders = gather_tc_binders tps k in 
     let p = range_of_lid t in 
-    let binders = binders@[null_v_binder <| mk_Typ_app'(Util.ftv t kun, Util.args_of_non_null_binders binders) kun p] in
-    let disc_type = mk_Typ_fun(binders, Util.total_comp (Util.ftv Const.bool_lid ktype) p) ktype p in
+    let binders = binders@[null_v_binder <| mk_Typ_app'(Util.ftv t kun, Util.args_of_non_null_binders binders) None p] in
+    let disc_type = mk_Typ_fun(binders, Util.total_comp (Util.ftv Const.bool_lid ktype) p) None p in
     datas |> List.map (fun d -> 
         let disc_name = Util.mk_discriminator d in
         //Util.fprint1 "Making discriminator %s\n" disc_name.str;
@@ -1072,14 +1074,14 @@ let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binde
     let binders = gather_tc_binders tps k in 
     let p = range_of_lid lid in
     let arg_binder = 
-        let arg_typ = mk_Typ_app'(Util.ftv tc kun, Util.args_of_non_null_binders binders) kun p in
+        let arg_typ = mk_Typ_app'(Util.ftv tc kun, Util.args_of_non_null_binders binders) None p in
         let projectee = {ppname=Syntax.mk_ident ("projectee", p);
                          realname=Util.genident (Some p)} in
         if not refine_domain
         then v_binder (Util.bvd_to_bvar_s projectee arg_typ) //records have only one constructor; no point refining the domain
         else let disc_name = Util.mk_discriminator lid in
              let x = Util.gen_bvar arg_typ in
-             v_binder <| (Util.bvd_to_bvar_s projectee <| mk_Typ_refine(x, Util.b2t(mk_Exp_app(Util.fvar false disc_name p, [varg <| Util.bvar_to_exp x]) tun p)) kun p) in
+             v_binder <| (Util.bvd_to_bvar_s projectee <| mk_Typ_refine(x, Util.b2t(mk_Exp_app(Util.fvar false disc_name p, [varg <| Util.bvar_to_exp x]) None p)) None p) in
       
     let binders = binders@[arg_binder] in
     let arg = Util.arg_of_non_null_binder arg_binder in
@@ -1088,14 +1090,14 @@ let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binde
             if binders |> Util.for_some (function (Inl b, _) -> bvd_eq a.v b.v | _ -> false)
             then []
             else let field_name, _ = Util.mk_field_projector_name lid a i in
-                 let proj = mk_Typ_app(Util.ftv field_name kun, [arg]) kun p in
+                 let proj = mk_Typ_app(Util.ftv field_name kun, [arg]) None p in
                  [Inl (a.v, proj)]
 
         | Inr x ->
             if binders |> Util.for_some (function (Inr y, _) -> bvd_eq x.v y.v | _ -> false)
             then []
             else let field_name, _ = Util.mk_field_projector_name lid x i in
-                 let proj = mk_Exp_app(Util.fvar false field_name p, [arg]) tun p in
+                 let proj = mk_Exp_app(Util.fvar false field_name p, [arg]) None p in
                  [Inr (x.v, proj)]) |> List.flatten in
 
     formals |> List.mapi (fun i ax -> match fst ax with 
@@ -1106,7 +1108,7 @@ let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binde
                
         | Inr x ->
             let field_name, _ = Util.mk_field_projector_name lid x i in
-            let t = mk_Typ_fun(binders, Util.total_comp (Util.subst_typ subst x.sort) p) kun p in 
+            let t = mk_Typ_fun(binders, Util.total_comp (Util.subst_typ subst x.sort) p) None p in 
             Sig_val_decl(field_name, t, [Assumption; Logic; Projector(lid, Inr x.v)], range_of_lid field_name))
 
 let mk_data_projectors env = function
@@ -1142,21 +1144,13 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | NoName t -> t in
   let tot = mk_term (Name (Const.p2l ["PURE"; "Tot"])) rng Expr in 
   let with_constructor_effect t = mk_term (App(tot, t, false)) t.range t.level in
-  let add_constructor_effect t = match (unparen t).tm with
-    | Product _ -> 
-      let rec aux t = match t.tm with 
-        | Product(binders, s) ->  mk_term (Product(binders, aux s)) t.range t.level
-        | Paren s -> mk_term (Paren(aux s)) s.range s.level
-        | _ -> with_constructor_effect t in
-      aux t
-    | _ -> t in
   let apply_binders t binders =
     List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, false)) out.range out.level)
       t binders in
   let tycon_record_as_variant = function
     | TyconRecord(id, parms, kopt, fields) ->
       let constrName = mk_ident("Mk" ^ id.idText, id.idRange) in
-      let mfields = List.map (fun (x,t) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr false) fields in
+      let mfields = List.map (fun (x,t) -> mk_binder (Annotated(mangle_field_name x,t)) x.idRange Expr None) fields in
       let result = apply_binders (mk_term (Var (lid_of_ids [id])) id.idRange Type) parms in
       let constrTyp = mk_term (Product(mfields, with_constructor_effect result)) id.idRange Type in
       //let _ = Util.print_string (Util.format2 "Translated record %s to constructor %s\n" (id.idText) (term_to_string constrTyp)) in 
@@ -1244,7 +1238,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                 let t =
                   if of_notation
                   then match topt with 
-                    | Some t -> mk_term (Product([mk_binder (NoName t) t.range t.level false], tconstr)) t.range t.level
+                    | Some t -> mk_term (Product([mk_binder (NoName t) t.range t.level None], tconstr)) t.range t.level
                     | None -> tconstr 
                   else match topt with 
                     | None -> failwith "Impossible"
@@ -1299,7 +1293,10 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
           let lids = snd lbs |> List.map (function 
             | (Inr l, _, _) -> l
             | _ -> failwith "impossible") in
-          let s = Sig_let(lbs, d.drange, lids, false) in
+          let quals = snd lbs |> List.collect 
+            (function (Inl _, _, _) -> []
+                     | (Inr l, _, _) -> DesugarEnv.lookup_letbinding_quals env l) in
+          let s = Sig_let(lbs, d.drange, lids, quals) in
           let env = push_sigelt env s in
           env, [s]
         | _ -> failwith "Desugaring a let did not produce a let"
@@ -1333,7 +1330,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
         
   | Exception(id, Some term) ->
     let t = desugar_typ env term in
-    let t = mk_Typ_fun([null_v_binder t], mk_Total (fail_or env (try_lookup_typ_name env) Const.exn_lid)) kun d.drange in
+    let t = mk_Typ_fun([null_v_binder t], mk_Total (fail_or env (try_lookup_typ_name env) Const.exn_lid)) None d.drange in
     let l = qualify env id in
     let se = Sig_datacon(l, t, (Const.exn_lid,[],ktype), [ExceptionConstructor], d.drange) in
     let se' = Sig_bundle([se], d.drange, [l]) in
@@ -1459,11 +1456,11 @@ let add_modul_to_env (m:Syntax.modul) (en: env) :env =
         let menv = List.fold_left DesugarEnv.push_kind_abbrev menv m.kind_abbrevs in
         let menv = DesugarEnv.push_sigelt menv (Sig_tycon(m.mname, [], m.signature, [], [], [], dummyRange)) in
         let menv = List.fold_left DesugarEnv.push_sigelt menv m.abbrevs in
-        let env = DesugarEnv.exit_monad_scope env0 menv in
-        DesugarEnv.push_sigelt env elt
-      in
-      List.fold_left do_monad_decl en decls
+        DesugarEnv.exit_monad_scope env0 menv in
+      let env = List.fold_left do_monad_decl en decls in
+      DesugarEnv.push_sigelt env elt
     | _ -> DesugarEnv.push_sigelt en elt
   in
+  let en = DesugarEnv.prepare_module_or_interface false en m.name in
   let en = List.fold_left do_sigelt ({ en with curmodule = Some(m.name) }) m.exports in
-  DesugarEnv.finish en m
+  DesugarEnv.finish_module_or_interface en m

@@ -23,7 +23,6 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Absyn.Const
 open Microsoft.FStar.Util
-open Microsoft.FStar.Profiling 
 open Microsoft.FStar.Absyn.Util
    
 type binding =
@@ -81,6 +80,7 @@ type env = {
   letrecs:list<(lbname * typ)>;  (* mutually recursive names and their types (for termination checking) *)
   top_level:bool;                (* is this a top-level term? if so, then discharge guards *)
   check_uvars:bool;
+  use_eq:bool                    (* generate an equality constraint, rather than subtyping/subkinding *)
 } 
 and solver_t = {
     init: env -> unit;
@@ -124,6 +124,7 @@ let initial_env solver module_lid =
     letrecs=[];
     top_level=true;
     check_uvars=false;
+    use_eq=false;
   }
 
 let monad_decl_opt env l = 
@@ -166,7 +167,7 @@ let build_lattice env se = match se with
   | Sig_monads(decls0, order, p, _) -> 
     let mk_lift b k2 lift_t r wp1 =
       let k2 = Util.subst_kind [Inl(b.v, r)] k2 in
-      mk_Typ_app(lift_t, [targ r; targ wp1]) k2 p in
+      mk_Typ_app(lift_t, [targ r; targ wp1]) None p in
     let decls = env.lattice.decls@decls0 in
     let kwp l = wp_sig_aux decls l in
     let order = order |> List.map (fun mo -> 
@@ -427,11 +428,11 @@ let push_module env (m:modul) =
       expected_typ=None}
 
 let set_expected_typ env t = 
-  {env with expected_typ = Some t}
+  {env with expected_typ = Some t; use_eq=false}
 let expected_typ env = match env.expected_typ with 
   | None -> None
   | Some t -> Some t
-let clear_expected_typ env = {env with expected_typ=None}, expected_typ env
+let clear_expected_typ env = {env with expected_typ=None; use_eq=false}, expected_typ env
 
 let fold_env env f a = List.fold_right (fun e a -> f a e) env.gamma a
 

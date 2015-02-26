@@ -2,10 +2,13 @@ math
 css.sty
 madoko.css
 madoko.sty
+*math-dvi.tex
+*math-pdf.tex
+*math-dvi.final.tex
+*math-pdf.final.tex
 *.aux
 *.dim
 *.dvi
-*.tex
 *.log
 *.out
 *.upa

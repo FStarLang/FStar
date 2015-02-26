@@ -97,6 +97,7 @@ val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
 val is_type_lid: env -> lident -> bool
 val find_all_datacons: env -> lident -> option<list<lident>>
+val lookup_letbinding_quals: env -> lident -> list<qualifier>
 
 val finish_module_or_interface: env -> modul -> env
 val prepare_module_or_interface: bool -> env -> lident -> env

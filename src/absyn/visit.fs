@@ -22,7 +22,7 @@ open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
 
-let log s = ()(* if !Options.fvdie then printfn "%d;" s *)
+let log s = ()
 
 (* We always have to compress before pattern matching on a term or a
    type. It computes the substitutions at head of the term. *)
@@ -33,7 +33,7 @@ let rec compress_typ_aux pos typ = match typ.n with
           | Fixed typ -> compress_typ_aux pos typ
           | _ -> typ
       end
-  | Typ_delayed(_, _, m) -> 
+  | Typ_delayed(_, m) -> 
     (match !m with 
       | None -> typ
       | Some t -> let t' = compress_typ_aux pos t in m := Some t'; t')
@@ -42,7 +42,7 @@ let rec compress_typ_aux pos typ = match typ.n with
   | Typ_app({n=Typ_uvar(uv, _)}, args) ->
        begin 
           match Unionfind.find uv with 
-            | Fixed t' -> compress_typ_aux pos <| mk_Typ_app(t', args) typ.tk typ.pos
+            | Fixed t' -> compress_typ_aux pos <| mk_Typ_app(t', args) None typ.pos
             | _ -> typ
        end
   | _ -> typ
@@ -60,11 +60,11 @@ let rec compress_exp_aux meta exp = match exp.n with
     (match !m with 
       | None -> exp
       | Some e -> let e' = compress_exp_aux meta e in m := Some e'; e')
-  | Exp_ascribed(e, _)
+  //| Exp_ascribed(e, _)
   | Exp_meta(Meta_desugared(e, _)) when meta -> compress_exp_aux meta e
   | Exp_app({n=Exp_uvar(uv, _)}, args) -> 
        begin match Unionfind.find uv with 
-        | Fixed e' -> mk_Exp_app(e', args) exp.tk exp.pos
+        | Fixed e' -> mk_Exp_app(e', args) None exp.pos
         | _ -> exp
        end
   | _ -> exp
@@ -115,8 +115,8 @@ let vbinder_opt aopt t = match aopt with
 type knd_components = binders * list<knd> * list<typ> * list<arg>
 type typ_components = binders * list<knd> * list<typ> * list<comp> * list<arg>
 type exp_components = binders * list<knd> * list<typ> * list<exp> * list<arg>
-let leaf_k = ([], [], [], [])
-let leaf_te = ([], [], [], [], [])
+let leaf_k () = ([], [], [], [])
+let leaf_te () = ([], [], [], [], [])
 
 let rec reduce_kind 
     (map_kind': mapper<'env, knd, knd>)
@@ -135,7 +135,7 @@ let rec reduce_kind
         | Kind_type 
         | Kind_effect
         | Kind_unknown -> 
-          leaf_k, env
+          leaf_k(), env
         | Kind_uvar(_, args) ->
           let args, env = map_args map_typ map_exp env binders args in
           ([], [], [], args), env
@@ -207,7 +207,7 @@ and reduce_typ
       | Typ_unknown
       | Typ_btvar _   
       | Typ_const _ -> 
-        leaf_te, env
+        leaf_te(), env
 
       | Typ_app(t, args) -> 
         let t, env = map_typ env binders t in
@@ -220,7 +220,7 @@ and reduce_typ
         (axs, [], [t], [], []), env
 
       | Typ_refine(x, t2) -> 
-        let bs, binders, env = map_binders map_kind map_typ env binders [Inr x, false] in
+        let bs, binders, env = map_binders map_kind map_typ env binders [Inr x, None] in
         let t2, env = map_typ env binders t2 in
         (bs, [], [t2], [], []), env
 
@@ -252,8 +252,8 @@ and reduce_typ
       | Typ_meta(Meta_pattern(t,ps)) ->
         let t,env = map_typ env binders t in
         let pats, env = List.fold_left (fun (pats, env) arg -> match arg with
-          | Inl t, _ -> let t, env = map_typ env binders t in ((Inl t, false)::pats, env)
-          | Inr e, _ -> let e, env = map_exp env binders e in ((Inr e, false)::pats, env)) ([], env) ps in 
+          | Inl t, _ -> let t, env = map_typ env binders t in ((Inl t, None)::pats, env)
+          | Inr e, _ -> let e, env = map_exp env binders e in ((Inr e, None)::pats, env)) ([], env) ps in 
         ([], [], [t], [], List.rev pats), env in
 
     combine_typ t components env
@@ -288,8 +288,7 @@ and reduce_exp
   and visit_exp env binders e : (exp * 'env) = 
      let e = compress_exp_uvars e in 
      let components, env = match e.n with 
-        | Exp_delayed _
-        | Exp_meta(Meta_datainst _) -> failwith "impossible"
+        | Exp_delayed _ -> failwith "impossible"
 
         | Exp_meta(Meta_desugared(e, _)) -> 
           let e, env = map_exp env binders e in 
@@ -298,7 +297,7 @@ and reduce_exp
         | Exp_bvar _  
         | Exp_fvar _ 
         | Exp_constant _ -> 
-          leaf_te, env
+          leaf_te(), env
 
         | Exp_uvar(_, t) ->  
           let t, env = map_typ env binders t in
@@ -379,7 +378,7 @@ let combine_kind k (kc:knd_components) env =
     
 let combine_typ t (tc:typ_components) env =
   let t = compress_typ t in 
-  let w f = f t.tk t.pos in
+  let w f = f None t.pos in
   let t' = match t.n, tc with
     | Typ_unknown, _
     | Typ_btvar _, _
@@ -400,7 +399,7 @@ let combine_typ t (tc:typ_components) env =
 
 let combine_exp e (ec:exp_components) env = 
   let e = compress_exp e in 
-  let w f = f e.tk e.pos in
+  let w f = f None e.pos in
   let e' = match e.n, ec with 
     | Exp_bvar _, _
     | Exp_fvar _, _

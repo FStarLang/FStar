@@ -8,7 +8,7 @@ Colorizer     : fstar
 .Comment      : replace=""
 ~CH           : .comment color=green author=CH
 ~CK           : .comment color=blue author=Chantal
-~BB           : .comment color=purple author="Benjamin Beurdouch"
+~BB           : .comment color=purple author="Benjamin Beurdouche"
 ~NS           : .comment color=red author="Nik"
 ~Todo         : .comment author="Todo"
 
@@ -219,7 +219,7 @@ Our first module begins by defining a type synonym: we'll use
 Next, we define `canWrite`, a function that inspects its argument `f`
 using a *pattern matching expression*: it returns the boolean `true`
 when `f="C:/temp/tempfile"` and `false` otherwise. The function
-`canRead` is similar---a file is readable if it is writeable, or if it
+`canRead` is similar---a file is readable if it is writable, or if it
 is the `"C:/public/README"` file. The boolean functions `canWrite` and
 `canRead` specify our policy.
 
@@ -259,7 +259,7 @@ provide its type signature.
   `read` for which the `canRead` predicate can't be statically proved
   for the argument.
 
-* The type of `write` says that is a function of two arguments: the
+* The type of `write` says that it is a function of two arguments: the
   first is a `filename` `f`, such that `canWrite f` evaluates to `true`;
   the second is a `string`, the data to be written to the file `f`. The `write`
   function returns `unit`, roughly analogous to the `void` type in
@@ -291,7 +291,7 @@ The type-checker ensures statically that this untrusted code complies
 with the security policy. The reads to `tmp` and `readme`, and the
 write to `tmp` are allowed by the policy, so the program successfully
 type-checks. On the other hand, if we uncomment the lines that read
-or write `"junk"` to the `password` file, the F\* type-checker complains 
+or write `"junk"` to the `password` file, the F\* type-checker complains
 complains that the `passwd` file does not have the type
 `:f:filename{canRead f}`, respectively `:f:filename{canWrite f}`.
 For instance, if we uncomment the `write` we get the following error message:
@@ -393,7 +393,7 @@ state, etc).
 For instance, in ML `(canRead "foo.txt")` is inferred to have type `:bool`.
 However, in F\*, we infer `(canRead "foo.txt" : Tot bool)`. This
 indicates that `canRead "foo.txt"` is a total expression, which always
-evaluates to an boolean. For that matter, any expression that is
+evaluates to a boolean. For that matter, any expression that is
 inferred to have type-and-effect `:Tot t`, is guaranteed (provided the
 computer has enough resources) to evaluate to a `:t`-typed result,
 without entering an infinite loop; reading or writing the program's
@@ -628,7 +628,7 @@ One way to prove properties about your code in F\* is to write assertions.
 
     assert (max 0 1 = 1)
 
-Our first assertion is an obious property about `max`. You may have seen
+Our first assertion is an obvious property about `max`. You may have seen
 a construct called `assert` in other languages---typically, it is used to
 check a property of your code *at runtime*, raising an assertion-failed
 exception if the asserted condition is not `true`.
@@ -990,16 +990,16 @@ the covers, we implicitly coerce the boolean to a type, by adding the
 coercion `b2t (b:bool) : Type = (b == true)`. The type '`==`' is the type
 constructor for the equality predicate; it is different from '`=`', which
 is a boolean function comparing a pair of values. Additionally, '`==`' is
-heterogenous: you can speak about equality between any pair of values,
-regardless of their type. In contrast, '`=`' is homogenous.
+heterogeneous: you can speak about equality between any pair of values,
+regardless of their type. In contrast, '`=`' is homogeneous.
 
-The propostional connectives, `:/\`, `:\/`, and `:~`, for conjunction,
+The propositional connectives, `:/\`, `:\/`, and `:~`, for conjunction,
 disjunction and negations are type constructors. We also include `:==>`
-and `:<==>` for single and bidirectional impliciation. In contrast,
+and `:<==>` for single and bidirectional implication. In contrast,
 `:&&`, `:||`, and `:not` are boolean functions.
 
 Often, because of the implicit conversion from `:bool` to `:Type`, you
-can almost ignore the disctinction between the two. However, when you
+can almost ignore the distinction between the two. However, when you
 start to write refinement formulas with quantifiers, the distinction
 between the two will become apparent.
 
@@ -1498,7 +1498,7 @@ let rec nth l n =
 
 Whenever you pattern match a term (to analyze it by cases), F\* insists
 on proving that you have handled all the cases. We call this the
-`exhaustiveness check`, and unlike in F\# or Ocaml, it is implemented
+`exhaustiveness check`, and unlike in F\# or OCaml, it is implemented
 semantically.
 -->
 
@@ -1836,7 +1836,7 @@ exercise on lists (Section [#sec-basic-lists]).
 
 Here's a simple implementation of the quicksort algorithm. It always
 picks the first element of the list as the pivot; partitions the rest
-of the list into those elements greater than or equal to the the
+of the list into those elements greater than or equal to the
 pivot, and the rest; recursive sorts the partitions; and slots the
 pivot in the middle before returning.
 
@@ -1950,7 +1950,7 @@ Armed with these lemmas, let's return to our implementation of
 quicksort. Unfortunately, with the lemmas as they are, we still can't
 prove our original implementation of quicksort correct. As we saw with
 our proofs of `rev_injective` (Section [#sec-basic-lists]), we need to
-explicilty invoke our lemmas in order to use their properties. We'll
+explicitly invoke our lemmas in order to use their properties. We'll
 be able to do better in a minute, but lets see how to modify `sort` by
 calling the lemmas to make the proof go through.
 
@@ -1970,7 +1970,7 @@ calling the lemmas to make the proof go through.
 
 That works, but it's pretty ugly. Not only did we have to pollute our
 implementation with calls to the lemmas, in order to make those calls,
-we had to further rewrite our ccode so that we could bind names for
+we had to further rewrite our code so that we could bind names for
 the arguments to those lemmas. We can do much better. 
 
 
@@ -1994,7 +1994,7 @@ as well. Polluting its type is a non-starter. So, it seems we are
 caught in a bind.
 
 Wouldn't it be nice if there were some way to retroactively associate
-a property provern about a function `f` by a lemma directly with `f`,
+a property proven about a function `f` by a lemma directly with `f`,
 so that every application `f x` immediately carries the lemma
 properties? F\* provides exactly such a mechanism, which provides a
 way to bridge the gap between extrinsic and intrinsic proofs.
@@ -2201,7 +2201,7 @@ $\lambda x:\mathsf{bool}.~\mathsf{if }~x~\mathsf{ then~false~else~true}$).
 ## Operational semantics
 
 We define a standard small-step call-by-value interpreter for STLC.
-The final result of succesfully evaluating an expression is
+The final result of successfully evaluating an expression is
 called a _value_. We postulate that functions and the Boolean
 constants are values by defining `is_value`,
 a boolean predicate on expressions (a total function):
@@ -2384,7 +2384,7 @@ let rec progress e =
 Variables are not well-typed in the empty environment,
 so the theorem holds vacuously for variables.
 Boolean constants and abstractions are values,
-so the theorem holds trivialy for these.
+so the theorem holds trivially for these.
 All these simple cases are proved automatically by F\*.
 For the remaining cases we need to use the induction hypothesis,
 but otherwise the proofs are fully automated.
@@ -2498,6 +2498,8 @@ We remark `Equal` in particular and logical formulas in general
 are "types" in F\*, thus the different syntax for this definition. 
 ~CH
 What does opaque do exactly?
+What does logic do?
+Hints for the SMT solver / logical encoding only?
 ~
 
 The context invariance lemma uses in fact a weaker variant of this equivalence
@@ -2581,7 +2583,7 @@ we give the intuition of the two most interesting cases:
 * Case `e = EVar y`
   * Case `x = y`: We have `subst x v e = v` and we already know that
     `typing empty v == Some t_x`. However, what we need to show is
-    `typing g v == Some t_x` for some arbitray environment `g`.
+    `typing g v == Some t_x` for some arbitrary environment `g`.
     From the `typable_empty_closed` lemma we obtain that `v` contains
     no free variables, so we have `EqualE v empty g`. This allows us
     to apply the `context_invariance` lemma to obtain that
@@ -2598,7 +2600,7 @@ we give the intuition of the two most interesting cases:
     and can apply the `typing_extensional` lemma.
   * Case `x <> y`: We have `subst x v e = EAbs y t_y (subst x v e1)`.
     Since `x <> y` (and since we are in a simply typed calculus, not
-    a dependenty typed one) we can swap the `x` and `y` binding to show
+    a dependently typed one) we can swap the `x` and `y` binding to show
     that `Equal gxy xyx`. By the `typing_extensional` lemma we obtain that
     `typing gxy e1 == typing gyx e1`. By the induction hypothesis we thus
     obtain that `typing gy (subst x v e1) == Some t_e1`, and by the definition
@@ -2947,6 +2949,9 @@ but it seems quite interesting)
 #State and other effects
 
 ## Stateful access control
+~ CH
+Should change name of safe_delete as in Section 1
+~
 
 ```
 module DynACLs
@@ -3094,72 +3099,7 @@ let mk_counter_2 _ =
 
 # Cryptography examples
 
-## Cryptographic Capabilities for Accessing Files
-
-We extend the acls2.fst example with cryptographic capabilities, so that our trusted ACLs library can now issue and 
-accept HMACSHA1 tags as evidence that a given file is readable.
-
-What is the advantage of capabilities over the refinements already provided in acls2.fst? 
-
-~ Exercise
-Relying on acls2.fst and mac.fst, implement a pair of functions with the following specification, 
-and verify them by typing under the security assumption that HMACSHA1 is 
-INT-CPA. 
-
-```
-val issue:  f:file{ canRead f } -> SHA1.tag 
-val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
-
-```
-
-To this end, assume given a UTF8 encoding function from strings to bytes, with the following specification:
-
-```
-assume val utf8: s:string  -> Tot (seq byte) 
-
-assume UTF8_inj: 
-  forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
-    equal (utf8 s0) (utf8 s1) ==> s0==s1
-
-
-```
-
-~~ Answer
-```
-(* to be used with mac.fst and acls2.fst *)
-
-module Cap (* capabilities *) 
-open Array
-open UTF8
-open ACLs
-open MAC 
-
-opaque logic type CapRead (msg:seq byte) =
-    (forall f. msg = utf8 f ==> canRead f)
-
-let k = keygen CapRead
-
-val issue: f:file{ canRead f } -> SHA1.tag 
-val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
-
-let issue f = MAC.mac k (utf8 f)
-let redeem f t = if MAC.verify k (utf8 f) t then () else failwith "bad capability"
-
-```
-~~
-
-How would we extend it to also cover CanWrite access? 
-~ 
-   
-## Secure RPC
-
-We describe a simple secure RPC implementation, which consists of three 
-modules: `Mac`, a library for MACs, `Format`, a module for message 
-formatting, and `RPC`, a module for the rest of the protocol code. 
-(Placing the formatting functions request and response in a separate 
-module is convenient to illustrate modular programming and verification.)
-
-### MAC
+## MAC
 
 We begin with our cryptographic library. 
 
@@ -3198,6 +3138,60 @@ val mac:    k:key -> t:text{key_prop k t} -> tag
 val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
 ```
 
+## Cryptographic Capabilities for Accessing Files
+
+We extend the acls2.fst example with cryptographic capabilities, so
+that our trusted ACLs library can now issue and accept HMACSHA1 tags
+as evidence that a given file is readable.
+
+What is the advantage of capabilities over the refinements already
+provided in acls2.fst?
+
+~ Exercise
+Relying on acls2.fst and mac.fst, implement a pair of functions with
+the following specification, and verify them by typing under the
+security assumption that HMACSHA1 is INT-CPA.
+
+~~ ExerciseFragment {exname=ex9a-acls-cap}
+val issue:  f:file{ canRead f } -> SHA1.tag 
+val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
+~~
+
+To this end, assume given a UTF8 encoding function from strings to
+bytes, with the following specification:
+
+```
+assume val utf8: s:string  -> Tot (seq byte) 
+
+assume UTF8_inj: 
+  forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
+    equal (utf8 s0) (utf8 s1) ==> s0==s1
+
+
+```
+
+~~ Answer
+```
+val issue: f:file{ canRead f } -> SHA1.tag 
+val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
+
+let issue f = MAC.mac k (utf8 f)
+let redeem f t = if MAC.verify k (utf8 f) t then () else failwith "bad capability"
+
+```
+~~
+
+How would we extend it to also cover CanWrite access? 
+~ 
+   
+## Secure RPC
+
+We describe a simple secure RPC implementation, which consists of three 
+modules: `Mac`, our library for MACs, `Format`, a module for message 
+formatting, and `RPC`, a module for the rest of the protocol code. 
+(Placing the formatting functions request and response in a separate 
+module is convenient to illustrate modular programming and verification.)
+
 ### Secure RPC protocol
 
 To start with we consider a single client and server. The security goals of 
@@ -3224,7 +3218,7 @@ that can be send over the network. `|` written also `append`
 is a function concatenating `bytes`. `request` and `response` build
 message digests (the authenticated values). These functions may for 
 instance be implemented as tagged concatenations of their utf8-encoded 
-arguments. These funcions will be detailed in the `Format` module.
+arguments. These functions will be detailed in the `Format` module.
 
 Below we give an implementation of the protocol using these functions, 
 the functions of the 'Mac' module, and networking functions
@@ -3304,6 +3298,8 @@ authenticate the text before marshalling.
 
 ~Exercise
 Try to state this formally as three lemmas.
+
+
 ~~Answer
 ```
 val req_resp_distinct: 
@@ -3373,8 +3369,10 @@ let rec append_inj_lemma b1 b2 c1 c2 =
 -->
 
 ~ Remark
-In the lecture we also saw an extended protocol where we have a population of principals, represented as concrete strings ranged over by a
-and b, that intend to perform various remote procedure calls (RPCs) over a public network.
+In the lecture we also saw an extended protocol where we have a
+population of principals, represented as concrete strings ranged over
+by a and b, that intend to perform various remote procedure calls
+(RPCs) over a public network.
 The RPCs consist of requests and responses, both also represented as strings.
 The security goals of our RPC protocol are that (1) whenever a principal b accepts a
 request message s from a, principal a has indeed sent the message to b and, conversely,
@@ -3407,11 +3405,11 @@ assume val b2n: b:uint8 -> Tot (n:nat { (n < 256) /\ n2b n = b })
 type bytes = seq byte (* concrete byte arrays *) 
 type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
 
-let blocksize = 32 
+let blocksize = 32
 type block = nbytes blocksize
 type text = b:bytes {(length b < blocksize)}
 
-let pad n = Array.create n (n2b (n-1))  
+let pad n = Array.create n (n2b (n-1))
 
 let encode (a:text) = append a (pad (blocksize - length a))
 
@@ -3421,7 +3419,7 @@ let decode (b:block) =
     let (plain,padding) = split b (blocksize - padsize) in
     if padding = pad padsize
     then Some plain
-    else None   
+    else None
   else None
 ```
 
@@ -3450,7 +3448,9 @@ Provide examples of other schemes, both good and bad.
 
 ~~ Answer
 
-A padding scheme should be invertible. For authentication properties, we require it to be injective, so that authenticating a padded text unambiguously authenticate the text before padding. For instance:
+A padding scheme should be invertible. For authentication properties,
+we require it to be injective, so that authenticating a padded text
+unambiguously authenticate the text before padding. For instance:
 
 ```
 val inj: a: text -> b: text -> Lemma (requires (Array.equal (encode a) (encode b)))
@@ -3465,17 +3465,23 @@ let inj a b =
        cut (Array.index aa 31 =!= Array.index bb 31)
 ```
 
-In this context, another good padding scheme is to append a 1 then enough zeros to fill the block. One could also format the message by explicitly including its length.
-A bad scheme is to fill the rest of the block with zeros (or random values), as the same padded text may then be parsed into several texts ending with 0s.  
+In this context, another good padding scheme is to append a 1 then
+enough zeros to fill the block. One could also format the message by
+explicitly including its length.
+A bad scheme is to fill the rest of the block with zeros (or random
+values), as the same padded text may then be parsed into several texts
+ending with 0s.
 ~~
 ~
 
 ~ Exercise
-Relying on that specification, implement and verify a MAC interface for messages
-of type `text`, i.e., of less than `blocksize` bytes,  using the MAC interface below, which only supports messages of
-type `block`.
+Relying on that specification, implement and verify a MAC interface
+for messages of type `text`, i.e., of less than `blocksize` bytes,
+using the MAC interface below, which only supports messages of type
+`block`.
 
-To this end, we assume given an implementation of the following module (adapted from mac.fst)
+To this end, we assume given an implementation of the following module
+(adapted from `mac.fst`)
 
 ```
 module BMAC
@@ -3496,7 +3502,8 @@ assume val verify: k:key -> t:block -> tag -> b:bool{b ==> key_prop k t}
 
 Write a similar module that accepts texts instead of blocks: 
 first the implementations for keygen, mac, and verify,
-then type annotations to derive their authentication property (on texts) from the one of BMAC (on blocks).
+then type annotations to derive their authentication property
+(on texts) from the one of BMAC (on blocks).
 
 ~~ Answer
 ```
@@ -3531,7 +3538,8 @@ let verify k t tag = BMAC.verify k (encode t) tag
 ~
 
 ~ Exercise
-(1) Can we similarly construct a MAC scheme for texts with type `text:bytes {length text <= n}`?
+(1) Can we similarly construct a MAC scheme for texts
+    with type `text:bytes {length text <= n}`?
 (2) Implement, then verify this construction.
 
 ~~ Answer
@@ -3596,6 +3604,157 @@ let verify (Keys k0 k1) t tag =
 What about MAC schemes for texts of arbitrary lengths?
 Hint: have a look e.g. at the HMAC construction.
 ~
+
+
+# Advanced cryptographic examples
+
+## Encryption
+
+The basis of our encryption example is the interface of a symmetric encryption scheme based on a block cipher, say AES.
+It uses a one block initialization vector (IV) that is XORed to the plaintext. The masked value is then enciphered. 
+The ciphertext consists of the IV and this enciphered block. 
+
+```
+module AES
+open Array
+
+type bytes = seq byte
+type nbytes (n:nat) = b:bytes{length b == n}
+
+let blocksize = 32 (* 256 bits *)
+
+type plain  = nbytes blocksize
+type cipher = nbytes (2 * blocksize)  (* including IV *)
+
+let keysize = 16 (* 128 bits *)
+type key = nbytes keysize 
+
+assume val gen: unit -> key 
+assume val dec: key -> cipher -> Tot plain
+(* this function is pure & complete *)
+```
+
+~ Exercise
+
+~~ ExerciseFragment {exname=ex10a-encrypt}
+assume val enc: k:key -> p:plain -> c:cipher
+~~
+
+~~ Answer
+
+```
+assume val enc: k:key -> p:plain -> c:cipher{ dec k c = p }  
+(* this function is not pure (samples IV); 
+   the refinement captures functional correctness *)
+```
+~~
+
+~
+
+We model perfect secrecy by typing using type abstraction. As concrete cryptographic 
+algorithms such as the one above talk about bytes, we now introduce the notion of a 
+symmetric encryption scheme that enforces type abstraction for `safe` keys.   
+
+```
+module SymEnc (* a multi-key symmetric variant; for simplicity: 
+                 (1) only using AES above; and (2) parsing is complete *)
+
+type r = AES.plain
+
+(* CPA variant: *) 
+opaque type Encrypted: #k: Type -> p:Type -> k -> AES.bytes -> Type         
+(* an opaque predicate, keeping track of honest encryptions *)
+
+type cipher (p:Type) (k:Type) (key:k) = c:AES.cipher { Encrypted p key c }  
+
+type keyT: Type -> Type = 
+  | Ideal    : p:Type -> AES.key -> i:int -> keyT p 
+  | Concrete : p:Type -> AES.key -> i:int -> keyT p  
+
+type scheme: Type -> Type =
+  | Scheme:  p:Type -> k:Type -> 
+             keyrepr: (k -> AES.key) -> 
+             keygen:  (bool -> k) ->   
+             encrypt: (key:k -> p -> cipher p k key) ->
+             decrypt: (key:k -> cipher p k key -> p) -> 
+             scheme p 
+
+type entry (p:Type) (k:Type) = 
+  | Entry : key:k -> c:cipher p k key -> plain:p -> entry p k
+  
+```
+
+To create a cryptographic scheme one needs to provide a `plain` function 
+for turning `bytes` into the plain type values
+and a `repr` function for turning plain type values into bytes.
+```
+val create: p: Type -> plain: (r -> p) -> repr: (p -> r) -> scheme p
+```
+
+The `create` function instantiates the scheme using the `AES` module.
+ 
+```
+let create (p:Type) plain repr = 
+  let c = ST.alloc 0 in
+  let log : ref (list (entry p (keyT p))) = ST.alloc [] in
+
+  let keygen : bool -> keyT p = fun safe ->
+    let i = !c in
+    c := !c + 1;
+    let kv = AES.gen() in
+    if safe
+    then Ideal    p kv i 
+    else Concrete p kv i in
+
+  let keyrepr k : AES.key = 
+    match k with 
+    | Ideal kv _ -> failwith "no way!"
+    | Concrete kv _ -> kv in
+
+  let encrypt: (k:keyT p -> p -> cipher p (keyT p) k) = fun k text ->
+    match k with
+    | Ideal kv _ -> 
+       let c = AES.enc kv AES.dummy in
+       assume (Encrypted p k c); 
+       log := Entry k c text :: !log; 
+       c
+
+    | Concrete kv _ -> 
+       let rep = repr text in    
+       (* NS: need the let-binding because repr is impure and we can't 
+          substitute it in the type of 'enc' *) 
+       let c = AES.enc kv rep in
+       assume (Encrypted p k c); 
+       c in
+
+  let decrypt: key:keyT p -> cipher p (keyT p) key -> p = fun k c ->
+    match k with 
+    | Ideal kv _ -> (match List.find (fun (Entry k' c' _) -> k=k' && c= c') !log with 
+                     | Some e -> Entry.plain e
+                     | _ -> failwith "never")
+    | Concrete kv _ -> plain (AES.dec kv c)  in
+
+  Scheme p (keyT p) keyrepr keygen encrypt decrypt
+```
+
+Here is how such a symmetric encryption scheme would be used in an example:
+```
+module SampleEncrypt
+open SymEnc
+let plain (x:AES.plain) = x
+let repr (x:AES.plain) = x
+
+let test() =
+  let p = failwith "nice bytes" in
+  let Scheme keyrepr keygen encrypt decrypt = SymEnc.create (AES.plain) plain repr in
+  let k0 = keygen true in
+  let k1 = keygen true in
+  let c = encrypt k0 p in
+  let p' = decrypt k0 c in
+  //assert( p == p');           // this should eventually succeed, once we prove functional correctness
+  (* let p'' = decrypt k1 c in     // this rightfully triggers an error *)
+  ()
+```
 
 [Title          A]: http://Title_A.com "Title          A title"
 

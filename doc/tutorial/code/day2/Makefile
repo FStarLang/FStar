@@ -8,7 +8,7 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-LIB_FILES= string.fst partialmap.fst st.fst array-realized.fst
+LIB_FILES= string.fst set.fst map.fst heap.fst array.fst st.fst array-realized.fst
 STDLIB = list.fst $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
 #FSTAR      = $(RUNTIME) ../../bin/fstar.exe --codegen OCaml --odir ocaml-gen --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
 

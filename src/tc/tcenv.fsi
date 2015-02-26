@@ -61,6 +61,7 @@ type env = {
   letrecs:list<(lbname * typ)>;  (* mutually recursive names and their types (for termination checking) *)
   top_level:bool;                (* is this a top-level term? if so, then discharge guards *)
   check_uvars:bool;
+  use_eq:bool                    (* generate an equality constraint, rather than subtyping/subkinding *)
 }
 and solver_t = {
     init: env -> unit;

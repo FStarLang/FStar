@@ -13,7 +13,7 @@ let should_succeed u =
   assert (mem A (union (singleton A) (singleton B)));
   assert (Subset (singleton A) (union (singleton A) (singleton B)));
   assert (Subset (singleton B) (union (singleton A) (singleton B)));
-  assert (equal (union (singleton A) (singleton B))
+  assert (Equal (union (singleton A) (singleton B))
                 (union (singleton B) (singleton A)))
 
 
@@ -30,7 +30,10 @@ let test1 _ = assert (sel (upd (upd h x 0) y 1) x = 0)
 let test3 _ = assert (sel (upd (upd h x 0) y 1) y = 1)
 let h1 = upd (upd h x 0) y 1
 let test5 _ = assert (equal h1 (upd (upd h y 1) x 0))
+
+(* val ys: set aref  ... required ... NS: Not anymore *)
 let ys = Set.singleton (Ref y)
+
 let test6 _ = assert (equal h1 (concat h1 (restrict h1 (complement ys))))
 let test7 _ = assert (contains h1 x)
 let test8 _ = assert (contains h y ==> contains (upd h x 0) y)

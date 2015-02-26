@@ -15,6 +15,8 @@
 *)
 module Microsoft.FStar.Util
 
+open System.IO
+
 exception Impos
 exception NYI of string
 exception Failure of string
@@ -94,9 +96,6 @@ val kill_process: proc -> unit
 val kill_all: unit -> unit
 
 val run_proc : string -> string -> string -> (bool * string * string)
-
-val write_JSON: 'a -> string -> unit
-val read_JSON: string -> 'a
 
 val get_file_extension: string -> string
 
@@ -189,3 +188,33 @@ val check_sharing: 'a -> 'a -> string -> unit
 val is_letter_or_digit: char -> bool
 val is_punctuation: char -> bool
 val is_symbol: char -> bool
+
+(* serialization of compiled modules *)
+type OWriter = {
+    write_byte: byte -> unit;
+    write_bool: bool -> unit;
+    write_int32: int -> unit;
+    write_int64: int64 -> unit;
+    write_char: char -> unit;
+    write_double: double -> unit;
+    write_bytearray: array<byte> -> unit;
+    write_string: string -> unit;
+
+    close: unit -> unit
+}
+
+type OReader = {
+    read_byte: unit -> byte;
+    read_bool: unit -> bool;
+    read_int32: unit -> int;
+    read_int64: unit -> int64;
+    read_char: unit -> char;
+    read_double: unit -> double;
+    read_bytearray: unit -> array<byte>;
+    read_string: unit -> string;
+
+    close: unit -> unit
+}
+
+val get_owriter: string -> OWriter
+val get_oreader: string -> OReader

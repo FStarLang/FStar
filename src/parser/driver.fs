@@ -36,7 +36,7 @@ let parse env fn =
   let (b, s) = is_cache_file fn in
   if b then
     let full_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ s in
-    let m = SSyntax.deserialize_modul (Util.read_JSON<SSyntax.s_modul> full_name) in
+    let m = SSyntax.deserialize_modul (get_oreader full_name) in
     Desugar.add_modul_to_env m env, [m]
   else
     match ParseIt.parse_file fn with 
