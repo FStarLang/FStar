@@ -223,3 +223,38 @@ and appNfSp g t s f sp =
     | SExt u us ->
        match s with
            | A r s -> appNfSp g t s (napp g s r f u) us
+
+
+(* The whole set of terms *)
+
+type Tm =
+  | TVar : Var -> Tm
+  | TLam : Ty -> Tm -> Tm
+  | TApp : Tm -> Tm -> Tm
+
+val infer_tm : Tm -> Con -> Tot (option Ty)
+let rec infer_tm tm g =
+  match tm with
+    | TVar v -> infer_var v g
+    | TLam a u ->
+       (match infer_tm u (a::g) with
+          | Some b -> Some (A a b)
+          | None -> None)
+    | TApp f u ->
+       (match infer_tm f g, infer_tm u g with
+          | Some (A a b), Some a' -> if a = a' then Some b else None
+          | _, _ -> None)
+type typing_tm t g a = infer_tm t g = Some a
+
+
+(* The terms normalizer *)
+
+val nf : g:Con -> s:Ty -> u:Tm{typing_tm u g s} -> Tot (n:Nf{typing_nf n g s})
+                                                       (decreases %[u])
+let rec nf g s u =
+  match u, s with
+    | TVar x, _ -> nvar g s x
+    | TLam _ u, A s t -> NLam s (nf (s::g) t u)
+    | TApp f u, _ ->
+       (match infer_tm f g with
+          | Some (A s t) -> napp g t s (nf g (A s t) f) (nf g s u))
