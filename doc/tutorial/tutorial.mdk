@@ -1824,11 +1824,20 @@ let rec foo l = match l with
     | x::xs -> bar xs
 and bar l = foo l
 ```
+
+The tricky part is in the call to `foo` by `bar`. As `foo` is called on the same list.
+
 ~Exercise
 
-Prove termination. Tip, in your `lex_t` expression ou have to distinguish between input to `foo` and input to `bar`.
+Prove termination. 
 
-~~AnswerFragment
+Tip 1: In your `lex_t` expression you have to distinguish between input to `foo` and input to `bar`. Tip 2: The expression can use constants.
+~~ ExerciseFragment {exname=ex5c-mutualrec}
+val foo : l:list int -> Tot int
+val bar : l:list int -> Tot int
+~~
+
+~~AnswerFragment {exname=ex5c-mutualrec}
 val foo : l:list int -> Tot int (decreases %[l;0])
 val bar : l:list int -> Tot int (decreases %[l;1])
 let rec foo l = match l with
