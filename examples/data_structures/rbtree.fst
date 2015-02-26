@@ -214,7 +214,7 @@ opaque type pre_balance (c:color) (lt:rbtree') (ky:nat) (rt:rbtree') =
  * similar to pre_balance, post condition specifies invariants for
  * k_inv, h_inv, and c_inv
  *)
-val balance: c:color -> lt:rbtree' -> ky:nat -> rt:rbtree' ->
+opaque val balance: c:color -> lt:rbtree' -> ky:nat -> rt:rbtree' ->
              Pure rbtree'
              (requires (pre_balance c lt ky rt))
 	     (ensures (fun r -> post_balance c lt ky rt r))
@@ -231,7 +231,7 @@ let balance c lt ky rt =
  * a helper function that inserts a red node with new key, and calls
  * balance to re-establish red black tree invariants
  *)
-val ins: t:rbtree' -> k:nat ->
+opaque val ins: t:rbtree' -> k:nat ->
          Pure rbtree'
          (requires (c_inv t /\ h_inv t /\ k_inv t))
 	 (ensures (fun r ->
@@ -296,7 +296,7 @@ opaque type balanced_rbtree' (t:rbtree') = r_inv t /\ h_inv t /\ c_inv t /\ k_in
 (*
  * make black blackens the root of a tree
  *)
-val make_black: t:rbtree' -> Pure rbtree'
+opaque val make_black: t:rbtree' -> Pure rbtree'
                             (requires (is_T t /\ c_inv t /\ h_inv t /\ k_inv t))
                             (ensures (fun r -> balanced_rbtree' r
                             /\ (forall k. in_tree t k <==> in_tree r k)))
