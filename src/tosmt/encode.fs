@@ -664,7 +664,7 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
             tm, vars, decls in
         
         let head = Util.compress_exp head in
-        let head_type = whnf env (Util.unrefine (Tc.Recheck.recompute_typ head)) in //head should be a variable, so this should be fast to recompute
+        let head_type = Util.unrefine <| whnf env (Util.unrefine (Tc.Recheck.recompute_typ head)) in //head should be a variable, so this should be fast to recompute
         if Tc.Env.debug env.tcenv <| Options.Other "Encoding"
         then Util.fprint3 "Recomputed type of head %s (%s) to be %s\n" (Print.exp_to_string head) (Print.tag_of_exp head) (Print.typ_to_string head_type);
         begin match Util.function_formals head_type with

@@ -18,6 +18,7 @@ module TinyFStar
 
 open Constructive
 type cimp : Type -> Type -> Type (* CH: somebody forgot to add this? *)
+type cand : Type -> Type -> Type (* NS: somebody forgot to add this? *)
 
 (********************************************************)
 (* Syntax *)

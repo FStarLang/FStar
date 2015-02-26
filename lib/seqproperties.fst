@@ -26,3 +26,10 @@ let lemma_count_slice s i =
   lemma_append_count (slice s 0 i) (slice s i s.length)
 
 
+let rec sorted_concat_lemma f lo pivot hi =
+  if lo.length = 0
+  then (cut (Eq (append lo (cons pivot hi)) (cons pivot hi));
+        cut (Eq (tail (cons pivot hi)) hi))
+  else (sorted_concat_lemma f (tail lo) pivot hi;
+        Seq.lemma_append_cons lo (cons pivot hi);
+        Seq.lemma_tl (head lo) (append (tail lo) (cons pivot hi)))

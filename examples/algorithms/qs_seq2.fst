@@ -8,15 +8,6 @@ val cons_perm: a:Type -> tl:seq a -> s:seq a{length s > 0} ->
                (ensures (permutation a (cons (head s) tl) s))
 let cons_perm tl s = Seq.lemma_tl (head s) tl
 
-val sorted: ('a -> 'a -> Tot bool) 
-          -> s:seq 'a
-          -> Tot bool (decreases (s.length))
-let rec sorted f s =
-  if s.length <= 1
-  then true
-  else let hd = head s in
-       f hd (index s 1) && sorted f (tail s)
-
 (* Defining a new predicate symbol *)
 type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a. f a a)                                           (* reflexivity   *)
@@ -58,25 +49,7 @@ let rec partition f s pivot back =
        else let s' = swap s (pivot + 1) back in (* the back moves backward *)
             let _ = lemma_swap_permutes s (pivot + 1) back in
             let res = partition f s' pivot (back - 1) in
-            res
-
-val sorted_concat_lemma: a:Type
-                      -> f:(a -> a -> Tot bool){total_order a f}
-                      -> lo:seq a{sorted f lo}
-                      -> pivot:a
-                      -> hi:seq a{sorted f hi}
-                      -> Lemma (requires (forall y. (mem y lo ==> f y pivot)
-                                                 /\ (mem y hi ==> f pivot y)))
-                               (ensures (sorted f (append lo (cons pivot hi))))
-                               (decreases (lo.length))
-let rec sorted_concat_lemma f lo pivot hi =
-  if lo.length = 0
-  then (cut (Eq (append lo (cons pivot hi)) (cons pivot hi));
-        cut (Eq (tail (cons pivot hi)) hi))
-  else (sorted_concat_lemma f (tail lo) pivot hi;
-        Seq.lemma_append_cons lo (cons pivot hi);
-        Seq.lemma_tl (head lo) (append (tail lo) (cons pivot hi)))
-        
+            res        
 
 val sort: f:('a -> 'a -> Tot bool){total_order 'a f}
        -> s1:seq 'a

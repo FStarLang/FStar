@@ -54,7 +54,6 @@ opaque type Subset' (a:Type) (s1:set a) (s2:set a) = (forall (x:a).{:pattern mem
 
 type Subset : #a:Type -> set a -> set a -> Type = fun (a:Type) (s1:set a) (s2:set a) -> Subset' a s1 s2
 
-
 module Map
 open Prims.PURE
 open Set
@@ -112,7 +111,6 @@ let const_on (key:Type) (value:Type) (dom:set key) (v:value) = restrict dom (con
 opaque type DisjointDom (key:Type) (value:Type) (m1:t key value) (m2:t key value) =
           (forall x.{:pattern (contains m1 x)(* ; (contains m2 x) *)} contains m1 x ==> not (contains m2 x))
 
-
 module Heap
 open Set
 
@@ -167,7 +165,6 @@ assume ContainsConcat:forall (a:Type) (h1:heap) (h2:heap) (a:ref a).       {:pat
 type On (r:set aref) (p:(heap -> Type)) (h:heap) = p (restrict h r)
 opaque type fresh (h:heap) (refs:set aref)       = (forall (a:Type) (a:ref a).{:pattern (contains h a)} mem (Ref a) refs ==> not(contains h a))
 
-  
 (* A logical theory of integer-indexed arrays, from [0, n) *)
 module Array
 

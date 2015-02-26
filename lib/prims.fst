@@ -198,6 +198,7 @@ monad_lattice {
              type null_wp ('a:Type) ('p:Post 'a) (h:heap) = (forall (x:'a) (h':heap). 'p x h')
              type trivial ('a:Type) ('wp:WP 'a) = (forall h0. 'wp (fun r h1 -> True) h0)
              with State ('a:Type) ('wp:WP 'a) = STATE 'a 'wp 'wp
+             and STCore (a:Type) (wp:WP a) (wlp:WP a) = STATE a wp wlp
              and ST ('a:Type) ('pre:Pre) ('post: heap -> Post 'a) =
                  STATE 'a
                    (fun ('p:Post 'a) (h:heap) -> 'pre h /\ (forall a h1. ('pre h /\ 'post h a h1) ==> 'p a h1)) (* WP *)
