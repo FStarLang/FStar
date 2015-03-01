@@ -118,10 +118,10 @@ let display_usage specs =
              else Util.print_string (Util.format3 "  --%s %s  %s\n" flag argname doc))
     specs
 
-let specs () : list<Getopt.opt> = 
+let rec specs () : list<Getopt.opt> = 
   let specs =   
     [( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
-     ( noshort, "codegen", OneArg ((fun s -> codegen := Some s; verify := false), "OCaml|F#|JavaScript"), "Generate code for execution");
+     ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s; verify := false), "OCaml|F#|JavaScript"), "Generate code for execution");
      ( noshort, "lax", ZeroArgs (fun () -> pretype := true; verify := false), "Run the lax-type checker only (admit all verification conditions)");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
      ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
@@ -158,3 +158,11 @@ let specs () : list<Getopt.opt> =
      ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator")
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
+and parse_codegen s =
+  match s with
+  | "OCaml"
+  | "F#"
+  | "JavaScript" -> Some s
+  | _ ->
+     (Util.print_string "Wrong argument to codegen flag\n";
+      display_usage (specs ()); exit 1)
