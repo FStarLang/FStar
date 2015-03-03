@@ -186,7 +186,7 @@ let checkmail inbox =
       | Some [ ctxt; ctag ] ->
         (match parse ctxt with
         | Some [ sender; vk ] -> 
-            if true // verify vk0 ctxt ctag && verify vk mail mtag 
+            if verify vk0 ctxt ctag && verify vk mail mtag 
             then ReceivedFrom sender mail 
             else failwith "bad signature"
         | _ -> failwith "bad certificate text")

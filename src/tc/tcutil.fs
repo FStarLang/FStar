@@ -61,7 +61,7 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
     else match Rel.try_subtype env t1 t2 with 
             | None -> None
             | Some f -> Some <| apply_guard f e in
-  if env.is_pattern
+  if env.is_pattern && false
   then match Rel.try_teq env t1 t2 with
         | None -> raise (Error(Tc.Errors.expected_pattern_of_type env t2 e t1, Tc.Env.get_range env))
         | Some g -> e, g
@@ -910,7 +910,8 @@ let maybe_instantiate env e t =
   | _ -> e, t
 
 let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t = 
-  let gopt = if env.is_pattern || env.use_eq 
+  let gopt = if //env.is_pattern ||
+                env.use_eq 
              then Tc.Rel.try_teq env lc.res_typ t, false 
              else Tc.Rel.try_subtype env lc.res_typ t, true in
   match gopt with 
