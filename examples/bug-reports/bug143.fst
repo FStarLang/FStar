@@ -5,8 +5,7 @@ type empty = | Empty : empty -> empty
 
 
 val empty_is_empty : empty -> Tot (u:unit{False})
-let rec empty_is_empty = function
-  | Empty f -> empty_is_empty f
+let rec empty_is_empty = function | Empty f -> empty_is_empty f
 
 
 type lam = | Lam : (lam -> Dv empty) -> lam
@@ -17,7 +16,7 @@ let f l = match l with | Lam f -> f l
 
 
 val delta : lam
-let delta = Lam (fun l -> match l with | Lam f -> f l)
+let delta = Lam f
 
 
 val omega : empty
