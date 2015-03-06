@@ -11,6 +11,10 @@ tutorial-debug: tutorial.mdk fstar.json code/exercises/*.fst code/solutions/*.fs
 tutorial.pdf: tutorial.mdk fstar.json code/exercises/*.fst code/solutions/*.fst
 	madoko -v --pdf tutorial.mdk
 
+deck:
+	madoko intro-tiny-fstar.mdk
+	cp madoko2.css madoko.css
+
 clean:
 	rm -f *~ css.sty madoko.css madoko.sty *math-dvi.tex *math-pdf.tex *math-dvi.final.tex *math-pdf.final.tex  *.aux *.dim *.dvi *.log *.out *.upa *.dimx *.html *.log *.pdf *.upa *.upb *.bbl *.blg .*~
 	rm -dfr math
