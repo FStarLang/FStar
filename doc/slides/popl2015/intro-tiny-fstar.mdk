@@ -6,7 +6,7 @@ Affiliation   : Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
 Reveal Theme  : solarized
 Beamer Theme  : singapore
 Reveal Url    : ./reveal
-Colorizer     : fstar
+Colorizer     : ../../tutorial/fstar
 Package       : semantic
 Logo          : False
 
@@ -42,7 +42,7 @@ Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
 
 ![fo-verifiers]
 
-[fo-verifiers]: fo-verifiers.png
+[fo-verifiers]: img/fo-verifiers.png
 
 <!-------------------------------------------------------------------------------->
 
@@ -52,7 +52,7 @@ Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
 
 ### Modern languages use higher-order constructs pervasively
 
-[ho-langs]: ho-langs.png
+[ho-langs]: img/ho-langs.png
 
 <!-------------------------------------------------------------------------------->
 
@@ -66,7 +66,7 @@ Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
 * Effectful
 * Call by value
 
-[fstar-logo]: fstar.png
+[fstar-logo]: img/fstar.png
 
 <!-------------------------------------------------------------------------------->
 
@@ -143,14 +143,14 @@ $\Gamma_{\mbox{prelude}} \vdash \mbox{\texttt{let factorial n = e}} : t \Leftarr
   OCaml and F\#.  More streamlined, expressive, and efficient than
   prior versions.
 
-[timeline]: timeline.png
+[timeline]: img/timeline.png
 ~
 
 ~Slide
 
 ![arch]
 
-[arch]: arch.png
+[arch]: img/arch.png
 ~
 
 ~Slide
