@@ -19,13 +19,13 @@ module Wf
 
 
 type acc (a:Type) (r:(a -> a -> Type)) (x:a) : Type =
-  | AccIntro : (y:a -> r y x -> acc a r y) -> acc a r x
+  | AccIntro : (y:a -> r y x -> Tot (acc a r y)) -> acc a r x
 
 type well_founded (a:Type) (r:(a -> a -> Type)) = x:a -> acc a r x
 
 val acc_inv : r:('a -> 'a -> Type) -> x:'a -> acc 'a r x ->
-              y:'a -> r y x -> acc 'a r y
-let acc_inv _ = function | AccIntro _ h1 -> h1
+              y:'a -> r y x -> Tot (acc 'a r y)
+let acc_inv _ = function | AccIntro z h1 -> h1
 
 val fix_F : r:('a -> 'a -> Type) -> p:('a -> Type) ->
             (x:'a -> (y:'a -> r y x -> p y) -> p x) ->
