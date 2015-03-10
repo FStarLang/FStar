@@ -237,18 +237,13 @@ let mkForall_fuel' n (pats, vars, body) =
     let fallback () = Term.mkForall(pats, vars, body) in
     if !Options.unthrottle_inductives
     then fallback ()
-    else if List.length pats = n 
-            && pats |> List.for_all (fun p -> match p.tm with 
-                | Term.App("HasType", _) -> true
-                | _ -> false)
-         then let fsym, fterm = fresh_bvar "f" Fuel_sort in 
-              let pats = pats |> List.map (fun p -> match p.tm with 
-                | Term.App(_, args) -> Term.mkApp("HasTypeFuel", fterm::args)
-                | _ -> failwith "impos") in
-              let vars = (fsym, Fuel_sort)::vars in 
-              Term.mkForall(pats, vars, body)
-         else fallback() 
-
+    else let fsym, fterm = fresh_bvar "f" Fuel_sort in 
+         let pats = pats |> List.map (fun p -> match p.tm with 
+            | Term.App("HasType", args) -> Term.mkApp("HasTypeFuel", fterm::args)
+            | _ -> p) in
+            let vars = (fsym, Fuel_sort)::vars in 
+         Term.mkForall(pats, vars, body)
+  
 let mkForall_fuel = mkForall_fuel' 1
 
 let head_normal env t =   
@@ -1015,6 +1010,10 @@ let prims =
 let primitive_type_axioms : lident -> string -> term -> list<decl> = 
     let xx = ("x", Term_sort) in
     let x = mkBoundV xx in
+
+    let yy = ("y", Term_sort) in
+    let y = mkBoundV yy in
+
     let mk_unit : string -> term -> decls_t = fun _ tt -> 
         let typing_pred = Term.mk_HasType x tt in
         [Term.Assume(Term.mk_HasType Term.mk_Term_unit tt,    Some "unit typing");
@@ -1027,19 +1026,24 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
          Term.Assume(mkForall([Term.boxBool b], [bb], Term.mk_HasType (Term.boxBool b) tt),    Some "bool typing")] in
     let mk_int : string -> term -> decls_t  = fun _ tt -> 
         let typing_pred = Term.mk_HasType x tt in
+        let typing_pred_y = Term.mk_HasType y tt in
         let aa = ("a", Int_sort) in
         let a = mkBoundV aa in
         let bb = ("b", Int_sort) in
         let b = mkBoundV bb in
         let precedes = Term.mk_Valid <| mkApp("Prims.Precedes", [tt;tt;Term.boxInt a; Term.boxInt b]) in
+        let precedes_y_x = Term.mk_Valid <| mkApp("Precedes", [y; x]) in
         [Term.Assume(mkForall_fuel([typing_pred], [xx], mkImp(typing_pred, Term.mk_tester "BoxInt" x)),    Some "int inversion");
          Term.Assume(mkForall([Term.boxInt b], [bb], Term.mk_HasType (Term.boxInt b) tt),    Some "int typing");
-         Term.Assume(mkForall([precedes], [aa;bb], mkIff(precedes, mk_and_l [Term.mkGTE(a, Term.mkInteger 0);
-                                                                             Term.mkGTE(b, Term.mkInteger 0);
-                                                                             Term.mkLT(a, b)])), Some "Well-founded ordering on nats");
-         Term.Assume(mkForall_fuel([typing_pred], [xx], mkImp(Term.mkAnd(typing_pred, Term.mkGT (Term.unboxInt x, Term.mkInteger 0)),
-                                                         Term.mk_Valid <| mkApp("Precedes", [Term.boxInt <| Term.mkSub(Term.unboxInt x, Term.mkInteger 1); x]))), 
-                                                            Some "well-founded ordering on nat (alt)")] in
+         Term.Assume(mkForall_fuel([typing_pred; typing_pred_y;precedes_y_x], 
+                                   [xx;yy], 
+                                   mkImp(mk_and_l [typing_pred; 
+                                                   typing_pred_y; 
+                                                   Term.mkGT (Term.unboxInt x, Term.mkInteger 0);
+                                                   Term.mkGTE (Term.unboxInt y, Term.mkInteger 0);
+                                                   Term.mkLT (Term.unboxInt y, Term.unboxInt x)],
+                                         precedes_y_x)),
+                                  Some "well-founded ordering on nat (alt)")] in
     let mk_int_alias : string -> term -> decls_t = fun _ tt -> 
         [Term.Assume(mkEq(tt, mkFreeV(Const.int_lid.str, Type_sort)), Some "mapping to int; for now")] in
     let mk_str : string -> term -> decls_t  = fun _ tt -> 
