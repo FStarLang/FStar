@@ -41,6 +41,18 @@ let warn r msg =
   Util.print_string (format2 "Diagnostic %s: %s\n" (Range.string_of_range r) msg)
 
 let num_errs = Util.mk_ref 0
+let verification_errs : ref<list<string>> = Util.mk_ref []
+let add_errors env errs = 
+    let errs = errs |> List.map (fun msg -> format2 "Error %s: %s\n" (Range.string_of_range <| Env.get_range env) msg) in
+    let n_errs = List.length errs in 
+    atomically (fun () -> 
+        verification_errs := errs@ (!verification_errs);
+        num_errs := !num_errs + n_errs)
+let report_all () =
+    let all_errs = atomically (fun () -> !verification_errs) in
+    let all_errs = List.sortWith Util.compare all_errs in
+    all_errs |> List.iter Util.print_string
+
 let report r msg = 
   incr num_errs;
   Util.print_string (format2 "Error %s: %s\n" (Range.string_of_range r) msg)

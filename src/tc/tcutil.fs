@@ -36,9 +36,7 @@ let report env errs =
     Tc.Errors.report (Tc.Env.get_range env)
                      (Tc.Errors.failed_to_prove_specification errs)
 
-let discharge_guard env (g:guard_t) = 
-    let ok, errs = Rel.try_discharge_guard env g in
-    if not ok then report env errs
+let discharge_guard env (g:guard_t) = Rel.try_discharge_guard env g 
 
 let force_trivial env g = discharge_guard env g
 
@@ -1047,9 +1045,8 @@ let generalize verify env (lecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*com
       
 let check_top_level env g lc : (bool * comp) =
   let discharge g = 
-    let ok, errs = try_discharge_guard env g in
-    if not ok then report env errs;
-    Util.is_pure_lcomp lc && ok in
+    try_discharge_guard env g;
+    Util.is_pure_lcomp lc in
   let g = Rel.solve_deferred_constraints env g in
   if Util.is_total_lcomp lc 
   then discharge g, lc.comp()

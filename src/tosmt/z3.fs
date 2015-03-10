@@ -93,11 +93,6 @@ let status_to_string = function
     | UNKNOWN -> "unknown"
     | TIMEOUT -> "timeout"
 
-let z3proc =
-    let cond (s:string) = Util.trim_string s = "Done!" in
-    Util.start_process (!Options.z3_exe) ini_params cond 
-
- 
 
 let doZ3Exe (input:string) = 
   let parse (z3out:string) =
@@ -114,24 +109,18 @@ let doZ3Exe (input:string) =
       | _::tl -> result tl 
       | _ -> failwith <| format1 "Got output lines: %s\n" (String.concat "\n" (List.map (fun (l:string) -> format1 "<%s>" (Util.trim_string l)) lines)) in
       result lines in
+  let z3proc =
+    let cond (s:string) = Util.trim_string s = "Done!" in
+    Util.start_process (!Options.z3_exe) ini_params cond in
   let stdout = Util.ask_process z3proc input in    
+  Util.kill_process z3proc;
   parse (Util.trim_string stdout) 
 
-let qfh : ref<option<Util.file_handle>> = Util.mk_ref None
-let get_qfile () = 
-    match !qfh with 
-        | Some f -> f
-        | None -> 
-          Util.print_string "Opening file queries.smt2\n";
-          let fh = Util.open_file_for_writing "queries.smt2" in
-          qfh := Some fh;
-          fh
-
-let cleanup () = 
-    Util.kill_process z3proc;
-    match !qfh with 
-        | Some f -> Util.close_file f
-        | _ -> ()
+let get_qfile = 
+    let ctr = Util.mk_ref 0 in
+    fun () -> 
+        incr ctr;
+        Util.open_file_for_writing (Util.format1 "queries-%s.smt2" (Util.string_of_int !ctr))
 
 let z3_options () =
   let mbqi =
@@ -146,90 +135,70 @@ let z3_options () =
      "(set-option :" ^ mbqi ^ " false)\n" ^
      model_on_timeout
 
-//Invariant: if scopes[i] = Pending(true, f), then the declarations 'f() = Push::_' have yet to be given to the solver
-//Invariant: if scopes[i] = Pending(false, f), then the declarations 'f() <> Push::_' have yet to be given to the solver
-//Invariant: if scopes[i] = Closed, then a Pop is yet to be given to the solver for each level i
-type scope = 
-    | Closed of string * (unit -> decls_t)
-        | Pending of string * bool * (unit -> decls_t)
+type job<'a> = {
+    job:unit -> 'a;
+    callback: 'a -> unit
+}
+type z3job = job<(bool * list<string>)>
 
-let print_scopes s = s |> List.map (function 
-    | Closed (m, _) -> "Closed "^m
-    | Pending (m, true, _) -> "Pending (true) " ^m
-    | Pending (m, _, _) -> "Pending (false) " ^m) |> String.concat "\n\t"
+let n_cores = 24
+let n_runners = Util.mk_ref 0
+let job_queue : ref<list<z3job>> = Util.mk_ref []
 
-let open_scope m  = Pending (m, false, (fun () -> []))
-let scopes : ref<list<scope>> = Util.mk_ref [open_scope "top"]
-let push msg f =
-    let b = !scopes in
-    let hd = Pending (msg, true, (fun () -> let u = [Term.Push; Term.Caption ("push" ^ msg)] in let v = f() in u@v)) in
-    scopes := hd::b
-let pop msg f =
-    let rec aux l = match l with
-        | [] -> failwith "Too many pops"
-        | Closed(m,g)::tl -> Closed(m,g)::aux tl
-        | Pending(_, true, _)::tl -> tl   // top of the stack contains a push that was never given to the solver; so, don't add a pop
-        | Pending(m, false, _)::tl -> Closed ("popped" ^m, (fun () -> let u = f() in let v = [Term.Pop; Term.Caption ("Pop " ^ msg)] in u@v))::tl in
-    scopes := aux (!scopes) 
-let flush_scopes () = 
-    let close_all closed = 
-        closed |> List.collect (function 
-            | Closed(_, f) -> f()
-            | _ -> failwith "impossible") in
-    let flush_pending pending = 
-        List.fold_right (fun p decls -> match p with
-            | Pending (_, _, f) -> let v = f() in decls@v
-            | _ -> decls) pending [] in
-    let pending, closed = !scopes |> List.partition (function Closed _ -> false | _ -> true) in
-    let decls = let u = close_all closed in let v = flush_pending pending in u@v in 
-    scopes := pending |> List.map (function 
-        | Closed _ -> failwith (Util.format1 "impos!!!:\n\t%s\n" (print_scopes !scopes))  
-        | Pending(m, _, _) -> open_scope m);
-    decls
-
-let giveZ3 msg (theory:unit -> decls_t) = 
-    let rec aux l = match l with 
-        | [] -> failwith "no open scopes"
-        | Closed(m, f)::tl -> Closed(m, f)::aux tl
-        | Pending(m, b, f)::tl -> 
-            let g () =
-              let u = f() in
-              let v = theory() in
-              u @ v in
-            Pending(m, b, g)::tl in
-    scopes := aux !scopes
-
-let ask bg_theory label_messages qry =
-  let theory = bg_theory@[Term.Push]@qry@[Term.Pop] in
-  let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
-    if !Options.logQueries then Util.append_to_file (get_qfile()) input; (* append flushes *)
-    let status, lblnegs = doZ3Exe input in
+let z3_job label_messages input () =
+  let status, lblnegs = doZ3Exe input in
   let result = match status with 
-        | UNSAT -> true, []
-        | _ -> 
-          if !Options.debug <> [] then print_string <| format1 "Z3 says: %s\n" (status_to_string status);
-          let failing_assertions = lblnegs |> List.collect (fun l -> 
-            match label_messages |> List.tryFind (fun (m, _) -> fst m = l) with
-                | None -> []
-                | Some (_, msg) -> [msg]) in
-          false, failing_assertions in
+    | UNSAT -> true, []
+    | _ -> 
+        if !Options.debug <> [] then print_string <| format1 "Z3 says: %s\n" (status_to_string status);
+        let failing_assertions = lblnegs |> List.collect (fun l -> 
+        match label_messages |> List.tryFind (fun (m, _) -> fst m = l) with
+            | None -> []
+            | Some (_, msg) -> [msg]) in
+        false, failing_assertions in        
     result
 
-let     queryAndPop query_and_labels pop_fn =
-  let bg_theory = flush_scopes() in
-  let qry, label_messages = query_and_labels () in
-  let theory = bg_theory@[Term.Push]@qry@[Term.Pop] in
+let rec dequeue () = 
+    let next_job = atomically (fun () -> match !job_queue with 
+        | [] -> None
+        | hd::tl -> job_queue := tl; Some hd) in
+    match next_job with 
+        | None -> atomically (fun () -> decr n_runners)
+        | Some j -> run_job j
+and run_job j = 
+    spawn (fun () -> j.callback <| j.job (); dequeue())
+
+let enqueue j = 
+    let n = atomically (fun () -> !n_runners) in 
+    if n < n_cores
+    then atomically (fun () -> incr n_runners; run_job j)
+    else atomically (fun () -> job_queue := !job_queue@[j])
+
+let rec finish () = 
+    let n = atomically (fun () -> 
+       let n = !n_runners in 
+       if n=0 && List.length !job_queue <> 0
+       then failwith "OUTSTANDING JOBS BUT NO RUNNERS!"
+       else n) in
+    if n=0 
+    then Tc.Errors.report_all()
+    else let _ = System.Threading.Thread.Sleep(500) in
+         finish()
+
+type scope_t = list<list<decl>>
+let scope : ref<scope_t> = Util.mk_ref [[]]
+let push msg    = scope := [Term.Caption msg]::!scope
+let pop ()      = scope := List.tl !scope
+let bgtheory () = List.rev !scope |> List.flatten
+let giveZ3 decls = match !scope with 
+    | hd::tl -> scope := (hd@decls)::tl
+    | _ -> failwith "Impossible"
+let ask label_messages qry cb =
+  let log_query i = 
+    let fh = get_qfile () in 
+    Util.append_to_file fh i;
+    Util.close_file fh in
+  let theory = bgtheory()@qry in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
-    if !Options.logQueries then Util.append_to_file (get_qfile()) input; (* append flushes *)
-    let status, lblnegs = doZ3Exe input in
-  let result = match status with 
-        | UNSAT -> true, []
-        | _ -> 
-          if !Options.debug <> [] then print_string <| format1 "Z3 says: %s\n" (status_to_string status);
-          let failing_assertions = lblnegs |> List.collect (fun l -> 
-            match label_messages |> List.tryFind (fun (m, _) -> fst m = l) with
-                | None -> []
-                | Some (_, msg) -> [msg]) in
-          false, failing_assertions in
-  pop_fn(); 
-  result
+  if !Options.logQueries then log_query input; 
+  enqueue ({job=z3_job label_messages input; callback=cb})

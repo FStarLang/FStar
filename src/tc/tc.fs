@@ -69,18 +69,14 @@ let fxv_check head env kt fvs =
                           let s = Util.new_kvar env in
                           begin match Tc.Rel.try_keq env k s with 
                             | Some g ->
-                              if fst <| Tc.Rel.try_discharge_guard env g 
-                              then ()
-                              else fail()
+                              Tc.Rel.try_discharge_guard env g 
                             | _ -> fail ()
                           end 
                         | Inr t -> 
                           let s = Util.new_tvar env ktype in
                           begin match Tc.Rel.try_teq env t s with
                             | Some g -> 
-                              if fst <| Tc.Rel.try_discharge_guard env g
-                              then ()
-                              else fail()
+                              Tc.Rel.try_discharge_guard env g
                             | _ -> fail ()
                           end in
     aux false kt
@@ -1010,9 +1006,9 @@ and tc_exp env e : exp * lcomp * guard_t =
                  let fvs = Util.freevars_typ tres in
                  if Util.set_mem (bvd_to_bvar_s bvd t) fvs.fxvs 
                  then let t = Tc.Util.new_tvar env0 ktype in
-                      if fst (Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env tres t)
-                      then e, cres, guard
-                      else raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres bvd, rng env))
+                      Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env tres t;
+                      e, cres, guard
+//                      else raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres bvd, rng env))
                  else e, cres, guard
               | _ -> e, cres, guard
      end       
@@ -1082,9 +1078,9 @@ and tc_exp env e : exp * lcomp * guard_t =
                     | (Inl x, _, _) -> Util.set_mem (bvd_to_bvar_s x tun) fvs.fxvs) with
                 | Some (Inl y, _, _) ->
                   let t' = Tc.Util.new_tvar env0 ktype in 
-                  if fst (Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env tres t')
-                  then e, cres, guard
-                  else raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres y, rng env))
+                  Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env tres t';
+                  e, cres, guard
+                  //else raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres y, rng env))
                 | _ -> e, cres, guard
          end
 
@@ -1592,7 +1588,7 @@ let add_modul_to_tcenv (en: env) (m: modul) :env =
   let en = Tc.Env.set_current_module en m.name in 
   Tc.Env.finish_module (List.fold_left do_sigelt en m.exports) m
 
-let check_modules (s:solver_t) (ds: solver_t) mods = 
+let check_modules (s:solver_t) mods = 
    let env = Tc.Env.initial_env s Const.prims_lid in
    s.init env; 
    let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 

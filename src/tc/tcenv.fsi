@@ -69,8 +69,9 @@ and solver_t = {
     pop: string -> unit;
     encode_modul:env -> modul -> unit;
     encode_sig:env -> sigelt -> unit;
-    solve:env -> typ -> (bool * list<string>);
+    solve:env -> typ -> unit;// (bool * list<string>);
     is_trivial: env -> typ -> bool;
+    finish: unit -> unit;
 }
 
 val bound_vars: env -> list<Util.either<btvar, bvvar>>

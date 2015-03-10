@@ -2448,13 +2448,13 @@ let solve_deferred_constraints env (g:guard_t) =
 
 let try_discharge_guard env (g:guard_t) = 
    let g = solve_deferred_constraints env g in
-   if not (!Options.verify) then true, []
+   if not (!Options.verify) then ()
    else match g.guard_f with 
-    | Trivial -> true, []
+    | Trivial -> ()
     | NonTrivial vc -> 
         let vc = Normalize.norm_typ [Delta; Beta; Eta; Simplify] env vc in
         begin match check_trivial vc with 
-            | Trivial -> (true, [])
+            | Trivial -> ()
             | NonTrivial vc -> 
                 if Tc.Env.debug env <| Options.Other "Rel" then Tc.Errors.diag (Tc.Env.get_range env) (Util.format1 "Checking VC=\n%s\n" (Print.formula_to_string vc));
                 env.solver.solve env vc

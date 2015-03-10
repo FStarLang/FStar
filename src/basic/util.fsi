@@ -218,3 +218,6 @@ type OReader = {
 
 val get_owriter: string -> OWriter
 val get_oreader: string -> OReader
+
+val atomically: (unit -> 'a) -> 'a
+val spawn: (unit -> unit) -> unit

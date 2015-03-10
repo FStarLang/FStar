@@ -550,3 +550,11 @@ let get_oreader (file:string) :OReader =
         close = r.Close
     }
 
+open System.Threading
+let global_lock = new Mutex()
+let atomically (f:unit -> 'a) = 
+    ignore <| global_lock.WaitOne();
+    let result = f () in
+    global_lock.ReleaseMutex(); 
+    result
+let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
