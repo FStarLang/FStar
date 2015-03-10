@@ -8,7 +8,7 @@ assume val index:  a:Type -> s:seq a -> i:nat{i < length s} -> Tot a
 
 (* Constructors *)
 assume val create: a:Type -> nat -> a -> Tot (seq a)
-assume val upd:    a:Type -> n:nat -> a -> s:seq a{n < length s} -> Tot (seq a)
+assume val upd:    a:Type -> s:seq a -> n:nat{n < length s} -> a ->  Tot (seq a)
 assume val append: a:Type -> seq a -> seq a -> Tot (seq a)
 assume val slice:  a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s} -> Tot (seq a)
 
@@ -23,8 +23,8 @@ assume val lemma_create_len: a:Type -> n:nat -> i:a -> Lemma
 
 assume val lemma_len_upd: a:Type -> n:nat -> v:a -> s:seq a{n < length s} -> Lemma
   (requires True)
-  (ensures (length (upd n v s) = length s))
-  [SMTPat (length (upd n v s))]
+  (ensures (length (upd s n v) = length s))
+  [SMTPat (length (upd s n v))]
 
 assume val lemma_len_append: a:Type -> s1:seq a -> s2:seq a -> Lemma
   (requires True)
@@ -42,15 +42,15 @@ assume val lemma_index_create: a:Type -> n:nat -> v:a -> i:nat{i < n} -> Lemma
   (ensures (index (create n v) i = v))
   [SMTPat (index (create n v) i)]
 
-assume val lemma_index_upd1: a:Type -> n:nat -> v:a -> s:seq a{n < length s} -> Lemma
+assume val lemma_index_upd1: a:Type -> s:seq a -> n:nat{n < length s} -> v:a -> Lemma
   (requires True)
-  (ensures (index (upd n v s) n = v))
-  [SMTPat (index (upd n v s) n)]
+  (ensures (index (upd s n v) n = v))
+  [SMTPat (index (upd s n v) n)]
 
-assume val lemma_index_upd2: a:Type -> n:nat -> v:a -> s:seq a{n < length s} -> i:nat{i<>n /\ i < length s} -> Lemma
+assume val lemma_index_upd2: a:Type -> s:seq a -> n:nat{n < length s} -> v:a -> i:nat{i<>n /\ i < length s} -> Lemma
   (requires True)
-  (ensures (index (upd n v s) i = index s i))
-  [SMTPat (index (upd n v s) i)]
+  (ensures (index (upd s n v) i = index s i))
+  [SMTPat (index (upd s n v) i)]
 
 assume val lemma_index_app1: a:Type -> s1:seq a -> s2:seq a -> i:nat{i < length s1} -> Lemma
   (requires True)

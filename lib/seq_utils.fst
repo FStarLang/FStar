@@ -38,7 +38,7 @@ val mem: 'a -> seq 'a -> Tot bool
 let mem x l = count x l > 0
 
 val swap: a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{j<length s} -> Tot (seq a)
-let swap s i j = upd i (index s j) (upd j (index s i) s)
+let swap s i j = upd (upd s j (index s i)) i (index s j) 
 
 val lemma_slice_append: a:Type -> s1:seq a{length s1 >= 1} -> s2:seq a -> Lemma 
   (ensures (Eq (append s1 s2) (append (slice s1 0 1) (append (slice s1 1 (length s1)) s2))))
@@ -82,7 +82,7 @@ val lemma_append_count_aux: a:Type -> x:a -> lo:seq a -> hi:seq a -> Lemma
   (ensures (count x (append lo hi) = (count x lo + count x hi)))
 let lemma_append_count_aux x lo hi = lemma_append_count lo hi
 
-val lemma_mem_inversion: a:Type -> s:seq a{length s > 0} -> Lemma 
+val lemma_mem_inversion: a:Type -> s:seq a{length s > 0} -> Lemma
   (ensures (forall x. mem x s = (x=head s || mem x (tail s))))
 let lemma_mem_inversion s = ()
 
@@ -126,6 +126,24 @@ let rec sorted_concat_lemma f lo pivot hi =
         lemma_append_cons lo (cons pivot hi);
         lemma_tl (head lo) (append (tail lo) (cons pivot hi)))
 
+opaque val split_5 : a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
+  (requires True)
+  (ensures (fun x ->
+            ((length x = 5)
+             /\ (s = append (index x 0) (append (index x 1) (append (index x 2) (append (index x 3) (index x 4)))))
+             /\ Eq (index x 0) (slice s 0 i)
+             /\ Eq (index x 1) (slice s i (i+1))
+             /\ Eq (index x 2) (slice s (i+1) j)
+             /\ Eq (index x 3) (slice s j (j + 1))
+             /\ Eq (index x 4) (slice s (j + 1) (length s)))))
+let split_5 s i j =
+  let frag_lo, rest  = split_eq s i in
+  let frag_i,  rest  = split_eq rest 1 in
+  let frag_mid,rest  = split_eq rest (j - (i + 1)) in
+  let frag_j,frag_hi = split_eq rest 1 in
+  upd (upd (upd (upd (create 5 frag_lo) 1 frag_i) 2 frag_mid) 3 frag_j) 4 frag_hi
+  
+  
 val lemma_swap_permutes_aux: a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> x:a -> Lemma
   (requires True)
   (ensures (count x s = count x (swap s i j)))
@@ -133,57 +151,40 @@ let lemma_swap_permutes_aux s i j x =
   if j=i
   then cut (Eq (swap s i j) s)
   else begin
-    let frag_lo, rest  = split_eq s i in   
-    let frag_i,  rest  = split_eq rest 1 in
-    let frag_mid,rest  = split_eq rest (j - (i + 1)) in 
-    let frag_j,frag_hi = split_eq rest 1 in
-    cut (Eq s            (append frag_lo (append frag_i (append frag_mid (append frag_j frag_hi)))));
-    lemma_append_count_aux x frag_lo (append frag_i (append frag_mid (append frag_j frag_hi)));
-    lemma_append_count_aux x frag_i (append frag_mid (append frag_j frag_hi));
-    lemma_append_count_aux x frag_mid (append frag_j frag_hi);
-    lemma_append_count_aux x frag_j frag_hi;
+      let s5 = split_5 s i j in
+      let frag_lo, frag_i, frag_mid, frag_j, frag_hi = 
+        index s5 0, index s5 1, index s5 2, index s5 3, index s5 4 in
+      lemma_append_count_aux x frag_lo (append frag_i (append frag_mid (append frag_j frag_hi)));
+      lemma_append_count_aux x frag_i (append frag_mid (append frag_j frag_hi));
+      lemma_append_count_aux x frag_mid (append frag_j frag_hi);
+      lemma_append_count_aux x frag_j frag_hi;
 
-    let s' = swap s i j in 
-    let frag_lo', rest   = split_eq s' i in   
-    cut (Eq  frag_lo frag_lo');
+      let s' = swap s i j in
+      let s5' = split_5 s' i j in 
+      let frag_lo', frag_j', frag_mid', frag_i', frag_hi' = 
+        index s5' 0, index s5' 1, index s5' 2, index s5' 3, index s5' 4 in
 
+      cut (Eq frag_lo'  frag_lo);
+      cut (Eq frag_i' frag_i);
+      cut (Eq frag_j' frag_j);
+      cut (Eq frag_hi'  frag_hi);
+      cut (Eq frag_mid' frag_mid);
 
-    let frag_j',  rest   = split_eq rest 1 in
-    cut (Eq  frag_j frag_j');
-
-
-    let frag_mid',rest   = split_eq rest (j - (i + 1)) in 
-    admitP (Eq  frag_mid frag_mid');
-    (* let _ = admit () in *)
-
-    let frag_i',frag_hi' = split_eq rest 1 in
-    admitP (Eq  frag_i frag_i');
-
-    (* cut (Eq  s' (append frag_lo' (append frag_j' (append frag_mid' (append frag_i' frag_hi'))))); *)
-
-
-    lemma_append_count_aux x frag_lo (append frag_j (append frag_mid (append frag_i frag_hi)));
-    lemma_append_count_aux x frag_j (append frag_mid (append frag_i frag_hi));
-    lemma_append_count_aux x frag_mid (append frag_i frag_hi);
-    lemma_append_count_aux x frag_i frag_hi
+      lemma_append_count_aux x frag_lo (append frag_j (append frag_mid (append frag_i frag_hi)));
+      lemma_append_count_aux x frag_j (append frag_mid (append frag_i frag_hi));
+      lemma_append_count_aux x frag_mid (append frag_i frag_hi);
+      lemma_append_count_aux x frag_i frag_hi
   end
 
-(* let lemma_swap_permutes_aux s i j x = *)
-(*   if j=i *)
-(*   then cut (Eq (swap s i j) s) *)
-(*   else *)
-(*     let frag_lo  = slice s 0 i in *)
-(*     let frag_i   = slice s i (i + 1) in *)
-(*     let frag_mid = slice s (i + 1) j in *)
-(*     let frag_j   = slice s j (j + 1) in *)
-(*     let frag_hi  = slice s (j + 1) (length s) in *)
-(*     cut (Eq s            (append frag_lo (append frag_i (append frag_mid (append frag_j frag_hi))))); *)
-(*     lemma_append_count_aux x frag_lo (append frag_i (append frag_mid (append frag_j frag_hi))); *)
-(*     lemma_append_count_aux x frag_i (append frag_mid (append frag_j frag_hi)); *)
-(*     lemma_append_count_aux x frag_mid (append frag_j frag_hi); *)
-(*     lemma_append_count_aux x frag_j frag_hi; *)
-(*     cut (Eq (swap s i j) (append frag_lo (append frag_j (append frag_mid (append frag_i frag_hi))))); *)
-(*     lemma_append_count_aux x frag_lo (append frag_j (append frag_mid (append frag_i frag_hi))); *)
-(*     lemma_append_count_aux x frag_j (append frag_mid (append frag_i frag_hi)); *)
-(*     lemma_append_count_aux x frag_mid (append frag_i frag_hi); *)
-(*     lemma_append_count_aux x frag_i frag_hi *)
+opaque type permutation (a:Type) (s1:seq a) (s2:seq a) =
+       (forall i. count i s1 = count i s2)
+
+val lemma_swap_permutes: a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> Lemma
+  (permutation a s (swap s i j))
+let lemma_swap_permutes s i j = Classical.forall_intro (lemma_swap_permutes_aux s i j)
+
+val cons_perm: a:Type -> tl:seq a -> s:seq a{length s > 0} ->
+         Lemma (requires (permutation a tl (tail s)))
+               (ensures (permutation a (cons (head s) tl) s))
+let cons_perm tl s = lemma_tl (head s) tl
+
