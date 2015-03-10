@@ -1092,6 +1092,25 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     match se with
      | Sig_typ_abbrev(_, _, _, _, [Effect], _) -> [], env
 
+     | Sig_typ_abbrev(lid, _, _, _, _, _) when (lid_equals lid Const.b2t_lid) ->
+       let tname, ttok, env = gen_free_tvar env lid in 
+       let xx = ("x", Term_sort) in
+       let x = mkBoundV xx in
+       let valid_b2t_x = mk_Valid(Term.mkApp("Prims.b2t", [x])) in
+//       (assert (forall ((@x Term))
+//                (! (= (Valid (Prims.b2t @x))
+//                      (and (HasType @x Prims.bool)
+//                           (= BoxBool_proj_0 @x)))
+//                   
+//                   :pattern ((Valid (Prims.b2t @x))))))
+       let decls = [Term.DeclFun(tname, [Term_sort], Type_sort, None);
+                    Term.Assume(Term.mkForall([valid_b2t_x], [xx], 
+                                              Term.mkEq(valid_b2t_x, 
+                                                        Term.mkAnd(Term.mk_HasType x (Term.mkFreeV("Prims.bool", Type_sort)), 
+                                                                   Term.mkApp("BoxBool_proj_0", [x])))),                                     
+                                Some "b2t def")] in
+       decls, env
+      
      | Sig_typ_abbrev(lid, tps, _, t, tags, _) -> 
         let tname, ttok, env = gen_free_tvar env lid in 
         let tps, t = match t.n with 
