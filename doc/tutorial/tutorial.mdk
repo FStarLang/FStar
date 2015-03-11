@@ -3679,10 +3679,12 @@ type key = nbytes keysize
 assume val gen: unit -> key 
 assume val dec: key -> cipher -> Tot plain
 (* this function is pure & complete *)
+assume val enc: k:key -> p:plain -> c:cipher
 ```
 
 ~ Exercise
-
+Refine the type of the encryption function to model the *correctness* property:
+A correctly generated ciphertext, decrypts to its plaintext. 
 ~~ ExerciseFragment {exname=ex10a-encrypt}
 assume val enc: k:key -> p:plain -> c:cipher
 ~~
@@ -3698,7 +3700,7 @@ assume val enc: k:key -> p:plain -> c:cipher{ dec k c = p }
 
 ~
 
-We model perfect secrecy by typing using type abstraction. As concrete cryptographic 
+We model *perfect secrecy* by typing using type abstraction. As concrete cryptographic 
 algorithms such as the one above talk about bytes, we now introduce the notion of a 
 symmetric encryption scheme that enforces type abstraction for `safe` keys.   
 
