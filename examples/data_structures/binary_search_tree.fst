@@ -36,13 +36,15 @@ type tree: int -> Type =
                                  /\ (is_None left <==> n=l)}
         -> tree r
 
-let leaf i = Node #i None i #i None (* Need to supply #i for the empty sub-trees, since it can't be inferred by unification *)
+(* Need to supply #i for the empty sub-trees, since it can't be inferred by unification *)
+let leaf i = Node #i None i #i None
+
 let max i j = if i < j then j else i
 
 val insert: #k:int -> t:tree k -> i:int -> Tot (tree (max k i)) (decreases t)
 let rec insert k (Node left n right) i =
   if i = n
-  then Node left n right
+  then Node left n right (* no duplicates *)
   else if i < n
   then match left with
        | None ->
