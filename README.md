@@ -29,6 +29,39 @@ hope will lead to a 1.0 release soon. This new variant is
 incompatible and quite different compared to the previously
 released 0.7 versions.
 
+### Editing F* code
+
+#### Emacs
+
+The [Tuareg Mode] for Objective Caml works quite well for F* too. Tuareg is easiest to install using [MELPA].
+To use MELPA add this to your `.emacs` or `.emacs.d/init.el` file:
+```elisp
+(require 'package)
+(add-to-list 'package-archives
+             '("melpa" . "http://melpa.milkbox.net/packages/") t)
+```
+Now do `M-x package-install` and install `tuareg`.
+
+Then add the rest of the configuration to `.emacs` or `.emacs.d/init.el`:
+```elisp
+(add-hook 'tuareg-mode-hook 'tuareg-imenu-set-imenu)
+(setq auto-mode-alist
+      (append '(("\\.ml[ily]?$" . tuareg-mode)
+                ("\\.topml$" . tuareg-mode))
+              auto-mode-alist))
+(setq auto-mode-alist 
+      (append '(("\\.fs[tiy]?$" . tuareg-mode))
+          auto-mode-alist))
+```
+Finally, if you want easy navigation through F* error messages also add this to your `.emacs` or `.emacs.d/init.el`:
+```elisp
+(add-to-list 'compilation-error-regexp-alist
+ '("\\([a-zA-Z_-]*.fst\\)(\\([0-9]+\\)\\,\\([0-9]+\\)-[0-9]+\\,[0-9]+)" 1 2 3))
+```
+
+[Tuareg Mode]: https://github.com/ocaml/tuareg
+[MELPA]: http://melpa.org
+
 ### Code structure
 
 This section describes the general structure of the F* verifier.
