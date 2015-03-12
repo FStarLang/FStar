@@ -1073,6 +1073,17 @@ let rec fibonacci_is_monotone n = if n > 1 then fibonacci_is_monotone (n - 1) el
 
 # Simple inductive types
 
+~CH
+
+We should explain all our syntactic restrictions on naming things:
+Constructors have to start uppercase, types can be upper or lower
+case, right? (although they are usually lower case), variables
+have to start lower-case. In particular every lower case thing
+in a pattern is interpreted as a variable, even if it's already
+bound somewhere else. We might want to raise a warning in such
+cases.
+~
+
 Here's the standard definition of (immutable) lists in F\*.
 
     type list 'a = 
