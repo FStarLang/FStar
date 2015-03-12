@@ -94,7 +94,7 @@ let status_to_string = function
     | TIMEOUT -> "timeout"
 
 let new_z3proc () =
-   let cond (s:string) = Util.trim_string s = "Done!" in
+   let cond (s:string) = (Util.fprint1 "%s\n" s; Util.trim_string s = "Done!") in
    Util.start_process (!Options.z3_exe) ini_params cond 
 
 type bgproc = {
@@ -166,12 +166,8 @@ type job<'a> = {
     callback: 'a -> unit
 }
 type z3job = job<(bool * list<(string * Range.range)>)>
-
-let n_cores = 3
-let n_runners = Util.mk_ref 0
-let job_queue : ref<list<z3job>> =
-  let x = Util.mk_ref [{job=(fun () -> (false, [("",Range.mk_range "" 0 0)])); callback=(fun a -> ())}] in
-  x := []; x
+let job_queue : ref<list<z3job>> = Util.mk_ref []
+let pending_jobs = Util.mk_ref 0
 
 let z3_job fresh label_messages input () =
   let status, lblnegs = doZ3Exe fresh input in
@@ -186,34 +182,54 @@ let z3_job fresh label_messages input () =
         false, failing_assertions in        
     result
 
-let rec dequeue () = 
-    let next_job = atomically (fun () -> match !job_queue with 
-        | [] -> None
-        | hd::tl -> job_queue := tl; Some hd) in
-    match next_job with 
-        | None -> atomically (fun () -> Util.decr n_runners)
-        | Some j -> run_job j
+let rec dequeue' () = 
+    let next_job = match !job_queue with 
+        | [] ->  None
+        | hd::tl -> 
+          job_queue := tl; 
+          Some hd in
+    System.Threading.Monitor.Exit job_queue;
+    let _ = match next_job with 
+        | Some j -> 
+            atomically (fun () -> incr pending_jobs);
+            run_job j;
+            atomically (fun () -> decr pending_jobs)
+        | _ -> () in
+    dequeue()
+
+and dequeue () = 
+    System.Threading.Monitor.Enter (job_queue);
+    System.Threading.Monitor.Wait(job_queue) |> ignore;
+    dequeue'()
+         
 and run_job j = 
     spawn (fun () -> j.callback <| j.job (); dequeue())
+
+let init () = 
+    let n_runners = !Options.n_cores - 1 in
+    let rec aux n = 
+        if n = 0 then ()
+        else (spawn dequeue; aux (n - 1)) in
+    aux n_runners
 
 let enqueue fresh j = 
  //   Util.fprint1 "Enqueue fresh is %s\n" (if fresh then "true" else "false");
     if not fresh
     then j.callback <| j.job()
-    else let n = atomically (fun () -> !n_runners) in 
-         if n < n_cores
-         then atomically (fun () -> incr n_runners; run_job j)
-         else atomically (fun () -> job_queue := !job_queue@[j])
+    else begin
+        System.Threading.Monitor.Enter job_queue;
+        job_queue := !job_queue@[j];
+        System.Threading.Monitor.Pulse job_queue;
+        System.Threading.Monitor.Exit job_queue
+    end
 
 let rec finish () = 
     let bg = bg_z3_proc.grab() in
     Util.kill_process bg;
     bg_z3_proc.release();
-    let n = atomically (fun () -> 
-       let n = !n_runners in 
-       if n=0 && List.length !job_queue <> 0
-       then failwith "OUTSTANDING JOBS BUT NO RUNNERS!"
-       else n) in
+    System.Threading.Monitor.Enter job_queue;
+    let n = atomically (fun () -> !pending_jobs + List.length !job_queue)  in
+    System.Threading.Monitor.Exit job_queue;
     if n=0 
     then Tc.Errors.report_all()
     else let _ = Util.sleep 500 in

@@ -1588,6 +1588,7 @@ let pop_env () = match !last_env with
 
 let init tcenv =
     init_env tcenv;
+    Z3.init ();
     Z3.giveZ3 [DefPrelude]
 let push msg = 
     push_env ();
