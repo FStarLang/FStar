@@ -65,7 +65,14 @@ type proc = {m:Object;
              proc:Process;
              killed:ref<bool>}
 let all_procs : ref<list<proc>> = ref []
-
+open System.Threading
+let global_lock = new Object()
+let atomically (f:unit -> 'a) = 
+    System.Threading.Monitor.Enter(global_lock);
+    let result = f () in
+    System.Threading.Monitor.Exit(global_lock);
+    result
+let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let start_process (prog:string) (args:string) (cond:string -> bool) : proc = 
     let signal = new Object() in
     let with_sig f = 
@@ -550,11 +557,3 @@ let get_oreader (file:string) :OReader =
         close = r.Close
     }
 
-open System.Threading
-let global_lock = new Mutex()
-let atomically (f:unit -> 'a) = 
-    ignore <| global_lock.WaitOne();
-    let result = f () in
-    global_lock.ReleaseMutex(); 
-    result
-let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()

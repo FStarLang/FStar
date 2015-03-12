@@ -964,7 +964,7 @@ and desugar_formula' env (f:term) : typ =
   match (unparen f).tm with
     | Labeled(f, l, p) -> 
       let f = desugar_formula env f in
-      mk_Typ_meta(Meta_labeled(f, l, p))
+      mk_Typ_meta(Meta_labeled(f, l, dummyRange, p))
 
     | Op("==", ((hd::_args))) ->
       let args = hd::_args in

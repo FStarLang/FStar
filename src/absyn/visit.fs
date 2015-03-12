@@ -243,7 +243,7 @@ and reduce_typ
         let t2, env = map_typ env binders t2 in
         ([], [], [t1;t2], [], []), env
         
-      | Typ_meta(Meta_labeled(t, _, _))
+      | Typ_meta(Meta_labeled(t, _, _, _))
       | Typ_meta(Meta_named(t, _))
       | Typ_meta(Meta_refresh_label(t, _, _)) ->
         let t, env = map_typ env binders t in
@@ -391,7 +391,7 @@ let combine_typ t (tc:typ_components) env =
     | Typ_ascribed _, (_, [k], [t], _, _) ->                       w <| mk_Typ_ascribed'(t, k)
     | Typ_meta(Meta_named(_, l)), (_, _, [t'], _, _) ->            w <| mk_Typ_meta'(Meta_named(t', l))
     | Typ_meta(Meta_pattern _), (_, _, [t], _, args) ->            w <| mk_Typ_meta'(Meta_pattern(t, args))
-    | Typ_meta(Meta_labeled(_, l, p)), (_, _, [t], _, _) ->        w <| mk_Typ_meta'(Meta_labeled(t, l, p))
+    | Typ_meta(Meta_labeled(_, l, r, p)), (_, _, [t], _, _) ->        w <| mk_Typ_meta'(Meta_labeled(t, l, r, p))
     | Typ_meta(Meta_refresh_label(_, b, r)), (_, _, [t], _, _)  -> w <| mk_Typ_meta'(Meta_refresh_label(t, b, r))
     | Typ_meta(Meta_slack_formula(_, _, _)), (_, _, [t1;t2], _, _) -> w <| mk_Typ_meta'(Meta_slack_formula(t1, t2, Util.mk_ref false))
     | _ -> failwith "impossible" in

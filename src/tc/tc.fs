@@ -452,9 +452,9 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     let t, k, f = tc_typ env t in 
     mk_Typ_meta(Meta_refresh_label(t, b, r)), k, f
   
-  | Typ_meta(Meta_labeled(t, l, p)) -> 
+  | Typ_meta(Meta_labeled(t, l, r, p)) -> 
     let t, k, f = tc_typ env t in 
-    mk_Typ_meta(Meta_labeled(t, l, p)), k, f
+    mk_Typ_meta(Meta_labeled(t, l, r, p)), k, f
      
   | Typ_meta (Meta_named(t, l)) -> 
     let t, k, f = tc_typ env t in 
@@ -720,7 +720,7 @@ and tc_exp env e : exp * lcomp * guard_t =
   let top = e in
   match e.n with
   | Exp_delayed _ -> tc_exp env (compress_exp e)
-
+   
   | Exp_uvar _ 
   | Exp_bvar _  
   | Exp_fvar _ 

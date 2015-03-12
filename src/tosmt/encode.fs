@@ -326,7 +326,7 @@ let close env vars pred =
     and term( * ) is just term
  *)
 
-type label = (var * string)
+type label = (var * string * Range.range)
 type labels = list<label>
 type match_branch = {
     guard:term;       (* bool; negation of all prior pattern guards *)
@@ -901,14 +901,14 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
                     ] in
 
     let fallback phi =  match phi.n with
-        | Typ_meta(Meta_labeled(phi', msg, b)) -> 
+        | Typ_meta(Meta_labeled(phi', msg, r, b)) -> 
           let phi, labs, decls = encode_formula_with_labels phi' env in
           if env.nolabels
           then phi, [], decls
           else let lvar = varops.fresh "label", Bool_sort in
                let lterm = Term.mkFreeV lvar in
                let lphi = Term.mkOr(lterm, phi) in
-               lphi, (lvar, msg)::labs, decls
+               lphi, (lvar, msg, r)::labs, decls
         
         | Typ_app({n=Typ_const ih}, [(Inl phi, _)]) when lid_equals ih.v Const.using_IH -> 
             if Util.is_lemma phi
@@ -1559,8 +1559,8 @@ let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t *
     List.fold_right encode_binding bindings ([], env)
 
 let encode_labels labs = 
-    let prefix = labs |> List.map (fun (l, _) -> Term.DeclFun(fst l, [], Bool_sort, None)) in
-    let suffix = labs |> List.collect (fun (l, _) -> [Echo <| fst l; Eval (mkFreeV l)]) in
+    let prefix = labs |> List.map (fun (l, _, _) -> Term.DeclFun(fst l, [], Bool_sort, None)) in
+    let suffix = labs |> List.collect (fun (l, _, _) -> [Echo <| fst l; Eval (mkFreeV l)]) in
     prefix, suffix
 
 (* caching encodings of the environment and the top-level API to the encoding *)
@@ -1596,7 +1596,7 @@ let push msg =
 let pop msg   = 
     ignore <| pop_env(); 
     varops.pop();
-    Z3.pop ()
+    Z3.pop msg
 let encode_sig tcenv se =
    let caption decls = 
     if !Options.logQueries
@@ -1637,10 +1637,10 @@ let solve tcenv q : unit =
         let qry = Term.Assume(mkNot phi, Some "query") in
         let suffix = label_suffix@[Term.Echo "Done!"]  in
         query_prelude, labels, qry, suffix in
-    let fresh = true in   
     begin match qry with 
         | Assume({tm=False}, _) -> pop(); ()
-        | _ ->
+        | Assume(q, _) ->
+            let fresh = String.length q.as_str >= 2048 in   
             Z3.giveZ3 prefix;
 
             let with_fuel (n, i) = 
@@ -1657,7 +1657,7 @@ let solve tcenv q : unit =
                                                 (if !Options.max_fuel > !Options.initial_fuel && !Options.max_ifuel > !Options.initial_ifuel then [(!Options.max_fuel, !Options.max_ifuel)] else []);
                                                 (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])] in
 
-                let report (ok, errs) = if ok then () else (Util.print_string "ADDING ERROR"; Tc.Errors.add_errors tcenv errs) in
+                let report (ok, errs) = if ok then () else Tc.Errors.add_errors tcenv errs in
 
                 let rec try_alt_configs errs = function 
                     | [] -> report (false, errs)

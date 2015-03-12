@@ -713,8 +713,7 @@ let refresh_comp_label env b lc =
     {lc with comp=refresh}
 
 let label reason r f = 
-    let label = Util.format2 "%s (%s)" reason (Range.string_of_range r) in
-    Syntax.mk_Typ_meta(Meta_labeled(f, label, true))
+    Syntax.mk_Typ_meta(Meta_labeled(f, reason, r, true))
 let label_opt reason r f = match reason with 
     | None -> f
     | Some reason -> 

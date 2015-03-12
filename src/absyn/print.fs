@@ -415,7 +415,7 @@ and either_to_string x = match x with
 
 and meta_to_string x = match x with 
   | Meta_refresh_label(t, _, _) -> Util.format1 "(refresh) %s" (typ_to_string t)
-  | Meta_labeled(t, l, _) -> Util.format2 "(labeled \"%s\") %s" l (typ_to_string t)
+  | Meta_labeled(t, l, _, _) -> Util.format2 "(labeled \"%s\") %s" l (typ_to_string t)
   | Meta_named(_, l) -> sli l
   | Meta_pattern(t,ps) -> Util.format2 "{:pattern %s} %s" (args_to_string ps) (t |> typ_to_string) 
   | Meta_slack_formula(t1, t2, _) -> Util.format2 "%s /\ %s" (formula_to_string t1) (formula_to_string t2)

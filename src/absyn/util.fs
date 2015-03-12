@@ -810,7 +810,7 @@ let rec vs_typ' (t:typ) (uvonly:bool) (cont:(freevars * uvars) -> 'res) : 'res =
            cont (union_fvs_uvs vs1 vs2)))
 
         | Typ_meta(Meta_refresh_label(t, _, _))
-        | Typ_meta(Meta_labeled(t, _, _))
+        | Typ_meta(Meta_labeled(t, _, _, _))
         | Typ_meta(Meta_named(t, _))
         | Typ_meta(Meta_pattern(t, _)) -> 
           vs_typ t uvonly cont
@@ -1195,7 +1195,7 @@ let rec unmeta_typ t =
         | Typ_ascribed(t, _) 
         | Typ_meta(Meta_named(t, _))
         | Typ_meta(Meta_pattern(t, _))
-        | Typ_meta(Meta_labeled(t, _, _))
+        | Typ_meta(Meta_labeled(t, _, _, _))
         | Typ_meta(Meta_refresh_label(t, _, _)) -> unmeta_typ t
         | Typ_meta(Meta_slack_formula(t1, t2, _)) -> mk_conj t1 t2
         | _ -> t

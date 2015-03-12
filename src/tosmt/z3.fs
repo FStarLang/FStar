@@ -96,8 +96,14 @@ let status_to_string = function
 let new_z3proc () =
    let cond (s:string) = Util.trim_string s = "Done!" in
    Util.start_process (!Options.z3_exe) ini_params cond 
- 
-let bg_z3proc = new_z3proc()
+
+
+let grab_bg_z3proc, release_bg_z3proc = 
+    let z3proc = new_z3proc() in
+    let x = new System.Object() in
+    (fun () -> System.Threading.Monitor.Enter(x); z3proc),
+    (fun () -> System.Threading.Monitor.Exit(x))
+
     
 let doZ3Exe' (input:string) (z3proc:proc) = 
   let parse (z3out:string) =
@@ -118,9 +124,9 @@ let doZ3Exe' (input:string) (z3proc:proc) =
   parse (Util.trim_string stdout) 
 
 let doZ3Exe (fresh:bool) (input:string) = 
-    let z3proc = if fresh then new_z3proc() else bg_z3proc in
+    let z3proc = if fresh then new_z3proc() else grab_bg_z3proc() in
     let res = doZ3Exe' input z3proc in 
-    if fresh then Util.kill_process z3proc;
+    if fresh then Util.kill_process z3proc else release_bg_z3proc();
     res
 
 let queries_dot_smt2 : ref<option<file_handle>> = Util.mk_ref None
@@ -157,7 +163,7 @@ type job<'a> = {
     job:unit -> 'a;
     callback: 'a -> unit
 }
-type z3job = job<(bool * list<string>)>
+type z3job = job<(bool * list<(string * Range.range)>)>
 
 let n_cores = 3
 let n_runners = Util.mk_ref 0
@@ -170,9 +176,9 @@ let z3_job fresh label_messages input () =
     | _ -> 
         if !Options.debug <> [] then print_string <| format1 "Z3 says: %s\n" (status_to_string status);
         let failing_assertions = lblnegs |> List.collect (fun l -> 
-        match label_messages |> List.tryFind (fun (m, _) -> fst m = l) with
+        match label_messages |> List.tryFind (fun (m, _, _) -> fst m = l) with
             | None -> []
-            | Some (_, msg) -> [msg]) in
+            | Some (_, msg, r) -> [(msg, r)]) in
         false, failing_assertions in        
     result
 
@@ -187,6 +193,7 @@ and run_job j =
     spawn (fun () -> j.callback <| j.job (); dequeue())
 
 let enqueue fresh j = 
+ //   Util.fprint1 "Enqueue fresh is %s\n" (if fresh then "true" else "false");
     if not fresh
     then j.callback <| j.job()
     else let n = atomically (fun () -> !n_runners) in 
@@ -195,6 +202,7 @@ let enqueue fresh j =
          else atomically (fun () -> job_queue := !job_queue@[j])
 
 let rec finish () = 
+    Util.print_string ".";
     let n = atomically (fun () -> 
        let n = !n_runners in 
        if n=0 && List.length !job_queue <> 0
@@ -211,9 +219,9 @@ let bg_scope : ref<list<decl>> = Util.mk_ref []
 let push msg    = 
     fresh_scope := [Term.Caption msg]::!fresh_scope;
     bg_scope := [Term.Caption msg; Term.Push]@ !bg_scope
-let pop ()      = 
+let pop msg      = 
     fresh_scope := List.tl !fresh_scope;
-    bg_scope := Term.Pop::!bg_scope
+    bg_scope := [Term.Caption msg; Term.Pop]@ !bg_scope
 let giveZ3 decls = 
    let _  = match !fresh_scope with 
     | hd::tl -> fresh_scope := (hd@decls)::tl
@@ -227,7 +235,11 @@ let bgtheory fresh =
          List.rev bg
 let ask fresh label_messages qry cb =
   let fresh = fresh && !Options.n_cores > 1 in 
-  let theory = bgtheory fresh@qry in
+  push "Pushing for query";
+  giveZ3 qry;
+  let theory = bgtheory fresh in
+  pop "Popping for query";
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
   if !Options.logQueries then log_query fresh input; 
-  enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
+  enqueue fresh ({job=z3_job fresh label_messages input; callback=cb});
+  

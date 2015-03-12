@@ -3,6 +3,7 @@
 *.vspx
 *.psess
 *.suo
+queries*.smt2
 
 /VS/packages
 

@@ -55,7 +55,7 @@ type config<'a> = {code:'a;
                    steps:list<step>}
 and environment = {
     context:list<env_entry>;//Tried using Util.smap<env_entry> and Microsoft.FStar.Util.map<env_entry>; lists are still the fastest by about 12.5% end-to-end time
-    label_suffix:list<(option<bool> * string)>
+    label_suffix:list<(option<bool> * Range.range)>
 }
 and stack = {
     args:list<(arg * environment)>;
@@ -392,7 +392,7 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                         wk <| mk_Typ_meta'(Meta_pattern(t, ps)) in
                     sn tcenv ({config with code=t; close=close_with_config config pat})
     
-                | Typ_meta(Meta_labeled(t, l, b)) -> 
+                | Typ_meta(Meta_labeled(t, l, r, b)) -> 
                   if unmeta config then
                     sn tcenv ({config with code=t})
                   else
@@ -402,17 +402,17 @@ and sn tcenv (cfg:config<typ>) : config<typ> =
                           match config.environment.label_suffix with
                               | (b', sfx)::_ ->
                                   if b'=None || Some b=b'
-                                  then (if Tc.Env.debug tcenv Options.Low then Util.fprint2 "Stripping label %s because of enclosing refresh %s\n" l sfx; t)
-                                  else (if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Normalizer refreshing label: %s\n" sfx;
-                                        wk <| mk_Typ_meta'(Meta_labeled(t, l ^ sfx, b)))
-                              | _ -> wk <| mk_Typ_meta'(Meta_labeled(t, l, b))  in
+                                  then (if Tc.Env.debug tcenv Options.Low then Util.fprint2 "Stripping label %s because of enclosing refresh %s\n" l (Range.string_of_range sfx); t)
+                                  else (if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Normalizer refreshing label: %s\n" (Range.string_of_range sfx);
+                                        wk <| mk_Typ_meta'(Meta_labeled(t, l, sfx, b)))
+                              | _ -> wk <| mk_Typ_meta'(Meta_labeled(t, l, r, b))  in
                     sn tcenv ({config with code=t; close=close_with_config config lab})
 
                 | Typ_meta(Meta_refresh_label(t, b, r)) -> 
                   if unmeta config then
                     sn tcenv ({config with code=t})
                   else
-                   let sfx = match b with Some false -> Util.format1 " (call at %s)" <| Range.string_of_range r | _ -> "" in
+                   let sfx = match b with Some false -> r | _ -> dummyRange in
                    let config = {config with code=t; environment={config.environment with label_suffix=(b, sfx)::config.environment.label_suffix}} in
                    sn tcenv config
 
