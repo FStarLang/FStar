@@ -164,6 +164,7 @@ val prefix: list<'a> -> Tot<(list<'a> * 'a)>
 val string_of_unicode: array<byte> -> Tot<string>
 val unicode_of_string: string -> Tot<array<byte>>
 val incr: ref<int> -> unit
+val decr: ref<int> -> unit
 val geq: int -> int -> Tot<bool>
 val for_range: int -> int -> (int -> unit) -> unit
 

@@ -97,13 +97,16 @@ let new_z3proc () =
    let cond (s:string) = Util.trim_string s = "Done!" in
    Util.start_process (!Options.z3_exe) ini_params cond 
 
+type bgproc = {
+    grab:unit -> proc;
+    release:unit -> unit;
+}
 
-let grab_bg_z3proc, release_bg_z3proc = 
+let bg_z3_proc = 
     let z3proc = new_z3proc() in
-    let x = new System.Object() in
-    (fun () -> System.Threading.Monitor.Enter(x); z3proc),
-    (fun () -> System.Threading.Monitor.Exit(x))
-
+    let x = [] in
+    {grab=(fun () -> System.Threading.Monitor.Enter(x); z3proc);
+     release=(fun () -> System.Threading.Monitor.Exit(x))}
     
 let doZ3Exe' (input:string) (z3proc:proc) = 
   let parse (z3out:string) =
@@ -124,9 +127,9 @@ let doZ3Exe' (input:string) (z3proc:proc) =
   parse (Util.trim_string stdout) 
 
 let doZ3Exe (fresh:bool) (input:string) = 
-    let z3proc = if fresh then new_z3proc() else grab_bg_z3proc() in
+    let z3proc = if fresh then new_z3proc() else bg_z3_proc.grab() in
     let res = doZ3Exe' input z3proc in 
-    if fresh then Util.kill_process z3proc else release_bg_z3proc();
+    if fresh then Util.kill_process z3proc else bg_z3_proc.release();
     res
 
 let queries_dot_smt2 : ref<option<file_handle>> = Util.mk_ref None
@@ -187,7 +190,7 @@ let rec dequeue () =
         | [] -> None
         | hd::tl -> job_queue := tl; Some hd) in
     match next_job with 
-        | None -> atomically (fun () -> decr n_runners)
+        | None -> atomically (fun () -> Util.decr n_runners)
         | Some j -> run_job j
 and run_job j = 
     spawn (fun () -> j.callback <| j.job (); dequeue())
@@ -202,7 +205,9 @@ let enqueue fresh j =
          else atomically (fun () -> job_queue := !job_queue@[j])
 
 let rec finish () = 
-    Util.print_string ".";
+    let bg = bg_z3_proc.grab() in
+    Util.kill_process bg;
+    bg_z3_proc.release();
     let n = atomically (fun () -> 
        let n = !n_runners in 
        if n=0 && List.length !job_queue <> 0
@@ -241,5 +246,5 @@ let ask fresh label_messages qry cb =
   pop "Popping for query";
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
   if !Options.logQueries then log_query fresh input; 
-  enqueue fresh ({job=z3_job fresh label_messages input; callback=cb});
+  enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})
   

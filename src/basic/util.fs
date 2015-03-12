@@ -489,6 +489,7 @@ let for_range lo hi f =
   done
 
 let incr r = r := !r + 1
+let decr r = r := !r - 1
 let geq (i:int) (j:int) = i >= j
 
 let expand_environment_variable s = 
