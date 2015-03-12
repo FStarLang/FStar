@@ -82,6 +82,7 @@ let eager_inference = Util.mk_ref false
 let unthrottle_inductives = Util.mk_ref false
 let use_eq_at_higher_order = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
+let n_cores = Util.mk_ref 1
 
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
@@ -157,7 +158,8 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
      ( noshort, "unthrottle_inductives", ZeroArgs (fun () -> unthrottle_inductives := true), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
      ( noshort, "use_eq_at_higher_order", ZeroArgs (fun () -> use_eq_at_higher_order := true), "Use equality constraints when comparing higher-order types; temporary");
-     ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator")
+     ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator");
+     ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x), "positive integer"), "Maximum number of cores to use for the solver (default 1)")
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
 and parse_codegen s =

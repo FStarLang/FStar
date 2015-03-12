@@ -1637,7 +1637,7 @@ let solve tcenv q : unit =
         let qry = Term.Assume(mkNot phi, Some "query") in
         let suffix = label_suffix@[Term.Echo "Done!"]  in
         query_prelude, labels, qry, suffix in
-    
+    let fresh = true in   
     begin match qry with 
         | Assume({tm=False}, _) -> pop(); ()
         | _ ->
@@ -1657,24 +1657,24 @@ let solve tcenv q : unit =
                                                 (if !Options.max_fuel > !Options.initial_fuel && !Options.max_ifuel > !Options.initial_ifuel then [(!Options.max_fuel, !Options.max_ifuel)] else []);
                                                 (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])] in
 
-                let report (ok, errs) = if ok then () else Tc.Errors.add_errors tcenv errs in
+                let report (ok, errs) = if ok then () else (Util.print_string "ADDING ERROR"; Tc.Errors.add_errors tcenv errs) in
 
                 let rec try_alt_configs errs = function 
                     | [] -> report (false, errs)
                     | [mi] -> 
                       begin match errs with 
-                        | [] -> Z3.ask labels (with_fuel mi) (cb [])
+                        | [] -> Z3.ask fresh labels (with_fuel mi) (cb [])
                         | _ -> report (false, errs)
                       end
 
                     | mi::tl -> 
-                        Z3.ask labels (with_fuel mi) (fun (ok, errs') -> 
+                        Z3.ask fresh labels (with_fuel mi) (fun (ok, errs') -> 
                         match errs with 
                             | [] -> cb tl (ok, errs')  
                             | _ -> cb tl (ok, errs))
 
                 and cb alt (ok, errs) = if ok then () else try_alt_configs errs alt in
-                Z3.ask labels (with_fuel initial_config) (cb alt_configs)  in
+                Z3.ask fresh labels (with_fuel initial_config) (cb alt_configs)  in
             check ();
             pop()
     end

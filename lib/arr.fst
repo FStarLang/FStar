@@ -34,7 +34,7 @@ assume val index : a:Type -> x:array a -> n:nat -> ST a
 assume val upd : a:Type -> x:array a -> n:nat -> v:a -> ST unit
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
   (ensures  (fun h0 u h1 -> (n < Seq.length (sel h0 x)
-                            /\ sel h1 x=Seq.upd n v (sel h0 x))))
+                            /\ sel h1 x=Seq.upd (sel h0 x) n v)))
   (modifies (a_ref x))
 
 
