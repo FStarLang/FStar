@@ -5,6 +5,10 @@ module RBTree
  * (https://wiki.rice.edu/confluence/download/attachments/2761212/Okasaki-Red-Black.pdf)
  *)
 
+(* CH: how does this compare to Andrew Appel's verified RB-trees?
+   http://www.cs.princeton.edu/~appel/papers/redblack.pdf
+*)
+
 (* color: Red or Black *)
 type color =
   | R

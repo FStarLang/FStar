@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Nikhil Swamy, Chantal Keller and Microsoft Research
+   Copyright 2008-2014 Nikhil Swamy, Chantal Keller, Catalin Hritcu
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,36 +16,12 @@
 
 
 module InsertionSort
-open Prims.PURE
 open List
+open IntSort
 
-(* Check that a list is sorted *)
-val sorted: list int -> Tot bool
-let rec sorted l = match l with
-    | [] | [_] -> true
-    | x::y::xs -> (x <= y) && (sorted (y::xs))
-
-val test_sorted: x:int -> l:list int ->
-      Lemma ((sorted (x::l) /\ is_Cons l) ==> x <= Cons.hd l)
-let test_sorted x l = ()
-
-val test_sorted2: unit -> Tot (m:list int{sorted m})
-let test_sorted2 () = Nil
-
-(* Fact about sorted *)
-val sorted_smaller: x:int
-                ->  y:int
-                ->  l:list int
-                ->  Lemma (requires (sorted (x::l) /\ mem y l))
-                          (ensures (x <= y))
-                          [SMTPat (sorted (x::l)); SMTPat (mem y l)]
-let rec sorted_smaller x y l = match l with
-    | [] -> ()
-    | z::zs -> if z=y then () else sorted_smaller x y zs
-
-(* Explicitly calling lemma *)
+(* Explicitly calling lsorted_smaller lemma *)
 val insert : i:int -> l:list int{sorted l} ->
-      Tot (m:list int{sorted m /\ (forall x. mem x m <==> x==i \/ mem x l)})
+      Tot (m:list int{sorted m /\ permutation (i::l) m})
 let rec insert i l = match l with
   | [] -> [i]
   | hd::tl ->
@@ -57,7 +33,7 @@ let rec insert i l = match l with
 
 (* Solver implicitly uses the lemma: sorted_smaller hd (Cons.hd i_tl) tl *)
 val insert_implicit : i:int -> l:list int{sorted l} ->
-      Tot (m:list int{sorted m /\ (forall x. mem x m <==> x==i \/ mem x l)})
+      Tot (m:list int{sorted m /\ permutation (i::l) m})
 let rec insert_implicit i l = match l with
   | [] -> [i]
   | hd::tl ->
@@ -65,7 +41,7 @@ let rec insert_implicit i l = match l with
      else hd::(insert_implicit i tl)
 
 (* Insertion sort *)
-val sort : l:list int -> Tot (m:list int{sorted m /\ (forall x. mem x l == mem x m)})
+val sort : l:list int -> Tot (m:list int{sorted m /\ permutation l m})
 let rec sort l = match l with
     | [] -> []
     | x::xs -> insert x (sort xs)

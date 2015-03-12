@@ -1,4 +1,4 @@
-VERFILES=counters.fst insertionsort.fst mergesort.fst 
+VERFILES=counters.fst intsort.fst insertionsort.fst mergesort.fst qsc.fst
 OTHERFLAGS=
 include ../Makefile.include
 all: .all.ver #downgrade
