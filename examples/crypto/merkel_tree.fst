@@ -1,24 +1,20 @@
 module MerkelTree
 
-(* crypto stuff, assumptions on injectivity of hash and concat functions *)
-type mstring : nat -> Type
+open Constructive
+
+(* type of data and hashes, length indexed strings *)
+type mstring:nat -> Type =
+  | Base:   n:nat -> mstring n
+  | Concat: #n:nat -> s1:mstring n -> s2:mstring n -> mstring (n + n)
 
 assume val hash_size:nat
-
 assume val data_size:nat
 
-assume val gen_hash: #n:nat -> mstring n -> Tot (mstring hash_size)
-
-assume val concat: #n:nat -> mstring n -> mstring n -> Tot (mstring (n + n))
-
-assume Injective_hash: (forall (n:nat) (s1:mstring n) (s2:mstring n).
-                               gen_hash s1 = gen_hash s2 ==> s1 = s2)
-
-assume Injective_concat: (forall (n:nat) (s1:mstring n) (s2:mstring n) (s3:mstring n) (s4:mstring n). concat s1 s2 = concat s3 s4 ==> (s1 = s3 /\ s2 = s4))
-
 type data = mstring data_size
-
 type hash = mstring hash_size
+
+(* hash function *)
+assume val gen_hash: #n:nat -> mstring n -> Tot (mstring hash_size)
 
 let len = List.length
 
@@ -31,7 +27,7 @@ type mtree: nat -> hash -> Type =
   | N: #n:nat -> #h1:hash -> #h2:hash ->
        left:mtree n h1 ->
        right:mtree n h2 ->
-       mtree (n + 1) (gen_hash (concat h1 h2))
+       mtree (n + 1) (gen_hash (Concat h1 h2))
 
 (* lookup function takes a path in the tree, true goes left, false goes right *)
 type path = list bool
@@ -77,30 +73,9 @@ let rec verifier path p =
 	| hd::_ ->
 	  let h' = verifier path' (p_tail p) in
 	  if bit then
-	    gen_hash (concat h' hd)
+	    gen_hash (Concat h' hd)
 	  else
-	    gen_hash (concat hd h')
-
-(*
- * security theorem: if verifier computed hash matches the root node hash,
- * then the tree indeed contains the looked up element
- *)
-val security: #h:hash ->
-              path:path ->
-              tree:mtree (len path) h ->
-              p:proof{lenp p = len path /\ verifier path p = h} ->
-              Lemma (requires True) (ensures (get_elt path tree = p_data p))
-              (decreases path)
-let rec security h path tree p =
-  match path with
-    | [] -> ()
-    | bit::path' ->
-      match Mk_proof.pstream p with
-	| hd::tl ->
-	  if bit then
-	    security path' (N.left tree) (p_tail p)
-	  else
-	    security path' (N.right tree) (p_tail p)
+	    gen_hash (Concat hd h')
 
 (*
  * prover function, generates a proof stream for a path
@@ -140,3 +115,43 @@ let rec correctness h path tree p =
 	correctness path' (N.left tree) (p_tail p)
       else
 	correctness path' (N.right tree) (p_tail p)
+
+(*
+ * We prove a standard security definition that if verifier can be tricked into
+ * accepting a proof of existence of an element, when the element is not actually
+ * present, then we can provide a constructive proof of hash collision
+ *)
+
+type hash_collision =
+    cexists (fun n -> cexists (fun (s1:mstring n) -> cexists (fun (s2:mstring n) ->
+             u:unit{gen_hash s1 = gen_hash s2 /\ not (s1 = s2)})))
+
+(*
+ * security theorem: Only way a verifier can be tricked into accepting proof
+ * stream for an non existent element is if there is a hash collision.
+ *)
+val security: #h:hash ->
+              path:path ->
+              tree:mtree (len path) h ->
+              p:proof{lenp p = len path /\ verifier path p = h /\
+                      not (get_elt path tree = p_data p)} ->
+              Tot hash_collision
+              (decreases path)
+let rec security h path tree p =
+  match path with
+    | [] -> ExIntro data_size (ExIntro (p_data p) (ExIntro (L.data tree) ()))
+
+    | bit::path' ->
+      let N #dc #h1 #h2 left right = tree in
+      let h' = verifier path' (p_tail p) in
+      let hd = Cons.hd (p_stream p) in
+      if bit then
+	if h' = h1 then
+	  security path' left (p_tail p)
+	else
+	  ExIntro (hash_size + hash_size) (ExIntro (Concat h1 h2) (ExIntro (Concat h' hd) ()))
+      else
+	if h' = h2 then
+	  security path' right (p_tail p)
+	else
+	  ExIntro (hash_size + hash_size) (ExIntro (Concat h1 h2) (ExIntro (Concat hd h') ()))
