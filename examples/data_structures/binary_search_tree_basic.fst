@@ -16,6 +16,13 @@ let rec all p t =
   | Leaf n -> true
   | Node n t1 t2 -> p n && all p t1 && all p t2
 
+val all_correct : p:(int -> Tot bool) -> t:tree -> Lemma (requires True)
+      (ensures (all p t <==> (forall x. in_tree x t ==> p x))) [SMTPat (all p t)]
+let rec all_correct p t =
+  match t with
+  | Leaf -> ()
+  | Node x' t1 t2 -> all_correct p t1; all_correct p t2
+
 (* CH: don't these already have some non-operator form? *)
 val lt : int -> int -> Tot bool
 let lt n1 n2 = n1 < n2
@@ -29,14 +36,6 @@ let rec is_bst t =
   | Leaf n -> true
   | Node n t1 t2 -> all (gt n) t1 && all (lt n) t2 && is_bst t1 && is_bst t2
 
-val aux : p:(int -> Tot bool) -> x:int -> t:tree -> Lemma
-      (requires (not(p x) /\ all p t))
-      (ensures (not (in_tree x t))) [SMTPat (all p t); SMTPat (in_tree x t)]
-let rec aux p x t =
-  match t with
-  | Leaf x' -> ()
-  | Node x' t1 t2 -> aux p x t1; aux p x t2
-
 val search : x:int -> t:tree{is_bst t} -> Tot (r:bool{r <==> in_tree x t})
 let rec search x t =
   match t with
@@ -45,7 +44,7 @@ let rec search x t =
                     else if x < n then search x t1
                     else               search x t2
 
-(*
+(* This variant should also work, filed as #155
 val insert : x:int -> t:tree -> Pure tree
                (requires (is_bst t))
                (ensures (fun r -> is_bst r /\
@@ -61,12 +60,6 @@ let rec insert x t =
                       admit()(*Node n t1 (insert x t2)*)
 *)
 
-(*
-val helper : n:int -> x:int -> t:tree -> Lemma
-      (requires (x < n && all (gt n) t))
-      (ensures (all (gt n) (insert x t)))
-*)
-
 val insert : x:int -> t:tree{is_bst t} ->
              Tot (r:tree{is_bst r /\
                   (forall y. in_tree y r <==> (in_tree y t \/ x = y))})
@@ -74,9 +67,5 @@ let rec insert x t =
   match t with
   | Leaf -> Node x Leaf Leaf
   | Node n t1 t2 -> if x = n then      t
-                    else if x < n then
-                      (assert (is_bst (insert x t1));
-                       assert (all (gt n) (insert x t1));
-                       admit() (*Node n (insert x t1) t2*))
-                    else
-                      admit()(*Node n t1 (insert x t2)*)
+                    else if x < n then Node n (insert x t1) t2
+                    else               Node n t1 (insert x t2)
