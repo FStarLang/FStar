@@ -1,11 +1,11 @@
 module Bug154b
 
-val all : p:bool -> xs:list unit ->
+val all : b:bool -> n:nat ->
           Pure bool (requires True)
-            (ensures (fun u -> is_Nil xs \/ p))
-let rec all p xs =
-  if is_Nil xs then false
-  else (p && all p (Cons.tl xs))
+            (ensures (fun u -> n = 0 \/ b))
+let rec all b n =
+  if n = 0 then b
+  else b && all b (n-1)
 
 val ff : u:unit -> Lemma (False)
-let ff u = ignore (all false [()])
+let ff u = ignore (all false 42)
