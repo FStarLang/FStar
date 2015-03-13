@@ -93,9 +93,13 @@ let status_to_string = function
     | UNKNOWN -> "unknown"
     | TIMEOUT -> "timeout"
 
-let new_z3proc () =
-   let cond (s:string) = (Util.fprint1 "%s\n" s; Util.trim_string s = "Done!") in
-   Util.start_process (!Options.z3_exe) ini_params cond 
+let tid () = System.Threading.Thread.CurrentThread.ManagedThreadId |> Util.string_of_int   
+let new_z3proc id =
+   let cond pid (s:string) = 
+    (let x = Util.trim_string s = "Done!" in
+//     Util.fprint5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output"); 
+     x) in
+   Util.start_process id (!Options.z3_exe) ini_params cond 
 
 type bgproc = {
     grab:unit -> proc;
@@ -103,9 +107,10 @@ type bgproc = {
 }
 
 let bg_z3_proc = 
-    let z3proc = new_z3proc() in
-    {grab=(fun () -> Util.lock(); z3proc);
-     release=(fun () -> Util.release())}
+    let z3proc = new_z3proc "bg" in
+    let x = [] in
+    {grab=(fun () -> System.Threading.Monitor.Enter(x); z3proc);
+     release=(fun () -> System.Threading.Monitor.Exit(x))}
     
 let doZ3Exe' (input:string) (z3proc:proc) = 
   let parse (z3out:string) =
@@ -125,11 +130,14 @@ let doZ3Exe' (input:string) (z3proc:proc) =
   let stdout = Util.ask_process z3proc input in    
   parse (Util.trim_string stdout) 
 
-let doZ3Exe (fresh:bool) (input:string) = 
-    let z3proc = if fresh then new_z3proc() else bg_z3_proc.grab() in
-    let res = doZ3Exe' input z3proc in 
-    if fresh then Util.kill_process z3proc else bg_z3_proc.release();
-    res
+let doZ3Exe = 
+    let ctr = Util.mk_ref 0 in 
+    fun (fresh:bool) (input:string) ->  
+        let z3proc = if fresh then (incr ctr; new_z3proc (Util.string_of_int !ctr)) else bg_z3_proc.grab() in
+//        Util.fprint2 "On thread %s, doZ3Exe with fresh=%s\n" (tid()) (if fresh then "true" else "false");
+        let res = doZ3Exe' input z3proc in 
+        if fresh then Util.kill_process z3proc else bg_z3_proc.release();
+        res
 
 let queries_dot_smt2 : ref<option<file_handle>> = Util.mk_ref None
 
@@ -168,7 +176,12 @@ type job<'a> = {
 type z3job = job<(bool * list<(string * Range.range)>)>
 let job_queue : ref<list<z3job>> = Util.mk_ref []
 let pending_jobs = Util.mk_ref 0
-
+let with_monitor m f = 
+    System.Threading.Monitor.Enter m;
+    let res = f () in
+    System.Threading.Monitor.Exit m;
+    res
+    
 let z3_job fresh label_messages input () =
   let status, lblnegs = doZ3Exe fresh input in
   let result = match status with 
@@ -183,27 +196,27 @@ let z3_job fresh label_messages input () =
     result
 
 let rec dequeue' () = 
-    let next_job = match !job_queue with 
-        | [] ->  None
+    let j = match !job_queue with 
+        | [] -> failwith "Impossible"
         | hd::tl -> 
           job_queue := tl; 
-          Some hd in
+          hd in
+    incr pending_jobs;
     System.Threading.Monitor.Exit job_queue;
-    let _ = match next_job with 
-        | Some j -> 
-            atomically (fun () -> incr pending_jobs);
-            run_job j;
-            atomically (fun () -> decr pending_jobs)
-        | _ -> () in
+    run_job j;
+    with_monitor job_queue (fun () -> decr pending_jobs);
     dequeue()
 
 and dequeue () = 
     System.Threading.Monitor.Enter (job_queue);
-    System.Threading.Monitor.Wait(job_queue) |> ignore;
-    dequeue'()
-         
-and run_job j = 
-    spawn (fun () -> j.callback <| j.job (); dequeue())
+    let rec aux () = match !job_queue with 
+        | [] -> 
+          System.Threading.Monitor.Wait(job_queue) |> ignore;
+          aux ()
+        | _ -> dequeue'() in
+    aux()
+        
+and run_job j = j.callback <| j.job ()
 
 let init () = 
     let n_runners = !Options.n_cores - 1 in
@@ -215,7 +228,7 @@ let init () =
 let enqueue fresh j = 
  //   Util.fprint1 "Enqueue fresh is %s\n" (if fresh then "true" else "false");
     if not fresh
-    then j.callback <| j.job()
+    then run_job j
     else begin
         System.Threading.Monitor.Enter job_queue;
         job_queue := !job_queue@[j];
@@ -223,17 +236,18 @@ let enqueue fresh j =
         System.Threading.Monitor.Exit job_queue
     end
 
-let rec finish () = 
+let finish () = 
     let bg = bg_z3_proc.grab() in
     Util.kill_process bg;
     bg_z3_proc.release();
-    System.Threading.Monitor.Enter job_queue;
-    let n = atomically (fun () -> !pending_jobs + List.length !job_queue)  in
-    System.Threading.Monitor.Exit job_queue;
-    if n=0 
-    then Tc.Errors.report_all()
-    else let _ = Util.sleep 500 in
-         finish()
+    let rec aux () =
+        let n, m = with_monitor job_queue (fun () -> !pending_jobs,  List.length !job_queue)  in
+        //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
+        if n+m=0 
+        then Tc.Errors.report_all()
+        else let _ = System.Threading.Thread.Sleep(500) in
+             aux() in
+    aux()
 
 type scope_t = list<list<decl>>
 let fresh_scope : ref<scope_t> = Util.mk_ref [[]]
@@ -257,10 +271,11 @@ let bgtheory fresh =
          List.rev bg
 let ask fresh label_messages qry cb =
   let fresh = fresh && !Options.n_cores > 1 in 
-  push "Pushing for query";
-  giveZ3 qry;
   let theory = bgtheory fresh in
-  pop "Popping for query";
+  let theory = 
+    if fresh 
+    then theory@qry
+    else theory@[Term.Push]@qry@[Term.Pop] in
   let input = List.map (declToSmt (z3_options ())) theory |> String.concat "\n" in
   if !Options.logQueries then log_query fresh input; 
   enqueue fresh ({job=z3_job fresh label_messages input; callback=cb})

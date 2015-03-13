@@ -63,7 +63,8 @@ let max_int: int = System.Int32.MaxValue
 type proc = {m:Object; 
              outbuf:StringBuilder;
              proc:Process;
-             killed:ref<bool>}
+             killed:ref<bool>;
+             id:string}
 let all_procs : ref<list<proc>> = ref []
 open System.Threading
 let global_lock = new Object()
@@ -76,7 +77,7 @@ let atomically (f:unit -> 'a) =
     System.Threading.Monitor.Exit(global_lock);
     result
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
-let start_process (prog:string) (args:string) (cond:string -> bool) : proc = 
+let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc = 
     let signal = new Object() in
     let with_sig f = 
         System.Threading.Monitor.Enter(signal);
@@ -101,7 +102,7 @@ let start_process (prog:string) (args:string) (cond:string -> bool) : proc =
                            ignore <| driverOutput.Append("\n");
                            if null = args.Data
                            then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
-                           if null = args.Data || cond args.Data
+                           if null = args.Data || cond id args.Data
                            then System.Threading.Monitor.Pulse(signal))));
         proc.Exited.AddHandler(
              EventHandler(fun _ _ ->
@@ -119,17 +120,30 @@ let start_process (prog:string) (args:string) (cond:string -> bool) : proc =
         let proc = {m=signal;
                     outbuf=driverOutput;
                     proc=proc;
-                    killed=killed} in
+                    killed=killed;
+                    id=prog ^ ":" ^id} in
         all_procs := proc::!all_procs;
         proc
+let tid () = System.Threading.Thread.CurrentThread.ManagedThreadId |> string_of_int   
 
-let ask_process (p:proc) (stdin:string) : string = 
-    ignore <| p.outbuf.Clear();
+let ask_process (p:proc) (input:string) : string = 
     System.Threading.Monitor.Enter(p.m);
-    p.proc.StandardInput.WriteLine(stdin);
+    //Printf.printf "Thread %s is asking process %s\n" (tid()) p.id;
+    ignore <| p.outbuf.Clear();
+    //Printf.printf "Thread %s is writing to process %s ... responding?=%A\n" (tid()) p.id p.proc.Responding;
+    //Printf.fprintf stderr "Thread %s is writing to process %s:\n%s\n" (tid()) p.id input;
+//    if p.id = "z3.exe:bg"
+//    then begin
+//        Printf.printf "Thread BG break\n"
+//    end;
+    p.proc.StandardInput.WriteLine(input);
+//    Printf.printf "Thread %s is waiting for process to reply\n" (tid());
+//    flush(stdout);
     ignore <| System.Threading.Monitor.Wait(p.m);
+//    Printf.printf "Thread %s is continuing with reply from process %s\n" (tid()) p.id;
+    let x = p.outbuf.ToString() in
     System.Threading.Monitor.Exit(p.m);
-    p.outbuf.ToString()
+    x
 
 let kill_process (p:proc) = 
     p.killed := true;

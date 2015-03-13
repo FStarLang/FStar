@@ -89,8 +89,9 @@ val flush_file: file_handle -> unit
 type proc = {m:System.Object; 
              outbuf:System.Text.StringBuilder;
              proc:System.Diagnostics.Process;
-             killed:ref<bool>}  (* not relying on representation *)
-val start_process: string -> string -> (string -> bool) -> proc
+             killed:ref<bool>;
+             id:string}  (* not relying on representation *)
+val start_process: string -> string -> string -> (string -> string -> bool) -> proc
 val ask_process: proc -> string -> string
 val kill_process: proc -> unit
 val kill_all: unit -> unit
