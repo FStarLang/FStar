@@ -82,7 +82,7 @@
 
 (no cross platform compilation supported at the moment)
 
-0. Make sure you have the Z3 binary in your `bin` folder (this prerequisite could go away at some point)
+0. Make sure you have the Z3 binary in your `<fstar-home>/bin` folder (this prerequisite could go away at some point)
 
 1. Bootstrap the compiler in OCaml using the instructions above
 
