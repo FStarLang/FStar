@@ -1,7 +1,7 @@
-# Binary releases
+### Binary releases
 - https://github.com/FStarLang/FStar/releases
 
-# Building F* from sources
+### Building F* from sources
 
 - On Windows 7/8 with .NET framework 4.5 and F# v3.0 :
   - Either using VisualStudio 2013, open FStar/VS/FStar.sln and build solution.
@@ -56,7 +56,7 @@
   - If `make test` (`make boot` in fact) causes stack overflow try
     issuing `ulimit -s unlimited` in the terminal beforehand.
 
-# Bootstrapping the compiler in OCaml
+### Bootstrapping the compiler in OCaml
 
 0. Prerequisite: OCaml (version 4.01.0 or newer)
 
@@ -69,31 +69,25 @@
      `opam init` to edit your `~/.bashrc` or `~/.profile`, it is done
      automatically; otherwise, use: `eval $(opam config env)`.
 
-2. Install the required OCaml libraries:
+2. Install OCaml Batteries:
 
-        $ opam install batteries camlp4 conf-gmp cstruct ctypes fileutils menhir oasis ocaml-data-notation ocamlfind ocamlify ocamlmod ocplib-endian optcomp ounit sexplib sqlite3 type_conv zarith
+        $ opam install batteries
 
-3. Compile and install the 3rdparty tools (in src/support/ocaml/3rdparty):
-
-        $ git submodule init
-        $ git submodule update
-        $ make
-
-4. Compile and install the fstar OCaml package (in src/support/ocaml/fstar-lib):
-
-        $ ./autogen.sh
-        $ ./configure
-        $ make
-        $ make install
-
-   If the `make install` fails with
-   `ocamlfind: Package fstar is already installed`
-   you need to remove first the previous package then re-run `make install`
-
-        $ ocamlfind remove fstar
-        $ make install
-
-5. Generate the backend (in src):
+3. Generate the OCaml backend by running the following commands in `src`:
 
         $ make
         $ make ocaml
+
+### Creating binary packages for your platform
+
+(no cross platform compilation supported at the moment)
+
+0. Make sure you have the Z3 binary in your `bin` folder (this prerequisite could go away at some point)
+
+1. Bootstrap the compiler in OCaml using the instructions above
+
+2. Run the following commands in `src/ocaml-output`:
+
+        $ make parser
+        $ make
+        $ make package
