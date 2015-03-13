@@ -1,5 +1,5 @@
-OCAMLC=ocamlfind ocamlc -package batteries -linkpkg -g
-OCAMLOPT=ocamlfind ocamlopt -package batteries -linkpkg -g
+OCAMLC=ocamlfind ocamlc -thread -package batteries -linkpkg -g
+OCAMLOPT=ocamlfind ocamlopt -thread -package batteries -linkpkg -g
 OCAMLDEP=ocamldep
 INCLUDES=                 # all relevant -I options here
 OCAMLFLAGS=$(INCLUDES)    # add other options for ocamlc here
@@ -17,7 +17,7 @@ FSTARML=fstar$(SUFFIX)
 # units: mod1, mod2 and mod3.
 
 # The list of object files for prog1
-FSTAR_OBJS=support.cmx Microsoft_FStar_Options.cmx Microsoft_FStar_LazySet.cmx Microsoft_FStar_Absyn_Syntax.cmx Microsoft_FStar_Absyn_Const.cmx Microsoft_FStar_Absyn_Visit.cmx Microsoft_FStar_Absyn_Util.cmx Microsoft_FStar_Absyn_Print.cmx Microsoft_FStar_Absyn_SSyntax.cmx Microsoft_FStar_Parser_AST.cmx Microsoft_FStar_Parser_DesugarEnv.cmx Microsoft_FStar_Parser_Desugar.cmx Microsoft_FStar_Parser_Parse.cmx Microsoft_FStar_Parser_Lexhelp.cmx Microsoft_FStar_Parser_LexFStar.cmx Microsoft_FStar_Parser_ParseIt.cmx Microsoft_FStar_Parser_Driver.cmx Microsoft_FStar_Tc_Env.cmx Microsoft_FStar_Tc_Normalize.cmx Microsoft_FStar_Tc_Errors.cmx Microsoft_FStar_Tc_Rel1.cmx Microsoft_FStar_Tc_Rel2.cmx Microsoft_FStar_Tc_Rel.cmx Microsoft_FStar_Tc_Util.cmx Microsoft_FStar_Tc_Tc.cmx Microsoft_FStar_ToSMT_Term.cmx Microsoft_FStar_ToSMT_Z3.cmx Microsoft_FStar_ToSMT_Encode.cmx FSharp_Format.cmx Microsoft_FStar_Backends_NameEnv.cmx Microsoft_FStar_Backends_OCaml_Syntax.cmx Microsoft_FStar_Backends_OCaml_ASTTrans.cmx Microsoft_FStar_Backends_OCaml_Code.cmx
+FSTAR_OBJS=support.cmx Microsoft_FStar_Options.cmx Microsoft_FStar_LazySet.cmx Microsoft_FStar_Absyn_Syntax.cmx Microsoft_FStar_Absyn_Const.cmx Microsoft_FStar_Absyn_Visit.cmx Microsoft_FStar_Absyn_Util.cmx Microsoft_FStar_Absyn_Print.cmx Microsoft_FStar_Absyn_SSyntax.cmx Microsoft_FStar_Parser_AST.cmx Microsoft_FStar_Parser_DesugarEnv.cmx Microsoft_FStar_Parser_Desugar.cmx Microsoft_FStar_Parser_Parse.cmx Microsoft_FStar_Parser_Lexhelp.cmx Microsoft_FStar_Parser_LexFStar.cmx Microsoft_FStar_Parser_ParseIt.cmx Microsoft_FStar_Parser_Driver.cmx Microsoft_FStar_Tc_Env.cmx Microsoft_FStar_Tc_Recheck.cmx Microsoft_FStar_Tc_Normalize.cmx Microsoft_FStar_Tc_Errors.cmx Microsoft_FStar_Tc_Rel.cmx Microsoft_FStar_Tc_Util.cmx Microsoft_FStar_Tc_Tc.cmx Microsoft_FStar_ToSMT_Term.cmx Microsoft_FStar_ToSMT_Z3.cmx Microsoft_FStar_ToSMT_Encode.cmx FSharp_Format.cmx Microsoft_FStar_Backends_NameEnv.cmx Microsoft_FStar_Backends_OCaml_Syntax.cmx Microsoft_FStar_Backends_OCaml_ASTTrans.cmx Microsoft_FStar_Backends_OCaml_Code.cmx
 
 all: $(FSTARML)
 
@@ -32,18 +32,14 @@ package: $(FSTARML)
 	cp -R ../../lib fstar/ || true
 	cp $(FSTARML) fstar/bin/ || true
 	cp ../../bin/z3* fstar/bin || true
-	mkdir fstar/code || true
-	cp -R ../../examples/school2014 fstar/code/tutorial || true
-	cp -R ../../examples/unit-tests fstar/code/examples || true
-	cp makefile.examples fstar/code/examples/Makefile || true
-	cp makefile.tutorial fstar/code/tutorial/Makefile.include || true
-	mkdir fstar/mllib || true
-	cp ~/.opam/system/lib/num/* fstar/mllib || true
-	cp ~/.opam/system/lib/bytes/* fstar/mllib || true
-	cp ~/.opam/system/lib/batteries/* fstar/mllib || true
-	cp ~/.opam/system/lib/fstar/* fstar/mllib || true
-	cp /usr/lib/ocaml/unix.cmxa /usr/lib/ocaml/nums.cmxa /usr/lib/ocaml/bigarray.cmxa /usr/lib/ocaml/str.cmxa fstar/mllib || true
-	cp /usr/lib/ocaml/unix.a /usr/lib/ocaml/nums.a /usr/lib/ocaml/bigarray.a /usr/lib/ocaml/str.a fstar/mllib || true
+	cp -R ../../examples fstar/ || true
+#	mkdir fstar/mllib || true
+#	cp ~/.opam/system/lib/num/* fstar/mllib || true
+#	cp ~/.opam/system/lib/bytes/* fstar/mllib || true
+#	cp ~/.opam/system/lib/batteries/* fstar/mllib || true
+#	cp ~/.opam/system/lib/fstar/* fstar/mllib || true
+#	cp /usr/lib/ocaml/unix.cmxa /usr/lib/ocaml/nums.cmxa /usr/lib/ocaml/bigarray.cmxa /usr/lib/ocaml/str.cmxa fstar/mllib || true
+#	cp /usr/lib/ocaml/unix.a /usr/lib/ocaml/nums.a /usr/lib/ocaml/bigarray.a /usr/lib/ocaml/str.a fstar/mllib || true
 	tar czvf fstar_`git log --pretty=format:'%h' -n 1`_`uname`_`uname -m`.tar.gz fstar
 
 parser:

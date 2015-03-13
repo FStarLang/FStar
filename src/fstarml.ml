@@ -20,9 +20,7 @@
       
     let cleanup _20045 =
       match _20045 with
-      | () ->
-          let _20046 = Microsoft_FStar_ToSMT_Z3.cleanup ()
-          in Support.Microsoft.FStar.Util.kill_all ()
+      | () -> Support.Microsoft.FStar.Util.kill_all ()
       
     let has_prims_cache l = Support.List.mem "Prims.cache" l
       
@@ -79,8 +77,7 @@
                  let fmods =
                    if Support.ST.read Microsoft_FStar_Options.pretype
                    then
-                     Microsoft_FStar_Tc_Tc.check_modules solver
-                       Microsoft_FStar_ToSMT_Encode.dummy fmods
+                     Microsoft_FStar_Tc_Tc.check_modules solver fmods
                    else fmods in
 
              let _20222 =

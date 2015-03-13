@@ -338,18 +338,21 @@ let freevars_of_list l =
 let list_of_freevars fvs = 
    (Util.set_elements fvs.ftvs |> List.map (fun x -> Inl x))@(Util.set_elements fvs.fxvs |> List.map (fun x -> Inr x))
 
-let mk_Kind_type : knd = {n=Kind_type; pos=dummyRange; tk=Util.mk_ref None; uvs=mk_uvs(); fvs=mk_fvs()}
-let mk_Kind_effect : knd = {n=Kind_effect; pos=dummyRange; tk=Util.mk_ref None; uvs=mk_uvs(); fvs=mk_fvs()}
+(* This is a type annotation for the OCaml version to avoid inference of knd = knd' '_a syntax *)
+let get_unit_ref () = let x = Util.mk_ref (Some ()) in x := None; x
+
+let mk_Kind_type : knd = {n=Kind_type; pos=dummyRange; tk=(get_unit_ref ()); uvs=mk_uvs(); fvs=mk_fvs()}
+let mk_Kind_effect : knd = {n=Kind_effect; pos=dummyRange; tk=(get_unit_ref ()); uvs=mk_uvs(); fvs=mk_fvs()}
 let mk_Kind_abbrev ((kabr:kabbrev), (k:knd)) p : knd = {
     n=Kind_abbrev(kabr, k);
     pos=p;
-    tk=Util.mk_ref None;
+    tk=(get_unit_ref ());
     uvs=mk_uvs(); fvs=mk_fvs()
 }
 let mk_Kind_arrow ((bs:binders),(k:knd)) p : knd = {
     n=Kind_arrow(bs, k);
     pos=p;
-    tk=Util.mk_ref None;
+    tk=(get_unit_ref ());
     uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Kind_arrow' ((bs:binders), (k:knd)) p : knd = 
@@ -360,27 +363,31 @@ let mk_Kind_arrow' ((bs:binders), (k:knd)) p : knd =
 let mk_Kind_uvar (uv:uvar_k_app) p : knd = {
     n=Kind_uvar uv;
     pos=p;
-    tk=Util.mk_ref None;
+    tk=(get_unit_ref ());
     uvs=mk_uvs(); fvs=mk_fvs();
     
 }
 let mk_Kind_lam ((vs:binders), (k:knd)) p : knd = {
     n=Kind_lam(vs, k);
     pos=p;
-    tk=Util.mk_ref None;
+    tk=(get_unit_ref ());
     uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Kind_delayed ((k:knd),(s:subst_t),(m:memo<knd>)) p : knd = {
     n=Kind_delayed(k, s, m);
     pos=p;
-    tk=Util.mk_ref None;
+    tk=(get_unit_ref ());
     uvs=mk_uvs(); fvs=mk_fvs();//union k.fvs s.subst_fvs;
     
 }
-let mk_Kind_unknown : knd = {n=Kind_unknown; pos=dummyRange; tk=Util.mk_ref None; uvs=mk_uvs(); fvs=mk_fvs()}
+let mk_Kind_unknown : knd = {n=Kind_unknown; pos=dummyRange; tk=(get_unit_ref ()); uvs=mk_uvs(); fvs=mk_fvs()}
 
-let mk_Typ_btvar    (x:btvar) (k:option<knd>) (p:range) = {n=Typ_btvar x; tk=Util.mk_ref k; pos=p; uvs=mk_uvs(); fvs=mk_fvs();}
-let mk_Typ_const    (x:ftvar) (k:option<knd>) (p:range) = {n=Typ_const x; tk=Util.mk_ref k; pos=p; uvs=memo_no_uvs; fvs=memo_no_fvs}
+(* This is a type annotation for the OCaml version to avoid inference of typ = typ' '_a syntax *)
+let get_knd_nref () = let x = Util.mk_ref (Some mk_Kind_unknown) in x := None; x
+let get_knd_ref k = let x = Util.mk_ref (Some mk_Kind_unknown) in x := k; x
+
+let mk_Typ_btvar    (x:btvar) (k:option<knd>) (p:range) = {n=Typ_btvar x; tk=get_knd_ref k; pos=p; uvs=mk_uvs(); fvs=mk_fvs();}
+let mk_Typ_const    (x:ftvar) (k:option<knd>) (p:range) = {n=Typ_const x; tk=get_knd_ref k; pos=p; uvs=memo_no_uvs; fvs=memo_no_fvs}
 let rec check_fun (bs:binders) (c:comp) p = 
     match bs with 
         | [] -> failwith "Empty binders"
@@ -445,7 +452,7 @@ let mk_Typ_meta     (m:meta_t) = match m with
 
 let mk_Typ_uvar'     ((u:uvar_t),(k:knd)) (k':option<knd>) (p:range) = {
     n=Typ_uvar(u, k);
-    tk=Util.mk_ref k';
+    tk=get_knd_ref k';
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
     
@@ -463,7 +470,10 @@ let mk_Typ_delayed' st (k:option<knd>) p = {
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
-let mk_Typ_unknown : typ = {n=Typ_unknown; pos=dummyRange; tk=Util.mk_ref None; uvs=mk_uvs(); fvs=mk_fvs()}
+
+let mk_Typ_unknown : typ = {n=Typ_unknown; pos=dummyRange; tk=(get_knd_nref ()); uvs=mk_uvs(); fvs=mk_fvs()}
+let get_typ_nref () = let x = Util.mk_ref (Some mk_Typ_unknown) in x := None; x
+let get_typ_ref t = let x = Util.mk_ref (Some mk_Typ_unknown) in x := t; x
 
 let mk_Total t : comp = {
     n=Total t;
@@ -479,25 +489,25 @@ let mk_Comp (ct:comp_typ) : comp  =
 }
 let mk_Exp_bvar (x:bvvar) (t:option<typ>) p = {
     n=Exp_bvar x;
-    tk=Util.mk_ref t;
+    tk=get_typ_ref t;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Exp_fvar ((x:fvvar),(b:bool)) (t:option<typ>) p = {
     n=Exp_fvar(x, b);
-    tk=Util.mk_ref t;
+    tk=get_typ_ref t;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 } 
 let mk_Exp_constant (s:sconst) (t:option<typ>) p = {
     n=Exp_constant s;
-    tk=Util.mk_ref t;
+    tk=get_typ_ref t;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 } 
 let mk_Exp_abs ((b:binders),(e:exp)) (t':option<typ>) p = {
     n=(match b with [] -> failwith "abstraction with no binders!" | _ -> Exp_abs(b, e));
-    tk=Util.mk_ref t';
+    tk=get_typ_ref t';
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
@@ -506,13 +516,13 @@ let mk_Exp_abs' ((b:binders),(e:exp)) (t':option<typ>) p = {
         | _, Exp_abs(binders, body) -> Exp_abs(b@binders, body) 
         | [], _ -> failwith "abstraction with no binders!"
         | _ -> Exp_abs(b, e));
-    tk=Util.mk_ref t';
+    tk=get_typ_ref t';
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
 let mk_Exp_app ((e1:exp),(args:args)) (t:option<typ>) p = {
     n=(match args with [] -> failwith "Empty args!" | _ -> Exp_app(e1, args));
-    tk=Util.mk_ref t;
+    tk=get_typ_ref t;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
 }
@@ -554,13 +564,13 @@ let rec pat_vars p = match p.v with
 let mk_Exp_match ((e:exp),(pats:list<(pat * option<exp> * exp)>)) (t:option<typ>) p = 
     {
        n=Exp_match(e, pats);
-       tk=Util.mk_ref t;
+       tk=get_typ_ref t;
        pos=p;
        uvs=mk_uvs(); fvs=mk_fvs();
     } 
 let mk_Exp_ascribed' ((e:exp),(t:typ)) (t':option<typ>) p = {
     n=Exp_ascribed(e, t);
-    tk=Util.mk_ref t';
+    tk=get_typ_ref t';
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
     
@@ -569,14 +579,14 @@ let mk_Exp_ascribed ((e:exp),(t:typ)) p = mk_Exp_ascribed' (e, t) (Some t) p
 let mk_Exp_let ((lbs:letbindings),(e:exp)) (t:option<typ>) p = 
    {
     n=Exp_let(lbs, e);
-    tk=Util.mk_ref t;
+    tk=get_typ_ref t;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
    }
 
 let mk_Exp_uvar' ((u:uvar_e),(t:typ)) (t':option<typ>) p = {
     n=Exp_uvar(u, t);
-    tk=Util.mk_ref t';
+    tk=get_typ_ref t';
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
     
@@ -585,7 +595,7 @@ let mk_Exp_uvar  ((u:uvar_e),(t:typ)) p = mk_Exp_uvar' (u, t) (Some t) p
 
 let mk_Exp_delayed ((e:exp),(s:subst_t),(m:memo<exp>)) (t:option<typ>) p = {
     n=Exp_delayed(e, s, m);
-    tk=Util.mk_ref t;
+    tk=get_typ_ref t;
     pos=p;
     uvs=mk_uvs(); fvs=mk_fvs();
     
@@ -593,7 +603,7 @@ let mk_Exp_delayed ((e:exp),(s:subst_t),(m:memo<exp>)) (t:option<typ>) p = {
 let mk_Exp_meta' (m:meta_e) (t:option<typ>) p = 
     { 
         n=Exp_meta m;
-        tk=Util.mk_ref t;
+        tk=get_typ_ref t;
         pos=p;
         uvs=mk_uvs(); fvs=mk_fvs();//fvs;
     }

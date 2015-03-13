@@ -62,6 +62,7 @@ module List = struct
   let iter = BatList.iter
   let partition = BatList.partition
   let append = BatList.append
+  let rev_append = BatList.rev_append
   let fold_left = BatList.fold_left
   let fold_right = BatList.fold_right
   let collect f l = BatList.flatten (BatList.map f l)
@@ -82,6 +83,15 @@ module List = struct
   let choose = BatList.filter_map
   let contains x l = BatList.exists (fun y -> x = y) l
   let zip = BatList.combine
+  let rec zip3 l1 l2 l3 =
+    match l1, l2, l3 with
+    | [], [], [] -> []
+    | h1::t1, h2::t2, h3::t3 -> (h1, h2, h3) :: (zip3 t1 t2 t3)
+    | _ -> failwith "zip3"
+  let rec unzip3 l =
+    match l with
+    | [] -> [],[],[]
+    | (x,y,z)::t -> let u,v,w = unzip3 t in x::u,y::v,z::w
 end
 
 
@@ -120,6 +130,18 @@ module Microsoft = struct
            mutable killed : bool}
 
       let all_procs : (proc list) ref = ref []
+
+      let lock () = ()
+      let release () = ()
+      let sleep n = Thread.delay ((float_of_int n) /. 1000.)
+
+      let atomically =
+        (* let mutex = Mutex.create () in *)
+        fun f -> f ()
+        (*fun f -> Mutex.lock mutex; let r = f () in Mutex.unlock mutex; r*)
+
+      let spawn f =
+        let _ = Thread.create f () in ()
 
       let start_process (prog:string) (args:string) (cond:string -> bool) : proc =
         let command = prog^" "^args in
@@ -215,7 +237,7 @@ module Microsoft = struct
         BatArray.fold_left (fun acc b -> acc^(BatUTF8.init 1 (fun _ -> BatUChar.of_char b))) "" bytes
       let unicode_of_string (string:string) =
         let n = BatUTF8.length string in
-        let t = Array.create n 'x' in
+        let t = Array.make n 'x' in
         let i = ref 0 in
         BatUTF8.iter (fun c -> t.(!i) <- BatUChar.char_of c; incr i) string;
         t
@@ -411,6 +433,9 @@ module Microsoft = struct
         BatString.implode (BatArray.to_list b)
       let mk_ref a = ref a
 
+      let incr = Pervasives.incr
+      let decr = Pervasives.decr
+
       (* A simple state monad *)
       type ('s,'a) state = 's -> ('a*'s)
       let get : ('s,'s) state = fun s -> (s,s)
@@ -479,58 +504,85 @@ module Microsoft = struct
       let physical_equality (x:'a) (y:'a) = x == y
       let check_sharing a b msg = if physical_equality a b then fprint1 "Sharing OK: %s\n" msg else fprint1 "Sharing broken in %s\n" msg
 
-      type OWriter = {
-	  write_byte: byte -> unit;
+      type oWriter = {
+	  write_byte: char -> unit;
 	  write_bool: bool -> unit;
 	  write_int32: int -> unit;
 	  write_int64: int64 -> unit;
 	  write_char: char -> unit;
-	  write_double: double -> unit;
-	  write_bytearray: byte[] -> unit;
+	  write_double: float -> unit;
+	  write_bytearray: char array -> unit;
 	  write_string: string -> unit;
 
 	  close: unit -> unit
       }
 
-      type OReader = {
-	  read_byte: unit -> byte;
+      type oReader = {
+	  read_byte: unit -> char;
 	  read_bool: unit -> bool;
 	  read_int32: unit -> int;
 	  read_int64: unit -> int64;
 	  read_char: unit -> char;
-	  read_double: unit -> double;
-	  read_bytearray: unit -> byte[];
+	  read_double: unit -> float;
+	  read_bytearray: unit -> char array;
 	  read_string: unit -> string;
 
 	  close: unit -> unit
       }
-      
+     
+      module MkoReader = struct
+          let read_byte r x = r.read_byte x
+          let read_bool r x = r.read_bool x
+          let read_int32 r x = r.read_int32 x
+          let read_int64 r x = r.read_int64 x
+          let read_char r x = r.read_char x
+          let read_double r x = r.read_double x
+          let read_bytearray r x = r.read_bytearray x
+          let read_string r x = r.read_string x
+
+          let close r x = r.close x
+      end
+
+      module MkoWriter = struct
+          let write_byte w x = w.write_byte x
+          let write_bool w x = w.write_bool x
+          let write_int32 w x = w.write_int32 x
+          let write_int64 w x = w.write_int64 x
+          let write_char w x = w.write_char x
+          let write_double w x = w.write_double x
+          let write_bytearray w x = w.write_bytearray x
+          let write_string w x = w.write_string x
+
+          let close w x = w.close x
+      end
+
       (*
        * TODO: these functions need to be filled in
        *)
-      let get_owriter (filename:string) :OWriter = {
-	  write_byte = fun _ -> ()
-	  write_bool = fun _ -> ()
-	  write_int32 = fun _ -> ()
-	  write_int64 = fun _ -> ()
-	  write_char = fun _ -> ()
-	  write_double = fun _ -> ()
-	  write_bytearray = fun _ -> ()
-	  write_string = fun _ -> ()
+      let get_owriter (filename:string) : oWriter = {
+          write_byte = (fun _ -> ());
+          write_bool = (fun _ -> ());
+          write_int32 = (fun _ -> ());
+          write_int64 = (fun _ -> ());
+          write_char = (fun _ -> ());
+          write_double = (fun _ -> ());
+          write_bytearray = (fun _ -> ());
+          write_string = (fun _ -> ());
 
-	  close = fun _ -> ()
+          close = (fun _ -> ());
       }
-      let get_oreader (filename:string) :OReader = {
-	  read_byte = fun _ -> 'a'
-	  read_bool = fun _ -> true
-	  read_int32 = fun _ -> 0
-	  read_int64 = fun _ -> 0
-	  read_char = fun _ -> 'a'
-	  read_double = fun _ -> 0.0
-	  read_bytearray = fun _ -> [||]
-	  read_string = fun _ -> ""
 
-	  close = fun _ -> ()
+      let get_oreader (filename:string) : oReader = {
+          read_byte = (fun _ -> 'a');
+          read_bool = (fun _ -> true);
+          read_int32 = (fun _ -> 0);
+          read_int64 = (fun _ -> 0L);
+          read_char = (fun _ -> 'a');
+          read_double = (fun _ -> 0.0);
+          read_bytearray = (fun _ -> [||]);
+          read_string = (fun _ -> "");
+
+          close = (fun _ -> ());
       }
 
     end
@@ -837,6 +889,17 @@ let parse_cmdline specs others =
       (* For Diagnostics *)
       let string_of_pos   pos = let line,col = line_of_pos pos,col_of_pos pos in Printf.sprintf "%d,%d" line col
       let string_of_range r   = Printf.sprintf "%s(%s-%s)" (file_of_range r) (string_of_pos (start_of_range r)) (string_of_pos (end_of_range r))
+
+      let compare r1 r2 = 
+        let fcomp = String.compare (file_of_range r1) (file_of_range r2) in
+        if fcomp = 0
+          then let start1 = start_of_range r1 in          
+          let start2 = start_of_range r2 in
+          let lcomp = line_of_pos start1 - line_of_pos start2 in
+          if lcomp = 0 
+            then col_of_pos start1 - col_of_pos start2
+            else lcomp
+        else fcomp
 
     end
 

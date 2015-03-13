@@ -104,9 +104,8 @@ type bgproc = {
 
 let bg_z3_proc = 
     let z3proc = new_z3proc() in
-    let x = [] in
-    {grab=(fun () -> System.Threading.Monitor.Enter(x); z3proc);
-     release=(fun () -> System.Threading.Monitor.Exit(x))}
+    {grab=(fun () -> Util.lock(); z3proc);
+     release=(fun () -> Util.release())}
     
 let doZ3Exe' (input:string) (z3proc:proc) = 
   let parse (z3out:string) =
@@ -170,7 +169,9 @@ type z3job = job<(bool * list<(string * Range.range)>)>
 
 let n_cores = 3
 let n_runners = Util.mk_ref 0
-let job_queue : ref<list<z3job>> = Util.mk_ref []
+let job_queue : ref<list<z3job>> =
+  let x = Util.mk_ref [{job=(fun () -> (false, [("",Range.mk_range "" 0 0)])); callback=(fun a -> ())}] in
+  x := []; x
 
 let z3_job fresh label_messages input () =
   let status, lblnegs = doZ3Exe fresh input in
@@ -215,7 +216,7 @@ let rec finish () =
        else n) in
     if n=0 
     then Tc.Errors.report_all()
-    else let _ = System.Threading.Thread.Sleep(500) in
+    else let _ = Util.sleep 500 in
          finish()
 
 type scope_t = list<list<decl>>

@@ -67,6 +67,9 @@ type proc = {m:Object;
 let all_procs : ref<list<proc>> = ref []
 open System.Threading
 let global_lock = new Object()
+let lock () = System.Threading.Monitor.Enter(global_lock)
+let release () = System.Threading.Monitor.Exit(global_lock)
+let sleep n = System.Threading.Thread.Sleep(0+n)
 let atomically (f:unit -> 'a) = 
     System.Threading.Monitor.Enter(global_lock);
     let result = f () in
@@ -502,7 +505,7 @@ let is_letter_or_digit = Char.IsLetterOrDigit
 let is_punctuation = Char.IsPunctuation
 let is_symbol = Char.IsSymbol
 
-type OWriter = {
+type oWriter = {
     write_byte: byte -> unit;
     write_bool: bool -> unit;
     write_int32: int -> unit;
@@ -515,7 +518,7 @@ type OWriter = {
     close: unit -> unit
 }
 
-type OReader = {
+type oReader = {
     read_byte: unit -> byte;
     read_bool: unit -> bool;
     read_int32: unit -> int;
@@ -528,7 +531,7 @@ type OReader = {
     close: unit -> unit
 }
 
-let get_owriter (file:string) :OWriter =
+let get_owriter (file:string) : oWriter =
     let w = new BinaryWriter(File.Open(file, FileMode.Create)) in
     {
         write_byte = w.Write;
@@ -543,7 +546,7 @@ let get_owriter (file:string) :OWriter =
         close = w.Close;
     }
 
-let get_oreader (file:string) :OReader =
+let get_oreader (file:string) : oReader =
     let r = new BinaryReader(File.Open(file, FileMode.Open)) in
     {
         read_byte = r.ReadByte;

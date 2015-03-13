@@ -191,7 +191,7 @@ val is_punctuation: char -> bool
 val is_symbol: char -> bool
 
 (* serialization of compiled modules *)
-type OWriter = {
+type oWriter = {
     write_byte: byte -> unit;
     write_bool: bool -> unit;
     write_int32: int -> unit;
@@ -204,7 +204,7 @@ type OWriter = {
     close: unit -> unit
 }
 
-type OReader = {
+type oReader = {
     read_byte: unit -> byte;
     read_bool: unit -> bool;
     read_int32: unit -> int;
@@ -217,8 +217,11 @@ type OReader = {
     close: unit -> unit
 }
 
-val get_owriter: string -> OWriter
-val get_oreader: string -> OReader
+val get_owriter: string -> oWriter
+val get_oreader: string -> oReader
 
+val lock: unit -> unit
+val release: unit -> unit
+val sleep: int -> unit
 val atomically: (unit -> 'a) -> 'a
 val spawn: (unit -> unit) -> unit

@@ -10,9 +10,9 @@ exception Err of string
 
 let parse_error () = failwith "Parse error: ill-formed cache"
 
-type Writer = Util.OWriter
+type Writer = Util.oWriter
 
-type Reader = Util.OReader
+type Reader = Util.oReader
 
 let serialize_list (writer:Writer) (f:Writer -> 'a -> unit) (l:list<'a>) :unit =
     writer.write_int32 (List.length l);
