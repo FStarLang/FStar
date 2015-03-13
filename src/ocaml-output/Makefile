@@ -8,7 +8,7 @@ OCAMLOPTFLAGS=$(INCLUDES) # add other options for ocamlopt here
 ifeq ($(OS),Windows_NT)
 SUFFIX=.exe
 else
-SUFFIX=.exe
+SUFFIX=
 endif
 
 FSTARML=fstar$(SUFFIX)
@@ -31,8 +31,8 @@ package: $(FSTARML)
 	cp ../../setenv.sh fstar/
 	cp -R ../../lib fstar/ || true
 	cp $(FSTARML) fstar/bin/ || true
-	cp ../../bin/z3* fstar/bin || true
-	cp -R ../../examples fstar/ || true
+	cp ../../bin/z3* fstar/bin || echo " ********** WARNING: you don't have Z3 in \$FSTAR_HOME/bin, skipped from package ************** "
+#	cp -R ../../examples fstar/ || true
 #	mkdir fstar/mllib || true
 #	cp ~/.opam/system/lib/num/* fstar/mllib || true
 #	cp ~/.opam/system/lib/bytes/* fstar/mllib || true
@@ -40,7 +40,7 @@ package: $(FSTARML)
 #	cp ~/.opam/system/lib/fstar/* fstar/mllib || true
 #	cp /usr/lib/ocaml/unix.cmxa /usr/lib/ocaml/nums.cmxa /usr/lib/ocaml/bigarray.cmxa /usr/lib/ocaml/str.cmxa fstar/mllib || true
 #	cp /usr/lib/ocaml/unix.a /usr/lib/ocaml/nums.a /usr/lib/ocaml/bigarray.a /usr/lib/ocaml/str.a fstar/mllib || true
-	tar czvf fstar_`git log --pretty=format:'%h' -n 1`_`uname`_`uname -m`.tar.gz fstar
+	tar czf fstar_`git log --pretty=format:'%h' -n 1`_`uname`_`uname -m`.tar.gz fstar
 
 parser:
 	cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
