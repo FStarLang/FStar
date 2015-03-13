@@ -29,35 +29,6 @@ let return_all x = x
 exception Impos
 exception NYI of string
 exception Failure of string
-
-open System.Collections.Generic
-
-(* type weakmap<'a> = *)
-(*     | Dummy of 'a *)
-(*     | Map of Dictionary<int, list<WeakReference>> *)
-
-(* let new_weakmap () = Map (new Dictionary<int,list<WeakReference>>()) *)
-
-(* let weakmap_insert (map:weakmap<'a>) key (value:'a) =  *)
-(*   let w = new WeakReference(value) in *)
-(*   match map with  *)
-(*     | Map m -> *)
-(*         let (exists, value) = m.TryGetValue(key) in *)
-(*         if exists *)
-(*         then (m.Remove(key) |> ignore; m.Add(key, w::value)) *)
-(*         else m.Add(key, [w]) *)
-(*     | _ -> failwith "impossible" *)
-
-(* let weakmap_lookup (map:weakmap<'a>) key =  *)
-(*    match map with  *)
-(*     | Map m ->  *)
-(*         let (ok, value) = m.TryGetValue(key) in *)
-(*         if ok  *)
-(*         then Some (value |> List.map (fun v -> v.Target :?> 'a)) *)
-(*         else None *)
-(*     | _ -> failwith "impossible" *)
-
-
 let max_int: int = System.Int32.MaxValue
 
 type proc = {m:Object; 
@@ -68,8 +39,11 @@ type proc = {m:Object;
 let all_procs : ref<list<proc>> = ref []
 open System.Threading
 let global_lock = new Object()
-let lock () = System.Threading.Monitor.Enter(global_lock)
-let release () = System.Threading.Monitor.Exit(global_lock)
+let monitor_enter m = System.Threading.Monitor.Enter(m)
+let monitor_exit m = System.Threading.Monitor.Exit(m)
+let monitor_wait m = ignore <| System.Threading.Monitor.Wait(m)
+let monitor_pulse m = System.Threading.Monitor.Pulse(m)
+let current_tid () = System.Threading.Thread.CurrentThread.ManagedThreadId
 let sleep n = System.Threading.Thread.Sleep(0+n)
 let atomically (f:unit -> 'a) = 
     System.Threading.Monitor.Enter(global_lock);

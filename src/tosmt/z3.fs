@@ -93,7 +93,7 @@ let status_to_string = function
     | UNKNOWN -> "unknown"
     | TIMEOUT -> "timeout"
 
-let tid () = System.Threading.Thread.CurrentThread.ManagedThreadId |> Util.string_of_int   
+let tid () = Util.current_tid() |> Util.string_of_int   
 let new_z3proc id =
    let cond pid (s:string) = 
     (let x = Util.trim_string s = "Done!" in
@@ -109,8 +109,8 @@ type bgproc = {
 let bg_z3_proc = 
     let z3proc = new_z3proc "bg" in
     let x = [] in
-    {grab=(fun () -> System.Threading.Monitor.Enter(x); z3proc);
-     release=(fun () -> System.Threading.Monitor.Exit(x))}
+    {grab=(fun () -> Util.monitor_enter x; z3proc);
+     release=(fun () -> Util.monitor_exit(x))}
     
 let doZ3Exe' (input:string) (z3proc:proc) = 
   let parse (z3out:string) =
@@ -177,9 +177,9 @@ type z3job = job<(bool * list<(string * Range.range)>)>
 let job_queue : ref<list<z3job>> = Util.mk_ref []
 let pending_jobs = Util.mk_ref 0
 let with_monitor m f = 
-    System.Threading.Monitor.Enter m;
+    Util.monitor_enter(m);
     let res = f () in
-    System.Threading.Monitor.Exit m;
+    Util.monitor_exit(m);
     res
     
 let z3_job fresh label_messages input () =
@@ -202,16 +202,16 @@ let rec dequeue' () =
           job_queue := tl; 
           hd in
     incr pending_jobs;
-    System.Threading.Monitor.Exit job_queue;
+    Util.monitor_exit job_queue;
     run_job j;
     with_monitor job_queue (fun () -> decr pending_jobs);
     dequeue()
 
 and dequeue () = 
-    System.Threading.Monitor.Enter (job_queue);
+    Util.monitor_enter (job_queue);
     let rec aux () = match !job_queue with 
         | [] -> 
-          System.Threading.Monitor.Wait(job_queue) |> ignore;
+          Util.monitor_wait(job_queue);
           aux ()
         | _ -> dequeue'() in
     aux()
@@ -230,10 +230,10 @@ let enqueue fresh j =
     if not fresh
     then run_job j
     else begin
-        System.Threading.Monitor.Enter job_queue;
+        Util.monitor_enter job_queue;
         job_queue := !job_queue@[j];
-        System.Threading.Monitor.Pulse job_queue;
-        System.Threading.Monitor.Exit job_queue
+        Util.monitor_pulse job_queue;
+        Util.monitor_exit job_queue
     end
 
 let finish () = 
@@ -245,7 +245,7 @@ let finish () =
         //Printf.printf "In finish: pending jobs = %d, job queue len = %d\n" n m;
         if n+m=0 
         then Tc.Errors.report_all()
-        else let _ = System.Threading.Thread.Sleep(500) in
+        else let _ = Util.sleep(500) in
              aux() in
     aux()
 

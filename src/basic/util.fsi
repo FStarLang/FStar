@@ -221,8 +221,11 @@ type oReader = {
 val get_owriter: string -> oWriter
 val get_oreader: string -> oReader
 
-val lock: unit -> unit
-val release: unit -> unit
+val monitor_enter: 'a -> unit
+val monitor_exit:  'a -> unit
+val monitor_wait: 'a -> unit
+val monitor_pulse:  'a -> unit
+val current_tid: unit -> int
 val sleep: int -> unit
 val atomically: (unit -> 'a) -> 'a
 val spawn: (unit -> unit) -> unit
