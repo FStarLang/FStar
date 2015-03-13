@@ -155,3 +155,14 @@ let rec security h path tree p =
 	  security path' right (p_tail p)
 	else
 	  ExIntro (hash_size + hash_size) (ExIntro (Concat h1 h2) (ExIntro (Concat hd h') ()))
+
+(* CH: After discussing with Cedric, we want to build a bit more on top
+       of this (and that could be part of the project):
+  1) a meta-program (maybe also written in F* ) that given the description
+     of an ADT, produces a strongly typed hash and lookup function for
+     that particular ADT, together with
+  2) a higher-level theorem saying something of the form
+     tau = ADT with refinements, e.g. tree of prime numbers
+     impl. h_tau : tau -> bytes{exists v:tau. h = merkle(v)}
+           loop_tau : path -> option (prime number)
+ *)
