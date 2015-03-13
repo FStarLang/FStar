@@ -378,7 +378,7 @@ let caption_to_string = function
 let rec declToSmt z3options decl = match decl with
   | DefPrelude -> mkPrelude z3options
   | Caption c -> 
-    format1 "\n; %s" (Util.splitlines c |> List.hd)
+    format1 "\n; %s" (Util.splitlines c |> (function [] -> "" | h::t -> h))
   | DeclFun(f,argsorts,retsort,c) ->
     let l = List.map strSort argsorts in
     format4 "%s(declare-fun %s (%s) %s)" (caption_to_string c) f (String.concat " " l) (strSort retsort)
