@@ -35,15 +35,27 @@ let ill_kinded_type = "Ill-kinded type"
 let totality_check  = "This term may not terminate"
 
 let diag r msg = 
-  Util.print_string (format2 "Diagnostic %s: %s\n" (Range.string_of_range r) msg)
+  Util.print_string (format2 "%s (Diagnostic): %s\n" (Range.string_of_range r) msg)
 
 let warn r msg = 
-  Util.print_string (format2 "Diagnostic %s: %s\n" (Range.string_of_range r) msg)
+  Util.print_string (format2 "%s (Warning): %s\n" (Range.string_of_range r) msg)
 
 let num_errs = Util.mk_ref 0
+let verification_errs : ref<list<(Range.range * string)>> = Util.mk_ref []
+let add_errors env errs = 
+    let errs = errs |> List.map (fun (msg, r) -> let r = if r=dummyRange then Env.get_range env else r in (r, msg)) in
+    let n_errs = List.length errs in 
+    atomically (fun () -> 
+        verification_errs := errs@ (!verification_errs);
+        num_errs := !num_errs + n_errs)
+let report_all () =
+    let all_errs = atomically (fun () -> !verification_errs) in
+    let all_errs = List.sortWith (fun (r1, _) (r2, _) -> Range.compare r1 r2) all_errs in
+    all_errs |> List.iter (fun (r, msg) -> Util.fprint2 "%s: %s\n" (Range.string_of_range r) msg)
+
 let report r msg = 
   incr num_errs;
-  Util.print_string (format2 "Error %s: %s\n" (Range.string_of_range r) msg)
+  Util.print_string (format2 "%s: %s\n" (Range.string_of_range r) msg)
 let get_err_count () = !num_errs
 
 let unexpected_signature_for_monad env m k = 

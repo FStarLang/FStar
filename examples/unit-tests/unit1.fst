@@ -236,7 +236,9 @@ val factorial: nat -> Tot nat
 let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
 
 val factorial_is_positive: x:nat -> Lemma (ensures (factorial x > 0))
-let rec factorial_is_positive x = using_induction_hyp factorial_is_positive
+let rec factorial_is_positive x = match x with 
+  | 0 -> ()
+  | n -> factorial_is_positive (n - 1) //NS:used to be:  using_induction_hyp factorial_is_positive; but that seems to require a very inefficient axiom on the nat ordering
 
 val length: list 'a -> Tot int
 let rec length = function

@@ -1023,7 +1023,7 @@ let rec typing_weakening_ebnd g x t_x e t h =
       let hk1 = kinding_weakening_ebnd #g #t1 #k hk x t_x in
       TyAppT #(extend_evar g x t_x) #(eshift_up_above x e1) #t1 #t2 k h11 hk1
 
-type tshift_up_above_tsubst_beta_aux_typ (x:var) (t2:typ) (y:var) =
+opaque type tshift_up_above_tsubst_beta_aux_typ (x:var) (t2:typ) (y:var) =
   (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2) y =
    tsub_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
              (tsub_inc_above (x+1)) y)
@@ -1086,7 +1086,7 @@ let rec tequiv_tshift t1 t2 h x =
       EqFor k (tequiv_tshift h1 (x + 1))
 
 
-type esubst_gen_elam_aux_type (e:exp) (x:var) (y:var) =
+opaque type esubst_gen_elam_aux_type (e:exp) (x:var) (y:var) =
   (esubst_lam (esub_beta_gen x e) y = esub_beta_gen (x + 1) (eshift_up e) y)
 val esubst_gen_elam_aux : e:exp -> x:var -> y:var ->
                           Lemma (esubst_gen_elam_aux_type e x y)
@@ -1392,7 +1392,7 @@ let rec kinding_substitution_l x t1 t k_x k1 l g h1 h2 =
   let hb = kinding_substitution x #t1 #t #k_x #k1 #g h1 ha in
   tcontext_invariance #(tsubst_beta_gen x t t1) #g #k1 hb (extend_rl g (subst_beta_gen_rl l x t))
 
-val tequiv_tsubst: t1:typ -> t2:typ -> x:nat -> t:typ ->
+opaque val tequiv_tsubst: t1:typ -> t2:typ -> x:nat -> t:typ ->
                    h:tequiv t1 t2 ->
                    Tot (tequiv (tsubst_beta_gen x t t1) (tsubst_beta_gen x t t2))
 		   (decreases h)
@@ -1422,7 +1422,7 @@ let rec tequiv_tsubst t1 t2 x t h =
     | EqTran #t3 #t4 #t5 h1 h2 ->
       EqTran (tequiv_tsubst t3 t4 x t h1) (tequiv_tsubst t4 t5 x t h2)
 
-val typing_substitution_t_l: x:nat -> #e:exp -> #t1:typ -> #k_x:knd -> #t2:typ -> #g:env -> #l:rl ->
+opaque val typing_substitution_t_l: x:nat -> #e:exp -> #t1:typ -> #k_x:knd -> #t2:typ -> #g:env -> #l:rl ->
                            h1:kinding g t1 k_x ->
                            h2:typing (extend_rl (extend_tvar g x k_x) l) e t2 ->
                            Tot (typing (extend_rl g (subst_beta_gen_rl l x t1))
@@ -1483,7 +1483,7 @@ let rec typing_substitution_t_l x e t1 k_x t2 g l h1 h2 =
       TyAppT #(extend_rl g (rmap l (tsubst_beta_gen x t1))) #(esubst_tbeta_gen x t1 e3) #(tsubst_beta_gen x t1 t3) #(TFor k (tsubst_beta_gen (x + 1) (tshift_up_above 0 t1) t4)) k h21' h22'
 
 
-val typing_substitution_t: x:nat -> #e:exp -> #t1:typ -> #k_x:knd -> #t2:typ -> #g:env ->
+opaque val typing_substitution_t: x:nat -> #e:exp -> #t1:typ -> #k_x:knd -> #t2:typ -> #g:env ->
                            h1:kinding g t1 k_x ->
                            h2:typing (extend_tvar g x k_x) e t2 ->
                            Tot (typing g
@@ -1976,7 +1976,7 @@ let rec inversion_elam g s1 e s t1 t2 ht heq hnew =
     	TyEqu ht1 pst2 (kinding_weakening_ebnd hnew 0 s1) in
       Conj (Conj (EqTran (tred_star_tequiv ptu1) (EqSymm (tred_star_tequiv psu1))) h) hk
 
-val kinding_efor_inversion: #k1:knd -> #t1:typ -> #k2:knd -> #t2:typ ->
+opaque val kinding_efor_inversion: #k1:knd -> #t1:typ -> #k2:knd -> #t2:typ ->
                             h:tequiv (TFor k1 t1) (TFor k2 t2) ->
                             Tot (u:(tequiv t1 t2){k1 = k2}) (decreases h)
 let rec kinding_efor_inversion k1 t1 k2 t2 h =

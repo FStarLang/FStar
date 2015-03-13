@@ -110,7 +110,7 @@ and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
 and meta_t = 
   | Meta_pattern       of typ * list<arg>
   | Meta_named         of typ * lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
-  | Meta_labeled       of typ * string * bool                          (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
+  | Meta_labeled       of typ * string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_refresh_label of typ * option<bool> * Range.range             (* Add the range to the label of any labeled sub-term of the type *)
   | Meta_slack_formula of typ * typ * ref<bool>                        (* A refinement formula with slack, used in type inference; boolean marks if the slack is gone *)
 and uvar_basis<'a,'b> = 

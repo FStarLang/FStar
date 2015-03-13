@@ -10,6 +10,7 @@ Colorizer     : fstar
 ~CK           : .comment color=blue author=Chantal
 ~BB           : .comment color=purple author="Benjamin Beurdouche"
 ~NS           : .comment color=red author="Nik"
+~MK           : .comment color=blue author=Markulf
 ~Todo         : .comment author="Todo"
 
 ~Remark       : font-style=italic padding-left=1em
@@ -1072,6 +1073,17 @@ let rec fibonacci_is_monotone n = if n > 1 then fibonacci_is_monotone (n - 1) el
 
 # Simple inductive types
 
+~CH
+
+We should explain all our syntactic restrictions on naming things:
+Constructors have to start uppercase, types can be upper or lower
+case, right? (although they are usually lower case), variables
+have to start lower-case. In particular every lower case thing
+in a pattern is interpreted as a variable, even if it's already
+bound somewhere else. We might want to raise a warning in such
+cases.
+~
+
 Here's the standard definition of (immutable) lists in F\*.
 
     type list 'a = 
@@ -1587,6 +1599,11 @@ relations below):
 ~CH
 I guess there is also an exception for types with negative occurrences, right?
 ~
+
+~MK
+Maybe its clear for you, but for me it's not clear what `v` and `D` are? Is `D` a constructor of type `T`?
+`v` a value? Do we require that `v=e`?
+~
     
 3. **The lexicographic ordering on lex_t**, as described below.
 
@@ -1625,6 +1642,10 @@ In its standard prelude, F\* defines the following inductive type:
 
     
 * If `v:lex_t` and `v <> LexTop`, then `v << LexTop`.
+
+~MK
+We could explain what that means, that longer `lex_t` are smaller?
+~
 
 **We include the following syntactic sugar**: 
 
@@ -1800,6 +1821,43 @@ let rec fib_is_ok_aux i n =
 val fib_is_ok : n:nat -> Lemma (fib 1 1 n = fibonacci n)
 let fib_is_ok n = fib_is_ok_aux 0 n
 ~~
+~
+
+## Mutually recursive functions
+
+The same strategy for proving termination also works for mutually recursive functions. 
+Consider for instance the following example:
+```
+val foo : l:list int -> Tot int
+val bar : l:list int -> Tot int
+let rec foo l = match l with
+    | [] -> 0
+    | x::xs -> bar xs
+and bar l = foo l
+```
+
+The tricky part is in the call to `foo` by `bar`. As `foo` is called on the same list.
+
+~Exercise
+
+Prove termination. 
+
+Tip 1: In your `lex_t` expression you have to distinguish between input to `foo` and input to `bar`. Tip 2: The expression can use constants.
+~~ ExerciseFragment {exname=ex5c-mutualrec}
+val foo : l:list int -> Tot int
+val bar : l:list int -> Tot int
+~~
+
+~~AnswerFragment {exname=ex5c-mutualrec}
+val foo : l:list int -> Tot int (decreases %[l;0])
+val bar : l:list int -> Tot int (decreases %[l;1])
+let rec foo l = match l with
+    | [] -> 0
+    | x::xs -> bar xs
+and bar l = foo l
+
+~~
+
 ~
 
 # Putting the pieces together
@@ -3632,10 +3690,12 @@ type key = nbytes keysize
 assume val gen: unit -> key 
 assume val dec: key -> cipher -> Tot plain
 (* this function is pure & complete *)
+assume val enc: k:key -> p:plain -> c:cipher
 ```
 
 ~ Exercise
-
+Refine the type of the encryption function to model the *correctness* property:
+A correctly generated ciphertext, decrypts to its plaintext. 
 ~~ ExerciseFragment {exname=ex10a-encrypt}
 assume val enc: k:key -> p:plain -> c:cipher
 ~~
@@ -3651,9 +3711,13 @@ assume val enc: k:key -> p:plain -> c:cipher{ dec k c = p }
 
 ~
 
-We model perfect secrecy by typing using type abstraction. As concrete cryptographic 
+We model *perfect secrecy* by typing using type abstraction. As concrete cryptographic 
 algorithms such as the one above talk about bytes, we now introduce the notion of a 
 symmetric encryption scheme that enforces type abstraction for `safe` keys.   
+
+A scheme is parameterized by a key type `k` for keys and a plain type `p` that abstractly defines plaintexts.
+
+Keys are abstract to enforce a well typed key usage regime on well typed users of the module.
 
 ```
 module SymEnc (* a multi-key symmetric variant; for simplicity: 
@@ -3666,23 +3730,36 @@ opaque type Encrypted: #k: Type -> p:Type -> k -> AES.bytes -> Type
 (* an opaque predicate, keeping track of honest encryptions *)
 
 type cipher (p:Type) (k:Type) (key:k) = c:AES.cipher { Encrypted p key c }  
+```
+The type of `cipher` records the plain type, key type, and key it was generated for.
 
+```
 type keyT: Type -> Type = 
   | Ideal    : p:Type -> AES.key -> i:int -> keyT p 
   | Concrete : p:Type -> AES.key -> i:int -> keyT p  
+```
+Keys record whether they were correctly generated `Ideal` in which case their usage will provide security by type abstraction,
+or not, in which they are just concrete keys that can be leaked to the adversary.
 
+```
 type scheme: Type -> Type =
   | Scheme:  p:Type -> k:Type -> 
              keyrepr: (k -> AES.key) -> 
              keygen:  (bool -> k) ->   
              encrypt: (key:k -> p -> cipher p k key) ->
              decrypt: (key:k -> cipher p k key -> p) -> 
-             scheme p 
+             scheme p
+```
 
+A scheme records a plain type `p`, a function `keyrepr` for breaking key abstraction,
+a key generation function `keygen`, and encryption and decryption functions `encrypt` and `decrypt`.
+
+```
 type entry (p:Type) (k:Type) = 
   | Entry : key:k -> c:cipher p k key -> plain:p -> entry p k
   
 ```
+
 
 To create a cryptographic scheme one needs to provide a `plain` function 
 for turning `bytes` into the plain type values
@@ -3737,6 +3814,15 @@ let create (p:Type) plain repr =
   Scheme p (keyT p) keyrepr keygen encrypt decrypt
 ```
 
+Relying on basic cryptographic assumptions (IND-CPA), the
+ ideal implementation never accesses plaintexts when using `Ideal` keys! 
+ 
+Formally, the `Ideal` branch can be typed using an abstract plaintype:
+`encrypt` encrypts a constant AES block `c` and logs `Entry k c text`
+`decrypt` returns `text` when `Entry k c text` is in the log. 
+As IND-CPA requires that only ciphertext that have previously 
+been encrypted are decrypted, this is guaranteed by typing to be always the case.
+
 Here is how such a symmetric encryption scheme would be used in an example:
 ```
 module SampleEncrypt
@@ -3751,7 +3837,7 @@ let test() =
   let k1 = keygen true in
   let c = encrypt k0 p in
   let p' = decrypt k0 c in
-  //assert( p == p');           // this should eventually succeed, once we prove functional correctness
+  assert( p == p');                // this succeeds, as we enforce functional correctness
   (* let p'' = decrypt k1 c in     // this rightfully triggers an error *)
   ()
 ```

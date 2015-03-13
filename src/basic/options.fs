@@ -72,6 +72,7 @@ let hide_uvar_nums = Util.mk_ref false
 let hide_genident_nums = Util.mk_ref false
 let serialize_mods = Util.mk_ref false
 let initial_fuel = Util.mk_ref 2
+let initial_ifuel = Util.mk_ref 1
 let max_fuel = Util.mk_ref 8
 let min_fuel = Util.mk_ref 1
 let max_ifuel = Util.mk_ref 2
@@ -81,6 +82,7 @@ let eager_inference = Util.mk_ref false
 let unthrottle_inductives = Util.mk_ref false
 let use_eq_at_higher_order = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
+let n_cores = Util.mk_ref 1
 
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
@@ -118,10 +120,10 @@ let display_usage specs =
              else Util.print_string (Util.format3 "  --%s %s  %s\n" flag argname doc))
     specs
 
-let specs () : list<Getopt.opt> = 
+let rec specs () : list<Getopt.opt> = 
   let specs =   
     [( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
-     ( noshort, "codegen", OneArg ((fun s -> codegen := Some s; verify := false), "OCaml|F#|JavaScript"), "Generate code for execution");
+     ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s; verify := false), "OCaml|F#|JavaScript"), "Generate code for execution");
      ( noshort, "lax", ZeroArgs (fun () -> pretype := true; verify := false), "Run the lax-type checker only (admit all verification conditions)");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
      ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
@@ -149,12 +151,22 @@ let specs () : list<Getopt.opt> =
      ( noshort, "initial_fuel", OneArg((fun x -> initial_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try initially (default 2)");
      ( noshort, "max_fuel", OneArg((fun x -> max_fuel := int_of_string x), "non-negative integer"), "Number of unrolling of recursive functions to try at most (default 8)");
      ( noshort, "min_fuel", OneArg((fun x -> min_fuel := int_of_string x), "non-negative integer"), "Minimum number of unrolling of recursive functions to try (default 1)");
+     ( noshort, "initial_ifuel", OneArg((fun x -> initial_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at first (default 1)");
      ( noshort, "max_ifuel", OneArg((fun x -> max_ifuel := int_of_string x), "non-negative integer"), "Number of unrolling of inductive datatypes to try at most (default 1)");
      ( noshort, "warn_top_level_effects", ZeroArgs (fun () -> warn_top_level_effects := true), "Top-level effects are ignored, by default; turn this flag on to be warned when this happens");
      ( noshort, "no_slack", ZeroArgs (fun () -> no_slack := true), "Use the partially flow-insensitive variant of --rel2 (experimental)");
      ( noshort, "eager_inference", ZeroArgs (fun () -> eager_inference := true), "Solve all type-inference constraints eagerly; more efficient but at the cost of generality");
      ( noshort, "unthrottle_inductives", ZeroArgs (fun () -> unthrottle_inductives := true), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
      ( noshort, "use_eq_at_higher_order", ZeroArgs (fun () -> use_eq_at_higher_order := true), "Use equality constraints when comparing higher-order types; temporary");
-     ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator")
+     ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator");
+     ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x), "positive integer"), "Maximum number of cores to use for the solver (default 1)")
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
+and parse_codegen s =
+  match s with
+  | "OCaml"
+  | "F#"
+  | "JavaScript" -> Some s
+  | _ ->
+     (Util.print_string "Wrong argument to codegen flag\n";
+      display_usage (specs ()); exit 1)

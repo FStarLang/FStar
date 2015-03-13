@@ -1,9 +1,12 @@
 VERFILES=stlc_cbv_db_pntsubst_nolists.fst stlc_cbv_named.fst 
 include ../Makefile.include
-all: .all.ver tinyfstar.vv pars stlc_strong_db_parsubst #stlc_cbv_db_pntsubst_lists 
+all: .all.ver tinyfstar pars stlc_strong_db_parsubst #stlc_cbv_db_pntsubst_lists 
 
 pars:
 	$(FSTAR) ../../lib/ext.fst pars.fst --max_fuel 1 --max_ifuel 1
+
+tinyfstar: 
+	$(FSTAR) ../../lib/constr.fst tinyfstar.fst
 
 lo:
 	$(FSTAR) ../../lib/constr.fst ../../lib/classical.fst ../../lib/ext.fst lambda_omega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1

@@ -65,7 +65,14 @@ type proc = {m:Object;
              proc:Process;
              killed:ref<bool>}
 let all_procs : ref<list<proc>> = ref []
-
+open System.Threading
+let global_lock = new Object()
+let atomically (f:unit -> 'a) = 
+    System.Threading.Monitor.Enter(global_lock);
+    let result = f () in
+    System.Threading.Monitor.Exit(global_lock);
+    result
+let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let start_process (prog:string) (args:string) (cond:string -> bool) : proc = 
     let signal = new Object() in
     let with_sig f = 
@@ -482,6 +489,7 @@ let for_range lo hi f =
   done
 
 let incr r = r := !r + 1
+let decr r = r := !r - 1
 let geq (i:int) (j:int) = i >= j
 
 let expand_environment_variable s = 

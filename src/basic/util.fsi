@@ -164,6 +164,7 @@ val prefix: list<'a> -> Tot<(list<'a> * 'a)>
 val string_of_unicode: array<byte> -> Tot<string>
 val unicode_of_string: string -> Tot<array<byte>>
 val incr: ref<int> -> unit
+val decr: ref<int> -> unit
 val geq: int -> int -> Tot<bool>
 val for_range: int -> int -> (int -> unit) -> unit
 
@@ -218,3 +219,6 @@ type OReader = {
 
 val get_owriter: string -> OWriter
 val get_oreader: string -> OReader
+
+val atomically: (unit -> 'a) -> 'a
+val spawn: (unit -> unit) -> unit

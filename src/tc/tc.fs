@@ -69,18 +69,14 @@ let fxv_check head env kt fvs =
                           let s = Util.new_kvar env in
                           begin match Tc.Rel.try_keq env k s with 
                             | Some g ->
-                              if fst <| Tc.Rel.try_discharge_guard env g 
-                              then ()
-                              else fail()
+                              Tc.Rel.try_discharge_guard env g 
                             | _ -> fail ()
                           end 
                         | Inr t -> 
                           let s = Util.new_tvar env ktype in
                           begin match Tc.Rel.try_teq env t s with
                             | Some g -> 
-                              if fst <| Tc.Rel.try_discharge_guard env g
-                              then ()
-                              else fail()
+                              Tc.Rel.try_discharge_guard env g
                             | _ -> fail ()
                           end in
     aux false kt
@@ -456,9 +452,9 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     let t, k, f = tc_typ env t in 
     mk_Typ_meta(Meta_refresh_label(t, b, r)), k, f
   
-  | Typ_meta(Meta_labeled(t, l, p)) -> 
+  | Typ_meta(Meta_labeled(t, l, r, p)) -> 
     let t, k, f = tc_typ env t in 
-    mk_Typ_meta(Meta_labeled(t, l, p)), k, f
+    mk_Typ_meta(Meta_labeled(t, l, r, p)), k, f
      
   | Typ_meta (Meta_named(t, l)) -> 
     let t, k, f = tc_typ env t in 
@@ -724,7 +720,7 @@ and tc_exp env e : exp * lcomp * guard_t =
   let top = e in
   match e.n with
   | Exp_delayed _ -> tc_exp env (compress_exp e)
-
+   
   | Exp_uvar _ 
   | Exp_bvar _  
   | Exp_fvar _ 
@@ -893,7 +889,7 @@ and tc_exp env e : exp * lcomp * guard_t =
               let comp = Tc.Util.bind env None chead (None, comp) in
               let app =  mk_Exp_app_flat(head, List.rev outargs) (Some comp.res_typ) top.pos in
               let comp, g = Tc.Util.strengthen_precondition None env app comp g in //Each conjunct in g is already labeled
-              if debug env Options.Low then Util.fprint1 "\t Type of app term is %s\n" (Print.lcomp_typ_to_string comp);
+              if debug env Options.Low then Util.fprint2 "\t Type of app term %s is %s\n" (Normalize.exp_norm_to_string env app) (Print.lcomp_typ_to_string comp);
               app, comp, g
                
             | (Inr _, _)::_, (Inl _, _)::_ ->
@@ -925,7 +921,7 @@ and tc_exp env e : exp * lcomp * guard_t =
             then Tc.Util.maybe_assume_result_eq_pure_term env e c 
             else c in
     if debug env Options.Extreme 
-    then Util.fprint3 "(%s) About to check %s against expected typ %s" (Range.string_of_range e.pos) 
+    then Util.fprint3 "(%s) About to check %s against expected typ %s\n" (Range.string_of_range e.pos) 
           (Print.typ_to_string c.res_typ)
           (Env.expected_typ env0 |> (fun x -> match x with None -> "None" | Some t -> Print.typ_to_string t));
     let e, c, g' = comp_check_expected_typ env0 e c in
@@ -1010,9 +1006,9 @@ and tc_exp env e : exp * lcomp * guard_t =
                  let fvs = Util.freevars_typ tres in
                  if Util.set_mem (bvd_to_bvar_s bvd t) fvs.fxvs 
                  then let t = Tc.Util.new_tvar env0 ktype in
-                      if fst (Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env tres t)
-                      then e, cres, guard
-                      else raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres bvd, rng env))
+                      Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env tres t;
+                      e, cres, guard
+//                      else raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres bvd, rng env))
                  else e, cres, guard
               | _ -> e, cres, guard
      end       
@@ -1082,9 +1078,9 @@ and tc_exp env e : exp * lcomp * guard_t =
                     | (Inl x, _, _) -> Util.set_mem (bvd_to_bvar_s x tun) fvs.fxvs) with
                 | Some (Inl y, _, _) ->
                   let t' = Tc.Util.new_tvar env0 ktype in 
-                  if fst (Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env tres t')
-                  then e, cres, guard
-                  else raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres y, rng env))
+                  Tc.Rel.try_discharge_guard env <| Tc.Rel.teq env tres t';
+                  e, cres, guard
+                  //else raise (Error(Tc.Errors.inferred_type_causes_variable_to_escape env tres y, rng env))
                 | _ -> e, cres, guard
          end
 
@@ -1104,21 +1100,26 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
         | Env.Binding_var(x, t) -> Util.fprint2 "Before tc ... pattern var %s  : %s\n" (Print.strBvd x) (Normalize.typ_norm_to_string env t)
         | _ -> ());
     let env1, _ = Tc.Env.clear_expected_typ pat_env in 
-    let env1 = {env1 with Env.is_pattern=true} in 
-    let env1 = Tc.Env.set_expected_typ env1 (Tc.Rel.unrefine env pat_t) in
-    let exps, gs = exps |> List.map (fun e -> 
+    let env1 = {env1 with Env.is_pattern=true} in  //just a flag for a better error message
+    let expected_pat_t = Tc.Rel.unrefine env pat_t in
+    let exps = exps |> List.map (fun e -> 
         if Tc.Env.debug env Options.High
         then Util.fprint2 "Checking pattern expression %s against expected type %s\n" (Print.exp_to_string e) (Print.typ_to_string pat_t);
-        let e, _, g =  tc_total_exp env1 e in //only keep the unification/subtyping constraints; discard the logical guard for patterns
+        let e, lc, g =  tc_exp env1 e in //only keep the unification/subtyping constraints; discard the logical guard for patterns
         if Tc.Env.debug env Options.High
-        then Util.fprint1 "Done checking pattern expression %s\n" (Print.exp_to_string e);
-        e, {g with Rel.guard_f=Rel.Trivial}) |> List.unzip in
+        then Util.fprint2 "Pre-checked pattern expression %s at type %s\n" (Normalize.exp_norm_to_string env e) (Normalize.typ_norm_to_string env lc.res_typ);
+        let g' = Tc.Rel.teq env lc.res_typ expected_pat_t in
+        let g = Rel.conj_guard g g' in
+        ignore <| Tc.Rel.solve_deferred_constraints env g;
+        if Tc.Env.debug env Options.High
+        then Util.fprint1 "Done checking pattern expression %s\n" (Normalize.exp_norm_to_string env e);//.exp_to_string e);
+        e) in
     let p = Tc.Util.decorate_pattern env p exps in
     if debug env <| Options.Other "Pat" 
     then bindings |> List.iter (function 
         | Env.Binding_var(x, t) -> Util.fprint2 "Pattern var %s  : %s\n" (Print.strBvd x) (Print.typ_to_string t)//(Normalize.typ_norm_to_string env t)
         | _ -> ());
-    p, bindings@w, pat_env, exps, List.fold_right Rel.conj_guard gs Rel.trivial_guard in
+    p, bindings@w, pat_env, exps, Rel.trivial_guard in
   (*</tc_pat>*)
 
   let pattern, bindings, pat_env, disj_exps, g_pat = tc_pat pat_t env pattern in //disj_exps, an exp for each arm of a disjunctive pattern
@@ -1587,7 +1588,7 @@ let add_modul_to_tcenv (en: env) (m: modul) :env =
   let en = Tc.Env.set_current_module en m.name in 
   Tc.Env.finish_module (List.fold_left do_sigelt en m.exports) m
 
-let check_modules (s:solver_t) (ds: solver_t) mods = 
+let check_modules (s:solver_t) mods = 
    let env = Tc.Env.initial_env s Const.prims_lid in
    s.init env; 
    let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 

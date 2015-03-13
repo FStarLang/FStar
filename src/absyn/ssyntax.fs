@@ -142,7 +142,7 @@ and serialize_meta_t (writer:Writer) (ast:meta_t) :unit =
     match ast with
     | Meta_pattern(t, l) -> writer.write_char 'a'; serialize_typ writer t; serialize_list writer serialize_arg l
     | Meta_named(t, lid) -> writer.write_char 'b'; serialize_typ writer t; serialize_lident writer lid
-    | Meta_labeled(t, s, b) -> writer.write_char 'c'; serialize_typ writer t; writer.write_string s; writer.write_bool b
+    | Meta_labeled(t, s, _, b) -> writer.write_char 'c'; serialize_typ writer t; writer.write_string s; writer.write_bool b
     | _ -> raise (Err "unimplemented meta_t")
 
 and serialize_arg (writer:Writer) (ast:arg) :unit = serialize_either writer serialize_typ serialize_exp (fst ast); writer.write_bool (is_implicit <| snd ast)//TODO: Generalize
@@ -279,7 +279,7 @@ and deserialize_meta_t (reader:Reader) :meta_t =
     match (reader.read_char ()) with
     | 'a' -> Meta_pattern(deserialize_typ reader, deserialize_list reader deserialize_arg)
     | 'b' -> Meta_named(deserialize_typ reader, deserialize_lident reader)
-    | 'c' -> Meta_labeled(deserialize_typ reader, reader.read_string (), reader.read_bool ())
+    | 'c' -> Meta_labeled(deserialize_typ reader, reader.read_string (), dummyRange, reader.read_bool ())
     |  _  -> parse_error()
 
 and deserialize_arg (reader:Reader) :arg = (deserialize_either reader deserialize_typ deserialize_exp, as_implicit <| reader.read_bool ())//TODO: Generalize

@@ -6,7 +6,7 @@ Affiliation   : Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
 Reveal Theme  : solarized
 Beamer Theme  : singapore
 Reveal Url    : ./reveal
-Colorizer     : fstar
+Colorizer     : ../../tutorial/fstar
 Package       : semantic
 Logo          : False
 
@@ -42,7 +42,7 @@ Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
 
 ![fo-verifiers]
 
-[fo-verifiers]: fo-verifiers.png
+[fo-verifiers]: img/fo-verifiers.png
 
 <!-------------------------------------------------------------------------------->
 
@@ -52,7 +52,7 @@ Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
 
 ### Modern languages use higher-order constructs pervasively
 
-[ho-langs]: ho-langs.png
+[ho-langs]: img/ho-langs.png
 
 <!-------------------------------------------------------------------------------->
 
@@ -66,7 +66,7 @@ Microsoft Research, INRIA, MSR-INRIA, IMDEA, UMD
 * Effectful
 * Call by value
 
-[fstar-logo]: fstar.png
+[fstar-logo]: img/fstar.png
 
 <!-------------------------------------------------------------------------------->
 
@@ -143,14 +143,14 @@ $\Gamma_{\mbox{prelude}} \vdash \mbox{\texttt{let factorial n = e}} : t \Leftarr
   OCaml and F\#.  More streamlined, expressive, and efficient than
   prior versions.
 
-[timeline]: timeline.png
+[timeline]: img/timeline.png
 ~
 
 ~Slide
 
 ![arch]
 
-[arch]: arch.png
+[arch]: img/arch.png
 ~
 
 ~Slide
@@ -440,69 +440,56 @@ val swap: x:ref int
 ~Slide
 ### Typing values (selected judgments)
 
-$\begin{scriptsize}
+~~ Snippet
+\begin{small}
+\[
+\begin{array}{c}
 {\Gamma \vdash e : t}
-\end{scriptsize}$
-
-- T-Var
-
-$\begin{scriptsize}
-\inference{\Gamma(x) = t}
+\\[0.5cm]
+\inference[(T-Var)]{\Gamma(x) = t}
           {\Gamma \vdash x : t}
-\end{scriptsize}$
+\\[0.5cm]
 
-- T-Const
-   
-
-$\begin{scriptsize}
-\inference{e\in\{\ldots,-1,0,1,\ldots\}}
+\inference[(T-Const)]{e\in\{\ldots,-1,0,1,\ldots\}}
           {\Gamma \vdash e : int}
-\end{scriptsize}$
-
-- T-Abs
-
-$\begin{scriptsize}
-\inference{\Gamma,x:t \vdash e : M~t~wp}
+\\[0.5cm]
+\inference[(T-Abs)]{\Gamma,x:t \vdash e : M~t~wp}
           {\Gamma \vdash \mbox{\it fun}~(x:t) \rightarrow e ~:~ x\!:\!t \rightarrow M~t~wp}
-\end{scriptsize}$
+\end{array}
+\]
+\end{small}
+~~
 
 ~
 
 ~Slide
 ### Typing expressions (selected judgments)
 
-$\begin{scriptsize}
+~~ Snippet
+\begin{small}
+\[
+\begin{array}{c}
 {\Gamma \vdash e : M~t~wp}
-\end{scriptsize}$
+\\[0.2cm]
 
-
-- T-Ret
-
-
-$\begin{scriptsize}
-\inference{\Gamma \vdash e : t}
+\inference[(T-Ret)]{\Gamma \vdash e : t}
           {\Gamma \vdash e :  \pure~t~(\pure.\retern~e)}
-\end{scriptsize}$
+\\[0.5cm]
 
-
-- T-Let
-
-$\begin{scriptsize}
-\inference{\Gamma \vdash e_1 : M~t_1~wp_1 &
+\inference[(T-Let)]{\Gamma \vdash e_1 : M~t_1~wp_1 &
             \Gamma,x:t_1 \vdash e_2 : M~t_2~wp_2 & 
             x \not\in FV(t_2)}
           {\Gamma \vdash \mbox{\it let}~x = e_1~\mbox{\it in}~e_2 : M~t_2~(M.\mbox{\it bind}~wp_1~(\mbox{\it fun}~x \rightarrow wp_2))}
-\end{scriptsize}$
+\\[0.5cm]
 
-- T-If
-
-$\begin{scriptsize}
-\inference{\Gamma \vdash e_1 : M~\mbox{\it int}~wp_1 \\
+\inference[(T-If)]{\Gamma \vdash e_1 : M~\mbox{\it int}~wp_1 \\
            \Gamma \vdash e_2 : M~t~wp_2 &
            \Gamma \vdash e_3 : M~t~wp_3}
          {\Gamma \vdash \mbox{\it if0}~e_1~\mbox{\it then}~e_2~\mbox{\it else}~e_3 : M.\ite~t~wp_1~wp_2~wp_3}
-\end{scriptsize}$
-
+\end{array}
+\]
+\end{small}
+~~
 
 ```fstar
 PURE.ITE t wp1 wp2 wp3 post = 

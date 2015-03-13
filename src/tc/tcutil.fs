@@ -36,9 +36,7 @@ let report env errs =
     Tc.Errors.report (Tc.Env.get_range env)
                      (Tc.Errors.failed_to_prove_specification errs)
 
-let discharge_guard env (g:guard_t) = 
-    let ok, errs = Rel.try_discharge_guard env g in
-    if not ok then report env errs
+let discharge_guard env (g:guard_t) = Rel.try_discharge_guard env g 
 
 let force_trivial env g = discharge_guard env g
 
@@ -61,7 +59,7 @@ let check_and_ascribe env (e:exp) (t1:typ) (t2:typ) : exp * guard_t =
     else match Rel.try_subtype env t1 t2 with 
             | None -> None
             | Some f -> Some <| apply_guard f e in
-  if env.is_pattern
+  if env.is_pattern && false
   then match Rel.try_teq env t1 t2 with
         | None -> raise (Error(Tc.Errors.expected_pattern_of_type env t2 e t1, Tc.Env.get_range env))
         | Some g -> e, g
@@ -715,8 +713,7 @@ let refresh_comp_label env b lc =
     {lc with comp=refresh}
 
 let label reason r f = 
-    let label = Util.format2 "%s (%s)" reason (Range.string_of_range r) in
-    Syntax.mk_Typ_meta(Meta_labeled(f, label, true))
+    Syntax.mk_Typ_meta(Meta_labeled(f, reason, r, true))
 let label_opt reason r f = match reason with 
     | None -> f
     | Some reason -> 
@@ -910,7 +907,8 @@ let maybe_instantiate env e t =
   | _ -> e, t
 
 let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t = 
-  let gopt = if env.is_pattern || env.use_eq 
+  let gopt = if //env.is_pattern ||
+                env.use_eq 
              then Tc.Rel.try_teq env lc.res_typ t, false 
              else Tc.Rel.try_subtype env lc.res_typ t, true in
   match gopt with 
@@ -1046,9 +1044,8 @@ let generalize verify env (lecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*com
       
 let check_top_level env g lc : (bool * comp) =
   let discharge g = 
-    let ok, errs = try_discharge_guard env g in
-    if not ok then report env errs;
-    Util.is_pure_lcomp lc && ok in
+    try_discharge_guard env g;
+    Util.is_pure_lcomp lc in
   let g = Rel.solve_deferred_constraints env g in
   if Util.is_total_lcomp lc 
   then discharge g, lc.comp()
