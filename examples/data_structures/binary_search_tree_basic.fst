@@ -45,6 +45,7 @@ let rec search x t =
                     else if x < n then search x t1
                     else               search x t2
 
+(*
 val insert : x:int -> t:tree -> Pure tree
                (requires (is_bst t))
                (ensures (fun r -> is_bst r /\
@@ -55,6 +56,27 @@ let rec insert x t =
   | Node n t1 t2 -> if x = n then      t
                     else if x < n then
                       (assert (is_bst (insert x t1)); (* WTF? *)
+                       admit() (*Node n (insert x t1) t2*))
+                    else
+                      admit()(*Node n t1 (insert x t2)*)
+*)
+
+(*
+val helper : n:int -> x:int -> t:tree -> Lemma
+      (requires (x < n && all (gt n) t))
+      (ensures (all (gt n) (insert x t)))
+*)
+
+val insert : x:int -> t:tree{is_bst t} ->
+             Tot (r:tree{is_bst r /\
+                  (forall y. in_tree y r <==> (in_tree y t \/ x = y))})
+let rec insert x t =
+  match t with
+  | Leaf -> Node x Leaf Leaf
+  | Node n t1 t2 -> if x = n then      t
+                    else if x < n then
+                      (assert (is_bst (insert x t1));
+                       assert (all (gt n) (insert x t1));
                        admit() (*Node n (insert x t1) t2*))
                     else
                       admit()(*Node n t1 (insert x t2)*)
