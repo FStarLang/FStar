@@ -1851,10 +1851,6 @@ terminating:
 ```
 val foo : l:list int -> Tot int (decreases %[l;0])
 val bar : l:list int -> Tot int (decreases %[l;1])
-let rec foo l = match l with
-    | [] -> 0
-    | x::xs -> bar xs
-and bar l = foo l
 ```
 
 The metrics of `foo` and `bar` are both lexicographic tuples with the
