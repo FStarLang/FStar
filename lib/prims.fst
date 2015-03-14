@@ -413,7 +413,7 @@ assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" '
 assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (fun x -> 'P)
 assume val qintro: a:Type -> p:(a -> Type) -> (x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 assume val failwith: string -> ALL.All 'a (fun h -> True) (fun h a h' -> is_Err a /\ h==h')
-assume val raise: exn -> 'a       (* TODO: refine with the Exn monad *)
+assume val raise: exn -> EXN.Ex 'a       (* TODO: refine with the Exn monad *)
 assume val pipe_right: 'a -> ('a -> 'b) -> 'b
 assume val pipe_left: ('a -> 'b) -> 'a -> 'b
 val ignore: 'a -> Tot unit

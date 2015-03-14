@@ -225,7 +225,11 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
                let pats = List.map (elaborate_pat env) pats in
                let t = Tc.Env.lookup_datacon env fv.v in
                let pats = match Util.function_formals t with 
-                    | None -> []
+                    | None -> 
+                        begin match pats with   
+                            | [] -> []
+                            | _ -> raise (Error("Too many pattern arguments", range_of_lid fv.v))
+                        end
                     | Some(f, _) -> 
                       let rec aux formals pats = match formals, pats with 
                         | [], [] -> []
