@@ -1,4 +1,4 @@
-module MerkelTree
+module MerkleTree
 
 open Constructive
 
