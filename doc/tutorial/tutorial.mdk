@@ -1825,8 +1825,13 @@ let fib_is_ok n = fib_is_ok_aux 0 n
 
 ## Mutually recursive functions
 
-The same strategy for proving termination also works for mutually recursive functions. 
-Consider for instance the following example:
+The same strategy for proving termination also works for mutually
+recursive functions. In the case of mutually recursive functions, the
+F\* termination checker requires that all directly or mutually
+recursive calls decrease the termination metric of the called
+function. This is a quite strong requirement. Consider for instance
+the following example:
+
 ```
 val foo : l:list int -> Tot int
 val bar : l:list int -> Tot int
@@ -1836,29 +1841,28 @@ let rec foo l = match l with
 and bar l = foo l
 ```
 
-The tricky part is in the call to `foo` by `bar`. As `foo` is called on the same list.
+This function is terminating because `foo` is always called (via
+`bar`) on a sub-list. The call from `bar` to `foo` is not on a smaller
+list though, and with the default metrics this example is rejected.
 
-~Exercise
+We can use a custom metric to convince F\* that the two functions are
+terminating:
 
-Prove termination. 
-
-Tip 1: In your `lex_t` expression you have to distinguish between input to `foo` and input to `bar`. Tip 2: The expression can use constants.
-~~ ExerciseFragment {exname=ex5c-mutualrec}
-val foo : l:list int -> Tot int
-val bar : l:list int -> Tot int
-~~
-
-~~AnswerFragment {exname=ex5c-mutualrec}
+```
 val foo : l:list int -> Tot int (decreases %[l;0])
 val bar : l:list int -> Tot int (decreases %[l;1])
 let rec foo l = match l with
     | [] -> 0
     | x::xs -> bar xs
 and bar l = foo l
+```
 
-~~
+The metrics of `foo` and `bar` are both lexicographic tuples with the
+argument `l` in the first position and `0` or `1` in the second. The
+call from `foo` to `bar` decreases `l`, while the call from `bar` to
+`foo` keeps `l` the same, but decreases the second component from `0`
+to `1`.
 
-~
 
 # Putting the pieces together
 
