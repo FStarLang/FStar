@@ -1,11 +1,5 @@
 module BinarySearchTreeBasic
 
-val myand : bool -> bool -> Tot bool
-let myand b1 b2 = if b1 then b2 else false
-
-val myor : bool -> bool -> Tot bool
-let myor b1 b2 = if b1 then true else b2
-
 type tree =
   | Leaf : tree
   | Node : n:int -> tree -> tree -> tree
@@ -14,23 +8,14 @@ val in_tree : int -> tree -> Tot bool
 let rec in_tree x t =
   match t with
   | Leaf n -> false
-  | Node n t1 t2 -> myor (x = n) (myor (in_tree x t1) (in_tree x t2))
+  | Node n t1 t2 -> x = n || in_tree x t1 || in_tree x t2
 
 val all : p:(int -> Tot bool) -> t:tree ->
             Tot (r:bool{r <==> (forall x. in_tree x t ==> p x)})
 let rec all p t =
   match t with
   | Leaf n -> true
-  | Node n t1 t2 -> myand (p n) (myand (all p t1) (all p t2))
-
-(* doing this just for the SMTPat that's needed in insert
-val all_correct : p:(int -> Tot bool) -> t:tree -> Lemma (requires True)
-      (ensures (all p t <==> (forall x. in_tree x t ==> p x))) [SMTPat (all p t)]
-let rec all_correct p t =
-  match t with
-  | Leaf -> ()
-  | Node x' t1 t2 -> all_correct p t1; all_correct p t2
-*)
+  | Node n t1 t2 -> p n && all p t1 && all p t2
 
 (* CH: don't these already have some non-operator form? *)
 val lt : int -> int -> Tot bool
@@ -43,8 +28,7 @@ val is_bst : tree -> Tot bool
 let rec is_bst t =
   match t with
   | Leaf n -> true
-  | Node n t1 t2 -> myand (myand (all (gt n) t1) (all (lt n) t2))
-                          (myand (is_bst t1) (is_bst t2))
+  | Node n t1 t2 -> all (gt n) t1 && all (lt n) t2 && is_bst t1 && is_bst t2
 
 val search : x:int -> t:tree{is_bst t} -> Tot (r:bool{r <==> in_tree x t})
 let rec search x t =
