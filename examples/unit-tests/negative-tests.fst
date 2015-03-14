@@ -183,3 +183,12 @@ let bad_node_3 (l:int) (t1:tree l) (t2:tree (l + 1)) = Node (Some t1) (l + 1) (S
 (* assume val repr : int -> int *)
  
 (* let f (text:int) = enc (repr text) //should fail; plain escapes *)
+
+module ShortCircuitingBugs
+
+type Bad : bool -> Type
+val bad : x:int -> Tot (b:bool{Bad b})
+let rec bad x = true || bad x
+
+val ff : unit -> Lemma (ensures False)
+let ff u = ignore (false && (0 = 1))

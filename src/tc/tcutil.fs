@@ -780,6 +780,20 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (lc:lc
        {g0 with Rel.guard_f=Rel.Trivial} 
 
 
+let ite env (guard:formula) lcomp_then lcomp_else = 
+  let comp () = 
+      let (md, _, _), (res_t, wp_then, wlp_then), (_, wp_else, wlp_else) = lift_and_destruct env (lcomp_then.comp()) (lcomp_else.comp()) in
+      let ifthenelse md res_t g wp_t wp_e = mk_Typ_app(md.if_then_else, [targ res_t; targ g; targ wp_t; targ wp_e]) None (Range.union_ranges wp_t.pos wp_e.pos) in
+      let wp = ifthenelse md res_t guard wp_then wp_else in
+      let wlp = ifthenelse md res_t guard wlp_then wlp_else in
+      let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) None wp.pos in
+      let wlp = mk_Typ_app(md.ite_wlp, [targ res_t; targ wlp]) None wlp.pos in
+      mk_comp md res_t wp wlp [] in
+    {eff_name=join_effects env lcomp_then.eff_name lcomp_else.eff_name;
+     res_typ=lcomp_then.res_typ;
+     cflags=[];
+     comp=comp} 
+
 let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
     let eff = match lcases with 
         | [] -> failwith "Empty cases!"
@@ -921,6 +935,8 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
           let g = {g with Rel.guard_f=Rel.Trivial} in
           let strengthen () = 
             let c = lc.comp() in
+            if Tc.Env.debug env <| Options.Extreme
+            then Util.fprint2 "Strengthening %s with guard %s\n" (Normalize.comp_typ_norm_to_string env c) (Normalize.typ_norm_to_string env f);
             let ct = Tc.Normalize.weak_norm_comp env c in
             let a, kwp = Env.wp_signature env Const.pure_effect_lid in
             let k = Util.subst_kind [Inl(a.v, t)] kwp in
@@ -938,7 +954,10 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
                 then weaken_precondition env eq_ret (Rel.NonTrivial (Util.mk_eq xexp e))
                 else eq_ret in 
             let c = bind env (Some e) (lcomp_of_comp <| mk_Comp ct) (Some(Env.Binding_var(x, lc.res_typ)), eq_ret) in
-            c.comp() in
+            let c = c.comp () in
+            if Tc.Env.debug env <| Options.Extreme
+            then Util.fprint1 "Strengthened to %s\n" (Normalize.comp_typ_norm_to_string env c);
+            c in
           let flags = lc.cflags |> List.collect (function RETURN | PARTIAL_RETURN -> [PARTIAL_RETURN] | _ -> []) in
           let lc = {lc with res_typ=t; comp=strengthen; cflags=flags; eff_name=norm_eff_name env lc.eff_name} in
           (e, lc, g)
@@ -1057,25 +1076,43 @@ let check_top_level env g lc : (bool * comp) =
        let vc = mk_Typ_app(md.trivial, [targ t; targ wp]) (Some ktype) (Env.get_range env) in
        let g = Rel.conj_guard g (Rel.guard_of_guard_formula <| Rel.NonTrivial vc) in
        discharge g, mk_Comp c
-       
 
 (* Having already seen_args to head (from right to left), 
    compute the guard, if any, for the next argument, 
    if head is a short-circuiting operator *)
-let short_circuit_guard (head:either<typ, exp>) (seen_args:args) : guard_formula = 
-    let short_bin_op_e f : args -> guard_formula = function
-        | [] -> (* no args seen yet *) Rel.Trivial
-        | [(Inr fst, _)] -> f fst
+let short_circuit_exp (head:exp) (seen_args:args) : option<(formula * exp)> = 
+    let short_bin_op_e f : args -> option<(formula * exp)> = function
+        | [] -> (* no args seen yet *) None
+        | [(Inr fst, _)] -> f fst |> Some
         | _ -> failwith "Unexpexted args to binary operator" in
+ 
+    let table = 
+       let op_and_e e = Util.b2t e, Const.exp_false_bool in
+       let op_or_e e  = Util.mk_neg (Util.b2t e), Const.exp_true_bool  in
+       [(Const.op_And,  short_bin_op_e op_and_e);
+        (Const.op_Or,   short_bin_op_e op_or_e)]  in
+
+    match head.n with 
+        | Exp_fvar(fv, _) ->
+          let lid = fv.v in 
+          begin match Util.find_map table (fun (x, mk) -> if lid_equals x lid then Some (mk seen_args) else None) with 
+            | None -> None
+            | Some g -> g
+          end
+        | _ -> None
+
+
+(* Having already seen_args to head (from right to left), 
+   compute the guard, if any, for the next argument, 
+   if head is a short-circuiting operator *)
+let short_circuit_typ (head:either<typ,exp>) (seen_args:args) : guard_formula = 
     let short_bin_op_t f : args -> guard_formula = function
         | [] -> (* no args seen yet *) Rel.Trivial
         | [(Inl fst, _)] -> f fst
         | _ -> failwith "Unexpexted args to binary operator" in
     
-    let op_and_e e =  Util.b2t e |> Rel.NonTrivial in
-    let op_or_e e = Util.mk_neg (Util.b2t e) |> Rel.NonTrivial in
     let op_and_t t = unlabel t |> Rel.NonTrivial in
-    let op_or_t t =  unlabel t |> Util.mk_neg |> Rel.NonTrivial in
+    let op_or_t t  =  unlabel t |> Util.mk_neg |> Rel.NonTrivial in
     let op_imp_t t = unlabel t |> Rel.NonTrivial in
     let short_op_ite : args -> guard_formula = function 
         | [] -> Rel.Trivial
@@ -1083,22 +1120,22 @@ let short_circuit_guard (head:either<typ, exp>) (seen_args:args) : guard_formula
         | [_then;(Inl guard, _)] -> Util.mk_neg guard |> Rel.NonTrivial 
         | _ -> failwith "Unexpected args to ITE" in 
     let table = 
-        [(Const.op_And,  short_bin_op_e op_and_e);
-         (Const.op_Or,   short_bin_op_e op_or_e);
-         (Const.and_lid, short_bin_op_t op_and_t);
+        [(Const.and_lid, short_bin_op_t op_and_t);
          (Const.or_lid,  short_bin_op_t op_or_t);
          (Const.imp_lid, short_bin_op_t op_imp_t);
          (Const.ite_lid, short_op_ite);] in
 
-    let head_lid = match head with 
-        | Inr ({n=Exp_fvar(fv, _)}) -> Some fv.v
-        | Inl ({n=Typ_const fv}) -> Some fv.v 
-        | _ -> None in
-    match head_lid with 
-        | None -> Rel.Trivial
-        | Some lid -> 
+     match head with 
+        | Inr head -> 
+          begin match short_circuit_exp head seen_args with 
+            | None -> Rel.Trivial
+            | Some (g, _) -> Rel.NonTrivial g
+          end
+        | Inl ({n=Typ_const fv}) -> 
+          let lid = fv.v in
           begin match Util.find_map table (fun (x, mk) -> if lid_equals x lid then Some (mk seen_args) else None) with 
             | None ->   Rel.Trivial
             | Some g -> g
           end
+        | _ -> Rel.Trivial
         

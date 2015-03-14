@@ -1,12 +1,17 @@
 module Bug
-open List
 
-(* works but it shouldn't *)
-val search : x:int -> l:(list int) -> Tot (r:bool{r <==> mem x l})
+val search : x:int -> l:(list int) -> Tot (b:bool{b = false})
 let rec search x l =
   match l with
   | [] -> false
-  | n :: l' -> x = n || (false && search x l')
+  | n :: l' ->  x = n || (if false then search x l' else false)
+
+(* (\* works but it shouldn't *\) *)
+(* val search : x:int -> l:(list int) -> Pure bool (requires True) (ensures (fun r -> r = mem x l)) *)
+(* let rec search x l = *)
+(*   match l with *)
+(*   | [] -> false *)
+(*   | n :: l' ->  x = n || (if false then search x l' else false) *)
 
 (* this equivalent thing fails as it should
 val search' : x:int -> l:(list int) -> Tot (r:bool{r <==> mem x l})

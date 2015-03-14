@@ -1658,7 +1658,12 @@ let solve tcenv q : unit =
                                                 (if !Options.max_fuel > !Options.initial_fuel && !Options.max_ifuel > !Options.initial_ifuel then [(!Options.max_fuel, !Options.max_ifuel)] else []);
                                                 (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])] in
 
-                let report (ok, errs) = if ok then () else Tc.Errors.add_errors tcenv errs in
+                let report (ok, errs) = 
+                    if ok then () 
+                    else let errs = match errs with 
+                            | [] -> [("Unknown assertion failed", dummyRange)]
+                            | _ -> errs in 
+                         Tc.Errors.add_errors tcenv errs in
 
                 let rec try_alt_configs errs = function 
                     | [] -> report (false, errs)

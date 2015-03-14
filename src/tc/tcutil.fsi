@@ -50,6 +50,7 @@ val is_pure_effect: env -> lident -> bool
 val return_value: env -> typ -> exp -> comp
 val bind: env -> option<exp> -> lcomp -> lcomp_with_binder -> lcomp
 val bind_cases: env -> typ -> list<(typ * lcomp)> -> lcomp
+val ite: env -> formula -> lcomp -> lcomp -> lcomp
 val weaken_result_typ: env -> exp -> lcomp -> typ -> exp * lcomp * guard_t
 val strengthen_precondition: option<(unit -> string)> -> env -> exp -> lcomp -> guard_t -> lcomp*guard_t
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
@@ -67,7 +68,7 @@ val force_trivial: env -> guard_t -> unit
 val discharge_guard: env -> guard_t -> unit
 val label: string -> Range.range -> typ -> typ
 val label_guard: string -> Range.range -> guard_formula -> guard_formula
-val short_circuit_guard: Util.either<typ,exp> -> args -> guard_formula
+val short_circuit_typ: Util.either<typ,exp> -> args -> guard_formula
 
 val force_tk: syntax<'a,'b> -> 'b
 val tks_of_args: args -> list<(Util.either<knd,typ> * aqual)>

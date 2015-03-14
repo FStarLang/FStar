@@ -7,5 +7,5 @@ all: .all.ver all-neg
 
 all-neg: $(NEGFILES)
 	-$(FSTAR) $(STDLIB) $^
-	echo "EXPECT 31 FAILURES<------------------------------------"
+	echo "EXPECT 34 FAILURES<------------------------------------"
 
