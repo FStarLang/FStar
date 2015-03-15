@@ -45,6 +45,7 @@ package: $(FSTARML)
 parser:
 	cat ../parser/parse.fsy | sed 's/^[/][/].*//g' | sed 's/^[#].*//g' | sed 's/^open .*//g' > parse.mly
 	ocamlyacc parse.mly
+	rm Microsoft_FStar_Parser_Parse.ml
 	echo "open Support.Microsoft.FStar.Util" > Microsoft_FStar_Parser_Parse.ml
 	echo "open Support.Microsoft.FStar.Range" >> Microsoft_FStar_Parser_Parse.ml
 	echo "open Microsoft_FStar_Absyn_Syntax" >> Microsoft_FStar_Parser_Parse.ml
