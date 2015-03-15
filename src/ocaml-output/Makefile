@@ -31,7 +31,7 @@ package: $(FSTARML)
 	cp ../../setenv.sh fstar/
 	cp -R ../../lib fstar/ || true
 	cp $(FSTARML) fstar/bin/fstar$(SUFFIX) || true
-	cp ../../bin/*z3* fstar/bin || echo " ********** WARNING: you don't have Z3 in \$FSTAR_HOME/bin, skipped from package ************** "
+	@cp ../../bin/*z3* fstar/bin || echo " ********** WARNING: you don't have Z3 in \$FSTAR_HOME/bin, skipped from package ************** "
 #	cp -R ../../examples fstar/ || true
 #	mkdir fstar/mllib || true
 #	cp ~/.opam/system/lib/num/* fstar/mllib || true
@@ -79,6 +79,7 @@ clean:
 	rm -fr fstar
 	rm -f $(FSTARML)
 	rm -f Microsoft_FStar_*.ml* Microsoft_FStar_*.cm[iox] FSharp_Format.cm[iox] parse.ml *.o *.gz
+	rm -f System_*.ml FSharp_Format.ml support.* parse.* .depend
 
 # Dependencies
 depend:

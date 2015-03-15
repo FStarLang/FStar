@@ -111,7 +111,7 @@ significantly richer than ML's, allowing functional correctness
 specifications to be stated and checked semi-automatically. This
 tutorial provides a first taste of verified programming in F\*. More
 information about F\*, including papers and technical reports, 
-can be found at the [F\* website].
+can be found on the [F\* website].
 
 [Microsoft Research]: http://research.microsoft.com/en-us
 [MSR-Inria]: http://www.msr-inria.fr/
