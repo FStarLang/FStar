@@ -1102,15 +1102,8 @@ let parse_cmdline specs others =
 
         let parseState = ()
 
-        let newline (lexbuf:lexbuf) =
-          let pos = lexbuf.lex_curr_p in
-          lexbuf.lex_curr_p <- { pos with
-            pos_lnum = pos.pos_lnum + 1;
-            pos_bol = pos.pos_cnum;
-          }
-
         let pos_of_lexpos (p:position) =
-          mk_pos p.pos_lnum p.pos_bol
+          mk_pos p.pos_lnum (p.pos_cnum - p.pos_bol)
 
         let mksyn_range (p1:position) p2 =
           mk_file_idx_range (decode_file_idx p1.pos_fname) (pos_of_lexpos p1) (pos_of_lexpos p2)

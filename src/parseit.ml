@@ -40,5 +40,5 @@ let parse_file fn =
       let pos = lexbuf.lex_curr_p in
       Inr  (Util.format3 "ERROR: Syntax error near line %s, character %s in file %s\n" 
               (Util.string_of_int pos.pos_lnum) 
-              (Util.string_of_int pos.pos_bol)
+              (Util.string_of_int (pos.pos_cnum - pos.pos_bol))
               filename)
