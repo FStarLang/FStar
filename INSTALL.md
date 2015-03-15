@@ -24,6 +24,7 @@
     - For Mac OS X install the MRE:
       - http://www.mono-project.com/download/#download-mac
 
+
   - Import certificates for Mono
 
           $ mozroots --import --sync
@@ -91,3 +92,7 @@
         $ make parser
         $ make
         $ make package
+
+#### Additional instructions for getting Windows binaries
+
+Use [wodi](http://wodi.forge.ocamlcore.org/) for building the package. Make sure you have F# installed and fsc.exe is in your PATH. To install F# [check this out](http://fsharp.org/use/windows/).
