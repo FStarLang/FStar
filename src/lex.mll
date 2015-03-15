@@ -264,8 +264,10 @@ rule token = parse
  | "=!="       { EQUALS_BANG_EQUALS }
  | "=="        { EQUALS_EQUALS }
  | "="         { EQUALS }
+ | "%["        { PERCENT_LBRACK }
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
+ | "<<"        {  LESSLESS }
  | "<="        { LEQ }
  | ">="        { GEQ }
  | "<>"        { LESSGREATER }
