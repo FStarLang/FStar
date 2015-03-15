@@ -11,7 +11,7 @@ else
 SUFFIX=
 endif
 
-FSTARML=fstar$(SUFFIX)
+FSTARML=fstarml$(SUFFIX)
 
 # prog1 should be compiled to bytecode, and is composed of three
 # units: mod1, mod2 and mod3.
@@ -30,8 +30,8 @@ package: $(FSTARML)
 	cp /usr/bin/ocamlrun fstar/bin/fsocamlrun || true
 	cp ../../setenv.sh fstar/
 	cp -R ../../lib fstar/ || true
-	cp $(FSTARML) fstar/bin/ || true
-	cp ../../bin/z3* fstar/bin || echo " ********** WARNING: you don't have Z3 in \$FSTAR_HOME/bin, skipped from package ************** "
+	cp $(FSTARML) fstar/bin/fstar$(SUFFIX) || true
+	cp ../../bin/*z3* fstar/bin || echo " ********** WARNING: you don't have Z3 in \$FSTAR_HOME/bin, skipped from package ************** "
 #	cp -R ../../examples fstar/ || true
 #	mkdir fstar/mllib || true
 #	cp ~/.opam/system/lib/num/* fstar/mllib || true
@@ -77,8 +77,8 @@ $(FSTARML): $(FSTAR_OBJS)
 # Clean up
 clean:
 	rm -fr fstar
-	rm -f fstar.*
-	rm -f Microsoft_FStar_*.cm[iox] FSharp_Format.cm[iox] parse.ml *.o *.gz
+	rm -f $(FSTARML)
+	rm -f Microsoft_FStar_*.ml* Microsoft_FStar_*.cm[iox] FSharp_Format.cm[iox] parse.ml *.o *.gz
 
 # Dependencies
 depend:

@@ -127,13 +127,20 @@ module Microsoft = struct
       type proc =
           {inc : in_channel;
            outc : out_channel;
-           mutable killed : bool}
+           mutable killed : bool;
+           id : string}
 
       let all_procs : (proc list) ref = ref []
 
       let lock () = ()
       let release () = ()
       let sleep n = Thread.delay ((float_of_int n) /. 1000.)
+
+      let monitor_enter _ = ()
+      let monitor_exit _ = ()
+      let monitor_wait _ = ()
+      let monitor_pulse _ = ()
+      let current_tid _ = 0
 
       let atomically =
         (* let mutex = Mutex.create () in *)
@@ -143,10 +150,10 @@ module Microsoft = struct
       let spawn f =
         let _ = Thread.create f () in ()
 
-      let start_process (prog:string) (args:string) (cond:string -> bool) : proc =
+      let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc =
         let command = prog^" "^args in
         let (inc,outc) = Unix.open_process command in
-        let proc = {inc = inc; outc = outc; killed = false} in
+        let proc = {inc = inc; outc = outc; killed = false; id = prog^":"^id} in
         all_procs := proc::!all_procs;
         proc
 
