@@ -95,4 +95,4 @@
 
 #### Additional instructions for getting Windows binaries
 
-Use [wodi](http://wodi.forge.ocamlcore.org/) for building the package. Make sure you have F# installed and fsc.exe is in your PATH. To install F# [check this out](http://fsharp.org/use/windows/).
+Use [wodi](http://wodi.forge.ocamlcore.org/) for building the package and for installing batteries. Make sure you have F# installed and fsc.exe is in your PATH. To install F# [check this out](http://fsharp.org/use/windows/).
