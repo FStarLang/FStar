@@ -5,7 +5,6 @@
 
 - On Windows 7/8 with .NET framework 4.5 and F# v3.0 :
   - Either using VisualStudio 2013, open FStar/VS/FStar.sln and build solution.
-  - or, with Cygwin's GNU make (4.0), run "make" from FStar/src
 
 - On Linux or Mac OS X using Mono:
   - Install mono 3.10.x and fsharp 3.1.x
@@ -95,4 +94,4 @@
 
 #### Additional instructions for getting Windows binaries
 
-Use [wodi](http://wodi.forge.ocamlcore.org/) for building the package and for installing batteries. Wodi installs cygwin; when your asked which packages add `git` to the default list. Make sure you have F# installed and fsc.exe is in your PATH. To install F# [check this out](http://fsharp.org/use/windows/).
+Use Visual Studio for building `fstar.exe` (note: running `make` in `src` will just give you a broken binary). Use [wodi](http://wodi.forge.ocamlcore.org/) for building the package and for installing batteries. Wodi installs cygwin; when your asked which packages add `git` to the default list. Make sure you have F# installed and fsc.exe is in your PATH. To install F# [check this out](http://fsharp.org/use/windows/).
