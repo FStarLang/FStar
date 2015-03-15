@@ -6,4 +6,4 @@ all: .all.ver bst rbtree
 bst: binary_search_tree.fulllib.ver
 
 rbtree: rbtree.fst
-	$(FSTAR) $(STDLIB) --z3timeout 7 $^
+	$(FSTAR) $(STDLIB) --z3timeout 15 $^
