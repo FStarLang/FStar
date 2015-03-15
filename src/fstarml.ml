@@ -79,6 +79,8 @@
                    then
                      Microsoft_FStar_Tc_Tc.check_modules solver fmods
                    else fmods in
+                solver.finish();
+
 
              let _20222 =
                if

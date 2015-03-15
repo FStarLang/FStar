@@ -56,11 +56,12 @@ parser:
 #	cp ../support/ocaml/fstar-lang/src/FSLangLexer.mll lex.mll
 	ocamllex ../lex.mll -o Microsoft_FStar_Parser_LexFStar.ml
 	cp ../parseit.ml Microsoft_FStar_Parser_ParseIt.ml
+	cp ../fstarml.ml .
 	cp ../support/ocaml/fstar-lib/src/support.ml .
 	$(OCAMLDEP) $(INCLUDES) *.ml > .depend
 
 $(FSTARML): $(FSTAR_OBJS)
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o $(FSTARML) $(FSTAR_OBJS) ../fstarml.ml
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o $(FSTARML) $(FSTAR_OBJS) fstarml.ml
 
 # Common rules
 .SUFFIXES: .ml .mli .cmo .cmi .cmx
@@ -76,13 +77,11 @@ $(FSTARML): $(FSTAR_OBJS)
 
 # Clean up
 clean:
-	rm -fr fstar
-	rm -f $(FSTARML)
-	rm -f Microsoft_FStar_*.ml* Microsoft_FStar_*.cm[iox] FSharp_Format.cm[iox] parse.ml *.o *.gz
-	rm -f System_*.ml FSharp_Format.ml support.* parse.* .depend
+	rm -fr fstar || true
+	rm -f System_* Microsoft_FStar_* FSharp_Format.* support.* parse.* fstarml.* .depend $(FSTARML) || true
 
 # Dependencies
 depend:
-	$(OCAMLDEP) $(INCLUDES) *.ml ../fstarml.ml > .depend
+	$(OCAMLDEP) $(INCLUDES) *.ml > .depend
 
 -include .depend
