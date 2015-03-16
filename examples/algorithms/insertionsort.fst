@@ -19,7 +19,8 @@ module InsertionSort
 open List
 open IntSort
 
-(* Explicitly calling lsorted_smaller lemma *)
+(* Explicitly calling sorted_smaller lemma
+   (otherwise verification takes a lot longer) *)
 val insert : i:int -> l:list int{sorted l} ->
       Tot (m:list int{sorted m /\ permutation (i::l) m})
 let rec insert i l = match l with

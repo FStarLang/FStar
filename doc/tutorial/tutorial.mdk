@@ -1560,7 +1560,7 @@ The basic idea behind all termination proofs is to define a measure, some
 function on the program's state, and to show that this measure strictly
 decreases as the program reduces. For this to guarantee termination, we
 need the measure to be a function into a set equipped with a well-founded
-partial order. An relation `R` is a well-founded partial order on a set
+partial order. A relation `R` is a well-founded partial order on a set
 `S` if, and only if, `R` is a partial order on `S` and there are no
 infinite descending chains in `S` related by `R`. For example, taking `S`
 to be `nat`, the set of natural numbers, the integer ordering `<` is a
@@ -1681,8 +1681,24 @@ Let's see how this works on a couple of examples.
 
 ### Ackermann
 
-When type-checking `ackermann`, F\* includes the recursively bound function 
-at the following type for use in the body:
+F* can show automatically that the `ackermann` function
+
+    1.  let rec ackermann m n =
+    2.    if m=0 then n + 1
+    3.    else if n = 0 then ackermann (m - 1) 1
+    4.    else ackermann (m - 1) 
+    5.                   (ackermann m (n - 1))
+
+is terminating and has type:
+
+    ackermann : nat -> nat -> Tot nat
+
+F* gives this function a default termination metric, so this expands out to:
+
+    ackermann : m:nat -> n:nat -> Tot nat (decreases %[m;n])
+
+When type-checking `ackermann`, F\* uses the following more
+restrictive type for the recursive calls in the body of `ackermann`:
 
     ackermann: m':nat
             -> n':nat{%[m';n'] << %[m;n]}
@@ -1692,11 +1708,6 @@ At each of three recursive calls to `ackermann`, we need to prove, not
 only that the arguments are non-negative, but that they precede the
 previous arguments according to the refinement formula above.
 
-    1.  let rec ackermann m n =
-    2.    if m=0 then n + 1
-    3.    else if n = 0 then ackermann (m - 1) 1
-    4.    else ackermann (m - 1) 
-    5.                   (ackermann m (n - 1))
 
 * For the call at line 3, we have to show that `%[(m - 1);1] << %[m;n]`.
 This works out, since `m - 1 << m` according to the integer ordering, and
