@@ -60,8 +60,9 @@ type env = {
   generalize:bool;               (* should we generalize let bindings? *)
   letrecs:list<(lbname * typ)>;  (* mutually recursive names and their types (for termination checking) *)
   top_level:bool;                (* is this a top-level term? if so, then discharge guards *)
-  check_uvars:bool;
-  use_eq:bool                    (* generate an equality constraint, rather than subtyping/subkinding *)
+  check_uvars:bool;              (* paranoid: re-typecheck unification variables *)
+  use_eq:bool;                   (* generate an equality constraint, rather than subtyping/subkinding *)
+  is_interface:bool;             (* is the module we're currently checking an interface? *)
 }
 and solver_t = {
     init: env -> unit;

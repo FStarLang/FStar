@@ -14,9 +14,8 @@
    limitations under the License.
 *)
 
-(* A logical theory of integer-indexed sequences, from [0, n) *)
+(* A logical theory of sequences indexed by natural numbers in [0, n) *)
 module Seq
-open FunctionalExtensionality
 
 (* Representation hidden from clients *)
 type seq (a:Type) = { 
@@ -34,7 +33,7 @@ let create len v = {
 
 let index s i = s.contents i
 
-let upd n v s = {
+let upd s n v = {
   contents=(fun i -> if i=n then v else s.contents i);
   length=s.length;
 }
@@ -50,15 +49,35 @@ let slice s i j = {
 }
 
 (* Lemmas about length *)
-let lemma_create_len n i = ()
-let lemma_len_upd n v s = ()
+let lemma_create_len n i   = ()
+let lemma_len_upd n v s    = ()
 let lemma_len_append s1 s2 = ()
-let lemma_len_slice s i j = ()
+let lemma_len_slice s i j  = ()
 
 (* Lemmas about index *)
-let lemma_index_create n v i = ()
-let lemma_index_upd1 n v s = ()
-let lemma_index_upd2 n v s i = ()
-let lemma_index_app1 s1 s2 i = ()
-let lemma_index_app2 s2 s2 i = ()
+let lemma_index_create n v i  = ()
+let lemma_index_upd1 n v s    = ()
+let lemma_index_upd2 n v s i  = ()
+let lemma_index_app1 s1 s2 i  = ()
+let lemma_index_app2 s2 s2 i  = ()
 let lemma_index_slice s i j k = ()
+
+logic type Eq: #a:Type -> seq a -> seq a -> Type = fun (a:Type) (s1:seq a) (s2:seq a) -> 
+  (length s1 = length s2 
+   /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i)))
+(* Need to assume extensionality here, since it doesn't follow from functional extensionality alone; 
+   We only want the maps that hold the sequences to agree on the locations within range;
+   An alternative would be to define 
+
+       type seq (a:Type) = (| len:nat * (x:nat{x < len} -> a) |)
+
+   i.e., restricting the domain of the maps to the indices within range only. 
+   In that case, functional extensionality should suffice.
+ 
+   TODO: try moving to that style?
+ *)
+assume Extensionality: forall (a:Type) (s1:seq a) (s2:seq a). Eq s1 s2 <==> (s1=s2)
+
+let lemma_eq_intro s1 s2 = ()
+let lemma_eq_refl s1 s2  = ()
+let lemma_eq_elim s1 s2  = ()

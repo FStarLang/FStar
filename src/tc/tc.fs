@@ -1616,19 +1616,29 @@ let check_modules (s:solver_t) mods =
    let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 
     if List.length !Options.debug <> 0
     then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
-    let msg = ("Internals for module " ^m.name.str) in
+
+    let env = {env with Env.is_interface=m.is_interface} in
     let m, env =
         if m.is_deserialized then
           let env' = add_modul_to_tcenv env m in
           m, env'
-        else
-          let m, env = tc_modul env m in
-          let _ = if !Options.serialize_mods then
-            let c_file_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ (text_of_lid m.name) ^ ".cache" in
-            print_string ("Serializing module " ^ (text_of_lid m.name) ^ "\n");
-            SSyntax.serialize_modul (get_owriter c_file_name) m
-          else () in
-          m, env
+        else begin
+           let msg = ("Internals for module " ^m.name.str) in
+//           s.push msg;
+           let m, env = tc_modul env m in
+           if !Options.serialize_mods 
+           then begin 
+                let c_file_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ (text_of_lid m.name) ^ ".cache" in
+                print_string ("Serializing module " ^ (text_of_lid m.name) ^ "\n");
+                SSyntax.serialize_modul (get_owriter c_file_name) m
+           end;
+           s.pop msg;
+//           if  not m.is_interface
+//           ||  List.contains m.name.str !Options.admit_fsi
+//           then s.encode_modul env m
+//           else ();
+           m, env
+      end
     in 
     if Options.should_dump m.name.str then Util.fprint1 "%s\n" (Print.modul_to_string m);
     if m.is_interface  //TODO: admit interfaces to the solver also?

@@ -73,7 +73,7 @@ $(FSTARML): $(FSTAR_OBJS)
 .mli.cmi:
 	$(OCAMLC) $(OCAMLFLAGS) -c $<
 
-.ml.cmx:
+.ml.cmx: 
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
 
 # Clean up

@@ -235,7 +235,7 @@ let try_lookup_lid' any_val exclude_interf env (lid:lident) : option<exp> =
     | None -> None
     | Some (Typ_name _) -> None//Util.print_string ("Resolved name " ^lid.str^ " as a type\n"); None
     | Some (Exp_name(_, e)) -> Some e
-let try_lookup_lid env l = try_lookup_lid' false false env l
+let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
 
 let try_lookup_datacon env (lid:lident) = 
   let find_in_sig lid = 

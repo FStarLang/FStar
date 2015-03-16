@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module SeqUtils
+module SeqProperties
 open Seq
 
 val head: a:Type -> s:seq a{length s > 0} -> Tot a
@@ -181,8 +181,8 @@ let lemma_swap_permutes_aux s i j x =
         index s5' 0, index s5' 1, index s5' 2, index s5' 3, index s5' 4 in
 
       cut (Eq frag_lo'  frag_lo);
-      cut (Eq frag_i' frag_i);
-      cut (Eq frag_j' frag_j);
+      cut (Eq frag_i'   frag_i);
+      cut (Eq frag_j'   frag_j);
       cut (Eq frag_hi'  frag_hi);
       cut (Eq frag_mid' frag_mid);
 

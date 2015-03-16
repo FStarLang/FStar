@@ -280,7 +280,12 @@ let mkDiv t      = mk (Div t)
 let mkMul t      = mk (Mul t)
 let mkMinus t    = mk (Minus t)
 let mkMod t      = mk (Mod t) 
-let mkITE t      = mk (ITE t) 
+let mkITE (t1, t2, t3) =
+    match t2.tm, t3.tm with 
+        | True, True -> mkTrue
+        | True, _ -> mkImp (mkNot t1, t3)
+        | _, True -> mkImp(t1, t2)
+        | _, _ ->  mk (ITE (t1, t2, t3)) 
 let mkSelect t   = mk (Select t) 
 let mkUpdate t   = mk (Update t) 
 let mkCases t    = mk (Cases t)  

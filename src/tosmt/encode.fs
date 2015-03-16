@@ -1141,7 +1141,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_val_decl(lid, t, quals, _) -> 
         let tt = whnf env t in
         let decls, env = encode_free_var env lid t tt quals in
-        if Util.is_smt_lemma t && quals |> List.contains Assumption
+        if Util.is_smt_lemma t && (quals |> List.contains Assumption || env.tcenv.is_interface)
         then decls@encode_smt_lemma env lid t, env
         else decls, env
 
@@ -1623,8 +1623,6 @@ let encode_modul tcenv modul =
     Z3.giveZ3 decls
 
 let solve tcenv q : unit =
-    push (Util.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
-    let pop () = pop (Util.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     let prefix, labels, qry, suffix =
         let env = get_env tcenv in
         let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) tcenv.gamma) in
@@ -1639,8 +1637,9 @@ let solve tcenv q : unit =
         let suffix = label_suffix@[Term.Echo "Done!"]  in
         query_prelude, labels, qry, suffix in
     begin match qry with 
-        | Assume({tm=False}, _) -> pop(); ()
+        | Assume({tm=False}, _) -> ()
         | Assume(q, _) ->
+            push (Util.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
             let fresh = String.length q.as_str >= 2048 in   
             Z3.giveZ3 prefix;
 
@@ -1682,7 +1681,7 @@ let solve tcenv q : unit =
                 and cb alt (ok, errs) = if ok then () else try_alt_configs errs alt in
                 Z3.ask fresh labels (with_fuel initial_config) (cb alt_configs)  in
             check ();
-            pop()
+            pop (Util.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv))
     end
 
 let is_trivial (tcenv:Tc.Env.env) (q:typ) : bool = 
