@@ -20,8 +20,8 @@ qsort_seq_full: qsort_seq_libs qsort_seq
 qsort_arr: $(addprefix ../../lib/, set.fst heap.fst stperm.fst seq.fst  seqproperties.fsi seqpermutation.fsi arr.fst) qsort_arr.fst
 	$(FSTAR) --admit_fsi SeqProperties --admit_fsi SeqPermutation $^ 
 
-downgrade: $(addprefix ../../lib/, classical.fst set.fst heap.fst seq.fsi seqproperties.fst) # arr.fst) downgrade.fst
-	$(FSTAR) --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 1 --admit_fsi Seq $^ 
+downgrade: $(addprefix ../../lib/, classical.fst ext.fst set.fsi set.fst heap.fst seq.fsi seq.fst seqproperties.fst) # arr.fst) downgrade.fst
+	$(FSTAR) --initial_fuel 1 --max_fuel 1 --initial_ifuel 0 --max_ifuel 1 $^ 
 
 # qsort_arr: $(addprefix ../../lib/, classical.fst seq.fstarr.fst) qsort_arr.fst
 # 	$(FSTAR) --admit_fsi SeqProperties --admit_fsi SeqPermutation $^  --z3timeout 20

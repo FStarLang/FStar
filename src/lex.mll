@@ -200,10 +200,12 @@ let tvar        = '\'' (ident_start_char | constructor_start_char) tvar_char*
 let basekind    = '*' | 'A' | 'E' | "Prop"
 
 rule token = parse
- | "#monadic"
-     { PRAGMAMONADIC }
  | "#light"
      { PRAGMALIGHT }
+ | "#set-options"
+     { PRAGMA_SET_OPTIONS }
+ | "#reset-options"
+     { PRAGMA_RESET_OPTIONS }
  | ident as id
      { id |> Hashtbl.find_option keywords |> Option.default (IDENT id) }
  | constructor as id

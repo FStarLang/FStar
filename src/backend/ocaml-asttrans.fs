@@ -859,6 +859,8 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
     in
 
     match modx with
+    | Sig_pragma _ -> None
+
     | Sig_val_decl (x, ty, qal, rg) when (export_val qal && mode = Sig) ->
 (*        Printf.printf "translating val decl %s\n" x.ident.idText; *)
         let tparams, ty = mlscheme_of_ty mlenv rg ty in

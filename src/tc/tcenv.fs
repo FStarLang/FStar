@@ -81,7 +81,7 @@ type env = {
   top_level:bool;                (* is this a top-level term? if so, then discharge guards *)
   check_uvars:bool;              (* paranoid: re-typecheck unification variables *)
   use_eq:bool;                   (* generate an equality constraint, rather than subtyping/subkinding *)
-  is_interface:bool;             (* is the module we're currently checking an interface? *)
+  is_iface:bool;             (* is the module we're currently checking an interface? *)
 } 
 and solver_t = {
     init: env -> unit;
@@ -92,6 +92,7 @@ and solver_t = {
     solve:env -> typ -> unit;//(bool * list<string>);
     is_trivial: env -> typ -> bool;
     finish: unit -> unit;
+    refresh: unit -> unit;
 }
 
 let bound_vars env = 
@@ -127,7 +128,7 @@ let initial_env solver module_lid =
     top_level=true;
     check_uvars=false;
     use_eq=false;
-    is_interface=false;
+    is_iface=false;
   }
 
 let monad_decl_opt env l = 
@@ -226,9 +227,12 @@ and add_sigelts env ses =
 let empty_lid = Syntax.lid_of_ids [Syntax.id_of_text ""]
 
 let finish_module env m = 
-  let sigs = env.gamma |> List.collect (function 
-    | Binding_sig se -> [se]
-    | _ -> [])  in
+  let sigs = 
+    if lid_equals m.name Const.prims_lid
+    then env.gamma |> List.collect (function 
+            | Binding_sig se -> [se]
+            | _ -> []) 
+    else m.exports  in
   add_sigelts env sigs;
   {env with 
     curmodule=empty_lid;

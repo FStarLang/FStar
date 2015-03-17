@@ -84,6 +84,47 @@ let use_eq_at_higher_order = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
 let n_cores = Util.mk_ref 1
 
+let init_options () = 
+    show_signatures := [];
+    norm_then_print := true;
+    z3_exe := Platform.exe "z3";
+    silent := false;
+    debug := [];
+    debug_level  := [];
+    log_types  := false;
+    print_effect_args := false;
+    print_real_names  := false;
+    dump_module  := None;
+    logQueries  := false;
+    z3exe  := true;
+    outputDir  := Some ".";
+    fstar_home_opt  := None;
+    _fstar_home  := "";
+    prims_ref  := None;
+    z3timeout  := 5;
+    pretype  := true;
+    codegen  := None;
+    admit_fsi  := [];
+    trace_error  := false;
+    verify  := true;
+    full_context_dependency  := true;
+    print_implicits  := false;
+    hide_uvar_nums  := false;
+    hide_genident_nums  := false;
+    serialize_mods  := false;
+    initial_fuel  := 2;
+    initial_ifuel  := 1;
+    max_fuel  := 8;
+    min_fuel  := 1;
+    max_ifuel  := 2;
+    warn_top_level_effects  := false;
+    no_slack  := false;
+    eager_inference  := false;
+    unthrottle_inductives  := false;
+    use_eq_at_higher_order  := false;
+    fs_typ_app  := false;
+    n_cores  := 1
+
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
     | None ->
@@ -170,3 +211,7 @@ and parse_codegen s =
   | _ ->
      (Util.print_string "Wrong argument to codegen flag\n";
       display_usage (specs ()); exit 1)
+
+let reset_options () = 
+    init_options();
+    Getopt.parse_cmdline (specs()) (fun x -> ())

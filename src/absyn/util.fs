@@ -656,6 +656,7 @@ let rec lids_of_sigelt se = match se with
   | Sig_datacon (lid, _, _, _, _)
   | Sig_val_decl (lid, _, _, _) 
   | Sig_assume (lid, _, _, _) -> [lid]
+  | Sig_pragma _
   | Sig_main _ -> []
     
 let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
@@ -671,6 +672,7 @@ let range_of_sigelt x = match x with
   | Sig_assume (_, _, _, r)
   | Sig_let(_, r, _, _) 
   | Sig_main(_, r) 
+  | Sig_pragma(_, r)
   | Sig_monads(_, _, r, _) -> r
 
 let range_of_lb = function

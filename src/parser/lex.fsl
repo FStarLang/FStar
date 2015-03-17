@@ -186,13 +186,12 @@ rule token args = parse
      { NAME(ulexeme lexbuf) }
  | tvar 
      { TVAR (ulexeme lexbuf) }
- | "#monadic"
-     { PRAGMAMONADIC }
- | "#dynamic"
-     { PRAGMADYNAMIC }
  | "#light"
      { PRAGMALIGHT }
- | "F#" | "C#"  { LANG(ulexeme lexbuf) }
+ | "#set-options"
+     { PRAGMA_SET_OPTIONS }
+ | "#reset-options"
+     { PRAGMA_RESET_OPTIONS }
  | int8 
      { let n = trim_to_i32 lexbuf 1 in 
        if n > 0x80 || n < -0x80 then fail lexbuf "This number is outside the allowable range for 8-bit signed integers" (INT8(0y,false))

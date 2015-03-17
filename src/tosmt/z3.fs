@@ -104,13 +104,49 @@ let new_z3proc id =
 type bgproc = {
     grab:unit -> proc;
     release:unit -> unit;
+    refresh:unit -> unit;
 }
 
+
+let queries_dot_smt2 : ref<option<file_handle>> = Util.mk_ref None
+
+let get_qfile = 
+    let ctr = Util.mk_ref 0 in
+    fun fresh -> 
+        if fresh
+        then (incr ctr;
+              Util.open_file_for_writing (Util.format1 "queries-%s.smt2" (Util.string_of_int !ctr)))
+        else match !queries_dot_smt2 with 
+                | None -> let fh = Util.open_file_for_writing "queries-bg-0.smt2" in  queries_dot_smt2 := Some fh; fh
+                | Some fh -> fh
+
+ let log_query fresh i = 
+    let fh = get_qfile fresh in 
+    Util.append_to_file fh i;
+    if fresh then Util.close_file fh 
+ 
 let bg_z3_proc = 
-    let z3proc = new_z3proc "bg" in
+    let ctr = Util.mk_ref (-1) in
+    let new_proc () = new_z3proc (Util.format1 "bg-%s" (incr ctr; !ctr |> string_of_int)) in
+    let z3proc = Util.mk_ref (new_proc()) in
     let x = [] in
-    {grab=(fun () -> Util.monitor_enter x; z3proc);
-     release=(fun () -> Util.monitor_exit(x))}
+    let grab () = Util.monitor_enter x; !z3proc in
+    let release () = Util.monitor_exit(x) in
+    let refresh () = 
+        let proc = grab() in 
+        Util.kill_process proc;
+        z3proc := new_proc ();
+        begin match !queries_dot_smt2 with 
+            | None -> ()
+            | Some fh -> 
+                Util.close_file fh;
+                let fh = Util.open_file_for_writing (Util.format1 "queries-bg-%s.smt2" (!ctr |> string_of_int)) in
+                queries_dot_smt2 := Some fh
+        end;
+        release() in
+    {grab=grab;
+     release=release;
+     refresh=refresh}
     
 let doZ3Exe' (input:string) (z3proc:proc) = 
   let parse (z3out:string) =
@@ -139,23 +175,6 @@ let doZ3Exe =
         if fresh then Util.kill_process z3proc else bg_z3_proc.release();
         res
 
-let queries_dot_smt2 : ref<option<file_handle>> = Util.mk_ref None
-
-let get_qfile = 
-    let ctr = Util.mk_ref 0 in
-    fun fresh -> 
-        if fresh
-        then (incr ctr;
-              Util.open_file_for_writing (Util.format1 "queries-%s.smt2" (Util.string_of_int !ctr)))
-        else match !queries_dot_smt2 with 
-                | None -> let fh = Util.open_file_for_writing "queries.smt2" in  queries_dot_smt2 := Some fh; fh
-                | Some fh -> fh
-
- let log_query fresh i = 
-    let fh = get_qfile fresh in 
-    Util.append_to_file fh i;
-    if fresh then Util.close_file fh 
- 
 let z3_options () =
   let mbqi =
     if   z3v_le (get_z3version ()) (4, 3, 1)
@@ -274,6 +293,10 @@ let bgtheory fresh =
     else let bg = !bg_scope in
          bg_scope := [];
          List.rev bg
+let refresh () = 
+    bg_z3_proc.refresh();
+    let theory = bgtheory true in
+    bg_scope := List.rev theory
 let ask fresh label_messages qry cb =
   let fresh = fresh && !Options.n_cores > 1 in 
   let theory = bgtheory fresh in

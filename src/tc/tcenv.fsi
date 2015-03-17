@@ -62,7 +62,7 @@ type env = {
   top_level:bool;                (* is this a top-level term? if so, then discharge guards *)
   check_uvars:bool;              (* paranoid: re-typecheck unification variables *)
   use_eq:bool;                   (* generate an equality constraint, rather than subtyping/subkinding *)
-  is_interface:bool;             (* is the module we're currently checking an interface? *)
+  is_iface:bool;             (* is the module we're currently checking an interface? *)
 }
 and solver_t = {
     init: env -> unit;
@@ -72,7 +72,8 @@ and solver_t = {
     encode_sig:env -> sigelt -> unit;
     solve:env -> typ -> unit;// (bool * list<string>);
     is_trivial: env -> typ -> bool;
-    finish: unit -> unit;
+    finish:  unit -> unit;
+    refresh: unit -> unit;
 }
 
 val bound_vars: env -> list<Util.either<btvar, bvvar>>

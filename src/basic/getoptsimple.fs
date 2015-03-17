@@ -58,3 +58,9 @@ let parse_cmdline specs others =
   let go_on () = parse specs others Sys.argv 1 (len - 1) 0 in
     if len = 1 then Help
     else go_on ()
+
+let parse_string specs others (str:string) = 
+    let args = str.Split([|' '|]) in
+    parse specs others args 0 (args.Length - 1) 0
+
+

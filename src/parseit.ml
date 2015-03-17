@@ -24,14 +24,12 @@ let parse_file fn =
   try
     let file = Microsoft_FStar_Parser_Parse.file lexer lexbuf in
     let mods = if Util.ends_with filename ".fsi" 
-               then snd file |> List.map (function
+               then file |> List.map (function
                 | Microsoft_FStar_Parser_AST.Module(l,d) -> 
-                  if Util.for_some (fun m -> m=l.str) (!Microsoft_FStar_Options.admit_fsi)
-                  then Microsoft_FStar_Parser_AST.Module(l,d)
-                  else Microsoft_FStar_Parser_AST.Interface(l,d)
+                  Microsoft_FStar_Parser_AST.Interface(l,d,Util.for_some (fun m -> m=l.str) (!Microsoft_FStar_Options.admit_fsi))
                 | _ -> failwith "Impossible") 
-               else snd file in
-     Inl (fst file, mods)
+               else file in
+     Inl mods
   with 
     | Microsoft_FStar_Absyn_Syntax.Error(msg, r) -> 
       let msg = Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg in

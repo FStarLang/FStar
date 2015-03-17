@@ -24,7 +24,7 @@ let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char
     pos_cnum=0;
     pos_lnum=1 }
 
-let parse_file fn = 
+let parse_file fn =
   Parser.Util.warningHandler := (function
     | Lexhelp.ReservedKeyword(m,s) -> Printf.printf "%s:%s" (Range.string_of_range s) m
     | e -> Printf.printf "Warning: %A\n" e);
@@ -45,14 +45,12 @@ let parse_file fn =
   try
     let file = Parse.file lexer lexbuf in
     let mods = if Util.ends_with filename ".fsi" 
-               then snd file |> List.map (function
+               then file |> List.map (function
                 | AST.Module(l,d) -> 
-                  if Util.for_some (fun m -> m=l.str) (!Options.admit_fsi)
-                  then AST.Module(l,d)
-                  else AST.Interface(l,d)
+                  AST.Interface(l, d, Util.for_some (fun m -> m=l.str) !Options.admit_fsi)
                 | _ -> failwith "Impossible") 
-               else snd file in
-     Inl (fst file, mods)
+               else file in
+     Inl mods
   with 
     | Absyn.Syntax.Error(msg, r) -> 
       let msg = Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg in

@@ -56,7 +56,9 @@ type sconst =
   | Const_float       of double
   | Const_bytearray   of array<byte> * Range.range 
   | Const_string      of array<byte> * Range.range           (* unicode encoded, F#/Caml independent *)
-
+type pragma =
+  | SetOptions of string
+  | ResetOptions
 type memo<'a> = ref<option<'a>>
 type arg_qualifier =
     | Implicit
@@ -248,7 +250,8 @@ and sigelt =
   | Sig_main           of exp * Range.range 
   | Sig_bundle         of list<sigelt> * Range.range * list<lident> (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
   | Sig_monads         of list<monad_decl> * monad_lat * Range.range * list<lident>
-type sigelts = list<sigelt>
+  | Sig_pragma         of pragma * Range.range
+type sigelts = list<sigelt> 
 
 type modul = {
   name: lident;

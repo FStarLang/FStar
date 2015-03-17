@@ -499,6 +499,7 @@ let rec serialize_monad_decl (writer:Writer) (ast:monad_decl) :unit =
 
 and serialize_sigelt (writer:Writer) (ast:sigelt) :unit =
     match ast with
+    | Sig_pragma _ -> failwith "NYI"
     | Sig_tycon(lid, bs, k, l1, l2, qs, _) ->
         writer.write_char 'a';
         serialize_lident writer lid; serialize_binders writer bs; serialize_knd writer k;

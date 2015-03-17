@@ -705,6 +705,10 @@ let parse_cmdline specs others =
     if len = 1 then Help
     else go_on ()
 
+let parse_string specs others (str:string) = 
+    let args = Str.split (Str.regexp "[ \t]+") str in
+    let args = Array.of_list args in
+    parse specs others args 0 (Array.length args - 1) 0
 
     end
 

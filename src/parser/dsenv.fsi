@@ -46,7 +46,8 @@ type env = {
   sigmap: Util.smap<(sigelt * bool)>; (* bool indicates that this was declared in an interface file *)
   effect_names:list<lident>;
   default_result_effect:typ -> Range.range -> comp;
-  iface:bool
+  iface:bool;
+  admitted_iface:bool
 }
 
 type record = {
@@ -100,7 +101,7 @@ val find_all_datacons: env -> lident -> option<list<lident>>
 val lookup_letbinding_quals: env -> lident -> list<qualifier>
 
 val finish_module_or_interface: env -> modul -> env
-val prepare_module_or_interface: bool -> env -> lident -> env
+val prepare_module_or_interface: bool -> bool -> env -> lident -> env
 val enter_monad_scope: env -> ident -> env
 val exit_monad_scope: env -> env -> env
 

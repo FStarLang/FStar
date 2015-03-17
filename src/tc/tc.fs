@@ -1373,6 +1373,19 @@ let rec tc_monad_decl env m deserialized =
     menv, m 
 
 and tc_decl env se deserialized = match se with 
+    | Sig_pragma(p, r) -> 
+        begin match p with 
+            | SetOptions o -> 
+                begin match Getopt.parse_string (Options.specs()) (fun _ -> ()) o with 
+                    | Getopt.GoOn -> se, env
+                    | Getopt.Help  -> raise (Error ("Failed to process pragma: use 'fstar --help' to see which options are available", r))
+                    | Getopt.Die s -> raise (Error ("Failed to process pragma: " ^s, r))
+                end
+            | ResetOptions -> 
+                Options.reset_options() |> ignore; 
+                se, env
+        end
+    
     | Sig_monads(mdecls, mlat, r, lids) -> 
       let env = Env.set_range env r in 
      //TODO: check downward closure of totality flags
@@ -1546,9 +1559,12 @@ and tc_decls for_export env ses deserialized =
   then Util.print_string (Util.format1 "Checked sigelt\t%s\n" (Print.sigelt_to_string_short se));
 
   let exports, to_encode = 
-    if for_export && !Options.serialize_mods
-    then as_exports env0 se
-    else [], [se] in   //TODO: Revise this once we add the private qualifier
+    [se], [se] in
+
+//    if for_export && !Options.serialize_mods
+//    then as_exports env0 se
+//    else [], [se] in   //TODO: Revise this once we add the private qualifier
+
   to_encode |> List.iter (env.solver.encode_sig env);
   se::ses, exports::all_exports, env) ([], [], env) ses in
   List.rev ses, List.rev exports |> List.flatten, env 
@@ -1560,6 +1576,7 @@ and as_exports env se : (list<sigelt> * list<sigelt>) = match se with
                     then [se]
                     else [] in
       exports, [se]
+
     | Sig_let(lbs, r, l, b) -> 
       let pure_funs, rest = snd lbs |> List.partition (fun (_, t, _) -> Util.is_pure_function t && not <| Util.is_lemma t) in
       let val_decls_for_rest = rest |> List.collect (fun (x, t, _) -> match x with 
@@ -1576,10 +1593,14 @@ and as_exports env se : (list<sigelt> * list<sigelt>) = match se with
     | _ -> let exports = [Tc.Normalize.norm_sigelt env se] in exports, exports
 
 let get_exports env modul decls = 
+    let assume_vals decls = 
+        decls |> List.map (function
+            | Sig_val_decl(lid, t, quals, r) -> Sig_val_decl(lid, t, Assumption::quals, r)
+            | s -> s) in
     if modul.is_interface then decls
     else let exports = Util.find_map (Tc.Env.modules env) (fun m -> 
             if (m.is_interface && Syntax.lid_equals modul.name m.name)
-            then Some (m.exports)
+            then Some (m.exports |> assume_vals)
             else None) in
          match exports with 
             | None -> decls //TODO: filter decls to exclude the private ones, once we add private qualifiers
@@ -1617,14 +1638,15 @@ let check_modules (s:solver_t) mods =
     if List.length !Options.debug <> 0
     then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
 
-    let env = {env with Env.is_interface=m.is_interface} in
+    let env = {env with Env.is_iface=m.is_interface} in
     let m, env =
         if m.is_deserialized then
           let env' = add_modul_to_tcenv env m in
           m, env'
         else begin
-           let msg = ("Internals for module " ^m.name.str) in
-//           s.push msg;
+           let name = Util.format2 "%s %s"  (if m.is_interface then "interface" else "module") m.name.str in
+           let msg = "Internals for " ^name in
+           if not (lid_equals m.name Const.prims_lid) then s.push msg;
            let m, env = tc_modul env m in
            if !Options.serialize_mods 
            then begin 
@@ -1632,11 +1654,16 @@ let check_modules (s:solver_t) mods =
                 print_string ("Serializing module " ^ (text_of_lid m.name) ^ "\n");
                 SSyntax.serialize_modul (get_owriter c_file_name) m
            end;
-           s.pop msg;
-//           if  not m.is_interface
-//           ||  List.contains m.name.str !Options.admit_fsi
-//           then s.encode_modul env m
-//           else ();
+           if not (lid_equals m.name Const.prims_lid) 
+           then begin
+                s.pop msg;
+                if  not m.is_interface
+                ||  List.contains m.name.str !Options.admit_fsi
+                then s.encode_modul env m;
+                s.refresh();
+                Options.reset_options() |> ignore
+//                else Util.fprint1 "Not encoding externals for %s\n" name
+           end;
            m, env
       end
     in 

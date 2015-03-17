@@ -46,7 +46,8 @@ type env = {
   sigmap: Util.smap<(sigelt * bool)>; (* bool indicates that this was declared in an interface file *)
   effect_names:list<lident>;
   default_result_effect:typ -> Range.range -> comp;
-  iface:bool
+  iface:bool;
+  admitted_iface:bool;
 }
 
 let open_modules e = e.modules
@@ -69,7 +70,8 @@ let empty_env () = {curmodule=None;
                     sigmap=Util.smap_create(100);
                     effect_names=[];
                     default_result_effect=Util.ml_comp;
-                    iface=false}
+                    iface=false;
+                    admitted_iface=false}
 
 let total env = {env with default_result_effect=(fun t _ -> mk_Total t)}
 let ml env = {env with default_result_effect=Util.ml_comp}
@@ -433,7 +435,7 @@ let push_sigelt env s =
     | _ -> env, [lids_of_sigelt s, s] in
   lss |> List.iter (fun (lids, se) -> 
     lids |> List.iter (fun lid -> 
-      Util.smap_add env.sigmap lid.str (se, env.iface)));
+      Util.smap_add env.sigmap lid.str (se, env.iface && not env.admitted_iface)));
   env
     
 let push_namespace env lid = 
@@ -477,10 +479,10 @@ let finish_module_or_interface env modul =
   then check_admits modul.name env;
   finish env modul
 
-let prepare_module_or_interface intf env mname =
+let prepare_module_or_interface intf admitted env mname =
   let prep env = 
     let open_ns = if lid_equals mname Const.prims_lid then [] else Const.prims_lid::env.effect_names in
-    {env with curmodule=Some mname; open_namespaces = open_ns; iface=intf} in
+    {env with curmodule=Some mname; open_namespaces = open_ns; iface=intf; admitted_iface=admitted} in
   match env.modules |> Util.find_opt (fun (l, _) -> lid_equals l mname) with
     | None -> prep env
     | Some (_, m) -> 

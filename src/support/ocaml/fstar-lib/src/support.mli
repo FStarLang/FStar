@@ -305,6 +305,8 @@ module Microsoft :
               string array -> int -> int -> int -> parse_cmdline_res
             val parse_cmdline :
               opt list -> (string -> 'a) -> parse_cmdline_res
+            val parse_string :
+              opt list -> (string -> 'a) -> string -> parse_cmdline_res
           end
         module Range :
           sig

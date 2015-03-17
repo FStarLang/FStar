@@ -86,8 +86,9 @@
 %token OPEN
 %token PIPE_LEFT
 %token PIPE_RIGHT
-%token PRAGMALIGHT
-%token PRAGMAMONADIC
+%token PRAGMALIGHT 
+%token PRAGMA_SET_OPTIONS 
+%token PRAGMA_RESET_OPTIONS
 %token PRINT
 %token QUERY
 %token RARROW
@@ -157,8 +158,8 @@ idpath:
 
 (* ==================================================================== *)
 file:
-| pg=pragmas ms=modul+ EOF
-    { ignore (pg, ms) }
+| pg=maybe_pragma_light ms=modul+ EOF
+    { ignore (ms) }
 
 (* -------------------------------------------------------------------- *)
 modul:
@@ -166,16 +167,17 @@ modul:
     { Ast.mk_module (name, decls) }
 
 (* -------------------------------------------------------------------- *)
-pragma:
-| PRAGMAMONADIC LPAREN
-    x1=eitherQname COMMA
-    x2=eitherQname COMMA
-    x3=eitherQname
-  RPAREN
-    { [Ast.mk_monadic (x1, x2, x3)] }
+maybe_pragma_light:
+  |     {}
+  | PRAGMALIGHT STRING
+        {}
 
-| PRAGMALIGHT STRING
-    { [] }
+pragma: 
+  | PRAGMA_SET_OPTIONS x=STRING
+	{ SetOptions (string_of_bytes x) }
+
+  | PRAGMA_RESET_OPTIONS
+	{ ResetOptions }
 
 (* -------------------------------------------------------------------- *)
 %inline pragmas:
@@ -220,6 +222,8 @@ decl:
     lifts=prefix(WITH, plist1(lift, SEMICOLON))?
   RBRACE
     { Ast.mk_monadlat (mds, lifts) }
+| p=pragma 
+    { Pragma p }
 
 (* -------------------------------------------------------------------- *)
 tycon:

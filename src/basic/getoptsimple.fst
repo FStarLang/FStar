@@ -29,3 +29,4 @@ type parse_cmdline_res =
   | GoOn
 
 assume val parse_cmdline: list<opt> -> (string -> 'a) -> parse_cmdline_res
+assume val parse_string: list<opt> -> (string -> 'a) -> string -> parse_cmdline_res

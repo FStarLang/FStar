@@ -103,6 +103,7 @@ type decl' =
   | Val of qualifiers * ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
   | MonadLat of list<monad_sig> * list<lift>
+  | Pragma of pragma
 and decl = {d:decl'; drange:range}
 and monad_sig = {
   mon_name:ident;
@@ -116,13 +117,10 @@ and lift = {
   lift_op: term
  }
 
-type pragma =
-  | Monadic of lid * lid * lid
-  | Dynamic 
 type modul = 
   | Module of LongIdent * list<decl>
-  | Interface of LongIdent * list<decl>
-type file = list<pragma> * list<modul>
+  | Interface of LongIdent * list<decl> * bool (* flag to mark admitted interfaces *)
+type file = list<modul>
 
 (********************************************************************************)
 let mk_decl d r = {d=d; drange=r}

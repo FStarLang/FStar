@@ -17,6 +17,7 @@
 module SeqProperties
 open Seq
 
+#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val head: a:Type -> s:seq a{length s > 0} -> Tot a
 let head s = index s 0
 
@@ -79,6 +80,7 @@ let rec sorted f s =
   else let hd = head s in
        f hd (index s 1) && sorted f (tail s)
 
+#set-options "--max_fuel 1 --initial_fuel 1"
 val lemma_append_count: a:Type -> lo:seq a -> hi:seq a -> Lemma
   (requires True)
   (ensures (forall x. count x (append lo hi) = (count x lo + count x hi)))
@@ -142,6 +144,7 @@ let rec sorted_concat_lemma f lo pivot hi =
         lemma_append_cons lo (cons pivot hi);
         lemma_tl (head lo) (append (tail lo) (cons pivot hi)))
 
+#set-options "--max_fuel 0 --initial_fuel 0"
 opaque val split_5 : a:Type -> s:seq a -> i:nat -> j:nat{i < j && j < length s} -> Pure (seq (seq a))
   (requires True)
   (ensures (fun x ->
@@ -158,8 +161,8 @@ let split_5 s i j =
   let frag_mid,rest  = split_eq rest (j - (i + 1)) in
   let frag_j,frag_hi = split_eq rest 1 in
   upd (upd (upd (upd (create 5 frag_lo) 1 frag_i) 2 frag_mid) 3 frag_j) 4 frag_hi
-  
-  
+
+#set-options "--max_fuel 1 --initial_fuel 1"
 val lemma_swap_permutes_aux: a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> x:a -> Lemma
   (requires True)
   (ensures (count x s = count x (swap s i j)))
@@ -192,13 +195,14 @@ let lemma_swap_permutes_aux s i j x =
       lemma_append_count_aux x frag_i frag_hi
   end
 
+#set-options "--max_fuel 0 --initial_fuel 0"
 opaque type permutation (a:Type) (s1:seq a) (s2:seq a) =
        (forall i. count i s1 = count i s2)
-
 val lemma_swap_permutes: a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> Lemma
   (permutation a s (swap s i j))
 let lemma_swap_permutes s i j = Classical.forall_intro (lemma_swap_permutes_aux s i j)
 
+#set-options "--max_fuel 1 --initial_fuel 1"
 val cons_perm: a:Type -> tl:seq a -> s:seq a{length s > 0} ->
          Lemma (requires (permutation a tl (tail s)))
                (ensures (permutation a (cons (head s) tl) s))

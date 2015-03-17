@@ -18,6 +18,7 @@
 module Microsoft.FStar.ToSMT.Encode
 
 open Microsoft.FStar
+open Microsoft.FStar.Tc.Env
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
@@ -1141,7 +1142,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_val_decl(lid, t, quals, _) -> 
         let tt = whnf env t in
         let decls, env = encode_free_var env lid t tt quals in
-        if Util.is_smt_lemma t && (quals |> List.contains Assumption || env.tcenv.is_interface)
+        if Util.is_smt_lemma t && (quals |> List.contains Assumption || env.tcenv.is_iface)
         then decls@encode_smt_lemma env lid t, env
         else decls, env
 
@@ -1437,6 +1438,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              [decl], env
         end
 
+    | Sig_pragma _
     | Sig_main _
     | Sig_monads _ -> [], env
 
@@ -1609,16 +1611,18 @@ let encode_sig tcenv se =
    Z3.giveZ3 (caption decls)
 
 let encode_modul tcenv modul = 
-    if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Actually encoding module externals %s\n" (modul.name.str);
+    let name = Util.format2 "%s %s" (if modul.is_interface then "interface" else "module")  modul.name.str in
+    if Tc.Env.debug tcenv Options.Low 
+    then Util.fprint2 "Encoding externals for %s ... %s exports\n" name (List.length modul.exports |> string_of_int);
     let env = get_env tcenv in
     let decls, env = encode_signature ({env with warn=false}) modul.exports in
     let caption decls = 
     if !Options.logQueries
-    then let msg = "Externals for module " ^ modul.name.str in
+    then let msg = "Externals for " ^ name in
          Caption msg::decls@[Caption ("End " ^ msg)]
     else decls in
     set_env ({env with warn=true}); 
-    if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Done encoding module externals %s\n" (modul.name.str);
+    if Tc.Env.debug tcenv Options.Low then Util.fprint1 "Done encoding externals for %s\n" name;
     let decls = caption decls in
     Z3.giveZ3 decls
 
@@ -1702,6 +1706,7 @@ let solver = {
     solve=solve;
     is_trivial=is_trivial;
     finish=Z3.finish;
+    refresh=Z3.refresh;
 }
 let dummy = {
     init=(fun _ -> ());
@@ -1711,6 +1716,7 @@ let dummy = {
     encode_modul=(fun _ _ -> ());
     solve=(fun _ _ -> ());
     is_trivial=(fun _ _ -> false);
-    finish=(fun () -> ())
+    finish=(fun () -> ());
+    refresh=(fun () -> ());
 }
 

@@ -1060,7 +1060,8 @@ let gather_tc_binders tps k =
 
 
 let mk_data_discriminators env t tps k datas = 
-    if env.iface then [] else
+//    if env.iface && not env.admitted_iface then [] else
+    let quals q = if not <| env.iface || env.admitted_iface then Assumption::q else q in
     let binders = gather_tc_binders tps k in 
     let p = range_of_lid t in 
     let binders = binders@[null_v_binder <| mk_Typ_app'(Util.ftv t kun, Util.args_of_non_null_binders binders) None p] in
@@ -1068,7 +1069,7 @@ let mk_data_discriminators env t tps k datas =
     datas |> List.map (fun d -> 
         let disc_name = Util.mk_discriminator d in
         //Util.fprint1 "Making discriminator %s\n" disc_name.str;
-        Sig_val_decl(disc_name, disc_type, [Assumption; Logic; Discriminator d], range_of_lid disc_name))
+        Sig_val_decl(disc_name, disc_type, quals [Logic; Discriminator d], range_of_lid disc_name))
 
 let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binder>) t = 
     let binders = gather_tc_binders tps k in 
@@ -1109,10 +1110,12 @@ let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binde
         | Inr x ->
             let field_name, _ = Util.mk_field_projector_name lid x i in
             let t = mk_Typ_fun(binders, Util.total_comp (Util.subst_typ subst x.sort) p) None p in 
-            Sig_val_decl(field_name, t, [Assumption; Logic; Projector(lid, Inr x.v)], range_of_lid field_name))
+            let quals q = if not env.iface || env.admitted_iface then Assumption::q else q in
+            Sig_val_decl(field_name, t, quals [Logic; Projector(lid, Inr x.v)], range_of_lid field_name))
 
 let mk_data_projectors env = function
-  | Sig_datacon(lid, t, tycon, quals, _) when (not env.iface && not (lid_equals lid Const.lexcons_lid)) ->
+  | Sig_datacon(lid, t, tycon, quals, _) when (//(not env.iface || env.admitted_iface) && 
+                                                not (lid_equals lid Const.lexcons_lid)) ->
     let refine_domain = 
         if (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false))
         then false
@@ -1128,7 +1131,7 @@ let mk_data_projectors env = function
         | _ -> [] //no fields to project
     end
 
-  | _ -> []
+  | _ -> [] 
 
 let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
   let tycon_id = function
@@ -1280,6 +1283,10 @@ let desugar_kind_abbrev r env id binders k =
   env, (name, binders, k)
            
 let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
+  | Pragma p -> 
+    let se = Sig_pragma(p, d.drange) in
+    env, [se]
+    
   | Open lid ->
     let env = DesugarEnv.push_namespace env lid in
     env, []
@@ -1313,6 +1320,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
 
   | Val(quals, id, t) ->
     let t = desugar_typ env (close_fun env t) in
+    let quals = if env.iface && env.admitted_iface then Assumption::quals else quals in
     let se = Sig_val_decl(qualify env id, t, quals, d.drange) in
     let env = push_sigelt env se in
     env, [se]
@@ -1426,8 +1434,9 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
     then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname))  :: d
     else d in
   let env, mname, decls, intf = match m with
-    | Interface(mname, decls) -> DesugarEnv.prepare_module_or_interface true env mname, mname, open_ns mname decls, true
-    | Module(mname, decls) -> DesugarEnv.prepare_module_or_interface false env mname, mname, open_ns mname decls, false in
+    | Interface(mname, decls, admitted) ->
+      DesugarEnv.prepare_module_or_interface true admitted env mname, mname, open_ns mname decls, true
+    | Module(mname, decls) -> DesugarEnv.prepare_module_or_interface false false env mname, mname, open_ns mname decls, false in
   let env, sigelts = List.fold_left (fun (env, sigelts) d ->
     let env, se = desugar_decl env d in
     env, sigelts@se) (env, []) decls in
@@ -1442,10 +1451,9 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
   env, modul
   
 let desugar_file env (f:file) =
-  let pragmas, ms = f in
   let env, mods = List.fold_left (fun (env, mods) m ->
     let env, m = desugar_modul env m in
-    env, m::mods) (env, []) ms in
+    env, m::mods) (env, []) f in
   env, List.rev mods
 
 let add_modul_to_env (m:Syntax.modul) (en: env) :env =
@@ -1461,6 +1469,6 @@ let add_modul_to_env (m:Syntax.modul) (en: env) :env =
       DesugarEnv.push_sigelt env elt
     | _ -> DesugarEnv.push_sigelt en elt
   in
-  let en = DesugarEnv.prepare_module_or_interface false en m.name in
+  let en = DesugarEnv.prepare_module_or_interface false false en m.name in
   let en = List.fold_left do_sigelt ({ en with curmodule = Some(m.name) }) m.exports in
   DesugarEnv.finish_module_or_interface en m
