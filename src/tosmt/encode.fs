@@ -1659,10 +1659,10 @@ let solve tcenv q : unit =
 
             let with_fuel (n, i) = 
                 [Term.Caption (Util.format1 "<fuel='%s'>" (string_of_int n)); 
-                 Term.Assume(mkEq(mkFreeV("MaxFuel", Fuel_sort), n_fuel n), None);
-                 Term.Assume(mkEq(mkFreeV("MaxIFuel", Fuel_sort), n_fuel i), None);
-                 qry;
-                 Term.CheckSat]@suffix in
+                    Term.Assume(mkEq(mkFreeV("MaxFuel", Fuel_sort), n_fuel n), None);
+                    Term.Assume(mkEq(mkFreeV("MaxIFuel", Fuel_sort), n_fuel i), None);
+                    qry;
+                    Term.CheckSat]@suffix in
     
             let check () =
                 let initial_config = (!Options.initial_fuel, !Options.initial_ifuel) in
@@ -1676,15 +1676,15 @@ let solve tcenv q : unit =
                     else let errs = match errs with 
                             | [] -> [("Unknown assertion failed", dummyRange)]
                             | _ -> errs in 
-                         Tc.Errors.add_errors tcenv errs in
+                            Tc.Errors.add_errors tcenv errs in
 
                 let rec try_alt_configs errs = function 
                     | [] -> report (false, errs)
                     | [mi] -> 
-                      begin match errs with 
+                        begin match errs with 
                         | [] -> Z3.ask fresh labels (with_fuel mi) (cb [])
                         | _ -> report (false, errs)
-                      end
+                        end
 
                     | mi::tl -> 
                         Z3.ask fresh labels (with_fuel mi) (fun (ok, errs') -> 
@@ -1694,7 +1694,7 @@ let solve tcenv q : unit =
 
                 and cb alt (ok, errs) = if ok then () else try_alt_configs errs alt in
                 Z3.ask fresh labels (with_fuel initial_config) (cb alt_configs)  in
-            check ();
+            if !Options.admit_smt_queries then () else check ();
             pop ()
     end
 

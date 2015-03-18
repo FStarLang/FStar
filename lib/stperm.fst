@@ -31,11 +31,11 @@ effect ST (a:Type) (pre:Pre) (post: (heap -> Post a)) (mods:refs) =
               (fun (p:Post a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ Modifies mods h h1 /\ post h a h1) ==> p a h1)) (* WP *)
               (fun (p:Post a) (h:heap) -> (forall a h1. (pre h /\ Modifies mods h h1 /\ post h a h1) ==> p a h1))          (* WLP *)
 
-(* effect St (a:Type) (pre:Pre) (post: (heap -> Post a)) = STATE a *)
-(*   (fun (p:Post a) (h:heap) -> *)
-(*      pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (\* WP *\) *)
-(*   (fun (p:Post a) (h:heap) -> *)
-(*      (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (\* WLP *\) *)
+effect St (a:Type) (pre:Pre) (post: (heap -> Post a)) = STATE a
+  (fun (p:Post a) (h:heap) ->
+     pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
+  (fun (p:Post a) (h:heap) ->
+     (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 
 (* signatures WITH permissions *)
 assume val alloc: a:Type -> init:a -> Prims.STATE.ST (ref a) 
