@@ -108,7 +108,7 @@ let rec sort (a:Type) f i j x =
 
 
       let lo = slice (sel h3 x) i pivot in
-      let hi = tail (slice (sel h3 x) pivot j) in
+      let hi = slice (sel h3 x) (pivot + 1) j in
 
       (* cut (sorted f lo); *)
       (* cut (sorted f hi); *)
@@ -116,10 +116,10 @@ let rec sort (a:Type) f i j x =
       (* cut (forall y. mem y lo ==> f y pv); *)
 
       (* cut (forall y. mem y (slice (sel h3 x) pivot j) ==> f pv y); *)
-      (* SeqProperties.sorted_concat_lemma f lo pv hi; *)
+      SeqProperties.sorted_concat_lemma f lo pv hi;
 
-      (* cut (Eq (slice (sel h3 x) i j) (append lo (cons pv hi))); *)
-      (* assert (sorted f (slice (sel h3 x) i j)); *)
+      cut (Eq (slice (sel h3 x) i j) (append lo (cons pv hi)));
+      assert (sorted f (slice (sel h3 x) i j));
       admit()
 
     end
