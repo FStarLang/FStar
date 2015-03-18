@@ -123,6 +123,7 @@ type decl =
   | CheckSat
 type decls_t = list<decl>
 
+val fresh_token: (string * sort) -> int -> decl
 val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: constructor_t -> decls_t
 val termToSmt: term -> string

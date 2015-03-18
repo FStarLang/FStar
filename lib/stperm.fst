@@ -14,6 +14,7 @@
    limitations under the License.
 *)
 module ST
+#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open Prims.STATE
 open Set
 open Heap

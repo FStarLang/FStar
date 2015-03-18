@@ -15,9 +15,9 @@
 *)
 
 module SeqProperties
+#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open Seq
 
-#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 val head: a:Type -> s:seq a{length s > 0} -> Tot a
 let head s = index s 0
 

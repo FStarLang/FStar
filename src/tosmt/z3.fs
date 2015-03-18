@@ -170,8 +170,8 @@ let doZ3Exe =
     let ctr = Util.mk_ref 0 in 
     fun (fresh:bool) (input:string) ->  
         let z3proc = if fresh then (incr ctr; new_z3proc (Util.string_of_int !ctr)) else bg_z3_proc.grab() in
-//        Util.fprint2 "On thread %s, doZ3Exe with fresh=%s\n" (tid()) (if fresh then "true" else "false");
         let res = doZ3Exe' input z3proc in 
+        //Printf.printf "z3-%A says %s\n"  (get_z3version()) (status_to_string (fst res));
         if fresh then Util.kill_process z3proc else bg_z3_proc.release();
         res
 

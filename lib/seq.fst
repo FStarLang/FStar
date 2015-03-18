@@ -16,6 +16,7 @@
 
 (* A logical theory of sequences indexed by natural numbers in [0, n) *)
 module Seq
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 (* Representation hidden from clients *)
 type seq (a:Type) = { 

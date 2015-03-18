@@ -1,4 +1,5 @@
 module QuickSort.Seq
+#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open Seq
 open SeqProperties
 
@@ -39,6 +40,7 @@ let rec partition f s pivot back =
             let res = partition f s' pivot (back - 1) in
             res        
 
+#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 val sort: f:('a -> 'a -> Tot bool){total_order 'a f}
        -> s1:seq 'a
        -> Tot (s2:seq 'a{sorted f s2 /\ permutation 'a s1 s2})

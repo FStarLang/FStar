@@ -322,6 +322,9 @@ type decl =
 type decls_t = list<decl>
 
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
+let fresh_token (tok_name, sort) id = 
+    Assume(mkEq(mkInteger id, mkApp(constr_id_of_sort sort, [mkFreeV (tok_name,sort)])), Some "fresh token")
+     
 let constructor_to_decl_aux disc_inversion (name, projectors, sort, id) =
     let cdecl = DeclFun(name, projectors |> List.map snd, sort, Some "Constructor") in
     let bvar_name i = "x_" ^ string_of_int i in

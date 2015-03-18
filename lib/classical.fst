@@ -1,4 +1,5 @@
 module Classical
+#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 (* My proposal would be to put this in Classic not in Tot *)
 assume val excluded_middle : p:Type -> Tot (b:bool{b = true <==> p})

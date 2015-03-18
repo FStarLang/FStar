@@ -15,6 +15,8 @@
 *)
 
 module FunctionalExtensionality
+#set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+
 type efun (a:Type) (b:Type) = a -> Tot b
 
 opaque logic type FEq : #a:Type -> #b:Type -> efun a b -> efun a b -> Type =

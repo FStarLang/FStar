@@ -1,4 +1,5 @@
 module Downgrade
+#set-options "--max_fuel 1 --initial_fuel 1 --initial_ifuel 1 --max_ifuel 1"
 open Array
 open Seq
 open SeqProperties
@@ -11,8 +12,6 @@ assume val qsort_arr: a:Type -> f:tot_ord a -> x:array a -> ST unit
   (requires (fun h -> contains h x))
   (ensures (fun h0 u h1 -> contains h1 x /\ sorted f (sel h1 x) /\ permutation a (sel h0 x) (sel h1 x)))
   (modifies (a_ref x))
-
-
 
 val qsort_seq : a:Type -> f:tot_ord a -> x:seq a -> ST (seq a)
   (requires (fun h -> True))

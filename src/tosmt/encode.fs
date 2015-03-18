@@ -1231,12 +1231,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 | [] -> [], push_free_tvar env t tname (mkFreeV(tname, Type_sort)) 
                 | _ -> 
                         let ttok_decl = Term.DeclFun(Term.freeV_sym ttok, [], Type_sort, Some "token") in
+                        let ttok_fresh = Term.fresh_token (Term.freeV_sym ttok, Type_sort) (varops.next_id()) in
                         let ttok_app = mk_ApplyT ttok vars in 
                         let pats = if not is_logical && quals |> Util.for_some (function Opaque -> true | _ -> false)
                                    then [[ttok_app]; [tapp]]
                                    else [[ttok_app]] in
                         let name_tok_corr = Term.Assume(mkForall'(pats, None, vars, mkEq(ttok_app, tapp)), Some "name-token correspondence") in
-                        [ttok_decl;name_tok_corr], env in
+                        [ttok_decl; ttok_fresh; name_tok_corr], env in
             tname_decl@tok_decls, env in
         let kindingAx = 
             let k, decls = encode_knd res env' tapp in
@@ -1294,12 +1295,15 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
              let dapp =  mkApp(ddconstrsym, xvars) in
              encode_typ_pred' (Some fuel_tm) t_res env'' dapp in 
         let guard' = Term.mk_and_l guards' in
-
+        let proxy_fresh = match formals with 
+            | [] -> []
+            | _ -> [Term.fresh_token (Term.freeV_sym ddtok, Term_sort) (varops.next_id())] in
         let g = binder_decls
                 @decls2
                 @decls3
-                @[Term.DeclFun(Term.freeV_sym ddtok, [], Term_sort, Some (format1 "data constructor proxy: %s" (Print.sli d)));
-                  Term.Assume(tok_typing, Some "typing for data constructor proxy"); 
+                @[Term.DeclFun(Term.freeV_sym ddtok, [], Term_sort, Some (format1 "data constructor proxy: %s" (Print.sli d)))]
+                @proxy_fresh
+                @[Term.Assume(tok_typing, Some "typing for data constructor proxy"); 
                   Term.Assume(mkForall([app], vars, 
                                        mkEq(app, dapp)), Some "equality for proxy");
                   Term.Assume(mkForall([ty_pred], add_fuel (fuel_var, Fuel_sort) vars, mkImp(ty_pred, guard)), Some "data constructor typing elim");
@@ -1503,13 +1507,14 @@ and encode_free_var env lid tt t_norm quals =
                             decls2@[tok_typing], push_free_var env lid vname (mkFreeV(vname, Term_sort))
                         | _ -> 
                                 let vtok_decl = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None) in
+                                let vtok_fresh = Term.fresh_token (Term.freeV_sym vtok, Term_sort) (varops.next_id()) in
                                 let name_tok_corr = Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vapp)), None) in
                                 let tok_typing, decls2 = 
                                 if not(head_normal env tt) 
                                 then encode_typ_pred' None tt env vtok 
                                 else encode_typ_pred' None t_norm env vtok in
                                 let tok_typing = Term.Assume(tok_typing, Some "function token typing") in
-                                decls2@[vtok_decl;name_tok_corr;tok_typing], env in
+                                decls2@[vtok_decl;vtok_fresh;name_tok_corr;tok_typing], env in
                     vname_decl::tok_decl, env in
               let ty_pred, decls3 = encode_typ_pred' None res env' vapp in
               let tt_typing, decls4 = 
@@ -1627,6 +1632,8 @@ let encode_modul tcenv modul =
     Z3.giveZ3 decls
 
 let solve tcenv q : unit =
+    push (Util.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
+    let pop () = pop (Util.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     let prefix, labels, qry, suffix =
         let env = get_env tcenv in
         let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) tcenv.gamma) in
@@ -1641,9 +1648,8 @@ let solve tcenv q : unit =
         let suffix = label_suffix@[Term.Echo "Done!"]  in
         query_prelude, labels, qry, suffix in
     begin match qry with 
-        | Assume({tm=False}, _) -> ()
+        | Assume({tm=False}, _) -> pop(); ()
         | Assume(q, _) ->
-            push (Util.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
             let fresh = String.length q.as_str >= 2048 in   
             Z3.giveZ3 prefix;
 
@@ -1685,7 +1691,7 @@ let solve tcenv q : unit =
                 and cb alt (ok, errs) = if ok then () else try_alt_configs errs alt in
                 Z3.ask fresh labels (with_fuel initial_config) (cb alt_configs)  in
             check ();
-            pop (Util.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv))
+            pop ()
     end
 
 let is_trivial (tcenv:Tc.Env.env) (q:typ) : bool = 
