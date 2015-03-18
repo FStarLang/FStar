@@ -11,19 +11,23 @@ type tot_ord (a:Type) = f:(a -> a -> Tot bool){total_order a f}
 let splice (a:Type) (s1:seq a) (i:nat) (s2:seq a{length s1=length s2})  (j:nat{i <= j /\ j <= (length s2)})
     = Seq.append (slice s1 0 i) (Seq.append (slice s2 i j) (slice s1 j (length s1)))
 
-assume val partition: a:Type -> f:tot_ord a
-               -> start:nat -> len:nat{start <= len} 
-               -> pivot:nat{start <= pivot /\ pivot < len} 
-               -> back:nat{pivot <= back /\ back < len}
-               -> x:array a -> ST nat
-  (requires (fun h -> 
-    contains h x 
-    /\ len <= length (sel h x)
-    /\ (forall (i:nat{start <= i /\ i < len}).
-          ((i <= pivot ==> f (index (sel h x) i) (index (sel h x) pivot))
-           /\ (back < i  ==> f (index (sel h x) pivot) (index (sel h x) i))))))
-  (ensures (fun h0 i h1 -> 
-    len <= length (sel h0 x)
+opaque logic type partition_pre 
+                    (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
+                    (pivot:nat{start <= pivot /\ pivot < len})
+                    (back:nat{pivot <= back /\ back < len})
+                    (x:array a) (h:heap) = 
+    (contains h x 
+     /\ len <= length (sel h x)
+     /\ (forall (i:nat{start <= i /\ i < len}).
+         ((i <= pivot ==> f (index (sel h x) i) (index (sel h x) pivot))
+     /\ (back < i  ==> f (index (sel h x) pivot) (index (sel h x) i)))))
+
+opaque logic type partition_post 
+                    (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
+                    (pivot:nat{start <= pivot /\ pivot < len})
+                    (back:nat{pivot <= back /\ back < len})
+                    (x:array a) (h0:heap) (i:nat) (h1:heap) = 
+   (len <= length (sel h0 x)
     /\ contains h1 x
     /\ start <= i 
     /\ i < len
@@ -31,13 +35,21 @@ assume val partition: a:Type -> f:tot_ord a
     /\ (sel h1 x = splice (sel h0 x) start (sel h1 x) len)
     /\ ((fun orig lo hi p -> 
                ((length hi) > 0)
-            /\ (forall y. (mem y hi ==> f p y)
-                       /\ (mem y lo ==> f y p)
-                       /\ (count y orig = count y hi + count y lo)))
+                /\ (forall y. (mem y hi ==> f p y)
+                         /\ (mem y lo ==> f y p)
+                         /\ (count y orig = count y hi + count y lo)))
         (slice (sel h0 x) start len)
         (slice (sel h1 x) start i)
         (slice (sel h1 x) i len)
-        (index (sel h1 x) i))))
+        (index (sel h1 x) i)))
+
+assume val partition: a:Type -> f:tot_ord a
+               -> start:nat -> len:nat{start <= len} 
+               -> pivot:nat{start <= pivot /\ pivot < len} 
+               -> back:nat{pivot <= back /\ back < len}
+               -> x:array a -> ST nat
+  (requires (partition_pre a f start len pivot back x))
+  (ensures (partition_post a f start len pivot back x))
   (modifies (a_ref x))
 
 (* assume val lemma_slice_splice: a:Type -> s1:seq a  *)

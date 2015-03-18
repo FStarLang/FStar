@@ -122,7 +122,7 @@ let lemma_count_slice s i =
   cut (Eq s (append (slice s 0 i) (slice s i (length s))));
   lemma_append_count (slice s 0 i) (slice s i (length s))
 
-type total_order (a:Type) (f: (a -> a -> Tot bool)) =
+opaque logic type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a. f a a)                                           (* reflexivity   *)
     /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
