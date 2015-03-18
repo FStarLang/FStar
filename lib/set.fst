@@ -32,7 +32,7 @@ let complement s    = fun x -> not (s x)
 
 (* properties *)
 let mem_empty x           = ()
-let mem_singleton x       = ()
+let mem_singleton x y     = ()
 let mem_union x s1 s2     = ()
 let mem_intersect x s1 s2 = ()
 let mem_complement x s    = ()

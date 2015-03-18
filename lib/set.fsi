@@ -35,10 +35,10 @@ val mem_empty: a:Type -> x:a -> Lemma
    (ensures (not (mem x empty)))
    [SMTPat (mem x empty)]                                           
 
-val mem_singleton: a:Type -> x:a -> Lemma 
+val mem_singleton: a:Type -> x:a -> y:a -> Lemma 
    (requires True)
-   (ensures (mem x (singleton x)))
-   [SMTPat (mem x (singleton x))]
+   (ensures (mem y (singleton x) <==> x=y))
+   [SMTPat (mem y (singleton x))]
 
 val mem_union: a:Type -> x:a -> s1:set a -> s2:set a -> Lemma 
    (requires True)

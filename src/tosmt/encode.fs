@@ -1121,9 +1121,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let tok_app = mk_ApplyT ttok vars in
         let tok_decl = Term.DeclFun(Term.freeV_sym ttok, [], Type_sort, None) in
         let app = mkApp(tname, List.map mkBoundV vars) in
+        let fresh_tok = match vars with 
+            | [] -> []
+            | _ -> [Term.fresh_token(Term.freeV_sym ttok, Type_sort) (varops.next_id())] in
         let decls = [Term.DeclFun(tname, List.map snd vars, Type_sort, None);
-                    tok_decl;
-                    Term.Assume(mkForall([tok_app], vars, mkEq(tok_app, app)), Some "name-token correspondence")] in
+                    tok_decl]
+                    @fresh_tok
+                    @[Term.Assume(mkForall([tok_app], vars, mkEq(tok_app, app)), Some "name-token correspondence")] in
         let def, (body, ex_vars, decls1) = 
             if tags |> Util.for_some (function Logic -> true | _ -> false) 
             then mk_Valid app, (let f, decls = encode_formula t env' in f, [], decls)
