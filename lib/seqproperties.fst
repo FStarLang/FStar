@@ -126,6 +126,7 @@ opaque logic type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a. f a a)                                           (* reflexivity   *)
     /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
+type tot_ord (a:Type) = f:(a -> a -> Tot bool){total_order a f}
 
 val sorted_concat_lemma: a:Type
                       -> f:(a -> a -> Tot bool){total_order a f}

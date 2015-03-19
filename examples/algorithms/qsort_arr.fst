@@ -5,7 +5,6 @@ open SeqProperties
 open Heap
 open ST
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --admit_smt_queries false"
-type tot_ord (a:Type) = f:(a -> a -> Tot bool){total_order a f}
 
 (* replaces the [i,j) sub-sequence of s1 with the corresponding sub-sequence of s2 *)
 let splice (a:Type) (s1:seq a) (i:nat) (s2:seq a{length s1=length s2})  (j:nat{i <= j /\ j <= (length s2)})
@@ -44,6 +43,7 @@ opaque logic type partition_post
         (slice (sel h1 x) i len)
         (index (sel h1 x) i)))
 
+
 assume val partition: a:Type -> f:tot_ord a
                -> start:nat -> len:nat{start <= len} 
                -> pivot:nat{start <= pivot /\ pivot < len} 
@@ -52,7 +52,6 @@ assume val partition: a:Type -> f:tot_ord a
   (requires (partition_pre a f start len pivot back x))
   (ensures (partition_post a f start len pivot back x))
   (modifies (a_ref x))
-
 
 val lemma_seq_frame_hi: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat{i <= j} -> m:nat{j <= m} -> n:nat{m < n && n <= length s1} 
   -> Lemma
