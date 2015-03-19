@@ -10,17 +10,20 @@ open ST
 let splice (a:Type) (s1:seq a) (i:nat) (s2:seq a{length s1=length s2})  (j:nat{i <= j /\ j <= (length s2)})
     = Seq.append (slice s1 0 i) (Seq.append (slice s2 i j) (slice s1 j (length s1)))
 
+opaque type partition_inv (a:Type) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) = 
+           ((length hi) >= 0)
+           /\ (forall y. (mem y hi ==> f pv y) /\ (mem y lo ==> f y pv))
+
 opaque logic type partition_pre 
                     (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
                     (pivot:nat{start <= pivot /\ pivot < len})
                     (back:nat{pivot <= back /\ back < len})
                     (x:array a) (h:heap) = 
     (contains h x 
-     /\ ((fun s -> 
-          (len <= length s)
-          /\ (forall (i:nat{start <= i /\ i < len}).
-              ((i <= pivot ==> f (index s i) (index s pivot))
-               /\ (back < i  ==> f (index s pivot) (index s i)))))
+     /\ ((fun s -> (len <= length s) /\ (partition_inv a f         
+                                                       (slice s start pivot) 
+                                                       (index s pivot)
+                                                       (slice s (back + 1) len)))
            (sel h x)))
 
 opaque logic type partition_post 
@@ -35,14 +38,10 @@ opaque logic type partition_post
     /\ (length (sel h1 x) = length (sel h0 x))
     /\ (sel h1 x = splice (sel h0 x) start (sel h1 x) len)
     /\ (permutation a (slice (sel h0 x) start len) (slice (sel h1 x) start len))
-    /\ ((fun lo hi p -> 
-               ((length hi) > 0)
-                /\ (forall y. (mem y hi ==> f p y)
-                           /\ (mem y lo ==> f y p)))
-        (slice (sel h1 x) start i)
-        (slice (sel h1 x) i len)
-        (index (sel h1 x) i)))
-
+    /\ (partition_inv a f
+                      (slice (sel h1 x) start i)
+                      (index (sel h1 x) i)
+                      (slice (sel h1 x) i len)))
 
 assume val partition: a:Type -> f:tot_ord a
                -> start:nat -> len:nat{start <= len} 
@@ -52,6 +51,13 @@ assume val partition: a:Type -> f:tot_ord a
   (requires (partition_pre a f start len pivot back x))
   (ensures (partition_post a f start len pivot back x))
   (modifies (a_ref x))
+(* let rec partition f start len pivot back x =  *)
+(*   if pivot = back *)
+(*   then pivot *)
+(*   else begin  *)
+(*       admit(); 0 *)
+(*     end *)
+
 
 val lemma_seq_frame_hi: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat{i <= j} -> m:nat{j <= m} -> n:nat{m < n && n <= length s1} 
   -> Lemma
