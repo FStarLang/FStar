@@ -33,6 +33,7 @@ opaque logic type partition_post
     /\ i < len
     /\ (length (sel h1 x) = length (sel h0 x))
     /\ (sel h1 x = splice (sel h0 x) start (sel h1 x) len)
+    /\ (permutation a (slice (sel h0 x) start len) (slice (sel h1 x) start len))
     /\ ((fun orig lo hi p -> 
                ((length hi) > 0)
                 /\ (forall y. (mem y hi ==> f p y)
@@ -105,6 +106,22 @@ val lemma_trans_frame : a:Type -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = l
   (ensures (s1 == splice s3 i s1 j))
 let lemma_trans_frame s1 s2 s3 i j = cut (Eq s1 (splice s3 i s1 j))
 
+assume val lemma_weaken_perm_left: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat -> k:nat{i <= j /\ j <= k /\ k <= length s1}
+  -> Lemma
+  (requires (s1 == splice s2 j s1 k /\ permutation a (slice s2 j k) (slice s1 j k)))
+  (ensures (permutation a (slice s2 i k) (slice s1 i k)))
+
+assume val lemma_weaken_perm_right: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat -> k:nat{i <= j /\ j <= k /\ k <= length s1}
+  -> Lemma
+  (requires (s1 == splice s2 i s1 j /\ permutation a (slice s2 i j) (slice s1 i j)))
+  (ensures (permutation a (slice s2 i k) (slice s1 i k)))
+
+val lemma_trans_perm: a:Type -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = length s2 /\ length s2 = length s3} -> i:nat -> j:nat{i<=j && j <= length s1}
+ -> Lemma 
+  (requires (permutation a (slice s1 i j) (slice s2 i j)
+             /\ permutation a (slice s2 i j) (slice s3 i j)))
+  (ensures (permutation a (slice s1 i j) (slice s3 i j)))
+let lemma_trans_perm s1 s2 s3 i j = ()
   
 val sort: a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
           -> ST unit
@@ -141,14 +158,15 @@ let rec sort (a:Type) f i j x =
 (* ghost *)    SeqProperties.sorted_concat_lemma f lo pv hi;
 (* ghost *)    lemma_slice_append (sel h3 x) i pivot j pv;
 
-               assert (sorted f (slice (sel h3 x) i j));
-               
-               lemma_weaken_frame_right (sel h2 x) (sel h1 x) i pivot j;
-               lemma_weaken_frame_left (sel h3 x) (sel h2 x) i (pivot + 1) j;
-               lemma_trans_frame (sel h3 x) (sel h2 x) (sel h1 x) i j;
-               lemma_trans_frame (sel h3 x) (sel h1 x) (sel h0 x) i j;
+(* ghost *)    lemma_weaken_frame_right (sel h2 x) (sel h1 x) i pivot j;
+(* ghost *)    lemma_weaken_frame_left (sel h3 x) (sel h2 x) i (pivot + 1) j;
+(* ghost *)    lemma_trans_frame (sel h3 x) (sel h2 x) (sel h1 x) i j;
+(* ghost *)    lemma_trans_frame (sel h3 x) (sel h1 x) (sel h0 x) i j;
 
-               admitP  (permutation a (slice (sel h0 x) i j) (slice (sel h3 x) i j))
+(* ghost *)    lemma_weaken_perm_right (sel h2 x) (sel h1 x) i pivot j;
+(* ghost *)    lemma_weaken_perm_left (sel h3 x) (sel h2 x) i (pivot + 1) j;
+(* ghost *)    lemma_trans_perm (sel h0 x) (sel h1 x) (sel h2 x) i j;
+(* ghost *)    lemma_trans_perm (sel h0 x) (sel h2 x) (sel h3 x) i j
   end
        
 
