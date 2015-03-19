@@ -1382,6 +1382,7 @@ and tc_decl env se deserialized = match se with
                     | Getopt.Die s -> raise (Error ("Failed to process pragma: " ^s, r))
                 end
             | ResetOptions -> 
+                env.solver.refresh();
                 Options.reset_options() |> ignore; 
                 se, env
         end
