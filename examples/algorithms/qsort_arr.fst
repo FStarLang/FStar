@@ -52,78 +52,80 @@ assume val partition: a:Type -> f:tot_ord a
   (ensures (partition_post a f start len pivot back x))
   (modifies (a_ref x))
 
-val sort: a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a 
-          -> ST unit 
+
+val lemma_seq_frame_hi: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat{i <= j} -> m:nat{j <= m} -> n:nat{m < n && n <= length s1} 
+  -> Lemma
+  (requires (s1 == (splice s2 i s1 j)))
+  (ensures  ((slice s1 m n == slice s2 m n) /\ (index s1 m == index s2 m)))
+let lemma_seq_frame_hi s1 s2 i j m n = 
+  cut (Eq (slice s1 m n) (slice s2 m n))
+
+val lemma_seq_frame_lo: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat{i <= j} -> m:nat{j < m} -> n:nat{m <= n && n <= length s1} 
+  -> Lemma
+  (requires (s1 == (splice s2 m s1 n)))
+  (ensures  ((slice s1 i j == slice s2 i j) /\ (index s1 j == index s2 j)))
+let lemma_seq_frame_lo s1 s2 i j m n = 
+  cut (Eq (slice s1 i j) (slice s2 i j))
+
+val lemma_tail_slice: a:Type -> s:seq a -> i:nat -> j:nat{i < j && j <= length s} 
+  -> Lemma 
+  (ensures (tail (slice s i j) == slice s (i + 1) j))
+let lemma_tail_slice s i j = 
+  cut (Eq (tail (slice s i j)) (slice s (i + 1) j))
+
+val lemma_slice_append: a:Type -> s:seq a -> i:nat -> pivot:nat{i <= pivot} -> j:nat{pivot < j && j <= length s} -> pv:a
+  -> Lemma 
+  (requires (pv == index s pivot))
+  (ensures (slice s i j == append (slice s i pivot) (cons pv (slice s (pivot + 1) j))))
+let lemma_slice_append s i pivot j pv =
+  let lo = slice s i pivot in
+  let hi = slice s (pivot + 1) j in
+  cut (Eq (slice s i j) (append lo (cons pv hi)))
+
+val sort: a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
+          -> ST unit
   (requires (fun h -> contains h x /\ j <= length (sel h x)))
   (ensures (fun h0 u h1 -> (j <= length (sel h0 x)                                      (* carrying this along from the requires clause *)
                             /\ contains h1 x                                            (* the array is still in the heap *)
                             /\ (length (sel h0 x) = length (sel h1 x))                  (* it's length has not changed *)
                             /\ sorted f (slice (sel h1 x) i j)                          (* it is sorted between [i, j) *)
-                            /\ Eq (sel h1 x) (splice (sel h0 x) i (sel h1 x) j)         (* the rest of it is unchanged *)
+                            /\ Eq (sel h1 x) (splice (sel h0 x) i (sel h1 x) j)           (* the rest of it is unchanged *)
                             /\ permutation a (slice (sel h0 x) i j) (slice (sel h1 x) i j)))) (* the [i,j) sub-array is permutation of the original one *)
   (modifies (a_ref x))
-let rec sort (a:Type) f i j x = 
+let rec sort (a:Type) f i j x =
   let h0 = ST.get () in
-  if i=j 
+  if i=j
   then ()
   else begin
-      let h0 = get() in
-      let pivot = partition f i j i (j - 1) x in
-      
-      
-      let h1 = get() in
-      let pv = index (sel h1 x) pivot in
+(* ghost *)    let h0 = get() in
+        
+               let pivot = partition f i j i (j - 1) x in
+               
+(* ghost *)    let h1 = get() in
+(* ghost *)    let pv = index (sel h1 x) pivot in
 
+               sort f i pivot x;
 
-      sort f i pivot x;
-      let h2 = get() in
+(* ghost *)    let h2 = get() in
+(* ghost *)    lemma_seq_frame_hi (sel h2 x) (sel h1 x) i pivot pivot j; //slice (sel h2 x) pivot j = slice (sel h1 x) pivot j
+(* ghost *)    lemma_tail_slice (sel h2 x) pivot j;
 
-      admitP ((slice (sel h2 x) pivot j) 
-                 == 
-              (slice (sel h1 x) pivot j));
+               sort f (pivot + 1) j x;
 
-      admitP ((tail (slice (sel h2 x) pivot j)) 
-                 ==
-              (slice (sel h2 x) (pivot + 1) j));
+(* ghost *)    let h3 = get() in
+(* ghost *)    lemma_seq_frame_lo (sel h3 x) (sel h2 x) i pivot (pivot + 1) j;
+(* ghost *)    let lo = slice (sel h3 x) i pivot in
+(* ghost *)    let hi = slice (sel h3 x) (pivot + 1) j in
+(* ghost *)    SeqProperties.sorted_concat_lemma f lo pv hi;
+(* ghost *)    lemma_slice_append (sel h3 x) i pivot j pv;
+               assert (sorted f (slice (sel h3 x) i j));
 
-      admitP (forall y. mem y (slice (sel h2 x) (pivot + 1) j) ==> f pv y);
+               admitP ((sel h3 x)
+                       ==
+                      (splice (sel h0 x) i (sel h3 x) j));         (* the rest of it is unchanged *)
 
-
-      sort f (pivot + 1) j x;
-      let h3 = get() in
-
-      admitP ((slice (sel h3 x) i pivot)
-                 ==
-              (slice (sel h2 x) i pivot));
-
-      
-      admitP (forall y. mem y (slice (sel h3 x) i pivot) ==> f y pv);
-
-      admitP (forall y. mem y (slice (sel h3 x) (pivot + 1) j) ==> f pv y);
-
-
-      let lo = slice (sel h3 x) i pivot in
-      let hi = slice (sel h3 x) (pivot + 1) j in
-
-      (* cut (sorted f lo); *)
-      (* cut (sorted f hi); *)
-
-      (* cut (forall y. mem y lo ==> f y pv); *)
-
-      (* cut (forall y. mem y (slice (sel h3 x) pivot j) ==> f pv y); *)
-      SeqProperties.sorted_concat_lemma f lo pv hi;
-
-      admitP ((slice (sel h3 x) i j)
-                 ==
-              (append lo (cons pv hi)));
-      assert (sorted f (slice (sel h3 x) i j));
-
-      admitP ((sel h3 x) 
-                 == 
-              (splice (sel h0 x) i (sel h3 x) j));         (* the rest of it is unchanged *)
-
-      admitP  (permutation a (slice (sel h0 x) i j) (slice (sel h3 x) i j))
-    end
+               admitP  (permutation a (slice (sel h0 x) i j) (slice (sel h3 x) i j))
+  end
        
 
 (* val qsort: a:Type -> f:(a -> a -> Tot bool){total_order a f} -> x:array a -> ST unit  *)
