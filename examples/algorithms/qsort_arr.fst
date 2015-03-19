@@ -52,28 +52,6 @@ assume val partition: a:Type -> f:tot_ord a
   (ensures (partition_post a f start len pivot back x))
   (modifies (a_ref x))
 
-(* assume val lemma_slice_splice: a:Type -> s1:seq a  *)
-(*          -> i:nat -> s2:seq a{length s2 = length s1} -> j:nat{i <= j /\ j <= (length s1)}  *)
-(*          -> k:nat{k <= i} -> Lemma *)
-(*   (requires True) *)
-(*   (ensures (slice (splice s1 i s2 j) k i = slice s1 k i)) *)
-(*   (\* [SMTPat (slice (splice s1 i s2 j) k i)] *\) *)
-
-(* assume val lemma_splice_append: a:Type -> s1:seq a -> i:nat -> s2:seq a{(length s1) = (length s2)} -> j:nat{i <= j /\ j<=(length s1)} *)
-(*          -> k:nat{k <= i} -> Lemma  *)
-(*          (requires True) *)
-(*          (ensures (slice (splice s1 i s2 j) k j = append (slice s1 k i) (slice s2 i j))) *)
-(*          (\* [SMTPat (slice (splice s1 i s2 j) k j)] *\) *)
-
-(* assume val lemma_slice_splice_append_cons: a:Type -> s1:seq a{(length s1) > 0} -> i:nat ->  p:nat{i < p} -> s2:seq a{(length s1) = (length s2)} -> j:nat{p <= j /\ j <= (length s1)} -> Lemma *)
-(*          (requires True)                                                                                                                                                                                   *)
-(*          (ensures (slice (splice s2 p s1 j) i j =  *)
-(*              append (slice s2 i (p - 1)) (cons (index s2 (p - 1)) (slice s1 p j)))) *)
-(*          (\* [SMTPat (slice (splice s2 p s1 j) i j)] *\) *)
-
-assume val lemma_slice_mem: a:Type -> s:seq a -> i:nat -> j:nat{i <= j /\ j < length s} -> Lemma
-                           (requires True)
-                           (ensures (forall x. mem x (slice s i j) ==> mem x s))
 val sort: a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a 
           -> ST unit 
   (requires (fun h -> contains h x /\ j <= length (sel h x)))
@@ -100,23 +78,28 @@ let rec sort (a:Type) f i j x =
       sort f i pivot x;
       let h2 = get() in
 
-      cut (Eq (slice (sel h2 x) pivot j) (slice (sel h1 x) pivot j));
-      cut (Eq (tail (slice (sel h2 x) pivot j))
+      admitP ((slice (sel h2 x) pivot j) 
+                 == 
+              (slice (sel h1 x) pivot j));
+
+      admitP ((tail (slice (sel h2 x) pivot j)) 
+                 ==
               (slice (sel h2 x) (pivot + 1) j));
-      cut (forall y. mem y (slice (sel h2 x) (pivot + 1) j) ==> f pv y);
+
+      admitP (forall y. mem y (slice (sel h2 x) (pivot + 1) j) ==> f pv y);
+
 
       sort f (pivot + 1) j x;
       let h3 = get() in
 
-      (* assert (permutation a (slice (sel h2 x) (pivot + 1) j) *)
-      (*                       (slice (sel h3 x) (pivot + 1) j)); *)
-      cut (Eq (slice (sel h3 x) i pivot) (slice (sel h2 x) i pivot));
+      admitP ((slice (sel h3 x) i pivot)
+                 ==
+              (slice (sel h2 x) i pivot));
 
       
-      (* cut (Eq (tail (slice (sel h3 x) pivot j)) (slice (sel h3 x) (pivot + 1) j)); *)
+      admitP (forall y. mem y (slice (sel h3 x) i pivot) ==> f y pv);
 
-      cut (forall y. mem y (slice (sel h3 x) i pivot) ==> f y pv);
-      cut (forall y. mem y (slice (sel h3 x) (pivot + 1) j) ==> f pv y);
+      admitP (forall y. mem y (slice (sel h3 x) (pivot + 1) j) ==> f pv y);
 
 
       let lo = slice (sel h3 x) i pivot in
@@ -130,10 +113,16 @@ let rec sort (a:Type) f i j x =
       (* cut (forall y. mem y (slice (sel h3 x) pivot j) ==> f pv y); *)
       SeqProperties.sorted_concat_lemma f lo pv hi;
 
-      cut (Eq (slice (sel h3 x) i j) (append lo (cons pv hi)));
+      admitP ((slice (sel h3 x) i j)
+                 ==
+              (append lo (cons pv hi)));
       assert (sorted f (slice (sel h3 x) i j));
-      admit()
 
+      admitP ((sel h3 x) 
+                 == 
+              (splice (sel h0 x) i (sel h3 x) j));         (* the rest of it is unchanged *)
+
+      admitP  (permutation a (slice (sel h0 x) i j) (slice (sel h3 x) i j))
     end
        
 
