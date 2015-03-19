@@ -48,21 +48,6 @@ opaque logic type partition_post
                       (index (sel h1 x) i)
                       (slice (sel h1 x) i len)))
 
-assume val lemma_slice_cons: a:Type -> s:seq a -> i:nat -> j:nat{i < j && j <= length s} 
-  -> Lemma (ensures (forall x. mem x (slice s i j) <==> (x = index s i || mem x (slice s (i + 1) j))))
-
-assume val lemma_slice_snoc: a:Type -> s:seq a -> i:nat -> j:nat{i < j && j <= length s} 
-  -> Lemma (ensures (forall x. mem x (slice s i j) <==> (x = index s (j - 1) || mem x (slice s i (j - 1)))))
-
-assume val swap_frame_lo : a:Type -> s:seq a -> lo:nat -> i:nat{lo <= i} -> j:nat{i <= j && j < length s} 
-     -> Lemma (ensures (slice s lo i == slice (swap s i j) lo i))                                                     
-
-assume val swap_frame_lo' : a:Type -> s:seq a -> lo:nat -> i':nat {lo <= i'} -> i:nat{i' <= i} -> j:nat{i <= j && j < length s} 
-     -> Lemma (ensures (slice s lo i' == slice (swap s i j) lo i'))                                                     
-
-assume val swap_frame_hi : a:Type -> s:seq a -> i:nat -> j:nat{i <= j} -> k:nat{j < k} -> hi:nat{k <= hi /\ hi <= length s}
-     -> Lemma (ensures (slice s k hi == slice (swap s i j) k hi))                                                         
-
 assume val lemma_partition_inv_lo_snoc: a:Type -> f:tot_ord a -> s:seq a -> i:nat -> j:nat{i <= j && j < length s} -> pv:a
    -> Lemma (requires ((forall y. mem y (slice s i j) ==> f y pv) /\ f (index s j) pv))
             (ensures ((forall y. mem y (slice s i (j + 1)) ==> f y pv)))
@@ -154,9 +139,6 @@ let lemma_trans_perm s1 s2 s3 i j = ()
 assume val lemma_partition_inv_hi_cons: a:Type -> f:tot_ord a -> s:seq a -> back:nat -> len:nat{back < len && len <= length s} -> pv:a
    -> Lemma (requires ((forall y. mem y (slice s (back + 1) len) ==> f pv y) /\ f pv (index s back)))
             (ensures ((forall y. mem y (slice s back len) ==> f pv y)))
-
-assume val lemma_swap_permutes_slice : a:Type -> s:seq a -> start:nat -> i:nat{start <= i} -> j:nat{i <= j} -> len:nat{j < len && len <= length s}
-   -> Lemma (ensures (permutation a (slice s start len) (slice (SeqProperties.swap s i j) start len)))
 
 #reset-options
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --admit_smt_queries false"                                                                                                            

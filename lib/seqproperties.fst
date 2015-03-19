@@ -196,6 +196,7 @@ let lemma_swap_permutes_aux s i j x =
       lemma_append_count_aux x frag_i frag_hi
   end
 
+
 #set-options "--max_fuel 0 --initial_fuel 0"
 opaque type permutation (a:Type) (s1:seq a) (s2:seq a) =
        (forall i. count i s1 = count i s2)
@@ -209,3 +210,41 @@ val cons_perm: a:Type -> tl:seq a -> s:seq a{length s > 0} ->
                (ensures (permutation a (cons (head s) tl) s))
 let cons_perm tl s = lemma_tl (head s) tl
 
+#set-options "--max_fuel 2 --initial_fuel 2"
+assume val lemma_mem_append : a:Type -> s1:seq a -> s2:seq a
+      -> Lemma (ensures (forall x. mem x (append s1 s2) <==> (mem x s1 || mem x s2)))
+
+val lemma_slice_cons: a:Type -> s:seq a -> i:nat -> j:nat{i < j && j <= length s} 
+  -> Lemma (ensures (forall x. mem x (slice s i j) <==> (x = index s i || mem x (slice s (i + 1) j))))
+let lemma_slice_cons s i j = 
+  cut (Eq (slice s i j) (append (create 1 (index s i)) (slice s (i + 1) j)));
+  lemma_mem_append (create 1 (index s i)) (slice s (i + 1) j)
+
+val lemma_slice_snoc: a:Type -> s:seq a -> i:nat -> j:nat{i < j && j <= length s} 
+  -> Lemma (ensures (forall x. mem x (slice s i j) <==> (x = index s (j - 1) || mem x (slice s i (j - 1)))))
+let lemma_slice_snoc s i j = 
+  cut (Eq (slice s i j) (append (slice s i (j - 1)) (create 1 (index s (j - 1)))));
+  lemma_mem_append (slice s i (j - 1)) (create 1 (index s (j - 1)))
+
+#set-options "--max_fuel 0 --initial_fuel 0"
+val swap_frame_lo : a:Type -> s:seq a -> lo:nat -> i:nat{lo <= i} -> j:nat{i <= j && j < length s} 
+     -> Lemma (ensures (slice s lo i == slice (swap s i j) lo i))  
+let swap_frame_lo s lo i j = cut (Eq (slice s lo i) (slice (swap s i j) lo i))
+
+val swap_frame_lo' : a:Type -> s:seq a -> lo:nat -> i':nat {lo <= i'} -> i:nat{i' <= i} -> j:nat{i <= j && j < length s} 
+     -> Lemma (ensures (slice s lo i' == slice (swap s i j) lo i'))                                                     
+let swap_frame_lo' s lo i' i j = cut (Eq (slice s lo i') (slice (swap s i j) lo i'))
+
+val swap_frame_hi : a:Type -> s:seq a -> i:nat -> j:nat{i <= j} -> k:nat{j < k} -> hi:nat{k <= hi /\ hi <= length s}
+     -> Lemma (ensures (slice s k hi == slice (swap s i j) k hi))                                                         
+let swap_frame_hi s i j k hi = cut (Eq (slice s k hi) (slice (swap s i j) k hi))
+
+val lemma_swap_slice_commute  : a:Type -> s:seq a -> start:nat -> i:nat{start <= i} -> j:nat{i <= j} -> len:nat{j < len && len <= length s}
+    -> Lemma (ensures (slice (swap s i j) start len == (swap (slice s start len) (i - start) (j - start))))
+let lemma_swap_slice_commute s start i j len = cut (Eq (slice (swap s i j) start len) (swap (slice s start len) (i - start) (j - start)))
+                                                                                                            
+val lemma_swap_permutes_slice : a:Type -> s:seq a -> start:nat -> i:nat{start <= i} -> j:nat{i <= j} -> len:nat{j < len && len <= length s}
+   -> Lemma (ensures (permutation a (slice s start len) (slice (swap s i j) start len)))
+let lemma_swap_permutes_slice s start i j len =
+  lemma_swap_slice_commute s start i j len;
+  lemma_swap_permutes (slice s start len) (i - start) (j - start)
