@@ -102,19 +102,9 @@ let rec partition (a:Type) f start len pivot back x =
           let s' = Array.to_seq x in 
           swap_frame_lo s start pivot (pivot + 1);
           swap_frame_hi s pivot (pivot + 1) (back + 1) len;
-          (* admitP ( (slice s start pivot) == *)
-          (*         (slice s' start pivot)); *)
-          (* admitP ((slice s (back + 1) len) == *)
-          (*         (slice s' (back + 1) len)); *)
-          (* cut (Eq (slice s start pivot) *)
-          (*         (slice s' start pivot)); *)
-          (* cut (Eq (slice s (back + 1) len) *)
-          (*         (slice s' (back + 1) len)); *)
           lemma_partition_inv_lo_snoc f s' start pivot p;
           let res = partition f start len (pivot + 1) back x in
           let s'' = Array.to_seq x in
-          assert (start <= res);
-          assert (res < len);
           assert (length s'' = length s);
           admitP (b2t (s'' = splice s start s'' len)); 
           admitP (permutation a (slice s start len) (slice s'' start len));
