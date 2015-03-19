@@ -17,10 +17,12 @@ opaque logic type partition_pre
                     (back:nat{pivot <= back /\ back < len})
                     (x:array a) (h:heap) = 
     (contains h x 
-     /\ len <= length (sel h x)
-     /\ (forall (i:nat{start <= i /\ i < len}).
-         ((i <= pivot ==> f (index (sel h x) i) (index (sel h x) pivot))
-     /\ (back < i  ==> f (index (sel h x) pivot) (index (sel h x) i)))))
+     /\ ((fun s -> 
+          (len <= length s)
+          /\ (forall (i:nat{start <= i /\ i < len}).
+              ((i <= pivot ==> f (index s i) (index s pivot))
+               /\ (back < i  ==> f (index s pivot) (index s i)))))
+           (sel h x)))
 
 opaque logic type partition_post 
                     (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
@@ -34,12 +36,10 @@ opaque logic type partition_post
     /\ (length (sel h1 x) = length (sel h0 x))
     /\ (sel h1 x = splice (sel h0 x) start (sel h1 x) len)
     /\ (permutation a (slice (sel h0 x) start len) (slice (sel h1 x) start len))
-    /\ ((fun orig lo hi p -> 
+    /\ ((fun lo hi p -> 
                ((length hi) > 0)
                 /\ (forall y. (mem y hi ==> f p y)
-                         /\ (mem y lo ==> f y p)
-                         /\ (count y orig = count y hi + count y lo)))
-        (slice (sel h0 x) start len)
+                           /\ (mem y lo ==> f y p)))
         (slice (sel h1 x) start i)
         (slice (sel h1 x) i len)
         (index (sel h1 x) i)))
@@ -129,13 +129,6 @@ let lemma_weaken_perm_right s1 s2 i j k =
                                  (slice s2 j k)));
   lemma_append_count (slice s2 i j) (slice s2 j k);
   lemma_append_count (slice s1 i j) (slice s2 j k)
-
-val lemma_trans_perm: a:Type -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = length s2 /\ length s2 = length s3} -> i:nat -> j:nat{i<=j && j <= length s1}
- -> Lemma 
-  (requires (permutation a (slice s1 i j) (slice s2 i j)
-             /\ permutation a (slice s2 i j) (slice s3 i j)))
-  (ensures (permutation a (slice s1 i j) (slice s3 i j)))
-let lemma_trans_perm s1 s2 s3 i j = ()
   
 val sort: a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
           -> ST unit
@@ -154,18 +147,18 @@ let rec sort (a:Type) f i j x =
   else begin
                let pivot = partition f i j i (j - 1) x in
                
-(* ghost *)    let h1 = get() in //sel h1 x = splice h0 i (sel h1 x) j
+(* ghost *)    let h1 = get() in 
 (* ghost *)    let pv = index (sel h1 x) pivot in
 
                sort f i pivot x; 
 
-(* ghost *)    let h2 = get() in //sel h2 x = splice (sel h1 x) i (sel h2 x) pivot
-(* ghost *)    lemma_seq_frame_hi (sel h2 x) (sel h1 x) i pivot pivot j; //slice (sel h2 x) pivot j = slice (sel h1 x) pivot j
+(* ghost *)    let h2 = get() in 
+(* ghost *)    lemma_seq_frame_hi (sel h2 x) (sel h1 x) i pivot pivot j;
 (* ghost *)    lemma_tail_slice (sel h2 x) pivot j;
 
                sort f (pivot + 1) j x;
 
-(* ghost *)    let h3 = get() in //sel h3 x = splice (sel h2 x) (pivot + 1) (sel h3 x) j
+(* ghost *)    let h3 = get() in
 (* ghost *)    lemma_seq_frame_lo (sel h3 x) (sel h2 x) i pivot (pivot + 1) j;
 (* ghost *)    let lo = slice (sel h3 x) i pivot in
 (* ghost *)    let hi = slice (sel h3 x) (pivot + 1) j in
@@ -178,13 +171,21 @@ let rec sort (a:Type) f i j x =
 (* ghost *)    lemma_trans_frame (sel h3 x) (sel h1 x) (sel h0 x) i j;
 
 (* ghost *)    lemma_weaken_perm_right (sel h2 x) (sel h1 x) i pivot j;
-(* ghost *)    lemma_weaken_perm_left (sel h3 x) (sel h2 x) i (pivot + 1) j;
-(* ghost *)    lemma_trans_perm (sel h0 x) (sel h1 x) (sel h2 x) i j;
-(* ghost *)    lemma_trans_perm (sel h0 x) (sel h2 x) (sel h3 x) i j
+(* ghost *)    lemma_weaken_perm_left (sel h3 x) (sel h2 x) i (pivot + 1) j
   end
        
 
-(* val qsort: a:Type -> f:(a -> a -> Tot bool){total_order a f} -> x:array a -> ST unit  *)
-(*   (requires (fun h -> contains h x)) *)
-(*   (ensures (fun h0 u h1 -> sorted f (sel h1 x) /\ permutation a (sel h0 x) (sel h1 x))) *)
-(*   (modifies (a_ref x)) *)
+val qsort: a:Type -> f:tot_ord a -> x:array a -> ST unit
+  (requires (fun h -> contains h x))
+  (ensures (fun h0 u h1 -> sorted f (sel h1 x) /\ permutation a (sel h0 x) (sel h1 x)))
+  (modifies (a_ref x))
+let qsort f x = 
+  let h0 = get() in
+
+  let len = Array.length x in
+  sort f 0 len x;
+  
+  let h1 = get() in
+  cut (Eq (sel h0 x) (slice (sel h0 x) 0 len));
+  cut (Eq (sel h1 x) (slice (sel h1 x) 0 len))
+

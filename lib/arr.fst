@@ -6,6 +6,8 @@ open ST
 open Heap
 (* private *) type array (t:Type) = ref (seq t)
 
+
+
 assume val of_seq: a:Type -> s:seq a -> ST (array a)
   (requires (fun h -> True))
   (ensures  (fun h0 x h1 -> (not(contains h0 x) 
@@ -38,6 +40,10 @@ assume val upd : a:Type -> x:array a -> n:nat -> v:a -> ST unit
                             /\ sel h1 x=Seq.upd (sel h0 x) n v)))
   (modifies (a_ref x))
 
+assume val length: a:Type -> x:array a -> ST nat
+  (requires (fun h -> contains h x))
+  (ensures  (fun h0 y h1 -> y=length (sel h0 x)))
+  (modifies no_refs)
 
 assume val op: a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
   (requires (fun h -> contains h x))
