@@ -163,7 +163,7 @@ let split_5 s i j =
   let frag_j,frag_hi = split_eq rest 1 in
   upd (upd (upd (upd (create 5 frag_lo) 1 frag_i) 2 frag_mid) 3 frag_j) 4 frag_hi
 
-#set-options "--max_fuel 1 --initial_fuel 1"
+#set-options "--max_fuel 1 --initial_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 val lemma_swap_permutes_aux: a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> x:a -> Lemma
   (requires True)
   (ensures (count x s = count x (swap s i j)))
@@ -197,7 +197,7 @@ let lemma_swap_permutes_aux s i j x =
   end
 
 
-#set-options "--max_fuel 0 --initial_fuel 0"
+#set-options "--max_fuel 0 --initial_fuel 0 --z3timeout 5"
 opaque type permutation (a:Type) (s1:seq a) (s2:seq a) =
        (forall i. count i s1 = count i s2)
 val lemma_swap_permutes: a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> Lemma
@@ -265,3 +265,86 @@ let lemma_swap_permutes_slice s start i j len =
   lemma_swap_slice_commute s start i j len;
   lemma_swap_permutes (slice s start len) (i - start) (j - start)
 
+#set-options "--initial_fuel 0 --max_fuel 0"
+(* replaces the [i,j) sub-sequence of s1 with the corresponding sub-sequence of s2 *)
+let splice (a:Type) (s1:seq a) (i:nat) (s2:seq a{length s1=length s2})  (j:nat{i <= j /\ j <= (length s2)})
+    = Seq.append (slice s1 0 i) (Seq.append (slice s2 i j) (slice s1 j (length s1)))
+
+val splice_refl : a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s}
+  -> Lemma
+  (ensures (s == splice s i s j))
+let splice_refl s i j = cut (Eq s (splice s i s j))
+
+val lemma_swap_splice : a:Type -> s:seq a -> start:nat -> i:nat{start <= i} -> j:nat{i <= j} -> len:nat{j < len && len <= length s}
+   -> Lemma 
+        (ensures (swap s i j == splice s start (swap s i j) len))
+let lemma_swap_splice s start i j len = cut (Eq (swap s i j) (splice s start (swap s i j) len))
+
+val lemma_seq_frame_hi: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat{i <= j} -> m:nat{j <= m} -> n:nat{m < n && n <= length s1} 
+  -> Lemma
+  (requires (s1 == (splice s2 i s1 j)))
+  (ensures  ((slice s1 m n == slice s2 m n) /\ (index s1 m == index s2 m)))
+let lemma_seq_frame_hi s1 s2 i j m n = 
+  cut (Eq (slice s1 m n) (slice s2 m n))
+
+val lemma_seq_frame_lo: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat{i <= j} -> m:nat{j < m} -> n:nat{m <= n && n <= length s1} 
+  -> Lemma
+  (requires (s1 == (splice s2 m s1 n)))
+  (ensures  ((slice s1 i j == slice s2 i j) /\ (index s1 j == index s2 j)))
+let lemma_seq_frame_lo s1 s2 i j m n = 
+  cut (Eq (slice s1 i j) (slice s2 i j))
+
+val lemma_tail_slice: a:Type -> s:seq a -> i:nat -> j:nat{i < j && j <= length s} 
+  -> Lemma 
+  (ensures (tail (slice s i j) == slice s (i + 1) j))
+let lemma_tail_slice s i j = 
+  cut (Eq (tail (slice s i j)) (slice s (i + 1) j))
+  
+val lemma_weaken_frame_right : a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat -> k:nat{i <= j && j <= k && k <= length s1}
+  -> Lemma
+  (requires (s1 == splice s2 i s1 j))
+  (ensures (s1 == splice s2 i s1 k))
+let lemma_weaken_frame_right s1 s2 i j k = cut (Eq s1 (splice s2 i s1 k))
+
+val lemma_weaken_frame_left : a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat -> k:nat{i <= j && j <= k && k <= length s1}
+  -> Lemma
+  (requires (s1 == splice s2 j s1 k))
+  (ensures (s1 == splice s2 i s1 k))
+let lemma_weaken_frame_left s1 s2 i j k = cut (Eq s1 (splice s2 i s1 k))
+
+val lemma_trans_frame : a:Type -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = length s2 /\ length s2 = length s3} -> i:nat -> j:nat{i <= j && j <= length s1}
+  -> Lemma
+  (requires ((s1 == splice s2 i s1 j) /\ s2 == splice s3 i s2 j))
+  (ensures (s1 == splice s3 i s1 j))
+let lemma_trans_frame s1 s2 s3 i j = cut (Eq s1 (splice s3 i s1 j))
+
+val lemma_weaken_perm_left: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat -> k:nat{i <= j /\ j <= k /\ k <= length s1} 
+  -> Lemma
+  (requires (s1 == splice s2 j s1 k /\ permutation a (slice s2 j k) (slice s1 j k)))
+  (ensures (permutation a (slice s2 i k) (slice s1 i k)))
+let lemma_weaken_perm_left s1 s2 i j k = 
+  cut (Eq (slice s2 i k) (append (slice s2 i j) 
+                                 (slice s2 j k)));
+  cut (Eq (slice s1 i k) (append (slice s2 i j)
+                                 (slice s1 j k)));
+  lemma_append_count (slice s2 i j) (slice s2 j k);
+  lemma_append_count (slice s2 i j) (slice s1 j k)
+ 
+val lemma_weaken_perm_right: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat -> k:nat{i <= j /\ j <= k /\ k <= length s1}
+  -> Lemma
+  (requires (s1 == splice s2 i s1 j /\ permutation a (slice s2 i j) (slice s1 i j)))
+  (ensures (permutation a (slice s2 i k) (slice s1 i k)))
+let lemma_weaken_perm_right s1 s2 i j k = 
+  cut (Eq (slice s2 i k) (append (slice s2 i j) 
+                                 (slice s2 j k)));
+  cut (Eq (slice s1 i k) (append (slice s1 i j)
+                                 (slice s2 j k)));
+  lemma_append_count (slice s2 i j) (slice s2 j k);
+  lemma_append_count (slice s1 i j) (slice s2 j k)
+
+val lemma_trans_perm: a:Type -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = length s2 /\ length s2 = length s3} -> i:nat -> j:nat{i<=j && j <= length s1}
+ -> Lemma 
+  (requires (permutation a (slice s1 i j) (slice s2 i j)
+             /\ permutation a (slice s2 i j) (slice s3 i j)))
+  (ensures (permutation a (slice s1 i j) (slice s3 i j)))
+let lemma_trans_perm s1 s2 s3 i j = ()
