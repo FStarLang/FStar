@@ -4,7 +4,7 @@ open Seq
 open SeqProperties
 open Heap
 open ST
-//#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --admit_smt_queries false"
+#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --admit_smt_queries false"
 
 (* replaces the [i,j) sub-sequence of s1 with the corresponding sub-sequence of s2 *)
 let splice (a:Type) (s1:seq a) (i:nat) (s2:seq a{length s1=length s2})  (j:nat{i <= j /\ j <= (length s2)})
@@ -151,22 +151,34 @@ val lemma_trans_perm: a:Type -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = len
   (ensures (permutation a (slice s1 i j) (slice s3 i j)))
 let lemma_trans_perm s1 s2 s3 i j = ()
 
-assume val swap: a:Type -> x:array a -> i:nat -> j:nat{i <= j} 
-                 -> St unit (requires (fun h -> j < length (sel h x)))
-                            (ensures (fun h0 _u h1 -> 
-                                      (j < length (sel h0 x))
-                                      /\ (let s0 = sel h0 x in
-                                          let s1 = SeqProperties.swap s0 i j in
-                                          h1 = upd h0 x s1 )))
-#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --admit_smt_queries false"
 assume val lemma_partition_inv_hi_cons: a:Type -> f:tot_ord a -> s:seq a -> back:nat -> len:nat{back < len && len <= length s} -> pv:a
    -> Lemma (requires ((forall y. mem y (slice s (back + 1) len) ==> f pv y) /\ f pv (index s back)))
             (ensures ((forall y. mem y (slice s back len) ==> f pv y)))
 
 assume val lemma_swap_permutes_slice : a:Type -> s:seq a -> start:nat -> i:nat{start <= i} -> j:nat{i <= j} -> len:nat{j < len && len <= length s}
    -> Lemma (ensures (permutation a (slice s start len) (slice (SeqProperties.swap s i j) start len)))
-                                                                                                            
 
+val swap: a:Type -> x:array a -> i:nat -> j:nat{i <= j} 
+                 -> St unit (requires (fun h -> contains h x /\ j < length (sel h x)))
+                            (ensures (fun h0 _u h1 -> 
+                                      (j < length (sel h0 x))
+                                      /\ contains h1 x
+                                      /\ (h1==upd h0 x (SeqProperties.swap (sel h0 x) i j))))
+                            (* (modifies (a_ref x)) *)
+let swap x i j =
+  let h0 = get () in
+  let s0 = sel h0 x in
+  let tmpi = Array.index x i in
+  let tmpj = Array.index x j in
+  Array.upd x j tmpi;
+  Array.upd x i tmpj;
+  let h1 = get () in
+  let s1 = sel h1 x in
+  cut (b2t(equal h1 (upd h0 x s1)))
+
+
+#reset-options
+#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --admit_smt_queries false"                                                                                                            
 val partition: a:Type -> f:tot_ord a
                -> start:nat -> len:nat{start <= len} 
                -> pivot:nat{start <= pivot /\ pivot < len} 
@@ -229,7 +241,7 @@ let rec partition (a:Type) f start len pivot back x =
 
 
 #reset-options
-(* #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --admit_smt_queries false" *)
+#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --admit_smt_queries false"
 val sort: a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
           -> ST unit
   (requires (fun h -> contains h x /\ j <= length (sel h x)))
@@ -277,7 +289,7 @@ let rec sort (a:Type) f i j x =
 
 val qsort: a:Type -> f:tot_ord a -> x:array a -> ST unit
   (requires (fun h -> contains h x))
-  (ensures (fun h0 u h1 -> sorted f (sel h1 x) /\ permutation a (sel h0 x) (sel h1 x)))
+  (ensures (fun h0 u h1 -> contains h1 x /\ sorted f (sel h1 x) /\ permutation a (sel h0 x) (sel h1 x)))
   (modifies (a_ref x))
 let qsort f x = 
   let h0 = get() in

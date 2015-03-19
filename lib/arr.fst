@@ -15,10 +15,9 @@ assume val of_seq: a:Type -> s:seq a -> ST (array a)
                              /\ sel h1 x=s)))
   (modifies no_refs)
 
-assume val to_seq: a:Type -> s:array a -> ST (seq a)
+assume val to_seq: a:Type -> s:array a -> St (seq a)
   (requires (fun h -> contains h s))
-  (ensures  (fun h0 x h1 -> (sel h0 s=x)))
-  (modifies no_refs)
+  (ensures  (fun h0 x h1 -> (sel h0 s=x /\ h0==h1)))
 
 assume val create : a:Type -> n:nat -> init:a -> ST (array a) 
   (requires (fun h -> True))
@@ -27,23 +26,23 @@ assume val create : a:Type -> n:nat -> init:a -> ST (array a)
                              /\ sel h1 x=Seq.create n init)))
   (modifies no_refs)
 
-assume val index : a:Type -> x:array a -> n:nat -> ST a
+assume val index : a:Type -> x:array a -> n:nat -> St a
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
   (ensures  (fun h0 v h1 -> (n < Seq.length (sel h0 x)
+                             /\ h0==h1
                              /\ v=Seq.index (sel h0 x) n)))
-  (modifies no_refs)
 
 
 assume val upd : a:Type -> x:array a -> n:nat -> v:a -> ST unit
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
   (ensures  (fun h0 u h1 -> (n < Seq.length (sel h0 x)
-                            /\ sel h1 x=Seq.upd (sel h0 x) n v)))
+                            /\ contains h1 x
+                            /\ h1==upd h0 x (Seq.upd (sel h0 x) n v))))
   (modifies (a_ref x))
 
-assume val length: a:Type -> x:array a -> ST nat
+assume val length: a:Type -> x:array a -> St nat
   (requires (fun h -> contains h x))
-  (ensures  (fun h0 y h1 -> y=length (sel h0 x)))
-  (modifies no_refs)
+  (ensures  (fun h0 y h1 -> y=length (sel h0 x) /\ h0==h1))
 
 assume val op: a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
   (requires (fun h -> contains h x))
