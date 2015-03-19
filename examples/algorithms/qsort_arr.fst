@@ -10,6 +10,11 @@ open ST
 let splice (a:Type) (s1:seq a) (i:nat) (s2:seq a{length s1=length s2})  (j:nat{i <= j /\ j <= (length s2)})
     = Seq.append (slice s1 0 i) (Seq.append (slice s2 i j) (slice s1 j (length s1)))
 
+val splice_refl : a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s}
+  -> Lemma
+  (ensures (s == splice s i s j))
+let splice_refl s i j = cut (Eq s (splice s i s j))
+
 opaque type partition_inv (a:Type) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) = 
            ((length hi) >= 0)
            /\ (forall y. (mem y hi ==> f pv y) /\ (mem y lo ==> f y pv))
@@ -43,7 +48,32 @@ opaque logic type partition_post
                       (index (sel h1 x) i)
                       (slice (sel h1 x) i len)))
 
-assume val partition: a:Type -> f:tot_ord a
+assume val lemma_slice_cons: a:Type -> s:seq a -> i:nat -> j:nat{i < j && j <= length s} 
+  -> Lemma (ensures (forall x. mem x (slice s i j) <==> (x = index s i || mem x (slice s (i + 1) j))))
+
+assume val lemma_slice_snoc: a:Type -> s:seq a -> i:nat -> j:nat{i < j && j <= length s} 
+  -> Lemma (ensures (forall x. mem x (slice s i j) <==> (x = index s (j - 1) || mem x (slice s i (j - 1)))))
+
+assume val swap_frame_lo : a:Type -> s:seq a -> lo:nat -> i:nat{lo <= i} -> j:nat{i <= j && j < length s} 
+     -> Lemma (ensures (slice s lo i == slice (swap s i j) lo i))                                                     
+
+assume val swap_frame_hi : a:Type -> s:seq a -> i:nat -> j:nat{i <= j} -> k:nat{j < k} -> hi:nat{k <= hi /\ hi <= length s}
+     -> Lemma (ensures (slice s k hi == slice (swap s i j) k hi))                                                         
+
+assume val swap: a:Type -> x:array a -> i:nat -> j:nat{i <= j} 
+                 -> St unit (requires (fun h -> j < length (sel h x)))
+                            (ensures (fun h0 _u h1 -> 
+                                      (j < length (sel h0 x))
+                                      /\ (let s0 = sel h0 x in
+                                          let s1 = SeqProperties.swap s0 i j in
+                                          h1 = upd h0 x s1 )))
+
+assume val lemma_partition_inv_lo_snoc: a:Type -> f:tot_ord a -> s:seq a -> i:nat -> j:nat{i <= j && j < length s} -> pv:a
+   -> Lemma (requires ((forall y. mem y (slice s i j) ==> f y pv) /\ f (index s j) pv))
+            (ensures ((forall y. mem y (slice s i (j + 1)) ==> f y pv)))
+
+
+val partition: a:Type -> f:tot_ord a
                -> start:nat -> len:nat{start <= len} 
                -> pivot:nat{start <= pivot /\ pivot < len} 
                -> back:nat{pivot <= back /\ back < len}
@@ -51,12 +81,54 @@ assume val partition: a:Type -> f:tot_ord a
   (requires (partition_pre a f start len pivot back x))
   (ensures (partition_post a f start len pivot back x))
   (modifies (a_ref x))
-(* let rec partition f start len pivot back x =  *)
-(*   if pivot = back *)
-(*   then pivot *)
-(*   else begin  *)
-(*       admit(); 0 *)
-(*     end *)
+let rec partition (a:Type) f start len pivot back x =
+  let s = Array.to_seq x in
+  if pivot = back
+  then 
+    begin
+      lemma_slice_cons s pivot len;
+      splice_refl s start len;
+      pivot
+    end
+  else 
+    begin
+      let next = Array.index x (pivot + 1) in
+      let p = Array.index x pivot in
+      if f next p
+      then 
+        begin 
+          swap x pivot (pivot + 1);  (* the pivot moves forward *)
+          (* lemma_swap_permutes s pivot (pivot + 1); *)
+          let s' = Array.to_seq x in 
+          swap_frame_lo s start pivot (pivot + 1);
+          swap_frame_hi s pivot (pivot + 1) (back + 1) len;
+          (* admitP ( (slice s start pivot) == *)
+          (*         (slice s' start pivot)); *)
+          (* admitP ((slice s (back + 1) len) == *)
+          (*         (slice s' (back + 1) len)); *)
+          (* cut (Eq (slice s start pivot) *)
+          (*         (slice s' start pivot)); *)
+          (* cut (Eq (slice s (back + 1) len) *)
+          (*         (slice s' (back + 1) len)); *)
+          lemma_partition_inv_lo_snoc f s' start pivot p;
+          let res = partition f start len (pivot + 1) back x in
+          let s'' = Array.to_seq x in
+          assert (start <= res);
+          assert (res < len);
+          assert (length s'' = length s);
+          admitP (b2t (s'' = splice s start s'' len)); 
+          admitP (permutation a (slice s start len) (slice s'' start len));
+          assert (partition_inv a f (slice s'' start res) (index s'' res) (slice s'' res len));
+          res
+        end
+      else 
+        begin 
+          admit();
+          swap x (pivot + 1) back; (* the back moves backward *)
+          lemma_swap_permutes s (pivot + 1) back;
+          partition f start len pivot (back - 1) x
+        end
+    end
 
 
 val lemma_seq_frame_hi: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat{i <= j} -> m:nat{j <= m} -> n:nat{m < n && n <= length s1} 
@@ -88,10 +160,6 @@ let lemma_slice_append s i pivot j pv =
   let hi = slice s (pivot + 1) j in
   cut (Eq (slice s i j) (append lo (cons pv hi)))
 
-val splice_refl : a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s}
-  -> Lemma
-  (ensures (s == splice s i s j))
-let splice_refl s i j = cut (Eq s (splice s i s j))
   
 val lemma_weaken_frame_right : a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat -> k:nat{i <= j && j <= k && k <= length s1}
   -> Lemma
