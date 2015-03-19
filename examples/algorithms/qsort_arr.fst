@@ -82,7 +82,7 @@ let lemma_slice_append s i pivot j pv =
   let hi = slice s (pivot + 1) j in
   cut (Eq (slice s i j) (append lo (cons pv hi)))
 
-val splice_refl : a:Type -> s:seq a -> i:nat -> j:nat 
+val splice_refl : a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s}
   -> Lemma
   (ensures (s == splice s i s j))
 let splice_refl s i j =
@@ -101,7 +101,7 @@ val sort: a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
 let rec sort (a:Type) f i j x =
   let h0 = ST.get () in
   if i=j
-  then splie_refl (sel h0 x) i j
+  then splice_refl (sel h0 x) i j
   else begin
                let pivot = partition f i j i (j - 1) x in
                
