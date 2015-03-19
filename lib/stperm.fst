@@ -60,3 +60,12 @@ assume val free: a:Type -> r:ref a -> ST unit
 
 assume val get: unit -> Prims.STATE.State heap (fun 'post h -> 'post h h)
 
+
+assume val forget_ST: #a:Type -> #b:(a -> Type)
+  -> #req:(a -> heap -> Type)
+  -> #ens:(x:a -> heap -> b x -> heap -> Type)
+  -> =f:(x:a -> ST (b x) (req x) (ens x) no_refs)
+     {forall x h h'. req x h ==> req x h'}
+  -> Tot (x:a -> Div (b x)
+                 (requires (forall h. req x h))
+                 (ensures (fun (y:b x) -> exists h0 h1. ens x h0 y h1)))
