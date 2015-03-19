@@ -106,15 +106,29 @@ val lemma_trans_frame : a:Type -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = l
   (ensures (s1 == splice s3 i s1 j))
 let lemma_trans_frame s1 s2 s3 i j = cut (Eq s1 (splice s3 i s1 j))
 
-assume val lemma_weaken_perm_left: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat -> k:nat{i <= j /\ j <= k /\ k <= length s1}
+val lemma_weaken_perm_left: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat -> k:nat{i <= j /\ j <= k /\ k <= length s1} 
   -> Lemma
   (requires (s1 == splice s2 j s1 k /\ permutation a (slice s2 j k) (slice s1 j k)))
   (ensures (permutation a (slice s2 i k) (slice s1 i k)))
-
-assume val lemma_weaken_perm_right: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat -> k:nat{i <= j /\ j <= k /\ k <= length s1}
+let lemma_weaken_perm_left s1 s2 i j k = 
+  cut (Eq (slice s2 i k) (append (slice s2 i j) 
+                                 (slice s2 j k)));
+  cut (Eq (slice s1 i k) (append (slice s2 i j)
+                                 (slice s1 j k)));
+  lemma_append_count (slice s2 i j) (slice s2 j k);
+  lemma_append_count (slice s2 i j) (slice s1 j k)
+ 
+val lemma_weaken_perm_right: a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat -> k:nat{i <= j /\ j <= k /\ k <= length s1}
   -> Lemma
   (requires (s1 == splice s2 i s1 j /\ permutation a (slice s2 i j) (slice s1 i j)))
   (ensures (permutation a (slice s2 i k) (slice s1 i k)))
+let lemma_weaken_perm_right s1 s2 i j k = 
+  cut (Eq (slice s2 i k) (append (slice s2 i j) 
+                                 (slice s2 j k)));
+  cut (Eq (slice s1 i k) (append (slice s1 i j)
+                                 (slice s2 j k)));
+  lemma_append_count (slice s2 i j) (slice s2 j k);
+  lemma_append_count (slice s1 i j) (slice s2 j k)
 
 val lemma_trans_perm: a:Type -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = length s2 /\ length s2 = length s3} -> i:nat -> j:nat{i<=j && j <= length s1}
  -> Lemma 
