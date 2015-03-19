@@ -12,7 +12,7 @@ downgrade: $(ARR_LIB) downgrade.fst
 	$(FSTAR) $^ 
 
 qsort_arr: $(ARR_LIB) qsort_arr.fst
-	$(FSTAR) --admit_smt_queries true $^ 
+	$(FSTAR) $^ 
 
 
 # qsort_arr: $(addprefix ../../lib/, classical.fst seq.fstarr.fst) qsort_arr.fst

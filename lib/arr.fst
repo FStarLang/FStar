@@ -49,3 +49,19 @@ assume val op: a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
   (ensures  (fun h0 u h1 -> sel h1 x=f (sel h0 x)))
   (modifies (a_ref x))
 
+
+val swap: a:Type -> x:array a -> i:nat -> j:nat{i <= j} 
+                 -> St unit (requires (fun h -> contains h x /\ j < Seq.length (sel h x)))
+                            (ensures (fun h0 _u h1 -> 
+                                      (j < Seq.length (sel h0 x))
+                                      /\ contains h1 x
+                                      /\ (h1==Heap.upd h0 x (SeqProperties.swap (sel h0 x) i j))))
+let swap x i j =
+  let h0 = get () in
+  let tmpi = index x i in
+  let tmpj = index x j in
+  upd x j tmpi;
+  upd x i tmpj;
+  let h1 = get () in
+  let s1 = sel h1 x in
+  cut (b2t(equal h1 (Heap.upd h0 x s1)))

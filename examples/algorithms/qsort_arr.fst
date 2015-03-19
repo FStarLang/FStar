@@ -158,25 +158,6 @@ assume val lemma_partition_inv_hi_cons: a:Type -> f:tot_ord a -> s:seq a -> back
 assume val lemma_swap_permutes_slice : a:Type -> s:seq a -> start:nat -> i:nat{start <= i} -> j:nat{i <= j} -> len:nat{j < len && len <= length s}
    -> Lemma (ensures (permutation a (slice s start len) (slice (SeqProperties.swap s i j) start len)))
 
-val swap: a:Type -> x:array a -> i:nat -> j:nat{i <= j} 
-                 -> St unit (requires (fun h -> contains h x /\ j < length (sel h x)))
-                            (ensures (fun h0 _u h1 -> 
-                                      (j < length (sel h0 x))
-                                      /\ contains h1 x
-                                      /\ (h1==upd h0 x (SeqProperties.swap (sel h0 x) i j))))
-                            (* (modifies (a_ref x)) *)
-let swap x i j =
-  let h0 = get () in
-  let s0 = sel h0 x in
-  let tmpi = Array.index x i in
-  let tmpj = Array.index x j in
-  Array.upd x j tmpi;
-  Array.upd x i tmpj;
-  let h1 = get () in
-  let s1 = sel h1 x in
-  cut (b2t(equal h1 (upd h0 x s1)))
-
-
 #reset-options
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --admit_smt_queries false"                                                                                                            
 val partition: a:Type -> f:tot_ord a
@@ -204,7 +185,7 @@ let rec partition (a:Type) f start len pivot back x =
       if f next p
       then 
         begin 
-          swap x pivot (pivot + 1);  (* the pivot moves forward *)
+          Array.swap x pivot (pivot + 1);  (* the pivot moves forward *)
 (* ghost *)           let h1 = get () in
 (* ghost *)           let s' = sel h1 x in
 (* ghost *)           swap_frame_lo s start pivot (pivot + 1);
@@ -221,7 +202,7 @@ let rec partition (a:Type) f start len pivot back x =
         end
       else 
         begin 
-          swap x (pivot + 1) back; (* the back moves backward *)
+          Array.swap x (pivot + 1) back; (* the back moves backward *)
           
 (* ghost *)          let h1 = get () in
 (* ghost *)          let s' = sel h1 x in
