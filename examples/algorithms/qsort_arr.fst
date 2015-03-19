@@ -4,7 +4,7 @@ open Seq
 open SeqProperties
 open Heap
 open ST
-#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --admit_smt_queries false"
+#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
 
 (* replaces the [i,j) sub-sequence of s1 with the corresponding sub-sequence of s2 *)
 let splice (a:Type) (s1:seq a) (i:nat) (s2:seq a{length s1=length s2})  (j:nat{i <= j /\ j <= (length s2)})
@@ -47,10 +47,6 @@ opaque logic type partition_post
                       (slice (sel h1 x) start i)
                       (index (sel h1 x) i)
                       (slice (sel h1 x) i len)))
-
-assume val lemma_partition_inv_lo_snoc: a:Type -> f:tot_ord a -> s:seq a -> i:nat -> j:nat{i <= j && j < length s} -> pv:a
-   -> Lemma (requires ((forall y. mem y (slice s i j) ==> f y pv) /\ f (index s j) pv))
-            (ensures ((forall y. mem y (slice s i (j + 1)) ==> f y pv)))
 
 val lemma_swap_splice : a:Type -> s:seq a -> start:nat -> i:nat{start <= i} -> j:nat{i <= j} -> len:nat{j < len && len <= length s}
    -> Lemma 
@@ -136,12 +132,8 @@ val lemma_trans_perm: a:Type -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = len
   (ensures (permutation a (slice s1 i j) (slice s3 i j)))
 let lemma_trans_perm s1 s2 s3 i j = ()
 
-assume val lemma_partition_inv_hi_cons: a:Type -> f:tot_ord a -> s:seq a -> back:nat -> len:nat{back < len && len <= length s} -> pv:a
-   -> Lemma (requires ((forall y. mem y (slice s (back + 1) len) ==> f pv y) /\ f pv (index s back)))
-            (ensures ((forall y. mem y (slice s back len) ==> f pv y)))
-
 #reset-options
-#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --admit_smt_queries false"                                                                                                            
+#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
 val partition: a:Type -> f:tot_ord a
                -> start:nat -> len:nat{start <= len} 
                -> pivot:nat{start <= pivot /\ pivot < len} 
@@ -172,7 +164,7 @@ let rec partition (a:Type) f start len pivot back x =
 (* ghost *)           let s' = sel h1 x in
 (* ghost *)           swap_frame_lo s start pivot (pivot + 1);
 (* ghost *)           swap_frame_hi s pivot (pivot + 1) (back + 1) len;
-(* ghost *)           lemma_partition_inv_lo_snoc f s' start pivot p;
+(* ghost *)           lemma_ordering_lo_snoc f s' start pivot p;
           let res = partition f start len (pivot + 1) back x in
 (* ghost *)           let h2 = get () in
 (* ghost *)           let s'' = sel h2 x in
@@ -190,7 +182,7 @@ let rec partition (a:Type) f start len pivot back x =
 (* ghost *)          let s' = sel h1 x in
 (* ghost *)          swap_frame_lo' s start pivot (pivot + 1) back; 
 (* ghost *)          swap_frame_hi s (pivot + 1) back (back + 1) len;
-(* ghost *)          lemma_partition_inv_hi_cons f s' back len p;
+(* ghost *)          lemma_ordering_hi_cons f s' back len p;
           let res = partition f start len pivot (back - 1) x in
 (* ghost *)          let h2 = get () in
 (* ghost *)          let s'' = sel h2 x in
@@ -204,7 +196,7 @@ let rec partition (a:Type) f start len pivot back x =
 
 
 #reset-options
-#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0 --admit_smt_queries false"
+#set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
 val sort: a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
           -> ST unit
   (requires (fun h -> contains h x /\ j <= length (sel h x)))

@@ -204,6 +204,7 @@ val lemma_swap_permutes: a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j 
   (permutation a s (swap s i j))
 let lemma_swap_permutes s i j = Classical.forall_intro (lemma_swap_permutes_aux s i j)
 
+
 #set-options "--max_fuel 1 --initial_fuel 1"
 val cons_perm: a:Type -> tl:seq a -> s:seq a{length s > 0} ->
          Lemma (requires (permutation a tl (tail s)))
@@ -211,8 +212,9 @@ val cons_perm: a:Type -> tl:seq a -> s:seq a{length s > 0} ->
 let cons_perm tl s = lemma_tl (head s) tl
 
 #set-options "--max_fuel 2 --initial_fuel 2"
-assume val lemma_mem_append : a:Type -> s1:seq a -> s2:seq a
+val lemma_mem_append : a:Type -> s1:seq a -> s2:seq a
       -> Lemma (ensures (forall x. mem x (append s1 s2) <==> (mem x s1 || mem x s2)))
+let lemma_mem_append s1 s2 = lemma_append_count s1 s2
 
 val lemma_slice_cons: a:Type -> s:seq a -> i:nat -> j:nat{i < j && j <= length s} 
   -> Lemma (ensures (forall x. mem x (slice s i j) <==> (x = index s i || mem x (slice s (i + 1) j))))
@@ -225,6 +227,20 @@ val lemma_slice_snoc: a:Type -> s:seq a -> i:nat -> j:nat{i < j && j <= length s
 let lemma_slice_snoc s i j = 
   cut (Eq (slice s i j) (append (slice s i (j - 1)) (create 1 (index s (j - 1)))));
   lemma_mem_append (slice s i (j - 1)) (create 1 (index s (j - 1)))
+
+val lemma_ordering_lo_snoc: a:Type -> f:tot_ord a -> s:seq a -> i:nat -> j:nat{i <= j && j < length s} -> pv:a
+   -> Lemma (requires ((forall y. mem y (slice s i j) ==> f y pv) /\ f (index s j) pv))
+            (ensures ((forall y. mem y (slice s i (j + 1)) ==> f y pv)))
+let lemma_ordering_lo_snoc f s i j pv = 
+  cut (Eq (slice s i (j + 1)) (append (slice s i j) (create 1 (index s j))));
+  lemma_mem_append (slice s i j) (create 1 (index s j))
+
+val lemma_ordering_hi_cons: a:Type -> f:tot_ord a -> s:seq a -> back:nat -> len:nat{back < len && len <= length s} -> pv:a
+   -> Lemma (requires ((forall y. mem y (slice s (back + 1) len) ==> f pv y) /\ f pv (index s back)))
+            (ensures ((forall y. mem y (slice s back len) ==> f pv y)))
+let lemma_ordering_hi_cons f s back len pv = 
+  cut (Eq (slice s back len) (append (create 1 (index s back)) (slice s (back + 1) len)));
+  lemma_mem_append (create 1 (index s back)) (slice s (back + 1) len)
 
 #set-options "--max_fuel 0 --initial_fuel 0"
 val swap_frame_lo : a:Type -> s:seq a -> lo:nat -> i:nat{lo <= i} -> j:nat{i <= j && j < length s} 
@@ -248,3 +264,4 @@ val lemma_swap_permutes_slice : a:Type -> s:seq a -> start:nat -> i:nat{start <=
 let lemma_swap_permutes_slice s start i j len =
   lemma_swap_slice_commute s start i j len;
   lemma_swap_permutes (slice s start len) (i - start) (j - start)
+
