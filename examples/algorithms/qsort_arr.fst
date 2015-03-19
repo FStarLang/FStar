@@ -85,8 +85,26 @@ let lemma_slice_append s i pivot j pv =
 val splice_refl : a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s}
   -> Lemma
   (ensures (s == splice s i s j))
-let splice_refl s i j =
-  cut (Eq s (splice s i s j))
+let splice_refl s i j = cut (Eq s (splice s i s j))
+  
+val lemma_weaken_frame_right : a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat -> k:nat{i <= j && j <= k && k <= length s1}
+  -> Lemma
+  (requires (s1 == splice s2 i s1 j))
+  (ensures (s1 == splice s2 i s1 k))
+let lemma_weaken_frame_right s1 s2 i j k = cut (Eq s1 (splice s2 i s1 k))
+
+val lemma_weaken_frame_left : a:Type -> s1:seq a -> s2:seq a{length s1 = length s2} -> i:nat -> j:nat -> k:nat{i <= j && j <= k && k <= length s1}
+  -> Lemma
+  (requires (s1 == splice s2 j s1 k))
+  (ensures (s1 == splice s2 i s1 k))
+let lemma_weaken_frame_left s1 s2 i j k = cut (Eq s1 (splice s2 i s1 k))
+
+val lemma_trans_frame : a:Type -> s1:seq a -> s2:seq a -> s3:seq a{length s1 = length s2 /\ length s2 = length s3} -> i:nat -> j:nat{i <= j && j <= length s1}
+  -> Lemma
+  (requires ((s1 == splice s2 i s1 j) /\ s2 == splice s3 i s2 j))
+  (ensures (s1 == splice s3 i s1 j))
+let lemma_trans_frame s1 s2 s3 i j = cut (Eq s1 (splice s3 i s1 j))
+
   
 val sort: a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
           -> ST unit
@@ -105,18 +123,18 @@ let rec sort (a:Type) f i j x =
   else begin
                let pivot = partition f i j i (j - 1) x in
                
-(* ghost *)    let h1 = get() in
+(* ghost *)    let h1 = get() in //sel h1 x = splice h0 i (sel h1 x) j
 (* ghost *)    let pv = index (sel h1 x) pivot in
 
-               sort f i pivot x;
+               sort f i pivot x; 
 
-(* ghost *)    let h2 = get() in
+(* ghost *)    let h2 = get() in //sel h2 x = splice (sel h1 x) i (sel h2 x) pivot
 (* ghost *)    lemma_seq_frame_hi (sel h2 x) (sel h1 x) i pivot pivot j; //slice (sel h2 x) pivot j = slice (sel h1 x) pivot j
 (* ghost *)    lemma_tail_slice (sel h2 x) pivot j;
 
                sort f (pivot + 1) j x;
 
-(* ghost *)    let h3 = get() in
+(* ghost *)    let h3 = get() in //sel h3 x = splice (sel h2 x) (pivot + 1) (sel h3 x) j
 (* ghost *)    lemma_seq_frame_lo (sel h3 x) (sel h2 x) i pivot (pivot + 1) j;
 (* ghost *)    let lo = slice (sel h3 x) i pivot in
 (* ghost *)    let hi = slice (sel h3 x) (pivot + 1) j in
@@ -124,10 +142,11 @@ let rec sort (a:Type) f i j x =
 (* ghost *)    lemma_slice_append (sel h3 x) i pivot j pv;
 
                assert (sorted f (slice (sel h3 x) i j));
-
-               admitP ((sel h3 x)
-                       ==
-                      (splice (sel h0 x) i (sel h3 x) j));         (* the rest of it is unchanged *)
+               
+               lemma_weaken_frame_right (sel h2 x) (sel h1 x) i pivot j;
+               lemma_weaken_frame_left (sel h3 x) (sel h2 x) i (pivot + 1) j;
+               lemma_trans_frame (sel h3 x) (sel h2 x) (sel h1 x) i j;
+               lemma_trans_frame (sel h3 x) (sel h1 x) (sel h0 x) i j;
 
                admitP  (permutation a (slice (sel h0 x) i j) (slice (sel h3 x) i j))
   end
