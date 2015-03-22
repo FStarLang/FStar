@@ -9,15 +9,15 @@ type exp =
   | EAbs: exp -> exp        (* nameless, untyped for now *)
   | EApp: exp -> exp -> exp
 
-val free_zero: exp -> Tot bool
-let rec free_zero e =
+val no_zero: exp -> Tot bool
+let rec no_zero e =
   match e with
-  | EVar k     -> k = 0
-  | EAbs _     -> false
-  | EApp e1 e2 -> free_zero e1 || free_zero e2
+  | EVar k     -> k <> 0
+  | EAbs _     -> true
+  | EApp e1 e2 -> no_zero e1 && no_zero e2
 
 val shift : c:nat -> d:int -> e:exp -> Pure exp
-              (requires (d >= -1 /\ (d = -1 ==> (not (free_zero e) \/ c > 0))))
+              (requires (d >= -1 /\ ((d = -1 /\ c = 0) ==> no_zero e)))
               (ensures (fun _ -> True))
               (decreases e)
 let rec shift c d e =
@@ -57,9 +57,9 @@ let sub3 = (subst 0 (EVar 1) (EAbs (EApp (EVar 0) (EVar 2)))
 let sub4 = (subst 0 (EVar 1) (EAbs (EApp (EVar 1) (EVar 0)))
                            = (EAbs (EApp (EVar 2) (EVar 0))))
 
-val subst_zero_lem: e1:exp -> e2:exp{not (free_zero e2)} ->
-                      Lemma (requires True)
-                            (ensures (not (free_zero (subst 0 e2 e1))))
+val subst_zero_lem: e1:exp -> e2:exp ->
+                      Lemma (requires (no_zero e2))
+                            (ensures (no_zero (subst 0 e2 e1)))
                         (decreases e1) [SMTPat (subst 0 e2 e1)]
 let rec subst_zero_lem e1 e2 =
   match e1 with

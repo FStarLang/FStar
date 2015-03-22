@@ -744,7 +744,8 @@ let rec tequiv_tshift t1 t2 h x =
   | EqArr h1 h2 -> EqArr (tequiv_tshift h1 x) (tequiv_tshift h2 x)
 
 (* typing weakening when type variable binding is added to env *)
-(* NS: This one alone takes ~4-5 secs to prove *)
+(* NS: This one alone takes ~4-5 secs to prove
+   CH: For me, admitting it doesn't seem to improve things by more than 1-2s though *)
 opaque val typing_weakening_tbnd: #g:env -> x:var -> k_x:knd -> #e:exp -> #t:typ ->
       h:(typing g e t) ->
       Tot (typing (extend_tvar g x k_x)
@@ -963,7 +964,7 @@ let ts  = tsubst_beta_gen
 let tsh = tshift_up_above
 
 (* shift above and substitute is an identity *)
-val shift_above_and_subst: s:typ -> y:nat -> t:typ -> Lemma (requires True)
+val shift_above_and_subst: s:typ -> y:nat -> t:typ -> Lemma
                            (ensures (ts y t (tsh y s) = s)) (decreases s)
 let rec shift_above_and_subst s y t =
   tsubst_comp (tsub_beta_gen y t) (tsub_inc_above y) s;
@@ -973,7 +974,7 @@ let rec shift_above_and_subst s y t =
 (* reordering shifts *)
 (* CH: there might be a nicer proof for this using substitution composition
    CH: this proof sometimes fails with 5s timeout *)
-val tshifts_reordering: x:nat -> y:nat{y >= x} -> s:typ -> Lemma (requires True)
+val tshifts_reordering: x:nat -> y:nat{y >= x} -> s:typ -> Lemma
                         (ensures (tsh x (tsh y s) = tsh (y + 1) (tsh x s)))
              	        (decreases s)
 let rec tshifts_reordering x y s = admit()

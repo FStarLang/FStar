@@ -1,4 +1,4 @@
-VERFILES=stlc_cbv_db_pntsubst_nolists.fst stlc_cbv_named.fst 
+VERFILES=stlc_cbv_db_pntsubst_nolists.fst stlc_cbv_named.fst db_subst.fst
 include ../Makefile.include
 all: .all.ver tinyfstar pars stlc_strong_db_parsubst #stlc_cbv_db_pntsubst_lists 
 
