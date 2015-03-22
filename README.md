@@ -64,7 +64,7 @@ Finally, if you want easy navigation through F* error messages also add this to 
 [Tuareg Mode]: https://github.com/ocaml/tuareg
 [MELPA]: http://melpa.org
 
-### Code structure
+### Code structure (partially outdated)
 
 This section describes the general structure of the F* verifier.
 

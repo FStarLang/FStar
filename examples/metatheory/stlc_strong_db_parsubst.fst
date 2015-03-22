@@ -40,15 +40,15 @@ type exp =
    1) an _undecidable_ well-founded order on substitutions that
       equates all renamings, equates all non-renamings, and makes
       renamings strictly smaller than non-renamings; we write down a
-      non-constructive function mapping substitutions (infinite
-      objects) to 0 (renaming) or 1 (non-renaming)
+      non-constructive function is_renaming mapping substitutions
+      (infinite objects) to 0 (renaming) or 1 (non-renaming)
    2) the structure of the expression e *)
 
 type sub = var -> Tot exp
 
 opaque type renaming (s:sub) = (forall (x:var). is_EVar (s x))
 
-val is_renaming : s:sub -> Tot (n:int{(renaming s ==> n=0) /\
+val is_renaming : s:sub -> Tot (n:int{  (renaming s  ==> n=0) /\
                                       (~(renaming s) ==> n=1)})
 let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
 
@@ -61,7 +61,7 @@ let renaming_sub_inc _ = ()
 let is_var (e:exp) : int = if is_EVar e then 0 else 1
 
 val subst : e:exp -> s:sub -> Pure exp (requires True)
-     (ensures (fun e' -> renaming s /\ is_EVar e ==> is_EVar e'))
+     (ensures (fun e' -> (renaming s /\ is_EVar e) ==> is_EVar e'))
      (decreases %[is_var e; is_renaming s; e])
 let rec subst e s =
   match e with
@@ -92,8 +92,8 @@ let subst_extensional s1 s2 e = ()
    (useful for the substitution lemma) *)
 val sub_beta_gen : var -> exp -> Tot sub
 let sub_beta_gen x v = fun y -> if y < x then (EVar y)
-                                      else if y = x then v
-                                      else (EVar (y-1))
+                                else if y = x then v
+                                else (EVar (y-1))
 
 val subst_beta_gen : var -> exp -> exp -> Tot exp
 let subst_beta_gen x v e = subst e (sub_beta_gen x v)
@@ -164,12 +164,6 @@ let rec progress _ _ h =
      | ELam t e1' -> ExIntro (subst_beta e2 e1') (SBeta t e1' e2)
      | _          -> (match progress h1 with
                       | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1'))
-
-(* Substitution extensional
-   the proof would be trivial with the extensionality axiom *)
-
-(* opaque logic type SubEqual (s1:sub) (s2:sub) = *)
-(*                  (forall (x:var). s1 x = s2 x) *)
 
 
 (* Typing extensional (weaker) and context invariance (stronger) lemmas;

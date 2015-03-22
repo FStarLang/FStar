@@ -61,7 +61,7 @@ val subst_zero_lem: e1:exp -> e2:exp{not (free_zero e2)} ->
 let rec subst_zero_lem e1 e2 = match e1 with
   | EVar k       -> ()
   | EAbs _ _     -> ()
-  | EApp e1' e2' -> subst_zero_lem e1' e2; subst_zero_lem e2' e2
+  | EApp e1' e2' -> (subst_zero_lem e1' e2; subst_zero_lem e2' e2)
 
 val is_value: exp -> Tot bool
 let is_value = is_EAbs

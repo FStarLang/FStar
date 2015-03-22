@@ -4,7 +4,7 @@
 ### Building F* from sources
 
 - On Windows 7/8 with .NET framework 4.5 and F# v3.0 :
-  - Either using VisualStudio 2013, open FStar/VS/FStar.sln and build solution.
+  - Using VisualStudio 2013, open FStar/VS/FStar.sln and build solution.
 
 - On Linux or Mac OS X using Mono:
   - Install mono 3.10.x and fsharp 3.1.x

@@ -9,10 +9,10 @@ qs_seq: $(addprefix ../../lib/, classical.fst ext.fst seq.fsi seq.fst seqpropert
 ARR_LIB=$(addprefix ../../lib/, classical.fst ext.fst set.fsi set.fst heap.fst stperm.fst seq.fsi seq.fst seqproperties.fst arr.fst) 
 
 downgrade: $(ARR_LIB) qsort_arr.fst downgrade.fst
-	$(FSTAR) $^ 
+	$(FSTAR) --z3timeout 10 $^ 
 
 qsort_arr: $(ARR_LIB) qsort_arr.fst
-	$(FSTAR) $^ 
+	$(FSTAR) --z3timeout 10 $^ 
 
 binary_search: binary_search.fst
 	$(FSTAR) ../../lib/seq.fsi --admit_fsi Seq $^
