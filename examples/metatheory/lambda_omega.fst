@@ -63,25 +63,25 @@ let erenaming_sub_inc _ = ()
 
 let is_evar (e:exp) : int = if is_EVar e then 0 else 1
 
-val esubst : e:exp -> s:esub -> Pure exp (requires True)
+val esubst : s:esub -> e:exp -> Pure exp (requires True)
       (ensures (fun e' -> erenaming s /\ is_EVar e ==> is_EVar e'))
       (decreases %[is_evar e; is_erenaming s; e])
-let rec esubst e s =
+let rec esubst s e =
   match e with
   | EVar x -> s x
 
   | ELam t e1 ->
-     let esubst_lam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) = fun y ->
-       if y=0 then EVar y
-       else (esubst (s (y - 1)) esub_inc) in
-     ELam t (esubst e1 esubst_lam)
+     let esubst_lam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) =
+       fun y -> if y=0 then EVar y
+                       else (esubst esub_inc (s (y - 1))) in
+     ELam t (esubst esubst_lam e1)
 
-  | EApp e1 e2 -> EApp (esubst e1 s) (esubst e2 s)
+  | EApp e1 e2 -> EApp (esubst s e1) (esubst s e2)
 
 val esubst_lam: s:esub -> Tot esub
 let esubst_lam s y =
   if y = 0 then EVar y
-  else esubst (s (y-1)) esub_inc
+           else esubst esub_inc (s (y-1))
 
 val esubst_lam_renaming: s:esub -> Lemma
   (ensures (forall (x:var). erenaming s ==> is_EVar (esubst_lam s x)))
@@ -89,7 +89,7 @@ let esubst_lam_renaming s = ()
 
 (* Substitution extensional; trivial with the extensionality axiom *)
 val esubst_extensional: s1:esub -> s2:esub{FEq s1 s2} -> e:exp ->
-                        Lemma (requires True) (ensures (esubst e s1 = esubst e s2))
+                        Lemma (requires True) (ensures (esubst s1 e = esubst s2 e))
                        (* [SMTPat (esubst e s1);  SMTPat (esubst e s2)] *)
 let esubst_extensional s1 s2 e = ()
 
@@ -98,7 +98,7 @@ let esubst_extensional s1 s2 e = ()
    Even worse, there is no way to prove this without the SMTPat (e.g. manually),
    or to use the SMTPat only locally, in this definition (`using` needed). *)
 val esubst_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
-      (ensures (esubst (ELam t e) s = ELam t (esubst e (esubst_lam s))))
+      (ensures (esubst s (ELam t e) = ELam t (esubst (esubst_lam s) e)))
       (* [SMTPat (esubst (ELam t e) s)]
       (\* -- this increases running time by 10 secs and adds variability *\) *)
 let esubst_lam_hoist t e s = admit()
@@ -106,24 +106,19 @@ let esubst_lam_hoist t e s = admit()
 (* Substitution composition *)
 
 val esub_comp : s1:esub -> s2:esub -> Tot esub
-let esub_comp s1 s2 x = esubst (s2 x) s1
+let esub_comp s1 s2 x = esubst s1 (s2 x)
 
-type esub_comp_inc_type (s:esub) (x:var) =
-  (esub_comp esub_inc s x = esub_comp (esubst_lam s) esub_inc x)
-
-val esub_comp_inc : s:esub -> x:var -> Lemma (esub_comp_inc_type s x)
+val esub_comp_inc : s:esub -> x:var ->
+      Lemma (esub_comp esub_inc s x = esub_comp (esubst_lam s) esub_inc x)
 let esub_comp_inc s x =
-  assert(esub_comp esub_inc s x = esubst (s x) esub_inc);
+  assert(esub_comp esub_inc s x = esubst esub_inc (s x));
   assert(esub_comp (esubst_lam s) esub_inc x =
-                                  esubst (EVar (x+1)) (esubst_lam s));
+                                  esubst (esubst_lam s) (EVar (x+1)));
   assert(esub_comp (esubst_lam s) esub_inc x = esubst_lam s (x+1));
-  assert(esub_comp (esubst_lam s) esub_inc x = esubst (s x) esub_inc)
-
-type esubst_lam_composes (s1:esub) (s2:esub) (x:var) =
-  (esubst_lam (esub_comp s1 s2) x = esub_comp (esubst_lam s1) (esubst_lam s2) x)
+  assert(esub_comp (esubst_lam s) esub_inc x = esubst esub_inc (s x))
 
 val esubst_comp : s1:esub -> s2:esub -> e:exp -> Lemma
-      (ensures (esubst (esubst e s2) s1 = esubst e (esub_comp s1 s2)))
+      (ensures (esubst s1 (esubst s2 e) = esubst (esub_comp s1 s2) e))
       (decreases %[is_evar e;
                    is_erenaming s1;
                    is_erenaming s2;
@@ -146,7 +141,9 @@ let rec esubst_comp s1 s2 e =
     *)
 
     let esubst_lam_comp : x:var -> Lemma
-      (esubst_lam_composes s1 s2 x) = fun x ->
+      (esubst_lam (esub_comp s1 s2) x =
+       esub_comp (esubst_lam s1) (esubst_lam s2) x) =
+      fun x ->
         match x with
           | 0 -> ()
           | _ ->
@@ -174,7 +171,7 @@ esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
                 esubst_comp esub_inc s1 (s2 (x-1)) in
 
               let ext =
-                forall_intro (* #var #(esub_comp_inc_type s1) *) (esub_comp_inc s1);
+                forall_intro (esub_comp_inc s1);
                 esubst_extensional
                   (esub_comp esub_inc s1)
                   (esub_comp (esubst_lam s1) esub_inc) (s2 (x-1)) in
@@ -195,7 +192,7 @@ esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
 
 
     let hoist1 = esubst_lam_hoist t e1 s2 in
-    let hoist2 = esubst_lam_hoist t (esubst e1 (esubst_lam s2)) s1 in
+    let hoist2 = esubst_lam_hoist t (esubst (esubst_lam s2) e1) s1 in
 
 
     (* terminates because e1 is a sub-term,
@@ -209,7 +206,7 @@ esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
       esubst_comp (esubst_lam s1) (esubst_lam s2) e1 in
 
     let h2 =
-      forall_intro (* #var #(esubst_lam_composes s1 s2) *) esubst_lam_comp;
+      forall_intro esubst_lam_comp;
       cut (FEq (esub_comp (esubst_lam s1) (esubst_lam s2))
              (esubst_lam (esub_comp s1 s2))) in
 
@@ -226,7 +223,7 @@ esub_comp_inc,ext=   esubst (s2 (x-1)) (esub_comp (esubst_lam s1) esub_inc)
 val esub_id : esub
 let esub_id x = EVar x
 
-val esubst_id : e:exp -> Lemma (esubst e esub_id = e)
+val esubst_id : e:exp -> Lemma (esubst esub_id e = e)
 let rec esubst_id e =
   match e with
   | EVar _ -> ()
@@ -245,9 +242,9 @@ let esub_beta_gen x e = fun y -> if y < x then (EVar y)
                                  else (EVar (y-1))
 
 val esubst_beta_gen : var -> exp -> exp -> Tot exp
-let esubst_beta_gen x e' e = esubst e (esub_beta_gen x e')
+let esubst_beta_gen x e' = esubst (esub_beta_gen x e')
 
-let esubst_beta e' e = esubst_beta_gen 0 e' e
+let esubst_beta = esubst_beta_gen 0
 
 (* Substitution on types is very much analogous *)
 
@@ -269,47 +266,46 @@ let trenaming_sub_inc _ = ()
 
 let is_tvar (t:typ) : int = if is_TVar t then 0 else 1
 
-val tsubst : t:typ -> s:tsub -> Pure typ (requires True)
+val tsubst : s:tsub -> t:typ -> Pure typ (requires True)
       (ensures (fun t' -> trenaming s /\ is_TVar t ==> is_TVar t'))
       (decreases %[is_tvar t; is_trenaming s; t])
-let rec tsubst t s =
+let rec tsubst s t =
   match t with
   | TVar x -> s x
 
   | TLam k t1 ->
-     let tsubst_lam : y:var -> Tot (t:typ{trenaming s ==> is_TVar t}) = fun y ->
-       if y=0
-       then TVar y
-       else (tsubst (s (y - 1)) tsub_inc) in
-     TLam k (tsubst t1 tsubst_lam)
+     let tsubst_lam : y:var -> Tot (t:typ{trenaming s ==> is_TVar t}) =
+       fun y -> if y=0 then TVar y
+                       else (tsubst tsub_inc (s (y-1))) in
+     TLam k (tsubst tsubst_lam t1)
 
-  | TArr t1 t2 -> TArr (tsubst t1 s) (tsubst t2 s)
-  | TApp t1 t2 -> TApp (tsubst t1 s) (tsubst t2 s)
+  | TArr t1 t2 -> TArr (tsubst s t1) (tsubst s t2)
+  | TApp t1 t2 -> TApp (tsubst s t1) (tsubst s t2)
 
 val tsubst_lam: s:tsub -> Tot tsub
 let tsubst_lam s y =
   if y = 0 then TVar y
-  else tsubst (s (y-1)) tsub_inc
+           else tsubst tsub_inc (s (y-1))
 
 (* Type substitution extensional; trivial with the extensionality axiom *)
 val tsubst_extensional: s1:tsub -> s2:tsub{FEq s1 s2} -> t:typ ->
-                        Lemma (requires True) (ensures (tsubst t s1 = tsubst t s2))
+                        Lemma (requires True) (ensures (tsubst s1 t = tsubst s2 t))
 (*                       [SMTPat (tsubst t s1);  SMTPat (tsubst t s2)]*)
 let tsubst_extensional s1 s2 t = ()
 
 (* Same silly situation as for esubst_lam_hoist *)
 val tsubst_lam_hoist : k:knd -> t:typ -> s:tsub -> Lemma
-      (ensures (tsubst (TLam k t) s = TLam k (tsubst t (tsubst_lam s))))
+      (ensures (tsubst s (TLam k t) = TLam k (tsubst (tsubst_lam s) t)))
 let tsubst_lam_hoist k t s = admit()
 
 (* Type substitution composition (again analogous) *)
 
 val tsub_comp : s1:tsub -> s2:tsub -> Tot tsub
-let tsub_comp s1 s2 x = tsubst (s2 x) s1
+let tsub_comp s1 s2 x = tsubst s1 (s2 x)
 
 (* CH: admitting these for now, they are exactly the same as for esubst *)
 assume val tsubst_comp : s1:tsub -> s2:tsub -> t:typ -> Lemma
-      (tsubst (tsubst t s2) s1 = tsubst t (tsub_comp s1 s2))
+      (tsubst s1 (tsubst s2 t) = tsubst (tsub_comp s1 s2) t)
 assume val tsubst_lam_comp : s1:tsub -> s2:tsub -> x:var -> Lemma
       (tsubst_lam (tsub_comp s1 s2) x = tsub_comp (tsubst_lam s1) (tsubst_lam s2) x)
 
@@ -318,7 +314,7 @@ assume val tsubst_lam_comp : s1:tsub -> s2:tsub -> x:var -> Lemma
 val tsub_id : tsub
 let tsub_id x = TVar x
 
-val tsubst_id : t:typ -> Lemma (tsubst t tsub_id = t)
+val tsubst_id : t:typ -> Lemma (tsubst tsub_id t = t)
 let rec tsubst_id t =
   match t with
   | TVar z -> ()
@@ -337,14 +333,14 @@ let tsub_beta_gen x t = fun y -> if y < x then (TVar y)
                                  else (TVar (y-1))
 
 val tsubst_beta_gen : var -> typ -> typ -> Tot typ
-let tsubst_beta_gen x t' t = tsubst t (tsub_beta_gen x t')
+let tsubst_beta_gen x t' t = tsubst (tsub_beta_gen x t') t
 
 let tsubst_beta t' t = tsubst_beta_gen 0 t' t
 
 (* Shifting *)
 
 val tshift_up_above : nat -> typ -> Tot typ
-let tshift_up_above x t = tsubst t (tsub_inc_above x)
+let tshift_up_above x = tsubst (tsub_inc_above x)
 
 val tshift_up : typ -> Tot typ
 let tshift_up = tshift_up_above 0
@@ -592,14 +588,14 @@ let kinding_weakening_ebnd g t k h x t' = kinding_extensional h (extend_evar g x
 val tshift_up_above_lam: n:nat -> k:knd -> t:typ -> Lemma
   (ensures (tshift_up_above n (TLam k t) = TLam k (tshift_up_above (n + 1) t)))
 let tshift_up_above_lam n k t =
-  assert(tshift_up_above n (TLam k t) = tsubst (TLam k t) (tsub_inc_above n));
+  assert(tshift_up_above n (TLam k t) = tsubst (tsub_inc_above n) (TLam k t));
   tsubst_lam_hoist k t (tsub_inc_above n);
   assert(tshift_up_above n (TLam k t) =
-         TLam k (tsubst t (tsubst_lam (tsub_inc_above n))));
+         TLam k (tsubst (tsubst_lam (tsub_inc_above n)) t));
   tsubst_extensional (tsubst_lam (tsub_inc_above n)) (tsub_inc_above (n+1)) t
 
 val eshift_up_above : nat -> exp -> Tot exp
-let eshift_up_above x e = esubst e (esub_inc_above x)
+let eshift_up_above x = esubst (esub_inc_above x)
 
 val eshift_up : exp -> Tot exp
 let eshift_up = eshift_up_above 0
@@ -607,10 +603,10 @@ let eshift_up = eshift_up_above 0
 val eshift_up_above_lam: n:nat -> t:typ -> e:exp -> Lemma
   (ensures (eshift_up_above n (ELam t e) = ELam t (eshift_up_above (n + 1) e)))
 let eshift_up_above_lam n t e =
-  assert(eshift_up_above n (ELam t e) = esubst (ELam t e) (esub_inc_above n));
+  assert(eshift_up_above n (ELam t e) = esubst (esub_inc_above n) (ELam t e));
   esubst_lam_hoist t e (esub_inc_above n);
   assert(eshift_up_above n (ELam t e) =
-         ELam t (esubst e (esubst_lam (esub_inc_above n))));
+         ELam t (esubst (esubst_lam (esub_inc_above n)) e));
   esubst_extensional (esubst_lam (esub_inc_above n)) (esub_inc_above (n+1)) e
 
 (* kinding weakening when a type variable binding is added to env *)
@@ -691,13 +687,10 @@ let rec tshift_up_above_e x e = match e with
   | ELam t e1 -> ELam (tshift_up_above x t) (tshift_up_above_e x e1)
   | EApp e1 e2 -> EApp (tshift_up_above_e x e1) (tshift_up_above_e x e2)
 
-type tshift_up_above_tsubst_beta_aux_typ (x:var) (t2:typ) (y:var) =
-  (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2) y =
-   tsub_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
-             (tsub_inc_above (x+1)) y)
-
 val tshift_up_above_tsubst_beta_aux : x:var -> t2:typ -> y:var ->
-      Lemma (tshift_up_above_tsubst_beta_aux_typ x t2 y)
+      Lemma (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2) y =
+             tsub_comp (tsub_beta_gen 0 (tsubst (tsub_inc_above x) t2))
+                       (tsub_inc_above (x+1)) y)
 let tshift_up_above_tsubst_beta_aux x t2 y = ()
 
 val tshift_up_above_tsubst_beta : x:var -> t1:typ -> t2:typ -> Lemma
@@ -707,28 +700,28 @@ val tshift_up_above_tsubst_beta : x:var -> t1:typ -> t2:typ -> Lemma
 let rec tshift_up_above_tsubst_beta x t1 t2 =
 
   assert(tshift_up_above x (tsubst_beta t2 t1) =
-         tsubst (tsubst_beta t2 t1) (tsub_inc_above x));
+         tsubst (tsub_inc_above x) (tsubst_beta t2 t1));
   assert(tshift_up_above x (tsubst_beta t2 t1) =
-         tsubst (tsubst t1 (tsub_beta_gen 0 t2)) (tsub_inc_above x));
+         tsubst (tsub_inc_above x) (tsubst (tsub_beta_gen 0 t2) t1));
   tsubst_comp (tsub_inc_above x) (tsub_beta_gen 0 t2) t1;
   assert(tshift_up_above x (tsubst_beta t2 t1) =
-         tsubst t1 (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2)));
+         tsubst (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2)) t1);
 
   assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) =
-         tsubst (tshift_up_above (x + 1) t1)
-                (tsub_beta_gen 0 (tshift_up_above x t2)));
+         tsubst (tsub_beta_gen 0 (tshift_up_above x t2))
+                (tshift_up_above (x + 1) t1));
   assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) =
-         tsubst (tsubst t1 (tsub_inc_above (x+1)))
-                (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x))));
-  tsubst_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
+         tsubst (tsub_beta_gen 0 (tsubst (tsub_inc_above x) t2))
+                (tsubst (tsub_inc_above (x+1)) t1));
+  tsubst_comp (tsub_beta_gen 0 (tsubst (tsub_inc_above x) t2))
               (tsub_inc_above (x+1)) t1;
   assert(tsubst_beta (tshift_up_above x t2) (tshift_up_above (x + 1) t1) =
-         tsubst t1 (tsub_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
-                              (tsub_inc_above (x+1))));
+         tsubst (tsub_comp (tsub_beta_gen 0 (tsubst (tsub_inc_above x) t2))
+                              (tsub_inc_above (x+1))) t1);
   forall_intro (* #var #(tshift_up_above_tsubst_beta_aux_typ x t2) *)
                (tshift_up_above_tsubst_beta_aux x t2); (* only for speedup *)
   tsubst_extensional (tsub_comp (tsub_inc_above x) (tsub_beta_gen 0 t2))
-                     (tsub_comp (tsub_beta_gen 0 (tsubst t2 (tsub_inc_above x)))
+                     (tsub_comp (tsub_beta_gen 0 (tsubst (tsub_inc_above x) t2))
                                 (tsub_inc_above (x+1))) t1
 
 opaque val tequiv_tshift : #t1:typ -> #t2:typ -> h:(tequiv t1 t2) -> x:nat ->
@@ -771,25 +764,24 @@ let rec typing_weakening_tbnd g x k_x e t h =
             (kinding_weakening_tbnd kh x k_x)
 
 (* CH: this proof sometimes fails with 5s timeout *)
-type esubst_gen_elam_aux_type (e:exp) (x:var) (y:var) =
-  (esubst_lam (esub_beta_gen x e) y = esub_beta_gen (x + 1) (eshift_up e) y)
 val esubst_gen_elam_aux : e:exp -> x:var -> y:var ->
-                          Lemma (esubst_gen_elam_aux_type e x y)
+                          Lemma (esubst_lam (esub_beta_gen x e) y =
+                                 esub_beta_gen (x + 1) (eshift_up e) y)
 let esubst_gen_elam_aux e x y = admit()
 (*
   match y with
   | 0 -> ()
   | _ ->
      (assert(esubst_lam (esub_beta_gen x e) y =
-               esubst (esub_beta_gen x e (y-1)) esub_inc);
+               esubst esub_inc (esub_beta_gen x e (y-1)));
       assert(esub_beta_gen (x + 1) (eshift_up e) y =
-               esub_beta_gen (x + 1) (esubst e (esub_inc_above 0)) y);
+               esub_beta_gen (x + 1) (esubst (esub_inc_above 0) e) y);
       if (y-1) < x then ()
       else if y-1 = x then
         (assert(esubst_lam (esub_beta_gen x e) y =
-                  esubst e esub_inc);
+                  esubst esub_inc e);
          assert(esub_beta_gen (x + 1) (eshift_up e) y =
-                  esubst e (esub_inc_above 0));
+                  esubst (esub_inc_above 0) e);
          esubst_extensional esub_inc (esub_inc_above 0) e)
       else ())
 *)
@@ -799,15 +791,15 @@ val esubst_gen_elam : x:var -> e:exp -> t:typ -> e':exp -> Lemma
                        ELam t (esubst_beta_gen (x + 1) (eshift_up e) e')))
 let esubst_gen_elam x e t e' =
   assert(esubst_beta_gen x e (ELam t e') =
-           esubst (ELam t e') (esub_beta_gen x e));
+           esubst (esub_beta_gen x e) (ELam t e'));
   esubst_lam_hoist t e' (esub_beta_gen x e);
   assert(esubst_beta_gen x e (ELam t e') =
-           ELam t (esubst e' (esubst_lam (esub_beta_gen x e))));
+           ELam t (esubst (esubst_lam (esub_beta_gen x e)) e'));
 
   assert(ELam t (esubst_beta_gen (x + 1) (eshift_up e) e') =
-           ELam t (esubst e' (esub_beta_gen (x + 1) (eshift_up e))));
+           ELam t (esubst (esub_beta_gen (x + 1) (eshift_up e)) e'));
 
-  forall_intro (* #var #(esubst_gen_elam_aux_type e x) *) (esubst_gen_elam_aux e x);
+  forall_intro (esubst_gen_elam_aux e x);
 
   esubst_extensional (esubst_lam (esub_beta_gen x e))
                      (esub_beta_gen (x + 1) (eshift_up e)) e'
@@ -835,24 +827,23 @@ let rec typing_substitution x e v t_x t g h1 h2 =
         (kinding_strengthening_ebnd g x t_x kh)
 
 (* analogous to above *)
-type tsubst_gen_tlam_aux_type (t:typ) (x:var) (y:var) =
-  (tsubst_lam (tsub_beta_gen x t) y = tsub_beta_gen (x + 1) (tshift_up t) y)
 val tsubst_gen_tlam_aux : t:typ -> x:var -> y:var ->
-      Lemma (tsubst_gen_tlam_aux_type t x y)
+      Lemma (tsubst_lam (tsub_beta_gen x t) y =
+             tsub_beta_gen (x + 1) (tshift_up t) y)
 let tsubst_gen_tlam_aux t x y =
   match y with
   | 0 -> ()
   | _ ->
      (assert(tsubst_lam (tsub_beta_gen x t) y =
-               tsubst (tsub_beta_gen x t (y-1)) tsub_inc);
+               tsubst tsub_inc (tsub_beta_gen x t (y-1)));
       assert(tsub_beta_gen (x + 1) (tshift_up t) y =
-               tsub_beta_gen (x + 1) (tsubst t (tsub_inc_above 0)) y);
+               tsub_beta_gen (x + 1) (tsubst (tsub_inc_above 0) t) y);
       if (y-1) < x then ()
       else if y-1 = x then
         (assert(tsubst_lam (tsub_beta_gen x t) y =
-                  tsubst t tsub_inc);
+                  tsubst tsub_inc t);
          assert(tsub_beta_gen (x + 1) (tshift_up t) y =
-                  tsubst t (tsub_inc_above 0));
+                  tsubst (tsub_inc_above 0) t);
          tsubst_extensional tsub_inc (tsub_inc_above 0) t)
       else ())
 
@@ -861,15 +852,15 @@ val tsubst_gen_tlam : x:var -> t:typ -> k:knd -> t':typ -> Lemma
                        TLam k (tsubst_beta_gen (x + 1) (tshift_up t) t')))
 let tsubst_gen_tlam x t k t' =
   assert(tsubst_beta_gen x t (TLam k t') =
-           tsubst (TLam k t') (tsub_beta_gen x t));
+           tsubst (tsub_beta_gen x t) (TLam k t'));
   tsubst_lam_hoist k t' (tsub_beta_gen x t);
   assert(tsubst_beta_gen x t (TLam k t') =
-           TLam k (tsubst t' (tsubst_lam (tsub_beta_gen x t))));
+           TLam k (tsubst (tsubst_lam (tsub_beta_gen x t)) t'));
 
   assert(TLam k (tsubst_beta_gen (x + 1) (tshift_up t) t') =
-           TLam k (tsubst t' (tsub_beta_gen (x + 1) (tshift_up t))));
+           TLam k (tsubst (tsub_beta_gen (x + 1) (tshift_up t)) t'));
 
-  forall_intro (* #var #(tsubst_gen_tlam_aux_type t x) *) (tsubst_gen_tlam_aux t x);
+  forall_intro (tsubst_gen_tlam_aux t x);
 
   tsubst_extensional (tsubst_lam (tsub_beta_gen x t))
                      (tsub_beta_gen (x + 1) (tshift_up t)) t'

@@ -72,9 +72,8 @@ let rec subst s e =
 
   | ELam t e1 ->
      let subst_elam : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) =
-       fun y -> if y=0
-                then EVar y
-                else subst sub_inc (s (y-1))                   (* shift +1 *)
+       fun y -> if y=0 then EVar y
+                       else subst sub_inc (s (y-1))            (* shift +1 *)
      in ELam t (subst subst_elam e1)
 
   | EApp e1 e2 -> EApp (subst s e1) (subst s e2)
