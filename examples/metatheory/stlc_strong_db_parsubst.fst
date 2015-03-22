@@ -175,8 +175,7 @@ let rec progress _ _ h =
    (it's also a special case of context invariance below) *)
 
 val typing_extensional : #e:exp -> #g:env -> #t:typ ->
-      h:(typing g e t) -> g':env{FEq g g'} ->
-      Tot (typing g' e t)
+      h:(typing g e t) -> g':env{FEq g g'} -> Tot (typing g' e t)
 let typing_extensional _ _ _ h _ = h
 
 (* Context invariance (actually used in a single place within substitution,
