@@ -504,8 +504,10 @@ type typing : env -> exp -> typ -> Type =
 val is_value : exp -> Tot bool
 let is_value = is_ELam
 
-opaque val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
-               Tot (cexists (fun e' -> step e e')) (decreases h)
+opaque val progress : #e:exp -> #t:typ -> h:typing empty e t ->
+               Pure (cexists (fun e' -> step e e'))
+                    (requires (not (is_value e)))
+                    (ensures (fun _ -> True)) (decreases h)
 let rec progress _ _ h =
   match h with
     | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
