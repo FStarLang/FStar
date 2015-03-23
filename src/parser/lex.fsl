@@ -76,6 +76,7 @@ type delimiters = {
   paren:ref<int>
 }
 
+let n_typ_apps = Util.mk_ref 0
 let is_typ_app (args:Lexhelp.lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*UnicodeLexing.Lexbuf*)) = 
  if not !Options.fs_typ_app then false else
  try
@@ -100,10 +101,16 @@ let is_typ_app (args:Lexhelp.lexargs) (lexbuf:Microsoft.FSharp.Text.Lexing.LexBu
       else (upd i; aux (i + 1)) in
       aux (pos + 1) in
    let res = balanced args.contents lexbuf.StartPos.AbsoluteOffset in
+   if res then Util.incr n_typ_apps;
    res
  with e -> printfn "Resolving typ_app<...> syntax failed: %A" e; false 
-	                    
+
+let is_typ_app_gt () = 
+	if !n_typ_apps > 0 
+	then (Util.decr n_typ_apps; true)
+	else false	                    
 } 
+
 
 let letter = '\Lu' | '\Ll' | '\Lt' | '\Lm' | '\Lo' | '\Nl'
 let digit = '\Nd'
@@ -152,8 +159,8 @@ let hexgraph_short = '\\' 'x' hex hex
 let unicodegraph_short = '\\' 'u' hex hex hex hex
 let unicodegraph_long =  '\\' 'U' hex hex hex hex hex hex hex hex
 let newline = ('\n' | '\r' '\n')
-let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'>'|'_'|'|'|'!'|'^'
-let custom_op = custom_op_char+
+let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'|'|'!'|'^'
+let custom_op = custom_op_char (custom_op_char | '>')*
 let connecting_char = '\Pc'
 let combining_char = '\Mn' | '\Mc'
 let formatting_char = '\Cf' 
@@ -404,7 +411,6 @@ rule token args = parse
  | '`' '`' ([^'`' '\n' '\r' '\t'] | '`' [^'`''\n' '\r' '\t']) + '`' '`' 
      { IDENT (trim_both lexbuf 2 2) }
 
- | ">" { GREATER }
  | "=" { EQUALS }
  | '#' { HASH }
  | '&' { AMP }
@@ -432,6 +438,7 @@ rule token args = parse
  | "[" { LBRACK }
  | "[|" { LBRACK_BAR }
  | "<" {  if is_typ_app args lexbuf then TYP_APP_LESS else CUSTOM_OP("<")  }
+ | ">" {  if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser args lexbuf }
  | "]"  { RBRACK }
  | "|]" { BAR_RBRACK }
  | "{" { LBRACE }
@@ -447,6 +454,9 @@ rule token args = parse
  | custom_op												 { CUSTOM_OP (ulexeme lexbuf) }
  | _ { unexpected_char lexbuf }     
  | eof { lc := 1; EOF }
+
+and custom_op_parser args = parse
+ | custom_op_char * {CUSTOM_OP(">" ^  ulexeme lexbuf)}
 
 and string sargs = parse
  |  '\\' newline anywhite* 

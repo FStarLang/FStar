@@ -64,7 +64,7 @@ open Microsoft.FStar.Parser.Util
 %token <bool> LET 
 %token <string * bool> LQUOTE RQUOTE 
 %token FORALL EXISTS ASSUME QUERY DEFINE LOGIC OPAQUE PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
-%token BAR_BAR LEQ GEQ LESS LESSLESS TYP_APP_LESS GREATER LESSGREATER SUBTYPE SUBKIND
+%token BAR_BAR LEQ GEQ LESS LESSLESS TYP_APP_LESS TYP_APP_GREATER LESSGREATER SUBTYPE SUBKIND
 %token AND AS ASSERT BEGIN ELSE END DOT_DOT
 %token EXCEPTION FALSE FOR FUN FUNCTION IF IN FINALLY RESERVED MODULE DEFAULT
 %token LAZY MATCH OF 
@@ -403,7 +403,7 @@ typars:
   | binders                { $1 }
 
 tvarinsts: 
-  | TYP_APP_LESS tvars GREATER    { List.map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind None) $2 }
+  | TYP_APP_LESS tvars TYP_APP_GREATER    { List.map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind None) $2 }
 
 binders: 
   | binder binders { $1::$2 }
@@ -716,8 +716,7 @@ cmpTerm:
 comparisonOp:
   | CUSTOM_OP { $1 }
   | EQUALS    { "=" }
-  | GREATER   { ">" }
-
+ 
 tmCons:
   | product COLON_COLON tmCons
       { consTerm (rhs parseState 2) $1 $3 }
@@ -841,7 +840,7 @@ appTerm:
 */
 
 fsTypApp:
-  | eitherQname TYP_APP_LESS targs GREATER 
+  | eitherQname TYP_APP_LESS targs TYP_APP_GREATER 
       {
         mkExplicitApp (mk_term (Var $1) (rhs parseState 1) Type) $3 (rhs2 parseState 1 4)
       }
@@ -908,7 +907,7 @@ atomicProductTerm:
 
 maybeInsts:
   |    { (fun x -> x) }
-  | TYP_APP_LESS targs GREATER 
+  | TYP_APP_LESS targs TYP_APP_GREATER 
       {
         (fun (x:term) -> mkExplicitApp x $2
           (union_ranges x.range (rhs2 parseState 1 3)))
