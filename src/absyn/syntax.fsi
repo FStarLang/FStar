@@ -295,6 +295,7 @@ val text_of_path: path -> string
 val lid_equals: lident -> lident -> Tot<bool>
 val bvd_eq: bvdef<'a> -> bvdef<'a> -> Tot<bool>
 val order_bvd: either<bvdef<'a>, bvdef<'b>> -> either<bvdef<'c>, bvdef<'d>> -> int
+val lid_with_range: lident -> range -> lident
 val range_of_lid: lident -> range
 val range_of_lbname: lbname -> range
 val lid_of_ids: list<ident> -> lident

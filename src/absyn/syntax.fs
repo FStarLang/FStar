@@ -307,6 +307,9 @@ let order_bvd x y = match x, y with
   | Inl x, Inl y -> String.compare x.realname.idText y.realname.idText
   | Inr x, Inr y -> String.compare x.realname.idText y.realname.idText
 
+let lid_with_range (lid:LongIdent) (r:Range.range) = 
+    let id = {lid.ident with idRange=r} in
+    {lid with ident=id}
 let range_of_lid (lid:LongIdent) = lid.ident.idRange
 let range_of_lbname (l:lbname) = match l with
     | Inl x -> x.ppname.idRange

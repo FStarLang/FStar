@@ -116,6 +116,9 @@ let rec is_type env (t:term) =
     | Var l 
     | Name l
     | Construct(l, _) -> is_type_lid env l
+    | App({tm=Var l}, arg, false) 
+    | App({tm=Name l}, arg, false) when (l.str = "ref") ->
+      is_type env arg
     | App(t, _, _)
     | Paren t
     | Ascribed(t, _)
@@ -464,9 +467,15 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
           setpos <| mk_exp_app op args
       end
 
+    
     | Var l
     | Name l -> 
-      setpos <| fail_or env (DesugarEnv.try_lookup_lid env) l
+      if l.str = "ref"
+      then begin match DesugarEnv.try_lookup_lid env Const.alloc_lid with 
+            | None -> raise (Error ("Identifier 'ref' not found; include lib/st.fst in your path", range_of_lid l))
+            | Some e -> setpos e
+           end
+      else setpos <| fail_or env (DesugarEnv.try_lookup_lid env) l
       
     | Construct(l, args) ->
       let dt = pos <| mk_Exp_fvar(fail_or env (DesugarEnv.try_lookup_datacon env) l, true) in

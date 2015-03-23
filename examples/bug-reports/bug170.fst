@@ -5,7 +5,7 @@ assume val sorted: list int -> Tot bool
 assume val split: l:list int -> Tot ((list int * list int))
 assume val merge: l1:list int -> Tot (r:list int{(sorted l1)})
 
-val mergesort: l:list int -> list int
+val mergesort: list int -> Tot (list int)
 let rec mergesort l =
     let (l1, l2) = split l in
     let sl1 = mergesort l in
