@@ -66,6 +66,10 @@ let start_string (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char> (*Unicode
                      else
                         STRING s)  in
     buf,fin,m
+
+let lc = Util.mk_ref 1
+let rec mknewline n lexbuf =
+	if n > 0 then (newline lexbuf; Util.incr lc; mknewline (n-1) lexbuf)
     
 type delimiters = {
   angle:ref<int>;
@@ -192,6 +196,10 @@ rule token args = parse
      { PRAGMA_SET_OPTIONS }
  | "#reset-options"
      { PRAGMA_RESET_OPTIONS }
+ | '#' ' ' (digit)*
+     { let n = Util.int_of_string (trim_left lexbuf 2) in
+	   mknewline (n - !lc) lexbuf; 
+       ignore_endline args lexbuf }
  | int8 
      { let n = trim_to_i32 lexbuf 1 in 
        if n > 0x80 || n < -0x80 then fail lexbuf "This number is outside the allowable range for 8-bit signed integers" (INT8(0y,false))
@@ -392,7 +400,7 @@ rule token args = parse
      { token args lexbuf  }
 
  | newline 
-     { newline lexbuf; 
+     { mknewline 1 lexbuf; 
        token args lexbuf }
 
  | '`' '`' ([^'`' '\n' '\r' '\t'] | '`' [^'`''\n' '\r' '\t']) + '`' '`' 
@@ -480,12 +488,12 @@ rule token args = parse
  | ".[]"  | ".[]<-" | ".[,]<-" | ".[,,]<-" | ".[,,]" | ".[,]" | ".[..]" | ".[..,..]" 
  | ".()"  | ".()<-" | ".(,)<-" | ".(,,)<-" | ".(,,)" | ".(,)" | ".(..)" | ".(..,..)" { FUNKY_OPERATOR_NAME(ulexeme lexbuf) }
  | _ { unexpected_char lexbuf }     
- | eof { EOF }
+ | eof { lc := 1; EOF }
 
 and string sargs = parse
  |  '\\' newline anywhite* 
     { let (buf,fin,m,args) = sargs in 
-      newline lexbuf; 
+      mknewline 1 lexbuf; 
       string sargs lexbuf }
 
  |  escape_char
@@ -531,7 +539,7 @@ and string sargs = parse
 
  | newline
     { let (buf,fin,m,args) = sargs in 
-      newline lexbuf; 
+      mknewline 1 lexbuf; 
       Lexhelp.add_string buf (ulexeme lexbuf); 
       string sargs lexbuf }
 
@@ -577,7 +585,7 @@ and vstring sargs = parse
 
  | newline 
     { let (buf,fin,m,args) = sargs in 
-      newline lexbuf; 
+      mknewline 1 lexbuf; 
       Lexhelp.add_string buf (ulexeme lexbuf); 
       vstring sargs lexbuf }
 
@@ -625,7 +633,7 @@ and comment cargs = parse
      
  | newline
     { let n,m,args = cargs in 
-      newline lexbuf; 
+      mknewline 1 lexbuf; 
       comment cargs lexbuf }
  | "*)" 
     { 
@@ -648,7 +656,7 @@ and comment cargs = parse
 and comment_string n m args = parse
  (* Follow string lexing, skipping tokens until it finishes *)
  |  '\\' newline anywhite* 
-     { newline lexbuf; 
+     { mknewline 1 lexbuf; 
        comment_string n m args lexbuf }
 
  | escape_char
@@ -666,7 +674,7 @@ and comment_string n m args = parse
      { comment(n,m,args) lexbuf }
      
  | newline 
-     { newline lexbuf;  
+     { mknewline 1 lexbuf;  
        comment_string n m args lexbuf }
      
  | eof 
@@ -684,7 +692,7 @@ and comment_vstring n m args = parse
      { comment(n,m,args) lexbuf }
      
  | newline 
-     { newline lexbuf;
+     { mknewline 1 lexbuf;
        comment_vstring n m args lexbuf }
      
  | eof 
@@ -692,3 +700,9 @@ and comment_vstring n m args = parse
      
  | _  
      { comment_vstring n m args lexbuf }
+
+and ignore_endline args = parse
+ | newline 
+     { token args lexbuf }
+ | _  
+     { ignore_endline args lexbuf }
