@@ -43,8 +43,32 @@ let rec unlabel t = match t.tm with
 
 let kind_star r = mk_term (Name (lid_of_path ["Type"] r)) r Kind
 
-let op_as_vlid env arity r s =
-  let r l = Some (set_lid_range l r) in
+
+let compile_op s = 
+    let name_of_char = function 
+            |'&' -> "Amp"
+            |'@'  -> "At"
+            |'+' -> "Plus"
+            |'-' -> "Minus"
+            |'/' -> "Slash"
+            |'<' -> "Less"
+            |'=' -> "Equals"
+            |'>' -> "Greater"
+            |'_' -> "Underscore"
+            |'|' -> "Bar"
+            |'!' -> "Bang"
+            |'^' -> "Hat"
+            | _ -> "UNKNOWN" in
+    let rec aux i = 
+        if i = String.length s 
+        then []
+        else name_of_char (Util.char_at s i) :: aux (i + 1) in
+    "op_"^ (String.concat "_" (aux 0))
+
+let compile_op_lid s r = [Syntax.mk_ident(compile_op s, r)] |> Syntax.lid_of_ids 
+    
+let op_as_vlid env arity rng s =
+  let r l = Some (set_lid_range l rng) in
   match s, env.phase with
     | "=", _ ->    r Const.op_Eq
     | ":=", _ ->   r Const.op_ColonEq
@@ -67,23 +91,28 @@ let op_as_vlid env arity r s =
     | "|>", _ ->   r Const.pipe_right_lid
     | "<|", _ ->   r Const.pipe_left_lid
     | "<>", _ ->   r Const.op_notEq
-    | _ -> None
+    | s, _ ->   
+      begin match DesugarEnv.try_lookup_lid env (compile_op_lid s rng) with 
+        | Some ({n=Exp_fvar(fv, _)}) -> Some fv.v
+        | None -> None
+      end
 
-let op_as_tylid r s =
-  let r l = Some (set_lid_range l r) in
+let op_as_tylid env rng s =
+  let r l = Some (set_lid_range l rng) in
   match s with
     | "~"   ->  r Const.not_lid
     | "=="  ->  r Const.eq2_lid
     | "=!=" ->  r Const.neq2_lid
     | "<<" ->   r Const.precedes_lid
-//    | "<=" ->   r Const.lte_lid
-//    | ">" ->    r Const.gt_lid
-//    | ">=" ->   r Const.gte_lid
     | "/\\" ->  r Const.and_lid
     | "\\/" ->  r Const.or_lid
     | "==>" ->  r Const.imp_lid
     | "<==>" -> r Const.iff_lid
-    | _ -> None
+    | s -> 
+      begin match DesugarEnv.try_lookup_typ_name env (compile_op_lid s rng) with 
+        | Some ({n=Typ_const ftv}) -> Some ftv.v
+        | None -> None
+      end
 
 let rec is_type env (t:term) =
   if t.level = Type then true
@@ -99,7 +128,7 @@ let rec is_type env (t:term) =
     | Op("==>", _)
     | Op("<==>", _)  
     | Op("<<", _) -> true              
-    | Op(s, _) -> (match op_as_tylid t.range s with
+    | Op(s, _) -> (match op_as_tylid env t.range s with
         | None -> false
         | _ -> true)
     | QForall _
@@ -726,7 +755,7 @@ and desugar_typ env (top:term) : typ =
       desugar_typ env (mk_term(Op("~", [mk_term (Op("==", args)) top.range top.level])) top.range top.level)
       
     | Op(s, args) ->
-      begin match op_as_tylid top.range s with
+      begin match op_as_tylid env top.range s with
         | None -> desugar_exp env top |> Util.b2t
         | Some l ->
           let args = List.map (fun t -> arg_withimp false <| desugar_typ_or_exp env t) args in

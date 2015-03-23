@@ -133,30 +133,18 @@ type compatibilityMode =
     | FSHARP  (* keyword, but an identifier under --ml-compatibility mode *)
 
 let keywords = 
-  [ FSHARP, "abstract"   ,ABSTRACT;
-    ALWAYS, "and"        ,AND;
+  [ ALWAYS, "and"        ,AND;
     ALWAYS, "as"         ,AS;
     ALWAYS, "assert"     ,ASSERT;
-    ALWAYS, "asr"        ,INFIX_STAR_STAR_OP "asr";
     ALWAYS, "assume"     ,ASSUME;
-    ALWAYS, "base"       ,BASE;
     ALWAYS, "begin"      ,BEGIN;
-    ALWAYS, "class"      ,CLASS;
     FSHARP, "default"    ,DEFAULT;
-    ALWAYS, "define"     ,DEFINE;
-    FSHARP, "delegate"   ,DELEGATE;
-    ALWAYS, "do"         ,DO;
-    ALWAYS, "done"       ,DONE;
-    FSHARP, "downcast"   ,DOWNCAST;
-    ALWAYS, "downto"     ,DOWNTO;
     ALWAYS, "effect"     ,EFFECT;
-    FSHARP, "elif"       ,ELIF;
     ALWAYS, "else"       ,ELSE;
     ALWAYS, "end"        ,END;
     ALWAYS, "ensures"    ,ENSURES;
     ALWAYS, "exception"  ,EXCEPTION;
     ALWAYS, "exists"     ,EXISTS;
-    FSHARP, "extern"     ,EXTERN;
     ALWAYS, "false"      ,FALSE;
     ALWAYS, "finally"    ,FINALLY;
     ALWAYS, "for"        ,FOR;
@@ -165,61 +153,33 @@ let keywords =
     ALWAYS, "function"   ,FUNCTION;
     ALWAYS, "if"         ,IF;
     ALWAYS, "in"         ,IN;
-    ALWAYS, "inherit"    ,INHERIT;
-    FSHARP, "inline"     ,INLINE;
-    FSHARP, "interface"  ,INTERFACE;
-    FSHARP, "internal"   ,INTERNAL;
-    ALWAYS, "land"       ,INFIX_STAR_DIV_MOD_OP "land";
     ALWAYS, "lazy"       ,LAZY;
     ALWAYS, "let"        ,LET(false);
-    ALWAYS, "lor"        ,INFIX_STAR_DIV_MOD_OP "lor";
     ALWAYS, "logic"      ,LOGIC;
-    ALWAYS, "lsl"        ,INFIX_STAR_STAR_OP "lsl";
-    ALWAYS, "lsr"        ,INFIX_STAR_STAR_OP "lsr";
-    ALWAYS, "lxor"       ,INFIX_STAR_DIV_MOD_OP "lxor";
     ALWAYS, "match"      ,MATCH;
-    FSHARP, "member"     ,MEMBER;
-    ALWAYS, "method"     ,METHOD;
-    ALWAYS, "mod"        ,INFIX_STAR_DIV_MOD_OP "mod";
     ALWAYS, "module"     ,MODULE;
   (*   FSHARP, "namespace"  ,NAMESPACE; *)
-    ALWAYS, "new"        ,NEW;
-    FSHARP, "null"       ,NULL;
     ALWAYS, "of"         ,OF;
     ALWAYS, "open"       ,OPEN;
     ALWAYS, "or"         ,OR;
-    FSHARP, "override"   ,OVERRIDE;
     ALWAYS, "opaque"     ,OPAQUE;
     ALWAYS, "private"    ,PRIVATE;  
-    ALWAYS, "prop"       ,PROP;  
     FSHARP, "public"     ,PUBLIC;
     ALWAYS, "query"      ,QUERY;
     ALWAYS, "rec"        ,REC;
-    FSHARP, "reference"  ,REFERENCE;
     ALWAYS, "requires"   ,REQUIRES;
-    ALWAYS, "sig"        ,SIG;
-    FSHARP, "static"     ,STATIC;
-    ALWAYS, "struct"     ,STRUCT;
     ALWAYS, "then"       ,THEN;
     ALWAYS, "to"         ,TO;
     ALWAYS, "true"       ,TRUE;
     ALWAYS, "try"        ,TRY;
     ALWAYS, "type"       ,TYPE;
-    FSHARP, "upcast"     ,UPCAST;
-    FSHARP, "use"        ,LET(true);
     ALWAYS, "val"        ,VAL;
-    ALWAYS, "virtual"    ,VIRTUAL;
-    FSHARP, "void"       ,VOID;
     ALWAYS, "when"       ,WHEN;
-    ALWAYS, "while"      ,WHILE;
     ALWAYS, "with"       ,WITH;
     ALWAYS, "monad_lattice", MONADLATTICE;
     ALWAYS, "terminating",TOTAL;
     ALWAYS, "kind"       ,KIND;
-    FSHARP, "yield"      ,YIELD(true);
     ALWAYS, "_"          ,UNDERSCORE;
-    FSHARP, "__token_constraint",CONSTRAINT;
-    ALWAYS, "print", PRINT;
   ]
 (*------- reserved keywords which are ml-compatibility ids *) 
   @ List.map (fun s -> (FSHARP,s,RESERVED)) 

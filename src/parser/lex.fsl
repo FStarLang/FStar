@@ -152,7 +152,8 @@ let hexgraph_short = '\\' 'x' hex hex
 let unicodegraph_short = '\\' 'u' hex hex hex hex
 let unicodegraph_long =  '\\' 'U' hex hex hex hex hex hex hex hex
 let newline = ('\n' | '\r' '\n')
-
+let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'>'|'_'|'|'|'!'|'^'
+let custom_op = custom_op_char+
 let connecting_char = '\Pc'
 let combining_char = '\Mn' | '\Mc'
 let formatting_char = '\Cf' 
@@ -181,7 +182,6 @@ let constructor = constructor_start_char ident_char*
 let ident = ident_start_char ident_char*
 let tvar = '\'' (ident_start_char | constructor_start_char) tvar_char*
 let tvar_alt = constructor_start_char+
-let basekind = '*' | 'A' | 'E' | "Prop"
 
 rule token args = parse
  | ident 
@@ -369,8 +369,6 @@ rule token args = parse
  | "(|"             { LENS_PAREN_LEFT }
  | "|)"             { LENS_PAREN_RIGHT }
 
- | "(*)"            { LPAREN_STAR_RPAREN }
-
  | "(*"
      { let m = getLexerRange  lexbuf in 
        comment(1,m,args) lexbuf }
@@ -406,6 +404,7 @@ rule token args = parse
  | '`' '`' ([^'`' '\n' '\r' '\t'] | '`' [^'`''\n' '\r' '\t']) + '`' '`' 
      { IDENT (trim_both lexbuf 2 2) }
 
+ | "=" { EQUALS }
  | '#' { HASH }
  | '&' { AMP }
  | "&&" { AMP_AMP }
@@ -415,78 +414,36 @@ rule token args = parse
  | '(' { LPAREN }
  | ')' { RPAREN }
  | '*' { STAR }
- | "$*" 
-     { BASEKIND("*") }
- | "$A" 
- | "$Affine" 
-     { BASEKIND("A") }
- | "$E" 
- | "$Erasable" 
-     { BASEKIND("E") } 
- | "$P" 
- | "$Prop" 
-     { BASEKIND("P") }
  | ',' { COMMA }
  | "~>" { SQUIGGLY_RARROW }
  | "->" { RARROW }
- | "->>" { RARROW2 }
- | "=>" { RRARROW }
  | "<==>" { IFF }
  | "==>" { IMPLIES }
- | "?" { QMARK }
- | "??" { QMARK_QMARK }
  | ".." { DOT_DOT }
  | "." { DOT }
  | "{:pattern" { LBRACE_COLON_PATTERN }
  | ":" { COLON }
  | "::" { COLON_COLON }
- | "@" { ATSIGN }
- | "^" { HAT }
- | ":>" { COLON_GREATER }
- | ">." { GREATER_DOT }
- | ">|]" { GREATER_BAR_RBRACK }
- | ":?>" { COLON_QMARK_GREATER }
- | ":?" { COLON_QMARK }
  | ":=" { COLON_EQUALS }
  | ";;" { SEMICOLON_SEMICOLON }
  | ";" { SEMICOLON }
- | "<-" { LARROW }
- | "=!=" { EQUALS_BANG_EQUALS }
- | "==" { EQUALS_EQUALS }
- | "=" { EQUALS }
  | "%[" { PERCENT_LBRACK }
  | "[" { LBRACK }
  | "[|" { LBRACK_BAR }
- | "<<" {  LESSLESS }
- | "<=" { LEQ }
- | ">=" { GEQ }
- | "<>" { LESSGREATER }
- | "<" {  if is_typ_app args lexbuf then TYP_APP_LESS else LESS  }
- | ">" { GREATER }
- | "|>" { PIPE_RIGHT }
- | "<|" { PIPE_LEFT }
- | "[<" { LBRACK_LESS }
- | "]" { RBRACK }
+ | "<" {  if is_typ_app args lexbuf then TYP_APP_LESS else CUSTOM_OP("<")  }
+ | "]"  { RBRACK }
  | "|]" { BAR_RBRACK }
- | ">]" { GREATER_RBRACK }
  | "{" { LBRACE }
  | "|" { BAR }
  | "}" { RBRACE }
  | "$" { DOLLAR }
- | "%%" { PERCENT_OP("%%") }
  | "!" { BANG(ulexeme lexbuf) }
  | "~" { RESERVED }
  | "`" { RESERVED }
  | "\\" { BACKSLASH }
- | ('/' | '%')                                          { DIV_MOD_OP(ulexeme lexbuf) }
- | ('+'|'-')                                            { PLUS_MINUS_OP(ulexeme lexbuf) }
- | ignored_op_char* '*' '*'                    op_char* { checkExprOp lexbuf; INFIX_STAR_STAR_OP(ulexeme lexbuf) }
- | ignored_op_char* ('=' | "!=" | '<' | '>' | '$')  op_char* { checkExprOp lexbuf; INFIX_COMPARE_OP(ulexeme lexbuf) }
- | ignored_op_char* ('&')                      op_char* { checkExprOp lexbuf; INFIX_AMP_OP(ulexeme lexbuf) }
- | ignored_op_char* '|'                        op_char* { checkExprOp lexbuf; INFIX_BAR_OP(ulexeme lexbuf) }
- | ignored_op_char* ('?' | '~' )         op_char* { checkExprOp lexbuf; PREFIX_OP(ulexeme lexbuf) }
- | ".[]"  | ".[]<-" | ".[,]<-" | ".[,,]<-" | ".[,,]" | ".[,]" | ".[..]" | ".[..,..]" 
- | ".()"  | ".()<-" | ".(,)<-" | ".(,,)<-" | ".(,,)" | ".(,)" | ".(..)" | ".(..,..)" { FUNKY_OPERATOR_NAME(ulexeme lexbuf) }
+ | ('/' | '%')                                               { DIV_MOD_OP(ulexeme lexbuf) }
+ | ('+'|'-')                                                 { PLUS_MINUS_OP(ulexeme lexbuf) }
+ | custom_op												 { CUSTOM_OP (ulexeme lexbuf) }
  | _ { unexpected_char lexbuf }     
  | eof { lc := 1; EOF }
 
