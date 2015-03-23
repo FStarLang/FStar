@@ -157,8 +157,10 @@ type typing : env -> exp -> typ -> Type =
 val is_value : exp -> Tot bool
 let is_value = is_ELam
 
-val progress : #e:exp{not (is_value e)} -> #t:typ -> h:typing empty e t ->
-               Tot (cexists (fun e' -> step e e')) (decreases h)
+opaque val progress : #e:exp -> #t:typ -> h:typing empty e t ->
+               Pure (cexists (fun e' -> step e e'))
+                    (requires (not (is_value e)))
+                    (ensures (fun _ -> True)) (decreases h)
 let rec progress _ _ h =
   match h with
   | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
@@ -173,7 +175,7 @@ let rec progress _ _ h =
 (* Typing extensional follows directly from functional extensionality
    (it's also a special case of context invariance below) *)
 
-val typing_extensional : #e:exp -> #g:env -> #t:typ ->
+opaque val typing_extensional : #e:exp -> #g:env -> #t:typ ->
       h:(typing g e t) -> g':env{FEq g g'} -> Tot (typing g' e t)
 let typing_extensional _ _ _ h _ = h
 
@@ -190,7 +192,7 @@ let rec appears_free_in x e =
 opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
                  (forall (x:var). appears_free_in x e ==> g1 x = g2 x)
 
-val context_invariance : #e:exp -> #g:env -> #t:typ ->
+opaque val context_invariance : #e:exp -> #g:env -> #t:typ ->
       h:(typing g e t) -> g':env{EnvEqualE e g g'} ->
       Tot (typing g' e t) (decreases h)
 let rec context_invariance _ _ _ h g' =
@@ -223,7 +225,7 @@ let shift_up_above_lam n t e =
 
 (* Weakening (or shifting preserves typing) *)
 
-val weakening : x:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
+opaque val weakening : x:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
       h:typing g e t -> Tot (typing (extend g x t') (shift_up_above x e) t)
       (decreases h)
 let rec weakening n g v t t' h =
@@ -237,7 +239,7 @@ let rec weakening n g v t t' h =
 
 (* Substitution preserves typing *)
 
-val substitution_preserves_typing :
+opaque val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
       h1:typing g v t_x ->
       h2:typing (extend g x t_x) e t ->
@@ -259,7 +261,7 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
 
 (* Type preservation *)
 
-val preservation : #e:exp -> #e':exp -> hs:step e e' ->
+opaque val preservation : #e:exp -> #e':exp -> hs:step e e' ->
                    #g:env -> #t:typ -> ht:(typing g e t) ->
                    Tot (typing g e' t) (decreases ht)
 let rec preservation e e' hs g t ht =

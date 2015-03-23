@@ -20,5 +20,8 @@ stlc_strong_db_parsubst:
 norm-take2:
 	$(FSTAR) ../../lib/constr.fst ../../lib/classical.fst ../../lib/ext.fst stlc_strong_db_parsubst.fst norm-take2.fst --max_fuel 1 --max_ifuel 1
 
+norm-take3:
+	$(FSTAR) ../../lib/constr.fst ../../lib/classical.fst ../../lib/ext.fst stlc_strong_db_parsubst.fst norm-take3.fst --max_fuel 1 --max_ifuel 1
+
 stlc_cbv_db_pntsubst_lists:
 	make stlc_cbv_db_pntsubst_lists.fulllib.ver OTHERFLAGS='--z3timeout 20'
