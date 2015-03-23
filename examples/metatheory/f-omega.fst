@@ -775,37 +775,8 @@ type typing : env -> exp -> typ -> Type =
             kinding g t k ->
             typing g (ETApp e t) (tsubst_beta t t')
 
-(* Progress proof *)
-
 val is_value : exp -> Tot bool
 let is_value = fun e -> is_ELam e || is_EForT e
-
-(* TODO: broken, fix non-trivial; see TAPL 31 *)
-opaque val progress : #e:exp -> #t:typ -> h:typing empty e t ->
-               Pure (cexists (fun e' -> step e e'))
-                    (requires (not (is_value e)))
-                    (ensures (fun _ -> True)) (decreases h)
-let rec progress _ _ h =
-  match h with
-    | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
-      (match e1 with
-       | ELam t e1' -> ExIntro (esubst_beta e2 e1') (SBeta t e1' e2)
-       | _ -> admit())
-(*
-                match progress h1 with
-                | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1'))
-*)
-    | TyEqu h1 _ _ -> progress h1
-
-    | TyAppT #g #e #t #k #t' h1 hk ->
-      (match e with
-    	| EForT k e1 -> ExIntro (esubst_tbeta t e1) (SBetaT k e1 t)
-    	| _ -> admit()
-(*
-    	  let ExIntro e' h2 = progress h1 in
-    	  ExIntro (ETApp e' t) (STApp1 t h2)
-*)
-      )
 
 val tappears_free_in : x:var -> t:typ -> Tot bool (decreases t)
 let rec tappears_free_in x t =
@@ -836,7 +807,7 @@ let rec eappears_free_in x e =
   match e with
     | EVar y -> x = y
     | EApp e1 e2 -> eappears_free_in x e1 || eappears_free_in x e2
-    | ELam _ e1 -> eappears_free_in (x+1) e1      
+    | ELam _ e1 -> eappears_free_in (x+1) e1
     | EForT _ e1 -> eappears_free_in x e1
     | ETApp e1 _ -> eappears_free_in x e1
 
@@ -845,7 +816,7 @@ let rec eappears_tfree_in tx e =
   match e with
     | EVar _ -> false
     | EApp e1 e2 -> eappears_tfree_in tx e1 || eappears_tfree_in tx e2
-    | ELam _ e1 -> eappears_tfree_in tx e1      
+    | ELam _ e1 -> eappears_tfree_in tx e1
     | EForT _ e1 -> eappears_tfree_in (tx + 1) e1
     | ETApp e1 t -> eappears_tfree_in tx e1 || tappears_free_in tx t
 
@@ -1945,6 +1916,61 @@ let rec tred_tfor_preserved k t1 t h =
     	  ExIntro t' (TsStep h12 p)
       )
 
+(* TArr cannot be equivalent to TFor *)
+opaque val arrow_eq_tfor_contra: #t1:typ -> #t2:typ -> #k:knd -> #t3:typ ->
+                                 h:(tequiv (TArr t1 t2) (TFor k t3)) ->
+                                 Tot (u:unit{false})
+let arrow_eq_tfor_contra t1 t2 k t3 h =
+  let ExIntro u p = tequiv_tred_tred h in
+  let Conj p1 p2 = p in
+  let _ = tred_tarr_preserved #t1 #t2 #u p1 in
+  let _ = tred_tfor_preserved #k #t3 #u p2 in
+  ()
+
+opaque val efor_typing_eq_tfor: #k:knd -> #e:exp -> #t:typ ->
+                                h:typing empty (EForT k e) t ->
+                                Tot (cexists (fun t1 -> tequiv t (TFor k t1))) (decreases h)
+let rec efor_typing_eq_tfor k e t h =
+  match h with
+    | TyFor #dc1 #dc2 #t1 _ _ ->
+      ExIntro t1 (EqRefl (TFor k t1))
+    | TyEqu #dc1 #d2 #t1 #dc3 h1 h2 h3 ->
+      let ExIntro t2 p = efor_typing_eq_tfor #k #e #t1 h1 in
+      ExIntro t2 (EqTran (EqSymm h2) p)
+
+opaque val elam_typing_eq_tarr: #t1:typ -> #e:exp -> #t:typ ->
+                                h:typing empty (ELam t1 e) t ->
+                                Tot (cexists (fun t2 -> tequiv t (TArr t1 t2))) (decreases h)
+let rec elam_typing_eq_tarr t1 e t h =
+  match h with
+    | TyLam #dc _ #dc2 #t2 _ _ ->
+      ExIntro t2 (EqRefl (TArr t1 t2))
+    | TyEqu #dc1 #dc2 #t2 #dc3 h1 h2 h3 ->
+      let ExIntro t3 p = elam_typing_eq_tarr #t1 #e #t2 h1 in
+      ExIntro t3 (EqTran (EqSymm h2) p)
+
+(* expression with type TArr cannot be a EForT, used in progress *)
+opaque val tarr_not_efor: #e:exp -> #t1:typ -> #t2:typ ->
+                          h:typing empty e (TArr t1 t2) ->
+                          Tot (u:unit{(not (is_value e)) \/ is_ELam e})
+let tarr_not_efor e t1 t2 h =
+  match e with
+    | EForT k e1 ->
+      let ExIntro t3 p = efor_typing_eq_tfor #k #e1 #(TArr t1 t2) h in
+      arrow_eq_tfor_contra #t1 #t2 #k #t3 p
+    | _ -> ()
+
+(* expression with type TFor cannot be a lambda, used in progress *)
+opaque val fort_not_elam: #e:exp -> #k:knd -> #t1:typ ->
+                          h:typing empty e (TFor k t1) ->
+                          Tot (u:unit{(not (is_value e)) \/ is_EForT e})
+let fort_not_elam e k t1 h =
+  match e with
+    | ELam t e1 ->
+      let ExIntro t3 p = elam_typing_eq_tarr #t #e1 #(TFor k t1) h in
+      arrow_eq_tfor_contra #t #t3 #k #t1 (EqSymm p)
+    | _ -> ()
+
 opaque val inversion_elam : #g:env -> s1:typ -> e:exp -> #s:typ -> t1:typ -> t2:typ ->
       ht:typing g (ELam s1 e) s -> heq:tequiv s (TArr t1 t2) ->
       hnew:kinding g t2 KTyp ->
@@ -2037,6 +2063,31 @@ let rec inversion_efor_typing g k1 e k2 t h =
   let p = kinding_inversion_forall #g #k2 #t (typing_to_kinding #g #(EForT k1 e) #(TFor k2 t) h) in
   let _ = inversion_efor_jk #g #k1 #k2 #e #(TFor k2 t) #t h (EqRefl (TFor k2 t)) in
   inversion_efor #g #k1 #k2 #e #(TFor k2 t) #t h (EqRefl (TFor k2 t)) p
+
+(* Progress *)
+opaque val progress : #e:exp -> #t:typ -> h:typing empty e t ->
+               Pure (cexists (fun e' -> step e e'))
+                    (requires (not (is_value e)))
+                    (ensures (fun _ -> True)) (decreases h)
+let rec progress _ _ h =
+  match h with
+    | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
+      tarr_not_efor #e1 #t11 #t12 h1;
+      (match e1 with
+       | ELam t e1' -> ExIntro (esubst_beta e2 e1') (SBeta t e1' e2)
+       | _ ->
+         match progress h1 with
+           | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1'))
+    | TyEqu h1 _ _ -> progress h1
+
+    | TyAppT #g #e #t #k #t' h1 hk ->
+      fort_not_elam #e #t' #k h1;
+      (match e with
+    	| EForT k e1 -> ExIntro (esubst_tbeta t e1) (SBetaT k e1 t)
+    	| _ -> 
+    	  let ExIntro e' h2 = progress h1 in
+    	  ExIntro (ETApp e' t) (STApp1 t h2)
+      )
 
 (* Type preservation *)
 opaque val preservation : #e:exp -> #e':exp -> hs:step e e' ->
