@@ -22,7 +22,7 @@ open ST
 open Heap
 (* private *) type array (t:Type) = ref (seq t)
 
-
+assume val op_At_Bar: a:Type -> array a -> array a -> STATE.St (array a)
 
 assume val of_seq: a:Type -> s:seq a -> ST (array a)
   (requires (fun h -> True))

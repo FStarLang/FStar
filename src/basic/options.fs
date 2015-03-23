@@ -203,7 +203,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "unthrottle_inductives", ZeroArgs (fun () -> unthrottle_inductives := true), "Let the SMT solver unfold inductive types to arbitrary depths (may affect verifier performance)");
      ( noshort, "use_eq_at_higher_order", ZeroArgs (fun () -> use_eq_at_higher_order := true), "Use equality constraints when comparing higher-order types; temporary");
      ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator");
-     ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x), "positive integer"), "Maximum number of cores to use for the solver (default 1)")
+     ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x), "positive integer"), "Maximum number of cores to use for the solver (default 1)");
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
 and parse_codegen s =

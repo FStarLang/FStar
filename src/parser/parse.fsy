@@ -22,6 +22,7 @@
 
 *)
 // (c) Microsoft Corporation. All rights reserved
+open Microsoft.FStar
 open Microsoft.FStar.Range
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn.Syntax
@@ -115,7 +116,12 @@ maybe_pragma_light:
 
 pragma: 
   | PRAGMA_SET_OPTIONS STRING
-	{ SetOptions (string_of_bytes $2) }
+	{ 
+	   let s = string_of_bytes $2 in
+	   if s = "--no_fs_typ_app"
+	   then Options.fs_typ_app := false;
+	   SetOptions s
+	}
 
   | PRAGMA_RESET_OPTIONS
 	{ ResetOptions }
