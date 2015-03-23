@@ -716,6 +716,7 @@ cmpTerm:
 comparisonOp:
   | CUSTOM_OP { $1 }
   | EQUALS    { "=" }
+  | GREATER   { ">" }
 
 tmCons:
   | product COLON_COLON tmCons

@@ -404,6 +404,7 @@ rule token args = parse
  | '`' '`' ([^'`' '\n' '\r' '\t'] | '`' [^'`''\n' '\r' '\t']) + '`' '`' 
      { IDENT (trim_both lexbuf 2 2) }
 
+ | ">" { GREATER }
  | "=" { EQUALS }
  | '#' { HASH }
  | '&' { AMP }
