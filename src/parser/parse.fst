@@ -179,4 +179,5 @@ type token =
   | IDENT_LESS of (string)
   | IDENT of (string)
   | STRING of (array<byte>)
+  | INT32 of (int32 * bool)
   | YIELD of (bool)
