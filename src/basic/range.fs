@@ -130,6 +130,8 @@ type FileIndexTable() =
                         indexToFileTable.Add(f);
                         fileToIndexTable.[f] <- n;
                         n)
+        member t.SetFileName n f =
+            indexToFileTable.[n] <- f
 
         member t.IndexToFile n = 
             (if n < 0 then failwithf "file_of_file_idx: negative argument: n = %d\n" n);
@@ -144,6 +146,7 @@ let fileIndexTable = new FileIndexTable()
 // Note if we exceed the maximum number of files we'll start to report incorrect file names
 let file_idx_of_file f = fileIndexTable.FileToIndex(f) % maxFileIndex 
 let file_of_file_idx n = fileIndexTable.IndexToFile(n)
+let set_file_of_range r f = fileIndexTable.SetFileName (file_idx_of_range r) f
 
 let mk_range f b e = mk_file_idx_range (file_idx_of_file f) b e
 let file_of_range r = file_of_file_idx (file_idx_of_range r)

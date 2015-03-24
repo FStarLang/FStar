@@ -48,6 +48,7 @@ parser:
 	rm Microsoft_FStar_Parser_Parse.ml
 	echo "open Support.Microsoft.FStar.Util" > Microsoft_FStar_Parser_Parse.ml
 	echo "open Support.Microsoft.FStar.Range" >> Microsoft_FStar_Parser_Parse.ml
+	echo "open Microsoft_FStar_Options" >> Microsoft_FStar_Parser_Parse.ml
 	echo "open Microsoft_FStar_Absyn_Syntax" >> Microsoft_FStar_Parser_Parse.ml
 	echo "open Microsoft_FStar_Absyn_Const" >> Microsoft_FStar_Parser_Parse.ml
 	echo "open Microsoft_FStar_Absyn_Util" >> Microsoft_FStar_Parser_Parse.ml

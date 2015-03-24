@@ -206,7 +206,7 @@ rule token args = parse
  | '#' ' ' (digit)*
      { let n = Util.int_of_string (trim_left lexbuf 2) in
 	   mknewline (n - !lc) lexbuf; 
-       ignore_endline args lexbuf }
+       cpp_filename args lexbuf }
  | int8 
      { let n = trim_to_i32 lexbuf 1 in 
        if n > 0x80 || n < -0x80 then fail lexbuf "This number is outside the allowable range for 8-bit signed integers" (INT8(0y,false))
@@ -669,8 +669,13 @@ and comment_vstring n m args = parse
  | _  
      { comment_vstring n m args lexbuf }
 
+and cpp_filename args = parse
+ | ' ' '"' [^ '"']+ '"'
+     { let s = trim_both lexbuf 2 1 in
+	   let r = getLexerRange lexbuf in
+	   Range.set_file_of_range r s;
+	   ignore_endline args lexbuf }
+
 and ignore_endline args = parse
- | newline 
+ | ' '* newline
      { token args lexbuf }
- | _  
-     { ignore_endline args lexbuf }

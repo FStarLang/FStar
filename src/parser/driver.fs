@@ -48,7 +48,7 @@ let parse env fn =
 let parse_files files = 
   let _, mods = List.fold_left (fun (env,mods) fn -> 
     let env, m = parse env (Inl fn) in
-    Options.reset_options();
+    let _ = Options.reset_options() in
     let _ = match !Options.dump_module with 
       | Some n -> 
         m |> List.iter (fun (m:Absyn.Syntax.modul) -> if n=m.name.str then (Util.format1 "%s\n" <| Absyn.Print.modul_to_string m) |> Util.print_string)

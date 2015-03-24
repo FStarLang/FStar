@@ -31,20 +31,12 @@
   let keywords = Hashtbl.create 0
 
   let () =
-    Hashtbl.add keywords "abstract"      ABSTRACT    ;
     Hashtbl.add keywords "and"           AND         ;
     Hashtbl.add keywords "as"            AS          ;
     Hashtbl.add keywords "assert"        ASSERT      ;
-    Hashtbl.add keywords "asr"           (INFIX_STAR_STAR_OP "asr");
     Hashtbl.add keywords "assume"        ASSUME      ;
-    Hashtbl.add keywords "base"          BASE        ;
     Hashtbl.add keywords "begin"         BEGIN       ;
-    Hashtbl.add keywords "class"         CLASS       ;
     Hashtbl.add keywords "default"       DEFAULT     ;
-    Hashtbl.add keywords "define"        DEFINE      ;
-    Hashtbl.add keywords "do"            DO          ;
-    Hashtbl.add keywords "done"          DONE        ;
-    Hashtbl.add keywords "downto"        DOWNTO      ;
     Hashtbl.add keywords "effect"        EFFECT      ;
     Hashtbl.add keywords "else"          ELSE        ;
     Hashtbl.add keywords "end"           END         ;
@@ -60,21 +52,12 @@
     Hashtbl.add keywords "if"            IF          ;
     Hashtbl.add keywords "kind"          KIND        ;
     Hashtbl.add keywords "in"            IN          ;
-    Hashtbl.add keywords "inherit"       INHERIT     ;
-    Hashtbl.add keywords "land"          (INFIX_STAR_DIV_MOD_OP "land");
     Hashtbl.add keywords "lazy"          LAZY        ;
     Hashtbl.add keywords "let"           (LET false) ;
-    Hashtbl.add keywords "lor"           (INFIX_STAR_DIV_MOD_OP "lor");
     Hashtbl.add keywords "logic"         LOGIC       ;
-    Hashtbl.add keywords "lsl"           (INFIX_STAR_STAR_OP "lsl");
-    Hashtbl.add keywords "lsr"           (INFIX_STAR_STAR_OP "lsr");
-    Hashtbl.add keywords "lxor"          (INFIX_STAR_STAR_OP "lxor");
     Hashtbl.add keywords "match"         MATCH       ;
-    Hashtbl.add keywords "method"        METHOD      ;
-    Hashtbl.add keywords "mod"           (INFIX_STAR_DIV_MOD_OP "mod");
     Hashtbl.add keywords "module"        MODULE      ;
     Hashtbl.add keywords "monad_lattice" MONADLATTICE;
-    Hashtbl.add keywords "new"           NEW         ;
     Hashtbl.add keywords "of"            OF          ;
     Hashtbl.add keywords "open"          OPEN        ;
     Hashtbl.add keywords "or"            OR          ;
@@ -85,8 +68,6 @@
     Hashtbl.add keywords "query"         QUERY       ;
     Hashtbl.add keywords "rec"           REC         ;
     Hashtbl.add keywords "requires"      REQUIRES    ;
-    Hashtbl.add keywords "sig"           SIG         ;
-    Hashtbl.add keywords "struct"        STRUCT      ;
     Hashtbl.add keywords "terminating"   TOTAL       ;
     Hashtbl.add keywords "then"          THEN        ;
     Hashtbl.add keywords "to"            TO          ;
@@ -95,9 +76,7 @@
     Hashtbl.add keywords "try"           TRY         ;
     Hashtbl.add keywords "type"          TYPE        ;
     Hashtbl.add keywords "val"           VAL         ;
-    Hashtbl.add keywords "virtual"       VIRTUAL     ;
     Hashtbl.add keywords "when"          WHEN        ;
-    Hashtbl.add keywords "while"         WHILE       ;
     Hashtbl.add keywords "with"          WITH        ;
     Hashtbl.add keywords "_"             UNDERSCORE
 
@@ -187,6 +166,8 @@ let xieee64    = xinteger 'L' 'F'
 (* -------------------------------------------------------------------- *)
 let escape_char = ('\\' ( '\\' | "\"" | '\'' | 'n' | 't' | 'b' | 'r'))
 let char        = [^'\\''\n''\r''\t''\b'] | escape_char
+let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'>'|'_'|'|'|'!'|'^'
+let custom_op = custom_op_char+
 
 (* -------------------------------------------------------------------- *)
 let constructor_start_char = upper
@@ -197,7 +178,6 @@ let tvar_char              = letter | digit | ['\'' '_']
 let constructor = constructor_start_char ident_char*  
 let ident       = ident_start_char ident_char*
 let tvar        = '\'' (ident_start_char | constructor_start_char) tvar_char*
-let basekind    = '*' | 'A' | 'E' | "Prop"
 
 rule token = parse
  | "#light"
@@ -251,32 +231,21 @@ rule token = parse
  | ','         { COMMA }
  | "~>"        { SQUIGGLY_RARROW }
  | "->"        { RARROW }
- | "=>"        { RRARROW }
  | "<==>"      { IFF }
  | "==>"       { IMPLIES }
  | "."         { DOT }
  | "{:pattern" { LBRACE_COLON_PATTERN }
  | ":"         { COLON }
  | "::"        { COLON_COLON }
- | "@"         { ATSIGN }
- | "^"         { HAT }
  | ":="        { COLON_EQUALS }
  | ";;"        { SEMICOLON_SEMICOLON }
  | ";"         { SEMICOLON }
- | "=!="       { EQUALS_BANG_EQUALS }
- | "=="        { EQUALS_EQUALS }
  | "="         { EQUALS }
  | "%["        { PERCENT_LBRACK }
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
- | "<<"        {  LESSLESS }
- | "<="        { LEQ }
- | ">="        { GEQ }
- | "<>"        { LESSGREATER }
  | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else LESS  }
  | ">"         { GREATER }
- | "|>"        { PIPE_RIGHT }
- | "<|"        { PIPE_LEFT }
  | "]"         { RBRACK }
  | "|]"        { BAR_RBRACK }
  | "{"         { LBRACE }

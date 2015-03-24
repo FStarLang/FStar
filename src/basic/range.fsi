@@ -25,6 +25,7 @@ val mk_range: string -> int -> int -> range
 val encode_file:string -> string
 val decode_file_idx:string -> int
 val file_of_file_idx:file_idx -> string
+val set_file_of_range:range -> string -> unit
 val union_ranges: range -> range -> range
 val string_of_range: range -> string
 val file_of_range: range -> string
