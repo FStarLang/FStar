@@ -21,12 +21,12 @@ val wf : U
 let wf (z : V) = let y : (U -> Tot bool) = z U le in p2b (x : U -> b2p (le y x) -> Tot (b2p (y x)))               
 
 let omega =
-(fun (i : U -> Tot bool) (y : (x1 : U -> b2p (le i x1) -> Tot (b2p (i x1)))) ->
- y wf
-   (p2p2
-      ( x2 : U ->
-       b2p (le (fun (a : U) -> i (fun (v : V) -> sb v U le a)) x2) ->
-       b2p (i (fun (v : V) -> sb v U le x2)))
-      (fun (x3 : U) -> fun
-         (h0 : b2p (le (fun (a : U) -> i (fun (v : V) -> sb v U le a)) x3)) ->
-       y (fun (v : V) -> sb v U le x3) h0)))
+  (fun (i : U -> Tot bool) (y : (x1 : U -> b2p (le i x1) -> Tot (b2p (i x1)))) ->
+    y wf
+      (p2p2
+         ( x2 : U ->
+           b2p (le (fun (a : U) -> i (fun (v : V) -> sb v U le a)) x2) ->
+           b2p (i (fun (v : V) -> sb v U le x2)))
+         (fun (x3 : U) (h0 : b2p (le (fun (a : U) -> i (fun (v : V) -> sb v U le a)) x3)) ->
+           y (fun (v : V) -> sb v U le x3) h0)))
+    

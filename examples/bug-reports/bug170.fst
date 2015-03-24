@@ -1,12 +1,14 @@
-module MergeSort
-open List
+module Bug170
+type t = 
+  | A 
+assume type Sorted: t -> Type
+assume val split: unit -> Dv t
+assume val merge: l1:t -> Dv (r:t{Sorted l1})
+assume val foo : t -> Dv t
 
-assume val sorted: list int -> Tot bool
-assume val split: l:list int -> Tot ((list int * list int))
-assume val merge: l1:list int -> Tot (r:list int{(sorted l1)})
-
-val mergesort: list int -> Tot (list int)
-let rec mergesort l =
-    let (l1, l2) = split l in
-    let sl1 = mergesort l in
-    merge sl1
+val mergesort: t -> Dv t
+let mergesort l =
+  match split() with 
+    | A -> 
+      let sl1 = foo l in
+      merge sl1

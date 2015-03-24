@@ -813,11 +813,11 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
             let md = Tc.Env.get_monad_decl env Const.pure_effect_lid in
             mk_comp md res_t wp wlp [] in 
         let comp = List.fold_right (fun (g, cthen) celse ->
-            let (md, a, kwp), (res_t, wp_then, wlp_then), (_, wp_else, wlp_else) = lift_and_destruct env (cthen.comp()) celse in
+            let (md, _, _), (_, wp_then, wlp_then), (_, wp_else, wlp_else) = lift_and_destruct env (cthen.comp()) celse in
             mk_comp md res_t (ifthenelse md res_t g wp_then wp_else) (ifthenelse md res_t g wlp_then wlp_else) []) lcases default_case in
         let comp = comp_to_comp_typ comp in
         let md = Tc.Env.get_monad_decl env comp.effect_name in
-        let res_t, wp, wlp = destruct_comp comp in
+        let _, wp, wlp = destruct_comp comp in
         let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) None wp.pos in
         let wlp = mk_Typ_app(md.ite_wlp, [targ res_t; targ wlp]) None wlp.pos in
         mk_comp md res_t wp wlp [] in
@@ -934,7 +934,9 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
     | Some g, apply_guard -> 
       let g = Rel.simplify_guard env g in 
       match guard_f g with 
-        | Rel.Trivial -> (e, lc, g)
+        | Rel.Trivial -> 
+          let lc = {lc with res_typ = t} in
+          (e, lc, g)
         | Rel.NonTrivial f ->
           let g = {g with Rel.guard_f=Rel.Trivial} in
           let strengthen () = 
