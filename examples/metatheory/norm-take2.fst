@@ -18,3 +18,14 @@ let rec red t e =
      excluded_middle (typing empty e (TArr t1 t2) /\
                       halts e /\
                       (forall e'. red t1 e' ==> red t2 (EApp e e')))
+
+(* hard to reason about red, for instance can't prove this? *)
+val r_arrow : t1:typ ->
+              t2:typ ->
+              #e:exp ->
+              typing empty e (TArr t1 t2) ->
+              halts e ->
+              (e':exp{red t1 e'} -> Tot (u:unit{red t2 (EApp e e')})) ->
+              Tot (u:unit{red (TArr t1 t2) e})
+let r_arrow t1 t2 e ht hh hf = admit()
+
