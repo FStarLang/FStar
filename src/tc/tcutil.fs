@@ -886,6 +886,34 @@ let check_comp env (e:exp) (c:comp) (c':comp) : exp * comp * guard_t =
     | None -> raise (Error(Tc.Errors.computed_computation_type_does_not_match_annotation env e c c', Tc.Env.get_range env))
     | Some g -> e, c', g
 
+let maybe_instantiate_typ env t k = 
+  let k = compress_kind k in
+  if not (env.instantiate_targs && env.instantiate_vargs) then t, k else
+  match k.n with 
+    | Kind_arrow(bs, k) ->
+      let rec aux subst = function 
+        | (Inl a, Some Implicit)::rest -> 
+          let k = Util.subst_kind subst a.sort in
+          let t = new_tvar env k in
+          let subst = (Inl(a.v, t))::subst in 
+          let args, bs, subst = aux subst rest in 
+          (Inl t, Some Implicit)::args, bs, subst  
+
+        | (Inr x, Some Implicit)::rest -> 
+          let t = Util.subst_typ subst x.sort in 
+          let v = new_evar env t in
+          let subst = (Inr(x.v, v))::subst in 
+          let args, bs, subst = aux subst rest in 
+          (Inr v, Some Implicit)::args, bs, subst
+
+        | bs -> [], bs, subst in 
+     let args, bs, subst = aux [] bs in
+     let k = mk_Kind_arrow'(bs, k) t.pos in 
+     let k = Util.subst_kind subst k in
+     Syntax.mk_Typ_app'(t, args) (Some k) t.pos, k
+
+  | _ -> t, k
+
 let maybe_instantiate env e t = 
   let t = compress_typ t in 
   if not (env.instantiate_targs && env.instantiate_vargs) then e, t else

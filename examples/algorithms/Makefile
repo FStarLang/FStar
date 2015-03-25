@@ -4,7 +4,7 @@ include ../Makefile.include
 all: .all.ver downgrade qs_seq
 
 qs_seq: $(addprefix ../../lib/, classical.fst ext.fst seq.fsi seq.fst seqproperties.fst) qs_seq.fst
-	$(FSTAR) $^ 
+	$(FSTAR) $^  --z3timeout 10
 
 ARR_LIB=$(addprefix ../../lib/, classical.fst ext.fst set.fsi set.fst heap.fst stperm.fst seq.fsi seq.fst seqproperties.fst arr.fst) 
 

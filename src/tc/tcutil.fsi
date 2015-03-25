@@ -36,6 +36,7 @@ val decorated_pattern_as_exp: pat -> list<either_var> * exp
 val decorated_pattern_as_typ: pat -> list<either_var> * typ
 val decorated_pattern_as_either: pat -> list<either_var> * Util.either<typ,exp>
 
+val maybe_instantiate_typ : env -> typ -> knd -> (typ * knd)
 val maybe_instantiate : env -> exp -> typ -> (exp * typ)
 val destruct_comp: comp_typ -> (typ * typ * typ)
 val destruct_arrow_kind: env -> typ -> knd -> args -> (args * binders * knd)

@@ -25,8 +25,6 @@ open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Tc.Rel
 open Microsoft.FStar.Absyn.Syntax
 
-open System.IO
-
 let syn' env k = syn (Tc.Env.get_range env) (Some k)
 let log env = !Options.log_types && not(lid_equals Const.prims_lid (Env.current_module env))
 let rng env = Tc.Env.get_range env
@@ -281,7 +279,9 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
   | Typ_btvar a -> 
     let k = Env.lookup_btvar env a in
     let a = {a with sort=k} in
-    w k <| mk_Typ_btvar a, k, Rel.trivial_guard
+    let t = w k <| mk_Typ_btvar a in
+    let t, k = Tc.Util.maybe_instantiate_typ env t k in
+    t, k, Rel.trivial_guard
 
   (* Special treatment for ForallTyp, ExistsTyp, EqTyp, giving them polymorphic kinds *)
   | Typ_const i when (lid_equals i.v Const.eqT_lid) -> 
@@ -299,7 +299,9 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
   | Typ_const i -> 
     let k = Env.lookup_typ_lid env i.v in 
     let i = {i with sort=k} in
-    mk_Typ_const i (Some k) t.pos, k, Rel.trivial_guard
+    let t = mk_Typ_const i (Some k) t.pos in
+    let t, k = Tc.Util.maybe_instantiate_typ env t k in
+    t, k, Rel.trivial_guard
      
   | Typ_fun(bs, cod) -> 
     let bs, env, g = tc_binders env bs in 
@@ -324,7 +326,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
         (Range.string_of_range top.pos)
         (Util.string_of_int <| List.length args)
         (Print.typ_to_string top);
-    let head, k1, f1 = tc_typ env head in 
+    let head, k1, f1 = tc_typ (no_inst env) head in 
     let k1 = Normalize.norm_kind [Normalize.WHNF; Normalize.Beta] env k1 in 
   
     let check_app () = match k1.n with
