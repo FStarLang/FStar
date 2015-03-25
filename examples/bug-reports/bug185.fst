@@ -29,14 +29,10 @@ let rec validate vk0 chain =
             | [ sender; vk ] -> ()
             | [ vk ] -> if verify #certified vk0 ctxt ctag then
               (
-(*               assert (verified vk == certified); magic() -- succeeds *)
-(*               validate vk chain_tl -- fails*)
-(*               assume (verified vk == certified); -- adding this makes the
-                     verified it work, unless the assert is still
-                     around, in which case that starts failing*)
-
-                assert (verified vk == certified)
-)
+               assert (verified vk == certified);
+               assume (verified vk == certified);
+               validate vk chain_tl
+              )
                  else ()
             | _ -> ())
         | _ -> ())
