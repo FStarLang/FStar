@@ -839,22 +839,27 @@ and encode_function_type_as_formula (use_decreasing_pat:bool) (t:typ) (env:env_t
     mkForall(pats, vars, mkImp(mk_and_l (pre::guards), post)), decls
 
 and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t = (* expects phi to be normalized; the existential variables are all labels *)
-    let enc (f:list<term> -> term) : args -> term * labels * decls_t = fun l -> 
+    encode_formula_with_labels_and_ex_vars false phi env |> fst 
+
+and encode_formula_with_labels_and_ex_vars (xvars:bool)  (phi:typ) (env:env_t) : (term * labels * decls_t) * ex_vars = (* expects phi to be normalized; the existential variables are all labels *)
+    let enc (f:list<term> -> term) : args -> (term * labels * decls_t) * ex_vars = fun l -> 
         let (vars, decls), args = Util.fold_map (fun (vars, decls) x -> match fst x with 
             | Inl t -> let t, vars', decls' = encode_typ_term t env in (vars@vars', decls@decls'), t
             | Inr e -> let e, vars', decls' = encode_exp e env in (vars@vars', decls@decls'), e) ([],[]) l in
-        close env vars (f args), [], decls in
+        if xvars 
+        then (f args, [], decls), vars
+        else (close env vars (f args), [], decls), [] in
 
-    let enc_prop_c polarities f : args -> term * labels * decls_t = fun l ->
+    let enc_prop_c polarities f : args -> (term * labels * decls_t) * ex_vars = fun l ->
         let phis, labs, decls = List.unzip3 <| List.map2 (fun p l -> 
             let env = if p then env else negate env in 
             match fst l with 
                 | Inl t -> encode_formula_with_labels t env
                 | _ -> failwith "Expected a formula") polarities l in
-        f phis, List.flatten labs, List.flatten decls in
+        (f phis, List.flatten labs, List.flatten decls), [] in
   
 
-    let const_op f _ = f, [], [] in
+    let const_op f _ = (f, [], []), [] in
     let un_op f l = f <| List.hd l in
     let bin_op : ((term * term) -> term) -> list<term> -> term = fun f -> function 
         | [t1;t2] -> f(t1,t2)
@@ -862,21 +867,33 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
     let tri_op : ((term * term * term) -> term) -> list<term> -> term = fun f -> function
         | [t1;t2;t3] -> f(t1,t2,t3)
         | _ -> failwith "Impossible" in
-    let eq_op : args -> term * labels * decls_t = function 
+    let eq_op : args -> (term * labels * decls_t) * ex_vars = function 
         | [_;_;e1;e2] -> enc (bin_op mkEq) [e1;e2]
         | l ->  enc (bin_op mkEq) l in
   
-    let mk_imp : args -> term * labels * decls_t = function 
+    let mk_imp : args -> (term * labels * decls_t) * ex_vars = function 
         | [(Inl lhs, _); (Inl rhs, _)] -> 
           let l1, labs1, decls1 = encode_formula_with_labels rhs env in
           begin match l1.tm with 
-            | True -> l1, labs1, decls1 (* Optimization: don't bother encoding the LHS of a trivial implication *)
+            | True -> (l1, labs1, decls1), [] (* Optimization: don't bother encoding the LHS of a trivial implication *)
             | _ -> 
              let l2, labs2, decls2 = encode_formula_with_labels lhs (negate env) in
-             Term.mkImp(l2, l1), labs1@labs2, decls1@decls2
+             (Term.mkImp(l2, l1), labs1@labs2, decls1@decls2), []
           end
          | _ -> failwith "impossible" in
-    let mk_iff : args -> term * labels * decls_t = function 
+    let mk_ite : args -> (term * labels * decls_t) * ex_vars = function
+        | [(Inl guard, _); (Inl _then, _); (Inl _else, _)] -> 
+          let (g, labs1, decls1), ex_vars = encode_formula_with_labels_and_ex_vars true guard env in
+          let (t, labs2, decls2) = encode_formula_with_labels _then env in 
+          let (e, labs3, decls3) = encode_formula_with_labels _else env in 
+          let res = Term.mkITE(g, t, e) in
+          let tm, ex_vars = if xvars
+                            then res, ex_vars
+                            else close env ex_vars res, [] in
+          (tm, labs1@labs2@labs3, decls1@decls2@decls3), ex_vars
+        | _ -> failwith "impossible" in 
+    
+    let mk_iff : args -> (term * labels * decls_t) * ex_vars = function 
         | [(Inl lhs, _); (Inl rhs, _)] -> 
           let l1, labs1, decls1 = encode_formula_with_labels lhs (negate env) in
           let l2, labs2, decls2 = encode_formula_with_labels rhs env in
@@ -884,7 +901,7 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
           let m1, labs3, decls3 = encode_formula_with_labels lhs env in
           let m2, labs4, decls4 = encode_formula_with_labels rhs (negate env) in
 
-          mkAnd(mkImp(l1, l2), mkImp(m2, m1)), labs1@labs2@labs3@labs4, decls1@decls2@decls3@decls4
+          (mkAnd(mkImp(l1, l2), mkImp(m2, m1)), labs1@labs2@labs3@labs4, decls1@decls2@decls3@decls4), []
   
         | _ -> failwith "Impossible" in
     let unboxInt_l : (list<term> -> term) -> list<term> -> term = fun f l -> f (List.map Term.unboxInt l) in
@@ -893,7 +910,7 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
                         (Const.or_lid,  enc_prop_c [true;true]  <| bin_op mkOr);
                         (Const.imp_lid, mk_imp);
                         (Const.iff_lid, mk_iff);
-                        (Const.ite_lid, enc_prop_c [true;true;true] <| tri_op mkITE); //NS: The guard appears both positively and negatively; scratching my head about this one. REVIEW!
+                        (Const.ite_lid, mk_ite); 
                         (Const.not_lid, enc_prop_c [false] <| un_op mkNot);
                         (Const.eqT_lid, enc <| bin_op mkEq);
                         (Const.eq2_lid, eq_op);
@@ -905,21 +922,23 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
         | Typ_meta(Meta_labeled(phi', msg, r, b)) -> 
           let phi, labs, decls = encode_formula_with_labels phi' env in
           if env.nolabels
-          then phi, [], decls
+          then (phi, [], decls), []
           else let lvar = varops.fresh "label", Bool_sort in
                let lterm = Term.mkFreeV lvar in
                let lphi = Term.mkOr(lterm, phi) in
-               lphi, (lvar, msg, r)::labs, decls
+               (lphi, (lvar, msg, r)::labs, decls), []
         
         | Typ_app({n=Typ_const ih}, [(Inl phi, _)]) when lid_equals ih.v Const.using_IH -> 
             if Util.is_lemma phi
             then let f, decls = encode_function_type_as_formula true phi env in
-                 f, [], decls
-            else Term.mkTrue, [], []
+                 (f, [], decls), []
+            else (Term.mkTrue, [], []), []
             
         | _ -> 
             let tt, ex_vars, decls = encode_typ_term phi env in
-            close env ex_vars <| Term.mk_Valid tt, [], decls in
+            if xvars
+            then (Term.mk_Valid tt, [], decls), ex_vars
+            else (close env ex_vars <| Term.mk_Valid tt, [], decls), [] in
 
     let encode_q_body env (bs:Syntax.binders) (ps:args) body = 
         let vars, guards, env, decls, _ = encode_binders None bs (negate env) in 
@@ -953,11 +972,11 @@ and encode_formula_with_labels  (phi:typ) (env:env_t) : term * labels * decls_t 
           then Util.fprint1 ">>>> Got QALL [%s]\n" (vars |> Print.binders_to_string "; ");
 
           let vars, pats, guard, body, labs, decls = encode_q_body env vars pats body in
-          mkForall(pats, vars, mkImp(guard, body)), labs, decls
+          (mkForall(pats, vars, mkImp(guard, body)), labs, decls), []
 
         | Some (Util.QEx(vars, pats, body)) -> 
           let vars, pats, guard, body, labs, decls = encode_q_body env vars pats body in
-          mkExists(pats, vars, mkAnd(guard, body)), labs, decls
+          (mkExists(pats, vars, mkAnd(guard, body)), labs, decls), []
 
 (***************************************************************************************************)
 (* end main encoding of kinds/types/exps/formulae *)
@@ -1202,9 +1221,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                                         mkImp(xx_has_type, data_ax)), Some "inversion axiom")] in
         
         let k = Util.close_kind tps k in 
-        let formals, res = match (Util.compress_kind k).n with 
-            | Kind_arrow(bs, res) -> bs, res
-            | _ -> [], k in
+        let is_kind_arrow, formals, res = match (Util.compress_kind k).n with 
+            | Kind_arrow(bs, res) -> true, bs, res
+            | _ -> false, [], k in
         let vars, guards, env', binder_decls, _ = encode_binders None formals env in
         
         let projection_axioms tapp vars = 
@@ -1245,7 +1264,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             tname_decl@tok_decls, env in
         let kindingAx = 
             let k, decls = encode_knd res env' tapp in
-            decls@[Term.Assume(mkForall([tapp], vars, mkImp(guard, k)), Some "kinding")] in
+            let karr = 
+                if is_kind_arrow 
+                then [Term.Assume(mk_tester "Kind_arrow" (mk_PreKind ttok), Some "kinding")] 
+                else [] in
+            decls@karr@[Term.Assume(mkForall([tapp], vars, mkImp(guard, k)), Some "kinding")] in
         let aux = 
             if is_logical 
             then kindingAx@projection_axioms tapp vars 

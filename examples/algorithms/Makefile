@@ -1,7 +1,7 @@
 VERFILES=counters.fst intsort.fst insertionsort.fst mergesort.fst qsc.fst
 OTHERFLAGS=
 include ../Makefile.include
-all: .all.ver downgrade qs_seq qsort_arr
+all: .all.ver downgrade qs_seq
 
 qs_seq: $(addprefix ../../lib/, classical.fst ext.fst seq.fsi seq.fst seqproperties.fst) qs_seq.fst
 	$(FSTAR) $^ 
