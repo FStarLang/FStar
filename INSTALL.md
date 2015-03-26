@@ -1,9 +1,17 @@
-### Binary releases
+### Binary releases ###
+
 - https://github.com/FStarLang/FStar/releases
 
-### Building F* from sources
+### Building F* from sources ###
 
-- On Windows 7/8 with .NET framework 4.5 and F# v3.0 :
+- On Windows 7/8 with .NET framework 4.5:
+  - Prerequisite: VisualStudio 2013 and Visual F# Tools (v3.0 or later)
+    (http://fsharp.org/use/windows/)
+    - for instance install the **free** Visual Studio 2013 Community
+      (https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx)
+    - Install the Visual F# Tools from Microsoft
+      (by clicking the "Get Visual F# Tools for Visual Studio 2013"
+       link here https://msdn.microsoft.com/en-us/vstudio/hh388569.aspx)
   - Using VisualStudio 2013, open FStar/VS/FStar.sln and build solution.
 
 - On Linux or Mac OS X using Mono:
@@ -20,6 +28,7 @@
     - For other Linux distributions check out these links:
       - http://www.mono-project.com/download/#download-lin
       - http://fsharp.org/use/linux/
+
     - For Mac OS X install the MRE:
       - http://www.mono-project.com/download/#download-mac
 
@@ -35,7 +44,7 @@
 
       For instance, for a 64bit architecture you can do
 
-          $ wget "https://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=z3&DownloadId=891122&FileTime=130523828556400000&Build=20941" -O z3-4.3.2.5a45711f22d9-x64-ubuntu-13.10.zip
+          $ wget "https://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=z3&DownloadId=891122&FileTime=130523828556400000&Build=20959" -O z3-4.3.2.5a45711f22d9-x64-ubuntu-13.10.zip
           $ unzip z3-4.3.2.5a45711f22d9-x64-ubuntu-13.10.zip
           $ export PATH=z3-4.3.2.5a45711f22d9-x64-ubuntu-13.10/bin:$PATH
 
@@ -56,11 +65,32 @@
   - If `make test` (`make boot` in fact) causes stack overflow try
     issuing `ulimit -s unlimited` in the terminal beforehand.
 
-### Bootstrapping the compiler in OCaml
+### Bootstrapping the compiler in OCaml ###
 
-0. Prerequisite: OCaml (version 4.01.0 or newer)
+#### Windows Prerequisites ####
 
-1. Prerequisite: OPAM (version 1.2.x).
+0. Use Visual Studio for building `fstar.exe`
+   (note: running cygwin/wodi `make` in `src` will probably
+   just give you a broken binary).
+
+1. Use [Wodi] for installing OCaml (version 4.01.0 or newer)
+
+2. [Wodi] also installs cygwin; when your asked which cygwin packages
+   you want add `git` to the default list. If you forgot to do this,
+   you can still do that by downloading cygwin's setup-x86.exe and
+   pointing it at your wodi install.
+
+3. Use the [Wodi] ocaml package manager for installing batteries;
+   you can do this either from the visual package manager or
+   by issuing the command `godi_add godi_batteries`
+
+[Wodi]: http://wodi.forge.ocamlcore.org/
+
+#### Linux/MacOS Prerequisites ####
+
+0. OCaml (version 4.01.0 or newer)
+
+1. OPAM (version 1.2.x).
    - Installation instructions available at various places
      (e.g., https://github.com/realworldocaml/book/wiki/Installation-Instructions#getting-opam
      or http://opam.ocaml.org/doc/Install.html).
@@ -69,16 +99,19 @@
      `opam init` to edit your `~/.bashrc` or `~/.profile`, it is done
      automatically; otherwise, use: `eval $(opam config env)`.
 
-2. Install OCaml Batteries:
+2. Install OCaml Batteries using OPAM:
 
         $ opam install batteries
 
-3. Generate the OCaml backend by running the following commands in `src`:
+#### Bootstrapping the compiler in OCaml ####
+
+- Once you satisfy the prerequisites for your platform,
+  generate the OCaml backend by running the following commands in `src`:
 
         $ make
         $ make ocaml
 
-### Creating binary packages for your platform
+### Creating binary packages for your platform ###
 
 (no cross platform compilation supported at the moment)
 
@@ -91,7 +124,3 @@
         $ make parser
         $ make
         $ make package
-
-#### Additional instructions for getting Windows binaries
-
-Use Visual Studio for building `fstar.exe` (note: running `make` in `src` will just give you a broken binary). Use [wodi](http://wodi.forge.ocamlcore.org/) for building the package and for installing batteries. Wodi installs cygwin; when your asked which packages add `git` to the default list. Make sure you have F# installed and fsc.exe is in your PATH. To install F# [check this out](http://fsharp.org/use/windows/).
