@@ -405,11 +405,11 @@ let snd x = MkTuple2._2 x
 
 logic type InductionHyp : Type -> Type
 assume val using_induction_hyp: 'a -> Lemma (ensures (InductionHyp 'a))
-assume val Assume: 'P:Type -> unit -> (y:unit{'P})
+assume val _assume: 'P:Type -> unit -> (y:unit{'P})
 assume val admit: unit -> Admit 'a
 assume val magic: unit -> Tot 'a
 assume val admitP: 'P:Type -> Pure unit True (fun x -> 'P)
-assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
+assume val _assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
 assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (fun x -> 'P)
 assume val qintro: a:Type -> p:(a -> Type) -> (x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 assume val failwith: string -> ALL.All 'a (fun h -> True) (fun h a h' -> is_Err a /\ h==h')
