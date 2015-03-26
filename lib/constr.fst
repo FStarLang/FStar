@@ -15,3 +15,11 @@ type cexists_type : (Type -> Type) -> Type =
 
 type ceq : #a:Type -> a -> a -> Type =
   | Eq : a:Type -> x:a -> ceq x x
+
+(* can we make this work?
+type cfalse : Type
+
+val cfalse_elim : cfalse -> a:Type -> a
+let cfalse_elim pf _ =
+  match pf with
+*)
