@@ -345,8 +345,8 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
           let add_implicits formals args = match formals, args with 
             | (_, Some Implicit)::_, (_, None)::_ -> (* a prefix of formals are implicit args are to be instantiated *)
               let rec aux subst formals implicits = match formals with 
-                | []
-                | (_, None)::_ -> subst, formals, implicits 
+                | [] -> subst, formals, implicits
+                | (_, aq)::_ when (aq <> Some Implicit) -> subst, formals, implicits
                 | formal::formals -> 
                   let implicit = match fst formal with 
                     | Inl a -> Inl (Tc.Util.new_tvar env (Util.subst_kind subst a.sort)), as_implicit true
