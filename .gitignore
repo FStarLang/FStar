@@ -3,8 +3,9 @@
 *.vspx
 *.psess
 *.suo
-queries*.smt2
-
+*.smt2
+*.sav
+cache/
 /VS/packages
 
 /src/parser/parse.fs

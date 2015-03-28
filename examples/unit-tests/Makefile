@@ -9,3 +9,5 @@ all-neg: $(NEGFILES)
 	-$(FSTAR) $(STDLIB) $^
 	echo "EXPECT 35 FAILURES<------------------------------------"
 
+inverse:
+	$(FSTAR) --admit_fsi Seq $(FSTAR_HOME)/lib/classical.fst $(FSTAR_HOME)/lib/ext.fst $(FSTAR_HOME)/lib/seq.fsi inverse.fst --max_fuel 0 --max_ifuel 3 --initial_ifuel 3 --initial_fuel 0

@@ -19,6 +19,32 @@ module SeqProperties
 #set-options "--max_fuel 0 --initial_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 open Seq
 
+val lemma_append_inj_l: a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a{length s1 = length t1 /\ Eq (append s1 s2) (append t1 t2)} -> i:nat{i < length s1}
+  -> Lemma (index s1 i == index t1 i)
+let lemma_append_inj_l s1 s2 t1 t2 i =
+  assert (index s1 i = (index (append s1 s2) i));
+  assert (index t1 i = (index (append t1 t2) i))
+
+val lemma_append_inj_r: a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a{length s1 = length t1 /\ length s2 = length t2 /\ Eq (append s1 s2) (append t1 t2)} -> i:nat{i < length s2}
+  -> Lemma (ensures  (index s2 i == index t2 i))
+let lemma_append_inj_r s1 s2 t1 t2 i =
+  assert (index s2 i = (index (append s1 s2) (i + length s1)));
+  assert (index t2 i = (index (append t1 t2) (i + length t1)))
+
+val lemma_append_len_disj: a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a {(length s1 = length t1 \/ length s2 = length t2) /\ (Eq (append s1 s2) (append t1 t2))}
+  -> Lemma (ensures (length s1 = length t1 /\ length s2 = length t2))
+let lemma_append_len_disj s1 s2 t1 t2 = 
+  cut (length (append s1 s2) == length s1 + length s2);
+  cut (length (append t1 t2) == length t1 + length t2)
+
+val lemma_append_inj: a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a {length s1 = length t1 \/ length s2 = length t2}
+  -> Lemma (requires (Eq (append s1 s2) (append t1 t2)))
+           (ensures (Eq s1 t1 /\ Eq s2 t2))
+let lemma_append_inj s1 s2 t1 t2 =
+  lemma_append_len_disj s1 s2 t1 t2;
+  Classical.forall_intro (lemma_append_inj_l s1 s2 t1 t2);
+  Classical.forall_intro (lemma_append_inj_r s1 s2 t1 t2)
+
 val head: a:Type -> s:seq a{length s > 0} -> Tot a
 let head s = index s 0
 
