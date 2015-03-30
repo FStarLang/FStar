@@ -1,4 +1,4 @@
-module Bug192b
+module Bug195b
 
 assume val subst : int -> Tot int
 assume type typing : int -> Type

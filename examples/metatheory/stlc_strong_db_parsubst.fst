@@ -259,7 +259,7 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
     (TyApp (substitution_preserves_typing x h1 h21)
            (substitution_preserves_typing x h1 h22))
 
-(* Simpler proof idea from Steven (blocked on #195)
+(* Simpler proof idea from Steven (blocked on #195) *)
 
 (*
 type subst_typing (s:sub) (g1:env) (g2:env) =
@@ -274,7 +274,6 @@ val substitution :
       hs:subst_typing s g1 g2 ->
       Tot (typing g2 (subst s e) t) (decreases e)
 let substitution g1 e t s g2 h1 hs = magic()
-*)
 
 (* Type preservation *)
 
