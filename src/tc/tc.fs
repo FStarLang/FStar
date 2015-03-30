@@ -617,6 +617,10 @@ and tc_value env e : exp * lcomp * guard_t =
                         let ct = Util.comp_to_comp_typ c in
                         match ct.flags |> List.tryFind (function DECREASES _ -> true | _ -> false) with 
                             | Some (DECREASES dec) -> 
+                                if List.length bs' <> List.length actuals
+                                then raise (Error(Util.format2 "Decreases clause on a function with an unexpected number of arguments (expected %s; got %s)" 
+                                                                (string_of_int (List.length bs')) (string_of_int (List.length actuals)), 
+                                                  Env.get_range env));
                                 let dec = as_lex_list dec in 
                                 let subst = List.map2 (fun b a -> match b, a with 
                                     | (Inl formal, _), (Inl actual, _) -> Inl (formal.v, Util.btvar_to_typ actual)

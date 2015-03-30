@@ -607,6 +607,12 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
              begin match tfun.n with 
                 | Typ_fun(bs', c) -> 
                     let nformals = List.length bs' in
+//                    Printf.printf "Encoding Exp_abs %s\nType tfun is %s\ngot n_formals(typ)=%d and n_formals(term)=%d; total_comp=%A" 
+//                    (Print.exp_to_string e)
+//                    (Print.typ_to_string tfun)
+//                    nformals 
+//                    (List.length bs) 
+//                    (Util.is_total_comp c);
                     if nformals < List.length bs && Util.is_total_comp c (* explicit currying *)
                     then let bs0, rest = Util.first_N nformals bs in 
                          let res_t = match Util.mk_subst_binder bs0 bs' with 
@@ -1365,14 +1371,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  | Typ_fun(formals, c) -> 
                     let nformals = List.length formals in
                     let nbinders = List.length binders in
-                    let tres = Util.comp_result c in                   
+                    let tres = Util.comp_result c in       
                     if nformals < nbinders && Util.is_total_comp c (* explicit currying *)
                     then let bs0, rest = Util.first_N nformals binders in 
                          let tres = match Util.mk_subst_binder bs0 formals with
                             | Some s -> Util.subst_typ s tres 
                             | _ -> failwith "impossible" in
                          let body = mk_Exp_abs(rest, body) (Some tres) body.pos in
-                         bs0, body, formals, tres
+                         bs0, body, bs0, tres
                     
                     else if nformals > nbinders (* eta-expand before translating it *)
                     then let binders, body = eta_expand binders formals body tres in
