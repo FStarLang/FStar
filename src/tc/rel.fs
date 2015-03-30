@@ -2229,7 +2229,8 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
       flex_rigid (destruct_flex_e e2) e1 //the constraint is an equality, so reorientation is fine
 
     | _ -> //TODO: check that they at least have the same head? 
-     solve env (solve_prob orig (Some <| Util.mk_eq (Recheck.recompute_typ e1) (Recheck.recompute_typ e2) e1 e2) [] wl)  
+     let t, _ = new_tvar (Tc.Env.get_range env) (Tc.Env.binders env) ktype in 
+     solve env (solve_prob orig (Some <| Util.mk_eq t t e1 e2) [] wl)  
 
 (* -------------------------------------------------------- *)        
 (* top-level interface                                      *)
@@ -2338,6 +2339,7 @@ let new_k_problem env lhs rel rhs elt loc =
 let simplify_guard env g = match g.guard_f with 
     | Trivial -> g
     | NonTrivial f -> 
+      if Tc.Env.debug env Options.High then Util.fprint1 "Simplifying guard %s\n" (Print.typ_to_string f);
       let f = Normalize.norm_typ [Beta; Simplify] env f in
       let f = match f.n with 
         | Typ_const fv when lid_equals fv.v Const.true_lid -> Trivial
