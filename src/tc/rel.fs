@@ -2192,7 +2192,7 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
     | Exp_bvar x1, Exp_bvar x1' -> 
       if Util.bvd_eq x1.v x1'.v
       then solve env (solve_prob orig None [] wl)
-      else solve env (solve_prob orig (Some <| Util.mk_eq e1 e2) [] wl)
+      else solve env (solve_prob orig (Some <| Util.mk_eq (Recheck.recompute_typ e1) (Recheck.recompute_typ e2) e1 e2) [] wl)
 
     | Exp_fvar (fv1, _), Exp_fvar (fv1', _) -> 
       if lid_equals fv1.v fv1'.v
@@ -2229,7 +2229,7 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
       flex_rigid (destruct_flex_e e2) e1 //the constraint is an equality, so reorientation is fine
 
     | _ -> //TODO: check that they at least have the same head? 
-     solve env (solve_prob orig (Some <| Util.mk_eq e1 e2) [] wl)  
+     solve env (solve_prob orig (Some <| Util.mk_eq (Recheck.recompute_typ e1) (Recheck.recompute_typ e2) e1 e2) [] wl)  
 
 (* -------------------------------------------------------- *)        
 (* top-level interface                                      *)

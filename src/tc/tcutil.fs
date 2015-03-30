@@ -870,7 +870,7 @@ let maybe_assume_result_eq_pure_term env (e:exp) (lc:lcomp) : lcomp =
            let x = Util.new_bvd None in
            let xexp = Util.bvd_to_exp x t in
            let ret = lcomp_of_comp <| return_value env t xexp in
-           let eq_ret = weaken_precondition env ret (Rel.NonTrivial (Util.mk_eq xexp e)) in
+           let eq_ret = weaken_precondition env ret (Rel.NonTrivial (Util.mk_eq t t xexp e)) in
            comp_set_flags ((bind env None (lcomp_of_comp c) (Some (Env.Binding_var(x, t)), eq_ret)).comp()) (PARTIAL_RETURN::comp_flags c) in
   let flags = 
     if not (Util.is_function_typ lc.res_typ)
@@ -985,7 +985,7 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
                                     (guard_of_guard_formula <| Rel.NonTrivial guard) in
             let eq_ret = 
                 if Util.is_pure_comp c 
-                then weaken_precondition env eq_ret (Rel.NonTrivial (Util.mk_eq xexp e))
+                then weaken_precondition env eq_ret (Rel.NonTrivial (Util.mk_eq t t xexp e))
                 else eq_ret in 
             let c = bind env (Some e) (lcomp_of_comp <| mk_Comp ct) (Some(Env.Binding_var(x, lc.res_typ)), eq_ret) in
             let c = c.comp () in

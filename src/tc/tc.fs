@@ -1158,7 +1158,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
              Some e, g in
   let when_condition = match when_clause with 
         | None -> None 
-        | Some w -> Some <| Util.mk_eq w Const.exp_true_bool in
+        | Some w -> Some <| Util.mk_eq Util.t_bool Util.t_bool w Const.exp_true_bool in
   let branch, c, g_branch = tc_exp pat_env branch in
   let scrutinee = Util.bvd_to_exp scrutinee_x pat_t in
   let scrutinee_env, _ = Env.push_local_binding env (Env.Binding_var(scrutinee_x, pat_t)) |> Tc.Env.clear_expected_typ in
@@ -1170,7 +1170,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
             | Exp_constant _ 
             | Exp_fvar _ -> fopt (* Equation for non-binding forms are handled with the discriminators below *)
             | _ -> 
-              let clause = Util.mk_eq scrutinee e in
+              let clause = Util.mk_eq (Recheck.recompute_typ scrutinee) (Recheck.recompute_typ e) scrutinee e in
                 match fopt with
                  | None -> Some clause
                  | Some f -> Some <| Util.mk_disj clause f) None in 
@@ -1185,16 +1185,16 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
     let disc = Util.fvar false (Util.mk_discriminator f.v) <| range_of_lid f.v in 
     let disc = mk_Exp_app(disc, [varg <| scrutinee]) None scrutinee.pos in
     let e, _, _ = tc_total_exp (Env.set_expected_typ scrutinee_env Recheck.t_bool) disc in
-    Util.mk_eq e Const.exp_true_bool in
+    Util.mk_eq Util.t_bool Util.t_bool e Const.exp_true_bool in
 
-  let rec mk_guard scrutinee pat_exp : typ = 
+  let rec mk_guard scrutinee tsc pat_exp : typ = 
     if not !Options.verify then Util.ftv Const.true_lid ktype else //NS: TODO ... seem to be hitting a bug when type-checking visit.fs
         let pat_exp = Util.compress_exp pat_exp in
         match pat_exp.n with 
           | Exp_uvar _
           | Exp_app({n=Exp_uvar _}, _) 
           | Exp_bvar _ -> Util.ftv Const.true_lid ktype
-          | Exp_constant _ -> Util.mk_eq scrutinee pat_exp
+          | Exp_constant _ -> Util.mk_eq tsc (Recheck.recompute_typ pat_exp) scrutinee pat_exp
           | Exp_fvar(f, _) -> discriminate scrutinee f
           | Exp_app({n=Exp_fvar(f, _)}, args) ->  
             let head = discriminate scrutinee f in
@@ -1203,12 +1203,12 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
                 | Inr ei ->
                     let projector = Tc.Env.lookup_projector env f.v i in
                     let sub_term = mk_Exp_app(Util.fvar false projector f.p, [varg scrutinee]) None f.p in
-                    let sub_term, _, _ = tc_total_exp scrutinee_env sub_term in
-                    [mk_guard sub_term ei]) |> List.flatten in
+                    let sub_term, tsub, _ = tc_total_exp scrutinee_env sub_term in
+                    [mk_guard sub_term tsub ei]) |> List.flatten in
             Util.mk_conj_l (head::sub_term_guards)
           | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range pat_exp.pos) (Print.exp_to_string pat_exp)) in
 
-  let path_guard = disj_exps |> List.map (fun e -> mk_guard scrutinee (Normalize.norm_exp [Normalize.Beta] env e)) |> Util.mk_disj_l  in
+  let path_guard = disj_exps |> List.map (fun e -> mk_guard scrutinee pat_t (Normalize.norm_exp [Normalize.Beta] env e)) |> Util.mk_disj_l  in
   let path_guard = match when_condition with 
     | None -> path_guard
     | Some w -> Util.mk_conj path_guard w in

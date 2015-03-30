@@ -1,4 +1,4 @@
-module Bug
+module Bug77
 
 assume type a
 assume type p : a -> Type
