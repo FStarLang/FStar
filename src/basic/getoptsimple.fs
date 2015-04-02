@@ -48,8 +48,11 @@ let rec parse (opts:list<opt>) def ar ix max i =
                        | OneArg (f, _) ->
                            if ix + 1 > max then Die ("last option '" + argtrim + "' takes an argument but has none")
                            else
-                             (f (ar.(ix + 1));
-                              parse opts def ar (ix + 2) max (i + 1)))
+                             try
+                               f (ar.(ix + 1));
+                               parse opts def ar (ix + 2) max (i + 1)
+                             with _ ->
+                                  Die ("wrong argument given to option '" + argtrim + "'"))
                 | None -> Die ("unrecognized option '" + arg + "'")
           else go_on ()
 
