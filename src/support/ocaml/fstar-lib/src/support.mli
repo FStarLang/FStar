@@ -12,7 +12,7 @@ module Prims :
     val snd : 'a * 'b -> 'b
     val failwith : string -> 'a
     val try_with : (unit -> 'a) -> (exn -> 'a) -> 'a
-    val l__Assert : 'a -> unit
+    val _assert : 'a -> unit
   end
 module ST : sig val read : 'a ref -> 'a end
 module String :

@@ -13,7 +13,7 @@ module Prims = struct
   let snd = snd
   let failwith = failwith
   let try_with f1 f2 = try f1 () with | e -> f2 e
-  let l__Assert x = ()
+  let _assert x = ()
 end
 
 module ST = struct

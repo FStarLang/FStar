@@ -84,6 +84,7 @@
 
   (** XXX TODO This is an unacceptable hack. Needs to be redone ASAP  **)
   let ba_of_string s = Array.init (String.length s) (String.get s)
+  let n_typ_apps = Util.mk_ref 0
   let is_typ_app lexbuf =
   try
    let char_ok = function
@@ -108,6 +109,11 @@
       aux (pos + 1) in
    balanced lexbuf.lex_buffer (lexbuf.lex_curr_pos - 1)
   with e -> Printf.printf "Resolving typ_app<...> syntax failed.\n"; false
+
+  let is_typ_app_gt () =
+    if !n_typ_apps > 0
+    then (Util.decr n_typ_apps; true)
+    else false
 
  let clean_number x = String.strip ~chars:"uyslLUnIN" x
 }
@@ -245,7 +251,7 @@ rule token = parse
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
  | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else LESS  }
- | ">"         { GREATER }
+ | ">"         { if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser lexbuf }
  | "]"         { RBRACK }
  | "|]"        { BAR_RBRACK }
  | "{"         { LBRACE }
@@ -284,6 +290,9 @@ rule token = parse
  | _ { failwith "unexpected char" }     
 
  | eof { EOF }
+
+and custom_op_parser = parse
+ | custom_op_char * {CUSTOM_OP(">" ^  lexeme lexbuf)}
 
 and string buffer = parse
  |  '\\' (newline as x) anywhite* 
