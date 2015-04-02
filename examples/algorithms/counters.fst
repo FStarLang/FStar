@@ -56,17 +56,17 @@ let mk_counter _ =
   Evens (inv1 x y) (Set.union (Set.singleton (Ref x)) (Set.singleton (Ref y))) evens
 
 
-opaque logic type inv2 (r:ref int) (h:heap) = contains h r==true
-val mk_counter_2: unit
-               -> ST t (requires (fun h -> True))
-                       (ensures  (fun h v h' ->
-                         On  (Evens.fp v) (Evens.inv v) h'
-                         /\ Heap.fresh h (Evens.fp v)))
-                       (modifies no_refs)
-let mk_counter_2 _ =
-  let x = ST.alloc 0 in
-  let evens _ =
-    let rx = ST.read x in
-    ST.write x (rx + 1);
-    2 * rx in
-  Evens (inv2 x) (Set.singleton (Ref x)) evens
+(* opaque logic type inv2 (r:ref int) (h:heap) = contains h r==true *)
+(* val mk_counter_2: unit *)
+(*                -> ST t (requires (fun h -> True)) *)
+(*                        (ensures  (fun h v h' -> *)
+(*                          On  (Evens.fp v) (Evens.inv v) h' *)
+(*                          /\ Heap.fresh h (Evens.fp v))) *)
+(*                        (modifies no_refs) *)
+(* let mk_counter_2 _ = *)
+(*   let x = ST.alloc 0 in *)
+(*   let evens _ = *)
+(*     let rx = ST.read x in *)
+(*     ST.write x (rx + 1); *)
+(*     2 * rx in *)
+(*   Evens (inv2 x) (Set.singleton (Ref x)) evens *)

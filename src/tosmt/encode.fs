@@ -354,27 +354,33 @@ let encode_const = function
     | Const_string(bytes, _) -> varops.string_const (Util.string_of_bytes <| bytes)
     | c -> failwith (Util.format1 "Unhandled constant: %s\n" (Print.const_to_string c))
  
-let rec encode_knd (k:knd) (env:env_t) (t:term) : term  * decls_t = 
+let rec encode_knd' (prekind:bool) (k:knd) (env:env_t) (t:term) : term  * decls_t = 
     match (Util.compress_kind k).n with 
         | Kind_type -> 
             mk_HasKind t (Term.mk_Kind_type), []
 
         | Kind_abbrev(_, k) -> 
-            encode_knd k env t
+            encode_knd' prekind k env t
 
         | Kind_uvar (uv, _) -> (* REVIEW: warn? *)
             Term.mkTrue, []
 
         | Kind_arrow(bs, k) -> 
             let vars, guards, env', decls, _ = encode_binders None bs env in 
-            let prekind = mk_tester "Kind_arrow" (mk_PreKind t) in
             let app = mk_ApplyT t vars in
-            let k, decls' = encode_knd k env' app in
-            Term.mkAnd(prekind,
-                       Term.mkForall([app], vars, mkImp(mk_and_l guards, k))), 
+            let k, decls' = encode_knd' prekind k env' app in
+            let term = Term.mkForall([app], vars, mkImp(mk_and_l guards, k)) in
+            let term = 
+                if prekind
+                then Term.mkAnd(mk_tester "Kind_arrow" (mk_PreKind t), 
+                                term)
+                else term in 
+            term,
             decls@decls'
 
         | _ -> failwith (Util.format1 "Unknown kind: %s" (Print.kind_to_string k))
+
+and encode_knd (k:knd) (env:env_t) (t:term) = encode_knd' true k env t
 
 and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) : (list<var>       (* translated bound variables *)
                                                       * list<term>    (* guards *)
@@ -392,7 +398,7 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) : (li
                     if is_null_binder b 
                     then withenv env <| fresh_bvar "a" Type_sort
                     else gen_typ_var env a in 
-                let guard_a_k,decls' = encode_knd k env aa in
+                let guard_a_k,decls' = encode_knd' false k env aa in
                 (aasym, Type_sort), 
                 guard_a_k,
                 env', 

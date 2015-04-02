@@ -57,8 +57,8 @@ let canRead db file =
   is_Some (List.find (function Readable x | Writable x -> x=file) db)
   
 assume val acls: ref db
-type CanRead f h  = canRead  (Heap.sel h acls) f == true
-type CanWrite f h = canWrite (Heap.sel h acls) f == true
+logic type CanRead f h  = canRead  (Heap.sel h acls) f == true
+logic type CanWrite f h = canWrite (Heap.sel h acls) f == true
 
 let grant e = 
   let a = ST.read acls in 

@@ -1108,6 +1108,35 @@ let destruct_slack env wl (phi:typ) : either<typ, slack> =
 (* </slack>                                         *)
 (* ------------------------------------------------ *)
 
+(* ---------------------------------------------------------------------- *)
+(* <eq_args> Special case of deciding syntactic equality, an optimization *)
+(* ---------------------------------------------------------------------- *)
+let rec eq_typ (t1:typ) (t2:typ) = 
+    let t1 = compress_typ t1 in
+    let t2 = compress_typ t2 in 
+    match t1.n, t2.n with
+        | Typ_btvar a, Typ_btvar b -> Util.bvar_eq a b
+        | Typ_const f, Typ_const g -> Util.fvar_eq f g
+        | Typ_uvar (u1, _), Typ_uvar (u2, _) -> Unionfind.equivalent u1 u2
+        | Typ_app (h1, args1), Typ_app(h2, args2) -> 
+          eq_typ h1 h2 && eq_args args1 args2
+        | _ -> false
+and eq_exp (e1:exp) (e2:exp) = 
+    let e1 = compress_exp e1 in
+    let e2 = compress_exp e2 in 
+    match e1.n, e2.n with
+        | Exp_bvar a, Exp_bvar b -> Util.bvar_eq a b
+        | Exp_fvar (f, _), Exp_fvar (g, _) -> Util.fvar_eq f g
+        | Exp_constant c, Exp_constant d -> c=d
+        | Exp_app(h1, args1), Exp_app(h2, args2) -> eq_exp h1 h2 && eq_args args1 args2
+        | _ -> false
+and eq_args (a1:args) (a2:args) : bool = 
+    if List.length a1 = List.length a2
+    then List.forall2 (fun a1 a2 -> match a1, a2 with
+        | (Inl t, _), (Inl s, _) -> eq_typ t s
+        | (Inr e, _), (Inr f, _) -> eq_exp e f
+        | _ -> false) a1 a2
+    else false
 (* ------------------------------------------------ *)
 (* <solver> The main solving algorithm              *)
 (* ------------------------------------------------ *)
@@ -1945,8 +1974,8 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                             (Print.typ_to_string head')
                             (Print.args_to_string args')) 
                             orig
-                else if nargs=0
-                then solve env (solve_prob orig None [] wl)  //special case of nullary constructors works well for easily proving things like nat <: nat
+                else if nargs=0 || eq_args args args'
+                then solve env (solve_prob orig None [] wl)  //special case works well for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
                 else //Given T t1 ..tn REL T s1..sn
                      //  if T expands to a refinement, then normalize it and recurse
                      //  This allows us to prove things like
@@ -2454,7 +2483,7 @@ let try_discharge_guard env (g:guard_t) =
    else match g.guard_f with 
     | Trivial -> ()
     | NonTrivial vc -> 
-        let vc = Normalize.norm_typ [Delta; Beta; Eta; Simplify] env vc in
+        let vc = Normalize.norm_typ [Beta; Eta; Simplify] env vc in
         begin match check_trivial vc with 
             | Trivial -> ()
             | NonTrivial vc -> 
