@@ -134,7 +134,6 @@ let destruct_arrow_kind env tt k (args:args) : (Syntax.args * binders * knd) =
     Turns a disjunctive pattern p into a quadruple:
  *)
 let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may appear in the branch of match) *)
-                         * list<binding>   (* pattern-bound wild-card variables (may not appear in the branch, but do appear in expresions corresponding to the pattern) *)
                          * list<exp>       (* expressions corresponding to each arm of the disjunct *)
                          * pat) =          (* decorated pattern, with all the missing implicit args in p filled in *)
      let pvar_eq x y = match x, y with 
@@ -148,33 +147,38 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
            | Env.Binding_typ(x, _) -> Inl x
            | _ -> failwith "impos") in
   
-     let rec pat_env env (p:pat) : list<Env.binding> * list<Env.binding> * Env.env = 
+     let rec pat_env allow_wc_dependence env (p:pat) : 
+                                    (list<Env.binding>    //all pattern-bound vars including wild-cards, in proper order
+                                    * list<Env.binding>  //just the accessible vars, for the disjunctive pattern test
+                                    * list<Env.binding>  //just the wildcards
+                                    * Env.env) = 
         match p.v with 
            | Pat_dot_term _
            | Pat_dot_typ _ 
-           | Pat_constant _ -> [], [], env
+           | Pat_constant _ -> [], [], [], env
            | Pat_wild x -> 
                 let w = Env.Binding_var(x.v, new_tvar env ktype) in
-                let env = Env.push_local_binding env w in
-                [], [w], env
+                let env = if allow_wc_dependence then Env.push_local_binding env w else env in
+                [w], [], [w], env
            | Pat_var (x, _) ->
                 let b = Env.Binding_var(x.v, new_tvar env ktype) in
                 let env = Env.push_local_binding env b in
-                [b], [], env
+                [b], [b], [], env
            | Pat_twild a -> 
                 let w = Env.Binding_typ(a.v, new_kvar env) in
-                let env = Env.push_local_binding env w in
-                [], [w], env
+                let env = if allow_wc_dependence then Env.push_local_binding env w else env in
+                [w], [], [w], env
            | Pat_tvar a ->      
                 let b = Env.Binding_typ(a.v, new_kvar env) in
                 let env = Env.push_local_binding env b in 
-                [b], [], env
+                [b], [b], [], env
            | Pat_cons(fv, pats) -> 
-               let b, w, env = pats |> List.fold_left (fun (b, w, env) p -> 
-                    let b', w', env = pat_env env p in
-                    b'::b, w'::w, env)  ([], [], env) in
+               let b, a, w, env = pats |> List.fold_left (fun (b, a, w, env) p -> 
+                    let b', a', w', env = pat_env allow_wc_dependence env p in
+                    b'::b, a'::a, w'::w, env)  ([], [], [], env) in
                List.rev b |> List.flatten, 
-               List.rev w |> List.flatten, 
+               List.rev a |> List.flatten, 
+               List.rev w |> List.flatten,
                env
            | Pat_disj _ -> failwith "impossible" in
 
@@ -269,42 +273,41 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
 
         | _ -> p in
 
-    let one_pat env p = 
+    let one_pat allow_wc_dependence env p = 
         let p = elaborate_pat env p in
-        let b, w, env = pat_env env p in
+        let b, a, w, env = pat_env allow_wc_dependence  env p in
         let arg, p = pat_as_arg env p in
         match b |> Util.find_dup pvar_eq with 
             | Some (Env.Binding_var(x, _)) -> raise (Error(Tc.Errors.nonlinear_pattern_variable (Inr x), p.p))
             | Some (Env.Binding_typ(x, _)) -> raise (Error(Tc.Errors.nonlinear_pattern_variable (Inl x), p.p))
-            | _ -> b, w, arg, p in
+            | _ -> b, a, w, arg, p in
 
 
    let top_level_pat_as_args env (p:pat) : (list<Env.binding>                    (* pattern bound variables *)
-                                            * list<Env.binding>                  (* pattern-bound wild variables *)
                                             * list<arg>                          (* pattern sub-terms *)
                                             * pat) =                             (* decorated pattern *)
         match p.v with 
            | Pat_disj [] -> failwith "impossible"
 
            | Pat_disj (q::pats) -> 
-              let b, w, arg, q = one_pat env q in
+              let b, a, _, arg, q = one_pat false env q in //in disjunctive patterns, the wildcards are not accessible even for typing
               let w, args, pats = List.fold_right (fun p (w, args, pats) -> 
-                  let b', w', arg, p = one_pat env p in
-                  if not (Util.multiset_equiv pvar_eq b b')
-                  then raise (Error(Tc.Errors.disjunctive_pattern_vars (vars_of_bindings b) (vars_of_bindings b'), Tc.Env.get_range env))
+                  let b', a', w', arg, p = one_pat false env p in
+                  if not (Util.multiset_equiv pvar_eq a a')
+                  then raise (Error(Tc.Errors.disjunctive_pattern_vars (vars_of_bindings a) (vars_of_bindings a'), Tc.Env.get_range env))
                   else (w'@w, arg::args, p::pats)) 
-                  pats (w, [], []) in
-              b, w, arg::args, {p with v=Pat_disj(q::pats)}
+                  pats ([], [], []) in
+              b@w, arg::args, {p with v=Pat_disj(q::pats)}
 
            | _ -> 
-             let b, w, arg, p = one_pat env p in 
-             b, w, [arg], p in
+             let b, _, _, arg, p = one_pat true env p in //in single pattersn, the wildcards are available, at least for typing
+             b, [arg], p in
 
-    let b, w, args, p = top_level_pat_as_args env p in
+    let b, args, p = top_level_pat_as_args env p in
     let exps = args |> List.map (function 
         | Inl _, _ -> failwith "Impossible: top-level pattern must be an expression"
         | Inr e, _ -> e) in
-    b, w, exps, p 
+    b, exps, p 
 
 let decorate_pattern env p exps = 
     let rec aux p e : pat  = 

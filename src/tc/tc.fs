@@ -1121,8 +1121,8 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
   *)
   (*<tc_pat>*)
   let tc_pat (pat_t:typ) env p : pat * list<Env.binding> * Env.env * list<exp> * guard_t = 
-    let bindings, w, exps, p = Tc.Util.pat_as_exps env p in
-    let pat_env = List.fold_left Env.push_local_binding env (bindings@w) in
+    let bindings, exps, p = Tc.Util.pat_as_exps env p in
+    let pat_env = List.fold_left Env.push_local_binding env bindings in
     if debug env <| Options.Other "Pat" 
     then bindings |> List.iter (function 
         | Env.Binding_var(x, t) -> Util.fprint2 "Before tc ... pattern var %s  : %s\n" (Print.strBvd x) (Normalize.typ_norm_to_string env t)
@@ -1147,7 +1147,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
     then bindings |> List.iter (function 
         | Env.Binding_var(x, t) -> Util.fprint2 "Pattern var %s  : %s\n" (Print.strBvd x) (Print.typ_to_string t)//(Normalize.typ_norm_to_string env t)
         | _ -> ());
-    p, bindings@w, pat_env, exps, Rel.trivial_guard in
+    p, bindings, pat_env, exps, Rel.trivial_guard in
   (*</tc_pat>*)
 
   let pattern, bindings, pat_env, disj_exps, g_pat = tc_pat pat_t env pattern in //disj_exps, an exp for each arm of a disjunctive pattern
