@@ -466,6 +466,7 @@ let qual_to_string = function
     | Opaque -> "opaque"
     | Discriminator _ -> "discriminator"
     | Projector _ -> "projector"
+    | RecordType ids -> Util.format1 "record(%s)" (ids |> List.map (fun id -> id.idText) |> String.concat ", ")
     | _ -> "other"
 let quals_to_string quals = quals |> List.map qual_to_string |> String.concat " " 
 let rec sigelt_to_string x = match x with 

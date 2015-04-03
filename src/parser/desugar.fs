@@ -1249,29 +1249,29 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     |  _::_ ->
       let env0 = env in
       let mutuals = List.map (fun x -> qualify env <| tycon_id x) tcs in
-      let rec collect_tcs etq tc = 
-        let (env, tcs, quals) = etq in
+      let rec collect_tcs quals et tc = 
+        let (env, tcs) = et in
         match tc with
           | TyconRecord _ ->
             let trec = tc in
             let t, fs = tycon_record_as_variant trec in
-            collect_tcs (env, tcs, RecordType fs::quals) t
+            collect_tcs (RecordType fs::quals) (env, tcs) t
           | TyconVariant(id, binders, kopt, constructors) ->
             let env, (_, tps), se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
-            env, Inl(se, tps, constructors, tconstr)::tcs, quals
+            env, Inl(se, tps, constructors, tconstr, quals)::tcs
           | TyconAbbrev(id, binders, kopt, t) ->
             let env, (_, tps), se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
-            env, Inr(se, tps, t)::tcs, quals
+            env, Inr(se, tps, t, quals)::tcs
           | _ -> failwith "Unrecognized mutual type definition" in
-      let env, tcs, quals = List.fold_left collect_tcs (env, [], quals) tcs in
+      let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
       let sigelts = tcs |> List.collect (function
-        | Inr(Sig_tycon(id, tpars, k, _, _, _, _), tps, t) ->
+        | Inr(Sig_tycon(id, tpars, k, _, _, _, _), tps, t, quals) ->
           let env_tps = push_tparams env tps in
           let t = desugar_typ env_tps t in
           [Sig_typ_abbrev(id, tpars, k, t, [], rng)]
             
-        | Inl (Sig_tycon(tname, tpars, k, mutuals, _, tags, _), tps, constrs, tconstr) ->
+        | Inl (Sig_tycon(tname, tpars, k, mutuals, _, tags, _), tps, constrs, tconstr, quals) ->
           let tycon = (tname, tpars, k) in
           let env_tps = push_tparams env tps in
           let constrNames, constrs = List.split <|
