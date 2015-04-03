@@ -124,7 +124,6 @@ and exp' =
 and exp = syntax<exp',typ>
 and meta_e = 
   | Meta_desugared     of exp * meta_source_info                 (* Node tagged with some information about source term before desugaring *)
-  | Meta_datainst      of exp * option<typ>                      (* Expect the data constructor e to build a t-typed value; only used internally to pretyping; not visible elsewhere *)
 and meta_source_info =
   | Data_app
   | Sequence                   
