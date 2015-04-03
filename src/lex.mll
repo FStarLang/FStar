@@ -172,8 +172,8 @@ let xieee64    = xinteger 'L' 'F'
 (* -------------------------------------------------------------------- *)
 let escape_char = ('\\' ( '\\' | "\"" | '\'' | 'n' | 't' | 'b' | 'r'))
 let char        = [^'\\''\n''\r''\t''\b'] | escape_char
-let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'>'|'_'|'|'|'!'|'^'
-let custom_op = custom_op_char+
+let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'_'|'|'|'!'|'^'
+let custom_op = custom_op_char (custom_op_char | '>')*
 
 (* -------------------------------------------------------------------- *)
 let constructor_start_char = upper
@@ -250,7 +250,7 @@ rule token = parse
  | "%["        { PERCENT_LBRACK }
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
- | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else LESS  }
+ | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else CUSTOM_OP("<")  }
  | ">"         { if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser lexbuf }
  | "]"         { RBRACK }
  | "|]"        { BAR_RBRACK }
@@ -263,6 +263,7 @@ rule token = parse
 
  | ('/' | '%') as op { DIV_MOD_OP    (String.of_char op) }
  | ('+' | '-') as op { PLUS_MINUS_OP (String.of_char op) }
+ | custom_op   {CUSTOM_OP (L.lexeme lexbuf) }
 
  | "(*"
      { comment lexbuf; token lexbuf }
@@ -292,7 +293,7 @@ rule token = parse
  | eof { EOF }
 
 and custom_op_parser = parse
- | custom_op_char * {CUSTOM_OP(">" ^  lexeme lexbuf)}
+ | custom_op_char * {CUSTOM_OP(">" ^  L.lexeme lexbuf)}
 
 and string buffer = parse
  |  '\\' (newline as x) anywhite* 
