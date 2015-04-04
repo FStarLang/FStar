@@ -610,7 +610,8 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
         | Exp_match (x, [(p, None, e)]) when (Absyn.Util.is_wild_pat p) ->
             (match x.n with 
               | Exp_fvar _ -> mlexpr_of_expr mlenv rg lenv e
-              | Exp_bvar _ -> mlexpr_of_expr mlenv rg lenv e)
+              | Exp_bvar _ -> mlexpr_of_expr mlenv rg lenv e
+              | _ -> failwith "Impossible")
             
 
         | Exp_match (e, bs) -> begin
@@ -794,7 +795,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
     in
 
     let cons_args cname tparams rg x =
-      let (Some (c, _)) = smap_try_find cs cname.ident.idText  in
+      let (c, _) = smap_try_find cs cname.ident.idText |> Util.must in
       let cparams, rgty, c = strip_polymorphism [] rg c in
 
       if List.length cparams <> List.length tparams then

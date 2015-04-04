@@ -21,7 +21,6 @@ open Microsoft.FStar
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Absyn.Const
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn.Util
    
@@ -81,7 +80,8 @@ type env = {
   top_level:bool;                (* is this a top-level term? if so, then discharge guards *)
   check_uvars:bool;              (* paranoid: re-typecheck unification variables *)
   use_eq:bool;                   (* generate an equality constraint, rather than subtyping/subkinding *)
-  is_iface:bool;             (* is the module we're currently checking an interface? *)
+  is_iface:bool;                 (* is the module we're currently checking an interface? *)
+  uvar_level:int;                (* level to track uvar binding site *)
 } 
 and solver_t = {
     init: env -> unit;
@@ -129,8 +129,12 @@ let initial_env solver module_lid =
     check_uvars=false;
     use_eq=false;
     is_iface=false;
+    uvar_level=0;
   }
 
+
+let incr_level e = {e with uvar_level=e.uvar_level + 1}
+let decr_level e = {e with uvar_level=e.uvar_level - 1}
 let monad_decl_opt env l = 
   env.lattice.decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname l) 
 

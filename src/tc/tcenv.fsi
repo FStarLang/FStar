@@ -62,7 +62,8 @@ type env = {
   top_level:bool;                (* is this a top-level term? if so, then discharge guards *)
   check_uvars:bool;              (* paranoid: re-typecheck unification variables *)
   use_eq:bool;                   (* generate an equality constraint, rather than subtyping/subkinding *)
-  is_iface:bool;             (* is the module we're currently checking an interface? *)
+  is_iface:bool;                 (* is the module we're currently checking an interface? *)  
+  uvar_level:int;                (* level to track uvar binding sites *)                
 }
 and solver_t = {
     init: env -> unit;
@@ -76,6 +77,8 @@ and solver_t = {
     refresh: unit -> unit;
 }
 
+val incr_level: env -> env
+val decr_level: env -> env
 val bound_vars: env -> list<Util.either<btvar, bvvar>>
 val debug: env -> Options.debug_level_t -> bool
 val show: env -> bool

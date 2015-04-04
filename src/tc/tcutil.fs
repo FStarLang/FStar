@@ -79,9 +79,9 @@ let env_binders env =
     if !Options.full_context_dependency 
     then Env.binders env 
     else Env.t_binders env
-let new_kvar env   = Rel.new_kvar (Env.get_range env) (env_binders env)   |> fst
-let new_tvar env k = Rel.new_tvar (Env.get_range env) (env_binders env) k |> fst
-let new_evar env t = Rel.new_evar (Env.get_range env) (env_binders env) t |> fst
+let new_kvar env   = Rel.new_kvar env (Env.get_range env) (env_binders env)   |> fst
+let new_tvar env k = Rel.new_tvar env (Env.get_range env) (env_binders env) k |> fst
+let new_evar env t = Rel.new_evar env (Env.get_range env) (env_binders env) t |> fst
 let force_tk s = match !s.tk with 
     | None -> failwith (Util.format1 "Impossible: Forced tk not present (%s)" (Range.string_of_range s.pos))
     | Some tk -> tk
@@ -103,8 +103,8 @@ let destruct_arrow_kind env tt k (args:args) : (Syntax.args * binders * knd) =
             | b::brest -> 
               if snd b |> is_implicit
               then let imp_arg = match fst b with 
-                    | Inl a -> Tc.Rel.new_tvar r vars (Util.subst_kind subst a.sort) |> fst |> (fun x -> Inl x, as_implicit true) //set the implicit flag
-                    | Inr x -> Tc.Rel.new_evar r vars (Util.subst_typ subst x.sort) |> fst |>  (fun x -> Inr x, as_implicit true) in
+                    | Inl a -> Tc.Rel.new_tvar env r vars (Util.subst_kind subst a.sort) |> fst |> (fun x -> Inl x, as_implicit true) //set the implicit flag
+                    | Inr x -> Tc.Rel.new_evar env r vars (Util.subst_typ subst x.sort) |> fst |>  (fun x -> Inr x, as_implicit true) in
                    let subst = if is_null_binder b then subst else  (subst_formal b imp_arg)::subst in
                    let imp_args, bs = mk_implicits vars subst brest in
                    imp_arg::imp_args, bs
@@ -120,7 +120,7 @@ let destruct_arrow_kind env tt k (args:args) : (Syntax.args * binders * knd) =
        | Kind_uvar _ -> 
          let fvs = Util.freevars_kind k in
          let binders = Util.binders_of_freevars fvs in 
-         let kres = Tc.Rel.new_kvar r binders |> fst in
+         let kres = Tc.Rel.new_kvar env r binders |> fst in
          let bs = null_binders_of_tks (tks_of_args args) in
          let kar = mk_Kind_arrow(bs, kres) r in
          force_trivial env <| keq env None k kar;
@@ -185,7 +185,7 @@ let pat_as_exps env p : (list<binding>     (* pattern-bound variables (which may
      let rec pat_as_arg env (p:pat) : arg * pat = match p.v with
            | Pat_dot_term (x, _) -> 
                 let t = new_tvar env ktype in
-                let e = fst <| Rel.new_evar p.p [] t in //TODO: why empty vars?
+                let e = fst <| Rel.new_evar env p.p [] t in //TODO: why empty vars?
                 let p = {p with v=Pat_dot_term(x, e)} in
                 varg e, p
 
@@ -475,9 +475,9 @@ let mk_basic_dtuple_type env n =
           let k = Util.subst_kind subst a.sort in 
           let arg = match k.n with 
             | Kind_type -> 
-              Rel.new_tvar r vars ktype |> fst 
+              Rel.new_tvar env r vars ktype |> fst 
             | Kind_arrow(bs, k) -> 
-              mk_Typ_lam(bs, Rel.new_tvar r vars ktype |> fst) (Some k) r
+              mk_Typ_lam(bs, Rel.new_tvar env r vars ktype |> fst) (Some k) r
             | _ -> failwith "Impossible" in
           let subst = (Inl(a.v, arg))::subst in 
           (targ arg::out, subst)) ([], []) in
@@ -490,13 +490,13 @@ let extract_lb_annotation env t e = match t.n with
     let r = Env.get_range env in
     let mk_t_binder scope a = match a.sort.n with 
         | Kind_unknown ->
-          let k =  Rel.new_kvar e.pos scope |> fst in
+          let k =  Rel.new_kvar env e.pos scope |> fst in
           {a with sort=k}, false
         | _ -> a, true in
 
     let mk_v_binder scope x = match x.sort.n with 
         | Typ_unknown -> 
-          let t = Rel.new_tvar e.pos scope ktype |> fst in
+          let t = Rel.new_tvar env e.pos scope ktype |> fst in
           begin match Syntax.null_v_binder t with 
             | Inr x, _ -> x, false
             | _ -> failwith "impos"
@@ -532,7 +532,7 @@ let extract_lb_annotation env t e = match t.n with
         if debug env Options.High then Util.fprint2 "(%s) Using type %s\n" (Range.string_of_range r) (Print.typ_to_string t);
         t, check_res || check
 
-      | _ -> Rel.new_tvar r vars ktype |> fst, false in
+      | _ -> Rel.new_tvar env r vars ktype |> fst, false in
 
      aux (Env.t_binders env)  e       
 

@@ -334,7 +334,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
          let args, g = tc_args env args in
          let fvs = Util.freevars_kind k1 in
          let binders = Util.binders_of_freevars fvs in 
-         let kres = Tc.Rel.new_kvar k1.pos binders |> fst in
+         let kres = Tc.Rel.new_kvar env k1.pos binders |> fst in
          let bs = null_binders_of_tks (Tc.Util.tks_of_args args) in
          let kar = mk_Kind_arrow(bs, kres) k1.pos in
          Tc.Util.force_trivial env <| keq env None k1 kar;
@@ -433,7 +433,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     (match s.n with 
         | Typ_uvar(u,k1) -> 
           let k1, g = tc_kind env k1 in
-          let _, u' = Tc.Rel.new_tvar s.pos [] k1 in
+          let _, u' = Tc.Rel.new_tvar env s.pos [] k1 in
           Util.unchecked_unify u u'; //replace all occurrences of this unchecked uvar with its checked variant
           u', k1, g
         | _ -> tc_typ env s)
@@ -825,7 +825,7 @@ and tc_exp env e : exp * lcomp * guard_t =
                       fxv_check head env (Inl k) fvs;
                       let targ = 
               
-                      fst <| Tc.Rel.new_tvar e.pos vars k in 
+                      fst <| Tc.Rel.new_tvar env e.pos vars k in 
                       if debug env Options.Extreme then Util.fprint2 "Instantiating %s to %s" (Print.strBvd a.v) (Print.typ_to_string targ);
                       let subst = (Inl(a.v, targ))::subst in
                       let arg = Inl targ, as_implicit true in
@@ -1528,7 +1528,7 @@ and tc_decl env se deserialized = match se with
       let recs = abbrevs |> List.map (function 
         | Sig_typ_abbrev(lid, tps, k, t, [], r) ->
            let k = match k.n with 
-            | Kind_unknown -> Tc.Rel.new_kvar r tps |> fst
+            | Kind_unknown -> Tc.Rel.new_kvar env r tps |> fst
             | _ -> k in
            Sig_tycon(lid, tps, k, [], [], [], r), t
         | _ -> failwith "impossible") in
