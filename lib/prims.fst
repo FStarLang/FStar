@@ -420,6 +420,8 @@ val ignore: 'a -> Tot unit
 let ignore x = ()
 assume val exit: int -> 'a
 assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
+assume val min: int -> int -> Tot int
+assume val max: int -> int -> Tot int
 assume logic val op_AmpAmp             : bool -> bool -> Tot bool
 assume logic val op_BarBar             : bool -> bool -> Tot bool
 assume logic val op_Negation           : bool -> Tot bool

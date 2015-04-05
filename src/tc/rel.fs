@@ -35,15 +35,19 @@ open Microsoft.FStar.Absyn.Syntax
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
-let new_kvar env r binders =
+let uvar_level u = match Unionfind.find u with 
+    | Uvar l -> !l
+    | _ -> failwith "Impossible"
+
+let new_kvar_level uvar_level r binders =
   let wf k () = true in
-  let u = Unionfind.fresh (Uvar (Util.mk_ref env.uvar_level)) in
+  let u = Unionfind.fresh (Uvar (Util.mk_ref uvar_level)) in
   mk_Kind_uvar (u, Util.args_of_non_null_binders binders) r, u
 
-let new_tvar env r binders k =
+let new_tvar_level uvar_level r binders k =
   let wf t tk = true in
   let binders = binders |> List.filter (fun x -> is_null_binder x |> not) in
-  let uv = Unionfind.fresh (Uvar (Util.mk_ref env.uvar_level)) in 
+  let uv = Unionfind.fresh (Uvar (Util.mk_ref uvar_level)) in 
   match binders with 
     | [] -> 
       let uv = mk_Typ_uvar'(uv,k) None r in
@@ -54,10 +58,10 @@ let new_tvar env r binders k =
       let uv = mk_Typ_uvar'(uv,k') None r in
       mk_Typ_app(uv, args) None r, uv
 
-let new_evar env r binders t =
+let new_evar_level uvar_level r binders t =
   let wf e t = true in 
   let binders = binders |> List.filter (fun x -> is_null_binder x |> not) in
-  let uv = Unionfind.fresh (Uvar (Util.mk_ref env.uvar_level)) in
+  let uv = Unionfind.fresh (Uvar (Util.mk_ref uvar_level)) in
   match binders with 
     | [] -> 
       let uv = mk_Exp_uvar'(uv,t) None r in
@@ -69,6 +73,10 @@ let new_evar env r binders t =
       match args with 
         | [] -> uv, uv
         | _ -> mk_Exp_app(uv, args) None r, uv
+
+let new_kvar env r binders = new_kvar_level env.uvar_level r binders
+let new_tvar env r binders k = new_tvar_level env.uvar_level r binders k
+let new_evar env r binders t = new_evar_level env.uvar_level r binders t
 
 (* --------------------------------------------------------- *)
 (* </new_uvar>                                               *)
@@ -111,9 +119,8 @@ type probs = list<prob>
 (* Instantiation of unification variables *)
 type uvi =  
   | UK of uvar_k * knd 
-  | UT of (uvar_t * knd) * typ 
-  | UE of (uvar_e * typ) * exp
-  | UC of (uvar_t * knd) * typ
+  | UT of (uvar_t * knd) * typ * option<uvars>
+  | UE of (uvar_e * typ) * exp * option<uvars>
 
 (* The set of problems currently being addressed *)
 type worklist = {
@@ -170,9 +177,8 @@ let uvi_to_string env uvi =
   let str (u:Unionfind.uvar<'a>) = if !Options.hide_uvar_nums then "?" else Unionfind.uvar_id u |> string_of_int in
   match uvi with
       | UK (u, _) -> str u |> Util.format1 "UK %s"
-      | UT ((u,_), t) -> str u |> (fun x -> Util.format2 "UT %s %s" x (Normalize.typ_norm_to_string env t))
-      | UE ((u,_), _) -> str u |> Util.format1 "UE %s"
-      | UC ((u,_), _) -> str u |> Util.format1 "UC %s"
+      | UT ((u,_), t, _) -> str u |> (fun x -> Util.format2 "UT %s %s" x (Normalize.typ_norm_to_string env t))
+      | UE ((u,_), _, _) -> str u |> Util.format1 "UE %s"
 
 (* ------------------------------------------------*)
 (* </Printing> *)
@@ -238,7 +244,7 @@ let mk_problem env scope orig lhs rel rhs elt reason = {
      relation=rel;
      rhs=rhs;
      element=elt;
-     logical_guard=new_tvar env (p_loc orig) scope ktype;
+     logical_guard=new_tvar_level env (p_loc orig) scope ktype;
      scope=[];
      reason=reason::p_reason orig;
      loc=p_loc orig;
@@ -249,7 +255,7 @@ let new_problem env lhs rel rhs elt loc reason = {
     relation=rel;
     rhs=rhs;
     element=elt;
-    logical_guard=new_tvar env (Env.get_range env) (Env.binders env) ktype;
+    logical_guard=new_tvar_level env.uvar_level (Env.get_range env) (Env.binders env) ktype;
     scope=[];
     reason=[reason];
     loc=loc;
@@ -331,19 +337,31 @@ let giveup env reason prob =
 (* ------------------------------------------------*)
 (* <uvi ops> Instantiating unification variables   *)
 (* ------------------------------------------------*)
+let update_level level uv = match Unionfind.find uv with 
+    | Uvar l' -> if level < !l' then l' := level 
+    | _ -> ()//failwith "Impossible"
+
+let update_levels uv uvs = match uvs with 
+    | None -> ()
+    | Some uvs -> 
+       begin match Unionfind.find uv with
+        | Uvar l -> 
+          let level = !l in
+          Util.set_elements uvs.uvars_k |> List.iter (update_level level);
+          Util.set_elements uvs.uvars_t |> List.iter (fun (x, _) -> update_level level x);
+          Util.set_elements uvs.uvars_e |> List.iter (fun (x, _) -> update_level level x)
+        | _ -> failwith "Impossible"
+       end
+        
 let commit env uvis = 
     uvis |> List.iter (function
-        | UK(u,k)     -> Util.unchecked_unify u k //Unionfind.change u (Fixed k)
-        | UT((u,k),t) -> if debug env (Options.Other "Rel")
-                         then Util.fprint2 "Commiting %s to %s\n" (Print.uvar_t_to_string (u,k)) (Normalize.typ_norm_to_string env t);
-                         Util.unchecked_unify u t//Unionfind.change u (Fixed t)
-        | UE((u,_),e) -> Util.unchecked_unify u e//Unionfind.change u (Fixed e)
-        | UC((u,_),c) -> Util.unchecked_unify u c)//Unionfind.change u (Fixed c))
+        | UK(u,k)     -> (* update_levels u (Util.uvars_in_kind k); *) Util.unchecked_unify u k 
+        | UT((u,k),t, uvs) -> update_levels u uvs;  Util.unchecked_unify u t
+        | UE((u,_),e, uvs) -> update_levels u uvs;  Util.unchecked_unify u e)
 
 let find_uvar_k uv s = Util.find_map s (function UK(u, t) ->     if Unionfind.equivalent uv u then Some t else None | _ -> None)
-let find_uvar_t uv s = Util.find_map s (function UT((u,_), t) -> if Unionfind.equivalent uv u then Some t else None | _ -> None)
-let find_uvar_e uv s = Util.find_map s (function UE((u,_), t) -> if Unionfind.equivalent uv u then Some t else None | _ -> None)
-let find_uvar_c uv s = Util.find_map s (function UC((u,_), t) -> if Unionfind.equivalent uv u then Some t else None | _ -> None)
+let find_uvar_t uv s = Util.find_map s (function UT((u,_), t, _) -> if Unionfind.equivalent uv u then Some t else None | _ -> None)
+let find_uvar_e uv s = Util.find_map s (function UE((u,_), t, _) -> if Unionfind.equivalent uv u then Some t else None | _ -> None)
 (* ------------------------------------------------*)
 (* </uvi ops>                                      *)
 (* ------------------------------------------------*)
@@ -746,7 +764,7 @@ let arg_of_ktec = function
     | E e -> varg e
     | _ -> failwith "Impossible"
 
-let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * variance * ktec)>) =
+let imitation_sub_probs u_level orig env scope (ps:args) (qs:list<(option<binder> * variance * ktec)>) =
    //U p1..pn REL h q1..qm
    //if h is not a free variable
    //extend_subst: (U -> \x1..xn. h (G1(x1..xn), ..., Gm(x1..xm)))
@@ -756,26 +774,26 @@ let imitation_sub_probs orig env scope (ps:args) (qs:list<(option<binder> * vari
     let sub_prob scope args q = 
         match q with 
         | _, variance, K ki -> 
-            let gi_xs, gi = new_kvar env r scope in
+            let gi_xs, gi = new_kvar_level u_level r scope in
             let gi_ps = mk_Kind_uvar(gi, args) r in
             K gi_xs, 
-            KProb <| mk_problem env scope orig gi_ps (vary_rel rel variance) ki None "kind subterm"
+            KProb <| mk_problem u_level scope orig gi_ps (vary_rel rel variance) ki None "kind subterm"
 
         | _, variance, T (ti, kopt) -> 
             let k = match kopt with 
                 | Some k -> k
                 | None -> Recheck.recompute_kind ti in
-            let gi_xs, gi = new_tvar env r scope k in
+            let gi_xs, gi = new_tvar_level u_level r scope k in
             let gi_ps = mk_Typ_app'(gi, args) None r in
             T (gi_xs, Some k), 
-            TProb <| mk_problem env scope orig gi_ps (vary_rel rel variance) ti None "type subterm"
+            TProb <| mk_problem u_level scope orig gi_ps (vary_rel rel variance) ti None "type subterm"
  
         | _, variance, E ei -> 
             let t = Recheck.recompute_typ ei in
-            let gi_xs, gi = new_evar env r scope t in
+            let gi_xs, gi = new_evar_level u_level r scope t in
             let gi_ps = mk_Exp_app'(gi, args) (Some t) r in
             E gi_xs, 
-            EProb <| mk_problem env scope orig gi_ps (vary_rel rel variance) ei None "expression subterm"
+            EProb <| mk_problem u_level scope orig gi_ps (vary_rel rel variance) ei None "expression subterm"
 
         | _, _, C _ -> failwith "impos" in
 
@@ -1043,12 +1061,12 @@ let fix_slack slack =
 
 let new_slack_var env slack = 
     let xs = destruct_flex_pattern env (snd slack.lower) |> snd |> Util.must in
-    new_tvar env (fst slack.lower).pos xs ktype, xs
+    new_tvar_level env.uvar_level (fst slack.lower).pos xs ktype, xs
 
 let new_slack_formula p env wl xs low high = 
-    let low_var, uv1 = new_tvar env p xs ktype in
+    let low_var, uv1 = new_tvar_level env p xs ktype in
     let wl = add_slack_add uv1 wl in
-    let high_var, uv2 = new_tvar env p xs ktype in
+    let high_var, uv2 = new_tvar_level env p xs ktype in
     let wl = add_slack_mul uv2 wl in
     let low = match low with 
         | None -> Util.mk_disj Util.t_false low_var 
@@ -1397,9 +1415,9 @@ and solve_binders (env:Tc.Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:w
                let env = Env.push_local_binding env (Env.binding_of_binder hd1) in
                let prob = match fst hd1, fst hd2 with 
                  | Inl a, Inl b -> 
-                   KProb <| mk_problem env (hd1::scope) orig a.sort (invert_rel <| p_rel orig) (Util.subst_kind subst b.sort) None "Formal type parameter" 
+                   KProb <| mk_problem env.uvar_level (hd1::scope) orig a.sort (invert_rel <| p_rel orig) (Util.subst_kind subst b.sort) None "Formal type parameter" 
                  | Inr x, Inr y -> 
-                   TProb <| mk_problem env (hd1::scope) orig x.sort (invert_rel <| p_rel orig) (Util.subst_typ subst y.sort) None "Formal value parameter"
+                   TProb <| mk_problem env.uvar_level (hd1::scope) orig x.sort (invert_rel <| p_rel orig) (Util.subst_typ subst y.sort) None "Formal value parameter"
                  | _ -> failwith "impos" in
                begin match aux (hd1::scope) env subst xs ys with
                  | Inr msg -> Inr msg
@@ -1435,7 +1453,7 @@ and solve_k' (env:Env.env) (problem:problem<knd,unit>) (wl:worklist) : solution 
         //extend_subst: (U -> \x1..xn. h (G1(x1..xn), ..., Gm(x1..xm)))
         //sub-problems: Gi(p1..pn) =?= qi
         let r = Env.get_range env in 
-        let sub_probs, gs_xs, f = imitation_sub_probs orig env xs ps qs in
+        let sub_probs, gs_xs, f = imitation_sub_probs (uvar_level u) orig env xs ps qs in
         let im = mk_Kind_lam(xs, h gs_xs) r in
         let wl = solve_prob orig (Some f) [UK(u, im)] wl in 
         solve env (attempt sub_probs wl) in
@@ -1466,7 +1484,7 @@ and solve_k' (env:Env.env) (problem:problem<knd,unit>) (wl:worklist) : solution 
 
      | Kind_arrow(bs1, k1'), Kind_arrow(bs2, k2') -> 
        let sub_prob scope env subst = 
-           KProb <| mk_problem env scope orig k1' problem.relation (Util.subst_kind subst k2') None "Arrow-kind result"  in
+           KProb <| mk_problem env.uvar_level scope orig k1' problem.relation (Util.subst_kind subst k2') None "Arrow-kind result"  in
        solve_binders env bs1 bs2 orig wl sub_prob
 
      | Kind_uvar(u1, args1), Kind_uvar (u2, args2) -> //flex-flex: at the kind level, we only solve patterns anyway
@@ -1483,7 +1501,7 @@ and solve_k' (env:Env.env) (problem:problem<knd,unit>) (wl:worklist) : solution 
                     //U1 = \xs. U zs
                     //U2 = \ys. U zs(KP
                   let zs = intersect_vars xs ys in
-                  let u, _ = new_kvar env r zs in 
+                  let u, _ = new_kvar_level (min (uvar_level u1) (uvar_level u2)) r zs in 
                   let k1 = mk_Kind_lam(xs, u) r in
                   let k2 = mk_Kind_lam(ys, u) r in
                   let wl = solve_prob orig None [UK(u1, k1); UK(u2, k2)] wl in
@@ -1524,14 +1542,14 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         //extend_subst: (U -> \x1..xn. h (G1(x1..xn), ..., Gm(x1..xm)))
         //sub-problems: Gi(p1..pn) REL' qi, where REL' = vary_rel REL (variance h i)
         let r = Env.get_range env in
-        let sub_probs, gs_xs, formula = imitation_sub_probs orig env xs ps qs in
+        let sub_probs, gs_xs, formula = imitation_sub_probs (uvar_level u) orig env xs ps qs in
         let im = mk_Typ_lam'(xs, h gs_xs) None r in
         if Tc.Env.debug env <| Options.Other "Rel" 
         then Util.fprint4 "Imitating %s (%s)\nsub_probs = %s\nformula=%s\n" 
             (Print.typ_to_string im) (Print.tag_of_typ im) 
             (List.map (prob_to_string env) sub_probs |> String.concat ", ") 
             (Normalize.formula_norm_to_string env formula);
-        let wl = solve_prob orig (Some formula) [UT((u,k), im)] wl in
+        let wl = solve_prob orig (Some formula) [UT((u,k), im, None)] wl in
         solve env (attempt sub_probs wl) in
     (* </imitate_t> *)
 
@@ -1543,6 +1561,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         //sub-problems: pi(G1(p1..pn)..Gk(p1..pn)) REL h q1..qm
         let r = Env.get_range env in
         let pi = List.nth ps i in
+        let u_level = uvar_level <| fst u in
         let rec gs k = 
             let bs, k = Util.kind_formals k in
             let rec aux subst bs = match bs with 
@@ -1551,7 +1570,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                     let gi_xs, gi_ps, subst = match fst hd with 
                         | Inl a -> 
                             let k_a = Util.subst_kind subst a.sort in
-                            let gi_xs, gi = new_tvar env r xs k_a in
+                            let gi_xs, gi = new_tvar_level u_level r xs k_a in
                             let gi_xs = Tc.Normalize.eta_expand env gi_xs in
                             let gi_ps = mk_Typ_app(gi, ps) (Some k_a) r in
                             let subst = if is_null_binder hd then subst else Inl(a.v, gi_xs)::subst in
@@ -1559,7 +1578,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
 
                         | Inr x ->  
                             let t_x = Util.subst_typ subst x.sort in 
-                            let gi_xs, gi = new_evar env r xs t_x in
+                            let gi_xs, gi = new_evar_level u_level r xs t_x in
                             let gi_xs = Tc.Normalize.eta_expand_exp env gi_xs in
                             let gi_ps = mk_Exp_app(gi, ps) (Some t_x) r in
                             let subst = if is_null_binder hd then subst else Inr(x.v, gi_xs)::subst in
@@ -1576,9 +1595,9 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                      let xi = btvar_to_typ xi in
                      let proj = mk_Typ_lam(xs, mk_Typ_app'(xi, g_xs) (Some ktype) r) None r in
                      let sub = 
-                        TProb <| mk_problem env (p_scope orig) orig (mk_Typ_app'(proj, ps) (Some ktype) r) (p_rel orig) (h <| List.map (fun (_, _, y) -> y) qs) None "projection" in
+                        TProb <| mk_problem (uvar_level <| fst u) (p_scope orig) orig (mk_Typ_app'(proj, ps) (Some ktype) r) (p_rel orig) (h <| List.map (fun (_, _, y) -> y) qs) None "projection" in
                      if debug env <| Options.Other "Rel" then Util.fprint2 "Projecting %s\n\tsubprob=%s\n" (Print.typ_to_string proj) (prob_to_string env sub);
-                     let wl = solve_prob orig (Some (fst <| p_guard sub)) [UT(u, proj)] wl in
+                     let wl = solve_prob orig (Some (fst <| p_guard sub)) [UT(u, proj, None)] wl in
                      Some <| solve env (attempt [sub] wl)
             | _ -> None in
     (* </project_t> *)
@@ -1638,7 +1657,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                            let sol = match vars with 
                                 | [] -> t2
                                 | _ -> mk_Typ_lam(sn_binders env vars, t2) None t1.pos in
-                           let wl = solve_prob orig None [UT((uv,k), sol)] wl in
+                           let wl = solve_prob orig None [UT((uv,k), sol, Some (Util.uvars_in_typ t2))] wl in
                            solve env wl)
                 else if wl.defer_ok
                 then solve env (defer "flex pattern/rigid: occurs or freevar check" orig wl)
@@ -1688,9 +1707,9 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                     let ys = List.rev ys in
                     let binders = List.rev binders in 
                     let kk = Recheck.recompute_kind t in
-                    let t', _ = new_tvar env t.pos ys kk in 
+                    let t', _ = new_tvar_level (uvar_level u) t.pos ys kk in 
                     let u1_ys, u1, k1, _ = destruct_flex_t t' in
-                    let sol = UT((u,k), mk_Typ_lam(binders, u1_ys) (Some k) t.pos) in
+                    let sol = UT((u,k), mk_Typ_lam(binders, u1_ys) (Some k) t.pos, None) in
                     sol, (t', u, k1, ys)
 
                 | hd::tl -> 
@@ -1726,12 +1745,12 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                 let xs = sn_binders env xs in
                 let ys = sn_binders env ys in
                 let zs = intersect_vars xs ys in
-                let u_zs, _ = new_tvar env r zs k in
+                let u_zs, _ = new_tvar_level (min (uvar_level u1) (uvar_level u2)) r zs k in
                 let sub1 = mk_Typ_lam'(xs, u_zs) (Some k1) r in
                 let occurs_ok, msg = occurs_check env (u1,k1) sub1 in
                 if not occurs_ok
                 then giveup_or_defer orig "flex-flex: failed occcurs check" 
-                else let sol1 = UT((u1, k1), sub1) in
+                else let sol1 = UT((u1, k1), sub1, Some (Util.uvars_in_typ sub1)) in
                         if Unionfind.equivalent u1 u2
                         then let wl = solve_prob orig None [sol1] wl in
                                 solve env wl
@@ -1739,7 +1758,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                                 let occurs_ok, msg = occurs_check env (u2,k2) sub2 in
                                 if not occurs_ok 
                                 then giveup_or_defer orig "flex-flex: failed occurs check"
-                                else let sol2 = UT((u2,k2), sub2) in
+                                else let sol2 = UT((u2,k2), sub2, Some (Util.uvars_in_typ sub2)) in
                                     let wl = solve_prob orig None [sol1;sol2] wl in
                                     solve env wl in
 
@@ -1748,11 +1767,12 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                 if Tc.Env.debug env <| Options.Other "Rel"
                 then Util.fprint2 "Trying flex-flex one pattern (%s) with %s\n" (Print.typ_to_string t1) (Print.typ_to_string t2);
                 if Unionfind.equivalent u1 u2
-                then let sub_probs = List.map2 (fun a b ->  
+                then let u_level = uvar_level u1 in 
+                     let sub_probs = List.map2 (fun a b ->  
                                let a = Util.arg_of_non_null_binder a in
                                match fst a, fst b with 
-                                | Inl t1, Inl t2 -> mk_problem env (p_scope orig) orig t1 EQ t2 None "flex-flex index" |> TProb
-                                | Inr t1, Inr t2 -> mk_problem env (p_scope orig) orig t1 EQ t2 None "flex-flex index" |> EProb
+                                | Inl t1, Inl t2 -> mk_problem u_level (p_scope orig) orig t1 EQ t2 None "flex-flex index" |> TProb
+                                | Inr t1, Inr t2 -> mk_problem u_level (p_scope orig) orig t1 EQ t2 None "flex-flex index" |> EProb
                                 | _ -> failwith "Impossible") xs args2 in
                      let guard = Util.mk_conj_l (List.map (fun p -> p_guard p |> fst) sub_probs) in
                      let wl = solve_prob orig (Some guard) [] wl in
@@ -1763,7 +1783,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                      let occurs_ok, _ = occurs_check env (u1,k1) t2 in
                      let lhs_vars = freevars_of_binders xs in
                      if occurs_ok && Util.fvs_included rhs_vars lhs_vars
-                     then let sol = UT((u1, k1), mk_Typ_lam'(xs, t2) (Some k1) t1.pos) in
+                     then let sol = UT((u1, k1), mk_Typ_lam'(xs, t2) (Some k1) t1.pos, Some (Util.uvars_in_typ t2)) in
                           let wl = solve_prob orig None [sol] wl in
                           solve env wl
                      else if occurs_ok && not <| wl.defer_ok 
@@ -1841,7 +1861,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
             let rel = if !Options.use_eq_at_higher_order then EQ else problem.relation in 
             let _ = if Tc.Env.debug env <| Options.Other "EQ"
                     then Util.fprint2 "(%s) Using relation %s at higher order\n" (Env.get_range env |> Range.string_of_range) (rel_to_string rel) in
-            CProb <| mk_problem env scope orig c1 rel c2 None "function co-domain")
+            CProb <| mk_problem env.uvar_level scope orig c1 rel c2 None "function co-domain")
 
       | Typ_lam(bs1, t1'), Typ_lam(bs2, t2') -> 
         let mk_t t = function
@@ -1852,12 +1872,12 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
         solve_binders env bs1 bs2 orig wl
         (fun scope env subst -> 
             let t2' = Util.subst_typ subst t2' in
-            TProb <| mk_problem env scope orig t1' problem.relation t2' None "lambda co-domain")
+            TProb <| mk_problem env.uvar_level scope orig t1' problem.relation t2' None "lambda co-domain")
 
       | Typ_refine _, Typ_refine _ -> 
         let x1, phi1 = as_refinement env wl t1 in
         let x2, phi2 = as_refinement env wl t2 in
-        let base_prob = TProb <| mk_problem env (p_scope orig) orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
+        let base_prob = TProb <| mk_problem env.uvar_level (p_scope orig) orig x1.sort problem.relation x2.sort problem.element "refinement base type" in
         let x1_for_x2 = Util.mk_subst_one_binder (v_binder x1) (v_binder x2) in
         let phi2 = Util.subst_typ x1_for_x2 phi2 in
         let mk_imp imp phi1 phi2 = imp phi1 phi2 |> guard_on_element problem x1 in
@@ -1870,7 +1890,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
             let wl = solve_prob orig (Some guard) [] wl in
             solve env (attempt [base_prob] wl) in
         if problem.relation = EQ
-        then let ref_prob = TProb <| mk_problem env (p_scope orig) orig phi1 EQ phi2 None "refinement formula" in
+        then let ref_prob = TProb <| mk_problem env.uvar_level (p_scope orig) orig phi1 EQ phi2 None "refinement formula" in
              begin match solve env ({wl with defer_ok=false; attempting=[ref_prob]; deferred=[]}) with 
                     | Failed _ -> fallback()
                     | Success (subst, _) -> 
@@ -1917,7 +1937,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                           let y' = {y with sort = t1} in
                           let impl = guard_on_element problem y' phi in
                           let base_prob = 
-                            TProb <| mk_problem env problem.scope orig t1 new_rel y.sort problem.element "flex-rigid: base type" in
+                            TProb <| mk_problem env.uvar_level problem.scope orig t1 new_rel y.sort problem.element "flex-rigid: base type" in
                           let guard = Util.mk_conj (p_guard base_prob |> fst) impl in
                           let wl = solve_prob orig (Some guard) [] wl in
                           solve env (attempt [base_prob] wl)
@@ -1990,9 +2010,9 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                                        then failwith (Util.format2 "Assertion failed: expected full match of %s and %s\n" (Print.typ_to_string head) (Print.typ_to_string head')) in
                                let subprobs = List.map2 (fun a a' -> match fst a, fst a' with 
                                     | Inl t, Inl t' -> 
-                                      TProb <| mk_problem env (p_scope orig) orig t EQ t' None "type index"
+                                      TProb <| mk_problem env.uvar_level (p_scope orig) orig t EQ t' None "type index"
                                     | Inr v, Inr v' -> 
-                                      EProb <| mk_problem env (p_scope orig) orig v EQ v' None "term index"
+                                      EProb <| mk_problem env.uvar_level (p_scope orig) orig v EQ v' None "term index"
                                     | _ -> failwith "Impossible" (*terms are well-kinded*)) args args' in
                                let formula = Util.mk_conj_l (List.map (fun p -> fst (p_guard p)) subprobs) in
                                let wl = solve_prob orig (Some formula) [] wl in
@@ -2019,7 +2039,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
     let c2 = problem.rhs in
     let orig = CProb problem in
     let sub_prob : 'a -> rel -> 'a -> string -> problem_t<'a,'b> = 
-        fun t1 rel t2 reason -> mk_problem env (p_scope orig) orig t1 rel t2 None reason in
+        fun t1 rel t2 reason -> mk_problem env.uvar_level (p_scope orig) orig t1 rel t2 None reason in
     if Util.physical_equality c1 c2 
     then solve env (solve_prob orig None [] wl)
     else let _ = if debug env <| Options.Other "Rel" then Util.fprint3 "solve_c %s %s %s\n" (Print.comp_typ_to_string c1) (rel_to_string problem.relation) (Print.comp_typ_to_string c2) in
@@ -2089,26 +2109,27 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
     let e1 = problem.lhs in 
     let e2 = problem.rhs in 
     let orig = EProb problem in
-    let sub_prob : 'a -> 'a -> string -> problem_t<'a,'b> = 
-        fun lhs rhs reason -> mk_problem env (p_scope orig) orig lhs EQ rhs None reason in
+    let sub_prob : int -> 'a -> 'a -> string -> problem_t<'a,'b> = 
+        fun level lhs rhs reason -> mk_problem level (p_scope orig) orig lhs EQ rhs None reason in
     let _ = if debug env <| Options.Other "Rel" then Util.fprint1 "Attempting:\n%s\n" (prob_to_string env orig) in
   
     let flex_rigid (e1, u1, t1, args1) e2 = 
         //u arg1...argn =?= e2
         let maybe_vars1 = pat_vars env [] args1 in
+        let u1_level = uvar_level u1 in
 
-        let sub_problems xs args2 =
+        let sub_problems u_level xs args2 =
             let gi_xi, gi_pi = args2 |> List.map (function 
             | Inl t, imp -> 
                 let kk = Recheck.recompute_kind t in
-                let gi_xi, gi = new_tvar env t.pos xs kk in 
+                let gi_xi, gi = new_tvar_level u_level t.pos xs kk in 
                 let gi_pi = mk_Typ_app(gi, args1) (Some kk) t.pos in
-                (Inl gi_xi, imp), TProb <| sub_prob gi_pi t "type index"
+                (Inl gi_xi, imp), TProb <| sub_prob u_level gi_pi t "type index"
             | Inr v, imp ->
                 let tt = Recheck.recompute_typ v in
-                let gi_xi, gi = new_evar env v.pos xs tt in 
+                let gi_xi, gi = new_evar_level u_level v.pos xs tt in 
                 let gi_pi = mk_Exp_app(gi, args1) (Some tt) v.pos in
-                (Inr gi_xi, imp), EProb <| sub_prob gi_pi v "expression index") |> List.unzip in
+                (Inr gi_xi, imp), EProb <| sub_prob u_level gi_pi v "expression index") |> List.unzip in
         let formula = Util.mk_conj_l (List.map (fun p -> p_guard p |> fst) gi_pi) in
         gi_xi, gi_pi, formula in
          
@@ -2134,11 +2155,11 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
                                 begin match (Util.compress_exp arg).n with 
                                        | Exp_bvar z -> 
                                           if Util.bvar_eq y z (* found the variable to project *)
-                                          then let gi_xi, gi_pi, f = sub_problems all_xs args2 in
+                                          then let gi_xi, gi_pi, f = sub_problems u1_level all_xs args2 in
                                                let sol = mk_Exp_abs(all_xs, mk_Exp_app'(Util.bvar_to_exp xi, gi_xi) None e1.pos) None e1.pos in
                                                if Tc.Env.debug env <| Options.Other "Rel"
                                                then Util.fprint3 "Projected: %s -> %s\nSubprobs=\n%s\n" (Print.uvar_e_to_string (u1,t1)) (Print.exp_to_string sol) (gi_pi |> List.map (prob_to_string env) |> String.concat "\n");
-                                               solve env (attempt gi_pi (solve_prob orig (Some f) [UE((u1, t1), sol)] wl))
+                                               solve env (attempt gi_pi (solve_prob orig (Some f) [UE((u1, t1), sol, None)] wl))
                                           else aux xs args
                                        | _ -> aux xs args
                                 end
@@ -2163,11 +2184,11 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
                 then let xs, tres = match Util.function_formals t1 with
                             | None -> [], t1
                             | Some (xs, c) -> xs, Util.comp_result c in
-                     let gi_xi, gi_pi, f = sub_problems xs args2 in
+                     let gi_xi, gi_pi, f = sub_problems u1_level xs args2 in
                      let sol = mk_Exp_abs(xs, mk_Exp_app(head2, gi_xi) None e1.pos) None e1.pos in
                      if Tc.Env.debug env <| Options.Other "Rel"
                      then Util.fprint3 "Imitated: %s -> %s\nSubprobs=\n%s\n" (Print.uvar_e_to_string (u1,t1)) (Print.exp_to_string sol) (gi_pi |> List.map (prob_to_string env) |> String.concat "\n");
-                     solve env (attempt gi_pi (solve_prob orig (Some f) [UE((u1, t1), sol)] wl))
+                     solve env (attempt gi_pi (solve_prob orig (Some f) [UE((u1, t1), sol, Some (Util.uvars_in_exp head2))] wl))
                 else if occurs_ok 
                 then project_e head2 args2
                 else giveup env "flex-rigid: occurs check failed" orig in
@@ -2185,7 +2206,7 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
                 then // U1 xs =?= e2
                      // U1 = \xs. e2
                     let sol = mk_Exp_abs(xs, e2) None e1.pos in
-                    solve env (solve_prob orig None [UE((u1,t1), sol)] wl)
+                    solve env (solve_prob orig None [UE((u1,t1), sol, Some (Util.uvars_in_exp e2))] wl)
                 else imitate_or_project_e ()
         end in
 
@@ -2209,10 +2230,10 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
               //U2 = \y1 y2 y3. U zs 
               let zs = intersect_vars xs ys in 
               let tt = Recheck.recompute_typ e2 in
-              let u, _ = new_evar env (Env.get_range env) zs tt in
+              let u, _ = new_evar_level (min (uvar_level u1) (uvar_level u2)) (Env.get_range env) zs tt in
               let sub1 = mk_Exp_abs(xs, u) (Some t1) e1.pos in
               let sub2 = mk_Exp_abs(ys, u) (Some t2) e1.pos in
-              solve env (solve_prob orig None [UE((u1,t1), sub1); UE((u2,t2), sub2)] wl)
+              solve env (solve_prob orig None [UE((u1,t1), sub1, None); UE((u2,t2), sub2, None)] wl)
       end in
 
     match e1.n, e2.n with 
@@ -2256,7 +2277,7 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
       flex_rigid (destruct_flex_e e2) e1 //the constraint is an equality, so reorientation is fine
 
     | _ -> //TODO: check that they at least have the same head? 
-     let t, _ = new_tvar env (Tc.Env.get_range env) (Tc.Env.binders env) ktype in 
+     let t, _ = new_tvar_level env.uvar_level (Tc.Env.get_range env) (Tc.Env.binders env) ktype in 
      solve env (solve_prob orig (Some <| Util.mk_eq t t e1 e2) [] wl)  
 
 (* -------------------------------------------------------- *)        

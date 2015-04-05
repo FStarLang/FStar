@@ -1119,9 +1119,12 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
               option<formula> -- guard condition for this branch, propagated up for exhaustiveness check
               comp            -- the computation type of the branch
   *)
+  let env0 = env in 
   (*<tc_pat>*)
-  let tc_pat (pat_t:typ) env p : pat * list<Env.binding> * Env.env * list<exp> * guard_t = 
-    let bindings, exps, p = Tc.Util.pat_as_exps env p in
+  let tc_pat (allow_implicits:bool) (pat_t:typ) p0 : pat * list<Env.binding> * Env.env * list<exp> * guard_t = 
+    let env = Env.incr_level env0 in
+    let pat_level = env.uvar_level in
+    let bindings, exps, p, uvars = Tc.Util.pat_as_exps allow_implicits env p0 in
     let pat_env = List.fold_left Env.push_local_binding env bindings in
     if debug env <| Options.Other "Pat" 
     then bindings |> List.iter (function 
@@ -1142,15 +1145,18 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
         if Tc.Env.debug env Options.High
         then Util.fprint1 "Done checking pattern expression %s\n" (Normalize.exp_norm_to_string env e);//.exp_to_string e);
         e) in
+    if not <| Tc.Util.check_level uvars (fun l -> l < pat_level) //NS: Could try to introduce existential variables automatically, but that seems too implicit 
+    then raise (Error("Implicit pattern variables could not be resolved; please bind them explicitly", p.p));
     let p = Tc.Util.decorate_pattern env p exps in
     if debug env <| Options.Other "Pat" 
     then bindings |> List.iter (function 
         | Env.Binding_var(x, t) -> Util.fprint2 "Pattern var %s  : %s\n" (Print.strBvd x) (Print.typ_to_string t)//(Normalize.typ_norm_to_string env t)
         | _ -> ());
+    let pat_env = Env.decr_level pat_env in
     p, bindings, pat_env, exps, Rel.trivial_guard in
   (*</tc_pat>*)
 
-  let pattern, bindings, pat_env, disj_exps, g_pat = tc_pat pat_t env pattern in //disj_exps, an exp for each arm of a disjunctive pattern
+  let pattern, bindings, pat_env, disj_exps, g_pat = tc_pat true pat_t pattern in //disj_exps, an exp for each arm of a disjunctive pattern
   let when_clause, g_when = match when_clause with 
     | None -> None, Rel.trivial_guard
     | Some e -> 
