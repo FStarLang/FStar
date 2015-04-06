@@ -2287,9 +2287,11 @@ type guard_formula =
   | Trivial
   | NonTrivial of formula
 
+type implicits = list<either<(uvar_t * Range.range), (uvar_e * Range.range)>>
 type guard_t = {
   guard_f:  guard_formula;
   deferred: deferred;
+  implicits: implicits;
 }
 
 let guard_to_string (env:env) g = 
@@ -2305,7 +2307,7 @@ let guard_to_string (env:env) g =
 (* ------------------------------------------------*)
 (* <guard_formula ops> Operations on guard_formula *)
 (* ------------------------------------------------*)
-let guard_of_guard_formula g = {guard_f=g; deferred={slack=[]; carry=[]}}
+let guard_of_guard_formula g = {guard_f=g; deferred={slack=[]; carry=[]}; implicits=[]}
 
 let guard_f g = g.guard_f
 
@@ -2313,7 +2315,7 @@ let is_trivial g = match g with
     | {guard_f=Trivial; deferred={carry=[]; slack=[]}} -> true
     | _ -> false
 
-let trivial_guard = {guard_f=Trivial; deferred={carry=[]; slack=[]}}
+let trivial_guard = {guard_f=Trivial; deferred={carry=[]; slack=[]}; implicits=[]}
 
 let abstract_guard x g = match g with 
     | None 
@@ -2349,7 +2351,8 @@ let imp_guard_f g1 g2 = match g1, g2 with
 
 let binop_guard f g1 g2 = {guard_f=f g1.guard_f g2.guard_f;
                            deferred={slack=g1.deferred.slack@g2.deferred.slack;
-                                     carry=g1.deferred.carry@g2.deferred.carry}}
+                                     carry=g1.deferred.carry@g2.deferred.carry};
+                           implicits=g1.implicits@g2.implicits}
 let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
 let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
 
@@ -2357,7 +2360,9 @@ let close_guard binders g = match g.guard_f with
     | Trivial -> g
     | NonTrivial f -> {g with guard_f=close_forall binders f |> NonTrivial}
 
-let mk_guard g ps slack locs = {guard_f=g; deferred={carry=ps; slack=slack;}}
+let mk_guard g ps slack locs = {guard_f=g; 
+                                deferred={carry=ps; slack=slack;};
+                                implicits=[]}
 
 (* ------------------------------------------------*)
 (* </guard_formula ops>                            *)
@@ -2409,7 +2414,7 @@ let solve_and_commit env probs err =
 let with_guard env prob dopt = match dopt with 
     | None -> None
     | Some d -> 
-      Some <| simplify_guard env ({guard_f=(p_guard prob |> fst |> NonTrivial); deferred=d}) 
+      Some <| simplify_guard env ({guard_f=(p_guard prob |> fst |> NonTrivial); deferred=d; implicits=[]}) 
      
 let try_keq env k1 k2 : option<guard_t> = 
   if debug env <| Other "Rel" 

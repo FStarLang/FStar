@@ -79,9 +79,22 @@ let env_binders env =
     if !Options.full_context_dependency 
     then Env.binders env 
     else Env.t_binders env
+
+let as_uvar_e = function 
+    | {n=Exp_uvar(uv, _)} -> uv
+    | _ -> failwith "Impossible"
+let as_uvar_t (t:typ) = match t with 
+    | {n=Typ_uvar(uv, _)} -> uv
+    | _ -> failwith "Impossible" 
 let new_kvar env   = Rel.new_kvar env (Env.get_range env) (env_binders env)   |> fst
 let new_tvar env k = Rel.new_tvar env (Env.get_range env) (env_binders env) k |> fst
 let new_evar env t = Rel.new_evar env (Env.get_range env) (env_binders env) t |> fst
+let new_implicit_tvar env k = 
+    let t, u = Rel.new_tvar env (Env.get_range env) (env_binders env) k in
+    t, (as_uvar_t u, u.pos)
+let new_implicit_evar env t = 
+    let e, u = Rel.new_evar env (Env.get_range env) (env_binders env) t in
+    e, (as_uvar_e u, u.pos)
 let force_tk s = match !s.tk with 
     | None -> failwith (Util.format1 "Impossible: Forced tk not present (%s)" (Range.string_of_range s.pos))
     | Some tk -> tk
@@ -196,14 +209,6 @@ let pat_as_exps allow_implicits env p
                List.rev w |> List.flatten,
                env
            | Pat_disj _ -> failwith "impossible" in
-
-     let as_uvar_e = function 
-        | {n=Exp_uvar(uv, _)} -> uv
-        | _ -> failwith "Impossible" in
-
-     let as_uvar_t = function 
-        | {n=Typ_uvar(uv, _)} -> uv
-        | _ -> failwith "Impossible" in
 
      let rec pat_as_arg env (p:pat) : arg * pat * list<either<uvar_t, uvar_e>> = match p.v with
            | Pat_dot_term (x, _) -> 
@@ -924,54 +929,54 @@ let check_comp env (e:exp) (c:comp) (c':comp) : exp * comp * guard_t =
 
 let maybe_instantiate_typ env t k = 
   let k = compress_kind k in
-  if not (env.instantiate_targs && env.instantiate_vargs) then t, k else
+  if not (env.instantiate_targs && env.instantiate_vargs) then t, k, [] else
   match k.n with 
     | Kind_arrow(bs, k) ->
       let rec aux subst = function 
         | (Inl a, Some Implicit)::rest -> 
           let k = Util.subst_kind subst a.sort in
-          let t = new_tvar env k in
+          let t, u = new_implicit_tvar env k in
           let subst = (Inl(a.v, t))::subst in 
-          let args, bs, subst = aux subst rest in 
-          (Inl t, Some Implicit)::args, bs, subst  
+          let args, bs, subst, us = aux subst rest in 
+          (Inl t, Some Implicit)::args, bs, subst, Inl u::us
 
         | (Inr x, Some Implicit)::rest -> 
           let t = Util.subst_typ subst x.sort in 
-          let v = new_evar env t in
+          let v, u = new_implicit_evar env t in
           let subst = (Inr(x.v, v))::subst in 
-          let args, bs, subst = aux subst rest in 
-          (Inr v, Some Implicit)::args, bs, subst
+          let args, bs, subst, us = aux subst rest in 
+          (Inr v, Some Implicit)::args, bs, subst, Inr u::us
 
-        | bs -> [], bs, subst in 
-     let args, bs, subst = aux [] bs in
+        | bs -> [], bs, subst, [] in 
+     let args, bs, subst, implicits = aux [] bs in
      let k = mk_Kind_arrow'(bs, k) t.pos in 
      let k = Util.subst_kind subst k in
-     Syntax.mk_Typ_app'(t, args) (Some k) t.pos, k
+     Syntax.mk_Typ_app'(t, args) (Some k) t.pos, k, implicits
 
-  | _ -> t, k
+  | _ -> t, k, []
 
 let maybe_instantiate env e t = 
   let t = compress_typ t in 
-  if not (env.instantiate_targs && env.instantiate_vargs) then e, t else
+  if not (env.instantiate_targs && env.instantiate_vargs) then e, t, [] else
   match t.n with 
     | Typ_fun(bs, c) -> 
       let rec aux subst = function 
         | (Inl a, _)::rest -> 
           let k = Util.subst_kind subst a.sort in
-          let t = new_tvar env k in
+          let t, u = new_implicit_tvar env k in
           let subst = (Inl(a.v, t))::subst in 
-          let args, bs, subst = aux subst rest in 
-          (Inl t, Some Implicit)::args, bs, subst  
+          let args, bs, subst, us = aux subst rest in 
+          (Inl t, Some Implicit)::args, bs, subst, Inl u::us
 
         | (Inr x, Some Implicit)::rest -> 
           let t = Util.subst_typ subst x.sort in 
-          let v = new_evar env t in
+          let v, u = new_implicit_evar env t in
           let subst = (Inr(x.v, v))::subst in 
-          let args, bs, subst = aux subst rest in 
-          (Inr v, Some Implicit)::args, bs, subst
+          let args, bs, subst, us = aux subst rest in 
+          (Inr v, Some Implicit)::args, bs, subst, Inr u::us
 
-        | bs -> [], bs, subst in 
-     let args, bs, subst = aux [] bs in
+        | bs -> [], bs, subst, [] in 
+     let args, bs, subst, implicits = aux [] bs in
      let mk_exp_app e args t = match args with 
         | [] -> e 
         | _ -> mk_Exp_app(e, args) t e.pos in
@@ -979,14 +984,14 @@ let maybe_instantiate env e t =
         | [] -> 
             if Util.is_total_comp c
             then let t = Util.subst_typ subst (Util.comp_result c) in
-                 mk_exp_app e args (Some t), t
-            else e, t //don't instantiate implicitly, if it has an effect
+                 mk_exp_app e args (Some t), t, implicits
+            else e, t, [] //don't instantiate implicitly, if it has an effect
         | _ -> 
             let t = mk_Typ_fun(bs, c) (Some ktype) e.pos |> Util.subst_typ subst in 
-            mk_exp_app e args (Some t), t
+            mk_exp_app e args (Some t), t, implicits
      end
 
-  | _ -> e, t
+  | _ -> e, t, []
 
 let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t = 
   let gopt = if //env.is_pattern ||
@@ -1130,10 +1135,18 @@ let generalize verify env (lecs:list<(lbname*exp*comp)>) : (list<(lbname*exp*com
       List.map2 (fun (l, _, _) (e, c) -> 
          if debug env Options.Medium then Util.fprint3 "(%s) Generalized %s to %s" (Range.string_of_range e.pos) (Print.lbname_to_string l) (Print.typ_to_string (Util.comp_result c));
       (l, e, c)) lecs ecs
-      
+
+let unresolved u = match Unionfind.find u with 
+    | Uvar _ -> true
+    | _ -> false
+          
 let check_top_level env g lc : (bool * comp) =
   let discharge g = 
     try_discharge_guard env g;
+    begin match g.implicits |> List.tryFind (function Inl u -> false | Inr (u, _) -> unresolved u) with 
+        | Some (Inr(_, r)) -> raise (Error("Unresolved implicit argument", r))
+        | _ -> ()
+    end;
     Util.is_pure_lcomp lc in
   let g = Rel.solve_deferred_constraints env g in
   if Util.is_total_lcomp lc 
