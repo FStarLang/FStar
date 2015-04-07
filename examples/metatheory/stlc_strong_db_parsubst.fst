@@ -266,15 +266,24 @@ type subst_typing (s:sub) (g1:env) (g2:env) =
   (forall (x:var). is_Some (g1 x) ==> typing g2 (s x) (Some.v (g1 x)))
 *)
 type subst_typing (s:sub) (g1:env) (g2:env) =
-  (x:var{is_Some (g1 x)} -> typing g2 (s x) (Some.v (g1 x)))
+  (x:var{is_Some (g1 x)} -> Tot(typing g2 (s x) (Some.v (g1 x))))
 
 val substitution :
-      #g1:env -> #e:exp -> #t:typ -> #s:sub -> #g2:env ->
+      #g1:env -> #e:exp -> #t:typ -> s:sub -> #g2:env ->
       h1:typing g1 e t ->
       hs:subst_typing s g1 g2 ->
-      Tot (typing g2 (subst s e) t) (decreases e)
-let substitution g1 e t s g2 h1 hs = magic()
-
+      Tot (typing g2 (subst s e) t) (decreases h1)
+(*This code makes the compiler explode. It is likely because of the call to weakening*)
+(*
+let rec substitution g1 e t s g2 h1 hs = 
+match h1 with
+| TyVar x -> hs x
+| TyApp hfun harg -> TyApp (substitution s hfun hs) (substitution s harg hs)
+| TyLam tlam hbody -> 
+let hs' : subst_typing (subst_elam s) (extend g1 0 tlam) (extend g2 0 tlam) = fun y -> 
+if y = 0 then TyVar y else let hgamma2 = hs (y - 1) in weakening 0 tlam hgamma2 
+in TyLam tlam (substitution (subst_elam s) hbody hs')
+*)
 (* Type preservation *)
 
 opaque val preservation : #e:exp -> #e':exp -> hs:step e e' ->
