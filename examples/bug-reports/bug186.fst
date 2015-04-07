@@ -1,4 +1,4 @@
-module Bug2
+module Bug186
 
 type form =
 | FImpl   : form -> form -> form
