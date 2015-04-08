@@ -58,6 +58,7 @@ let sub_inc_above n y = if y<n then EVar y else EVar (y+1)
 val sub_inc : var -> Tot exp
 let sub_inc = sub_inc_above 0
 
+
 val renaming_sub_inc : unit -> Lemma (renaming (sub_inc))
 let renaming_sub_inc _ = ()
 
@@ -181,7 +182,7 @@ let typing_extensional _ _ _ h _ = h
 
 (* Context invariance (actually used in a single place within substitution,
    for in a specific form of weakening when typing variables) *)
-
+(*
 val appears_free_in : x:var -> e:exp -> Tot bool (decreases e)
 let rec appears_free_in x e =
   match e with
@@ -202,7 +203,7 @@ let rec context_invariance _ _ _ h g' =
     TyLam t_y (context_invariance h1 (extend g' 0 t_y))
   | TyApp h1 h2 ->
     TyApp (context_invariance h1 g') (context_invariance h2 g')
-
+*)
 (* Lemmas about substitution and shifting bellow lambdas *)
 
 val shift_up_above : nat -> exp -> Tot exp
@@ -223,20 +224,39 @@ val shift_up_above_lam : n:nat -> t:typ -> e:exp -> Lemma
 let shift_up_above_lam n t e =
   subst_extensional (subst_elam (sub_inc_above n)) (sub_inc_above (n+1)) e
 
+type subst_typing (s:sub) (g1:env) (g2:env) =
+  (x:var{is_Some (g1 x)} -> Tot(typing g2 (s x) (Some.v (g1 x))))
+
+opaque val substitution :
+      #g1:env -> #e:exp -> #t:typ -> s:sub -> #g2:env ->
+      h1:typing g1 e t ->
+      hs:subst_typing s g1 g2 ->
+      Tot (typing g2 (subst s e) t)
+     (decreases %[is_var e; is_renaming s; e])
+
+let rec substitution g1 e t s g2 h1 hs = 
+match h1 with
+| TyVar x -> hs x
+| TyApp hfun harg -> TyApp (substitution s hfun hs) (substitution s harg hs)
+| TyLam tlam hbody ->  
+let hs'' : subst_typing (sub_inc) (g2) (extend g2 0 tlam) = fun x ->
+TyVar (x+1) in
+let hs' : subst_typing (subst_elam s) (extend g1 0 tlam) (extend g2 0 tlam) = 
+fun y -> if y = 0 then TyVar y 
+         else let hgamma2 = hs (y - 1) in (substitution sub_inc hgamma2 hs'')
+in TyLam tlam (substitution (subst_elam s) hbody hs')
+
 (* Weakening (or shifting preserves typing) *)
-
-opaque val weakening : x:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
-      h:typing g e t -> Tot (typing (extend g x t') (shift_up_above x e) t)
+(*Useless now*)
+opaque val weakening : n:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
+      h:typing g e t -> Tot (typing (extend g n t') (shift_up_above n e) t)
       (decreases h)
-let rec weakening n g v t t' h =
-  match h with
-  | TyVar y -> if y<n then TyVar y else TyVar (y+1)
-  | TyLam #g t_y #e' #t'' h21 ->
-      (shift_up_above_lam n t_y e';
-       let h21 = weakening (n+1) t' h21 in
-       TyLam t_y (typing_extensional h21 (extend (extend g n t') 0 t_y)))
-  | TyApp h21 h22 -> TyApp (weakening n t' h21) (weakening n t' h22)
 
+let rec weakening n g v t t' h = 
+let hs : subst_typing (sub_inc_above n) g (extend g n t') = fun y ->
+if y < n then TyVar y else TyVar (y+1) in
+substitution (sub_inc_above n) h hs
+(* Type preservation *)
 (* Substitution preserves typing *)
 
 opaque val substitution_preserves_typing :
@@ -244,47 +264,11 @@ opaque val substitution_preserves_typing :
       h1:typing g v t_x ->
       h2:typing (extend g x t_x) e t ->
       Tot (typing g (subst_beta_gen x v e) t) (decreases e)
+
 let rec substitution_preserves_typing x e v t_x t g h1 h2 =
-  match h2 with
-  | TyVar y ->
-     if      x=y then h1
-     else if y<x then context_invariance h2 g
-     else             TyVar (y-1)
-  | TyLam #g' t_y #e' #t' h21 ->
-     (let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
-      let h1' = weakening 0 t_y h1 in
-      subst_gen_elam x v t_y e';
-      TyLam t_y (substitution_preserves_typing (x+1) h1' h21'))
-  | TyApp h21 h22 ->
-    (TyApp (substitution_preserves_typing x h1 h21)
-           (substitution_preserves_typing x h1 h22))
-
-(* Simpler proof idea from Steven (blocked on #195) *)
-
-(*
-type subst_typing (s:sub) (g1:env) (g2:env) =
-  (forall (x:var). is_Some (g1 x) ==> typing g2 (s x) (Some.v (g1 x)))
-*)
-type subst_typing (s:sub) (g1:env) (g2:env) =
-  (x:var{is_Some (g1 x)} -> Tot(typing g2 (s x) (Some.v (g1 x))))
-
-val substitution :
-      #g1:env -> #e:exp -> #t:typ -> s:sub -> #g2:env ->
-      h1:typing g1 e t ->
-      hs:subst_typing s g1 g2 ->
-      Tot (typing g2 (subst s e) t) (decreases h1)
-(*This code makes the compiler explode. It is likely because of the call to weakening*)
-(*
-let rec substitution g1 e t s g2 h1 hs = 
-match h1 with
-| TyVar x -> hs x
-| TyApp hfun harg -> TyApp (substitution s hfun hs) (substitution s harg hs)
-| TyLam tlam hbody -> 
-let hs' : subst_typing (subst_elam s) (extend g1 0 tlam) (extend g2 0 tlam) = fun y -> 
-if y = 0 then TyVar y else let hgamma2 = hs (y - 1) in weakening 0 tlam hgamma2 
-in TyLam tlam (substitution (subst_elam s) hbody hs')
-*)
-(* Type preservation *)
+let hs : subst_typing (sub_beta_gen x v) (extend g x t_x) g = fun y ->
+if y < x then TyVar y else if y = x then h1 else TyVar (y-1) in
+substitution (sub_beta_gen x v) h2 hs
 
 opaque val preservation : #e:exp -> #e':exp -> hs:step e e' ->
                    #g:env -> #t:typ -> ht:(typing g e t) ->
