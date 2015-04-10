@@ -18,8 +18,8 @@ module StlcCbvDbParSubst
 
 (* Constructive style progress and preservation proof for STLC with
    CBV reduction, using deBruijn indices and parallel substitution.
-   An awkward special case pf stlc_strongred.fst; in fact this proof
-   is _more_ complex than the one in stlc_strongred.fst! *)
+   An awkward special case of stlc_strong...; in fact this proof
+   is _more_ complex than the one in stlc_strong...! *)
 
 open StlcStrongDbParSubst
 open FunctionalExtensionality
@@ -51,6 +51,37 @@ let rec progress _ _ h =
   | TyLam _ _ -> ()
   | TyApp h1 h2 -> progress h1; progress h2
 
+(* Typing extensional (weaker) and context invariance (stronger) lemmas *)
+
+(* Typing extensional follows directly from functional extensionality
+   (it's also a special case of context invariance below) *)
+
+opaque val typing_extensional : #e:exp -> #g:env -> #t:typ ->
+      h:(typing g e t) -> g':env{FEq g g'} -> Tot (typing g' e t)
+let typing_extensional _ _ _ h _ = h
+
+val appears_free_in : x:var -> e:exp -> Tot bool (decreases e)
+let rec appears_free_in x e =
+  match e with
+  | EVar y -> x = y
+  | EApp e1 e2 -> appears_free_in x e1 || appears_free_in x e2
+  | ELam _ e1 -> appears_free_in (x+1) e1
+
+opaque logic type EnvEqualE (e:exp) (g1:env) (g2:env) =
+                 (forall (x:var). appears_free_in x e ==> g1 x = g2 x)
+
+(* Context invariance (actually used in a single place within substitution,
+   for in a specific form of weakening when typing variables) *)
+opaque val context_invariance : #e:exp -> #g:env -> #t:typ ->
+      h:(typing g e t) -> g':env{EnvEqualE e g g'} ->
+      Tot (typing g' e t) (decreases h)
+let rec context_invariance _ _ _ h g' =
+  match h with
+  | TyVar x -> TyVar x
+  | TyLam t_y h1 ->
+    TyLam t_y (context_invariance h1 (extend g' 0 t_y))
+  | TyApp h1 h2 ->
+    TyApp (context_invariance h1 g') (context_invariance h2 g')
 
 val free_in_context : x:var -> #e:exp -> #g:env -> #t:typ -> h:typing g e t ->
       Lemma (ensures (appears_free_in x e ==> is_Some (g x))) (decreases h)
