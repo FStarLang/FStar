@@ -85,18 +85,9 @@ val sub_elam: s:sub -> Tot sub
 let sub_elam s y = if y=0 then EVar y
                    else subst sub_inc (s (y-1))
 
-(* subst_beta_gen is a generalization of the substitution we do for
-   the beta rule, when we've under x binders
-   (useful for the old, weak substitution lemma) *)
-val sub_beta_gen : var -> exp -> Tot sub
-let sub_beta_gen x v = fun y -> if y < x then (EVar y)
-                                else if y = x then v (* substitute *)
-                                else (EVar (y-1))    (* shift -1 *)
-
-val subst_beta_gen : var -> exp -> exp -> Tot exp
-let subst_beta_gen x v = subst (sub_beta_gen x v)
-
-let subst_beta = subst_beta_gen 0
+val sub_beta : exp -> Tot sub
+let sub_beta v = fun y -> if y = 0 then v      (* substitute *)
+                          else (EVar (y-1))    (* shift -1 *)
 
 (* Small-step operational semantics; strong / full-beta reduction is
    non-deterministic, so necessarily as inductive relation *)
@@ -105,7 +96,7 @@ type step : exp -> exp -> Type =
   | SBeta : t:typ ->
             e1:exp ->
             e2:exp ->
-            step (EApp (ELam t e1) e2) (subst_beta e2 e1)
+            step (EApp (ELam t e1) e2) (subst (sub_beta e2) e1)
   | SApp1 : #e1:exp ->
             e2:exp ->
             #e1':exp ->
@@ -137,7 +128,7 @@ type typing : env -> exp -> typ -> Type =
             t:typ ->
             #e1:exp ->
             #t':typ ->
-            typing (extend g 0 t) e1 t' ->
+            hbody:typing (extend g 0 t) e1 t' ->
             typing g (ELam t e1) (TArr t t')
   | TyApp : #g:env ->
             #e1:exp ->
@@ -161,7 +152,7 @@ let rec progress _ _ h =
   match h with
   | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
      match e1 with
-     | ELam t e1' -> ExIntro (subst_beta e2 e1') (SBeta t e1' e2)
+     | ELam t e1' -> ExIntro (subst (sub_beta e2) e1') (SBeta t e1' e2)
      | _          -> (match progress h1 with
                       | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1'))
 
@@ -209,16 +200,17 @@ let rec weakening n g v t t' h =
   if y < n then TyVar y else TyVar (y+1) in
   substitution (sub_inc_above n) h hs
 
-(* Substitution for beta reduction -- now just a special case of substitution lemma *)
+(* Substitution for beta reduction
+   Now just a special case of substitution lemma *)
 opaque val substitution_beta :
-      x:var -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
+      #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
       h1:typing g v t_x ->
-      h2:typing (extend g x t_x) e t ->
-      Tot (typing g (subst_beta_gen x v e) t) (decreases e)
-let rec substitution_beta x e v t_x t g h1 h2 =
-  let hs : subst_typing (sub_beta_gen x v) (extend g x t_x) g =
-    fun y -> if y < x then TyVar y else if y = x then h1 else TyVar (y-1) in
-  substitution (sub_beta_gen x v) h2 hs
+      h2:typing (extend g 0 t_x) e t ->
+      Tot (typing g (subst (sub_beta v) e) t) (decreases e)
+let rec substitution_beta e v t_x t g h1 h2 =
+  let hs : subst_typing (sub_beta v) (extend g 0 t_x) g =
+    fun y -> if y = 0 then h1 else TyVar (y-1) in
+  substitution (sub_beta v) h2 hs
 
 (* Type preservation *)
 opaque val preservation : #e:exp -> #e':exp -> hs:step e e' ->
@@ -227,7 +219,6 @@ opaque val preservation : #e:exp -> #e':exp -> hs:step e e' ->
 let rec preservation e e' hs g t ht =
   let TyApp h1 h2 = ht in
     match hs with
-    | SBeta t e1' e2' -> let TyLam t_x hbody = h1 in
-                         substitution_beta 0 h2 hbody
+    | SBeta t e1' e2' -> substitution_beta h2 (TyLam.hbody h1)
     | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
     | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2)
