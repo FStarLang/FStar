@@ -1,5 +1,8 @@
 (*
-   Copyright 2008-2014 Catalin Hritcu, Nikhil Swamy, Microsoft Research and Inria
+   Copyright 2014-2015
+     Simon Forest - Inria and ENS Paris
+     Catalin Hritcu - Inria
+     Nikhil Swamy - Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -58,7 +61,6 @@ let sub_inc_above n y = if y<n then EVar y else EVar (y+1)
 val sub_inc : var -> Tot exp
 let sub_inc = sub_inc_above 0
 
-
 val renaming_sub_inc : unit -> Lemma (renaming (sub_inc))
 let renaming_sub_inc _ = ()
 
@@ -72,27 +74,20 @@ let rec subst s e =
   | EVar x -> s x
 
   | ELam t e1 ->
-     let subst_elam : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) =
+     let sub_elam : y:var -> Tot (e:exp{renaming s ==> is_EVar e}) =
        fun y -> if y=0 then EVar y
                        else subst sub_inc (s (y-1))            (* shift +1 *)
-     in ELam t (subst subst_elam e1)
+     in ELam t (subst sub_elam e1)
 
   | EApp e1 e2 -> EApp (subst s e1) (subst s e2)
 
-val subst_elam: s:sub -> Tot sub
-let subst_elam s y =
-  if y = 0 then EVar y
-  else subst sub_inc (s (y-1))
-
-val subst_extensional: s1:sub -> s2:sub{FEq s1 s2} -> e:exp ->
-                       Lemma (requires True)
-                             (ensures (subst s1 e = subst s2 e))
-                             [SMTPat (subst s1 e); SMTPat (subst s2 e)]
-let subst_extensional s1 s2 e = ()
+val sub_elam: s:sub -> Tot sub
+let sub_elam s y = if y=0 then EVar y
+                   else subst sub_inc (s (y-1))
 
 (* subst_beta_gen is a generalization of the substitution we do for
    the beta rule, when we've under x binders
-   (useful for the substitution lemma) *)
+   (useful for the old, weak substitution lemma) *)
 val sub_beta_gen : var -> exp -> Tot sub
 let sub_beta_gen x v = fun y -> if y < x then (EVar y)
                                 else if y = x then v (* substitute *)
@@ -104,7 +99,7 @@ let subst_beta_gen x v = subst (sub_beta_gen x v)
 let subst_beta = subst_beta_gen 0
 
 (* Small-step operational semantics; strong / full-beta reduction is
-   non-deterministic, so necessarily in inductive form *)
+   non-deterministic, so necessarily as inductive relation *)
 
 type step : exp -> exp -> Type =
   | SBeta : t:typ ->
@@ -122,7 +117,7 @@ type step : exp -> exp -> Type =
             step e2 e2' ->
             step (EApp e1 e2) (EApp e1 e2')
 
-(* Type system; in inductive form (not strictly necessary for STLC) *)
+(* Type system; as inductive relation (not strictly necessary for STLC) *)
 
 type env = var -> Tot (option typ)
 
@@ -170,8 +165,14 @@ let rec progress _ _ h =
      | _          -> (match progress h1 with
                       | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1'))
 
-(* Typing of substitutions (very easy, actually) *)
+(* Substitution extensional - used by substitution lemma below *)
+val subst_extensional: s1:sub -> s2:sub{FEq s1 s2} -> e:exp ->
+                       Lemma (requires True)
+                             (ensures (subst s1 e = subst s2 e))
+                             [SMTPat (subst s1 e); SMTPat (subst s2 e)]
+let subst_extensional s1 s2 e = ()
 
+(* Typing of substitutions (very easy, actually) *)
 type subst_typing (s:sub) (g1:env) (g2:env) =
   (x:var{is_Some (g1 x)} -> Tot(typing g2 (s x) (Some.v (g1 x))))
 
@@ -182,21 +183,21 @@ opaque val substitution :
       h1:typing g1 e t ->
       hs:subst_typing s g1 g2 ->
       Tot (typing g2 (subst s e) t)
-     (decreases %[is_var e; is_renaming s; e])
+      (decreases %[is_var e; is_renaming s; e])
 let rec substitution g1 e t s g2 h1 hs =
   match h1 with
   | TyVar x -> hs x
   | TyApp hfun harg -> TyApp (substitution s hfun hs) (substitution s harg hs)
   | TyLam tlam hbody ->
-  let hs'' : subst_typing (sub_inc) (g2) (extend g2 0 tlam) = fun x ->
-  TyVar (x+1) in
-  let hs' : subst_typing (subst_elam s) (extend g1 0 tlam) (extend g2 0 tlam) =
-  fun y -> if y = 0 then TyVar y
-           else let hgamma2 = hs (y - 1) in (substitution sub_inc hgamma2 hs'')
-  in TyLam tlam (substitution (subst_elam s) hbody hs')
+  let hs'' : subst_typing (sub_inc) (g2) (extend g2 0 tlam) =
+    fun x -> TyVar (x+1) in
+  let hs' : subst_typing (sub_elam s) (extend g1 0 tlam) (extend g2 0 tlam) =
+    fun y -> if y = 0 then TyVar y
+             else let hgamma2 = hs (y - 1) in (substitution sub_inc hgamma2 hs'')
+  in TyLam tlam (substitution (sub_elam s) hbody hs')
 
 (* Weakening (or shifting preserves typing) *)
-(* Useless now, showing that it follows from substitution *)
+(* Useless now, showing that it follows from substitution lemma *)
 val shift_up_above : nat -> exp -> Tot exp
 let shift_up_above n e = subst (sub_inc_above n) e
 
@@ -208,7 +209,7 @@ let rec weakening n g v t t' h =
   if y < n then TyVar y else TyVar (y+1) in
   substitution (sub_inc_above n) h hs
 
-(* Substitution for beta reduction -- now a special case of substitution *)
+(* Substitution for beta reduction -- now just a special case of substitution lemma *)
 opaque val substitution_beta :
       x:var -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
       h1:typing g v t_x ->
@@ -221,8 +222,8 @@ let rec substitution_beta x e v t_x t g h1 h2 =
 
 (* Type preservation *)
 opaque val preservation : #e:exp -> #e':exp -> hs:step e e' ->
-                   #g:env -> #t:typ -> ht:(typing g e t) ->
-                   Tot (typing g e' t) (decreases ht)
+                          #g:env -> #t:typ -> ht:(typing g e t) ->
+                          Tot (typing g e' t) (decreases ht)
 let rec preservation e e' hs g t ht =
   let TyApp h1 h2 = ht in
     match hs with
