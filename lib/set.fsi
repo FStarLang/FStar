@@ -29,6 +29,9 @@ val union      : a:Type -> set a -> set a -> Tot (set a)
 val intersect  : a:Type -> set a -> set a -> Tot (set a)
 val complement : a:Type -> set a -> Tot (set a)
 
+(* Ops *)
+val subset     : a:Type -> set a -> set a -> Tot bool
+
 (* Properties *)
 val mem_empty: a:Type -> x:a -> Lemma 
    (requires True)
@@ -54,6 +57,16 @@ val mem_complement: a:Type -> x:a -> s:set a -> Lemma
    (requires True)
    (ensures (mem x (complement s) = not(mem x s)))
    [SMTPat (mem x (complement s))]
+
+val mem_subset: a:Type -> s1:set a -> s2:set a -> Lemma 
+   (requires (forall x. mem x s1 ==> mem x s2))
+   (ensures (subset s1 s2))
+   [SMTPat (subset s1 s2)]
+
+val subset_mem: a:Type -> s1:set a -> s2:set a -> Lemma 
+   (requires (subset s1 s2))
+   (ensures (forall x. mem x s1 ==> mem x s2))
+   [SMTPat (subset s1 s2)]
 
 (* Extensionality *)
 type Equal : #a:Type -> set a -> set a -> Type
