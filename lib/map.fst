@@ -3,6 +3,7 @@ open Prims.PURE
 open Set
 
 assume type t : Type -> Type -> Type
+assume logic val empty:      key:Type -> value:Type -> Tot (t key value)
 assume logic val sel :       key:Type -> value:Type -> t key value -> key -> Tot value
 assume logic val upd :       key:Type -> value:Type -> t key value -> key -> value -> Tot (t key value)
 assume logic val const :     key:Type -> value:Type -> v:value -> Tot (t key value)
@@ -28,6 +29,9 @@ assume SelConcat1:    forall (key:Type) (value:Type) (m1:t key value) (m2:t key 
 
 assume SelConcat1:    forall (key:Type) (value:Type) (m1:t key value) (m2:t key value) (k:key).  {:pattern sel (concat m1 m2) k}
                       not(contains m2 k) ==> sel (concat m1 m2) k==sel m1 k
+
+assume InDomEmpty:    forall (key:Type) (value:Type) (k:key).   (*this gives a warning {:pattern contains empty k}*)
+                      (not (contains key value empty k))
 
 assume InDomUpd1:     forall (key:Type) (value:Type) (m:t key value) (k1:key) (k2:key) (v:value).   {:pattern contains (upd m k1 v) k2}
                       contains (upd m k1 v) k2 == (k1=k2 || contains m k2)
