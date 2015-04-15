@@ -19,7 +19,9 @@ Colorizer     : fstar
                 margin-left=1em
                 before="[**Exercise &label;: **]{margin-left=-1em}&br;" 
                 
-~Answer       : replace=""
+~Answer       : replace="[answer]{.answer-link}&br;~Begin AnswerContent&nl;&source;&nl;~End AnswerContent&nl;"
+                margin-top=-1em tight 
+~AnswerContent: border-style=solid border-width=1px border-color=black padding=0.5ex
 
 ~Code,~Pre : language=fstar
                 replace=/([a-zA-Z])([12])\b/\(\1\2|\1~\2~\)/g
