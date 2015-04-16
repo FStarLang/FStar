@@ -403,6 +403,12 @@ let fst x = MkTuple2._1 x
 val snd : ('a * 'b) -> Tot 'b
 let snd x = MkTuple2._2 x
 
+val dfst : 'a:Type -> 'b:('a -> Type) -> DTuple2 'a 'b -> Tot 'a
+let dfst t = MkDTuple2._1 t
+
+val dsnd : 'a:Type -> 'b:('a -> Type) -> t:(DTuple2 'a 'b) -> Tot ('b (MkDTuple2._1 t))
+let dsnd t = MkDTuple2._2 t
+
 logic type InductionHyp : Type -> Type
 assume val using_induction_hyp: 'a -> Lemma (ensures (InductionHyp 'a))
 assume val _assume: 'P:Type -> unit -> (y:unit{'P})
