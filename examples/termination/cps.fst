@@ -231,28 +231,53 @@ let eval e = eval_cps e C0
 (* *\) *)
 
 
-(* Nik's suggestion for closure conversion *)
-
+(** Nik's suggestion for closure conversion **)
 module DoubleCPSCC
 
 open Expr
 
-  type closure =
-    | Clos : env:Type -> env -> (env -> int -> Tot int) -> closure
+type closure =
+  | Clos : env:Type -> env -> (env -> int -> Tot int) -> closure
 
-  val apply : closure -> int -> Tot int
-  let apply c n =
-    match c with
-      | Clos e k -> k e n
+val apply : closure -> int -> Tot int
+let apply c n =
+  match c with
+    | Clos e k -> k e n
 
-  val clos2 : (closure * int) -> int -> Tot int
-  let clos2 (k,n) m = apply k (n + m)
+val clos2 : (closure * int) -> int -> Tot int
+let clos2 (k,n) m = apply k (n + m)
 
-  val eval : e:expr -> closure -> Tot int (decreases %[e;1])
-  val clos1 : e:expr -> ((a:expr{a << e}) * closure) -> int -> Tot int (decreases %[e;0])
-  let rec eval e k =
-    match e with
-      | Const n -> apply k n
-      | Plus t u -> eval t (Clos #((a:expr{a << e}) * closure) (u,k) (clos1 e))
+val eval : e:expr -> closure -> Tot int (decreases %[e;1])
+val clos1 : e:expr -> ((a:expr{a << e}) * closure) -> int -> Tot int (decreases %[e;0])
+let rec eval e k =
+  match e with
+    | Const n -> apply k n
+    | Plus t u -> eval t (Clos #((a:expr{a << e}) * closure) (u,k) (clos1 e))
 
-  and clos1 _ (u,k) n = eval u (Clos #(closure * int) (k,n) clos2)
+and clos1 _ (u,k) n = eval u (Clos #(closure * int) (k,n) clos2)
+
+
+(** Trying to go further by putting the ghost expression into the environment: F* raises two strange errors **)
+(* module DoubleCPSCCEnv *)
+
+(* open Expr *)
+
+(* type closure = *)
+(*   | Clos : env:Type -> env -> (env -> int -> Tot int) -> closure *)
+
+(* val apply : closure -> int -> Tot int *)
+(* let apply c n = *)
+(*   match c with *)
+(*     | Clos e k -> k e n *)
+
+(* val clos2 : (closure * int) -> int -> Tot int *)
+(* let clos2 (k,n) m = apply k (n + m) *)
+
+(* val eval : e:expr -> closure -> Tot int (decreases %[e;1]) *)
+(* val clos1 : p:((|e:expr * (a:expr{a << e})|) * closure) -> int -> Tot int (decreases %[dfst (fst p);0]) *)
+(* let rec eval e k = *)
+(*   match e with *)
+(*     | Const n -> apply k n *)
+(*     | Plus t u -> eval t (Clos #((|e:expr * (a:expr{a << e})|) * closure) ((|e,u|),k) clos1) *)
+
+(* and clos1 ((|e,u|),k) n = eval u (Clos #(closure * int) (k,n) clos2) *)
