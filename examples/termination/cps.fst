@@ -77,12 +77,17 @@ let add l = add_cps l C0
 (*** A more complex CPS function: adding the elements of a tree. ***)
 (*******************************************************************)
 
-(** Standard implementation **)
-module DoubleCPS
+module Expr
 
 type expr =
   | Const : int -> expr
   | Plus : expr -> expr -> expr
+
+
+(** Standard implementation **)
+module DoubleCPS
+
+open Expr
 
 val eval_cps : expr -> (int -> Tot 'a) -> Tot 'a
 let rec eval_cps e k =
@@ -95,9 +100,7 @@ let rec eval_cps e k =
 (** With λ-lifting **)
 module DoubleCPSLambdaLifting
 
-type expr =
-  | Const : int -> expr
-  | Plus : expr -> expr -> expr
+open Expr
 
 val eval_cps1 : (int -> Tot 'a) -> int -> int -> Tot 'a
 let eval_cps1 k r1 r2 = k (r1 + r2)
@@ -116,9 +119,7 @@ and eval_cps2 e2 k r1 = eval_cps e2 (eval_cps1 k r1)
 (** With greadier λ-lifting that removes mutual recursion **)
 module DoubleCPSLambdaLifting2
 
-type expr =
-  | Const : int -> expr
-  | Plus : expr -> expr -> expr
+open Expr
 
 val eval_cps1 : (int -> Tot 'a) -> int -> int -> Tot 'a
 let eval_cps1 k r1 r2 = k (r1 + r2)
@@ -139,9 +140,7 @@ let eval e = eval_cps e (fun x -> x)
 (** We have to be careful when λ-lifting not to delay the strictly decreasing recursive call **)
 (* module DoubleCPSLambdaLifting3 *)
 
-(* type expr = *)
-(*   | Const : int -> expr *)
-(*   | Plus : expr -> expr -> expr *)
+(* open Expr *)
 
 (* val eval_cps1 : (int -> Tot 'a) -> int -> int -> Tot 'a *)
 (* let eval_cps1 k r1 r2 = k (r1 + r2) *)
@@ -168,9 +167,7 @@ let eval e = eval_cps e (fun x -> x)
     ordering on call stacks **)
 module DoubleCPSDefun
 
-type expr =
-  | Const : int -> expr
-  | Plus : expr -> expr -> expr
+open Expr
 
 type cont =
   | C0 : cont
@@ -210,9 +207,7 @@ let eval e = eval_cps e C0
 (** Second try with λ-lifting: I would not expect F* to be able to infer termination anyway, but actually I get another strange error message **)
 (* module DoubleCPSDefunLambdaLifting *)
 
-(* type expr = *)
-(*   | Const : int -> expr *)
-(*   | Plus : expr -> expr -> expr *)
+(* open Expr *)
 
 (* type cont = *)
 (*   | C0 : cont *)
@@ -234,3 +229,30 @@ let eval e = eval_cps e C0
 (*  Unexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error. *)
 (* Bound term variable not found: _ *)
 (* *\) *)
+
+
+(* Nik's suggestion for closure conversion *)
+
+module DoubleCPSCC
+
+open Expr
+
+  type closure =
+    | Clos : env:Type -> env -> (env -> int -> Tot int) -> closure
+
+  val apply : closure -> int -> Tot int
+  let apply c n =
+    match c with
+      | Clos e k -> k e n
+
+  val clos2 : (closure * int) -> int -> Tot int
+  let clos2 (k,n) m = apply k (n + m)
+
+  val eval : e:expr -> closure -> Tot int (decreases %[e;1])
+  val clos1 : e:expr -> ((a:expr{a << e}) * closure) -> int -> Tot int (decreases %[e;0])
+  let rec eval e k =
+    match e with
+      | Const n -> apply k n
+      | Plus t u -> eval t (Clos #((a:expr{a << e}) * closure) (u,k) (clos1 e))
+
+  and clos1 _ (u,k) n = eval u (Clos #(closure * int) (k,n) clos2)
