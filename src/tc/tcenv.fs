@@ -82,6 +82,7 @@ type env = {
   use_eq:bool;                   (* generate an equality constraint, rather than subtyping/subkinding *)
   is_iface:bool;                 (* is the module we're currently checking an interface? *)
   uvar_level:int;                (* level to track uvar binding site *)
+  admit:bool;                    (* admit VCs in the current module *) 
 } 
 and solver_t = {
     init: env -> unit;
@@ -130,6 +131,7 @@ let initial_env solver module_lid =
     use_eq=false;
     is_iface=false;
     uvar_level=0;
+    admit=false;
   }
 
 

@@ -15,6 +15,5 @@
 *)
 module ST
 assume val alloc: 'a -> ref 'a
-assume val read: ref 'a -> 'a
-assume val write: ref 'a -> 'a -> unit
-
+assume val read:  ref 'a -> 'a
+assume val op_ColonEquals: ref 'a -> 'a -> unit

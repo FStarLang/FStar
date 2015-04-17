@@ -1688,6 +1688,7 @@ let solve tcenv q : unit =
         query_prelude, labels, qry, suffix in
     begin match qry with 
         | Assume({tm=False}, _) -> pop(); ()
+        | _ when tcenv.admit -> pop(); ()
         | Assume(q, _) ->
             let fresh = String.length q.as_str >= 2048 in   
             Z3.giveZ3 prefix;

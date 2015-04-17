@@ -1658,7 +1658,7 @@ let check_modules (s:solver_t) mods =
     if List.length !Options.debug <> 0
     then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
 
-    let env = {env with Env.is_iface=m.is_interface} in
+    let env = {env with Env.is_iface=m.is_interface; admit=not (Options.should_verify m.name.str)} in
     let m, env =
         if m.is_deserialized then
           let env' = add_modul_to_tcenv env m in
@@ -1682,7 +1682,6 @@ let check_modules (s:solver_t) mods =
                 then s.encode_modul env m;
                 s.refresh();
                 Options.reset_options() |> ignore
-//                else Util.fprint1 "Not encoding externals for %s\n" name
            end;
            m, env
       end
