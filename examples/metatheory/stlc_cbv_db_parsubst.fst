@@ -31,7 +31,7 @@ let rec step e =
       if is_value e1 then
         if is_value e2 then
           match e1 with
-          | ELam t e' -> Some (subst_beta e2 e')
+          | ELam t e' -> Some (subst (sub_beta e2) e')
           | _         -> None
         else
           match (step e2) with
@@ -137,10 +137,13 @@ val typable_empty_closed : #e:exp -> #t:typ -> h:typing empty e t ->
       Lemma (ensures (closed e))
 let typable_empty_closed e t h = typable_below 0 h
 
-
+val sub_beta_gen : var -> exp -> Tot sub
+let sub_beta_gen x v = fun y -> if y < x then (EVar y)
+                                else if y = x then v (* substitute *)
+                                else (EVar (y-1))    (* shift -1 *)
 
 val subst_gen_var_lt : x:var -> y:var{y < x} -> v:exp -> Lemma
-  (ensures (subst_beta_gen x v (EVar y) = (EVar y)))
+  (ensures (subst (sub_beta_gen x v) (EVar y) = (EVar y)))
 let subst_gen_var_lt x y v = ()
 
 val extend_lt : x:var -> y:var{y < x} -> g:env -> t_x:typ -> Lemma
@@ -164,22 +167,22 @@ let rec subst_below x v s =
   match v with
   | EVar y     -> ()
   | EApp e1 e2 -> subst_below x e1 s; subst_below x e2 s
-  | ELam t e   -> (subst_below (x+1) e (subst_elam s);
-                   assert(e = subst (subst_elam s) e);
+  | ELam t e   -> (subst_below (x+1) e (sub_elam s);
+                   assert(e = subst (sub_elam s) e);
                    assert(v = ELam t e);
-                   assert(subst s v = ELam t (subst (subst_elam s) e)))
+                   assert(subst s v = ELam t (subst (sub_elam s) e)))
 
 val subst_closed : v:exp{closed v} -> s:sub ->
   Lemma (ensures (v = subst s v)) (decreases v)
 let rec subst_closed v s = subst_below 0 v s
 
 val subst_gen_elam_aux : x:var -> v:exp{closed v} -> y:var -> Lemma
-      (ensures ((subst_elam (sub_beta_gen  x    v)) y =
+      (ensures ((sub_elam (sub_beta_gen  x    v)) y =
                             (sub_beta_gen (x+1) v)  y))
 let subst_gen_elam_aux x v y =
   if y = 0 then ()
   else
-    (assert((subst_elam (sub_beta_gen x v)) y =
+    (assert((sub_elam (sub_beta_gen x v)) y =
            (subst sub_inc (sub_beta_gen x v (y-1))));
           if y-1 < x then ()
      else if y-1 = x then
@@ -189,26 +192,26 @@ let subst_gen_elam_aux x v y =
      else ())
 
 val subst_gen_elam_aux_forall : x:var -> v:exp{closed v} -> Lemma
-      (ensures (FEq (subst_elam (sub_beta_gen  x    v))
+      (ensures (FEq (sub_elam (sub_beta_gen  x    v))
                                 (sub_beta_gen (x+1) v)))
 let subst_gen_elam_aux_forall x v = admit()
 (* should follow from subst_gen_elam_aux and forall_intro *)
 
 val subst_gen_elam : x:var -> v:exp{closed v} -> t_y:typ -> e':exp -> Lemma
-      (ensures (subst_beta_gen x v (ELam t_y e') =
-                ELam t_y (subst_beta_gen (x+1) v e')))
+      (ensures (subst (sub_beta_gen x v) (ELam t_y e') =
+                ELam t_y (subst (sub_beta_gen (x+1) v) e')))
 let subst_gen_elam x v t_y e' =
   subst_gen_elam_aux_forall x v;
-  subst_extensional (subst_elam (sub_beta_gen  x    v))
+  subst_extensional (sub_elam (sub_beta_gen  x    v))
                                       (sub_beta_gen (x+1) v)  e';
-  assert(subst_beta_gen x v (ELam t_y e')
-           = ELam t_y (subst (subst_elam (sub_beta_gen x v)) e'))
+  assert(subst (sub_beta_gen x v) (ELam t_y e')
+           = ELam t_y (subst (sub_elam (sub_beta_gen x v)) e'))
 
 val substitution_preserves_typing :
       x:var -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
       h1:typing empty v t_x ->
       h2:typing (extend g x t_x) e t ->
-      Tot (typing g (subst_beta_gen x v e) t) (decreases e)
+      Tot (typing g (subst (sub_beta_gen x v) e) t) (decreases e)
 let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   match h2 with
   | TyVar y ->
@@ -224,7 +227,8 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
       TyLam t_y (substitution_preserves_typing (x+1) h1 h21'))
   | TyApp #g' #e1 #e2 #t11 #t12 h21 h22 ->
      (* CH: implicits don't work here, why? *)
-    (TyApp #g #(subst_beta_gen x v e1) #(subst_beta_gen x v e2) #t11 #t12
+    (TyApp #g #(subst (sub_beta_gen x v) e1)
+              #(subst (sub_beta_gen x v) e2) #t11 #t12
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22))
 
