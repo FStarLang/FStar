@@ -1,9 +1,9 @@
 FSTAR_HOME=../../../..
 FSTAR_BIN=fstar.exe
-FSTAR=$(FSTAR_HOME)/bin/$(FSTAR_BIN) --fstar_home $(FSTAR_HOME)
+FSTAR=$(FSTAR_HOME)/bin/$(FSTAR_BIN)
 STATE=
-main: 
-	$(FSTAR) $(FSTAR_HOME)/lib/list.fst main.fst 
+main:
+	$(FSTAR) $(FSTAR_HOME)/lib/list.fst main.fst
 #
 #all : swap factorial fibonacci wp
 #
@@ -18,4 +18,3 @@ main:
 #
 #fibonacci : fibonacci.fst
 #	$(FSTAR) $(STATE) $^
-
