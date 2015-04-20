@@ -262,6 +262,8 @@ let head_normal env t =
 let whnf env t =
     if head_normal env t then t
     else Tc.Normalize.norm_typ [Tc.Normalize.Beta;Tc.Normalize.WHNF;Tc.Normalize.DeltaHard] env.tcenv t
+let whnf_e env e =
+    Tc.Normalize.norm_exp [Tc.Normalize.Beta;Tc.Normalize.WHNF;Tc.Normalize.DeltaHard] env.tcenv e
 let norm_t env t = Tc.Normalize.norm_typ [Tc.Normalize.Beta] env.tcenv t
 let norm_k env k = Tc.Normalize.normalize_kind env.tcenv k
 let trivial_post t : typ = mk_Typ_lam([null_v_binder t], Util.ftv Const.true_lid ktype) 
@@ -651,6 +653,8 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
 
       | Exp_app(head, args_e) -> 
         let args, vars, decls = encode_args args_e env in
+        let head = Util.compress_exp head in
+        let head = whnf_e env head in
     
         let encode_partial_app ht_opt = 
             let head, vars', decls' = encode_exp head env in
@@ -671,7 +675,6 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
             let tm = Term.mkApp(fname, fuel_args@List.map (function Inl t | Inr t -> t) args) in
             tm, vars, decls in
         
-        let head = Util.compress_exp head in
         let head_type = Util.unrefine <| whnf env (Util.unrefine (Tc.Recheck.recompute_typ head)) in //head should be a variable, so this should be fast to recompute
         if Tc.Env.debug env.tcenv <| Options.Other "Encoding"
         then Util.fprint3 "Recomputed type of head %s (%s) to be %s\n" (Print.exp_to_string head) (Print.tag_of_exp head) (Print.typ_to_string head_type);
