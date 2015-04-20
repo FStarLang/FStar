@@ -483,6 +483,10 @@ let incr r = r := !r + 1
 let decr r = r := !r - 1
 let geq (i:int) (j:int) = i >= j
 
+let get_exec_dir () = 
+    let asm = System.Reflection.Assembly.GetEntryAssembly() in
+    Path.GetDirectoryName(asm.Location)
+
 let expand_environment_variable s = 
   System.Environment.ExpandEnvironmentVariables ("%"^s^"%")
 

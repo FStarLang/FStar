@@ -14,10 +14,12 @@ module Prims = struct
   let failwith = failwith
   let try_with f1 f2 = try f1 () with | e -> f2 e
   let _assert x = ()
+  let min x y = if x < y then x else y
 end
 
 module ST = struct
   let read x = !x
+  let op_ColonEquals x y = x := y
 end
 
 module String = struct
@@ -101,10 +103,10 @@ module Option = struct
     | None -> false
   let isNone o = not (isSome o)
   let map f = function
-    | Some x -> Some (f x) 
+    | Some x -> Some (f x)
     | None -> None
   let get = function
-    | Some x -> x 
+    | Some x -> x
     | None -> failwith "Option.get called on None"
 end
 
@@ -221,7 +223,7 @@ module Microsoft = struct
       let smap_create (i:int) : 'value smap = BatHashtbl.create i
       let smap_clear (s:('value smap)) = BatHashtbl.clear s
       let smap_add (m:'value smap) k (v:'value) = BatHashtbl.add m k v
-      let smap_of_list (l: (string * 'value) list) = 
+      let smap_of_list (l: (string * 'value) list) =
           let s = smap_create (List.length l) in
           List.iter (fun (x,y) -> smap_add s x y) l;
           s
@@ -262,7 +264,7 @@ module Microsoft = struct
       let float_of_int64 = BatInt64.to_float
 
       let string_of_int = string_of_int
-      let string_of_int64 = BatInt64.to_string 
+      let string_of_int64 = BatInt64.to_string
       let string_of_float = string_of_float
       let string_of_char  (i:char) = spr "%c" i
       let hex_string_of_byte (i:char) = spr "%x" (int_of_char i)
@@ -506,6 +508,7 @@ module Microsoft = struct
       let incr r = r := !r + 1
       let geq (i:int) (j:int) = i >= j
 
+      let get_exec_dir () = Filename.dirname (Sys.executable_name)
       let expand_environment_variable x = try Sys.getenv x with Not_found -> ""
 
       let physical_equality (x:'a) (y:'a) = x == y
@@ -536,7 +539,7 @@ module Microsoft = struct
 
 	  close: unit -> unit
       }
-     
+
       module MkoReader = struct
           let read_byte r x = r.read_byte x
           let read_bool r x = r.read_bool x
@@ -691,7 +694,7 @@ let rec parse (opts:opt list) def ar ix max i =
                     (match p with
                        | ZeroArgs f -> f (); parse opts def ar (ix + 1) max (i + 1)
                        | OneArg (f, _) ->
-                           if ix + 1 > max 
+                           if ix + 1 > max
                            then Die ("last option '" ^ argtrim ^ "' takes an argument but has none")
                            else
                              (f (ar.(ix + 1));
@@ -705,7 +708,7 @@ let parse_cmdline specs others =
     if len = 1 then Help
     else go_on ()
 
-let parse_string specs others (str:string) = 
+let parse_string specs others (str:string) =
     let args = Str.split (Str.regexp "[ \t]+") str in
     let args = Array.of_list args in
     parse specs others args 0 (Array.length args - 1) 0
@@ -901,13 +904,13 @@ let parse_string specs others (str:string) =
       let string_of_pos   pos = let line,col = line_of_pos pos,col_of_pos pos in Printf.sprintf "%d,%d" line col
       let string_of_range r   = Printf.sprintf "%s(%s-%s)" (file_of_range r) (string_of_pos (start_of_range r)) (string_of_pos (end_of_range r))
 
-      let compare r1 r2 = 
+      let compare r1 r2 =
         let fcomp = String.compare (file_of_range r1) (file_of_range r2) in
         if fcomp = 0
-          then let start1 = start_of_range r1 in          
+          then let start1 = start_of_range r1 in
           let start2 = start_of_range r2 in
           let lcomp = line_of_pos start1 - line_of_pos start2 in
-          if lcomp = 0 
+          if lcomp = 0
             then col_of_pos start1 - col_of_pos start2
             else lcomp
         else fcomp

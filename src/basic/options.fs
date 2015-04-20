@@ -131,10 +131,14 @@ let init_options () =
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
     | None ->
-      let x = Util.expand_environment_variable "FSTAR_HOME" in
+      let x = Util.get_exec_dir () in 
+      let x = x ^ "/.." in
       _fstar_home := x;
       fstar_home_opt := Some x;
       x
+//      let x = Util.expand_environment_variable "FSTAR_HOME" in
+//      _fstar_home := x;
+      
     | Some x -> _fstar_home := x; x in
   fh
 let get_fstar_home () = match !fstar_home_opt with 

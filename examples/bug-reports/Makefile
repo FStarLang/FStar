@@ -3,4 +3,4 @@ include ../Makefile.include
 all: .all.ver
 
 bug194: bug194.fst
-	../../bin/fstar.exe --fstar_home ../.. ../../lib/classical.fst ../../lib/ext.fst ../../lib/constr.fst ../metatheory/stlc_strong_db_parsubst.fst bug194.fst 
+	../../bin/fstar.exe --fstar_home ../.. ../../lib/classical.fst ../../lib/ext.fst ../../lib/constr.fst ../metatheory/stlc_strong_db_parsubst.fst bug194.fst
