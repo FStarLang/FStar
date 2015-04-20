@@ -63,7 +63,8 @@ type env = {
   check_uvars:bool;              (* paranoid: re-typecheck unification variables *)
   use_eq:bool;                   (* generate an equality constraint, rather than subtyping/subkinding *)
   is_iface:bool;                 (* is the module we're currently checking an interface? *)  
-  uvar_level:int;                (* level to track uvar binding sites *)                
+  uvar_level:int;                (* level to track uvar binding sites *)   
+  admit:bool;                    (* admit VCs in the current module *) 
 }
 and solver_t = {
     init: env -> unit;

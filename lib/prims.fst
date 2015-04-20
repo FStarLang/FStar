@@ -457,8 +457,5 @@ type nonzero = i:int{i<>0}
 assume val op_Modulus            : int -> nonzero -> Tot int
 assume val op_Division           : nat -> nonzero -> Tot int
 
-(* Unrefined specifications for these functions for typing ML code *)
-assume val op_ColonEquals: ref 'a -> 'a -> unit
-assume val op_Dereference: ref 'a -> 'a
 assume type Boxed : Type -> Type
 

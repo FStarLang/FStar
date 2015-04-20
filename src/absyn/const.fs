@@ -87,7 +87,6 @@ let strcat_lid      = p2l ["String"; "strcat"]
 (* Primitive operators *)
 let op_Eq              = pconst "op_Equality"
 let op_notEq           = pconst "op_disEquality"
-let op_ColonEq         = pconst "op_ColonEquals"
 let op_LT              = pconst "op_LessThan"
 let op_LTE             = pconst "op_LessThanOrEqual"
 let op_GT              = pconst "op_GreaterThan"
@@ -114,6 +113,7 @@ let array_mk_array_lid = p2l ["Array"; "mk_array"]
 let write_lid    = p2l ["ST"; "write"]
 let read_lid     = p2l ["ST"; "read"]
 let alloc_lid    = p2l ["ST"; "alloc"]
+let op_ColonEq   = p2l ["ST"; "op_ColonEquals"]
 
 (* monad constants *)
 let pure_effect_lid = pconst "PURE"

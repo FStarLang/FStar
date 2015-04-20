@@ -118,8 +118,6 @@ let hex = ['0'-'9'] | ['A'-'F'] | ['a'-'f']
 let truewhite = [' ']
 let offwhite = ['\t']
 let anywhite = truewhite | offwhite
-let op_char = '!'|'$'|'%'|'&'|'*'|'+'|'-'|'.'|'/'|'<'|'='|'?'|'^'|'|'|'~'|':'
-let ignored_op_char = '.' | '$'
 let xinteger = 
   (  '0' ('x'| 'X')  hex + 
    | '0' ('o'| 'O')  (['0'-'7']) + 
@@ -159,8 +157,8 @@ let hexgraph_short = '\\' 'x' hex hex
 let unicodegraph_short = '\\' 'u' hex hex hex hex
 let unicodegraph_long =  '\\' 'U' hex hex hex hex hex hex hex hex
 let newline = ('\n' | '\r' '\n')
-let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'|'|'!'|'^'
-let custom_op = custom_op_char (custom_op_char | '>')*
+let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'|'|'^'
+let custom_op = custom_op_char (custom_op_char | '>' | '!' )*
 let connecting_char = '\Pc'
 let combining_char = '\Mn' | '\Mc'
 let formatting_char = '\Cf' 
@@ -414,6 +412,7 @@ rule token args = parse
  | "=" { EQUALS }
  | '#' { HASH }
  | '&' { AMP }
+ | "!" { BANG }
  | "&&" { AMP_AMP }
  | "||" { BAR_BAR }
  | '\'' { QUOTE }
@@ -445,7 +444,6 @@ rule token args = parse
  | "|" { BAR }
  | "}" { RBRACE }
  | "$" { DOLLAR }
- | "!" { BANG(ulexeme lexbuf) }
  | "~" { RESERVED }
  | "`" { RESERVED }
  | "\\" { BACKSLASH }

@@ -43,7 +43,10 @@ assume val read: a:Type -> r:ref a -> ST a
 assume val write: a:Type -> r:ref a -> v:a -> Prims.STATE.ST unit 
                                                  (fun h -> True)
                                                  (fun h0 x h1 -> h1==upd h0 r v)
-                                                 (* (modifies (a_ref r)) *)
+                          
+assume val op_ColonEquals: a:Type -> r:ref a -> v:a -> Prims.STATE.ST unit 
+                                                 (fun h -> True)
+                                                 (fun h0 x h1 -> h1==upd h0 r v)
 
 
 assume val get: unit -> ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h=h1) (modifies no_refs)
