@@ -30,3 +30,5 @@ norm-take3:
 
 stlc_cbv_db_pntsubst_lists:
 	make stlc_cbv_db_pntsubst_lists.fulllib.ver OTHERFLAGS='--z3timeout 20'
+hoare_wp:
+	$(FSTAR) ../../lib/classical.fst hoare_wp.fst --max_fuel 1 --max_ifuel 1
