@@ -87,7 +87,7 @@ let esubst_lam_renaming s = ()
 (* Substitution extensional; trivial with the extensionality axiom *)
 val esubst_extensional: s1:esub -> s2:esub{FEq s1 s2} -> e:exp ->
                         Lemma (requires True) (ensures (esubst s1 e = esubst s2 e))
-                       (* [SMTPat (esubst e s1);  SMTPat (esubst e s2)] *)
+                       (*[SMTPat (esubst s1 e);  SMTPat (esubst s2 e)]*)
 let esubst_extensional s1 s2 e = ()
 
 (* This only works automatically with the patterns in subst_extensional above;
@@ -171,9 +171,61 @@ let tsubst_lam_hoist k t s = admit()
 val tsub_comp : s1:tsub -> s2:tsub -> Tot tsub
 let tsub_comp s1 s2 x = tsubst s1 (s2 x)
 
-(* CH: admitting these for now, they are exactly the same as for esubst *)
-assume val tsubst_comp : s1:tsub -> s2:tsub -> t:typ -> Lemma
+val tsub_comp_inc : s:tsub -> x:var ->
+      Lemma (tsub_comp tsub_inc s x = tsub_comp (tsubst_lam s) tsub_inc x)
+let tsub_comp_inc s x = ()
+val tsubst_lam_renaming: s:tsub -> Lemma
+  (ensures (forall (x:var). trenaming s ==> is_TVar (tsubst_lam s x)))
+let tsubst_lam_renaming s = ()
+val tsubst_comp : s1:tsub -> s2:tsub -> t:typ -> Lemma
       (tsubst s1 (tsubst s2 t) = tsubst (tsub_comp s1 s2) t)
+      (decreases %[is_tvar t;
+                   is_trenaming s1;
+                   is_trenaming s2;
+                   t])
+let rec tsubst_comp s1 s2 t =
+  match t with 
+  | TVar z -> ()
+  | TApp t1 t2 -> tsubst_comp s1 s2 t1; tsubst_comp s1 s2 t2
+  | TLam k tbody -> 
+      let tsubst_lam_comp : x:var -> Lemma( tsubst_lam (tsub_comp s1 s2) x =
+                                            tsub_comp (tsubst_lam s1) (tsubst_lam s2) x) =
+        fun x -> match x with
+        | 0 -> ()
+        | _ -> begin 
+          let ih1 = trenaming_sub_inc ();
+                    tsubst_comp tsub_inc s1 (s2 (x-1)) in
+          let ext = forall_intro (tsub_comp_inc s1);
+                    tsubst_extensional (tsub_comp tsub_inc s1)
+                                       (tsub_comp (tsubst_lam s1) tsub_inc) (s2 (x-1)) in
+          let ih2 = tsubst_lam_renaming s1;
+                    trenaming_sub_inc ();
+                    tsubst_comp (tsubst_lam s1) tsub_inc (s2 (x-1))
+          in ()
+        end
+      in
+      let hoist1 = tsubst_lam_hoist k tbody s2 in
+      let hoist2 = tsubst_lam_hoist k (tsubst (tsubst_lam s2) tbody) s1 in
+    let h1 =
+      tsubst_lam_renaming s1;
+      tsubst_lam_renaming s2;
+      tsubst_comp (tsubst_lam s1) (tsubst_lam s2) tbody in
+
+    let h2 =
+      forall_intro tsubst_lam_comp;
+      cut (FEq (tsub_comp (tsubst_lam s1) (tsubst_lam s2))
+             (tsubst_lam (tsub_comp s1 s2))) in
+
+    let ext = tsubst_extensional
+      (tsub_comp (tsubst_lam s1) (tsubst_lam s2))
+      (tsubst_lam (tsub_comp s1 s2))
+      tbody in
+
+    let hoist3 = tsubst_lam_hoist k tbody (tsub_comp s1 s2) in
+    ()
+
+
+  | TArr t1 t2 -> tsubst_comp s1 s2 t1; tsubst_comp s1 s2 t2
 assume val tsubst_lam_comp : s1:tsub -> s2:tsub -> x:var -> Lemma
       (tsubst_lam (tsub_comp s1 s2) x = tsub_comp (tsubst_lam s1) (tsubst_lam s2) x)
 
@@ -691,71 +743,25 @@ let rec shift_above_and_subst s y t =
   tsubst_extensional (tsub_comp (tsub_beta_gen y t) (tsub_inc_above y)) tsub_id s;
   tsubst_id s
 
-(* reordering shifts *)
-(* CH: there might be a nicer proof for this using substitution composition
-   CH: this proof sometimes fails with 5s timeout *)
-val tshifts_reordering: x:nat -> y:nat{y >= x} -> s:typ -> Lemma
-                        (ensures (tsh x (tsh y s) = tsh (y + 1) (tsh x s)))
-             	        (decreases s)
-let rec tshifts_reordering x y s = admit()
-(*
-match s with
-  | TVar z -> ()
-  | TLam k t1' ->
-    tshift_up_above_lam y k t1';
-    tshift_up_above_lam x k (tsh (y + 1) t1');
-    tshifts_reordering (x + 1) (y + 1) t1';
-    tshift_up_above_lam x k t1';
-    tshift_up_above_lam (y + 1) k (tsh (x + 1) t1')
-  | TArr t1' t2'
-  | TApp t1' t2' -> tshifts_reordering x y t1'; tshifts_reordering x y t2'
-*)
+val tsubst_commute_aux : y:nat -> x:nat{x >= y} -> s1:typ ->
 
-(* CH: This proof sometimes fails even with 10s timeout; try to refactor it! *)
-val tsubst_commute_helper: x:nat -> y:nat{x >= y} ->s:typ -> t:typ ->
-          Lemma (requires True)
-                (ensures (tsh y (ts x s t) = ts (x + 1) (tsh y s) (tsh y t)))
-         (decreases t)
-let rec tsubst_commute_helper x y s t = admit()
-(*
-  match t with
-  | TVar z -> ()
-  | TLam k t1' ->
-    tsubst_gen_tlam x s k t1';
-    tshift_up_above_lam y k (ts (x + 1) (tsh 0 s) t1');
-    tsubst_commute_helper (x + 1) (y + 1) (tsh 0 s) t1';
-    tshift_up_above_lam y k t1';
-    tsubst_gen_tlam (x + 1) (tsh y s) k (tsh (y + 1) t1');
-    tshifts_reordering 0 y s
-  | TArr t1' t2'
-  | TApp t1' t2' -> tsubst_commute_helper x y s t1'; tsubst_commute_helper x y s t2'
-*)
-
-(* CH: This proof sometimes fails with 5s timeout; try to refactor it! *)
+  s2:typ -> v:var ->          Lemma (requires True)
+		    (ensures ((tsub_comp (tsub_beta_gen x s1) (tsub_beta_gen y s2)) v = (tsub_comp (tsub_beta_gen y (tsubst_beta_gen x s1 s2)) (tsub_beta_gen (x+1) (tshift_up_above y s1))) v))
+let tsubst_commute_aux y x s1 s2 v = 
+  if v < x+1 then ()
+  else if v = x+1 then
+    shift_above_and_subst s1 y (tsubst_beta_gen x s1 s2)
+  else ()
+  
 val tsubst_commute: t1:typ -> y:nat -> t2:typ -> x:nat{x >= y} -> s:typ ->
                     Lemma (requires True)
 		    (ensures (ts x s (ts y t2 t1) =
                               ts y (ts x s t2) (ts (x + 1) (tsh y s) t1)))
-                    (decreases t1)
-let rec tsubst_commute t1 y t2 x s = admit()
-(*
-  match t1 with
-  | TVar z ->
-    if z > y && z = x + 1 then
-      shift_above_and_subst s y (ts x s t2)
-    else
-      ()
-  | TLam k t1' ->
-    tsubst_gen_tlam y t2 k t1';
-    tsubst_gen_tlam x s k (ts (y + 1) (tsh 0 t2) t1');
-    tsubst_commute t1' (y + 1) (tsh 0 t2) (x + 1) (tsh 0 s);
-    tsubst_gen_tlam (x + 1) (tsh y s) k t1';
-    tsubst_gen_tlam y (ts x s t2) k (ts (x + 2) (tsh 0 (tsh y s)) t1');
-    tsubst_commute_helper x 0 s t2;
-    tshifts_reordering 0 y s
-  | TArr t1' t2'
-  | TApp t1' t2' -> tsubst_commute t1' y t2 x s; tsubst_commute t2' y t2 x s
-*)
+let rec tsubst_commute t1 y t2 x s = 
+  tsubst_comp (tsub_beta_gen x s) (tsub_beta_gen y t2) t1;
+  forall_intro (tsubst_commute_aux y x s t2);
+  tsubst_extensional (tsub_comp (tsub_beta_gen x s) (tsub_beta_gen y t2)) (tsub_comp (tsub_beta_gen y (ts x s t2)) (tsub_beta_gen (x+1) (tsh y s))) t1;
+  tsubst_comp (tsub_beta_gen y (ts x s t2)) (tsub_beta_gen (x+1) (tsh y s)) t1
 
 (* Lemma 30.3.7: t => t' and s => s' implies t[x |-> s] => t'[x |-> s'] *)
 opaque val subst_of_tred_tred: #s:typ -> #s':typ -> #t:typ -> #t':typ -> x:nat ->
