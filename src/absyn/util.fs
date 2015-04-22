@@ -653,7 +653,7 @@ let rec lids_of_sigelt se = match se with
   | Sig_monads(_, _, _, lids) -> lids
   | Sig_tycon (lid, _, _,  _, _, _, _)    
   | Sig_typ_abbrev  (lid, _, _, _, _, _)
-  | Sig_datacon (lid, _, _, _, _)
+  | Sig_datacon (lid, _, _, _, _, _)
   | Sig_val_decl (lid, _, _, _) 
   | Sig_assume (lid, _, _, _) -> [lid]
   | Sig_pragma _
@@ -667,7 +667,7 @@ let range_of_sigelt x = match x with
   | Sig_bundle(_, r, _) 
   | Sig_tycon (_, _, _,  _, _, _, r)    
   | Sig_typ_abbrev  (_, _, _, _, _, r)
-  | Sig_datacon (_, _, _, _, r)
+  | Sig_datacon (_, _, _, _, _, r)
   | Sig_val_decl (_, _, _, r) 
   | Sig_assume (_, _, _, r)
   | Sig_let(_, r, _, _) 

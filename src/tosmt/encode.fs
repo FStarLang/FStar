@@ -1300,9 +1300,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 @aux in
         g, env
 
-    | Sig_datacon(d, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env 
+    | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env 
 
-    | Sig_datacon(d, t, _, quals, _) -> 
+    | Sig_datacon(d, t, _, quals, _, _) -> 
         let ddconstrsym, ddtok, env = gen_free_var env d in //Print.sli d in
         let formals, t_res = match Util.function_formals t with 
             | Some (f, c) -> f, Util.comp_result c

@@ -1452,7 +1452,7 @@ and tc_decl env se deserialized = match se with
       let env = Tc.Env.push_sigelt env se in 
       se, env
   
-    | Sig_datacon(lid, t, tycon, quals, r) -> 
+    | Sig_datacon(lid, t, tycon, quals, mutuals, r) -> 
       let tname, _, _  = tycon in
       let env = Tc.Env.set_range env r in
       let t = tc_typ_check_trivial env t ktype in
@@ -1461,12 +1461,34 @@ and tc_decl env se deserialized = match se with
       let formals, result_t = match Util.function_formals t with 
         | Some (formals, cod) -> formals, Util.comp_result cod
         | _ -> [], t in
+
+      let positivity_check (formal:binder) = match fst formal with 
+        | Inl _ -> ()
+        | Inr x -> 
+          let t = Normalize.norm_typ [Normalize.Beta; Normalize.DeltaHard] env x.sort in
+          if Util.is_function_typ t && Util.is_pure_function t 
+          then let formals, _ = Util.function_formals t |> Util.must in
+               formals |> List.iter (fun (a, _) -> match a with
+                | Inl _ -> ()
+                | Inr y -> 
+                  let t = y.sort in 
+                  Visit.collect_from_typ (fun b t -> 
+                    match (Util.compress_typ t).n with
+                    | Typ_const f -> 
+                      begin match List.tryFind (lid_equals f.v) mutuals with 
+                        | None -> ()
+                        | Some tname -> 
+                          raise (Error (Tc.Errors.constructor_fails_the_positivity_check env (Util.fvar true lid (range_of_lid lid)) tname, range_of_lid lid))
+                      end 
+                    | _ -> ()) () t) in
+      
+      formals |> List.iter positivity_check;
+
       (* TODO: check that the tps in tname are the same as here *)
       let _ = match destruct result_t tname with 
         | Some _ -> ()
         | _ -> raise (Error (Tc.Errors.constructor_builds_the_wrong_type env (Util.fvar true lid (range_of_lid lid)) result_t (Util.ftv tname kun), range_of_lid lid)) in
-//      let t = Tc.Util.refine_data_type env lid formals result_t in
-      let se = Sig_datacon(lid, t, tycon, quals, r) in 
+      let se = Sig_datacon(lid, t, tycon, quals, mutuals, r) in 
       let env = Tc.Env.push_sigelt env se in 
       if log env then Util.print_string <| Util.format2 "data %s : %s\n" lid.str (Tc.Normalize.typ_norm_to_string env t);
       se, env

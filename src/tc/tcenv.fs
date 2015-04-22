@@ -305,7 +305,7 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
 
 let lookup_datacon env lid = 
   match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, t, _, _,_))) -> t
+    | Some (Inr (Sig_datacon (_, t, _, _, _, _))) -> t
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_projector env lid i = 
@@ -338,7 +338,7 @@ let lookup_lid env lid =
     raise (Error(name_not_found lid, range_of_lid lid)) in
   let mapper = function
     | Inl t
-    | Inr (Sig_datacon(_, t, _, _,_))  
+    | Inr (Sig_datacon(_, t, _, _,_, _))  
     | Inr (Sig_val_decl (_, t, _, _)) 
     | Inr (Sig_let((_, [(_, t, _)]), _, _, _)) -> Some t 
     | Inr (Sig_let((_, lbs), _, _, _)) -> 
@@ -358,7 +358,7 @@ let lookup_lid env lid =
 let is_datacon env lid = 
   match lookup_qname env lid with
     | Some (Inr(Sig_val_decl(_, _, quals, _))) -> quals |> Util.for_some (function Assumption -> true | _ -> false)
-    | Some (Inr (Sig_datacon (_, t, _, _,_))) -> true
+    | Some (Inr (Sig_datacon (_, t, _, _,_,_))) -> true
     | _ -> false
 
 let is_record env lid =

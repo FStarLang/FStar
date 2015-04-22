@@ -1152,7 +1152,7 @@ let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binde
             Sig_val_decl(field_name, t, quals [Logic; Projector(lid, Inr x.v)], range_of_lid field_name))
 
 let mk_data_projectors env = function
-  | Sig_datacon(lid, t, tycon, quals, _) when (//(not env.iface || env.admitted_iface) && 
+  | Sig_datacon(lid, t, tycon, quals, _, _) when (//(not env.iface || env.admitted_iface) && 
                                                 not (lid_equals lid Const.lexcons_lid)) ->
     let refine_domain = 
         if (quals |> Util.for_some (function RecordConstructor _ -> true | _ -> false))
@@ -1289,7 +1289,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                 let quals = tags |> List.collect (function 
                     | RecordType fns -> [RecordConstructor fns]
                     | _ -> []) in
-                (name, Sig_datacon(name, close_typ tps t |> Util.name_function_binders, tycon, quals, rng)))) in
+                (name, Sig_datacon(name, close_typ tps t |> Util.name_function_binders, tycon, quals, mutuals, rng)))) in
               Sig_tycon(tname, tpars, k, mutuals, constrNames, tags, rng)::constrs
         | _ -> failwith "impossible") in
       let bundle = Sig_bundle(sigelts, rng, List.collect Util.lids_of_sigelt sigelts) in
@@ -1366,7 +1366,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
   | Exception(id, None) ->
     let t = fail_or env  (try_lookup_typ_name env) Const.exn_lid in
     let l = qualify env id in
-    let se = Sig_datacon(l, t, (Const.exn_lid,[],ktype), [ExceptionConstructor], d.drange) in
+    let se = Sig_datacon(l, t, (Const.exn_lid,[],ktype), [ExceptionConstructor], [Const.exn_lid], d.drange) in
     let se' = Sig_bundle([se], d.drange, [l]) in
     let env = push_sigelt env se' in
     let data_ops = mk_data_projectors env se in
@@ -1378,7 +1378,7 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let t = desugar_typ env term in
     let t = mk_Typ_fun([null_v_binder t], mk_Total (fail_or env (try_lookup_typ_name env) Const.exn_lid)) None d.drange in
     let l = qualify env id in
-    let se = Sig_datacon(l, t, (Const.exn_lid,[],ktype), [ExceptionConstructor], d.drange) in
+    let se = Sig_datacon(l, t, (Const.exn_lid,[],ktype), [ExceptionConstructor], [Const.exn_lid], d.drange) in
     let se' = Sig_bundle([se], d.drange, [l]) in
     let env = push_sigelt env se' in
     let data_ops = mk_data_projectors env se in

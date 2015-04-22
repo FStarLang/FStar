@@ -474,7 +474,7 @@ let rec sigelt_to_string x = match x with
   | Sig_pragma(SetOptions s, _) -> Util.format1 "#set-options \"%s\"" s
   | Sig_tycon(lid, tps, k, _, _, quals, _) -> Util.format4 "%s type %s %s : %s" (quals_to_string quals) lid.str (binders_to_string " " tps) (kind_to_string k)
   | Sig_typ_abbrev(lid, tps, k, t, _, _) ->  Util.format4 "type %s %s : %s = %s" lid.str (binders_to_string " " tps) (kind_to_string k) (typ_to_string t)
-  | Sig_datacon(lid, t, _, _, _) -> Util.format2 "datacon %s : %s" lid.str (typ_to_string t)
+  | Sig_datacon(lid, t, _, _, _, _) -> Util.format2 "datacon %s : %s" lid.str (typ_to_string t)
   | Sig_val_decl(lid, t, quals, _) -> Util.format3 "%s val %s : %s" (quals_to_string quals) lid.str (typ_to_string t)
   | Sig_assume(lid, f, _, _) -> Util.format2 "val %s : %s" lid.str (typ_to_string f)
   | Sig_let(lbs, _, _, b) -> lbs_to_string lbs

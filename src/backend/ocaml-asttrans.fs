@@ -771,7 +771,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
                 (ty :: types, ctors)
               end
 
-            | Sig_datacon (x, ty, pr, _, rg) ->
+            | Sig_datacon (x, ty, pr, _, _, rg) ->
                let arity = List.length (type_vars ty.n) in
                smap_add algebraic_constructors x.ident.idText arity;
                (types, (x.ident.idText, (ty, pr)) :: ctors)
@@ -918,8 +918,8 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
     | Sig_monads (_, _, rg, _) ->
         unsupported rg "mod1-monad"
 
-    | Sig_bundle ([Sig_datacon (_, _, _, qal, _)], _, _) when (not (export_val qal)) -> None
-    | Sig_bundle ([Sig_datacon (x, ty, (tx, _, _), qal, rg)], _, _) when (as_tprims tx = Some Exn) -> begin
+    | Sig_bundle ([Sig_datacon (_, _, _, qal, _, _)], _, _) when (not (export_val qal)) -> None
+    | Sig_bundle ([Sig_datacon (x, ty, (tx, _, _), qal, _, rg)], _, _) when (as_tprims tx = Some Exn) -> begin
         let rec aux acc ty =
             match (Absyn.Util.compress_typ ty).n with
             | Typ_fun(bs, c) -> 
