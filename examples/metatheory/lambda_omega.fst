@@ -974,8 +974,6 @@ let rec shift_above_and_subst s y t =
   tsubst_id s
 
 (* reordering shifts *)
-(* CH: there might be a nicer proof for this using substitution composition
-   CH: this proof sometimes fails with 5s timeout *)
 val tshifts_reordering: x:nat -> y:nat{y >= x} -> s:typ -> Lemma
                         (ensures (tsh x (tsh y s) = tsh (y + 1) (tsh x s)))
              	        (decreases s)
@@ -984,7 +982,6 @@ let rec tshifts_reordering x y s =
   tsubst_extensional (tsub_comp (tsub_inc_above x) (tsub_inc_above y)) (tsub_comp (tsub_inc_above (y+1)) (tsub_inc_above x)) s;
   tsubst_comp (tsub_inc_above (y+1)) (tsub_inc_above x) s
 
-(* CH: This proof sometimes fails even with 10s timeout; try to refactor it! *)
 val tsubst_commute_helper: x:nat -> y:nat{x >= y} ->s:typ -> t:typ ->
           Lemma (requires True)
                 (ensures (tsh y (ts x s t) = ts (x + 1) (tsh y s) (tsh y t)))
@@ -994,7 +991,6 @@ let rec tsubst_commute_helper x y s t =
   tsubst_extensional (tsub_comp (tsub_inc_above y) (tsub_beta_gen x s)) (tsub_comp (tsub_beta_gen (x+1) (tsh y s)) (tsub_inc_above y)) t;
   tsubst_comp (tsub_beta_gen (x+1) (tsh y s)) (tsub_inc_above y) t
 val tsubst_commute_aux : y:nat -> x:nat{x >= y} -> s1:typ ->
-
   s2:typ -> v:var ->          Lemma (requires True)
 		    (ensures ((tsub_comp (tsub_beta_gen x s1) (tsub_beta_gen y s2)) v = (tsub_comp (tsub_beta_gen y (tsubst_beta_gen x s1 s2)) (tsub_beta_gen (x+1) (tshift_up_above y s1))) v))
 let tsubst_commute_aux y x s1 s2 v = 

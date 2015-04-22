@@ -13,9 +13,9 @@
       [Visual Studio 2013 Community](https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx)
     - Install the Visual F# Tools from Microsoft
       (by clicking the "Get Visual F# Tools for Visual Studio 2013"
-       link [here](https://msdn.microsoft.com/en-us/vstudio/hh388569.aspx)
+       link [here](https://msdn.microsoft.com/en-us/vstudio/hh388569.aspx))
 
-  - Using VisualStudio 2013, open FStar/VS/FStar.sln and build solution.
+  - Using VisualStudio 2013, open `FStar/VS/FStar.sln` and build solution.
 
   - Get a Z3 4.3.2 binary and add it to your PATH
     - 64 bits: https://z3.codeplex.com/releases/view/135729
@@ -68,9 +68,9 @@
   - Try out
 
           $ source setenv.sh
-          $ make test -C src
+          $ make test.net -C src
 
-  - If `make test` (`make boot` in fact) causes stack overflow try
+  - If `make test.net` (`make boot` in fact) causes stack overflow try
     issuing `ulimit -s unlimited` in the terminal beforehand.
 
 ### Bootstrapping the compiler in OCaml ###

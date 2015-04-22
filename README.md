@@ -38,13 +38,20 @@ Yes, we encourage asking questions on the issue tracker!
 
 ### Editing F* code
 
-#### FStarIDE (Atom)
+#### Atom
 
 [FStarIDE] is a recently started project aimed at devising an F* mode
 for the [Atom] editor.
 
 [Atom]: https://atom.io/
 [FStarIDE]: https://github.com/FStarLang/FStarIDE
+
+#### Vim
+
+[VimFStar] is a [Vim] plugin for F*.
+
+[Vim]: http://www.vim.org/
+[VimFStar]: https://github.com/FStarLang/VimFStar
 
 #### Emacs
 

@@ -17,7 +17,6 @@ We prove :
   * wlp is weakest regarding syntactic hoare triples -> wlp_weakest'
 *)
 
-(* Higher-order abstract syntax (HOAS) representation of formulas *)
 type binop =
 | Plus
 | Minus
@@ -63,6 +62,7 @@ let rec eval_bexp h be =
   | BNot be' -> not (eval_bexp h be')
   | BAnd be1 be2 -> eval_bexp h be1 && eval_bexp h be2
 
+(* Higher-order abstract syntax (HOAS) representation of formulas *)
 type form =
 | FFalse  : form
 | FImpl   : form -> form -> form
