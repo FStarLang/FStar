@@ -46,14 +46,14 @@ let rec parse (opts:list<opt>) def ar ix max i =
                     (match p with
                        | ZeroArgs f -> f (); parse opts def ar (ix + 1) max (i + 1)
                        | OneArg (f, _) ->
-                           if ix + 1 > max then Die ("last option '" + argtrim + "' takes an argument but has none")
+                           if ix + 1 > max then Die ("last option '" + argtrim + "' takes an argument but has none\n")
                            else
                              try
                                f (ar.(ix + 1));
                                parse opts def ar (ix + 2) max (i + 1)
                              with _ ->
-                                  Die ("wrong argument given to option '" + argtrim + "'"))
-                | None -> Die ("unrecognized option '" + arg + "'")
+                                  Die ("wrong argument given to option '" + argtrim + "'\n"))
+                | None -> Die ("unrecognized option '" + arg + "'\n")
           else go_on ()
 
 let parse_cmdline specs others =
@@ -62,7 +62,7 @@ let parse_cmdline specs others =
     if len = 1 then Help
     else go_on ()
 
-let parse_string specs others (str:string) = 
+let parse_string specs others (str:string) =
     let args = str.Split([|' '|]) in
     parse specs others args 0 (args.Length - 1) 0
 

@@ -695,11 +695,11 @@ let rec parse (opts:opt list) def ar ix max i =
                        | ZeroArgs f -> f (); parse opts def ar (ix + 1) max (i + 1)
                        | OneArg (f, _) ->
                            if ix + 1 > max
-                           then Die ("last option '" ^ argtrim ^ "' takes an argument but has none")
+                           then Die ("last option '" ^ argtrim ^ "' takes an argument but has none\n")
                            else
                              (f (ar.(ix + 1));
                               parse opts def ar (ix + 2) max (i + 1)))
-                | None -> Die ("unrecognized option '" ^ arg ^ "'")
+                | None -> Die ("unrecognized option '" ^ arg ^ "'\n")
           else go_on ()
 
 let parse_cmdline specs others =
