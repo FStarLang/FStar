@@ -84,10 +84,12 @@
 
   (** XXX TODO This is an unacceptable hack. Needs to be redone ASAP  **)
   let ba_of_string s = Array.init (String.length s) (String.get s)
+  let n_typ_app = ref 0
   let is_typ_app lexbuf =
-  try
+  if not !Microsoft_FStar_Options.fs_typ_app then false
+  else try
    let char_ok = function
-     | '(' | ')' | '<' | '>' | '*' | '-' | '\'' | ',' | '.' | '_' -> true
+     | '(' | ')' | '<' | '>' | '*' | '-' | '\'' | ',' | '.' | ' ' | '\t' -> true
      | c when c >= 'A' && c <= 'Z' -> true
      | c when c >= 'a' && c <= 'z' -> true
      | c when c >= '0' && c <= '9' -> true
@@ -106,8 +108,15 @@
       else if i >= String.length contents || not (ok ()) || (not (char_ok (Util.char_at contents i))) || (Util.starts_with (Util.substring_from contents i) "then") then false
       else (upd i; aux (i + 1)) in
       aux (pos + 1) in
-   balanced lexbuf.lex_buffer (lexbuf.lex_curr_pos - 1)
+   let res = balanced lexbuf.lex_buffer (lexbuf.lex_curr_pos - 1) in
+   if res then incr n_typ_app;
+   res
   with e -> Printf.printf "Resolving typ_app<...> syntax failed.\n"; false
+
+ let is_typ_app_gt () =
+   if !n_typ_app > 0
+   then (decr n_typ_app; true)
+   else false
 
  let clean_number x = String.strip ~chars:"uyslLUnIN" x
 }
@@ -166,8 +175,8 @@ let xieee64    = xinteger 'L' 'F'
 (* -------------------------------------------------------------------- *)
 let escape_char = ('\\' ( '\\' | "\"" | '\'' | 'n' | 't' | 'b' | 'r'))
 let char        = [^'\\''\n''\r''\t''\b'] | escape_char
-let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'>'|'_'|'|'|'!'|'^'
-let custom_op = custom_op_char+
+let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'|'|'!'|'^'
+let custom_op = custom_op_char (custom_op_char | '>')*
 
 (* -------------------------------------------------------------------- *)
 let constructor_start_char = upper
@@ -244,8 +253,8 @@ rule token = parse
  | "%["        { PERCENT_LBRACK }
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
- | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else LESS  }
- | ">"         { GREATER }
+ | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else CUSTOM_OP("<")  }
+ | ">"         { if is_typ_app_gt () then TYP_APP_GREATER else custom_op_parser lexbuf }
  | "]"         { RBRACK }
  | "|]"        { BAR_RBRACK }
  | "{"         { LBRACE }
@@ -254,6 +263,7 @@ rule token = parse
  | "!"         { BANG (L.lexeme lexbuf) }
  | "$"         { DOLLAR }
  | "\\"        { BACKSLASH }
+ | custom_op   { CUSTOM_OP(L.lexeme lexbuf) }
 
  | ('/' | '%') as op { DIV_MOD_OP    (String.of_char op) }
  | ('+' | '-') as op { PLUS_MINUS_OP (String.of_char op) }
@@ -284,6 +294,9 @@ rule token = parse
  | _ { failwith "unexpected char" }     
 
  | eof { EOF }
+
+and custom_op_parser = parse
+ | custom_op_char* { CUSTOM_OP(">" ^ (L.lexeme lexbuf)) }
 
 and string buffer = parse
  |  '\\' (newline as x) anywhite* 
