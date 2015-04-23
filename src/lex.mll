@@ -109,7 +109,7 @@
       else (upd i; aux (i + 1)) in
       aux (pos + 1) in
    let res = balanced lexbuf.lex_buffer (lexbuf.lex_curr_pos - 1) in
-   if res then incr n_typ_app;
+   if res then Util.incr n_typ_apps;
    res
   with e -> Printf.printf "Resolving typ_app<...> syntax failed.\n"; false
 
