@@ -469,7 +469,8 @@ and mkPrelude z3options =
                                  ("BoxBool",    ["BoxBool_proj_0", Bool_sort], Term_sort, 2);
                                  ("BoxString",  ["BoxString_proj_0", String_sort], Term_sort, 3);
                                  ("BoxRef",     ["BoxRef_proj_0", Ref_sort], Term_sort, 4);
-                                 ("LexCons",    [("LexCons_0", Term_sort); ("LexCons_1", Term_sort)], Term_sort, 5)] in
+                                 ("Exp_uvar",   [("Exp_uvar_fst", Int_sort)], Term_sort, 5);
+                                 ("LexCons",    [("LexCons_0", Term_sort); ("LexCons_1", Term_sort)], Term_sort, 6)] in
    let bcons = constrs |> List.collect (constructor_to_decl_aux true) |> List.map (declToSmt z3options) |> String.concat "\n" in
    let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n\
                                    (is-LexCons t))\n\
@@ -484,6 +485,7 @@ let mk_Kind_type        = mkApp("Kind_type", [])
 let mk_Typ_app t1 t2    = mkApp("Typ_app", [t1;t2])
 let mk_Typ_dep t1 t2    = mkApp("Typ_dep", [t1;t2])
 let mk_Typ_uvar i       = mkApp("Typ_uvar", [mkInteger i])
+let mk_Exp_uvar i       = mkApp("Exp_uvar", [mkInteger i])
 
 let mk_Term_unit        = mkApp("Term_unit", [])
 let boxInt t            = mkApp("BoxInt", [t]) 
