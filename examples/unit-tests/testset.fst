@@ -1,20 +1,20 @@
 (* Expect 5 intentional failures *)
 module TestSet
 assume type elt
-assume logic val A : elt
-assume logic val B : elt
-assume logic val C : elt
-assume AB_distinct: A=!=B
+assume logic val a : elt
+assume logic val b : elt
+assume logic val c : elt
+assume AB_distinct: a=!=b
 open Set
 
 val should_succeed: unit -> Tot unit
 let should_succeed u =
-  assert (mem B (union (singleton A) (singleton B)));
-  assert (mem A (union (singleton A) (singleton B)));
-  assert (Subset (singleton A) (union (singleton A) (singleton B)));
-  assert (Subset (singleton B) (union (singleton A) (singleton B)));
-  assert (Equal (union (singleton A) (singleton B))
-                (union (singleton B) (singleton A)))
+  assert (mem b (union (singleton a) (singleton b)));
+  assert (mem a (union (singleton a) (singleton b)));
+  assert (Subset (singleton a) (union (singleton a) (singleton b)));
+  assert (Subset (singleton b) (union (singleton a) (singleton b)));
+  assert (Equal (union (singleton a) (singleton b))
+                (union (singleton b) (singleton a)))
 
 
 module TestHeap

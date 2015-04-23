@@ -403,13 +403,19 @@ let fst x = MkTuple2._1 x
 val snd : ('a * 'b) -> Tot 'b
 let snd x = MkTuple2._2 x
 
+val dfst : 'a:Type -> 'b:('a -> Type) -> DTuple2 'a 'b -> Tot 'a
+let dfst t = MkDTuple2._1 t
+
+val dsnd : 'a:Type -> 'b:('a -> Type) -> t:(DTuple2 'a 'b) -> Tot ('b (MkDTuple2._1 t))
+let dsnd t = MkDTuple2._2 t
+
 logic type InductionHyp : Type -> Type
 assume val using_induction_hyp: 'a -> Lemma (ensures (InductionHyp 'a))
-assume val Assume: 'P:Type -> unit -> (y:unit{'P})
+assume val _assume: 'P:Type -> unit -> (y:unit{'P})
 assume val admit: unit -> Admit 'a
 assume val magic: unit -> Tot 'a
 assume val admitP: 'P:Type -> Pure unit True (fun x -> 'P)
-assume val Assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
+assume val _assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
 assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (fun x -> 'P)
 assume val qintro: a:Type -> p:(a -> Type) -> (x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 assume val failwith: string -> ALL.All 'a (fun h -> True) (fun h a h' -> is_Err a /\ h==h')
@@ -420,6 +426,8 @@ val ignore: 'a -> Tot unit
 let ignore x = ()
 assume val exit: int -> 'a
 assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
+assume val min: int -> int -> Tot int
+assume val max: int -> int -> Tot int
 assume logic val op_AmpAmp             : bool -> bool -> Tot bool
 assume logic val op_BarBar             : bool -> bool -> Tot bool
 assume logic val op_Negation           : bool -> Tot bool
@@ -449,8 +457,5 @@ type nonzero = i:int{i<>0}
 assume val op_Modulus            : int -> nonzero -> Tot int
 assume val op_Division           : nat -> nonzero -> Tot int
 
-(* Unrefined specifications for these functions for typing ML code *)
-assume val op_ColonEquals: ref 'a -> 'a -> unit
-assume val op_Dereference: ref 'a -> 'a
 assume type Boxed : Type -> Type
 

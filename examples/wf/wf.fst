@@ -23,10 +23,14 @@ type acc (a:Type) (r:(a -> a -> Type)) (x:a) : Type =
 
 type well_founded (a:Type) (r:(a -> a -> Type)) = x:a -> acc a r x
 
-val acc_inv : r:('a -> 'a -> Type) -> x:'a -> acc 'a r x ->
-              y:'a -> r y x -> Tot (acc 'a r y)
-let acc_inv _ = function | AccIntro z h1 -> h1
+val acc_inv : r:('a -> 'a -> Type) -> x:'a -> a:(acc 'a r x) ->
+              Tot (e:(y:'a -> r y x -> Tot (acc 'a r y)){e << a})
+let acc_inv x a = match a with | AccIntro z h1 -> h1
 
+(* Can't prove it is total : I know that [acc_inv x a << a] but from this I cannot deduce [acc_inv x a y h << a] *)
+(* val fix_F : r:('a -> 'a -> Type) -> p:('a -> Type) -> *)
+(*             (x:'a -> (y:'a -> r y x -> Tot (p y)) -> Tot (p x)) -> *)
+(*             x:'a -> a:(acc 'a r x) -> Tot (p x) (decreases a) *)
 val fix_F : r:('a -> 'a -> Type) -> p:('a -> Type) ->
             (x:'a -> (y:'a -> r y x -> p y) -> p x) ->
             x:'a -> acc 'a r x -> p x

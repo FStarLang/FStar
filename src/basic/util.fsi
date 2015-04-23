@@ -182,6 +182,7 @@ val stfold: 'b -> list<'a> -> ('b -> 'a -> state<'s,'b>) -> state<'s,'b>
 val run_st: 's -> state<'s,'a> -> ('a * 's)
 val mk_ref: 'a -> ref<'a>
 
+val get_exec_dir: unit -> string
 val expand_environment_variable: string -> string
 
 val physical_equality: 'a -> 'a -> bool

@@ -84,7 +84,7 @@
 
   (** XXX TODO This is an unacceptable hack. Needs to be redone ASAP  **)
   let ba_of_string s = Array.init (String.length s) (String.get s)
-  let n_typ_app = ref 0
+  let n_typ_apps = Util.mk_ref 0
   let is_typ_app lexbuf =
   if not !Microsoft_FStar_Options.fs_typ_app then false
   else try
@@ -113,10 +113,10 @@
    res
   with e -> Printf.printf "Resolving typ_app<...> syntax failed.\n"; false
 
- let is_typ_app_gt () =
-   if !n_typ_app > 0
-   then (decr n_typ_app; true)
-   else false
+  let is_typ_app_gt () =
+    if !n_typ_apps > 0
+    then (Util.decr n_typ_apps; true)
+    else false
 
  let clean_number x = String.strip ~chars:"uyslLUnIN" x
 }
@@ -140,35 +140,35 @@ let ignored_op_char = '.' | '$'
 
 (* -------------------------------------------------------------------- *)
 let xinteger =
-  (  '0' ('x'| 'X')  hex + 
-   | '0' ('o'| 'O')  (['0'-'7']) + 
+  (  '0' ('x'| 'X')  hex +
+   | '0' ('o'| 'O')  (['0'-'7']) +
    | '0' ('b'| 'B')  (['0'-'1']) + )
 
 let integer    = digit+
 let int8       = integer 'y'
-let uint8      = (xinteger | integer) 'u' 'y' 
+let uint8      = (xinteger | integer) 'u' 'y'
 let int16      = integer 's'
 let uint16     = (xinteger | integer) 'u' 's'
-let int        = integer 
+let int        = integer
 let int32      = integer 'l'
-let uint32     = (xinteger | integer) 'u' 
+let uint32     = (xinteger | integer) 'u'
 let uint32l    = (xinteger | integer) 'u' 'l'
 let nativeint  = (xinteger | integer) 'n'
 let unativeint = (xinteger | integer) 'u' 'n'
-let int64      = (xinteger | integer) 'L' 
-let uint64     = (xinteger | integer) ('u' | 'U') 'L' 
+let int64      = (xinteger | integer) 'L'
+let uint64     = (xinteger | integer) ('u' | 'U') 'L'
 let xint8      = xinteger 'y'
 let xint16     = xinteger 's'
-let xint       = xinteger 
+let xint       = xinteger
 let xint32     = xinteger 'l'
-let floatp     = digit+ '.' digit*  
+let floatp     = digit+ '.' digit*
 let floate     = digit+ ('.' digit* )? ('e'| 'E') ['+' '-']? digit+
-let float      = floatp | floate 
-let bigint     = integer 'I' 
-let bignum     = integer 'N' 
+let float      = floatp | floate
+let bigint     = integer 'I'
+let bignum     = integer 'N'
 let ieee64     = float
-let ieee32     = float ('f' | 'F') 
-let decimal    = (float | integer) ('m' | 'M') 
+let ieee32     = float ('f' | 'F')
+let decimal    = (float | integer) ('m' | 'M')
 let xieee32    = xinteger 'l' 'f'
 let xieee64    = xinteger 'L' 'F'
 
@@ -182,9 +182,9 @@ let custom_op = custom_op_char (custom_op_char | '>')*
 let constructor_start_char = upper
 let ident_start_char       = lower  | '_'
 let ident_char             = letter | digit  | ['\'' '_']
-let tvar_char              = letter | digit | ['\'' '_'] 
+let tvar_char              = letter | digit | ['\'' '_']
 
-let constructor = constructor_start_char ident_char*  
+let constructor = constructor_start_char ident_char*
 let ident       = ident_start_char ident_char*
 let tvar        = '\'' (ident_start_char | constructor_start_char) tvar_char*
 
@@ -260,46 +260,47 @@ rule token = parse
  | "{"         { LBRACE }
  | "|"         { BAR }
  | "}"         { RBRACE }
- | "!"         { BANG (L.lexeme lexbuf) }
+ | "!"         { BANG }
  | "$"         { DOLLAR }
  | "\\"        { BACKSLASH }
  | custom_op   { CUSTOM_OP(L.lexeme lexbuf) }
 
  | ('/' | '%') as op { DIV_MOD_OP    (String.of_char op) }
  | ('+' | '-') as op { PLUS_MINUS_OP (String.of_char op) }
+ | custom_op   {CUSTOM_OP (L.lexeme lexbuf) }
 
  | "(*"
      { comment lexbuf; token lexbuf }
 
- | "//"  [^'\n''\r']* 
+ | "//"  [^'\n''\r']*
      { token lexbuf }
 
- | '"' 
+ | '"'
      { string (Buffer.create 0) lexbuf }
 
- | truewhite+  
+ | truewhite+
      { token lexbuf }
 
- | offwhite+  
+ | offwhite+
      { token lexbuf }
 
- | newline 
+ | newline
      { L.new_line lexbuf; token lexbuf }
 
  | '`' '`'
      (([^'`' '\n' '\r' '\t'] | '`' [^'`''\n' '\r' '\t'])+) as id
-   '`' '`' 
+   '`' '`'
      { IDENT id }
 
- | _ { failwith "unexpected char" }     
+ | _ { failwith "unexpected char" }
 
  | eof { EOF }
 
 and custom_op_parser = parse
- | custom_op_char* { CUSTOM_OP(">" ^ (L.lexeme lexbuf)) }
+ | custom_op_char * {CUSTOM_OP(">" ^  L.lexeme lexbuf)}
 
 and string buffer = parse
- |  '\\' (newline as x) anywhite* 
+ |  '\\' (newline as x) anywhite*
     { Buffer.add_string buffer x;
       L.new_line lexbuf;
       string buffer lexbuf; }
@@ -312,63 +313,63 @@ and string buffer = parse
  | escape_char as c
     { Buffer.add_char buffer (char_of_ec c.[1]);
       string buffer lexbuf }
-     
- |  '"' 
+
+ |  '"'
     { STRING (ba_of_string (Buffer.contents buffer)) }
 
- |  '"''B' 
+ |  '"''B'
     { BYTEARRAY (ba_of_string (Buffer.contents buffer)) }
 
  | _ as c
     { Buffer.add_char buffer c;
       string buffer lexbuf }
 
- | eof  
+ | eof
     { failwith "unterminated string" }
 
 and comment = parse
  | char
     { comment lexbuf }
-    
- | '"'   
+
+ | '"'
     { comment_string lexbuf; comment lexbuf; }
 
  | "(*"
     { comment lexbuf; comment lexbuf; }
-     
+
  | newline
     { L.new_line lexbuf; comment lexbuf; }
 
- | "*)" 
+ | "*)"
     { () }
-      
+
  | [^ '\'' '(' '*' '\n' '\r' '"' ')' ]+
     { comment lexbuf }
-    
+
  | _
     { comment lexbuf }
 
- | eof 
+ | eof
      { failwith "unterminated comment" }
 
 and comment_string = parse
- | '\\' newline anywhite* 
+ | '\\' newline anywhite*
      { L.new_line lexbuf; comment_string lexbuf }
 
- | newline 
+ | newline
      { L.new_line lexbuf; comment_string lexbuf }
 
- | '"' 
+ | '"'
      { () }
 
  | escape_char
- | ident  
+ | ident
  | xinteger
  | anywhite+
      { comment_string lexbuf }
 
- | _  
+ | _
      { comment_string lexbuf }
 
- | eof 
+ | eof
      { failwith "unterminated comment" }

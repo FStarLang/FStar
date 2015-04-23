@@ -58,14 +58,16 @@ type deferred = {
   slack:   list<(bool * typ)>;
 }
 
+type implicits = list<either<(uvar_t * Range.range), (uvar_e * Range.range)>>
 type guard_t = {
   guard_f:  guard_formula;
   deferred: deferred;
+  implicits: implicits;
 }
 
-val new_kvar: Range.range -> binders -> knd * uvar_k
-val new_tvar: Range.range -> binders -> knd -> typ * typ
-val new_evar: Range.range -> binders -> typ -> exp * exp
+val new_kvar: env -> Range.range -> binders -> knd * uvar_k
+val new_tvar: env -> Range.range -> binders -> knd -> typ * typ
+val new_evar: env -> Range.range -> binders -> typ -> exp * exp
 
 val close_guard: binders -> guard_t -> guard_t
 val apply_guard: guard_t -> exp -> guard_t

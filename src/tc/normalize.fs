@@ -673,8 +673,6 @@ and wne tcenv (cfg:config<exp>) : config<exp> =
       if is_stack_empty config
       then rebuild ({config with code=mk_Exp_meta(Meta_desugared(c.code, info))})
       else c
-    
-    | Exp_meta(Meta_datainst _) -> failwith "impossible"
 
 (************************************************************************************)
 (* External interface *)

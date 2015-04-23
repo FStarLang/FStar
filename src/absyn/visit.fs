@@ -206,7 +206,8 @@ and reduce_typ
       | Typ_delayed _ -> failwith "Impossible"
       | Typ_unknown
       | Typ_btvar _   
-      | Typ_const _ -> 
+      | Typ_const _ ->
+        let _, env = map_typ env binders t in
         leaf_te(), env
 
       | Typ_app(t, args) -> 
@@ -426,3 +427,15 @@ let combine_exp e (ec:exp_components) env =
 
     | _ -> failwith "impossible" in
   e', env
+
+let collect_from_typ (f:'env -> typ -> 'env) (env:'env) (t:typ) : 'env = 
+   snd <| reduce_typ (fun _ _ _ env _ k -> k, env)
+                     (fun _ _ _ env _ t -> t, f env t)
+                     (fun _ _ _ env _ e -> e, env)
+                     (fun k _ env -> k, env)
+                     (fun t _ env -> t, env)
+                     (fun e _ env -> e, env)
+                     env
+                     []
+                     t 
+                

@@ -28,15 +28,20 @@ val report: env -> list<string> -> unit
 val new_kvar : env -> knd          
 val new_tvar : env -> knd -> typ
 val new_evar : env -> typ -> exp
+val new_implicit_tvar : env -> knd -> (typ * (uvar_t * Range.range))
+val new_implicit_evar : env -> typ -> (exp * (uvar_e * Range.range))
+val as_uvar_t : typ -> uvar_t
 val check_uvars: Range.range -> typ -> unit
+val check_level: list<Util.either<uvar_t, uvar_e>> -> (int -> bool) -> bool
 val check_and_ascribe : env -> exp -> typ -> typ -> exp * Rel.guard_t
-val pat_as_exps: env -> pat -> list<Env.binding> * list<Env.binding> * list<exp> * pat
+val pat_as_exps: bool -> env -> pat -> (list<Env.binding> * list<exp> * pat * list<Util.either<uvar_t, uvar_e>>)
 val decorate_pattern: env -> pat -> list<exp> -> pat
 val decorated_pattern_as_exp: pat -> list<either_var> * exp
 val decorated_pattern_as_typ: pat -> list<either_var> * typ
 val decorated_pattern_as_either: pat -> list<either_var> * Util.either<typ,exp>
 
-val maybe_instantiate : env -> exp -> typ -> (exp * typ)
+val maybe_instantiate_typ : env -> typ -> knd -> (typ * knd * implicits)
+val maybe_instantiate : env -> exp -> typ -> (exp * typ * implicits)
 val destruct_comp: comp_typ -> (typ * typ * typ)
 val destruct_arrow_kind: env -> typ -> knd -> args -> (args * binders * knd)
 val mk_basic_dtuple_type: env -> int -> typ

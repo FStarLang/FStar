@@ -8,17 +8,17 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-LIB_FILES= list.fst string.fst partialmap.fst 
+LIB_FILES= list.fst string.fst partialmap.fst
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst)
 
 FULL_LIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst listproperties.fst)
-STDLIB_CACHE = Prims.cache List.cache Set.cache Map.cache Heap.cache Array.cache String.cache ST.cache 
+STDLIB_CACHE = Prims.cache List.cache Set.cache Map.cache Heap.cache Array.cache String.cache ST.cache
 FULL_LIB_CACHE = $(STDLIB_CACHE) ListProperties.cache
 PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)
-FSTAR = $(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(OTHERFLAGS)
+FSTAR = $(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS)
 
 STDCACHE=Prims.cache List.cache String.cache ST.cache Set.cache Map.cache Heap.cache Array.cache
-FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(OTHERFLAGS)
+FSTARC=$(RUNTIME) ../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
 
 %.ver: %.fst
 	$(FSTAR) $(STDLIB) $^

@@ -274,14 +274,14 @@ let extract_record (e:env) = function
     
     let find_dc dc = 
       sigs |> Util.find_opt (function 
-        | Sig_datacon(lid, _, _, _, _) -> lid_equals dc lid 
+        | Sig_datacon(lid, _, _, _, _, _) -> lid_equals dc lid 
         | _ -> false) in
     
     sigs |> List.iter (function 
       | Sig_tycon(typename, parms, _, _, [dc], tags, _) ->
         if is_rec tags
         then match must <| find_dc dc with 
-            | Sig_datacon(constrname, t, _, _, _) -> 
+            | Sig_datacon(constrname, t, _, _, _, _) -> 
                 let formals = match Util.function_formals t with 
                     | Some (x, _) -> x 
                     | _ -> [] in

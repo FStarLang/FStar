@@ -30,6 +30,9 @@ let union s1 s2     = fun x -> s1 x || s2 x
 let intersect s1 s2 = fun x -> s1 x && s2 x
 let complement s    = fun x -> not (s x)
 
+(* ops *)
+let subset s1 s2    = (intersect s1 s2) = s1
+
 (* properties *)
 let mem_empty x           = ()
 let mem_singleton x y     = ()
@@ -43,3 +46,12 @@ type Equal : #a:Type -> set a -> set a -> Type = fun (a:Type) (s1:set a) (s2:set
 let lemma_equal_intro s1 s2 = ()
 let lemma_equal_elim s1 s2 = ()
 let lemma_equal_refl s1 s2 = ()
+
+(* ops *)
+let mem_subset s1 s2 =
+  assert (Equal (intersect s1 s2) s1);
+  (* this gives an error *)
+  (* lemma_equal_elim (intersect s1 s2) s1 *)
+  admit ()
+
+let subset_mem s1 s2 = ()

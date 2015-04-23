@@ -7,19 +7,17 @@
       function ...
       try e with | ... 
 
-   1 r/r conflict on STAR
-     (x:t{P} * t')  can also be reduced as ((x:t{P}) * t')
-      we pick the first one.
-
    1 s/r conflict on SEMICOLON
-       e1 . ; e2
+       e1 ^ ; e2
 
-   1 s/r conflict on LESS
-       t < t
-       t<t>
+   1 s/r conflict on DOT
+      A.B ^ .C 
 
    1 s/r conflict on STAR (from the sum types but unclear exactly why)
 
+   1 r/r conflict on STAR
+     (x:t{P} * t')  can also be reduced as ((x:t{P}) * t')
+      we pick the first one.
 *)
 // (c) Microsoft Corporation. All rights reserved
 open Microsoft.FStar.Options
@@ -43,7 +41,7 @@ open Microsoft.FStar.Parser.Util
 %token <string> PLUS_MINUS_OP 
 %token <string> TILDE
 %token <string> CUSTOM_OP
-%token <string> BANG 
+
 
 /* bool indicates if INT8 was 'bad' max_int+1, e.g. '128'  */
 %token <sbyte * bool> INT8 
@@ -65,7 +63,7 @@ open Microsoft.FStar.Parser.Util
 %token <bool> LET 
 %token <string * bool> LQUOTE RQUOTE 
 %token FORALL EXISTS ASSUME QUERY DEFINE LOGIC OPAQUE PRAGMALIGHT PRAGMA_SET_OPTIONS PRAGMA_RESET_OPTIONS
-%token BAR_BAR LEQ GEQ LESS LESSLESS TYP_APP_LESS TYP_APP_GREATER LESSGREATER SUBTYPE SUBKIND
+%token BAR_BAR LEQ GEQ LESS LESSLESS TYP_APP_LESS TYP_APP_GREATER LESSGREATER SUBTYPE SUBKIND BANG
 %token AND AS ASSERT BEGIN ELSE END DOT_DOT
 %token EXCEPTION FALSE FOR FUN FUNCTION IF IN FINALLY RESERVED MODULE DEFAULT
 %token LAZY MATCH OF 
@@ -73,7 +71,7 @@ open Microsoft.FStar.Parser.Util
 %token WHEN WITH HASH AMP AMP_AMP QUOTE LPAREN RPAREN LPAREN_RPAREN STAR COMMA RARROW
 %token IFF IMPLIES CONJUNCTION DISJUNCTION 
 %token DOT COLON COLON_COLON ATSIGN HAT COLON_EQUALS SEMICOLON 
-%token SEMICOLON_SEMICOLON EQUALS EQUALS_EQUALS EQUALS_BANG_EQUALS PERCENT_LBRACK LBRACK LBRACK_BAR LBRACE BACKSLASH
+%token SEMICOLON_SEMICOLON EQUALS EQUALS_EQUALS PERCENT_LBRACK LBRACK LBRACK_BAR LBRACE BACKSLASH
 %token BAR_RBRACK UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
 %token BAR RBRACK RBRACE MINUS DOLLAR  
 %token PUBLIC PRIVATE LBRACE_COLON_PATTERN PIPE_LEFT PIPE_RIGHT 
@@ -145,7 +143,7 @@ decl2:
       { $1 }
   | LET recopt letbinding letbindings
       { ToplevelLet($2, $3::$4) }
-  | qualifiers VAL eitherName COLON typ
+  | qualifiers VAL ident COLON typ
       { Val($1, $3, $5) }
   | assumeTag name COLON formula
       { Assume($1, $2, $4) }
@@ -449,11 +447,15 @@ of_typ:
   | OF typ { Some $2 }
 
 eitherQname: 
-  | eitherQname2 { lid_of_ids $1 }
+  | eitherpath { lid_of_ids $1 }
 
-eitherQname2: 
-  | eitherName { [$1] }
-  | name DOT eitherQname2 { $1::$3 }
+eitherpath: 
+  | ident { [$1] }
+  | name maybeMorePath { $1::$2 }
+
+maybeMorePath:
+  |		  { [] }
+  | DOT eitherpath  { $2 }
 
 lid:
   | idpath { lid_of_ids $1 }
@@ -875,7 +877,7 @@ atomicTerm:
           $1 $2
       }
   | BANG atomicTerm
-      { mk_term (Op($1, [$2])) (rhs2 parseState 1 3) Expr }
+      { mk_term (Op("!", [$2])) (rhs2 parseState 1 2) Expr }
   | BEGIN term END 
       { $2 }
 
@@ -888,7 +890,7 @@ moreRecdFieldTypes:
   | SEMICOLON recdFieldType moreRecdFieldTypes { $2::$3 }
 
 recdFieldType:
-  | lid COLON typ { ($1, $3) }
+  | ident COLON typ { ($1, $3) }
 
 maybeFieldProjections:
   |    { [] }
@@ -941,12 +943,6 @@ projectionLHS:
 	  {
 		mkLexList (rhs2 parseState 1 3) $2
 	  }
-
-projection: 
-  | projectionLHS DOT ident 
-      { mk_term (Project($1, lid_of_ids[$3])) (rhs2 parseState 1 3) Expr } 
-  | projectionLHS 
-      { $1 }
 
 semiColonTermList:
   |  { [] }

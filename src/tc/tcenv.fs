@@ -21,7 +21,6 @@ open Microsoft.FStar
 open Microsoft.FStar.Absyn
 open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Absyn.Util
-open Microsoft.FStar.Absyn.Const
 open Microsoft.FStar.Util
 open Microsoft.FStar.Absyn.Util
    
@@ -81,7 +80,9 @@ type env = {
   top_level:bool;                (* is this a top-level term? if so, then discharge guards *)
   check_uvars:bool;              (* paranoid: re-typecheck unification variables *)
   use_eq:bool;                   (* generate an equality constraint, rather than subtyping/subkinding *)
-  is_iface:bool;             (* is the module we're currently checking an interface? *)
+  is_iface:bool;                 (* is the module we're currently checking an interface? *)
+  uvar_level:int;                (* level to track uvar binding site *)
+  admit:bool;                    (* admit VCs in the current module *) 
 } 
 and solver_t = {
     init: env -> unit;
@@ -129,8 +130,13 @@ let initial_env solver module_lid =
     check_uvars=false;
     use_eq=false;
     is_iface=false;
+    uvar_level=0;
+    admit=false;
   }
 
+
+let incr_level e = {e with uvar_level=e.uvar_level + 1}
+let decr_level e = {e with uvar_level=e.uvar_level - 1}
 let monad_decl_opt env l = 
   env.lattice.decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname l) 
 
@@ -299,7 +305,7 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
 
 let lookup_datacon env lid = 
   match lookup_qname env lid with
-    | Some (Inr (Sig_datacon (_, t, _, _,_))) -> t
+    | Some (Inr (Sig_datacon (_, t, _, _, _, _))) -> t
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_projector env lid i = 
@@ -332,7 +338,7 @@ let lookup_lid env lid =
     raise (Error(name_not_found lid, range_of_lid lid)) in
   let mapper = function
     | Inl t
-    | Inr (Sig_datacon(_, t, _, _,_))  
+    | Inr (Sig_datacon(_, t, _, _,_, _))  
     | Inr (Sig_val_decl (_, t, _, _)) 
     | Inr (Sig_let((_, [(_, t, _)]), _, _, _)) -> Some t 
     | Inr (Sig_let((_, lbs), _, _, _)) -> 
@@ -352,7 +358,7 @@ let lookup_lid env lid =
 let is_datacon env lid = 
   match lookup_qname env lid with
     | Some (Inr(Sig_val_decl(_, _, quals, _))) -> quals |> Util.for_some (function Assumption -> true | _ -> false)
-    | Some (Inr (Sig_datacon (_, t, _, _,_))) -> true
+    | Some (Inr (Sig_datacon (_, t, _, _,_,_))) -> true
     | _ -> false
 
 let is_record env lid =

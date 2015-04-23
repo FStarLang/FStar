@@ -262,6 +262,7 @@ let head_normal env t =
 let whnf env t =
     if head_normal env t then t
     else Tc.Normalize.norm_typ [Tc.Normalize.Beta;Tc.Normalize.WHNF;Tc.Normalize.DeltaHard] env.tcenv t
+let whnf_e env e = Tc.Normalize.norm_exp [Tc.Normalize.Beta;Tc.Normalize.WHNF] env.tcenv e
 let norm_t env t = Tc.Normalize.norm_typ [Tc.Normalize.Beta] env.tcenv t
 let norm_k env k = Tc.Normalize.normalize_kind env.tcenv k
 let trivial_post t : typ = mk_Typ_lam([null_v_binder t], Util.ftv Const.true_lid ktype) 
@@ -354,27 +355,33 @@ let encode_const = function
     | Const_string(bytes, _) -> varops.string_const (Util.string_of_bytes <| bytes)
     | c -> failwith (Util.format1 "Unhandled constant: %s\n" (Print.const_to_string c))
  
-let rec encode_knd (k:knd) (env:env_t) (t:term) : term  * decls_t = 
+let rec encode_knd' (prekind:bool) (k:knd) (env:env_t) (t:term) : term  * decls_t = 
     match (Util.compress_kind k).n with 
         | Kind_type -> 
             mk_HasKind t (Term.mk_Kind_type), []
 
         | Kind_abbrev(_, k) -> 
-            encode_knd k env t
+            encode_knd' prekind k env t
 
         | Kind_uvar (uv, _) -> (* REVIEW: warn? *)
             Term.mkTrue, []
 
         | Kind_arrow(bs, k) -> 
             let vars, guards, env', decls, _ = encode_binders None bs env in 
-            let prekind = mk_tester "Kind_arrow" (mk_PreKind t) in
             let app = mk_ApplyT t vars in
-            let k, decls' = encode_knd k env' app in
-            Term.mkAnd(prekind,
-                       Term.mkForall([app], vars, mkImp(mk_and_l guards, k))), 
+            let k, decls' = encode_knd' prekind k env' app in
+            let term = Term.mkForall([app], vars, mkImp(mk_and_l guards, k)) in
+            let term = 
+                if prekind
+                then Term.mkAnd(mk_tester "Kind_arrow" (mk_PreKind t), 
+                                term)
+                else term in 
+            term,
             decls@decls'
 
         | _ -> failwith (Util.format1 "Unknown kind: %s" (Print.kind_to_string k))
+
+and encode_knd (k:knd) (env:env_t) (t:term) = encode_knd' true k env t
 
 and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) : (list<var>       (* translated bound variables *)
                                                       * list<term>    (* guards *)
@@ -392,7 +399,7 @@ and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) : (li
                     if is_null_binder b 
                     then withenv env <| fresh_bvar "a" Type_sort
                     else gen_typ_var env a in 
-                let guard_a_k,decls' = encode_knd k env aa in
+                let guard_a_k,decls' = encode_knd' false k env aa in
                 (aasym, Type_sort), 
                 guard_a_k,
                 env', 
@@ -607,6 +614,12 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
              begin match tfun.n with 
                 | Typ_fun(bs', c) -> 
                     let nformals = List.length bs' in
+//                    Printf.printf "Encoding Exp_abs %s\nType tfun is %s\ngot n_formals(typ)=%d and n_formals(term)=%d; total_comp=%A" 
+//                    (Print.exp_to_string e)
+//                    (Print.typ_to_string tfun)
+//                    nformals 
+//                    (List.length bs) 
+//                    (Util.is_total_comp c);
                     if nformals < List.length bs && Util.is_total_comp c (* explicit currying *)
                     then let bs0, rest = Util.first_N nformals bs in 
                          let res_t = match Util.mk_subst_binder bs0 bs' with 
@@ -637,6 +650,9 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
          let v2, vars2, decls2 = encode_exp v2 env in
          Term.mk_LexCons v1 v2, vars1@vars2, decls1@decls2
 
+      | Exp_app({n=Exp_abs _}, _) -> 
+        encode_exp (whnf_e env e) env
+
       | Exp_app(head, args_e) -> 
         let args, vars, decls = encode_args args_e env in
     
@@ -660,6 +676,8 @@ and encode_exp (e:exp) (env:env_t) : (term * ex_vars * decls_t) =
             tm, vars, decls in
         
         let head = Util.compress_exp head in
+        if Env.debug env.tcenv <| Options.Other "186"
+        then Util.fprint2 "Recomputing type for %s\nFull term is %s\n" (Print.exp_to_string head) (Print.exp_to_string e);
         let head_type = Util.unrefine <| whnf env (Util.unrefine (Tc.Recheck.recompute_typ head)) in //head should be a variable, so this should be fast to recompute
         if Tc.Env.debug env.tcenv <| Options.Other "Encoding"
         then Util.fprint3 "Recomputed type of head %s (%s) to be %s\n" (Print.exp_to_string head) (Print.tag_of_exp head) (Print.typ_to_string head_type);
@@ -1282,9 +1300,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 @aux in
         g, env
 
-    | Sig_datacon(d, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env 
+    | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env 
 
-    | Sig_datacon(d, t, _, quals, _) -> 
+    | Sig_datacon(d, t, _, quals, _, _) -> 
         let ddconstrsym, ddtok, env = gen_free_var env d in //Print.sli d in
         let formals, t_res = match Util.function_formals t with 
             | Some (f, c) -> f, Util.comp_result c
@@ -1365,14 +1383,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  | Typ_fun(formals, c) -> 
                     let nformals = List.length formals in
                     let nbinders = List.length binders in
-                    let tres = Util.comp_result c in                   
+                    let tres = Util.comp_result c in       
                     if nformals < nbinders && Util.is_total_comp c (* explicit currying *)
                     then let bs0, rest = Util.first_N nformals binders in 
                          let tres = match Util.mk_subst_binder bs0 formals with
                             | Some s -> Util.subst_typ s tres 
                             | _ -> failwith "impossible" in
                          let body = mk_Exp_abs(rest, body) (Some tres) body.pos in
-                         bs0, body, formals, tres
+                         bs0, body, bs0, tres
                     
                     else if nformals > nbinders (* eta-expand before translating it *)
                     then let binders, body = eta_expand binders formals body tres in
@@ -1676,6 +1694,7 @@ let solve tcenv q : unit =
         query_prelude, labels, qry, suffix in
     begin match qry with 
         | Assume({tm=False}, _) -> pop(); ()
+        | _ when tcenv.admit -> pop(); ()
         | Assume(q, _) ->
             let fresh = String.length q.as_str >= 2048 in   
             Z3.giveZ3 prefix;
@@ -1690,7 +1709,7 @@ let solve tcenv q : unit =
             let check () =
                 let initial_config = (!Options.initial_fuel, !Options.initial_ifuel) in
                 let alt_configs = List.flatten [(if !Options.max_ifuel > !Options.initial_ifuel then [(!Options.initial_fuel, !Options.max_ifuel)] else []);
-                                                //(if !Options.max_fuel > !Options.initial_fuel then [(!Options.max_fuel, 1)] else []);
+                                                (if !Options.max_fuel / 2 > !Options.initial_fuel then [(!Options.max_fuel / 2, !Options.max_ifuel)] else []);
                                                 (if !Options.max_fuel > !Options.initial_fuel && !Options.max_ifuel > !Options.initial_ifuel then [(!Options.max_fuel, !Options.max_ifuel)] else []);
                                                 (if !Options.min_fuel < !Options.initial_fuel then [(!Options.min_fuel, 1)] else [])] in
 

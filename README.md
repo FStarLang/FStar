@@ -29,11 +29,28 @@ hope will lead to a 1.0 release soon. This new variant is
 incompatible and quite different compared to the previously
 released 0.7 versions.
 
+### Contacting the F* team
+
+Please report bugs or ask questions using the GitHub issue tracker for
+the FStar project:
+https://github.com/FStarLang/FStar/issues
+Yes, we encourage asking questions on the issue tracker!
+
 ### Editing F* code
+
+#### FStarIDE (Atom)
+
+[FStarIDE] is a recently started project aimed at devising an F* mode
+for the [Atom] editor.
+
+[Atom]: https://atom.io/
+[FStarIDE]: https://github.com/FStarLang/FStarIDE
 
 #### Emacs
 
-The [Tuareg Mode] for Objective Caml works quite well for F* too. Tuareg is easiest to install using [MELPA].
+The [Tuareg Mode] for Objective Caml works quite well for F* too
+(although some people have reported crashes).
+Tuareg is easiest to install using [MELPA].
 To use MELPA add this to your `.emacs` or `.emacs.d/init.el` file:
 ```elisp
 (require 'package)
@@ -53,12 +70,13 @@ Then add the rest of the configuration to `.emacs` or `.emacs.d/init.el`:
       (append '(("\\.fs[tiy]?$" . tuareg-mode))
           auto-mode-alist))
 ```
-Finally, if you want easy navigation through F* error messages also add this to your `.emacs` or `.emacs.d/init.el`:
+Finally, if you want easy navigation through F* error messages also
+add this to your `.emacs` or `.emacs.d/init.el`:
 ```elisp
 (add-to-list 'compilation-error-regexp-alist
- '("\\([0-9a-zA-Z_-]*.fst\\)(\\([0-9]+\\)\\,\\([0-9]+\\)-[0-9]+\\,[0-9]+)" 1 2 3))
+ '("\\([0-9a-zA-Z._/-]*.fst\\)(\\([0-9]+\\)\\,\\([0-9]+\\)-[0-9]+\\,[0-9]+)" 1 2 3))
 (add-to-list 'compilation-error-regexp-alist
- '("^ERROR: Syntax error near line \\(.[0-9]+\\), character \\(.[0-9]+\\) in file \\(.*\\)$" 3 1 2))
+ '("^ERROR: Syntax error near line \\([0-9]+\\), character \\([0-9]+\\) in file \\(.*\\)$" 3 1 2))
 ```
 
 [Tuareg Mode]: https://github.com/ocaml/tuareg

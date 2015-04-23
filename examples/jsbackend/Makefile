@@ -1,6 +1,6 @@
 FSLIBFILES=st.fst string.fst js.fst list.fsi
 FSLIB=$(addprefix ../../lib/, $(FSLIBFILES))
-FSTAR=../../bin/FStar.exe --fstar_home ../../ --admit_fsi List $(OTHERFLAGS)
+FSTAR=../../bin/FStar.exe --admit_fsi List $(OTHERFLAGS)
 
 TESTS=constants.js strings.js fun.js tuples.js record.js
 
@@ -17,4 +17,4 @@ close:
 	echo "<script src=\"$@\"></script>" >> tests.htm
 
 clean:
-	rm -fr tests.htm *.js *~ 
+	rm -fr tests.htm *.js *~

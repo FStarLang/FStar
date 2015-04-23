@@ -108,15 +108,15 @@ and cflags =
   | SOMETRIVIAL
   | LEMMA
   | DECREASES of exp
-and uvar_t = Unionfind.uvar<uvar_basis<typ,knd>>
+and uvar_t = Unionfind.uvar<uvar_basis<typ>>
 and meta_t = 
   | Meta_pattern       of typ * list<arg>
   | Meta_named         of typ * lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
   | Meta_labeled       of typ * string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_refresh_label of typ * option<bool> * Range.range             (* Add the range to the label of any labeled sub-term of the type *)
   | Meta_slack_formula of typ * typ * ref<bool>                        (* A refinement formula with slack, used in type inference; boolean marks if the slack is gone *)
-and uvar_basis<'a,'b> = 
-  | Uvar of ('a -> 'b -> bool)                               (* A well-formedness check to ensure that all names are in scope *)
+and uvar_basis<'a> = 
+  | Uvar of ref<int>                                                   (* An integer level *)
   | Fixed of 'a
 and exp' =
   | Exp_bvar       of bvvar
@@ -133,13 +133,12 @@ and exp' =
 and exp = syntax<exp',typ>
 and meta_e = 
   | Meta_desugared     of exp * meta_source_info                 (* Node tagged with some information about source term before desugaring *)
-  | Meta_datainst      of exp * option<typ>                      (* Expect the data constructor e to build a t-typed value; only used internally to pretyping; not visible elsewhere *)
 and meta_source_info =
   | Data_app
   | Sequence                   
   | Primop                                  (* ... add more cases here as needed for better code generation *)
   | MaskedEffect
-and uvar_e = Unionfind.uvar<uvar_basis<exp,typ>>
+and uvar_e = Unionfind.uvar<uvar_basis<exp>>
 and btvdef = bvdef<typ>
 and bvvdef = bvdef<exp>
 and pat' = 
@@ -165,7 +164,7 @@ and knd' =
 and knd = syntax<knd', unit>
 and uvar_k_app = uvar_k * args
 and kabbrev = lident * args
-and uvar_k = Unionfind.uvar<uvar_basis<knd,unit>>
+and uvar_k = Unionfind.uvar<uvar_basis<knd>>
 and lbname = either<bvvdef, lident>
 and letbindings = bool * list<(lbname * typ * exp)> (* let recs may have more than one element; top-level lets have lidents *)
 and subst_t = list<list<subst_elt>>
@@ -267,7 +266,7 @@ type monad_decl = {
 and sigelt =
   | Sig_tycon          of lident * binders * knd * list<lident> * list<lident> * list<qualifier> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
   | Sig_typ_abbrev     of lident * binders * knd * typ * list<qualifier> * Range.range 
-  | Sig_datacon        of lident * typ * tycon * list<qualifier> * Range.range  (* second lident is the name of the type this constructs *)
+  | Sig_datacon        of lident * typ * tycon * list<qualifier> * list<lident> (* mutuals *) * Range.range  (* second lident is the name of the type this constructs *)
   | Sig_val_decl       of lident * typ * list<qualifier> * Range.range 
   | Sig_assume         of lident * formula * list<qualifier> * Range.range 
   | Sig_let            of letbindings * Range.range * list<lident> * list<qualifier>

@@ -12,9 +12,14 @@ module Prims :
     val snd : 'a * 'b -> 'b
     val failwith : string -> 'a
     val try_with : (unit -> 'a) -> (exn -> 'a) -> 'a
-    val l__Assert : 'a -> unit
+    val _assert : 'a -> unit
+    val min: int -> int -> int
   end
-module ST : sig val read : 'a ref -> 'a end
+module ST :
+  sig
+    val read : 'a ref -> 'a
+    val op_ColonEquals: 'a ref -> 'a -> unit
+  end
 module String :
   sig
     val strcat : string -> string -> string
@@ -243,6 +248,7 @@ module Microsoft :
             val for_range : int -> int -> (int -> 'a) -> unit
             val incr : int ref -> unit
             val geq : int -> int -> bool
+            val get_exec_dir: unit -> string
             val expand_environment_variable : string -> string
             val physical_equality : 'a -> 'a -> bool
             val check_sharing : 'a -> 'a -> string -> unit

@@ -653,7 +653,7 @@ let rec lids_of_sigelt se = match se with
   | Sig_monads(_, _, _, lids) -> lids
   | Sig_tycon (lid, _, _,  _, _, _, _)    
   | Sig_typ_abbrev  (lid, _, _, _, _, _)
-  | Sig_datacon (lid, _, _, _, _)
+  | Sig_datacon (lid, _, _, _, _, _)
   | Sig_val_decl (lid, _, _, _) 
   | Sig_assume (lid, _, _, _) -> [lid]
   | Sig_pragma _
@@ -667,7 +667,7 @@ let range_of_sigelt x = match x with
   | Sig_bundle(_, r, _) 
   | Sig_tycon (_, _, _,  _, _, _, r)    
   | Sig_typ_abbrev  (_, _, _, _, _, r)
-  | Sig_datacon (_, _, _, _, r)
+  | Sig_datacon (_, _, _, _, _, r)
   | Sig_val_decl (_, _, _, r) 
   | Sig_assume (_, _, _, r)
   | Sig_let(_, r, _, _) 
@@ -1212,7 +1212,10 @@ let eq_k =
                   ktype) dummyRange
 
 let teq = ftv Const.eq2_lid eq_k
-let mk_eq e1 e2 = mk_Typ_app(teq, [varg e1; varg e2]) None (Range.union_ranges e1.pos e2.pos)
+let mk_eq t1 t2 e1 e2 = match t1.n, t2.n with 
+    | Typ_unknown, _
+    | _, Typ_unknown -> failwith "DIE! mk_eq with tun"
+    | _ -> mk_Typ_app(teq, [targ t1; targ t2; varg e1; varg e2]) None (Range.union_ranges e1.pos e2.pos)
 let eq_typ = ftv Const.eqT_lid kun
 let mk_eq_typ t1 t2 = mk_Typ_app(eq_typ, [targ t1; targ t2]) None (Range.union_ranges t1.pos t2.pos)
 

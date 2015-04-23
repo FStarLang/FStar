@@ -979,65 +979,40 @@ let rec shift_above_and_subst s y t =
 val tshifts_reordering: x:nat -> y:nat{y >= x} -> s:typ -> Lemma
                         (ensures (tsh x (tsh y s) = tsh (y + 1) (tsh x s)))
              	        (decreases s)
-let rec tshifts_reordering x y s = admit()
-(*
-match s with
-  | TVar z -> ()
-  | TLam k t1' ->
-    tshift_up_above_lam y k t1';
-    tshift_up_above_lam x k (tsh (y + 1) t1');
-    tshifts_reordering (x + 1) (y + 1) t1';
-    tshift_up_above_lam x k t1';
-    tshift_up_above_lam (y + 1) k (tsh (x + 1) t1')
-  | TArr t1' t2'
-  | TApp t1' t2' -> tshifts_reordering x y t1'; tshifts_reordering x y t2'
-*)
+let rec tshifts_reordering x y s =
+  tsubst_comp (tsub_inc_above x) (tsub_inc_above y) s;
+  tsubst_extensional (tsub_comp (tsub_inc_above x) (tsub_inc_above y)) (tsub_comp (tsub_inc_above (y+1)) (tsub_inc_above x)) s;
+  tsubst_comp (tsub_inc_above (y+1)) (tsub_inc_above x) s
 
 (* CH: This proof sometimes fails even with 10s timeout; try to refactor it! *)
 val tsubst_commute_helper: x:nat -> y:nat{x >= y} ->s:typ -> t:typ ->
           Lemma (requires True)
                 (ensures (tsh y (ts x s t) = ts (x + 1) (tsh y s) (tsh y t)))
          (decreases t)
-let rec tsubst_commute_helper x y s t = admit()
-(*
-  match t with
-  | TVar z -> ()
-  | TLam k t1' ->
-    tsubst_gen_tlam x s k t1';
-    tshift_up_above_lam y k (ts (x + 1) (tsh 0 s) t1');
-    tsubst_commute_helper (x + 1) (y + 1) (tsh 0 s) t1';
-    tshift_up_above_lam y k t1';
-    tsubst_gen_tlam (x + 1) (tsh y s) k (tsh (y + 1) t1');
-    tshifts_reordering 0 y s
-  | TArr t1' t2'
-  | TApp t1' t2' -> tsubst_commute_helper x y s t1'; tsubst_commute_helper x y s t2'
-*)
+let rec tsubst_commute_helper x y s t = 
+  tsubst_comp (tsub_inc_above y) (tsub_beta_gen x s) t;
+  tsubst_extensional (tsub_comp (tsub_inc_above y) (tsub_beta_gen x s)) (tsub_comp (tsub_beta_gen (x+1) (tsh y s)) (tsub_inc_above y)) t;
+  tsubst_comp (tsub_beta_gen (x+1) (tsh y s)) (tsub_inc_above y) t
+val tsubst_commute_aux : y:nat -> x:nat{x >= y} -> s1:typ ->
 
-(* CH: This proof sometimes fails with 5s timeout; try to refactor it! *)
+  s2:typ -> v:var ->          Lemma (requires True)
+		    (ensures ((tsub_comp (tsub_beta_gen x s1) (tsub_beta_gen y s2)) v = (tsub_comp (tsub_beta_gen y (tsubst_beta_gen x s1 s2)) (tsub_beta_gen (x+1) (tshift_up_above y s1))) v))
+let tsubst_commute_aux y x s1 s2 v = 
+  if v < x+1 then ()
+  else if v = x+1 then
+    shift_above_and_subst s1 y (tsubst_beta_gen x s1 s2)
+  else ()
+  
 val tsubst_commute: t1:typ -> y:nat -> t2:typ -> x:nat{x >= y} -> s:typ ->
                     Lemma (requires True)
 		    (ensures (ts x s (ts y t2 t1) =
                               ts y (ts x s t2) (ts (x + 1) (tsh y s) t1)))
-                    (decreases t1)
-let rec tsubst_commute t1 y t2 x s = admit()
-(*
-  match t1 with
-  | TVar z ->
-    if z > y && z = x + 1 then
-      shift_above_and_subst s y (ts x s t2)
-    else
-      ()
-  | TLam k t1' ->
-    tsubst_gen_tlam y t2 k t1';
-    tsubst_gen_tlam x s k (ts (y + 1) (tsh 0 t2) t1');
-    tsubst_commute t1' (y + 1) (tsh 0 t2) (x + 1) (tsh 0 s);
-    tsubst_gen_tlam (x + 1) (tsh y s) k t1';
-    tsubst_gen_tlam y (ts x s t2) k (ts (x + 2) (tsh 0 (tsh y s)) t1');
-    tsubst_commute_helper x 0 s t2;
-    tshifts_reordering 0 y s
-  | TArr t1' t2'
-  | TApp t1' t2' -> tsubst_commute t1' y t2 x s; tsubst_commute t2' y t2 x s
-*)
+let rec tsubst_commute t1 y t2 x s = 
+  tsubst_comp (tsub_beta_gen x s) (tsub_beta_gen y t2) t1;
+  forall_intro (tsubst_commute_aux y x s t2);
+  tsubst_extensional (tsub_comp (tsub_beta_gen x s) (tsub_beta_gen y t2)) (tsub_comp (tsub_beta_gen y (ts x s t2)) (tsub_beta_gen (x+1) (tsh y s))) t1;
+  tsubst_comp (tsub_beta_gen y (ts x s t2)) (tsub_beta_gen (x+1) (tsh y s)) t1
+
 
 (* Lemma 30.3.7: t => t' and s => s' implies t[x |-> s] => t'[x |-> s'] *)
 opaque val subst_of_tred_tred: #s:typ -> #s':typ -> #t:typ -> #t':typ -> x:nat ->

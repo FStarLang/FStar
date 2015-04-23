@@ -610,7 +610,8 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
         | Exp_match (x, [(p, None, e)]) when (Absyn.Util.is_wild_pat p) ->
             (match x.n with 
               | Exp_fvar _ -> mlexpr_of_expr mlenv rg lenv e
-              | Exp_bvar _ -> mlexpr_of_expr mlenv rg lenv e)
+              | Exp_bvar _ -> mlexpr_of_expr mlenv rg lenv e
+              | _ -> failwith "Impossible")
             
 
         | Exp_match (e, bs) -> begin
@@ -770,7 +771,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
                 (ty :: types, ctors)
               end
 
-            | Sig_datacon (x, ty, pr, _, rg) ->
+            | Sig_datacon (x, ty, pr, _, _, rg) ->
                let arity = List.length (type_vars ty.n) in
                smap_add algebraic_constructors x.ident.idText arity;
                (types, (x.ident.idText, (ty, pr)) :: ctors)
@@ -794,7 +795,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
     in
 
     let cons_args cname tparams rg x =
-      let (Some (c, _)) = smap_try_find cs cname.ident.idText  in
+      let (c, _) = smap_try_find cs cname.ident.idText |> Util.must in
       let cparams, rgty, c = strip_polymorphism [] rg c in
 
       if List.length cparams <> List.length tparams then
@@ -917,8 +918,8 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
     | Sig_monads (_, _, rg, _) ->
         unsupported rg "mod1-monad"
 
-    | Sig_bundle ([Sig_datacon (_, _, _, qal, _)], _, _) when (not (export_val qal)) -> None
-    | Sig_bundle ([Sig_datacon (x, ty, (tx, _, _), qal, rg)], _, _) when (as_tprims tx = Some Exn) -> begin
+    | Sig_bundle ([Sig_datacon (_, _, _, qal, _, _)], _, _) when (not (export_val qal)) -> None
+    | Sig_bundle ([Sig_datacon (x, ty, (tx, _, _), qal, _, rg)], _, _) when (as_tprims tx = Some Exn) -> begin
         let rec aux acc ty =
             match (Absyn.Util.compress_typ ty).n with
             | Typ_fun(bs, c) -> 

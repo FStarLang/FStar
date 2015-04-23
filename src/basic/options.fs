@@ -84,7 +84,7 @@ let unthrottle_inductives = Util.mk_ref false
 let use_eq_at_higher_order = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
 let n_cores = Util.mk_ref 1
-
+let verify_module = Util.mk_ref []
 let init_options () = 
     show_signatures := [];
     norm_then_print := true;
@@ -125,15 +125,20 @@ let init_options () =
     unthrottle_inductives  := false;
     use_eq_at_higher_order  := false;
     fs_typ_app  := false;
-    n_cores  := 1
+    n_cores  := 1;
+    verify_module := []
 
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
     | None ->
-      let x = Util.expand_environment_variable "FSTAR_HOME" in
+      let x = Util.get_exec_dir () in 
+      let x = x ^ "/.." in
       _fstar_home := x;
       fstar_home_opt := Some x;
       x
+//      let x = Util.expand_environment_variable "FSTAR_HOME" in
+//      _fstar_home := x;
+      
     | Some x -> _fstar_home := x; x in
   fh
 let get_fstar_home () = match !fstar_home_opt with 
@@ -205,6 +210,7 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "fs_typ_app", ZeroArgs (fun () -> fs_typ_app := true), "Allow the use of t<t1,...,tn> syntax for type applications; brittle since it clashes with the integer less-than operator");
      ( noshort, "no_fs_typ_app", ZeroArgs (fun () -> fs_typ_app := false), "Do not allow the use of t<t1,...,tn> syntax for type applications");
      ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x), "positive integer"), "Maximum number of cores to use for the solver (default 1)");
+     ( noshort, "verify_module", OneArg ((fun x -> verify_module := x::!verify_module), "string"), "Name of the module to verify");
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
 and parse_codegen s =
@@ -215,6 +221,11 @@ and parse_codegen s =
   | _ ->
      (Util.print_string "Wrong argument to codegen flag\n";
       display_usage (specs ()); exit 1)
+
+let should_verify m = 
+    match !verify_module with 
+        | [] -> true //the verify_module flag was not set, so verify everything
+        | l -> List.contains m l //otherwise, look in the list to see if it is explicitly mentioned
 
 let reset_options () = 
     init_options();

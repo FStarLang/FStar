@@ -509,7 +509,7 @@ and serialize_sigelt (writer:Writer) (ast:sigelt) :unit =
         writer.write_char 'b';
         serialize_lident writer lid; serialize_binders writer bs; serialize_knd writer k;
         serialize_typ writer t; serialize_list writer serialize_qualifier qs
-    | Sig_datacon(lid1, t, tyc, qs, _) ->
+    | Sig_datacon(lid1, t, tyc, qs, mutuals, _) ->
       let t' =
         match Util.function_formals t with 
         | Some (f, c) -> mk_Typ_fun (f, Syntax.mk_Total  (Util.comp_result c)) None dummyRange
@@ -517,7 +517,8 @@ and serialize_sigelt (writer:Writer) (ast:sigelt) :unit =
       in
       writer.write_char 'c';
       serialize_lident writer lid1; serialize_typ writer t'; serialize_tycon writer tyc;
-      serialize_list writer serialize_qualifier qs
+      serialize_list writer serialize_qualifier qs;
+      serialize_list writer serialize_lident mutuals
     | Sig_val_decl(lid, t, qs, _) -> 
         writer.write_char 'd';
         serialize_lident writer lid; serialize_typ writer t; serialize_list writer serialize_qualifier qs
@@ -579,7 +580,8 @@ and deserialize_sigelt (reader:Reader) :sigelt =
              deserialize_list reader deserialize_qualifier, dummyRange)
     | 'c' -> 
         Sig_datacon
-            (deserialize_lident reader, deserialize_typ reader, deserialize_tycon reader, deserialize_list reader deserialize_qualifier, dummyRange)
+            (deserialize_lident reader, deserialize_typ reader, deserialize_tycon reader, deserialize_list reader deserialize_qualifier, 
+            deserialize_list reader deserialize_lident, dummyRange)
     | 'd' -> 
         Sig_val_decl(deserialize_lident reader, deserialize_typ reader, deserialize_list reader deserialize_qualifier, dummyRange)
     | 'e' -> 

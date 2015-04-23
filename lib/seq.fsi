@@ -28,7 +28,7 @@ val create: a:Type -> nat -> a -> Tot (seq a)
 val upd:    a:Type -> s:seq a -> n:nat{n < length s} -> a ->  Tot (seq a)
 val append: a:Type -> seq a -> seq a -> Tot (seq a)
 val slice:  a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s} -> Tot (seq a)
-
+assume val op_At_Bar: a:Type -> seq a -> seq a -> Tot (seq a)
 (* Lemmas about length *)
 val lemma_create_len: a:Type -> n:nat -> i:a -> Lemma
   (requires True)

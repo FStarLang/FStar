@@ -34,7 +34,6 @@ open Microsoft.FStar
 open Microsoft.FStar.Util
 open Microsoft.FStar.Range
 open Microsoft.FStar.Parser
-open Microsoft.FStar.Parser.AST
 open Microsoft.FStar.Parser.Parse
 
 let intern_string : string -> string = 
@@ -165,7 +164,6 @@ let keywords =
     ALWAYS, "opaque"     ,OPAQUE;
     ALWAYS, "private"    ,PRIVATE;  
     FSHARP, "public"     ,PUBLIC;
-    ALWAYS, "query"      ,QUERY;
     ALWAYS, "rec"        ,REC;
     ALWAYS, "requires"   ,REQUIRES;
     ALWAYS, "then"       ,THEN;
