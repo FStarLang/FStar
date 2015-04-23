@@ -3,9 +3,13 @@ module Constructive
 type cand : Type -> Type -> Type =
   | Conj : #a:Type -> #b:Type -> pa:a -> pb:b -> cand a b
 
+type cor : Type -> Type -> Type =
+  | IntroL : #a:Type -> #b:Type -> pa:a -> cor a b
+  | IntroR : #a:Type -> #b:Type -> pb:b -> cor a b
+
 type cimp (a:Type) (b:Type) = a -> Tot b
 
-type ciff (a : Type) (b : Type) = cand (a -> Tot b) (b -> Tot a)
+type ciff (a : Type) (b : Type) = cand (cimp a b) (cimp b a)
 
 type cexists : #a:Type -> (a -> Type) -> Type =
   | ExIntro : #a:Type -> #p:(a -> Type) -> x:a -> p x -> cexists p
@@ -16,10 +20,15 @@ type cexists_type : (Type -> Type) -> Type =
 type ceq : #a:Type -> a -> a -> Type =
   | Eq : a:Type -> x:a -> ceq x x
 
-(* can we make this work?
-type cfalse : Type
+val ceq_eq : #a:Type -> #x:a -> #y:a -> ceq x y -> Lemma (x = y)
+let ceq_eq x y p = ()
 
-val cfalse_elim : cfalse -> a:Type -> a
-let cfalse_elim pf _ =
+(* hopefully this is an empty type *)
+type cfalse : Type =
+
+(* can we make this work?
+val cfalse_elim : cfalse -> 'a
+let cfalse_elim pf =
   match pf with
+  | _ -> 76 (* silly, fails type checking *)
 *)
