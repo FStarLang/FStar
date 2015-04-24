@@ -194,7 +194,7 @@ let canonical_forms_fun e t1 t2 = ()
 val progress : e:exp -> Lemma
       (requires (is_Some (typing empty e)))
       (ensures (is_value e \/ (is_Some (step e))))
-let rec progress e = using_induction_hyp progress
+let rec progress e = by_induction_on e progress
 
 val appears_free_in : x:int -> e:exp -> Tot bool
 let rec appears_free_in x e =
@@ -231,7 +231,7 @@ let rec free_in_context x e g =
       free_in_context x e2 (extend g y (Some.v (typing g e1))))
 
 (* I also tried to changed the order of arguments employ
-   using_induction_hyp with a partially applied induction
+   by_induction_on e with a partially applied induction
    hypothesis. For some obscure to me reason
    this requires the --full_context_dependency flag even to
    pre-type-check and then it doesn't really help verifying this
@@ -247,13 +247,13 @@ let rec free_in_context' g x e =
   | EFalse -> ()
   | EAbs y t e1 -> free_in_context' (extend g y t) x e1
   | EApp _ _
-  | EIf _ _ _ -> using_induction_hyp (free_in_context' g x); admit()
+  | EIf _ _ _ -> by_induction_on e (free_in_context' g x); admit()
     (* Tried partially applying free_in_context' to g, but that
        lead to strange error message: expected type U1430 got ...
        Setting the --full_context_dependency fixed this problem. *)
   | EPair _ _
   | EFst _
-  | ESnd _ -> using_induction_hyp (free_in_context' g x); admit()
+  | ESnd _ -> by_induction_on e (free_in_context' g x); admit()
   | ELet y e1 e2 ->
       (free_in_context' g x e1;
       free_in_context' (extend g y (Some.v (typing g e1))) x e2)
@@ -286,7 +286,7 @@ val context_invariance : e:exp -> g:env -> g':env
       got type "(_1:(EqualE e g g') -> Tot pattern)"
 *)
 let rec context_invariance e g g' =
-(*  using_induction_hyp context_invariance; *)
+(*  by_induction_on e context_invariance; *)
   match e with
   | EAbs x t e1 ->
      context_invariance e1 (extend g x t) (extend g' x t)

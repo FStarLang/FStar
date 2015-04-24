@@ -16,7 +16,7 @@
 module Prims
 
 kind Unop  = Type -> Type           (* simple kind abbreviation *)
-kind Binop = Type -> Type -> Type   
+kind Binop = Type -> Type -> Type
 
 (* Primitive logical connectives *)
 logic type l_not : Unop  (* prefix unary '~' *)
@@ -24,11 +24,11 @@ logic type l_and : Binop (* infix binary '/\' *)
 logic type l_or  : Binop (* infix binary '\/' *)
 logic type l_iff : Binop (* infix binary '<==>' *)
 logic type l_imp : Binop (* infix binary '==>' *)
-logic type Forall : #a:Type -> (a -> Type) -> Type 
-logic type Exists : #a:Type -> (a -> Type) -> Type 
+logic type Forall : #a:Type -> (a -> Type) -> Type
+logic type Exists : #a:Type -> (a -> Type) -> Type
 logic type ForallTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
 logic type ExistsTyp : (Type -> Type) -> Type (* Handled specially to support quantification over types of arbitrary kinds *)
-logic type True 
+logic type True
 logic type False
 logic type EqTyp : Type -> Type -> Type                (* infix binary '==' *)
 logic type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
@@ -44,14 +44,14 @@ monad_lattice { (* The definition of the PURE effect is fixed; no user should ev
              kind Post (a:Type) = a -> Type
              kind WP (a:Type) = Post a -> Pre
              type return (a:Type) (x:a) (p:Post a) = p x
-             type bind_wp  (a:Type) (b:Type) (wp1:WP a) (wlp1:WP a) 
+             type bind_wp  (a:Type) (b:Type) (wp1:WP a) (wlp1:WP a)
                                              (wp2: (a -> WP b)) (wlp2: (a -> WP b))
                                              (p:Post b) = wp1 (fun (x:a) -> wp2 x p)
-             type bind_wlp (a:Type) (b:Type) (wlp1:WP a) 
+             type bind_wlp (a:Type) (b:Type) (wlp1:WP a)
                                              (wlp2:(a -> WP b))
                                              (p:Post b) = wlp1 (fun (x:a) -> wlp2 x p)
-             type if_then_else (a:Type) (p:Type) (wp_then:WP a) (wp_else:WP a) (post:Post a) = 
-                 (if p 
+             type if_then_else (a:Type) (p:Type) (wp_then:WP a) (wp_else:WP a) (post:Post a) =
+                 (if p
                   then wp_then post
                   else wp_else post)
              type ite_wlp (a:Type) (wlp_cases:WP a) (post:Post a) =
@@ -102,14 +102,14 @@ type list (a:Type) =
   | Nil : list a
   | Cons : hd:a -> tl:list a -> list a
 
-type pattern = 
+type pattern =
   | SMTPat  : a:Type -> a -> pattern
   | SMTPatT : a:Type -> pattern
 
 assume type decreases : #a:Type -> a -> Type
 
 effect Lemma (a:Type) (pre:Type) (post:Type) (pats:list pattern) = Pure a pre (fun r -> post)
-(* 
+(*
    Lemma is desugared specially. You can write:
 
      Lemma phi                 for   Lemma unit (requires True) phi []
@@ -140,14 +140,14 @@ monad_lattice {
              kind Post (a:Type) = a -> Type
              kind WP (a:Type) = Post a -> Pre
              type return (a:Type) (x:a) (p:Post a) = p x
-             type bind_wp  (a:Type) (b:Type) (wp1:WP a) (wlp1:WP a) 
+             type bind_wp  (a:Type) (b:Type) (wp1:WP a) (wlp1:WP a)
                                               (wp2: (a -> WP b)) (wlp2: (a -> WP b))
                                                (p:Post b) = wp1 (fun a -> wp2 a p)
-             type bind_wlp (a:Type) (b:Type) (wlp1:WP a) 
+             type bind_wlp (a:Type) (b:Type) (wlp1:WP a)
                                              (wlp2:(a -> WP b))
                                              (p:Post b) = wlp1 (fun a -> wlp2 a p)
-             type if_then_else (a:Type) (p:Type) (wp_then:WP a) (wp_else:WP a) (post:Post a) = 
-                 (if p 
+             type if_then_else (a:Type) (p:Type) (wp_then:WP a) (wp_else:WP a) (post:Post a) =
+                 (if p
                   then wp_then post
                   else wp_else post)
              type ite_wlp (a:Type) (wlp_cases:WP a) (post:Post a) =
@@ -176,11 +176,11 @@ monad_lattice {
              kind Post ('a:Type) = 'a -> heap -> Type
              kind WP ('a:Type) = Post 'a -> Pre
              type return   ('a:Type) (x:'a) ('p:Post 'a) = 'p x
-             type bind_wp  ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a -> WP 'b) ('wlp2:'a -> WP 'b) ('p:Post 'b) (h0:heap) = 
+             type bind_wp  ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a -> WP 'b) ('wlp2:'a -> WP 'b) ('p:Post 'b) (h0:heap) =
                  'wp1 (fun a h1 -> 'wp2 a 'p h1) h0
              type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) ('wlp2:'a -> WP 'b) ('p:Post 'b) (h0:heap) = 'wlp1 (fun a -> 'wlp2 a 'p) h0
-             type if_then_else ('a:Type) ('p:Type) ('wp_then:WP 'a) ('wp_else:WP 'a) ('post:Post 'a) (h0:heap) = 
-                 (if 'p 
+             type if_then_else ('a:Type) ('p:Type) ('wp_then:WP 'a) ('wp_else:WP 'a) ('post:Post 'a) (h0:heap) =
+                 (if 'p
                   then 'wp_then 'post h0
                   else 'wp_else 'post h0)
              type ite_wlp  ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) (h0:heap) =
@@ -222,7 +222,7 @@ monad_lattice {
                                           ('wp2 (V.v ra1) (fun rb2 -> True))
                                            True))
              type if_then_else ('a:Type) ('p:Type) ('wp_then:WP 'a) ('wp_else:WP 'a) ('post:Post 'a) =
-                 (if 'p 
+                 (if 'p
                   then 'wp_then 'post
                   else 'wp_else 'post)
              type ite_wlp  ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) =
@@ -238,7 +238,7 @@ monad_lattice {
              type assert_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P /\ 'wp 'p)
              type assume_p ('a:Type) ('P:Type) ('wp:WP 'a) ('p:Post 'a) = ('P ==> 'wp 'p)
              type null_wp ('a:Type) ('p:Post 'a) = (forall (r:result 'a). 'p r)
-             type trivial ('a:Type) ('wp:WP 'a) = 'wp (fun r -> True) 
+             type trivial ('a:Type) ('wp:WP 'a) = 'wp (fun r -> True)
              with Exn ('a:Type) ('pre:Pre) ('post:Post 'a) =
                  EXN 'a
                    (fun 'p -> 'pre /\ (forall (r:result 'a). ('pre /\ 'post r) ==> 'p r)) (* WP *)
@@ -254,12 +254,12 @@ monad_lattice {
              type bind_wp ('a:Type) ('b:Type) ('wp1:WP 'a) ('wlp1:WP 'a) ('wp2:'a -> WP 'b) ('wlp2:'a -> WP 'b) ('p:Post 'b) (h0:heap) =
                  ('wp1 (fun ra h1 -> b2t(is_V ra) ==> 'wp2 (V.v ra) 'p h1) h0)
              type bind_wlp ('a:Type) ('b:Type) ('wlp1:WP 'a) ('wlp2:'a -> WP 'b) ('p:Post 'b) (h0:heap) =
-                 (forall rb h. 'wlp1 (fun ra h1 -> 
+                 (forall rb h. 'wlp1 (fun ra h1 ->
                      if b2t (is_V ra)
                      then 'wlp2 (V.v ra) (fun rb2 h2 -> rb=!=rb2 \/ h=!=h2) h1
                      else rb=!=ra \/ h=!=h1) h0 \/ 'p rb h)
              type if_then_else ('a:Type) ('p:Type) ('wp_then:WP 'a) ('wp_else:WP 'a) ('post:Post 'a) (h0:heap) =
-                 (if 'p 
+                 (if 'p
                   then 'wp_then 'post h0
                   else 'wp_else 'post h0)
              type ite_wlp  ('a:Type) ('wlp_cases:WP 'a) ('post:Post 'a) (h0:heap) =
@@ -281,7 +281,7 @@ monad_lattice {
                    (fun ('p:Post 'a) (h:heap) -> 'pre h /\ (forall ra h1. 'post h ra h1 ==> 'p ra h1)) (* WP *)
                    (fun ('p:Post 'a) (h:heap) -> forall ra h1. ('pre h /\ 'post h ra h1) ==> 'p ra h1) (* WLP *)
              and default ML ('a:Type) =
-                 ALL 'a (fun 'p h0 -> forall (a:result 'a) (h:heap). 'p a h) 
+                 ALL 'a (fun 'p h0 -> forall (a:result 'a) (h:heap). 'p a h)
                         (fun 'p h0 -> forall (a:result 'a) (h:heap). 'p a h)
 
   with
@@ -409,15 +409,15 @@ let dfst t = MkDTuple2._1 t
 val dsnd : 'a:Type -> 'b:('a -> Type) -> t:(DTuple2 'a 'b) -> Tot ('b (MkDTuple2._1 t))
 let dsnd t = MkDTuple2._2 t
 
-logic type InductionHyp : Type -> Type
-assume val using_induction_hyp: 'a -> Lemma (ensures (InductionHyp 'a))
+logic type InductionHyp : #a:Type -> a -> Type -> Type
+assume val by_induction_on: a:Type -> p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
 assume val _assume: 'P:Type -> unit -> (y:unit{'P})
 assume val admit: unit -> Admit 'a
 assume val magic: unit -> Tot 'a
 assume val admitP: 'P:Type -> Pure unit True (fun x -> 'P)
 assume val _assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
 assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (fun x -> 'P)
-assume val qintro: a:Type -> p:(a -> Type) -> (x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
+assume val qintro: a:Type -> p:(a -> Type) -> =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 assume val failwith: string -> ALL.All 'a (fun h -> True) (fun h a h' -> is_Err a /\ h==h')
 assume val raise: exn -> EXN.Ex 'a       (* TODO: refine with the Exn monad *)
 assume val pipe_right: 'a -> ('a -> 'b) -> 'b
@@ -458,4 +458,3 @@ assume val op_Modulus            : int -> nonzero -> Tot int
 assume val op_Division           : nat -> nonzero -> Tot int
 
 assume type Boxed : Type -> Type
-
