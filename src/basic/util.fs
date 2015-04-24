@@ -355,6 +355,15 @@ let map_opt opt f =
       | None -> None
       | Some x -> Some (f x)
 
+let try_find_i f l = 
+    let rec aux i = function 
+        | [] -> None
+        | hd::tl -> 
+            if f i hd 
+            then Some(i, hd)
+            else aux (i+1) tl in
+    aux 0 l
+
 let rec find_map l f = 
     match l with 
       | [] -> None 

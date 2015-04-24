@@ -40,7 +40,7 @@ type term' =
   | True
   | False
   | Integer    of int
-  | BoundV     of string * sort 
+  | BoundV     of var
   | FreeV      of string * sort
   | PP         of term * term
   | App        of string * list<term>
@@ -61,22 +61,19 @@ type term' =
   | Minus      of term
   | Mod        of term * term
   | ITE        of term * term * term 
-  | Forall     of list<list<pat>> * option<int> * list<(string * sort)> * term 
-  | Exists     of list<list<pat>> * option<int> * list<(string * sort)> * term 
-  | Select     of term * term 
-  | Update     of term * term * term
-  | ConstArray of string * sort * term 
+  | Forall     of list<list<pat>> * option<int> * list<var> * term 
+  | Exists     of list<list<pat>> * option<int> * list<var> * term 
   | Cases      of list<term>
 and pat = term
-and term = {tm:term'; as_str:string; freevars:Syntax.memo<list<var>>}
-and var = (string * sort)
+and term = {tm:term'; as_str:string;  hash:string;  freevars:Syntax.memo<list<var>>}
+and var = (string * int * sort)
 
 val free_variables: term -> list<var>
 
 val mkTrue : term
 val mkFalse : term
 val mkInteger : int -> term
-val mkBoundV : (string * sort) -> term
+val mkBoundV : var -> term
 val mkFreeV  : (string * sort) -> term
 val mkPP   : (term * term) -> term
 val mkApp  : (string * list<term>) -> term
@@ -97,14 +94,12 @@ val mkMul: (term * term) -> term
 val mkMinus: term -> term
 val mkMod: (term * term) -> term
 val mkITE: (term * term * term) -> term 
-val mkSelect: (term * term) -> term
-val mkUpdate: (term * term * term) -> term 
 val mkCases : list<term> -> term
-val mkConstArr: (string * sort * term) -> term
-val mkForall: (list<pat> * list<(string * sort)> * term) -> term
-val mkForall': (list<list<pat>> * option<int> * list<(string * sort)> * term) -> term
-val mkExists: (list<pat> * list<(string * sort)> * term) -> term
+val mkForall: (list<pat> * list<var> * term) -> term
+val mkForall': (list<list<pat>> * option<int> * list<var> * term) -> term
+val mkExists: (list<pat> * list<var> * term) -> term
 
+val shift: int -> int -> term -> term
 type caption = option<string>
 type binders = list<(string * sort)>
 type projector = (string * sort)
@@ -113,7 +108,7 @@ type constructors  = list<constructor_t>
 type decl =
   | DefPrelude
   | DeclFun    of string * list<sort> * sort * caption
-  | DefineFun  of string * list<(string * sort)> * sort * term * caption
+  | DefineFun  of string * list<var> * sort * term * caption
   | Assume     of term   * caption
   | Caption    of string
   | Eval       of term
@@ -146,7 +141,6 @@ val unboxString: term -> term
 val boxRef: term -> term
 val unboxRef: term -> term
 
-val mk_Closure: int -> list<var> -> term
 val mk_Term_unit: term
 val mk_PreKind: term -> term
 val mk_PreType: term -> term
