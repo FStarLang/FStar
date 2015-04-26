@@ -18,9 +18,9 @@ module Microsoft.FStar.Parser.ParseIt
 open Microsoft.FStar
 open Microsoft.FStar.Util
 
-let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) = 
-  lexbuf.EndPos <- {lexbuf.EndPos with 
-    pos_fname= Range.encode_file filename; 
+let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char>) =
+  lexbuf.EndPos <- {lexbuf.EndPos with
+    pos_fname= Range.encode_file filename;
     pos_cnum=0;
     pos_lnum=1 }
 
@@ -28,36 +28,36 @@ let parse_file fn =
   Parser.Util.warningHandler := (function
     | Lexhelp.ReservedKeyword(m,s) -> Printf.printf "%s:%s" (Range.string_of_range s) m
     | e -> Printf.printf "Warning: %A\n" e);
-  
-  let filename,sr,fs = match fn with 
-    | Inl (filename:string) ->  
-      (try 
+
+  let filename,sr,fs = match fn with
+    | Inl (filename:string) ->
+      (try
         let fs = new System.IO.StreamReader(filename) in
         let contents = fs.ReadToEnd() in
         filename, new System.IO.StringReader(contents) :> System.IO.TextReader, contents
-       with e -> raise (Absyn.Syntax.Err (Util.format1 "Unable to open file: %s" filename)))
+       with e -> raise (Absyn.Syntax.Err (Util.format1 "Unable to open file: %s\n" filename)))
     | Inr (s:string) -> "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s in
 
   let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromTextReader(sr) in
   resetLexbufPos filename lexbuf;
-  let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in 
-  let lexer = LexFStar.token lexargs in 
+  let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
+  let lexer = LexFStar.token lexargs in
   try
     let file = Parse.file lexer lexbuf in
-    let mods = if Util.ends_with filename ".fsi" 
+    let mods = if Util.ends_with filename ".fsi"
                then file |> List.map (function
-                | AST.Module(l,d) -> 
+                | AST.Module(l,d) ->
                   AST.Interface(l, d, Util.for_some (fun m -> m=l.str) !Options.admit_fsi)
-                | _ -> failwith "Impossible") 
+                | _ -> failwith "Impossible")
                else file in
      Inl mods
-  with 
-    | Absyn.Syntax.Error(msg, r) -> 
+  with
+    | Absyn.Syntax.Error(msg, r) ->
       let msg = Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg in
       Inr msg
     | e ->
       let pos = lexbuf.EndPos in
-      Inr  (Util.format3 "ERROR: Syntax error near line %s, character %s in file %s\n" 
-              (Util.string_of_int pos.pos_lnum) 
+      Inr  (Util.format3 "ERROR: Syntax error near line %s, character %s in file %s\n"
+              (Util.string_of_int pos.pos_lnum)
               (Util.string_of_int (pos.pos_cnum - pos.pos_bol))
               filename)
