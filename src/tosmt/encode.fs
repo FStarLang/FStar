@@ -65,7 +65,6 @@ let mk_term_projector_by_pos (lid:lident) (i:int) : term =
 let mk_data_tester env l x = Term.mk_tester l.str x
 (* ------------------------------------ *)
 (* New name generation *)
-type ex_vars = list<(var * term)> (* existentially bound variables and their guards *)
 type varops_t = {
     push: unit -> unit;
     pop: unit -> unit;
@@ -113,52 +112,27 @@ let varops =
 (* ---------------------------------------------------- *)
 (* <Environment> *)
 (* Each entry maps a Syntax variable to its encoding as a SMT2 term *)
-type closure_var = either<(btvdef*term), (bvvdef*term)>
-type closure_vars = list<closure_var>
-
 type binding = 
-    | Binding_var   of bvvdef * term * closure_vars
-    | Binding_tvar  of btvdef * term * closure_vars
+    | Binding_var   of bvvdef * term 
+    | Binding_tvar  of btvdef * term
     | Binding_fvar  of lident * string * term * option<term> (* free variables, depending on whether or not they are fully applied ...  *)
     | Binding_ftvar of lident * string * term                (* ... are mapped either to SMT2 functions, or to nullary term/type tokens *)
 
-let cvar_binders cs = cs |> List.map (function 
-    | Inl (_, {tm=BoundV v}) 
-    | Inr (_, {tm=BoundV v}) -> v
-    | _ -> failwith "impossible")
-let cvar_sorts cs = cs |> List.map (function
-    | Inl _ -> Type_sort
-    | Inr _ -> Term_sort)
-let cvar_terms cs = 
-    List.fold_right (fun v (out, i) -> 
-        match v with 
-        | Inl (_, {tm=BoundV(x, _, s)})
-        | Inr (_, {tm=BoundV(x, _, s)}) -> (mkBoundV(x, i, s)::out, i + 1)
-        | _ -> failwith "Unexpected cvar") cs ([], 0) |> fst
-let exclude_cvars (bs:Syntax.binders) (cvars:closure_vars) : closure_vars = 
-    let cvars = cvars |> Util.remove_dups (fun c1 c2 -> 
-       match c1, c2 with
-        | Inl (_, {tm=BoundV(x, _, _)}), Inl (_, {tm=BoundV(y, _, _)})
-        | Inr (_, {tm=BoundV(x, _, _)}), Inr (_, {tm=BoundV(y, _, _)}) -> x=y
-        | _ -> false) in
-    cvars |> List.filter (function
-        | Inl (a, {tm=BoundV _}) -> bs |> Util.for_some (function (Inl a', _) -> Util.bvd_eq a a'.v | _ -> false) |> not
-        | Inr (x, {tm=BoundV _}) -> bs |> Util.for_some (function (Inr x', _) -> Util.bvd_eq x x'.v | _ -> false) |> not
-        | _ -> failwith "Unexpected term in set of closure variables")
-
 let binder_of_eithervar v = (v, None)
-type env_t = {bindings:list<binding>;
-              tcenv:Env.env;
-              warn:bool;
-              refinements:Util.smap<(term * list<decl>)>;
-              nolabels:bool;
-              use_zfuel_name:bool;
-              }
+type env_t = {
+    bindings:list<binding>;
+    depth:int; //length of local var/tvar bindings
+    tcenv:Env.env;
+    warn:bool;
+    cache:Util.smap<(string * list<sort> * list<decl>)>;
+    nolabels:bool;
+    use_zfuel_name:bool;
+}
 let print_env e = 
     e.bindings |> List.map (function 
-        | Binding_var  (x, t, _) -> Print.strBvd x
-        | Binding_tvar (a, t, _) -> Print.strBvd a
-        | Binding_fvar(l, s, t, _) -> Print.sli l
+        | Binding_var  (x, t) -> Print.strBvd x
+        | Binding_tvar (a, t) -> Print.strBvd a
+        | Binding_fvar (l, s, t, _) -> Print.sli l
         | Binding_ftvar(l, s, t) -> Print.sli l) |> String.concat ", "
 
 let lookup_binding env f = Util.find_map env.bindings f 
@@ -168,72 +142,57 @@ let caption_t env t =
     then Some (Print.typ_to_string t)
     else None
 
-let fresh_bvar_i i x s = let xsym = varops.fresh x in xsym, mkBoundV(xsym, i, s)
-let fresh_bvar x s = fresh_bvar_i 0 x s
+let fresh_fvar x s = let xsym = varops.fresh x in xsym, mkFreeV(xsym, s)
+(* generate terms corresponding to a variable and record the mapping in the environment *)
 
-let cvars_of_term (env:env_t) (t:term) : closure_vars =    
-    let reverse_lookup x = 
-        Util.find_map env.bindings (function 
-            | Binding_var(y, {tm=BoundV(z, _, _)}, _) when (x=z) -> Some (Inr y)
-            | Binding_tvar(y, {tm=BoundV(z, _, _)}, _) when (x=z) -> Some (Inl y)
-            | _ -> None) in
-    let fvars = Term.free_variables t in
-    fvars |> List.collect (fun (x, i, z) -> 
-        match reverse_lookup x with
-            | Some (Inl a) -> [Inl (a, Term.mkBoundV (x,i,z))]
-            | Some (Inr y) -> [Inr (y, Term.mkBoundV (x,i,z))]
-            | _ -> [])//failwith ("Variable " ^x^ " not found"))
-    
 (* Bound term variables *)
-let gen_term_var_i i (env:env_t) (x:bvvdef) = 
-    let ysym = varops.new_var x.ppname x.realname in 
-    let y = mkBoundV(ysym, i, Term_sort) in 
-    ysym, y, {env with bindings=Binding_var(x, y, [Inr(x,y)])::env.bindings}
-let gen_term_var env x = gen_term_var_i 0 env x
+let gen_term_var (env:env_t) (x:bvvdef) = 
+    let ysym = "@x"^(string_of_int env.depth) in
+    let y = mkFreeV(ysym, Term_sort) in
+    ysym, y, {env with bindings=Binding_var(x, y)::env.bindings; depth=env.depth + 1}
 let gen_free_term_var (env:env_t) (x:bvvdef) = 
     let ysym = varops.new_var x.ppname x.realname in 
-    let y = mkFreeV(ysym, Term_sort) in 
-    ysym, y, {env with bindings=Binding_var(x, y, [])::env.bindings}
+    let y = mkApp(ysym, []) in
+    ysym, y, {env with bindings=Binding_var(x, y)::env.bindings}
 let push_term_var (env:env_t) (x:bvvdef) (t:term) = 
-    {env with bindings=Binding_var(x,t,cvars_of_term env t)::env.bindings}
-let lookup_term_var env a =
-    match Util.try_find_i (fun i -> function Binding_var(b, t, cvs) -> Util.bvd_eq b a.v | _ -> false) env.bindings with 
-        | None -> failwith (format1 "Bound term variable not found: %s" (Print.strBvd a.v))
-        | Some (i, Binding_var(b,t,cvs)) -> shift 0 i t, cvs        
+    {env with bindings=Binding_var(x,t)::env.bindings}
+let lookup_term_var env a = 
+    match lookup_binding env (function Binding_var(b, t) when Util.bvd_eq b a.v -> Some (b,t) | _ -> None) with
+    | None -> failwith (format1 "Bound term variable not found: %s" (Print.strBvd a.v))
+    | Some (b,t) -> t
 
 (* Bound type variables *)
-let gen_typ_var_i i (env:env_t) (x:btvdef) = 
-    let ysym = varops.new_var x.ppname x.realname in 
-    let y = mkBoundV(ysym, i, Type_sort) in
-    ysym, y, {env with bindings=Binding_tvar(x, y, [Inl(x,y)])::env.bindings}
-let gen_typ_var (env:env_t) (x:btvdef) = gen_typ_var_i 0 env x
+let gen_typ_var (env:env_t) (x:btvdef) = 
+    let ysym = "@a"^(string_of_int env.depth) in
+    let y = mkFreeV(ysym, Type_sort) in
+    ysym, y, {env with bindings=Binding_tvar(x, y)::env.bindings; depth=env.depth + 1}
 let gen_free_typ_var (env:env_t) (x:btvdef) = 
     let ysym = varops.new_var x.ppname x.realname in 
-    let y = mkFreeV(ysym, Type_sort) in
-    ysym, y, {env with bindings=Binding_tvar(x,y,[])::env.bindings}
+    let y = mkApp(ysym, []) in
+    ysym, y, {env with bindings=Binding_tvar(x,y)::env.bindings}
 let push_typ_var (env:env_t) (x:btvdef) (t:term) = 
-    {env with bindings=Binding_tvar(x,t,cvars_of_term env t)::env.bindings}
-let lookup_typ_var env a = 
-     match Util.try_find_i (fun i -> function Binding_tvar(b, t, cvs) -> Util.bvd_eq b a.v | _ -> false) env.bindings with 
-        | None -> failwith (format1 "Bound type variable not found: %s" (Print.strBvd a.v))
-        | Some (i, Binding_tvar(b,t,cvs)) -> shift 0 i t, cvs        
+    {env with bindings=Binding_tvar(x,t)::env.bindings}
+ let lookup_typ_var env a = 
+   match lookup_binding env (function Binding_tvar(b, t) when Util.bvd_eq b a.v -> Some (b,t) | _ -> None) with 
+    | None -> failwith (format1 "Bound type variable not found: %s" (Print.strBvd a.v))
+    | Some (b,t) -> t
 
 (* Qualified term names *)
 let gen_free_var (env:env_t) (x:lident) =
     let fname = varops.new_fvar x in
-    let ftok = mkFreeV(varops.new_fvar x , Term_sort) in
-    fname, ftok, {env with bindings=Binding_fvar(x, fname, ftok, None)::env.bindings}
+    let ftok = varops.new_fvar x in
+    fname, ftok, {env with bindings=Binding_fvar(x, fname, mkApp(ftok,[]), None)::env.bindings}
 let try_lookup_lid env a = 
     lookup_binding env (function Binding_fvar(b, t1, t2, t3) when lid_equals b a -> Some (t1, t2, t3) | _ -> None) 
 let lookup_lid env a = 
-    match lookup_binding env (function Binding_fvar(b, t1, t2, t3) when lid_equals b a -> Some (t1, t2, t3) | _ -> None) with
+    match try_lookup_lid env a with
     | None -> failwith (format1 "Name not found: %s" (Print.sli a))
     | Some s -> s
 let push_free_var env (x:lident) fname ftok = 
     {env with bindings=Binding_fvar(x, fname, ftok, None)::env.bindings}
 let push_zfuel_name env (x:lident) f = 
     let t1, t2, _ = lookup_lid env x in
-    let t3 = Term.mkApp(f, [Term.mkFreeV("ZFuel", Term.Fuel_sort)]) in
+    let t3 = Term.mkApp(f, [Term.mkApp("ZFuel", [])]) in
     {env with bindings=Binding_fvar(x, t1, t2, Some t3)::env.bindings}
 let lookup_free_var env a =
     let name, sym, zf_opt = lookup_lid env a.v in
@@ -242,7 +201,7 @@ let lookup_free_var env a =
         | _ -> 
           match sym.tm with 
             | App(_, [fuel]) -> 
-                if (Util.starts_with (Term.boundV_sym fuel) "fuel") 
+                if (Util.starts_with (Term.fv_of_term fuel |> fst) "fuel") 
                 then Term.mk_ApplyEF(Term.mkFreeV (name, Term_sort)) fuel
                 else sym
             | _ -> sym
@@ -254,13 +213,13 @@ let lookup_free_var_sym env a =
         | _ -> 
             match sym.tm with 
                 | App(g, [fuel]) -> g, [fuel]
-                | _ -> name, []
+                | _ -> Var name, []
 
 (* Qualified type names *)
 let gen_free_tvar (env:env_t) (x:lident) =
     let fname = varops.new_fvar x in
-    let ftok = mkFreeV(varops.new_fvar x, Type_sort) in 
-    fname, ftok, {env with bindings=Binding_ftvar(x, fname, ftok)::env.bindings}
+    let ftok = varops.new_fvar x in
+    fname, ftok, {env with bindings=Binding_ftvar(x, fname, mkApp(ftok, []))::env.bindings}
 let lookup_tlid env a = 
     match lookup_binding env (function Binding_ftvar(b, t1, t2) when lid_equals b a -> Some (t1, t2) | _ -> None) with
     | None -> failwith (format1 "Type name not found: %s" (Print.sli a))
@@ -274,18 +233,19 @@ let lookup_free_tvar_name env a = lookup_tlid env a.v |> fst
 (*---------------------------------------------------------------------------------*)
 (* <Utilities> *)
 
-let mkForall_fuel (pats, vars, body) = 
+let mkForall_fuel' n (pats, vars, body) = 
     let fallback () = Term.mkForall(pats, vars, body) in
     if !Options.unthrottle_inductives
     then fallback ()
-    else let nvars = List.length vars in
-         let fsym, fterm = fresh_bvar_i (nvars - 1) "f" Fuel_sort in 
+    else let fsym, fterm = fresh_fvar "f" Fuel_sort in 
          let pats = pats |> List.map (fun p -> match p.tm with 
-            | Term.App("HasType", args) -> Term.mkApp("HasTypeFuel", fterm::args)
+            | Term.App(Var "HasType", args) -> Term.mkApp("HasTypeFuel", fterm::args)
             | _ -> p) in
-         let vars = (fsym, 0, Fuel_sort)::vars in 
-         Term.mkForall(pats, vars, shift nvars 1 body)
+         let vars = (fsym, Fuel_sort)::vars in 
+         Term.mkForall(pats, vars, body)
   
+let mkForall_fuel = mkForall_fuel' 1
+
 let head_normal env t =   
    let t = Util.unmeta_typ t in
    match t.n with 
@@ -306,29 +266,25 @@ let norm_t env t = Tc.Normalize.norm_typ [Tc.Normalize.Beta] env.tcenv t
 let norm_k env k = Tc.Normalize.normalize_kind env.tcenv k
 let trivial_post t : typ = mk_Typ_lam([null_v_binder t], Util.ftv Const.true_lid ktype) 
                                      None t.pos
-let var_name  (x, _, _) = x
-let var_index (_, i, _) = i
-let var_sort  (_, _, s) = s
 
 let mk_ApplyE e vars =  
-    vars |> List.fold_left (fun out var -> match var_sort var with 
-            | Type_sort -> mk_ApplyET out (Term.mkBoundV var)
-            | Fuel_sort -> mk_ApplyEF out (Term.mkBoundV var)
-            | _ -> mk_ApplyEE out (Term.mkBoundV var)) e
+    vars |> List.fold_left (fun out var -> match snd var with 
+            | Type_sort -> mk_ApplyET out (Term.mkFreeV var)
+            | Fuel_sort -> mk_ApplyEF out (Term.mkFreeV var)
+            | _ -> mk_ApplyEE out (Term.mkFreeV var)) e
 let mk_ApplyE_args e args = 
     args |> List.fold_left (fun out arg -> match arg with 
             | Inl t -> mk_ApplyET out t
             | Inr e -> mk_ApplyEE out e) e
 
 let mk_ApplyT t vars = 
-    vars |> List.fold_left (fun out var -> match var_sort var with 
-            | Type_sort -> mk_ApplyTT out (Term.mkBoundV var)
-            | _ -> mk_ApplyTE out (Term.mkBoundV var)) t
+    vars |> List.fold_left (fun out var -> match snd var with 
+            | Type_sort -> mk_ApplyTT out (Term.mkFreeV var)
+            | _ -> mk_ApplyTE out (Term.mkFreeV var)) t
 let mk_ApplyT_args t args = 
     args |> List.fold_left (fun out arg -> match arg with 
             | Inl t -> mk_ApplyTT out t
             | Inr e -> mk_ApplyTE out e) t
-
 (* </Utilities> *)
 
 (**********************************************************************************)
@@ -353,18 +309,18 @@ let mk_ApplyT_args t args =
     and term( * ) is just term
  *)
 
-type label = (var * string * Range.range)
+type label = (fv * string * Range.range)
 type labels = list<label>
-type match_branch = {
-    guard:term;       (* bool; negation of all prior pattern guards *)
-    pat_vars:ex_vars; (* existentially bound pattern variables *)
-    pattern:term;     (* the pattern itself *)
-    rhs:term;         (* the branch translated as a term *)
-}
-type match_branches = list<match_branch>
+//type match_branch = {
+//    guard:term;       (* bool; negation of all prior pattern guards *)
+//    pat_vars:ex_vars; (* existentially bound pattern variables *)
+//    pattern:term;     (* the pattern itself *)
+//    rhs:term;         (* the branch translated as a term *)
+//}
+//type match_branches = list<match_branch>
 type pattern = {
-  pat_vars: list<(Syntax.either_var * var)>;
-  pat_term: unit -> (term * closure_vars * decls_t);    (* the pattern as a term(exp) *)
+  pat_vars: list<(Syntax.either_var * fv)>;
+  pat_term: unit -> (term * decls_t);                   (* the pattern as a term(exp) *)
   guard: term -> term;                                  (* the guard condition of the pattern, as applied to a particular scrutinee term(exp) *)
   projections: term -> list<(either_var * term)>        (* bound variables of the pattern, and the corresponding projected components of the scrutinee *)
  }
@@ -380,21 +336,21 @@ let encode_const = function
     | Const_string(bytes, _) -> varops.string_const (Util.string_of_bytes <| bytes)
     | c -> failwith (Util.format1 "Unhandled constant: %s\n" (Print.const_to_string c))
  
-let rec encode_knd' (prekind:bool) (k:knd) (env:env_t) (t:term) : term  * closure_vars * decls_t = 
+let rec encode_knd' (prekind:bool) (k:knd) (env:env_t) (t:term) : term  * decls_t = 
     match (Util.compress_kind k).n with 
         | Kind_type -> 
-            mk_HasKind t (Term.mk_Kind_type), [], []
+            mk_HasKind t (Term.mk_Kind_type), []
 
         | Kind_abbrev(_, k) -> 
             encode_knd' prekind k env t
 
         | Kind_uvar (uv, _) -> (* REVIEW: warn? *)
-            Term.mkTrue, [], []
+            Term.mkTrue, []
 
         | Kind_arrow(bs, k) -> 
-            let vars, cvars, guards, env', decls, _ = encode_binders None bs env in 
+            let vars, guards, env', decls, _ = encode_binders None bs env in 
             let app = mk_ApplyT t vars in
-            let k, cvars', decls' = encode_knd' prekind k env' app in
+            let k, decls' = encode_knd' prekind k env' app in
             let term = Term.mkForall([app], vars, mkImp(mk_and_l guards, k)) in
             let term = 
                 if prekind
@@ -402,7 +358,6 @@ let rec encode_knd' (prekind:bool) (k:knd) (env:env_t) (t:term) : term  * closur
                                 term)
                 else term in 
             term,
-            exclude_cvars bs (cvars@cvars'),
             decls@decls'
 
         | _ -> failwith (Util.format1 "Unknown kind: %s" (Print.kind_to_string k))
@@ -410,162 +365,158 @@ let rec encode_knd' (prekind:bool) (k:knd) (env:env_t) (t:term) : term  * closur
 and encode_knd (k:knd) (env:env_t) (t:term) = encode_knd' true k env t
 
 and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) : 
-                            (list<var>                      (* translated bound variables *)
-                            * closure_vars
+                            (list<fv>                      (* translated bound variables *)
                             * list<term>                    (* guards *)
                             * env_t                         (* extended context *)
                             * decls_t                       (* top-level decls to be emitted *)
                             * list<either<btvdef, bvvdef>>) (* unmangled names *) =
 
     if Tc.Env.debug env.tcenv Options.Low then Util.fprint1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
-    let n_vars = List.length bs in
-    let vars, cvars, guards, env, decls, names, _ = bs |> List.fold_left (fun (vars, cvars, guards, env, decls, names, i) b -> 
-        let index = n_vars - i in
-        let v, cvars', g, env, decls', n = match fst b with 
+    
+    let vars, guards, env, decls, names = bs |> List.fold_left (fun (vars, guards, env, decls, names) b -> 
+        let v, g, env, decls', n = match fst b with 
             | Inl {v=a; sort=k} -> 
                 let a = unmangle a in
-                let aasym, aa, env' = 
-                    if is_null_binder b 
-                    then withenv env <| fresh_bvar_i index "a" Type_sort
-                    else gen_typ_var_i index env a in 
-                let guard_a_k, cvars, decls' = encode_knd' false k env aa in
-                (aasym, index, Type_sort), 
-                cvars,
+                let aasym, aa, env' = gen_typ_var env a in 
+                let guard_a_k, decls' = encode_knd' false k env aa in
+                (aasym, Type_sort), 
                 guard_a_k,
                 env', 
                 decls',
-                Inl a
+                Inl a  
 
             | Inr {v=x; sort=t} -> 
                 let x = unmangle x in
-                let xxsym, xx, env' = 
-                    if is_null_binder b   
-                    then withenv env <| fresh_bvar_i index "x" Term_sort
-                    else gen_term_var_i index env x in
-                let guard_x_t, cvars, decls' = encode_typ_pred' fuel_opt (norm_t env t) env xx in
-                (xxsym, index, Term_sort),
-                cvars, 
+                let xxsym, xx, env' = gen_term_var env x in
+                let guard_x_t, decls' = encode_typ_pred' fuel_opt (norm_t env t) env xx in
+                (xxsym, Term_sort),
                 guard_x_t,
                 env', 
                 decls',
                 Inr x in
-        v::vars, cvars@cvars', g::guards, env, decls@decls', n::names, i + 1) ([], [], [], env, [], [], 1) in
+        v::vars, g::guards, env, decls@decls', n::names) ([], [], env, [], []) in
     List.rev vars,
-    cvars,
     List.rev guards,
     env, 
     decls,
     List.rev names
 
-and encode_typ_pred' (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : term * closure_vars * decls_t = 
+and encode_typ_pred' (fuel_opt:option<term>) (t:typ) (env:env_t) (e:term) : term * decls_t = 
     let t = Util.compress_typ t in 
-    let t, cvars, decls = encode_typ_term t env in 
-    mk_HasTypeWithFuel fuel_opt e t, cvars, decls
+    let t, decls = encode_typ_term t env in 
+    mk_HasTypeWithFuel fuel_opt e t, decls
 
 and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expects t to be in normal form already *)
-                                           * closure_vars (* captured varaiables in the term encoding *)
                                            * decls_t)     (* top-level declarations to be emitted (for shared representations of existentially bound terms *) = 
     let t0 = Util.compress_typ t in
     match t0.n with 
       | Typ_btvar a -> 
-        let t, c = lookup_typ_var env a in
-        t, c, []
-
+        lookup_typ_var env a, []
+        
       | Typ_const fv -> 
-        lookup_free_tvar env fv, [], []
+        lookup_free_tvar env fv, []
 
       | Typ_fun(binders, res) -> 
-        (* TODO: sharing; check that currying works properly; handling non-total functions *)
+        (* TODO: check that currying works properly; handling non-total functions *)
         if   Absyn.Util.is_total_comp res
-        then let vars, cvars, guards, env', decls, _ = encode_binders None binders env in 
-             let n_vars = List.length vars in
-            
-             let res_t, cvars', decls' = encode_typ_term (Util.comp_result res) env' in
-             let cvars = exclude_cvars binders (cvars@cvars') in
-             let cvar_binders = cvar_binders cvars in
-             let n_cvars = List.length cvars in
-
-             let fsym = varops.fresh "f" in
-             let f = mkBoundV (fsym, 0, Term_sort) in
-            
+        then let vars, guards, env', decls, _ = encode_binders None binders env in 
+             let fsym = varops.fresh "f", Term_sort in
+             let f = mkFreeV fsym in
              let app = mk_ApplyE f vars in      
-             let res_pred = mk_HasTypeWithFuel None (mk_ApplyE (shift 0 (n_vars + n_cvars) f) vars) res_t in
-             let tsym = varops.fresh "Typ_fun" in
-             let caption = 
-                if !Options.logQueries
-                then Some (Normalize.typ_norm_to_string env.tcenv t0)
-                else None in
-             let tdecl = Term.DeclFun(tsym, cvar_sorts cvars, Type_sort, caption) in
-             let t = Term.mkApp(tsym, cvar_terms cvars) in
-             let t_has_kind = mk_HasKind t Term.mk_Kind_type in
-             
+             let res_pred, decls' = encode_typ_pred' None (Util.comp_result res) env' app in
+             let t_interp = 
+                 mkAnd(mk_tester "Typ_fun" (mk_PreType f), 
+                       mkForall([app], 
+                                vars,  
+                                mkImp(mk_and_l guards, res_pred))) in
+                   
+             let cvars = Term.free_variables t_interp |> List.filter (fun (x, _) -> x <> fst fsym) in
+             let tkey = Term.mkForall([], fsym::cvars, t_interp) in
+             begin match Util.smap_try_find env.cache tkey.hash with 
+                | Some (t', sorts, _) ->  
+                  Term.mkApp(t', cvars |> List.map mkFreeV), []
 
-             let k_assumption = Term.Assume(Term.mkForall([t_has_kind], cvar_binders, t_has_kind), Some (tsym ^ " kinding")) in
-             let f_has_t = mk_HasType (shift 0 n_cvars f) t in
-             let t_interp = Term.Assume(mkForall_fuel([f_has_t], (fsym, 0, Term_sort)::cvar_binders, 
-                                                      mkIff(f_has_t, 
-                                                            mkAnd(mk_tester "Typ_fun" (mk_PreType (shift 0 n_cvars f)), 
-                                                                  mkForall([app], vars,  
-                                                                              mkImp(mk_and_l guards, 
-                                                                                    mk_HasTypeWithFuel None (mk_ApplyE (shift 0 (n_vars + n_cvars) f) vars) 
-                                                                                                            (res_t in
-                                                                              
-                                                                              res_pred))))), 
-                                       Some (tsym ^ " interpretation")) in 
-            
-             t, cvars, decls@decls'@[tdecl; k_assumption; t_interp]              
+                | None -> 
+                  let tsym = varops.fresh "Typ_fun" in
+                  let cvar_sorts = List.map snd cvars in
+                  let caption = 
+                    if !Options.logQueries
+                    then Some (Normalize.typ_norm_to_string env.tcenv t0)
+                    else None in
+
+                  let tdecl = Term.DeclFun(tsym, cvar_sorts, Type_sort, caption) in
+ 
+                  let t = Term.mkApp(tsym, List.map mkFreeV cvars) in
+                  let t_has_kind = mk_HasKind t Term.mk_Kind_type in
+ 
+                  let k_assumption = Term.Assume(Term.mkForall([t_has_kind], cvars, t_has_kind), Some (tsym ^ " kinding")) in
+
+                  let f_has_t = mk_HasType f t in
+                  let t_interp = Term.Assume(mkForall_fuel([f_has_t], fsym::cvars, mkIff(f_has_t, t_interp)),
+                                             Some (tsym ^ " interpretation")) in 
+
+                  let t_decls = decls@decls'@[tdecl; k_assumption; t_interp] in
+                  Util.smap_add env.cache tkey.hash  (tsym, cvar_sorts, t_decls);
+                  t, t_decls
+             end
 
         else let tsym = varops.fresh "Non_total_Typ_fun" in
-             let t = Term.mkFreeV(tsym, Type_sort) in
              let tdecl = Term.DeclFun(tsym, [], Type_sort, None) in
+             let t = Term.mkApp(tsym, []) in
              let t_kinding = Term.Assume(mk_HasKind t Term.mk_Kind_type, None) in
-             let fsym = varops.fresh "f", Term_sort in
-             let f = mkBoundV fsym in
+             let fsym = "f", Term_sort in
+             let f = mkFreeV fsym in
              let f_has_t = mk_HasType f t in
              let t_interp = Term.Assume(mkForall_fuel([f_has_t], [fsym],
                                                       mkImp(f_has_t, 
                                                             mk_tester "Typ_fun" (mk_PreType f))), Some "pre-typing") in 
              
-             t, [], [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
+             t, [tdecl; t_kinding; t_interp] (* TODO: At least preserve alpha-equivalence of non-pure function types *)
       
       | Typ_refine _ -> 
         let x, f = match Tc.Normalize.normalize_refinement env.tcenv t0 with 
             | {n=Typ_refine(x, f)} -> x, f
             | _ -> failwith "impossible" in
-        let xsym = "this", Term_sort in 
-        let xtm = mkBoundV xsym in 
-        let base_pred, cvars, decls = encode_typ_pred' None x.sort env xtm in 
-        let env' = push_term_var env x.v xtm in
-        let refinement, cvars', decls' = encode_formula f env' in
 
-        let encoding = Term.mkAnd(base_pred, refinement) in
-        let cvars = exclude_cvars [(Inr x, None)] (cvars@cvars') in
-      
-        (* TODO: resolve sharing *)
-        begin match Util.smap_try_find env.refinements encoding.as_str with 
-            | Some (tm, _) -> tm, [], []
+        let base_t, decls = encode_typ_term x.sort env in
+        let x, xtm, env' = gen_term_var env x.v in
+        let refinement, decls' = encode_formula f env' in
+        let encoding = Term.mkAnd(mk_HasType xtm base_t, refinement) in
+
+        let cvars = Term.free_variables encoding |> List.filter (fun (y, _) -> y <> x) in 
+        let xfv = (x, Term_sort) in
+        let tkey = Term.mkForall([], xfv::cvars, encoding) in
+
+        begin match Util.smap_try_find env.cache tkey.hash with 
+            | Some (t, _, _) -> 
+              Term.mkApp(t, cvars |> List.map mkFreeV), []
+
             | None -> 
               let tsym = varops.fresh "Typ_refine" in
-              let tdecl = Term.DeclFun(tsym, cvar_sorts cvars, Type_sort, None) in
-              let t = Term.mkApp(tsym, cvar_terms cvars) in
+              let cvar_sorts = List.map snd cvars in 
+              let tdecl = Term.DeclFun(tsym, cvar_sorts, Type_sort, None) in
+              let t = Term.mkApp(tsym, List.map mkFreeV cvars) in
+
               let x_has_t = mk_HasType xtm t in
               let t_has_kind = mk_HasKind t Term.mk_Kind_type in
-              let t_kinding = mkForall([t_has_kind], cvar_binders cvars, t_has_kind) in //TODO: guard by typing of cvars?
-              let assumption = mkForall_fuel([x_has_t], xsym::cvar_binders cvars, mkIff(x_has_t, encoding)) in
-              let new_decls = [tdecl;
-                               Term.Assume(t_kinding, None);
-                               Term.Assume(assumption, Some (Print.typ_to_string t0))] in
-              Util.smap_add env.refinements encoding.as_str (t, new_decls);
-              t, cvars, decls@decls'@new_decls
-         end       
-            
+              
+              let t_kinding = mkForall([t_has_kind], cvars, t_has_kind) in //TODO: guard by typing of cvars?
+              let assumption = mkForall_fuel([x_has_t], xfv::cvars, mkIff(x_has_t, encoding)) in
+              
+              let t_decls = decls
+                            @decls'
+                            @[tdecl;
+                              Term.Assume(t_kinding, None);
+                              Term.Assume(assumption, Some (Print.typ_to_string t0))] in
+              Util.smap_add env.cache tkey.hash (tsym, cvar_sorts, t_decls);
+              t, t_decls
+        end 
 
       | Typ_uvar (uv, k) ->
         let ttm = Term.mk_Typ_uvar (Unionfind.uvar_id uv) in
-        let t_has_k, cvars, decls = encode_knd k env ttm in //TODO: skip encoding this if it has already been encoded before
-        assert (cvars = []);
+        let t_has_k, decls = encode_knd k env ttm in //TODO: skip encoding this if it has already been encoded before
         let d = Term.Assume(t_has_k, None) in
-        ttm, [], d::decls
+        ttm, d::decls
 
       | Typ_app(head, args) -> 
         let is_full_app () = 
@@ -575,27 +526,26 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
         let head = Util.compress_typ head in
         begin match head.n with
             | Typ_btvar a -> 
-              let head, cvar = lookup_typ_var env a in
-              let args, cvars, decls = encode_args args env in
+              let head = lookup_typ_var env a in
+              let args, decls = encode_args args env in
               let t = mk_ApplyT_args head args in
-              t, cvar@cvars, decls
+              t, decls
                 
             | Typ_const fv -> 
-              let args, cvars, decls = encode_args args env in
+              let args, decls = encode_args args env in
               if is_full_app () 
               then let head = lookup_free_tvar_name env fv in
                    let t = Term.mkApp(head, List.map (function Inl t | Inr t -> t) args) in
-                   t, cvars, decls
+                   t, decls
               else let head = lookup_free_tvar env fv in
                    let t = mk_ApplyT_args head args in
-                   t, cvars, decls
+                   t, decls
 
             | Typ_uvar(uv, k) -> 
                let ttm = Term.mk_Typ_uvar (Unionfind.uvar_id uv) in
-               let t_has_k, cvars, decls = encode_knd k env ttm in //TODO: skip encoding this if it has already been encoded before
-               assert (cvars=[]);
+               let t_has_k, decls = encode_knd k env ttm in //TODO: skip encoding this if it has already been encoded before
                let d = Term.Assume(t_has_k, None) in
-               ttm, [], d::decls  
+               ttm, d::decls  
 
             | _ -> (* not in head normal form; so reduce and retry *)
               let t = norm_t env t in
@@ -606,23 +556,36 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
         end
 
       | Typ_lam(bs, body) ->
-        let vars, cvars, guards, env, decls, _ = encode_binders None bs env in
-        let body, cvars', decls' = encode_typ_term body env in
+        let vars, guards, env, decls, _ = encode_binders None bs env in
+        let body, decls' = encode_typ_term body env in
         
-        let cvars = exclude_cvars bs (cvars@cvars') in
-      
-        let tsym = varops.fresh "Typ_lam" in
-        let tdecl = Term.DeclFun(tsym, cvar_sorts cvars, Type_sort, None) in
-        let t = Term.mkApp(tsym, cvar_terms cvars) in
+        let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
+        let cvars = Term.free_variables key_body in
+        let tkey = mkForall([], cvars, key_body) in
 
-        let app = mk_ApplyT t vars in
-        let interp = Term.Assume(mkForall([app], vars@cvar_binders cvars, mkImp(mk_and_l guards, mkEq(app,body))), 
-                                 Some "Typ_lam interpretation") in
-        let kinding =    
-            let ktm, _, decls'' = encode_knd (Tc.Recheck.recompute_kind t0) env t in
-            decls''@[Term.Assume(mkForall([t], cvar_binders cvars, ktm), Some "Typ_lam kinding")] in
+        begin match Util.smap_try_find env.cache tkey.hash with 
+            | Some (t, _, _) -> 
+              mkApp(t, List.map mkFreeV cvars), []
 
-        t, cvars, decls@decls'@tdecl::interp::kinding
+            | None -> 
+              let cvar_sorts = List.map snd cvars in
+              let tsym = varops.fresh "Typ_lam" in
+              let tdecl = Term.DeclFun(tsym, cvar_sorts, Type_sort, None) in
+              let t = Term.mkApp(tsym, List.map mkFreeV cvars) in
+              let app = mk_ApplyT t vars in
+
+              let interp = Term.Assume(mkForall([app], vars@cvars, mkImp(mk_and_l guards, mkEq(app,body))), 
+                                       Some "Typ_lam interpretation") in
+        
+              let kinding =    
+                let ktm, decls'' = encode_knd (Tc.Recheck.recompute_kind t0) env t in
+                decls''@[Term.Assume(mkForall([t], cvars, ktm), Some "Typ_lam kinding")] in
+
+              let t_decls = decls@decls'@tdecl::interp::kinding in 
+
+              Util.smap_add env.cache tkey.hash (tsym, cvar_sorts, t_decls);
+              t, t_decls
+        end
 
       | Typ_ascribed(t, _) -> 
         encode_typ_term t env
@@ -632,7 +595,6 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
       | Typ_unknown    -> failwith (format4 "(%s) Impossible: %s\n%s\n%s\n" (Range.string_of_range <| t.pos) (Print.tag_of_typ t0) (Print.typ_to_string t0) (Print.typ_to_string t))                 
 
 and encode_exp (e:exp) (env:env_t) : (term 
-                                      * closure_vars
                                       * decls_t) = 
     let e = Visit.compress_exp_uvars e in 
     let e0 = e in
@@ -641,14 +603,14 @@ and encode_exp (e:exp) (env:env_t) : (term
         encode_exp (Util.compress_exp e) env
 
       | Exp_bvar x -> 
-        let t, c = lookup_term_var env x in
-        t, c, []
+        let t = lookup_term_var env x in
+        t, []
 
       | Exp_fvar(v, _) -> 
-        lookup_free_var env v, [], []
+        lookup_free_var env v, []
 
       | Exp_constant c -> 
-        encode_const c, [], []
+        encode_const c, []
       
       | Exp_ascribed(e, t) -> 
         e.tk := Some t;
@@ -660,7 +622,7 @@ and encode_exp (e:exp) (env:env_t) : (term
       | Exp_uvar(uv, _) ->
         (* TODO: typing axiom for uvar? *)
         let e = Term.mk_Exp_uvar (Unionfind.uvar_id uv) in
-        e, [], []
+        e, []
  
       | Exp_abs(bs, body) -> 
 
@@ -668,7 +630,7 @@ and encode_exp (e:exp) (env:env_t) : (term
         if not <| Util.is_pure_function tfun
         then let f = varops.fresh "Exp_abs" in
              let decl = Term.DeclFun(f, [], Term_sort, None) in
-             Term.mkFreeV(f, Term_sort), [], [decl]
+             Term.mkFreeV(f, Term_sort), [decl]
         else let tfun = whnf env tfun |> Util.compress_typ in
              begin match tfun.n with 
                 | Typ_fun(bs', c) -> 
@@ -689,63 +651,73 @@ and encode_exp (e:exp) (env:env_t) : (term
                          //Util.fprint1 "Explicitly currying %s\n" (Print.exp_to_string e);
                          encode_exp e env
 
-                    else let vars, cvars, guards, envbody, decls, _ = encode_binders None bs env in 
-                         let body, cvars', decls' = encode_exp body envbody in
+                    else //much like the encoding of Typ_lam
+                         let vars, guards, envbody, decls, _ = encode_binders None bs env in 
+                         let body, decls' = encode_exp body envbody in
                          
-                         let cvars = exclude_cvars bs (cvars@cvars') in
-                         let cvar_binders = cvar_binders cvars in 
+                         let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
+                         let cvars = Term.free_variables key_body in
+                         let tkey = mkForall([], cvars, key_body) in
 
-                         let f = varops.fresh "f" in
-                         let decl_f = Term.DeclFun(f, cvar_sorts cvars, Term_sort, None) in
-                         let lam = Term.mkApp(f, cvar_terms cvars) in
-                         let lam_typed, _, decls'' = encode_typ_pred' None tfun env lam in
-                         let typing_f = Term.Assume(Term.mkForall([lam], cvar_binders, lam_typed), 
-                                                    Some (f ^ " typing")) in 
+                         begin match Util.smap_try_find env.cache tkey.hash with 
+                            | Some (t, _, _) -> 
+                              Term.mkApp(t, List.map mkFreeV cvars), []
+
+                            | None -> 
+
+                              let cvar_sorts = List.map snd cvars in
+                              let fsym = varops.fresh "Exp_abs" in
+                              let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
+                              let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
+                              let app = mk_ApplyE f vars in
+
+                              let f_has_t, decls'' = encode_typ_pred' None tfun env f in
+                              let typing_f = Term.Assume(Term.mkForall([f], cvars, f_has_t), 
+                                                        Some (fsym ^ " typing")) in 
                          
-                         let app = mk_ApplyE lam vars in
-                         let app_is_typed = 
-                            let tsym, t = fresh_bvar "t" Type_sort in 
-                            let app_has_t = Term.mk_HasType app t in
-                            Term.mkExists([app_has_t], [(tsym, Type_sort)], app_has_t) in
-                         let interp_f = Term.Assume(Term.mkForall([app], vars@cvar_binders, mkImp(app_is_typed, mkEq(app, body))), 
-                                                    Some (f ^ " interpretation")) in
-                         
-                         lam, cvars, decls@decls'@decls''@[decl_f; typing_f; interp_f]
+                              let interp_f = Term.Assume(Term.mkForall([app], vars@cvars, mkImp(Term.mk_IsTyped app, mkEq(app, body))), 
+                                                        Some (fsym ^ " interpretation")) in
+
+                              let f_decls = decls@decls'@(fdecl::decls'')@[typing_f;interp_f] in
+                              
+                              Util.smap_add env.cache tkey.hash (fsym, cvar_sorts, f_decls);
+
+                              f, f_decls
+                        end
 
               | _ -> failwith "Impossible"
             end
 
       | Exp_app({n=Exp_fvar(l, _)}, [(Inl _, _); (Inr v1, _); (Inr v2, _)]) when (lid_equals l.v Const.lexcons_lid) -> 
-         let v1, vars1, decls1 = encode_exp v1 env in 
-         let v2, vars2, decls2 = encode_exp v2 env in
-         Term.mk_LexCons v1 v2, vars1@vars2, decls1@decls2
+         let v1, decls1 = encode_exp v1 env in 
+         let v2, decls2 = encode_exp v2 env in
+         Term.mk_LexCons v1 v2, decls1@decls2
 
       | Exp_app({n=Exp_abs _}, _) -> 
         encode_exp (whnf_e env e) env
 
       | Exp_app(head, args_e) -> 
-        let args, cvars, decls = encode_args args_e env in
+        let args, decls = encode_args args_e env in
     
         let encode_partial_app ht_opt = 
-            let head, cvars', decls' = encode_exp head env in
+            let head, decls' = encode_exp head env in
             let app_tm = mk_ApplyE_args head args in
             begin match ht_opt with
-                | None -> app_tm, cvars'@cvars, decls@decls'
+                | None -> app_tm, decls@decls'
                 | Some (formals, c) ->
                   let formals, rest = Util.first_N (List.length args_e) formals in
                   let subst = Util.formals_for_actuals formals args_e in
                   let ty = mk_Typ_fun(rest, c) (Some ktype) e0.pos |> Util.subst_typ subst in
-
-                  let has_type, cvars'', decls'' = encode_typ_pred' None ty env app_tm in
-                  let cvars = exclude_cvars [] (cvars@cvars'@cvars'') in
-                  let interp_e = Term.Assume(Term.mkForall([has_type], cvar_binders cvars, has_type), None) in
-                  app_tm, cvars, decls@decls'@decls''@[interp_e]
+                  let has_type, decls'' = encode_typ_pred' None ty env app_tm in
+                  let cvars = Term.free_variables has_type in
+                  let e_typing = Term.Assume(Term.mkForall([has_type], cvars, has_type), None) in
+                  app_tm, decls@decls'@decls''@[e_typing]
             end in
 
         let encode_full_app fv = 
             let fname, fuel_args = lookup_free_var_sym env fv in
-            let tm = Term.mkApp(fname, fuel_args@List.map (function Inl t | Inr t -> t) args) in
-            tm, cvars, decls in
+            let tm = Term.mkApp'(fname, fuel_args@List.map (function Inl t | Inr t -> t) args) in
+            tm, decls in
         
         let head = Util.compress_exp head in
        
@@ -774,42 +746,40 @@ and encode_exp (e:exp) (env:env_t) : (term
       | Exp_let((false, [(Inr _, _, _)]), _) -> failwith "Impossible: already handled by encoding of Sig_let" 
 
       | Exp_let((false, [(Inl x, t1, e1)]), e2) ->
-        let ee1, cvars1, decls1 = encode_exp e1 env in
+        let ee1, decls1 = encode_exp e1 env in
         let env' = push_term_var env x ee1 in
-        let ee2, cvars2, decls2 = encode_exp e2 env' in
-        let cvars = exclude_cvars [(Inr (Util.bvd_to_bvar_s x t1), None)] (cvars1@cvars2) in
-        ee2, cvars, decls1@decls2 
+        let ee2, decls2 = encode_exp e2 env' in
+        ee2, decls1@decls2 
   
       | Exp_let _ -> 
         Tc.Errors.warn e.pos "Nested 'let rec' is not yet fully encoded to the SMT solver; you may not be able to prove some facts";
         let e = varops.fresh "let-rec" in
         let decl_e = Term.DeclFun(e, [], Term_sort, None) in
-        Term.mkFreeV(e, Term_sort), [], [decl_e]
+        Term.mkFreeV(e, Term_sort), [decl_e]
 
       | Exp_match(e, pats) ->
-        let scr, cvars, decls = encode_exp e env in 
+        let scr, decls = encode_exp e env in 
 
 
-        let match_tm, cvars, decls = List.fold_right (fun (p, w, br) (else_case, cvars, decls) -> 
+        let match_tm, decls = List.fold_right (fun (p, w, br) (else_case, decls) -> 
             let patterns = encode_pat env p in
-            List.fold_right (fun (env0, pattern) (else_case, cvars, decls) -> 
+            List.fold_right (fun (env0, pattern) (else_case, decls) -> 
                 let guard = pattern.guard scr in
                 let projections = pattern.projections scr in
                 let env = projections |> List.fold_left (fun env (x, t) -> match x with 
                     | Inl a -> push_typ_var env a.v t
                     | Inr x -> push_term_var env x.v t) env in
-                let guard, cvars_w, decls2 = match w with 
-                    | None -> guard, [], []
+                let guard, decls2 = match w with 
+                    | None -> guard, []
                     | Some w -> 
-                        let w, cvars', decls2 = encode_exp w env in
-                        Term.mkAnd(guard, Term.mkEq(w, Term.boxBool Term.mkTrue)), cvars', decls2 in
-                let br, cvars_br, decls3 = encode_exp br env in
-                let cvars_br = exclude_cvars (projections |> List.map (fun (x, _) -> binder_of_eithervar x)) (cvars_w@cvars_br) in
-                mkITE(guard, br, else_case), cvars@cvars_br, decls@decls2@decls3)
-            patterns (else_case, cvars, decls))
+                        let w, decls2 = encode_exp w env in
+                        Term.mkAnd(guard, Term.mkEq(w, Term.boxBool Term.mkTrue)), decls2 in
+                let br, decls3 = encode_exp br env in
+                mkITE(guard, br, else_case), decls@decls2@decls3)
+            patterns (else_case, decls))
             pats 
-            (Term.mk_Term_unit(* default; should be unreachable *), cvars, decls) in
-        match_tm, cvars, decls
+            (Term.mk_Term_unit(* default; should be unreachable *), decls) in
+        match_tm, decls
 
       | Exp_meta _ -> failwith (Util.format2 "(%s): Impossible: encode_exp got %s" (Range.string_of_range e.pos) (Print.exp_to_string e))
 
@@ -880,19 +850,19 @@ and encode_one_pat (env:env_t) pat : (env_t * pattern) =
 
         env, pattern 
 
-and encode_args l env =
-    let l, vars, decls = l |> List.fold_left (fun (tms, ex_vars, decls) x -> match x with
-        | Inl t, _ -> let t, vs, decls' = encode_typ_term t env in Inl t::tms, vs@ex_vars, decls@decls'
-        | Inr e, _ -> let t, vs, decls' = encode_exp e env in Inr t::tms, vs@ex_vars, decls@decls') ([], [], []) in
-    List.rev l, vars, decls
+and encode_args l env : (list<either<term,term>> * decls_t)  =
+    let l, decls = l |> List.fold_left (fun (tms, decls) x -> match x with
+        | Inl t, _ -> let t, decls' = encode_typ_term t env in Inl t::tms, decls@decls'
+        | Inr e, _ -> let t, decls' = encode_exp e env in Inr t::tms, decls@decls') ([], []) in
+    List.rev l, decls
 
-and encode_formula (phi:typ) (env:env_t) : term * closure_vars * decls_t = 
-    let t, cvars, vars, decls = encode_formula_with_labels phi env in
+and encode_formula (phi:typ) (env:env_t) : term * decls_t = 
+    let t, vars, decls = encode_formula_with_labels phi env in
     match vars with
-        | [] -> t, cvars, decls
+        | [] -> t, decls
         | _ -> failwith "Unexpected labels in formula"
   
-and encode_function_type_as_formula (induction_on:option<term>) (t:typ) (env:env_t) : term * closure_vars * decls_t = 
+and encode_function_type_as_formula (induction_on:option<term>) (t:typ) (env:env_t) : term * decls_t = 
     let v_or_t_pat p = match (Util.unmeta_exp p).n with
         | Exp_app(_, [(Inl _, _); (Inr e, _)]) -> varg e
         | Exp_app(_, [(Inl t, _)]) -> targ t
@@ -911,11 +881,13 @@ and encode_function_type_as_formula (induction_on:option<term>) (t:typ) (env:env
             
         | _ -> failwith "Impos" in
   
-    let vars, cvars, guards, env, decls, _ = encode_binders None binders env in 
-  
-    let pats, cvars', decls' = patterns |> List.map (function 
+    let vars, guards, env, decls, _ = encode_binders None binders env in 
+   
+
+    let pats, decls' = patterns |> List.map (function 
         | Inl t, _ -> encode_formula t env
-        | Inr e, _ -> encode_exp e ({env with use_zfuel_name=true})) |> List.unzip3 in 
+        | Inr e, _ -> encode_exp e ({env with use_zfuel_name=true})) |> List.unzip in 
+  
   
     let pats = 
         match induction_on with 
@@ -923,43 +895,41 @@ and encode_function_type_as_formula (induction_on:option<term>) (t:typ) (env:env
             | Some e -> 
                begin match vars with 
                 | [] -> pats
-                | [l] -> Term.mk_Precedes (Term.mkBoundV l) e::pats
+                | [l] -> Term.mk_Precedes (Term.mkFreeV l) e::pats
                 | _ -> 
                   let rec aux tl vars = match vars with
                     | [] -> Term.mk_Precedes tl e::pats
-                    | (x, Term_sort)::vars -> aux (Term.mk_LexCons (Term.mkBoundV(x,Term_sort)) tl) vars
+                    | (x, Term_sort)::vars -> aux (Term.mk_LexCons (Term.mkFreeV(x,Term_sort)) tl) vars
                     | _ -> pats in
                   aux (Term.mkFreeV ("Prims.LexTop", Term_sort)) vars 
                end in
-
+               
     let env = {env with nolabels=true} in
-    let pre, cvars'', decls'' = encode_formula (Util.unmeta_typ pre) env in
-    let post, cvars''', decls''' = encode_formula (Util.unmeta_typ post) env in
+    let pre, decls'' = encode_formula (Util.unmeta_typ pre) env in
+    let post, decls''' = encode_formula (Util.unmeta_typ post) env in
     let decls = decls@(List.flatten decls')@decls''@decls''' in 
-    let cvars = exclude_cvars binders (cvars@List.flatten cvars'@cvars''@cvars''') in
+    mkForall(pats, vars, mkImp(mk_and_l (pre::guards), post)), decls
 
-    mkForall(pats, vars, mkImp(mk_and_l (pre::guards), post)), cvars, decls
+and encode_formula_with_labels (phi:typ) (env:env_t) : (term * labels * decls_t)  = (* expects phi to be normalized; the existential variables are all labels *)
+    let enc (f:list<term> -> term) : args -> (term * labels * decls_t) = fun l -> 
+        let decls, args = Util.fold_map (fun decls x -> match fst x with 
+            | Inl t -> let t, decls' = encode_typ_term t env in decls@decls', t
+            | Inr e -> let e, decls' = encode_exp e env in decls@decls', e) [] l in
+        (f args, [], decls) in
 
-and encode_formula_with_labels (phi:typ) (env:env_t) : (term * closure_vars * labels * decls_t)  = (* expects phi to be normalized; the existential variables are all labels *)
-    let enc (f:list<term> -> term) : args -> (term * closure_vars * labels * decls_t) = fun l -> 
-        let (cvars, decls), args = Util.fold_map (fun (vars, decls) x -> match fst x with 
-            | Inl t -> let t, vars', decls' = encode_typ_term t env in (vars@vars', decls@decls'), t
-            | Inr e -> let e, vars', decls' = encode_exp e env in (vars@vars', decls@decls'), e) ([],[]) l in
-        (f args, cvars, [], decls) in
-
-    let enc_prop_c f : args -> (term * closure_vars * labels * decls_t) = fun l ->
-        let phis, cvars, labs, decls = 
-            List.fold_right (fun t (phis, cvars, labs, decls) -> 
+    let enc_prop_c f : args -> (term * labels * decls_t) = fun l ->
+        let phis, labs, decls = 
+            List.fold_right (fun t (phis, labs, decls) -> 
                 match fst t with 
                 | Inl t -> 
-                    let phi, cvars', labs', decls' = encode_formula_with_labels t env in
-                    (phi::phis, cvars'@cvars, labs'@labs, decls'@decls)
+                    let phi, labs', decls' = encode_formula_with_labels t env in
+                    (phi::phis, labs'@labs, decls'@decls)
                 | _ -> failwith "Expected a formula") 
-                l ([], [], [], []) in
-        (f phis, cvars, labs, decls) in
+                l ([], [], []) in
+        (f phis, labs, decls) in
   
 
-    let const_op f _ = (f, [], [], []) in
+    let const_op f _ = (f, [], []) in
     let un_op f l = f <| List.hd l in
     let bin_op : ((term * term) -> term) -> list<term> -> term = fun f -> function 
         | [t1;t2] -> f(t1,t2)
@@ -967,28 +937,28 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * closure_vars * la
     let tri_op : ((term * term * term) -> term) -> list<term> -> term = fun f -> function
         | [t1;t2;t3] -> f(t1,t2,t3)
         | _ -> failwith "Impossible" in
-    let eq_op : args -> (term * closure_vars * labels * decls_t) = function 
+    let eq_op : args -> (term * labels * decls_t) = function 
         | [_;_;e1;e2] -> enc (bin_op mkEq) [e1;e2]
         | l ->  enc (bin_op mkEq) l in
   
-    let mk_imp : args -> (term * closure_vars * labels * decls_t) = function 
+    let mk_imp : args -> (term * labels * decls_t) = function 
         | [(Inl lhs, _); (Inl rhs, _)] -> 
-          let l1, cvars1, labs1, decls1 = encode_formula_with_labels rhs env in
+          let l1, labs1, decls1 = encode_formula_with_labels rhs env in
           begin match l1.tm with 
-            | True -> (l1, cvars1, labs1, decls1) (* Optimization: don't bother encoding the LHS of a trivial implication *)
+            | App(True, _) -> (l1, labs1, decls1) (* Optimization: don't bother encoding the LHS of a trivial implication *)
             | _ -> 
-             let l2, cvars2, labs2, decls2 = encode_formula_with_labels lhs env in
-             (Term.mkImp(l2, l1), cvars1@cvars2, labs1@labs2, decls1@decls2)
+             let l2, labs2, decls2 = encode_formula_with_labels lhs env in
+             (Term.mkImp(l2, l1), labs1@labs2, decls1@decls2)
           end
          | _ -> failwith "impossible" in
 
-    let mk_ite : args -> (term * closure_vars * labels * decls_t) = function
+    let mk_ite : args -> (term * labels * decls_t) = function
         | [(Inl guard, _); (Inl _then, _); (Inl _else, _)] -> 
-          let (g, cvars1, labs1, decls1) = encode_formula_with_labels guard env in
-          let (t, cvars2, labs2, decls2) = encode_formula_with_labels _then env in 
-          let (e, cvars3, labs3, decls3) = encode_formula_with_labels _else env in 
+          let (g, labs1, decls1) = encode_formula_with_labels guard env in
+          let (t, labs2, decls2) = encode_formula_with_labels _then env in 
+          let (e, labs3, decls3) = encode_formula_with_labels _else env in 
           let res = Term.mkITE(g, t, e) in
-          res, cvars1@cvars2@cvars3, labs1@labs2@labs3, decls1@decls2@decls3
+          res, labs1@labs2@labs3, decls1@decls2@decls3
         | _ -> failwith "impossible" in 
 
    
@@ -1008,33 +978,32 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * closure_vars * la
 
     let fallback phi =  match phi.n with
         | Typ_meta(Meta_labeled(phi', msg, r, b)) -> 
-          let phi, cvars, labs, decls = encode_formula_with_labels phi' env in
+          let phi, labs, decls = encode_formula_with_labels phi' env in
           if env.nolabels
-          then (phi, cvars, [], decls)
+          then (phi, [], decls)
           else let lvar = varops.fresh "label", Bool_sort in
                let lterm = Term.mkFreeV lvar in
                let lphi = Term.mkOr(lterm, phi) in
-               (lphi, cvars, (lvar, msg, r)::labs, decls)
+               (lphi, (lvar, msg, r)::labs, decls)
         
         | Typ_app({n=Typ_const ih}, [_;(Inr l, _); (Inl phi, _)]) when lid_equals ih.v Const.using_IH -> 
             if Util.is_lemma phi
-            then let e, cvars, decls = encode_exp l env in
-                 let f, cvars', decls' = encode_function_type_as_formula (Some e) phi env in
-                 (f, cvars@cvars', [], decls@decls')
-            else (Term.mkTrue, [], [], [])
+            then let e, decls = encode_exp l env in
+                 let f, decls' = encode_function_type_as_formula (Some e) phi env in
+                 (f, [], decls@decls')
+            else (Term.mkTrue, [], [])
             
         | _ -> 
-            let tt, cvars, decls = encode_typ_term phi env in
-            Term.mk_Valid tt, cvars, [], decls in
+            let tt, decls = encode_typ_term phi env in
+            Term.mk_Valid tt, [], decls in
 
     let encode_q_body env (bs:Syntax.binders) (ps:args) body = 
-        let vars, cvars, guards, env, decls, _ = encode_binders None bs env in
-        let pats, cvars', decls' = ps |> List.map (function 
+        let vars, guards, env, decls, _ = encode_binders None bs env in
+        let pats, decls' = ps |> List.map (function 
             | Inl t, _ -> encode_formula t env
-            | Inr e, _ -> encode_exp e ({env with use_zfuel_name=true})) |> List.unzip3 in 
-        let body, cvars'', labs, decls'' = encode_formula_with_labels body env in
-        let cvars = exclude_cvars bs (cvars@(List.flatten cvars')@cvars'') in
-        vars, pats, mk_and_l guards, body, cvars, labs, decls@List.flatten decls'@decls'' in
+            | Inr e, _ -> encode_exp e ({env with use_zfuel_name=true})) |> List.unzip in 
+        let body, labs, decls'' = encode_formula_with_labels body env in
+        vars, pats, mk_and_l guards, body, labs, decls@List.flatten decls'@decls'' in
     
     if Tc.Env.debug env.tcenv Options.Low
     then Util.fprint1 ">>>> Destructing as formula ... %s\n" (Print.formula_to_string phi);
@@ -1051,12 +1020,12 @@ and encode_formula_with_labels (phi:typ) (env:env_t) : (term * closure_vars * la
           if Tc.Env.debug env.tcenv Options.Low
           then Util.fprint1 ">>>> Got QALL [%s]\n" (vars |> Print.binders_to_string "; ");
 
-          let vars, pats, guard, body, cvars, labs, decls = encode_q_body env vars pats body in
-          (mkForall(pats, vars, mkImp(guard, body)), cvars, labs, decls)
+          let vars, pats, guard, body, labs, decls = encode_q_body env vars pats body in
+          (mkForall(pats, vars, mkImp(guard, body)), labs, decls)
 
         | Some (Util.QEx(vars, pats, body)) -> 
-          let vars, pats, guard, body, cvars, labs, decls = encode_q_body env vars pats body in
-          (mkExists(pats, vars, mkAnd(guard, body)), cvars, labs, decls)
+          let vars, pats, guard, body, labs, decls = encode_q_body env vars pats body in
+          (mkExists(pats, vars, mkAnd(guard, body)), labs, decls)
 
 (***************************************************************************************************)
 (* end main encoding of kinds/types/exps/formulae *)
@@ -1071,12 +1040,12 @@ type prims_t = {
 
 
 let prims =
-    let asym, a = fresh_bvar "a" Type_sort in 
-    let xsym, x = fresh_bvar "x" Term_sort in 
-    let ysym, y = fresh_bvar "y" Term_sort in 
+    let asym, a = fresh_fvar "a" Type_sort in 
+    let xsym, x = fresh_fvar "x" Term_sort in 
+    let ysym, y = fresh_fvar "y" Term_sort in 
     let deffun vars body x = [Term.DefineFun(x, vars, Term_sort, body, None)] in     
     let quant vars body : string -> list<decl> = fun x ->
-        let t1 = Term.mkApp(x, List.map Term.mkBoundV vars) in 
+        let t1 = Term.mkApp(x, List.map Term.mkFreeV vars) in 
         let vname_decl = Term.DeclFun(x, vars |> List.map snd, Term_sort, None) in
         [vname_decl;
          Term.Assume(mkForall([t1], vars, mkEq(t1, body)), None)] in
@@ -1109,10 +1078,10 @@ let prims =
 
 let primitive_type_axioms : lident -> string -> term -> list<decl> = 
     let xx = ("x", Term_sort) in
-    let x = mkBoundV xx in
+    let x = mkFreeV xx in
 
     let yy = ("y", Term_sort) in
-    let y = mkBoundV yy in
+    let y = mkFreeV yy in
 
     let mk_unit : string -> term -> decls_t = fun _ tt -> 
         let typing_pred = Term.mk_HasType x tt in
@@ -1121,16 +1090,16 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
     let mk_bool : string -> term -> decls_t = fun _ tt -> 
         let typing_pred = Term.mk_HasType x tt in
         let bb = ("b", Bool_sort) in
-        let b = mkBoundV bb in
+        let b = mkFreeV bb in
         [Term.Assume(mkForall_fuel([typing_pred], [xx], mkImp(typing_pred, Term.mk_tester "BoxBool" x)),    Some "bool inversion");
          Term.Assume(mkForall([Term.boxBool b], [bb], Term.mk_HasType (Term.boxBool b) tt),    Some "bool typing")] in
     let mk_int : string -> term -> decls_t  = fun _ tt -> 
         let typing_pred = Term.mk_HasType x tt in
         let typing_pred_y = Term.mk_HasType y tt in
         let aa = ("a", Int_sort) in
-        let a = mkBoundV aa in
+        let a = mkFreeV aa in
         let bb = ("b", Int_sort) in
-        let b = mkBoundV bb in
+        let b = mkFreeV bb in
         let precedes = Term.mk_Valid <| mkApp("Prims.Precedes", [tt;tt;Term.boxInt a; Term.boxInt b]) in
         let precedes_y_x = Term.mk_Valid <| mkApp("Precedes", [y; x]) in
         [Term.Assume(mkForall_fuel([typing_pred], [xx], mkImp(typing_pred, Term.mk_tester "BoxInt" x)),    Some "int inversion");
@@ -1149,19 +1118,19 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
     let mk_str : string -> term -> decls_t  = fun _ tt -> 
         let typing_pred = Term.mk_HasType x tt in
         let bb = ("b", String_sort) in
-        let b = mkBoundV bb in
+        let b = mkFreeV bb in
         [Term.Assume(mkForall_fuel([typing_pred], [xx], mkImp(typing_pred, Term.mk_tester "BoxString" x)),    Some "string inversion");
          Term.Assume(mkForall([Term.boxString b], [bb], Term.mk_HasType (Term.boxString b) tt),    Some "string typing")] in
     let mk_ref : string -> term -> decls_t = fun reft_name _ -> 
         let r = ("r", Ref_sort) in
         let aa = ("a", Type_sort) in
         let bb = ("b", Type_sort) in
-        let refa = Term.mkApp(reft_name, [mkBoundV aa]) in
-        let refb = Term.mkApp(reft_name, [mkBoundV bb]) in
+        let refa = Term.mkApp(reft_name, [mkFreeV aa]) in
+        let refb = Term.mkApp(reft_name, [mkFreeV bb]) in
         let typing_pred = Term.mk_HasType x refa in
         let typing_pred_b = Term.mk_HasType x refb in
         [Term.Assume(mkForall_fuel([typing_pred], [xx;aa], mkImp(typing_pred, Term.mk_tester "BoxRef" x)), Some "ref inversion");
-         Term.Assume(mkForall_fuel' 2 ([typing_pred; typing_pred_b], [xx;aa;bb], mkImp(mkAnd(typing_pred, typing_pred_b), mkEq(mkBoundV aa, mkBoundV bb))), Some "ref typing is injective")] in
+         Term.Assume(mkForall_fuel' 2 ([typing_pred; typing_pred_b], [xx;aa;bb], mkImp(mkAnd(typing_pred, typing_pred_b), mkEq(mkFreeV aa, mkFreeV bb))), Some "ref typing is injective")] in
 
     let prims = [(Const.unit_lid,   mk_unit);
                  (Const.bool_lid,   mk_bool);
@@ -1195,7 +1164,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_typ_abbrev(lid, _, _, _, _, _) when (lid_equals lid Const.b2t_lid) ->
        let tname, ttok, env = gen_free_tvar env lid in 
        let xx = ("x", Term_sort) in
-       let x = mkBoundV xx in
+       let x = mkFreeV xx in
        let valid_b2t_x = mk_Valid(Term.mkApp("Prims.b2t", [x])) in
 //       (assert (forall ((@x Term))
 //                (! (= (Valid (Prims.b2t @x))
@@ -1216,19 +1185,18 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let tps, t = match t.n with 
             | Typ_lam(tps', body) -> tps@tps', body
             | _ -> tps, t in 
-        let vars, cvars, guards, env', binder_decls, _ = encode_binders None tps env in
-        assert (exclude_cvars tps cvars = []);
-        let tok_app = mk_ApplyT ttok vars in
-        let tok_decl = Term.DeclFun(Term.freeV_sym ttok, [], Type_sort, None) in
-        let app = mkApp(tname, List.map mkBoundV vars) in
+        let vars, guards, env', binder_decls, _ = encode_binders None tps env in
+        let tok_app = mk_ApplyT (mkApp(ttok, [])) vars in
+        let tok_decl = Term.DeclFun(ttok, [], Type_sort, None) in
+        let app = mkApp(tname, List.map mkFreeV vars) in
         let fresh_tok = match vars with 
             | [] -> []
-            | _ -> [Term.fresh_token(Term.freeV_sym ttok, Type_sort) (varops.next_id())] in
+            | _ -> [Term.fresh_token(ttok, Type_sort) (varops.next_id())] in
         let decls = [Term.DeclFun(tname, List.map snd vars, Type_sort, None);
                     tok_decl]
                     @fresh_tok
                     @[Term.Assume(mkForall([tok_app], vars, mkEq(tok_app, app)), Some "name-token correspondence")] in
-        let def, (body, _, decls1) = 
+        let def, (body, decls1) = 
             if tags |> Util.for_some (function Logic -> true | _ -> false) 
             then mk_Valid app, encode_formula t env'
             else app, encode_typ_term t env' in 
@@ -1239,8 +1207,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 //                         let _ = encode_typ_pred 
 //                         [Term.Assume(mkForall([mk_HasType x def], (xxsym, Term_sort)::vars, mkImp(close_ex ex_vars mkTrue, mk_HasType x def)), Some "abbrev. intro")] in
         let kindingAx = 
-            let k, cvars, decls = encode_knd (Recheck.recompute_kind t) env' app in
-            assert (exclude_cvars tps cvars = []);
+            let k, decls = encode_knd (Recheck.recompute_kind t) env' app in
             decls@[Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, k)), Some "abbrev. kinding")] in
         let g = binder_decls@decls@decls1@abbrev_def::kindingAx in
         g, env
@@ -1253,8 +1220,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         else decls, env
 
      | Sig_assume(l, f, _, _) -> 
-        let f, cvars, decls = encode_formula f env in
-        assert (cvars=[]);
+        let f, decls = encode_formula f env in
         let g = [Term.Assume(f, Some (format1 "Assumption: %s" (Print.sli l)))] in 
         decls@g, env
 
@@ -1280,7 +1246,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             if List.length datas = 0  || datas |> Util.for_some (fun l -> Tc.Env.lookup_qname env.tcenv l |> Option.isNone)
             then []
             else 
-                 let xxsym, xx = fresh_bvar "x" Term_sort in
+                 let xxsym, xx = fresh_fvar "x" Term_sort in
                  let data_ax, decls = datas |> List.fold_left (fun (out, decls) l -> 
                     let data_t = Tc.Env.lookup_datacon env.tcenv l in
                     let args, res = match Util.function_formals data_t with
@@ -1292,14 +1258,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     let env = args |> List.fold_left (fun env a -> match fst a with 
                         | Inl a -> push_typ_var env a.v (Term.mkApp(mk_typ_projector_name l a.v, [xx]))
                         | Inr x -> push_term_var env x.v (Term.mkApp(mk_term_projector_name l x.v, [xx]))) env in
-                    let indices, _, decls' = encode_args indices env in
+                    let indices, decls' = encode_args indices env in
                     if List.length indices <> List.length vars
                     then failwith "Impossible";
                     let eqs = List.map2 (fun v a -> match a with 
-                        | Inl a -> Term.mkEq(mkBoundV v, a)
-                        | Inr a -> Term.mkEq(mkBoundV v, a)) vars indices |> Term.mk_and_l in
+                        | Inl a -> Term.mkEq(mkFreeV v, a)
+                        | Inr a -> Term.mkEq(mkFreeV v, a)) vars indices |> Term.mk_and_l in
                     mkOr(out, mkAnd(mk_data_tester env l xx, eqs)), decls@decls') (mkFalse, []) in
-                    let ffsym, ff = fresh_bvar "f" Fuel_sort in
+                    let ffsym, ff = fresh_fvar "f" Fuel_sort in
                     let xx_has_type = mk_HasTypeFuel (Term.mkApp("SFuel", [ff])) xx tapp in
                     decls@[Term.Assume(mkForall([xx_has_type], add_fuel (ffsym, Fuel_sort) ((xxsym, Term_sort)::vars),
                                         mkImp(xx_has_type, data_ax)), Some "inversion axiom")] in
@@ -1308,7 +1274,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let is_kind_arrow, formals, res = match (Util.compress_kind k).n with 
             | Kind_arrow(bs, res) -> true, bs, res
             | _ -> false, [], k in
-        let vars, _cvars, guards, env', binder_decls, _ = encode_binders None formals env in
+        let vars, guards, env', binder_decls, _ = encode_binders None formals env in
         
         let projection_axioms tapp vars = 
             match quals |> Util.find_opt (function Projector _ -> true | _ -> false) with
@@ -1325,21 +1291,22 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 let xx, suffix = match Util.first_N projectee_pos vars with 
                                     | _, xx::suffix -> xx, suffix
                                     | _ -> failwith "impossible" in
-                let dproj_app = mk_ApplyT (Term.mkApp(mk_typ_projector_name d a, [mkBoundV xx])) suffix in
+                let dproj_app = mk_ApplyT (Term.mkApp(mk_typ_projector_name d a, [mkFreeV xx])) suffix in
                 [Term.Assume(mkForall([tapp], vars, mkEq(tapp, dproj_app)), Some "projector axiom")]
             | _ -> [] in
 
         let tname, ttok, env = gen_free_tvar env t in
+        let ttok_tm = mkApp(ttok, []) in
         let guard = mk_and_l guards in
-        let tapp = Term.mkApp(tname, List.map mkBoundV vars) in
+        let tapp = Term.mkApp(tname, List.map mkFreeV vars) in
         let decls, env =
             let tname_decl = constructor_or_logic_type_decl(tname, vars, Type_sort, varops.next_id()) in
             let tok_decls, env = match vars with 
                 | [] -> [], push_free_tvar env t tname (mkFreeV(tname, Type_sort)) 
                 | _ -> 
-                        let ttok_decl = Term.DeclFun(Term.freeV_sym ttok, [], Type_sort, Some "token") in
-                        let ttok_fresh = Term.fresh_token (Term.freeV_sym ttok, Type_sort) (varops.next_id()) in
-                        let ttok_app = mk_ApplyT ttok vars in 
+                        let ttok_decl = Term.DeclFun(ttok, [], Type_sort, Some "token") in
+                        let ttok_fresh = Term.fresh_token (ttok, Type_sort) (varops.next_id()) in
+                        let ttok_app = mk_ApplyT ttok_tm vars in 
                         let pats = if not is_logical && quals |> Util.for_some (function Opaque -> true | _ -> false)
                                    then [[ttok_app]; [tapp]]
                                    else [[ttok_app]] in
@@ -1347,10 +1314,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         [ttok_decl; ttok_fresh; name_tok_corr], env in
             tname_decl@tok_decls, env in
         let kindingAx = 
-            let k, _, decls = encode_knd res env' tapp in
+            let k, decls = encode_knd res env' tapp in
             let karr = 
                 if is_kind_arrow 
-                then [Term.Assume(mk_tester "Kind_arrow" (mk_PreKind ttok), Some "kinding")] 
+                then [Term.Assume(mk_tester "Kind_arrow" (mk_PreKind ttok_tm), Some "kinding")] 
                 else [] in
             decls@karr@[Term.Assume(mkForall([tapp], vars, mkImp(guard, k)), Some "kinding")] in
         let aux = 
@@ -1370,49 +1337,50 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_datacon(d, t, _, quals, _, _) -> 
         let ddconstrsym, ddtok, env = gen_free_var env d in //Print.sli d in
+        let ddtok_tm = mkApp(ddtok, []) in
         let formals, t_res = match Util.function_formals t with 
             | Some (f, c) -> f, Util.comp_result c
             | None -> [], t in
-        let fuel_var, fuel_tm = fresh_bvar "f" Fuel_sort in
+        let fuel_var, fuel_tm = fresh_fvar "f" Fuel_sort in
         let s_fuel_tm = Term.mkApp("SFuel", [fuel_tm]) in
-        let vars, _, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in 
+        let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in 
         let projectors = names |> List.map (function 
             | Inl a -> mk_typ_projector_name d a, Type_sort
             | Inr x -> mk_term_projector_name d x, Term_sort) in
         let datacons = (ddconstrsym, projectors, Term_sort, varops.next_id()) |> Term.constructor_to_decl in
-        let app = mk_ApplyE ddtok vars in
+        let app = mk_ApplyE ddtok_tm vars in
         let guard = Term.mk_and_l guards in 
-        let xvars = List.map mkBoundV vars in
+        let xvars = List.map mkFreeV vars in
         let dapp =  mkApp(ddconstrsym, xvars) in
-        let ty_pred, _, decls2 = encode_typ_pred' (Some s_fuel_tm) t_res env' dapp in
+        let ty_pred, decls2 = encode_typ_pred' (Some s_fuel_tm) t_res env' dapp in
         let precedence = 
             if lid_equals d Const.lextop_lid
             then let x = varops.fresh "x", Term_sort in
-                 let xtm = mkBoundV x in
+                 let xtm = mkFreeV x in
                  [Term.Assume(mkForall([Term.mk_Precedes xtm dapp], [x], mkImp(mk_tester "LexCons" xtm, Term.mk_Precedes xtm dapp)), Some "lextop is top")]
             else (* subterm ordering *)
                 let prec = vars |> List.collect (fun v -> match snd v with 
                     | Type_sort
                     | Fuel_sort -> []
-                    | Term_sort -> [Term.mk_Precedes (mkBoundV v) dapp]
+                    | Term_sort -> [Term.mk_Precedes (mkFreeV v) dapp]
                     | _ -> failwith "unexpected sort") in
                 [Term.Assume(mkForall([ty_pred], add_fuel (fuel_var, Fuel_sort) vars, mkImp(guard, mk_and_l prec)), Some "subterm ordering")] in
 
-        let tok_typing, _, decls3 = encode_typ_pred' None t env ddtok in
+        let tok_typing, decls3 = encode_typ_pred' None t env ddtok_tm in
 
-        let vars', _, guards', env'', decls_formals, _ = encode_binders (Some s_fuel_tm) formals env in
-        let ty_pred', _, decls_pred = 
-             let xvars = List.map mkBoundV vars' in
+        let vars', guards', env'', decls_formals, _ = encode_binders (Some s_fuel_tm) formals env in
+        let ty_pred', decls_pred = 
+             let xvars = List.map mkFreeV vars' in
              let dapp =  mkApp(ddconstrsym, xvars) in
              encode_typ_pred' (Some fuel_tm) t_res env'' dapp in 
         let guard' = Term.mk_and_l guards' in
         let proxy_fresh = match formals with 
             | [] -> []
-            | _ -> [Term.fresh_token (Term.freeV_sym ddtok, Term_sort) (varops.next_id())] in
+            | _ -> [Term.fresh_token (ddtok, Term_sort) (varops.next_id())] in
         let g = binder_decls
                 @decls2
                 @decls3
-                @[Term.DeclFun(Term.freeV_sym ddtok, [], Term_sort, Some (format1 "data constructor proxy: %s" (Print.sli d)))]
+                @[Term.DeclFun(ddtok, [], Term_sort, Some (format1 "data constructor proxy: %s" (Print.sli d)))]
                 @proxy_fresh
                 @decls_formals
                 @decls_pred
@@ -1502,14 +1470,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  then match bindings, typs, toks with 
                         | [(_, _, e)], [t_norm], [(flid, (f, ftok))] ->
                           let binders, body, formals, tres = destruct_bound_function flid t_norm e in
-                          let vars, _, guards, env', binder_decls, _ = encode_binders None binders env in
-                          let app = match vars with [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkBoundV vars) in
-                          let body, _, decls2 = encode_exp body env' in
+                          let vars, guards, env', binder_decls, _ = encode_binders None binders env in
+                          let app = match vars with [] -> Term.mkFreeV(f, Term_sort) | _ -> Term.mkApp(f, List.map mkFreeV vars) in
+                          let body, decls2 = encode_exp body env' in
                           let eqn = Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, mkEq(app, body))), Some (Util.format1 "Equation for %s" flid.str)) in
                           decls@binder_decls@decls2@[eqn], env      
                         | _ -> failwith "Impossible"
                  else let fuel = varops.fresh "fuel", Fuel_sort in
-                      let fuel_tm = mkBoundV fuel in
+                      let fuel_tm = mkFreeV fuel in
                       let env0 = env in 
                       let gtoks, env = toks |> List.fold_left (fun (gtoks, env) (flid, (f, ftok)) -> 
                          let g = varops.new_fvar flid in
@@ -1519,27 +1487,27 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       let gtoks = List.rev gtoks in
                       let encode_one_binding env0 (flid, f, ftok, g, gtok) t_norm (_, _, e) = 
                          let binders, body, formals, tres = destruct_bound_function flid t_norm e in
-                         let vars, _, guards, env', binder_decls, _ = encode_binders None binders env in
+                         let vars, guards, env', binder_decls, _ = encode_binders None binders env in
                          let decl_g = Term.DeclFun(g, Fuel_sort::List.map snd vars, Term_sort, Some "Fuel-instrumented function name") in
                          let env0 = push_zfuel_name env0 flid g in
                          let decl_g_tok = Term.DeclFun(gtok, [], Term_sort, Some "Token for fuel-instrumented partial applications") in
-                         let vars_tm = List.map mkBoundV vars in
+                         let vars_tm = List.map mkFreeV vars in
                          let app = Term.mkApp(f, vars_tm) in 
                          let gsapp = Term.mkApp(g, Term.mkApp("SFuel", [fuel_tm])::vars_tm) in
                          let gmax = Term.mkApp(g, Term.mkFreeV("MaxFuel", Term_sort)::vars_tm) in
-                         let body_tm, _, decls2 = encode_exp body env' in
+                         let body_tm, decls2 = encode_exp body env' in
                          let eqn_g = Term.Assume(mkForall([gsapp], fuel::vars, mkImp(mk_and_l guards, mkEq(gsapp, body_tm))), Some (Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.str)) in
                          let eqn_f = Term.Assume(mkForall([app], vars, mkEq(app, gmax)), Some "Correspondence of recursive function to instrumented version") in
-                         let eqn_g' = Term.Assume(mkForall([gsapp], fuel::vars, mkEq(gsapp,  Term.mkApp(g, mkBoundV fuel::vars_tm))), Some "Fuel irrelevance") in
+                         let eqn_g' = Term.Assume(mkForall([gsapp], fuel::vars, mkEq(gsapp,  Term.mkApp(g, mkFreeV fuel::vars_tm))), Some "Fuel irrelevance") in
                          let aux_decls, g_typing = 
-                            let vars, _, v_guards, env, binder_decls, _ = encode_binders None formals env0 in
-                            let vars_tm = List.map mkBoundV vars in
+                            let vars, v_guards, env, binder_decls, _ = encode_binders None formals env0 in
+                            let vars_tm = List.map mkFreeV vars in
                             let gapp = Term.mkApp(g, fuel_tm::vars_tm) in
                             let tok_corr = 
                                 let tok_app = mk_ApplyE (Term.mkFreeV (gtok, Term_sort)) (fuel::vars) in
                                 Term.Assume(mkForall([tok_app], fuel::vars, mkEq(tok_app, gapp)), Some "Fuel token correspondence") in
                             let aux_decls, typing_corr = 
-                                let g_typing, _, d3 = encode_typ_pred' None tres env gapp in
+                                let g_typing, d3 = encode_typ_pred' None tres env gapp in
                                 d3, [Term.Assume(mkForall([gapp], fuel::vars, mkImp(Term.mk_and_l v_guards, g_typing)), None)] in
                             binder_decls@aux_decls, typing_corr@[tok_corr] in
                         binder_decls@decls2@aux_decls@[decl_g;decl_g_tok], [eqn_g;eqn_g';eqn_f]@g_typing, env0 in
@@ -1569,8 +1537,7 @@ and declare_top_level_let env x t t_norm =
             (n, x), [], env
 
 and encode_smt_lemma env lid t = 
-    let form, cvars, decls = encode_function_type_as_formula None t env in 
-    assert (cvars=[]);
+    let form, decls = encode_function_type_as_formula None t env in 
     decls@[Term.Assume(form, Some ("Lemma: " ^ lid.str))]
 
 and encode_free_var env lid tt t_norm quals = 
@@ -1580,12 +1547,13 @@ and encode_free_var env lid tt t_norm quals =
             | Typ_fun(binders, _) -> binders |> List.map (function (Inl _, _) -> Type_sort | _ -> Term_sort) 
             | _ -> [] in
          let d = Term.DeclFun(vname, arg_sorts, Term_sort, Some "Uninterpreted function symbol for impure function") in
-         let dd = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, Some "Uninterpreted name for impure function") in
+         let dd = Term.DeclFun(vtok, [], Term_sort, Some "Uninterpreted name for impure function") in
          [d;dd], env
     else let formals, res = match Util.function_formals t_norm with 
             | Some (args, comp) -> args, Util.comp_result comp 
             | None -> [], t_norm in
          let vname, vtok, env = gen_free_var env lid in 
+         let vtok_tm = mkApp(vtok, []) in
          if prims.is lid
          then let definition = prims.mk lid vname in
               let env = push_free_var env lid vname (mkFreeV(vname, Term_sort)) in 
@@ -1593,52 +1561,50 @@ and encode_free_var env lid tt t_norm quals =
          else let mk_disc_proj_axioms vapp vars = quals |> List.collect (function 
                 | Discriminator d -> 
                     let _, (xxsym, _) = Util.prefix vars in
-                    let xx = mkBoundV(xxsym, Term_sort) in
+                    let xx = mkFreeV(xxsym, Term_sort) in
                     [Term.Assume(mkForall([vapp], vars,
                                             mkEq(vapp, Term.boxBool <| Term.mk_tester d.str xx)), None)]
 
                 | Projector(d, Inr f) -> 
                     let _, (xxsym, _) = Util.prefix vars in
-                    let xx = mkBoundV(xxsym, Term_sort) in
+                    let xx = mkFreeV(xxsym, Term_sort) in
                     [Term.Assume(mkForall([vapp], vars,
                                             mkEq(vapp, Term.mkApp(mk_term_projector_name d f, [xx]))), None)]
                 | _ -> []) in
-              let vars, _, guards, env', decls1, _ = encode_binders None formals env in
+              let vars, guards, env', decls1, _ = encode_binders None formals env in
               let guard = mk_and_l guards in
-              let vtok_app = mk_ApplyE vtok vars in
+              let vtok_app = mk_ApplyE vtok_tm vars in
         
-              let vapp = Term.mkApp(vname, List.map Term.mkBoundV vars) in
+              let vapp = Term.mkApp(vname, List.map Term.mkFreeV vars) in
               let decls2, env =
                 let vname_decl = Term.DeclFun(vname, formals |> List.map (function Inl _, _ -> Type_sort | _ -> Term_sort), Term_sort, None) in
                     (* Generate a token and a function symbol; equate the two, and use the function symbol for full applications *)
                     let tok_decl, env = match formals with 
                         | [] -> 
-                            let t, _, decls2 = 
+                            let t, decls2 = 
                                 if not(head_normal env tt) 
                                 then encode_typ_pred' None tt env (mkFreeV(vname, Term_sort))
                                 else encode_typ_pred' None t_norm env (mkFreeV(vname, Term_sort)) in
                             let tok_typing = Term.Assume(t, Some "function token typing") in 
                             decls2@[tok_typing], push_free_var env lid vname (mkFreeV(vname, Term_sort))
                         | _ -> 
-                                let vtok_decl = Term.DeclFun(Term.freeV_sym vtok, [], Term_sort, None) in
-                                let vtok_fresh = Term.fresh_token (Term.freeV_sym vtok, Term_sort) (varops.next_id()) in
+                                let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
+                                let vtok_fresh = Term.fresh_token (vtok, Term_sort) (varops.next_id()) in
                                 let name_tok_corr = Term.Assume(mkForall([vtok_app], vars, mkEq(vtok_app, vapp)), None) in
-                                let tok_typing, _, decls2 = 
+                                let tok_typing, decls2 = 
                                     if not(head_normal env tt) 
-                                    then encode_typ_pred' None tt env vtok 
-                                    else encode_typ_pred' None t_norm env vtok in
+                                    then encode_typ_pred' None tt env vtok_tm 
+                                    else encode_typ_pred' None t_norm env vtok_tm in
                                 let tok_typing = Term.Assume(tok_typing, Some "function token typing") in
                                 decls2@[vtok_decl;vtok_fresh;name_tok_corr;tok_typing], env in
                     vname_decl::tok_decl, env in
-              let ty_pred, _, decls3 = encode_typ_pred' None res env' vapp in
+              let ty_pred, decls3 = encode_typ_pred' None res env' vapp in
               let tt_typing, decls4 = 
                     if not(head_normal env tt) 
-                    then let tok_typing, _, decls4 = encode_typ_pred' None tt env vtok in
+                    then let tok_typing, decls4 = encode_typ_pred' None tt env vtok_tm in
                          [Term.Assume(tok_typing, None)], decls4
                     else [], [] in
             
-        //        let tpat_var = varops.fresh "tt", Type_sort in
-        //        let pat = Term.mk_HasType false vapp (mkBoundV tpat_var) in
               let typingAx = Term.Assume(mkForall([vapp], vars, mkImp(guard, ty_pred)), Some "free var typing") in
               let g = decls1@decls2@decls3@decls4@typingAx::tt_typing@mk_disc_proj_axioms vapp vars in
               g, env
@@ -1654,7 +1620,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t *
         | Env.Binding_var(x, t0) -> 
             let xxsym, xx, env' = gen_free_term_var env x in 
             let t1 = norm_t env t0 in
-            let t, _, decls' = encode_typ_pred' None t1 env xx in
+            let t, decls' = encode_typ_pred' None t1 env xx in
             let caption = 
                 if !Options.logQueries 
                 then Some (Util.format3 "%s : %s (%s)" (Print.strBvd x) (Print.typ_to_string t0) (Print.typ_to_string t1))
@@ -1665,7 +1631,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t *
             decls@g, env'
         | Env.Binding_typ(a, k) -> 
             let aasym, aa, env' = gen_free_typ_var env a in 
-            let k, _, decls' = encode_knd k env aa in
+            let k, decls' = encode_knd k env aa in
             let g = [Term.DeclFun(aasym, [], Type_sort, Some (Print.strBvd a))]
                     @decls'
                     @[Term.Assume(k, None)] in
@@ -1687,7 +1653,7 @@ let encode_labels labs =
 (* caching encodings of the environment and the top-level API to the encoding *)
 open Microsoft.FStar.Tc.Env
 let last_env : ref<list<env_t>> = Util.mk_ref []
-let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; refinements=Util.smap_create 20; nolabels=false; use_zfuel_name=false}]
+let init_env tcenv = last_env := [{bindings=[]; tcenv=tcenv; warn=true; depth=0; cache=Util.smap_create 100; nolabels=false; use_zfuel_name=false}]
 let get_env tcenv = match !last_env with 
     | [] -> failwith "No env; call init first!"
     | e::_ -> {e with tcenv=tcenv}
@@ -1697,8 +1663,8 @@ let set_env env = match !last_env with
 let push_env () = match !last_env with 
     | [] -> failwith "Empty env stack"
     | hd::tl -> 
-      let refs = Util.smap_copy hd.refinements  in
-      let top = {hd with refinements=refs} in
+      let refs = Util.smap_copy hd.cache  in
+      let top = {hd with cache=refs} in
       last_env := top::hd::tl 
 
 let pop_env () = match !last_env with 
@@ -1752,7 +1718,7 @@ let solve tcenv q : unit =
         let env = get_env tcenv in
         let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) tcenv.gamma) in
         if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);//(Normalize.formula_norm_to_string tcenv q);
-        let phi, _, labels, qdecls = encode_formula_with_labels q env in
+        let phi, labels, qdecls = encode_formula_with_labels q env in
         let label_prefix, label_suffix = encode_labels labels in
         let query_prelude = 
             env_decls
@@ -1762,10 +1728,10 @@ let solve tcenv q : unit =
         let suffix = label_suffix@[Term.Echo "Done!"]  in
         query_prelude, labels, qry, suffix in
     begin match qry with 
-        | Assume({tm=False}, _) -> pop(); ()
+        | Assume({tm=App(False, _)}, _) -> pop(); ()
         | _ when tcenv.admit -> pop(); ()
         | Assume(q, _) ->
-            let fresh = String.length q.as_str >= 2048 in   
+            let fresh = String.length q.hash >= 2048 in   
             Z3.giveZ3 prefix;
 
             let with_fuel (n, i) = 
@@ -1812,10 +1778,10 @@ let solve tcenv q : unit =
 let is_trivial (tcenv:Tc.Env.env) (q:typ) : bool = 
    let env = get_env tcenv in
    push "query";
-   let f, _, _, _ = encode_formula_with_labels q env in
+   let f, _, _ = encode_formula_with_labels q env in
    pop "query";
    match f.tm with 
-    | True -> true
+    | App(True, _) -> true
     | _ -> false
 
 let solver = {
