@@ -311,13 +311,6 @@ let mk_ApplyT_args t args =
 
 type label = (fv * string * Range.range)
 type labels = list<label>
-//type match_branch = {
-//    guard:term;       (* bool; negation of all prior pattern guards *)
-//    pat_vars:ex_vars; (* existentially bound pattern variables *)
-//    pattern:term;     (* the pattern itself *)
-//    rhs:term;         (* the branch translated as a term *)
-//}
-//type match_branches = list<match_branch>
 type pattern = {
   pat_vars: list<(Syntax.either_var * fv)>;
   pat_term: unit -> (term * decls_t);                   (* the pattern as a term(exp) *)
@@ -365,7 +358,7 @@ let rec encode_knd' (prekind:bool) (k:knd) (env:env_t) (t:term) : term  * decls_
 and encode_knd (k:knd) (env:env_t) (t:term) = encode_knd' true k env t
 
 and encode_binders (fuel_opt:option<term>) (bs:Syntax.binders) (env:env_t) : 
-                            (list<fv>                      (* translated bound variables *)
+                            (list<fv>                       (* translated bound variables *)
                             * list<term>                    (* guards *)
                             * env_t                         (* extended context *)
                             * decls_t                       (* top-level decls to be emitted *)
@@ -417,7 +410,7 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
         lookup_free_tvar env fv, []
 
       | Typ_fun(binders, res) -> 
-        (* TODO: check that currying works properly; handling non-total functions *)
+        (* TODO: handling non-total functions *)
         if   Absyn.Util.is_total_comp res
         then let vars, guards, env', decls, _ = encode_binders None binders env in 
              let fsym = varops.fresh "f", Term_sort in
@@ -500,7 +493,7 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
               let x_has_t = mk_HasType xtm t in
               let t_has_kind = mk_HasKind t Term.mk_Kind_type in
               
-              let t_kinding = mkForall([t_has_kind], cvars, t_has_kind) in //TODO: guard by typing of cvars?
+              let t_kinding = mkForall([t_has_kind], cvars, t_has_kind) in //TODO: guard by typing of cvars?; not necessary since we have pattern-guarded 
               let assumption = mkForall_fuel([x_has_t], xfv::cvars, mkIff(x_has_t, encoding)) in
               
               let t_decls = decls
@@ -1514,9 +1507,11 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         let decls, eqns, env0 = List.fold_left (fun (decls, eqns, env0) (gtok, ty, bs) -> 
                             let decls', eqns', env0 = encode_one_binding env0 gtok ty bs in
                             decls'::decls, eqns'@eqns, env0) ([], [], env0) (List.zip3 gtoks typs bindings) in
-                        let prefix_decls = List.rev decls |> List.flatten in
+                        let prefix_decls, rest = decls |> List.flatten |> List.partition (function 
+                            | DeclFun _ -> true
+                            | _ -> false) in
                         let eqns = List.rev eqns in
-                        ( prefix_decls)@( eqns), env0
+                        prefix_decls@rest@eqns, env0
         with Let_rec_unencodeable -> 
              let msg = bindings |> List.map (fun (lb, _, _) -> Print.lbname_to_string lb) |> String.concat " and " in
              let decl = Caption ("let rec unencodeable: Skipping: " ^msg) in

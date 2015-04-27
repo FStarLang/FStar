@@ -144,6 +144,7 @@ val remove_dups: ('a -> 'a -> bool) -> list<'a> -> list<'a>
 val add_unique: ('a -> 'a -> bool) -> 'a -> list<'a> -> list<'a>
 val try_find_i: (int -> 'a -> bool) -> list<'a> -> option<(int * 'a)>
 val find_map: list<'a> -> ('a -> option<'b>) -> option<'b>
+val try_find_index: ('a -> bool) -> list<'a> -> option<int>
 val fold_map: ('a -> 'b -> 'a * 'c) -> 'a -> list<'b> -> 'a * list<'c>
 val choose_map: ('a -> 'b -> 'a * option<'c>) -> 'a -> list<'b> -> 'a * list<'c>
 val for_all: ('a -> bool) -> list<'a> -> bool

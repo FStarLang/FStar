@@ -239,7 +239,7 @@ let mkQuant (qop, pats, wopt, vars, body) =
 (*****************************************************)
 let abstr fvs t =
     let nvars = List.length fvs in
-    let index_of fv = match List.tryFindIndex (fv_eq fv) fvs with 
+    let index_of fv = match Util.try_find_index (fv_eq fv) fvs with 
         | None -> None
         | Some i -> Some (nvars - (i + 1)) in
     let rec aux ix t = 
