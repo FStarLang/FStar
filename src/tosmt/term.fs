@@ -147,7 +147,7 @@ let weightToSmt = function
 let rec hash_of_term' t = match t with 
     | Integer i -> string_of_int i 
     | BoundV i  -> "@"^string_of_int i
-    | FreeV x   -> fst x
+    | FreeV x   -> fst x ^ ":" ^ strSort (snd x)
     | App(op, tms) -> "("^(op_to_string op)^(List.map (fun t -> t.hash) tms |> String.concat " ")^")"
     | Quant(qop, pats, wopt, sorts, body) -> 
         Util.format5 "(%s (%s)(! %s %s %s))" 
@@ -166,18 +166,15 @@ let mk t =
           let tm = {tm=t; hash=key; freevars=Util.mk_ref None} in
           Util.smap_add all_terms key tm;
           tm
-//let freeV_sym fv = match fv.tm with 
-//    | FreeV(s, _) -> s
-//    | _ -> failwith "Not a free variable"
-//let boundV_sym x = match x.tm with 
-//    | BoundV(x, _, _) -> x
-//    | _ -> failwith "Not a bound variable"
 
 let mkTrue       = mk (App(True, [])) 
 let mkFalse      = mk (App(False, []))
 let mkInteger i  = mk (Integer i) 
 let mkBoundV i   = mk (BoundV i) 
-let mkFreeV x    = mk (FreeV x) 
+let mkFreeV x    = 
+    if fst x = "Prims.int" 
+    then failwith ":ARGH!";
+    mk (FreeV x) 
 let mkApp' f        = mk (App f) 
 let mkApp (s, args) = mk (App (Var s, args)) 
 let mkNot t      = match t.tm with
@@ -348,7 +345,7 @@ let name_binders_inner outer_names start sorts =
             | _ -> "@u" in
         let nm = prefix ^ string_of_int n in
         let names = (nm,s)::names in
-        let b = Util.format2 "(%s %s)" prefix (strSort s) in
+        let b = Util.format2 "(%s %s)" nm (strSort s) in
         names, b::binders, n+1) 
         (outer_names, [], start)  in
     names, List.rev binders, n
@@ -364,18 +361,20 @@ let termToSmt t =
         else string_of_int i
       | BoundV i -> 
         List.nth names i |> fst
-      | FreeV x -> fst x
+      | FreeV x -> fst x 
       | App(op, []) -> op_to_string op
       | App(op, tms) -> Util.format2 "(%s %s)" (op_to_string op) (List.map (aux n names) tms |> String.concat "\n")
       | Quant(qop, pats, wopt, sorts, body) -> 
         let names, binders, n = name_binders_inner names n sorts in 
         let binders = binders |> String.concat " " in
         let pats_str = match pats with 
+            | [[]] 
             | [] -> ""
             | _ -> pats |> List.map (fun pats -> format1 "\n:pattern (%s)" (String.concat " " (List.map (fun p -> format1 "%s" (aux n names p)) pats))) |> String.concat "\n" in
         begin match pats, wopt with 
+            | [[]], None
             | [], None ->  Util.format3 "(%s (%s)\n %s)" (qop_to_string qop) binders (aux n names body)
-            | _ -> Util.format5 "(%s (%s)\n (! %s\n %s %s)" (qop_to_string qop) binders (aux n names body) (weightToSmt wopt) pats_str
+            | _ -> Util.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders (aux n names body) (weightToSmt wopt) pats_str
         end in
     aux 0 [] t
 
@@ -543,7 +542,7 @@ let mk_String_const i = mkApp("String_const", [ mkInteger i ])
 let mk_Precedes x1 x2 = mkApp("Precedes", [x1;x2]) |> mk_Valid
 let mk_LexCons x1 x2  = mkApp("LexCons", [x1;x2])
 let rec n_fuel n = 
-    if n = 0 then mkFreeV("ZFuel", Fuel_sort)
+    if n = 0 then mkApp("ZFuel", [])
     else mkApp("SFuel", [n_fuel (n - 1)])
 let fuel_2 = n_fuel 2
 let fuel_100 = n_fuel 100

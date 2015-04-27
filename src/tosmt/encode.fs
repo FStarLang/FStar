@@ -150,7 +150,7 @@ let gen_term_var (env:env_t) (x:bvvdef) =
     let ysym = "@x"^(string_of_int env.depth) in
     let y = mkFreeV(ysym, Term_sort) in
     ysym, y, {env with bindings=Binding_var(x, y)::env.bindings; depth=env.depth + 1}
-let gen_free_term_var (env:env_t) (x:bvvdef) = 
+let new_term_constant (env:env_t) (x:bvvdef) = 
     let ysym = varops.new_var x.ppname x.realname in 
     let y = mkApp(ysym, []) in
     ysym, y, {env with bindings=Binding_var(x, y)::env.bindings}
@@ -166,7 +166,7 @@ let gen_typ_var (env:env_t) (x:btvdef) =
     let ysym = "@a"^(string_of_int env.depth) in
     let y = mkFreeV(ysym, Type_sort) in
     ysym, y, {env with bindings=Binding_tvar(x, y)::env.bindings; depth=env.depth + 1}
-let gen_free_typ_var (env:env_t) (x:btvdef) = 
+let new_typ_constant (env:env_t) (x:btvdef) = 
     let ysym = varops.new_var x.ppname x.realname in 
     let y = mkApp(ysym, []) in
     ysym, y, {env with bindings=Binding_tvar(x,y)::env.bindings}
@@ -178,9 +178,9 @@ let push_typ_var (env:env_t) (x:btvdef) (t:term) =
     | Some (b,t) -> t
 
 (* Qualified term names *)
-let gen_free_var (env:env_t) (x:lident) =
+let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) =
     let fname = varops.new_fvar x in
-    let ftok = varops.new_fvar x in
+    let ftok = fname^"@tok" in
     fname, ftok, {env with bindings=Binding_fvar(x, fname, mkApp(ftok,[]), None)::env.bindings}
 let try_lookup_lid env a = 
     lookup_binding env (function Binding_fvar(b, t1, t2, t3) when lid_equals b a -> Some (t1, t2, t3) | _ -> None) 
@@ -216,9 +216,9 @@ let lookup_free_var_sym env a =
                 | _ -> Var name, []
 
 (* Qualified type names *)
-let gen_free_tvar (env:env_t) (x:lident) =
+let new_typ_constant_and_tok_from_lid (env:env_t) (x:lident) =
     let fname = varops.new_fvar x in
-    let ftok = varops.new_fvar x in
+    let ftok = fname^"@tok" in
     fname, ftok, {env with bindings=Binding_ftvar(x, fname, mkApp(ftok, []))::env.bindings}
 let lookup_tlid env a = 
     match lookup_binding env (function Binding_ftvar(b, t1, t2) when lid_equals b a -> Some (t1, t2) | _ -> None) with
@@ -425,10 +425,9 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
              let app = mk_ApplyE f vars in      
              let res_pred, decls' = encode_typ_pred' None (Util.comp_result res) env' app in
              let t_interp = 
-                 mkAnd(mk_tester "Typ_fun" (mk_PreType f), 
                        mkForall([app], 
                                 vars,  
-                                mkImp(mk_and_l guards, res_pred))) in
+                                mkImp(mk_and_l guards, res_pred)) in
                    
              let cvars = Term.free_variables t_interp |> List.filter (fun (x, _) -> x <> fst fsym) in
              let tkey = Term.mkForall([], fsym::cvars, t_interp) in
@@ -452,10 +451,11 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
                   let k_assumption = Term.Assume(Term.mkForall([t_has_kind], cvars, t_has_kind), Some (tsym ^ " kinding")) in
 
                   let f_has_t = mk_HasType f t in
+                  let pre_typing = Term.Assume(mkForall_fuel([f_has_t], fsym::cvars, mkImp(f_has_t, mk_tester "Typ_fun" (mk_PreType f))), Some "pre-typing for functions") in
                   let t_interp = Term.Assume(mkForall_fuel([f_has_t], fsym::cvars, mkIff(f_has_t, t_interp)),
                                              Some (tsym ^ " interpretation")) in 
 
-                  let t_decls = decls@decls'@[tdecl; k_assumption; t_interp] in
+                  let t_decls = decls@decls'@[tdecl; k_assumption; pre_typing; t_interp] in
                   Util.smap_add env.cache tkey.hash  (tsym, cvar_sorts, t_decls);
                   t, t_decls
              end
@@ -1114,7 +1114,7 @@ let primitive_type_axioms : lident -> string -> term -> list<decl> =
                                          precedes_y_x)),
                                   Some "well-founded ordering on nat (alt)")] in
     let mk_int_alias : string -> term -> decls_t = fun _ tt -> 
-        [Term.Assume(mkEq(tt, mkFreeV(Const.int_lid.str, Type_sort)), Some "mapping to int; for now")] in
+        [Term.Assume(mkEq(tt, mkApp(Const.int_lid.str, [])), Some "mapping to int; for now")] in
     let mk_str : string -> term -> decls_t  = fun _ tt -> 
         let typing_pred = Term.mk_HasType x tt in
         let bb = ("b", String_sort) in
@@ -1162,7 +1162,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | Sig_typ_abbrev(_, _, _, _, [Effect], _) -> [], env
 
      | Sig_typ_abbrev(lid, _, _, _, _, _) when (lid_equals lid Const.b2t_lid) ->
-       let tname, ttok, env = gen_free_tvar env lid in 
+       let tname, ttok, env = new_typ_constant_and_tok_from_lid env lid in 
        let xx = ("x", Term_sort) in
        let x = mkFreeV xx in
        let valid_b2t_x = mk_Valid(Term.mkApp("Prims.b2t", [x])) in
@@ -1181,7 +1181,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        decls, env
       
      | Sig_typ_abbrev(lid, tps, _, t, tags, _) -> 
-        let tname, ttok, env = gen_free_tvar env lid in 
+        let tname, ttok, env = new_typ_constant_and_tok_from_lid env lid in 
         let tps, t = match t.n with 
             | Typ_lam(tps', body) -> tps@tps', body
             | _ -> tps, t in 
@@ -1225,7 +1225,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         decls@g, env
 
      | Sig_tycon(t, tps, k, _, datas, quals, _) when (lid_equals t Const.precedes_lid) -> 
-        let tname, ttok, env = gen_free_tvar env t in
+        let tname, ttok, env = new_typ_constant_and_tok_from_lid env t in
         [], env
                
      | Sig_tycon(t, _, _, _, _, _, _) when (lid_equals t Const.char_lid || lid_equals t Const.uint8_lid) ->
@@ -1295,14 +1295,14 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 [Term.Assume(mkForall([tapp], vars, mkEq(tapp, dproj_app)), Some "projector axiom")]
             | _ -> [] in
 
-        let tname, ttok, env = gen_free_tvar env t in
+        let tname, ttok, env = new_typ_constant_and_tok_from_lid env t in
         let ttok_tm = mkApp(ttok, []) in
         let guard = mk_and_l guards in
         let tapp = Term.mkApp(tname, List.map mkFreeV vars) in
         let decls, env =
-            let tname_decl = constructor_or_logic_type_decl(tname, vars, Type_sort, varops.next_id()) in
+            let tname_decl = constructor_or_logic_type_decl(tname, vars |> List.map (fun (n, s) -> (tname^n,s)), Type_sort, varops.next_id()) in
             let tok_decls, env = match vars with 
-                | [] -> [], push_free_tvar env t tname (mkFreeV(tname, Type_sort)) 
+                | [] -> [], push_free_tvar env t tname (mkApp(tname, [])) 
                 | _ -> 
                         let ttok_decl = Term.DeclFun(ttok, [], Type_sort, Some "token") in
                         let ttok_fresh = Term.fresh_token (ttok, Type_sort) (varops.next_id()) in
@@ -1336,7 +1336,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env 
 
     | Sig_datacon(d, t, _, quals, _, _) -> 
-        let ddconstrsym, ddtok, env = gen_free_var env d in //Print.sli d in
+        let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d in //Print.sli d in
         let ddtok_tm = mkApp(ddtok, []) in
         let formals, t_res = match Util.function_formals t with 
             | Some (f, c) -> f, Util.comp_result c
@@ -1494,7 +1494,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                          let vars_tm = List.map mkFreeV vars in
                          let app = Term.mkApp(f, vars_tm) in 
                          let gsapp = Term.mkApp(g, Term.mkApp("SFuel", [fuel_tm])::vars_tm) in
-                         let gmax = Term.mkApp(g, Term.mkFreeV("MaxFuel", Term_sort)::vars_tm) in
+                         let gmax = Term.mkApp(g, Term.mkApp("MaxFuel", [])::vars_tm) in
                          let body_tm, decls2 = encode_exp body env' in
                          let eqn_g = Term.Assume(mkForall([gsapp], fuel::vars, mkImp(mk_and_l guards, mkEq(gsapp, body_tm))), Some (Util.format1 "Equation for fuel-instrumented recursive function: %s" flid.str)) in
                          let eqn_f = Term.Assume(mkForall([app], vars, mkEq(app, gmax)), Some "Correspondence of recursive function to instrumented version") in
@@ -1542,7 +1542,7 @@ and encode_smt_lemma env lid t =
 
 and encode_free_var env lid tt t_norm quals = 
     if not <| Util.is_pure_function t_norm || Util.is_lemma t_norm
-    then let vname, vtok, env = gen_free_var env lid in
+    then let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in
          let arg_sorts = match t_norm.n with 
             | Typ_fun(binders, _) -> binders |> List.map (function (Inl _, _) -> Type_sort | _ -> Term_sort) 
             | _ -> [] in
@@ -1552,7 +1552,7 @@ and encode_free_var env lid tt t_norm quals =
     else let formals, res = match Util.function_formals t_norm with 
             | Some (args, comp) -> args, Util.comp_result comp 
             | None -> [], t_norm in
-         let vname, vtok, env = gen_free_var env lid in 
+         let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in 
          let vtok_tm = mkApp(vtok, []) in
          if prims.is lid
          then let definition = prims.mk lid vname in
@@ -1618,7 +1618,7 @@ and encode_signature env ses =
 let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t * env_t) = 
     let encode_binding b (decls, env) = match b with
         | Env.Binding_var(x, t0) -> 
-            let xxsym, xx, env' = gen_free_term_var env x in 
+            let xxsym, xx, env' = new_term_constant env x in 
             let t1 = norm_t env t0 in
             let t, decls' = encode_typ_pred' None t1 env xx in
             let caption = 
@@ -1630,7 +1630,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t *
                     @[Term.Assume(t, None)] in
             decls@g, env'
         | Env.Binding_typ(a, k) -> 
-            let aasym, aa, env' = gen_free_typ_var env a in 
+            let aasym, aa, env' = new_typ_constant env a in 
             let k, decls' = encode_knd k env aa in
             let g = [Term.DeclFun(aasym, [], Type_sort, Some (Print.strBvd a))]
                     @decls'
@@ -1736,8 +1736,8 @@ let solve tcenv q : unit =
 
             let with_fuel (n, i) = 
                 [Term.Caption (Util.format1 "<fuel='%s'>" (string_of_int n)); 
-                    Term.Assume(mkEq(mkFreeV("MaxFuel", Fuel_sort), n_fuel n), None);
-                    Term.Assume(mkEq(mkFreeV("MaxIFuel", Fuel_sort), n_fuel i), None);
+                    Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None);
+                    Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None);
                     qry;
                     Term.CheckSat]@suffix in
     
