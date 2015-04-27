@@ -120,7 +120,7 @@ let repr (x:AES.plain) = x
 
 let test() =
   let p = failwith "nice bytes" in
-  let Scheme keyrepr keygen encrypt decrypt = SymEnc.create (AES.plain) plain repr in
+  let Scheme '_ 'k keyrepr keygen encrypt decrypt = SymEnc.create (AES.plain) plain repr in
   let k0 = keygen true in
   let k1 = keygen true in
   let c = encrypt k0 p in

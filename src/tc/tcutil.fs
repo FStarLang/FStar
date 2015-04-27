@@ -175,83 +175,71 @@ let pat_as_exps allow_implicits env p
            | Env.Binding_typ(x, _) -> Inl x
            | _ -> failwith "impos") in
   
-     let rec pat_env allow_wc_dependence env (p:pat) : 
-                                    (list<Env.binding>    //all pattern-bound vars including wild-cards, in proper order
-                                    * list<Env.binding>  //just the accessible vars, for the disjunctive pattern test
-                                    * list<Env.binding>  //just the wildcards
-                                    * Env.env) = 
+     
+      let rec pat_as_arg_with_env allow_wc_dependence env (p:pat) : 
+                                    ((list<Env.binding>    //all pattern-bound vars including wild-cards, in proper order
+                                    * list<Env.binding>    //just the accessible vars, for the disjunctive pattern test
+                                    * list<Env.binding>    //just the wildcards
+                                    * Env.env)             //env extending with the pattern-bound variables
+                                    * (arg                 //the pattern as a term/typ
+                                     * pat                 //the elaborated pattern itself
+                                     * list<either<uvar_t, uvar_e>>)) =  //all the uvars introduced for inaccesible sub-patterns
         match p.v with 
-           | Pat_dot_term _
-           | Pat_dot_typ _ 
-           | Pat_constant _ -> [], [], [], env
-           | Pat_wild x -> 
-                let w = Env.Binding_var(x.v, new_tvar env ktype) in
-                let env = if allow_wc_dependence then Env.push_local_binding env w else env in
-                [w], [], [w], env
-           | Pat_var (x, _) ->
-                let b = Env.Binding_var(x.v, new_tvar env ktype) in
-                let env = Env.push_local_binding env b in
-                [b], [b], [], env
-           | Pat_twild a -> 
-                let w = Env.Binding_typ(a.v, new_kvar env) in
-                let env = if allow_wc_dependence then Env.push_local_binding env w else env in
-                [w], [], [w], env
-           | Pat_tvar a ->      
-                let b = Env.Binding_typ(a.v, new_kvar env) in
-                let env = Env.push_local_binding env b in 
-                [b], [b], [], env
-           | Pat_cons(fv, pats) -> 
-               let b, a, w, env = pats |> List.fold_left (fun (b, a, w, env) p -> 
-                    let b', a', w', env = pat_env allow_wc_dependence env p in
-                    b'::b, a'::a, w'::w, env)  ([], [], [], env) in
-               List.rev b |> List.flatten, 
-               List.rev a |> List.flatten, 
-               List.rev w |> List.flatten,
-               env
-           | Pat_disj _ -> failwith "impossible" in
+           | Pat_dot_term(x, _) ->
+             let t = new_tvar env ktype in
+             let e, u = Rel.new_evar env p.p [] t in //TODO: why empty vars?
+             let p = {p with v=Pat_dot_term(x, e)} in
+             ([], [], [], env), (varg e, p, [Inr <| as_uvar_e u])
 
-     let rec pat_as_arg env (p:pat) : arg * pat * list<either<uvar_t, uvar_e>> = match p.v with
-           | Pat_dot_term (x, _) -> 
-                let t = new_tvar env ktype in
-                let e, u = Rel.new_evar env p.p [] t in //TODO: why empty vars?
-                let p = {p with v=Pat_dot_term(x, e)} in
-                varg e, p, [Inr <| as_uvar_e u]
-                
-           | Pat_dot_typ (a, _) -> 
-                let k = new_kvar env in
-                let t, u = Rel.new_tvar env p.p (Env.binders env) k in
-                let p = {p with v=Pat_dot_typ(a, t)} in
-                (Inl t, as_implicit true), p, [Inl <| as_uvar_t u]
-                
+           | Pat_dot_typ (a, _) ->
+             let k = new_kvar env in
+             let t, u = Rel.new_tvar env p.p (Env.binders env) k in
+             let p = {p with v=Pat_dot_typ(a, t)} in
+             ([], [], [], env), ((Inl t, as_implicit true), p, [Inl <| as_uvar_t u])
+
            | Pat_constant c -> 
-                let e = mk_Exp_constant c None p.p in
-                varg e, p, []
-
+             let e = mk_Exp_constant c None p.p in
+             ([], [], [], env), (varg e, p, [])
+           
            | Pat_wild x -> 
-                let e = mk_Exp_bvar x None p.p in
-                varg e, p, []
+             let w = Env.Binding_var(x.v, new_tvar env ktype) in
+             let env = if allow_wc_dependence then Env.push_local_binding env w else env in
+             let e = mk_Exp_bvar x None p.p in
+             ([w], [], [w], env), (varg e, p, [])
 
-           | Pat_var (x, imp) -> 
-                let e = mk_Exp_bvar x None p.p in
-                (Inr e, as_implicit imp), p, []
+           | Pat_var (x, imp) ->
+             let b = Env.Binding_var(x.v, new_tvar env ktype) in
+             let env = Env.push_local_binding env b in
+             let e = mk_Exp_bvar x None p.p in
+             ([b], [b], [], env), ((Inr e, as_implicit imp), p, [])
  
            | Pat_twild a -> 
-                let t = mk_Typ_btvar a None p.p in
-                targ t, p, []
+             let w = Env.Binding_typ(a.v, new_kvar env) in
+             let env = if allow_wc_dependence then Env.push_local_binding env w else env in
+             let t = mk_Typ_btvar a None p.p in
+             ([w], [], [w], env), (targ t, p, [])
 
            | Pat_tvar a ->      
-                let t = mk_Typ_btvar a None p.p in
-                targ t, p, []
+             let b = Env.Binding_typ(a.v, new_kvar env) in
+             let env = Env.push_local_binding env b in 
+             let t = mk_Typ_btvar a None p.p in
+             ([b], [b], [], env), (targ t, p, [])
+
 
            | Pat_cons(fv, pats) -> 
-               let args, pats, uvars = pats |> List.map (pat_as_arg env) |> List.unzip3 in
-               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, args) None p.p, Data_app)) in
-               varg e,
-               {p with v=Pat_cons(fv, pats)}, 
-               List.flatten uvars
+               let (b, a, w, env), (args, pats, uvars) = pats |> List.fold_left (fun ((b, a, w, env), (args, pats, uvars)) p ->
+                   let (b', a', w', env), (arg, pat, uvars') = pat_as_arg_with_env allow_wc_dependence env p in
+                    (b'::b, a'::a, w'::w, env), (arg::args, pat::pats, uvars'@uvars))  (([], [], [], env), ([], [], [])) in
+               let e = mk_Exp_meta(Meta_desugared(mk_Exp_app'(Util.fvar true fv.v fv.p, args |> List.rev) None p.p, Data_app)) in
+               (List.rev b |> List.flatten, 
+                List.rev a |> List.flatten, 
+                List.rev w |> List.flatten,
+                env), 
+               (varg e,
+                {p with v=Pat_cons(fv, List.rev pats)}, 
+                List.rev uvars)
 
-           | Pat_disj _ -> failwith "impossible: nested disjunctive pattern" in
-
+           | Pat_disj _ -> failwith "impossible" in
     let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
         match p.v with 
            | Pat_cons(fv, pats) -> 
@@ -312,8 +300,13 @@ let pat_as_exps allow_implicits env p
 
     let one_pat allow_wc_dependence env p = 
         let p = elaborate_pat env p in
-        let b, a, w, env = pat_env allow_wc_dependence  env p in
-        let arg, p, uvars = pat_as_arg env p in
+
+//        let b, a, w, env = pat_env allow_wc_dependence env p in
+//        let arg, p, uvars = pat_as_arg env p in
+
+//        let b, a, w, env = pat_env allow_wc_dependence env p in
+        let (b, a, w, env), (arg, p, uvars) = pat_as_arg_with_env allow_wc_dependence env p in
+
         match b |> Util.find_dup pvar_eq with 
             | Some (Env.Binding_var(x, _)) -> raise (Error(Tc.Errors.nonlinear_pattern_variable (Inr x), p.p))
             | Some (Env.Binding_typ(x, _)) -> raise (Error(Tc.Errors.nonlinear_pattern_variable (Inl x), p.p))

@@ -1711,7 +1711,8 @@ let solve tcenv q : unit =
     let pop () = pop (Util.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     let prefix, labels, qry, suffix =
         let env = get_env tcenv in
-        let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) tcenv.gamma) in
+        let bindings = Tc.Env.fold_env tcenv (fun bs b -> b::bs) [] in
+        let env_decls, env = encode_env_bindings env (List.filter (function Binding_sig _ -> false | _ -> true) bindings) in
         if debug tcenv Options.Low then Util.fprint1 "Encoding query formula: %s\n" (Print.formula_to_string q);//(Normalize.formula_norm_to_string tcenv q);
         let phi, labels, qdecls = encode_formula_with_labels q env in
         let label_prefix, label_suffix = encode_labels labels in

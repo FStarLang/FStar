@@ -491,21 +491,30 @@ let force_refinement (t_base, refopt) =
 (* ------------------------------------------------ *)
 (* <variable ops> common ops on variables           *)
 (* ------------------------------------------------ *)
-let occurs_check env uk t = 
+let rec occurs env wl uk t = 
     let uvs = Util.uvars_in_typ t in 
-    let occurs_ok = not (Util.set_mem uk uvs.uvars_t) in
+    uvs.uvars_t |> Util.set_elements |> Util.for_some (fun (uvt, _) ->
+        match find_uvar_t uvt wl.subst with 
+            | None -> Unionfind.equivalent uvt (fst uk)
+            | Some t ->
+               let t = match Util.compress_typ t with 
+                        | {n=Typ_lam(_, t)} -> t
+                        | t -> t in
+              occurs env wl uk t) 
+    
+let occurs_check env wl uk t = 
+    let occurs_ok = not (occurs env wl uk t) in
     let msg = 
         if occurs_ok then None
-        else Some (Util.format4 "occurs-check failed (%s occurs in {%s} uvars of %s normalized to %s)" 
+        else Some (Util.format3 "occurs-check failed (%s occurs in %s) (with substitution %s)" 
                         (Print.uvar_t_to_string uk) 
-                        (Util.set_elements uvs.uvars_t |> List.map Print.uvar_t_to_string |> String.concat ", ")
                         (Print.typ_to_string t)
-                        (Normalize.typ_norm_to_string env t)) in
+                        (wl.subst |> List.map (uvi_to_string env) |> String.concat ", ")) in
     occurs_ok, msg
 
-let occurs_and_freevars_check env uk fvs t = 
+let occurs_and_freevars_check env wl uk fvs t = 
     let fvs_t = Util.freevars_typ t in
-    let occurs_ok, msg = occurs_check env uk t in
+    let occurs_ok, msg = occurs_check env wl uk t in
     (occurs_ok, Util.fvs_included fvs_t fvs, (msg, fvs, fvs_t))
 
 let occurs_check_e env ut e = 
@@ -1645,7 +1654,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                 let t2 = sn env t2 in 
                 let fvs1 = Util.freevars_typ t1 in
                 let fvs2 = Util.freevars_typ t2 in
-                let occurs_ok, msg = occurs_check env (uv,k) t2 in
+                let occurs_ok, msg = occurs_check env wl (uv,k) t2 in
                 if not occurs_ok 
                 then giveup_or_defer orig ("occurs-check failed: " ^ (Option.get msg))
                 else if Util.fvs_included fvs2 fvs1 
@@ -1747,7 +1756,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                 let zs = intersect_vars xs ys in
                 let u_zs, _ = new_tvar_level (min (uvar_level u1) (uvar_level u2)) r zs k in
                 let sub1 = mk_Typ_lam'(xs, u_zs) (Some k1) r in
-                let occurs_ok, msg = occurs_check env (u1,k1) sub1 in
+                let occurs_ok, msg = occurs_check env wl (u1,k1) sub1 in
                 if not occurs_ok
                 then giveup_or_defer orig "flex-flex: failed occcurs check" 
                 else let sol1 = UT((u1, k1), sub1, Some (Util.uvars_in_typ sub1)) in
@@ -1755,7 +1764,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                         then let wl = solve_prob orig None [sol1] wl in
                                 solve env wl
                         else let sub2 = mk_Typ_lam'(ys, u_zs) (Some k2) r in
-                                let occurs_ok, msg = occurs_check env (u2,k2) sub2 in
+                                let occurs_ok, msg = occurs_check env wl (u2,k2) sub2 in
                                 if not occurs_ok 
                                 then giveup_or_defer orig "flex-flex: failed occurs check"
                                 else let sol2 = UT((u2,k2), sub2, Some (Util.uvars_in_typ sub2)) in
@@ -1780,7 +1789,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
                 else
                      let t2 = sn env t2 in
                      let rhs_vars = Util.freevars_typ t2 in
-                     let occurs_ok, _ = occurs_check env (u1,k1) t2 in
+                     let occurs_ok, _ = occurs_check env wl (u1,k1) t2 in
                      let lhs_vars = freevars_of_binders xs in
                      if occurs_ok && Util.fvs_included rhs_vars lhs_vars
                      then let sol = UT((u1, k1), mk_Typ_lam'(xs, t2) (Some k1) t1.pos, Some (Util.uvars_in_typ t2)) in
