@@ -286,10 +286,9 @@ monad_lattice {
 
   with
   PURE  ~> DIV   = (fun ('a:Type) ('wp:PURE.WP 'a) ('p:DIV.Post 'a) -> 'wp (fun a -> 'p a));
-  DIV   ~> ALL  =  (fun ('a:Type) ('wp:DIV.WP 'a) ('p:ALL.Post 'a) (h:heap) -> 'wp (fun a -> 'p (V a) h));
-  PURE  ~> STATE = (fun ('a:Type) ('wp:PURE.WP 'a) ('p:STATE.Post 'a) (h:heap) -> 'wp (fun a -> 'p a h));
+  DIV   ~> STATE = (fun ('a:Type) ('wp:DIV.WP 'a) ('p:ALL.Post 'a) (h:heap) -> 'wp (fun a -> 'p (V a) h));
   STATE ~> ALL   = (fun ('a:Type) ('wp:STATE.WP 'a) ('p:ALL.Post 'a) -> 'wp (fun a -> 'p (V a)));
-  PURE  ~> EXN   = (fun ('a:Type) ('wp:PURE.WP 'a) ('p:EXN.Post 'a) -> 'wp (fun a -> 'p (V a)));
+  DIV   ~> EXN   = (fun ('a:Type) ('wp:PURE.WP 'a) ('p:EXN.Post 'a) -> 'wp (fun a -> 'p (V a)));
   EXN   ~> ALL   = (fun ('a:Type) ('wp:EXN.WP 'a) ('p:ALL.Post 'a) (h:heap) -> 'wp (fun ra -> 'p ra h))
 }
 
