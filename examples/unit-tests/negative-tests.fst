@@ -1,4 +1,4 @@
-(* EXPECT 33 FAILURES *)
+(* EXPECT 32 FAILURES *)
 (* ******************************************************************************** *)
 module Neg
 
@@ -126,7 +126,7 @@ let rec t1 n =
 
 val plus : snat -> snat -> Tot snat
 let rec plus n m =
-  match n with //reports a spurious incomplete pattern error
+  match n with
     | O -> m
     | S O -> m
     | S (S n') -> plus (S (S n')) m //termination check should fail

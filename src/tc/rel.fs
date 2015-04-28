@@ -2489,7 +2489,7 @@ let try_discharge_guard env (g:guard_t) =
    else match g.guard_f with 
     | Trivial -> ()
     | NonTrivial vc -> 
-        let vc = Normalize.norm_typ [Beta; Eta; Simplify] env vc in
+        let vc = Normalize.norm_typ [DeltaHard; Beta; Eta; Simplify] env vc in
         begin match check_trivial vc with 
             | Trivial -> ()
             | NonTrivial vc -> 
