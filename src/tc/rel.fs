@@ -498,7 +498,7 @@ let occurs_check_e env ut e =
     let occurs_ok = not (Util.set_mem ut uvs.uvars_e) in
     let msg = 
         if occurs_ok then None
-        else Some (Util.format3 "occurs-check failed (%s occurs in {%s} uvars of %s normalized to %s)" 
+        else Some (Util.format3 "occurs-check failed (%s occurs in {%s} uvars of %s)" 
                         (Print.uvar_e_to_string ut) 
                         (Util.set_elements uvs.uvars_e |> List.map Print.uvar_e_to_string |> String.concat ", ")
                         (Normalize.exp_norm_to_string env e)) in
