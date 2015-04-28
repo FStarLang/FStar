@@ -618,69 +618,73 @@ and encode_exp (e:exp) (env:env_t) : (term
         e, []
  
       | Exp_abs(bs, body) -> 
+        let fallback () =
+            let f = varops.fresh "Exp_abs" in
+            let decl = Term.DeclFun(f, [], Term_sort, None) in
+            Term.mkFreeV(f, Term_sort), [decl] in
 
-        let tfun = Tc.Util.force_tk e in
-        if not <| Util.is_pure_function tfun
-        then let f = varops.fresh "Exp_abs" in
-             let decl = Term.DeclFun(f, [], Term_sort, None) in
-             Term.mkFreeV(f, Term_sort), [decl]
-        else let tfun = whnf env tfun |> Util.compress_typ in
-             begin match tfun.n with 
-                | Typ_fun(bs', c) -> 
-                    let nformals = List.length bs' in
-//                    Printf.printf "Encoding Exp_abs %s\nType tfun is %s\ngot n_formals(typ)=%d and n_formals(term)=%d; total_comp=%A" 
-//                    (Print.exp_to_string e)
-//                    (Print.typ_to_string tfun)
-//                    nformals 
-//                    (List.length bs) 
-//                    (Util.is_total_comp c);
+        begin match !e.tk with 
+            | None -> fallback ()
+            | Some tfun -> 
+            if not <| Util.is_pure_function tfun
+            then fallback ()
+            else let tfun = whnf env tfun |> Util.compress_typ in
+                 begin match tfun.n with 
+                    | Typ_fun(bs', c) -> 
+                        let nformals = List.length bs' in
+    //                    Printf.printf "Encoding Exp_abs %s\nType tfun is %s\ngot n_formals(typ)=%d and n_formals(term)=%d; total_comp=%A" 
+    //                    (Print.exp_to_string e)
+    //                    (Print.typ_to_string tfun)
+    //                    nformals 
+    //                    (List.length bs) 
+    //                    (Util.is_total_comp c);
                    
-                    if nformals < List.length bs && Util.is_total_comp c (* explicit currying *)
-                    then let bs0, rest = Util.first_N nformals bs in 
-                         let res_t = match Util.mk_subst_binder bs0 bs' with 
-                            | Some s -> Util.subst_typ s (Util.comp_result c) 
-                            | _ -> failwith "Impossible" in
-                         let e = mk_Exp_abs(bs0, mk_Exp_abs(rest, body) (Some res_t) body.pos) (Some tfun) e0.pos in
-                         //Util.fprint1 "Explicitly currying %s\n" (Print.exp_to_string e);
-                         encode_exp e env
+                        if nformals < List.length bs && Util.is_total_comp c (* explicit currying *)
+                        then let bs0, rest = Util.first_N nformals bs in 
+                             let res_t = match Util.mk_subst_binder bs0 bs' with 
+                                | Some s -> Util.subst_typ s (Util.comp_result c) 
+                                | _ -> failwith "Impossible" in
+                             let e = mk_Exp_abs(bs0, mk_Exp_abs(rest, body) (Some res_t) body.pos) (Some tfun) e0.pos in
+                             //Util.fprint1 "Explicitly currying %s\n" (Print.exp_to_string e);
+                             encode_exp e env
 
-                    else //much like the encoding of Typ_lam
-                         let vars, guards, envbody, decls, _ = encode_binders None bs env in 
-                         let body, decls' = encode_exp body envbody in
+                        else //much like the encoding of Typ_lam
+                             let vars, guards, envbody, decls, _ = encode_binders None bs env in 
+                             let body, decls' = encode_exp body envbody in
                          
-                         let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
-                         let cvars = Term.free_variables key_body in
-                         let tkey = mkForall([], cvars, key_body) in
+                             let key_body = mkForall([], vars, mkImp(mk_and_l guards, body)) in
+                             let cvars = Term.free_variables key_body in
+                             let tkey = mkForall([], cvars, key_body) in
 
-                         begin match Util.smap_try_find env.cache tkey.hash with 
-                            | Some (t, _, _) -> 
-                              Term.mkApp(t, List.map mkFreeV cvars), []
+                             begin match Util.smap_try_find env.cache tkey.hash with 
+                                | Some (t, _, _) -> 
+                                  Term.mkApp(t, List.map mkFreeV cvars), []
 
-                            | None -> 
+                                | None -> 
 
-                              let cvar_sorts = List.map snd cvars in
-                              let fsym = varops.fresh "Exp_abs" in
-                              let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
-                              let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
-                              let app = mk_ApplyE f vars in
+                                  let cvar_sorts = List.map snd cvars in
+                                  let fsym = varops.fresh "Exp_abs" in
+                                  let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
+                                  let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
+                                  let app = mk_ApplyE f vars in
 
-                              let f_has_t, decls'' = encode_typ_pred' None tfun env f in
-                              let typing_f = Term.Assume(Term.mkForall([f], cvars, f_has_t), 
-                                                        Some (fsym ^ " typing")) in 
+                                  let f_has_t, decls'' = encode_typ_pred' None tfun env f in
+                                  let typing_f = Term.Assume(Term.mkForall([f], cvars, f_has_t), 
+                                                            Some (fsym ^ " typing")) in 
                          
-                              let interp_f = Term.Assume(Term.mkForall([app], vars@cvars, mkImp(Term.mk_IsTyped app, mkEq(app, body))), 
-                                                        Some (fsym ^ " interpretation")) in
+                                  let interp_f = Term.Assume(Term.mkForall([app], vars@cvars, mkImp(Term.mk_IsTyped app, mkEq(app, body))), 
+                                                            Some (fsym ^ " interpretation")) in
 
-                              let f_decls = decls@decls'@(fdecl::decls'')@[typing_f;interp_f] in
+                                  let f_decls = decls@decls'@(fdecl::decls'')@[typing_f;interp_f] in
                               
-                              Util.smap_add env.cache tkey.hash (fsym, cvar_sorts, f_decls);
+                                  Util.smap_add env.cache tkey.hash (fsym, cvar_sorts, f_decls);
 
-                              f, f_decls
-                        end
+                                  f, f_decls
+                            end
 
-              | _ -> failwith "Impossible"
+                  | _ -> failwith "Impossible"
+                end
             end
-
       | Exp_app({n=Exp_fvar(l, _)}, [(Inl _, _); (Inr v1, _); (Inr v2, _)]) when (lid_equals l.v Const.lexcons_lid) -> 
          let v1, decls1 = encode_exp v1 env in 
          let v2, decls2 = encode_exp v2 env in
