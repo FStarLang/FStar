@@ -238,7 +238,7 @@ let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
 val factorial_is_positive: x:nat -> Lemma (ensures (factorial x > 0))
 let rec factorial_is_positive x = match x with 
   | 0 -> ()
-  | n -> factorial_is_positive (n - 1) //NS:used to be:  using_induction_hyp factorial_is_positive; but that seems to require a very inefficient axiom on the nat ordering
+  | n -> factorial_is_positive (n - 1) //NS:used to be:  by_induction_on e factorial_is_positive; but that seems to require a very inefficient axiom on the nat ordering
 
 val length: list 'a -> Tot int
 let rec length = function
@@ -246,10 +246,10 @@ let rec length = function
   | _::tl -> 1 + length tl
 
 val length_is_nat: l:list int -> Lemma (ensures (length l >= 0))
-let rec length_is_nat l = using_induction_hyp length_is_nat
+let rec length_is_nat l = by_induction_on l length_is_nat
 
 val poly_length_is_nat: l:list 'a -> Lemma (ensures (length l >= 0))
-let rec poly_length_is_nat 'a l = using_induction_hyp (poly_length_is_nat 'a)
+let rec poly_length_is_nat 'a l = by_induction_on l (poly_length_is_nat 'a)
 
 
 val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)

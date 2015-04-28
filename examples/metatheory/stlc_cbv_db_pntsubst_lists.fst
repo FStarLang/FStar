@@ -101,7 +101,7 @@ let rec typing g e = match e with
 
 val progress: e:exp{is_Some (typing [] e)} ->
               Lemma (requires True) (ensures (is_value e \/ is_Some (step e)))
-let rec progress e = using_induction_hyp progress
+let rec progress e = by_induction_on e progress
 
 let len = List.length
 

@@ -384,6 +384,12 @@ module Microsoft = struct
                | None -> find_map tl f
                | y -> y
 
+      let try_find_index f l =
+        let rec aux i = function
+          | [] -> None
+          | hd::tl -> if f hd then Some i else aux (i+1) tl in
+        aux 0 l
+
       let fold_map f state s =
         let fold (state, acc) x =
           let state, v = f state x in (state, v :: acc) in

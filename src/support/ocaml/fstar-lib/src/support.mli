@@ -199,6 +199,7 @@ module Microsoft :
             val bind_opt : 'a option -> ('a -> 'b option) -> 'b option
             val map_opt : 'a option -> ('a -> 'b) -> 'b option
             val find_map : 'a list -> ('a -> 'b option) -> 'b option
+            val try_find_index: ('a -> bool) -> 'a list -> int option
             val fold_map :
               ('a -> 'b -> 'a * 'c) -> 'a -> 'b list -> 'a * 'c list
             val choose_map :

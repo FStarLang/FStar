@@ -90,7 +90,7 @@ let rec typing g e =
 val progress : e:exp -> Lemma
       (requires (is_Some (typing empty e)))
       (ensures (is_value e \/ (is_Some (step e))))
-let rec progress e = using_induction_hyp progress
+let rec progress e = by_induction_on e progress
 
 val appears_free_in : x:int -> e:exp -> Tot bool
 let rec appears_free_in x e =

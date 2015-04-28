@@ -14,41 +14,40 @@
    limitations under the License.
 *)
 
-(* Defining accessibility predicates and well-founded recursion like in Coq
-   https://coq.inria.fr/library/Coq.Init.Wf.html
-*)
 
 module Wf
+
 
 type acc (a:Type) (r:(a -> a -> Type)) (x:a) : Type =
   | AccIntro : (y:a -> r y x -> Tot (acc a r y)) -> acc a r x
 
-type well_founded (a:Type) (r:(a -> a -> Type)) = x:a -> Tot (acc a r x)
+type well_founded (a:Type) (r:(a -> a -> Type)) = x:a -> acc a r x
 
-(* This would be a section in Coq *)
-assume type aa : Type
-assume type r : (aa -> aa -> Type)
-
-val acc_inv : x:aa -> a:(acc aa r x) ->
-              Tot (e:(y:aa -> r y x -> Tot (acc aa r y)){e << a})
+val acc_inv : r:('a -> 'a -> Type) -> x:'a -> a:(acc 'a r x) ->
+              Tot (e:(y:'a -> r y x -> Tot (acc 'a r y)){e << a})
 let acc_inv x a = match a with | AccIntro z h1 -> h1
 
-assume val axiom1_dep : a:Type -> b:(a->Type) -> f:(y:a -> Tot (b y)) -> x:a ->
-                        Lemma (f x << f)
+assume val axiom1 : a:Type -> b:Type -> f:(a -> Tot b) -> x:a ->
+                    Lemma (f x << f)
 
-val axiom1 : a:Type -> b:Type -> f:(a -> Tot b) -> x:a ->
-             Lemma (Precedes (f x) f)
-let axiom1 f x = axiom1_dep f x
-
-val fix_F : p:(aa -> Type) ->
+(* Can't prove it is total : I know that [acc_inv x a << a]
+   but from this I cannot deduce [acc_inv x a y h << a] *)
+val fix_F : #aa:Type -> #r:(aa -> aa -> Type) -> #p:(aa -> Type) ->
             (x:aa -> (y:aa -> r y x -> Tot (p y)) -> Tot (p x)) ->
             x:aa -> a:(acc aa r x) -> Tot (p x) (decreases a)
-let rec fix_F f x a =
+(*
+val fix_F : r:('a -> 'a -> Type) -> p:('a -> Type) ->
+            (x:'a -> (y:'a -> r y x -> p y) -> p x) ->
+            x:'a -> acc 'a r x -> p x
+*)
+let rec fix_F #aa #r #p f x a =
   f x (fun y h ->
-         axiom1_dep aa (fun y -> r y x -> Tot (acc aa r y)) (acc_inv x a) y;
-         axiom1 (r y x) (acc aa r y) (acc_inv x a y) h;
-         fix_F f y (acc_inv x a y h))
+(*
+         axiom1 a (r y x -> Tot (acc a r y)) (acc_inv x a) y;
+         axiom1 (acc_inv x a y) h;
+*)
+         fix_F #aa #r #p f y (acc_inv x a y h))
 
-val fix : well_founded aa r -> p:(aa -> Type) ->
-          (x:aa -> (y:aa -> r y x -> Tot (p y)) -> Tot (p x)) -> x:aa -> Tot (p x)
+val fix : r:('a -> 'a -> Type) -> well_founded 'a r -> p:('a -> Type) ->
+          (x:'a -> (y:'a -> r y x -> p y) -> p x) -> x:'a -> p x
 let fix rwf f x = fix_F f x (rwf x)
