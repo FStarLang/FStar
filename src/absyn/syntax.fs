@@ -107,7 +107,7 @@ and meta_t =
   | Meta_refresh_label of typ * option<bool> * Range.range   (* Add the range to the label of any labeled sub-term of the type *)
   | Meta_slack_formula of typ * typ * ref<bool>              (* A refinement formula with slack, used in type inference *)
 and uvar_basis<'a> = 
-  | Uvar of ref<int>                                         (* An integer 'level' *)
+  | Uvar 
   | Fixed of 'a
 and exp' =
   | Exp_bvar       of bvvar

@@ -1,5 +1,25 @@
 module Unit2
 
+(* Proving alpha equivalence in the solver *)
+let test1 _ = assert ((fun x -> x) = (fun y -> y))
+assume type vector : Type -> nat -> Type
+let test2 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
+                      (b:Type -> y:nat -> Tot (vector b y)))
+let test3 _ = assert (nat == y:int{y>=0})
+
+type zat = x:int{x >= 0}
+let test5 _ = assert (nat == zat)
+
+let test6 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
+                      (b:Type -> y:zat -> Tot (vector b y)))
+
+let test7 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
+                      (b:Type -> y:int{y>=0} -> Tot (vector b y)))
+
+
+(*type geq (z:int) = x:int{x >= z}
+let test4 _ = assert (nat == geq 0)*)
+
 (* GADTs *)
 type t : Type -> Type =
   | Int : i:int -> t int
@@ -10,7 +30,7 @@ let f (a:Type) (x:t a) : a =
   | Int i -> i + 1
   | Bool b -> not b
 
-  
+
 (* Strategies: *)
 
 (*   0. --rel1, the current default of F* *)
@@ -40,7 +60,7 @@ let f (a:Type) (x:t a) : a =
 (*                   x:t{phi} <: ?u as  ?u = x:t{phi \/ ?slack x} *)
 
 (*   3. Flow-sensitive idea   (ideal) *)
-     
+
 (*      Infers subtyping constraints Psi |- t <: t', where Psi is the  *)
 (*      It delays the solving of ?u < t and t <: ?u *)
 

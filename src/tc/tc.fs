@@ -335,7 +335,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
          let args, g = tc_args env args in
          let fvs = Util.freevars_kind k1 in
          let binders = Util.binders_of_freevars fvs in 
-         let kres = Tc.Rel.new_kvar env k1.pos binders |> fst in
+         let kres = Tc.Rel.new_kvar k1.pos binders |> fst in
          let bs = null_binders_of_tks (Tc.Util.tks_of_args args) in
          let kar = mk_Kind_arrow(bs, kres) k1.pos in
          Tc.Util.force_trivial env <| keq env None k1 kar;
@@ -438,7 +438,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     (match s.n with 
         | Typ_uvar(u,k1) -> 
           let k1, g = tc_kind env k1 in
-          let _, u' = Tc.Rel.new_tvar env s.pos [] k1 in
+          let _, u' = Tc.Rel.new_tvar s.pos [] k1 in
           Util.unchecked_unify u u'; //replace all occurrences of this unchecked uvar with its checked variant
           u', k1, g
         | _ -> tc_typ env s)
@@ -832,7 +832,7 @@ and tc_exp env e : exp * lcomp * guard_t =
                     | (Inl a, _)::rest, (Inr e, _)::_ -> (* instantiate a type argument *) 
                       let k = Util.subst_kind subst a.sort in
                       fxv_check head env (Inl k) fvs;
-                      let targ, u = Tc.Rel.new_tvar env e.pos vars k in 
+                      let targ, u = Tc.Rel.new_tvar e.pos vars k in 
                       if debug env Options.Extreme then Util.fprint2 "Instantiating %s to %s" (Print.strBvd a.v) (Print.typ_to_string targ);
                       let subst = (Inl(a.v, targ))::subst in
                       let arg = Inl targ, as_implicit true in
@@ -1126,12 +1126,9 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
               option<formula> -- guard condition for this branch, propagated up for exhaustiveness check
               comp            -- the computation type of the branch
   *)
-  let env0 = env in 
   (*<tc_pat>*)
   let tc_pat (allow_implicits:bool) (pat_t:typ) p0 : pat * list<Env.binding> * Env.env * list<exp> * guard_t = 
-    let env = Env.incr_level env0 in
-    let pat_level = env.uvar_level in
-    let bindings, exps, p, uvars = Tc.Util.pat_as_exps allow_implicits env p0 in
+    let bindings, exps, p = Tc.Util.pat_as_exps allow_implicits env p0 in
     let pat_env = List.fold_left Env.push_local_binding env bindings in
     if debug env <| Options.Other "Pat" 
     then bindings |> List.iter (function 
@@ -1143,23 +1140,28 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
     let exps = exps |> List.map (fun e -> 
         if Tc.Env.debug env Options.High
         then Util.fprint2 "Checking pattern expression %s against expected type %s\n" (Print.exp_to_string e) (Print.typ_to_string pat_t);
+
         let e, lc, g =  tc_exp env1 e in //only keep the unification/subtyping constraints; discard the logical guard for patterns
+
         if Tc.Env.debug env Options.High
         then Util.fprint2 "Pre-checked pattern expression %s at type %s\n" (Normalize.exp_norm_to_string env e) (Normalize.typ_norm_to_string env lc.res_typ);
+
         let g' = Tc.Rel.teq env lc.res_typ expected_pat_t in
         let g = Rel.conj_guard g g' in
         ignore <| Tc.Rel.solve_deferred_constraints env g;
+        let e' = Normalize.norm_exp [Normalize.Beta] env e in
+        if not <| Util.uvars_included_in (Util.uvars_in_exp e') (Util.uvars_in_typ expected_pat_t)
+        then raise (Error(Util.format2 "Implicit pattern variables in %s could not be resolved against expected type %s; please bind them explicitly" (Print.exp_to_string e') (Print.typ_to_string expected_pat_t), p.p));
         if Tc.Env.debug env Options.High
-        then Util.fprint1 "Done checking pattern expression %s\n" (Normalize.exp_norm_to_string env e);//.exp_to_string e);
+        then Util.fprint1 "Done checking pattern expression %s\n" (Normalize.exp_norm_to_string env e);
+
+        //explicitly return e here, not its normal form, since pattern decoration relies on it
         e) in
-    if not <| Tc.Util.check_level uvars (fun l -> l < pat_level) //NS: Could try to introduce existential variables automatically, but that seems too implicit 
-    then raise (Error("Implicit pattern variables could not be resolved; please bind them explicitly", p.p));
     let p = Tc.Util.decorate_pattern env p exps in
     if debug env <| Options.Other "Pat" 
     then bindings |> List.iter (function 
-        | Env.Binding_var(x, t) -> Util.fprint2 "Pattern var %s  : %s\n" (Print.strBvd x) (Print.typ_to_string t)//(Normalize.typ_norm_to_string env t)
+        | Env.Binding_var(x, t) -> Util.fprint2 "Pattern var %s  : %s\n" (Print.strBvd x) (Print.typ_to_string t)
         | _ -> ());
-    let pat_env = Env.decr_level pat_env in
     p, bindings, pat_env, exps, Rel.trivial_guard in
   (*</tc_pat>*)
 
@@ -1169,8 +1171,8 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
     | Some e -> 
         if !Options.verify
         then raise (Error("When clauses are not yet supported in --verify mode; they soon will be", e.pos))
-//             let e, c, g = no_logical_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e in
-//             Some e, g
+        //             let e, c, g = no_logical_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e in
+        //             Some e, g
         else let e, c, g = tc_exp (Env.set_expected_typ pat_env Recheck.t_bool) e in
              Some e, g in
   let when_condition = match when_clause with 
@@ -1563,7 +1565,7 @@ and tc_decl env se deserialized = match se with
       let recs = abbrevs |> List.map (function 
         | Sig_typ_abbrev(lid, tps, k, t, [], r) ->
            let k = match k.n with 
-            | Kind_unknown -> Tc.Rel.new_kvar env r tps |> fst
+            | Kind_unknown -> Tc.Rel.new_kvar r tps |> fst
             | _ -> k in
            Sig_tycon(lid, tps, k, [], [], [], r), t
         | _ -> failwith "impossible") in

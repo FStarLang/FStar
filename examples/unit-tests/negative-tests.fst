@@ -52,7 +52,7 @@ let should_fail1 u =
   assert (mem b (singleton a))
 
 val should_fail2: unit -> Tot unit
-let should_fail2 u = 
+let should_fail2 u =
   assert (Subset (union (singleton a) (singleton b)) (singleton a))
 
 val should_fail3: unit -> Tot unit
@@ -77,7 +77,7 @@ let test10 (x:ref int) (y:ref int) (h0:heap) (h1:heap) (h2:heap) =
 
 (* ******************************************************************************** *)
 module NegTermination
-val bug15 : m : int -> z : int -> 
+val bug15 : m : int -> z : int ->
             Lemma (ensures False)
 let rec bug15 m =
   match m with
@@ -126,7 +126,7 @@ let rec t1 n =
 
 val plus : snat -> snat -> Tot snat
 let rec plus n m =
-  match n with //reports a spurious incomplete pattern error
+  match n with
     | O -> m
     | S O -> m
     | S (S n') -> plus (S (S n')) m //termination check should fail
@@ -154,18 +154,18 @@ let rec xxx (n : snat) : snat =
 module NegBST
 
 (* The type of a binary tree indexed by its max element *)
-type tree: int -> Type = 
+type tree: int -> Type =
   | Leaf : n:int -> tree n
-  | Node : #l   :int 
+  | Node : #l   :int
         -> left :option (tree l)
         -> n    :int
-        -> #r   :int 
-        -> right:option (tree r){l <= n 
-                                 /\ n <= r 
+        -> #r   :int
+        -> right:option (tree r){l <= n
+                                 /\ n <= r
                                  /\ (is_None right <==> n=r)
                                  /\ (is_None left <==> n=l)}
         -> tree r
-    
+
 
 let test_node_1 () = Node #1 None 1 #1 None
 let test_node_2 (l:int) (t:tree l) = Node (Some t) (l + 1) #(l + 1) None
@@ -181,7 +181,7 @@ let bad_node_3 (l:int) (t1:tree l) (t2:tree (l + 1)) = Node (Some t1) (l + 1) (S
 (* assume type Good : int -> Type *)
 (* assume val enc: plain:int -> c:unit{Good plain} *)
 (* assume val repr : int -> int *)
- 
+
 (* let f (text:int) = enc (repr text) //should fail; plain escapes *)
 
 module ShortCircuitingBugs
