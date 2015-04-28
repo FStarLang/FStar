@@ -608,7 +608,7 @@ and tc_value env e : exp * lcomp * guard_t =
                         bs |> List.collect (fun b -> match b with 
                             | Inl _, _ -> [] (* skip the type arguments from the ordering *)
                             | Inr x, _ -> 
-                               (match (whnf env x.sort).n with 
+                               (match (Util.unrefine (whnf env (Util.unrefine x.sort))).n with 
                                     | Typ_fun _ -> []
                                     | _ -> [Util.bvar_to_exp x])) in
                                                        
