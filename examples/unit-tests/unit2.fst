@@ -8,6 +8,9 @@ let test2 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
 let test3 _ = assert (nat == y:int{y>=0})
 
 type zat = x:int{x >= 0}
+type geq (z:int) = x:int{x >= z}
+let test4 _ = assert (nat == geq 0)
+
 let test5 _ = assert (nat == zat)
 
 let test6 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
@@ -16,9 +19,6 @@ let test6 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
 let test7 _ = assert ((a:Type -> x:nat -> Tot (vector a x)) ==
                       (b:Type -> y:int{y>=0} -> Tot (vector b y)))
 
-
-(*type geq (z:int) = x:int{x >= z}
-let test4 _ = assert (nat == geq 0)*)
 
 (* GADTs *)
 type t : Type -> Type =

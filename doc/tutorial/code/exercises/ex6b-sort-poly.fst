@@ -71,11 +71,10 @@ let rec sorted_concat_lemma l1 l2 pivot = match l1 with
     | hd::tl -> sorted_concat_lemma tl l2 pivot
 
 
-let cmp i j = i <= j
 val sort: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l = mem i m)})
                             (decreases (length l))
 let rec sort l = match l with
   | [] -> []
   | pivot::tl ->
-    let hi, lo = partition (cmp pivot) tl in
+    let hi, lo = partition (fun j -> pivot <= j) tl in
     append (sort lo) (pivot::sort hi)
