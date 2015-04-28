@@ -18,6 +18,11 @@
       (lexeme_start_p lexbuf, lexeme_end_p lexbuf)
   end
 
+  let string_trim_both s n m = Util.substring s n (String.length s - (n+m))
+  let trim_both   lexbuf n m = string_trim_both (L.lexeme lexbuf) n m
+  let trim_right  lexbuf n = trim_both lexbuf 0 n
+  let trim_left   lexbuf n = trim_both lexbuf n 0
+
   let char_of_ec = function
     | '\'' -> '\''
     | '\"' -> '"'
@@ -118,6 +123,10 @@
     then (Util.decr n_typ_apps; true)
     else false
 
+  let lc = Util.mk_ref 1
+  let rec mknewline n lexbuf =
+    if n > 0 then (L.new_line lexbuf; Util.incr lc; mknewline (n-1) lexbuf)
+    
  let clean_number x = String.strip ~chars:"uyslLUnIN" x
 }
 
@@ -189,12 +198,18 @@ let ident       = ident_start_char ident_char*
 let tvar        = '\'' (ident_start_char | constructor_start_char) tvar_char*
 
 rule token = parse
+ | "\xef\xbb\xbf"   (* UTF-8 byte order mark, some compiler files have them *)
+     {token lexbuf}
  | "#light"
      { PRAGMALIGHT }
  | "#set-options"
      { PRAGMA_SET_OPTIONS }
  | "#reset-options"
      { PRAGMA_RESET_OPTIONS }
+ | '#' ' ' (digit)*
+     { let n = int_of_string (trim_left lexbuf 2) in
+       mknewline (n - !lc) lexbuf;
+       cpp_filename lexbuf }
  | ident as id
      { id |> Hashtbl.find_option keywords |> Option.default (IDENT id) }
  | constructor as id
@@ -222,6 +237,29 @@ rule token = parse
          | '\\' -> char_of_ec c.[1]
          | _    -> c.[0]
        in CHAR c }
+
+ | "(*"
+     { comment lexbuf; token lexbuf }
+
+ | "//"  [^'\n''\r']*
+     { token lexbuf }
+
+ | '"'
+     { string (Buffer.create 0) lexbuf }
+
+ | truewhite+
+     { token lexbuf }
+
+ | offwhite+
+     { token lexbuf }
+
+ | newline
+     { L.new_line lexbuf; token lexbuf }
+
+ | '`' '`'
+     (([^'`' '\n' '\r' '\t'] | '`' [^'`''\n' '\r' '\t'])+) as id
+   '`' '`'
+     { IDENT id }
 
  | "~"         { TILDE (L.lexeme lexbuf) }
  | "/\\"       { CONJUNCTION }
@@ -263,38 +301,12 @@ rule token = parse
  | "!"         { BANG }
  | "$"         { DOLLAR }
  | "\\"        { BACKSLASH }
- | custom_op   { CUSTOM_OP(L.lexeme lexbuf) }
-
  | ('/' | '%') as op { DIV_MOD_OP    (String.of_char op) }
  | ('+' | '-') as op { PLUS_MINUS_OP (String.of_char op) }
  | custom_op   {CUSTOM_OP (L.lexeme lexbuf) }
 
- | "(*"
-     { comment lexbuf; token lexbuf }
-
- | "//"  [^'\n''\r']*
-     { token lexbuf }
-
- | '"'
-     { string (Buffer.create 0) lexbuf }
-
- | truewhite+
-     { token lexbuf }
-
- | offwhite+
-     { token lexbuf }
-
- | newline
-     { L.new_line lexbuf; token lexbuf }
-
- | '`' '`'
-     (([^'`' '\n' '\r' '\t'] | '`' [^'`''\n' '\r' '\t'])+) as id
-   '`' '`'
-     { IDENT id }
-
  | _ { failwith "unexpected char" }
-
- | eof { EOF }
+ | eof { lc := 1; EOF }
 
 and custom_op_parser = parse
  | custom_op_char * {CUSTOM_OP(">" ^  L.lexeme lexbuf)}
@@ -373,3 +385,13 @@ and comment_string = parse
 
  | eof
      { failwith "unterminated comment" }
+
+and cpp_filename = parse
+ | ' ' '"' [^ '"']+ '"'
+     { let s = trim_both lexbuf 2 1 in
+       ignore_endline lexbuf }
+
+and ignore_endline = parse
+ | ' '* newline
+     { token lexbuf }
+
