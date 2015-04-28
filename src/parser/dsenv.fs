@@ -200,8 +200,9 @@ let is_effect_name env lid =
         then Some (ftv lid kun)
         else None
       | _ -> None in
-  resolve_in_open_namespaces env lid find_in_sig |> Util.is_some
-
+  env.effect_names |> Util.for_some (lid_equals lid)
+  || resolve_in_open_namespaces env lid find_in_sig |> Util.is_some 
+ 
 let try_resolve_typ_abbrev env lid = 
   let find_in_sig lid = 
     match Util.smap_try_find env.sigmap lid.str with 
