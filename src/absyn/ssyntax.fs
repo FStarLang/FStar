@@ -423,6 +423,7 @@ let serialize_qualifier (writer:Writer)(ast:qualifier) :unit =
     | RecordConstructor(l) -> writer.write_char 'l'; serialize_list writer serialize_ident l
     | ExceptionConstructor -> writer.write_char 'm'
     | Effect -> writer.write_char 'n'
+    | HasMaskedEffect -> writer.write_char 'o'
 
 let deserialize_qualifier (reader:Reader) :qualifier =
     match (reader.read_char ()) with
@@ -440,6 +441,7 @@ let deserialize_qualifier (reader:Reader) :qualifier =
     | 'l' -> RecordConstructor(deserialize_list reader deserialize_ident)
     | 'm' -> ExceptionConstructor
     | 'n' -> Effect
+    | 'o' -> HasMaskedEffect
     |  _  -> parse_error()
 
 let serialize_tycon (writer:Writer) ((lid, bs, k): tycon) :unit = serialize_lident writer lid; serialize_binders writer bs; serialize_knd writer k

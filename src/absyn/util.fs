@@ -1024,8 +1024,13 @@ and uvars_in_exp e : uvars =
   update_uvars (SynSumExp e) <| vs_exp e true (fun (_,x) -> x) 
 
 and uvars_in_comp c : uvars = 
-  update_uvars (SynSumComp c) <| vs_comp c true (fun (_,x) -> x) 
+  update_uvars (SynSumComp c) <| vs_comp c true (fun (_,x) -> x)
   
+let uvars_included_in (u1:uvars) (u2:uvars) = 
+    Util.set_is_subset_of u1.uvars_k u2.uvars_k
+    && Util.set_is_subset_of u1.uvars_t u2.uvars_t
+    && Util.set_is_subset_of u1.uvars_e u2.uvars_e
+
 (***********************************************************************************************)
 (* closing types and terms *)
 (***********************************************************************************************)

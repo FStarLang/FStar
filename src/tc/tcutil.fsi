@@ -32,9 +32,8 @@ val new_implicit_tvar : env -> knd -> (typ * (uvar_t * Range.range))
 val new_implicit_evar : env -> typ -> (exp * (uvar_e * Range.range))
 val as_uvar_t : typ -> uvar_t
 val check_uvars: Range.range -> typ -> unit
-val check_level: list<Util.either<uvar_t, uvar_e>> -> (int -> bool) -> bool
 val check_and_ascribe : env -> exp -> typ -> typ -> exp * Rel.guard_t
-val pat_as_exps: bool -> env -> pat -> (list<Env.binding> * list<exp> * pat * list<Util.either<uvar_t, uvar_e>>)
+val pat_as_exps: bool -> env -> pat -> (list<Env.binding> * list<exp> * pat)
 val decorate_pattern: env -> pat -> list<exp> -> pat
 val decorated_pattern_as_exp: pat -> list<either_var> * exp
 val decorated_pattern_as_typ: pat -> list<either_var> * typ

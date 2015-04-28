@@ -242,7 +242,7 @@ type closure =
 val apply : closure -> int -> Tot int
 let apply c n =
   match c with
-    | Clos e k -> k e n
+    | Clos 'env e k -> k e n
 
 val clos2 : (closure * int) -> int -> Tot int
 let clos2 (k,n) m = apply k (n + m)
