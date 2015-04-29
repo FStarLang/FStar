@@ -131,12 +131,12 @@ let rec index l n =
 (* Functions as Data *)
 
 (* NS: Unannotated let recs have the ALL effect. To get the Tot effect, you must request it (enabling the termination checker).
-   NS: BTW, the default function type has ML effect, so if not annotated, test will be in ML, and so the whole thing will be ALL. 
+   NS: BTW, the default function type has ML effect, so if not annotated, test will be in ML, and so the whole thing will be ALL.
    NS: An alternative may be to have some other syntax, like fix instead let rec, to locally change the default function effect to Tot. *)
 
 (* Currying *)
 
-(* NS: it used to be that if you intended to partially apply 
+(* NS: it used to be that if you intended to partially apply
        a function, then you had to indicate it as such in the type.
        Not so any more. *)
 val prod_curry : (('a * 'b) -> Tot 'c) -> 'a -> 'b -> Tot 'c
@@ -243,7 +243,7 @@ let rec fold f l b =
   | []   -> b
   | h::t -> f h (fold f t b)
 
-val fold_example1 : unit -> Lemma 
+val fold_example1 : unit -> Lemma
       (ensures (fold (fun x y -> x * y) [1;2;3;4] 1 = 24))
 let fold_example1 () = ()
 
@@ -266,7 +266,7 @@ let ftrue = constfun true *)
 let ftrue _ = true
 
 (* CH: This causes syntax error at character 12, is override a
-   keyword?  
+   keyword?
 
    NS: Yes, override is a keyword. Only because it is a keyword in F#,
    and since we (plan to) codegen to F# and Caml, unless we mangle
@@ -364,6 +364,12 @@ let rec fold_map_correct f l =
   | [] -> ()
   | h::t -> fold_map_correct f t
 
+val fold_right_cons_is_id: l:list 'a -> l':list 'a ->
+                           Lemma (List.fold_rightT Cons l l' = (l @ l'))
+let rec fold_right_cons_is_id l l' = match l with
+  | []   -> ()
+  | _::t -> fold_right_cons_is_id t l'
+
 (* Church numerals *)
 
 (* Using type abbreviation here does not work, even with full annotations
@@ -399,20 +405,20 @@ val mult  : (('a->'a) -> 'a -> 'a) -> (('a->'a) -> 'a -> 'a) -> ('a->'a) -> 'a -
 let mult n m f x = n (m f) x
 
 (* CH: not enough polymorphism to do this in F*?
-   NS: I don't see why this should type-check. In particular, (m n) is ill-typed. 
-       Perhaps you really want higher-rank polymorphism? 
+   NS: I don't see why this should type-check. In particular, (m n) is ill-typed.
+       Perhaps you really want higher-rank polymorphism?
        In which case, you can write it as shown below.
-   
+
 val exp  : (('a->'a) -> 'a -> 'a) -> (('a->'a) -> 'a -> 'a) -> ('a->'a) -> 'a -> 'a
 let exp n m f x = m n f x
 *)
 
-val exp : 'a:Type 
-     -> n:(('a -> 'a) -> 'a -> 'a) 
+val exp : 'a:Type
+     -> n:(('a -> 'a) -> 'a -> 'a)
      -> m:('b:Type -> 'b -> 'b)
      -> f:('a -> 'a)
-     -> 'a 
      -> 'a
-let exp n m f x = 
+     -> 'a
+let exp n m f x =
   let n' = m n in (* NS TODO: fix ugly syntax. I should just allow you to write (m n f x) *)
   n' f x

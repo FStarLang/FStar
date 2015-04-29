@@ -174,12 +174,12 @@ let rec fold_left2 f a l1 l2 = match l1, l2 with
 val fold_right: ('a -> 'b -> 'b) -> list 'a -> 'b -> 'b
 let rec fold_right f l x = match l with
   | [] -> x
-  | hd::tl -> fold_right f tl (f hd x)
+  | hd::tl -> f hd (fold_right f tl x)
 
 val fold_rightT: ('a -> 'b -> Tot 'b) -> list 'a -> 'b -> Tot 'b
 let rec fold_rightT f l x = match l with
   | [] -> x
-  | hd::tl -> fold_rightT f tl (f hd x)
+  | hd::tl -> f hd (fold_rightT f tl x)
 
 
 (** List searching **)
