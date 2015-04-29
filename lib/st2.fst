@@ -1,6 +1,8 @@
 module Comp
 open Heap
 type heap2 = heap * heap
+
+(* Working around https://github.com/FStarLang/FStar/issues/164 *)
 kind STWP (a:Type) = (a -> heap -> Type) -> heap -> Type
 kind PUREWP (a:Type) = (a -> Type) -> Type
 kind ALLPost (a:Type) = result a -> heap -> Type
@@ -165,21 +167,42 @@ let monotonic_id_standard x y = ()
 (*                                                 (ensures (fun h1 r h2 -> (fst r) <= (snd r))) *)
 (* let monotonic_id x y = compose2 id id x y *)
 
+type twice (a:Type) = a * a
 
-type low 'a = x:('a * 'a){fst x = snd x}
-type high 'a = 'a * 'a
+type low 'a = x:(twice 'a){fst x = snd x}
+type high 'a = twice 'a
 
-val one : int * int
-let one = (1,1)
+val same : 'a -> Tot (twice 'a)
+let same x = (x,x)
 
-val plus : (int * int) -> (int * int) -> Tot (int * int)
-let plus (x1,x2) (y1,y2) = (x1 + y1, x2 + y2)
+val one : twice int
+let one = same 1
 
-val test_info : (high int * low int) -> (high int * low int)
+val pair_map2 : ('a -> 'b -> Tot 'c) -> (twice 'a) -> (twice 'b) -> Tot (twice 'c)
+let pair_map2 f (x1,x2) (y1,y2) = (f x1 y1, f x2 y2)
+
+let plus = pair_map2 (fun x y -> x + y)
+
+val test_info : (high int * low int) -> Tot (high int * low int)
 (* This one fails as expected *)
 (* val test_info : (high int * low int) -> (low int * low int) *)
 let test_info (x,y) = ((plus x y), (plus y one))
 
+let minus  = pair_map2 (fun x y -> x - y)
+
+val test_minus : high int -> Tot (low int)
+let test_minus z = minus z z
+
+type monotonic = x:twice int -> Tot (y:(twice int){fst x <= snd x ==> fst y <= snd y})
+
+type k_sensitive = k:int -> d:(int->int) -> x:twice int ->
+                   Tot (y:(twice int){fst x <= snd x ==> fst y <= snd y})
+
+val foo : k:int -> twice int -> Tot (twice int)
+let foo k x = pair_map2 (fun k x -> k * x) (same k) x
+
+(* val foo_monotonic : int -> monotonic *)
+(* let foo_monotonic k = (fun x -> pair_map2 (fun k x -> k * x) (same k) x) *)
 
 (* This does not work if I η-expand [noleak] in the body of noleak_ok *)
 let noleak (x,b) = if b then x := 1 else x := 1
