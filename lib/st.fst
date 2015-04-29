@@ -41,10 +41,9 @@ assume val alloc: a:Type -> init:a -> ST (ref a)
                                          (fun h0 r h1 -> not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)
                                          (modifies no_refs)
 
-assume val read: a:Type -> r:ref a -> ST a
-                                         (fun h -> True)
-                                         (fun h0 x h1 -> h0==h1 /\ x==sel h0 r)
-                                         (modifies no_refs)
+assume val read: a:Type -> r:ref a -> STATE a
+                                         (fun 'p h -> 'p (sel h r) h)
+                                         (fun 'p h -> 'p (sel h r) h)
 
 assume val write: a:Type -> r:ref a -> v:a -> Prims.STATE.ST unit
                                                  (fun h -> True)
