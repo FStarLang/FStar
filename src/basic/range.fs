@@ -149,7 +149,10 @@ let file_of_file_idx n = fileIndexTable.IndexToFile(n)
 let set_file_of_range r f = fileIndexTable.SetFileName (file_idx_of_range r) f
 
 let mk_range f b e = mk_file_idx_range (file_idx_of_file f) b e
-let file_of_range r = file_of_file_idx (file_idx_of_range r)
+let file_of_range r = 
+    if !Options.report_full_paths
+    then
+    else file_of_file_idx (file_idx_of_range r)
 
 (* end representation, start derived ops *)
 

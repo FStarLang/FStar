@@ -1397,7 +1397,7 @@ and tc_decl env se deserialized = match se with
     | Sig_pragma(p, r) -> 
         begin match p with 
             | SetOptions o -> 
-                begin match Getopt.parse_string (Options.specs()) (fun _ -> ()) o with 
+                begin match Options.set_options o with
                     | Getopt.GoOn -> se, env
                     | Getopt.Help  -> raise (Error ("Failed to process pragma: use 'fstar --help' to see which options are available", r))
                     | Getopt.Die s -> raise (Error ("Failed to process pragma: " ^s, r))

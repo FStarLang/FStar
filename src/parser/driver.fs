@@ -56,6 +56,7 @@ let parse_files files =
     (env, m::mods)) (DesugarEnv.empty_env(), []) files in 
   List.rev mods |> List.flatten
 
+let read_build_config file = ParseIt.read_build_config file
 (* ;;  *)
 
 (* parse_files ["prims.fst"] *)

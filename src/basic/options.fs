@@ -85,6 +85,8 @@ let use_eq_at_higher_order = Util.mk_ref false
 let fs_typ_app = Util.mk_ref false
 let n_cores = Util.mk_ref 1
 let verify_module = Util.mk_ref []
+let use_build_config = Util.mk_ref false
+let report_full_paths = Util.mk_ref false
 let init_options () = 
     show_signatures := [];
     norm_then_print := true;
@@ -211,6 +213,8 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "no_fs_typ_app", ZeroArgs (fun () -> fs_typ_app := false), "Do not allow the use of t<t1,...,tn> syntax for type applications");
      ( noshort, "n_cores", OneArg ((fun x -> n_cores := int_of_string x), "positive integer"), "Maximum number of cores to use for the solver (default 1)");
      ( noshort, "verify_module", OneArg ((fun x -> verify_module := x::!verify_module), "string"), "Name of the module to verify");
+     ( noshort, "use_build_config", ZeroArgs (fun () -> use_build_config := true), "Expect just a single file on the command line and no options; will read the 'build-config' prelude from the file");
+     ( noshort, "report_full_paths", ZeroArgs (fun () -> report_full_paths := true), "Report full paths in error messages, rather than relative ones")
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
 and parse_codegen s =
@@ -227,6 +231,12 @@ let should_verify m =
         | [] -> true //the verify_module flag was not set, so verify everything
         | l -> List.contains m l //otherwise, look in the list to see if it is explicitly mentioned
 
+let set_options s = Getopt.parse_string (specs()) (fun _ -> ()) s
+
+let reset_options_string : ref<option<string>> = ref None
 let reset_options () = 
     init_options();
-    Getopt.parse_cmdline (specs()) (fun x -> ())
+    match !reset_options_string with 
+        | Some x -> set_options x
+        | _ -> Getopt.parse_cmdline (specs()) (fun x -> ())
+

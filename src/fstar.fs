@@ -50,8 +50,14 @@ let go _ =
     | Die msg ->
       Util.print_string msg
     | GoOn ->
-        if Option.isSome !Options.codegen then
-            Options.pretype := true;
+        let filenames = if !Options.use_build_config  //if the user explicitly requested it
+                        || Sys.argv.Length = 2        //or, if there is only a single file on the command line
+                        then match filenames with 
+                                | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
+                                | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
+                        else filenames in
+        if Option.isSome !Options.codegen 
+        then Options.pretype := true; //NS: this is odd
         (* 1. Parsing the file + desugaring *)
         let filenames = if has_prims_cache filenames then filenames else (Options.prims()::filenames) in
         let fmods = Parser.Driver.parse_files filenames in
