@@ -192,7 +192,7 @@ OCAML_ALL=$(addprefix ocaml-output/, $(OCAML_FILES))
 ocaml-test: ocaml
 	make -s -C ocaml-output parser
 	make -s -C ocaml-output
-	cp ocaml-output/fstarml.exe ../bin/fstar.exe
+	cp ocaml-output/fstarml.exe ../bin/fstar.exe || cp ocaml-output/fstarml ../bin/fstar.exe
 
 test:   clean $(BIN)/fstar.exe ocaml-test
 	make -C ../examples
