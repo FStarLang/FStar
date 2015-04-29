@@ -75,3 +75,57 @@ val equiv2: x:ref int
                 (requires (fun h2 -> sel (fst h2) x = - (sel (snd h2) y)))     //x, y negatives of each other
                 (ensures (fun _ _ h2' -> sel (fst h2') x = sel (snd h2') y)) //their contents are equal afterwards
 let equiv2 x y = compose2 square square x y
+
+
+(* Examples taken from the POPL paper *)
+
+let assign x y = x := y
+
+val monotonic_assign : x:ref int -> y1:int -> y2:int
+                       -> STATE2.ST2 (unit * unit)
+                                     (requires (fun h -> y1 <= y2))
+                                     (ensures (fun h1 r h2 -> sel (fst h2) x <= sel (snd h2) x))
+let monotonic_assign x y1 y2 = compose2 (assign x) (assign x) y1 y2
+
+
+val id : int -> Tot int
+let id x = x
+
+val monotonic_id_standard : x:int -> y:int
+                            -> Lemma (requires (x <= y))
+                                     (ensures (id x <= id y))
+let monotonic_id_standard x y = ()
+
+
+(* This does not work...? *)
+(* val monotonic_id : x:int -> y:int -> STATE2.ST2 (int * int) *)
+(*                                                 (requires (fun h -> x <= y)) *)
+(*                                                 (ensures (fun h1 r h2 -> (fst r) <= (snd r))) *)
+(* let monotonic_id x y = compose2 id id x y *)
+
+
+type low 'a = x:('a * 'a){fst x = snd x}
+type high 'a = 'a * 'a
+
+val one : int * int
+let one = (1,1)
+
+val plus : (int * int) -> (int * int) -> Tot (int * int)
+let plus (x1,x2) (y1,y2) = (x1 + y1, x2 + y2)
+
+val test_info : (high int * low int) -> (high int * low int)
+(* This one fails as expected *)
+(* val test_info : (high int * low int) -> (low int * low int) *)
+let test_info (x,y) = ((plus x y), (plus y one))
+
+
+(* This does not work if I η-expand [noleak] in the body of noleak_ok *)
+let noleak (x,b) = if b then x := 1 else x := 1
+val noleak_ok: x1:ref int
+               -> x2:ref int
+               -> b1:bool
+               -> b2:bool
+               -> STATE2.ST2 (unit * unit)
+                             (requires (fun h -> True))
+                             (ensures (fun h1 r h2 -> ((x1 = x2) /\ (fst h1 = snd h1)) ==> (fst h2 = snd h2)))
+let noleak_ok x1 x2 b1 b2 = compose2 noleak noleak (x1,b1) (x2,b2)
