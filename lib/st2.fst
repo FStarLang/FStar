@@ -77,6 +77,68 @@ val equiv2: x:ref int
 let equiv2 x y = compose2 square square x y
 
 
+let f3 x = if !x = 0 then x := 0 else x:= 1
+let g3 x = if !x <> 0 then x := 1 else x:= 0
+val equiv3: x:ref int
+         -> y:ref int
+         -> STATE2.ST2 (unit * unit)
+                (requires (fun h -> sel (fst h) x = sel (snd h) y)) // x, y have same values
+                (ensures (fun _ _ h2' -> sel (fst h2') x = sel (snd h2') y)) // their contents are equal afterwards
+let equiv3 x y = compose2 f3 g3 x y
+
+
+let f4 x = if !x = 0 then x := 0 else x:= 1
+let g4 x = if !x = 0 then x := 1 else x:= 0
+val equiv4: x:ref int
+         -> y:ref int
+         -> STATE2.ST2 (unit * unit)
+                (requires (fun h -> if sel (fst h) x = 0 then sel (snd h) y = 1 else sel (snd h) y = 0)) // making sure !x=0 <==> !y <> 0
+                (ensures (fun _ _ h2' -> sel (fst h2') x = sel (snd h2') y)) //their contents are equal afterwards
+let equiv4 x y = compose2 f4 g4 x y
+
+
+let f5 x = x := 0 
+let g5 x = if !x = 0 then x := !x else x:= !x - !x 
+val equiv5: x:ref int
+         -> y:ref int
+         -> STATE2.ST2 (unit * unit)
+                (requires (fun _ -> True))  // no requirements
+                (ensures (fun _ _ h2' -> sel (fst h2') x = sel (snd h2') y)) //their contents are equal afterwards
+let equiv5 x y = compose2 f5 g5 x y
+
+
+let f6 x = let y = 1 in x := y 
+let g6 x = if !x = 0 then x := 1 else if !x <> 0 then x := 1 else x:= 0
+val equiv6: x:ref int
+         -> y:ref int
+         -> STATE2.ST2 (unit * unit)
+                (requires (fun _ -> True)) // no requirements
+                (ensures (fun _ _ h2' -> sel (fst h2') x = sel (snd h2') y)) //their contents are equal afterwards
+let equiv6 x y = compose2 f6 g6 x y
+
+
+let f7 x = x := 2*!x
+let g7 x = let y = (fun a -> a + a) !x in x := y
+val equiv7: x:ref int
+         -> y:ref int
+         -> STATE2.ST2 (unit * unit)
+                (requires (fun h -> sel (fst h) x - sel (snd h) y = 10)) // values of x, y differ by 10
+                (ensures (fun _ _ h2' -> sel (fst h2') x - sel (snd h2') y = 20)) // values of x, y differ by 20
+let equiv7 x y = compose2 f7 g7 x y
+
+
+let f8 (x, y, z) = if !z=0 then (x := 1; y := 1) else (y:=1 ; x := 0)
+val equiv8: a:(ref int * ref int * ref int)
+         -> b:(ref int * ref int * ref int)
+         -> STATE2.ST2 (unit * unit)
+                (requires (fun h -> MkTuple3._1 a <> MkTuple3._2 a /\  // x and y are not aliases 
+                                    MkTuple3._1 b <> MkTuple3._2 b))
+                (ensures (fun _ _ h2' -> sel (fst h2') (MkTuple3._2 a) = sel (snd h2') (MkTuple3._2 b))) //value of y is the same 
+let equiv8 a b = compose2 f8 f8 a b
+
+
+
+
 (* Examples taken from the POPL paper *)
 
 let assign x y = x := y
