@@ -195,8 +195,8 @@ let test_minus z = minus z z
 
 type monotonic = x:twice int -> Tot (y:(twice int){fst x <= snd x ==> fst y <= snd y})
 
-type k_sensitive = d:(int -> int -> Tot int) -> k:int -> x:twice int ->
-                   Tot (y:(twice int){d (fst x) (snd x) <= d (fst y) (snd y)})
+type k_sensitive (d:(int -> int -> Tot int)) (k:int) =
+   x:twice int -> Tot (y:(twice int){d (fst x) (snd x) <= d (fst y) (snd y)})
 
 val foo : k:int -> twice int -> Tot (twice int)
 let foo k x = pair_map2 (fun k x -> k * x) (same k) x
@@ -209,14 +209,13 @@ let dist x1 x2 = let m = x1 - x2 in
               if m >= 0 then m else -m
 
 (* This doesn't work for obscure reasons *)
-(* val foo_k_sensitive : k:int -> Tot (k_sensitive dist k) *)
+(* val foo_k_sensitive : k:int{k>0} -> Tot (k_sensitive dist k) *)
 (* let foo_k_sensitive k = (fun x -> pair_map2 (fun k x -> k * x) (same k) x) *)
-(* Expected a type-to-type constructor or function; *)
-(* got a type "(k_sensitive dist k)" of kind "Type" *)
+(* Unknown assertion failed *)
 
 (* Unfolding k_sensitive makes it work again *)
 val foo_k_sensitive : k:int{k>0} -> x:twice int ->
-                      Tot (y:(twice int){dist (fst x) (snd x) <= k * (dist (fst y) (snd y))})
+      Tot (y:(twice int){dist (fst x) (snd x) <= k * (dist (fst y) (snd y))})
 let foo_k_sensitive k = (fun x -> pair_map2 (fun k x -> k * x) (same k) x)
 
 (* This does not work if I η-expand [noleak] in the body of noleak_ok *)
