@@ -1455,8 +1455,11 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
       env, msig::msigs) (env, []) monads in
     let order = lifts |> List.map (fun l -> 
       let t = desugar_typ env (l.lift_op) in
-      {source=qualify env (l.msource);
-       target=qualify env (l.mdest);
+      let qualify_name env l = match DesugarEnv.try_lookup_typ_name env (Syntax.lid_of_ids [l]) with 
+            | Some ({n=Typ_const ftv}) -> ftv.v
+            | _ -> qualify env l in
+      {source=qualify_name env l.msource;
+       target=qualify_name env l.mdest;
        lift=t}) in
     let lids = msigs |> List.map (fun m -> m.mname) in
     let se = Sig_monads(List.rev msigs, order, d.drange, lids) in
