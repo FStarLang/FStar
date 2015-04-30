@@ -46,18 +46,17 @@ let write x v = x := v
 
 val witness: #a:Type
           -> #b:Reln a
+          -> m:mref a b
           -> p:(a -> Type)
-          -> x:mref a b
-          -> St (token x p)
-                (requires (fun h0 -> p (sel h0 x) /\ stable p b))
-                (ensures (fun h0 w h1 -> h0=h1))
-let witness x = ()
+          -> St (u:unit {token m p})
+                (requires (fun h0 -> p (sel h0 m) /\ stable p b))
+                (ensures (fun h0 _ h1 -> h0=h1))
+let witness (a:Type) (b:Reln a) m (p: a -> Type) = ()
 
-assume val recall: #a:Type
-                -> #b:Reln a
-                -> #p:(a -> Type)
-                -> #m:mref a b
-                -> w:token m p
+assume val recall: a:Type
+                -> b:Reln a
+                -> p:(a -> Type) 
+                -> m:mref a b {token m p}
                 -> St unit
                       (requires (fun _ -> True))
                       (ensures (fun h0 _ h1 -> h0=h1 /\ p (sel h1 m)))
