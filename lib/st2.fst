@@ -1,3 +1,8 @@
+(*--build-config
+    options:--admit_fsi Set;
+    variables:LIB=../lib;
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst
+  --*)
 module Comp
 open Heap
 type heap2 = heap * heap
@@ -99,8 +104,8 @@ val equiv4: x:ref int
 let equiv4 x y = compose2 f4 g4 x y
 
 
-let f5 x = x := 0 
-let g5 x = if !x = 0 then x := !x else x:= !x - !x 
+let f5 x = x := 0
+let g5 x = if !x = 0 then x := !x else x:= !x - !x
 val equiv5: x:ref int
          -> y:ref int
          -> STATE2.ST2 (unit * unit)
@@ -109,7 +114,7 @@ val equiv5: x:ref int
 let equiv5 x y = compose2 f5 g5 x y
 
 
-let f6 x = let y = 1 in x := y 
+let f6 x = let y = 1 in x := y
 let g6 x = if !x = 0 then x := 1 else if !x <> 0 then x := 1 else x:= 0
 val equiv6: x:ref int
          -> y:ref int
@@ -133,9 +138,9 @@ let f8 (x, y, z) = if !z=0 then (x := 1; y := 1) else (y:=1 ; x := 0)
 val equiv8: a:(ref int * ref int * ref int)
          -> b:(ref int * ref int * ref int)
          -> STATE2.ST2 (unit * unit)
-                (requires (fun h -> MkTuple3._1 a <> MkTuple3._2 a /\  // x and y are not aliases 
+                (requires (fun h -> MkTuple3._1 a <> MkTuple3._2 a /\  // x and y are not aliases
                                     MkTuple3._1 b <> MkTuple3._2 b))
-                (ensures (fun _ _ h2' -> sel (fst h2') (MkTuple3._2 a) = sel (snd h2') (MkTuple3._2 b))) //value of y is the same 
+                (ensures (fun _ _ h2' -> sel (fst h2') (MkTuple3._2 a) = sel (snd h2') (MkTuple3._2 b))) //value of y is the same
 let equiv8 a b = compose2 f8 f8 a b
 
 
