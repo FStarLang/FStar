@@ -206,7 +206,7 @@ type k_sensitive (d:(int -> int -> Tot int)) (k:int) =
 val foo : k:int -> twice int -> Tot (twice int)
 let foo k x = pair_map2 (fun k x -> k * x) (same k) x
 
-val foo_monotonic : k:int{k>0} -> Tot monotonic
+val foo_monotonic : k:int{k>=0} -> Tot monotonic
 let foo_monotonic k = (fun x -> pair_map2 (fun k x -> k * x) (same k) x)
 
 val dist : int -> int -> Tot int

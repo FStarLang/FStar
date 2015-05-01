@@ -23,6 +23,9 @@ type ceq : #a:Type -> a -> a -> Type =
 val ceq_eq : #a:Type -> #x:a -> #y:a -> ceq x y -> Lemma (x = y)
 let ceq_eq x y p = ()
 
+type ctrue : Type =
+  | I : ctrue
+
 (* hopefully this is an empty type *)
 type cfalse : Type =
 
