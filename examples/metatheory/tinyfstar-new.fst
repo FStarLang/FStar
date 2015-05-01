@@ -1,6 +1,8 @@
 module TinyFStarNew
+
 open Classical
 open FunctionalExtensionality
+
 type var = nat
 type loc = nat
 
@@ -8,14 +10,15 @@ type heap = loc -> Tot int
 
 type econst =
   | EcUnit
-  | EcInt : int -> econst
-  | EcLoc : loc -> econst
+  | EcInt : i:int -> econst
+  | EcLoc : l:loc -> econst
   | EcBang
   | EcAssign
   | EcSel
   | EcUpd
+  | EcHeap : h:heap -> econst
 
-type tconst = 
+type tconst =
   | TcUnit
   | TcInt
   | TcRefInt
@@ -28,44 +31,58 @@ type tconst =
   | TcImpl
 
   | TcForallE
-
-  | TEqT  : k:knd -> tconst
   | TForallT : k:knd -> tconst
 
   | TcEqE
+  | TEqT     : k:knd -> tconst
 
   | TcPrecedes
-type knd =
+
+and knd =
   | KType : knd
-  | KKArr : k:knd -> kbody:knd -> knd
-  | KTArr : t:typ -> kbody:knd -> knd
+  | KKArr : karg:knd -> kres:knd -> knd
+  | KTArr : targ:typ -> kres:knd -> knd
+
 and typ =
-  | TVar : a:var -> typ
+  | TVar   : a:var -> typ
   | TConst : c:tconst -> typ
 
-  | TArr  : t:typ -> c:typ{is_TCmp c} -> typ
+  | TArr  : t:typ -> c:cmp -> typ
   | TTLam : k:knd -> tbody:typ -> typ
-  | TELam : t:typ -> tbody:typ -> typ
+  | TELam : t:typ -> ebody:typ -> typ
   | TTApp : t1:typ -> t2:typ -> typ
   | TEApp : t:typ -> e:exp -> typ
-  | TCmp :  m:eff -> t:typ -> wp:typ -> typ
-and exp = 
+
+and exp =
   | EVar : x:var -> exp
   | EConst : c:econst -> exp
   | ELam : t:typ -> ebody:exp -> exp
-  | EFix : d:(option exp) -> t:typ -> ebody : exp -> exp
-  | EIf0 : g:exp -> ethen:exp -> eelse:exp -> exp
+  | EFix : d:(option exp) -> t:typ -> ebody:exp -> exp
+  | EIf0 : eguard:exp -> ethen:exp -> eelse:exp -> exp
   | EApp : e1:exp -> e2:exp -> exp
-  | EHeap : heap -> exp
+
 and eff =
   | EfPure
   | EfAll
+
 and cmp =
+  | Cmp :  m:eff -> t:typ -> wp:typ -> cmp
+
+(****************************)
+(* Sugar                    *)
+(****************************)
+
+let eint x = EConst (EcInt x)
+let eloc l = EConst (EcLoc l)
+let esel eh el = (EApp (EApp (EConst EcSel) eh) el)
+let eupd eh el ei = EApp (EApp (EApp (EConst EcUpd) eh) el) ei
 
 (****************************)
 (* Expression Substitutions *)
 (****************************)
+
 type esub = var -> Tot exp
+
 opaque type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 
 val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
@@ -80,21 +97,20 @@ let esub_inc = esub_inc_above 0
 
 let is_evar (e:exp) : int = if is_EVar e then 0 else 1
 
+val omap : ('a -> Tot 'b) -> option 'a -> Tot (option 'b)
+let omap f o =
+  match o with
+  | Some x -> Some (f x)
+  | None   -> None
+
 val eesubst : s:esub -> e:exp -> Pure exp (requires True)
       (ensures (fun e' -> erenaming s /\ is_EVar e ==> is_EVar e'))
       (decreases %[is_evar e; is_erenaming s; e])
 val tesubst : s:esub -> t:typ -> Tot typ
-      (decreases %[1;is_erenaming s; t])
+      (decreases %[1; is_erenaming s; t])
 val kesubst : s:esub -> k:knd -> Tot knd
-      (decreases %[1;is_erenaming s; k])
-      (*
-and exp = 
-  | EVar : x:var -> exp
-  | EConst : c:econst -> exp
-  | ELam : t:typ -> ebody:exp -> exp
-  | EFix : d:(option exp) -> t:typ -> ebody : exp -> exp
-  | EIf0 : g:exp -> ethen:exp -> eelse:exp -> exp
-  *)
+      (decreases %[1; is_erenaming s; k])
+
 let rec eesubst s e =
   match e with
   | EVar x -> s x
@@ -102,49 +118,56 @@ let rec eesubst s e =
   | ELam t e1 ->
      let esub_lam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) =
        fun y -> if y=0 then EVar y
-                       else (eesubst esub_inc (s (y - 1))) in
+                else (eesubst esub_inc (s (y - 1))) in
      ELam (tesubst s t) (eesubst esub_lam e1)
-  | EFix d t ebody -> let esub_lam2 : y:var -> Tot(e:exp{erenaming s ==> is_EVar e}) = fun y -> if y <= 1 then EVar y else (eesubst esub_inc (eesubst esub_inc (s (y-2)))) in
- let d' = match d with Some de -> Some (eesubst s de) | None -> None in
- EFix d' (tesubst s t) (eesubst esub_lam2 ebody)
+  | EFix d t ebody ->
+     let esub_lam2 : y:var -> Tot(e:exp{erenaming s ==> is_EVar e}) =
+       fun y -> if y <= 1 then EVar y
+                else (eesubst esub_inc (eesubst esub_inc (s (y-2)))) in
+     let d' = match d with
+              | Some de -> Some (eesubst s de)
+              | None -> None in
+     (* CH: wanted to write "d' = (omap (eesubst s) d)" but that fails
+            the termination check *)
+     EFix d' (tesubst s t) (eesubst esub_lam2 ebody)
   | EIf0 g ethen eelse -> EIf0 (eesubst s g) (eesubst s ethen) (eesubst s eelse)
   | EApp e1 e2 -> EApp (eesubst s e1) (eesubst s e2)
 
-and tesubst s t = match t with
-| TVar a -> t
-| TConst c -> 
-(match c with
-| TEqT k -> TConst (TEqT (kesubst s k))
-| TForallT k -> TConst (TForallT (kesubst s k))
-| c -> TConst c
-)
-| TArr t c -> 
-  let esub_lam : y : var -> Tot (e:exp{erenaming s ==> is_EVar e}) =
-    fun y -> if y=0 then EVar y
-             else (eesubst esub_inc (s (y-1))) in
-  TArr (tesubst s t) (Cmp (Cmp.m c) (tesubst esub_lam (Cmp.t c)) (tesubst esub_lam (Cmp.wp c)))
-| TTLam k tbody -> TTLam (kesubst s k) (tesubst s tbody)
-| TELam t tbody -> 
-  let esub_lam : y : var -> Tot (e:exp{erenaming s ==> is_EVar e}) =
-    fun y -> if y=0 then EVar y (*TODO: why does fstar complain when it is written «y = 0» with spaces*)
-             else (eesubst esub_inc (s (y-1))) in
-TELam (tesubst s t) (tesubst esub_lam tbody)
-| TTApp t1 t2 -> TTApp (tesubst s t1) (tesubst s t2)
-| TEApp t e -> TEApp (tesubst s t) (eesubst s e)  
-| TEqT k -> TEqT (kesubst s k)
-| TForallT k -> TForallT (kesubst s k)
-  (*| KType : knd
-  | KKArr : k:knd -> kbody:knd -> knd
-  | KTArr : t:typ -> kbody:knd -> knd*)
+and tesubst s t =
+  match t with
+  | TVar a -> t
+  | TConst c ->
+     (match c with
+      | TEqT k     -> TConst (TEqT (kesubst s k))
+      | TForallT k -> TConst (TForallT (kesubst s k))
+      | c          -> TConst c)
+  | TArr t c ->
+     let esub_lam : y : var -> Tot (e:exp{erenaming s ==> is_EVar e}) =
+       fun y -> if y=0 then EVar y
+                else eesubst esub_inc (s (y-1)) in
+     TArr (tesubst s t)
+          (Cmp (Cmp.m c) (tesubst esub_lam (Cmp.t c))
+               (tesubst esub_lam (Cmp.wp c)))
+  | TTLam k tbody -> TTLam (kesubst s k) (tesubst s tbody)
+  | TELam t tbody ->
+     let esub_lam : y : var -> Tot (e:exp{erenaming s ==> is_EVar e}) =
+       fun y -> (*TODO: why does fstar complain when it is written
+                        «y = 0» with spaces 
+                  CH: can't reproduce this, what variant do you use? *)
+                if y=0 then EVar y
+                else (eesubst esub_inc (s (y-1))) in
+     TELam (tesubst s t) (tesubst esub_lam tbody)
+  | TTApp t1 t2 -> TTApp (tesubst s t1) (tesubst s t2)
+  | TEApp t e -> TEApp (tesubst s t) (eesubst s e)
 
-and kesubst s k = match k with 
-| KType -> KType
-| KKArr k kbody -> KKArr (kesubst s k) (kesubst s kbody)
-| KTArr t kbody -> 
-let esub_lam : y :var -> Tot(e:exp{erenaming s ==> is_EVar e}) =
-fun y -> if y = 0 then EVar y
-         else (eesubst esub_inc (s (y-1))) in
-KTArr (tesubst s t) (kesubst esub_lam kbody)
+and kesubst s k = match k with
+  | KType -> KType
+  | KKArr k kbody -> KKArr (kesubst s k) (kesubst s kbody)
+  | KTArr t kbody ->
+     let esub_lam : y :var -> Tot(e:exp{erenaming s ==> is_EVar e}) =
+       fun y -> if y = 0 then EVar y
+                else (eesubst esub_inc (s (y-1))) in
+     KTArr (tesubst s t) (kesubst esub_lam kbody)
 
 val esub_lam : s:esub -> Tot esub
 let esub_lam s y =
@@ -166,13 +189,13 @@ Lemma (requires True) (ensures (kesubst s1 k = kesubst s2 k))
 let kesubst_extensional s1 s2 k = ()
 
 val eesubst_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
-      (ensures (eesubst s (ELam t e) = ELam (tesubst s t) (eesubst (esub_lam s) e)))
-      (* [SMTPat (esubst (ELam t e) s)]
-      (\* -- this increases running time by 10 secs and adds variability *\) *)
+      (ensures (eesubst s (ELam t e) =
+                ELam (tesubst s t) (eesubst (esub_lam s) e)))
 let eesubst_lam_hoist t e s = ()
 
 val tesubst_elam_hoist : t:typ -> tbody:typ -> s:esub -> Lemma (requires True)
-      (ensures (tesubst s (TELam t tbody) = TELam (tesubst s t) (tesubst (esub_lam s) tbody)))
+      (ensures (tesubst s (TELam t tbody) =
+                TELam (tesubst s t) (tesubst (esub_lam s) tbody)))
 
 let tesubst_elam_hoist t tbody s = ()
 
@@ -194,10 +217,6 @@ let tesubst_beta = tesubst_beta_gen 0
 let eesh = eesubst esub_inc
 let tesh = tesubst esub_inc
 
-let eint x = EConst (EcInt x)
-let eloc l = EConst (EcLoc l)
-let esel eh el = (EApp (EApp (EConst EcSel) eh) el)
-let eupd eh el ei = EApp (EApp (EApp (EConst EcUpd) eh) el) ei
 (****************************)
 (*   Type   Substitutions   *)
 (****************************)
@@ -215,58 +234,59 @@ let tsub_inc_above x y = if y<x then TVar y else TVar (y+1)
 val tsub_inc : var -> Tot typ
 let tsub_inc = tsub_inc_above 0
 
-
 let is_tvar (t:typ) : int = if is_TVar t then 0 else 1
 
-val etsubst : s:tsub -> e:exp -> Tot exp 
+val etsubst : s:tsub -> e:exp -> Tot exp
       (decreases %[1; is_trenaming s; e])
 val ttsubst : s:tsub -> t:typ -> Pure typ (requires True)
       (ensures (fun t' -> trenaming s /\ is_TVar t ==> is_TVar t'))
-      (decreases %[is_tvar t;is_trenaming s; t])
+      (decreases %[is_tvar t; is_trenaming s; t])
 val ktsubst : s:tsub -> k:knd -> Tot knd
-      (decreases %[1;is_trenaming s; k])
+      (decreases %[1; is_trenaming s; k])
 
 let rec etsubst s e =
   match e with
   | EVar x -> e
   | EConst c -> e
   | ELam t ebody -> ELam (ttsubst s t) (etsubst s ebody)
-  | EFix d t ebody -> let d' = match d with Some de -> Some (etsubst s de) | None -> None in EFix d' (ttsubst s t) (etsubst s ebody)
+  | EFix d t ebody ->
+     let d' = match d with
+              | Some de -> Some (etsubst s de)
+              | None -> None in
+     EFix d' (ttsubst s t) (etsubst s ebody)
   | EIf0 g ethen eelse -> EIf0 (etsubst s g) (etsubst s ethen) (etsubst s eelse)
   | EApp e1 e2 -> EApp (etsubst s e1) (etsubst s e2)
 
-and ttsubst s t = match t with
-| TVar a -> t
-| TConst c -> 
-(match c with
-| TEqT k -> TConst (TEqT (tksubst s k))
-| TForallT k -> TConst (TForallT (tksubst s k))
-| c -> TConst c
-)
-| TArr t c -> 
-  TArr (ttsubst s t) (Cmp (Cmp.m c) (ttsubst s (Cmp.t c)) (ttsubst s (Cmp.wp c)))
-| TTLam k tbody -> 
-  let tsub_lam : y : var -> Tot (t:typ{trenaming s ==> is_TVar t}) =
-    fun y -> if y=0 then TVar y 
-             else (ttsubst tsub_inc (s (y-1))) in
-TTLam (ktsubst s k) (ttsubst tsub_lam tbody)
-| TELam t tbody -> TELam (ttsubst s t) (ttsubst s tbody)
-| TTApp t1 t2 -> TTApp (ttsubst s t1) (ttsubst s t2)
-| TEApp t e -> TEApp (ttsubst s t) (etsubst s e)  
-| TEqT k -> TEqT (ktsubst s k)
-| TForallT k -> TForallT (ktsubst s k)
-  (*| KType : knd
-  | KKArr : k:knd -> kbody:knd -> knd
-  | KTArr : t:typ -> kbody:knd -> knd*)
-and ktsubst s k = match k with 
-| KType -> KType
-| KKArr k kbody -> 
-let tsub_lam : y :var -> Tot(t:typ{trenaming s ==> is_TVar t}) =
-fun y -> if y = 0 then TVar y
-         else (ttsubst tsub_inc (s (y-1))) in
-KKArr (ktsubst s k) (ktsubst tsub_lam kbody)
-| KTArr t kbody -> 
-KTArr (ttsubst s t) (ktsubst s kbody)
+and ttsubst s t =
+  match t with
+  | TVar a -> t
+  | TConst c ->
+     (match c with
+      | TEqT k -> TConst (TEqT (ktsubst s k))
+      | TForallT k -> TConst (TForallT (ktsubst s k))
+      | c -> TConst c)
+  | TArr t c ->
+     TArr (ttsubst s t)
+          (Cmp (Cmp.m c) (ttsubst s (Cmp.t c)) (ttsubst s (Cmp.wp c)))
+  | TTLam k tbody ->
+     let tsub_lam : y : var -> Tot (t:typ{trenaming s ==> is_TVar t}) =
+       fun y -> if y=0 then TVar y
+                else (ttsubst tsub_inc (s (y-1))) in
+     TTLam (ktsubst s k) (ttsubst tsub_lam tbody)
+  | TELam t tbody -> TELam (ttsubst s t) (ttsubst s tbody)
+  | TTApp t1 t2 -> TTApp (ttsubst s t1) (ttsubst s t2)
+  | TEApp t e -> TEApp (ttsubst s t) (etsubst s e)
+
+and ktsubst s k =
+  match k with
+  | KType -> KType
+  | KKArr k kbody ->
+     let tsub_lam : y :var -> Tot(t:typ{trenaming s ==> is_TVar t}) =
+       fun y -> if y = 0 then TVar y
+                else (ttsubst tsub_inc (s (y-1))) in
+     KKArr (ktsubst s k) (ktsubst tsub_lam kbody)
+  | KTArr t kbody ->
+     KTArr (ttsubst s t) (ktsubst s kbody)
 
 val tsub_lam: s:tsub -> Tot tsub
 let tsub_lam s y =
@@ -287,7 +307,8 @@ Lemma (requires True) (ensures (ktsubst s1 k = ktsubst s2 k))
 let ktsubst_extensional s1 s2 k = ()
 
 val ttsubst_tlam_hoist : k:knd -> tbody:typ -> s:tsub -> Lemma (requires True)
-      (ensures (ttsubst s (TTLam k tbody) = TTLam (ktsubst s k) (ttsubst (tsub_lam s) tbody)))
+      (ensures (ttsubst s (TTLam k tbody) =
+                TTLam (ktsubst s k) (ttsubst (tsub_lam s) tbody)))
 
 let ttsubst_tlam_hoist t e s = ()
 
@@ -303,6 +324,7 @@ let ttsubst_beta = ttsubst_beta_gen 0
 
 let etsh = etsubst tsub_inc
 let ttsh = ttsubst tsub_inc
+
 (*************************************)
 (*   Common substitution functions   *)
 (*************************************)
@@ -318,7 +340,7 @@ val kshift_up_above : ei:nat -> ti:nat ->
                       eplus:nat -> tplus:nat ->
                       t:typ -> Tot typ
 *)
-                      
+
 (************************************)
 (*     type manipulation functions  *)
 (************************************)
@@ -327,20 +349,18 @@ let tint = TConst TcInt
 let tand a b = TTApp (TTApp (TConst TcAnd) a) b
 
 val timpl : a:typ -> b:typ -> Tot typ (*a ==> b*)
-let timpl a b =
-TTApp (TTApp (TConst TcImpl) a) b
+let timpl a b = TTApp (TTApp (TConst TcImpl) a) b
 
 let tnot a = timpl a (TConst TcFalse)
-let tequal e1 e2 = TEApp (TEApp (TConst TcEqualE) e1) e2
+let tequal e1 e2 = TEApp (TEApp (TConst TcEqE) e1) e2
 
 val tforalle : t:typ -> p:typ -> Tot typ
 let tforalle t p =
 TTApp (TTApp (TConst TcForallE) t) p
 
 val tforallk : a:knd -> p:typ -> Tot typ
-let tforallk a p =
-TTApp (TForallT a) p
-(*TODO:write a function {e|t|k}shift_up which 
+let tforallk a p = TTApp (TConst (TForallT a)) p
+(*TODO:write a function {e|t|k}shift_up which
 shift both expression and type variables
 and prove some properties on it*)
 
@@ -348,10 +368,9 @@ and prove some properties on it*)
 (*  Heap manipulation  *)
 (***********************)
 
-
-val upd_heap : l:loc -> v:exp -> h:heap -> Tot heap
-let upd_heap l v h =
-fun x -> if x = l then v else h x
+val upd_heap : l:loc -> i:int -> h:heap -> Tot heap
+let upd_heap l i h =
+  fun x -> if x = l then i else h x
 
 (********************************************)
 (* Reduction for types and pure expressions *)
@@ -368,10 +387,10 @@ let rec is_value e =
   | EApp e1 e2 ->
       if not (is_value e2) then false
       else
-      (match e1 with 
+      (match e1 with
       | EApp e11 e12 -> if not (is_value e2) then false
                         else
-			(match e11 with 
+			(match e11 with
 	                | EApp e111 e112 -> (match e111 with
 			                    | EConst c -> is_EcUpd c && is_value e112(*Why is it a value ?*)
 					    | _ -> false)
@@ -379,7 +398,7 @@ let rec is_value e =
 			| _ -> false)
       | EConst c -> is_EcUpd c || is_EcSel c || is_EcAssign c
       | _ -> false)
-        
+
 type value = e:exp{is_value e}
 
 type tstep : typ -> typ -> Type =
@@ -405,7 +424,7 @@ type tstep : typ -> typ -> Type =
                t2:typ ->
 	       t2':typ ->
 	       ht:tstep t2 t2' ->
-	       tstep (TTApp t1 t2) (TTApp t1 t2') 
+	       tstep (TTApp t1 t2) (TTApp t1 t2')
   | TsEAppT : t:typ ->
               t':typ ->
 	      e:exp ->
@@ -434,11 +453,11 @@ and epstep : exp -> exp -> Type =
               v:value ->
               epstep (EApp (ELam t ebody) v) (eesubst_beta v ebody)
   | PsFix : d:option exp ->
-            t:typ -> 
+            t:typ ->
 	    ebody:exp ->
 	    v:value ->
 	    epstep (EApp (EFix d t ebody) v) (eesubst_beta (EFix d t ebody) (eesubst_beta v ebody))
-            
+
   | PsIf0 :  e1:exp ->
              e2:exp ->
              epstep (EIf0 (EConst (EcInt 0)) e1 e2) e1
@@ -481,6 +500,8 @@ and epstep : exp -> exp -> Type =
 	      epstep (EIf0 e0 ethen eelse) (EIf0 e0' ethen eelse)
 
 
+(* CH: wasn't compiling
+
 type cfg =
   | Cfg : h:heap -> e:exp -> cfg
 
@@ -500,11 +521,11 @@ type eistep : cfg -> cfg -> Type =
               eistep (Cfg h (EApp (ELam t ebody) v)) (Cfg h (eesubst_beta v ebody))
   | IsFix : h:heap ->
             d:option exp ->
-            t:typ -> 
+            t:typ ->
 	    ebody:exp ->
 	    v:value ->
 	    eistep (Cfg h (EApp (EFix d t ebody) v)) (Cfg h (eesubst_beta (EFix d t ebody) (eesubst_beta v ebody)))
-            
+
   | IsIf0 :  h:heap ->
              e1:exp ->
              e2:exp ->
@@ -546,18 +567,18 @@ let k_post_all  t = KTArr t (KTArr (TConst TcHeap) KType)
 let k_pure t      = KKArr (k_post_pure t) k_pre_pure
 let k_all  t      = KKArr (k_post_all  t) k_pre_all
 
-let k_m m = match m with 
+let k_m m = match m with
 | EfPure -> k_pure
 | EfAll  -> k_all
 
-let tot t = TCmp EfPure t (TTLam (k_post_pure t)
+let tot t = Cmp EfPure t (TTLam (k_post_pure t)
                                (TTApp (TTApp (TConst TcForallE) t)
                                       (TELam t (TEApp (TVar 1) (EVar 0)))))
 val return_pure : t:typ -> e:exp -> Tot typ
 let return_pure t e = TTLam (k_post_pure t) (TEApp (TVar 0) e)
 
 val return_all : t:typ -> e:exp -> Tot typ
-let return_all t e = TTLam (k_post_all t) (TELam (TConst TcHeap) 
+let return_all t e = TTLam (k_post_all t) (TELam (TConst TcHeap)
                     (TEApp (TEApp (TVar 0) (eesh (etsh e))) (EVar 0)))
 (*TODO: do not forget to shift up e !!!*)
 (*Actually, can it have free variables ?*)
@@ -570,7 +591,7 @@ let bind_pure ta tb wp f = (* bind wp1 wp2 post = wp1 (fun (x:t1) -> wp2 x post)
    (TTApp (ttsh wp)
       (TELam (*shift*)(ttsh tb)(*x*)
          (TTApp (TEApp (ttsh (tesh f)) (EVar 0)) (TVar 0)))))
-val bind_all:  ta:typ -> tb:typ 
+val bind_all:  ta:typ -> tb:typ
              ->wp : typ
              ->f  : typ
              ->Tot typ
@@ -578,7 +599,7 @@ let bind_all ta tb wp f =
 (TTLam (k_post_all tb) (*p*)
    (TTApp (ttsh wp)
       (TELam (ttsh tb) (*x*)
-         (TELam (TConst TcHeap) 
+         (TELam (TConst TcHeap)
             (TEApp (TTApp (TEApp (ttsh (tesh (tesh f))) (EVar 1))
                           (TVar 0))
                    (EVar 0))))))
@@ -590,16 +611,16 @@ monotonic_ALL a wp = forall p1 p2. (forall x h. p1 x h ==> p2 x h) ==> (forall h
 val monotonic_pure : a:typ -> wp:typ -> Tot typ
 let monotonic_pure a wp =
 tforallk (k_post_pure a)
-(TTLam (k_post_pure a) 
+(TTLam (k_post_pure a)
   (tforallk (k_post_pure (ttsh a))
     (TTLam (k_post_pure (ttsh a))
-      (timpl 
+      (timpl
 	((*forall x. p1 x ==> p2 x *)
 	  tforalle (ttsh (ttsh a))
-	   (TELam (ttsh (ttsh a)) 
+	   (TELam (ttsh (ttsh a))
 	     (timpl  (TEApp (TVar 1 (*p1*)) (EVar 0))
 		     (TEApp (TVar 0 (*p2*)) (EVar 0))
-	     ) 
+	     )
 	   )
 	)
 	((*wp p1 ==> wp p2*)
@@ -609,26 +630,26 @@ tforallk (k_post_pure a)
       )
      )
    )
-) 
+)
 (*
 monotonic_ALL a wp = forall p1 p2. (forall x h. p1 x h ==> p2 x h) ==> (forall h. wp p1 h ===> wp p2 h)
 *)
 val monotonic_all : a:typ -> wp:typ -> Tot typ
 let monotonic_all a wp =
 tforallk (k_post_pure a)
-(TTLam (k_post_pure a) 
+(TTLam (k_post_pure a)
   (tforallk (k_post_pure (ttsh a))
     (TTLam (k_post_pure (ttsh a))
       (
-	timpl 
+	timpl
 	((*forall x. p1 x ==> p2 x *)
 	  tforalle (ttsh (ttsh a))
-	   (TELam (ttsh (ttsh a)) 
+	   (TELam (ttsh (ttsh a))
 	     (tforalle (TConst TcHeap)
 	       (TELam (TConst TcHeap)
 		  (timpl  (TEApp (TEApp (TVar 1 (*p1*)) (EVar 1(*x*))) (EVar 0) )
 			  (TEApp (TEApp (TVar 0 (*p2*)) (EVar 1)) (EVar 0))
-		  ) 
+		  )
 	       )
 	     )
 	   )
@@ -644,7 +665,7 @@ tforallk (k_post_pure a)
       )
     )
   )
-) 
+)
 let monotonic_m m = match m with
 | EfPure -> monotonic_pure
 | EfAll  -> monotonic_all
@@ -654,7 +675,7 @@ TTLam (k_post_pure a) (TTApp (TTApp (ttsh op) (TTApp (ttsh wp1) (TVar 0)))
                              (TTApp (ttsh wp2) (TVar 0)))
 val op_all : a:typ -> op:typ -> wp1:typ -> wp2:typ -> Tot typ
 let op_all a op wp1 wp2 =
-TTLam (k_post_all a) 
+TTLam (k_post_all a)
   (TELam (TConst TcHeap)
     (TTApp (TTApp (tesh (ttsh op)) (TEApp (TTApp (tesh (ttsh wp1)) (TVar 0)) (EVar 0)))
            (TEApp (TTApp (tesh (ttsh wp2)) (TVar 0)) (EVar 0)))
@@ -669,18 +690,18 @@ TTLam (k_post_pure a) (TELam (TConst TcHeap) (tesh (ttsh t)))
 
 val down_pure : a:typ -> wp:typ -> Tot typ
 let down_pure a wp =
-(tforallk (k_post_pure a) (TTLam (k_post_pure a) (TTApp (ttsh wp) (TVar 0)))) 
+(tforallk (k_post_pure a) (TTLam (k_post_pure a) (TTApp (ttsh wp) (TVar 0))))
 
 val down_all : a : typ -> wp:typ -> Tot typ
 let down_all a wp =
-(tforallk (k_post_all a) 
-  (TTLam (k_post_all a) 
+(tforallk (k_post_all a)
+  (TTLam (k_post_all a)
     (tforalle (TConst TcHeap)
       (TELam (TConst TcHeap)
         (
 	 TEApp (TTApp (tesh (ttsh wp)) (TVar 0)) (EVar 0)
 	)
-        
+
       )
     )
   )
@@ -715,7 +736,7 @@ val closet_pure : a:typ -> f:typ -> Tot typ
 let closet_pure a f =
 (TTLam (k_post_pure a)
  (tforallk KType
-  (TTLam (KType) 
+  (TTLam (KType)
    (
     TTApp (TTApp (ttsh (ttsh f)) (TVar 0)) (TVar 1)
    )
@@ -728,7 +749,7 @@ let closet_all a f =
 (TTLam (k_post_all a)
  (TELam (TConst TcHeap)
    (tforallk KType
-    (TTLam (KType) 
+    (TTLam (KType)
      (
       TEApp (TTApp (TTApp (ttsh (tesh (ttsh f))) (TVar 0)) (TVar 1)) (EVar 0)
      )
@@ -742,21 +763,21 @@ ite_M : #a:Type -> K_M(int) -> K_M(a) -> K_M(a) -> K_M(a)
 ite_M a wp0 wp1 wp2 = bind_M wp0 (fun i -> (up_M (i  = 0) ==>_M wp1) /\_M
                                             (up_M (i != 0) ==>_M wp2))
 *)
-val ite_pure : a:typ -> wp0:typ -> wp1:typ -> wp2:typ -> Tot typ 
+val ite_pure : a:typ -> wp0:typ -> wp1:typ -> wp2:typ -> Tot typ
 let ite_pure a wp0 wp1 wp2 =
 bind_pure tint a wp0
 (
- TELam (tint) 
+ TELam (tint)
   (
-    op_pure (tesh a) (TConst TcAnd)  
+    op_pure (tesh a) (TConst TcAnd)
     ((*up_M (i=0) ==>_M wp1*)
      op_pure (tesh a) (TConst TcImpl)
       (
-       up_pure (tesh a) 
+       up_pure (tesh a)
 	 (
 	  TEApp (TEApp (TConst TcEqE) (EVar 0)) (EConst (EcInt 0))
 	 )
-      )   
+      )
       (
        wp1
       )
@@ -764,11 +785,11 @@ bind_pure tint a wp0
     ((*up_M (i!=0) ==>_M wp2*)
      op_pure (tesh a) (TConst TcImpl)
       (
-       up_pure (tesh a) 
+       up_pure (tesh a)
 	 (
 	  tnot (TEApp (TEApp (TConst TcEqE) (EVar 0)) (EConst (EcInt 0)))
 	 )
-      )   
+      )
       (
        wp2
       )
@@ -776,21 +797,21 @@ bind_pure tint a wp0
     )
   )
 )
-val ite_all : a:typ -> wp0:typ -> wp1:typ -> wp2:typ -> Tot typ 
+val ite_all : a:typ -> wp0:typ -> wp1:typ -> wp2:typ -> Tot typ
 let ite_all a wp0 wp1 wp2 =
 bind_all tint a wp0
 (
- TELam (tint) 
+ TELam (tint)
   (
-    op_all (tesh a) (TConst TcAnd)  
+    op_all (tesh a) (TConst TcAnd)
     ((*up_M (i=0) ==>_M wp1*)
      op_all (tesh a) (TConst TcImpl)
       (
-       up_all (tesh a) 
+       up_all (tesh a)
 	 (
 	  TEApp (TEApp (TConst TcEqE) (EVar 0)) (EConst (EcInt 0))
 	 )
-      )   
+      )
       (
        wp1
       )
@@ -798,11 +819,11 @@ bind_all tint a wp0
     ((*up_M (i!=0) ==>_M wp2*)
      op_all (tesh a) (TConst TcImpl)
       (
-       up_all (tesh a) 
+       up_all (tesh a)
 	 (
 	  tnot (TEApp (TEApp (TConst TcEqE) (EVar 0)) (EConst (EcInt 0)))
 	 )
-      )   
+      )
       (
        wp2
       )
@@ -811,7 +832,7 @@ bind_all tint a wp0
   )
 )
 (*
-valid_M : Pre_M  -> Type                                               
+valid_M : Pre_M  -> Type
 valid_PURE p = p
 valid_ALL  p = forall h. p h
 *)
@@ -820,18 +841,18 @@ val valid_pure : typ -> Tot typ
 let valid_pure p = p
 
 val valid_all : typ -> Tot typ
-let valid_all p = 
+let valid_all p =
 tforalle (theap) (TELam (theap) (TEApp (tesh p) (EVar 0)))
 
 val lift_pure_all : a:typ -> wp:typ -> Tot typ
 let lift_pure_all a wp =
-TTLam (k_post_all a) 
+TTLam (k_post_all a)
 (
  TELam (TConst TcHeap)
  (
   TTApp (tesh (ttsh wp))
    (
-    TELam (tesh (ttsh a)) 
+    TELam (tesh (ttsh a))
      (
       TEApp (TEApp (TVar 0) (EVar 0)) (EVar 1)
      )
@@ -842,16 +863,17 @@ TTLam (k_post_all a)
 val bind : m:eff -> ta:typ -> tb:typ -> wp:typ -> f:typ -> Tot typ
 let bind m ta tb wp f =
 match m with
-| Pure -> bind_pure ta tb wp f
-| All  -> bind_all ta tb wp f
+| EfPure -> bind_pure ta tb wp f
+| EfAll  -> bind_all ta tb wp f
 
 val tfix_wp : tx:typ -> t'':typ -> d:exp -> wp:typ -> Tot typ
 let tfix_wp tx t'' d wp =
-op_pure t'' (TConst TcAnd) 
+op_pure t'' (TConst TcAnd)
  (up_pure (t'') (TEApp (TEApp (TConst TcPrecedes) (EApp d (EVar 0))) (EApp d (EVar 1))))
  (wp)
 
-val eff_sub :m1:eff -> m2:eff -> bool = 
+val eff_sub :m1:eff -> m2:eff -> bool
+let eff_sub m1 m2 =
 match m1,m2 with
 | EfPure,EfPure -> true
 | EfPure,EfAll  -> true
@@ -1008,32 +1030,31 @@ let eempty x = None
 val tempty : tenv
 let tempty x = None
 
-type env = 
+type env =
 | Env : e:eenv -> t:tenv -> env
 (*Let's assume we just need to extend at 0*)
 val eextend : env -> t -> env
 let eextend t e =
 let Env eenvi tenvi = env in
-let eenvi' : eenv = fun x -> if x = 0 then tesh t 
-                             else (match eenvi x with None -> None 
+let eenvi' : eenv = fun x -> if x = 0 then tesh t
+                             else (match eenvi x with None -> None
 				                    | Some t -> Some (tesh t)) in
 Env eenvi tenvi
 
 val lookup_evar : env -> var -> Tot (option typ)
-let lookup_evar g x =
-Env.e g x
+let lookup_evar g x = Env.e g x
 
 val lookup_tvar : env -> var -> Tot (option knd)
-let lookup_tvar g x =
-Env.t g x
+let lookup_tvar g x = Env.t g x
+
 (**************)
 (*   Typing   *)
 (**************)
 (*
 G |- e1 : M (x:t -> M t' wp) wp1
     G |- e2 : M t wp2
-    G |- t'[e2/x] : Type 
-    x in FV t' ==> G |- e2 : Tot t                      
+    G |- t'[e2/x] : Type
+    x in FV t' ==> G |- e2 : Tot t
     ---------------------------------------------------------------- [T-App]
     G |- e1 e2 :  M (t'[e2/x])
                     (bind_M wp1 (fun f -> bind_M wp2 (fun x -> wp)))
@@ -1050,6 +1071,7 @@ G |- e1 : M (x:t -> M t' wp) wp1
     -------------------------------- [T-Sub]
     G |- e : M t wp
 *)
+
 type typing : env -> exp -> typ -> Type =
 | TVar : g:env -> x:var{is_Some (lookup_evar g x)} -> kwf g ->  typing g (EVar x) (Some.v (lookup_evar g x))
 | TConst : g:env -> ewf g -> ec:econst -> typing g (EConst ec) (econsts ec)
@@ -1077,34 +1099,34 @@ type typing : env -> exp -> typ -> Type =
          typing g d (tot (TArr tx (tot t'))) ->
          typing (eextend (eextend g tx) (tesh (TArr tx (TCmp EfPure t'' (tfix_wp tx t'' d wp))))) ebody (TCmp EfPure (tesh t'') (tesh wp)) ->
 	 typing g (EFix (Some d) (TArr tx (TCmp EfPure t'' wp)) ebody) (Tot t)
-| TFixOmega : g:env -> tx:typ -> t':typ -> wp:typ -> ebody : exp -> 
+| TFixOmega : g:env -> tx:typ -> t':typ -> wp:typ -> ebody : exp ->
               kinding g (TArr tx (TCmp EfAll t' wp)) KType ->
 	      typing (eextend (eextend g tx) (tesh (TArr tx (TCmp EfAll t' wp)))) ebody (TCmp EfAll (tesh t') (tesh wp)) ->
 	      typing g (EFix None (TArr tx (TCmp EfAll t' wp)) ebody) (Tot (TArr tx (TCmp EfAll t' wp) )
-(*for this one, is t=y:tx -> Pure t'' wp a syntactic equivalence ? 
+(*for this one, is t=y:tx -> Pure t'' wp a syntactic equivalence ?
 I guess no. But where is the equivalence definition ?*)
 (* | TFixOmega *)
 | TIf : g:env -> e0 : exp -> e1:exp -> e2:exp -> m:eff -> t:typ -> wp0 : typ -> wp1 : typ -> wp2:typ -> typing g e0 (Cmp m tint wp0) -> typing g e1 (Cmp m t wp1) -> typing g e2 (Cmp m t wp2) -> typing g (EIf e0 e1 e2) (TCmp m t (ite m wp0 wp1 wp2))
-| TApp : g:env -> e1:exp -> e2:exp -> m:eff -> t:typ -> t':typ -> wp : typ -> wp1:typ -> wp2:typ  -> 
-       typing g e1 (TCmp m (TArr t (TCmp m t' wp)) wp1) -> 
-       typing g e2 (TCmp m t wp2) -> 
-       kinding g (tesubst_beta e2 t') KType -> 
-       htot:option (typing g e2 (tot t) ){teappears_in 0 t' ==> is_Some htot} -> 
+| TApp : g:env -> e1:exp -> e2:exp -> m:eff -> t:typ -> t':typ -> wp : typ -> wp1:typ -> wp2:typ  ->
+       typing g e1 (TCmp m (TArr t (TCmp m t' wp)) wp1) ->
+       typing g e2 (TCmp m t wp2) ->
+       kinding g (tesubst_beta e2 t') KType ->
+       htot:option (typing g e2 (tot t) ){teappears_in 0 t' ==> is_Some htot} ->
        typing g (EApp e1 e2) (TCmp m (tesubst_beta e2 t') (bind m (TArr t (TCmp m t' wp)) t wp1 wp2))
 | TRet : g:env -> e:exp -> t:typ ->
          typing g e (tot t) ->
          typing g e (TCmp Pure t (return_pure e))
 and scmp : g:env -> m':eff -> t':typ -> wp':typ -> m:eff -> t:typ -> wp:typ -> phi:typ -> Type =
 | SCmp : g:env -> m':eff -> t':typ -> wp':typ -> m:eff{eff_sub m' m} -> t:typ -> wp:typ -> phi:typ ->
-         sub_typing g t' t phi -> 
+         sub_typing g t' t phi ->
 	 kinding g wp (k_m m t) ->
 	 validity g (monotonic_m m t wp) ->
 	 scmp g m' t' wp' m t wp (tand phi (down_m m (op_m m (TConst TcImpl) wp (lift_m_m' m' m wp'))))
 and styping : g:env -> t':typ -> t:typ -> phi : typ -> Type =
-| SubFun : g:env -> t:typ -> t':typ -> 
+| SubFun : g:env -> t:typ -> t':typ ->
            validity g (TTApp (TTApp (TEqT KType) t') t) ->
 	   kinding g t KType ->
-	   styping g t' t (TConst TcTrue) 
+	   styping g t' t (TConst TcTrue)
 | SubFun : g:env -> t:typ -> t':typ -> phi:typ -> m':eff -> s':typ -> wp':typ -> m:eff -> s:typ -> wp:typ -> psi:typ ->
            styping g t t' phi ->
            scmp (eextend g t) m' t' wp' m t wp psi ->
@@ -1118,7 +1140,7 @@ and kinding : g:env -> t : typ -> k:knd -> Type =
          ewf g ->
 	 kinding g (TVar x) (Some.v (lookup_tvar g x))
 (*TODO: Ok so we need to put TForallk in tconst, otherwise this rule won't apply*)
-| KConst : g:env -> c:tconst -> 
+| KConst : g:env -> c:tconst ->
            ewf g ->
 	   kinding g (TConst c) (tconsts c)
 | KArr : g:env -> t1:typ -> t2:typ -> phi:typ -> m:eff ->
@@ -1135,8 +1157,8 @@ and kinding : g:env -> t : typ -> k:knd -> Type =
           kinding g t1 KType ->
 	  kinding (eextend g t1) t2 k2 ->
 	  kinding (TELam t1 t2) (KTArr t1 k2)
-| KTApp : g:env -> t1:typ -> t2:typ -> k:knd -> k':knd -> 
-          kinding g t1 (KKArr k k') -> 
+| KTApp : g:env -> t1:typ -> t2:typ -> k:knd -> k':knd ->
+          kinding g t1 (KKArr k k') ->
 	  kinding g t2 k ->
 	  kwf g (ktsubst_beta t2 k') ->
 	  kinding g (TTApp t1 t2) (ktsubst_beta t2 k')
@@ -1157,7 +1179,7 @@ and skinding : g:env -> k1:knd -> k2:knd -> phi:typ -> Type=
 | KSubKArr : g:env -> k1:knd -> k2:knd -> k1':knd -> k2':knd -> phi1:typ -> phi2:typ->
              skinding g k1 k2 phi1 ->
 	     skinding (textend g k2) k1' k2' phi2 ->
-	     skinding g (KTArr t1 k1) (KTArr t2 k2) (tand phi1 (tforalle t2 (TELam t2 phi2))) 
+	     skinding g (KTArr t1 k1) (KTArr t2 k2) (tand phi1 (tforalle t2 (TELam t2 phi2)))
 | KSubTArr : g:env -> t1:typ -> t2:typ -> k1:knd -> k2:knd -> phi1:typ -> phi2:typ ->
              styping g t2 t1 phi1 ->
 	     skinding (textend g t2) k1 k2 phi2 ->
@@ -1166,7 +1188,7 @@ and kwf : env -> knd -> Type =
 | KOkType : g:env ->
             ewf g ->
 	    kwf g KType
-| KOkTArr : g:env -> t:typ -> k':knd -> 
+| KOkTArr : g:env -> t:typ -> k':knd ->
             kinding g t KType ->
 	    kwf (eextend g t) k' ->
 	    kwf g (KTArr t k')
@@ -1178,12 +1200,12 @@ and validity : g:env -> t:typ -> Type =
 | VAssume : g:env -> x:var{is_Some (lookup_tvar g x)} ->
             ewf g ->
 	    validity g (Some.v (lookup_tvar g x))
-| VRedE   : g:env -> e:exp -> t:typ -> e':exp -> 
+| VRedE   : g:env -> e:exp -> t:typ -> e':exp ->
             typing g e t ->
 	    typing g e' t ->
             epstep e e' ->
 	    validity g (tequal e e')
-| VEqReflE : g:env -> e:exp -> t:typ ->	    
+| VEqReflE : g:env -> e:exp -> t:typ ->
              typing g e (tot t) ->
 	     validity g (tequal e e)
 | VEqTranE : g:env -> e1:exp -> e2:exp -> e3:exp ->
@@ -1254,10 +1276,10 @@ and validity : g:env -> t:typ -> Type =
 		   validity g (ttsubst_beta t phi)
 | VAndElim1 : g:env -> p1:typ -> p2:typ ->
               validity g (tand p1 p2) ->
-	      validity g p1 
+	      validity g p1
 | VAndElim2 : g:env -> p1:typ -> p2:typ ->
               validity g (tand p1 p2) ->
-	      validity g p2 
+	      validity g p2
 | VAndIntro : g:env -> p1:typ -> p2:typ ->
               validity g p1 ->
 	      validity g p2 ->
@@ -1274,8 +1296,8 @@ and validity : g:env -> t:typ -> Type =
 | VExMiddle : g:env -> t:typ ->
               ewf g ->
 	      validity g (tor t (tnot t))
-| VOrIntro1 : g:env -> t1:typ -> t2:typ -> 
-              validity g t1 -> 
+| VOrIntro1 : g:env -> t1:typ -> t2:typ ->
+              validity g t1 ->
 	      kinding g t2 KType ->
 	      validity g (tor t1 t2)
 | VOrIntro2 : g:env -> t1:typ -> t2:typ ->
@@ -1296,7 +1318,7 @@ and validity : g:env -> t:typ -> Type =
 	       validity g t
 | VDistinctC : g:env -> c1:econst -> c2:econst{c1 <> c2} -> t:typ ->
                validity g (tnot (tequal (EConst c1) (EConst c2)))
-               
+
 (*Where is << defined ?*)
 (*| VPreceedsIntro ????*)
 (*Where is tv defined ?*)
@@ -1309,3 +1331,4 @@ and ewf : env -> Type =
 | GKind  : g:env -> k:knd ->
            kwf g k ->
 	   ewf (textend g k)
+ *)
