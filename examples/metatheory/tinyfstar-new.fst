@@ -223,6 +223,9 @@ let kesubst_beta = kesubst_beta_gen 0
 
 let eesh = eesubst esub_inc
 let tesh = tesubst esub_inc
+let kesh = kesubst esub_inc
+
+assume val teappears_in : var -> typ -> Tot bool
 
 (****************************)
 (*   Type   Substitutions   *)
@@ -336,6 +339,7 @@ let ktsubst_beta = ktsubst_beta_gen 0
 
 let etsh = etsubst tsub_inc
 let ttsh = ttsubst tsub_inc
+let ktsh = ktsubst tsub_inc
 
 (*************************************)
 (*   Common substitution functions   *)
@@ -1126,16 +1130,37 @@ type env =
 
 let empty = Env eempty tempty
 
+val enveshift : env -> Tot env
+let enveshift e =
+  let Env eenvi tenvi = e in
+  let eenvi' : eenv = fun (x:var) -> omap tesh (eenvi x) in
+  let tenvi' : tenv = fun (x:var) -> omap kesh (tenvi x) in
+  Env eenvi' tenvi'
+
+val envtshift : env -> Tot env
+let envtshift e =
+  let Env eenvi tenvi = e in
+  let eenvi' : eenv = fun x -> omap ttsh (eenvi x) in
+  let tenvi' : tenv = fun x -> omap ktsh (tenvi x) in
+  Env eenvi' tenvi'
+
 (*Let's assume we just need to extend at 0*)
 val eextend : env -> typ -> Tot env
 let eextend e t =
   let Env eenvi tenvi = e in
-  let eenvi' : eenv = fun x -> if x = 0 then Some (tesh t)
-                               else (match eenvi x with None -> None
-				                      | Some t -> Some (tesh t)) in
-  Env eenvi tenvi
+  let eenvi' : eenv = fun x -> if x = 0 then Some t
+                               else eenvi (x-1)
+  in
+  enveshift (Env eenvi' tenvi)
 
-assume val textend : env -> knd -> Tot env
+val textend : env -> knd -> Tot env
+let textend e k =
+  let Env eenvi tenvi = e in
+  let tenvi' : tenv = fun x -> if x = 0 then Some k
+                               else tenvi (x-1)
+  in
+  envtshift (Env eenvi tenvi')
+ 
 
 val lookup_evar : env -> var -> Tot (option typ)
 let lookup_evar g x = Env.e g x
@@ -1172,8 +1197,10 @@ type typing : env -> exp -> cmp -> Type =
 | TyVar : g:env -> x:var{is_Some (lookup_evar g x)} -> ewf g ->
           typing g (EVar x) (tot (Some.v (lookup_evar g x)))
 | TyConst : g:env -> ewf g -> ec:econst -> typing g (EConst ec) (tot (econsts ec))
-| TyAbs : g:env -> t1 : typ -> ebody : exp -> m : eff -> t2:typ ->  wp:typ -> kinding g t1 KType
-       -> typing (eextend g t1) ebody (Cmp m t2 wp) -> typing g (ELam t1 ebody) (tot (TArr t1 (Cmp m t2 wp)))
+| TyAbs : g:env -> t1 : typ -> ebody : exp -> m : eff -> t2:typ ->  wp:typ -> 
+          kinding g t1 KType -> 
+          typing (eextend g t1) ebody (Cmp m t2 wp) -> 
+          typing g (ELam t1 ebody) (tot (TArr t1 (Cmp m t2 wp)))
 (*
     G |- t : Type
     G |- d : Tot (x:tx -> Tot t')
@@ -1190,28 +1217,30 @@ type typing : env -> exp -> cmp -> Type =
     ------------------------------------ [T-FixOmega]
     G |- let rec (f:t) x = e : Tot t
 *)
-(*TODO: check and finish this rule. Do not use it like that !!!
+(*TODO: check and finish this rule. Do not use it like that !!!*)
 | TyFix : g:env -> tx:typ -> t':typ -> d:exp -> t'':typ -> wp:typ -> ebody:exp ->
-         kinding g (TArr tx (Cmp Pure t'' wp)) KType ->
+         kinding g (TArr tx (Cmp EfPure t'' wp)) KType ->
          typing g d (tot (TArr tx (tot t'))) ->
          typing (eextend (eextend g tx) (tesh (TArr tx (Cmp EfPure t'' (tfix_wp tx t'' d wp))))) ebody (Cmp EfPure (tesh t'') (tesh wp)) ->
-	 typing g (EFix (Some d) (TArr tx (Cmp EfPure t'' wp)) ebody) (Tot t)
+	 typing g (EFix (Some d) (TArr tx (Cmp EfPure t'' wp)) ebody) (tot (TArr tx (Cmp EfPure t'' wp)))
 | TyFixOmega : g:env -> tx:typ -> t':typ -> wp:typ -> ebody : exp ->
               kinding g (TArr tx (Cmp EfAll t' wp)) KType ->
 	      typing (eextend (eextend g tx) (tesh (TArr tx (Cmp EfAll t' wp)))) ebody (Cmp EfAll (tesh t') (tesh wp)) ->
-	      typing g (EFix None (TArr tx (Cmp EfAll t' wp)) ebody) (Tot (TArr tx (Cmp EfAll t' wp) ))
-*)
+	      typing g (EFix None (TArr tx (Cmp EfAll t' wp)) ebody) (tot (TArr tx (Cmp EfAll t' wp) ))
 (*for this one, is t=y:tx -> Pure t'' wp a syntactic equivalence ?
-I guess no. But where is the equivalence definition ?
+I guess no. But where is the equivalence definition ?*)
 (* | TFixOmega *)
-| TIf : g:env -> e0 : exp -> e1:exp -> e2:exp -> m:eff -> t:typ -> wp0 : typ -> wp1 : typ -> wp2:typ -> typing g e0 (Cmp m tint wp0) -> typing g e1 (Cmp m t wp1) -> typing g e2 (Cmp m t wp2) -> typing g (EIf0 e0 e1 e2) (Cmp m t (ite m wp0 wp1 wp2))
+| TyIf0 : g:env -> e0 : exp -> e1:exp -> e2:exp -> m:eff -> t:typ -> wp0 : typ -> wp1 : typ -> wp2:typ -> 
+          typing g e0 (Cmp m tint wp0) -> 
+          typing g e1 (Cmp m t wp1) -> 
+          typing g e2 (Cmp m t wp2) -> 
+          typing g (EIf0 e0 e1 e2) (Cmp m t (ite m t wp0 wp1 wp2))
 | TApp : g:env -> e1:exp -> e2:exp -> m:eff -> t:typ -> t':typ -> wp : typ -> wp1:typ -> wp2:typ  ->
        typing g e1 (Cmp m (TArr t (Cmp m t' wp)) wp1) ->
        typing g e2 (Cmp m t wp2) ->
        kinding g (tesubst_beta e2 t') KType ->
        htot:option (typing g e2 (tot t) ){teappears_in 0 t' ==> is_Some htot} ->
        typing g (EApp e1 e2) (Cmp m (tesubst_beta e2 t') (bind m (TArr t (Cmp m t' wp)) t wp1 wp2))
-*)
 | TyRet : g:env -> e:exp -> t:typ ->
          typing g e (tot t) ->
          typing g e (Cmp EfPure t (return_pure t e))
@@ -1239,7 +1268,6 @@ and kinding : g:env -> t : typ -> k:knd -> Type =
 | KVar : g:env -> x:var{is_Some (lookup_tvar g x)} ->
          ewf g ->
 	 kinding g (TVar x) (Some.v (lookup_tvar g x))
-(*TODO: Ok so we need to put TForallk in tconst, otherwise this rule won't apply*)
 | KConst : g:env -> c:tconst ->
            ewf g ->
 	   kinding g (TConst c) (tconsts c)
@@ -1276,11 +1304,10 @@ and skinding : g:env -> k1:knd -> k2:knd -> phi:typ -> Type=
 | KSubRefl : g:env -> k:knd ->
              kwf g k ->
 	     skinding g k k (TConst TcTrue)
-(* | KSubKArr : g:env -> k1:knd -> k2:knd -> k1':knd -> k2':knd -> phi1:typ -> phi2:typ-> *)
-(*              t1:typ -> t2:typ -> *)
-(*              skinding g k1 k2 phi1 -> *)
-(* 	     skinding (textend g k2) k1' k2' phi2 -> *)
-(* 	     skinding g (KTArr t1 k1) (KTArr t2 k2) (tand phi1 (tforalle t2 (TELam t2 phi2))) *)
+| KSubKArr : g:env -> k1:knd -> k2:knd -> k1':knd -> k2':knd -> phi1:typ -> phi2:typ-> 
+             skinding g k2 k1 phi1 -> 
+	     skinding (textend g k2) k1' k2' phi2 -> 
+	     skinding g (KKArr k1 k1') (KKArr k2 k2') (tand phi1 (tforallk k2 (TTLam k2 phi2)))
 | KSubTArr : g:env -> t1:typ -> t2:typ -> k1:knd -> k2:knd -> phi1:typ -> phi2:typ ->
              styping g t2 t1 phi1 ->
 	     skinding (eextend g t2) k1 k2 phi2 ->
