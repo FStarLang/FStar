@@ -18,6 +18,10 @@ type econst =
   | EcUpd
   | EcHeap : h:heap -> econst
 
+type eff =
+  | EfPure
+  | EfAll
+
 type tconst =
   | TcUnit
   | TcInt
@@ -60,10 +64,6 @@ and exp =
   | EFix : d:(option exp) -> t:typ -> ebody:exp -> exp
   | EIf0 : eguard:exp -> ethen:exp -> eelse:exp -> exp
   | EApp : e1:exp -> e2:exp -> exp
-
-and eff =
-  | EfPure
-  | EfAll
 
 and cmp =
   | Cmp :  m:eff -> t:typ -> wp:typ -> cmp
@@ -499,8 +499,6 @@ and epstep : exp -> exp -> Type =
 	      ht:epstep e0 e0' ->
 	      epstep (EIf0 e0 ethen eelse) (EIf0 e0' ethen eelse)
 
-
-(* CH: wasn't compiling
 
 type cfg =
   | Cfg : h:heap -> e:exp -> cfg
@@ -1017,6 +1015,48 @@ let econsts ec =
                      (tot (TArr (TConst TcRefInt)
                                 (tot (TArr (TConst TcInt)
                                            (tot (TConst TcHeap))))))
+
+(***********************)
+(* Head normal forms   *)
+(***********************)
+
+val head_const : t:typ -> Tot (option tconst)
+let rec head_const t =
+  match t with
+  | TConst tc  -> Some tc
+  | TTApp t1 _
+  | TEApp t1 _ -> head_const t1
+  | _          -> None
+
+val is_hnf : typ -> Tot bool
+let is_hnf t = (is_TArr t) || (is_Some (head_const t))
+
+val head_eq : t1:typ{is_hnf t1} -> t2:typ{is_hnf t2} -> Tot bool
+let head_eq t1 t2 =
+  match t1, t2 with
+  | TArr _ (Cmp EfPure _ _), TArr _ (Cmp EfPure _ _)
+  | TArr _ (Cmp EfAll _ _),  TArr _ (Cmp EfAll _ _)  -> true
+  | _, _ -> is_Some (head_const t1) && head_const t1 = head_const t2
+
+val head_neq : typ -> typ -> Tot bool
+let head_neq t1 t2 = is_hnf t1 && is_hnf t2 && not (head_eq t1 t2)
+
+(* Can implement this using head_neq
+    G |- t1 : Type
+    G |- t2 : Type
+    t1 <>_head t2
+    -------------------------------------------- [V-DistinctTH]
+    G |= ~(t1 =_Type t2)
+
+For injectivity should probably stick with this:
+
+    G |= x:t1 -> M t2 phi = x:t1' -> M t2' phi'
+    -------------------------------------------- [V-InjTH]
+    G |= (t1 = t1) /\ (t2 = t2') /\ (phi = phi')
+
+ *)
+
+(* CH: wasn't compiling
 
 (***********************)
 (* Typing environments *)
