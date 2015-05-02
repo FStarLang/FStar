@@ -110,6 +110,10 @@ let tnot a = timpl a tfalse
 (* Expression Substitutions *)
 (****************************)
 
+(* CH: My impression is that pairing up substitutions and having a
+       single set of operations for substituting would be better.
+       We can return to this later though. *)
+
 type esub = var -> Tot exp
 
 opaque type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
@@ -427,39 +431,39 @@ type tstep : typ -> typ -> Type =
               tstep (TTApp (TTLam k t) t') (ttsubst_beta t' t)
   | TsArrT1 : #t1:typ->
               #t1':typ->
-	      c:cmp ->
-	      =ht:tstep t1 t1' ->
-	      tstep (TArr t1 c) (TArr t1' c)
+              c:cmp ->
+              =ht:tstep t1 t1' ->
+              tstep (TArr t1 c) (TArr t1' c)
   | TsTAppT1 : #t1:typ ->
                #t1':typ ->
-	       t2 : typ ->
-	       =ht:tstep t1 t1' ->
-	       tstep (TTApp t1 t2) (TTApp t1' t2)
+               t2 : typ ->
+               =ht:tstep t1 t1' ->
+               tstep (TTApp t1 t2) (TTApp t1' t2)
   | TsTAppT2 : t1:typ ->
                #t2:typ ->
-	       #t2':typ ->
-	       =ht:tstep t2 t2' ->
-	       tstep (TTApp t1 t2) (TTApp t1 t2')
+               #t2':typ ->
+               =ht:tstep t2 t2' ->
+               tstep (TTApp t1 t2) (TTApp t1 t2')
   | TsEAppT : #t:typ ->
               #t':typ ->
-	      e:exp ->
-	      =ht:tstep t t' ->
-	      tstep (TEApp t e) (TEApp t' e)
+              e:exp ->
+              =ht:tstep t t' ->
+              tstep (TEApp t e) (TEApp t' e)
   | TsEAppE : t:typ ->
               #e:exp ->
-	      #e':exp ->
-	      =he:epstep e e' ->
-	      tstep (TEApp t e) (TEApp t e')
+              #e':exp ->
+              =he:epstep e e' ->
+              tstep (TEApp t e) (TEApp t e')
   | TsTLamT : k:knd ->
               #t:typ ->
-	      #t':typ ->
-	      =ht:tstep t t' ->
-	      tstep (TTLam k t) (TTLam k t')
+              #t':typ ->
+              =ht:tstep t t' ->
+              tstep (TTLam k t) (TTLam k t')
   | TsELamT1 : #t1:typ ->
                #t1':typ ->
-	       t2:typ ->
-	       =ht:tstep t1 t1' ->
-	       tstep (TELam t1 t2) (TELam t1' t2)
+               t2:typ ->
+               =ht:tstep t1 t1' ->
+               tstep (TELam t1 t2) (TELam t1' t2)
 (*Why do the last two rules reduce different part of the term ?
   Why do we have TTLam k t ~> TTLam k t' and not TELam t1 t2 ~> TELam t1 t2' ? *)
 and epstep : exp -> exp -> Type =
@@ -469,9 +473,9 @@ and epstep : exp -> exp -> Type =
               epstep (EApp (ELam t ebody) v) (eesubst_beta v ebody)
   | PsFix : d:option exp ->
             t:typ ->
-	    ebody:exp ->
-	    v:value ->
-	    epstep (EApp (EFix d t ebody) v) (eesubst_beta (EFix d t ebody)
+            ebody:exp ->
+            v:value ->
+            epstep (EApp (EFix d t ebody) v) (eesubst_beta (EFix d t ebody)
                                                 (eesubst_beta v ebody))
   | PsIf0 :  e1:exp ->
              e2:exp ->
@@ -482,37 +486,37 @@ and epstep : exp -> exp -> Type =
              epstep (EIf0 (eint i) e1 e2) e2
   | PsAppE1 : #e1:exp ->
               #e1':exp ->
-	      e2:exp ->
-	      =ht:epstep e1 e1' ->
-	      epstep (EApp e1 e2) (EApp e1' e2)
+              e2:exp ->
+              =ht:epstep e1 e1' ->
+              epstep (EApp e1 e2) (EApp e1' e2)
   | PsAppE2 : e1:exp ->
               #e2:exp ->
-	      #e2':exp ->
-	      =ht:epstep e2 e2' ->
-	      epstep (EApp e1 e2) (EApp e1 e2')
+              #e2':exp ->
+              =ht:epstep e2 e2' ->
+              epstep (EApp e1 e2) (EApp e1 e2')
   | PsLamT : #t:typ ->
              #t':typ ->
-	     ebody:exp ->
-	     =ht:tstep t t' ->
-	     epstep (ELam t ebody) (ELam t' ebody)
+             ebody:exp ->
+             =ht:tstep t t' ->
+             epstep (ELam t ebody) (ELam t' ebody)
   | PsFixT : d:option exp ->
              #t:typ ->
-	     #t':typ ->
+             #t':typ ->
              ebody:exp ->
-	     #ht:tstep t t' ->
-	     epstep (EFix d t ebody) (EFix d t' ebody)
+             #ht:tstep t t' ->
+             epstep (EFix d t ebody) (EFix d t' ebody)
   | PsFixD : #de:exp ->
              #de':exp ->
-	     t:typ ->
-	     ebody:exp ->
-	     =ht:epstep de de' ->
-	     epstep (EFix (Some de) t ebody) (EFix (Some de') t ebody)
+             t:typ ->
+             ebody:exp ->
+             =ht:epstep de de' ->
+             epstep (EFix (Some de) t ebody) (EFix (Some de') t ebody)
   | PsIf0E0 : #e0:exp ->
               #e0':exp ->
-	      ethen:exp ->
-	      eelse:exp ->
-	      =ht:epstep e0 e0' ->
-	      epstep (EIf0 e0 ethen eelse) (EIf0 e0' ethen eelse)
+              ethen:exp ->
+              eelse:exp ->
+              =ht:epstep e0 e0' ->
+              epstep (EIf0 e0 ethen eelse) (EIf0 e0' ethen eelse)
 
 type cfg =
   | Cfg : h:heap -> e:exp -> cfg
@@ -535,9 +539,9 @@ type eistep : cfg -> cfg -> Type =
   | IsFix : h:heap ->
             d:option exp ->
             t:typ ->
-	    ebody:exp ->
-	    v:value ->
-	    eistep (Cfg h (EApp (EFix d t ebody) v))
+            ebody:exp ->
+            v:value ->
+            eistep (Cfg h (EApp (EFix d t ebody) v))
                    (Cfg h (eesubst_beta (EFix d t ebody)
                                         (eesubst_beta v ebody)))
   | IsIf0 :  h:heap ->
@@ -552,22 +556,22 @@ type eistep : cfg -> cfg -> Type =
   | IsAppE1 : h:heap ->
               #e1:exp ->
               #e1':exp ->
-	      e2:exp ->
-	      =ht:epstep e1 e1' ->
-	      eistep (Cfg h (EApp e1 e2)) (Cfg h (EApp e1' e2))
+              e2:exp ->
+              =ht:epstep e1 e1' ->
+              eistep (Cfg h (EApp e1 e2)) (Cfg h (EApp e1' e2))
   | IsAppE2 : h:heap ->
               e1:exp ->
               #e2:exp ->
-	      #e2':exp ->
-	      =ht:epstep e2 e2' ->
-	      eistep (Cfg h (EApp e1 e2)) (Cfg h (EApp e1 e2'))
+              #e2':exp ->
+              =ht:epstep e2 e2' ->
+              eistep (Cfg h (EApp e1 e2)) (Cfg h (EApp e1 e2'))
   | IsIf0E0 : h:heap ->
               #e0:exp ->
               #e0':exp ->
-	      ethen:exp ->
-	      eelse:exp ->
-	      =ht:epstep e0 e0' ->
-	      eistep (Cfg h (EIf0 e0 ethen eelse))
+              ethen:exp ->
+              eelse:exp ->
+              =ht:epstep e0 e0' ->
+              eistep (Cfg h (EIf0 e0 ethen eelse))
                      (Cfg h (EIf0 e0' ethen eelse))
 
 (********************************************************)
@@ -873,7 +877,7 @@ let tfix_wp tx t'' d wp =
                                 (EApp d (EVar 1)))) wp
 
 (********************************************************)
-(* Signature for constants                              *)
+(* Signature for type and expression constants          *)
 (********************************************************)
 
 val tconsts : tconst -> Tot knd
@@ -883,32 +887,32 @@ let tconsts tc =
   | TcInt
   | TcRefInt
   | TcHeap
-  | TcFalse
-  | TcTrue    -> KType
+  | TcTrue
+  | TcFalse     -> KType
 
   | TcAnd
   | TcOr
-  | TcImpl    -> KKArr KType (KKArr KType KType)
+  | TcImpl      -> KKArr KType (KKArr KType KType)
 
-  | TcForallE -> KKArr KType (KKArr (KTArr (TVar 0) KType) KType)
+  | TcForallE   -> KKArr KType (KKArr (KTArr (TVar 0) KType) KType)
 
-  | TcEqE      -> KKArr KType (KTArr (TVar 0) (KTArr (TVar 0) KType))
+  | TcEqE       -> KKArr KType (KTArr (TVar 0) (KTArr (TVar 0) KType))
 
-  | TcPrecedes -> KKArr KType (KKArr KType
-                   (KTArr (TVar 0) (KTArr (TVar 1) KType)))
+  | TcPrecedes  -> KKArr KType (KKArr KType
+                                 (KTArr (TVar 0) (KTArr (TVar 1) KType)))
 
   | TcEqT     k -> KKArr k (KKArr k KType)
+  (* CH: don't we need to do some shifting for the second k in TcEqT? *)
 
   | TcForallT k -> KKArr (KKArr k KType) KType
 
-
 let cmp_bang x =
   Cmp EfAll tint (TTLam (k_post_all tint) (TELam theap
-                   (TEApp (TEApp (TVar 0) (esel (EVar 0) x)) (EVar 0))))
+                   (TEApp (TEApp (TVar 1) (esel (EVar 0) x)) (EVar 0))))
 
 let cmp_assign x y =
   Cmp EfAll tunit (TTLam (k_post_all tunit) (TELam theap
-                    (TEApp (TEApp (TVar 0) eunit) (eupd (EVar 0) x y))))
+                    (TEApp (TEApp (TVar 1) eunit) (eupd (EVar 0) x y))))
 
 val econsts : econst -> Tot typ
 let econsts ec =
@@ -920,7 +924,7 @@ let econsts ec =
   | EcAssign -> TArr tref (tot (TArr tint (cmp_assign (EVar 1) (EVar 0))))
   | EcSel    -> TArr theap (tot (TArr tref (tot tint)))
   | EcUpd    -> TArr theap (tot (TArr tref (tot (TArr tint (tot theap)))))
-  | EcHeap h -> theap
+  | EcHeap _ -> theap
 
 (***********************)
 (* Head normal forms   *)
@@ -935,19 +939,19 @@ let rec head_const t =
   | _          -> None
 
 val is_hnf : typ -> Tot bool
-let is_hnf t = (is_TArr t) || (is_Some (head_const t))
+let is_hnf t = is_TArr t || is_Some (head_const t)
 
 val head_eq : t1:typ{is_hnf t1} -> t2:typ{is_hnf t2} -> Tot bool
 let head_eq t1 t2 =
   match t1, t2 with
   | TArr _ (Cmp EfPure _ _), TArr _ (Cmp EfPure _ _)
-  | TArr _ (Cmp EfAll _ _),  TArr _ (Cmp EfAll _ _)  -> true
+  | TArr _ (Cmp EfAll  _ _), TArr _ (Cmp EfAll  _ _) -> true
   | _, _ -> is_Some (head_const t1) && head_const t1 = head_const t2
 
 val head_neq : typ -> typ -> Tot bool
 let head_neq t1 t2 = is_hnf t1 && is_hnf t2 && not (head_eq t1 t2)
 
-(* Can implement this using head_neq
+(* CH: TODO: Implement this using head_neq
     G |- t1 : Type
     G |- t2 : Type
     t1 <>_head t2
@@ -965,6 +969,7 @@ For injectivity should probably stick with this:
 (***********************)
 (* Typing environments *)
 (***********************)
+
 type eenv = var -> Tot (option typ)
 type tenv = var -> Tot (option knd)
 
@@ -993,23 +998,23 @@ let envtshift e =
   let tenvi' : tenv = fun x -> omap ktsh (tenvi x) in
   Env eenvi' tenvi'
 
-(*Let's assume we just need to extend at 0*)
+(* SF: Let's assume we just need to extend at 0 *)
+(* CH: TODO: Even under this assumption, I would expect that the shift
+       of the binders in the env needs to be propagated to all the
+       entries in the env that depend on the shifted bindings *)
 val eextend : env -> typ -> Tot env
 let eextend e t =
   let Env eenvi tenvi = e in
   let eenvi' : eenv = fun x -> if x = 0 then Some t
                                else eenvi (x-1)
-  in
-  enveshift (Env eenvi' tenvi)
+  in enveshift (Env eenvi' tenvi)
 
 val textend : env -> knd -> Tot env
 let textend e k =
   let Env eenvi tenvi = e in
   let tenvi' : tenv = fun x -> if x = 0 then Some k
                                else tenvi (x-1)
-  in
-  envtshift (Env eenvi tenvi')
- 
+  in envtshift (Env eenvi tenvi')
 
 val lookup_evar : env -> var -> Tot (option typ)
 let lookup_evar g x = Env.e g x
@@ -1020,36 +1025,32 @@ let lookup_tvar g x = Env.t g x
 (**************)
 (*   Typing   *)
 (**************)
-(*
-G |- e1 : M (x:t -> M t' wp) wp1
-    G |- e2 : M t wp2
-    G |- t'[e2/x] : Type
-    x in FV t' ==> G |- e2 : Tot t
-    ---------------------------------------------------------------- [T-App]
-    G |- e1 e2 :  M (t'[e2/x])
-                    (bind wp1 (fun f -> bind wp2 (fun x -> wp)))
 
-
-    G |- e : Tot t
-    ------------------------------- [T-Ret]
-    G |- e : PURE t (return_PURE e)
-
-
-    G |- e : M' t' wp'
-    G |- M' t' wp' <: M t wp <== phi
-    G |= phi
-    -------------------------------- [T-Sub]
-    G |- e : M t wp
-*)
+(* CH: TODO: I was actually hoping of getting rid of ewf completely,
+       and perform few checks that still make sense in a nameless
+       setting on lookups. This worked very well for lambda_omega! *)
 
 type typing : env -> exp -> cmp -> Type =
-| TyVar : g:env -> x:var{is_Some (lookup_evar g x)} -> ewf g ->
-          typing g (EVar x) (tot (Some.v (lookup_evar g x)))
-| TyConst : g:env -> ewf g -> ec:econst -> typing g (EConst ec) (tot (econsts ec))
-| TyAbs : g:env -> t1 : typ -> ebody : exp -> m : eff -> t2:typ ->  wp:typ -> 
-          kinding g t1 KType -> 
-          typing (eextend g t1) ebody (Cmp m t2 wp) -> 
-          typing g (ELam t1 ebody) (tot (TArr t1 (Cmp m t2 wp)))
+
+| TyVar : #g:env ->
+           x:var{is_Some (lookup_evar g x)} ->
+          =h:(ewf g) ->
+           typing g (EVar x) (tot (Some.v (lookup_evar g x)))
+
+| TyConst : #g:env ->
+            =h:(ewf g) ->
+             c:econst ->
+             typing g (EConst c) (tot (econsts c))
+
+| TyAbs : #g:env ->
+          #t1:typ ->
+          #ebody:exp ->
+          #m:eff ->
+          #t2:typ ->
+          #wp:typ -> 
+          =hk:(kinding g t1 KType) -> 
+           typing (eextend g t1) ebody (Cmp m t2 wp) ->
+           typing g (ELam t1 ebody) (tot (TArr t1 (Cmp m t2 wp)))
 (*
     G |- t : Type
     G |- d : Tot (x:tx -> Tot t')
@@ -1068,244 +1069,324 @@ type typing : env -> exp -> cmp -> Type =
 *)
 (*TODO: check and finish this rule. Do not use it like that !!!*)
 | TyFix : g:env -> tx:typ -> t':typ -> d:exp -> t'':typ -> wp:typ -> ebody:exp ->
-         kinding g (TArr tx (Cmp EfPure t'' wp)) KType ->
-         typing g d (tot (TArr tx (tot t'))) ->
-         typing (eextend (eextend g tx) (tesh (TArr tx (Cmp EfPure t'' (tfix_wp tx t'' d wp))))) ebody (Cmp EfPure (tesh t'') (tesh wp)) ->
-	 typing g (EFix (Some d) (TArr tx (Cmp EfPure t'' wp)) ebody) (tot (TArr tx (Cmp EfPure t'' wp)))
+          kinding g (TArr tx (Cmp EfPure t'' wp)) KType ->
+          typing g d (tot (TArr tx (tot t'))) ->
+          typing (eextend (eextend g tx)
+                          (tesh (TArr tx (Cmp EfPure t'' (tfix_wp tx t'' d wp)))))
+                 ebody (Cmp EfPure (tesh t'') (tesh wp)) ->
+          typing g (EFix (Some d) (TArr tx (Cmp EfPure t'' wp)) ebody)
+                 (tot (TArr tx (Cmp EfPure t'' wp)))
+
 | TyFixOmega : g:env -> tx:typ -> t':typ -> wp:typ -> ebody : exp ->
               kinding g (TArr tx (Cmp EfAll t' wp)) KType ->
-	      typing (eextend (eextend g tx) (tesh (TArr tx (Cmp EfAll t' wp)))) ebody (Cmp EfAll (tesh t') (tesh wp)) ->
-	      typing g (EFix None (TArr tx (Cmp EfAll t' wp)) ebody) (tot (TArr tx (Cmp EfAll t' wp) ))
-(*for this one, is t=y:tx -> Pure t'' wp a syntactic equivalence ?
-I guess no. But where is the equivalence definition ?*)
-(* | TFixOmega *)
-| TyIf0 : g:env -> e0 : exp -> e1:exp -> e2:exp -> m:eff -> t:typ -> wp0 : typ -> wp1 : typ -> wp2:typ -> 
+              typing (eextend (eextend g tx) (tesh (TArr tx (Cmp EfAll t' wp))))
+                     ebody (Cmp EfAll (tesh t') (tesh wp)) ->
+              typing g (EFix None (TArr tx (Cmp EfAll t' wp)) ebody)
+                     (tot (TArr tx (Cmp EfAll t' wp) ))
+(* SF:for this one, is t=y:tx -> Pure t'' wp a syntactic equivalence ?
+      I guess no. But where is the equivalence definition ?
+   CH: It it syntactic equality. We can probably get rid of it with
+       testers and selectors. *)
+
+| TyIf0 : g:env -> e0 : exp -> e1:exp -> e2:exp -> m:eff ->
+          t:typ -> wp0 : typ -> wp1 : typ -> wp2:typ -> 
           typing g e0 (Cmp m tint wp0) -> 
           typing g e1 (Cmp m t wp1) -> 
           typing g e2 (Cmp m t wp2) -> 
           typing g (EIf0 e0 e1 e2) (Cmp m t (ite m t wp0 wp1 wp2))
-| TApp : g:env -> e1:exp -> e2:exp -> m:eff -> t:typ -> t':typ -> wp : typ -> wp1:typ -> wp2:typ  ->
-       typing g e1 (Cmp m (TArr t (Cmp m t' wp)) wp1) ->
-       typing g e2 (Cmp m t wp2) ->
-       kinding g (tesubst_beta e2 t') KType ->
-       htot:option (typing g e2 (tot t) ){teappears_in 0 t' ==> is_Some htot} ->
-       typing g (EApp e1 e2) (Cmp m (tesubst_beta e2 t') (bind m (TArr t (Cmp m t' wp)) t wp1 wp2))
+
+| TApp : g:env -> e1:exp -> e2:exp -> m:eff -> t:typ ->
+         t':typ -> wp : typ -> wp1:typ -> wp2:typ  ->
+         typing g e1 (Cmp m (TArr t (Cmp m t' wp)) wp1) ->
+         typing g e2 (Cmp m t wp2) ->
+         kinding g (tesubst_beta e2 t') KType ->
+         htot:option (typing g e2 (tot t)){teappears_in 0 t' ==> is_Some htot} ->
+         typing g (EApp e1 e2) (Cmp m (tesubst_beta e2 t')
+                                    (bind m (TArr t (Cmp m t' wp)) t wp1 wp2))
+
 | TyRet : g:env -> e:exp -> t:typ ->
          typing g e (tot t) ->
          typing g e (Cmp EfPure t (return_pure t e))
-(* Switch to c1, c2 below *)
-and scmp : g:env -> m':eff -> t':typ -> wp':typ -> m:eff -> t:typ -> wp:typ -> phi:typ -> Type =
-| SCmp : g:env -> m':eff -> t':typ -> wp':typ -> m:eff{eff_sub m' m} -> t:typ -> wp:typ -> phi:typ ->
-         styping g t' t phi ->
-	 kinding g wp (k m t) ->
-	 validity g (monotonic m t wp) ->
-	 scmp g m' t' wp' m t wp (tand phi (down m t (op m t (TConst TcImpl) wp (lift m' m t' wp'))))
+
+and scmp : g:env -> c1:cmp -> c2:cmp -> phi:typ -> Type =
+
+| SCmp : #g:env -> m':eff -> #t':typ -> wp':typ ->
+          m:eff{eff_sub m' m} -> #t:typ -> wp:typ -> #phi:typ ->
+         =hs:(styping g t' t phi) ->
+         =hk:(kinding g wp (k m t)) ->
+         =hv:(validity g (monotonic m t wp)) ->
+          scmp g (Cmp m' t' wp') (Cmp m t wp)
+                 (tand phi (down m t (op m t (TConst TcImpl)
+                                         wp (lift m' m t' wp'))))
+
 and styping : g:env -> t':typ -> t:typ -> phi : typ -> Type =
-| SubConv : g:env -> t:typ -> t':typ ->
-           validity g (teqt KType t' t) ->
-	   kinding g t KType ->
-	   styping g t' t ttrue
-| SubFun : g:env -> t:typ -> t':typ -> phi:typ -> m':eff -> s':typ -> wp':typ -> m:eff -> s:typ -> wp:typ -> psi:typ ->
-           styping g t t' phi ->
-           scmp (eextend g t) m' t' wp' m t wp psi ->
-	   styping g (TArr t' (Cmp m' s' wp')) (TArr t (Cmp m s wp)) (tand phi (tforalle t (TELam t psi)))
-| SubTrans : g:env -> t1:typ -> t2:typ -> t3:typ -> phi12:typ -> phi23:typ ->
-             styping g t1 t2 phi12 ->
-	     styping g t2 t3 phi23 ->
-	     styping g t1 t3 (tand phi12 phi23)
+
+| SubConv : #g:env -> #t:typ -> t':typ ->
+            =hv:(validity g (teqt KType t' t)) ->
+            =hk:(kinding g t KType) ->
+             styping g t' t ttrue
+
+| SubFun : #g:env -> #t:typ -> #t':typ -> #phi:typ ->
+           #c':cmp -> #c:cmp -> #psi:typ ->
+           =hst:(styping g t t' phi) ->
+           =hsc:(scmp (eextend g t) c' c psi) ->
+            styping g (TArr t' c') (TArr t c)
+                      (tand phi (tforalle t (TELam t psi)))
+
+| SubTrans : #g:env -> #t1:typ -> #t2:typ -> #t3:typ ->
+             #phi12:typ -> #phi23:typ ->
+             =hs12:(styping g t1 t2 phi12) ->
+             =hs23:(styping g t2 t3 phi23) ->
+              styping g t1 t3 (tand phi12 phi23)
+
 and kinding : g:env -> t : typ -> k:knd -> Type =
+
 | KVar : g:env -> x:var{is_Some (lookup_tvar g x)} ->
          ewf g ->
-	 kinding g (TVar x) (Some.v (lookup_tvar g x))
+         kinding g (TVar x) (Some.v (lookup_tvar g x))
+
 | KConst : g:env -> c:tconst ->
            ewf g ->
-	   kinding g (TConst c) (tconsts c)
+           kinding g (TConst c) (tconsts c)
+
 | KArr : g:env -> t1:typ -> t2:typ -> phi:typ -> m:eff ->
          kinding g t1 KType ->
-	 kinding (eextend g t1) t2 KType ->
-	 kinding (eextend g t1) phi (k m t2) ->
-	 validity (eextend g t1) (monotonic m t2 phi) ->
-	 kinding g (TArr t1 (Cmp m t2 phi)) KType
+         kinding (eextend g t1) t2 KType ->
+         kinding (eextend g t1) phi (k m t2) ->
+         validity (eextend g t1) (monotonic m t2 phi) ->
+         kinding g (TArr t1 (Cmp m t2 phi)) KType
+
 | KTLam : g:env -> k:knd -> t:typ -> k':knd ->
           kwf g k ->
-	  kinding (textend g k) t k' ->
-	  kinding g (TTLam k t) (KKArr k k')
+          kinding (textend g k) t k' ->
+          kinding g (TTLam k t) (KKArr k k')
+
 | KELam : g:env -> t1:typ -> t2:typ -> k2:knd ->
           kinding g t1 KType ->
-	  kinding (eextend g t1) t2 k2 ->
-	  kinding g (TELam t1 t2) (KTArr t1 k2)
+          kinding (eextend g t1) t2 k2 ->
+          kinding g (TELam t1 t2) (KTArr t1 k2)
+
 | KTApp : g:env -> t1:typ -> t2:typ -> k:knd -> k':knd ->
           kinding g t1 (KKArr k k') ->
-	  kinding g t2 k ->
-	  kwf g (ktsubst_beta t2 k') ->
-	  kinding g (TTApp t1 t2) (ktsubst_beta t2 k')
+          kinding g t2 k ->
+          kwf g (ktsubst_beta t2 k') ->
+          kinding g (TTApp t1 t2) (ktsubst_beta t2 k')
+
 | KEApp : g:env -> t:typ -> t':typ -> k:knd -> e:exp ->
           kinding g t (KTArr t' k) ->
-	  typing g e (tot t') ->
-	  kwf g (kesubst_beta e k) ->
-	  kinding g (TEApp t e) (kesubst_beta e k)
+          typing g e (tot t') ->
+          kwf g (kesubst_beta e k) ->
+          kinding g (TEApp t e) (kesubst_beta e k)
+
 | KSub  : g:env -> t:typ -> k':knd -> k:knd -> phi:typ ->
           kinding g t k' ->
-	  skinding g k' k phi ->
-	  validity g phi ->
-	  kinding g t k
+          skinding g k' k phi ->
+          validity g phi ->
+          kinding g t k
+
 and skinding : g:env -> k1:knd -> k2:knd -> phi:typ -> Type=
+
 | KSubRefl : g:env -> k:knd ->
              kwf g k ->
-	     skinding g k k ttrue
-| KSubKArr : g:env -> k1:knd -> k2:knd -> k1':knd -> k2':knd -> phi1:typ -> phi2:typ-> 
+             skinding g k k ttrue
+
+| KSubKArr : g:env -> k1:knd -> k2:knd -> k1':knd -> k2':knd ->
+             phi1:typ -> phi2:typ-> 
              skinding g k2 k1 phi1 -> 
-	     skinding (textend g k2) k1' k2' phi2 -> 
-	     skinding g (KKArr k1 k1') (KKArr k2 k2') (tand phi1 (tforallt k2 (TTLam k2 phi2)))
-| KSubTArr : g:env -> t1:typ -> t2:typ -> k1:knd -> k2:knd -> phi1:typ -> phi2:typ ->
+             skinding (textend g k2) k1' k2' phi2 -> 
+             skinding g (KKArr k1 k1') (KKArr k2 k2')
+                      (tand phi1 (tforallt k2 (TTLam k2 phi2)))
+
+| KSubTArr : g:env -> t1:typ -> t2:typ -> k1:knd ->
+             k2:knd -> phi1:typ -> phi2:typ ->
              styping g t2 t1 phi1 ->
-	     skinding (eextend g t2) k1 k2 phi2 ->
-	     skinding g (KTArr t1 k1) (KTArr t2 k2) (tand phi1 (tforalle t2 (TELam t2 phi2)))
+             skinding (eextend g t2) k1 k2 phi2 ->
+             skinding g (KTArr t1 k1) (KTArr t2 k2)
+                      (tand phi1 (tforalle t2 (TELam t2 phi2)))
+
 and kwf : env -> knd -> Type =
+
 | KOkType : g:env ->
             ewf g ->
-	    kwf g KType
+            kwf g KType
+
 | KOkTArr : g:env -> t:typ -> k':knd ->
             kinding g t KType ->
-	    kwf (eextend g t) k' ->
-	    kwf g (KTArr t k')
+            kwf (eextend g t) k' ->
+            kwf g (KTArr t k')
+
 | KOkKArr : g:env -> k:knd -> k':knd ->
             kwf g k ->
-	    kwf (textend g k) k' ->
-	    kwf g (KKArr k k')
+            kwf (textend g k) k' ->
+            kwf g (KKArr k k')
+
 and validity : g:env -> t:typ -> Type =
+
 | VAssume : g:env -> x:var{is_Some (lookup_evar g x)} ->
             ewf g ->
-	    validity g (Some.v (lookup_evar g x))
+            validity g (Some.v (lookup_evar g x))
+
 | VRedE   : g:env -> e:exp -> t:typ -> e':exp ->
             typing g e (tot t) ->
-	    typing g e' (tot t) ->
+            typing g e' (tot t) ->
             epstep e e' ->
-	    validity g (teqe e e')
+            validity g (teqe e e')
+
 | VEqReflE : g:env -> e:exp -> t:typ ->
              typing g e (tot t) ->
-	     validity g (teqe e e)
+             validity g (teqe e e)
+
 | VEqTranE : g:env -> e1:exp -> e2:exp -> e3:exp ->
              validity g (teqe e1 e2) ->
-	     validity g (teqe e2 e3) ->
-	     validity g (teqe e1 e3)
+             validity g (teqe e2 e3) ->
+             validity g (teqe e1 e3)
+
 | VEqSymE  : g:env -> e1:exp -> e2:exp ->
              validity g (teqe e1 e2) ->
-	     validity g (teqe e2 e1)
+             validity g (teqe e2 e1)
+
 (*Do we really need this rule for all x ?*)
 | VSubstE  : g:env -> e1:exp -> e2:exp -> t:typ -> x:var ->
              validity g (teqe e1 e2) ->
-	     validity g (tesubst_beta_gen x e1 t) ->
-	     validity g (tesubst_beta_gen x e2 t)
+             validity g (tesubst_beta_gen x e1 t) ->
+             validity g (tesubst_beta_gen x e2 t)
+
 | VRedT    : g:env -> t:typ -> t':typ -> k:knd ->
              kinding g t k ->
-	     kinding g t' k ->
-	     tstep t t' ->
-	     validity g (teqt k t t')
+             kinding g t' k ->
+             tstep t t' ->
+             validity g (teqt k t t')
+
 | VEqReflT : g:env -> t:typ -> k:knd ->
              kinding g t k ->
              validity g (teqt k t t)
+
 | VEqTranT : g:env -> t1:typ -> t2:typ -> t3:typ -> k:knd ->
              validity g (teqt k t1 t2) ->
-	     validity g (teqt k t2 t3) ->
-	     validity g (teqt k t1 t3)
+             validity g (teqt k t2 t3) ->
+             validity g (teqt k t1 t3)
+
 | VEqSymT : g:env -> t1:typ -> t2:typ -> k:knd ->
             validity g (teqt k t1 t2) ->
-	    validity g (teqt k t2 t1)
+            validity g (teqt k t2 t1)
+
 | VSubstT : g:env -> t1:typ -> t2:typ -> k:knd -> t:typ -> x:var ->
             validity g (teqt k t1 t2) ->
-	    validity g (ttsubst_beta_gen x t1 t) ->
-	    validity g (ttsubst_beta_gen x t2 t)
+            validity g (ttsubst_beta_gen x t1 t) ->
+            validity g (ttsubst_beta_gen x t2 t)
+
 | VSelAsHeap : g:env -> h:heap -> l:loc ->
                typing g (eheap h) (tot theap) ->
-	       typing g (eloc l) (tot tref) ->
-	       validity g (teqe (esel (eheap h) (eloc l)) (eint (h l)))
+               typing g (eloc l) (tot tref) ->
+               validity g (teqe (esel (eheap h) (eloc l)) (eint (h l)))
+
 | VUpdAsHeap : g:env -> h:heap -> l:loc -> i:int ->
                typing g (eheap h) (tot theap) ->
-	       typing g (eloc l) (tot tref) ->
-	       typing g (eint i) (tot tint) ->
-	       validity g (teqe (eupd (eheap h) (eloc l) (eint i))
-                                  (eheap (upd_heap l i h)))
+               typing g (eloc l) (tot tref) ->
+               typing g (eint i) (tot tint) ->
+               validity g (teqe (eupd (eheap h) (eloc l) (eint i))
+                                (eheap (upd_heap l i h)))
+
 | VSelEq : g:env -> eh:exp -> el:exp -> ei:exp ->
            typing g eh (tot theap) ->
-	   typing g el (tot tref) ->
-	   typing g ei (tot tint) ->
-	   validity g (teqe (esel (eupd eh el ei) el) ei)
+           typing g el (tot tref) ->
+           typing g ei (tot tint) ->
+           validity g (teqe (esel (eupd eh el ei) el) ei)
+
 | VSelNeq : g:env -> eh:exp -> el:exp -> el':exp -> ei:exp ->
             typing g eh (tot theap) ->
-	    typing g el (tot tref) ->
-	    typing g el' (tot tref) ->
-	    typing g ei (tot tint) ->
-	    validity g (tnot (teqe el el')) ->
-	    validity g (teqe (esel (eupd eh el' ei) ei) (esel eh el))
+            typing g el (tot tref) ->
+            typing g el' (tot tref) ->
+            typing g ei (tot tint) ->
+            validity g (tnot (teqe el el')) ->
+            validity g (teqe (esel (eupd eh el' ei) ei) (esel eh el))
+
 | VForallIntro : g:env -> t:typ -> phi:typ ->
                  validity (eextend g t) phi ->
-		 validity g (tforalle t (TELam t phi))
+                 validity g (tforalle t (TELam t phi))
+
 | VForallTypIntro : g:env -> k:knd -> phi:typ ->
                     validity (textend g k) phi ->
-		    validity g (tforallt k (TTLam k phi))
+                    validity g (tforallt k (TTLam k phi))
+
 | VForallElim : g:env -> t:typ -> phi:typ -> e:exp ->
                 validity g (tforalle t (TELam t phi)) ->
-		typing g e (tot t) ->
-		validity g (tesubst_beta e phi)
+                typing g e (tot t) ->
+                validity g (tesubst_beta e phi)
+
 | VForallTypElim : g:env -> t:typ -> k:knd -> phi:typ ->
                    validity g (tforallt k (TTLam k phi)) ->
-		   kinding g t k ->
-		   validity g (ttsubst_beta t phi)
+                   kinding g t k ->
+                   validity g (ttsubst_beta t phi)
+
 | VAndElim1 : g:env -> p1:typ -> p2:typ ->
               validity g (tand p1 p2) ->
-	      validity g p1
+              validity g p1
+
 | VAndElim2 : g:env -> p1:typ -> p2:typ ->
               validity g (tand p1 p2) ->
-	      validity g p2
+              validity g p2
+
 | VAndIntro : g:env -> p1:typ -> p2:typ ->
               validity g p1 ->
-	      validity g p2 ->
-	      validity g (tand p1 p2)
+              validity g p2 ->
+              validity g (tand p1 p2)
+
 (* t1==>t2 is not a form of lambda regarding de Bruijn indices, right ?*)
 | VImplIntro : g:env -> t1:typ -> t2:typ ->
                validity (eextend g t1) (tesh t2) -> (*so we have to shift t2 as well*)
-	       kinding g (timpl t1 t2) KType ->
-	       validity g (timpl t1 t2)
+               kinding g (timpl t1 t2) KType ->
+               validity g (timpl t1 t2)
+
 | VImplElim : g:env -> t1:typ -> t2:typ ->
               validity g (timpl t1 t2) ->
-	      validity g t1 ->
-	      validity g t2
+              validity g t1 ->
+              validity g t2
+
 | VExMiddle : g:env -> t:typ ->
               ewf g ->
-	      validity g (tor t (tnot t))
+              validity g (tor t (tnot t))
+
 | VOrIntro1 : g:env -> t1:typ -> t2:typ ->
               validity g t1 ->
-	      kinding g t2 KType ->
-	      validity g (tor t1 t2)
+              kinding g t2 KType ->
+              validity g (tor t1 t2)
+
 | VOrIntro2 : g:env -> t1:typ -> t2:typ ->
               validity g t2 ->
-	      kinding g t1 KType ->
-	      validity g (tor t1 t2)
+              kinding g t1 KType ->
+              validity g (tor t1 t2)
+
 | VOrElim : g:env -> t1:typ -> t2:typ -> t3:typ ->
             validity (eextend g t1) (tesh t3) ->
-	    validity (eextend g t2) (tesh t3) ->
-	    kinding g t3 KType ->
-	    validity g t3
+            validity (eextend g t2) (tesh t3) ->
+            kinding g t3 KType ->
+            validity g t3
+
 | VTrue : g:env ->
           ewf g ->
-	  validity g ttrue
+          validity g ttrue
+
 | VFalseElim : g:env -> t:typ ->
                validity g tfalse ->
-	       kinding g t KType ->
-	       validity g t
+               kinding g t KType ->
+               validity g t
+
 | VDistinctC : g:env -> c1:econst -> c2:econst{c1 <> c2} -> t:typ ->
                validity g (tnot (teqe (EConst c1) (EConst c2)))
 
 (*Where is << defined ?*)
 (*| VPreceedsIntro ????*)
-(*Where is tv defined ?*)
 (*| VDistinctTH *)
+
 and ewf : env -> Type =
+
 | GEmpty : ewf empty
+
 | GType  : g:env -> t:typ ->
            kinding g t KType ->
-	   ewf (eextend g t)
+           ewf (eextend g t)
+
 | GKind  : g:env -> k:knd ->
            kwf g k ->
-	   ewf (textend g k)
+           ewf (textend g k)
