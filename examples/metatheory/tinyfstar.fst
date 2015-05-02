@@ -650,10 +650,11 @@ type valid: env -> typ -> Type =
                  cand (valid g t1) (valid g t2) ->
                  valid g (mk_and t1 t2)
 
+(*
   | VImp:        #g:env -> #t1:typ -> #t2:typ ->
-                 cimp (valid g t1) (valid g t2) ->
+                 cimp (valid g t1) (valid g t2) -> //non-positive occurrence of valid
                  valid g (mk_imp t1 t2)
-
+*)
    (* CH: TODO: there are a lot more logical constants that have no
           rule here, not just the foralls *)
 

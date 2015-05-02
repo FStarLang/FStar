@@ -430,7 +430,13 @@ let combine_exp e (ec:exp_components) env =
 
 let collect_from_typ (f:'env -> typ -> 'env) (env:'env) (t:typ) : 'env = 
    snd <| reduce_typ (fun _ _ _ env _ k -> k, env)
-                     (fun _ _ _ env _ t -> t, f env t)
+                     (fun _ vt _ env bvs t -> 
+                        let env = f env t in 
+                        match (compress_typ t).n with
+                          | Typ_unknown
+                          | Typ_btvar _   
+                          | Typ_const _ -> t, env
+                          | _ -> vt env bvs t)
                      (fun _ _ _ env _ e -> e, env)
                      (fun k _ env -> k, env)
                      (fun t _ env -> t, env)
