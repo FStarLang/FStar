@@ -221,15 +221,14 @@ val kesubst_extensional: s1:esub -> s2:esub{FEq s1 s2} -> k:knd ->
 Lemma (requires True) (ensures (kesubst s1 k = kesubst s2 k))
 let kesubst_extensional s1 s2 k = ()
 
-val eesubst_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
+val eesub_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
       (ensures (eesubst s (ELam t e) =
                 ELam (tesubst s t) (eesubst (esub_lam s) e)))
-let eesubst_lam_hoist t e s = ()
+let eesub_lam_hoist t e s = ()
 
 val tesubst_elam_hoist : t:typ -> tbody:typ -> s:esub -> Lemma (requires True)
       (ensures (tesubst s (TELam t tbody) =
                 TELam (tesubst s t) (tesubst (esub_lam s) tbody)))
-
 let tesubst_elam_hoist t tbody s = ()
 
 (* Point substitution *)
@@ -598,7 +597,7 @@ let k_post_all  t = KTArr t (KTArr theap KType)
 let k_pure t      = KKArr (k_post_pure t) k_pre_pure
 let k_all  t      = KKArr (k_post_all  t) k_pre_all
 
-let k m = match m with
+let k_m m = match m with
 | EfPure -> k_pure
 | EfAll  -> k_all
 
@@ -1108,7 +1107,7 @@ type typing : env -> exp -> cmp -> Type =
          t':typ -> wp : typ -> wp1:typ -> wp2:typ  ->
          typing g e1 (Cmp m (TArr t (Cmp m t' wp)) wp1) ->
          typing g e2 (Cmp m t wp2) ->
-         (* CH: keep only one of these two *)
+         (* CH: keep only one of these two (problem in txt file too) *)
          kinding g (tesubst (esub_pnt 0 e2) t') KType ->
          htot:option (typing g e2 (tot t)){teappears_in 0 t' ==> is_Some htot} ->
          typing g (EApp e1 e2) (Cmp m (tesubst (esub_pnt 0 e2) t')
@@ -1123,7 +1122,7 @@ and scmp : g:env -> c1:cmp -> c2:cmp -> phi:typ -> Type =
 | SCmp : #g:env -> m':eff -> #t':typ -> wp':typ ->
           m:eff{eff_sub m' m} -> #t:typ -> wp:typ -> #phi:typ ->
          =hs:(styping g t' t phi) ->
-         =hk:(kinding g wp (k m t)) ->
+         =hk:(kinding g wp (k_m m t)) ->
          =hv:(validity g (monotonic m t wp)) ->
           scmp g (Cmp m' t' wp') (Cmp m t wp)
                  (tand phi (down m t (op m t (TConst TcImpl)
@@ -1151,42 +1150,41 @@ and styping : g:env -> t':typ -> t:typ -> phi : typ -> Type =
 
 and kinding : g:env -> t : typ -> k:knd -> Type =
 
-| KVar : g:env -> x:var{is_Some (lookup_tvar g x)} ->
-         kwf g (Some.v (lookup_tvar g x)) ->
-         kinding g (TVar x) (Some.v (lookup_tvar g x))
+| KVar : #g:env -> x:var{is_Some (lookup_tvar g x)} ->
+         =hw:(kwf g (Some.v (lookup_tvar g x))) ->
+          kinding g (TVar x) (Some.v (lookup_tvar g x))
 
 | KConst : g:env -> c:tconst ->
            kinding g (TConst c) (tconsts c)
 
-| KArr : g:env -> t1:typ -> t2:typ -> phi:typ -> m:eff ->
-         kinding g t1 KType ->
-         kinding (eextend g t1) t2 KType ->
-         kinding (eextend g t1) phi (k m t2) ->
-         validity (eextend g t1) (monotonic m t2 phi) ->
-         kinding g (TArr t1 (Cmp m t2 phi)) KType
+| KArr : #g:env -> #t1:typ -> #t2:typ -> #phi:typ -> m:eff ->
+         =hk1:(kinding g t1 KType) ->
+         =hk2:(kinding (eextend g t1) t2 KType) ->
+         =hkp:(kinding (eextend g t1) phi (k_m m t2)) ->
+         =hv:(validity (eextend g t1) (monotonic m t2 phi)) ->
+          kinding g (TArr t1 (Cmp m t2 phi)) KType
 
-| KTLam : g:env -> k:knd -> t:typ -> k':knd ->
-          kwf g k ->
-          kinding (textend g k) t k' ->
-          kinding g (TTLam k t) (KKArr k k')
+| KTLam : #g:env -> #k:knd -> #t:typ -> #k':knd ->
+          =hw:(kwf g k) ->
+          =hk:(kinding (textend g k) t k') ->
+           kinding g (TTLam k t) (KKArr k k')
 
-| KELam : g:env -> t1:typ -> t2:typ -> k2:knd ->
-          kinding g t1 KType ->
-          kinding (eextend g t1) t2 k2 ->
-          kinding g (TELam t1 t2) (KTArr t1 k2)
+| KELam : #g:env -> #t1:typ -> #t2:typ -> #k2:knd ->
+          =hk1:(kinding g t1 KType) ->
+          =hk2:(kinding (eextend g t1) t2 k2) ->
+           kinding g (TELam t1 t2) (KTArr t1 k2)
 
-| KTApp : g:env -> t1:typ -> t2:typ -> k:knd -> k':knd ->
-          kinding g t1 (KKArr k k') ->
-          kinding g t2 k ->
-          (* CH: unjustified difference wrt T-App *)
-          kwf g (ktsubst (tsub_pnt 0 t2) k') ->
-          kinding g (TTApp t1 t2) (ktsubst (tsub_pnt 0 t2) k')
+| KTApp : #g:env -> #t1:typ -> #t2:typ -> #k:knd -> #k':knd ->
+          =hk1:(kinding g t1 (KKArr k k')) ->
+          =hk2:(kinding g t2 k) ->
+          =hw:(kwf g (ktsubst (tsub_pnt 0 t2) k')) ->
+           kinding g (TTApp t1 t2) (ktsubst (tsub_pnt 0 t2) k')
 
-| KEApp : g:env -> t:typ -> t':typ -> k:knd -> e:exp ->
-          kinding g t (KTArr t' k) ->
-          typing g e (tot t') ->
-          kwf g (kesubst (esub_pnt 0 e) k) ->
-          kinding g (TEApp t e) (kesubst (esub_pnt 0 e) k)
+| KEApp : #g:env -> #t:typ -> #t':typ -> #k:knd -> #e:exp ->
+          =hk:(kinding g t (KTArr t' k)) ->
+          =ht:(typing g e (tot t')) ->
+          =hw:(kwf g (kesubst (esub_pnt 0 e) k)) ->
+           kinding g (TEApp t e) (kesubst (esub_pnt 0 e) k)
 
 | KSub  : g:env -> t:typ -> k':knd -> k:knd -> phi:typ ->
           kinding g t k' ->
@@ -1282,7 +1280,7 @@ and validity : g:env -> t:typ -> Type =
 | VSubstT : g:env -> t1:typ -> t2:typ -> k:knd -> t:typ -> x:var ->
             validity g (teqt k t1 t2) ->
             validity g (ttsubst (tsub_pnt x t1) t) ->
-            validity g (ttsubst (tsub_pne x t2) t)
+            validity g (ttsubst (tsub_pnt x t2) t)
 
 | VSelAsHeap : g:env -> h:heap -> l:loc ->
                typing g (eheap h) (tot theap) ->
