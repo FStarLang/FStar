@@ -232,6 +232,13 @@ val tesubst_elam_hoist : t:typ -> tbody:typ -> s:esub -> Lemma (requires True)
 
 let tesubst_elam_hoist t tbody s = ()
 
+(* Point substitution *)
+val esub_pnt : var -> exp -> Tot esub
+let esub_pnt x e = fun y -> if y = x then e else (EVar y)
+
+(* Beta substitution *)
+(* CH: Could consider defining this as the composition of esub_pnt and
+       a shift of all variables larger than x *)
 val esub_beta_gen : var -> exp -> Tot esub
 let esub_beta_gen x e = fun y -> if y < x then (EVar y)
                                  else if y = x then e
@@ -353,6 +360,11 @@ val ttsubst_tlam_hoist : k:knd -> tbody:typ -> s:tsub -> Lemma (requires True)
 
 let ttsubst_tlam_hoist t e s = ()
 
+(* Point substitution *)
+val tsub_pnt : var -> typ -> Tot tsub
+let tsub_pnt a t = fun b -> if b = a then t else (TVar b)
+
+(* Beta substitution *)
 val tsub_beta_gen : var -> typ -> Tot tsub
 let tsub_beta_gen x t = fun y -> if y < x then (TVar y)
                                  else if y = x then t
@@ -1096,9 +1108,10 @@ type typing : env -> exp -> cmp -> Type =
          t':typ -> wp : typ -> wp1:typ -> wp2:typ  ->
          typing g e1 (Cmp m (TArr t (Cmp m t' wp)) wp1) ->
          typing g e2 (Cmp m t wp2) ->
-         kinding g (tesubst_beta e2 t') KType ->
+         (* CH: keep only one of these two *)
+         kinding g (tesubst (esub_pnt 0 e2) t') KType ->
          htot:option (typing g e2 (tot t)){teappears_in 0 t' ==> is_Some htot} ->
-         typing g (EApp e1 e2) (Cmp m (tesubst_beta e2 t')
+         typing g (EApp e1 e2) (Cmp m (tesubst (esub_pnt 0 e2) t')
                                     (bind m (TArr t (Cmp m t' wp)) t wp1 wp2))
 
 | TyRet : g:env -> e:exp -> t:typ ->
@@ -1165,14 +1178,15 @@ and kinding : g:env -> t : typ -> k:knd -> Type =
 | KTApp : g:env -> t1:typ -> t2:typ -> k:knd -> k':knd ->
           kinding g t1 (KKArr k k') ->
           kinding g t2 k ->
-          kwf g (ktsubst_beta t2 k') ->
-          kinding g (TTApp t1 t2) (ktsubst_beta t2 k')
+          (* CH: unjustified difference wrt T-App *)
+          kwf g (ktsubst (tsub_pnt 0 t2) k') ->
+          kinding g (TTApp t1 t2) (ktsubst (tsub_pnt 0 t2) k')
 
 | KEApp : g:env -> t:typ -> t':typ -> k:knd -> e:exp ->
           kinding g t (KTArr t' k) ->
           typing g e (tot t') ->
-          kwf g (kesubst_beta e k) ->
-          kinding g (TEApp t e) (kesubst_beta e k)
+          kwf g (kesubst (esub_pnt 0 e) k) ->
+          kinding g (TEApp t e) (kesubst (esub_pnt 0 e) k)
 
 | KSub  : g:env -> t:typ -> k':knd -> k:knd -> phi:typ ->
           kinding g t k' ->
@@ -1243,8 +1257,8 @@ and validity : g:env -> t:typ -> Type =
 (*Do we really need this rule for all x ?*)
 | VSubstE  : g:env -> e1:exp -> e2:exp -> t:typ -> x:var ->
              validity g (teqe e1 e2) ->
-             validity g (tesubst_beta_gen x e1 t) ->
-             validity g (tesubst_beta_gen x e2 t)
+             validity g (tesubst (esub_pnt x e1) t) ->
+             validity g (tesubst (esub_pnt x e2) t)
 
 | VRedT    : g:env -> t:typ -> t':typ -> k:knd ->
              kinding g t k ->
@@ -1267,8 +1281,8 @@ and validity : g:env -> t:typ -> Type =
 
 | VSubstT : g:env -> t1:typ -> t2:typ -> k:knd -> t:typ -> x:var ->
             validity g (teqt k t1 t2) ->
-            validity g (ttsubst_beta_gen x t1 t) ->
-            validity g (ttsubst_beta_gen x t2 t)
+            validity g (ttsubst (tsub_pnt x t1) t) ->
+            validity g (ttsubst (tsub_pne x t2) t)
 
 | VSelAsHeap : g:env -> h:heap -> l:loc ->
                typing g (eheap h) (tot theap) ->
