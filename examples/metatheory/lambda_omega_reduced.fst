@@ -68,21 +68,21 @@ let rec esubst s e =
   | EVar x -> s x
 
   | ELam t e1 ->
-     let esubst_lam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) =
+     let esub_lam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) =
        fun y -> if y=0 then EVar y
                        else (esubst esub_inc (s (y - 1))) in
-     ELam t (esubst esubst_lam e1)
+     ELam t (esubst esub_lam e1)
 
   | EApp e1 e2 -> EApp (esubst s e1) (esubst s e2)
 
-val esubst_lam: s:esub -> Tot esub
-let esubst_lam s y =
+val esub_lam: s:esub -> Tot esub
+let esub_lam s y =
   if y = 0 then EVar y
            else esubst esub_inc (s (y-1))
 
-val esubst_lam_renaming: s:esub -> Lemma
-  (ensures (forall (x:var). erenaming s ==> is_EVar (esubst_lam s x)))
-let esubst_lam_renaming s = ()
+val esub_lam_renaming: s:esub -> Lemma
+  (ensures (forall (x:var). erenaming s ==> is_EVar (esub_lam s x)))
+let esub_lam_renaming s = ()
 
 (* Substitution extensional; trivial with the extensionality axiom *)
 val esubst_extensional: s1:esub -> s2:esub{FEq s1 s2} -> e:exp ->
@@ -94,25 +94,18 @@ let esubst_extensional s1 s2 e = ()
    it would be a lot cooler if this worked without, since that increases checking time.
    Even worse, there is no way to prove this without the SMTPat (e.g. manually),
    or to use the SMTPat only locally, in this definition (`using` needed). *)
-val esubst_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
-      (ensures (esubst s (ELam t e) = ELam t (esubst (esubst_lam s) e)))
+val esub_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
+      (ensures (esubst s (ELam t e) = ELam t (esubst (esub_lam s) e)))
       (* [SMTPat (esubst (ELam t e) s)]
       (\* -- this increases running time by 10 secs and adds variability *\) *)
-let esubst_lam_hoist t e s = admit()
+let esub_lam_hoist t e s = admit()
 
+val esub_beta : exp -> Tot esub
+let esub_beta e = fun y -> if y = 0 then e
+                           else (EVar (y-1))
 
-(* subst_beta_gen is a generalization of the substitution we do for
-   the beta rule, when we've under x binders
-   (useful for the substitution lemma) *)
-val esub_beta_gen : var -> exp -> Tot esub
-let esub_beta_gen x e = fun y -> if y < x then (EVar y)
-                                 else if y = x then e
-                                 else (EVar (y-1))
-
-val esubst_beta_gen : var -> exp -> exp -> Tot exp
-let esubst_beta_gen x e' = esubst (esub_beta_gen x e')
-
-let esubst_beta = esubst_beta_gen 0
+val esubst_beta : exp -> exp -> Tot exp
+let esubst_beta e = esubst (esub_beta e)
 
 (* Substitution on types is very much analogous *)
 
@@ -142,16 +135,16 @@ let rec tsubst s t =
   | TVar x -> s x
 
   | TLam k t1 ->
-     let tsubst_lam : y:var -> Tot (t:typ{trenaming s ==> is_TVar t}) =
+     let tsub_lam : y:var -> Tot (t:typ{trenaming s ==> is_TVar t}) =
        fun y -> if y=0 then TVar y
                        else (tsubst tsub_inc (s (y-1))) in
-     TLam k (tsubst tsubst_lam t1)
+     TLam k (tsubst tsub_lam t1)
 
   | TArr t1 t2 -> TArr (tsubst s t1) (tsubst s t2)
   | TApp t1 t2 -> TApp (tsubst s t1) (tsubst s t2)
 
-val tsubst_lam: s:tsub -> Tot tsub
-let tsubst_lam s y =
+val tsub_lam: s:tsub -> Tot tsub
+let tsub_lam s y =
   if y = 0 then TVar y
            else tsubst tsub_inc (s (y-1))
 
@@ -161,10 +154,10 @@ val tsubst_extensional: s1:tsub -> s2:tsub{FEq s1 s2} -> t:typ ->
 (*                       [SMTPat (tsubst t s1);  SMTPat (tsubst t s2)]*)
 let tsubst_extensional s1 s2 t = ()
 
-(* Same silly situation as for esubst_lam_hoist *)
-val tsubst_lam_hoist : k:knd -> t:typ -> s:tsub -> Lemma
-      (ensures (tsubst s (TLam k t) = TLam k (tsubst (tsubst_lam s) t)))
-let tsubst_lam_hoist k t s = admit()
+(* Same silly situation as for esub_lam_hoist *)
+val tsub_lam_hoist : k:knd -> t:typ -> s:tsub -> Lemma
+      (ensures (tsubst s (TLam k t) = TLam k (tsubst (tsub_lam s) t)))
+let tsub_lam_hoist k t s = admit()
 
 (* Type substitution composition (again analogous) *)
 
@@ -172,11 +165,11 @@ val tsub_comp : s1:tsub -> s2:tsub -> Tot tsub
 let tsub_comp s1 s2 x = tsubst s1 (s2 x)
 
 val tsub_comp_inc : s:tsub -> x:var ->
-      Lemma (tsub_comp tsub_inc s x = tsub_comp (tsubst_lam s) tsub_inc x)
+      Lemma (tsub_comp tsub_inc s x = tsub_comp (tsub_lam s) tsub_inc x)
 let tsub_comp_inc s x = ()
-val tsubst_lam_renaming: s:tsub -> Lemma
-  (ensures (forall (x:var). trenaming s ==> is_TVar (tsubst_lam s x)))
-let tsubst_lam_renaming s = ()
+val tsub_lam_renaming: s:tsub -> Lemma
+  (ensures (forall (x:var). trenaming s ==> is_TVar (tsub_lam s x)))
+let tsub_lam_renaming s = ()
 val tsubst_comp : s1:tsub -> s2:tsub -> t:typ -> Lemma
       (tsubst s1 (tsubst s2 t) = tsubst (tsub_comp s1 s2) t)
       (decreases %[is_tvar t;
@@ -188,8 +181,8 @@ let rec tsubst_comp s1 s2 t =
   | TVar z -> ()
   | TApp t1 t2 -> tsubst_comp s1 s2 t1; tsubst_comp s1 s2 t2
   | TLam k tbody -> 
-      let tsubst_lam_comp : x:var -> Lemma( tsubst_lam (tsub_comp s1 s2) x =
-                                            tsub_comp (tsubst_lam s1) (tsubst_lam s2) x) =
+      let tsub_lam_comp : x:var -> Lemma( tsub_lam (tsub_comp s1 s2) x =
+                                            tsub_comp (tsub_lam s1) (tsub_lam s2) x) =
         fun x -> match x with
         | 0 -> ()
         | _ -> begin 
@@ -197,37 +190,37 @@ let rec tsubst_comp s1 s2 t =
                     tsubst_comp tsub_inc s1 (s2 (x-1)) in
           let ext = forall_intro (tsub_comp_inc s1);
                     tsubst_extensional (tsub_comp tsub_inc s1)
-                                       (tsub_comp (tsubst_lam s1) tsub_inc) (s2 (x-1)) in
-          let ih2 = tsubst_lam_renaming s1;
+                                       (tsub_comp (tsub_lam s1) tsub_inc) (s2 (x-1)) in
+          let ih2 = tsub_lam_renaming s1;
                     trenaming_sub_inc ();
-                    tsubst_comp (tsubst_lam s1) tsub_inc (s2 (x-1))
+                    tsubst_comp (tsub_lam s1) tsub_inc (s2 (x-1))
           in ()
         end
       in
-      let hoist1 = tsubst_lam_hoist k tbody s2 in
-      let hoist2 = tsubst_lam_hoist k (tsubst (tsubst_lam s2) tbody) s1 in
+      let hoist1 = tsub_lam_hoist k tbody s2 in
+      let hoist2 = tsub_lam_hoist k (tsubst (tsub_lam s2) tbody) s1 in
     let h1 =
-      tsubst_lam_renaming s1;
-      tsubst_lam_renaming s2;
-      tsubst_comp (tsubst_lam s1) (tsubst_lam s2) tbody in
+      tsub_lam_renaming s1;
+      tsub_lam_renaming s2;
+      tsubst_comp (tsub_lam s1) (tsub_lam s2) tbody in
 
     let h2 =
-      forall_intro tsubst_lam_comp;
-      cut (FEq (tsub_comp (tsubst_lam s1) (tsubst_lam s2))
-             (tsubst_lam (tsub_comp s1 s2))) in
+      forall_intro tsub_lam_comp;
+      cut (FEq (tsub_comp (tsub_lam s1) (tsub_lam s2))
+             (tsub_lam (tsub_comp s1 s2))) in
 
     let ext = tsubst_extensional
-      (tsub_comp (tsubst_lam s1) (tsubst_lam s2))
-      (tsubst_lam (tsub_comp s1 s2))
+      (tsub_comp (tsub_lam s1) (tsub_lam s2))
+      (tsub_lam (tsub_comp s1 s2))
       tbody in
 
-    let hoist3 = tsubst_lam_hoist k tbody (tsub_comp s1 s2) in
+    let hoist3 = tsub_lam_hoist k tbody (tsub_comp s1 s2) in
     ()
 
 
   | TArr t1 t2 -> tsubst_comp s1 s2 t1; tsubst_comp s1 s2 t2
-assume val tsubst_lam_comp : s1:tsub -> s2:tsub -> x:var -> Lemma
-      (tsubst_lam (tsub_comp s1 s2) x = tsub_comp (tsubst_lam s1) (tsubst_lam s2) x)
+assume val tsub_lam_comp : s1:tsub -> s2:tsub -> x:var -> Lemma
+      (tsub_lam (tsub_comp s1 s2) x = tsub_comp (tsub_lam s1) (tsub_lam s2) x)
 
 (* Identity substitution *)
 
@@ -239,8 +232,8 @@ let rec tsubst_id t =
   match t with
   | TVar z -> ()
   | TLam k t1 ->
-     tsubst_lam_hoist k t1 tsub_id;
-     tsubst_extensional tsub_id (tsubst_lam tsub_id) t1;
+     tsub_lam_hoist k t1 tsub_id;
+     tsubst_extensional tsub_id (tsub_lam tsub_id) t1;
      tsubst_id t1
   | TArr t1 t2
   | TApp t1 t2 -> tsubst_id t1; tsubst_id t2
@@ -252,6 +245,7 @@ let tsub_beta_gen x t = fun y -> if y < x then (TVar y)
                                  else if y = x then t
                                  else (TVar (y-1))
 
+(* CH: Can really get rid of this? *)
 val tsubst_beta_gen : var -> typ -> typ -> Tot typ
 let tsubst_beta_gen x t' t = tsubst (tsub_beta_gen x t') t
 
@@ -481,10 +475,10 @@ val tshift_up_above_lam: n:nat -> k:knd -> t:typ -> Lemma
   (ensures (tshift_up_above n (TLam k t) = TLam k (tshift_up_above (n + 1) t)))
 let tshift_up_above_lam n k t =
   assert(tshift_up_above n (TLam k t) = tsubst (tsub_inc_above n) (TLam k t));
-  tsubst_lam_hoist k t (tsub_inc_above n);
+  tsub_lam_hoist k t (tsub_inc_above n);
   assert(tshift_up_above n (TLam k t) =
-         TLam k (tsubst (tsubst_lam (tsub_inc_above n)) t));
-  tsubst_extensional (tsubst_lam (tsub_inc_above n)) (tsub_inc_above (n+1)) t
+         TLam k (tsubst (tsub_lam (tsub_inc_above n)) t));
+  tsubst_extensional (tsub_lam (tsub_inc_above n)) (tsub_inc_above (n+1)) t
 
 (* kinding weakening when a type variable binding is added to env *)
 opaque val kinding_weakening_tbnd : #g:env -> #t:typ -> #k:knd ->
@@ -611,34 +605,38 @@ let rec substitution g1 e t s g2 h1 hs =
   | TyLam #gtemp tlam #ebody #tfun hkind hbody ->
   let hs'' : subst_typing (esub_inc) (g2) (extend_evar g2 0 tlam) = fun x hkind ->
   TyVar (x+1) (kinding_extensional hkind (extend_evar g2 0 tlam) ) in
-  let hs' : subst_typing (esubst_lam s) (extend_evar g1 0 tlam) (extend_evar g2 0 tlam) =
+  let hs' : subst_typing (esub_lam s) (extend_evar g1 0 tlam) (extend_evar g2 0 tlam) =
   fun y hkindg1 -> if y = 0 then TyVar y (kinding_extensional hkindg1 (extend_evar g2 0 tlam))
            else let hgamma2 = hs (y - 1) (kinding_extensional hkindg1 g1) in (substitution esub_inc hgamma2 hs'')
-  in esubst_lam_hoist tlam ebody s; TyLam tlam (kinding_extensional hkind g2) (substitution (esubst_lam s) hbody hs')
+  in esub_lam_hoist tlam ebody s; TyLam tlam (kinding_extensional hkind g2) (substitution (esub_lam s) hbody hs')
   | TyEqu het1 hequiv hkind -> TyEqu (substitution s het1 hs) hequiv (kinding_extensional hkind g2)
 
-opaque val typing_substitution: x:nat -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ ->
-      #g:env -> h1:(typing g v t_x) -> h2:(typing (extend_evar g x t_x) e t) ->
-      Tot (typing g (esubst_beta_gen x v e) t) (decreases %[e;h2])
-let rec typing_substitution x e v t_x t g h1 h2 =
-let hs : subst_typing (esub_beta_gen x v) (extend_evar g x t_x) (g) = fun y hkind -> if y < x then TyVar y (kinding_extensional hkind g) else if y = x then h1 else TyVar (y-1) (kinding_extensional hkind g) in
-substitution (esub_beta_gen x v) h2 hs
+opaque val typing_substitution: #e:exp -> #v:exp -> #t_x:typ ->
+                                #t:typ -> #g:env ->
+      h1:(typing g v t_x) ->
+      h2:(typing (extend_evar g 0 t_x) e t) ->
+      Tot (typing g (esubst_beta v e) t) (decreases %[e;h2])
+let rec typing_substitution e v t_x t g h1 h2 =
+  let hs : subst_typing (esub_beta v) (extend_evar g 0 t_x) g =
+    fun y hkind -> if y = 0 then h1
+                   else TyVar (y-1) (kinding_extensional hkind g) in
+  substitution (esub_beta v) h2 hs
 
 (* analogous to above *)
 val tsubst_gen_tlam_aux : t:typ -> x:var -> y:var ->
-      Lemma (tsubst_lam (tsub_beta_gen x t) y =
+      Lemma (tsub_lam (tsub_beta_gen x t) y =
              tsub_beta_gen (x + 1) (tshift_up t) y)
 let tsubst_gen_tlam_aux t x y =
   match y with
   | 0 -> ()
   | _ ->
-     (assert(tsubst_lam (tsub_beta_gen x t) y =
+     (assert(tsub_lam (tsub_beta_gen x t) y =
                tsubst tsub_inc (tsub_beta_gen x t (y-1)));
       assert(tsub_beta_gen (x + 1) (tshift_up t) y =
                tsub_beta_gen (x + 1) (tsubst (tsub_inc_above 0) t) y);
       if (y-1) < x then ()
       else if y-1 = x then
-        (assert(tsubst_lam (tsub_beta_gen x t) y =
+        (assert(tsub_lam (tsub_beta_gen x t) y =
                   tsubst tsub_inc t);
          assert(tsub_beta_gen (x + 1) (tshift_up t) y =
                   tsubst (tsub_inc_above 0) t);
@@ -651,16 +649,16 @@ val tsubst_gen_tlam : x:var -> t:typ -> k:knd -> t':typ -> Lemma
 let tsubst_gen_tlam x t k t' =
   assert(tsubst_beta_gen x t (TLam k t') =
            tsubst (tsub_beta_gen x t) (TLam k t'));
-  tsubst_lam_hoist k t' (tsub_beta_gen x t);
+  tsub_lam_hoist k t' (tsub_beta_gen x t);
   assert(tsubst_beta_gen x t (TLam k t') =
-           TLam k (tsubst (tsubst_lam (tsub_beta_gen x t)) t'));
+           TLam k (tsubst (tsub_lam (tsub_beta_gen x t)) t'));
 
   assert(TLam k (tsubst_beta_gen (x + 1) (tshift_up t) t') =
            TLam k (tsubst (tsub_beta_gen (x + 1) (tshift_up t)) t'));
 
   forall_intro (tsubst_gen_tlam_aux t x);
 
-  tsubst_extensional (tsubst_lam (tsub_beta_gen x t))
+  tsubst_extensional (tsub_lam (tsub_beta_gen x t))
                      (tsub_beta_gen (x + 1) (tshift_up t)) t'
 
 (* Parallel type reduction *)
@@ -1137,11 +1135,12 @@ opaque val preservation : #e:exp -> #e':exp -> hs:step e e' ->
 let rec preservation _ _ hs _ _ ht =
   match ht with
   | TyApp #g #e1 #e2 #t1 #t2 h1 h2 ->
+
     (match hs with
      | SBeta s1 e11 e12 ->
        let Conj p12 (p3:kinding g s1 KTyp) = inversion_elam_typing s1 e11 t1 t2 h1 in
        let Conj (p1:tequiv t1 s1) (p2:typing (extend_evar g 0 s1) e11 t2) = p12 in
-       typing_substitution 0 (TyEqu h2 p1 p3) p2
+       typing_substitution (TyEqu h2 p1 p3) p2
      | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
      | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2))
   | TyEqu ht1 he hk -> TyEqu (preservation hs ht1) he hk
