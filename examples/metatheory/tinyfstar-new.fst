@@ -1032,15 +1032,12 @@ let lookup_tvar g x = Env.t g x
 
 type typing : env -> exp -> cmp -> Type =
 
-| TyVar : #g:env ->
-           x:var{is_Some (lookup_evar g x)} ->
-          =h:(ewf g) ->
+| TyVar : #g:env -> x:var{is_Some (lookup_evar g x)} ->
+          =hk:(kinding g (Some.v (lookup_evar g x)) KType) ->
            typing g (EVar x) (tot (Some.v (lookup_evar g x)))
 
-| TyConst : #g:env ->
-            =h:(ewf g) ->
-             c:econst ->
-             typing g (EConst c) (tot (econsts c))
+| TyConst : g:env -> c:econst ->
+            typing g (EConst c) (tot (econsts c))
 
 | TyAbs : #g:env ->
           #t1:typ ->
@@ -1142,11 +1139,10 @@ and styping : g:env -> t':typ -> t:typ -> phi : typ -> Type =
 and kinding : g:env -> t : typ -> k:knd -> Type =
 
 | KVar : g:env -> x:var{is_Some (lookup_tvar g x)} ->
-         ewf g ->
+         kwf g (Some.v (lookup_tvar g x)) ->
          kinding g (TVar x) (Some.v (lookup_tvar g x))
 
 | KConst : g:env -> c:tconst ->
-           ewf g ->
            kinding g (TConst c) (tconsts c)
 
 | KArr : g:env -> t1:typ -> t2:typ -> phi:typ -> m:eff ->
@@ -1207,7 +1203,6 @@ and skinding : g:env -> k1:knd -> k2:knd -> phi:typ -> Type=
 and kwf : env -> knd -> Type =
 
 | KOkType : g:env ->
-            ewf g ->
             kwf g KType
 
 | KOkTArr : g:env -> t:typ -> k':knd ->
@@ -1223,7 +1218,7 @@ and kwf : env -> knd -> Type =
 and validity : g:env -> t:typ -> Type =
 
 | VAssume : g:env -> x:var{is_Some (lookup_evar g x)} ->
-            ewf g ->
+            kinding g (Some.v (lookup_evar g x)) KType ->
             validity g (Some.v (lookup_evar g x))
 
 | VRedE   : g:env -> e:exp -> t:typ -> e':exp ->
@@ -1344,7 +1339,7 @@ and validity : g:env -> t:typ -> Type =
               validity g t2
 
 | VExMiddle : g:env -> t:typ ->
-              ewf g ->
+              kinding g t KType ->
               validity g (tor t (tnot t))
 
 | VOrIntro1 : g:env -> t1:typ -> t2:typ ->
@@ -1364,7 +1359,6 @@ and validity : g:env -> t:typ -> Type =
             validity g t3
 
 | VTrue : g:env ->
-          ewf g ->
           validity g ttrue
 
 | VFalseElim : g:env -> t:typ ->
@@ -1378,15 +1372,3 @@ and validity : g:env -> t:typ -> Type =
 (*Where is << defined ?*)
 (*| VPreceedsIntro ????*)
 (*| VDistinctTH *)
-
-and ewf : env -> Type =
-
-| GEmpty : ewf empty
-
-| GType  : g:env -> t:typ ->
-           kinding g t KType ->
-           ewf (eextend g t)
-
-| GKind  : g:env -> k:knd ->
-           kwf g k ->
-           ewf (textend g k)
