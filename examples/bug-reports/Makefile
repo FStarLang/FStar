@@ -1,8 +1,8 @@
 VERFILES=bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst\
   bug28.fst bug52.fst bug23.fst bug21.fst bug96.fst bug77.fst bug92.fst bug62.fst\
   bug67.fst bug56.fst bug103.fst bug96.fst bug60.fst bug97b.fst bug101.fst\
-  bug111.fst\
-  bug116.fst bug122.fst bug148.fst bug162.fst bug170.fst bug175.fst bug178.fst\
+  bug111.fst bug116.fst bug117.fst\
+  bug122.fst bug148.fst bug162.fst bug170.fst bug175.fst bug178.fst\
   bug179.fst bug186.fst bug189.fst bug190.fst bug192.fst bug195.fst\
   bug212.fst\
   bugWildcardTelescopes.fst
