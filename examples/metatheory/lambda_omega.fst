@@ -1,6 +1,9 @@
 (*
-   Copyright 2008-2015 Catalin Hritcu (Inria), Aseem Rastogi (UMD), and
-   Nikhil Swamy (Microsoft Research)
+   Copyright 2015
+     Catalin Hritcu - Inria
+     Aseem Rastogi - UMD
+     Nikhil Swamy - Microsoft Research
+
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -50,7 +53,7 @@ opaque type erenaming (s:esub) = (forall (x:var). is_EVar (s x))
 val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
                                         (~(erenaming s) ==> n=1)})
 let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
-  (* not marking erenaming 'opaque' triggers #122 *)
+  (* not marking erenaming 'opaque' triggers #222 *)
 
 val esub_inc_above : nat -> var -> Tot exp
 let esub_inc_above x y = if y<x then EVar y else EVar (y+1)
@@ -234,7 +237,7 @@ let rec esubst_id e =
   | EApp e1 e2 -> esubst_id e1; esubst_id e2
 
 (* subst_beta_gen is a generalization of the substitution we do for
-   the beta rule, when we've under x binders
+   the beta rule, when we're under x binders
    (useful for the substitution lemma) *)
 val esub_beta_gen : var -> exp -> Tot esub
 let esub_beta_gen x e = fun y -> if y < x then (EVar y)

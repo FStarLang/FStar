@@ -55,11 +55,8 @@ val is_renaming : s:sub -> Tot (n:int{  (renaming s  ==> n=0) /\
                                       (~(renaming s) ==> n=1)})
 let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
 
-val sub_inc_above : nat -> var -> Tot exp
-let sub_inc_above n y = if y<n then EVar y else EVar (y+1)
-
 val sub_inc : var -> Tot exp
-let sub_inc = sub_inc_above 0
+let sub_inc y = EVar (y+1)
 
 val renaming_sub_inc : unit -> Lemma (renaming (sub_inc))
 let renaming_sub_inc _ = ()
@@ -100,13 +97,13 @@ type step : exp -> exp -> Type =
   | SApp1 : #e1:exp ->
              e2:exp ->
             #e1':exp ->
-            =hst:(step e1 e1') ->
-             step (EApp e1 e2) (EApp e1' e2)
+            =hst:step e1 e1' ->
+                 step (EApp e1 e2) (EApp e1' e2)
   | SApp2 :  e1:exp ->
             #e2:exp ->
             #e2':exp ->
-            =hst:(step e2 e2') ->
-             step (EApp e1 e2) (EApp e1 e2')
+            =hst:step e2 e2' ->
+                 step (EApp e1 e2) (EApp e1 e2')
 
 (* Type system; as inductive relation (not strictly necessary for STLC) *)
 
@@ -129,15 +126,15 @@ type typing : env -> exp -> typ -> Type =
             #e1:exp ->
             #t':typ ->
             =hbody:typing (extend t g) e1 t' ->
-             typing g (ELam t e1) (TArr t t')
+                   typing g (ELam t e1) (TArr t t')
   | TyApp : #g:env ->
             #e1:exp ->
             #e2:exp ->
             #t11:typ ->
             #t12:typ ->
-            =h1:(typing g e1 (TArr t11 t12)) ->
-            =h2:(typing g e2 t11) ->
-             typing g (EApp e1 e2) t12
+            =h1:typing g e1 (TArr t11 t12) ->
+            =h2:typing g e2 t11 ->
+                typing g (EApp e1 e2) t12
 
 (* Progress *)
 
@@ -189,6 +186,9 @@ let rec substitution g1 e t s g2 h1 hs =
 
 (* Weakening (or shifting preserves typing) *)
 (* Useless now, showing that it follows from substitution lemma *)
+val sub_inc_above : nat -> var -> Tot exp
+let sub_inc_above n y = if y<n then EVar y else EVar (y+1)
+
 val shift_up_above : nat -> exp -> Tot exp
 let shift_up_above n e = subst (sub_inc_above n) e
 
