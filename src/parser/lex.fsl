@@ -581,18 +581,10 @@ and vstring sargs = parse
 (* WARNING: taking sargs as a single parameter seems to make a difference as to whether *)
 (* OCaml takes tailcalls. *)
 and comment cargs = parse
- |  char
+ |  char | '"' | '@'
     { let n,m,args = cargs in 
       comment(n,m,args) lexbuf  } 
     
- | '"'   
-    { let n,m,args = cargs in 
-      comment_string n m args lexbuf }
-
- | '@' '"'
-    { let n,m,args = cargs in 
-      comment_vstring n m args lexbuf }
-
  | '(' '*'
     { let n,m,args = cargs in 
       comment (n+1,m,args) lexbuf }
@@ -601,6 +593,7 @@ and comment cargs = parse
     { let n,m,args = cargs in 
       mknewline 1 lexbuf; 
       comment cargs lexbuf }
+ 
  | "*)" 
     { 
       let n,m,args = cargs in 
@@ -618,54 +611,6 @@ and comment cargs = parse
      
  | _ { let n,m,args = cargs in 
        comment(n,m,args) lexbuf }
-
-and comment_string n m args = parse
- (* Follow string lexing, skipping tokens until it finishes *)
- |  '\\' newline anywhite* 
-     { mknewline 1 lexbuf; 
-       comment_string n m args lexbuf }
-
- | escape_char
- | trigraph
- | hexgraph_short
- | unicodegraph_short
- | unicodegraph_long
- | ident  
- | xinteger
- | anywhite +  
-     { comment_string n m args lexbuf }
-
-
- | '"' 
-     { comment(n,m,args) lexbuf }
-     
- | newline 
-     { mknewline 1 lexbuf;  
-       comment_string n m args lexbuf }
-     
- | eof 
-     { EOF }
-     
- | _  
-     { comment_string n m args lexbuf }
-
-and comment_vstring n m args = parse
- (* Follow vstring lexing, in short, skip double-quotes and other chars until we hit a single quote *)
- | '"' '"'
-     { comment_vstring n m args lexbuf }
-
- | '"' 
-     { comment(n,m,args) lexbuf }
-     
- | newline 
-     { mknewline 1 lexbuf;
-       comment_vstring n m args lexbuf }
-     
- | eof 
-     { EOF }
-     
- | _  
-     { comment_vstring n m args lexbuf }
 
 and cpp_filename args = parse
  | ' ' '"' [^ '"']+ '"'

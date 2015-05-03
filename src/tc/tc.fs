@@ -140,8 +140,8 @@ let check_expected_effect env (copt:option<comp>) (e, c) : exp * comp * guard_t 
     | Some _ -> copt 
     | None -> 
         let c1 = Tc.Normalize.weak_norm_comp env c in
-        let md = Tc.Env.get_monad_decl env c1.effect_name in
-        match md.default_monad with 
+        let md = Tc.Env.get_effect_decl env c1.effect_name in
+        match Tc.Env.default_effect env md.mname with
             | None -> None
             | Some l ->
                 let flags = 
@@ -194,6 +194,30 @@ let rec tc_kind env k : knd * guard_t =
     let args, g = tc_args env args in
     w <| mk_Kind_uvar(u, args), g 
 
+  | Kind_abbrev((l, args), {n=Kind_unknown}) -> 
+    let (_, binders, body) = Tc.Env.lookup_kind_abbrev env l in
+    let args, g = tc_args env args in
+    if List.length binders <> List.length args
+    then raise (Error("Unexpected number of arguments to kind abbreviation " ^ (Print.sli l), k.pos))
+    else let subst, args, guards = List.fold_left2 (fun (subst, args, guards) (b:binder) a -> 
+            match fst b, fst a with 
+            | Inl a, Inl t ->
+              let t, g = tc_typ_check env t (Util.subst_kind subst a.sort) in
+              let subst = Inl(a.v, t)::subst in
+              subst, targ t::args, g::guards 
+            | Inr x, Inr e ->  
+              let env = Env.set_expected_typ env (Util.subst_typ subst x.sort) in
+              let e, _, g = tc_total_exp env e in
+              let subst = (Inr (x.v, e)::subst) in
+              subst, varg e::args, g::guards
+            | _ -> raise (Error("Ill-typed argument to kind abbreviation", Util.range_of_arg a))) 
+          ([], [], []) binders args in
+         let args = List.rev args in
+         let k = w <| mk_Kind_abbrev((l, args), mk_Kind_unknown) in
+         let k' = Tc.Normalize.norm_kind [Normalize.DeltaHard] env k in
+         let k = w <| mk_Kind_abbrev((l, args), k') in
+         k', List.fold_left Rel.conj_guard g guards
+
   | Kind_abbrev(kabr, k) -> 
     let k, f = tc_kind env k in 
     let args, g = tc_args env <| snd kabr in
@@ -244,7 +268,6 @@ and tc_args env args : Syntax.args * guard_t =
     | Inr e -> 
         let e, _, g' = tc_total_exp env e in
         (Inr e, imp)::args, Tc.Rel.conj_guard g g') args ([], Rel.trivial_guard)
-
    
 and tc_comp env c = 
   match c.n with 
@@ -253,7 +276,7 @@ and tc_comp env c =
       mk_Total t, g
 
     | Comp c -> 
-      let kc =  Tc.Env.lookup_typ_lid env c.effect_name in
+      let kc =  Tc.Env.lookup_effect_lid env c.effect_name in
       let head = Util.ftv c.effect_name kc in
       let tc = mk_Typ_app(head, (targ c.result_typ)::c.effect_args) None c.result_typ.pos in
       let tc, f = tc_typ_check env tc keffect in 
@@ -298,7 +321,9 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
     mk_Typ_const i (Some qk) t.pos, qk, Rel.trivial_guard
 
   | Typ_const i -> 
-    let k = Env.lookup_typ_lid env i.v in 
+    let k = match Env.try_lookup_effect_lid env i.v with 
+            | Some k -> k
+            | _ -> Env.lookup_typ_lid env i.v in 
     let i = {i with sort=k} in
     let t = mk_Typ_const i (Some k) t.pos in
     let t, k, imps = Tc.Util.maybe_instantiate_typ env t k in
@@ -327,9 +352,16 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
         (Range.string_of_range top.pos)
         (Util.string_of_int <| List.length args)
         (Print.typ_to_string top);
-    let head, k1, f1 = tc_typ (no_inst env) head in 
-    let k1 = Normalize.norm_kind [Normalize.WHNF; Normalize.Beta] env k1 in 
-  
+    let head, k1', f1 = tc_typ (no_inst env) head in 
+    
+    let k1 = Normalize.norm_kind [Normalize.WHNF; Normalize.Beta] env k1' in 
+   
+    if debug env Options.Extreme then Util.fprint4 "(%s) head %s has kind %s ... after norm %s\n"
+        (Range.string_of_range head.pos)
+        (Print.typ_to_string head)
+        (Print.kind_to_string k1')
+        (Print.kind_to_string k1);
+   
     let check_app () = match k1.n with
        | Kind_uvar _ -> (* intantiate k1 = 'u1 x1 ... xm; instantiate 'u1 to  \x1...xm. t1 => ... tn => 'u2 x1 .. xm, where argi:ti, and *)
          let args, g = tc_args env args in
@@ -367,10 +399,12 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
                 begin match formal, actual with 
                     | (Inl a, aqual), (Inl t, imp) -> (* explicit type argument *)
                       let formal_k = Util.subst_kind subst a.sort in
+                      if Env.debug env Options.High 
+                      then Util.fprint2 "Checking argument %s against expected kind %s\n"
+                             (Print.arg_to_string actual) (Print.kind_to_string formal_k);
                       let t, g' = tc_typ_check ({env with use_eq=is_eq aqual}) t formal_k in
                       if Env.debug env Options.High 
-                      then Util.fprint3 "Checking argument %s against expected kind %s\n>>>Got guard %s\n"
-                             (Print.arg_to_string actual) (Print.kind_to_string formal_k) (Rel.guard_to_string env g');
+                      then Util.fprint1 ">>>Got guard %s\n" (Rel.guard_to_string env g');
                       let actual = Inl t, imp in
                       let g' = Rel.imp_guard (Rel.guard_of_guard_formula <| Tc.Util.short_circuit_typ (Inl head) outargs) g' in
                       let subst = maybe_extend_subst subst formal actual in
@@ -396,8 +430,8 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
                               raise (Error("Expected a type; got an expression", v.pos))
                        end
             
-                    | (Inr _, _), (Inl t, _) ->
-                      raise (Error("Expected an expression; got a type", t.pos)) 
+                    | (Inr x, _), (Inl t, _) ->
+                      raise (Error(Util.format2 "Expected an expression (%s); got a type (%s)" (Print.strBvd x.v) (Print.typ_to_string t), t.pos)) 
                 end 
 
              | _, [] -> Util.subst_kind subst (mk_Kind_arrow(formals, kres) kres.pos), List.rev outargs, g //partial app
@@ -1275,7 +1309,9 @@ let a_kwp_a env m s = match s.n with
                 (Inl _, _)], _) -> a, wp.sort
   | _ -> raise (Error(Tc.Errors.unexpected_signature_for_monad env m s, range_of_lid m))
 
-let rec tc_monad_decl env m deserialized =  
+let rec tc_new_effect env (m:Syntax.new_effect)  =  
+  let binders, env, g = tc_binders env m.binders in
+  Tc.Util.discharge_guard env g;
   let mk = tc_kind_trivial env m.signature in 
   let a, kwp_a = a_kwp_a env m.mname mk in 
   let a_typ = Util.btvar_to_typ a in
@@ -1330,7 +1366,6 @@ let rec tc_monad_decl env m deserialized =
     let expected_k = w <| mk_Kind_arrow([t_binder a;
                                          null_t_binder kwp_a],
                                         ktype) in
-//    let expected_k = w <| mk_Kind_tcon(Some a, ktype, kt kwp_a ktype, false) in
     tc_typ_check_trivial env m.wp_as_type expected_k |> norm_t env in
   let close_wp = 
     let expected_k = w <| mk_Kind_arrow([t_binder b; t_binder a; 
@@ -1353,45 +1388,26 @@ let rec tc_monad_decl env m deserialized =
   let trivial_wp =
       let expected_k = w <| mk_Kind_arrow([t_binder a; null_t_binder kwp_a], ktype) in
       tc_typ_check_trivial env m.trivial expected_k |> norm_t env in
-  let menv = Tc.Env.push_sigelt env (Sig_tycon(m.mname, [], mk, [], [], [], range_of_lid m.mname)) in
-  let menv, abbrevs = m.abbrevs |> List.fold_left (fun (env, out) (ma:sigelt) -> 
-    let ma, env = tc_decl env ma deserialized in 
-     env, ma::out) (menv, []) in 
-  let default_monad = match m.default_monad with 
-    | None -> None
-    | Some m ->
-        if abbrevs |> Util.for_some (function 
-         | Sig_typ_abbrev(m', binders, k, _, _, _) when lid_equals m m' -> 
-            let k = Util.close_kind binders k in
-            let expect = mk_Kind_arrow([null_t_binder ktype], keffect) (range_of_lid m) in
-            Tc.Util.discharge_guard env <| keq env None k expect;
-            true
-         | _ -> false)
-        then Some m
-        else raise (Error(Util.format1 "Default monad %s is not found, or has the wrong kind (expect 'a -> Effect)" m.str, range_of_lid m)) in
-  let m = { 
-    mname=m.mname;
-    total=m.total; 
-    signature=mk;
-    abbrevs=List.rev abbrevs;
-    ret=ret;
-    bind_wp=bind_wp;
-    bind_wlp=bind_wlp;
-    if_then_else=if_then_else;
-    ite_wp=ite_wp;
-    ite_wlp=ite_wlp;
-    wp_binop=wp_binop;
-    wp_as_type=wp_as_type;
-    close_wp=close_wp;
-    close_wp_t=close_wp_t;
-    assert_p=assert_p;
-    assume_p=assume_p;
-    null_wp=null_wp;
-    trivial=trivial_wp;
-    kind_abbrevs=m.kind_abbrevs;
-    default_monad=default_monad} in 
-   let _ = Tc.Env.lookup_typ_lid menv m.mname in
-    menv, m 
+    { 
+        mname=m.mname;
+        qualifiers=m.qualifiers;
+        binders=binders;
+        signature=mk;
+        ret=ret;
+        bind_wp=bind_wp;
+        bind_wlp=bind_wlp;
+        if_then_else=if_then_else;
+        ite_wp=ite_wp;
+        ite_wlp=ite_wlp;
+        wp_binop=wp_binop;
+        wp_as_type=wp_as_type;
+        close_wp=close_wp;
+        close_wp_t=close_wp_t;
+        assert_p=assert_p;
+        assume_p=assume_p;
+        null_wp=null_wp;
+        trivial=trivial_wp
+    } 
 
 and tc_decl env se deserialized = match se with 
     | Sig_pragma(p, r) -> 
@@ -1407,25 +1423,23 @@ and tc_decl env se deserialized = match se with
                 Options.reset_options() |> ignore; 
                 se, env
         end
-    
-    | Sig_monads(mdecls, mlat, r, lids) -> 
-      let env = Env.set_range env r in 
-     //TODO: check downward closure of totality flags
-      let menv, mdecls = mdecls |> List.fold_left (fun (env, out) m ->
-        let env, m = tc_monad_decl env m deserialized in 
-        env, m::out) (env, []) in
-      let lat = mlat |> List.map (fun (o:monad_order) -> 
-        let a, kwp_a_src = a_kwp_a env o.source (Tc.Env.lookup_typ_lid menv o.source) in
-        let b, kwp_b_tgt = a_kwp_a env o.target (Tc.Env.lookup_typ_lid menv o.target) in
-        let kwp_a_tgt = Util.subst_kind [Inl(b.v, Util.btvar_to_typ a)] kwp_b_tgt in
-        let expected_k = r |> mk_Kind_arrow([t_binder a; null_t_binder kwp_a_src], kwp_a_tgt) in
-        let lift = tc_typ_check_trivial menv o.lift expected_k in
-        {source=o.source; 
-          target=o.target;
-          lift=lift}) in
-      let se = Sig_monads(List.rev mdecls, lat, r, lids) in
-      let menv = Tc.Env.push_sigelt menv se in 
-      se, menv
+
+    | Sig_new_effect(ne, r) -> 
+      let ne = tc_new_effect env ne in 
+      let se = Sig_new_effect(ne, r) in
+      let env = Tc.Env.push_sigelt env se in 
+      se, env
+
+    | Sig_sub_effect(sub, r) -> 
+      let a, kwp_a_src = a_kwp_a env sub.source (Tc.Env.lookup_effect_lid env sub.source) in
+      let b, kwp_b_tgt = a_kwp_a env sub.target (Tc.Env.lookup_effect_lid env sub.target) in
+      let kwp_a_tgt = Util.subst_kind [Inl(b.v, Util.btvar_to_typ a)] kwp_b_tgt in
+      let expected_k = r |> mk_Kind_arrow([t_binder a; null_t_binder kwp_a_src], kwp_a_tgt) in
+      let lift = tc_typ_check_trivial env sub.lift expected_k in
+      let sub = {sub with lift=lift} in
+      let se = Sig_sub_effect(sub, r) in
+      let env = Tc.Env.push_sigelt env se in 
+      se, env
 
     | Sig_tycon (lid, tps, k, _mutuals, _data, tags, r) -> 
       let env = Tc.Env.set_range env r in 
@@ -1440,6 +1454,24 @@ and tc_decl env se deserialized = match se with
         | {n=Kind_uvar _} -> Tc.Util.force_trivial env <| Tc.Rel.keq env None k ktype
         | _ -> () in 
       let env = Tc.Env.push_sigelt env se in
+      se, env
+  
+    | Sig_kind_abbrev(lid, tps, k, r) -> 
+      let env0 = env in
+      let env = Tc.Env.set_range env r in
+      let tps, env = tc_tparams env tps in
+      let k = tc_kind_trivial env k in
+      let se = Sig_kind_abbrev(lid, tps, k, r) in
+      let env = Tc.Env.push_sigelt env0 se in 
+      se, env
+  
+    | Sig_effect_abbrev(lid, tps, c, tags, r) ->
+      let env0 = env in 
+      let env = Tc.Env.set_range env r in
+      let tps, env = tc_tparams env tps in
+      let c, g = tc_comp env c in
+      let se = Sig_effect_abbrev(lid, tps, c, tags, r) in
+      let env = Tc.Env.push_sigelt env0 se in 
       se, env
   
     | Sig_typ_abbrev(lid, tps, k, t, tags, r) -> 
@@ -1660,15 +1692,7 @@ let tc_modul env modul =
 
 let add_modul_to_tcenv (en: env) (m: modul) :env =
   let do_sigelt (en: env) (elt: sigelt) :env =
-    let env = match elt with
-    | Sig_monads(l, _, _, _) ->
-      let en = List.fold_left (fun en m ->
-                               let en = Tc.Env.push_sigelt en (Sig_tycon(m.mname, [], m.signature, [], [], [], range_of_lid m.mname)) in
-                               List.fold_left Tc.Env.push_sigelt en m.abbrevs) 
-               en l
-      in
-      Tc.Env.push_sigelt en elt
-    | _ -> Tc.Env.push_sigelt en elt in
+    let env = Tc.Env.push_sigelt en elt in
     env.solver.encode_sig env elt;
     env
   in

@@ -2058,7 +2058,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                          let c2 = Normalize.weak_norm_comp env c2 in
                          if debug env <| Options.Other "Rel" then Util.fprint2 "solve_c for %s and %s\n" (c1.effect_name.str) (c2.effect_name.str);
                          begin match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
-                           | None -> giveup env "incompatible monad ordering" orig
+                           | None -> giveup env (Util.format2 "incompatible monad ordering: %s </: %s" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) orig
                            | Some edge ->
                              let is_null_wp_2 = c2.flags |> Util.for_some (function TOTAL | MLEFFECT | SOMETRIVIAL -> true | _ -> false) in
                              let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
@@ -2066,7 +2066,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                                | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in
                              if Util.physical_equality wpc1 wpc2 
                              then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
-                             else let c2_decl : monad_decl = Tc.Env.get_monad_decl env c2.effect_name in
+                             else let c2_decl = Tc.Env.get_effect_decl env c2.effect_name in
                                   let g = 
                                     if is_null_wp_2 
                                     then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in

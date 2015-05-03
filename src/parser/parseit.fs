@@ -115,10 +115,9 @@ let parse_file fn =
   with
     | Absyn.Syntax.Error(msg, r) ->
       let msg = Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg in
-      Inr msg
+      Inr (Absyn.Print.format_error r msg)
     | e ->
       let pos = lexbuf.EndPos in
-      Inr  (Util.format3 "ERROR: Syntax error near line %s, character %s in file %s\n"
-              (Util.string_of_int pos.pos_lnum)
-              (Util.string_of_int (pos.pos_cnum - pos.pos_bol))
-              filename)
+      let p = Range.mk_pos pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) in
+      let r = Range.mk_range filename p p in
+      Inr (Absyn.Print.format_error r "Syntax error")

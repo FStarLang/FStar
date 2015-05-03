@@ -214,11 +214,7 @@ val new_uvt_set: unit -> set<(Unionfind.uvar<'a> * 'b)>
 
 type qualifier = 
   | Private 
-  | Public 
   | Assumption
-  | Definition  
-  | Query
-  | Lemma
   | Opaque
   | Logic
   | Discriminator of lident                          (* discriminator for a datacon l *)
@@ -226,8 +222,10 @@ type qualifier =
   | RecordType of list<ident>                        (* unmangled field names *)
   | RecordConstructor of list<ident>                 (* unmangled field names *)
   | ExceptionConstructor
-  | Effect 
+  | DefaultEffect of option<lident>
+  | TotalEffect
   | HasMaskedEffect
+  | Effect
 
 type tycon = lident * binders * knd
 type monad_abbrev = {
@@ -235,15 +233,15 @@ type monad_abbrev = {
   parms:binders;
   def:typ
   }
-type monad_order = {
+type sub_effect = {
   source:lident;
   target:lident;
   lift: typ
  }
-type monad_lat = list<monad_order>
-type monad_decl = {
+type new_effect = {
     mname:lident;
-    total:bool;
+    binders:binders;
+    qualifiers:list<qualifier>;
     signature:knd;
     ret:typ;
     bind_wp:typ;
@@ -259,12 +257,10 @@ type monad_decl = {
     assume_p:typ;
     null_wp:typ;
     trivial:typ;
-    abbrevs:list<sigelt>;
-    kind_abbrevs:list<(lident * list<either<btvdef, bvvdef>> * knd)>;
-    default_monad:option<lident>;
- }
+}
 and sigelt =
   | Sig_tycon          of lident * binders * knd * list<lident> * list<lident> * list<qualifier> * Range.range (* bool is for a prop, list<lident> identifies mutuals, second list<lident> are all the constructors *)
+  | Sig_kind_abbrev    of lident * binders * knd * Range.range
   | Sig_typ_abbrev     of lident * binders * knd * typ * list<qualifier> * Range.range 
   | Sig_datacon        of lident * typ * tycon * list<qualifier> * list<lident> (* mutuals *) * Range.range  (* second lident is the name of the type this constructs *)
   | Sig_val_decl       of lident * typ * list<qualifier> * Range.range 
@@ -272,7 +268,9 @@ and sigelt =
   | Sig_let            of letbindings * Range.range * list<lident> * list<qualifier>
   | Sig_main           of exp * Range.range 
   | Sig_bundle         of list<sigelt> * Range.range * list<lident> (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *)
-  | Sig_monads         of list<monad_decl> * monad_lat * Range.range * list<lident>
+  | Sig_new_effect     of new_effect * Range.range
+  | Sig_sub_effect     of sub_effect * Range.range
+  | Sig_effect_abbrev  of lident * binders * comp * list<qualifier> * Range.range
   | Sig_pragma         of pragma * Range.range
 type sigelts = list<sigelt>
 

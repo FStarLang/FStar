@@ -54,11 +54,11 @@ type mlift = typ -> typ -> typ
 type edge = {
   msource:lident;
   mtarget:lident;
-  mlift:typ -> typ -> typ;
+  mlift:mlift
 }
-type lattice = {
-  decls: list<monad_decl>;
-  order: list<edge>;                                     (* transitive closure of the order in the signature *)
+type effects = {
+  decls: list<new_effect>;
+  order: list<edge>;                                       (* transitive closure of the order in the signature *)
   joins: list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
 
@@ -74,7 +74,7 @@ type env = {
   is_pattern:bool;               (* is the current term being checked a pattern? *)
   instantiate_targs:bool;        (* instantiate implicit type arguments? default=true *)
   instantiate_vargs:bool;        (* instantiate implicit value agruments? default=true *)
-  lattice:lattice;               (* monad lattice *)
+  effects:effects;               (* effect partial order *)
   generalize:bool;               (* generalize let-binding *)
   letrecs:list<(lbname * typ)>;  (* mutually recursive names and their types (for termination checking) *)
   top_level:bool;                (* is this a top-level term? if so, then discharge guards *)
@@ -82,6 +82,7 @@ type env = {
   use_eq:bool;                   (* generate an equality constraint, rather than subtyping/subkinding *)
   is_iface:bool;                 (* is the module we're currently checking an interface? *)
   admit:bool;                    (* admit VCs in the current module *) 
+  default_effects:list<(lident * lident)>
 } 
 and solver_t = {
     init: env -> unit;
@@ -122,7 +123,7 @@ let initial_env solver module_lid =
     is_pattern=false;
     instantiate_targs=true;
     instantiate_vargs=true;
-    lattice={decls=[]; order=[]; joins=[]};
+    effects={decls=[]; order=[]; joins=[]};
     generalize=true;
     letrecs=[];
     top_level=true;
@@ -130,10 +131,11 @@ let initial_env solver module_lid =
     use_eq=false;
     is_iface=false;
     admit=false;
+    default_effects=[];
   }
 
-let monad_decl_opt env l = 
-  env.lattice.decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname l) 
+let effect_decl_opt env l = 
+  env.effects.decls |> Util.find_opt (fun d -> lid_equals d.mname l) 
 
 let name_not_found (l:Syntax.lident) =
   format1 "Name \"%s\" not found" l.str
@@ -141,81 +143,107 @@ let name_not_found (l:Syntax.lident) =
 let variable_not_found v = 
   format1 "Variable \"%s\" not found" (Print.strBvd v)
 
-let get_monad_decl env l = 
-  match monad_decl_opt env l with
+let get_effect_decl env l = 
+  match effect_decl_opt env l with
     | None -> raise (Error(name_not_found l, range_of_lid l))
     | Some md -> md
   
 let join env l1 l2 : (lident * (typ -> typ -> typ) * (typ -> typ -> typ)) = 
   if lid_equals l1 l2
   then l1, (fun t wp -> wp), (fun t wp -> wp)
-  else match env.lattice.joins |> Util.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with 
-    | None -> failwith (Util.format2 "Impossible: no join found between effects %s and %s" (Print.sli l1) (Print.sli l2))
+  else match env.effects.joins |> Util.find_opt (fun (m1, m2, _, _, _) -> lid_equals l1 m1 && lid_equals l2 m2) with 
+    | None -> raise (Error(Util.format2 "Effects %s and %s cannot be composed" (Print.sli l1) (Print.sli l2), env.range))
     | Some (_, _, m3, j1, j2) -> m3, j1, j2
 
 let monad_leq env l1 l2 : option<edge> =
   if lid_equals l1 l2 
   then Some ({msource=l1; mtarget=l2; mlift=(fun t wp -> wp)})
-  else env.lattice.order |> Util.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)  
+  else env.effects.order |> Util.find_opt (fun e -> lid_equals l1 e.msource && lid_equals l2 e.mtarget)  
 
 let wp_sig_aux decls m = 
-  match decls |> Util.find_opt (fun (d:monad_decl) -> lid_equals d.mname m) with
+  match decls |> Util.find_opt (fun d -> lid_equals d.mname m) with
   | None -> failwith (Util.format1 "Impossible: declaration for monad %s not found" m.str)
   | Some md -> 
     match md.signature.n with 
       | Kind_arrow([(Inl a, _); (Inl wp, _); (Inl wlp, _)], {n=Kind_effect}) -> a, wp.sort
       | _ -> failwith "Impossible" 
 
-let wp_signature env m = wp_sig_aux env.lattice.decls m
+let wp_signature env m = wp_sig_aux env.effects.decls m
 
+let default_effect env l = Util.find_map env.default_effects (fun (l', m) -> if lid_equals l l' then Some m else None)
+ 
 let build_lattice env se = match se with 
-  | Sig_monads(decls0, order, p, _) -> 
-    let mk_lift b k2 lift_t r wp1 =
-      let k2 = Util.subst_kind [Inl(b.v, r)] k2 in
-      mk_Typ_app(lift_t, [targ r; targ wp1]) None p in
-    let decls = env.lattice.decls@decls0 in
-    let kwp l = wp_sig_aux decls l in
-    let order = order |> List.map (fun mo -> 
-      let b, k2 = kwp mo.target in
-      {msource=mo.source; mtarget=mo.target; mlift=mk_lift b k2 mo.lift}) in
-    let order = env.lattice.order@order in
-    let order = order@(decls0 |> List.map (fun md -> {msource=md.mname; mtarget=md.mname; mlift=(fun t wp -> wp)})) in
+  | Sig_effect_abbrev(l, _, c, quals, r) -> 
+    if   quals |> Util.for_some (function DefaultEffect _ -> true | _ -> false)
+    then match env.effects.decls |> List.tryFind (fun e -> lid_equals e.mname (Util.comp_to_comp_typ c).effect_name) with 
+            | None -> raise (Error("Default effect for " ^ Print.sli l ^ " could not be found", r))
+            | Some e -> 
+              if env.default_effects |> Util.for_some (fun (l,_) -> lid_equals l e.mname)
+              then raise (Error("Default effect for " ^ Print.sli e.mname ^ " has already been set", r));
+              {env with default_effects=(e.mname, l)::env.default_effects}
+    else env
 
+  | Sig_new_effect(ne, _) -> 
+    let effects = {env.effects with decls=ne::env.effects.decls} in
+    {env with effects=effects}
+
+  | Sig_sub_effect(sub, _) -> 
     let compose_edges e1 e2 : edge = 
        {msource=e1.msource;
         mtarget=e2.mtarget;
         mlift=(fun r wp1 -> e2.mlift r (e1.mlift r wp1))} in
-    let ms = List.collect (fun e -> [e.msource; e.mtarget]) order |> Util.remove_dups lid_equals in
+    
+    let mk_lift lift_t r wp1 = mk_Typ_app(lift_t, [targ r; targ wp1]) None wp1.pos in
+    
+    let edge = 
+      {msource=sub.source; 
+       mtarget=sub.target; 
+       mlift=mk_lift sub.lift} in
+    
+    let order = edge::env.effects.order in
+      
+    let ms = env.effects.decls |> List.map (fun (e:new_effect) -> e.mname) in
+
     let find_edge order (i, j) = 
       order |> Util.find_opt (fun e -> lid_equals e.msource i && lid_equals e.mtarget j) in
 
     (* basically, this is Warshall's algorithm for transitive closure, 
        except it's ineffcient because find_edge is doing a linear scan. 
+       and it's not incremental.
        Could be made better. But these are really small graphs (~ 4-8 vertices) ... so not worth it *)
-    let order = ms |> List.fold_left (fun order k -> 
-        ms |> List.collect (fun i -> 
-        ms |> List.collect (fun j -> 
-          match find_edge order (i, j) with 
-            | Some e -> [e]
-            | None -> match find_edge order (i, k), find_edge order (k, j) with 
-                        | Some e1, Some e2 -> [compose_edges e1 e2]
-                        | _ -> []))) order in
+    let order =
+        ms |> List.fold_left (fun order k -> 
+            ms |> List.collect (fun i -> 
+            ms |> List.collect (fun j -> 
+              match find_edge order (i, j) with 
+                | Some e -> [e]
+                | None -> match find_edge order (i, k), find_edge order (k, j) with 
+                            | Some e1, Some e2 -> [compose_edges e1 e2]
+                            | _ -> []))) order in
     let joins =
-      if not (Util.for_some (lid_equals Const.all_effect_lid) ms)
-      then []
-      else 
         ms |> List.collect (fun i -> 
         ms |> List.collect (fun j -> 
-        let (join, e1, e2) = ms |> List.fold_left (fun (ub, e1, e2) k ->
-          if Util.is_some (find_edge order (ub, k)) || not (Util.is_some (find_edge order (k, ub)))
-          then (ub, e1, e2)
-          else match find_edge order (i, k), find_edge order (j, k) with 
-              | Some e1, Some e2 -> (k, e1, e2)
-              | _ -> (ub, e1, e2)) (Const.all_effect_lid, Util.must <| find_edge order (i, Const.all_effect_lid), Util.must <| find_edge order (j, Const.all_effect_lid))  in
-        [i, j, join, e1.mlift, e2.mlift])) in 
-    let lat = {decls=decls; order=order;joins=joins} in
-    {env with lattice=lat}
+        let join_opt = ms |> List.fold_left (fun bopt k ->
+          let kb = match find_edge order (i, k), find_edge order (j, k) with 
+                  | Some e1, Some e2 -> Some (k, e1, e2) //k is an upper bound
+                  | _ -> None in
+          match bopt with 
+            | None -> kb //we don't have a current candidate as the upper bound; so we may as well use k
+                           
+            | Some (ub, e1, e2) -> 
+              if Util.is_some (find_edge order (k, ub))
+              && not (Util.is_some (find_edge order (ub, k)))
+              then kb //k is less than ub
+              else bopt) None in //ub is still the best       
+        match join_opt with 
+            | None -> []
+            | Some (k, e1, e2) -> [(i, j, k, e1.mlift, e2.mlift)])) in
+
+    let effects = {env.effects with order=order; joins=joins} in
+    {env with effects=effects}
+  
   | _ -> env
+
 
 let rec add_sigelt env se = match se with 
   | Sig_bundle(ses, _, _) -> add_sigelts env ses
@@ -276,9 +304,7 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
     else false in
   let cur_mod = in_cur_mod lid in
   let found = if cur_mod
-              then 
-                Util.find_map env.gamma (function 
-                | Binding_sig (Sig_monads _) -> None
+              then Util.find_map env.gamma (function 
                 | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl t) else None
                 | Binding_sig (Sig_bundle(ses, _, _)) -> 
                     Util.find_map ses (fun se -> 
@@ -301,6 +327,11 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
 let lookup_datacon env lid = 
   match lookup_qname env lid with
     | Some (Inr (Sig_datacon (_, t, _, _, _, _))) -> t
+    | _ -> raise (Error(name_not_found lid, range_of_lid lid))
+
+let lookup_kind_abbrev env lid = 
+  match lookup_qname env lid with
+    | Some (Inr (Sig_kind_abbrev (l, binders, k, _))) -> (l, binders, k)
     | _ -> raise (Error(name_not_found lid, range_of_lid lid))
 
 let lookup_projector env lid i = 
@@ -366,6 +397,14 @@ let lookup_datacons_of_typ env lid =
   match lookup_qname env lid with 
     | Some (Inr (Sig_tycon(_, _, _, _, datas, _, _))) -> Some (List.map (fun l -> (l, lookup_lid env l)) datas)
     | _ -> None
+
+let lookup_effect_abbrev env lid =
+  match lookup_qname env lid with 
+    | Some (Inr (Sig_effect_abbrev (lid, binders, c, quals, _))) -> 
+      if quals |> Util.for_some (function Opaque -> true | _ -> false)
+      then None
+      else Some (binders, c)
+    | _ -> None
     
 let lookup_typ_abbrev env lid =
   match lookup_qname env lid with 
@@ -394,20 +433,25 @@ let lookup_typ_lid env (ftv:lident) : knd =
     | _ ->
       raise (Error(name_not_found ftv, range_of_lid ftv))
 
+let try_lookup_effect_lid env (ftv:lident) : option<knd> = 
+  match lookup_qname env ftv with
+    | Some (Inr (Sig_new_effect(ne, _))) -> 
+      Util.close_kind ne.binders ne.signature |> Some
+    | Some (Inr (Sig_effect_abbrev (lid, binders, _, _, _))) -> 
+      Util.close_kind binders mk_Kind_effect |> Some
+    | _ ->
+      None
+
+let lookup_effect_lid env (ftv:lident) : knd = 
+  match try_lookup_effect_lid env ftv with 
+    | None -> raise (Error(name_not_found ftv, range_of_lid ftv))
+    | Some k -> k
+
 let lookup_operator env (opname:ident) = 
   let primName = lid_of_path ["Prims"; ("_dummy_" ^ opname.idText)] dummyRange in
     lookup_lid env primName
       
-let rec push_sigelt en s : env = 
-    let env0 = en in
-    let env = build_lattice ({en with gamma=Binding_sig s::en.gamma}) s in
-    let _ = match s with 
-    | Sig_monads(decls, _, _, _) -> 
-        decls |> List.iter (fun md -> ignore <| lookup_typ_lid env0 md.mname)
-    | _ -> () in
-    env
-   
-        
+let push_sigelt env s = build_lattice ({env with gamma=Binding_sig s::env.gamma}) s 
 let push_local_binding env b = {env with gamma=b::env.gamma}
       
 let uvars_in_env env = 

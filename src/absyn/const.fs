@@ -117,21 +117,8 @@ let op_ColonEq   = p2l ["ST"; "op_ColonEquals"]
 
 (* monad constants *)
 let pure_effect_lid = pconst "PURE"
-let tot_effect_lid  = p2l ["Prims";"PURE";"Tot"]
-let pure_ret_lid    = p2l ["Prims";"PURE";"return"]
-let pure_bind_lid   = p2l ["Prims";"PURE";"bind"]
+let tot_effect_lid  = pconst "Tot"
 let all_effect_lid  = pconst "ALL"
-let all_ret_lid     = p2l ["Prims";"ALL";"return"]
-let all_bind_lid    = p2l ["Prims";"ALL";"bind"]
-let ml_effect_lid   = p2l ["Prims"; "ALL"; "ML"]
-let assert_pure_lid = p2l ["Prims"; "PURE"; "assert_p"]
-let assume_pure_lid = p2l ["Prims"; "PURE"; "assume_p"]
+let ml_effect_lid   = pconst "ML"
 let lemma_lid       = pconst "Lemma"
 let decreases_lid   = pconst "decreases"
-
-(* relational mode constants *)
-let lproj_lid            = pconst  "L"
-let rproj_lid            = pconst  "R"
-let reln_lid             = pconst  "Relational" 
-let doublesided_lid      = pconst  "DoubleSided"  
-let composeClassic_lid   = pconst  "composeClassic"

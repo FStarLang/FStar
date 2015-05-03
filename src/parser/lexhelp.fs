@@ -174,8 +174,9 @@ let keywords =
     ALWAYS, "val"        ,VAL;
     ALWAYS, "when"       ,WHEN;
     ALWAYS, "with"       ,WITH;
-    ALWAYS, "monad_lattice", MONADLATTICE;
-    ALWAYS, "terminating",TOTAL;
+    ALWAYS, "new_effect" ,NEW_EFFECT;
+    ALWAYS, "sub_effect" ,SUB_EFFECT;
+    ALWAYS, "total"      ,TOTAL;
     ALWAYS, "kind"       ,KIND;
     ALWAYS, "_"          ,UNDERSCORE;
   ]

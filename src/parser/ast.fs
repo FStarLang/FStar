@@ -93,6 +93,12 @@ type tycon =
    
 type qualifiers = list<Syntax.qualifier>
 
+type lift = {
+  msource: lid;
+  mdest:   lid;
+  lift_op: term
+}
+
 type decl' = 
   | Open of lid 
   | KindAbbrev of ident * list<binder> * knd
@@ -102,20 +108,13 @@ type decl' =
   | Tycon of qualifiers * list<tycon>
   | Val of qualifiers * ident * term  (* bool is for logic val *)
   | Exception of ident * option<term>
-  | MonadLat of list<monad_sig> * list<lift>
+  | NewEffect of qualifiers * effect_decl
+  | SubEffect of lift
   | Pragma of pragma
 and decl = {d:decl'; drange:range}
-and monad_sig = {
-  mon_name:ident;
-  mon_total:bool;
-  mon_decls:list<decl>;
-  mon_abbrevs:list<(bool * ident * list<binder> * typ)>
- }
-and lift = {
-  msource: ident;
-  mdest: ident;
-  lift_op: term
- }
+and effect_decl = 
+  | DefineEffect      of ident * list<binder> * term * list<decl>
+  | RedefineEffect of ident * list<binder> * term
 
 type modul = 
   | Module of LongIdent * list<decl>

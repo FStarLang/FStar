@@ -915,8 +915,10 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
 
         Some (mlitem1_ty mode [t.ident.idText, tparams, None])
 
-    | Sig_monads (_, _, rg, _) ->
-        unsupported rg "mod1-monad"
+    | Sig_new_effect _
+    | Sig_kind_abbrev _
+    | Sig_effect_abbrev _ ->
+        unsupported (Absyn.Util.range_of_sigelt modx) "mod1-effect/kind"
 
     | Sig_bundle ([Sig_datacon (_, _, _, qal, _, _)], _, _) when (not (export_val qal)) -> None
     | Sig_bundle ([Sig_datacon (x, ty, (tx, _, _), qal, _, rg)], _, _) when (as_tprims tx = Some Exn) -> begin

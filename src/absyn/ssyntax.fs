@@ -14,6 +14,16 @@ type Writer = Util.oWriter
 
 type Reader = Util.oReader
 
+let serialize_option (writer:Writer) (f:Writer -> 'a -> unit) (l:option<'a>) :unit =
+    match l with 
+        | None -> writer.write_char 'n'
+        | Some l -> writer.write_char 's'; f writer l
+
+let deserialize_option (reader:Reader) (f:Reader -> 'a) : option<'a> =
+    let n = reader.read_char () in
+    if n='n' then None
+    else Some (f reader)
+
 let serialize_list (writer:Writer) (f:Writer -> 'a -> unit) (l:list<'a>) :unit =
     writer.write_int32 (List.length l);
     List.iter (fun elt -> f writer elt) (List.rev_append l [])
@@ -410,11 +420,7 @@ let deserialize_formula = deserialize_typ
 let serialize_qualifier (writer:Writer)(ast:qualifier) :unit =
     match ast with
     | Private -> writer.write_char 'a'
-    | Public -> writer.write_char 'b'
     | Assumption -> writer.write_char 'c'
-    | Definition -> writer.write_char 'd'
-    | Query -> writer.write_char 'e'
-    | Lemma -> writer.write_char 'f'
     | Logic -> writer.write_char 'g'
     | Opaque -> writer.write_char 'h'
     | Discriminator(lid) -> writer.write_char 'i'; serialize_lident writer lid
@@ -422,17 +428,15 @@ let serialize_qualifier (writer:Writer)(ast:qualifier) :unit =
     | RecordType(l) -> writer.write_char 'k'; serialize_list writer serialize_ident l
     | RecordConstructor(l) -> writer.write_char 'l'; serialize_list writer serialize_ident l
     | ExceptionConstructor -> writer.write_char 'm'
-    | Effect -> writer.write_char 'n'
     | HasMaskedEffect -> writer.write_char 'o'
-
+    | DefaultEffect l -> writer.write_char 'p'; serialize_option writer serialize_lident l 
+    | TotalEffect -> writer.write_char 'q'
+    | _ -> failwith "Unexpected qualifier"
+ 
 let deserialize_qualifier (reader:Reader) :qualifier =
-    match (reader.read_char ()) with
+    match reader.read_char () with
     | 'a' -> Private
-    | 'b' -> Public
     | 'c' -> Assumption
-    | 'd' -> Definition
-    | 'e' -> Query
-    | 'f' -> Lemma
     | 'g' -> Logic
     | 'h' -> Opaque
     | 'i' -> Discriminator(deserialize_lident reader)
@@ -440,8 +444,9 @@ let deserialize_qualifier (reader:Reader) :qualifier =
     | 'k' -> RecordType(deserialize_list reader deserialize_ident)
     | 'l' -> RecordConstructor(deserialize_list reader deserialize_ident)
     | 'm' -> ExceptionConstructor
-    | 'n' -> Effect
     | 'o' -> HasMaskedEffect
+    | 'p' -> deserialize_option reader deserialize_lident |> DefaultEffect
+    | 'q' -> TotalEffect
     |  _  -> parse_error()
 
 let serialize_tycon (writer:Writer) ((lid, bs, k): tycon) :unit = serialize_lident writer lid; serialize_binders writer bs; serialize_knd writer k
@@ -457,22 +462,20 @@ let deserialize_monad_abbrev (reader:Reader) :monad_abbrev =
       parms = deserialize_binders reader;
       def = deserialize_typ reader }
 
-let serialize_monad_order (writer:Writer) (ast:monad_order) :unit =
+let serialize_sub_effect (writer:Writer) (ast:sub_effect) :unit =
     serialize_lident writer ast.source;
     serialize_lident writer ast.target;
     serialize_typ writer ast.lift
 
-let deserialize_monad_order (reader:Reader) :monad_order = 
+let deserialize_sub_effect (reader:Reader) :sub_effect = 
     { source = deserialize_lident reader;
       target = deserialize_lident reader;
       lift = deserialize_typ reader }
 
-let serialize_monad_lat (writer:Writer) (ast:monad_lat) :unit = serialize_list writer serialize_monad_order ast
-let deserialize_monad_lat (reader:Reader) :monad_lat = deserialize_list reader deserialize_monad_order
-
-let rec serialize_monad_decl (writer:Writer) (ast:monad_decl) :unit =
+let rec serialize_new_effect (writer:Writer) (ast:new_effect) :unit =
     serialize_lident writer ast.mname;
-    writer.write_bool ast.total;
+    serialize_list writer serialize_binder ast.binders;
+    serialize_list writer serialize_qualifier ast.qualifiers;
     serialize_knd writer ast.signature;
     serialize_typ writer ast.ret;
     serialize_typ writer ast.bind_wp;
@@ -487,17 +490,7 @@ let rec serialize_monad_decl (writer:Writer) (ast:monad_decl) :unit =
     serialize_typ writer ast.assert_p;
     serialize_typ writer ast.assume_p;
     serialize_typ writer ast.null_wp;
-    serialize_typ writer ast.trivial;
-    serialize_list writer serialize_sigelt ast.abbrevs;
-    (serialize_list writer
-              (fun writer (lid, l, k) ->
-               serialize_lident writer lid;
-               serialize_list writer (fun writer vdef -> serialize_either writer serialize_btvdef serialize_bvvdef vdef) l;
-               serialize_knd writer k)
-               ast.kind_abbrevs);
-    (match ast.default_monad with
-     | None -> writer.write_char 'a'
-     | Some(lid) -> writer.write_char 'b'; serialize_lident writer lid)
+    serialize_typ writer ast.trivial
 
 and serialize_sigelt (writer:Writer) (ast:sigelt) :unit =
     match ast with
@@ -534,14 +527,27 @@ and serialize_sigelt (writer:Writer) (ast:sigelt) :unit =
     | Sig_bundle(l, _, lids) ->
         writer.write_char 'h';
         serialize_list writer serialize_sigelt l; serialize_list writer serialize_lident lids
-    | Sig_monads(l, lat, _, lids) ->
+    | Sig_new_effect (n, _) ->
         writer.write_char 'i';
-        serialize_list writer serialize_monad_decl l; serialize_monad_lat writer lat;
-        serialize_list writer serialize_lident lids
-
-let rec deserialize_monad_decl (reader:Reader) :monad_decl =
-    { mname = deserialize_lident reader;
-      total = reader.read_bool ();
+        serialize_new_effect writer n
+    | Sig_effect_abbrev(lid, bs, c, qs, _) ->
+        writer.write_char 'j';
+        serialize_lident writer lid; serialize_binders writer bs; 
+        serialize_comp writer c; serialize_list writer serialize_qualifier qs
+    | Sig_sub_effect(se, r) -> 
+        writer.write_char 'k';
+        serialize_sub_effect writer se
+    | Sig_kind_abbrev(l, binders, k, _) -> 
+        writer.write_char 'l';
+        serialize_lident writer l;
+        serialize_list writer serialize_binder binders;
+        serialize_knd writer k
+    
+let rec deserialize_new_effect (reader:Reader) :new_effect =
+    { 
+      mname = deserialize_lident reader;
+      binders= deserialize_list reader deserialize_binder;
+      qualifiers = deserialize_list reader deserialize_qualifier;
       signature = deserialize_knd reader;
       ret = deserialize_typ reader;
       bind_wp = deserialize_typ reader;
@@ -557,19 +563,8 @@ let rec deserialize_monad_decl (reader:Reader) :monad_decl =
       assume_p = deserialize_typ reader;
       null_wp = deserialize_typ reader;
       trivial = deserialize_typ reader;
-      abbrevs = deserialize_list reader deserialize_sigelt;
-      kind_abbrevs = 
-          deserialize_list reader
-              (fun reader -> 
-               deserialize_lident reader,
-               deserialize_list reader (fun reader -> deserialize_either reader deserialize_btvdef deserialize_bvvdef),
-               deserialize_knd reader);
-      default_monad = 
-          (match (reader.read_char ()) with
-          | 'a' -> None
-          | 'b' -> Some(deserialize_lident reader)
-          |  _  -> parse_error()) }
- 
+     }
+      
 and deserialize_sigelt (reader:Reader) :sigelt =
     match (reader.read_char ()) with
     | 'a' ->
@@ -591,9 +586,10 @@ and deserialize_sigelt (reader:Reader) :sigelt =
     | 'f' -> Sig_let(deserialize_letbindings reader, dummyRange, deserialize_list reader deserialize_lident, (if reader.read_bool () then [HasMaskedEffect] else [])) //TODO: Generalize
     | 'g' -> Sig_main(deserialize_exp reader, dummyRange)
     | 'h' -> Sig_bundle(deserialize_list reader deserialize_sigelt, dummyRange, deserialize_list reader deserialize_lident)
-    | 'i' -> 
-        Sig_monads
-            (deserialize_list reader deserialize_monad_decl, deserialize_monad_lat reader, dummyRange, deserialize_list reader deserialize_lident)
+    | 'i' -> Sig_new_effect(deserialize_new_effect reader, dummyRange)
+    | 'j'
+    | 'k'
+    | 'l' -> failwith "TODO"
     |  _  -> parse_error()
 
 let serialize_sigelts (writer:Writer) (ast:sigelts) :unit = serialize_list writer serialize_sigelt ast

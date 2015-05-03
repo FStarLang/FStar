@@ -649,13 +649,16 @@ let destruct typ lid =
 
 let rec lids_of_sigelt se = match se with 
   | Sig_let(_, _, lids, _) 
-  | Sig_bundle(_, _, lids)
-  | Sig_monads(_, _, _, lids) -> lids
+  | Sig_bundle(_, _, lids) -> lids
   | Sig_tycon (lid, _, _,  _, _, _, _)    
+  | Sig_effect_abbrev(lid, _, _,  _, _)
   | Sig_typ_abbrev  (lid, _, _, _, _, _)
   | Sig_datacon (lid, _, _, _, _, _)
   | Sig_val_decl (lid, _, _, _) 
+  | Sig_kind_abbrev(lid, _, _, _) 
   | Sig_assume (lid, _, _, _) -> [lid]
+  | Sig_new_effect(n, _) -> [n.mname]
+  | Sig_sub_effect _ 
   | Sig_pragma _
   | Sig_main _ -> []
     
@@ -667,22 +670,27 @@ let range_of_sigelt x = match x with
   | Sig_bundle(_, r, _) 
   | Sig_tycon (_, _, _,  _, _, _, r)    
   | Sig_typ_abbrev  (_, _, _, _, _, r)
+  | Sig_effect_abbrev  (_, _, _, _, r)
   | Sig_datacon (_, _, _, _, _, r)
   | Sig_val_decl (_, _, _, r) 
   | Sig_assume (_, _, _, r)
   | Sig_let(_, r, _, _) 
   | Sig_main(_, r) 
   | Sig_pragma(_, r)
-  | Sig_monads(_, _, r, _) -> r
+  | Sig_new_effect(_, r)
+  | Sig_kind_abbrev(_, _, _, r)
+  | Sig_sub_effect(_, r) -> r
 
 let range_of_lb = function
   | (Inl x, _, _) -> range_of_bvd x
   | (Inr l, _, _) -> range_of_lid l 
 
+let range_of_arg = function 
+    | (Inl hd, _) -> hd.pos
+    | (Inr hd, _) -> hd.pos
+
 let range_of_args args r = 
-   args |> List.fold_left (fun r -> function 
-    | (Inl hd, _) -> Range.union_ranges r hd.pos
-    | (Inr hd, _) -> Range.union_ranges r hd.pos) r 
+   args |> List.fold_left (fun r a -> Range.union_ranges r (range_of_arg a)) r
 
 let mk_typ_app f args = 
      let r = range_of_args args f.pos in

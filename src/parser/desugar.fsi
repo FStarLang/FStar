@@ -29,7 +29,6 @@ open Microsoft.FStar.Util
 val desugar_file: env -> file -> env * list<modul>
 
 (* private *) val desugar_modul : env -> AST.modul -> env * Syntax.modul
-(* private *) val desugar_kind_abbrev : range -> env -> ident -> list<AST.binder> -> term -> env * kind_abbrev
 (* private *) val mk_data_projectors : env -> sigelt -> list<sigelt>
 (* private *) val close : env -> term -> term
 (* private *) val op_as_tylid : env -> range -> string -> option<lident>

@@ -332,10 +332,10 @@ let encode_const = function
 let rec encode_knd' (prekind:bool) (k:knd) (env:env_t) (t:term) : term  * decls_t = 
     match (Util.compress_kind k).n with 
         | Kind_type -> 
-            mk_HasKind t (Term.mk_Kind_type), []
+           mk_HasKind t (Term.mk_Kind_type), []
 
-        | Kind_abbrev(_, k) -> 
-            encode_knd' prekind k env t
+        | Kind_abbrev(_, k) ->
+           encode_knd' prekind k env t
 
         | Kind_uvar (uv, _) -> (* REVIEW: warn? *)
             Term.mkTrue, []
@@ -1155,9 +1155,16 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | _ -> Caption (format1 "<Start encoding %s>" nm)::g@[Caption (format1 "</end encoding %s>" nm)], e
     
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) = 
+    let should_skip (l:lident) = 
+        l.str.StartsWith("Prims.pure_")
+        || l.str.StartsWith("Prims.ex_")
+        || l.str.StartsWith("Prims.st_")
+        || l.str.StartsWith("Prims.all_") in
+        
     match se with
      | Sig_typ_abbrev(_, _, _, _, [Effect], _) -> [], env
 
+     | Sig_typ_abbrev(lid, _, _, _, _, _) when should_skip lid -> [], env
      | Sig_typ_abbrev(lid, _, _, _, _, _) when (lid_equals lid Const.b2t_lid) ->
        let tname, ttok, env = new_typ_constant_and_tok_from_lid env lid in 
        let xx = ("x", Term_sort) in
@@ -1524,7 +1531,10 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_pragma _
     | Sig_main _
-    | Sig_monads _ -> [], env
+    | Sig_new_effect _
+    | Sig_effect_abbrev _
+    | Sig_kind_abbrev _ 
+    | Sig_sub_effect _ -> [], env
 
 and declare_top_level_let env x t t_norm =
     match try_lookup_lid env x with 

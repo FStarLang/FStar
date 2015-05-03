@@ -38,8 +38,8 @@ type edge = {
   mtarget:lident;
   mlift:typ -> typ -> typ;
 }
-type lattice = {
-  decls: list<monad_decl>;
+type effects = {
+  decls: list<new_effect>;
   order: list<edge>;                                     (* transitive closure of the order in the signature *)
   joins: list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
@@ -56,7 +56,7 @@ type env = {
   is_pattern:bool;               (* is the current term being checked a pattern? *)
   instantiate_targs:bool;        (* instantiate implicit type arguments? default=true *)
   instantiate_vargs:bool;        (* instantiate implicit term arguments? default=true *)
-  lattice:lattice;               (* monad lattice *)
+  effects:effects;               (* monad lattice *)
   generalize:bool;               (* should we generalize let bindings? *)
   letrecs:list<(lbname * typ)>;  (* mutually recursive names and their types (for termination checking) *)
   top_level:bool;                (* is this a top-level term? if so, then discharge guards *)
@@ -64,6 +64,7 @@ type env = {
   use_eq:bool;                   (* generate an equality constraint, rather than subtyping/subkinding *)
   is_iface:bool;                 (* is the module we're currently checking an interface? *)  
   admit:bool;                    (* admit VCs in the current module *) 
+  default_effects:list<(lident*lident)>;
 }
 and solver_t = {
     init: env -> unit;
@@ -90,8 +91,10 @@ val set_current_module : env -> lident -> env
 val set_range : env -> Range.range -> env
 val get_range : env -> Range.range
 
+val default_effect : env -> lident -> option<lident>
 val lookup_bvar : env -> bvvar -> typ
 val lookup_lid : env -> lident -> typ      
+val lookup_kind_abbrev: env -> lident -> (lident * binders * knd)
 val try_lookup_val_decl : env -> lident -> option<typ>
 val lookup_val_decl : env -> lident -> typ
 val lookup_datacon: env -> lident -> typ
@@ -99,8 +102,11 @@ val is_datacon : env -> lident -> bool
 val is_record : env -> lident -> bool
 val lookup_datacons_of_typ : env -> lident -> option<list<(lident * typ)>>
 val lookup_typ_abbrev : env -> lident -> option<typ>
+val lookup_effect_abbrev : env -> lident -> option<(binders * comp)>
 val lookup_btvar : env -> btvar -> knd
 val lookup_typ_lid : env -> lident -> knd
+val try_lookup_effect_lid : env -> lident -> option<knd>
+val lookup_effect_lid : env -> lident -> knd
 val lookup_operator : env -> ident -> typ
 val lookup_projector: env -> lident -> int -> lident
 val lookup_qname: env -> lident -> option<Util.either<typ,sigelt>>
@@ -124,6 +130,6 @@ val lidents : env -> list<lident>
 (* operations on monads *)
 val join: env -> lident -> lident -> lident * mlift * mlift
 val monad_leq: env -> lident -> lident -> option<edge>
-val monad_decl_opt: env -> lident -> option<monad_decl>
-val get_monad_decl: env -> lident -> monad_decl
+val effect_decl_opt: env -> lident -> option<new_effect>
+val get_effect_decl: env -> lident -> new_effect
 val wp_signature: env -> lident -> (btvar * knd)

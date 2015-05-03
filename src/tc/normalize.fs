@@ -162,6 +162,21 @@ let is_stack_empty config = match config.stack.args with
     | _ -> false
 let has_eta cfg = cfg.steps |> List.contains Eta
 
+let rec weak_norm_comp env comp =
+  let c = comp_to_comp_typ comp in
+  match Tc.Env.lookup_effect_abbrev env c.effect_name with
+    | None -> c
+    | Some (binders, cdef) ->
+      //alpha-convert c first
+      let binders' = List.map (function 
+        | Inl b, imp -> Inl (Util.freshen_bvar b), imp
+        | Inr b, imp -> Inr (Util.freshen_bvar b), imp) binders in
+      let subst = Util.subst_of_list binders (Util.args_of_binders binders' |> snd) in
+      let cdef = Util.subst_comp subst cdef in
+      let subst = subst_of_list binders' (targ c.result_typ::c.effect_args) in
+      let c = Util.subst_comp subst cdef in
+      weak_norm_comp env c
+             
 let t_config code env steps = 
     {close=None;
      code=code;
@@ -461,29 +476,29 @@ and sncomp tcenv (cfg:config<comp>) : config<comp> =
            with_new_code cfg (mk_Total t.code)
 
 and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> = 
-  let remake l r eargs flags = 
-    let c = {effect_name=l; result_typ=r; effect_args=eargs; flags=flags} in
-    {cfg with code=c} in
   let m = cfg.code in 
-  let res = (sn tcenv (with_new_code cfg m.result_typ)).code in
-  let sn_flags flags = 
+  let norm () = 
+    let remake l r eargs flags = 
+        let c = {effect_name=l; result_typ=r; effect_args=eargs; flags=flags} in
+        {cfg with code=c} in
+    let res = (sn tcenv (with_new_code cfg m.result_typ)).code in
+    let sn_flags flags = 
     flags |> List.map (function 
         | DECREASES e -> 
-          let e = (wne tcenv (e_config e cfg.environment cfg.steps)).code in
-          DECREASES e
+            let e = (wne tcenv (e_config e cfg.environment cfg.steps)).code in
+            DECREASES e
         | f -> f) in
-  let flags, args = sn_flags m.flags, sn_args true tcenv cfg.environment cfg.steps m.effect_args in
-  if not <| List.contains DeltaComp cfg.steps
-  then remake m.effect_name res args flags
-  else match Tc.Env.lookup_typ_abbrev tcenv m.effect_name with
-        | None -> remake m.effect_name res args flags
-        | Some t -> 
-          let t = mk_Typ_app(t, (Inl res, None)::args) None res.pos in
-          let c = sn tcenv (with_new_code cfg t) in
-          match (Util.compress_typ c.code).n with
-            | Typ_app({n=Typ_const fv}, (Inl res, _)::args) -> remake fv.v res args flags
-            | _ ->  failwith (Util.format2 "Got a computation %s, normalized unexpectedly to %s" (Print.sli m.effect_name) (Print.typ_to_string c.code))
-       
+    let flags, args = sn_flags m.flags, sn_args true tcenv cfg.environment cfg.steps m.effect_args in
+    remake m.effect_name res args flags  in
+    
+  if List.contains DeltaComp cfg.steps
+  then match Tc.Env.lookup_effect_abbrev tcenv m.effect_name with
+        | Some _ -> 
+            let c = weak_norm_comp tcenv (mk_Comp cfg.code) in
+            sncomp_typ tcenv ({cfg with code=c})
+        | _ -> norm()
+  else norm()
+      
 and sn_args delay tcenv env steps args = 
    args |> List.map (function 
      | Inl t, imp when delay -> Inl <| (sn_delay tcenv (t_config t env steps)).code, imp
@@ -500,6 +515,10 @@ and snk tcenv (cfg:config<knd>) : config<knd> =
     | Kind_uvar(uv, args) -> 
       let args = sn_args false tcenv cfg.environment (no_eta cfg.steps) args in
       {cfg with code=w <| mk_Kind_uvar(uv, args)}  
+    | Kind_abbrev((l, args), {n=Kind_unknown}) -> 
+      let (_, binders, body) = Tc.Env.lookup_kind_abbrev tcenv l in
+      let subst = Util.subst_of_list binders args in
+      snk tcenv ({cfg with code=Util.subst_kind subst body})
     | Kind_abbrev(_, k) -> 
       snk tcenv ({cfg with code=k}) 
     | Kind_arrow(bs, k) -> 
@@ -712,31 +731,6 @@ let whnf tcenv t =
         | Typ_app({n=Typ_uvar _}, _) 
         | _ -> norm_typ [WHNF;Beta;Eta] tcenv t
 
-let rec weak_norm_comp env comp =
-  let c = comp_to_comp_typ comp in
-  match Tc.Env.lookup_typ_abbrev env c.effect_name with
-    | None -> c
-    | Some t -> 
-      let t = Util.compress_typ <| Util.alpha_typ t in
-      match t.n with 
-        | Typ_lam(formals, body) -> 
-          let subst = subst_of_list formals (targ c.result_typ::c.effect_args) in
-          let body = Util.subst_typ subst body in
-          begin match (Util.compress_typ body).n with 
-            | Typ_app(eff, (Inl res, _)::effs) -> 
-                (match (compress_typ eff).n with
-                    | Typ_const eff -> 
-                          weak_norm_comp env (mk_Comp <|  { 
-                             effect_name=eff.v;
-                             result_typ=res;
-                             effect_args=effs;
-                             flags=c.flags 
-                          })
-                    | _ -> failwith "Impossible")
-            | _ -> failwith (Util.format2 "Impossible: Expanded abbrev to %s (%s)" (Print.typ_to_string body) (Print.tag_of_typ body)) 
-          end
-       | _ -> failwith (Util.format2 "Impossible: Expanded abbrev %s to %s" (Print.sli c.effect_name) (Print.tag_of_typ t))
-             
 let norm_comp steps tcenv c = 
   let c = sncomp tcenv (c_config c empty_env steps) in
   c.code

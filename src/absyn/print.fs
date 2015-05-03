@@ -480,7 +480,28 @@ let rec sigelt_to_string x = match x with
   | Sig_let(lbs, _, _, b) -> lbs_to_string lbs
   | Sig_main(e, _) -> Util.format1 "let _ = %s" (exp_to_string e)
   | Sig_bundle(ses, _, _) -> List.map sigelt_to_string ses |> String.concat "\n"
-  | Sig_monads _ -> "monad_lattice { ... }"
+  | Sig_new_effect _ -> "new_effect { ... }"
+  | Sig_sub_effect _ -> "sub_effect ..."
+  | Sig_kind_abbrev _ -> "kind ..."
+  | Sig_effect_abbrev(l, tps, c, _, _) -> Util.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_typ_to_string c)
+
+let format_error r msg = format2 "%s: %s\n" (Range.string_of_range r) msg
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 let rec sigelt_to_string_short x = match x with 
   | Sig_let((_, [(Inr l, t, _)]), _, _, _) -> Util.format2 "let %s : %s" l.str (typ_to_string t) 
