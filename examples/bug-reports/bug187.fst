@@ -1,11 +1,9 @@
 module Bug187
 
 opaque type verified : unit -> unit -> Type
-assume type vkey (p:(unit -> Type)) = k:unit{verified k == p}
+assume type vkey = k:unit{verified k == verified k}
 
-opaque type sent: unit -> Type 
-
-assume val test : option (d:unit * vkey sent)
+assume val test : option (d:unit * vkey)
 
 let fail =
   match test with
