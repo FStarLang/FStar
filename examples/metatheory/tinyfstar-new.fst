@@ -28,7 +28,6 @@ type tconst =
   | TcRefInt
   | TcHeap
 
-  | TcTrue
   | TcFalse
   | TcAnd
   | TcOr
@@ -86,7 +85,6 @@ let tint = TConst TcInt
 let tref = TConst TcRefInt
 let theap = TConst TcHeap
 
-let ttrue = TConst TcTrue
 let tfalse = TConst TcFalse
 let tand  a b = TTApp (TTApp (TConst TcAnd)  a) b
 let tor   a b = TTApp (TTApp (TConst TcOr)   a) b
@@ -105,7 +103,12 @@ let tprecedes e1 e2 = TEApp (TEApp (TConst TcPrecedes) e1) e2
 shift both expression and type variables
 and prove some properties on it*)
 
-let tnot a = timpl a tfalse
+(****************************)
+(* Encoded logic constants  *)
+(****************************)
+
+let tnot t = timpl t tfalse
+let ttrue = tnot tfalse
 
 (****************************)
 (* Expression Substitutions *)
@@ -899,7 +902,6 @@ let tconsts tc =
   | TcInt
   | TcRefInt
   | TcHeap
-  | TcTrue
   | TcFalse     -> KType
 
   | TcAnd
@@ -1167,7 +1169,7 @@ and kinding : g:env -> t : typ -> k:knd -> Type =
           =hk2:kinding (eextend g t1) t2 k2 ->
                kinding g (TELam t1 t2) (KTArr t1 k2)
 
-| KTApp : #g:env -> #t1:typ -> #t2:typ -> #k:knd -> #k':knd ->
+| KTApp : #g:env -> #t1:typ -> #t2:typ -> #k:knd -> k':knd ->
           =hk1:kinding g t1 (KKArr k k') ->
           =hk2:kinding g t2 k ->
           =hw :kwf g (ktsubst (tsub_pnt 0 t2) k') ->
@@ -1334,7 +1336,7 @@ and validity : g:env -> t:typ -> Type =
               =hv2:validity g p2 ->
                    validity g (tand p1 p2)
 
-| VImplIntro : #g:env -> #t1:typ -> #t2:typ ->
+| VImplIntro : #g:env -> t1:typ -> t2:typ ->
                =hv:validity (eextend g t1) (tesh t2) -> (* shifting t2 *)
                (* CH: kinding spurious, maybe needed for derived judgment lemma *)
                =hk:kinding g (timpl t1 t2) KType ->
@@ -1402,3 +1404,31 @@ For injectivity should probably stick with this (see discussion in txt file):
                                    (TArr t1' (Cmp m t2' phi'))) ->
                validity g (tand (tand (teqtype t1 t1') (teqtype t2 t2))
                                       (teqtype phi phi'))
+
+(* Derived kinding rules -- TODO: need a lot more *)
+
+val kimpl : #g:env -> #t1:typ -> #t2:typ ->
+            =hk1:kinding g t1 KType ->
+            =hk1:kinding g t2 KType ->
+            Tot (kinding g (timpl t1 t2) KType)
+let kimpl g t1 t2 hk1 hk2 =
+  let happ1 : (kinding g (TTApp (TConst TcImpl) t1) (KKArr KType KType)) =
+    KTApp (KKArr KType KType) (KConst g TcImpl) hk1
+          (KOkKArr (KOkType g) (KOkType (textend g KType)))
+  in KTApp KType happ1 hk2 (KOkType g)
+
+val kfalse : g:env -> Tot (kinding g tfalse KType)
+let kfalse g = KConst g TcFalse
+
+val knot : #g:env -> #t:typ ->
+           =hk:kinding g t KType ->
+           Tot (kinding g (tnot t) KType)
+let knot g t hk = kimpl hk (kfalse g)
+
+(* Derived validity rules -- TODO: need a lot more *)
+
+val vtrue : g:env -> Tot (validity g ttrue)
+let vtrue g =
+  VImplIntro tfalse tfalse
+    (VAssume 0 (kfalse (eextend g tfalse)))
+    (knot (kfalse g))
