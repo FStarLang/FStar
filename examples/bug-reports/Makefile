@@ -12,3 +12,12 @@ all: .all.ver
 
 bug194: bug194.fst
 	../../bin/fstar.exe ../../lib/classical.fst ../../lib/ext.fst ../../lib/constr.fst ../metatheory/stlc_strong_db_parsubst.fst bug194.fst
+
+insertionsortcmp: insertionsortcmp.fst
+	../../bin/fstar.exe ../../lib/list.fst insertionsortcmp.fst
+
+insertionsortcmpfails: insertionsortcmpfails.fst
+	../../bin/fstar.exe ../../lib/list.fst insertionsortcmpfails.fst
+
+insertionsortcmpfails2: insertionsortcmpfails2.fst
+	../../bin/fstar.exe ../../lib/list.fst insertionsortcmpfails2.fst
