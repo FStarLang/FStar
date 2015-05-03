@@ -387,7 +387,7 @@ new_effect {
 kind AllPre = AllPre_h heap
 kind AllPost (a:Type) = AllPost_h heap a
 kind AllWP (a:Type) = AllWP_h heap a
-opaque effect ALL (a:Type) (wp:AllWP a) (wlp:AllWP a) = ALL_h heap a wp wlp
+new_effect ALL = ALL_h heap
 effect All (a:Type) (pre:AllPre) (post: (heap -> AllPost a)) =
        ALL a
            (fun (p:AllPost a) (h:heap) -> pre h /\ (forall ra h1. post h ra h1 ==> p ra h1)) (* AllWP *)
@@ -398,7 +398,7 @@ default effect ML (a:Type) =
 sub_effect
   PURE  ~> DIV   = fun (a:Type) (wp:PureWP a) (p:PurePost a) -> wp (fun a -> p a)
 sub_effect
-  DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:heap) -> wp (fun a -> p a h)
+  PURE   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:heap) -> wp (fun a -> p a h)
 sub_effect
   STATE ~> ALL   = fun (a:Type) (wp:STWP a)   (p:AllPost a) -> wp (fun a -> p (V a))
 sub_effect

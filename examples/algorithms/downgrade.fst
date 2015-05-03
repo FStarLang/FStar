@@ -1,3 +1,10 @@
+(*--build-options
+  options:--z3timeout 20;
+  variables:LIB=../../lib;
+  other-files:$LIB/classical.fst $LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst
+              $LIB/stperm.fst $LIB/seq.fsi $LIB/seq.fst $LIB/seqproperties.fst $LIB/arr.fst
+              qs_seq.fst qsort_arr.fst
+--*)
 module Downgrade
 #set-options "--initial_fuel 0 --initial_ifuel 0 --max_fuel 0 --max_ifuel 0"
 open Array
@@ -14,7 +21,7 @@ val qsort_seq : a:Type -> f:tot_ord a -> x:seq a -> ST (seq a)
 let qsort_seq f x =
   let x_ar = Array.of_seq x in
   QuickSort.Array.qsort f x_ar;
-  let res = to_seq x_ar in 
+  let res = to_seq x_ar in
   free x_ar;
   res
 

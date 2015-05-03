@@ -1470,6 +1470,11 @@ and tc_decl env se deserialized = match se with
       let env = Tc.Env.set_range env r in
       let tps, env = tc_tparams env tps in
       let c, g = tc_comp env c in
+      let tags = tags |> List.map (function 
+        | DefaultEffect None -> 
+          let c' = Tc.Normalize.weak_norm_comp env c in
+          DefaultEffect (c'.effect_name |> Some)
+        | t -> t) in
       let se = Sig_effect_abbrev(lid, tps, c, tags, r) in
       let env = Tc.Env.push_sigelt env0 se in 
       se, env

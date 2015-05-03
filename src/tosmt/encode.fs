@@ -1155,12 +1155,12 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
      | _ -> Caption (format1 "<Start encoding %s>" nm)::g@[Caption (format1 "</end encoding %s>" nm)], e
     
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) = 
-    let should_skip (l:lident) = false in
-//        l.str.StartsWith("Prims.pure_")
-//        || l.str.StartsWith("Prims.ex_")
-//        || l.str.StartsWith("Prims.st_")
-//        || l.str.StartsWith("Prims.all_") in
-//        
+    let should_skip (l:lident) = 
+        l.str.StartsWith("Prims.pure_")
+        || l.str.StartsWith("Prims.ex_")
+        || l.str.StartsWith("Prims.st_")
+        || l.str.StartsWith("Prims.all_") in
+        
     match se with
      | Sig_typ_abbrev(_, _, _, _, [Effect], _) -> [], env
 

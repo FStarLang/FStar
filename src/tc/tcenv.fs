@@ -174,15 +174,10 @@ let default_effect env l = Util.find_map env.default_effects (fun (l', m) -> if 
  
 let build_lattice env se = match se with 
   | Sig_effect_abbrev(l, _, c, quals, r) -> 
-    if   quals |> Util.for_some (function DefaultEffect _ -> true | _ -> false)
-    then match env.effects.decls |> List.tryFind (fun e -> lid_equals e.mname (Util.comp_to_comp_typ c).effect_name) with 
-            | None -> raise (Error("Default effect for " ^ Print.sli l ^ " could not be found", r))
-            | Some e -> 
-              if env.default_effects |> Util.for_some (fun (l,_) -> lid_equals l e.mname)
-              then raise (Error("Default effect for " ^ Print.sli e.mname ^ " has already been set", r));
-              {env with default_effects=(e.mname, l)::env.default_effects}
-    else env
-
+    begin match Util.find_map quals (function DefaultEffect n -> n | _ -> None) with
+        | None -> env
+        | Some e -> {env with default_effects=(e, l)::env.default_effects}
+    end
   | Sig_new_effect(ne, _) -> 
     let effects = {env.effects with decls=ne::env.effects.decls} in
     {env with effects=effects}
@@ -199,13 +194,23 @@ let build_lattice env se = match se with
       {msource=sub.source; 
        mtarget=sub.target; 
        mlift=mk_lift sub.lift} in
-    
+    let id_edge l = {
+       msource=sub.source; 
+       mtarget=sub.target; 
+       mlift=(fun t wp -> wp)
+    } in
+    let print_mlift l =
+        let arg = Util.ftv (Syntax.lid_of_path ["ARG"] dummyRange) mk_Kind_type in
+        let wp = Util.ftv (Syntax.lid_of_path  ["WP"]  dummyRange) mk_Kind_unknown in
+        Print.typ_to_string (l arg wp) in
     let order = edge::env.effects.order in
       
     let ms = env.effects.decls |> List.map (fun (e:new_effect) -> e.mname) in
 
     let find_edge order (i, j) = 
-      order |> Util.find_opt (fun e -> lid_equals e.msource i && lid_equals e.mtarget j) in
+      if lid_equals i j
+      then id_edge i |> Some
+      else order |> Util.find_opt (fun e -> lid_equals e.msource i && lid_equals e.mtarget j) in
 
     (* basically, this is Warshall's algorithm for transitive closure, 
        except it's ineffcient because find_edge is doing a linear scan. 
@@ -213,33 +218,40 @@ let build_lattice env se = match se with
        Could be made better. But these are really small graphs (~ 4-8 vertices) ... so not worth it *)
     let order =
         ms |> List.fold_left (fun order k -> 
-            ms |> List.collect (fun i -> 
-            ms |> List.collect (fun j -> 
-              match find_edge order (i, j) with 
-                | Some e -> [e]
-                | None -> match find_edge order (i, k), find_edge order (k, j) with 
+        order@(ms |> List.collect (fun i -> 
+               if lid_equals i k then []
+               else ms |> List.collect (fun j ->
+                    if lid_equals j k 
+                    then []
+                    else match find_edge order (i, k), find_edge order (k, j) with 
                             | Some e1, Some e2 -> [compose_edges e1 e2]
-                            | _ -> []))) order in
+                            | _ -> [])))) 
+        order in
+    let order = Util.remove_dups (fun e1 e2 -> lid_equals e1.msource e2.msource 
+                                            && lid_equals e1.mtarget e2.mtarget) order in
     let joins =
         ms |> List.collect (fun i -> 
         ms |> List.collect (fun j -> 
         let join_opt = ms |> List.fold_left (fun bopt k ->
-          let kb = match find_edge order (i, k), find_edge order (j, k) with 
-                  | Some e1, Some e2 -> Some (k, e1, e2) //k is an upper bound
-                  | _ -> None in
-          match bopt with 
-            | None -> kb //we don't have a current candidate as the upper bound; so we may as well use k
+          match find_edge order (i, k), find_edge order (j, k) with 
+            | Some ik, Some jk -> 
+              begin match bopt with 
+                | None -> Some (k, ik, jk) //we don't have a current candidate as the upper bound; so we may as well use k
                            
-            | Some (ub, e1, e2) -> 
-              if Util.is_some (find_edge order (k, ub))
-              && not (Util.is_some (find_edge order (ub, k)))
-              then kb //k is less than ub
-              else bopt) None in //ub is still the best       
+                | Some (ub, _, _) -> 
+                  if Util.is_some (find_edge order (k, ub))
+                  && not (Util.is_some (find_edge order (ub, k)))
+                  then Some (k, ik, jk) //k is less than ub
+                  else bopt
+              end
+            | _ -> bopt) None in
         match join_opt with 
             | None -> []
             | Some (k, e1, e2) -> [(i, j, k, e1.mlift, e2.mlift)])) in
 
     let effects = {env.effects with order=order; joins=joins} in
+//    order |> List.iter (fun o -> Printf.printf "%s <: %s\n\t%s\n" o.msource.str o.mtarget.str (print_mlift o.mlift));
+//    joins |> List.iter (fun (e1, e2, e3, l1, l2) -> if lid_equals e1 e2 then () else Printf.printf "%s join %s = %s\n\t%s\n\t%s\n" e1.str e2.str e3.str (print_mlift l1) (print_mlift l2));
     {env with effects=effects}
   
   | _ -> env

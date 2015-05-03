@@ -22,12 +22,12 @@ open ST
 open Heap
 (* private *) type array (t:Type) = ref (seq t)
 
-assume val op_At_Bar: a:Type -> array a -> array a -> STATE.St (array a)
+assume val op_At_Bar: a:Type -> array a -> array a -> Prims.St (array a)
 
 assume val of_seq: a:Type -> s:seq a -> ST (array a)
   (requires (fun h -> True))
-  (ensures  (fun h0 x h1 -> (not(contains h0 x) 
-                             /\ contains h1 x 
+  (ensures  (fun h0 x h1 -> (not(contains h0 x)
+                             /\ contains h1 x
                              /\ sel h1 x=s)))
   (modifies no_refs)
 
@@ -35,10 +35,10 @@ assume val to_seq: a:Type -> s:array a -> St (seq a)
   (requires (fun h -> contains h s))
   (ensures  (fun h0 x h1 -> (sel h0 s=x /\ h0==h1)))
 
-assume val create : a:Type -> n:nat -> init:a -> ST (array a) 
+assume val create : a:Type -> n:nat -> init:a -> ST (array a)
   (requires (fun h -> True))
-  (ensures  (fun h0 x h1 -> (not(contains h0 x) 
-                             /\ contains h1 x 
+  (ensures  (fun h0 x h1 -> (not(contains h0 x)
+                             /\ contains h1 x
                              /\ sel h1 x=Seq.create n init)))
   (modifies no_refs)
 
@@ -66,9 +66,9 @@ assume val op: a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
   (modifies (a_ref x))
 
 
-val swap: a:Type -> x:array a -> i:nat -> j:nat{i <= j} 
+val swap: a:Type -> x:array a -> i:nat -> j:nat{i <= j}
                  -> St unit (requires (fun h -> contains h x /\ j < Seq.length (sel h x)))
-                            (ensures (fun h0 _u h1 -> 
+                            (ensures (fun h0 _u h1 ->
                                       (j < Seq.length (sel h0 x))
                                       /\ contains h1 x
                                       /\ (h1==Heap.upd h0 x (SeqProperties.swap (sel h0 x) i j))))
