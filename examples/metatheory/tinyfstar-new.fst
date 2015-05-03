@@ -97,6 +97,7 @@ let tforallt a p = TTApp (TConst (TcForallT a)) p
 
 let teqe e1 e2 = TEApp (TEApp (TConst TcEqE) e1) e2
 let teqt k t1 t2 = TTApp (TTApp (TConst (TcForallT k)) t1) t2
+let teqtype = teqt KType
 
 let tprecedes e1 e2 = TEApp (TEApp (TConst TcPrecedes) e1) e2
 
@@ -959,23 +960,15 @@ let head_eq t1 t2 =
   | TArr _ (Cmp EfAll  _ _), TArr _ (Cmp EfAll  _ _) -> true
   | _, _ -> is_Some (head_const t1) && head_const t1 = head_const t2
 
-val head_neq : typ -> typ -> Tot bool
-let head_neq t1 t2 = is_hnf t1 && is_hnf t2 && not (head_eq t1 t2)
+(***********************)
+(* Precedes on values  *)
+(***********************)
 
-(* CH: TODO: Implement this using head_neq
-    G |- t1 : Type
-    G |- t2 : Type
-    t1 <>_head t2
-    -------------------------------------------- [V-DistinctTH]
-    G |= ~(t1 =_Type t2)
-
-For injectivity should probably stick with this:
-
-    G |= x:t1 -> M t2 phi = x:t1' -> M t2' phi'
-    -------------------------------------------- [V-InjTH]
-    G |= (t1 = t1) /\ (t2 = t2') /\ (phi = phi')
-
- *)
+val precedes : v1:value -> v2:value -> Tot bool
+let precedes v1 v2 =
+  match v1, v2 with
+  | EConst (EcInt i1), EConst (EcInt i2) -> i1 >= 0 && i2 >= 0 && i1 < i2
+  | _, _ -> false
 
 (***********************)
 (* Typing environments *)
@@ -1227,6 +1220,8 @@ and kwf : env -> knd -> Type =
             =hw':kwf (textend g k) k' ->
                  kwf g (KKArr k k')
 
+(* CH: TODO: try to encode as many logical connectives as possible
+             to reduce the number of rules here (prove them as lemmas) *)
 and validity : g:env -> t:typ -> Type =
 
 | VAssume : #g:env -> x:var{is_Some (lookup_evar g x)} ->
@@ -1378,9 +1373,32 @@ and validity : g:env -> t:typ -> Type =
                =hk:kinding g t KType ->
                    validity g t
 
+| VPreceedsIntro : #g:env -> #v1:value -> #v2:value{precedes v1 v2} ->
+                   #t1:typ -> #t2:typ ->
+                   =ht1:typing g v1 (tot t1) ->
+                   =ht2:typing g v2 (tot t2) ->
+                        validity g (tprecedes v1 v2)
+
 | VDistinctC : g:env -> c1:econst -> c2:econst{c1 <> c2} -> t:typ ->
                validity g (tnot (teqe (EConst c1) (EConst c2)))
 
-(*Where is << defined ?*)
-(*| VPreceedsIntro ????*)
-(*| VDistinctTH *)
+| VDistinctTH : #g:env -> #t1:typ{is_hnf t1} ->
+                          #t2:typ{is_hnf t2 && not (head_eq t1 t2)} ->
+                =hk1:kinding g t1 KType ->
+                =hk2:kinding g t2 KType ->
+                     validity g (tnot (teqtype t1 t2))
+
+(*
+For injectivity should probably stick with this (see discussion in txt file):
+
+    G |= x:t1 -> M t2 phi =_Type x:t1' -> M t2' phi'
+    -------------------------------------------- [V-InjTH]
+    G |= (t1 =_Type t1) /\ (t2 = t2') /\ (phi = phi')
+ *)
+
+| VInjTH : #g:env -> #t1 :typ -> #t2 :typ -> #phi :typ ->
+                     #t1':typ -> #t2':typ -> #phi':typ -> #m:eff ->
+           =hv:validity g (teqtype (TArr t1  (Cmp m t2  phi))
+                                   (TArr t1' (Cmp m t2' phi'))) ->
+               validity g (tand (tand (teqtype t1 t1') (teqtype t2 t2))
+                                      (teqtype phi phi'))
