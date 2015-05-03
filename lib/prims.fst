@@ -468,42 +468,41 @@ type Tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
            -> _8:'h
            -> Tuple8 'a 'b 'c 'd 'e 'f 'g 'h
 
-(*type DTuple2: a:Type
+type DTuple2: a:Type
           ->  b:(a -> Type)
           -> Type =
   | MkDTuple2: a:Type
            ->  b:(a -> Type)
            -> _1:a
            -> _2:b _1
-           -> DTuple2 a b*)
+           -> DTuple2 a b
 
-(* type DTuple3: 'a:Type *)
-(*           -> 'b:('a -> Type) *)
-(*           -> 'c:(x:'a -> 'b x -> Type) *)
-(*           -> Type = *)
-(*   | MkDTuple3: 'a:Type *)
-(*            -> 'b:('a -> Type) *)
-(*            -> 'c:(x:'a -> 'b x -> Type) *)
-(*            -> _1:'a *)
-(*            -> _2:'b _1 *)
-(*            -> _3:'c _1 _2 *)
-(*            -> DTuple3 'a 'b 'c *)
+ type DTuple3: a:Type
+            -> b:(a -> Type)
+            -> c:(x:a -> b x -> Type)
+            -> Type =
+   | MkDTuple3: a:Type
+            -> b:(a -> Type)
+            -> c:(x:a -> b x -> Type)
+            -> _1:a
+            -> _2:b _1
+            -> _3:c _1 _2
+            -> DTuple3 a b c
 
-(* type DTuple4: 'a:Type *)
-(*           -> 'b:(x:'a -> Type) *)
-(*           -> 'c:(x:'a -> 'b x -> Type) *)
-(*           -> 'd:(x:'a -> y:'b x -> z:'c x y -> Type) *)
-(*           -> Type = *)
-(*   | MkDTuple4: 'a:Type *)
-(*            -> 'b:('a -> Type) *)
-(*            -> 'c:(x:'a -> 'b x -> Type) *)
-(*            -> 'd:(x:'a -> y:'b x -> z:'c x y -> Type) *)
-(*            -> _1:'a *)
-(*            -> _2:'b _1 *)
-(*            -> _3:'c _1 _2 *)
-(*            -> _4:'d _1 _2 _3 *)
-(*            -> DTuple4 'a 'b 'c 'd *)
-
+type DTuple4: a:Type
+           -> b:(x:a -> Type)
+           -> c:(x:a -> b x -> Type)
+           -> d:(x:a -> y:b x -> z:c x y -> Type)
+           -> Type =
+ | MkDTuple4: a:Type
+           -> b:(a -> Type)
+           -> c:(x:a -> b x -> Type)
+           -> d:(x:a -> y:b x -> z:c x y -> Type)
+           -> _1:a
+           -> _2:b _1
+           -> _3:c _1 _2
+           -> _4:d _1 _2 _3
+           -> DTuple4 a b c d
 
 (* Primitive (structural) equality.
    What about for function types? *)
@@ -515,12 +514,12 @@ let fst x = MkTuple2._1 x
 
 val snd : ('a * 'b) -> Tot 'b
 let snd x = MkTuple2._2 x
-(*
+
 val dfst : 'a:Type -> 'b:('a -> Type) -> DTuple2 'a 'b -> Tot 'a
 let dfst t = MkDTuple2._1 t
 
 val dsnd : 'a:Type -> 'b:('a -> Type) -> t:(DTuple2 'a 'b) -> Tot ('b (MkDTuple2._1 t))
-let dsnd t = MkDTuple2._2 t*)
+let dsnd t = MkDTuple2._2 t
 logic type InductionHyp : #a:Type -> a -> Type -> Type
 assume val by_induction_on: a:Type -> p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
 assume val _assume: 'P:Type -> unit -> (y:unit{'P})

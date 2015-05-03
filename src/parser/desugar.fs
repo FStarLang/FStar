@@ -781,6 +781,7 @@ and desugar_typ env (top:term) : typ =
               
     | Var l
     | Name l ->
+      let l = Util.set_lid_range l top.range in
       setpos <| fail_or env  (try_lookup_typ_name env) l
       
     | Construct(l, args) ->
@@ -788,7 +789,6 @@ and desugar_typ env (top:term) : typ =
       let args = List.map (fun (t, imp) -> arg_withimp imp <| desugar_typ_or_exp env t) args in
       mk_typ_app t args
 
-  
     | Abs(binders, body) -> 
       let rec aux env bs = function 
         | [] -> 
@@ -1201,7 +1201,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
     | TAnnotated(a, _)
     | TVariable a -> mk_term (Tvar a) a.idRange Type
     | NoName t -> t in
-  let tot = mk_term (Name (Const.p2l ["PURE"; "Tot"])) rng Expr in 
+  let tot = mk_term (Name (Const.tot_effect_lid)) rng Expr in 
   let with_constructor_effect t = mk_term (App(tot, t, false)) t.range t.level in
   let apply_binders t binders =
     List.fold_left (fun out b -> mk_term (App(out, binder_to_term b, false)) out.range out.level)

@@ -1,6 +1,9 @@
+(*--build-config
+    options:--admit_fsi Set --verify_module Unit1;
+    variables:LIB=../../lib;
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst
+--*)
 module Unit1
-open Prims.PURE
-open Prims.ALL
 
 type t =
   | A
@@ -80,7 +83,7 @@ let tabs_id ('a:Type) (x:'a) = x
 val id_pure_annot_eq : x:'a -> Pure 'a True (fun y -> y==x)
 let id_pure_annot_eq x = x
 
-val id_all_annot_eq: x:'a -> All 'a (fun h -> True) (fun h0 y h1 -> is_V y /\ h0==h1 /\ x==(V.v y)) 
+val id_all_annot_eq: x:'a -> All 'a (fun h -> True) (fun h0 y h1 -> is_V y /\ h0==h1 /\ x==(V.v y))
 let id_all_annot_eq x = x
 
 val hd: list 'a -> 'a
@@ -119,7 +122,7 @@ val record_f_exhaustive: record -> Tot int
 let record_f_exhaustive r = match r.f with (* should be able to prove that the pattern below is exhaustive for r.f *)
   | Some i -> i
   | None -> 0
-    
+
 
 
 val repeat : int -> nat -> Tot int
@@ -134,7 +137,7 @@ type inat =
   | S : inat -> inat
 
 val minus : inat -> inat -> Tot inat
-let rec minus n m : inat = 
+let rec minus n m : inat =
   match n, m with
   | O   , _    -> O
   | S _ , O    -> n
@@ -147,7 +150,7 @@ let rec ackermann m n =
   else ackermann (m - 1) (ackermann m (n - 1))
 
 assume type contents : Type -> Type
-type seq (a:Type) = 
+type seq (a:Type) =
   | Seq : c:contents a
           -> start_i:nat
           -> end_i:nat{end_i >= start_i}
@@ -165,7 +168,7 @@ let test_impure l m =  lm_corr (l - 1) (unsafe_slice (impure m) 1 l)
 
 
 type mlist =
-  | N 
+  | N
   | C of (nat * mlist)
 
 val zero_list: l:mlist -> Tot bool
@@ -173,11 +176,11 @@ let rec zero_list l = match l with
   | N -> true
   | C (n, l') -> n = 0 && zero_list l'
 
-(* this is saying: either l is a zerolist, or if first element of l is not 0, then its tail is a zero list *) 
+(* this is saying: either l is a zerolist, or if first element of l is not 0, then its tail is a zero list *)
 type pre (l:mlist) = (forall (n:nat) l'. ((l = C(n, l') /\ not (n = 0)) ==> zero_list l') /\ ((l = C(0, l') \/ l = N) ==> zero_list l))
 
 (* this function promises to return a zero list *)
-val do_ok: l:mlist -> Pure mlist (requires (pre l)) (ensures (fun l -> zero_list l)) 
+val do_ok: l:mlist -> Pure mlist (requires (pre l)) (ensures (fun l -> zero_list l))
 let do_ok l = match l with
   | N -> N
   | C(n, l') -> if n = 0 then l else C(0, l')
@@ -203,12 +206,12 @@ val test_skolem_refinement: x:int{T} -> Tot unit
 let test_skolem_refinement x = assert false
 
 val find: f:('a -> Tot bool) -> list 'a -> Tot (option (x:'a{f x}))
-let rec find f = function 
+let rec find f = function
   | [] -> None
   | hd::tl -> if f hd then Some hd else find f tl
 
 val test_skolem_let: x:int -> Tot (b:bool{b ==> x=0})
-let test_skolem_let x = 
+let test_skolem_let x =
   let found = find (fun y -> x=0) [x] in
   is_Some found
 
@@ -236,7 +239,7 @@ val factorial: nat -> Tot nat
 let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
 
 val factorial_is_positive: x:nat -> Lemma (ensures (factorial x > 0))
-let rec factorial_is_positive x = match x with 
+let rec factorial_is_positive x = match x with
   | 0 -> ()
   | n -> factorial_is_positive (n - 1) //NS:used to be:  by_induction_on e factorial_is_positive; but that seems to require a very inefficient axiom on the nat ordering
 
@@ -253,7 +256,7 @@ let rec poly_length_is_nat 'a l = by_induction_on l (poly_length_is_nat 'a)
 
 
 val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
-let rec map f = function 
+let rec map f = function
   | [] -> []
   | hd::tl -> f hd::map f tl
 let plus_one x = x + 1
@@ -276,7 +279,7 @@ let test_pred_lemma_2'  (a:Type) = qintro a (fun x -> forall (y:a). test_pred x 
 
 val test_pred_lemma_unif' : a:Type -> Lemma (ensures (forall (x:a) (y:a). test_pred x y))
 let test_pred_lemma_unif'  (a:Type) = qintro (test_pred_lemma_1 a)
- 
+
 val even: nat -> Tot bool
 val odd: nat -> Tot bool
 let rec even x = if x=0 then true else odd (x - 1)

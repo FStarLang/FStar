@@ -1,3 +1,7 @@
+(*--build-config
+  options:--admit_fsi Set;
+  other-files:ext.fst set.fsi heap.fst
+--*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -14,7 +18,6 @@
    limitations under the License.
 *)
 module ST
-open Prims.STATE
 open Set
 open Heap
 
@@ -45,11 +48,11 @@ assume val read: a:Type -> r:ref a -> STATE a
                                          (fun 'p h -> 'p (sel h r) h)
                                          (fun 'p h -> 'p (sel h r) h)
 
-assume val write: a:Type -> r:ref a -> v:a -> Prims.STATE.ST unit
+assume val write: a:Type -> r:ref a -> v:a -> Prims.ST unit
                                                  (fun h -> True)
                                                  (fun h0 x h1 -> h1==upd h0 r v)
 
-assume val op_ColonEquals: a:Type -> r:ref a -> v:a -> Prims.STATE.ST unit
+assume val op_ColonEquals: a:Type -> r:ref a -> v:a -> Prims.ST unit
                                                  (fun h -> True)
                                                  (fun h0 x h1 -> h1==upd h0 r v)
 

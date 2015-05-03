@@ -174,7 +174,8 @@ let rec weak_norm_comp env comp =
       let subst = Util.subst_of_list binders (Util.args_of_binders binders' |> snd) in
       let cdef = Util.subst_comp subst cdef in
       let subst = subst_of_list binders' (targ c.result_typ::c.effect_args) in
-      let c = Util.subst_comp subst cdef in
+      let c1 = Util.subst_comp subst cdef in
+      let c = {Util.comp_to_comp_typ c1 with flags=c.flags} |> mk_Comp in
       weak_norm_comp env c
              
 let t_config code env steps = 
@@ -494,8 +495,8 @@ and sncomp_typ tcenv (cfg:config<comp_typ>) : config<comp_typ> =
   if List.contains DeltaComp cfg.steps
   then match Tc.Env.lookup_effect_abbrev tcenv m.effect_name with
         | Some _ -> 
-            let c = weak_norm_comp tcenv (mk_Comp cfg.code) in
-            sncomp_typ tcenv ({cfg with code=c})
+            let c = weak_norm_comp tcenv (mk_Comp m) in
+            sncomp_typ tcenv ({cfg with code=c}) 
         | _ -> norm()
   else norm()
       
