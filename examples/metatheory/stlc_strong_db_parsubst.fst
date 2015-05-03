@@ -98,15 +98,15 @@ type step : exp -> exp -> Type =
             e2:exp ->
             step (EApp (ELam t e1) e2) (subst (sub_beta e2) e1)
   | SApp1 : #e1:exp ->
-            e2:exp ->
+             e2:exp ->
             #e1':exp ->
-            step e1 e1' ->
-            step (EApp e1 e2) (EApp e1' e2)
-  | SApp2 : e1:exp ->
+            =hst:(step e1 e1') ->
+             step (EApp e1 e2) (EApp e1' e2)
+  | SApp2 :  e1:exp ->
             #e2:exp ->
             #e2':exp ->
-            step e2 e2' ->
-            step (EApp e1 e2) (EApp e1 e2')
+            =hst:(step e2 e2') ->
+             step (EApp e1 e2) (EApp e1 e2')
 
 (* Type system; as inductive relation (not strictly necessary for STLC) *)
 
@@ -115,29 +115,29 @@ type env = var -> Tot (option typ)
 val empty : env
 let empty _ = None
 
-val extend : env -> var -> typ -> Tot env
-let extend g x t y = if y < x then g y
-                     else if y = x then Some t
-                     else g (y-1)
+(* we only need extend at 0 *)
+val extend : typ -> env -> Tot env
+let extend t g y = if y = 0 then Some t
+                   else g (y-1)
 
 type typing : env -> exp -> typ -> Type =
   | TyVar : #g:env ->
-            x:var{is_Some (g x)} ->
-            typing g (EVar x) (Some.v (g x))
-  | TyLam : #g:env ->
-            t:typ ->
+             x:var{is_Some (g x)} ->
+             typing g (EVar x) (Some.v (g x))
+  | TyLam : #g :env ->
+             t :typ ->
             #e1:exp ->
             #t':typ ->
-            hbody:typing (extend g 0 t) e1 t' ->
-            typing g (ELam t e1) (TArr t t')
+            =hbody:typing (extend t g) e1 t' ->
+             typing g (ELam t e1) (TArr t t')
   | TyApp : #g:env ->
             #e1:exp ->
             #e2:exp ->
             #t11:typ ->
             #t12:typ ->
-            typing g e1 (TArr t11 t12) ->
-            typing g e2 t11 ->
-            typing g (EApp e1 e2) t12
+            =h1:(typing g e1 (TArr t11 t12)) ->
+            =h2:(typing g e2 t11) ->
+             typing g (EApp e1 e2) t12
 
 (* Progress *)
 
@@ -145,16 +145,16 @@ val is_value : exp -> Tot bool
 let is_value = is_ELam
 
 opaque val progress : #e:exp -> #t:typ -> h:typing empty e t ->
-               Pure (cexists (fun e' -> step e e'))
-                    (requires (not (is_value e)))
-                    (ensures (fun _ -> True)) (decreases h)
+                         Pure (cexists (fun e' -> step e e'))
+                              (requires (not (is_value e)))
+                              (ensures (fun _ -> True)) (decreases h)
 let rec progress _ _ h =
   match h with
   | TyApp #g #e1 #e2 #t11 #t12 h1 h2 ->
      match e1 with
      | ELam t e1' -> ExIntro (subst (sub_beta e2) e1') (SBeta t e1' e2)
-     | _          -> (match progress h1 with
-                      | ExIntro e1' h1' -> ExIntro (EApp e1' e2) (SApp1 e2 h1'))
+     | _          -> let ExIntro e1' h1' = progress h1 in
+                     ExIntro (EApp e1' e2) (SApp1 e2 h1')
 
 (* Substitution extensional - used by substitution lemma below *)
 val subst_extensional: s1:sub -> s2:sub{FEq s1 s2} -> e:exp ->
@@ -180,9 +180,9 @@ let rec substitution g1 e t s g2 h1 hs =
   | TyVar x -> hs x
   | TyApp hfun harg -> TyApp (substitution s hfun hs) (substitution s harg hs)
   | TyLam tlam hbody ->
-  let hs'' : subst_typing (sub_inc) (g2) (extend g2 0 tlam) =
+  let hs'' : subst_typing (sub_inc) (g2) (extend tlam g2) =
     fun x -> TyVar (x+1) in
-  let hs' : subst_typing (sub_elam s) (extend g1 0 tlam) (extend g2 0 tlam) =
+  let hs' : subst_typing (sub_elam s) (extend tlam g1) (extend tlam g2) =
     fun y -> if y = 0 then TyVar y
              else let hgamma2 = hs (y - 1) in (substitution sub_inc hgamma2 hs'')
   in TyLam tlam (substitution (sub_elam s) hbody hs')
@@ -192,11 +192,16 @@ let rec substitution g1 e t s g2 h1 hs =
 val shift_up_above : nat -> exp -> Tot exp
 let shift_up_above n e = subst (sub_inc_above n) e
 
+val extend_gen : var -> typ -> env -> Tot env
+let extend_gen x t g y = if y < x then g y
+                         else if y = x then Some t
+                         else g (y-1)
+
 opaque val weakening : n:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
-      h:typing g e t -> Tot (typing (extend g n t') (shift_up_above n e) t)
+      h:typing g e t -> Tot (typing (extend_gen n t' g) (shift_up_above n e) t)
       (decreases h)
 let rec weakening n g v t t' h =
-  let hs : subst_typing (sub_inc_above n) g (extend g n t') = fun y ->
+  let hs : subst_typing (sub_inc_above n) g (extend_gen n t' g) = fun y ->
   if y < n then TyVar y else TyVar (y+1) in
   substitution (sub_inc_above n) h hs
 
@@ -205,10 +210,10 @@ let rec weakening n g v t t' h =
 opaque val substitution_beta :
       #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
       h1:typing g v t_x ->
-      h2:typing (extend g 0 t_x) e t ->
+      h2:typing (extend t_x g) e t ->
       Tot (typing g (subst (sub_beta v) e) t) (decreases e)
 let rec substitution_beta e v t_x t g h1 h2 =
-  let hs : subst_typing (sub_beta v) (extend g 0 t_x) g =
+  let hs : subst_typing (sub_beta v) (extend t_x g) g =
     fun y -> if y = 0 then h1 else TyVar (y-1) in
   substitution (sub_beta v) h2 hs
 

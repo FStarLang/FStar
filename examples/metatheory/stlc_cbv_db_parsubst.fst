@@ -21,6 +21,7 @@ module StlcCbvDbParSubst
    An awkward special case of stlc_strong...; in fact this proof
    is _more_ complex than the one in stlc_strong...! *)
 
+open Classical
 open StlcStrongDbParSubst
 open FunctionalExtensionality
 
@@ -79,7 +80,7 @@ let rec context_invariance _ _ _ h g' =
   match h with
   | TyVar x -> TyVar x
   | TyLam t_y h1 ->
-    TyLam t_y (context_invariance h1 (extend g' 0 t_y))
+    TyLam t_y (context_invariance h1 (extend t_y g'))
   | TyApp h1 h2 ->
     TyApp (context_invariance h1 g') (context_invariance h2 g')
 
@@ -147,16 +148,16 @@ val subst_gen_var_lt : x:var -> y:var{y < x} -> v:exp -> Lemma
 let subst_gen_var_lt x y v = ()
 
 val extend_lt : x:var -> y:var{y < x} -> g:env -> t_x:typ -> Lemma
-     (ensures (extend g x t_x) y = g y)
+     (ensures (extend_gen x t_x g) y = g y)
 let extend_lt x y g t_x = ()
 
 val extend_gt : x:var -> y:var{y > x} -> g:env -> t_x:typ -> Lemma
-     (ensures (extend g x t_x) y = g (y-1))
+     (ensures (extend_gen x t_x g) y = g (y-1))
 let extend_gt x y g t_x = ()
 
 val extend_twice : x:var -> g:env -> t_x:typ -> t_y:typ -> Lemma
-      (ensures (FEq (extend (extend g x t_x) 0     t_y)
-                      (extend (extend g 0 t_y) (x+1) t_x)))
+      (ensures (FEq (extend_gen 0 t_y (extend_gen x t_x g) )
+                      (extend_gen (x+1) t_x (extend_gen 0 t_y g))))
 let extend_twice x g t_x t_y = ()
 
 type sub_below (x:var) (s:sub) = (forall (y:var). y<x ==> s y = EVar y)
@@ -208,10 +209,10 @@ let subst_gen_elam x v t_y e' =
            = ELam t_y (subst (sub_elam (sub_beta_gen x v)) e'))
 
 val substitution_preserves_typing :
-      x:var -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
-      h1:typing empty v t_x ->
-      h2:typing (extend g x t_x) e t ->
-      Tot (typing g (subst (sub_beta_gen x v) e) t) (decreases e)
+       x:var -> #e:exp -> #v:exp -> #t_x:typ -> #t:typ -> #g:env ->
+      =h1:typing empty v t_x ->
+      =h2:typing (extend_gen x t_x g) e t ->
+       Tot (typing g (subst (sub_beta_gen x v) e) t) (decreases e)
 let rec substitution_preserves_typing x e v t_x t g h1 h2 =
   match h2 with
   | TyVar y ->
@@ -221,7 +222,7 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
      else if y<x then context_invariance h2 g
      else             TyVar (y-1)
   | TyLam #g' t_y #e' #t' h21 ->
-     (let h21' = typing_extensional h21 (extend (extend g 0 t_y) (x+1) t_x) in
+     (let h21' = typing_extensional h21 (extend_gen (x+1) t_x (extend t_y g)) in
       typable_empty_closed h1;
       subst_gen_elam x v t_y e';
       TyLam t_y (substitution_preserves_typing (x+1) h1 h21'))
@@ -232,6 +233,16 @@ let rec substitution_preserves_typing x e v t_x t g h1 h2 =
        (substitution_preserves_typing x h1 h21)
        (substitution_preserves_typing x h1 h22))
 
+
+val extend_gen_0_aux : t:typ -> g:env -> y:var ->
+                   Lemma (extend_gen 0 t g y = extend t g y)
+let extend_gen_0_aux t g y = ()
+
+val extend_gen_0 : t:typ -> g:env ->
+                   Lemma (FEq (extend_gen 0 t g) (extend t g))
+let extend_gen_0 t g =
+  forall_intro (extend_gen_0_aux t g)
+
 val preservation : #e:exp{is_Some (step e)} -> #t:typ -> h:(typing empty e t) ->
       Tot (typing empty (Some.v (step e)) t) (decreases e)
 let rec preservation e t h =
@@ -239,6 +250,7 @@ let rec preservation e t h =
      if is_value e1
      then (if is_value e2
            then let TyLam t_x hbody = h1 in
-                substitution_preserves_typing 0 h2 hbody
+                (extend_gen_0 t_x empty;
+                 substitution_preserves_typing 0 h2 hbody)
            else TyApp h1 (preservation h2))
      else TyApp (preservation h1) h2

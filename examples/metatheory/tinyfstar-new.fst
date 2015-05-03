@@ -1186,92 +1186,92 @@ and kinding : g:env -> t : typ -> k:knd -> Type =
           =hw:(kwf g (kesubst (esub_pnt 0 e) k)) ->
            kinding g (TEApp t e) (kesubst (esub_pnt 0 e) k)
 
-| KSub  : g:env -> t:typ -> k':knd -> k:knd -> phi:typ ->
-          kinding g t k' ->
-          skinding g k' k phi ->
-          validity g phi ->
-          kinding g t k
+| KSub  : #g:env -> #t:typ -> #k':knd -> #k:knd -> #phi:typ ->
+          =hk:(kinding g t k') ->
+          =hs:(skinding g k' k phi) ->
+          =hv:(validity g phi) ->
+           kinding g t k
 
 and skinding : g:env -> k1:knd -> k2:knd -> phi:typ -> Type=
 
-| KSubRefl : g:env -> k:knd ->
-             kwf g k ->
-             skinding g k k ttrue
+| KSubRefl : #g:env -> #k:knd ->
+             =hw:(kwf g k) ->
+              skinding g k k ttrue
 
-| KSubKArr : g:env -> k1:knd -> k2:knd -> k1':knd -> k2':knd ->
-             phi1:typ -> phi2:typ-> 
-             skinding g k2 k1 phi1 -> 
-             skinding (textend g k2) k1' k2' phi2 -> 
-             skinding g (KKArr k1 k1') (KKArr k2 k2')
-                      (tand phi1 (tforallt k2 (TTLam k2 phi2)))
+| KSubKArr : #g:env -> #k1:knd -> #k2:knd -> k1':knd -> k2':knd ->
+             #phi1:typ -> #phi2:typ-> 
+             =hs21:(skinding g k2 k1 phi1) -> 
+             =hs12':(skinding (textend g k2) k1' k2' phi2) -> 
+              skinding g (KKArr k1 k1') (KKArr k2 k2')
+                         (tand phi1 (tforallt k2 (TTLam k2 phi2)))
 
-| KSubTArr : g:env -> t1:typ -> t2:typ -> k1:knd ->
-             k2:knd -> phi1:typ -> phi2:typ ->
-             styping g t2 t1 phi1 ->
-             skinding (eextend g t2) k1 k2 phi2 ->
-             skinding g (KTArr t1 k1) (KTArr t2 k2)
-                      (tand phi1 (tforalle t2 (TELam t2 phi2)))
+| KSubTArr : #g:env -> #t1:typ -> #t2:typ -> #k1:knd -> #k2:knd ->
+             #phi1:typ -> #phi2:typ ->
+             =hs21:(styping g t2 t1 phi1) ->
+             =hs12':(skinding (eextend g t2) k1 k2 phi2) ->
+              skinding g (KTArr t1 k1) (KTArr t2 k2)
+                         (tand phi1 (tforalle t2 (TELam t2 phi2)))
 
 and kwf : env -> knd -> Type =
 
 | KOkType : g:env ->
             kwf g KType
 
-| KOkTArr : g:env -> t:typ -> k':knd ->
-            kinding g t KType ->
-            kwf (eextend g t) k' ->
-            kwf g (KTArr t k')
+| KOkTArr : #g:env -> #t:typ -> #k':knd ->
+            =hk:(kinding g t KType) ->
+            =hw:(kwf (eextend g t) k') ->
+             kwf g (KTArr t k')
 
-| KOkKArr : g:env -> k:knd -> k':knd ->
-            kwf g k ->
-            kwf (textend g k) k' ->
-            kwf g (KKArr k k')
+| KOkKArr : #g:env -> #k:knd -> #k':knd ->
+            =hw:(kwf g k) ->
+            =hw':(kwf (textend g k) k') ->
+             kwf g (KKArr k k')
 
 and validity : g:env -> t:typ -> Type =
 
-| VAssume : g:env -> x:var{is_Some (lookup_evar g x)} ->
-            kinding g (Some.v (lookup_evar g x)) KType ->
-            validity g (Some.v (lookup_evar g x))
+| VAssume : #g:env -> x:var{is_Some (lookup_evar g x)} ->
+            =hk:(kinding g (Some.v (lookup_evar g x)) KType) ->
+             validity g (Some.v (lookup_evar g x))
 
-| VRedE   : g:env -> e:exp -> t:typ -> e':exp ->
-            typing g e (tot t) ->
-            typing g e' (tot t) ->
-            epstep e e' ->
+| VRedE   : #g:env -> #e:exp -> #t:typ -> #e':exp ->
+            =ht :(typing g e (tot t)) ->
+            =ht':(typing g e' (tot t)) ->
+            =hst:(epstep e e') ->
             validity g (teqe e e')
 
-| VEqReflE : g:env -> e:exp -> t:typ ->
-             typing g e (tot t) ->
-             validity g (teqe e e)
+| VEqReflE : #g:env -> #e:exp -> #t:typ ->
+             =ht:(typing g e (tot t)) ->
+              validity g (teqe e e)
 
-| VEqTranE : g:env -> e1:exp -> e2:exp -> e3:exp ->
-             validity g (teqe e1 e2) ->
-             validity g (teqe e2 e3) ->
-             validity g (teqe e1 e3)
+| VEqTranE : #g:env -> #e1:exp -> #e2:exp -> #e3:exp ->
+             =hv12:(validity g (teqe e1 e2)) ->
+             =hv23:(validity g (teqe e2 e3)) ->
+              validity g (teqe e1 e3)
 
-| VEqSymE  : g:env -> e1:exp -> e2:exp ->
-             validity g (teqe e1 e2) ->
-             validity g (teqe e2 e1)
+| VEqSymE : #g:env -> #e1:exp -> #e2:exp ->
+             =hv:(validity g (teqe e1 e2)) ->
+              validity g (teqe e2 e1)
 
-(*Do we really need this rule for all x ?*)
-| VSubstE  : g:env -> e1:exp -> e2:exp -> t:typ -> x:var ->
-             validity g (teqe e1 e2) ->
-             validity g (tesubst (esub_pnt x e1) t) ->
-             validity g (tesubst (esub_pnt x e2) t)
+(* SF: Do we really need this rule for all x? CH: yes, I'm afraid so *)
+| VSubstE  : #g:env -> #e1:exp -> #e2:exp -> t:typ -> x:var ->
+             =hv12 :(validity g (teqe e1 e2)) ->
+             =hvsub:(validity g (tesubst (esub_pnt x e1) t)) ->
+              validity g (tesubst (esub_pnt x e2) t)
 
-| VRedT    : g:env -> t:typ -> t':typ -> k:knd ->
-             kinding g t k ->
-             kinding g t' k ->
-             tstep t t' ->
-             validity g (teqt k t t')
+| VRedT    : #g:env -> #t:typ -> #t':typ -> #k:knd ->
+             =hk :(kinding g t k) ->
+             =hk':(kinding g t' k) ->
+             =hst:(tstep t t') ->
+              validity g (teqt k t t')
 
-| VEqReflT : g:env -> t:typ -> k:knd ->
-             kinding g t k ->
-             validity g (teqt k t t)
+| VEqReflT : #g:env -> #t:typ -> #k:knd ->
+             =hk:(kinding g t k) ->
+              validity g (teqt k t t)
 
-| VEqTranT : g:env -> t1:typ -> t2:typ -> t3:typ -> k:knd ->
-             validity g (teqt k t1 t2) ->
-             validity g (teqt k t2 t3) ->
-             validity g (teqt k t1 t3)
+| VEqTranT : #g:env -> #t1:typ -> #t2:typ -> #t3:typ -> #k:knd ->
+             =hv12:(validity g (teqt k t1 t2)) ->
+             =hv23:(validity g (teqt k t2 t3)) ->
+              validity g (teqt k t1 t3)
 
 | VEqSymT : g:env -> t1:typ -> t2:typ -> k:knd ->
             validity g (teqt k t1 t2) ->
