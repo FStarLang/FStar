@@ -91,6 +91,19 @@ add this to your `.emacs` or `.emacs.d/init.el`:
 [Tuareg Mode]: https://github.com/ocaml/tuareg
 [MELPA]: http://melpa.org
 
+### Building an executable
+
+Generating executable code from F* can be achieved using the OCaml backend. It requires the OCaml bootstrapping (see the instructions at [INSTALL.md]).
+
+The OCaml backend will produce `<ModuleName>.ml` files for each F* module in the code using the `--codegen OCaml` argument.
+Those `.ml` files can then be compiled into executable code using the following command in the directory containing the ocaml files :
+
+```
+ocamlfind ocamlopt -o program -package batteries -linkpkg -thread -I $FSTAR_HOME/src/ocaml-output/ $FSTAR_HOME/src/ocamk-output/support.ml <OCamlFiles>.ml
+```
+where `program` is the executable. Linking the [ocaml-output] directory and `support.ml` is required if the F* code used built-ins.
+[ocaml-output]: https://github.com/FStarLang/FStar/tree/master/src/ocaml-output
+
 ### Code structure (partially outdated)
 
 This section describes the general structure of the F* verifier.
