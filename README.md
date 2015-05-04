@@ -57,6 +57,8 @@ for the [Atom] editor.
 
 The [Tuareg Mode] for Objective Caml works quite well for F* too
 (although some people have reported crashes).
+Go for 2.0.9 (2015-03-25) or later to avoid some silly hangs that
+are already fixed.
 Tuareg is easiest to install using [MELPA].
 To use MELPA add this to your `.emacs` or `.emacs.d/init.el` file:
 ```elisp

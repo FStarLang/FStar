@@ -1024,10 +1024,6 @@ let lookup_tvar g x = Env.t g x
 (*   Typing   *)
 (**************)
 
-(* CH: TODO: I was actually hoping of getting rid of ewf completely,
-       and perform few checks that still make sense in a nameless
-       setting on lookups. This worked very well for lambda_omega! *)
-
 type typing : env -> exp -> cmp -> Type =
 
 | TyVar : #g:env -> x:var{is_Some (lookup_evar g x)} ->
@@ -1095,9 +1091,11 @@ type typing : env -> exp -> cmp -> Type =
           t':typ -> wp : typ -> wp1:typ -> wp2:typ  ->
           typing g e1 (Cmp m (TArr t (Cmp m t' wp)) wp1) ->
           typing g e2 (Cmp m t wp2) ->
-          (* CH: keep only one of these two (problem in txt file too) *)
           kinding g (tesubst (esub_pnt 0 e2) t') KType ->
-          htot:option (typing g e2 (tot t)){teappears_in 0 t' ==> is_Some htot} ->
+          (* CH: Let's completely ignore this for now,
+                 it's strange and I'm not sure it's really needed.
+                 And anyway, I wouldn't express it this way.
+          htot:option (typing g e2 (tot t)){teappears_in 0 t' ==> is_Some htot} -> *)
           typing g (EApp e1 e2) (Cmp m (tesubst (esub_pnt 0 e2) t')
                                      (bind m (TArr t (Cmp m t' wp)) t wp1 wp2))
 
@@ -1215,8 +1213,6 @@ and kwf : env -> knd -> Type =
             =hw':kwf (textend k g) k' ->
                  kwf g (KKArr k k')
 
-(* CH: TODO: try to encode as many logical connectives as possible
-             to reduce the number of rules here (prove them as lemmas) *)
 and validity : g:env -> t:typ -> Type =
 
 | VAssume : #g:env -> x:var{is_Some (lookup_evar g x)} ->
@@ -1233,15 +1229,6 @@ and validity : g:env -> t:typ -> Type =
              =ht:typing g e (tot t) ->
                  validity g (teqe e e)
 
-| VEqTranE : #g:env -> #e1:exp -> #e2:exp -> #e3:exp ->
-             =hv12:validity g (teqe e1 e2) ->
-             =hv23:validity g (teqe e2 e3) ->
-                   validity g (teqe e1 e3)
-
-| VEqSymE : #g:env -> #e1:exp -> #e2:exp ->
-             =hv:validity g (teqe e1 e2) ->
-                 validity g (teqe e2 e1)
-
 (* SF: Do we really need this rule for all x? CH: yes, I'm afraid so *)
 | VSubstE  : #g:env -> #e1:exp -> #e2:exp -> t:typ -> x:var ->
              =hv12 :validity g (teqe e1 e2) ->
@@ -1257,15 +1244,6 @@ and validity : g:env -> t:typ -> Type =
 | VEqReflT : #g:env -> #t:typ -> #k:knd ->
              =hk:kinding g t k ->
                  validity g (teqt k t t)
-
-| VEqTranT : #g:env -> #t1:typ -> #t2:typ -> #t3:typ -> #k:knd ->
-             =hv12:validity g (teqt k t1 t2) ->
-             =hv23:validity g (teqt k t2 t3) ->
-                   validity g (teqt k t1 t3)
-
-| VEqSymT : #g:env -> #t1:typ -> #t2:typ -> #k:knd ->
-            =hv:validity g (teqt k t1 t2) ->
-                validity g (teqt k t2 t1)
 
 | VSubstT : #g:env -> #t1:typ -> #t2:typ -> #k:knd -> t:typ -> x:var ->
             =hv12 :validity g (teqt k t1 t2) ->
@@ -1388,19 +1366,20 @@ module VerifyOnlyThis
 
 open TinyFStarNew
 
-(* Derived kinding rules -- TODO: need a lot more *)
+(* CH: TODO: How about starting directly with the substitution lemma
+             and only prove what's needed for that. Could it be it
+             doesn't even need derived judgments? *)
 
-(*
-tinyfstar-new.fst(1400,26-1400,46): Subtyping check failed; expected type (kinding g (TConst TcForallE) (KKArr KType (tres (TVar 0)))); got type (kinding g (TConst TcForallE) (tconsts TcForallE))
- *)
+(* Derived kinding rules -- TODO: need a lot more *)
 
 val k_foralle : #g:env -> #t1:typ -> #t2:typ ->
                 =hk1:kinding g t1 KType ->
                 =hk2:kinding (eextend t1 g) t2 KType ->
                 Tot (kinding g (tforalle t1 t2) KType)
 let k_foralle g t1 t2 hk1 hk2 =
+(* TODO: finish this *)
   let tres x = KKArr (KTArr x KType) KType in
-     (* using tres doesn't work, god damn it! Had to unfold it. *)
+     (* using tres doesn't work, god damn it! Had to unfold it. File this shit. *)
   let happ1 : (kinding g (TTApp (TConst TcForallE) t1)
                          (KKArr (KTArr t1 KType) KType)) =
     KTApp (KKArr (KTArr (TVar 0) KType) KType) (KConst g TcForallE) hk1 (magic())
@@ -1433,9 +1412,12 @@ let k_not g t hk = k_impl hk (k_false g)
    prove some of the derived validity rules! For us weakening is just
    an instance of (expression) substitution, so we also need
    substitution. All this works fine only if none of these proofs rely
-   on things like v_of_intro1. *)
+   on things like v_of_intro1; at this point I don't see why the wouldn't. *)
 
 (* Derived validity rules *)
+
+(* CH: TODO: trying to encode as many logical connectives as possible
+             to reduce the number of rules here (prove them as lemmas) *)
 
 val v_impl_intro : #g:env -> t1:typ -> t2:typ ->
                    =hv:validity (eextend t1 g) (tesh t2) ->
@@ -1511,3 +1493,28 @@ val v_or_elim : #g:env -> t1:typ -> t2:typ -> #t3:typ ->
                 =hk :kinding g t3 KType ->
                      validity g t3
 let v_or_elim = admit()
+
+(* CH: TODO: prove symmetry and transitivity of equality as in the F7
+   paper from VEqRefl and VSubst; this will save us 4 rules *)
+
+val v_eq_trane : #g:env -> #e1:exp -> #e2:exp -> #e3:exp ->
+             =hv12:validity g (teqe e1 e2) ->
+             =hv23:validity g (teqe e2 e3) ->
+                   validity g (teqe e1 e3)
+let v_eq_trane = admit()
+
+val v_eq_syme : #g:env -> #e1:exp -> #e2:exp ->
+             =hv:validity g (teqe e1 e2) ->
+                 validity g (teqe e2 e1)
+let v_eq_syme = admit()
+
+val v_eq_trant : #g:env -> #t1:typ -> #t2:typ -> #t3:typ -> #k:knd ->
+             =hv12:validity g (teqt k t1 t2) ->
+             =hv23:validity g (teqt k t2 t3) ->
+                   validity g (teqt k t1 t3)
+let v_eq_trant = admit()
+
+val v_eq_symt : #g:env -> #t1:typ -> #t2:typ -> #k:knd ->
+            =hv:validity g (teqt k t1 t2) ->
+                validity g (teqt k t2 t1)
+let v_eq_symt = admit()
