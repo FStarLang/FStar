@@ -62,7 +62,7 @@
     Hashtbl.add keywords "logic"         LOGIC       ;
     Hashtbl.add keywords "match"         MATCH       ;
     Hashtbl.add keywords "module"        MODULE      ;
-    Hashtbl.add keywords "monad_lattice" MONADLATTICE;
+    Hashtbl.add keywords "new_effect"    NEW_EFFECT  ;
     Hashtbl.add keywords "of"            OF          ;
     Hashtbl.add keywords "open"          OPEN        ;
     Hashtbl.add keywords "or"            OR          ;
@@ -73,6 +73,7 @@
     Hashtbl.add keywords "query"         QUERY       ;
     Hashtbl.add keywords "rec"           REC         ;
     Hashtbl.add keywords "requires"      REQUIRES    ;
+    Hashtbl.add keywords "sub_effect"    SUB_EFFECT  ;
     Hashtbl.add keywords "terminating"   TOTAL       ;
     Hashtbl.add keywords "then"          THEN        ;
     Hashtbl.add keywords "to"            TO          ;
@@ -126,7 +127,7 @@
   let lc = Util.mk_ref 1
   let rec mknewline n lexbuf =
     if n > 0 then (L.new_line lexbuf; Util.incr lc; mknewline (n-1) lexbuf)
-    
+
  let clean_number x = String.strip ~chars:"uyslLUnIN" x
 }
 
@@ -394,4 +395,3 @@ and cpp_filename = parse
 and ignore_endline = parse
  | ' '* newline
      { token lexbuf }
-

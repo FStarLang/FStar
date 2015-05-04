@@ -19,6 +19,7 @@ module ST :
   sig
     val read : 'a ref -> 'a
     val op_ColonEquals: 'a ref -> 'a -> unit
+    val alloc: 'a -> ref 'a
   end
 module String :
   sig
@@ -53,6 +54,7 @@ module List :
     val append : 'a list -> 'a list -> 'a list
     val fold_left : ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
     val fold_right : ('a -> 'b -> 'b) -> 'a list -> 'b -> 'b
+    val fold_left2 : ('a -> 'b -> 'c -> 'a) -> 'a -> 'b list -> 'c list -> 'a
     val collect : ('a -> 'b list) -> 'a list -> 'b list
     val unzip : ('a * 'b) list -> 'a list * 'b list
     val unzip3 : ('a * 'b * 'c) list -> 'a list * 'b list * 'c list

@@ -63,7 +63,7 @@ let get_z3version () =
         in
             _z3version := Some out; out
 
-let ini_params =
+let ini_params () =
   let t =
     if z3v_le (get_z3version ()) (4, 3, 1)
     then !Options.z3timeout
@@ -99,7 +99,7 @@ let new_z3proc id =
     (let x = Util.trim_string s = "Done!" in
 //     Util.fprint5 "On thread %s, Z3 %s (%s) says: %s\n\t%s\n" (tid()) id pid s (if x then "finished" else "waiting for more output"); 
      x) in
-   Util.start_process id (!Options.z3_exe) ini_params cond 
+   Util.start_process id (!Options.z3_exe) (ini_params()) cond 
 
 type bgproc = {
     grab:unit -> proc;

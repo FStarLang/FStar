@@ -175,11 +175,13 @@ BOOT_JSBACKEND=$(addprefix jsbackend/, $(BOOT_JSBACKENDFILES))
 BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_BACKEND)
 
+ADMITTED_MODULES=Microsoft.FStar.Util Microsoft.FStar.Platform Microsoft.FStar.Parser.ParseIt
+ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 boot: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --debug yes --fs_typ_app --lax $(FSTAROPTS) --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform --admit_fsi Microsoft.FStar.Parser.ParseIt $^
+	$(RUNTIME) ../bin/fstar.exe --debug yes --fs_typ_app --lax $(FSTAROPTS) $(ADMITS) $^
 
 ocaml: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+	$(RUNTIME) ../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^
 
 fstarml:
 	@echo "Building parser and lexer filex..."
@@ -190,8 +192,8 @@ OCAML_FILES= Microsoft_FStar_Options.ml Microsoft_FStar_LazySet.ml Microsoft_FSt
 OCAML_ALL=$(addprefix ocaml-output/, $(OCAML_FILES))
 
 ocaml-test: ocaml
-	make -s -C ocaml-output parser
-	make -s -C ocaml-output
+	make -C ocaml-output parser
+	make -C ocaml-output
 	cp ocaml-output/fstarml.exe ../bin/fstar.exe || cp ocaml-output/fstarml ../bin/fstar.exe
 
 test:   clean $(BIN)/fstar.exe ocaml-test
