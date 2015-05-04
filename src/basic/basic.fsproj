@@ -65,8 +65,6 @@
     <Compile Include="options.fs" />
     <Compile Include="unionfind.fsi" />
     <Compile Include="unionfind.fs" />
-    <Compile Include="lazyset.fsi" />
-    <Compile Include="lazyset.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

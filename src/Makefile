@@ -1,7 +1,7 @@
 # -*- Makefile -*-
 
 # --------------------------------------------------------------------
-BASIC=prims-fake.fs profiling.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs platform.fsi platform.fs options.fs unionfind.fsi unionfind.fs lazyset.fsi lazyset.fs
+BASIC=prims-fake.fs profiling.fs util.fsi util.fs bytes.fsi bytes.fs range.fsi range.fs getoptsimple.fsi getoptsimple.fs platform.fsi platform.fs options.fs unionfind.fsi unionfind.fs
 BASIC_SRC=$(addprefix basic/, $(BASIC))
 
 ABSYN=syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
@@ -158,7 +158,7 @@ clean:
 STDFILES=system.fst stboot.fst list.fst option.fst string.fst char.fst
 STDLIB=$(addprefix ../lib/, $(STDFILES))
 
-BOOT_BASICFILES=bytes.fst platform.fsi util.fsi getoptsimple.fst options.fs range.fst unionfind.fst lazyset.fsi lazyset.fs
+BOOT_BASICFILES=bytes.fst platform.fsi util.fsi getoptsimple.fst options.fs range.fst unionfind.fst
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
 BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
@@ -188,7 +188,7 @@ fstarml:
 	make -C ocaml-output parser
 	make -s -C ocaml-output
 
-OCAML_FILES= Microsoft_FStar_Options.ml Microsoft_FStar_LazySet.ml Microsoft_FStar_Absyn_Syntax.ml Microsoft_FStar_Absyn_Const.ml Microsoft_FStar_Absyn_Visit.ml Microsoft_FStar_Absyn_Util.ml Microsoft_FStar_Absyn_Print.ml Microsoft_FStar_Absyn_SSyntax.ml Microsoft_FStar_Parser_AST.ml Microsoft_FStar_Parser_DesugarEnv.ml Microsoft_FStar_Parser_Desugar.ml Microsoft_FStar_Parser_Parse.ml Microsoft_FStar_Parser_Lexhelp.ml Microsoft_FStar_Parser_Driver.ml Microsoft_FStar_Tc_Env.ml Microsoft_FStar_Tc_Normalize.ml Microsoft_FStar_Tc_Errors.ml Microsoft_FStar_Tc_Rel.ml Microsoft_FStar_Tc_Util.ml Microsoft_FStar_Tc_Tc.ml Microsoft_FStar_ToSMT_Term.ml Microsoft_FStar_ToSMT_Z3.ml Microsoft_FStar_ToSMT_Encode.ml
+OCAML_FILES= Microsoft_FStar_Options.ml Microsoft_FStar_Absyn_Syntax.ml Microsoft_FStar_Absyn_Const.ml Microsoft_FStar_Absyn_Visit.ml Microsoft_FStar_Absyn_Util.ml Microsoft_FStar_Absyn_Print.ml Microsoft_FStar_Absyn_SSyntax.ml Microsoft_FStar_Parser_AST.ml Microsoft_FStar_Parser_DesugarEnv.ml Microsoft_FStar_Parser_Desugar.ml Microsoft_FStar_Parser_Parse.ml Microsoft_FStar_Parser_Lexhelp.ml Microsoft_FStar_Parser_Driver.ml Microsoft_FStar_Tc_Env.ml Microsoft_FStar_Tc_Normalize.ml Microsoft_FStar_Tc_Errors.ml Microsoft_FStar_Tc_Rel.ml Microsoft_FStar_Tc_Util.ml Microsoft_FStar_Tc_Tc.ml Microsoft_FStar_ToSMT_Term.ml Microsoft_FStar_ToSMT_Z3.ml Microsoft_FStar_ToSMT_Encode.ml
 OCAML_ALL=$(addprefix ocaml-output/, $(OCAML_FILES))
 
 ocaml-test: ocaml
