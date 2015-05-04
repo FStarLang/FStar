@@ -93,15 +93,24 @@ add this to your `.emacs` or `.emacs.d/init.el`:
 
 ### Building an executable
 
-Generating executable code from F* can be achieved using the OCaml backend. It requires the OCaml bootstrapping (see the instructions at [INSTALL.md]).
+Generating executable code from F* can be achieved using the OCaml backend
+(the `--codegen OCaml` command-line argument to F*).
+It requires the OCaml bootstrapping for the support libraries
+(see the [instructions for bootstrapping in OCaml])
 
-The OCaml backend will produce `<ModuleName>.ml` files for each F* module in the code using the `--codegen OCaml` argument.
-Those `.ml` files can then be compiled into executable code using the following command in the directory containing the ocaml files :
+[instructions for bootstrapping in OCaml]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md#bootstrapping-the-compiler-in-ocaml
+
+The OCaml backend will produce `<ModuleName>.ml` files for each F*
+module in the code.
+Those `.ml` files can then be compiled into executable code using the
+following command in the directory containing the ocaml files:
 
 ```
-ocamlfind ocamlopt -o program -package batteries -linkpkg -thread -I $FSTAR_HOME/src/ocaml-output/ $FSTAR_HOME/src/ocamk-output/support.ml <OCamlFiles>.ml
+ocamlfind ocamlopt -o program -package batteries -linkpkg -thread -I $FSTAR_HOME/src/ocaml-output/ $FSTAR_HOME/src/ocaml-output/support.ml <OCamlFiles>.ml
 ```
-where `program` is the executable. Linking the [ocaml-output] directory and `support.ml` is required if the F* code used built-ins.
+where `program` is the executable. Linking the [ocaml-output]
+directory and `support.ml` is required if the F* code used any built-ins.
+
 [ocaml-output]: https://github.com/FStarLang/FStar/tree/master/src/ocaml-output
 
 ### Code structure (partially outdated)
