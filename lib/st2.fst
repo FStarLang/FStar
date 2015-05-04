@@ -233,3 +233,57 @@ val noleak_ok: x1:ref int
                              (requires (fun h -> True))
                              (ensures (fun h1 r h2 -> ((x1 = x2) /\ (fst h1 = snd h1)) ==> (fst h2 = snd h2)))
 let noleak_ok x1 x2 b1 b2 = compose2 noleak noleak (x1,b1) (x2,b2)
+
+
+(*  First try to work on Nik's proposal of sequencing... Not working yet *)
+
+(* Duplication... was unable to access types defined in STATE2 monad *)
+type bind_wp_s2  (a:Type) (b:Type) (wp1:STATE2.WP a) (wlp1:STATE2.WP a) 
+                 (wp2:(a -> STATE2.WP b)) (wlp2:(a -> STATE2.WP b)) 
+                 (p:STATE2.Post b) (h0:heap2) =
+                     wp1 (fun a h1 -> wp2 a p h1) h0
+
+type bind_wlp_s2 (a:Type) (b:Type) (wlp1:STATE2.WP a) (wlp2:(a -> STATE2.WP b))
+                 (p:STATE2.Post b) (h0:heap2) =
+                     wlp1 (fun a -> wlp2 a p) h0
+
+
+assume val sequence: c0r:Type -> c1r:Type 
+                     -> wp0:STATE2.WP c0r -> wp1:STATE2.WP c1r
+                     -> wlp0:STATE2.WP c0r -> wlp1:STATE2.WP c1r
+                     -> =c0:(unit -> STATE2 c0r wp0 wlp0)
+                     -> =c1:(unit -> STATE2 c1r wp1 wlp1)
+                     -> STATE2 c1r 
+                       (bind_wp_s2 c0r c1r wp0 wlp0 (fun a-> wp1) (fun a -> wlp1))
+                       (bind_wlp_s2 c0r c1r wlp0 (fun a -> wlp1))
+
+let c0_pfx a = a := 0
+let c1_pfx b = b := !b - !b
+val equiv_pfx: a:ref int
+               -> b:ref int
+               -> STATE2.ST2 (unit * unit)
+                  (requires (fun _ -> True)) 
+                  (ensures (fun _ _ h2 -> sel (fst h2) a = sel (snd h2) b)) 
+let equiv_pfx a b = compose2 c0_pfx c1_pfx a b
+
+let c0_sfx c = c := !c - !c
+let c1_sfx d = d := 0
+val equiv_sfx: c:ref int
+                -> d:ref int
+                -> STATE2.ST2 (unit * unit)
+                  (requires (fun _ -> True)) 
+                  (ensures (fun _ _ h2 -> sel (fst h2) c = sel (snd h2) d))
+let equiv_sfx c d = compose2 c0_sfx c1_sfx c d
+
+(* This does not work yet: Unknown assertion failed... *)
+(*
+val equiv_seq: a:ref int
+               -> b:ref int
+               -> c:ref int
+               -> d:ref int
+               -> STATE2.ST2 (unit * unit)
+                  (requires (fun _ -> True))
+                  (ensures (fun _ _ h2 -> sel (fst h2) a = sel (snd h2) b /\
+                                          sel (fst h2) c = sel (snd h2) d)) 
+let equiv_seq a b c d = sequence (fun () -> equiv_pfx a b) (fun () -> equiv_sfx c d)
+*)
