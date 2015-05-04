@@ -524,9 +524,11 @@ and serialize_sigelt (writer:Writer) (ast:sigelt) :unit =
         writer.write_char 'f';
         serialize_letbindings writer lbs; serialize_list writer serialize_lident l; writer.write_bool (quals |> Util.for_some (function HasMaskedEffect -> true | _ -> false)) //TODO: Generalize
     | Sig_main(e, _) -> writer.write_char 'g'; serialize_exp writer e
-    | Sig_bundle(l, _, lids) ->
+    | Sig_bundle(l, qs, lids, _) ->
         writer.write_char 'h';
-        serialize_list writer serialize_sigelt l; serialize_list writer serialize_lident lids
+        serialize_list writer serialize_sigelt l; 
+        serialize_list writer serialize_qualifier qs;
+        serialize_list writer serialize_lident lids
     | Sig_new_effect (n, _) ->
         writer.write_char 'i';
         serialize_new_effect writer n
@@ -585,7 +587,7 @@ and deserialize_sigelt (reader:Reader) :sigelt =
         Sig_assume(deserialize_lident reader, deserialize_formula reader, deserialize_list reader deserialize_qualifier, dummyRange)
     | 'f' -> Sig_let(deserialize_letbindings reader, dummyRange, deserialize_list reader deserialize_lident, (if reader.read_bool () then [HasMaskedEffect] else [])) //TODO: Generalize
     | 'g' -> Sig_main(deserialize_exp reader, dummyRange)
-    | 'h' -> Sig_bundle(deserialize_list reader deserialize_sigelt, dummyRange, deserialize_list reader deserialize_lident)
+    | 'h' -> Sig_bundle(deserialize_list reader deserialize_sigelt, deserialize_list reader deserialize_qualifier, deserialize_list reader deserialize_lident, dummyRange)
     | 'i' -> Sig_new_effect(deserialize_new_effect reader, dummyRange)
     | 'j'
     | 'k'

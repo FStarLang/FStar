@@ -688,7 +688,7 @@ let destruct typ lid =
 
 let rec lids_of_sigelt se = match se with 
   | Sig_let(_, _, lids, _) 
-  | Sig_bundle(_, _, lids) -> lids
+  | Sig_bundle(_, _, lids, _) -> lids
   | Sig_tycon (lid, _, _,  _, _, _, _)    
   | Sig_effect_abbrev(lid, _, _,  _, _)
   | Sig_typ_abbrev  (lid, _, _, _, _, _)
@@ -706,7 +706,7 @@ let lid_of_sigelt se : option<lident> = match lids_of_sigelt se with
   | _ -> None
 
 let range_of_sigelt x = match x with 
-  | Sig_bundle(_, r, _) 
+  | Sig_bundle(_, _, _, r) 
   | Sig_tycon (_, _, _,  _, _, _, r)    
   | Sig_typ_abbrev  (_, _, _, _, _, r)
   | Sig_effect_abbrev  (_, _, _, _, r)

@@ -56,6 +56,13 @@
              | Support.Microsoft.FStar.Getopt.Die msg ->
                  Support.Microsoft.FStar.Util.print_string msg
              | Support.Microsoft.FStar.Getopt.GoOn ->
+                let filenames = 
+                  if !Microsoft_FStar_Options.use_build_config  (* if the user explicitly requested it *)
+                     || Array.length Sys.argv = 2     (* or, if there is only a single file on the command line *)
+                  then match filenames with 
+                       | [f] -> Microsoft_FStar_Parser_Driver.read_build_config f (* then, try to read a build config from the header of the file *)
+                       | _ -> Support.Microsoft.FStar.Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
+                  else filenames in
                  let _20060 =
                    if
                      not

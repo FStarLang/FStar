@@ -95,7 +95,7 @@ val default_effect : env -> lident -> option<lident>
 val lookup_bvar : env -> bvvar -> typ
 val lookup_lid : env -> lident -> typ      
 val lookup_kind_abbrev: env -> lident -> (lident * binders * knd)
-val try_lookup_val_decl : env -> lident -> option<typ>
+val try_lookup_val_decl : env -> lident -> option<(typ * list<qualifier>)>
 val lookup_val_decl : env -> lident -> typ
 val lookup_datacon: env -> lident -> typ
 val is_datacon : env -> lident -> bool

@@ -921,8 +921,8 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
     | Sig_sub_effect _ ->
         unsupported (Absyn.Util.range_of_sigelt modx) "mod1-effect/kind"
 
-    | Sig_bundle ([Sig_datacon (_, _, _, qal, _, _)], _, _) when (not (export_val qal)) -> None
-    | Sig_bundle ([Sig_datacon (x, ty, (tx, _, _), qal, _, rg)], _, _) when (as_tprims tx = Some Exn) -> begin
+    | Sig_bundle ([Sig_datacon (_, _, _, qal, _, _)], _, _, _) when (not (export_val qal)) -> None
+    | Sig_bundle ([Sig_datacon (x, ty, (tx, _, _), qal, _, rg)], _, _, _) when (as_tprims tx = Some Exn) -> begin
         let rec aux acc ty =
             match (Absyn.Util.compress_typ ty).n with
             | Typ_fun(bs, c) -> 
@@ -941,7 +941,7 @@ let mlmod1_of_mod1 mode (mlenv : mlenv) (modx : sigelt) : option<mlitem1> =
         Some (mlitem1_exn mode (x.ident.idText, args))
     end
 
-    | Sig_bundle (indt, _, _) -> begin
+    | Sig_bundle (indt, _, _, _) -> begin
         let aout = mldtype_of_indt mlenv indt in
         let aout = List.map (fun (x, y, z) -> (x, y, Some z)) aout in
 

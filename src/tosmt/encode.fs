@@ -1397,7 +1397,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  @precedence in
         datacons@g, env
 
-    | Sig_bundle(ses, _, _) -> 
+    | Sig_bundle(ses, _, _, _) -> 
       let g, env = encode_signature env ses in
       let g', inversions = g |> List.partition (function
         | Term.Assume(_, Some "inversion axiom") -> false

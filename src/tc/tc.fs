@@ -1567,8 +1567,8 @@ and tc_decl env se deserialized = match se with
           | (Inl _, _, _) -> failwith "impossible"
           | (Inr l, t, e) -> 
             let gen, (lb, t, e) = match Tc.Env.try_lookup_val_decl env l with 
-              | None -> gen, lb 
-              | Some t' -> 
+              | None -> gen, lb
+              | Some (t', _) -> 
                 if debug env Options.Medium
                 then Util.fprint2 "Using annotation %s for let binding %s\n" (Print.typ_to_string t') l.str;
                 match t.n with 
@@ -1605,7 +1605,7 @@ and tc_decl env se deserialized = match se with
       let env = Tc.Env.push_sigelt env se in 
       se, env
 
-    | Sig_bundle(ses, r, lids) -> 
+    | Sig_bundle(ses, quals, lids, r) -> 
       let env = Tc.Env.set_range env r in
       let tycons, rest = ses |> List.partition (function Sig_tycon _ -> true | _ -> false) in
       let abbrevs, rest = rest |> List.partition (function Sig_typ_abbrev _ -> true | _ -> false) in
@@ -1623,7 +1623,7 @@ and tc_decl env se deserialized = match se with
       env.solver.push msg; //Push a context in the solver to check the recursively bound definitions
       let tycons, _, _ = tc_decls false env tycons deserialized in 
       let recs, _, _ = tc_decls false env recs deserialized in
-      let env1 = Tc.Env.push_sigelt env (Sig_bundle(tycons@recs, r, lids)) in
+      let env1 = Tc.Env.push_sigelt env (Sig_bundle(tycons@recs, quals, lids, r)) in
       let rest, _, _ = tc_decls false env1 rest deserialized in
       let abbrevs = List.map2 (fun se t -> match se with 
         | Sig_tycon(lid, tps, k, [], [], [], r) -> 
@@ -1636,71 +1636,124 @@ and tc_decl env se deserialized = match se with
         | _ -> failwith (Util.format1 "(%s) Impossible" (Range.string_of_range r))) 
         recs abbrev_defs in    
       env.solver.pop msg;
-      let se = Sig_bundle(tycons@abbrevs@rest, r, lids) in 
+      let se = Sig_bundle(tycons@abbrevs@rest, quals, lids, r) in 
       let env = Tc.Env.push_sigelt env se in
       se, env
 
 and tc_decls for_export env ses deserialized = 
- let ses, exports, env = List.fold_left (fun (ses, all_exports, (env:Tc.Env.env)) se ->
-  if debug env Options.Low
-  then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
-  let env0 = env in 
-  let se, env = tc_decl env se deserialized in
-  if debug env <| Options.Other "Progress"
-  then Util.print_string (Util.format1 "Checked sigelt\t%s\n" (Print.sigelt_to_string_short se));
+ let ses, all_non_private, env = 
+  ses |> List.fold_left (fun (ses, all_non_private, (env:Tc.Env.env)) se ->
+          if debug env Options.Low then Util.print_string (Util.format1 "Checking sigelt\t%s\n" (Print.sigelt_to_string se));
+  
+          let se, env = tc_decl env se deserialized in
+          env.solver.encode_sig env se;
 
-  let exports, to_encode = 
-    [se], [se] in
+          let non_private_decls = 
+            if for_export 
+            then non_private env se
+            else [] in
 
-//    if for_export && !Options.serialize_mods
-//    then as_exports env0 se
-//    else [], [se] in   //TODO: Revise this once we add the private qualifier
+          se::ses, non_private_decls::all_non_private, env) 
+  ([], [], env) in
+  List.rev ses, List.rev all_non_private |> List.flatten, env 
 
-  to_encode |> List.iter (env.solver.encode_sig env);
-  se::ses, exports::all_exports, env) ([], [], env) ses in
-  List.rev ses, List.rev exports |> List.flatten, env 
+and non_private env se : list<sigelt> = 
+   let is_private quals = List.contains Private quals in
+   match se with 
+    | Sig_bundle(ses, quals, _, _) -> 
+      if is_private quals
+      then ses |> List.filter (function
+                | Sig_datacon _ -> false
+                | _ -> true)
+      else [se]
 
-and as_exports env se : (list<sigelt> * list<sigelt>) = match se with 
-    | Sig_val_decl(_, t, quals, _) -> 
-      let exports = if quals |> Util.for_some (function Assumption -> true | _ -> false)
-                    || (Util.is_pure_or_ghost_function t && not (Util.is_lemma t))
-                    then [se]
-                    else [] in
-      exports, [se]
+   | Sig_tycon(_, _, _, _, _, quals, r) -> 
+     if is_private quals
+     then []
+     else [se]
 
-    | Sig_let(lbs, r, l, b) -> 
-      let pure_funs, rest = snd lbs |> List.partition (fun (_, t, _) -> Util.is_pure_or_ghost_function t && not <| Util.is_lemma t) in
-      let val_decls_for_rest = rest |> List.collect (fun (x, t, _) -> match x with 
-        | Inl _ -> failwith "impossible"
-        | Inr l -> 
-          if Tc.Env.debug env Options.Low then Util.fprint1 "Exporting only the signature of %s\n" l.str; 
-          [Sig_val_decl(l, t, [Assumption], range_of_lid l)]) in
-      let ses = match pure_funs with 
-        | [] -> val_decls_for_rest
-        | _ -> val_decls_for_rest@[Sig_let((fst lbs, pure_funs), r, l, b)] in
-      let exports = ses |> List.map (Tc.Normalize.norm_sigelt env) in
-      exports, [se]
+   | Sig_typ_abbrev(l, bs, k, t, quals, r) -> 
+     if is_private quals
+     then [Sig_tycon(l, bs, k, [], [], quals, r)]
+     else [se]
 
-    | _ -> let exports = [Tc.Normalize.norm_sigelt env se] in exports, exports
+   | Sig_assume(_, _, quals, _) -> 
+     if is_private quals 
+     then []
+     else [se]
 
-let get_exports env modul decls = 
+   | Sig_val_decl(_, _, quals, _) -> 
+     if is_private quals
+     then []
+     else [se]
+
+   | Sig_main  _ -> []
+  
+   | Sig_new_effect     _ 
+   | Sig_sub_effect     _ 
+   | Sig_effect_abbrev  _
+   | Sig_pragma         _ 
+   | Sig_kind_abbrev    _ -> [se]
+
+   | Sig_datacon _ -> failwith "Impossible"
+
+   | Sig_let(lbs, r, l, _) -> 
+     let check_priv lbs = 
+        let is_priv = function 
+            | (Inr l, _, _) -> 
+            begin match Tc.Env.try_lookup_val_decl env l with 
+                    | Some (_, qs) -> List.contains Private qs
+                    | _ -> false
+            end
+            | _ -> false in
+        let some_priv = lbs |> Util.for_some is_priv in
+        if some_priv 
+        then if lbs |> Util.for_some (fun x -> is_priv x |> not)
+             then raise (Error("Some but not all functions in this mutually recursive nest are marked private", r))
+             else true
+        else false in
+
+
+     let pure_funs, rest = snd lbs |> List.partition (fun (_, t, _) -> Util.is_pure_or_ghost_function t && not <| Util.is_lemma t) in
+     begin match pure_funs, rest with 
+        | _::_, _::_ -> 
+          raise (Error("Pure functions cannot be mutually recursive with impure functions", r))
+
+        | _::_, [] -> 
+          if check_priv pure_funs 
+          then []
+          else [se]
+       
+        | [], _::_ ->
+          if check_priv rest
+          then []
+          else rest |> List.collect (fun (x, t, _) -> match x with 
+                | Inl _ -> failwith "impossible"
+                | Inr l -> [Sig_val_decl(l, t, [Assumption], range_of_lid l)])
+
+        
+        | [], [] -> failwith "Impossible"
+     end  
+
+let get_exports env modul non_private_decls = 
     let assume_vals decls = 
         decls |> List.map (function
             | Sig_val_decl(lid, t, quals, r) -> Sig_val_decl(lid, t, Assumption::quals, r)
             | s -> s) in
-    if modul.is_interface then decls
+    if modul.is_interface 
+    then non_private_decls
     else let exports = Util.find_map (Tc.Env.modules env) (fun m -> 
             if (m.is_interface && Syntax.lid_equals modul.name m.name)
             then Some (m.exports |> assume_vals)
             else None) in
          match exports with 
-            | None -> decls //TODO: filter decls to exclude the private ones, once we add private qualifiers
+            | None -> non_private_decls 
             | Some e -> e
 
 let tc_modul env modul = 
   let env = Tc.Env.set_current_module env modul.name in 
-  let ses, exports, env = tc_decls true env modul.declarations modul.is_deserialized in 
-  let exports = get_exports env modul exports in
+  let ses, non_private_decls, env = tc_decls true env modul.declarations modul.is_deserialized in 
+  let exports = get_exports env modul non_private_decls in
   let modul = {name=modul.name; declarations=ses; exports=exports; is_interface=modul.is_interface; is_deserialized=modul.is_deserialized} in 
   let env = Tc.Env.finish_module env modul in
   modul, env

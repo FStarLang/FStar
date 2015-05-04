@@ -225,7 +225,7 @@ and compile_def (d:sigelt) =
         let fields = type_vars ty.n in
         Util.smap_add constructors n.str ((match fields with []->Some(1) | _ -> None), None);
         add_fieldnames n.str fields
-    | Sig_bundle(defs, _, _) -> List.iter compile_def defs
+    | Sig_bundle(defs, _, _, _) -> List.iter compile_def defs
     | _ -> ()
 
 and js_of_exports isrec (id,typ,expr) : source_t =
@@ -239,7 +239,7 @@ and js_of_exports isrec (id,typ,expr) : source_t =
 let rec js_of_singl (p:sigelt) : list<source_t> =
     match p with
     | Sig_let((isrec, bind),range, _, _) -> List.map (js_of_exports isrec) bind
-    | Sig_bundle(defs, range, _) -> List.iter compile_def defs; []
+    | Sig_bundle(defs, _, _, range) -> List.iter compile_def defs; []
     | _ -> []
 
 let js_of_fstar (m:modul) : Ast.t =

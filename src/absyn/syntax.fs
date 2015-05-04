@@ -243,7 +243,7 @@ and sigelt =
   | Sig_assume         of lident * formula * list<qualifier> * Range.range 
   | Sig_let            of letbindings * Range.range * list<lident> * list<qualifier> (* flag indicates masked effect *)
   | Sig_main           of exp * Range.range 
-  | Sig_bundle         of list<sigelt> * Range.range * list<lident> (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *) 
+  | Sig_bundle         of list<sigelt> * list<qualifier> * list<lident> * Range.range (* an inductive type is a bundle of all mutually defined Sig_tycons and Sig_datacons *) 
   | Sig_new_effect     of eff_decl * Range.range
   | Sig_sub_effect     of sub_eff  * Range.range
   | Sig_effect_abbrev  of lident * binders * comp * list<qualifier> * Range.range

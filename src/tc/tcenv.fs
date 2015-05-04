@@ -258,10 +258,11 @@ let build_lattice env se = match se with
 
 
 let rec add_sigelt env se = match se with 
-  | Sig_bundle(ses, _, _) -> add_sigelts env ses
+  | Sig_bundle(ses, _, _, _) -> add_sigelts env ses
   | _ -> 
     let lids = lids_of_sigelt se in
     List.iter (fun l -> Util.smap_add env.sigtab l.str se) lids
+
 and add_sigelts env ses = 
   ses |> List.iter (add_sigelt env)
 
@@ -318,7 +319,7 @@ let lookup_qname env (lid:lident) : option<either<typ, sigelt>>  =
   let found = if cur_mod
               then Util.find_map env.gamma (function 
                 | Binding_lid(l,t) -> if lid_equals lid l then Some (Inl t) else None
-                | Binding_sig (Sig_bundle(ses, _, _)) -> 
+                | Binding_sig (Sig_bundle(ses, _, _, _)) -> 
                     Util.find_map ses (fun se -> 
                         if lids_of_sigelt se |> Util.for_some (lid_equals lid)
                         then Some (Inr se)
@@ -362,7 +363,7 @@ let lookup_projector env lid i =
 
 let try_lookup_val_decl env lid = 
   match lookup_qname env lid with
-    | Some (Inr (Sig_val_decl(_, t, _, _))) -> Some t
+    | Some (Inr (Sig_val_decl(_, t, q, _))) -> Some (t,q)
     | _ -> None
 
 let lookup_val_decl env lid = 
