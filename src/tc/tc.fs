@@ -207,7 +207,7 @@ let rec tc_kind env k : knd * guard_t =
               subst, targ t::args, g::guards 
             | Inr x, Inr e ->  
               let env = Env.set_expected_typ env (Util.subst_typ subst x.sort) in
-              let e, _, g = tc_total_exp env e in
+              let e, _, g = tc_ghost_exp env e in
               let subst = (Inr (x.v, e)::subst) in
               subst, varg e::args, g::guards
             | _ -> raise (Error("Ill-typed argument to kind abbreviation", Util.range_of_arg a))) 
@@ -266,7 +266,7 @@ and tc_args env args : Syntax.args * guard_t =
         let t, _, g' = tc_typ env t in 
         (Inl t, imp)::args, Tc.Rel.conj_guard g g'
     | Inr e -> 
-        let e, _, g' = tc_total_exp env e in
+        let e, _, g' = tc_ghost_exp env e in
         (Inr e, imp)::args, Tc.Rel.conj_guard g g') args ([], Rel.trivial_guard)
    
 and tc_comp env c = 
@@ -287,7 +287,7 @@ and tc_comp env c =
       let flags, guards = c.flags |> List.map (function
         | DECREASES e -> 
             let env, _ = Env.clear_expected_typ env in 
-            let e, _, g = tc_total_exp env e in 
+            let e, _, g = tc_ghost_exp env e in 
             DECREASES e, g
         | f -> f, Rel.trivial_guard) |> List.unzip in
       mk_Comp ({c with 
@@ -415,7 +415,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
                       let env' = Env.set_expected_typ env tx in 
                       let env' = {env' with use_eq=is_eq aqual} in
                       if Env.debug env Options.High then Util.fprint2 "Checking argument %s against expected type %s\n" (Print.arg_to_string actual) (Print.typ_to_string tx);
-                      let v, _, g' = tc_total_exp env' v in
+                      let v, _, g' = tc_ghost_exp env' v in
                       let actual = Inr v, imp in
                       let g' = Rel.imp_guard (Rel.guard_of_guard_formula <| Tc.Util.short_circuit_typ (Inl head) outargs) g' in
                       let subst = maybe_extend_subst subst formal actual in
@@ -1295,6 +1295,21 @@ and tc_total_exp env e : exp * typ * guard_t =
         | Some g' -> e, Util.comp_result c, Rel.conj_guard g g'
         | _ -> raise (Error(Tc.Errors.expected_pure_expression e c, e.pos))
 
+and tc_ghost_exp env e : exp * typ * guard_t = 
+  let e, c, g = tc_exp env e in
+  if is_total_lcomp c 
+  then e, c.res_typ, g
+  else let expected_c = mk_Comp {
+                 effect_name=Const.gtot_effect_lid;
+                 result_typ=c.res_typ;
+                 effect_args=[];
+                 flags=[]
+            } in 
+       let g = Rel.solve_deferred_constraints env g in
+       let c = c.comp() |> norm_c env in
+       match Tc.Rel.sub_comp env c expected_c with
+        | Some g' -> e, Util.comp_result c, Rel.conj_guard g g'
+        | _ -> raise (Error(Tc.Errors.expected_pure_expression e c, e.pos))
 
 (*****************Type-checking the signature of a module*****************************)
 

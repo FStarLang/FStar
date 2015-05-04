@@ -204,6 +204,7 @@ qualifier:
   | OPAQUE       { Opaque }
   | DEFAULT      { DefaultEffect None }
   | TOTAL        { TotalEffect }
+  | PRIVATE      { Private }
 
 qualifiers:
   |                      { [] }

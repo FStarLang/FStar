@@ -118,6 +118,7 @@ let op_ColonEq   = p2l ["ST"; "op_ColonEquals"]
 (* monad constants *)
 let pure_effect_lid = pconst "PURE"
 let tot_effect_lid  = pconst "Tot"
+let gtot_effect_lid = pconst "GTot"
 let all_effect_lid  = pconst "ALL"
 let ml_effect_lid   = pconst "ML"
 let lemma_lid       = pconst "Lemma"
