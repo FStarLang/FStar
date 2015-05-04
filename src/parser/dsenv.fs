@@ -69,8 +69,8 @@ let empty_env () = {curmodule=None;
                     iface=false;
                     admitted_iface=false}
 
-let total env = {env with default_result_effect=(fun t _ -> mk_Total t)}
-let ml env = {env with default_result_effect=Util.ml_comp}
+let default_total env = {env with default_result_effect=(fun t _ -> mk_Total t)}
+let default_ml env = {env with default_result_effect=Util.ml_comp}
 
 let range_of_binding = function
   | Binding_typ_var id

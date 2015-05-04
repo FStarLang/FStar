@@ -100,7 +100,6 @@ let op_Modulus         = pconst "op_Modulus"
 let op_And             = pconst "op_AmpAmp"
 let op_Or              = pconst "op_BarBar"
 let op_Negation        = pconst "op_Negation"
-let print_lid          = pconst "print"
 
 (* control primitives *)
 let try_with_lid       = pconst "try_with"
@@ -118,8 +117,12 @@ let op_ColonEq   = p2l ["ST"; "op_ColonEquals"]
 (* monad constants *)
 let pure_effect_lid = pconst "PURE"
 let tot_effect_lid  = pconst "Tot"
-let gtot_effect_lid = pconst "GTot"
 let all_effect_lid  = pconst "ALL"
 let ml_effect_lid   = pconst "ML"
 let lemma_lid       = pconst "Lemma"
 let decreases_lid   = pconst "decreases"
+
+let effect_GTot_lid  = pconst "GTot"
+let effect_GHOST_lid = pconst "GHOST"
+let effect_Ghost_lid = pconst "Ghost"
+

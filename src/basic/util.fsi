@@ -86,7 +86,7 @@ val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val flush_file: file_handle -> unit
 
-type proc = {m:System.Object; 
+type proc = {m:System.Object;
              outbuf:System.Text.StringBuilder;
              proc:System.Diagnostics.Process;
              killed:ref<bool>;
@@ -133,9 +133,9 @@ val split: string -> string -> Tot<list<string>>
 type either<'a,'b> =
   | Inl of 'a
   | Inr of 'b
- 
+
 val left: either<'a,'b> -> 'a
-val right: either<'a,'b> -> 'b    
+val right: either<'a,'b> -> 'b
 val find_dup: ('a -> 'a -> bool) -> list<'a> -> option<'a>
 val nodups: ('a -> 'a -> bool) -> list<'a> -> bool
 val sort_with: ('a -> 'a -> int) -> list<'a> -> list<'a>
@@ -173,7 +173,7 @@ val for_range: int -> int -> (int -> unit) -> unit
 
 (* A simple state monad *)
 type state<'s,'a> = ('s -> 'a * 's) (* not relying on definition *)
-val get: state<'s,'s> 
+val get: state<'s,'s>
 val put: 's -> state<'s,unit>
 val upd: ('s -> 's) -> state<'s,unit>
 val ret: 'a -> state<'s,'a>

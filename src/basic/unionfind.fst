@@ -22,6 +22,5 @@ assume val uvar_id: uvar<'a> -> int
 assume val fresh : 'a -> uvar<'a>
 assume val find : uvar<'a> -> 'a
 assume val change : uvar<'a> -> 'a -> unit
-assume val equivalent : uvar<'a> -> uvar<'a> -> PURE.Tot bool (* Cheating a bit? *)
+assume val equivalent : uvar<'a> -> uvar<'a> -> Tot bool (* Cheating a bit? *)
 assume val union : uvar<'a> -> uvar<'a> -> unit
-

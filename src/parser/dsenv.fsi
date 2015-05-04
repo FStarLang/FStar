@@ -62,8 +62,8 @@ val qualify: env -> ident -> lident
 val qualify_lid: env -> lident -> lident
 
 val empty_env: unit -> env
-val total: env -> env
-val ml: env -> env
+val default_total: env -> env
+val default_ml: env -> env
 type occurrence = 
   | OSig of sigelt
   | OLet of lident
@@ -79,7 +79,7 @@ val resolve_in_open_namespaces: env -> lident -> (lident -> option<'a>) -> optio
 val try_lookup_typ_name: env -> lident -> option<typ>
 val is_effect_name: env -> lident -> bool
 val try_lookup_effect_name: env -> lident -> option<lident>
-val try_lookup_effect_defn: env -> lident -> option<new_effect>
+val try_lookup_effect_defn: env -> lident -> option<eff_decl>
 val try_resolve_typ_abbrev: env -> lident -> option<typ>
 val try_lookup_id: env -> ident -> option<exp>
 val try_lookup_lid: env -> lident -> option<exp>

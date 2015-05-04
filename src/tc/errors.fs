@@ -166,6 +166,9 @@ let unexpected_non_trivial_precondition_on_term env f =
 let expected_pure_expression e c =
   format2 "Expected a pure expression;\ngot an expression \"%s\" with effect \"%s\"" (Print.exp_to_string e) (fst <| name_and_result c)
 
+let expected_ghost_expression e c =
+  format2 "Expected a ghost expression;\ngot an expression \"%s\" with effect \"%s\"" (Print.exp_to_string e) (fst <| name_and_result c)
+
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
   format2 "Expected a computation with effect %s; but it has effect %s\n" (Print.sli c1) (Print.sli c2)
 

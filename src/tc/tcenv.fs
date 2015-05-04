@@ -57,7 +57,7 @@ type edge = {
   mlift:mlift
 }
 type effects = {
-  decls: list<new_effect>;
+  decls: list<eff_decl>;
   order: list<edge>;                                       (* transitive closure of the order in the signature *)
   joins: list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
@@ -205,7 +205,7 @@ let build_lattice env se = match se with
         Print.typ_to_string (l arg wp) in
     let order = edge::env.effects.order in
       
-    let ms = env.effects.decls |> List.map (fun (e:new_effect) -> e.mname) in
+    let ms = env.effects.decls |> List.map (fun (e:eff_decl) -> e.mname) in
 
     let find_edge order (i, j) = 
       if lid_equals i j

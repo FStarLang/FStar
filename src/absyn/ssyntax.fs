@@ -462,17 +462,17 @@ let deserialize_monad_abbrev (reader:Reader) :monad_abbrev =
       parms = deserialize_binders reader;
       def = deserialize_typ reader }
 
-let serialize_sub_effect (writer:Writer) (ast:sub_effect) :unit =
+let serialize_sub_effect (writer:Writer) (ast:sub_eff) :unit =
     serialize_lident writer ast.source;
     serialize_lident writer ast.target;
     serialize_typ writer ast.lift
 
-let deserialize_sub_effect (reader:Reader) :sub_effect = 
+let deserialize_sub_effect (reader:Reader) : sub_eff  = 
     { source = deserialize_lident reader;
       target = deserialize_lident reader;
       lift = deserialize_typ reader }
 
-let rec serialize_new_effect (writer:Writer) (ast:new_effect) :unit =
+let rec serialize_new_effect (writer:Writer) (ast:eff_decl) :unit =
     serialize_lident writer ast.mname;
     serialize_list writer serialize_binder ast.binders;
     serialize_list writer serialize_qualifier ast.qualifiers;
@@ -543,7 +543,7 @@ and serialize_sigelt (writer:Writer) (ast:sigelt) :unit =
         serialize_list writer serialize_binder binders;
         serialize_knd writer k
     
-let rec deserialize_new_effect (reader:Reader) :new_effect =
+let rec deserialize_new_effect (reader:Reader) :eff_decl =
     { 
       mname = deserialize_lident reader;
       binders= deserialize_list reader deserialize_binder;

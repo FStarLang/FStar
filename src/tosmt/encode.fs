@@ -411,7 +411,7 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
 
       | Typ_fun(binders, res) -> 
         (* TODO: handling non-total functions *)
-        if   Absyn.Util.is_total_comp res
+        if   Absyn.Util.is_tot_or_gtot_comp res
         then let vars, guards, env', decls, _ = encode_binders None binders env in 
              let fsym = varops.fresh "f", Term_sort in
              let f = mkFreeV fsym in
@@ -626,7 +626,7 @@ and encode_exp (e:exp) (env:env_t) : (term
         begin match !e.tk with 
             | None -> fallback ()
             | Some tfun -> 
-            if not <| Util.is_pure_function tfun
+            if not <| Util.is_pure_or_ghost_function tfun
             then fallback ()
             else let tfun = whnf env tfun |> Util.compress_typ in
                  begin match tfun.n with 
@@ -1156,10 +1156,10 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
     
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) = 
     let should_skip (l:lident) = 
-        l.str.StartsWith("Prims.pure_")
-        || l.str.StartsWith("Prims.ex_")
-        || l.str.StartsWith("Prims.st_")
-        || l.str.StartsWith("Prims.all_") in
+        Util.starts_with l.str "Prims.pure_"
+        || Util.starts_with l.str "Prims.ex_"
+        || Util.starts_with l.str "Prims.st_"
+        || Util.starts_with l.str "Prims.all_" in
         
     match se with
      | Sig_typ_abbrev(_, _, _, _, [Effect], _) -> [], env
@@ -1468,7 +1468,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                  let decls = List.rev decls |> List.flatten in
                  let typs = List.rev typs in
                  if quals |> Util.for_some (function HasMaskedEffect -> true | _ -> false)
-                 || typs  |> Util.for_some (fun t -> Util.is_lemma t || not <| Util.is_pure_function t) 
+                 || typs  |> Util.for_some (fun t -> Util.is_lemma t || not <| Util.is_pure_or_ghost_function t) 
                  then decls, env
                  else if not is_rec
                  then match bindings, typs, toks with 
@@ -1550,7 +1550,7 @@ and encode_smt_lemma env lid t =
     decls@[Term.Assume(form, Some ("Lemma: " ^ lid.str))]
 
 and encode_free_var env lid tt t_norm quals = 
-    if not <| Util.is_pure_function t_norm || Util.is_lemma t_norm
+    if not <| Util.is_pure_or_ghost_function t_norm || Util.is_lemma t_norm
     then let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in
          let arg_sorts = match t_norm.n with 
             | Typ_fun(binders, _) -> binders |> List.map (function (Inl _, _) -> Type_sort | _ -> Term_sort) 

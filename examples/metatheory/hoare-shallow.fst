@@ -28,6 +28,14 @@ val _while: p:Asrt -> q:(bool -> Asrt)
 let rec _while guard body =
   if guard () then (body (); _while guard body)
 
+
+val _while2: p:Asrt -> q:(bool -> Asrt)
+        -> =guard:exp bool p q
+        -> =body:(unit -> com unit (fun h -> p h /\ q true h) p)
+        -> com unit p (fun h -> p h /\ q false h)
+let rec _while2 guard body =
+  if guard () then (body (); _while guard body)
+
 val cond: p:Asrt -> q:(bool -> Asrt) -> r:Asrt -> s:Asrt
       -> =guard:exp bool p q
       -> =_then:(unit -> com unit (fun h -> q true h) r)

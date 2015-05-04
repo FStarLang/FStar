@@ -823,7 +823,7 @@ and desugar_typ env (top:term) : typ =
           let cod = desugar_comp top.range true env t in 
           wpos <| mk_Typ_fun(List.rev bs, cod)
         | hd::tl -> 
-          let mlenv = ml env in 
+          let mlenv = default_ml env in 
           let bb = desugar_binder mlenv hd in
           let b, env = as_binder env hd.aqual bb in
           aux env (b::bs) tl in
@@ -960,7 +960,7 @@ and desugar_kind env k : knd =
         | [] ->   
           pos <| mk_Kind_arrow(List.rev bs, desugar_kind env k)
         | hd::tl -> 
-          let b, env = desugar_binder (ml env) hd |> as_binder env hd.aqual in
+          let b, env = desugar_binder (default_ml env) hd |> as_binder env hd.aqual in
           aux env (b::bs) tl in
       aux env [] bs
 
@@ -1306,7 +1306,7 @@ let rec desugar_tycon env rng quals tcs : (env_t * sigelts) =
                   else match topt with 
                     | None -> failwith "Impossible"
                     | Some t -> t in
-                let t = desugar_typ (total env_tps) (close env_tps t) in
+                let t = desugar_typ (default_total env_tps) (close env_tps t) in
                 let name = qualify env id in
                 let quals = tags |> List.collect (function 
                     | RecordType fns -> [RecordConstructor fns]

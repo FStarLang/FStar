@@ -162,7 +162,7 @@ BOOT_BASICFILES=bytes.fst platform.fsi util.fsi getoptsimple.fst options.fs rang
 BOOT_BASIC=$(addprefix basic/, $(BOOT_BASICFILES))
 BOOT_SYNTAXFILES=syntax.fsi syntax.fs const.fs visit.fs util.fs print.fs ssyntax.fs
 BOOT_SYNTAX=$(addprefix absyn/, $(BOOT_SYNTAXFILES))
-BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fst driver.fs
+BOOT_PARSERFILES=ast.fs dsenv.fsi dsenv.fs desugar.fsi desugar.fs parse.fst lexhelp.fs parseit.fsi driver.fs
 BOOT_PARSER=$(addprefix parser/, $(BOOT_PARSERFILES))
 BOOT_TCFILES=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs
 BOOT_TC=$(addprefix tc/, $(BOOT_TCFILES))
@@ -176,7 +176,7 @@ BOOT_MAIN=fstar.fs
 BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_BACKEND)
 
 boot: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --debug yes --fs_typ_app --lax $(FSTAROPTS) --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^
+	$(RUNTIME) ../bin/fstar.exe --debug yes --fs_typ_app --lax $(FSTAROPTS) --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform --admit_fsi Microsoft.FStar.Parser.ParseIt $^
 
 ocaml: $(BOOT_ALL)
 	$(RUNTIME) ../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml --admit_fsi Microsoft.FStar.Util --admit_fsi Microsoft.FStar.Platform $^

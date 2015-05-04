@@ -507,6 +507,14 @@ let ml_comp t r =
     
 let total_comp t r = mk_Total t
 
+let gtotal_comp t = 
+    mk_Comp ({
+        effect_name=Const.effect_GTot_lid;
+        result_typ=t;
+        effect_args=[];
+        flags=[SOMETRIVIAL]
+   }) 
+
 let comp_set_flags (c:comp) f = match c.n with 
   | Total _ -> c
   | Comp ct -> {c with n=Comp ({ct with flags=f})}
@@ -515,22 +523,53 @@ let comp_flags c = match c.n with
   | Total _ -> [TOTAL]
   | Comp ct -> ct.flags
 
-let is_total_comp c = comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
+let comp_effect_name c = match c.n with 
+    | Comp c  -> c.effect_name
+    | Total _ -> Const.tot_effect_lid 
+
+let comp_to_comp_typ (c:comp) : comp_typ = 
+    match c.n with
+    | Comp c -> c
+    | Total t -> {effect_name=Const.tot_effect_lid; result_typ=t; effect_args=[]; flags=[TOTAL]} 
+        
+let is_total_comp c = 
+    comp_flags c |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
+
 let is_total_lcomp c = lid_equals c.eff_name Const.tot_effect_lid || c.cflags |> Util.for_some (function TOTAL | RETURN -> true | _ -> false)
+
 let is_partial_return c = comp_flags c |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
+
 let is_lcomp_partial_return c = c.cflags |> Util.for_some (function RETURN | PARTIAL_RETURN -> true | _ -> false)
+
+let is_tot_or_gtot_comp c = 
+    is_total_comp c
+    || lid_equals Const.effect_GTot_lid (comp_effect_name c)
+
 let is_pure_comp c = match c.n with 
     | Total _ -> true
-    | Comp ct -> is_total_comp c 
+    | Comp ct -> is_tot_or_gtot_comp c 
                  || Util.starts_with ct.effect_name.str "Prims.PURE"
+                 || Util.starts_with ct.effect_name.str "Prims.Pure"
                  || ct.flags |> Util.for_some (function LEMMA -> true | _ -> false)
+
+let is_ghost_effect l = 
+     lid_equals Const.effect_GTot_lid l
+    || lid_equals Const.effect_GHOST_lid l
+    || lid_equals Const.effect_Ghost_lid l
+    
+let is_pure_or_ghost_comp c = is_pure_comp c || is_ghost_effect (comp_effect_name c)
+
 let is_pure_lcomp lc = 
     is_total_lcomp lc
+    || Util.starts_with lc.eff_name.str "Prims.Pure"
     || Util.starts_with lc.eff_name.str "Prims.PURE"
     || lc.cflags |> Util.for_some (function LEMMA -> true | _ -> false)
-                 
-let is_pure_function t = match (compress_typ t).n with 
-    | Typ_fun(_, c) -> is_pure_comp c
+
+let is_pure_or_ghost_lcomp lc = 
+    is_pure_lcomp lc || is_ghost_effect lc.eff_name
+        
+let is_pure_or_ghost_function t = match (compress_typ t).n with 
+    | Typ_fun(_, c) -> is_pure_or_ghost_comp c
     | _ -> true
 
 let is_lemma t =  match (compress_typ t).n with 
@@ -1373,9 +1412,5 @@ let destruct_typ_as_formula f : option<connective> =
         | Some b -> Some b
         | None -> destruct_q_conn phi
 
-let comp_to_comp_typ (c:comp) : comp_typ = 
-    match c.n with
-        | Comp c -> c
-        | Total t -> {effect_name=Const.tot_effect_lid; result_typ=t; effect_args=[]; flags=[TOTAL]} 
-        
+
 

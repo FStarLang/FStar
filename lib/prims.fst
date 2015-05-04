@@ -93,6 +93,16 @@ effect Pure (a:Type) (pre:PurePre) (post:PurePost a) =
              (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)   (* WLP *)
 effect Admit (a:Type) = PURE a (fun (p:PurePost a) -> True) (fun (p:PurePost a) -> True)
 default effect Tot (a:Type) = PURE a (pure_null_wp a) (pure_null_wp a)
+
+total new_effect GHOST = PURE
+sub_effect
+  PURE ~> GHOST = fun (a:Type) (wp:PureWP a) -> wp
+default effect GTot (a:Type) = GHOST a (pure_null_wp a) (pure_null_wp a)
+effect Ghost (a:Type) (pre:Type) (post:PurePost a) =
+       GHOST a
+           (fun (p:PurePost a) -> pre /\ (forall (x:a). post x ==> p x))
+           (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
+
 logic type b2t (b:bool) = b==true
 assume type unit
 assume type int
@@ -106,6 +116,7 @@ assume type ref : Type -> Type
 assume logic type LBL : string -> Type -> Type
 assume type exn
 assume type uint8
+assume type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
 type byte = uint8
 type double = float
 type int32 = int
@@ -129,7 +140,6 @@ effect Lemma (a:Type) (pre:Type) (post:Type) (pats:list pattern) =
      Lemma phi                 for   Lemma (requires True) phi []
      Lemma t1..tn              for   Lemma unit t1..tn
 *)
-
 type option (a:Type) =
   | None : option a
   | Some : v:a -> option a

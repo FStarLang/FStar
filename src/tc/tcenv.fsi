@@ -39,7 +39,7 @@ type edge = {
   mlift:typ -> typ -> typ;
 }
 type effects = {
-  decls: list<new_effect>;
+  decls: list<eff_decl>;
   order: list<edge>;                                     (* transitive closure of the order in the signature *)
   joins: list<(lident * lident * lident * mlift * mlift)>; (* least upper bounds *)
 }
@@ -130,6 +130,6 @@ val lidents : env -> list<lident>
 (* operations on monads *)
 val join: env -> lident -> lident -> lident * mlift * mlift
 val monad_leq: env -> lident -> lident -> option<edge>
-val effect_decl_opt: env -> lident -> option<new_effect>
-val get_effect_decl: env -> lident -> new_effect
+val effect_decl_opt: env -> lident -> option<eff_decl>
+val get_effect_decl: env -> lident -> eff_decl
 val wp_signature: env -> lident -> (btvar * knd)

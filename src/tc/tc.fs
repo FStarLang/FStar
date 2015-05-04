@@ -1099,7 +1099,7 @@ and tc_exp env e : exp * lcomp * guard_t =
         then (if Env.debug env <| Options.High then Util.fprint1 "Type %s is marked as no-generalize\n" (Print.typ_to_string t); 
               t) (* t is already checked *) 
         else tc_typ_check_trivial ({env0 with check_uvars=true}) t ktype |> norm_t env in
-      let env = if Util.is_pure_function t && !Options.verify (* store the let rec names separately for termination checks *)
+      let env = if Util.is_pure_or_ghost_function t && !Options.verify (* store the let rec names separately for termination checks *)
                 then {env with letrecs=(x,t)::env.letrecs}
                 else Env.push_local_binding env (binding_of_lb x t) in
       (x, t, e)::xts, env) ([],env)  in 
@@ -1299,17 +1299,12 @@ and tc_ghost_exp env e : exp * typ * guard_t =
   let e, c, g = tc_exp env e in
   if is_total_lcomp c 
   then e, c.res_typ, g
-  else let expected_c = mk_Comp {
-                 effect_name=Const.gtot_effect_lid;
-                 result_typ=c.res_typ;
-                 effect_args=[];
-                 flags=[]
-            } in 
+  else let expected_c = Util.gtotal_comp c.res_typ in
        let g = Rel.solve_deferred_constraints env g in
        let c = c.comp() |> norm_c env in
        match Tc.Rel.sub_comp env c expected_c with
         | Some g' -> e, Util.comp_result c, Rel.conj_guard g g'
-        | _ -> raise (Error(Tc.Errors.expected_pure_expression e c, e.pos))
+        | _ -> raise (Error(Tc.Errors.expected_ghost_expression e c, e.pos))
 
 (*****************Type-checking the signature of a module*****************************)
 
@@ -1324,7 +1319,7 @@ let a_kwp_a env m s = match s.n with
                 (Inl _, _)], _) -> a, wp.sort
   | _ -> raise (Error(Tc.Errors.unexpected_signature_for_monad env m s, range_of_lid m))
 
-let rec tc_new_effect env (m:Syntax.new_effect)  =  
+let rec tc_eff_decl env (m:Syntax.eff_decl)  =  
   let binders, env, g = tc_binders env m.binders in
   Tc.Util.discharge_guard env g;
   let mk = tc_kind_trivial env m.signature in 
@@ -1440,7 +1435,7 @@ and tc_decl env se deserialized = match se with
         end
 
     | Sig_new_effect(ne, r) -> 
-      let ne = tc_new_effect env ne in 
+      let ne = tc_eff_decl env ne in 
       let se = Sig_new_effect(ne, r) in
       let env = Tc.Env.push_sigelt env se in 
       se, env
@@ -1520,7 +1515,7 @@ and tc_decl env se deserialized = match se with
         | Inl _ -> ()
         | Inr x -> 
           let t = Normalize.norm_typ [Normalize.Beta; Normalize.DeltaHard] env x.sort in
-          if Util.is_function_typ t && Util.is_pure_function t 
+          if Util.is_function_typ t && Util.is_pure_or_ghost_function t 
           then let formals, _ = Util.function_formals t |> Util.must in
                formals |> List.iter (fun (a, _) -> match a with
                 | Inl _ -> ()
@@ -1668,13 +1663,13 @@ and tc_decls for_export env ses deserialized =
 and as_exports env se : (list<sigelt> * list<sigelt>) = match se with 
     | Sig_val_decl(_, t, quals, _) -> 
       let exports = if quals |> Util.for_some (function Assumption -> true | _ -> false)
-                    || (Util.is_pure_function t && not (Util.is_lemma t))
+                    || (Util.is_pure_or_ghost_function t && not (Util.is_lemma t))
                     then [se]
                     else [] in
       exports, [se]
 
     | Sig_let(lbs, r, l, b) -> 
-      let pure_funs, rest = snd lbs |> List.partition (fun (_, t, _) -> Util.is_pure_function t && not <| Util.is_lemma t) in
+      let pure_funs, rest = snd lbs |> List.partition (fun (_, t, _) -> Util.is_pure_or_ghost_function t && not <| Util.is_lemma t) in
       let val_decls_for_rest = rest |> List.collect (fun (x, t, _) -> match x with 
         | Inl _ -> failwith "impossible"
         | Inr l -> 
