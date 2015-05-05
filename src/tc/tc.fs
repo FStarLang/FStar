@@ -1662,9 +1662,12 @@ and non_private env se : list<sigelt> =
    match se with 
     | Sig_bundle(ses, quals, _, _) -> 
       if is_private quals
-      then ses |> List.filter (function
+      then let ses = ses |> List.filter (function
                 | Sig_datacon _ -> false
-                | _ -> true)
+                | _ -> true) in
+           ses |> List.map (function 
+            | Sig_tycon(lid, bs, k, mutuals, datas, quals, r) -> Sig_tycon(lid, bs, k, [], [], Assumption::quals, r)
+            | se -> se)
       else [se]
 
    | Sig_tycon(_, _, _, _, _, quals, r) -> 
@@ -1674,7 +1677,7 @@ and non_private env se : list<sigelt> =
 
    | Sig_typ_abbrev(l, bs, k, t, quals, r) -> 
      if is_private quals
-     then [Sig_tycon(l, bs, k, [], [], quals, r)]
+     then [Sig_tycon(l, bs, k, [], [], Assumption::quals, r)]
      else [se]
 
    | Sig_assume(_, _, quals, _) -> 

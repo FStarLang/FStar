@@ -86,7 +86,7 @@ and term = {tm:term'; hash:string; freevars:Syntax.memo<fvs>}
 and fv = string * sort
 and fvs = list<fv>
 
-let fv_eq (x, _) (y, _) = x=y
+let fv_eq (x:fv) (y:fv) = fst x = fst y
 let fv_sort x = snd x
 let freevar_eq x y = match x.tm, y.tm with
     | FreeV x, FreeV y -> fv_eq x y

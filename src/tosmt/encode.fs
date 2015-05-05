@@ -229,6 +229,12 @@ let push_free_tvar env (x:lident) fname ftok =
 let lookup_free_tvar env a = lookup_tlid env a.v |> snd
 let lookup_free_tvar_name env a = lookup_tlid env a.v |> fst
 
+let tok_of_name env nm = 
+    Util.find_map env.bindings (function 
+        | Binding_fvar(_, nm', tok, _) 
+        | Binding_ftvar(_, nm', tok) when (nm=nm') -> Some tok
+        | _ -> None)
+
 (* </Environment> *)
 (*---------------------------------------------------------------------------------*)
 (* <Utilities> *)
@@ -285,6 +291,31 @@ let mk_ApplyT_args t args =
     args |> List.fold_left (fun out arg -> match arg with 
             | Inl t -> mk_ApplyTT out t
             | Inr e -> mk_ApplyTE out e) t
+let is_app = function 
+    | Var "ApplyTT"
+    | Var "ApplyTE"
+    | Var "ApplyET"
+    | Var "ApplyEE" -> true
+    | _ -> false
+
+let is_eta env vars t = 
+    let rec aux t xs = match t.tm, xs with 
+        | App(app, [f; {tm=FreeV y}]), x::xs 
+          when (is_app app && Term.fv_eq x y) -> aux f xs
+        | App(Var f, args), _ -> 
+          if List.length args = List.length vars
+          then tok_of_name env f 
+          else None
+        | _, [] -> 
+          let fvs = Term.free_variables t in
+          if fvs |> List.for_all (fun fv -> not (Util.for_some (fv_eq fv) vars)) //t doesn't contain any of the bound variables
+          then Some t
+          else None
+        | _ -> None in
+  aux t (List.rev vars)
+
+            
+
 (* </Utilities> *)
 
 (**********************************************************************************)
@@ -561,23 +592,29 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
               mkApp(t, List.map mkFreeV cvars), []
 
             | None -> 
-              let cvar_sorts = List.map snd cvars in
-              let tsym = varops.fresh "Typ_lam" in
-              let tdecl = Term.DeclFun(tsym, cvar_sorts, Type_sort, None) in
-              let t = Term.mkApp(tsym, List.map mkFreeV cvars) in
-              let app = mk_ApplyT t vars in
+                   //First, try to collapse needless eta-expansions
+              begin match is_eta env vars body with 
+                | Some head -> head, []
+                | None -> 
+                  //Otherwise, introduce a new function symbol 
+                  let cvar_sorts = List.map snd cvars in
+                  let tsym = varops.fresh "Typ_lam" in
+                  let tdecl = Term.DeclFun(tsym, cvar_sorts, Type_sort, None) in
+                  let t = Term.mkApp(tsym, List.map mkFreeV cvars) in
+                  let app = mk_ApplyT t vars in
 
-              let interp = Term.Assume(mkForall([app], vars@cvars, mkImp(mk_and_l guards, mkEq(app,body))), 
-                                       Some "Typ_lam interpretation") in
+                  let interp = Term.Assume(mkForall([app], vars@cvars, mkImp(mk_and_l guards, mkEq(app,body))), 
+                                           Some "Typ_lam interpretation") in
         
-              let kinding =    
-                let ktm, decls'' = encode_knd (Tc.Recheck.recompute_kind t0) env t in
-                decls''@[Term.Assume(mkForall([t], cvars, ktm), Some "Typ_lam kinding")] in
+                  let kinding =    
+                    let ktm, decls'' = encode_knd (Tc.Recheck.recompute_kind t0) env t in
+                    decls''@[Term.Assume(mkForall([t], cvars, ktm), Some "Typ_lam kinding")] in
 
-              let t_decls = decls@decls'@tdecl::interp::kinding in 
+                  let t_decls = decls@decls'@tdecl::interp::kinding in 
 
-              Util.smap_add env.cache tkey.hash (tsym, cvar_sorts, t_decls);
-              t, t_decls
+                  Util.smap_add env.cache tkey.hash (tsym, cvar_sorts, t_decls);
+                  t, t_decls
+             end
         end
 
       | Typ_ascribed(t, _) -> 
@@ -661,25 +698,28 @@ and encode_exp (e:exp) (env:env_t) : (term
                                   Term.mkApp(t, List.map mkFreeV cvars), []
 
                                 | None -> 
+                                  begin match is_eta env vars body with 
+                                    | Some t -> t, []
+                                    | None -> 
+                                      let cvar_sorts = List.map snd cvars in
+                                      let fsym = varops.fresh "Exp_abs" in
+                                      let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
+                                      let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
+                                      let app = mk_ApplyE f vars in
 
-                                  let cvar_sorts = List.map snd cvars in
-                                  let fsym = varops.fresh "Exp_abs" in
-                                  let fdecl = Term.DeclFun(fsym, cvar_sorts, Term_sort, None) in
-                                  let f = Term.mkApp(fsym, List.map mkFreeV cvars) in
-                                  let app = mk_ApplyE f vars in
-
-                                  let f_has_t, decls'' = encode_typ_pred' None tfun env f in
-                                  let typing_f = Term.Assume(Term.mkForall([f], cvars, f_has_t), 
-                                                            Some (fsym ^ " typing")) in 
+                                      let f_has_t, decls'' = encode_typ_pred' None tfun env f in
+                                      let typing_f = Term.Assume(Term.mkForall([f], cvars, f_has_t), 
+                                                                Some (fsym ^ " typing")) in 
                          
-                                  let interp_f = Term.Assume(Term.mkForall([app], vars@cvars, mkImp(Term.mk_IsTyped app, mkEq(app, body))), 
-                                                            Some (fsym ^ " interpretation")) in
+                                      let interp_f = Term.Assume(Term.mkForall([app], vars@cvars, mkImp(Term.mk_IsTyped app, mkEq(app, body))), 
+                                                                Some (fsym ^ " interpretation")) in
 
-                                  let f_decls = decls@decls'@(fdecl::decls'')@[typing_f;interp_f] in
+                                      let f_decls = decls@decls'@(fdecl::decls'')@[typing_f;interp_f] in
                               
-                                  Util.smap_add env.cache tkey.hash (fsym, cvar_sorts, f_decls);
+                                      Util.smap_add env.cache tkey.hash (fsym, cvar_sorts, f_decls);
 
-                                  f, f_decls
+                                      f, f_decls
+                                end
                             end
 
                   | _ -> failwith "Impossible"
@@ -1170,17 +1210,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
        let xx = ("x", Term_sort) in
        let x = mkFreeV xx in
        let valid_b2t_x = mk_Valid(Term.mkApp("Prims.b2t", [x])) in
-//       (assert (forall ((@x Term))
-//                (! (= (Valid (Prims.b2t @x))
-//                      (and (HasType @x Prims.bool)
-//                           (= BoxBool_proj_0 @x)))
-//                   
-//                   :pattern ((Valid (Prims.b2t @x))))))
        let decls = [Term.DeclFun(tname, [Term_sort], Type_sort, None);
                     Term.Assume(Term.mkForall([valid_b2t_x], [xx], 
-                                              Term.mkEq(valid_b2t_x, 
-                                                        Term.mkAnd(Term.mk_HasType x (Term.mkFreeV("Prims.bool", Type_sort)), 
-                                                                   Term.mkApp("BoxBool_proj_0", [x])))),                                     
+                                              Term.mkEq(valid_b2t_x, Term.mkApp("BoxBool_proj_0", [x]))),                                     
                                 Some "b2t def")] in
        decls, env
       
@@ -1239,7 +1271,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         decl::primitive_type_axioms t tname tsym, push_free_tvar env t tname tsym
 
      | Sig_tycon(t, tps, k, _, datas, quals, _) -> 
-        let is_logical = quals |> Util.for_some (function Logic -> true | _ -> false) in
+        let is_logical = quals |> Util.for_some (function Logic | Assumption -> true | _ -> false) in
         let constructor_or_logic_type_decl c = 
             if is_logical
             then let name, args, _, _ = c in 

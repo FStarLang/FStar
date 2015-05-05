@@ -57,14 +57,24 @@ let read_build_config (filename:string) =
         else let name, value = nv.(0), nv.(1) in
              match name with 
                 | "options" -> set_options value
-                | "other-files" -> set_filenames (value.Split([|' '|]) |> Array.map (fun f -> f.Trim()) |> List.ofArray)
+                | "other-files" -> 
+                    set_filenames (Util.split value " " 
+                                    |> List.collect 
+                                        (fun x ->
+                                        let x = Util.trim_string x in
+                                        if String.length x = 0
+                                        then []
+                                        else [x]))
                 | "variables" -> 
                   let vars = value.Split([|' '|]) in 
                   vars |> Array.iter (fun v -> 
-                    let xv = v.Split([|'='|]) in
-                    if xv.Length <> 2
-                    then fail ("could not parse variable: " ^ v)
-                    else set_variable (xv.(0).Trim(), xv.(1).Trim()))
+                    let v = Util.trim_string v in
+                    if String.length v = 0
+                    then ()
+                    else let xv = v.Split([|'='|]) in
+                         if xv.Length <> 2
+                         then fail ("could not parse variable: " ^ v)
+                         else set_variable (xv.(0).Trim(), xv.(1).Trim()))
                 | _ -> fail ("unexpected config option: " ^ name));
 
         begin match !options with 

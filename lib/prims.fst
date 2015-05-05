@@ -103,20 +103,19 @@ effect Ghost (a:Type) (pre:Type) (post:PurePost a) =
            (fun (p:PurePost a) -> pre /\ (forall (x:a). post x ==> p x))
            (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
 
-logic type b2t (b:bool) = b==true
-assume type unit
-assume type int
-assume type char
-assume type uint16
-assume type int64
-assume type float
-assume type string
-assume type array : Type -> Type
-assume type ref : Type -> Type
-assume logic type LBL : string -> Type -> Type
-assume type exn
-assume type uint8
-assume type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
+opaque logic type b2t (b:bool) = b==true
+type unit
+type int
+type char
+type uint16
+type int64
+type float
+type string
+type array : Type -> Type
+type ref : Type -> Type
+type exn
+type uint8
+type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
 type byte = uint8
 type double = float
 type int32 = int
@@ -408,7 +407,7 @@ default effect ML (a:Type) =
 sub_effect
   PURE  ~> DIV   = fun (a:Type) (wp:PureWP a) (p:PurePost a) -> wp (fun a -> p a)
 sub_effect
-  PURE   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:heap) -> wp (fun a -> p a h)
+  DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:heap) -> wp (fun a -> p a h)
 sub_effect
   STATE ~> ALL   = fun (a:Type) (wp:STWP a)   (p:AllPost a) -> wp (fun a -> p (V a))
 sub_effect

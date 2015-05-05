@@ -73,6 +73,7 @@ and term = {tm:term'; hash:string; freevars:Syntax.memo<fvs>}
 and fv = string * sort
 and fvs = list<fv>
 
+val fv_eq : fv -> fv -> bool
 val fv_of_term : term -> fv
 val free_variables: term -> fvs
 val mkTrue : term
