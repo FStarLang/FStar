@@ -115,6 +115,9 @@ val is_erenaming : s:esub -> Tot (n:int{(  erenaming s  ==> n=0) /\
                                         (~(erenaming s) ==> n=1)})
 let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
 
+val esub_id : esub 
+let esub_id = fun x -> EVar x
+
 val esub_inc_above : nat -> var -> Tot exp
 let esub_inc_above x y = if y<x then EVar y else EVar (y+1)
 
@@ -128,7 +131,7 @@ let omap f o =
   match o with
   | Some x -> Some (f x)
   | None   -> None
-
+(*
 val eesubst : s:esub -> e:exp -> Pure exp (requires True)
       (ensures (fun e' -> erenaming s /\ is_EVar e ==> is_EVar e'))
       (decreases %[is_evar e; is_erenaming s; e])
@@ -223,34 +226,10 @@ val tesubst_elam_hoist : t:typ -> tbody:typ -> s:esub -> Lemma (requires True)
       (ensures (tesubst s (TELam t tbody) =
                 TELam (tesubst s t) (tesubst (esub_lam s) tbody)))
 let tesubst_elam_hoist t tbody s = ()
-
-(* Beta substitution *)
-val esub_beta_gen : var -> exp -> Tot esub
-let esub_beta_gen x e = fun y -> if y < x then (EVar y)
-                                 else if y = x then e
-                                 else (EVar (y-1))
-
-val eesubst_beta_gen : var -> exp -> exp -> Tot exp
-let eesubst_beta_gen x e' = eesubst (esub_beta_gen x e')
-
-let eesubst_beta = eesubst_beta_gen 0
-
-val tesubst_beta_gen : var -> exp -> typ -> Tot typ
-let tesubst_beta_gen x e = tesubst (esub_beta_gen x e)
-
-let tesubst_beta = tesubst_beta_gen 0
-
-val kesubst_beta_gen : var -> exp -> knd -> Tot knd
-let kesubst_beta_gen x e = kesubst (esub_beta_gen x e)
-
-let kesubst_beta = kesubst_beta_gen 0
-
-let eesh = eesubst esub_inc
-let tesh = tesubst esub_inc
-let kesh = kesubst esub_inc
-
+*)
+(*
 assume val teappears_in : var -> typ -> Tot bool
-
+*)
 (****************************)
 (*   Type   Substitutions   *)
 (****************************)
@@ -265,11 +244,14 @@ let is_trenaming s = (if excluded_middle (trenaming s) then 0 else 1)
 val tsub_inc_above : nat -> var -> Tot typ
 let tsub_inc_above x y = if y<x then TVar y else TVar (y+1)
 
+val tsub_id :tsub
+let tsub_id = fun x -> TVar x
+
 val tsub_inc : var -> Tot typ
 let tsub_inc = tsub_inc_above 0
 
 let is_tvar (t:typ) : int = if is_TVar t then 0 else 1
-
+(*
 val etsubst : s:tsub -> e:exp -> Tot exp
       (decreases %[1; is_trenaming s; e])
 val ttsubst : s:tsub -> t:typ -> Pure typ (requires True)
@@ -321,7 +303,6 @@ and ktsubst s k =
      KKArr (ktsubst s k) (ktsubst tsub_lam kbody)
   | KTArr t kbody ->
      KTArr (ttsubst s t) (ktsubst s kbody)
-
 val tsub_lam: s:tsub -> Tot tsub
 let tsub_lam s y =
   if y = 0 then TVar y
@@ -345,8 +326,168 @@ val ttsubst_tlam_hoist : k:knd -> tbody:typ -> s:tsub -> Lemma (requires True)
                 TTLam (ktsubst s k) (ttsubst (tsub_lam s) tbody)))
 
 let ttsubst_tlam_hoist t e s = ()
+*)
 
-(* Beta substitution *)
+(********************************)
+(* Global substitution function *)
+(********************************)
+
+(*The projectors for pairs were not working well with substitutions*)
+type sub = 
+| Sub : es:esub -> ts:tsub -> sub
+
+opaque type renaming (s:sub) = (erenaming (Sub.es s))  /\ (trenaming (Sub.ts s))
+
+val is_renaming : s:sub -> Tot (n:int{(  renaming s  ==> n=0) /\
+                                       (~(renaming s) ==> n=1)})
+let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
+
+val esubst : s:sub -> e:exp -> Pure exp (requires True)
+      (ensures (fun e' -> renaming s /\ is_EVar e ==> is_EVar e'))
+      (decreases %[is_evar e; is_renaming s;1; e])
+val tsubst : s:sub -> t:typ -> Pure typ (requires True)
+      (ensures (fun t' -> renaming s /\ is_TVar t ==> is_TVar t'))
+      (decreases %[is_tvar t; is_renaming s;1; t])
+val ksubst : s:sub -> k:knd -> Tot knd
+      (decreases %[1; is_renaming s; 1; k])
+val esub_elam: s:sub -> x:var -> Tot(e:exp{renaming s ==> is_EVar e})
+      (decreases %[1; is_renaming s; 0; EVar 0])
+val tsub_elam : s:sub -> a:var -> Tot(t:typ{renaming s ==> is_TVar t}) 
+      (decreases %[1; is_renaming s; 0; TVar 0])
+val esub_tlam: s:sub -> x:var -> Tot(e:exp{renaming s ==> is_EVar e})
+      (decreases %[1; is_renaming s; 0; EVar 0])
+val tsub_tlam : s:sub -> a:var -> Tot(t:typ{renaming s ==> is_TVar t}) 
+      (decreases %[1; is_renaming s; 0; TVar 0])
+val esub_elam2: s:sub -> x:var -> Tot(e:exp{renaming s ==> is_EVar e})
+      (decreases %[1; is_renaming s; 0; EVar 0])
+val tsub_elam2 : s:sub -> a:var -> Tot(t:typ{renaming s ==> is_TVar t}) 
+      (decreases %[1; is_renaming s; 0; TVar 0])
+
+let rec esub_elam s =
+fun x -> if x = 0 then EVar x
+         else esubst (Sub esub_inc tsub_id) (Sub.es s (x-1)) 
+
+and tsub_elam s =
+fun a -> tsubst (Sub esub_inc tsub_id) (Sub.ts s a) 
+
+and esub_tlam s =
+fun x -> esubst (Sub esub_id tsub_inc) (Sub.es s x)
+
+and tsub_tlam s =
+fun a -> if a = 0 then TVar a
+         else tsubst (Sub esub_id tsub_inc) (Sub.ts s a)
+
+and esub_elam2 s =
+fun x -> if x <= 1 then EVar x
+                   else (esubst (Sub esub_inc tsub_id) (esubst (Sub esub_inc tsub_id) (Sub.es s (x-2))))
+
+and tsub_elam2 s =
+fun a -> tsubst (Sub esub_inc tsub_id) (tsubst (Sub esub_inc tsub_id) (Sub.ts s a))
+
+(*Substitution inside expressions*)
+and esubst s e =
+  match e with
+  | EVar x -> Sub.es s x
+  | EConst _ -> e
+  | ELam t ebody -> 
+let sub_elam = Sub (esub_elam s) (tsub_elam s) in
+ELam (tsubst s t) (esubst sub_elam ebody)
+  | EFix d t ebody -> 
+let sub_lam2 = Sub (esub_elam2 s) (tsub_elam2 s) in
+     let d' = match d with
+              | Some de -> Some (esubst s de)
+              | None -> None in
+     (* CH: wanted to write "d' = (omap (eesubst s) d)" but that fails
+            the termination check *)
+     (EFix d' (tsubst s t) (esubst sub_lam2 ebody))
+  | EIf0 g ethen eelse -> EIf0 (esubst s g) (esubst s ethen) (esubst s eelse)
+  | EApp e1 e2 -> EApp (esubst s e1) (esubst s e2)
+
+(*Substitution inside types*)
+and tsubst s t =
+  match t with
+  | TVar a -> (Sub.ts s a)
+  | TConst c ->
+     (match c with
+      | TcEqT k -> TConst (TcEqT (ksubst s k))
+      | TcForallT k -> TConst (TcForallT (ksubst s k))
+      | c -> TConst c)
+  | TArr t c -> 
+let sub_elam = Sub (esub_elam s) (tsub_elam s) in
+     TArr (tsubst s t)
+          (Cmp (Cmp.m c) (tsubst sub_elam (Cmp.t c))
+               (tsubst sub_elam (Cmp.wp c)))
+  | TTLam k tbody -> 
+let sub_tlam = Sub (esub_tlam s) (tsub_tlam s) in
+     TTLam (ksubst s k) (tsubst sub_tlam tbody)
+  | TELam t tbody -> 
+let sub_elam = Sub (esub_elam s) (tsub_elam s) in
+     TELam (tsubst s t) (tsubst sub_elam tbody)
+  | TTApp t1 t2 -> TTApp (tsubst s t1) (tsubst s t2)
+  | TEApp t e -> TEApp (tsubst s t) (esubst s e)
+
+(*Substitution inside kinds*)
+and ksubst s k =
+  match k with
+  | KType -> KType
+  | KKArr k kbody -> 
+let sub_tlam = Sub (esub_tlam s) (tsub_tlam s) in
+     KKArr (ksubst s k) (ksubst sub_tlam kbody)
+  | KTArr t kbody -> 
+let sub_elam = Sub (esub_elam s) (tsub_elam s) in
+     (KTArr (tsubst s t) (ksubst sub_elam kbody))
+
+val csubst : s:sub -> c:cmp -> Tot cmp
+let csubst s c = let Cmp m t wp = c in
+Cmp m (tsubst s t) (tsubst s wp)
+
+val etsubst : s:tsub -> e:exp -> Tot exp
+val ttsubst : s:tsub -> t:typ -> Tot typ
+val ktsubst : s:tsub -> k:knd -> Tot knd
+
+let etsubst s e = esubst (Sub esub_id s) e
+
+let ttsubst s t = tsubst (Sub esub_id s) t
+
+let ktsubst s k = ksubst (Sub esub_id s) k
+
+val eesubst : s:esub -> e:exp -> Tot exp
+val tesubst : s:esub -> t:typ -> Tot typ
+val kesubst : s:esub -> k:knd -> Tot knd
+
+let eesubst s e = esubst (Sub s tsub_id) e
+
+let tesubst s t = tsubst (Sub s tsub_id) t
+
+let kesubst s k = ksubst (Sub s tsub_id) k
+
+(* Beta substitution for expressions *)
+
+val esub_beta_gen : var -> exp -> Tot esub
+let esub_beta_gen x e = fun y -> if y < x then (EVar y)
+                                 else if y = x then e
+                                 else (EVar (y-1))
+
+val eesubst_beta_gen : var -> exp -> exp -> Tot exp
+let eesubst_beta_gen x e' = eesubst (esub_beta_gen x e')
+
+let eesubst_beta = eesubst_beta_gen 0
+
+val tesubst_beta_gen : var -> exp -> typ -> Tot typ
+let tesubst_beta_gen x e = tesubst (esub_beta_gen x e)
+
+let tesubst_beta = tesubst_beta_gen 0
+
+val kesubst_beta_gen : var -> exp -> knd -> Tot knd
+let kesubst_beta_gen x e = kesubst (esub_beta_gen x e)
+
+let kesubst_beta = kesubst_beta_gen 0
+
+let eesh = eesubst esub_inc
+let tesh = tesubst esub_inc
+let kesh = kesubst esub_inc
+
+(* Beta substitution for types *)
 val tsub_beta_gen : var -> typ -> Tot tsub
 let tsub_beta_gen x t = fun y -> if y < x then (TVar y)
                                  else if y = x then t
@@ -365,7 +506,6 @@ let ktsubst_beta = ktsubst_beta_gen 0
 let etsh = etsubst tsub_inc
 let ttsh = ttsubst tsub_inc
 let ktsh = ktsubst tsub_inc
-
 (****************************)
 (* Derived logic constants  *)
 (****************************)
@@ -965,19 +1105,38 @@ let envtshift e =
   Env eenvi' tenvi'
 
 (* SF: Let's assume we just need to extend at 0 *)
+(* SF: with this version, it was not possible to prove simple things about the env*)
+(*
 val eextend : typ -> env -> Tot env
 let eextend t e =
   let Env eenvi tenvi = e in
   let eenvi' : eenv = fun x -> if x = 0 then Some t
                                else eenvi (x-1)
   in enveshift (Env eenvi' tenvi)
-
+*)
+val eextend : typ -> env -> Tot env
+let eextend t e =
+  let Env eenvi tenvi = e in
+  let eenvi' : eenv = fun x -> if x = 0 then Some (tesh t)
+                                        else omap tesh (eenvi (x-1)) 
+  in
+  let tenvi' : tenv = fun x -> omap kesh (tenvi x) in
+  Env eenvi' tenvi'
+(*
 val textend : knd -> env -> Tot env
 let textend k e =
   let Env eenvi tenvi = e in
   let tenvi' : tenv = fun x -> if x = 0 then Some k
                                else tenvi (x-1)
   in envtshift (Env eenvi tenvi')
+*)
+val textend : knd -> env -> Tot env
+let textend k e =
+  let Env eenvi tenvi = e in
+  let eenvi' : eenv = fun x -> omap ttsh (eenvi x) in
+  let tenvi' : tenv = fun x -> if x = 0 then Some (ktsh k)
+                               else omap ktsh (tenvi (x-1))
+  in (Env eenvi' tenvi')
 
 val lookup_evar : env -> var -> Tot (option typ)
 let lookup_evar g x = Env.e g x
@@ -985,6 +1144,8 @@ let lookup_evar g x = Env.e g x
 val lookup_tvar : env -> var -> Tot (option knd)
 let lookup_tvar g x = Env.t g x
 
+val plouf : t1:typ -> Tot unit
+let plouf t1= assert(is_Some (lookup_evar (eextend tfalse empty) 0) )
 (**************)
 (*   Typing   *)
 (**************)
@@ -1274,9 +1435,12 @@ and validity : g:env -> t:typ -> Type =
               =hv2:validity g p2 ->
                    validity g (tand p1 p2)
 
-| VExMiddle : #g:env -> #t:typ ->
-              =hk:kinding g t KType ->
-                  validity g (tor t (tnot t))
+| VExMiddle : #g:env -> #t1:typ -> t2:typ ->
+              =hk1:kinding g t1 KType ->
+              =hk2:kinding g t2 KType ->
+              =hv1:validity (eextend t1 g) (tesh t2) ->
+              =hv2:validity (eextend (tnot t1) g) (tesh t2) ->
+              validity g t2
 
 | VOrIntro1 : #g:env -> #t1:typ -> #t2:typ ->
               =hv:validity g t1 ->
@@ -1329,6 +1493,61 @@ For injectivity should probably stick with this (see discussion in txt file):
                validity g (tand (tand (teqtype t1 t1') (teqtype t2 t2))
                                       (teqtype phi phi'))
 
+(**********************)
+(* Substitution Lemma *)
+(**********************)
+
+type subst_typing : s:sub -> g1:env -> g2:env -> Type =
+| SubstTyping : #s:sub -> #g1:env -> #g2:env -> 
+                ef:(x:var{is_Some (lookup_evar g1 x)} -> Tot(typing g2 (Sub.es s x) (tot (tsubst s (Some.v (lookup_evar g1 x)))))) ->
+                tf:(a:var{is_Some (lookup_tvar g1 a)} -> Tot(kinding g2 (Sub.ts s a) (ksubst s (Some.v (lookup_tvar g1 a))))) ->
+                subst_typing s g1 g2
+
+(*
+opaque val substitution :
+      #g1:env -> #e:exp -> #t:typ -> s:esub -> #g2:env ->
+      h1:typing g1 e t ->
+      hs:subst_typing s g1 g2 ->
+      Tot (typing g2 (esubst s e) t)
+     (decreases %[is_var e; is_renaming s; h1])
+*)
+val typing_substitution : #g1:env -> #e:exp -> #c:cmp -> s:sub -> #g2:env ->
+    h1:typing g1 e c ->
+    hs:subst_typing s g1 g2 ->
+    Tot (typing g2 (esubst s e) (csubst s c))
+val scmp_substitution : #g1:env -> #c1:cmp -> #c2:cmp -> #phi:typ -> s:sub -> #g2:env ->
+    h1:scmp g1 c1 c2 phi ->
+    hs:subst_typing s g1 g2 ->
+    Tot (scmp g2 (csubst s c1) (csubst s c2) (tsubst s phi))
+val styping_substitution : #g1:env -> #t':typ -> #t:typ -> #phi:typ -> s:sub -> #g2:env ->
+    h1:styping g1 t' t phi ->
+    hs:subst_typing s g1 g2 ->
+    Tot (styping g2 (tsubst s t') (tsubst s t) (tsubst s phi))
+val kinding_substitution : #g1:env -> #t:typ -> #k:knd -> s:sub -> #g2:env ->
+    h1:kinding g1 t k ->
+    hs:subst_typing s g1 g2 ->
+    Tot (kinding g2 (tsubst s t) (ksubst s k))
+val skinding_substitution : #g1:env -> #k1:knd -> #k2:knd -> #phi:typ -> s:sub -> #g2:env -> 
+    h1:skinding g1 k1 k2 phi ->
+    hs:subst_typing s g1 g2 ->
+    Tot (skinding g2 (ksubst s k1) (ksubst s k2) (tsubst s phi))
+val kwf_substitution : #g1:env -> #k:knd -> s:sub -> #g2:env ->
+    h1:kwf g1 k ->
+    hs:subst_typing s g1 g2 ->
+    Tot (kwf g2 (ksubst s k))
+val validity_substitution : #g1:env -> #t:typ -> s:sub -> #g2:env ->
+    h1:validity g1 t ->
+    hs:subst_typing s g1 g2 ->
+    Tot (validity g2 (tsubst s t))
+
+let rec typing_substitution g1 e c s g2 h1 hs = admit()
+and scmp_substitution g1 c1 c2 phi s g2 h1 hs = admit()
+and styping_substitution g1 t' t phi s g2 h1 hs = admit()
+and kinding_substitution g1 t k s g2 h1 hs = admit()
+and skinding_substitution g1 k1 k2 phi s g2 h1 hs = admit()
+and kwf_substitution g1 k s g2 h1 hs = admit()
+and validity_substitution g1 t s g2 h1 hs = admit()
+(*
 module VerifyOnlyThis
 
 open TinyFStarNew
@@ -1389,7 +1608,7 @@ let k_not g t hk = k_impl hk (k_false g)
 val v_impl_intro : #g:env -> t1:typ -> t2:typ ->
                    =hv:validity (eextend t1 g) (tesh t2) ->
                   Tot (validity g (timpl t1 t2))
-let v_impl_intro = admit()
+let v_impl_intro g t1 t2 hv= VForallIntro g t1 hv
 
 val v_impl_elim : #g:env -> #t1:typ -> #t2:typ ->
                  =hv12:validity g (timpl t1 t2) ->
@@ -1485,3 +1704,4 @@ val v_eq_symt : #g:env -> #t1:typ -> #t2:typ -> #k:knd ->
             =hv:validity g (teqt k t1 t2) ->
                 validity g (teqt k t2 t1)
 let v_eq_symt = admit()
+*)
