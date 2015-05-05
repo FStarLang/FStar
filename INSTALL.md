@@ -23,7 +23,7 @@
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono 3.10.x and fsharp 3.1.x
+  - Install mono 3.10.x or 3.12.x and fsharp 3.1.x
   
     - On Debian/Ubuntu
 
@@ -83,11 +83,15 @@
 
 1. Use [Wodi] for installing OCaml (version 4.01.0 or newer)
 
-2. [Wodi] also installs Cygwin; when your asked which Cygwin packages
-   you want add `git` to the default list. If you forgot to do this,
-   you can still do that by downloading [Cygwin]'s setup-x86.exe and
-   pointing it at your wodi install. By installing [Wodi] you get a
-   special Cygwin terminal where you should run all the commands below.
+2. [Wodi] also installs it's own version of Cygwin. By installing Wodi
+   you get a special Cygwin terminal where you should run all the
+   commands below.
+
+   Note: If you want to also build F* binaries (instruction in the
+   next section), when Wodi asks which Cygwin packages you want add
+   `git` to the default list. If you forgot to do this, you can still
+   do that by downloading [Cygwin]'s `setup-x86.exe` and pointing it
+   at your Wodi install.
 
 3. Use the [Wodi] ocaml package manager to install `batteries`; you can
    do this either from the visual package manager or by issuing the
@@ -99,7 +103,8 @@
 #### Linux/MacOS Prerequisites ####
 
 0. OCaml (version 4.01.0 or later)
-   - Can be installed using either your package manager or using OPAM (see below).
+   - Can be installed using either your package manager or using OPAM
+     (see below).
 
 1. OPAM (version 1.2.x).
    - Installation instructions available at various places

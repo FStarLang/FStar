@@ -96,12 +96,12 @@ add this to your `.emacs` or `.emacs.d/init.el`:
 Generating executable code from F* can be achieved using the OCaml backend
 (the `--codegen OCaml` command-line argument to F*).
 The code most often depends on a support library;
-obtaining this support library requires [bootstrapping F\* in OCaml]
-(once things are set up run `make ocaml` in the `src` directory)
+obtaining this support library requires [bootstrapping in OCaml]
+(once all prerequisites are satisfied running `make ocaml` in the `src` directory)
 and afterwards running `make parser` in the `src/ocaml-output` directory.
 (see [more instructions here]).
 
-[bootstrapping F\* in OCaml]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md#bootstrapping-the-compiler-in-ocaml
+[bootstrapping in OCaml]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md#bootstrapping-the-compiler-in-ocaml
 
 [more instructions here]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md#creating-binary-packages-for-your-platform
 
