@@ -124,7 +124,6 @@ let parse_file fn =
      Inl mods
   with
     | Absyn.Syntax.Error(msg, r) ->
-      let msg = Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg in
       Inr (Absyn.Print.format_error r msg)
     | e ->
       let pos = lexbuf.EndPos in

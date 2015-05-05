@@ -748,14 +748,12 @@ and desugar_typ env (top:term) : typ =
       if is_type env t1 
       then let rec flatten t = match t.tm with
             | Op("*", [t1;t2]) -> 
-              let binders, final = flatten t2 in
-              let b = mk_binder (NoName t1) t1.range Type None in
-              b::binders, final
-            | Sum(binders, final) -> binders, final 
-            | _ -> [], t in 
-          let binders, final = flatten top in
-          let t = mk_term (Sum(binders, final)) top.range top.level in
-          desugar_typ env t
+              let rest = flatten t2 in
+              t1::rest
+            | _ -> [t] in 
+          let targs = flatten top |> List.map (fun t -> targ (desugar_typ env t)) in
+          let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_tuple_lid (List.length targs) top.range) in
+          wpos <| mk_Typ_app(tup, targs)
       else raise (Error(Util.format1 "The operator \"*\" is resolved here as multiplication since \"%s\" is a term, although a type was expected" (term_to_string t1), top.range))
       
     | Op("=!=", args) ->
@@ -847,27 +845,16 @@ and desugar_typ env (top:term) : typ =
       wpos <| mk_Typ_ascribed'(desugar_typ env t, desugar_kind env k)
 
     | Sum(binders, t) -> 
-      if contains_binder binders
-      then let env, _, targs = List.fold_left (fun (env, tparams, typs) b ->
-             let xopt, t = desugar_exp_binder env b in
-             let env, x = match xopt with
-                          | None -> env, new_bvd (Some top.range)
-                          | Some x -> push_local_vbinding env x in
-             (env, tparams@[Inr (bvd_to_bvar_s x t), None], typs@[targ <| close_with_lam tparams t]))
-             (env, [], []) (binders@[mk_binder (NoName t) t.range Type None]) in
-           let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_dtuple_lid (List.length targs) top.range) in
-           wpos <| mk_Typ_app(tup, targs)
-           
-      else let env, targs = List.fold_left (fun (env, typs) b ->
-              let xopt, t = desugar_exp_binder env b in
-              let _ = match xopt with
-                | None -> ()
-                | Some _ -> failwith "Impossible" in
-              (env, typs@[targ t]))
-              (env, []) (binders@[mk_binder (NoName t) t.range Type None]) in
-           let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_tuple_lid (List.length targs) top.range) in
-           wpos <| mk_Typ_app(tup, targs)
-   
+      let env, _, targs = List.fold_left (fun (env, tparams, typs) b ->
+        let xopt, t = desugar_exp_binder env b in
+        let env, x = match xopt with
+                    | None -> env, new_bvd (Some top.range)
+                    | Some x -> push_local_vbinding env x in
+        (env, tparams@[Inr (bvd_to_bvar_s x t), None], typs@[targ <| close_with_lam tparams t]))
+        (env, [], []) (binders@[mk_binder (NoName t) t.range Type None]) in
+      let tup = fail_or env  (try_lookup_typ_name env) (Util.mk_dtuple_lid (List.length targs) top.range) in
+      wpos <| mk_Typ_app(tup, targs)     
+      
     | Record _ -> failwith "Unexpected record type"
 
     | If _  

@@ -270,6 +270,7 @@ rule token = parse
  | "(|"        { LENS_PAREN_LEFT }
  | "|)"        { LENS_PAREN_RIGHT }
  | '#'         { HASH }
+ | "&"         { AMP }
  | "&&"        { AMP_AMP }
  | "||"        { BAR_BAR }
  | "()"        { LPAREN_RPAREN }
