@@ -95,7 +95,7 @@
 
 3. Use the [Wodi] ocaml package manager to install `batteries`; you can
    do this either from the visual package manager or by issuing the
-   command `godi_add godi-batteries` in the Wodi's Cygwin terminal.
+   command `godi_add godi-batteries` in Wodi's Cygwin terminal.
 
 [Wodi]: http://wodi.forge.ocamlcore.org/
 [Cygwin]: https://www.cygwin.com/
