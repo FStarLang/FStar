@@ -201,8 +201,7 @@ boot-ocaml:
 test:   clean $(BIN)/fstar.exe ocaml-test
 	make -C ../examples
 
-test.net: clean $(BIN)/fstar.exe
-# boot -- CH 2015-05-04: currently broken
+test.net: clean $(BIN)/fstar.exe boot
 	make -C ../examples
 
 test.diff:
