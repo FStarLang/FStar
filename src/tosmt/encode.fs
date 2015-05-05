@@ -115,8 +115,8 @@ let varops =
 type binding = 
     | Binding_var   of bvvdef * term 
     | Binding_tvar  of btvdef * term
-    | Binding_fvar  of lident * string * term * option<term> (* free variables, depending on whether or not they are fully applied ...  *)
-    | Binding_ftvar of lident * string * term                (* ... are mapped either to SMT2 functions, or to nullary term/type tokens *)
+    | Binding_fvar  of lident * string * option<term> * option<term> (* free variables, depending on whether or not they are fully applied ...  *)
+    | Binding_ftvar of lident * string * option<term>                (* ... are mapped either to SMT2 functions, or to nullary term/type tokens *)
 
 let binder_of_eithervar v = (v, None)
 type env_t = {
@@ -181,7 +181,7 @@ let push_typ_var (env:env_t) (x:btvdef) (t:term) =
 let new_term_constant_and_tok_from_lid (env:env_t) (x:lident) =
     let fname = varops.new_fvar x in
     let ftok = fname^"@tok" in
-    fname, ftok, {env with bindings=Binding_fvar(x, fname, mkApp(ftok,[]), None)::env.bindings}
+    fname, ftok, {env with bindings=Binding_fvar(x, fname, Some <| mkApp(ftok,[]), None)::env.bindings}
 let try_lookup_lid env a = 
     lookup_binding env (function Binding_fvar(b, t1, t2, t3) when lid_equals b a -> Some (t1, t2, t3) | _ -> None) 
 let lookup_lid env a = 
@@ -199,40 +199,50 @@ let lookup_free_var env a =
     match zf_opt with 
         | Some f when (env.use_zfuel_name) -> f
         | _ -> 
-          match sym.tm with 
-            | App(_, [fuel]) -> 
-                if (Util.starts_with (Term.fv_of_term fuel |> fst) "fuel") 
-                then Term.mk_ApplyEF(Term.mkFreeV (name, Term_sort)) fuel
-                else sym
-            | _ -> sym
+          match sym with 
+            | Some t -> 
+                begin match t.tm with 
+                    | App(_, [fuel]) -> 
+                        if (Util.starts_with (Term.fv_of_term fuel |> fst) "fuel") 
+                        then Term.mk_ApplyEF(Term.mkFreeV (name, Term_sort)) fuel
+                        else t
+                    | _ -> t
+                end
+            | _ -> failwith (format1 "Name not found: %s" (Print.sli a.v))
 let lookup_free_var_name env a = let x, _, _ = lookup_lid env a.v in x
 let lookup_free_var_sym env a = 
     let name, sym, zf_opt = lookup_lid env a.v in
     match zf_opt with 
         | Some({tm=App(g, zf)}) when env.use_zfuel_name -> g, zf
         | _ -> 
-            match sym.tm with 
-                | App(g, [fuel]) -> g, [fuel]
-                | _ -> Var name, []
+            match sym with 
+                | None -> Var name, []
+                | Some sym -> 
+                    match sym.tm with 
+                        | App(g, [fuel]) -> g, [fuel]
+                        | _ -> Var name, []
 
 (* Qualified type names *)
 let new_typ_constant_and_tok_from_lid (env:env_t) (x:lident) =
     let fname = varops.new_fvar x in
     let ftok = fname^"@tok" in
-    fname, ftok, {env with bindings=Binding_ftvar(x, fname, mkApp(ftok, []))::env.bindings}
+    fname, ftok, {env with bindings=Binding_ftvar(x, fname, Some <| mkApp(ftok, []))::env.bindings}
 let lookup_tlid env a = 
     match lookup_binding env (function Binding_ftvar(b, t1, t2) when lid_equals b a -> Some (t1, t2) | _ -> None) with
     | None -> failwith (format1 "Type name not found: %s" (Print.sli a))
     | Some s -> s
 let push_free_tvar env (x:lident) fname ftok = 
     {env with bindings=Binding_ftvar(x, fname, ftok)::env.bindings}
-let lookup_free_tvar env a = lookup_tlid env a.v |> snd
+let lookup_free_tvar env a = 
+    match lookup_tlid env a.v |> snd with 
+        | None -> failwith (format1 "Type name not found: %s" (Print.sli a.v))
+        | Some t -> t
 let lookup_free_tvar_name env a = lookup_tlid env a.v |> fst
 
 let tok_of_name env nm = 
     Util.find_map env.bindings (function 
         | Binding_fvar(_, nm', tok, _) 
-        | Binding_ftvar(_, nm', tok) when (nm=nm') -> Some tok
+        | Binding_ftvar(_, nm', tok) when (nm=nm') -> tok
         | _ -> None)
 
 (* </Environment> *)
@@ -303,7 +313,10 @@ let is_eta env vars t =
         | App(app, [f; {tm=FreeV y}]), x::xs 
           when (is_app app && Term.fv_eq x y) -> aux f xs
         | App(Var f, args), _ -> 
-          if List.length args = List.length vars
+          if List.length args = List.length vars 
+          && List.forall2 (fun a v -> match a.tm with 
+            | FreeV fv -> fv_eq fv v
+            | _ -> false) args vars
           then tok_of_name env f 
           else None
         | _, [] -> 
@@ -699,7 +712,8 @@ and encode_exp (e:exp) (env:env_t) : (term
 
                                 | None -> 
                                   begin match is_eta env vars body with 
-                                    | Some t -> t, []
+                                    | Some t -> 
+                                      t, []
                                     | None -> 
                                       let cvar_sorts = List.map snd cvars in
                                       let fsym = varops.fresh "Exp_abs" in
@@ -1268,7 +1282,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let tname = t.str in
         let tsym = mkFreeV(tname, Type_sort) in
         let decl = Term.DeclFun(tname, [], Type_sort, None) in
-        decl::primitive_type_axioms t tname tsym, push_free_tvar env t tname tsym
+        decl::primitive_type_axioms t tname tsym, push_free_tvar env t tname (Some tsym)
 
      | Sig_tycon(t, tps, k, _, datas, quals, _) -> 
         let is_logical = quals |> Util.for_some (function Logic | Assumption -> true | _ -> false) in
@@ -1338,7 +1352,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let decls, env =
             let tname_decl = constructor_or_logic_type_decl(tname, vars |> List.map (fun (n, s) -> (tname^n,s)), Type_sort, varops.next_id()) in
             let tok_decls, env = match vars with 
-                | [] -> [], push_free_tvar env t tname (mkApp(tname, [])) 
+                | [] -> [], push_free_tvar env t tname (Some <| mkApp(tname, [])) 
                 | _ -> 
                         let ttok_decl = Term.DeclFun(ttok, [], Type_sort, Some "token") in
                         let ttok_fresh = Term.fresh_token (ttok, Type_sort) (varops.next_id()) in
@@ -1518,7 +1532,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                       let gtoks, env = toks |> List.fold_left (fun (gtoks, env) (flid, (f, ftok)) -> 
                          let g = varops.new_fvar flid in
                          let gtok = varops.new_fvar flid in
-                         let env = push_free_var env flid gtok (Term.mkApp(g, [fuel_tm])) in
+                         let env = push_free_var env flid gtok (Some <| Term.mkApp(g, [fuel_tm])) in
                          (flid, f, ftok, g, gtok)::gtoks, env) ([], env) in
                       let gtoks = List.rev gtoks in
                       let encode_one_binding env0 (flid, f, ftok, g, gtok) t_norm (_, _, e) = 
@@ -1590,16 +1604,17 @@ and encode_free_var env lid tt t_norm quals =
          let d = Term.DeclFun(vname, arg_sorts, Term_sort, Some "Uninterpreted function symbol for impure function") in
          let dd = Term.DeclFun(vtok, [], Term_sort, Some "Uninterpreted name for impure function") in
          [d;dd], env
-    else let formals, res = match Util.function_formals t_norm with 
-            | Some (args, comp) -> args, Util.comp_result comp 
-            | None -> [], t_norm in
-         let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in 
-         let vtok_tm = mkApp(vtok, []) in
-         if prims.is lid
-         then let definition = prims.mk lid vname in
-              let env = push_free_var env lid vname (mkFreeV(vname, Term_sort)) in 
+    else if prims.is lid
+         then let vname = varops.new_fvar lid in
+              let definition = prims.mk lid vname in
+              let env = push_free_var env lid vname None in
               definition, env
-         else let mk_disc_proj_axioms vapp vars = quals |> List.collect (function 
+         else let formals, res = match Util.function_formals t_norm with 
+                | Some (args, comp) -> args, Util.comp_result comp 
+                | None -> [], t_norm in
+              let vname, vtok, env = new_term_constant_and_tok_from_lid env lid in 
+              let vtok_tm = mkApp(vtok, []) in
+              let mk_disc_proj_axioms vapp vars = quals |> List.collect (function 
                 | Discriminator d -> 
                     let _, (xxsym, _) = Util.prefix vars in
                     let xx = mkFreeV(xxsym, Term_sort) in
@@ -1627,7 +1642,7 @@ and encode_free_var env lid tt t_norm quals =
                                 then encode_typ_pred' None tt env (mkFreeV(vname, Term_sort))
                                 else encode_typ_pred' None t_norm env (mkFreeV(vname, Term_sort)) in
                             let tok_typing = Term.Assume(t, Some "function token typing") in 
-                            decls2@[tok_typing], push_free_var env lid vname (mkFreeV(vname, Term_sort))
+                            decls2@[tok_typing], push_free_var env lid vname (Some <| mkFreeV(vname, Term_sort))
                         | _ -> 
                                 let vtok_decl = Term.DeclFun(vtok, [], Term_sort, None) in
                                 let vtok_fresh = Term.fresh_token (vtok, Term_sort) (varops.next_id()) in

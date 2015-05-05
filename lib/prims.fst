@@ -35,7 +35,7 @@ logic type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
 logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
 logic type ITE : Type -> Type -> Type -> Type (* written if/then/else in concrete syntax *)
 logic type Precedes : #a:Type -> #b:Type -> a -> b -> Type  (* a built-in well-founded partial order over all terms *)
-assume type bool
+type bool
 
 (* PURE effect *)
 kind PurePre = Type
@@ -113,6 +113,7 @@ type float
 type string
 type array : Type -> Type
 type ref : Type -> Type
+assume logic type LBL : string -> Type -> Type
 type exn
 type uint8
 type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
@@ -244,7 +245,7 @@ new_effect {
      ; trivial      = st_trivial heap
 }
 
-assume type heap
+type heap
 kind STPre = STPre_h heap
 kind STPost (a:Type) = STPost_h heap a
 kind STWP (a:Type) = STWP_h heap a
