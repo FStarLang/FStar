@@ -95,10 +95,15 @@ add this to your `.emacs` or `.emacs.d/init.el`:
 
 Generating executable code from F* can be achieved using the OCaml backend
 (the `--codegen OCaml` command-line argument to F*).
-It requires the OCaml bootstrapping for the support libraries
-(see the [instructions for bootstrapping in OCaml])
+The code most often depends on a support library;
+obtaining this support library requires [bootstrapping F\* in OCaml]
+(once things are set up run `make ocaml` in the `src` directory)
+and afterwards running `make parser` in the `src/ocaml-output` directory.
+(see [more instructions here]).
 
-[instructions for bootstrapping in OCaml]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md#bootstrapping-the-compiler-in-ocaml
+[bootstrapping F\* in OCaml]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md#bootstrapping-the-compiler-in-ocaml
+
+[more instructions here]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md#creating-binary-packages-for-your-platform
 
 The OCaml backend will produce `<ModuleName>.ml` files for each F*
 module in the code.
@@ -108,10 +113,9 @@ following command in the directory containing the ocaml files:
 ```
 ocamlfind ocamlopt -o program -package batteries -linkpkg -thread -I $FSTAR_HOME/src/ocaml-output/ $FSTAR_HOME/src/ocaml-output/support.ml <OCamlFiles>.ml
 ```
-where `program` is the executable. Linking the [ocaml-output]
-directory and `support.ml` is required if the F* code used any built-ins.
-
-[ocaml-output]: https://github.com/FStarLang/FStar/tree/master/src/ocaml-output
+where `program` is the desired name of the produced executable.
+Linking the `ocaml-output` directory and `support.ml` is required if
+the F* code used any built-in functions.
 
 ### Code structure (partially outdated)
 
