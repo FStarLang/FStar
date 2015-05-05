@@ -209,18 +209,6 @@ let noleak_ok x1 x2 b1 b2 = compose2 noleak noleak (x1,b1) (x2,b2)
 
 (*  First try to work on Nik's proposal of sequencing... Not working yet *)
 
-(* Duplication... was unable to access types defined in STATE2 monad *)
-(*
-type bind_wp_s2  (a:Type) (b:Type) (wp1:STATE2.WP a) (wlp1:STATE2.WP a) 
-                 (wp2:(a -> STATE2.WP b)) (wlp2:(a -> STATE2.WP b)) 
-                 (p:STATE2.Post b) (h0:heap2) =
-                     wp1 (fun a h1 -> wp2 a p h1) h0
-
-type bind_wlp_s2 (a:Type) (b:Type) (wlp1:STATE2.WP a) (wlp2:(a -> STATE2.WP b))
-                 (p:STATE2.Post b) (h0:heap2) =
-                     wlp1 (fun a -> wlp2 a p) h0
-*)
-
 assume val sequence: c0r:Type -> c1r:Type 
                      -> wp0:STWP_h heap2 c0r -> wp1:STWP_h heap2 c1r
                      -> wlp0:STWP_h heap2 c0r -> wlp1:STWP_h heap2 c1r
