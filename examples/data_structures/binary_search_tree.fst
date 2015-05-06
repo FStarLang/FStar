@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-(* 
+(*
    Exercising:
     -- indexed types
     -- implicit value parameters
@@ -25,13 +25,13 @@
 module BST
 
 (* The type of a binary tree indexed by its max element *)
-type tree: int -> Type = 
-  | Node : #l   :int 
+type tree: int -> Type =
+  | Node : #l   :int
         -> left :option (tree l)
         -> n    :int
-        -> #r   :int 
-        -> right:option (tree r){l <= n 
-                                 /\ n <= r 
+        -> #r   :int
+        -> right:option (tree r){l <= n
+                                 /\ n <= r
                                  /\ (is_None right <==> n=r)
                                  /\ (is_None left <==> n=l)}
         -> tree r
@@ -56,7 +56,7 @@ let rec insert k (Node left n right) i =
           Node left n (Some (leaf i))
        | Some right ->
           Node left n (Some (insert right i))
-               
+
 val contains: #k:int -> t:tree k -> key:int -> Tot bool (decreases t)
 let rec contains k t key =
   if key > k
@@ -78,7 +78,7 @@ val index_is_max : #max:int
                 -> Pure unit True (fun u -> List.mem x (in_order_opt t) ==> x <= max) (decreases t)
 let rec index_is_max max t x = match t with
   | None -> ()
-  | Some (Node left i right) -> 
+  | Some (Node left i right) ->
      ListProperties.append_mem (in_order_opt left @ [i]) (in_order_opt right) x;
      ListProperties.append_mem (in_order_opt left) [i] x;
      index_is_max left x;
@@ -96,6 +96,6 @@ let rec index_is_max2 max t x = match t with
      index_is_max2 #l left x;
      index_is_max2 #r right x
 
-type t = (|l:int * tree l|)                        (* The lens-bracketed tuple is sugar for DTuple2 int (fun (l:int) -> tree l) *)
+type t = (l:int & tree l)                  
 val ins : lt:t -> n:int -> Tot t
 let ins (| m, tt |) n = (| max m n, insert tt n |) (* open the dependent pair by matching it; repackage it, using the expected type t from the annotation *)

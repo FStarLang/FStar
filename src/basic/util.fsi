@@ -46,7 +46,7 @@ type smap<'value> = HashMultiMap<string,'value> (* not relying on representation
 val smap_create: int -> smap<'value>
 val smap_clear:smap<'value> -> unit
 val smap_add: smap<'value> -> string -> 'value -> unit
-val smap_of_list: list<string*'value> -> smap<'value>
+val smap_of_list: list<(string*'value)> -> smap<'value>
 val smap_try_find: smap<'value> -> string -> option<'value>
 val smap_fold: smap<'value> -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
 val smap_remove: smap<'value> -> string -> unit

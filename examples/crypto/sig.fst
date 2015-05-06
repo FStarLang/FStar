@@ -36,7 +36,7 @@ assume val sk_to_pk : sk -> Tot pk
 
 type pk_sk (p:pk) = s:sk{sk_to_pk s == p}
 
-assume val keygen: p:(text -> Type) -> k:prop_pk p * pk_sk k
+assume val keygen: p:(text -> Type) -> k:prop_pk p & pk_sk k
 
 type entry =
   | Entry : k:pk
@@ -50,15 +50,15 @@ val sign: p:pk
       -> s:pk_sk p
       -> t:text{key_prop p t}
       -> sig_t
-let sign p s t = 
+let sign p s t =
   let m = fdh_rsa s t in
   log := Entry p t m :: !log;
   m
 
 val verify: p:pk
-         -> t:text 
-         -> sig_t 
+         -> t:text
+         -> sig_t
          -> b:bool{b ==> key_prop p t}
-let verify p t m = 
+let verify p t m =
   let found = List.find (function (Entry p' t' _) -> p=p' && t=t') !log in
   is_Some found

@@ -1,3 +1,7 @@
+(*--build-config
+    options:--verify_module MRef --admit_fsi Set;
+    other-files:ext.fst set.fsi heap.fst st.fst
+ --*)
 module MRef
 open Heap
 open ST
@@ -12,10 +16,22 @@ type stable : #a:Type -> (a -> Type) -> Reln a -> Type =
   fun (a:Type) (p:(a -> Type)) (b:Reln a) ->
     (forall x y. p x /\ b x y ==> p y)
 
-(*private*)
-type mref (a:Type) (b:Reln a) = ref a
-opaque logic type token : #a:Type -> #b:Reln a -> mref a b -> (a -> Type) -> Type =
-  fun (a:Type) (b:Reln a) (r:mref a b) (p:a -> Type) -> unit
+private type mref (a:Type) (b:Reln a) = ref a
+
+val as_ref: #a:Type -> #b:Reln a -> mref a b -> GTot (ref a)
+let as_ref m = m
+
+val contains: #a:Type -> #b:Reln a -> h:heap -> mref a b -> GTot bool
+let contains h m = Heap.contains h (as_ref m)
+
+val sel: #a:Type -> #b:Reln a -> h:heap -> mref a b -> GTot a
+let sel (a:Type) (b:Reln a) h m = Heap.sel h (as_ref m)
+
+val upd: #a:Type -> #b:Reln a -> h:heap -> mref a b -> a -> GTot heap
+let upd h m v = Heap.upd h (as_ref m) v
+
+private logic type token : #a:Type -> #b:Reln a -> mref a b -> (a -> Type) -> Type =
+  fun (a:Type) (b:Reln a) (r:mref a b) (p:a -> Type) -> True
 
 let fresh x h0 r h1 = not(contains h0 r) && contains h1 r && h1=upd h0 r x
 
@@ -34,7 +50,6 @@ val read: #a:Type
             (requires (fun h -> True))
             (ensures (fun h0 v h1 -> h0=h1 /\ v=sel h0 x))
 let read x = !x
-
 
 val write: #a:Type
         -> #b:Reln a

@@ -35,7 +35,7 @@ logic type Eq2 : #a:Type -> #b:Type -> a -> b -> Type  (* infix binary '==' *)
 logic type XOR (p:Type) (q:Type) = (p \/ q) /\ ~(p /\ q)
 logic type ITE : Type -> Type -> Type -> Type (* written if/then/else in concrete syntax *)
 logic type Precedes : #a:Type -> #b:Type -> a -> b -> Type  (* a built-in well-founded partial order over all terms *)
-assume type bool
+type bool
 
 (* PURE effect *)
 kind PurePre = Type
@@ -103,20 +103,20 @@ effect Ghost (a:Type) (pre:Type) (post:PurePost a) =
            (fun (p:PurePost a) -> pre /\ (forall (x:a). post x ==> p x))
            (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
 
-logic type b2t (b:bool) = b==true
-assume type unit
-assume type int
-assume type char
-assume type uint16
-assume type int64
-assume type float
-assume type string
-assume type array : Type -> Type
-assume type ref : Type -> Type
+opaque logic type b2t (b:bool) = b==true
+type unit
+type int
+type char
+type uint16
+type int64
+type float
+type string
+type array : Type -> Type
+type ref : Type -> Type
 assume logic type LBL : string -> Type -> Type
-assume type exn
-assume type uint8
-assume type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
+type exn
+type uint8
+type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
 type byte = uint8
 type double = float
 type int32 = int
@@ -245,7 +245,7 @@ new_effect {
      ; trivial      = st_trivial heap
 }
 
-assume type heap
+type heap
 kind STPre = STPre_h heap
 kind STPost (a:Type) = STPost_h heap a
 kind STWP (a:Type) = STWP_h heap a
@@ -408,7 +408,7 @@ default effect ML (a:Type) =
 sub_effect
   PURE  ~> DIV   = fun (a:Type) (wp:PureWP a) (p:PurePost a) -> wp (fun a -> p a)
 sub_effect
-  PURE   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:heap) -> wp (fun a -> p a h)
+  DIV   ~> STATE = fun (a:Type) (wp:PureWP a) (p:STPost a) (h:heap) -> wp (fun a -> p a h)
 sub_effect
   STATE ~> ALL   = fun (a:Type) (wp:STWP a)   (p:AllPost a) -> wp (fun a -> p (V a))
 sub_effect
