@@ -1071,10 +1071,10 @@ and typars_of_binders env bs =
         match tk with
             | Inl(Some a, k) -> 
                 let env, a = push_local_tbinding env a in
-                (env, (t_binder (bvd_to_bvar_s a k))::out)
+                (env, (Inl (bvd_to_bvar_s a k), b.aqual)::out)
             | Inr(Some x,t) ->
                 let env, x = push_local_vbinding env x in
-                (env, (v_binder (bvd_to_bvar_s x t))::out)
+                (env, (Inr (bvd_to_bvar_s x t), b.aqual)::out)
             | _ -> raise (Error ("Unexpected binder", b.brange))) (env, []) bs in
     env, List.rev tpars
 

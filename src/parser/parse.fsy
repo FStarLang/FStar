@@ -352,13 +352,22 @@ recordPattern:
 moreFieldPatterns:
   | { [] }
   | SEMICOLON lid EQUALS pattern moreFieldPatterns { ($2,$4)::$5 }
-
+/*
 binder:
   | ident { mk_binder (Variable($1)) (rhs parseState 1) Type  }
   | tvar  { mk_binder (TVariable($1)) (rhs parseState 1) Kind  }
   | LPAREN ident COLON appTerm refineOpt RPAREN 
       { mkRefinedBinder $2 $4 $5 (rhs2 parseState 1 6)  }
   | LPAREN tvar COLON  kind RPAREN { mk_binder (TAnnotated($2, $4)) (rhs2 parseState 1 5) Kind }
+*/
+
+binder:
+  | ident { mk_binder (Variable($1)) (rhs parseState 1) Type None  }
+  | tvar  { mk_binder (TVariable($1)) (rhs parseState 1) Kind None  }
+  | LPAREN aqual_opt ident COLON appTerm refineOpt RPAREN 
+      { mkRefinedBinder $3 $5 $6 (rhs2 parseState 1 7) $2  }
+  | LPAREN aqual_opt tvar COLON kind RPAREN 
+	  { mk_binder (TAnnotated($3, $5)) (rhs2 parseState 1 6) Kind $2 }
 
 typars:
   | tvarinsts              { $1 }
@@ -368,13 +377,13 @@ tvarinsts:
   | TYP_APP_LESS tvars TYP_APP_GREATER    { List.map (fun tv -> mk_binder (TVariable(tv)) tv.idRange Kind None) $2 }
 
 aqual_opt:
-  | HASH  { Some Implicit }
-  | HAT   { Some Equality }
-  |       { None }
+  | HASH   { Some Implicit }
+  | EQUALS { Some Equality }
+  |        { None }
 
 binders: 
-  | aqual_opt binder binders { ($2 $1)::$3 }
-  |                          { []     }
+  | binder binders { $1::$2 }
+  |                { []     }
 
 tyconDefn: 
   |               { (fun id binders kopt -> TyconAbstract(id, binders, kopt)) }
