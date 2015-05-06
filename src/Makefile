@@ -59,9 +59,15 @@ endif
 MSBUILD := $(MSBUILD) /verbosity:normal
 
 # --------------------------------------------------------------------
+ifeq ($(OS),Windows_NT)
+RUNTIME =
+else
+RUNTIME = mono
+endif
+
 FSLYDIR := ../VS/packages/FsLexYacc.6.0.3
-FSYACC  := $(FSLYDIR)/bin/fsyacc.exe
-FSLEX   := $(FSLYDIR)/bin/fslex.exe
+FSYACC  := $(RUNTIME) $(FSLYDIR)/bin/fsyacc.exe
+FSLEX   := $(RUNTIME) $(FSLYDIR)/bin/fslex.exe
 
 # --------------------------------------------------------------------
 .PHONY: all z3_x86 z3_x64 wc clean tidy boot ocaml
