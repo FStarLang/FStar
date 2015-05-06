@@ -158,8 +158,8 @@ type seq (a:Type) =
 type message = seq char
 let slength s = Seq.end_i s - Seq.start_i s
 assume val impure: m:message -> ST message
-                                 (requires \h -> True)
-                                 (ensures \h0 n h1 -> slength n == slength m)
+                                 (requires (fun h -> True))
+                                 (ensures (fun h0 n h1 -> slength n == slength m))
 assume val lm_corr: l:nat -> m:message{slength m==l} -> int
 val unsafe_slice: message -> i:nat -> j:nat{i<=j} -> Tot message
 let unsafe_slice (Seq c _ _) n m = Seq c n m
@@ -252,7 +252,7 @@ val length_is_nat: l:list int -> Lemma (ensures (length l >= 0))
 let rec length_is_nat l = by_induction_on l length_is_nat
 
 val poly_length_is_nat: l:list 'a -> Lemma (ensures (length l >= 0))
-let rec poly_length_is_nat 'a l = by_induction_on l (poly_length_is_nat 'a)
+let rec poly_length_is_nat 'a l = by_induction_on l (poly_length_is_nat #'a)
 
 
 val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
@@ -268,17 +268,17 @@ let test_map1 () =
 let test_map2 x = assert (map (fun x -> x + 1) [0;1;2] = [1;2;3])
 
 
-assume val test_pred: a:Type -> a -> a -> Tot bool
-assume val test_pred_lemma_1: a:Type -> x:a -> Lemma (forall (bad:a). test_pred x bad)
+assume val test_pred: #a:Type -> a -> a -> Tot bool
+assume val test_pred_lemma_1: #a:Type -> x:a -> Lemma (forall (bad:a). test_pred x bad)
 
-let test_pred_lemma_2    (a:Type) = qintro a (fun x -> forall (y:a). test_pred x y) (test_pred_lemma_1 a)
-let test_pred_lemma_unif (a:Type) = qintro (test_pred_lemma_1 a)
+let test_pred_lemma_2    (a:Type) = qintro #a #(fun x -> forall (y:a). test_pred x y) (test_pred_lemma_1 #a)
+let test_pred_lemma_unif (a:Type) = qintro (test_pred_lemma_1 #a)
 
-val test_pred_lemma_2' : a:Type -> Lemma (ensures (forall (x:a) (y:a). test_pred x y))
-let test_pred_lemma_2'  (a:Type) = qintro a (fun x -> forall (y:a). test_pred x y) (test_pred_lemma_1 a)
+val test_pred_lemma_2' : #a:Type -> Lemma (ensures (forall (x:a) (y:a). test_pred x y))
+let test_pred_lemma_2'  (a:Type) = qintro #a #(fun x -> forall (y:a). test_pred x y) (test_pred_lemma_1 #a)
 
-val test_pred_lemma_unif' : a:Type -> Lemma (ensures (forall (x:a) (y:a). test_pred x y))
-let test_pred_lemma_unif'  (a:Type) = qintro (test_pred_lemma_1 a)
+val test_pred_lemma_unif' : #a:Type -> Lemma (ensures (forall (x:a) (y:a). test_pred x y))
+let test_pred_lemma_unif'  (a:Type) = qintro (test_pred_lemma_1 #a)
 
 val even: nat -> Tot bool
 val odd: nat -> Tot bool
@@ -291,6 +291,6 @@ let test_even2 = assert (even 5 = false)
 let test_odd1 = assert (odd 4 = false)
 let test_odd2 = assert (odd 5 = true)
 
-assume val f_eq: a:Type -> p:(a -> Type) -> =arg:(u:unit -> Pure a (requires True) (ensures p)) -> Tot (x:a{p x})
+assume val f_eq: #a:Type -> #p:(a -> Type) -> =arg:(u:unit -> Pure a (requires True) (ensures p)) -> Tot (x:a{p x})
 assume val g_eq_c: unit -> Pure int (requires True) (ensures (fun x -> x >= 0))
 let h_test_eq :nat = f_eq g_eq_c

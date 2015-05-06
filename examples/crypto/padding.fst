@@ -5,20 +5,20 @@ open Array
 assume val n2b: n:nat {( n < 256 )} -> Tot (b:uint8{b==n})
 assume val b2n: b:uint8 -> Tot (n:nat { (n < 256) /\ b == n})
 
-type bytes = seq byte (* concrete byte arrays *) 
+type bytes = seq byte (* concrete byte arrays *)
 type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
 
-let blocksize = 32 
+let blocksize = 32
 type block = nbytes blocksize
 type text = b:bytes {(length b < blocksize)}
 
 val pad: n:nat { 1 <= n /\ n <= blocksize } -> Tot (nbytes n)
-let pad n = Array.create uint8 n (n2b (n-1))  
+let pad n = Array.create #uint8 n (n2b (n-1))
 
 (* pad 1 = [| 0 |]; pad 2 = [| 1; 1 |]; ... *)
 
 
-val encode: a: text -> Tot block 
+val encode: a: text -> Tot block
 let encode a = append a (pad (blocksize - length a))
 
 val inj: a: text -> b: text -> Lemma (requires (Array.equal (encode a) (encode b)))
@@ -27,7 +27,7 @@ val inj: a: text -> b: text -> Lemma (requires (Array.equal (encode a) (encode b
                                      (decreases (length a))
 let inj a b =
   if length a = length b
-  then () 
+  then ()
   else let aa = encode a in
        let bb = encode b in
        cut (Array.index aa 31 =!= Array.index bb 31)
@@ -44,7 +44,7 @@ let decode (b:block) =
          Some plain
     else None
   else None
-  
+
 module BMAC
 open Pad
 

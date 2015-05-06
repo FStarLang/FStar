@@ -324,6 +324,7 @@ let pat_as_exps allow_implicits env p
     b, exps, p
 
 let decorate_pattern env p exps = 
+    let qq = p in
     let rec aux p e : pat  = 
         let pkg q t = withinfo q (Some <| Inr t) p.p in
         let e = Util.unmeta_exp e in
@@ -361,29 +362,33 @@ let decorate_pattern env p exps =
 
               let rec match_args matched_pats args argpats = match args, argpats with 
                 | [], [] -> pkg (Pat_cons(fv, List.rev matched_pats)) (force_tk e)
-                | (Inl t, Some Implicit)::args, _ -> (* implicit type argument *)
-                  let x = Util.gen_bvar_p p.p (force_tk t) in
-                  let q = withinfo (Pat_dot_typ(x, t)) (Some<| Inl x.sort) p.p in
-                  match_args (q::matched_pats) args argpats
+                | arg::args, argpat::argpats -> 
+                  begin match arg, argpat.v with 
+                        | (Inl t, Some Implicit), Pat_dot_typ _ -> (* implicit type argument *)
+                          let x = Util.gen_bvar_p p.p (force_tk t) in
+                          let q = withinfo (Pat_dot_typ(x, t)) (Some<| Inl x.sort) p.p in
+                          match_args (q::matched_pats) args argpats
                  
-                | (Inr e, Some Implicit)::args, _ -> (* implicit value argument *)  
-                  let x = Util.gen_bvar_p p.p (force_tk e) in
-                  let q = withinfo (Pat_dot_term(x, e)) (Some <| Inr x.sort) p.p in
-                  match_args (q::matched_pats) args argpats
+                        | (Inr e, Some Implicit), Pat_dot_term _ -> (* implicit value argument *)  
+                          let x = Util.gen_bvar_p p.p (force_tk e) in
+                          let q = withinfo (Pat_dot_term(x, e)) (Some <| Inr x.sort) p.p in
+                          match_args (q::matched_pats) args argpats
                   
-                | (Inl t, _)::args, pat::argpats -> 
-                  let pat = aux_t pat t in
-                  match_args (pat::matched_pats) args argpats
+                        | (Inl t, _), _ -> 
+                          let pat = aux_t argpat t in
+                          match_args (pat::matched_pats) args argpats
 
-                | (Inr e, _)::args, pat::argpats -> 
-                  let pat = aux pat e in
-                  match_args (pat::matched_pats) args argpats
+                        | (Inr e, _), _ ->
+                          let pat = aux argpat e in
+                          match_args (pat::matched_pats) args argpats
+                 end
 
-                | _ -> failwith "Unexpected number of pattern arguments" in
+                | _ -> failwith (Util.format2 "Unexpected number of pattern arguments: \n\t%s\n\t%s\n" (Print.pat_to_string p) (Print.exp_to_string e)) in
 
               match_args [] args argpats
 
-           | _ -> failwith (Util.format3 "(%s) Impossible: pattern to decorate is %s; expression is %s\n" (Range.string_of_range p.p) (Print.pat_to_string p) (Print.exp_to_string e))
+           | _ -> failwith (Util.format3 "(%s) Impossible: pattern to decorate is %s; expression is %s\n" (Range.string_of_range qq.p) (Print.pat_to_string qq) 
+                    (exps |> List.map Print.exp_to_string |> String.concat "\n\t"))
         
     and aux_t p t0 =
        let pkg q k = withinfo q (Some <| Inl k) p.p in
@@ -1086,7 +1091,7 @@ let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
                   //let t = Util.bvd_to_typ a k in
                   unchecked_unify u t; 
                   Util.bvd_to_bvar_s a ktype in
-            t_binder a) in
+            Inl a, Some Implicit) in
     
           let t = match Util.comp_result c |> Util.function_formals with 
             | Some (bs, cod) -> mk_Typ_fun(tvars@bs, cod) (Some ktype) c.pos 

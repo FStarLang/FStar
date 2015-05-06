@@ -27,6 +27,10 @@ open Microsoft.FStar.Util
  *)
 type level = | Un | Expr | Type | Kind | Formula
 type lid = Syntax.LongIdent
+type imp = 
+    | FsTypApp
+    | Hash
+    | Nothing
 type term' = 
   | Wild      
   | Const     of Syntax.sconst
@@ -34,9 +38,9 @@ type term' =
   | Tvar      of ident
   | Var       of lid
   | Name      of lid
-  | Construct of lid * list<(term*bool)>               (* data, type: bool in each arg records an implicit *)
+  | Construct of lid * list<(term*imp)>               (* data, type: bool in each arg records an implicit *)
   | Abs       of list<pattern> * term
-  | App       of term * term * bool                    (* aqual marks an explicitly provided implicit parameter *)
+  | App       of term * term * imp                    (* aqual marks an explicitly provided implicit parameter *)
   | Let       of bool * list<(pattern * term)> * term  (* bool is for let rec *)
   | Seq       of term * term
   | If        of term * term * term
@@ -69,9 +73,9 @@ and pattern' =
   | PatWild
   | PatConst    of Syntax.sconst 
   | PatApp      of pattern * list<pattern> 
-  | PatVar      of ident * bool         (* flag marks an explicitly provided implicit *)
+  | PatVar      of ident * bool         (* flag marks an implicit *)
   | PatName     of lid
-  | PatTvar     of ident
+  | PatTvar     of ident * bool         (* flag marks an implicit *)
   | PatList     of list<pattern>
   | PatTuple    of list<pattern> * bool (* dependent if flag is set *)
   | PatRecord   of list<(lid * pattern)>
@@ -142,7 +146,9 @@ let lid_with_range lid r = lid_of_path (path_of_lid lid) r
 
 let to_string_l sep f l = 
   String.concat sep (List.map f l)
-
+let imp_to_string = function 
+    | Hash -> "#"
+    | _ -> ""
 let rec term_to_string (x:term) = match x.tm with 
   | Wild -> "_"
   | Requires (t, _) -> Util.format1 "(requires %s)" (term_to_string t)
@@ -154,12 +160,12 @@ let rec term_to_string (x:term) = match x.tm with
   | Var l
   | Name l -> Print.sli l
   | Construct(l, args) -> 
-    Util.format2 "(%s %s)" (Print.sli l) (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (if imp then "#" else "") (term_to_string a)) args)
+    Util.format2 "(%s %s)" (Print.sli l) (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
   | Abs(pats, t) when (x.level = Expr) -> 
     Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | Abs(pats, t) when (x.level = Type) -> 
     Util.format2 "(fun %s => %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
-  | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (if imp then "#" else "") (t2|> term_to_string)
+  | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)
   | Let(false, [(pat,tm)], body) -> 
     Util.format3 "let %s = %s in %s" (pat|> pat_to_string) (tm|> term_to_string) (body|> term_to_string)
   | Let(_, lbs, body) -> 
@@ -227,8 +233,9 @@ and pat_to_string x = match x.pat with
   | PatWild -> "_"
   | PatConst c -> Print.const_to_string c
   | PatApp(p, ps) -> Util.format2 "(%s %s)" (p |> pat_to_string) (to_string_l " " pat_to_string ps)
-  | PatTvar i 
+  | PatTvar (i, true)
   | PatVar (i, true) -> Util.format1 "#%s" i.idText
+  | PatTvar(i, false)
   | PatVar (i, false) -> i.idText
   | PatName l -> Print.sli l
   | PatList l -> Util.format1 "[%s]" (to_string_l "; " pat_to_string l)
@@ -244,8 +251,8 @@ let error msg tm r =
  raise (Error(msg^"\n"^tm, r))
 
 let consPat r hd tl = PatApp(mk_pattern (PatName Const.cons_lid) r, [hd;tl])
-let consTerm r hd tl = mk_term (Construct(Const.cons_lid, [(hd, false);(tl, false)])) r Expr
-let lexConsTerm r hd tl = mk_term (Construct(Const.lexcons_lid, [(hd, false);(tl, false)])) r Expr
+let consTerm r hd tl = mk_term (Construct(Const.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
+let lexConsTerm r hd tl = mk_term (Construct(Const.lexcons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
 
 let mkConsList r elts =  
   let nil = mk_term (Construct(Const.nil_lid, [])) r Expr in
@@ -264,16 +271,19 @@ let mkApp t args r = match args with
 let mkExplicitApp t args r = match args with 
   | [] -> t 
   | _ -> match t.tm with 
-      | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, false)) args))) r Un
-      | _ -> List.fold_left (fun t a -> mk_term (App(t, a, false)) r Un) t args
-          
+      | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r Un
+      | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r Un) t args
+
+let mkFsTypApp t args r = 
+  mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
+
 let mkTuple args r = 
   let cons = Util.mk_tuple_data_lid (List.length args) r in 
-  mkExplicitApp (mk_term (Name cons) r Expr) args r
+  mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
 
 let mkDTuple args r = 
   let cons = Util.mk_dtuple_data_lid (List.length args) r in 
-  mkExplicitApp (mk_term (Name cons) r Expr) args r
+  mkApp (mk_term (Name cons) r Expr) (List.map (fun x -> (x, Nothing)) args) r
     
 let mkRefinedBinder id t refopt m implicit = 
   let b = mk_binder (Annotated(id, t)) m Type implicit in

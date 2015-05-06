@@ -309,7 +309,7 @@ let rec sorted f = function
   | [_] -> true
   | x::y::tl -> f x y && sorted f (y::tl)
 
-opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
+opaque type total_order (#a:Type) (f: (a -> a -> Tot bool)) =
     (forall a. f a a)                                           (* reflexivity   *)
     /\ (forall a1 a2. f a1 a2 /\ f a2 a1  ==> a1 = a2)          (* anti-symmetry *)
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
@@ -320,12 +320,12 @@ opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
 (*     /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (\* anti-symmetry + totality *\) *)
 (*     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (\* transitivity  *\) *)
 
-val append_sorted:  a:Type
+val append_sorted: #a:Type
                ->  f:(a -> a -> Tot bool)
                ->  l1:list a{sorted f l1}
                ->  l2:list a{sorted f l2}
                ->  pivot:a
-               ->  Lemma (requires (total_order a f
+               ->  Lemma (requires (total_order #a f
                                     /\ (forall y. mem y l1 ==> not(f pivot y))
                                     /\ (forall y. mem y l2 ==> f pivot y))
 )                         (ensures (sorted f (l1@(pivot::l2))))
@@ -334,8 +334,8 @@ let rec append_sorted f l1 l2 pivot = match l1 with
   | [] -> ()
   | hd::tl -> append_sorted f tl l2 pivot
 
-val sortWithT_sorted: 'a:Type -> f:('a -> 'a -> Tot int) -> l:list 'a ->
-  Lemma (requires (total_order 'a (bool_of_compare f)))
+val sortWithT_sorted: #a:Type -> f:(a -> a -> Tot int) -> l:list a ->
+  Lemma (requires (total_order #a (bool_of_compare f)))
         (ensures ((sorted (bool_of_compare f) (sortWithT f l)) /\ (forall x. mem x l = mem x (sortWithT f l))))
         (decreases (length l))
 let rec sortWithT_sorted f l = match l with

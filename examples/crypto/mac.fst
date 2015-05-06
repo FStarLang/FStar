@@ -31,28 +31,28 @@
 
 
 
-module SHA1 
+module SHA1
 open Array
 
-type bytes = seq byte (* concrete byte arrays *) 
+type bytes = seq byte (* concrete byte arrays *)
 type text  = bytes    (* a type abbreviation, for clarity *)
 
-type nbytes (n:nat) = 
+type nbytes (n:nat) =
   b:bytes{length b == n} (* fixed-length bytes *)
 
 (* we rely on some external crypto library implementing HMAC-SHA1 *)
 
-let keysize = 16 
-let macsize = 20  
+let keysize = 16
+let macsize = 20
 
 type key = nbytes keysize
 type tag = nbytes macsize
 
 assume val sample: n:nat -> nbytes n
-assume val sha1: key -> text -> Tot tag 
+assume val sha1: key -> text -> Tot tag
 
 
-(* to verify, we simply recompute & compare *) 
+(* to verify, we simply recompute & compare *)
 
 val sha1verify: key -> text -> tag -> Tot bool
 let sha1verify k txt tag = (sha1 k txt = tag)
@@ -64,14 +64,14 @@ let sha1verify k txt tag = (sha1 k txt = tag)
 
 
 
-module MAC 
+module MAC
 open Array
 open SHA1
 
 (* ---- specification *)
 
-(* we attach an authenticated properties to each key, 
-   used as a pre-condition for MACing and 
+(* we attach an authenticated properties to each key,
+   used as a pre-condition for MACing and
    a postcondition of MAC verification *)
 
 opaque type key_prop : key -> text -> Type
@@ -104,44 +104,44 @@ val verify: k:key -> t:text -> tag -> b:bool{b ==> key_prop k t}
 
 (* ---- implementation *)
 
-let keygen (p: (text -> Type)) = 
+let keygen (p: (text -> Type)) =
   let k = sample keysize in
   assume (key_prop k == p);
   k
 
-(* to model authentication, we log all genuine calls 
-   to MACs; the ideal implementation below uses the 
+(* to model authentication, we log all genuine calls
+   to MACs; the ideal implementation below uses the
    log to correct errors. *)
 
-type entry = 
-  | Entry : k:key 
+type entry =
+  | Entry : k:key
          -> t:text{key_prop k t}
          -> m:tag
          -> entry
 
-let log = ST.alloc (list entry) [] 
+let log = ST.alloc #(list entry) [] 
 
-let mac k t = 
+let mac k t =
   let m = sha1 k t in
   log := Entry k t m :: !log;
   m
 
 let verify k text tag =
-  let verified = sha1verify k text tag in 
+  let verified = sha1verify k text tag in
   let found =
-    is_Some 
-      (List.find 
+    is_Some
+      (List.find
         (fun (Entry k' text' tag') -> k=k' && text=text')
-        !log) in 
+        !log) in
 
-  (* plain, concrete implementation (ignoring the log) *) 
-//verified           
+  (* plain, concrete implementation (ignoring the log) *)
+//verified
 
-  (* ideal, error-correcting implementation *) 
-  verified && found  
+  (* ideal, error-correcting implementation *)
+  verified && found
 
   (* error-detecting implementation for the INT-CMA game *)
-//(if verified && not found then win := Some(k,text,tag)); 
+//(if verified && not found then win := Some(k,text,tag));
 //verified
 
 

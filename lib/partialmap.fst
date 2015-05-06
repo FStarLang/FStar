@@ -9,43 +9,43 @@ assume type Equal : #a:Type -> set a -> set a -> Type
 
 (* private *) assume Extensionality : (forall (a:Type) (s1:set a) (s2:set a). Equal s1 s2 <==> s1 = s2)
 
-val empty : a:Type -> Tot (set a)
+val empty : #a:Type -> Tot (set a)
 (* private *) let empty = (fun _ -> false)
 
-val singleton : a:Type -> a -> Tot (set a)
+val singleton : #a:Type -> a -> Tot (set a)
 (* private *) let singleton x = (fun y -> y = x)
 
-val union : a:Type -> set a -> set a -> Tot (set a)
+val union : #a:Type -> set a -> set a -> Tot (set a)
 (* private *) let union s1 s2 = (fun x -> s1 x || s2 x)
 
-val intersect : a:Type -> set a -> set a -> Tot (set a)
+val intersect : #a:Type -> set a -> set a -> Tot (set a)
 (* private *) let intersect s1 s2 = (fun x -> s1 x && s2 x)
 
-val complement : a:Type -> set a -> Tot (set a)
+val complement : #a:Type -> set a -> Tot (set a)
 (* private *) let complement s = (fun x -> not (s x))
 
-val mem : a:Type -> a -> set a -> Tot bool
+val mem : #a:Type -> a -> set a -> Tot bool
 (* private *) let mem x s = s x
 
-val memEmpty : a:Type -> x:a -> Lemma (requires True) (ensures (not (mem x empty))) [SMTPat (mem x empty)]
+val memEmpty : #a:Type -> x:a -> Lemma (requires True) (ensures (not (mem x empty))) [SMTPat (mem x empty)]
 (* private *) let memEmpty (a:Type) (x:a) = ()
 
-val memSingleton : a:Type -> x:a -> y:a -> Lemma (requires True) (ensures (mem x (singleton y) == (x = y))) [SMTPat (mem x (singleton y))]
+val memSingleton : #a:Type -> x:a -> y:a -> Lemma (requires True) (ensures (mem x (singleton y) == (x = y))) [SMTPat (mem x (singleton y))]
 (* private *) let memSingleton (a:Type) (x:a) (y:a) = ()
 
-val memUnion : a:Type -> s1:set a -> s2:set a -> x:a -> Lemma (requires True) (ensures (mem x (union s1 s2) = (mem x s1 || mem x s2))) [SMTPat (mem x (union s1 s2))]
+val memUnion : #a:Type -> s1:set a -> s2:set a -> x:a -> Lemma (requires True) (ensures (mem x (union s1 s2) = (mem x s1 || mem x s2))) [SMTPat (mem x (union s1 s2))]
 (* private *) let memUnion (a:Type) (s1:set a) (s2:set a) (x:a) = ()
 
-val memIntersect : a:Type -> s1:set a -> s2:set a -> x:a -> Lemma (requires True) (ensures (mem x (intersect s1 s2) = (mem x s1 && mem x s2))) [SMTPat (mem x (intersect s1 s2))]
+val memIntersect : #a:Type -> s1:set a -> s2:set a -> x:a -> Lemma (requires True) (ensures (mem x (intersect s1 s2) = (mem x s1 && mem x s2))) [SMTPat (mem x (intersect s1 s2))]
 (* private *) let memIntersect (a:Type) (s1:set a) (s2:set a) (x:a) = ()
 
-val memComplement : a:Type -> s:set a -> x:a -> Lemma (requires True) (ensures (mem x (complement s) = not (mem x s))) [SMTPat (mem x (complement s))]
+val memComplement : #a:Type -> s:set a -> x:a -> Lemma (requires True) (ensures (mem x (complement s) = not (mem x s))) [SMTPat (mem x (complement s))]
 (* private *) let memComplement (a:Type) (s:set a) (x:a) = ()
 
-val extensional : a:Type -> s1:set a -> s2:set a -> Lemma (requires True) (ensures (Equal s1 s2 <==> s1 = s2)) (* error: [SMTPat (Equal a s1 s2)] *)
+val extensional : #a:Type -> s1:set a -> s2:set a -> Lemma (requires True) (ensures (Equal s1 s2 <==> s1 = s2)) (* error: [SMTPat (Equal a s1 s2)] *)
 (* private *) let extensional (a:Type) (s1:set a) (s2:set a) = ()
 
-val equals : a:Type -> s1:set a -> s2:set a -> Lemma (requires True) (ensures (Equal s1 s2 <==> (forall x. (* error: {:pattern (mem x s1); (mem x s2)}*) mem x s1 = mem x s2))) (* error: [SMTPat (Equal a s1 s2)] *)
+val equals : #a:Type -> s1:set a -> s2:set a -> Lemma (requires True) (ensures (Equal s1 s2 <==> (forall x. (* error: {:pattern (mem x s1); (mem x s2)}*) mem x s1 = mem x s2))) (* error: [SMTPat (Equal a s1 s2)] *)
 (* private *) let equals (a:Type) (s1:set a) (s2:set a) = ()
 
 let minus (a:Type) (s1:set a) (s2:set a) = intersect s1 (complement s2)
@@ -59,13 +59,13 @@ open Prims.PURE
 open Set
 
 assume type t : Type -> Type -> Type
-assume logic val sel :       key:Type -> value:Type -> t key value -> key -> Tot value
-assume logic val upd :       key:Type -> value:Type -> t key value -> key -> value -> Tot (t key value)
-assume logic val const :     key:Type -> value:Type -> v:value -> Tot (t key value)
-assume logic val concat:     key:Type -> value:Type -> t key value -> t key value -> Tot (t key value)
-assume logic val contains:   key:Type -> value:Type -> t key value -> key -> Tot bool
-assume logic val equal:      key:Type -> value:Type -> t key value -> t key value -> Tot bool
-assume logic val restrict:   key:Type -> value:Type -> set key -> t key value -> Tot (t key value)
+assume logic val sel :       #key:Type -> #value:Type -> t key value -> key -> Tot value
+assume logic val upd :       #key:Type -> #value:Type -> t key value -> key -> value -> Tot (t key value)
+assume logic val const :     #key:Type -> #value:Type -> v:value -> Tot (t key value)
+assume logic val concat:     #key:Type -> #value:Type -> t key value -> t key value -> Tot (t key value)
+assume logic val contains:   #key:Type -> #value:Type -> t key value -> key -> Tot bool
+assume logic val equal:      #key:Type -> #value:Type -> t key value -> t key value -> Tot bool
+assume logic val restrict:   #key:Type -> #value:Type -> set key -> t key value -> Tot (t key value)
 
 assume SelUpd1:       forall (key:Type) (value:Type) (m:t key value) (k:key) (v:value).          {:pattern sel (upd m k v) k}
                       sel (upd m k v) k == v
@@ -106,6 +106,7 @@ assume Extensional:   forall (key:Type) (value:Type) (m1:t key value) (m2:t key 
 assume Equals:        forall (key:Type) (value:Type) (m1:t key value) (m2:t key value).          {:pattern (equal m1 m2)}
                       equal m1 m2 <==> (forall k.{:pattern (sel m1 k); (sel m2 k)} sel m1 k == sel m2 k)
 
+val const_on: #key:Type -> #value:Type -> set key -> value -> Tot (t key value)
 let const_on (key:Type) (value:Type) (dom:set key) (v:value) = restrict dom (const v)
 
 opaque type DisjointDom (key:Type) (value:Type) (m1:t key value) (m2:t key value) =
@@ -114,8 +115,8 @@ opaque type DisjointDom (key:Type) (value:Type) (m1:t key value) (m2:t key value
 module Heap
 open Set
 
-type aref = 
-  | Ref : a:Type -> r:ref a -> aref
+type aref =
+  | Ref : #a:Type -> r:ref a -> aref
 
 type refs =
   | AllRefs : refs
@@ -124,18 +125,18 @@ type refs =
 let no_refs  = SomeRefs empty
 let a_ref  r = SomeRefs (singleton (Ref r))
 
-assume logic val sel :       a:Type -> heap -> ref a -> Tot a
-assume logic val upd :       a:Type -> heap -> ref a -> a -> Tot heap
+assume logic val sel :       #a:Type -> heap -> ref a -> Tot a
+assume logic val upd :       #a:Type -> heap -> ref a -> a -> Tot heap
 assume logic val emp :       heap
-assume logic val contains :  a:Type -> heap -> ref a -> Tot bool
+assume logic val contains :  #a:Type -> heap -> ref a -> Tot bool
 assume logic val equal:      heap -> heap -> Tot bool
 assume logic val restrict:   heap -> set aref -> Tot heap
 assume logic val concat:     heap -> heap -> Tot heap
 
-assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).            {:pattern (sel (upd h r v) r)}       
+assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).            {:pattern (sel (upd h r v) r)}
                       sel (upd h r v) r == v
 
-assume SelUpd2:       forall (a:Type) (b:Type) (h:heap) (k1:ref a) (k2:ref b) (v:b).{:pattern (sel (upd h k2 v) k1)}     
+assume SelUpd2:       forall (a:Type) (b:Type) (h:heap) (k1:ref a) (k2:ref b) (v:b).{:pattern (sel (upd h k2 v) k1)}
                       k2=!=k1 ==> sel (upd h k2 v) k1 == sel h k1
 
 assume ContainsUpd:   forall (a:Type) (b:Type) (h:heap) (k1:ref a) (k2:ref b) (v:a).{:pattern contains (upd h k1 v) k2}
@@ -144,10 +145,10 @@ assume ContainsUpd:   forall (a:Type) (b:Type) (h:heap) (k1:ref a) (k2:ref b) (v
 assume InDomEmp:      forall (a:Type) (k:ref a).                           {:pattern contains emp k}
                       not(contains emp k)
 
-assume Extensional:   forall (h1:heap) (h2:heap).                          {:pattern equal h1 h2}               
+assume Extensional:   forall (h1:heap) (h2:heap).                          {:pattern equal h1 h2}
                       equal h1 h2 <==> h1 == h2
 
-assume Equals:        forall (h1:heap) (h2:heap).                          {:pattern equal h1 h2}               
+assume Equals:        forall (h1:heap) (h2:heap).                          {:pattern equal h1 h2}
                       equal h1 h2 <==> (forall (a:Type) (k:ref a).{:pattern (sel h1 k); (sel h2 k)} sel h1 k == sel h2 k)
 
 assume RestrictSel:   forall (a:Type) (h:heap) (r:set aref) (a:ref a).     {:pattern sel (restrict h r) a}
@@ -169,43 +170,43 @@ opaque type fresh (h:heap) (refs:set aref)       = (forall (a:Type) (a:ref a).{:
 module Array
 
 type seq : Type -> Type
-assume val const:  a:Type -> nat -> a -> Tot (seq a)
-assume val upd:    a:Type -> nat -> a -> seq a -> Tot (seq a)
-assume val append: a:Type -> seq a -> seq a -> Tot (seq a)
-assume val sub:    a:Type -> s:seq a -> i:nat -> j:nat -> Tot (seq a)
-assume val length: a:Type -> seq a -> Tot nat
-assume val sel:    a:Type -> seq a -> nat -> Tot a
-assume val equal:  a:Type -> seq a -> seq a -> Tot bool
+assume val const:  #a:Type -> nat -> a -> Tot (seq a)
+assume val upd:    #a:Type -> nat -> a -> seq a -> Tot (seq a)
+assume val append: #a:Type -> seq a -> seq a -> Tot (seq a)
+assume val sub:    #a:Type -> s:seq a -> i:nat -> j:nat -> Tot (seq a)
+assume val length: #a:Type -> seq a -> Tot nat
+assume val sel:    #a:Type -> seq a -> nat -> Tot a
+assume val equal:  #a:Type -> seq a -> seq a -> Tot bool
 
-assume LengthConst: forall (a:Type) (n:nat) (x:a).                     {:pattern (length a (const a n x))}    length a (const a n x)    == n
-assume LengthUpd:   forall (a:Type) (i:nat) (x:a) (s:seq a).           {:pattern (length a (upd a i x s))}    length a (upd a i x s)    == length a s
-assume LengthApp:   forall (a:Type) (s1:seq a) (s2:seq a).             {:pattern (length a (append a s1 s2))} length a (append a s1 s2) == length s1 + length s2
-assume LengthSub:   forall (a:Type) (s:seq a) (i:nat) (j:nat).         {:pattern (length a (sub a s i j))}    (i <= j && j <= length s) ==> length a (sub a s i j) == j - i
-assume SelConst:    forall (a:Type) (n:nat) (x:a) (i:nat).             {:pattern (sel (const a n x) i)}       (i < n) ==> sel a (const a n x) i     == x
-assume SelUpd1:     forall (a:Type) (s:seq a) (i:nat) (x:a).           {:pattern (sel (upd a i x s) i)}       sel a (upd a i x s) i     == x
-assume SelUpd2:     forall (a:Type) (s:seq a) (i:nat) (j:nat) (x:a).   {:pattern (sel (upd a j x s) i)}       i=!=j ==> sel a (upd a j x s) i == sel a s i
+assume LengthConst: forall (a:Type) (n:nat) (x:a).                     {:pattern (length #a (const #a n x))}    length #a (const #a n x)    == n
+assume LengthUpd:   forall (a:Type) (i:nat) (x:a) (s:seq a).           {:pattern (length #a (upd #a i x s))}    length #a (upd #a i x s)    == length #a s
+assume LengthApp:   forall (a:Type) (s1:seq a) (s2:seq a).             {:pattern (length #a (append #a s1 s2))} length #a (append #a s1 s2) == length s1 + length s2
+assume LengthSub:   forall (a:Type) (s:seq a) (i:nat) (j:nat).         {:pattern (length #a (sub #a s i j))}    (i <= j && j <= length s) ==> length #a (sub #a s i j) == j - i
+assume SelConst:    forall (a:Type) (n:nat) (x:a) (i:nat).             {:pattern (sel (const #a n x) i)}       (i < n) ==> sel #a (const #a n x) i     == x
+assume SelUpd1:     forall (a:Type) (s:seq a) (i:nat) (x:a).           {:pattern (sel (upd #a i x s) i)}       sel #a (upd #a i x s) i     == x
+assume SelUpd2:     forall (a:Type) (s:seq a) (i:nat) (j:nat) (x:a).   {:pattern (sel (upd #a j x s) i)}       i=!=j ==> sel #a (upd #a j x s) i == sel #a s i
 assume SelAppend1:  forall (a:Type) (s1:seq a) (s2:seq a) (i:nat).     {:pattern (sel (append s1 s2) i)}      (i < length s1)  ==> sel (append s1 s2) i == sel s1 i
 assume SelAppend2:  forall (a:Type) (s1:seq a) (s2:seq a) (i:nat).     {:pattern (sel (append s1 s2) i)}      (i >= length s1) ==> sel (append s1 s2) i == sel s2 i
-assume SelSub:      forall (a:Type) (s:seq a) (i:nat) (j:nat) (k:nat). {:pattern (sel (sub a s i j) k)}       (k < (j - i)) ==> sel (sub a s i j) k == sel a s (i + k)
-assume Extensional: forall (a:Type) (s1:seq a) (s2:seq a).             {:pattern (equal a s1 s2)}             equal a s1 s2 <==> s1==s2
-assume Equals:      forall (a:Type) (s1:seq a) (s2:seq a).             {:pattern (equal a s1 s2)}             equal a s1 s2 <==> 
-                            (forall (i:nat).{:pattern (sel a s1 i); (sel a s2 i)} (length s1 == length s2 
+assume SelSub:      forall (a:Type) (s:seq a) (i:nat) (j:nat) (k:nat). {:pattern (sel (sub #a s i j) k)}       (k < (j - i)) ==> sel (sub #a s i j) k == sel #a s (i + k)
+assume Extensional: forall (a:Type) (s1:seq a) (s2:seq a).             {:pattern (equal #a s1 s2)}             equal #a s1 s2 <==> s1==s2
+assume Equals:      forall (a:Type) (s1:seq a) (s2:seq a).             {:pattern (equal #a s1 s2)}             equal #a s1 s2 <==>
+                            (forall (i:nat).{:pattern (sel #a s1 i); (sel #a s2 i)} (length s1 == length s2
                                                                                    /\ i < length s1
-                                                                                   /\ sel a s1 i == sel a s2 i))
+                                                                                   /\ sel #a s1 i == sel #a s2 i))
 assume TypeInj:     forall (a:Type) (b:Type) (s1:seq a) (s2:seq b). s1==s2 ==> a==b
 assume AppendInj:   forall (a:Type) (b1:seq a) (b2:seq a) (c1:seq a) (c2:seq a). {:pattern (equal (append b1 b2) (append c1 c2))}
                                                                          (length b1 == length c1 /\ equal (append b1 b2) (append c1 c2))
                                                                          ==> (equal b1 c1 /\ equal b2 c2)
 assume AppendSplit: forall (a:Type) (b:seq a) (i:nat). {:pattern (append (sub b 0 i) (sub b i (length b)))} equal (append (sub b 0 i) (sub b i (length b))) b
 
-val create: a:Type -> nat -> a -> Tot (seq a)
-let create (a:Type) (n:nat) (init:a) = const a n init
+val create: #a:Type -> nat -> a -> Tot (seq a)
+let create (a:Type) (n:nat) (init:a) = const #a n init
 
-val index: a:Type -> s:seq a -> i:nat{(i < length s)} -> Tot a
-let index (a:Type) s i   = sel a s i
+val index: #a:Type -> s:seq a -> i:nat{(i < length s)} -> Tot a
+let index (a:Type) s i   = sel #a s i
 
-val slice: a:Type -> s:seq a -> i:nat -> j:nat{(i <= j /\ j <= length s)} -> Tot (seq a)
-let slice (a:Type) s i j = sub a s i j
+val slice: #a:Type -> s:seq a -> i:nat -> j:nat{(i <= j /\ j <= length s)} -> Tot (seq a)
+let slice (a:Type) s i j = sub #a s i j
 
-val split: a:Type -> s:seq a -> i:nat{(0 <= i /\ i < length s)} -> Tot (seq a * seq a)
+val split: #a:Type -> s:seq a -> i:nat{(0 <= i /\ i < length s)} -> Tot (seq a * seq a)
 let split s i = slice s 0 i, slice s i (length s)

@@ -33,7 +33,7 @@ let no_inst env = {env with Env.instantiate_targs=false; Env.instantiate_vargs=f
 let mk_lex_list vs =
     List.fold_right (fun v tl -> 
         let r = if tl.pos = dummyRange then v.pos else Range.union_ranges v.pos tl.pos in
-        mk_Exp_app(lex_pair, [targ (Recheck.recompute_typ v); varg v; varg tl]) (Some lex_t) r) vs lex_top
+        mk_Exp_app(lex_pair, [(Inl <| Recheck.recompute_typ v, Some Implicit); varg v; varg tl]) (Some lex_t) r) vs lex_top
 let is_eq = function 
     | Some Equality -> true
     | _ -> false
@@ -353,7 +353,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
         (Util.string_of_int <| List.length args)
         (Print.typ_to_string top);
     let head, k1', f1 = tc_typ (no_inst env) head in 
-    
+    let args0 = args in 
     let k1 = Normalize.norm_kind [Normalize.WHNF; Normalize.Beta] env k1' in 
    
     if debug env Options.Extreme then Util.fprint4 "(%s) head %s has kind %s ... after norm %s\n"
@@ -374,27 +374,30 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
          kres, args, g
        
        | Kind_arrow(formals, kres) -> 
-
-          let add_implicits formals args = match formals, args with 
-            | (_, Some Implicit)::_, (_, None)::_ -> (* a prefix of formals are implicit args are to be instantiated *)
-              let rec aux subst formals implicits us = match formals with 
-                | [] -> subst, formals, implicits, us
-                | (_, aq)::_ when (aq <> Some Implicit) -> subst, formals, implicits, us
-                | formal::formals -> 
-                  let implicit, u = match fst formal with 
-                    | Inl a -> 
-                      let t, u = Tc.Util.new_implicit_tvar env (Util.subst_kind subst a.sort) in
-                      (Inl t, as_implicit true), Inl u
-                    | Inr x -> 
-                      let e, u = Tc.Util.new_implicit_evar env (Util.subst_typ subst x.sort) in 
-                      (Inr e, as_implicit true), Inr u in
-                  let subst = maybe_extend_subst subst formal implicit in
-                  aux subst formals (implicit::implicits) (u::us) in
-              aux [] formals [] []
-           | _ -> [], formals, [], [] in
-           
-          let rec check_explicit_args outargs subst g formals args = match formals, args with 
+           let rec check_args outargs subst g formals args = match formals, args with 
               | [], [] -> Util.subst_kind subst kres, List.rev outargs, g
+
+              | (_, None)::_, (_, Some Implicit)::_  
+              | (_, Some Equality)::_, (_, Some Implicit)::_  -> raise (Error("Argument is marked as instanting an implicit parameter; although the expected parameter is explicit", Util.range_of_arg (List.hd args)))
+
+              | (Inl a, Some Implicit)::rest, (_, None)::_ 
+              | (Inl a, Some Implicit)::rest, [] ->  (* Instantiate an implicit type argument *)
+                 let formal = List.hd formals in
+                 let t, u = Tc.Util.new_implicit_tvar env (Util.subst_kind subst a.sort) in
+                 let targ = (Inl t, Some Implicit) in
+                 let g = add_implicit (Inl u) g in
+                 let subst = maybe_extend_subst subst formal targ in
+                 check_args (targ::outargs) subst g rest args
+
+              | (Inr x, Some Implicit)::rest, (_, None)::_ 
+              | (Inr x, Some Implicit)::rest, [] ->  (* instantiate an implicit expression argument *)
+                 let formal = List.hd formals in
+                 let e, u = Tc.Util.new_implicit_evar env (Util.subst_typ subst x.sort) in 
+                 let varg = (Inr e, Some Implicit) in
+                 let g = add_implicit (Inr u) g in
+                 let subst = maybe_extend_subst subst formal varg in
+                 check_args (varg::outargs) subst g rest args
+
               | formal::formals, actual::actuals -> 
                 begin match formal, actual with 
                     | (Inl a, aqual), (Inl t, imp) -> (* explicit type argument *)
@@ -408,7 +411,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
                       let actual = Inl t, imp in
                       let g' = Rel.imp_guard (Rel.guard_of_guard_formula <| Tc.Util.short_circuit_typ (Inl head) outargs) g' in
                       let subst = maybe_extend_subst subst formal actual in
-                      check_explicit_args (actual::outargs) subst (Rel.conj_guard g g') formals actuals
+                      check_args (actual::outargs) subst (Rel.conj_guard g g') formals actuals
 
                     | (Inr x, aqual), (Inr v, imp) -> (* explicit term argument *)
                       let tx = Util.subst_typ subst x.sort in
@@ -419,29 +422,30 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
                       let actual = Inr v, imp in
                       let g' = Rel.imp_guard (Rel.guard_of_guard_formula <| Tc.Util.short_circuit_typ (Inl head) outargs) g' in
                       let subst = maybe_extend_subst subst formal actual in
-                      check_explicit_args (actual::outargs) subst (Rel.conj_guard g g') formals actuals
+                      check_args (actual::outargs) subst (Rel.conj_guard g g') formals actuals
 
                     | (Inl a, _), (Inr v, imp) -> (* bool-to-type promotion *)
                        begin match a.sort.n with
                             | Kind_type ->
                                 let tv = Util.b2t v in 
-                                check_explicit_args outargs subst g (formal::formals) (targ tv::actuals)
+                                check_args outargs subst g (formal::formals) (targ tv::actuals)
                             | _ ->
                               raise (Error("Expected a type; got an expression", v.pos))
                        end
-            
-                    | (Inr x, _), (Inl t, _) ->
-                      raise (Error(Util.format2 "Expected an expression (%s); got a type (%s)" (Print.strBvd x.v) (Print.typ_to_string t), t.pos)) 
-                end 
 
-             | _, [] -> Util.subst_kind subst (mk_Kind_arrow(formals, kres) kres.pos), List.rev outargs, g //partial app
+                    | (Inr _, _), (Inl _, _) -> 
+                        raise (Error("Expcetd an expression; got a type", Util.range_of_arg actual))
+                end
 
-             | [], _ -> raise (Error(Util.format3 "Too many arguments to type: head is %s, seen args = %s, more args = %s\n" 
-                                        (Print.typ_to_string head) (Print.args_to_string (List.rev outargs)) (Print.args_to_string args), 
-                                    top.pos)) in
 
-         let subst, formals, implicits, us = add_implicits formals args in
-         with_implicits us <| check_explicit_args implicits subst f1 formals args
+              | _, [] -> Util.subst_kind subst (mk_Kind_arrow(formals, kres) kres.pos), List.rev outargs, g //partial app
+
+              | [], _ -> raise (Error(Util.format2 "Too many arguments to type; expected %s arguments but got %s"
+                                        (List.length (outargs |> List.filter (function (_, Some Implicit) -> false | _ -> true)) |> Util.string_of_int) 
+                                        (List.length args0 |> Util.string_of_int),
+                                      top.pos)) in
+
+          check_args [] [] f1 formals args
       
       
        | _ -> raise (Error(Tc.Errors.expected_tcon_kind env top k1, top.pos)) in
@@ -863,14 +867,14 @@ and tc_exp env e : exp * lcomp * guard_t =
                                    cres     (* function result comp *)
                                    args     (* actual arguments  *) : (exp * lcomp * guard_t) =
                    match bs, args with 
-                    | (Inl a, _)::rest, (Inr e, _)::_ -> (* instantiate a type argument *) 
+                    | (Inl a, Some Implicit)::rest, (_, None)::_ -> (* instantiate an implicit type argument *) 
                       let k = Util.subst_kind subst a.sort in
                       fxv_check head env (Inl k) fvs;
-                      let targ, u = Tc.Rel.new_tvar e.pos vars k in 
+                      let targ, u = Tc.Rel.new_tvar (Util.range_of_arg (List.hd args)) vars k in 
                       if debug env Options.Extreme then Util.fprint2 "Instantiating %s to %s" (Print.strBvd a.v) (Print.typ_to_string targ);
                       let subst = (Inl(a.v, targ))::subst in
                       let arg = Inl targ, as_implicit true in
-                      tc_args (subst, arg::outargs, arg::arg_rets, comps, add_implicit (Inl <| (Tc.Util.as_uvar_t u, u.pos)) g, fvs) rest cres args
+                      tc_args (subst, arg::outargs, arg::arg_rets, comps, add_implicit (Inl (Tc.Util.as_uvar_t u, u.pos)) g, fvs) rest cres args
 
                     | (Inr x, Some Implicit)::rest, (_, None)::_ -> (* instantiate an implicit value arg *)
                       let t = Util.subst_typ subst x.sort in
@@ -880,18 +884,18 @@ and tc_exp env e : exp * lcomp * guard_t =
                       let arg = Inr varg, as_implicit true in
                       tc_args (subst, arg::outargs, arg::arg_rets, comps, add_implicit (Inr u) g, fvs) rest cres args
 
-                    | (Inl a, aqual)::rest, (Inl t, _)::rest' -> (* a concrete type argument *)
+                    | (Inl a, aqual)::rest, (Inl t, aq)::rest' -> (* a concrete type argument *)
                       if debug env Options.Extreme then Util.fprint2 "\tGot a type arg for %s = %s\n" (Print.strBvd a.v) (Print.typ_to_string t);
                       let k = Util.subst_kind subst a.sort in 
                       fxv_check head env (Inl k) fvs;
                       let t, g' = tc_typ_check ({env with use_eq=is_eq aqual}) t k in
                       let f = Tc.Util.label_guard Errors.ill_kinded_type t.pos (guard_f g') in
                       let g' = {g' with Rel.guard_f=f} in
-                      let arg = targ t in 
+                      let arg = Inl t, aq in
                       let subst = maybe_extend_subst subst (List.hd bs) arg in
                       tc_args (subst, arg::outargs, arg::arg_rets, comps, Rel.conj_guard g g', fvs) rest cres rest'
 
-                    | (Inr x, aqual)::rest, (Inr e, _)::rest' -> (* a concrete exp argument *)
+                    | (Inr x, aqual)::rest, (Inr e, aq)::rest' -> (* a concrete exp argument *)
                       if debug env Options.Extreme then Util.fprint2 "\tType of arg (before subst (%s)) = %s\n" (Print.subst_to_string subst) (Print.typ_to_string x.sort);
                       let targ = Util.subst_typ subst x.sort in 
                       if debug env Options.Extreme then  Util.fprint1 "\tType of arg (after subst) = %s\n" (Print.typ_to_string targ);
@@ -903,24 +907,29 @@ and tc_exp env e : exp * lcomp * guard_t =
                       let e, c, g_e = tc_exp env e in 
                       let g = Rel.conj_guard g g_e in
                       if debug env Options.High then Util.fprint2 "Guard on this arg is %s;\naccumulated guard is %s\n" (Rel.guard_to_string env g_e) (Rel.guard_to_string env g);
+                      let arg = Inr e, aq in 
                       if Util.is_total_lcomp c 
-                      then let arg = varg e in 
-                           let subst = maybe_extend_subst subst (List.hd bs) arg in
+                      then let subst = maybe_extend_subst subst (List.hd bs) arg in
                            tc_args (subst, arg::outargs, arg::arg_rets, comps, g, fvs) rest cres rest'
                       else if Tc.Util.is_pure_effect env c.eff_name 
-                      then let arg = varg e in
-                           let subst = maybe_extend_subst subst (List.hd bs) arg in
+                      then let subst = maybe_extend_subst subst (List.hd bs) arg in
                            let comps, guard =
                               (Some (Env.Binding_var(x.v, x.sort)), c)::comps, g in
                            tc_args (subst, arg::outargs, arg::arg_rets, comps, guard, fvs) rest cres rest'
                       else if is_null_binder (List.hd bs)
                       then let newx = Util.gen_bvar_p e.pos c.res_typ in
-                           let arg = varg <| bvar_to_exp newx in
+                           let arg' = varg <| bvar_to_exp newx in
                            let binding = Env.Binding_var(newx.v, newx.sort) in
-                           tc_args (subst, (varg e)::outargs, arg::arg_rets, (Some binding, c)::comps, g, fvs) rest cres rest'
-                      else tc_args (subst, (varg e)::outargs, (varg <| bvar_to_exp x)::arg_rets, (Some <| Env.Binding_var(x.v, x.sort), c)::comps, g, Util.set_add x fvs) rest cres rest'
+                           tc_args (subst, arg::outargs, arg'::arg_rets, (Some binding, c)::comps, g, fvs) rest cres rest'
+                      else tc_args (subst, arg::outargs, (varg <| bvar_to_exp x)::arg_rets, (Some <| Env.Binding_var(x.v, x.sort), c)::comps, g, Util.set_add x fvs) rest cres rest'
 
-                    | _, [] -> (* full or partial application *) 
+                    | (Inr _, _)::_, (Inl _, _)::_ ->
+                      raise (Error("Expected an expression; got a type", Util.range_of_arg (List.hd args)))
+
+                    | (Inl _, _)::_, (Inr _, _)::_ ->
+                      raise (Error("Expected a type; got an expression", Util.range_of_arg (List.hd args)))
+
+                    | _, [] -> (* no more args; full or partial application *) 
                       fxv_check head env (Inr cres.res_typ) fvs;
                       let cres, g = match bs with 
                         | [] -> (* full app *)
@@ -960,8 +969,6 @@ and tc_exp env e : exp * lcomp * guard_t =
                       if debug env Options.Low then Util.fprint2 "\t Type of app term %s is %s\n" (Normalize.exp_norm_to_string env app) (Print.lcomp_typ_to_string comp);
                       app, comp, g
                
-                    | (Inr _, _)::_, (Inl _, _)::_ ->
-                      raise (Error(Util.format1 "Unexpected type argument (%s)" (Print.exp_to_string top), argpos (List.hd args)))
 
                     | [], arg::_ -> (* too many args, except maybe c returns a function *) 
                       let rec aux norm tres = 
@@ -1237,17 +1244,16 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
   let discriminate scrutinee f = 
     let disc = Util.fvar false (Util.mk_discriminator f.v) <| range_of_lid f.v in 
     let disc = mk_Exp_app(disc, [varg <| scrutinee]) None scrutinee.pos in
-    let e, _, _ = tc_total_exp (Env.set_expected_typ scrutinee_env Recheck.t_bool) disc in
-    Util.mk_eq Util.t_bool Util.t_bool e Const.exp_true_bool in
+    Util.mk_eq Util.t_bool Util.t_bool disc Const.exp_true_bool in
 
-  let rec mk_guard scrutinee tsc pat_exp : typ = 
-    if not !Options.verify then Util.ftv Const.true_lid ktype else //NS: TODO ... seem to be hitting a bug when type-checking visit.fs
+  let rec mk_guard scrutinee pat_exp : typ = 
+    //if not !Options.verify then Util.ftv Const.true_lid ktype else //NS: TODO ... seem to be hitting a bug when type-checking visit.fs
         let pat_exp = Util.compress_exp pat_exp in
         match pat_exp.n with 
           | Exp_uvar _
           | Exp_app({n=Exp_uvar _}, _) 
           | Exp_bvar _ -> Util.ftv Const.true_lid ktype
-          | Exp_constant _ -> Util.mk_eq tsc (Recheck.recompute_typ pat_exp) scrutinee pat_exp
+          | Exp_constant _ -> mk_Typ_app(Util.teq, [varg scrutinee; varg pat_exp]) None scrutinee.pos
           | Exp_fvar(f, _) -> discriminate scrutinee f
           | Exp_app({n=Exp_fvar(f, _)}, args) ->  
             let head = discriminate scrutinee f in
@@ -1256,11 +1262,13 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
                 | Inr ei ->
                     let projector = Tc.Env.lookup_projector env f.v i in
                     let sub_term = mk_Exp_app(Util.fvar false projector f.p, [varg scrutinee]) None f.p in
-                    let sub_term, tsub, _ = tc_total_exp scrutinee_env sub_term in
-                    [mk_guard sub_term tsub ei]) |> List.flatten in
+                    [mk_guard sub_term ei]) |> List.flatten in
             Util.mk_conj_l (head::sub_term_guards)
           | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range pat_exp.pos) (Print.exp_to_string pat_exp)) in
-
+  let mk_guard s tsc pat = 
+    let t = mk_guard s pat in 
+    let t, _ = tc_typ_check scrutinee_env t mk_Kind_type in
+    t in
   let path_guard = disj_exps |> List.map (fun e -> mk_guard scrutinee pat_t (Normalize.norm_exp [Normalize.Beta] env e)) |> Util.mk_disj_l  in
   let path_guard = match when_condition with 
     | None -> path_guard

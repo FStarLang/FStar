@@ -22,30 +22,30 @@ open Heap
 open ST
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
 
-opaque type partition_inv (a:Type) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) = 
+opaque type partition_inv (a:Type) (f:tot_ord a) (lo:seq a) (pv:a) (hi:seq a) =
            ((length hi) >= 0)
            /\ (forall y. (mem y hi ==> f pv y) /\ (mem y lo ==> f y pv))
 
-opaque logic type partition_pre 
+opaque logic type partition_pre
                     (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
                     (pivot:nat{start <= pivot /\ pivot < len})
                     (back:nat{pivot <= back /\ back < len})
-                    (x:array a) (h:heap) = 
-    (contains h x 
-     /\ ((fun s -> (len <= length s) /\ (partition_inv a f         
-                                                       (slice s start pivot) 
+                    (x:array a) (h:heap) =
+    (contains h x
+     /\ ((fun s -> (len <= length s) /\ (partition_inv a f
+                                                       (slice s start pivot)
                                                        (index s pivot)
                                                        (slice s (back + 1) len)))
            (sel h x)))
 
-opaque logic type partition_post 
+opaque logic type partition_post
                     (a:Type) (f:tot_ord a) (start:nat) (len:nat{start <= len} )
                     (pivot:nat{start <= pivot /\ pivot < len})
                     (back:nat{pivot <= back /\ back < len})
-                    (x:array a) (h0:heap) (i:nat) (h1:heap) = 
+                    (x:array a) (h0:heap) (i:nat) (h1:heap) =
    (len <= length (sel h0 x)
     /\ contains h1 x
-    /\ start <= i 
+    /\ start <= i
     /\ i < len
     /\ (length (sel h1 x) = length (sel h0 x))
     /\ (sel h1 x = splice (sel h0 x) start (sel h1 x) len)
@@ -57,9 +57,9 @@ opaque logic type partition_post
 
 #reset-options
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
-val partition: a:Type -> f:tot_ord a
-               -> start:nat -> len:nat{start <= len} 
-               -> pivot:nat{start <= pivot /\ pivot < len} 
+val partition: #a:Type -> f:tot_ord a
+               -> start:nat -> len:nat{start <= len}
+               -> pivot:nat{start <= pivot /\ pivot < len}
                -> back:nat{pivot <= back /\ back < len}
                -> x:array a -> ST nat
   (requires (partition_pre a f start len pivot back x))
@@ -69,19 +69,19 @@ let rec partition (a:Type) f start len pivot back x =
   let h0 = get() in
   let s = sel h0 x in
   if pivot = back
-  then 
+  then
     begin
       lemma_slice_cons s pivot len;
       splice_refl s start len;
       pivot
     end
-  else 
+  else
     begin
       let next = Array.index x (pivot + 1) in
       let p = Array.index x pivot in
       if f next p
-      then 
-        begin 
+      then
+        begin
           Array.swap x pivot (pivot + 1);  (* the pivot moves forward *)
 (* ghost *)           let h1 = get () in
 (* ghost *)           let s' = sel h1 x in
@@ -97,13 +97,13 @@ let rec partition (a:Type) f start len pivot back x =
 (* ghost *)           lemma_trans_perm s s' s'' start len;
           res
         end
-      else 
-        begin 
+      else
+        begin
           Array.swap x (pivot + 1) back; (* the back moves backward *)
-          
+
 (* ghost *)          let h1 = get () in
 (* ghost *)          let s' = sel h1 x in
-(* ghost *)          swap_frame_lo' s start pivot (pivot + 1) back; 
+(* ghost *)          swap_frame_lo' s start pivot (pivot + 1) back;
 (* ghost *)          swap_frame_hi s (pivot + 1) back (back + 1) len;
 (* ghost *)          lemma_ordering_hi_cons f s' back len p;
           let res = partition f start len pivot (back - 1) x in
@@ -118,8 +118,8 @@ let rec partition (a:Type) f start len pivot back x =
     end
 
 
-val lemma_slice_cons_pv: a:Type -> s:seq a -> i:nat -> pivot:nat{i <= pivot} -> j:nat{pivot < j && j <= length s} -> pv:a
-  -> Lemma 
+val lemma_slice_cons_pv: #a:Type -> s:seq a -> i:nat -> pivot:nat{i <= pivot} -> j:nat{pivot < j && j <= length s} -> pv:a
+  -> Lemma
   (requires (pv == index s pivot))
   (ensures (slice s i j == append (slice s i pivot) (cons pv (slice s (pivot + 1) j))))
 let lemma_slice_cons_pv s i pivot j pv =
@@ -129,7 +129,7 @@ let lemma_slice_cons_pv s i pivot j pv =
 
 #reset-options
 #set-options "--initial_fuel 1 --initial_ifuel 0 --max_fuel 1 --max_ifuel 0"
-val sort: a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
+val sort: #a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
           -> ST unit
   (requires (fun h -> contains h x /\ j <= length (sel h x)))
   (ensures (fun h0 u h1 -> (j <= length (sel h0 x)                                      (* carrying this along from the requires clause *)
@@ -145,13 +145,13 @@ let rec sort (a:Type) f i j x =
   then splice_refl (sel h0 x) i j
   else begin
                let pivot = partition f i j i (j - 1) x in
-               
-(* ghost *)    let h1 = get() in 
+
+(* ghost *)    let h1 = get() in
 (* ghost *)    let pv = index (sel h1 x) pivot in
 
-               sort f i pivot x; 
+               sort f i pivot x;
 
-(* ghost *)    let h2 = get() in 
+(* ghost *)    let h2 = get() in
 (* ghost *)    lemma_seq_frame_hi (sel h2 x) (sel h1 x) i pivot pivot j;
 (* ghost *)    lemma_tail_slice (sel h2 x) pivot j;
 
@@ -172,19 +172,18 @@ let rec sort (a:Type) f i j x =
 (* ghost *)    lemma_weaken_perm_right (sel h2 x) (sel h1 x) i pivot j;
 (* ghost *)    lemma_weaken_perm_left (sel h3 x) (sel h2 x) i (pivot + 1) j
   end
-       
 
-val qsort: a:Type -> f:tot_ord a -> x:array a -> ST unit
+
+val qsort: #a:Type -> f:tot_ord a -> x:array a -> ST unit
   (requires (fun h -> contains h x))
   (ensures (fun h0 u h1 -> contains h1 x /\ sorted f (sel h1 x) /\ permutation a (sel h0 x) (sel h1 x)))
   (modifies (a_ref x))
-let qsort f x = 
+let qsort f x =
   let h0 = get() in
 
   let len = Array.length x in
   sort f 0 len x;
-  
+
   let h1 = get() in
   cut (Eq (sel h0 x) (slice (sel h0 x) 0 len));
   cut (Eq (sel h1 x) (slice (sel h1 x) 0 len))
-

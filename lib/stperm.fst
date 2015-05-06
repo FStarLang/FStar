@@ -37,27 +37,27 @@ effect St (a:Type) (pre:Pre) (post: (heap -> Post a)) = STATE a
      (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 
 (* signatures WITH permissions *)
-assume val alloc: a:Type -> init:a -> Prims.ST (ref a)
+assume val alloc: #a:Type -> init:a -> Prims.ST (ref a)
                                          (fun h -> True)
                                          (fun h0 r h1 -> not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)
                                          (* (modifies no_refs) *)
 
-assume val read: a:Type -> r:ref a -> ST a
+assume val read: #a:Type -> r:ref a -> ST a
                                          (requires (fun h -> contains h r))
                                          (ensures (fun h0 x h1 -> h0==h1 /\ x==sel h0 r))
                                          (modifies no_refs)
 
-assume val write: a:Type -> r:ref a -> v:a -> ST unit
+assume val write: #a:Type -> r:ref a -> v:a -> ST unit
                                                  (requires (fun h -> contains h r))
                                                  (ensures (fun h0 x h1 -> h1==upd h0 r v))
                                                  (modifies (a_ref r))
 
-assume val op_ColonEquals: a:Type -> r:ref a -> v:a -> ST unit
+assume val op_ColonEquals: #a:Type -> r:ref a -> v:a -> ST unit
                                                  (requires (fun h -> contains h r))
                                                  (ensures (fun h0 x h1 -> h1==upd h0 r v))
                                                  (modifies (a_ref r))
 
-assume val free: a:Type -> r:ref a -> ST unit
+assume val free: #a:Type -> r:ref a -> ST unit
          (requires (fun h -> contains h r))
          (ensures (fun h0 x h1 -> not(contains h1 r)))
          (modifies (a_ref r))

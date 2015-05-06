@@ -6,7 +6,7 @@ assume val g : 'a -> Tot 'b
 assume val h : 'a:Type -> 'b:Type -> a:'a -> Tot (b:'b{b == g a})
 assume val length: list 'a -> Tot int
 assume val length_nil : unit -> Lemma
-      (ensures (length int [] == 0))
+      (ensures (length #int [] == 0))
 
 opaque val x:nat
 let x = -1 //should fail reporting 1 error
@@ -18,13 +18,13 @@ let assert_0_eq_1 () = assert (0==1) //should fail
 let hd_int_inexhaustive l = match l with
   | hd::_ -> hd //should fail
 
-val test_label: x:int -> Pure int (requires (x > 0)) (ensures \y -> y > 0)
+val test_label: x:int -> Pure int (requires (x > 0)) (ensures (fun y -> y > 0))
 let test_label x = x
 
 val test_precondition_label: x:int -> Tot int
 let test_precondition_label x = test_label x //should fail
 
-val test_postcondition_label: x:int -> Pure int (requires True) (ensures \y -> y > 0)
+val test_postcondition_label: x:int -> Pure int (requires True) (ensures (fun y -> y > 0))
 let test_postcondition_label x = x //should fail
 
 val bad_projector: option 'a -> 'a
@@ -53,7 +53,7 @@ let should_fail1 u =
 
 val should_fail2: unit -> Tot unit
 let should_fail2 u =
-  assert (Subset (union (singleton a) (singleton b)) (singleton a))
+  assert (subset (union (singleton a) (singleton b)) (singleton a))
 
 val should_fail3: unit -> Tot unit
 let should_fail3 u =

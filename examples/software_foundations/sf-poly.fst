@@ -308,7 +308,7 @@ let override_eq x k f = ()
 
 val override_neq : x1:'a -> x2:'a -> k1:'b -> k2:'b -> f:('b->Tot 'a) -> Pure unit
       (requires (f k1 = x1 /\ k2 <> k1))
-      (ensures \r -> (my_override f k2 x2) k1 = x1)
+      (ensures (fun r -> (my_override f k2 x2) k1 = x1))
 let override_neq x1 x2 k1 k2 f = ()
 
 (* NS: Experimenting first with named functions *)
@@ -413,12 +413,12 @@ val exp  : (('a->'a) -> 'a -> 'a) -> (('a->'a) -> 'a -> 'a) -> ('a->'a) -> 'a ->
 let exp n m f x = m n f x
 *)
 
-val exp : 'a:Type
-     -> n:(('a -> 'a) -> 'a -> 'a)
-     -> m:('b:Type -> 'b -> 'b)
-     -> f:('a -> 'a)
-     -> 'a
-     -> 'a
+val exp : #a:Type
+     -> n:((a -> a) -> a -> a)
+     -> m:(#b:Type -> b -> b)
+     -> f:(a -> a)
+     -> a
+     -> a
 let exp n m f x =
   let n' = m n in (* NS TODO: fix ugly syntax. I should just allow you to write (m n f x) *)
   n' f x
