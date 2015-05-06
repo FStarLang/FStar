@@ -1,22 +1,20 @@
 # --------------------------------------------------------------------
 ifeq ($(OS),Windows_NT)
-RUNTIME =
 MSBUILD = msbuild
 else
-RUNTIME = mono
 MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
 LIB_FILES= string.fst set.fst map.fst heap.fst array.fst st.fst array-realized.fst
 STDLIB = list.fst $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
-#FSTAR      = $(RUNTIME) ../../bin/fstar.exe --codegen OCaml --odir ocaml-gen  $(STDLIB) $(OTHERFLAGS)
+#FSTAR      = ../../bin/fstar.exe --codegen OCaml --odir ocaml-gen  $(STDLIB) $(OTHERFLAGS)
 
 #Use the following to test the bootstrapped ocaml version: fstarml
 FSTAR      = ../../src/ocaml-output/fstarml --debug_level LOW --prims ../../lib/prims.fst  $(STDLIB) $(OTHERFLAGS)
 
 STDCACHE=Prims.cache List.cache String.cache ST.cache PartialMap.cache Array.cache
-FSTARC=$(RUNTIME) ../../bin/fstar.exe  $(STDCACHE) $(OTHERFLAGS)
+FSTARC=../../bin/fstar.exe  $(STDCACHE) $(OTHERFLAGS)
 
 all: all-lax all-ver
 
@@ -26,20 +24,20 @@ all: all-lax all-ver
 VERFILES=unit1.fst testset.fst millionaires.fst listlemmas.fst intlist-insertionsort.fst insertionsort.fst insertionsort-lemma.fst sf-basic.fst sf-lists.fst termination.fst termination-bugs.fst cca2.fst sf-poly.fst format.fst mac.fst sig.fst stlc.fst qs.fst cca2.fst bug22.fst bug19.fst bug29.fst bug26.fst bug15.fst bug25.fst bug24.fst bug28.fst bug35.fst bug52.fst bug23.fst bug21.fst
 
 acls2: list.fst $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst st.fst) acls2.fst
-	$(RUNTIME) ../../bin/fstar.exe  $^ --verify
+	../../bin/fstar.exe  $^ --verify
 
 counters: list.fst $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst stperm.fst) ../sep/counters.fst
-	$(RUNTIME) ../../bin/fstar.exe  $^ --verify
+	../../bin/fstar.exe  $^ --verify
 
 test: $(addprefix $(FSTAR_HOME)/lib/, partialmap.fst st.fst) test.fst
-	$(RUNTIME) ../../bin/fstar.exe  $^ --verify $(OTHERFLAGS)
+	../../bin/fstar.exe  $^ --verify $(OTHERFLAGS)
 
 cache: $(STDLIB)
 	mkdir $(FSTAR_HOME)/cache
 	$(FSTAR) --serialize_mods --verify
 
 map:
-	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS) $(FSTAR_HOME)/lib/partialmap.fst --verify --logQueries
+	../../bin/fstar.exe $(OTHERFLAGS) $(FSTAR_HOME)/lib/partialmap.fst --verify --logQueries
 
 ccache:
 	rm -f $(addprefix $(FSTAR_HOME)/cache/, $(STDCACHE))
@@ -67,16 +65,16 @@ all-lax: rec.fst pat.fst mac.fst bug16.fst
 	$(FSTAR) --lax $^
 
 %.vv: list.fst %.fst
-	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS)  $^ --verify
+	../../bin/fstar.exe $(OTHERFLAGS)  $^ --verify
 
 stlc:
-	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS)  stlc.fst --verify
+	../../bin/fstar.exe $(OTHERFLAGS)  stlc.fst --verify
 
 format: format.fst
-	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS)  $(FSTAR_HOME)/lib/array-realized.fst format.fst --verify
+	../../bin/fstar.exe $(OTHERFLAGS)  $(FSTAR_HOME)/lib/array-realized.fst format.fst --verify
 
 mac: mac.fst
-	$(RUNTIME) ../../bin/fstar.exe $(OTHERFLAGS)  $(FSTAR_HOME)/lib/list.fst $(FSTAR_HOME)/lib/array-realized.fst mac.fst --verify
+	../../bin/fstar.exe $(OTHERFLAGS)  $(FSTAR_HOME)/lib/list.fst $(FSTAR_HOME)/lib/array-realized.fst mac.fst --verify
 
 vector: vectors.fst
 	$(FSTAR) --verify --full_context_dependency vectors.fst

@@ -1,10 +1,8 @@
 # --------------------------------------------------------------------
 ifeq ($(OS),Windows_NT)
-RUNTIME =
 MSBUILD = msbuild
 SUFFIX = .exe
 else
-RUNTIME = mono
 MSBUILD = xbuild
 SUFFIX = 
 endif
@@ -12,13 +10,13 @@ endif
 FSTAR_HOME = ../..
 LIB_FILES= string.fst partialmap.fst st.fst array-realized.fst bytes.fst tcp.fst crypto.fst io.fst
 STDLIB = list.fst $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
-#FSTAR      = $(RUNTIME) ../../bin/fstar.exe --codegen OCaml --odir ocaml-gen --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
+#FSTAR      = ../../bin/fstar.exe --codegen OCaml --odir ocaml-gen --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
 
 #Use the following to test the bootstrapped ocaml version: fstarml
 FSTAR      = ../../bin/fstarml$(SUFFIX) --debug_level Low --prims ../../lib/prims.fst --fstar_home $(FSTAR_HOME) $(STDLIB) $(OTHERFLAGS)
 
 STDCACHE=Prims.cache List.cache String.cache ST.cache PartialMap.cache Array.cache
-FSTARC=$(RUNTIME) ../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(OTHERFLAGS)
+FSTARC=../../bin/fstar.exe --fstar_home $(FSTAR_HOME) $(STDCACHE) $(OTHERFLAGS)
 
 all: all-lax all-ver
 

@@ -14,7 +14,7 @@ all:
 
 stdlib: $(addprefix ../lib/, list.fst string.fst partialmap.fst st.fst listproperties.fst)
 	mkdir -p ../cache
-	$(RUNTIME) ../bin/fstar.exe $(OTHERFLAGS) $^ --serialize_mods
+	../bin/fstar.exe $(OTHERFLAGS) $^ --serialize_mods
 
 
 clean:

@@ -37,7 +37,6 @@ RELEASE       ?= Debug
 BUILD_VERSION  =
 OTHERFLAGS    := --optimize+ --debug:full --nologo -g -O
 OTHERFLAGS    += --mlcompatibility $(addprefix --define:, $(BUILD_VERSION))
-RUNTIMEFLAGS   = -g --nowarn:62
 
 ALL_DLLS    = basic.dll format.dll absyn.dll backend.dll parser.dll tc.dll tosmt.dll jsbackend.dll
 FSHARP_LIBS = System.Runtime.Serialization.dll System.Xml.dll $(BIN)/FSharp.PowerPack.dll $(BIN)/FSharp.PowerPack.Compatibility.dll $(BIN)/FSharp.PPrint.dll
@@ -50,11 +49,9 @@ override OTHERFLAGS += --platform:x86
 endif
 
 ifeq ($(OS),Windows_NT)
-RUNTIME =
 FSC     = fsc
 MSBUILD = msbuild
 else
-RUNTIME = mono
 FSC     = fsharpc
 MSBUILD = xbuild
 endif
@@ -63,8 +60,8 @@ MSBUILD := $(MSBUILD) /verbosity:normal
 
 # --------------------------------------------------------------------
 FSLYDIR := ../VS/packages/FsLexYacc.6.0.3
-FSYACC  := $(RUNTIME) $(FSLYDIR)/bin/fsyacc.exe
-FSLEX   := $(RUNTIME) $(FSLYDIR)/bin/fslex.exe
+FSYACC  := $(FSLYDIR)/bin/fsyacc.exe
+FSLEX   := $(FSLYDIR)/bin/fslex.exe
 
 # --------------------------------------------------------------------
 .PHONY: all z3_x86 z3_x64 wc clean tidy boot ocaml
@@ -183,10 +180,10 @@ BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSM
 ADMITTED_MODULES=Microsoft.FStar.Util Microsoft.FStar.Platform Microsoft.FStar.Parser.ParseIt
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
 boot: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --debug yes --fs_typ_app --lax $(FSTAROPTS) $(ADMITS) $^
+	../bin/fstar.exe --debug yes --fs_typ_app --lax $(FSTAROPTS) $(ADMITS) $^
 
 ocaml: $(BOOT_ALL)
-	$(RUNTIME) ../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^
+	../bin/fstar.exe --eager_inference --MLish --lax --fs_typ_app --odir ocaml-output $(FSTAROPTS) --codegen OCaml $(ADMITS) $^
 
 fstarml:
 	@echo "Building parser and lexer filex..."
