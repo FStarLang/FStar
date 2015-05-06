@@ -63,21 +63,17 @@ let is_evar (e:exp) : int = if is_EVar e then 0 else 1
 
 val esubst : s:esub -> e:exp -> Pure exp (requires True)
       (ensures (fun e' -> erenaming s /\ is_EVar e ==> is_EVar e'))
-      (decreases %[is_evar e; is_erenaming s; e])
+      (decreases %[is_evar e; is_erenaming s; 1; e])
+
+val esub_lam: s:esub -> x:var -> Tot (e:exp{ erenaming s ==> is_EVar e}) 
+      (decreases %[1;is_erenaming s; 0; EVar 0])
+
 let rec esubst s e =
   match e with
   | EVar x -> s x
-
-  | ELam t e1 ->
-     let esub_lam : y:var -> Tot (e:exp{erenaming s ==> is_EVar e}) =
-       fun y -> if y=0 then EVar y
-                       else (esubst esub_inc (s (y - 1))) in
-     ELam t (esubst esub_lam e1)
-
+  | ELam t e -> ELam t (esubst (esub_lam s) e)
   | EApp e1 e2 -> EApp (esubst s e1) (esubst s e2)
-
-val esub_lam: s:esub -> Tot esub
-let esub_lam s y =
+and esub_lam s = fun y ->
   if y = 0 then EVar y
            else esubst esub_inc (s (y-1))
 
@@ -100,7 +96,6 @@ val esub_lam_hoist : t:typ -> e:exp -> s:esub -> Lemma (requires True)
       (* [SMTPat (esubst (ELam t e) s)]
       (\* -- this increases running time by 10 secs and adds variability *\) *)
 let esub_lam_hoist t e s = admit()
-
 val esub_beta : exp -> Tot esub
 let esub_beta e = fun y -> if y = 0 then e
                            else (EVar (y-1))
