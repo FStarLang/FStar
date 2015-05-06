@@ -136,8 +136,13 @@ $(BIN)/tc.dll: $(TC_DEPS) $(TC_SRC)
 	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TC_DEPS)) $(TC_SRC)
 
 FSTAR_DEPS=$(addprefix $(BIN)/, $(ALL_DLLS))
-$(BIN)/fstar.exe: $(FSTAR_DEPS) fstar.fs
+$(BIN)/fstar.exe: $(FSTAR_DEPS) fstar.fs $(BIN)/fstar-mono.sh
+ifeq ($(OS),Windows_NT)
 	$(FSC)  $(OTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs
+else
+	$(FSC)  $(OTHERFLAGS) -o $(BIN)/fstar-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs
+	cp $(BIN)/fstar-mono.sh $(BIN)/fstar.exe
+endif
 
 fstar-nodeps: fstar.fs
 	$(FSC) $(OTHERFLAGS) -o $(BIN)/fstar.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs
@@ -147,7 +152,7 @@ wc: $(BASIC_SRC) $(ABSYN_SRC) $(PARSER_NOGEN_SRC) $(TC_SRC) $(TOSMT_SRC) $(FORMA
 	wc -l $^
 
 clean:
-	rm -rf *.exe $(addprefix $(BIN)/, $(ALL_DLLS) FStar.exe) *~ *res
+	rm -rf *.exe $(addprefix $(BIN)/, $(ALL_DLLS) fstar.exe) *~ *res
 	rm -rf $(BIN)/*.pdb  $(BIN)/*.mdb $(BIN)/queries
 	make -s -C ocaml-output clean
 
