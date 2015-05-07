@@ -1159,11 +1159,12 @@ let plouf t1= assert(is_Some (lookup_evar (eextend tfalse empty) 0) )
 type typing : env -> exp -> cmp -> Type =
 
 | TyVar : #g:env -> x:var{is_Some (lookup_evar g x)} ->
-          =hk:kinding g (Some.v (lookup_evar g x)) KType ->
-           typing g (EVar x) (tot (Some.v (lookup_evar g x)))
+          =h:ewf g ->
+              typing g (EVar x) (tot (Some.v (lookup_evar g x)))
 
 | TyConst : g:env -> c:econst ->
-            typing g (EConst c) (tot (econsts c))
+           =h:ewf g ->
+              typing g (EConst c) (tot (econsts c))
 
 | TyAbs : #g:env ->
           #t1:typ ->
@@ -1269,11 +1270,12 @@ and styping : g:env -> t':typ -> t:typ -> phi : typ -> Type =
 and kinding : g:env -> t : typ -> k:knd -> Type =
 
 | KVar : #g:env -> x:var{is_Some (lookup_tvar g x)} ->
-         =hw:kwf g (Some.v (lookup_tvar g x)) ->
-             kinding g (TVar x) (Some.v (lookup_tvar g x))
+         =h:ewf g ->
+            kinding g (TVar x) (Some.v (lookup_tvar g x))
 
 | KConst : g:env -> c:tconst ->
-           kinding g (TConst c) (tconsts c)
+          =h:ewf g ->
+             kinding g (TConst c) (tconsts c)
 
 | KArr : #g:env -> #t1:typ -> #t2:typ -> #phi:typ -> m:eff ->
          =hk1:kinding g t1 KType ->
@@ -1333,7 +1335,8 @@ and skinding : g:env -> k1:knd -> k2:knd -> phi:typ -> Type=
 and kwf : env -> knd -> Type =
 
 | WfType : g:env ->
-            kwf g KType
+          =h:ewf g ->
+             kwf g KType
 
 | WfTArr : #g:env -> #t:typ -> #k':knd ->
             =hk:kinding g t KType ->
@@ -1348,8 +1351,8 @@ and kwf : env -> knd -> Type =
 and validity : g:env -> t:typ -> Type =
 
 | VAssume : #g:env -> x:var{is_Some (lookup_evar g x)} ->
-            =hk:kinding g (Some.v (lookup_evar g x)) KType ->
-                validity g (Some.v (lookup_evar g x))
+            =h:ewf g ->
+               validity g (Some.v (lookup_evar g x))
 
 | VRedE   : #g:env -> #e:exp -> #t:typ -> #e':exp ->
             =ht :typing g e (tot t) ->
@@ -1443,7 +1446,6 @@ and validity : g:env -> t:typ -> Type =
                    validity g (tand p1 p2)
 
 | VExMiddle : #g:env -> #t1:typ -> t2:typ ->
-              =hk1:kinding g t1 KType ->
               =hk2:kinding g t2 KType ->
               =hv1:validity (eextend t1 g) (tesh t2) ->
               =hv2:validity (eextend (tnot t1) g) (tesh t2) ->
@@ -1500,6 +1502,19 @@ For injectivity should probably stick with this (see discussion in txt file):
                validity g (tand (tand (teqtype t1 t1') (teqtype t2 t2))
                                       (teqtype phi phi'))
 
+and ewf : env -> Type =
+
+| GEmpty : ewf empty
+
+| GType  : #g:env -> #t:typ ->
+           =hk:kinding g t KType ->
+               ewf (eextend t g)
+
+| GKind  : #g:env -> #k:knd ->
+           =h:kwf g k ->
+              ewf (textend k g)
+
+
 (**********************)
 (* Substitution Lemma *)
 (**********************)
@@ -1525,13 +1540,14 @@ let tyif03 s m t wp = ()
 
 type subst_typing : s:sub -> g1:env -> g2:env -> Type =
 | SubstTyping : #s:sub -> #g1:env -> #g2:env -> 
+                hwf1:ewf g1 ->
+                hwf2:ewf g2 ->
 
                 ef:(x:var{is_Some (lookup_evar g1 x)} -> 
-                hk:kinding g1 (Some.v (lookup_evar g1 x)) KType ->
-                Dv(typing g2 (Sub.es s x) (tot (tsubst s (Some.v (lookup_evar g1 x)))))) ->
+                    Dv(typing g2 (Sub.es s x) (tot (tsubst s (Some.v (lookup_evar g1 x)))))) ->
+
                 tf:(a:var{is_Some (lookup_tvar g1 a)} -> 
-                hwf:kwf g1 (Some.v (lookup_tvar g1 a)) ->
-                Dv(kinding g2 (Sub.ts s a) (ksubst s (Some.v (lookup_tvar g1 a))))) ->
+                    Dv(kinding g2 (Sub.ts s a) (ksubst s (Some.v (lookup_tvar g1 a))))) ->
                 subst_typing s g1 g2
 
 (*
@@ -1583,6 +1599,7 @@ val typing_substitution : #g1:env -> #e:exp -> #c:cmp -> s:sub -> #g2:env ->
     hs:subst_typing s g1 g2 ->
     Tot (typing g2 (esubst s e) (csubst s c))
 *)
+(*
 let rec typing_substitution g1 e c s g2 h1 hs = 
 (*
 | TyVar : #g:env -> x:var{is_Some (lookup_evar g x)} ->
@@ -1604,7 +1621,11 @@ let rec typing_substitution g1 e c s g2 h1 hs =
 *)
 match h1 with 
 (*| TyVar #g1 x hk -> (subst_on_tot s (Cmp.t c); SubstTyping.ef hs x (kinding_substitution s hk hs))*)
-| TyConst g ec -> (subst_on_econst s ec; subst_on_tot s (econsts ec); subst_on_teconst s ec; TyConst g2 ec)
+| TyConst g ec h ->
+    (subst_on_econst s ec;
+     subst_on_tot s (econsts ec);
+     subst_on_teconst s ec;
+     TyConst g2 ec h)
 | TyIf0 g e0 e1 e2 m t wp0 wp1 wp2 he0 he1 he2 -> 
 (* Does not work for now …*)
 (
@@ -1632,7 +1653,7 @@ type subst_typing : s:sub -> g1:env -> g2:env -> Type =
 (*let hs'' : subst_typing sub_inc g2 (eextend g2 0 t1) = admit() in
 let hs' : subst_typing (sub_elam s) (eextend t1 g1) (eextend (tsubst s t1) g2) = admit()
 (*
-let ef: (x:var{is_Some (lookup_evar g1 x)} -> 
+let rec ef: (x:var{is_Some (lookup_evar g1 x)} -> 
 kinding g1 (Some.v (lookup_evar g1 x)) KType ->
 Dv (typing g2 (Sub.es s x) (tot (tsubst s (Some.v (lookup_evar g1 x)))))) = fun x hk -> 
 match x with
@@ -1806,4 +1827,5 @@ val v_eq_symt : #g:env -> #t1:typ -> #t2:typ -> #k:knd ->
             =hv:validity g (teqt k t1 t2) ->
                 validity g (teqt k t2 t1)
 let v_eq_symt = admit()
+*)
 *)
