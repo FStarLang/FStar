@@ -24,7 +24,7 @@ open Constructive
 type var = nat    // de Bruijn indices
 type loc = nat    // global location names
 
-type tconst = 
+type tconst =
   | TcUnit
   | TcInt
   | TcRefInt
@@ -65,7 +65,7 @@ and typ =
   | TEApp  : t:typ    -> e:exp  -> typ
   | TTLam  : k:knd    -> t:typ  -> typ (* a:k  bound in t *)
   | TELam  : t1:typ   -> t2:typ -> typ (* x:t1 bound in t2 *)
-    
+
     (* this is special, since we do not have kind polymorphism *)
   | TEqT   : k:knd    -> typ
 
@@ -80,7 +80,7 @@ and exp =
   | ELet   : t:typ   -> e1:exp -> e2:exp -> exp (* x:t bound in e2 *)
   | EIf0   : e0:exp  -> e1:exp -> e2:exp -> exp
   | EFix   : ed:(option exp) -> t:typ  -> e:exp  -> exp
-             (* x:(TArr.t t) and then f:t bound in e; 
+             (* x:(TArr.t t) and then f:t bound in e;
                 i.e. from e index 0 points to x and index 1 to f *)
 
 
@@ -387,7 +387,7 @@ let op_CSt t op wp1 wp2   = TTLam (k_post_st t)   (TELam (TConst TcHeap) (TTApp 
 
 (* CH: unsure about this, especially its asymmetric nature (taking t2 discarding t1)
    NS [from review]: The (op op c1 c2) looks a bit fishy. Generally, the op functions have kind:
-                a:Type -> M.WP a -> M.WP a -> M.WP a
+                #a:Type -> M.WP a -> M.WP a -> M.WP a
       The result type is the same on both sides. Without it, you can’t apply the
       same post-condition to both of them.
 let op op c1 c2 =
@@ -441,7 +441,7 @@ let tconsts tc =
   | TcPrecedes -> KKArr KType (KTArr (TVar 0) (KTArr (TVar 0) KType))
                  (* TODO: please double-check *)
 
-  | TcForallPostPure 
+  | TcForallPostPure
   | TcForallPostSt -> KType (* TODO: finish this *)
 
 val econsts : econst -> Tot typ
@@ -491,7 +491,7 @@ let binds test g x = match g x with
 let binds_a   = binds is_B_a
 let binds_x   = binds is_B_x
 
-val lookup: a:Type
+val lookup: #a:Type
          -> test:(var_binding -> Tot bool)
          -> g:env
          -> x:var{binds test g x}
@@ -587,7 +587,7 @@ type valid: env -> typ -> Type =
   | VTEqTran:    #g:env -> #t:typ -> #t1:typ -> #t2:typ ->
                  k:knd ->
                  valid g (mk_eqt k t t1) ->
-                 valid g (mk_eqt k t t2) ->   
+                 valid g (mk_eqt k t t2) ->
                  valid g (mk_eqt k t t2)
   (* CH: Isn't VTApp already part of VTReduction? *)
   | VTApp:       #g:env -> #t1:typ -> #t2:typ ->
@@ -666,7 +666,7 @@ and typing : env -> exp -> cmp -> Type =
 
   | TyConst : g:env
            -> c:econst
-(* 
+(*
            -> kinding g (econsts c) KType
               CH: TODO: prove once and for all that this holds!
 *)
@@ -687,7 +687,7 @@ and typing : env -> exp -> cmp -> Type =
          -> wp:typ
          -> #d:exp
          -> #e:exp
-         -> kinding g (TArr tx (Cmp CPure t'' wp)) KType   
+         -> kinding g (TArr tx (Cmp CPure t'' wp)) KType
          -> typing g d (tot (TArr tx (tot t')))
          -> typing (extend (extend g (B_x tx))
                            (B_x (TArr tx (Cmp CPure t'' (op_CPure t'' (TConst TcAnd)
@@ -742,14 +742,14 @@ and typing : env -> exp -> cmp -> Type =
    NS [from review]: So, contrary to our Skype chat, I don’t think you
        can reuse the op_M functions to simulate the compositions of WPs
        in the App and If rules.
- 
+
 For App, I think you want something like what I wrote:
- 
+
 G |- e1 : c1
 G |- e2 : c2
 ---------------
 G |- e1 e2 : c3
- 
+
 Where c1: M (x:t -> M t’ wp) wp1
                 c2: M t wp2
 M t’ wp’  = bind c1 (bump_cmp 1 (bind c2 (M t’ wp)))

@@ -378,7 +378,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
               | [], [] -> Util.subst_kind subst kres, List.rev outargs, g
 
               | (_, None)::_, (_, Some Implicit)::_  
-              | (_, Some Equality)::_, (_, Some Implicit)::_  -> raise (Error("Argument is marked as instanting an implicit parameter; although the expected parameter is explicit", Util.range_of_arg (List.hd args)))
+              | (_, Some Equality)::_, (_, Some Implicit)::_  -> raise (Error("Argument is marked as instantiating an implicit parameter; although the expected parameter is explicit", Util.range_of_arg (List.hd args)))
 
               | (Inl a, Some Implicit)::rest, (_, None)::_ 
               | (Inl a, Some Implicit)::rest, [] ->  (* Instantiate an implicit type argument *)
@@ -1247,15 +1247,14 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
     Util.mk_eq Util.t_bool Util.t_bool disc Const.exp_true_bool in
 
   let rec mk_guard scrutinee pat_exp : typ = 
-    //if not !Options.verify then Util.ftv Const.true_lid ktype else //NS: TODO ... seem to be hitting a bug when type-checking visit.fs
-        let pat_exp = Util.compress_exp pat_exp in
-        match pat_exp.n with 
-          | Exp_uvar _
-          | Exp_app({n=Exp_uvar _}, _) 
-          | Exp_bvar _ -> Util.ftv Const.true_lid ktype
-          | Exp_constant _ -> mk_Typ_app(Util.teq, [varg scrutinee; varg pat_exp]) None scrutinee.pos
-          | Exp_fvar(f, _) -> discriminate scrutinee f
-          | Exp_app({n=Exp_fvar(f, _)}, args) ->  
+    let pat_exp = Util.compress_exp pat_exp in
+    match pat_exp.n with 
+        | Exp_uvar _
+        | Exp_app({n=Exp_uvar _}, _) 
+        | Exp_bvar _ -> Util.ftv Const.true_lid ktype
+        | Exp_constant _ -> mk_Typ_app(Util.teq, [varg scrutinee; varg pat_exp]) None scrutinee.pos
+        | Exp_fvar(f, _) -> discriminate scrutinee f
+        | Exp_app({n=Exp_fvar(f, _)}, args) ->  
             let head = discriminate scrutinee f in
             let sub_term_guards = args |> List.mapi (fun i arg -> match fst arg with 
                 | Inl _ -> (* no patterns on type arguments *) []
@@ -1264,11 +1263,13 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
                     let sub_term = mk_Exp_app(Util.fvar false projector f.p, [varg scrutinee]) None f.p in
                     [mk_guard sub_term ei]) |> List.flatten in
             Util.mk_conj_l (head::sub_term_guards)
-          | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range pat_exp.pos) (Print.exp_to_string pat_exp)) in
+        | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range pat_exp.pos) (Print.exp_to_string pat_exp)) in
   let mk_guard s tsc pat = 
-    let t = mk_guard s pat in 
-    let t, _ = tc_typ_check scrutinee_env t mk_Kind_type in
-    t in
+     if not !Options.verify 
+     then Util.ftv Const.true_lid ktype 
+     else let t = mk_guard s pat in 
+          let t, _ = tc_typ_check scrutinee_env t mk_Kind_type in
+          t in
   let path_guard = disj_exps |> List.map (fun e -> mk_guard scrutinee pat_t (Normalize.norm_exp [Normalize.Beta] env e)) |> Util.mk_disj_l  in
   let path_guard = match when_condition with 
     | None -> path_guard

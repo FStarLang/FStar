@@ -1111,7 +1111,7 @@ let gather_tc_binders tps k =
         | Kind_arrow(binders, k) -> aux (bs@binders) k
         | Kind_abbrev(_, k) -> aux bs k
         | _ -> bs in
-    aux tps k |> Util.name_binders |> List.map (fun x -> (fst x, Some Implicit)) // all implicit
+    aux tps k |> Util.name_binders
 
 
 let mk_data_discriminators env t tps k datas = 
@@ -1119,7 +1119,8 @@ let mk_data_discriminators env t tps k datas =
     let quals q = if not <| env.iface || env.admitted_iface then Assumption::q else q in
     let binders = gather_tc_binders tps k in 
     let p = range_of_lid t in 
-    let binders = binders@[null_v_binder <| mk_Typ_app'(Util.ftv t kun, Util.args_of_non_null_binders binders |> List.map (fun (x, _) -> (x, None))) None p] in
+    let imp_binders = binders |> List.map (fun (x, _) -> x, Some Implicit) in
+    let binders = imp_binders@[null_v_binder <| mk_Typ_app'(Util.ftv t kun, Util.args_of_non_null_binders binders) None p] in
     let disc_type = mk_Typ_fun(binders, Util.total_comp (Util.ftv Const.bool_lid ktype) p) None p in
     datas |> List.map (fun d -> 
         let disc_name = Util.mk_discriminator d in
@@ -1130,7 +1131,7 @@ let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binde
     let binders = gather_tc_binders tps k in 
     let p = range_of_lid lid in
     let arg_binder = 
-        let arg_typ = mk_Typ_app'(Util.ftv tc kun, Util.args_of_non_null_binders binders |> List.map (fun (x, _) -> (x, None))) None p in
+        let arg_typ = mk_Typ_app'(Util.ftv tc kun, Util.args_of_non_null_binders binders) None p in
         let projectee = {ppname=Syntax.mk_ident ("projectee", p);
                          realname=Util.genident (Some p)} in
         if not refine_domain
@@ -1138,8 +1139,8 @@ let mk_indexed_projectors refine_domain env (tc, tps, k) lid (formals:list<binde
         else let disc_name = Util.mk_discriminator lid in
              let x = Util.gen_bvar arg_typ in
              v_binder <| (Util.bvd_to_bvar_s projectee <| mk_Typ_refine(x, Util.b2t(mk_Exp_app(Util.fvar false disc_name p, [varg <| Util.bvar_to_exp x]) None p)) None p) in
-      
-    let binders = binders@[arg_binder] in
+    let imp_binders = binders |> List.map (fun (x, _) -> x, Some Implicit) in
+    let binders = imp_binders@[arg_binder] in
     let arg = Util.arg_of_non_null_binder arg_binder in
     let subst = formals |> List.mapi (fun i f -> match fst f with
         | Inl a -> 
