@@ -319,10 +319,10 @@ nonTvarPattern2:
       }
 
 ascriptionOrPattern:
-  |  nonTvarPattern COLON typ refineOpt 
+  |  nonTvarPattern COLON typ refineOpt
       { 
 		match $4 with
-		  | None -> PatAscribed($1, $3)
+		  | None -> PatAscribed($1, $3) 
 			  | Some phi ->
 				let t = match $1.pat with 
 				  | PatVar(x, _) -> 
@@ -697,7 +697,7 @@ product:
         mk_term (Product([b], $3)) (rhs2 parseState 1 3)  Un
       }
 
-  | dtupleTerm
+  | dtupleTerm 
 	  { $1 }
 
 dtupleTerm:
@@ -711,8 +711,8 @@ dtupleTerm:
 	     mk_term (Sum(dom, res)) (rhs2 parseState 1 6) Type
 	  }
   | arithTerm
-	  { $1 }
-
+	 { $1 }
+  
 arithTerm:
   | starDivModTerm PLUS_MINUS_OP arithTerm
       { mk_term (Op($2, [$1;$3])) (rhs2 parseState 1 3) Un}
@@ -734,6 +734,22 @@ starDivModTerm:
         $1 
       }
 
+refinementTerm:
+  | ident COLON appTerm 
+      {
+        $3 
+      }
+	  
+  | ident COLON appTerm LBRACE formula RBRACE 
+      {
+        mk_term (Refine(mk_binder (Annotated($1, $3)) (rhs2 parseState 1 3) Type None, $5)) 
+        (rhs2 parseState 1 6) Type
+      }
+	  
+  | LBRACE recordExp RBRACE { $2 }
+
+  | unaryTerm { $1 }
+  
 productDomain:
   | ident COLON appTerm refineOpt
       { mkRefinedBinder $1 $3 $4 (rhs2 parseState 1 4) None } 
@@ -752,16 +768,7 @@ refineOpt:
   |                       { None }
   | LBRACE formula RBRACE { Some $2 }
 
-refinementTerm:
-  | ident COLON appTerm LBRACE formula RBRACE 
-      {
-        mk_term (Refine(mk_binder (Annotated($1, $3)) (rhs2 parseState 1 3) Type None, $5)) 
-        (rhs2 parseState 1 6) Type
-      }
 
-  | LBRACE recordExp RBRACE { $2 }
-
-  | unaryTerm { $1 }
 
 unaryTerm: 
   | PLUS_MINUS_OP atomicTerm
