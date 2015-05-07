@@ -5,7 +5,7 @@ NEGFILES=negative-tests.fst
 all: .all.ver testmref all-neg
 
 all-neg: $(NEGFILES)
-	-$(FSTAR) $(STDLIB) $^
+	-$(FSTAR) --admit_fsi Set $(STDLIB) $^
 	echo "EXPECT 33 FAILURES<------------------------------------"
 
 inverse:

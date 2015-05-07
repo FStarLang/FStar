@@ -25,7 +25,7 @@ let rec repeat n count =
   | _ -> Cons n (repeat n (count - 1))
 
 val app : ilist -> ilist -> Tot ilist
-let rec app l1 l2 = 
+let rec app l1 l2 =
   match l1 with
   | Nil    -> l2
   | Cons h t -> Cons h (app t l2)
@@ -128,20 +128,20 @@ let rec rev_length l =
 
 val foo1 : n:int -> l : ilist -> Pure unit
       (requires (repeat n 0 = l))
-      (ensures \r -> length l = 0)
+      (ensures (fun r -> length l = 0))
 let foo1 n l = ()
 
 val foo2 : n : nat -> m : nat -> l : ilist -> Pure unit
       (requires (repeat n m = l))
-      (ensures \r -> length l = m)
+      (ensures (fun r -> length l = m))
 let rec foo2 n m l =
   match m with
-  | 0 -> () 
+  | 0 -> ()
   | _ -> foo2 n (m-1) (repeat n (m-1))
 
 val foo3 : l : ilist -> n : int -> m : nat -> Pure unit
       (requires (length l = m))
-      (ensures \r -> (length (snoc l n) = m+1))
+      (ensures (fun r -> (length (snoc l n) = m+1)))
 let rec foo3 l n m =
   match l with
   | Nil -> ()
@@ -149,13 +149,13 @@ let rec foo3 l n m =
 
 val foo4 : n : int -> l1 : ilist -> l2 : ilist -> Pure unit
       (requires (snoc l1 n = l2))
-      (ensures \r -> 0 < length l2)
+      (ensures (fun r -> 0 < length l2))
 let foo4 n l1 l2 = ()
 
 
 
 
-val snoc_cons: l:ilist -> h:int -> Lemma (rev (snoc l h) = Cons h (rev l)) 
+val snoc_cons: l:ilist -> h:int -> Lemma (rev (snoc l h) = Cons h (rev l))
 let rec snoc_cons l h = match l with
   | Nil -> ()
   | Cons hd tl ->
@@ -187,7 +187,7 @@ let rec rev_injective l1 l2 = match (l1, l2) with
     ()
   | _, _ -> ()
 
-val fold_left: 'a:Type -> f:(int -> 'a -> Tot 'a) -> l:ilist -> 'a -> Tot 'a
+val fold_left: f:(int -> 'a -> Tot 'a) -> l:ilist -> 'a -> Tot 'a
 let rec fold_left f l a = match l with
   | Nil -> a
   | Cons hd tl -> fold_left f tl (f hd a)
@@ -252,4 +252,3 @@ let rec existsb_existsb' l f = match l with
   | Cons x l' ->
     let _ = existsb_existsb' l' f in
     ()
-

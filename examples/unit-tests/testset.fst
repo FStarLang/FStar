@@ -11,8 +11,8 @@ val should_succeed: unit -> Tot unit
 let should_succeed u =
   assert (mem b (union (singleton a) (singleton b)));
   assert (mem a (union (singleton a) (singleton b)));
-  assert (Subset (singleton a) (union (singleton a) (singleton b)));
-  assert (Subset (singleton b) (union (singleton a) (singleton b)));
+  assert (subset (singleton a) (union (singleton a) (singleton b)));
+  assert (subset (singleton b) (union (singleton a) (singleton b)));
   assert (Equal (union (singleton a) (singleton b))
                 (union (singleton b) (singleton a)))
 

@@ -1267,7 +1267,7 @@ let teq = ftv Const.eq2_lid eq_k
 let mk_eq t1 t2 e1 e2 = match t1.n, t2.n with 
     | Typ_unknown, _
     | _, Typ_unknown -> failwith "DIE! mk_eq with tun"
-    | _ -> mk_Typ_app(teq, [targ t1; targ t2; varg e1; varg e2]) None (Range.union_ranges e1.pos e2.pos)
+    | _ -> mk_Typ_app(teq, [itarg t1; itarg t2; varg e1; varg e2]) None (Range.union_ranges e1.pos e2.pos)
 let eq_typ = ftv Const.eqT_lid kun
 let mk_eq_typ t1 t2 = mk_Typ_app(eq_typ, [targ t1; targ t2]) None (Range.union_ranges t1.pos t2.pos)
 

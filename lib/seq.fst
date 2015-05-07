@@ -19,7 +19,7 @@ module Seq
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 (* Representation hidden from clients *)
-type seq (a:Type) = { 
+type seq (a:Type) = {
   contents: nat -> Tot a;
   length:   nat
 }
@@ -63,18 +63,18 @@ let lemma_index_app1 s1 s2 i  = ()
 let lemma_index_app2 s2 s2 i  = ()
 let lemma_index_slice s i j k = ()
 
-logic type Eq: #a:Type -> seq a -> seq a -> Type = fun (a:Type) (s1:seq a) (s2:seq a) -> 
-  (length s1 = length s2 
+logic type Eq (#a:Type) (s1:seq a) (s2:seq a) =
+  (length s1 = length s2
    /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i)))
-(* Need to assume extensionality here, since it doesn't follow from functional extensionality alone; 
+(* Need to assume extensionality here, since it doesn't follow from functional extensionality alone;
    We only want the maps that hold the sequences to agree on the locations within range;
-   An alternative would be to define 
+   An alternative would be to define
 
        type seq (a:Type) = (| len:nat * (x:nat{x < len} -> a) |)
 
-   i.e., restricting the domain of the maps to the indices within range only. 
+   i.e., restricting the domain of the maps to the indices within range only.
    In that case, functional extensionality should suffice.
- 
+
    TODO: try moving to that style?
  *)
 assume Extensionality: forall (a:Type) (s1:seq a) (s2:seq a). Eq s1 s2 <==> (s1=s2)

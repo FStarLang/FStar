@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Nikhil Swamy, Aseem Rastogi, 
+   Copyright 2008-2014 Nikhil Swamy, Aseem Rastogi,
                        Microsoft Research, University of Maryland
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +42,7 @@ let mem_complement x s    = ()
 
 (* extensionality *)
 open FunctionalExtensionality
-type Equal : #a:Type -> set a -> set a -> Type = fun (a:Type) (s1:set a) (s2:set a) -> FEq s1 s2
+type Equal (#a:Type) (s1:set a) (s2:set a) = FEq s1 s2
 let lemma_equal_intro s1 s2 = ()
 let lemma_equal_elim s1 s2 = ()
 let lemma_equal_refl s1 s2 = ()

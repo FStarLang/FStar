@@ -31,7 +31,7 @@ let rec mem_count x l = match l with
   | _::tl -> mem_count x tl
 
 
-val append_count: l:list 'a -> m:list 'a -> x:'a 
+val append_count: l:list 'a -> m:list 'a -> x:'a
                -> Lemma (requires True)
                         (ensures (count x (append l m) = (count x l + count x m)))
                         [SMTPat (count x (append l m))]
@@ -62,7 +62,7 @@ let rec partition_lemma f l = match l with
     | hd::tl -> partition_lemma f tl
 
 
-val sorted_app_lemma: a:Type
+val sorted_app_lemma: #a:Type
                       -> f:(a -> a -> Tot bool){total_order a f}
                       -> l1:list a{sorted f l1}
                       -> l2:list a{sorted f l2}

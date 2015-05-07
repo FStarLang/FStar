@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2014 Nikhil Swamy, Aseem Rastogi, 
+   Copyright 2008-2014 Nikhil Swamy, Aseem Rastogi,
                        Microsoft Research, University of Maryland
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,68 +20,67 @@ module Set
 type set : Type -> Type
 
 (* Destructors *)
-val mem : a:Type -> a -> set a -> Tot bool
+val mem : #a:Type -> a -> set a -> Tot bool
 
 (* Constructors *)
-val empty      : a:Type -> Tot (set a)
-val singleton  : a:Type -> a -> Tot (set a)
-val union      : a:Type -> set a -> set a -> Tot (set a)
-val intersect  : a:Type -> set a -> set a -> Tot (set a)
-val complement : a:Type -> set a -> Tot (set a)
+val empty      : #a:Type -> Tot (set a)
+val singleton  : #a:Type -> a -> Tot (set a)
+val union      : #a:Type -> set a -> set a -> Tot (set a)
+val intersect  : #a:Type -> set a -> set a -> Tot (set a)
+val complement : #a:Type -> set a -> Tot (set a)
 
 (* Ops *)
-val subset     : a:Type -> set a -> set a -> Tot bool
+val subset     : #a:Type -> set a -> set a -> Tot bool
 
 (* Properties *)
-val mem_empty: a:Type -> x:a -> Lemma 
+val mem_empty: #a:Type -> x:a -> Lemma
    (requires True)
    (ensures (not (mem x empty)))
-   [SMTPat (mem x empty)]                                           
+   [SMTPat (mem x empty)]
 
-val mem_singleton: a:Type -> x:a -> y:a -> Lemma 
+val mem_singleton: #a:Type -> x:a -> y:a -> Lemma
    (requires True)
    (ensures (mem y (singleton x) = (x=y)))
    [SMTPat (mem y (singleton x))]
 
-val mem_union: a:Type -> x:a -> s1:set a -> s2:set a -> Lemma 
+val mem_union: #a:Type -> x:a -> s1:set a -> s2:set a -> Lemma
    (requires True)
    (ensures (mem x (union s1 s2) = (mem x s1 || mem x s2)))
    [SMTPat (mem x (union s1 s2))]
 
-val mem_intersect: a:Type -> x:a -> s1:set a -> s2:set a -> Lemma 
+val mem_intersect: #a:Type -> x:a -> s1:set a -> s2:set a -> Lemma
    (requires True)
    (ensures (mem x (intersect s1 s2) = (mem x s1 && mem x s2)))
    [SMTPat (mem x (intersect s1 s2))]
 
-val mem_complement: a:Type -> x:a -> s:set a -> Lemma 
+val mem_complement: #a:Type -> x:a -> s:set a -> Lemma
    (requires True)
    (ensures (mem x (complement s) = not(mem x s)))
    [SMTPat (mem x (complement s))]
 
-val mem_subset: a:Type -> s1:set a -> s2:set a -> Lemma 
+val mem_subset: #a:Type -> s1:set a -> s2:set a -> Lemma
    (requires (forall x. mem x s1 ==> mem x s2))
    (ensures (subset s1 s2))
    [SMTPat (subset s1 s2)]
 
-val subset_mem: a:Type -> s1:set a -> s2:set a -> Lemma 
+val subset_mem: #a:Type -> s1:set a -> s2:set a -> Lemma
    (requires (subset s1 s2))
    (ensures (forall x. mem x s1 ==> mem x s2))
    [SMTPat (subset s1 s2)]
 
 (* Extensionality *)
 type Equal : #a:Type -> set a -> set a -> Type
-val lemma_equal_intro: a:Type -> s1:set a -> s2:set a -> Lemma 
+val lemma_equal_intro: #a:Type -> s1:set a -> s2:set a -> Lemma
     (requires  (forall x. mem x s1 = mem x s2))
     (ensures (Equal s1 s2))
     [SMTPatT (Equal s1 s2)]
 
-val lemma_equal_elim: a:Type -> s1:set a -> s2:set a -> Lemma 
+val lemma_equal_elim: #a:Type -> s1:set a -> s2:set a -> Lemma
     (requires (Equal s1 s2))
     (ensures  (s1 = s2))
     [SMTPatT (Equal s1 s2)]
 
-val lemma_equal_refl: a:Type -> s1:set a -> s2:set a -> Lemma 
+val lemma_equal_refl: #a:Type -> s1:set a -> s2:set a -> Lemma 
     (requires (s1 = s2))
     (ensures  (Equal s1 s2))
     [SMTPatT (Equal s1 s2)]
-

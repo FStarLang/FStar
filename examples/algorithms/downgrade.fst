@@ -14,7 +14,7 @@ open ST
 open Heap
 type tot_ord (a:Type) = f:(a -> a -> Tot bool){total_order a f}
 
-val qsort_seq : a:Type -> f:tot_ord a -> x:seq a -> ST (seq a)
+val qsort_seq : #a:Type -> f:tot_ord a -> x:seq a -> ST (seq a)
   (requires (fun h -> True))
   (ensures (fun h0 y h1 -> sorted f y /\ permutation a x y))
   (modifies (no_refs))
@@ -25,5 +25,5 @@ let qsort_seq f x =
   free x_ar;
   res
 
-val qsort_seq_forget: a:Type -> f:tot_ord a -> s1:seq a -> Dv (s2:seq a{sorted f s2 /\ permutation a s1 s2})
+val qsort_seq_forget: #a:Type -> f:tot_ord a -> s1:seq a -> Dv (s2:seq a{sorted f s2 /\ permutation a s1 s2})
 let qsort_seq_forget f x = forget_ST (qsort_seq f)  x

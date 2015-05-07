@@ -630,6 +630,8 @@ let t_binder (a:btvar) : binder = Inl a, None
 let v_binder (a:bvvar) : binder = Inr a, None
 let null_t_binder t : binder = Inl (null_bvar t), None
 let null_v_binder t : binder = Inr (null_bvar t), None
+let itarg t : arg = Inl t, Some Implicit
+let ivarg v : arg = Inr v, Some Implicit
 let targ t : arg = Inl t, None
 let varg v : arg = Inr v, None
 let is_null_pp (b:bvdef<'a>) = b.ppname.idText = null_id.idText

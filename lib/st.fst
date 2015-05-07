@@ -39,20 +39,20 @@ effect St (a:Type) (pre:Pre) (post: (heap -> Post a)) = STATE a
      (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 
 (* signatures WITHOUT permissions *)
-assume val alloc: a:Type -> init:a -> ST (ref a)
+assume val alloc:  #a:Type -> init:a -> ST (ref a)
                                          (fun h -> True)
                                          (fun h0 r h1 -> not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)
                                          (modifies no_refs)
 
-assume val read: a:Type -> r:ref a -> STATE a
+assume val read:  #a:Type -> r:ref a -> STATE a
                                          (fun 'p h -> 'p (sel h r) h)
                                          (fun 'p h -> 'p (sel h r) h)
 
-assume val write: a:Type -> r:ref a -> v:a -> Prims.ST unit
+assume val write:  #a:Type -> r:ref a -> v:a -> Prims.ST unit
                                                  (fun h -> True)
                                                  (fun h0 x h1 -> h1==upd h0 r v)
 
-assume val op_ColonEquals: a:Type -> r:ref a -> v:a -> Prims.ST unit
+assume val op_ColonEquals:  #a:Type -> r:ref a -> v:a -> Prims.ST unit
                                                  (fun h -> True)
                                                  (fun h0 x h1 -> h1==upd h0 r v)
 

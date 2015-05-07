@@ -171,7 +171,7 @@ let plus_O_n n = ()
 
 val plus_id_example : n : nat -> m : nat -> Pure unit
       (requires (n = m))
-      (ensures \r -> (plus n n = plus m m))
+      (ensures (fun r -> (plus n n = plus m m)))
 let plus_id_example n m = ()
 
 val mult_0_plus : n : nat -> m : nat -> Lemma

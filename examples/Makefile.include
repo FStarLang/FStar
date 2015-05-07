@@ -6,26 +6,29 @@ MSBUILD = xbuild
 endif
 
 FSTAR_HOME = ../..
-LIB_FILES= list.fst string.fst partialmap.fst
-STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst)
+LIB_FILES=set.fsi heap.fst list.fst string.fst st.fst
+STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
+OLDLIB = $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst st.fst)
 
-FULL_LIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) st.fst listproperties.fst)
+FULL_LIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) listproperties.fst)
 STDLIB_CACHE = Prims.cache List.cache Set.cache Map.cache Heap.cache Array.cache String.cache ST.cache
 FULL_LIB_CACHE = $(STDLIB_CACHE) ListProperties.cache
 PERMLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES) stperm.fst)
 FSTAR = ../../bin/fstar.exe $(OTHERFLAGS)
-
 STDCACHE=Prims.cache List.cache String.cache ST.cache Set.cache Map.cache Heap.cache Array.cache
 FSTARC=../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
 
 %.ver: %.fst
-	$(FSTAR) $(STDLIB) $^
+	$(FSTAR) --admit_fsi Set $(STDLIB) $^
+
+%.oldlib.ver: %.fst
+	$(FSTAR) --admit_fsi Set $(OLDLIB) $^
 
 %.cache.ver: %.fst
 	$(FSTAR) $(STDLIB_CACHE) $^
 
 %.fulllib.ver: %.fst
-	$(FSTAR) $(FULL_LIB) $^
+	$(FSTAR) --admit_fsi Set $(FULL_LIB) $^
 
 %.vv: %.fst
 	$(FSTAR) $^
@@ -47,7 +50,10 @@ FSTARC=../../bin/fstar.exe $(STDCACHE) $(OTHERFLAGS)
 	rm -f $(addprefix $(FSTAR_HOME)/cache/, $(STDCACHE))
 
 .all.ver: $(VERFILES)
-	$(FSTAR) $(STDLIB) $^
+	$(FSTAR) --admit_fsi Set $(STDLIB) $^
+
+.all.oldlib.ver: $(VERFILES)
+	$(FSTAR) --admit_fsi Set $(OLDLIB) $^
 
 .all.cache.ver: $(VERFILES)
 	$(FSTAR) $(STDLIB_CACHE) $^

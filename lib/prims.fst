@@ -122,11 +122,11 @@ type double = float
 type int32 = int
 
 type list (a:Type) =
-  | Nil : list a
+  | Nil  : list a
   | Cons : hd:a -> tl:list a -> list a
 
 type pattern =
-  | SMTPat  : a:Type -> a -> pattern
+  | SMTPat  : #a:Type -> a -> pattern
   | SMTPatT : a:Type -> pattern
 
 assume type decreases : #a:Type -> a -> Type
@@ -261,7 +261,7 @@ effect St (a:Type) =
 
 (* Effect EXCEPTION *)
 kind ExPre  = Type
-kind ExPost  (a:Type) = result a -> Type
+kind ExPost (a:Type) = result a -> Type
 kind ExWP   (a:Type) = ExPost a -> ExPre
 type ex_return (a:Type) (x:a) (p:ExPost a) = p (V x)
 type ex_bind_wlp (a:Type) (b:Type) (wlp1:ExWP a) (wlp2:(a -> ExWP b)) (p:ExPost b) =
@@ -418,7 +418,7 @@ sub_effect
 
 type lex_t =
   | LexTop  : lex_t
-  | LexCons : a:Type -> a -> lex_t -> lex_t
+  | LexCons : #a:Type -> a -> lex_t -> lex_t
 
 type Tuple2 'a 'b =
   | MkTuple2: _1:'a
@@ -481,8 +481,8 @@ type Tuple8 'a 'b 'c 'd 'e 'f 'g 'h =
 type DTuple2: a:Type
           ->  b:(a -> Type)
           -> Type =
-  | MkDTuple2: a:Type
-           ->  b:(a -> Type)
+  | MkDTuple2: #a:Type
+           ->  #b:(a -> Type)
            -> _1:a
            -> _2:b _1
            -> DTuple2 a b
@@ -491,9 +491,9 @@ type DTuple2: a:Type
             -> b:(a -> Type)
             -> c:(x:a -> b x -> Type)
             -> Type =
-   | MkDTuple3: a:Type
-            -> b:(a -> Type)
-            -> c:(x:a -> b x -> Type)
+   | MkDTuple3: #a:Type
+            ->  #b:(a -> Type)
+            ->  #c:(x:a -> b x -> Type)
             -> _1:a
             -> _2:b _1
             -> _3:c _1 _2
@@ -504,10 +504,10 @@ type DTuple4: a:Type
            -> c:(x:a -> b x -> Type)
            -> d:(x:a -> y:b x -> z:c x y -> Type)
            -> Type =
- | MkDTuple4: a:Type
-           -> b:(a -> Type)
-           -> c:(x:a -> b x -> Type)
-           -> d:(x:a -> y:b x -> z:c x y -> Type)
+ | MkDTuple4: #a:Type
+           -> #b:(a -> Type)
+           -> #c:(x:a -> b x -> Type)
+           -> #d:(x:a -> y:b x -> z:c x y -> Type)
            -> _1:a
            -> _2:b _1
            -> _3:c _1 _2
@@ -531,14 +531,14 @@ let dfst t = MkDTuple2._1 t
 val dsnd : 'a:Type -> 'b:('a -> Type) -> t:(DTuple2 'a 'b) -> Tot ('b (MkDTuple2._1 t))
 let dsnd t = MkDTuple2._2 t
 logic type InductionHyp : #a:Type -> a -> Type -> Type
-assume val by_induction_on: a:Type -> p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
-assume val _assume: 'P:Type -> unit -> (y:unit{'P})
-assume val admit: unit -> Admit 'a
-assume val magic: unit -> Tot 'a
-assume val admitP: 'P:Type -> Pure unit True (fun x -> 'P)
-assume val _assert : 'P:Type -> unit -> Pure unit (requires $"assertion failed" 'P) (ensures \x -> True)
-assume val cut : 'P:Type -> Pure unit (requires $"assertion failed" 'P) (fun x -> 'P)
-assume val qintro: a:Type -> p:(a -> Type) -> =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
+assume val by_induction_on: #a:Type -> #p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
+assume val _assume : p:Type -> unit -> (y:unit{p})
+assume val admit   : #a:Type -> unit -> Admit a
+assume val magic   : #a:Type -> unit -> Tot a
+assume val admitP  : p:Type -> Pure unit True (fun x -> p)
+assume val _assert : p:Type -> unit -> Pure unit (requires $"assertion failed" p) (ensures (fun x -> True))
+assume val cut     : p:Type -> Pure unit (requires $"assertion failed" p) (fun x -> p)
+assume val qintro  : #a:Type -> #p:(a -> Type) -> =f:(x:a -> Lemma (p x)) -> Lemma (forall (x:a). p x)
 assume val failwith: string -> All 'a (fun h -> True) (fun h a h' -> is_Err a /\ h==h')
 assume val raise: exn -> Ex 'a       (* TODO: refine with the Exn monad *)
 assume val pipe_right: 'a -> ('a -> 'b) -> 'b

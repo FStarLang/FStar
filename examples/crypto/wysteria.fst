@@ -27,12 +27,12 @@ effect Wys (a:Type) (req:Requires) (ens:Ensures a) =
 
 (* defining this shorthand doesn't work, e.g. in with_mode it says expected unit -> Wys bool got unit -> Wys_m bool *)
 effect Wys_m (a:Type) (m:mode) ('post:a -> Type) =
-  Wys a (fun m0 -> b2t (m0 = m)) (fun x m0 -> 'post x)	       
+  Wys a (fun m0 -> b2t (m0 = m)) (fun x m0 -> 'post x)
 
 type Wire (a:Type) = Map.t prin a
 
 type Box: Type -> Type =
-  |Mk_box: a:Type -> v:a -> m:mode -> Box a
+  |Mk_box: #a:Type -> v:a -> m:mode -> Box a
 
 type CanDelegate (m1:mode) (m2:mode) =
   (Mode.p_or_s m2 = Par /\ Mode.p_or_s m1 = Par /\ Subset (Mode.ps m2) (Mode.ps m1)) \/
@@ -95,4 +95,3 @@ assume val read: #a:Type -> unit ->
   Wys a (fun m0 -> Mode.p_or_s m0 = Par /\
                    (exists p. Mode.ps m0 = singleton p))
         (fun x m0 -> (forall p. Mode.ps m0 = singleton p ==> says p x))
-

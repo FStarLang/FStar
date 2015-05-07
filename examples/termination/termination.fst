@@ -82,36 +82,36 @@ let rec list_subterm_ordering_coercion l bound = match l with
   | [] -> []
   | hd::tl ->
     hd::list_subterm_ordering_coercion tl bound
- 
-val list_subterm_ordering_lemma: l:list 'a 
+
+val list_subterm_ordering_lemma: l:list 'a
                         -> bound:'b
-                        -> x:'a 
+                        -> x:'a
                         -> Lemma (requires (l << bound))
                                  (ensures (mem x l ==> x << bound))
                                  [SMTPat (mem x l);
                                   SMTPatT (x << bound)]
 let rec list_subterm_ordering_lemma l bound x = match l with
-  | [] -> () 
+  | [] -> ()
   | hd::tl -> list_subterm_ordering_lemma tl bound x
-     
-val move_refinement:  a:Type
-                   -> p:(a -> Type)
+
+val move_refinement:  #a:Type
+                   -> #p:(a -> Type)
                    -> l:list a{forall z. mem z l ==> p z}
                    -> Tot (list (x:a{p x}))
 let rec move_refinement (a:Type) (p:(a -> Type)) l = match l with
   | [] -> []
-  | hd::tl -> hd::move_refinement a p tl
+  | hd::tl -> hd::move_refinement #a #p tl
 
 type T 'a =
   | Leaf : 'a -> T 'a
   | Node : list (T 'a) -> T 'a
 
-val treeMap : 'a:Type -> 'b:Type -> ('a -> Tot 'b) -> T 'a -> Tot (T 'b)
+val treeMap : #a:Type -> #b:Type -> (a -> Tot b) -> T a -> Tot (T b)
 let rec treeMap 'a 'b f v = match v with
   | Leaf a -> Leaf (f a)
   | Node l ->
-    (* NS: this next call seems to be unavoidable. We need to move the refinement "inside" the list. 
-           An alternative would be to give map a different type accouting for this "outside" refinement. 
+    (* NS: this next call seems to be unavoidable. We need to move the refinement "inside" the list.
+           An alternative would be to give map a different type accouting for this "outside" refinement.
            But, it's seeems nicer to give map its normal type *)
-    let l = move_refinement #_ #(fun aa -> aa << v) l in (* ghost *) 
+    let l = move_refinement #_ #(fun aa -> aa << v) l in (* ghost *)
     Node (map (treeMap f) l) //treeMap f: (x:T a{x << v} -> Tot (T b))
