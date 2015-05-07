@@ -12,6 +12,20 @@
 
    1 s/r conflict on DOT
       A.B ^ .C 
+
+   1 s/r conflict on LBRACE
+	
+      Consider: 
+		  let f (x: y:int & z:vector y{z=z /\ y=0}) = 0
+	  
+	  Could be parsed as:
+        let f (x: (y:int & z:vector y{z=z /\ y=0})) = 0
+	  Or
+	    let f (x: (y:int & z:vector y){z=z /\ y=0}) = 0
+
+	  We pick the former, for now
+	  Analogous ambiguities with -> and * as well.
+
 *)
 // (c) Microsoft Corporation. All rights reserved
 open Microsoft.FStar.Options
@@ -330,8 +344,7 @@ ascriptionOrPattern:
 				  | _ -> errorR(Error("Not a valid refinement type", lhs(parseState))); $3 in
 				PatAscribed($1, t)
       }
-  |  tvar COLON  kind        { PatAscribed(mk_pattern (PatTvar($1, false)) (rhs parseState 1), $3) }
-  |  pattern { $1.pat }
+  |  pattern                { $1.pat }
 
 maybeAscribeKind: 
   |            { fun p -> p }
@@ -356,10 +369,8 @@ moreFieldPatterns:
 binder:
   | ident { mk_binder (Variable($1)) (rhs parseState 1) Type None  }
   | tvar  { mk_binder (TVariable($1)) (rhs parseState 1) Kind None  }
-  | LPAREN aqual_opt ident COLON typ refineOpt RPAREN 
-      { mkRefinedBinder $3 $5 $6 (rhs2 parseState 1 7) $2  }
-  | LPAREN aqual_opt tvar COLON kind RPAREN 
-	  { mk_binder (TAnnotated($3, $5)) (rhs2 parseState 1 6) Kind $2 }
+  | LPAREN aqual_opt ident COLON typ refineOpt RPAREN
+	 { mkRefinedBinder $3 $5 $6 (rhs2 parseState 1 7) $2 }
 
 typars:
   | tvarinsts              { $1 }
@@ -673,7 +684,7 @@ tmAnd:
 cmpTerm:
   | cmpTerm comparisonOp tmCons
       { mk_term (Op($2, [$1;$3])) (rhs2 parseState 1 3) Expr }
-  | tmCons
+  | tmCons 
       { $1 }
 
 comparisonOp:
@@ -689,27 +700,36 @@ tmCons:
 
 product: 
   | productDomain RARROW product
-      { mk_term (Product([$1], $3)) (rhs2 parseState 1 3) Un }
-
-  | appTerm RARROW product
-      { 
-        let b = mk_binder (NoName $1) (rhs parseState 1) Un None in
+	 {
+		let aq, tm = $1 in 
+		let b = match extract_named_refinement tm with 
+			| None -> mk_binder (NoName tm) (rhs parseState 1) Un aq
+			| Some (x, t, f) -> mkRefinedBinder x t f (rhs2 parseState 1 1) aq in
         mk_term (Product([b], $3)) (rhs2 parseState 1 3)  Un
-      }
+	 
+	 }
 
   | dtupleTerm 
 	  { $1 }
 
+productDomain:
+  | aqual dtupleTerm { (Some $1, $2) }
+  | dtupleTerm      { (None, $1)    }
+
 dtupleTerm:
-  | ident COLON appTerm refineOpt AMP dtupleTerm
+  | arithTerm AMP dtupleTerm
       { 
-	     let dom = mkRefinedBinder $1 $3 $4 (rhs2 parseState 1 4) None in
-		 let tail = $6 in
-		 let dom, res = match tail.tm with 
+		let x, t, f = match extract_named_refinement $1 with 
+			| Some (x, t, f) -> x, t, f
+			| _ -> raise (Error("Missing binder for the first component of a dependent tuple", rhs2 parseState 1 2)) in
+	    let dom = mkRefinedBinder x t f (rhs2 parseState 1 2) None in
+		let tail = $3 in
+		let dom, res = match tail.tm with 
 			| Sum(dom', res) -> dom::dom', res
 			| _ -> [dom], tail in 
-	     mk_term (Sum(dom, res)) (rhs2 parseState 1 6) Type
+	    mk_term (Sum(dom, res)) (rhs2 parseState 1 6) Type
 	  }
+
   | arithTerm
 	 { $1 }
   
@@ -737,7 +757,7 @@ starDivModTerm:
 refinementTerm:
   | ident COLON appTerm 
       {
-        $3 
+        mk_term (NamedTyp($1, $3)) (rhs2 parseState 1 3) Type 
       }
 	  
   | ident COLON appTerm LBRACE formula RBRACE 
@@ -750,19 +770,9 @@ refinementTerm:
 
   | unaryTerm { $1 }
   
-productDomain:
-  | ident COLON appTerm refineOpt
-      { mkRefinedBinder $1 $3 $4 (rhs2 parseState 1 4) None } 
-  | aqual ident COLON appTerm refineOpt
-      { mkRefinedBinder $2 $4 $5 (rhs2 parseState 1 5) $1 } 
-  | tvar COLON atomicKind
-      { mk_binder (TAnnotated($1, $3)) (rhs2 parseState 1 3) Kind None }
-  | aqual tvar COLON atomicKind
-      { mk_binder (TAnnotated($2, $4)) (rhs2 parseState 1 4) Kind $1 }
-
 aqual:
-  | HASH   { Some Implicit }
-  | EQUALS    { Some Equality }
+  | HASH      { Implicit }
+  | EQUALS    { Equality }
 
 refineOpt:
   |                       { None }

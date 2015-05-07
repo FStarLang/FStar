@@ -54,6 +54,7 @@ type term' =
   | QForall   of list<binder> * list<term> * term 
   | QExists   of list<binder> * list<term> * term 
   | Refine    of binder * term 
+  | NamedTyp  of ident * term
   | Paren     of term
   | Requires  of term * option<string>
   | Ensures   of term * option<string>
@@ -211,6 +212,8 @@ let rec term_to_string (x:term) = match x.tm with
       (t|> term_to_string)
   | Refine(b, t) -> 
     Util.format2 "%s:{%s}" (b|> binder_to_string) (t|> term_to_string)      
+  | NamedTyp(x, t) -> 
+    Util.format2 "%s:%s" x.idText  (t|> term_to_string)        
   | Paren t -> Util.format1 "(%s)" (t|> term_to_string)
   | Product(bs, t) ->
         Util.format2 "Unidentified product: [%s] %s"
@@ -290,3 +293,10 @@ let mkRefinedBinder id t refopt m implicit =
   match refopt with 
     | None -> b 
     | Some t -> mk_binder (Annotated(id, mk_term (Refine(b, t)) m Type)) m Type implicit
+
+let rec extract_named_refinement t1  = 
+    match t1.tm with 
+	| NamedTyp(x, t) -> Some (x, t, None) 
+	| Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
+    | Paren t -> extract_named_refinement t  
+	| _ -> None

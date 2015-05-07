@@ -26,8 +26,8 @@ effect Wys (a:Type) (req:Requires) (ens:Ensures a) =
   ST a (fun h0 -> req (sel h0 moderef)) (fun h0 x h1 -> sel h1 moderef = sel h0 moderef /\ ens x (sel h0 moderef))
 
 (* defining this shorthand doesn't work, e.g. in with_mode it says expected unit -> Wys bool got unit -> Wys_m bool *)
-effect Wys_m (a:Type) (m:mode) ('post:a -> Type) =
-  Wys a (fun m0 -> b2t (m0 = m)) (fun x m0 -> 'post x)
+effect Wys_m (a:Type) (m:mode) (post:a -> Type) =
+  Wys a (fun m0 -> b2t (m0 = m)) (fun x m0 -> post x)
 
 type Wire (a:Type) = Map.t prin a
 

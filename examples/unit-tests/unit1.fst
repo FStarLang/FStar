@@ -75,10 +75,10 @@ let pure_id_annot x = x
 val ml_id_annot : 'a -> 'a
 let ml_id_annot x = x
 
-val tabs_id_pure_annot_eq : 'a:Type -> x:'a -> Pure 'a True (fun y -> y==x)
-let tabs_id_pure_annot_eq ('a:Type) x = x
+val tabs_id_pure_annot_eq : a:Type -> x:a -> Pure a True (fun y -> y==x)
+let tabs_id_pure_annot_eq (a:Type) x = x
 
-let tabs_id ('a:Type) (x:'a) = x
+let tabs_id (a:Type) (x:'a) = x
 
 val id_pure_annot_eq : x:'a -> Pure 'a True (fun y -> y==x)
 let id_pure_annot_eq x = x

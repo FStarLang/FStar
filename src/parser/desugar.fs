@@ -143,7 +143,8 @@ let rec is_type env (t:term) =
     | QExists _
     | Sum _
     | Refine _
-    | Tvar _ -> true
+    | Tvar _ 
+    | NamedTyp _ -> true
     | Var l
     | Name l when (List.length l.ns = 0) ->
       begin match DesugarEnv.try_lookup_typ_var env l.ident with 
@@ -220,6 +221,7 @@ and free_type_vars env t = match (unparen t).tm with
   | Requires (t, _)
   | Ensures (t, _)
   | Labeled(t, _, _)
+  | NamedTyp(_, t)
   | Paren t
   | Ascribed(t, _) -> free_type_vars env t
 
@@ -850,6 +852,7 @@ and desugar_typ env (top:term) : typ =
           wpos <| mk_Typ_refine(b, f)
       end
 
+    | NamedTyp(_, t)
     | Paren t ->
       desugar_typ env t
 
