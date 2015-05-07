@@ -356,7 +356,7 @@ moreFieldPatterns:
 binder:
   | ident { mk_binder (Variable($1)) (rhs parseState 1) Type None  }
   | tvar  { mk_binder (TVariable($1)) (rhs parseState 1) Kind None  }
-  | LPAREN aqual_opt ident COLON appTerm refineOpt RPAREN 
+  | LPAREN aqual_opt ident COLON typ refineOpt RPAREN 
       { mkRefinedBinder $3 $5 $6 (rhs2 parseState 1 7) $2  }
   | LPAREN aqual_opt tvar COLON kind RPAREN 
 	  { mk_binder (TAnnotated($3, $5)) (rhs2 parseState 1 6) Kind $2 }
