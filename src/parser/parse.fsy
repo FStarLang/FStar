@@ -346,10 +346,6 @@ ascriptionOrPattern:
       }
   |  pattern                { $1.pat }
 
-maybeAscribeKind: 
-  |            { fun p -> p }
-  | COLON kind { fun p -> PatAscribed(mk_pattern p (lhs parseState), $2) }
-
 patternListSemiColon:
   |   { [] }
   | appPattern patternListSemiColonRest { $1::$2 }
