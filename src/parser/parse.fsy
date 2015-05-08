@@ -479,13 +479,20 @@ ascribeKindOpt:
 
 kind:
   | product { {$1 with level=Kind} }
-
-atomicKind:
-  | atomicTerm { let tm:term = $1 in {tm with level=Kind} }
       
 typ:
-  | simpleTerm { $1 }
+  | simpleTerm  { $1 }
 
+  | FORALL binders DOT qpat noSeqTerm
+      {
+        mk_term (QForall($2,$4,$5)) (rhs2 parseState 1 5) Formula
+      }
+
+  | EXISTS binders DOT qpat noSeqTerm
+      {
+        mk_term (QExists($2,$4,$5)) (rhs2 parseState 1 5) Formula
+      }
+  
 term:
   | noSeqTerm 
       { $1 }
@@ -495,7 +502,7 @@ term:
 
 
 noSeqTerm:
-  | simpleTerm { $1 }
+  | typ  { $1 }
 
   | REQUIRES label_opt typ 
      {
@@ -536,16 +543,6 @@ noSeqTerm:
   | LET recopt letbinding letbindings IN term
       {
         mk_term (Let($2, ($3::$4), $6)) (rhs2 parseState 1 6) Expr
-      }
-
-  | FORALL binders DOT qpat noSeqTerm
-      {
-        mk_term (QForall($2,$4,$5)) (rhs2 parseState 1 5) Formula
-      }
-
-  | EXISTS binders DOT qpat noSeqTerm
-      {
-        mk_term (QExists($2,$4,$5)) (rhs2 parseState 1 5) Formula
       }
 
   | FUNCTION firstPatternBranch patternBranches 
