@@ -1,14 +1,18 @@
 %{
 #light "off" 
 (*
- Known (intentional) ambiguitites: 5 s/r conflicts in total; resolved by shifting
+ Known (intentional) ambiguitites: 6 s/r conflicts in total; resolved by shifting
    3 s/r conflicts on BAR
       match  with | P -> match with | Q -> _ | R -> _
       function ...
       try e with | ... 
 
    1 s/r conflict on SEMICOLON
-       e1 ^ ; e2
+       fun x -> e1 ; e2
+	 is parsed as
+		(fun x -> e1; e2)
+	 rather than
+		(fun x -> e1); e2
 
    1 s/r conflict on DOT
       A.B ^ .C 
@@ -18,15 +22,14 @@
       Consider: 
 		  let f (x: y:int & z:vector y{z=z /\ y=0}) = 0
 	  
-	  Could be parsed as:
+	  This is parsed as:
         let f (x: (y:int & z:vector y{z=z /\ y=0})) = 0
-	  Or
+	  rather than:
 	    let f (x: (y:int & z:vector y){z=z /\ y=0}) = 0
 
-	  We pick the former, for now
 	  Analogous ambiguities with -> and * as well.
-
 *)
+
 // (c) Microsoft Corporation. All rights reserved
 open Microsoft.FStar.Options
 open Microsoft.FStar.Range
