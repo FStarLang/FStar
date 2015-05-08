@@ -49,7 +49,6 @@ open Microsoft.FStar.Parser.Util
 %token <string> NAME
 %token <string> TVAR
 %token <string> DIV_MOD_OP 
-%token <string> PLUS_MINUS_OP 
 %token <string> TILDE
 %token <string> CUSTOM_OP
 
@@ -88,6 +87,7 @@ open Microsoft.FStar.Parser.Util
 %token PUBLIC PRIVATE LBRACE_COLON_PATTERN PIPE_LEFT PIPE_RIGHT 
 %token NEW_EFFECT SUB_EFFECT SQUIGGLY_RARROW TOTAL KIND
 %token PRINT REQUIRES ENSURES
+%token PLUS_OP MINUS_OP 
  
 /* These are artificial */
 %token <string> LEX_FAILURE
@@ -733,11 +733,23 @@ dtupleTerm:
 	 { $1 }
   
 arithTerm:
-  | starDivModTerm PLUS_MINUS_OP arithTerm
-      { mk_term (Op($2, [$1;$3])) (rhs2 parseState 1 3) Un}
+  | plusOp 
+	  { $1 }
+
+plusOp:
+  | minusOp PLUS_OP plusOp
+      { mk_term (Op("+", [$1;$3])) (rhs2 parseState 1 3) Un}
+
+  | minusOp
+	  { $1 }
+
+minusOp:
+  | starDivModTerm MINUS_OP minusOp
+      { mk_term (Op("-", [$1;$3])) (rhs2 parseState 1 3) Un}
 
   | starDivModTerm 
       { $1 }
+
 
 starDivModTerm:
   | refinementTerm STAR starDivModTerm 
@@ -780,8 +792,11 @@ refineOpt:
 
 
 unaryTerm: 
-  | PLUS_MINUS_OP atomicTerm
-      { mk_term (Op($1, [$2])) (rhs2 parseState 1 3) Expr }
+  | PLUS_OP atomicTerm
+      { mk_term (Op("+", [$2])) (rhs2 parseState 1 3) Expr }
+
+  | MINUS_OP atomicTerm
+      { mk_term (Op("-", [$2])) (rhs2 parseState 1 3) Expr }
 
   | TILDE atomicTerm
       { mk_term (Op($1, [$2])) (rhs2 parseState 1 3) Formula }

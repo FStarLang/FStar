@@ -448,7 +448,8 @@ rule token args = parse
  | "`" { RESERVED }
  | "\\" { BACKSLASH }
  | ('/' | '%')                                               { DIV_MOD_OP(ulexeme lexbuf) }
- | ('+'|'-')                                                 { PLUS_MINUS_OP(ulexeme lexbuf) }
+ | '+'                                                       { PLUS_OP }
+ | '-'                                                       { MINUS_OP }
  | custom_op												 { CUSTOM_OP (ulexeme lexbuf) }
  | _ { unexpected_char lexbuf }     
  | eof { lc := 1; EOF }

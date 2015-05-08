@@ -304,7 +304,8 @@ rule token = parse
  | "$"         { DOLLAR }
  | "\\"        { BACKSLASH }
  | ('/' | '%') as op { DIV_MOD_OP    (String.of_char op) }
- | ('+' | '-') as op { PLUS_MINUS_OP (String.of_char op) }
+ | '+'         { PLUS_OP }
+ | '-'         { MINUS_OP }
  | custom_op   {CUSTOM_OP (L.lexeme lexbuf) }
 
  | _ { failwith "unexpected char" }
