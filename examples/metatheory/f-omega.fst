@@ -88,7 +88,7 @@ val tsubst : t:typ -> s:tsub -> Pure typ (requires True)
 let rec tsubst t s =
   match t with
   | TVar x -> s x
-    
+
   | TFor k t1
   | TLam k t1 ->
      let tsubst_lam : y:var -> Tot (t:typ{trenaming s ==> is_TVar t}) = fun y ->
@@ -129,7 +129,7 @@ let rec esubst e s =
        if y=0 then EVar y
        else (esubst (s (y - 1)) esub_inc) in
      ELam t (esubst e1 esubst_lam)
-       
+
   | EForT k e1 -> EForT k (esubst e1 (fun y -> esubst_t (s y) tsub_inc))
 
   | ETApp e1 t -> ETApp (esubst e1 s) t
@@ -309,7 +309,7 @@ let rec esubst_id e =
       esubst_forallt_hoist k e1 esub_id;
       esubst_extensional esub_id (esubst_forallt esub_id) e1;
       esubst_id e1
-	
+
     | ETApp e1 t -> esubst_id e1
 
 (* subst_beta_gen is a generalization of the substitution we do for
@@ -1423,7 +1423,7 @@ let rec typing_substitution_t_l x e t1 k_x t2 g l h1 h2 =
       combine_with_rl_ext (extend_tvar g x k_x) l t3;
       let h21' = typing_extensional #(extend_evar (extend_rl (extend_tvar g x k_x) l) 0 t3) #e3 #t4 h21 (extend_rl (extend_tvar g x k_x) (RSnoc l t3)) in
       let h22 = typing_substitution_t_l x #e3 #t1 #k_x #t4 #g #(RSnoc l t3) h1 h21' in
-      
+
       combine_with_rl_ext g (rmap l (tsubst_beta_gen x t1)) (tsubst_beta_gen x t1 t3);
       let h22' = typing_extensional #(extend_rl g (rmap (RSnoc l t3) (tsubst_beta_gen x t1))) #(esubst_tbeta_gen x t1 e3) #(tsubst_beta_gen x t1 t4) h22 (extend_evar (extend_rl g (rmap l (tsubst_beta_gen x t1))) 0 (tsubst_beta_gen x t1 t3)) in
 
@@ -1440,7 +1440,7 @@ let rec typing_substitution_t_l x e t1 k_x t2 g l h1 h2 =
       let h21' = typing_substitution_t_l x #e #t1 #k_x #t3 #g #l h1 h21 in
       let h22' = tequiv_tsubst t3 t2 x t1 h22 in
       let h23' = kinding_substitution_l x #t2 #t1 #k_x #KTyp #l #g h1 h23 in
-      
+
       TyEqu #(extend_rl g (rmap l (tsubst_beta_gen x t1))) #(esubst_tbeta_gen x t1 e) #(tsubst_beta_gen x t1 t3) #(tsubst_beta_gen x t1 t2) h21' h22' h23'
 
     | TyFor #dc #e3 #t3 k h21 ->
@@ -1453,7 +1453,7 @@ let rec typing_substitution_t_l x e t1 k_x t2 g l h1 h2 =
       esubst_tbeta_gen_for x t1 k e3;
       tsubst_gen_tlam x t1 k t3;
       TyFor #(extend_rl g (rmap l (tsubst_beta_gen x t1))) #(esubst_tbeta_gen (x + 1) (tshift_up_above 0 t1) e3) #(tsubst_beta_gen (x + 1) (tshift_up_above 0 t1) t3) k h22
-      
+
     | TyAppT #dc #e3 #t3 #t4 k h21 h22 ->
       let h21' = typing_substitution_t_l x #e3 #t1 #k_x #(TFor k t4) #g #l h1 h21 in
       tsubst_gen_tlam x t1 k t4;
@@ -1490,7 +1490,7 @@ let rec typing_to_kinding g e t h =
       let h11 = typing_to_kinding #g #e1 #(TFor k t2) h1 in
       let h12 = kinding_inversion_forall #g #k #t2 h11 in
       kinding_substitution 0 #t2 #t1 #k #KTyp #g h2 h12
-      
+
 (* Parallel type reduction *)
 
 type tred: typ -> typ -> Type =
@@ -1923,9 +1923,10 @@ opaque val arrow_eq_tfor_contra: #t1:typ -> #t2:typ -> #k:knd -> #t3:typ ->
 let arrow_eq_tfor_contra t1 t2 k t3 h =
   let ExIntro u p = tequiv_tred_tred h in
   let Conj p1 p2 = p in
-  let _ = tred_tarr_preserved #t1 #t2 #u p1 in
-  let _ = tred_tfor_preserved #k #t3 #u p2 in
-  ()
+  let ExIntro _ p1 = tred_tarr_preserved #t1 #t2 #u p1 in
+  let ExIntro _ p2 = tred_tfor_preserved #k #t3 #u p2 in
+  Classical.give_proof p1;
+  Classical.give_proof p2
 
 opaque val efor_typing_eq_tfor: #k:knd -> #e:exp -> #t:typ ->
                                 h:typing empty (EForT k e) t ->
@@ -2031,7 +2032,7 @@ let rec inversion_efor_jk g k1 k2 e s t h1 h2 =
       ()
     | TyEqu #dc1 #dc2 #t' #dc3 h11 h12 h23 ->
       inversion_efor_jk #g #k1 #k2 #e #t' #t h11 (EqTran h12 h2)
-  
+
 opaque val inversion_efor:#g:env ->#k1:knd -> #k2:knd -> #e:exp -> #s:typ -> #t:typ ->
                           h1:typing g (EForT k1 e) s ->
                           h2:tequiv s (TFor k2 t)    ->
@@ -2084,7 +2085,7 @@ let rec progress _ _ h =
       fort_not_elam #e #t' #k h1;
       (match e with
     	| EForT k e1 -> ExIntro (esubst_tbeta t e1) (SBetaT k e1 t)
-    	| _ -> 
+    	| _ ->
     	  let ExIntro e' h2 = progress h1 in
     	  ExIntro (ETApp e' t) (STApp1 t h2)
       )
