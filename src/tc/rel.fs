@@ -1946,12 +1946,14 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
             | (MisMatch, _) -> //heads definitely do not match
               let head1 = Util.head_and_args t1 |> fst in 
               let head2 = Util.head_and_args t2 |> fst in 
-              begin match head1.n, head2.n with 
-                | Typ_btvar _, _
-                | _, Typ_btvar _ -> (* may match by refinement *) 
-                  solve env (solve_prob orig (Some <| Util.mk_eq_typ t1 t2) [] wl)  
-                | _ -> giveup env "head mismatch" orig        
-              end
+              let may_equate head = match head.n with 
+                | Typ_btvar _  -> true
+                | Typ_const tc -> Env.is_projector env tc.v
+                | _ -> false  in
+              if (may_equate head1 || may_equate head2) && wl.smt_ok
+              then solve env (solve_prob orig (Some <| Util.mk_eq_typ t1 t2) [] wl)  
+              else giveup env "head mismatch" orig        
+             
 
             | (_, Some (t1, t2)) -> //heads match after some delta steps
               solve_t env ({problem with lhs=t1; rhs=t2}) wl

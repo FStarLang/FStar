@@ -105,6 +105,7 @@ val lookup_typ_abbrev : env -> lident -> option<typ>
 val lookup_effect_abbrev : env -> lident -> option<(binders * comp)>
 val lookup_btvar : env -> btvar -> knd
 val lookup_typ_lid : env -> lident -> knd
+val is_projector: env -> lident -> bool
 val try_lookup_effect_lid : env -> lident -> option<knd>
 val lookup_effect_lid : env -> lident -> knd
 val lookup_operator : env -> ident -> typ

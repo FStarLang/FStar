@@ -446,6 +446,13 @@ let lookup_typ_lid env (ftv:lident) : knd =
     | _ ->
       raise (Error(name_not_found ftv, range_of_lid ftv))
 
+let is_projector env (l:lident) : bool = 
+    match lookup_qname env l with 
+        | Some (Inr (Sig_tycon(_, _, _, _, _, quals, _)))
+        | Some (Inr (Sig_val_decl(_, _, quals, _))) -> 
+          Util.for_some (function Projector _ -> true | _ -> false) quals
+        | _ -> false
+
 let try_lookup_effect_lid env (ftv:lident) : option<knd> = 
   match lookup_qname env ftv with
     | Some (Inr (Sig_new_effect(ne, _))) -> 
