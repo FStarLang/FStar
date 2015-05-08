@@ -119,9 +119,10 @@ type worklist = {
     attempting: probs;
     deferred:   list<(int * string * prob)>;  //flex-flex cases, non patterns, and subtyping constraints involving a unification variable, 
     subst:      list<uvi>;                    //the partial solution derived so far
-    ctr:        int;                 //a counter incremented each time we extend subst, used to detect if we've made progress
-    slack_vars: list<(bool * typ)>;  //all the slack variables introduced so far, the flag marks a multiplicative variable
-    defer_ok:   bool;                //whether or not carrying constraints is ok---at the top-level, this flag is false
+    ctr:        int;                          //a counter incremented each time we extend subst, used to detect if we've made progress
+    slack_vars: list<(bool * typ)>;           //all the slack variables introduced so far, the flag marks a multiplicative variable
+    defer_ok:   bool;                         //whether or not carrying constraints is ok---at the top-level, this flag is false
+    smt_ok:     bool;                         //whether or not falling back to the SMT solver is permitted
     tcenv:      Tc.Env.env;
 }
 
@@ -310,6 +311,7 @@ let empty_worklist env = {
     slack_vars=[];
     tcenv=env;
     defer_ok=true;
+    smt_ok=true
 }
 let singleton env prob     = {empty_worklist env with attempting=[prob]}
 let wl_of_guard env g      = {empty_worklist env with defer_ok=false; attempting=List.map snd g.carry; slack_vars=g.slack}
@@ -359,6 +361,7 @@ let sn_binders env binders =
         | Inr x, imp -> 
           Inr ({x with sort=norm_targ env x.sort}), imp)
 let whnf_k env k = Tc.Normalize.norm_kind [Beta;Eta;WHNF] env k |> Util.compress_kind
+let whnf_e env e = Tc.Normalize.norm_exp [Beta;Eta;WHNF] env e |> Util.compress_exp
 
 let rec compress_k (env:env) wl k = 
     let k = Util.compress_kind k in 
@@ -1259,16 +1262,6 @@ let rec solve_flex_rigid_join env tp wl =
           else None
        
         | _ -> None in
-//        | Typ_fun(bs1, c1), Typ_fun(bs2, c2) ->  
-//          if List.length bs1 = List.length bs2
-//          then let c1 = Util.comp_to_comp_typ c1 in
-//               let c2 = Util.comp_to_comp_typ c2 in 
-//               if lid_equals c1.effect_name c2.effect_name
-//               then partial_match
-//               else failed_match
-//          else failed_match
-//                 
-//        | _ -> fallback in
 
     let conjoin t1 t2 = match t1.n, t2.n with 
         | Typ_refine(x, phi1), Typ_refine(y, phi2) -> 
@@ -2218,7 +2211,37 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
               solve env (solve_prob orig None [UE((u1,t1), sub1); UE((u2,t2), sub2)] wl)
       end in
 
+    let smt_fallback e1 e2 =
+        if wl.smt_ok
+        then let _ = if debug env <| Options.Other "Rel" then Util.fprint1 "Using SMT to solve:\n%s\n" (prob_to_string env orig) in
+             let t, _ = new_tvar (Tc.Env.get_range env) (Tc.Env.binders env) ktype in 
+             solve env (solve_prob orig (Some <| Util.mk_eq t t e1 e2) [] wl) 
+        else giveup env "no SMT solution permitted" orig  in
+
     match e1.n, e2.n with 
+    | Exp_ascribed(e1, _), _ -> 
+      solve_e env ({problem with lhs=e1}) wl
+
+    | _, Exp_ascribed(e2, _) -> 
+      solve_e env ({problem with rhs=e2}) wl
+
+    | Exp_uvar _,                 Exp_uvar _ 
+    | Exp_app({n=Exp_uvar _}, _), Exp_uvar _
+    | Exp_uvar _,                 Exp_app({n=Exp_uvar _}, _)
+    | Exp_app({n=Exp_uvar _}, _), Exp_app({n=Exp_uvar _}, _) -> //flex-flex
+      flex_flex (destruct_flex_e e1) (destruct_flex_e e2)
+
+    | Exp_uvar _, _
+    | Exp_app({n=Exp_uvar _}, _), _ -> //flex-rigid
+      flex_rigid (destruct_flex_e e1) e2
+
+    | _, Exp_uvar _
+    | _, Exp_app({n=Exp_uvar _}, _) -> //rigid-flex
+      flex_rigid (destruct_flex_e e2) e1 //the constraint is an equality, so reorientation is fine
+
+    //remaining are rigid-rigid; try to solve as much by unification, 
+    //falling back to SMT only when all else fails
+
     | Exp_bvar x1, Exp_bvar x1' -> 
       if Util.bvd_eq x1.v x1'.v
       then solve env (solve_prob orig None [] wl)
@@ -2238,26 +2261,45 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
       then solve env (solve_prob orig None [] wl)
       else giveup env "constants unequal" orig
 
-    | Exp_ascribed(e1, _), _ -> 
-      solve_e env ({problem with lhs=e1}) wl
+    | Exp_app({n=Exp_abs _}, _), _ -> 
+      solve_e env ({problem with lhs=whnf_e env e1}) wl
 
-    | _, Exp_ascribed(e2, _) -> 
-      solve_e env ({problem with rhs=e2}) wl
+    | _, Exp_app({n=Exp_abs _}, _) -> 
+      solve_e env ({problem with rhs=whnf_e env e2}) wl
 
-    | Exp_uvar _,                 Exp_uvar _ 
-    | Exp_app({n=Exp_uvar _}, _), Exp_uvar _
-    | Exp_uvar _,                 Exp_app({n=Exp_uvar _}, _)
-    | Exp_app({n=Exp_uvar _}, _), Exp_app({n=Exp_uvar _}, _) ->
-      flex_flex (destruct_flex_e e1) (destruct_flex_e e2)
+    | Exp_app(head1, args1), Exp_app(head2, args2) -> 
+      let orig_wl = wl in
+      let rec solve_args wl args1 args2 = match args1, args2 with 
+            | [], [] -> 
+                solve env (solve_prob orig None wl.subst ({orig_wl with subst=[]}))
+            | arg1::rest1, arg2::rest2 -> 
+                let prob = match fst arg1, fst arg2 with 
+                | Inl t1, Inl t2 -> 
+                    TProb <| mk_problem (p_scope orig) orig t1 EQ t2 None "expression type arg"
+                | Inr e1, Inr e2 ->
+                    EProb <| mk_problem (p_scope orig) orig e1 EQ e2 None "expression arg"
+                | _ -> failwith "Impossible: ill-typed expression" in
+                begin match solve env ({wl with defer_ok=false; smt_ok=false; attempting=[prob]; deferred=[]}) with 
+                | Failed _ -> smt_fallback e1 e2
+                | Success (subst, _) -> solve_args ({wl with subst=subst}) rest1 rest2
+                end
+            | _ -> failwith "Impossible: lengths defer" in
+ 
 
-    | Exp_uvar _, _
-    | Exp_app({n=Exp_uvar _}, _), _ ->
-      flex_rigid (destruct_flex_e e1) e2
+      let rec match_head_and_args head1 head2 = match (Util.compress_exp head1).n, (Util.compress_exp head2).n with 
+        | Exp_bvar x, Exp_bvar y           when (bvar_eq x y && List.length args1 = List.length args2) -> solve_args wl args1 args2
+        | Exp_fvar (f, _), Exp_fvar (g, _) when (fvar_eq f g && List.length args1 = List.length args2) -> solve_args wl args1 args2
+        | Exp_ascribed(e, _), _ -> match_head_and_args e head2
+        | _, Exp_ascribed(e, _) -> match_head_and_args head1 e
+        | Exp_abs _, _ -> 
+          solve_e env ({problem with lhs=whnf_e env e1}) wl
+        | _, Exp_abs _ -> 
+          solve_e env ({problem with rhs=whnf_e env e2}) wl
+        | _ -> smt_fallback e1 e2 in
 
-    | _, Exp_uvar _
-    | _, Exp_app({n=Exp_uvar _}, _) ->
-      flex_rigid (destruct_flex_e e2) e1 //the constraint is an equality, so reorientation is fine
-
+     match_head_and_args head1 head2
+        
+      
     | _ -> //TODO: check that they at least have the same head? 
      let t, _ = new_tvar (Tc.Env.get_range env) (Tc.Env.binders env) ktype in 
      solve env (solve_prob orig (Some <| Util.mk_eq t t e1 e2) [] wl)  

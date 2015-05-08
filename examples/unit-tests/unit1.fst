@@ -331,3 +331,10 @@ type s0 (x:int) (y:int -> Tot int) = tint (y 0)
 type s1 (x: y:int &  z:tint y{z=z /\ y=0}) = tint (dfst x)
 type s2 (x: y:int *  z:tint 0{z=z}) = tint (fst x)
 type s3 (x: y:int -> z:tint y{z=z /\ y=0}) = tint ((fun x -> 0) x)
+
+module MoreUnificationTests
+type t : int -> Type
+assume val f: int -> Tot int
+assume val g: #x:int -> t (f x) -> Tot unit
+let h1 (x: t (f 0)) = g x
+let h2 (x: t ((fun x -> f (x - 1)) 1)) = g x
