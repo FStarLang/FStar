@@ -141,3 +141,6 @@
         $ make parser
         $ make
         $ make package
+
+3. Test that the binary is good by expanding the archive and running
+   `make` in the `examples` folder inside

@@ -22,17 +22,18 @@ FSTAR_OBJS=support.cmx Microsoft_FStar_Options.cmx Microsoft_FStar_Absyn_Syntax.
 all: $(FSTARML)
 
 package: $(FSTARML)
-	mkdir fstar || true
-	cp ../../LICENSE fstar/ || true
-	mkdir fstar/bin || true
-	cp README fstar/ || true
+	rm -dfr fstar && mkdir fstar
+	cp ../../LICENSE fstar/
+	mkdir fstar/bin
+	cp README fstar/
 	cp /usr/bin/ocamlopt fstar/bin/ocamlopt || true
 	cp /usr/bin/ocamlrun fstar/bin/fsocamlrun || true
 	cp ../../setenv.sh fstar/
-	cp -R ../../lib fstar/ || true
-	cp $(FSTARML) fstar/bin/fstar$(SUFFIX) || true
-	@cp ../../bin/*z3* fstar/bin || echo " ********** WARNING: you don't have Z3 in \$FSTAR_HOME/bin, skipped from package ************** "
-#	cp -R ../../examples fstar/ || true
+	cd ../.. && git archive --format=tar --prefix=lib/ HEAD:lib/ | tar -x -C src/ocaml-output/fstar
+	cp $(FSTARML) fstar/bin/fstar.exe
+	@cp ../../bin/*z3* fstar/bin || cp `which z3` fstar/bin || echo " ********** WARNING: you don't have Z3 in \\$FSTAR_HOME/bin or in your \\$PATH, skipped from package ************** "
+	cd ../.. && git archive --format=tar --prefix=examples/ HEAD:examples/ | tar -x -C src/ocaml-output/fstar
+	cd ../.. && git archive --format=tar --prefix=doc/tutorial/ HEAD:doc/tutorial/ | tar -x -C src/ocaml-output/fstar
 #	mkdir fstar/mllib || true
 #	cp ~/.opam/system/lib/num/* fstar/mllib || true
 #	cp ~/.opam/system/lib/bytes/* fstar/mllib || true
