@@ -75,7 +75,7 @@
 
 ### Bootstrapping the compiler in OCaml ###
 
-#### Windows Prerequisites ####
+#### Prerequisites on Windows ####
 
 0. Use Visual Studio for building `fstar.exe` as describes above
    (note: running cygwin/wodi `make` in `src` will probably
@@ -100,7 +100,7 @@
 [Wodi]: http://wodi.forge.ocamlcore.org/
 [Cygwin]: https://www.cygwin.com/
 
-#### Linux/MacOS Prerequisites ####
+#### Prerequisites on Linux and Mac OS X ####
 
 0. OCaml (version 4.01.0 or later)
    - Can be installed using either your package manager or using OPAM
@@ -129,7 +129,7 @@
 
 ### Creating binary packages for your platform ###
 
-(no cross platform compilation supported at the moment)
+(no cross-platform compilation supported at the moment)
 
 0. Make sure you have the Z3 binary in your `<fstar-home>/bin` folder
    (this prerequisite could go away at some point)
