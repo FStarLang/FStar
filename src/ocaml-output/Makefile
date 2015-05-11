@@ -26,8 +26,8 @@ package: $(FSTARML)
 	cp ../../LICENSE fstar/
 	mkdir fstar/bin
 	cp README fstar/
-	cp /usr/bin/ocamlopt fstar/bin/ocamlopt || true
-	cp /usr/bin/ocamlrun fstar/bin/fsocamlrun || true
+#	cp /usr/bin/ocamlopt fstar/bin/ocamlopt || true
+#	cp /usr/bin/ocamlrun fstar/bin/fsocamlrun || true
 	cp ../../setenv.sh fstar/
 	cd ../.. && git archive --format=tar --prefix=lib/ HEAD:lib/ | tar -x -C src/ocaml-output/fstar
 	cp $(FSTARML) fstar/bin/fstar.exe
