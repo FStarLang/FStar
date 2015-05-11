@@ -1293,9 +1293,9 @@ and kinding : g:env -> t : typ -> k:knd -> Type =
          =h:ewf g ->
             kinding g (TVar x) (Some.v (lookup_tvar g x))
 
-| KConst : g:env -> c:tconst ->
-          =h:ewf g ->
-             kinding g (TConst c) (tconsts c)
+| KConst : #g:env -> c:tconst ->
+           =h:ewf g ->
+              kinding g (TConst c) (tconsts c)
 
 | KArr : #g:env -> #t1:typ -> #t2:typ -> #phi:typ -> m:eff ->
          =hk1:kinding g t1 KType ->
@@ -1713,7 +1713,7 @@ and kinding_substitution g1 t k s g2 h1 hs = admit()
 and skinding_substitution g1 k1 k2 phi s g2 h1 hs = admit()
 and kwf_substitution g1 k s g2 h1 hs = admit()
 and validity_substitution g1 t s g2 h1 hs = admit()
-(*
+
 module VerifyOnlyThis
 
 open TinyFStarNew
@@ -1724,21 +1724,29 @@ open TinyFStarNew
 
 (* Derived kinding rules -- TODO: need a lot more *)
 
+(* derived judgments (small part) *)
+opaque val kinding_ewf : #g:env -> #t:typ -> #k:knd ->
+                  =hk:kinding g t k ->
+                 Tot (ewf g)
+let kinding_ewf g t k hk = admit()
+
 val k_foralle : #g:env -> #t1:typ -> #t2:typ ->
                 =hk1:kinding g t1 KType ->
                 =hk2:kinding (eextend t1 g) t2 KType ->
                 Tot (kinding g (tforalle t1 t2) KType)
-let k_foralle g t1 t2 hk1 hk2 =
-(* TODO: finish this *)
+let k_foralle g t1 t2 hk1 hk2 = admit()
+(* TODO: finish this -- it takes >10s to check (admitting)
+  let gwf = kinding_ewf hk1 in
   let tres x = KKArr (KTArr x KType) KType in
      (* using tres doesn't work, god damn it! Had to unfold it. File this shit. *)
   let happ1 : (kinding g (TTApp (TConst TcForallE) t1)
                          (KKArr (KTArr t1 KType) KType)) =
-    KTApp (KKArr (KTArr (TVar 0) KType) KType) (KConst g TcForallE) hk1 (magic())
+    KTApp (KKArr (KTArr (TVar 0) KType) KType) (KConst TcForallE gwf) hk1 (magic())
           (* (WfKArr (magic()) (\*WfTArr (magic())*\) *)
           (*                 (WfType (eextend (TVar 0) g)) *)
           (*         (WfType (textend KType g))) *)
   in magic() (* KTApp KType happ1 hk2 (WfType g) *)
+*)
 
 val k_impl : #g:env -> #t1:typ -> #t2:typ ->
             =hk1:kinding g t1 KType ->
@@ -1752,13 +1760,13 @@ let k_impl g t1 t2 hk1 hk2 = admit()
   in KTApp KType happ1 hk2 (WfType g)
 *)
 
-val k_false : g:env -> Tot (kinding g tfalse KType)
-let k_false g = KConst g TcFalse
+val k_false : #g:env -> =hewf:(ewf g) -> Tot (kinding g tfalse KType)
+let k_false g hewf = KConst TcFalse hewf
 
 val k_not : #g:env -> #t:typ ->
            =hk:kinding g t KType ->
            Tot (kinding g (tnot t) KType)
-let k_not g t hk = k_impl hk (k_false g)
+let k_not g t hk = k_impl hk (k_false (kinding_ewf hk))
 
 (* TODO: need to prove derived judgment and weakening before we can
    prove some of the derived validity rules! For us weakening is just
@@ -1782,9 +1790,9 @@ val v_impl_elim : #g:env -> #t1:typ -> #t2:typ ->
                   Tot (validity g t2)
 let v_impl_elim = admit()
 
-val v_true : g:env -> Tot (validity g ttrue)
-let v_true g = v_impl_intro tfalse tfalse
-                            (VAssume 0 (k_false (eextend tfalse g)))
+val v_true : #g:env -> =hewf:ewf g -> Tot (validity g ttrue)
+let v_true g hewf = v_impl_intro tfalse tfalse
+                            (VAssume 0 (GType (k_false hewf)))
 
     (* CH: Can probably derive V-ExMiddle from: *)
 
@@ -1870,4 +1878,3 @@ val v_eq_symt : #g:env -> #t1:typ -> #t2:typ -> #k:knd ->
             =hv:validity g (teqt k t1 t2) ->
                 validity g (teqt k t2 t1)
 let v_eq_symt = admit()
-*)
