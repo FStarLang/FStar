@@ -98,7 +98,9 @@ type init_invariant (ptr:mem_addr) (gc:gc_state) =
 val upd_map: #a:Type -> #b:Type -> (a -> Tot b) -> a -> b -> a -> Tot b
 let upd_map f i v = fun j -> if i=j then v else f j
 
-val aux : ptr:mem_addr -> GC unit (init_invariant ptr) (fun gc _ gc' -> mutator_inv gc' /\ to_abs_inj gc'.to_abs)
+val aux : ptr:mem_addr -> GC unit
+                            (requires (init_invariant ptr))
+                            (ensures (fun gc _ gc' -> mutator_inv gc' /\ to_abs_inj gc'.to_abs))
 let rec aux ptr =
   let gc = get () in
   let gc' = {gc with
