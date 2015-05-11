@@ -8,7 +8,7 @@ type color =
  | Black
 
 assume val mem_lo : x:int{0 < x}
-assume val mem_hi : x:int{mem_lo <= x}
+assume val mem_hi : x:int{mem_lo < x}
 let is_mem_addr i = mem_lo <= i && i < mem_hi
 
 type field =
@@ -52,8 +52,8 @@ opaque type ptr_lifts_to gc_state (ptr:mem_addr) (abs:abs_node) : Type =
 
 opaque type obj_inv gc_state (i:mem_addr) =
   valid (gc_state.to_abs i)
-  /\ ptr_lifts_to gc_state (gc_state.fields i F1) (gc_state.abs_fields (gc_state.to_abs i) F1)
-  /\ ptr_lifts_to gc_state (gc_state.fields i F2) (gc_state.abs_fields (gc_state.to_abs i) F2)
+  ==> ptr_lifts_to gc_state (gc_state.fields i F1) (gc_state.abs_fields (gc_state.to_abs i) F1)
+   /\ ptr_lifts_to gc_state (gc_state.fields i F2) (gc_state.abs_fields (gc_state.to_abs i) F2)
 
 (* Maybe derive gc_inv from mutator_inv? via some higher-orderness *)
 opaque type gc_inv gc_state =
@@ -100,7 +100,7 @@ let upd_map f i v = fun j -> if i=j then v else f j
 
 val aux : ptr:mem_addr -> GC unit
                             (requires (init_invariant ptr))
-                            (ensures (fun gc _ gc' -> mutator_inv gc' /\ to_abs_inj gc'.to_abs))
+                            (ensures (fun gc _ gc' -> mutator_inv gc'))
 let rec aux ptr =
   let gc = get () in
   let gc' = {gc with
