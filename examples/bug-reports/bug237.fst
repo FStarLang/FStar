@@ -1,14 +1,18 @@
 module Bug236
 
-(* Still can't reproduce this, it only appears in tinyfstar-new.fst *)
+(* Can only reproduce one of the problems with k_foralle.
+   The others only appear in tinyfstar-new.fst *)
 
 open Classical
 
 type var = nat
 
+type tconst =
+  | TcForallE
+
 type typ =
   | TVar   : a:var -> typ
-  | TConst : typ
+  | TConst : c:tconst -> typ
   | TTApp  : t1:typ -> t2:typ -> typ
 
 type knd =
@@ -44,7 +48,7 @@ val ktsubst : s:tsub -> k:knd -> Tot knd
 let rec ttsubst s t =
   match t with
   | TVar a -> s a
-  | TConst -> TConst
+  | TConst c -> TConst c
   | TTApp t1 t2 -> TTApp (ttsubst s t1) (ttsubst s t2)
 
 and ktsubst s k =
@@ -102,7 +106,7 @@ fun a -> tsubst (Sub esub_inc tsub_id) (tsubst (Sub esub_inc tsub_id) (Sub.ts s 
 and tsubst s t =
   match t with
   | TVar a -> (Sub.ts s a)
-  | TConst -> TConst
+  | TConst c -> TConst c
   | TTApp t1 t2 -> TTApp (tsubst s t1) (tsubst s t2)
 
 (*Substitution inside kinds*)
@@ -129,20 +133,34 @@ let ktsubst_beta_gen x t' = ktsubst (tsub_beta_gen x t')
 
 let ktsubst_beta = ktsubst_beta_gen 0
 
-type kinding : g:int -> t:typ -> k:knd -> Type =
-| KConst : g:int ->
-    kinding g TConst (KKArr KType (KKArr (KTArr (TVar 0) KType) KType))
-| KTApp : #g:int -> #t1:typ -> #t2:typ -> #k:knd -> #k':knd ->
+type eenv = var -> Tot (option typ)
+type tenv = var -> Tot (option knd)
+
+type env =
+| Env : e:eenv -> t:tenv -> env
+
+val tconsts : tconst -> Tot knd
+let tconsts tc =
+  match tc with
+  | TcForallE   -> KKArr KType (KKArr (KTArr (TVar 0) KType) KType)
+
+type kinding : g:env -> t:typ -> k:knd -> Type =
+| KConst : g:env -> c:tconst ->
+    kinding g (TConst c) (tconsts c)
+
+| KTApp : #g:env -> #t1:typ -> #t2:typ -> #k:knd -> #k':knd ->
           =hk1:kinding g t1 (KKArr k k') ->
           =hk2:kinding g t2 k ->
                (* kinding g (TTApp t1 t2) k' *)
                kinding g (TTApp t1 t2) (ktsubst_beta t2 k')
 
-val k_foralle : #g:int -> #t1:typ -> #t2:typ ->
+val k_foralle : #g:env -> #t1:typ -> #t2:typ ->
                 =hk1:kinding g t1 KType ->
-                Tot (kinding g (TTApp TConst t1)
+                Tot (kinding g (TTApp (TConst TcForallE) t1)
                                (KKArr (KTArr t1 KType) KType))
 let k_foralle g t1 t2 hk1 =
   (* assert(KKArr (KTArr t1 KType) KType =  *)
   (*        ktsubst_beta t1 (KKArr (KTArr (TVar 0) KType) KType)); *)
-  KTApp (* (KKArr (KTArr (TVar 0) KType) KType) *) (KConst g) hk1
+  KTApp (*KKArr (KTArr (TVar 0) KType) KType*) (KConst g TcForallE) hk1
+(* Problem: without the annotation and the explicit k' in KTApp
+   this causes "Unresolved implicit argument" *)
