@@ -323,7 +323,7 @@ type tc = x:int -> f:(y:int -> Tot int) -> tint (f 0)
 
 let f1 (x: y:int &  z:tint y{z=z /\ y=0}) = x
 let f2 (x: y:int *  z:tint 0{z=z}) = x
-let f3 (x: y:int -> z:tint y{z=z /\ y=0}) = x
+let f3 (x: y:int -> z:tint y{z=z /\ y=0})= x
 let f4 (#a:Type) (l:list a) (#x:int) (v:tint x) = l
 let f5 (l:list int) (v:tint 0) = f4 l v
 
