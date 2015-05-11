@@ -541,8 +541,7 @@ let rec typing_to_kinding g e t h = match h with
   | TyLam t' hk h1 -> KiArr hk (kinding_strengthening_ebnd g 0 t'
                                   (typing_to_kinding h1))
   | TyApp #g #e1 #e2 #t1 #t2 h1 h2 ->
-    let Conj pa pb = kinding_inversion_arrow #g #t1 #t2
-                       (typing_to_kinding h1) in pb
+    Conj.h2 (kinding_inversion_arrow #g #t1 #t2 (typing_to_kinding h1))
   | TyEqu h1 eq hk -> hk
 
 (* this folows from functional extensionality *)
@@ -825,76 +824,50 @@ let rec tred_diamond s t u h1 h2 =
     | MkLTup (TrLam k h11) (TrLam _ h12) ->
     (* AR: p only has one constructor Conj,
            but direct pattern matching doesn't work *)
-      let ExIntro t' p = tred_diamond h11 h12 in
-      (match p with
-          | Conj pa pb -> ExIntro (TLam k t') (Conj (TrLam k pa) (TrLam k pb)))
+      let ExIntro t' (Conj pa pb) = tred_diamond h11 h12 in
+      ExIntro (TLam k t') (Conj (TrLam k pa) (TrLam k pb))
     (* if one is TrArr, the other has to be TrArr *)
     | MkLTup (TrArr h11 h12) (TrArr h21 h22) ->
-      let ExIntro v1 p1 = tred_diamond h11 h21 in
-      let ExIntro v2 p2 = tred_diamond h12 h22 in
-
-      (match p1 with
-          | Conj p1a p1b ->
-            (match p2 with
-              | Conj p2a p2b ->
-                ExIntro (TArr v1 v2) (Conj (TrArr p1a p2a) (TrArr p1b p2b))))
+      let ExIntro v1 (Conj p1a p1b) = tred_diamond h11 h21 in
+      let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
+      ExIntro (TArr v1 v2) (Conj (TrArr p1a p2a) (TrArr p1b p2b))
     (* both TrApp *)
     | MkLTup (TrApp h11 h12) (TrApp h21 h22) ->
-      let ExIntro v1 p1 = tred_diamond h11 h21 in
-      let ExIntro v2 p2 = tred_diamond h12 h22 in
-
-      (match p1 with
-          | Conj p1a p1b ->
-            (match p2 with
-              | Conj p2a p2b ->
-                ExIntro (TApp v1 v2) (Conj (TrApp p1a p2a) (TrApp p1b p2b))))
+      let ExIntro v1 (Conj p1a p1b) = tred_diamond h11 h21 in
+      let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
+      ExIntro (TApp v1 v2) (Conj (TrApp p1a p2a) (TrApp p1b p2b))
     (* both TrBeta *)
     | MkLTup (TrBeta #s1 #s2 #t1' #t2' k h11 h12)
              (TrBeta #s11 #s21 #u1' #u2' k' h21 h22) ->
-      let ExIntro v1 p1 = tred_diamond h11 h21 in
-      let ExIntro v2 p2 = tred_diamond h12 h22 in
-
-      (match p1 with
-          | Conj p1a p1b ->
-            (match p2 with
-              | Conj p2a p2b ->
-                ExIntro (tsubst_beta v2 v1)
-                      (Conj (subst_of_tred_tred 0 p2a p1a)
-                            (subst_of_tred_tred 0 p2b p1b))))
+      let ExIntro v1 (Conj p1a p1b) = tred_diamond h11 h21 in
+      let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
+      ExIntro (tsubst_beta v2 v1) (Conj (subst_of_tred_tred 0 p2a p1a)
+                                        (subst_of_tred_tred 0 p2b p1b))
     (* one TrBeta and other TrApp *)
     | MkLTup (TrBeta #s1 #s2 #t1' #t2' k h11 h12)
              (TrApp #s1' #s2' #lu1' #u2' h21 h22) ->
     (* AR: does not work without this type annotation *)
-      let h21:(tred (TLam.t s1') (TLam.t lu1')) = match h21 with
+      let h21:(tred (TLam.t s1') (TLam.t lu1')) =
+        match h21 with
           | TrLam _ h' -> h'
-          | TrRefl _ -> TrRefl (TLam.t s1')
-      in
+          | TrRefl _ -> TrRefl (TLam.t s1') in
+      let ExIntro v1 (Conj p1a p1b) = tred_diamond h11 h21 in
+      let ExIntro v2 (Conj p2a p2b) = tred_diamond h12 h22 in
+      let v = tsubst_beta v2 v1 in
+      ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta k p1b p2b))
 
-      let ExIntro v1 p1 = tred_diamond h11 h21 in
-      let ExIntro v2 p2 = tred_diamond h12 h22 in
-
-      (match p1 with
-          | Conj p1a p1b ->
-            (match p2 with
-              | Conj p2a p2b ->
-                let v = tsubst_beta v2 v1 in
-                ExIntro v (Conj (subst_of_tred_tred 0 p2a p1a) (TrBeta k p1b p2b))))
     | MkLTup (TrApp #s1' #s2' #lu1' #u2' h21 h22)
              (TrBeta #s1 #s2 #t1' #t2' k h11 h12) ->
-      let ExIntro v1 p = tred_diamond h21 (TrLam k h11) in
-      let Conj (p1:tred lu1' v1) (p2:tred (TLam k t1') v1) = p in
-      let ExIntro v2 p = tred_diamond h22 h12 in
-      let Conj (p3:tred u2' v2) (p4:tred t2' v2) = p in
-
-      let h_body:(tred (TLam.t lu1') (TLam.t v1)) = match p1 with
+      let ExIntro v1 (Conj p1 p2) = tred_diamond h21 (TrLam k h11) in
+      let ExIntro v2 (Conj p3 p4) = tred_diamond h22 h12 in
+      let h_body:(tred (TLam.t lu1') (TLam.t v1)) =
+        match p1 with
           | TrLam _ h' -> h'
-          | TrRefl _ -> TrRefl (TLam.t lu1')
-      in
-      let h_body2:(tred t1' (TLam.t v1)) = match p2 with
+          | TrRefl _ -> TrRefl (TLam.t lu1') in
+      let h_body2:(tred t1' (TLam.t v1)) =
+        match p2 with
           | TrLam _ h' -> h'
-          | TrRefl _ -> TrRefl t1'
-      in
-
+          | TrRefl _ -> TrRefl t1' in
       ExIntro (tsubst_beta v2 (TLam.t v1))
               (Conj (TrBeta k h_body p3) (subst_of_tred_tred 0 p4 h_body2))
 
@@ -914,10 +887,8 @@ let rec tred_star_one_loop s t u h hs = match hs with
   | TsRefl _ ->
     ExIntro t (Conj (TsRefl t) h)
   | TsStep #s #u1 #u h1 hs' ->
-    let ExIntro v1 p1 = tred_diamond h h1 in
-    let Conj p1a p1b = p1 in
-    let ExIntro v p2 = tred_star_one_loop p1b hs' in
-    let Conj p2a p2b = p2 in
+    let ExIntro v1 (Conj p1a p1b) = tred_diamond h h1 in
+    let ExIntro v (Conj p2a p2b) = tred_star_one_loop p1b hs' in
     ExIntro v (Conj (TsStep p1a p2a) (p2b))
 
 (* aka Church-Rosser; used in Proposition 30.3.10 *)
@@ -930,10 +901,8 @@ let rec confluence s t u h1 h2 =
   | TsRefl _ ->
     ExIntro u (Conj h2 (TsRefl u))
   | TsStep #s #t1 #t h1' hs1 ->
-     let ExIntro v1 p = tred_star_one_loop h1' h2 in
-     let Conj p1 p2 = p in
-     let ExIntro v p' = confluence hs1 p1 in
-     let Conj p1' p2' = p' in
+     let ExIntro v1 (Conj p1 p2) = tred_star_one_loop h1' h2 in
+     let ExIntro v (Conj p1' p2') = confluence hs1 p1 in
      ExIntro v (Conj p1' (TsStep p2 p2'))
 
 opaque val ts_tran: #s:typ -> #t:typ -> #u:typ ->
@@ -965,17 +934,12 @@ let rec tred_star_sym_confluent s t h =
   match h with
     | TssBase h1 -> ExIntro t (Conj (TsStep h1 (TsRefl t)) (TsRefl t))
     | TssSym h1 ->
-      let ExIntro u p = tred_star_sym_confluent h1 in
-      let Conj p1 p2 = p in
+      let ExIntro u (Conj p1 p2) = tred_star_sym_confluent h1 in
       ExIntro u (Conj p2 p1)
     | TssTran #s #v #t h1 h2 ->
-      let ExIntro u1 p = tred_star_sym_confluent h1 in
-      let Conj psu1 pvu1 = p in
-      let ExIntro u2 p = tred_star_sym_confluent h2 in
-      let Conj pvu2 ptu2 = p in
-
-      let ExIntro w p = confluence pvu1 pvu2 in
-      let Conj pu1w pu2w = p in
+      let ExIntro u1 (Conj psu1 pvu1) = tred_star_sym_confluent h1 in
+      let ExIntro u2 (Conj pvu2 ptu2) = tred_star_sym_confluent h2 in
+      let ExIntro w (Conj pu1w pu2w) = confluence pvu1 pvu2 in
       ExIntro w (Conj (ts_tran psu1 pu1w) (ts_tran ptu2 pu2w))
 
 opaque val trlam_tss : #t1:typ -> #t2:typ -> k:knd ->
@@ -1089,9 +1053,8 @@ let rec tred_tarr_preserved s1 s2 t h =
           | TrRefl _ -> tred_tarr_preserved hs1
           | TrArr #s1 #s2 #u1 #u2 h11 h12 ->
             (* AR: does not work without specifying implicits *)
-            let ExIntro t1 p = tred_tarr_preserved #u1 #u2 #t hs1 in
-            let ExIntro t2 p = p in
-            let Conj p1 p2 = p in
+            let ExIntro t1 (ExIntro t2 (Conj p1 p2)) =
+                                           tred_tarr_preserved #u1 #u2 #t hs1 in
             ExIntro t1 (ExIntro t2 (Conj (TsStep h11 p1) (TsStep h12 p2)))
 
 opaque val inversion_elam :
@@ -1107,15 +1070,13 @@ let rec inversion_elam g s1 e s t1 t2 ht heq hnew = match ht with
     let ExIntro u p = tequiv_tred_tred heq in
     let Conj p1 p2 = p in
 
-    (* implicits required *)
-    let ExIntro u1 p = tred_tarr_preserved #s1 #s2 #u p1 in
-    let ExIntro u2 p = p in
-    let Conj psu1 psu2 = p in
+    (* AR: implicits required *)
+    let ExIntro u1 (ExIntro u2 (Conj psu1 psu2)) = tred_tarr_preserved #s1 #s2 #u p1 in
 
     (* AR: implicits required *)
+    (* CH: can't merge these two matches (error: "Patterns are incomplete") *)
     let ExIntro u1' p = tred_tarr_preserved #t1 #t2 #u p2 in
-    let ExIntro u2' p = p in
-    let Conj ptu1 ptu2 = p in
+    let ExIntro u2' (Conj ptu1 ptu2) = p in
 
     (*
      * AR: so now we have tequiv s2 t2, and ht1. as TAPL says, we now want to use
@@ -1128,19 +1089,6 @@ let rec inversion_elam g s1 e s t1 t2 ht heq hnew = match ht with
      * we will get t2::KTyp. to do so, i had to make a small change to TyVar
      * requiring that the lookup type has kind KTyp.
      *)
-
-    (*
-     * AR: Cannot use Conj.pb directly below, have to let bind.
-     *)
-
-    (* AR: removing this type annotation,
-           verification fails after taking a long time *)
-
-    (* CH: I can reproduce this, even with z3timeout 100 I get:
-      An unknown assertion in the term at this location was not provable *)
-    let d1:(cand (kinding g s1 KTyp) (kinding g s2 KTyp)) =
-      kinding_inversion_arrow (typing_to_kinding ht) in
-    let Conj pa pb = d1 in
 
     let pst2 = EqTran (tred_star_tequiv psu2)
                       (EqSymm (tred_star_tequiv ptu2)) in
@@ -1155,9 +1103,8 @@ opaque val inversion_elam_typing : #g:env -> s1:typ -> e:exp ->
       Tot (cand (cand (tequiv t1 s1) (typing (extend_evar g 0 s1) e t2))
                 (kinding g s1 KTyp))
 let inversion_elam_typing g s1 e t1 t2 h =
-  let Conj _ hnew = kinding_inversion_arrow #g #t1 #t2
-                      (typing_to_kinding h) in
-  inversion_elam s1 e t1 t2 h (EqRefl (TArr t1 t2)) hnew
+  inversion_elam s1 e t1 t2 h (EqRefl (TArr t1 t2))
+    (Conj.h2 (kinding_inversion_arrow #g #t1 #t2 (typing_to_kinding h)))
 
 (* Type preservation *)
 opaque val preservation : #e:exp -> #e':exp -> hs:step e e' ->
@@ -1166,13 +1113,9 @@ opaque val preservation : #e:exp -> #e':exp -> hs:step e e' ->
 let rec preservation _ _ hs _ _ ht =
   match ht with
   | TyApp #g #e1 #e2 #t1 #t2 h1 h2 ->
-
     (match hs with
      | SBeta s1 e11 e12 ->
-       let Conj p12 (p3:kinding g s1 KTyp) =
-         inversion_elam_typing s1 e11 t1 t2 h1 in
-       let Conj (p1:tequiv t1 s1)
-                (p2:typing (extend_evar g 0 s1) e11 t2) = p12 in
+       let Conj (Conj p1 p2) p3 = inversion_elam_typing s1 e11 t1 t2 h1 in
        typing_substitution (TyEqu h2 p1 p3) p2
      | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
      | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2))
