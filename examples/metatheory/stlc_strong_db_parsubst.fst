@@ -177,12 +177,12 @@ let rec substitution g1 e t s g2 h1 hs =
   | TyVar x -> hs x
   | TyApp hfun harg -> TyApp (substitution s hfun hs) (substitution s harg hs)
   | TyLam tlam hbody ->
-  let hs'' : subst_typing (sub_inc) (g2) (extend tlam g2) =
-    fun x -> TyVar (x+1) in
-  let hs' : subst_typing (sub_elam s) (extend tlam g1) (extend tlam g2) =
-    fun y -> if y = 0 then TyVar y
-             else let hgamma2 = hs (y - 1) in (substitution sub_inc hgamma2 hs'')
-  in TyLam tlam (substitution (sub_elam s) hbody hs')
+     let hs'' : subst_typing (sub_inc) g2 (extend tlam g2) =
+       fun x -> TyVar (x+1) in
+     let hs' : subst_typing (sub_elam s) (extend tlam g1) (extend tlam g2) =
+       fun y -> if y = 0 then TyVar y
+                else substitution sub_inc (hs (y - 1)) hs''
+     in TyLam tlam (substitution (sub_elam s) hbody hs')
 
 (* Weakening (or shifting preserves typing) *)
 (* Useless now, showing that it follows from substitution lemma *)
@@ -201,9 +201,9 @@ opaque val weakening : n:nat -> #g:env -> #e:exp -> #t:typ -> t':typ ->
       h:typing g e t -> Tot (typing (extend_gen n t' g) (shift_up_above n e) t)
       (decreases h)
 let rec weakening n g v t t' h =
-  let hs : subst_typing (sub_inc_above n) g (extend_gen n t' g) = fun y ->
-  if y < n then TyVar y else TyVar (y+1) in
-  substitution (sub_inc_above n) h hs
+  let hs : subst_typing (sub_inc_above n) g (extend_gen n t' g) =
+    fun y -> if y < n then TyVar y else TyVar (y+1)
+  in substitution (sub_inc_above n) h hs
 
 (* Substitution for beta reduction
    Now just a special case of substitution lemma *)
@@ -223,7 +223,7 @@ opaque val preservation : #e:exp -> #e':exp -> hs:step e e' ->
                           Tot (typing g e' t) (decreases ht)
 let rec preservation e e' hs g t ht =
   let TyApp h1 h2 = ht in
-    match hs with
-    | SBeta t e1' e2' -> substitution_beta h2 (TyLam.hbody h1)
-    | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
-    | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2)
+  match hs with
+  | SBeta t e1' e2' -> substitution_beta h2 (TyLam.hbody h1)
+  | SApp1 e2' hs1   -> TyApp (preservation hs1 h1) h2
+  | SApp2 e1' hs2   -> TyApp h1 (preservation hs2 h2)
