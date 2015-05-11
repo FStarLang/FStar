@@ -1058,13 +1058,24 @@ let econsts ec =
 (* Head normal forms   *)
 (***********************)
 
-val head_const : t:typ -> Tot (option tconst)
+(* head_eq (and head_const_eq) might seem too strong,
+   but we only use their negation, which should be weak enough
+   to be closed under substitution for instance. *)
+
+val head_const : typ -> Tot (option tconst)
 let rec head_const t =
   match t with
   | TConst tc  -> Some tc
   | TTApp t1 _
   | TEApp t1 _ -> head_const t1
   | _          -> None
+
+val head_const_eq : ot1:(option tconst) -> ot2:(option tconst) -> Tot bool
+let head_const_eq ot1 ot2 =
+  match ot1, ot2 with
+  | Some (TcForallT _), Some (TcForallT _)
+  | Some (TcEqT _)    , Some (TcEqT _)     -> true
+  | _                 , _                  -> ot1 = ot2
 
 val is_hnf : typ -> Tot bool
 let is_hnf t = is_TArr t || is_Some (head_const t)
@@ -1074,7 +1085,8 @@ let head_eq t1 t2 =
   match t1, t2 with
   | TArr _ (Cmp EfPure _ _), TArr _ (Cmp EfPure _ _)
   | TArr _ (Cmp EfAll  _ _), TArr _ (Cmp EfAll  _ _) -> true
-  | _, _ -> is_Some (head_const t1) && head_const t1 = head_const t2
+  | _, _ -> is_Some (head_const t1) && head_const_eq (head_const t1)
+                                                     (head_const t2)
 
 (***********************)
 (* Precedes on values  *)
