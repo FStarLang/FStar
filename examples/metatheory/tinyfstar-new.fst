@@ -456,13 +456,12 @@ let sub_einc = Sub esub_inc tsub_id
 let sub_tinc s = Sub esub_id (fun x -> TVar (x+1))
 
 val etsubst : s:tsub -> e:exp -> Tot exp
-val ttsubst : s:tsub -> t:typ -> Tot typ
-val ktsubst : s:tsub -> k:knd -> Tot knd
-
 let etsubst s e = esubst (Sub esub_id s) e
 
+val ttsubst : s:tsub -> t:typ -> Tot typ
 let ttsubst s t = tsubst (Sub esub_id s) t
 
+val ktsubst : s:tsub -> k:knd -> Tot knd
 let ktsubst s k = ksubst (Sub esub_id s) k
 
 val eesubst : s:esub -> e:exp -> Tot exp
@@ -1730,6 +1729,21 @@ opaque val kinding_ewf : #g:env -> #t:typ -> #k:knd ->
                  Tot (ewf g)
 let kinding_ewf g t k hk = admit()
 
+(* This takes forever to typecheck and fails without the assert;
+   plus this fails without the explicit type annotation on k' in KTApp
+   (Unresolved implicit argument). Filed as #237.
+val k_foralle : #g:env -> #t1:typ -> #t2:typ ->
+                =hk1:kinding g t1 KType ->
+                =hk2:kinding (eextend t1 g) t2 KType ->
+                Tot (kinding g (TTApp (TConst TcForallE) t1)
+                               (KKArr (KTArr t1 KType) KType))
+let k_foralle g t1 t2 hk1 hk2 =
+  let gwf = kinding_ewf hk1 in
+  (* assert(KKArr (KTArr t1 KType) KType =  *)
+  (*        ktsubst_beta t1 (KKArr (KTArr (TVar 0) KType) KType)); *)
+  KTApp (KKArr (KTArr (TVar 0) KType) KType) (KConst TcForallE gwf) hk1 (magic())
+*)
+
 val k_foralle : #g:env -> #t1:typ -> #t2:typ ->
                 =hk1:kinding g t1 KType ->
                 =hk2:kinding (eextend t1 g) t2 KType ->
@@ -1878,3 +1892,4 @@ val v_eq_symt : #g:env -> #t1:typ -> #t2:typ -> #k:knd ->
             =hv:validity g (teqt k t1 t2) ->
                 validity g (teqt k t2 t1)
 let v_eq_symt = admit()
+ *)
