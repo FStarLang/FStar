@@ -159,13 +159,33 @@ let rec is_type env (t:term) =
       is_type env arg
     | App(t, _, _)
     | Paren t
-    | Ascribed(t, _)
-    | Product(_, t)
-    | Abs(_, t) -> is_type env t
+    | Ascribed(t, _) -> is_type env t
+    | Product(_, t) -> not (is_kind env t)
     | If(t, t1, t2) -> is_type env t || is_type env t1 || is_type env t2 
+    | Abs(pats, t) -> 
+       let rec aux env pats = match pats with 
+        | [] -> is_type env t
+        | hd::pats -> 
+          begin match hd.pat with 
+            | PatWild
+            | PatVar _ -> aux env pats  //these do not help in identifying a type
+            | PatTvar (id, _) -> 
+              let env, _ = DesugarEnv.push_local_tbinding env id in
+              aux env pats
+            | PatAscribed (p, tm) -> 
+              let env = if is_kind env tm 
+                        then match p.pat with 
+                                | PatVar (id, _)
+                                | PatTvar (id, _) -> DesugarEnv.push_local_tbinding env id |> fst
+                                | _ -> env 
+                        else env in 
+              aux env pats
+            | _ -> false //no other patterns are permitted in type functions 
+         end in
+       aux env pats  
     | _ -> false
 
-let rec is_kind env (t:term) : bool =
+and is_kind env (t:term) : bool =
   if t.level = Kind
   then true
   else match (unparen t).tm with

@@ -1,12 +1,15 @@
 VERFILES=counters.fst intsort.fst insertionsort.fst mergesort.fst qsc.fst
 OTHERFLAGS=
 include ../Makefile.include
-all: .all.ver downgrade
+all: .all.ver downgrade gc
 
 qs_seq: $(addprefix ../../lib/, classical.fst ext.fst set.fsi seq.fsi seq.fst seqproperties.fst) qs_seq.fst
 	$(FSTAR) $^  --z3timeout 10 --admit_fsi Set
 
 ARR_LIB=$(addprefix ../../lib/, classical.fst ext.fst set.fsi set.fst heap.fst stperm.fst seq.fsi seq.fst seqproperties.fst arr.fst)
+
+gc:
+	$(FSTAR) gc.fst
 
 downgrade: $(ARR_LIB) qs_seq.fst qsort_arr.fst downgrade.fst
 	$(FSTAR) --z3timeout 20 $^
