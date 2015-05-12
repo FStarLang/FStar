@@ -31,18 +31,15 @@ type abs_map   = mem_addr -> Tot abs_node
 type field_map     = mem_addr -> field -> Tot mem_addr
 type abs_field_map = abs_node -> field -> Tot abs_node
 
+opaque logic type trigger (i:int) = True
 (* Invariant: to_abs is injective *)
 type to_abs_inj (to_abs:abs_map) =
-  forall (i1:mem_addr) (i2:mem_addr).
+  forall (i1:mem_addr) (i2:mem_addr).{:pattern (trigger i1); (trigger i2)}
     valid (to_abs i1)
     /\ valid (to_abs i2)
     /\ i1 <> i2
     ==> to_abs i1 <> to_abs i2
 
-(*
-Note: the default inferred type infers ('a -> 'b) to to_abs
-      which includes an unwanted effect
-*)
 type gc_state = {
   to_abs: abs_map;
   color: color_map;
@@ -66,15 +63,16 @@ opaque type obj_inv gc_state (i:mem_addr) =
 opaque type gc_inv gc_state =
   to_abs_inj gc_state.to_abs
   /\ (forall (i:mem_addr).
-        obj_inv gc_state i
+        trigger i
+        /\ obj_inv gc_state i
         /\ (gc_state.color i = Black ==> (gc_state.color (gc_state.fields i F1) <> White
                                        /\ gc_state.color (gc_state.fields i F2) <> White))
         /\ (not (valid (gc_state.to_abs i)) <==> gc_state.color i = Unalloc))
 
-opaque logic type trigger (i:int) = True
 opaque type mutator_inv gc_state =
   to_abs_inj gc_state.to_abs
-  /\ (forall (i:mem_addr).{:pattern (trigger i)}
+  /\ (forall (i:mem_addr).
+        trigger i /\
         obj_inv gc_state i /\
         (gc_state.color i = Unalloc \/ gc_state.color i = White) /\
         (not (valid (gc_state.to_abs i)) <==> gc_state.color i = Unalloc))
@@ -106,6 +104,9 @@ type init_invariant (ptr:mem_addr) (gc:gc_state) =
 val upd_map: #a:Type -> #b:Type -> (a -> Tot b) -> a -> b -> a -> Tot b
 let upd_map f i v = fun j -> if i=j then v else f j
 
+val upd_map2: #a:Type -> #b:Type -> #c:Type -> (a -> b -> Tot c) -> a -> b -> c -> a -> b -> Tot c
+let upd_map2 m i f v = fun j g -> if (i,f)=(j,g) then v else m j g
+
 val aux_init : ptr:mem_addr -> GC unit
                             (requires (init_invariant ptr))
                             (ensures (fun gc _ gc' -> mutator_inv gc'))
@@ -132,74 +133,14 @@ let read_field ptr f =
   let gc = get () in
   gc.fields ptr f
 
-val upd_field: field_map
-            -> mem_addr
-            -> field
-            -> mem_addr
-            -> Tot field_map
-let upd_field m i f v =
-  fun j g -> if (i, f) = (j, g) then v else m j g
-
-val upd_abs_field: abs_field_map
-            -> abs_node
-            -> field
-            -> abs_node
-            -> Tot abs_field_map
-let upd_abs_field m i f v =
-  fun j g -> if (i, f) = (j, g) then v else m j g
-
-opaque type obj_inv' gc_state (i:mem_addr) =
-    valid (gc_state.to_abs i)
-    ==> (ptr_lifts_to gc_state (gc_state.fields i F1) (gc_state.abs_fields (gc_state.to_abs i) F1)
-     /\  ptr_lifts_to gc_state (gc_state.fields i F2) (gc_state.abs_fields (gc_state.to_abs i) F2))
-
-opaque type mutator_inv' gc_state =
-    to_abs_inj gc_state.to_abs
-    /\ (forall (i:mem_addr).//{:pattern (trigger i)}
-          obj_inv' gc_state i /\
-          (gc_state.color i = Unalloc \/ gc_state.color i = White) /\
-          (not (valid (gc_state.to_abs i)) <==> gc_state.color i = Unalloc) /\
-          True
-          )
-module VerifyThis
-open GC
-(*val write_field: ptr:mem_addr -> f:field -> v:mem_addr -> GC unit
-  (requires (fun gc -> ptr_lifts gc ptr /\ ptr_lifts gc v /\ mutator_inv' gc))
-  (ensures (fun gc _ gc' ->
-              to_abs_inj gc'.to_abs
-                /\ obj_inv gc' ptr
-                /\ obj_inv gc' v /\
-                (*/\ mutator_inv gc' /\*)
-                (*/\ (forall (i:mem_addr).{:pattern (trigger i)}
-                      obj_inv gc' i /\
-                      (*(gc'.color i = Unalloc \/ gc'.color i = White) /\*)
-                      (*(not (valid (gc'.to_abs i)) <==> gc'.color i = Unalloc)*)
-                      True
-                      )) /\*)
-              gc'.color=gc.color /\
-              gc'.to_abs = gc.to_abs /\
-              gc'.abs_fields
-               = upd_map #(abs_node * field) #abs_node gc.abs_fields (gc.to_abs ptr, f) (gc.to_abs v)))*)
 val write_field: ptr:mem_addr -> f:field -> v:mem_addr -> GC unit
- (requires (fun gc -> ptr_lifts_to gc ptr (gc.to_abs ptr)
-                   /\ ptr_lifts_to gc v (gc.to_abs v)
-                   /\ mutator_inv' gc))
- (ensures (fun gc _ gc' -> True))
+  (requires (fun gc -> ptr_lifts gc ptr /\ ptr_lifts gc v /\ mutator_inv gc))
+  (ensures (fun gc _ gc' -> mutator_inv gc' /\ gc'.color=gc.color))
 let write_field ptr f v =
+  cut (trigger ptr /\ trigger v);
   let gc = get () in
-  (*assert (obj_inv gc v);*)
   let gc' = {gc with
-    (*color=upd_map gc.color ptr (gc.color ptr)*)
-    fields=upd_field gc.fields ptr f v;//(gc.fields ptr f);
-    abs_fields=upd_abs_field gc.abs_fields (gc.to_abs ptr) f (gc.to_abs v);//(gc.fields ptr f));//v)
+    fields=upd_map2 #mem_addr #field #mem_addr gc.fields ptr f v;
+    abs_fields=upd_map2 gc.abs_fields (gc.to_abs ptr) f (gc.to_abs v);
     } in
-  (*assert (valid (gc'.to_abs v));
-  assert (v<>ptr ==> gc'.abs_fields (gc'.to_abs v, f) = gc.abs_fields (gc.to_abs v, f));
-  assert (v<>ptr ==> gc'.fields (v, f) = gc.fields (v, f));
-  assert (ptr_lifts_to gc' (gc'.fields (v, f)) (gc'.abs_fields (gc'.to_abs v, f)));
-  assert (obj_inv gc' v);
-  assert (obj_inv gc' ptr);
-  assert (mutator_inv gc);*)
-  assert (mutator_inv' gc');
-  admit();
   set gc'

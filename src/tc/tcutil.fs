@@ -876,7 +876,9 @@ let close_comp env bindings (lc:lcomp) =
 let maybe_assume_result_eq_pure_term env (e:exp) (lc:lcomp) : lcomp = 
   let refine () = 
       let c = lc.comp() in
-      if not (is_pure_effect env lc.eff_name) then c
+      if not (is_pure_effect env lc.eff_name)
+         || (Util.is_constructor lc.res_typ Const.unit_lid)
+      then c
       else if Util.is_partial_return c then c
       else match (compress_typ (Util.comp_result c)).n with 
         | Typ_fun _ -> c (* no need to include equalities for functions *)
