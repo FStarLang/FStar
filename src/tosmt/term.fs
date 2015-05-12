@@ -157,14 +157,21 @@ let rec hash_of_term' t = match t with
             (weightToSmt wopt)
             (pats |> List.map (fun pats -> (List.map (fun p -> p.hash) pats |> String.concat " ")) |> String.concat "; ")
 
-let all_terms = Util.smap_create<term> 10000
+let all_terms_l = ref [Util.smap_create<term> 10000]
+let all_terms () = List.hd !all_terms_l
+let push () = all_terms_l := Util.smap_copy (all_terms ())::!all_terms_l
+let pop () = match !all_terms_l with 
+    | []
+    | [_] -> failwith "too many pops"
+    | _::tl -> all_terms_l := tl
+    
 let mk t = 
     let key = hash_of_term' t in
-    match Util.smap_try_find all_terms key with 
+    match Util.smap_try_find (all_terms()) key with 
         | Some tm -> tm 
         | None -> 
           let tm = {tm=t; hash=key; freevars=Util.mk_ref None} in
-          Util.smap_add all_terms key tm;
+          Util.smap_add (all_terms()) key tm;
           tm
 
 let mkTrue       = mk (App(True, [])) 

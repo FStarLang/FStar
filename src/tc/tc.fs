@@ -1779,14 +1779,12 @@ let add_modul_to_tcenv (en: env) (m: modul) :env =
   let en = Tc.Env.set_current_module en m.name in 
   Tc.Env.finish_module (List.fold_left do_sigelt en m.exports) m
 
-let check_modules (s:solver_t) mods = 
-   let env = Tc.Env.initial_env s Const.prims_lid in
-   s.init env; 
-   let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 
+let check_module env m = 
     if List.length !Options.debug <> 0
     then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
 
     let env = {env with Env.is_iface=m.is_interface; admit=not (Options.should_verify m.name.str)} in
+
     let m, env =
         if m.is_deserialized then
           let env' = add_modul_to_tcenv env m in
@@ -1794,7 +1792,7 @@ let check_modules (s:solver_t) mods =
         else begin
            let name = Util.format2 "%s %s"  (if m.is_interface then "interface" else "module") m.name.str in
            let msg = "Internals for " ^name in
-           if not (lid_equals m.name Const.prims_lid) then s.push msg;
+           if not (lid_equals m.name Const.prims_lid) then env.solver.push msg;
            let m, env = tc_modul env m in
            if !Options.serialize_mods 
            then begin 
@@ -1804,18 +1802,29 @@ let check_modules (s:solver_t) mods =
            end;
            if not (lid_equals m.name Const.prims_lid) 
            then begin
-                s.pop msg;
+                env.solver.pop msg;
                 if  not m.is_interface
                 ||  List.contains m.name.str !Options.admit_fsi
-                then s.encode_modul env m;
-                s.refresh();
-                Options.reset_options() |> ignore
+                then env.solver.encode_modul env m;
+                if not !Options.interactive
+                then begin
+                    env.solver.refresh();
+                    Options.reset_options() |> ignore
+                end
            end;
            m, env
       end
     in 
     if Options.should_dump m.name.str then Util.fprint1 "%s\n" (Print.modul_to_string m);
     if m.is_interface  //TODO: admit interfaces to the solver also?
-    then    mods, env
-    else m::mods, env) ([], env) in
+    then [], env
+    else [m], env
+
+
+let check_modules (s:solver_t) mods = 
+   let env = Tc.Env.initial_env s Const.prims_lid in
+   env.solver.init env; 
+   let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 
+    let ms, env = check_module env m in
+    ms@mods, env) ([], env) in
    List.rev fmods

@@ -34,15 +34,132 @@ let cleanup () = Util.kill_all ()
 
 let has_prims_cache (l: list<string>) :bool = List.mem "Prims.cache" l
 
+let tc_prims () = 
+    let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
+    let env = Tc.Env.initial_env solver Const.prims_lid in
+    env.solver.init env; 
+    
+    let p = Options.prims () in
+    let dsenv, prims_mod = Parser.Driver.parse (Parser.DesugarEnv.empty_env()) (Inl p) in
+    let prims_mod, env = Tc.Tc.check_module env (List.hd prims_mod) in
+    prims_mod, dsenv, env
+
+let report_errors nopt = 
+    let errs = match nopt with
+        | None -> Tc.Errors.get_err_count ()
+        | Some n -> n in
+    if errs>0 
+    then begin
+        fprint1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
+        exit 1
+    end
+
+let tc_one_file dsenv env fn = 
+    let dsenv, fmods = Parser.Driver.parse dsenv fn in
+    let env, all_mods = fmods |> List.fold_left (fun (env, all_mods) m -> 
+        let ms, env = Tc.Tc.check_module env m in
+        env, ms) (env, []) in
+    dsenv, env, List.rev all_mods
+
+type input_chunks = 
+    | Push
+    | Pop
+    | Code of string
+
+let interactive_mode () = 
+    if Option.isSome !Options.codegen
+    then (Util.print_string "Code-generation is not supported in interactive mode"; exit 1);
+
+    let prims_mod, dsenv, env = tc_prims () in
+
+    let chunk = System.Text.StringBuilder() in 
+    let stdin = new System.IO.StreamReader(System.Console.OpenStandardInput()) in
+    let rec fill_chunk ()= 
+        if stdin.EndOfStream then exit 0;
+        let line = stdin.ReadLine() in
+        Printf.printf "Read line <%s>\n" line;
+        ignore <| chunk.AppendLine(line);
+        let l = line.Trim() in
+        if l = "end"
+        then begin
+            let str = chunk.ToString() in ignore <| chunk.Clear(); Code str
+        end
+        else if l = "#pop"
+        then (chunk.Clear() |> ignore; Pop)
+        else if l = "#push"
+        then (chunk.Clear() |> ignore; Push)
+        else if l = "#finish"
+        then exit 0
+        else fill_chunk() in
+
+    let rec go dsenv env = 
+        match fill_chunk () with 
+            | Pop -> 
+              let dsenv = Parser.DesugarEnv.pop dsenv in
+              let env = Tc.Env.pop env in
+              env.solver.refresh();
+              Options.reset_options() |> ignore;
+              go dsenv env
+
+            | Push -> 
+              let dsenv = Parser.DesugarEnv.push dsenv in
+              let env = Tc.Env.push env in
+              go dsenv env
+            
+            | Code text ->
+              let dsenv, env, mods = tc_one_file dsenv env (Inr text) in
+              let n = Tc.Errors.report_all() in
+              mods |> List.iter (fun x -> fprint1 "Checked module %s\n" (Print.sli x.name));
+              go dsenv env in
+
+    go dsenv env
+
+
+let batch_mode_tc filenames = 
+    let prims_mod, dsenv, env = tc_prims () in
+
+    let all_mods, _, env = filenames |> List.fold_left (fun (all_mods, dsenv, env) f -> 
+        let dsenv, env, ms = tc_one_file dsenv env (Inl f) in
+        all_mods@ms, dsenv, env)
+        (prims_mod, dsenv, env) in
+   
+    env.solver.finish();
+    all_mods
+
+let finished_message fmods =
+    if not !Options.silent 
+    then begin
+        let msg = 
+            if !Options.verify then "Verified" 
+            else if !Options.pretype then "Lax type-checked"
+            else "Parsed and desugared" in
+         fmods |> List.iter (fun m -> Util.print_string (Util.format2 "%s module: %s\n" msg (Syntax.text_of_lid m.name)));
+         print_string "All verification conditions discharged successfully\n"
+    end
+
+let codegen fmods = 
+    if !Options.codegen = Some "OCaml" then begin
+        try
+            let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
+            let doc   = Backends.OCaml.Code.doc_of_mllib mllib in
+            List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) doc
+        with Backends.OCaml.ASTTrans.OCamlFailure (rg, error) -> begin
+            (* FIXME: register exception and remove this block  *)
+            Util.print_string (* stderr *) <|
+            Util.format2 "OCaml Backend Error: %s %s\n"
+                (Range.string_of_range rg)
+                (Backends.OCaml.ASTTrans.string_of_error error);
+            exit 1
+        end
+    end;
+    if !Options.codegen = Some "JavaScript" then begin
+        let js = Backends.JS.Translate.js_of_fstars (List.tail fmods) in
+        let doc = Backends.JS.Print.pretty_print js in
+        Util.print_string (FSharp.Format.pretty 120 doc)
+    end
+    
 (* Main function *)
 let go _ =    
-  let finished (mods:list<Syntax.modul>) = 
-    if !Options.silent then () else
-      let msg = 
-        if !Options.verify then "Verified" 
-        else if !Options.pretype then "Lax type-checked"
-        else "Parsed and desugared" in
-      mods |> List.iter (fun m -> Util.print_string (Util.format2 "%s module: %s\n" msg (Syntax.text_of_lid m.name))) in
   let (res, filenames) = process_args () in
   match res with
     | Help ->
@@ -50,52 +167,20 @@ let go _ =
     | Die msg ->
       Util.print_string msg
     | GoOn ->
-        let filenames = if !Options.use_build_config  //if the user explicitly requested it
-                        || Sys.argv.Length = 2        //or, if there is only a single file on the command line
-                        then match filenames with 
-                                | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
-                                | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
-                        else filenames in
-        if Option.isSome !Options.codegen 
-        then Options.pretype := true; //NS: this is odd
-        (* 1. Parsing the file + desugaring *)
-        let filenames = if has_prims_cache filenames then filenames else (Options.prims()::filenames) in
-        let fmods = Parser.Driver.parse_files filenames in
-        (* 2. Pre-typing + produce VCs + encode them + prove them, if the option --verify is set *)
-        let solver = if !Options.verify then ToSMT.Encode.solver else ToSMT.Encode.dummy in
-        (* 2b. Pre-typing only (throw away all the VCs) *)
-        let fmods = if !Options.pretype then Tc.Tc.check_modules solver fmods else fmods in
-        solver.finish();
-        (* 3. Code generation, if the flag is set *)
-        if !Options.codegen = Some "OCaml" then begin
-            try
-                let mllib = Backends.OCaml.ASTTrans.mlmod_of_fstars (List.tail fmods) in
-                let doc   = Backends.OCaml.Code.doc_of_mllib mllib in
-                List.iter (fun (n,d) -> Util.write_file (Options.prependOutputDir (n^".ml")) (FSharp.Format.pretty 120 d)) doc
-            with Backends.OCaml.ASTTrans.OCamlFailure (rg, error) -> begin
-                (* FIXME: register exception and remove this block  *)
-                Util.print_string (* stderr *) <|
-                Util.format2 "OCaml Backend Error: %s %s\n"
-                    (Range.string_of_range rg)
-                    (Backends.OCaml.ASTTrans.string_of_error error);
-                exit 1
-            end
-        end;
-        if !Options.codegen = Some "JavaScript" then begin
-            let js = Backends.JS.Translate.js_of_fstars (List.tail fmods) in
-            let doc = Backends.JS.Print.pretty_print js in
-            Util.print_string (FSharp.Format.pretty 120 doc)
-        end;
-        finished fmods;
-        let errs = Tc.Errors.get_err_count () in
-        if !Options.verify then begin
-          if errs>0 then begin
-            fprint1 "Error: %s errors were reported (see above)\n" (string_of_int errs);
-            exit 1
-            end
-          else if not !Options.silent then
-            print_string "All verification conditions discharged successfully\n"
-        end
+        if !Options.interactive 
+        then interactive_mode () 
+        else let filenames = if !Options.use_build_config  //if the user explicitly requested it
+                             || Sys.argv.Length = 2        //or, if there is only a single file on the command line
+                             then match filenames with 
+                                    | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
+                                    | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
+                             else filenames in
+             
+             let fmods = batch_mode_tc filenames  in
+             report_errors None;
+             codegen fmods;
+             finished_message fmods
+
 
 let () =
     try 

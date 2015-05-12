@@ -42,7 +42,7 @@ type env = {
   localbindings:list<(either<btvdef,bvvdef> * binding)>;  (* local name bindings for name resolution, paired with an env-generated unique name *)
   recbindings:list<binding>;     (* names bound by recursive type and top-level let-bindings definitions only *)
   phase:AST.level;
-  sigmap: Util.smap<(sigelt * bool)>; (* bool indicates that this was declared in an interface file *)
+  sigmap: list<Util.smap<(sigelt * bool)>>; (* bool indicates that this was declared in an interface file *)
   default_result_effect:typ -> Range.range -> comp;
   iface:bool;
   admitted_iface:bool
@@ -101,6 +101,8 @@ val is_type_lid: env -> lident -> bool
 val find_all_datacons: env -> lident -> option<list<lident>>
 val lookup_letbinding_quals: env -> lident -> list<qualifier>
 
+val pop: env -> env
+val push: env -> env
 val finish_module_or_interface: env -> modul -> env
 val prepare_module_or_interface: bool -> bool -> env -> lident -> env
 val enter_monad_scope: env -> ident -> env

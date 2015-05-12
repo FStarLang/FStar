@@ -1252,11 +1252,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             then mk_Valid app, encode_formula t env'
             else app, encode_typ_term t env' in 
         let abbrev_def = Term.Assume(mkForall([def], vars, mkImp(mk_and_l guards, mkEq(def, body))), Some "abbrev. elimination") in
-//        let intro = if tags |> Util.for_some (function Logic -> true | _ -> false) 
-//                    then []
-//                    else let xxsym, x = fresh_bvar "x" Term_sort in
-//                         let _ = encode_typ_pred 
-//                         [Term.Assume(mkForall([mk_HasType x def], (xxsym, Term_sort)::vars, mkImp(close_ex ex_vars mkTrue, mk_HasType x def)), Some "abbrev. intro")] in
         let kindingAx = 
             let k, decls = encode_knd (Recheck.recompute_kind t) env' app in
             decls@[Term.Assume(mkForall([app], vars, mkImp(mk_and_l guards, k)), Some "abbrev. kinding")] in
@@ -1717,16 +1712,18 @@ let get_env tcenv = match !last_env with
 let set_env env = match !last_env with 
     | [] -> failwith "Empty env stack"
     | _::tl -> last_env := env::tl
+
 let push_env () = match !last_env with 
     | [] -> failwith "Empty env stack"
     | hd::tl -> 
+      Term.push();
       let refs = Util.smap_copy hd.cache  in
       let top = {hd with cache=refs} in
       last_env := top::hd::tl 
 
 let pop_env () = match !last_env with 
     | [] -> failwith "Popping an empty stack"
-    | _::tl -> last_env := tl
+    | _::tl -> Term.pop(); last_env := tl
 
 (* TOP-LEVEL API *)
 

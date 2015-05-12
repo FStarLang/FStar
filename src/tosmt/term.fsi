@@ -167,3 +167,5 @@ val mk_LexCons: term -> term -> term
 val fuel_2: term
 val fuel_100:term
 val n_fuel: int -> term
+val push: unit -> unit
+val pop: unit -> unit

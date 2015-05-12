@@ -70,7 +70,7 @@ type env = {
   modules:list<modul>;           (* already fully type checked modules *)
   expected_typ:option<typ>;      (* type expected by the context *)
   level:level;                   (* current term being checked is at level *)
-  sigtab:sigtable;               (* a dictionary of long-names to sigelts *)
+  sigtab:list<sigtable>;         (* a dictionary of long-names to sigelts *)
   is_pattern:bool;               (* is the current term being checked a pattern? *)
   instantiate_targs:bool;        (* instantiate implicit type arguments? default=true *)
   instantiate_vargs:bool;        (* instantiate implicit value agruments? default=true *)
@@ -111,6 +111,18 @@ let debug env (l:Options.debug_level_t) =
     && Options.debug_level_geq l
 let show env = !Options.show_signatures |> Util.for_some (fun x -> env.curmodule.str = x)
 
+let new_sigtab () = Util.smap_create default_table_size
+let sigtab env = List.hd env.sigtab
+let push env = 
+    env.solver.push "USER PUSH";
+    {env with sigtab=Util.smap_copy (sigtab env)::env.sigtab}
+let pop env = match env.sigtab with 
+    | []
+    | [_] -> failwith "Too many pops"
+    | _::tl -> 
+        env.solver.pop "USER POP";
+        {env with sigtab=tl}
+
 let initial_env solver module_lid =
   { solver=solver;
     range=Syntax.dummyRange;
@@ -119,7 +131,7 @@ let initial_env solver module_lid =
     modules= [];
     expected_typ=None;
     level=Expr;
-    sigtab=Util.smap_create default_table_size;
+    sigtab=[new_sigtab()];
     is_pattern=false;
     instantiate_targs=true;
     instantiate_vargs=true;
@@ -133,6 +145,7 @@ let initial_env solver module_lid =
     admit=false;
     default_effects=[];
   }
+
 
 let effect_decl_opt env l = 
   env.effects.decls |> Util.find_opt (fun d -> lid_equals d.mname l) 
@@ -261,7 +274,7 @@ let rec add_sigelt env se = match se with
   | Sig_bundle(ses, _, _, _) -> add_sigelts env ses
   | _ -> 
     let lids = lids_of_sigelt se in
-    List.iter (fun l -> Util.smap_add env.sigtab l.str se) lids
+    List.iter (fun l -> Util.smap_add (sigtab env) l.str se) lids
 
 and add_sigelts env ses = 
   ses |> List.iter (add_sigelt env)
@@ -289,7 +302,7 @@ let current_module env = env.curmodule
 let set_current_module env lid = {env with curmodule=lid} 
 let set_range e r = if r=dummyRange then e else {e with range=r}
 let get_range e = e.range
-let find_in_sigtab env lid = Util.smap_try_find env.sigtab (text_of_lid lid)
+let find_in_sigtab env lid = Util.smap_try_find (sigtab env) (text_of_lid lid)
 
 let lookup_bvvdef env (bvvd:bvvdef) : option<typ> = 
   Util.find_map env.gamma (function
@@ -530,6 +543,6 @@ let lidents env : list<lident> =
   let keys = List.fold_left (fun keys -> function 
     | Binding_sig s -> Util.lids_of_sigelt s@keys
     | _ -> keys) [] env.gamma in
-  Util.smap_fold env.sigtab (fun _ v keys -> Util.lids_of_sigelt v@keys) keys  
+  Util.smap_fold (sigtab env) (fun _ v keys -> Util.lids_of_sigelt v@keys) keys  
 
       

@@ -42,7 +42,7 @@ type env = {
   localbindings:list<(either<btvdef,bvvdef> * binding)>;  (* local name bindings for name resolution, paired with an env-generated unique name *)
   recbindings:list<binding>;     (* names bound by recursive type and top-level let-bindings definitions only *)
   phase:AST.level;
-  sigmap: Util.smap<(sigelt * bool)>; (* bool indicates that this was declared in an interface file *)
+  sigmap: list<Util.smap<(sigelt * bool)>>; (* bool indicates that this was declared in an interface file *)
   default_result_effect:typ -> Range.range -> comp;
   iface:bool;
   admitted_iface:bool;
@@ -57,6 +57,7 @@ let qualify env id = qual (current_module env) id
 let qualify_lid env lid = 
   let cur = current_module env in 
   set_lid_range (lid_of_ids (cur.ns @ [cur.ident] @ lid.ns @ [lid.ident])) (range_of_lid lid)
+let new_sigmap () = Util.smap_create 100
 let empty_env () = {curmodule=None; 
                     modules=[]; 
                     open_namespaces=[];
@@ -64,11 +65,11 @@ let empty_env () = {curmodule=None;
                     localbindings=[]; 
                     recbindings=[];
                     phase=AST.Un;
-                    sigmap=Util.smap_create(100);
+                    sigmap=[new_sigmap()];
                     default_result_effect=Util.ml_comp;
                     iface=false;
                     admitted_iface=false}
-
+let sigmap env = List.hd env.sigmap
 let default_total env = {env with default_result_effect=(fun t _ -> mk_Total t)}
 let default_ml env = {env with default_result_effect=Util.ml_comp}
 
@@ -145,7 +146,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option<foundname> 
      2. sig bindings in current module
      3. each open namespace, in reverse order *)
   let find_in_sig lid  = 
-    match Util.smap_try_find env.sigmap lid.str with 
+    match Util.smap_try_find (sigmap env) lid.str with 
       | Some (_, true) when exclude_interf -> None
       | None -> None
       | Some (se, _) -> 
@@ -207,7 +208,7 @@ let is_effect_name env lid =
 
 let try_resolve_typ_abbrev env lid = 
   let find_in_sig lid = 
-    match Util.smap_try_find env.sigmap lid.str with 
+    match Util.smap_try_find (sigmap env) lid.str with 
       | Some (Sig_typ_abbrev(lid, tps, k, def, _, _), _) -> 
         let t = mk_Typ_meta(Meta_named(Util.close_with_lam tps def, lid)) in
         Some t
@@ -216,7 +217,7 @@ let try_resolve_typ_abbrev env lid =
 
 let lookup_letbinding_quals env lid = 
   let find_in_sig lid = 
-    match Util.smap_try_find env.sigmap lid.str with 
+    match Util.smap_try_find (sigmap env) lid.str with 
       | Some (Sig_val_decl(lid, _, quals, _), _) -> Some quals
       | _ -> None in
   match resolve_in_open_namespaces env lid find_in_sig with 
@@ -230,7 +231,7 @@ let try_lookup_module env path =
 
 let try_lookup_let env (lid:lident) = 
   let find_in_sig lid = 
-    match Util.smap_try_find env.sigmap lid.str with 
+    match Util.smap_try_find (sigmap env) lid.str with 
       | Some (Sig_let _, _) -> Some (fvar false lid (range_of_lid lid))
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
@@ -243,7 +244,7 @@ let try_lookup_lid (env:env) l = try_lookup_lid' env.iface false env l
 
 let try_lookup_datacon env (lid:lident) = 
   let find_in_sig lid = 
-    match Util.smap_try_find env.sigmap lid.str with 
+    match Util.smap_try_find (sigmap env) lid.str with 
       | Some (Sig_val_decl(_, _, quals, _), _) -> 
         if quals |> Util.for_some (function Assumption -> true | _ -> false)
         then Some (fv lid)
@@ -254,7 +255,7 @@ let try_lookup_datacon env (lid:lident) =
 
 let find_all_datacons env (lid:lident) = 
   let find_in_sig lid = 
-    match Util.smap_try_find env.sigmap lid.str with 
+    match Util.smap_try_find (sigmap env) lid.str with 
       | Some (Sig_tycon(_, _, _, _, datas, _, _), _) -> Some datas
       | _ -> None in
   resolve_in_open_namespaces env lid find_in_sig
@@ -401,7 +402,7 @@ let push_rec_binding env b = match b with
     
 let push_sigelt env s = 
   let err l = 
-    let sopt = Util.smap_try_find env.sigmap l.str in
+    let sopt = Util.smap_try_find (sigmap env) l.str in
     let r = match sopt with 
       | Some (se, _) ->
         begin match Util.find_opt (lid_equals l) (lids_of_sigelt se) with
@@ -425,7 +426,7 @@ let push_sigelt env s =
     | _ -> env, [lids_of_sigelt s, s] in
   lss |> List.iter (fun (lids, se) -> 
     lids |> List.iter (fun lid -> 
-      Util.smap_add env.sigmap lid.str (se, env.iface && not env.admitted_iface)));
+      Util.smap_add (sigmap env) lid.str (se, env.iface && not env.admitted_iface)));
   env
     
 let push_namespace env lid = 
@@ -449,7 +450,7 @@ let check_admits nm env =
       begin match try_lookup_lid env l with 
         | None -> 
           if warn then Util.print_string (Util.format2 "%s: Warning: Admitting %s without a definition\n" (Range.string_of_range (range_of_lid l)) (Print.sli l));
-          Util.smap_add env.sigmap l.str (Sig_val_decl(l, t, Assumption::quals, r), false)
+          Util.smap_add (sigmap env) l.str (Sig_val_decl(l, t, Assumption::quals, r), false)
         | Some _ -> ()
       end
     | _ -> ())
@@ -464,6 +465,20 @@ let finish env modul =
     recbindings=[];
     phase=AST.Un}
 
+let push env = 
+    {env with 
+        curmodule=None;
+        sigmap=Util.smap_copy (sigmap env)::env.sigmap; 
+        open_namespaces=[]}
+
+let pop env = match env.modules, env.sigmap with 
+    | _::mods, _::maps -> 
+        {env with 
+            curmodule=None;
+            modules=mods;
+            sigmap=maps}
+    | _ -> failwith "No more modules to pop"
+
 let finish_module_or_interface env modul = 
   if not modul.is_interface 
   then check_admits modul.name env;
@@ -472,7 +487,8 @@ let finish_module_or_interface env modul =
 let prepare_module_or_interface intf admitted env mname =
   let prep env = 
     let open_ns = if lid_equals mname Const.prims_lid then [] else [Const.prims_lid] in
-    {env with curmodule=Some mname; open_namespaces = open_ns; iface=intf; admitted_iface=admitted} in
+    {env with curmodule=Some mname; sigmap=env.sigmap; open_namespaces = open_ns; iface=intf; admitted_iface=admitted} in
+
   match env.modules |> Util.find_opt (fun (l, _) -> lid_equals l mname) with
     | None -> prep env
     | Some (_, m) -> 
