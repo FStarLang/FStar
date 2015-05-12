@@ -1,4 +1,4 @@
-module Bug236
+module Bug237
 
 (* Can only reproduce one of the problems with k_foralle.
    The others only appear in tinyfstar-new.fst *)
