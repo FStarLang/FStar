@@ -1246,6 +1246,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                     tok_decl]
                     @fresh_tok
                     @[Term.Assume(mkForall([tok_app], vars, mkEq(tok_app, app)), Some "name-token correspondence")] in
+        let t = whnf env t in
         let def, (body, decls1) = 
             if tags |> Util.for_some (function Logic -> true | _ -> false) 
             then mk_Valid app, encode_formula t env'

@@ -945,7 +945,6 @@ and tc_exp env e : exp * lcomp * guard_t =
                                 //if the function is pure, but its arguments are not, then add an equality refinement here
                                 //OW, for pure applications we always add an equality at the end; see ADD_EQ_REFINEMENT below
                                 Util.is_pure_lcomp cres
-                                && not(Util.is_constructor cres.res_typ Const.unit_lid)
                                 && comps |> Util.for_some (fun (_, c) -> not (Util.is_pure_lcomp c)) in (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
                       
                             let cres = //NS: Choosing when to add an equality refinement is VERY important for performance. Adding it unconditionally impacts run time by >5x
