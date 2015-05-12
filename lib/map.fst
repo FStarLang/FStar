@@ -2,59 +2,52 @@ module Map
 open Prims.PURE
 open Set
 
-assume type t : Type -> Type -> Type
-assume logic val empty:      key:Type -> value:Type -> Tot (t key value)
-assume logic val sel :       key:Type -> value:Type -> t key value -> key -> Tot value
-assume logic val upd :       key:Type -> value:Type -> t key value -> key -> value -> Tot (t key value)
-assume logic val const :     key:Type -> value:Type -> v:value -> Tot (t key value)
-assume logic val concat:     key:Type -> value:Type -> t key value -> t key value -> Tot (t key value)
-assume logic val contains:   key:Type -> value:Type -> t key value -> key -> Tot bool
-assume logic val equal:      key:Type -> value:Type -> t key value -> t key value -> Tot bool
-assume logic val restrict:   key:Type -> value:Type -> set key -> t key value -> Tot (t key value)
+type t (key:Type) (value:Type) = {
+  mappings: key -> Tot value;
+  domain:   key -> Tot bool
+}
+	    
 
-assume SelUpd1:       forall (key:Type) (value:Type) (m:t key value) (k:key) (v:value).          {:pattern sel (upd m k v) k}
-                      sel (upd m k v) k == v
+let sel m k = m.mappings k
+let upd m k v = {
+  mappings = (fun x -> if x = k then v else m.mappings x);
+  domain =   (fun x -> x = k || m.domain x)
+}
+let const v = {
+  mappings = (fun _ -> v);
+  domain =   (fun _ -> true)
+}
+let concat m1 m2 = {
+  mappings = (fun x -> if m2.domain x then m2.mappings x else m1.mappings x);
+  domain =   (fun x -> m1.domain x || m2.domain x)
+}
+let contains m k = m.domain k
+let restrict s m = {
+  mappings = m.mappings;
+  domain =   (fun x -> mem x s)
+}
 
-assume SelUpd2:       forall (key:Type) (value:Type) (m:t key value) (k1:key) (k2:key) (v:value).{:pattern sel (upd m k2 v) k1}
-                      k2=!=k1 ==> sel (upd m k2 v) k1 == sel m k1
+let lemma_SelUpd1 m k v        = ()
+let lemma_SelUpd2 m k1 k2 v    = ()
+let lemma_SelConst v k         = ()
+let lemma_SelRestrict m ks k   = ()
+let lemma_SelConcat1 m1 m2 k   = ()
+let lemma_SelConcat2 m1 m2 k   = ()
+let lemma_InDomUpd1 m k1 k2 v  = ()
+let lemma_InDomUpd2 m k1 k2 v  = ()
+let lemma_InDomConstMap v k    = ()
+let lemma_InDomConcat m1 m2 k  = ()
+let lemma_InDomRestrict m ks k = ()
 
-assume SelConst:      forall (key:Type) (value:Type) (v:value) (k:key).                          {:pattern sel (const v) k}
-                      sel (const v) k == v
+open FunctionalExtensionality
 
-assume SelRestrict:   forall (key:Type) (value:Type) (m:t key value) (ks:set key) (k:key).       {:pattern sel (restrict ks m) k}
-                      mem k ks ==> sel (restrict ks m) k == sel m k
+type Equal (#key:Type) (#value:Type) (m1:t key value) (m2:t key value) =
+    FEq m1.mappings m2.mappings /\ FEq m1.domain m2.domain
 
-assume SelConcat1:    forall (key:Type) (value:Type) (m1:t key value) (m2:t key value) (k:key).  {:pattern sel (concat m1 m2) k}
-                      contains m2 k ==> sel (concat m1 m2) k==sel m2 k
+let lemma_equal_intro m1 m2 = ()
+let lemma_equal_elim m1 m2  = ()
+let lemma_equal_refl m1 m2  = ()
 
-assume SelConcat1:    forall (key:Type) (value:Type) (m1:t key value) (m2:t key value) (k:key).  {:pattern sel (concat m1 m2) k}
-                      not(contains m2 k) ==> sel (concat m1 m2) k==sel m1 k
-
-assume InDomEmpty:    forall (key:Type) (value:Type) (k:key).   (*this gives a warning {:pattern contains empty k}*)
-                      (not (contains key value empty k))
-
-assume InDomUpd1:     forall (key:Type) (value:Type) (m:t key value) (k1:key) (k2:key) (v:value).   {:pattern contains (upd m k1 v) k2}
-                      contains (upd m k1 v) k2 == (k1=k2 || contains m k2)
-
-assume InDomUpd2:     forall (key:Type) (value:Type) (m:t key value) (k1:key) (k2:key) (v:value).{:pattern contains (upd m k2 v) k1}
-                      k2=!=k1 ==> contains (upd m k2 v) k1 == contains m k1
-
-assume InDomConstMap: forall (key:Type) (value:Type) (v:value) (k:key).                          {:pattern contains (const v) k}
-                      contains (const v) k
-
-assume InDomConcat:   forall (key:Type) (value:Type) (m1:t key value) (m2:t key value) (k:key).  {:pattern contains (concat m1 m2) k}
-                      contains (concat m1 m2) k==(contains m1 k || contains m2 k)
-
-assume InDomRestrict: forall (key:Type) (value:Type) (m:t key value) (ks:set key) (k:key).       {:pattern contains (restrict ks m) k}
-                      contains (restrict ks m) k == mem k ks
-
-assume Extensional:   forall (key:Type) (value:Type) (m1:t key value) (m2:t key value).          {:pattern (equal m1 m2)}
-                      equal m1 m2 <==> m1 == m2
-
-assume Equals:        forall (key:Type) (value:Type) (m1:t key value) (m2:t key value).          {:pattern (equal m1 m2)}
-                      equal m1 m2 <==> (forall k.{:pattern (sel m1 k); (sel m2 k)} sel m1 k == sel m2 k)
-
-let const_on (key:Type) (value:Type) (dom:set key) (v:value) = restrict dom (const v)
-
-opaque type DisjointDom (key:Type) (value:Type) (m1:t key value) (m2:t key value) =
-          (forall x.{:pattern (contains m1 x)(* ; (contains m2 x) *)} contains m1 x ==> not (contains m2 x))
+(* AR: this needs to be copied from .fsi, else get an error in wysteria.fst *)
+opaque type DisjointDom (#key:Type) (#value:Type) (m1:t key value) (m2:t key value) =
+    (forall x.{:pattern (contains m1 x)(* ; (contains m2 x) *)} contains m1 x ==> not (contains m2 x))

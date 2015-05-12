@@ -35,11 +35,11 @@ type Box: Type -> Type =
   |Mk_box: #a:Type -> v:a -> m:mode -> Box a
 
 type CanDelegate (m1:mode) (m2:mode) =
-  (Mode.p_or_s m2 = Par /\ Mode.p_or_s m1 = Par /\ Subset (Mode.ps m2) (Mode.ps m1)) \/
+  (Mode.p_or_s m2 = Par /\ Mode.p_or_s m1 = Par /\ subset (Mode.ps m2) (Mode.ps m1)) \/
   (Mode.p_or_s m2 = Sec /\ Mode.ps m2 = Mode.ps m1)
 
 type CanUnbox : #a:Type -> ps:prins -> v:Box a -> Type =
-  fun (a:Type) (ps:prins) (v:Box a) -> Subset ps (Mode.ps (Mk_box.m v))
+  fun (a:Type) (ps:prins) (v:Box a) -> b2t (subset ps (Mode.ps (Mk_box.m v)))
 
 val with_mode: #a:Type -> #req:Requires -> #ens:Ensures a -> m:mode -> =f:(unit -> Wys a req ens) ->
   Wys (Box a) (fun m0 -> CanDelegate m0 m /\ req m) (fun x m0 -> Mk_box.m x = Mode (Mode.p_or_s m0) (Mode.ps m) /\
@@ -60,13 +60,13 @@ let unbox (a:Type) (v:Box a) =
   Mk_box.v v
 
 val mk_wire: #a:Type -> ps:prins -> v:Box a ->
-  Wys (Wire a) (fun m0 -> Subset ps (Mode.ps m0) /\
+  Wys (Wire a) (fun m0 -> subset ps (Mode.ps m0) /\
                           Mode.p_or_s m0 = Par ==> CanUnbox ps v /\
                           Mode.p_or_s m0 = Sec ==> CanUnbox (Mode.ps m0) v)
                (fun x m0 -> b2t (x = Map.const_on ps (Mk_box.v v)))
 let mk_wire ps v =
   let m0 = ST.read moderef in
-  assert (Subset ps (Mode.ps m0) /\
+  assert (subset ps (Mode.ps m0) /\
           Mode.p_or_s m0 = Par ==> CanUnbox ps v /\
           Mode.p_or_s m0 = Sec ==> CanUnbox (Mode.ps m0) v);
   Map.const_on ps (Mk_box.v v)
@@ -84,9 +84,9 @@ let project_wire v p =
   Map.sel v p
 
 val concat_wire: #a:Type -> v1:Wire a -> v2:Wire a ->
-  Wys (Wire a) (fun m0 -> Map.DisjointDom prin a v1 v2) (fun x m0 -> b2t (x = Map.concat v1 v2))
+  Wys (Wire a) (fun m0 -> Map.DisjointDom v1 v2) (fun x m0 -> b2t (x = Map.concat v1 v2))
 let concat_wire (a:Type) v1 v2 =
-  assert (Map.DisjointDom prin a v1 v2);
+  assert (Map.DisjointDom v1 v2);
   Map.concat v1 v2
 
 type says : #a:Type -> p:prin -> x:a -> Type
