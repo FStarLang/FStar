@@ -148,10 +148,15 @@ val upd_abs_field: abs_field_map
 let upd_abs_field m i f v =
   fun j g -> if (i, f) = (j, g) then v else m j g
 
+opaque type obj_inv' gc_state (i:mem_addr) =
+    valid (gc_state.to_abs i)
+    ==> (ptr_lifts_to gc_state (gc_state.fields i F1) (gc_state.abs_fields (gc_state.to_abs i) F1)
+     /\  ptr_lifts_to gc_state (gc_state.fields i F2) (gc_state.abs_fields (gc_state.to_abs i) F2))
+
 opaque type mutator_inv' gc_state =
     to_abs_inj gc_state.to_abs
     /\ (forall (i:mem_addr).//{:pattern (trigger i)}
-          obj_inv gc_state i /\
+          obj_inv' gc_state i /\
           (gc_state.color i = Unalloc \/ gc_state.color i = White) /\
           (not (valid (gc_state.to_abs i)) <==> gc_state.color i = Unalloc) /\
           True
@@ -176,17 +181,17 @@ open GC
               gc'.abs_fields
                = upd_map #(abs_node * field) #abs_node gc.abs_fields (gc.to_abs ptr, f) (gc.to_abs v)))*)
 val write_field: ptr:mem_addr -> f:field -> v:mem_addr -> GC unit
- (requires (fun gc -> ptr_lifts gc ptr /\ ptr_lifts gc v /\ mutator_inv' gc))
+ (requires (fun gc -> ptr_lifts_to gc ptr (gc.to_abs ptr)
+                   /\ ptr_lifts_to gc v (gc.to_abs v)
+                   /\ mutator_inv' gc))
  (ensures (fun gc _ gc' -> True))
 let write_field ptr f v =
-  (*cut (trigger ptr);
-  cut (trigger v);*)
   let gc = get () in
   (*assert (obj_inv gc v);*)
   let gc' = {gc with
     (*color=upd_map gc.color ptr (gc.color ptr)*)
-    fields=upd_field gc.fields ptr f (gc.fields ptr f);
-    abs_fields=upd_abs_field gc.abs_fields (gc.to_abs ptr) f (gc.to_abs (gc.fields ptr f));//v)
+    fields=upd_field gc.fields ptr f v;//(gc.fields ptr f);
+    abs_fields=upd_abs_field gc.abs_fields (gc.to_abs ptr) f (gc.to_abs v);//(gc.fields ptr f));//v)
     } in
   (*assert (valid (gc'.to_abs v));
   assert (v<>ptr ==> gc'.abs_fields (gc'.to_abs v, f) = gc.abs_fields (gc.to_abs v, f));
