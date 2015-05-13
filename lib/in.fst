@@ -1,21 +1,13 @@
-#push
-module Test
+module Test1
 let x = 0
-end
-#pop
-
-#push
-module Test
+ 
+module Test2
 let x = 1
-let y = assert (0=1)
-end
-#pop
+let y = assert  (1=1)
 
-#push
-module Test
+
+module Test3
 let x = 1
-let y = assert (0=0)
-end
-#pop
+let y = assert (Test2.x - 1 = 0)
 
 #finish

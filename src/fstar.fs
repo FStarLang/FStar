@@ -64,8 +64,8 @@ let tc_one_file dsenv env fn =
 type input_chunks = 
     | Push
     | Pop
-    | Code of string
-
+    | Code of string * (string * string)
+    
 let interactive_mode () = 
     if Option.isSome !Options.codegen
     then (Util.print_string "Code-generation is not supported in interactive mode"; exit 1);
@@ -78,11 +78,13 @@ let interactive_mode () =
         if stdin.EndOfStream then exit 0;
         let line = stdin.ReadLine() in
         Printf.printf "Read line <%s>\n" line;
-        ignore <| chunk.AppendLine(line);
         let l = line.Trim() in
-        if l = "end"
+        if Util.starts_with l "#end"
         then begin
-            let str = chunk.ToString() in ignore <| chunk.Clear(); Code str
+            let responses = match Util.split l " " with 
+                | [_; ok; fail] -> (ok, fail)
+                | _ -> ("ok", "fail") in
+            let str = chunk.ToString() in ignore <| chunk.Clear(); Code (str, responses)
         end
         else if l = "#pop"
         then (chunk.Clear() |> ignore; Pop)
@@ -90,7 +92,8 @@ let interactive_mode () =
         then (chunk.Clear() |> ignore; Push)
         else if l = "#finish"
         then exit 0
-        else fill_chunk() in
+        else (ignore <| chunk.AppendLine(line);
+              fill_chunk()) in
 
     let rec go dsenv env = 
         match fill_chunk () with 
@@ -106,10 +109,12 @@ let interactive_mode () =
               let env = Tc.Env.push env in
               go dsenv env
             
-            | Code text ->
+            | Code (text, (ok, fail)) ->
               let dsenv, env, mods = tc_one_file dsenv env (Inr text) in
               let n = Tc.Errors.report_all() in
-              mods |> List.iter (fun x -> fprint1 "Checked module %s\n" (Print.sli x.name));
+              if n=0
+              then Util.fprint1 "\n%s\n" ok
+              else Util.fprint1 "\n%s\n" fail;
               go dsenv env in
 
     go dsenv env
