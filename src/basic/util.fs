@@ -144,23 +144,21 @@ let run_proc (name:string) (args:string) (stdin:string) : bool * string * string
 
 let get_file_extension (fn: string) :string = Path.GetExtension fn
 
-open Prims
-//type set<'a> = Collections.Set<Boxed<'a>> * ('a -> Boxed<'a>)
-//
-//let new_set (cmp:'a -> 'a -> int) (hash:'a -> int) : set<'a> = 
-//    let box v = new Boxed<'a>(v, cmp, hash) in
-//    (new Collections.Set<Boxed<'a>>([]), box)
-//
-//let set_add a ((s, b):set<'a>) = s.Add (b a), b
-//let set_remove a ((s1, b):set<'a>) = s1.Remove(b a), b
-//let set_mem a ((s, b):set<'a>) = s.Contains (b a)
-//let set_union ((s1, b):set<'a>) ((s2, _):set<'a>) = Set.union s1 s2, b
-//let set_intersect ((s1, b):set<'a>) ((s2, _):set<'a>) = Set.intersect s1 s2, b
-//let set_is_subset_of ((s1, _): set<'a>) ((s2, _):set<'a>) = s1.IsSubsetOf(s2)
-//let set_count ((s1, _):set<'a>) = s1.Count
-//let set_difference ((s1, b):set<'a>) ((s2, _):set<'a>) : set<'a> = Set.difference s1 s2, b
-//let set_elements ((s1, b):set<'a>) :list<'a> = Set.toList s1 |> List.map (fun x -> x.unbox)
+type stream_reader = System.IO.StreamReader (* not relying on representation *)
+let open_stdin () = new System.IO.StreamReader(System.Console.OpenStandardInput()) 
+let is_end_of_stream (s: stream_reader) = s.EndOfStream
+let read_line (s:stream_reader) = s.ReadLine()
 
+type string_builder = System.Text.StringBuilder (* not relying on representation *)
+let new_string_builder () = new System.Text.StringBuilder()
+let clear_string_builder (s:string_builder) = s.Clear() |> ignore
+let string_of_string_builder (s: string_builder) = s.ToString() 
+let string_builder_append (s: string_builder) (t:string) = s.Append t |> ignore
+
+let message_of_exn (e:exn) = e.Message
+let trace_of_exn (e:exn) = e.StackTrace
+
+open Prims
 type set<'a> = (list<'a> * ('a -> 'a -> bool))
 
 let set_is_empty ((s, _):set<'a>) = 

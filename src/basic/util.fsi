@@ -86,6 +86,20 @@ val close_file: file_handle -> unit
 val write_file: string -> string -> unit
 val flush_file: file_handle -> unit
 
+type stream_reader = System.IO.StreamReader (* not relying on representation *)
+val open_stdin : unit -> stream_reader
+val is_end_of_stream: stream_reader -> bool
+val read_line: stream_reader -> string
+
+type string_builder = System.Text.StringBuilder (* not relying on representation *)
+val new_string_builder: unit -> string_builder
+val clear_string_builder: string_builder -> unit
+val string_of_string_builder: string_builder -> string
+val string_builder_append: string_builder -> string -> unit
+
+val message_of_exn: exn -> string
+val trace_of_exn: exn -> string
+
 type proc = {m:System.Object;
              outbuf:System.Text.StringBuilder;
              proc:System.Diagnostics.Process;

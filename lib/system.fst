@@ -3,6 +3,7 @@ assume type Object
 
 module System.IO
 assume type TextWriter
+assume type StreamReader
 
 module System.Text
 assume type StringBuilder

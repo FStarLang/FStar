@@ -21,6 +21,7 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Util
 open Microsoft.FStar.Getopt
 open Microsoft.FStar.Tc.Util
+open Microsoft.FStar.Tc.Env
 
 let process_args () = 
   let file_list = Util.mk_ref [] in
@@ -72,27 +73,28 @@ let interactive_mode () =
 
     let prims_mod, dsenv, env = tc_prims () in
 
-    let chunk = System.Text.StringBuilder() in 
-    let stdin = new System.IO.StreamReader(System.Console.OpenStandardInput()) in
+    let chunk = Util.new_string_builder () in
+    let stdin = Util.open_stdin () in
     let rec fill_chunk ()= 
-        if stdin.EndOfStream then exit 0;
-        let line = stdin.ReadLine() in
-        Printf.printf "Read line <%s>\n" line;
-        let l = line.Trim() in
+        if Util.is_end_of_stream stdin then exit 0;
+        let line = Util.read_line stdin in
+//        Printf.printf "Read line <%s>\n" line;
+        let l = Util.trim_string line in 
         if Util.starts_with l "#end"
         then begin
             let responses = match Util.split l " " with 
                 | [_; ok; fail] -> (ok, fail)
                 | _ -> ("ok", "fail") in
-            let str = chunk.ToString() in ignore <| chunk.Clear(); Code (str, responses)
+            let str = Util.string_of_string_builder chunk in 
+            Util.clear_string_builder chunk; Code (str, responses)
         end
         else if l = "#pop"
-        then (chunk.Clear() |> ignore; Pop)
+        then (Util.clear_string_builder chunk; Pop)
         else if l = "#push"
-        then (chunk.Clear() |> ignore; Push)
+        then (Util.clear_string_builder chunk; Pop)
         else if l = "#finish"
         then exit 0
-        else (ignore <| chunk.AppendLine(line);
+        else (Util.string_builder_append chunk line;
               fill_chunk()) in
 
     let rec go dsenv env = 
@@ -196,8 +198,8 @@ let () =
     | e -> 
         if Util.handleable e then Util.handle_err false () e;
         if !Options.trace_error
-        then Util.fprint2 "\nUnexpected error\n%s\n%s\n" e.Message e.StackTrace
+        then Util.fprint2 "\nUnexpected error\n%s\n%s\n" (Util.message_of_exn e) (Util.trace_of_exn e)
         else if not (Util.handleable e)
-        then Util.fprint1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" e.Message;
+        then Util.fprint1 "\nUnexpected error; please file a bug report, ideally with a minimized version of the source program that triggered the error.\n%s\n" (Util.message_of_exn e);
         cleanup ();
         exit 1
