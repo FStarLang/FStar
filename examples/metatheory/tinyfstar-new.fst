@@ -118,11 +118,14 @@ let is_erenaming s = (if excluded_middle (erenaming s) then 0 else 1)
 val esub_id : esub 
 let esub_id = fun x -> EVar x
 
-val esub_inc_above : nat -> var -> Tot exp
-let esub_inc_above x y = if y<x then EVar y else EVar (y+1)
+val esub_inc_gen : nat -> var -> Tot exp
+let esub_inc_gen x y = EVar (y+x)
 
 val esub_inc : var -> Tot exp
-let esub_inc = esub_inc_above 0
+let esub_inc = esub_inc_gen 1
+
+val esub_inc2 : var -> Tot exp
+let esub_inc2 = esub_inc_gen 2
 
 let is_evar (e:exp) : int = if is_EVar e then 0 else 1
 
@@ -342,7 +345,8 @@ val is_renaming : s:sub -> Tot (n:int{(  renaming s  ==> n=0) /\
                                        (~(renaming s) ==> n=1)})
 let is_renaming s = (if excluded_middle (renaming s) then 0 else 1)
 
-let sub_einc = Sub esub_inc tsub_id
+let sub_einc_gen y = Sub (esub_inc_gen y) tsub_id
+let sub_einc = sub_einc_gen 1
 let sub_tinc s = Sub esub_id tsub_inc
 
 val esubst : s:sub -> e:exp -> Pure exp (requires True)
@@ -355,56 +359,44 @@ val csubst : s:sub -> c:cmp -> Tot cmp
       (decreases %[1; is_renaming s; 1; c])
 val ksubst : s:sub -> k:knd -> Tot knd
       (decreases %[1; is_renaming s; 1; k])
-val esub_elam: s:sub -> x:var -> Tot(e:exp{renaming s ==> is_EVar e})
+val sub_elam_gen : y:nat -> s:sub -> Tot (r:sub{renaming s ==> renaming r})
       (decreases %[1; is_renaming s; 0; EVar 0])
-val tsub_elam : s:sub -> a:var -> Tot(t:typ{renaming s ==> is_TVar t}) 
-      (decreases %[1; is_renaming s; 0; TVar 0])
-val esub_tlam: s:sub -> x:var -> Tot(e:exp{renaming s ==> is_EVar e})
+val sub_tlam : s:sub -> Tot(r:sub{renaming s ==> renaming r})
       (decreases %[1; is_renaming s; 0; EVar 0])
-val tsub_tlam : s:sub -> a:var -> Tot(t:typ{renaming s ==> is_TVar t}) 
-      (decreases %[1; is_renaming s; 0; TVar 0])
-val esub_elam2: s:sub -> x:var -> Tot(e:exp{renaming s ==> is_EVar e})
-      (decreases %[1; is_renaming s; 0; EVar 0])
-val tsub_elam2 : s:sub -> a:var -> Tot(t:typ{renaming s ==> is_TVar t}) 
-      (decreases %[1; is_renaming s; 0; TVar 0])
 
-let rec esub_elam s =
-fun x -> if x = 0 then EVar x
-         else esubst (Sub esub_inc tsub_id) (Sub.es s (x-1)) 
+let rec sub_elam_gen y s =
+let esub_elam : x:var -> Tot(e:exp{renaming s ==> is_EVar e}) =
+  fun x -> if x < y then EVar x
+           else esubst (sub_einc_gen y) (Sub.es s (x-y)) 
+  in
+let tsub_elam : x:var -> Tot(t:typ{renaming s ==> is_TVar t}) =
+  fun a -> tsubst (sub_einc_gen y) (Sub.ts s a)
+  in
+Sub esub_elam tsub_elam
+and sub_tlam s =
+let esub_tlam : x:var -> Tot(e:exp{renaming s ==> is_EVar e}) =
+   fun x -> esubst (Sub esub_id tsub_inc) (Sub.es s x)
+in
+let tsub_tlam : a:var -> Tot(t:typ{renaming s ==> is_TVar t}) =
+   fun a -> if a = 0 then TVar a
+            else tsubst (Sub esub_id tsub_inc) (Sub.ts s a)
+in
+Sub esub_tlam tsub_tlam
 
-and tsub_elam s =
-fun a -> tsubst (Sub esub_inc tsub_id) (Sub.ts s a) 
-
-and esub_tlam s =
-fun x -> esubst (Sub esub_id tsub_inc) (Sub.es s x)
-
-and tsub_tlam s =
-fun a -> if a = 0 then TVar a
-         else tsubst (Sub esub_id tsub_inc) (Sub.ts s a)
-
-and esub_elam2 s =
-fun x -> if x <= 1 then EVar x
-                   else (esubst (Sub esub_inc tsub_id) (esubst (Sub esub_inc tsub_id) (Sub.es s (x-2))))
-
-and tsub_elam2 s =
-fun a -> tsubst (Sub esub_inc tsub_id) (tsubst (Sub esub_inc tsub_id) (Sub.ts s a))
 
 (*Substitution inside expressions*)
 and esubst s e =
   match e with
   | EVar x -> Sub.es s x
   | EConst _ -> e
-  | ELam t ebody -> 
-let sub_elam = Sub (esub_elam s) (tsub_elam s) in
-ELam (tsubst s t) (esubst sub_elam ebody)
+  | ELam t ebody -> ELam (tsubst s t) (esubst (sub_elam_gen 1 s) ebody)
   | EFix d t ebody -> 
-let sub_lam2 = Sub (esub_elam2 s) (tsub_elam2 s) in
      let d' = match d with
               | Some de -> Some (esubst s de)
               | None -> None in
      (* CH: wanted to write "d' = (omap (eesubst s) d)" but that fails
             the termination check *)
-     (EFix d' (tsubst s t) (esubst sub_lam2 ebody))
+     (EFix d' (tsubst s t) (esubst (sub_elam_gen 2 s) ebody))
   | EIf0 g ethen eelse -> EIf0 (esubst s g) (esubst s ethen) (esubst s eelse)
   | EApp e1 e2 -> EApp (esubst s e1) (esubst s e2)
 
@@ -418,15 +410,12 @@ and tsubst s t =
       | TcForallT k -> TConst (TcForallT (ksubst s k))
       | c -> TConst c)
   | TArr t c -> 
-let sub_elam = Sub (esub_elam s) (tsub_elam s) in
      TArr (tsubst s t)
-          (csubst sub_elam c)
+          (csubst (sub_elam_gen 1 s) c)
   | TTLam k tbody -> 
-let sub_tlam = Sub (esub_tlam s) (tsub_tlam s) in
-     TTLam (ksubst s k) (tsubst sub_tlam tbody)
+     TTLam (ksubst s k) (tsubst (sub_tlam s) tbody)
   | TELam t tbody -> 
-let sub_elam = Sub (esub_elam s) (tsub_elam s) in
-     TELam (tsubst s t) (tsubst sub_elam tbody)
+     TELam (tsubst s t) (tsubst (sub_elam_gen 1 s) tbody)
   | TTApp t1 t2 -> TTApp (tsubst s t1) (tsubst s t2)
   | TEApp t e -> TEApp (tsubst s t) (esubst s e)
 and csubst s c = let Cmp m t wp = c in
@@ -436,24 +425,15 @@ and ksubst s k =
   match k with
   | KType -> KType
   | KKArr k kbody -> 
-let sub_tlam = Sub (esub_tlam s) (tsub_tlam s) in
-     KKArr (ksubst s k) (ksubst sub_tlam kbody)
+     KKArr (ksubst s k) (ksubst (sub_tlam s) kbody)
   | KTArr t kbody -> 
-let sub_elam = Sub (esub_elam s) (tsub_elam s) in
-     (KTArr (tsubst s t) (ksubst sub_elam kbody))
+     (KTArr (tsubst s t) (ksubst (sub_elam_gen 1 s) kbody))
 
-
-
-val sub_elam : s:sub -> Tot sub
-let sub_elam s = Sub (esub_elam s) (tsub_elam s)
-
+let sub_elam = sub_elam_gen 1
 val esub_elam_at0 : s:sub -> Lemma (Sub.es (sub_elam s) 0 = EVar 0)
 let esub_elam_at0 s = ()
-
-val sub_tlam : s:sub -> Tot sub
-let sub_tlam s = Sub (esub_tlam s) (tsub_tlam s)
-
-
+(*BUG : without this normally neutral code, the file does not compile -> ??? *)
+let plouf s t1 ebody = assert (sub_elam s == sub_elam s) 
 
 val etsubst : s:tsub -> e:exp -> Tot exp
 let etsubst s e = esubst (Sub esub_id s) e
@@ -496,9 +476,10 @@ let kesubst_beta_gen x e = kesubst (esub_beta_gen x e)
 
 let kesubst_beta = kesubst_beta_gen 0
 
-let eesh = eesubst esub_inc
-let tesh = tesubst esub_inc
-let kesh = kesubst esub_inc
+let eesh = esubst sub_einc
+let cesh = csubst sub_einc
+let tesh = tsubst sub_einc
+let kesh = ksubst sub_einc
 
 (* Beta substitution for types *)
 val tsub_beta_gen : var -> typ -> Tot tsub
@@ -1164,6 +1145,8 @@ let eextend t e =
   in
   let tenvi' : tenv = fun x -> omap kesh (tenvi x) in
   Env eenvi' tenvi'
+
+
 (*
 val textend : knd -> env -> Tot env
 let textend k e =
@@ -1186,8 +1169,6 @@ let lookup_evar g x = Env.e g x
 val lookup_tvar : env -> var -> Tot (option knd)
 let lookup_tvar g x = Env.t g x
 
-val plouf : t1:typ -> Tot unit
-let plouf t1= assert(is_Some (lookup_evar (eextend tfalse empty) 0) )
 (**************)
 (*   Typing   *)
 (**************)
@@ -1643,15 +1624,21 @@ val th_sub_einc : g:env -> t:typ -> hk:kinding g t KType ->
 a:var{is_Some (lookup_tvar g a)} -> 
                     Tot(kinding (eextend t g) (Sub.ts s a) (ksubst s (Some.v (lookup_tvar g1 a))))
 *)
+val sub_einc_on_e : x:var -> Lemma (Sub.es sub_einc x = EVar (x+1))
+let sub_einc_on_e x = ()
+
+val sub_einc_on_t : a:var -> Lemma (Sub.ts sub_einc a = TVar a)
+let sub_einc_on_t x = ()
 val hs_sub_einc : #g:env -> #t:typ -> hwf : ewf g -> hk:kinding g t KType ->
 Tot(subst_typing sub_einc g (eextend t g))
 let hs_sub_einc g t hwf hk =
 let hwfgext = GType hk in
-      SubstTyping hwf hwfgext 
-		  (fun x -> 
+      let temp : subst_typing sub_einc g (eextend t g) = SubstTyping #sub_einc hwf hwfgext 
+		  (fun x ->  
 			     TyVar (x+1) hwfgext
 		  ) 
-		  (fun x -> KVar x hwfgext)
+		  (fun a -> KVar a hwfgext )
+		  in temp
 (*
 opaque val substitution :
       #g1:env -> #e:exp -> #t:typ -> s:esub -> #g2:env ->
@@ -1675,7 +1662,7 @@ val styping_substitution : #g1:env -> #t':typ -> #t:typ -> #phi:typ -> s:sub -> 
     hs:subst_typing s g1 g2 ->
     Tot (styping g2 (tsubst s t') (tsubst s t) (tsubst s phi))
 (decreases %[1;is_renaming s; h1])
-val kinding_substitution : g1:env -> #t:typ -> #k:knd -> s:sub -> g2:env ->
+val kinding_substitution : #g1:env -> #t:typ -> #k:knd -> s:sub -> #g2:env ->
     h1:kinding g1 t k ->
     hs:subst_typing s g1 g2 ->
     Tot (kinding g2 (tsubst s t) (ksubst s k))
@@ -1724,6 +1711,96 @@ val typing_substitution : #g1:env -> #e:exp -> #c:cmp -> s:sub -> #g2:env ->
 *)
 let rec typing_substitution g1 e c s g2 h1 hs = 
 match h1 with 
+| TyFixOmega g tx t' wp ebody hkarr htbody ->
+    let hktlam : kinding g1 tx KType = get_tlam_kinding hkarr in
+    let hktarrg2 : kinding g2 (TArr (tsubst s tx) (Cmp EfAll (tsubst (sub_elam s) t') (tsubst (sub_elam s) wp))) KType = subst_on_tarrow s tx EfAll t' wp; kinding_substitution s hkarr hs in
+    let g1' = eextend tx g1 in
+    let g2' = eextend (tsubst s tx) g2 in
+    let s' = sub_elam s in
+    let hwfg1 : ewf g1 = SubstTyping.hwf1 hs in
+    let hwfg1' : ewf g1' = GType hktlam in
+    let hwfg2 : ewf g2 = SubstTyping.hwf2 hs in
+    let hwfg2' : ewf g2' = GType (kinding_substitution s hktlam hs) in
+    let hsg1g1' : subst_typing sub_einc g1 g1' = hs_sub_einc hwfg1 hktlam in
+    let hsg2g2' : subst_typing sub_einc g2 g2' = hs_sub_einc hwfg2 (kinding_substitution s hktlam hs) in
+    let hsg1'g2' : subst_typing s' g1' g2' = hs_sub_elam s hktlam hs in
+    let sdiag = sub_comp sub_einc s in
+    let hsg1g2' : subst_typing sdiag g1 g2' =
+    (* Commenting the code to gain some seconds of compilation … *)
+  (*
+    SubstTyping hwfg1 hwfg2'
+    (fun x -> let tg1 = Some.v (lookup_evar g1 x) in
+              let eg2 = Sub.es s x in
+              let htg2 : typing g2 eg2 (tot (tsubst s tg1)) = SubstTyping.ef hs x in 
+              let htg2' : typing g2' (eesh eg2) (csubst sub_einc (tot (tsubst s tg1))) = typing_substitution sub_einc htg2 hsg2g2' in
+	      let htg2'p : typing g2' (eesh eg2) (tot (tsubst sdiag tg1)) = subst_on_tot sub_einc (tsubst s tg1); tsubst_comp sub_einc s tg1; htg2' in
+	      htg2'p
+     )
+    (fun a -> let kg1 = Some.v (lookup_tvar g1 a) in
+              let tg2 = Sub.ts s a in
+	      let hkg2 : kinding g2 tg2 (ksubst s kg1) = SubstTyping.tf hs a in
+	      let htg2': kinding g2' (tesh tg2) (kesh (ksubst s kg1)) = kinding_substitution g2 sub_einc g2' hkg2 hsg2g2' in
+	      ksubst_comp sub_einc s kg1; htg2'
+    )
+*)   
+  magic()
+    in
+    let tfung1 = TArr tx (Cmp EfAll t' wp) in
+(*OK until this point ^*)
+    let tfung1' = tesh tfung1 in
+    let tfung2' = tsubst sdiag tfung1 in
+    let hkarrg1' : kinding g1' tfung1' KType = kinding_substitution sub_einc hkarr hsg1g1' in
+    let hkarr : kinding g1 tfung1 KType = hkarr in
+    let hkarrg2' : kinding g2' tfung2' KType = kinding_substitution sdiag hkarr (magic()(*hsg1g2'*)) in
+
+    let g1'' = eextend tfung1' g1' in
+    let g2'' = eextend tfung2' g2' in
+    let hwfg1'' : ewf g1'' = GType hkarrg1' in
+   let hwfg2'' : ewf g2'' = GType hkarrg2' in
+   let hsg2'g2'' : subst_typing sub_einc g2' g2'' = hs_sub_einc hwfg2' hkarrg2' in
+   let s2 = sub_elam (sub_elam s) in
+   let hsg1''g2'' : subst_typing s2 g1'' g2'' =
+    (* Commenting the code to gain some seconds of compilation … *)
+     SubstTyping (hwfg1'') (hwfg2'') 
+     (fun x -> match x with
+        | 0 -> (
+		tsubst_elam_shift (sub_elam s) (tesh tfung1);
+		let ht : typing g2'' (EVar 0) (tot (tesh (tsubst sdiag tfung1))) = TyVar 0 hwfg2'' in
+		tsubst_comp sub_einc s tfung1;
+		let ht' : typing g2'' (EVar 0) (tot (tesh (tesh (tsubst s tfung1)))) = ht in
+
+	  	tsubst_elam_shift s tfung1;
+		let ht'' : typing g2'' (EVar 0) (tot (tesh (tsubst (sub_elam s) (tesh tfung1)))) = ht' in
+		tsubst_elam_shift (sub_elam s) (tesh tfung1);
+		let htppp : typing g2'' (EVar 0) (tot (tsubst (sub_elam (sub_elam s)) (tesh (tesh tfung1)))) = ht'' in
+		subst_on_tot (sub_elam (sub_elam s)) (tesh (tesh tfung1));
+		htppp
+		)
+	| n -> (
+	  (*
+	        let eg2' = Sub.es (sub_elam s) (x-1) in
+	        let teg1' = Some.v (lookup_evar g1' (x-1))  in
+	        let hg2' : typing g2' eg2' (tot (tsubst (sub_elam s) teg1')) = SubstTyping.ef hsg1'g2' (x-1) in
+	        let hg2'' : typing g2'' (eesh eg2') (csubst sub_einc (tot (tsubst (sub_elam s) teg1'))) = typing_substitution sub_einc hg2' hsg2'g2'' in
+		subst_on_tot sub_einc (tsubst (sub_elam s) teg1');
+		let hg2ppp : typing g2'' (eesh eg2') (tot (tesh (tsubst (sub_elam s) teg1'))) = hg2'' in
+		tsubst_elam_shift (sub_elam s) teg1';
+		hg2ppp
+		*) magic()
+
+	       )
+	       
+     )
+     (
+      fun a -> let hkg2' = SubstTyping.tf hsg1'g2' a in
+               let hkg2'' = kinding_substitution sub_einc hkg2' hsg2'g2'' in
+	       ksubst_elam_shift (sub_elam s) (Some.v (lookup_tvar g1' a));
+	       hkg2'' 
+      ) 
+     in
+     (*SF : I really do not know what to do to make the next line compile … *)
+     let htbodyg2'' : typing g2'' (esubst s2 ebody) (csubst s2 (Cmp EfAll (tesh t') (tesh wp))) = typing_substitution s2 htbody (magic() (*hsg1''g2''*)) in
+    admit()
 | TyVar #g1 x hk -> (subst_on_tot s (Cmp.t c); SubstTyping.ef hs x)
 | TyConst g ec hwf ->
 admit()
@@ -1750,20 +1827,16 @@ admit()
       h1'
     )
     *)
-| TyAbs #g1 #t1 #ebody m t2 wp hk hbody  -> 
-admit()
-  (*
-    (
+| TyAbs #g1 #t1 #ebody m t2 wp hk hbody  -> admit()
+    (*(
+    let g1ext = eextend t1 g1 in
+    let g2ext = eextend (tsubst s t1) g2 in
     let hwfg1ext : ewf (eextend t1 g1) = GType hk in
     let hkt1g2 : kinding g2 (tsubst s t1) KType = kinding_substitution s hk hs in
     let hwfg2ext : ewf (eextend (tsubst s t1) g2) = GType hkt1g2 in
     let hs'' : subst_typing sub_einc g2 (eextend (tsubst s t1) g2) =
-      SubstTyping (SubstTyping.hwf2 hs) hwfg2ext 
-		  (fun x -> 
-			     TyVar (x+1) hwfg2ext
-		  ) 
-		  (fun x -> KVar x hwfg2ext) in
-    let hs' : subst_typing (sub_elam s) (eextend t1 g1) (eextend (tsubst s t1) g2) =
+    hs_sub_einc (SubstTyping.hwf2 hs) hkt1g2 in
+    let hs' : subst_typing (sub_elam s) g1ext g2ext =
     SubstTyping hwfg1ext hwfg2ext 
       (fun x -> match x with 
 		| 0 -> (*TyVar 0 hwg2ext -> typing g2ext (EVar 0) (tot (tesh (tsubst s t1)))
@@ -1776,13 +1849,16 @@ admit()
 		       (*subst_on_tot -> typing g2ext (eesh s.ex (x-1)) (tot (tesh (tsubst s (g1 (x-1)))))*)
 		       (*elam_shift -> typing g2ext (eesh s.ex (x-1)) (tot (tsubst (sub_elam s) (tesh (g1 (x-1))))) *)
 		       (* =    -> typing g2ext (esub_elam x) (tot (tsubst (sub_elam s) (g1ext x)))*)
-		       let hg2 = SubstTyping.ef hs (x-1) in
-		       let hg2ext = typing_substitution sub_einc hg2 hs'' in
-		       subst_on_tot sub_einc (tsubst s (Some.v (lookup_evar g1 (x-1))));
-		       tsubst_elam_shift s (Some.v (lookup_evar g1 (x-1)));
+		       let eg2 = Sub.es s (x-1) in
+		       let tg1 = Some.v (lookup_evar g1 (x-1)) in
+		       let hg2 : typing g2 eg2 (tot (tsubst s tg1))  = SubstTyping.ef hs (x-1) in
+		       let hg2ext : typing g2ext (eesh eg2) (cesh (tot (tsubst s tg1))) = typing_substitution sub_einc hg2 hs'' in
+		       subst_on_tot sub_einc (tsubst s tg1);
+		       tsubst_elam_shift s tg1;
 		       hg2ext
+		       (*SF : here with timeout of 5, it fails after a relatively long time. With a timeout of 10, it succeeds after a relatively short time*)
 		       )
-      )
+      ) 
       (fun a -> let hkg2 = SubstTyping.tf hs a in
 		(*hkg2    -> kinding g2 (s.tf a) (ksubst s (g1 a)) *)
 		let hkg2ext = kinding_substitution sub_einc hkg2 hs'' in
@@ -1792,16 +1868,17 @@ admit()
 		hkg2ext
       )
     in
-    let hbodyg2ext : typing (eextend (tsubst s t1) g2) (esubst (sub_elam s) ebody) (Cmp m (tsubst (sub_elam s) t2) (tsubst (sub_elam s) wp)) = typing_substitution (sub_elam s) hbody hs' in
+    let hbodyg2ext : typing g2ext (esubst (sub_elam s) ebody) (Cmp m (tsubst (sub_elam s) t2) (tsubst (sub_elam s) wp)) = typing_substitution (sub_elam s) hbody hs' in
     (*hbodyg2ext -> typing (eextend (tsubst s t1) g2) (esubst (sub_elam s) ebody) (Cmp m (tsubst s t2) (tsubst s wp)) *)
-    let habsg2ext = TyAbs m (tsubst (sub_elam s) t2) (tsubst (sub_elam s) wp) hkt1g2 hbodyg2ext in
+    let elam = ELam (tsubst s t1) (esubst (sub_elam s) ebody) in
+    let tarr = TArr t1 (Cmp m t2 wp) in
+    let habsg2ext : typing g2 elam (tot (TArr (tsubst s t1) (Cmp m (tsubst (sub_elam s) t2) (tsubst (sub_elam s) wp)))) = TyAbs m (tsubst (sub_elam s) t2) (tsubst (sub_elam s) wp) hkt1g2 hbodyg2ext in
     (*habsg2ext  -> typing g2 (ELam (tsubst s t1) (esubst (sub_elam s) ebody)) (tot (TArr (tsubst s t1) (Cmp m (tsubst (sub_elam s) t2) (tsubst (sub_elam s) wp))))*)
     subst_on_elam s t1 ebody;
     subst_on_tarrow s t1 m t2 wp;
     subst_on_tot s (TArr t1 (Cmp m t2 wp));
     habsg2ext
-    )
-    *)
+    )*)
 | TyFix #g #tx #t' #d #t'' #wp #ebody hktarr htd htbody -> (
     (*
     let hktlam : kinding g1 tx KType = get_tlam_kinding hktarr in
@@ -1838,96 +1915,6 @@ admit()
 
 
 )
-| TyFixOmega g tx t' wp ebody hkarr htbody ->
-    let hktlam : kinding g1 tx KType = get_tlam_kinding hkarr in
-    let hktarrg2 : kinding g2 (TArr (tsubst s tx) (Cmp EfAll (tsubst (sub_elam s) t') (tsubst (sub_elam s) wp))) KType = subst_on_tarrow s tx EfAll t' wp; kinding_substitution g1 s g2 hkarr hs in
-    let g1' = eextend tx g1 in
-    let g2' = eextend (tsubst s tx) g2 in
-    let s' = sub_elam s in
-    let hwfg1 : ewf g1 = SubstTyping.hwf1 hs in
-    let hwfg1' : ewf g1' = GType hktlam in
-    let hwfg2 : ewf g2 = SubstTyping.hwf2 hs in
-    let hwfg2' : ewf g2' = GType (kinding_substitution g1 s g2 hktlam hs) in
-    let hsg1g1' : subst_typing sub_einc g1 g1' = hs_sub_einc hwfg1 hktlam in
-    let hsg2g2' : subst_typing sub_einc g2 g2' = hs_sub_einc hwfg2 (kinding_substitution g1 s g2 hktlam hs) in
-    let hsg1'g2' : subst_typing s' g1' g2' = hs_sub_elam s hktlam hs in
-    let sdiag = sub_comp sub_einc s in
-    let hsg1g2' : subst_typing sdiag g1 g2' =
-    (* Commenting the code to gain some seconds of compilation … *)
-  (*
-    SubstTyping hwfg1 hwfg2'
-    (fun x -> let tg1 = Some.v (lookup_evar g1 x) in
-              let eg2 = Sub.es s x in
-              let htg2 : typing g2 eg2 (tot (tsubst s tg1)) = SubstTyping.ef hs x in 
-              let htg2' : typing g2' (eesh eg2) (csubst sub_einc (tot (tsubst s tg1))) = typing_substitution sub_einc htg2 hsg2g2' in
-	      let htg2'p : typing g2' (eesh eg2) (tot (tsubst sdiag tg1)) = subst_on_tot sub_einc (tsubst s tg1); tsubst_comp sub_einc s tg1; htg2' in
-	      htg2'p
-     )
-    (fun a -> let kg1 = Some.v (lookup_tvar g1 a) in
-              let tg2 = Sub.ts s a in
-	      let hkg2 : kinding g2 tg2 (ksubst s kg1) = SubstTyping.tf hs a in
-	      let htg2': kinding g2' (tesh tg2) (kesh (ksubst s kg1)) = kinding_substitution g2 sub_einc g2' hkg2 hsg2g2' in
-	      ksubst_comp sub_einc s kg1; htg2'
-    )
-*)   
-  magic()
-    in
-    let tfung1 = TArr tx (Cmp EfAll t' wp) in
-(*OK until this point ^*)
-    let tfung1' = tesh tfung1 in
-    let tfung2' = tsubst sdiag tfung1 in
-    let hkarrg1' : kinding g1' tfung1' KType = kinding_substitution g1 #tfung1 sub_einc g1' hkarr hsg1g1' in
-    let hkarr : kinding g1 tfung1 KType = hkarr in
-    let hkarrg2' : kinding g2' tfung2' KType = kinding_substitution g1 sdiag g2' hkarr (hsg1g2') in
-
-    let g1'' = eextend tfung1' g1' in
-    let g2'' = eextend tfung2' g2' in
-    let hwfg1'' : ewf g1'' = GType hkarrg1' in
-   let hwfg2'' : ewf g2'' = GType hkarrg2' in
-   let hsg2'g2'' : subst_typing sub_einc g2' g2'' = hs_sub_einc hwfg2' hkarrg2' in
-   let s2 = sub_elam (sub_elam s) in
-   let hsg1''g2'' : subst_typing s2 g1'' g2'' =
-    (* Commenting the code to gain some seconds of compilation … *)
-  (*
-     SubstTyping (hwfg1'') (hwfg2'') 
-     (fun x -> match x with
-        | 0 -> (
-		tsubst_elam_shift (sub_elam s) (tesh tfung1);
-		let ht : typing g2'' (EVar 0) (tot (tesh (tsubst sdiag tfung1))) = TyVar 0 hwfg2'' in
-		tsubst_comp sub_einc s tfung1;
-		let ht' : typing g2'' (EVar 0) (tot (tesh (tesh (tsubst s tfung1)))) = ht in
-
-	  	tsubst_elam_shift s tfung1;
-		let ht'' : typing g2'' (EVar 0) (tot (tesh (tsubst (sub_elam s) (tesh tfung1)))) = ht' in
-		tsubst_elam_shift (sub_elam s) (tesh tfung1);
-		let htppp : typing g2'' (EVar 0) (tot (tsubst (sub_elam (sub_elam s)) (tesh (tesh tfung1)))) = ht'' in
-		subst_on_tot (sub_elam (sub_elam s)) (tesh (tesh tfung1));
-		htppp
-		)
-	| n -> (let eg2' = Sub.es (sub_elam s) (x-1) in
-	        let teg1' = Some.v (lookup_evar g1' (x-1))  in
-	        let hg2' : typing g2' eg2' (tot (tsubst (sub_elam s) teg1')) = SubstTyping.ef hsg1'g2' (x-1) in
-	        let hg2'' : typing g2'' (eesh eg2') (csubst sub_einc (tot (tsubst (sub_elam s) teg1'))) = typing_substitution sub_einc hg2' hsg2'g2'' in
-		subst_on_tot sub_einc (tsubst (sub_elam s) teg1');
-		let hg2ppp : typing g2'' (eesh eg2') (tot (tesh (tsubst (sub_elam s) teg1'))) = hg2'' in
-		tsubst_elam_shift (sub_elam s) teg1';
-		hg2ppp
-
-	       )
-	       
-     )
-     (fun a -> let hkg2' = SubstTyping.tf hsg1'g2' a in
-               let hkg2'' = kinding_substitution g2' sub_einc g2'' hkg2' hsg2'g2'' in
-	       ksubst_elam_shift (sub_elam s) (Some.v (lookup_tvar g1' a));
-	       hkg2'' 
-      ) 
-     *) magic()
-     in
-     (*SF : I really do not know what to do to make the next line compile … *)
-  (*
-     let htbodyg2'' : typing g2'' (esubst s2 ebody) (csubst s2 (Cmp EfAll (tesh t') (tesh wp))) = typing_substitution s2 htbody hsg1''g2'' in
-  *)
-    admit()
 | _ -> admit()
 and scmp_substitution g1 c1 c2 phi s g2 h1 hs = admit()
 and styping_substitution g1 t' t phi s g2 h1 hs = admit()
