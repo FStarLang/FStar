@@ -83,6 +83,7 @@ let rec list_subterm_ordering_coercion l bound = match l with
   | hd::tl ->
     hd::list_subterm_ordering_coercion tl bound
 
+(* WARNING: pattern does not contain all quantified variables. *)
 val list_subterm_ordering_lemma: l:list 'a
                         -> bound:'b
                         -> x:'a

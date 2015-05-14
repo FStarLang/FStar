@@ -84,6 +84,9 @@ type deduce : form -> Type =
              deduce FFalse ->
              deduce f
   | DImplIntro :
+      (* Constructor "DImplIntro" fails the strict positivity check;
+         the constructed type occurs "deduce" occurs to the left of a
+         pure function type *)
              f1:form ->
              f2:form ->
              (deduce f1 -> Tot (deduce f2)) -> (* <-- meta level implication *)
@@ -228,7 +231,7 @@ type reval : com -> heap -> heap -> Type =
    (needs to be proved in intrinsic (+ constructive) style(s),
    because eval has side-effects) *)
 
-val eval : c:com -> h0:heap -> Dv (|h1:heap * reval c h0 h1|)
+val eval : c:com -> h0:heap -> Dv (h1:heap & reval c h0 h1)
 let rec eval c h0 =
   match c with
   | Skip ->
@@ -254,7 +257,7 @@ let rec eval c h0 =
      else (|h0, EWhileEnd be cb i|)
 
 (* Without whiles we can prove eval total *)
-val eval_tot : c:com -> h0:heap -> Tot (|h1:heap * reval c h0 h1|)
+val eval_tot : c:com -> h0:heap -> Tot (h1:heap & reval c h0 h1)
 let rec eval_tot c h0 =
   match c with
   | Skip ->
@@ -325,7 +328,7 @@ let hoare_seq p c1 q c2 r hpq hqr =
 
 
 val bpred : bexp -> Tot pred
-let bpred be h = FEq bool (eval_bexp h be) true
+let bpred be h = FEq #bool (eval_bexp h be) true
 
 opaque val hoare_if : p:pred -> q:pred -> be:bexp -> t:com -> e:com ->
                       hoare (pand p (bpred be))  t q ->

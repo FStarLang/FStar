@@ -13,11 +13,10 @@ type steps : exp -> exp -> Type = multi exp step
 
 type halts (e:exp) : Type = cexists (fun e' -> u:(steps e e'){is_value e'})
 
-(* This has a negative occurrence of R that makes Coq succumb,
-   although this definition is just fine (the type decreases);
-   F* should have similar problems as soon as we start checking
-   for negative occurrences. Hopefully by then we will also have
-   a solution for this. *)
+(* This has a negative occurrence of R that makes Coq and F* succumb,
+   although this definition is just fine (the type decreases).  While
+   in Coq we could define this as a fixpoint, we don't currently have
+   type-level fixpoints in F*. *)
 type red : typ -> exp -> Type =
 (*  | R_bool : e:exp -> typing empty e TBool -> halts e -> red TBool e *)
   | R_arrow : t1:typ ->
@@ -46,4 +45,3 @@ val red_typing : t:typ -> e:exp -> red t e -> Tot (typing empty e t)
 let red_typing t e h =
   match h with
   | R_arrow k1 k2 ht k3 k4 -> ht
-

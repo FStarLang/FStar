@@ -5,11 +5,11 @@ all: .all.ver tinyfstar pars stlc_cbv_db_parsubst lo-reduced f-omega tinyfstar-n
 pars:
 	$(FSTAR) ../../lib/ext.fst pars.fst --max_fuel 1 --max_ifuel 1
 
-tinyfstar:
-	$(FSTAR) ../../lib/constr.fst tinyfstar.fst
+tinyfstar: ../../lib/constr.fst tinyfstar.fst
+	$(FSTAR) $^
 
-tinyfstar-new:
-	$(FSTAR) ../../lib/classical.fst ../../lib/ext.fst tinyfstar-new.fst --z3timeout 20 --log_types
+tinyfstar-new: ../../lib/classical.fst ../../lib/ext.fst tinyfstar-new.fst
+	$(FSTAR) --z3timeout 20 $^
 
 lo:
 	$(FSTAR) ../../lib/constr.fst ../../lib/classical.fst ../../lib/ext.fst lambda_omega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1
@@ -34,5 +34,6 @@ norm-take3:
 
 stlc_cbv_db_pntsubst_lists:
 	make stlc_cbv_db_pntsubst_lists.fulllib.ver OTHERFLAGS='--z3timeout 20'
+
 hoare_wp:
 	$(FSTAR) ../../lib/classical.fst hoare_wp.fst --max_fuel 1 --max_ifuel 1
