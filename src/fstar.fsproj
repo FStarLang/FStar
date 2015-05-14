@@ -62,6 +62,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="fstar.fs" />
+    <Compile Include="main.fs" />
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>

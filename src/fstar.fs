@@ -76,8 +76,9 @@ let interactive_mode () =
     let chunk = Util.new_string_builder () in
     let stdin = Util.open_stdin () in
     let rec fill_chunk ()= 
-        if Util.is_end_of_stream stdin then exit 0;
-        let line = Util.read_line stdin in
+        let line = match Util.read_line stdin with 
+            | None -> exit 0
+            | Some l -> l in
 //        Printf.printf "Read line <%s>\n" line;
         let l = Util.trim_string line in 
         if Util.starts_with l "#end"
@@ -91,10 +92,11 @@ let interactive_mode () =
         else if l = "#pop"
         then (Util.clear_string_builder chunk; Pop)
         else if l = "#push"
-        then (Util.clear_string_builder chunk; Pop)
+        then (Util.clear_string_builder chunk; Push)
         else if l = "#finish"
         then exit 0
         else (Util.string_builder_append chunk line;
+              Util.string_builder_append chunk "\n";
               fill_chunk()) in
 
     let rec go dsenv env = 
@@ -158,13 +160,14 @@ let codegen fmods =
                 (Backends.OCaml.ASTTrans.string_of_error error);
             exit 1
         end
-    end;
-    if !Options.codegen = Some "JavaScript" then begin
-        let js = Backends.JS.Translate.js_of_fstars (List.tail fmods) in
-        let doc = Backends.JS.Print.pretty_print js in
-        Util.print_string (FSharp.Format.pretty 120 doc)
     end
-    
+//    ;
+//    if !Options.codegen = Some "JavaScript" then begin
+//        let js = Backends.JS.Translate.js_of_fstars (List.tail fmods) in
+//        let doc = Backends.JS.Print.pretty_print js in
+//        Util.print_string (FSharp.Format.pretty 120 doc)
+//    end
+//    
 (* Main function *)
 let go _ =    
   let (res, filenames) = process_args () in
@@ -177,7 +180,7 @@ let go _ =
         if !Options.interactive 
         then interactive_mode () 
         else let filenames = if !Options.use_build_config  //if the user explicitly requested it
-                             || Sys.argv.Length = 2        //or, if there is only a single file on the command line
+                             //|| Sys.argv.Length = 2        //or, if there is only a single file on the command line
                              then match filenames with 
                                     | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
                                     | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1
@@ -189,7 +192,7 @@ let go _ =
              finished_message fmods
 
 
-let () =
+let main () =
     try 
       go ();
       cleanup ();

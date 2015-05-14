@@ -88,13 +88,13 @@ let parse_file fn =
     | Microsoft_FStar_Parser_Lexhelp.ReservedKeyword(m,s) -> Printf.printf "%s:%s" (Range.string_of_range s) m
     | e -> Printf.printf "There was some warning (TODO)\n");
 
-  let filename,channel = match fn with
+  let filename,lexbuf = match fn with
     | Inl(f) ->
-       (try f,open_in f
+       (try f, Lexing.from_channel (open_in f)
         with _ -> raise (Err(Util.format1 "Unable to open file: %s\n" f)))
-    | Inr(s) -> failwith "not supported" in
+    | Inr(s) ->
+      "<input>", Lexing.from_string s in
 
-  let lexbuf = Lexing.from_channel channel in
   resetLexbufPos filename lexbuf;
   let lexer = Microsoft_FStar_Parser_LexFStar.token in
   try
@@ -114,4 +114,5 @@ let parse_file fn =
       let pos = lexbuf.lex_curr_p in
       let p = Range.mk_pos pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) in
       let r = Range.mk_range filename p p in
-      Inr (Microsoft_FStar_Absyn_Print.format_error r "Syntax error")
+      Inr (Microsoft_FStar_Absyn_Print.format_error r
+        ("Syntax error: " ^ (Printexc.to_string e)))

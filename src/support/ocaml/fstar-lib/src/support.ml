@@ -189,6 +189,23 @@ module Microsoft = struct
 
       let get_file_extension (fn:string) : string = snd (BatString.rsplit fn ".")
 
+      type stream_reader = BatIO.input
+      let open_stdin () = BatIO.stdin
+      let read_line s =
+        try
+          Some (BatIO.read_line s)
+        with
+          _ -> None
+
+      type string_builder = BatBuffer.t
+      let new_string_builder () = BatBuffer.create 256
+      let clear_string_builder b = BatBuffer.clear b
+      let string_of_string_builder b = BatBuffer.contents b
+      let string_builder_append b s = BatBuffer.add_string b s
+
+      let message_of_exn (e:exn) = Printexc.to_string e
+      let trace_of_exn (e:exn) = Printexc.get_backtrace ()
+
       type 'a set = ('a list) * ('a -> 'a -> bool)
 
       let set_is_empty ((s, _):'a set) =

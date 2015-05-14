@@ -139,15 +139,15 @@ $(BIN)/tc.dll: $(TC_DEPS) $(TC_SRC)
 	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(TC_DEPS)) $(TC_SRC)
 
 FSTAR_DEPS=$(addprefix $(BIN)/, $(ALL_DLLS))
-$(BIN)/fstar.exe: $(FSTAR_DEPS) fstar.fs $(BIN)/fstar-mono.sh
+$(BIN)/fstar.exe: $(FSTAR_DEPS) fstar.fs main.fs $(BIN)/fstar-mono.sh
 ifeq ($(OS),Windows_NT)
-	$(FSC)  $(OTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs
+	$(FSC)  $(OTHERFLAGS) -o $@ $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs main.fs
 else
-	$(FSC)  $(OTHERFLAGS) -o $(BIN)/fstar-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs
+	$(FSC)  $(OTHERFLAGS) -o $(BIN)/fstar-mono.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs main.fs
 	cp $(BIN)/fstar-mono.sh $(BIN)/fstar.exe
 endif
 
-fstar-nodeps: fstar.fs
+fstar-nodeps: fstar.fs main.fs
 	$(FSC) $(OTHERFLAGS) -o $(BIN)/fstar.exe $(BASELIBS) $(addprefix -r , $(FSTAR_DEPS)) fstar.fs
 
 

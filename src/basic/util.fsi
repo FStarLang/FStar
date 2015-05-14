@@ -88,8 +88,7 @@ val flush_file: file_handle -> unit
 
 type stream_reader = System.IO.StreamReader (* not relying on representation *)
 val open_stdin : unit -> stream_reader
-val is_end_of_stream: stream_reader -> bool
-val read_line: stream_reader -> string
+val read_line: stream_reader -> option<string>
 
 type string_builder = System.Text.StringBuilder (* not relying on representation *)
 val new_string_builder: unit -> string_builder

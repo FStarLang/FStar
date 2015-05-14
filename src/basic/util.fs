@@ -147,7 +147,10 @@ let get_file_extension (fn: string) :string = Path.GetExtension fn
 type stream_reader = System.IO.StreamReader (* not relying on representation *)
 let open_stdin () = new System.IO.StreamReader(System.Console.OpenStandardInput()) 
 let is_end_of_stream (s: stream_reader) = s.EndOfStream
-let read_line (s:stream_reader) = s.ReadLine()
+let read_line (s:stream_reader) = 
+    if is_end_of_stream s
+    then None
+    else Some <| s.ReadLine()
 
 type string_builder = System.Text.StringBuilder (* not relying on representation *)
 let new_string_builder () = new System.Text.StringBuilder()

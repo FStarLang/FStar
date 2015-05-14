@@ -104,6 +104,19 @@ module Microsoft :
             val run_proc :
               string -> string -> string -> bool * string * string
             val get_file_extension : string -> string
+            type stream_reader
+            val open_stdin : unit -> stream_reader
+            val read_line: stream_reader -> string optoin
+
+            type string_builder
+            val new_string_builder: unit -> string_builder
+            val clear_string_builder: string_builder -> unit
+            val string_of_string_builder: string_builder -> string
+            val string_builder_append: string_builder -> string -> unit
+
+            val message_of_exn: exn -> string
+            val trace_of_exn: exn -> string
+
             type 'a set = 'a list * ('a -> 'a -> bool)
             val set_is_empty : 'a set -> bool
             val new_set : ('a -> 'a -> int) -> ('a -> int) -> 'a set
