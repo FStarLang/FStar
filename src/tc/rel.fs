@@ -2172,7 +2172,8 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
       
 
         begin match maybe_vars1 with 
-            | None -> imitate_or_project_e ()
+            | None 
+            | Some [] -> imitate_or_project_e ()
             | Some xs -> 
                 let fvs1 = freevars_of_binders xs in 
                 let fvs2 = Util.freevars_exp e2 in 
@@ -2182,7 +2183,7 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
                     && occurs_ok
                 then // U1 xs =?= e2
                      // U1 = \xs. e2
-                    let sol = mk_Exp_abs(xs, e2) None e1.pos in
+                    let sol = mk_Exp_abs'(xs, e2) None e1.pos in
                     solve env (solve_prob orig None [UE((u1,t1), sol)] wl)
                 else imitate_or_project_e ()
         end in

@@ -2,7 +2,7 @@ module Bug208
 
 assume type acc (r:(int -> Type)) : Type
 
-assume val acc_inv : r:(int -> Type) -> acc r ->
+assume val acc_inv : #r:(int -> Type) -> acc r ->
               Tot (y:int -> Tot (r y))
 
 assume val axiom1 : #b:Type -> f:(int -> Tot b) -> Lemma True
