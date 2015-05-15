@@ -27,6 +27,8 @@ open Microsoft.FStar.Absyn.Util
 open Microsoft.FStar.Util
 
 val desugar_file: env -> file -> env * list<modul>
+val desugar_decls: env -> list<AST.decl> -> env * sigelts
+val desugar_partial_modul: env -> AST.modul -> env * Syntax.modul
 
 (* private *) val desugar_modul : env -> AST.modul -> env * Syntax.modul
 (* private *) val mk_data_projectors : env -> sigelt -> list<sigelt>

@@ -28,36 +28,38 @@ open Microsoft.FStar.Absyn.Syntax
 let print_error msg r = 
   Util.print_string (Util.format2 "ERROR %s: %s\n" (Range.string_of_range r) msg)
 
-let is_cache_file (fn: either<string, string>) :(bool * string) = match fn with
-  | Inl(s) -> ((Util.get_file_extension s) = ".cache"), s
-  | _ -> false, ""
+let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
 
-let parse env fn =
-  let (b, s) = is_cache_file fn in
-  if b then
-    let full_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ s in
-    let m = SSyntax.deserialize_modul (get_oreader full_name) in
-    Desugar.add_modul_to_env m env, [m]
-  else
-    match ParseIt.parse_file fn with 
-    | Inl ast -> Desugar.desugar_file env ast
+let parse_fragment env frag =
+    match ParseIt.parse (Inr frag) with
+    | Inl (Inl [modul]) -> //interactive mode: module
+      let env, modul = Desugar.desugar_partial_modul env modul in
+      Inl (env, modul)
+  
+    | Inl (Inr decls) -> //interactive mode: more decls
+      Inr <| Desugar.desugar_decls env decls
+  
+    | Inl (Inl _) -> 
+      Util.print_string "Refusing to check more than one module at a time incrementally";
+      exit 1
+
     | Inr msg -> 
       Util.print_string msg;
       exit 1
 
-let parse_files files = 
-  let _, mods = List.fold_left (fun (env,mods) fn -> 
-    let env, m = parse env (Inl fn) in
-    let _ = Options.reset_options() in
-    let _ = match !Options.dump_module with 
-      | Some n -> 
-        m |> List.iter (fun (m:Absyn.Syntax.modul) -> if n=m.name.str then Util.fprint1 "%s\n" (Absyn.Print.modul_to_string m))
-      | _ -> () in
-    (env, m::mods)) (DesugarEnv.empty_env(), []) files in 
-  List.rev mods |> List.flatten
+let parse_file env fn =
+  if is_cache_file fn then
+    let full_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ fn in
+    let m = SSyntax.deserialize_modul (get_oreader full_name) in
+    Desugar.add_modul_to_env m env, [m]
+  else
+    match ParseIt.parse (Inl fn) with
+    | Inl (Inl ast) ->
+      Desugar.desugar_file env ast
+  
+    | Inr msg -> 
+      Util.print_string msg;
+      exit 1
 
 let read_build_config file = ParseIt.read_build_config file
-(* ;;  *)
-
-(* parse_files ["prims.fst"] *)
   

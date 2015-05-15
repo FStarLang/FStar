@@ -83,7 +83,7 @@ let read_build_config (filename:string) =
     then fail ""
     else [filename]
 
-let parse_file fn =
+let parse fn =
   Parser.Util.warningHandler := (function
     | Microsoft_FStar_Parser_Lexhelp.ReservedKeyword(m,s) -> Printf.printf "%s:%s" (Range.string_of_range s) m
     | e -> Printf.printf "There was some warning (TODO)\n");
@@ -98,14 +98,17 @@ let parse_file fn =
   resetLexbufPos filename lexbuf;
   let lexer = Microsoft_FStar_Parser_LexFStar.token in
   try
-    let file = Microsoft_FStar_Parser_Parse.file lexer lexbuf in
-    let mods = if Util.ends_with filename ".fsi"
-               then file |> List.map (function
-                | Microsoft_FStar_Parser_AST.Module(l,d) ->
-                  Microsoft_FStar_Parser_AST.Interface(l,d,Util.for_some (fun m -> m=l.str) (!Microsoft_FStar_Options.admit_fsi))
-                | _ -> failwith "Impossible")
-               else file in
-     Inl mods
+      let fileOrFragment = Microsoft_FStar_Parser_Parse.inputFragment lexer lexbuf in
+      let frags = match fileOrFragment with
+          | Inl mods ->
+             if Util.ends_with filename ".fsi" || Util.ends_with filename ".fsti"
+             then Inl (mods |> List.map (function
+                  | Microsoft_FStar_Parser_AST.Module(l,d) ->
+                    Microsoft_FStar_Parser_AST.Interface(l, d, Util.for_some (fun m -> m=l.str) !Microsoft_FStar_Options.admit_fsi)
+                  | _ -> failwith "Impossible"))
+             else Inl mods
+          | _ -> fileOrFragment in
+      Inl frags
   with
     | Microsoft_FStar_Absyn_Syntax.Error(msg, r) ->
       Inr (Microsoft_FStar_Absyn_Print.format_error r msg)

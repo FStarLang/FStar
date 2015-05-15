@@ -95,7 +95,7 @@ let read_build_config (filename:string) =
     then fail ""
     else [filename]
 
-let parse_file fn =
+let parse fn =
   Parser.Util.warningHandler := (function
     | Lexhelp.ReservedKeyword(m,s) -> Printf.printf "%s:%s" (Range.string_of_range s) m
     | e -> Printf.printf "Warning: %A\n" e);
@@ -107,21 +107,24 @@ let parse_file fn =
         let contents = fs.ReadToEnd() in
         filename, new System.IO.StringReader(contents) :> System.IO.TextReader, contents
        with e -> raise (Absyn.Syntax.Err (Util.format1 "Unable to open file: %s\n" filename)))
-    | Inr (s:string) -> "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s in
+    | Inr (s:string) -> "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s  in
 
   let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromTextReader(sr) in
   resetLexbufPos filename lexbuf;
   let lexargs = Lexhelp.mkLexargs ((fun () -> "."), filename,fs) in
   let lexer = LexFStar.token lexargs in
   try
-    let file = Parse.file lexer lexbuf in
-    let mods = if Util.ends_with filename ".fsi" || Util.ends_with filename ".fsti"
-               then file |> List.map (function
+    let fileOrFragment = Parse.inputFragment lexer lexbuf in
+    let frags = match fileOrFragment with 
+        | Inl mods -> 
+           if Util.ends_with filename ".fsi" || Util.ends_with filename ".fsti"
+           then Inl (mods |> List.map (function
                 | AST.Module(l,d) ->
                   AST.Interface(l, d, Util.for_some (fun m -> m=l.str) !Options.admit_fsi)
-                | _ -> failwith "Impossible")
-               else file in
-     Inl mods
+                | _ -> failwith "Impossible"))
+           else Inl mods
+        | _ -> fileOrFragment in
+    Inl frags
   with
     | Absyn.Syntax.Error(msg, r) ->
       Inr (Absyn.Print.format_error r msg)

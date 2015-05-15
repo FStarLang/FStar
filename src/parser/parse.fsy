@@ -96,13 +96,20 @@ open Microsoft.FStar.Parser.Util
 %nonassoc THEN
 %nonassoc ELSE
 
-%start file
-%type <file> file
+%start inputFragment
+%type <inputFragment> inputFragment
 
 %%
+inputFragment:
+  | file
+	  { Inl $1 }
+  | decls
+	  { Inr $1 }
+
 file: 
   | maybe_pragma_light moduleList
       { $2 }
+
 
 moduleList:
   | modul moduleList

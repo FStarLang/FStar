@@ -125,6 +125,7 @@ type modul =
   | Module of LongIdent * list<decl>
   | Interface of LongIdent * list<decl> * bool (* flag to mark admitted interfaces *)
 type file = list<modul>
+type inputFragment = either<file,list<decl>>
 
 (********************************************************************************)
 let mk_decl d r = {d=d; drange=r}

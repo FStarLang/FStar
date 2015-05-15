@@ -1522,11 +1522,15 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
     let se = Sig_sub_effect({source=src; target=dst; lift=lift}, d.drange) in
     env, [se]
 
-        
+ let desugar_decls env decls = 
+    List.fold_left (fun (env, sigelts) d ->
+        let env, se = desugar_decl env d in
+        env, sigelts@se) (env, []) decls 
+     
 (* Most important function: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)
-let desugar_modul env (m:AST.modul) : env_t * Syntax.modul = 
+let desugar_partial_modul env (m:AST.modul) : env_t * Syntax.modul = 
   let open_ns (mname:lident) d = 
     if List.length mname.ns <> 0 
     then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname))  :: d
@@ -1535,9 +1539,7 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
     | Interface(mname, decls, admitted) ->
       DesugarEnv.prepare_module_or_interface true admitted env mname, mname, open_ns mname decls, true
     | Module(mname, decls) -> DesugarEnv.prepare_module_or_interface false false env mname, mname, open_ns mname decls, false in
-  let env, sigelts = List.fold_left (fun (env, sigelts) d ->
-    let env, se = desugar_decl env d in
-    env, sigelts@se) (env, []) decls in
+  let env, sigelts = desugar_decls env decls in
   let modul = {
     name = mname;
     declarations = sigelts;
@@ -1545,9 +1547,13 @@ let desugar_modul env (m:AST.modul) : env_t * Syntax.modul =
     is_interface=intf;
     is_deserialized=false
   } in
+  env, modul
+
+let desugar_modul env (m:AST.modul) : env_t * Syntax.modul = 
+  let env, modul = desugar_partial_modul env m in 
   let env = DesugarEnv.finish_module_or_interface env modul in
   env, modul
-  
+
 let desugar_file env (f:file) =
   let env, mods = List.fold_left (fun (env, mods) m ->
     let env, m = desugar_modul env m in

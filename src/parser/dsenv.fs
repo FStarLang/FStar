@@ -467,20 +467,16 @@ let finish env modul =
 
 let push env = 
     {env with 
-        curmodule=None;
-        sigmap=Util.smap_copy (sigmap env)::env.sigmap; 
-        open_namespaces=[]}
+        sigmap=Util.smap_copy (sigmap env)::env.sigmap;}
 
 let mark env = push env
 let reset_mark env = {env with sigmap=List.tl env.sigmap}
 let commit_mark env = match env.sigmap with 
     | hd::_::tl -> {env with sigmap=hd::tl}
     | _ -> failwith "Impossible"
-let pop env = match env.modules, env.sigmap with 
-    | _::mods, _::maps -> 
+let pop env = match env.sigmap with 
+    | _::maps -> 
         {env with 
-            curmodule=None;
-            modules=mods;
             sigmap=maps}
     | _ -> failwith "No more modules to pop"
 
