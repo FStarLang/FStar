@@ -133,12 +133,12 @@ let interactive_mode dsenv env =
     let rec go stack curmod dsenv env = 
         begin match fill_chunk () with 
             | Pop -> 
-              let (curmod, dsenv, env), stack = match stack with 
-                | [] -> failwith "Too many pops"
-                | hd::tl -> hd, tl in
               Tc.Env.pop env |> ignore;
               env.solver.refresh();
               Options.reset_options() |> ignore;
+              let (curmod, dsenv, env), stack = match stack with 
+                | [] -> failwith "Too many pops"
+                | hd::tl -> hd, tl in
               go stack curmod dsenv env
 
             | Push -> 
