@@ -1762,13 +1762,37 @@ let get_exports env modul non_private_decls =
             | None -> non_private_decls 
             | Some e -> e
 
-let tc_modul env modul = 
+let tc_partial_modul env modul = 
+  let name = Util.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
+  let msg = "Internals for " ^name in
+  if not (lid_equals modul.name Const.prims_lid) then env.solver.push msg;        
   let env = Tc.Env.set_current_module env modul.name in 
-  let ses, non_private_decls, env = tc_decls true env modul.declarations modul.is_deserialized in 
-  let exports = get_exports env modul non_private_decls in
-  let modul = {name=modul.name; declarations=ses; exports=exports; is_interface=modul.is_interface; is_deserialized=modul.is_deserialized} in 
+  let ses, non_private_decls, env = tc_decls true env modul.declarations modul.is_deserialized in
+  {modul with declarations=ses}, non_private_decls, env
+
+let tc_more_partial_modul env modul decls = 
+  let ses, non_private_decls, env = tc_decls true env decls false in 
+  let modul = {modul with declarations=modul.declarations@ses} in
+  modul, non_private_decls, env
+
+let finish_partial_modul env modul npds = 
+  let exports = get_exports env modul npds in
+  let modul = {modul with exports=exports; is_interface=modul.is_interface; is_deserialized=modul.is_deserialized} in 
   let env = Tc.Env.finish_module env modul in
+  if not (lid_equals modul.name Const.prims_lid) 
+  then begin
+    env.solver.pop ("Ending modul " ^ modul.name.str);
+    if  not modul.is_interface
+    ||  List.contains modul.name.str !Options.admit_fsi
+    then env.solver.encode_modul env modul;
+    env.solver.refresh();
+    Options.reset_options() |> ignore
+  end;
   modul, env
+
+let tc_modul env modul = 
+  let modul, non_private_decls, env = tc_partial_modul env modul in 
+  finish_partial_modul env modul non_private_decls
 
 let add_modul_to_tcenv (en: env) (m: modul) :env =
   let do_sigelt (en: env) (elt: sigelt) :env =
@@ -1790,27 +1814,12 @@ let check_module env m =
           let env' = add_modul_to_tcenv env m in
           m, env'
         else begin
-           let name = Util.format2 "%s %s"  (if m.is_interface then "interface" else "module") m.name.str in
-           let msg = "Internals for " ^name in
-           if not (lid_equals m.name Const.prims_lid) then env.solver.push msg;
            let m, env = tc_modul env m in
            if !Options.serialize_mods 
            then begin 
                 let c_file_name = Options.get_fstar_home () ^ "/" ^ Options.cache_dir ^ "/" ^ (text_of_lid m.name) ^ ".cache" in
                 print_string ("Serializing module " ^ (text_of_lid m.name) ^ "\n");
                 SSyntax.serialize_modul (get_owriter c_file_name) m
-           end;
-           if not (lid_equals m.name Const.prims_lid) 
-           then begin
-                env.solver.pop msg;
-                if  not m.is_interface
-                ||  List.contains m.name.str !Options.admit_fsi
-                then env.solver.encode_modul env m;
-                if not !Options.interactive
-                then begin
-                    env.solver.refresh();
-                    Options.reset_options() |> ignore
-                end
            end;
            m, env
       end
@@ -1820,11 +1829,3 @@ let check_module env m =
     then [], env
     else [m], env
 
-
-let check_modules (s:solver_t) mods = 
-   let env = Tc.Env.initial_env s Const.prims_lid in
-   env.solver.init env; 
-   let fmods, _ = mods |> List.fold_left (fun (mods, env) m -> 
-    let ms, env = check_module env m in
-    ms@mods, env) ([], env) in
-   List.rev fmods

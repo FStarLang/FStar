@@ -164,7 +164,10 @@ let pop () = match !all_terms_l with
     | []
     | [_] -> failwith "too many pops"
     | _::tl -> all_terms_l := tl
-    
+let commit_mark () = match !all_terms_l with 
+    | hd::_::tl -> all_terms_l := hd::tl
+    | _ -> failwith "Impossible"    
+
 let mk t = 
     let key = hash_of_term' t in
     match Util.smap_try_find (all_terms()) key with 

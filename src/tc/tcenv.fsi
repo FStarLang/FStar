@@ -70,6 +70,9 @@ and solver_t = {
     init: env -> unit;
     push: string -> unit;
     pop: string -> unit;
+    mark: string -> unit;
+    reset_mark: string -> unit;
+    commit_mark: string -> unit;
     encode_modul:env -> modul -> unit;
     encode_sig:env -> sigelt -> unit;
     solve:env -> typ -> unit;// (bool * list<string>);
@@ -79,6 +82,9 @@ and solver_t = {
 }
 val push: env -> env
 val pop: env -> env
+val mark: env -> env
+val reset_mark: env -> env
+val commit_mark: env -> env
 val bound_vars: env -> list<Util.either<btvar, bvvar>>
 val debug: env -> Options.debug_level_t -> bool
 val show: env -> bool

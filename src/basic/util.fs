@@ -51,6 +51,7 @@ let atomically (f:unit -> 'a) =
     System.Threading.Monitor.Exit(global_lock);
     result
 let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
+let ctr = ref 0
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc = 
     let signal = new Object() in
     let with_sig f = 
@@ -91,12 +92,14 @@ let start_process (id:string) (prog:string) (args:string) (cond:string -> string
         proc.StartInfo <- startInfo;
         proc.Start() |> ignore;
         proc.BeginOutputReadLine();
+        incr ctr;
         let proc = {m=signal;
                     outbuf=driverOutput;
                     proc=proc;
                     killed=killed;
-                    id=prog ^ ":" ^id} in
+                    id=prog ^ ":" ^id^ "-" ^ (string_of_int !ctr)} in
         all_procs := proc::!all_procs;
+//        Printf.printf "Started process %s\n" (proc.id);
         proc
 let tid () = System.Threading.Thread.CurrentThread.ManagedThreadId |> string_of_int   
 
@@ -120,6 +123,7 @@ let ask_process (p:proc) (input:string) : string =
     x
 
 let kill_process (p:proc) = 
+//    Printf.printf "Killing process %s\n" (p.id);
     p.killed := true;
     System.Threading.Monitor.Enter(p.m);
     p.proc.StandardInput.Close();

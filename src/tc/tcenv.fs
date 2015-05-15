@@ -88,6 +88,9 @@ and solver_t = {
     init: env -> unit;
     push: string -> unit;
     pop:  string -> unit;
+    mark: string -> unit;
+    reset_mark: string -> unit;
+    commit_mark: string -> unit;
     encode_modul:env -> modul -> unit;
     encode_sig:env -> sigelt -> unit;
     solve:env -> typ -> unit;//(bool * list<string>);
@@ -116,6 +119,18 @@ let sigtab env = List.hd env.sigtab
 let push env = 
     env.solver.push "USER PUSH";
     {env with sigtab=Util.smap_copy (sigtab env)::env.sigtab}
+let mark env = 
+    env.solver.mark "USER MARK";
+    {env with sigtab=Util.smap_copy (sigtab env)::env.sigtab}
+let commit_mark env = 
+    env.solver.commit_mark "USER MARK";
+    let sigtab = match env.sigtab with 
+        | hd::_::tl -> hd::tl
+        | _ -> failwith "Impossible" in
+    {env with sigtab=sigtab}
+let reset_mark env = 
+    env.solver.reset_mark "USER MARK";
+    {env with sigtab=List.tl env.sigtab}
 let pop env = match env.sigtab with 
     | []
     | [_] -> failwith "Too many pops"

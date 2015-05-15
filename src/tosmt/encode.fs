@@ -68,6 +68,9 @@ let mk_data_tester env l x = Term.mk_tester l.str x
 type varops_t = {
     push: unit -> unit;
     pop: unit -> unit;
+    mark: unit -> unit;
+    reset_mark: unit -> unit;
+    commit_mark: unit -> unit;
     new_var:ident -> ident -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
     fresh:string -> string;
@@ -100,8 +103,19 @@ let varops =
             f in
     let push () = scopes := new_scope()::!scopes in
     let pop () = scopes := List.tl !scopes in
+    let mark () = push () in
+    let reset_mark () = pop () in
+    let commit_mark () = match !scopes with 
+        | (hd1, hd2)::(next1, next2)::tl -> 
+          Util.smap_fold hd1 (fun key value v  -> Util.smap_add next1 key value) ();
+          Util.smap_fold hd2 (fun key value v  -> Util.smap_add next2 key value) ();
+          scopes := (next1, next2)::tl
+        | _ -> failwith "Impossible" in
     {push=push;
      pop=pop;
+     mark=mark;
+     reset_mark=reset_mark;
+     commit_mark=commit_mark;
      new_var=new_var;
      new_fvar=new_fvar;
      fresh=fresh;
@@ -1712,7 +1726,6 @@ let get_env tcenv = match !last_env with
 let set_env env = match !last_env with 
     | [] -> failwith "Empty env stack"
     | _::tl -> last_env := env::tl
-
 let push_env () = match !last_env with 
     | [] -> failwith "Empty env stack"
     | hd::tl -> 
@@ -1720,11 +1733,16 @@ let push_env () = match !last_env with
       let refs = Util.smap_copy hd.cache  in
       let top = {hd with cache=refs} in
       last_env := top::hd::tl 
-
 let pop_env () = match !last_env with 
     | [] -> failwith "Popping an empty stack"
     | _::tl -> Term.pop(); last_env := tl
-
+let mark_env () = push_env()
+let reset_mark_env () = pop_env()
+let commit_mark_env () = 
+    Term.commit_mark();
+    match !last_env with 
+        | hd::_::tl -> last_env := hd::tl
+        | _ -> failwith "Impossible"
 (* TOP-LEVEL API *)
 
 let init tcenv =
@@ -1739,6 +1757,18 @@ let pop msg   =
     ignore <| pop_env(); 
     varops.pop();
     Z3.pop msg
+let mark msg = 
+    mark_env();
+    varops.mark();
+    Z3.mark msg
+let reset_mark msg = 
+    reset_mark_env();
+    varops.reset_mark();
+    Z3.reset_mark msg
+let commit_mark msg = 
+    commit_mark_env();
+    varops.commit_mark();
+    Z3.commit_mark msg
 let encode_sig tcenv se =
    let caption decls = 
     if !Options.logQueries
@@ -1843,6 +1873,9 @@ let solver = {
     init=init;
     push=push;
     pop=pop;
+    mark=mark;
+    reset_mark=reset_mark;
+    commit_mark=commit_mark;
     encode_sig=encode_sig;
     encode_modul=encode_modul;
     solve=solve;
@@ -1854,6 +1887,9 @@ let dummy = {
     init=(fun _ -> ());
     push=(fun _ -> ());
     pop=(fun _ -> ());
+    mark=(fun _ -> ());
+    reset_mark=(fun _ -> ());
+    commit_mark=(fun _ -> ());
     encode_sig=(fun _ _ -> ());
     encode_modul=(fun _ _ -> ());
     solve=(fun _ _ -> ());

@@ -103,6 +103,9 @@ val lookup_letbinding_quals: env -> lident -> list<qualifier>
 
 val pop: env -> env
 val push: env -> env
+val mark: env -> env
+val reset_mark: env -> env
+val commit_mark: env -> env
 val finish_module_or_interface: env -> modul -> env
 val prepare_module_or_interface: bool -> bool -> env -> lident -> env
 val enter_monad_scope: env -> ident -> env

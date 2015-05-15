@@ -297,6 +297,16 @@ let refresh () =
     bg_z3_proc.refresh();
     let theory = bgtheory true in
     bg_scope := List.rev theory
+let mark msg = 
+    push msg
+let reset_mark msg = 
+    pop msg;
+    refresh ()
+let commit_mark msg = 
+    begin match !fresh_scope with 
+        | hd::s::tl -> fresh_scope := (hd@s)::tl
+        | _ -> failwith "Impossible"
+    end
 let ask fresh label_messages qry cb =
   let fresh = fresh && !Options.n_cores > 1 in 
   let theory = bgtheory fresh in

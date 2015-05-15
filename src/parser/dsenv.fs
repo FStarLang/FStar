@@ -471,6 +471,11 @@ let push env =
         sigmap=Util.smap_copy (sigmap env)::env.sigmap; 
         open_namespaces=[]}
 
+let mark env = push env
+let reset_mark env = {env with sigmap=List.tl env.sigmap}
+let commit_mark env = match env.sigmap with 
+    | hd::_::tl -> {env with sigmap=hd::tl}
+    | _ -> failwith "Impossible"
 let pop env = match env.modules, env.sigmap with 
     | _::mods, _::maps -> 
         {env with 
