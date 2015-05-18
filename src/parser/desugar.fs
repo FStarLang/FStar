@@ -1530,11 +1530,14 @@ let rec desugar_decl env (d:decl) : (env_t * sigelts) = match d.d with
 (* Most important function: from AST to a module
    Keeps track of the name of variables and so on (in the context)
  *)
-let desugar_partial_modul env (m:AST.modul) : env_t * Syntax.modul = 
+let desugar_partial_modul curmod env (m:AST.modul) : env_t * Syntax.modul = 
   let open_ns (mname:lident) d = 
     if List.length mname.ns <> 0 
     then (AST.mk_decl (AST.Open (Syntax.lid_of_ids mname.ns)) (Syntax.range_of_lid mname))  :: d
     else d in
+  let env = match curmod with 
+    | None -> env
+    | Some(prev_mod, _) ->  DesugarEnv.finish_module_or_interface env prev_mod in
   let env, mname, decls, intf = match m with
     | Interface(mname, decls, admitted) ->
       DesugarEnv.prepare_module_or_interface true admitted env mname, mname, open_ns mname decls, true
@@ -1550,7 +1553,7 @@ let desugar_partial_modul env (m:AST.modul) : env_t * Syntax.modul =
   env, modul
 
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul = 
-  let env, modul = desugar_partial_modul env m in 
+  let env, modul = desugar_partial_modul None env m in 
   let env = DesugarEnv.finish_module_or_interface env modul in
   env, modul
 

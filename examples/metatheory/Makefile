@@ -8,8 +8,8 @@ pars:
 tinyfstar: ../../lib/constr.fst tinyfstar.fst
 	$(FSTAR) $^
 
-tinyfstar-new: ../../lib/classical.fst ../../lib/ext.fst tinyfstar-new.fst
-	$(FSTAR) --z3timeout 20 $^
+tinyfstar-new: tinyfstar-new.fst
+	$(FSTAR) --use_build_config $^
 
 lo:
 	$(FSTAR) ../../lib/constr.fst ../../lib/classical.fst ../../lib/ext.fst lambda_omega.fst --max_fuel 1 --max_ifuel 1 --initial_fuel 1

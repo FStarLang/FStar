@@ -30,18 +30,17 @@ let print_error msg r =
 
 let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
 
-let parse_fragment env frag =
+let parse_fragment curmod env frag =
     match ParseIt.parse (Inr frag) with
     | Inl (Inl [modul]) -> //interactive mode: module
-      let env, modul = Desugar.desugar_partial_modul env modul in
+      let env, modul = Desugar.desugar_partial_modul curmod env modul in
       Inl (env, modul)
   
     | Inl (Inr decls) -> //interactive mode: more decls
       Inr <| Desugar.desugar_decls env decls
   
     | Inl (Inl _) -> 
-      Util.print_string "Refusing to check more than one module at a time incrementally";
-      exit 1
+      raise (Absyn.Syntax.Err("Refusing to check more than one module at a time incrementally"))
 
     | Inr msg -> 
       Util.print_string msg;

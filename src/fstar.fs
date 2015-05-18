@@ -64,13 +64,11 @@ let tc_one_file dsenv env fn =
 
 let tc_one_fragment curmod dsenv env frag = 
     try
-        match Parser.Driver.parse_fragment dsenv frag with 
+        match Parser.Driver.parse_fragment curmod dsenv frag with 
             | Inl (dsenv, modul) -> 
-              let dsenv, env = match curmod with
-                        | None -> dsenv, env 
-                        | Some (modul,npds) -> 
-                        let dsenv = Parser.DesugarEnv.finish_module_or_interface dsenv modul in
-                        dsenv, Tc.Tc.finish_partial_modul env modul npds |> snd in
+              let env = match curmod with
+                | None -> env 
+                | Some (modul,npds) -> Tc.Tc.finish_partial_modul env modul npds |> snd in
               let modul, npds, env = Tc.Tc.tc_partial_modul env modul in
               Some (Some (modul, npds), dsenv, env)
 

@@ -159,14 +159,9 @@ let rec hash_of_term' t = match t with
 
 let all_terms_l = ref [Util.smap_create<term> 10000]
 let all_terms () = List.hd !all_terms_l
-let push () = all_terms_l := Util.smap_copy (all_terms ())::!all_terms_l
-let pop () = match !all_terms_l with 
-    | []
-    | [_] -> failwith "too many pops"
-    | _::tl -> all_terms_l := tl
-let commit_mark () = match !all_terms_l with 
-    | hd::_::tl -> all_terms_l := hd::tl
-    | _ -> failwith "Impossible"    
+let push () = ()
+let pop () = ()
+let commit_mark () = ()
 
 let mk t = 
     let key = hash_of_term' t in
