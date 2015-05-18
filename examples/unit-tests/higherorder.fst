@@ -20,8 +20,8 @@ module HO
 val f1 : ('a -> 'b) -> ('a -> 'c) -> 'a -> 'b * 'c
 let f1 g h x = (g x, h x)
 
-(* val f2 : g:('a -> Tot 'b) -> h:('a -> Tot 'b){forall (a:'a). g a == h a} -> 'a -> r:('b * 'b){fst r == snd r} *)
+(* val f2 : g:('a -> Tot 'b) -> h:('a -> Tot 'b){forall (a:'a). g a = h a} -> 'a -> r:('b * 'b){fst r = snd r} *)
 (* let f2 g h x = (g x, h x) *)
 
-val f3 : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b == g a})) -> 'a -> r:('b * 'b){fst r == snd r}
+val f3 : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b = g a})) -> 'a -> r:('b * 'b){fst r = snd r}
 let f3 g h x = (g x, h x)

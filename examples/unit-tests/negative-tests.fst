@@ -5,15 +5,13 @@ module Neg
 assume val g : 'a -> Tot 'b
 assume val h : a:Type -> b:Type -> a:'a -> Tot (b:'b{b == g a})
 assume val length: list 'a -> Tot int
-assume val length_nil : unit -> Lemma
-      (ensures (length #int [] == 0))
 
 opaque val x:nat
 let x = -1 //should fail reporting 1 error
 opaque val y:nat
 let y = -1 //should also fail reporting only 1 error
 
-let assert_0_eq_1 () = assert (0==1) //should fail
+let assert_0_eq_1 () = assert (0=1) //should fail
 
 let hd_int_inexhaustive l = match l with
   | hd::_ -> hd //should fail
@@ -31,7 +29,7 @@ val bad_projector: option 'a -> 'a
 let bad_projector x = Some.v x (* should fail *)
 
 assume type T : (result int -> Type) -> Type
-assume TEST: T (fun ri -> V.v ri == 0)//should fail: not (is_V ri)
+assume TEST: T (fun ri -> b2t (V.v ri = 0))//should fail: not (is_V ri)
 
 assume val f1: (x:int -> Tot unit) -> Tot unit
 assume val g1: nat -> Tot unit
@@ -70,8 +68,8 @@ assume DistinctXY: x <> y
 
 let test2 _ = assert (sel (upd (upd h x 0) y 1) y = 0) //should fail
 let test10 (x:ref int) (y:ref int) (h0:heap) (h1:heap) (h2:heap) =
-  admitP (h1 == concat h1 (restrict h0 (complement empty)));
-  admitP (h1 == upd h0 x 0);
+  admitP (b2t (h1 = concat h1 (restrict h0 (complement empty))));
+  admitP (b2t (h1 = upd h0 x 0));
   admitP (~ (contains h1 y));
   assert false //should fail
 

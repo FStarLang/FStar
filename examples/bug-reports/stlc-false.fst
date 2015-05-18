@@ -16,6 +16,6 @@ let rec typing e =
   | _ -> None
 
 val inconsistent : e:exp -> t:ty -> Pure unit
-      (requires (typing e == Some t))
-      (ensures \r => False)
+      (requires (typing e = Some t))
+      (ensures (fun r -> False))
 let inconsistent e t = ()

@@ -21,7 +21,7 @@ let rec length l =
   | hd::tl -> 1 + length tl
 
 val length_nil : unit -> Lemma
-      (ensures (length [] == 0))
+      (ensures (length [] = 0))
 let length_nil () = ()
 
 assume val impossible : u : unit { False } -> Tot 'a

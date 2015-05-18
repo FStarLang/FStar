@@ -24,7 +24,7 @@ open Array
 type bytes = seq byte (* concrete byte arrays *) 
 type text  = bytes    (* a type abbreviation, for clarity *)
 
-type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
+type nbytes (n:nat) = b:bytes{length b = n} (* fixed-length bytes *)
 
 let keysize = 16 (* these are the sizes for SHA1 *) 
 let macsize = 20  

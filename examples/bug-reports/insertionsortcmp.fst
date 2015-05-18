@@ -8,11 +8,11 @@ let rec sorted f l = match l with
     | x::y::xs -> f x y && sorted f (y::xs)
 
 opaque type permutation (a:Type) (l1:list a) (l2:list a) =
-    length l1 = length l2 /\ (forall n. mem n l1 == mem n l2)
+    length l1 = length l2 /\ (forall n. mem n l1 = mem n l2)
 
 type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     (forall a. f a a)                                           (* reflexivity   *)
-    /\ (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 == a2)       (* anti-symmetry *)
+    /\ (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2)       (* anti-symmetry *)
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
     /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                       (* totality      *)
 

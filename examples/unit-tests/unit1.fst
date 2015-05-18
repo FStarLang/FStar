@@ -21,16 +21,16 @@ let partial_app f x y =
 let unit_id x = ()
 let unit_pattern () = ()
 
-let assert_0_eq_0 x = assert (0==0)
+let assert_0_eq_0 x = assert (0=0)
 
-type zero = x:int{x==0}
+type zero = x:int{x=0}
 val z: unit -> Tot zero
 let z x = 0
 
 val list_zero_to_int_assert : list zero -> Tot int
 let list_zero_to_int_assert l = match l with
   | [] -> 0
-  | hd::tl -> assert (hd==0); hd
+  | hd::tl -> assert (hd=0); hd
 
 val list_zero_to_zero : list zero -> Tot zero
 let list_zero_to_zero l = match l with
@@ -75,15 +75,15 @@ let pure_id_annot x = x
 val ml_id_annot : 'a -> 'a
 let ml_id_annot x = x
 
-val tabs_id_pure_annot_eq : a:Type -> x:a -> Pure a True (fun y -> y==x)
+val tabs_id_pure_annot_eq : a:Type -> x:a -> Pure a True (fun y -> b2t (y=x))
 let tabs_id_pure_annot_eq (a:Type) x = x
 
 let tabs_id (a:Type) (x:'a) = x
 
-val id_pure_annot_eq : x:'a -> Pure 'a True (fun y -> y==x)
+val id_pure_annot_eq : x:'a -> Pure 'a True (fun y -> b2t (y=x))
 let id_pure_annot_eq x = x
 
-val id_all_annot_eq: x:'a -> All 'a (fun h -> True) (fun h0 y h1 -> is_V y /\ h0==h1 /\ x==(V.v y))
+val id_all_annot_eq: x:'a -> All 'a (fun h -> True) (fun h0 y h1 -> is_V y /\ h0=h1 /\ x=(V.v y))
 let id_all_annot_eq x = x
 
 val hd: list 'a -> 'a
@@ -102,16 +102,17 @@ let hd_pure_alt = function
 val dup_pure: x:'a -> Tot ('a * 'a)
 let dup_pure x = (x,x)
 
-val dup_pure_eq: x:'a -> Pure ('a * 'a) True (fun y -> MkTuple2._1 y==MkTuple2._2 y)
+val dup_pure_eq: x:'a -> Pure ('a * 'a) True
+                              (fun y -> b2t (MkTuple2._1 y=MkTuple2._2 y))
 let dup_pure_eq x = (x,x)
 
 (* the programs below are equivalent---see the refinement of the result in tc.fs/Exp_app case. *)
-assume val get_0: unit -> ST int (fun _h -> True) (fun _h i _h' -> i==0)
-assume val get_1: unit -> ST int (fun _h -> True) (fun _h i _h' -> i==1)
-val get_false: unit -> ST bool (fun _h -> True) (fun _h b _h' -> b==false)
+assume val get_0: unit -> ST int (fun _h -> True) (fun _h i _h' -> b2t (i=0))
+assume val get_1: unit -> ST int (fun _h -> True) (fun _h i _h' -> b2t (i=1))
+val get_false: unit -> ST bool (fun _h -> True) (fun _h b _h' -> b2t (b=false))
 let get_false u = get_0 () > get_1 ()
 
-val get_false_ANF: unit -> ST bool (fun _h -> True) (fun _h b _h' -> b==false)
+val get_false_ANF: unit -> ST bool (fun _h -> True) (fun _h b _h' -> b2t (b=false))
 let get_false_ANF u =
   let x = get_0 () in
   let y = get_1 () in
@@ -159,11 +160,11 @@ type message = seq char
 let slength s = Seq.end_i s - Seq.start_i s
 assume val impure: m:message -> ST message
                                  (requires (fun h -> True))
-                                 (ensures (fun h0 n h1 -> slength n == slength m))
-assume val lm_corr: l:nat -> m:message{slength m==l} -> int
+                                 (ensures (fun h0 n h1 -> slength n = slength m))
+assume val lm_corr: l:nat -> m:message{slength m=l} -> int
 val unsafe_slice: message -> i:nat -> j:nat{i<=j} -> Tot message
 let unsafe_slice (Seq c _ _) n m = Seq c n m
-val test_impure: l:nat{l > 0} -> m:message{slength m==l} -> int
+val test_impure: l:nat{l > 0} -> m:message{slength m=l} -> int
 let test_impure l m =  lm_corr (l - 1) (unsafe_slice (impure m) 1 l)
 
 
@@ -200,7 +201,7 @@ let test_skolem_match (x:int) =
   match apply (fun x -> x) 0  with
   | 0 -> 0
 
-logic type T = (apply (fun x -> x) 0 == 1)
+logic type T = (apply (fun x -> x) 0 = 1)
 
 val test_skolem_refinement: x:int{T} -> Tot unit
 let test_skolem_refinement x = assert false
@@ -263,7 +264,7 @@ let plus_one x = x + 1
 let test_map1 () =
   let l = [0;1;2] in
   let g = map plus_one l in
-  assert (g == [1;2;3])
+  assert (g = [1;2;3])
 
 let test_map2 x = assert (map (fun x -> x + 1) [0;1;2] = [1;2;3])
 

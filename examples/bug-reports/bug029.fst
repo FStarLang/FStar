@@ -1,5 +1,6 @@
 module Bug29
 
+(* Some tests for heterogenous equality *)
 
 val f1 : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b == g a})) -> x:'a -> r:'b{r == g x}
 let f1 g h x = h x
@@ -24,14 +25,14 @@ val f4 : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b == g a})) ->  x:'a -> Tot (r
 let f4 g h x = (h x, h x)
 
 (* Or, alternatively, don't use heterogenous equality. *)
-val f4' : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b == g a})) ->  x:'a -> Tot (r:('b * 'b){r=(h x, h x)})
+val f4' : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b = g a})) ->  x:'a -> Tot (r:('b * 'b){r=(h x, h x)})
 let f4' g h x = (h x, h x)
 
-val f5 : g:('a -> Tot 'a) -> h:(a:'a -> Tot (b:'b{b == g a})) ->  x:'a -> Tot (r:('b * 'b){MkTuple2._1 r == MkTuple2._2 r})
+val f5 : g:('a -> Tot 'a) -> h:(a:'a -> Tot (b:'b{b == g a})) ->  x:'a -> Tot (r:('b * 'b){MkTuple2._1 r = MkTuple2._2 r})
 let f5 g h x = (h x, h x)
 
-val f6 : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b == g a})) ->  x:'a -> r:('b * 'b){fst r == snd r}
+val f6 : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b = g a})) ->  x:'a -> r:('b * 'b){fst r = snd r}
 let f6 g h x = (h x, h x)
 
-val f7 : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b == g a})) ->  x:'a -> r:('b * 'b){fst r == snd r}
+val f7 : g:('a -> Tot 'b) -> h:(a:'a -> Tot (b:'b{b = g a})) ->  x:'a -> r:('b * 'b){fst r = snd r}
 let f7 g h x = (g x, h x)

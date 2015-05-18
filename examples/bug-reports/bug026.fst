@@ -1,7 +1,7 @@
 module Bug26
 
 assume val factorial : n:nat -> Tot nat
-assume val bar:n:int{n > 1} -> Tot (y:int{y==factorial n})
+assume val bar:n:int{n > 1} -> Tot (y:int{y=factorial n})
 
 val evenb: nat -> Tot bool
 let evenb i = (i % 2) = 0
