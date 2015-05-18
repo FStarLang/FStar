@@ -18,15 +18,15 @@
 module Array
 
 type seq            : Type -> Type
-assume val index    : a:Type -> seq a -> int -> Tot a
-assume val update   : a:Type -> seq a -> int -> a -> Tot (seq a)
+assume val index    : #a:Type -> seq a -> int -> Tot a
+assume val update   : #a:Type -> seq a -> int -> a -> Tot (seq a)
 assume val emp      : a:Type -> Tot (seq a)
-assume val create   : a:Type -> int -> a -> Tot (seq a)
+assume val create   : #a:Type -> int -> a -> Tot (seq a)
 
-assume val length   : a:Type -> seq a -> Tot nat
-assume val slice    : a:Type -> seq a -> int -> int -> Tot (seq a)
-assume val append   : a:Type -> seq a -> seq a -> Tot (seq a)
-assume val proj_some: a:Type -> seq (option a) -> Tot (seq a)
+assume val length   : #a:Type -> seq a -> Tot nat
+assume val slice    : #a:Type -> seq a -> int -> int -> Tot (seq a)
+assume val append   : #a:Type -> seq a -> seq a -> Tot (seq a)
+assume val proj_some: #a:Type -> seq (option a) -> Tot (seq a)
 type Equal          : #a:Type -> seq a -> seq a -> Type
 type array (a:Type) = ref (seq a)
 
@@ -80,9 +80,9 @@ assume ProjEmp:      forall (a:Type).{:pattern (proj_some (emp (option a)))}
 assume ProjLen:      forall (a:Type) (s:seq (option a)).{:pattern  (proj_some s)} 
                      length (proj_some s)==length s
 
-assume ProjIndex:    forall (a:Type) (s:seq (option a)) (i:int).{:pattern  (index (proj_some s) i)} 
-                     (0 <= i /\ i <= length (proj_some s)) 
-                     ==> index (proj_some s) i == Some.v (index s i)
+(* assume ProjIndex:    forall (a:Type) (s:seq (option a)) (i:int).{:pattern  (index (proj_some s) i)}  *)
+(*                      (0 <= i /\ i <= length (proj_some s))  *)
+(*                      ==> index (proj_some s) i == Some.v (index s i) *)
 
 assume EmpConst:     forall (a:Type) (s:seq a).{:pattern (length s)}
                      length s == 0 

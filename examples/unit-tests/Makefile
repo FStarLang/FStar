@@ -2,7 +2,7 @@ VERFILES=unit1.fst unit2.fst testset.fst short-circuit.fst
 include ../Makefile.include
 NEGFILES=negative-tests.fst
 
-all: .all.ver testmref all-neg
+all: .all.ver testmref all-neg mac2
 
 all-neg: $(NEGFILES)
 	-$(FSTAR) --admit_fsi Set $(STDLIB) $^
@@ -19,3 +19,6 @@ testmref:
 
 test:
 	$(FSTAR) --admit_fsi Seq $(FSTAR_HOME)/lib/classical.fst $(FSTAR_HOME)/lib/ext.fst $(FSTAR_HOME)/lib/seq.fsi $(FSTAR_HOME)/lib/seqproperties.fst test.fst --admit_smt_queries true --max_fuel 0 --max_ifuel 0 --initial_ifuel 0 --initial_fuel 0
+
+mac2:
+	$(FSTAR) $(FSTAR_HOME)/lib/ext.fst $(FSTAR_HOME)/lib/array.fst $(FSTAR_HOME)/lib/set.fsi $(FSTAR_HOME)/lib/set.fst $(FSTAR_HOME)/lib/heap.fst $(FSTAR_HOME)/lib/st.fst $(FSTAR_HOME)/lib/list.fst mac2.fst

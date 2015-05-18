@@ -67,7 +67,7 @@ type entry =
          -> m:tag
          -> entry
 
-let log = ST.alloc (list entry) [] 
+let log = ST.alloc #(list entry) [] 
 
 let mac k t = 
   let m = sha1 k t in
@@ -84,7 +84,7 @@ let verify k text tag =
   (* ideal, error-correcting implementation *) 
   verified && (found || leaked k ) 
 
-  (* error-detecting implementation for the INT-CMA-LEAK game
+  (* error-detecting implementation for the INT-CMA-LEAK game *)
 //if verified && not (found || leaked k) then win:= Some(k,text,tag);
 //verified 
 
