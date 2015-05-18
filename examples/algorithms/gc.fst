@@ -139,3 +139,63 @@ let write_field ptr f v =
     abs_fields=upd_map gc.abs_fields (gc.to_abs ptr, f) (gc.to_abs v);
     } in
   set gc'
+
+
+assume val mark : ptr:mem_addr -> GC unit
+  (requires (fun gc -> gc_inv gc /\ trigger ptr /\ ptr_lifts gc ptr))
+  (ensures (fun gc _ gc' -> gc_inv gc'
+                        /\  (forall (i:mem_addr).{:pattern (trigger i)}
+                                   trigger i
+                                /\ gc.color i <> Black
+                                ==> gc.color i = gc'.color i)
+                        /\ gc'.color ptr <> White
+                        /\ (exists c. gc' = {gc with color=c})))
+
+assume val sweep: unit -> GC unit
+  (requires (fun gc -> gc_inv gc
+                    /\ (forall (i:mem_addr). {:pattern (trigger i)}
+                             trigger i
+                          /\ gc.color i <> Gray)))
+  (ensures (fun gc _ gc' -> (exists c a. gc' = {gc with color=c; to_abs=a}
+                        /\ mutator_inv gc'
+                        /\ (forall (i:mem_addr).{:pattern (trigger i)}
+                                 trigger i
+                              /\ (gc.color i=Black ==> ptr_lifts gc' i)
+                              /\ (ptr_lifts gc' i ==> gc.to_abs i = gc'.to_abs i)))))
+
+val gc: root:mem_addr -> GC unit
+  (requires (fun gc -> mutator_inv gc
+                    /\ (root<>0 ==> ptr_lifts gc root)))
+  (ensures (fun gc _ gc' -> (exists c a. gc' = {gc with color=c; to_abs=a})
+                    /\ mutator_inv gc'
+                    /\ (root<>0 ==> ptr_lifts gc' root)
+                    /\ (forall (i:mem_addr). {:pattern (trigger i)}
+                                 trigger i
+                              /\ ptr_lifts gc i
+                              ==> gc.to_abs i = gc'.to_abs i)
+                    /\ (root <> 0 ==> gc.to_abs root = gc'.to_abs root)))
+
+
+let gc root =
+  cut (trigger root);
+  if (root <> 0)
+  then mark root;
+  sweep ()
+
+
+val alloc: root:mem_addr -> abs:abs_node -> GC (mem_addr * mem_addr)
+  (requires (fun gc -> mutator_inv gc
+                    /\ root<>0 ==> ptr_lifts gc root
+                    /\ abs<>no_abs
+                    /\ (forall (i:mem_addr).{:pattern (trigger i)}
+                             trigger i
+                          /\ gc.to_abs i <> abs)
+                    /\ gc.abs_fields (abs, F1) = abs
+                    /\ gc.abs_fields (abs, F2) = abs))
+  (ensures (fun gc res gc' ->
+                       gc'.abs_fields = gc.abs_fields
+                    /\ mutator_inv gc'
+                    /\ (root<>0 ==> ptr_lifts_to gc' (fst res) (gc.to_abs root))
+                    /\ ptr_lifts gc' (snd res)
+                    /\ to_abs_inj gc'.to_abs))
+let alloc root abs = admit(); magic()
