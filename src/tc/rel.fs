@@ -1389,18 +1389,18 @@ and solve_binders (env:Tc.Env.env) (bs1:binders) (bs2:binders) (orig:prob) (wl:w
             | (Inr _, _)::_, (Inl _, _)::_ -> Inr "sort mismatch"
         
             | hd1::xs, hd2::ys -> 
-               let subst = Util.mk_subst_one_binder hd1 hd2 @ subst in
-               let env = Env.push_local_binding env (Env.binding_of_binder hd1) in
+               let subst = Util.mk_subst_one_binder hd2 hd1 @ subst in
+               let env = Env.push_local_binding env (Env.binding_of_binder hd2) in
                let prob = match fst hd1, fst hd2 with 
                  | Inl a, Inl b -> 
-                   KProb <| mk_problem (hd1::scope) orig a.sort (invert_rel <| p_rel orig) (Util.subst_kind subst b.sort) None "Formal type parameter" 
+                   KProb <| mk_problem (hd2::scope) orig (Util.subst_kind subst a.sort) (invert_rel <| p_rel orig) b.sort None "Formal type parameter" 
                  | Inr x, Inr y -> 
-                   TProb <| mk_problem (hd1::scope) orig x.sort (invert_rel <| p_rel orig) (Util.subst_typ subst y.sort) None "Formal value parameter"
+                   TProb <| mk_problem (hd2::scope) orig (Util.subst_typ subst x.sort)  (invert_rel <| p_rel orig) y.sort None "Formal value parameter"
                  | _ -> failwith "impos" in
-               begin match aux (hd1::scope) env subst xs ys with
+               begin match aux (hd2::scope) env subst xs ys with
                  | Inr msg -> Inr msg
                  | Inl (sub_probs, phi) -> 
-                   let phi = Util.mk_conj (p_guard prob |> fst) (close_forall [hd1] phi) in
+                   let phi = Util.mk_conj (p_guard prob |> fst) (close_forall [hd2] phi) in
                    Inl (prob::sub_probs, phi)
                end
 
@@ -1462,7 +1462,7 @@ and solve_k' (env:Env.env) (problem:problem<knd,unit>) (wl:worklist) : solution 
 
      | Kind_arrow(bs1, k1'), Kind_arrow(bs2, k2') -> 
        let sub_prob scope env subst = 
-           KProb <| mk_problem scope orig k1' problem.relation (Util.subst_kind subst k2') None "Arrow-kind result"  in
+           KProb <| mk_problem scope orig (Util.subst_kind subst k1') problem.relation k2' None "Arrow-kind result"  in
        solve_binders env bs1 bs2 orig wl sub_prob
 
      | Kind_uvar(u1, args1), Kind_uvar (u2, args2) -> //flex-flex: at the kind level, we only solve patterns anyway
@@ -1833,7 +1833,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
             match_num_binders (bs1, mk_c c1) (bs2, mk_c c2) in
         solve_binders env bs1 bs2 orig wl
         (fun scope env subst  -> 
-            let c2 = Util.subst_comp subst c2 in
+            let c1 = Util.subst_comp subst c1 in
             let rel = if !Options.use_eq_at_higher_order then EQ else problem.relation in 
             let _ = if Tc.Env.debug env <| Options.Other "EQ"
                     then Util.fprint2 "(%s) Using relation %s at higher order\n" (Env.get_range env |> Range.string_of_range) (rel_to_string rel) in
@@ -1847,7 +1847,7 @@ and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
             match_num_binders (bs1, mk_t t1') (bs2, mk_t t2') in
         solve_binders env bs1 bs2 orig wl
         (fun scope env subst -> 
-            let t2' = Util.subst_typ subst t2' in
+            let t1' = Util.subst_typ subst t1' in
             TProb <| mk_problem scope orig t1' problem.relation t2' None "lambda co-domain")
 
       | Typ_refine _, Typ_refine _ -> 
