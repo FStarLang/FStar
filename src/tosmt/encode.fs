@@ -1396,8 +1396,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
 
     | Sig_datacon(d, _, _, _, _, _) when (lid_equals d Const.lexcons_lid) -> [], env 
 
-    | Sig_datacon(d, t, _, quals, _, _) -> 
-        let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d in //Print.sli d in
+    | Sig_datacon(d, t, _, quals, _, drange) -> 
+        let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d in 
         let ddtok_tm = mkApp(ddtok, []) in
         let formals, t_res = match Util.function_formals t with 
             | Some (f, c) -> f, Util.comp_result c
@@ -1413,19 +1413,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let guard = Term.mk_and_l guards in 
         let xvars = List.map mkFreeV vars in
         let dapp =  mkApp(ddconstrsym, xvars) in
-        let ty_pred, decls2 = encode_typ_pred' (Some s_fuel_tm) t_res env' dapp in
-        let precedence = 
-            if lid_equals d Const.lextop_lid
-            then let x = varops.fresh "x", Term_sort in
-                 let xtm = mkFreeV x in
-                 [Term.Assume(mkForall([Term.mk_Precedes xtm dapp], [x], mkImp(mk_tester "LexCons" xtm, Term.mk_Precedes xtm dapp)), Some "lextop is top")]
-            else (* subterm ordering *)
-                let prec = vars |> List.collect (fun v -> match snd v with 
-                    | Type_sort
-                    | Fuel_sort -> []
-                    | Term_sort -> [Term.mk_Precedes (mkFreeV v) dapp]
-                    | _ -> failwith "unexpected sort") in
-                [Term.Assume(mkForall([ty_pred], add_fuel (fuel_var, Fuel_sort) vars, mkImp(guard, mk_and_l prec)), Some "subterm ordering")] in
 
         let tok_typing, decls3 = encode_typ_pred' None t env ddtok_tm in
 
@@ -1438,6 +1425,50 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
         let proxy_fresh = match formals with 
             | [] -> []
             | _ -> [Term.fresh_token (ddtok, Term_sort) (varops.next_id())] in
+
+        let encode_elim () = 
+            let head, args = Util.head_and_args t_res in 
+            match (Util.compress_typ head).n with 
+                | Typ_const fv -> 
+                  let encoded_head = lookup_free_tvar_name env' fv in
+                  let encoded_args, arg_decls = encode_args args env' in
+                  let _, arg_vars, eqns = List.fold_left (fun (env, arg_vars, eqns) arg -> 
+                       match arg with 
+                        | Inl targ -> 
+                          let _, tv, env = gen_typ_var env (Util.new_bvd None) in
+                          (env, tv::arg_vars, Term.mkEq(targ, tv)::eqns)
+                        | Inr varg -> 
+                          let _, xv, env = gen_term_var env (Util.new_bvd None) in
+                          (env, xv::arg_vars, Term.mkEq(varg, xv)::eqns)) (env', [], []) encoded_args in
+                  let arg_vars = List.rev arg_vars in
+                  let ty = Term.mkApp(encoded_head, arg_vars) in
+                  let xvars = List.map mkFreeV vars in
+                  let dapp =  mkApp(ddconstrsym, xvars) in
+                  let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
+                  let arg_binders = List.map fv_of_term arg_vars in
+                  let typing_inversion =
+                    Term.Assume(mkForall([ty_pred], 
+                                        add_fuel (fuel_var, Fuel_sort) (vars@arg_binders), 
+                                        mkImp(ty_pred, Term.mk_and_l (eqns@guards))), 
+                               Some "data constructor typing elim") in
+                  let subterm_ordering = 
+                    if lid_equals d Const.lextop_lid
+                    then let x = varops.fresh "x", Term_sort in
+                         let xtm = mkFreeV x in
+                         Term.Assume(mkForall([Term.mk_Precedes xtm dapp], [x], mkImp(mk_tester "LexCons" xtm, Term.mk_Precedes xtm dapp)), Some "lextop is top")
+                    else (* subterm ordering *)
+                        let prec = vars |> List.collect (fun v -> match snd v with 
+                            | Type_sort
+                            | Fuel_sort -> []
+                            | Term_sort -> [Term.mk_Precedes (mkFreeV v) dapp]
+                            | _ -> failwith "unexpected sort") in
+                        Term.Assume(mkForall([ty_pred], add_fuel (fuel_var, Fuel_sort) (vars@arg_binders), mkImp(ty_pred, mk_and_l prec)), Some "subterm ordering") in
+                  arg_decls, [typing_inversion; subterm_ordering]
+
+                | _ -> 
+                  Tc.Errors.warn drange (Util.format2 "Constructor %s builds an unexpected type %s\n" (Print.sli d) (Print.typ_to_string head));
+                  [], [] in
+        let decls2, elim = encode_elim () in
         let g = binder_decls
                 @decls2
                 @decls3
@@ -1448,10 +1479,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 @[Term.Assume(tok_typing, Some "typing for data constructor proxy"); 
                   Term.Assume(mkForall([app], vars, 
                                        mkEq(app, dapp)), Some "equality for proxy");
-                  Term.Assume(mkForall([ty_pred], add_fuel (fuel_var, Fuel_sort) vars, mkImp(ty_pred, guard)), Some "data constructor typing elim");
                   Term.Assume(mkForall([ty_pred'],add_fuel (fuel_var, Fuel_sort) vars', mkImp(guard', ty_pred')), Some "data constructor typing intro");
                   ]
-                 @precedence in
+                @elim in
         datacons@g, env
 
     | Sig_bundle(ses, _, _, _) -> 

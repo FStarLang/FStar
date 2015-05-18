@@ -557,7 +557,7 @@ and tc_value env e : exp * lcomp * guard_t =
 
   | Exp_abs(bs, body) ->  (* This is the dual of the treatment of application ... see the Exp_app case below. *)
     let fail :string -> typ -> 'a = fun msg t -> raise (Error(Tc.Errors.expected_a_term_of_type_t_got_a_function env msg t top, top.pos)) in
-    let expected_function_typ env t0 = match t0 with 
+    let rec expected_function_typ env t0 = match t0 with 
         | None -> (* no expected type; just build a function type from the binders in the term *)
             let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
             let bs, envbody, g = tc_binders env bs in
@@ -723,10 +723,13 @@ and tc_value env e : exp * lcomp * guard_t =
                 (* CK: add this case since the type may be f:(a -> M b wp){φ}, in which case I drop the refinement *)
                 | Typ_refine (b, _) -> as_function_typ norm b.sort
 
-                | _ -> (* expected type is not a function; try normalizing it before giving up *)
+                | _ -> (* expected type is not a function; 
+                          try normalizing it first; 
+                          otherwise synthesize a type and check it against the given type *)
                   if not norm
                   then as_function_typ true (whnf env t) 
-                  else fail "Annotated type is not a function" t in
+                  else let _, bs, c_opt, envbody, g = expected_function_typ env None in
+                       Some t, bs, c_opt, envbody, g in
            as_function_typ false t in
 
     let env, topt = Tc.Env.clear_expected_typ env in
@@ -742,25 +745,23 @@ and tc_value env e : exp * lcomp * guard_t =
     let guard = if env.top_level || not(!Options.verify) 
                 then (Tc.Util.discharge_guard envbody (Rel.conj_guard g guard); {Rel.trivial_guard with implicits=guard.implicits})
                 else let guard = Rel.close_guard bs guard in Rel.conj_guard g guard in 
-    let tfun = match tfun_opt with 
+    let tfun, guard = match tfun_opt with 
         | Some t -> 
            let t = Util.compress_typ t in
            (match t.n with 
-                | Typ_fun _ -> t
+                | Typ_fun _ -> t, guard
                 | _ -> 
-                    if Env.debug env Options.Low
-                    then Util.fprint2 "!!!!!!!!!!!!!!!Expected function type is instead %s (%s)\n" (Print.typ_to_string t) (Print.tag_of_typ t);
                     let t' = mk_Typ_fun(bs, cbody) (Some ktype) top.pos in
-                    Tc.Util.force_trivial env <| Rel.teq env t t';
-                    t')
-        | None -> mk_Typ_fun(bs, cbody) (Some ktype) top.pos in
+                    let guard' = Rel.teq env t t' in
+                    t', Rel.conj_guard guard guard')
+        | None -> mk_Typ_fun(bs, cbody) (Some ktype) top.pos, guard in
     if Env.debug env Options.Low
     then Util.fprint2 "!!!!!!!!!!!!!!!Annotating lambda with type %s (%s)\n" (Print.typ_to_string tfun) (Print.tag_of_typ tfun);
+
     let e = mk_Exp_abs(bs, body) (Some tfun) e.pos  in
     let e = mk_Exp_ascribed(e, tfun) e.pos in //Important to ascribe, since the SMT encoding requires the type of every abstraction
     let c, g = Tc.Util.strengthen_precondition None env e (Tc.Util.lcomp_of_comp <| mk_Total tfun) guard in
-    if Tc.Env.debug env <| Options.Other "Implicits"
-    then Util.fprint1 "Introduced %s implicits in abstraction\n" (string_of_int <| List.length g.implicits);
+    
     e, c, g 
 
   | _ -> 

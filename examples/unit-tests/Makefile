@@ -2,7 +2,7 @@ VERFILES=unit1.fst unit2.fst testset.fst short-circuit.fst
 include ../Makefile.include
 NEGFILES=negative-tests.fst
 
-all: .all.ver testmref all-neg mac2
+all: .all.ver testmref mac2 all-neg
 
 all-neg: $(NEGFILES)
 	-$(FSTAR) --admit_fsi Set $(STDLIB) $^

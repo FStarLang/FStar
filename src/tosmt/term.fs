@@ -176,10 +176,7 @@ let mkTrue       = mk (App(True, []))
 let mkFalse      = mk (App(False, []))
 let mkInteger i  = mk (Integer i) 
 let mkBoundV i   = mk (BoundV i) 
-let mkFreeV x    = 
-    if fst x = "Prims.int" 
-    then failwith ":ARGH!";
-    mk (FreeV x) 
+let mkFreeV x    = mk (FreeV x) 
 let mkApp' f        = mk (App f) 
 let mkApp (s, args) = mk (App (Var s, args)) 
 let mkNot t      = match t.tm with
