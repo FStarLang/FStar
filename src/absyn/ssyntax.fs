@@ -25,11 +25,11 @@ let deserialize_option (reader:Reader) (f:Reader -> 'a) : option<'a> =
     else Some (f reader)
 
 let serialize_list (writer:Writer) (f:Writer -> 'a -> unit) (l:list<'a>) :unit =
-    writer.write_int32 (List.length l);
+    writer.write_int (List.length l);
     List.iter (fun elt -> f writer elt) (List.rev_append l [])
 
 let deserialize_list (reader: Reader) (f:Reader -> 'a) :list<'a> =
-    let n = reader.read_int32 () in
+    let n = reader.read_int () in
     let rec helper (accum:list<'a>) (n:int) :list<'a> =
         if n = 0 then accum
         else
@@ -94,6 +94,7 @@ let serialize_sconst (writer:Writer) (ast:sconst) :unit =
     | Const_float(v) -> writer.write_char 'g'; writer.write_double v
     | Const_bytearray(v, _) -> writer.write_char 'h'; writer.write_bytearray v
     | Const_string(v, _) -> writer.write_char 'i'; writer.write_bytearray v
+    | Const_int(v) -> writer.write_char 'j'; writer.write_int v
 
 let deserialize_sconst (reader:Reader) :sconst =
     match (reader.read_char()) with
@@ -106,6 +107,7 @@ let deserialize_sconst (reader:Reader) :sconst =
     | 'g' -> Const_float(reader.read_double ())
     | 'h' -> Const_bytearray(reader.read_bytearray (), dummyRange)
     | 'i' -> Const_string(reader.read_bytearray (), dummyRange)
+    | 'j' -> Const_int(reader.read_int ())
     |  _  -> parse_error()
 
 let serialize_either (writer:Writer) (s_l:Writer -> 'a -> unit) (s_r:Writer -> 'b -> unit) (ast:either<'a, 'b>) :unit =

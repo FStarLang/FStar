@@ -223,7 +223,9 @@ rule token = parse
      { INT8 (char_of_int (int_of_string (clean_number x)), false) }
  | (uint16 | int16 | xint16) as x
      { INT16 (int_of_string (clean_number x), false) }
- | (uint32l | uint32 | xint | xint32 | int | int32) as x
+ | (int| xint) as x
+     { INT (int_of_string (clean_number x), false)  }
+ | (uint32l | uint32 | xint32 | int32) as x (* TODO: separate these out and check bounds *)
      { INT32 (int_of_string (clean_number x), false) }
  | (uint64 | int64) as x
      { INT64 (Int64.of_string (clean_number x), false) }

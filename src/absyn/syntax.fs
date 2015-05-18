@@ -52,6 +52,7 @@ type sconst =
   | Const_bool        of bool
   | Const_int32       of int32
   | Const_int64       of int64
+  | Const_int         of int
   | Const_char        of char
   | Const_float       of double
   | Const_bytearray   of array<byte> * Range.range 

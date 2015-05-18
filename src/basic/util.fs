@@ -235,8 +235,12 @@ let float_of_byte (b:byte) = (float)b
 let float_of_int32 (n:int32) = (float)n
 let float_of_int64 (n:int64) = (float)n
 
+let int_of_int32 (i:int32) = i
+let int32_of_int (i:int) = int32 i
+
 let string_of_int   i = string_of_int i
 let string_of_int64  (i:int64) = i.ToString()
+let string_of_int32 i = string_of_int i
 let string_of_float i = string_of_float i
 let hex_string_of_byte  (i:byte) = spr "%x" i
 let string_of_char  (i:char) = spr "%c" i
@@ -506,7 +510,8 @@ let is_symbol = Char.IsSymbol
 type oWriter = {
     write_byte: byte -> unit;
     write_bool: bool -> unit;
-    write_int32: int -> unit;
+    write_int: int -> unit;
+    write_int32: int32 -> unit;
     write_int64: int64 -> unit;
     write_char: char -> unit;
     write_double: double -> unit;
@@ -519,7 +524,8 @@ type oWriter = {
 type oReader = {
     read_byte: unit -> byte;
     read_bool: unit -> bool;
-    read_int32: unit -> int;
+    read_int: unit -> int;
+    read_int32: unit -> int32;
     read_int64: unit -> int64;
     read_char: unit -> char;
     read_double: unit -> double;
@@ -534,6 +540,7 @@ let get_owriter (file:string) : oWriter =
     {
         write_byte = w.Write;
         write_bool = w.Write;
+        write_int = w.Write;
         write_int32 = w.Write;
         write_int64 = w.Write;
         write_char = w.Write;
@@ -549,6 +556,7 @@ let get_oreader (file:string) : oReader =
     {
         read_byte = r.ReadByte;
         read_bool = r.ReadBoolean;
+        read_int = r.ReadInt32;
         read_int32 = r.ReadInt32;
         read_int64 = r.ReadInt64;
         read_char = r.ReadChar;

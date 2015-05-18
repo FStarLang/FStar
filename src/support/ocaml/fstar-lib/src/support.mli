@@ -160,7 +160,10 @@ module Microsoft :
             val float_of_byte : char -> float
             val float_of_int32 : int -> float
             val float_of_int64 : int64 -> float
-            val string_of_int : int -> string
+            val int_of_int32: int32 -> int
+            val int32_of_int: int -> int32
+            val string_of_int: int -> string
+            val string_of_int32 : int32 -> string
             val string_of_int64 : int64 -> string
             val string_of_float : float -> string
             val string_of_char : char -> string
@@ -271,6 +274,7 @@ module Microsoft :
             type OWriter = {
 		write_byte: byte -> unit;
 		write_bool: bool -> unit;
+    write_int: int -> unit;
 		write_int32: int -> unit;
 		write_int64: int64 -> unit;
 		write_char: char -> unit;
@@ -284,6 +288,7 @@ module Microsoft :
 	    type OReader = {
 		read_byte: unit -> byte;
 		read_bool: unit -> bool;
+    read_int: unit -> int;
 		read_int32: unit -> int;
 		read_int64: unit -> int64;
 		read_char: unit -> char;

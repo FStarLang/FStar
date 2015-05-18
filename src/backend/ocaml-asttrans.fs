@@ -269,6 +269,7 @@ let mlconst_of_const (rg : range) (sctt : sconst) =
   | Const_unit         -> MLC_Unit
   | Const_char   c     -> MLC_Char  c
   | Const_uint8  c     -> MLC_Byte  c
+  | Const_int    c     -> MLC_Int32 (Util.int32_of_int c)
   | Const_int32  i     -> MLC_Int32 i
   | Const_int64  i     -> MLC_Int64 i
   | Const_bool   b     -> MLC_Bool  b

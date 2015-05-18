@@ -31,6 +31,7 @@ let t_unit   = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.unit_l
 let t_bool   = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.bool_lid   ktype)
 let t_uint8  = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.uint8_lid  ktype)
 let t_int    = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.int_lid    ktype)
+let t_int32  = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.int32_lid  ktype)
 let t_int64  = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.int64_lid  ktype)
 let t_string = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.string_lid ktype)
 let t_float  = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.float_lid  ktype)
@@ -39,11 +40,12 @@ let t_char   = syn dummyRange oktype <| mk_Typ_const (Util.withsort Const.char_l
 let typing_const r (s:sconst) = match s with 
   | Const_unit -> t_unit 
   | Const_bool _ -> t_bool
-  | Const_int32 _ -> t_int
+  | Const_int _ -> t_int
+  | Const_int32 _ -> t_int32
+  | Const_int64 _ -> t_int64
   | Const_string _ -> t_string
   | Const_float _ -> t_float
   | Const_char _ -> t_char
-  | Const_int64 _ -> t_int64
   | Const_uint8 _ -> t_uint8
   | _ -> raise (Error("Unsupported constant", r))
 

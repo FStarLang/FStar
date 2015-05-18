@@ -69,6 +69,7 @@ let nothing =
 
 let rec js_of_const (c:sconst) : expression_t =
     match c with
+    | Const_int _ -> failwith "Unexpected mathematical integer constant"
     | Const_unit -> JSE_Undefined
     | Const_uint8(n) -> JSE_Number(Util.float_of_byte n)
     | Const_bool(b) -> JSE_Bool(b)

@@ -100,6 +100,9 @@ let parse fn =
     | Lexhelp.ReservedKeyword(m,s) -> Printf.printf "%s:%s" (Range.string_of_range s) m
     | e -> Printf.printf "Warning: %A\n" e);
 
+  Parser.Util.errorHandler := (function
+    | e -> raise e);
+
   let filename,sr,fs = match fn with
     | Inl (filename:string) ->
       (try

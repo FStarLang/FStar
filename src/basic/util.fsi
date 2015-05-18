@@ -123,8 +123,11 @@ val uint16_of_int: int -> Tot<uint16>
 val float_of_byte: byte -> Tot<float>
 val float_of_int32: int32 -> Tot<float>
 val float_of_int64: int64 -> Tot<float>
-val string_of_int:   int -> Tot<string>
-val string_of_int64:   int64 -> Tot<string>
+val int_of_int32: int32 -> Tot<int>
+val int32_of_int:   int -> int32 //potentially failing int32 coercion
+val string_of_int:   int -> string
+val string_of_int64: int64 -> Tot<string>
+val string_of_int32: int32 -> Tot<string>
 val string_of_float: float -> Tot<string>
 val string_of_char:  char -> Tot<string>
 val hex_string_of_byte:  byte -> Tot<string>
@@ -211,7 +214,8 @@ val is_symbol: char -> bool
 type oWriter = {
     write_byte: byte -> unit;
     write_bool: bool -> unit;
-    write_int32: int -> unit;
+    write_int: int -> unit;
+    write_int32: int32 -> unit;
     write_int64: int64 -> unit;
     write_char: char -> unit;
     write_double: double -> unit;
@@ -224,7 +228,8 @@ type oWriter = {
 type oReader = {
     read_byte: unit -> byte;
     read_bool: unit -> bool;
-    read_int32: unit -> int;
+    read_int: unit -> int;
+    read_int32: unit -> int32;
     read_int64: unit -> int64;
     read_char: unit -> char;
     read_double: unit -> double;

@@ -106,20 +106,23 @@ effect Ghost (a:Type) (pre:Type) (post:PurePost a) =
 opaque logic type b2t (b:bool) = b==true
 type unit
 type int
-type char
-type uint16
+type int16
+type int32
 type int64
+type uint8
+type uint16
+type uint32
+type uint64
+type char
 type float
 type string
 type array : Type -> Type
 type ref : Type -> Type
 assume logic type LBL : string -> Type -> Type
 type exn
-type uint8
 type HashMultiMap : Type -> Type -> Type //needed for bootstrapping
 type byte = uint8
 type double = float
-type int32 = int
 
 type list (a:Type) =
   | Nil  : list a

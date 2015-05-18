@@ -248,7 +248,7 @@ rule token args = parse
        let n =
            try int32 s with _ ->  fail lexbuf "This number is outside the allowable range for 32-bit signed integers" 0
        in 
-       INT32(n,false)
+       INT(n,false)
      } 
  | xint32 
  | int32 

@@ -188,7 +188,7 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Bool     false -> "false"
   | MLC_Char     c     -> "'"^(encode_char c)^"'"
   | MLC_Byte     c     -> "'"^(ocaml_u8_codepoint c)^"'"
-  | MLC_Int32    i     -> string_of_int  i
+  | MLC_Int32    i     -> string_of_int32  i
   | MLC_Int64    i     -> (string_of_int64 i)^"L"
   | MLC_Float    d     -> string_of_float d
 

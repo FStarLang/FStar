@@ -139,7 +139,7 @@ let strBvd bvd =
     then bvd.ppname.idText ^ bvd.realname.idText
     else 
         if !Options.hide_genident_nums && starts_with (bvd.ppname.idText) "_" then
-            try
+            try 
                 let _ = int_of_string (substring_from (bvd.ppname.idText) 1) in "_?"
             with _ -> bvd.ppname.idText
         else bvd.ppname.idText
@@ -148,11 +148,12 @@ let filter_imp a = a |> List.filter (function (_, Some Implicit) -> false | _ ->
 let const_to_string x = match x with
   | Const_unit -> "()"
   | Const_bool b -> if b then "true" else "false"
-  | Const_int32 x ->      Util.string_of_int x
+  | Const_int32 x ->      Util.string_of_int32 x
   | Const_float x ->      Util.string_of_float x
   | Const_char x ->       "'" ^ (Util.string_of_char x) ^ "'"
   | Const_string(bytes, _) -> Util.format1 "\"%s\"" (Util.string_of_bytes bytes)
   | Const_bytearray _  ->  "<bytearray>"
+  | Const_int   x -> Util.string_of_int x
   | Const_int64 _ -> "<int64>"
   | Const_uint8 _ -> "<uint8>"
    

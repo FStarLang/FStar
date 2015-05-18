@@ -58,6 +58,7 @@ open Microsoft.FStar.Parser.Util
 %token <int16 * bool> INT16
 %token <int32 * bool> INT32 INT32_DOT_DOT
 %token <int64 * bool> INT64
+%token <int32 * bool> INT
 
 %token <byte> UINT8
 %token <uint16> UINT16
@@ -964,6 +965,12 @@ tupleN:
 
 constant:  
   | LPAREN_RPAREN { Const_unit }
+  | INT 
+	 {
+	    if snd $1 then 
+          errorR(Error("This number is outside the allowable range for representable integer constants", lhs(parseState)));
+        Const_int (fst $1) 
+	 }
   | INT32 
       { 
         if snd $1 then 

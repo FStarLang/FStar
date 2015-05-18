@@ -1,8 +1,9 @@
 module Test1
 let x = 0
 
+module Test2
 let x = 1
-let y = assert  (1=0)
+let y = assert  (1=1)
 
 
 module Test3

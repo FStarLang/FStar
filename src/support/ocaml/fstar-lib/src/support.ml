@@ -282,7 +282,11 @@ module Microsoft = struct
       let float_of_int32 = float_of_int
       let float_of_int64 = BatInt64.to_float
 
+      let int_of_int32 i = i
+      let int32_of_int i = i
+
       let string_of_int = string_of_int
+      let string_of_int32 = string_of_int
       let string_of_int64 = BatInt64.to_string
       let string_of_float = string_of_float
       let string_of_char  (i:char) = spr "%c" i
@@ -542,6 +546,7 @@ module Microsoft = struct
       type oWriter = {
 	  write_byte: char -> unit;
 	  write_bool: bool -> unit;
+    write_int: int -> unit;
 	  write_int32: int -> unit;
 	  write_int64: int64 -> unit;
 	  write_char: char -> unit;
@@ -555,6 +560,7 @@ module Microsoft = struct
       type oReader = {
 	  read_byte: unit -> char;
 	  read_bool: unit -> bool;
+    read_int: unit -> int;
 	  read_int32: unit -> int;
 	  read_int64: unit -> int64;
 	  read_char: unit -> char;
@@ -568,6 +574,7 @@ module Microsoft = struct
       module MkoReader = struct
           let read_byte r x = r.read_byte x
           let read_bool r x = r.read_bool x
+          let read_int r x = r.read_int32 x
           let read_int32 r x = r.read_int32 x
           let read_int64 r x = r.read_int64 x
           let read_char r x = r.read_char x
@@ -581,6 +588,7 @@ module Microsoft = struct
       module MkoWriter = struct
           let write_byte w x = w.write_byte x
           let write_bool w x = w.write_bool x
+          let write_int w x = w.write_int32 x
           let write_int32 w x = w.write_int32 x
           let write_int64 w x = w.write_int64 x
           let write_char w x = w.write_char x
@@ -597,6 +605,7 @@ module Microsoft = struct
       let get_owriter (filename:string) : oWriter = {
           write_byte = (fun _ -> ());
           write_bool = (fun _ -> ());
+          write_int = (fun _ -> ());
           write_int32 = (fun _ -> ());
           write_int64 = (fun _ -> ());
           write_char = (fun _ -> ());
@@ -610,6 +619,7 @@ module Microsoft = struct
       let get_oreader (filename:string) : oReader = {
           read_byte = (fun _ -> 'a');
           read_bool = (fun _ -> true);
+          read_int = (fun _ -> 0);
           read_int32 = (fun _ -> 0);
           read_int64 = (fun _ -> 0L);
           read_char = (fun _ -> 'a');
