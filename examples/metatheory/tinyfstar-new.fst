@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 10 --max_fuel 4 --max_ifuel 2 --initial_fuel 4 --initial_ifuel 2;
+    options:--z3timeout 10 --max_fuel 4 --max_ifuel 4 --initial_fuel 4 --initial_ifuel 2;
     other-files:../../lib/classical.fst ../../lib/ext.fst
   --*)
 module TinyFStarNew
@@ -1389,14 +1389,14 @@ else ()
 *)
 
 
-
-val tsubst_elam_shift : s:sub -> t:typ -> Lemma (tsubst (sub_elam s) (tesh t) = tesh (tsubst s t))
+//NS: Writing 'requires' and 'ensures' will  give you better error messages
+val tsubst_elam_shift : s:sub -> t:typ -> Lemma (ensures (tsubst (sub_elam s) (tesh t) = tesh (tsubst s t)))
 let tsubst_elam_shift s t = admit()
 
-val ksubst_elam_shift : s:sub -> k:knd -> Lemma (ksubst (sub_elam s) (kesh k) = kesh (ksubst s k))
+val ksubst_elam_shift : s:sub -> k:knd -> Lemma (ensures (ksubst (sub_elam s) (kesh k) = kesh (ksubst s k)))
 let ksubst_elam_shift s k = admit()
 
-val tyif01 : s:sub -> e0:exp -> e1:exp -> e2:exp -> Lemma (esubst s (EIf0 e0 e1 e2) = EIf0 (esubst s e0) (esubst s e1) (esubst s e2))
+val tyif01 : s:sub -> e0:exp -> e1:exp -> e2:exp -> Lemma (ensures (esubst s (EIf0 e0 e1 e2) = EIf0 (esubst s e0) (esubst s e1) (esubst s e2)))
 let tyif01 s e0 e1 e2 = ()
 val tyif02 : s:sub -> m:eff -> wp0:typ -> Lemma(csubst s (Cmp m tint wp0) = Cmp m tint (tsubst s wp0))
 let tyif02 s m wp0 = ()
