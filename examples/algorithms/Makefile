@@ -18,7 +18,7 @@ binary_search: $(FSTAR_HOME)/lib/seq.fsi binary_search.fst
 	$(FSTAR) --admit_fsi Seq $^
 
 qsc: $(FSTAR_HOME)/lib/list.fst qsc.fst
-	$(FSTAR) --z3timeout 10 $^
+	$(FSTAR) --z3timeout 20 $^
 
 gc: gc.fst
 	$(FSTAR) $^

@@ -95,7 +95,7 @@ add this to your `.emacs` or `.emacs.d/init.el`:
 
 By default F* only verifies the input code, it does not execute it.
 To execute F* code one needs to translate it to OCaml
-using using the OCaml backend (the `--codegen OCaml` command-line argument to F*).
+using the OCaml backend (the `--codegen OCaml` command-line argument to F*).
 The generated executable OCaml code most often depends on a support library;
 obtaining this support library requires
 [bootstrapping in OCaml](https://github.com/FStarLang/FStar/blob/master/INSTALL.md#bootstrapping-the-compiler-in-ocaml)
