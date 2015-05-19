@@ -636,7 +636,7 @@ let is_function t = match (compress_typ t).n with
     | _ -> false
   
 let return_value env t v = 
-  if is_function t then failwith (Util.format1 "(%s): Returning a function!" (Range.string_of_range (Env.get_range env)));
+//  if is_function t then failwith (Util.format1 "(%s): Returning a function!" (Range.string_of_range (Env.get_range env)));
   let c = match Tc.Env.effect_decl_opt env Const.pure_effect_lid with 
     | None -> mk_Total t 
     | Some m -> 
@@ -879,9 +879,10 @@ let maybe_assume_result_eq_pure_term env (e:exp) (lc:lcomp) : lcomp =
       if not (is_pure_effect env lc.eff_name)
       then c
       else if Util.is_partial_return c then c
-      else match (compress_typ (Util.comp_result c)).n with 
-        | Typ_fun _ -> c (* no need to include equalities for functions *)
-        | _ -> 
+      else 
+//      match (compress_typ (Util.comp_result c)).n with 
+//        | Typ_fun _ -> c (* no need to include equalities for functions *)
+//        | _ -> 
            let c = Tc.Normalize.weak_norm_comp env c in
            let t = c.result_typ in
            let c = mk_Comp c in 
