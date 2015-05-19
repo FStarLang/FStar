@@ -81,7 +81,8 @@ let read_build_config (filename:string) =
             | None -> ()
             | Some v -> 
               begin match Options.set_options v with 
-                    | Getopt.GoOn -> Options.reset_options_string := Some v
+                    | Getopt.GoOn ->
+                      Options.reset_options_string := Some v
                     | Getopt.Help  -> fail ("Invalid options: " ^ v)
                     | Getopt.Die s -> fail ("Invalid options : " ^ s)
               end 
@@ -130,9 +131,9 @@ let parse fn =
     Inl frags
   with
     | Absyn.Syntax.Error(msg, r) ->
-      Inr (Absyn.Print.format_error r msg)
+      Inr (msg, r)
     | e ->
       let pos = lexbuf.EndPos in
       let p = Range.mk_pos pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) in
       let r = Range.mk_range filename p p in
-      Inr (Absyn.Print.format_error r "Syntax error")
+      Inr ("Syntax error", r)

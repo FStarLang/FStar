@@ -69,8 +69,8 @@ val witness: #a:Type
                 (ensures (fun h0 _ h1 -> h0=h1 /\ token m p))
 let witness (a:Type) (b:Reln a) m (p: a -> Type) = ()
 
-assume val recall: a:Type
-                -> b:Reln a
+assume val recall: #a:Type
+                -> #b:Reln a
                 -> m:mref a b
                 -> p:(a -> Type)
                 -> St unit

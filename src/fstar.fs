@@ -68,7 +68,8 @@ let tc_one_fragment curmod dsenv env frag =
             | Inl (dsenv, modul) -> 
               let env = match curmod with
                 | None -> env 
-                | Some (modul,npds) -> Tc.Tc.finish_partial_modul env modul npds |> snd in
+                | Some _ ->
+                  raise (Absyn.Syntax.Err("Interactive mode only supports a single module at the top-level")) in
               let modul, npds, env = Tc.Tc.tc_partial_modul env modul in
               Some (Some (modul, npds), dsenv, env)
 
@@ -91,10 +92,16 @@ let tc_one_fragment curmod dsenv env frag =
         | e -> raise e
 
 type input_chunks = 
-    | Push
-    | Pop
+    | Push of string
+    | Pop  of string
     | Code of string * (string * string)
     
+type stack_elt = 
+    (option<(modul * list<sigelt>)>
+     * Parser.DesugarEnv.env 
+     * Tc.Env.env)
+type stack = list<stack_elt>
+
 let interactive_mode dsenv env = 
     if Option.isSome !Options.codegen
     then (Util.print_string "Code-generation is not supported in interactive mode"; exit 1);
@@ -117,10 +124,10 @@ let interactive_mode dsenv env =
             let str = Util.string_of_string_builder chunk in 
             Util.clear_string_builder chunk; Code (str, responses)
         end
-        else if l = "#pop"
-        then (Util.clear_string_builder chunk; Pop)
-        else if l = "#push"
-        then (Util.clear_string_builder chunk; Push)
+        else if Util.starts_with l "#pop"
+        then (Util.clear_string_builder chunk; Pop l)
+        else if Util.starts_with l "#push"
+        then (Util.clear_string_builder chunk; Push l)
         else if l = "#finish"
         then exit 0
         else (Util.string_builder_append chunk line;
@@ -128,10 +135,10 @@ let interactive_mode dsenv env =
               fill_chunk()) in
 
     
-    let rec go stack curmod dsenv env = 
+    let rec go (stack:stack) curmod dsenv env = 
         begin match fill_chunk () with 
-            | Pop -> 
-              Tc.Env.pop env |> ignore;
+            | Pop msg -> 
+              Tc.Env.pop env msg |> ignore;
               env.solver.refresh();
               Options.reset_options() |> ignore;
               let (curmod, dsenv, env), stack = match stack with 
@@ -139,10 +146,10 @@ let interactive_mode dsenv env =
                 | hd::tl -> hd, tl in
               go stack curmod dsenv env
 
-            | Push -> 
+            | Push msg -> 
               let stack = (curmod, dsenv, env)::stack in
               let dsenv = Parser.DesugarEnv.push dsenv in
-              let env = Tc.Env.push env in
+              let env = Tc.Env.push env msg in
               go stack curmod dsenv env
             
             | Code (text, (ok, fail)) ->
@@ -197,7 +204,7 @@ let batch_mode_tc filenames =
         all_mods@ms, dsenv, env)
         (prims_mod, dsenv, env) in
    
-    if !Options.interactive
+    if !Options.interactive && Tc.Errors.get_err_count () = 0
     then env.solver.refresh()
     else env.solver.finish();
     all_mods, dsenv, env
@@ -209,7 +216,9 @@ let finished_message fmods =
             if !Options.verify then "Verified" 
             else if !Options.pretype then "Lax type-checked"
             else "Parsed and desugared" in
-         fmods |> List.iter (fun m -> Util.print_string (Util.format2 "%s module: %s\n" msg (Syntax.text_of_lid m.name)));
+         fmods |> List.iter (fun m -> 
+            if Options.should_verify m.name.str
+            then Util.print_string (Util.format2 "%s module: %s\n" msg (Syntax.text_of_lid m.name)));
          print_string "All verification conditions discharged successfully\n"
     end
 

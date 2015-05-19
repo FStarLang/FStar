@@ -69,7 +69,8 @@ let read_build_config (filename:string) =
             | None -> ()
             | Some v ->
               begin match Microsoft_FStar_Options.set_options v with
-                    | Support.Microsoft.FStar.Getopt.GoOn -> Microsoft_FStar_Options.reset_options_string := Some v
+                    | Support.Microsoft.FStar.Getopt.GoOn ->
+                      Microsoft_FStar_Options.reset_options_string := Some v
                     | Support.Microsoft.FStar.Getopt.Help  -> fail ("Invalid options: " ^ v)
                     | Support.Microsoft.FStar.Getopt.Die s -> fail ("Invalid options : " ^ s)
               end
@@ -111,11 +112,10 @@ let parse fn =
       Inl frags
   with
     | Microsoft_FStar_Absyn_Syntax.Error(msg, r) ->
-      Inr (Microsoft_FStar_Absyn_Print.format_error r msg)
+      Inr (msg, r)
 
     | e ->
       let pos = lexbuf.lex_curr_p in
       let p = Range.mk_pos pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1) in
       let r = Range.mk_range filename p p in
-      Inr (Microsoft_FStar_Absyn_Print.format_error r
-        ("Syntax error: " ^ (Printexc.to_string e)))
+      Inr ("Syntax error: " ^ (Printexc.to_string e), r)

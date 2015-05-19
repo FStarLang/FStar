@@ -71,6 +71,7 @@ fstarml.ml: ../main.ml
 
 $(FSTARML): $(FSTAR_OBJS) fstarml.ml
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o $(FSTARML) $^
+	cp fstarml.exe ../../bin/fstar.exe || cp fstarml ../../bin/fstar.exe
 
 # Common rules
 .SUFFIXES: .ml .mli .cmo .cmi .cmx

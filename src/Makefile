@@ -204,7 +204,6 @@ ocaml-test: ocaml boot-ocaml
 boot-ocaml:
 	make -C ocaml-output parser
 	make -C ocaml-output
-	cp ocaml-output/fstarml.exe ../bin/fstar.exe || cp ocaml-output/fstarml ../bin/fstar.exe
 
 test:   clean $(BIN)/fstar.exe ocaml-test
 	make -C ../examples

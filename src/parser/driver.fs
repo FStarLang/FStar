@@ -42,9 +42,8 @@ let parse_fragment curmod env frag =
     | Inl (Inl _) -> 
       raise (Absyn.Syntax.Err("Refusing to check more than one module at a time incrementally"))
 
-    | Inr msg -> 
-      Util.print_string msg;
-      exit 1
+    | Inr (msg,r) -> 
+      raise (Absyn.Syntax.Error(msg, r))
 
 let parse_file env fn =
   if is_cache_file fn then
@@ -56,8 +55,8 @@ let parse_file env fn =
     | Inl (Inl ast) ->
       Desugar.desugar_file env ast
   
-    | Inr msg -> 
-      Util.print_string msg;
+    | Inr (msg, r) -> 
+      Util.print_string <| Print.format_error r msg;
       exit 1
 
 let read_build_config file = ParseIt.read_build_config file

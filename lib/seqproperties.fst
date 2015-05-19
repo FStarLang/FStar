@@ -1,3 +1,8 @@
+(*--build-config
+    options:--admit_fsi Set --admit_fsi Seq;
+    other-files:classical.fst ext.fst set.fsi seq.fsi
+  --*)
+
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -190,6 +195,20 @@ let split_5 s i j =
   let frag_j,frag_hi = split_eq rest 1 in
   upd (upd (upd (upd (create 5 frag_lo) 1 frag_i) 2 frag_mid) 3 frag_j) 4 frag_hi
 
+val lemma_swap_permutes_aux_frag_eq: #a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s}
+                          -> i':nat -> j':nat{i' <= j' /\ j'<=length s /\
+                                              (j < i'  //high slice
+                                              \/ j' <= i //low slice
+                                              \/ (i < i' /\ j' <= j)) //mid slice
+                                              }
+                          -> Lemma (ensures (slice s i' j' = slice (swap s i j) i' j'
+                                            /\ slice s i (i + 1) = slice (swap s i j) j (j + 1)
+                                            /\ slice s j (j + 1) = slice (swap s i j) i (i + 1)))
+let lemma_swap_permutes_aux_frag_eq s i j i' j' =
+  cut (Eq (slice s i' j') (slice (swap s i j) i' j'));
+  cut (Eq (slice s i (i + 1))  (slice (swap s i j) j (j + 1)));
+  cut (Eq (slice s j (j + 1))  (slice (swap s i j) i (i + 1)))
+
 #set-options "--max_fuel 1 --initial_fuel 1 --initial_ifuel 0 --max_ifuel 0"
 val lemma_swap_permutes_aux: #a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> x:a -> Lemma
   (requires True)
@@ -211,18 +230,15 @@ let lemma_swap_permutes_aux s i j x =
       let frag_lo', frag_j', frag_mid', frag_i', frag_hi' =
         index s5' 0, index s5' 1, index s5' 2, index s5' 3, index s5' 4 in
 
-      cut (Eq frag_lo'  frag_lo);
-      cut (Eq frag_i'   frag_i);
-      cut (Eq frag_j'   frag_j);
-      cut (Eq frag_hi'  frag_hi);
-      cut (Eq frag_mid' frag_mid);
+      lemma_swap_permutes_aux_frag_eq s i j 0 i;
+      lemma_swap_permutes_aux_frag_eq s i j (i + 1) j;
+      lemma_swap_permutes_aux_frag_eq s i j (j + 1) (length s);
 
       lemma_append_count_aux x frag_lo (append frag_j (append frag_mid (append frag_i frag_hi)));
       lemma_append_count_aux x frag_j (append frag_mid (append frag_i frag_hi));
       lemma_append_count_aux x frag_mid (append frag_i frag_hi);
       lemma_append_count_aux x frag_i frag_hi
   end
-
 
 #set-options "--max_fuel 0 --initial_fuel 0 --z3timeout 5"
 opaque type permutation (a:Type) (s1:seq a) (s2:seq a) =

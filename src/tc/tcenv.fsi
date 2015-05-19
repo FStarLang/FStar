@@ -80,8 +80,8 @@ and solver_t = {
     finish:  unit -> unit;
     refresh: unit -> unit;
 }
-val push: env -> env
-val pop: env -> env
+val push: env -> string -> env
+val pop: env -> string -> env
 val mark: env -> env
 val reset_mark: env -> env
 val commit_mark: env -> env

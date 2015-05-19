@@ -116,8 +116,8 @@ let show env = !Options.show_signatures |> Util.for_some (fun x -> env.curmodule
 
 let new_sigtab () = Util.smap_create default_table_size
 let sigtab env = List.hd env.sigtab
-let push env = 
-    env.solver.push "USER PUSH";
+let push env msg = 
+    env.solver.push msg;
     {env with sigtab=Util.smap_copy (sigtab env)::env.sigtab}
 let mark env = 
     env.solver.mark "USER MARK";
@@ -131,11 +131,11 @@ let commit_mark env =
 let reset_mark env = 
     env.solver.reset_mark "USER MARK";
     {env with sigtab=List.tl env.sigtab}
-let pop env = match env.sigtab with 
+let pop env msg = match env.sigtab with 
     | []
     | [_] -> failwith "Too many pops"
     | _::tl -> 
-        env.solver.pop "USER POP";
+        env.solver.pop msg;
         {env with sigtab=tl}
 
 let initial_env solver module_lid =

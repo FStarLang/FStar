@@ -1766,6 +1766,7 @@ let get_exports env modul non_private_decls =
 let tc_partial_modul env modul = 
   let name = Util.format2 "%s %s"  (if modul.is_interface then "interface" else "module") modul.name.str in
   let msg = "Internals for " ^name in
+  let env = {env with Env.is_iface=modul.is_interface; admit=not (Options.should_verify modul.name.str)} in
   if not (lid_equals modul.name Const.prims_lid) then env.solver.push msg;        
   let env = Tc.Env.set_current_module env modul.name in 
   let ses, non_private_decls, env = tc_decls true env modul.declarations modul.is_deserialized in
@@ -1807,8 +1808,6 @@ let add_modul_to_tcenv (en: env) (m: modul) :env =
 let check_module env m = 
     if List.length !Options.debug <> 0
     then Util.fprint2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.sli m.name);
-
-    let env = {env with Env.is_iface=m.is_interface; admit=not (Options.should_verify m.name.str)} in
 
     let m, env =
         if m.is_deserialized then
