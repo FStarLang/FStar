@@ -1,7 +1,7 @@
 (*--build-config
     options:--max_ifuel 1 --initial_ifuel 1 --max_fuel 1 --initial_fuel 1;
   --*)
-(* Copyright Microsoft Reseach 2015
+(* Copyright Microsoft Research 2015
 
    This module is an adaptation of Chris Hawblitzel and Erez Petrank's
    simplified mark-sweep collector from the POPL 2009 paper
