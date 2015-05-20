@@ -630,12 +630,21 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
       let ds_let_rec () = 
         let bindings = (pat, _snd)::_tl in
         let funs = bindings |> List.map (fun (p, def) ->
-          let p, def = if is_app_pattern p
-                       then p, def
-                       else match un_function p def with 
-                             | Some (p, def) -> p, def  
-                             | _ -> raise (Error("Only functions may be defined recursively", p.prange)) in
-          destruct_app_pattern env top_level p, def) in
+          if is_app_pattern p
+          then destruct_app_pattern env top_level p, def
+          else match un_function p def with 
+                | Some (p, def) -> destruct_app_pattern env top_level p, def  
+                | _ -> begin match p.pat with 
+                                | PatAscribed({pat=PatVar(id,_)}, t) ->
+                                  if top_level
+                                  then (Inr (qualify env id), [], Some t), def
+                                  else (Inl id, [], Some t), def
+                                | PatVar(id, _) ->
+                                  if top_level
+                                  then (Inr (qualify env id), [], None), def
+                                  else (Inl id, [], None), def
+                                | _ -> raise (Error("Unexpected let binding", p.prange))
+                      end) in
         let env', fnames =
           List.fold_left (fun (env, fnames) ((f, _, _), _) ->
             let env, lbname = match f with
@@ -650,7 +659,9 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
           let def = match result_t with
             | None -> def
             | Some t -> mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr in
-          let def = mk_term (un_curry_abs args def) top.range top.level in
+          let def = match args with 
+            | [] -> def
+            | _ -> mk_term (un_curry_abs args def) top.range top.level in
           //let _ = Util.fprint1 "Desugaring let binding: %s\n" (AST.term_to_string def) in
           desugar_exp env def in
         let defs = funs |> List.map (desugar_one_def (if is_rec then env' else env)) in
