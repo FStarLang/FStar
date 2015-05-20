@@ -1,9 +1,19 @@
 (*--build-config
-    options:--max_ifuel 1 --initial_ifuel 1 --max_fuel 1 --initial_fuel 1 --z3timeout 15;
+    options:--max_ifuel 1 --initial_ifuel 1 --max_fuel 1 --initial_fuel 1;
   --*)
+(* Copyright Microsoft Reseach 2015
+
+   This module is an adaptation of Chris Hawblitzel and Erez Petrank's
+   simplified mark-sweep collector from the POPL 2009 paper
+   "Automated Verification of Practical Garbage Collectors"
+
+   While this module states and proves the same properties as the paper,
+   its implementation is currently still quite high-level, e.g, it
+   uses lots of recursive functions instead of while loops with mutable
+   local variables. Going lower level with this module is work in progress.
+*)
 module GC
 
-(* invariants *)
 type color =
  | Unalloc
  | White
@@ -34,9 +44,9 @@ opaque logic type trigger (i:int) = True
 
 opaque logic type to_abs_inj (to_abs:abs_map) =
   forall (i1:mem_addr) (i2:mem_addr).{:pattern (trigger i1); (trigger i2)}
-    trigger i1
-    /\ trigger i2
-    /\ valid (to_abs i1)
+    trigger i1 /\
+    trigger i2 /\
+       valid (to_abs i1)
     /\ valid (to_abs i2)
     /\ i1 <> i2
     ==> to_abs i1 <> to_abs i2
@@ -61,14 +71,16 @@ opaque type obj_inv gc_state (i:mem_addr) =
 
 type inv gc_state (color_invariant:mem_addr -> Type) =
     to_abs_inj gc_state.to_abs
-    /\ (forall (i:mem_addr).//{:pattern (trigger i)}
-          trigger i /\
+    /\ (forall (i:mem_addr).{:pattern (trigger i)}
+          trigger i ==>
           obj_inv gc_state i /\
           color_invariant i /\
           (not (valid (gc_state.to_abs i)) <==> gc_state.color i = Unalloc))
 
 opaque logic type gc_inv gc_state =
-  inv gc_state (fun i -> (gc_state.color i = Black ==> (forall f. gc_state.color (gc_state.fields (i, f)) <> White)))
+  inv gc_state (fun i ->
+      (gc_state.color i = Black
+        ==> (forall f. gc_state.color (gc_state.fields (i, f)) <> White)))
 
 opaque logic type mutator_inv gc_state =
   inv gc_state (fun i -> gc_state.color i = Unalloc \/ gc_state.color i = White)
@@ -145,10 +157,10 @@ let write_field ptr f v =
 val mark : ptr:mem_addr -> GC unit
   (requires (fun gc -> gc_inv gc /\ trigger ptr /\ ptr_lifts gc ptr))
   (ensures (fun gc _ gc' -> gc_inv gc'
-                        /\  (forall (i:mem_addr).{:pattern (trigger i)}
-                                   trigger i
-                                /\ gc'.color i <> Black
-                                ==> gc.color i = gc'.color i)
+                        /\  (forall (i:mem_addr).//{:pattern (trigger i)}
+                                   trigger i /\
+                                   (gc'.color i <> Black
+                                 ==> gc.color i = gc'.color i))
                         /\ gc'.color ptr <> White
                         /\ (exists c. gc' = {gc with color=c})))
 let rec mark ptr =
@@ -163,74 +175,69 @@ let rec mark ptr =
     set ({st'' with color = upd_map st''.color ptr Black})
   end
 
-opaque logic type sweep_aux_inv_i (ptr:int) (old:gc_state) (st:gc_state) (i:mem_addr) =
-  trigger i
-  /\ (old.color i = Black
-   ==> (ptr_lifts st i
-       (*/\ obj_inv st i*)
-       /\ (forall f. st.fields (i, f) >= ptr ==> st.color (st.fields (i, f)) <> White)))
+ opaque logic type sweep_aux_inv (old:gc_state) (ptr:int) (st:gc_state) =
+  gc_inv old
+  /\ (st.fields = old.fields /\ st.abs_fields = old.abs_fields)
+  /\ to_abs_inj st.to_abs
+  /\ (forall (i:mem_addr). {:pattern (trigger i)}
+           trigger i
+       ==> st.color i <> Gray
+       /\ (old.color i = Black
+           ==> (ptr_lifts st i
+               /\ obj_inv st i
+               /\ (forall f. st.fields (i, f) >= ptr ==> st.color (st.fields (i, f)) <> White)))
+       /\ (~(ptr_lifts st i) <==> st.color i=Unalloc)
+       /\ (ptr_lifts st i ==> old.to_abs i = st.to_abs i)
+       /\ (ptr <= i ==> old.color i = st.color i)
+       /\ (i < ptr ==> (st.color i = Unalloc \/ st.color i = White))
+       /\ (i < ptr /\ st.color i = White ==> old.color i = Black)
+     )
 
-opaque logic type sweep_aux_inv (ptr:int) (old:gc_state) (st:gc_state) =
-   to_abs_inj st.to_abs
-   /\ gc_inv st
-   /\ (forall (i:mem_addr). //{:pattern (trigger i)}
-        //sweep_aux_inv_i ptr old st i
-            trigger i
-        /\ st.color i <> Gray
-        /\ (old.color i = Black
-            ==> (ptr_lifts st i
-                /\ obj_inv st i
-                /\ (forall f. st.fields (i, f) >= ptr ==> st.color (st.fields (i, f)) <> White)))
-        /\ (~(ptr_lifts st i) <==> st.color i=Unalloc)
-        /\ (ptr_lifts st i ==> old.to_abs i = st.to_abs i)
-        /\ (ptr <= i ==> old.color i = st.color i)
-        /\ (i < ptr ==> (st.color i = Unalloc \/ st.color i = White))
-        (*/\ (i < ptr /\ st.color i = White
-            ==> old.color i = Black)*)
-      )
-#reset-options
-val sweep_aux: ptr:mem_addr -> GC unit
-  (requires (fun st -> sweep_aux_inv ptr st st))
-  (ensures (fun old _ st' -> sweep_aux_inv (ptr + 1) old st'))
-let rec sweep_aux ptr =
+let test1 old new = assert (sweep_aux_inv old mem_hi new
+                           ==> mutator_inv new)
+
+let test2 old = assert (gc_inv old /\ (forall i. old.color i <> Gray) ==> sweep_aux_inv old mem_lo old)
+
+val sweep_aux: old:gc_state -> ptr:mem_addr -> GC unit
+    (requires (fun gc -> sweep_aux_inv old ptr gc))
+    (ensures (fun _ _ st ->
+                    (st.abs_fields = old.abs_fields
+                     /\ st.fields = old.fields
+                     /\ mutator_inv st
+                     /\ (forall (i:mem_addr).{:pattern (trigger i)}
+                             trigger i
+                          ==> (old.color i=Black ==> ptr_lifts st i)
+                              /\ (ptr_lifts st i ==> old.to_abs i = st.to_abs i)))))
+let rec sweep_aux old ptr =
   cut (trigger ptr);
   let st = get () in
   if st.color ptr = White //deallocate
   then (let st' = {st with
                       color=upd_map st.color ptr Unalloc;
                       to_abs=upd_map st.to_abs ptr no_abs} in
-        admitP (gc_inv st');
-        (*assert (sweep_aux_inv (ptr + 1) st' st');*)
         set st')
   else if st.color ptr = Black
   then
   begin let st' = {st with color=upd_map st.color ptr White} in
-        admitP (gc_inv st');
         set st'
-        (*assert (sweep_aux_inv (ptr + 1) st' st')*)
   end;
-  let st' = get () in
-  assert (sweep_aux_inv (ptr + 1) st' st');
-  admit();
-  (*let st' = get () in
-  assert (sweep_aux_inv (ptr + 1) st st')*)
-  //admit();
   if ptr + 1 < mem_hi
-  then sweep_aux (ptr + 1)
+  then sweep_aux old (ptr + 1)
 
 val sweep: unit -> GC unit
   (requires (fun gc -> gc_inv gc
                     /\ (forall (i:mem_addr). {:pattern (trigger i)}
                              trigger i
-                          /\ gc.color i <> Gray)))
+                          ==> gc.color i <> Gray)))
   (ensures (fun gc _ gc' -> (exists c a. gc' = {gc with color=c; to_abs=a}
                         /\ mutator_inv gc'
                         /\ (forall (i:mem_addr).{:pattern (trigger i)}
                                  trigger i
-                              /\ (gc.color i=Black ==> ptr_lifts gc' i)
-                              /\ (ptr_lifts gc i <==> ptr_lifts gc' i)
-                              /\ (ptr_lifts gc' i ==> gc.to_abs i = gc'.to_abs i)))))
-let sweep _u = sweep_aux mem_lo
+                              ==> (gc.color i=Black ==> ptr_lifts gc' i)
+                              (*/\ (ptr_lifts gc i <==> ptr_lifts gc' i)*)
+                                  /\ (ptr_lifts gc' i ==> gc.to_abs i = gc'.to_abs i)))))
+let sweep _u =
+  sweep_aux (get()) mem_lo
 
 val gc: root:mem_addr -> GCMut unit
   (requires (fun gc -> root<>0 ==> ptr_lifts gc root))
@@ -238,7 +245,7 @@ val gc: root:mem_addr -> GCMut unit
                     /\ (root<>0 ==> ptr_lifts gc' root)
                     /\ (forall (i:mem_addr). {:pattern (trigger i)}
                                  trigger i
-                              /\ (ptr_lifts gc i <==> ptr_lifts gc' i)
+                              (*/\ (ptr_lifts gc i <==> ptr_lifts gc' i)*)
                               /\ (ptr_lifts gc' i ==> gc.to_abs i = gc'.to_abs i))
                     /\ (root <> 0 ==> gc.to_abs root = gc'.to_abs root)))
 let gc root =
@@ -286,15 +293,15 @@ opaque logic type try_alloc_invariant (root:mem_addr) (abs:abs_node) (gc:gc_stat
   /\ gc'.abs_fields (abs, F2) = abs
   /\ (forall (i:mem_addr).{:pattern (trigger i)}
                          trigger i
-                      /\ ptr_lifts gc i
-                      ==> gc'.to_abs i <> abs)
+                      ==> (ptr_lifts gc i
+                      ==> gc'.to_abs i <> abs))
 
 val alloc: root:mem_addr -> abs:abs_node -> GCMut mem_addr
   (requires (fun gc ->
               try_alloc_invariant root abs gc gc
               /\ abs <> no_abs
               /\ (forall (i:mem_addr). trigger i /\ ptr_lifts gc i ==> gc.to_abs i <> abs)))
-  (ensures (fun gc ptr gc' -> try_alloc_invariant root abs gc gc'
+  (ensures (fun gc ptr gc' -> (root <> 0 ==> ptr_lifts_to gc' root (gc.to_abs root))
                             /\ ptr_lifts gc' ptr
                             /\ gc'.abs_fields = gc.abs_fields))
 let rec alloc root abs =

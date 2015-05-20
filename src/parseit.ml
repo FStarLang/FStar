@@ -36,34 +36,36 @@ let read_build_config (filename:string) =
         let fields = Util.split bc ";" in
         fields |> List.iter (fun field ->
         let field = Util.trim_string field in
-        let nv = Util.split field ":" in
-        if List.length nv <> 2
-        then fail ("could not parse field: " ^ field)
-        else let [name; value] = nv in
-             match name with
-                | "options" -> set_options value
-                | "other-files" ->
-                   set_filenames (Util.split value " "
-                                  |> List.map
-                                       (fun x ->
-                                        let x = Util.trim_string x in
-                                        if String.length x = 0
-                                        then []
-                                        else [x])
-                                 |> List.flatten)
-                | "variables" ->
-                  let vars = Util.split value " " in
-                  vars |> List.iter (fun v ->
-                    let v = Util.trim_string v in
-                    if String.length v = 0
-                    then ()
-                    else
-                      let xv = Util.split v "=" in
-                      if List.length xv <> 2
-                      then fail (Util.format1 "could not parse variable:<%s>"  v)
-                      else let [x;v] = xv in
-                           set_variable (Util.trim_string x, Util.trim_string v))
-                | _ -> fail ("unexpected config option: " ^ name));
+        if field = "" then ()
+        else
+          let nv = Util.split field ":" in
+          if List.length nv <> 2
+          then fail ("could not parse field: " ^ field)
+          else let [name; value] = nv in
+               match name with
+                  | "options" -> set_options value
+                  | "other-files" ->
+                     set_filenames (Util.split value " "
+                                    |> List.map
+                                         (fun x ->
+                                          let x = Util.trim_string x in
+                                          if String.length x = 0
+                                          then []
+                                          else [x])
+                                   |> List.flatten)
+                  | "variables" ->
+                    let vars = Util.split value " " in
+                    vars |> List.iter (fun v ->
+                      let v = Util.trim_string v in
+                      if String.length v = 0
+                      then ()
+                      else
+                        let xv = Util.split v "=" in
+                        if List.length xv <> 2
+                        then fail (Util.format1 "could not parse variable:<%s>"  v)
+                        else let [x;v] = xv in
+                             set_variable (Util.trim_string x, Util.trim_string v))
+                  | _ -> fail ("unexpected config option: " ^ name));
 
         begin match !options with
             | None -> ()
