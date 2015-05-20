@@ -234,7 +234,6 @@ val sweep: unit -> GC unit
                         /\ (forall (i:mem_addr).{:pattern (trigger i)}
                                  trigger i
                               ==> (gc.color i=Black ==> ptr_lifts gc' i)
-                              (*/\ (ptr_lifts gc i <==> ptr_lifts gc' i)*)
                                   /\ (ptr_lifts gc' i ==> gc.to_abs i = gc'.to_abs i)))))
 let sweep _u =
   sweep_aux (get()) mem_lo
@@ -245,7 +244,6 @@ val gc: root:mem_addr -> GCMut unit
                     /\ (root<>0 ==> ptr_lifts gc' root)
                     /\ (forall (i:mem_addr). {:pattern (trigger i)}
                                  trigger i
-                              (*/\ (ptr_lifts gc i <==> ptr_lifts gc' i)*)
                               /\ (ptr_lifts gc' i ==> gc.to_abs i = gc'.to_abs i))
                     /\ (root <> 0 ==> gc.to_abs root = gc'.to_abs root)))
 let gc root =
