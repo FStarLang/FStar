@@ -528,11 +528,11 @@ let extract_lb_annotation env t e = match t.n with
           end in 
         
 
-    let rec aux vars e = match e.n with 
+    let rec aux vars e : exp * typ * bool = match e.n with 
       | Exp_meta(Meta_desugared(e, _)) -> aux vars e 
-      | Exp_ascribed(_, t) -> t, true
+      | Exp_ascribed(e, t) -> e, t, true
 
-      | Exp_abs(bs, e) -> 
+      | Exp_abs(bs, body) -> 
         let scope, bs, check = bs |> List.fold_left (fun (scope, bs, check) b -> match fst b with 
             | Inl a -> 
               let tb, c = mk_t_binder scope a in
@@ -545,17 +545,18 @@ let extract_lb_annotation env t e = match t.n with
               let b = (Inr vb, snd b) in //Note, the default annotation for a let-rec bound function is non-dependent on the values; important for efficiency
               scope, bs@[b], c || check) (vars,[],false) in
 
-        let res, check_res = aux scope e in 
+        let body, res, check_res = aux scope body in 
         let c = Util.ml_comp res r in
         let t = mk_Typ_fun(bs, c) (Some ktype) e.pos in
         if debug env Options.High then Util.fprint2 "(%s) Using type %s\n" (Range.string_of_range r) (Print.typ_to_string t);
-        t, check_res || check
+        let e = mk_Exp_abs(bs, body) None e.pos in
+        e, t, check_res || check
 
-      | _ -> Rel.new_tvar r vars ktype |> fst, false in
+      | _ -> e, Rel.new_tvar r vars ktype |> fst, false in
 
      aux (Env.t_binders env)  e       
 
-  | _ -> t, false
+  | _ -> e, t, false
 
 (*********************************************************************************************)
 (* Utils related to monadic computations *)
@@ -683,7 +684,13 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
       match try_simplify () with 
         | Some c -> 
           if Tc.Env.debug env <| Options.Other "bind"
-          then Util.fprint3 "bind %s and %s simplified to %s\n" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2) (Print.comp_typ_to_string c);
+          then Util.fprint4 "bind (%s) %s and %s simplified to %s\n" 
+              (match b with 
+                 | None -> "None" 
+                 | Some (Env.Binding_var(x, _)) -> Print.strBvd x 
+                 | Some (Env.Binding_lid(l, _)) -> Print.sli l
+                 | _ -> "Something else") 
+            (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2) (Print.comp_typ_to_string c);
           c
         | None -> 
           let (md, a, kwp), (t1, wp1, wlp1), (t2, wp2, wlp2) = lift_and_destruct env c1 c2 in 

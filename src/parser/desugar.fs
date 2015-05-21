@@ -655,17 +655,16 @@ and desugar_exp_maybe_top (top_level:bool) (env:env_t) (top:term) : exp =
                 push_rec_binding env (Binding_let l), Inr l in
             env, (lbname::fnames)) (env, []) funs in
         let fnames = List.rev fnames in
-        let desugar_one_def env ((_, args, result_t), def) =
-          let def = match result_t with
-            | None -> def
-            | Some t -> mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr in
-          let def = match args with 
-            | [] -> def
-            | _ -> mk_term (un_curry_abs args def) top.range top.level in
-          //let _ = Util.fprint1 "Desugaring let binding: %s\n" (AST.term_to_string def) in
-          desugar_exp env def in
-        let defs = funs |> List.map (desugar_one_def (if is_rec then env' else env)) in
-        let lbs = List.map2 (fun lbname def -> (lbname, tun, def)) fnames defs in
+        let desugar_one_def env lbname ((_, args, result_t), def) =
+            let def = match result_t with
+                | None -> def
+                | Some t -> mk_term (Ascribed(def, t)) (Range.union_ranges t.range def.range) Expr in
+            let def = match args with 
+                | [] -> def
+                | _ -> mk_term (un_curry_abs args def) top.range top.level in
+            let body = desugar_exp env def in
+            (lbname, tun, body) in
+        let lbs = List.map2 (desugar_one_def (if is_rec then env' else env)) fnames funs in
         let body = desugar_exp env' body in
         pos <| mk_Exp_let((is_rec, lbs), body) in
 
@@ -1566,6 +1565,7 @@ let desugar_partial_modul curmod env (m:AST.modul) : env_t * Syntax.modul =
 let desugar_modul env (m:AST.modul) : env_t * Syntax.modul = 
   let env, modul = desugar_partial_modul None env m in 
   let env = DesugarEnv.finish_module_or_interface env modul in
+  if Options.should_dump modul.name.str then Util.fprint1 "%s\n" (Print.modul_to_string modul);
   env, modul
 
 let desugar_file env (f:file) =

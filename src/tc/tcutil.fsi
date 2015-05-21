@@ -44,7 +44,7 @@ val maybe_instantiate : env -> exp -> typ -> (exp * typ * implicits)
 val destruct_comp: comp_typ -> (typ * typ * typ)
 val destruct_arrow_kind: env -> typ -> knd -> args -> (args * binders * knd)
 val mk_basic_dtuple_type: env -> int -> typ
-val extract_lb_annotation: env -> typ -> exp -> typ*bool
+val extract_lb_annotation: env -> typ -> exp -> (exp * typ * bool)
 
 (* most operations on computations are lazy *)
 type lcomp_with_binder = option<Env.binding> * lcomp

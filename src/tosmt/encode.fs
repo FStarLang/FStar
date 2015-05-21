@@ -818,7 +818,7 @@ and encode_exp (e:exp) (env:env_t) : (term
         ee2, decls1@decls2 
   
       | Exp_let _ -> 
-        Tc.Errors.warn e.pos "Nested 'let rec' is not yet fully encoded to the SMT solver; you may not be able to prove some facts";
+        Tc.Errors.warn e.pos "Non-top-level recursive functions are not yet fully encoded to the SMT solver; you may not be able to prove some facts";
         let e = varops.fresh "let-rec" in
         let decl_e = Term.DeclFun(e, [], Term_sort, None) in
         Term.mkFreeV(e, Term_sort), [decl_e]

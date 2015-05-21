@@ -65,7 +65,7 @@ val esubst : s:esub -> e:exp -> Pure exp (requires True)
       (ensures (fun e' -> erenaming s /\ is_EVar e ==> is_EVar e'))
       (decreases %[is_evar e; is_erenaming s; 1; e])
 
-val esub_lam: s:esub -> x:var -> Tot (e:exp{ erenaming s ==> is_EVar e}) 
+val esub_lam: s:esub -> x:var -> Tot (e:exp{ erenaming s ==> is_EVar e})
       (decreases %[1;is_erenaming s; 0; EVar 0])
 
 let rec esubst s e =
@@ -1056,7 +1056,8 @@ let rec tred_tarr_preserved s1 s2 t h =
             let ExIntro t1 (ExIntro t2 (Conj p1 p2)) =
                                            tred_tarr_preserved #u1 #u2 #t hs1 in
             ExIntro t1 (ExIntro t2 (Conj (TsStep h11 p1) (TsStep h12 p2)))
-
+#reset-options
+//NS: Something seems super fragile here ...
 opaque val inversion_elam :
       #g:env -> s1:typ -> e:exp -> #s:typ -> t1:typ -> t2:typ ->
       ht:typing g (ELam s1 e) s -> heq:tequiv s (TArr t1 t2) ->
@@ -1069,14 +1070,29 @@ let rec inversion_elam g s1 e s t1 t2 ht heq hnew = match ht with
   | TyLam #g s1 #e #s2 hk ht1 ->
     let ExIntro u p = tequiv_tred_tred heq in
     let Conj p1 p2 = p in
+    (* NS:
+       p1:tred_star (TArr s1 s2) u
+       p2:tred_star (TArr t1 t2) u
+    *)
 
     (* AR: implicits required *)
+    (*let ExIntro u1 pp = tred_tarr_preserved #s1 #s2 #u p1 in
+    let ExIntro u2 (Conj psu1 psu2) = pp in
+    *)
     let ExIntro u1 (ExIntro u2 (Conj psu1 psu2)) = tred_tarr_preserved #s1 #s2 #u p1 in
+    (* NS:
+       psu1: tred_star (TArr s1 s2) (TArr u1 u2)
+       psu2: tred_star u (TArr u1 u2)
+    *)
 
     (* AR: implicits required *)
     (* CH: can't merge these two matches (error: "Patterns are incomplete") *)
     let ExIntro u1' p = tred_tarr_preserved #t1 #t2 #u p2 in
     let ExIntro u2' (Conj ptu1 ptu2) = p in
+    (* NS:
+        ptu1: tred_star (TArr s1 s2) (TArr u1' u2')
+        ptu2: tred_star u (TArr u1' u2')
+    *)
 
     (*
      * AR: so now we have tequiv s2 t2, and ht1. as TAPL says, we now want to use
@@ -1090,8 +1106,9 @@ let rec inversion_elam g s1 e s t1 t2 ht heq hnew = match ht with
      * requiring that the lookup type has kind KTyp.
      *)
 
-    let pst2 = EqTran (tred_star_tequiv psu2)
-                      (EqSymm (tred_star_tequiv ptu2)) in
+    let pst2 = EqTran (tred_star_tequiv psu2) //NS: tequiv (TArr u1 u2) u
+                      (EqSymm (tred_star_tequiv ptu2))  //NS: tequiv u (TArr u1' u2')
+                      in
     let h:(typing (extend_evar g 0 s1) e t2) =
       TyEqu ht1 pst2 (kinding_weakening_ebnd hnew 0 s1) in
     Conj (Conj (EqTran (tred_star_tequiv ptu1)

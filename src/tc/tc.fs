@@ -113,9 +113,9 @@ let set_lcomp_result lc t =
 
 let value_check_expected_typ env e tlc : exp * lcomp * guard_t =
   let lc = match tlc with 
-    | Inl t -> Tc.Util.lcomp_of_comp (match (Util.compress_typ t).n with 
-                                          | Typ_fun _ -> mk_Total t
-                                          | _ -> Tc.Util.return_value env t e)
+    | Inl t -> Tc.Util.lcomp_of_comp (if not (Util.is_pure_or_ghost_function t)
+                                      then mk_Total t
+                                      else Tc.Util.return_value env t e)
     | Inr lc -> lc in
   let t = lc.res_typ in
   let e, lc, g = match Env.expected_typ env with 
@@ -561,7 +561,7 @@ and tc_value env e : exp * lcomp * guard_t =
         | None -> (* no expected type; just build a function type from the binders in the term *)
             let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
             let bs, envbody, g = tc_binders env bs in
-            None, bs, None, envbody, g
+            None, bs, [], None, envbody, g
 
         | Some t -> 
            let t = compress_typ t in
@@ -572,7 +572,7 @@ and tc_value env e : exp * lcomp * guard_t =
                   let _ = match env.letrecs with [] -> () | _ -> failwith "Impossible" in
                   let bs, envbody, g = tc_binders env bs in 
                   let envbody, _ = Env.clear_expected_typ envbody in
-                  Some t, bs, None, envbody, g
+                  Some t, bs, [], None, envbody, g
 
                 | Typ_fun(bs', c) -> 
                     (* Two main interesting bits here;
@@ -636,7 +636,7 @@ and tc_value env e : exp * lcomp * guard_t =
                        List.rev out, env, g, Util.subst_comp subst c in
 
                  let mk_letrec_environment actuals env = match env.letrecs with 
-                    | [] -> env
+                    | [] -> env, []
                     | letrecs ->
                      let _ = if Tc.Env.debug env Options.High then Util.fprint1 "Building let-rec environment... type of this abstraction is %s\n" (Print.typ_to_string t) in
                      let r = Env.get_range env in
@@ -713,12 +713,15 @@ and tc_value env e : exp * lcomp * guard_t =
                         
                           | _ -> failwith "Impossible") in
 
-                     letrecs |> List.fold_left (fun env (x,t) -> Env.push_local_binding env (binding_of_lb x t)) env in
+                     letrecs |> List.fold_left (fun env (x,t) -> Env.push_local_binding env (binding_of_lb x t)) env, 
+                     letrecs |> List.collect (function 
+                        | Inl x, t -> [v_binder (Util.bvd_to_bvar_s x t)]
+                        | _ -> []) in
                 
                  let bs, envbody, g, c = tc_binders ([], env, Rel.trivial_guard, []) bs' c bs in
-                 let envbody = if !Options.verify then mk_letrec_environment bs envbody else envbody in
+                 let envbody, letrecs = if !Options.verify then mk_letrec_environment bs envbody else envbody, [] in
                  let envbody = Tc.Env.set_expected_typ envbody (Util.comp_result c) in
-                 Some t, bs, Some c, envbody, g
+                 Some t, bs, letrecs, Some c, envbody, g
 
                 (* CK: add this case since the type may be f:(a -> M b wp){φ}, in which case I drop the refinement *)
                 | Typ_refine (b, _) -> as_function_typ norm b.sort
@@ -728,12 +731,12 @@ and tc_value env e : exp * lcomp * guard_t =
                           otherwise synthesize a type and check it against the given type *)
                   if not norm
                   then as_function_typ true (whnf env t) 
-                  else let _, bs, c_opt, envbody, g = expected_function_typ env None in
-                       Some t, bs, c_opt, envbody, g in
+                  else let _, bs, _, c_opt, envbody, g = expected_function_typ env None in
+                       Some t, bs, [], c_opt, envbody, g in
            as_function_typ false t in
 
     let env, topt = Tc.Env.clear_expected_typ env in
-    let tfun_opt, bs, c_opt, envbody, g = expected_function_typ env topt in
+    let tfun_opt, bs, letrec_binders, c_opt, envbody, g = expected_function_typ env topt in
     let body, cbody, guard_body = tc_exp ({envbody with top_level=false}) body in 
     if Env.debug env Options.Medium
     then Util.fprint3 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\n" (Print.exp_to_string body) (Print.lcomp_typ_to_string cbody) (Rel.guard_to_string env guard_body);
@@ -744,7 +747,7 @@ and tc_value env e : exp * lcomp * guard_t =
     let guard = Rel.conj_guard guard_body guard in
     let guard = if env.top_level || not(!Options.verify) 
                 then (Tc.Util.discharge_guard envbody (Rel.conj_guard g guard); {Rel.trivial_guard with implicits=guard.implicits})
-                else let guard = Rel.close_guard bs guard in Rel.conj_guard g guard in 
+                else let guard = Rel.close_guard (bs@letrec_binders) guard in Rel.conj_guard g guard in 
     let tfun, guard = match tfun_opt with 
         | Some t -> 
            let t = Util.compress_typ t in
@@ -752,15 +755,18 @@ and tc_value env e : exp * lcomp * guard_t =
                 | Typ_fun _ -> t, guard
                 | _ -> 
                     let t' = mk_Typ_fun(bs, cbody) (Some ktype) top.pos in
+                    if Env.debug env Options.Low
+                    then Util.fprint2 "Adding an additional equality constraint between\nannotated type %s\nand\ncomputed type %s\n" (Print.typ_to_string t) (Print.typ_to_string t');
                     let guard' = Rel.teq env t t' in
                     t', Rel.conj_guard guard guard')
         | None -> mk_Typ_fun(bs, cbody) (Some ktype) top.pos, guard in
     if Env.debug env Options.Low
-    then Util.fprint2 "!!!!!!!!!!!!!!!Annotating lambda with type %s (%s)\n" (Print.typ_to_string tfun) (Print.tag_of_typ tfun);
+    then Util.fprint3 "!!!!!!!!!!!!!!!Annotating lambda with type %s (%s)\nGuard is %s\n" (Print.typ_to_string tfun) (Print.tag_of_typ tfun) (Rel.guard_to_string env guard);
 
     let e = mk_Exp_abs(bs, body) (Some tfun) e.pos  in
     let e = mk_Exp_ascribed(e, tfun) e.pos in //Important to ascribe, since the SMT encoding requires the type of every abstraction
-    let c, g = Tc.Util.strengthen_precondition None env e (Tc.Util.lcomp_of_comp <| mk_Total tfun) guard in
+    let c = if env.top_level then mk_Total tfun else Tc.Util.return_value env tfun e in
+    let c, g = Tc.Util.strengthen_precondition None env e (Tc.Util.lcomp_of_comp c) guard in
     
     e, c, g 
 
@@ -1077,6 +1083,8 @@ and tc_exp env e : exp * lcomp * guard_t =
             let e2, c2, g2 = tc_exp (Env.push_local_binding env b) e2 in
             let cres = Tc.Util.bind env (Some e1) c1 (Some b, c2) in
             let e = w cres <| mk_Exp_let((false, [(x, c1.res_typ, e1)]), e2) in
+            let g2 = Rel.close_guard [v_binder (Util.bvd_to_bvar_s bvd c1.res_typ)] <|
+                (Rel.imp_guard (Rel.guard_of_guard_formula (Rel.NonTrivial <| Util.mk_eq c1.res_typ c1.res_typ (Util.bvd_to_exp bvd c1.res_typ) e1)) g2) in
             let guard = Rel.conj_guard guard_f (Rel.conj_guard g1 g2) in
             match topt with
               | None -> (* no expected type; check that x doesn't escape it's scope *)
@@ -1099,9 +1107,10 @@ and tc_exp env e : exp * lcomp * guard_t =
     let is_inner_let = lbs |> Util.for_some (function (Inl _, _, _) -> true (* inner let *) | _ -> false) in
     (* build an environment with recursively bound names. refining the types of those names with decreases clauses is done in Exp_abs *)
     let lbs, env' = lbs |> List.fold_left (fun (xts, env) (x, t, e) -> 
-      let t, check_t = Tc.Util.extract_lb_annotation env t e in 
+      let _, t, check_t = Tc.Util.extract_lb_annotation env t e in 
+      let e = Util.unascribe e in
       let t = 
-        if not check_t 
+        if not check_t
         then t
         else if not (is_inner_let) && not(env.generalize)
         then (if Env.debug env <| Options.High then Util.fprint1 "Type %s is marked as no-generalize\n" (Print.typ_to_string t); 

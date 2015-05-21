@@ -19,3 +19,49 @@ let rec fib_is_ok_aux i n =
 
 val fib_is_ok : n:nat -> Lemma (fib 1 1 n = fibonacci n)
 let fib_is_ok n = fib_is_ok_aux 0 n
+
+(* You can write nested recursive functions, as you'd expect *)
+val fib_inner_aux : nat -> Tot nat
+let fib_inner_aux n =
+  let rec aux : a:nat -> b:nat -> n:nat -> Tot nat (decreases n) =
+    fun a b n -> match n with
+      | 0 -> a
+      | _ -> aux b (a + b) (n - 1) in
+  aux 1 1 n
+
+(* But, proving that the nested aux correctly computes fibonacci is
+   hard, because you can't get you can't get your hands on that
+   nested recursive aux function.
+
+   Here's one way to do it. *)
+val fib_inner_aux_2 : n:nat -> Tot (f:nat{f=fibonacci n})
+let fib_inner_aux_2 n =
+  let rec aux : a:nat -> b:nat -> n:nat
+             -> Pure nat (requires true)
+                         (ensures (fun m -> forall (k:nat{n <= k}). a=fibonacci (k - n) /\ b=fibonacci (k - n + 1) ==> m=fibonacci k))
+                         (decreases n) =
+    fun a b n -> match n with
+      | 0 -> a
+      | _ -> aux b (a + b) (n - 1) in
+  aux 1 1 n
+
+(* Here's another way: which doesn't quite work yet *)
+(*val fib_inner_aux_3 : n:nat -> Tot (f:nat{f=fibonacci n})
+let fib_inner_aux_3 n =
+  let rec aux : a:nat -> b:nat -> n:nat -> Tot nat (decreases n) =
+    fun a b n -> match n with
+      | 0 -> a
+      | _ -> aux b (a + b) (n - 1) in
+  let rec lemma_aux_is_ok : k:nat -> n:nat{k <= n}
+                    -> Lemma (requires true)
+                             (ensures (aux (fibonacci (k - n))
+                                           (fibonacci (k - n + 1))
+                                           n
+                                       = fibonacci k))
+                             (decreases n) = fun k n ->
+      match n with
+        | 0 -> ()
+        | _ -> lemma_aux_is_ok k (n - 1) in
+  let result = aux 1 1 n in
+  lemma_aux_is_ok n n;
+  result*)
