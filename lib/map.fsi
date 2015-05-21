@@ -77,3 +77,6 @@ let const_on (#key:Type) (#value:Type) (dom:set key) (v:value) = restrict dom (c
 
 opaque type DisjointDom (#key:Type) (#value:Type) (m1:t key value) (m2:t key value) =
     (forall x.{:pattern (contains m1 x)(* ; (contains m2 x) *)} contains m1 x ==> not (contains m2 x))
+
+opaque type HasDom (#key:Type) (#value:Type) (m:t key value) (dom:set key) =
+  (forall x. contains m x <==> mem x dom)
