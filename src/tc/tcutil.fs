@@ -995,8 +995,10 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
           let g = {g with Rel.guard_f=Rel.Trivial} in
           let strengthen () = 
             let c = lc.comp() in
+          
             if Tc.Env.debug env <| Options.Extreme
             then Util.fprint2 "Strengthening %s with guard %s\n" (Normalize.comp_typ_norm_to_string env c) (Normalize.typ_norm_to_string env f);
+          
             let ct = Tc.Normalize.weak_norm_comp env c in
             let a, kwp = Env.wp_signature env Const.pure_effect_lid in
             let k = Util.subst_kind [Inl(a.v, t)] kwp in
@@ -1004,15 +1006,11 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
             let x = new_bvd None in
             let xexp = Util.bvd_to_exp x t in
             let wp = mk_Typ_app(md.ret, [targ t; varg xexp]) (Some k) xexp.pos in
-            let cret = lcomp_of_comp <| mk_comp md t wp wp [] in//ct.flags in
+            let cret = lcomp_of_comp <| mk_comp md t wp wp [RETURN] in
             let guard = if apply_guard then mk_Typ_app(f, [varg xexp]) (Some ktype) f.pos else f in
             let eq_ret, _trivial_so_ok_to_discard = 
             strengthen_precondition (Some <| Errors.subtyping_failed env lc.res_typ t) (Env.set_range env e.pos) e cret
                                     (guard_of_guard_formula <| Rel.NonTrivial guard) in
-            let eq_ret = 
-                if Util.is_pure_comp c 
-                then weaken_precondition env eq_ret (Rel.NonTrivial (Util.mk_eq t t xexp e))
-                else eq_ret in 
             let c = bind env (Some e) (lcomp_of_comp <| mk_Comp ct) (Some(Env.Binding_var(x, lc.res_typ)), eq_ret) in
             let c = c.comp () in
             if Tc.Env.debug env <| Options.Extreme
