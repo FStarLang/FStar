@@ -1198,20 +1198,21 @@ ktshd_ktsh (kesh (keshd k'))
 
 type pullback : env -> typ -> env -> knd -> Type =
 | PullBack : g:env -> t:typ -> g':env -> k':knd{eextend t g = textend k' g'} -> gbase : env -> tbase : typ { eextend tbase gbase = g' /\ ttsh tbase = t} -> kbase : knd {textend kbase gbase = g /\ kesh kbase = k'} -> pullback g t g' k'
+
 val get_pullback : g : env -> t : typ -> g' : env -> k':knd{eextend t g = textend k' g'} -> Tot (pullback g t g' k')
 let get_pullback g t g' k' = 
-let gbase = build_gbase g t g' k' in
-let tbase = ttshd t in
-let kbase = keshd k' in
-get_pullback3 g t g' k';
-ext_of_textend (eextend tbase gbase) k' g' k';
-assert (eextend tbase gbase = g');
-get_pullback6 g t g' k';
-ext_of_eextend (textend kbase gbase) t g t;
-assert (textend kbase gbase = g);
-get_pullback7 g t g' k';
-get_pullback8 g t g' k';
-PullBack g t g' k' gbase tbase kbase
+  let gbase = build_gbase g t g' k' in
+  let tbase = ttshd t in
+  let kbase = keshd k' in
+  get_pullback3 g t g' k';
+  ext_of_textend (eextend tbase gbase) k' g' k';
+  assert (eextend tbase gbase = g');
+  get_pullback6 g t g' k';
+  ext_of_eextend (textend kbase gbase) t g t;
+  assert (textend kbase gbase = g);
+  get_pullback7 g t g' k';
+  get_pullback8 g t g' k';
+  PullBack g t g' k' gbase tbase kbase
 
 (**************)
 (*   Typing   *)
@@ -1275,6 +1276,12 @@ type typing : env -> exp -> cmp -> Type =
 | TyRet : #g:env -> #e:exp -> t:typ ->
           typing g e (tot t) ->
           typing g e (Cmp EfPure t (return_pure t e))
+
+| TySub : #g:env -> #e:exp -> #c':cmp -> #c:cmp -> #phi:typ ->
+          =ht:typing g e c' ->
+          =hs:scmp g c' c phi ->
+          =hv:validity g phi ->
+              typing g e c
 
 and scmp : g:env -> c1:cmp -> c2:cmp -> phi:typ -> Type =
 
@@ -1391,9 +1398,9 @@ and kwf : env -> knd -> Type =
 
 and validity : g:env -> t:typ -> Type =
 
-| VAssume : #g:env -> x:var{is_Some (lookup_evar g x)} ->
-            =h:ewf g ->
-               validity g (Some.v (lookup_evar g x))
+| VAssume : #g:env -> e:exp -> t:typ ->
+            =h:typing g e (tot t) ->
+               validity g t
 
 | VRedE   : #g:env -> #e:exp -> #t:typ -> #e':exp ->
             =ht :typing g e (tot t) ->
@@ -1703,6 +1710,9 @@ let get_hwf2 s g1 g2 hs = match hs with
 val is_renaming_typing : #s:sub -> #g1:env -> #g2:env -> hs:subst_typing s g1 g2 -> Tot (r:nat{is_RenamingTyping hs ==> r = 0 /\ is_SubstTyping hs ==> r = 1})
 let is_renaming_typing s g1 g2 hs = if (is_RenamingTyping hs) then 0 else 1
 
+val is_tyvar : #g:env -> #e:exp -> #t:cmp -> ht:typing g e t -> Tot nat
+let is_tyvar g e t ht = if is_TyVar ht then 0 else 1
+
 val is_kvar : #g : env -> #t:typ -> #k:knd -> hk : kinding g t k -> Tot nat
 let is_kvar g t k hk = if is_KVar hk then 0 else 1
 
@@ -1790,7 +1800,7 @@ PreRenaming (sub_comp s23 s12) g1 g3
 (fun a -> let a' = PreRenaming.tf hsp12 a in ksubst_comp s23 s12 (Some.v (lookup_tvar g1 a)); PreRenaming.tf hsp23 a')
 
 type digcfgt : g:env -> t:typ -> hwf: ewf (eextend t g) -> Type =
-| DigCfgT : gb:env -> tb:typ -> hwfb: ewf (eextend tb gb) -> g':env -> hwf : ewf g' -> t':typ -> s':sub{tsubst s' t' = tb} -> hk : kinding g' t' KType{hk << hwfb} -> hs:prerenaming s' g' gb -> digcfgt gb tb hwfb
+  | DigCfgT : gb:env -> tb:typ -> hwfb: ewf (eextend tb gb) -> g':env -> hwf : ewf g' -> t':typ -> s':sub{tsubst s' t' = tb} -> hk : kinding g' t' KType{hk << hwfb} -> hs:prerenaming s' g' gb -> digcfgt gb tb hwfb (* << *)
 
 val eextend_not_empty : g:env -> t:typ -> Lemma (eextend t g <> empty)
 let eextend_not_empty g t = 
@@ -1810,7 +1820,7 @@ tsubst_comp sub_tinc sunder tunder;
 DigCfgT g t hwf gunder hwfunder tunder (sub_comp sub_tinc sunder) hkunder (compose_prerenaming_arrow gunder gbase g sunder sub_tinc hsunder (hsp_sub_tinc gbase kbase) )
 
 type digcfgk : g : env -> k : knd -> hwf : ewf (textend k g) -> Type =
-| DigCfgK : gb:env -> kb : knd -> hwfb : ewf (textend kb gb) -> g':env -> hwf : ewf g' -> k' : knd -> s':sub{ksubst s' k' = kb} -> hkw : kwf g' k'{hkw << hwfb} -> hs : prerenaming s' g' gb -> digcfgk gb kb hwfb
+  | DigCfgK : gb:env -> kb : knd -> hwfb : ewf (textend kb gb) -> g':env -> hwf : ewf g' -> k' : knd -> s':sub{ksubst s' k' = kb} -> hkw : kwf g' k'{hkw << hwfb} -> hs : prerenaming s' g' gb -> digcfgk gb kb hwfb (* << *)
 
 val digkwf : g:env -> k:knd -> hwf : ewf (textend k g) -> Tot (digcfgk g k hwf)
 let digkwf g k hwf = admit()
@@ -1819,8 +1829,8 @@ let digkwf g k hwf = admit()
 val typing_substitution : #g1:env -> #e:exp -> #c:cmp -> s:sub -> #g2:env ->
     h1:typing g1 e c ->
     hs:subst_typing s g1 g2 ->
-    Tot (hr:typing g2 (esubst s e) (csubst s c){is_RenamingTyping hs /\ is_TyVar h1 ==> is_TyVar hr})
-(decreases %[is_evar e; is_renaming_typing hs; h1; 0])
+    Tot (hr:typing g2 (esubst s e) (csubst s c)(* {is_RenamingTyping hs /\ is_TyVar h1 ==> is_TyVar hr} *))
+(decreases %[is_tyvar h1; is_renaming_typing hs; h1; 0])
 val scmp_substitution : #g1:env -> #c1:cmp -> #c2:cmp -> #phi:typ -> s:sub -> #g2:env ->
     h1:scmp g1 c1 c2 phi ->
     hs:subst_typing s g1 g2 ->
@@ -1953,6 +1963,7 @@ let htg2 : typing g2 (esubst s e) (tot (tsubst s t))=subst_on_tot s t; typing_su
 let hretg2 : typing g2 (esubst s e) (Cmp EfPure (tsubst s t) (tsubst s (return_pure t e))) = subst_on_return_pure s t e; TyRet (tsubst s t) htg2 in
 hretg2
 *)
+| TySub ht hs hv -> admit() (* TODO *)
 
 and scmp_substitution g1 c1 c2 phi s g2 h1 hs = 
 admit()
@@ -2122,7 +2133,6 @@ WfTArr plouf (kwf_substitution (sub_elam s) hw (elam_hs s hk hs))
 | WfKArr #g #k #k' hw hw' -> WfKArr (kwf_substitution s hw hs) (kwf_substitution (sub_tlam s) hw' (tlam_hs s hw hs))
 and validity_substitution g1 t1 s g2 h1 hs = admit()
 and elam_hs g1 s g2 t1 hk hs =
-admit()(*
 let g1ext = eextend t1 g1 in
 let g2ext = eextend (tsubst s t1) g2 in
 let hwfg1ext : ewf (eextend t1 g1) = GType hk in
@@ -2192,7 +2202,6 @@ hs_sub_einc (get_hwf2 hs) hkt1g2 in
 		hkg2ext
       )
 )
-*)
 and tlam_hs g1 s g2 k hkwf hs =
 admit()(*
 let g1ext = textend k g1 in
@@ -2362,9 +2371,10 @@ val v_impl_elim : #g:env -> #t1:typ -> #t2:typ ->
                   Tot (validity g t2)
 let v_impl_elim = admit()
 
-val v_true : #g:env -> =hewf:ewf g -> Tot (validity g ttrue)
-let v_true g hewf = v_impl_intro tfalse tfalse
-                            (VAssume 0 (GType (k_false hewf)))
+assume val v_true : #g:env -> =hewf:ewf g -> Tot (validity g ttrue)
+(* VAssume changed *)
+(* let v_true g hewf = v_impl_intro tfalse tfalse *)
+(*                             (VAssume 0 (GType (k_false hewf))) *)
 
     (* CH: Can probably derive V-ExMiddle from: *)
 
