@@ -56,7 +56,7 @@ let mk_counter _ =
   Evens (inv1 x y) (Set.union (Set.singleton (Ref x)) (Set.singleton (Ref y))) evens
 
 
-(* opaque logic type inv2 (r:ref int) (h:heap) = contains h r==true *)
+(* opaque logic type inv2 (r:ref int) (h:heap) = contains h r=true *)
 (* val mk_counter_2: unit *)
 (*                -> ST t (requires (fun h -> True)) *)
 (*                        (ensures  (fun h v h' -> *)

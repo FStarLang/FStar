@@ -29,8 +29,8 @@ let rec sorted_smaller x y l = match l with
 
 
 opaque type permutation (l1:list int) (l2:list int) =
-    length l1 = length l2 /\ (forall n. mem n l1 == mem n l2)
+    length l1 = length l2 /\ (forall n. mem n l1 = mem n l2)
 
 opaque type permutation_2 (l:list int) (l1:list int) (l2:list int) =
-    (forall n. mem n l == (mem n l1 || mem n l2)) /\
+    (forall n. mem n l = (mem n l1 || mem n l2)) /\
     length l = length l1 + length l2
