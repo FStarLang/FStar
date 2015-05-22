@@ -77,13 +77,13 @@
 
 #### Prerequisites on Windows ####
 
-0. Use Visual Studio for building `fstar.exe` as describes above
+0. Use Visual Studio for building `fstar.exe` as described above
    (note: running cygwin/wodi `make` in `src` will probably
    just give you a broken binary).
 
 1. Use [Wodi] for installing OCaml (version 4.01.0 or newer)
 
-2. [Wodi] also installs it's own version of Cygwin. By installing Wodi
+2. [Wodi] also installs its own version of Cygwin. By installing Wodi
    you get a special Cygwin terminal where you should run all the
    commands below.
 
@@ -126,6 +126,7 @@
 
         $ make
         $ make ocaml
+- What you get is a set of files in OCaml syntax ready to be built. To actually generate the OCaml backend, follow the instructions below (just skip "make package"). 
 
 ### Creating binary packages for your platform ###
 
