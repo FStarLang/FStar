@@ -77,27 +77,33 @@
 
 #### Prerequisites on Windows ####
 
+NOTE: It appears that [WODI] has been recently discontinued. Some
+archives are still available at the moment though: [wodi32] and [wodi64]
+
+[wodi32]: http://wodi.forge.ocamlcore.org/wodi32.tar.xz
+[wodi64]: http://wodi.forge.ocamlcore.org/wodi64.tar.xz
+
 0. Use Visual Studio for building `fstar.exe` as described above
    (note: running cygwin/wodi `make` in `src` will probably
    just give you a broken binary).
 
-1. Use [Wodi] for installing OCaml (version 4.01.0 or newer)
+1. Use [WODI] for installing OCaml (version 4.01.0 or newer)
 
-2. [Wodi] also installs its own version of Cygwin. By installing Wodi
+2. [WODI] also installs its own version of Cygwin. By installing WODI
    you get a special Cygwin terminal where you should run all the
    commands below.
 
    Note: If you want to also build F* binaries (instruction in the
-   next section), when Wodi asks which Cygwin packages you want add
+   next section), when WODI asks which Cygwin packages you want add
    `git` to the default list. If you forgot to do this, you can still
    do that by downloading [Cygwin]'s `setup-x86.exe` and pointing it
-   at your Wodi install.
+   at your WODI install.
 
-3. Use the [Wodi] ocaml package manager to install `batteries`; you can
+3. Use the [WODI] ocaml package manager to install `batteries`; you can
    do this either from the visual package manager or by issuing the
-   command `godi_add godi-batteries` in Wodi's Cygwin terminal.
+   command `godi_add godi-batteries` in WODI's Cygwin terminal.
 
-[Wodi]: http://wodi.forge.ocamlcore.org/
+[WODI]: http://wodi.forge.ocamlcore.org/
 [Cygwin]: https://www.cygwin.com/
 
 #### Prerequisites on Linux and Mac OS X ####
@@ -123,7 +129,7 @@
 
 1. Once you satisfy the prerequisites for your platform,
    first generate a set of files in OCaml syntax
-   by running the following commands in `src`:
+   by running the following commands in `$FSTAR_HOME/src`:
 
         $ make
         $ make ocaml
@@ -137,14 +143,14 @@
 
 (no cross-platform compilation supported at the moment)
 
-0. Make sure you have the Z3 binary in your `<fstar-home>/bin` folder
-   (this prerequisite could go away at some point)
+0. Bootstrap the compiler in OCaml using the instructions above
 
-1. Bootstrap the compiler in OCaml using the instructions above
+1. Make sure you have the Z3 binary in your `$PATH` or
+   in the `$FSTAR_HOME/bin` directory
 
 2. Run the following command in `src/ocaml-output`:
 
         $ make package
 
 3. Test that the binary is good by expanding the archive and running
-   `make` in the `examples` folder inside
+   `make` in the `examples` directory inside
