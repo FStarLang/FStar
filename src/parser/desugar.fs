@@ -102,7 +102,7 @@ let op_as_vlid env arity rng s =
     | s, _ ->   
       begin match DesugarEnv.try_lookup_lid env (compile_op_lid s rng) with 
         | Some ({n=Exp_fvar(fv, _)}) -> Some fv.v
-        | None -> None
+        | _ -> None
       end
 
 let op_as_tylid env rng s =
@@ -119,7 +119,7 @@ let op_as_tylid env rng s =
     | s -> 
       begin match DesugarEnv.try_lookup_typ_name env (compile_op_lid s rng) with 
         | Some ({n=Typ_const ftv}) -> Some ftv.v
-        | None -> None
+        | _ -> None
       end
 
 let rec is_type env (t:term) =
