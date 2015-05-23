@@ -121,12 +121,17 @@
 
 #### Bootstrapping the compiler in OCaml ####
 
-- Once you satisfy the prerequisites for your platform,
-  generate the OCaml backend by running the following commands in `src`:
+1. Once you satisfy the prerequisites for your platform,
+   first generate a set of files in OCaml syntax
+   by running the following commands in `src`:
 
         $ make
         $ make ocaml
-- What you get is a set of files in OCaml syntax ready to be built. To actually generate the OCaml backend, follow the instructions below (just skip "make package"). 
+
+2. Then run the following commands in `src/ocaml-output`:
+
+        $ make parser
+        $ make
 
 ### Creating binary packages for your platform ###
 
@@ -137,10 +142,8 @@
 
 1. Bootstrap the compiler in OCaml using the instructions above
 
-2. Run the following commands in `src/ocaml-output`:
+2. Run the following command in `src/ocaml-output`:
 
-        $ make parser
-        $ make
         $ make package
 
 3. Test that the binary is good by expanding the archive and running

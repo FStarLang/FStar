@@ -98,13 +98,7 @@ To execute F* code one needs to translate it to OCaml
 using the OCaml backend (the `--codegen OCaml` command-line argument to F*).
 The generated executable OCaml code most often depends on a support library;
 obtaining this support library requires
-[bootstrapping in OCaml](https://github.com/FStarLang/FStar/blob/master/INSTALL.md#bootstrapping-the-compiler-in-ocaml)
-(once all prerequisites are satisfied running `make ocaml` in the
-`src` directory)
-and afterwards running `make parser` in the `src/ocaml-output` directory
-(see [more instructions here]).
-
-[more instructions here]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md\#creating-binary-packages-for-your-platform
+[bootstrapping in OCaml](https://github.com/FStarLang/FStar/blob/master/INSTALL.md#bootstrapping-the-compiler-in-ocaml).
 
 The OCaml backend will produce `<ModuleName>.ml` files for each F*
 module in the code.
