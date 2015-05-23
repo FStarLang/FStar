@@ -55,6 +55,10 @@ let parse_file env fn =
     | Inl (Inl ast) ->
       Desugar.desugar_file env ast
   
+    | Inl (Inr _) -> 
+      Util.print_string "Expected a module\n";
+      exit 1
+
     | Inr (msg, r) -> 
       Util.print_string <| Print.format_error r msg;
       exit 1
