@@ -40,11 +40,13 @@ Yes, we encourage asking questions on the issue tracker!
 
 #### Atom
 
-[FStarIDE] is a recently started project aimed at devising an F* mode
-for the [Atom] editor.
+The [Atom] editor has currently the best support for F*. It supports
+syntax highlighting via [atom-fstar] and (Proof General style)
+interactive development via [fstar-interactive].
 
 [Atom]: https://atom.io/
-[FStarIDE]: https://github.com/FStarLang/FStarIDE
+[atom-fstar]: https://github.com/FStarLang/atom-fstar
+[fstar-interactive]: https://github.com/FStarLang/fstar-interactive
 
 #### Vim
 
