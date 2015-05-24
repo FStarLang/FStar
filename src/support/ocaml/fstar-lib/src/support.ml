@@ -291,9 +291,9 @@ module Microsoft = struct
       let string_of_float = string_of_float
       let string_of_char  (i:char) = spr "%c" i
       let hex_string_of_byte (i:char) = 
-          let hs = spr "%x" i in
-          if (String.length hs = 1) then "0"^hs
-          else h s
+          let hs = spr "%x" (int_of_char i) in
+          if (String.length hs = 1) then "0" ^ hs
+          else hs
       let string_of_bytes = string_of_unicode
       let starts_with = BatString.starts_with
       let trim_string = BatString.trim
