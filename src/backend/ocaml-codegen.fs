@@ -157,7 +157,7 @@ let maybe_paren (outer, side) inner doc =
 
 (* -------------------------------------------------------------------- *)
 let ocaml_u8_codepoint (i : byte) =
-  if (int_of_byte i) = 0 then "" else "\\x"^(hex_string_of_byte i)
+  if (int_of_byte i) = 0 then "\\x00" else "\\x"^(hex_string_of_byte i)
 
 (* -------------------------------------------------------------------- *)
 let encode_char c =

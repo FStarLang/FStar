@@ -242,7 +242,10 @@ let string_of_int   i = string_of_int i
 let string_of_int64  (i:int64) = i.ToString()
 let string_of_int32 i = string_of_int i
 let string_of_float i = string_of_float i
-let hex_string_of_byte  (i:byte) = spr "%x" i
+let hex_string_of_byte  (i:byte) = 
+    let hs = spr "%x" i in
+    if (String.length hs = 1) then "0"^hs
+    else hs
 let string_of_char  (i:char) = spr "%c" i
 let string_of_bytes (i:byte[]) = string_of_unicode i
 let starts_with (s1:string) (s2:string) = s1.StartsWith(s2)

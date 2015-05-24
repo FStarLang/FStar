@@ -106,8 +106,20 @@ effect Ghost (a:Type) (pre:Type) (post:PurePost a) =
 opaque logic type b2t (b:bool) = b==true
 type unit
 type int
-type int16
-type int32
+assume logic val op_AmpAmp             : bool -> bool -> Tot bool
+assume logic val op_BarBar             : bool -> bool -> Tot bool
+assume logic val op_Negation           : bool -> Tot bool
+assume logic val op_Multiply           : int -> int -> Tot int
+assume logic val op_Subtraction        : int -> int -> Tot int
+assume logic val op_Addition           : int -> int -> Tot int
+assume logic val op_Minus              : int -> Tot int
+assume logic val op_LessThanOrEqual    : int -> int -> Tot bool
+assume logic val op_GreaterThan        : int -> int -> Tot bool
+assume logic val op_GreaterThanOrEqual : int -> int -> Tot bool
+assume logic val op_LessThan           : int -> int -> Tot bool
+
+type int16 = i:int{i > -32769  /\ 32768 > i}
+type int32 = int
 type int64
 type uint8
 type uint16
@@ -552,17 +564,6 @@ assume val exit: int -> 'a
 assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
 assume val min: int -> int -> Tot int
 assume val max: int -> int -> Tot int
-assume logic val op_AmpAmp             : bool -> bool -> Tot bool
-assume logic val op_BarBar             : bool -> bool -> Tot bool
-assume logic val op_Negation           : bool -> Tot bool
-assume logic val op_Multiply           : int -> int -> Tot int
-assume logic val op_Subtraction        : int -> int -> Tot int
-assume logic val op_Addition           : int -> int -> Tot int
-assume logic val op_Minus              : int -> Tot int
-assume logic val op_LessThanOrEqual    : int -> int -> Tot bool
-assume logic val op_GreaterThan        : int -> int -> Tot bool
-assume logic val op_GreaterThanOrEqual : int -> int -> Tot bool
-assume logic val op_LessThan           : int -> int -> Tot bool
 
 type nat = i:int{i >= 0}
 type pos = i:int{i > 0}

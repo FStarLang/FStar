@@ -153,6 +153,8 @@ let tempty : tenv =
     TEnv (smap_create 0)
 
 (* -------------------------------------------------------------------- *)
+let tvsym (x,n) = if Util.starts_with x "'" then (x,n) else ("'"^x,n)
+
 let tenv_of_tvmap tvs =
     let rec fresh_tyvar used i =
         let pp = tyvar_of_int 0 in
@@ -180,11 +182,11 @@ let tenv_of_tvmap tvs =
                 (used, (fresh pp, None)) in
 
         Util.fold_map for1 (new_set (fun (x:string) y -> if x = y then 0 else 1) (fun x -> 0)) tvs
-    in
+            in
     
-    let tparams = List.map (fun (x, _) -> x) tvs in
+    let tparams = List.map (fun (x, _) -> tvsym x) tvs in
     let tvs = List.choose (fun (x, y) ->
-        match y with None -> None | Some y -> Some (y, x))
+        match y with None -> None | Some y -> Some (y, tvsym x))
         tvs
     in
 
@@ -196,7 +198,8 @@ let tvar_of_btvar (TEnv tenv) (x : bvar<typ, knd>) =
 
     match smap_try_find tenv name with
     | None   -> ("",0) //unbound_ty_var x.p x.v.ppname
-    | Some x -> x
+    | Some x -> tvsym x
+
 
 (* -------------------------------------------------------------------- *)
 let is_prim_ns (ns : list<ident>) =
