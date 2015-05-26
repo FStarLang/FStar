@@ -21,6 +21,10 @@ type econst =
   | EcSel
   | EcUpd
   | EcHeap : h:heap -> econst
+  (*
+  | EcFixPure
+  | EcFixOmega
+  *)
 
 type eff =
   | EfPure
@@ -914,6 +918,12 @@ let econsts ec =
   | EcSel    -> TArr theap (tot (TArr tref (tot tint)))
   | EcUpd    -> TArr theap (tot (TArr tref (tot (TArr tint (tot theap)))))
   | EcHeap _ -> theap
+  (*
+  | EcFixPure -> TTLam (KType) (*tx*)(
+                  TTLam (KTArr (TVar 0) KType) (*t'*)(
+                   TTLam (KTArr (TVar 1) KType) (*t''*)(                  
+		     TTLam (KTArr (TVar 2) (k_m (EfPure) (TArr 
+			   *)
 
 (***********************)
 (* Head normal forms   *)
@@ -1214,6 +1224,8 @@ let get_pullback g t g' k' =
   get_pullback8 g t g' k';
   PullBack g t g' k' gbase tbase kbase
 
+(*SF: ^ normally useless now. but maybe used later …*)
+
 (**************)
 (*   Typing   *)
 (**************)
@@ -1221,11 +1233,9 @@ let get_pullback g t g' k' =
 type typing : env -> exp -> cmp -> Type =
 
 | TyVar : #g:env -> x:var{is_Some (lookup_evar g x)} ->
-          =h:ewf g ->
               typing g (EVar x) (tot (Some.v (lookup_evar g x)))
 
 | TyConst : g:env -> c:econst ->
-           =h:ewf g ->
               typing g (EConst c) (tot (econsts c))
 
 | TyAbs : #g:env ->
@@ -1279,7 +1289,7 @@ type typing : env -> exp -> cmp -> Type =
 
 | TySub : #g:env -> #e:exp -> #c':cmp -> #c:cmp -> #phi:typ ->
           =ht:typing g e c' ->
-          =hs:scmp g c' c phi ->
+          =hsc:scmp g c' c phi ->
           =hv:validity g phi ->
               typing g e c
 
@@ -1295,7 +1305,8 @@ and scmp : g:env -> c1:cmp -> c2:cmp -> phi:typ -> Type =
 
 
 and styping : g:env -> t':typ -> t:typ -> phi : typ -> Type =
-
+(*SF: a term styping does not tell us that t' is kind KType,
+ but it should be ok since we can get that where it is used in TySub*)
 | SubConv : #g:env -> #t:typ -> t':typ ->
             =hv:validity g (teqtype t' t) ->
             =hk:kinding g t KType ->
@@ -1304,6 +1315,7 @@ and styping : g:env -> t':typ -> t:typ -> phi : typ -> Type =
 | SubFun : #g:env -> #t:typ -> #t':typ -> #phi:typ ->
            #c':cmp -> #c:cmp -> #psi:typ ->
            =hst:styping g t t' phi ->
+	   =hk:kinding g t KType ->
            =hsc:scmp (eextend t g) c' c psi ->
                 styping g (TArr t' c') (TArr t c)
                           (tand phi (tforalle t psi))
@@ -1313,15 +1325,22 @@ and styping : g:env -> t':typ -> t:typ -> phi : typ -> Type =
              =hs12:styping g t1 t2 phi12 ->
              =hs23:styping g t2 t3 phi23 ->
                    styping g t1 t3 (tand phi12 phi23)
-
+and tcwf : g:env -> tc:tconst -> Type =
+| WFTcForallT : #g:env -> #k:knd ->
+                kwf g k ->
+		tcwf g (TcForallT k)
+| WFTcEqT     : #g:env -> #k:knd ->
+                kwf g k ->
+		tcwf g (TcEqT k)
+| WFTcOther    : g:env -> tc:tconst{not(is_TcForallT tc) && not(is_TcEqT tc)} ->
+                tcwf g tc
 and kinding : g:env -> t : typ -> k:knd -> Type =
 
 | KVar : #g:env -> x:var{is_Some (lookup_tvar g x)} ->
-         =h:ewf g ->
             kinding g (TVar x) (Some.v (lookup_tvar g x))
 
-| KConst : #g:env -> c:tconst ->
-           =h:ewf g ->
+| KConst : #g:env -> #c:tconst ->
+              tcwf g c ->
               kinding g (TConst c) (tconsts c)
 (*SF : we do not check the kwf of the parameter of c, is it a problem ?*)
 
@@ -1369,6 +1388,7 @@ and skinding : g:env -> k1:knd -> k2:knd -> phi:typ -> Type=
 | KSubKArr : #g:env -> #k1:knd -> #k2:knd -> k1':knd -> k2':knd ->
              #phi1:typ -> #phi2:typ->
              =hs21 :skinding g k2 k1 phi1 ->
+	     =hkw:kwf g k2 ->
              =hs12':skinding (textend k2 g) k1' k2' phi2 ->
                     skinding g (KKArr k1 k1') (KKArr k2 k2')
                                (tand phi1 (tforallt k2 phi2))
@@ -1376,6 +1396,7 @@ and skinding : g:env -> k1:knd -> k2:knd -> phi:typ -> Type=
 | KSubTArr : #g:env -> #t1:typ -> #t2:typ -> #k1:knd -> #k2:knd ->
              #phi1:typ -> #phi2:typ ->
              =hs21:styping g t2 t1 phi1 ->
+	     =hk:kinding g t2 KType ->
              =hs12':skinding (eextend t2 g) k1 k2 phi2 ->
                     skinding g (KTArr t1 k1) (KTArr t2 k2)
                                (tand phi1 (tforalle t2 phi2))
@@ -1383,7 +1404,6 @@ and skinding : g:env -> k1:knd -> k2:knd -> phi:typ -> Type=
 and kwf : env -> knd -> Type =
 
 | WfType : g:env ->
-          =h:ewf g ->
              kwf g KType
 
 | WfTArr : #g:env -> #t:typ -> #k':knd ->
@@ -1416,6 +1436,9 @@ and validity : g:env -> t:typ -> Type =
              =hv12 :validity g (teqe e1 e2) ->
              =ht1  :typing g e1 (tot t') ->
              =ht2  :typing g e2 (tot t') ->
+	     (*hkt':kinding g t' KType ->*)
+	     (*SF : this one is not compulsory, since
+	      we can extract it from typing above*)
              =hk   :kinding (eextend t' g) t KType ->
              =hvsub:validity g (tsubst_ebeta e1 t) ->
                     validity g (tsubst_ebeta e2 t)
@@ -1432,6 +1455,7 @@ and validity : g:env -> t:typ -> Type =
 
 | VSubstT :  #g:env -> #t1:typ -> #t2:typ -> #k:knd -> t:typ -> x:var ->
              =hv12 :validity g (teqt k t1 t2) ->
+	     =hkw : kwf g k ->
              =hk   :kinding (textend k g) t KType ->
              =hvsub:validity g (tsubst_tbeta t1 t) ->
                     validity g (tsubst_tbeta t2 t)
@@ -1462,12 +1486,14 @@ and validity : g:env -> t:typ -> Type =
             =hv  :validity g (tnot (teqe el el')) ->
                   validity g (teqe (esel (eupd eh el' ei) ei) (esel eh el))
 
-| VForallIntro :  g:env -> t:typ -> #phi:typ ->
+| VForallIntro :  #g:env -> #t:typ -> #phi:typ ->
+                 =hk:kinding g t KType ->
                  =hv:validity (eextend t g) phi ->
                      validity g (tforalle t phi)
 
 
 | VForallTypIntro :  g:env -> k:knd -> #phi:typ ->
+                    =kw:kwf g k ->
                     =hv:validity (textend k g) phi ->
                         validity g (tforallt k phi)
 
@@ -1495,6 +1521,7 @@ and validity : g:env -> t:typ -> Type =
                    validity g (tand p1 p2)
 
 | VExMiddle : #g:env -> #t1:typ -> t2:typ ->
+              =hk1:kinding g t1 KType ->
               =hk2:kinding g t2 KType ->
               =hv1:validity (eextend t1 g) (tesh t2) ->
               =hv2:validity (eextend (tnot t1) g) (tesh t2) ->
@@ -1511,9 +1538,12 @@ and validity : g:env -> t:typ -> Type =
                   validity g (tor t1 t2)
 
 | VOrElim : #g:env -> t1:typ -> t2:typ -> #t3:typ ->
+            =hk1:kinding g t1 KType ->
+	    =hk2:kinding g t2 KType ->
+	    =validity g (tor t1 t2) ->
+            =hk :kinding g t3 KType ->
             =hv1:validity (eextend t1 g) (tesh t3) ->
             =hv2:validity (eextend t2 g) (tesh t3) ->
-            =hk :kinding g t3 KType ->
                  validity g t3
 
 | VFalseElim : #g:env -> #t:typ ->
@@ -1528,7 +1558,6 @@ and validity : g:env -> t:typ -> Type =
                         validity g (tprecedes v1 v2)
 
 | VDistinctC : g:env -> c1:econst -> c2:econst{c1 <> c2} -> t:typ ->
-               =h:ewf g ->
                validity g (tnot (teqe (EConst c1) (EConst c2)))
 
 | VDistinctTH : #g:env -> #t1:typ{is_hnf t1} ->
@@ -1551,16 +1580,18 @@ For injectivity should probably stick with this (see discussion in txt file):
                                    (TArr t1' (Cmp m t2' phi'))) ->
                validity g (tand (tand (teqtype t1 t1') (teqtype t2 t2))
                                       (teqtype phi phi'))
-
-and ewf : env -> Type =
+(* Environment Well-Formedness*)
+type ewf : env -> Type =
 
 | GEmpty : ewf empty
 
 | GType  : #g:env -> #t:typ ->
+           =hw:ewf g ->
            =hk:kinding g t KType ->
                ewf (eextend t g)
 
 | GKind  : #g:env -> #k:knd ->
+           =hw:ewf g ->
            =h:kwf g k ->
               ewf (textend k g)
 
@@ -1592,6 +1623,7 @@ let subst_on_k_m s m t = admit()
 
 val subst_on_monotonic : s:sub -> m:eff -> t:typ -> wp:typ -> Lemma (tsubst s (monotonic m t wp) = monotonic m (tsubst s t) (tsubst s wp))
 let subst_on_monotonic s m t wp = admit()
+
 
 val subst_on_teqtype : s:sub -> t:typ -> t':typ -> Lemma (tsubst s (teqtype t' t) = teqtype (tsubst s t') (tsubst s t))
 let subst_on_teqtype s t t' = admit()
@@ -1672,25 +1704,30 @@ let tyif02 s m wp0 = ()
 val tyif03 : s:sub -> m:eff -> t:typ -> wp:typ -> Lemma (csubst s (Cmp m t wp) = Cmp m (tsubst s t) (tsubst s wp))
 let tyif03 s m t wp = ()
 
+val epstep_substitution : s:sub -> e:exp -> e':exp -> hs:epstep e e' -> Tot (epstep (esubst s e) (esubst s e'))
+(decreases %[hs])
+let rec epstep_substitution s e e' hs = match hs with
+| PsBeta t ebody v -> admit() (*TODO: code a substitution lemma for values*)
+| PsIf0 e1 e2 -> PsIf0 (esubst s e1) (esubst s e2)
+| PsIfS i e1 e2 -> PsIfS i (esubst s e1) (esubst s e2)
+| PsAppE1 #e1 #e1' e2 ht -> PsAppE1 (esubst s e2) (epstep_substitution s e1 e1' ht)
+| PsAppE2 e1 #e2 #e2' ht -> PsAppE2 (esubst s e1) (epstep_substitution s e2 e2' ht)
+| PsLamT #t #t' ebody ht -> admit()
+| PsIf0E0 #e0 #e0' ethen eelse ht -> admit() (*PsIfE0 (esubst s ethen) (esubst s eelse) (ep*)
+| _ -> admit() 
 (**********************)
 (* Substitution Arrow *)
 (**********************)
 
 type subst_typing : s:sub -> g1:env -> g2:env -> Type =
-| SubstTyping : #s:sub -> #g1:env -> #g2:env ->
-                hwf1:ewf g1 ->
-                hwf2:ewf g2 ->
-
+| SubstTyping : s:sub -> g1:env -> g2:env ->
                 ef:(x:var{is_Some (lookup_evar g1 x)} ->
                     Tot(typing g2 (Sub.es s x) (tot (tsubst s (Some.v (lookup_evar g1 x)))))) ->
 
                 tf:(a:var{is_Some (lookup_tvar g1 a)} ->
                     Tot(kinding g2 (Sub.ts s a) (ksubst s (Some.v (lookup_tvar g1 a))))) ->
                 subst_typing s g1 g2
-| RenamingTyping : s:sub{renaming s} -> #g1:env -> #g2:env ->
-                hwf1:ewf g1 ->
-                hwf2:ewf g2 ->
-
+| RenamingTyping : s:sub -> g1:env -> g2:env ->
                 ef:(x:var{is_Some (lookup_evar g1 x)} ->
                     Tot(hr:typing g2 (Sub.es s x) (tot (tsubst s (Some.v (lookup_evar g1 x)))){is_TyVar hr})) ->
 
@@ -1699,14 +1736,6 @@ type subst_typing : s:sub -> g1:env -> g2:env -> Type =
                 subst_typing s g1 g2
 (*I wanted to rewrite the substitution lemma in a 'is_renaming' style (so without the RenamingTyping constructor) but I was not able to make it work*)
 
-val get_hwf1 : #s:sub -> #g1:env -> #g2:env -> hs:subst_typing s g1 g2 -> Tot (ewf g1)
-let get_hwf1 s g1 g2 hs = match hs with
-| SubstTyping hwf1 _ _ _ -> hwf1
-| RenamingTyping _ hwf1 _ _ _ -> hwf1
-val get_hwf2 : #s:sub -> #g1:env -> #g2:env -> hs:subst_typing s g1 g2 -> Tot (ewf g2)
-let get_hwf2 s g1 g2 hs = match hs with
-| SubstTyping _ hwf2  _ _ -> hwf2
-| RenamingTyping _ _ hwf2 _ _ -> hwf2
 val is_renaming_typing : #s:sub -> #g1:env -> #g2:env -> hs:subst_typing s g1 g2 -> Tot (r:nat{is_RenamingTyping hs ==> r = 0 /\ is_SubstTyping hs ==> r = 1})
 let is_renaming_typing s g1 g2 hs = if (is_RenamingTyping hs) then 0 else 1
 
@@ -1716,197 +1745,105 @@ let is_tyvar g e t ht = if is_TyVar ht then 0 else 1
 val is_kvar : #g : env -> #t:typ -> #k:knd -> hk : kinding g t k -> Tot nat
 let is_kvar g t k hk = if is_KVar hk then 0 else 1
 
-val hs_sub_einc : #g:env -> #t:typ -> hwf : ewf g -> hk:kinding g t KType ->
+val hs_sub_einc : g:env -> t:typ ->
 Tot(r:subst_typing sub_einc g (eextend t g){is_RenamingTyping r})
-let hs_sub_einc g t hwf hk =
-let hwfgext = GType hk in
-      let temp : subst_typing sub_einc g (eextend t g) = RenamingTyping sub_einc hwf hwfgext
-		  (fun x ->  TyVar (x+1) hwfgext
+let hs_sub_einc g t =
+      let temp : subst_typing sub_einc g (eextend t g) = RenamingTyping sub_einc g (eextend t g)
+		  (fun x ->  TyVar (x+1)
 		  )
-		  (fun a -> KVar a hwfgext )
+		  (fun a -> KVar a )
 		  in temp
-val hs_sub_tinc : #g:env -> #k:knd -> hwf : ewf g -> hkwf:kwf g k ->
-Tot(r:subst_typing sub_tinc g (textend k g){is_RenamingTyping r})
-let hs_sub_tinc g t hwf hkwf =
-let hwfgext = GKind hkwf in
-      RenamingTyping sub_tinc hwf hwfgext
-		  (fun x ->  TyVar x hwfgext
-		  )
-		  (fun a -> KVar (a+1) hwfgext )
-val hs_sub_id : g:env -> hwf : ewf g -> Tot (r:subst_typing sub_id g g{is_RenamingTyping r})
-let hs_sub_id g hwf =
-RenamingTyping sub_id hwf hwf (fun x -> tsubst_with_sub_id (Some.v (lookup_evar g x)); TyVar x hwf) (fun a -> ksubst_with_sub_id (Some.v (lookup_tvar g a)); KVar a hwf)
+val hs_sub_tinc : g:env -> k:knd -> 
+           Tot(r:subst_typing sub_tinc g (textend k g){is_RenamingTyping r})
+let hs_sub_tinc g k =
+      RenamingTyping sub_tinc g (textend k g)
+		  (fun x ->  TyVar x) (fun a -> KVar (a+1))
+
+val hs_sub_id : g:env -> Tot (r:subst_typing sub_id g g{is_RenamingTyping r})
+let hs_sub_id g =
+RenamingTyping sub_id g g (fun x -> tsubst_with_sub_id (Some.v (lookup_evar g x)); TyVar x) (fun a -> ksubst_with_sub_id (Some.v (lookup_tvar g a)); KVar a)
 
 val compose_with_renaming_arrow : g1 : env -> g2 : env -> g3 : env -> s12 : sub -> s23 : sub -> hs12 : subst_typing s12 g1 g2{ is_RenamingTyping hs12} -> hs23 : subst_typing s23 g2 g3 -> Tot (hr : subst_typing (sub_comp s23 s12) g1 g3)
 let compose_with_renaming_arrow g1 g2 g3 s12 s23 hs12 hs23 =
-let RenamingTyping _ hwg1 _ ef12 tf12 = hs12 in
+let RenamingTyping _ _ _ ef12 tf12 = hs12 in
 match hs23 with
-| RenamingTyping _ _ hwg3 ef23 tf23 ->
-RenamingTyping (sub_comp s23 s12) hwg1 hwg3
-(fun x -> let TyVar x' _ = ef12 x in ef23 x')
-(fun a -> let KVar a' _ = tf12 a in tf23 a')
-| SubstTyping _ hwg3 ef23 tf23 ->
-SubstTyping #(sub_comp s23 s12) #g1 #g3 hwg1 hwg3
-(fun x -> let TyVar x' _ = ef12 x in ef23 x')
-(fun a -> let KVar a' _ = tf12 a in tf23 a')
+| RenamingTyping _ _ _ ef23 tf23 ->
+RenamingTyping (sub_comp s23 s12) g1 g3
+(fun x -> let TyVar x' = ef12 x in ef23 x')
+(fun a -> let KVar a' = tf12 a in tf23 a')
+| SubstTyping _ _ _ ef23 tf23 ->
+SubstTyping (sub_comp s23 s12) g1 g3
+(fun x -> let TyVar x' = ef12 x in ef23 x')
+(fun a -> let KVar a' = tf12 a in tf23 a')
 
 
-val get_ewf_from_kinding : g : env -> t : typ -> k : knd -> hk : kinding g t k -> Tot (r:ewf g{r << hk})
-let get_ewf_from_kinding g t k hk = admit()
-
-val get_ewf_from_kwf : g:env -> k:knd -> hkw : kwf g k -> Tot (r:ewf g { r << hkw })
-let get_ewf_from_kwf g k hkw = admit()
-
-val get_ewf_from_skinding : g:env -> #k1:knd -> #k2:knd -> #phi:typ -> hsk : skinding g k1 k2 phi -> Tot(r : ewf g { r << hsk })
-let get_ewf_from_skinding g k1 k2 phi hsk = admit()
-
-val get_ewf_from_scmp : g:env -> #c':cmp -> #c:cmp -> #psi:typ ->
-                        hsc : scmp g c' c psi ->
-			Tot (hr: ewf g {hr << hsc})
-let get_ewf_from_scmp g c' c psi hsc = admit()
-
-type prerenaming : sub -> env -> env -> Type =
-| PreRenaming : s:sub{renaming s} -> g1:env -> g2 : env ->
-                ef : ( x : var{is_Some (lookup_evar g1 x)} ->
-                       Tot (y : var{ Sub.es s x = EVar y /\ is_Some (lookup_evar g2 y) /\ tsubst s (Some.v (lookup_evar g1 x)) = Some.v (lookup_evar g2 y)})) ->
-                tf : ( a : var{is_Some (lookup_tvar g1 a)} ->
-                       Tot (b : var{ Sub.ts s a = TVar b /\ is_Some (lookup_tvar g2 b) /\ ksubst s (Some.v (lookup_tvar g1 a)) = Some.v (lookup_tvar g2 b)})) ->
-                prerenaming s g1 g2
-
-val pre_to_renaming : s:sub{renaming s} -> g1 :env -> g2 : env -> hps : prerenaming s g1 g2 ->
-                      hwf1 : ewf g1 -> hwf2 : ewf g2 ->
-                      Tot (hs : subst_typing s g1 g2 {is_RenamingTyping hs})
-let pre_to_renaming s g1 g2 hps hwf1 hwf2 =
-RenamingTyping s hwf1 hwf2
-(fun x -> let y = PreRenaming.ef hps x in TyVar y hwf2)
-(fun a -> let b = PreRenaming.tf hps a in KVar b hwf2 )
-
-val hsp_sub_id : g:env -> Tot (prerenaming sub_id g g)
-let hsp_sub_id g =
-PreRenaming sub_id g g
-(fun x -> tsubst_with_sub_id (Some.v (lookup_evar g x)); x)
-(fun a -> ksubst_with_sub_id (Some.v (lookup_tvar g a)); a)
-
-val hsp_sub_tinc : g : env -> k : knd -> Tot (prerenaming sub_tinc g (textend k g))
-let hsp_sub_tinc g k =
-PreRenaming sub_tinc g (textend k g)
-(fun x -> x)
-(fun a -> a+1)
-
-val compose_prerenaming_arrow : g1 : env -> g2 : env -> g3 : env -> s12 : sub -> s23 : sub -> hsp12 : prerenaming s12 g1 g2 -> hsp23 : prerenaming s23 g2 g3 -> Tot (hr : prerenaming (sub_comp s23 s12) g1 g3 )
-let compose_prerenaming_arrow g1 g2 g3 s12 s23 hsp12 hsp23 =
-PreRenaming (sub_comp s23 s12) g1 g3
-(fun x -> let x' = PreRenaming.ef hsp12 x in tsubst_comp s23 s12 (Some.v (lookup_evar g1 x)); PreRenaming.ef hsp23 x')
-(fun a -> let a' = PreRenaming.tf hsp12 a in ksubst_comp s23 s12 (Some.v (lookup_tvar g1 a)); PreRenaming.tf hsp23 a')
-
-type digcfgt : g:env -> t:typ -> hwf: ewf (eextend t g) -> Type =
-  | DigCfgT : gb:env -> tb:typ -> hwfb: ewf (eextend tb gb) -> g':env -> hwf : ewf g' -> t':typ -> s':sub{tsubst s' t' = tb} -> hk : kinding g' t' KType{hk << hwfb} -> hs:prerenaming s' g' gb -> digcfgt gb tb hwfb (* << *)
-
-val eextend_not_empty : g:env -> t:typ -> Lemma (eextend t g <> empty)
-let eextend_not_empty g t =
-let Some truc = lookup_evar (eextend t g) 0 in
-let None = lookup_evar empty 0 in ()
-val digkinding : g:env -> t:typ -> hwf : ewf (eextend t g) -> Tot (digcfgt g t hwf)
-(decreases %[hwf])
-let rec digkinding g t hwf =
-eextend_not_empty g t;
-match hwf with
-| GType #g' #t' hk -> let gwf : ewf g' = get_ewf_from_kinding g' t' KType hk in (ext_of_eextend g t g' t' ; tsubst_with_sub_id t'; let hsp_id : prerenaming sub_id g' g = hsp_sub_id g' in DigCfgT g t hwf g' gwf t' sub_id hk hsp_id)
-| GKind #g' #k' hkw ->
-let PullBack _ _ _ _ gbase tbase kbase = get_pullback g t g' k' in
-let hwfgbaseext : ewf (eextend tbase gbase) = get_ewf_from_kwf g' k' hkw in
-let DigCfgT _ _ _ gunder hwfunder tunder sunder hkunder hsunder : digcfgt gbase tbase hwfgbaseext = digkinding gbase tbase hwfgbaseext in
-tsubst_comp sub_tinc sunder tunder;
-DigCfgT g t hwf gunder hwfunder tunder (sub_comp sub_tinc sunder) hkunder (compose_prerenaming_arrow gunder gbase g sunder sub_tinc hsunder (hsp_sub_tinc gbase kbase) )
-
-type digcfgk : g : env -> k : knd -> hwf : ewf (textend k g) -> Type =
-  | DigCfgK : gb:env -> kb : knd -> hwfb : ewf (textend kb gb) -> g':env -> hwf : ewf g' -> k' : knd -> s':sub{ksubst s' k' = kb} -> hkw : kwf g' k'{hkw << hwfb} -> hs : prerenaming s' g' gb -> digcfgk gb kb hwfb (* << *)
-
-val digkwf : g:env -> k:knd -> hwf : ewf (textend k g) -> Tot (digcfgk g k hwf)
-let digkwf g k hwf = admit()
-(*SF : same as above normally*)
-
-val typing_substitution : #g1:env -> #e:exp -> #c:cmp -> s:sub -> #g2:env ->
+opaque val typing_substitution : #g1:env -> #e:exp -> #c:cmp -> s:sub -> #g2:env ->
     h1:typing g1 e c ->
     hs:subst_typing s g1 g2 ->
-    Tot (hr:typing g2 (esubst s e) (csubst s c)(* {is_RenamingTyping hs /\ is_TyVar h1 ==> is_TyVar hr} *))
+    Tot (hr:typing g2 (esubst s e) (csubst s c) {is_RenamingTyping hs /\ is_TyVar h1 ==> is_TyVar hr} )
 (decreases %[is_tyvar h1; is_renaming_typing hs; h1; 0])
-val scmp_substitution : #g1:env -> #c1:cmp -> #c2:cmp -> #phi:typ -> s:sub -> #g2:env ->
+opaque val scmp_substitution : #g1:env -> #c1:cmp -> #c2:cmp -> #phi:typ -> s:sub -> #g2:env ->
     h1:scmp g1 c1 c2 phi ->
     hs:subst_typing s g1 g2 ->
     Tot (scmp g2 (csubst s c1) (csubst s c2) (tsubst s phi))
 (decreases %[1; is_renaming_typing hs; h1; 0])
-val styping_substitution : #g1:env -> #t':typ -> #t:typ -> #phi:typ -> s:sub -> #g2:env ->
+opaque val styping_substitution : #g1:env -> #t':typ -> #t:typ -> #phi:typ -> s:sub -> #g2:env ->
     h1:styping g1 t' t phi ->
     hs:subst_typing s g1 g2 ->
     Tot (styping g2 (tsubst s t') (tsubst s t) (tsubst s phi))
 (decreases %[1;is_renaming_typing hs; h1; 0])
-val kinding_substitution : #g1:env -> #t:typ -> #k:knd -> s:sub -> #g2:env ->
+opaque val tcwf_substitution : #g1:env -> #c:tconst -> s:sub -> #g2:env ->
+                        h1:tcwf g1 c ->
+			hs:subst_typing s g1 g2 ->
+			Tot (tcwf g2 (tcsubst s c))
+(decreases %[1;is_renaming_typing hs; h1; 0])
+opaque val kinding_substitution : #g1:env -> #t:typ -> #k:knd -> s:sub -> #g2:env ->
     h1:kinding g1 t k ->
     hs:subst_typing s g1 g2 ->
     Tot (hr:kinding g2 (tsubst s t) (ksubst s k){is_RenamingTyping hs /\ is_KVar h1 ==> is_KVar hr})
 (decreases %[is_kvar h1; is_renaming_typing hs; h1; 0])
-val skinding_substitution : #g1:env -> #k1:knd -> #k2:knd -> #phi:typ -> s:sub -> #g2:env ->
+opaque val skinding_substitution : #g1:env -> #k1:knd -> #k2:knd -> #phi:typ -> s:sub -> #g2:env ->
     h1:skinding g1 k1 k2 phi ->
     hs:subst_typing s g1 g2 ->
     Tot (skinding g2 (ksubst s k1) (ksubst s k2) (tsubst s phi))
 (decreases %[1; is_renaming_typing hs; h1; 0])
-val kwf_substitution : #g1:env -> #k:knd -> s:sub -> #g2:env ->
+opaque val kwf_substitution : #g1:env -> #k:knd -> s:sub -> #g2:env ->
     h1:kwf g1 k ->
     hs:subst_typing s g1 g2 ->
     Tot (kwf g2 (ksubst s k))
 (decreases %[1;is_renaming_typing hs; h1; 0])
-val validity_substitution : #g1:env -> #t:typ -> s:sub -> #g2:env ->
+opaque val validity_substitution : #g1:env -> #t:typ -> s:sub -> #g2:env ->
     h1:validity g1 t ->
     hs:subst_typing s g1 g2 ->
     Tot (validity g2 (tsubst s t))
 (decreases %[1;is_renaming_typing hs; h1; 0])
-val elam_hs : #g1:env -> s:sub -> #g2:env -> #t:typ ->
+opaque val elam_hs : #g1:env -> s:sub -> #g2:env -> #t:typ ->
                          hk:kinding g1 t KType ->
                          hs:subst_typing s g1 g2 ->
                          Tot (hr:subst_typing (sub_elam s) (eextend t g1) (eextend (tsubst s t) g2){is_RenamingTyping hs ==> is_RenamingTyping hr})
 (decreases %[1;is_renaming_typing hs; hk; 1])
-val elam_hs' : #g1:env -> s:sub -> #g2:env -> #t:typ -> #g' : env -> #t':typ ->
-                         hk : kinding g' t' KType -> (* <- 2 solutions : a useless parameter or a complete change of the decreasing clause *)
-                         hk1:kinding g1 t KType ->
-			 hk2:kinding g2 (tsubst s t) KType ->
-                         hs:subst_typing s g1 g2 ->
-                         Tot (hr:subst_typing (sub_elam s) (eextend t g1) (eextend (tsubst s t) g2){is_RenamingTyping hs ==> is_RenamingTyping hr})
-(decreases %[1;is_renaming_typing hs; hk; 1])
-val tlam_hs : #g1:env -> s:sub -> #g2:env -> #k:knd ->
+opaque val tlam_hs : #g1:env -> s:sub -> #g2:env -> #k:knd ->
                          hkwf:kwf g1 k ->
-                         hs:subst_typing s g1 g2 ->
-                         Tot (hr:subst_typing (sub_tlam s) (textend k g1) (textend (ksubst s k) g2){is_RenamingTyping hs ==> is_RenamingTyping hr})
-(decreases %[1;is_renaming_typing hs; hkwf; 1])
-val tlam_hs' : #g1:env -> s:sub -> #g2:env -> #k:knd -> #g' : env -> #k' : knd ->
-                         hkwf: kwf g' k' ->
-                         hkwf1:kwf g1 k ->
-			 hkwf2:kwf g2 (ksubst s k) ->
                          hs:subst_typing s g1 g2 ->
                          Tot (hr:subst_typing (sub_tlam s) (textend k g1) (textend (ksubst s k) g2){is_RenamingTyping hs ==> is_RenamingTyping hr})
 (decreases %[1;is_renaming_typing hs; hkwf; 1])
 let rec typing_substitution g1 e c s g2 h1 hs =
 match h1 with
-| TyVar #g1 x hk ->
-admit()
-(*
+| TyVar #g1 x ->
 ( match hs with
-| SubstTyping hwf1 hwf2 ef tf -> (subst_on_tot s (Cmp.t c); ef x)
-| RenamingTyping _ hwf1 hwf2 ef tf -> (subst_on_tot s (Cmp.t c); ef x)
+| SubstTyping _ _ _ ef tf -> (subst_on_tot s (Cmp.t c); ef x)
+| RenamingTyping _ _ _ ef tf -> (subst_on_tot s (Cmp.t c); ef x)
 )
-*)
-| TyConst g ec hwf ->
-admit()
-(*
-    (let hwg2 = get_hwf2 hs in
+| TyConst g ec ->
+admit()(*
+    (
      subst_on_econst s ec;
      subst_on_tot s (econsts ec);
      subst_on_teconst s ec;
-     TyConst g2 ec hwg2)
-*)
+     TyConst g2 ec )
+    *)
 | TyIf0 g e0 e1 e2 m t wp0 wp1 wp2 he0 he1 he2 ->
-admit()
-(*
+admit()(*
     (
       subst_on_ite s m t wp0 wp1 wp2;
       tyif01 s e0 e1 e2;
@@ -1920,17 +1857,15 @@ admit()
 	  TyIf0 g2 (esubst s e0) (esubst s e1) (esubst s e2) m (tsubst s t) (tsubst s wp0) (tsubst s wp1) (tsubst s wp2) he0' he1' he2' in
       h1'
     )
-*)
+    *)
 | TyAbs #g1 #t1 #ebody m t2 wp hk hbody  ->
-admit() (*
+admit()(*
     (
     let g1ext = eextend t1 g1 in
     let g2ext = eextend (tsubst s t1) g2 in
-    let hwfg1ext : ewf (eextend t1 g1) = GType hk in
     let hkt1g2 : kinding g2 (tsubst s t1) KType = kinding_substitution s hk hs in
-    let hwfg2ext : ewf (eextend (tsubst s t1) g2) = GType hkt1g2 in
     let hs'' : subst_typing sub_einc g2 (eextend (tsubst s t1) g2) =
-    hs_sub_einc (get_hwf2 hs) hkt1g2 in
+    hs_sub_einc g2 (tsubst s t1) in
     let hs' : subst_typing (sub_elam s) g1ext g2ext=elam_hs s hk hs in
     let hbodyg2ext : typing g2ext (esubst (sub_elam s) ebody) (Cmp m (tsubst (sub_elam s) t2) (tsubst (sub_elam s) wp)) = typing_substitution (sub_elam s) hbody hs' in
     (*hbodyg2ext -> typing (eextend (tsubst s t1) g2) (esubst (sub_elam s) ebody) (Cmp m (tsubst s t2) (tsubst s wp)) *)
@@ -1943,7 +1878,7 @@ admit() (*
     subst_on_tot s (TArr t1 (Cmp m t2 wp));
     habsg2ext
     )
-*)
+    *)
 | TyApp #g #e1 #e2 #m #t #t' #wp #wp1 #wp2 ht1 ht2 hkt' ->
 admit()
 (*
@@ -1957,56 +1892,41 @@ happg2
 )
 *)
 | TyRet t ht ->
-admit()
-(*
 let htg2 : typing g2 (esubst s e) (tot (tsubst s t))=subst_on_tot s t; typing_substitution s ht hs in
 let hretg2 : typing g2 (esubst s e) (Cmp EfPure (tsubst s t) (tsubst s (return_pure t e))) = subst_on_return_pure s t e; TyRet (tsubst s t) htg2 in
 hretg2
-*)
-| TySub ht hs hv -> admit() (* TODO *)
-
+| TySub #g #e #c' #c #phi ht hsc hv -> 
+(
+let htg2 : typing g2 (esubst s e) (csubst s c') = typing_substitution s ht hs in
+let hscg2 : scmp g2 (csubst s c') (csubst s c) (tsubst s phi) = scmp_substitution s hsc hs in
+let hvg2 : validity g2 (tsubst s phi) = validity_substitution s hv hs in
+TySub htg2 hscg2 hvg2
+)
 and scmp_substitution g1 c1 c2 phi s g2 h1 hs =
-admit()
-(*
+admit()(*
 let SCmp #g m' #t' wp' m #t wp #phi hsub hk hv = h1 in
 let hsubg2 = styping_substitution s hsub hs in
 let hkg2 : kinding g2 (tsubst s wp) (k_m m (tsubst s t)) = subst_on_k_m s m t; kinding_substitution s hk hs in
 let hvg2 : validity g2 (monotonic m (tsubst s t) (tsubst s wp)) = subst_on_monotonic s m t wp; validity_substitution s hv hs in
 let hscmpg2 : scmp g2 (Cmp m' (tsubst s t') (tsubst s wp')) (Cmp m (tsubst s t) (tsubst s wp)) (tsubst s (sub_computation phi m t wp m' t' wp')) = subst_on_sub_computation s phi m t wp m' t' wp'; SCmp m' (tsubst s wp') m (tsubst s wp) hsubg2 hkg2 hvg2 in
 hscmpg2
-
 *)
 and styping_substitution g1 t' t phi s g2 h1 hs = match h1 with
 | SubConv #g #t t' hv hk ->
-admit()
-(*
+admit()(*
 let hvg2 : validity g2 (teqtype (tsubst s t') (tsubst s t)) = subst_on_teqtype s t t'; validity_substitution s hv hs in
 let hkg2 : kinding g2 (tsubst s t) KType = kinding_substitution s hk hs in
 let hsubg2 : styping g2 (tsubst s t') (tsubst s t) (tsubst s ttrue) = SubConv (tsubst s t') hvg2 hkg2 in hsubg2
 *)
-(*
-| SubFun : #g:env -> #t:typ -> #t':typ -> #phi:typ ->
-           #c':cmp -> #c:cmp -> #psi:typ ->
-           =hst:styping g t t' phi ->
-           =hsc:scmp (eextend t g) c' c psi ->
-                styping g (TArr t' c') (TArr t c)
-                          (tand phi (tforalle t psi))
-*)
-| SubFun #g #t #t' #phi #c' #c #psi hst hsc ->
-admit()(*
+| SubFun #g #t #t' #phi #c' #c #psi hst hk hsc ->
+admit()
+  (*
 (
-let hewfext : ewf (eextend t g) = get_ewf_from_scmp (eextend t g) hsc in
-let DigCfgT _ _ _ g' hwf' t' s' hk' hsp = digkinding g1 t hewfext in
-let hs' : subst_typing s' g' g1 = pre_to_renaming s' g' g1 hsp hwf' (get_hwf1 hs) in
-let hkg1 : kinding g1 t KType = kinding_substitution s' hk' hs' in
-let hkg2 : kinding g2 (tsubst s t) KType =
-   let hs'' : subst_typing (sub_comp s s') g' g2 = compose_with_renaming_arrow g' g1 g2 s' s hs' hs in
-   tsubst_comp s s' t';
-   kinding_substitution (sub_comp s s') hk' hs''
-in
+let hkg1 : kinding g1 t KType = hk in
+let hkg2 : kinding g2 (tsubst s t) KType = kinding_substitution s hk hs in
 let hstg2 : styping g2 (tsubst s t) (tsubst s t') (tsubst s phi) = styping_substitution s hst hs in
-let hscg2 : scmp (eextend (tsubst s t) g2) (csubst (sub_elam s) c') (csubst (sub_elam s) c) (tsubst (sub_elam s) psi) = scmp_substitution (sub_elam s) hsc (elam_hs' s hk' hkg1 hkg2 hs) in
-let hr : styping g2 (TArr (tsubst s t') (csubst (sub_elam s) c')) (TArr (tsubst s t) (csubst (sub_elam s) c)) (tand (tsubst s phi) (tforalle (tsubst s t) (tsubst (sub_elam s) psi))) = SubFun hstg2 hscg2 in
+let hscg2 : scmp (eextend (tsubst s t) g2) (csubst (sub_elam s) c') (csubst (sub_elam s) c) (tsubst (sub_elam s) psi) = scmp_substitution (sub_elam s) hsc (elam_hs s hkg1 hs) in
+let hr : styping g2 (TArr (tsubst s t') (csubst (sub_elam s) c')) (TArr (tsubst s t) (csubst (sub_elam s) c)) (tand (tsubst s phi) (tforalle (tsubst s t) (tsubst (sub_elam s) psi))) = SubFun hstg2 hkg2 hscg2 in
 subst_on_tforalle s t psi;
 subst_on_tand s phi (tforalle t psi);
 hr
@@ -2017,20 +1937,22 @@ admit()
 (*
 SubTrans (styping_substitution s hs12 hs) (styping_substitution s hs23 hs)
 *)
+and tcwf_substitution g1 c s g2 h1 hs = match h1 with
+|WFTcForallT #g #k hkw -> WFTcForallT (kwf_substitution s hkw hs)
+|WFTcEqT #g #k hkw -> WFTcEqT (kwf_substitution s hkw hs)
+|WFTcOther g tc -> WFTcOther g2 tc
 and kinding_substitution g1 t k s g2 h1 hs = match h1 with
-| KVar #g x hwfg1 ->
+| KVar #g x ->
 admit()
 (*
 (
 match hs with
-| SubstTyping _ _ _ tf -> tf x
+| SubstTyping _ _ _ _ tf -> tf x
 | RenamingTyping _ _ _ _ tf -> tf x
 )
 *)
-| KConst #g c h ->
-admit() (*
-subst_on_tconst s c; KConst #g2 (tcsubst s c) (get_hwf2 hs)
-*)
+| KConst #g #c htc ->
+subst_on_tconst s c; KConst #g2 #(tcsubst s c) (tcwf_substitution s htc hs)
 | KArr #g #t1 #t2 #phi #m hk1 hk2 hkp hv ->
 admit()(*
 let hsext : subst_typing (sub_elam s) (eextend t1 g1) (eextend (tsubst s t1) g2) = elam_hs s hk1 hs in
@@ -2038,7 +1960,7 @@ let hk1g2 : kinding g2 (tsubst s t1) KType = kinding_substitution s hk1 hs in
 let hk2g2 : kinding (eextend (tsubst s t1) g2) (tsubst s t2) KType = kinding_substitution (sub_elam s) hk2 hsext in
 let hkpg2 : kinding (eextend (tsubst s t1) g2) (tsubst (sub_elam s) phi) (k_m m (tsubst (sub_elam s) t2)) = subst_on_k_m (sub_elam s) m t2; kinding_substitution (sub_elam s) hkp hsext in
 let hvg2 : validity (eextend (tsubst s t1) g2) (monotonic m (tsubst (sub_elam s) t2) (tsubst (sub_elam s) phi)) = subst_on_monotonic (sub_elam s) m t2 phi; validity_substitution (sub_elam s) hv hsext in
-KArr #g2 #(tsubst s t1) #(tsubst s t2) #(tsubst s phi) #m hk1g2 hk2g2 hkpg2 hvg2
+KArr #g2 #(tsubst s t1) #(tsubst (sub_elam s) t2) #(tsubst (sub_elam s) phi) #m hk1g2 hk2g2 hkpg2 hvg2
 *)
 | KTLam #g #k #t #k' hw hk ->
 admit()
@@ -2077,9 +1999,7 @@ KSub #g2 #(tsubst s t) #(ksubst s k') #(ksubst s k) #(tsubst s phi) plouf (skind
 (*SF : I switched to the new version of the substitution lemma because of this case ^*)
 and skinding_substitution g1 k1 k2 phi s g2 h1 hs = match h1 with
 | KSubRefl #g #k hw ->
-admit()(*
  KSubRefl (kwf_substitution s hw hs)
- *)
 (*
 | KSubKArr : #g:env -> #k1:knd -> #k2:knd -> k1':knd -> k2':knd ->
              #phi1:typ -> #phi2:typ->
@@ -2088,65 +2008,63 @@ admit()(*
                     skinding g (KKArr k1 k1') (KKArr k2 k2')
                                (tand phi1 (tforallt k2 phi2))
 *)
-| KSubKArr #g #k1 #k2 k1' k2' #phi1 #phi2 hs21 hs12' ->
-admit()(*
-let hewfext : ewf (textend k2 g1) = get_ewf_from_skinding (textend k2 g1) hs12' in
-let DigCfgK _ _ _ g' hwf' k' s' hkw' hsp = digkwf g1 k2 hewfext in
-let hs' : subst_typing s' g' g1 = pre_to_renaming s' g' g hsp hwf' (get_hwf1 hs) in
-let hkg1 : kwf g1 k2 = kwf_substitution s' hkw' hs' in
-let hkg2 : kwf g2 (ksubst s k2) =
-   let hs'' : subst_typing (sub_comp s s') g' g2 = compose_with_renaming_arrow g' g1 g2 s' s hs' hs in
-   ksubst_comp s s' k';
-   kwf_substitution (sub_comp s s') hkw' hs''
-   in
+| KSubKArr #g #k1 #k2 k1' k2' #phi1 #phi2 hs21 hkw hs12' ->
+admit()
+  (*
+let hkg1 : kwf g1 k2 = hkw in
+let hkg2 : kwf g2 (ksubst s k2) = kwf_substitution s hkg1 hs in
 let hs21g2 : skinding g2 (ksubst s k2) (ksubst s k1) (tsubst s phi1) = skinding_substitution s hs21 hs in
-let hs12'g2 : skinding (textend (ksubst s k2) g2) (ksubst (sub_tlam s) k1') (ksubst (sub_tlam s) k2') (tsubst (sub_tlam s) phi2) = skinding_substitution (sub_tlam s) hs12' (tlam_hs' s hkw' hkg1 hkg2 hs) in
+let hs12'g2 : skinding (textend (ksubst s k2) g2) (ksubst (sub_tlam s) k1') (ksubst (sub_tlam s) k2') (tsubst (sub_tlam s) phi2) = skinding_substitution (sub_tlam s) hs12' (tlam_hs s hkw hs) in
 subst_on_tforallt s k2 phi2;
 subst_on_tand s phi1 (tforallt k2 phi2);
-KSubKArr (ksubst (sub_tlam s) k1') (ksubst (sub_tlam s) k2') hs21g2 hs12'g2
+KSubKArr (ksubst (sub_tlam s) k1') (ksubst (sub_tlam s) k2') hs21g2 hkg2 hs12'g2
 *)
-| KSubTArr #g #t1 #t2 #k1 #k2 #phi1 #phi2 hs21 hs12' ->
-admit() (*
-let hewfext : ewf (eextend t2 g) = get_ewf_from_skinding (eextend t2 g) hs12' in
-let DigCfgT _ _ _ g' hwf' t' s' hk' hsp = digkinding g t2 hewfext in
-let hs' : subst_typing s' g' g1 = pre_to_renaming s' g' g hsp hwf' (get_hwf1 hs) in
-let hk : kinding g1 t2 KType = kinding_substitution s' hk' hs' in
-let hkg2 : kinding g2 (tsubst s t2) KType =
-   let hs'' : subst_typing (sub_comp s s') g' g2 = compose_with_renaming_arrow g' g1 g2 s' s hs' hs in
-   tsubst_comp s s' t';
-   kinding_substitution (sub_comp s s') hk' hs''
-in
-(*SF : ^ First example of how to retrieve the kinding from a proof in an extended environment. So the idea of building arrows by induction on ewf works \o/. *)
+| KSubTArr #g #t1 #t2 #k1 #k2 #phi1 #phi2 hs21 hk hs12' ->
+admit()(*
+let hk : kinding g1 t2 KType = hk in
+let hkg2 : kinding g2 (tsubst s t2) KType = kinding_substitution s hk hs in
 let hs21g2 : styping g2 (tsubst s t2) (tsubst s t1) (tsubst s phi1) = styping_substitution s hs21 hs in
-let hs12'g2 : skinding (eextend (tsubst s t2) g2) (ksubst (sub_elam s) k1) (ksubst (sub_elam s) k2) (tsubst (sub_elam s) phi2) = skinding_substitution (sub_elam s) hs12' (elam_hs' s hk' hk hkg2 hs) in
-let hr : skinding g2 (KTArr (tsubst s t1) (ksubst (sub_elam s) k1)) (KTArr (tsubst s t2) (ksubst (sub_elam s) k2)) (tand (tsubst s phi1) (tforalle (tsubst s t2) (tsubst (sub_elam s) phi2))) = KSubTArr hs21g2 hs12'g2 in
+let hs12'g2 : skinding (eextend (tsubst s t2) g2) (ksubst (sub_elam s) k1) (ksubst (sub_elam s) k2) (tsubst (sub_elam s) phi2) = skinding_substitution (sub_elam s) hs12' (elam_hs s hk hs) in
+let hr : skinding g2 (KTArr (tsubst s t1) (ksubst (sub_elam s) k1)) (KTArr (tsubst s t2) (ksubst (sub_elam s) k2)) (tand (tsubst s phi1) (tforalle (tsubst s t2) (tsubst (sub_elam s) phi2))) = KSubTArr hs21g2 hkg2 hs12'g2 in
 subst_on_tforalle s (t2) (phi2);
 subst_on_tand s phi1 (tforalle t2 phi2);
 hr
 *)
 and kwf_substitution g1 k s g2 h1 hs = match h1 with
-| WfType g h -> WfType g2 (get_hwf2 hs)
+| WfType g -> WfType g2
 | WfTArr #g #t #k' hk hw ->
 let plouf : kinding g2 (tsubst s t) KType = (kinding_substitution s hk hs) in
 WfTArr plouf (kwf_substitution (sub_elam s) hw (elam_hs s hk hs))
 (*SF : I also need plouf here. Why ?*)
 | WfKArr #g #k #k' hw hw' -> WfKArr (kwf_substitution s hw hs) (kwf_substitution (sub_tlam s) hw' (tlam_hs s hw hs))
-and validity_substitution g1 t1 s g2 h1 hs = admit()
-and elam_hs g1 s g2 t1 hk hs =
+and validity_substitution g1 t1 s g2 h1 hs = match h1 with
+| VAssume #g e t h -> (let h2 : typing g2 (esubst s e) (tot (tsubst s t)) = subst_on_tot s t; typing_substitution s h hs in
+VAssume #g2 (esubst s e) (tsubst s t) h2)
+| VRedE #g #e #t #e' ht ht' hst ->
+(
+ let ht2 : typing g2 (esubst s e) (tot (tsubst s t)) = subst_on_tot s t; typing_substitution s ht hs in
+ let ht2' : typing g2 (esubst s e') (tot (tsubst s t)) = subst_on_tot s t; typing_substitution s ht' hs in
+ let hst2 : epstep (esubst s e) (esubst s e') = epstep_substitution s e e' hst in
+ VRedE ht2 ht2' hst2
+)
+| VEqReflE #g #e #t ht -> (let ht2:typing g2 (esubst s e) (tot (tsubst s t)) = subst_on_tot s t; typing_substitution s ht hs in
+VEqReflE #g2 #(esubst s e) #(tsubst s t) ht2)
+| VSubstE #g #e1 #e2 #t' t x hv12 ht1 ht2 hk hvsub -> admit()
+| _ -> admit()
+and elam_hs g1 s g2 t1 hk hs = 
+admit()(*
 let g1ext = eextend t1 g1 in
 let g2ext = eextend (tsubst s t1) g2 in
-let hwfg1ext : ewf (eextend t1 g1) = GType hk in
 let hkt1g2 : kinding g2 (tsubst s t1) KType = kinding_substitution s hk hs in
-let hwfg2ext : ewf (eextend (tsubst s t1) g2) = GType hkt1g2 in
 let hs'' : subst_typing sub_einc g2 (eextend (tsubst s t1) g2) =
-hs_sub_einc (get_hwf2 hs) hkt1g2 in
-(match hs with SubstTyping hwg1 hwg2 ef tf ->
-    SubstTyping hwfg1ext hwfg2ext
+hs_sub_einc g2 (tsubst s t1) in
+(match hs with SubstTyping s' g1' g2' ef tf ->
+    SubstTyping (sub_elam s) g1ext g2ext
       (fun x -> match x with
 		| 0 -> (*TyVar 0 hwg2ext -> typing g2ext (EVar 0) (tot (tesh (tsubst s t1)))
 			elam_shift       -> typing g2ext (EVar 0) (tot (tsubst (sub_elam s) (tesh t1)))*)
 			(tsubst_elam_shift s t1;
-			 TyVar 0 hwfg2ext)
+			 TyVar 0 )
 		| n -> (
 		       (*hg2   -> typing g2 (s.es (x-1)) (tot (tsubst s (g1 (x-1))))*)
 		       (*ind   -> typing g2ext (eesh s.ex (x-1)) (cesh (tot (tsubst s (g1 (x-1))))) *)
@@ -2172,10 +2090,10 @@ hs_sub_einc (get_hwf2 hs) hkt1g2 in
 		ksubst_elam_shift s (Some.v (lookup_tvar g1 a));
 		hkg2ext
       )
-| RenamingTyping _ hwg1 hwg2 ef tf ->
-    RenamingTyping (sub_elam s) hwfg1ext hwfg2ext
+| RenamingTyping s' g1' g2' ef tf ->
+    RenamingTyping (sub_elam s) g1ext g2ext
       (fun x -> match x with
-		| 0 -> (tsubst_elam_shift s t1; TyVar 0 hwfg2ext)
+		| 0 -> (tsubst_elam_shift s t1; TyVar 0 )
 		| n -> (
 		       (*x'   -> s.es (x-1) = EVar x' /\ is_Some (lookup_evar g2 x') /\ tsubst s (lookup_evar g1 (x-1)).v = (lookup_evar g2 x').v*)
 		       (*ind   -> typing g2ext (eesh s.ex (x-1)) (cesh (tot (tsubst s (g1 (x-1))))) *)
@@ -2202,18 +2120,18 @@ hs_sub_einc (get_hwf2 hs) hkt1g2 in
 		hkg2ext
       )
 )
+*)
 and tlam_hs g1 s g2 k hkwf hs =
-admit()(*
+admit()
+  (*
 let g1ext = textend k g1 in
 let g2ext = textend (ksubst s k) g2 in
-let hwfg1ext : ewf g1ext = GKind hkwf in
 let hkwfkg2 : kwf g2 (ksubst s k) = kwf_substitution s hkwf hs in
-let hwfg2ext : ewf g2ext = GKind hkwfkg2 in
-let hs'' : subst_typing sub_tinc g2 g2ext = hs_sub_tinc (get_hwf2 hs) hkwfkg2 in
+let hs'' : subst_typing sub_tinc g2 g2ext = hs_sub_tinc g2 (ksubst s k) in
 let newhs : subst_typing (sub_tlam s) g1ext g2ext =
 (match hs with
-| SubstTyping hwg1 hwg2 ef tf ->
-    SubstTyping hwfg1ext hwfg2ext
+| SubstTyping _ _ _ ef tf ->
+    SubstTyping (sub_tlam s) g1ext g2ext
       (fun x -> let htg2 = ef x in
                 (*htg2 : g2 |- s(x) : tot (tsubst s (g1(x)))*)
                 let tg1 = Some.v (lookup_evar g1 x) in
@@ -2225,7 +2143,7 @@ let newhs : subst_typing (sub_tlam s) g1ext g2ext =
                 htg2ext
       )
       (fun a -> match a with
-                | 0 -> (ksubst_tlam_shift s k; KVar 0 hwfg2ext)
+                | 0 -> (ksubst_tlam_shift s k; KVar 0 )
                 | n -> (
 		let tg2 = Sub.ts s (a-1) in
 		let kg1 = Some.v (lookup_tvar g1 (a-1)) in
@@ -2235,8 +2153,8 @@ let newhs : subst_typing (sub_tlam s) g1ext g2ext =
 		assert(ktsh (ksubst s kg1) = ksubst (sub_tlam s) (ktsh kg1));
 		hkg2ext)
       )
-| RenamingTyping _ hwg1 hwg2 ef tf ->
-    RenamingTyping (sub_tlam s) hwfg1ext hwfg2ext
+| RenamingTyping _ _ _ ef tf ->
+    RenamingTyping (sub_tlam s) g1ext g2ext 
       (fun x -> let htg2 = ef x in
                 (*htg2 : g2 |- s(x) : tot (tsubst s (g1(x)))*)
                 let tg1 = Some.v (lookup_evar g1 x) in
@@ -2248,7 +2166,7 @@ let newhs : subst_typing (sub_tlam s) g1ext g2ext =
                 htg2ext
       )
       (fun a -> match a with
-                | 0 -> (ksubst_tlam_shift s k; KVar 0 hwfg2ext)
+                | 0 -> (ksubst_tlam_shift s k; KVar 0 )
                 | n -> (
 		let tg2 = Sub.ts s (a-1) in
 		let kg1 = Some.v (lookup_tvar g1 (a-1)) in
@@ -2260,12 +2178,8 @@ let newhs : subst_typing (sub_tlam s) g1ext g2ext =
 
 )
 in newhs
-
 *)
-and elam_hs' g1 s g2 t1 g' t' hk hk1 hk2 hs = admit()
-(*SF : same as elam_hs, except we provide the kinding proof for g2.
- At some point, we should switch to elam_hs'*)
-and tlam_hs' g1 s g2 k g' k' hkwf hkwf1 hkwf2 hs = admit()
+
 (**********************)
 (* Derived judgements *)
 (**********************)
@@ -2337,13 +2251,13 @@ let k_impl g t1 t2 hk1 hk2 = admit()
   in KTApp KType happ1 hk2 (WfType g)
 *)
 
-val k_false : #g:env -> =hewf:(ewf g) -> Tot (kinding g tfalse KType)
-let k_false g hewf = KConst TcFalse hewf
+val k_false : g:env -> Tot (kinding g tfalse KType)
+let k_false g = KConst (WFTcOther g TcFalse)
 
 val k_not : #g:env -> #t:typ ->
            =hk:kinding g t KType ->
            Tot (kinding g (tnot t) KType)
-let k_not g t hk = k_impl hk (k_false (kinding_ewf hk))
+let k_not g t hk = k_impl hk (k_false g)
 
 (* TODO: need to prove derived judgment and weakening before we can
    prove some of the derived validity rules! For us weakening is just
@@ -2357,9 +2271,10 @@ let k_not g t hk = k_impl hk (k_false (kinding_ewf hk))
              to reduce the number of rules here (prove them as lemmas) *)
 
 val v_impl_intro : #g:env -> t1:typ -> t2:typ ->
+                   =hk:kinding g t1 KType ->
                    =hv:validity (eextend t1 g) (tesh t2) ->
                   Tot (validity g (timpl t1 t2))
-let v_impl_intro g t1 t2 hv= VForallIntro g t1 hv
+let v_impl_intro g t1 t2 hk hv= VForallIntro hk hv
 
 val v_impl_elim : #g:env -> #t1:typ -> #t2:typ ->
                  =hv12:validity g (timpl t1 t2) ->
@@ -2412,9 +2327,11 @@ val v_or_intro1 : #g:env -> #t1:typ -> #t2:typ ->
                   =hv1:validity g t1 ->
                   =hk2:kinding g t2 KType ->
                        validity g (tor t1 t2)
-let v_or_intro1 g t1 t2 hv1 hk2 =
+let v_or_intro1 g t1 t2 hv1 hk2 = magic()
+  (*
   v_impl_intro (tnot t1) t2
                (magic())
+	       *)
 
 val v_or_intro2 : #g:env -> #t1:typ -> #t2:typ ->
                   =hv:validity g t2 ->
