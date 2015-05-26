@@ -88,14 +88,13 @@
 
   type delimiters = { angle:int ref; paren:int ref; }
 
-  (** XXX TODO This is an unacceptable hack. Needs to be redone ASAP  **)
   let ba_of_string s = Array.init (String.length s) (String.get s)
   let n_typ_apps = Util.mk_ref 0
   let is_typ_app lexbuf =
   if not !Microsoft_FStar_Options.fs_typ_app then false
   else try
    let char_ok = function
-     | '(' | ')' | '<' | '>' | '*' | '-' | '\'' | ',' | '.' | ' ' | '\t' -> true
+     | '(' | ')' | '<' | '>' | '*' | '-' | '\'' | '_' | ',' | '.' | ' ' | '\t' -> true
      | c when c >= 'A' && c <= 'Z' -> true
      | c when c >= 'a' && c <= 'z' -> true
      | c when c >= '0' && c <= '9' -> true
@@ -114,8 +113,12 @@
       else if i >= String.length contents || not (ok ()) || (not (char_ok (Util.char_at contents i))) || (Util.starts_with (Util.substring_from contents i) "then") then false
       else (upd i; aux (i + 1)) in
       aux (pos + 1) in
-   let res = balanced lexbuf.lex_buffer (lexbuf.lex_curr_pos - 1) in
+   let rest = String.sub lexbuf.lex_buffer lexbuf.lex_last_pos (lexbuf.lex_buffer_len - lexbuf.lex_last_pos) in
+   if not (String.contains rest '\n') then (lexbuf.refill_buff lexbuf);
+   let lookahead = String.sub lexbuf.lex_buffer (lexbuf.lex_last_pos - 1) (lexbuf.lex_buffer_len - lexbuf.lex_last_pos + 1) in
+   let res = balanced lookahead 0 in
    if res then Util.incr n_typ_apps;
+   (*Printf.printf "TYP_APP %s: %s\n" lookahead (if res then "YES" else "NO");*)
    res
   with e -> Printf.printf "Resolving typ_app<...> syntax failed.\n"; false
 
@@ -191,8 +194,8 @@ let custom_op = custom_op_char (custom_op_char | '>')*
 (* -------------------------------------------------------------------- *)
 let constructor_start_char = upper
 let ident_start_char       = lower  | '_'
-let ident_char             = letter | digit  | ['\'' '_']
-let tvar_char              = letter | digit | ['\'' '_']
+let ident_char             = letter | digit  | '\'' | '_'
+let tvar_char              = letter | digit | '\'' | '_'
 
 let constructor = constructor_start_char ident_char*
 let ident       = ident_start_char ident_char*
@@ -211,6 +214,14 @@ rule token = parse
      { let n = int_of_string (trim_left lexbuf 2) in
        mknewline (n - !lc) lexbuf;
        cpp_filename lexbuf }
+ (* Must appear before tvar to avoid 'a <-> 'a' conflict *)
+ | '\'' (char as c) '\''
+ | '\'' (char as c) '\'' 'B'
+     { let c =
+         match c.[0] with
+         | '\\' -> char_of_ec c.[1]
+         | _    -> c.[0]
+     in CHAR c }
  | ident as id
      { id |> Hashtbl.find_option keywords |> Option.default (IDENT id) }
  | constructor as id
@@ -233,13 +244,6 @@ rule token = parse
      { IEEE64 (float_of_string x) }
  | (int | xint | float) ident_char+
      { failwith "This is not a valid numeric literal." }
- | '\'' (char as c) '\''
- | '\'' (char as c) '\'' 'B'
-     { let c =
-         match c.[0] with
-         | '\\' -> char_of_ec c.[1]
-         | _    -> c.[0]
-       in CHAR c }
 
  | "(*"
      { comment lexbuf; token lexbuf }
