@@ -289,8 +289,8 @@ let extract_record (e:env) = function
                     | Some (x, _) -> x 
                     | _ -> [] in
                 let fields = formals |> List.collect (fun b -> match b with
-                    | Inr x, _ ->  
-                        if is_null_binder b 
+                    | Inr x, q ->  
+                        if is_null_binder b  || q = Some Implicit
                         then []
                         else [(qual constrname (Util.unmangle_field_name x.v.ppname), x.sort)]
                     | _ -> []) in
