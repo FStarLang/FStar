@@ -100,8 +100,8 @@ The current version of F* requires OCaml 4.02.
 
 0. Follow the steps above to compile the .NET version of F*.
 
-1. Since WODI has been discontinued, the only solution is to use the (OCaml
-   Installer for Windows)[http://protz.github.io/ocaml-installer/]. This
+1. Since WODI has been discontinued, the only solution is to use the [OCaml
+   Installer for Windows](http://protz.github.io/ocaml-installer/). This
    installer installs an outdated version of OCaml (4.01.0) -- this is going to
    cause some difficulties.
 
