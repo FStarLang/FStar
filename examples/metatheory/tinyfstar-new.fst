@@ -1,5 +1,5 @@
 (*--build-config
-    options:--z3timeout 10 --max_fuel 4 --max_ifuel 4 --initial_fuel 4 --initial_ifuel 2;
+    options:--z3timeout 15 --log_types --max_fuel 4 --max_ifuel 4 --initial_fuel 4 --initial_ifuel 2;
     other-files:../../lib/classical.fst ../../lib/ext.fst
   --*)
 module TinyFStarNew
@@ -1492,7 +1492,7 @@ and validity : g:env -> t:typ -> Type =
                      validity g (tforalle t phi)
 
 
-| VForallTypIntro :  g:env -> k:knd -> #phi:typ ->
+| VForallTypIntro :  #g:env -> #k:knd -> #phi:typ ->
                     =kw:kwf g k ->
                     =hv:validity (textend k g) phi ->
                         validity g (tforallt k phi)
@@ -1520,7 +1520,7 @@ and validity : g:env -> t:typ -> Type =
               =hv2:validity g p2 ->
                    validity g (tand p1 p2)
 
-| VExMiddle : #g:env -> #t1:typ -> t2:typ ->
+| VExMiddle : #g:env -> #t1:typ -> #t2:typ ->
               =hk1:kinding g t1 KType ->
               =hk2:kinding g t2 KType ->
               =hv1:validity (eextend t1 g) (tesh t2) ->
@@ -1537,11 +1537,11 @@ and validity : g:env -> t:typ -> Type =
               =hk:kinding g t1 KType ->
                   validity g (tor t1 t2)
 
-| VOrElim : #g:env -> t1:typ -> t2:typ -> #t3:typ ->
+| VOrElim : #g:env -> #t1:typ -> #t2:typ -> #t3:typ ->
             =hk1:kinding g t1 KType ->
 	    =hk2:kinding g t2 KType ->
-	    =validity g (tor t1 t2) ->
-            =hk :kinding g t3 KType ->
+            =hk3 :kinding g t3 KType ->
+	    =hvor:validity g (tor t1 t2) ->
             =hv1:validity (eextend t1 g) (tesh t3) ->
             =hv2:validity (eextend t2 g) (tesh t3) ->
                  validity g t3
@@ -1557,7 +1557,7 @@ and validity : g:env -> t:typ -> Type =
                    =ht2:typing g v2 (tot t2) ->
                         validity g (tprecedes v1 v2)
 
-| VDistinctC : g:env -> c1:econst -> c2:econst{c1 <> c2} -> t:typ ->
+| VDistinctC : g:env -> c1:econst -> c2:econst{c1 <> c2} ->
                validity g (tnot (teqe (EConst c1) (EConst c2)))
 
 | VDistinctTH : #g:env -> #t1:typ{is_hnf t1} ->
@@ -1578,8 +1578,11 @@ For injectivity should probably stick with this (see discussion in txt file):
                      #t1':typ -> #t2':typ -> #phi':typ -> #m:eff ->
            =hv:validity g (teqtype (TArr t1  (Cmp m t2  phi))
                                    (TArr t1' (Cmp m t2' phi'))) ->
-               validity g (tand (tand (teqtype t1 t1') (teqtype t2 t2))
+               validity g (tand (tand (teqtype t1 t1') (teqtype t2 t2'))
                                       (teqtype phi phi'))
+(*SF : ^ there is a problem in the conclusion : t2,t2',phi,phi' do not
+ live in g, but in eextend _ g with _ = t1 or t1'. We can not
+ compare them directly. How to fix this nicely ?*)
 (* Environment Well-Formedness*)
 type ewf : env -> Type =
 
@@ -1647,6 +1650,12 @@ let subst_on_tconst s tc = admit()
 
 val subst_on_tand : s:sub -> a:typ -> b:typ -> Lemma (tsubst s (tand a b) = tand (tsubst s a) (tsubst s b))
 let subst_on_tand s a b = admit()
+
+val subst_on_tor : s:sub -> t1 : typ -> t2 : typ -> Lemma (tsubst s (tor t1 t2) = tor (tsubst s t1) (tsubst s t2))
+let subst_on_tor s t1 t2 = admit()
+
+val subst_on_tnot : s:sub -> t:typ -> Lemma (tsubst s (tnot t) = tnot (tsubst s t))
+let subst_on_tnot s t = admit()
 
 val subst_on_tforallt : s:sub -> k:knd -> body:typ -> Lemma (tsubst s (tforallt k body) = tforallt (ksubst s k) (tsubst (sub_tlam s) body))
 let subst_on_tforallt s k body = admit()
@@ -1844,17 +1853,22 @@ opaque val tlam_hs : #g1:env -> s:sub -> #g2:env -> #k:knd ->
 let rec typing_substitution g1 e c s g2 h1 hs =
 match h1 with
 | TyVar #g1 x ->
+admit()(*
 ( match hs with
 | SubstTyping _ _ _ ef tf -> (subst_on_tot s (Cmp.t c); ef x)
 | RenamingTyping _ _ _ ef tf -> (subst_on_tot s (Cmp.t c); ef x)
 )
+*)
 | TyConst g ec ->
+admit()(*
     (
      subst_on_econst s ec;
      subst_on_tot s (econsts ec);
      subst_on_teconst s ec;
      TyConst g2 ec )
+    *)
 | TyIf0 g e0 e1 e2 m t wp0 wp1 wp2 he0 he1 he2 ->
+admit()(*
     (
       subst_on_ite s m t wp0 wp1 wp2;
       tyif01 s e0 e1 e2;
@@ -1868,7 +1882,9 @@ match h1 with
 	  TyIf0 g2 (esubst s e0) (esubst s e1) (esubst s e2) m (tsubst s t) (tsubst s wp0) (tsubst s wp1) (tsubst s wp2) he0' he1' he2' in
       h1'
     )
+    *)
 | TyAbs #g1 #t1 #ebody m t2 wp hk hbody  ->
+admit()(*
     (
     let g1ext = eextend t1 g1 in
     let g2ext = eextend (tsubst s t1) g2 in
@@ -1887,7 +1903,9 @@ match h1 with
     subst_on_tot s (TArr t1 (Cmp m t2 wp));
     habsg2ext
     )
+    *)
 | TyApp #g #e1 #e2 #m #t #t' #wp #wp1 #wp2 ht1 ht2 hkt' ->
+admit()(*
 (
 let ht1g2 : typing g2 (esubst s e1) (Cmp m (TArr (tsubst s t) (Cmp m (tsubst (sub_elam s) t') (tsubst (sub_elam s) wp))) (tsubst s wp1)) =
 subst_on_tarrow s t m t' wp; typing_substitution s ht1 hs in
@@ -1896,30 +1914,40 @@ let hkt'g2 : kinding g2 (tsubst_ebeta (esubst s e2) (tsubst (sub_elam s) t')) KT
 let happg2 : typing g2 (EApp (esubst s e1) (esubst s e2)) (Cmp m (tsubst s (tsubst_ebeta e2 t')) (tsubst s (bind m (TArr t (Cmp m t' wp)) t wp1 wp2))) = tsubst_on_ebeta s e2 t'; subst_on_bind s m (TArr t (Cmp m t' wp)) t wp1 wp2; TyApp ht1g2 ht2g2 hkt'g2 in
 happg2
 )
+*)
 | TyRet t ht ->
+admit()(*
 let htg2 : typing g2 (esubst s e) (tot (tsubst s t))=subst_on_tot s t; typing_substitution s ht hs in
 let hretg2 : typing g2 (esubst s e) (Cmp EfPure (tsubst s t) (tsubst s (return_pure t e))) = subst_on_return_pure s t e; TyRet (tsubst s t) htg2 in
 hretg2
+*)
 | TySub #g #e #c' #c #phi ht hsc hv -> 
+admit()(*
 (
 let htg2 : typing g2 (esubst s e) (csubst s c') = typing_substitution s ht hs in
 let hscg2 : scmp g2 (csubst s c') (csubst s c) (tsubst s phi) = scmp_substitution s hsc hs in
 let hvg2 : validity g2 (tsubst s phi) = validity_substitution s hv hs in
 TySub htg2 hscg2 hvg2
 )
+*)
 and scmp_substitution g1 c1 c2 phi s g2 h1 hs =
+admit()(*
 let SCmp #g m' #t' wp' m #t wp #phi hsub hk hv = h1 in
 let hsubg2 = styping_substitution s hsub hs in
 let hkg2 : kinding g2 (tsubst s wp) (k_m m (tsubst s t)) = subst_on_k_m s m t; kinding_substitution s hk hs in
 let hvg2 : validity g2 (monotonic m (tsubst s t) (tsubst s wp)) = subst_on_monotonic s m t wp; validity_substitution s hv hs in
 let hscmpg2 : scmp g2 (Cmp m' (tsubst s t') (tsubst s wp')) (Cmp m (tsubst s t) (tsubst s wp)) (tsubst s (sub_computation phi m t wp m' t' wp')) = subst_on_sub_computation s phi m t wp m' t' wp'; SCmp m' (tsubst s wp') m (tsubst s wp) hsubg2 hkg2 hvg2 in
 hscmpg2
+*)
 and styping_substitution g1 t' t phi s g2 h1 hs = match h1 with
 | SubConv #g #t t' hv hk ->
+admit()(*
 let hvg2 : validity g2 (teqtype (tsubst s t') (tsubst s t)) = subst_on_teqtype s t t'; validity_substitution s hv hs in
 let hkg2 : kinding g2 (tsubst s t) KType = kinding_substitution s hk hs in
 let hsubg2 : styping g2 (tsubst s t') (tsubst s t) (tsubst s ttrue) = SubConv (tsubst s t') hvg2 hkg2 in hsubg2
+*)
 | SubFun #g #t #t' #phi #c' #c #psi hst hk hsc ->
+admit()(*
 (
 let hkg1 : kinding g1 t KType = hk in
 let hkg2 : kinding g2 (tsubst s t) KType = kinding_substitution s hk hs in
@@ -1930,13 +1958,20 @@ subst_on_tforalle s t psi;
 subst_on_tand s phi (tforalle t psi);
 hr
 )
+*)
 | SubTrans #g #t1 #t2 #t3 #phi12 #phi23 hs12 hs23 ->
+admit()(*
 SubTrans (styping_substitution s hs12 hs) (styping_substitution s hs23 hs)
+*)
 and tcwf_substitution g1 c s g2 h1 hs = match h1 with
 |WFTcForallT #g #k hkw -> 
+admit()(*
 WFTcForallT (kwf_substitution s hkw hs)
+*)
 |WFTcEqT #g #k hkw -> 
+admit()(*
 WFTcEqT (kwf_substitution s hkw hs)
+*)
 |WFTcOther g tc -> 
 admit()(*
 WFTcOther g2 tc
@@ -2027,10 +2062,15 @@ hr
 and kwf_substitution g1 k s g2 h1 hs = match h1 with
 | WfType g -> WfType g2
 | WfTArr #g #t #k' hk hw ->
+admit()(*
 let plouf : kinding g2 (tsubst s t) KType = (kinding_substitution s hk hs) in
 WfTArr plouf (kwf_substitution (sub_elam s) hw (elam_hs s hk hs))
+*)
 (*SF : I also need plouf here. Why ?*)
-| WfKArr #g #k #k' hw hw' -> WfKArr (kwf_substitution s hw hs) (kwf_substitution (sub_tlam s) hw' (tlam_hs s hw hs))
+| WfKArr #g #k #k' hw hw' -> 
+admit()(*
+WfKArr (kwf_substitution s hw hs) (kwf_substitution (sub_tlam s) hw' (tlam_hs s hw hs))
+*)
 and validity_substitution g1 t1 s g2 h1 hs = match h1 with
 | VAssume #g e t h -> 
 admit()(*
@@ -2134,7 +2174,7 @@ admit()(*
  let htlg2 : typing g2 (esubst s el) (tot tref) = subst_on_tot s tref; typing_substitution s htl hs in
  let htl'g2 : typing g2 (esubst s el') (tot tref) = subst_on_tot s tref; typing_substitution s htl' hs in
  let htig2 : typing g2 (esubst s ei) (tot tint) = subst_on_tot s tint; typing_substitution s hti hs in
- let hvg2 : validity g2 (tnot (teqe (esubst s el) (esubst s el'))) = validity_substitution s hv hs in
+ let hvg2 : validity g2 (tnot (teqe (esubst s el) (esubst s el'))) = subst_on_tnot s (teqe el el') ; subst_on_teqe s el el';  validity_substitution s hv hs in
  let hr : validity g2 (teqe (esel (eupd (esubst s eh) (esubst s el') (esubst s ei)) (esubst s ei)) (esel (esubst s eh) (esubst s el))) = VSelNeq hthg2 htlg2 htl'g2 htig2 hvg2 in
  subst_on_esel s eh el;
  subst_on_eupd s eh el' ei;
@@ -2143,7 +2183,131 @@ admit()(*
  hr
 )
 *)
-| _ -> admit()
+| VForallIntro #g #t #phi hk hv ->
+admit()(*
+(
+ let hkg2 : kinding g2 (tsubst s t) KType = kinding_substitution s hk hs in
+ let hvg2 : validity (eextend (tsubst s t) g2) (tsubst (sub_elam s) phi) = validity_substitution (sub_elam s) hv (elam_hs s hk hs) in
+ let hr : validity g2 (tforalle (tsubst s t) (tsubst (sub_elam s) phi)) = VForallIntro hkg2 hvg2 in
+ subst_on_tforalle s t phi;
+ hr
+
+)
+*)
+| VForallTypIntro #g #k #phi hkw hv ->
+admit()(*
+(
+ let hkwg2 : kwf g2 (ksubst s k) = kwf_substitution s hkw hs in
+ let hvg2 : validity (textend (ksubst s k) g2) (tsubst (sub_tlam s) phi) = validity_substitution (sub_tlam s) hv (tlam_hs s hkw hs) in
+ let hr : validity g2 (tforallt (ksubst s k) (tsubst (sub_tlam s) phi)) = VForallTypIntro hkwg2 hvg2 in
+ subst_on_tforallt s k phi;
+ hr
+)
+*)
+| VForallElim #g #t #phi #e hv ht -> 
+admit()(*
+(
+ let hvg2 : validity g2 (tforalle (tsubst s t) (tsubst (sub_elam s) phi)) = subst_on_tforalle s t phi; validity_substitution s hv hs in
+ let htg2 : typing g2 (esubst s e) (tot (tsubst s t)) = subst_on_tot s t; typing_substitution s ht hs in
+ let hr : validity g2 (tsubst_ebeta (esubst s e) (tsubst (sub_elam s) phi)) = VForallElim hvg2 htg2 in
+ tsubst_on_ebeta s e phi;
+ hr
+)
+*)
+| VForallTypElim #g #t #k #phi hv hk -> 
+admit()(*
+(
+ let hvg2 : validity g2 (tforallt (ksubst s k) (tsubst (sub_tlam s) phi)) = subst_on_tforallt s k phi; validity_substitution s hv hs in
+ let hkg2 : kinding g2 (tsubst s t) (ksubst s k) =kinding_substitution s hk hs in
+ let hr : validity g2 (tsubst_tbeta (tsubst s t) (tsubst (sub_tlam s) phi)) = VForallTypElim hvg2 hkg2 in
+ tsubst_on_tbeta s t phi;
+ hr
+)
+*)
+| VAndElim1 #g #p1 #p2 hv -> 
+admit()(*
+(
+ let hvg2 : validity g2 (tand (tsubst s p1) (tsubst s p2)) = subst_on_tand s p1 p2; validity_substitution s hv hs in
+ VAndElim1 hvg2
+)
+*)
+| VAndElim2 #g #p1 #p2 hv -> 
+admit()(*
+(
+ let hvg2 : validity g2 (tand (tsubst s p1) (tsubst s p2)) = subst_on_tand s p1 p2; validity_substitution s hv hs in
+ VAndElim2 hvg2
+)
+*)
+| VAndIntro #g #p1 #p2 hv1 hv2 ->
+admit()(*
+(
+ let hv1g2 : validity g2 (tsubst s p1) = validity_substitution s hv1 hs in
+ let hv2g2 : validity g2 (tsubst s p2) = validity_substitution s hv2 hs in
+ subst_on_tand s p1 p2 ;VAndIntro hv1g2 hv2g2
+)
+*)
+| VExMiddle #g #t1 #t2 hk1 hk2 hv1 hv2 ->
+admit()(*
+(
+ let hk1g2 : kinding g2 (tsubst s t1) KType = kinding_substitution s hk1 hs in
+ let hk2g2 : kinding g2 (tsubst s t2) KType = kinding_substitution s hk2 hs in
+ let hv1g2 : validity (eextend (tsubst s t1) g2) (tesh (tsubst s t2)) = tsubst_elam_shift s t2; validity_substitution (sub_elam s) hv1 (elam_hs s hk1 hs) in
+ let hv2g2 : validity (eextend (tnot (tsubst s t1)) g2) (tesh (tsubst s t2)) = magic()(*TODO:We need to rewrite elam_hs decreasing clause -> we can not use hk1 here*) in
+ VExMiddle hk1g2 hk2g2 hv1g2 hv2g2
+)
+*)
+| VOrIntro1 #g #t1 #t2 hv hk ->
+admit()(*
+(
+ let hvg2 : validity g2 (tsubst s t1) = validity_substitution s hv hs in
+ let hkg2 : kinding g2 (tsubst s t2) KType = kinding_substitution s hk hs in
+ subst_on_tor s t1 t2; VOrIntro1 hvg2 hkg2
+)
+*)
+| VOrIntro2 #g #t1 #t2 hv hk ->
+admit()(*
+(
+ let hvg2 : validity g2 (tsubst s t2) = validity_substitution s hv hs in
+ let hkg2 : kinding g2 (tsubst s t1) KType = kinding_substitution s hk hs in
+ subst_on_tor s t1 t2; VOrIntro2 hvg2 hkg2
+)
+*)
+| VOrElim #g #t1 #t2 #t3 hk1 hk2 hk3 hvor hv1 hv2 ->
+admit()(*
+(
+ let hk1g2 : kinding g2 (tsubst s t1) KType = kinding_substitution s hk1 hs in
+ let hk2g2 : kinding g2 (tsubst s t2) KType = kinding_substitution s hk2 hs in
+ let hk3g2 : kinding g2 (tsubst s t3) KType = kinding_substitution s hk3 hs in
+ let hvorg2 : validity g2 (tor (tsubst s t1) (tsubst s t2)) = subst_on_tor s t1 t2; validity_substitution s hvor hs in
+ let hv1g2 : validity (eextend (tsubst s t1) g2) (tesh (tsubst s t3)) = tsubst_elam_shift s t3; validity_substitution (sub_elam s) hv1 (elam_hs s hk1 hs) in
+ let hv2g2 : validity (eextend (tsubst s t2) g2) (tesh (tsubst s t3)) = tsubst_elam_shift s t3; validity_substitution (sub_elam s) hv2 (elam_hs s hk2 hs) in
+ VOrElim hk1g2 hk2g2 hk3g2 hvorg2 hv1g2 hv2g2
+)
+*)
+| VFalseElim #g #t hv hk ->
+admit()(*
+(
+ let hvg2 : validity g2 tfalse = validity_substitution s hv hs in
+ let hkg2 : kinding g2 (tsubst s t) KType = kinding_substitution s hk hs in
+ VFalseElim hvg2 hkg2
+)
+*)
+| VPreceedsIntro #g #v1 #v2 #t1 #t2 ht1 ht2 ->
+admit()(*
+(
+ let ht1g2 : typing g2 (esubst s v1) (tot (tsubst s t1)) = subst_on_tot s t1; typing_substitution s ht1 hs in
+ let ht2g2 : typing g2 (esubst s v2) (tot (tsubst s t2)) = subst_on_tot s t2; typing_substitution s ht2 hs in
+ VPreceedsIntro ht1g2 ht2g2
+)
+*)
+| VDistinctC g c1 c2 -> (subst_on_teqe s (EConst c1) (EConst c2); subst_on_tnot s (teqe (EConst c1) (EConst c2)); VDistinctC g2 c1 c2)
+| VDistinctTH #g #t1 #t2 hk1 hk2 -> admit() (*TODO: last two rules to write !*)
+| VInjTH #g #t1 #t2 #phi #t1' #t2' #phi' #m hv -> 
+(
+ let hvg2 : validity g2 (teqtype (TArr (tsubst s t1) (Cmp m (tsubst (sub_elam s) t2) (tsubst (sub_elam s) phi))) (TArr (tsubst s t1') (Cmp m (tsubst (sub_elam s) t2') (tsubst (sub_elam s) phi')))) = subst_on_teqtype s (TArr t1 (Cmp m t2 phi)) (TArr t1' (Cmp m t2' phi')); validity_substitution s hv hs in
+  admit() 
+  (*Problem here with the end of the proof. See the definition of VInjTH*)
+)
 and elam_hs g1 s g2 t1 hk hs = 
 let g1ext = eextend t1 g1 in
 let g2ext = eextend (tsubst s t1) g2 in
