@@ -37,14 +37,14 @@ let mk_lex_list vs =
 let is_eq = function 
     | Some Equality -> true
     | _ -> false
-let steps = 
-    if !Options.verify then 
+let steps env = 
+    if Options.should_verify env.curmodule.str then 
     [Normalize.Beta; Normalize.SNComp]
     else [Normalize.Beta] 
 let whnf env t = Tc.Normalize.norm_typ [Normalize.WHNF; Normalize.DeltaHard; Normalize.Beta] env t
-let norm_t env t = Tc.Normalize.norm_typ steps env t
-let norm_k env k = Tc.Normalize.norm_kind steps env k
-let norm_c env c = Tc.Normalize.norm_comp steps env c
+let norm_t env t = Tc.Normalize.norm_typ (steps env) env t
+let norm_k env k = Tc.Normalize.norm_kind (steps env) env k
+let norm_c env c = Tc.Normalize.norm_comp (steps env) env c
 let fxv_check head env kt fvs =
     let rec aux norm kt = 
         if Util.set_is_empty fvs then ()
@@ -537,7 +537,7 @@ and tc_value env e : exp * lcomp * guard_t =
     let t = Env.lookup_bvar env x in
     let e = mk_Exp_bvar({x with sort=t}) (Some t) e.pos in
     let e, t, implicits = Tc.Util.maybe_instantiate env e t in
-    let tc = if !Options.verify then Inl t else Inr (Tc.Util.lcomp_of_comp <| mk_Total t) in
+    let tc = if Options.should_verify env.curmodule.str then Inl t else Inr (Tc.Util.lcomp_of_comp <| mk_Total t) in
     with_implicits implicits <| value_check_expected_typ env e tc
 
   | Exp_fvar(v, dc) -> 
@@ -545,7 +545,7 @@ and tc_value env e : exp * lcomp * guard_t =
     let e = mk_Exp_fvar({v with sort=t}, dc) (Some t) e.pos in
     let e, t, implicits = Tc.Util.maybe_instantiate env e t in 
     //printfn "Instantiated type of %s to %s\n" (Print.exp_to_string e) (Print.typ_to_string t);
-    let tc = if !Options.verify then Inl t else Inr (Tc.Util.lcomp_of_comp <| mk_Total t) in
+    let tc = if Options.should_verify env.curmodule.str then Inl t else Inr (Tc.Util.lcomp_of_comp <| mk_Total t) in
     if dc && not(Env.is_datacon env v.v)
     then raise (Error(Util.format1 "Expected a data constructor; got %s" v.v.str, Tc.Env.get_range env))
     else with_implicits implicits <| value_check_expected_typ env e tc
@@ -719,7 +719,7 @@ and tc_value env e : exp * lcomp * guard_t =
                         | _ -> []) in
                 
                  let bs, envbody, g, c = tc_binders ([], env, Rel.trivial_guard, []) bs' c bs in
-                 let envbody, letrecs = if !Options.verify then mk_letrec_environment bs envbody else envbody, [] in
+                 let envbody, letrecs = if Options.should_verify env.curmodule.str then mk_letrec_environment bs envbody else envbody, [] in
                  let envbody = Tc.Env.set_expected_typ envbody (Util.comp_result c) in
                  Some t, bs, letrecs, Some c, envbody, g
 
@@ -745,7 +745,7 @@ and tc_value env e : exp * lcomp * guard_t =
     then Util.fprint1 "Introduced %s implicits in body of abstraction\n" (string_of_int <| List.length guard_body.implicits);      
     let body, cbody, guard = check_expected_effect envbody c_opt (body, cbody.comp()) in
     let guard = Rel.conj_guard guard_body guard in
-    let guard = if env.top_level || not(!Options.verify) 
+    let guard = if env.top_level || not(Options.should_verify env.curmodule.str) 
                 then (Tc.Util.discharge_guard envbody (Rel.conj_guard g guard); {Rel.trivial_guard with implicits=guard.implicits})
                 else let guard = Rel.close_guard (bs@letrec_binders) guard in Rel.conj_guard g guard in 
     let tfun, guard = match tfun_opt with 
@@ -1000,7 +1000,7 @@ and tc_exp env e : exp * lcomp * guard_t =
         let e, c, g = aux () in
         if Tc.Env.debug env <| Options.Other "Implicits"
         then Util.fprint1 "Introduced %s implicits in application\n" (string_of_int <| List.length g.implicits);
-        let c = if !Options.verify 
+        let c = if Options.should_verify env.curmodule.str
                 && not (Util.is_lcomp_partial_return c)
                 && Util.is_pure_lcomp c //ADD_EQ_REFINEMENT for pure applications
                 then Tc.Util.maybe_assume_result_eq_pure_term env e c 
@@ -1059,7 +1059,7 @@ and tc_exp env e : exp * lcomp * guard_t =
     begin match x with 
         | Inr _ -> (* top-level let, always ends with e2=():unit *)
           let e2, c1 = 
-            if !Options.verify 
+            if Options.should_verify env.curmodule.str
             then let ok, c1 = Tc.Util.check_top_level env (Rel.conj_guard g1 guard_f) c1 in
                  if ok 
                  then e2, c1
@@ -1116,7 +1116,8 @@ and tc_exp env e : exp * lcomp * guard_t =
         then (if Env.debug env <| Options.High then Util.fprint1 "Type %s is marked as no-generalize\n" (Print.typ_to_string t); 
               t) (* t is already checked *) 
         else tc_typ_check_trivial ({env0 with check_uvars=true}) t ktype |> norm_t env in
-      let env = if Util.is_pure_or_ghost_function t && !Options.verify (* store the let rec names separately for termination checks *)
+      let env = if Util.is_pure_or_ghost_function t
+                && Options.should_verify env.curmodule.str (* store the let rec names separately for termination checks *)
                 then {env with letrecs=(x,t)::env.letrecs}
                 else Env.push_local_binding env (binding_of_lb x t) in
       (x, t, e)::xts, env) ([],env)  in 
@@ -1220,7 +1221,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
   let when_clause, g_when = match when_clause with 
     | None -> None, Rel.trivial_guard
     | Some e -> 
-        if !Options.verify
+        if Options.should_verify (env.curmodule.str)
         then raise (Error("When clauses are not yet supported in --verify mode; they soon will be", e.pos))
         //             let e, c, g = no_logical_guard pat_env <| tc_total_exp (Env.set_expected_typ pat_env Tc.Util.t_bool) e in
         //             Some e, g
@@ -1275,7 +1276,7 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
             Util.mk_conj_l (head::sub_term_guards)
         | _ -> failwith (Util.format2 "tc_eqn: Impossible (%s) %s" (Range.string_of_range pat_exp.pos) (Print.exp_to_string pat_exp)) in
   let mk_guard s tsc pat = 
-     if not !Options.verify 
+     if not (Options.should_verify env.curmodule.str)
      then Util.ftv Const.true_lid ktype 
      else let t = mk_guard s pat in 
           let t, _ = tc_typ_check scrutinee_env t mk_Kind_type in

@@ -2530,7 +2530,7 @@ let solve_deferred_constraints env (g:guard_t) =
 
 let try_discharge_guard env (g:guard_t) = 
    let g = solve_deferred_constraints env g in
-   if not (!Options.verify) then ()
+   if not (Options.should_verify env.curmodule.str) then ()
    else match g.guard_f with 
     | Trivial -> ()
     | NonTrivial vc -> 
