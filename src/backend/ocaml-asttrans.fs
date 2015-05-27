@@ -66,8 +66,8 @@ let path_of_ns mlenv ns =
     in match List.tryPick chkin outmod with
     | None -> 
         (match List.tryPick chkin (!Microsoft.FStar.Options.codegen_libs) with
-         | Some ns -> ns
-         | None -> outsupport ((fst mlenv.mle_name) @ [snd mlenv.mle_name], ns))
+         | None -> outsupport ((fst mlenv.mle_name) @ [snd mlenv.mle_name], ns)
+         | _ -> ns)
     | Some sns -> "Support" :: ns
 
 let mlpath_of_lident (mlenv : mlenv) (x : lident) : mlpath =
