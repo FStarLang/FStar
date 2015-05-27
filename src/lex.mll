@@ -214,6 +214,9 @@ rule token = parse
      { let n = int_of_string (trim_left lexbuf 2) in
        mknewline (n - !lc) lexbuf;
        cpp_filename lexbuf }
+ | "__SOURCE_FILE__" {STRING (ba_of_string lexbuf.lex_curr_p.pos_fname)}
+ | "__LINE__"  {INT (!lc, false)}
+
  (* Must appear before tvar to avoid 'a <-> 'a' conflict *)
  | '\'' (char as c) '\''
  | '\'' (char as c) '\'' 'B'
