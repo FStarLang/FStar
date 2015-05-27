@@ -9,6 +9,7 @@ module Prims = struct
   type byte = char
   type uint8 = char
   let ignore _ = ()
+  let cut = ()
   let fst = fst
   let snd = snd
   let failwith = failwith

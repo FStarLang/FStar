@@ -62,8 +62,12 @@ let path_of_ns mlenv ns =
     | x1 :: p1, x2 :: p2 when x1 = x2 -> outsupport (p1, p2)
     | _, p -> p
     *)
-    in match List.tryPick (fun sns -> if insupport (sns, ns) then Some sns else None) outmod with
-    | None -> outsupport ((fst mlenv.mle_name) @ [snd mlenv.mle_name], ns)
+    in let chkin sns = if insupport (sns, ns) then Some sns else None
+    in match List.tryPick chkin outmod with
+    | None -> 
+        (match List.tryPick chkin (!Microsoft.FStar.Options.codegen_libs) with
+         | Some ns -> ns
+         | None -> outsupport ((fst mlenv.mle_name) @ [snd mlenv.mle_name], ns))
     | Some sns -> "Support" :: ns
 
 let mlpath_of_lident (mlenv : mlenv) (x : lident) : mlpath =

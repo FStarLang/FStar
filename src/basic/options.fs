@@ -65,6 +65,7 @@ let admit_smt_queries = Util.mk_ref false
 let pretype = Util.mk_ref true
 let codegen = Util.mk_ref None
 let admit_fsi = Util.mk_ref []
+let codegen_libs = Util.mk_ref []
 let trace_error = Util.mk_ref false
 let verify = Util.mk_ref true
 let full_context_dependency = Util.mk_ref true
@@ -174,6 +175,7 @@ let rec specs () : list<Getopt.opt> =
   let specs =   
     [( noshort, "trace_error", ZeroArgs (fun () -> trace_error := true), "Don't print an error message; show an exception trace instead");
      ( noshort, "codegen", OneArg ((fun s -> codegen := parse_codegen s; verify := false), "OCaml|F#|JavaScript"), "Generate code for execution");
+     ( noshort, "codegen-lib", OneArg ((fun s -> codegen_libs := (Util.split s ".")::!codegen_libs), "namespace"), "External runtime library library");
      ( noshort, "lax", ZeroArgs (fun () -> pretype := true; verify := false), "Run the lax-type checker only (admit all verification conditions)");
      ( noshort, "fstar_home", OneArg ((fun x -> fstar_home_opt := Some x), "dir"), "Set the FSTAR_HOME variable to dir");
      ( noshort, "silent", ZeroArgs (fun () -> silent := true), "");
