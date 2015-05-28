@@ -228,9 +228,10 @@ and parse_codegen s =
       display_usage (specs ()); exit 1)
 
 let should_verify m = 
-    match !verify_module with 
+    !verify &&
+    (match !verify_module with 
         | [] -> true //the verify_module flag was not set, so verify everything
-        | l -> List.contains m l //otherwise, look in the list to see if it is explicitly mentioned
+        | l -> List.contains m l) //otherwise, look in the list to see if it is explicitly mentioned
 
 let set_options s = Getopt.parse_string (specs()) (fun _ -> ()) s
 

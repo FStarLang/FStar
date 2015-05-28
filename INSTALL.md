@@ -2,7 +2,17 @@
 
 - https://github.com/FStarLang/FStar/releases
 
-### Building F* from sources ###
+### Building F* from sources (.NET version) ###
+
+F* is written in a subset of F# that F* can also parse with a special flag.
+Therefore, the build process of F* is as follows:
+
+- build F* using the F# compiler
+- compile the source of F* with F* and emit OCaml code (optional)
+- re-build F* using the OCaml compiler (optional).
+
+The first step builds an F* compiler that runs on .NET. The last two steps build
+a native, more optimized binary of F*.
 
 #### On Windows 7/8 using Visual Studio ####
 
@@ -15,16 +25,20 @@
       (by clicking the "Get Visual F# Tools for Visual Studio 2013"
        link [here](https://msdn.microsoft.com/en-us/vstudio/hh388569.aspx))
 
-  - Using VisualStudio 2013, open `FStar/VS/FStar.sln` and build solution.
+  - Using VisualStudio 2013, open `FStar/VS/FStar.sln` and build solution (in
+      the menus: Build > Build Solution).
 
   - Get a Z3 4.3.2 binary and add it to your PATH
     - 64 bits: https://z3.codeplex.com/releases/view/135729
     - 32 bits: https://z3.codeplex.com/releases/view/135728
 
+Please note that 1) the Makefile is currently broken on Windows, and 2) the
+"Release" build configuration is also broken in Visual Studio.
+
 #### On Linux or Mac OS X using Mono ####
 
   - Install mono 3.10.x or 3.12.x and fsharp 3.1.x
-  
+
     - On Debian/Ubuntu
 
             $ sudo apt-get install mono-complete fsharp
@@ -73,46 +87,63 @@
   - If `make test.net` (`make boot` in fact) causes stack overflow try
     issuing `ulimit -s unlimited` in the terminal beforehand.
 
-### Bootstrapping the compiler in OCaml ###
 
-#### Prerequisites on Windows ####
+### Building F* (native binary via OCaml) ###
 
-NOTE: It appears that [WODI] has been recently discontinued. Some
-archives are still available at the moment though: [wodi32] and [wodi64]
+Once the .NET version of F* has been built using the F# compiler, an optional
+step is to translate the sources of F* into OCaml (using F*) and compile that
+output with OCaml to get a faster, native binary.
 
-[wodi32]: http://wodi.forge.ocamlcore.org/wodi32.tar.xz
-[wodi64]: http://wodi.forge.ocamlcore.org/wodi64.tar.xz
+The current version of F* requires OCaml 4.02.
 
-0. Use Visual Studio for building `fstar.exe` as described above
-   (note: running cygwin/wodi `make` in `src` will probably
-   just give you a broken binary).
+#### Instructions for Windows ####
 
-1. Use [WODI] for installing OCaml (version 4.01.0 or newer)
+0. Follow the steps above to compile the .NET version of F*.
 
-2. [WODI] also installs its own version of Cygwin. By installing WODI
-   you get a special Cygwin terminal where you should run all the
-   commands below.
+1. Since WODI has been discontinued, the only solution is to use the [OCaml
+   Installer for Windows](http://protz.github.io/ocaml-installer/). This
+   installer installs an outdated version of OCaml (4.01.0) -- this is going to
+   cause some difficulties.
 
-   Note: If you want to also build F* binaries (instruction in the
-   next section), when WODI asks which Cygwin packages you want add
-   `git` to the default list. If you forgot to do this, you can still
-   do that by downloading [Cygwin]'s `setup-x86.exe` and pointing it
-   at your WODI install.
+2. Install Batteries from source. The current release of Batteries does *not*
+   compile with 4.01.0, so you need to build an older version. Open up a cygwin
+   shell and:
+      * `git clone https://github.com/ocaml-batteries-team/batteries-included`
+      * `cd batteries-included`
+      * `git checkout v2.2.0`
+      * `make && make install`
 
-3. Use the [WODI] ocaml package manager to install `batteries`; you can
-   do this either from the visual package manager or by issuing the
-   command `godi_add godi-batteries` in WODI's Cygwin terminal.
+3. Translate the F* sources from F# to OCaml using F*.
+      * `cd fstar/src`
+      * `make ocaml`
 
-[WODI]: http://wodi.forge.ocamlcore.org/
-[Cygwin]: https://www.cygwin.com/
+4. Generate the parser
+      * `cd ocaml-output`
+      * `make parser`
 
-#### Prerequisites on Linux and Mac OS X ####
+5. Patch the `support.ml` file because it no longer compiles with 4.01.0
+      * at the beginning of the file, add `module S = String`
+      * at line 1285, replace `Bytes.create maxlen` with
+        `S.make maxlen ' '`
+      * replace the next three occurrences of `Bytes` with `S`
 
-0. OCaml (version 4.01.0 or later)
+6. Finish the build
+      * `make`
+
+(Side note: this procedure generates a native F* binary , that is, a binary that
+does *not* depend on `cygwin1.dll`, as since the installer above uses a
+*native* Windows port of OCaml.  Cygwin is just there to provide `make` and
+other utilities required for the build.)
+
+#### Instructions for Linux and Mac OS X ####
+
+0. Build the .NET version of F* using the instructions above.
+
+0. Install OCaml (version 4.02.0 or later)
    - Can be installed using either your package manager or using OPAM
      (see below).
 
-1. OPAM (version 1.2.x).
+1. Install OPAM (version 1.2.x).
    - Installation instructions available at various places
      (e.g., https://github.com/realworldocaml/book/wiki/Installation-Instructions#getting-opam
      or http://opam.ocaml.org/doc/Install.html).
@@ -125,13 +156,10 @@ archives are still available at the moment though: [wodi32] and [wodi64]
 
         $ opam install batteries
 
-#### Bootstrapping the compiler in OCaml ####
-
 1. Once you satisfy the prerequisites for your platform,
    first generate a set of files in OCaml syntax
    by running the following commands in `$FSTAR_HOME/src`:
 
-        $ make
         $ make ocaml
 
 2. Then run the following commands in `src/ocaml-output`:

@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module Microsoft.FStar.Range
-
 type range = int64
 type file_idx = int32
 type pos = int32

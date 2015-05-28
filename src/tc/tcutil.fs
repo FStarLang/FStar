@@ -742,10 +742,10 @@ let refresh_comp_label env b lc =
 
 let label reason r f = 
     Syntax.mk_Typ_meta(Meta_labeled(f, reason, r, true))
-let label_opt reason r f = match reason with 
+let label_opt env reason r f = match reason with 
     | None -> f
     | Some reason -> 
-        if not <| !Options.verify
+        if not <| Options.should_verify env.curmodule.str
         then f
         else label (reason()) r f
 
@@ -798,7 +798,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (lc:lc
                 let c = Tc.Normalize.weak_norm_comp env c in
                 let res_t, wp, wlp = destruct_comp c in
                 let md = Tc.Env.get_effect_decl env c.effect_name in 
-                let wp = mk_Typ_app(md.assert_p, [targ res_t; targ <| label_opt reason (Env.get_range env) f; targ wp]) None wp.pos in
+                let wp = mk_Typ_app(md.assert_p, [targ res_t; targ <| label_opt env reason (Env.get_range env) f; targ wp]) None wp.pos in
                 let wlp = mk_Typ_app(md.assume_p, [targ res_t; targ f; targ wlp]) None wlp.pos in
                 let c2 = mk_comp md res_t wp wlp flags in 
                 c2 in
@@ -1052,8 +1052,8 @@ let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
      let norm c =
         if debug env Options.Medium then Util.fprint1 "Normalizing before generalizing:\n\t %s" (Print.comp_typ_to_string c);    
          let steps = [Eta;Delta;Beta;SNComp] in
-         let c = if !Options.verify then 
-                 Normalize.norm_comp steps env c
+         let c = if Options.should_verify env.curmodule.str 
+                 then Normalize.norm_comp steps env c
                  else Normalize.norm_comp [Beta; Delta] env c
          in
         if debug env Options.Medium then Util.fprint1 "Normalized to:\n\t %s" (Print.comp_typ_to_string c);
@@ -1076,7 +1076,9 @@ let gen verify env (ecs:list<(exp * comp)>) : option<list<(exp * comp)>> =
                let t = ct.result_typ in
                let uvt = Util.uvars_in_typ t in
                let uvs = gen_uvars uvt.uvars_t in 
-               if !Options.verify && verify && not <| Util.is_total_comp c
+               if Options.should_verify env.curmodule.str
+               && verify
+               && not <| Util.is_total_comp c
                then begin
                   let _, wp, _ = destruct_comp ct in 
                   let binder = [null_v_binder t] in
