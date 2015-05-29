@@ -39,6 +39,10 @@ effect St (a:Type) (pre:Pre) (post: (heap -> Post a)) = STATE a
      (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 
 (* signatures WITHOUT permissions *)
+assume val recall: #a:Type -> r:ref a -> STATE unit
+                                         (fun 'p h -> Heap.contains h r ==> 'p () h)
+                                         (fun 'p h -> Heap.contains h r ==> 'p () h)
+                                         
 assume val alloc:  #a:Type -> init:a -> ST (ref a)
                                          (fun h -> True)
                                          (fun h0 r h1 -> not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)

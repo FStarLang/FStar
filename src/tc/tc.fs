@@ -434,7 +434,7 @@ and tc_typ env (t:typ) : typ * knd * guard_t =
                        end
 
                     | (Inr _, _), (Inl _, _) -> 
-                        raise (Error("Expcetd an expression; got a type", Util.range_of_arg actual))
+                        raise (Error("Expected an expression; got a type", Util.range_of_arg actual))
                 end
 
 
