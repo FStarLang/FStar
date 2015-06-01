@@ -63,7 +63,7 @@ Under (strong) CBV reduction xxx is stuck, because f is a variable
 
 (* This example can be ported one level up to type reduction *)
 
-val diverge' : unit -> Pure bool (requires False) (ensures (fun _ -> False))
+val diverge' : unit -> Pure bool (requires False) (ensures (fun _ -> True))
 let rec diverge' x = diverge' x
 
 type tg (u:unit{False}) = u':unit{diverge'()}

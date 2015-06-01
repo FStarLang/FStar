@@ -1040,7 +1040,7 @@ let rec mllib_add (MLLib mllib) ((path : mlpath), sig_, mod_) =
 *)
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstars (fmods : list<modul>) =
-    let in_std_ns x = List.exists (fun y -> in_ns (y,x)) !Microsoft.FStar.Options.codegen_libs in
+    let in_std_ns x = Util.for_some (fun y -> in_ns (y,x)) !Microsoft.FStar.Options.codegen_libs in
     let fmods = List.filter (fun x -> not (in_std_ns (List.map (fun y->y.idText) x.name.ns))) fmods in
     let stdlib = List.map (fun x -> Util.concat_l "." x) (outmod @ !Microsoft.FStar.Options.codegen_libs) in
     let fmods = List.filter (fun x -> not (List.contains x.name.str stdlib)) fmods in
