@@ -1041,7 +1041,7 @@ let rec mllib_add (MLLib mllib) ((path : mlpath), sig_, mod_) =
 *)
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstars (fmods : list<modul>) =
-    let stdlib = List.map (fun x -> Util.concat_l "." x) outmod in
+    let stdlib = List.map (fun x -> Util.concat_l "." x) (!Microsoft.FStar.Options.codegen_libs @ outmod) in
     let fmods = List.filter (fun x -> not (List.contains x.name.str stdlib)) fmods in
     let fmods = List.map mlmod_of_fstar fmods in
     let for1 mllib the = 
