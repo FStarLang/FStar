@@ -109,6 +109,7 @@ let init_options () =
     admit_smt_queries := false;
     pretype  := true;
     codegen  := None;
+    codegen_libs := [];
     admit_fsi  := [];
     trace_error  := false;
     verify  := true;

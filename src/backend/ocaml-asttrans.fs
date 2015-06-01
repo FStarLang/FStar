@@ -47,22 +47,21 @@ let outmod = [
     ["Microsoft"; "FStar"; "Parser"; "Util"];
 ]
 
+let rec in_ns = function
+| [], _ -> true
+| x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
+| _, _ -> false
+
 (* -------------------------------------------------------------------- *)
 let path_of_ns mlenv ns =
     let ns = List.map (fun x -> x.idText) ns in
-
-    let rec insupport = function
-    | [], _ -> true
-    | x1::t1, x2::t2 when (x1 = x2) -> insupport (t1, t2)
-    | _, _ -> false
-
-    and outsupport = fun (ns1,ns2) ->  if ns1 = ns2 then [] else [String.concat "_" ns2]
+    let outsupport = fun (ns1,ns2) ->  if ns1 = ns2 then [] else [String.concat "_" ns2]
     
     (*function
     | x1 :: p1, x2 :: p2 when x1 = x2 -> outsupport (p1, p2)
     | _, p -> p
     *)
-    in let chkin sns = if insupport (sns, ns) then Some sns else None
+    in let chkin sns = if in_ns (sns, ns) then Some sns else None
     in match List.tryPick chkin outmod with
     | None -> 
         (match List.tryPick chkin (!Microsoft.FStar.Options.codegen_libs) with
@@ -1041,7 +1040,9 @@ let rec mllib_add (MLLib mllib) ((path : mlpath), sig_, mod_) =
 *)
 (* -------------------------------------------------------------------- *)
 let mlmod_of_fstars (fmods : list<modul>) =
-    let stdlib = List.map (fun x -> Util.concat_l "." x) (!Microsoft.FStar.Options.codegen_libs @ outmod) in
+    let in_std_ns x = List.exists (fun y -> in_ns (y,x)) !Microsoft.FStar.Options.codegen_libs in
+    let fmods = List.filter (fun x -> not (in_std_ns (List.map (fun y->y.idText) x.name.ns))) fmods in
+    let stdlib = List.map (fun x -> Util.concat_l "." x) outmod in
     let fmods = List.filter (fun x -> not (List.contains x.name.str stdlib)) fmods in
     let fmods = List.map mlmod_of_fstar fmods in
     let for1 mllib the = 
