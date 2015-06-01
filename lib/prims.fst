@@ -560,7 +560,7 @@ assume val pipe_right: 'a -> ('a -> 'b) -> 'b
 assume val pipe_left: ('a -> 'b) -> 'a -> 'b
 val ignore: 'a -> Tot unit
 let ignore x = ()
-val erase: 'a -> unit
+val erase: 'a -> Tot unit
 let erase x = ()
 assume val exit: int -> 'a
 assume val try_with: (unit -> 'a) -> (exn -> 'a) -> 'a
