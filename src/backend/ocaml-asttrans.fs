@@ -559,7 +559,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
              mlexpr_of_expr mlenv rg lenv ({e with n = Exp_app (a1, [a2])})
           | Exp_fvar (c, false), [_;_;a1;(Inr a2,_)] when (c.v.ident.idText = "pipe_right") ->
              mlexpr_of_expr mlenv rg lenv ({e with n = Exp_app (a2, [a1])})
-          | Exp_fvar (c, false), _ when (c.v.str = "Prims.Assume" || c.v.str = "Prims.Assert" || Util.starts_with c.v.ident.idText "l__") ->
+          | Exp_fvar (c, false), _ when (c.v.str = "Prims.Assume" || c.v.str = "Prims.Assert" || c.v.str = "Prims.erase" || Util.starts_with c.v.ident.idText "l__") ->
              MLE_Const (MLC_Unit)
           | _, _ ->
        begin
