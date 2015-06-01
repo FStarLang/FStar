@@ -47,8 +47,8 @@ val lemma_append_inj: #a:Type -> s1:seq a -> s2:seq a -> t1:seq a -> t2:seq a {l
            (ensures (Eq s1 t1 /\ Eq s2 t2))
 let lemma_append_inj s1 s2 t1 t2 =
   lemma_append_len_disj s1 s2 t1 t2;
-  Classical.forall_intro (lemma_append_inj_l s1 s2 t1 t2);
-  Classical.forall_intro (lemma_append_inj_r s1 s2 t1 t2)
+  erase (Classical.forall_intro (lemma_append_inj_l s1 s2 t1 t2));
+  erase (Classical.forall_intro (lemma_append_inj_r s1 s2 t1 t2))
 
 val head: #a:Type -> s:seq a{length s > 0} -> Tot a
 let head s = index s 0
@@ -245,7 +245,7 @@ opaque type permutation (a:Type) (s1:seq a) (s2:seq a) =
        (forall i. count i s1 = count i s2)
 val lemma_swap_permutes: #a:Type -> s:seq a -> i:nat{i<length s} -> j:nat{i <= j && j<length s} -> Lemma
   (permutation a s (swap s i j))
-let lemma_swap_permutes s i j = Classical.forall_intro (lemma_swap_permutes_aux s i j)
+let lemma_swap_permutes s i j = erase (Classical.forall_intro (lemma_swap_permutes_aux s i j))
 
 
 #set-options "--max_fuel 1 --initial_fuel 1"
