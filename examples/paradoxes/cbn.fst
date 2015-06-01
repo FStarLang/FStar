@@ -47,8 +47,10 @@ let g x = ()
 val xxx : f:(unit -> Lemma (ensures False)) -> Lemma (ensures False)
 let xxx f = f (); g ()   (* same as: g (f ()) *)
 
+(*
 val yyy : f:(unit -> Lemma (ensures False)) -> Lemma (ensures False)
-let yyy f = () (* <-- type error *)
+let yyy f = ()  <-- type error
+*)
 
 (*
 Although xxx -strong-CBN-> yyy, yyy doesn't have the same type as xxx,
@@ -58,3 +60,24 @@ the fact that f is uninhabited and exploit that for typing ().
 Under (strong) CBV reduction xxx is stuck, because f is a variable
 (and in fact it can't be instantiated because the type is uninhabited)
 *)
+
+(* This example can be ported one level up to type reduction *)
+
+val diverge' : unit -> Pure bool (requires False) (ensures (fun _ -> False))
+let rec diverge' x = diverge' x
+
+type tg (u:unit{False}) = u':unit{diverge'()}
+
+type txxx (f:(unit -> Lemma (ensures False))) =
+  tg (f ())
+
+(*
+type tyyy (f:(unit -> Lemma (ensures False))) =
+  u':unit{diverge'()} <-- type error
+*)
+
+(*
+Although txxx -strong-CBN-> tyyy, tyyy is not well-kinded, which
+breaks preservation for type reduction (conversion). Again, under
+(strong) CBV reduction txxx is stuck because f is a variable.
+ *)
