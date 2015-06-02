@@ -1,11 +1,12 @@
 (*--build-config
     options:--z3timeout 20 --log_types --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2;
-    other-files:../../lib/classical.fst ../../lib/ext.fst
+    other-files:../../lib/classical.fst ../../lib/ext.fst ../../lib/constr.fst
   --*)
 module TinyFStarNew
 
 open Classical
 open FunctionalExtensionality
+open Constructive
 
 type var = nat
 type loc = nat
@@ -885,10 +886,10 @@ let k_all  t      = KKArr (k_post_all  t) k_pre_all
 let k_m m = match m with
 | EfPure -> k_pure
 | EfAll  -> k_all
-
-let tot t = Cmp EfPure t (TTLam (k_post_pure t)
+let tot_wp t = (TTLam (k_post_pure t)
                            (tforalle (ttsh t) (TEApp (TVar 0) (EVar 0))))
 
+let tot t = Cmp EfPure t (tot_wp t)
 val return_pure : t:typ -> e:exp -> Tot typ
 let return_pure t e = TTLam (k_post_pure t) (TEApp (TVar 0) (etsh e))
 
@@ -1158,6 +1159,10 @@ let tfix_wp tx t'' d wp =
 val sub_computation : phi:typ -> m:eff -> t:typ -> wp : typ -> m':eff{eff_sub m' m} -> t':typ -> w':typ -> Tot typ
 let sub_computation phi m t wp m' t' wp' =
 tand phi (down m t (op m t timpl wp (lift m' m t' wp')))
+
+val eapp_wp : m:eff -> ta:typ -> tb:typ -> wp1:typ -> wp2:typ -> wpbody:typ -> Tot typ
+let eapp_wp m ta tb wp1 wp2 wpbody = magic() (*TODO : rewrite the eapp wp here *)
+
 
 (********************************************************)
 (* Signature for type and expression constants          *)
@@ -1641,6 +1646,7 @@ type typing : env -> exp -> cmp -> Type =
           htot:option (typing g e2 (tot t)){teappears_in 0 t' ==> is_Some htot} -> *)
           typing g (EApp e1 e2) (Cmp m (tsubst_ebeta e2 t')
                                      (bind m (TArr t (Cmp m t' wp)) t wp1 wp2))
+	  (*SF : TODO: the final wp is complety wrong ! change it !*)
 
 | TyRet : #g:env -> #e:exp -> t:typ ->
           typing g e (tot t) ->
@@ -1747,7 +1753,7 @@ and kinding : g:env -> t : typ -> k:knd -> Type =
               kinding g (TEApp t e) (ksubst_ebeta e k)
 
 | KSub  : #g:env -> #t:typ -> #k':knd -> #k:knd -> #phi:typ ->
-          =hk:kinding g t k' ->
+          =hk:kinding g t k' -> (* <- SF : can we not get it by derived judgement on hs ?*)
           =hs:skinding g k' k phi ->
           =hv:validity g phi ->
               kinding g t k
@@ -2120,7 +2126,9 @@ val epstep_substitution : s:vsub -> e:exp -> e':exp -> hs:epstep e e' -> Tot (ep
 (decreases %[hs])
 val tstep_substitution : s:vsub -> t:typ -> t':typ -> hs:tstep t t' -> Tot (tstep (tsubst s t) (tsubst s t'))
 (decreases %[hs])
-let rec epstep_substitution s e e' hs = match hs with
+let rec epstep_substitution s e e' hs = 
+admit()(*
+match hs with
 | PsBeta t ebody v -> 
 (
     subst_on_value s v;
@@ -2137,7 +2145,10 @@ let rec epstep_substitution s e e' hs = match hs with
     PsLamT (esubst (sub_elam s) ebody) htg2
     )
 | PsIf0E0 #e0 #e0' ethen eelse ht -> let htg2 : epstep (esubst s e0) (esubst s e0') = epstep_substitution s e0 e0' ht in PsIf0E0 (esubst s ethen) (esubst s eelse) htg2
-and tstep_substitution s t t' hs = match hs with
+*)
+and tstep_substitution s t t' hs = 
+admit()(*
+match hs with
 | TsEBeta tx t v -> (
     subst_on_value s v;
     let hr : tstep (TEApp (TELam (tsubst s tx) (tsubst (sub_elam s) t)) (esubst s v)) (tsubst_ebeta (esubst s v) (tsubst (sub_elam s) t)) = TsEBeta (tsubst s tx) (tsubst s t) (esubst s v) in
@@ -2182,6 +2193,7 @@ and tstep_substitution s t t' hs = match hs with
     let hr : tstep (tsubst s t1) (tsubst s t1') = tstep_substitution s t1 t1' ht in
     TsELamT1 #(tsubst s t1) #(tsubst s t1') (tsubst (sub_elam s) t2) hr
     )
+*)
 
 (**********************)
 (* Substitution Arrow *)
@@ -2859,16 +2871,7 @@ in newhs
 (**********************)
 (* Derived judgements *)
 (**********************)
-(*
-val typing_derived : #g:env -> #e:exp -> #m:eff -> #t:typ -> #wp:typ ->
-                     typing g e (Cmp m t wp) ->
-                     Tot (cand (cand (kinding g t KType) (kinding g wp (k_m m t))) (cand (validity g (monotonic m t wp)) (ewf g)))
-val scmp_derived : #g:env -> #m':eff -> #t':typ -> #wp':typ ->
-                             #m:eff -> #t:typ -> #wp:typ -> #phi:typ ->
-                             scmp g (Cmp m' t' wp') (Cmp m t wp) phi ->
-                             kinding g t' KType ->
-                             Tot (cand (cand (kinding g t KType) (kinding g wp (k_m m t))) (cand (kinding g phi KType) (ewf g)))
-*)
+
 
 (* CH: TODO: How about starting directly with the substitution lemma
              and only prove what's needed for that. Could it be it
@@ -3049,3 +3052,243 @@ val v_eq_symt : #g:env -> #t1:typ -> #t2:typ -> #k:knd ->
             =hv:validity g (teqt k t1 t2) ->
                 validity g (teqt k t2 t1)
 let v_eq_symt = admit()
+
+val inversion_tarr : #g:env -> #targ:typ -> #m:eff -> #tret:typ -> #wp:typ ->
+                     hk:kinding g (TArr targ (Cmp m tret wp)) KType ->
+		     Tot (cand (kinding (eextend targ g) tret KType) (kinding (eextend targ g) wp (k_m m tret)))
+(decreases %[hk])
+let rec inversion_tarr g targ m tret wp hk =
+match hk with
+| KArr #g #t1 #t2 #phi #m hk1 hk2 hkp hv -> Conj (hk2) (hkp)
+| KSub #g #t #k' #k #phi hk hs hv ->
+  let KSubRefl hw = hs in inversion_tarr hk
+
+val get_kinding_from_ewf : #g:env -> hw:ewf g -> x:var{is_Some (lookup_evar g x)} ->
+                           Tot (kinding g (Some.v (lookup_evar g x)) KType)
+(decreases %[hw])
+let rec get_kinding_from_ewf g hw x =
+let None = lookup_evar empty x in
+match hw with
+| GType #gsub #tsub hwsub hksub ->
+(
+ if x = 0 then kinding_substitution sub_einc hksub (hs_sub_einc gsub tsub)
+ else let hksub' : kinding gsub (Some.v (lookup_evar gsub (x-1))) KType = get_kinding_from_ewf hwsub (x-1) in kinding_substitution sub_einc hksub' (hs_sub_einc gsub tsub)
+)
+| GKind #gsub #ksub hwsub hkwfsub ->
+(
+ let hksub : kinding gsub (Some.v (lookup_evar gsub x)) KType = get_kinding_from_ewf hwsub x in
+ kinding_substitution sub_tinc hksub (hs_sub_tinc gsub ksub)
+
+)
+val get_kwf_from_ewf : #g:env -> hewf: ewf g -> a:var{is_Some (lookup_tvar g a)} ->
+                       Tot (kwf g (Some.v (lookup_tvar g a)))
+(decreases %[hewf])
+let rec get_kwf_from_ewf g hewf a = 
+let None = lookup_tvar empty a in
+match hewf with
+| GType #gsub #tsub hwsub _ -> 
+(
+ let hkwfsub : kwf gsub (Some.v (lookup_tvar gsub a)) = get_kwf_from_ewf hwsub a in
+ kwf_substitution sub_einc hkwfsub (hs_sub_einc gsub tsub)
+)
+| GKind #gsub #ksub hwsub hkwfsub ->
+(
+ if a = 0 then kwf_substitution sub_tinc hkwfsub (hs_sub_tinc gsub ksub)
+ else let hkwfsub' : kwf gsub (Some.v (lookup_tvar gsub (a-1))) = get_kwf_from_ewf hwsub (a-1) in
+ kwf_substitution sub_tinc hkwfsub' (hs_sub_tinc gsub ksub)
+)
+val k_tot_wp : #g:env -> #t:typ -> kinding g t KType -> Tot (kinding g (tot_wp t) (k_m EfPure t))
+let k_tot_wp g t hk = admit()
+
+val k_ite : #g:env -> m:eff -> t:typ -> #wp0:typ -> #wp1:typ -> #wp2:typ ->
+            kinding g wp0 (k_m m tint) ->
+	    kinding g wp1 (k_m m t) ->
+	    kinding g wp2 (k_m m t) ->
+	    Tot (kinding g (ite m t wp0 wp1 wp2) (k_m m t))
+let k_ite g m t wp0 wp1 wp2 hk0 hk1 hk2 = admit() 
+type typing_der : g:env -> m:eff -> t:typ -> wp:typ -> Type = 
+| TypingDerived : #g:env -> #m:eff -> #t:typ -> #wp:typ ->
+                  hkt : kinding g t KType ->
+		  hkwp : kinding g wp (k_m m t) ->
+		  validity g (monotonic m t wp) ->
+		  typing_der g m t wp
+type scmp_der : g:env -> m:eff -> t:typ -> wp:typ -> phi:typ -> Type =
+| ScmpDerived : #g:env -> #m:eff  -> #t:typ  -> #wp:typ -> #phi:typ ->
+                        kinding g t KType ->
+			kinding g wp (k_m m t) ->
+			kinding g phi KType ->
+			scmp_der g m t wp phi
+
+
+val typing_derived : #g:env -> #e:exp -> #m:eff -> #t:typ -> #wp:typ ->
+                     hwf : ewf g ->
+                     ht : typing g e (Cmp m t wp) ->
+		     Tot (typing_der g m t wp)
+(decreases %[ht])
+val scmp_derived : #g:env -> #m':eff -> #t':typ -> #wp':typ ->
+                             #m:eff -> #t:typ -> #wp:typ -> #phi:typ ->
+                             hwf : ewf g ->
+                             hsc : scmp g (Cmp m' t' wp') (Cmp m t wp) phi ->
+                             kinding g t' KType ->
+                             Tot (scmp_der g m t wp phi)
+(decreases %[hsc])
+val styping_derived : #g:env -> #t':typ -> #t:typ -> #phi:typ ->
+                      hwf:ewf g ->
+		      hst:styping g t' t phi ->
+		      hkt':kinding g t' KType ->
+		      Tot (cand (kinding g t KType) (kinding g phi KType))
+(decreases %[hst])
+val kinding_derived : #g:env -> #t:typ -> #k:knd ->
+                      hwf:ewf g ->
+                      hkt:kinding g t k ->
+		      Tot (kwf g k)
+(decreases %[hkt])
+val skinding_derived : #g:env -> #k:knd -> #k':knd -> #phi:typ ->
+                       hwf:ewf g ->
+		       hsk:skinding g k k' phi ->
+		       Tot (cand (kwf g k) (kwf g k')) (* SF : what about g |- phi : KType ? *)
+(decreases %[hsk])
+val validity_derived : #g:env -> #t:typ ->
+                       hwf:ewf g ->
+		       hv:validity g t ->
+		       Tot (kinding g t KType)
+(decreases %[hv])
+
+let rec typing_derived g e m t wp hwf ht = 
+match ht with
+| TyVar #g x ->
+ (
+  let t = Some.v (lookup_evar g x) in
+  let hkt : kinding g t KType = get_kinding_from_ewf hwf x in
+  let hkwp : kinding g (tot_wp t) (k_m EfPure t) = k_tot_wp hkt in
+  let hmono : validity g (monotonic EfPure t (tot_wp t)) = magic() in
+  TypingDerived hkt hkwp hmono
+ )
+| TyConst g c hecwf -> admit()
+| TyAbs #g #t1 #ebody m t2 wp hk ht ->
+(
+ let hwfext = GType hwf hk in
+ let TypingDerived hkt2 hkwp hmono : typing_der (eextend t1 g) m t2 wp = typing_derived hwfext ht in
+ let tarr = TArr t1 (Cmp m t2 wp) in
+ let hktarr : kinding g tarr KType = KArr hk hkt2 hkwp hmono in
+ let hkwp  : kinding g (tot_wp tarr) (k_m EfPure tarr) = k_tot_wp hktarr in
+ let hmono : validity g (monotonic EfPure tarr (tot_wp tarr)) = magic() in
+ TypingDerived hktarr hkwp hmono
+)
+| TyIf0 g e0 e1 e2 m t wp0 wp1 wp2 hte0 hte1 hte2 ->
+(
+ let TypingDerived hktint hkwp0 hmono0 : typing_der g m tint wp0 = typing_derived hwf hte0 in
+ let TypingDerived hkt hkwp1 hmono1 : typing_der g m t wp1 = typing_derived hwf hte1 in
+ let TypingDerived _ hkwp2 hmono2 : typing_der g m t wp2 = typing_derived hwf hte2 in
+ let hkite : kinding g (ite m t wp0 wp1 wp2) (k_m m t) = k_ite m t hkwp0 hkwp1 hkwp2 in
+ let hmono : validity g (monotonic m t (ite m t wp0 wp1 wp2)) = magic() in
+ TypingDerived hkt hkite hmono
+ 
+)
+| TyApp #g #e1 #e2 #m #t #t' #wp #wp1 #wp2 ht1 ht2 hk -> 
+(
+ let tarr = TArr t (Cmp m t' wp) in
+ let TypingDerived hktarr hkwp1 hmono1 : typing_der g m tarr wp1 = typing_derived hwf ht1 in
+ let TypingDerived hkt hkwp2 hmono2 : typing_der g m t wp2 = typing_derived hwf ht2 in 
+ let hkbind : kinding g (bind m (tarr) (t) (wp1) (wp2)) (k_m m t') = magic() in
+ magic()
+)
+| _ -> admit()
+  (*
+| SCmp : #g:env -> m':eff -> #t':typ -> wp':typ ->
+          m:eff{eff_sub m' m} -> #t:typ -> wp:typ -> #phi:typ ->
+         =hs:styping g t' t phi ->
+         =hk:kinding g wp (k_m m t) ->
+         =hv:validity g (monotonic m t wp) ->
+             scmp g (Cmp m' t' wp') (Cmp m t wp)
+               (sub_computation phi m t wp m' t' wp')
+type scmp_der : g:env -> m:eff -> t:typ -> wp:typ -> phi:typ -> Type =
+| ScmpDerived #g:env -> #m:eff  -> #t:typ  -> #wp:typ -> #phi:typ ->
+                        kinding g t KType -> (OK from derived on hs)
+			kinding g wp (k_m m t) -> (OK from hk)
+			kinding g phi KType -> (OK from derived on hs)
+			scmp_der g m t wp phi
+			*)
+and scmp_derived g m' t' wp' m t wp phi' hwf hsc hkt' = 
+let SCmp _ _ _ _ #phi hssub hksub hvsub = hsc in
+let Conj hkt hkphi : cand (kinding g t KType) (kinding g phi KType) = styping_derived hwf hssub hkt' in
+let hkphisub : kinding g (sub_computation phi m t wp m' t' wp') KType = magic() (* compute it out of hkphi *)in
+ScmpDerived #g #m #t #wp #(sub_computation phi m t wp m' t' wp') hkt hksub hkphisub
+and styping_derived g t' t phi hwf hst hk' = 
+match hst with
+| SubConv #g #t t' hv hk -> let hr : cand (kinding g t KType) 
+                                          (kinding g ttrue KType)= Conj hk (magic()) in
+					  hr
+| SubFun #g #t #t' #phi #c' #c #psi hst hk hsc -> 
+(
+ (*
+| KArr : #g:env -> #t1:typ -> #t2:typ -> #phi:typ -> #m:eff ->
+         =hk1:kinding g t1 KType ->
+         =hk2:kinding (eextend t1 g) t2 KType ->
+         =hkp:kinding (eextend t1 g) phi (k_m m t2) ->
+         =hv :validity (eextend t1 g) (monotonic m t2 phi) ->
+              kinding g (TArr t1 (Cmp m t2 phi)) KType
+	      *)
+ (*g |- t -> c : KType*)
+ let Cmp mc tc wpc = c in
+ let Cmp mc' tc' wpc' = c' in
+ let hwfext : ewf (eextend t g) = GType hwf hk in
+ let hktc'g' : kinding (eextend t' g) tc' KType = (*let Conj hktc' hkwpc' = inversion_tarr hk' in hktc'*) magic() in
+ let hktc' : kinding (eextend t g) tc' KType = magic() in
+ (* SF : can we build this without an additional hypothesis ?
+  We would apply the substitution lemma to go from (eextend t' g) to (eextend t g) so we would need to be able to apply TySub on EVar 0 but we would need to know that phi is valid in g … so the additional hypothesis would be to ask for the validity of phi *)
+ let ScmpDerived hktc hkwpc hkpsi : scmp_der (eextend t g) mc tc wpc psi = scmp_derived #(eextend t g) #mc' #tc' #wpc' #mc #tc #wpc #psi hwfext hsc hktc' in
+ let hk1 : kinding g t KType = hk in
+ let hk2 : kinding (eextend t g) (tc) KType = hktc (*get it from hsc*) in
+ let hkp : kinding (eextend t g) (wpc) (k_m mc tc) = hkwpc (*get it from hsc too*) in
+ let hv: validity (eextend t g) (monotonic mc tc wpc) = magic() in
+ let hktarr : kinding g (TArr t c) KType = KArr hk1 hk2 hkp hv in
+ let hr : cand (kinding g (TArr t c) KType) (kinding g (tand phi (tforalle t psi)) KType ) = Conj (hktarr) (magic()) in hr
+)
+| SubTrans #g #t1 #t2 #t3 #phi12 #phi23 hs12 hs23 ->
+(
+ let Conj hkt2 hkphi12 = styping_derived hwf hs12 hk' in
+ let Conj hkt3 hkphi23 = styping_derived hwf hs23 hkt2 in
+ let hkand : kinding g (tand phi12 phi23) KType = magic() in
+ Conj hkt3 hkand
+)
+|_ -> admit()
+and kinding_derived g t k hwf hk =
+match hk with
+| KVar #g a -> get_kwf_from_ewf hwf a
+| KConst #g #c htcwf -> admit()
+| KArr #g #t1 #t2 #phi #m hk1 hk2 hkp hv -> WfType g
+| KTLam #g #k #t #k' hw hk ->
+(
+ let hewfext : ewf (textend k g) = GKind hwf hw in
+ let hbkwf : kwf (textend k g) k' = kinding_derived hewfext hk in
+ WfKArr hw hbkwf
+)
+| KELam #g #t1 #t2 #k2 hk1 hk2 ->
+(
+ let hewfext : ewf (eextend t1 g) = GType hwf hk1 in
+ let hbkwf : kwf (eextend t1 g) k2 = kinding_derived hewfext hk2 in
+ WfTArr hk1 hbkwf
+)
+| KTApp #g #t1 #t #k k' hk1 hk2 hw -> hw
+| KEApp #g #t #t' #k #e hk ht hw -> hw
+| KSub #g #t #k' #k #phi hk hs hv ->
+(
+ let Conj hkw1 hkw2 : cand (kwf g k') (kwf g k) = skinding_derived hwf hs in
+ hkw2
+)
+and skinding_derived g k k' phi hwf hsk = 
+match hsk with
+| KSubRefl hw -> Conj hw hw
+| KSubKArr #g #k1 #k2 k1' k2' #phi1 #phi2 hs21 hkw hs12' ->
+(
+ admit()
+ (*Same problem here as in SubFun : we need to build kwf (textend k1 g) k1' from 
+  kwf (textend k2 g) k1'. But we do not know that phi2 is valid !*)
+)
+| KSubTArr #g #t1 #t2 #k1 #k2 #phi1 #phi2 hs21 hk hs12' ->
+(
+ admit()
+ (*… Here too*)
+)
+and validity_derived g t hwf hv = admit()
