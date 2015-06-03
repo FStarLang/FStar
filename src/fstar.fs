@@ -103,17 +103,22 @@ type stack_elt =
 type stack = list<stack_elt>
 
 let interactive_mode dsenv env = 
+    let should_log = !Options.debug <> [] in
+    let log = 
+        if should_log 
+        then let transcript = Util.open_file_for_writing "transcript" in
+             (fun line -> Util.append_to_file transcript line;
+                          Util.flush_file transcript)
+        else (fun line -> ()) in
     if Option.isSome !Options.codegen
     then (Util.print_string "Code-generation is not supported in interactive mode"; exit 1);
-    let transcript = Util.open_file_for_writing "transcript" in
     let chunk = Util.new_string_builder () in
     let stdin = Util.open_stdin () in
     let rec fill_chunk ()= 
         let line = match Util.read_line stdin with 
             | None -> exit 0
             | Some l -> l in
-        Util.append_to_file transcript line;
-        Util.flush_file transcript;
+        log line; 
 //        Printf.printf "Read line <%s>\n" line;
         let l = Util.trim_string line in 
         if Util.starts_with l "#end"
