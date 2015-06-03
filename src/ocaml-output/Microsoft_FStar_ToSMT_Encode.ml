@@ -2242,7 +2242,7 @@ in (match (_428306) with
 | (decls', eqns', env0) -> begin
 ((decls')::decls, (Support.List.append eqns' eqns), env0)
 end))
-end)) ([], [], env0) (Support.List.zip3 gtoks typs bindings))
+end)) ((decls)::[], [], env0) (Support.List.zip3 gtoks typs bindings))
 in (match (_428310) with
 | (decls, eqns, env0) -> begin
 (let _428319 = ((Support.List.partition (fun _425646 -> (match (_425646) with
@@ -2284,8 +2284,8 @@ in (match (_428346) with
 | (decls, env) -> begin
 (let _428351 = (lookup_lid env x)
 in (match (_428351) with
-| (n, x, _) -> begin
-((n, x), decls, env)
+| (n, x', _) -> begin
+((n, x'), decls, env)
 end))
 end))
 end

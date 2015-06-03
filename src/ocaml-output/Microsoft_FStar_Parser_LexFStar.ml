@@ -1693,7 +1693,7 @@ let __ocaml_lex_tables = {
 }
 
 let rec token lexbuf =
-  lexbuf.Lexing.lex_mem <- Array.make 4 (-1) ;   __ocaml_lex_token_rec lexbuf 0
+  lexbuf.Lexing.lex_mem <- Array.create 4 (-1) ;   __ocaml_lex_token_rec lexbuf 0
 and __ocaml_lex_token_rec lexbuf __ocaml_lex_state =
   match Lexing.new_engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
@@ -2132,8 +2132,7 @@ let
        ( lc := 1; EOF )
 # 2134 "Microsoft_FStar_Parser_LexFStar.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
-      __ocaml_lex_token_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_token_rec lexbuf __ocaml_lex_state
 
 and custom_op_parser lexbuf =
     __ocaml_lex_custom_op_parser_rec lexbuf 160
@@ -2142,78 +2141,76 @@ and __ocaml_lex_custom_op_parser_rec lexbuf __ocaml_lex_state =
       | 0 ->
 # 323 "../lex.mll"
                     (CUSTOM_OP(">" ^  L.lexeme lexbuf))
-# 2146 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2145 "Microsoft_FStar_Parser_LexFStar.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
-      __ocaml_lex_custom_op_parser_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_custom_op_parser_rec lexbuf __ocaml_lex_state
 
 and string buffer lexbuf =
-  lexbuf.Lexing.lex_mem <- Array.make 2 (-1) ;   __ocaml_lex_string_rec buffer lexbuf 161
+  lexbuf.Lexing.lex_mem <- Array.create 2 (-1) ;   __ocaml_lex_string_rec buffer lexbuf 161
 and __ocaml_lex_string_rec buffer lexbuf __ocaml_lex_state =
   match Lexing.new_engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 let
 # 326 "../lex.mll"
                      x
-# 2159 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2157 "Microsoft_FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf (lexbuf.Lexing.lex_start_pos + 1) lexbuf.Lexing.lex_mem.(0) in
 # 327 "../lex.mll"
     ( Buffer.add_string buffer x;
       L.new_line lexbuf;
       string buffer lexbuf; )
-# 2165 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2163 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 1 ->
 let
 # 331 "../lex.mll"
               x
-# 2171 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2169 "Microsoft_FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
 # 332 "../lex.mll"
     ( Buffer.add_string buffer x;
       L.new_line lexbuf;
       string buffer lexbuf; )
-# 2177 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2175 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 2 ->
 let
 # 336 "../lex.mll"
                   c
-# 2183 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2181 "Microsoft_FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos (lexbuf.Lexing.lex_start_pos + 2) in
 # 337 "../lex.mll"
     ( Buffer.add_char buffer (char_of_ec c.[1]);
       string buffer lexbuf )
-# 2188 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2186 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 3 ->
 # 341 "../lex.mll"
     ( STRING (ba_of_string (Buffer.contents buffer)) )
-# 2193 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2191 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 4 ->
 # 344 "../lex.mll"
     ( BYTEARRAY (ba_of_string (Buffer.contents buffer)) )
-# 2198 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2196 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 5 ->
 let
 # 346 "../lex.mll"
         c
-# 2204 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2202 "Microsoft_FStar_Parser_LexFStar.ml"
 = Lexing.sub_lexeme_char lexbuf lexbuf.Lexing.lex_start_pos in
 # 347 "../lex.mll"
     ( Buffer.add_char buffer c;
       string buffer lexbuf )
-# 2209 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2207 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 6 ->
 # 351 "../lex.mll"
     ( failwith "unterminated string" )
-# 2214 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2212 "Microsoft_FStar_Parser_LexFStar.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
-      __ocaml_lex_string_rec buffer lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_string_rec buffer lexbuf __ocaml_lex_state
 
 and comment lexbuf =
     __ocaml_lex_comment_rec lexbuf 172
@@ -2222,45 +2219,44 @@ and __ocaml_lex_comment_rec lexbuf __ocaml_lex_state =
       | 0 ->
 # 355 "../lex.mll"
     ( comment lexbuf )
-# 2226 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2223 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 1 ->
 # 358 "../lex.mll"
     ( comment_string lexbuf; comment lexbuf; )
-# 2231 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2228 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 2 ->
 # 361 "../lex.mll"
     ( comment lexbuf; comment lexbuf; )
-# 2236 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2233 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 3 ->
 # 364 "../lex.mll"
     ( L.new_line lexbuf; comment lexbuf; )
-# 2241 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2238 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 4 ->
 # 367 "../lex.mll"
     ( () )
-# 2246 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2243 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 5 ->
 # 370 "../lex.mll"
     ( comment lexbuf )
-# 2251 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2248 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 6 ->
 # 373 "../lex.mll"
     ( comment lexbuf )
-# 2256 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2253 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 7 ->
 # 376 "../lex.mll"
      ( failwith "unterminated comment" )
-# 2261 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2258 "Microsoft_FStar_Parser_LexFStar.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
-      __ocaml_lex_comment_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_comment_rec lexbuf __ocaml_lex_state
 
 and comment_string lexbuf =
     __ocaml_lex_comment_string_rec lexbuf 184
@@ -2269,35 +2265,34 @@ and __ocaml_lex_comment_string_rec lexbuf __ocaml_lex_state =
       | 0 ->
 # 380 "../lex.mll"
      ( L.new_line lexbuf; comment_string lexbuf )
-# 2273 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2269 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 1 ->
 # 383 "../lex.mll"
      ( L.new_line lexbuf; comment_string lexbuf )
-# 2278 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2274 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 2 ->
 # 386 "../lex.mll"
      ( () )
-# 2283 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2279 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 3 ->
 # 392 "../lex.mll"
      ( comment_string lexbuf )
-# 2288 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2284 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 4 ->
 # 395 "../lex.mll"
      ( comment_string lexbuf )
-# 2293 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2289 "Microsoft_FStar_Parser_LexFStar.ml"
 
   | 5 ->
 # 398 "../lex.mll"
      ( failwith "unterminated comment" )
-# 2298 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2294 "Microsoft_FStar_Parser_LexFStar.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
-      __ocaml_lex_comment_string_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_comment_string_rec lexbuf __ocaml_lex_state
 
 and cpp_filename lexbuf =
     __ocaml_lex_cpp_filename_rec lexbuf 203
@@ -2307,10 +2302,9 @@ and __ocaml_lex_cpp_filename_rec lexbuf __ocaml_lex_state =
 # 402 "../lex.mll"
      ( let s = trim_both lexbuf 2 1 in
        ignore_endline lexbuf )
-# 2311 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2306 "Microsoft_FStar_Parser_LexFStar.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
-      __ocaml_lex_cpp_filename_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_cpp_filename_rec lexbuf __ocaml_lex_state
 
 and ignore_endline lexbuf =
     __ocaml_lex_ignore_endline_rec lexbuf 208
@@ -2319,10 +2313,9 @@ and __ocaml_lex_ignore_endline_rec lexbuf __ocaml_lex_state =
       | 0 ->
 # 407 "../lex.mll"
      ( token lexbuf )
-# 2323 "Microsoft_FStar_Parser_LexFStar.ml"
+# 2317 "Microsoft_FStar_Parser_LexFStar.ml"
 
-  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; 
-      __ocaml_lex_ignore_endline_rec lexbuf __ocaml_lex_state
+  | __ocaml_lex_state -> lexbuf.Lexing.refill_buff lexbuf; __ocaml_lex_ignore_endline_rec lexbuf __ocaml_lex_state
 
 ;;
 
