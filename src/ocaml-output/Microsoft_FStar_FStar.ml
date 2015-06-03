@@ -49,7 +49,7 @@ end
 n
 end)
 in if (errs > 0) then begin
-(let _524082 = (Support.Microsoft.FStar.Util.fprint1 "Error: %s errors were reported (see above)\n" (Support.Microsoft.FStar.Util.string_of_int errs))
+(let _524082 = (Support.Microsoft.FStar.Util.fprint1 "Error: %s errors were reported \x28see above\x29\n" (Support.Microsoft.FStar.Util.string_of_int errs))
 in (exit (1)))
 end))
 
@@ -127,7 +127,7 @@ stack_elt list
 let interactive_mode = (fun dsenv env -> (let should_log = ((Support.ST.read Microsoft_FStar_Options.debug) <> [])
 in (let log = if should_log then begin
 (let transcript = (Support.Microsoft.FStar.Util.open_file_for_writing "transcript")
-in (fun line -> (let _524157 = (Support.Microsoft.FStar.Util.append_to_file transcript line)
+in (fun line -> (let _524158 = (Support.Microsoft.FStar.Util.append_to_file transcript line)
 in (Support.Microsoft.FStar.Util.flush_file transcript))))
 end else begin
 (fun line -> ())
@@ -158,22 +158,22 @@ end
 ("ok", "fail")
 end)
 in (let str = (Support.Microsoft.FStar.Util.string_of_string_builder chunk)
-in (let _524185 = (Support.Microsoft.FStar.Util.clear_string_builder chunk)
+in (let _524193 = (Support.Microsoft.FStar.Util.clear_string_builder chunk)
 in Code ((str, responses)))))
 end else begin
 if (Support.Microsoft.FStar.Util.starts_with l "#pop") then begin
-(let _524187 = (Support.Microsoft.FStar.Util.clear_string_builder chunk)
+(let _524182 = (Support.Microsoft.FStar.Util.clear_string_builder chunk)
 in Pop (l))
 end else begin
 if (Support.Microsoft.FStar.Util.starts_with l "#push") then begin
-(let _524189 = (Support.Microsoft.FStar.Util.clear_string_builder chunk)
+(let _524180 = (Support.Microsoft.FStar.Util.clear_string_builder chunk)
 in Push (l))
 end else begin
 if (l = "#finish") then begin
 (exit (0))
 end else begin
-(let _524191 = (Support.Microsoft.FStar.Util.string_builder_append chunk line)
-in (let _524193 = (Support.Microsoft.FStar.Util.string_builder_append chunk "\n")
+(let _524176 = (Support.Microsoft.FStar.Util.string_builder_append chunk line)
+in (let _524178 = (Support.Microsoft.FStar.Util.string_builder_append chunk "\n")
 in (fill_chunk ())))
 end
 end
@@ -316,7 +316,7 @@ end
 (Microsoft_FStar_Parser_Driver.read_build_config f)
 end
 | _ -> begin
-(let _524328 = (Support.Microsoft.FStar.Util.print_string "--use_build_config expects just a single file on the command line and no other arguments")
+(let _524328 = (Support.Microsoft.FStar.Util.print_string "--use\x5fbuild\x5fconfig expects just a single file on the command line and no other arguments")
 in (exit (1)))
 end)
 end else begin

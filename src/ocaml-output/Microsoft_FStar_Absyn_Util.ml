@@ -30,7 +30,7 @@ end))
 let gensym = (let ctr = (Support.Microsoft.FStar.Util.mk_ref 0)
 in (fun _68744 -> (match (_68744) with
 | () -> begin
-(Support.String.strcat "_" (Support.Microsoft.FStar.Util.string_of_int (let _68745 = (Support.Microsoft.FStar.Util.incr ctr)
+(Support.String.strcat "\x5f" (Support.Microsoft.FStar.Util.string_of_int (let _68745 = (Support.Microsoft.FStar.Util.incr ctr)
 in (Support.ST.read ctr))))
 end)))
 
@@ -173,12 +173,12 @@ end)) binders)))
 let name_binders = (fun binders -> ((Support.List.mapi (fun i b -> if (Microsoft_FStar_Absyn_Syntax.is_null_binder b) then begin
 (match (b) with
 | (Support.Microsoft.FStar.Util.Inl (a), imp) -> begin
-(let b = (Microsoft_FStar_Absyn_Syntax.id_of_text (Support.String.strcat "_" (Support.Microsoft.FStar.Util.string_of_int i)))
+(let b = (Microsoft_FStar_Absyn_Syntax.id_of_text (Support.String.strcat "\x5f" (Support.Microsoft.FStar.Util.string_of_int i)))
 in (let b = (bvd_to_bvar_s (mkbvd (b, b)) a.Microsoft_FStar_Absyn_Syntax.sort)
 in (Support.Microsoft.FStar.Util.Inl (b), imp)))
 end
 | (Support.Microsoft.FStar.Util.Inr (y), imp) -> begin
-(let x = (Microsoft_FStar_Absyn_Syntax.id_of_text (Support.String.strcat "_" (Support.Microsoft.FStar.Util.string_of_int i)))
+(let x = (Microsoft_FStar_Absyn_Syntax.id_of_text (Support.String.strcat "\x5f" (Support.Microsoft.FStar.Util.string_of_int i)))
 in (let x = (bvd_to_bvar_s (mkbvd (x, x)) y.Microsoft_FStar_Absyn_Syntax.sort)
 in (Support.Microsoft.FStar.Util.Inr (x), imp)))
 end)
@@ -759,7 +759,7 @@ end
 Some ((compress_typ t))
 end))
 
-let mk_discriminator = (fun lid -> (Microsoft_FStar_Absyn_Syntax.lid_of_ids (Support.List.append lid.Microsoft_FStar_Absyn_Syntax.ns (((Microsoft_FStar_Absyn_Syntax.mk_ident ((Support.String.strcat "is_" lid.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText), lid.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idRange)))::[]))))
+let mk_discriminator = (fun lid -> (Microsoft_FStar_Absyn_Syntax.lid_of_ids (Support.List.append lid.Microsoft_FStar_Absyn_Syntax.ns (((Microsoft_FStar_Absyn_Syntax.mk_ident ((Support.String.strcat "is\x5f" lid.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText), lid.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idRange)))::[]))))
 
 let is_name = (fun lid -> (let c = (Support.Microsoft.FStar.Util.char_at lid.Microsoft_FStar_Absyn_Syntax.ident.Microsoft_FStar_Absyn_Syntax.idText 0)
 in (Support.Microsoft.FStar.Util.is_upper c)))
@@ -1126,7 +1126,7 @@ x
 end)
 
 let mk_field_projector_name = (fun lid x i -> (let nm = if (Microsoft_FStar_Absyn_Syntax.is_null_bvar x) then begin
-(Microsoft_FStar_Absyn_Syntax.mk_ident ((Support.String.strcat "_" (Support.Microsoft.FStar.Util.string_of_int i)), x.Microsoft_FStar_Absyn_Syntax.p))
+(Microsoft_FStar_Absyn_Syntax.mk_ident ((Support.String.strcat "\x5f" (Support.Microsoft.FStar.Util.string_of_int i)), x.Microsoft_FStar_Absyn_Syntax.p))
 end else begin
 x.Microsoft_FStar_Absyn_Syntax.v.Microsoft_FStar_Absyn_Syntax.ppname
 end
@@ -1305,7 +1305,7 @@ end))
 and vs_kind' = (fun k uvonly cont -> (let k = (compress_kind k)
 in (match (k.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Kind_lam ((_, k)) -> begin
-(failwith ((Support.Microsoft.FStar.Util.format1 "%s: Impossible ... found a Kind_lam bare" (Support.Microsoft.FStar.Range.string_of_range k.Microsoft_FStar_Absyn_Syntax.pos))))
+(failwith ((Support.Microsoft.FStar.Util.format1 "%s: Impossible ... found a Kind\x5flam bare" (Support.Microsoft.FStar.Range.string_of_range k.Microsoft_FStar_Absyn_Syntax.pos))))
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_delayed (_) -> begin
 (failwith ("Impossible"))
@@ -1816,7 +1816,7 @@ let teq = (ftv Microsoft_FStar_Absyn_Const.eq2_lid eq_k)
 
 let mk_eq = (fun t1 t2 e1 e2 -> (match ((t1.Microsoft_FStar_Absyn_Syntax.n, t2.Microsoft_FStar_Absyn_Syntax.n)) with
 | ((Microsoft_FStar_Absyn_Syntax.Typ_unknown, _)) | ((_, Microsoft_FStar_Absyn_Syntax.Typ_unknown)) -> begin
-(failwith ("DIE! mk_eq with tun"))
+(failwith ("DIE! mk\x5feq with tun"))
 end
 | _ -> begin
 (Microsoft_FStar_Absyn_Syntax.mk_Typ_app (teq, ((Microsoft_FStar_Absyn_Syntax.itarg t1))::((Microsoft_FStar_Absyn_Syntax.itarg t2))::((Microsoft_FStar_Absyn_Syntax.varg e1))::((Microsoft_FStar_Absyn_Syntax.varg e2))::[]) None (Support.Microsoft.FStar.Range.union_ranges e1.Microsoft_FStar_Absyn_Syntax.pos e2.Microsoft_FStar_Absyn_Syntax.pos))

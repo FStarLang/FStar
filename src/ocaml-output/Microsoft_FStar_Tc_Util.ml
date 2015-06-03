@@ -41,7 +41,7 @@ end else begin
 (raise (Microsoft_FStar_Absyn_Syntax.Error (((Microsoft_FStar_Tc_Errors.expected_expression_of_type env t2 e t1), (Microsoft_FStar_Tc_Env.get_range env)))))
 end
 | Some (g) -> begin
-(let _301876 = if ((Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel"))) then begin
+(let _301873 = if ((Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Rel"))) then begin
 ((Support.Microsoft.FStar.Util.fprint1 "Applied guard is %s\n") (Microsoft_FStar_Tc_Rel.guard_to_string env g))
 end
 in (let e = (Microsoft_FStar_Absyn_Util.compress_exp e)
@@ -50,8 +50,8 @@ in (let e = (match (e.Microsoft_FStar_Absyn_Syntax.n) with
 (Microsoft_FStar_Absyn_Syntax.mk_Exp_bvar (Microsoft_FStar_Absyn_Util.bvd_to_bvar_s x.Microsoft_FStar_Absyn_Syntax.v t2) (Some (t2)) e.Microsoft_FStar_Absyn_Syntax.pos)
 end
 | _ -> begin
-(let _301883 = e
-in {Microsoft_FStar_Absyn_Syntax.n = _301883.Microsoft_FStar_Absyn_Syntax.n; Microsoft_FStar_Absyn_Syntax.tk = (Support.Microsoft.FStar.Util.mk_ref (Some (t2))); Microsoft_FStar_Absyn_Syntax.pos = _301883.Microsoft_FStar_Absyn_Syntax.pos; Microsoft_FStar_Absyn_Syntax.fvs = _301883.Microsoft_FStar_Absyn_Syntax.fvs; Microsoft_FStar_Absyn_Syntax.uvs = _301883.Microsoft_FStar_Absyn_Syntax.uvs})
+(let _301880 = e
+in {Microsoft_FStar_Absyn_Syntax.n = _301880.Microsoft_FStar_Absyn_Syntax.n; Microsoft_FStar_Absyn_Syntax.tk = (Support.Microsoft.FStar.Util.mk_ref (Some (t2))); Microsoft_FStar_Absyn_Syntax.pos = _301880.Microsoft_FStar_Absyn_Syntax.pos; Microsoft_FStar_Absyn_Syntax.fvs = _301880.Microsoft_FStar_Absyn_Syntax.fvs; Microsoft_FStar_Absyn_Syntax.uvs = _301880.Microsoft_FStar_Absyn_Syntax.uvs})
 end)
 in (e, g))))
 end)
@@ -99,7 +99,7 @@ end)))
 
 let force_tk = (fun s -> (match ((Support.ST.read s.Microsoft_FStar_Absyn_Syntax.tk)) with
 | None -> begin
-(failwith ((Support.Microsoft.FStar.Util.format1 "Impossible: Forced tk not present (%s)" (Support.Microsoft.FStar.Range.string_of_range s.Microsoft_FStar_Absyn_Syntax.pos))))
+(failwith ((Support.Microsoft.FStar.Util.format1 "Impossible: Forced tk not present \x28%s\x29" (Support.Microsoft.FStar.Range.string_of_range s.Microsoft_FStar_Absyn_Syntax.pos))))
 end
 | Some (tk) -> begin
 tk
@@ -319,7 +319,7 @@ end
 in (Microsoft_FStar_Absyn_Syntax.withinfo (Microsoft_FStar_Absyn_Syntax.Pat_var ((a, true))) None (Microsoft_FStar_Absyn_Syntax.range_of_lid fv.Microsoft_FStar_Absyn_Syntax.v)))
 end
 | _ -> begin
-(raise (Microsoft_FStar_Absyn_Syntax.Error (((Support.Microsoft.FStar.Util.format1 "Insufficient pattern arguments (%s)" (Microsoft_FStar_Absyn_Print.pat_to_string p)), (Microsoft_FStar_Absyn_Syntax.range_of_lid fv.Microsoft_FStar_Absyn_Syntax.v)))))
+(raise (Microsoft_FStar_Absyn_Syntax.Error (((Support.Microsoft.FStar.Util.format1 "Insufficient pattern arguments \x28%s\x29" (Microsoft_FStar_Absyn_Print.pat_to_string p)), (Microsoft_FStar_Absyn_Syntax.range_of_lid fv.Microsoft_FStar_Absyn_Syntax.v)))))
 end))) formals)
 end
 | (f::formals', p::pats') -> begin
@@ -502,7 +502,7 @@ end))
 in (match_args [] args argpats))))
 end
 | _ -> begin
-(failwith ((Support.Microsoft.FStar.Util.format3 "(%s) Impossible: pattern to decorate is %s; expression is %s\n" (Support.Microsoft.FStar.Range.string_of_range qq.Microsoft_FStar_Absyn_Syntax.p) (Microsoft_FStar_Absyn_Print.pat_to_string qq) ((Support.String.concat "\n\t") ((Support.List.map Microsoft_FStar_Absyn_Print.exp_to_string) exps)))))
+(failwith ((Support.Microsoft.FStar.Util.format3 "\x28%s\x29 Impossible: pattern to decorate is %s; expression is %s\n" (Support.Microsoft.FStar.Range.string_of_range qq.Microsoft_FStar_Absyn_Syntax.p) (Microsoft_FStar_Absyn_Print.pat_to_string qq) ((Support.String.concat "\n\t") ((Support.List.map Microsoft_FStar_Absyn_Print.exp_to_string) exps)))))
 end))))
 and aux_t = (fun p t0 -> (let pkg = (fun q k -> (Microsoft_FStar_Absyn_Syntax.withinfo q (Some (Support.Microsoft.FStar.Util.Inl (k))) p.Microsoft_FStar_Absyn_Syntax.p))
 in (let t = (Microsoft_FStar_Absyn_Util.compress_typ t0)
@@ -526,7 +526,7 @@ in {Microsoft_FStar_Absyn_Syntax.v = _302557.Microsoft_FStar_Absyn_Syntax.v; Mic
 in (pkg (Microsoft_FStar_Absyn_Syntax.Pat_dot_typ ((a, t))) a.Microsoft_FStar_Absyn_Syntax.sort)))
 end
 | _ -> begin
-(failwith ((Support.Microsoft.FStar.Util.format3 "(%s) Impossible: pattern to decorate is %s; expression is %s\n" (Support.Microsoft.FStar.Range.string_of_range p.Microsoft_FStar_Absyn_Syntax.p) (Microsoft_FStar_Absyn_Print.pat_to_string p) (Microsoft_FStar_Absyn_Print.typ_to_string t))))
+(failwith ((Support.Microsoft.FStar.Util.format3 "\x28%s\x29 Impossible: pattern to decorate is %s; expression is %s\n" (Support.Microsoft.FStar.Range.string_of_range p.Microsoft_FStar_Absyn_Syntax.p) (Microsoft_FStar_Absyn_Print.pat_to_string p) (Microsoft_FStar_Absyn_Print.typ_to_string t))))
 end))))
 in (match ((p.Microsoft_FStar_Absyn_Syntax.v, exps)) with
 | (Microsoft_FStar_Absyn_Syntax.Pat_disj (ps), _) when ((Support.List.length ps) = (Support.List.length exps)) -> begin
@@ -714,7 +714,7 @@ in (match (_302776) with
 (let c = (Microsoft_FStar_Absyn_Util.ml_comp res r)
 in (let t = (Microsoft_FStar_Absyn_Syntax.mk_Typ_fun (bs, c) (Some (Microsoft_FStar_Absyn_Syntax.ktype)) e.Microsoft_FStar_Absyn_Syntax.pos)
 in (let _302779 = if (Microsoft_FStar_Tc_Env.debug env Microsoft_FStar_Options.High) then begin
-(Support.Microsoft.FStar.Util.fprint2 "(%s) Using type %s\n" (Support.Microsoft.FStar.Range.string_of_range r) (Microsoft_FStar_Absyn_Print.typ_to_string t))
+(Support.Microsoft.FStar.Util.fprint2 "\x28%s\x29 Using type %s\n" (Support.Microsoft.FStar.Range.string_of_range r) (Microsoft_FStar_Absyn_Print.typ_to_string t))
 end
 in (let e = (Microsoft_FStar_Absyn_Syntax.mk_Exp_abs (bs, body) None e.Microsoft_FStar_Absyn_Syntax.pos)
 in (e, t, (check_res || check))))))
@@ -738,7 +738,7 @@ let destruct_comp = (fun c -> (let _302802 = (match (c.Microsoft_FStar_Absyn_Syn
 (wp, wlp)
 end
 | _ -> begin
-(failwith ((Support.Microsoft.FStar.Util.format2 "Impossible: Got a computation %s with effect args [%s]" c.Microsoft_FStar_Absyn_Syntax.effect_name.Microsoft_FStar_Absyn_Syntax.str ((Support.String.concat ", ") (Support.List.map Microsoft_FStar_Absyn_Print.arg_to_string c.Microsoft_FStar_Absyn_Syntax.effect_args)))))
+(failwith ((Support.Microsoft.FStar.Util.format2 "Impossible: Got a computation %s with effect args \x5b%s\x5d" c.Microsoft_FStar_Absyn_Syntax.effect_name.Microsoft_FStar_Absyn_Syntax.str ((Support.String.concat ", ") (Support.List.map Microsoft_FStar_Absyn_Print.arg_to_string c.Microsoft_FStar_Absyn_Syntax.effect_args)))))
 end)
 in (match (_302802) with
 | (wp, wlp) -> begin
@@ -836,7 +836,7 @@ in (mk_comp m t wp wlp ((Microsoft_FStar_Absyn_Syntax.RETURN)::[])))))
 end))
 end)
 in (let _302890 = if (Microsoft_FStar_Tc_Env.debug env Microsoft_FStar_Options.High) then begin
-(Support.Microsoft.FStar.Util.fprint3 "(%s) returning %s at comp type %s\n" (Support.Microsoft.FStar.Range.string_of_range v.Microsoft_FStar_Absyn_Syntax.pos) (Microsoft_FStar_Absyn_Print.exp_to_string v) (Microsoft_FStar_Tc_Normalize.comp_typ_norm_to_string env c))
+(Support.Microsoft.FStar.Util.fprint3 "\x28%s\x29 returning %s at comp type %s\n" (Support.Microsoft.FStar.Range.string_of_range v.Microsoft_FStar_Absyn_Syntax.pos) (Microsoft_FStar_Absyn_Print.exp_to_string v) (Microsoft_FStar_Tc_Normalize.comp_typ_norm_to_string env c))
 end
 in c)))
 
@@ -904,7 +904,7 @@ end))
 in (match ((try_simplify ())) with
 | Some (c) -> begin
 (let _302957 = if ((Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("bind"))) then begin
-(Support.Microsoft.FStar.Util.fprint4 "bind (%s) %s and %s simplified to %s\n" (match (b) with
+(Support.Microsoft.FStar.Util.fprint4 "bind \x28%s\x29 %s and %s simplified to %s\n" (match (b) with
 | None -> begin
 "None"
 end
@@ -1420,18 +1420,18 @@ in (let hide_uvar_nums_saved = (Support.ST.read Microsoft_FStar_Options.hide_uva
 in (let print_implicits_saved = (Support.ST.read Microsoft_FStar_Options.print_implicits)
 in (let _303454 = (Support.ST.op_ColonEquals Microsoft_FStar_Options.hide_uvar_nums false)
 in (let _303456 = (Support.ST.op_ColonEquals Microsoft_FStar_Options.print_implicits true)
-in (let _303458 = (Microsoft_FStar_Tc_Errors.report r (Support.Microsoft.FStar.Util.format2 "Unconstrained unification variables %s in type signature %s; please add an annotation" union (Microsoft_FStar_Absyn_Print.typ_to_string t)))
+in (let _303458 = (Microsoft_FStar_Tc_Errors.report r (Support.Microsoft.FStar.Util.format2 "Unconstrained unification variables %s in type signature %s; \nplease add an annotation" union (Microsoft_FStar_Absyn_Print.typ_to_string t)))
 in (let _303460 = (Support.ST.op_ColonEquals Microsoft_FStar_Options.hide_uvar_nums hide_uvar_nums_saved)
 in (Support.ST.op_ColonEquals Microsoft_FStar_Options.print_implicits print_implicits_saved)))))))))))
 end))
 
-let gen = (fun verify env ecs -> if (not ((Support.Microsoft.FStar.Util.for_all (fun _303468 -> (match (_303468) with
+let gen = (fun verify env ecs -> if (not ((Support.Microsoft.FStar.Util.for_all (fun _303586 -> (match (_303586) with
 | (_, c) -> begin
 (Microsoft_FStar_Absyn_Util.is_pure_comp c)
 end)) ecs))) then begin
 None
 end else begin
-(let norm = (fun c -> (let _303471 = if (Microsoft_FStar_Tc_Env.debug env Microsoft_FStar_Options.Medium) then begin
+(let norm = (fun c -> (let _303467 = if (Microsoft_FStar_Tc_Env.debug env Microsoft_FStar_Options.Medium) then begin
 (Support.Microsoft.FStar.Util.fprint1 "Normalizing before generalizing:\n\t %s" (Microsoft_FStar_Absyn_Print.comp_typ_to_string c))
 end
 in (let steps = (Microsoft_FStar_Tc_Normalize.Eta)::(Microsoft_FStar_Tc_Normalize.Delta)::(Microsoft_FStar_Tc_Normalize.Beta)::(Microsoft_FStar_Tc_Normalize.SNComp)::[]
@@ -1440,7 +1440,7 @@ in (let c = if (Microsoft_FStar_Options.should_verify env.Microsoft_FStar_Tc_Env
 end else begin
 (Microsoft_FStar_Tc_Normalize.norm_comp ((Microsoft_FStar_Tc_Normalize.Beta)::(Microsoft_FStar_Tc_Normalize.Delta)::[]) env c)
 end
-in (let _303475 = if (Microsoft_FStar_Tc_Env.debug env Microsoft_FStar_Options.Medium) then begin
+in (let _303471 = if (Microsoft_FStar_Tc_Env.debug env Microsoft_FStar_Options.Medium) then begin
 (Support.Microsoft.FStar.Util.fprint1 "Normalized to:\n\t %s" (Microsoft_FStar_Absyn_Print.comp_typ_to_string c))
 end
 in c)))))
@@ -1463,7 +1463,7 @@ end
 | _ -> begin
 true
 end))
-in (let uvars = ((Support.List.map (fun _303500 -> (match (_303500) with
+in (let uvars = ((Support.List.map (fun _303496 -> (match (_303496) with
 | (e, c) -> begin
 (let t = (Microsoft_FStar_Absyn_Util.compress_typ (Microsoft_FStar_Absyn_Util.comp_result c))
 in if (not ((should_gen t))) then begin
@@ -1474,9 +1474,9 @@ in (let ct = (Microsoft_FStar_Absyn_Util.comp_to_comp_typ c)
 in (let t = ct.Microsoft_FStar_Absyn_Syntax.result_typ
 in (let uvt = (Microsoft_FStar_Absyn_Util.uvars_in_typ t)
 in (let uvs = (gen_uvars uvt.Microsoft_FStar_Absyn_Syntax.uvars_t)
-in (let _303516 = if (((Microsoft_FStar_Options.should_verify env.Microsoft_FStar_Tc_Env.curmodule.Microsoft_FStar_Absyn_Syntax.str) && verify) && (not ((Microsoft_FStar_Absyn_Util.is_total_comp c)))) then begin
-(let _303512 = (destruct_comp ct)
-in (match (_303512) with
+in (let _303512 = if (((Microsoft_FStar_Options.should_verify env.Microsoft_FStar_Tc_Env.curmodule.Microsoft_FStar_Absyn_Syntax.str) && verify) && (not ((Microsoft_FStar_Absyn_Util.is_total_comp c)))) then begin
+(let _303508 = (destruct_comp ct)
+in (match (_303508) with
 | (_, wp, _) -> begin
 (let binder = ((Microsoft_FStar_Absyn_Syntax.null_v_binder t))::[]
 in (let post = (Microsoft_FStar_Absyn_Syntax.mk_Typ_lam (binder, (Microsoft_FStar_Absyn_Util.ftv Microsoft_FStar_Absyn_Const.true_lid Microsoft_FStar_Absyn_Syntax.ktype)) (Some ((Microsoft_FStar_Absyn_Syntax.mk_Kind_arrow (binder, Microsoft_FStar_Absyn_Syntax.ktype) t.Microsoft_FStar_Absyn_Syntax.pos))) t.Microsoft_FStar_Absyn_Syntax.pos)
@@ -1487,9 +1487,9 @@ end
 in (uvs, e, c)))))))
 end)
 end))) ecs)
-in (let ecs = ((Support.List.map (fun _303522 -> (match (_303522) with
+in (let ecs = ((Support.List.map (fun _303518 -> (match (_303518) with
 | (uvs, e, c) -> begin
-(let tvars = ((Support.List.map (fun _303525 -> (match (_303525) with
+(let tvars = ((Support.List.map (fun _303521 -> (match (_303521) with
 | (u, k) -> begin
 (let a = (match ((Support.Microsoft.FStar.Unionfind.find u)) with
 | (Microsoft_FStar_Absyn_Syntax.Fixed ({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_btvar (a); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _})) | (Microsoft_FStar_Absyn_Syntax.Fixed ({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_lam ((_, {Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_btvar (a); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _})); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _})) -> begin
@@ -1501,7 +1501,7 @@ end
 | _ -> begin
 (let a = (Microsoft_FStar_Absyn_Util.new_bvd (Some (Microsoft_FStar_Tc_Env.get_range env)))
 in (let t = (Microsoft_FStar_Absyn_Util.close_for_kind (Microsoft_FStar_Absyn_Util.bvd_to_typ a Microsoft_FStar_Absyn_Syntax.ktype) k)
-in (let _303569 = (Microsoft_FStar_Absyn_Util.unchecked_unify u t)
+in (let _303565 = (Microsoft_FStar_Absyn_Util.unchecked_unify u t)
 in (Microsoft_FStar_Absyn_Util.bvd_to_bvar_s a Microsoft_FStar_Absyn_Syntax.ktype))))
 end)
 in (Support.Microsoft.FStar.Util.Inl (a), Some (Microsoft_FStar_Absyn_Syntax.Implicit)))
@@ -1537,7 +1537,7 @@ let generalize = (fun verify env lecs -> (let _303596 = if (Microsoft_FStar_Tc_E
 (Microsoft_FStar_Absyn_Print.lbname_to_string lb)
 end)) lecs)))
 end
-in (match ((gen verify env ((Support.List.map (fun _303602 -> (match (_303602) with
+in (match ((gen verify env ((Support.List.map (fun _303616 -> (match (_303616) with
 | (_, e, c) -> begin
 (e, c)
 end))) lecs))) with
@@ -1545,10 +1545,10 @@ end))) lecs))) with
 lecs
 end
 | Some (ecs) -> begin
-(Support.List.map2 (fun _303611 _303614 -> (match ((_303611, _303614)) with
+(Support.List.map2 (fun _303606 _303609 -> (match ((_303606, _303609)) with
 | ((l, _, _), (e, c)) -> begin
-(let _303615 = if (Microsoft_FStar_Tc_Env.debug env Microsoft_FStar_Options.Medium) then begin
-(Support.Microsoft.FStar.Util.fprint3 "(%s) Generalized %s to %s" (Support.Microsoft.FStar.Range.string_of_range e.Microsoft_FStar_Absyn_Syntax.pos) (Microsoft_FStar_Absyn_Print.lbname_to_string l) (Microsoft_FStar_Absyn_Print.typ_to_string (Microsoft_FStar_Absyn_Util.comp_result c)))
+(let _303610 = if (Microsoft_FStar_Tc_Env.debug env Microsoft_FStar_Options.Medium) then begin
+(Support.Microsoft.FStar.Util.fprint3 "\x28%s\x29 Generalized %s to %s" (Support.Microsoft.FStar.Range.string_of_range e.Microsoft_FStar_Absyn_Syntax.pos) (Microsoft_FStar_Absyn_Print.lbname_to_string l) (Microsoft_FStar_Absyn_Print.typ_to_string (Microsoft_FStar_Absyn_Util.comp_result c)))
 end
 in (l, e, c))
 end)) lecs ecs)
@@ -1610,7 +1610,7 @@ in ((Microsoft_FStar_Absyn_Const.op_And, (short_bin_op_e op_and_e)))::((Microsof
 in (match (head.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Exp_fvar ((fv, _)) -> begin
 (let lid = fv.Microsoft_FStar_Absyn_Syntax.v
-in (match ((Support.Microsoft.FStar.Util.find_map table (fun _303685 -> (match (_303685) with
+in (match ((Support.Microsoft.FStar.Util.find_map table (fun _303688 -> (match (_303688) with
 | (x, mk) -> begin
 if (Microsoft_FStar_Absyn_Syntax.lid_equals x lid) then begin
 Some ((mk seen_args))
@@ -1668,7 +1668,7 @@ end)
 end
 | Support.Microsoft.FStar.Util.Inl ({Microsoft_FStar_Absyn_Syntax.n = Microsoft_FStar_Absyn_Syntax.Typ_const (fv); Microsoft_FStar_Absyn_Syntax.tk = _; Microsoft_FStar_Absyn_Syntax.pos = _; Microsoft_FStar_Absyn_Syntax.fvs = _; Microsoft_FStar_Absyn_Syntax.uvs = _}) -> begin
 (let lid = fv.Microsoft_FStar_Absyn_Syntax.v
-in (match ((Support.Microsoft.FStar.Util.find_map table (fun _303753 -> (match (_303753) with
+in (match ((Support.Microsoft.FStar.Util.find_map table (fun _303756 -> (match (_303756) with
 | (x, mk) -> begin
 if (Microsoft_FStar_Absyn_Syntax.lid_equals x lid) then begin
 Some ((mk seen_args))

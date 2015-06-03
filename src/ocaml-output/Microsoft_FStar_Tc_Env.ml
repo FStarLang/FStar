@@ -125,7 +125,7 @@ end))
 let join = (fun env l1 l2 -> if (Microsoft_FStar_Absyn_Syntax.lid_equals l1 l2) then begin
 (l1, (fun t wp -> wp), (fun t wp -> wp))
 end else begin
-(match (((Support.Microsoft.FStar.Util.find_opt (fun _180374 -> (match (_180374) with
+(match (((Support.Microsoft.FStar.Util.find_opt (fun _180380 -> (match (_180380) with
 | (m1, m2, _, _, _) -> begin
 ((Microsoft_FStar_Absyn_Syntax.lid_equals l1 m1) && (Microsoft_FStar_Absyn_Syntax.lid_equals l2 m2))
 end))) env.effects.joins)) with
@@ -181,8 +181,8 @@ end)))) with
 env
 end
 | Some (e) -> begin
-(let _180452 = env
-in {solver = _180452.solver; range = _180452.range; curmodule = _180452.curmodule; gamma = _180452.gamma; modules = _180452.modules; expected_typ = _180452.expected_typ; level = _180452.level; sigtab = _180452.sigtab; is_pattern = _180452.is_pattern; instantiate_targs = _180452.instantiate_targs; instantiate_vargs = _180452.instantiate_vargs; effects = _180452.effects; generalize = _180452.generalize; letrecs = _180452.letrecs; top_level = _180452.top_level; check_uvars = _180452.check_uvars; use_eq = _180452.use_eq; is_iface = _180452.is_iface; admit = _180452.admit; default_effects = ((e, l))::env.default_effects})
+(let _180447 = env
+in {solver = _180447.solver; range = _180447.range; curmodule = _180447.curmodule; gamma = _180447.gamma; modules = _180447.modules; expected_typ = _180447.expected_typ; level = _180447.level; sigtab = _180447.sigtab; is_pattern = _180447.is_pattern; instantiate_targs = _180447.instantiate_targs; instantiate_vargs = _180447.instantiate_vargs; effects = _180447.effects; generalize = _180447.generalize; letrecs = _180447.letrecs; top_level = _180447.top_level; check_uvars = _180447.check_uvars; use_eq = _180447.use_eq; is_iface = _180447.is_iface; admit = _180447.admit; default_effects = ((e, l))::env.default_effects})
 end)
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_new_effect ((ne, _)) -> begin
@@ -618,7 +618,7 @@ end
 k
 end))
 
-let lookup_operator = (fun env opname -> (let primName = (Microsoft_FStar_Absyn_Syntax.lid_of_path (("Prims")::((Support.String.strcat "_dummy_" opname.Microsoft_FStar_Absyn_Syntax.idText))::[]) Microsoft_FStar_Absyn_Syntax.dummyRange)
+let lookup_operator = (fun env opname -> (let primName = (Microsoft_FStar_Absyn_Syntax.lid_of_path (("Prims")::((Support.String.strcat "\x5fdummy\x5f" opname.Microsoft_FStar_Absyn_Syntax.idText))::[]) Microsoft_FStar_Absyn_Syntax.dummyRange)
 in (lookup_lid env primName)))
 
 let push_sigelt = (fun env s -> (build_lattice (let _181058 = env

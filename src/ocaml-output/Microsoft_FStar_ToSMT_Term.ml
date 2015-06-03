@@ -38,10 +38,10 @@ end
 "Fuel"
 end
 | Array ((s1, s2)) -> begin
-(Support.Microsoft.FStar.Util.format2 "(Array %s %s)" (strSort s1) (strSort s2))
+(Support.Microsoft.FStar.Util.format2 "\x28Array %s %s\x29" (strSort s1) (strSort s2))
 end
 | Arrow ((s1, s2)) -> begin
-(Support.Microsoft.FStar.Util.format2 "(%s -> %s)" (strSort s1) (strSort s2))
+(Support.Microsoft.FStar.Util.format2 "\x28%s -> %s\x29" (strSort s1) (strSort s2))
 end
 | Sort (s) -> begin
 s
@@ -225,10 +225,10 @@ end
 (Support.String.strcat (Support.String.strcat (Support.Prims.fst x) ":") (strSort (Support.Prims.snd x)))
 end
 | App ((op, tms)) -> begin
-(Support.String.strcat (Support.String.strcat (Support.String.strcat "(" (op_to_string op)) ((Support.String.concat " ") (Support.List.map (fun t -> t.hash) tms))) ")")
+(Support.String.strcat (Support.String.strcat (Support.String.strcat "\x28" (op_to_string op)) ((Support.String.concat " ") (Support.List.map (fun t -> t.hash) tms))) "\x29")
 end
 | Quant ((qop, pats, wopt, sorts, body)) -> begin
-(Support.Microsoft.FStar.Util.format5 "(%s (%s)(! %s %s %s))" (qop_to_string qop) ((Support.String.concat " ") (Support.List.map strSort sorts)) body.hash (weightToSmt wopt) ((Support.String.concat "; ") ((Support.List.map (fun pats -> ((Support.String.concat " ") (Support.List.map (fun p -> p.hash) pats)))) pats)))
+(Support.Microsoft.FStar.Util.format5 "\x28%s \x28%s\x29\x28! %s %s %s\x29\x29" (qop_to_string qop) ((Support.String.concat " ") (Support.List.map strSort sorts)) body.hash (weightToSmt wopt) ((Support.String.concat "; ") ((Support.List.map (fun pats -> ((Support.String.concat " ") (Support.List.map (fun p -> p.hash) pats)))) pats)))
 end))
 
 let all_terms_l = (Support.ST.alloc (((Support.Microsoft.FStar.Util.smap_create 10000))::[]))
@@ -543,7 +543,7 @@ let mkDefineFun = (fun _413701 -> (match (_413701) with
 DefineFun ((nm, (Support.List.map (fv_sort) vars), s, (abstr vars tm), c))
 end))
 
-let constr_id_of_sort = (fun sort -> (Support.Microsoft.FStar.Util.format1 "%s_constr_id" (strSort sort)))
+let constr_id_of_sort = (fun sort -> (Support.Microsoft.FStar.Util.format1 "%s\x5fconstr\x5fid" (strSort sort)))
 
 let fresh_token = (fun _413705 id -> (match (_413705) with
 | (tok_name, sort) -> begin
@@ -554,7 +554,7 @@ let constructor_to_decl = (fun _413711 -> (match (_413711) with
 | (name, projectors, sort, id) -> begin
 (let cdecl = DeclFun ((name, ((Support.List.map (Support.Prims.snd)) projectors), sort, Some ("Constructor")))
 in (let n_bvars = (Support.List.length projectors)
-in (let bvar_name = (fun i -> (Support.String.strcat "x_" (Support.Microsoft.FStar.Util.string_of_int i)))
+in (let bvar_name = (fun i -> (Support.String.strcat "x\x5f" (Support.Microsoft.FStar.Util.string_of_int i)))
 in (let bvar_index = (fun i -> (n_bvars - (i + 1)))
 in (let bvar = (fun i s -> (mkFreeV ((bvar_name i), s)))
 in (let bvars = ((Support.List.mapi (fun i _413725 -> (match (_413725) with
@@ -598,7 +598,7 @@ end
 end)
 in (let nm = (Support.String.strcat prefix (Support.Microsoft.FStar.Util.string_of_int n))
 in (let names = ((nm, s))::names
-in (let b = (Support.Microsoft.FStar.Util.format2 "(%s %s)" nm (strSort s))
+in (let b = (Support.Microsoft.FStar.Util.format2 "\x28%s %s\x29" nm (strSort s))
 in (names, (b)::binders, (n + 1))))))
 end)) (outer_names, [], start)) sorts)
 in (match (_413767) with
@@ -615,7 +615,7 @@ end)))
 let termToSmt = (fun t -> (let rec aux = (fun n names t -> (match (t.tm) with
 | Integer (i) -> begin
 if (i < 0) then begin
-(Support.Microsoft.FStar.Util.format1 "(- %s)" (Support.Microsoft.FStar.Util.string_of_int (- (i))))
+(Support.Microsoft.FStar.Util.format1 "\x28- %s\x29" (Support.Microsoft.FStar.Util.string_of_int (- (i))))
 end else begin
 (Support.Microsoft.FStar.Util.string_of_int i)
 end
@@ -630,7 +630,7 @@ end
 (op_to_string op)
 end
 | App ((op, tms)) -> begin
-(Support.Microsoft.FStar.Util.format2 "(%s %s)" (op_to_string op) ((Support.String.concat "\n") (Support.List.map (aux n names) tms)))
+(Support.Microsoft.FStar.Util.format2 "\x28%s %s\x29" (op_to_string op) ((Support.String.concat "\n") (Support.List.map (aux n names) tms)))
 end
 | Quant ((qop, pats, wopt, sorts, body)) -> begin
 (let _413802 = (name_binders_inner names n sorts)
@@ -642,14 +642,14 @@ in (let pats_str = (match (pats) with
 ""
 end
 | _ -> begin
-((Support.String.concat "\n") ((Support.List.map (fun pats -> (Support.Microsoft.FStar.Util.format1 "\n:pattern (%s)" (Support.String.concat " " (Support.List.map (fun p -> (Support.Microsoft.FStar.Util.format1 "%s" (aux n names p))) pats))))) pats))
+((Support.String.concat "\n") ((Support.List.map (fun pats -> (Support.Microsoft.FStar.Util.format1 "\n:pattern \x28%s\x29" (Support.String.concat " " (Support.List.map (fun p -> (Support.Microsoft.FStar.Util.format1 "%s" (aux n names p))) pats))))) pats))
 end)
 in (match ((pats, wopt)) with
 | (([]::[], None)) | (([], None)) -> begin
-(Support.Microsoft.FStar.Util.format3 "(%s (%s)\n %s)" (qop_to_string qop) binders (aux n names body))
+(Support.Microsoft.FStar.Util.format3 "\x28%s \x28%s\x29\n %s\x29" (qop_to_string qop) binders (aux n names body))
 end
 | _ -> begin
-(Support.Microsoft.FStar.Util.format5 "(%s (%s)\n (! %s\n %s %s))" (qop_to_string qop) binders (aux n names body) (weightToSmt wopt) pats_str)
+(Support.Microsoft.FStar.Util.format5 "\x28%s \x28%s\x29\n \x28! %s\n %s %s\x29\x29" (qop_to_string qop) binders (aux n names body) (weightToSmt wopt) pats_str)
 end)))
 end))
 end))
@@ -689,67 +689,67 @@ end)) (Support.Microsoft.FStar.Util.splitlines c)))
 end
 | DeclFun ((f, argsorts, retsort, c)) -> begin
 (let l = (Support.List.map strSort argsorts)
-in (Support.Microsoft.FStar.Util.format4 "%s(declare-fun %s (%s) %s)" (caption_to_string c) f (Support.String.concat " " l) (strSort retsort)))
+in (Support.Microsoft.FStar.Util.format4 "%s\x28declare-fun %s \x28%s\x29 %s\x29" (caption_to_string c) f (Support.String.concat " " l) (strSort retsort)))
 end
 | DefineFun ((f, arg_sorts, retsort, body, c)) -> begin
 (let _413858 = (name_binders arg_sorts)
 in (match (_413858) with
 | (names, binders) -> begin
 (let body = (inst (Support.List.map mkFreeV names) body)
-in (Support.Microsoft.FStar.Util.format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (Support.String.concat " " binders) (strSort retsort) (termToSmt body)))
+in (Support.Microsoft.FStar.Util.format5 "%s\x28define-fun %s \x28%s\x29 %s\n %s\x29" (caption_to_string c) f (Support.String.concat " " binders) (strSort retsort) (termToSmt body)))
 end))
 end
 | Assume ((t, c)) -> begin
-(Support.Microsoft.FStar.Util.format2 "%s(assert %s)" (caption_to_string c) (termToSmt t))
+(Support.Microsoft.FStar.Util.format2 "%s\x28assert %s\x29" (caption_to_string c) (termToSmt t))
 end
 | Eval (t) -> begin
-(Support.Microsoft.FStar.Util.format1 "(eval %s)" (termToSmt t))
+(Support.Microsoft.FStar.Util.format1 "\x28eval %s\x29" (termToSmt t))
 end
 | Echo (s) -> begin
-(Support.Microsoft.FStar.Util.format1 "(echo \"%s\")" s)
+(Support.Microsoft.FStar.Util.format1 "\x28echo \"%s\"\x29" s)
 end
 | CheckSat -> begin
-"(check-sat)"
+"\x28check-sat\x29"
 end
 | Push -> begin
-"(push)"
+"\x28push\x29"
 end
 | Pop -> begin
-"(pop)"
+"\x28pop\x29"
 end))
-and mkPrelude = (fun z3options -> (let basic = (Support.String.strcat z3options "(declare-sort Ref)\n(declare-fun Ref_constr_id (Ref) Int)\n\n(declare-sort String)\n(declare-fun String_constr_id (String) Int)\n\n(declare-sort Kind)\n(declare-fun Kind_constr_id (Kind) Int)\n\n(declare-sort Type)\n(declare-fun Type_constr_id (Type) Int)\n\n(declare-sort Term)\n(declare-fun Term_constr_id (Term) Int)\n(declare-datatypes () ((Fuel \n(ZFuel) \n(SFuel (prec Fuel)))))\n(declare-fun MaxIFuel () Fuel)\n(declare-fun MaxFuel () Fuel)\n(declare-fun PreKind (Type) Kind)\n(declare-fun PreType (Term) Type)\n(declare-fun Valid (Type) Bool)\n(declare-fun HasKind (Type Kind) Bool)\n(declare-fun HasType (Term Type) Bool)\n(define-fun  IsTyped ((x Term)) Bool\n(exists ((t Type)) (HasType x t)))\n(declare-fun HasTypeFuel (Fuel Term Type) Bool)\n(declare-fun ApplyEF (Term Fuel) Term)\n(declare-fun ApplyEE (Term Term) Term)\n(declare-fun ApplyET (Term Type) Term)\n(declare-fun ApplyTE (Type Term) Type)\n(declare-fun ApplyTT (Type Type) Type)\n(declare-fun Rank (Term) Int)\n(declare-fun Closure (Term) Term)\n(declare-fun ConsTerm (Term Term) Term)\n(declare-fun ConsType (Type Term) Term)\n(declare-fun ConsFuel (Fuel Term) Term)\n(declare-fun Precedes (Term Term) Type)\n(assert (forall ((e Term) (t Type))\n(!  (= (HasType e t)\n(HasTypeFuel MaxIFuel e t))\n:pattern ((HasType e t)))))\n(assert (forall ((f Fuel) (e Term) (t Type)) \n(! (= (HasTypeFuel (SFuel f) e t)\n(HasTypeFuel f e t))\n:pattern ((HasTypeFuel (SFuel f) e t)))))\n(assert (forall ((t1 Term) (t2 Term))\n(! (iff (Valid (Precedes t1 t2)) \n(< (Rank t1) (Rank t2)))\n:pattern ((Precedes t1 t2)))))\n(define-fun Prims.Precedes ((a Type) (b Type) (t1 Term) (t2 Term)) Type\n(Precedes t1 t2))\n")
-in (let constrs = (("String_const", (("String_const_proj_0", Int_sort))::[], String_sort, 0))::(("Kind_type", [], Kind_sort, 0))::(("Kind_arrow", (("Kind_arrow_id", Int_sort))::[], Kind_sort, 1))::(("Typ_fun", (("Typ_fun_id", Int_sort))::[], Type_sort, 1))::(("Typ_app", (("Typ_app_fst", Type_sort))::(("Typ_app_snd", Type_sort))::[], Type_sort, 2))::(("Typ_dep", (("Typ_dep_fst", Type_sort))::(("Typ_dep_snd", Term_sort))::[], Type_sort, 3))::(("Typ_uvar", (("Typ_uvar_fst", Int_sort))::[], Type_sort, 4))::(("Term_unit", [], Term_sort, 0))::(("BoxInt", (("BoxInt_proj_0", Int_sort))::[], Term_sort, 1))::(("BoxBool", (("BoxBool_proj_0", Bool_sort))::[], Term_sort, 2))::(("BoxString", (("BoxString_proj_0", String_sort))::[], Term_sort, 3))::(("BoxRef", (("BoxRef_proj_0", Ref_sort))::[], Term_sort, 4))::(("Exp_uvar", (("Exp_uvar_fst", Int_sort))::[], Term_sort, 5))::(("LexCons", (("LexCons_0", Term_sort))::(("LexCons_1", Term_sort))::[], Term_sort, 6))::[]
+and mkPrelude = (fun z3options -> (let basic = (Support.String.strcat z3options "\x28declare-sort Ref\x29\n\n\x28declare-fun Ref\x5fconstr\x5fid \x28Ref\x29 Int\x29\n\n\n\n\x28declare-sort String\x29\n\n\x28declare-fun String\x5fconstr\x5fid \x28String\x29 Int\x29\n\n\n\n\x28declare-sort Kind\x29\n\n\x28declare-fun Kind\x5fconstr\x5fid \x28Kind\x29 Int\x29\n\n\n\n\x28declare-sort Type\x29\n\n\x28declare-fun Type\x5fconstr\x5fid \x28Type\x29 Int\x29\n\n\n\n\x28declare-sort Term\x29\n\n\x28declare-fun Term\x5fconstr\x5fid \x28Term\x29 Int\x29\n\n\x28declare-datatypes \x28\x29 \x28\x28Fuel \n\n\x28ZFuel\x29 \n\n\x28SFuel \x28prec Fuel\x29\x29\x29\x29\x29\n\n\x28declare-fun MaxIFuel \x28\x29 Fuel\x29\n\n\x28declare-fun MaxFuel \x28\x29 Fuel\x29\n\n\x28declare-fun PreKind \x28Type\x29 Kind\x29\n\n\x28declare-fun PreType \x28Term\x29 Type\x29\n\n\x28declare-fun Valid \x28Type\x29 Bool\x29\n\n\x28declare-fun HasKind \x28Type Kind\x29 Bool\x29\n\n\x28declare-fun HasType \x28Term Type\x29 Bool\x29\n\n\x28define-fun  IsTyped \x28\x28x Term\x29\x29 Bool\n\n\x28exists \x28\x28t Type\x29\x29 \x28HasType x t\x29\x29\x29\n\n\x28declare-fun HasTypeFuel \x28Fuel Term Type\x29 Bool\x29\n\n\x28declare-fun ApplyEF \x28Term Fuel\x29 Term\x29\n\n\x28declare-fun ApplyEE \x28Term Term\x29 Term\x29\n\n\x28declare-fun ApplyET \x28Term Type\x29 Term\x29\n\n\x28declare-fun ApplyTE \x28Type Term\x29 Type\x29\n\n\x28declare-fun ApplyTT \x28Type Type\x29 Type\x29\n\n\x28declare-fun Rank \x28Term\x29 Int\x29\n\n\x28declare-fun Closure \x28Term\x29 Term\x29\n\n\x28declare-fun ConsTerm \x28Term Term\x29 Term\x29\n\n\x28declare-fun ConsType \x28Type Term\x29 Term\x29\n\n\x28declare-fun ConsFuel \x28Fuel Term\x29 Term\x29\n\n\x28declare-fun Precedes \x28Term Term\x29 Type\x29\n\n\x28assert \x28forall \x28\x28e Term\x29 \x28t Type\x29\x29\n\n\x28!  \x28= \x28HasType e t\x29\n\n\x28HasTypeFuel MaxIFuel e t\x29\x29\n\n:pattern \x28\x28HasType e t\x29\x29\x29\x29\x29\n\n\x28assert \x28forall \x28\x28f Fuel\x29 \x28e Term\x29 \x28t Type\x29\x29 \n\n\x28! \x28= \x28HasTypeFuel \x28SFuel f\x29 e t\x29\n\n\x28HasTypeFuel f e t\x29\x29\n\n:pattern \x28\x28HasTypeFuel \x28SFuel f\x29 e t\x29\x29\x29\x29\x29\n\n\x28assert \x28forall \x28\x28t1 Term\x29 \x28t2 Term\x29\x29\n\n\x28! \x28iff \x28Valid \x28Precedes t1 t2\x29\x29 \n\n\x28< \x28Rank t1\x29 \x28Rank t2\x29\x29\x29\n\n:pattern \x28\x28Precedes t1 t2\x29\x29\x29\x29\x29\n\n\x28define-fun Prims.Precedes \x28\x28a Type\x29 \x28b Type\x29 \x28t1 Term\x29 \x28t2 Term\x29\x29 Type\n\n\x28Precedes t1 t2\x29\x29\n")
+in (let constrs = (("String\x5fconst", (("String\x5fconst\x5fproj\x5f0", Int_sort))::[], String_sort, 0))::(("Kind\x5ftype", [], Kind_sort, 0))::(("Kind\x5farrow", (("Kind\x5farrow\x5fid", Int_sort))::[], Kind_sort, 1))::(("Typ\x5ffun", (("Typ\x5ffun\x5fid", Int_sort))::[], Type_sort, 1))::(("Typ\x5fapp", (("Typ\x5fapp\x5ffst", Type_sort))::(("Typ\x5fapp\x5fsnd", Type_sort))::[], Type_sort, 2))::(("Typ\x5fdep", (("Typ\x5fdep\x5ffst", Type_sort))::(("Typ\x5fdep\x5fsnd", Term_sort))::[], Type_sort, 3))::(("Typ\x5fuvar", (("Typ\x5fuvar\x5ffst", Int_sort))::[], Type_sort, 4))::(("Term\x5funit", [], Term_sort, 0))::(("BoxInt", (("BoxInt\x5fproj\x5f0", Int_sort))::[], Term_sort, 1))::(("BoxBool", (("BoxBool\x5fproj\x5f0", Bool_sort))::[], Term_sort, 2))::(("BoxString", (("BoxString\x5fproj\x5f0", String_sort))::[], Term_sort, 3))::(("BoxRef", (("BoxRef\x5fproj\x5f0", Ref_sort))::[], Term_sort, 4))::(("Exp\x5fuvar", (("Exp\x5fuvar\x5ffst", Int_sort))::[], Term_sort, 5))::(("LexCons", (("LexCons\x5f0", Term_sort))::(("LexCons\x5f1", Term_sort))::[], Term_sort, 6))::[]
 in (let bcons = ((Support.String.concat "\n") ((Support.List.map (declToSmt z3options)) ((Support.List.collect constructor_to_decl) constrs)))
-in (let lex_ordering = "\n(define-fun is-Prims.LexCons ((t Term)) Bool \n(is-LexCons t))\n(assert (forall ((x1 Term) (x2 Term) (y1 Term) (y2 Term))\n(iff (Valid (Precedes (LexCons x1 x2) (LexCons y1 y2)))\n(or (Valid (Precedes x1 y1))\n(and (= x1 y1)\n(Valid (Precedes x2 y2)))))))\n"
+in (let lex_ordering = "\n\x28define-fun is-Prims.LexCons \x28\x28t Term\x29\x29 Bool \n\n\x28is-LexCons t\x29\x29\n\n\x28assert \x28forall \x28\x28x1 Term\x29 \x28x2 Term\x29 \x28y1 Term\x29 \x28y2 Term\x29\x29\n\n\x28iff \x28Valid \x28Precedes \x28LexCons x1 x2\x29 \x28LexCons y1 y2\x29\x29\x29\n\n\x28or \x28Valid \x28Precedes x1 y1\x29\x29\n\n\x28and \x28= x1 y1\x29\n\n\x28Valid \x28Precedes x2 y2\x29\x29\x29\x29\x29\x29\x29\n"
 in (Support.String.strcat (Support.String.strcat basic bcons) lex_ordering))))))
 
-let mk_Kind_type = (mkApp ("Kind_type", []))
+let mk_Kind_type = (mkApp ("Kind\x5ftype", []))
 
-let mk_Typ_app = (fun t1 t2 -> (mkApp ("Typ_app", (t1)::(t2)::[])))
+let mk_Typ_app = (fun t1 t2 -> (mkApp ("Typ\x5fapp", (t1)::(t2)::[])))
 
-let mk_Typ_dep = (fun t1 t2 -> (mkApp ("Typ_dep", (t1)::(t2)::[])))
+let mk_Typ_dep = (fun t1 t2 -> (mkApp ("Typ\x5fdep", (t1)::(t2)::[])))
 
-let mk_Typ_uvar = (fun i -> (mkApp ("Typ_uvar", ((mkInteger i))::[])))
+let mk_Typ_uvar = (fun i -> (mkApp ("Typ\x5fuvar", ((mkInteger i))::[])))
 
-let mk_Exp_uvar = (fun i -> (mkApp ("Exp_uvar", ((mkInteger i))::[])))
+let mk_Exp_uvar = (fun i -> (mkApp ("Exp\x5fuvar", ((mkInteger i))::[])))
 
-let mk_Term_unit = (mkApp ("Term_unit", []))
+let mk_Term_unit = (mkApp ("Term\x5funit", []))
 
 let boxInt = (fun t -> (mkApp ("BoxInt", (t)::[])))
 
-let unboxInt = (fun t -> (mkApp ("BoxInt_proj_0", (t)::[])))
+let unboxInt = (fun t -> (mkApp ("BoxInt\x5fproj\x5f0", (t)::[])))
 
 let boxBool = (fun t -> (mkApp ("BoxBool", (t)::[])))
 
-let unboxBool = (fun t -> (mkApp ("BoxBool_proj_0", (t)::[])))
+let unboxBool = (fun t -> (mkApp ("BoxBool\x5fproj\x5f0", (t)::[])))
 
 let boxString = (fun t -> (mkApp ("BoxString", (t)::[])))
 
-let unboxString = (fun t -> (mkApp ("BoxString_proj_0", (t)::[])))
+let unboxString = (fun t -> (mkApp ("BoxString\x5fproj\x5f0", (t)::[])))
 
 let boxRef = (fun t -> (mkApp ("BoxRef", (t)::[])))
 
-let unboxRef = (fun t -> (mkApp ("BoxRef_proj_0", (t)::[])))
+let unboxRef = (fun t -> (mkApp ("BoxRef\x5fproj\x5f0", (t)::[])))
 
 let boxTerm = (fun sort t -> (match (sort) with
 | Int_sort -> begin
@@ -827,7 +827,7 @@ let mk_ApplyEE = (fun e e' -> (mkApp ("ApplyEE", (e)::(e')::[])))
 
 let mk_ApplyEF = (fun e f -> (mkApp ("ApplyEF", (e)::(f)::[])))
 
-let mk_String_const = (fun i -> (mkApp ("String_const", ((mkInteger i))::[])))
+let mk_String_const = (fun i -> (mkApp ("String\x5fconst", ((mkInteger i))::[])))
 
 let mk_Precedes = (fun x1 x2 -> (mk_Valid (mkApp ("Precedes", (x1)::(x2)::[]))))
 
