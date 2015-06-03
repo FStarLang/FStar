@@ -1,9 +1,6 @@
 .depend
-Microsoft_FStar_*
-FSharp_*
-System_*
-parse.*
-support.*
-fstarml*
+*.cm*
+*.o
+*.exe
 fstar/
 *.tar.gz

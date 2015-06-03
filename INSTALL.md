@@ -2,10 +2,10 @@
 
 - https://github.com/FStarLang/FStar/releases
 
-### Building F* from sources (.NET version) ###
+### Overview of the build process
 
 F* is written in a subset of F# that F* can also parse with a special flag.
-Therefore, the build process of F* is as follows:
+Therefore, the standard build process of F* is as follows:
 
 - build F* using the F# compiler
 - compile the source of F* with F* and emit OCaml code (optional)
@@ -13,6 +13,13 @@ Therefore, the build process of F* is as follows:
 
 The first step builds an F* compiler that runs on .NET. The last two steps build
 a native, more optimized binary of F*.
+
+It may be the case that it's easier for you to build F* directly from the OCaml
+sources. Therefore, for convenience, we keep a (possibly outdated) snapshot of
+the F* sources translated to OCaml. This allows you to bootstrap F* with just an
+OCaml compiler. See [Building F* using the OCaml snapshot].
+
+### Building F* from sources (.NET version) ###
 
 #### On Windows 7/8 using Visual Studio ####
 
@@ -88,56 +95,25 @@ Please note that 1) the Makefile is currently broken on Windows, and 2) the
     issuing `ulimit -s unlimited` in the terminal beforehand.
 
 
-### Building F* (native binary via OCaml) ###
-
-Once the .NET version of F* has been built using the F# compiler, an optional
-step is to translate the sources of F* into OCaml (using F*) and compile that
-output with OCaml to get a faster, native binary.
+### Building F* using the OCaml snapshot ###
 
 The current version of F* requires OCaml 4.02.
 
 #### Instructions for Windows ####
 
-0. Follow the steps above to compile the .NET version of F*.
+0. Install the [OCaml Installer for
+   Windows](http://protz.github.io/ocaml-installer/). Make sure you ask it to
+   install Cygwin -- it will just launch Cygwin's setup.exe with the right set
+   of packages pre-checked, to make sure you have everything you need.
 
-1. Since WODI has been discontinued, the only solution is to use the [OCaml
-   Installer for Windows](http://protz.github.io/ocaml-installer/). This
-   installer installs an outdated version of OCaml (4.01.0) -- this is going to
-   cause some difficulties.
+1. `make -C src/ocaml-output`
 
-2. Install Batteries from source. The current release of Batteries does *not*
-   compile with 4.01.0, so you need to build an older version. Open up a cygwin
-   shell and:
-      * `git clone https://github.com/ocaml-batteries-team/batteries-included`
-      * `cd batteries-included`
-      * `git checkout v2.2.0`
-      * `make && make install`
-
-3. Translate the F* sources from F# to OCaml using F*.
-      * `cd fstar/src`
-      * `make ocaml`
-
-4. Generate the parser
-      * `cd ocaml-output`
-      * `make parser`
-
-5. Patch the `support.ml` file because it no longer compiles with 4.01.0
-      * at the beginning of the file, add `module S = String`
-      * at line 1285, replace `Bytes.create maxlen` with
-        `S.make maxlen ' '`
-      * replace the next three occurrences of `Bytes` with `S`
-
-6. Finish the build
-      * `make`
-
-(Side note: this procedure generates a native F* binary , that is, a binary that
+(Side note: this procedure generates a native F* binary, that is, a binary that
 does *not* depend on `cygwin1.dll`, as since the installer above uses a
 *native* Windows port of OCaml.  Cygwin is just there to provide `make` and
 other utilities required for the build.)
 
 #### Instructions for Linux and Mac OS X ####
-
-0. Build the .NET version of F* using the instructions above.
 
 0. Install OCaml (version 4.02.0 or later)
    - Can be installed using either your package manager or using OPAM
@@ -156,9 +132,20 @@ other utilities required for the build.)
 
         $ opam install batteries
 
+2. Then run the following commands in `src/ocaml-output`:
+
+        $ make
+
+
+### Refreshing the OCaml snapshot
+
+0. Get an F* binary, either using the .NET build process, or the OCaml build
+   process. Make sure you follow the instructions above to get a working OCaml
+   setup.
+
 1. Once you satisfy the prerequisites for your platform,
-   first generate a set of files in OCaml syntax
-   by running the following commands in `$FSTAR_HOME/src`:
+   translate the F* sources from F# to OCaml using F*.
+   Run the following commands in `$FSTAR_HOME/src`:
 
         $ make ocaml
 
