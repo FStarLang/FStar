@@ -49,7 +49,7 @@ new_effect StSTATE = STATE_h smem
 kind Pre  = smem -> Type
 kind Post (a:Type) = a -> smem -> Type
 
-effect ST (a:Type) (pre:Pre) (post: (smem -> Post a)) =
+effect SST (a:Type) (pre:Pre) (post: (smem -> Post a)) =
         StSTATE a
               (fun (p:Post a) (h:smem) -> pre h /\ (forall a h1. (pre h  /\ post h a h1) ==> p a h1)) (* WP *)
               (fun (p:Post a) (h:smem) -> (forall a h1. (pre h  /\ post h a h1) ==> p a h1))          (* WLP *)
@@ -69,11 +69,11 @@ type allocateInBlock (#a:Type) (r: ref a) (h0 : heap) (h1 : heap) (init : a)   =
 
 
 
-assume val halloc:  #a:Type -> init:a -> ST (ref a)
+assume val halloc:  #a:Type -> init:a -> SST (ref a)
                                          (fun m -> True)
                                          (fun m0 r m1 -> allocateInBlock r (hp m0)  (hp m1) init /\ (st m0 == st m1) /\ refLoc r == InHeap)
 
-assume val salloc:  #a:Type -> init:a -> ST (ref a)
+assume val salloc:  #a:Type -> init:a -> SST (ref a)
      (fun m -> isNonEmpty (st m) == true) (*why is "== true" required here, but not at other places?*)
      (*Does F* have (user defined?) implicit coercions?*)
      (fun m0 r m1 ->
@@ -101,7 +101,7 @@ match (blockAtLoc m (refLoc r)) with
           | Some b -> Some (sel b r)
           | None -> None
 
-assume val read:  #a:Type -> r:(ref a) -> ST a
+assume val read:  #a:Type -> r:(ref a) -> SST a
 	  (fun m -> (refExistsInMem r m) == true)
     (fun m0 a m1 -> m0=m1 /\ loopkupRef r m0 = Some a)
 
@@ -110,13 +110,25 @@ assume val read:  #a:Type -> r:(ref a) -> ST a
 val sids : smem -> Tot (list sidt)
 let sids (m : smem) = mapT fst (st m)
 
-assume val newStackFrame:  unit -> ST unit
+assume val newStackFrame:  unit -> SST unit
     (fun m -> True)
     (fun m0 a m1 -> stail (st m1) = (st m0) /\ (isNonEmpty (st m1)) /\ (notIn (topstid m1) (sids m0)) /\ (topstb m1) = emp)
 
 
+    (* are there associative maps in FStar? *)
+    (*  proof by computation *)
+
 (*
-assume val write:  #a:Type -> r:(ref a) -> ST unit
+val writeMemAux : #a:Type -> r:(ref a) -> m:smem{(refExistsInMem r m)} -> a -> Tot smem
+let writeMemAux r m v =
+  match (refLoc r) with
+  | InHeap -> ((upd (hp m) r v), snd m)
+  | InStack s ->
+
+
+
+assume val write:  #a:Type -> r:(ref a) -> SST unit
 	    (fun m -> (refExistsInMem r m) == true)
       (fun m0 a m1 -> m0=m1 /\ loopkupRef r m0 = Some a)
+
 *)
