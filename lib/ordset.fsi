@@ -29,19 +29,17 @@ val eq_lemma: #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f
               -> Lemma (requires (forall x. mem f x s1 = mem f x s2))
                        (ensures s1 = s2)
 
-val mem_empty: #a:Type -> f:cmp a -> x:a
-               -> Lemma (requires True) (ensures (not (mem f x (empty f))))
-                  [SMTPat (mem f x (empty f))]
+val mem_empty: #a:Type -> f:cmp a
+               -> Lemma (requires True) (ensures (forall x. not (mem f x (empty f))))
+                  [SMTPat (empty f)]
 
-val mem_insert: #a:Type -> f:cmp a -> x:a -> s:ordset a f
+val insert_lem: #a:Type -> f:cmp a -> x:a -> s:ordset a f
                 -> Lemma (requires True)
-                         (ensures (mem f x (insert f x s)))
-                   [SMTPat (mem f x (insert f x s))]
+                         (ensures ((mem f x s       ==> (s = insert f x s)) /\
+                                   (not (mem f x s) ==> ((forall y. mem f y s ==> mem f y (insert f x s)) /\
+                                                         (forall y. mem f y (insert f x s) = (y = x || mem f y s))))))
+                   [SMTPat (insert f x s)]
                    
-val mem_insert_all: #a:Type -> f:cmp a -> x:a -> s:ordset a f -> y:a
-                    -> Lemma (requires (True))
-                             (ensures (mem f y (insert f x s) = (y = x || mem f y s)))
-                  
 val mem_union: #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f -> x:a
                -> Lemma (requires True)            
                         (ensures (mem f x (union f s1 s2) = (mem f x s1 || mem f x s2)))
@@ -52,13 +50,24 @@ val mem_intersect: #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f -> x:a
                             (ensures (mem f x (intersect f s1 s2) = (mem f x s1 && mem f x s2)))
                             [SMTPat (mem f x (intersect f s1 s2))]
 
-val mem_choose: #a:Type -> f:cmp a -> s:ordset a f
-                -> Lemma (requires True) (ensures ((is_Some (choose f s) ==> mem f (Some.v (choose f s)) s) /\
-                                                   (is_None (choose f s) ==> s = empty f)))
+val choose_lem: #a:Type -> f:cmp a -> s:ordset a f
+                -> Lemma (requires True)
+                   (ensures ((s = empty f       ==> is_None (choose f s)) /\
+                             (not (s = empty f) ==> (is_Some (choose f s) /\
+                                                     s = insert f (Some.v (choose f s)) (remove f (Some.v (choose f s)) s)))))
                    [SMTPat (choose f s)]
 
-val mem_remove: #a:Type -> f:cmp a -> x:a -> s:ordset a f
-                -> Lemma (requires True) (ensures (not (mem f x (remove f x s))))
-                   [SMTPat (mem f x (remove f x s))]
-
+val remove_lem: #a:Type -> f:cmp a -> x:a -> s:ordset a f
+                -> Lemma (requires True)
+                   (ensures ((not (mem f x s) ==> (s = remove f x s)) /\
+                             (mem f x s       ==> ((not (mem f x (remove f x s))) /\
+                                                   (forall y. mem f y s = (x = y || mem f y (remove f x s))) /\
+                                                   (forall y. mem f y (remove f x s) ==> mem f y s)))))
+                   [SMTPat (remove f x s)]
+                  
+val remove_size: #a:Type -> f:cmp a -> x:a -> s:ordset a f
+                 -> Lemma (requires (mem f x s))
+                          (ensures (size f s = size f (remove f x s) + 1))
+                    [SMTPat (size f (remove f x s))]
+                    
 (**********)

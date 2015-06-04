@@ -93,33 +93,45 @@ let rec eq_lemma f s1 s2 = match s1, s2 with
     else
       eq_helper f hd2 s1
 
-let mem_empty f x = ()
+let mem_empty f = ()
 
-let rec mem_insert f x s = match s with
+let rec insert_lem f x s = match s with
   | []     -> ()
-  | hd::tl -> if x = hd then () else mem_insert f x tl
-
-let rec mem_insert_all f x s y = match s with
-  | []     -> ()
-  | hd::tl ->
-    if x = hd then ()
-    else if f x hd then ()
-    else
-      if y = hd then () else mem_insert_all f x tl y
+  | hd::tl -> if x = hd then () else insert_lem f x tl
 
 let rec mem_union f s1 s2 x = match s1 with
   | []     -> ()
-  | hd::tl -> mem_union f tl (insert f hd s2) x; mem_insert_all f hd s2 x
+  | hd::tl -> mem_union f tl (insert f hd s2) x
 
 let rec mem_intersect f s1 s2 x = match s1 with
   | []     -> ()
-  | hd::tl ->
-    if mem f hd s2 then
-      (mem_insert_all f hd (intersect f tl s2) x; mem_intersect f tl s2 x)
-    else mem_intersect f tl s2 x
+  | hd::tl -> mem_intersect f tl s2 x
 
-let mem_choose f s = ()
+let choose_lem f s = match s with
+  | [] -> ()
+  | _  ->  
+    let Some e = choose f s in
+    eq_lemma f s (insert f e (remove f e s))
 
-let rec mem_remove f x s = match s with
+let rec remove_lem f x s = match s with
   | []     -> ()
-  | hd::tl -> if x = hd then hd_unique f s else mem_remove f x tl
+  | hd::tl -> if x = hd then hd_unique f s else remove_lem f x tl
+
+let rec remove_size f x s = match s with
+  | []     -> ()
+  | hd::tl ->
+    if x = hd then () else remove_size f x tl
+
+(**********)
+
+val insert_basic: #a:Type -> f:cmp a -> x:a -> s:ordset a f
+                  -> Lemma (ensures (mem f x (insert f x s)))
+let insert_basic f x s = ()
+
+val remove_basic: #a:Type -> f:cmp a -> x:a -> s:ordset a f
+                  -> Lemma (ensures (not (mem f x (remove f x s))))
+let remove_basic f x s = ()
+
+val choose_basic: #a:Type -> f:cmp a -> s:ordset a f{s =!= empty f}
+                  -> Lemma (ensures (is_Some (choose f s) /\ mem f (Some.v (choose f s)) s))
+let choose_basic f s = ()
