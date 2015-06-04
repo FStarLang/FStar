@@ -13,7 +13,7 @@ So what this shows is that CBN I-reduction would be unsound.
 
  *)
 
-val diverge : int -> Div int (requires True) (ensures (fun _ -> False))
+val diverge : int -> Div int (requires (True)) (ensures (fun _ -> False))
 let rec diverge x = diverge x
 
 val explode : int -> Dv int
@@ -51,6 +51,11 @@ let xxx f = f (); g ()   (* same as: g (f ()) *)
 val yyy : f:(unit -> Lemma (ensures False)) -> Lemma (ensures False)
 let yyy f = ()  <-- type error
 *)
+
+(*
+assume val f : (unit -> Tot (u:unit{False}))
+let yyy = assert(False)
+ *)
 
 (*
 Although xxx -strong-CBN-> yyy, yyy doesn't have the same type as xxx,
