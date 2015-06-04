@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst stack.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst stack.fst listset.fst
   --*)
 
 module StructuredMem
@@ -9,12 +9,18 @@ open Heap
 open Stack
 open Set
 open Prims
-
+open List
+open ListSet
 type sidt = nat
 
+(*How does List.memT work? is equality always decidable?*)
 
 (* should we way that the stack ids are unique and contained in the list of sidts : {contains (map snd (fst p)) (snd p)}*)
 type memStack = x:((Stack (sidt * heap)) * (list sidt))
+  {let stids = (mapT fst (fst x)) in
+    let idhistory = (snd x) in
+    (lsubset stids idhistory) && (noRepeats stids)}
+
 (* should we also include sizes of refs in order to enable reasoninag about memory usage of programs?*)
 (* what is the size of programs ?*)
 type smem = heap * memStack
@@ -59,7 +65,7 @@ assume val refLoc : #a:Type -> ref a -> Tot refLocType
 assume val blockAtLoc : smem -> refLocType  -> Tot (option heap)
 
 
-type allocateInBlock (#a:Type) (r: ref a) (h0 : heap) (h1 : heap) (init : a)   = not(contains h0 r) /\ contains h1 r /\  h1 == upd h0 r init
+type allocateInBlock (#a:Type) (r: ref a) (h0 : heap) (h1 : heap) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
 
 
 
@@ -77,10 +83,11 @@ assume val salloc:  #a:Type -> init:a -> ST (ref a)
           /\ stail (st m0) == stail (st m1) /\ (hp m0) == hp m1)
 
 
+
 val refExistsInMem : #a:Type -> (ref a) -> smem ->  Tot bool
 let refExistsInMem (#a:Type) (r:ref a) (m:smem) =
 match (blockAtLoc m (refLoc r)) with
-          | Some b -> contains b r
+          | Some b -> Heap.contains b r
           | None -> false
 
 (* it is surprising that sel always returns something; It might be tricky to implement it.
@@ -99,16 +106,13 @@ assume val read:  #a:Type -> r:(ref a) -> ST a
     (fun m0 a m1 -> m0=m1 /\ loopkupRef r m0 = Some a)
 
 
-open List
 
 val sids : smem -> Tot (list sidt)
 let sids (m : smem) = mapT fst (st m)
 
-assume val inList : sidt -> (list sidt) -> Tot bool
-
 assume val newStackFrame:  unit -> ST unit
     (fun m -> True)
-    (fun m0 a m1 -> stail (st m1) = (st m0) /\ (isNonEmpty (st m1)) /\ ((inList (topstid m1) (sids m0)) == false) /\ (topstb m1) = emp)
+    (fun m0 a m1 -> stail (st m1) = (st m0) /\ (isNonEmpty (st m1)) /\ (notIn (topstid m1) (sids m0)) /\ (topstb m1) = emp)
 
 
 (*
