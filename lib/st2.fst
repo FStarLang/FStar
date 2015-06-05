@@ -24,8 +24,8 @@ type comp (a:Type) (b:Type) (wp0:STWP a) (wp1:STWP b) (p:((a * b) -> heap2 -> Ty
       (snd h2))
     (fst h2)
 
-assume val compose2: a0:Type -> b0:Type -> wp0:(a0 -> STWP b0) -> wlp0:(a0 -> STWP b0)
-                  -> a1:Type -> b1:Type -> wp1:(a1 -> STWP b1) -> wlp1:(a1 -> STWP b1)
+assume val compose2: #a0:Type -> #b0:Type -> #wp0:(a0 -> STWP b0) -> #wlp0:(a0 -> STWP b0)
+                  -> #a1:Type -> #b1:Type -> #wp1:(a1 -> STWP b1) -> #wlp1:(a1 -> STWP b1)
                   -> =c0:(x0:a0 -> STATE b0 (wp0 x0) (wlp0 x0))
                   -> =c1:(x1:a1 -> STATE b1 (wp1 x1) (wlp1 x1))
                   -> x0:a0
@@ -173,7 +173,7 @@ let test_minus z = minus z z
 type monotonic = x:twice int -> Tot (y:(twice int){fst x <= snd x ==> fst y <= snd y})
 
 type k_sensitive (d:(int -> int -> Tot int)) (k:int) =
-   x:twice int -> Tot (y:(twice int){d (fst x) (snd x) <= d (fst y) (snd y)})
+   x:twice int -> Tot (y:(twice int){d (fst y) (snd y) <= k * (d (fst x) (snd x))})
 
 val foo : k:int -> twice int -> Tot (twice int)
 let foo k x = pair_map2 (fun k x -> k * x) (same k) x
@@ -185,15 +185,9 @@ val dist : int -> int -> Tot int
 let dist x1 x2 = let m = x1 - x2 in
               if m >= 0 then m else -m
 
-(* This doesn't work for obscure reasons *)
-(* val foo_k_sensitive : k:int{k>0} -> Tot (k_sensitive dist k) *)
-(* let foo_k_sensitive k = (fun x -> pair_map2 (fun k x -> k * x) (same k) x) *)
-(* Unknown assertion failed *)
-
-(* Unfolding k_sensitive makes it work again *)
-val foo_k_sensitive : k:int{k>0} -> x:twice int ->
-      Tot (y:(twice int){dist (fst x) (snd x) <= k * (dist (fst y) (snd y))})
+val foo_k_sensitive : k:int{k>0} -> Tot (k_sensitive dist k)
 let foo_k_sensitive k = (fun x -> pair_map2 (fun k x -> k * x) (same k) x)
+
 
 (* This does not work if I η-expand [noleak] in the body of noleak_ok *)
 let noleak (x,b) = if b then x := 1 else x := 1

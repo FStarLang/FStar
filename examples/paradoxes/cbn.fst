@@ -13,7 +13,7 @@ So what this shows is that CBN I-reduction would be unsound.
 
  *)
 
-val diverge : int -> Div int (requires True) (ensures (fun _ -> False))
+val diverge : int -> Div int (requires (True)) (ensures (fun _ -> False))
 let rec diverge x = diverge x
 
 val explode : int -> Dv int
@@ -49,8 +49,13 @@ let xxx f = f (); g ()   (* same as: g (f ()) *)
 
 (*
 val yyy : f:(unit -> Lemma (ensures False)) -> Lemma (ensures False)
-let yyy f = ()  <-- type error
+let yyy f = ()  <-- type error in the tool (now allowed in meta-theory!)
 *)
+
+(*
+assume val f : (unit -> Tot (u:unit{False}))
+let yyy = assert(False)
+ *)
 
 (*
 Although xxx -strong-CBN-> yyy, yyy doesn't have the same type as xxx,
@@ -63,7 +68,7 @@ Under (strong) CBV reduction xxx is stuck, because f is a variable
 
 (* This example can be ported one level up to type reduction *)
 
-val diverge' : unit -> Pure bool (requires False) (ensures (fun _ -> False))
+val diverge' : unit -> Pure bool (requires False) (ensures (fun _ -> True))
 let rec diverge' x = diverge' x
 
 type tg (u:unit{False}) = u':unit{diverge'()}

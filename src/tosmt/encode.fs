@@ -1604,7 +1604,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                         binder_decls@decls2@aux_decls@[decl_g;decl_g_tok], [eqn_g;eqn_g';eqn_f]@g_typing, env0 in
                         let decls, eqns, env0 = List.fold_left (fun (decls, eqns, env0) (gtok, ty, bs) -> 
                             let decls', eqns', env0 = encode_one_binding env0 gtok ty bs in
-                            decls'::decls, eqns'@eqns, env0) ([], [], env0) (List.zip3 gtoks typs bindings) in
+                            decls'::decls, eqns'@eqns, env0) ([decls], [], env0) (List.zip3 gtoks typs bindings) in
                         let prefix_decls, rest = decls |> List.flatten |> List.partition (function 
                             | DeclFun _ -> true
                             | _ -> false) in
@@ -1627,8 +1627,8 @@ and declare_top_level_let env x t t_norm =
     match try_lookup_lid env x with 
         | None -> (* Need to introduce a new name decl *)
             let decls, env = encode_free_var env x t t_norm [] in
-            let n, x, _ = lookup_lid env x in
-            (n, x), decls, env 
+            let n, x', _ = lookup_lid env x in
+            (n, x'), decls, env 
         | Some (n, x, _) -> (* already declared, only need an equation *)
             (n, x), [], env
 

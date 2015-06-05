@@ -1,3 +1,6 @@
+(*--build-config
+    other-files:ext.fst set.fsi
+  --*)
 (*
    Copyright 2008-2014 Nikhil Swamy, Aseem Rastogi,
                        Microsoft Research, University of Maryland
@@ -49,9 +52,6 @@ let lemma_equal_refl s1 s2 = ()
 
 (* ops *)
 let mem_subset s1 s2 =
-  assert (Equal (intersect s1 s2) s1);
-  (* this gives an error *)
-  (* lemma_equal_elim (intersect s1 s2) s1 *)
-  admit ()
+  cut (Equal (intersect s1 s2) s1)
 
 let subset_mem s1 s2 = ()
