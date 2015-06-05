@@ -13,23 +13,36 @@ open List
 open ListSet
 type sidt = nat
 
+
 (*How does List.memT work? is equality always decidable?*)
+type memStackAux = ((Stack (sidt * heap)) * (list sidt))
+
+val wellFormed : memStackAux -> Tot bool
+let wellFormed x =
+let stids = (mapT fst (fst x)) in
+  let idhistory = (snd x) in
+  (lsubset stids idhistory) && (noRepeats stids)
 
 (* should we way that the stack ids are unique and contained in the list of sidts : {contains (map snd (fst p)) (snd p)}*)
-type memStack = x:((Stack (sidt * heap)) * (list sidt))
-  {let stids = (mapT fst (fst x)) in
-    let idhistory = (snd x) in
-    (lsubset stids idhistory) && (noRepeats stids)}
+type memStack = x:memStackAux{wellFormed x}
+
 
 (* should we also include sizes of refs in order to enable reasoninag about memory usage of programs?*)
 (* what is the size of programs ?*)
 type smem = heap * memStack
+
 
 (*rename heap to memblock, and then hp to heap*)
 let hp (s : smem) = fst s
 
 val st : smem -> Tot (Stack (sidt * heap))
 let st (s : smem) = fst (snd s)
+
+val sids : smem -> Tot (list sidt)
+let sids (m : smem) = mapT fst (st m)
+
+val idHistory : smem -> Tot (list sidt)
+let idHistory (s : smem) = snd (snd s)
 
 let sid (s : (sidt * heap)) = fst s
 
@@ -107,31 +120,60 @@ assume val read:  #a:Type -> r:(ref a) -> SST a
 
 
 
-val sids : smem -> Tot (list sidt)
-let sids (m : smem) = mapT fst (st m)
-
 assume val newStackFrame:  unit -> SST unit
     (fun m -> True)
     (fun m0 a m1 -> stail (st m1) = (st m0) /\ (isNonEmpty (st m1)) /\ (notIn (topstid m1) (sids m0)) /\ (topstb m1) = emp)
 
 
-    (* are there associative maps in FStar? *)
-    (*  proof by computation *)
 
-(*
-val writeMemAux : #a:Type -> r:(ref a) -> m:smem{(refExistsInMem r m)} -> a -> Tot smem
+(* are there associative maps in FStar? *)
+(*  proof by computation *)
+
+
+val writeMemStack : #a:Type -> (ref a) -> (Stack (sidt * heap)) -> sidt -> a -> Tot (Stack (sidt * heap))
+let rec writeMemStack r ms s v =
+match ms with
+| Nil -> Nil
+| h::tl ->
+  (if (fst h = s) then ((fst h, (upd (snd h) r v))::tl) else h::(writeMemStack r tl s v))
+
+val writeMemStackLem : #a:Type -> r:(ref a) -> ms:(Stack (sidt * heap))
+  -> s:sidt -> v:a
+  -> Lemma ((mapT fst ms) = (mapT fst (writeMemStack r ms s v)))
+          (* [SMTPat (writeMemStack r ms s v)] *)
+let rec writeMemStackLem r ms s v =
+match ms with
+| Nil -> ()
+| h::tl ->   if (fst h = s) then () else (writeMemStackLem r tl s v)
+
+
+val writeMemStackLem2 : #a:Type -> r:(ref a)
+  -> his : (list sidt)
+  -> ms:(Stack (sidt * heap))
+  -> s:sidt -> v:a
+  -> Lemma
+      (requires (wellFormed (ms,his)))
+      (ensures (wellFormed ((writeMemStack r ms s v),his)))
+      [SMTPat (writeMemStack r ms s v)]
+let writeMemStackLem2 r his ms s v = admit ()
+(* ((writeMemStackLem r ms s v)) *)
+
+(* what is the analog of transport / eq_ind?*)
+
+
+val writeMemAux : #a:Type -> (ref a) -> m:smem -> a -> Tot smem
 let writeMemAux r m v =
   match (refLoc r) with
   | InHeap -> ((upd (hp m) r v), snd m)
-  | InStack s ->
+  | InStack s -> ((hp m), ((writeMemStack r (st m) s v), idHistory m))
 
 
 
-assume val write:  #a:Type -> r:(ref a) -> SST unit
+assume val write:  #a:Type -> r:(ref a) -> v:a ->
+  SST unit
 	    (fun m -> (refExistsInMem r m) == true)
-      (fun m0 a m1 -> m0=m1 /\ loopkupRef r m0 = Some a)
+      (fun m0 a m1 -> m0=m1 /\ (writeMemAux r m0 v) =  m1)
 
-*)
 
 
 kind SSTPost (a:Type) = STPost_h smem a
