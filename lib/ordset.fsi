@@ -4,11 +4,9 @@
 module OrdSet
 
 opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
-    (forall a. f a a)                                           (* reflexivity   *)
-    /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
-    /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
-    /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                       (* totality *)
-
+    (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2) (* anti-symmetry *)
+ /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3) (* transitivity  *)
+ /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                (* totality      *)
 
 type cmp (a:Type) = f:(a -> a -> Tot bool){total_order a f}
 
@@ -28,6 +26,7 @@ val size      : #a:Type -> f:cmp a -> ordset a f -> Tot nat
 val eq_lemma: #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f
               -> Lemma (requires (forall x. mem f x s1 = mem f x s2))
                        (ensures s1 = s2)
+                       [SMTPat (s1 = s2)]
 
 val mem_empty: #a:Type -> f:cmp a
                -> Lemma (requires True) (ensures (forall x. not (mem f x (empty f))))

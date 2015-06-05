@@ -32,7 +32,7 @@ let rec union_lemma f s1 s2 =
 val union_lemma': #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f
                   -> Lemma (requires (True))
                      (ensures (union f s1 s2 = union' f s1 s2))
-let rec union_lemma' f s1 s2 =
+let union_lemma' f s1 s2 =
   union_lemma f s1 s2;
   eq_lemma f (union f s1 s2) (union' f s1 s2)
 

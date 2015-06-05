@@ -5,10 +5,9 @@
 module OrdSet
 
 opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
-    (forall a. f a a)                                           (* reflexivity   *)
-    /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
-    /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
-    /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                       (* totality *)
+    (forall a1 a2. (f a1 a2 /\ f a2 a1)  ==> a1 = a2)  (* anti-symmetry *)
+ /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3) (* transitivity  *)
+ /\ (forall a1 a2. f a1 a2 \/ f a2 a1)                (* totality      *)
 
 type cmp (a:Type) = f:(a -> a -> Tot bool){total_order a f}
 
