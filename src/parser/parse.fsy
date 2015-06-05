@@ -104,8 +104,8 @@ open Microsoft.FStar.Parser.Util
 inputFragment:
   | file
 	  { Inl $1 }
-  | decls
-	  { Inr $1 }
+  | decl decls EOF
+	  { Inr ($1::$2) }
 
 file: 
   | maybe_pragma_light moduleList
