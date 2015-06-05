@@ -132,3 +132,9 @@ assume val write:  #a:Type -> r:(ref a) -> SST unit
       (fun m0 a m1 -> m0=m1 /\ loopkupRef r m0 = Some a)
 
 *)
+
+
+kind SSTPost (a:Type) = STPost_h smem a
+
+sub_effect
+  DIV   ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem) -> wp (fun a -> p a h)

@@ -12,17 +12,14 @@ open Prims
 open List
 open ListSet
 
-(*
 val helloWorld : unit -> SST unit  (fun m -> True) (fun m0 a m1 -> True)
-let helloWorld () = let x= halloc 0 in return ()
-*)
+let helloWorld () = (newStackFrame ())
 
 (*a good aspect of the current formulation is that the heap/stack difference
 only matters at the time of allocation. Functions like increment can be
 defined without without bothering about that distinction*)
 
-(*
+
+
 val increment : (ref int) -> SST unit  (fun m -> True) (fun m0 a m1 -> True)
-let increment r =  (newStackFrame ())
-What is wrong with this?
-*)
+let increment r = admit ()
