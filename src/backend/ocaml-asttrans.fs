@@ -51,7 +51,7 @@ let outmod = [
 (* A table to remember the names of the fields of constructors *)
 let record_constructors = smap_create<list<ident>>(17)
 (* A table to remember the arity of algebraic constructors *)
-let algebraic_constructors = smap_create<int * list<string>>(40)
+let algebraic_constructors = smap_create<(int * list<string>)>(40)
 let _ign = smap_add algebraic_constructors "Prims.Some" (1, ["v"])
 
 let rec in_ns = function
