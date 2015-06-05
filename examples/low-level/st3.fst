@@ -172,7 +172,7 @@ let writeMemAux r m v =
 assume val write:  #a:Type -> r:(ref a) -> v:a ->
   SST unit
 	    (fun m -> (refExistsInMem r m) == true)
-      (fun m0 a m1 -> m0=m1 /\ (writeMemAux r m0 v) =  m1)
+      (fun m0 a m1 -> (writeMemAux r m0 v) ==  m1)
 
 
 
