@@ -61,6 +61,7 @@ let infix_prim_ops = [
 let prim_uni_ops = [
     ("op_Negation", "not");
     ("op_Minus", "-");
+    ("op_Bang","!");
     ("exit", "exit");
     ("failwith", "failwith");
     ("raise", "raise");

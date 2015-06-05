@@ -51,7 +51,8 @@ let outmod = [
 (* A table to remember the names of the fields of constructors *)
 let record_constructors = smap_create<list<ident>>(17)
 (* A table to remember the arity of algebraic constructors *)
-let algebraic_constructors = smap_create<int>(40)
+let algebraic_constructors = smap_create<int * list<string>>(40)
+let _ign = smap_add algebraic_constructors "Prims.Some" (1, ["v"])
 
 let rec in_ns = function
 | [], _ -> true
@@ -61,7 +62,7 @@ let rec in_ns = function
 (* -------------------------------------------------------------------- *)
 let path_of_ns mlenv ns =
     let ns = List.map (fun x -> x.idText) ns in
-    let outsupport = fun (ns1,ns2) ->  if ns1 = ns2 then [] else [String.concat "_" ns2]
+    let outsupport = fun (ns1,ns2) -> if ns1 = ns2 then [] else [String.concat "_" ns2]
     
     (*function
     | x1 :: p1, x2 :: p2 when x1 = x2 -> outsupport (p1, p2)
@@ -76,9 +77,19 @@ let path_of_ns mlenv ns =
     | Some sns -> "Support" :: ns
 
 let mlpath_of_lident (mlenv : mlenv) (x : lident) : mlpath =
-    let ns = x.ns in
-    let x  = x.ident.idText in
-    (path_of_ns mlenv ns, x)
+    match x.str with
+    | "Prims.Some" -> ([], "Some")
+    | "Prims.None" -> ([], "None")
+    | "Prims.failwith" -> ([], "failwith")
+    | "ST.alloc" -> ([], "ref")
+    | "ST.read" -> (["Support";"Prims"], "op_Bang")
+    | "ST.op_ColonEquals" -> (["Support";"Prims"], "op_ColonEquals")
+    | _ ->
+      begin
+        let ns = x.ns in
+        let x  = x.ident.idText in
+        (path_of_ns mlenv ns, x)
+      end
 
 (* -------------------------------------------------------------------- *)
 type error =
@@ -544,8 +555,8 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
         | Some f -> MLE_Record (path_of_ns mlenv c.ns, List.zip (List.map (fun x -> x.idText) f) args)
         | None ->
           begin
-            match smap_try_find algebraic_constructors c.ident.idText with
-            | Some n when (n > List.length args) -> eta_expand_dataconst (mlpath_of_lident mlenv c) args (n-List.length args)
+            match smap_try_find algebraic_constructors c.str with
+            | Some (n,_) when (n > List.length args) -> eta_expand_dataconst (mlpath_of_lident mlenv c) args (n-List.length args)
             | _ -> MLE_CTor (mlpath_of_lident mlenv c, args)
           end
       in
@@ -593,14 +604,28 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             MLE_Var (lresolve lenv x.v.realname)
 
         | Exp_fvar (x, false) ->
-            if Util.starts_with x.v.ident.idText "is_" then
-                let sub = Util.substring_from x.v.ident.idText 3 in
+            let fid = x.v.ident.idText in
+            if Util.starts_with fid "is_" && String.length fid > 3 && Util.is_upper (Util.char_at fid 3) then
+                let sub = Util.substring_from fid 3 in
                 let mlid = fresh "_discr_" in
+                let rid = {x.v with ident = {x.v.ident with idText = sub}; str = sub} in
                 MLE_Fun([mlid], MLE_Match(MLE_Name([], idsym mlid), [
-                    MLP_CTor(mlpath_of_lident mlenv {x.v
-                      with ident={x.v.ident with idText = sub}; str=sub}, [MLP_Wild]), None, MLE_Const(MLC_Bool true) ;
+                    MLP_CTor(mlpath_of_lident mlenv rid, [MLP_Wild]), None, MLE_Const(MLC_Bool true);
                     MLP_Wild, None, MLE_Const(MLC_Bool false)]))
-            else MLE_Name (mlpath_of_lident mlenv x.v)
+            else begin
+                match smap_try_find algebraic_constructors x.v.nsstr with
+                | Some (_, projs) ->
+                    let mlid = fresh "_proj_" in
+                    let cargs = List.map (fun x -> MLP_Var(fresh x)) projs in
+                    let cn::cr = List.rev x.v.ns in
+                    let crstr = List.map (fun x->x.idText) cr in
+                    let rid = {ns=cr; ident={x.v.ident with idText=cn.idText}; nsstr=String.concat "." crstr; str=x.v.nsstr} in
+                    let cn = cn.idText in
+                    MLE_Fun([mlid], MLE_Match(MLE_Name([], idsym mlid), [
+                        MLP_CTor(mlpath_of_lident mlenv rid, cargs), None, MLE_Name ([], x.v.ident.idText);
+                    ]))
+                | None -> MLE_Name (mlpath_of_lident mlenv x.v)
+            end
 
         | Exp_fvar (x, true) ->
            mkCTor x.v []
@@ -786,8 +811,11 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
               end
 
             | Sig_datacon (x, ty, pr, _, _, rg) ->
-               let arity = List.length (type_vars ty.n) in
-               smap_add algebraic_constructors x.ident.idText arity;
+               let actr = Util.mk_ref 0 in
+               let anames = List.map (function
+                    | None -> Util.incr actr;  "_"^(Util.string_of_int !actr)
+                    | Some x -> Util.incr actr; x.ppname.idText) (type_vars ty.n) in
+               smap_add algebraic_constructors x.str (List.length anames, anames);
                (types, (x.ident.idText, (ty, pr)) :: ctors)
 
             | Sig_typ_abbrev (x, tps, k, body, _, rg) ->
