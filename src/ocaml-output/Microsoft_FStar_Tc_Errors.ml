@@ -7,9 +7,9 @@ let ill_kinded_type = "Ill-kinded type"
 
 let totality_check = "This term may not terminate"
 
-let diag = (fun r msg -> (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "%s \x28Diagnostic\x29: %s\n" (Support.Microsoft.FStar.Range.string_of_range r) msg)))
+let diag = (fun r msg -> (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "%s (Diagnostic): %s\n" (Support.Microsoft.FStar.Range.string_of_range r) msg)))
 
-let warn = (fun r msg -> (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "%s \x28Warning\x29: %s\n" (Support.Microsoft.FStar.Range.string_of_range r) msg)))
+let warn = (fun r msg -> (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "%s (Warning): %s\n" (Support.Microsoft.FStar.Range.string_of_range r) msg)))
 
 let num_errs = (Support.Microsoft.FStar.Util.mk_ref 0)
 
@@ -58,9 +58,9 @@ let get_err_count = (fun _215258 -> (match (_215258) with
 (Support.ST.read num_errs)
 end))
 
-let unexpected_signature_for_monad = (fun env m k -> (Support.Microsoft.FStar.Util.format2 "Unexpected signature for monad \"%s\". Expected a kind of the form \x28\'a:Type => WP \'a => WP \'a => Type\x29;\ngot %s" m.Microsoft_FStar_Absyn_Syntax.str (Microsoft_FStar_Tc_Normalize.kind_norm_to_string env k)))
+let unexpected_signature_for_monad = (fun env m k -> (Support.Microsoft.FStar.Util.format2 "Unexpected signature for monad \"%s\". Expected a kind of the form (\'a:Type => WP \'a => WP \'a => Type);\ngot %s" m.Microsoft_FStar_Absyn_Syntax.str (Microsoft_FStar_Tc_Normalize.kind_norm_to_string env k)))
 
-let expected_a_term_of_type_t_got_a_function = (fun env msg t e -> (Support.Microsoft.FStar.Util.format3 "Expected a term of type \"%s\";\ngot a function \"%s\" \x28%s\x29" (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t) (Microsoft_FStar_Absyn_Print.exp_to_string e) msg))
+let expected_a_term_of_type_t_got_a_function = (fun env msg t e -> (Support.Microsoft.FStar.Util.format3 "Expected a term of type \"%s\";\ngot a function \"%s\" (%s)" (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t) (Microsoft_FStar_Absyn_Print.exp_to_string e) msg))
 
 let unexpected_implicit_argument = "Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"
 
@@ -78,7 +78,7 @@ end
 (Support.Microsoft.FStar.Util.format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t1) (Microsoft_FStar_Absyn_Print.exp_to_string e) (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env t2))
 end))
 
-let occurs_check = "Possibly infinite typ \x28occurs check failed\x29"
+let occurs_check = "Possibly infinite typ (occurs check failed)"
 
 let unification_well_formedness = "Term or type of an unexpected sort"
 
@@ -118,7 +118,7 @@ end
 | Support.Microsoft.FStar.Util.Inr (x) -> begin
 (Microsoft_FStar_Absyn_Print.strBvd x)
 end))) v)))
-in (Support.Microsoft.FStar.Util.format2 "Every alternative of an \'or\' pattern must bind the same variables; here one branch binds \x28\"%s\"\x29 and another \x28\"%s\"\x29" (vars v1) (vars v2))))
+in (Support.Microsoft.FStar.Util.format2 "Every alternative of an \'or\' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")" (vars v1) (vars v2))))
 
 let name_and_result = (fun c -> (match (c.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Total (t) -> begin
@@ -146,7 +146,7 @@ let expected_ghost_expression = (fun e c -> (Support.Microsoft.FStar.Util.format
 
 let expected_effect_1_got_effect_2 = (fun c1 c2 -> (Support.Microsoft.FStar.Util.format2 "Expected a computation with effect %s; but it has effect %s\n" (Microsoft_FStar_Absyn_Print.sli c1) (Microsoft_FStar_Absyn_Print.sli c2)))
 
-let failed_to_prove_specification_of = (fun l lbls -> (Support.Microsoft.FStar.Util.format2 "Failed to prove specification of %s; assertions at \x5b%s\x5d may fail" (Microsoft_FStar_Absyn_Print.lbname_to_string l) ((Support.String.concat ", ") lbls)))
+let failed_to_prove_specification_of = (fun l lbls -> (Support.Microsoft.FStar.Util.format2 "Failed to prove specification of %s; assertions at [%s] may fail" (Microsoft_FStar_Absyn_Print.lbname_to_string l) ((Support.String.concat ", ") lbls)))
 
 let failed_to_prove_specification = (fun lbls -> (match (lbls) with
 | [] -> begin

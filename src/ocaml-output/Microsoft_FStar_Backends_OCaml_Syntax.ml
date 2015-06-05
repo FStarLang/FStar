@@ -16,7 +16,7 @@ end))
 let ptsym = (fun _493760 -> (match (_493760) with
 | (p, s) -> begin
 (let s = if ((Support.Char.lowercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
-(Support.String.strcat "l\x5f\x5f" s)
+(Support.String.strcat "l__" s)
 end else begin
 s
 end
@@ -26,7 +26,7 @@ end))
 let ptctor = (fun _493764 -> (match (_493764) with
 | (p, s) -> begin
 (let s = if ((Support.Char.uppercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
-(Support.String.strcat "U\x5f\x5f" s)
+(Support.String.strcat "U__" s)
 end else begin
 s
 end
