@@ -160,6 +160,15 @@ tuareg-mode) to edit F\* files locally.
 [source code on github]: http://github.com/FStarLang/FStar
 [instructions]: https://github.com/FStarLang/FStar/blob/master/INSTALL.md
 
+A new github project now also provides an [interactive mode] for
+type-checking F* code, built as a package for the [Atom editor]. You need
+an installation of Atom, and it's a good idea to also install [atom-fstar]
+separately for syntax highlighting.
+
+[Atom editor]: https://atom.io/
+[interactive mode]: https://github.com/FStarLang/fstar-interactive
+[atom-fstar]: https://github.com/FStarLang/atom-fstar
+
 **A note on compatibility with F\#**: The syntax of F\* and F\#
 overlap on a common subset. In fact, the F\* compiler is currently
 programmed entirely in this intersection. Aside from this, the
