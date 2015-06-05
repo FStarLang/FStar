@@ -114,6 +114,12 @@ let read_lid     = p2l ["ST"; "read"]
 let alloc_lid    = p2l ["ST"; "alloc"]
 let op_ColonEq   = p2l ["ST"; "op_ColonEquals"]
 
+(* Constants for sets and ref sets *)
+let set_empty = p2l ["Set"; "empty"]
+let heap_ref  = p2l ["Heap"; "Ref"]
+let set_singleton = p2l ["Set"; "singleton"]
+let set_union = p2l ["Set"; "union"]
+
 (* monad constants *)
 let pure_effect_lid = pconst "PURE"
 let tot_effect_lid  = pconst "Tot"

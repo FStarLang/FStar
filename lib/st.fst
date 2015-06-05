@@ -42,11 +42,10 @@ effect St (a:Type) (pre:Pre) (post: (heap -> Post a)) = STATE a
 assume val recall: #a:Type -> r:ref a -> STATE unit
                                          (fun 'p h -> Heap.contains h r ==> 'p () h)
                                          (fun 'p h -> Heap.contains h r ==> 'p () h)
-                                         
-assume val alloc:  #a:Type -> init:a -> ST (ref a)
-                                         (fun h -> True)
-                                         (fun h0 r h1 -> not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)
-                                         (modifies no_refs)
+
+assume val alloc:  #a:Type -> init:a -> Prims.ST (ref a)
+                                                 (fun h -> True)
+                                                 (fun h0 r h1 -> not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)
 
 assume val read:  #a:Type -> r:ref a -> STATE a
                                          (fun 'p h -> 'p (sel h r) h)
@@ -60,5 +59,4 @@ assume val op_ColonEquals:  #a:Type -> r:ref a -> v:a -> Prims.ST unit
                                                  (fun h -> True)
                                                  (fun h0 x h1 -> h1==upd h0 r v)
 
-
-assume val get: unit -> ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h=h1) (modifies no_refs)
+assume val get: unit -> Prims.ST heap (fun h -> True) (fun h0 h h1 -> h0==h1 /\ h=h1)
