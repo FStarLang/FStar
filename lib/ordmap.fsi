@@ -29,6 +29,9 @@ val remove  : #key:Type -> #value:Type -> f:cmp key -> key
               -> ordmap key value f -> Tot (ordmap key value f)
 val choose  : #key:Type -> #value:Type -> f:cmp key -> ordmap key value f
               -> Tot (option (key * value))
+              
+val size    : #key:Type -> #value:Type -> f:cmp key -> ordmap key value f
+              -> Tot nat
                        
 val eq_lemma: #key:Type -> #value:Type -> f:cmp key
               -> m1:ordmap key value f -> m2:ordmap key value f
@@ -71,11 +74,18 @@ val dom_empty: #key:Type -> #value:Type -> f:cmp key
 
 val choose_lem: #key:Type -> #value:Type -> f:cmp key -> m:ordmap key value f
   -> Lemma (requires True)
-           (ensures ((dom f m = OrdSet.empty f       ==> (choose f m = None)) /\
-                     (not (dom f m = OrdSet.empty f) ==> (is_Some (choose f m) /\
-                                                          (select f (fst (Some.v (choose f m))) m =
-                                                                Some (snd (Some.v (choose f m)))) /\
-                                                          (m = update f (fst (Some.v (choose f m)))
-                                                                        (snd (Some.v (choose f m)))
-                                                                        (remove f (fst (Some.v (choose f m))) m))))))
+           (ensures ((m = empty f       ==> (choose f m = None)) /\
+                     (not (m = empty f) ==> ((is_Some (choose f m)) /\
+                                             (select f (fst (Some.v (choose f m))) m =
+                                                    Some (snd (Some.v (choose f m)))) /\
+                                             (m = update f (fst (Some.v (choose f m)))
+                                                           (snd (Some.v (choose f m)))
+                                                           (remove f (fst (Some.v (choose f m))) m))))))
+           [SMTPat (choose f m)]
+                                                                        
+val size_remove_lem: #key:Type -> #value:Type -> f:cmp key -> k:key
+                     -> m:ordmap key value f
+                     -> Lemma (requires (contains f k m))
+                              (ensures (size f m = 1 + size f (remove f k m)))
+                        [SMTPat (size f (remove f k m))]
                                                              

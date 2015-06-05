@@ -44,6 +44,8 @@ let choose f (| s, g |) =
     | None   -> None
     | Some k -> Some (k, Some.v (g k))
 
+let size f (| s, g |) = OrdSet.size f s
+
 open FunctionalExtensionality
 
 let eq_lemma f m1 m2 =
@@ -79,6 +81,7 @@ let dom_empty_helper f m =
 let dom_empty f m = dom_empty_helper f m
 
 let choose_lem f m =
+  dom_empty f m;
   let c = choose f m in
   let (| s, g |) = m in
   match c with
@@ -91,5 +94,5 @@ let choose_lem f m =
       let _ = cut (FEq g g'') in
       ()
 
-
+let size_remove_lem f k m = ()
 
