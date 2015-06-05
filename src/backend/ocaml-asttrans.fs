@@ -47,6 +47,12 @@ let outmod = [
     ["Microsoft"; "FStar"; "Parser"; "Util"];
 ]
 
+(* -------------------------------------------------------------------- *)
+(* A table to remember the names of the fields of constructors *)
+let record_constructors = smap_create<list<ident>>(17)
+(* A table to remember the arity of algebraic constructors *)
+let algebraic_constructors = smap_create<int>(40)
+
 let rec in_ns = function
 | [], _ -> true
 | x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
@@ -479,12 +485,6 @@ let mlscheme_of_ty (mlenv : mlenv) (rg : range) (ty : typ) : mltyscheme =
     (tparams, mlty_of_ty mlenv tenv (rg, ty))
 
 (* -------------------------------------------------------------------- *)
-(* A table to remember the names of the fields of constructors *)
-let record_constructors = smap_create<list<ident>>(17)
-(* A table to remember the arity of algebraic constructors *)
-let algebraic_constructors = smap_create<int>(40)
-
-(* -------------------------------------------------------------------- *)
 let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (le : lenv) (p : pat) : lenv * mlpattern =
     match p.v with
     | Pat_cons (x, ps) -> begin
@@ -580,7 +580,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
                                            MLE_Proj (arg, (path_of_ns mlenv (List.rev cons), c.v.ident.idText))
                         | Some f, arg::args -> let ids = List.map (fun x -> x.idText) f in
                           //                     assert (List.mem c.v.ident.idText ids); 
-                                               MLE_App (MLE_Proj (arg, (path_of_ns mlenv (List.rev cons), c.v.ident.idText)), args)
+                                           MLE_App (MLE_Proj (arg, (path_of_ns mlenv (List.rev cons), c.v.ident.idText)), args)
                         | _, _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args))
                   | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args))
 
@@ -593,7 +593,14 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             MLE_Var (lresolve lenv x.v.realname)
 
         | Exp_fvar (x, false) ->
-            MLE_Name (mlpath_of_lident mlenv x.v)
+            if Util.starts_with x.v.ident.idText "is_" then
+                let sub = Util.substring_from x.v.ident.idText 3 in
+                let mlid = fresh "_discr_" in
+                MLE_Fun([mlid], MLE_Match(MLE_Name([], idsym mlid), [
+                    MLP_CTor(mlpath_of_lident mlenv {x.v
+                      with ident={x.v.ident with idText = sub}; str=sub}, [MLP_Wild]), None, MLE_Const(MLC_Bool true) ;
+                    MLP_Wild, None, MLE_Const(MLC_Bool false)]))
+            else MLE_Name (mlpath_of_lident mlenv x.v)
 
         | Exp_fvar (x, true) ->
            mkCTor x.v []
