@@ -55,24 +55,13 @@ let topstb ss = snd (topst ss)
 val topstid : (s:smem{isNonEmpty (st s)}) ->  Tot sidt
 let topstid ss = fst (topst ss)
 
-
-new_effect StSTATE = STATE_h smem
-
-
-kind Pre  = smem -> Type
-kind Post (a:Type) = a -> smem -> Type
-
-effect SST (a:Type) (pre:Pre) (post: (smem -> Post a)) =
-        StSTATE a
-              (fun (p:Post a) (h:smem) -> pre h /\ (forall a h1. (pre h  /\ post h a h1) ==> p a h1)) (* WP *)
-              (fun (p:Post a) (h:smem) -> (forall a h1. (pre h  /\ post h a h1) ==> p a h1))          (* WLP *)
-
-
 type refLocType =
   | InHeap : refLocType
   | InStack : id:sidt -> refLocType
 
 assume val refLoc : #a:Type -> ref a -> Tot refLocType
+
+new_effect StSTATE = STATE_h smem
 
 val stackBlockAtLoc : sidt  -> (Stack (sidt * heap)) -> Tot (option heap)
 let rec stackBlockAtLoc id sp =
@@ -86,26 +75,6 @@ let blockAtLoc m rl =
 match rl with
 | InHeap -> Some (hp m)
 | InStack id -> stackBlockAtLoc id (st m)
-
-
-type allocateInBlock (#a:Type) (r: ref a) (h0 : heap) (h1 : heap) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
-
-
-(*withNewStackFrame [funBody]*)
-
-assume val halloc:  #a:Type -> init:a -> SST (ref a)
-                                         (fun m -> True)
-                                         (fun m0 r m1 -> allocateInBlock r (hp m0)  (hp m1) init /\ (st m0 == st m1) /\ refLoc r == InHeap)
-
-assume val salloc:  #a:Type -> init:a -> SST (ref a)
-     (fun m -> b2t (isNonEmpty (st m))) (*why is "== true" required here, but not at other places?*)
-     (*Does F* have (user defined?) implicit coercions?*)
-     (fun m0 r m1 ->
-          (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
-          /\ allocateInBlock r (topstb m0) (topstb m1) init
-          /\ refLoc r == InStack (topstid m0) /\ (topstid m0 = topstid m1)
-          /\ stail (st m0) == stail (st m1) /\ (hp m0) == hp m1)
-
 
 val refExistsInMem : #a:Type -> (ref a) -> smem ->  Tot bool
 let refExistsInMem (#a:Type) (r:ref a) (m:smem) =
@@ -122,20 +91,6 @@ val loopkupRef : #a:Type -> r:(ref a) -> m:smem{(refExistsInMem r m) == true} ->
 let loopkupRef r m =
 match (blockAtLoc m (refLoc r)) with
           | Some b -> (sel b r)
-
-
-assume val read:  #a:Type -> r:(ref a) -> SST a
-	  (fun m -> (refExistsInMem r m) == true)
-    (fun m0 a m1 -> m0=m1 /\ (refExistsInMem r m0) /\ loopkupRef r m0 = a)
-
-
-(*make sure that the ids are monotone *)
-assume val newStackFrame:  unit -> SST unit
-    (fun m -> True)
-    (fun m0 a m1 -> stail (st m1) = (st m0) /\ (isNonEmpty (st m1)) /\ (notIn (topstid m1) (sids m0)) /\ (topstb m1) = emp)
-
-
-
 (* are there associative maps in FStar? *)
 (*  proof by computation *)
 
@@ -162,7 +117,7 @@ val writeMemStackLem2 : #a:Type -> r:(ref a)
   -> s:sidt -> v:a
   -> Lemma
       (requires (wellFormed (ms,his)))
-      (ensures (wellFormed ((writeMemStack r ms s v),his)))
+      (ensures (wellFormed (writeMemStack r ms s v,his)))
       [SMTPat (writeMemStack r ms s v)]
 let writeMemStackLem2 r his ms s v = admit ()
 (* ((writeMemStackLem r ms s v)) *)
@@ -207,19 +162,62 @@ Lemma (requires (refExistsInMem r m))
 let rec writeMemAuxPreservesExists r m v =  (admit ())
 
 
+type allocateInBlock (#a:Type) (r: ref a) (h0 : heap) (h1 : heap) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
+
+kind Pre  = smem -> Type
+kind Post (a:Type) = a -> smem -> Type
+
+effect SST (a:Type) (pre:Pre) (post: (smem -> Post a)) =
+        StSTATE a
+              (fun (p:Post a) (h:smem) -> pre h /\ (forall a h1. (pre h  /\ post h a h1) ==> p a h1)) (* WP *)
+              (fun (p:Post a) (h:smem) -> (forall a h1. (pre h  /\ post h a h1) ==> p a h1))          (* WLP *)
+
+assume val halloc:  #a:Type -> init:a -> SST (ref a)
+                                         (fun m -> True)
+                                         (fun m0 r m1 -> allocateInBlock r (hp m0)  (hp m1) init /\ (snd m0 = snd m1) /\ refLoc r == InHeap)
+
+assume val salloc:  #a:Type -> init:a -> SST (ref a)
+     (fun m -> b2t (isNonEmpty (st m))) (*why is "== true" required here, but not at other places?*)
+     (*Does F* have (user defined?) implicit coercions?*)
+     (fun m0 r m1 ->
+          (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
+          /\ allocateInBlock r (topstb m0) (topstb m1) init
+          /\ refLoc r == InStack (topstid m0) /\ (topstid m0 = topstid m1)
+          /\ stail (st m0) == stail (st m1) /\ hp m0 = hp m1 /\ idHistory m0 = idHistory m1)
+
+
+
+assume val read:  #a:Type -> r:(ref a) -> SST a
+	  (fun m -> (refExistsInMem r m) == true)
+    (fun m0 a m1 -> m0=m1 /\ (refExistsInMem r m0) /\ loopkupRef r m0 = a)
+
+(*should extend to types with decidable equality*)
+val is1SufficOf : list sidt -> list sidt -> Tot bool
+let is1SufficOf lsmall lbig =
+match lbig with
+| [] -> false
+| h::tl -> tl=lsmall
+
+(*make sure that the ids are monotone *)
+assume val newStackFrame:  unit -> SST unit
+    (fun m -> True)
+    (fun m0 a m1 -> stail (st m1) = (st m0) /\ (isNonEmpty (st m1)) /\ topstb m1 = emp /\ is1SufficOf (idHistory m0)  (idHistory m1))
+
 
 assume val write:  #a:Type -> r:(ref a) -> v:a ->
   SST unit
 	    (fun m -> (refExistsInMem r m) == true)
-      (fun m0 a m1 -> (refExistsInMem r m1) /\ (writeMemAux r m0 v) ==  m1)
+      (fun m0 a m1 -> (refExistsInMem r m1) /\ (writeMemAux r m0 v) =  m1 /\ (writeMemAux r m0 v) =  m1 /\ idHistory m0 = idHistory m1)
 
 
-val readAfterWrite : #a:Type -> r:(ref a) -> v:a -> m:smem ->
-  Lemma (requires (refExistsInMem r m))
-        (ensures ((refExistsInMem r m) /\ loopkupRef r (writeMemAux r m v) == v))
-let readAfterWrite = admit ()
-
+(** Injection of DIV effect into the new effect, mostly copied from prims.fst*)
 kind SSTPost (a:Type) = STPost_h smem a
 
 sub_effect
   DIV   ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem) -> wp (fun a -> p a h)
+
+(** algebraic properties of memory operations*)
+val readAfterWrite : #a:Type -> r:(ref a) -> v:a -> m:smem ->
+  Lemma (requires (refExistsInMem r m))
+        (ensures ((refExistsInMem r m) /\ loopkupRef r (writeMemAux r m v) == v))
+let readAfterWrite = admit ()
