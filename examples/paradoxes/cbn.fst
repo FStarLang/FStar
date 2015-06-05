@@ -49,7 +49,7 @@ let xxx f = f (); g ()   (* same as: g (f ()) *)
 
 (*
 val yyy : f:(unit -> Lemma (ensures False)) -> Lemma (ensures False)
-let yyy f = ()  <-- type error
+let yyy f = ()  <-- type error in the tool (now allowed in meta-theory!)
 *)
 
 (*

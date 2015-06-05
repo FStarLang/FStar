@@ -35,3 +35,5 @@ let cfalse_elim pf =
   match pf with
   | _ -> 76 (* silly, fails type checking *)
 *)
+
+type cnot p = cimp p cfalse
