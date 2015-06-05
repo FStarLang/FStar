@@ -15,12 +15,13 @@ type sidt = nat
 
 
 (*How does List.memT work? is equality always decidable?*)
-type memStackAux = ((Stack (sidt * heap)) * (list sidt))
+type memStackAux = Stack (sidt * heap) * list sidt
+
 
 val wellFormed : memStackAux -> Tot bool
 let wellFormed x =
-let stids = (mapT fst (fst x)) in
-  let idhistory = (snd x) in
+let stids = mapT fst (fst x) in
+  let idhistory = snd x in
   (lsubset stids idhistory) && (noRepeats stids)
 
 type memStack = x:memStackAux{wellFormed x}
@@ -90,17 +91,18 @@ match rl with
 type allocateInBlock (#a:Type) (r: ref a) (h0 : heap) (h1 : heap) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
 
 
+(*withNewStackFrame [funBody]*)
 
 assume val halloc:  #a:Type -> init:a -> SST (ref a)
                                          (fun m -> True)
                                          (fun m0 r m1 -> allocateInBlock r (hp m0)  (hp m1) init /\ (st m0 == st m1) /\ refLoc r == InHeap)
 
 assume val salloc:  #a:Type -> init:a -> SST (ref a)
-     (fun m -> isNonEmpty (st m) == true) (*why is "== true" required here, but not at other places?*)
+     (fun m -> b2t (isNonEmpty (st m))) (*why is "== true" required here, but not at other places?*)
      (*Does F* have (user defined?) implicit coercions?*)
      (fun m0 r m1 ->
           (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
-          /\ allocateInBlock r (topstb m0) (topstb m0) init
+          /\ allocateInBlock r (topstb m0) (topstb m1) init
           /\ refLoc r == InStack (topstid m0) /\ (topstid m0 = topstid m1)
           /\ stail (st m0) == stail (st m1) /\ (hp m0) == hp m1)
 
@@ -127,7 +129,7 @@ assume val read:  #a:Type -> r:(ref a) -> SST a
     (fun m0 a m1 -> m0=m1 /\ (refExistsInMem r m0) /\ loopkupRef r m0 = a)
 
 
-
+(*make sure that the ids are monotone *)
 assume val newStackFrame:  unit -> SST unit
     (fun m -> True)
     (fun m0 a m1 -> stail (st m1) = (st m0) /\ (isNonEmpty (st m1)) /\ (notIn (topstid m1) (sids m0)) /\ (topstb m1) = emp)
@@ -137,17 +139,16 @@ assume val newStackFrame:  unit -> SST unit
 (* are there associative maps in FStar? *)
 (*  proof by computation *)
 
-
 val writeMemStack : #a:Type -> (ref a) -> (Stack (sidt * heap)) -> sidt -> a -> Tot (Stack (sidt * heap))
 let rec writeMemStack r ms s v =
 match ms with
-| Nil -> Nil
+| [] -> []
 | h::tl ->
   (if (fst h = s) then ((fst h, (upd (snd h) r v))::tl) else h::(writeMemStack r tl s v))
 
 val writeMemStackLem : #a:Type -> r:(ref a) -> ms:(Stack (sidt * heap))
   -> s:sidt -> v:a
-  -> Lemma ((mapT fst ms) = (mapT fst (writeMemStack r ms s v)))
+  -> Lemma (ensures ((mapT fst ms) = (mapT fst (writeMemStack r ms s v))))
           (* [SMTPat (writeMemStack r ms s v)] *)
 let rec writeMemStackLem r ms s v =
 match ms with
