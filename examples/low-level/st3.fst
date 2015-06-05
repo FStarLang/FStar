@@ -23,12 +23,11 @@ let stids = (mapT fst (fst x)) in
   let idhistory = (snd x) in
   (lsubset stids idhistory) && (noRepeats stids)
 
-(* should we way that the stack ids are unique and contained in the list of sidts : {contains (map snd (fst p)) (snd p)}*)
 type memStack = x:memStackAux{wellFormed x}
 
 
-(* should we also include sizes of refs in order to enable reasoninag about memory usage of programs?*)
-(* what is the size of programs ?*)
+(* Should we also include sizes of refs in order to enable reasoninag about memory usage of programs?*)
+(* What is the size of functions? Does it make even make sense to store a function at a reference? Would it be possible to transpile such a construct? *)
 type smem = heap * memStack
 
 
@@ -74,8 +73,18 @@ type refLocType =
 
 assume val refLoc : #a:Type -> ref a -> Tot refLocType
 
-(*it shpuld be possible to define this*)
-assume val blockAtLoc : smem -> refLocType  -> Tot (option heap)
+val stackBlockAtLoc : sidt  -> (Stack (sidt * heap)) -> Tot (option heap)
+let rec stackBlockAtLoc id sp =
+  match sp with
+  | Nil -> None
+  | h::tl -> if (id=(fst h)) then Some (snd h) else stackBlockAtLoc id tl
+
+
+val blockAtLoc : smem -> refLocType  -> Tot (option heap)
+let blockAtLoc m rl =
+match rl with
+| InHeap -> Some (hp m)
+| InStack id -> stackBlockAtLoc id (st m)
 
 
 type allocateInBlock (#a:Type) (r: ref a) (h0 : heap) (h1 : heap) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
@@ -96,7 +105,6 @@ assume val salloc:  #a:Type -> init:a -> SST (ref a)
           /\ stail (st m0) == stail (st m1) /\ (hp m0) == hp m1)
 
 
-
 val refExistsInMem : #a:Type -> (ref a) -> smem ->  Tot bool
 let refExistsInMem (#a:Type) (r:ref a) (m:smem) =
 match (blockAtLoc m (refLoc r)) with
@@ -108,15 +116,15 @@ match (blockAtLoc m (refLoc r)) with
    of the type (ref False) . For example, the memory allocation operator, which creates a new (ref 'a)
    requires an initial value of type 'a
 *)
-val loopkupRef : #a:Type -> (ref a) -> smem ->  Tot (option a)
-let loopkupRef (#a:Type) (r:ref a) (m:smem) =
+val loopkupRef : #a:Type -> r:(ref a) -> m:smem{(refExistsInMem r m) == true} ->  Tot a
+let loopkupRef r m =
 match (blockAtLoc m (refLoc r)) with
-          | Some b -> Some (sel b r)
-          | None -> None
+          | Some b -> (sel b r)
+
 
 assume val read:  #a:Type -> r:(ref a) -> SST a
 	  (fun m -> (refExistsInMem r m) == true)
-    (fun m0 a m1 -> m0=m1 /\ loopkupRef r m0 = Some a)
+    (fun m0 a m1 -> m0=m1 /\ (refExistsInMem r m0) /\ loopkupRef r m0 = a)
 
 
 
@@ -159,7 +167,30 @@ let writeMemStackLem2 r his ms s v = admit ()
 (* ((writeMemStackLem r ms s v)) *)
 
 (* what is the analog of transport / eq_ind?*)
+val refExistsInStack : #a:Type -> (ref a)
+  -> (Stack (sidt * heap)) -> Tot bool
+let refExistsInStack r s =
+match (refLoc r) with
+| InHeap -> false
+| InStack id -> match  (stackBlockAtLoc id s)  with
+                | Some b -> Heap.contains b r
+                | None -> false
 
+
+
+val writeMemStackExists : #a:Type -> rw:(ref a) -> r: (ref a)
+  -> ms:(Stack (sidt * heap))
+  -> s:sidt -> v:a
+  -> Lemma
+      (requires (refExistsInStack r ms))
+      (ensures (refExistsInStack r (writeMemStack rw ms s v)))
+      [SMTPat (writeMemStack rw ms s v)]
+let rec writeMemStackExists rw r ms s v =
+match ms with
+| Nil -> ()
+| h::tl ->   if (fst h = s) then () else (admit ())
+
+(* ((writeMemStackLem r ms s v)) *)
 
 val writeMemAux : #a:Type -> (ref a) -> m:smem -> a -> Tot smem
 let writeMemAux r m v =
@@ -168,13 +199,24 @@ let writeMemAux r m v =
   | InStack s -> ((hp m), ((writeMemStack r (st m) s v), idHistory m))
 
 
+val writeMemAuxPreservesExists :  #a:Type -> r:(ref a) -> m:smem -> v:a ->
+Lemma (requires (refExistsInMem r m))
+      (ensures (refExistsInMem r (writeMemAux r m v)))
+      [SMTPat (writeMemAux r m v)]
+let rec writeMemAuxPreservesExists r m v =  (admit ())
+
+
 
 assume val write:  #a:Type -> r:(ref a) -> v:a ->
   SST unit
 	    (fun m -> (refExistsInMem r m) == true)
-      (fun m0 a m1 -> (writeMemAux r m0 v) ==  m1)
+      (fun m0 a m1 -> (refExistsInMem r m1) /\ (writeMemAux r m0 v) ==  m1)
 
 
+val readAfterWrite : #a:Type -> r:(ref a) -> v:a -> m:smem ->
+  Lemma (requires (refExistsInMem r m))
+        (ensures ((refExistsInMem r m) /\ loopkupRef r (writeMemAux r m v) == v))
+let readAfterWrite = admit ()
 
 kind SSTPost (a:Type) = STPost_h smem a
 
