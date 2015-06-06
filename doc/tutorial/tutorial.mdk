@@ -1873,8 +1873,8 @@ val bar : l:list int -> Tot int (decreases %[l;1])
 The metrics of `foo` and `bar` are both lexicographic tuples with the
 argument `l` in the first position and `0` or `1` in the second. The
 call from `foo` to `bar` decreases `l`, while the call from `bar` to
-`foo` keeps `l` the same, but decreases the second component from `0`
-to `1`.
+`foo` keeps `l` the same, but decreases the second component from `1`
+to `0`.
 
 
 # Putting the pieces together
@@ -1905,7 +1905,10 @@ Given a sorting algorithm `sort`, we would like to prove the following
 property, where `mem` is the list membership function from the earlier
 exercise on lists (Section [#sec-basic-lists]).
 
-    sorted (sort l) /\ forall i. mem i l <==> mem i (sort l)
+    sorted (sort l) /\ ( forall i. mem i l <==> mem i (sort l) )
+
+We acknowledge that this property is not strictly strong enough, as it
+allows to add duplicate values to the sorted list.
 
 ### Implementing Quicksort
 
@@ -1954,7 +1957,7 @@ We'll verify `sort` intrinsically, although we'll have to use some
 additional lemmas. Here's a first-cut at a specification. Try asking
 F\* to prove it.
 
-    val sort_0: l:list int -> Tot (m:list int{sorted m /\  forall i. mem i l <==> mem i m})
+    val sort_0: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l <==> mem i m) })
 
 ~CH
 Is this an exercise or not? :)
