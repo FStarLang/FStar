@@ -77,21 +77,7 @@ match rl with
 | InHeap -> Some (hp m)
 | InStack id -> stackBlockAtLoc id (st m)
 
-val refExistsInMem : #a:Type -> (ref a) -> smem ->  Tot bool
-let refExistsInMem (#a:Type) (r:ref a) (m:smem) =
-match (blockAtLoc m (refLoc r)) with
-          | Some b -> Heap.contains b r
-          | None -> false
 
-(* it is surprising that sel always returns something; It might be tricky to implement it.
-   What prevents me from creating a ref of an empty type? Perhaps it is impossible to create a member
-   of the type (ref False) . For example, the memory allocation operator, which creates a new (ref 'a)
-   requires an initial value of type 'a
-*)
-val loopkupRef : #a:Type -> r:(ref a) -> m:smem{(refExistsInMem r m) == true} ->  Tot a
-let loopkupRef r m =
-match (blockAtLoc m (refLoc r)) with
-          | Some b -> (sel b r)
 (* are there associative maps in FStar? *)
 (*  proof by computation *)
 
@@ -112,40 +98,6 @@ match ms with
 | h::tl ->   if (fst h = s) then () else (writeMemStackLem r tl s v)
 
 
-val writeMemStackLem4 :
- his : (list sidt)
-  -> ms1:(Stack sidt)
-  -> ms2:(Stack sidt)
-  -> Lemma
-      (requires (wellFormedAux  ms1 his) /\ ms1 = ms2)
-      (ensures (wellFormedAux  ms2 his))
-let writeMemStackLem4 his ms1 ms2 = ()
-
-val writeMemStackLem5 :
- his : (list sidt)
-  //-> s:Stack sidt
-  -> ms1:(Stack (sidt * heap))
-  -> ms2:(Stack (sidt * heap)){mapT fst ms1 = mapT fst ms2}
-  -> Lemma
-      (requires (wellFormedAux  (mapT fst ms1) his))// /\ (mapT fst ms1 = mapT fst ms2))
-      (ensures (wellFormedAux  (mapT fst ms2) his))
-let writeMemStackLem5 his ms1 ms2 =
-  let x = mapT fst ms1 in
-  let y = mapT fst ms2 in
-  //let _ = assert (wellFormedAux (mapT fst ms1) his) in
-  let _ = assert (wellFormedAux x his) in
-  let _ = assert (x = y) in
-  admit ()
-
-val writeMemStackLem2 :
- his : (list sidt)
-  -> ms1:(Stack (sidt * heap))
-  -> ms2:(Stack (sidt * heap)){mapT fst ms2 = mapT fst ms1}
-  -> Lemma
-      (requires (wellFormed (ms1,his)) /\ (mapT fst ms1 = mapT fst ms2))
-      (ensures (wellFormed (ms2,his)))
-let writeMemStackLem2 his ms1 ms2 = (admit ())
-
 
 val writeMemStackLem3 : #a:Type -> r:(ref a)
   -> his : (list sidt)
@@ -156,10 +108,33 @@ val writeMemStackLem3 : #a:Type -> r:(ref a)
       (ensures (wellFormed (writeMemStack r ms s v,his)))
       [SMTPat (writeMemStack r ms s v)]
 let writeMemStackLem3 r his ms s v =
-(writeMemStackLem r ms s v); (writeMemStackLem2 his ms (writeMemStack r ms s v))
-(* () *)
-
+(writeMemStackLem r ms s v) ; admit ()
 (* what is the analog of transport / eq_ind?*)
+
+val refExistsInStack : #a:Type -> (ref a)
+  -> id:sidt -> (Stack (sidt * heap)) -> Tot bool
+let refExistsInStack r id ms =
+match  (stackBlockAtLoc id ms)  with
+                | Some b -> Heap.contains b r
+                | None -> false
+
+val refExistsInMem : #a:Type -> (ref a) -> smem ->  Tot bool
+let refExistsInMem (#a:Type) (r:ref a) (m:smem) =
+match (refLoc r) with
+| InHeap -> Heap.contains (hp m) r
+| InStack id -> refExistsInStack r id (st m)
+
+(* it is surprising that sel always returns something; It might be tricky to implement it.
+   What prevents me from creating a ref of an empty type? Perhaps it is impossible to create a member
+   of the type (ref False) . For example, the memory allocation operator, which creates a new (ref 'a)
+   requires an initial value of type 'a
+*)
+val loopkupRef : #a:Type -> r:(ref a) -> m:smem{(refExistsInMem r m) == true} ->  Tot a
+let loopkupRef r m =
+match (blockAtLoc m (refLoc r)) with
+          | Some b -> (sel b r)
+
+(*
 val refExistsInStack : #a:Type -> (ref a)
   -> (Stack (sidt * heap)) -> Tot bool
 let refExistsInStack r s =
@@ -168,20 +143,20 @@ match (refLoc r) with
 | InStack id -> match  (stackBlockAtLoc id s)  with
                 | Some b -> Heap.contains b r
                 | None -> false
-
+*)
 
 
 val writeMemStackExists : #a:Type -> rw:(ref a) -> r: (ref a)
   -> ms:(Stack (sidt * heap))
-  -> s:sidt -> v:a
+  -> id:sidt -> v:a
   -> Lemma
-      (requires (refExistsInStack r ms))
-      (ensures (refExistsInStack r (writeMemStack rw ms s v)))
-      [SMTPat (writeMemStack rw ms s v)]
-let rec writeMemStackExists rw r ms s v =
+      (requires (refExistsInStack r id ms))
+      (ensures (refExistsInStack r  id (writeMemStack rw ms id v)))
+      [SMTPat (writeMemStack rw ms id v)]
+let rec writeMemStackExists rw r ms id v =
 match ms with
 | Nil -> ()
-| h::tl ->   if (fst h = s) then () else (admit ())
+| h::tl ->   if (fst h = id) then () else ((writeMemStackExists rw r tl id v))
 
 (* ((writeMemStackLem r ms s v)) *)
 
@@ -196,7 +171,7 @@ val writeMemAuxPreservesExists :  #a:Type -> r:(ref a) -> m:smem -> v:a ->
 Lemma (requires (refExistsInMem r m))
       (ensures (refExistsInMem r (writeMemAux r m v)))
       [SMTPat (writeMemAux r m v)]
-let rec writeMemAuxPreservesExists r m v =  (admit ())
+let rec writeMemAuxPreservesExists r m v =  ()
 
 
 type allocateInBlock (#a:Type) (r: ref a) (h0 : heap) (h1 : heap) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
