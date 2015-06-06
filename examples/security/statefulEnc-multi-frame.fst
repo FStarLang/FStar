@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq --z3timeout 10 --max_fuel 1 --max_ifuel 1 --initial_ifuel 1 --max_ifuel 1;
+    options:--admit_fsi Set --admit_fsi Seq --z3timeout 15 --max_fuel 1 --max_ifuel 1 --initial_ifuel 1 --max_ifuel 1;
     other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/heap.fst ../../lib/st.fst ../../lib/seq.fsi ../../lib/list.fst
   --*)
 (* A standalone experiment corresponding to building a stateful encryption on
@@ -220,13 +220,13 @@ type st_fp_inv (h:heap) =
    /\ basic_fp =!= st_fp       //two footprints are anti-aliased
    /\ (forall s1.
           List.mem s1 (Heap.sel h st_fp)
-          ==> (forall s2. List.mem s2 (Heap.sel h st_fp) ==> s1 = s2 \/ distinct_sti s1 s2)
-               /\ in_basic_fp (BI (StEnc.key (STI.e s1)) (StDec.key (STI.d s1))) h
-               /\ st_inv (STI.e s1) (STI.d s1) h
+          ==> (forall s2. List.mem s2 (Heap.sel h st_fp) ==> s1 = s2 \/ distinct_sti s1 s2) //pairwise distinct
+               /\ in_basic_fp (BI (StEnc.key (STI.e s1)) (StDec.key (STI.d s1))) h //the key is in the basic invariant
+               /\ st_inv (STI.e s1) (STI.d s1) h //and in the st invariant
                /\ (forall (a:Type) (r:ref a).
                     Set.mem (Ref r) (sti_refs s1)
-                    ==> Heap.contains h r
-                        /\ r =!= basic_fp
+                    ==> Heap.contains h r        //every ref is in the heap
+                        /\ r =!= basic_fp        //and doesn't alias the footprints
                         /\ r =!= st_fp))
 
 let refs_in_e (e:st_encryptor) = !{StEnc.log e, StEnc.ctr e, Enc.log (StEnc.key e)}
@@ -240,7 +240,6 @@ val stateful_gen : unit -> St sti
               /\ modifies !{basic_fp, st_fp} h0 h1
               /\ (forall (a:Type) (r:ref a). Set.mem (Ref r) (sti_refs b)
                     ==> Fresh h0 r h1)))
-#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
 let stateful_gen () =
   let BI e d = gen () in
   let l = ref emp in
@@ -261,10 +260,10 @@ type dec_in_st_fp (d:st_decryptor) (h:heap) =
 val stateful_enc : e:st_encryptor -> p:plain -> St cipher
   (requires (fun h -> st_fp_inv h /\ enc_in_st_fp e h))
   (ensures (fun h0 c h1 ->
-                  st_fp_inv h1
-                 /\
-                 modifies (refs_in_e e) h0 h1
-                 /\ Heap.sel h1 (StEnc.log e) = snoc (Heap.sel h0 (StEnc.log e)) (StEntry (Heap.sel h0 (StEnc.ctr e)) p c)))
+                 st_fp_inv h1
+                 /\ modifies (refs_in_e e) h0 h1
+                 /\ Heap.sel h1 (StEnc.log e) //exactly plain added to the end of the log
+                    = snoc (Heap.sel h0 (StEnc.log e)) (StEntry (Heap.sel h0 (StEnc.ctr e)) p c)))
 let stateful_enc e p =
   let h0 = get() in
   let i = !(StEnc.ctr e) in
@@ -290,8 +289,6 @@ val stateful_dec: ad:nat -> d:st_decryptor -> c:cipher -> St (option plain)
                    /\ (is_Some p ==>
                           ((Heap.sel h1 (StDec.ctr d) = r + 1)
                            /\ StEntry.p (Seq.index log r) = Some.v p))))))
-#reset-options
-//#set-options "--max_fuel 1 --max_ifuel 1 --initial_fuel 1 --initial_ifuel 1"
 let stateful_dec ad d c =
   let i = !(StDec.ctr d) in
   cut(trigger i);
