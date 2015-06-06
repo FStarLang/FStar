@@ -739,7 +739,6 @@ val factorial: nat -> Tot int
 val factorial: nat -> Tot nat
 val factorial: nat -> Tot (x:int{x > 0})
 val factorial: int -> int
-val factorial: int -> x:int{x > 0}
 ~~~
 ~~
 Try describing in words what each of those types mean. Rank the types
@@ -824,11 +823,10 @@ Now that we've seen dependent functions, we can elaborate a bit more
 on the general form of function types, which have the following form:
 
 ~ Center
-`:x_1:t_1 -> ... -> x_n:t_n[x_1 ... x_{n-1}] -> E t[x_1 ... x_n]`
+`:x_1:t_1 -> ... -> x_n:t_n[x_1 ... x\(~n-1~\)] -> E t[x_1 ... x_n]`
 ~
-
 This is to say that each of a function's formal parameters are named
-`:x_i`; and each of these names is in scope to the right of the first
+`x\(~i~\) `; and each of these names is in scope to the right of the first
 arrow that follows it. The notation `:t[x_1 ... x_m]` indicates that
 the variables `:x_1 ... x_m` may appear free in `:t`.
 
@@ -839,7 +837,7 @@ This is not really monotonicity, as Giuseppe Castagna remarked
 during our POPL tutorial. `factorial_increases`?
 ~
 
-How shall we specify that `factorial` is strictly monotone when it's
+How shall we specify that `factorial` is strictly monotone when its
 argument is greater than 2? Here's a first cut:
 
     val factorial_is_monotone_1: x:(y:nat{y > 2}) -> Tot (u:unit{factorial x > x})
@@ -983,7 +981,7 @@ Here's another proof of `factorial_is_monotone`:
 
 Calling `using_induction_hyp` with `factorial_is_monotone` as argument
 causes F\* to encode the induction hypothesis as a quantified logical
-formula and feed it to Z3, which is simple examples can take care of
+formula and feed it to Z3, which in simple examples can take care of
 the rest.
 
 ## Under the hood: `:bool` versus `:Type` { #sec-bool-versus-type }
@@ -1275,8 +1273,6 @@ it is:
       | [] -> ()
       | hd::tl -> rev_involutive tl; snoc_cons (reverse tl) hd
 
-In the `Cons` case of `rev_involutive` we are explicitly applying not just
-the induction hypothesis but also the `snoc_cons` lemma we proved above.
 In the `Cons` case of `rev_involutive` we are explicitly applying not just
 the induction hypothesis but also the `snoc_cons` lemma we proved above.
 
@@ -1601,7 +1597,7 @@ relations below):
    which is only a _partial_ order.
 
 2. **The subterm ordering on inductive types**: For any pure term `e` of
-    an inductive type `T`, if `v=D e1 ... en` we include `e_i << e`, for
+    an inductive type `T`, if `e=D e1 ... en` we include `e_i << e`, for
     all `i`. That is, the sub-terms of a well-typed constructed term
     precede the constructed term. (The exception to this rule is if `T`
     is an instance of `lexPair`).
@@ -1707,8 +1703,9 @@ is terminating and has type:
 F* gives this function a default termination metric, so this expands out to:
 
     ackermann : m:nat -> n:nat -> Tot nat (decreases %[m;n])
-
-When type-checking `ackermann`, F\* uses the following more
+    
+The `decreases` clause will be discussed in the next section. In this
+example it leads to the F\* type-checker using the following more
 restrictive type for the recursive calls in the body of `ackermann`:
 
     ackermann: m':nat
@@ -1722,7 +1719,7 @@ previous arguments according to the refinement formula above.
 
 * For the call at line 3, we have to show that `%[(m - 1);1] << %[m;n]`.
 This works out, since `m - 1 << m` according to the integer ordering, and
-we can diregard the rest of the terms.
+we can disregard the rest of the terms.
 
 * The call at line 4 verifies for the same reason---the first argument
 decreases.
