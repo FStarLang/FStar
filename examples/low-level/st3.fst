@@ -17,12 +17,13 @@ type sidt = nat
 (*How does List.memT work? is equality always decidable?*)
 type memStackAux = Stack (sidt * heap) * list sidt
 
+val wellFormedAux : list sidt -> list sidt -> Tot bool
+let  wellFormedAux stids idhistory = (lsubset stids idhistory) && (noRepeats stids)
 
 val wellFormed : memStackAux -> Tot bool
 let wellFormed x =
 let stids = mapT fst (fst x) in
-  let idhistory = snd x in
-  (lsubset stids idhistory) && (noRepeats stids)
+  let idhistory = snd x in (wellFormedAux stids idhistory)
 
 type memStack = x:memStackAux{wellFormed x}
 
@@ -111,7 +112,42 @@ match ms with
 | h::tl ->   if (fst h = s) then () else (writeMemStackLem r tl s v)
 
 
-val writeMemStackLem2 : #a:Type -> r:(ref a)
+val writeMemStackLem4 :
+ his : (list sidt)
+  -> ms1:(Stack sidt)
+  -> ms2:(Stack sidt)
+  -> Lemma
+      (requires (wellFormedAux  ms1 his) /\ ms1 = ms2)
+      (ensures (wellFormedAux  ms2 his))
+let writeMemStackLem4 his ms1 ms2 = ()
+
+val writeMemStackLem5 :
+ his : (list sidt)
+  //-> s:Stack sidt
+  -> ms1:(Stack (sidt * heap))
+  -> ms2:(Stack (sidt * heap)){mapT fst ms1 = mapT fst ms2}
+  -> Lemma
+      (requires (wellFormedAux  (mapT fst ms1) his))// /\ (mapT fst ms1 = mapT fst ms2))
+      (ensures (wellFormedAux  (mapT fst ms2) his))
+let writeMemStackLem5 his ms1 ms2 =
+  let x = mapT fst ms1 in
+  let y = mapT fst ms2 in
+  //let _ = assert (wellFormedAux (mapT fst ms1) his) in
+  let _ = assert (wellFormedAux x his) in
+  let _ = assert (x = y) in
+  admit ()
+
+val writeMemStackLem2 :
+ his : (list sidt)
+  -> ms1:(Stack (sidt * heap))
+  -> ms2:(Stack (sidt * heap)){mapT fst ms2 = mapT fst ms1}
+  -> Lemma
+      (requires (wellFormed (ms1,his)) /\ (mapT fst ms1 = mapT fst ms2))
+      (ensures (wellFormed (ms2,his)))
+let writeMemStackLem2 his ms1 ms2 = (admit ())
+
+
+val writeMemStackLem3 : #a:Type -> r:(ref a)
   -> his : (list sidt)
   -> ms:(Stack (sidt * heap))
   -> s:sidt -> v:a
@@ -119,8 +155,9 @@ val writeMemStackLem2 : #a:Type -> r:(ref a)
       (requires (wellFormed (ms,his)))
       (ensures (wellFormed (writeMemStack r ms s v,his)))
       [SMTPat (writeMemStack r ms s v)]
-let writeMemStackLem2 r his ms s v = admit ()
-(* ((writeMemStackLem r ms s v)) *)
+let writeMemStackLem3 r his ms s v =
+(writeMemStackLem r ms s v); (writeMemStackLem2 his ms (writeMemStack r ms s v))
+(* () *)
 
 (* what is the analog of transport / eq_ind?*)
 val refExistsInStack : #a:Type -> (ref a)
