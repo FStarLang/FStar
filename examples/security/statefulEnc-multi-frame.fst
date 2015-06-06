@@ -303,7 +303,7 @@ let stateful_dec ad d c =
            else None
       else None
 
-
+#reset-options
 val test_st_frame : s1:sti -> s2:sti{distinct_sti s1 s2} -> St unit
     (requires (fun h -> st_fp_inv h
                     /\ in_st_fp s1 h
@@ -324,7 +324,5 @@ let test_st_frame s1 s2 =
   let p1' = stateful_dec n1 (STI.d s1) c1 in
   let n2 = !(StDec.ctr (STI.d s2)) in
   let p2' = stateful_dec n2 (STI.d s2) c2 in
-  (*cut (trigger n1);*)
-  (*cut (trigger n2);*)
   assert (is_Some p1' /\ Some.v p1' = p1);
   assert (is_Some p2' /\ Some.v p2' = p2)
