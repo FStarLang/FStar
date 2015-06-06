@@ -1601,7 +1601,7 @@ relations below):
    which is only a _partial_ order.
 
 2. **The subterm ordering on inductive types**: For any pure term `e` of
-    an inductive type `T`, if `v=D e1 ... en` we include `e_i << e`, for
+    an inductive type `T`, if `e=D e1 ... en` we include `e_i << e`, for
     all `i`. That is, the sub-terms of a well-typed constructed term
     precede the constructed term. (The exception to this rule is if `T`
     is an instance of `lexPair`).
@@ -1707,8 +1707,9 @@ is terminating and has type:
 F* gives this function a default termination metric, so this expands out to:
 
     ackermann : m:nat -> n:nat -> Tot nat (decreases %[m;n])
-
-When type-checking `ackermann`, F\* uses the following more
+    
+The `decreases` clause will be discussed in the next section. In this
+example it leads to the F\* type-checker using the following more
 restrictive type for the recursive calls in the body of `ackermann`:
 
     ackermann: m':nat
@@ -1722,7 +1723,7 @@ previous arguments according to the refinement formula above.
 
 * For the call at line 3, we have to show that `%[(m - 1);1] << %[m;n]`.
 This works out, since `m - 1 << m` according to the integer ordering, and
-we can diregard the rest of the terms.
+we can disregard the rest of the terms.
 
 * The call at line 4 verifies for the same reason---the first argument
 decreases.
