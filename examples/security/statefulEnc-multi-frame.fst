@@ -302,3 +302,29 @@ let stateful_dec ad d c =
            then (StDec.ctr d := i + 1; Some q)
            else None
       else None
+
+
+val test_st_frame : s1:sti -> s2:sti{distinct_sti s1 s2} -> St unit
+    (requires (fun h -> st_fp_inv h
+                    /\ in_st_fp s1 h
+                    /\ in_st_fp s2 h
+                    /\ Heap.sel h (StEnc.ctr (STI.e s1))
+                       = Heap.sel h (StDec.ctr (STI.d s1))
+                    /\ Heap.sel h (StEnc.ctr (STI.e s2))
+                       = Heap.sel h (StDec.ctr (STI.d s2))))
+    (ensures (fun h0 _ h1 ->
+                st_fp_inv h1
+                /\ modifies (Set.union (sti_refs s1) (sti_refs s2)) h0 h1))
+let test_st_frame s1 s2 =
+  let p1 = mk_plain () in
+  let p2 = mk_plain () in
+  let c1 = stateful_enc (STI.e s1) p1 in
+  let c2 = stateful_enc (STI.e s2) p2 in
+  let n1 = !(StDec.ctr (STI.d s1)) in
+  let p1' = stateful_dec n1 (STI.d s1) c1 in
+  let n2 = !(StDec.ctr (STI.d s2)) in
+  let p2' = stateful_dec n2 (STI.d s2) c2 in
+  (*cut (trigger n1);*)
+  (*cut (trigger n2);*)
+  assert (is_Some p1' /\ Some.v p1' = p1);
+  assert (is_Some p2' /\ Some.v p2' = p2)
