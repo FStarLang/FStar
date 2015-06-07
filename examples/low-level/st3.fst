@@ -28,11 +28,11 @@ type memStack = x:memStackAux{wellFormed x}
 
 
 (* Should we also include sizes of refs in order to enable reasoninag about memory usage of programs?*)
+(* Even a simple notion of size, e.g. 1 unit per object, can help us reason about (lack of) memory leaks.*)
 (* What is the size of functions? Does it make even make sense to store a function at a reference? Would it be possible to transpile such a construct? *)
 type smem = heap * memStack
 
 
-(*rename heap to memblock, and then hp to heap*)
 let hp (s : smem) = fst s
 
 val st : smem -> Tot (Stack (sidt * heap))
@@ -271,6 +271,8 @@ sub_effect
 (** withNewStackFrame combinator *)
 
 effect WNSC (#a:Type) (post: (smem -> Post a)) =
+(*instead of SST, this could be a weaker effect (in the lattic) which
+    does not allow pushing and popping stack frames *)
   SST a
       (fun m -> isNonEmpty (st m) /\ topstb m = emp)
       (fun m0 a m1 -> post m0 a m1)
@@ -278,8 +280,8 @@ effect WNSC (#a:Type) (post: (smem -> Post a)) =
 (*
 val withNewStackFrame : #a:Type -> post:(smem -> Post a) -> body:(WNSC post)
       -> SST a (fun m -> True) (fun m0 a m1 -> post m0 a m1)
+*)
 let withNewStackFrame post body =
   pushStackFrame ();
   body;
-  popStackFrame
-*)
+  popStackFrame ()
