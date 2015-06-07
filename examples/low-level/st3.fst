@@ -182,6 +182,7 @@ match m with
 val readAfterWrite : #a:Type -> r:(ref a) -> v:a -> m:smem ->
   Lemma (requires (refExistsInMem r m))
         (ensures ((refExistsInMem r m) /\ loopkupRef r (writeMemAux r m v) == v))
+        [SMTPat (writeMemAux r m v)]
 let readAfterWrite r v m =
 match (refLoc r) with
 | InHeap -> ()
