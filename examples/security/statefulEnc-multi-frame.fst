@@ -14,15 +14,31 @@ open Seq
 (* TODO: merge these functions with the standard library *)
 opaque logic type trigger (#a:Type) (x:a) = True
 
+// snoc?
 val snoc : seq 'a -> 'a -> Tot (seq 'a)
 let snoc s x = Seq.append s (Seq.create 1 x)
 
 assume val emp: #a:Type -> Tot (seq a)
 assume Length_emp: forall (a:Type).{:pattern (Seq.length (emp #a))} Seq.length (emp #a) = 0
 
+// we'll need variants passing i to f, and showing forall j. j < i ==> not f(Seq.index s j)
 assume val find_seq : #a:Type -> f:(a -> Tot bool) -> s:seq a
             -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
 
+(* not quite typing...
+// i is the next index to try
+val find_seq' : #a:Type -> f:(a -> Tot bool) -> s:seq a ->
+  i:nat { i <= Seq.length s /\ (forall (j:nat{j<i}). not (f (Seq.index s j))) } ->
+  Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)} /\ (forall (j:nat{j<i}). not (f (Seq.index s j)))) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
+let rec find_seq' a f s i =
+  if i = Seq.length s then None
+  else if f (Seq.index s i) then Some i
+  else find_seq' #a f s (i+1)
+let find_seq a f s = find_seq' #a f s 0
+*)
+
+// replacing the usual modifies clause?
+// this does not preclude h' extending h with fresh refs
 opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
     b2t (Heap.equal h' (concat h' (restrict h (complement mods))))
 
@@ -31,15 +47,27 @@ type Fresh (#a:Type) h0 (r:ref a) h1 = Heap.contains h1 r /\ not (Heap.contains 
 type Let (#a:Type) (x:a) (body: (y:a{y=x} -> Type)) = body x
 
 (* ------------------------------------------------------------ *)
-(* Some placeholder functions to build plain/cipher/key *)
-type plain
-assume val mk_plain: unit -> Tot plain
-type cipher
-assume val mk_cipher: unit -> Tot cipher
-type key
-assume val mk_key: unit -> Tot key
-
 (* Start with a basic stateful encryption functionality *)
+
+(* Some placeholder functions to build plain/cipher/key *)
+
+type key
+// we need something more stateful, accounting for random sampling & pairwise distinct keys
+// similarly we should be able to instantiate the scheme to an instance that holds/updates refs in key
+
+// assume val mk_key: unit -> Tot key
+assume val mk_key: unit -> St key (fun h -> True) (fun h0 k h1 -> modifies !{} h0 h1)
+
+type plain
+assume val mk_plain: unit -> St plain (fun h -> True) (fun h0 k h1 -> modifies !{} h0 h1)
+
+type cipher
+assume val mk_cipher: unit -> St cipher (fun h -> True) (fun h0 k h1 -> modifies !{} h0 h1)
+
+// to guarantees that decryption is a stateful inverse of encryption (a good sanity check),
+// the invariant on entries should state that the ciphers are pairwise distinct.
+// we may also have a refinement guaranteeing that decryption of that ciphertext yields that plaintext.
+
 type basicEntry =
   | Entry : p:plain -> c:cipher -> basicEntry
 
@@ -55,6 +83,7 @@ type paired (e:encryptor) (d:decryptor) = b2t (Enc.log e = Dec.log d)
 type bi =
   | BI : e:encryptor -> d:decryptor{paired e d} -> bi
 
+// new concrete syntax for sets of (a & x:a) ?
 let bi_refs (BI e d) = !{Enc.log e}
 
 type distinct_bi (b1:bi) (b2:bi) =
@@ -68,6 +97,9 @@ type pairwise_distinct (s:list bi) =
 *)
 let basic_fp : ref (s:list bi{pairwise_distinct s}) = ref []
 
+// somewhat generic
+// could we put the separation from basic_fp above instead?
+// could we show that those refs are separated from others?
 type basic_fp_inv (h:heap) =
   Heap.contains h basic_fp
   /\ (forall bi.
@@ -92,31 +124,31 @@ let gen () =
   basic_fp := bi::!basic_fp; //ghost
   bi
 
-type enc_in_basic_fp (e:encryptor) (h:heap) =
-  exists d. paired e d /\ List.mem (BI e d) (Heap.sel h basic_fp)
+type in_basic_fp bi h =
+  basic_fp_inv h /\
+  b2t(List.mem bi (Heap.sel h basic_fp))
 
-type dec_in_basic_fp (d:decryptor) (h:heap) =
-  exists e. paired e d /\ List.mem (BI e d) (Heap.sel h basic_fp)
-
-let in_basic_fp bi h = List.mem bi (Heap.sel h basic_fp)
+type enc_in_basic_fp (e:encryptor) (h:heap) = exists d. paired e d /\ in_basic_fp (BI e d) h
+type dec_in_basic_fp (d:decryptor) (h:heap) = exists e. paired e d /\ in_basic_fp (BI e d) h
 
 val enc : e:encryptor -> p:plain -> St cipher
-    (requires (fun h -> basic_fp_inv h /\ enc_in_basic_fp e h))
+    (requires (fun h -> enc_in_basic_fp e h))
     (ensures (fun h0 c h1 ->
                 modifies !{Enc.log e} h0 h1
-                /\ basic_fp_inv h1
-                /\ Heap.contains h1 (Enc.log e)
+                /\ enc_in_basic_fp e h1
+                // /\ Heap.contains h1 (Enc.log e) // could we get it from the precondition?
                 /\ Heap.sel h1 (Enc.log e) = snoc (Heap.sel h0 (Enc.log e)) (Entry p c)))
 let enc e p =
   let c = mk_cipher () in
   Enc.log e := snoc !(Enc.log e) (Entry p c);
   c
 
+// cryptographically, this assumes both INT-CTXT and IND-CPA (except for distinct ciphers)
 val dec: d:decryptor -> c:cipher -> St (option plain)
-  (requires (fun h -> basic_fp_inv h /\ dec_in_basic_fp d h))
+  (requires (fun h -> dec_in_basic_fp d h))
   (ensures (fun h0 p h1 ->
               modifies !{} h0 h1
-              /\ basic_fp_inv h1
+              /\ dec_in_basic_fp d h1
               /\ (Let (Heap.sel h0 (Dec.log d))
                       (fun log ->
                           (is_None p <==> (forall (i:nat{i < Seq.length log}).{:pattern (trigger i)} trigger i /\ Entry.c (Seq.index log i) <> c))
@@ -129,9 +161,10 @@ let dec d c =
       cut (trigger i);
       Some (Entry.p (Seq.index s i))
 
+
 val test_basic_frame : b1:bi -> b2:bi{distinct_bi b1 b2} -> St unit
-    (requires (fun h -> basic_fp_inv h
-                    /\ in_basic_fp b1 h
+    (requires (fun h ->
+                       in_basic_fp b1 h
                     /\ in_basic_fp b2 h
                     /\ Heap.sel h (Enc.log (BI.e b1)) = emp
                     /\ Heap.sel h (Enc.log (BI.e b2)) = emp))
@@ -142,20 +175,25 @@ val test_basic_frame : b1:bi -> b2:bi{distinct_bi b1 b2} -> St unit
      proves that use of one instance doesn't mess with another
 *)
 let test_basic_frame b1 b2 =
-  let p1 = mk_plain () in
-  let p2 = mk_plain () in
-  let c1 = enc (BI.e b1) p1 in
-  let c2 = enc (BI.e b2) p2 in
-  let p1' = dec (BI.d b1) c1 in
-  let p2' = dec (BI.d b2) c2 in
+  // let b3 = gen() in // this breaks typing; why?
+  let p = mk_plain () in
+  let q = mk_plain () in
+  let c1 = enc (BI.e b1) p in
+  //  let c1'= enc (BI.e b1) q in // this breaks typing, unless we strengthen our invariant
+  let c2 = enc (BI.e b2) q in
+  let p' = dec (BI.d b1) c1 in
+  let q' = dec (BI.d b2) c2 in
   cut (trigger 0);
-  assert (is_Some p1' /\ Some.v p1' = p1);
-  assert (is_Some p2' /\ Some.v p2' = p2)
+  assert (Some.v p' = p);
+  assert (Some.v q' = q)
 
 (* -------------------------------------------------------- *)
 (* This is the analog of StatefulLHAE on top of AEAD_GCM *)
 type statefulEntry =
   | StEntry : i:nat -> p:plain -> c:cipher -> statefulEntry
+
+// it is a bit strange to have a copy of the sequence index
+// as above, we could use a stronger invariant
 
 type st_encryptor =
   | StEnc : log: ref (seq statefulEntry) -> ctr: ref nat -> key:encryptor -> st_encryptor
@@ -166,12 +204,12 @@ type st_decryptor =
 type st_paired (enc:st_encryptor) (dec:st_decryptor) =
       StEnc.log enc = StDec.log dec
       /\ paired (StEnc.key enc) (StDec.key dec)
-      /\ (Enc.log (StEnc.key enc)) =!= StEnc.log enc
+      /\ Enc.log (StEnc.key enc) =!= StEnc.log enc
       /\ StEnc.ctr enc <> StDec.ctr dec
-      /\ StEnc.log enc =!= StEnc.ctr enc                      //These last four are needed because seq is abstract
-      /\ StEnc.log enc =!= StDec.ctr dec                      //...
-      /\ (Enc.log (StEnc.key enc)) =!= StEnc.ctr enc          //...
-      /\ (Enc.log (StEnc.key enc)) =!= StDec.ctr dec          //and so potentially equal to nat ... TODO: make seq a new type
+      /\ StEnc.log enc =!= StEnc.ctr enc                    //These last four are needed because seq is abstract
+      /\ StEnc.log enc =!= StDec.ctr dec                    //...
+      /\ Enc.log (StEnc.key enc) =!= StEnc.ctr enc          //...
+      /\ Enc.log (StEnc.key enc) =!= StDec.ctr dec          //and so potentially equal to nat ... TODO: make seq a new type
 
 (* a stateful instance *)
 type sti =
@@ -179,6 +217,8 @@ type sti =
 
 (* an abstract function to add additional data to the plain text *)
 assume val with_seqn : nat -> plain -> Tot plain
+// this is simplified from AEAD (usually not encrypted)
+// we will need it to be injective in its first argument
 
 (* The invariant of a single instance *)
 type st_inv (e:st_encryptor) (d:st_decryptor) (h:heap) =
@@ -265,7 +305,7 @@ val stateful_enc : e:st_encryptor -> p:plain -> St cipher
                  /\ Heap.sel h1 (StEnc.log e) //exactly plain added to the end of the log
                     = snoc (Heap.sel h0 (StEnc.log e)) (StEntry (Heap.sel h0 (StEnc.ctr e)) p c)))
 let stateful_enc e p =
-  let h0 = get() in
+  //let h0 = get() in
   let i = !(StEnc.ctr e) in
   let ip = with_seqn i p in
   let c = enc (StEnc.key e) ip in
