@@ -1907,8 +1907,7 @@ exercise on lists (Section [#sec-basic-lists]).
 
     sorted (sort l) /\ ( forall i. mem i l <==> mem i (sort l) )
 
-We acknowledge that this property is not strictly strong enough, as it
-allows to add duplicate values to the sorted list.
+We will see below that this specification can still be improved.
 
 ### Implementing Quicksort
 
