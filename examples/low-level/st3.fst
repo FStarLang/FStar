@@ -188,6 +188,13 @@ match (refLoc r) with
 | InHeap -> ()
 | InStack id -> readAfterWriteStack r v (st m) id
 
+(*should extend to types with decidable equality*)
+val is1SuffixOf : list sidt -> list sidt -> Tot bool
+let is1SuffixOf lsmall lbig =
+match lbig with
+| [] -> false
+| h::tl -> tl=lsmall
+
 
 type allocateInBlock (#a:Type) (r: ref a) (h0 : heap) (h1 : heap) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
 
@@ -218,23 +225,20 @@ assume val read:  #a:Type -> r:(ref a) -> SST a
 	  (fun m -> (refExistsInMem r m) == true)
     (fun m0 a m1 -> m0=m1 /\ (refExistsInMem r m0) /\ loopkupRef r m0 = a)
 
-(*should extend to types with decidable equality*)
-val is1SufficOf : list sidt -> list sidt -> Tot bool
-let is1SufficOf lsmall lbig =
-match lbig with
-| [] -> false
-| h::tl -> tl=lsmall
-
-(*make sure that the ids are monotone *)
-assume val newStackFrame:  unit -> SST unit
-    (fun m -> True)
-    (fun m0 a m1 -> stail (st m1) = (st m0) /\ (isNonEmpty (st m1)) /\ topstb m1 = emp /\ is1SufficOf (idHistory m0)  (idHistory m1))
-
-
 assume val write:  #a:Type -> r:(ref a) -> v:a ->
   SST unit
 	    (fun m -> (refExistsInMem r m) == true)
       (fun m0 a m1 -> (refExistsInMem r m1) /\ (writeMemAux r m0 v) =  m1 /\ (writeMemAux r m0 v) =  m1 /\ idHistory m0 = idHistory m1)
+
+(*make sure that the ids are monotone *)
+assume val pushStackFrame:  unit -> SST unit
+    (fun m -> True)
+    (fun m0 a m1 -> stail (st m1) = (st m0) /\ (isNonEmpty (st m1)) /\ topstb m1 = emp /\ is1SuffixOf (idHistory m0)  (idHistory m1))
+
+assume val popStackFrame:  unit -> SST unit
+    (fun m -> True)
+    (fun m0 a m1 -> stail (st m0) == (st m1))
+
 
 
 (** Injection of DIV effect into the new effect, mostly copied from prims.fst*)
