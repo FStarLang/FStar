@@ -267,3 +267,19 @@ sub_effect
   DIV   ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem) -> wp (fun a -> p a h)
 
 (** algebraic properties of memory operations*)
+
+(** withNewStackFrame combinator *)
+
+effect WNSC (#a:Type) (post: (smem -> Post a)) =
+  SST a
+      (fun m -> isNonEmpty (st m) /\ topstb m = emp)
+      (fun m0 a m1 -> post m0 a m1)
+
+(*
+val withNewStackFrame : #a:Type -> post:(smem -> Post a) -> body:(WNSC post)
+      -> SST a (fun m -> True) (fun m0 a m1 -> post m0 a m1)
+let withNewStackFrame post body =
+  pushStackFrame ();
+  body;
+  popStackFrame
+*)
