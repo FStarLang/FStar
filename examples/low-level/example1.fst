@@ -21,8 +21,8 @@ defined without without bothering about that distinction*)
 val incrementRef : r:(ref int) -> SST unit  (fun m -> (refExistsInMem r m)==true)
 (fun m0 a m1 -> (refExistsInMem r m0) /\ (refExistsInMem r m1) /\ (mstail m0 = mstail m1) /\ (loopkupRef r m1 = (loopkupRef r m0) + 1))
 let incrementRef r =
-  let oldv = read r in
-  write r (oldv + 1)
+  let oldv = memread r in
+  memwrite r (oldv + 1)
 
 val pushPopNoChage : unit ->  SST unit  (fun _ -> True) (fun m0 vo m1 -> heapAndStack m0 == heapAndStack m1)
 let pushPopNoChage () =
@@ -35,9 +35,9 @@ val incrementUsingStack : vi:int -> SST int  (fun _ -> True)
 let incrementUsingStack vi =
   pushStackFrame ();
     let r = salloc vi in
-    let oldv = read r in
-    write r (oldv + 1);
-    let v = (read r) in
+    let oldv = memread r in
+    memwrite r (oldv + 1);
+    let v = (memread r) in
   popStackFrame ();
   v
 
@@ -50,8 +50,8 @@ val incrementRef2 : r:(ref int) -> SST unit
     /\ (heapAndStackTail m0 = heapAndStackTail m1)
     /\ (loopkupRef r m1 = (loopkupRef r m0) + 1))
 let incrementRef2 r =
-  let oldv = read r in
-  write r (oldv + 1)
+  let oldv = memread r in
+  memwrite r (oldv + 1)
 
 (* an example illustrating a typical C idiom :
   caller allocates memory and passes the ref to calle to get some work done *)
@@ -61,6 +61,6 @@ let incrementUsingStack2 vi =
   pushStackFrame ();
     let r = salloc vi in
     incrementRef2 r; (*why doesnt incrementRef work here?*)
-    let v = (read r) in
+    let v = (memread r) in
   popStackFrame ();
   v
