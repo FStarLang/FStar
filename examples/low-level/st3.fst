@@ -13,7 +13,6 @@ open List
 open ListSet
 type sidt = nat
 
-
 (*How does List.memT work? is equality always decidable?*)
 type memStackAux = Stack (sidt * heap) * list sidt
 
@@ -124,27 +123,6 @@ match (refLoc r) with
 | InHeap -> Heap.contains (hp m) r
 | InStack id -> refExistsInStack r id (st m)
 
-(* it is surprising that sel always returns something; It might be tricky to implement it.
-   What prevents me from creating a ref of an empty type? Perhaps it is impossible to create a member
-   of the type (ref False) . For example, the memory allocation operator, which creates a new (ref 'a)
-   requires an initial value of type 'a
-*)
-val loopkupRef : #a:Type -> r:(ref a) -> m:smem{(refExistsInMem r m) == true} ->  Tot a
-let loopkupRef r m =
-match (blockAtLoc m (refLoc r)) with
-          | Some b -> (sel b r)
-
-(*
-val refExistsInStack : #a:Type -> (ref a)
-  -> (Stack (sidt * heap)) -> Tot bool
-let refExistsInStack r s =
-match (refLoc r) with
-| InHeap -> false
-| InStack id -> match  (stackBlockAtLoc id s)  with
-                | Some b -> Heap.contains b r
-                | None -> false
-*)
-
 
 val writeMemStackExists : #a:Type -> rw:(ref a) -> r: (ref a)
   -> ms:(Stack (sidt * heap))
@@ -173,6 +151,42 @@ Lemma (requires (refExistsInMem r m))
       [SMTPat (writeMemAux r m v)]
 let rec writeMemAuxPreservesExists r m v =  ()
 
+val loopkupRefStack : #a:Type -> r:(ref a) -> id:sidt -> ms:(Stack (sidt * heap)){refExistsInStack r id ms}  ->  Tot a
+let rec loopkupRefStack r id ms =
+match ms with
+| h::tl ->
+    if (fst h = id) then  sel (snd h) r else (loopkupRefStack r id tl)
+
+
+(* it is surprising that sel always returns something; It might be tricky to implement it.
+   What prevents me from creating a ref of an empty type? Perhaps it is impossible to create a member
+   of the type (ref False) . For example, the memory allocation operator, which creates a new (ref 'a)
+   requires an initial value of type 'a
+*)
+val loopkupRef : #a:Type -> r:(ref a) -> m:smem{(refExistsInMem r m) == true} ->  Tot a
+let loopkupRef r m =
+match (refLoc r) with
+| InHeap -> (sel (hp m) r)
+| InStack id -> loopkupRefStack r id (st m)
+
+val readAfterWriteStack :
+  #a:Type -> r:(ref a) -> v:a -> m:(Stack (sidt * heap)) -> id:sidt ->
+  Lemma (requires (refExistsInStack r id m))
+        (ensures ((refExistsInStack r id m) /\ loopkupRefStack r id (writeMemStack r m id v) == v))
+let rec readAfterWriteStack r v m id =
+match m with
+| [] -> ()
+| h::tl -> if (fst h = id) then () else ((readAfterWriteStack r v tl id))
+
+
+val readAfterWrite : #a:Type -> r:(ref a) -> v:a -> m:smem ->
+  Lemma (requires (refExistsInMem r m))
+        (ensures ((refExistsInMem r m) /\ loopkupRef r (writeMemAux r m v) == v))
+let readAfterWrite r v m =
+match (refLoc r) with
+| InHeap -> ()
+| InStack id -> readAfterWriteStack r v (st m) id
+
 
 type allocateInBlock (#a:Type) (r: ref a) (h0 : heap) (h1 : heap) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
 
@@ -189,13 +203,13 @@ assume val halloc:  #a:Type -> init:a -> SST (ref a)
                                          (fun m0 r m1 -> allocateInBlock r (hp m0)  (hp m1) init /\ (snd m0 = snd m1) /\ refLoc r == InHeap)
 
 assume val salloc:  #a:Type -> init:a -> SST (ref a)
-     (fun m -> b2t (isNonEmpty (st m))) (*why is "== true" required here, but not at other places?*)
-     (*Does F* have (user defined?) implicit coercions?*)
+     (fun m -> b2t (isNonEmpty (st m))) (*why is "== true" required here, but not at other places? : *)
+     (*Does F* have (user defined?) implicit coercions? : Not yet *)
      (fun m0 r m1 ->
           (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
           /\ allocateInBlock r (topstb m0) (topstb m1) init
-          /\ refLoc r == InStack (topstid m0) /\ (topstid m0 = topstid m1)
-          /\ stail (st m0) == stail (st m1) /\ hp m0 = hp m1 /\ idHistory m0 = idHistory m1)
+          /\ refLoc r = InStack (topstid m0) /\ (topstid m0 = topstid m1)
+          /\ stail (st m0) = stail (st m1) /\ hp m0 = hp m1 /\ idHistory m0 = idHistory m1)
 
 
 
@@ -229,7 +243,3 @@ sub_effect
   DIV   ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem) -> wp (fun a -> p a h)
 
 (** algebraic properties of memory operations*)
-val readAfterWrite : #a:Type -> r:(ref a) -> v:a -> m:smem ->
-  Lemma (requires (refExistsInMem r m))
-        (ensures ((refExistsInMem r m) /\ loopkupRef r (writeMemAux r m v) == v))
-let readAfterWrite = admit ()
