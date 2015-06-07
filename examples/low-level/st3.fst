@@ -13,7 +13,6 @@ open List
 open ListSet
 type sidt = nat
 
-
 (*How does List.memT work? is equality always decidable?*)
 type memStackAux = Stack (sidt * heap) * list sidt
 
@@ -38,6 +37,15 @@ let hp (s : smem) = fst s
 
 val st : smem -> Tot (Stack (sidt * heap))
 let st (s : smem) = fst (snd s)
+
+val heapAndStack : smem -> Tot (heap * (Stack (sidt * heap)))
+let heapAndStack (s : smem) = (hp s, st s)
+
+val heapAndStackTail : smem -> Tot (heap * (Stack (sidt * heap)))
+let heapAndStackTail (s : smem) = (hp s, stail (st s))
+
+val mstail : smem -> Tot ((Stack (sidt * heap)))
+let mstail (s : smem) = stail (st s)
 
 val sids : smem -> Tot (list sidt)
 let sids (m : smem) = mapT fst (st m)
@@ -88,18 +96,18 @@ match ms with
 | h::tl ->
   (if (fst h = s) then ((fst h, (upd (snd h) r v))::tl) else h::(writeMemStack r tl s v))
 
-val writeMemStackLem : #a:Type -> r:(ref a) -> ms:(Stack (sidt * heap))
+val writeMemStackSameIDs : #a:Type -> r:(ref a) -> ms:(Stack (sidt * heap))
   -> s:sidt -> v:a
   -> Lemma (ensures ((mapT fst ms) = (mapT fst (writeMemStack r ms s v))))
           (* [SMTPat (writeMemStack r ms s v)] *)
-let rec writeMemStackLem r ms s v =
+let rec writeMemStackSameIDs r ms s v =
 match ms with
 | Nil -> ()
-| h::tl ->   if (fst h = s) then () else (writeMemStackLem r tl s v)
+| h::tl ->   if (fst h = s) then () else (writeMemStackSameIDs r tl s v)
 
 
 
-val writeMemStackLem3 : #a:Type -> r:(ref a)
+val writeMemStackWellFormed : #a:Type -> r:(ref a)
   -> his : (list sidt)
   -> ms:(Stack (sidt * heap))
   -> s:sidt -> v:a
@@ -107,9 +115,17 @@ val writeMemStackLem3 : #a:Type -> r:(ref a)
       (requires (wellFormed (ms,his)))
       (ensures (wellFormed (writeMemStack r ms s v,his)))
       [SMTPat (writeMemStack r ms s v)]
-let writeMemStackLem3 r his ms s v =
-(writeMemStackLem r ms s v) ; admit ()
+let writeMemStackWellFormed r his ms s v =
+(writeMemStackSameIDs r ms s v) ; admit ()
 (* what is the analog of transport / eq_ind?*)
+
+
+val writeMemStackSameStail : #a:Type -> r:(ref a) -> ms:(Stack (sidt * heap))
+  -> s:sidt -> v:a
+  -> Lemma (ensures ((stail ms) = (stail (writeMemStack r ms s v))))
+         (*  [SMTPat (writeMemStack r ms s v)] *)
+let rec writeMemStackSameStail r ms s v = ()
+
 
 val refExistsInStack : #a:Type -> (ref a)
   -> id:sidt -> (Stack (sidt * heap)) -> Tot bool
@@ -123,28 +139,6 @@ let refExistsInMem (#a:Type) (r:ref a) (m:smem) =
 match (refLoc r) with
 | InHeap -> Heap.contains (hp m) r
 | InStack id -> refExistsInStack r id (st m)
-
-(* it is surprising that sel always returns something; It might be tricky to implement it.
-   What prevents me from creating a ref of an empty type? Perhaps it is impossible to create a member
-   of the type (ref False) . For example, the memory allocation operator, which creates a new (ref 'a)
-   requires an initial value of type 'a
-*)
-val loopkupRef : #a:Type -> r:(ref a) -> m:smem{(refExistsInMem r m) == true} ->  Tot a
-let loopkupRef r m =
-match (blockAtLoc m (refLoc r)) with
-          | Some b -> (sel b r)
-
-(*
-val refExistsInStack : #a:Type -> (ref a)
-  -> (Stack (sidt * heap)) -> Tot bool
-let refExistsInStack r s =
-match (refLoc r) with
-| InHeap -> false
-| InStack id -> match  (stackBlockAtLoc id s)  with
-                | Some b -> Heap.contains b r
-                | None -> false
-*)
-
 
 val writeMemStackExists : #a:Type -> rw:(ref a) -> r: (ref a)
   -> ms:(Stack (sidt * heap))
@@ -173,6 +167,55 @@ Lemma (requires (refExistsInMem r m))
       [SMTPat (writeMemAux r m v)]
 let rec writeMemAuxPreservesExists r m v =  ()
 
+val writeMemAuxPreservesStail :  #a:Type -> r:(ref a) -> m:smem -> v:a ->
+Lemma (requires (is_InStack (refLoc r)))
+  (ensures heapAndStackTail m = heapAndStackTail (writeMemAux r m v))
+let rec writeMemAuxPreservesStail r m v =  ()
+
+val loopkupRefStack : #a:Type -> r:(ref a) -> id:sidt -> ms:(Stack (sidt * heap)){refExistsInStack r id ms}  ->  Tot a
+let rec loopkupRefStack r id ms =
+match ms with
+| h::tl ->
+    if (fst h = id) then  sel (snd h) r else (loopkupRefStack r id tl)
+
+
+(* it is surprising that sel always returns something; It might be tricky to implement it.
+   What prevents me from creating a ref of an empty type? Perhaps it is impossible to create a member
+   of the type (ref False) . For example, the memory allocation operator, which creates a new (ref 'a)
+   requires an initial value of type 'a
+*)
+val loopkupRef : #a:Type -> r:(ref a) -> m:smem{(refExistsInMem r m) == true} ->  Tot a
+let loopkupRef r m =
+match (refLoc r) with
+| InHeap -> (sel (hp m) r)
+| InStack id -> loopkupRefStack r id (st m)
+
+val readAfterWriteStack :
+  #a:Type -> r:(ref a) -> v:a -> m:(Stack (sidt * heap)) -> id:sidt ->
+  Lemma (requires (refExistsInStack r id m))
+        (ensures ((refExistsInStack r id m) /\ loopkupRefStack r id (writeMemStack r m id v) == v))
+let rec readAfterWriteStack r v m id =
+match m with
+| [] -> ()
+| h::tl -> if (fst h = id) then () else ((readAfterWriteStack r v tl id))
+
+
+val readAfterWrite : #a:Type -> r:(ref a) -> v:a -> m:smem ->
+  Lemma (requires (refExistsInMem r m))
+        (ensures ((refExistsInMem r m) /\ loopkupRef r (writeMemAux r m v) == v))
+        [SMTPat (writeMemAux r m v)]
+let readAfterWrite r v m =
+match (refLoc r) with
+| InHeap -> ()
+| InStack id -> readAfterWriteStack r v (st m) id
+
+(*should extend to types with decidable equality*)
+val is1SuffixOf : list sidt -> list sidt -> Tot bool
+let is1SuffixOf lsmall lbig =
+match lbig with
+| [] -> false
+| h::tl -> tl=lsmall
+
 
 type allocateInBlock (#a:Type) (r: ref a) (h0 : heap) (h1 : heap) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
 
@@ -189,37 +232,32 @@ assume val halloc:  #a:Type -> init:a -> SST (ref a)
                                          (fun m0 r m1 -> allocateInBlock r (hp m0)  (hp m1) init /\ (snd m0 = snd m1) /\ refLoc r == InHeap)
 
 assume val salloc:  #a:Type -> init:a -> SST (ref a)
-     (fun m -> b2t (isNonEmpty (st m))) (*why is "== true" required here, but not at other places?*)
-     (*Does F* have (user defined?) implicit coercions?*)
+     (fun m -> b2t (isNonEmpty (st m))) (*why is "== true" required here, but not at other places? : *)
+     (*Does F* have (user defined?) implicit coercions? : Not yet *)
      (fun m0 r m1 ->
           (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
           /\ allocateInBlock r (topstb m0) (topstb m1) init
-          /\ refLoc r == InStack (topstid m0) /\ (topstid m0 = topstid m1)
-          /\ stail (st m0) == stail (st m1) /\ hp m0 = hp m1 /\ idHistory m0 = idHistory m1)
-
-
+          /\ refLoc r = InStack (topstid m0) /\ (topstid m0 = topstid m1)
+          /\ heapAndStackTail m0 = heapAndStackTail m1 /\ idHistory m0 = idHistory m1)
 
 assume val read:  #a:Type -> r:(ref a) -> SST a
-	  (fun m -> (refExistsInMem r m) == true)
+	  (fun m -> b2t (refExistsInMem r m))
     (fun m0 a m1 -> m0=m1 /\ (refExistsInMem r m0) /\ loopkupRef r m0 = a)
-
-(*should extend to types with decidable equality*)
-val is1SufficOf : list sidt -> list sidt -> Tot bool
-let is1SufficOf lsmall lbig =
-match lbig with
-| [] -> false
-| h::tl -> tl=lsmall
-
-(*make sure that the ids are monotone *)
-assume val newStackFrame:  unit -> SST unit
-    (fun m -> True)
-    (fun m0 a m1 -> stail (st m1) = (st m0) /\ (isNonEmpty (st m1)) /\ topstb m1 = emp /\ is1SufficOf (idHistory m0)  (idHistory m1))
-
 
 assume val write:  #a:Type -> r:(ref a) -> v:a ->
   SST unit
-	    (fun m -> (refExistsInMem r m) == true)
-      (fun m0 a m1 -> (refExistsInMem r m1) /\ (writeMemAux r m0 v) =  m1 /\ (writeMemAux r m0 v) =  m1 /\ idHistory m0 = idHistory m1)
+	    (fun m -> b2t (refExistsInMem r m))
+      (fun m0 a m1 -> (refExistsInMem r m1) /\ (writeMemAux r m0 v) =  m1
+        /\ (writeMemAux r m0 v) =  m1 /\ idHistory m0 = idHistory m1)
+
+(*make sure that the ids are monotone *)
+assume val pushStackFrame:  unit -> SST unit
+    (fun m -> True)
+    (fun m0 a m1 -> (heapAndStackTail m1 = heapAndStack m0) /\ (isNonEmpty (st m1)) /\ topstb m1 = emp /\ is1SuffixOf (idHistory m0)  (idHistory m1))
+
+assume val popStackFrame:  unit -> SST unit
+    (fun m -> b2t (isNonEmpty (st m)))
+    (fun m0 a m1 -> heapAndStackTail m0 == heapAndStack m1)
 
 
 (** Injection of DIV effect into the new effect, mostly copied from prims.fst*)
@@ -229,7 +267,19 @@ sub_effect
   DIV   ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem) -> wp (fun a -> p a h)
 
 (** algebraic properties of memory operations*)
-val readAfterWrite : #a:Type -> r:(ref a) -> v:a -> m:smem ->
-  Lemma (requires (refExistsInMem r m))
-        (ensures ((refExistsInMem r m) /\ loopkupRef r (writeMemAux r m v) == v))
-let readAfterWrite = admit ()
+
+(** withNewStackFrame combinator *)
+
+effect WNSC (#a:Type) (post: (smem -> Post a)) =
+  SST a
+      (fun m -> isNonEmpty (st m) /\ topstb m = emp)
+      (fun m0 a m1 -> post m0 a m1)
+
+(*
+val withNewStackFrame : #a:Type -> post:(smem -> Post a) -> body:(WNSC post)
+      -> SST a (fun m -> True) (fun m0 a m1 -> post m0 a m1)
+let withNewStackFrame post body =
+  pushStackFrame ();
+  body;
+  popStackFrame
+*)
