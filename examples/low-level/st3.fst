@@ -38,6 +38,15 @@ let hp (s : smem) = fst s
 val st : smem -> Tot (Stack (sidt * heap))
 let st (s : smem) = fst (snd s)
 
+val heapAndStack : smem -> Tot (heap * (Stack (sidt * heap)))
+let heapAndStack (s : smem) = (hp s, st s)
+
+val heapAndStackTail : smem -> Tot (heap * (Stack (sidt * heap)))
+let heapAndStackTail (s : smem) = (hp s, stail (st s))
+
+val mstail : smem -> Tot ((Stack (sidt * heap)))
+let mstail (s : smem) = stail (st s)
+
 val sids : smem -> Tot (list sidt)
 let sids (m : smem) = mapT fst (st m)
 
@@ -87,18 +96,18 @@ match ms with
 | h::tl ->
   (if (fst h = s) then ((fst h, (upd (snd h) r v))::tl) else h::(writeMemStack r tl s v))
 
-val writeMemStackLem : #a:Type -> r:(ref a) -> ms:(Stack (sidt * heap))
+val writeMemStackSameIDs : #a:Type -> r:(ref a) -> ms:(Stack (sidt * heap))
   -> s:sidt -> v:a
   -> Lemma (ensures ((mapT fst ms) = (mapT fst (writeMemStack r ms s v))))
           (* [SMTPat (writeMemStack r ms s v)] *)
-let rec writeMemStackLem r ms s v =
+let rec writeMemStackSameIDs r ms s v =
 match ms with
 | Nil -> ()
-| h::tl ->   if (fst h = s) then () else (writeMemStackLem r tl s v)
+| h::tl ->   if (fst h = s) then () else (writeMemStackSameIDs r tl s v)
 
 
 
-val writeMemStackLem3 : #a:Type -> r:(ref a)
+val writeMemStackWellFormed : #a:Type -> r:(ref a)
   -> his : (list sidt)
   -> ms:(Stack (sidt * heap))
   -> s:sidt -> v:a
@@ -106,9 +115,17 @@ val writeMemStackLem3 : #a:Type -> r:(ref a)
       (requires (wellFormed (ms,his)))
       (ensures (wellFormed (writeMemStack r ms s v,his)))
       [SMTPat (writeMemStack r ms s v)]
-let writeMemStackLem3 r his ms s v =
-(writeMemStackLem r ms s v) ; admit ()
+let writeMemStackWellFormed r his ms s v =
+(writeMemStackSameIDs r ms s v) ; admit ()
 (* what is the analog of transport / eq_ind?*)
+
+
+val writeMemStackSameStail : #a:Type -> r:(ref a) -> ms:(Stack (sidt * heap))
+  -> s:sidt -> v:a
+  -> Lemma (ensures ((stail ms) = (stail (writeMemStack r ms s v))))
+         (*  [SMTPat (writeMemStack r ms s v)] *)
+let rec writeMemStackSameStail r ms s v = ()
+
 
 val refExistsInStack : #a:Type -> (ref a)
   -> id:sidt -> (Stack (sidt * heap)) -> Tot bool
@@ -122,7 +139,6 @@ let refExistsInMem (#a:Type) (r:ref a) (m:smem) =
 match (refLoc r) with
 | InHeap -> Heap.contains (hp m) r
 | InStack id -> refExistsInStack r id (st m)
-
 
 val writeMemStackExists : #a:Type -> rw:(ref a) -> r: (ref a)
   -> ms:(Stack (sidt * heap))
@@ -150,6 +166,11 @@ Lemma (requires (refExistsInMem r m))
       (ensures (refExistsInMem r (writeMemAux r m v)))
       [SMTPat (writeMemAux r m v)]
 let rec writeMemAuxPreservesExists r m v =  ()
+
+val writeMemAuxPreservesStail :  #a:Type -> r:(ref a) -> m:smem -> v:a ->
+Lemma (requires (is_InStack (refLoc r)))
+  (ensures heapAndStackTail m = heapAndStackTail (writeMemAux r m v))
+let rec writeMemAuxPreservesStail r m v =  ()
 
 val loopkupRefStack : #a:Type -> r:(ref a) -> id:sidt -> ms:(Stack (sidt * heap)){refExistsInStack r id ms}  ->  Tot a
 let rec loopkupRefStack r id ms =
@@ -217,28 +238,26 @@ assume val salloc:  #a:Type -> init:a -> SST (ref a)
           (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
           /\ allocateInBlock r (topstb m0) (topstb m1) init
           /\ refLoc r = InStack (topstid m0) /\ (topstid m0 = topstid m1)
-          /\ stail (st m0) = stail (st m1) /\ hp m0 = hp m1 /\ idHistory m0 = idHistory m1)
-
-
+          /\ heapAndStackTail m0 = heapAndStackTail m1 /\ idHistory m0 = idHistory m1)
 
 assume val read:  #a:Type -> r:(ref a) -> SST a
-	  (fun m -> (refExistsInMem r m) == true)
+	  (fun m -> b2t (refExistsInMem r m))
     (fun m0 a m1 -> m0=m1 /\ (refExistsInMem r m0) /\ loopkupRef r m0 = a)
 
 assume val write:  #a:Type -> r:(ref a) -> v:a ->
   SST unit
-	    (fun m -> (refExistsInMem r m) == true)
-      (fun m0 a m1 -> (refExistsInMem r m1) /\ (writeMemAux r m0 v) =  m1 /\ (writeMemAux r m0 v) =  m1 /\ idHistory m0 = idHistory m1)
+	    (fun m -> b2t (refExistsInMem r m))
+      (fun m0 a m1 -> (refExistsInMem r m1) /\ (writeMemAux r m0 v) =  m1
+        /\ (writeMemAux r m0 v) =  m1 /\ idHistory m0 = idHistory m1)
 
 (*make sure that the ids are monotone *)
 assume val pushStackFrame:  unit -> SST unit
     (fun m -> True)
-    (fun m0 a m1 -> stail (st m1) = (st m0) /\ (isNonEmpty (st m1)) /\ topstb m1 = emp /\ is1SuffixOf (idHistory m0)  (idHistory m1))
+    (fun m0 a m1 -> (heapAndStackTail m1 = heapAndStack m0) /\ (isNonEmpty (st m1)) /\ topstb m1 = emp /\ is1SuffixOf (idHistory m0)  (idHistory m1))
 
 assume val popStackFrame:  unit -> SST unit
-    (fun m -> True)
-    (fun m0 a m1 -> stail (st m0) == (st m1))
-
+    (fun m -> b2t (isNonEmpty (st m)))
+    (fun m0 a m1 -> heapAndStackTail m0 == heapAndStack m1)
 
 
 (** Injection of DIV effect into the new effect, mostly copied from prims.fst*)
