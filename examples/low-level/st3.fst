@@ -13,6 +13,13 @@ open List
 open ListSet
 type sidt = nat
 
+(*It should be possible to implement it using the existing assumptions in Heap,
+    perhaps using Heap.restrict?*)
+val freeRefInBlock : #a:Type -> r:(ref a) -> h:heap (*{Heap.contains h r} *) -> Tot heap
+let freeRefInBlock r h = admit ()
+
+
+
 type memblock = heap
 
 (*How does List.memT work? is equality always decidable?*)
@@ -87,27 +94,51 @@ match rl with
 | InHeap -> Some (hp m)
 | InStack id -> stackBlockAtLoc id (st m)
 
+val writeInBlock : #a:Type -> r:(ref a) -> v:a -> memblock -> Tot memblock
+let writeInBlock r v mb= upd mb r v
 
 (* are there associative maps in FStar? *)
 (*  proof by computation *)
 
-val writeMemStack : #a:Type -> (ref a) -> (Stack (sidt * memblock)) -> sidt -> a -> Tot (Stack (sidt * memblock))
-let rec writeMemStack r ms s v =
+val changeStackBlockWithId  : (memblock -> Tot memblock)
+  -> sidt
+  -> (Stack (sidt * memblock))
+        -> Tot (Stack (sidt * memblock))
+let rec changeStackBlockWithId f s ms=
 match ms with
 | [] -> []
 | h::tl ->
-  (if (fst h = s) then ((fst h, (upd (snd h) r v))::tl) else h::(writeMemStack r tl s v))
+  (if (fst h = s) then ((fst h, (f (snd h)))::tl) else h::(changeStackBlockWithId f s tl))
+
+val writeInMemStack : #a:Type -> (ref a) -> (Stack (sidt * memblock)) -> sidt -> a -> Tot (Stack (sidt * memblock))
+let rec writeInMemStack r ms s v = changeStackBlockWithId (writeInBlock r v) s ms
+
+val freeInMemStack : #a:Type -> (ref a) -> (Stack (sidt * memblock)) -> sidt -> Tot (Stack (sidt * memblock))
+let rec freeInMemStack r ms s = changeStackBlockWithId (freeRefInBlock r) s ms
+
+
+val changeStackBlockSameIDs :
+    f:(memblock -> Tot memblock) -> s:sidt -> ms:(Stack (sidt * memblock))
+  -> Lemma (ensures ((mapT fst ms) = (mapT fst (changeStackBlockWithId f s ms))))
+let rec changeStackBlockSameIDs f s ms =
+match ms with
+| Nil -> ()
+| h::tl ->   if (fst h = s) then () else (changeStackBlockSameIDs f s tl)
+
+val changeStackBlockWellFormed :
+   his:(list sidt)
+  -> f:(memblock -> Tot memblock) -> s:sidt -> ms:(Stack (sidt * memblock))
+  -> Lemma
+      (requires (wellFormed (ms,his)))
+      (ensures (wellFormed (changeStackBlockWithId f s ms,his)))
+let changeStackBlockWellFormed  his f s ms =
+(changeStackBlockSameIDs f s ms);(admit ())
+(*admit is not required; this is the bug that was minilized to https://github.com/FStarLang/FStar/issues/254*)
 
 val writeMemStackSameIDs : #a:Type -> r:(ref a) -> ms:(Stack (sidt * memblock))
   -> s:sidt -> v:a
-  -> Lemma (ensures ((mapT fst ms) = (mapT fst (writeMemStack r ms s v))))
-          (* [SMTPat (writeMemStack r ms s v)] *)
-let rec writeMemStackSameIDs r ms s v =
-match ms with
-| Nil -> ()
-| h::tl ->   if (fst h = s) then () else (writeMemStackSameIDs r tl s v)
-
-
+  -> Lemma (ensures ((mapT fst ms) = (mapT fst (writeInMemStack r ms s v))))
+let writeMemStackSameIDs r ms s v = (changeStackBlockSameIDs (writeInBlock r v) s ms)
 
 val writeMemStackWellFormed : #a:Type -> r:(ref a)
   -> his : (list sidt)
@@ -115,16 +146,31 @@ val writeMemStackWellFormed : #a:Type -> r:(ref a)
   -> s:sidt -> v:a
   -> Lemma
       (requires (wellFormed (ms,his)))
-      (ensures (wellFormed (writeMemStack r ms s v,his)))
-      [SMTPat (writeMemStack r ms s v)]
-let writeMemStackWellFormed r his ms s v =
-(writeMemStackSameIDs r ms s v) ; admit ()
+      (ensures (wellFormed (writeInMemStack r ms s v,his)))
+      [SMTPat (writeInMemStack r ms s v)]
+let writeMemStackWellFormed r his ms s v = (changeStackBlockWellFormed his (writeInBlock r v) s ms)
+
+val freeInMemStackSameIDs : #a:Type -> r:(ref a) -> ms:(Stack (sidt * memblock))
+  -> s:sidt
+  -> Lemma (ensures ((mapT fst ms) = (mapT fst (freeInMemStack r ms s))))
+let freeInMemStackSameIDs r ms s = (changeStackBlockSameIDs (freeRefInBlock r) s ms)
+
+val freeInMemStackWellFormed : #a:Type -> r:(ref a)
+  -> his : (list sidt)
+  -> ms:(Stack (sidt * memblock))
+  -> s:sidt
+  -> Lemma
+      (requires (wellFormed (ms,his)))
+      (ensures (wellFormed (freeInMemStack r ms s, his)))
+      [SMTPat (freeInMemStack r ms s)]
+let freeInMemStackWellFormed r his ms s = (changeStackBlockWellFormed his (freeRefInBlock r) s ms)
+
 (* what is the analog of transport / eq_ind?*)
 
 
 val writeMemStackSameStail : #a:Type -> r:(ref a) -> ms:(Stack (sidt * memblock))
   -> s:sidt -> v:a
-  -> Lemma (ensures ((stail ms) = (stail (writeMemStack r ms s v))))
+  -> Lemma (ensures ((stail ms) = (stail (writeInMemStack r ms s v))))
          (*  [SMTPat (writeMemStack r ms s v)] *)
 let rec writeMemStackSameStail r ms s v = ()
 
@@ -147,8 +193,8 @@ val writeMemStackExists : #a:Type -> rw:(ref a) -> r: (ref a)
   -> id:sidt -> v:a
   -> Lemma
       (requires (refExistsInStack r id ms))
-      (ensures (refExistsInStack r  id (writeMemStack rw ms id v)))
-      [SMTPat (writeMemStack rw ms id v)]
+      (ensures (refExistsInStack r  id (writeInMemStack rw ms id v)))
+      [SMTPat (writeInMemStack rw ms id v)]
 let rec writeMemStackExists rw r ms id v =
 match ms with
 | Nil -> ()
@@ -160,7 +206,14 @@ val writeMemAux : #a:Type -> (ref a) -> m:smem -> a -> Tot smem
 let writeMemAux r m v =
   match (refLoc r) with
   | InHeap -> ((upd (hp m) r v), snd m)
-  | InStack s -> ((hp m), ((writeMemStack r (st m) s v), idHistory m))
+  | InStack s -> ((hp m), ((writeInMemStack r (st m) s v), idHistory m))
+
+
+val freeMemAux : #a:Type -> (ref a) -> m:smem  -> Tot smem
+let freeMemAux r m =
+  match (refLoc r) with
+  | InHeap -> ((freeRefInBlock r (hp m)), snd m)
+  | InStack s -> ((hp m), ((freeInMemStack r (st m) s), idHistory m))
 
 
 val writeMemAuxPreservesExists :  #a:Type -> r:(ref a) -> m:smem -> v:a ->
@@ -195,7 +248,7 @@ match (refLoc r) with
 val readAfterWriteStack :
   #a:Type -> r:(ref a) -> v:a -> m:(Stack (sidt * memblock)) -> id:sidt ->
   Lemma (requires (refExistsInStack r id m))
-        (ensures ((refExistsInStack r id m) /\ loopkupRefStack r id (writeMemStack r m id v) == v))
+        (ensures ((refExistsInStack r id m) /\ loopkupRefStack r id (writeInMemStack r m id v) == v))
 let rec readAfterWriteStack r v m id =
 match m with
 | [] -> ()
@@ -217,8 +270,6 @@ let is1SuffixOf lsmall lbig =
 match lbig with
 | [] -> false
 | h::tl -> tl=lsmall
-
-(* assume val freeBlock *)
 
 type allocateInBlock (#a:Type) (r: ref a) (h0 : memblock) (h1 : memblock) (init : a)   = not(Heap.contains h0 r) /\ Heap.contains h1 r /\  h1 == upd h0 r init
 
@@ -250,39 +301,48 @@ assume val memread:  #a:Type -> r:(ref a) -> SST a
 assume val memwrite:  #a:Type -> r:(ref a) -> v:a ->
   SST unit
 	    (fun m -> b2t (refExistsInMem r m))
-      (fun m0 a m1 -> (refExistsInMem r m1) /\ (writeMemAux r m0 v) =  m1
+      (fun m0 _ m1 -> (refExistsInMem r m1)
         /\ (writeMemAux r m0 v) =  m1 /\ idHistory m0 = idHistory m1)
+
+assume val freeRef:  #a:Type -> r:(ref a)  ->
+  SST unit
+	    (fun m -> b2t (refExistsInMem r m))
+      (fun m0 _ m1 -> (freeMemAux r m0) =  m1 /\ idHistory m0 = idHistory m1)
 
 (*make sure that the ids are monotone *)
 assume val pushStackFrame:  unit -> SST unit
     (fun m -> True)
-    (fun m0 a m1 -> (heapAndStackTail m1 = heapAndStack m0) /\ (isNonEmpty (st m1)) /\ topstb m1 = emp /\ is1SuffixOf (idHistory m0)  (idHistory m1))
+    (fun m0 _ m1 -> (heapAndStackTail m1 = heapAndStack m0)
+          /\ (isNonEmpty (st m1))
+          /\ topstb m1 = emp
+          /\ is1SuffixOf (idHistory m0)  (idHistory m1))
 
 assume val popStackFrame:  unit -> SST unit
     (fun m -> b2t (isNonEmpty (st m)))
-    (fun m0 a m1 -> heapAndStackTail m0 == heapAndStack m1)
+    (fun m0 _ m1 -> heapAndStackTail m0 == heapAndStack m1)
 
 
 (** Injection of DIV effect into the new effect, mostly copied from prims.fst*)
 kind SSTPost (a:Type) = STPost_h smem a
 
 sub_effect
-  DIV   ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem) -> wp (fun a -> p a h)
+  DIV  ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem)
+            -> wp (fun a -> p a h)
 
 (** algebraic properties of memory operations*)
 
 (** withNewStackFrame combinator *)
 
 effect WNSC (#a:Type) (post: (smem -> Post a)) =
-(*instead of SST, this could be a weaker effect (in the lattic) which
-    does not allow pushing and popping stack frames *)
   SST a
       (fun m -> isNonEmpty (st m) /\ topstb m = emp)
-      (fun m0 a m1 -> post m0 a m1)
+      (fun m0 a m1 -> post m0 a m1
+          /\ isNonEmpty (st m0) (*not needed, ideally*)
+          /\ topstid m1 = topstid m0) (*body popped all and only the stack frames it pushed*)
 
 (*
 val withNewStackFrame : #a:Type -> post:(smem -> Post a) -> body:(WNSC post)
-      -> SST a (fun m -> True) (fun m0 a m1 -> post m0 a m1)
+      -> SST a (fun m -> True) (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
 *)
 let withNewStackFrame post body =
   pushStackFrame ();
