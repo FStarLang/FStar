@@ -201,15 +201,15 @@ match (refLoc r) with
 
 val writeMemStackExists : #a:Type -> rw:(ref a) -> r: (ref a)
   -> ms:(Stack (sidt * memblock))
-  -> id:sidt -> v:a
+  -> id:sidt -> idw:sidt -> v:a
   -> Lemma
       (requires (refExistsInStack r id ms))
-      (ensures (refExistsInStack r id (writeInMemStack rw ms id v)))
+      (ensures (refExistsInStack r id (writeInMemStack rw ms idw v)))
       [SMTPat (writeInMemStack rw ms id v)]
-let rec writeMemStackExists rw r ms id v =
+let rec writeMemStackExists rw r ms id idw v =
 match ms with
 | Nil -> ()
-| h::tl ->   if (fst h = id) then () else ((writeMemStackExists rw r tl id v))
+| h::tl ->   if (fst h = id) then () else ((writeMemStackExists rw r tl id idw v))
 
 (* ((writeMemStackLem r ms s v)) *)
 
@@ -234,8 +234,12 @@ Lemma (requires (refExistsInMem r m))
 let writeMemAuxPreservesExists rw r m v =
 match (refLoc r) with
 | InHeap -> ()
-| InStack id -> (writeMemStackExists rw r (st m) id v); admit ()
-(*this just follows from definitional equality; admit should not be needed*)
+| InStack id ->
+    match (refLoc rw) with
+    | InHeap -> ()
+    | InStack idw ->  (writeMemStackExists rw r (st m) id idw v)
+
+
 
 val writeMemAuxPreservesStail :  #a:Type -> r:(ref a) -> m:smem -> v:a ->
 Lemma (requires (is_InStack (refLoc r)))
@@ -262,14 +266,24 @@ match (refLoc r) with
 
 
 val readAfterWriteStack :
-  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> m:(Stack (sidt * memblock)) ->
+  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * memblock)) ->
+  Lemma (requires (refExistsInStack r id m))
+        (ensures true)
+        (*  (ensures ((refExistsInStack r id m)
+            /\ loopkupRefStack r id (writeInMemStack rw m idw v) = (if (r=rw) then v else (loopkupRefStack r id m)))) *)
+
+val readAfterWriteStack :
+  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * memblock)) ->
   Lemma (requires (refExistsInStack r id m))
         (ensures ((refExistsInStack r id m)
-            /\ loopkupRefStack r id (writeInMemStack rw m id v) = (if (r=rw) then v else (loopkupRefStack r id m))))
-let rec readAfterWriteStack rw r v id m =
+            /\ loopkupRefStack r id (writeInMemStack rw m idw v) = (if (r=rw) then v else (loopkupRefStack r id m))))
+let rec readAfterWriteStack rw r v id idw m =
 match m with
 | [] -> ()
-| h::tl -> if (fst h = id) then () else ((readAfterWriteStack rw r v id tl))
+| h::tl ->  if (fst h = idw) then (admit ()) else (admit ())
+(*else ((readAfterWriteStack rw r v id idw tl); admit()) *)
+
+
 
 val readAfterWrite : #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> m:smem ->
   Lemma (requires (refExistsInMem r m))
@@ -279,8 +293,10 @@ val readAfterWrite : #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> m:smem ->
 let readAfterWrite rw r v m =
 match (refLoc r) with
 | InHeap -> ()
-| InStack id -> (readAfterWriteStack rw r v id (st m)); admit ()
-(*this just follows from definitional equality; admit should not be needed*)
+| InStack id ->
+  match (refLoc rw) with
+  | InHeap -> ()
+  | InStack idw -> (readAfterWriteStack rw r v id idw (st m))
 
 
 
