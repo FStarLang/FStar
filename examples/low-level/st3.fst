@@ -369,6 +369,7 @@ sub_effect
 
 (** withNewStackFrame combinator *)
 
+(*we might need a precondition abut heap*)
 effect WNSC (#a:Type) (post: (smem -> Post a)) =
   SST a
       (fun m -> isNonEmpty (st m) /\ topstb m = emp)
@@ -376,11 +377,14 @@ effect WNSC (#a:Type) (post: (smem -> Post a)) =
           /\ isNonEmpty (st m0) (*not needed, ideally*)
           /\ topstid m1 = topstid m0) (*body popped all and only the stack frames it pushed*)
 
+
+val withNewStackFrame : #a:Type -> post:(smem -> Post a) -> body:(unit -> WNSC post)
+      -> SST a (fun m -> True)
+       (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
 (*
-val withNewStackFrame : #a:Type -> post:(smem -> Post a) -> body:(WNSC post)
-      -> SST a (fun m -> True) (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
-*)
 let withNewStackFrame post body =
   pushStackFrame ();
-  body;
-  popStackFrame ()
+  body ();
+  popStackFrame ()  *)
+
+(* withNewLocal , e.g. for while loop*)
