@@ -23,6 +23,9 @@ val remove    : #a:Type -> f:cmp a -> a -> ordset a f -> Tot (ordset a f)
 
 val size      : #a:Type -> f:cmp a -> ordset a f -> Tot nat
 
+(* TODO: implement and add lemmas *)
+val subset    : #a:Type -> f:cmp a -> ordset a f -> ordset a f -> Tot bool
+
 val eq_lemma: #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f
               -> Lemma (requires (forall x. mem f x s1 = mem f x s2))
                        (ensures s1 = s2)
