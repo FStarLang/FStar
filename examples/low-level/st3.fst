@@ -272,16 +272,21 @@ val readAfterWriteStack :
         (*  (ensures ((refExistsInStack r id m)
             /\ loopkupRefStack r id (writeInMemStack rw m idw v) = (if (r=rw) then v else (loopkupRefStack r id m)))) *)
 
+
 val readAfterWriteStack :
   #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * memblock)) ->
   Lemma (requires (refExistsInStack r id m))
         (ensures ((refExistsInStack r id m)
-            /\ loopkupRefStack r id (writeInMemStack rw m idw v) = (if (r=rw) then v else (loopkupRefStack r id m))))
+            /\ loopkupRefStack r id (writeInMemStack rw m idw v) = (if (r=rw && id=idw) then v else (loopkupRefStack r id m))))
 let rec readAfterWriteStack rw r v id idw m =
 match m with
 | [] -> ()
-| h::tl ->  if (fst h = idw) then (admit ()) else (admit ())
-(*else ((readAfterWriteStack rw r v id idw tl); admit()) *)
+| h::tl ->
+  if (fst h = idw)
+    then ()
+    else (if (fst h=id)
+              then ()
+              else ((readAfterWriteStack rw r v id idw tl)))
 
 
 
@@ -375,16 +380,16 @@ effect WNSC (#a:Type) (post: (smem -> Post a)) =
       (fun m -> isNonEmpty (st m) /\ topstb m = emp)
       (fun m0 a m1 -> post m0 a m1
           /\ isNonEmpty (st m0) (*not needed, ideally*)
-          /\ topstid m1 = topstid m0) (*body popped all and only the stack frames it pushed*)
+          /\ sids m1 = sids m0) (*body popped all and only the stack frames it pushed*)
 
-
+(*
 val withNewStackFrame : #a:Type -> post:(smem -> Post a) -> body:(unit -> WNSC post)
       -> SST a (fun m -> True)
        (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
-(*
 let withNewStackFrame post body =
   pushStackFrame ();
   body ();
-  popStackFrame ()  *)
+  popStackFrame ()
+*)
 
 (* withNewLocal , e.g. for while loop*)
