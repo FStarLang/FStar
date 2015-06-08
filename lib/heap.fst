@@ -4,14 +4,6 @@ open Set
 
 type aref =
   | Ref : #a:Type -> r:ref a -> aref
-
-type refs =
-  | AllRefs : refs
-  | SomeRefs : v:set aref -> refs
-
-let no_refs  = SomeRefs empty
-let a_ref  r = SomeRefs (singleton (Ref r))
-
 assume logic val sel :       #a:Type -> heap -> ref a -> Tot a
 assume logic val upd :       #a:Type -> heap -> ref a -> a -> Tot heap
 assume logic val emp :       heap

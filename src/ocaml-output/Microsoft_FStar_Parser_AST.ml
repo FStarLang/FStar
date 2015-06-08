@@ -141,7 +141,7 @@ let lid_with_range = (fun lid r -> (Microsoft_FStar_Absyn_Syntax.lid_of_path (Mi
 
 let to_string_l = (fun sep f l -> (Support.String.concat sep (Support.List.map f l)))
 
-let imp_to_string = (fun _111790 -> (match (_111790) with
+let imp_to_string = (fun _111810 -> (match (_111810) with
 | Hash -> begin
 "#"
 end
@@ -175,7 +175,7 @@ end
 (Microsoft_FStar_Absyn_Print.sli l)
 end
 | Construct ((l, args)) -> begin
-(Support.Microsoft.FStar.Util.format2 "(%s %s)" (Microsoft_FStar_Absyn_Print.sli l) (to_string_l " " (fun _112010 -> (match (_112010) with
+(Support.Microsoft.FStar.Util.format2 "(%s %s)" (Microsoft_FStar_Absyn_Print.sli l) (to_string_l " " (fun _112030 -> (match (_112030) with
 | (a, imp) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s%s" (imp_to_string imp) (term_to_string a))
 end)) args))
@@ -193,7 +193,7 @@ end
 (Support.Microsoft.FStar.Util.format3 "let %s = %s in %s" (pat_to_string pat) (term_to_string tm) (term_to_string body))
 end
 | Let ((_, lbs, body)) -> begin
-(Support.Microsoft.FStar.Util.format2 "let rec %s in %s" (to_string_l " and " (fun _112040 -> (match (_112040) with
+(Support.Microsoft.FStar.Util.format2 "let rec %s in %s" (to_string_l " and " (fun _112060 -> (match (_112060) with
 | (p, b) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (pat_to_string p) (term_to_string b))
 end)) lbs) (term_to_string body))
@@ -205,7 +205,7 @@ end
 (Support.Microsoft.FStar.Util.format3 "if %s then %s else %s" (term_to_string t1) (term_to_string t2) (term_to_string t3))
 end
 | Match ((t, branches)) -> begin
-(Support.Microsoft.FStar.Util.format2 "match %s with %s" (term_to_string t) (to_string_l " | " (fun _112057 -> (match (_112057) with
+(Support.Microsoft.FStar.Util.format2 "match %s with %s" (term_to_string t) (to_string_l " | " (fun _112077 -> (match (_112077) with
 | (p, w, e) -> begin
 (Support.Microsoft.FStar.Util.format3 "%s %s -> %s" (pat_to_string p) (match (w) with
 | None -> begin
@@ -220,13 +220,13 @@ end
 (Support.Microsoft.FStar.Util.format2 "(%s : %s)" (term_to_string t1) (term_to_string t2))
 end
 | Record ((Some (e), fields)) -> begin
-(Support.Microsoft.FStar.Util.format2 "{%s with %s}" (term_to_string e) (to_string_l " " (fun _112072 -> (match (_112072) with
+(Support.Microsoft.FStar.Util.format2 "{%s with %s}" (term_to_string e) (to_string_l " " (fun _112092 -> (match (_112092) with
 | (l, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli l) (term_to_string e))
 end)) fields))
 end
 | Record ((None, fields)) -> begin
-(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l " " (fun _112079 -> (match (_112079) with
+(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l " " (fun _112099 -> (match (_112099) with
 | (l, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli l) (term_to_string e))
 end)) fields))
@@ -268,7 +268,7 @@ end
 (Support.Microsoft.FStar.Util.format2 "Unidentified product: [%s] %s" ((Support.String.concat ",") ((Support.List.map binder_to_string) bs)) (term_to_string t))
 end
 | t -> begin
-(failwith ("Missing case in term_to_string"))
+(failwith "Missing case in term_to_string")
 end))
 and binder_to_string = (fun x -> (let s = (match (x.b) with
 | Variable (i) -> begin
@@ -322,7 +322,7 @@ end
 (Support.Microsoft.FStar.Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l))
 end
 | PatRecord (l) -> begin
-(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l "; " (fun _112193 -> (match (_112193) with
+(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l "; " (fun _112213 -> (match (_112213) with
 | (f, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli f) (pat_to_string e))
 end)) l))
@@ -364,12 +364,20 @@ end
 (mk_term (Construct ((s, args))) r Un)
 end
 | _ -> begin
-(Support.List.fold_left (fun t _112237 -> (match (_112237) with
+(Support.List.fold_left (fun t _112257 -> (match (_112257) with
 | (a, imp) -> begin
 (mk_term (App ((t, a, imp))) r Un)
 end)) t args)
 end)
 end))
+
+let mkRefSet = (fun r elts -> (let empty = (mk_term (Name ((Microsoft_FStar_Absyn_Util.set_lid_range Microsoft_FStar_Absyn_Const.set_empty r))) r Expr)
+in (let ref_constr = (mk_term (Name ((Microsoft_FStar_Absyn_Util.set_lid_range Microsoft_FStar_Absyn_Const.heap_ref r))) r Expr)
+in (let singleton = (mk_term (Name ((Microsoft_FStar_Absyn_Util.set_lid_range Microsoft_FStar_Absyn_Const.set_singleton r))) r Expr)
+in (let union = (mk_term (Name ((Microsoft_FStar_Absyn_Util.set_lid_range Microsoft_FStar_Absyn_Const.set_union r))) r Expr)
+in (Support.List.fold_right (fun e tl -> (let e = (mkApp ref_constr (((e, Nothing))::[]) r)
+in (let single_e = (mkApp singleton (((e, Nothing))::[]) r)
+in (mkApp union (((single_e, Nothing))::((tl, Nothing))::[]) r)))) elts empty))))))
 
 let mkExplicitApp = (fun t args r -> (match (args) with
 | [] -> begin

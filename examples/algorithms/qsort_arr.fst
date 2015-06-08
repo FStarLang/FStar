@@ -63,8 +63,7 @@ val partition: #a:Type -> f:tot_ord a
                -> back:nat{pivot <= back /\ back < len}
                -> x:array a -> ST nat
   (requires (partition_pre a f start len pivot back x))
-  (ensures (partition_post a f start len pivot back x))
-  (modifies (a_ref x))
+  (ensures (fun h0 n h1 -> partition_post a f start len pivot back x h0 n h1 /\ modifies !{x} h0 h1))
 let rec partition (a:Type) f start len pivot back x =
   let h0 = get() in
   let s = sel h0 x in
@@ -132,13 +131,13 @@ let lemma_slice_cons_pv s i pivot j pv =
 val sort: #a:Type -> f:tot_ord a -> i:nat -> j:nat{i <= j} -> x:array a
           -> ST unit
   (requires (fun h -> contains h x /\ j <= length (sel h x)))
-  (ensures (fun h0 u h1 -> (j <= length (sel h0 x)                                      (* carrying this along from the requires clause *)
+  (ensures (fun h0 u h1 -> (modifies !{x} h0 h1
+                            /\ j <= length (sel h0 x)                                      (* carrying this along from the requires clause *)
                             /\ contains h1 x                                            (* the array is still in the heap *)
                             /\ (length (sel h0 x) = length (sel h1 x))                  (* its length has not changed *)
                             /\ sorted f (slice (sel h1 x) i j)                          (* it is sorted between [i, j) *)
                             /\ (sel h1 x == splice (sel h0 x) i (sel h1 x) j)           (* the rest of it is unchanged *)
                             /\ permutation a (slice (sel h0 x) i j) (slice (sel h1 x) i j)))) (* the [i,j) sub-array is a permutation of the original one *)
-  (modifies (a_ref x))
 let rec sort (a:Type) f i j x =
   let h0 = ST.get () in
   if i=j
@@ -176,8 +175,8 @@ let rec sort (a:Type) f i j x =
 
 val qsort: #a:Type -> f:tot_ord a -> x:array a -> ST unit
   (requires (fun h -> contains h x))
-  (ensures (fun h0 u h1 -> contains h1 x /\ sorted f (sel h1 x) /\ permutation a (sel h0 x) (sel h1 x)))
-  (modifies (a_ref x))
+  (ensures (fun h0 u h1 -> modifies !{x} h0 h1
+                        /\ contains h1 x /\ sorted f (sel h1 x) /\ permutation a (sel h0 x) (sel h1 x)))
 let qsort f x =
   let h0 = get() in
 

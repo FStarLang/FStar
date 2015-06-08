@@ -28,10 +28,10 @@ assume val of_seq: #a:Type -> s:seq a -> ST (array a)
   (requires (fun h -> True))
   (ensures  (fun h0 x h1 -> (not(contains h0 x)
                              /\ contains h1 x
+                             /\ modifies !{} h0 h1
                              /\ sel h1 x=s)))
-  (modifies no_refs)
 
-assume val to_seq: #a:Type -> s:array a -> St (seq a)
+assume val to_seq: #a:Type -> s:array a -> ST (seq a)
   (requires (fun h -> contains h s))
   (ensures  (fun h0 x h1 -> (sel h0 s=x /\ h0==h1)))
 
@@ -39,10 +39,10 @@ assume val create : #a:Type -> n:nat -> init:a -> ST (array a)
   (requires (fun h -> True))
   (ensures  (fun h0 x h1 -> (not(contains h0 x)
                              /\ contains h1 x
+                             /\ modifies !{} h0 h1
                              /\ sel h1 x=Seq.create n init)))
-  (modifies no_refs)
 
-assume val index : #a:Type -> x:array a -> n:nat -> St a
+assume val index : #a:Type -> x:array a -> n:nat -> ST a
   (requires (fun h -> contains h x /\ n < Seq.length (sel h x)))
   (ensures  (fun h0 v h1 -> (n < Seq.length (sel h0 x)
                              /\ h0==h1
@@ -54,20 +54,17 @@ assume val upd : #a:Type -> x:array a -> n:nat -> v:a -> ST unit
   (ensures  (fun h0 u h1 -> (n < Seq.length (sel h0 x)
                             /\ contains h1 x
                             /\ h1==upd h0 x (Seq.upd (sel h0 x) n v))))
-  (modifies (a_ref x))
 
-assume val length: #a:Type -> x:array a -> St nat
+assume val length: #a:Type -> x:array a -> ST nat
   (requires (fun h -> contains h x))
   (ensures  (fun h0 y h1 -> y=length (sel h0 x) /\ h0==h1))
 
 assume val op: #a:Type -> f:(seq a -> Tot (seq a)) -> x:array a -> ST unit
   (requires (fun h -> contains h x))
-  (ensures  (fun h0 u h1 -> sel h1 x=f (sel h0 x)))
-  (modifies (a_ref x))
-
+  (ensures  (fun h0 u h1 -> modifies !{x} h0 h1 /\ sel h1 x=f (sel h0 x)))
 
 val swap: #a:Type -> x:array a -> i:nat -> j:nat{i <= j}
-                 -> St unit (requires (fun h -> contains h x /\ j < Seq.length (sel h x)))
+                 -> ST unit (requires (fun h -> contains h x /\ j < Seq.length (sel h x)))
                             (ensures (fun h0 _u h1 ->
                                       (j < Seq.length (sel h0 x))
                                       /\ contains h1 x
