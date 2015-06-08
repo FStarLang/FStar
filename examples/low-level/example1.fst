@@ -31,7 +31,7 @@ let pushPopNoChage () =
 
 
 val incrementUsingStack : vi:int -> SST int  (fun _ -> True)
-    (fun m0 vo m1 -> heapAndStack m0 = heapAndStack m1 /\ vo==vi+1)
+    (fun m0 vo m1 -> heapAndStack m0 = heapAndStack m1 /\ vo=vi+1)
 let incrementUsingStack vi =
   pushStackFrame ();
     let r = salloc vi in
@@ -54,13 +54,27 @@ let incrementRef2 r =
   memwrite r (oldv + 1)
 
 (* an example illustrating a typical C idiom :
-  caller allocates memory and passes the ref to calle to get some work done *)
+  caller allocates memory and passes the ref to callee to get some work done *)
 val incrementUsingStack2 : vi:int -> SST int  (fun _ -> True)
-    (fun m0 vo m1 -> heapAndStack m0 = heapAndStack m1 /\ vo==vi+1)
+    (fun m0 vo m1 -> heapAndStack m0 = heapAndStack m1 /\ vo=vi+1)
 let incrementUsingStack2 vi =
   pushStackFrame ();
     let r = salloc vi in
-    incrementRef2 r; (*why doesnt incrementRef work here?*)
+    incrementRef2 r; (*why doesn't incrementRef work here?*)
+    let v = (memread r) in
+  popStackFrame ();
+  v
+
+val incrementUsingStack3 : vi:int -> SST int  (fun _ -> True)
+    (fun m0 vo m1 -> heapAndStack m0 = heapAndStack m1 /\ vo=vi+1)
+let incrementUsingStack3 vi =
+  pushStackFrame ();
+  pushStackFrame ();
+    let r = salloc vi in
+    let r2 = salloc 0 in
+    let oldv = memread r in
+    memwrite r (oldv + 1);
+    memwrite r2 2; (*a dummy operation bwteen write r and read r*)
     let v = (memread r) in
   popStackFrame ();
   v

@@ -23,6 +23,17 @@ let freeRefInBlock r h = admit ()
 type memblock = heap
 
 (*How does List.memT work? is equality always decidable?*)
+
+(*Actually, history is not required. The axiomatization can remain agnostic
+    about resuse of memory ids, i.e. it should (provably) have both kind of models.
+    Then, a client code's correctness cannot depend on stack-ids being reused.
+    That will actually be a strictly weaker assumption, than the current one
+    where the client can potentially depend on stack ids being never reused.
+
+    This is similar to the case of freshness of references in ST.
+    The axiomatization is agnostic about whether a reference can be reused after it
+    is freed.
+    *)
 type memStackAux = Stack (sidt * memblock) * list sidt
 
 val wellFormedAux : list sidt -> list sidt -> Tot bool
@@ -193,7 +204,7 @@ val writeMemStackExists : #a:Type -> rw:(ref a) -> r: (ref a)
   -> id:sidt -> v:a
   -> Lemma
       (requires (refExistsInStack r id ms))
-      (ensures (refExistsInStack r  id (writeInMemStack rw ms id v)))
+      (ensures (refExistsInStack r id (writeInMemStack rw ms id v)))
       [SMTPat (writeInMemStack rw ms id v)]
 let rec writeMemStackExists rw r ms id v =
 match ms with
@@ -206,7 +217,7 @@ val writeMemAux : #a:Type -> (ref a) -> m:smem -> a -> Tot smem
 let writeMemAux r m v =
   match (refLoc r) with
   | InHeap -> ((upd (hp m) r v), snd m)
-  | InStack s -> ((hp m), ((writeInMemStack r (st m) s v), idHistory m))
+  | InStack id -> ((hp m), ((writeInMemStack r (st m) id v), idHistory m))
 
 
 val freeMemAux : #a:Type -> (ref a) -> m:smem  -> Tot smem
@@ -216,11 +227,15 @@ let freeMemAux r m =
   | InStack s -> ((hp m), ((freeInMemStack r (st m) s), idHistory m))
 
 
-val writeMemAuxPreservesExists :  #a:Type -> r:(ref a) -> m:smem -> v:a ->
+val writeMemAuxPreservesExists :  #a:Type -> rw:(ref a) -> r:(ref a) -> m:smem -> v:a ->
 Lemma (requires (refExistsInMem r m))
-      (ensures (refExistsInMem r (writeMemAux r m v)))
-      [SMTPat (writeMemAux r m v)]
-let rec writeMemAuxPreservesExists r m v =  ()
+      (ensures (refExistsInMem r (writeMemAux rw m v)))
+      [SMTPat (writeMemAux rw m v)]
+let writeMemAuxPreservesExists rw r m v =
+match (refLoc r) with
+| InHeap -> ()
+| InStack id -> (writeMemStackExists rw r (st m) id v); admit ()
+(*this just follows from definitional equality; admit should not be needed*)
 
 val writeMemAuxPreservesStail :  #a:Type -> r:(ref a) -> m:smem -> v:a ->
 Lemma (requires (is_InStack (refLoc r)))
@@ -245,24 +260,29 @@ match (refLoc r) with
 | InHeap -> (sel (hp m) r)
 | InStack id -> loopkupRefStack r id (st m)
 
+
 val readAfterWriteStack :
-  #a:Type -> r:(ref a) -> v:a -> m:(Stack (sidt * memblock)) -> id:sidt ->
+  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> m:(Stack (sidt * memblock)) ->
   Lemma (requires (refExistsInStack r id m))
-        (ensures ((refExistsInStack r id m) /\ loopkupRefStack r id (writeInMemStack r m id v) == v))
-let rec readAfterWriteStack r v m id =
+        (ensures ((refExistsInStack r id m)
+            /\ loopkupRefStack r id (writeInMemStack rw m id v) = (if (r=rw) then v else (loopkupRefStack r id m))))
+let rec readAfterWriteStack rw r v id m =
 match m with
 | [] -> ()
-| h::tl -> if (fst h = id) then () else ((readAfterWriteStack r v tl id))
+| h::tl -> if (fst h = id) then () else ((readAfterWriteStack rw r v id tl))
 
-
-val readAfterWrite : #a:Type -> r:(ref a) -> v:a -> m:smem ->
+val readAfterWrite : #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> m:smem ->
   Lemma (requires (refExistsInMem r m))
-        (ensures ((refExistsInMem r m) /\ loopkupRef r (writeMemAux r m v) == v))
-        [SMTPat (writeMemAux r m v)]
-let readAfterWrite r v m =
+        (ensures (refExistsInMem r m)
+            /\ loopkupRef r (writeMemAux rw m v) = (if (r=rw) then v else (loopkupRef r m)))
+        [SMTPat (writeMemAux rw m v)]
+let readAfterWrite rw r v m =
 match (refLoc r) with
 | InHeap -> ()
-| InStack id -> readAfterWriteStack r v (st m) id
+| InStack id -> (readAfterWriteStack rw r v id (st m)); admit ()
+(*this just follows from definitional equality; admit should not be needed*)
+
+
 
 (*should extend to types with decidable equality*)
 val is1SuffixOf : list sidt -> list sidt -> Tot bool
