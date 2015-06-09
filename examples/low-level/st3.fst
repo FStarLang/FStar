@@ -424,18 +424,26 @@ effect whileGuard (pre :(smem -> Type))
 (* the guard of a while loop is not supposed to change the memory*)
 
 effect whileBody (loopInv :(smem -> Type)) (wg : unit -> whileGuard loopInv)
-  = SST unit (fun m -> loopInv m (*/\ wg computes to true in m*))
-             (fun m0 _ m1 -> loopInv m1)
+  = SST unit (fun m -> loopInv (mtail m) (*/\ wg computes to true in m*))
+             (fun m0 _ m1 -> loopInv (mtail m1) /\ sids m0 = sids m1)
+(*to get the commented out part,
+  should the while guard also have a logical predicate as a parameter ?
+  Wouldn't it be annoying for the programmer to duplicate the effort;
+    writing both the program and its logical predicate?
+    Perhaps the latter part can be automated.
+    *)
 
 val scopedWhile : loopInv:(smem -> Type)
   -> wg:(unit -> whileGuard loopInv)
   -> bd:(unit -> whileBody loopInv wg)
   -> SST unit (fun m -> loopInv m (*/\ wg computes to true in m*))
-              (fun m0 _ m1 -> loopInv m1 (* /\ wg computes to false in m1*))
+              (fun m0 _ m1 -> loopInv m1 /\ sids m0 = sids m1(* /\ wg computes to false in m1*))
 let rec scopedWhile (loopInv:(smem -> Type))
           (wg:(unit -> whileGuard loopInv))
           (bd:(unit -> whileBody loopInv wg)) =
    let gv = wg () in
    if (gv)
-      then scopedWhile loopInv wg bd
+      then
+        ((withNewScope unit (fun m -> loopInv m) (fun _ _ m1 -> loopInv m1) bd);
+        (scopedWhile loopInv wg bd))
       else ()
