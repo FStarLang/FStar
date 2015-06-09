@@ -89,3 +89,41 @@ let equal2 r =
   (if (oldv=2)
     then memwrite r 2
     else memwrite r (oldv + 1));oldv
+
+val factorial : nat -> Tot nat
+let rec factorial n =
+match n with
+| 0 -> 1
+| n -> n * factorial (n - 1)
+
+
+val factorialGuard :  nat -> li:(ref nat)  -> unit -> whileGuard (fun m -> b2t (refExistsInMem li m))
+let factorialGuard n li u = (memread li < n)
+
+(*
+Why does the following not work?
+let factorialGuard () = true
+*)
+
+(* the guard of a while loop is not supposed to change the memory*)
+
+val factorialLoopBody : n:nat -> li:(ref nat) -> res:(ref nat)
+  -> whileBody (fun m -> refExistsInMem li m /\ refExistsInMem res m (*/\ loopkupRef res m == factorial (loopkupRef li m) *))
+    (factorialGuard n li)
+let factorialLoopBody n li res  =
+    let liv = memread li in
+    memwrite li (liv + 1);
+    memwrite res ((memread res) * liv)
+
+
+(*
+val factorialBody : n:nat
+  ->
+
+  whileBody (fun m -> refExistsInMem li m /\ refExistsInMem res m (*/\ loopkupRef res m == factorial (loopkupRef li m) *))
+    (factorialGuard n li)
+let factorialLoopBody n li res  =
+    let liv = memread li in
+    memwrite li (liv + 1);
+    memwrite res ((memread res) * liv)
+*)

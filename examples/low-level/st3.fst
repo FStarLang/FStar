@@ -379,9 +379,11 @@ sub_effect
   DIV  ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem)
             -> wp (fun a -> p a h)
 
+(*
 sub_effect
   PURE  ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem)
             -> wp (fun a -> p a h)
+*)
 
 (* should we have an SSTP  for pure SST which has a lifting from PURE,
    and a lifting from SSTP and DIV to SST?
