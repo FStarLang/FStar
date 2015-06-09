@@ -38,25 +38,20 @@ type out_P1_t = ( cipher * (in_P2_t -> out_P2_t) )
 
 (* -------------- Protocol ------------- *)
 
-val p2 : pub_id_t -> priv_id_t
-  -> ca:cipher{(FromAboth (fst ca) (snd ca)) /\ (exists (mLa:bytes) (mRa:bytes).((Encryptedboth mLa mRa (fst ca) (snd ca)) /\ (Marshboth (fst v1) (snd v2) mLa mRa)))}
-  -> error
-  -> in_P2_t -> out_P2_t
-let p2 pkBB skBB cA e arg2 =
-  let cB = bob pkBB in
-
-  let p3 arg3 =
-    let res = ballotBox pkBB skBB cA cB arg3 e in
-    res in
-
-  (cB,p3)
-
-
-
 val p1: error -> in_P1_t -> out_P1_t
 let p1 e arg1 =
   let key_ref = mkKeyRef () in
   let skBB = mkPrivKey key_ref () in
   let pkBB = mkPubKey key_ref skBB in
   let cA = alice pkBB in
-  (cA,p2 pkBB skBB cA e)
+
+  let p2 arg2 : out_P2_t =
+    let cB = bob pkBB in
+
+    let p3 cO =
+      let res = ballotBox pkBB skBB cA cB cO e in
+      res in
+
+    (cB,p3) in
+
+  (cA,p2)

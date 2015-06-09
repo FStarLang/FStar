@@ -25,23 +25,11 @@ open Assumptions
 
 (* -------------- Ballot Box Implementation -------------- *)
 let ballotBox pkBB skBB ca cb co e =
-  let ba = check_val pkBB ca in
-  match ba with
-    | false -> e
-    | true ->
-       let bb = check_val pkBB cb in
-       match bb with
-	 | false -> e
-	 | true ->
-	    let bo = check_val pkBB co in
-	(* Note: If the intruder send an homo encryption of ca and ca then, bo = false and protocol still typechecks *)
-	    match bo with
-	      | false -> e
-	      | true ->
-	         if (co = ca) then e else
-	           if (co = cb) then e else
-	             let cab = hom_add pkBB ca cb in
-	             let cfinal = hom_add pkBB cab co in
-	             match dec skBB cfinal with
-	               | None -> e
-	               | Some mfinal -> mfinal
+  if (check_val pkBB ca) && (check_val pkBB cb) && (check_val pkBB co) && (co <> ca) && (co <> cb) then
+    (* Note: If the intruder send an homo encryption of ca and ca then, check_val pkBB co = false and protocol still typechecks *)
+    let cab = hom_add pkBB ca cb in
+    let cfinal = hom_add pkBB cab co in
+    match dec skBB cfinal with
+      | None -> e
+      | Some mfinal -> mfinal
+  else e
