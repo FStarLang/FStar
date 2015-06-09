@@ -1,8 +1,10 @@
 (*--build-config
     options:--admit_fsi Set;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst stack.fst listset.fst
+    variables:MATHS=../maths;
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst
   --*)
+
 
 module StructuredMem
 open Heap
@@ -11,22 +13,39 @@ open Set
 open Prims
 open List
 open ListSet
+
 type sidt = nat
+
+(*copied fro examples/maths/bijection.fst, because that file doesn't compile*)
+type inverseLR (#a:Type) (#b:Type) (fab:(a -> Tot b)) (fba:(b -> Tot a)) =
+       (forall (x:a). fba (fab x) = x) /\ (forall (y:b). fab (fba y) = y)
 
 (*It should be possible to implement it using the existing assumptions in Heap,
     perhaps using Heap.restrict?*)
 val freeRefInBlock : #a:Type -> r:(ref a) -> h:heap (*{Heap.contains h r} *) -> Tot heap
 let freeRefInBlock r h = admit ()
 
-
+(*it seems that F* does not have dependent records
+type memRep (a:Type) = {sz:nat;  rep:a->Tot (l:list nat{length l=sz})}
+*)
+type word=int
+(*it seems that F* does not have paremetrized inductive types.
+    It has indexed inductive types, which is too powerful for defining the concept below;
+    the definitions of members of the type family below do not depend on each other
+    *)
+type memRep : Type -> Type =
+  | MkRep : #a:Type -> sz:nat
+        -> rep:(a->Tot (l:list word{length l=sz}))
+        -> repInv:((l:list word{length l=sz})-> Tot a){inverseLR repInv rep}
+        -> memRep a
 
 type memblock = heap
 
 (*How does List.memT work? is equality always decidable?*)
 
-(*Actually, history is not required. The axiomatization can remain agnostic
+  (* The axiomatization is agnostic
     about resuse of memory ids, i.e. it should (provably) have both kind of models.
-    Then, a client code's correctness cannot depend on stack-ids being reused.
+    A client code's correctness/well-typedness cannot depend on stack-ids being reused.
     That will actually be a strictly weaker assumption, than the current one
     where the client can potentially depend on stack ids being never reused.
 
@@ -34,44 +53,35 @@ type memblock = heap
     The axiomatization is agnostic about whether a reference can be reused after it
     is freed.
     *)
-type memStackAux = Stack (sidt * memblock) * list sidt
+type memStackAux = Stack (sidt * memblock)
 
-val wellFormedAux : list sidt -> list sidt -> Tot bool
-let  wellFormedAux stids idhistory = (lsubset stids idhistory) && (noRepeats stids)
 
 val wellFormed : memStackAux -> Tot bool
-let wellFormed x =
-let stids = mapT fst (fst x) in
-  let idhistory = snd x in (wellFormedAux stids idhistory)
+let wellFormed ms = noRepeats (mapT fst ms)
 
 type memStack = x:memStackAux{wellFormed x}
 
 
 (* Should we also include sizes of refs in order to enable reasoninag about memory usage of programs?*)
-(* Even a simple notion of size, e.g. 1 unit per object, can help us reason about (lack of) memory leaks.*)
 (* What is the size of functions? Does it make even make sense to store a function at a reference? Would it be possible to transpile such a construct? *)
+
+(* Even a simple notion of size, e.g. 1 unit per object only for heap objects, can help us reason about (lack of) memory leaks.*)
 type smem = memblock * memStack
 
 
 let hp (s : smem) = fst s
 
 val st : smem -> Tot (Stack (sidt * memblock))
-let st (s : smem) = fst (snd s)
+let st (s : smem) = (snd s)
 
-val heapAndStack : smem -> Tot (memblock * (Stack (sidt * memblock)))
-let heapAndStack (s : smem) = (hp s, st s)
-
-val heapAndStackTail : smem -> Tot (memblock * (Stack (sidt * memblock)))
-let heapAndStackTail (s : smem) = (hp s, stail (st s))
+val mtail : smem -> Tot smem
+let mtail (s : smem) = (hp s, stail (st s))
 
 val mstail : smem -> Tot ((Stack (sidt * memblock)))
 let mstail (s : smem) = stail (st s)
 
 val sids : smem -> Tot (list sidt)
 let sids (m : smem) = mapT fst (st m)
-
-val idHistory : smem -> Tot (list sidt)
-let idHistory (s : smem) = snd (snd s)
 
 let sid (s : (sidt * memblock)) = fst s
 
@@ -137,14 +147,11 @@ match ms with
 | h::tl ->   if (fst h = s) then () else (changeStackBlockSameIDs f s tl)
 
 val changeStackBlockWellFormed :
-   his:(list sidt)
-  -> f:(memblock -> Tot memblock) -> s:sidt -> ms:(Stack (sidt * memblock))
+ f:(memblock -> Tot memblock) -> s:sidt -> ms:(Stack (sidt * memblock))
   -> Lemma
-      (requires (wellFormed (ms,his)))
-      (ensures (wellFormed (changeStackBlockWithId f s ms,his)))
-let changeStackBlockWellFormed  his f s ms =
-(changeStackBlockSameIDs f s ms);(admit ())
-(*admit is not required; this is the bug that was minilized to https://github.com/FStarLang/FStar/issues/254*)
+      (requires (wellFormed ms))
+      (ensures (wellFormed (changeStackBlockWithId f s ms)))
+let changeStackBlockWellFormed  f s ms = (changeStackBlockSameIDs f s ms)
 
 val writeMemStackSameIDs : #a:Type -> r:(ref a) -> ms:(Stack (sidt * memblock))
   -> s:sidt -> v:a
@@ -152,14 +159,13 @@ val writeMemStackSameIDs : #a:Type -> r:(ref a) -> ms:(Stack (sidt * memblock))
 let writeMemStackSameIDs r ms s v = (changeStackBlockSameIDs (writeInBlock r v) s ms)
 
 val writeMemStackWellFormed : #a:Type -> r:(ref a)
-  -> his : (list sidt)
   -> ms:(Stack (sidt * memblock))
   -> s:sidt -> v:a
   -> Lemma
-      (requires (wellFormed (ms,his)))
-      (ensures (wellFormed (writeInMemStack r ms s v,his)))
+      (requires (wellFormed (ms)))
+      (ensures (wellFormed (writeInMemStack r ms s v)))
       [SMTPat (writeInMemStack r ms s v)]
-let writeMemStackWellFormed r his ms s v = (changeStackBlockWellFormed his (writeInBlock r v) s ms)
+let writeMemStackWellFormed r ms s v = (changeStackBlockWellFormed (writeInBlock r v) s ms)
 
 val freeInMemStackSameIDs : #a:Type -> r:(ref a) -> ms:(Stack (sidt * memblock))
   -> s:sidt
@@ -167,14 +173,13 @@ val freeInMemStackSameIDs : #a:Type -> r:(ref a) -> ms:(Stack (sidt * memblock))
 let freeInMemStackSameIDs r ms s = (changeStackBlockSameIDs (freeRefInBlock r) s ms)
 
 val freeInMemStackWellFormed : #a:Type -> r:(ref a)
-  -> his : (list sidt)
   -> ms:(Stack (sidt * memblock))
   -> s:sidt
   -> Lemma
-      (requires (wellFormed (ms,his)))
-      (ensures (wellFormed (freeInMemStack r ms s, his)))
+      (requires (wellFormed (ms)))
+      (ensures (wellFormed (freeInMemStack r ms s)))
       [SMTPat (freeInMemStack r ms s)]
-let freeInMemStackWellFormed r his ms s = (changeStackBlockWellFormed his (freeRefInBlock r) s ms)
+let freeInMemStackWellFormed r ms s = (changeStackBlockWellFormed (freeRefInBlock r) s ms)
 
 (* what is the analog of transport / eq_ind?*)
 
@@ -201,15 +206,15 @@ match (refLoc r) with
 
 val writeMemStackExists : #a:Type -> rw:(ref a) -> r: (ref a)
   -> ms:(Stack (sidt * memblock))
-  -> id:sidt -> v:a
+  -> id:sidt -> idw:sidt -> v:a
   -> Lemma
       (requires (refExistsInStack r id ms))
-      (ensures (refExistsInStack r id (writeInMemStack rw ms id v)))
+      (ensures (refExistsInStack r id (writeInMemStack rw ms idw v)))
       [SMTPat (writeInMemStack rw ms id v)]
-let rec writeMemStackExists rw r ms id v =
+let rec writeMemStackExists rw r ms id idw v =
 match ms with
 | Nil -> ()
-| h::tl ->   if (fst h = id) then () else ((writeMemStackExists rw r tl id v))
+| h::tl ->   if (fst h = id) then () else ((writeMemStackExists rw r tl id idw v))
 
 (* ((writeMemStackLem r ms s v)) *)
 
@@ -217,14 +222,14 @@ val writeMemAux : #a:Type -> (ref a) -> m:smem -> a -> Tot smem
 let writeMemAux r m v =
   match (refLoc r) with
   | InHeap -> ((upd (hp m) r v), snd m)
-  | InStack id -> ((hp m), ((writeInMemStack r (st m) id v), idHistory m))
+  | InStack id -> ( (hp m), (writeInMemStack r (st m) id v) )
 
 
 val freeMemAux : #a:Type -> (ref a) -> m:smem  -> Tot smem
 let freeMemAux r m =
   match (refLoc r) with
   | InHeap -> ((freeRefInBlock r (hp m)), snd m)
-  | InStack s -> ((hp m), ((freeInMemStack r (st m) s), idHistory m))
+  | InStack s -> ((hp m), ((freeInMemStack r (st m) s)))
 
 
 val writeMemAuxPreservesExists :  #a:Type -> rw:(ref a) -> r:(ref a) -> m:smem -> v:a ->
@@ -234,12 +239,16 @@ Lemma (requires (refExistsInMem r m))
 let writeMemAuxPreservesExists rw r m v =
 match (refLoc r) with
 | InHeap -> ()
-| InStack id -> (writeMemStackExists rw r (st m) id v); admit ()
-(*this just follows from definitional equality; admit should not be needed*)
+| InStack id ->
+    match (refLoc rw) with
+    | InHeap -> ()
+    | InStack idw ->  (writeMemStackExists rw r (st m) id idw v)
+
+
 
 val writeMemAuxPreservesStail :  #a:Type -> r:(ref a) -> m:smem -> v:a ->
 Lemma (requires (is_InStack (refLoc r)))
-  (ensures heapAndStackTail m = heapAndStackTail (writeMemAux r m v))
+  (ensures mtail m = mtail (writeMemAux r m v))
 let rec writeMemAuxPreservesStail r m v =  ()
 
 val loopkupRefStack : #a:Type -> r:(ref a) -> id:sidt -> ms:(Stack (sidt * memblock)){refExistsInStack r id ms}  ->  Tot a
@@ -262,14 +271,29 @@ match (refLoc r) with
 
 
 val readAfterWriteStack :
-  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> m:(Stack (sidt * memblock)) ->
+  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * memblock)) ->
+  Lemma (requires (refExistsInStack r id m))
+        (ensures true)
+        (*  (ensures ((refExistsInStack r id m)
+            /\ loopkupRefStack r id (writeInMemStack rw m idw v) = (if (r=rw) then v else (loopkupRefStack r id m)))) *)
+
+
+val readAfterWriteStack :
+  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * memblock)) ->
   Lemma (requires (refExistsInStack r id m))
         (ensures ((refExistsInStack r id m)
-            /\ loopkupRefStack r id (writeInMemStack rw m id v) = (if (r=rw) then v else (loopkupRefStack r id m))))
-let rec readAfterWriteStack rw r v id m =
+            /\ loopkupRefStack r id (writeInMemStack rw m idw v) = (if (r=rw && id=idw) then v else (loopkupRefStack r id m))))
+let rec readAfterWriteStack rw r v id idw m =
 match m with
 | [] -> ()
-| h::tl -> if (fst h = id) then () else ((readAfterWriteStack rw r v id tl))
+| h::tl ->
+  if (fst h = idw)
+    then ()
+    else (if (fst h=id)
+              then ()
+              else ((readAfterWriteStack rw r v id idw tl)))
+
+
 
 val readAfterWrite : #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> m:smem ->
   Lemma (requires (refExistsInMem r m))
@@ -279,8 +303,10 @@ val readAfterWrite : #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> m:smem ->
 let readAfterWrite rw r v m =
 match (refLoc r) with
 | InHeap -> ()
-| InStack id -> (readAfterWriteStack rw r v id (st m)); admit ()
-(*this just follows from definitional equality; admit should not be needed*)
+| InStack id ->
+  match (refLoc rw) with
+  | InHeap -> ()
+  | InStack idw -> (readAfterWriteStack rw r v id idw (st m))
 
 
 
@@ -312,7 +338,7 @@ assume val salloc:  #a:Type -> init:a -> SST (ref a)
           (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
           /\ allocateInBlock r (topstb m0) (topstb m1) init
           /\ refLoc r = InStack (topstid m0) /\ (topstid m0 = topstid m1)
-          /\ heapAndStackTail m0 = heapAndStackTail m1 /\ idHistory m0 = idHistory m1)
+          /\ mtail m0 = mtail m1)
 
 assume val memread:  #a:Type -> r:(ref a) -> SST a
 	  (fun m -> b2t (refExistsInMem r m))
@@ -322,24 +348,29 @@ assume val memwrite:  #a:Type -> r:(ref a) -> v:a ->
   SST unit
 	    (fun m -> b2t (refExistsInMem r m))
       (fun m0 _ m1 -> (refExistsInMem r m1)
-        /\ (writeMemAux r m0 v) =  m1 /\ idHistory m0 = idHistory m1)
+        /\ (writeMemAux r m0 v) =  m1)
+
+(*
+Free can only deallocate a heap-allocated ref. The implementation
+below doesn't make sense becasue it allows even deallocation of stack
+references
 
 assume val freeRef:  #a:Type -> r:(ref a)  ->
   SST unit
 	    (fun m -> b2t (refExistsInMem r m))
-      (fun m0 _ m1 -> (freeMemAux r m0) =  m1 /\ idHistory m0 = idHistory m1)
+      (fun m0 _ m1 -> (freeMemAux r m0) ==  m1)
+*)
 
 (*make sure that the ids are monotone *)
 assume val pushStackFrame:  unit -> SST unit
     (fun m -> True)
-    (fun m0 _ m1 -> (heapAndStackTail m1 = heapAndStack m0)
+    (fun m0 _ m1 -> (mtail m1 = m0)
           /\ (isNonEmpty (st m1))
-          /\ topstb m1 = emp
-          /\ is1SuffixOf (idHistory m0)  (idHistory m1))
+          /\ topstb m1 = emp)
 
 assume val popStackFrame:  unit -> SST unit
     (fun m -> b2t (isNonEmpty (st m)))
-    (fun m0 _ m1 -> heapAndStackTail m0 == heapAndStack m1)
+    (fun m0 _ m1 -> mtail m0 ==  m1)
 
 
 (** Injection of DIV effect into the new effect, mostly copied from prims.fst*)
@@ -353,18 +384,25 @@ sub_effect
 
 (** withNewStackFrame combinator *)
 
-effect WNSC (#a:Type) (post: (smem -> Post a)) =
-  SST a
-      (fun m -> isNonEmpty (st m) /\ topstb m = emp)
-      (fun m0 a m1 -> post m0 a m1
-          /\ isNonEmpty (st m0) (*not needed, ideally*)
-          /\ topstid m1 = topstid m0) (*body popped all and only the stack frames it pushed*)
+(*we might need a precondition abut heap*)
 
-(*
-val withNewStackFrame : #a:Type -> post:(smem -> Post a) -> body:(WNSC post)
-      -> SST a (fun m -> True) (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
-*)
-let withNewStackFrame post body =
-  pushStackFrame ();
-  body;
-  popStackFrame ()
+effect WNSC (#a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) =
+  SST a
+      (fun m -> isNonEmpty (st m) /\ topstb m = emp /\ pre (mtail m))
+      (fun m0 a m1 -> post (mtail m0) a (mtail m1)
+          /\ isNonEmpty (st m0) (*not needed, ideally*)
+          /\ sids m0 = sids m1) (*body popped all and only the stack frames it pushed*)
+
+val withNewScope : a:Type -> pre:(smem -> Type) -> post:(smem -> SSTPost a) -> body:(unit -> WNSC pre post)
+      -> SST a  (fun m -> pre m)
+                (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
+let withNewScope (a:Type) (pre:(smem -> Type)) (post:(smem -> SSTPost a)) (body:(unit -> WNSC pre post)) =
+(* omitting the types in above let expression results in a wierd error*)
+    pushStackFrame ();
+    let v = body () in
+    popStackFrame (); v
+(*sample application : a function of type n -> list of primes between 1 and n,
+  using the sieve of Eratosthenes*)
+
+(*SMTPat could be used to implement something similar to Coq's type-class mechanism.
+Coq's typeclass mechanism is based on Hint databases, which is similar to SMTPat*)

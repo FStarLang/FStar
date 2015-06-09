@@ -24,14 +24,14 @@ let incrementRef r =
   let oldv = memread r in
   memwrite r (oldv + 1)
 
-val pushPopNoChage : unit ->  SST unit  (fun _ -> True) (fun m0 vo m1 -> heapAndStack m0 == heapAndStack m1)
+val pushPopNoChage : unit ->  SST unit  (fun _ -> True) (fun m0 vo m1 -> m0 == m1)
 let pushPopNoChage () =
   pushStackFrame (); (* As expected, removing this line results in an error, even for the trivial postcondition*)
   popStackFrame ()
 
 
 val incrementUsingStack : vi:int -> SST int  (fun _ -> True)
-    (fun m0 vo m1 -> heapAndStack m0 = heapAndStack m1 /\ vo=vi+1)
+    (fun m0 vo m1 -> m0 = m1 /\ vo=vi+1)
 let incrementUsingStack vi =
   pushStackFrame ();
     let r = salloc vi in
@@ -47,7 +47,7 @@ val incrementRef2 : r:(ref int) -> SST unit
               /\ (isNonEmpty (st m))
               /\ (refLoc r = InStack (topstid m)))
 (fun m0 a m1 -> (refExistsInMem r m0) /\ (refExistsInMem r m1)
-    /\ (heapAndStackTail m0 = heapAndStackTail m1)
+    /\ (mtail m0 = mtail m1)
     /\ (loopkupRef r m1 = (loopkupRef r m0) + 1))
 let incrementRef2 r =
   let oldv = memread r in
@@ -56,7 +56,7 @@ let incrementRef2 r =
 (* an example illustrating a typical C idiom :
   caller allocates memory and passes the ref to callee to get some work done *)
 val incrementUsingStack2 : vi:int -> SST int  (fun _ -> True)
-    (fun m0 vo m1 -> heapAndStack m0 = heapAndStack m1 /\ vo=vi+1)
+    (fun m0 vo m1 -> m0 = m1 /\ vo=vi+1)
 let incrementUsingStack2 vi =
   pushStackFrame ();
     let r = salloc vi in
@@ -66,7 +66,7 @@ let incrementUsingStack2 vi =
   v
 
 val incrementUsingStack3 : vi:int -> SST int  (fun _ -> True)
-    (fun m0 vo m1 -> heapAndStack m0 = heapAndStack m1 /\ vo=vi+1)
+    (fun m0 vo m1 ->  m0 =  m1 /\ vo=vi+1)
 let incrementUsingStack3 vi =
   pushStackFrame ();
   pushStackFrame ();
