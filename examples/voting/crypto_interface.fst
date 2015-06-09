@@ -20,7 +20,6 @@
 
 module Crypto_interface
 open Comp
-(* open Heap *)
 open Bytes
 
 
@@ -29,17 +28,24 @@ open Bytes
 (* -------------- Eq Types -------------- *)
 type twice (a:Type) = a * a
 
-val same : 'a -> Tot (twice 'a)
-let same x = (x,x)
-
 type tbytes = twice bytes
 type tint = twice int
 type tbool = twice bool
 
 type eq 'a = x:(twice 'a){fst x = snd x}
 
-val pair_map2 : ('a -> 'b -> Tot 'c) -> (twice 'a) -> (twice 'b) -> Tot (twice 'c)
-let pair_map2 f (x1,x2) (y1,y2) = (f x1 y1, f x2 y2)
+(* Coercions between eq 'a and 'a; unused for the moment *)
+val same : 'a -> Tot (eq 'a)
+let same x = (x,x)
+
+val dump : eq 'a -> Tot 'a
+let dump (x,_) = x
+
+val iso1 : x:'a -> Lemma (requires True) (ensures (dump (same x) = x))
+let iso1 x = ()
+
+val iso2 : x:(eq 'a) -> Lemma (requires True) (ensures (same (dump x) = x))
+let iso2 x = ()
 
 (* -------------- Specified constants -------------- *)
 type vote = eq int
@@ -50,50 +56,40 @@ assume val v2:vote
 type cipher = eq bytes
 
 (* -------------- Predicates Definitions -------------- *)
-assume type Encrypted : bytes -> bytes -> Type
-assume type Encryptedboth : bytes -> bytes -> bytes -> bytes -> Type
 (* Note: We define a "both" version of predicates for writing purposes. *)
+type mkBoth (#a:Type) (p:a -> Type) (x:a) (y:a) : Type = (p x) /\ (p y)
+
+type Encrypted : bytes -> bytes -> Type
+type Encryptedboth : bytes -> bytes -> bytes -> bytes -> Type
+(* We keep an axiomatic version of Encryptedboth, otherwise, it confuses
+   the SMT solver when proving [exists mLa mRa ...] in alice.fst *)
 
 type FromA : bytes -> Type
-type FromAboth : bytes -> bytes -> Type
+type FromAboth : bytes -> bytes -> Type = mkBoth FromA
 
 type FromB : bytes -> Type
-type FromBboth : bytes -> bytes -> Type
+type FromBboth : bytes -> bytes -> Type = mkBoth FromB
 
 type FromO : bytes -> Type
-type FromOboth : bytes -> bytes -> Type
+type FromOboth : bytes -> bytes -> Type = mkBoth FromO
 
 type Marsh : int -> bytes -> Type
 type Marshboth : int -> int -> bytes -> bytes -> Type
+(* We keep an axiomatic version of Marshboth, otherwise, it confuses
+   the SMT solver in ballot_box.fst *)
 
 type Valid : bytes -> Type
-type Validboth : bytes -> bytes -> Type
+type Validboth : bytes -> bytes -> Type = mkBoth Valid
 
 (* -------------- Macros -------------- *)
 assume val hypEncrypted :
     (m:bytes) -> (n:bytes) -> (x:bytes) -> (y:bytes) -> Lemma
          (requires True)
          (ensures ((Encryptedboth m n x y) <==> ((Encrypted m x) /\ (Encrypted n y)))) [SMTPatT (Encryptedboth m n x y)]
-assume val hypFromA :
-    (x:bytes) -> (y:bytes) -> Lemma
-         (requires True)
-         (ensures (FromAboth x y <==> ((FromA x) /\ (FromA y)))) [SMTPatT (FromAboth x y)]
-assume val hypFromB :
-    (x:bytes) -> (y:bytes) -> Lemma
-         (requires True)
-         (ensures (FromBboth x y <==> ((FromB x) /\ (FromB y)))) [SMTPatT (FromBboth x y)]
-assume val hypFromO :
-    (x:bytes) -> (y:bytes) -> Lemma
-         (requires True)
-         (ensures (FromOboth x y <==> ((FromO x) /\ (FromO y)))) [SMTPatT (FromOboth x y)]
 assume val hypMarsh :
     (m:int) -> (n:int) -> (x:bytes) -> (y:bytes) -> Lemma
          (requires True)
          (ensures ((Marshboth m n x y) <==> ((Marsh m x) /\ (Marsh n y)))) [SMTPatT (Marshboth m n x y)]
-assume val hypValid :
-    (x:bytes) -> (y:bytes) -> Lemma
-         (requires True)
-         (ensures (Validboth x y <==> ((Valid x) /\ (Valid y)))) [SMTPatT (Validboth x y)]
 
 (* -------------- Marshalling -------------- *)
 (* Marshalling Assumptions *)
