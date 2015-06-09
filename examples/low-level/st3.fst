@@ -365,18 +365,22 @@ sub_effect
 (** withNewStackFrame combinator *)
 
 (*we might need a precondition abut heap*)
-effect WNSC (#a:Type) (post: (smem -> SSTPost a)) =
+
+effect WNSC (#a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) =
   SST a
-      (fun m -> isNonEmpty (st m) /\ topstb m = emp)
+      (fun m -> isNonEmpty (st m) /\ topstb m = emp /\ pre (mtail m))
       (fun m0 a m1 -> post (mtail m0) a (mtail m1)
           /\ isNonEmpty (st m0) (*not needed, ideally*)
           /\ sids m0 = sids m1) (*body popped all and only the stack frames it pushed*)
 
-val withNewStackFrame : a:Type -> post:(smem -> SSTPost a) -> body:(unit -> WNSC post)
-      -> SST a  (fun m -> True)
+val withNewScope : a:Type -> pre:(smem -> Type) -> post:(smem -> SSTPost a) -> body:(unit -> WNSC pre post)
+      -> SST a  (fun m -> pre m)
                 (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
-let withNewStackFrame (a:Type) (post:(smem -> SSTPost a)) (body:(unit -> WNSC post)) =
+let withNewScope (a:Type) (pre:(smem -> Type)) (post:(smem -> SSTPost a)) (body:(unit -> WNSC pre post)) =
 (* omitting the types in above let expression results in a wierd error*)
     pushStackFrame ();
     let v = body () in
     popStackFrame (); v
+
+(*SMTPat could be used to implement something similar to Coq's type-class mechanism.
+Coq's typeclass mechanism is based on Hint databases, which is similar to SMTPat*)
