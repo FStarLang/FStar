@@ -3097,22 +3097,33 @@ let test_acls f =
 ```
 
 ~Exercise
-Write down some types for `canRead` and `canWrite` that are sufficiently 
+Write down some types for `grant` and `revoke` that are sufficiently 
 precise to allow the program to continue to type-check.
-~~Answer
-```
+
+~~ ExerciseFragment {exname=ex8a-acls}
+val grant : e:entry -> ST unit (requires (fun h -> True))
+                               (ensures (fun h x h' -> True))
+let grant e = ST.write acls (e::ST.read acls)
+
+val revoke: e:entry -> ST unit (requires (fun h -> True))
+                               (ensures (fun h x h' -> True))
+elet revoke e =
+  let db = List.filterT (fun e' -> e<>e') (ST.read acls) in
+  ST.write acls db
+~~
+
+~~Answer {exname=ex8a-acls}
+~~~ SolutionFragment
 val grant : e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> sel h' acls == e::sel h acls))
-                               (modifies (a_ref acls))
 let grant e = ST.write acls (e::ST.read acls)
 
 val revoke: e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> not(List.mem e (sel h' acls))))
-                               (modifies (a_ref acls))
 let revoke e = 
   let db = List.filter (fun e' -> e<>e') (ST.read acls) in
   ST.write acls db
-```
+~~~
 ~~
 ~
 
