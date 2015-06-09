@@ -510,7 +510,7 @@ let rec mlpat_of_pat (mlenv : mlenv) (rg : range) (le : lenv) (p : pat) : lenv *
         else
           let le, ps = Util.fold_map (mlpat_of_pat mlenv rg) le ps in
           let p =
-            match smap_try_find record_constructors x.v.ident.idText with
+            match smap_try_find record_constructors x.v.str with
               | Some f -> MLP_Record (path_of_ns mlenv x.v.ns, List.zip (List.map (fun x -> x.idText) f) ps)
               | None -> MLP_CTor (mlpath_of_lident mlenv x.v, ps) in
           (le, p)
@@ -551,7 +551,7 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
     in
 
     let mkCTor c args =
-      match smap_try_find record_constructors c.ident.idText with
+      match smap_try_find record_constructors c.str with
         | Some f -> MLE_Record (path_of_ns mlenv c.ns, List.zip (List.map (fun x -> x.idText) f) args)
         | None ->
           begin
@@ -581,20 +581,16 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             let args = List.collect (function (Inl _, _) -> [] | Inr e, _ -> [mlexpr_of_expr mlenv rg lenv e]) args in
 
             match sube with
-            | { n = Exp_fvar (c, true) } -> mkCTor c.v args (* MLE_CTor (mlpath_of_lident mlenv c.v, args) *)
+            | { n = Exp_fvar (c, true) } -> mkCTor c.v args
             | { n = Exp_fvar (c, false) } ->
-               (match List.rev c.v.ns with
-                  | con::cons ->
-                     (match smap_try_find record_constructors con.idText, args with
-                        | Some f, [arg] -> let ids = List.map (fun x -> x.idText) f in
-                        //                   assert (List.mem c.v.ident.idText ids);
-                                           MLE_Proj (arg, (path_of_ns mlenv (List.rev cons), c.v.ident.idText))
-                        | Some f, arg::args -> let ids = List.map (fun x -> x.idText) f in
-                          //                     assert (List.mem c.v.ident.idText ids); 
-                                           MLE_App (MLE_Proj (arg, (path_of_ns mlenv (List.rev cons), c.v.ident.idText)), args)
-                        | _, _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args))
-                  | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args))
-
+                let subns = String.concat "." (List.map (fun x -> x.idText) c.v.ns) in
+                let rn, subnsl = match List.rev c.v.ns with [] -> "", [] | h::t -> h.idText, List.rev t in
+                (match Util.starts_with rn "Mk", args with
+                | true, [arg] ->
+                    MLE_Proj (arg, (path_of_ns mlenv subnsl, c.v.ident.idText))
+                | true, arg::args ->
+                    MLE_App (MLE_Proj (arg, (path_of_ns mlenv subnsl, c.v.ident.idText)), args)
+                | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args))
             | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args)
        end)
 
@@ -804,7 +800,7 @@ let mldtype_of_indt (mlenv : mlenv) (indt : list<sigelt>) : list<mldtype> =
                 let ty =
                   match getRecordFieldsFromType qualif, cs with
                     | Some f, [c] ->
-                       (smap_add record_constructors c.ident.idText f;
+                       (smap_add record_constructors c.str f;
                         Rec (x.ident.idText, f, cs, snd (tenv_of_tvmap ar), rg))
                     | _, _ -> DT (x.ident.idText, cs, snd (tenv_of_tvmap ar), rg) in
                 (ty :: types, ctors)
