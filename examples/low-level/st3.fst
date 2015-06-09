@@ -374,15 +374,24 @@ assume val popStackFrame:  unit -> SST unit
 (** Injection of DIV effect into the new effect, mostly copied from prims.fst*)
 kind SSTPost (a:Type) = STPost_h smem a
 
+
 sub_effect
   DIV  ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem)
             -> wp (fun a -> p a h)
 
-(** algebraic properties of memory operations*)
+sub_effect
+  PURE  ~> StSTATE = fun (a:Type) (wp:PureWP a) (p : SSTPost a) (h:smem)
+            -> wp (fun a -> p a h)
+
+(* should we have an SSTP  for pure SST which has a lifting from PURE,
+   and a lifting from SSTP and DIV to SST?
+    It seems like a bad idea to have a blank check for non-termination.
+    One can carefully restrict and explicitly identify the programs that
+    really need non-termination *)
+
+
 
 (** withNewStackFrame combinator *)
-
-(*we might need a precondition abut heap*)
 
 effect WNSC (#a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) =
   SST a
@@ -403,4 +412,30 @@ let withNewScope (a:Type) (pre:(smem -> Type)) (post:(smem -> SSTPost a)) (body:
   using the sieve of Eratosthenes*)
 
 (*SMTPat could be used to implement something similar to Coq's type-class mechanism.
-Coq's typeclass mechanism is based on Hint databases, which is similar to SMTPat*)
+Coq's typeclass resolution is based on proof search using Hint databases, which is similar to SMTPat.
+Can implicit arguments be inferred automatically by the SMT solver using proof seach with SMTPat hints?
+*)
+
+
+(*a combinator for writing while loops*)
+
+effect whileGuard (pre :(smem -> Type))
+  = SST bool (fun m -> pre m) (fun m0 _ m1 -> m0 == m1)
+(* the guard of a while loop is not supposed to change the memory*)
+
+effect whileBody (loopInv :(smem -> Type)) (wg : unit -> whileGuard loopInv)
+  = SST unit (fun m -> loopInv m (*/\ wg computes to true in m*))
+             (fun m0 _ m1 -> loopInv m1)
+
+val scopedWhile : loopInv:(smem -> Type)
+  -> wg:(unit -> whileGuard loopInv)
+  -> bd:(unit -> whileBody loopInv wg)
+  -> SST unit (fun m -> loopInv m (*/\ wg computes to true in m*))
+              (fun m0 _ m1 -> loopInv m1 (* /\ wg computes to false in m1*))
+let rec scopedWhile (loopInv:(smem -> Type))
+          (wg:(unit -> whileGuard loopInv))
+          (bd:(unit -> whileBody loopInv wg)) =
+   let gv = wg () in
+   if (gv)
+      then scopedWhile loopInv wg bd
+      else ()

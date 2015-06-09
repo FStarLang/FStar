@@ -180,7 +180,7 @@ out the syntax of this shared fragment.
 
 <!-- # Getting started  { #sec-getstarted } -->
 
-## Your first F\* program: a simple model of access control
+## Your first F\* program: a simple model of access control {#sec-access-control}
 
 Let's get started by diving into a simple model of access control on
 files. Along the way, we'll see some basic concepts from functional
@@ -2330,7 +2330,7 @@ it is shadowed by the local `x`. The other cases are straightforward.
 Given the definition of values and of substitution we can now define
 a small-step interpreter, as a function `step` that takes an expression `e`
 and it either returns the expression to which `e` reduces in
-a single step computation step, or it returns `None` in case of an error
+a single step, or it returns `None` in case of an error
 (all errors in this language are typing errors, and will be prevented
  statically by the type system).
 ```
@@ -2561,7 +2561,7 @@ let typable_empty_closed x e = free_in_context x e empty
 The quantifier pattern `[SMTPat (appears_free_in x e)]` signals F\*
 that it should feed this lemma to the SMT solver using this pattern.
 
-Sometimes, when know that `typing g e = Some t`,
+Sometimes, we know that `typing g e = Some t`,
 and we will need to replace `g` by an "equivalent" context `g'`.
 We still need to define formally when two environments are equivalent.
 A natural definition is extensional equivalence of functions: 
@@ -2611,8 +2611,7 @@ let rec context_invariance e g g' =
 Because `Equal` is a stronger relation than `EqualE` we obtain the same property
 for `Equal`:
 ```
-val typing_extensional : g:env -> g':env -> e:exp
-                      -> Lemma
+val typing_extensional : g:env -> g':env -> e:exp -> Lemma
                            (requires (Equal g g'))
                            (ensures (typing g e == typing g' e))
 let typing_extensional g g' e = context_invariance e g g'
@@ -2620,10 +2619,12 @@ let typing_extensional g g' e = context_invariance e g g'
 We can use these results to show the following substitution lemma:
 ```
 val substitution_preserves_typing : x:int -> e:exp -> v:exp ->
-      g:env{is_Some (typing empty v) &&
-            is_Some (typing (extend g x (Some.v (typing empty v))) e)} ->
-      Tot (u:unit{typing g (subst x v e) ==
-                  typing (extend g x (Some.v (typing empty v))) e})
+      g:env -> Lemma
+        (requires ( is_Some (typing empty v) /\
+              is_Some (typing (extend g x (Some.v (typing empty v))) e)))
+        (ensures (is_Some (typing empty v) /\
+                  typing g (subst x v e) ==
+                  typing (extend g x (Some.v (typing empty v))) e))
 let rec substitution_preserves_typing x e v g =
   let Some t_x = typing empty v in
   let gx = extend g x t_x in
@@ -2688,8 +2689,10 @@ if a closed expression `e` has type `t` and takes an evaluation step to `e'`,
 then `e'` is also a closed expression with type `t`.
 In other words, the small-step evaluation relation preserves types.
 ```
-val preservation : e:exp{is_Some (typing empty e) /\ is_Some (step e)} ->
-      Tot (u:unit{typing empty (Some.v (step e)) == typing empty e})
+val preservation : e:exp -> Lemma
+        (requires(is_Some (typing empty e) /\ is_Some (step e) ))
+        (ensures(is_Some (step e) /\ 
+                 typing empty (Some.v (step e)) == typing empty e))
 let rec preservation e =
   match e with
   | EApp e1 e2 ->
@@ -3026,9 +3029,11 @@ but it seems quite interesting)
 #State and other effects
 
 ## Stateful access control
-~ CH
-Should change name of safe_delete as in Section 1
-~
+
+Recall our access control example from [#sec-access-control]. A
+restriction of that example was that the access control policy was fixed
+by the two functions `canWrite` and `canRead`. What if we want to
+administer access rights using an access control list (ACL)?
 
 ```
 module DynACLs
@@ -3074,8 +3079,8 @@ assume val delete: file:string -> ST unit
                                      (ensures (fun h s h' -> h=h'))
                                      (modifies no_refs)
 
-val safe_delete: file -> All unit (fun h -> True) (fun h x h' -> h==h')
-let safe_delete file = 
+val checkedDelete: file -> All unit (fun h -> True) (fun h x h' -> h==h')
+let checkedDelete file = 
   if canWrite !acls file 
   then delete file
   else failwith "unwritable"
@@ -3085,29 +3090,40 @@ let test_acls f =
   grant (Readable f);     (* ok *)
   let _ = read f in       (* ok --- it's in the acl *)
   (* delete f;               not ok --- we're only allowed to read it *)
-  safe_delete f;          (* ok, but fails dynamically *)
+  checkedDelete f;          (* ok, but fails dynamically *)
   revoke (Readable f);
   (* let _ = read f in    (* not ok any more *)
   ()
 ```
 
 ~Exercise
-Write down some types for `canRead` and `canWrite` that are sufficiently 
+Write down some types for `grant` and `revoke` that are sufficiently 
 precise to allow the program to continue to type-check.
-~~Answer
-```
+
+~~ ExerciseFragment {exname=ex8a-acls}
+val grant : e:entry -> ST unit (requires (fun h -> True))
+                               (ensures (fun h x h' -> True))
+let grant e = ST.write acls (e::ST.read acls)
+
+val revoke: e:entry -> ST unit (requires (fun h -> True))
+                               (ensures (fun h x h' -> True))
+elet revoke e =
+  let db = List.filterT (fun e' -> e<>e') (ST.read acls) in
+  ST.write acls db
+~~
+
+~~Answer {exname=ex8a-acls}
+~~~ SolutionFragment
 val grant : e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> sel h' acls == e::sel h acls))
-                               (modifies (a_ref acls))
 let grant e = ST.write acls (e::ST.read acls)
 
 val revoke: e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> not(List.mem e (sel h' acls))))
-                               (modifies (a_ref acls))
 let revoke e = 
   let db = List.filter (fun e' -> e<>e') (ST.read acls) in
   ST.write acls db
-```
+~~~
 ~~
 ~
 

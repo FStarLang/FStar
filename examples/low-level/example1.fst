@@ -78,3 +78,14 @@ let incrementUsingStack3 vi =
     let v = (memread r) in
   popStackFrame ();
   v
+
+(* Why am I able to write this if then else with effectful computations in the brances?
+   What is going on under the hood?
+   Is this because of the ite_wp in the definition of an effect? *)
+val incrementIfNot2 : r:(ref int) -> SST int  (fun m -> (refExistsInMem r m)==true)
+(fun m0 a m1 -> (refExistsInMem r m0) /\ (refExistsInMem r m1) /\ (mstail m0 = mstail m1) /\ True)
+let equal2 r =
+  let oldv = memread r in
+  (if (oldv=2)
+    then memwrite r 2
+    else memwrite r (oldv + 1));oldv
