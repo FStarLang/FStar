@@ -749,7 +749,7 @@ plusOp:
 	  { $1 }
 
 minusOp:
-  | starDivModTerm MINUS_OP minusOp
+  | minusOp MINUS_OP starDivModTerm
       { mk_term (Op("-", [$1;$3])) (rhs2 parseState 1 3) Un}
 
   | starDivModTerm 
