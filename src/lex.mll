@@ -248,7 +248,7 @@ rule token = parse
      { failwith "This is not a valid numeric literal." }
 
  | "(*"
-     { comment lexbuf; token lexbuf }
+     { comment false lexbuf }
 
  | "//"  [^'\n''\r']*
      { token lexbuf }
@@ -350,52 +350,22 @@ and string buffer = parse
  | eof
     { failwith "unterminated string" }
 
-and comment = parse
- | char
-    { comment lexbuf }
-
- | '"'
-    { comment_string lexbuf; comment lexbuf; }
+and comment inner = parse
 
  | "(*"
-    { comment lexbuf; comment lexbuf; }
+    { let close_eof = comment true lexbuf in comment inner lexbuf }
 
  | newline
-    { L.new_line lexbuf; comment lexbuf; }
+    { L.new_line lexbuf; comment inner lexbuf }
 
  | "*)"
-    { () }
-
- | [^ '\'' '(' '*' '\n' '\r' '"' ')' ]+
-    { comment lexbuf }
+    { if inner then EOF else token lexbuf }
 
  | _
-    { comment lexbuf }
+    { comment inner lexbuf }
 
  | eof
-     { failwith "unterminated comment" }
-
-and comment_string = parse
- | '\\' newline anywhite*
-     { L.new_line lexbuf; comment_string lexbuf }
-
- | newline
-     { L.new_line lexbuf; comment_string lexbuf }
-
- | '"'
-     { () }
-
- | escape_char
- | ident
- | xinteger
- | anywhite+
-     { comment_string lexbuf }
-
- | _
-     { comment_string lexbuf }
-
- | eof
-     { failwith "unterminated comment" }
+     { lc := 1; EOF }
 
 and cpp_filename = parse
  | ' ' '"' [^ '"']+ '"'
