@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst stack.fst listset.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst  $LIB/list.fst stack.fst listset.fst
   --*)
 
 module StructuredMem
@@ -365,20 +365,18 @@ sub_effect
 (** withNewStackFrame combinator *)
 
 (*we might need a precondition abut heap*)
-effect WNSC (#a:Type) (post: (smem -> Post a)) =
+effect WNSC (#a:Type) (post: (smem -> SSTPost a)) =
   SST a
       (fun m -> isNonEmpty (st m) /\ topstb m = emp)
       (fun m0 a m1 -> post (mtail m0) a (mtail m1)
           /\ isNonEmpty (st m0) (*not needed, ideally*)
           /\ sids m0 = sids m1) (*body popped all and only the stack frames it pushed*)
 
-val withNewStackFrame : #a:Type -> post:(smem -> Post a) -> body:(unit -> WNSC post)
-      -> SST a (fun m -> True)
-       (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
-(*
-let withNewStackFrame post body =
-  pushStackFrame ();
-  (body ());
-  popStackFrame ()
-*)
-(* withNewLocal , e.g. for while loop*)
+val withNewStackFrame : a:Type -> post:(smem -> SSTPost a) -> body:(unit -> WNSC post)
+      -> SST a  (fun m -> True)
+                (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
+let withNewStackFrame (a:Type) (post:(smem -> SSTPost a)) (body:(unit -> WNSC post)) =
+(* omitting the types in above let expression results in a wierd error*)
+    pushStackFrame ();
+    let v = body () in
+    popStackFrame (); v
