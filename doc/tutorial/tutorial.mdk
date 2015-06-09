@@ -3030,7 +3030,10 @@ but it seems quite interesting)
 
 ## Stateful access control
 
-Recall our access control example from [#sec-access-control].
+Recall our access control example from [#sec-access-control]. A
+restriction of that example was that the access control policy was fixed
+by the two functions `canWrite` and `canRead`. What if we want to
+administer access rights using an access control list (ACL)?
 
 ```
 module DynACLs
