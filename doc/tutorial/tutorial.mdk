@@ -2330,7 +2330,7 @@ it is shadowed by the local `x`. The other cases are straightforward.
 Given the definition of values and of substitution we can now define
 a small-step interpreter, as a function `step` that takes an expression `e`
 and it either returns the expression to which `e` reduces in
-a single step computation step, or it returns `None` in case of an error
+a single step, or it returns `None` in case of an error
 (all errors in this language are typing errors, and will be prevented
  statically by the type system).
 ```
