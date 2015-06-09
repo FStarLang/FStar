@@ -72,6 +72,20 @@ let rec sorted_concat_lemma l1 l2 pivot = match l1 with
     | hd::tl -> sorted_concat_lemma tl l2 pivot
 
 
+opaque type match_head (l1:list int) (l2:list int) =
+  (l1 = [] /\ l2 = []) \/
+  (exists h t1 t2. l1 = h::t1 /\ l2 = h::t2)
+
+val dedup: l:list int{sorted l} -> Tot (l2:list int{sorted l2 /\ (forall i. mem i l = mem i l2) /\ match_head l l2})
+  let rec dedup l =
+    match l with
+    | [] -> []
+    | [x] -> [x]
+    | h::h2::t ->
+      if h = h2 then dedup (h2::t)
+      else  h::dedup (h2::t)
+
+
 let cmp i j = i <= j
 val sort: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l = mem i m)})
                             (decreases (length l))
@@ -79,4 +93,5 @@ let rec sort l = match l with
   | [] -> []
   | pivot::tl ->
     let hi, lo = partition (cmp pivot) tl in
-    append (sort lo) (pivot::sort hi)
+    let l' = append (sort lo) (pivot::sort hi) in
+    dedup l'

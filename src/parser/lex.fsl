@@ -434,6 +434,7 @@ rule token args = parse
  | ";;" { SEMICOLON_SEMICOLON }
  | ";" { SEMICOLON }
  | "%[" { PERCENT_LBRACK }
+ | "!{" { BANG_LBRACE }
  | "[" { LBRACK }
  | "[|" { LBRACK_BAR }
  | "<" {  if is_typ_app args lexbuf then TYP_APP_LESS else CUSTOM_OP("<")  }

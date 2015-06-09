@@ -48,7 +48,7 @@ type both = ed:(encryptor * decryptor){paired (fst ed) (snd ed)}
 val gen: unit -> St both
   (requires (fun h -> True))
   (ensures (fun h0 b h1 ->
-      modifies Set.empty h0 h1
+      modifies !{} h0 h1
       /\ Let (Enc.log (fst b)) (fun log ->
          Fresh h0 log h1
          /\ Heap.sel h1 log = emp)))
@@ -60,7 +60,7 @@ let gen () =
 val enc : e:encryptor -> p:plain -> St cipher
     (requires (fun h -> True))
     (ensures (fun h0 c h1 ->
-                modifies (Set.singleton (Ref (Enc.log e))) h0 h1
+                modifies !{Enc.log e} h0 h1
                 /\ Heap.contains h1 (Enc.log e)
                 /\ Heap.sel h1 (Enc.log e) = snoc (Heap.sel h0 (Enc.log e)) (Entry p c)))
 
@@ -75,7 +75,7 @@ assume val find_seq : #a:Type -> f:(a -> Tot bool) -> s:seq a
 val dec: d:decryptor -> c:cipher -> St (option plain)
   (requires (fun h -> True))
   (ensures (fun h0 p h1 ->
-              modifies Set.empty h0 h1
+              modifies !{} h0 h1
               /\ (Let (Heap.sel h0 (Dec.log d))
                       (fun log ->
                           (is_None p ==> (forall (i:nat{i < Seq.length log}). Entry.c (Seq.index log i) <> c))
@@ -136,21 +136,15 @@ type st_enc_inv (e:st_encryptor) (h:heap) =
 type st_dec_inv (d:st_decryptor) (h:heap) =
   exists (e:st_encryptor). st_inv e d h
 
-let refs_in_e (e:st_encryptor) =
-  Set.union (Set.singleton (Ref (StEnc.log e)))
-            (Set.union (Set.singleton (Ref (StEnc.ctr e)))
-                       (Set.singleton (Ref (Enc.log (StEnc.key e)))))
+let refs_in_e (e:st_encryptor) = !{StEnc.log e, StEnc.ctr e, Enc.log (StEnc.key e)}
 
-let refs_in_d (d:st_decryptor) =
- Set.union (Set.singleton (Ref (StDec.log d)))
-           (Set.union (Set.singleton (Ref (StDec.ctr d)))
-                      (Set.singleton (Ref (Dec.log (StDec.key d)))))
+let refs_in_d (d:st_decryptor) = !{StDec.log d, StDec.ctr d, Dec.log (StDec.key d)}
 
 val stateful_gen : unit -> St st_both
   (requires (fun h -> True))
   (ensures (fun h0 b h1 ->
               st_inv (fst b) (snd b) h1
-              /\ modifies Set.empty h0 h1
+              /\ modifies !{} h0 h1
               /\ (forall (a:Type) (r:ref a). Set.mem (Ref r) (Set.union (refs_in_e (fst b)) (refs_in_d (snd b)))
                     ==> Fresh h0 r h1)))
 let stateful_gen () =
@@ -164,9 +158,7 @@ val stateful_enc : e:st_encryptor -> p:plain -> St cipher
   (requires (fun h -> st_enc_inv e h))
   (ensures (fun h0 c h1 ->
                     st_enc_inv e h1
-                 /\ modifies (Set.union (Set.singleton (Ref (StEnc.log e)))
-                                        (Set.union (Set.singleton (Ref (Enc.log (StEnc.key e))))
-                                                   (Set.singleton (Ref (StEnc.ctr e))))) h0 h1
+                 /\ modifies (refs_in_e e) h0 h1
                  /\ Heap.sel h1 (StEnc.log e) = snoc (Heap.sel h0 (StEnc.log e)) (StEntry (Heap.sel h0 (StEnc.ctr e)) p c)))
 
 let stateful_enc e p =
@@ -182,7 +174,7 @@ val stateful_dec: ad:nat -> d:st_decryptor -> c:cipher -> St (option plain)
   (ensures (fun h0 p h1 ->
                 st_dec_inv d h0
                 /\ st_dec_inv d h1
-                /\ modifies (Set.singleton (Ref (StDec.ctr d))) h0 h1
+                /\ modifies !{StDec.ctr d} h0 h1
                 /\ Let (Heap.sel h0 (StDec.ctr d)) (fun (r:nat{r=Heap.sel h0 (StDec.ctr d)}) ->
                    Let (Heap.sel h0 (StDec.log d)) (fun (log:seq statefulEntry{log=Heap.sel h0 (StDec.log d)}) ->
                     (is_None p ==> (r = Seq.length log                     //nothing encrypted yet

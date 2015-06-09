@@ -54,6 +54,7 @@ val partition_lemma: f:('a -> Tot bool)
                                   /\ (forall x. mem x (fst (partition f l)) ==> f x)
                                   /\ (forall x. mem x (snd (partition f l)) ==> not (f x))
                                   /\ (forall x. mem x l = (mem x (fst (partition f l)) || mem x (snd (partition f l)))))))
+                            [SMTPat (partition f l)]
 let rec partition_lemma f l = match l with
     | [] -> ()
     | hd::tl -> partition_lemma f tl
@@ -65,12 +66,11 @@ opaque type total_order (a:Type) (f: (a -> a -> Tot bool)) =
     /\ (forall a1 a2. (f a1 a2 /\ a1<>a2)  <==> not (f a2 a1))  (* anti-symmetry *)
     /\ (forall a1 a2 a3. f a1 a2 /\ f a2 a3 ==> f a1 a3)        (* transitivity  *)
 
-val sorted_concat_lemma: a:Type
-                      -> f:(a -> a -> Tot bool)
-                      -> l1:list a{sorted f l1}
-                      -> l2:list a{sorted f l2}
-                      -> pivot:a
-                      -> Lemma (requires (total_order a f
+val sorted_concat_lemma: f:('a -> 'a -> Tot bool)
+                      -> l1:list 'a{sorted f l1}
+                      -> l2:list 'a{sorted f l2}
+                      -> pivot:'a
+                      -> Lemma (requires (total_order 'a f
                                        /\ (forall y. mem y l1 ==> not (f pivot y))
                                        /\ (forall y. mem y l2 ==> f pivot y)))
                                (ensures (sorted f (append l1 (pivot::l2))))
@@ -88,5 +88,4 @@ let rec sort f l = match l with
   | [] -> []
   | pivot::tl ->
     let hi, lo = partition (f pivot) tl in
-    partition_lemma (f pivot) tl;
     append (sort f lo) (pivot::sort f hi)
