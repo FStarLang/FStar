@@ -18,19 +18,13 @@ module ST
 open Set
 open Heap
 
-opaque type Modifies (mods:refs) (h:heap) (h':heap) =
-           is_SomeRefs mods ==> (Heap.equal h' (concat h' (restrict h (complement (SomeRefs.v mods)))))
+// this intentionally does not preclude h' extending h with fresh refs
+opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
+    b2t (Heap.equal h' (concat h' (restrict h (complement mods))))
 
-val modifies: refs -> Tot refs
-let modifies (r:refs) = r
 kind Pre  = heap -> Type
 kind Post (a:Type) = a -> heap -> Type
-effect ST (a:Type) (pre:Pre) (post: (heap -> Post a)) (mods:refs) =
-        STATE a
-              (fun (p:Post a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ Modifies mods h h1 /\ post h a h1) ==> p a h1)) (* WP *)
-              (fun (p:Post a) (h:heap) -> (forall a h1. (pre h /\ Modifies mods h h1 /\ post h a h1) ==> p a h1))          (* WLP *)
-
-effect St (a:Type) (pre:Pre) (post: (heap -> Post a)) = STATE a
+effect ST (a:Type) (pre:Pre) (post: (heap -> Post a)) = STATE a
   (fun (p:Post a) (h:heap) ->
      pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
   (fun (p:Post a) (h:heap) ->
@@ -40,36 +34,32 @@ effect St (a:Type) (pre:Pre) (post: (heap -> Post a)) = STATE a
 assume val alloc: #a:Type -> init:a -> Prims.ST (ref a)
                                          (fun h -> True)
                                          (fun h0 r h1 -> not(contains h0 r) /\ contains h1 r /\ h1==upd h0 r init)
-                                         (* (modifies no_refs) *)
 
 assume val read: #a:Type -> r:ref a -> ST a
                                          (requires (fun h -> contains h r))
                                          (ensures (fun h0 x h1 -> h0==h1 /\ x==sel h0 r))
-                                         (modifies no_refs)
 
 assume val write: #a:Type -> r:ref a -> v:a -> ST unit
                                                  (requires (fun h -> contains h r))
                                                  (ensures (fun h0 x h1 -> h1==upd h0 r v))
-                                                 (modifies (a_ref r))
 
 assume val op_ColonEquals: #a:Type -> r:ref a -> v:a -> ST unit
                                                  (requires (fun h -> contains h r))
                                                  (ensures (fun h0 x h1 -> h1==upd h0 r v))
-                                                 (modifies (a_ref r))
 
 assume val free: #a:Type -> r:ref a -> ST unit
          (requires (fun h -> contains h r))
-         (ensures (fun h0 x h1 -> not(contains h1 r)))
-         (modifies (a_ref r))
+         (ensures (fun h0 x h1 -> modifies !{r} h0 h1 /\ not(contains h1 r)))
 
 assume val get: unit -> State heap (fun 'post h -> 'post h h)
-
 
 assume val forget_ST: #a:Type -> #b:(a -> Type)
   -> #req:(a -> heap -> Type)
   -> #ens:(x:a -> heap -> b x -> heap -> Type)
-  -> =f:(x:a -> ST (b x) (req x) (ens x) no_refs)
-     {forall x h h'. req x h ==> req x h'}
-  -> Tot (x:a -> Div (b x)
+  -> =f:(x:a -> ST (b x) (req x) (ens x))
+  -> Pure (x:a -> Div (b x)
                  (requires (forall h. req x h))
                  (ensures (fun (y:b x) -> exists h0 h1. ens x h0 y h1)))
+          (requires (forall (x:a) (y:b x) h h'.
+                        (req x h /\ ens x h y h' ==> modifies !{} h h')))
+          (ensures (fun _ -> True))

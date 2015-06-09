@@ -353,7 +353,7 @@ let list_of_freevars = (fun fvs -> (Support.List.append ((Support.List.map (fun 
 let get_unit_ref = (fun _28802 -> (match (_28802) with
 | () -> begin
 (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (())))
-in (let _28804 = (Support.ST.op_ColonEquals x None)
+in (let _28804 = (x := None)
 in x))
 end))
 
@@ -405,12 +405,12 @@ let mk_Kind_unknown = {n = Kind_unknown; tk = (get_unit_ref ()); pos = dummyRang
 let get_knd_nref = (fun _28838 -> (match (_28838) with
 | () -> begin
 (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Kind_unknown)))
-in (let _28840 = (Support.ST.op_ColonEquals x None)
+in (let _28840 = (x := None)
 in x))
 end))
 
 let get_knd_ref = (fun k -> (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Kind_unknown)))
-in (let _28844 = (Support.ST.op_ColonEquals x k)
+in (let _28844 = (x := k)
 in x)))
 
 let mk_Typ_btvar = (fun x k p -> {n = Typ_btvar (x); tk = (get_knd_ref k); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())})
@@ -419,7 +419,7 @@ let mk_Typ_const = (fun x k p -> {n = Typ_const (x); tk = (get_knd_ref k); pos =
 
 let rec check_fun = (fun bs c p -> (match (bs) with
 | [] -> begin
-(failwith ("Empty binders"))
+(failwith "Empty binders")
 end
 | _ -> begin
 Typ_fun ((bs, c))
@@ -439,7 +439,7 @@ let mk_Typ_app = (fun _28870 k p -> (match (_28870) with
 | (t1, args) -> begin
 {n = (match (args) with
 | [] -> begin
-(failwith ("Empty arg list!"))
+(failwith "Empty arg list!")
 end
 | _ -> begin
 Typ_app ((t1, args))
@@ -472,7 +472,7 @@ let mk_Typ_lam = (fun _28897 k p -> (match (_28897) with
 | (b, t) -> begin
 {n = (match (b) with
 | [] -> begin
-(failwith ("Empty binders!"))
+(failwith "Empty binders!")
 end
 | _ -> begin
 Typ_lam ((b, t))
@@ -504,7 +504,7 @@ let mk_Typ_meta' = (fun m k p -> {n = Typ_meta (m); tk = (Support.Microsoft.FSta
 
 let mk_Typ_meta = (fun m -> (match (m) with
 | (Meta_pattern ((t, _))) | (Meta_named ((t, _))) | (Meta_labeled ((t, _, _, _))) | (Meta_refresh_label ((t, _, _))) | (Meta_slack_formula ((t, _, _))) -> begin
-(mk_Typ_meta' m (Support.ST.read t.tk) t.pos)
+(mk_Typ_meta' m (! (t.tk)) t.pos)
 end))
 
 let mk_Typ_uvar' = (fun _28955 k' p -> (match (_28955) with
@@ -521,7 +521,7 @@ let mk_Typ_delayed = (fun _28965 k p -> (match (_28965) with
 | (t, s, m) -> begin
 {n = (match (t.n) with
 | Typ_delayed (_) -> begin
-(failwith ("NESTED DELAYED TYPES!"))
+(failwith "NESTED DELAYED TYPES!")
 end
 | _ -> begin
 Typ_delayed ((Support.Microsoft.FStar.Util.Inl ((t, s)), m))
@@ -535,12 +535,12 @@ let mk_Typ_unknown = {n = Typ_unknown; tk = (get_knd_nref ()); pos = dummyRange;
 let get_typ_nref = (fun _28976 -> (match (_28976) with
 | () -> begin
 (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Typ_unknown)))
-in (let _28978 = (Support.ST.op_ColonEquals x None)
+in (let _28978 = (x := None)
 in x))
 end))
 
 let get_typ_ref = (fun t -> (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Typ_unknown)))
-in (let _28982 = (Support.ST.op_ColonEquals x t)
+in (let _28982 = (x := t)
 in x)))
 
 let mk_Total = (fun t -> {n = Total (t); tk = (Support.Microsoft.FStar.Util.mk_ref None); pos = t.pos; fvs = (mk_fvs ()); uvs = (mk_uvs ())})
@@ -560,7 +560,7 @@ let mk_Exp_abs = (fun _28999 t' p -> (match (_28999) with
 | (b, e) -> begin
 {n = (match (b) with
 | [] -> begin
-(failwith ("abstraction with no binders!"))
+(failwith "abstraction with no binders!")
 end
 | _ -> begin
 Exp_abs ((b, e))
@@ -574,7 +574,7 @@ let mk_Exp_abs' = (fun _29007 t' p -> (match (_29007) with
 Exp_abs (((Support.List.append b binders), body))
 end
 | ([], _) -> begin
-(failwith ("abstraction with no binders!"))
+(failwith "abstraction with no binders!")
 end
 | _ -> begin
 Exp_abs ((b, e))
@@ -585,7 +585,7 @@ let mk_Exp_app = (fun _29025 t p -> (match (_29025) with
 | (e1, args) -> begin
 {n = (match (args) with
 | [] -> begin
-(failwith ("Empty args!"))
+(failwith "Empty args!")
 end
 | _ -> begin
 Exp_app ((e1, args))
@@ -696,7 +696,7 @@ let mk_Exp_meta' = (fun m t p -> {n = Exp_meta (m); tk = (get_typ_ref t); pos = 
 
 let mk_Exp_meta = (fun m -> (match (m) with
 | Meta_desugared ((e, _)) -> begin
-(mk_Exp_meta' m (Support.ST.read e.tk) e.pos)
+(mk_Exp_meta' m (! (e.tk)) e.pos)
 end))
 
 let mk_subst = (fun s -> s)

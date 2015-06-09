@@ -45,7 +45,7 @@ type paired (e:encryptor) (d:decryptor) = b2t (Enc.log e = Dec.log d)
 
 type both = ed:(encryptor * decryptor){paired (fst ed) (snd ed)}
 
-val gen: unit -> St both
+val gen: unit -> ST both
   (requires (fun h -> True))
   (ensures (fun h0 b h1 ->
       modifies !{} h0 h1
@@ -57,7 +57,7 @@ let gen () =
   let log = ref emp in
   (Enc log key, Dec log key)
 
-val enc : e:encryptor -> p:plain -> St cipher
+val enc : e:encryptor -> p:plain -> ST cipher
     (requires (fun h -> True))
     (ensures (fun h0 c h1 ->
                 modifies !{Enc.log e} h0 h1
@@ -72,7 +72,7 @@ let enc e p =
 assume val find_seq : #a:Type -> f:(a -> Tot bool) -> s:seq a
             -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
 
-val dec: d:decryptor -> c:cipher -> St (option plain)
+val dec: d:decryptor -> c:cipher -> ST (option plain)
   (requires (fun h -> True))
   (ensures (fun h0 p h1 ->
               modifies !{} h0 h1
@@ -140,7 +140,7 @@ let refs_in_e (e:st_encryptor) = !{StEnc.log e, StEnc.ctr e, Enc.log (StEnc.key 
 
 let refs_in_d (d:st_decryptor) = !{StDec.log d, StDec.ctr d, Dec.log (StDec.key d)}
 
-val stateful_gen : unit -> St st_both
+val stateful_gen : unit -> ST st_both
   (requires (fun h -> True))
   (ensures (fun h0 b h1 ->
               st_inv (fst b) (snd b) h1
@@ -154,7 +154,7 @@ let stateful_gen () =
   let r = ref 0 in
   (StEnc l w e, StDec l r d)
 
-val stateful_enc : e:st_encryptor -> p:plain -> St cipher
+val stateful_enc : e:st_encryptor -> p:plain -> ST cipher
   (requires (fun h -> st_enc_inv e h))
   (ensures (fun h0 c h1 ->
                     st_enc_inv e h1
@@ -169,7 +169,7 @@ let stateful_enc e p =
   StEnc.ctr e := i + 1;
   c
 
-val stateful_dec: ad:nat -> d:st_decryptor -> c:cipher -> St (option plain)
+val stateful_dec: ad:nat -> d:st_decryptor -> c:cipher -> ST (option plain)
   (requires (fun h -> st_dec_inv d h))
   (ensures (fun h0 p h1 ->
                 st_dec_inv d h0

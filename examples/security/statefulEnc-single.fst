@@ -24,10 +24,7 @@ type basicEntry =
 
 let basicLog : ref (seq basicEntry) = ref emp
 
-opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
-    b2t (Heap.equal h' (concat h' (restrict h (complement mods))))
-
-val enc : key -> p:plain -> St cipher
+val enc : key -> p:plain -> ST cipher
     (requires (fun h -> Heap.contains h basicLog))
     (ensures (fun h0 c h1 ->
                 modifies (Set.singleton (Ref basicLog)) h0 h1
@@ -44,7 +41,7 @@ type Let (#a:Type) (x:a) (body: a -> Type) = body x
 assume val find_seq : #a:Type -> f:(a -> Tot bool) -> s:seq a
             -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
 
-val dec: key -> c:cipher -> St (option plain)
+val dec: key -> c:cipher -> ST (option plain)
   (requires (fun h -> Heap.contains h basicLog))
   (ensures (fun h0 p h1 ->
               modifies Set.empty h0 h1
@@ -77,7 +74,7 @@ type log_inv (h:heap) =
             StEntry.i st_en = i
             /\ Seq.index basic i = Entry (with_seqn i (StEntry.p st_en)) (StEntry.c st_en)))))
 
-val stateful_enc : key -> p:plain -> St cipher
+val stateful_enc : key -> p:plain -> ST cipher
   (requires (fun h -> log_inv h))
   (ensures (fun h0 c h1 -> log_inv h1
                         /\ modifies (Set.union (Set.singleton (Ref basicLog)) (Set.singleton (Ref stLog))) h0 h1

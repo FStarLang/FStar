@@ -21,9 +21,8 @@ type even (x:int) = x%2=0
 
 effect InvST (t:Type) (inv:(heap -> Type)) (fp:set aref) (post:(heap -> t -> heap -> Type)) =
              ST t (fun h -> On fp inv h)
-                  (fun h i h' -> post h i h' /\ On fp inv h')
-                  (SomeRefs fp)
-    
+                  (fun h i h' -> modifies fp h h' /\ post h i h' /\ On fp inv h')
+
 type even_post (h:heap) (i:int) (h':heap) = even i
 
 
@@ -41,9 +40,9 @@ opaque type inv1 (r1:ref int) (r2:ref int) (h:heap) =
 val mk_counter: unit
              -> ST t (requires (fun h -> True))
                      (ensures  (fun h v h' ->
-                             On  (Evens.fp v) (Evens.inv v) h'
+                             modifies !{} h h'
+                             /\ On  (Evens.fp v) (Evens.inv v) h'
                              /\ Heap.fresh h (Evens.fp v)))
-                     (modifies no_refs)
 let mk_counter _ =
   let x = ST.alloc 0 in
   let y = ST.alloc 0 in
@@ -55,18 +54,17 @@ let mk_counter _ =
     rx + ry in
   Evens (inv1 x y) (Set.union (Set.singleton (Ref x)) (Set.singleton (Ref y))) evens
 
-
-(* opaque logic type inv2 (r:ref int) (h:heap) = contains h r=true *)
-(* val mk_counter_2: unit *)
-(*                -> ST t (requires (fun h -> True)) *)
-(*                        (ensures  (fun h v h' -> *)
-(*                          On  (Evens.fp v) (Evens.inv v) h' *)
-(*                          /\ Heap.fresh h (Evens.fp v))) *)
-(*                        (modifies no_refs) *)
-(* let mk_counter_2 _ = *)
-(*   let x = ST.alloc 0 in *)
-(*   let evens _ = *)
-(*     let rx = ST.read x in *)
-(*     ST.write x (rx + 1); *)
-(*     2 * rx in *)
-(*   Evens (inv2 x) (Set.singleton (Ref x)) evens *)
+opaque logic type inv2 (r:ref int) (h:heap) = contains h r=true
+val mk_counter_2: unit
+               -> ST t (requires (fun h -> True))
+                       (ensures  (fun h v h' ->
+                         modifies !{} h h'
+                         /\ On  (Evens.fp v) (Evens.inv v) h'
+                         /\ Heap.fresh h (Evens.fp v)))
+let mk_counter_2 _ =
+  let x = ST.alloc 0 in
+  let evens _ =
+    let rx = ST.read x in
+    ST.write x (rx + 1);
+    2 * rx in
+  Evens (inv2 x) (Set.singleton (Ref x)) evens

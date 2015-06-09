@@ -299,6 +299,7 @@ rule token = parse
  | ";"         { SEMICOLON }
  | "="         { EQUALS }
  | "%["        { PERCENT_LBRACK }
+ | "!{"        { BANG_LBRACE }
  | "["         { LBRACK }
  | "[|"        { LBRACK_BAR }
  | "<"         { if is_typ_app lexbuf then TYP_APP_LESS else CUSTOM_OP("<")  }

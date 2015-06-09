@@ -21,18 +21,13 @@ module ST
 open Set
 open Heap
 
-opaque type Modifies (mods:refs) (h:heap) (h':heap) =
-           is_SomeRefs mods ==> (Heap.equal h' (concat h' (restrict h (complement (SomeRefs.v mods)))))
+// this intentionally does not preclude h' extending h with fresh refs
+opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
+    b2t (Heap.equal h' (concat h' (restrict h (complement mods))))
 
-let modifies (r:refs) = r
 kind Pre  = heap -> Type
 kind Post (a:Type) = a -> heap -> Type
-effect ST (a:Type) (pre:Pre) (post: (heap -> Post a)) (mods:refs) =
-        STATE a
-              (fun (p:Post a) (h:heap) -> pre h /\ (forall a h1. (pre h /\ Modifies mods h h1 /\ post h a h1) ==> p a h1)) (* WP *)
-              (fun (p:Post a) (h:heap) -> (forall a h1. (pre h /\ Modifies mods h h1 /\ post h a h1) ==> p a h1))          (* WLP *)
-
-effect St (a:Type) (pre:Pre) (post: (heap -> Post a)) = STATE a
+effect ST (a:Type) (pre:Pre) (post: (heap -> Post a)) = STATE a
   (fun (p:Post a) (h:heap) ->
      pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
   (fun (p:Post a) (h:heap) ->

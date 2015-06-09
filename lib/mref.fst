@@ -38,7 +38,7 @@ let fresh x h0 r h1 = not(contains h0 r) && contains h1 r && h1=upd h0 r x
 val alloc: #a:Type
         -> #b:Reln a
         -> x:a{monotonic a b}
-        -> St (mref a b)
+        -> ST (mref a b)
               (requires (fun _ -> True))
               (fun h0 r h1 -> b2t(fresh x h0 r h1))
 let alloc x = ref x
@@ -46,7 +46,7 @@ let alloc x = ref x
 val read: #a:Type
        -> #b:Reln a
        -> x:mref a b
-       -> St a
+       -> ST a
             (requires (fun h -> True))
             (ensures (fun h0 v h1 -> h0=h1 /\ v=sel h0 x))
 let read x = !x
@@ -55,7 +55,7 @@ val write: #a:Type
         -> #b:Reln a
         -> x:mref a b
         -> v:a
-        -> St unit
+        -> ST unit
               (requires (fun h0 -> b (sel h0 x) v))
               (ensures (fun h0 _ h1 -> h1=upd h0 x v))
 let write x v = x := v
@@ -64,7 +64,7 @@ val witness: #a:Type
           -> #b:Reln a
           -> m:mref a b
           -> p:(a -> Type)
-          -> St unit
+          -> ST unit
                 (requires (fun h0 -> p (sel h0 m) /\ stable p b))
                 (ensures (fun h0 _ h1 -> h0=h1 /\ token m p))
 let witness (a:Type) (b:Reln a) m (p: a -> Type) = ()
@@ -73,6 +73,6 @@ assume val recall: #a:Type
                 -> #b:Reln a
                 -> m:mref a b
                 -> p:(a -> Type)
-                -> St unit
+                -> ST unit
                       (requires (fun _ ->  token m p))
                       (ensures (fun h0 _ h1 -> h0=h1 /\ p (sel h1 m)))

@@ -232,7 +232,7 @@ let freeMemAux r m =
   | InStack s -> ((hp m), ((freeInMemStack r (st m) s)))
 
 
-val writeMemAuxPreservesExists :  #a:Type -> rw:(ref a) -> r:(ref a) -> m:smem -> v:a ->
+val writeMemAuxPreservesExists :  #a:Type -> rw:ref a -> r:ref a -> m:smem -> v:a ->
 Lemma (requires (refExistsInMem r m))
       (ensures (refExistsInMem r (writeMemAux rw m v)))
       [SMTPat (writeMemAux rw m v)]
@@ -243,8 +243,6 @@ match (refLoc r) with
     match (refLoc rw) with
     | InHeap -> ()
     | InStack idw ->  (writeMemStackExists rw r (st m) id idw v)
-
-
 
 val writeMemAuxPreservesStail :  #a:Type -> r:(ref a) -> m:smem -> v:a ->
 Lemma (requires (is_InStack (refLoc r)))

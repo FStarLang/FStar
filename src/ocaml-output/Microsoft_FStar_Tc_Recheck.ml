@@ -86,8 +86,8 @@ Microsoft_FStar_Absyn_Syntax.ktype
 end
 | _ -> begin
 (let k1 = (recompute_kind t1)
-in (let _191458 = (Microsoft_FStar_Absyn_Util.kind_formals k1)
-in (match (_191458) with
+in (let _191604 = (Microsoft_FStar_Absyn_Util.kind_formals k1)
+in (match (_191604) with
 | (bs, k) -> begin
 (let rec aux = (fun subst bs args -> (match ((bs, args)) with
 | ([], []) -> begin
@@ -101,7 +101,7 @@ end
 in (aux subst bs args))
 end
 | _ -> begin
-(failwith ((Support.Microsoft.FStar.Util.format4 "Head kind is %s\nToo many arguments in type %s; result kind is %s\nwith %s remaining args\n" (Microsoft_FStar_Absyn_Print.kind_to_string k1) (Microsoft_FStar_Absyn_Print.tag_of_typ t) (Microsoft_FStar_Absyn_Print.kind_to_string k) (Support.Microsoft.FStar.Util.string_of_int (Support.List.length args)))))
+(failwith (Support.Microsoft.FStar.Util.format4 "Head kind is %s\nToo many arguments in type %s; result kind is %s\nwith %s remaining args\n" (Microsoft_FStar_Absyn_Print.kind_to_string k1) (Microsoft_FStar_Absyn_Print.tag_of_typ t) (Microsoft_FStar_Absyn_Print.kind_to_string k) (Support.Microsoft.FStar.Util.string_of_int (Support.List.length args))))
 end))
 in (aux [] bs args))
 end)))
@@ -110,13 +110,13 @@ end
 | Microsoft_FStar_Absyn_Syntax.Typ_unknown -> begin
 Microsoft_FStar_Absyn_Syntax.kun
 end))
-in (match ((Support.ST.read t.Microsoft_FStar_Absyn_Syntax.tk)) with
+in (match ((! (t.Microsoft_FStar_Absyn_Syntax.tk))) with
 | Some (k) -> begin
 k
 end
 | None -> begin
 (let k = (recompute t)
-in (let _191485 = (Support.ST.op_ColonEquals t.Microsoft_FStar_Absyn_Syntax.tk (Some (k)))
+in (let _191631 = (t.Microsoft_FStar_Absyn_Syntax.tk := Some (k))
 in k))
 end)))
 
@@ -155,13 +155,13 @@ end
 in (aux subst bs args))
 end
 | _ -> begin
-(failwith ("Too many arguments"))
+(failwith "Too many arguments")
 end))
 in (aux [] bs args))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_match (_) -> begin
-(failwith ("Expect match nodes to be annotated already"))
+(failwith "Expect match nodes to be annotated already")
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((_, t)) -> begin
 t
@@ -175,13 +175,13 @@ end
 | Microsoft_FStar_Absyn_Syntax.Exp_meta (Microsoft_FStar_Absyn_Syntax.Meta_desugared ((e, _))) -> begin
 (recompute_typ e)
 end))
-in (match ((Support.ST.read e.Microsoft_FStar_Absyn_Syntax.tk)) with
+in (match ((! (e.Microsoft_FStar_Absyn_Syntax.tk))) with
 | Some (t) -> begin
 t
 end
 | None -> begin
 (let t = (recompute e)
-in (let _191565 = (Support.ST.op_ColonEquals e.Microsoft_FStar_Absyn_Syntax.tk (Some (t)))
+in (let _191711 = (e.Microsoft_FStar_Absyn_Syntax.tk := Some (t))
 in t))
 end)))
 

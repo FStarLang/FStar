@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq --z3timeout 15 --max_fuel 1 --max_ifuel 1 --initial_ifuel 1 --max_ifuel 1;
+    options:--admit_fsi Set --admit_fsi Seq --z3timeout 25 --max_fuel 1 --max_ifuel 1 --initial_ifuel 1 --initial_fuel 1;
     other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/heap.fst ../../lib/st.fst ../../lib/seq.fsi ../../lib/list.fst
   --*)
 (* A standalone experiment corresponding to building stateful encryption on
@@ -40,10 +40,7 @@ let find_seq a f s = find_seq' #a f s 0
 assume val seq_map: #a:Type -> #b:Type -> f:(a -> Tot b) -> s:seq a ->
   Tot (t:seq b { Seq.length t = Seq.length s /\ (forall (i:nat{i < Seq.length s}).(Seq.index t i = f (Seq.index s i))) })
 
-// replacing the usual modifies clause?
-// this does not preclude h' extending h with fresh refs
-opaque logic type modifies (mods:set aref) (h:heap) (h':heap) =
-    b2t (Heap.equal h' (concat h' (restrict h (complement mods))))
+
 
 type Fresh (#a:Type) h0 (r:ref a) h1 = Heap.contains h1 r /\ not (Heap.contains h0 r)
 
@@ -59,15 +56,15 @@ type key
 // similarly we should be able to instantiate the scheme to an instance that holds/updates refs in key
 
 // assume val gen0: unit -> Tot key
-assume val gen0: unit -> St key (fun h -> True) (fun h0 k h1 -> modifies !{} h0 h1)
+assume val gen0: unit -> ST key (fun h -> True) (fun h0 k h1 -> modifies !{} h0 h1)
 
 type plain
-assume val mk_plain: unit -> St plain (fun h -> True) (fun h0 k h1 -> modifies !{} h0 h1)
+assume val mk_plain: unit -> ST plain (fun h -> True) (fun h0 k h1 -> modifies !{} h0 h1)
 
 type ad = nat // additional data, just integers for simplicity
 
 type cipher
-assume val enc0: s:seq cipher (* ghost *) -> St cipher
+assume val enc0: s:seq cipher (* ghost *) -> ST cipher
   (fun h -> True)
   (fun h0 c h1 -> modifies !{} h0 h1
                /\ find_seq (fun c' -> c=c') s = None)
@@ -90,6 +87,7 @@ type paired (e:encryptor) (d:decryptor) = b2t (Enc.log e = Dec.log d)
 (* A basic instance *)
 type bi =
   | BI : e:encryptor -> d:decryptor{paired e d} -> bi
+opaque logic type triggerBI (x:bi) = True
 
 // new concrete syntax for sets of (a & x:a) ?
 let bi_refs (BI e d) = !{Enc.log e}
@@ -103,20 +101,22 @@ type pairwise_distinct (s:list bi) =
 (* basic_fp: the footprint of the basic encryption functionality.
              maintains all basic instances, bi
 *)
-let basic_fp : ref (s:list bi{pairwise_distinct s}) = ref []
+let basic_fp : ref (list bi) = ref []
 
 // somewhat generic
 // could we put the separation from basic_fp above instead?
 // could we show that those refs are separated from others?
 type basic_fp_inv (h:heap) =
   Heap.contains h basic_fp
-  /\ (forall bi.
-        List.mem bi (Heap.sel h basic_fp)
-         ==> (forall (a:Type) (r:ref a).
-                Set.mem (Ref r) (bi_refs bi)
-                ==> Heap.contains h r /\ r =!= basic_fp))
+  /\ (forall bi.{:pattern (triggerBI bi)}
+        triggerBI bi
+        /\ List.mem bi (Heap.sel h basic_fp)
+         ==> (forall bi'.{:pattern (triggerBI bi')} triggerBI bi' /\ List.mem bi' (Heap.sel h basic_fp) ==> bi=bi' \/ distinct_bi bi bi')
+             /\ (forall (a:Type) (r:ref a).
+                    Set.mem (Ref r) (bi_refs bi)
+                    ==> Heap.contains h r /\ r =!= basic_fp))
 
-val gen: unit -> St bi
+val gen: unit -> ST bi
   (requires (basic_fp_inv))
   (ensures (fun h0 b h1 ->
       modifies !{basic_fp} h0 h1
@@ -136,10 +136,10 @@ type in_basic_fp bi h =
   basic_fp_inv h /\
   b2t(List.mem bi (Heap.sel h basic_fp))
 
-type enc_in_basic_fp (e:encryptor) (h:heap) = exists d. paired e d /\ in_basic_fp (BI e d) h
-type dec_in_basic_fp (d:decryptor) (h:heap) = exists e. paired e d /\ in_basic_fp (BI e d) h
+type enc_in_basic_fp (e:encryptor) (h:heap) = exists d. paired e d /\ in_basic_fp (BI e d) h /\ triggerBI (BI e d)
+type dec_in_basic_fp (d:decryptor) (h:heap) = exists e. paired e d /\ in_basic_fp (BI e d) h /\ triggerBI (BI e d)
 
-val enc : e:encryptor -> i:ad -> p:plain -> St cipher
+val enc : e:encryptor -> i:ad -> p:plain -> ST cipher
     (requires (fun h -> enc_in_basic_fp e h))
     (ensures (fun h0 c h1 ->
                 modifies !{Enc.log e} h0 h1
@@ -155,7 +155,7 @@ let enc e i p =
 let basicMatch i c (Entry i' c' p) = i = i' && c = c'
 
 // cryptographically, this assumes both INT-CTXT and IND-CPA (except for distinct ciphers)
-val dec: d:decryptor -> a:ad -> c:cipher -> St (option plain)
+val dec: d:decryptor -> a:ad -> c:cipher -> ST (option plain)
   (requires (fun h -> dec_in_basic_fp d h))
   (ensures (fun h0 o h1 ->
               modifies !{} h0 h1
@@ -172,7 +172,7 @@ let dec d a c =
       cut (trigger i);
       Some (Entry.p (Seq.index s i))
 
-val test_basic_frame : b1:bi -> b2:bi{distinct_bi b1 b2} -> St unit
+val test_basic_frame : b1:bi -> b2:bi{distinct_bi b1 b2} -> ST unit
     (requires (fun h ->
                        in_basic_fp b1 h
                     /\ in_basic_fp b2 h
@@ -180,24 +180,30 @@ val test_basic_frame : b1:bi -> b2:bi{distinct_bi b1 b2} -> St unit
                     /\ Heap.sel h (Enc.log (BI.e b2)) = emp))
     (ensures (fun h0 _ h1 ->
                 basic_fp_inv h1
-                /\ modifies (Set.union (bi_refs b1) (bi_refs b2)) h0 h1))
+                /\ modifies (Set.union !{basic_fp}
+                                        (Set.union (bi_refs b1) (bi_refs b2)))
+                                h0 h1))
 (* A test of multiple basic instances:
      proves that use of one instance doesn't mess with another
 *)
 let test_basic_frame b1 b2 =
-  // let b3 = gen() in // this breaks typing; why?
-  let p = mk_plain () in
-  let q = mk_plain () in
-  let c0 = enc (BI.e b1) 0 p in
-  let c1 = enc (BI.e b1) 1 q in
-  let c2 = enc (BI.e b2) 0 q in
-  let o0 = dec (BI.d b1) 0 c0 in
-  let o2 = dec (BI.d b2) 0 c2 in
-  let oX = dec (BI.d b1) 2 c0 in // this fails with 1, as we might have c0=c1
-  cut (trigger 0); // what does this achieve?
-  assert (Some.v o0 = p);
-  assert (Some.v o2 = q);
-  assert (oX = None)
+   let b3 = gen() in
+   let p = mk_plain () in
+   let q = mk_plain () in
+   let c0 = enc (BI.e b1) 0 p in
+   let c1 = enc (BI.e b1) 1 q in
+   let c2 = enc (BI.e b2) 0 q in
+   let o0 = dec (BI.d b1) 0 c0 in
+   let o2 = dec (BI.d b2) 0 c2 in
+   let h0 = get() in
+   let oX = dec (BI.d b1) 2 c0 in // this fails with 1, as we might have c0=c1
+   let h1 = get() in
+   cut (modifies !{} h0 h1); //not yet sure why we need this hint
+   cut (trigger 0);   // what does this achieve?;
+   assert (Some.v o0 = p);
+   assert (Some.v o2 = q);
+   assert (oX = None)
+
 
 (* -------------------------------------------------------- *)
 (* This is the analog of StatefulLHAE on top of AEAD_GCM *)
@@ -226,6 +232,7 @@ type st_paired (enc:st_encryptor) (dec:st_decryptor) =
 (* a stateful instance *)
 type sti =
   | STI : e:st_encryptor -> d:st_decryptor{st_paired e d} -> sti
+opaque logic type triggerSTI (x:sti) = True
 
 // this is simplified from AEAD (usually not encrypted)
 
@@ -247,11 +254,6 @@ type st_inv (e:st_encryptor) (d:st_decryptor) (h:heap) =
           Let (Seq.index st i) (fun st_en ->
             b2t (Seq.index basic i = Entry i (StEntry.c st_en) (StEntry.p st_en) )))))))
 
-type st_enc_inv (e:st_encryptor) (h:heap) =
-  exists (d:st_decryptor). st_paired e d /\ st_inv e d h
-
-type st_dec_inv (d:st_decryptor) (h:heap) =
-  exists (e:st_encryptor). st_paired e d /\ st_inv e d h
 
 let sti_refs (STI e d) =
   Set.union !{StEnc.log e, StEnc.ctr e, StDec.ctr d}
@@ -266,9 +268,12 @@ type st_fp_inv (h:heap) =
    basic_fp_inv h              //the basic encryption invariant
    /\ Heap.contains h st_fp
    /\ basic_fp =!= st_fp       //two footprints are anti-aliased
-   /\ (forall s1.
-          List.mem s1 (Heap.sel h st_fp)
-          ==> (forall s2. List.mem s2 (Heap.sel h st_fp) ==> s1 = s2 \/ distinct_sti s1 s2) //pairwise distinct
+   /\ (forall s1.{:pattern (triggerSTI s1)}
+          triggerSTI s1
+          /\ List.mem s1 (Heap.sel h st_fp)
+          ==> (forall s2.{:pattern (triggerSTI s2)}
+                    triggerSTI s2
+                    /\ List.mem s2 (Heap.sel h st_fp) ==> s1 = s2 \/ distinct_sti s1 s2) //pairwise distinct
                /\ in_basic_fp (BI (StEnc.key (STI.e s1)) (StDec.key (STI.d s1))) h //the key is in the basic invariant
                /\ st_inv (STI.e s1) (STI.d s1) h //and in the st invariant
                /\ (forall (a:Type) (r:ref a).
@@ -280,7 +285,7 @@ type st_fp_inv (h:heap) =
 let refs_in_e (e:st_encryptor) = !{StEnc.log e, StEnc.ctr e, Enc.log (StEnc.key e)}
 let refs_in_d (d:st_decryptor) = !{StDec.log d, StDec.ctr d, Dec.log (StDec.key d)}
 
-val stateful_gen : unit -> St sti
+val stateful_gen : unit -> ST sti
   (requires (st_fp_inv))
   (ensures (fun h0 b h1 ->
               st_fp_inv h1
@@ -301,10 +306,10 @@ type in_st_fp sti h =
   st_fp_inv h /\
   b2t( List.mem sti (Heap.sel h st_fp))
 
-type enc_in_st_fp (e:st_encryptor) (h:heap) = exists d. st_paired e d /\ in_st_fp (STI e d) h
-type dec_in_st_fp (d:st_decryptor) (h:heap) = exists e. st_paired e d /\ in_st_fp (STI e d) h
+type enc_in_st_fp (e:st_encryptor) (h:heap) = exists d. st_paired e d /\ in_st_fp (STI e d) h /\ triggerSTI (STI e d)
+type dec_in_st_fp (d:st_decryptor) (h:heap) = exists e. st_paired e d /\ in_st_fp (STI e d) h /\ triggerSTI (STI e d)
 
-val stateful_enc : e:st_encryptor -> p:plain -> St cipher
+val stateful_enc : e:st_encryptor -> p:plain -> ST cipher
   (requires (fun h -> enc_in_st_fp e h))
   (ensures (fun h0 c h1 ->
                     enc_in_st_fp e h1
@@ -317,7 +322,7 @@ let stateful_enc (StEnc log ctr e) p =
   ctr := !ctr + 1;
   c
 
-val stateful_dec: d:st_decryptor -> c:cipher -> St (option plain)
+val stateful_dec: d:st_decryptor -> c:cipher -> ST (option plain)
   (requires (fun h -> dec_in_st_fp d h))
   (ensures (fun h0 p h1 ->
                    dec_in_st_fp d h0 //repeating pre
@@ -331,7 +336,7 @@ val stateful_dec: d:st_decryptor -> c:cipher -> St (option plain)
                    /\ (is_Some p ==>
                           ((Heap.sel h1 (StDec.ctr d) = r + 1)
                            /\ StEntry.p (Seq.index log r) = Some.v p))))))
-
+#reset-options
 // note that we do not increment the counter in case of decryption failure,
 // thereby enabling retries
 let stateful_dec (StDec _ ctr d) c =
@@ -342,8 +347,8 @@ let stateful_dec (StDec _ ctr d) c =
     | Some p -> ctr := !ctr + 1; Some p
 
 // what does it do? related to transient failures?
-#reset-options
-val test_st_frame : s1:sti -> s2:sti{distinct_sti s1 s2} -> St unit
+
+val test_st_frame : s1:sti -> s2:sti{distinct_sti s1 s2} -> ST unit
     (requires (fun h ->
                    in_st_fp s1 h
                 /\ in_st_fp s2 h
@@ -356,11 +361,11 @@ val test_st_frame : s1:sti -> s2:sti{distinct_sti s1 s2} -> St unit
                 /\ modifies (Set.union (sti_refs s1) (sti_refs s2)) h0 h1))
 // note that we do not require new encryptor/decryptors,
 // just that those in s1 are in sync, so that decryption cancels encryption
-
+#reset-options
 let test_st_frame s1 s2 =
   let p = mk_plain () in
   let q = mk_plain () in
-  // let s3 = stateful_gen() // also type-breaking
+  // let s3 = stateful_gen() // also type-breaking; yes, because this modifies fp, basic_fp
   let c0 = stateful_enc (STI.e s1) p in
   let c1 = stateful_enc (STI.e s1) q in
   let c2 = stateful_enc (STI.e s2) p in
