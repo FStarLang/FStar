@@ -115,10 +115,6 @@ let rec stack_inv = function
     let (Mode Par ps, Mode Par ps') = Frame.m f, Frame.m f' in
     subset ps ps' && stack_inv (f'::tl)
 
-(* TODO: FIXME: perhaps build subset of modes in stack order in the list constructor itself (Cons) ?
- * else getting a bit tedious to reason about stack invariant
- *)
-
 type stack = l:list frame{stack_inv l}
 
 type CSMode (m:mode) (s:stack) =
@@ -714,7 +710,7 @@ val slice_f: p:prin -> f:frame{Mode.m (Frame.m f) = Par /\
 let slice_f p (Frame _ en f) = Frame (Mode Par (singleton p)) (slice_en p en)
                                      (slice_f' p f)
 
-val pop_absent_frames: prin -> stack -> Tot stack
+val pop_absent_frames: prin -> s:stack -> Tot (r:stack{r = s \/ r << s})
 let rec pop_absent_frames p s = match s with
   | []     -> []
   | hd::tl ->
@@ -734,17 +730,13 @@ let rec pop_absent_frames_lem p s = match s with
     else
       pop_absent_frames_lem p (f'::tl)
 
-val slice_s: p:prin -> stack -> Tot (s:stack{forall f. List.mem f s ==> Mode.ps (Frame.m f) = singleton p})
+val slice_s: p:prin -> s:stack -> Tot (s:stack{forall f. List.mem f s ==> (Mode.ps (Frame.m f) = singleton p)}) (decreases s)
 let rec slice_s p s =
-  let s':stack = pop_absent_frames p s in
+  let s' = pop_absent_frames p s in
   pop_absent_frames_lem p s;
   match s' with
     | []     -> []
-    | hd::tl ->
-      let s' = slice_s p tl in
-      let _ = assert (forall f. List.mem f s' ==> Mode.ps (Frame.m f) = singleton p) in
-      admit ()
-      (slice_f p hd)::(slice_s p tl)
+    | hd::tl -> (slice_f p hd)::(slice_s p tl)
 
 val slice_c: prin -> config -> Tot tconfig
 let rec slice_c p (Conf (Mode Par ps) s en e) =
