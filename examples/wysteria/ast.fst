@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi OrdSet;
     variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/list.fst
+    other-files:$LIB/ordset.fsi $LIB/list.fst $LIB/constr.fst
  --*)
 
 module AST
@@ -60,8 +60,6 @@ type exp' =
   | E_let  : x:varname -> e1:exp -> e2:exp -> exp'
   | E_abs  : x:varname -> e:exp -> exp'
   | E_app  : e1:exp -> e2:exp -> exp'
-  
-  | E_value: v:value -> exp' (* E_value only come up during evaluation *)
 
 and exp =
   | Exp: e:exp' -> info:option other_info -> exp
@@ -71,8 +69,15 @@ and value =
   | V_box    : ps:prins -> v:value -> value
   | V_clos   : en:env -> x:varname -> e:exp -> value
 
-  (* empty box, comes up in target only *)
-  | V_empbox : value
+  (* bomb value, comes up in target only *)
+  | V_emp : value
+  
+and redex =
+  | R_aspar:
+  | R_box  :
+  | R_unbox:
+  | R_let  :
+  | R_app  :
 
 (* TODO: fix it, option value *)
 and env = varname -> Tot value
@@ -260,6 +265,7 @@ let src = is_Src
 val tgt: level -> Tot bool
 let tgt = is_Tgt
 
+(* pre returns comp, for src it's never Skip *)
 type comp = | Do | Skip | NA
 
 val pre_aspar: config -> l:level -> Tot comp
@@ -274,15 +280,20 @@ let pre_aspar c l = match c with
   
   | _ -> NA
 
-val step_aspar: c:config -> l:level{pre_aspar c l = Do} -> Tot config
+val step_aspar: c:config -> l:level{not (pre_aspar c l = NA)}
+                -> Tot config
 let step_aspar c l = match c with
   | Conf m s _
          (Exp (E_aspar (Exp (E_value (V_const (C_prins ps))) _)
                        (Exp (E_value (V_clos en x e)) _)) _) ->
-    let m' = if src l then Mode Par ps else m in
-    let s'  = s_add (Frame m' empty_env (F_box_e (v_prins ps))) s in
+    let m'  = if src l then Mode Par ps else m in
+    let s'  = s_add (Frame m empty_env (F_box_e (v_prins ps))) s in
     let en' = update_env en x (V_const C_unit) in
-    Conf m' s' en' e
+    let e'  =
+      if src l then e
+      else (if pre_aspar c l = Do then e else e_value (V_emp))
+    in
+    Conf m' s' en' e'
 
 (*val pre_assec: c:config -> Tot bool
 let pre_assec c = match c with
@@ -310,7 +321,7 @@ let pre_box c l = match c with
     if src l then
       if subset ps2 ps1 then Do else NA
     else
-      if subset ps1 ps2 then Do else Skip
+      if subset ps1 ps2 then Do else NA
 
   | _ -> NA
 
@@ -613,23 +624,14 @@ type tstep: tconfig -> tconfig -> Type =
     -> c:tconfig p -> c':tconfig p -> h:cstep c c' -> tstep c c'*)
   
   
-  (* M; S; _; aspar ps do clos(E, fun x -> e) (when sub M.ps ps)
+  (* M; S; _; aspar ps do clos(E, fun x -> e) 
      -->
-     M; (M; E; Box ps <>)::S; E[x -> ()]; e
+     (when sub M.ps ps)        M;(M; E; Box ps <>)::S; E[x -> ()]; e
+     (when not (sub M.ps ps))  M;(M; E; Box ps <>)::S; E[x -> ()]; V_emp
   *)
   
-  | T_aspar_do:
-    c:tconfig{pre_aspar c Tgt = Do} -> c':tconfig{c' = step_aspar c Tgt}
-    -> tstep c c'
-
-  (* M; S; E; aspar ps do _ (when not sub M.ps ps)
-     -->
-     M; S; E; empty_box
-  *)
-  
-  | T_aspar_dont:
-    c:tconfig{pre_aspar c Tgt = Skip}
-    -> c':tconfig{c' = Conf (Conf.m c) (Conf.s c) (Conf.en c) (e_value V_empbox)}
+  | T_aspar_beta:
+    c:tconfig{not (pre_aspar c Tgt = NA)} -> c':tconfig{c' = step_aspar c Tgt}
     -> tstep c c'
 
   (* M; S; E; Box ps v (when sub M.ps ps )
@@ -637,18 +639,8 @@ type tstep: tconfig -> tconfig -> Type =
      M; S; E; V_box ps v
   *)
 
-  | T_box_do:
+  | T_box_beta:
     c:tconfig{pre_box c Tgt = Do} -> c':tconfig{c' = step_box c Tgt}
-    -> tstep c c'
-
-  (* M; S; E; Box ps v (when sub M.ps ps )
-     -->
-     M; S; E; V_box ps v
-  *)
-    
-  | T_box_dont:
-    c:tconfig{pre_box c Tgt = Skip}
-    -> c':tconfig{c' = Conf (Conf.m c) (Conf.s c) (Conf.en c) (e_value V_empbox)}
     -> tstep c c'
 
   (* M; S; E; unbox (Box ps v) (when sub M.ps ps)
@@ -656,7 +648,7 @@ type tstep: tconfig -> tconfig -> Type =
      M; S; E; v
   *)
   
-  | T_unbox:
+  | T_unbox_beta:
     c:tconfig{pre_unbox c Tgt = Do} -> c':tconfig{c' = step_unbox c Tgt}
     -> tstep c c'
 
@@ -667,12 +659,17 @@ assume val preceds_axiom: en:env -> x:varname -> Lemma (ensures (en x << en))
 val slice_v : prin -> v:value -> Tot value
 let rec slice_v p v =
   match v with
-    | V_box ps v'   -> if mem p ps then V_box ps (slice_v p v') else V_empbox
+    | V_box ps v'   ->
+      let v'' = if mem p ps then V_box ps (slice_v p v') else V_emp in
+      V_box ps v''
     | V_clos en x e -> V_clos (fun y -> preceds_axiom en y; slice_v p (en y)) x e
     | _             -> v
 
 val slice_en: prin -> en:env -> Tot env
 let slice_en p en = fun x -> slice_v p (en x)
+
+assume val slice_emp_en: p:prin
+                         -> Lemma (ensures (slice_en p empty_env = empty_env))
 
 (* only expressions with values need to be sliced *)
 val slice_e: prin -> exp -> Tot exp
@@ -742,21 +739,67 @@ val slice_c: prin -> config -> Tot tconfig
 let rec slice_c p (Conf (Mode Par ps) s en e) =
   let en', e' =
     if mem p ps then slice_en p en, slice_e p e
-    else empty_env, e_value (V_empbox)
+    else empty_env, e_value (V_emp)
   in
 
   Conf (Mode Par (singleton p)) (slice_s p s) en' e'
 
 (**********)
-(*
-type z_or_one_tstep: tconfig -> tconfig -> Type =
-  | ZT_refl: c:tconfig -> z_or_one_tstep c c
-  | ZT_step: c:tconfig -> c':tconfig -> h:tstep c c'
-             -> z_or_one_tstep c c'
+
+val slice_add_absent_frame_lem:
+    p:prin -> s:stack -> f:frame{AFMode f s}
+    -> Lemma (requires (not (mem p (Mode.ps (Frame.m f)))))
+             (ensures  (slice_s p s = slice_s p (s_add f s)))
+let slice_add_absent_frame_lem p s f = ()
+
+open Constructive
 
 val cstep_lemma: #c:config -> #c':config -> h:cstep c c' -> p:prin
-                 -> Tot (z_or_one_tstep (slice_c p c) (slice_c p c'))
-let c_step_lemma #c #c' h = match h with
-  | C_aspar_ps c c' ->
-    
-  | _ -> admit ()*)
+                 -> Tot (cor (u:unit{slice_c p c = slice_c p c'})
+                             (cstep (slice_c p c) (slice_c p c')))
+let cstep_lemma #c #c' h p = match h with
+  | C_aspar_ps (Conf m s en (Exp (E_aspar e1 e2) _)) (Conf m' s' en' e') ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else
+      let _ = assert (m' = m) in
+      let _ = assert (s' = s_add (Frame m en (F_aspar_ps e2)) s) in
+      let _ = assert (en' = en) in
+      let _ = assert (e' = e1) in
+      
+      let enp = slice_en p en in
+      
+      let _ = assert (slice_s p s' =
+                      (s_add (Frame (Mode Par (singleton p)) enp (F_aspar_ps e2))
+                             (slice_s p s))) in
+      
+      let _ = assert (slice_e p e2 = e2) in
+      
+      admit()
+      
+      (*let _ = C_aspar_ps (slice_c p c) (slice_c p c') in
+      admit ()*)
+  
+  
+  | _ -> admit ()
+  
+(* check_marker *)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
