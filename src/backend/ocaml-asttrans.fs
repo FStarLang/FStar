@@ -236,12 +236,12 @@ type tprims =
 let as_tprims (id : lident) : option<tprims> =
     if is_prim_ns id.ns then
         match id.ident.idText with
-        | "Tuple2" -> Some (Tuple 2)
-        | "Tuple3" -> Some (Tuple 3)
-        | "Tuple4" -> Some (Tuple 4)
-        | "Tuple5" -> Some (Tuple 5)
-        | "Tuple6" -> Some (Tuple 6)
-        | "Tuple7" -> Some (Tuple 7)
+        | "Tuple2" | "DTuple2" -> Some (Tuple 2)
+        | "Tuple3" | "DTuple3" -> Some (Tuple 3)
+        | "Tuple4" | "DTuple4" -> Some (Tuple 4)
+        | "Tuple5" | "DTuple5" -> Some (Tuple 5)
+        | "Tuple6" | "DTuple6" -> Some (Tuple 6)
+        | "Tuple7" | "DTuple7" -> Some (Tuple 7)
         | "exn"    -> Some Exn
         | _        -> None
     else
@@ -251,12 +251,12 @@ let as_tprims (id : lident) : option<tprims> =
 let is_xtuple (x : lident) =
     if is_prim_ns x.ns then
         match x.ident.idText with
-        | "MkTuple2" -> Some 2
-        | "MkTuple3" -> Some 3
-        | "MkTuple4" -> Some 4
-        | "MkTuple5" -> Some 5
-        | "MkTuple6" -> Some 6
-        | "MkTuple7" -> Some 7
+        | "MkTuple2" | "MkDTuple2" -> Some 2
+        | "MkTuple3" | "MkDTuple3" -> Some 3
+        | "MkTuple4" | "MkDTuple4" -> Some 4
+        | "MkTuple5" | "MkDTuple5" -> Some 5
+        | "MkTuple6" | "MkDTuple6" -> Some 6
+        | "MkTuple7" | "MkDTuple7" -> Some 7
         | _          -> None
     else
         None
@@ -585,10 +585,10 @@ let rec mlexpr_of_expr (mlenv : mlenv) (rg : range) (lenv : lenv) (e : exp) =
             | { n = Exp_fvar (c, false) } ->
                 let subns = String.concat "." (List.map (fun x -> x.idText) c.v.ns) in
                 let rn, subnsl = match List.rev c.v.ns with [] -> "", [] | h::t -> h.idText, List.rev t in
-                (match Util.starts_with rn "Mk", args with
-                | true, [arg] ->
+                (match smap_try_find record_constructors subns, args with
+                | Some _, [arg] ->
                     MLE_Proj (arg, (path_of_ns mlenv subnsl, c.v.ident.idText))
-                | true, arg::args ->
+                | Some _, arg::args ->
                     MLE_App (MLE_Proj (arg, (path_of_ns mlenv subnsl, c.v.ident.idText)), args)
                 | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args))
             | _ -> MLE_App (mlexpr_of_expr mlenv rg lenv sube, args)
@@ -1013,6 +1013,12 @@ let mlmod_of_fstar (fmod_ : modul) =
     let sig_ = mlsig_of_sig (mk_mlenv name) fmod_.declarations in
     (name, sig_, mod_)
 
+let mlmod_of_iface (fmod_ : modul) =
+    let name = Backends.OCaml.Syntax.mlpath_of_lident fmod_.name in
+    fprint1 "OCaml skip: %s\n" fmod_.name.ident.idText;
+    mlsig_of_sig (mk_mlenv name) fmod_.declarations |> ignore
+    
+
 (* -------------------------------------------------------------------- *)
 let mllib_empty : mllib =
     MLLib []
@@ -1073,9 +1079,10 @@ let rec mllib_add (MLLib mllib) ((path : mlpath), sig_, mod_) =
 let mlmod_of_fstars (fmods : list<modul>) =
     let in_std_ns x = Util.for_some (fun y -> in_ns (y,x)) !Microsoft.FStar.Options.codegen_libs in
     let fmods = List.filter (fun x -> not (in_std_ns (List.map (fun y->y.idText) x.name.ns))) fmods in
-    let stdlib = List.map (fun x -> Util.concat_l "." x) (outmod @ !Microsoft.FStar.Options.codegen_libs) in
+    let stdlib = List.map (fun x -> Util.concat_l "." x) outmod in
+    let extlib = List.map (fun x -> Util.concat_l "." x) !Microsoft.FStar.Options.codegen_libs in
     let fmods = List.filter (fun x -> not (List.contains x.name.str stdlib)) fmods in
-    let fmods = List.map mlmod_of_fstar fmods in
+    let fmods = List.choose (fun x -> if List.contains x.name.str extlib then (mlmod_of_iface x; None) else Some (mlmod_of_fstar x)) fmods in
     let for1 mllib the = 
         let (path, sig_, mod_) = the in
         let modname = (fst path) @ [snd path] in
