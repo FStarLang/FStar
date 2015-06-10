@@ -40,6 +40,7 @@ type memRep : Type -> Type =
         -> memRep a
 
 type memblock = heap
+(*Can we ever define a memRep for a ref type?*)
 
 (*How does List.memT work? is equality always decidable?*)
 
@@ -410,8 +411,6 @@ let withNewScope (a:Type) (pre:(smem -> Type)) (post:(smem -> SSTPost a)) (body:
     pushStackFrame ();
     let v = body () in
     popStackFrame (); v
-(*sample application : a function of type n -> list of primes between 1 and n,
-  using the sieve of Eratosthenes*)
 
 (*SMTPat could be used to implement something similar to Coq's type-class mechanism.
 Coq's typeclass resolution is based on proof search using Hint databases, which is similar to SMTPat.
@@ -421,12 +420,15 @@ Can implicit arguments be inferred automatically by the SMT solver using proof s
 
 (*a combinator for writing while loops*)
 
+
 effect whileGuard (pre :(smem -> Type))
-  = SST bool (fun m -> pre m) (fun m0 _ m1 -> m0 == m1)
+  (truePre : (smem -> Type))
+  (falsePre : (smem -> Type))
+  = SST bool  pre (fun m0 b m1 -> m0 = m1 /\  (truePre m0 ==> b = true) /\ (falsePre m0 ==> b=false))
 (* the guard of a while loop is not supposed to change the memory*)
 
-effect whileBody (loopInv :(smem -> Type)) (wg : unit -> whileGuard loopInv)
-  = SST unit (fun m -> loopInv (mtail m) (*/\ wg computes to true in m*))
+effect whileBody (loopInv:smem -> Type) (truePre:smem  -> Type)
+  = SST unit (fun m -> loopInv (mtail m) /\ (truePre m))
              (fun m0 _ m1 -> loopInv (mtail m1) /\ sids m0 = sids m1)
 (*to get the commented out part,
   should the while guard also have a logical predicate as a parameter ?
@@ -436,16 +438,20 @@ effect whileBody (loopInv :(smem -> Type)) (wg : unit -> whileGuard loopInv)
     *)
 
 val scopedWhile : loopInv:(smem -> Type)
-  -> wg:(unit -> whileGuard loopInv)
-  -> bd:(unit -> whileBody loopInv wg)
-  -> SST unit (fun m -> loopInv m (*/\ wg computes to true in m*))
-              (fun m0 _ m1 -> loopInv m1 /\ sids m0 = sids m1(* /\ wg computes to false in m1*))
+  -> wgTruePre:(smem -> Type)
+  -> wgFalsePre:(smem -> Type)
+  -> wg:(unit -> whileGuard loopInv wgTruePre wgFalsePre)
+  -> bd:(unit -> whileBody loopInv wgTruePre)
+  -> SST unit (fun m -> loopInv m /\ wgTruePre m)
+              (fun m0 _ m1 -> loopInv m1 /\ sids m0 = sids m1)
 let rec scopedWhile (loopInv:(smem -> Type))
-          (wg:(unit -> whileGuard loopInv))
-          (bd:(unit -> whileBody loopInv wg)) =
+  (wgTruePre:(smem -> Type))
+  (wgFalsePre:(smem -> Type))
+  (wg:(unit -> whileGuard loopInv wgTruePre wgFalsePre))
+  (bd:(unit -> whileBody loopInv wgTruePre)) =
    let gv = wg () in
    if (gv)
       then
-        ((withNewScope unit (fun m -> loopInv m) (fun _ _ m1 -> loopInv m1) bd);
-        (scopedWhile loopInv wg bd))
+        ((withNewScope unit (fun m -> loopInv m /\ (wgTruePre m)) (fun _ _ m1 -> loopInv m1) bd);
+        (scopedWhile loopInv wgTruePre wgFalsePre wg bd))
       else ()
