@@ -97,7 +97,9 @@ match n with
 | n -> n * factorial (n - 1)
 
 
-val factorialGuard :  nat -> li:(ref nat)  -> unit -> whileGuard (fun m -> b2t (refExistsInMem li m))
+val factorialGuard :  n:nat -> li:(ref nat)  -> unit
+  -> whileGuard (fun m -> b2t (refExistsInMem li m))
+                (fun m -> (refExistsInMem li m) /\ ((loopkupRef li m) <n))
 let factorialGuard n li u = (memread li < n)
 
 (*
@@ -109,21 +111,11 @@ let factorialGuard () = true
 
 val factorialLoopBody : n:nat -> li:(ref nat) -> res:(ref nat)
   -> whileBody (fun m -> refExistsInMem li m /\ refExistsInMem res m (*/\ loopkupRef res m == factorial (loopkupRef li m) *))
-    (factorialGuard n li)
+    (fun m -> (refExistsInMem li m) /\ ((loopkupRef li m) <n))
 let factorialLoopBody n li res  =
     let liv = memread li in
     memwrite li (liv + 1);
     memwrite res ((memread res) * liv)
-
-
-(*
-val factorialBody : n:nat
-  ->
-
-  whileBody (fun m -> refExistsInMem li m /\ refExistsInMem res m (*/\ loopkupRef res m == factorial (loopkupRef li m) *))
-    (factorialGuard n li)
-let factorialLoopBody n li res  =
-    let liv = memread li in
-    memwrite li (liv + 1);
-    memwrite res ((memread res) * liv)
+(*now, in a new scope, allocate res and li, with initial values 1 and 0 respecctively,
+  and then call the body
 *)

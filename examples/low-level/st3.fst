@@ -404,7 +404,7 @@ effect WNSC (#a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) =
           /\ sids m0 = sids m1) (*body popped all and only the stack frames it pushed*)
 
 val withNewScope : a:Type -> pre:(smem -> Type) -> post:(smem -> SSTPost a) -> body:(unit -> WNSC pre post)
-      -> SST a  (fun m -> pre m)
+      -> SST a pre
                 (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
 let withNewScope (a:Type) (pre:(smem -> Type)) (post:(smem -> SSTPost a)) (body:(unit -> WNSC pre post)) =
 (* omitting the types in above let expression results in a wierd error*)
@@ -422,13 +422,12 @@ Can implicit arguments be inferred automatically by the SMT solver using proof s
 
 
 effect whileGuard (pre :(smem -> Type))
-  (truePre : (smem -> Type))
-  (falsePre : (smem -> Type))
-  = SST bool  pre (fun m0 b m1 -> m0 = m1 /\  (truePre m0 ==> b = true) /\ (falsePre m0 ==> b=false))
+  (lc : (smem -> Type))
+  = SST bool  pre (fun m0 b m1 -> m0 = m1 /\  (lc m0 <==> b = true))
 (* the guard of a while loop is not supposed to change the memory*)
 
 effect whileBody (loopInv:smem -> Type) (truePre:smem  -> Type)
-  = SST unit (fun m -> loopInv (mtail m) /\ (truePre m))
+  = SST unit (fun m -> loopInv (mtail m) /\ (truePre (mtail m)))
              (fun m0 _ m1 -> loopInv (mtail m1) /\ sids m0 = sids m1)
 (*to get the commented out part,
   should the while guard also have a logical predicate as a parameter ?
@@ -438,20 +437,19 @@ effect whileBody (loopInv:smem -> Type) (truePre:smem  -> Type)
     *)
 
 val scopedWhile : loopInv:(smem -> Type)
-  -> wgTruePre:(smem -> Type)
-  -> wgFalsePre:(smem -> Type)
-  -> wg:(unit -> whileGuard loopInv wgTruePre wgFalsePre)
-  -> bd:(unit -> whileBody loopInv wgTruePre)
-  -> SST unit (fun m -> loopInv m /\ wgTruePre m)
-              (fun m0 _ m1 -> loopInv m1 /\ sids m0 = sids m1)
+  -> wglc:(smem -> Type)
+  -> wg:(unit -> whileGuard loopInv wglc)
+  -> bd:(unit -> whileBody loopInv wglc)
+  -> SST unit (fun m -> loopInv m)
+              (fun m0 _ m1 -> loopInv m1 /\ sids m0 = sids m1 /\ (~(wglc m1)))
+
 let rec scopedWhile (loopInv:(smem -> Type))
-  (wgTruePre:(smem -> Type))
-  (wgFalsePre:(smem -> Type))
-  (wg:(unit -> whileGuard loopInv wgTruePre wgFalsePre))
-  (bd:(unit -> whileBody loopInv wgTruePre)) =
-   let gv = wg () in
-   if (gv)
+  (wglc:(smem -> Type))
+  (wg:(unit -> whileGuard loopInv wglc))
+  (bd:(unit -> whileBody loopInv wglc)) =
+   if (wg ())
       then
-        ((withNewScope unit (fun m -> loopInv m /\ (wgTruePre m)) (fun _ _ m1 -> loopInv m1) bd);
-        (scopedWhile loopInv wgTruePre wgFalsePre wg bd))
+        ((withNewScope unit
+          (fun m -> loopInv m /\ (wglc m)) (fun _ _ m1 -> loopInv m1) bd);
+        (scopedWhile loopInv wglc wg bd))
       else ()
