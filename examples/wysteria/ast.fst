@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi OrdSet;
     variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi
+    other-files:$LIB/ordset.fsi $LIB/list.fst
  --*)
 
 module AST
@@ -19,11 +19,21 @@ let p_cmp p1 p2 = p1 <= p2
 
 type prins = ordset prin p_cmp
 
+(* TODO:FIXME: hack, we don't have s1 = s2 ==> subset s1 s2 yet *)
 val subset: prins -> prins -> Tot bool
-let subset = OrdSet.subset p_cmp
+let subset ps1 ps2 = (ps1 = ps2) || OrdSet.subset p_cmp ps1 ps2
 
+assume val subset_transitive: ps1:prins -> ps2:prins -> ps3:prins
+                              -> Lemma (requires (subset ps1 ps2 /\ subset ps2 ps3))
+                                       (ensures  (subset ps1 ps3))
+                                 [SMTPat (subset ps1 ps2); SMTPat (subset ps2 ps3)]
+                                 
 val mem: prin -> prins -> Tot bool
 let mem = OrdSet.mem p_cmp
+
+assume val mem_subset: p:prin -> ps1:prins -> ps2:prins
+                       -> Lemma (requires (mem p ps1 /\ subset ps1 ps2))
+                                (ensures  (mem p ps2))
 
 val singleton: prin -> Tot (ps:prins{OrdSet.size p_cmp ps = 1})
 let singleton p = OrdSet.singleton p_cmp p
@@ -96,16 +106,37 @@ type frame' =
   
 type frame =
   | Frame: m:mode -> en:env -> f:frame' -> frame
-  
-type stack = list frame
+
+val stack_inv: list frame -> Tot bool
+let rec stack_inv = function
+  | []        -> true
+  | f::[]     -> true
+  | f::f'::tl ->
+    let (Mode Par ps, Mode Par ps') = Frame.m f, Frame.m f' in
+    subset ps ps' && stack_inv (f'::tl)
+
+(* TODO: FIXME: perhaps build subset of modes in stack order in the list constructor itself (Cons) ?
+ * else getting a bit tedious to reason about stack invariant
+ *)
+
+type stack = l:list frame{stack_inv l}
+
+type CSMode (m:mode) (s:stack) =
+  is_Cons s ==> (subset (Mode.ps m) (Mode.ps (Frame.m (Cons.hd s))))
 
 type config =
-  | Conf: m:mode -> s:stack -> en:env -> e:exp -> config
+  | Conf: m:mode -> s:stack{CSMode m s} -> en:env -> e:exp -> config
 
-val s_add: frame -> stack -> Tot stack
-let s_add = Cons
+type AFMode (f:frame) (s:stack) =
+  is_Cons s ==> (subset (Mode.ps (Frame.m f)) (Mode.ps (Frame.m (Cons.hd s))))
 
-val s_replace: frame -> s:stack{is_Cons s} -> Tot stack
+val s_add: f:frame -> s:stack{AFMode f s} -> Tot stack
+let s_add f s = f::s
+
+type RFMode (f:frame) (s:stack) =
+  is_Cons s /\ (Mode.ps (Frame.m f) = Mode.ps (Frame.m (Cons.hd s)))
+  
+val s_replace: f:frame -> s:stack{RFMode f s} -> Tot stack
 let s_replace f s = s_add f (Cons.tl s)
 
 val s_pop: c:config{is_Cons (Conf.s c)} -> Tot stack
@@ -225,30 +256,34 @@ let e_value v = Exp (E_value v) None
 val v_prins: prins -> Tot value
 let v_prins ps = V_const (C_prins ps)
 
-val is_aspar_redex: config -> Tot bool
-let is_aspar_redex c = match c with
-  | Conf _ _ _
-         (Exp (E_aspar (Exp (E_value (V_const (C_prins _))) _)
-                       (Exp (E_value (V_clos _ _ _)) _)) _)
-         
-         -> true
-  
-  | _ -> false
+type level = | Src | Tgt
 
-val pre_aspar: c:config{is_aspar_redex c} -> Tot bool
-let pre_aspar c = match c with
+val src: level -> Tot bool
+let src = is_Src
+
+val tgt: level -> Tot bool
+let tgt = is_Tgt
+
+type comp = | Do | Skip | NA
+
+val pre_aspar: config -> l:level -> Tot comp
+let pre_aspar c l = match c with
   | Conf (Mode Par ps1) _ _
-         (Exp (E_aspar (Exp (E_value (V_const (C_prins ps2))) _) _) _) ->
-    subset ps2 ps1
+         (Exp (E_aspar (Exp (E_value (V_const (C_prins ps2))) _)
+                       (Exp (E_value (V_clos _ _ _)) _)) _) ->
+    if src l then
+      if subset ps2 ps1 then Do else NA
+    else
+      if subset ps1 ps2 then Do else Skip
   
-  | _ -> false
+  | _ -> NA
 
-val step_aspar: c:config{is_aspar_redex c} -> src:bool -> Tot config
-let step_aspar c src = match c with
+val step_aspar: c:config -> l:level{pre_aspar c l = Do} -> Tot config
+let step_aspar c l = match c with
   | Conf m s _
          (Exp (E_aspar (Exp (E_value (V_const (C_prins ps))) _)
                        (Exp (E_value (V_clos en x e)) _)) _) ->
-    let m'  = if src then Mode Par ps else m in
+    let m' = if src l then Mode Par ps else m in
     let s'  = s_add (Frame m' empty_env (F_box_e (v_prins ps))) s in
     let en' = update_env en x (V_const C_unit) in
     Conf m' s' en' e
@@ -271,46 +306,35 @@ let pe_assec_beta c = match c with
         
         -> MkTuple4 ps en x e*)
 
-val is_box_redex: config -> Tot bool
-let is_box_redex c = match c with
-  | Conf _ _ _
-         (Exp (E_box (Exp (E_value (V_const (C_prins _))) _)
-                     (Exp (E_value _) _)) _) ->
-    true
-
-  | _ -> false
-                     
-val pre_box: c:config{is_box_redex c} -> Tot bool
-let pre_box c = match c with
+val pre_box: config -> level -> Tot comp
+let pre_box c l = match c with
   | Conf (Mode Par ps1) _ _
-         (Exp (E_box (Exp (E_value (V_const (C_prins ps2))) _) _) _) ->
-    subset ps2 ps1
+         (Exp (E_box (Exp (E_value (V_const (C_prins ps2))) _)
+                     (Exp (E_value _) _)) _) ->
+    if src l then
+      if subset ps2 ps1 then Do else NA
+    else
+      if subset ps1 ps2 then Do else Skip
 
-  | _ -> false
+  | _ -> NA
 
-val step_box: c:config{is_box_redex c} -> Tot config
-let step_box c = match c with
+val step_box: c:config -> l:level{pre_box c l = Do} -> Tot config
+let step_box c l = match c with
   | Conf m s en
          (Exp (E_box (Exp (E_value (V_const (C_prins ps))) _)
                      (Exp (E_value v) _)) _) ->
     Conf m s en (e_value (V_box ps v))
 
-val is_unbox_redex: config -> Tot bool
-let is_unbox_redex c = match c with
-  | Conf _ _ _ (Exp (E_unbox (Exp (E_value (V_box _ _)) _)) _) -> true
-         
-  | _ -> false
-
-val pre_unbox: c:config{is_unbox_redex c} -> Tot bool
-let pre_unbox c = match c with
-  | Conf (Mode as_m ps1) _ _
+val pre_unbox: config -> level -> Tot comp
+let pre_unbox c l = match c with
+  | Conf (Mode Par ps1) _ _
          (Exp (E_unbox (Exp (E_value (V_box ps2 _)) _)) _) ->
-    if as_m = Par then subset ps1 ps2 else subset ps2 ps1
+    if subset ps1 ps2 then Do else NA
          
-  | _ -> false
+  | _ -> NA
 
-val step_unbox: c:config{is_unbox_redex c} -> Tot config
-let step_unbox c = match c with
+val step_unbox: c:config -> l:level{pre_unbox c l = Do} -> Tot config
+let step_unbox c l = match c with
   | Conf m s en (Exp (E_unbox (Exp (E_value (V_box _ v)) _)) _) ->
     Conf m s en (e_value v)
 
@@ -549,8 +573,7 @@ type sstep: config -> config -> Type =
      Par(ps); (Par(ps); E; Box ps <>)::S; E[x -> ()]; e
   *)
   | S_aspar_beta:
-    c:config{is_aspar_redex c /\ pre_aspar c}
-    -> c':config{c' = step_aspar c true}
+    c:config{pre_aspar c Src = Do} -> c':config{c' = step_aspar c Src}
     -> sstep c c'
 
   (* M; S; _; assec ps do clos(E, fun x -> e)  (when ps = M.ps)
@@ -572,8 +595,7 @@ type sstep: config -> config -> Type =
   *)
 
   | S_box_beta:
-    c:config{is_box_redex c /\ pre_box c} -> c':config{c' = step_box c}
-    -> sstep c c'
+    c:config{pre_box c Src = Do} -> c':config{c' = step_box c Src} -> sstep c c'
 
   (* M; S; E; unbox (Box ps v) (when isPar M ==> sub M.ps ps /\
                                      isSec M ==> sub ps M.ps)
@@ -581,40 +603,18 @@ type sstep: config -> config -> Type =
      M; S; E; v                                   
   *)
   | S_unbox_beta:
-    c:config{is_unbox_redex c /\ pre_unbox c} -> c':config{c' = step_unbox c}
+    c:config{pre_unbox c Src = Do} -> c':config{c' = step_unbox c Src}
     -> sstep c c'
 
 
 type tconfig = c:config{is_Par (Mode.m (Conf.m c)) /\
                         is_singleton (Mode.ps (Conf.m c))}
 
-val do_aspar_t: c:tconfig{is_aspar_redex c} -> Tot bool
-let do_aspar_t c = match c with
-  | Conf (Mode Par ps1) _ _
-         (Exp (E_aspar (Exp (E_value (V_const (C_prins ps2))) _) _) _) ->
-    subset ps1 ps2
-
-val do_box_t: c:tconfig{is_box_redex c} -> Tot bool
-let do_box_t c = match c with
-  | Conf (Mode Par ps1) _ _
-         (Exp (E_box (Exp (E_value (V_const (C_prins ps2))) _) _) _) ->
-    subset ps1 ps2
-
-  | _ -> false
-
-val pre_unbox_t: c:tconfig{is_unbox_redex c} -> Tot bool
-let pre_unbox_t c = match c with
-  | Conf (Mode Par ps1) _ _
-         (Exp (E_unbox (Exp (E_value (V_box ps2 _)) _)) _) ->
-    subset ps1 ps2
-
-  | _ -> false
-
-
 (* M; S; E; e --> M'; S'; E'; e'  (target configuration beta steps)*)
 type tstep: tconfig -> tconfig -> Type =
   
-  | T_cstep: c:tconfig -> c':tconfig -> h:cstep c c' -> tstep c c'
+  (*| T_cstep: #p:prin
+    -> c:tconfig p -> c':tconfig p -> h:cstep c c' -> tstep c c'*)
   
   
   (* M; S; _; aspar ps do clos(E, fun x -> e) (when sub M.ps ps)
@@ -623,8 +623,7 @@ type tstep: tconfig -> tconfig -> Type =
   *)
   
   | T_aspar_do:
-    c:tconfig{is_aspar_redex c /\ do_aspar_t c}
-    -> c':tconfig{c' = step_aspar c false}
+    c:tconfig{pre_aspar c Tgt = Do} -> c':tconfig{c' = step_aspar c Tgt}
     -> tstep c c'
 
   (* M; S; E; aspar ps do _ (when not sub M.ps ps)
@@ -633,38 +632,36 @@ type tstep: tconfig -> tconfig -> Type =
   *)
   
   | T_aspar_dont:
-    c:tconfig{is_aspar_redex c /\ not (do_aspar_t c)}
+    c:tconfig{pre_aspar c Tgt = Skip}
     -> c':tconfig{c' = Conf (Conf.m c) (Conf.s c) (Conf.en c) (e_value V_empbox)}
     -> tstep c c'
-  
+
   (* M; S; E; Box ps v (when sub M.ps ps )
      -->
      M; S; E; V_box ps v
   *)
-  
+
   | T_box_do:
-    c:tconfig{is_box_redex c /\ do_box_t c}
-    -> c':tconfig{c' = step_box c}
+    c:tconfig{pre_box c Tgt = Do} -> c':tconfig{c' = step_box c Tgt}
     -> tstep c c'
-    
+
   (* M; S; E; Box ps v (when sub M.ps ps )
      -->
      M; S; E; V_box ps v
   *)
     
   | T_box_dont:
-    c:tconfig{is_box_redex c /\ not (do_box_t c)}
+    c:tconfig{pre_box c Tgt = Skip}
     -> c':tconfig{c' = Conf (Conf.m c) (Conf.s c) (Conf.en c) (e_value V_empbox)}
     -> tstep c c'
-    
+
   (* M; S; E; unbox (Box ps v) (when sub M.ps ps)
      -->
      M; S; E; v
   *)
   
   | T_unbox:
-    c:tconfig{is_unbox_redex c /\ pre_unbox_t c}
-    -> c':tconfig{c' = step_unbox c}
+    c:tconfig{pre_unbox c Tgt = Do} -> c':tconfig{c' = step_unbox c Tgt}
     -> tstep c c'
 
 (**********)
@@ -717,14 +714,37 @@ val slice_f: p:prin -> f:frame{Mode.m (Frame.m f) = Par /\
 let slice_f p (Frame _ en f) = Frame (Mode Par (singleton p)) (slice_en p en)
                                      (slice_f' p f)
 
-val slice_s: prin -> stack -> Tot stack
-let rec slice_s p = function
+val pop_absent_frames: prin -> stack -> Tot stack
+let rec pop_absent_frames p s = match s with
   | []     -> []
   | hd::tl ->
-    if mem p (Mode.ps (Frame.m hd)) then
-      (slice_f p hd)::(slice_s p tl)
+    if mem p (Mode.ps (Frame.m hd)) then s else pop_absent_frames p tl
+
+val pop_absent_frames_lem: p:prin -> s:stack
+                           -> Lemma (requires (True))
+                                    (ensures  (forall f. List.mem f (pop_absent_frames p s) ==>
+                                                         mem p (Mode.ps (Frame.m f))))
+let rec pop_absent_frames_lem p s = match s with
+  | []        -> ()
+  | _::[]     -> ()
+  | f::f'::tl ->
+    if mem p (Mode.ps (Frame.m f)) then
+      let _ = mem_subset p (Mode.ps (Frame.m f)) (Mode.ps (Frame.m f')) in
+      pop_absent_frames_lem p (f'::tl)
     else
-      slice_s p tl
+      pop_absent_frames_lem p (f'::tl)
+
+val slice_s: p:prin -> stack -> Tot (s:stack{forall f. List.mem f s ==> Mode.ps (Frame.m f) = singleton p})
+let rec slice_s p s =
+  let s':stack = pop_absent_frames p s in
+  pop_absent_frames_lem p s;
+  match s' with
+    | []     -> []
+    | hd::tl ->
+      let s' = slice_s p tl in
+      let _ = assert (forall f. List.mem f s' ==> Mode.ps (Frame.m f) = singleton p) in
+      admit ()
+      (slice_f p hd)::(slice_s p tl)
 
 val slice_c: prin -> config -> Tot tconfig
 let rec slice_c p (Conf (Mode Par ps) s en e) =
@@ -735,27 +755,16 @@ let rec slice_c p (Conf (Mode Par ps) s en e) =
 
   Conf (Mode Par (singleton p)) (slice_s p s) en' e'
 
+(**********)
+(*
+type z_or_one_tstep: tconfig -> tconfig -> Type =
+  | ZT_refl: c:tconfig -> z_or_one_tstep c c
+  | ZT_step: c:tconfig -> c':tconfig -> h:tstep c c'
+             -> z_or_one_tstep c c'
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+val cstep_lemma: #c:config -> #c':config -> h:cstep c c' -> p:prin
+                 -> Tot (z_or_one_tstep (slice_c p c) (slice_c p c'))
+let c_step_lemma #c #c' h = match h with
+  | C_aspar_ps c c' ->
+    
+  | _ -> admit ()*)
