@@ -17,6 +17,9 @@ EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "basic", "..\src\basic\basic.fsproj", "{E8957DBD-58E7-4CF8-9192-E0A9CFB3867E}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "parser", "..\src\parser\parser.fsproj", "{9974A6DE-6CA8-44B6-A52E-51FC52932179}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5BF4AF3F-BEC2-4CFD-94B7-11A38A031F4B} = {5BF4AF3F-BEC2-4CFD-94B7-11A38A031F4B}
+	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fstar", "..\src\fstar.fsproj", "{F95B3965-1A6A-4FBF-A079-E849E8EA3FF7}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -24,9 +27,6 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "fstar", "..\src\fstar.fspro
 	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "tc", "..\src\tc\tc.fsproj", "{5BF4AF3F-BEC2-4CFD-94B7-11A38A031F4B}"
-	ProjectSection(ProjectDependencies) = postProject
-		{670DA3F6-7E41-4C1D-AB17-1F59E0317F52} = {670DA3F6-7E41-4C1D-AB17-1F59E0317F52}
-	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "backend", "..\src\backend\backend.fsproj", "{2F500A50-BDBA-40D3-92FA-F186ADB9A44F}"
 EndProject

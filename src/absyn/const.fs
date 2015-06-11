@@ -9,7 +9,7 @@
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   WITHOUT WARRANTIES OR C  ONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
@@ -61,6 +61,8 @@ let exTyp_lid  = pconst "ExistsTyp"
 let allTyp_lid = pconst "ForallTyp"
 let b2t_lid    = pconst "b2t" (* coercion from boolean to type *)
 let using_IH   = pconst "InductionHyp"
+let admit_lid  = pconst "admit"
+let magic_lid  = pconst "magic"
 
 (* Various equality predicates *)
 let eq_lid     = pconst  "Eq"

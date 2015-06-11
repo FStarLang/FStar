@@ -316,7 +316,7 @@ rule token = parse
  | '+'         { PLUS_OP }
  | '-'         { MINUS_OP }
  | custom_op   {CUSTOM_OP (L.lexeme lexbuf) }
-
+ 
  | _ { failwith "unexpected char" }
  | eof { lc := 1; EOF }
 

@@ -73,6 +73,10 @@ let b2t_lid = (pconst "b2t")
 
 let using_IH = (pconst "InductionHyp")
 
+let admit_lid = (pconst "admit")
+
+let magic_lid = (pconst "magic")
+
 let eq_lid = (pconst "Eq")
 
 let eq2_lid = (pconst "Eq2")

@@ -126,7 +126,7 @@ JSBACKEND_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll format.dll)
 $(BIN)/jsbackend.dll: $(JSBACKEND_DEPS) $(JSBACKEND_SRC)
 	$(FSC) $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(JSBACKEND_DEPS)) $(JSBACKEND_SRC)
 
-PARSER_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll)
+PARSER_DEPS=$(addprefix $(BIN)/, basic.dll absyn.dll tc.dll)
 $(BIN)/parser.dll: $(PARSER_DEPS) $(PARSER_SRC)
 	$(FSC)  $(OTHERFLAGS) -a -o $@ $(BASELIBS) $(addprefix -r , $(PARSER_DEPS)) $(PARSER_SRC)
 
@@ -181,7 +181,7 @@ BOOT_BACKEND=$(addprefix backend/, $(BOOT_BACKENDFILES))
 BOOT_JSBACKENDFILES=ast.fs translate.fs
 BOOT_JSBACKEND=$(addprefix jsbackend/, $(BOOT_JSBACKENDFILES))
 BOOT_MAIN=fstar.fs
-BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_PARSER) $(BOOT_TC) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_BACKEND) fstar.fs
+BOOT_ALL=$(STDLIB) $(BOOT_BASIC) $(BOOT_SYNTAX) $(BOOT_TC) $(BOOT_PARSER) $(TOSMT_SRC) $(BOOT_FORMAT) $(BOOT_BACKEND) fstar.fs
 
 ADMITTED_MODULES=Microsoft.FStar.Util Microsoft.FStar.Platform Microsoft.FStar.Parser.ParseIt
 ADMITS=$(addprefix --admit_fsi , $(ADMITTED_MODULES))
@@ -195,9 +195,6 @@ fstarml:
 	@echo "Building parser and lexer filex..."
 	make -C ocaml-output parser
 	make -s -C ocaml-output
-
-OCAML_FILES= Microsoft_FStar_Options.ml Microsoft_FStar_Absyn_Syntax.ml Microsoft_FStar_Absyn_Const.ml Microsoft_FStar_Absyn_Visit.ml Microsoft_FStar_Absyn_Util.ml Microsoft_FStar_Absyn_Print.ml Microsoft_FStar_Absyn_SSyntax.ml Microsoft_FStar_Parser_AST.ml Microsoft_FStar_Parser_DesugarEnv.ml Microsoft_FStar_Parser_Desugar.ml Microsoft_FStar_Parser_Parse.ml Microsoft_FStar_Parser_Lexhelp.ml Microsoft_FStar_Parser_Driver.ml Microsoft_FStar_Tc_Env.ml Microsoft_FStar_Tc_Normalize.ml Microsoft_FStar_Tc_Errors.ml Microsoft_FStar_Tc_Rel.ml Microsoft_FStar_Tc_Util.ml Microsoft_FStar_Tc_Tc.ml Microsoft_FStar_ToSMT_Term.ml Microsoft_FStar_ToSMT_Z3.ml Microsoft_FStar_ToSMT_Encode.ml
-OCAML_ALL=$(addprefix ocaml-output/, $(OCAML_FILES))
 
 ocaml-test: ocaml boot-ocaml
 

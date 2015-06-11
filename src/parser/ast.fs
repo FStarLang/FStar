@@ -288,6 +288,25 @@ let mkExplicitApp t args r = match args with
       | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r Un
       | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r Un) t args
 
+let mkWildAdmitMagic r = 
+    let unit_const = mk_term(Const Const_unit) r Expr in
+    let admit = 
+        let admit_name = mk_term(Var(Util.set_lid_range Const.admit_lid r)) r Expr in
+        mkExplicitApp admit_name [unit_const] r in
+    let magic = 
+        let magic_name = mk_term(Var(Util.set_lid_range Const.magic_lid r)) r Expr in
+        mkExplicitApp magic_name [unit_const] r in
+    let admit_magic = mk_term(Seq(admit, magic)) r Expr in
+    (mk_pattern PatWild r, None, admit_magic)
+
+let focusBranches branches r = 
+    let should_filter = Util.for_some fst branches in 
+	if should_filter 
+	then let _ = Tc.Errors.warn r "Focusing on only some cases" in
+         let focussed = List.filter fst branches |> List.map snd in
+		 focussed@[mkWildAdmitMagic r]
+	else branches |> List.map snd
+    
 let mkFsTypApp t args r = 
   mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
 

@@ -89,6 +89,11 @@
     <Compile Include="driver.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\tc\tc.fsproj">
+      <Name>tc</Name>
+      <Project>{5bf4af3f-bec2-4cfd-94b7-11a38a031f4b}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <Reference Include="FSharp.PowerPack">
       <HintPath>..\..\bin\FSharp.PowerPack.dll</HintPath>
     </Reference>

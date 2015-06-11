@@ -137,6 +137,7 @@ type token =
   | ENSURES
   | PLUS_OP
   | MINUS_OP
+  | BAR_FOCUS
   | LEX_FAILURE of (string)
   | COMMENT
   | WHITESPACE

@@ -88,7 +88,7 @@ open Microsoft.FStar.Parser.Util
 %token PUBLIC PRIVATE LBRACE_COLON_PATTERN PIPE_LEFT PIPE_RIGHT 
 %token NEW_EFFECT SUB_EFFECT SQUIGGLY_RARROW TOTAL KIND
 %token PRINT REQUIRES ENSURES
-%token PLUS_OP MINUS_OP 
+%token PLUS_OP MINUS_OP BAR_FOCUS
  
 /* These are artificial */
 %token <string> LEX_FAILURE
@@ -540,12 +540,14 @@ noSeqTerm:
 
   | TRY term WITH firstPatternBranch patternBranches 
       {
-         mk_term (TryWith($2, $4::$5)) (rhs2 parseState 1 5) Expr
+		 let branches = focusBranches ($4::$5) (rhs2 parseState 1 5) in
+         mk_term (TryWith($2, branches)) (rhs2 parseState 1 5) Expr
       }
 
   | MATCH term WITH firstPatternBranch patternBranches 
-      {
-        mk_term (Match($2, $4::$5)) (rhs2 parseState 1 5) Expr
+      {	
+		let branches = focusBranches ($4::$5) (rhs2 parseState 1 5) in
+	    mk_term (Match($2, branches)) (rhs2 parseState 1 5) Expr
       }
 
   | LET recopt letbinding letbindings IN term
@@ -555,7 +557,8 @@ noSeqTerm:
 
   | FUNCTION firstPatternBranch patternBranches 
       { 
-        mk_function ($2::$3) (lhs parseState) (rhs2 parseState 1 3)
+	    let branches = focusBranches ($2::$3) (rhs2 parseState 1 3) in
+        mk_function branches (lhs parseState) (rhs2 parseState 1 3)
       }
 
   | ASSUME atomicTerm 
@@ -593,22 +596,26 @@ maybeBar:
   |     {()}
   | BAR {()}
 
+maybeFocusArrow:
+  | RARROW          { false }
+  | SQUIGGLY_RARROW { true }
+
 firstPatternBranch: /* shift/reduce conflict on BAR ... expected for nested matches */
   | maybeBar disjunctivePattern maybeWhen RARROW term 
       { 
         let pat = match $2 with 
           | [p] -> p 
           | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2) in
-        (pat, $3, $5) 
+        (false, (pat, $3, $5))
       }
 
 patternBranch: /* shift/reduce conflict on BAR ... expected for nested matches */
-  | BAR disjunctivePattern maybeWhen RARROW term 
+  | BAR disjunctivePattern maybeWhen maybeFocusArrow term 
       { 
         let pat = match $2 with 
           | [p] -> p 
           | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2) in
-        (pat, $3, $5) 
+        ($4, (pat, $3, $5)) 
       }
 
 disjunctivePattern:
