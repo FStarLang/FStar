@@ -1,12 +1,12 @@
 module Bug260
 
-type typ =
-  | TVar : typ
-  | TImpl : typ -> typ
+type pnat =
+  | O : pnat
+  | S : pnat -> pnat
 
-type validity : t:typ -> Type =
-  | V_impl_intro : t:typ -> Tot (validity (TImpl t))
+type validity : n:pnat -> Type =
+  | VSucc : n:pnat -> Tot (validity (S n))
 
-val tot_ret_weakest : t:typ -> Tot (validity (TImpl (TImpl t))) (* wrong type: *)
-(* val tot_ret_weakest : t:typ -> Tot (validity (TImpl t)) -- right type: *)
-let tot_ret_weakest t = V_impl_intro t
+val bad : t:pnat -> Tot (validity (S (S t))) (* wrong type: *)
+(* val tot_ret_weakest : t:pnat -> Tot (validity (S t)) -- right type: *)
+let bad t = VSucc t
