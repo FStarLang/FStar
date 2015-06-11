@@ -84,7 +84,7 @@ let incrementUsingStack3 vi =
    Is this because of the ite_wp in the definition of an effect? *)
 val incrementIfNot2 : r:(ref int) -> SST int  (fun m -> (refExistsInMem r m)==true)
 (fun m0 a m1 -> (refExistsInMem r m0) /\ (refExistsInMem r m1) /\ (mstail m0 = mstail m1) /\ True)
-let equal2 r =
+let incrementIfNot2 r =
   let oldv = memread r in
   (if (oldv=2)
     then memwrite r 2
@@ -96,11 +96,14 @@ match n with
 | 0 -> 1
 | n -> n * factorial (n - 1)
 
+(* val factorialGuardLC :  n:nat -> li:(ref nat)  -> smem -> type *)
+type factorialGuardLC (n:nat) (li : ref nat) (m:smem) =
+  (refExistsInMem li m) && (not ((loopkupRef li m) = n))
 
 val factorialGuard :  n:nat -> li:(ref nat)  -> unit
   -> whileGuard (fun m -> b2t (refExistsInMem li m))
-                (fun m -> (refExistsInMem li m) /\ ((loopkupRef li m) <n))
-let factorialGuard n li u = (memread li < n)
+                (fun m -> (refExistsInMem li m) /\ (~((loopkupRef li m) = n)))
+let factorialGuard n li u = not (memread li = n)
 
 (*
 Why does the following not work?
@@ -109,13 +112,93 @@ let factorialGuard () = true
 
 (* the guard of a while loop is not supposed to change the memory*)
 
-val factorialLoopBody : n:nat -> li:(ref nat) -> res:(ref nat)
-  -> whileBody (fun m -> refExistsInMem li m /\ refExistsInMem res m (*/\ loopkupRef res m == factorial (loopkupRef li m) *))
-    (fun m -> (refExistsInMem li m) /\ ((loopkupRef li m) <n))
-let factorialLoopBody n li res  =
-    let liv = memread li in
-    memwrite li (liv + 1);
-    memwrite res ((memread res) * liv)
-(*now, in a new scope, allocate res and li, with initial values 1 and 0 respecctively,
-  and then call the body
+
+type  loopInv (li : ref nat) (res : ref nat) (m:smem) =
+  refExistsInMem li m /\ refExistsInMem res m
+    /\ (loopkupRef res m = factorial (loopkupRef li m))
+    /\ (~ (li = res))
+
+(* delete
+val factorialSuc : n:nat -> Lemma (factorial (n+1) = (n+1) * (factorial n))
+let factorialSuc n = ()
+
+
+val factorialLoopBodyAux :
+  n:nat -> li:(ref nat) -> res:(ref nat)
+  -> SST unit (fun m -> loopInv li res m /\ ~(li=res) /\ (loopkupRef res m = factorial (loopkupRef li m)))
+      (fun m0 _ m1 -> (refExistsInMem li m1) /\ (refExistsInMem li m0) /\ (loopkupRef li m1) = (loopkupRef li m0) + 1
+                      /\ (refExistsInMem res m1) /\ (refExistsInMem res m0)
+                      /\ (loopkupRef res m1) = (loopkupRef li m0 + 1) * (loopkupRef res m0) /\ (loopkupRef res m1 = factorial (loopkupRef li m1)) /\ (loopInv li res m1))
+
+let factorialLoopBodyAux (n:nat) (li:(ref nat)) (res:(ref nat))  =
+  let liv = memread li in
+  let resv = memread res in
+  memwrite li (liv + 1);
+  memwrite res ((liv+1) * resv)
 *)
+
+val factorialLoopBody2 :
+  n:nat -> li:(ref nat) -> res:(ref nat)
+  -> SST unit (loopInv li res)
+      (fun _ _ m1 -> (loopInv li res m1))
+
+let factorialLoopBody2 (n:nat) (li:(ref nat)) (res:(ref nat))  =
+  let liv = memread li in
+  let resv = memread res in
+  memwrite li (liv + 1);
+  memwrite res ((liv+1) * resv)
+
+
+val factorialLoopBody :
+  n:nat -> li:(ref nat) -> res:(ref nat)
+  -> unit -> whileBody (loopInv li res) (factorialGuardLC n li)
+let factorialLoopBody (n:nat) (li:(ref nat)) (res:(ref nat)) u =
+  let liv = memread li in
+  let resv = memread res in
+  memwrite li (liv + 1);
+  memwrite res ((liv+1) * resv)
+
+
+val factorialLoop : n:nat -> li:(ref nat) -> res:(ref nat)
+  -> SST unit (fun m -> mreads li 0 m /\ mreads res 1 m  /\ ~(li=res))
+              (fun _ _ m1 -> mreads res (factorial n) m1)
+let factorialLoop (n:nat) (li:(ref nat)) (res:(ref nat)) =
+  scopedWhile
+    (loopInv li res)
+    (factorialGuardLC n li)
+    (factorialGuard n li)
+    (factorialLoopBody n li res)
+
+(*BUG?
+  or is there an inconsistency in the formalization?
+  Can one look at the proof found by SMT?*)
+val initialize2 : n:unit ->
+  WNSC unit (fun _ -> True)
+      (fun _ _ _ -> True)
+let initialize2 n =
+  pushStackFrame ();
+  let li = salloc 0 in
+  let liv= memread li in
+  assert (liv=1);
+  assert (liv=3)
+
+val loopyFactorial : n:nat
+  -> SST nat (fun m -> True)
+              (fun _ rv _ -> rv == (factorial n))
+let loopyFactorial n =
+  pushStackFrame ();
+  let li = salloc 0 in
+  let res = salloc 1 in
+  (factorialLoop n li res);
+  let v=memread res in
+  popStackFrame ();
+  v
+
+
+
+
+(*What are the advantage (if any) of writing low-level programs this way,
+  as opposed to writihg it as constructs in a deep embedding of C, e.g. VST.
+  Hopefully, most of the code will not need the low-level style.
+  Beautiful functional programs will also be translated to C?
+  *)

@@ -396,17 +396,18 @@ sub_effect
 
 (** withNewStackFrame combinator *)
 
-effect WNSC (#a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) =
+effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) =
   SST a
       (fun m -> isNonEmpty (st m) /\ topstb m = emp /\ pre (mtail m))
       (fun m0 a m1 -> post (mtail m0) a (mtail m1)
           /\ isNonEmpty (st m0) (*not needed, ideally*)
           /\ sids m0 = sids m1) (*body popped all and only the stack frames it pushed*)
 
-val withNewScope : a:Type -> pre:(smem -> Type) -> post:(smem -> SSTPost a) -> body:(unit -> WNSC pre post)
+val withNewScope : a:Type -> pre:(smem -> Type) -> post:(smem -> SSTPost a)
+  -> body:(unit -> WNSC a pre post)
       -> SST a pre
                 (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
-let withNewScope (a:Type) (pre:(smem -> Type)) (post:(smem -> SSTPost a)) (body:(unit -> WNSC pre post)) =
+let withNewScope (a:Type) (pre:(smem -> Type)) (post:(smem -> SSTPost a)) (body:(unit -> WNSC a pre post)) =
 (* omitting the types in above let expression results in a wierd error*)
     pushStackFrame ();
     let v = body () in
@@ -442,7 +443,6 @@ val scopedWhile : loopInv:(smem -> Type)
   -> bd:(unit -> whileBody loopInv wglc)
   -> SST unit (fun m -> loopInv m)
               (fun m0 _ m1 -> loopInv m1 /\ sids m0 = sids m1 /\ (~(wglc m1)))
-
 let rec scopedWhile (loopInv:(smem -> Type))
   (wglc:(smem -> Type))
   (wg:(unit -> whileGuard loopInv wglc))
@@ -453,3 +453,5 @@ let rec scopedWhile (loopInv:(smem -> Type))
           (fun m -> loopInv m /\ (wglc m)) (fun _ _ m1 -> loopInv m1) bd);
         (scopedWhile loopInv wglc wg bd))
       else ()
+
+type  mreads (#a:Type) (r: ref a) (v:a) (m:smem) = refExistsInMem r m /\ loopkupRef r m = v
