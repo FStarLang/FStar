@@ -77,8 +77,8 @@ and value =
 and env = varname -> Tot value
     
 type redex =
-  | R_aspar: ps:value -> v:value -> redex
-  | R_box  : ps:value -> v:value -> redex
+  | R_aspar: ps:prins -> v:value -> redex
+  | R_box  : ps:prins -> v:value -> redex
   | R_unbox: v:value -> redex
   | R_let  : x:varname -> v:value -> e:exp -> redex
   | R_app  : v1:value -> v2:value -> redex
@@ -100,18 +100,18 @@ type mode =
 
 type frame' =
   | F_aspar_ps   : e:exp -> frame'
-  | F_aspar_e    : v:value -> frame'
+  | F_aspar_e    : ps:prins -> frame'
   (*| F_assec_ps   : e:exp -> frame'
   | F_assec_e    : v:value -> frame'*)
   | F_box_ps     : e:exp -> frame'
-  | F_box_e      : v:value -> frame'
+  | F_box_e      : ps:prins -> frame'
   | F_unbox      : frame'
   | F_let        : x:varname -> e2:exp -> frame'
   | F_app_e1     : e2:exp -> frame'
   | F_app_e2     : v:value -> frame'
   
 type frame =
-  | Frame: m:mode -> en:env -> f:frame' -> frame
+  | Frame: m:mode -> en:env -> f:frame'-> frame
 
 val mode_next_frame: mode -> frame -> Tot bool
 let mode_next_frame (Mode Par ps) (Frame (Mode Par ps') _ f') =
@@ -163,8 +163,17 @@ let pop_env (Conf _ (fr::_) _ _) = Frame.en fr
 val is_value: c:config -> Tot bool
 let is_value c = is_T_val (Conf.t c)
 
+val is_value_ps: c:config -> Tot bool
+let is_value_ps c = match c with
+  | Conf _ _ _ (T_val (V_const (C_prins _))) -> true
+  | _                                        -> false
+
 val c_value: c:config{is_value c} -> Tot value
 let c_value (Conf _ _ _ (T_val v)) = v
+
+val c_value_ps: c:config{is_value_ps c} -> Tot prins
+let c_value_ps c = match c with
+  | Conf _ _ _ (T_val (V_const (C_prins ps))) -> ps
 
 val is_redex: c:config -> Tot bool
 let is_redex c = is_T_red (Conf.t c)
@@ -184,8 +193,8 @@ let pf_let (Conf _ ((Frame _ _ (F_let x e2))::_) _ _) = x, e2
 val pf_app_e1: c:config{is_sframe c is_F_app_e1} -> Tot exp
 let pf_app_e1 (Conf _ ((Frame _ _ (F_app_e1 e2))::_) _ _) = e2
 
-val pf_aspar_e: c:config{is_sframe c is_F_aspar_e} -> Tot value
-let pf_aspar_e (Conf _ ((Frame _ _ (F_aspar_e v))::_) _ _) = v
+val pf_aspar_e: c:config{is_sframe c is_F_aspar_e} -> Tot prins
+let pf_aspar_e (Conf _ ((Frame _ _ (F_aspar_e ps))::_) _ _) = ps
 
 (*val pf_assec_e: c:config{is_sframe c is_F_assec_e} -> Tot value
 let pf_assec_e (Conf _ ((Frame _ _ (F_assec_e v))::_) _ _) = v*)
@@ -193,8 +202,8 @@ let pf_assec_e (Conf _ ((Frame _ _ (F_assec_e v))::_) _ _) = v*)
 val pf_box_ps: c:config{is_sframe c is_F_box_ps} -> Tot exp
 let pf_box_ps (Conf _ ((Frame _ _ (F_box_ps e))::_) _ _) = e
 
-val pf_box_e: c:config{is_sframe c is_F_box_e} -> Tot value
-let pf_box_e (Conf _ ((Frame _ _ (F_box_e v))::_) _ _) = v
+val pf_box_e: c:config{is_sframe c is_F_box_e} -> Tot prins
+let pf_box_e (Conf _ ((Frame _ _ (F_box_e ps))::_) _ _) = ps
 
 val pf_app_e2: c:config{is_sframe c is_F_app_e2} -> Tot value
 let pf_app_e2 (Conf _ ((Frame _ _ (F_app_e2 v))::_) _ _) = v
@@ -241,27 +250,6 @@ type is_eunbox (c:config) =
 val pe_unbox: c:config{is_eunbox c} -> Tot exp
 let pe_unbox (Conf _ _ _ (T_exp (Exp (E_unbox e) _))) = e
 
-val e_aspar: exp -> exp -> Tot exp
-let e_aspar ps e = Exp (E_aspar ps e) None
-
-(*val e_assec: exp -> exp -> Tot exp
-let e_assec ps e = Exp (E_assec ps e) None*)
-
-val e_box: exp -> exp -> Tot exp
-let e_box ps e = Exp (E_box ps e) None
-
-val e_unbox: exp -> Tot exp
-let e_unbox e = Exp (E_unbox e) None
-
-val e_let: varname -> exp -> exp -> Tot exp
-let e_let x e1 e2 = Exp (E_let x e1 e2) None
-
-val e_app: exp -> exp -> Tot exp
-let e_app e1 e2 = Exp (E_app e1 e2) None
-
-val v_prins: prins -> Tot value
-let v_prins ps = V_const (C_prins ps)
-
 type level = | Src | Tgt
 
 val src: level -> Tot bool
@@ -275,8 +263,7 @@ type comp = | Do | Skip | NA
 
 val pre_aspar: config -> l:level -> Tot comp
 let pre_aspar c l = match c with
-  | Conf (Mode Par ps1) _ _ (T_red (R_aspar (V_const (C_prins ps2))
-                                            (V_clos _ _ _))) ->
+  | Conf (Mode Par ps1) _ _ (T_red (R_aspar ps2 (V_clos _ _ _))) ->
     if src l then
       if subset ps2 ps1 then Do else NA
     else
@@ -287,9 +274,9 @@ let pre_aspar c l = match c with
 val step_aspar: c:config -> l:level{not (pre_aspar c l = NA)}
                 -> Tot config
 let step_aspar c l = match c with
-  | Conf m s _ (T_red (R_aspar (V_const (C_prins ps)) (V_clos en x e))) ->
+  | Conf m s _ (T_red (R_aspar ps (V_clos en x e))) ->
     let m'  = if src l then Mode Par ps else m in
-    let s'  = s_add (Frame m empty_env (F_box_e (v_prins ps))) s in
+    let s'  = s_add (Frame m empty_env (F_box_e ps)) s in
     let en' = update_env en x (V_const C_unit) in
     let t'  =
       if src l then T_exp e
@@ -317,7 +304,7 @@ let pe_assec_beta c = match c with
 
 val pre_box: config -> level -> Tot comp
 let pre_box c l = match c with
-  | Conf (Mode Par ps1) _ _ (T_red (R_box (V_const (C_prins ps2)) _)) ->
+  | Conf (Mode Par ps1) _ _ (T_red (R_box ps2 _)) ->
     if src l then
       if subset ps2 ps1 then Do else NA
     else Do
@@ -326,8 +313,7 @@ let pre_box c l = match c with
 
 val step_box: c:config -> l:level{pre_box c l = Do} -> Tot config
 let step_box c l = match c with
-  | Conf m s en (T_red (R_box (V_const (C_prins ps)) v)) ->
-    Conf m s en (T_val (V_box ps v))
+  | Conf m s en (T_red (R_box ps v)) -> Conf m s en (T_val (V_box ps v))
 
 val pre_unbox: config -> level -> Tot comp
 let pre_unbox c l = match c with
@@ -357,7 +343,7 @@ let is_app_redex c = match c with
 
 val step_app: c:config{is_app_redex c} -> Tot config
 let step_app c = match c with
-| Conf m s _ (T_red (R_app (V_clos en x e) v)) -> Conf m s (update_env en x v) (T_exp e)
+  | Conf m s _ (T_red (R_app (V_clos en x e) v)) -> Conf m s (update_env en x v) (T_exp e)
 
 (* M; S; E; e --> M'; S'; E'; e' (common steps for source and target) *)
 type cstep: config -> config -> Type =
@@ -449,9 +435,9 @@ type cstep: config -> config -> Type =
   (* M; (M'; E'; aspar <> do e)::S; E; v --> M'; (M'; E'; aspar v do <>)::s; E'; e *)
 
   | C_aspar_e:
-    c:config{is_value c /\ is_sframe c is_F_aspar_ps}
+    c:config{is_value_ps c /\ is_sframe c is_F_aspar_ps}
     -> c':config{c' = Conf (pop_mode c) (s_replace (Frame (pop_mode c) (pop_env c)
-                                                          (F_aspar_e (c_value c)))
+                                                          (F_aspar_e (c_value_ps c)))
                                                    (Conf.s c))
                            (pop_env c) (T_exp (pf_aspar_ps c))}
     -> cstep c c'
@@ -459,9 +445,9 @@ type cstep: config -> config -> Type =
   (* M; (M'; E'; box <> e)::S; E; v --> M'; (M'; E'; box v <>)::S; E'; e *)
   
   | C_box_e:
-    c:config{is_value c /\ is_sframe c is_F_box_ps}
+    c:config{is_value_ps c /\ is_sframe c is_F_box_ps}
     -> c':config{c' = Conf (pop_mode c) (s_replace (Frame (pop_mode c) (pop_env c)
-                                                          (F_box_e (c_value c)))
+                                                          (F_box_e (c_value_ps c)))
                                                    (Conf.s c))
                            (pop_env c) (T_exp (pf_box_ps c))}
     -> cstep c c'
@@ -659,14 +645,15 @@ and slice_en p en x = preceds_axiom en x; slice_v p (en x)// fun x -> slice_v p 
 assume val slice_emp_en: p:prin
                          -> Lemma (ensures (slice_en p empty_env = empty_env))
 
-(* only expressions with values need to be sliced *)
 val slice_e: prin -> exp -> Tot exp
 let slice_e p e = e
 
 val slice_r: prin -> redex -> Tot redex
 let slice_r p r = match r with
-  | R_aspar ps v  -> R_aspar (slice_v p ps) (slice_v p v)
-  | R_box ps v    -> R_box (slice_v p ps) (slice_v p v)
+  | R_aspar ps v  -> R_aspar ps (slice_v p v)
+  | R_box ps v    ->
+    let v' = if mem p ps then slice_v p v else V_emp in
+    R_box ps v'
   | R_unbox v     -> R_unbox (slice_v p v)
   | R_let x v1 e2 -> R_let x (slice_v p v1) e2
   | R_app v1 v2   -> R_app (slice_v p v1) (slice_v p v2)
@@ -674,8 +661,6 @@ let slice_r p r = match r with
 (* only frame' with values need to be sliced *)
 val slice_f': p:prin -> frame' -> Tot frame'
 let slice_f' p f = match f with
-  | F_aspar_e v -> F_aspar_e (slice_v p v)
-  | F_box_e   v -> F_box_e   (slice_v p v)
   | F_app_e2  v -> F_app_e2  (slice_v p v)
   | _           -> f
 
@@ -754,9 +739,7 @@ let cstep_lemma #c #c' h p = match h with
   | C_aspar_rec (Conf m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
     else IntroR (C_aspar_rec (slice_c p c) (slice_c p c'))
-
-  (* fill up C_box_e case *)
-
+  | C_box_rec (Conf m s _ _) _ -> admit ()    
   | C_unbox_rec (Conf m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
     else IntroR (C_unbox_rec (slice_c p c) (slice_c p c'))
@@ -768,3 +751,5 @@ let cstep_lemma #c #c' h p = match h with
     else IntroR (C_app_rec (slice_c p c) (slice_c p c'))
 
   | _ -> admit ()
+
+(* check_marker *)
