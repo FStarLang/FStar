@@ -194,7 +194,19 @@ let loopyFactorial n =
   popStackFrame ();
   v
 
-
+(*
+val loopyFactorial2 : n:nat
+  -> SST nat (fun m -> True)
+              (fun _ rv _ -> rv == (factorial n))
+let loopyFactorial2 (n:nat) =
+  withNewScope2
+  nat
+  (fun u ->
+    let li = salloc 0 in
+    let res = salloc 1 in
+    (factorialLoop n li res);
+    let v=memread res in v)
+*)
 
 
 (*What are the advantage (if any) of writing low-level programs this way,

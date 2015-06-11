@@ -392,6 +392,18 @@ sub_effect
     One can carefully restrict and explicitly identify the programs that
     really need non-termination *)
 
+type mStackNonEmpty (m:smem) = b2t (isNonEmpty (st m))
+
+val withNewScope2 : a:Type ->
+   body:(unit -> SST a mStackNonEmpty (fun m0 _ m1 -> sids m0 == sids m1))
+      -> SST a (fun m -> True)
+                (fun m0 a m1 -> sids m0 == sids m1)
+
+let withNewScope2 (a:Type)  (body:(unit -> SST a mStackNonEmpty (fun m0 _ m1 -> sids m0 == sids m1))) =
+(* omitting the types in above let expression results in a wierd error*)
+    pushStackFrame ();
+    let v = body () in
+    popStackFrame (); v
 
 
 (** withNewStackFrame combinator *)
@@ -402,6 +414,8 @@ effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) =
       (fun m0 a m1 -> post (mtail m0) a (mtail m1)
           /\ isNonEmpty (st m0) (*not needed, ideally*)
           /\ sids m0 = sids m1) (*body popped all and only the stack frames it pushed*)
+
+
 
 val withNewScope : a:Type -> pre:(smem -> Type) -> post:(smem -> SSTPost a)
   -> body:(unit -> WNSC a pre post)
