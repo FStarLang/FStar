@@ -44,7 +44,7 @@ Please note that 1) the Makefile is currently broken on Windows, and 2) the
 
 #### On Linux or Mac OS X using Mono ####
 
-  - Install mono 3.10.x or 3.12.x and fsharp 3.1.x
+  - Install mono 3.10.x or 3.12.x or 4.0.x and fsharp 3.1.x
 
     - On Debian/Ubuntu
 
