@@ -14,43 +14,43 @@ let break0 = (break_ 0)
 
 let break1 = (text " ")
 
-let enclose = (fun _493686 _493688 _493690 -> (match ((_493686, _493688, _493690)) with
+let enclose = (fun _495374 _495376 _495378 -> (match ((_495374, _495376, _495378)) with
 | (Doc (l), Doc (r), Doc (x)) -> begin
 Doc ((Support.String.strcat (Support.String.strcat l x) r))
 end))
 
-let brackets = (fun _493692 -> (match (_493692) with
+let brackets = (fun _495380 -> (match (_495380) with
 | Doc (d) -> begin
 (enclose (text "[") (text "]") (Doc (d)))
 end))
 
-let cbrackets = (fun _493694 -> (match (_493694) with
+let cbrackets = (fun _495382 -> (match (_495382) with
 | Doc (d) -> begin
 (enclose (text "{") (text "}") (Doc (d)))
 end))
 
-let parens = (fun _493696 -> (match (_493696) with
+let parens = (fun _495384 -> (match (_495384) with
 | Doc (d) -> begin
 (enclose (text "(") (text ")") (Doc (d)))
 end))
 
-let cat = (fun _493698 _493700 -> (match ((_493698, _493700)) with
+let cat = (fun _495386 _495388 -> (match ((_495386, _495388)) with
 | (Doc (d1), Doc (d2)) -> begin
 Doc ((Support.String.strcat d1 d2))
 end))
 
 let reduce = (fun docs -> (Support.List.fold_left cat empty docs))
 
-let group = (fun _493703 -> (match (_493703) with
+let group = (fun _495391 -> (match (_495391) with
 | Doc (d) -> begin
 Doc (d)
 end))
 
 let groups = (fun docs -> (group (reduce docs)))
 
-let combine = (fun _493706 docs -> (match (_493706) with
+let combine = (fun _495394 docs -> (match (_495394) with
 | Doc (sep) -> begin
-(let select = (fun _493710 -> (match (_493710) with
+(let select = (fun _495398 -> (match (_495398) with
 | Doc (d) -> begin
 if (d = "") then begin
 None
@@ -66,20 +66,20 @@ let cat1 = (fun d1 d2 -> (reduce ((d1)::(break1)::(d2)::[])))
 
 let reduce1 = (fun docs -> (combine break1 docs))
 
-let nest = (fun i _493717 -> (match (_493717) with
+let nest = (fun i _495405 -> (match (_495405) with
 | Doc (d) -> begin
 Doc (d)
 end))
 
-let align = (fun docs -> (let _493720 = (combine hardline docs)
-in (match (_493720) with
+let align = (fun docs -> (let _495408 = (combine hardline docs)
+in (match (_495408) with
 | Doc (doc) -> begin
 Doc (doc)
 end)))
 
 let hbox = (fun d -> d)
 
-let pretty = (fun sz _493724 -> (match (_493724) with
+let pretty = (fun sz _495412 -> (match (_495412) with
 | Doc (doc) -> begin
 doc
 end))

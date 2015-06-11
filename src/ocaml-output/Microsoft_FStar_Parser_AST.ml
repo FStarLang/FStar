@@ -141,7 +141,7 @@ let lid_with_range = (fun lid r -> (Microsoft_FStar_Absyn_Syntax.lid_of_path (Mi
 
 let to_string_l = (fun sep f l -> (Support.String.concat sep (Support.List.map f l)))
 
-let imp_to_string = (fun _344832 -> (match (_344832) with
+let imp_to_string = (fun _346512 -> (match (_346512) with
 | Hash -> begin
 "#"
 end
@@ -175,7 +175,7 @@ end
 (Microsoft_FStar_Absyn_Print.sli l)
 end
 | Construct ((l, args)) -> begin
-(Support.Microsoft.FStar.Util.format2 "(%s %s)" (Microsoft_FStar_Absyn_Print.sli l) (to_string_l " " (fun _345052 -> (match (_345052) with
+(Support.Microsoft.FStar.Util.format2 "(%s %s)" (Microsoft_FStar_Absyn_Print.sli l) (to_string_l " " (fun _346732 -> (match (_346732) with
 | (a, imp) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s%s" (imp_to_string imp) (term_to_string a))
 end)) args))
@@ -193,7 +193,7 @@ end
 (Support.Microsoft.FStar.Util.format3 "let %s = %s in %s" (pat_to_string pat) (term_to_string tm) (term_to_string body))
 end
 | Let ((_, lbs, body)) -> begin
-(Support.Microsoft.FStar.Util.format2 "let rec %s in %s" (to_string_l " and " (fun _345082 -> (match (_345082) with
+(Support.Microsoft.FStar.Util.format2 "let rec %s in %s" (to_string_l " and " (fun _346762 -> (match (_346762) with
 | (p, b) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (pat_to_string p) (term_to_string b))
 end)) lbs) (term_to_string body))
@@ -205,7 +205,7 @@ end
 (Support.Microsoft.FStar.Util.format3 "if %s then %s else %s" (term_to_string t1) (term_to_string t2) (term_to_string t3))
 end
 | Match ((t, branches)) -> begin
-(Support.Microsoft.FStar.Util.format2 "match %s with %s" (term_to_string t) (to_string_l " | " (fun _345099 -> (match (_345099) with
+(Support.Microsoft.FStar.Util.format2 "match %s with %s" (term_to_string t) (to_string_l " | " (fun _346779 -> (match (_346779) with
 | (p, w, e) -> begin
 (Support.Microsoft.FStar.Util.format3 "%s %s -> %s" (pat_to_string p) (match (w) with
 | None -> begin
@@ -220,13 +220,13 @@ end
 (Support.Microsoft.FStar.Util.format2 "(%s : %s)" (term_to_string t1) (term_to_string t2))
 end
 | Record ((Some (e), fields)) -> begin
-(Support.Microsoft.FStar.Util.format2 "{%s with %s}" (term_to_string e) (to_string_l " " (fun _345114 -> (match (_345114) with
+(Support.Microsoft.FStar.Util.format2 "{%s with %s}" (term_to_string e) (to_string_l " " (fun _346794 -> (match (_346794) with
 | (l, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli l) (term_to_string e))
 end)) fields))
 end
 | Record ((None, fields)) -> begin
-(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l " " (fun _345121 -> (match (_345121) with
+(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l " " (fun _346801 -> (match (_346801) with
 | (l, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli l) (term_to_string e))
 end)) fields))
@@ -322,7 +322,7 @@ end
 (Support.Microsoft.FStar.Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l))
 end
 | PatRecord (l) -> begin
-(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l "; " (fun _345235 -> (match (_345235) with
+(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l "; " (fun _346915 -> (match (_346915) with
 | (f, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli f) (pat_to_string e))
 end)) l))
@@ -364,7 +364,7 @@ end
 (mk_term (Construct ((s, args))) r Un)
 end
 | _ -> begin
-(Support.List.fold_left (fun t _345279 -> (match (_345279) with
+(Support.List.fold_left (fun t _346959 -> (match (_346959) with
 | (a, imp) -> begin
 (mk_term (App ((t, a, imp))) r Un)
 end)) t args)
@@ -403,7 +403,7 @@ in ((mk_pattern PatWild r), None, admit_magic))))))
 
 let focusBranches = (fun branches r -> (let should_filter = (Support.Microsoft.FStar.Util.for_some (Support.Prims.fst) branches)
 in if should_filter then begin
-(let _345313 = (Microsoft_FStar_Tc_Errors.warn r "Focusing on only some cases")
+(let _346993 = (Microsoft_FStar_Tc_Errors.warn r "Focusing on only some cases")
 in (let focussed = ((Support.List.map (Support.Prims.snd)) (Support.List.filter (Support.Prims.fst) branches))
 in (Support.List.append focussed (((mkWildAdmitMagic r))::[]))))
 end else begin

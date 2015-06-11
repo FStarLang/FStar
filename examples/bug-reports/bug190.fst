@@ -12,6 +12,5 @@ type deduce : form -> Type =
 
 type pred = heap -> Tot form
 
-val hoare_consequence : p:pred -> deduce (FForall (fun h -> p h)) -> h:heap -> Tot unit
-let hoare_consequence p vpp' h0 =
-  ignore(DForallElim (fun (h : heap) -> p h) vpp' h0)
+val hoare_consequence : p:pred -> deduce (FForall (fun (h:heap) -> p h)) -> h:heap -> Tot unit
+let hoare_consequence p vpp' h0 = ignore(DForallElim (fun (h : heap) -> p h) vpp' h0)

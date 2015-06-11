@@ -689,7 +689,9 @@ and encode_exp (e:exp) (env:env_t) : (term
             Term.mkFreeV(f, Term_sort), [decl] in
 
         begin match !e.tk with 
-            | None -> fallback ()
+            | None ->
+              Tc.Errors.warn e.pos ("Losing precision when encoding a function literal");
+              fallback ()
             | Some tfun -> 
             if not <| Util.is_pure_or_ghost_function tfun
             then fallback ()

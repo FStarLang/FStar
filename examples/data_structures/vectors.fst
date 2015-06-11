@@ -17,11 +17,11 @@
 module Vector
 
 type vector 'a : nat -> Type =
-  | VNil : vector 'a 0 
-  | VCons : hd:'a 
-         -> #n:nat     
-         -> tl:vector 'a n 
-         -> vector 'a (n + 1) 
+  | VNil : vector 'a 0
+  | VCons : hd:'a
+         -> #n:nat
+         -> tl:vector 'a n
+         -> vector 'a (n + 1)
 
 val head: #n:pos -> vector 'a n -> 'a
 let head n v = match v with
@@ -54,7 +54,7 @@ val fold_left: ('acc -> 'a -> Tot 'acc) -> 'acc -> #n:nat -> vector 'a n -> Tot 
 let rec fold_left f acc n v = match v with
   | VNil -> acc
   | VCons hd tl -> fold_left f (f acc hd) tl
-                     
+
 val fold_right: ('a -> 'acc -> Tot 'acc) -> #n:nat -> vector 'a n -> 'acc -> Tot 'acc
 let rec fold_right f n v acc = match v with
   | VNil -> acc
@@ -71,8 +71,8 @@ let rec find f n v = match v with
 val zip': #n:nat -> vector 'a n -> vector 'b n -> Tot (vector ('a * 'b) n)
 let rec zip' n v1 v2 = match v1 with
   | VNil -> VNil
-  | VCons a tl1 -> 
-    let VCons b tl2 = v2 in  
+  | VCons a tl1 ->
+    let VCons b tl2 = v2 in
     VCons (a, b) (zip' tl1 tl2)
 
 

@@ -7,7 +7,7 @@ all: .all.ver testmref mac2 all-neg
 all-neg: $(NEGFILES)
 	-$(FSTAR) --admit_fsi Set $(STDLIB) $^
 	@echo "---------------------------------------"
-	@echo "       Done ! EXPECT 32 FAILURES       "
+	@echo "       Done ! EXPECT 35 FAILURES       "
 	@echo "---------------------------------------"
 
 

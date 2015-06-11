@@ -5,9 +5,10 @@ VERFILES=bug015.fst bug019.fst\
   bug092.fst bug096.fst bug097b.fst bug101.fst bug103.fst\
   bug111.fst bug116.fst bug117.fst bug122.fst bug124.fst\
   bug148.fst bug161.fst bug162.fst bug170.fst bug175.fst bug178.fst\
-  bug179.fst bug181.fst bug186.fst bug189.fst bug190.fst bug192.fst bug195.fst\
+  bug179.fst bug181.fst bug186.fst bug189.fst bug192.fst bug195.fst\
   bug212.fst bug213.fst\
   bugWildcardTelescopes.fst
+##bug190.fst 
 
 include ../Makefile.include
 all: .all.ver

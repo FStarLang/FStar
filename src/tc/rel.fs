@@ -2272,9 +2272,10 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
 
     | Exp_app(head1, args1), Exp_app(head2, args2) -> 
       let orig_wl = wl in
-      let rec solve_args wl args1 args2 = match args1, args2 with 
+      let rec solve_args sub_probs wl args1 args2 = match args1, args2 with 
             | [], [] -> 
-                solve env (solve_prob orig None wl.subst ({orig_wl with subst=[]}))
+                let guard = Util.mk_conj_l (List.map p_guard sub_probs |> List.map fst) in
+                solve env (solve_prob orig (Some guard) wl.subst ({orig_wl with subst=[]}))
             | arg1::rest1, arg2::rest2 -> 
                 let prob = match fst arg1, fst arg2 with 
                 | Inl t1, Inl t2 -> 
@@ -2284,14 +2285,14 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
                 | _ -> failwith "Impossible: ill-typed expression" in
                 begin match solve env ({wl with defer_ok=false; smt_ok=false; attempting=[prob]; deferred=[]}) with 
                 | Failed _ -> smt_fallback e1 e2
-                | Success (subst, _) -> solve_args ({wl with subst=subst}) rest1 rest2
+                | Success (subst, _) -> solve_args (prob::sub_probs) ({wl with subst=subst}) rest1 rest2
                 end
             | _ -> failwith "Impossible: lengths defer" in
  
 
       let rec match_head_and_args head1 head2 = match (Util.compress_exp head1).n, (Util.compress_exp head2).n with 
-        | Exp_bvar x, Exp_bvar y           when (bvar_eq x y && List.length args1 = List.length args2) -> solve_args wl args1 args2
-        | Exp_fvar (f, _), Exp_fvar (g, _) when (fvar_eq f g && List.length args1 = List.length args2) -> solve_args wl args1 args2
+        | Exp_bvar x, Exp_bvar y           when (bvar_eq x y && List.length args1 = List.length args2) -> solve_args [] wl args1 args2
+        | Exp_fvar (f, _), Exp_fvar (g, _) when (fvar_eq f g && not (Util.is_interpreted f.v) && List.length args1 = List.length args2) -> solve_args [] wl args1 args2
         | Exp_ascribed(e, _), _ -> match_head_and_args e head2
         | _, Exp_ascribed(e, _) -> match_head_and_args head1 e
         | Exp_abs _, _ -> 
@@ -2305,6 +2306,9 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
       
     | _ -> //TODO: check that they at least have the same head? 
      let t, _ = new_tvar (Tc.Env.get_range env) (Tc.Env.binders env) ktype in 
+     let guard = Util.mk_eq t t e1 e2 in
+     if Tc.Env.debug env <| Options.Other "Rel"
+     then Util.fprint1 "Emitting guard %s\n" (Print.typ_to_string guard);
      solve env (solve_prob orig (Some <| Util.mk_eq t t e1 e2) [] wl)  
 
 (* -------------------------------------------------------- *)        
