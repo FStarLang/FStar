@@ -93,8 +93,16 @@ let topst ss = (top (st ss))
 val topstb : (s:smem{isNonEmpty (st s)}) ->  Tot memblock
 let topstb ss = snd (topst ss)
 
+let problem (m0:memStack) (id:sidt) =
+  let m1 = (id, emp)::m0 in
+  assert(b2t (stail m1 = m0));
+  admitP(b2t (snd (top m1) = emp));*)
+      assert(false)
+    (*| _ -> admit()*)
+
 val topstid : (s:smem{isNonEmpty (st s)}) ->  Tot sidt
 let topstid ss = fst (topst ss)
+
 
 type refLocType =
   | InHeap : refLocType
@@ -420,10 +428,24 @@ effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) =
 (*BUG?
   or is there an inconsistency in the formalization?
   Can one look at the proof found by SMT?*)
-val problem : n:unit ->
-  WNSC unit (fun _ -> True)
-      (fun _ _ _ -> True)
-let problem n =
+(*val problem : n:unit ->
+    SST unit (fun m -> b2t (isNonEmpty (st m))
+                       (*/\ topstb m = emp*)
+                       )
+      (fun _ _ _ -> True)*)
+let problem (m0:smem) (m1:smem) =
+  admitP(b2t (isNonEmpty (st m0)));
+  admitP(mtail m1 == m0);
+  admitP(b2t (isNonEmpty (st m1)));
+  admitP(topstb m1 == emp);
+  assert(false)
+
+
+        (fun m0 _ m1 -> (mtail m1 = m0)
+          /\ (isNonEmpty (st m1))
+          /\ topstb m1 = emp)
+
+
   pushStackFrame ();
   assert (false)
 

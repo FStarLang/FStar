@@ -288,7 +288,7 @@ let mkExplicitApp t args r = match args with
       | Name s -> mk_term (Construct(s, (List.map (fun a -> (a, Nothing)) args))) r Un
       | _ -> List.fold_left (fun t a -> mk_term (App(t, a, Nothing)) r Un) t args
 
-let mkWildAdmitMagic r = 
+let mkAdmitMagic r = 
     let unit_const = mk_term(Const Const_unit) r Expr in
     let admit = 
         let admit_name = mk_term(Var(Util.set_lid_range Const.admit_lid r)) r Expr in
@@ -297,7 +297,9 @@ let mkWildAdmitMagic r =
         let magic_name = mk_term(Var(Util.set_lid_range Const.magic_lid r)) r Expr in
         mkExplicitApp magic_name [unit_const] r in
     let admit_magic = mk_term(Seq(admit, magic)) r Expr in
-    (mk_pattern PatWild r, None, admit_magic)
+    admit_magic
+
+let mkWildAdmitMagic r = (mk_pattern PatWild r, None, mkAdmitMagic r)
 
 let focusBranches branches r = 
     let should_filter = Util.for_some fst branches in 
@@ -307,6 +309,15 @@ let focusBranches branches r =
 		 focussed@[mkWildAdmitMagic r]
 	else branches |> List.map snd
     
+let focusLetBindings lbs r = 
+    let should_filter = Util.for_some fst lbs in 
+	if should_filter 
+	then let _ = Tc.Errors.warn r "Focusing on only some cases in this (mutually) recursive definition" in
+         List.map (fun (f, lb) -> 
+              if f then lb
+              else (fst lb, mkAdmitMagic r)) lbs 
+	else lbs |> List.map snd
+
 let mkFsTypApp t args r = 
   mkApp t (List.map (fun a -> (a, FsTypApp)) args) r
 

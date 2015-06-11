@@ -161,7 +161,11 @@ decl2:
   | tycon 
       { $1 }
   | LET recopt letbinding letbindings
-      { ToplevelLet($2, $3::$4) }
+      { 
+		let r, focus = $2 in
+		let lbs = focusLetBindings ((focus, $3)::$4) (rhs2 parseState 1 4) in
+		ToplevelLet(r, lbs)
+	  }
   | qualifiers VAL ident COLON typ
       { Val($1, $3, $5) }
   | assumeTag name COLON formula
@@ -245,13 +249,17 @@ ident_opt:
   |       { None }
   | ident { Some $1 }
 
+maybeFocus:
+  |  { false }
+  | SQUIGGLY_RARROW { true }
+
 recopt:
-  | REC { true }
-  |     { false }
+  | maybeFocus REC      { true, $1 }
+  |                     { false, false }
 
 letbindings:
-  | AND letbinding letbindings 
-      { $2::$3 }
+  | AND maybeFocus letbinding letbindings 
+      { ($2, $3)::$4 }
   |   { [] }
 
 letbinding:
@@ -552,7 +560,9 @@ noSeqTerm:
 
   | LET recopt letbinding letbindings IN term
       {
-        mk_term (Let($2, ($3::$4), $6)) (rhs2 parseState 1 6) Expr
+		let r, focus = $2 in 
+		let lbs = focusLetBindings ((focus,$3)::$4) (rhs2 parseState 2 4) in
+        mk_term (Let(r, lbs, $6)) (rhs2 parseState 1 6) Expr
       }
 
   | FUNCTION firstPatternBranch patternBranches 
@@ -601,12 +611,12 @@ maybeFocusArrow:
   | SQUIGGLY_RARROW { true }
 
 firstPatternBranch: /* shift/reduce conflict on BAR ... expected for nested matches */
-  | maybeBar disjunctivePattern maybeWhen RARROW term 
+  | maybeBar disjunctivePattern maybeWhen maybeFocusArrow term 
       { 
         let pat = match $2 with 
           | [p] -> p 
           | ps -> mk_pattern (PatOr ps) (rhs2 parseState 1 2) in
-        (false, (pat, $3, $5))
+        ($4, (pat, $3, $5))
       }
 
 patternBranch: /* shift/reduce conflict on BAR ... expected for nested matches */

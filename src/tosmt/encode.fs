@@ -62,7 +62,7 @@ let mk_term_projector (lid:lident) (a:bvvdef) : term =
     mkFreeV(mk_term_projector_name lid a, Arrow(Term_sort, Term_sort))
 let mk_term_projector_by_pos (lid:lident) (i:int) : term = 
     mkFreeV(mk_term_projector_name_by_pos lid i, Arrow(Term_sort, Term_sort))
-let mk_data_tester env l x = Term.mk_tester l.str x
+let mk_data_tester env l x = Term.mk_tester (escape l.str) x
 (* ------------------------------------ *)
 (* New name generation *)
 type varops_t = {
@@ -1662,7 +1662,7 @@ and encode_free_var env lid tt t_norm quals =
                     let _, (xxsym, _) = Util.prefix vars in
                     let xx = mkFreeV(xxsym, Term_sort) in
                     [Term.Assume(mkForall([vapp], vars,
-                                            mkEq(vapp, Term.boxBool <| Term.mk_tester d.str xx)), None)]
+                                            mkEq(vapp, Term.boxBool <| Term.mk_tester (escape d.str) xx)), None)]
 
                 | Projector(d, Inr f) -> 
                     let _, (xxsym, _) = Util.prefix vars in
