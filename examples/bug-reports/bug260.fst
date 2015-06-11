@@ -1,6 +1,7 @@
-module TinyFStarNew
+module Bug260
 
 type typ =
+  | TVar : typ
   | TImpl : typ -> typ
 
 type validity : t:typ -> Type =
