@@ -3474,6 +3474,9 @@ match hv with
 (*validity_derived seems to need a lot of inversion lemma, and is not used in the
  other proofs. So maybe I finish it later ?*)
 
+
+
+
 (*
 val op_pure_timpl : g:env -> t:typ -> wp1:typ -> wp2:typ ->
      validity (textend (k_post_pure t) g) (timpl (TTApp (wp1) (TVar 0)) (TTApp (wp2) (TVar 0))) ->
