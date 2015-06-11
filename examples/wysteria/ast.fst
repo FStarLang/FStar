@@ -34,6 +34,7 @@ let mem = OrdSet.mem p_cmp
 assume val mem_subset: p:prin -> ps1:prins -> ps2:prins
                        -> Lemma (requires (mem p ps1 /\ subset ps1 ps2))
                                 (ensures  (mem p ps2))
+                          [SMTPat (subset ps1 ps2)]
 
 val singleton: prin -> Tot (ps:prins{OrdSet.size p_cmp ps = 1})
 let singleton p = OrdSet.singleton p_cmp p
@@ -682,33 +683,14 @@ val slice_f: p:prin -> f:frame{Mode.m (Frame.m f) = Par /\
 let slice_f p (Frame _ en f) = Frame (Mode Par (singleton p)) (slice_en p en)
                                      (slice_f' p f)
 
-val pop_absent_frames: prin -> s:stack -> Tot (r:stack{r = s \/ r << s})
-let rec pop_absent_frames p s = match s with
+val slice_s: p:prin -> s:stack -> Tot (s:stack{forall f. List.mem f s ==> (Mode.ps (Frame.m f) = singleton p)}) (decreases s)
+let rec slice_s p s = match s with
   | []     -> []
   | hd::tl ->
-    if mem p (Mode.ps (Frame.m hd)) then s else pop_absent_frames p tl
-
-val pop_absent_frames_lem: p:prin -> s:stack
-                           -> Lemma (requires (True))
-                                    (ensures  (forall f. List.mem f (pop_absent_frames p s) ==>
-                                                         mem p (Mode.ps (Frame.m f))))
-let rec pop_absent_frames_lem p s = match s with
-  | []        -> ()
-  | _::[]     -> ()
-  | f::f'::tl ->
-    if mem p (Mode.ps (Frame.m f)) then
-      let _ = mem_subset p (Mode.ps (Frame.m f)) (Mode.ps (Frame.m f')) in
-      pop_absent_frames_lem p (f'::tl)
+    if mem p (Mode.ps (Frame.m hd)) then
+      (slice_f p hd)::(slice_s p tl)
     else
-      pop_absent_frames_lem p (f'::tl)
-
-val slice_s: p:prin -> s:stack -> Tot (s:stack{forall f. List.mem f s ==> (Mode.ps (Frame.m f) = singleton p)}) (decreases s)
-let rec slice_s p s =
-  let s' = pop_absent_frames p s in
-  pop_absent_frames_lem p s;
-  match s' with
-    | []     -> []
-    | hd::tl -> (slice_f p hd)::(slice_s p tl)
+      slice_s p tl
 
 val slice_t: p:prin -> t:term -> Tot term
 let slice_t p t = match t with
@@ -755,58 +737,14 @@ let cstep_lemma #c #c' h p = match h with
   | C_let_e1 (Conf m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
     else IntroR (C_let_e1 (slice_c p c) (slice_c p c'))
-
-  (*| C_abs (Conf m s en (T_exp (Exp (E_abs x e) _)))
-          (Conf m' s' en' (T_val (V_clos en'' x'' e''))) ->
+  | C_abs (Conf m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
     else
-      let _ = assert (m = m' /\ s = s' /\ en = en' /\
-                      x = x'' /\ e = e'' /\ en'' = en) in
-      let sc = slice_c p c in
-      let (Conf (Mode Par p')
-                sp enp (T_exp (Exp (E_abs xp ep) _))) = sc in
-      
-      let _ = assert (p' = singleton p /\ xp = x /\ ep = e /\
-                      enp = slice_en p en /\
-                      sp = slice_s p s) in
-      
-      let _ = C_abs sc
-              (Conf (Mode Par (singleton p))
-                    sp enp (T_val (V_clos enp xp ep))
-              ) in
+      (* bug#259 *)
+      let _ = admit () in
+      IntroR (C_abs (slice_c p c) (slice_c p c'))
+  | C_app_e1 (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_app_e1 (slice_c p c) (slice_c p c'))
 
-      let _ = assert (slice_s p s' = sp) in
-      let _ = assert (slice_en p en' = enp) in
-      let _ = assert (slice_v p (V_clos en'' x'' e'') =
-                      V_clos (slice_en p en'') x'' e'') in
-              
-      (*let _ = assert ((Conf (Mode Par (singleton p))
-                             sp enp (T_val (V_clos enp xp ep))) =
-                      slice_c p c') in*)
-      
-      let _ = admit() in
-      IntroR (C_abs (slice_c p c) (slice_c p c'))*)
-  
   | _ -> admit ()
-  
-(* check_marker *)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
