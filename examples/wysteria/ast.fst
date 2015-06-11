@@ -71,16 +71,16 @@ and value =
 
   (* bomb value, comes up in target only *)
   | V_emp : value
-  
-and redex =
-  | R_aspar:
-  | R_box  :
-  | R_unbox:
-  | R_let  :
-  | R_app  :
 
 (* TODO: fix it, option value *)
 and env = varname -> Tot value
+    
+type redex =
+  | R_aspar: ps:value -> v:value -> redex
+  | R_box  : ps:value -> v:value -> redex
+  | R_unbox: v:value -> redex
+  | R_let  : x:varname -> v:value -> e:exp -> redex
+  | R_app  : v1:value -> v2:value -> redex
 
 assume val empty_env: env
 
@@ -125,8 +125,13 @@ type stack = l:list frame{stack_inv l}
 type CSMode (m:mode) (s:stack) =
   is_Cons s ==> (subset (Mode.ps m) (Mode.ps (Frame.m (Cons.hd s))))
 
+type term =
+  | T_exp: e:exp -> term
+  | T_red: r:redex -> term
+  | T_val: v:value -> term
+
 type config =
-  | Conf: m:mode -> s:stack{CSMode m s} -> en:env -> e:exp -> config
+  | Conf: m:mode -> s:stack{CSMode m s} -> en:env -> t:term -> config
 
 type AFMode (f:frame) (s:stack) =
   is_Cons s ==> (subset (Mode.ps (Frame.m f)) (Mode.ps (Frame.m (Cons.hd s))))
@@ -152,26 +157,17 @@ let pop_mode (Conf _ (fr::_) _ _) = Frame.m fr
 val pop_env: c:config{is_Cons (Conf.s c)} -> Tot env
 let pop_env (Conf _ (fr::_) _ _) = Frame.en fr
 
-val is_value_e: exp -> Tot bool
-let is_value_e e = is_E_value (Exp.e e)
-
 val is_value: c:config -> Tot bool
-let is_value c = is_value_e (Conf.e c)
+let is_value c = is_T_val (Conf.t c)
 
-val is_reduced_e: exp -> Tot bool
-let is_reduced_e (Exp e _) =
-  match e with
-    | E_aspar e1 e2
-    (*| E_assec e1 e2*)
-    | E_box   e1 e2
-    | E_app   e1 e2 -> is_value_e e1 && is_value_e e2
-    | E_unbox e
-    | E_let _ e _   -> is_value_e e
-    | E_value _     -> true
-    | _             -> false
+val c_value: c:config{is_value c} -> Tot value
+let c_value (Conf _ _ _ (T_val v)) = v
 
-val is_reduced: config -> Tot bool
-let is_reduced (Conf _ _ _ e) = is_reduced_e e
+val is_redex: c:config -> Tot bool
+let is_redex c = is_T_red (Conf.t c)
+
+val is_exp: c:config -> Tot bool
+let is_exp c = is_T_exp (Conf.t c) 
 
 val pf_aspar_ps: c:config{is_sframe c is_F_aspar_ps} -> Tot exp
 let pf_aspar_ps (Conf _ ((Frame _ _ (F_aspar_ps e))::_) _ _) = e
@@ -200,38 +196,47 @@ let pf_box_e (Conf _ ((Frame _ _ (F_box_e v))::_) _ _) = v
 val pf_app_e2: c:config{is_sframe c is_F_app_e2} -> Tot value
 let pf_app_e2 (Conf _ ((Frame _ _ (F_app_e2 v))::_) _ _) = v
 
-val pe_value: c:config{is_E_value (Exp.e (Conf.e c))} -> Tot value
-let pe_value (Conf _ _ _ (Exp (E_value v) _)) = v
-
-val pe_info: c:config -> Tot (option other_info)
-let pe_info (Conf _ _ _ (Exp _ inf)) = inf
-
-val pe_aspar: c:config{is_E_aspar (Exp.e (Conf.e c))} -> Tot (exp * exp)
-let pe_aspar (Conf _ _ _ (Exp (E_aspar e1 e2) _)) = e1, e2
+type is_easpar (c:config) =
+  is_T_exp (Conf.t c) /\ is_E_aspar (Exp.e (T_exp.e (Conf.t c)))
+val pe_aspar: c:config{is_easpar c} -> Tot (exp * exp)
+let pe_aspar (Conf _ _ _ (T_exp (Exp (E_aspar e1 e2) _))) = e1, e2
 
 (*val pe_assec: c:config{is_E_assec (Exp.e (Conf.e c))} -> Tot (exp * exp)
 let pe_assec (Conf _ _ _ (Exp (E_assec e1 e2) _)) = e1, e2*)
+type is_ebox (c:config) =
+  is_T_exp (Conf.t c) /\ is_E_box (Exp.e (T_exp.e (Conf.t c)))
+val pe_box: c:config{is_ebox c} -> Tot (exp * exp)
+let pe_box (Conf _ _ _ (T_exp (Exp (E_box e1 e2) _))) = e1, e2
 
-val pe_box: c:config{is_E_box (Exp.e (Conf.e c))} -> Tot (exp * exp)
-let pe_box (Conf _ _ _ (Exp (E_box e1 e2) _)) = e1, e2
+type is_eapp (c:config) =
+  is_T_exp (Conf.t c) /\ is_E_app (Exp.e (T_exp.e (Conf.t c)))
+val pe_app: c:config{is_eapp c} -> Tot (exp * exp)
+let pe_app (Conf _ _ _ (T_exp (Exp (E_app e1 e2) _))) = (e1, e2)
 
-val pe_app: c:config{is_E_app (Exp.e (Conf.e c))} -> Tot (exp * exp)
-let pe_app (Conf _ _ _ (Exp (E_app e1 e2) _)) = (e1, e2)
+type is_eabs (c:config) =
+  is_T_exp (Conf.t c) /\ is_E_abs (Exp.e (T_exp.e (Conf.t c)))
+val pe_abs: c:config{is_eabs c} -> Tot (varname * exp)
+let pe_abs (Conf _ _ _ (T_exp (Exp (E_abs x e) _))) = (x, e)
 
-val pe_abs: c:config{is_E_abs (Exp.e (Conf.e c))} -> Tot (varname * exp)
-let pe_abs (Conf _ _ _ (Exp (E_abs x e) _)) = (x, e)
+type is_elet (c:config) =
+  is_T_exp (Conf.t c) /\ is_E_let (Exp.e (T_exp.e (Conf.t c)))
+val pe_let: c:config{is_elet c} -> Tot (Tuple3 varname exp exp)
+let pe_let (Conf _ _ _ (T_exp (Exp (E_let x e1 e2) _))) = MkTuple3 x e1 e2
 
-val pe_let: c:config{is_E_let (Exp.e (Conf.e c))} -> Tot (Tuple3 varname exp exp)
-let pe_let (Conf _ _ _ (Exp (E_let x e1 e2) _)) = MkTuple3 x e1 e2
+type is_evar (c:config) =
+  is_T_exp (Conf.t c) /\ is_E_var (Exp.e (T_exp.e (Conf.t c)))
+val pe_var: c:config{is_evar c} -> Tot varname
+let pe_var (Conf _ _ _ (T_exp (Exp (E_var x) _))) = x
 
-val pe_var: c:config{is_E_var (Exp.e (Conf.e c))} -> Tot varname
-let pe_var (Conf _ _ _ (Exp (E_var x) _)) = x
+type is_econst (c:config) =
+  is_T_exp (Conf.t c) /\ is_E_const (Exp.e (T_exp.e (Conf.t c)))
+val pe_const: c:config{is_econst c} -> Tot const
+let pe_const (Conf _ _ _ (T_exp (Exp (E_const c) _))) = c
 
-val pe_const: c:config{is_E_const (Exp.e (Conf.e c))} -> Tot const
-let pe_const (Conf _ _ _ (Exp (E_const c) _)) = c
-
-val pe_unbox: c:config{is_E_unbox (Exp.e (Conf.e c))} -> Tot exp
-let pe_unbox (Conf _ _ _ (Exp (E_unbox e) _)) = e
+type is_eunbox (c:config) =
+  is_T_exp (Conf.t c) /\ is_E_unbox (Exp.e (T_exp.e (Conf.t c)))
+val pe_unbox: c:config{is_eunbox c} -> Tot exp
+let pe_unbox (Conf _ _ _ (T_exp (Exp (E_unbox e) _))) = e
 
 val e_aspar: exp -> exp -> Tot exp
 let e_aspar ps e = Exp (E_aspar ps e) None
@@ -251,9 +256,6 @@ let e_let x e1 e2 = Exp (E_let x e1 e2) None
 val e_app: exp -> exp -> Tot exp
 let e_app e1 e2 = Exp (E_app e1 e2) None
 
-val e_value: value -> Tot exp
-let e_value v = Exp (E_value v) None
-
 val v_prins: prins -> Tot value
 let v_prins ps = V_const (C_prins ps)
 
@@ -270,9 +272,8 @@ type comp = | Do | Skip | NA
 
 val pre_aspar: config -> l:level -> Tot comp
 let pre_aspar c l = match c with
-  | Conf (Mode Par ps1) _ _
-         (Exp (E_aspar (Exp (E_value (V_const (C_prins ps2))) _)
-                       (Exp (E_value (V_clos _ _ _)) _)) _) ->
+  | Conf (Mode Par ps1) _ _ (T_red (R_aspar (V_const (C_prins ps2))
+                                            (V_clos _ _ _))) ->
     if src l then
       if subset ps2 ps1 then Do else NA
     else
@@ -283,17 +284,15 @@ let pre_aspar c l = match c with
 val step_aspar: c:config -> l:level{not (pre_aspar c l = NA)}
                 -> Tot config
 let step_aspar c l = match c with
-  | Conf m s _
-         (Exp (E_aspar (Exp (E_value (V_const (C_prins ps))) _)
-                       (Exp (E_value (V_clos en x e)) _)) _) ->
+  | Conf m s _ (T_red (R_aspar (V_const (C_prins ps)) (V_clos en x e))) ->
     let m'  = if src l then Mode Par ps else m in
     let s'  = s_add (Frame m empty_env (F_box_e (v_prins ps))) s in
     let en' = update_env en x (V_const C_unit) in
-    let e'  =
-      if src l then e
-      else (if pre_aspar c l = Do then e else e_value (V_emp))
+    let t'  =
+      if src l then T_exp e
+      else (if pre_aspar c l = Do then T_exp e else T_val V_emp)
     in
-    Conf m' s' en' e'
+    Conf m' s' en' t'
 
 (*val pre_assec: c:config -> Tot bool
 let pre_assec c = match c with
@@ -315,59 +314,47 @@ let pe_assec_beta c = match c with
 
 val pre_box: config -> level -> Tot comp
 let pre_box c l = match c with
-  | Conf (Mode Par ps1) _ _
-         (Exp (E_box (Exp (E_value (V_const (C_prins ps2))) _)
-                     (Exp (E_value _) _)) _) ->
+  | Conf (Mode Par ps1) _ _ (T_red (R_box (V_const (C_prins ps2)) _)) ->
     if src l then
       if subset ps2 ps1 then Do else NA
-    else
-      if subset ps1 ps2 then Do else NA
+    else Do
 
   | _ -> NA
 
 val step_box: c:config -> l:level{pre_box c l = Do} -> Tot config
 let step_box c l = match c with
-  | Conf m s en
-         (Exp (E_box (Exp (E_value (V_const (C_prins ps))) _)
-                     (Exp (E_value v) _)) _) ->
-    Conf m s en (e_value (V_box ps v))
+  | Conf m s en (T_red (R_box (V_const (C_prins ps)) v)) ->
+    Conf m s en (T_val (V_box ps v))
 
 val pre_unbox: config -> level -> Tot comp
 let pre_unbox c l = match c with
-  | Conf (Mode Par ps1) _ _
-         (Exp (E_unbox (Exp (E_value (V_box ps2 _)) _)) _) ->
+  | Conf (Mode Par ps1) _ _ (T_red (R_unbox (V_box ps2 _))) ->
     if subset ps1 ps2 then Do else NA
          
   | _ -> NA
 
 val step_unbox: c:config -> l:level{pre_unbox c l = Do} -> Tot config
 let step_unbox c l = match c with
-  | Conf m s en (Exp (E_unbox (Exp (E_value (V_box _ v)) _)) _) ->
-    Conf m s en (e_value v)
+  | Conf m s en (T_red (R_unbox (V_box _ v))) -> Conf m s en (T_val v)
 
 val is_let_redex: c:config -> Tot bool
-let is_let_redex c = is_E_let (Exp.e (Conf.e c)) && is_reduced c
+let is_let_redex c = match c with
+  | Conf _ _ _ (T_red (R_let _ _ _)) -> true
+  | _                                -> false
 
 val step_let: c:config{is_let_redex c} -> Tot config
 let step_let c = match c with
-  | Conf m s en (Exp (E_let x (Exp (E_value v) _) e2) _) ->
-    Conf m s (update_env en x v) e2
+  | Conf m s en (T_red (R_let x v1 e2)) -> Conf m s (update_env en x v1) (T_exp e2)
 
 val is_app_redex: c:config -> Tot bool
 let is_app_redex c = match c with
-  | Conf _ _ _
-         (Exp (E_app (Exp (E_value (V_clos _ _ _)) _)
-                     (Exp (E_value _) _)) _) ->
-    true
+  | Conf _ _ _ (T_red (R_app (V_clos _ _ _) _)) -> true
 
   | _ -> false
 
 val step_app: c:config{is_app_redex c} -> Tot config
 let step_app c = match c with
-| Conf m s _
-       (Exp (E_app (Exp (E_value (V_clos en x e)) _)
-                   (Exp (E_value v) _)) _) ->
-  Conf m s (update_env en x v) e
+| Conf m s _ (T_red (R_app (V_clos en x e) v)) -> Conf m s (update_env en x v) (T_exp e)
 
 (* M; S; E; e --> M'; S'; E'; e' (common steps for source and target) *)
 type cstep: config -> config -> Type =
@@ -375,86 +362,85 @@ type cstep: config -> config -> Type =
   (* M; S; E; aspar e1 do e2 --> M; (M; E; aspar <> do e2)::S; E; e1*)
 
   | C_aspar_ps:
-    c:config{is_E_aspar (Exp.e (Conf.e c)) /\ not (is_reduced c)}
+    c:config{is_easpar c}
     -> c':config{c' = Conf (Conf.m c)
                            (s_add (Frame (Conf.m c) (Conf.en c)
                                          (F_aspar_ps (snd (pe_aspar c))))
                                   (Conf.s c))
-                           (Conf.en c) (fst (pe_aspar c))}
+                           (Conf.en c) (T_exp(fst (pe_aspar c)))}
     -> cstep c c'
 
   (* M; S; E; box e1 e2 --> M; (M; E; box <> e2)::S; E; e1 *)
 
   | C_box_ps:
-    c:config{is_E_box (Exp.e (Conf.e c)) /\ not (is_reduced c)}
+    c:config{is_ebox c}
     -> c':config{c' = Conf (Conf.m c)
                            (s_add (Frame (Conf.m c) (Conf.en c)
                                          (F_box_ps (snd (pe_box c))))
                                   (Conf.s c))
-                           (Conf.en c) (fst (pe_box c))}
+                           (Conf.en c) (T_exp (fst (pe_box c)))}
 
     -> cstep c c'
 
   (* M; S; E; unbox e --> M; (M; E; unbox <>)::S; E; e *)
 
   | C_unbox:
-    c:config{is_E_unbox (Exp.e (Conf.e c)) /\ not (is_reduced c)}
+    c:config{is_eunbox c}
     -> c':config{c' = Conf (Conf.m c)
                            (s_add (Frame (Conf.m c) (Conf.en c) F_unbox)
                                   (Conf.s c))
-                           (Conf.en c) (pe_unbox c)}
+                           (Conf.en c) (T_exp (pe_unbox c))}
     -> cstep c c'
 
   (* M; S; E; c --> M; S; E; c *)
 
   | C_const:
-    c:config{is_E_const (Exp.e (Conf.e c))}
+    c:config{is_econst c}
     -> c':config{c' = Conf (Conf.m c) (Conf.s c) (Conf.en c)
-                           (Exp (E_value (V_const (pe_const c))) (pe_info c))}
+                           (T_val (V_const (pe_const c)))}
     -> cstep c c'
 
   (* M; S; E; x --> M; S; E; E[x] *)
 
   | C_var:
-    c:config{is_E_var (Exp.e (Conf.e c))}
+    c:config{is_evar c}
     -> c':config{c' = Conf (Conf.m c) (Conf.s c) (Conf.en c)
-                           (Exp (E_value ((Conf.en c) (pe_var c))) (pe_info c))}
+                           (T_val ((Conf.en c) (pe_var c)))}
     -> cstep c c'
 
   (* M; S; E; let x = e1 in e2 --> M; (M; E; let x = <> in e2)::S; E; e1  *)
 
   | C_let_e1:
-    c:config{is_E_let (Exp.e (Conf.e c)) /\ not (is_reduced c)}
+    c:config{is_elet c}
     -> c':config{c' = Conf (Conf.m c)
                            (s_add (Frame (Conf.m c) (Conf.en c)
                                          (F_let (MkTuple3._1 (pe_let c))
                                                 (MkTuple3._3 (pe_let c))))
                                   (Conf.s c)
                            )
-                           (Conf.en c) (MkTuple3._2 (pe_let c))}
+                           (Conf.en c) (T_exp (MkTuple3._2 (pe_let c)))}
     -> cstep c c'
 
   (* M; S; E; fun x -> e --> M; S; E; clos(E, fun x -> e) *)
 
   | C_abs:
-    c:config{is_E_abs (Exp.e (Conf.e c))}
+    c:config{is_eabs c}
     -> c':config{c' = Conf (Conf.m c) (Conf.s c) (Conf.en c)
-                           (Exp (E_value (V_clos (Conf.en c)
-                                                 (fst (pe_abs c))
-                                                 (snd (pe_abs c))
-                                 )) (Exp.info (Conf.e c)))}
+                           (T_val (V_clos (Conf.en c)
+                                          (fst (pe_abs c))
+                                          (snd (pe_abs c))))}
     -> cstep c c'
 
   (* M; S; E; e1 e2 --> M; (M; E; <> e2)::s; E; e1 *)
 
   | C_app_e1:
-    c:config{is_E_app (Exp.e (Conf.e c)) /\ not (is_reduced c)}
+    c:config{is_eapp c}
     -> c':config{c' = Conf (Conf.m c)
                            (s_add  (Frame (Conf.m c) (Conf.en c)
                                           (F_app_e1 (snd (pe_app c))))
                                    (Conf.s c)
                            )
-                           (Conf.en c) (fst (pe_app c))}
+                           (Conf.en c) (T_exp (fst (pe_app c)))}
     -> cstep c c'
 
   (* M; (M'; E'; aspar <> do e)::S; E; v --> M'; (M'; E'; aspar v do <>)::s; E'; e *)
@@ -462,19 +448,19 @@ type cstep: config -> config -> Type =
   | C_aspar_e:
     c:config{is_value c /\ is_sframe c is_F_aspar_ps}
     -> c':config{c' = Conf (pop_mode c) (s_replace (Frame (pop_mode c) (pop_env c)
-                                                          (F_aspar_e (pe_value c)))
+                                                          (F_aspar_e (c_value c)))
                                                    (Conf.s c))
-                           (pop_env c) (pf_aspar_ps c)}
+                           (pop_env c) (T_exp (pf_aspar_ps c))}
     -> cstep c c'
-  
+
   (* M; (M'; E'; box <> e)::S; E; v --> M'; (M'; E'; box v <>)::S; E'; e *)
   
   | C_box_e:
     c:config{is_value c /\ is_sframe c is_F_box_ps}
     -> c':config{c' = Conf (pop_mode c) (s_replace (Frame (pop_mode c) (pop_env c)
-                                                          (F_box_e (pe_value c)))
+                                                          (F_box_e (c_value c)))
                                                    (Conf.s c))
-                           (pop_env c) (pf_box_ps c)}
+                           (pop_env c) (T_exp (pf_box_ps c))}
     -> cstep c c'
 
   (* M; (M'; E'; <> e)::S; E; v --> M'; (M'; E'; v <>)::S; E'; e *)
@@ -482,18 +468,17 @@ type cstep: config -> config -> Type =
   | C_app_e2:
     c:config{is_value c /\ is_sframe c is_F_app_e1}
     -> c':config{c' = Conf (pop_mode c) (s_replace (Frame (pop_mode c) (pop_env c)
-                                                          (F_app_e2 (pe_value c)))
+                                                          (F_app_e2 (c_value c)))
                                                    (Conf.s c))
-                           (pop_env c) (pf_app_e1 c)}
+                           (pop_env c) (T_exp (pf_app_e1 c))}
     -> cstep c c'
-  
+
   (* _; (M'; E'; aspar v1 do <>))::S; _; v2 --> M'; S; E'; aspar v1 do v2  *)  
   
   | C_aspar_rec:
     c:config{is_value c /\ is_sframe c is_F_aspar_e}
     -> c':config{c' = Conf (pop_mode c) (s_pop c) (pop_env c)
-                           (e_aspar (e_value (pf_aspar_e c))
-                                    (e_value (pe_value c)))}
+                           (T_red (R_aspar (pf_aspar_e c) (c_value c)))}
     -> cstep c c'
 
   (* _; (M'; E'; box v1 <>))::S; _; v2 --> M'; S; E'; box v1 v2  *)
@@ -501,8 +486,7 @@ type cstep: config -> config -> Type =
   | C_box_rec:
     c:config{is_value c /\ is_sframe c is_F_box_e}
     -> c':config{c' = Conf (pop_mode c) (s_pop c) (pop_env c)
-                           (e_box (e_value (pf_box_e c))
-                                  (e_value (pe_value c)))}
+                           (T_red (R_box (pf_box_e c) (c_value c)))}
     -> cstep c c'
 
   (* _; (M; E; unbox <>)::S; _; v --> M; S; E; unbox v*)
@@ -510,7 +494,7 @@ type cstep: config -> config -> Type =
   | C_unbox_rec:
     c:config{is_value c /\ is_sframe c is_F_unbox}
     -> c':config{c' = Conf (pop_mode c) (s_pop c) (pop_env c)
-                           (e_unbox (e_value (pe_value c)))}
+                           (T_red (R_unbox (c_value c)))}
     -> cstep c c'
     
   (* _; (M; E; let x = <> in e)::S; _; v --> M; S; E; let x = v in e  *)
@@ -518,16 +502,15 @@ type cstep: config -> config -> Type =
   | C_let_rec:
     c:config{is_value c /\ is_sframe c is_F_let}
     -> c':config{c' = Conf (pop_mode c) (s_pop c) (pop_env c)
-                           (e_let (fst (pf_let c)) (e_value (pe_value c))
-                                  (snd (pf_let c)))}
+                           (T_red (R_let (fst (pf_let c)) (c_value c)
+                                         (snd (pf_let c))))}
     -> cstep c c'
 
   (* _; (M; E; v1 <>)::S; _; v2 --> M; S; E; v1 v2 *)
   | C_app_rec:
     c:config{is_value c /\ is_sframe c is_F_app_e2}
     -> c':config{c' = Conf (pop_mode c) (s_pop c) (pop_env c)
-                           (e_app (e_value (pf_app_e2 c))
-                                  (e_value (pe_value c)))}
+                           (T_red (R_app (pf_app_e2 c) (c_value c)))}
     -> cstep c c'
     
   (* M; S; E; let x = v1 in e2 --> M; S; E[x -> v]; e2 *)
@@ -656,42 +639,34 @@ type tstep: tconfig -> tconfig -> Type =
 
 assume val preceds_axiom: en:env -> x:varname -> Lemma (ensures (en x << en))
 
-val slice_v : prin -> v:value -> Tot value
+val slice_v : prin -> v:value -> Tot value (decreases %[v])
+val slice_en: prin -> en:env -> varname -> Tot value (decreases %[en])
+
+// (fun y -> preceds_axiom en y; slice_v p (en y)) x e
 let rec slice_v p v =
   match v with
     | V_box ps v'   ->
-      let v'' = if mem p ps then V_box ps (slice_v p v') else V_emp in
+      let v'' = if mem p ps then slice_v p v' else V_emp in
       V_box ps v''
-    | V_clos en x e -> V_clos (fun y -> preceds_axiom en y; slice_v p (en y)) x e
+    | V_clos en x e -> V_clos (slice_en p en) x e
     | _             -> v
 
-val slice_en: prin -> en:env -> Tot env
-let slice_en p en = fun x -> slice_v p (en x)
+and slice_en p en x = preceds_axiom en x; slice_v p (en x)// fun x -> slice_v p (en x)
 
 assume val slice_emp_en: p:prin
                          -> Lemma (ensures (slice_en p empty_env = empty_env))
 
 (* only expressions with values need to be sliced *)
 val slice_e: prin -> exp -> Tot exp
-let slice_e p e =
-  if not (is_reduced_e e) then e
-  else
-    match Exp.e e with
-      | E_aspar (Exp (E_value v1) _) (Exp (E_value v2) _) ->
-        e_aspar (e_value (slice_v p v1)) (e_value (slice_v p v2))
-      (*| E_assec (Exp (E_value v1) _) (Exp (E_value v2) _) ->
-        e_assec (e_value (slice_v p v1)) (e_value (slice_v p v2))*)
-      | E_box (Exp (E_value v1) _) (Exp (E_value v2) _) ->
-        e_box (e_value (slice_v p v1)) (e_value (slice_v p v2))
-      | E_app (Exp (E_value v1) _) (Exp (E_value v2) _) ->
-        e_app (e_value (slice_v p v1)) (e_value (slice_v p v2))
-      | E_unbox (Exp (E_value v) _) ->
-        e_unbox (e_value (slice_v p v))
-      | E_let x (Exp (E_value v1) _) e2 ->
-        e_let x (e_value (slice_v p v1)) e2
-      | E_value v ->
-        e_value (slice_v p v)
+let slice_e p e = e
 
+val slice_r: prin -> redex -> Tot redex
+let slice_r p r = match r with
+  | R_aspar ps v  -> R_aspar (slice_v p ps) (slice_v p v)
+  | R_box ps v    -> R_box (slice_v p ps) (slice_v p v)
+  | R_unbox v     -> R_unbox (slice_v p v)
+  | R_let x v1 e2 -> R_let x (slice_v p v1) e2
+  | R_app v1 v2   -> R_app (slice_v p v1) (slice_v p v2)
 
 (* only frame' with values need to be sliced *)
 val slice_f': p:prin -> frame' -> Tot frame'
@@ -735,14 +710,18 @@ let rec slice_s p s =
     | []     -> []
     | hd::tl -> (slice_f p hd)::(slice_s p tl)
 
-val slice_c: prin -> config -> Tot tconfig
-let rec slice_c p (Conf (Mode Par ps) s en e) =
-  let en', e' =
-    if mem p ps then slice_en p en, slice_e p e
-    else empty_env, e_value (V_emp)
-  in
+val slice_t: p:prin -> t:term -> Tot term
+let slice_t p t = match t with
+  | T_val v -> T_val (slice_v p v)
+  | T_exp e -> t
+  | T_red r -> T_red (slice_r p r)
 
-  Conf (Mode Par (singleton p)) (slice_s p s) en' e'
+val slice_c: prin -> config -> Tot tconfig
+let rec slice_c p (Conf (Mode Par ps) s en t) =
+  let en', t' =
+    if mem p ps then slice_en p en, slice_t p t
+    else empty_env, T_val V_emp in
+  Conf (Mode Par (singleton p)) (slice_s p s) en' t'
 
 (**********)
 
@@ -758,27 +737,55 @@ val cstep_lemma: #c:config -> #c':config -> h:cstep c c' -> p:prin
                  -> Tot (cor (u:unit{slice_c p c = slice_c p c'})
                              (cstep (slice_c p c) (slice_c p c')))
 let cstep_lemma #c #c' h p = match h with
-  | C_aspar_ps (Conf m s en (Exp (E_aspar e1 e2) _)) (Conf m' s' en' e') ->
+  | C_aspar_ps (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_aspar_ps (slice_c p c) (slice_c p c'))
+  | C_box_ps (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_box_ps (slice_c p c) (slice_c p c'))
+  | C_unbox (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_unbox (slice_c p c) (slice_c p c'))
+  | C_const (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_const (slice_c p c) (slice_c p c'))
+  | C_var (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_var (slice_c p c) (slice_c p c'))
+  | C_let_e1 (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_let_e1 (slice_c p c) (slice_c p c'))
+
+  (*| C_abs (Conf m s en (T_exp (Exp (E_abs x e) _)))
+          (Conf m' s' en' (T_val (V_clos en'' x'' e''))) ->
     if not (mem p (Mode.ps m)) then IntroL ()
     else
-      let _ = assert (m' = m) in
-      let _ = assert (s' = s_add (Frame m en (F_aspar_ps e2)) s) in
-      let _ = assert (en' = en) in
-      let _ = assert (e' = e1) in
+      let _ = assert (m = m' /\ s = s' /\ en = en' /\
+                      x = x'' /\ e = e'' /\ en'' = en) in
+      let sc = slice_c p c in
+      let (Conf (Mode Par p')
+                sp enp (T_exp (Exp (E_abs xp ep) _))) = sc in
       
-      let enp = slice_en p en in
+      let _ = assert (p' = singleton p /\ xp = x /\ ep = e /\
+                      enp = slice_en p en /\
+                      sp = slice_s p s) in
       
-      let _ = assert (slice_s p s' =
-                      (s_add (Frame (Mode Par (singleton p)) enp (F_aspar_ps e2))
-                             (slice_s p s))) in
+      let _ = C_abs sc
+              (Conf (Mode Par (singleton p))
+                    sp enp (T_val (V_clos enp xp ep))
+              ) in
+
+      let _ = assert (slice_s p s' = sp) in
+      let _ = assert (slice_en p en' = enp) in
+      let _ = assert (slice_v p (V_clos en'' x'' e'') =
+                      V_clos (slice_en p en'') x'' e'') in
+              
+      (*let _ = assert ((Conf (Mode Par (singleton p))
+                             sp enp (T_val (V_clos enp xp ep))) =
+                      slice_c p c') in*)
       
-      let _ = assert (slice_e p e2 = e2) in
-      
-      admit()
-      
-      (*let _ = C_aspar_ps (slice_c p c) (slice_c p c') in
-      admit ()*)
-  
+      let _ = admit() in
+      IntroR (C_abs (slice_c p c) (slice_c p c'))*)
   
   | _ -> admit ()
   
