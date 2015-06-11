@@ -113,18 +113,23 @@ type frame' =
 type frame =
   | Frame: m:mode -> en:env -> f:frame' -> frame
 
+val mode_next_frame: mode -> frame -> Tot bool
+let mode_next_frame (Mode Par ps) (Frame (Mode Par ps') _ f') =
+  ps = ps' || (subset ps ps' && is_F_box_e f')
+
 val stack_inv: list frame -> Tot bool
 let rec stack_inv = function
   | []        -> true
   | f::[]     -> true
   | f::f'::tl ->
-    let (Mode Par ps, Mode Par ps') = Frame.m f, Frame.m f' in
-    subset ps ps' && stack_inv (f'::tl)
+    mode_next_frame (Frame.m f) f' && stack_inv (f'::tl)
 
 type stack = l:list frame{stack_inv l}
 
-type CSMode (m:mode) (s:stack) =
-  is_Cons s ==> (subset (Mode.ps m) (Mode.ps (Frame.m (Cons.hd s))))
+val mode_stack: mode -> stack -> Tot bool
+let mode_stack m s = match s with
+  | []    -> true
+  | f::_  -> mode_next_frame m f
 
 type term =
   | T_exp: e:exp -> term
@@ -132,12 +137,9 @@ type term =
   | T_val: v:value -> term
 
 type config =
-  | Conf: m:mode -> s:stack{CSMode m s} -> en:env -> t:term -> config
+  | Conf: m:mode -> s:stack{mode_stack m s} -> en:env -> t:term -> config
 
-type AFMode (f:frame) (s:stack) =
-  is_Cons s ==> (subset (Mode.ps (Frame.m f)) (Mode.ps (Frame.m (Cons.hd s))))
-
-val s_add: f:frame -> s:stack{AFMode f s} -> Tot stack
+val s_add: f:frame -> s:stack{mode_stack (Frame.m f) s} -> Tot stack
 let s_add f s = f::s
 
 type RFMode (f:frame) (s:stack) =
@@ -707,12 +709,6 @@ let rec slice_c p (Conf (Mode Par ps) s en t) =
 
 (**********)
 
-val slice_add_absent_frame_lem:
-    p:prin -> s:stack -> f:frame{AFMode f s}
-    -> Lemma (requires (not (mem p (Mode.ps (Frame.m f)))))
-             (ensures  (slice_s p s = slice_s p (s_add f s)))
-let slice_add_absent_frame_lem p s f = ()
-
 open Constructive
 
 val cstep_lemma: #c:config -> #c':config -> h:cstep c c' -> p:prin
@@ -746,5 +742,29 @@ let cstep_lemma #c #c' h p = match h with
   | C_app_e1 (Conf m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
     else IntroR (C_app_e1 (slice_c p c) (slice_c p c'))
+  | C_aspar_e (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_aspar_e (slice_c p c) (slice_c p c'))
+  | C_box_e (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_box_e (slice_c p c) (slice_c p c'))
+  | C_app_e2 (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_app_e2 (slice_c p c) (slice_c p c'))
+  | C_aspar_rec (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_aspar_rec (slice_c p c) (slice_c p c'))
+
+  (* fill up C_box_e case *)
+
+  | C_unbox_rec (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_unbox_rec (slice_c p c) (slice_c p c'))
+  | C_let_rec (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_let_rec (slice_c p c) (slice_c p c'))
+  | C_app_rec (Conf m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else IntroR (C_app_rec (slice_c p c) (slice_c p c'))
 
   | _ -> admit ()
