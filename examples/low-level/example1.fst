@@ -102,14 +102,8 @@ type factorialGuardLC (n:nat) (li : ref nat) (m:smem) =
 
 val factorialGuard :  n:nat -> li:(ref nat)  -> unit
   -> whileGuard (fun m -> b2t (refExistsInMem li m))
-                (fun m -> (refExistsInMem li m) /\ (~((loopkupRef li m) = n)))
+                (factorialGuardLC n li)
 let factorialGuard n li u = not (memread li = n)
-
-(*
-Why does the following not work?
-let factorialGuard () = true
-*)
-
 (* the guard of a while loop is not supposed to change the memory*)
 
 
@@ -117,37 +111,6 @@ type  loopInv (li : ref nat) (res : ref nat) (m:smem) =
   refExistsInMem li m /\ refExistsInMem res m
     /\ (loopkupRef res m = factorial (loopkupRef li m))
     /\ (~ (li = res))
-
-(* delete
-val factorialSuc : n:nat -> Lemma (factorial (n+1) = (n+1) * (factorial n))
-let factorialSuc n = ()
-
-
-val factorialLoopBodyAux :
-  n:nat -> li:(ref nat) -> res:(ref nat)
-  -> SST unit (fun m -> loopInv li res m /\ ~(li=res) /\ (loopkupRef res m = factorial (loopkupRef li m)))
-      (fun m0 _ m1 -> (refExistsInMem li m1) /\ (refExistsInMem li m0) /\ (loopkupRef li m1) = (loopkupRef li m0) + 1
-                      /\ (refExistsInMem res m1) /\ (refExistsInMem res m0)
-                      /\ (loopkupRef res m1) = (loopkupRef li m0 + 1) * (loopkupRef res m0) /\ (loopkupRef res m1 = factorial (loopkupRef li m1)) /\ (loopInv li res m1))
-
-let factorialLoopBodyAux (n:nat) (li:(ref nat)) (res:(ref nat))  =
-  let liv = memread li in
-  let resv = memread res in
-  memwrite li (liv + 1);
-  memwrite res ((liv+1) * resv)
-*)
-
-val factorialLoopBody2 :
-  n:nat -> li:(ref nat) -> res:(ref nat)
-  -> SST unit (loopInv li res)
-      (fun _ _ m1 -> (loopInv li res m1))
-
-let factorialLoopBody2 (n:nat) (li:(ref nat)) (res:(ref nat))  =
-  let liv = memread li in
-  let resv = memread res in
-  memwrite li (liv + 1);
-  memwrite res ((liv+1) * resv)
-
 
 val factorialLoopBody :
   n:nat -> li:(ref nat) -> res:(ref nat)
