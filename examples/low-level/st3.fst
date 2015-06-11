@@ -16,6 +16,7 @@ open ListSet
 
 type sidt = nat
 
+
 (*copied fro examples/maths/bijection.fst, because that file doesn't compile*)
 type inverseLR (#a:Type) (#b:Type) (fab:(a -> Tot b)) (fba:(b -> Tot a)) =
        (forall (x:a). fba (fab x) = x) /\ (forall (y:b). fab (fba y) = y)
@@ -190,7 +191,6 @@ val writeMemStackSameStail : #a:Type -> r:(ref a) -> ms:(Stack (sidt * memblock)
   -> Lemma (ensures ((stail ms) = (stail (writeInMemStack r ms s v))))
          (*  [SMTPat (writeMemStack r ms s v)] *)
 let rec writeMemStackSameStail r ms s v = ()
-
 
 val refExistsInStack : #a:Type -> (ref a)
   -> id:sidt -> (Stack (sidt * memblock)) -> Tot bool
@@ -416,6 +416,16 @@ effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) =
           /\ sids m0 = sids m1) (*body popped all and only the stack frames it pushed*)
 
 
+
+(*BUG?
+  or is there an inconsistency in the formalization?
+  Can one look at the proof found by SMT?*)
+val problem : n:unit ->
+  WNSC unit (fun _ -> True)
+      (fun _ _ _ -> True)
+let problem n =
+  pushStackFrame ();
+  assert (false)
 
 val withNewScope : a:Type -> pre:(smem -> Type) -> post:(smem -> SSTPost a)
   -> body:(unit -> WNSC a pre post)

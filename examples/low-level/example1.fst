@@ -132,19 +132,6 @@ let factorialLoop (n:nat) (li:(ref nat)) (res:(ref nat)) =
     (factorialGuard n li)
     (factorialLoopBody n li res)
 
-(*BUG?
-  or is there an inconsistency in the formalization?
-  Can one look at the proof found by SMT?*)
-val initialize2 : n:unit ->
-  WNSC unit (fun _ -> True)
-      (fun _ _ _ -> True)
-let initialize2 n =
-  pushStackFrame ();
-  let li = salloc 0 in
-  let liv= memread li in
-  assert (liv=1);
-  assert (liv=3)
-
 val loopyFactorial : n:nat
   -> SST nat (fun m -> True)
               (fun _ rv _ -> rv == (factorial n))
