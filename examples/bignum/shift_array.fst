@@ -107,22 +107,22 @@ val theorem_shift_array:
 let theorem_shift_array a i =
   shift_array_lemma a (getLength a) i (shift_array a i)
 
-val shift_array_max_value_lemma:
+assume val shift_array_max_value_lemma:
   a:bigint{ forall (n:nat). getTemplate a n = getTemplate a 0 } -> 
   i:nat -> 
   Lemma
     (requires (True))
     (ensures ( maxValue (shift_array a i) = maxValue a ))
     [SMTPat (shift_array a i)]
-let shift_array_max_value_lemma a i = ()
+//let shift_array_max_value_lemma a i = ()
 
-val shift_array_max_size_lemma:
+assume val shift_array_max_size_lemma:
   a:bigint{ forall (n:nat). getTemplate a n = getTemplate a 0 } -> 
   i:nat -> 
   Lemma
     (requires (True))
     (ensures ( maxSize (shift_array a i) = maxSize a ))
     [SMTPat (shift_array a i)]
-let shift_array_max_size_lemma a i = ()
+//let shift_array_max_size_lemma a i = ()
 
 
