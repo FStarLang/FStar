@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi OrdSet;
     variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/list.fst $LIB/constr.fst
+    other-files:$LIB/ordset.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst
  --*)
 
 module AST
@@ -42,10 +42,11 @@ let singleton p = OrdSet.singleton p_cmp p
 val is_singleton: prins -> Tot bool
 let is_singleton ps = (OrdSet.size p_cmp ps = 1)
 
-assume val mem_subset_singleton: p:prin -> ps:prins
-                                 -> Lemma (requires (mem p ps))
-                                          (ensures  (subset (singleton p) ps))
-                                    [SMTPat (subset (singleton p) ps)]
+assume val mem_subset_singleton:
+  p:prin -> ps:prins
+  -> Lemma (requires (True))
+           (ensures  (mem p ps <==> subset (singleton p) ps))
+     [SMTPat (subset (singleton p) ps)]
 
 type const =
   | C_prin : c:prin -> const
@@ -276,14 +277,22 @@ let pre_aspar c = match c with
 
 val step_aspar: c:config{not (pre_aspar c = NA)} -> Tot config
 let step_aspar c = match c with
-  | Conf l m s _ (T_red (R_aspar ps (V_clos en x e))) ->
+  | Conf l m s en' (T_red (R_aspar ps (V_clos en x e))) ->
     let m'  = if src l then Mode Par ps else m in
-    let s'  = s_add (Frame m empty_env (F_box_e ps)) s in
-    let en' = update_env en x (V_const C_unit) in
-    let t'  =
-      if src l then T_exp e
-      else (if pre_aspar c = Do then T_exp e else T_val V_emp)
+    let s'  = s_add (Frame m en' (F_box_e ps)) s in
+    
+    (*
+     * for parties not in ps, the choice of empty_env is arbitrary
+     * perhaps we should prove the theorem using any env and then
+     * implementation can make whatever decision (retain env as in F* semantics)
+     *)
+    let en', t' =
+      if src l then update_env en x (V_const C_unit), T_exp e
+      else
+        if pre_aspar c = Do then update_env en x (V_const C_unit), T_exp e
+        else empty_env, T_val V_emp
     in
+
     Conf l m' s' en' t'
 
 (*val pre_assec: c:config -> Tot bool
@@ -582,7 +591,9 @@ let rec slice_v p v =
 and slice_en p en x = preceds_axiom en x; slice_v p (en x)// fun x -> slice_v p (en x)
 
 assume val slice_emp_en: p:prin
-                         -> Lemma (ensures (slice_en p empty_env = empty_env))
+                         -> Lemma (requires (True))
+                                  (ensures (slice_en p empty_env = empty_env))
+                            [SMTPat (slice_en p empty_env)]
 
 val slice_e: prin -> exp -> Tot exp
 let slice_e p e = e
@@ -638,13 +649,16 @@ let rec slice_c p (Conf Source (Mode Par ps) s en t) =
 (**********)
 
 open Constructive
+open FunctionalExtensionality
 
-(* TODO: FIXME: this should follow *)
 val env_upd_slice_lemma: p:prin -> en:env -> x:varname -> v:value
                          -> Lemma (requires (True))
                                   (ensures (slice_en p (update_env en x v) =
                                             update_env (slice_en p en) x (slice_v p v)))
-let env_upd_slice_lemma p en x v = admit ()
+let env_upd_slice_lemma p en x v =
+  cut (FEq (slice_en p (update_env en x v))
+      (update_env (slice_en p en) x (slice_v p v)))
+
 
 (* TODO: FIXME: bug#259 *)
 val v_clos_slice_lemma: #en:env -> #x:varname -> #e:exp
@@ -724,8 +738,7 @@ let cstep_lemma #c #c' h p = match h with
     else
       let T_red (R_aspar _ (V_clos en x e)) = Conf.t c in
       v_clos_slice_lemma #en #x #e p (V_clos en x e);
-      env_upd_slice_lemma p en x (V_const (C_unit));      
-      let _ = admit () in
+      env_upd_slice_lemma p en x (V_const (C_unit));
       IntroR (C_aspar_beta (slice_c p c) (slice_c p c'))
   | C_box_beta (Conf _ m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
