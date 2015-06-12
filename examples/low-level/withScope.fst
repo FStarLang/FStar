@@ -48,13 +48,12 @@ let identity2 n u = n
 val scopedID : n:nat
   -> SST nat (fun m -> True)
               (fun _ n' _ -> n'==n)
-(* This does not typecheck
 
-  let scopedDummy (n:nat) =
+(* This does not typecheck *)
+(*let scopedID (n:nat) =
   withNewScope3
     nat
     (fun () ->  n)*)
-
 
 (* The part below also does not typecheck. The error is uninformative:
 Subtyping check failed; expected type (unit -> SST (nat)); got type (unit -> SST (nat))
@@ -64,3 +63,44 @@ let scopedID (n:nat) =
   withNewScope3
     nat
      (identity2 n)*)
+
+
+
+let scopedID (n:nat) =
+ withNewScope
+   nat
+   (fun m -> True)
+   (fun _ n' _ -> n'==n)
+   (fun () ->  n)
+
+
+(* Leaving the pre/post conditions out makes the above fail.
+   Having to put those everytime when callling withNewScope will be very tedious
+
+let scopedID (n:nat) =
+ withNewScope
+   nat
+   _
+   _
+   (fun () ->  n)*)
+
+
+val scopedID2 : n:nat
+  -> SST nat (fun m -> True)
+              (fun _ n' _ -> True)
+
+let scopedID2 (n:nat) =
+  withNewScope3
+    nat
+    (fun () ->  n)
+
+
+(*Just being able to define an abbreviation like below should be good, but it fails*)
+(*let withNewScope4
+  body
+          =
+    pushStackFrame ();
+    let v = body () in
+    popStackFrame (); v*)
+
+(*effect ALL and StSTATE cannot be combined*)
