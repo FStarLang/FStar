@@ -23,9 +23,19 @@ val remove    : #a:Type -> f:cmp a -> a -> ordset a f -> Tot (ordset a f)
 
 val size      : #a:Type -> f:cmp a -> ordset a f -> Tot nat
 
+val subset    : #a:Type -> f:cmp a -> ordset a f -> ordset a f -> Tot bool
+//val singleton : #a:Type -> f:cmp a -> a -> Tot (s:ordset a f{size f s = 1})
+val singleton : #a:Type -> f:cmp a -> a -> Tot (ordset a f)
+
+val is_singleton: #a:Type -> f:cmp a -> ordset a f -> Tot bool
+
+
+
+type Equal (#a:Type) (f:cmp a) (s1:ordset a f) (s2:ordset a f) =
+  (forall x. mem f x s1 = mem f x s2)
 
 val eq_lemma: #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f
-              -> Lemma (requires (forall x. mem f x s1 = mem f x s2))
+              -> Lemma (requires (Equal f s1 s2))
                        (ensures s1 = s2)
                        [SMTPat (s1 = s2)]
 
@@ -70,8 +80,20 @@ val remove_size: #a:Type -> f:cmp a -> x:a -> s:ordset a f
                           (ensures (size f s = size f (remove f x s) + 1))
                     [SMTPat (size f (remove f x s))]
                     
-(**********)
+val mem_subset: #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f
+                -> Lemma (requires (True))
+                         (ensures  (subset f s1 s2 <==> (forall x. mem f x s1 ==> mem f x s2)))
+                   [SMTPat (subset f s1 s2)]
+                   
+val mem_singleton: #a:Type -> f:cmp a -> x:a -> y:a
+                   -> Lemma (requires (True))
+                            (ensures (mem f y (singleton f x) <==> x = y))
+                      [SMTPat (mem f y (singleton f x))]
+                      
+val is_singleton_lemma: #a:Type -> f:cmp a -> x:a
+                        -> Lemma (requires (True))
+                                 (ensures  (is_singleton f (singleton f x) = true))
+                           [SMTPat (is_singleton f (singleton f x))]
 
-(* TODO: implement and add lemmas *)
-val subset      : #a:Type -> f:cmp a -> ordset a f -> ordset a f -> Tot bool
-val singleton   : #a:Type -> f:cmp a -> a -> Tot (s:ordset a f{size f s = 1})
+                    
+(**********)
