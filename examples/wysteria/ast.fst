@@ -42,6 +42,11 @@ let singleton p = OrdSet.singleton p_cmp p
 val is_singleton: prins -> Tot bool
 let is_singleton ps = (OrdSet.size p_cmp ps = 1)
 
+assume val mem_subset_singleton: p:prin -> ps:prins
+                                 -> Lemma (requires (mem p ps))
+                                          (ensures  (subset (singleton p) ps))
+                                    [SMTPat (subset (singleton p) ps)]
+
 type const =
   | C_prin : c:prin -> const
   | C_prins: c:prins -> const
@@ -634,6 +639,14 @@ let rec slice_c p (Conf Source (Mode Par ps) s en t) =
 
 open Constructive
 
+(* TODO: FIXME: this should follow *)
+val env_upd_slice_lemma: p:prin -> en:env -> x:varname -> v:value
+                         -> Lemma (requires (True))
+                                  (ensures (slice_en p (update_env en x v) =
+                                            update_env (slice_en p en) x (slice_v p v)))
+let env_upd_slice_lemma p en x v = admit ()
+
+
 val cstep_lemma: #c:sconfig -> #c':sconfig -> h:cstep c c' -> p:prin
                  -> Tot (cor (u:unit{slice_c p c = slice_c p c'})
                              (cstep (slice_c p c) (slice_c p c')))
@@ -686,7 +699,29 @@ let cstep_lemma #c #c' h p = match h with
   | C_app_rec (Conf _ m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
     else IntroR (C_app_rec (slice_c p c) (slice_c p c'))
-
-  | _ -> admit ()
-
-(* check_marker *)
+  | C_let_beta (Conf _ m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else
+      let Conf _ _ _ en (T_red (R_let x v _)) = c in
+      let _ = env_upd_slice_lemma p en x v in
+      IntroR (C_let_beta (slice_c p c) (slice_c p c'))
+  | C_app_beta (Conf _ m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else
+      (* bug#259 *)
+      let _ = admit () in
+      IntroR (C_app_beta (slice_c p c) (slice_c p c'))
+  | C_aspar_beta (Conf _ m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else
+      (* bug#259 *)
+      let _ = admit () in
+      IntroR (C_aspar_beta (slice_c p c) (slice_c p c'))
+  | C_box_beta (Conf _ m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else
+      IntroR (C_box_beta (slice_c p c) (slice_c p c'))
+  | C_unbox_beta (Conf _ m _ _ _) _ ->
+    if not (mem p (Mode.ps m)) then IntroL ()
+    else
+      IntroR (C_unbox_beta (slice_c p c) (slice_c p c'))
