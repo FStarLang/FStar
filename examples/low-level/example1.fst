@@ -112,21 +112,6 @@ type  loopInv (li : ref nat) (res : ref nat) (m:smem) =
     /\ (loopkupRef res m = factorial (loopkupRef li m))
     /\ (~ (li = res))
 
-val readTailRef : #a:Type -> r:(ref a) -> m:smem ->
-  Lemma (requires (refExistsInMem r (mtail m)))
-        (ensures (refExistsInMem r (mtail m))
-            /\ loopkupRef r m =  loopkupRef r (mtail m))
-            [SMTPat (refExistsInMem r (mtail m))]
-let readTailRef r m = (admit ())
-
-
-val writeTailRef : #a:Type -> r:(ref a) -> m:smem -> v:a ->
-  Lemma (requires (refExistsInMem r (mtail m)))
-        (ensures (refExistsInMem r (mtail m))
-            /\ mtail (writeMemAux r m v) =  writeMemAux r (mtail m) v)
-            [SMTPat (refExistsInMem r (mtail m))]
-let writeTailRef r m v = (admit ())
-
 val factorialLoopBody :
   n:nat -> li:(ref nat) -> res:(ref nat)
   -> unit ->
