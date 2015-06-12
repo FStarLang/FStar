@@ -96,7 +96,7 @@ end
 false
 end))
 
-let freevar_sort = (fun _415280 -> (match (_415280) with
+let freevar_sort = (fun _415427 -> (match (_415427) with
 | {tm = FreeV (x); hash = _; freevars = _} -> begin
 (fv_sort x)
 end
@@ -104,7 +104,7 @@ end
 (failwith "impossible")
 end))
 
-let fv_of_term = (fun _415281 -> (match (_415281) with
+let fv_of_term = (fun _415428 -> (match (_415428) with
 | {tm = FreeV (fv); hash = _; freevars = _} -> begin
 fv
 end
@@ -132,11 +132,11 @@ b
 end
 | None -> begin
 (let fvs = (Support.Microsoft.FStar.Util.remove_dups fv_eq (freevars t))
-in (let _415390 = (t.freevars := Some (fvs))
+in (let _415537 = (t.freevars := Some (fvs))
 in fvs))
 end))
 
-let qop_to_string = (fun _415282 -> (match (_415282) with
+let qop_to_string = (fun _415429 -> (match (_415429) with
 | Forall -> begin
 "forall"
 end
@@ -144,7 +144,7 @@ end
 "exists"
 end))
 
-let op_to_string = (fun _415283 -> (match (_415283) with
+let op_to_string = (fun _415430 -> (match (_415430) with
 | True -> begin
 "true"
 end
@@ -206,7 +206,7 @@ end
 s
 end))
 
-let weightToSmt = (fun _415284 -> (match (_415284) with
+let weightToSmt = (fun _415431 -> (match (_415431) with
 | None -> begin
 ""
 end
@@ -233,22 +233,22 @@ end))
 
 let all_terms_l = (ref (((Support.Microsoft.FStar.Util.smap_create 10000))::[]))
 
-let all_terms = (fun _415442 -> (match (_415442) with
+let all_terms = (fun _415589 -> (match (_415589) with
 | () -> begin
 (Support.List.hd (! (all_terms_l)))
 end))
 
-let push = (fun _415443 -> (match (_415443) with
+let push = (fun _415590 -> (match (_415590) with
 | () -> begin
 ()
 end))
 
-let pop = (fun _415444 -> (match (_415444) with
+let pop = (fun _415591 -> (match (_415591) with
 | () -> begin
 ()
 end))
 
-let commit_mark = (fun _415445 -> (match (_415445) with
+let commit_mark = (fun _415592 -> (match (_415592) with
 | () -> begin
 ()
 end))
@@ -260,7 +260,7 @@ tm
 end
 | None -> begin
 (let tm = {tm = t; hash = key; freevars = (Support.Microsoft.FStar.Util.mk_ref None)}
-in (let _415452 = (Support.Microsoft.FStar.Util.smap_add (all_terms ()) key tm)
+in (let _415599 = (Support.Microsoft.FStar.Util.smap_add (all_terms ()) key tm)
 in tm))
 end)))
 
@@ -276,7 +276,7 @@ let mkFreeV = (fun x -> (mk (FreeV (x))))
 
 let mkApp' = (fun f -> (mk (App (f))))
 
-let mkApp = (fun _415460 -> (match (_415460) with
+let mkApp = (fun _415607 -> (match (_415607) with
 | (s, args) -> begin
 (mk (App ((Var (s), args))))
 end))
@@ -292,7 +292,7 @@ end
 (mkApp' (Not, (t)::[]))
 end))
 
-let mkAnd = (fun _415476 -> (match (_415476) with
+let mkAnd = (fun _415623 -> (match (_415623) with
 | (t1, t2) -> begin
 (match ((t1.tm, t2.tm)) with
 | (App ((True, _)), _) -> begin
@@ -318,7 +318,7 @@ end
 end)
 end))
 
-let mkOr = (fun _415536 -> (match (_415536) with
+let mkOr = (fun _415683 -> (match (_415683) with
 | (t1, t2) -> begin
 (match ((t1.tm, t2.tm)) with
 | ((App ((True, _)), _)) | ((_, App ((True, _)))) -> begin
@@ -344,7 +344,7 @@ end
 end)
 end))
 
-let mkImp = (fun _415596 -> (match (_415596) with
+let mkImp = (fun _415743 -> (match (_415743) with
 | (t1, t2) -> begin
 (match ((t1.tm, t2.tm)) with
 | (_, App ((True, _))) -> begin
@@ -361,7 +361,7 @@ end
 end)
 end))
 
-let mk_bin_op = (fun op _415627 -> (match (_415627) with
+let mk_bin_op = (fun op _415774 -> (match (_415774) with
 | (t1, t2) -> begin
 (mkApp' (op, (t1)::(t2)::[]))
 end))
@@ -390,7 +390,7 @@ let mkMul = (mk_bin_op Mul)
 
 let mkMod = (mk_bin_op Mod)
 
-let mkITE = (fun _415632 -> (match (_415632) with
+let mkITE = (fun _415779 -> (match (_415779) with
 | (t1, t2, t3) -> begin
 (match ((t2.tm, t3.tm)) with
 | (App ((True, _)), App ((True, _))) -> begin
@@ -415,7 +415,7 @@ end
 (Support.List.fold_left (fun out t -> (mkAnd (out, t))) hd tl)
 end))
 
-let mkQuant = (fun _415677 -> (match (_415677) with
+let mkQuant = (fun _415824 -> (match (_415824) with
 | (qop, pats, wopt, vars, body) -> begin
 if ((Support.List.length vars) = 0) then begin
 body
@@ -488,22 +488,22 @@ in (mkQuant (qop, ((Support.List.map (Support.List.map (aux shift))) pats), wopt
 end))
 in (aux 0 t))))
 
-let mkQuant' = (fun _415755 -> (match (_415755) with
+let mkQuant' = (fun _415902 -> (match (_415902) with
 | (qop, pats, wopt, vars, body) -> begin
 (mkQuant (qop, ((Support.List.map (Support.List.map (abstr vars))) pats), wopt, (Support.List.map (fv_sort) vars), (abstr vars body)))
 end))
 
-let mkForall' = (fun _415760 -> (match (_415760) with
+let mkForall' = (fun _415907 -> (match (_415907) with
 | (pats, wopt, vars, body) -> begin
 (mkQuant' (Forall, pats, wopt, vars, body))
 end))
 
-let mkForall = (fun _415764 -> (match (_415764) with
+let mkForall = (fun _415911 -> (match (_415911) with
 | (pats, vars, body) -> begin
 (mkQuant' (Forall, (pats)::[], None, vars, body))
 end))
 
-let mkExists = (fun _415768 -> (match (_415768) with
+let mkExists = (fun _415915 -> (match (_415915) with
 | (pats, vars, body) -> begin
 (mkQuant' (Exists, (pats)::[], None, vars, body))
 end))
@@ -538,26 +538,26 @@ type decl =
 type decls_t =
 decl list
 
-let mkDefineFun = (fun _415786 -> (match (_415786) with
+let mkDefineFun = (fun _415933 -> (match (_415933) with
 | (nm, vars, s, tm, c) -> begin
 DefineFun ((nm, (Support.List.map (fv_sort) vars), s, (abstr vars tm), c))
 end))
 
 let constr_id_of_sort = (fun sort -> (Support.Microsoft.FStar.Util.format1 "%s_constr_id" (strSort sort)))
 
-let fresh_token = (fun _415790 id -> (match (_415790) with
+let fresh_token = (fun _415937 id -> (match (_415937) with
 | (tok_name, sort) -> begin
 Assume (((mkEq ((mkInteger id), (mkApp ((constr_id_of_sort sort), ((mkApp (tok_name, [])))::[])))), Some ("fresh token")))
 end))
 
-let constructor_to_decl = (fun _415796 -> (match (_415796) with
+let constructor_to_decl = (fun _415943 -> (match (_415943) with
 | (name, projectors, sort, id) -> begin
 (let cdecl = DeclFun ((name, ((Support.List.map (Support.Prims.snd)) projectors), sort, Some ("Constructor")))
 in (let n_bvars = (Support.List.length projectors)
 in (let bvar_name = (fun i -> (Support.String.strcat "x_" (Support.Microsoft.FStar.Util.string_of_int i)))
 in (let bvar_index = (fun i -> (n_bvars - (i + 1)))
 in (let bvar = (fun i s -> (mkFreeV ((bvar_name i), s)))
-in (let bvars = ((Support.List.mapi (fun i _415810 -> (match (_415810) with
+in (let bvars = ((Support.List.mapi (fun i _415957 -> (match (_415957) with
 | (_, s) -> begin
 (bvar i s)
 end))) projectors)
@@ -569,14 +569,14 @@ in (let disc_name = (Support.String.strcat "is-" name)
 in (let xfv = ("x", sort)
 in (let xx = (mkFreeV xfv)
 in (let disc_eq = (mkEq ((mkApp ((constr_id_of_sort sort), (xx)::[])), (mkInteger id)))
-in (let proj_terms = ((Support.List.map (fun _415822 -> (match (_415822) with
+in (let proj_terms = ((Support.List.map (fun _415969 -> (match (_415969) with
 | (proj, s) -> begin
 (mkApp (proj, (xx)::[]))
 end))) projectors)
 in (let disc_inv_body = (mkEq (xx, (mkApp (name, proj_terms))))
 in (let disc_ax = (mkAnd (disc_eq, disc_inv_body))
 in (let disc = (mkDefineFun (disc_name, (xfv)::[], Bool_sort, disc_ax, Some ("Discriminator definition")))
-in (let projs = ((Support.List.flatten) ((Support.List.mapi (fun i _415830 -> (match (_415830) with
+in (let projs = ((Support.List.flatten) ((Support.List.mapi (fun i _415977 -> (match (_415977) with
 | (name, s) -> begin
 (let cproj_app = (mkApp (name, (capp)::[]))
 in (DeclFun ((name, (sort)::[], s, Some ("Projector"))))::(Assume (((mkForall ((capp)::[], bvar_names, (mkEq (cproj_app, (bvar i s))))), Some ("Projection inverse"))))::[])
@@ -584,7 +584,7 @@ end))) projectors))
 in (Support.List.append (Support.List.append ((Caption ((Support.Microsoft.FStar.Util.format1 "<start constructor %s>" name)))::(cdecl)::(cid)::projs) ((disc)::[])) ((Caption ((Support.Microsoft.FStar.Util.format1 "</end constructor %s>" name)))::[])))))))))))))))))))))
 end))
 
-let name_binders_inner = (fun outer_names start sorts -> (let _415852 = ((Support.List.fold_left (fun _415839 s -> (match (_415839) with
+let name_binders_inner = (fun outer_names start sorts -> (let _415999 = ((Support.List.fold_left (fun _415986 s -> (match (_415986) with
 | (names, binders, n) -> begin
 (let prefix = (match (s) with
 | Type_sort -> begin
@@ -601,13 +601,13 @@ in (let names = ((nm, s))::names
 in (let b = (Support.Microsoft.FStar.Util.format2 "(%s %s)" nm (strSort s))
 in (names, (b)::binders, (n + 1))))))
 end)) (outer_names, [], start)) sorts)
-in (match (_415852) with
+in (match (_415999) with
 | (names, binders, n) -> begin
 (names, (Support.List.rev binders), n)
 end)))
 
-let name_binders = (fun sorts -> (let _415857 = (name_binders_inner [] 0 sorts)
-in (match (_415857) with
+let name_binders = (fun sorts -> (let _416004 = (name_binders_inner [] 0 sorts)
+in (match (_416004) with
 | (names, binders, n) -> begin
 ((Support.List.rev names), binders)
 end)))
@@ -633,8 +633,8 @@ end
 (Support.Microsoft.FStar.Util.format2 "(%s %s)" (op_to_string op) ((Support.String.concat "\n") (Support.List.map (aux n names) tms)))
 end
 | Quant ((qop, pats, wopt, sorts, body)) -> begin
-(let _415887 = (name_binders_inner names n sorts)
-in (match (_415887) with
+(let _416034 = (name_binders_inner names n sorts)
+in (match (_416034) with
 | (names, binders, n) -> begin
 (let binders = ((Support.String.concat " ") binders)
 in (let pats_str = (match (pats) with
@@ -655,13 +655,13 @@ end))
 end))
 in (aux 0 [] t)))
 
-let caption_to_string = (fun _415285 -> (match (_415285) with
+let caption_to_string = (fun _415432 -> (match (_415432) with
 | None -> begin
 ""
 end
 | Some (c) -> begin
-(let _415912 = (Support.Microsoft.FStar.Util.splitlines c)
-in (match (_415912) with
+(let _416059 = (Support.Microsoft.FStar.Util.splitlines c)
+in (match (_416059) with
 | hd::tl -> begin
 (let suffix = (match (tl) with
 | [] -> begin
@@ -679,7 +679,7 @@ let rec declToSmt = (fun z3options decl -> (match (decl) with
 (mkPrelude z3options)
 end
 | Caption (c) -> begin
-(Support.Microsoft.FStar.Util.format1 "\n; %s" ((fun _415286 -> (match (_415286) with
+(Support.Microsoft.FStar.Util.format1 "\n; %s" ((fun _415433 -> (match (_415433) with
 | [] -> begin
 ""
 end
@@ -692,8 +692,8 @@ end
 in (Support.Microsoft.FStar.Util.format4 "%s(declare-fun %s (%s) %s)" (caption_to_string c) f (Support.String.concat " " l) (strSort retsort)))
 end
 | DefineFun ((f, arg_sorts, retsort, body, c)) -> begin
-(let _415943 = (name_binders arg_sorts)
-in (match (_415943) with
+(let _416090 = (name_binders arg_sorts)
+in (match (_416090) with
 | (names, binders) -> begin
 (let body = (inst (Support.List.map mkFreeV names) body)
 in (Support.Microsoft.FStar.Util.format5 "%s(define-fun %s (%s) %s\n %s)" (caption_to_string c) f (Support.String.concat " " binders) (strSort retsort) (termToSmt body)))

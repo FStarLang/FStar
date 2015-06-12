@@ -8,12 +8,12 @@ type mlident =
 type mlpath =
 (mlsymbol list * mlsymbol)
 
-let idsym = (fun _495850 -> (match (_495850) with
+let idsym = (fun _495999 -> (match (_495999) with
 | (s, _) -> begin
 s
 end))
 
-let ptsym = (fun _495853 -> (match (_495853) with
+let ptsym = (fun _496002 -> (match (_496002) with
 | (p, s) -> begin
 (let s = if ((Support.Char.lowercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
 (Support.String.strcat "l__" s)
@@ -23,7 +23,7 @@ end
 in (Support.String.concat "." (Support.List.append p ((s)::[]))))
 end))
 
-let ptctor = (fun _495857 -> (match (_495857) with
+let ptctor = (fun _496006 -> (match (_496006) with
 | (p, s) -> begin
 (let s = if ((Support.Char.uppercase (Support.String.get s 0)) <> (Support.String.get s 0)) then begin
 (Support.String.strcat "U__" s)
@@ -132,7 +132,7 @@ end
 MLE_Fun (((x)::[], e))
 end))
 
-let mlif = (fun b _495969 -> (match (_495969) with
+let mlif = (fun b _496118 -> (match (_496118) with
 | (e1, e2) -> begin
 (match (e2) with
 | MLE_Const (MLC_Unit) -> begin

@@ -7,9 +7,9 @@ let root = (fun env -> env.env_root)
 let create = (fun nm -> {env_root = nm; env_map = (Support.Microsoft.FStar.Util.smap_create 0)})
 
 let push = (fun env x pp -> (let m = env.env_map
-in (let _495770 = (Support.Microsoft.FStar.Util.smap_add m x pp)
-in (let _495772 = env
-in {env_root = _495772.env_root; env_map = m}))))
+in (let _495919 = (Support.Microsoft.FStar.Util.smap_add m x pp)
+in (let _495921 = env
+in {env_root = _495921.env_root; env_map = m}))))
 
 let resolve = (fun env x -> (match ((Support.Microsoft.FStar.Util.smap_try_find env.env_map x)) with
 | None -> begin

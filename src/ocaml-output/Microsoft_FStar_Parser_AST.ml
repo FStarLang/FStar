@@ -393,21 +393,38 @@ end
 end)
 end))
 
-let mkWildAdmitMagic = (fun r -> (let unit_const = (mk_term (Const (Microsoft_FStar_Absyn_Syntax.Const_unit)) r Expr)
+let mkAdmitMagic = (fun r -> (let unit_const = (mk_term (Const (Microsoft_FStar_Absyn_Syntax.Const_unit)) r Expr)
 in (let admit = (let admit_name = (mk_term (Var ((Microsoft_FStar_Absyn_Util.set_lid_range Microsoft_FStar_Absyn_Const.admit_lid r))) r Expr)
 in (mkExplicitApp admit_name ((unit_const)::[]) r))
 in (let magic = (let magic_name = (mk_term (Var ((Microsoft_FStar_Absyn_Util.set_lid_range Microsoft_FStar_Absyn_Const.magic_lid r))) r Expr)
 in (mkExplicitApp magic_name ((unit_const)::[]) r))
 in (let admit_magic = (mk_term (Seq ((admit, magic))) r Expr)
-in ((mk_pattern PatWild r), None, admit_magic))))))
+in admit_magic)))))
+
+let mkWildAdmitMagic = (fun r -> ((mk_pattern PatWild r), None, (mkAdmitMagic r)))
 
 let focusBranches = (fun branches r -> (let should_filter = (Support.Microsoft.FStar.Util.for_some (Support.Prims.fst) branches)
 in if should_filter then begin
-(let _346993 = (Microsoft_FStar_Tc_Errors.warn r "Focusing on only some cases")
+(let _346994 = (Microsoft_FStar_Tc_Errors.warn r "Focusing on only some cases")
 in (let focussed = ((Support.List.map (Support.Prims.snd)) (Support.List.filter (Support.Prims.fst) branches))
 in (Support.List.append focussed (((mkWildAdmitMagic r))::[]))))
 end else begin
 ((Support.List.map (Support.Prims.snd)) branches)
+end))
+
+let focusLetBindings = (fun lbs r -> (let should_filter = (Support.Microsoft.FStar.Util.for_some (Support.Prims.fst) lbs)
+in if should_filter then begin
+(let _347000 = (Microsoft_FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
+in (Support.List.map (fun _347004 -> (match (_347004) with
+| (f, lb) -> begin
+if f then begin
+lb
+end else begin
+((Support.Prims.fst lb), (mkAdmitMagic r))
+end
+end)) lbs))
+end else begin
+((Support.List.map (Support.Prims.snd)) lbs)
 end))
 
 let mkFsTypApp = (fun t args r -> (mkApp t (Support.List.map (fun a -> (a, FsTypApp)) args) r))
