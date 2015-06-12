@@ -646,6 +646,13 @@ val env_upd_slice_lemma: p:prin -> en:env -> x:varname -> v:value
                                             update_env (slice_en p en) x (slice_v p v)))
 let env_upd_slice_lemma p en x v = admit ()
 
+(* TODO: FIXME: bug#259 *)
+val v_clos_slice_lemma: #en:env -> #x:varname -> #e:exp
+                        -> p:prin -> v:value{v = V_clos en x e}
+                        -> Lemma (requires (True))
+                                 (ensures  (slice_v p v = V_clos (slice_en p en) x e))
+let v_clos_slice_lemma #en #x #e p v = admit ()
+
 
 val cstep_lemma: #c:sconfig -> #c':sconfig -> h:cstep c c' -> p:prin
                  -> Tot (cor (u:unit{slice_c p c = slice_c p c'})
@@ -666,11 +673,11 @@ let cstep_lemma #c #c' h p = match h with
   | C_let_e1 (Conf _ m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
     else IntroR (C_let_e1 (slice_c p c) (slice_c p c'))
-  | C_abs (Conf _ m _ _ _) _ ->
+  | C_abs (Conf _ m _ en _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
     else
-      (* bug#259 *)
-      let _ = admit () in
+      let T_exp (Exp (E_abs x e) _) = Conf.t c in
+      v_clos_slice_lemma #en #x #e p (V_clos en x e);
       IntroR (C_abs (slice_c p c) (slice_c p c'))
   | C_app_e1 (Conf _ m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
@@ -708,13 +715,16 @@ let cstep_lemma #c #c' h p = match h with
   | C_app_beta (Conf _ m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
     else
-      (* bug#259 *)
-      let _ = admit () in
+      let T_red (R_app (V_clos en x e) v) = Conf.t c in
+      v_clos_slice_lemma #en #x #e p (V_clos en x e);
+      env_upd_slice_lemma p en x v;
       IntroR (C_app_beta (slice_c p c) (slice_c p c'))
   | C_aspar_beta (Conf _ m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
     else
-      (* bug#259 *)
+      let T_red (R_aspar _ (V_clos en x e)) = Conf.t c in
+      v_clos_slice_lemma #en #x #e p (V_clos en x e);
+      env_upd_slice_lemma p en x (V_const (C_unit));      
       let _ = admit () in
       IntroR (C_aspar_beta (slice_c p c) (slice_c p c'))
   | C_box_beta (Conf _ m _ _ _) _ ->
@@ -725,3 +735,5 @@ let cstep_lemma #c #c' h p = match h with
     if not (mem p (Mode.ps m)) then IntroL ()
     else
       IntroR (C_unbox_beta (slice_c p c) (slice_c p c'))
+
+(* check_marker *)
