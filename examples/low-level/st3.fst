@@ -572,8 +572,9 @@ val scopedWhile2 : #wpg:(Post bool -> Pre) -> #wpb:(Post unit -> Pre)
   -> loopInv:(smem -> Type)
   -> SST unit
   (requires (fun m -> loopInv m /\ whilePre wpg wpb loopInv))
-              (ensures (fun m0 _ m1 -> loopInv m1 (* /\ sids m0 = sids m1 *) ))
-(*how to say that the guard is false at the end*)
+              (ensures (fun m0 _ m1 -> (loopInv m1) (* /\ sids m0 = sids m1 *)
+                /\ (wpg (fun b _ -> b==false) m1)
+              ))
 
 (*let scopedWhile2
  (#wpg:(Post bool -> Pre))
