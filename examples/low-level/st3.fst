@@ -507,7 +507,6 @@ effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) =
   SST a
       (fun m -> isNonEmpty (st m) /\ topstb m = emp /\ pre (mtail m))
       (fun m0 a m1 -> post (mtail m0) a (mtail m1)
-          /\ isNonEmpty (st m0) (*not needed, ideally*)
           /\ sids m0 = sids m1) (*body popped all and only the stack frames it pushed*)
 
 val withNewScope : a:Type -> pre:(smem -> Type) -> post:(smem -> SSTPost a)
@@ -562,9 +561,8 @@ effect SSTS (a:Type) (wlp: Post a -> Pre) = StSTATE a wlp wlp
 type whilePre (wpg:(Post bool -> Pre))
               (wpb:(Post unit -> Pre))
               (inv:(smem -> Type)) =
-              (*how to say that wpg implies the computation does not change the memory?*)
-              (forall h. wpg (fun b h1 -> h1 == h) h) /\
-              (forall h1. inv h1 ==> wpg (fun b h2 -> b=true ==> wpb ( fun _ -> inv) h2) h1)
+  (forall h. forall h2. wpg (fun b h1 -> h1 == h) h2 ==> h=h2) (*computation of the guard does not change the memory*)
+  /\ (forall h1. inv h1 ==> wpg (fun b h2 -> b=true ==> wpb (fun _ -> inv) h2) h1)
 
 val scopedWhile2 : #wpg:(Post bool -> Pre) -> #wpb:(Post unit -> Pre)
   -> wg:(unit -> SSTS bool wpg)
@@ -572,8 +570,9 @@ val scopedWhile2 : #wpg:(Post bool -> Pre) -> #wpb:(Post unit -> Pre)
   -> loopInv:(smem -> Type)
   -> SST unit
   (requires (fun m -> loopInv m /\ whilePre wpg wpb loopInv))
-              (ensures (fun m0 _ m1 -> loopInv m1 (* /\ sids m0 = sids m1 *) ))
-(*how to say that the guard is false at the end*)
+              (ensures (fun m0 _ m1 -> (loopInv m1) (* /\ sids m0 = sids m1 *)
+                (*/\ (wpg (fun b _ -> b==false) m1)*)
+              ))
 
 (*let scopedWhile2
  (#wpg:(Post bool -> Pre))
@@ -581,5 +580,4 @@ val scopedWhile2 : #wpg:(Post bool -> Pre) -> #wpb:(Post unit -> Pre)
  (wg:(unit -> SSTS bool wpg))
  (bd:(unit -> SSTS unit wpb))
  (loopInv:(smem -> Type))
-=
-  let gv:bool = wg () in ()*)
+= let v=wg () in ()*)

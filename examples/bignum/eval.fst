@@ -1,3 +1,5 @@
+#include "preproc.h"
+
 (* 
   This library file shoul contains types and functions related to big integer 
   representation.
@@ -13,7 +15,7 @@ open IntLib
 open Limb
 open Seq
 
-#reset-options
+RESET
 
 (* TODO : unify the types and notations for bigint *)
 type int64 = int
@@ -281,8 +283,8 @@ let rec eval_partial_eq_lemma a b i =
      cut ( eval b i = pow2 (bitweight (getTemplate b) (i-1)) * get b (i-1) + eval_aux (getData b) (getTemplate b) (i-1) /\ True );
      ()
 
-#reset-options
-#set-options "--z3timeout 60"
+RESET
+SET "--z3timeout 60"
 
 val extendTo_lemma: a:bigint -> len:nat{ len >= getLength a } ->
 		    Lemma
@@ -301,9 +303,15 @@ let rec extendTo_lemma a len =
 
   
 (* TODO : prove this lemma *)
-assume val extendTo_max_size_and_values_lemma : 
+#ifndef COMPILE
+assume 
+#endif
+val extendTo_max_size_and_values_lemma : 
   a:bigint -> len:nat{ len >= getLength a } -> 
   Lemma
     (requires (True))
     (ensures (maxSize (extendTo a len) = maxSize a /\ maxValue (extendTo a len) = maxValue a))
     [SMTPat (extendTo a len)]
+#ifdef COMPILE
+let extendTo_max_size_and_values_lemma a len = ()
+#endif
