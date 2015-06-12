@@ -635,8 +635,7 @@ let rec substitution g1 e t s g2 h1 hs =
          assert(lookup_evar (extend_evar g2 0 tlam) (x + 1) =
                 lookup_evar g2 x); magic() (* <-- this works *)
          (* this not: *)
-         (* TyVar (x+1) (kinding_extensional hkind (extend_evar g2 0 tlam)) *)
-         in
+         (* TyVar (x+1) (kinding_extensional hkind (extend_evar g2 0 tlam)) *) in
 (*
 lambda_omega_reduced.fst(635,21-635,72): Subtyping check failed; expected type
 (kinding (extend_evar g2 0 tlam) (Some.v (lookup_evar (extend_evar g2 0 tlam)
@@ -648,16 +647,14 @@ lambda_omega_reduced.fst(635,21-635,72): Subtyping check failed; expected type
        fun y hkindg1 ->
          if y = 0
          then
-           (assert(Some.v (lookup_evar (extend_evar g2 0 tlam) y) =
-                   Some.v (lookup_evar (extend_evar g1 0 tlam) y)); magic())
-           (* this not: 
-           TyVar y (kinding_extensional hkindg1 (extend_evar g2 0 tlam)) *)
+           ((*assert(lookup_evar (extend_evar g1 0 tlam) y =
+                   lookup_evar g1 (y - 1));*) magic() (* <-- XXX problem *)
+           (* this not: *)
+           (* TyVar y (kinding_extensional hkindg1 (extend_evar g2 0 tlam)) *))
 (*
-lambda_omega_reduced.fst(651,19-651,72): Subtyping check failed; expected type
-(kinding (extend_evar g2 0 tlam)
-  (Some.v (lookup_evar (extend_evar g2 0 tlam) y)) KTyp); got type
-(kinding (extend_evar g2 0 tlam)
-  (Some.v (lookup_evar (extend_evar g1 0 tlam) y)) KTyp)
+lambda_omega_reduced.fst(637,39-637,71): Subtyping check failed; expected type
+(kinding g1 (Some.v (lookup_evar g1 (y - 1))) KTyp); got type
+(kinding g1 (Some.v (lookup_evar (extend_evar g1 0 tlam) y)) KTyp)
  *)
          else let hgamma2 =
                 assert(lookup_evar (extend_evar g1 0 tlam) y =
