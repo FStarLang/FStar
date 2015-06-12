@@ -348,6 +348,7 @@ let find_uvar_e uv s = Util.find_map s (function UE((u,_), t) -> if Unionfind.eq
 (* ------------------------------------------------*)
 (* <normalization>                                *)
 (* ------------------------------------------------*)
+let simplify_formula env f = Normalize.norm_typ [Beta; Simplify] env f
 let norm_targ env t = Tc.Normalize.norm_typ [Beta] env t
 let norm_arg env a = match fst a with 
     | Inl t -> Inl <| norm_targ env t, snd a
@@ -2275,7 +2276,16 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
       let rec solve_args sub_probs wl args1 args2 = match args1, args2 with 
             | [], [] -> 
                 let guard = Util.mk_conj_l (List.map p_guard sub_probs |> List.map fst) in
-                solve env (solve_prob orig (Some guard) wl.subst ({orig_wl with subst=[]}))
+                let g = simplify_formula env guard in 
+                let g = Util.compress_typ g in
+                begin match g.n with 
+                    | Typ_const fv when lid_equals fv.v Const.true_lid -> //if every sub-problem was solved by unification
+                      solve env (solve_prob orig None wl.subst ({orig_wl with subst=[]})) //then solve the whole thing without any logical guard
+                    | _ -> 
+                      let t, _ = new_tvar (Tc.Env.get_range env) (Tc.Env.binders env) ktype in
+                      let guard = Util.mk_disj g (Util.mk_eq t t e1 e2) in
+                      solve env (solve_prob orig (Some guard) wl.subst ({orig_wl with subst=[]})) //otherwise either try to prove the component guards, or the whole thing equal
+                end
             | arg1::rest1, arg2::rest2 -> 
                 let prob = match fst arg1, fst arg2 with 
                 | Inl t1, Inl t2 -> 

@@ -1,6 +1,6 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../FStar/lib/prims.fst --verify_module MAC --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    variables:LIB=../../FStar/lib;
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module MAC --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    variables:LIB=../../lib;
     other-files:$LIB/string.fst $LIB/list.fst
             $LIB/ext.fst $LIB/classical.fst
             $LIB/set.fsi $LIB/set.fst

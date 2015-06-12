@@ -1,7 +1,7 @@
 
 exception Err of (string)
 
-let parse_error = (fun _105817 -> (match (_105817) with
+let parse_error = (fun _106064 -> (match (_106064) with
 | () -> begin
 (failwith "Parse error: ill-formed cache")
 end))
@@ -17,7 +17,7 @@ let serialize_option = (fun writer f l -> (match (l) with
 (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'n')
 end
 | Some (l) -> begin
-(let _105825 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 's')
+(let _106072 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 's')
 in (f writer l))
 end))
 
@@ -28,7 +28,7 @@ end else begin
 Some ((f reader))
 end))
 
-let serialize_list = (fun writer f l -> (let _105835 = (Support.Microsoft.FStar.Util.MkoWriter.write_int writer (Support.List.length l))
+let serialize_list = (fun writer f l -> (let _106082 = (Support.Microsoft.FStar.Util.MkoWriter.write_int writer (Support.List.length l))
 in (Support.List.iter (fun elt -> (f writer elt)) (Support.List.rev_append l []))))
 
 let deserialize_list = (fun reader f -> (let n = (Support.Microsoft.FStar.Util.MkoReader.read_int reader ())
@@ -43,7 +43,7 @@ let serialize_ident = (fun writer ast -> (Support.Microsoft.FStar.Util.MkoWriter
 
 let deserialize_ident = (fun reader -> (Microsoft_FStar_Absyn_Syntax.mk_ident ((Support.Microsoft.FStar.Util.MkoReader.read_string reader ()), Microsoft_FStar_Absyn_Syntax.dummyRange)))
 
-let serialize_LongIdent = (fun writer ast -> (let _105850 = (serialize_list writer serialize_ident ast.Microsoft_FStar_Absyn_Syntax.ns)
+let serialize_LongIdent = (fun writer ast -> (let _106097 = (serialize_list writer serialize_ident ast.Microsoft_FStar_Absyn_Syntax.ns)
 in (serialize_ident writer ast.Microsoft_FStar_Absyn_Syntax.ident)))
 
 let deserialize_LongIdent = (fun reader -> (Microsoft_FStar_Absyn_Syntax.lid_of_ids (Support.List.append (deserialize_list reader deserialize_ident) (((deserialize_ident reader))::[]))))
@@ -52,7 +52,7 @@ let serialize_lident = serialize_LongIdent
 
 let deserialize_lident = deserialize_LongIdent
 
-let serialize_withinfo_t = (fun writer s_v s_sort ast -> (let _105859 = (s_v writer ast.Microsoft_FStar_Absyn_Syntax.v)
+let serialize_withinfo_t = (fun writer s_v s_sort ast -> (let _106106 = (s_v writer ast.Microsoft_FStar_Absyn_Syntax.v)
 in (s_sort writer ast.Microsoft_FStar_Absyn_Syntax.sort)))
 
 let deserialize_withinfo_t = (fun reader ds_v ds_sort -> {Microsoft_FStar_Absyn_Syntax.v = (ds_v reader); Microsoft_FStar_Absyn_Syntax.sort = (ds_sort reader); Microsoft_FStar_Absyn_Syntax.p = Microsoft_FStar_Absyn_Syntax.dummyRange})
@@ -61,7 +61,7 @@ let serialize_var = (fun writer s_sort ast -> (serialize_withinfo_t writer seria
 
 let deserialize_var = (fun reader ds_sort -> (deserialize_withinfo_t reader deserialize_lident ds_sort))
 
-let serialize_bvdef = (fun writer ast -> (let _105876 = (serialize_ident writer ast.Microsoft_FStar_Absyn_Syntax.ppname)
+let serialize_bvdef = (fun writer ast -> (let _106123 = (serialize_ident writer ast.Microsoft_FStar_Absyn_Syntax.ppname)
 in (serialize_ident writer ast.Microsoft_FStar_Absyn_Syntax.realname)))
 
 let deserialize_bvdef = (fun ghost reader -> {Microsoft_FStar_Absyn_Syntax.ppname = (deserialize_ident reader); Microsoft_FStar_Absyn_Syntax.realname = (deserialize_ident reader)})
@@ -75,39 +75,39 @@ let serialize_sconst = (fun writer ast -> (match (ast) with
 (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
 end
 | Microsoft_FStar_Absyn_Syntax.Const_uint8 (v) -> begin
-(let _105896 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
+(let _106143 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
 in (Support.Microsoft.FStar.Util.MkoWriter.write_byte writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Const_bool (v) -> begin
-(let _105900 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
+(let _106147 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
 in (Support.Microsoft.FStar.Util.MkoWriter.write_bool writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Const_int32 (v) -> begin
-(let _105904 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'd')
+(let _106151 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'd')
 in (Support.Microsoft.FStar.Util.MkoWriter.write_int32 writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Const_int64 (v) -> begin
-(let _105908 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'e')
+(let _106155 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'e')
 in (Support.Microsoft.FStar.Util.MkoWriter.write_int64 writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Const_char (v) -> begin
-(let _105912 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'f')
+(let _106159 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'f')
 in (Support.Microsoft.FStar.Util.MkoWriter.write_char writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Const_float (v) -> begin
-(let _105916 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'g')
+(let _106163 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'g')
 in (Support.Microsoft.FStar.Util.MkoWriter.write_double writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Const_bytearray ((v, _)) -> begin
-(let _105923 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'h')
+(let _106170 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'h')
 in (Support.Microsoft.FStar.Util.MkoWriter.write_bytearray writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Const_string ((v, _)) -> begin
-(let _105930 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'i')
+(let _106177 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'i')
 in (Support.Microsoft.FStar.Util.MkoWriter.write_bytearray writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Const_int (v) -> begin
-(let _105934 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'j')
+(let _106181 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'j')
 in (Support.Microsoft.FStar.Util.MkoWriter.write_int writer v))
 end))
 
@@ -148,11 +148,11 @@ end))
 
 let serialize_either = (fun writer s_l s_r ast -> (match (ast) with
 | Support.Microsoft.FStar.Util.Inl (v) -> begin
-(let _105957 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
+(let _106204 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
 in (s_l writer v))
 end
 | Support.Microsoft.FStar.Util.Inr (v) -> begin
-(let _105961 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
+(let _106208 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
 in (s_r writer v))
 end))
 
@@ -173,27 +173,27 @@ let deserialize_syntax = (fun reader ds_a ds_b -> {Microsoft_FStar_Absyn_Syntax.
 
 let rec serialize_typ' = (fun writer ast -> (match (ast) with
 | Microsoft_FStar_Absyn_Syntax.Typ_btvar (v) -> begin
-(let _105986 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
+(let _106233 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
 in (serialize_btvar writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_const (v) -> begin
-(let _105990 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
+(let _106237 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
 in (serialize_ftvar writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((bs, c)) -> begin
-(let _105996 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
-in (let _105998 = (serialize_binders writer bs)
+(let _106243 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
+in (let _106245 = (serialize_binders writer bs)
 in (serialize_comp writer c)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_refine ((v, t)) -> begin
-(let _106004 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'd')
-in (let _106006 = (serialize_bvvar writer v)
+(let _106251 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'd')
+in (let _106253 = (serialize_bvvar writer v)
 in (serialize_typ writer t)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_app ((t, ars)) -> begin
-(let _106012 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'e')
-in (let _106014 = (serialize_typ writer t)
-in (let _106016 = (serialize_args writer ars)
+(let _106259 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'e')
+in (let _106261 = (serialize_typ writer t)
+in (let _106263 = (serialize_args writer ars)
 in if ((! (Microsoft_FStar_Options.debug)) <> []) then begin
 (match (t.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_lam ((_, _)) -> begin
@@ -205,17 +205,17 @@ end)
 end)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_lam ((bs, t)) -> begin
-(let _106030 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'f')
-in (let _106032 = (serialize_binders writer bs)
+(let _106277 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'f')
+in (let _106279 = (serialize_binders writer bs)
 in (serialize_typ writer t)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_ascribed ((t, k)) -> begin
-(let _106038 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'g')
-in (let _106040 = (serialize_typ writer t)
+(let _106285 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'g')
+in (let _106287 = (serialize_typ writer t)
 in (serialize_knd writer k)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_meta (m) -> begin
-(let _106044 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'h')
+(let _106291 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'h')
 in (serialize_meta_t writer m))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_unknown -> begin
@@ -229,42 +229,42 @@ end
 end))
 and serialize_meta_t = (fun writer ast -> (match (ast) with
 | Microsoft_FStar_Absyn_Syntax.Meta_pattern ((t, l)) -> begin
-(let _106065 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
-in (let _106067 = (serialize_typ writer t)
+(let _106312 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
+in (let _106314 = (serialize_typ writer t)
 in (serialize_list writer serialize_arg l)))
 end
 | Microsoft_FStar_Absyn_Syntax.Meta_named ((t, lid)) -> begin
-(let _106073 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
-in (let _106075 = (serialize_typ writer t)
+(let _106320 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
+in (let _106322 = (serialize_typ writer t)
 in (serialize_lident writer lid)))
 end
 | Microsoft_FStar_Absyn_Syntax.Meta_labeled ((t, s, _, b)) -> begin
-(let _106084 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
-in (let _106086 = (serialize_typ writer t)
-in (let _106088 = (Support.Microsoft.FStar.Util.MkoWriter.write_string writer s)
+(let _106331 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
+in (let _106333 = (serialize_typ writer t)
+in (let _106335 = (Support.Microsoft.FStar.Util.MkoWriter.write_string writer s)
 in (Support.Microsoft.FStar.Util.MkoWriter.write_bool writer b))))
 end
 | _ -> begin
 (raise (Err ("unimplemented meta_t")))
 end))
-and serialize_arg = (fun writer ast -> (let _106094 = (serialize_either writer serialize_typ serialize_exp (Support.Prims.fst ast))
+and serialize_arg = (fun writer ast -> (let _106341 = (serialize_either writer serialize_typ serialize_exp (Support.Prims.fst ast))
 in (Support.Microsoft.FStar.Util.MkoWriter.write_bool writer (Microsoft_FStar_Absyn_Syntax.is_implicit (Support.Prims.snd ast)))))
 and serialize_args = (fun writer ast -> (serialize_list writer serialize_arg ast))
-and serialize_binder = (fun writer ast -> (let _106100 = (serialize_either writer serialize_btvar serialize_bvvar (Support.Prims.fst ast))
+and serialize_binder = (fun writer ast -> (let _106347 = (serialize_either writer serialize_btvar serialize_bvvar (Support.Prims.fst ast))
 in (Support.Microsoft.FStar.Util.MkoWriter.write_bool writer (Microsoft_FStar_Absyn_Syntax.is_implicit (Support.Prims.snd ast)))))
 and serialize_binders = (fun writer ast -> (serialize_list writer serialize_binder ast))
 and serialize_typ = (fun writer ast -> (serialize_syntax writer serialize_typ' (Microsoft_FStar_Absyn_Util.compress_typ ast)))
-and serialize_comp_typ = (fun writer ast -> (let _106108 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.effect_name)
-in (let _106110 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.result_typ)
-in (let _106112 = (serialize_args writer ast.Microsoft_FStar_Absyn_Syntax.effect_args)
+and serialize_comp_typ = (fun writer ast -> (let _106355 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.effect_name)
+in (let _106357 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.result_typ)
+in (let _106359 = (serialize_args writer ast.Microsoft_FStar_Absyn_Syntax.effect_args)
 in (serialize_list writer serialize_cflags ast.Microsoft_FStar_Absyn_Syntax.flags)))))
 and serialize_comp' = (fun writer ast -> (match (ast) with
 | Microsoft_FStar_Absyn_Syntax.Total (t) -> begin
-(let _106118 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
+(let _106365 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
 in (serialize_typ writer t))
 end
 | Microsoft_FStar_Absyn_Syntax.Comp (c) -> begin
-(let _106122 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
+(let _106369 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
 in (serialize_comp_typ writer c))
 end))
 and serialize_comp = (fun writer ast -> (serialize_syntax writer serialize_comp' ast))
@@ -288,64 +288,64 @@ end
 (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'f')
 end
 | Microsoft_FStar_Absyn_Syntax.DECREASES (e) -> begin
-(let _106136 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'g')
+(let _106383 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'g')
 in (serialize_exp writer e))
 end))
 and serialize_exp' = (fun writer ast -> (match (ast) with
 | Microsoft_FStar_Absyn_Syntax.Exp_bvar (v) -> begin
-(let _106142 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
+(let _106389 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
 in (serialize_bvvar writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_fvar ((v, b)) -> begin
-(let _106148 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
-in (let _106150 = (serialize_fvvar writer v)
+(let _106395 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
+in (let _106397 = (serialize_fvvar writer v)
 in (Support.Microsoft.FStar.Util.MkoWriter.write_bool writer b)))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_constant (c) -> begin
-(let _106154 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
+(let _106401 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
 in (serialize_sconst writer c))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_abs ((bs, e)) -> begin
-(let _106160 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'd')
-in (let _106162 = (serialize_binders writer bs)
+(let _106407 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'd')
+in (let _106409 = (serialize_binders writer bs)
 in (serialize_exp writer e)))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_app ((e, ars)) -> begin
-(let _106168 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'e')
-in (let _106170 = (serialize_exp writer e)
+(let _106415 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'e')
+in (let _106417 = (serialize_exp writer e)
 in (serialize_args writer ars)))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_match ((e, l)) -> begin
 (let g = (fun writer eopt -> (match (eopt) with
 | Some (e1) -> begin
-(let _106181 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
+(let _106428 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
 in (serialize_exp writer e1))
 end
 | None -> begin
 (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
 end))
-in (let f = (fun writer _106189 -> (match (_106189) with
+in (let f = (fun writer _106436 -> (match (_106436) with
 | (p, eopt, e) -> begin
-(let _106190 = (serialize_pat writer p)
-in (let _106192 = (g writer eopt)
+(let _106437 = (serialize_pat writer p)
+in (let _106439 = (g writer eopt)
 in (serialize_exp writer e)))
 end))
-in (let _106194 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'f')
-in (let _106196 = (serialize_exp writer e)
+in (let _106441 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'f')
+in (let _106443 = (serialize_exp writer e)
 in (serialize_list writer f l)))))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((e, t)) -> begin
-(let _106202 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'g')
-in (let _106204 = (serialize_exp writer e)
+(let _106449 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'g')
+in (let _106451 = (serialize_exp writer e)
 in (serialize_typ writer t)))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_let ((lbs, e)) -> begin
-(let _106210 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'h')
-in (let _106212 = (serialize_letbindings writer lbs)
+(let _106457 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'h')
+in (let _106459 = (serialize_letbindings writer lbs)
 in (serialize_exp writer e)))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_meta (m) -> begin
-(let _106216 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'i')
+(let _106463 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'i')
 in (serialize_meta_e writer m))
 end
 | _ -> begin
@@ -353,8 +353,8 @@ end
 end))
 and serialize_meta_e = (fun writer ast -> (match (ast) with
 | Microsoft_FStar_Absyn_Syntax.Meta_desugared ((e, s)) -> begin
-(let _106226 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
-in (let _106228 = (serialize_exp writer e)
+(let _106473 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
+in (let _106475 = (serialize_exp writer e)
 in (serialize_meta_source_info writer s)))
 end))
 and serialize_meta_source_info = (fun writer ast -> (match (ast) with
@@ -375,43 +375,43 @@ and serialize_btvdef = (fun writer ast -> (serialize_bvdef writer ast))
 and serialize_bvvdef = (fun writer ast -> (serialize_bvdef writer ast))
 and serialize_pat' = (fun writer ast -> (match (ast) with
 | Microsoft_FStar_Absyn_Syntax.Pat_disj (l) -> begin
-(let _106246 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
+(let _106493 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
 in (serialize_list writer serialize_pat l))
 end
 | Microsoft_FStar_Absyn_Syntax.Pat_constant (c) -> begin
-(let _106250 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
+(let _106497 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
 in (serialize_sconst writer c))
 end
 | Microsoft_FStar_Absyn_Syntax.Pat_cons ((v, l)) -> begin
-(let _106256 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
-in (let _106258 = (serialize_fvvar writer v)
+(let _106503 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
+in (let _106505 = (serialize_fvvar writer v)
 in (serialize_list writer serialize_pat l)))
 end
 | Microsoft_FStar_Absyn_Syntax.Pat_var ((v, b)) -> begin
-(let _106264 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'd')
-in (let _106266 = (serialize_bvvar writer v)
+(let _106511 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'd')
+in (let _106513 = (serialize_bvvar writer v)
 in (Support.Microsoft.FStar.Util.MkoWriter.write_bool writer b)))
 end
 | Microsoft_FStar_Absyn_Syntax.Pat_tvar (v) -> begin
-(let _106270 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'e')
+(let _106517 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'e')
 in (serialize_btvar writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Pat_wild (v) -> begin
-(let _106274 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'f')
+(let _106521 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'f')
 in (serialize_bvvar writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Pat_twild (v) -> begin
-(let _106278 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'g')
+(let _106525 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'g')
 in (serialize_btvar writer v))
 end
 | Microsoft_FStar_Absyn_Syntax.Pat_dot_term ((v, e)) -> begin
-(let _106284 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'h')
-in (let _106286 = (serialize_bvvar writer v)
+(let _106531 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'h')
+in (let _106533 = (serialize_bvvar writer v)
 in (serialize_exp writer e)))
 end
 | Microsoft_FStar_Absyn_Syntax.Pat_dot_typ ((v, t)) -> begin
-(let _106292 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'i')
-in (let _106294 = (serialize_btvar writer v)
+(let _106539 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'i')
+in (let _106541 = (serialize_btvar writer v)
 in (serialize_typ writer t)))
 end))
 and serialize_pat = (fun writer ast -> (serialize_withinfo_t writer serialize_pat' (fun w kt -> ()) ast))
@@ -423,18 +423,18 @@ end
 (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_abbrev ((ka, k)) -> begin
-(let _106308 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
-in (let _106310 = (serialize_kabbrev writer ka)
+(let _106555 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
+in (let _106557 = (serialize_kabbrev writer ka)
 in (serialize_knd writer k)))
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_arrow ((bs, k)) -> begin
-(let _106316 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'd')
-in (let _106318 = (serialize_binders writer bs)
+(let _106563 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'd')
+in (let _106565 = (serialize_binders writer bs)
 in (serialize_knd writer k)))
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_lam ((bs, k)) -> begin
-(let _106324 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'e')
-in (let _106326 = (serialize_binders writer bs)
+(let _106571 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'e')
+in (let _106573 = (serialize_binders writer bs)
 in (serialize_knd writer k)))
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_unknown -> begin
@@ -447,16 +447,16 @@ end
 (raise (Err ("knd\' serialization unimplemented:2")))
 end))
 and serialize_knd = (fun writer ast -> (serialize_syntax writer serialize_knd' (Microsoft_FStar_Absyn_Util.compress_kind ast)))
-and serialize_kabbrev = (fun writer ast -> (let _106345 = (serialize_lident writer (Support.Prims.fst ast))
+and serialize_kabbrev = (fun writer ast -> (let _106592 = (serialize_lident writer (Support.Prims.fst ast))
 in (serialize_args writer (Support.Prims.snd ast))))
 and serialize_lbname = (fun writer ast -> (serialize_either writer serialize_bvvdef serialize_lident ast))
-and serialize_letbindings = (fun writer ast -> (let f = (fun writer _106356 -> (match (_106356) with
+and serialize_letbindings = (fun writer ast -> (let f = (fun writer _106603 -> (match (_106603) with
 | (n, t, e) -> begin
-(let _106357 = (serialize_lbname writer n)
-in (let _106359 = (serialize_typ writer t)
+(let _106604 = (serialize_lbname writer n)
+in (let _106606 = (serialize_typ writer t)
 in (serialize_exp writer e)))
 end))
-in (let _106361 = (Support.Microsoft.FStar.Util.MkoWriter.write_bool writer (Support.Prims.fst ast))
+in (let _106608 = (Support.Microsoft.FStar.Util.MkoWriter.write_bool writer (Support.Prims.fst ast))
 in (serialize_list writer f (Support.Prims.snd ast)))))
 and serialize_fvar = (fun writer ast -> (serialize_either writer serialize_btvdef serialize_bvvdef ast))
 and serialize_btvar = (fun writer ast -> (serialize_bvar writer serialize_knd ast))
@@ -701,20 +701,20 @@ end
 (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'h')
 end
 | Microsoft_FStar_Absyn_Syntax.Discriminator (lid) -> begin
-(let _106489 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'i')
+(let _106736 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'i')
 in (serialize_lident writer lid))
 end
 | Microsoft_FStar_Absyn_Syntax.Projector ((lid, v)) -> begin
-(let _106495 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'j')
-in (let _106497 = (serialize_lident writer lid)
+(let _106742 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'j')
+in (let _106744 = (serialize_lident writer lid)
 in (serialize_either writer serialize_btvdef serialize_bvvdef v)))
 end
 | Microsoft_FStar_Absyn_Syntax.RecordType (l) -> begin
-(let _106501 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'k')
+(let _106748 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'k')
 in (serialize_list writer serialize_ident l))
 end
 | Microsoft_FStar_Absyn_Syntax.RecordConstructor (l) -> begin
-(let _106505 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'l')
+(let _106752 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'l')
 in (serialize_list writer serialize_ident l))
 end
 | Microsoft_FStar_Absyn_Syntax.ExceptionConstructor -> begin
@@ -724,7 +724,7 @@ end
 (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'o')
 end
 | Microsoft_FStar_Absyn_Syntax.DefaultEffect (l) -> begin
-(let _106511 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'p')
+(let _106758 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'p')
 in (serialize_option writer serialize_lident l))
 end
 | Microsoft_FStar_Absyn_Syntax.TotalEffect -> begin
@@ -775,64 +775,64 @@ end
 (parse_error ())
 end))
 
-let serialize_tycon = (fun writer _106535 -> (match (_106535) with
+let serialize_tycon = (fun writer _106782 -> (match (_106782) with
 | (lid, bs, k) -> begin
-(let _106536 = (serialize_lident writer lid)
-in (let _106538 = (serialize_binders writer bs)
+(let _106783 = (serialize_lident writer lid)
+in (let _106785 = (serialize_binders writer bs)
 in (serialize_knd writer k)))
 end))
 
 let deserialize_tycon = (fun reader -> ((deserialize_lident reader), (deserialize_binders reader), (deserialize_knd reader)))
 
-let serialize_monad_abbrev = (fun writer ast -> (let _106543 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.mabbrev)
-in (let _106545 = (serialize_binders writer ast.Microsoft_FStar_Absyn_Syntax.parms)
+let serialize_monad_abbrev = (fun writer ast -> (let _106790 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.mabbrev)
+in (let _106792 = (serialize_binders writer ast.Microsoft_FStar_Absyn_Syntax.parms)
 in (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.def))))
 
 let deserialize_monad_abbrev = (fun reader -> {Microsoft_FStar_Absyn_Syntax.mabbrev = (deserialize_lident reader); Microsoft_FStar_Absyn_Syntax.parms = (deserialize_binders reader); Microsoft_FStar_Absyn_Syntax.def = (deserialize_typ reader)})
 
-let serialize_sub_effect = (fun writer ast -> (let _106550 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.source)
-in (let _106552 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.target)
+let serialize_sub_effect = (fun writer ast -> (let _106797 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.source)
+in (let _106799 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.target)
 in (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.lift))))
 
 let deserialize_sub_effect = (fun reader -> {Microsoft_FStar_Absyn_Syntax.source = (deserialize_lident reader); Microsoft_FStar_Absyn_Syntax.target = (deserialize_lident reader); Microsoft_FStar_Absyn_Syntax.lift = (deserialize_typ reader)})
 
-let rec serialize_new_effect = (fun writer ast -> (let _106557 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.mname)
-in (let _106559 = (serialize_list writer serialize_binder ast.Microsoft_FStar_Absyn_Syntax.binders)
-in (let _106561 = (serialize_list writer serialize_qualifier ast.Microsoft_FStar_Absyn_Syntax.qualifiers)
-in (let _106563 = (serialize_knd writer ast.Microsoft_FStar_Absyn_Syntax.signature)
-in (let _106565 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.ret)
-in (let _106567 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.bind_wp)
-in (let _106569 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.bind_wlp)
-in (let _106571 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.if_then_else)
-in (let _106573 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.ite_wp)
-in (let _106575 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.ite_wlp)
-in (let _106577 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.wp_binop)
-in (let _106579 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.wp_as_type)
-in (let _106581 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.close_wp)
-in (let _106583 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.close_wp_t)
-in (let _106585 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.assert_p)
-in (let _106587 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.assume_p)
-in (let _106589 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.null_wp)
+let rec serialize_new_effect = (fun writer ast -> (let _106804 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.mname)
+in (let _106806 = (serialize_list writer serialize_binder ast.Microsoft_FStar_Absyn_Syntax.binders)
+in (let _106808 = (serialize_list writer serialize_qualifier ast.Microsoft_FStar_Absyn_Syntax.qualifiers)
+in (let _106810 = (serialize_knd writer ast.Microsoft_FStar_Absyn_Syntax.signature)
+in (let _106812 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.ret)
+in (let _106814 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.bind_wp)
+in (let _106816 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.bind_wlp)
+in (let _106818 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.if_then_else)
+in (let _106820 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.ite_wp)
+in (let _106822 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.ite_wlp)
+in (let _106824 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.wp_binop)
+in (let _106826 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.wp_as_type)
+in (let _106828 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.close_wp)
+in (let _106830 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.close_wp_t)
+in (let _106832 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.assert_p)
+in (let _106834 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.assume_p)
+in (let _106836 = (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.null_wp)
 in (serialize_typ writer ast.Microsoft_FStar_Absyn_Syntax.trivial)))))))))))))))))))
 and serialize_sigelt = (fun writer ast -> (match (ast) with
 | Microsoft_FStar_Absyn_Syntax.Sig_pragma (_) -> begin
 (failwith "NYI")
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_tycon ((lid, bs, k, l1, l2, qs, _)) -> begin
-(let _106606 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
-in (let _106608 = (serialize_lident writer lid)
-in (let _106610 = (serialize_binders writer bs)
-in (let _106612 = (serialize_knd writer k)
-in (let _106614 = (serialize_list writer serialize_lident l1)
-in (let _106616 = (serialize_list writer serialize_lident l2)
+(let _106853 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'a')
+in (let _106855 = (serialize_lident writer lid)
+in (let _106857 = (serialize_binders writer bs)
+in (let _106859 = (serialize_knd writer k)
+in (let _106861 = (serialize_list writer serialize_lident l1)
+in (let _106863 = (serialize_list writer serialize_lident l2)
 in (serialize_list writer serialize_qualifier qs)))))))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_typ_abbrev ((lid, bs, k, t, qs, _)) -> begin
-(let _106627 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
-in (let _106629 = (serialize_lident writer lid)
-in (let _106631 = (serialize_binders writer bs)
-in (let _106633 = (serialize_knd writer k)
-in (let _106635 = (serialize_typ writer t)
+(let _106874 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'b')
+in (let _106876 = (serialize_lident writer lid)
+in (let _106878 = (serialize_binders writer bs)
+in (let _106880 = (serialize_knd writer k)
+in (let _106882 = (serialize_typ writer t)
 in (serialize_list writer serialize_qualifier qs))))))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_datacon ((lid1, t, tyc, qs, mutuals, _)) -> begin
@@ -843,30 +843,30 @@ end
 | None -> begin
 t
 end)
-in (let _106652 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
-in (let _106654 = (serialize_lident writer lid1)
-in (let _106656 = (serialize_typ writer t')
-in (let _106658 = (serialize_tycon writer tyc)
-in (let _106660 = (serialize_list writer serialize_qualifier qs)
+in (let _106899 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'c')
+in (let _106901 = (serialize_lident writer lid1)
+in (let _106903 = (serialize_typ writer t')
+in (let _106905 = (serialize_tycon writer tyc)
+in (let _106907 = (serialize_list writer serialize_qualifier qs)
 in (serialize_list writer serialize_lident mutuals)))))))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_val_decl ((lid, t, qs, _)) -> begin
-(let _106669 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'd')
-in (let _106671 = (serialize_lident writer lid)
-in (let _106673 = (serialize_typ writer t)
+(let _106916 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'd')
+in (let _106918 = (serialize_lident writer lid)
+in (let _106920 = (serialize_typ writer t)
 in (serialize_list writer serialize_qualifier qs))))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_assume ((lid, fml, qs, _)) -> begin
-(let _106682 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'e')
-in (let _106684 = (serialize_lident writer lid)
-in (let _106686 = (serialize_formula writer fml)
+(let _106929 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'e')
+in (let _106931 = (serialize_lident writer lid)
+in (let _106933 = (serialize_formula writer fml)
 in (serialize_list writer serialize_qualifier qs))))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_let ((lbs, _, l, quals)) -> begin
-(let _106695 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'f')
-in (let _106697 = (serialize_letbindings writer lbs)
-in (let _106699 = (serialize_list writer serialize_lident l)
-in (Support.Microsoft.FStar.Util.MkoWriter.write_bool writer ((Support.Microsoft.FStar.Util.for_some (fun _105815 -> (match (_105815) with
+(let _106942 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'f')
+in (let _106944 = (serialize_letbindings writer lbs)
+in (let _106946 = (serialize_list writer serialize_lident l)
+in (Support.Microsoft.FStar.Util.MkoWriter.write_bool writer ((Support.Microsoft.FStar.Util.for_some (fun _106062 -> (match (_106062) with
 | Microsoft_FStar_Absyn_Syntax.HasMaskedEffect -> begin
 true
 end
@@ -875,34 +875,34 @@ false
 end))) quals)))))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_main ((e, _)) -> begin
-(let _106710 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'g')
+(let _106957 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'g')
 in (serialize_exp writer e))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_bundle ((l, qs, lids, _)) -> begin
-(let _106719 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'h')
-in (let _106721 = (serialize_list writer serialize_sigelt l)
-in (let _106723 = (serialize_list writer serialize_qualifier qs)
+(let _106966 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'h')
+in (let _106968 = (serialize_list writer serialize_sigelt l)
+in (let _106970 = (serialize_list writer serialize_qualifier qs)
 in (serialize_list writer serialize_lident lids))))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_new_effect ((n, _)) -> begin
-(let _106730 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'i')
+(let _106977 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'i')
 in (serialize_new_effect writer n))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_effect_abbrev ((lid, bs, c, qs, _)) -> begin
-(let _106740 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'j')
-in (let _106742 = (serialize_lident writer lid)
-in (let _106744 = (serialize_binders writer bs)
-in (let _106746 = (serialize_comp writer c)
+(let _106987 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'j')
+in (let _106989 = (serialize_lident writer lid)
+in (let _106991 = (serialize_binders writer bs)
+in (let _106993 = (serialize_comp writer c)
 in (serialize_list writer serialize_qualifier qs)))))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_sub_effect ((se, r)) -> begin
-(let _106752 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'k')
+(let _106999 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'k')
 in (serialize_sub_effect writer se))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_kind_abbrev ((l, binders, k, _)) -> begin
-(let _106761 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'l')
-in (let _106763 = (serialize_lident writer l)
-in (let _106765 = (serialize_list writer serialize_binder binders)
+(let _107008 = (Support.Microsoft.FStar.Util.MkoWriter.write_char writer 'l')
+in (let _107010 = (serialize_lident writer l)
+in (let _107012 = (serialize_list writer serialize_binder binders)
 in (serialize_knd writer k))))
 end))
 
@@ -950,14 +950,14 @@ let serialize_sigelts = (fun writer ast -> (serialize_list writer serialize_sige
 
 let deserialize_sigelts = (fun reader -> (deserialize_list reader deserialize_sigelt))
 
-let serialize_modul = (fun writer ast -> (let _106788 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.name)
-in (let _106790 = (serialize_sigelts writer [])
-in (let _106792 = (serialize_sigelts writer ast.Microsoft_FStar_Absyn_Syntax.exports)
+let serialize_modul = (fun writer ast -> (let _107035 = (serialize_lident writer ast.Microsoft_FStar_Absyn_Syntax.name)
+in (let _107037 = (serialize_sigelts writer [])
+in (let _107039 = (serialize_sigelts writer ast.Microsoft_FStar_Absyn_Syntax.exports)
 in (Support.Microsoft.FStar.Util.MkoWriter.write_bool writer ast.Microsoft_FStar_Absyn_Syntax.is_interface)))))
 
 let deserialize_modul = (fun reader -> (let m = {Microsoft_FStar_Absyn_Syntax.name = (deserialize_lident reader); Microsoft_FStar_Absyn_Syntax.declarations = (deserialize_sigelts reader); Microsoft_FStar_Absyn_Syntax.exports = (deserialize_sigelts reader); Microsoft_FStar_Absyn_Syntax.is_interface = (Support.Microsoft.FStar.Util.MkoReader.read_bool reader ()); Microsoft_FStar_Absyn_Syntax.is_deserialized = true}
-in (let _106796 = m
-in {Microsoft_FStar_Absyn_Syntax.name = _106796.Microsoft_FStar_Absyn_Syntax.name; Microsoft_FStar_Absyn_Syntax.declarations = m.Microsoft_FStar_Absyn_Syntax.exports; Microsoft_FStar_Absyn_Syntax.exports = _106796.Microsoft_FStar_Absyn_Syntax.exports; Microsoft_FStar_Absyn_Syntax.is_interface = _106796.Microsoft_FStar_Absyn_Syntax.is_interface; Microsoft_FStar_Absyn_Syntax.is_deserialized = _106796.Microsoft_FStar_Absyn_Syntax.is_deserialized})))
+in (let _107043 = m
+in {Microsoft_FStar_Absyn_Syntax.name = _107043.Microsoft_FStar_Absyn_Syntax.name; Microsoft_FStar_Absyn_Syntax.declarations = m.Microsoft_FStar_Absyn_Syntax.exports; Microsoft_FStar_Absyn_Syntax.exports = _107043.Microsoft_FStar_Absyn_Syntax.exports; Microsoft_FStar_Absyn_Syntax.is_interface = _107043.Microsoft_FStar_Absyn_Syntax.is_interface; Microsoft_FStar_Absyn_Syntax.is_deserialized = _107043.Microsoft_FStar_Absyn_Syntax.is_deserialized})))
 
 
 
