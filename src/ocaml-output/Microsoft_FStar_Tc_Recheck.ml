@@ -86,8 +86,8 @@ Microsoft_FStar_Absyn_Syntax.ktype
 end
 | _ -> begin
 (let k1 = (recompute_kind t1)
-in (let _123695 = (Microsoft_FStar_Absyn_Util.kind_formals k1)
-in (match (_123695) with
+in (let _123942 = (Microsoft_FStar_Absyn_Util.kind_formals k1)
+in (match (_123942) with
 | (bs, k) -> begin
 (let rec aux = (fun subst bs args -> (match ((bs, args)) with
 | ([], []) -> begin
@@ -116,7 +116,7 @@ k
 end
 | None -> begin
 (let k = (recompute t)
-in (let _123722 = (t.Microsoft_FStar_Absyn_Syntax.tk := Some (k))
+in (let _123969 = (t.Microsoft_FStar_Absyn_Syntax.tk := Some (k))
 in k))
 end)))
 
@@ -181,7 +181,7 @@ t
 end
 | None -> begin
 (let t = (recompute e)
-in (let _123802 = (e.Microsoft_FStar_Absyn_Syntax.tk := Some (t))
+in (let _124049 = (e.Microsoft_FStar_Absyn_Syntax.tk := Some (t))
 in t))
 end)))
 
