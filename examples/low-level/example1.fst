@@ -134,6 +134,25 @@ let factorialLoop (n:nat) (li:(ref nat)) (res:(ref nat)) =
     (factorialGuard n li)
     (factorialLoopBody n li res)
 
+
+val scopedWhile3 : loopInv:(smem -> Type)
+  -> #wglc:(smem -> Type)
+  -> wg:(unit -> whileGuard loopInv wglc)
+  -> bd:(unit -> whileBody loopInv wglc)
+  -> SST unit (fun m -> loopInv m)
+              (fun m0 _ m1 -> loopInv m1 /\ sids m0 = sids m1 /\ (~(wglc m1)))
+let rec scopedWhile3 (loopInv:(smem -> Type))
+  (#wglc:(smem -> Type))
+  (wg:(unit -> whileGuard loopInv wglc))
+  (bd:(unit -> whileBody loopInv wglc)) =
+   if (wg ())
+      then
+        ((withNewScope unit
+          (fun m -> loopInv m /\ (wglc m)) (fun _ _ m1 -> loopInv m1) bd);
+        (scopedWhile loopInv wglc wg bd))
+      else ()
+
+
 val loopyFactorial : n:nat
   -> SST nat (fun m -> True)
               (fun _ rv _ -> rv == (factorial n))
@@ -142,6 +161,26 @@ let loopyFactorial n =
   let li = salloc 0 in
   let res = salloc 1 in
   (factorialLoop n li res);
+  let v=memread res in
+  popStackFrame ();
+  v
+
+val loopyFactorial2 : n:nat
+  -> SST nat (fun m -> True)
+              (fun _ rv _ -> rv == (factorial n))
+let loopyFactorial2 n =
+  pushStackFrame ();
+  let li = salloc 0 in
+  let res = salloc 1 in
+  (scopedWhile
+    (loopInv li res)
+    (fun m -> (refExistsInMem li m) /\ ~ ((loopkupRef li m) = n))
+    (fun u -> not (memread li = n))
+    (fun u ->
+      let liv = memread li in
+      let resv = memread res in
+      memwrite li (liv + 1);
+      memwrite res ((liv+1) * resv)));
   let v=memread res in
   popStackFrame ();
   v

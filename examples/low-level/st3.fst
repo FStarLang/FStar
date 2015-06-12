@@ -402,6 +402,8 @@ match (refLoc r) with
 | InHeap -> ()
 | InStack id -> (writeStackTail r id v (st m))
 
+type  mreads (#a:Type) (r: ref a) (v:a) (m:smem) = refExistsInMem r m /\ loopkupRef r m = v
+
 (*should extend to types with decidable equality*)
 (*val is1SuffixOf : list sidt -> list sidt -> Tot bool
 let is1SuffixOf lsmall lbig =
@@ -554,4 +556,30 @@ let rec scopedWhile (loopInv:(smem -> Type))
         (scopedWhile loopInv wglc wg bd))
       else ()
 
-type  mreads (#a:Type) (r: ref a) (v:a) (m:smem) = refExistsInMem r m /\ loopkupRef r m = v
+
+effect SSTS (a:Type) (wlp: Post a -> Pre) = StSTATE a wlp wlp
+
+type whilePre (wpg:(Post bool -> Pre))
+              (wpb:(Post unit -> Pre))
+              (inv:(smem -> Type)) =
+              (*how to say that wpg implies the computation does not change the memory?*)
+              (forall h. wpg (fun b h1 -> h1 == h) h) /\
+              (forall h1. inv h1 ==> wpg (fun b h2 -> b=true ==> wpb ( fun _ -> inv) h2) h1)
+
+val scopedWhile2 : #wpg:(Post bool -> Pre) -> #wpb:(Post unit -> Pre)
+  -> wg:(unit -> SSTS bool wpg)
+  -> bd:(unit -> SSTS unit wpb)
+  -> loopInv:(smem -> Type)
+  -> SST unit
+  (requires (fun m -> loopInv m /\ whilePre wpg wpb loopInv))
+              (ensures (fun m0 _ m1 -> loopInv m1 (* /\ sids m0 = sids m1 *) ))
+(*how to say that the guard is false at the end*)
+
+(*let scopedWhile2
+ (#wpg:(Post bool -> Pre))
+ (#wpb:(Post unit -> Pre))
+ (wg:(unit -> SSTS bool wpg))
+ (bd:(unit -> SSTS unit wpb))
+ (loopInv:(smem -> Type))
+=
+  let gv:bool = wg () in ()*)
