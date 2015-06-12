@@ -601,10 +601,6 @@ let rec tequiv_tshift t1 t2 h x =
      EqBeta k (tshift_up_above (x+1) t1') (tshift_up_above x t2')
   | EqArr h1 h2 -> EqArr (tequiv_tshift h1 x) (tequiv_tshift h2 x)
 
-val lookup_extend_evar : g:env -> y:var{y>0} -> t:typ ->
-  Lemma (ensures (lookup_evar (extend_evar g 0 t) y = lookup_evar g (y - 1)))
-let lookup_extend_evar g1 y t = ()
-
 val is_var : exp -> Tot(nat)
 let is_var e = if is_EVar e then 0 else 1
 opaque type renaming (s:esub) = (forall (x:var). is_EVar (s x))
@@ -632,59 +628,17 @@ let rec substitution g1 e t s g2 h1 hs =
   | TyLam #gtemp tlam #ebody #tfun hkind hbody ->
      let hs'' : subst_typing (esub_inc) (g2) (extend_evar g2 0 tlam) =
        fun x hkind ->
-         assert(lookup_evar (extend_evar g2 0 tlam) (x + 1) =
-                lookup_evar g2 x); magic() (* <-- this works *)
-         (* this not: *)
-         (* TyVar (x+1) (kinding_extensional hkind (extend_evar g2 0 tlam)) *) in
-(*
-lambda_omega_reduced.fst(635,21-635,72): Subtyping check failed; expected type
-(kinding (extend_evar g2 0 tlam) (Some.v (lookup_evar (extend_evar g2 0 tlam)
-                                                      (x + 1))) KTyp); got type
-(kinding (extend_evar g2 0 tlam) (Some.v (lookup_evar g2 x)) KTyp)
- *)
+         TyVar (x+1) (kinding_extensional hkind (extend_evar g2 0 tlam)) in
      let hs' : subst_typing (esub_lam s) (extend_evar g1 0 tlam)
                                          (extend_evar g2 0 tlam) =
        fun y hkindg1 ->
          if y = 0
-         then
-           ((*assert(lookup_evar (extend_evar g1 0 tlam) y =
-                   lookup_evar g1 (y - 1));*) magic() (* <-- XXX problem *)
-           (* this not: *)
-           (* TyVar y (kinding_extensional hkindg1 (extend_evar g2 0 tlam)) *))
-(*
-lambda_omega_reduced.fst(637,39-637,71): Subtyping check failed; expected type
-(kinding g1 (Some.v (lookup_evar g1 (y - 1))) KTyp); got type
-(kinding g1 (Some.v (lookup_evar (extend_evar g1 0 tlam) y)) KTyp)
- *)
-         else let hgamma2 =
-                assert(lookup_evar (extend_evar g1 0 tlam) y =
-                       lookup_evar g1 (y - 1)); (* <-- this works *)
-                let h : kinding g1 (Some.v (lookup_evar g1 (y - 1))) KTyp =
-                        magic() in
-(*                let h = kinding_extensional hkindg1 g1 in *)
-(*
-lambda_omega_reduced.fst(659,39-659,71): Subtyping check failed; expected type
-(kinding g1 (Some.v (lookup_evar g1 (y - 1))) KTyp); got type
-(kinding g1 (Some.v (lookup_evar (extend_evar g1 0 tlam) y)) KTyp)
- *)
-                hs (y - 1) h
-              in
-              (assert (esub_lam s y = esubst esub_inc (s (y - 1)));
-              assert(lookup_evar (extend_evar g1 0 tlam) y =
-                     lookup_evar g1 (y - 1)); magic() (* <-- this works *)
-              (* substitution esub_inc hgamma2 hs'' <-- this doesn't *)
-                      )
-(*
-lambda_omega_reduced.fst(672,14-672,48): Subtyping check failed; expected type
-(typing (extend_evar g2 0 tlam) (esub_lam s y)
-  (Some.v (lookup_evar (extend_evar g1 0 tlam) y))); got type
-(typing (extend_evar g2 0 tlam) (esubst esub_inc (s (y - 1)))
-  (Some.v (lookup_evar g1 (y - 1))))
- *)
+         then TyVar y (kinding_extensional hkindg1 (extend_evar g2 0 tlam))
+         else let hgamma2 = hs (y - 1) (kinding_extensional hkindg1 g1) in
+              substitution esub_inc hgamma2 hs''
      in (esub_lam_hoist tlam ebody s;
          TyLam tlam (kinding_extensional hkind g2)
                (substitution (esub_lam s) hbody hs'))
-
   | TyEqu het1 hequiv hkind ->
      TyEqu (substitution s het1 hs) hequiv (kinding_extensional hkind g2)
 
@@ -696,17 +650,8 @@ opaque val typing_substitution: #e:exp -> #v:exp -> #t_x:typ ->
 let rec typing_substitution e v t_x t g h1 h2 =
   let hs : subst_typing (esub_beta v) (extend_evar g 0 t_x) g =
     fun y hkind -> if y = 0 then h1
-                   else
-                     (assert(lookup_evar (extend_evar g 0 t_x) y =
-                             lookup_evar g (y - 1)); (* <-- this works! *)
-                      admit()
-                      (* TyVar (y-1) (kinding_extensional hkind g) <-- this not *))
-(*
-lambda_omega_reduced.fst(653,36-653,65): Subtyping check failed; expected type
-(kinding g (Some.v (lookup_evar g (y - 1))) KTyp); got type
-(kinding g (Some.v (lookup_evar (extend_evar g 0 t_x) y)) KTyp)
- *)
-  in substitution (esub_beta v) h2 hs
+                   else TyVar (y-1) (kinding_extensional hkind g) in
+  substitution (esub_beta v) h2 hs
 
 (* analogous to above *)
 val tsubst_gen_tlam_aux : t:typ -> x:var -> y:var ->
