@@ -1,4 +1,4 @@
-#define VERIFY
+#include "preproc.h"
 
 (* STATUS : 
    Useful axioms to handle integer mathematical formulas.
