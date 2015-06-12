@@ -3,11 +3,11 @@
 module Fixnat
 open IO
 
-val exp: nat -> nat -> Tot nat
-let rec exp x n =
-  if n = 0 then 1 else x*(exp x (n-1))
+val exp2: nat -> Tot nat
+let rec exp2 n =
+  if n = 0 then 1 else 2*(exp2 (n-1))
 
-type fixnat (n:nat) = x:nat{x < exp 2 n}
+type fixnat (n:nat) = x:nat{x < exp2 n}
 
 val log2: #nb:nat{nb > 0} -> (n:fixnat nb) -> Tot (res:nat{res <= nb})
 let rec log2 #nb n =
@@ -16,7 +16,7 @@ let rec log2 #nb n =
 
 val ntofn: nat -> n:nat -> fixnat n
 let ntofn x n =
-  if x < (exp 2 n) then x
+  if x < (exp2 n) then x
   else failwith "insufficient precision"
 
 val fn2n: #n:nat -> x:(fixnat n) -> Tot nat
@@ -25,7 +25,7 @@ let fn2n #n x = x
 (* TODO: what is the semantics of overflow with the add circuit we are using? *)
 val add: #n:nat -> n1:(fixnat n) -> n2:(fixnat n) -> Tot (fixnat n)
 let rec add #n n1 n2 =
-  (n1 + n2) % (exp 2 n)
+  (n1 + n2) % (exp2 n)
 
 (*let foo () =
   let nsize = 4 in
