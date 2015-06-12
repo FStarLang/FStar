@@ -4,7 +4,8 @@
  --*)
 
 module Stack
-#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
+(*#set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"*)
+(*uncommenting the above fuel options seems to prevent Fstar from unfolding definitions in proofs*)
 
 open List
 
@@ -17,7 +18,7 @@ let push st e = e :: st
 val stail : #a:Type -> Stack a -> Tot (Stack a)
 let stail st =
 match st with
-| nil -> []
+| [] -> []
 | h::tl -> tl
 
 let isNonEmpty = is_Cons

@@ -18,8 +18,9 @@ only matters at the time of allocation. Functions like increment can be
 defined without without bothering about that distinction*)
 
 (*ideally, the refExistsInMem clauses should not be needed in the postcondition*)
-val incrementRef : r:(ref int) -> SST unit  (fun m -> (refExistsInMem r m)==true)
-(fun m0 a m1 -> (refExistsInMem r m0) /\ (refExistsInMem r m1) /\ (mstail m0 = mstail m1) /\ (loopkupRef r m1 = (loopkupRef r m0) + 1))
+val incrementRef : r:(ref int) -> SST unit
+  (requires (fun m -> (refExistsInMem r m)==true))
+  (ensures (fun m0 a m1 -> (refExistsInMem r m0) /\ (refExistsInMem r m1) /\ (loopkupRef r m1 = (loopkupRef r m0) + 1)))
 let incrementRef r =
   let oldv = memread r in
   memwrite r (oldv + 1)
@@ -69,7 +70,6 @@ val incrementUsingStack3 : vi:int -> SST int  (fun _ -> True)
     (fun m0 vo m1 ->  m0 =  m1 /\ vo=vi+1)
 let incrementUsingStack3 vi =
   pushStackFrame ();
-  pushStackFrame ();
     let r = salloc vi in
     let r2 = salloc 0 in
     let oldv = memread r in
@@ -83,7 +83,7 @@ let incrementUsingStack3 vi =
    What is going on under the hood?
    Is this because of the ite_wp in the definition of an effect? *)
 val incrementIfNot2 : r:(ref int) -> SST int  (fun m -> (refExistsInMem r m)==true)
-(fun m0 a m1 -> (refExistsInMem r m0) /\ (refExistsInMem r m1) /\ (mstail m0 = mstail m1) /\ True)
+(fun m0 a m1 -> (refExistsInMem r m0) /\ (refExistsInMem r m1))
 let incrementIfNot2 r =
   let oldv = memread r in
   (if (oldv=2)
@@ -112,9 +112,26 @@ type  loopInv (li : ref nat) (res : ref nat) (m:smem) =
     /\ (loopkupRef res m = factorial (loopkupRef li m))
     /\ (~ (li = res))
 
+val readTailRef : #a:Type -> r:(ref a) -> m:smem ->
+  Lemma (requires (refExistsInMem r (mtail m)))
+        (ensures (refExistsInMem r (mtail m))
+            /\ loopkupRef r m =  loopkupRef r (mtail m))
+            [SMTPat (refExistsInMem r (mtail m))]
+let readTailRef r m = (admit ())
+
+
+val writeTailRef : #a:Type -> r:(ref a) -> m:smem -> v:a ->
+  Lemma (requires (refExistsInMem r (mtail m)))
+        (ensures (refExistsInMem r (mtail m))
+            /\ mtail (writeMemAux r m v) =  writeMemAux r (mtail m) v)
+            [SMTPat (refExistsInMem r (mtail m))]
+let writeTailRef r m v = (admit ())
+
 val factorialLoopBody :
   n:nat -> li:(ref nat) -> res:(ref nat)
-  -> unit -> whileBody (loopInv li res) (factorialGuardLC n li)
+  -> unit ->
+  whileBody (loopInv li res) (factorialGuardLC n li)
+      (*SST unit (fun m -> loopInv li res (mtail m)) (fun m0 _ m1 -> loopInv li res (mtail m1))*)
 let factorialLoopBody (n:nat) (li:(ref nat)) (res:(ref nat)) u =
   let liv = memread li in
   let resv = memread res in
