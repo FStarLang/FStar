@@ -46,19 +46,19 @@ type memblock = heap
 
 (*How does List.memT work? is equality always decidable?*)
 
-  (* The axiomatization is agnostic
-    about resuse of memory ids, i.e. it should (provably) have both kind of models.
-    A client code's correctness/well-typedness cannot depend on stack-ids being reused.
-    That will actually be a strictly weaker assumption, than the current one
-    where the client can potentially depend on stack ids being never reused.
+(* The axiomatization is agnostic
+about resuse of memory ids, i.e. it should (provably) have both kind of models.
+A client code's correctness/well-typedness cannot depend on stack-ids being reused.
+That will actually be a strictly weaker assumption, than the current one
+where the client can potentially depend on stack ids being never reused.
 
-    This is similar to the case of freshness of references in ST.
-    The axiomatization is agnostic about whether a reference can be reused after it
-    is freed.
-    *)
+This is similar to the case of freshness of references in ST.
+The axiomatization is agnostic about whether a reference can be reused after it
+is freed.
+*)
 type memStackAux = Stack (sidt * memblock)
 
-val  ssids : memStackAux ->  Tot (list sidt)
+val ssids : memStackAux ->  Tot (list sidt)
 let ssids ms = mapT fst ms
 
 val wellFormed : memStackAux -> Tot bool
@@ -458,7 +458,8 @@ assume val freeRef:  #a:Type -> r:(ref a)  ->
 (*make sure that the ids are monotone *)
 assume val pushStackFrame:  unit -> SST unit
     (fun m -> True)
-    (fun m0 _ m1 -> (mtail m1 = m0)
+    (fun m0 _ m1 ->
+             (mtail m1 = m0)
           /\ (isNonEmpty (st m1))
           /\ topstb m1 = emp)
 
