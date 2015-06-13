@@ -72,6 +72,7 @@ match bound with
 type  innerLoopInv (n:nat) (lo: ref nat) (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
   (guardLC n li lo m)
   /\ (refExistsInMem res m)
+  /\  ~(li=lo) /\ ~(li==res) /\ ~(lo==res)
   /\ (forall (k:nat).
         (k < (loopkupRef li m)) ==> (marked n (loopkupRef res m) ((loopkupRef lo m)*k)))
 
@@ -82,11 +83,34 @@ let mark n f index =
 (*we are inside a loop, so, we have a fresh stack at each iteration of the loop.
  we store li there. creating li is a part of the outer loop*)
 
+val testAliasing : n:nat -> ((k:nat{k<n}) -> Tot bool) -> SST unit (fun  _  -> True) (fun _ _ _ -> True)
+let testAliasing n initv =
+  pushStackFrame ();
+  let li: ref nat = salloc 1 in
+  let res : ref ((k:nat{k<n}) -> Tot bool) = salloc initv in
+  let resv=memread res in
+    memwrite li 2;
+    let resv2=memread res in
+      assert (resv ==  resv2);
+      popStackFrame ()
+
+val testAliasing2 : n:nat
+ -> li : ref nat
+ -> res : ref ((k:nat{k<n}) -> Tot bool)
+ -> SST unit
+          (requires (fun  m  -> refExistsInMem res m /\ refExistsInMem li m /\ (li=!=res)))
+          (ensures (fun _ _ _ -> True))
+let testAliasing2 n li res =
+  let resv=memread res in
+    memwrite li 2;
+    let resv2=memread res in
+      assert (resv ==  resv2)
+
 val innerLoop : n:nat
   -> lo: ref nat
   -> li : ref nat
   -> res : ref ((k:nat{k<n}) -> Tot bool)
-  -> SST unit (fun m -> refExistsInMem lo m /\ refExistsInMem res m /\ (mreads li 0 m) /\ ~(li=lo))
+  -> SST unit (fun m -> refExistsInMem lo m /\ refExistsInMem res m /\ (mreads li 0 m) /\ ~(li=lo) /\ ~(li==res) /\ ~(lo==res) )
               (fun _ _ m1 -> refExistsInMem lo m1 /\ refExistsInMem res m1 /\  refExistsInMem li m1
                   /\ (forall (k:nat). (k * (loopkupRef lo m1) < n)  ==> marked n (loopkupRef res m1) ((loopkupRef lo m1)*k))
                   )
