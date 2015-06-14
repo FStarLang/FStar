@@ -25,18 +25,10 @@ type isPrime n = forall (m:nat). ((2<m /\ m<n) ==> ~ (divides m n))
 (*The program will be asked to compute first n primes. *)
 (*Suppose we are at the m^th iteration in the outer loop*)
 
-(*in a simplified version both inner and outer guards are same; just different variables*)
-type guardLC (n:nat) (lo : ref nat) (li : ref nat)
+type innerGuardLC (n:nat) (lo : ref nat) (li : ref nat)
 (m:smem) =
   (refExistsInMem li m) && (refExistsInMem lo m) &&
     (((loopkupRef li m) * (loopkupRef lo m) < n))
-
-val guard :  n:nat -> lo:(ref nat) -> li:(ref nat)  -> unit
-  -> whileGuard (fun m ->  (refExistsInMem li m) /\ (refExistsInMem lo m))
-                (guardLC n li lo)
-let guard n li lo u =
-  (memread li * memread lo < n)
-(* the guard of a while loop is not supposed to change the memory*)
 
 type vector (a:Type) (n:nat) = (k:nat{k<n}) -> Tot a
 
@@ -62,8 +54,9 @@ type distinctRefsExists3
   (ra:ref a) (rb: ref b) (rc: ref c)  =
   (refExistsInMem ra m) /\ (refExistsInMem rb m) /\ (refExistsInMem rc m) /\ (ra=!=rb) /\ (rb=!=rc) /\ (ra=!=rc)
 
-type  innerLoopInv (n:nat) (lo: ref nat) (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
+type  innerLoopInv (n:nat) (lo: ref nat) (lov:nat) (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
  distinctRefsExists3 m lo li res
+  /\ loopkupRef lo m = lov
   /\ (((loopkupRef li m)-1)*(loopkupRef lo m) < n)
   /\ (forall (k:nat).
         (k < (loopkupRef li m)) ==> (marked n (loopkupRef res m) ((loopkupRef lo m)*k)))
@@ -76,18 +69,19 @@ type multiplesMarked (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
 
 val innerLoop : n:nat{n>1}
   -> lo: ref nat
+  -> lov:nat
   -> li : ref nat
   -> res : ref ((k:nat{k<n}) -> Tot bool)
   -> SST unit
-      (fun m -> distinctRefsExists3 m li lo res /\ loopkupRef li m = 0)
+      (fun m -> distinctRefsExists3 m li lo res /\ loopkupRef li m = 0 /\ loopkupRef lo m = lov)
       (fun m0 _ m1 -> distinctRefsExists3 m1 li lo res
-(* need to strengthen loopInv for : /\ refExistsInMem lo m0 /\ loopkupRef lo m0 = loopkupRef lo m1*)
+                      /\ loopkupRef lo m1 = lov
                      /\ multiplesMarked n (loopkupRef res m1) (loopkupRef lo m1)
       )
-let innerLoop n lo li res =
+let innerLoop n lo lov li res =
   scopedWhile
-    (innerLoopInv n lo li res)
-    (guardLC n lo li)
+    (innerLoopInv n lo lov li res)
+    (innerGuardLC n lo li)
     (fun u -> (memread li * memread lo < n))
     (fun u ->
       let liv = memread li in
@@ -103,3 +97,57 @@ val multiplesMarkedAsDivides :
     (requires (multiplesMarked2 n bitv lo))
     (ensures (multiplesMarked n bitv lo))
 let multiplesMarkedAsDivides n bitv lo = ()
+
+type distinctRefsExists2
+  (#a:Type) (#b:Type) (m:smem)
+  (ra:ref a) (rb: ref b)  =
+  (refExistsInMem ra m) /\ (refExistsInMem rb m)  /\ (ra=!=rb)
+
+type outerGuardLC (n:nat) (lo : ref nat)
+(m:smem) =
+  (refExistsInMem lo m) && ((loopkupRef lo m) < n)
+
+type  outerLoopInv (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
+ distinctRefsExists2 m lo res
+  /\ (((loopkupRef lo m) - 1) < n)
+  /\ (1<(loopkupRef lo m))
+  /\ (forall (k:nat).
+        (1<k /\ k < (loopkupRef lo m)) ==> multiplesMarked n (loopkupRef res m) k)
+
+val outerLoop : n:nat{n>1}
+  -> lo: ref nat
+  -> res : ref ((k:nat{k<n}) -> Tot bool)
+  -> SST unit
+      (fun m -> distinctRefsExists2 m lo res /\ loopkupRef lo m =2)
+      (fun m0 _ m1 ->
+            distinctRefsExists2 m1 lo res
+           /\ (forall (k:nat).
+                (k < n ==> multiplesMarked n (loopkupRef res m1) k))
+      )
+
+val factorialLoopBody :
+  n:nat
+  -> lo:(ref nat)
+  -> res : ref ((k:nat{k<n}) -> Tot bool)
+  -> unit ->
+  whileBody (fun m -> refExistsInMem lo m == true) (outerGuardLC n lo)
+      (*SST unit (fun m -> loopInv li res (mtail m)) (fun m0 _ m1 -> loopInv li res (mtail m1))*)
+let factorialLoopBody n lo res u =
+  (*let li=salloc 0 in*)
+  (*it seems that lemmas are needed about how salloc commutes with memory operations*)
+  memwrite lo (memread lo)
+
+
+
+let outerLoop1 n lo res =
+  scopedWhile
+    (outerLoopInv n lo res)
+    (outerGuardLC n lo)
+    (fun u -> (memread lo < n))
+    (fun u ->
+      let li = salloc 0 in
+      let resv = memread res in
+      let lov = memread lo in
+      innerLoop n lo lov li res;
+      memwrite lo (lov+1)
+      )
