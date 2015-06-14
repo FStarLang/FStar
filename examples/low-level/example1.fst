@@ -206,3 +206,30 @@ let loopyFactorial2 (n:nat) =
   Hopefully, most of the code will not need the low-level style.
   Beautiful functional programs will also be translated to C?
   *)
+
+
+  (*we are inside a loop, so, we have a fresh stack at each iteration of the loop.
+   we store li there. creating li is a part of the outer loop*)
+
+  val testAliasing : n:nat -> ((k:nat{k<n}) -> Tot bool) -> SST unit (fun  _  -> True) (fun _ _ _ -> True)
+  let testAliasing n initv =
+    pushStackFrame ();
+    let li: ref nat = salloc 1 in
+    let res : ref ((k:nat{k<n}) -> Tot bool) = salloc initv in
+    let resv=memread res in
+      memwrite li 2;
+      let resv2=memread res in
+        assert (resv ==  resv2);
+        popStackFrame ()
+
+  val testAliasing2 : n:nat
+   -> li : ref nat
+   -> res : ref ((k:nat{k<n}) -> Tot bool)
+   -> SST unit
+            (requires (fun  m  -> refExistsInMem res m /\ refExistsInMem li m /\ (li=!=res)))
+            (ensures (fun _ _ _ -> True))
+  let testAliasing2 n li res =
+    let resv=memread res in
+      memwrite li 2;
+      let resv2=memread res in
+        assert (resv ==  resv2)
