@@ -14,10 +14,12 @@ open List
 open ListSet
 
 
-val divides : pos -> nat -> Tot bool
-let divides divisor n = ((n % divisor) = 0)
+(*val divides : pos -> nat -> Tot bool
+let divides divisor n = ((n % divisor) = 0)*)
+(*Instead, below is a definition from first principles*)
+type divides  (divisor :nat) (n:nat) = exists (k:nat). k*divisor=n
 
-type isPrime n = forall (m:nat). ((2<m /\ m<n) ==> not (divides m n))
+type isPrime n = forall (m:nat). ((2<m /\ m<n) ==> ~ (divides m n))
 
 (*this program has nested loops. first, we define the inner loop*)
 (*The program will be asked to compute first n primes. *)
@@ -66,8 +68,11 @@ type  innerLoopInv (n:nat) (lo: ref nat) (li : ref nat) (res:ref ((k:nat{k<n}) -
   /\ (forall (k:nat).
         (k < (loopkupRef li m)) ==> (marked n (loopkupRef res m) ((loopkupRef lo m)*k)))
 
-type multiplesMarked (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
+type multiplesMarked2 (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
 (forall (k:nat). (k * lo < n)  ==> marked n bitv (lo*k))
+
+type multiplesMarked (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
+(forall (m:nat{m<n}). (divides lo m) ==> marked n bitv m)
 
 val innerLoop : n:nat{n>1}
   -> lo: ref nat
@@ -75,7 +80,8 @@ val innerLoop : n:nat{n>1}
   -> res : ref ((k:nat{k<n}) -> Tot bool)
   -> SST unit
       (fun m -> distinctRefsExists3 m li lo res /\ loopkupRef li m = 0)
-      (fun _ _ m1 -> distinctRefsExists3 m1 li lo res
+      (fun m0 _ m1 -> distinctRefsExists3 m1 li lo res
+(* need to strengthen loopInv for : /\ refExistsInMem lo m0 /\ loopkupRef lo m0 = loopkupRef lo m1*)
                      /\ multiplesMarked n (loopkupRef res m1) (loopkupRef lo m1)
       )
 let innerLoop n lo li res =
@@ -89,3 +95,11 @@ let innerLoop n lo li res =
       let resv = memread res in
       memwrite li (liv+1);
       memwrite res (mark n resv (lov * liv)))
+
+
+val multiplesMarkedAsDivides :
+  n:nat -> bitv:((k:nat{k<n}) -> Tot bool) -> lo:pos
+  -> Lemma
+    (requires (multiplesMarked2 n bitv lo))
+    (ensures (multiplesMarked n bitv lo))
+let multiplesMarkedAsDivides n bitv lo = ()
