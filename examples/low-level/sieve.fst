@@ -38,24 +38,12 @@ let guard n li lo u =
 
 type vector (a:Type) (n:nat) = (k:nat{k<n}) -> Tot a
 
-type refBitVector (n:nat) = ref (vector bool n)
-
 (*cannot make n implcit, because the typechecker usually canNOT figure it out from f*)
 val marked : n:nat -> (vector bool n) -> m:nat{m<n} -> Tot bool
 let marked n f m = (f m)
 
 (*#set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"*)
 (*delta-folding vector creates a wierd error; see below*)
-
-(*nmult, for times when the typechecker confuses nats and ints*)
-val nmult : nat -> nat -> Tot nat
-let nmult n m = n*m
-
-val bforall : (nat -> Tot bool) -> nat -> Tot bool
-let rec bforall f bound =
-match bound with
-| 0 -> true
-| _ -> (f bound) && (bforall f (bound -1))
 
 (*li is the counter for the inner loop; lo is for the outer one*)
 (*the inner loop invariant says that cells lo*0, lo*1, lo*2 ....lo*(li-1) (first li multiples of lo) are marked.*)
@@ -73,22 +61,23 @@ type distinctRefsExists3
   (refExistsInMem ra m) /\ (refExistsInMem rb m) /\ (refExistsInMem rc m) /\ (ra=!=rb) /\ (rb=!=rc) /\ (ra=!=rc)
 
 type  innerLoopInv (n:nat) (lo: ref nat) (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
-  (refExistsInMem li m) && (refExistsInMem lo m)
-     && (((loopkupRef li m)-1)*(loopkupRef lo m) < n)
-  /\ (refExistsInMem res m)
-  /\  (li=!=lo) /\ (li=!=res) /\ (lo=!=res)
+ distinctRefsExists3 m lo li res
+  /\ (((loopkupRef li m)-1)*(loopkupRef lo m) < n)
   /\ (forall (k:nat).
         (k < (loopkupRef li m)) ==> (marked n (loopkupRef res m) ((loopkupRef lo m)*k)))
+
+type multiplesMarked (n:nat) (bitv : (k:nat{k<n}) -> Tot bool) (lo:nat) =
+(forall (k:nat). (k * lo < n)  ==> marked n bitv (lo*k))
 
 val innerLoop : n:nat{n>1}
   -> lo: ref nat
   -> li : ref nat
   -> res : ref ((k:nat{k<n}) -> Tot bool)
-  -> SST unit (fun m -> refExistsInMem lo m /\ refExistsInMem res m /\ (mreads li 0 m) /\ ~(li=lo) /\ ~(li==res) /\ ~(lo==res) )
-              (fun _ _ m1 -> refExistsInMem lo m1 /\ refExistsInMem res m1 /\  refExistsInMem li m1
-                  /\ (forall (k:nat). (k * (loopkupRef lo m1) < n)  ==> marked n (loopkupRef res m1) ((loopkupRef lo m1)*k))
-                  )
-
+  -> SST unit
+      (fun m -> distinctRefsExists3 m li lo res /\ loopkupRef li m = 0)
+      (fun _ _ m1 -> distinctRefsExists3 m1 li lo res
+                     /\ multiplesMarked n (loopkupRef res m1) (loopkupRef lo m1)
+      )
 let innerLoop n lo li res =
   scopedWhile
     (innerLoopInv n lo li res)
@@ -100,11 +89,3 @@ let innerLoop n lo li res =
       let resv = memread res in
       memwrite li (liv+1);
       memwrite res (mark n resv (lov * liv)))
-
-      (*let resv2=memread res in
-      assert (resv2==resv);*)
-
-(*val innerLoopBody :
-  n:nat -> lo:(ref pos) -> li:(ref pos) -> res:(ref (ll:seq bool{length ll=n}))
-  -> unit ->
-  whileBody (innerLoopInv n li lo res) (guardLC n li)*)
