@@ -142,7 +142,7 @@ let initialize_values size len nb =
   done;
   (fstar_array, big_int_array, zarith_array)
 
-let rounds = 10	
+let rounds = 5	
 			
 let benchmark_fstar_mul values len =
   for j = 0 to rounds do
@@ -188,7 +188,7 @@ let benchmark_zarith_add values len =
 
 let run_benchmark () =
   let f_values, b_values, z_values =
-    initialize_values size 10 10000 in
+    initialize_values size 10 1000 in
   let time f x s =
     let t = Sys.time() in
     let fx = f x in
