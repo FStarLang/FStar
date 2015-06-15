@@ -1,4 +1,4 @@
-(*--build-options
+(*--build-config
   options:--z3timeout 20;
   variables:LIB=../../lib;
   other-files:$LIB/classical.fst $LIB/ext.fst $LIB/set.fsi $LIB/set.fst $LIB/heap.fst

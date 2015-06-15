@@ -1,3 +1,5 @@
+#include "preproc.h"
+
 (* STATUS : lemmas to prove at the end of the file, see TODOS *)
 
 module ShiftArray
@@ -71,7 +73,7 @@ let shift_array_lemma_aux a len i b =
   let t = getTemplate a in
   pow2_const_template_lemma a (len-1) i;
   paren_mul_left (pow2 (bitweight t (len-1))) (pow2 (bitweight t i)) (get b (len+i-1));
-  //swap_add_plus_minus len i 1;
+  swap_add_plus_minus len i 1;
   swap_mul (pow2 (bitweight t i)) (get a (len-1));
   paren_mul_left (pow2 (bitweight t (len-1))) (get a (len-1)) (pow2 (bitweight t i));
   distributivity_add_left (pow2 (bitweight t (len-1)) * get a (len-1)) (eval a (len-1)) (pow2 (bitweight t i))
@@ -94,7 +96,7 @@ let rec shift_array_lemma a len i b =
   | _ ->
      let t = getTemplate a in
      shift_array_lemma a (len-1) i b ; 
-     //swap_add_plus_minus len i 1;
+     swap_add_plus_minus len i 1;
      shift_array_lemma_aux a len i b 
 
 val theorem_shift_array:
@@ -107,22 +109,31 @@ val theorem_shift_array:
 let theorem_shift_array a i =
   shift_array_lemma a (getLength a) i (shift_array a i)
 
-assume val shift_array_max_value_lemma:
+#ifndef COMPILE
+assume 
+#endif
+val shift_array_max_value_lemma:
   a:bigint{ forall (n:nat). getTemplate a n = getTemplate a 0 } -> 
   i:nat -> 
   Lemma
     (requires (True))
     (ensures ( maxValue (shift_array a i) = maxValue a ))
     [SMTPat (shift_array a i)]
-//let shift_array_max_value_lemma a i = ()
+#ifdef COMPILE
+let shift_array_max_value_lemma a i = ()
+#endif
 
-assume val shift_array_max_size_lemma:
+#ifndef COMPILE
+assume 
+#endif
+val shift_array_max_size_lemma:
   a:bigint{ forall (n:nat). getTemplate a n = getTemplate a 0 } -> 
   i:nat -> 
   Lemma
     (requires (True))
     (ensures ( maxSize (shift_array a i) = maxSize a ))
     [SMTPat (shift_array a i)]
-//let shift_array_max_size_lemma a i = ()
-
+#ifdef COMPILE
+let shift_array_max_size_lemma a i = ()
+#endif
 

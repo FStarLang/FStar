@@ -1,3 +1,5 @@
+#include "preproc.h"
+
 module Addition
 
 open IntLib
@@ -99,7 +101,10 @@ val theorem_addition:
 let theorem_addition a b len = addition_lemma a b len (addition a b)
 
 (* TODO : prove *)
-assume val addition_max_value_lemma:
+#ifndef COMPILE
+assume 
+#endif
+val addition_max_value_lemma:
   a:bigint{ maxSize a <= maxLimbSize a - 1 } ->
   b:bigint{ (SameFormat a b) 
 	    /\ (maxSize b <= maxLimbSize a - 1) } ->
@@ -107,10 +112,15 @@ assume val addition_max_value_lemma:
     (requires (True))
     (ensures (maxValue (addition a b) <= maxValue a + maxValue b))
     [SMTPat (addition a b)]
-//let addition_max_value_lemma a b = ()
+#ifdef COMPILE
+let addition_max_value_lemma a b = ()
+#endif
 
 (* TODO : prove *)
-assume val addition_max_size_lemma:
+#ifndef COMPILE
+assume 
+#endif
+val addition_max_size_lemma:
   a:bigint{ maxSize a <= maxLimbSize a - 1 } ->
   b:bigint{ (SameFormat a b) 
 	    /\ (maxSize b <= maxLimbSize a - 1) } ->
@@ -118,4 +128,6 @@ assume val addition_max_size_lemma:
     (requires (True))
     (ensures (maxSize (addition a b) <= max (maxSize a) (maxValue b) + 1))
     [SMTPat (addition a b)]
-//let addition_max_size_lemma a b = ()
+#ifdef COMPILE
+let addition_max_size_lemma a b = ()
+#endif

@@ -25,7 +25,7 @@ let rec bintonat (nb:nat) bl =
   | [] -> 0
   | hd::tl ->
      let x = b2i hd in
-     x*(exp 2 (nb-1)) + (bintonat (nb-1) tl)
+     x*(exp2 (nb-1)) + (bintonat (nb-1) tl)
 
 val nattobin_helper: #nb:nat{nb > 0} -> n:(fixnat nb) -> Tot (nlist bool (log2 #nb n))
 let rec nattobin_helper #nb n =
@@ -45,16 +45,16 @@ let rec bton_snoc nl l b =
  | hd::tl ->
    (*let _ = assert ((snoc #_ #nl (hd::tl) b) == hd::(snoc #_ #(nl-1) tl b)) in
      let _ = assert ((bintonat (nl+1) (hd::(snoc #_ #(nl-1) tl b))) ==
-                     ((b2i hd)*(exp 2 nl) + (bintonat #nl (snoc #_ #(nl-1) tl b)))) in*)
+                     ((b2i hd)*(exp2 nl) + (bintonat #nl (snoc #_ #(nl-1) tl b)))) in*)
    let _ = bton_snoc (nl-1) tl b in
-   let _ = assert (((b2i hd)*(exp 2 nl) + (bintonat (nl-1) tl)*2 + (b2i b)) ==
-                   ((b2i hd)*(exp 2 (nl-1))*2 + (bintonat (nl-1) tl)*2 + (b2i b))) in
+   let _ = assert (((b2i hd)*(exp2 nl) + (bintonat (nl-1) tl)*2 + (b2i b)) ==
+                   ((b2i hd)*(exp2 (nl-1))*2 + (bintonat (nl-1) tl)*2 + (b2i b))) in
    admit()
    (*
      (* TODO: Z3 can't prove the following assertion, which is just distributivity *)
-   let _ = assert (((b2i hd)*(exp 2 (nl-1))*2 + (bintonat (nl-1) tl)*2 + (b2i b)) ==
-                   (((b2i hd)*(exp 2 (nl-1)) + (bintonat (nl-1) tl))*2 + (b2i b))) in
-   let _ = assert ((((b2i hd)*(exp 2 (nl-1)) + (bintonat (nl-1) tl))*2 + (b2i b)) ==
+   let _ = assert (((b2i hd)*(exp2 (nl-1))*2 + (bintonat (nl-1) tl)*2 + (b2i b)) ==
+                   (((b2i hd)*(exp2 (nl-1)) + (bintonat (nl-1) tl))*2 + (b2i b))) in
+   let _ = assert ((((b2i hd)*(exp2 (nl-1)) + (bintonat (nl-1) tl))*2 + (b2i b)) ==
                    (bintonat nl l)*2 + (b2i b)) (* QED *)
 *)
 
@@ -96,11 +96,12 @@ let nattobin #nb n =
 val correct_nattobin: nb:nat{nb > 0} -> n:(fixnat nb) ->
      Lemma (requires True)
            (ensures (bintonat nb (nattobin #nb n)) == n)
-let correct_natobin nb n =
+let correct_nattobin nb n =
  let nl = log2 #nb n in
  let bs = nattobin_helper #nb n in
+ let bs' = MyList.revT #_ #nl bs in
  correct_ntob_helper nb n;
- padding_preserves_semantics nl nb bs
+ padding_preserves_semantics nl nb bs'
 
 (* CIRCUITS *)
 
@@ -153,15 +154,15 @@ let rec map_inverse #n l f g =
   | [] -> ()
   | hd::tl -> map_inverse #(n-1) #_ #_ tl f g
 
-(**** HERE ****)
-
-val eval_wires: booleanckt
-
 val const_correct: #nb:nat{nb > 0} -> n:(fixnat nb) ->
     Lemma (requires (True))
           (ensures ((bintonat #nb (evalboolckt_bundle #nb (genbooleanckt_const #nb n))) == n))
 let rec const_correct #nb n =
+  let bl = nattobin #nb n in
+  map_inverse #nb #_ #_ bl BConst evalboolckt;
+  correct_nattobin nb n
 
+(* HERE *)
 
 (* Adder circuit *)
 

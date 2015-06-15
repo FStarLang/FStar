@@ -1,3 +1,5 @@
+#include "preproc.h"
+
 (*
   This library file contains definitions for standard math functions.
   They should be extended with anything necessary and the associated lemmas.

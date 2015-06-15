@@ -46,6 +46,10 @@ let rec intersect f s1 s2 = match s1 with
 
 let mem f x s = List.mem x s
 
+type Equal (#a:Type) (f:cmp a) (s1:ordset a f) (s2:ordset a f) =
+  (forall x. mem f x s1 = mem f x s2)
+
+
 let choose f s = match s with
   | []   -> None
   | x::_ -> Some x
@@ -110,7 +114,7 @@ let choose_lem f s = match s with
   | [] -> ()
   | _  ->  
     let Some e = choose f s in
-    eq_lemma f s (insert f e (remove f e s))
+    cut (Equal f s (insert f e (remove f e s)))
 
 let rec remove_lem f x s = match s with
   | []     -> ()
@@ -120,6 +124,24 @@ let rec remove_size f x s = match s with
   | []     -> ()
   | hd::tl ->
     if x = hd then () else remove_size f x tl
+
+let rec subset f s1 s2 = match s1 with
+  | []     -> true
+  | hd::tl -> mem f hd s2 && subset f tl s2
+
+let rec mem_subset f s1 s2 = match s1 with
+  | []     -> ()
+  | hd::tl -> mem_subset f tl s2
+
+let singleton f x = [x]
+
+let mem_singleton f x y = ()
+
+let is_singleton f s = match s with
+  | _::[] -> true
+  | _     -> false
+
+let is_singleton_lemma f x = ()
 
 (**********)
 

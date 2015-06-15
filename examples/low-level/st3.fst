@@ -46,19 +46,19 @@ type memblock = heap
 
 (*How does List.memT work? is equality always decidable?*)
 
-  (* The axiomatization is agnostic
-    about resuse of memory ids, i.e. it should (provably) have both kind of models.
-    A client code's correctness/well-typedness cannot depend on stack-ids being reused.
-    That will actually be a strictly weaker assumption, than the current one
-    where the client can potentially depend on stack ids being never reused.
+(* The axiomatization is agnostic
+about resuse of memory ids, i.e. it should (provably) have both kind of models.
+A client code's correctness/well-typedness cannot depend on stack-ids being reused.
+That will actually be a strictly weaker assumption, than the current one
+where the client can potentially depend on stack ids being never reused.
 
-    This is similar to the case of freshness of references in ST.
-    The axiomatization is agnostic about whether a reference can be reused after it
-    is freed.
-    *)
+This is similar to the case of freshness of references in ST.
+The axiomatization is agnostic about whether a reference can be reused after it
+is freed.
+*)
 type memStackAux = Stack (sidt * memblock)
 
-val  ssids : memStackAux ->  Tot (list sidt)
+val ssids : memStackAux ->  Tot (list sidt)
 let ssids ms = mapT fst ms
 
 val wellFormed : memStackAux -> Tot bool
@@ -239,7 +239,8 @@ match (refLoc r) with
 | InHeap -> Heap.contains (hp m) r
 | InStack id -> refExistsInStack r id (st m)
 
-val writeMemStackExists : #a:Type -> rw:(ref a) -> r: (ref a)
+
+val writeMemStackExists : #a:Type -> #b:Type -> rw:(ref a) -> r: (ref b)
   -> ms:(Stack (sidt * memblock))
   -> id:sidt -> idw:sidt -> v:a
   -> Lemma
@@ -267,7 +268,8 @@ let freeMemAux r m =
   | InStack s -> ((hp m), ((freeInMemStack r (st m) s)))*)
 
 
-val writeMemAuxPreservesExists :  #a:Type -> rw:ref a -> r:ref a -> m:smem -> v:a ->
+val writeMemAuxPreservesExists :  #a:Type -> #b:Type ->
+  rw:ref a -> r:ref b -> m:smem -> v:a ->
 Lemma (requires (refExistsInMem r m))
       (ensures (refExistsInMem r (writeMemAux rw m v)))
       [SMTPat (writeMemAux rw m v)]
@@ -323,12 +325,16 @@ val readAfterWriteStack :
         (*  (ensures ((refExistsInStack r id m)
             /\ loopkupRefStack r id (writeInMemStack rw m idw v) = (if (r=rw) then v else (loopkupRefStack r id m)))) *)
 
+type ifthenelseT (b:Type) (tc : Type) (fc: Type) =
+ (b ==>  tc) /\ ((~b) ==> fc )
 
 val readAfterWriteStack :
-  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * memblock)) ->
+  #a:Type  -> #b:Type -> rw:(ref a) -> r:(ref b) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * memblock)) ->
   Lemma (requires (refExistsInStack r id m))
         (ensures ((refExistsInStack r id m)
-            /\ loopkupRefStack r id (writeInMemStack rw m idw v) = (if (r=rw && id=idw) then v else (loopkupRefStack r id m))))
+            /\ ifthenelseT (r==rw /\ id=idw)
+                (loopkupRefStack r id (writeInMemStack rw m idw v) == v)
+                (loopkupRefStack r id (writeInMemStack rw m idw v) = (loopkupRefStack r id m))))
 let rec readAfterWriteStack rw r v id idw m =
 match m with
 | [] -> ()
@@ -339,13 +345,20 @@ match m with
               then ()
               else ((readAfterWriteStack rw r v id idw tl)))
 
+(*perhaps this specialization is not requires anymore*)
+val readAfterWriteStackSameType :
+  #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> id:sidt -> idw:sidt -> m:(Stack (sidt * memblock)) ->
+  Lemma (requires (refExistsInStack r id m))
+        (ensures ((refExistsInStack r id m)
+            /\ loopkupRefStack r id (writeInMemStack rw m idw v) = (if (r=rw && id=idw) then v else (loopkupRefStack r id m))))
+let readAfterWriteStackSameType rw r v id idw m = readAfterWriteStack rw r v id idw m
 
-
-val readAfterWrite : #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> m:smem ->
+val readAfterWrite : #a:Type -> #b:Type ->  rw:(ref a) -> r:(ref b) -> v:a -> m:smem ->
   Lemma (requires (refExistsInMem r m))
         (ensures (refExistsInMem r m)
-            /\ loopkupRef r (writeMemAux rw m v) = (if (r=rw) then v else (loopkupRef r m)))
-        [SMTPat (writeMemAux rw m v)]
+        /\ ifthenelseT (r==rw)
+            (loopkupRef r (writeMemAux rw m v) == v)
+            (loopkupRef r (writeMemAux rw m v) = (loopkupRef r m)))
 let readAfterWrite rw r v m =
 match (refLoc r) with
 | InHeap -> ()
@@ -353,6 +366,32 @@ match (refLoc r) with
   match (refLoc rw) with
   | InHeap -> ()
   | InStack idw -> (readAfterWriteStack rw r v id idw (st m))
+
+(*Again, F*  does not seem to unfold ifthenelseT in the above. So, it seems
+necessary to provide the 2 specializations below as an SMTPat,
+instead of just the above lemma *)
+val readAfterWriteTrue : #a:Type -> #b:Type ->  rw:(ref a) -> r:(ref b) -> v:a -> m:smem ->
+  Lemma (requires (refExistsInMem r m /\ r==rw))
+        (ensures (refExistsInMem r m) /\
+            (loopkupRef r (writeMemAux rw m v) == v))
+        [SMTPat (writeMemAux rw m v)]
+let readAfterWriteTrue rw r v m = readAfterWrite rw r v m
+
+
+val readAfterWriteFalse : #a:Type -> #b:Type ->  rw:(ref a) -> r:(ref b) -> v:a -> m:smem ->
+  Lemma (requires (refExistsInMem r m /\ r=!=rw))
+        (ensures (refExistsInMem r m) /\
+        (loopkupRef r (writeMemAux rw m v) = (loopkupRef r m)))
+        [SMTPat (writeMemAux rw m v)]
+let readAfterWriteFalse rw r v m = readAfterWrite rw r v m
+
+
+(*perhaps this specialization is not requires anymore*)
+val readAfterWriteSameType : #a:Type -> rw:(ref a) -> r:(ref a) -> v:a -> m:smem ->
+  Lemma (requires (refExistsInMem r m))
+        (ensures (refExistsInMem r m)
+            /\ loopkupRef r (writeMemAux rw m v) = (if (r=rw) then v else (loopkupRef r m)))
+let readAfterWriteSameType rw r v m = readAfterWrite rw r v m
 
 
 val refExistsInMemTail : #a:Type -> r:(ref a) -> m:smem ->
@@ -458,7 +497,8 @@ assume val freeRef:  #a:Type -> r:(ref a)  ->
 (*make sure that the ids are monotone *)
 assume val pushStackFrame:  unit -> SST unit
     (fun m -> True)
-    (fun m0 _ m1 -> (mtail m1 = m0)
+    (fun m0 _ m1 ->
+             (mtail m1 = m0)
           /\ (isNonEmpty (st m1))
           /\ topstb m1 = emp)
 
@@ -503,19 +543,19 @@ let withNewScope2 (a:Type)  (body:(unit -> SST a mStackNonEmpty (fun m0 _ m1 -> 
 
 (** withNewStackFrame combinator *)
 
+(*adding requires/ensures here causes the definition of scopedWhile below to not typecheck.
+Hope this is not a concert w.r.t. soundness*)
 effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) =
   SST a
-      (fun m -> isNonEmpty (st m) /\ topstb m = emp /\ pre (mtail m))
-      (fun m0 a m1 -> post (mtail m0) a (mtail m1)
-          /\ isNonEmpty (st m0) (*not needed, ideally*)
-          /\ sids m0 = sids m1) (*body popped all and only the stack frames it pushed*)
+      ( (*requires *) (fun m -> isNonEmpty (st m) /\ topstb m = emp /\ pre (mtail m)))
+      ( (* ensures *) (fun m0 a m1 -> post (mtail m0) a (mtail m1)
+          /\ sids m0 = sids m1)) (*body popped all and only the stack frames it pushed*)
 
 val withNewScope : a:Type -> pre:(smem -> Type) -> post:(smem -> SSTPost a)
   -> body:(unit -> WNSC a pre post)
       -> SST a pre
                 (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
-let withNewScope (a:Type) (pre:(smem -> Type)) (post:(smem -> SSTPost a)) (body:(unit -> WNSC a pre post)) =
-(* omitting the types in above let expression results in a wierd error*)
+let withNewScope 'a 'pre 'post body =
     pushStackFrame ();
     let v = body () in
     popStackFrame (); v
@@ -535,16 +575,16 @@ effect whileGuard (pre :(smem -> Type))
 (* the guard of a while loop is not supposed to change the memory*)
 
 effect whileBody (loopInv:smem -> Type) (truePre:smem  -> Type)
-  = SST unit (fun m -> loopInv (mtail m) /\ (truePre (mtail m)))
-             (fun m0 _ m1 -> loopInv (mtail m1) /\ sids m0 = sids m1)
+  = WNSC unit (fun m -> loopInv m /\ truePre m)
+              (fun m0 _ m1 -> loopInv m1)
 
 
 val scopedWhile : loopInv:(smem -> Type)
   -> wglc:(smem -> Type)
   -> wg:(unit -> whileGuard loopInv wglc)
   -> bd:(unit -> whileBody loopInv wglc)
-  -> SST unit (fun m -> loopInv m)
-              (fun m0 _ m1 -> loopInv m1 /\ sids m0 = sids m1 /\ (~(wglc m1)))
+  -> SST unit (requires (fun m -> loopInv m))
+              (ensures (fun m0 _ m1 -> loopInv m1 /\ sids m0 = sids m1 /\ (~(wglc m1))))
 let rec scopedWhile (loopInv:(smem -> Type))
   (wglc:(smem -> Type))
   (wg:(unit -> whileGuard loopInv wglc))
@@ -562,9 +602,8 @@ effect SSTS (a:Type) (wlp: Post a -> Pre) = StSTATE a wlp wlp
 type whilePre (wpg:(Post bool -> Pre))
               (wpb:(Post unit -> Pre))
               (inv:(smem -> Type)) =
-              (*how to say that wpg implies the computation does not change the memory?*)
-              (forall h. wpg (fun b h1 -> h1 == h) h) /\
-              (forall h1. inv h1 ==> wpg (fun b h2 -> b=true ==> wpb ( fun _ -> inv) h2) h1)
+  (forall h. forall h2. wpg (fun b h1 -> h1 == h) h2 ==> h=h2) (*computation of the guard does not change the memory*)
+  /\ (forall h1. inv h1 ==> wpg (fun b h2 -> b=true ==> wpb (fun _ -> inv) h2) h1)
 
 val scopedWhile2 : #wpg:(Post bool -> Pre) -> #wpb:(Post unit -> Pre)
   -> wg:(unit -> SSTS bool wpg)
@@ -572,8 +611,9 @@ val scopedWhile2 : #wpg:(Post bool -> Pre) -> #wpb:(Post unit -> Pre)
   -> loopInv:(smem -> Type)
   -> SST unit
   (requires (fun m -> loopInv m /\ whilePre wpg wpb loopInv))
-              (ensures (fun m0 _ m1 -> loopInv m1 (* /\ sids m0 = sids m1 *) ))
-(*how to say that the guard is false at the end*)
+              (ensures (fun m0 _ m1 -> (loopInv m1) (* /\ sids m0 = sids m1 *)
+                (*/\ (wpg (fun b _ -> b==false) m1)*)
+              ))
 
 (*let scopedWhile2
  (#wpg:(Post bool -> Pre))
@@ -581,5 +621,4 @@ val scopedWhile2 : #wpg:(Post bool -> Pre) -> #wpb:(Post unit -> Pre)
  (wg:(unit -> SSTS bool wpg))
  (bd:(unit -> SSTS unit wpb))
  (loopInv:(smem -> Type))
-=
-  let gv:bool = wg () in ()*)
+= let v=wg () in ()*)

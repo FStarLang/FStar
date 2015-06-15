@@ -1,3 +1,5 @@
+#include "preproc.h"
+
 (* STATUS : verifies but still a couple of missing lemmas *)
 (* TODO : improve the readability / elegance of the proofs *)
 
@@ -90,7 +92,7 @@ val helper_lemma_4:
   a:nat -> b:nat -> Lemma (ensures ( a * b >= 0 ))
 let helper_lemma_4 a b = ()
 			   
-#reset-options
+RESET
 
 val auxiliary_lemma_2:
   a:norm_bigint{ (maxLimbSize a >= log (getLength a) + 1)
@@ -117,7 +119,7 @@ let auxiliary_lemma_2 a b ctr c =
   cut (maxValue b <= pow2 (maxSize b) /\ True );
   cut (maxValue b <= pow2 ((maxLimbSize b - log (getLength b) - 1) / 2 ) /\ True )
 
-#reset-options
+RESET
 
 val auxiliary_lemma_3:
   a:norm_bigint{ (maxLimbSize a >= log (getLength a) + 1)
@@ -146,7 +148,7 @@ let auxiliary_lemma_3 a b ctr c =
   cut (maxValue a * maxValue b <= pow2 s /\ True);
   ()
 
-#reset-options
+RESET
 
 (* Changes the "size" parameter of the bigint to a tighter value *)
 val auxiliary_function_1:
@@ -178,7 +180,7 @@ let auxiliary_function_1 a b ctr c =
   cut (maxSize res = maxLimbSize a - 1 /\ True );
   res
 
-#reset-options
+RESET
 
 val multiplication_step:
   a:norm_bigint{ (maxLimbSize a >= log (getLength a) + 1)
@@ -240,7 +242,7 @@ let multiplication_step a b ctr c =
   d
   
 
-#reset-options
+RESET
 
 val multiplication_step_lemma_1:
   a:norm_bigint{ (maxLimbSize a >= log (getLength a) + 1)
@@ -276,7 +278,7 @@ let multiplication_step_lemma_1 a b ctr c =
 	   + (eval b (getLength a - ctr))) ) ;
   () 
 
-#reset-options
+RESET
 
 val multiplication_step_lemma:
   a:norm_bigint{ (maxLimbSize a >= log (getLength a) + 1)
@@ -295,7 +297,7 @@ let multiplication_step_lemma a b ctr c =
   ()
 
 
-#reset-options
+RESET
 
 val multiplication_aux: 
   a:norm_bigint{ (log (getLength a) <= maxLimbSize a - 1)
@@ -326,7 +328,7 @@ let rec multiplication_aux a b ctr c =
      assert ( (maxValue c' <= (getLength a - (ctr-1)) * (maxValue a * maxValue b) ));
      multiplication_aux a b (ctr-1) c'
 
-#reset-options
+RESET
 
 val multiplication: 
   a:norm_bigint{ (log (getLength a) <= maxLimbSize a - 1)
