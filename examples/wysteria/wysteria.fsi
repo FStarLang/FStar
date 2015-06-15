@@ -56,7 +56,7 @@ val as_par: #a:Type -> #req_f:(mode -> Type) -> #ens_f:(mode -> a -> Type)
             -> ps:prins
             -> =f:(unit -> Wys a req_f ens_f)
             -> Wys (Box a) (fun m0   -> DelPar m0 ps /\ req_f (Mode Par ps))
-                           (fun m0 r -> ((ps_of_box r) = ps) /\
+                           (fun m0 r -> ps_of_box r = ps /\
                                         ens_f (Mode Par ps) (v_of_box r))
 
 (*****)
