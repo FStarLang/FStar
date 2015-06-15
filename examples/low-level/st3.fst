@@ -555,8 +555,7 @@ val withNewScope : a:Type -> pre:(smem -> Type) -> post:(smem -> SSTPost a)
   -> body:(unit -> WNSC a pre post)
       -> SST a pre
                 (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
-let withNewScope (a:Type) (pre:(smem -> Type)) (post:(smem -> SSTPost a)) (body:(unit -> WNSC a pre post)) =
-(* omitting the types in above let expression results in a wierd error*)
+let withNewScope 'a 'pre 'post body =
     pushStackFrame ();
     let v = body () in
     popStackFrame (); v
@@ -576,8 +575,8 @@ effect whileGuard (pre :(smem -> Type))
 (* the guard of a while loop is not supposed to change the memory*)
 
 effect whileBody (loopInv:smem -> Type) (truePre:smem  -> Type)
-  = SST unit (fun m -> loopInv (mtail m) /\ (truePre (mtail m)))
-             (fun m0 _ m1 -> loopInv (mtail m1) /\ sids m0 = sids m1)
+  = WNSC unit (fun m -> loopInv m /\ truePre m)
+              (fun m0 _ m1 -> loopInv m1)
 
 
 val scopedWhile : loopInv:(smem -> Type)

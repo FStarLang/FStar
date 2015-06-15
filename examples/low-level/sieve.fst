@@ -125,21 +125,41 @@ val outerLoop : n:nat{n>1}
                 (k < n ==> multiplesMarked n (loopkupRef res m1) k))
       )
 
-val factorialLoopBody :
-  n:nat
+(*val factorialLoopBody :
+  n:nat{n>1}
   -> lo:(ref nat)
   -> res : ref ((k:nat{k<n}) -> Tot bool)
   -> unit ->
-  whileBody (fun m -> refExistsInMem lo m == true) (outerGuardLC n lo)
-      (*SST unit (fun m -> loopInv li res (mtail m)) (fun m0 _ m1 -> loopInv li res (mtail m1))*)
+  whileBody (fun m -> b2t (refExistsInMem lo m)) (outerGuardLC n lo)
+
 let factorialLoopBody n lo res u =
-  (*let li=salloc 0 in*)
-  (*it seems that lemmas are needed about how salloc commutes with memory operations*)
-  memwrite lo (memread lo)
+let li = salloc 0 in
+let resv = memread res in
+let lov = memread lo in
+innerLoop n lo lov li res;
+memwrite lo (lov+1)
+
+effect SSTNull = SST unit (fun _ -> True) (fun _ _ _ -> True)
+
+val testSalloc1 : unit -> SST unit (fun _ -> True) (fun _ _ _ -> True)
+let testSalloc1 () =
+  pushStackFrame ();
+  let xi=salloc 0 in
+  memwrite xi 1;
+  pushStackFrame ();
+  memwrite xi 1
+
+val testSalloc2 : xi:ref int -> SST unit (fun m -> b2t (refExistsInMem xi m)) (fun _ _ m1 -> b2t (refExistsInMem xi m1))
+let testSalloc2 xi =
+  pushStackFrame ();
+  memwrite xi 1;
+  popStackFrame ();
+  memwrite xi 1
 
 
 
-let outerLoop1 n lo res =
+
+let outerLoop n lo res =
   scopedWhile
     (outerLoopInv n lo res)
     (outerGuardLC n lo)
@@ -150,4 +170,4 @@ let outerLoop1 n lo res =
       let lov = memread lo in
       innerLoop n lo lov li res;
       memwrite lo (lov+1)
-      )
+      )*)
