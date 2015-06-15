@@ -722,7 +722,7 @@ let lift_formula env t mk_wp mk_wlp f =
 
 let unlabel t = mk_Typ_meta(Meta_refresh_label(t, None, t.pos))
 
-let refresh_comp_label env b lc = 
+let refresh_comp_label env (b:bool) lc = 
     let refresh () = 
         let c = lc.comp () in
         if Util.is_ml_comp c then c

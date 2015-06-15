@@ -648,7 +648,9 @@ and encode_typ_term (t:typ) (env:env_t) : (term           (* encoding of t, expe
       | Typ_ascribed(t, _) -> 
         encode_typ_term t env
 
-      | Typ_meta _
+      | Typ_meta _ -> 
+        encode_typ_term (Util.unmeta_typ t0) env
+
       | Typ_delayed  _ 
       | Typ_unknown    -> failwith (format4 "(%s) Impossible: %s\n%s\n%s\n" (Range.string_of_range <| t.pos) (Print.tag_of_typ t0) (Print.typ_to_string t0) (Print.typ_to_string t))                 
 

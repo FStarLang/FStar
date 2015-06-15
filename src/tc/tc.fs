@@ -735,15 +735,16 @@ and tc_value env e : exp * lcomp * guard_t =
                        Some t, bs, [], c_opt, envbody, g in
            as_function_typ false t in
 
+    let use_eq = env.use_eq in
     let env, topt = Tc.Env.clear_expected_typ env in
     let tfun_opt, bs, letrec_binders, c_opt, envbody, g = expected_function_typ env topt in
-    let body, cbody, guard_body = tc_exp ({envbody with top_level=false}) body in 
+    let body, cbody, guard_body = tc_exp ({envbody with top_level=false; use_eq=use_eq}) body in 
     if Env.debug env Options.Medium
     then Util.fprint3 "!!!!!!!!!!!!!!!body %s has type %s\nguard is %s\n" (Print.exp_to_string body) (Print.lcomp_typ_to_string cbody) (Rel.guard_to_string env guard_body);
     let guard_body = Tc.Rel.solve_deferred_constraints envbody guard_body in 
     if Tc.Env.debug env <| Options.Other "Implicits"
     then Util.fprint1 "Introduced %s implicits in body of abstraction\n" (string_of_int <| List.length guard_body.implicits);      
-    let body, cbody, guard = check_expected_effect envbody c_opt (body, cbody.comp()) in
+    let body, cbody, guard = check_expected_effect ({envbody with use_eq=use_eq}) c_opt (body, cbody.comp()) in
     let guard = Rel.conj_guard guard_body guard in
     let guard = if env.top_level || not(Options.should_verify env.curmodule.str) 
                 then (Tc.Util.discharge_guard envbody (Rel.conj_guard g guard); {Rel.trivial_guard with implicits=guard.implicits})
@@ -921,14 +922,14 @@ and tc_exp env e : exp * lcomp * guard_t =
                       else if Tc.Util.is_pure_effect env c.eff_name 
                       then let subst = maybe_extend_subst subst (List.hd bs) arg in
                            let comps, guard =
-                              (Some (Env.Binding_var(x.v, x.sort)), c)::comps, g in
+                              (Some (Env.Binding_var(x.v, targ)), c)::comps, g in
                            tc_args (subst, arg::outargs, arg::arg_rets, comps, guard, fvs) rest cres rest'
                       else if is_null_binder (List.hd bs)
                       then let newx = Util.gen_bvar_p e.pos c.res_typ in
                            let arg' = varg <| bvar_to_exp newx in
                            let binding = Env.Binding_var(newx.v, newx.sort) in
                            tc_args (subst, arg::outargs, arg'::arg_rets, (Some binding, c)::comps, g, fvs) rest cres rest'
-                      else tc_args (subst, arg::outargs, (varg <| bvar_to_exp x)::arg_rets, (Some <| Env.Binding_var(x.v, x.sort), c)::comps, g, Util.set_add x fvs) rest cres rest'
+                      else tc_args (subst, arg::outargs, (varg <| bvar_to_exp x)::arg_rets, (Some <| Env.Binding_var(x.v, targ), c)::comps, g, Util.set_add x fvs) rest cres rest'
 
                     | (Inr _, _)::_, (Inl _, _)::_ ->
                       raise (Error("Expected an expression; got a type", Util.range_of_arg (List.hd args)))
@@ -973,7 +974,7 @@ and tc_exp env e : exp * lcomp * guard_t =
                       let comp = Tc.Util.bind env None chead (None, comp) in
                       let app =  mk_Exp_app_flat(head, List.rev outargs) (Some comp.res_typ) top.pos in
                       let comp, g = Tc.Util.strengthen_precondition None env app comp g in //Each conjunct in g is already labeled
-                      if debug env Options.Low then Util.fprint2 "\t Type of app term %s is %s\n" (Normalize.exp_norm_to_string env app) (Print.lcomp_typ_to_string comp);
+                      if debug env Options.Low then Util.fprint2 "\t Type of app term %s is %s\n" (Normalize.exp_norm_to_string env app) (Print.comp_typ_to_string (comp.comp()));
                       app, comp, g
                
 
@@ -1262,7 +1263,8 @@ and tc_eqn (scrutinee_x:bvvdef) pat_t env (pattern, when_clause, branch) : (pat 
     match pat_exp.n with 
         | Exp_uvar _
         | Exp_app({n=Exp_uvar _}, _) 
-        | Exp_bvar _ -> Util.ftv Const.true_lid ktype
+        | Exp_bvar _ 
+        | Exp_constant Const_unit -> Util.ftv Const.true_lid ktype
         | Exp_constant _ -> mk_Typ_app(Util.teq, [varg scrutinee; varg pat_exp]) None scrutinee.pos
         | Exp_fvar(f, _) -> discriminate scrutinee f
         | Exp_app({n=Exp_fvar(f, _)}, args) ->  

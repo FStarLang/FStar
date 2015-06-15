@@ -12,7 +12,8 @@ open Prims
 open List
 open ListSet
 
-
+let scopedID (n:nat) =
+  withNewScope (fun () -> n)
 
 val withNewScope3 : #a:Type ->
       body:(unit -> SST a mStackNonEmpty
@@ -72,8 +73,26 @@ val scopedID4 : n:nat
  -> SST nat (requires (fun m -> True))
             (ensures (fun _ n' _ -> n'==n))
 let scopedID4 (n:nat) =
-  //unfortunately, you still need to annotate the type of the argument to withNewScope4
-  //working on making inference compute it properly
+  //One option is to annotate the
   let id : unit -> SST nat (fun s -> True) (fun s0 x s1 -> s0=s1 /\ x=n) =
     fun () -> n in
   withNewScope4 id
+
+assume val as_SST: #a:Type -> #b:Type
+         -> #wp:(a -> (b -> smem -> Type) -> smem -> Type)
+         -> #wlp:(a -> (b -> smem -> Type) -> smem -> Type)
+         -> =f:(x:a -> StSTATE b (wp x) (wlp x))
+         -> Tot (x:a -> SST b
+                            (wp x (fun y s -> True))
+                            (fun s0 y s1 -> wlp x (fun y' s1' -> y=y' /\ s1=s1') s0))
+
+
+val test: unit -> SST int (requires (fun n -> True))
+                          (ensures (fun s0 x s1 -> s0=s1 /\ x=17))
+let test () = as_SST (fun () -> 17) ()
+
+val scopedID5 : n:nat
+             -> SST nat (requires (fun m -> True))
+                        (ensures (fun _ n' _ -> n'==n))
+let scopedID5 (n:nat) =
+  withNewScope4 (as_SST (fun () -> n))

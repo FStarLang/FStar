@@ -1509,7 +1509,11 @@ and solve_t (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
 and solve_t' (env:Env.env) (problem:problem<typ,exp>) (wl:worklist) : solution =
     let giveup_or_defer orig msg = 
         if wl.defer_ok
-        then solve env (defer msg orig wl)
+        then begin
+            if Tc.Env.debug env <| Options.Other "Rel"
+            then Util.fprint2 "\n\t\tDeferring %s\n\t\tBecause %s\n" (prob_to_string env orig) msg; 
+            solve env (defer msg orig wl)
+        end
         else giveup env msg orig in 
 
     (* <imitate_t> used in flex-rigid *)
@@ -2019,6 +2023,16 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
     let orig = CProb problem in
     let sub_prob : 'a -> rel -> 'a -> string -> problem_t<'a,'b> = 
         fun t1 rel t2 reason -> mk_problem (p_scope orig) orig t1 rel t2 None reason in
+    let solve_eq c1_comp c2_comp = 
+        let _ = if Tc.Env.debug env <| Options.Other "EQ"
+                then Util.print_string "solve_c is using an equality constraint\n" in
+        let sub_probs = List.map2 (fun arg1 arg2 -> match fst arg1, fst arg2 with 
+            | Inl t1, Inl t2 -> TProb<| sub_prob t1 EQ t2 "effect arg"
+            | Inr e1, Inr e2 -> EProb<| sub_prob e1 EQ e2 "effect arg" 
+            | _ -> failwith "impossible") c1_comp.effect_args c2_comp.effect_args in
+        let guard = Util.mk_conj_l (List.map (fun p -> p_guard p |> fst) sub_probs) in
+        let wl = solve_prob orig (Some guard) [] wl in
+        solve env (attempt sub_probs wl) in
     if Util.physical_equality c1 c2 
     then solve env (solve_prob orig None [] wl)
     else let _ = if debug env <| Options.Other "Rel" then Util.fprint3 "solve_c %s %s %s\n" (Print.comp_typ_to_string c1) (rel_to_string problem.relation) (Print.comp_typ_to_string c2) in
@@ -2040,15 +2054,7 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                  else let c1_comp = Util.comp_to_comp_typ c1 in
                       let c2_comp = Util.comp_to_comp_typ c2 in
                       if problem.relation=EQ && lid_equals c1_comp.effect_name c2_comp.effect_name
-                      then let _ = if Tc.Env.debug env <| Options.Other "EQ"
-                                   then Util.print_string "solve_c is using an equality constraint\n" in
-                           let sub_probs = List.map2 (fun arg1 arg2 -> match fst arg1, fst arg2 with 
-                            | Inl t1, Inl t2 -> TProb<| sub_prob t1 EQ t2 "effect arg"
-                            | Inr e1, Inr e2 -> EProb<| sub_prob e1 EQ e2 "effect arg" 
-                            | _ -> failwith "impossible") c1_comp.effect_args c2_comp.effect_args in
-                           let guard = Util.mk_conj_l (List.map (fun p -> p_guard p |> fst) sub_probs) in
-                           let wl = solve_prob orig (Some guard) [] wl in
-                           solve env (attempt sub_probs wl)
+                      then solve_eq c1_comp c2_comp
                       else
                          let c1 = Normalize.weak_norm_comp env c1 in
                          let c2 = Normalize.weak_norm_comp env c2 in
@@ -2056,26 +2062,37 @@ and solve_c (env:Env.env) (problem:problem<comp,unit>) (wl:worklist) : solution 
                          begin match Tc.Env.monad_leq env c1.effect_name c2.effect_name with
                            | None -> giveup env (Util.format2 "incompatible monad ordering: %s </: %s" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) orig
                            | Some edge ->
-                             let is_null_wp_2 = c2.flags |> Util.for_some (function TOTAL | MLEFFECT | SOMETRIVIAL -> true | _ -> false) in
-                             let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
-                               | (Inl wp1, _)::_, (Inl wp2, _)::_ -> wp1, wp2 
-                               | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in
-                             if Util.physical_equality wpc1 wpc2 
-                             then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
-                             else let c2_decl = Tc.Env.get_effect_decl env c2.effect_name in
-                                  let g = 
-                                    if is_null_wp_2 
-                                    then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
-                                         mk_Typ_app(c2_decl.trivial, [targ c1.result_typ; targ <| edge.mlift c1.result_typ wpc1]) (Some ktype) r 
-                                    else let wp2_imp_wp1 = mk_Typ_app(c2_decl.wp_binop, 
-                                                                      [targ c2.result_typ; 
-                                                                       targ wpc2; 
-                                                                       targ <| Util.ftv Const.imp_lid (Const.kbin ktype ktype ktype); 
-                                                                       targ <| edge.mlift c1.result_typ wpc1]) None r in
-                                         mk_Typ_app(c2_decl.wp_as_type, [targ c2.result_typ; targ wp2_imp_wp1]) (Some ktype) r  in
-                                  let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
-                                  let wl = solve_prob orig (Some <| Util.mk_conj (p_guard base_prob |> fst) g) [] wl in
-                                  solve env (attempt [base_prob] wl)
+                             if problem.relation = EQ
+                             then let wp, wlp = match c1.effect_args with 
+                                                   | [(Inl wp1,_); (Inl wlp1, _)] -> wp1, wlp1
+                                                   | _ -> failwith (Util.format1 "Unexpected number of indices on a normalized effect (%s)" (Range.string_of_range (Syntax.range_of_lid c1.effect_name))) in
+                                  let c1 = {
+                                    effect_name=c2.effect_name;
+                                    result_typ=c1.result_typ;
+                                    effect_args=[targ (edge.mlift c1.result_typ wp); targ (edge.mlift c1.result_typ wlp)]; 
+                                    flags=c1.flags
+                                  } in
+                                  solve_eq c1 c2 
+                             else let is_null_wp_2 = c2.flags |> Util.for_some (function TOTAL | MLEFFECT | SOMETRIVIAL -> true | _ -> false) in
+                                  let wpc1, wpc2 = match c1.effect_args, c2.effect_args with 
+                                    | (Inl wp1, _)::_, (Inl wp2, _)::_ -> wp1, wp2 
+                                    | _ -> failwith (Util.format2 "Got effects %s and %s, expected normalized effects" (Print.sli c1.effect_name) (Print.sli c2.effect_name)) in
+                                  if Util.physical_equality wpc1 wpc2 
+                                  then solve_t env (problem_using_guard orig c1.result_typ problem.relation c2.result_typ None "result type") wl
+                                  else let c2_decl = Tc.Env.get_effect_decl env c2.effect_name in
+                                       let g = 
+                                       if is_null_wp_2 
+                                       then let _ = if debug env <| Options.Other "Rel" then Util.print_string "Using trivial wp ... \n" in
+                                            mk_Typ_app(c2_decl.trivial, [targ c1.result_typ; targ <| edge.mlift c1.result_typ wpc1]) (Some ktype) r 
+                                       else let wp2_imp_wp1 = mk_Typ_app(c2_decl.wp_binop, 
+                                                                            [targ c2.result_typ; 
+                                                                            targ wpc2; 
+                                                                            targ <| Util.ftv Const.imp_lid (Const.kbin ktype ktype ktype); 
+                                                                            targ <| edge.mlift c1.result_typ wpc1]) None r in
+                                                mk_Typ_app(c2_decl.wp_as_type, [targ c2.result_typ; targ wp2_imp_wp1]) (Some ktype) r  in
+                                       let base_prob = TProb <| sub_prob c1.result_typ problem.relation c2.result_typ "result type" in
+                                       let wl = solve_prob orig (Some <| Util.mk_conj (p_guard base_prob |> fst) g) [] wl in
+                                       solve env (attempt [base_prob] wl)
                          end
 
 and solve_e env problem wl = 
@@ -2163,7 +2180,11 @@ and solve_e' (env:Env.env) (problem:problem<exp,unit>) (wl:worklist) : solution 
                             | None -> [], t1
                             | Some (xs, c) -> xs, Util.comp_result c in
                      let gi_xi, gi_pi, f = sub_problems xs args2 in
-                     let sol = mk_Exp_abs(xs, mk_Exp_app(head2, gi_xi) None e1.pos) None e1.pos in
+                     let sol = 
+                        let body = mk_Exp_app'(head2, gi_xi) None e1.pos in
+                        match xs with 
+                            | [] -> body
+                            | _ -> mk_Exp_abs(xs, mk_Exp_app'(head2, gi_xi) None e1.pos) None e1.pos in
                      if Tc.Env.debug env <| Options.Other "Rel"
                      then Util.fprint3 "Imitated: %s -> %s\nSubprobs=\n%s\n" (Print.uvar_e_to_string (u1,t1)) (Print.exp_to_string sol) (gi_pi |> List.map (prob_to_string env) |> String.concat "\n");
                      solve env (attempt gi_pi (solve_prob orig (Some f) [UE((u1, t1), sol)] wl))
@@ -2521,7 +2542,8 @@ let subtype env t1 t2 : guard_t =
 let sub_comp env c1 c2 = 
   if debug env <| Other "Rel" 
   then Util.fprint2 "sub_comp of %s and %s\n" (Print.comp_typ_to_string c1) (Print.comp_typ_to_string c2);
-  let prob = CProb <| new_problem env c1 SUB c2 None (Env.get_range env) "sub_comp" in
+  let rel = if env.use_eq then EQ else SUB in
+  let prob = CProb <| new_problem env c1 rel c2 None (Env.get_range env) "sub_comp" in
   with_guard env prob <| solve_and_commit env (singleton env prob)  (fun _ -> None) 
 
 let solve_deferred_constraints env (g:guard_t) =
