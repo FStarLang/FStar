@@ -82,7 +82,7 @@ type encryptor =
 type decryptor =
   | Dec : log:ref (seq basicEntry) -> key -> decryptor
 
-type paired (e:encryptor) (d:decryptor) = b2t (Enc.log e = Dec.log d)
+type paired (e:encryptor) (d:decryptor) = (Enc.log e = Dec.log d)
 
 (* A basic instance *)
 type bi =
@@ -134,7 +134,7 @@ let gen () =
 
 type in_basic_fp bi h =
   basic_fp_inv h /\
-  b2t(List.mem bi (Heap.sel h basic_fp))
+  List.mem bi (Heap.sel h basic_fp)
 
 type enc_in_basic_fp (e:encryptor) (h:heap) = exists d. paired e d /\ in_basic_fp (BI e d) h /\ triggerBI (BI e d)
 type dec_in_basic_fp (d:decryptor) (h:heap) = exists e. paired e d /\ in_basic_fp (BI e d) h /\ triggerBI (BI e d)
@@ -304,7 +304,7 @@ let stateful_gen () =
 
 type in_st_fp sti h =
   st_fp_inv h /\
-  b2t( List.mem sti (Heap.sel h st_fp))
+  List.mem sti (Heap.sel h st_fp)
 
 type enc_in_st_fp (e:st_encryptor) (h:heap) = exists d. st_paired e d /\ in_st_fp (STI e d) h /\ triggerSTI (STI e d)
 type dec_in_st_fp (d:st_decryptor) (h:heap) = exists e. st_paired e d /\ in_st_fp (STI e d) h /\ triggerSTI (STI e d)
