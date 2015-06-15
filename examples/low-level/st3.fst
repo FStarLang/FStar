@@ -581,3 +581,5 @@ val scopedWhile2 : #wpg:(Post bool -> Pre) -> #wpb:(Post unit -> Pre)
  (bd:(unit -> SSTS unit wpb))
  (loopInv:(smem -> Type))
 = let v=wg () in ()*)
+
+effect SSTNull = SST unit (fun _ -> True) (fun _ _ _ -> True)

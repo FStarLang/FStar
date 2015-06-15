@@ -93,7 +93,7 @@ type markedIffDividesOrInit2 (n:nat) (lo:nat)
   /\ (forall (k:nat{k < n}). (marked n new k ==> (marked n init k \/ divides lo k)))
 
 
- type markedIffDividesOrInit (n:nat) (lo:nat)
+type markedIffDividesOrInit (n:nat) (lo:nat)
    (init:((k:nat{k<n}) -> Tot bool)) (new:((k:nat{k<n}) -> Tot bool)) =
     (forall (k:nat{k < n}). (marked n new k <==> (marked n init k \/ divides lo k)))
 
@@ -107,15 +107,13 @@ val multiplesMarkedAsDivides :
     (ensures (multiplesMarked n bitv lo))
 let multiplesMarkedAsDivides n bitv lo = ()
 
-
-
 val multiplesMarkedAsDividesIff :
   n:nat -> initv:((k:nat{k<n}) -> Tot bool) -> newv:((k:nat{k<n}) -> Tot bool) -> lo:pos
   -> Lemma
     (requires (markedIffDividesOrInit2 n lo initv newv))
     (ensures (markedIffDividesOrInit n lo initv newv))
+    (*[SMTPatT (markedIffDividesOrInit2 n lo initv newv)]*)
 let multiplesMarkedAsDividesIff n bitv newv lo = (multiplesMarkedAsDivides n newv lo)
-
 
 val innerLoop : n:nat{n>1}
   -> lo: ref nat
@@ -130,8 +128,10 @@ val innerLoop : n:nat{n>1}
                     /\ loopkupRef lo m = lov /\ loopkupRef res m= initres))
       (ensures (fun m0 _ m1 -> distinctRefsExists3 m1 lo res li
                       /\ loopkupRef lo m1 = lov
-                     /\ markedIffDividesOrInit n (loopkupRef lo m1) initres (loopkupRef res m1)
+                      /\ sids m0 = sids m1 (*this could be baked into the definition of a new effect abbrev and one can uses that instead*)
+                      /\ markedIffDividesOrInit n (loopkupRef lo m1) initres (loopkupRef res m1)
       ))
+
 
 let innerLoop n lo lov li res initres =
   (scopedWhile
@@ -144,7 +144,8 @@ let innerLoop n lo lov li res initres =
       let resv = memread res in
       memwrite li (liv+1);
       memwrite res (mark n resv (lov * liv))));
-      (*the part below has no computaional content*)
+
+    (*the part below has no computaional content; why does SMTPatT not work?*)
       let newv = memread res in
       (multiplesMarkedAsDividesIff n initres newv lov)
 
@@ -153,91 +154,56 @@ type distinctRefsExists2
   (ra:ref a) (rb: ref b)  =
   (refExistsInMem ra m) /\ (refExistsInMem rb m)  /\ (ra=!=rb)
 
-type outerGuardLC (n:nat) (lo : ref nat)
-(m:smem) =
+type outerGuardLC (n:nat) (lo : ref nat) (m:smem) =
   (refExistsInMem lo m) && ((loopkupRef lo m) < n)
+
+
+type markedIffHasDivisorSmallerThan (n:nat) (lo:nat)
+    (new:((k:nat{k<n}) -> Tot bool)) =
+    (forall (k:nat{k < n}). (marked n new k <==> (exists (d:nat{1<d}). d<lo /\ divides d k)))
+
+
+val markedIffHasDivisorSmallerThanInc :
+  n:nat -> lo:nat{1<lo} -> old:((k:nat{k<n}) -> Tot bool) -> new:((k:nat{k<n}) -> Tot bool)
+  -> Lemma
+      (requires (markedIffHasDivisorSmallerThan n lo old)
+              /\ markedIffDividesOrInit n lo old new)
+      (ensures (markedIffHasDivisorSmallerThan n (lo+1) new))
+      (*[SMTPatT (markedIffHasDivisorSmallerThan n (lo+1) new)]*)
+let markedIffHasDivisorSmallerThanInc n lo old new  = ()
 
 type  outerLoopInv (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
  distinctRefsExists2 m lo res
   /\ (((loopkupRef lo m) - 1) < n)
   /\ (1<(loopkupRef lo m))
-  /\ (forall (k:nat).
-        (1<k /\ k < (loopkupRef lo m)) ==> markedIffDividesOrInit n k (fun _ -> false) (loopkupRef res m))
+  /\ (markedIffHasDivisorSmallerThan n (loopkupRef lo m) (loopkupRef res m))
 
-(*val ex23 : #a:Type -> #b:Type  -> #c:Type -> m:smem
-  -> ra:ref a -> rb: ref b -> rc: ref c
-  -> Lemma
-        (requires (distinctRefsExists2 m ra rb /\ refExistsInMem rc m /\ (rc=!=ra) /\ (rc=!=rb)))
-        (ensures (distinctRefsExists3 m ra rb rc))
-let ex23 m ra rb rc = ()
 
-val ex23p : #a:Type -> #b:Type  -> #c:Type
-  -> ra:ref a -> rb: ref b -> rc: ref c
-  -> Lemma
-        (requires (True))
-        (ensures  ( forall m.
-                    ((distinctRefsExists2 (mtail m) ra rb /\ refExistsInMem rc m /\ (rc=!=ra) /\ (rc=!=rb)))
-                    ==> ((distinctRefsExists3 m ra rb rc))))*)
-
-(*let ex23p ra rb rc = ()*)
-#set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"
+(*#set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"*)
 
 val factorialLoopBody :
   n:nat{n>1}
   -> lo:(ref nat)
   -> res : ref ((k:nat{k<n}) -> Tot bool)
   -> unit ->
-  (*whileBody
-  (*SST unit*)
-    (fun m ->  distinctRefsExists2 m lo res)
-    (*(outerGuardLC n lo)*)
-    (fun  _ -> True)
-    (*(fun  _ _ _ -> True)*)*)
-
-    (*WNSC unit (fun m -> distinctRefsExists2 m lo res)
-                (fun _ _ m1 -> distinctRefsExists2 m1 lo res)*)
+  whileBody
+    (outerLoopInv n lo res)
+    (outerGuardLC n lo)
 
 
-
-                  SST unit
-                      ( (*requires *) (fun m -> isNonEmpty (st m) /\ topstb m = emp
-                      /\ distinctRefsExists2 (mtail m) lo res
-                      ))
-                        (*)*)
-                      ( (* ensures *) (fun m0 _ m1 -> True
-                        /\ distinctRefsExists2 (mtail m1) lo res
-                          (*/\ sids m0 = sids m1*)
-                          )) (*body popped all and only the stack frames it pushed*)
-
-
-let factorialLoopBody n lo res u =
+  let factorialLoopBody n lo res u =
   (*pushStackFrame ();*)
   let initres = memread res in
   let lov = memread lo in
   let li = salloc 0 in
   let liv = memread li in
   innerLoop n lo lov li res initres;
-  memwrite lo (lov+1)
+  let newres = memread res in
+  memwrite lo (lov+1);
+  (*the part below has no computational content*)
+  (markedIffHasDivisorSmallerThanInc n lov initres newres)
 
 
-
-effect SSTNull = SST unit (fun _ -> True) (fun _ _ _ -> True)
-
-
-val testSalloc1 : unit -> SST unit (fun _ -> True) (fun _ _ _ -> True)
-let testSalloc1 () =
-  pushStackFrame ();
-  let xi=salloc 0 in
-  memwrite xi 1;
-  pushStackFrame ();
-  memwrite xi 1
-
-val testSalloc2 : xi:ref int -> SST unit (fun m -> b2t (refExistsInMem xi m)) (fun _ _ m1 -> b2t (refExistsInMem xi m1))
-let testSalloc2 xi =
-  pushStackFrame ();
-  memwrite xi 1;
-  popStackFrame ();
-  memwrite xi 1
 
 
 
