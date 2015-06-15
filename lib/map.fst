@@ -6,7 +6,7 @@ type t (key:Type) (value:Type) = {
   mappings: key -> Tot value;
   domain:   key -> Tot bool
 }
-	    
+
 
 let sel m k = m.mappings k
 let upd m k v = {
@@ -24,7 +24,7 @@ let concat m1 m2 = {
 let contains m k = m.domain k
 let restrict s m = {
   mappings = m.mappings;
-  domain =   (fun x -> mem x s)
+  domain =   (fun x -> mem x s && contains m x)
 }
 
 let lemma_SelUpd1 m k v        = ()

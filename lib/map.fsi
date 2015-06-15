@@ -52,9 +52,8 @@ val lemma_InDomConcat: #key:Type -> #value:Type -> m1:t key value -> m2:t key va
                  [SMTPat (contains (concat m1 m2) k)]
 
 val lemma_InDomRestrict: #key:Type -> #value:Type -> m:t key value -> ks:set key -> k:key ->
-                         Lemma (requires True) (ensures (contains (restrict ks m) k == mem k ks))
+                         Lemma (requires True) (ensures (contains (restrict ks m) k == (mem k ks && contains m k)))
                          [SMTPat (contains (restrict ks m) k)]
-
 
 type Equal: #key:Type -> #value:Type -> t key value -> t key value -> Type
 
