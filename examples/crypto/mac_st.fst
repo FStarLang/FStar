@@ -1,13 +1,12 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../FStar/lib/prims.fst --verify_module MAC --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    variables:LIB=../../FStar/lib;
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module MAC --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    variables:LIB=../../lib;
     other-files:$LIB/string.fst $LIB/list.fst
             $LIB/ext.fst $LIB/classical.fst
             $LIB/set.fsi $LIB/set.fst
             $LIB/heap.fst $LIB/st.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
   --*)
-
 
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
@@ -84,7 +83,8 @@ type entry =
          -> m:tag
          -> entry
 
-let log = ST.alloc []
+
+let log : ref (list entry) = ST.alloc []
 
 (* end of implementation dependencies *)
 
@@ -118,20 +118,10 @@ let keygen (p: (text -> Type)) =
   k
 
 let mac k t =
-//  log := [];
-  magic()
-
-val test : unit -> ST unit (requires (fun h -> contains h log))
-                         (ensures (fun h0 x h1 -> modifies !{ log } h0 h1))
-
-let test () =
-    log := [];
-    ()
-
-  (*let m = sha1 k t in
+  let m = sha1 k t in
   let l = !log in
-//  log:=(Entry k t m :: l);
-  m*)
+  log:=(Entry k t m :: l);
+  m
 
 let verify k text tag =
   let verified = sha1verify k text tag in
