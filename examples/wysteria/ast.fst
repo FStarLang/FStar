@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi OrdSet;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap;
     variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst
+    other-files:$LIB/ordset.fsi $LIB/ordsetproperties.fst $LIB/ordmap.fsi $LIB/ordmapproperties.fst $LIB/list.fst $LIB/constr.fst $LIB/ext.fst
  --*)
 
 module AST
@@ -570,9 +570,72 @@ let cstep_lemma #c #c' h p = match h with
     if not (mem p (Mode.ps m)) then IntroL ()
     else
       IntroR (C_box_beta (slice_c p c) (slice_c p c'))
-  | C_unbox_beta (Conf _ m _ _ _) _ ->
+  | C_unbox_beta (Conf _ m _ _ _) _ ~>
     if not (mem p (Mode.ps m)) then IntroL ()
     else
       IntroR (C_unbox_beta (slice_c p c) (slice_c p c'))
 
+(**********)
+
+open OrdMap
+
+type protocol = ordmap prin tconfig p_cmp
+
+val update: prin -> tconfig -> protocol -> Tot protocol
+let update = OrdMap.update p_cmp
+
+val empty_protocol: protocol
+let empty_protocol = OrdMap.empty p_cmp
+
+val select: prin -> protocol -> Tot (option tconfig)
+let select = OrdMap.select p_cmp
+
+val dom: protocol -> Tot prins
+let dom = OrdMap.dom p_cmp
+
+val contains: prin -> protocol -> Tot bool
+let contains = OrdMap.contains p_cmp
+
+val fold_fn: sconfig -> prin -> protocol -> Tot protocol
+let fold_fn c p pi = update p (slice_c p c) pi
+
+val slice_ps_c: ps:prins -> sconfig -> Tot protocol (decreases (OrdSet.size p_cmp ps))
+let rec slice_ps_c ps c =
+  if ps = OrdSet.empty p_cmp then OrdMap.empty p_cmp
+  else
+    let Some p = OrdSet.choose p_cmp ps in
+    let ps_rest = OrdSet.remove p_cmp p ps in
+    let pi' = slice_ps_c ps_rest c in
+    OrdMap.update p_cmp p (slice_c p c) pi'
+
+assume val contains_update_trivial: p:prin -> pi:protocol
+                                    -> Lemma (requires (True))
+                                             (ensures (forall c. OrdMap.contains p_cmp p (OrdMap.update p_cmp p c pi)))
+
+val slice_ps_c_lemma: ps:prins -> c:sconfig -> p:prin
+                      -> Lemma (requires (OrdSet.mem p_cmp p ps))
+                               (ensures (OrdMap.contains p_cmp p (slice_ps_c ps c)         /\
+                                         is_Some (OrdMap.select p_cmp p (slice_ps_c ps c)) /\
+                                         Some.v (OrdMap.select p_cmp p (slice_ps_c ps c)) = slice_c p c))
+                               (decreases (OrdSet.size p_cmp ps))
+let rec slice_ps_c_lemma ps c p =
+  if ps = OrdSet.empty p_cmp then ()
+  else
+    let Some e = OrdSet.choose p_cmp ps in
+    let ps_rest  = OrdSet.remove p_cmp e ps in
+    if not (p = e) then
+      let _ = slice_ps_c_lemma ps_rest c p in
+      let _ = OrdMap.update_lem p_cmp e (slice_c e c) p (slice_ps_c ps_rest c) in
+      ()
+    else
+      contains_update_trivial p (slice_ps_c ps_rest c)
 (* check_marker *)
+
+
+
+
+
+
+
+
+

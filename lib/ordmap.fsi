@@ -53,12 +53,12 @@ val select_lem: #key:Type -> #value:Type -> f:cmp key -> k:key
                          (ensures (is_Some (select f k m) = contains f k m))
                    [SMTPat (select f k m); SMTPat (contains f k m)]
 
-val update_lem: #key:Type -> #value:Type -> f:cmp key -> k:key -> v:value
+val update_lem: #key:Type -> #value:Type -> f:cmp key -> k:key -> v:value -> k':key
                 -> m:ordmap key value f
                 -> Lemma (requires True)
-                         (ensures (select f k (update f k v m) = Some v /\
-                                   (forall k'. k =!= k' ==> (select f k' (update f k v m) = select f k' m))))
-                   [SMTPat (select f k (update f k v m))]
+                         (ensures ((k = k'       ==> (select f k' (update f k v m) = Some v)) /\
+                                  ((not (k = k') ==> (select f k' (update f k v m) = select f k' m)))))
+                   [SMTPat (select f k' (update f k v m))]
                    
 val remove_lem: #key:Type -> #value:Type -> f:cmp key -> k:key
                 -> m:ordmap key value f
@@ -71,6 +71,7 @@ val dom_empty: #key:Type -> #value:Type -> f:cmp key
                -> m:ordmap key value f
                -> Lemma (requires True)
                         (ensures ((dom f m = OrdSet.empty f) <==> (m = empty f)))
+                  [SMTPat (dom f (empty f))]
 
 val choose_lem: #key:Type -> #value:Type -> f:cmp key -> m:ordmap key value f
   -> Lemma (requires True)
