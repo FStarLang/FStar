@@ -49,7 +49,7 @@ type memblock = heap
 (* The axiomatization is agnostic
 about resuse of memory ids, i.e. it should (provably) have both kind of models.
 A client code's correctness/well-typedness cannot depend on stack-ids being reused.
-That will actually be a strictly weaker assumption, than the current one
+This is actually a strictly weaker assumption, than the older one
 where the client can potentially depend on stack ids being never reused.
 
 This is similar to the case of freshness of references in ST.
@@ -70,7 +70,7 @@ type memStack = x:memStackAux{wellFormed x}
 (* Should we also include sizes of refs in order to enable reasoninag about memory usage of programs?*)
 (* What is the size of functions? Does it make even make sense to store a function at a reference? Would it be possible to transpile such a construct? *)
 
-(* Even a simple notion of size, e.g. 1 unit per object only for heap objects, can help us reason about (lack of) memory leaks.*)
+(* Free only makes sense for heaps. We can already reason about (absense of) memory leaks because one can talk about the domain of the heap*)
 type smem = memblock * memStack
 
 

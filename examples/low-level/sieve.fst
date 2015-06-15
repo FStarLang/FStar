@@ -52,7 +52,7 @@ let mark n f index =
 type distinctRefsExists3
   (#a:Type) (#b:Type) (#c:Type) (m:smem)
   (ra:ref a) (rb: ref b) (rc: ref c)  =
-  (refExistsInMem ra m) /\ (refExistsInMem rb m) /\ (refExistsInMem rc m) /\ (ra=!=rb) /\ (rb=!=rc) /\ (ra=!=rc)
+  (refExistsInMem ra (mtail m)) /\ (refExistsInMem rb (mtail m)) /\ (refExistsInMem rc m) /\ (ra=!=rb) /\ (rb=!=rc) /\ (ra=!=rc)
 
 val markMultiplesUpto : n:nat -> lo:nat -> upto:nat{lo*(upto-1)<n}
   ->((k:nat{k<n}) -> Tot bool) -> Tot ((k:nat{k<n}) -> Tot bool)
@@ -164,7 +164,7 @@ type  outerLoopInv (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m
   /\ (forall (k:nat).
         (1<k /\ k < (loopkupRef lo m)) ==> markedIffDividesOrInit n k (fun _ -> false) (loopkupRef res m))
 
-val ex23 : #a:Type -> #b:Type  -> #c:Type -> m:smem
+(*val ex23 : #a:Type -> #b:Type  -> #c:Type -> m:smem
   -> ra:ref a -> rb: ref b -> rc: ref c
   -> Lemma
         (requires (distinctRefsExists2 m ra rb /\ refExistsInMem rc m /\ (rc=!=ra) /\ (rc=!=rb)))
@@ -177,9 +177,9 @@ val ex23p : #a:Type -> #b:Type  -> #c:Type
         (requires (True))
         (ensures  ( forall m.
                     ((distinctRefsExists2 (mtail m) ra rb /\ refExistsInMem rc m /\ (rc=!=ra) /\ (rc=!=rb)))
-                    ==> ((distinctRefsExists3 m ra rb rc))))
-let ex23p ra rb rc = ()
+                    ==> ((distinctRefsExists3 m ra rb rc))))*)
 
+(*let ex23p ra rb rc = ()*)
 #set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"
 
 val factorialLoopBody :
@@ -187,12 +187,28 @@ val factorialLoopBody :
   -> lo:(ref nat)
   -> res : ref ((k:nat{k<n}) -> Tot bool)
   -> unit ->
-  whileBody
+  (*whileBody
   (*SST unit*)
     (fun m ->  distinctRefsExists2 m lo res)
     (*(outerGuardLC n lo)*)
     (fun  _ -> True)
-    (*(fun  _ _ _ -> True)*)
+    (*(fun  _ _ _ -> True)*)*)
+
+    (*WNSC unit (fun m -> distinctRefsExists2 m lo res)
+                (fun _ _ m1 -> distinctRefsExists2 m1 lo res)*)
+
+
+
+                  SST unit
+                      ( (*requires *) (fun m -> isNonEmpty (st m) /\ topstb m = emp
+                      /\ distinctRefsExists2 (mtail m) lo res
+                      ))
+                        (*)*)
+                      ( (* ensures *) (fun m0 _ m1 -> True
+                        /\ distinctRefsExists2 (mtail m1) lo res
+                          (*/\ sids m0 = sids m1*)
+                          )) (*body popped all and only the stack frames it pushed*)
+
 
 let factorialLoopBody n lo res u =
   (*pushStackFrame ();*)
@@ -200,14 +216,8 @@ let factorialLoopBody n lo res u =
   let lov = memread lo in
   let li = salloc 0 in
   let liv = memread li in
-  cut (liv==0);
-  cut (li=!=lo);
-  cut (li=!=res);
-  (ex23p lo res li);
-  (* innerLoop n lo lov li res initres*)
+  innerLoop n lo lov li res initres;
   memwrite lo (lov+1)
-
-  (*popStackFrame ()*)
 
 
 
@@ -242,8 +252,8 @@ let testSalloc2 xi =
                   (k < n ==> multiplesMarked n (loopkupRef res m1) k))
         )
 
-
-(*let outerLoop n lo res =
+(*
+let outerLoop n lo res =
   scopedWhile
     (outerLoopInv n lo res)
     (outerGuardLC n lo)
