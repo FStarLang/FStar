@@ -1,3 +1,9 @@
+(*--build-config
+    options:--admit_fsi Set --admit_fsi Map;
+    variables:LIB=../../lib;
+    other-files:$LIB/ghost.fst $LIB/ext.fst $LIB/set.fsi $LIB/map.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst
+ --*)
+
 module Wysteria
 
 open Set
@@ -22,10 +28,16 @@ assume val moderef : ref mode
 type Wire (a:Type) = Map.t prin a
 
 type Box: Type -> Type
+(*= //needed for type checking
+  |Mk_box: #a:Type -> v:a -> ps:prins -> Box a*)
 
 val v_of_box: #a:Type -> x:Box a -> GTot a
 
 val ps_of_box: #a:Type -> x:Box a -> GTot prins
+
+
+(*let v_of_box x = Mk_box.v x //needed for type checking
+let ps_of_box x = Mk_box.ps x*)
 
 kind Requires         = mode -> Type
 kind Ensures (a:Type) = mode -> a -> Type

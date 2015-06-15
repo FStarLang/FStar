@@ -12,11 +12,12 @@ let rec fold f g s a =
   if s = empty f then a
   else
     let Some e = choose f s in
-    fold f g (remove f e s) (g e a)
+    let a_rest = fold f g (remove f e s) a in
+    g e a_rest
 
 (**********)
 
-val union':#a:Type -> f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
+(*val union':#a:Type -> f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
 let union' f s1 s2 = fold f (fun e s -> insert f e s) s1 s2
 
 val union_lemma: #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f
@@ -34,5 +35,5 @@ val union_lemma': #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f
                      (ensures (union f s1 s2 = union' f s1 s2))
 let union_lemma' f s1 s2 =
   union_lemma f s1 s2;
-  eq_lemma f (union f s1 s2) (union' f s1 s2)
+  eq_lemma f (union f s1 s2) (union' f s1 s2)*)
 

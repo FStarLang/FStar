@@ -12,7 +12,7 @@ open Map
 open Wysteria
 open WLib
 
-type pre  (m:mode)  = fun m0 -> b2t (m0 = m)
+type pre  (m:mode)  = fun m0 -> (m0 = m)
 type post (#a:Type) = fun (m:mode) (x:a) -> True
 
 type pre_with (m:mode) (t:Type) = fun m0 -> m0 = m /\ t

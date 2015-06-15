@@ -8,7 +8,6 @@
             $LIB/seq.fsi $LIB/seqproperties.fst
   --*)
 
-
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -84,7 +83,8 @@ type entry =
          -> m:tag
          -> entry
 
-let log = ST.alloc []
+
+let log : ref (list entry) = ST.alloc []
 
 (* end of implementation dependencies *)
 
@@ -118,20 +118,10 @@ let keygen (p: (text -> Type)) =
   k
 
 let mac k t =
-//  log := [];
-  magic()
-
-val test : unit -> ST unit (requires (fun h -> contains h log))
-                         (ensures (fun h0 x h1 -> modifies !{ log } h0 h1))
-
-let test () =
-    log := [];
-    ()
-
-  (*let m = sha1 k t in
+  let m = sha1 k t in
   let l = !log in
-//  log:=(Entry k t m :: l);
-  m*)
+  log:=(Entry k t m :: l);
+  m
 
 let verify k text tag =
   let verified = sha1verify k text tag in
