@@ -1,39 +1,22 @@
 open Multiplication
+open Addition
 open Seq
 open Eval
-open Carry
+(* open Carry *)
 open Resize
+(* open Z *)
 
-(*
-let rnd_bigint max len =
-  Random.self_init ();
-  let a = Array.make 10 Int64.zero in
-  let b = ref (Seq.create 10 Int64.zero) in
-  for i = 0 to 9 do
-    let r = Random.int64 (Int64.of_int max) in
-    a.(i) <- r;
-    b := Seq.upd !b i r
-  done;
-  (a,b)
+let size = 26
 
-let print_seq s =
-  for i = 0 to length s - 1 do
-    print_string ((Int64.to_string (index s i)) ^ " ")
-  done;
-  print_string "\n"
 
-let print_array a =
-  Array.iter (fun x -> print_string ((Int64.to_string x) ^ " ")) a;
-  print_string "\n"
-  *)
-
+(* 2^n *)
 let pow2 n =
   let rec acc n t =
     if n = 0 then t else acc (n-1) (2*t) in
   acc n 1
 
+(* Returns random values *)
 let rnd_bigint max len =
-  Random.self_init ();
   let a = Array.make len 0 in
   let b = ref (Seq.create len 0) in
   for i = 0 to 9 do
@@ -57,12 +40,14 @@ let seq_of_array a =
   done;
   !s
 
+(* Print sequence of integers *)
 let print_seq s =
   for i = 0 to length s - 1 do
     print_string ((string_of_int (index s i)) ^ " ")
   done;
   print_string "\n"
 
+(* Prints ocaml int array *)
 let print_array a =
   Array.iter (fun x -> print_string ((string_of_int x) ^ " ")) a;
   print_string "\n"
@@ -70,9 +55,11 @@ let print_array a =
 let bigint_of_seq s size =
   Bigint64 (s, (fun x -> size), (fun x -> size), true)
 
+(* Converts from fstar bigint to sequence of ints *)
 let seq_of_bigint = fun 
     (Bigint64 (s, _, _, _)) -> s
 
+(* Converts from seq of int and size to fstar bigint *)
 let ocaml_bigint_of_array a size =
   let b = ref (Big_int.big_int_of_int a.(0)) in
   for i = 1 to Array.length a - 1 do
@@ -80,6 +67,7 @@ let ocaml_bigint_of_array a size =
   done;
   !b
 
+(* Returns an array from the Big_int.t type *)
 let array_of_ocaml_bigint b size =
   if Big_int.compare_big_int b Big_int.zero_big_int = 0 then [|0|]
   else
@@ -96,12 +84,25 @@ let array_of_ocaml_bigint b size =
 let resize s size =
   array_of_ocaml_bigint (ocaml_bigint_of_array (array_of_seq  s) size) size
 
+let carry_test a size =
+  let a = Eval.getData a in
+  let len = Array.length a in
+  let b = Array.make (len+1) 0 in
+  Array.blit a 0 b 0 len;
+  let mask = 1 lsl size in
+  for i = 0 to len-1 do
+    b.(i+1) <- b.(i+1) + b.(i) / mask;
+    b.(i) <- (b.(i) mod mask)
+  done;
+  Eval.Bigint64 (b, (fun x -> 0), (fun x -> 0), true)
+
 let test size =
+  Random.self_init ();
   let a1, s1 = rnd_bigint (pow2 size) 10 in
   let a2, s2 = rnd_bigint (pow2 size) 10 in
   
   let our_res = multiplication (bigint_of_seq !s1 size) (bigint_of_seq !s2 size) in
-  let our_res_normalized = carry our_res in
+  let our_res_normalized = carry_test our_res size in
   let our_res_array = array_of_seq (seq_of_bigint our_res_normalized) in
 
   let our_res_realigned = realign our_res_normalized (fun x -> if x mod 2 = 0 then 25 else 15) in
@@ -123,7 +124,83 @@ let test size =
     print_array ocaml_res_array;
     false)
 				 
-				 
+
+(* Initializes values for benchmarking *)
+let initialize_values size len nb =
+  let fstar_array = Array.make nb (bigint_of_seq (Seq.create len 0) size) in
+  let big_int_array = Array.make nb (Big_int.zero_big_int) in
+  let zarith_array = Array.make nb (Z.zero) in
+  for j = 0 to nb-1 do
+    let s = ref (Seq.create len 0) in
+    for i = 0 to len-1 do
+      let r = Random.int (pow2 size) in
+      s := Seq.upd !s i r;
+      big_int_array.(j) <- Big_int.add_big_int big_int_array.(j) (Big_int.shift_left_big_int (Big_int.big_int_of_int r) (i*size));
+      zarith_array.(j) <- Z.add zarith_array.(j) (Z.shift_left (Z.of_int r) (i*size));
+    done;
+    fstar_array.(j) <- bigint_of_seq !s size
+  done;
+  (fstar_array, big_int_array, zarith_array)
+
+let rounds = 10	
+			
+let benchmark_fstar_mul values len =
+  for j = 0 to rounds do
+  for i = 0 to len-2 do 
+    carry_test (multiplication values.(i) values.(i+1)) size
+  done;
+  done
+    
+let benchmark_big_int_mul values len =
+  for j = 0 to rounds do
+  for i = 0 to len - 2 do 
+    Big_int.mult_big_int values.(i) values.(i+1)
+  done;
+  done
+
+let benchmark_zarith_mul values len =
+  for j = 0 to rounds do
+  for i = 0 to len - 2 do
+    Z.mul values.(i) values.(i+1)
+  done;
+  done 
+
+let benchmark_fstar_add values len =
+  for j = 0 to rounds do
+  for i = 0 to len-2 do 
+    addition values.(i) values.(i+1)
+  done;
+  done
+    
+let benchmark_big_int_add values len =
+  for j = 0 to rounds do
+  for i = 0 to len - 2 do 
+    Big_int.add_big_int values.(i) values.(i+1)
+  done;
+  done
+
+let benchmark_zarith_add values len =
+  for j = 0 to rounds do
+  for i = 0 to len - 2 do
+    Z.add values.(i) values.(i+1)
+  done;
+  done 
+
+let run_benchmark () =
+  let f_values, b_values, z_values =
+    initialize_values size 10 10000 in
+  let time f x s =
+    let t = Sys.time() in
+    let fx = f x in
+    Printf.printf "Execution time for %s : %fs\n" s (Sys.time() -. t) in
+  let len = Array.length f_values in
+  time (benchmark_fstar_add f_values) len "fstar addition";
+  time (benchmark_big_int_add b_values) len "big_int addition";
+  time (benchmark_zarith_add z_values) len "zarith addition";
+  time (benchmark_fstar_mul f_values) len "fstar multiplication";
+  time (benchmark_big_int_mul b_values) len "big_int multiplication";
+  time (benchmark_zarith_mul z_values) len "zarith multiplication"
+  
 let _ =
   let b = ref true in
   for i = 0 to 100 do
@@ -132,6 +209,9 @@ let _ =
   if !b then 
     print_string "*** TEST SUCCEEDED ***\n"
   else 
-    print_string "*** TEST FAILED ***\n"
+    print_string "*** TEST FAILED ***\n";
+  print_string "\nStarting benchmark between F* bigint, OCaml Big_int and Zarith.\n";
+  run_benchmark ();
+  print_string "\nEnd of benchmark\n"
 
-	       
+	     
