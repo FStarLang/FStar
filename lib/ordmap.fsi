@@ -35,63 +35,84 @@ val size    : #key:Type -> #value:Type -> #f:cmp key -> ordmap key value f
 type Equal (#k:Type) (#v:Type) (#f:cmp k) (m1:ordmap k v f) (m2:ordmap k v f) =
   (forall x. select #k #v #f x m1 = select #k #v #f x m2)
 
-val eq_lemma: #k:Type -> #v:Type -> f:cmp k -> m1:ordmap k v f -> m2:ordmap k v f
+val eq_lemma: #k:Type -> #v:Type -> #f:cmp k -> m1:ordmap k v f -> m2:ordmap k v f
               -> Lemma (requires (Equal #k #v #f m1 m2))
                        (ensures (m1 = m2))
+                 [SMTPat (m1 = m2)]
 
+val sel_upd1: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> m:ordmap k v f
+              -> Lemma (requires True) (ensures select #k #v #f x
+                                                (update #k #v #f x y m) = Some y)
+                 [SMTPat (select #k #v #f x (update #k #v #f x y m))]
 
+val sel_upd2: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k -> m:ordmap k v f
+              -> Lemma (requires True)
+                       (ensures (x =!= x' ==> (select #k #v #f x' (update #k #v #f x y m)
+                                               = select #k #v #f x' m)))
+                 [SMTPat (select #k #v #f x' (update #k #v #f x y m))]
 
-
-
-val empty_lem: #key:Type -> #value:Type -> f:cmp key
-               -> Lemma (requires True) (ensures (forall k. not (contains f k (empty #key #value f))))
-                  [SMTPat (empty f)]
-
-val contains_lem: #key:Type -> #value:Type -> f:cmp key -> m:ordmap key value f
-                  -> Lemma (requires True) (ensures (forall k. contains f k m =
-                                                               mem f k (dom f m)))
-                     [SMTPat (dom f m)]
-
-val select_lem: #key:Type -> #value:Type -> f:cmp key -> k:key
-                -> m:ordmap key value f
-                -> Lemma (requires True)
-                         (ensures (is_Some (select f k m) = contains f k m))
-                   [SMTPat (select f k m); SMTPat (contains f k m)]
-
-val update_lem: #key:Type -> #value:Type -> f:cmp key -> k:key -> v:value -> k':key
-                -> m:ordmap key value f
-                -> Lemma (requires True)
-                         (ensures ((k = k'       ==> (select f k' (update f k v m) = Some v)) /\
-                                  ((not (k = k') ==> (select f k' (update f k v m) = select f k' m)))))
-                   [SMTPat (select f k' (update f k v m))]
-                   
-val remove_lem: #key:Type -> #value:Type -> f:cmp key -> k:key
-                -> m:ordmap key value f
-                -> Lemma (requires True)
-                         (ensures (select f k (remove f k m) = None /\
-                                   (forall k'. k =!= k' ==> (select f k' (remove f k m) = select f k' m))))
-                   [SMTPat (select f k (remove f k m))]
-
-val dom_empty: #key:Type -> #value:Type -> f:cmp key
-               -> m:ordmap key value f
+val sel_empty: #k:Type -> #v:Type -> #f:cmp k -> x:k
                -> Lemma (requires True)
-                        (ensures ((dom f m = OrdSet.empty f) <==> (m = empty f)))
-                  [SMTPat (dom f (empty f))]
+                        (ensures (select #k #v #f x (empty #k #v #f) = None))
+                  [SMTPat (select #k #v #f x (empty #k #v #f))]
 
-val choose_lem: #key:Type -> #value:Type -> f:cmp key -> m:ordmap key value f
-  -> Lemma (requires True)
-           (ensures ((m = empty f       ==> (choose f m = None)) /\
-                     (not (m = empty f) ==> ((is_Some (choose f m)) /\
-                                             (select f (fst (Some.v (choose f m))) m =
-                                                    Some (snd (Some.v (choose f m)))) /\
-                                             (m = update f (fst (Some.v (choose f m)))
-                                                           (snd (Some.v (choose f m)))
-                                                           (remove f (fst (Some.v (choose f m))) m))))))
-           [SMTPat (choose f m)]
-                                                                        
-val size_remove_lem: #key:Type -> #value:Type -> f:cmp key -> k:key
-                     -> m:ordmap key value f
-                     -> Lemma (requires (contains f k m))
-                              (ensures (size f m = 1 + size f (remove f k m)))
-                        [SMTPat (size f (remove f k m))]
-                                                             
+val contains_upd1: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k
+                   -> m:ordmap k v f
+                   -> Lemma (requires True)
+                            (ensures (contains #k #v #f x' (update #k #v #f x y m) =
+                                      (x = x' || contains #k #v #f x' m)))
+                      [SMTPat (contains #k #v #f x' (update #k #v #f x y m))]
+
+val contains_upd2: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k
+                   -> m:ordmap k v f
+                   -> Lemma (requires True)
+                            (ensures (x =!= x' ==> (contains #k #v #f x' (update #k #v #f x y m)
+                                                    = contains #k #v #f x' m)))
+                      [SMTPat (contains #k #v #f x' (update #k #v #f x y m))]
+
+val contains_empty: #k:Type -> #v:Type -> #f:cmp k -> x:k
+                    -> Lemma (requires True)
+                             (ensures (not (contains #k #v #f x (empty #k #v #f))))
+                       [SMTPat (contains #k #v #f x (empty #k #v #f))]
+
+val contains_remove: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:k -> m:ordmap k v f
+                     -> Lemma (requires True)
+                              (ensures (contains #k #v #f x (remove #k #v #f y m) =
+                                        (contains #k #v #f x m && not (x = y))))
+                        [SMTPat (contains #k #v #f x (remove #k #v #f y m))]
+                  
+val eq_remove: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
+              -> Lemma (requires (not (contains #k #v #f x m)))
+                       (ensures (m = remove #k #v #f x m))
+                 [SMTPat (remove #k #v #f x m)]
+
+val choose_empty: #k:Type -> #v:Type -> #f:cmp k
+                 -> Lemma (requires True) (ensures (is_None (choose #k #v #f
+                                                             (empty #k #v #f))))
+                    [SMTPat (choose #k #v #f (empty #k #v #f))]
+
+val choose_m: #k:Type -> #v:Type -> #f:cmp k -> m:ordmap k v f
+             -> Lemma (requires (not (m = (empty #k #v #f))))
+                      (ensures (is_Some (choose #k #v #f m) /\
+                                (select #k #v #f (fst (Some.v (choose #k #v #f m))) m =
+                                 Some (snd (Some.v (choose #k #v #f m)))) /\
+                                (m = update #k #v #f (fst (Some.v (choose #k #v #f m)))
+                                                     (snd (Some.v (choose #k #v #f m)))
+                                                     (remove #k #v #f (fst (Some.v (choose #k #v #f m))) m))))
+                [SMTPat (choose #k #v #f m)]
+
+val size_empty: #k:Type -> #v:Type -> #f:cmp k
+                -> Lemma (requires True)
+                         (ensures (size #k #v #f (empty #k #v #f) = 0))
+                   [SMTPat (size #k #v #f (empty #k #v #f))]
+                   
+val size_remove: #k:Type -> #v:Type -> #f:cmp k -> y:k -> m:ordmap k v f
+                -> Lemma (requires (contains #k #v #f y m))
+                         (ensures (size #k #v #f m = size #k #v #f (remove #k #v #f y m) + 1))
+                   [SMTPat (size #k #v #f (remove #k #v #f y m))]
+
+val dom_lemma: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
+               -> Lemma (requires True)
+                        (ensures (contains #k #v #f x m <==>
+                                  OrdSet.mem #k #f x (dom #k #v #f m)))
+                  [SMTPat (mem #k #f x (dom #k #v #f m))]

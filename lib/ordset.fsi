@@ -61,7 +61,7 @@ val mem_subset: #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
                    [SMTPat (subset #a #f s1 s2)]
 
 val choose_empty: #a:Type -> #f:cmp a -> unit
-                  -> Lemma (requires True) (ensures (is_None (choose #a #f empty)))
+                  -> Lemma (requires True) (ensures (is_None (choose #a #f (empty #a #f))))
                      [SMTPat (choose #a #f (empty #a #f))]
 
 (* TODO: FIXME: Pattern does not contain all quantified vars *)                     

@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi OrdSet;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap;
     variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordsetproperties.fst $LIB/list.fst $LIB/constr.fst $LIB/ext.fst
+    other-files:$LIB/ordset.fsi $LIB/ordsetproperties.fst $LIB/ordmap.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst
  --*)
 
 module AST
@@ -554,81 +554,38 @@ let cstep_lemma #c #c' h p = match h with
     else
       IntroR (C_unbox_beta (slice_c p c) (slice_c p c'))
 
-(* check_marker *)
 (**********)
 
 open OrdMap
 
 type protocol = ordmap prin tconfig p_cmp
 
-val update: prin -> tconfig -> protocol -> Tot protocol
-let update = OrdMap.update p_cmp
-
-val empty_protocol: protocol
-let empty_protocol = OrdMap.empty p_cmp
-
-val select: prin -> protocol -> Tot (option tconfig)
-let select = OrdMap.select p_cmp
-
-val dom: protocol -> Tot prins
-let dom = OrdMap.dom p_cmp
-
-val contains: prin -> protocol -> Tot bool
-let contains = OrdMap.contains p_cmp
-
-val fold_fn: sconfig -> prin -> protocol -> Tot protocol
-let fold_fn c p pi = update p (slice_c p c) pi
-
-val slice_ps_c: ps:prins -> sconfig -> Tot protocol (decreases (OrdSet.size p_cmp ps))
-let rec slice_ps_c ps c =
-  if ps = OrdSet.empty p_cmp then OrdMap.empty p_cmp
+val slice_c_ps: ps:prins -> sconfig -> Tot protocol (decreases (OrdSet.size ps))
+let rec slice_c_ps ps c =
+  if ps = OrdSet.empty then OrdMap.empty
   else
-    let Some p = OrdSet.choose p_cmp ps in
-    let ps_rest = OrdSet.remove p_cmp p ps in
-    let pi' = slice_ps_c ps_rest c in
-    OrdMap.update p_cmp p (slice_c p c) pi'
+    let Some p = OrdSet.choose ps in
+    let ps_rest = OrdSet.remove p ps in
+    let pi' = slice_c_ps ps_rest c in
+    OrdMap.update p (slice_c p c) pi'
 
-assume val contains_update_trivial: p:prin -> pi:protocol
-                                    -> Lemma (requires (True))
-                                             (ensures (forall c. OrdMap.contains p_cmp p (OrdMap.update p_cmp p c pi)))
-
-val slice_ps_c_lemma: ps:prins -> c:sconfig -> p:prin
-                      -> Lemma (requires (OrdSet.mem p_cmp p ps))
-                               (ensures (OrdMap.contains p_cmp p (slice_ps_c ps c)         /\
-                                         is_Some (OrdMap.select p_cmp p (slice_ps_c ps c)) /\
-                                         Some.v (OrdMap.select p_cmp p (slice_ps_c ps c)) = slice_c p c))
-                               (decreases (OrdSet.size p_cmp ps))
-let rec slice_ps_c_lemma ps c p =
-  if ps = OrdSet.empty p_cmp then ()
+val dom_slice_lemma: ps:prins -> c:sconfig
+                     -> Lemma (requires True) (ensures (dom (slice_c_ps ps c) = ps))
+                        (decreases (OrdSet.size ps))
+let rec dom_slice_lemma ps c =
+  if ps = OrdSet.empty then ()
   else
-    let Some e = OrdSet.choose p_cmp ps in
-    let ps_rest  = OrdSet.remove p_cmp e ps in
-    if not (p = e) then
-      let _ = slice_ps_c_lemma ps_rest c p in
-      let _ = OrdMap.update_lem p_cmp e (slice_c e c) p (slice_ps_c ps_rest c) in
-      ()
-    else
-      contains_update_trivial p (slice_ps_c ps_rest c)
+    dom_slice_lemma (OrdSet.remove (Some.v (OrdSet.choose ps)) ps) c
 
-
-assume val map_update_dom_lemma: pi:protocol -> p:prin
-                                 -> Lemma (requires (True))
-                                          (ensures (forall c. OrdMap.dom p_cmp (OrdMap.update p_cmp p c pi) =
-                                                              OrdSet.insert p_cmp p (OrdMap.dom p_cmp pi)))
-
-val slice_ps_c_lemma2: ps:prins -> c:sconfig
-                       -> Lemma (requires (True))
-                                (ensures (OrdMap.dom p_cmp (slice_ps_c ps c) = ps))
-                          (decreases (OrdSet.size p_cmp ps))
-let rec slice_ps_c_lemma2 ps c =
-  if ps = OrdSet.empty p_cmp then ()
-  else
-    let Some e = OrdSet.choose p_cmp ps in
-    let ps_rest = OrdSet.remove p_cmp e ps in
-    let _ = slice_ps_c_lemma2 ps_rest c in
-    map_update_dom_lemma (slice_ps_c ps_rest c) e;
-    ()
-(* check_marker *)
+val slice_range_lemma: ps:prins -> c:sconfig
+                       -> Lemma (requires True)
+                                (ensures (forall p. mem p ps ==>
+                                                    (is_Some (select p (slice_c_ps ps c)) /\
+                                                     Some.v (select p (slice_c_ps ps c)) = slice_c p c)))
+                          (decreases (OrdSet.size ps))
+let rec slice_range_lemma ps c =
+  if ps = OrdSet.empty then ()
+  else slice_range_lemma (OrdSet.remove (Some.v (OrdSet.choose ps)) ps) c
 
 
 

@@ -6,13 +6,12 @@ module OrdMapProps
  
 open OrdMap
 
-val fold: #key:Type -> #value:Type -> #a:Type -> f:cmp key -> (key -> value -> a -> Tot a)
-          -> m:ordmap key value f -> a
-          -> Tot a (decreases (size f m))
-let rec fold f g m a =
-  if m = empty f then a
+val fold: #k:Type -> #v:Type -> #a:Type -> #f:cmp k -> (k -> v -> a -> Tot a)
+          -> m:ordmap k v f -> a -> Tot a (decreases (size m))
+let rec fold (#k:Type) (#v:Type) #f g m a =
+  if m = empty then a
   else
-    let Some (k, v) = choose f m in
-    fold f g (remove f k m) (g k v a)
+    let Some (k, v) = choose m in
+    fold g (remove k m) (g k v a)
 
 (**********)
