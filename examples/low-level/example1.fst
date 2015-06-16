@@ -90,50 +90,6 @@ let incrementIfNot2 r =
     then memwrite r 2
     else memwrite r (oldv + 1));oldv
 
-val factorial : nat -> Tot nat
-let rec factorial n =
-match n with
-| 0 -> 1
-| n -> n * factorial (n - 1)
-
-(* val factorialGuardLC :  n:nat -> li:(ref nat)  -> smem -> type *)
-type factorialGuardLC (n:nat) (li : ref nat) (m:smem) =
-  (refExistsInMem li m) && (not ((loopkupRef li m) = n))
-
-val factorialGuard :  n:nat -> li:(ref nat)  -> unit
-  -> whileGuard (fun m -> b2t (refExistsInMem li m))
-                (factorialGuardLC n li)
-let factorialGuard n li u = not (memread li = n)
-(* the guard of a while loop is not supposed to change the memory*)
-
-
-type  loopInv (li : ref nat) (res : ref nat) (m:smem) =
-  refExistsInMem li m /\ refExistsInMem res m
-    /\ (loopkupRef res m = factorial (loopkupRef li m))
-    /\ (~ (li = res))
-
-val factorialLoopBody :
-  n:nat -> li:(ref nat) -> res:(ref nat)
-  -> unit ->
-  whileBody (loopInv li res) (factorialGuardLC n li)
-      (*SST unit (fun m -> loopInv li res (mtail m)) (fun m0 _ m1 -> loopInv li res (mtail m1))*)
-let factorialLoopBody (n:nat) (li:(ref nat)) (res:(ref nat)) u =
-  let liv = memread li in
-  let resv = memread res in
-  memwrite li (liv + 1);
-  memwrite res ((liv+1) * resv)
-
-
-val factorialLoop : n:nat -> li:(ref nat) -> res:(ref nat)
-  -> SST unit (fun m -> mreads li 0 m /\ mreads res 1 m  /\ ~(li=res))
-              (fun _ _ m1 -> mreads res (factorial n) m1)
-let factorialLoop (n:nat) (li:(ref nat)) (res:(ref nat)) =
-  scopedWhile
-    (loopInv li res)
-    (factorialGuardLC n li)
-    (factorialGuard n li)
-    (factorialLoopBody n li res)
-
 
 val scopedWhile3 : loopInv:(smem -> Type)
   -> #wglc:(smem -> Type)
@@ -153,63 +109,12 @@ let rec scopedWhile3 (loopInv:(smem -> Type))
       else ()
 
 
-val loopyFactorial : n:nat
-  -> SST nat (fun m -> True)
-              (fun _ rv _ -> rv == (factorial n))
-let loopyFactorial n =
-  pushStackFrame ();
-  let li = salloc 0 in
-  let res = salloc 1 in
-  (factorialLoop n li res);
-  let v=memread res in
-  popStackFrame ();
-  v
-
-val loopyFactorial2 : n:nat
-  -> SST nat (fun m -> True)
-              (fun _ rv _ -> rv == (factorial n))
-let loopyFactorial2 n =
-  pushStackFrame ();
-  let li = salloc 0 in
-  let res = salloc 1 in
-  (scopedWhile
-    (loopInv li res)
-    (fun m -> (refExistsInMem li m) /\ ~ ((loopkupRef li m) = n))
-    (fun u -> not (memread li = n))
-    (fun u ->
-      let liv = memread li in
-      let resv = memread res in
-      memwrite li (liv + 1);
-      memwrite res ((liv+1) * resv)));
-  let v=memread res in
-  popStackFrame ();
-  v
-
-
-(*
-val loopyFactorial2 : n:nat
-  -> SST nat (fun m -> True)
-              (fun _ rv _ -> rv == (factorial n))
-let loopyFactorial2 (n:nat) =
-  withNewScope2
-  nat
-  (fun u ->
-    let li = salloc 0 in
-    let res = salloc 1 in
-    (factorialLoop n li res);
-    let v=memread res in v)
-*)
-
-
 (*What are the advantage (if any) of writing low-level programs this way,
   as opposed to writihg it as constructs in a deep embedding of C, e.g. VST.
   Hopefully, most of the code will not need the low-level style.
   Beautiful functional programs will also be translated to C?
   *)
 
-
-  (*we are inside a loop, so, we have a fresh stack at each iteration of the loop.
-   we store li there. creating li is a part of the outer loop*)
 
 val testAliasing : n:nat -> ((k:nat{k<n}) -> Tot bool) -> SST unit (fun  _  -> True) (fun _ _ _ -> True)
 let testAliasing n initv =
@@ -233,8 +138,6 @@ let testAliasing2 n li res =
     memwrite li 2;
     let resv2=memread res in
       assert (resv =  resv2)
-
-
 
 
 val testSalloc1 : unit -> SST unit (fun _ -> True) (fun _ _ _ -> True)
