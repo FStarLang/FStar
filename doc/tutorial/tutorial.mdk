@@ -17,10 +17,10 @@ Colorizer     : fstar
 
 ~Exercise     : @h1-exercise=lower-case @h1-exercise label="@h1@h1-exercise"
                 margin-left=1em
-                before="[**Exercise &label;: **]{margin-left=-1em}&br;" 
-                
+                before="[**Exercise &label;: **]{margin-left=-1em}&br;"
+
 ~Answer       : replace="[answer]{.answer-link}&br;~Begin AnswerContent&nl;&source;&nl;~End AnswerContent&nl;"
-                margin-top=-1em tight 
+                margin-top=-1em tight
 ~AnswerContent: border-style=solid border-width=1px border-color=black padding=0.5ex
 
 ~Code,~Pre : language=fstar
@@ -40,12 +40,12 @@ CatalinComment : replace="Can't understand why this doesn't work (it eats up the
 
 ~AnswerFragment : replace="~Begin Answer&nl;~Begin SolutionFragment {exname=&exname;}&nl;&source;&nl;~End SolutionFragment&nl;~End Answer&nl;"
 
-~Code         : replace=/^:/\(:|\)/ 
+~Code         : replace=/^:/\(:|\)/
 
 <style>
-.answer.view .answercontent, 
-.preview[data-view=full] .answer.view .answercontent, 
-.preview .answer .answercontent { 
+.answer.view .answercontent,
+.preview[data-view=full] .answer.view .answercontent,
+.preview .answer .answercontent {
   display: block;
 }
 .answer .answercontent, .preview[data-view=full] .answer .answercontent {
@@ -82,13 +82,13 @@ CatalinComment : replace="Can't understand why this doesn't work (it eats up the
      3. Select the "GitHub" icon
      4. Authorize the Madoko application to access your GitHub repositories
      5. Open <github>/FStarLang/FStar/doc/tutorial/tutorial.mdk and start editing.
-     6. Ctrl+S (or Synchronize from the folder tab) will bring up a dialog to 
+     6. Ctrl+S (or Synchronize from the folder tab) will bring up a dialog to
         commit and push this file to GitHub after merging with the latest changes there.
-     
+
      For included code snippets:
      -- The snippets must be derived from files that are stored in the same subtree of the git repo
         i.e, all the samples should be in sub-directories of FStarLang/FStar/doc/tutorial/code
-        
+
      Note: in this mode (i.e., github instead of dropbox), the document will not live update
            with the changes that anyone else may be making to the document concurrently. You
            will only see others' changes when you synchronize with github.
@@ -104,7 +104,7 @@ CatalinComment : replace="Can't understand why this doesn't work (it eats up the
 
 # Introduction
 
-F\* is a verification-oriented programming language developed at 
+F\* is a verification-oriented programming language developed at
 [Microsoft Research], [MSR-Inria], [Inria], and [IMDEA Software].
 It follows in
 the tradition of the [ML] family of languages in that it is a typed,
@@ -112,7 +112,7 @@ strict, functional programming language. However, its type system is
 significantly richer than ML's, allowing functional correctness
 specifications to be stated and checked semi-automatically. This
 tutorial provides a first taste of verified programming in F\*. More
-information about F\*, including papers and technical reports, 
+information about F\*, including papers and technical reports,
 can be found on the [F\* website].
 
 [Microsoft Research]: http://research.microsoft.com/en-us
@@ -197,12 +197,12 @@ Our model of this scenario (which we'll make more realistic in later
 sections) proceeds in three easy steps.
 
   1. Describe the policy using simple pure functions.
-   
-   
-  2. Identify the security-sensitive primitives in the program 
-     and protect them with the policy. 
-   
-     
+
+
+  2. Identify the security-sensitive primitives in the program
+     and protect them with the policy.
+
+
   3. Write the rest of the program, resting assured that the F\*
      type-checker will verify statically
      that the policy-protected primitives are never improperly accessed.
@@ -273,7 +273,7 @@ provide its type signature.
   first is a `filename` `f`, such that `canWrite f` evaluates to `true`;
   the second is a `string`, the data to be written to the file `f`. The `write`
   function returns `unit`, roughly analogous to the `void` type in
-  C. The type `unit` has only a single value, written `()`. 
+  C. The type `unit` has only a single value, written `()`.
 
 The crucial bits of these declarations are, of course, the use of the
 `canRead` and `canWrite` functions in the signature, which allow us to
@@ -436,7 +436,7 @@ this feature *sub-effecting*.
 
 In fact, you can configure F\* with your own family of effects and effect
 ordering and have F\* infer those effects for your programs---but that's
-more advanced and beyond the scope of this tutorial. 
+more advanced and beyond the scope of this tutorial.
 ~CH
 Previous claim seems too strong to me. It misses the point that F\*
 effects are primitive and fixed, and in a way the lattice of effects
@@ -447,11 +447,11 @@ Am I missing anything?
 ~
 
 ~NS
-Yes, effects are primitive. But, the lattice is not fixed nor is the powerset, 
-since the effects themselves can be arbitrarily fine-grained. For example, 
+Yes, effects are primitive. But, the lattice is not fixed nor is the powerset,
+since the effects themselves can be arbitrarily fine-grained. For example,
 you can take {Pure, Div, RD, WR, ALLOC, ST, EXN, ALL}. You could also
 split RD/WR into very precise ones, recording a subset of the state that
-may be written, etc. 
+may be written, etc.
 ~
 
 ~CH
@@ -545,7 +545,7 @@ precise types:
 Since we often port programs from ML to F\*, we choose the default effect
 to be `ML` and typically don't even write it. So, you could have written
 the usual ML signature for `hello_incr` and `loop` as shown below, which
-is just a synonym for the more explicit `:(int -> ML int)`. 
+is just a synonym for the more explicit `:(int -> ML int)`.
 
     val hello_incr: int -> int
     val loop: int -> int
@@ -566,7 +566,7 @@ initializing it to `init`.
 
     let new_counter init =
       let c = Util.mk_ref init in
-      fun () -> c := c + 1; !c 
+      fun () -> c := c + 1; !c
 
 F\* infers that `new_counter` has type `:int -> ST (unit -> ST int)`,
 the type of a function that given an integer, may read, write or
@@ -657,7 +657,7 @@ automatically.
 
 We can assert and automatically check a more general property about `max`. For example:
 
-    assert (forall x y. max x y >= x 
+    assert (forall x y. max x y >= x
                      && max x y >= y
                      && (max x y = x || max x y = y))
 
@@ -686,7 +686,7 @@ Integers (values of the `int` type) in F\* are represented by
 32-bit integers when you're using the F\# backend and 31-bit integers
 when compiling to OCaml. At the moment, we do not yet check for
 overflow. We plan to add overflow checks in a platform-specific way,
-soon. 
+soon.
 ~
 
 The `factorial` function is, however, a total function on non-negative
@@ -697,7 +697,7 @@ writing:
 
 The line above says several things:
 
-* `factorial` is a value (that's the '`val factorial`' part) 
+* `factorial` is a value (that's the '`val factorial`' part)
 
 * It is a *function* (that's the arrow type '`->`')
 
@@ -773,7 +773,7 @@ care about is impractical.
 However, F\* will allow you to write other functions (we call them
 lemmas) to prove more properties about `factorial`, after you've defined
 `factorial` and given it some generally useful type like
-`:nat -> Tot nat`. 
+`:nat -> Tot nat`.
 
 A lemma is a total function that always returns the single `:unit` value
 `()`. As such, computationally, lemmas are useless---they have no effect
@@ -854,8 +854,8 @@ which is equivalent to, but more concise than, the type above.
 
 Another bit of clumsiness that you have no doubt noticed is the result
 type of the lemmas which include a refinement of the
-`:unit` type. To make this lighter, F\* provides the `:Lemma` keyword which 
-can be used in place of the `:Tot` effect. 
+`:unit` type. To make this lighter, F\* provides the `:Lemma` keyword which
+can be used in place of the `:Tot` effect.
 
 For example, the type of `factorial_is_monotone_2` is equivalent to the
 type of `factorial_is_monotone_3` (below), which is just a little
@@ -869,11 +869,11 @@ We can also write it in the following way, when that's more convenient:
                                                 (ensures (factorial x > x))
 
 The formula after `requires` is the _pre-condition_ of the
-function/lemma, while the one after `ensures` is its _post-condition_. 
+function/lemma, while the one after `ensures` is its _post-condition_.
 
 ### A simple lemma proved by induction, in detail
 
-Now, let's look at a proof of `factorial_is_monotone` in detail. Here it is:    
+Now, let's look at a proof of `factorial_is_monotone` in detail. Here it is:
 
     let rec factorial_is_monotone x =
       match x with
@@ -895,7 +895,7 @@ know that the first case is inapplicable, i.e., in the second case, we
 know from the type for `factorial_is_monotone` that `x:nat{x > 2}`, and
 from the inapplicability of the previous case that `x <> 3`. In other
 words, the second case is the induction step and handles the proof when
-`x > 3`. 
+`x > 3`.
 
 Informally, the proof in this case works by using the induction
 hypothesis, which gives us that `forall n, 2 < n < x ==> factorial n > n`,
@@ -940,7 +940,7 @@ Try proving that if `x >= 3` then `factorial x >= 2*x`.
 Try proving that if `x >= 4` then `factorial x > x*x`.
 ~
 
-~ Exercise 
+~ Exercise
 Try proving that if `x >= 6` then `factorial x > x*x*x`.
 ~
 Without learning a lot more about F\*, it's unlikely that you will
@@ -973,7 +973,7 @@ to focus our effort on the inductive case.
 Many of these proofs by induction are quite boring. You simply do case
 analysis and call the induction hypothesis as needed. Surely, we should
 automate this for you---and we do, in many cases using an **experimental**
-_automatic induction_ feature. 
+_automatic induction_ feature.
 
 Here's another proof of `factorial_is_monotone`:
 
@@ -1013,9 +1013,9 @@ between the two will become apparent.
 
 Both the universal quantifier `forall`, and the existential quantifier
 `exists`, are only available at `:Type`. When you mix refinements that
-include boolean function and the quantifiers, you need to use the 
+include boolean function and the quantifiers, you need to use the
 propositional connectives. For example, the following formula
-is well-formed: 
+is well-formed:
 
     canRead e /\ forall x. canWrite x ==> canRead x
 
@@ -1040,17 +1040,17 @@ val factorial: nat -> Tot nat
 let rec factorial n = if n = 0 then 1 else n * factorial (n - 1)
 
 val factorial_is_positive: x:nat -> Tot (u:unit{factorial x > 0})
-let rec factorial_is_positive = function 
+let rec factorial_is_positive = function
   | 0 -> ()
   | x -> factorial_is_positive (x - 1)
 
 val factorial_is_monotone: x:nat{x >= 2} -> Tot (u:unit{factorial x >= x})
-let rec factorial_is_monotone = function 
+let rec factorial_is_monotone = function
   | 2 -> ()
   | x -> factorial_is_monotone (x - 1)
 
 val factorial_is_doubling: x:nat{x >= 3} -> Tot (u:unit{factorial x >= 2 * x})
-let rec factorial_is_doubling = function 
+let rec factorial_is_doubling = function
   | 3 -> ()
   | x -> factorial_is_doubling (x - 1)
 
@@ -1066,12 +1066,12 @@ let rec factorial_is_squaring = function
 (*   | x -> factorial_is_cubing (x - 1) *)
 
 val fibonacci: nat -> Tot nat
-let rec fibonacci = function 
+let rec fibonacci = function
   | 0
   | 1 -> 1
   | n -> fibonacci (n - 1) + fibonacci (n - 2)
 
-val fibonacci_is_monotone: n:nat -> Lemma (requires True) 
+val fibonacci_is_monotone: n:nat -> Lemma (requires True)
                                           (ensures (fibonacci n >= n))
                                           []
 let rec fibonacci_is_monotone n = if n > 1 then fibonacci_is_monotone (n - 1) else ()
@@ -1093,7 +1093,7 @@ cases.
 
 Here's the standard definition of (immutable) lists in F\*.
 
-    type list 'a = 
+    type list 'a =
       | Nil  : list 'a
       | Cons : hd:'a -> tl:list 'a -> list 'a
 
@@ -1106,23 +1106,23 @@ We note some important conventions for the constructors of a data type in F\*.
   (as opposed to function types in general).
   So, when we write `Cons: 'a -> list 'a -> list 'a`,  F\* desugars it to
   `Cons: 'a -> Tot (list 'a -> Tot (list 'a))`.
-  
+
 + Constructors can be curried. So, we usually define our inductive
   types as above so that we write `Cons hd tl` (curried)
   rather than `Cons(hd,tl)` (uncurried).
 
 + Constructors can be partially applied, so `Cons hd` is legal and has
   type `:list 'a -> Tot (list 'a)` when `hd:'a`.
-  
+
 <!-- XXX -->
-  
+
 The `list` type is defined in F\*'s standard prelude and is available
 implicitly in all F\* programs. We provide special (but standard) syntax
-for the list constructors: 
+for the list constructors:
 
 * `[]` is `Nil`
 * `[v1;...;vn]` is `Cons v1 ... (Cons vn Nil)`
-* `hd::tl` is `Cons hd tl`. 
+* `hd::tl` is `Cons hd tl`.
 
 You can always just write out the constructors like `Nil` and `Cons`
 explicitly, if you find that useful (e.g., to partially apply `Cons`).
@@ -1139,7 +1139,7 @@ The prelude also defines the `option` type, shown below:
 
 ## Proofs about basic functions on lists { #sec-basic-lists }
 
-The usual functions on lists are programmed in F\* just as in any other ML dialect. 
+The usual functions on lists are programmed in F\* just as in any other ML dialect.
 Here is the `length` function:
 
     val length: list 'a -> Tot nat
@@ -1168,7 +1168,7 @@ I don't understand either, it is certainly wrong
 
 
 ~ Exercise
-Here's the `append` function that concatenates two lists. 
+Here's the `append` function that concatenates two lists.
 ~~ ExerciseFragment {exname=ex4a-append-intrinsic}
 let rec append l1 l2 = match l1 with
   | [] -> l2
@@ -1189,17 +1189,17 @@ then prove the same property as in the previous exercise using a lemma.
 val append:list 'a -> list 'a -> Tot (list 'a)
 ~~
 ~~ AnswerFragment {exname=ex4b-append-extrinsic}
-val append_len: l1:list 'a -> l2:list 'a 
+val append_len: l1:list 'a -> l2:list 'a
              -> Lemma (requires True)
                       (ensures (length (append l1 l2) = length l1 + length l2)))
-let rec append_len l1 l2 = match l1 with 
+let rec append_len l1 l2 = match l1 with
     | [] -> ()
     | hd::tl -> append_len tl l2
 ~~
 ~
 
 ~ Exercise
-Define a function `mem: x:'a -> l:list 'a -> Tot bool` that 
+Define a function `mem: x:'a -> l:list 'a -> Tot bool` that
 decides whether `x` is present in the `l` or not, then prove it satisfies the
 following property:
 ~~ ExerciseFragment {exname=ex4c-mem}
@@ -1236,12 +1236,12 @@ prove a property of a function directly in its type---you must resort
 to a lemma.
 
     val reverse: list 'a -> Tot (list 'a)
-    let rec reverse = function 
+    let rec reverse = function
       | [] -> []
       | hd::tl -> append (reverse tl) [hd]
 
 Let's try proving that reversing a list twice is the identity function.
-It's possible to 
+It's possible to
 *specify* this property in the type of `reverse` using a refinement type.
 
     val reverse: f:(list 'a -> Tot (list 'a)){forall l. l = f (f l)}
@@ -1262,12 +1262,12 @@ Instead, one can use two lemmas to prove the property we care about. Here
 it is:
 
     let snoc l h = append l [h]
-    
+
     val snoc_cons: l:list 'a -> h:'a -> Lemma (reverse (snoc l h) = h::reverse l)
     let rec snoc_cons l h = match l with
       | [] -> ()
-      | hd::tl -> snoc_cons tl h 
-    
+      | hd::tl -> snoc_cons tl h
+
     val rev_involutive: l:list 'a -> Lemma (reverse (reverse l) = l)
     let rec rev_involutive l = match l with
       | [] -> ()
@@ -1279,19 +1279,19 @@ the induction hypothesis but also the `snoc_cons` lemma we proved above.
 ~Exercise
 Prove that reverse is injective, i.e.,
 ~~ ExerciseFragment {exname=ex4d-reverse}
-val rev_injective_1: l1:list 'a -> l2:list 'a 
+val rev_injective_1: l1:list 'a -> l2:list 'a
                 -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
 ~~
 ~~ Answer
 Perhaps you did it like this:
 ~~~ SolutionFragment {exname=ex4d-reverse}
-    val snoc_injective: l1:list 'a -> h1:'a -> l2:list 'a -> h2:'a 
+    val snoc_injective: l1:list 'a -> h1:'a -> l2:list 'a -> h2:'a
                      -> Lemma (snoc l1 h1 = snoc l2 h2 ==> l1 = l2 && h1 = h2)
     let rec snoc_injective l1 h1 l2 h2 = match l1, l2 with
       | _::tl1, _::tl2 -> snoc_injective tl1 h1 tl2 h2
       | _ -> ()
 
-    val rev_injective_1: l1:list 'a -> l2:list 'a 
+    val rev_injective_1: l1:list 'a -> l2:list 'a
                     -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
     let rec rev_injective_1 l1 l2 = match (l1, l2) with
       | hd1::tl1, hd2::tl2 ->
@@ -1301,7 +1301,7 @@ Perhaps you did it like this:
 ~~~
 That's quite a tedious proof, isn't it. Here's a simpler proof.
 ~~~ SolutionFragment {exname=ex4d-reverse}
-    val rev_injective_2: l1:list 'a -> l2:list 'a 
+    val rev_injective_2: l1:list 'a -> l2:list 'a
                      -> Lemma (reverse l1 = reverse l2 ==> l1 = l2)
     let rev_injective_2 l1 l2 = rev_involutive l1; rev_involutive l2
 ~~~
@@ -1340,7 +1340,7 @@ By adding a type annotation we can give a _different_ type to `map`:
     val map: ('a -> Tot 'b) -> list 'a -> Tot (list 'b)
 
 This type is neither a subtype nor a supertype of the type F\*
-inferred on its own. 
+inferred on its own.
 
 >**No parametric polymorphism on effects**: You might hope to give
 `map` a very general type, one that accepts a function with any effect
@@ -1358,7 +1358,7 @@ We can use assertions to test expected properties of programs. For example:
 Again, this is not real code
 ~
 ~NS
-We are showing code snippets throughout, not complete programs. So, I don't get it ... 
+We are showing code snippets throughout, not complete programs. So, I don't get it ...
 are you upset because this line is not a valid top-level expression?
 ~
 
@@ -1376,12 +1376,12 @@ below and available in F\*'s standard prelude).
        | None : option 'a
        | Some : 'a -> option 'a
 
-    let rec find f l = match l with 
+    let rec find f l = match l with
       | [] -> None
       | hd::tl -> if f hd then Some hd else find f tl
 ~~
 
-Prove that if `find` returns `Some x` then `f x = true`. 
+Prove that if `find` returns `Some x` then `f x = true`.
 Is it better to do this intrinsically or extrinsically? Do it both ways.
 
 ~~ AnswerFragment {exname=ex4e-find}
@@ -1393,7 +1393,7 @@ Is it better to do this intrinsically or extrinsically? Do it both ways.
 Define the `fold_left` function on lists, so that
 `fold_left f a [b1; ...; bn]` computes `f (... (f (f a b1) b2) ...) bn`.
 Prove that `(fold_left Cons [] l = reverse l)`.
-(The proof is a level harder from what we've done so far) 
+(The proof is a level harder from what we've done so far)
 ~~ ExerciseFragment {exname=ex4f-fold-left}
 val fold_left_cons_is_reverse: l:list 'a -> l':list 'a ->
       Lemma (fold_left Cons l l' = append (reverse l) l')
@@ -1419,7 +1419,7 @@ number of utility functions: for each constructor, we have a
 *projector*. We describe these next, using the list type (repeated below)
 as a running example.
 
-    type list 'a = 
+    type list 'a =
       | Nil  : list 'a
       | Cons : hd:'a -> tl:list 'a -> list 'a
 
@@ -1431,7 +1431,7 @@ we have two discriminators:
 
     val is_Nil: list 'a -> Tot bool
     let is_Nil = function [] -> true | _ -> false
-    
+
     val is_Cons: list 'a -> Tot bool
     let is_Cons = function _::_-> true | _ -> false
 
@@ -1545,13 +1545,13 @@ example:
 
 F\* accepts this program, giving `f` the type `:(triple int int int -> Tot int)`.
 
-This is equivalent to the following, more verbose, source program: 
+This is equivalent to the following, more verbose, source program:
 
 
-    type triple 'a 'b 'c = 
+    type triple 'a 'b 'c =
       | MkTriple: fst:'a -> snd:'b -> third:'c -> triple 'a 'b 'c
-      
-    let f x = MkTriple.fst x + MkTriple.snd x + MkTriple.third x 
+
+    let f x = MkTriple.fst x + MkTriple.snd x + MkTriple.third x
 
 # Proving termination { #sec-termination }
 
@@ -1573,7 +1573,7 @@ infinite descending chains in `S` related by `R`. For example, taking `S`
 to be `nat`, the set of natural numbers, the integer ordering `<` is a
 well-founded partial order (in fact, it is a total order). Since the
 measure strictly decreases each time the program takes a step, and there
-are no infinite descending chains, this guarantees that the program eventually 
+are no infinite descending chains, this guarantees that the program eventually
 can take no more steps, i.e., it terminates.
 
 The type system of F\* is parameterized by the choice of a well-founded
@@ -1592,7 +1592,7 @@ relations below):
 
 1. **The ordering on integers**: Given `i, j : nat`,
    we have `i << j <==> i < j`.
-   
+
    _Note_: Negative integers are not related by the `<<` relation,
    which is only a _partial_ order.
 
@@ -1609,7 +1609,7 @@ I guess there is also an exception for types with negative occurrences, right?
 Maybe its clear for you, but for me it's not clear what `v` and `D` are? Is `D` a constructor of type `T`?
 `v` a value? Do we require that `v=e`?
 ~
-    
+
 3. **The lexicographic ordering on lex_t**, as described below.
 
 
@@ -1634,7 +1634,7 @@ does decrease according to a *lexical ordering* on pairs.
 
 In its standard prelude, F\* defines the following inductive type:
 
-    type lex_t = 
+    type lex_t =
       | LexCons: 'a -> lex_t -> lex_t
       | LexTop : lex_t 'a 'b
 
@@ -1645,14 +1645,14 @@ In its standard prelude, F\* defines the following inductive type:
     `LexCons v1 v2 << LexCons v1' v2'`, if and only if, either
     `v1 << v1'`; or `v1=v1'` and `v2 << v2'`.
 
-    
+
 * If `v:lex_t` and `v <> LexTop`, then `v << LexTop`.
 
 ~MK
 We could explain what that means, that longer `lex_t` are smaller?
 ~
 
-**We include the following syntactic sugar**: 
+**We include the following syntactic sugar**:
 
 >>`%[v1;...;vn]` is shorthand for `(LexCons v1 ... (LexCons vn LexTop))`
 
@@ -1670,9 +1670,9 @@ Usually, in ML, when type-checking `e`, the recursively bound function
 programmer. This type is, however, not sufficient to guarantee that an
 invocation of `f` does not trigger an infinite chain of recursive calls.
 
-To prove termination (i.e., to rule out infinitely deep recursive calls), F\* 
-uses a different rule for type-checking recursive functions. The recursively bound name `f` 
-is available for use in `e`, but only at the more restrictive type shown below: 
+To prove termination (i.e., to rule out infinitely deep recursive calls), F\*
+uses a different rule for type-checking recursive functions. The recursively bound name `f`
+is available for use in `e`, but only at the more restrictive type shown below:
 
        y1:t1
     -> ...
@@ -1693,7 +1693,7 @@ F* can show automatically that the `ackermann` function
     1.  let rec ackermann m n =
     2.    if m=0 then n + 1
     3.    else if n = 0 then ackermann (m - 1) 1
-    4.    else ackermann (m - 1) 
+    4.    else ackermann (m - 1)
     5.                   (ackermann m (n - 1))
 
 is terminating and has type:
@@ -1703,7 +1703,7 @@ is terminating and has type:
 F* gives this function a default termination metric, so this expands out to:
 
     ackermann : m:nat -> n:nat -> Tot nat (decreases %[m;n])
-    
+
 The `decreases` clause will be discussed in the next section. In this
 example it leads to the F\* type-checker using the following more
 restrictive type for the recursive calls in the body of `ackermann`:
@@ -1730,7 +1730,7 @@ element, and there `n - 1 << n`, and we're done.
 
 ### Decreases clauses {#sec-decreases-clause}
 
-Of course, sometimes you will need to override the default measure for 
+Of course, sometimes you will need to override the default measure for
 recursive functions. If we just swap the arguments of the `ackermann`
 function the default measure no longer works and we need to add a
 `decreases` clause explicitly choosing a lexicographic ordering that
@@ -1747,7 +1747,7 @@ The optional `decreases` clause is a second argument to the `Tot` effect.
 It is, in general, a total expression over the arguments of the function.
 
 <!-- this is messed up because of mult_assoc
-~Exercise 
+~Exercise
 Program a tail-recursive version of `factorial` and prove it
 total. Also, prove that it is functionally equivalent to `factorial`.
 
@@ -1757,9 +1757,9 @@ total. Also, prove that it is functionally equivalent to `factorial`.
       if n = 0 then a
       else fact (a * n) (n - 1)
 
-    val fact_is_ok: a:nat 
-                 -> n:nat 
-                 -> Lemma (ensures (fact a n = a * factorial n)) 
+    val fact_is_ok: a:nat
+                 -> n:nat
+                 -> Lemma (ensures (fact a n = a * factorial n))
                           (decreases n)
     let rec fact_is_ok a = function
       | 0 -> ()
@@ -1886,7 +1886,7 @@ exercises to modify or generalize the programs.
 ## Quicksort on lists
 
 A canonical example for program verification is proving various
-sorting algorithms correct. 
+sorting algorithms correct.
 
 We'll start with lists of integers and describe some properties that
 we'd like to hold true of a sorting algorithm, starting with a
@@ -1919,8 +1919,8 @@ pivot in the middle before returning.
 
     let rec sort l = match l with
       | [] -> []
-      | pivot::tl -> 
-        let hi, lo  = partition (fun x -> pivot <= x) tl in 
+      | pivot::tl ->
+        let hi, lo  = partition (fun x -> pivot <= x) tl in
         sort (append lo (pivot::sort hi))
 
 
@@ -1931,7 +1931,7 @@ val partition: ('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
 ~~
 ~~Answer
 
-The following definition is included in F\*'s list library. 
+The following definition is included in F\*'s list library.
 ~~~ SolutionFragment {exname=ex6a-partition}
 [INCLUDE=code/solutions/ex6a-partition.fst:Partition]
 ~~~
@@ -1949,7 +1949,7 @@ The following definition is included in F\*'s list library.
 ~~
 ~
 
-### Specifying `sort` 
+### Specifying `sort`
 
 
 We'll verify `sort` intrinsically, although we'll have to use some
@@ -1962,7 +1962,7 @@ F\* to prove it.
 Is this an exercise or not? :)
 ~
 
-Unsurprisingly, it fails, on several counts: 
+Unsurprisingly, it fails, on several counts:
 
 1. We fail to prove the function total. On what grounds can we claim
    that each recursive call to `sort` is on a smaller argument?
@@ -1975,7 +1975,7 @@ Unsurprisingly, it fails, on several counts:
    property---we need some lemmas about `partition` and also about the
    `sorted` function.
 
-Let's try again: 
+Let's try again:
 
     val sort: l:list int -> Tot (m:list int{sorted m /\ forall i. mem i l <==> mem i m})
                                 (decreases (length l))
@@ -1990,7 +1990,7 @@ And here are a couple of lemmas about `partition` and `sorted`:
                                       /\ (forall x. mem x (fst (partition f l)) ==> f x)
                                       /\ (forall x. mem x (snd (partition f l)) ==> not (f x))
                                       /\ (forall x. mem x l = (mem x (fst (partition f l)) || mem x (snd (partition f l)))))))
-     let rec partition_lemma f l = match l with 
+     let rec partition_lemma f l = match l with
        | [] -> ()
        | hd::tl -> partition_lemma f tl
 
@@ -2007,7 +2007,7 @@ machinery.
                            -> Lemma (requires ((forall y. mem y l1 ==> not (pivot <= y))
                                             /\ (forall y. mem y l2 ==> pivot <= y)))
                                     (ensures (sorted (append l1 (pivot::l2))))
-     let rec sorted_concat_lemma l1 l2 pivot = match l1 with  
+     let rec sorted_concat_lemma l1 l2 pivot = match l1 with
       | [] -> ()
       | hd::tl -> sorted_concat_lemma tl l2 pivot
 
@@ -2031,14 +2031,14 @@ explicitly invoke our lemmas in order to use their properties. We'll
 be able to do better in a minute, but lets see how to modify `sort` by
 calling the lemmas to make the proof go through.
 
-    let cmp i j = i <= j 
+    let cmp i j = i <= j
     val sort_tweaked: l:list int -> Tot (m:list int{sorted m /\ (forall i. mem i l = mem i m)})
                                         (decreases (length l))
     let rec sort_tweaked l = match l with
       | [] -> []
-      | pivot::tl -> 
-        let hi', lo' = partition (cmp pivot) tl in 
-        partition_lemma (cmp pivot) tl; 
+      | pivot::tl ->
+        let hi', lo' = partition (cmp pivot) tl in
+        partition_lemma (cmp pivot) tl;
         let hi = sort_tweaked hi' in
         let lo = sort_tweaked lo' in
         append_mem lo (pivot::hi);
@@ -2048,7 +2048,7 @@ calling the lemmas to make the proof go through.
 That works, but it's pretty ugly. Not only did we have to pollute our
 implementation with calls to the lemmas, in order to make those calls,
 we had to further rewrite our code so that we could bind names for
-the arguments to those lemmas. We can do much better. 
+the arguments to those lemmas. We can do much better.
 
 
 ### SMT Lemmas: Bridging the gap between intrinsic and extrinsic proofs
@@ -2059,7 +2059,7 @@ wouldn't have had to pollute out implementation of quicksort. This is
 a significant advantage of using the intrinsic proof style---every
 call of a function like `partition (fun x -> pivot <= x) tl`
 immediately carries all the properties that were proven intrinsically
-about the function. 
+about the function.
 
 However, polluting the type of a general-purpose function with a very
 application-specific type would also be awful. Consider enriching the
@@ -2093,10 +2093,10 @@ property proven by the lemma.
 
 Likewise, here's a revised type for `sorted_concat_lemma`. This time,
 we instruct F\* and the SMT solver to associate the lemma property
-only with very specific terms: just those that have the shape 
-`sorted (append 11 (pivot::l2))`. The more specific a pattern you can provide, 
-the more discriminating the SMT solver will be in applying lemmas, 
-keeping your verification times acceptable. 
+only with very specific terms: just those that have the shape
+`sorted (append 11 (pivot::l2))`. The more specific a pattern you can provide,
+the more discriminating the SMT solver will be in applying lemmas,
+keeping your verification times acceptable.
 
     val sorted_concat_lemma: l1:list int{sorted l1}
                           -> l2:list int{sorted l2}
@@ -2118,7 +2118,7 @@ Finally, we also revise the type for `append_mem` in the same way:
       | hd::tl -> append_mem tl l2
 
 
-~Remark 
+~Remark
  Use `SMTPat` with care! If you specify a bad pattern, you will get
  very unpredictable performance from the verification engine. To
  understand the details behind `SMTPat`, you should read up a bit on
@@ -2159,7 +2159,7 @@ I do not write an exercise file Exercises 6c and 6d since it is exactly
 the same as for Exercide 6b, and would thus duplicate code.
 ~
 
-~Exercise 
+~Exercise
 Starting from this implementation (given below), generalize `sort` so
 that it works on lists with an arbitrary element type, instead of just
 lists of integers. Prove it correct.
@@ -2175,7 +2175,7 @@ lists of integers. Prove it correct.
 ~Exercise {exname=ex6c-break-sort-spec}
 Our specification for `sort` is incomplete. Why? Can you write a
 variation of `sort` that has the same specification as the one above,
-but discards some elements of the list? 
+but discards some elements of the list?
 ~~ ExerciseFragment {exname=ex6b-sort-poly}
 (* Start from the code in the "Load in editor" link *)
 ~~
@@ -2190,7 +2190,7 @@ elements.
 ~~
 ~
 
-~ Exercise 
+~ Exercise
 Fix the specification to ensure that `sort` cannot discard any
 elements in the list. Prove that `sort` meets the specification.
 ~~ ExerciseFragment {exname=ex6b-sort-poly}
@@ -2244,7 +2244,7 @@ of functions taking a Boolean argument and returning a Boolean result.
 This would be written as `bool -> bool` in F* syntax, and
 $\mathsf{bool} \to \mathsf{bool}$ in paper notation.
 
-We represent the expressions of STLC by the datatype `exp`. 
+We represent the expressions of STLC by the datatype `exp`.
 ```
 type exp =
   | EVar   : int -> exp
@@ -2295,7 +2295,7 @@ The `EAbs`, `ETrue`, and `EFalse` cases share the same right-hand-side (`false`)
 which is a way to prevent duplication in definitions.
 
 In order to give a semantics to function applications we define a
-function `subst x e e'` that substitutes `x` with `e` in `e'`: 
+function `subst x e e'` that substitutes `x` with `e` in `e'`:
 ```
 val subst : int -> exp -> exp -> Tot exp
 let rec subst x e e' =
@@ -2432,7 +2432,7 @@ environment `extend g x t`, as explained above. If that succeeds and
 produces a type `t'`, then the whole abstraction is given type `TArrow t t'`.
 For applications `EApp e1 e2` we type-check `e1` and `e2` separately, and
 if `e1` has a function type `TArrow t11 t12` and
-`e2` has type `t11`, then the whole application has type `t12`. 
+`e2` has type `t11`, then the whole application has type `t12`.
 `ETrue` and `EFalse` have type `TBool`.
 For conditionals, we require that the guard has type `TBool` and
 the two branches have the same type, which is also the type of the conditional.
@@ -2494,7 +2494,7 @@ the proof above can be written as just:
 let rec progress e = using_induction_hyp progress
 ```
 
-The **preservation** theorem (sometimes also called "subject reduction") states that 
+The **preservation** theorem (sometimes also called "subject reduction") states that
 when a well-typed expression takes a step, the result is a well-typed expression
 of the same type.
 In order to show preservation we need to prove a couple of auxiliary results
@@ -2564,7 +2564,7 @@ that it should feed this lemma to the SMT solver using this pattern.
 Sometimes, we know that `typing g e = Some t`,
 and we will need to replace `g` by an "equivalent" context `g'`.
 We still need to define formally when two environments are equivalent.
-A natural definition is extensional equivalence of functions: 
+A natural definition is extensional equivalence of functions:
 ```
 opaque logic type Equal (g1:env) (g2:env) =
                  (forall (x:int). g1 x = g2 x)
@@ -2572,7 +2572,7 @@ opaque logic type Equal (g1:env) (g2:env) =
 According to this definition two environments are equivalent if have
 the same domain and they map all variables in the domain to the same type.
 We remark `Equal` in particular and logical formulas in general
-are "types" in F\*, thus the different syntax for this definition. 
+are "types" in F\*, thus the different syntax for this definition.
 ~CH
 What does opaque do exactly?
 What does logic do?
@@ -2666,7 +2666,7 @@ we give the intuition of the two most interesting cases:
     no free variables, so we have `EqualE v empty g`. This allows us
     to apply the `context_invariance` lemma to obtain that
     `typing empty v = typing g v` and complete the proof of this case.
-  * Case `x <> y`: We have `subst x v e = e` and 
+  * Case `x <> y`: We have `subst x v e = e` and
     `typing gx e = Some t_e` and need to show that `typing g e = Some t_e`.
     We have that `EquivE (EVar y) gx g` since `x <> y` so we can apply
     the `context_invariance` lemma to conclude.
@@ -2691,7 +2691,7 @@ In other words, the small-step evaluation relation preserves types.
 ```
 val preservation : e:exp -> Lemma
         (requires(is_Some (typing empty e) /\ is_Some (step e) ))
-        (ensures(is_Some (step e) /\ 
+        (ensures(is_Some (step e) /\
                  typing empty (Some.v (step e)) == typing empty e))
 let rec preservation e =
   match e with
@@ -2752,7 +2752,7 @@ definition of types, expressions, values, substitution, and step:
 type ty =
   ...
   | TPair : ty -> ty -> ty
-  
+
 type exp =
   ...
   | EPair  : exp -> exp -> exp
@@ -2765,14 +2765,14 @@ let rec is_value e =
   match e with
   ...
   | EPair e1 e2 -> is_value e1 && is_value e2
-  
+
 let rec subst x e e' =
   match e' with
   ...
   | EPair e1 e2 -> EPair (subst x e e1) (subst x e e2)
   | EFst e1 -> EFst (subst x e e1)
   | ESnd e1 -> ESnd (subst x e e1)
-  
+
 let rec step e =
   ...
   | EPair e1 e2 ->
@@ -2842,7 +2842,7 @@ val free_in_context : x:int -> e:exp -> g:env -> Lemma
 let rec free_in_context x e g =
 ...
   | EPair e1 e2 -> free_in_context x e1 g; free_in_context x e2 g
-  | EFst e1 
+  | EFst e1
   | ESnd e1 -> free_in_context x e1 g
 
 val context_invariance : e:exp -> g:env -> g':env
@@ -2854,7 +2854,7 @@ let rec context_invariance e g g' =
 | EPair e1 e2 ->
      context_invariance e1 g g';
      context_invariance e2 g g'
- 
+
   | EFst e1
   | ESnd e1 -> context_invariance e1 g g'
 
@@ -2911,7 +2911,7 @@ types and expressions (`EIf0` tests if a number is zero or not):_
 type ty =
   ...
   | TNat : ty
-  
+
 type exp =
   ...
   | ENat  : nat -> exp
@@ -3025,8 +3025,369 @@ instead of options_ (CH: Not sure this is solvable with the current F\*,
 but it seems quite interesting)
 -->
 
+# Higher kinds, indexed types, implicit arguments, and type-level functions
 
-#State and other effects
+So far, we have mostly programmed total functions and give them
+specifications using rich types. Under the covers, F\* has a second
+level of checking at work to ensure that the specifications that you
+write are also meaningful---this is F\*'s kind system. Before moving
+on to more advanced F\* features, you'll have to have a little
+understanding of the kind system. In short, just as types describe
+properties of programs, kinds describe properties of types.
+
+## `Type`: The type of types
+
+The basic construct in the kind system is the constant `Type`, which
+is the basic type of a type. For example, 
+just as we say that `0 : int` (zero has type `int`), we also say 
+`int : Type` (`int` has kind `Type`), `bool : Type`, `nat : Type` etc.
+
+## Arrow kinds
+
+Beyond the base types, consider types like `list int`, `list bool`
+etc.  These are also types, of course, and in F\* `list int : Type`
+and `list bool : Type`. However, what about the unapplied type
+constructor `list`---it's not a `Type` own its own; it only produces a
+`Type` when applied to a `Type`. In that sense, `list` is type
+constructor. To describe this, just as we use the `->` type
+constructor to describe functions at the level of programs, we use the
+`->` kind constructor to describe functions at the level of types. As
+such, we write `list : Type -> Type`, meaning that it produces a
+`Type` when applied to a `Type`.
+
+## Indexed types and implicit arguments
+
+Beyond inductive types like `list`, F\* also supports inductive type
+families, or [GADTs]. For example, here is one definition of a
+`vector`, a length-indexed list.
+
+```
+type vector : Type -> nat -> Type = 
+   | Nil :  vector 'a 0
+   | Cons : hd:'a -> n:nat -> tl:vector 'a n -> vector 'a (n + 1)
+```
+
+Here, we define a type constructor `vector : Type -> nat -> Type`,
+which takes two arguments: it produces a `Type` when applied first to
+a `Type` and then to a `nat`.
+
+The point is to illustrate that just as functions at the level of
+programs may take either type- or term-arguments, types themselves can
+take either types or pure expressions as arguments.
+
+[GADTs]: https://en.wikipedia.org/wiki/Generalized_algebraic_data_type
+
+### Implicit arguments
+
+When writing functions over terms with indexed types, it is convenient
+to mark some arguments as implicit, asking the type-checker to infer
+them rather than having to provide them manually.
+
+For example, the type of a function that reverses a vector can be
+written as follows:
+
+```
+val reverse_vector: #a:Type -> #n:nat -> vector a n -> Tot (vector a n)
+```
+
+This indicates that `reverse_vector` expects three arguments, but the
+`#` sign mark the first two arguments as implicit. Given a term 
+`v : vector t m`, simply writing `reverse_vector v` will type-check as
+`vector t m`---internally, F\* elaborates the function call to
+`reverse_vector #t #m v`, instantiating the two implicit arguments
+automatically. To view what F\* inferred, you can provide the
+`--print_implicits` argument to the compiler, which will cause all
+implicitly inferred arguments to be shown in any message from the
+compiler. Alternatively, you can write `reverse_vector #t #m v`
+yourself to force the choice of implicit arguments manually.
+
+When you write a type like `'a -> M t wp` (note the "ticked" variable
+`'a`), this is simply syntactic sugar for `#a:Type -> a -> M t wp`,
+with every occurrence of `'a` replaced by `a` in `M t wp`---in other
+words, the "ticked" type variable is an implicit type argument. With
+this in mind, the definition of `vector` is desugared to:
+
+```
+type vector : Type -> nat -> Type = 
+   | Nil :  #a:Type -> vector a 0
+   | Cons : #a:Type -> hd:a -> n:nat -> tl:vector a n -> vector a (n + 1)
+```
+
+One could go further and also define the `Cons` constructor's `n`
+argument to be implicit, like so:
+
+```
+type vector : Type -> nat -> Type = 
+   | Nil :  #a:Type -> vector a 0
+   | Cons : #a:Type -> hd:a -> #n:nat -> tl:vector a n -> vector a (n + 1)
+```
+
+With this, given `v: vector int m`, we can write `Cons 0 v` to build a
+`vector int (m + 1)`.
+
+## Dependent kind arrows and type function 
+
+Even some of the built-in type constructors can be given
+kinds. Consider the refinement type constructor: `_:_{_}`, whose
+instances include types we've seen before, like `x:int{x >= 0}`, which
+is the type `nat`, of course.  With less syntactic sugar, you can view
+the type `x:int{phi(x)}` as the application of a type constructor
+`refinement` to two arguments `int` and a refinement formula 
+`fun x -> phi(x)`. As discussed in Section [#sec-bool-versus-type], the formula
+`phi(x)` is itself a `Type`. Thus, the kind of the `refinemnt`
+constructor is `a:Type -> (a -> Type) -> Type`, meaning it takes two
+arguments; first, a type `a`; then a second argument, a predicate on
+`a` (whose kind depends on `a`); and then bulids a `Type`.
+
+The type `fun x -> phi(x)` is type function, a lambda abstraction at
+the level of types, which when applied to a particular value, say,
+`0`, reduces as usual to `phi(0)`.
+
+## Kind abbreviations
+
+F\* allows top-level declarations to define abbreviations for kinds. For example, 
+one can write: 
+
+```
+kind Predicate (a:Type) = a -> Type
+```
+
+Now, the kind `Predicate a` is an abbreviation for `a -> Type`.
+
+# Specifying effects 
+
+F\* provides a mechanism to define new effects. As mentioned earlier,
+the system is already configured with several basic effects, including
+non-termination, state and exceptions.  In this section, we look
+briefly at how effects are defined, using the `PURE` and `STATE`
+effects for illustration.
+
+On a first reading, you may wish to skip this section.
+
+
+## Computation types
+
+Expressions in F\* are given _computation types_ `C`.  For the
+purposes of the presentation here, we start by discussing
+a simplified form of these `C` types, i.e, we will consider
+computation types of the form `M t wp`, those that have a
+non-parameterized effect constructor `M`; a result type `t`; and a
+weakest pre-condition `wp`.
+
+~ Remark
+In its most primitive form, each effect in F\* introduces a
+_computation type_ of the form `M t1..tn t wp wlp`. The `M t1..tn`
+indicates the name of the effect `M` and several user-defined indexes
+`t1..tn`.  The type `t` indicates the type of the result of the
+computation; `wp` is a predicate transformer that is not weaker than
+the weakest pre-condition of `e`; and `wlp` is a predicate transformer
+not weaker than the weakest _liberal_ pre-condition of `e`. For the
+sake of brevity, we call `wp` the weakest pre-condition and `wlp` the
+weakest liberal pre-condition. For now, we set aside the `wlp` and 
+the other indices `t1..tn` and focus only on the simpler form of
+computation types.
+~
+
+A computation `e` has type `M t wp` if when run in an initial
+configuration satisfying `wp post`, it (either runs forever, if
+allowed, or) produces a result of type `t` in a final configuration
+`f` such that `post f` is true, all the while exhibiting no more
+effects that are allowed by `M`. In other words, `M` is an upper bound
+on the effects of `e`; `t` is its result type`; and `wp` is a
+predicate transformer that for any post-condition of the final
+configuration of `e`, produces a sufficient condition on the initial
+configuration of `e`. 
+
+These computation types (specifically their predicate transformers)
+form what is known as a [Dijkstra monad]. Some concrete examples
+should provide better intuition.
+
+[Dijkstra monad]: http://research.microsoft.com/en-us/um/people/nswamy/papers/paper-pldi13.pdf
+
+## The `PURE` effect
+
+The `PURE` effect is primitive in F\*. No user should ever have to
+(re-)define it. Its definition is provided once and for all in
+`lib/prims.fst`. It's instructive to look at its definition inasmuch
+as it provides some insight into how F\* works under the covers. It
+also provides some guidance on how to define new effects. We discuss a
+fragment of it here.
+
+The type of pure computations is `PURE t wp` where 
+`wp : (t -> Type) -> Type`. This means that pure computations produce
+`t`-typed results and are decribed by predicate transformers that
+transform result predicates (post-conditions of kind `t -> Type`) to
+pre-conditions, which are propositions of kind `Type`.
+
+Seen another way, the signature of the `wp` has the following
+form---it transforms pure post-conditions to pure pre-conditions.
+
+```
+kind PurePost (a:Type) = a -> Type
+kind PurePre = Type
+kind PureWP (a:Type) = PurePost a -> PurePre
+```
+
+For example, one computation type for `0` is `PURE int wp_zero` where
+`wp_zero = fun (p:(int -> Type)) -> p 0`.  This means that in order to
+prove any property `p` about the result of the computation `0` is
+suffices to prove `p 0`---which is of course what you would
+expect. The type `wp_zero` is an instance of the more general form
+below:
+
+```
+type return_PURE (#a:Type) (x:a) = fun (post: PurePost a) -> post x
+```
+
+When sequentially composing two pure computations using 
+`let x = e1 in e2`, if `e1: PURE t1 wp1` and `e2: (x:t1 -> PURE t2 (wp2 x))`, 
+we type the composed computation as `PURE t2 (bind_PURE wp1 wp2)`, where:
+
+```
+type bind_PURE (#a:Type) (#b:Type) 
+               (wp1: PureWP a)
+               (wp2: a -> PureWP b)
+ = fun (post:PurePost b) -> wp1 (fun (x:a) -> wp2 x post)
+```
+
+One can show that `return_PURE` and `bind_PURE` together form a monad.
+
+## The `STATE` effect
+
+Stateful programs operate on an input heap producing a result and an
+output heap. The computation type `STATE t wp` describes such a
+computation, where `wp : StateWP t` has the signature below.
+
+```
+kind StatePost t = t -> heap -> Type
+kind StatePre    = heap -> Type
+kind StateWP t   = StatePost t -> StatePre
+```
+
+In other words, WPs for stateful programs transform stateful
+post-conditions (relating the t-typed result of a computation to the
+final heap) into a pre-condition, a predicate on the input heap.
+
+The type `heap` is axiomatized in `lib/heap.fst` and is one model of
+the primitive heap provided by the F\* runtime system. 
+
+
+
+
+In a language like Haskell, or any functional language
+including F\*, you might define the state monad 
+`ST (s:Type) (a:Type) = s -> Tot (a * s)`. However, in F\*, using 
+this definition of `ST` only gives you a pure function that 
+threads through a store `s` while computing a result `a`. 
+
+By default, the state is the primitive `heap` of the
+program itself.
+
+
+## Generating compact verification conditions
+
+Aside from introducing and advertising the new F* to HOPE attendees,
+we plan to go into some depth about one technical aspect of F*, namely
+the problem of efficiently computing verification conditions for a
+program. We sketch the issue below.
+
+Consider the traditional formulation of a weakest pre-condition
+calculus: WP(e, Q) computes the weakest pre-condition of the
+post-condition Q for the program e.
+
+In the case where e is a conditional expression, the rule looks like:
+
+WP(if b then e1 else e2, Q) = b ==> WP(e1, Q)
+/\ (not b) ==> WP(e2, Q)
+
+While simple and familiar, this formulation has a significant
+drawback: the post-condition formula Q is duplicated across the
+branches, leading to an exponential blowup in the size of the
+verification condition.
+
+This problem with WP computations is well known---Flanagan and Saxe
+(POPL 2001, http://dl.acm.org/citation.cfm?id=360220) and Leino (JIPL
+2005, http://dl.acm.org/citation.cfm?id=1710882) both study this
+problem and provide equivalent solutions. In essence, they show that
+for a first-order, assignment-free guarded command language the
+weakest pre-condition can be computed in a size nearly linear in the
+size of the program. Then, they show that first-order imperative WHILE
+language can be converted into SSA form and then into a guarded
+command language.
+
+In the context of F*, we generalize the results of Flanagan and Saxe,
+and Leino, to the setting of a higher-order language. The main
+technical idea is a new "Double Dijkstra Monad". Given a program, F*
+infers a monadic computation type index by (1) a WP, the weakest
+pre-condition predicate transformer; and (2) a WLP, the weakest
+liberal pre-condition predicate transformer. Intuitively, WLP(e, Q) is
+sufficient to guarantee that if e contains no internal assertion
+failures, then its result satisfies Q; in contrast, the WP(e, Q) is
+sufficient to guarantee both that e's internal assertions succeed and
+that its result satisfies Q.
+
+The WP and WLP are related by the following identity:
+
+WP(e, Q) <==> (WP(e, (\x. True))
+/\ forall y. WLP(e, (\x. x=y)) ==> Q y)
+
+In words, the formula above can be read as follows:
+
+Proving that e contains no failing assertions and produces a result
+satisfying Q (i.e., WP(e, Q)) is equivalent to proving (a) that e
+contains no failing assertions (i.e., WP(e, \x.True)) and (b) that Q y
+holds for any result y that e may produce
+(i.e, forall y. WLP(e, \x.x=y) ==> Q y).
+
+With this identity in hand, the rule for computing the WP of a
+conditional becomes as follows, avoiding the exponential blow up by
+avoiding the repetition of Q in each branch.
+
+WP(if b then e1 else e2, Q) = (b ==> WP(e1, \x.True)
+/\ ~b ==> WP(e2, \x.True))
+/\ (forall y. (b ==> WLP(e1, \x. x=y)
+/\ ~b ==> WLP(e2, \x. x=y))
+==> Q y)
+
+
+## `M t1..tn r wp wlp`: Computation types and Dijkstra monads
+
+In its most primitive form, each effect in F\* introduces a
+_computation type_ of the form `M t1..tn r wp wlp`, which is uses to
+classify computations `e`. The `M t1..tn` indicates the name of the
+effect `M` and several user-defined indexes `t1..tn`.  The type `r`
+indicates the type of the result of the computation; `wp` is a
+predicate transformer that is not weaker than the weakest
+pre-condition of `e`; and `wlp` is a predicate transformer not weaker
+than the weakest _liberal_ pre-condition of `e`. For the sake of
+brevity, we call `wp` the weakest pre-condition and `wlp` the weakest
+liberal pre-condition.
+
+For the purposes of simplifying the presentation here, we start by
+discussing a simplified form of computation types, i.e, we will
+consider computation types of the form `M r wp`, those that have a
+non-parameterized effect constructor `M`; a result type `r`; and a
+weakest pre-condition `wp`.
+
+## Specifying the `PURE` effect
+
+
+
+
+
+
+
+# Verifying Stateful Programs
+
+In this chapter, we look in detail at F\*'s state monad and how it can be used
+to specify, program and verify stateful code. 
+
+
+## The `ST` monad, in brief
+
+The standard library of F\* includes `lib/st.fst` which provides 
+
+
 
 ## Stateful access control
 
@@ -3040,36 +3401,36 @@ module DynACLs
 open Heap
 open ST
 type file = string
-      
+
 (* using dynamic ACLs in some database *)
-type entry = 
+type entry =
   | Readable of string
   | Writable of string
-type db = list entry 
+type db = list entry
 assume val acls: ref db
 
-let canWrite db file = 
+let canWrite db file =
   is_Some (List.find (function Writable x -> x=file | _ -> false) db)
 
-let canRead db file = 
+let canRead db file =
   is_Some (List.find (function Readable x | Writable x -> x=file) db)
-  
+
 
 type CanRead f h  = canRead  (Heap.sel h acls) f == true
 type CanWrite f h = canWrite (Heap.sel h acls) f == true
 
 (* F* infers precise specifications for all non-recursive effectful computations *)
-let grant e = 
-  let a = ST.read acls in 
+let grant e =
+  let a = ST.read acls in
   ST.write acls (e::a)
 
-let revoke e = 
+let revoke e =
   let a = ST.read acls in
   let db = List.filter (fun e' -> e<>e') a in
   ST.write acls db
 
 (* two dangerous primitives *)
-assume val read:   file:string -> ST string 
+assume val read:   file:string -> ST string
                                      (requires (CanRead file))
                                      (ensures (fun h s h' -> h=h'))
                                      (modifies no_refs)
@@ -3080,13 +3441,13 @@ assume val delete: file:string -> ST unit
                                      (modifies no_refs)
 
 val checkedDelete: file -> All unit (fun h -> True) (fun h x h' -> h==h')
-let checkedDelete file = 
-  if canWrite !acls file 
+let checkedDelete file =
+  if canWrite !acls file
   then delete file
   else failwith "unwritable"
 
 val test_acls: file -> unit
-let test_acls f = 
+let test_acls f =
   grant (Readable f);     (* ok *)
   let _ = read f in       (* ok --- it's in the acl *)
   (* delete f;               not ok --- we're only allowed to read it *)
@@ -3097,7 +3458,7 @@ let test_acls f =
 ```
 
 ~Exercise
-Write down some types for `grant` and `revoke` that are sufficiently 
+Write down some types for `grant` and `revoke` that are sufficiently
 precise to allow the program to continue to type-check.
 
 ~~ ExerciseFragment {exname=ex8a-acls}
@@ -3120,7 +3481,7 @@ let grant e = ST.write acls (e::ST.read acls)
 
 val revoke: e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> not(List.mem e (sel h' acls))))
-let revoke e = 
+let revoke e =
   let db = List.filter (fun e' -> e<>e') (ST.read acls) in
   ST.write acls db
 ~~~
@@ -3140,7 +3501,7 @@ effect InvST (t:Type) (inv:(heap -> Type)) (fp:set aref) (post:(heap -> t -> hea
              ST t (fun h -> On fp inv h)
                   (fun h i h' -> post h i h' /\ On fp inv h')
                   (SomeRefs fp)
-    
+
 type even_post (h:heap) (i:int) (h':heap) = even i
 
 
@@ -3194,7 +3555,7 @@ let mk_counter_2 _ =
 
 ## MAC
 
-We begin with our cryptographic library. 
+We begin with our cryptographic library.
 
 ```
 module MAC
@@ -3202,11 +3563,11 @@ open Array
 open SHA1
 ```
 
-Message authentication codes 
-(MACs) provide integrity protection based on keyed cryptographic hashes. 
-We define an F* module that implements this functionality. 
+Message authentication codes
+(MACs) provide integrity protection based on keyed cryptographic hashes.
+We define an F* module that implements this functionality.
 
-We attach an authenticated property to each key 
+We attach an authenticated property to each key
 used as a pre-condition for MACing and a postcondition of MAC verification.
 
 ```
@@ -3214,7 +3575,7 @@ opaque type key_prop : key -> text -> Type
 type pkey (p:(text -> Type)) = k:key{key_prop k == p}
 ```
 
-(In the RPC example below we will use a key of type `pkey reqresp` where 
+(In the RPC example below we will use a key of type `pkey reqresp` where
 ```
 opaque logic type reqresp (msg:text) =
     (exists s. msg = request s /\ Request s)
@@ -3222,7 +3583,7 @@ opaque logic type reqresp (msg:text) =
 ```
 )
 
-Next, we define the types of functions that a MAC library is supposed to 
+Next, we define the types of functions that a MAC library is supposed to
 provide:
 
 ```
@@ -3246,7 +3607,7 @@ the following specification, and verify them by typing under the
 security assumption that HMACSHA1 is INT-CPA.
 
 ~~ ExerciseFragment {exname=ex9a-acls-cap}
-val issue:  f:file{ canRead f } -> SHA1.tag 
+val issue:  f:file{ canRead f } -> SHA1.tag
 val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
 ~~
 
@@ -3254,9 +3615,9 @@ To this end, assume given a UTF8 encoding function from strings to
 bytes, with the following specification:
 
 ```
-assume val utf8: s:string  -> Tot (seq byte) 
+assume val utf8: s:string  -> Tot (seq byte)
 
-assume UTF8_inj: 
+assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
     equal (utf8 s0) (utf8 s1) ==> s0==s1
 
@@ -3265,7 +3626,7 @@ assume UTF8_inj:
 
 ~~ Answer
 ```
-val issue: f:file{ canRead f } -> SHA1.tag 
+val issue: f:file{ canRead f } -> SHA1.tag
 val redeem: f:file -> m:SHA1.tag -> u:unit{ canRead f }
 
 let issue f = MAC.mac k (utf8 f)
@@ -3274,26 +3635,26 @@ let redeem f t = if MAC.verify k (utf8 f) t then () else failwith "bad capabilit
 ```
 ~~
 
-How would we extend it to also cover CanWrite access? 
-~ 
-   
+How would we extend it to also cover CanWrite access?
+~
+
 ## Secure RPC
 
-We describe a simple secure RPC implementation, which consists of three 
-modules: `Mac`, our library for MACs, `Format`, a module for message 
-formatting, and `RPC`, a module for the rest of the protocol code. 
-(Placing the formatting functions request and response in a separate 
+We describe a simple secure RPC implementation, which consists of three
+modules: `Mac`, our library for MACs, `Format`, a module for message
+formatting, and `RPC`, a module for the rest of the protocol code.
+(Placing the formatting functions request and response in a separate
 module is convenient to illustrate modular programming and verification.)
 
 ### Secure RPC protocol
 
-To start with we consider a single client and server. The security goals of 
+To start with we consider a single client and server. The security goals of
 our RPC protocol are that (1) whenever the server accepts a
-request message `s` from the client, the client has indeed sent the message to 
+request message `s` from the client, the client has indeed sent the message to
 the server and, conversely,
-(2) whenever the client accepts a response message `t` from the server, 
+(2) whenever the client accepts a response message `t` from the server,
 the server has indeed sent the
-message in response to a matching request from the client. 
+message in response to a matching request from the client.
 
 To this end, the protocol uses message authentication codes (MACs) computed as
 keyed hashes, such that each symmetric MAC key kab is associated with (and known
@@ -3304,16 +3665,16 @@ An Authenticated RPC Protocol:
     2. server->client  utf8 t | (mac kab (response s t))
 
 In the protocol narration, each line indicates an intended communication of data
-from one principal to another. 
+from one principal to another.
 
-`utf8` marshalls strings such as `s` and `t` into byte arrays 
-that can be send over the network. `|` written also `append` 
+`utf8` marshalls strings such as `s` and `t` into byte arrays
+that can be send over the network. `|` written also `append`
 is a function concatenating `bytes`. `request` and `response` build
-message digests (the authenticated values). These functions may for 
-instance be implemented as tagged concatenations of their utf8-encoded 
+message digests (the authenticated values). These functions may for
+instance be implemented as tagged concatenations of their utf8-encoded
 arguments. These functions will be detailed in the `Format` module.
 
-Below we give an implementation of the protocol using these functions, 
+Below we give an implementation of the protocol using these functions,
 the functions of the 'Mac' module, and networking functions
 
 ```
@@ -3321,7 +3682,7 @@ assume val send: message -> unit
 assume val recv: (message -> unit) -> unit
 ```
 
-These functions model an untrusted network controlled by the adversary, who decides 
+These functions model an untrusted network controlled by the adversary, who decides
 through their implementation when to deliver messages.
 
 Two events, record genuine requests and responses
@@ -3334,7 +3695,7 @@ in the following protocol
 ```
 let client (s:string16) =
   assume (Request s);
-  send (append (utf8 s) (mac k (request s))); 
+  send (append (utf8 s) (mac k (request s)));
   recv (fun msg ->
     if length msg < macsize then failwith "Too short"
     else
@@ -3348,22 +3709,22 @@ let server () =
     if length msg < macsize then failwith "Too short"
     else
       let (v,m) = split msg (length msg - macsize) in
-      if length v > 65535 then failwith "Too long" 
+      if length v > 65535 then failwith "Too long"
       else
         let s = iutf8 v in
-        if verify k (request s) m 
-        then  
+        if verify k (request s) m
+        then
           ( assert (Request s);
             let t = "22" in
             assume (Response s t);
             send (append (utf8 t) (mac k (response s t)))))
 ```
 
-The `assert` guarantee that messages that are received by a party have been sent by its peer. 
+The `assert` guarantee that messages that are received by a party have been sent by its peer.
 
 ### Formating code
 
-The Format module used by the protocol implementation 
+The Format module used by the protocol implementation
 exports among others the following types and functions.
 
 ```
@@ -3379,14 +3740,14 @@ let response s t =
   append tag1 (append lb (append (utf8 s) (utf8 t)))
 ```
 
-We require 3 lemmas on message formats: 
+We require 3 lemmas on message formats:
 
 * requests are injective on their argument
 * responses are injective on both their arguments
-* requests and responses are distinct 
+* requests and responses are distinct
 
-For authentication properties, we require both functions to be 
-injective, so that authenticating the bytes unambiguously 
+For authentication properties, we require both functions to be
+injective, so that authenticating the bytes unambiguously
 authenticate the text before marshalling.
 
 ~Exercise
@@ -3395,23 +3756,23 @@ Try to state this formally as three lemmas.
 
 ~~Answer
 ```
-val req_resp_distinct: 
-  s:string -> s':string16 -> t':string -> 
+val req_resp_distinct:
+  s:string -> s':string16 -> t':string ->
   Lemma (requires True)
         (ensures (request s <> response s' t'))
         [SMTPat (request s); SMTPat (response s' t')]
 
-val req_components_corr: 
-  s0:string -> s1:string -> 
+val req_components_corr:
+  s0:string -> s1:string ->
   Lemma (requires (request s0 == request s1))
         (ensures  (s0==s1))
 
-val resp_components_corr: 
-  s0:string16 -> t0:string -> s1:string16 -> t1:string -> 
+val resp_components_corr:
+  s0:string16 -> t0:string -> s1:string16 -> t1:string ->
   Lemma (requires (response s0 t0 == response s1 t1))
         (ensures  (s0==s1 /\ t0==t1))
 ```
-~~ 
+~~
 ~
 
 ~ Exercise
@@ -3428,7 +3789,7 @@ let resp_components_corr s0 t0 s1 t1 = ()
 ~~
 
 <!--
-These lemmas rely on more powerful lemmas about the 
+These lemmas rely on more powerful lemmas about the
 injectivity of append:
 
 ```
@@ -3442,7 +3803,7 @@ val append_inj_lemma: b1:message -> b2:message
                    -> Lemma (requires (length b1==length c1 /\ append b1 b2==append c1 c2))
                             (ensures (equal b1 c1 /\ equal b2 c2))
                             (decreases (length b1))
-                            [SMTPat (append b1 b2); SMTPat (append c1 c2)] 
+                            [SMTPat (append b1 b2); SMTPat (append c1 c2)]
 ```
 
 ~ Exercise
@@ -3453,10 +3814,10 @@ Try to fix this proof.
 ~~ Answer
 ```
 let rec append_inj_lemma b1 b2 c1 c2 =
-  let l = length b1 in 
+  let l = length b1 in
   match l with
   | 0 -> ()
-  | _ -> append_inj_lemma (slice b1 1 l) b2 (slice c1 1 l) c2  
+  | _ -> append_inj_lemma (slice b1 1 l) b2 (slice c1 1 l) c2
 ```
 ~~
 -->
@@ -3476,14 +3837,14 @@ message in response to a matching request from a.
 <!--
 ## Signing Email
 
-The purpose of this exercise is to program and verify functions for 
+The purpose of this exercise is to program and verify functions for
 signing email messages and verifying their signatures.
 -->
 
 ## Verified Padding
 
-We intend to MAC and/or encrypt plaintexts of variable sizes using 
-fixed-sized algorithms, such as those that operate on 256-bit blocks, such as AES. 
+We intend to MAC and/or encrypt plaintexts of variable sizes using
+fixed-sized algorithms, such as those that operate on 256-bit blocks, such as AES.
 
 To this end, we use the following classic padding scheme (used for instance in TLS).
 
@@ -3495,7 +3856,7 @@ open Array
 assume val n2b: n:nat {( n < 256 )} -> Tot uint8
 assume val b2n: b:uint8 -> Tot (n:nat { (n < 256) /\ n2b n = b })
 
-type bytes = seq byte (* concrete byte arrays *) 
+type bytes = seq byte (* concrete byte arrays *)
 type nbytes (n:nat) = b:bytes{length b == n} (* fixed-length bytes *)
 
 let blocksize = 32
@@ -3506,9 +3867,9 @@ let pad n = Array.create n (n2b (n-1))
 
 let encode (a:text) = append a (pad (blocksize - length a))
 
-let decode (b:block) = 
+let decode (b:block) =
   let padsize = b2n(index b (blocksize - 1)) + 1 in
-  if op_LessThan padsize blocksize then 
+  if op_LessThan padsize blocksize then
     let (plain,padding) = split b (blocksize - padsize) in
     if padding = pad padsize
     then Some plain
@@ -3525,7 +3886,7 @@ show that decoding cancels out encoding.
 
 ```
 val pad: n:nat { 1 <= n /\ n <= blocksize } -> Tot (nbytes n)
-val encode: a: text -> Tot block 
+val encode: a: text -> Tot block
 val decode: b:block -> Tot (option (t:text { Array.equal b (encode t)}))
 ```
 ~~
@@ -3552,7 +3913,7 @@ val inj: a: text -> b: text -> Lemma (requires (Array.equal (encode a) (encode b
                                      (decreases (length a))
 let inj a b =
   if length a = length b
-  then () 
+  then ()
   else let aa = encode a in
        let bb = encode b in
        cut (Array.index aa 31 =!= Array.index bb 31)
@@ -3578,9 +3939,9 @@ To this end, we assume given an implementation of the following module
 
 ```
 module BMAC
-open Pad 
+open Pad
 
-let keysize = 16 (* these are the sizes for SHA1 *) 
+let keysize = 16 (* these are the sizes for SHA1 *)
 let macsize = 20
 type key = nbytes keysize
 type tag = nbytes macsize
@@ -3593,7 +3954,7 @@ assume val mac:    k:key -> t:block{key_prop k t} -> tag
 assume val verify: k:key -> t:block -> tag -> b:bool{b ==> key_prop k t}
 ```
 
-Write a similar module that accepts texts instead of blocks: 
+Write a similar module that accepts texts instead of blocks:
 first the implementations for keygen, mac, and verify,
 then type annotations to derive their authentication property
 (on texts) from the one of BMAC (on blocks).
@@ -3601,25 +3962,25 @@ then type annotations to derive their authentication property
 ~~ Answer
 ```
 module TMAC
-open Pad 
+open Pad
 
 let keysize = BMAC.keysize
 let macsize = BMAC.macsize
 type key = BMAC.key
 type tag = BMAC.tag
 
-opaque type bspec (spec: (text -> Type)) (b:block) = 
+opaque type bspec (spec: (text -> Type)) (b:block) =
   (forall (t:text). b = encode t ==> spec t)
 
 opaque type key_prop : key -> text -> Type
-type pkey (p:(text -> Type)) = 
+type pkey (p:(text -> Type)) =
   k:key{key_prop k == p /\ BMAC.key_prop k == bspec p}
 
 val keygen: p:(text -> Type) -> pkey p
 val mac:    p:(text -> Type) -> k:pkey p -> t:text{p t} -> tag
 val verify: p:(text -> Type) -> k:pkey p -> t:text -> tag -> b:bool{b ==> p t}
 
-let keygen (spec: text -> Type) = 
+let keygen (spec: text -> Type) =
   let k = BMAC.keygen (bspec spec) in
   assume (key_prop k == spec);
   k
@@ -3636,16 +3997,16 @@ let verify k t tag = BMAC.verify k (encode t) tag
 (2) Implement, then verify this construction.
 
 ~~ Answer
-(1) Yes, using two keys: one for `text:bytes {length b = n}` 
+(1) Yes, using two keys: one for `text:bytes {length b = n}`
 and another for `text:bytes {length b}`.
 
 (2) Code:
 ```
 module MAC2
 open Array
-open Pad 
+open Pad
 
-type text2 = b:bytes { length b <=  blocksize } 
+type text2 = b:bytes { length b <=  blocksize }
 
 let keysize = 2 * BMAC.keysize
 let macsize = BMAC.macsize
@@ -3655,12 +4016,12 @@ type tag = BMAC.tag
 opaque type bspec0 (spec: (text2 -> Type)) (b:block) =
   (forall (t:text). b = encode t ==> spec t)
 
-opaque type bspec1 (spec: (text2 -> Type)) (b:block) = 
+opaque type bspec1 (spec: (text2 -> Type)) (b:block) =
   spec b
 
 opaque type key_prop : key -> text2 -> Type
 
-type pkey (p:(text2 -> Type)) = 
+type pkey (p:(text2 -> Type)) =
   k:key{ key_prop k == p
       /\ BMAC.key_prop (Keys.k0 k) == bspec0 p
       /\ BMAC.key_prop (Keys.k1 k) == bspec1 p }
@@ -3669,7 +4030,7 @@ val keygen: p:(text2 -> Type) -> pkey p
 val mac:    p:(text2 -> Type) -> k:pkey p -> t:text2{p  t} -> tag
 val verify: p:(text2 -> Type) -> k:pkey p -> t:text2 -> tag -> b:bool{b ==> p t}
 
-let keygen (spec: text2 -> Type) = 
+let keygen (spec: text2 -> Type) =
   let k0 = BMAC.keygen (bspec0 spec) in
   let k1 = BMAC.keygen (bspec1 spec) in
   let k = Keys k0 k1 in
@@ -3678,12 +4039,12 @@ let keygen (spec: text2 -> Type) =
   assume (key_prop k == spec);
   k
 
-let mac (Keys k0 k1) t = 
-  if length t < blocksize 
+let mac (Keys k0 k1) t =
+  if length t < blocksize
   then BMAC.mac k0 (encode t)
   else BMAC.mac k1 t
 
-let verify (Keys k0 k1) t tag =   
+let verify (Keys k0 k1) t tag =
   if length t < blocksize
   then BMAC.verify k0 (encode t) tag
   else BMAC.verify k1 t tag
@@ -3693,7 +4054,7 @@ let verify (Keys k0 k1) t tag =
 
 ~
 
-~ Exercise 
+~ Exercise
 What about MAC schemes for texts of arbitrary lengths?
 Hint: have a look e.g. at the HMAC construction.
 ~
@@ -3704,8 +4065,8 @@ Hint: have a look e.g. at the HMAC construction.
 ## Encryption
 
 The basis of our encryption example is the interface of a symmetric encryption scheme based on a block cipher, say AES.
-It uses a one block initialization vector (IV) that is XORed to the plaintext. The masked value is then enciphered. 
-The ciphertext consists of the IV and this enciphered block. 
+It uses a one block initialization vector (IV) that is XORed to the plaintext. The masked value is then enciphered.
+The ciphertext consists of the IV and this enciphered block.
 
 ```
 module AES
@@ -3720,9 +4081,9 @@ type plain  = nbytes blocksize
 type cipher = nbytes (2 * blocksize)  (* including IV *)
 
 let keysize = 16 (* 128 bits *)
-type key = nbytes keysize 
+type key = nbytes keysize
 
-assume val gen: unit -> key 
+assume val gen: unit -> key
 assume val dec: key -> cipher -> Tot plain
 (* this function is pure & complete *)
 assume val enc: k:key -> p:plain -> c:cipher
@@ -3730,7 +4091,7 @@ assume val enc: k:key -> p:plain -> c:cipher
 
 ~ Exercise
 Refine the type of the encryption function to model the *correctness* property:
-A correctly generated ciphertext, decrypts to its plaintext. 
+A correctly generated ciphertext, decrypts to its plaintext.
 ~~ ExerciseFragment {exname=ex10a-encrypt}
 assume val enc: k:key -> p:plain -> c:cipher
 ~~
@@ -3738,51 +4099,51 @@ assume val enc: k:key -> p:plain -> c:cipher
 ~~ Answer
 
 ```
-assume val enc: k:key -> p:plain -> c:cipher{ dec k c = p }  
-(* this function is not pure (samples IV); 
+assume val enc: k:key -> p:plain -> c:cipher{ dec k c = p }
+(* this function is not pure (samples IV);
    the refinement captures functional correctness *)
 ```
 ~~
 
 ~
 
-We model *perfect secrecy* by typing using type abstraction. As concrete cryptographic 
-algorithms such as the one above talk about bytes, we now introduce the notion of a 
-symmetric encryption scheme that enforces type abstraction for `safe` keys.   
+We model *perfect secrecy* by typing using type abstraction. As concrete cryptographic
+algorithms such as the one above talk about bytes, we now introduce the notion of a
+symmetric encryption scheme that enforces type abstraction for `safe` keys.
 
 A scheme is parameterized by a key type `k` for keys and a plain type `p` that abstractly defines plaintexts.
 
 Keys are abstract to enforce a well typed key usage regime on well typed users of the module.
 
 ```
-module SymEnc (* a multi-key symmetric variant; for simplicity: 
+module SymEnc (* a multi-key symmetric variant; for simplicity:
                  (1) only using AES above; and (2) parsing is complete *)
 
 type r = AES.plain
 
-(* CPA variant: *) 
-opaque type Encrypted: #k: Type -> p:Type -> k -> AES.bytes -> Type         
+(* CPA variant: *)
+opaque type Encrypted: #k: Type -> p:Type -> k -> AES.bytes -> Type
 (* an opaque predicate, keeping track of honest encryptions *)
 
-type cipher (p:Type) (k:Type) (key:k) = c:AES.cipher { Encrypted p key c }  
+type cipher (p:Type) (k:Type) (key:k) = c:AES.cipher { Encrypted p key c }
 ```
 The type of `cipher` records the plain type, key type, and key it was generated for.
 
 ```
-type keyT: Type -> Type = 
-  | Ideal    : p:Type -> AES.key -> i:int -> keyT p 
-  | Concrete : p:Type -> AES.key -> i:int -> keyT p  
+type keyT: Type -> Type =
+  | Ideal    : p:Type -> AES.key -> i:int -> keyT p
+  | Concrete : p:Type -> AES.key -> i:int -> keyT p
 ```
 Keys record whether they were correctly generated `Ideal` in which case their usage will provide security by type abstraction,
 or not, in which they are just concrete keys that can be leaked to the adversary.
 
 ```
 type scheme: Type -> Type =
-  | Scheme:  p:Type -> k:Type -> 
-             keyrepr: (k -> AES.key) -> 
-             keygen:  (bool -> k) ->   
+  | Scheme:  p:Type -> k:Type ->
+             keyrepr: (k -> AES.key) ->
+             keygen:  (bool -> k) ->
              encrypt: (key:k -> p -> cipher p k key) ->
-             decrypt: (key:k -> cipher p k key -> p) -> 
+             decrypt: (key:k -> cipher p k key -> p) ->
              scheme p
 ```
 
@@ -3790,13 +4151,13 @@ A scheme records a plain type `p`, a function `keyrepr` for breaking key abstrac
 a key generation function `keygen`, and encryption and decryption functions `encrypt` and `decrypt`.
 
 ```
-type entry (p:Type) (k:Type) = 
+type entry (p:Type) (k:Type) =
   | Entry : key:k -> c:cipher p k key -> plain:p -> entry p k
-  
+
 ```
 
 
-To create a cryptographic scheme one needs to provide a `plain` function 
+To create a cryptographic scheme one needs to provide a `plain` function
 for turning `bytes` into the plain type values
 and a `repr` function for turning plain type values into bytes.
 ```
@@ -3804,9 +4165,9 @@ val create: p: Type -> plain: (r -> p) -> repr: (p -> r) -> scheme p
 ```
 
 The `create` function instantiates the scheme using the `AES` module.
- 
+
 ```
-let create (p:Type) plain repr = 
+let create (p:Type) plain repr =
   let c = ST.alloc 0 in
   let log : ref (list (entry p (keyT p))) = ST.alloc [] in
 
@@ -3815,33 +4176,33 @@ let create (p:Type) plain repr =
     c := !c + 1;
     let kv = AES.gen() in
     if safe
-    then Ideal    p kv i 
+    then Ideal    p kv i
     else Concrete p kv i in
 
-  let keyrepr k : AES.key = 
-    match k with 
+  let keyrepr k : AES.key =
+    match k with
     | Ideal kv _ -> failwith "no way!"
     | Concrete kv _ -> kv in
 
   let encrypt: (k:keyT p -> p -> cipher p (keyT p) k) = fun k text ->
     match k with
-    | Ideal kv _ -> 
+    | Ideal kv _ ->
        let c = AES.enc kv AES.dummy in
-       assume (Encrypted p k c); 
-       log := Entry k c text :: !log; 
+       assume (Encrypted p k c);
+       log := Entry k c text :: !log;
        c
 
-    | Concrete kv _ -> 
-       let rep = repr text in    
-       (* NS: need the let-binding because repr is impure and we can't 
-          substitute it in the type of 'enc' *) 
+    | Concrete kv _ ->
+       let rep = repr text in
+       (* NS: need the let-binding because repr is impure and we can't
+          substitute it in the type of 'enc' *)
        let c = AES.enc kv rep in
-       assume (Encrypted p k c); 
+       assume (Encrypted p k c);
        c in
 
   let decrypt: key:keyT p -> cipher p (keyT p) key -> p = fun k c ->
-    match k with 
-    | Ideal kv _ -> (match List.find (fun (Entry k' c' _) -> k=k' && c= c') !log with 
+    match k with
+    | Ideal kv _ -> (match List.find (fun (Entry k' c' _) -> k=k' && c= c') !log with
                      | Some e -> Entry.plain e
                      | _ -> failwith "never")
     | Concrete kv _ -> plain (AES.dec kv c)  in
@@ -3850,12 +4211,12 @@ let create (p:Type) plain repr =
 ```
 
 Relying on basic cryptographic assumptions (IND-CPA), the
- ideal implementation never accesses plaintexts when using `Ideal` keys! 
- 
+ ideal implementation never accesses plaintexts when using `Ideal` keys!
+
 Formally, the `Ideal` branch can be typed using an abstract plaintype:
 `encrypt` encrypts a constant AES block `c` and logs `Entry k c text`
-`decrypt` returns `text` when `Entry k c text` is in the log. 
-As IND-CPA requires that only ciphertext that have previously 
+`decrypt` returns `text` when `Entry k c text` is in the log.
+As IND-CPA requires that only ciphertext that have previously
 been encrypted are decrypted, this is guaranteed by typing to be always the case.
 
 Here is how such a symmetric encryption scheme would be used in an example:
@@ -3891,7 +4252,7 @@ let test() =
     }
     else {
       answer.className = cls + " view";
-    } 
+    }
   });
 });
 </script>
