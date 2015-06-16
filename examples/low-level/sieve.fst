@@ -233,3 +233,27 @@ let outerLoop n lo res =
     (outerGuardLC n lo)
     (fun u -> (memread lo < n))
     (outerLoopBody n lo res)
+
+type markedIffPrime
+   (n:nat) (new:((k:nat{k<n}) -> Tot bool)) =
+   (forall (m:nat{m<n}). (marked n new m <==> isPrime m))
+
+val markedIffHasDivisorSmallerThan3 :
+n:nat -> new:((k:nat{k<n}) -> Tot bool)
+-> Lemma
+    (requires (markedIffHasDivisorSmallerThan n 2 new))
+    (ensures (markedIffPrime n new))
+(*let markedIffHasDivisorSmallerThan3 n new = ()*)
+
+
+
+val sieve : n:nat{n>1} -> unit
+  -> WNSC ((k:nat{k<n}) -> Tot bool)
+        (requires (fun m -> True))
+        (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
+let sieve n u =
+  let lo = salloc 2 in
+  let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
+  let res = salloc f in
+  (outerLoop n lo res);
+  memread res
