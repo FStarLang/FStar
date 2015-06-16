@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst example1.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst
   --*)
 
 module ScopedWhile3
@@ -12,14 +12,22 @@ open Set
 open Prims
 open List
 open ListSet
+open Constructive
+
 
 
 (*val divides : pos -> nat -> Tot bool
 let divides divisor n = ((n % divisor) = 0)*)
 (*Instead, below is a definition from first principles*)
-type divides  (divisor :nat) (n:nat) = exists (k:nat). k*divisor=n
+type divides  (divisor :nat) (n:nat) =
+exists (k:nat). k*divisor=n
+(*cexists (fun (k:nat) -> b2t (k*divisor=n))*)
+(*switching to cexists breaks many lemmas.
+ I guess the SMT solver does not know anything about cexists.*)
 
-type isPrime n = forall (m:nat). ((2<m /\ m<n) ==> ~ (divides m n))
+type isNotPrime n =
+exists (d:nat). (1<d /\ d<n /\ (divides d n))
+(*cexists (fun (d:nat) -> (1<d /\ d<n /\ (divides d n)))*)
 
 (*this program has nested loops. first, we define the inner loop*)
 (*The program will be asked to compute first n primes. *)
@@ -132,7 +140,6 @@ val innerLoop : n:nat{n>1}
                       /\ markedIffDividesOrInit n (loopkupRef lo m1) initres (loopkupRef res m1)
       ))
 
-
 let innerLoop n lo lov li res initres =
   (scopedWhile
     (innerLoopInv n lo lov li res initres)
@@ -234,17 +241,67 @@ let outerLoop n lo res =
     (fun u -> (memread lo < n))
     (outerLoopBody n lo res)
 
-type markedIffPrime
+type markedIffNotPrime
    (n:nat) (new:((k:nat{k<n}) -> Tot bool)) =
-   (forall (m:nat{m<n}). (marked n new m <==> isPrime m))
+   (forall (m:nat{m<n}). (marked n new m <==>  ((isNotPrime m))))
+
+
+val lessTrans : m:nat -> n:nat -> d:nat ->
+  Lemma (requires (d<n /\ m <n))
+          (ensures (d<n))
+let lessTrans n m d = ()
+
+
+val isNotPrimeIf :
+  n:nat -> m:nat{m<n}
+  -> Lemma
+  ((exists (d:nat{1<d}). d<m /\ divides d m))
+  (((isNotPrime m)))
+let isNotPrimeIf n m = ()
+
+val divisorSmall : n:nat{1<n} ->
+  Lemma
+      (requires (True))
+      (ensures (forall (divisor:nat). 1<divisor ==> divides divisor n ==> divisor < n))
+let divisorSmall n = (admit ())
+
+val existsWeakining : #a:Type
+  ->p:(a -> Type) -> q:(a->Type)
+  -> Lemma
+      (requires ((forall x. p x ==> q x)) /\ (exists y. p y))
+      (ensures (exists z. q z))
+let existsWeakining 'a 'p 'q = ()
+
+(*is this consistent? of course it breakes canonicity*)
+assume val existsCexists : #a:Type
+  ->p:(a -> Type)
+  ->u:unit{exists x. p x}
+  -> cexists p
+
+(*this should work without needing admit*)
+val cexistsExists :
+#a:Type
+  ->p:(a -> Type)
+  -> cexists p
+  ->u:unit{exists x. p x}
+let cexistsExists 'a 'p c =
+match c with
+| ExIntro x  px -> (admit ())
+
+val isNotPrimeIf2 :
+  n:nat{1<n} -> m:nat{1<m /\ m<n}
+  -> Lemma
+  ((exists (d:nat{1<d}). d<n /\ divides d m))
+  ((exists (d:nat{1<d}). d<m /\ divides d m))
+(*let isNotPrimeIf2 n m = ()*)
+(*how can one manually provide a witness to an existential? switch to cexists completely?*)
 
 val markedIffHasDivisorSmallerThan3 :
 n:nat -> new:((k:nat{k<n}) -> Tot bool)
 -> Lemma
-    (requires (markedIffHasDivisorSmallerThan n 2 new))
-    (ensures (markedIffPrime n new))
+    (requires (markedIffHasDivisorSmallerThan n n new))
+    (ensures (markedIffNotPrime n new))
 (*let markedIffHasDivisorSmallerThan3 n new = ()*)
-
 
 
 val sieve : n:nat{n>1} -> unit
