@@ -232,7 +232,7 @@ let testAliasing2 n li res =
   let resv=memread res in
     memwrite li 2;
     let resv2=memread res in
-      assert (resv ==  resv2)
+      assert (resv =  resv2)
 
 
 

@@ -203,20 +203,16 @@ val factorialLoopBody :
   (*the part below has no computational content*)
   (markedIffHasDivisorSmallerThanInc n lov initres newres)
 
-
-
-
-
-  val outerLoop : n:nat{n>1}
-    -> lo: ref nat
-    -> res : ref ((k:nat{k<n}) -> Tot bool)
-    -> SST unit
-        (fun m -> distinctRefsExists2 m lo res /\ loopkupRef lo m =2)
-        (fun m0 _ m1 ->
-              distinctRefsExists2 m1 lo res
-             /\ (forall (k:nat).
-                  (k < n ==> multiplesMarked n (loopkupRef res m1) k))
-        )
+val outerLoop : n:nat{n>1}
+  -> lo: ref nat
+  -> res : ref ((k:nat{k<n}) -> Tot bool)
+  -> SST unit
+      (fun m -> distinctRefsExists2 m lo res /\ loopkupRef lo m =2)
+      (fun m0 _ m1 ->
+            distinctRefsExists2 m1 lo res
+           /\ (forall (k:nat).
+                (k < n ==> multiplesMarked n (loopkupRef res m1) k))
+      )
 
 (*
 let outerLoop n lo res =
