@@ -12,8 +12,19 @@ type t = Map.t rid heap
 new_effect STATE = STATE_h t
 
 private type rref (id:rid) (a:Type) = Prims.ref a
-opaque val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
+val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
 let as_ref id r = r
+
+private val ref_as_rref : #a:Type -> i:rid -> r:ref a -> Tot (rref i a)
+let ref_as_rref i r = r
+
+val lemma_as_ref_inj: #a:Type -> #i:rid -> r:rref i a
+    -> Lemma (requires (True))
+             (ensures ((ref_as_rref i (as_ref r) = r)))
+       [SMTPat (as_ref r)]
+let lemma_as_ref_inj i r = ()
+
+
 effect ST (a:Type) (pre:t -> Type) (post:t -> a -> t -> Type) =
        STATE a (fun 'p m0 -> pre m0 /\ (forall x m1. post m0 x m1 ==> 'p x m1))
                (fun 'p m0 ->  (forall x m1. pre m0 /\ post m0 x m1 ==> 'p x m1))
@@ -46,9 +57,19 @@ assume val get: unit -> ST t
   (requires (fun m -> True))
   (ensures (fun m0 x m1 -> m0=x /\ m1=m0))
 
-
 type modifies (s:Set.set rid) (m0:t) (m1:t) =
     Map.Equal m1 (Map.concat m1 (Map.restrict (Set.complement s) m0))
+
+type fresh_region (i:rid) (m0:t) (m1:t) =
+  not (Map.contains m0 i)
+  /\ Map.contains m1 i
+
+type contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) =
+    Map.contains m i /\ Heap.contains (Map.sel m i) (as_ref r)
+
+type fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
+  not (Heap.contains (Map.sel m0 i) (as_ref r))
+  /\  (Heap.contains (Map.sel m1 i) (as_ref r))
 
 kind STPost (a:Type) = a -> t -> Type
 kind STWP (a:Type) = STPost a -> t -> Type

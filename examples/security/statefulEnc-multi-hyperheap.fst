@@ -4,10 +4,6 @@
   --*)
 (* A standalone experiment corresponding to building a stateful encryption on
    top of a stateless one ... along the lines of StatefulLHAE on top of AEAD_GCM *)
-
-(* Still to do:
-     Show that multiple instances do not overlap using footprints and dynamic frames
-*)
 module StatefulEncryption.MultiInstance.HyperHeap
 open ST
 open Set
@@ -43,16 +39,14 @@ type paired (#i:rid) (e:encryptor i) (d:decryptor i) = b2t (Enc.log e = Dec.log 
 type both =
   | Both : i:rid -> e:encryptor i -> d:decryptor i{paired e d} -> both
 
-type Fresh (#a:Type) h0 (r:ref a) h1 = Heap.contains h1 r /\ not (Heap.contains h0 r)
+(*type Fresh (#a:Type) h0 (r:ref a) h1 = Heap.contains h1 r /\ not (Heap.contains h0 r)*)
 
 val gen: unit -> ST both
   (requires (fun h -> True))
   (ensures (fun h0 b h1 ->
-      modifies Set.empty h0 h1
-      /\ not (Map.contains h0 (Both.i b))
-      /\ Map.contains h1 (Both.i b)
-      /\ Heap.contains (Map.sel h1 (Both.i b))
-                       (as_ref (Enc.log (Both.e b)))
+      HyperHeap.modifies Set.empty h0 h1
+      /\ fresh_region (Both.i b) h0 h1
+      /\ contains_ref (Enc.log (Both.e b)) h1
       /\ sel h1 (Enc.log (Both.e b)) = emp))
 let gen () =
   let key : key = magic () in
@@ -60,19 +54,16 @@ let gen () =
   let log = ralloc region emp in
   Both region (Enc log key) (Dec log key)
 
-opaque logic type modifies (mods:set Heap.aref) (h:heap) (h':heap) =
-    b2t (Heap.equal h' (Heap.concat h' (Heap.restrict h (complement mods))))
-
 val enc : #i:rid -> e:encryptor i -> p:plain -> ST cipher
     (requires (fun h -> True))
     (ensures (fun h0 c h1 ->
                 HyperHeap.modifies (Set.singleton i) h0 h1
-                /\ modifies !{as_ref (Enc.log e)} (Map.sel h0 i) (Map.sel h1 i)
+                /\ Heap.modifies !{as_ref (Enc.log e)} (Map.sel h0 i) (Map.sel h1 i)
                 /\ h1 = upd h0 (Enc.log e) (snoc (sel h0 (Enc.log e)) (Entry p c))))
 let enc i e p =
-    let c : cipher = magic () in
-    op_ColonEquals (Enc.log e) (snoc (op_Bang (Enc.log e)) (Entry p c));
-    c
+  let c : cipher = magic () in
+  op_ColonEquals (Enc.log e) (snoc (op_Bang (Enc.log e)) (Entry p c));
+  c
 
 assume val find_seq : #a:Type -> f:(a -> Tot bool) -> s:seq a
             -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
@@ -105,12 +96,12 @@ type st_decryptor (i:rid) =
 type st_paired (#i:rid) (enc:st_encryptor i) (dec:st_decryptor i) =
       StEnc.log enc = StDec.log dec
       /\ paired (StEnc.key enc) (StDec.key dec)
-      /\ as_ref (Enc.log (StEnc.key enc)) =!= as_ref (StEnc.log enc)
-      /\ as_ref (StEnc.ctr enc) <> as_ref (StDec.ctr dec)
-      /\ as_ref (StEnc.log enc) =!= as_ref (StEnc.ctr enc)                      //These last four are needed because seq is abstract
-      /\ as_ref (StEnc.log enc) =!= as_ref (StDec.ctr dec)                      //...
-      /\ as_ref (Enc.log (StEnc.key enc)) =!= as_ref (StEnc.ctr enc)            //...
-      /\ as_ref (Enc.log (StEnc.key enc)) =!= as_ref (StDec.ctr dec)            //and so potentially equal to nat ... TODO: make seq a new type
+      /\ (Enc.log (StEnc.key enc)) =!= (StEnc.log enc)
+      /\ (StEnc.ctr enc) <> (StDec.ctr dec)
+      /\ (StEnc.log enc) =!= (StEnc.ctr enc)                      //These last four are needed because seq is abstract
+      /\ (StEnc.log enc) =!= (StDec.ctr dec)                      //...
+      /\ (Enc.log (StEnc.key enc)) =!= (StEnc.ctr enc)            //...
+      /\ (Enc.log (StEnc.key enc)) =!= (StDec.ctr dec)            //and so potentially equal to nat ... TODO: make seq a new type
 
 type st_both =
   | STBoth : i:rid -> e:st_encryptor i -> d:st_decryptor i{st_paired e d} -> st_both
@@ -120,10 +111,10 @@ assume val with_seqn : nat -> plain -> Tot plain
 type st_inv (#i:rid) (e:st_encryptor i) (d:st_decryptor i) (h:HyperHeap.t) =
   st_paired e d
   /\ Map.contains h i
-  /\ Heap.contains (Map.sel h i) (as_ref (StEnc.log e))
-  /\ Heap.contains (Map.sel h i) (as_ref (StEnc.ctr e))
-  /\ Heap.contains (Map.sel h i) (as_ref (StDec.ctr d))
-  /\ Heap.contains (Map.sel h i) (as_ref (Enc.log (StEnc.key e)))
+  /\ contains_ref (StEnc.log e) h
+  /\ contains_ref (StEnc.ctr e) h
+  /\ contains_ref (StDec.ctr d) h
+  /\ contains_ref (Enc.log (StEnc.key e)) h
   /\ Let (sel h (Enc.log (StEnc.key e))) (fun basic ->
      Let (sel h (StEnc.log e)) (fun st ->
      Let (sel h (StEnc.ctr e)) (fun w ->
@@ -150,8 +141,7 @@ val stateful_gen : unit -> ST st_both
   (ensures (fun h0 b h1 ->
               st_inv (STBoth.e b) (STBoth.d b) h1
               /\ HyperHeap.modifies Set.empty h0 h1
-              /\ not (Map.contains h0 (STBoth.i b))
-              /\ Map.contains h1 (STBoth.i b)))
+              /\ fresh_region (STBoth.i b) h0 h1))
 let stateful_gen () =
   let Both i e d = gen () in
   let l = ralloc i emp in
@@ -164,7 +154,7 @@ val stateful_enc : #i:rid -> e:st_encryptor i -> p:plain -> ST cipher
   (ensures (fun h0 c h1 ->
                     st_enc_inv e h1
                  /\ HyperHeap.modifies (Set.singleton i) h0 h1
-                 /\ modifies (refs_in_e e) (Map.sel h0 i) (Map.sel h1 i)
+                 /\ Heap.modifies (refs_in_e e) (Map.sel h0 i) (Map.sel h1 i)
                  /\ sel h1 (StEnc.log e) = snoc (sel h0 (StEnc.log e)) (StEntry (sel h0 (StEnc.ctr e)) p c)))
 let stateful_enc i e p =
   let i = op_Bang (StEnc.ctr e) in
@@ -180,7 +170,7 @@ val stateful_dec: #i:rid -> ad:nat -> d:st_decryptor i -> c:cipher -> ST (option
                 st_dec_inv d h0
                 /\ st_dec_inv d h1
                 /\ HyperHeap.modifies (Set.singleton i) h0 h1
-                /\ modifies !{as_ref (StDec.ctr d)} (Map.sel h0 i) (Map.sel h1 i)
+                /\ Heap.modifies !{as_ref (StDec.ctr d)} (Map.sel h0 i) (Map.sel h1 i)
                 /\ Let (sel h0 (StDec.ctr d)) (fun (r:nat{r=sel h0 (StDec.ctr d)}) ->
                    Let (sel h0 (StDec.log d)) (fun (log:seq statefulEntry{log=sel h0 (StDec.log d)}) ->
                     (is_None p ==> (r = Seq.length log                     //nothing encrypted yet

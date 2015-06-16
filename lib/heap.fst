@@ -44,3 +44,5 @@ assume ContainsConcat:forall (a:Type) (h1:heap) (h2:heap) (a:ref a).       {:pat
 
 type On (r:set aref) (p:(heap -> Type)) (h:heap) = p (restrict h r)
 opaque type fresh (h:heap) (refs:set aref)       = (forall (a:Type) (a:ref a).{:pattern (contains h a)} mem (Ref a) refs ==> not(contains h a))
+opaque logic type modifies (mods:set Heap.aref) (h:heap) (h':heap) =
+    b2t (equal h' (concat h' (restrict h (complement mods))))
