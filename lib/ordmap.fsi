@@ -14,29 +14,34 @@ type cmp (a:Type) = f:(a -> a -> Tot bool){total_order a f}
 
 type ordmap: key:Type -> value:Type -> cmp key -> Type
 
-val empty:  #key:Type -> #value:Type -> f:cmp key -> Tot (ordmap key value f)
-
-val contains: #key:Type -> #value:Type -> f:cmp key -> key -> ordmap key value f
-              -> Tot bool
-val select  : #key:Type -> #value:Type -> f:cmp key -> k:key
+val empty   : #key:Type -> #value:Type -> #f:cmp key -> Tot (ordmap key value f)
+val select  : #key:Type -> #value:Type -> #f:cmp key -> k:key
               -> m:ordmap key value f -> Tot (option value)
-val update  : #key:Type -> #value:Type -> f:cmp key -> key -> value
+val update  : #key:Type -> #value:Type -> #f:cmp key -> key -> value
               -> m:ordmap key value f -> Tot (ordmap key value f)
-val dom     : #key:Type -> #value:Type -> f:cmp key -> m:ordmap key value f ->
+val contains: #key:Type -> #value:Type -> #f:cmp key -> key -> ordmap key value f
+              -> Tot bool
+val dom     : #key:Type -> #value:Type -> #f:cmp key -> m:ordmap key value f ->
               Tot (ordset key f)
 
-val remove  : #key:Type -> #value:Type -> f:cmp key -> key
+val remove  : #key:Type -> #value:Type -> #f:cmp key -> key
               -> ordmap key value f -> Tot (ordmap key value f)
-val choose  : #key:Type -> #value:Type -> f:cmp key -> ordmap key value f
+val choose  : #key:Type -> #value:Type -> #f:cmp key -> ordmap key value f
               -> Tot (option (key * value))
-              
-val size    : #key:Type -> #value:Type -> f:cmp key -> ordmap key value f
+
+val size    : #key:Type -> #value:Type -> #f:cmp key -> ordmap key value f
               -> Tot nat
-                       
-val eq_lemma: #key:Type -> #value:Type -> f:cmp key
-              -> m1:ordmap key value f -> m2:ordmap key value f
-              -> Lemma (requires (forall x. select f x m1 = select f x m2))
+
+type Equal (#k:Type) (#v:Type) (#f:cmp k) (m1:ordmap k v f) (m2:ordmap k v f) =
+  (forall x. select #k #v #f x m1 = select #k #v #f x m2)
+
+val eq_lemma: #k:Type -> #v:Type -> f:cmp k -> m1:ordmap k v f -> m2:ordmap k v f
+              -> Lemma (requires (Equal #k #v #f m1 m2))
                        (ensures (m1 = m2))
+
+
+
+
 
 val empty_lem: #key:Type -> #value:Type -> f:cmp key
                -> Lemma (requires True) (ensures (forall k. not (contains f k (empty #key #value f))))
