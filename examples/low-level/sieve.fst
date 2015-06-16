@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set;
+    options:--admit_fsi Set --z3timeout 10;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst
   --*)
@@ -19,11 +19,30 @@ open Constructive
 (*val divides : pos -> nat -> Tot bool
 let divides divisor n = ((n % divisor) = 0)*)
 (*Instead, below is a definition from first principles*)
-type divides  (divisor :nat) (n:nat) =
+
+opaque type divides  (divisor :nat) (n:nat) =
 exists (k:nat). k*divisor=n
 (*cexists (fun (k:nat) -> b2t (k*divisor=n))*)
 (*switching to cexists breaks many lemmas.
  I guess the SMT solver does not know anything about cexists.*)
+
+ val divisorSmall : n:nat{1<n} -> divisor:nat
+  ->
+   Lemma
+       ( requires (divides divisor n /\ 1<divisor))
+       (ensures (divisor < n))
+       [SMTPatT (divides divisor n)]
+ let divisorSmall n divisor = (admit ())
+
+
+ val isNotPrimeIf2 :
+   n:nat{1<n} -> m:nat{1<m /\ m<n}
+   -> Lemma
+   (requires (exists (d:nat{1<d}). d<n /\ divides d m))
+   (ensures (exists (d:nat{1<d}).{:pattern (divides d m)} d<m /\ divides d m))
+
+ let isNotPrimeIf2 n m = ()
+
 
 type isNotPrime n =
 exists (d:nat). (1<d /\ d<n /\ (divides d n))
@@ -60,7 +79,8 @@ let mark n f index =
 type distinctRefsExists3
   (#a:Type) (#b:Type) (#c:Type) (m:smem)
   (ra:ref a) (rb: ref b) (rc: ref c)  =
-  (refExistsInMem ra (mtail m)) /\ (refExistsInMem rb (mtail m)) /\ (refExistsInMem rc m) /\ (ra=!=rb) /\ (rb=!=rc) /\ (ra=!=rc)
+  (refExistsInMem ra (mtail m)) /\ (refExistsInMem rb (mtail m)) /\ (refExistsInMem rc m)
+  /\ (ra=!=rb) /\ (rb=!=rc) /\ (ra=!=rc)
 
 val markMultiplesUpto : n:nat -> lo:nat -> upto:nat{lo*(upto-1)<n}
   ->((k:nat{k<n}) -> Tot bool) -> Tot ((k:nat{k<n}) -> Tot bool)
@@ -259,11 +279,6 @@ val isNotPrimeIf :
   (((isNotPrime m)))
 let isNotPrimeIf n m = ()
 
-val divisorSmall : n:nat{1<n} ->
-  Lemma
-      (requires (True))
-      (ensures (forall (divisor:nat). 1<divisor ==> divides divisor n ==> divisor < n))
-let divisorSmall n = (admit ())
 
 val existsWeakining : #a:Type
   ->p:(a -> Type) -> q:(a->Type)
@@ -288,12 +303,7 @@ let cexistsExists 'a 'p c =
 match c with
 | ExIntro x  px -> (admit ())
 
-val isNotPrimeIf2 :
-  n:nat{1<n} -> m:nat{1<m /\ m<n}
-  -> Lemma
-  ((exists (d:nat{1<d}). d<n /\ divides d m))
-  ((exists (d:nat{1<d}). d<m /\ divides d m))
-(*let isNotPrimeIf2 n m = ()*)
+
 (*how can one manually provide a witness to an existential? switch to cexists completely?*)
 
 val markedIffHasDivisorSmallerThan3 :
