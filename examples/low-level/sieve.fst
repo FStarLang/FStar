@@ -172,6 +172,19 @@ val markedIffHasDivisorSmallerThanInc :
       (*[SMTPatT (markedIffHasDivisorSmallerThan n (lo+1) new)]*)
 let markedIffHasDivisorSmallerThanInc n lo old new  = ()
 
+type allUnmarked
+   (n:nat) (new:((k:nat{k<n}) -> Tot bool)) =
+   forall (m:nat{m<n}). not (marked n new m)
+
+
+val markedIffHasDivisorSmallerThan2 :
+ n:nat -> new:((k:nat{k<n}) -> Tot bool)
+ -> Lemma
+     (requires (allUnmarked n new))
+     (ensures (markedIffHasDivisorSmallerThan n 2 new))
+let markedIffHasDivisorSmallerThan2 n new = ()
+
+
 type  outerLoopInv (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
  distinctRefsExists2 m lo res
   /\ (((loopkupRef lo m) - 1) < n)
@@ -181,7 +194,7 @@ type  outerLoopInv (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m
 
 (*#set-options "--initial_fuel 100 --max_fuel 10000 --initial_ifuel 100 --max_ifuel 10000"*)
 
-val factorialLoopBody :
+val outerLoopBody :
   n:nat{n>1}
   -> lo:(ref nat)
   -> res : ref ((k:nat{k<n}) -> Tot bool)
@@ -191,7 +204,7 @@ val factorialLoopBody :
     (outerGuardLC n lo)
 
 
-  let factorialLoopBody n lo res u =
+let outerLoopBody n lo res u =
   (*pushStackFrame ();*)
   let initres = memread res in
   let lov = memread lo in
@@ -207,23 +220,16 @@ val outerLoop : n:nat{n>1}
   -> lo: ref nat
   -> res : ref ((k:nat{k<n}) -> Tot bool)
   -> SST unit
-      (fun m -> distinctRefsExists2 m lo res /\ loopkupRef lo m =2)
+      (fun m -> distinctRefsExists2 m lo res /\ loopkupRef lo m =2 /\ allUnmarked n (loopkupRef res m))
       (fun m0 _ m1 ->
             distinctRefsExists2 m1 lo res
-           /\ (forall (k:nat).
-                (k < n ==> multiplesMarked n (loopkupRef res m1) k))
+            /\ sids m0 = sids m1
+           /\ (markedIffHasDivisorSmallerThan n n (loopkupRef res m1))
       )
 
-(*
 let outerLoop n lo res =
   scopedWhile
     (outerLoopInv n lo res)
     (outerGuardLC n lo)
     (fun u -> (memread lo < n))
-    (fun u ->
-      let li = salloc 0 in
-      let resv = memread res in
-      let lov = memread lo in
-      innerLoop n lo lov li res resv;
-      memwrite lo (lov+1)
-      )*)
+    (outerLoopBody n lo res)
