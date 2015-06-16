@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq --admit_fsi Map;
+    options:--admit_fsi Set --admit_fsi Seq --admit_fsi Map --max_ifuel 1 --initial_ifuel 1 --initial_fuel 0 --max_fuel 0;
     other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/heap.fst ../../lib/map.fsi ../../lib/hyperheap.fst ../../lib/seq.fsi
   --*)
 (* A standalone experiment corresponding to building a stateful encryption on
@@ -16,17 +16,14 @@ let snoc s x = Seq.append s (Seq.create 1 x)
 
 assume val emp: #a:Type -> Tot (seq a)
 assume Length_emp: forall (a:Type).{:pattern (Seq.length (emp #a))} Seq.length (emp #a) = 0
-
-//type Fresh (#a:Type) h0 (r:ref a) h1 = Heap.contains h1 r /\ not (Heap.contains h0 r)
-
 type Let (#a:Type) (x:a) (body: (y:a{y=x} -> Type)) = body x
 
 type plain
 type cipher
 type key
-
+type ad = nat
 type basicEntry =
-  | Entry : p:plain -> c:cipher -> basicEntry
+  | Entry : ad:ad -> c:cipher -> p:plain ->basicEntry
 
 type encryptor (i:rid) =
   | Enc : log:rref i (seq basicEntry) -> key -> encryptor i
@@ -38,8 +35,6 @@ type paired (#i:rid) (e:encryptor i) (d:decryptor i) = b2t (Enc.log e = Dec.log 
 
 type both =
   | Both : i:rid -> e:encryptor i -> d:decryptor i{paired e d} -> both
-
-(*type Fresh (#a:Type) h0 (r:ref a) h1 = Heap.contains h1 r /\ not (Heap.contains h0 r)*)
 
 val gen: unit -> ST both
   (requires (fun h -> True))
@@ -54,38 +49,76 @@ let gen () =
   let log = ralloc region emp in
   Both region (Enc log key) (Dec log key)
 
-val enc : #i:rid -> e:encryptor i -> p:plain -> ST cipher
+assume val find_seq : #a:Type -> f:(a -> Tot bool) -> s:seq a
+            -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
+
+assume val enc0: s:seq cipher (* ghost *) -> ST cipher
+  (fun h -> True)
+  (fun h0 c h1 -> h0=h1
+               /\ find_seq (fun c' -> c=c') s = None)
+
+val enc : #i:rid -> e:encryptor i -> ad:ad -> p:plain -> ST cipher
     (requires (fun h -> True))
     (ensures (fun h0 c h1 ->
                 HyperHeap.modifies (Set.singleton i) h0 h1
                 /\ Heap.modifies !{as_ref (Enc.log e)} (Map.sel h0 i) (Map.sel h1 i)
-                /\ h1 = upd h0 (Enc.log e) (snoc (sel h0 (Enc.log e)) (Entry p c))))
-let enc i e p =
-  let c : cipher = magic () in
-  op_ColonEquals (Enc.log e) (snoc (op_Bang (Enc.log e)) (Entry p c));
+                /\ h1 = upd h0 (Enc.log e) (snoc (sel h0 (Enc.log e)) (Entry ad c p))))
+let enc i e ad p =
+  let c = enc0 emp in
+  op_ColonEquals (Enc.log e) (snoc (op_Bang (Enc.log e)) (Entry ad c p));
   c
 
-assume val find_seq : #a:Type -> f:(a -> Tot bool) -> s:seq a
-            -> Tot (o:option (i:nat{i < Seq.length s /\ f (Seq.index s i)}) { is_None o ==> (forall (i:nat{i < Seq.length s}). not (f (Seq.index s i)))})
-
+let basicMatch i c (Entry i' c' p) = i = i' && c = c'
 opaque logic type trigger (i:nat) = True
-val dec: #i:rid -> d:decryptor i -> c:cipher -> ST (option plain)
+val dec: #i:rid -> d:decryptor i -> a:ad -> c:cipher -> ST (option plain)
   (requires (fun h -> True))
-  (ensures (fun h0 p h1 ->
+  (ensures (fun h0 o h1 ->
               HyperHeap.modifies Set.empty h0 h1
               /\ (Let (sel h0 (Dec.log d))
                       (fun log ->
-                          (is_None p ==> (forall (i:nat{i < Seq.length log}). Entry.c (Seq.index log i) <> c))
-                          /\ (is_Some p ==> (exists (i:nat{i < Seq.length log}).{:pattern (trigger i)} Seq.index log i = Entry (Some.v p) c))))))
-let dec i d c =
+                          (is_None o ==> (forall (i:nat{i < Seq.length log}).{:pattern (trigger i)}
+                                            trigger i /\ ~(basicMatch a c (Seq.index log i))))
+                          /\ (is_Some o ==> (exists (i:nat{i < Seq.length log}).{:pattern (trigger i)}
+                                                  trigger i
+                                                  /\ basicMatch a c (Seq.index log i)
+                                                  /\ Entry.p (Seq.index log i) = Some.v o))))))
+let dec i d a c =
   let s = op_Bang (Dec.log d) in
-  match find_seq (function Entry p c' -> c=c') s with
+  match find_seq (basicMatch a c) s with
     | None -> None
     | Some j -> cut (trigger j); Some (Entry.p (Seq.index s j))
 
+(* A test of multiple basic instances:
+   proves that use of one instance doesn't mess with another
+*)
+val test_basic_frame : b1:both -> b2:both{Both.i b1 <> Both.i b2} -> ST unit
+    (requires (fun h -> Map.contains h (Both.i b1)
+                        /\ Map.contains h (Both.i b2)
+                        /\ sel h (Enc.log (Both.e b1)) = emp
+                        /\ sel h (Enc.log (Both.e b2)) = emp))
+    (ensures (fun h0 _ h1 ->
+                  HyperHeap.modifies (Set.union (Set.singleton (Both.i b1))
+                                                (Set.singleton (Both.i b2)))
+                            h0 h1))
+assume val mk_plain : unit -> ST plain (requires (fun h -> True)) (ensures (fun h0 x h1 -> h0=h1))
+let test_basic_frame b1 b2 =
+ let b3 = gen() in
+ let p = mk_plain () in
+ let q = mk_plain () in
+ let c0 = enc (Both.e b1) 0 p in
+ let c1 = enc (Both.e b1) 1 q in
+ let c2 = enc (Both.e b2) 0 q in
+ let o0 = dec (Both.d b1) 0 c0 in
+ let o2 = dec (Both.d b2) 0 c2 in
+ let oX = dec (Both.d b1) 2 c0 in // this fails with 1, as we might have c0=c1
+ cut (trigger 0);
+ assert (Some.v o0 = p);
+ assert (Some.v o2 = q);
+ assert (oX = None)
+
 (* -------------------------------------------------------- *)
 type statefulEntry =
-  | StEntry : i:nat -> p:plain -> c:cipher -> statefulEntry
+  | StEntry : c:cipher -> p:plain -> statefulEntry
 
 type st_encryptor (i:rid) =
   | StEnc : log: rref i (seq statefulEntry) -> ctr: rref i nat -> key:encryptor i -> st_encryptor i
@@ -103,10 +136,8 @@ type st_paired (#i:rid) (enc:st_encryptor i) (dec:st_decryptor i) =
       /\ (Enc.log (StEnc.key enc)) =!= (StEnc.ctr enc)            //...
       /\ (Enc.log (StEnc.key enc)) =!= (StDec.ctr dec)            //and so potentially equal to nat ... TODO: make seq a new type
 
-type st_both =
-  | STBoth : i:rid -> e:st_encryptor i -> d:st_decryptor i{st_paired e d} -> st_both
-
-assume val with_seqn : nat -> plain -> Tot plain
+type sti =
+  | STI : i:rid -> e:st_encryptor i -> d:st_decryptor i{st_paired e d} -> sti
 
 type st_inv (#i:rid) (e:st_encryptor i) (d:st_decryptor i) (h:HyperHeap.t) =
   st_paired e d
@@ -124,8 +155,7 @@ type st_inv (#i:rid) (e:st_encryptor i) (d:st_decryptor i) (h:HyperHeap.t) =
      /\ r <= w
      /\ (forall (i:nat{i < Seq.length st}).
           Let (Seq.index st i) (fun st_en ->
-            StEntry.i st_en = i
-            /\ Seq.index basic i = Entry (with_seqn i (StEntry.p st_en)) (StEntry.c st_en)))))))
+              b2t (Seq.index basic i = Entry i (StEntry.c st_en) (StEntry.p st_en))))))))
 
 type st_enc_inv (#i:rid) (e:st_encryptor i) (h:HyperHeap.t) =
   exists (d:st_decryptor i). st_inv e d h
@@ -136,18 +166,18 @@ type st_dec_inv (#i:rid) (d:st_decryptor i) (h:HyperHeap.t) =
 let refs_in_e (#i:rid) (e:st_encryptor i) = !{as_ref (StEnc.log e), as_ref (StEnc.ctr e), as_ref (Enc.log (StEnc.key e))}
 let refs_in_d (#i:rid) (d:st_decryptor i) = !{as_ref (StDec.log d), as_ref (StDec.ctr d), as_ref (Dec.log (StDec.key d))}
 
-val stateful_gen : unit -> ST st_both
+val stateful_gen : unit -> ST sti
   (requires (fun h -> True))
   (ensures (fun h0 b h1 ->
-              st_inv (STBoth.e b) (STBoth.d b) h1
+              st_inv (STI.e b) (STI.d b) h1
               /\ HyperHeap.modifies Set.empty h0 h1
-              /\ fresh_region (STBoth.i b) h0 h1))
+              /\ fresh_region (STI.i b) h0 h1))
 let stateful_gen () =
   let Both i e d = gen () in
   let l = ralloc i emp in
   let w = ralloc i 0 in
   let r = ralloc i 0 in
-  STBoth i (StEnc l w e) (StDec l r d)
+  STI i (StEnc l w e) (StDec l r d)
 
 val stateful_enc : #i:rid -> e:st_encryptor i -> p:plain -> ST cipher
   (requires (fun h -> st_enc_inv e h))
@@ -155,72 +185,64 @@ val stateful_enc : #i:rid -> e:st_encryptor i -> p:plain -> ST cipher
                     st_enc_inv e h1
                  /\ HyperHeap.modifies (Set.singleton i) h0 h1
                  /\ Heap.modifies (refs_in_e e) (Map.sel h0 i) (Map.sel h1 i)
-                 /\ sel h1 (StEnc.log e) = snoc (sel h0 (StEnc.log e)) (StEntry (sel h0 (StEnc.ctr e)) p c)))
-let stateful_enc i e p =
-  let i = op_Bang (StEnc.ctr e) in
-  let ip = with_seqn i p in
-  let c = enc (StEnc.key e) ip in
-  op_ColonEquals (StEnc.log e) (snoc (op_Bang (StEnc.log e)) (StEntry i p c));
-  op_ColonEquals (StEnc.ctr e) (i + 1);
-  c
+                 /\ sel h1 (StEnc.log e) = snoc (sel h0 (StEnc.log e)) (StEntry c p)))
+let stateful_enc i (StEnc log ctr e) p =
+    let c = enc e (op_Bang ctr) p in
+    op_ColonEquals log (snoc (op_Bang log) (StEntry c p));
+    op_ColonEquals ctr (op_Bang ctr + 1);
+    c
 
-val stateful_dec: #i:rid -> ad:nat -> d:st_decryptor i -> c:cipher -> ST (option plain)
+val stateful_dec: #i:rid -> d:st_decryptor i -> c:cipher -> ST (option plain)
   (requires (fun h -> st_dec_inv d h))
   (ensures (fun h0 p h1 ->
-                st_dec_inv d h0
+                st_dec_inv d h0    //repeating pre
                 /\ st_dec_inv d h1
                 /\ HyperHeap.modifies (Set.singleton i) h0 h1
                 /\ Heap.modifies !{as_ref (StDec.ctr d)} (Map.sel h0 i) (Map.sel h1 i)
                 /\ Let (sel h0 (StDec.ctr d)) (fun (r:nat{r=sel h0 (StDec.ctr d)}) ->
                    Let (sel h0 (StDec.log d)) (fun (log:seq statefulEntry{log=sel h0 (StDec.log d)}) ->
                     (is_None p ==> (r = Seq.length log                     //nothing encrypted yet
-                                    || StEntry.c (Seq.index log r) <> c    //bogus cipher
-                                    || r <> ad))                           //reading at the wrong postition
+                                    || StEntry.c (Seq.index log r) <> c    //wrong cipher
+                                    ) /\ sel h1 (StDec.ctr d) = r)
                    /\ (is_Some p ==>
                           ((sel h1 (StDec.ctr d) = r + 1)
                            /\ StEntry.p (Seq.index log r) = Some.v p))))))
-let stateful_dec i ad d c =
-  match dec (StDec.key d) c with
+// note that we do not increment the counter in case of decryption failure,
+// thereby enabling retries
+let stateful_dec _id (StDec _ ctr d) c =
+  let i = op_Bang ctr in
+  cut(trigger i);
+  match dec d (op_Bang ctr) c with
     | None -> None
-    | Some p ->
-      let i = op_Bang (StDec.ctr d) in
-      let l = op_Bang (StDec.log d) in
-      if i < Seq.length l
-      then let StEntry _ q _ = Seq.index l i in
-           if i = ad
-           then (op_ColonEquals (StDec.ctr d) (i + 1); Some q)
-           else None
-      else None
+    | Some p -> op_ColonEquals ctr (op_Bang ctr + 1); Some p
 
 
-val test_st_frame : #i:rid -> #j:rid{i<>j}
-                   -> s1:st_both{STBoth.i s1 = i}
-                   -> s2:st_both{STBoth.i s2 = j}
+val test_st_frame :   s1:sti
+                   -> s2:sti{STI.i s1 <> STI.i s2}
                    -> ST unit
   (requires (fun h ->
-                 st_inv (STBoth.e s1) (STBoth.d s1) h
-              /\ st_inv (STBoth.e s2) (STBoth.d s2) h
-              /\ sel h (StEnc.ctr (STBoth.e s1)) = sel h (StDec.ctr (STBoth.d s1))
+                 st_inv (STI.e s1) (STI.d s1) h
+              /\ st_inv (STI.e s2) (STI.d s2) h
+              /\ sel h (StEnc.ctr (STI.e s1)) = sel h (StDec.ctr (STI.d s1))
               // /\ Heap.sel h (StEnc.ctr (STI.e s2)) = Heap.sel h (StDec.ctr (STI.d s2))
               ))
   (ensures (fun h0 _ h1 ->
-                 st_inv (STBoth.e s1) (STBoth.d s1) h1
-              /\ st_inv (STBoth.e s2) (STBoth.d s2) h1
-              /\ HyperHeap.modifies (Set.union (Set.singleton i) (Set.singleton j)) h0 h1))
+                 st_inv (STI.e s1) (STI.d s1) h1
+              /\ st_inv (STI.e s2) (STI.d s2) h1
+              /\ HyperHeap.modifies (Set.union (Set.singleton (STI.i s1)) (Set.singleton (STI.i s2))) h0 h1))
+
 // note that we do not require new encryptor/decryptors,
 // just that those in s1 are in sync, so that decryption cancels encryption
-assume val mk_plain : unit -> ST plain (requires (fun h -> True)) (ensures (fun h0 x h1 -> h0=h1))
-let test_st_frame i j s1 s2 =
+let test_st_frame s1 s2 =
   let p = mk_plain () in
   let q = mk_plain () in
   let g = stateful_gen () in
-  // let s3 = stateful_gen() // also type-breaking; yes, because this modifies fp, basic_fp
-  let ctr = op_Bang (StEnc.ctr (STBoth.e s1)) in
-  let c0 = stateful_enc (STBoth.e s1) p in
-  let c1 = stateful_enc (STBoth.e s1) q in
-  let c2 = stateful_enc (STBoth.e s2) p in
-  // let oX = stateful_dec (STBoth.d s1) c2 in // might succeed
-  let o0 = stateful_dec (ctr) (STBoth.d s1) c0 in
-  let o1 = stateful_dec (ctr + 1) (STBoth.d s1) c1 in
+  let ctr = op_Bang (StEnc.ctr (STI.e s1)) in
+  let c0 = stateful_enc (STI.e s1) p in
+  let c1 = stateful_enc (STI.e s1) q in
+  let c2 = stateful_enc (STI.e s2) p in
+  // let oX = stateful_dec (STI.d s1) c2 in // might succeed
+  let o0 = stateful_dec (STI.d s1) c0 in
+  let o1 = stateful_dec (STI.d s1) c1 in
   assert (Some.v o0 = p);
   assert (Some.v o1 = q)
