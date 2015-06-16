@@ -24,6 +24,9 @@ assume val new_region: unit -> ST rid
 
 type Let (#a:Type) (x:a) (body:(a -> Type)) = body x
 
+let sel (#a:Type) (#i:rid) (m:t) (r:rref i a) = Heap.sel (Map.sel m i) (as_ref r)
+let upd (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a) = Map.upd m i (Heap.upd (Map.sel m i) (as_ref r) v)
+
 assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
     (requires (fun m -> Map.contains m i))
     (ensures (fun m0 x m1 ->
@@ -35,7 +38,6 @@ assume val op_ColonEquals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
   (requires (fun m -> True))
   (ensures (fun m0 _u m1 -> m1= Map.upd m0 i (Heap.upd (Map.sel m0 i) (as_ref r) v)))
 
-
 assume val op_Bang:#a:Type -> #i:rid -> r:rref i a -> ST a
   (requires (fun m -> True))
   (ensures (fun m0 x m1 -> m1=m0 /\ x=Heap.sel (Map.sel m0 i) (as_ref r)))
@@ -43,6 +45,7 @@ assume val op_Bang:#a:Type -> #i:rid -> r:rref i a -> ST a
 assume val get: unit -> ST t
   (requires (fun m -> True))
   (ensures (fun m0 x m1 -> m0=x /\ m1=m0))
+
 
 type modifies (s:Set.set rid) (m0:t) (m1:t) =
     Map.Equal m1 (Map.concat m1 (Map.restrict (Set.complement s) m0))
