@@ -1,5 +1,5 @@
 (*--build-config
-    other-files:list.fst ordset.fsi
+    other-files:list.fst listproperties.fst ordset.fsi
  --*)
 
 module OrdSet
@@ -19,70 +19,75 @@ let rec sorted (#a:Type) f l = match l with
 
 type ordset (a:Type) (f:cmp a) = l:(list a){sorted f l}
 
-let empty _ = []
+let empty (#a:Type) #f = []
 
-val insert': #a:Type -> f:cmp a -> x:a -> s:ordset a f
-             -> Tot (l:(ordset a f){is_Cons l /\ (Cons.hd l = x \/ (is_Cons s /\ Cons.hd l = Cons.hd s))})
-let rec insert' f x s = match s with
+val insert': #a:Type -> #f:cmp a -> x:a -> s:ordset a f
+             -> Tot (l:(ordset a f){is_Cons l /\
+                                    (Cons.hd l = x \/ 
+                                    (is_Cons s /\ Cons.hd l = Cons.hd s))})
+let rec insert' (#a:Type) #f x s = match s with
   | []     -> [x]
   | hd::tl ->
     if x = hd then hd::tl
     else if f x hd then x::hd::tl
-    else hd::(insert' f x tl)
+    else hd::(insert' #_ #f x tl)
 
-let insert f x s = insert' f x s
-
-let rec union f s1 s2 = match s1 with
+let rec union (#a:Type) #f s1 s2 = match s1 with
   | []     -> s2
-  | hd::tl -> union f tl (insert f hd s2)
+  | hd::tl -> union #_ #f tl (insert' #_ #f hd s2)
 
-let rec intersect f s1 s2 = match s1 with
+let mem (#a:Type) #f x s = List.mem x s
+
+let rec intersect (#a:Type) #f s1 s2 = match s1 with
   | []     -> []
   | hd::tl ->
-    if List.mem hd s2 then
-      insert f hd (intersect f tl s2)
+    if mem #_ #f hd s2 then
+      insert' #_ #f hd (intersect #_ #f tl s2)
     else
-      intersect f tl s2
+      intersect #_ #f tl s2
 
-let mem f x s = List.mem x s
-
-type Equal (#a:Type) (f:cmp a) (s1:ordset a f) (s2:ordset a f) =
-  (forall x. mem f x s1 = mem f x s2)
-
-
-let choose f s = match s with
+let choose (#a:Type) #f s = match s with
   | []   -> None
   | x::_ -> Some x
 
-val remove': #a:Type -> f:cmp a -> x:a -> s:ordset a f
+val remove': #a:Type -> #f:cmp a -> x:a -> s:ordset a f
              -> Tot (l:(ordset a f){(is_Nil s ==> is_Nil l) /\
                                     (is_Cons s ==> Cons.hd s = x ==> l = Cons.tl s) /\
                                     (is_Cons s ==> Cons.hd s =!= x ==> (is_Cons l /\ Cons.hd l = Cons.hd s))})
-let rec remove' f x s = match s with
+let rec remove' (#a:Type) #f x s = match s with
   | []     -> []
   | hd::tl ->
     if x = hd then tl
-    else hd::(remove' f x tl)
+    else hd::(remove' #_ #f x tl)
 
-let remove f x s = remove' f x s
+let remove (#a:Type) #f x s = remove' #_ #f x s
 
-let size f s = List.length s
+let size (#a:Type) #f s = List.length s
 
-val eq_helper: #a:Type -> f:cmp a -> x:a -> s:ordset a f
+let rec subset (#a:Type) #f s1 s2 = match s1 with
+  | []     -> true
+  | hd::tl -> mem #_ #f hd s2 && subset #_ #f tl s2
+
+let singleton (#a:Type) #f x = [x]
+
+type Equal (#a:Type) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
+  (forall x. mem #_ #f x s1 = mem #_ #f x s2)
+
+val eq_helper: #a:Type -> #f:cmp a -> x:a -> s:ordset a f
                -> Lemma (requires (is_Cons s /\ f x (Cons.hd s) /\ x =!= Cons.hd s))
-                        (ensures (not (mem f x s))) (decreases (size f s))
-let rec eq_helper f x (y::s) = match s with
+                        (ensures (not (mem #a #f x s))) (decreases (size #a #f s))
+let rec eq_helper (#a:Type) #f x (y::s) = match s with
   | []   -> ()
-  | _::_ -> eq_helper f x s
+  | _::_ -> eq_helper #_ #f x s
 
-val hd_unique: #a:Type -> f:cmp a -> s:ordset a f{is_Cons s}
+val hd_unique: #a:Type -> #f:cmp a -> s:ordset a f{is_Cons s}
                -> Lemma (requires (is_Cons s))
-                        (ensures (not (mem f (Cons.hd s) (Cons.tl s))))
+                        (ensures (not (mem #a #f (Cons.hd s) (Cons.tl s))))
 let hd_unique f (x::s) = match s with
   | []   -> ()
-  | _::_ -> eq_helper f x s
+  | _::_ -> eq_helper #_ #f x s
 
-let rec eq_lemma f s1 s2 = match s1, s2 with
+let rec eq_lemma (#a:Type) #f s1 s2 = match s1, s2 with
   | [], []             -> ()
   | _::_, []           -> ()
   | [], _::_           -> ()
@@ -90,69 +95,62 @@ let rec eq_lemma f s1 s2 = match s1, s2 with
     if hd1 = hd2 then
       (* hd_unique calls help us prove that forall x. mem f x tl1 = mem f x tl2 *)
       (* so that we can apply IH *)
-      (hd_unique f s1; hd_unique f s2; eq_lemma f tl1 tl2)
+      (hd_unique #_ #f s1; hd_unique #_ #f s2; eq_lemma #_ #f tl1 tl2)
     else if f hd1 hd2 then
-      eq_helper f hd1 s2
+      eq_helper #_ #f hd1 s2
     else
-      eq_helper f hd2 s1
+      eq_helper #_ #f hd2 s1
 
-let mem_empty f = ()
+let mem_empty (#a:Type) #f x = ()
 
-let rec insert_lem f x s = match s with
-  | []     -> ()
-  | hd::tl -> if x = hd then () else insert_lem f x tl
+let mem_singleton (#a:Type) #f x y = ()
 
-let rec mem_union f s1 s2 x = match s1 with
-  | []     -> ()
-  | hd::tl -> mem_union f tl (insert f hd s2) x
-
-let rec mem_intersect f s1 s2 x = match s1 with
-  | []     -> ()
-  | hd::tl -> mem_intersect f tl s2 x
-
-let choose_lem f s = match s with
-  | [] -> ()
-  | _  ->  
-    let Some e = choose f s in
-    cut (Equal f s (insert f e (remove f e s)))
-
-let rec remove_lem f x s = match s with
-  | []     -> ()
-  | hd::tl -> if x = hd then hd_unique f s else remove_lem f x tl
-
-let rec remove_size f x s = match s with
+val insert_mem: #a:Type -> #f:cmp a -> x:a -> y:a -> s:ordset a f
+                -> Lemma (requires (True))
+                         (ensures (mem #a #f y (insert' #a #f x s) =
+                                   (x = y || mem #a #f y s)))
+let rec insert_mem (#a:Type) #f x y s = match s with
   | []     -> ()
   | hd::tl ->
-    if x = hd then () else remove_size f x tl
+    if x = hd then ()
+    else if f x hd then ()
+    else insert_mem #_ #f x y tl
 
-let rec subset f s1 s2 = match s1 with
-  | []     -> true
-  | hd::tl -> mem f hd s2 && subset f tl s2
-
-let rec mem_subset f s1 s2 = match s1 with
+let rec mem_union (#a:Type) #f x s1 s2 = match s1 with
   | []     -> ()
-  | hd::tl -> mem_subset f tl s2
+  | hd::tl ->
+    mem_union #_ #f x tl (insert' #_ #f hd s2); insert_mem #_ #f hd x s2
 
-let singleton f x = [x]
+let rec mem_intersect (#a:Type) #f x s1 s2 = match s1 with
+  | []     -> ()
+  | hd::tl -> 
+    let _ = mem_intersect #_ #f x tl s2 in
+    if mem #_ #f hd s2 then insert_mem #_ #f hd x (intersect #_ #f tl s2) else ()
 
-let mem_singleton f x y = ()
+let rec mem_subset (#a:Type) #f s1 s2 = match s1 with
+  | []     -> ()
+  | hd::tl -> mem_subset #_ #f tl s2
 
-let is_singleton f s = match s with
-  | _::[] -> true
-  | _     -> false
+let choose_empty (#a:Type) #f _ = ()
 
-let is_singleton_lemma f x = ()
+let choose_s (#a:Type) #f s =
+  let Some e = choose #_ #f s in
+  cut (Equal #a #f s (insert' #a #f e (remove #a #f e s)))
+
+let rec mem_remove (#a:Type) #f x y s = match s with
+  | []     -> ()
+  | hd::tl -> if y = hd then hd_unique #_ #f s else mem_remove #_ #f x y tl
+
+let rec eq_remove (#a:Type) #f x s = match s with
+  | []    -> ()
+  | _::tl -> eq_remove #_ #f x tl
+
+let size_empty (#a:Type) #f _ = ()
+
+let rec size_remove (#a:Type) #f x s = match s with
+  | hd::tl ->
+    if x = hd then () else size_remove #_ #f x tl
+
+let rec size_singleton (#a:Type) #f x = ()
 
 (**********)
-
-val insert_basic: #a:Type -> f:cmp a -> x:a -> s:ordset a f
-                  -> Lemma (ensures (mem f x (insert f x s)))
-let insert_basic f x s = ()
-
-val remove_basic: #a:Type -> f:cmp a -> x:a -> s:ordset a f
-                  -> Lemma (ensures (not (mem f x (remove f x s))))
-let remove_basic f x s = ()
-
-val choose_basic: #a:Type -> f:cmp a -> s:ordset a f{s =!= empty f}
-                  -> Lemma (ensures (is_Some (choose f s) /\ mem f (Some.v (choose f s)) s))
-let choose_basic f s = ()

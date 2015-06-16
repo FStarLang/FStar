@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap;
+    options:--admit_fsi OrdSet;
     variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordsetproperties.fst $LIB/ordmap.fsi $LIB/ordmapproperties.fst $LIB/list.fst $LIB/constr.fst $LIB/ext.fst
+    other-files:$LIB/ordset.fsi $LIB/ordsetproperties.fst $LIB/list.fst $LIB/constr.fst $LIB/ext.fst
  --*)
 
 module AST
@@ -18,29 +18,6 @@ val p_cmp: prin -> prin -> Tot bool
 let p_cmp p1 p2 = p1 <= p2
 
 type prins = ordset prin p_cmp
-
-val subset: prins -> prins -> Tot bool
-let subset = OrdSet.subset p_cmp
-
-val mem: prin -> prins -> Tot bool
-let mem = OrdSet.mem p_cmp
-
-assume val mem_subset: p:prin -> ps1:prins -> ps2:prins
-                              -> Lemma (requires (mem p ps1 /\ subset ps1 ps2))
-                                       (ensures  (mem p ps2))
-                                [SMTPat (subset ps1 ps2)]
-
-val singleton: prin -> Tot prins
-let singleton = OrdSet.singleton p_cmp
-
-val is_singleton: prins -> Tot bool
-let is_singleton = OrdSet.is_singleton p_cmp
-
-assume val mem_subset_singleton:
-  p:prin -> ps:prins
-  -> Lemma (requires (True))
-           (ensures  (mem p ps <==> subset (singleton p) ps))
-     [SMTPat (subset (singleton p) ps)]
 
 type const =
   | C_prin : c:prin -> const
@@ -570,11 +547,14 @@ let cstep_lemma #c #c' h p = match h with
     if not (mem p (Mode.ps m)) then IntroL ()
     else
       IntroR (C_box_beta (slice_c p c) (slice_c p c'))
+
+  (* TODO: FIXME: this is ~> for faster type checking, fix it finally*)
   | C_unbox_beta (Conf _ m _ _ _) _ ~>
     if not (mem p (Mode.ps m)) then IntroL ()
     else
       IntroR (C_unbox_beta (slice_c p c) (slice_c p c'))
 
+(* check_marker *)
 (**********)
 
 open OrdMap
@@ -629,6 +609,25 @@ let rec slice_ps_c_lemma ps c p =
       ()
     else
       contains_update_trivial p (slice_ps_c ps_rest c)
+
+
+assume val map_update_dom_lemma: pi:protocol -> p:prin
+                                 -> Lemma (requires (True))
+                                          (ensures (forall c. OrdMap.dom p_cmp (OrdMap.update p_cmp p c pi) =
+                                                              OrdSet.insert p_cmp p (OrdMap.dom p_cmp pi)))
+
+val slice_ps_c_lemma2: ps:prins -> c:sconfig
+                       -> Lemma (requires (True))
+                                (ensures (OrdMap.dom p_cmp (slice_ps_c ps c) = ps))
+                          (decreases (OrdSet.size p_cmp ps))
+let rec slice_ps_c_lemma2 ps c =
+  if ps = OrdSet.empty p_cmp then ()
+  else
+    let Some e = OrdSet.choose p_cmp ps in
+    let ps_rest = OrdSet.remove p_cmp e ps in
+    let _ = slice_ps_c_lemma2 ps_rest c in
+    map_update_dom_lemma (slice_ps_c ps_rest c) e;
+    ()
 (* check_marker *)
 
 

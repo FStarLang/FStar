@@ -12,88 +12,91 @@ type cmp (a:Type) = f:(a -> a -> Tot bool){total_order a f}
 
 type ordset : a:Type -> cmp a -> Type
 
-val empty     : #a:Type -> f:cmp a -> Tot (ordset a f)
-val insert    : #a:Type -> f:cmp a -> a -> ordset a f -> Tot (ordset a f)
-val union     : #a:Type -> f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
-val intersect : #a:Type -> f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
+val empty     : #a:Type -> #f:cmp a -> Tot (ordset a f)
+val union     : #a:Type -> #f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
+val intersect : #a:Type -> #f:cmp a -> ordset a f -> ordset a f -> Tot (ordset a f)
 
-val mem       : #a:Type -> f:cmp a -> a -> ordset a f -> Tot bool
-val choose    : #a:Type -> f:cmp a -> s:ordset a f -> Tot (option a)
-val remove    : #a:Type -> f:cmp a -> a -> ordset a f -> Tot (ordset a f)
+val mem       : #a:Type -> #f:cmp a -> a -> s:ordset a f -> Tot bool
+val choose    : #a:Type -> #f:cmp a -> s:ordset a f -> Tot (option a)
+val remove    : #a:Type -> #f:cmp a -> a -> ordset a f -> Tot (ordset a f)
 
-val size      : #a:Type -> f:cmp a -> ordset a f -> Tot nat
+val size      : #a:Type -> #f:cmp a -> ordset a f -> Tot nat
 
-val subset    : #a:Type -> f:cmp a -> ordset a f -> ordset a f -> Tot bool
-//val singleton : #a:Type -> f:cmp a -> a -> Tot (s:ordset a f{size f s = 1})
-val singleton : #a:Type -> f:cmp a -> a -> Tot (ordset a f)
+val subset    : #a:Type -> #f:cmp a -> ordset a f -> ordset a f -> Tot bool
+val singleton : #a:Type -> #f:cmp a -> a -> Tot (ordset a f)
 
-val is_singleton: #a:Type -> f:cmp a -> ordset a f -> Tot bool
+type Equal (#a:Type) (#f:cmp a) (s1:ordset a f) (s2:ordset a f) =
+  (forall x. mem x s1 = mem x s2)
 
-
-
-type Equal (#a:Type) (f:cmp a) (s1:ordset a f) (s2:ordset a f) =
-  (forall x. mem f x s1 = mem f x s2)
-
-val eq_lemma: #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f
-              -> Lemma (requires (Equal f s1 s2))
+val eq_lemma: #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
+              -> Lemma (requires (Equal s1 s2))
                        (ensures s1 = s2)
-                       [SMTPat (s1 = s2)]
+                 [SMTPat (s1 = s2)]
 
-val mem_empty: #a:Type -> f:cmp a
-               -> Lemma (requires True) (ensures (forall x. not (mem f x (empty f))))
-                  [SMTPat (empty f)]
-
-val insert_lem: #a:Type -> f:cmp a -> x:a -> s:ordset a f
-                -> Lemma (requires True)
-                         (ensures ((mem f x s       ==> (s = insert f x s)) /\
-                                   (not (mem f x s) ==> ((forall y. mem f y s ==> mem f y (insert f x s)) /\
-                                                         (forall y. mem f y (insert f x s) = (y = x || mem f y s))))))
-                   [SMTPat (insert f x s)]
-                   
-val mem_union: #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f -> x:a
-               -> Lemma (requires True)            
-                        (ensures (mem f x (union f s1 s2) = (mem f x s1 || mem f x s2)))
-                        [SMTPat (mem f x (union f s1 s2))]
-
-val mem_intersect: #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f -> x:a
-                   -> Lemma (requires True)
-                            (ensures (mem f x (intersect f s1 s2) = (mem f x s1 && mem f x s2)))
-                            [SMTPat (mem f x (intersect f s1 s2))]
-
-val choose_lem: #a:Type -> f:cmp a -> s:ordset a f
-                -> Lemma (requires True)
-                   (ensures ((s = empty f       ==> is_None (choose f s)) /\
-                             (not (s = empty f) ==> (is_Some (choose f s) /\
-                                                     s = insert f (Some.v (choose f s)) (remove f (Some.v (choose f s)) s)))))
-                   [SMTPat (choose f s)]
-
-val remove_lem: #a:Type -> f:cmp a -> x:a -> s:ordset a f
-                -> Lemma (requires True)
-                   (ensures ((not (mem f x s) ==> (s = remove f x s)) /\
-                             (mem f x s       ==> ((not (mem f x (remove f x s))) /\
-                                                   (forall y. mem f y s = (x = y || mem f y (remove f x s))) /\
-                                                   (forall y. mem f y (remove f x s) ==> mem f y s)))))
-                   [SMTPat (remove f x s)]
+val mem_empty: #a:Type -> #f:cmp a -> x:a
+               -> Lemma (requires True) (ensures (not (mem #a #f x (empty #a #f))))
+                  [SMTPat (mem #a #f x (empty #a #f))]
                   
-val remove_size: #a:Type -> f:cmp a -> x:a -> s:ordset a f
-                 -> Lemma (requires (mem f x s))
-                          (ensures (size f s = size f (remove f x s) + 1))
-                    [SMTPat (size f (remove f x s))]
-                    
-val mem_subset: #a:Type -> f:cmp a -> s1:ordset a f -> s2:ordset a f
-                -> Lemma (requires (True))
-                         (ensures  (subset f s1 s2 <==> (forall x. mem f x s1 ==> mem f x s2)))
-                   [SMTPat (subset f s1 s2)]
-                   
-val mem_singleton: #a:Type -> f:cmp a -> x:a -> y:a
-                   -> Lemma (requires (True))
-                            (ensures (mem f y (singleton f x) <==> x = y))
-                      [SMTPat (mem f y (singleton f x))]
-                      
-val is_singleton_lemma: #a:Type -> f:cmp a -> x:a
-                        -> Lemma (requires (True))
-                                 (ensures  (is_singleton f (singleton f x) = true))
-                           [SMTPat (is_singleton f (singleton f x))]
+val mem_singleton: #a:Type -> #f:cmp a -> x:a -> y:a
+                   -> Lemma (requires True)
+                            (ensures (mem #a #f y (singleton #a #f x)) = (x = y))
+                      [SMTPat (mem #a #f y (singleton #a #f x))]
 
-                    
+val mem_union: #a:Type -> #f:cmp a -> x:a -> s1:ordset a f -> s2:ordset a f
+               -> Lemma (requires True)            
+                        (ensures (mem #a #f x (union #a #f s1 s2) =
+                                  (mem #a #f x s1 || mem #a #f x s2)))
+                  [SMTPat (mem #a #f x (union #a #f s1 s2))]
+
+val mem_intersect: #a:Type -> #f:cmp a -> x:a -> s1:ordset a f -> s2:ordset a f
+                   -> Lemma (requires True)
+                            (ensures (mem #a #f x (intersect s1 s2) =
+                                      (mem #a #f x s1 && mem #a #f x s2)))
+                      [SMTPat (mem #a #f x (intersect #a #f s1 s2))]
+
+val mem_subset: #a:Type -> #f:cmp a -> s1:ordset a f -> s2:ordset a f
+                -> Lemma (requires True)
+                         (ensures  (subset #a #f s1 s2 <==>
+                                    (forall x. mem #a #f x s1 ==> mem #a #f x s2)))
+                   [SMTPat (subset #a #f s1 s2)]
+
+val choose_empty: #a:Type -> #f:cmp a -> unit
+                  -> Lemma (requires True) (ensures (is_None (choose #a #f empty)))
+                     [SMTPat (choose #a #f (empty #a #f))]
+
+(* TODO: FIXME: Pattern does not contain all quantified vars *)                     
+val choose_s: #a:Type -> #f:cmp a -> s:ordset a f
+              -> Lemma (requires (not (s = (empty #a #f))))
+                       (ensures (is_Some (choose #a #f s) /\
+                                 s = union #a #f (singleton #a #f (Some.v (choose #a #f s)))
+                                                 (remove #a #f (Some.v (choose #a #f s)) s)))
+                 [SMTPat (choose #a #f s)]
+
+val mem_remove: #a:Type -> #f:cmp a -> x:a -> y:a -> s:ordset a f
+                -> Lemma (requires True)
+                         (ensures (mem #a #f x (remove #a #f y s) =
+                                   (mem #a #f x s && not (x = y))))
+                   [SMTPat (mem #a #f x (remove #a #f y s))]
+                   
+val eq_remove: #a:Type -> #f:cmp a -> x:a -> s:ordset a f
+               -> Lemma (requires (not (mem #a #f x s)))
+                        (ensures (s = remove #a #f x s))
+                  [SMTPat (remove #a #f x s)]
+
+val size_empty: #a:Type -> #f:cmp a -> unit
+                -> Lemma (requires True) (ensures (size #a #f (empty #a #f) = 0))
+                   [SMTPat (size #a #f (empty #a #f))]
+                   
+val size_remove: #a:Type -> #f:cmp a -> y:a -> s:ordset a f
+                 -> Lemma (requires (mem #a #f y s))
+                          (ensures (size #a #f s = size #a #f (remove #a #f y s) + 1))
+                    [SMTPat (size #a #f (remove #a #f y s))]
+
+val size_singleton: #a:Type -> #f:cmp a -> x:a
+                    -> Lemma (requires True) (ensures (size #a #f (singleton #a #f x) = 1))
+                       [SMTPat (size #a #f (singleton #a #f x))]
+
+let is_singleton (#a:Type) (#f:cmp a) (s:ordset a f) = (size #a #f s = 1)
+let insert (#a:Type) (#f:cmp a) (x:a) (s:ordset a f) = union #a #f (singleton #a #f x) s
+
 (**********)
