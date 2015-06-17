@@ -419,6 +419,40 @@ match (refLoc r) with
 | InHeap -> ()
 | InStack id -> (writeStackTail r id v (st m))
 
+(* The location of a ref (say r) is refLoc r, and is independent of the
+   currrent state of the memory. So the absolute location of a reference is
+   by definition preserved by all memory operations.
+
+   However, in most correctness proofs, what matters is the relative position
+   w.r.t the top of the stack e.g.
+   whether the reference is in the tail of memory.
+   There are some memory operations that do not preserve relative position,
+   e.g. pushStackFrame.
+   However, most sane program blocks will preserve it. So far,
+   preserving stack ids is a definition of sanity
+   *)
+
+val refExistsInMemSTailSids : #a:Type -> r:(ref a) -> id:sidt  -> m0:memStack -> m1:memStack
+  -> Lemma
+   (requires (ssids m0 = ssids m1
+            /\ refExistsInStack r id (stail m0)
+            (*/\ refExistsInStack r id m0*)
+            /\ refExistsInStack r id m1))
+   (ensures refExistsInStack r id (stail m1))
+let rec refExistsInMemSTailSids r id m0 m1 =
+(refExistsInStackId r id (stail m0))
+
+
+val refExistsInMemTailSids : #a:Type -> r:(ref a) -> m0:smem -> m1:smem -> Lemma
+  (requires (sids m0 = sids m1 /\ refExistsInMem r (mtail m0) /\ refExistsInMem r m1))
+  (ensures refExistsInMem r (mtail m1))
+  [SMTPat (sids m0 = sids m1)]
+let refExistsInMemTailSids r m0 m1 =
+match (refLoc r) with
+| InHeap -> ()
+| InStack id -> (refExistsInMemSTailSids r id (st m0) (st m1))
+
+
 type  mreads (#a:Type) (r: ref a) (v:a) (m:smem) = refExistsInMem r m /\ loopkupRef r m = v
 
 

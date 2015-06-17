@@ -76,10 +76,11 @@ let mark n f index =
   (fun indx -> if (indx= index) then true else f indx)
 
 (*using hetrogeneous lists, one can extend this to the general (n-ary) case*)
+(*previosly, mtail was need; verify*)
 type distinctRefsExists3
   (#a:Type) (#b:Type) (#c:Type) (m:smem)
   (ra:ref a) (rb: ref b) (rc: ref c)  =
-  (refExistsInMem ra (mtail m)) /\ (refExistsInMem rb (mtail m)) /\ (refExistsInMem rc m)
+  (refExistsInMem ra (m)) /\ (refExistsInMem rb (m)) /\ (refExistsInMem rc m)
   /\ (ra=!=rb) /\ (rb=!=rc) /\ (ra=!=rc)
 
 val markMultiplesUpto : n:nat -> lo:nat -> upto:nat{lo*(upto-1)<n}
@@ -350,7 +351,8 @@ let sieveUnfolded n u =
   memread res
 
 
-val sieveUnfolded2 : n:nat{n>1} -> unit
+
+(*val sieveUnfolded2 : n:nat{n>1} -> unit
   -> WNSC ((k:nat{k<n}) -> Tot bool)
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
@@ -385,4 +387,4 @@ let sieveUnfolded2 n u =
         memwrite lo (lov+1);
     (*the part below has no computational content*)
       (markedIffHasDivisorSmallerThanInc n lov initres newres));
-  memread res
+  memread res*)
