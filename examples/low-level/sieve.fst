@@ -150,7 +150,7 @@ val innerLoop : n:nat{n>1}
   -> li : ref nat
   -> res : ref ((k:nat{k<n}) -> Tot bool)
   -> initres : ((k:nat{k<n}) -> Tot bool)
-  -> SSST unit
+  -> Mem unit
       (requires (fun m ->
         (*(refExistsInMem li m) /\ (refExistsInMem lo m) /\ (refExistsInMem res m) /\ (li=!=lo) /\ (lo=!=res) /\ (li=!=res)*)
         distinctRefsExists3 m lo res li /\ loopkupRef li m = 0
@@ -246,7 +246,7 @@ let outerLoopBody n lo res u =
 val outerLoop : n:nat{n>1}
   -> lo: ref nat
   -> res : ref ((k:nat{k<n}) -> Tot bool)
-  -> SSST unit
+  -> Mem unit
       (fun m -> distinctRefsExists2 m lo res /\ loopkupRef lo m =2 /\ allUnmarked n (loopkupRef res m))
       (fun m0 _ m1 ->
             distinctRefsExists2 m1 lo res
@@ -324,6 +324,14 @@ let sieve n u =
   let res = salloc f in
   (outerLoop n lo res);
   memread res
+
+
+let sieveFull n u =
+withNewScope
+_
+_
+_
+(sieve n)
 
 
 val sieveUnfolded : n:nat{n>1} -> unit

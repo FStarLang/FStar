@@ -626,6 +626,6 @@ val scopedWhile2 : #wpg:(Post bool -> Pre) -> #wpb:(Post unit -> Pre)
 = let v=wg () in ()*)
 
 (*Sane SST*)
-effect SSST (a:Type) (pre:Pre) (post: (smem -> Post a)) =
+effect Mem (a:Type) (pre:Pre) (post: (smem -> Post a)) =
         SST a pre (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
 (*consider adding the property that the references dont move*)
