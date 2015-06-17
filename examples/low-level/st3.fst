@@ -421,6 +421,7 @@ match (refLoc r) with
 
 type  mreads (#a:Type) (r: ref a) (v:a) (m:smem) = refExistsInMem r m /\ loopkupRef r m = v
 
+
 (*should extend to types with decidable equality*)
 (*val is1SuffixOf : list sidt -> list sidt -> Tot bool
 let is1SuffixOf lsmall lbig =
@@ -589,3 +590,8 @@ val scopedWhile2 : #wpg:(Post bool -> Pre) -> #wpb:(Post unit -> Pre)
  (bd:(unit -> SSTS unit wpb))
  (loopInv:(smem -> Type))
 = let v=wg () in ()*)
+
+(*Sane SST*)
+effect SSST (a:Type) (pre:Pre) (post: (smem -> Post a)) =
+        SST a pre (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
+(*consider adding the property that the references dont move*)

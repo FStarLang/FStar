@@ -149,14 +149,13 @@ val innerLoop : n:nat{n>1}
   -> li : ref nat
   -> res : ref ((k:nat{k<n}) -> Tot bool)
   -> initres : ((k:nat{k<n}) -> Tot bool)
-  -> SST unit
+  -> SSST unit
       (requires (fun m ->
         (*(refExistsInMem li m) /\ (refExistsInMem lo m) /\ (refExistsInMem res m) /\ (li=!=lo) /\ (lo=!=res) /\ (li=!=res)*)
         distinctRefsExists3 m lo res li /\ loopkupRef li m = 0
                     /\ loopkupRef lo m = lov /\ loopkupRef res m= initres))
       (ensures (fun m0 _ m1 -> distinctRefsExists3 m1 lo res li
                       /\ loopkupRef lo m1 = lov
-                      /\ sids m0 = sids m1 (*this could be baked into the definition of a new effect abbrev and one can uses that instead*)
                       /\ markedIffDividesOrInit n (loopkupRef lo m1) initres (loopkupRef res m1)
       ))
 
@@ -246,7 +245,7 @@ let outerLoopBody n lo res u =
 val outerLoop : n:nat{n>1}
   -> lo: ref nat
   -> res : ref ((k:nat{k<n}) -> Tot bool)
-  -> SST unit
+  -> SSST unit
       (fun m -> distinctRefsExists2 m lo res /\ loopkupRef lo m =2 /\ allUnmarked n (loopkupRef res m))
       (fun m0 _ m1 ->
             distinctRefsExists2 m1 lo res
@@ -369,15 +368,15 @@ let sieveUnfolded2 n u =
         let li = salloc 0 in
         let liv = memread li in
         (scopedWhile
-          (innerLoopInv n lo lov li res initres)
-          (innerGuardLC n lo li)
-          (fun u -> (memread li * memread lo < n))
-          (fun u ->
-            let liv = memread li in
-            let lov = memread lo in
-            let resv = memread res in
-            memwrite li (liv+1);
-            memwrite res (mark n resv (lov * liv))));
+            (innerLoopInv n lo lov li res initres)
+            (innerGuardLC n lo li)
+            (fun u -> (memread li * memread lo < n))
+            (fun u ->
+              let liv = memread li in
+              let lov = memread lo in
+              let resv = memread res in
+              memwrite li (liv+1);
+              memwrite res (mark n resv (lov * liv))));
 
           (*the part below has no computaional content; why does SMTPatT not work?*)
         let newv = memread res in

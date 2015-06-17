@@ -47,8 +47,8 @@ let factorialLoopBody (n:nat) (li:(ref nat)) (res:(ref nat)) u =
 
 
 val factorialLoop : n:nat -> li:(ref nat) -> res:(ref nat)
-  -> SST unit (fun m -> mreads li 0 m /\ mreads res 1 m  /\ ~(li=res))
-              (fun m0 _ m1 -> mreads res (factorial n) m1 /\ sids m0 = sids m1)
+  -> SSST unit (fun m -> mreads li 0 m /\ mreads res 1 m  /\ ~(li=res))
+              (fun m0 _ m1 -> mreads res (factorial n) m1)
 let factorialLoop (n:nat) (li:(ref nat)) (res:(ref nat)) =
   scopedWhile
     (loopInv li res)
@@ -68,7 +68,7 @@ let loopyFactorial n =
   v
 
 val loopyFactorial2 : n:nat
-  -> SST nat (fun m -> True)
+  -> SSST nat (fun m -> True)
               (fun _ rv _ -> rv == (factorial n))
 let loopyFactorial2 n =
   withNewScope
