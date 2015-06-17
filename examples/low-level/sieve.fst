@@ -26,13 +26,13 @@ exists (k:nat). k*divisor=n
 (*switching to cexists breaks many lemmas.
  I guess the SMT solver does not know anything about cexists.*)
 
- val divisorSmall : n:nat{1<n} -> divisor:nat
+val divisorSmall : n:nat{1<n} -> divisor:nat
   ->
    Lemma
        ( requires (divides divisor n /\ 1<divisor))
        (ensures (divisor < n))
        [SMTPatT (divides divisor n)]
- let divisorSmall n divisor = (admit ())
+let divisorSmall n divisor = (admit ())
 
 
  val isNotPrimeIf2 :
@@ -351,8 +351,21 @@ let sieveUnfolded n u =
   memread res
 
 
+type  innerLoopInv2 (n:nat) (lo: ref nat) (lov:nat) (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool))
+    (initres: ((k:nat{k<n}) -> Tot bool)) (m:smem) =
+  (refExistsInMem li m) /\ (refExistsInMem lo m) /\ (refExistsInMem res m)
+  /\ loopkupRef lo m = lov
+  /\ ((loopkupRef li m)-1)*lov < n
+  /\ markedIffMultipleOrInit n lov (loopkupRef li m) initres (loopkupRef res m)
 
-(*val sieveUnfolded2 : n:nat{n>1} -> unit
+type  outerLoopInv2 (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
+  refExistsInMem lo m /\ refExistsInMem res m
+  /\ (((loopkupRef lo m) - 1) < n)
+  /\ (1<(loopkupRef lo m))
+  /\ (markedIffHasDivisorSmallerThan n (loopkupRef lo m) (loopkupRef res m))
+
+
+val sieveUnfolded2 : n:nat{n>1} -> unit
   -> WNSC ((k:nat{k<n}) -> Tot bool)
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
@@ -361,7 +374,7 @@ let sieveUnfolded2 n u =
   let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
   let res = salloc f in
   scopedWhile
-    (outerLoopInv n lo res)
+    (outerLoopInv2 n lo res)
     (outerGuardLC n lo)
     (fun u -> (memread lo < n))
     (fun u ->
@@ -370,7 +383,7 @@ let sieveUnfolded2 n u =
         let li = salloc 0 in
         let liv = memread li in
         (scopedWhile
-            (innerLoopInv n lo lov li res initres)
+            (innerLoopInv2 n lo lov li res initres)
             (innerGuardLC n lo li)
             (fun u -> (memread li * memread lo < n))
             (fun u ->
@@ -387,4 +400,4 @@ let sieveUnfolded2 n u =
         memwrite lo (lov+1);
     (*the part below has no computational content*)
       (markedIffHasDivisorSmallerThanInc n lov initres newres));
-  memread res*)
+  memread res

@@ -446,7 +446,7 @@ let rec refExistsInMemSTailSids r id m0 m1 =
 val refExistsInMemTailSids : #a:Type -> r:(ref a) -> m0:smem -> m1:smem -> Lemma
   (requires (sids m0 = sids m1 /\ refExistsInMem r (mtail m0) /\ refExistsInMem r m1))
   (ensures refExistsInMem r (mtail m1))
-  [SMTPat (sids m0 = sids m1)]
+  (*[SMTPat (sids m0 = sids m1)]*)
 let refExistsInMemTailSids r m0 m1 =
 match (refLoc r) with
 | InHeap -> ()
