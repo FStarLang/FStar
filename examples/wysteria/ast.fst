@@ -570,28 +570,68 @@ let rec slice_c_ps ps c =
     OrdMap.update p (slice_c p c) pi'
 
 val dom_slice_lemma: ps:prins -> c:sconfig
-                     -> Lemma (requires True) (ensures (dom (slice_c_ps ps c) = ps))
+                     -> Lemma (requires (True)) (ensures (dom (slice_c_ps ps c) = ps))
                         (decreases (OrdSet.size ps))
+                        [SMTPat (slice_c_ps ps c)]
 let rec dom_slice_lemma ps c =
   if ps = OrdSet.empty then ()
   else
     dom_slice_lemma (OrdSet.remove (Some.v (OrdSet.choose ps)) ps) c
 
-val slice_range_lemma: ps:prins -> c:sconfig
-                       -> Lemma (requires True)
-                                (ensures (forall p. mem p ps ==>
-                                                    (is_Some (select p (slice_c_ps ps c)) /\
-                                                     Some.v (select p (slice_c_ps ps c)) = slice_c p c)))
-                          (decreases (OrdSet.size ps))
-let rec slice_range_lemma ps c =
-  if ps = OrdSet.empty then ()
-  else slice_range_lemma (OrdSet.remove (Some.v (OrdSet.choose ps)) ps) c
+type pstep: protocol -> protocol -> Type =
 
+  | P_cstep:
+    pi:protocol -> p:prin{contains p pi} -> c':tconfig
+    -> h:cstep (Some.v (select p pi)) c'
+    -> pstep pi (update p c' pi)
 
+type pstep_star: protocol -> protocol -> Type =
 
+  | PS_refl:
+    pi:protocol -> pstep_star pi pi
+    
+  | PS_tran:
+    #pi:protocol -> #pi':protocol -> #pi'':protocol
+    -> h1:pstep pi pi' -> h2:pstep_star pi' pi''
+    -> pstep_star pi pi''
 
+val pstep_upd: #pi:protocol -> #pi':protocol -> h:pstep pi pi'
+               -> p:prin{not (contains p pi)} -> c:tconfig
+               -> Tot (pstep (update p c pi) (update p c pi'))
+let pstep_upd #pi #pi' h p c =
+  let P_cstep _ p' c' h' = h in
+  P_cstep (update p c pi) p' c' h'
 
+val pstep_star_upd: #pi:protocol -> #pi':protocol -> h:pstep_star pi pi'
+                    -> p:prin{not (contains p pi)} -> c:tconfig
+                    -> Tot (pstep_star (update p c pi) (update p c pi'))
+                       (decreases h)
+let rec pstep_star_upd #pi #pi' h p c = match h with
+  | PS_refl pi                -> PS_refl (update p c pi)
+  | PS_tran #pi #pi' #pi'' h1 h2 ->
+    PS_tran (pstep_upd h1 p c) (pstep_star_upd #pi' #pi'' h2 p c)
 
-
-
-
+val forward_simulation: c:sconfig -> c':sconfig -> h:cstep c c' -> ps:prins
+                        -> Tot (cexists (fun pi' -> cand (pstep_star (slice_c_ps ps c) pi')
+                                                         (u:unit{pi' = slice_c_ps ps c'})))
+                           (decreases (OrdSet.size ps))
+let rec forward_simulation c c' h ps =
+  if ps = OrdSet.empty then
+    ExIntro empty (Conj (PS_refl empty) ())
+  else
+    let Some p = OrdSet.choose ps in
+    let ps_rest = OrdSet.remove p ps in
+    let pi_rest = slice_c_ps ps_rest c in
+    //h1 is the pstep_star of ps_rest protocol
+    let ExIntro pi_rest' (Conj h1 _) = forward_simulation c c' h ps_rest in
+    //h2 is the step or same for p
+    let h2 = cstep_lemma h p in
+    let tc_p = slice_c p c in
+    match h2 with
+      | IntroL _  -> ExIntro (update p tc_p pi_rest')
+                             (Conj (pstep_star_upd h1 p tc_p) ())
+      | IntroR hp ->
+        let tc_p' = slice_c p c' in
+        let h1' = pstep_star_upd h1 p tc_p' in
+        let h2' = P_cstep (update p tc_p pi_rest) p tc_p' hp in
+        ExIntro (update p tc_p' pi_rest') (Conj (PS_tran h2' h1') ())

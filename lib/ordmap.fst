@@ -55,11 +55,23 @@ let eq_lemma (#k:Type) (#v:Type) #f m1 m2 =
   let _ = OrdSet.eq_lemma s1 s2 in
   ()
 
+let upd_order (#k:Type) (#v:Type) #f x y x' y' m =
+  let (| s1, g1 |) = update #k #v #f x' y' (update #k #v #f x y m) in
+  let (| s2, g2 |) = update #k #v #f x y (update #k #v #f x' y' m) in
+  cut (FEq g1 g2)
+
+let upd_same_k (#k:Type) (#v:Type) #f x y y' m =
+  let (| s1, g1 |) = update #k #v #f x y m in
+  let (| s2, g2 |) = update #k #v #f x y (update #k #v #f x y' m) in
+  cut (FEq g1 g2)
+
 let sel_upd1 (#k:Type) (#v:Type) #f x y m = ()
 
 let sel_upd2 (#k:Type) (#v:Type) #f x y x' m = ()
 
 let sel_empty (#k:Type) (#v:Type) #f x = ()
+
+let sel_contains (#k:Type) (#v:Type) #f x m = ()
 
 let contains_upd1 (#k:Type) (#v:Type) #f x y x' m = ()
 

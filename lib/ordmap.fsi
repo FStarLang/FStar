@@ -36,9 +36,23 @@ type Equal (#k:Type) (#v:Type) (#f:cmp k) (m1:ordmap k v f) (m2:ordmap k v f) =
   (forall x. select #k #v #f x m1 = select #k #v #f x m2)
 
 val eq_lemma: #k:Type -> #v:Type -> #f:cmp k -> m1:ordmap k v f -> m2:ordmap k v f
-              -> Lemma (requires (Equal #k #v #f m1 m2))
+              -> Lemma (requires (forall x. select #k #v #f x m1 = select #k #v #f x m2))
                        (ensures (m1 = m2))
                  [SMTPat (m1 = m2)]
+
+val upd_order: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k -> y':v
+               -> m:ordmap k v f
+               -> Lemma (requires (x =!= x'))
+                        (ensures (update #k #v #f x y (update #k #v #f x' y' m) =
+                                  update #k #v #f x' y' (update #k #v #f x y m)))
+                  [SMTPat (update #k #v #f x y (update #k #v #f x' y' m))]
+                  
+val upd_same_k: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> y':v
+                -> m:ordmap k v f
+                -> Lemma (requires (True))
+                         (ensures (update #k #v #f x y (update #k #v #f x y' m) =
+                                   update #k #v #f x y m))
+                   [SMTPat (update #k #v #f x y (update #k #v #f x y' m))]
 
 val sel_upd1: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> m:ordmap k v f
               -> Lemma (requires True) (ensures select #k #v #f x
@@ -55,6 +69,11 @@ val sel_empty: #k:Type -> #v:Type -> #f:cmp k -> x:k
                -> Lemma (requires True)
                         (ensures (select #k #v #f x (empty #k #v #f) = None))
                   [SMTPat (select #k #v #f x (empty #k #v #f))]
+                  
+val sel_contains: #k:Type -> #v:Type -> #f:cmp k -> x:k -> m:ordmap k v f
+                  -> Lemma (requires (contains #k #v #f x m))
+                           (ensures (is_Some (select #k #v #f x m)))
+                     [SMTPat (select #k #v #f x m); SMTPat (contains #k #v #f x m)]
 
 val contains_upd1: #k:Type -> #v:Type -> #f:cmp k -> x:k -> y:v -> x':k
                    -> m:ordmap k v f
