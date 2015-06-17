@@ -814,9 +814,11 @@ let ite env (guard:formula) lcomp_then lcomp_else =
       let ifthenelse md res_t g wp_t wp_e = mk_Typ_app(md.if_then_else, [targ res_t; targ g; targ wp_t; targ wp_e]) None (Range.union_ranges wp_t.pos wp_e.pos) in
       let wp = ifthenelse md res_t guard wp_then wp_else in
       let wlp = ifthenelse md res_t guard wlp_then wlp_else in
-      let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) None wp.pos in
-      let wlp = mk_Typ_app(md.ite_wlp, [targ res_t; targ wlp]) None wlp.pos in
-      mk_comp md res_t wp wlp [] in
+      if !Options.split_cases
+      then mk_comp md res_t wp wlp [] 
+      else let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) None wp.pos in
+           let wlp = mk_Typ_app(md.ite_wlp, [targ res_t; targ wlp]) None wlp.pos in
+           mk_comp md res_t wp wlp [] in
     {eff_name=join_effects env lcomp_then.eff_name lcomp_else.eff_name;
      res_typ=lcomp_then.res_typ;
      cflags=[];
@@ -840,11 +842,13 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
             let (md, _, _), (_, wp_then, wlp_then), (_, wp_else, wlp_else) = lift_and_destruct env (cthen.comp()) celse in
             mk_comp md res_t (ifthenelse md res_t g wp_then wp_else) (ifthenelse md res_t g wlp_then wlp_else) []) lcases default_case in
         let comp = comp_to_comp_typ comp in
-        let md = Tc.Env.get_effect_decl env comp.effect_name in
-        let _, wp, wlp = destruct_comp comp in
-        let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) None wp.pos in
-        let wlp = mk_Typ_app(md.ite_wlp, [targ res_t; targ wlp]) None wlp.pos in
-        mk_comp md res_t wp wlp [] in
+        if !Options.split_cases
+        then mk_Comp comp
+        else let md = Tc.Env.get_effect_decl env comp.effect_name in
+             let _, wp, wlp = destruct_comp comp in
+             let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) None wp.pos in
+             let wlp = mk_Typ_app(md.ite_wlp, [targ res_t; targ wlp]) None wlp.pos in
+             mk_comp md res_t wp wlp [] in
     {eff_name=eff;
      res_typ=res_t;
      cflags=[];

@@ -28,25 +28,25 @@ let qualify = (fun env id -> (qual (current_module env) id))
 let qualify_lid = (fun env lid -> (let cur = (current_module env)
 in (Microsoft_FStar_Absyn_Util.set_lid_range (Microsoft_FStar_Absyn_Syntax.lid_of_ids (Support.List.append (Support.List.append (Support.List.append cur.Microsoft_FStar_Absyn_Syntax.ns ((cur.Microsoft_FStar_Absyn_Syntax.ident)::[])) lid.Microsoft_FStar_Absyn_Syntax.ns) ((lid.Microsoft_FStar_Absyn_Syntax.ident)::[]))) (Microsoft_FStar_Absyn_Syntax.range_of_lid lid))))
 
-let new_sigmap = (fun _353270 -> (match (_353270) with
+let new_sigmap = (fun _353339 -> (match (_353339) with
 | () -> begin
 (Support.Microsoft.FStar.Util.smap_create 100)
 end))
 
-let empty_env = (fun _353271 -> (match (_353271) with
+let empty_env = (fun _353340 -> (match (_353340) with
 | () -> begin
 {curmodule = None; modules = []; open_namespaces = []; sigaccum = []; localbindings = []; recbindings = []; phase = Microsoft_FStar_Parser_AST.Un; sigmap = ((new_sigmap ()))::[]; default_result_effect = Microsoft_FStar_Absyn_Util.ml_comp; iface = false; admitted_iface = false}
 end))
 
 let sigmap = (fun env -> (Support.List.hd env.sigmap))
 
-let default_total = (fun env -> (let _353274 = env
-in {curmodule = _353274.curmodule; modules = _353274.modules; open_namespaces = _353274.open_namespaces; sigaccum = _353274.sigaccum; localbindings = _353274.localbindings; recbindings = _353274.recbindings; phase = _353274.phase; sigmap = _353274.sigmap; default_result_effect = (fun t _353277 -> (Microsoft_FStar_Absyn_Syntax.mk_Total t)); iface = _353274.iface; admitted_iface = _353274.admitted_iface}))
+let default_total = (fun env -> (let _353343 = env
+in {curmodule = _353343.curmodule; modules = _353343.modules; open_namespaces = _353343.open_namespaces; sigaccum = _353343.sigaccum; localbindings = _353343.localbindings; recbindings = _353343.recbindings; phase = _353343.phase; sigmap = _353343.sigmap; default_result_effect = (fun t _353346 -> (Microsoft_FStar_Absyn_Syntax.mk_Total t)); iface = _353343.iface; admitted_iface = _353343.admitted_iface}))
 
-let default_ml = (fun env -> (let _353280 = env
-in {curmodule = _353280.curmodule; modules = _353280.modules; open_namespaces = _353280.open_namespaces; sigaccum = _353280.sigaccum; localbindings = _353280.localbindings; recbindings = _353280.recbindings; phase = _353280.phase; sigmap = _353280.sigmap; default_result_effect = Microsoft_FStar_Absyn_Util.ml_comp; iface = _353280.iface; admitted_iface = _353280.admitted_iface}))
+let default_ml = (fun env -> (let _353349 = env
+in {curmodule = _353349.curmodule; modules = _353349.modules; open_namespaces = _353349.open_namespaces; sigaccum = _353349.sigaccum; localbindings = _353349.localbindings; recbindings = _353349.recbindings; phase = _353349.phase; sigmap = _353349.sigmap; default_result_effect = Microsoft_FStar_Absyn_Util.ml_comp; iface = _353349.iface; admitted_iface = _353349.admitted_iface}))
 
-let range_of_binding = (fun _353227 -> (match (_353227) with
+let range_of_binding = (fun _353296 -> (match (_353296) with
 | (Binding_typ_var (id)) | (Binding_var (id)) -> begin
 id.Microsoft_FStar_Absyn_Syntax.idRange
 end
@@ -54,7 +54,7 @@ end
 (Microsoft_FStar_Absyn_Syntax.range_of_lid lid)
 end))
 
-let try_lookup_typ_var = (fun env id -> (let fopt = (Support.List.tryFind (fun _353294 -> (match (_353294) with
+let try_lookup_typ_var = (fun env id -> (let fopt = (Support.List.tryFind (fun _353363 -> (match (_353363) with
 | (_, b) -> begin
 (match (b) with
 | (Binding_typ_var (id')) | (Binding_var (id')) -> begin
@@ -85,7 +85,7 @@ in (aux (((current_module env))::env.open_namespaces))))
 
 let unmangleMap = (("op_ColonColon", "Cons"))::(("not", "op_Negation"))::[]
 
-let unmangleOpName = (fun id -> (Support.Microsoft.FStar.Util.find_map unmangleMap (fun _353326 -> (match (_353326) with
+let unmangleOpName = (fun id -> (Support.Microsoft.FStar.Util.find_map unmangleMap (fun _353395 -> (match (_353395) with
 | (x, y) -> begin
 if (id.Microsoft_FStar_Absyn_Syntax.idText = x) then begin
 Some ((Microsoft_FStar_Absyn_Syntax.lid_of_path (("Prims")::(y)::[]) id.Microsoft_FStar_Absyn_Syntax.idRange))
@@ -99,7 +99,7 @@ let try_lookup_id' = (fun env id -> (match ((unmangleOpName id)) with
 Some ((l, (Microsoft_FStar_Absyn_Syntax.mk_Exp_fvar ((Microsoft_FStar_Absyn_Util.fv l), false) None id.Microsoft_FStar_Absyn_Syntax.idRange)))
 end
 | _ -> begin
-(let found = (Support.Microsoft.FStar.Util.find_map env.localbindings (fun _353228 -> (match (_353228) with
+(let found = (Support.Microsoft.FStar.Util.find_map env.localbindings (fun _353297 -> (match (_353297) with
 | (Support.Microsoft.FStar.Util.Inl (_), Binding_typ_var (id')) when (id'.Microsoft_FStar_Absyn_Syntax.idText = id.Microsoft_FStar_Absyn_Syntax.idText) -> begin
 Some (Support.Microsoft.FStar.Util.Inl (()))
 end
@@ -131,7 +131,7 @@ type occurrence =
 | OLet of Microsoft_FStar_Absyn_Syntax.lident
 | ORec of Microsoft_FStar_Absyn_Syntax.lident
 
-let range_of_occurrence = (fun _353229 -> (match (_353229) with
+let range_of_occurrence = (fun _353298 -> (match (_353298) with
 | (OLet (l)) | (ORec (l)) -> begin
 (Microsoft_FStar_Absyn_Syntax.range_of_lid l)
 end
@@ -173,7 +173,7 @@ end
 Some (Exp_name ((OSig (se), (Microsoft_FStar_Absyn_Util.fvar false lid (Microsoft_FStar_Absyn_Syntax.range_of_lid lid)))))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_val_decl ((_, _, quals, _)) -> begin
-if (any_val || ((Support.Microsoft.FStar.Util.for_some (fun _353230 -> (match (_353230) with
+if (any_val || ((Support.Microsoft.FStar.Util.for_some (fun _353299 -> (match (_353299) with
 | Microsoft_FStar_Absyn_Syntax.Assumption -> begin
 true
 end
@@ -197,7 +197,7 @@ Some (Exp_name ((OLet (lid), e)))
 end
 | None -> begin
 (let recname = (qualify env lid.Microsoft_FStar_Absyn_Syntax.ident)
-in (Support.Microsoft.FStar.Util.find_map env.recbindings (fun _353231 -> (match (_353231) with
+in (Support.Microsoft.FStar.Util.find_map env.recbindings (fun _353300 -> (match (_353300) with
 | Binding_let (l) when (Microsoft_FStar_Absyn_Syntax.lid_equals l recname) -> begin
 Some (Exp_name ((ORec (l), (Microsoft_FStar_Absyn_Util.fvar false recname (Microsoft_FStar_Absyn_Syntax.range_of_lid recname)))))
 end
@@ -290,7 +290,7 @@ end
 []
 end)))
 
-let try_lookup_module = (fun env path -> (match ((Support.List.tryFind (fun _353562 -> (match (_353562) with
+let try_lookup_module = (fun env path -> (match ((Support.List.tryFind (fun _353631 -> (match (_353631) with
 | (mlid, modul) -> begin
 ((Microsoft_FStar_Absyn_Syntax.path_of_lid mlid) = path)
 end)) env.modules)) with
@@ -322,7 +322,7 @@ let try_lookup_lid = (fun env l -> (try_lookup_lid' env.iface false env l))
 
 let try_lookup_datacon = (fun env lid -> (let find_in_sig = (fun lid -> (match ((Support.Microsoft.FStar.Util.smap_try_find (sigmap env) lid.Microsoft_FStar_Absyn_Syntax.str)) with
 | Some ((Microsoft_FStar_Absyn_Syntax.Sig_val_decl ((_, _, quals, _)), _)) -> begin
-if ((Support.Microsoft.FStar.Util.for_some (fun _353232 -> (match (_353232) with
+if ((Support.Microsoft.FStar.Util.for_some (fun _353301 -> (match (_353301) with
 | Microsoft_FStar_Absyn_Syntax.Assumption -> begin
 true
 end
@@ -356,23 +356,23 @@ type record =
 
 let record_cache = (Support.Microsoft.FStar.Util.mk_ref [])
 
-let extract_record = (fun e _353236 -> (match (_353236) with
+let extract_record = (fun e _353305 -> (match (_353305) with
 | Microsoft_FStar_Absyn_Syntax.Sig_bundle ((sigs, _, _, _)) -> begin
-(let is_rec = (Support.Microsoft.FStar.Util.for_some (fun _353233 -> (match (_353233) with
+(let is_rec = (Support.Microsoft.FStar.Util.for_some (fun _353302 -> (match (_353302) with
 | (Microsoft_FStar_Absyn_Syntax.RecordType (_)) | (Microsoft_FStar_Absyn_Syntax.RecordConstructor (_)) -> begin
 true
 end
 | _ -> begin
 false
 end)))
-in (let find_dc = (fun dc -> ((Support.Microsoft.FStar.Util.find_opt (fun _353234 -> (match (_353234) with
+in (let find_dc = (fun dc -> ((Support.Microsoft.FStar.Util.find_opt (fun _353303 -> (match (_353303) with
 | Microsoft_FStar_Absyn_Syntax.Sig_datacon ((lid, _, _, _, _, _)) -> begin
 (Microsoft_FStar_Absyn_Syntax.lid_equals dc lid)
 end
 | _ -> begin
 false
 end))) sigs))
-in ((Support.List.iter (fun _353235 -> (match (_353235) with
+in ((Support.List.iter (fun _353304 -> (match (_353304) with
 | Microsoft_FStar_Absyn_Syntax.Sig_tycon ((typename, parms, _, _, dc::[], tags, _)) -> begin
 if (is_rec tags) then begin
 (match (((Support.Microsoft.FStar.Util.must) (find_dc dc))) with
@@ -426,13 +426,13 @@ end
 (hd)::(aux tl)
 end))
 in (aux ns)))
-in (let find_in_cache = (fun fieldname -> (let _353761 = (fieldname.Microsoft_FStar_Absyn_Syntax.ns, fieldname.Microsoft_FStar_Absyn_Syntax.ident)
-in (match (_353761) with
+in (let find_in_cache = (fun fieldname -> (let _353830 = (fieldname.Microsoft_FStar_Absyn_Syntax.ns, fieldname.Microsoft_FStar_Absyn_Syntax.ident)
+in (match (_353830) with
 | (ns, fieldname) -> begin
 (Support.Microsoft.FStar.Util.find_map (! (record_cache)) (fun record -> (let constrname = record.constrname.Microsoft_FStar_Absyn_Syntax.ident
 in (let ns = (maybe_add_constrname ns constrname)
 in (let fname = (Microsoft_FStar_Absyn_Syntax.lid_of_ids (Support.List.append ns ((fieldname)::[])))
-in (Support.Microsoft.FStar.Util.find_map record.fields (fun _353769 -> (match (_353769) with
+in (Support.Microsoft.FStar.Util.find_map record.fields (fun _353838 -> (match (_353838) with
 | (f, _) -> begin
 if (Microsoft_FStar_Absyn_Syntax.lid_equals fname f) then begin
 Some ((record, fname))
@@ -443,12 +443,12 @@ end))))))))
 end)))
 in (resolve_in_open_namespaces env fieldname find_in_cache))))
 
-let qualify_field_to_record = (fun env recd f -> (let qualify = (fun fieldname -> (let _353777 = (fieldname.Microsoft_FStar_Absyn_Syntax.ns, fieldname.Microsoft_FStar_Absyn_Syntax.ident)
-in (match (_353777) with
+let qualify_field_to_record = (fun env recd f -> (let qualify = (fun fieldname -> (let _353846 = (fieldname.Microsoft_FStar_Absyn_Syntax.ns, fieldname.Microsoft_FStar_Absyn_Syntax.ident)
+in (match (_353846) with
 | (ns, fieldname) -> begin
 (let constrname = recd.constrname.Microsoft_FStar_Absyn_Syntax.ident
 in (let fname = (Microsoft_FStar_Absyn_Syntax.lid_of_ids (Support.List.append (Support.List.append ns ((constrname)::[])) ((fieldname)::[])))
-in (Support.Microsoft.FStar.Util.find_map recd.fields (fun _353783 -> (match (_353783) with
+in (Support.Microsoft.FStar.Util.find_map recd.fields (fun _353852 -> (match (_353852) with
 | (f, _) -> begin
 if (Microsoft_FStar_Absyn_Syntax.lid_equals fname f) then begin
 Some (fname)
@@ -497,11 +497,11 @@ end
 false
 end))
 
-let unique = (fun any_val exclude_if env lid -> (let this_env = (let _353821 = env
-in {curmodule = _353821.curmodule; modules = _353821.modules; open_namespaces = []; sigaccum = _353821.sigaccum; localbindings = _353821.localbindings; recbindings = _353821.recbindings; phase = _353821.phase; sigmap = _353821.sigmap; default_result_effect = _353821.default_result_effect; iface = _353821.iface; admitted_iface = _353821.admitted_iface})
+let unique = (fun any_val exclude_if env lid -> (let this_env = (let _353890 = env
+in {curmodule = _353890.curmodule; modules = _353890.modules; open_namespaces = []; sigaccum = _353890.sigaccum; localbindings = _353890.localbindings; recbindings = _353890.recbindings; phase = _353890.phase; sigmap = _353890.sigmap; default_result_effect = _353890.default_result_effect; iface = _353890.iface; admitted_iface = _353890.admitted_iface})
 in ((unique_name any_val exclude_if this_env lid) && (unique_typ_name this_env lid))))
 
-let gen_bvd = (fun _353237 -> (match (_353237) with
+let gen_bvd = (fun _353306 -> (match (_353306) with
 | Binding_typ_var (id) -> begin
 Support.Microsoft.FStar.Util.Inl ((Microsoft_FStar_Absyn_Util.mkbvd (id, (Microsoft_FStar_Absyn_Util.genident (Some (id.Microsoft_FStar_Absyn_Syntax.idRange))))))
 end
@@ -513,16 +513,16 @@ end
 end))
 
 let push_bvvdef = (fun env x -> (let b = Binding_var (x.Microsoft_FStar_Absyn_Syntax.ppname)
-in (let _353834 = env
-in {curmodule = _353834.curmodule; modules = _353834.modules; open_namespaces = _353834.open_namespaces; sigaccum = _353834.sigaccum; localbindings = ((Support.Microsoft.FStar.Util.Inr (x), b))::env.localbindings; recbindings = _353834.recbindings; phase = _353834.phase; sigmap = _353834.sigmap; default_result_effect = _353834.default_result_effect; iface = _353834.iface; admitted_iface = _353834.admitted_iface})))
+in (let _353903 = env
+in {curmodule = _353903.curmodule; modules = _353903.modules; open_namespaces = _353903.open_namespaces; sigaccum = _353903.sigaccum; localbindings = ((Support.Microsoft.FStar.Util.Inr (x), b))::env.localbindings; recbindings = _353903.recbindings; phase = _353903.phase; sigmap = _353903.sigmap; default_result_effect = _353903.default_result_effect; iface = _353903.iface; admitted_iface = _353903.admitted_iface})))
 
 let push_btvdef = (fun env x -> (let b = Binding_typ_var (x.Microsoft_FStar_Absyn_Syntax.ppname)
-in (let _353839 = env
-in {curmodule = _353839.curmodule; modules = _353839.modules; open_namespaces = _353839.open_namespaces; sigaccum = _353839.sigaccum; localbindings = ((Support.Microsoft.FStar.Util.Inl (x), b))::env.localbindings; recbindings = _353839.recbindings; phase = _353839.phase; sigmap = _353839.sigmap; default_result_effect = _353839.default_result_effect; iface = _353839.iface; admitted_iface = _353839.admitted_iface})))
+in (let _353908 = env
+in {curmodule = _353908.curmodule; modules = _353908.modules; open_namespaces = _353908.open_namespaces; sigaccum = _353908.sigaccum; localbindings = ((Support.Microsoft.FStar.Util.Inl (x), b))::env.localbindings; recbindings = _353908.recbindings; phase = _353908.phase; sigmap = _353908.sigmap; default_result_effect = _353908.default_result_effect; iface = _353908.iface; admitted_iface = _353908.admitted_iface})))
 
 let push_local_binding = (fun env b -> (let bvd = (gen_bvd b)
-in ((let _353844 = env
-in {curmodule = _353844.curmodule; modules = _353844.modules; open_namespaces = _353844.open_namespaces; sigaccum = _353844.sigaccum; localbindings = ((bvd, b))::env.localbindings; recbindings = _353844.recbindings; phase = _353844.phase; sigmap = _353844.sigmap; default_result_effect = _353844.default_result_effect; iface = _353844.iface; admitted_iface = _353844.admitted_iface}), bvd)))
+in ((let _353913 = env
+in {curmodule = _353913.curmodule; modules = _353913.modules; open_namespaces = _353913.open_namespaces; sigaccum = _353913.sigaccum; localbindings = ((bvd, b))::env.localbindings; recbindings = _353913.recbindings; phase = _353913.phase; sigmap = _353913.sigmap; default_result_effect = _353913.default_result_effect; iface = _353913.iface; admitted_iface = _353913.admitted_iface}), bvd)))
 
 let push_local_tbinding = (fun env a -> (match ((push_local_binding env (Binding_typ_var (a)))) with
 | (env, Support.Microsoft.FStar.Util.Inl (x)) -> begin
@@ -543,8 +543,8 @@ end))
 let push_rec_binding = (fun env b -> (match (b) with
 | (Binding_let (lid)) | (Binding_tycon (lid)) -> begin
 if (unique false true env lid) then begin
-(let _353867 = env
-in {curmodule = _353867.curmodule; modules = _353867.modules; open_namespaces = _353867.open_namespaces; sigaccum = _353867.sigaccum; localbindings = _353867.localbindings; recbindings = (b)::env.recbindings; phase = _353867.phase; sigmap = _353867.sigmap; default_result_effect = _353867.default_result_effect; iface = _353867.iface; admitted_iface = _353867.admitted_iface})
+(let _353936 = env
+in {curmodule = _353936.curmodule; modules = _353936.modules; open_namespaces = _353936.open_namespaces; sigaccum = _353936.sigaccum; localbindings = _353936.localbindings; recbindings = (b)::env.recbindings; phase = _353936.phase; sigmap = _353936.sigmap; default_result_effect = _353936.default_result_effect; iface = _353936.iface; admitted_iface = _353936.admitted_iface})
 end else begin
 (raise (Microsoft_FStar_Absyn_Syntax.Error (((Support.String.strcat "Duplicate top-level names " lid.Microsoft_FStar_Absyn_Syntax.str), (Microsoft_FStar_Absyn_Syntax.range_of_lid lid)))))
 end
@@ -568,7 +568,7 @@ end
 "<unknown>"
 end)
 in (raise (Microsoft_FStar_Absyn_Syntax.Error (((Support.Microsoft.FStar.Util.format2 "Duplicate top-level names [%s]; previously declared at %s" (Microsoft_FStar_Absyn_Syntax.text_of_lid l) r), (Microsoft_FStar_Absyn_Syntax.range_of_lid l))))))))
-in (let env = (let _353896 = (match (s) with
+in (let env = (let _353965 = (match (s) with
 | Microsoft_FStar_Absyn_Syntax.Sig_let (_) -> begin
 (false, true)
 end
@@ -578,7 +578,7 @@ end
 | _ -> begin
 (false, false)
 end)
-in (match (_353896) with
+in (match (_353965) with
 | (any_val, exclude_if) -> begin
 (let lids = (Microsoft_FStar_Absyn_Util.lids_of_sigelt s)
 in (match ((Support.Microsoft.FStar.Util.find_map lids (fun l -> if (not ((unique any_val exclude_if env l))) then begin
@@ -587,34 +587,34 @@ end else begin
 None
 end))) with
 | None -> begin
-(let _353900 = (extract_record env s)
-in (let _353902 = env
-in {curmodule = _353902.curmodule; modules = _353902.modules; open_namespaces = _353902.open_namespaces; sigaccum = (s)::env.sigaccum; localbindings = _353902.localbindings; recbindings = _353902.recbindings; phase = _353902.phase; sigmap = _353902.sigmap; default_result_effect = _353902.default_result_effect; iface = _353902.iface; admitted_iface = _353902.admitted_iface}))
+(let _353969 = (extract_record env s)
+in (let _353971 = env
+in {curmodule = _353971.curmodule; modules = _353971.modules; open_namespaces = _353971.open_namespaces; sigaccum = (s)::env.sigaccum; localbindings = _353971.localbindings; recbindings = _353971.recbindings; phase = _353971.phase; sigmap = _353971.sigmap; default_result_effect = _353971.default_result_effect; iface = _353971.iface; admitted_iface = _353971.admitted_iface}))
 end
 | Some (l) -> begin
 (err l)
 end))
 end))
-in (let _353921 = (match (s) with
+in (let _353990 = (match (s) with
 | Microsoft_FStar_Absyn_Syntax.Sig_bundle ((ses, _, _, _)) -> begin
 (env, (Support.List.map (fun se -> ((Microsoft_FStar_Absyn_Util.lids_of_sigelt se), se)) ses))
 end
 | _ -> begin
 (env, (((Microsoft_FStar_Absyn_Util.lids_of_sigelt s), s))::[])
 end)
-in (match (_353921) with
+in (match (_353990) with
 | (env, lss) -> begin
-(let _353926 = ((Support.List.iter (fun _353924 -> (match (_353924) with
+(let _353995 = ((Support.List.iter (fun _353993 -> (match (_353993) with
 | (lids, se) -> begin
 ((Support.List.iter (fun lid -> (Support.Microsoft.FStar.Util.smap_add (sigmap env) lid.Microsoft_FStar_Absyn_Syntax.str (se, (env.iface && (not (env.admitted_iface))))))) lids)
 end))) lss)
 in env)
 end)))))
 
-let push_namespace = (fun env lid -> (let _353930 = env
-in {curmodule = _353930.curmodule; modules = _353930.modules; open_namespaces = (lid)::env.open_namespaces; sigaccum = _353930.sigaccum; localbindings = _353930.localbindings; recbindings = _353930.recbindings; phase = _353930.phase; sigmap = _353930.sigmap; default_result_effect = _353930.default_result_effect; iface = _353930.iface; admitted_iface = _353930.admitted_iface}))
+let push_namespace = (fun env lid -> (let _353999 = env
+in {curmodule = _353999.curmodule; modules = _353999.modules; open_namespaces = (lid)::env.open_namespaces; sigaccum = _353999.sigaccum; localbindings = _353999.localbindings; recbindings = _353999.recbindings; phase = _353999.phase; sigmap = _353999.sigmap; default_result_effect = _353999.default_result_effect; iface = _353999.iface; admitted_iface = _353999.admitted_iface}))
 
-let is_type_lid = (fun env lid -> (let aux = (fun _353935 -> (match (_353935) with
+let is_type_lid = (fun env lid -> (let aux = (fun _354004 -> (match (_354004) with
 | () -> begin
 (match ((try_lookup_typ_name' false env lid)) with
 | Some (_) -> begin
@@ -641,7 +641,7 @@ in ((Support.List.iter (fun se -> (match (se) with
 | Microsoft_FStar_Absyn_Syntax.Sig_val_decl ((l, t, quals, r)) -> begin
 (match ((try_lookup_lid env l)) with
 | None -> begin
-(let _353958 = if warn then begin
+(let _354027 = if warn then begin
 (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "%s: Warning: Admitting %s without a definition\n" (Support.Microsoft.FStar.Range.string_of_range (Microsoft_FStar_Absyn_Syntax.range_of_lid l)) (Microsoft_FStar_Absyn_Print.sli l)))
 end
 in (Support.Microsoft.FStar.Util.smap_add (sigmap env) l.Microsoft_FStar_Absyn_Syntax.str (Microsoft_FStar_Absyn_Syntax.Sig_val_decl ((l, t, (Microsoft_FStar_Absyn_Syntax.Assumption)::quals, r)), false)))
@@ -654,21 +654,21 @@ end
 ()
 end))) env.sigaccum)))
 
-let finish = (fun env modul -> (let _353967 = env
-in {curmodule = None; modules = ((modul.Microsoft_FStar_Absyn_Syntax.name, modul))::env.modules; open_namespaces = []; sigaccum = []; localbindings = []; recbindings = []; phase = Microsoft_FStar_Parser_AST.Un; sigmap = _353967.sigmap; default_result_effect = _353967.default_result_effect; iface = _353967.iface; admitted_iface = _353967.admitted_iface}))
+let finish = (fun env modul -> (let _354036 = env
+in {curmodule = None; modules = ((modul.Microsoft_FStar_Absyn_Syntax.name, modul))::env.modules; open_namespaces = []; sigaccum = []; localbindings = []; recbindings = []; phase = Microsoft_FStar_Parser_AST.Un; sigmap = _354036.sigmap; default_result_effect = _354036.default_result_effect; iface = _354036.iface; admitted_iface = _354036.admitted_iface}))
 
-let push = (fun env -> (let _353970 = env
-in {curmodule = _353970.curmodule; modules = _353970.modules; open_namespaces = _353970.open_namespaces; sigaccum = _353970.sigaccum; localbindings = _353970.localbindings; recbindings = _353970.recbindings; phase = _353970.phase; sigmap = ((Support.Microsoft.FStar.Util.smap_copy (sigmap env)))::env.sigmap; default_result_effect = _353970.default_result_effect; iface = _353970.iface; admitted_iface = _353970.admitted_iface}))
+let push = (fun env -> (let _354039 = env
+in {curmodule = _354039.curmodule; modules = _354039.modules; open_namespaces = _354039.open_namespaces; sigaccum = _354039.sigaccum; localbindings = _354039.localbindings; recbindings = _354039.recbindings; phase = _354039.phase; sigmap = ((Support.Microsoft.FStar.Util.smap_copy (sigmap env)))::env.sigmap; default_result_effect = _354039.default_result_effect; iface = _354039.iface; admitted_iface = _354039.admitted_iface}))
 
 let mark = (fun env -> (push env))
 
-let reset_mark = (fun env -> (let _353974 = env
-in {curmodule = _353974.curmodule; modules = _353974.modules; open_namespaces = _353974.open_namespaces; sigaccum = _353974.sigaccum; localbindings = _353974.localbindings; recbindings = _353974.recbindings; phase = _353974.phase; sigmap = (Support.List.tl env.sigmap); default_result_effect = _353974.default_result_effect; iface = _353974.iface; admitted_iface = _353974.admitted_iface}))
+let reset_mark = (fun env -> (let _354043 = env
+in {curmodule = _354043.curmodule; modules = _354043.modules; open_namespaces = _354043.open_namespaces; sigaccum = _354043.sigaccum; localbindings = _354043.localbindings; recbindings = _354043.recbindings; phase = _354043.phase; sigmap = (Support.List.tl env.sigmap); default_result_effect = _354043.default_result_effect; iface = _354043.iface; admitted_iface = _354043.admitted_iface}))
 
 let commit_mark = (fun env -> (match (env.sigmap) with
 | hd::_::tl -> begin
-(let _353983 = env
-in {curmodule = _353983.curmodule; modules = _353983.modules; open_namespaces = _353983.open_namespaces; sigaccum = _353983.sigaccum; localbindings = _353983.localbindings; recbindings = _353983.recbindings; phase = _353983.phase; sigmap = (hd)::tl; default_result_effect = _353983.default_result_effect; iface = _353983.iface; admitted_iface = _353983.admitted_iface})
+(let _354052 = env
+in {curmodule = _354052.curmodule; modules = _354052.modules; open_namespaces = _354052.open_namespaces; sigaccum = _354052.sigaccum; localbindings = _354052.localbindings; recbindings = _354052.recbindings; phase = _354052.phase; sigmap = (hd)::tl; default_result_effect = _354052.default_result_effect; iface = _354052.iface; admitted_iface = _354052.admitted_iface})
 end
 | _ -> begin
 (failwith "Impossible")
@@ -676,14 +676,14 @@ end))
 
 let pop = (fun env -> (match (env.sigmap) with
 | _::maps -> begin
-(let _353992 = env
-in {curmodule = _353992.curmodule; modules = _353992.modules; open_namespaces = _353992.open_namespaces; sigaccum = _353992.sigaccum; localbindings = _353992.localbindings; recbindings = _353992.recbindings; phase = _353992.phase; sigmap = maps; default_result_effect = _353992.default_result_effect; iface = _353992.iface; admitted_iface = _353992.admitted_iface})
+(let _354061 = env
+in {curmodule = _354061.curmodule; modules = _354061.modules; open_namespaces = _354061.open_namespaces; sigaccum = _354061.sigaccum; localbindings = _354061.localbindings; recbindings = _354061.recbindings; phase = _354061.phase; sigmap = maps; default_result_effect = _354061.default_result_effect; iface = _354061.iface; admitted_iface = _354061.admitted_iface})
 end
 | _ -> begin
 (failwith "No more modules to pop")
 end))
 
-let finish_module_or_interface = (fun env modul -> (let _353998 = if (not (modul.Microsoft_FStar_Absyn_Syntax.is_interface)) then begin
+let finish_module_or_interface = (fun env modul -> (let _354067 = if (not (modul.Microsoft_FStar_Absyn_Syntax.is_interface)) then begin
 (check_admits modul.Microsoft_FStar_Absyn_Syntax.name env)
 end
 in (finish env modul)))
@@ -693,9 +693,9 @@ let prepare_module_or_interface = (fun intf admitted env mname -> (let prep = (f
 end else begin
 (Microsoft_FStar_Absyn_Const.prims_lid)::[]
 end
-in (let _354007 = env
-in {curmodule = Some (mname); modules = _354007.modules; open_namespaces = open_ns; sigaccum = _354007.sigaccum; localbindings = _354007.localbindings; recbindings = _354007.recbindings; phase = _354007.phase; sigmap = env.sigmap; default_result_effect = _354007.default_result_effect; iface = intf; admitted_iface = admitted})))
-in (match (((Support.Microsoft.FStar.Util.find_opt (fun _354012 -> (match (_354012) with
+in (let _354076 = env
+in {curmodule = Some (mname); modules = _354076.modules; open_namespaces = open_ns; sigaccum = _354076.sigaccum; localbindings = _354076.localbindings; recbindings = _354076.recbindings; phase = _354076.phase; sigmap = env.sigmap; default_result_effect = _354076.default_result_effect; iface = intf; admitted_iface = admitted})))
+in (match (((Support.Microsoft.FStar.Util.find_opt (fun _354081 -> (match (_354081) with
 | (l, _) -> begin
 (Microsoft_FStar_Absyn_Syntax.lid_equals l mname)
 end))) env.modules)) with
@@ -703,7 +703,7 @@ end))) env.modules)) with
 (prep env)
 end
 | Some ((_, m)) -> begin
-(let _354019 = if intf then begin
+(let _354088 = if intf then begin
 (raise (Microsoft_FStar_Absyn_Syntax.Error (((Support.Microsoft.FStar.Util.format1 "Duplicate module or interface name: %s" mname.Microsoft_FStar_Absyn_Syntax.str), (Microsoft_FStar_Absyn_Syntax.range_of_lid mname)))))
 end
 in (prep env))
@@ -711,11 +711,11 @@ end)))
 
 let enter_monad_scope = (fun env mname -> (let curmod = (current_module env)
 in (let mscope = (Microsoft_FStar_Absyn_Syntax.lid_of_ids (Support.List.append curmod.Microsoft_FStar_Absyn_Syntax.ns ((curmod.Microsoft_FStar_Absyn_Syntax.ident)::(mname)::[])))
-in (let _354025 = env
-in {curmodule = Some (mscope); modules = _354025.modules; open_namespaces = (curmod)::env.open_namespaces; sigaccum = _354025.sigaccum; localbindings = _354025.localbindings; recbindings = _354025.recbindings; phase = _354025.phase; sigmap = _354025.sigmap; default_result_effect = _354025.default_result_effect; iface = _354025.iface; admitted_iface = _354025.admitted_iface}))))
+in (let _354094 = env
+in {curmodule = Some (mscope); modules = _354094.modules; open_namespaces = (curmod)::env.open_namespaces; sigaccum = _354094.sigaccum; localbindings = _354094.localbindings; recbindings = _354094.recbindings; phase = _354094.phase; sigmap = _354094.sigmap; default_result_effect = _354094.default_result_effect; iface = _354094.iface; admitted_iface = _354094.admitted_iface}))))
 
-let exit_monad_scope = (fun env0 env -> (let _354029 = env
-in {curmodule = env0.curmodule; modules = _354029.modules; open_namespaces = env0.open_namespaces; sigaccum = _354029.sigaccum; localbindings = _354029.localbindings; recbindings = _354029.recbindings; phase = _354029.phase; sigmap = _354029.sigmap; default_result_effect = _354029.default_result_effect; iface = _354029.iface; admitted_iface = _354029.admitted_iface}))
+let exit_monad_scope = (fun env0 env -> (let _354098 = env
+in {curmodule = env0.curmodule; modules = _354098.modules; open_namespaces = env0.open_namespaces; sigaccum = _354098.sigaccum; localbindings = _354098.localbindings; recbindings = _354098.recbindings; phase = _354098.phase; sigmap = _354098.sigmap; default_result_effect = _354098.default_result_effect; iface = _354098.iface; admitted_iface = _354098.admitted_iface}))
 
 let fail_or = (fun env lookup lid -> (match ((lookup lid)) with
 | None -> begin
