@@ -324,3 +324,66 @@ let sieve n u =
   let res = salloc f in
   (outerLoop n lo res);
   memread res
+
+
+val sieveUnfolded : n:nat{n>1} -> unit
+  -> WNSC ((k:nat{k<n}) -> Tot bool)
+        (requires (fun m -> True))
+        (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
+let sieveUnfolded n u =
+  let lo = salloc 2 in
+  let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
+  let res = salloc f in
+  scopedWhile
+    (outerLoopInv n lo res)
+    (outerGuardLC n lo)
+    (fun u -> (memread lo < n))
+    (fun u ->
+        let initres = memread res in
+        let lov = memread lo in
+        let li = salloc 0 in
+        let liv = memread li in
+        innerLoop n lo lov li res initres;
+        let newres = memread res in
+        memwrite lo (lov+1);
+    (*the part below has no computational content*)
+      (markedIffHasDivisorSmallerThanInc n lov initres newres));
+  memread res
+
+
+val sieveUnfolded2 : n:nat{n>1} -> unit
+  -> WNSC ((k:nat{k<n}) -> Tot bool)
+        (requires (fun m -> True))
+        (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
+let sieveUnfolded2 n u =
+  let lo = salloc 2 in
+  let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
+  let res = salloc f in
+  scopedWhile
+    (outerLoopInv n lo res)
+    (outerGuardLC n lo)
+    (fun u -> (memread lo < n))
+    (fun u ->
+        let initres = memread res in
+        let lov = memread lo in
+        let li = salloc 0 in
+        let liv = memread li in
+        (scopedWhile
+          (innerLoopInv n lo lov li res initres)
+          (innerGuardLC n lo li)
+          (fun u -> (memread li * memread lo < n))
+          (fun u ->
+            let liv = memread li in
+            let lov = memread lo in
+            let resv = memread res in
+            memwrite li (liv+1);
+            memwrite res (mark n resv (lov * liv))));
+
+          (*the part below has no computaional content; why does SMTPatT not work?*)
+        let newv = memread res in
+        (multiplesMarkedAsDividesIff n initres newv lov);
+        let newres = memread res in
+        memwrite lo (lov+1);
+    (*the part below has no computational content*)
+      (markedIffHasDivisorSmallerThanInc n lov initres newres));
+  memread res

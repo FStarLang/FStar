@@ -18,28 +18,6 @@ open ListSet
 type sidt = nat
 
 
-(*copied fro examples/maths/bijection.fst, because that file doesn't compile*)
-type inverseLR (#a:Type) (#b:Type) (fab:(a -> Tot b)) (fba:(b -> Tot a)) =
-       (forall (x:a). fba (fab x) = x) /\ (forall (y:b). fab (fba y) = y)
-
-(*It should be possible to implement it using the existing assumptions in Heap,
-    perhaps using Heap.restrict?
-val freeRefInBlock : #a:Type -> r:(ref a) -> h:heap (*{Heap.contains h r} *) -> Tot heap
-let freeRefInBlock r h = restrict h *)
-
-(*it seems that F* does not have dependent records
-type memRep (a:Type) = {sz:nat;  rep:a->Tot (l:list nat{length l=sz})}
-*)
-type word=int
-(*it seems that F* does not have paremetrized inductive types.
-    It has indexed inductive types, which is too powerful for defining the concept below;
-    the definitions of members of the type family below do not depend on each other
-    *)
-type memRep : Type -> Type =
-  | MkRep : #a:Type -> sz:nat
-        -> rep:(a->Tot (l:list word{length l=sz}))
-        -> repInv:((l:list word{length l=sz})-> Tot a){inverseLR repInv rep}
-        -> memRep a
 
 type memblock = heap
 (*Can we ever define a memRep for a ref type?*)
@@ -529,17 +507,6 @@ sub_effect
 
 type mStackNonEmpty (m:smem) = b2t (isNonEmpty (st m))
 
-val withNewScope2 : a:Type ->
-   body:(unit -> SST a mStackNonEmpty (fun m0 _ m1 -> sids m0 == sids m1))
-      -> SST a (fun m -> True)
-                (fun m0 a m1 -> sids m0 == sids m1)
-
-let withNewScope2 (a:Type)  (body:(unit -> SST a mStackNonEmpty (fun m0 _ m1 -> sids m0 == sids m1))) =
-(* omitting the types in above let expression results in a wierd error*)
-    pushStackFrame ();
-    let v = body () in
-    popStackFrame (); v
-
 
 (** withNewStackFrame combinator *)
 
@@ -597,9 +564,9 @@ let rec scopedWhile (loopInv:(smem -> Type))
       else ()
 
 
-effect SSTS (a:Type) (wlp: Post a -> Pre) = StSTATE a wlp wlp
+(*effect SSTS (a:Type) (wlp: Post a -> Pre) = StSTATE a wlp wlp*)
 
-type whilePre (wpg:(Post bool -> Pre))
+(*type whilePre (wpg:(Post bool -> Pre))
               (wpb:(Post unit -> Pre))
               (inv:(smem -> Type)) =
   (forall h. forall h2. wpg (fun b h1 -> h1 == h) h2 ==> h=h2) (*computation of the guard does not change the memory*)
@@ -613,7 +580,7 @@ val scopedWhile2 : #wpg:(Post bool -> Pre) -> #wpb:(Post unit -> Pre)
   (requires (fun m -> loopInv m /\ whilePre wpg wpb loopInv))
               (ensures (fun m0 _ m1 -> (loopInv m1) (* /\ sids m0 = sids m1 *)
                 (*/\ (wpg (fun b _ -> b==false) m1)*)
-              ))
+              ))*)
 
 (*let scopedWhile2
  (#wpg:(Post bool -> Pre))
