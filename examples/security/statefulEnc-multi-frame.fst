@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq --z3timeout 60 --max_fuel 1 --max_ifuel 1 --initial_ifuel 1 --initial_fuel 1;
+    options:--admit_fsi Set --admit_fsi Seq --z3timeout 80 --max_fuel 1 --max_ifuel 1 --initial_ifuel 1 --initial_fuel 1;
     other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/heap.fst ../../lib/st.fst ../../lib/seq.fsi ../../lib/list.fst
   --*)
 (* A standalone experiment corresponding to building stateful encryption on
