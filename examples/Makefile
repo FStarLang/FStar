@@ -1,11 +1,11 @@
 include Makefile.include
 
 all:
-	# make -C bug-reports
-	# make -C data_structures
-	# make -C algorithms
-	# make -C crypto
-	# make -C security
+	make -C bug-reports
+	make -C data_structures
+	make -C algorithms
+	make -C crypto
+	make -C security
 	make -C termination
 	make -C software_foundations
 	make -C metatheory
