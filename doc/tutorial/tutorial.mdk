@@ -3396,7 +3396,7 @@ type bind_PURE (#a:Type) (#b:Type)
 
 One can show that `return_PURE` and `bind_PURE` together form a monad.
 
-### The `Pure` effect
+### `Pure` and `Tot`
 
 The `Pure` effect is an abbreviation for `PURE` that allows you to
 write specifications with pre- and post-conditions instead of
@@ -3574,8 +3574,8 @@ Pure t (p)
 ## The `STATE` effect
 
 Stateful programs operate on an input heap producing a result and an
-output heap. The computation type `STATE t wp` describes such a
-computation, where `wp : StateWP t` has the signature below.
+output heap. The computation type `STATE t wp wlp` describes such a
+computation, where `wp, wlp : StateWP t` has the signature below.
 
 ```
 kind StatePost t = t -> heap -> Type
@@ -3583,7 +3583,7 @@ kind StatePre    = heap -> Type
 kind StateWP t   = StatePost t -> StatePre
 ```
 
-In other words, WPs for stateful programs transform stateful
+In other words, WPs and WLPs for stateful programs transform stateful
 post-conditions (relating the t-typed result of a computation to the
 final heap) into a pre-condition, a predicate on the input heap.
 
@@ -3604,10 +3604,12 @@ These functions are interpreted using the following standard axioms,
 which allows the SMT solver to reason about heaps. 
 
 ```
-assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).            {:pattern (sel (upd h r v) r)}
+assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).            
+                      {:pattern (sel (upd h r v) r)}
                       sel (upd h r v) r = v
 
-assume SelUpd2:       forall (a:Type) (b:Type) (h:heap) (k1:ref a) (k2:ref b) (v:b).{:pattern (sel (upd h k2 v) k1)}
+assume SelUpd2:       forall (a:Type) (b:Type) (h:heap) (k1:ref a) (k2:ref b) (v:b).
+                      {:pattern (sel (upd h k2 v) k1)}
                       k2=!=k1 ==> sel (upd h k2 v) k1 = sel h k1
 ```
 
@@ -3625,7 +3627,7 @@ effect orienting the equalities in `SelUpd1` and `SelUpd2` as
 left-to-right rewritings.  
 ~
 
-The functions `sel` and `upd` provided a logical theory of heaps. At
+The functions `sel` and `upd` provide a logical theory of heaps. At
 the programmatic level, we require stateful operations to allocate,
 read and write references in the current heap of the program. The
 signatures of these stateful primitives are provided in `lib/st.fst`,
@@ -3634,8 +3636,8 @@ as illustrated (in slightly simplified form) below.
 Let's start with the signature of `read`:
 
 ```
-assume val read: #a:Type -> r:ref a -> STATE a (fun (post:StatePost a) (h0:heap) -> 
-                 post (sel h0 r) h0)
+assume val read: #a:Type -> r:ref a -> STATE a (wp_read r) (wp_read r)
+where wp_read r = fun (post:StatePost a) (h0:heap) ->  post (sel h0 r) h0
 ```
 
 This says that `read r` returns a result `v:a` when `r:ref a`;
@@ -3646,12 +3648,12 @@ when `read r` is run in the initial heap `h0`.
 Next, here's the signature of `write`:
 
 ```
-assume val write: #a:Type -> r:ref a -> v:a -> STATE unit (fun (post:StatePost a) (h0:heap) -> 
-                 post () (upd h0 r v))
+assume val write: #a:Type -> r:ref a -> v:a -> STATE unit (wp_write r) (wp_write r)
+where wp_write r = fun (post:StatePost a) (h0:heap) -> post () (upd h0 r v)
 ```
 
-This says that `write r v` returns a a `unit`-typed result when `r:ref
-a` and `v:a`; and, to prove for any post-condition `post:StatePost a`
+This says that `write r v` returns a a `unit`-typed result when 
+`r:ref a` and `v:a`; and, to prove any post-condition `post:StatePost a`
 relating the `()` to the resulting heap, it suffices to prove 
 `post () (upd h0 r v)` when `write r v` is run in the initial heap `h0`.
 
@@ -3670,16 +3672,54 @@ type bind_STATE (#a:Type) (wp1:StateWP a) (wp2:a -> StateWP b)
      = fun (post:StatePost b) (h0:heap) -> wp1 (fun (x:a) -> wp2 x post) h0
 ```
 
-## Derived forms: `Pure` and `ST`
+### The `ST` effect
+
+`ST` is to `STATE` what `Pure` is to `PURE`: it provides a way to
+write stateful specifications using pre- and post-conditions instead
+of predicate transformers. It is defined as shown below (in
+`lib/st.fst`):
+
+```
+effect ST (a:Type) (pre:StatePre) (post: (heap -> StatePost a)) = STATE a
+  (fun (p:StatePost a) (h:heap) ->
+     pre h /\ (forall a h1. (pre h /\ post h a h1) ==> p a h1)) (* WP *)
+  (fun (p:StatePost a) (h:heap) ->
+     (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
+```
+
+As before, we can also define a coercion to move to `ST` from `STATE`. 
 
 
-## Indexed computation types 
+```
+type as_requires (#a:Type) (wp:STWP_h heap a)  = wp (fun x h -> True)
+type as_ensures  (#a:Type) (wlp:STWP_h heap a) (h0:heap) (x:a) (h1:heap) = ~ (wlp (fun y h1' -> y<>x \/ h1<>h1') h0)
+val as_ST: #a:Type -> #b:(a -> Type)
+          -> #wp:(x:a -> STWP_h heap (b x))
+          -> #wlp:(x:a -> STWP_h heap (b x))
+          -> =f:(x:a -> STATE (b x) (wp x) (wlp x))
+          -> x:a -> ST (b x) (as_requires (wp x))
+                             (as_ensures (wlp x))
+```
 
+And here's a small program that uses this coercion. 
+
+```
+let f x = !x * !x
+
+val h : #req:(ref int -> heap -> Type)
+     -> #ens:(ref int -> heap -> int -> heap -> Type)
+     -> =f:(x:ref int -> ST int (req x) (ens x))
+     -> y:ref int -> ST int (req y) (ens y)
+let h f x = f x
+
+val g : x:ref int -> ST int (fun h -> True) (fun h0 y h1 -> h0=h1 /\ y >= 0)
+let g = h (as_ST f)
+```
 
 ## Lifting effects
 
-## Specifying the `PURE` effect
 
+## Indexed computation types 
 
 
 # Verifying Stateful Programs
