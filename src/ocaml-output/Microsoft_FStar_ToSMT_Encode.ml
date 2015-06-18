@@ -2450,7 +2450,7 @@ let encode_env_bindings = (fun env bindings -> (let encode_binding = (fun b _432
 (let _432378 = (new_term_constant env x)
 in (match (_432378) with
 | (xxsym, xx, env') -> begin
-(let t1 = (norm_t env t0)
+(let t1 = (Microsoft_FStar_Tc_Normalize.norm_typ ((Microsoft_FStar_Tc_Normalize.DeltaHard)::(Microsoft_FStar_Tc_Normalize.Beta)::(Microsoft_FStar_Tc_Normalize.Eta)::(Microsoft_FStar_Tc_Normalize.Simplify)::[]) env.tcenv t0)
 in (let _432382 = (encode_typ_pred' None t1 env xx)
 in (match (_432382) with
 | (t, decls') -> begin

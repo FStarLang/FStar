@@ -1720,7 +1720,7 @@ let encode_env_bindings (env:env_t) (bindings:list<Tc.Env.binding>) : (decls_t *
     let encode_binding b (decls, env) = match b with
         | Env.Binding_var(x, t0) -> 
             let xxsym, xx, env' = new_term_constant env x in 
-            let t1 = norm_t env t0 in
+            let t1 = Normalize.norm_typ [Normalize.DeltaHard; Normalize.Beta; Normalize.Eta; Normalize.Simplify] env.tcenv t0 in//whnf env t0 in
             let t, decls' = encode_typ_pred' None t1 env xx in
             let caption = 
                 if !Options.logQueries 
