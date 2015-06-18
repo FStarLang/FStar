@@ -550,6 +550,9 @@ type mStackNonEmpty (m:smem) = b2t (isNonEmpty (st m))
 effect Mem (a:Type) (pre:Pre) (post: (smem -> Post a)) =
         SST a pre (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
 
+effect PureMem (a:Type) (pre:Pre) (post: (smem -> Post a)) =
+        SST a pre (fun m0 a m1 -> post m0 a m1 /\ m0=m1)
+
 (*adding requires/ensures here causes the definition of scopedWhile below to not typecheck.
 Hope this is not a concert w.r.t. soundness*)
 effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) =
@@ -576,7 +579,7 @@ Can implicit arguments be inferred automatically by the SMT solver using proof s
 (*Mem restriction is not needed, because there is a even stronger condition here that the memory is unchanges*)
 effect whileGuard (pre :(smem -> Type))
   (lc : (smem -> Type))
-  = SST bool  pre (fun m0 b m1 -> m0 = m1 /\  (lc m0 <==> b = true))
+  = PureMem bool  pre (fun m0 b _ ->   (lc m0 <==> b = true))
 (* the guard of a while loop is not supposed to change the memory*)
 
 effect whileBody (loopInv:smem -> Type) (lc:smem  -> Type)

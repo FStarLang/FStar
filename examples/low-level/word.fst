@@ -13,12 +13,12 @@ let bitsize:nat = 32
 assume val nexp : nat -> nat -> Tot nat
 
 
-type wordInt = (n:int{-(nexp bitsize bitsize) < n /\ n < (nexp bitsize bitsize)})
+type wordNat = (n:int{0 < n /\ n < (nexp bitsize bitsize)})
 
 type word = (n:nat{n<bitsize}) -> Tot bool
 
-assume val toInt : word -> Tot wordInt
-assume val fromInt : f:(wordInt -> Tot word){inverseLR f toInt}
+assume val toNat : word -> Tot wordNat
+assume val fromNat : f:(wordNat -> Tot word){inverseLR f toNat}
 
 (*when compiled, it will be mapped to a SINGLE CPU instruction.
   This definition is for reasoning purposes, if any*)
@@ -37,4 +37,10 @@ let bitwiseAnd w1 w2 = (fun n -> ((w1 n) && (w2 n)))
 val bitwiseOr : word -> word -> Tot word
 let bitwiseOr w1 w2 = (fun n -> ((w1 n) || (w2 n)))
 
+
 assume val fromHex : string -> Tot word
+
+assume val modAddNat : wordNat -> wordNat -> Tot wordNat
+
+val wmodAdd : word -> word -> Tot word
+let wmodAdd w1 w2 =  fromNat (modAddNat (toNat w1) (toNat w2))

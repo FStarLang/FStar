@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 10;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst word.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst word.fst mvector.fsi mvector.fst
   --*)
 
 (*Why is MD5 so? Why did its designer(s) think
@@ -11,6 +11,8 @@
 module MD5
 open StructuredMem
 open MachineWord
+open MVector
+
 
 (*http://rosettacode.org/wiki/MD5/Implementation#Haskell
  While the version in Haskell and other higher order languages
@@ -76,9 +78,22 @@ let idx n =
    lo does not change in the sieve's inner loop
   *)
 
+(*A chunk of 512 bits, or 16 32 bit words.
+  MD5 processes messages as these chunk *)
+type chunk512 =  vector word 16
+
+
+
+(*How can we make these private to this file
+  and not corrupt the global namespace?*)
+let iA:(n:nat{n<4})=0
+let iB:(n:nat{n<4})=1
+let iC:(n:nat{n<4})=2
+let iD:(n:nat{n<4})=3
+
 val processChunk :
- ch:(ref (n:nat{n<16}-> Tot word))
--> acc:(ref (n:nat{n<4}-> Tot word))
+ ch:(ref chunk512)
+-> acc:(ref (vector word 4))
 -> WNSC unit
     (fun m -> refExistsInMem ch m
               /\ refExistsInMem acc m /\ ch =!= acc
@@ -87,6 +102,7 @@ val processChunk :
               /\ refExistsInMem acc m1 /\ ch =!= acc
               (*/\ loopkupRef  ch m0 = loopkupRef ch m1*)
               )
+
 let processChunk ch acc =
   let li = salloc #nat 0 in
   scopedWhile1
@@ -100,18 +116,13 @@ let processChunk ch acc =
               )
     (fun u ->
       let liv = memread li in
-        let accv = memread acc in
-        let chv = memread ch in
-        let fF:word = funFGHI liv (accv 1) (accv 2) (accv 3) in
-        let g:(n:nat{n<16}) = idx liv liv in
-        let ff:(n:nat{n<4}-> Tot word)
-          = (fun n
-            -> match n with
-                | 0 -> (accv 3)
-                | 1 -> (accv 1)  (*+ (chv g) + ...*)
-                | 2 -> (accv 1)
-                | 3 -> (accv 2)
-           ) in
-        memwrite acc ff;
-        memwrite li (liv+1)
-      )
+      let vA = readIndex acc iB in
+      let vB = readIndex acc iB in
+      let vC = readIndex acc iC in
+      let vD = readIndex acc iD in
+      let fF:word = funFGHI liv vB vC vD in
+      let g:(n:nat{n<16}) = idx liv liv in
+      updIndex acc iD vC;
+      updIndex acc iA vD;
+      updIndex acc iB (wmodAdd vA  vC);
+      memwrite li (liv+1))
