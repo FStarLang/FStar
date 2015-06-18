@@ -76,66 +76,42 @@ let idx n =
    lo does not change in the sieve's inner loop
   *)
 
-  val processChunk :
-  ch:(ref (n:nat{n<16}-> Tot int))
-  -> li:(ref nat)
-  -> SST unit
-      (fun m ->  True /\ refExistsInMem ch m
-         /\ refExistsInMem li m
-         (*/\ loopkupRef li m < 64*)
-
-        )
-      (fun m0 _ m1 -> True                (*loopkupRef m0 ch = loopkupRef m1 ch*)
-                )
-  let processChunk ch li =
-    (*let li:(ref nat) = salloc 0 in*)
-    scopedWhile1
-      li
-      (fun liv -> liv < 64)
-      (fun m -> True
-                /\ refExistsInMem ch m
-                (*/\ refExistsInMem acc m *)
-                /\ refExistsInMem li m
-                (*/\ loopkupRef li m < 65*)
-                (*/\ ch =!= acc /\ li =!= acc /\ li =!= ch *)
-                )
-      (fun u ->
-        let liv = memread li in
-          (*let accv = memread ch in*)
-          (*let fF:word = funFGHI liv (accv 1) (accv 2) (accv 3) in
-          let g:(n:nat{n<16}) = idx liv liv in*)
-          memwrite li (liv)
-        )
-
-
 val processChunk :
  ch:(ref (n:nat{n<16}-> Tot word))
 -> acc:(ref (n:nat{n<4}-> Tot word))
--> li:ref nat
 -> WNSC unit
     (fun m -> refExistsInMem ch m
               /\ refExistsInMem acc m /\ ch =!= acc
-              /\ refExistsInMem li m /\ loopkupRef li m < 65
               )
     (fun m0 _ m1 -> refExistsInMem ch m1
               /\ refExistsInMem acc m1 /\ ch =!= acc
-              (*loopkupRef m0 ch = loopkupRef m1 ch*)
+              (*/\ loopkupRef  ch m0 = loopkupRef ch m1*)
               )
-let processChunk ch acc li =
-  (*let li = salloc #nat 0 in*)
+let processChunk ch acc =
+  let li = salloc #nat 0 in
   scopedWhile1
     li
     (fun liv -> liv < 64)
     (fun m -> True
-              (*refExistsInMem ch m*)
-              (*/\ refExistsInMem acc m *)
+              /\ refExistsInMem ch m
+              /\ refExistsInMem acc m
               /\ refExistsInMem li m /\ loopkupRef li m < 65
-              (*/\ ch =!= acc /\ li =!= acc /\ li =!= ch *)
+              (*/\ ch =!= acc /\ li =!= acc /\ li =!= ch*)
               )
     (fun u ->
       let liv = memread li in
-        (*let accv = memread acc in
+        let accv = memread acc in
+        let chv = memread ch in
         let fF:word = funFGHI liv (accv 1) (accv 2) (accv 3) in
-        let g:(n:nat{n<16}) = idx liv liv in*)
+        let g:(n:nat{n<16}) = idx liv liv in
+        let ff:(n:nat{n<4}-> Tot word)
+          = (fun n
+            -> match n with
+                | 0 -> (accv 3)
+                | 1 -> (accv 1)  (*+ (chv g) + ...*)
+                | 2 -> (accv 1)
+                | 3 -> (accv 2)
+           ) in
+        memwrite acc ff;
         memwrite li (liv+1)
       )
