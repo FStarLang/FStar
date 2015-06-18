@@ -103,8 +103,8 @@ let rec scopedWhile3 (loopInv:(smem -> Type))
   (bd:(unit -> whileBody loopInv wglc)) =
    if (wg ())
       then
-        ((withNewScope unit
-          (fun m -> loopInv m /\ (wglc m)) (fun _ _ m1 -> loopInv m1) bd);
+        ((withNewScope #unit
+          #(fun m -> loopInv m /\ (wglc m)) #(fun _ _ m1 -> loopInv m1) bd);
         (scopedWhile loopInv wglc wg bd))
       else ()
 

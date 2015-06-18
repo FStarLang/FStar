@@ -14,8 +14,6 @@ open List
 open ListSet
 open Constructive
 
-
-
 (*val divides : pos -> nat -> Tot bool
 let divides divisor n = ((n % divisor) = 0)*)
 (*Instead, below is a definition from first principles*)
@@ -325,13 +323,11 @@ let sieve n u =
   (outerLoop n lo res);
   memread res
 
-
-let sieveFull n u =
-withNewScope
-_
-_
-_
-(sieve n)
+val sieveFull : n:nat{n>1}
+  -> Mem ((k:nat{k<n}) -> Tot bool)
+        (requires (fun m -> True))
+        (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
+let sieveFullTypeInfFail n= withNewScope (sieve n)
 
 
 val sieveUnfolded : n:nat{n>1} -> unit
@@ -371,6 +367,44 @@ type  outerLoopInv2 (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (
   /\ (((loopkupRef lo m) - 1) < n)
   /\ (1<(loopkupRef lo m))
   /\ (markedIffHasDivisorSmallerThan n (loopkupRef lo m) (loopkupRef res m))
+
+val sieveUnfolded3 : n:nat{n>1} -> unit
+  -> WNSC ((k:nat{k<n}) -> Tot bool)
+        (requires (fun m -> True))
+        (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
+let sieveUnfolded3 n u =
+  let lo:(ref nat) = salloc 2 in
+  let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
+  let res = salloc f in
+  scopedWhile1
+    lo
+    (fun lov -> lov < n)
+    (outerLoopInv2 n lo res)
+    (fun u ->
+        let initres = memread res in
+        let lov = memread lo in
+        let li:(ref nat) = salloc 0 in
+        let liv = memread li in
+        (scopedWhile2
+            lo
+            li
+            (fun lov liv -> liv *lov < n)
+            (innerLoopInv2 n lo lov li res initres)
+            (fun u ->
+              let liv = memread li in
+              let lov = memread lo in
+              let resv = memread res in
+              memwrite li (liv+1);
+              memwrite res (mark n resv (lov * liv))));
+
+          (*the part below has no computaional content; why does SMTPatT not work?*)
+        let newv = memread res in
+        (multiplesMarkedAsDividesIff n initres newv lov);
+        let newres = memread res in
+        memwrite lo (lov+1);
+    (*the part below has no computational content*)
+      (markedIffHasDivisorSmallerThanInc n lov initres newres));
+  memread res
 
 
 val sieveUnfolded2 : n:nat{n>1} -> unit

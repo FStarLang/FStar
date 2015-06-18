@@ -46,6 +46,7 @@ let factorialLoopBody (n:nat) (li:(ref nat)) (res:(ref nat)) u =
   memwrite res ((liv+1) * resv)
 
 
+
 val factorialLoop : n:nat -> li:(ref nat) -> res:(ref nat)
   -> Mem unit (fun m -> mreads li 0 m /\ mreads res 1 m  /\ ~(li=res))
               (fun m0 _ m1 -> mreads res (factorial n) m1)
@@ -55,6 +56,16 @@ let factorialLoop (n:nat) (li:(ref nat)) (res:(ref nat)) =
     (factorialGuardLC n li)
     (factorialGuard n li)
     (factorialLoopBody n li res)
+
+(*val factorialLoop2 : n:nat -> li:(ref nat) -> res:(ref nat)
+  -> Mem unit (fun m -> mreads li 0 m /\ mreads res 1 m  /\ ~(li=res))
+              (fun m0 _ m1 -> mreads res (factorial n) m1)
+let factorialLoop2 (n:nat) (li:(ref nat)) (res:(ref nat)) =
+  scopedWhile1
+    li
+    (fun liv -> not (liv = 1))
+    (loopInv li res)
+    (factorialLoopBody n li res)*)
 
 
 val loopyFactorial : n:nat
@@ -72,16 +83,16 @@ val loopyFactorial2 : n:nat
               (fun _ rv _ -> rv == (factorial n))
 let loopyFactorial2 n =
   withNewScope
-  nat
-  (fun m -> True) (*same as the comment below. F* should certainly try this precondition*)
-  (fun _ rv _ -> rv == (factorial n)) (*this is the same as that of the conclusion, why cant it be inferred?*)
+  #nat
+  #(fun m -> True) (*same as the comment below. F* should certainly try this precondition*)
+  #(fun _ rv _ -> rv == (factorial n)) (*this is the same as that of the conclusion, why cant it be inferred?*)
   (fun u ->
-    let li = salloc 0 in
-    let res = salloc 1 in
-    (scopedWhile
+    let li:(ref nat) = salloc 0 in
+    let res:(ref nat) = salloc 1 in
+    (scopedWhile1
+      li
+      (fun liv -> not (liv = n))
       (loopInv li res)
-      (fun m -> (refExistsInMem li m) /\ ~ ((loopkupRef li m) = n))
-      (fun u -> not (memread li = n))
       (fun u ->
         let liv = memread li in
         let resv = memread res in
