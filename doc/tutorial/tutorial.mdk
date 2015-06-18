@@ -3162,47 +3162,185 @@ non-termination, state and exceptions.  In this section, we look
 briefly at how effects are defined, using the `PURE` and `STATE`
 effects for illustration.
 
-On a first reading, you may wish to skip this section.
+On a first reading, you may wish to skip this section and proceed
+directly to the next chapter.
+
+
+## Background: Generating compact verification conditions
+
+Type inference in F\* is based on a weakest pre-condition calculus for
+higher order programs. For every term `e`, F\* computes `WP e`, which
+captures the semantics of `e` as _predicate transformer_. If you want
+to prove some property `P` about the result of `e` (i.e., a
+post-condition), it suffices to prove `WP e P` of the initial
+configuration in which `e` is executed (i.e., a pre-condition).
+
+Let's start by considering a very simple, purely functional
+programming language with only the following forms:
+
+```
+b ::= true | false
+e ::= b | let x = e1 in e2 | assert b | if b then e1 else e2
+```
+
+For this tiny language, the post-conditions `P` that you may want to
+prove are predicates on the boolean results of a computation, while
+the pre-conditions are just propositions. Defining `WP e` for this
+language is fairly straightforward:
+
+```
+WP b P                      = P b
+WP (let x = e1 in e2) P     = WP e1 (fun x -> WP e2 P)
+WP (assert b) P             = b /\ P b
+WP (if b then e1 else e2) P = (b ==> WP e1 P) /\ ((not b) ==> WP e2 P)
+```
+
+This is nice and simple, but it has a significant drawback,
+particularly in the the third rule: the post-condition formula `P` is
+duplicated across the branches. As several branching expressions are
+sequenced, this leads to an exponential blowup in the size of the
+verification condition.
+
+This problem with WP computations is well known---[Flanagan and Saxe]
+and [Leino] both study this problem and provide equivalent
+solutions. In essence, they show that for a first-order,
+assignment-free guarded command language the weakest pre-condition can
+be computed in a size nearly linear in the size of the program. Then,
+they show that first-order imperative WHILE language can be converted
+into SSA form and then into a guarded command language.
+
+[Flanagan and Saxe]: http://dl.acm.org/citation.cfm?id=360220
+[Leino]: http://dl.acm.org/citation.cfm?id=1710882
+
+In the context of F\*, we generalize the results of Flanagan and Saxe,
+and Leino, to the setting of a higher-order language. The main
+technical idea is a new "Double [Dijkstra Monad]". Given a program, F\*
+infers a monadic computation type indexed by (1) a WP, the weakest
+pre-condition predicate transformer; and (2) a WLP, the weakest
+liberal pre-condition predicate transformer. Intuitively, `WLP e Q` is
+sufficient to guarantee that if `e` contains no internal assertion
+failures, then its result satisfies `P`; in contrast, the `WP e P` is
+sufficient to guarantee both that `e`'s internal assertions succeed and
+that its result satisfies `P`. 
+
+Here's the definition of `WLP` for our small example langauge.
+
+```
+WLP b P                      = P b
+WLP (let x = e1 in e2) P     = WLP e1 (fun x -> WLP e2 P)
+WLP (assert b) P             = b ==> P b
+WLP (if b then e1 else e2) P = (b ==> WLP e1 P) /\ ((not b) ==> WLP e2 P)
+```
+
+The only difference with the `WP` is in the case of assertions. For a
+WLP, rather than requiring a proof of the assertion, we try to prove
+the post-condition assuming the assertion succeeds.
+
+How does this help us? Let's see. 
+
+First, you can prove the following property about `WLP`.
+
+```
+(1)   WLP e P  <==> forall x. P x \/ WLP e (fun y -> y <> x)
+```
+
+Here's one way to read formula (1): Proving that `P` is true of the
+typed result of a computation (the LHS) is equivalent to proving that
+for every `x`, we either have `P x` or we can prove that the result of
+the computation is not `x` (the RHS).
+
+Armed with identity (1) above, we can also prove the following
+identity:
+
+```
+(2)  WP e P 
+     <==> WP e (fun x -> True) /\ WLP e P
+     <==> WP e (fun x -> True) /\ (forall x. P x \/ WLP e (fun y -> y <> x)) (by (1))
+```
+
+That is, in order to prove that a computation `e` has no internal
+assertion failures and produces a result satisfying `P`, one can
+equivalent prove (a) that `e` has no internal assertion failures
+(i.e., `WP e (fun x -> True)`) and then prove (b) that `e`'s result
+satisfies `P` (i.e, `WLP e P`).
+
+Finally, we come back to our rule for conditional expressions, which
+we can restate as follows (using identities (1) and (2)):
+
+```
+WP (if b then e1 else e2) P 
+=    (b ==> WP e1 (fun x -> True))
+  /\ ((not b) ==> WP e2 (fun x -> True))
+  /\ (forall y. P y \/ ((b ==> WLP e1 (fun x -> x<>y)
+                     /\ (not b) ==> WLP e2 (fun x -> x<>y)))
+```
+
+In this form, the post-condition `P` is no longer duplicated across
+the branches of the computation and we avoid the exponenetial blowup
+(at the cost of computing both the `WP` and the `WLP`).
+
+WPs and WLPs are convenient for type inference---for loop- and
+recursion-free code, we can simply compute the most precise
+verification condition for a program without further
+annotation. However, programmers are often more comfortable writing
+specification in terms of pre- and post-conditions, rather than
+predicate transformers. As we will see shortly, computing both the WP
+and the WLP allows F\* to move between the two styles without a loss
+in precision (computing just the WP alone would not allow this).
 
 
 ## Computation types
 
-Expressions in F\* are given _computation types_ `C`.  For the
-purposes of the presentation here, we start by discussing
-a simplified form of these `C` types, i.e, we will consider
-computation types of the form `M t wp`, those that have a
-non-parameterized effect constructor `M`; a result type `t`; and a
-weakest pre-condition `wp`.
+Expressions in F\* are given _computation types_ `C`.  In its most
+primitive form, each effect in F\* introduces a computation type of
+the form `M t1..tn t wp wlp`. The `M t1..tn` indicates the name of the
+effect `M` and several user-defined indexes `t1..tn`.  The type `t`
+indicates the type of the result of the computation; `wp` is a
+predicate transformer that is not weaker than the weakest
+pre-condition of `e`; and `wlp` is a predicate transformer not weaker
+than the weakest _liberal_ pre-condition of `e`. For the sake of
+brevity, we call `wp` the weakest pre-condition and `wlp` the weakest
+liberal pre-condition. 
 
-~ Remark
-In its most primitive form, each effect in F\* introduces a
-_computation type_ of the form `M t1..tn t wp wlp`. The `M t1..tn`
-indicates the name of the effect `M` and several user-defined indexes
-`t1..tn`.  The type `t` indicates the type of the result of the
-computation; `wp` is a predicate transformer that is not weaker than
-the weakest pre-condition of `e`; and `wlp` is a predicate transformer
-not weaker than the weakest _liberal_ pre-condition of `e`. For the
-sake of brevity, we call `wp` the weakest pre-condition and `wlp` the
-weakest liberal pre-condition. For now, we set aside the `wlp` and 
-the other indices `t1..tn` and focus only on the simpler form of
-computation types.
-~
+For the purposes of the presentation here, we start by discussing a
+simplified form of these `C` types, i.e, we will consider computation
+types of the form `M t wp wlp`, those that have a non-parameterized
+effect constructor `M` (and generalize to the full form towards the
+end of this chapter).
 
-A computation `e` has type `M t wp` if when run in an initial
+A computation `e` has type `M t wp wlp` if when run in an initial
 configuration satisfying `wp post`, it (either runs forever, if
 allowed, or) produces a result of type `t` in a final configuration
 `f` such that `post f` is true, all the while exhibiting no more
 effects that are allowed by `M`. In other words, `M` is an upper bound
-on the effects of `e`; `t` is its result type`; and `wp` is a
-predicate transformer that for any post-condition of the final
-configuration of `e`, produces a sufficient condition on the initial
-configuration of `e`. 
+on the effects of `e`; `t` is its result type; and `wp` is a predicate
+transformer that for any post-condition of the final configuration of
+`e`, produces a sufficient condition on the initial configuration of
+`e`. The `wlp` is similar, except it is liberal with respect to the
+internal assertions of `e` in the sense described in the previous
+section.
 
 These computation types (specifically their predicate transformers)
 form what is known as a [Dijkstra monad]. Some concrete examples
 should provide better intuition.
 
+~Remark
+
+We follow an informal syntactic convention that the non-abbreviated
+all-caps names for computation types are the primitive forms---other
+forms are derived from these.
+
+For example, the computation type constructor `PURE` is a more
+primitive version of the `Pure`, which we have used earlier in this
+tutorial. By the end of this chapter, you will see how `Pure`, `Tot`,
+`Lemma` etc. are expressed in terms of `PURE`. Likewiwse `STATE` is
+the primitive form of `ST`; `EXN` is the primitive form of `Exn`; etc.
+
+~
+
 [Dijkstra monad]: http://research.microsoft.com/en-us/um/people/nswamy/papers/paper-pldi13.pdf
+
+
 
 ## The `PURE` effect
 
@@ -3269,111 +3407,97 @@ post-conditions (relating the t-typed result of a computation to the
 final heap) into a pre-condition, a predicate on the input heap.
 
 The type `heap` is axiomatized in `lib/heap.fst` and is one model of
-the primitive heap provided by the F\* runtime system. 
+the primitive heap provided by the F\* runtime system. Specifically,
+we have the uninterpreted functions below to select, update, and test
+the presence of a reference in a heap.
+
+```
+module Heap
+assume type heap
+assume val sel : #a:Type -> heap -> ref a -> Tot a
+assume val upd : #a:Type -> heap -> ref a -> a -> Tot heap
+assume val contains : #a:Type -> heap -> ref a -> a -> Tot bool
+```
+
+These functions are interpreted using the following standard axioms,
+which allows the SMT solver to reason about heaps. 
+
+```
+assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).            {:pattern (sel (upd h r v) r)}
+                      sel (upd h r v) r = v
+
+assume SelUpd2:       forall (a:Type) (b:Type) (h:heap) (k1:ref a) (k2:ref b) (v:b).{:pattern (sel (upd h k2 v) k1)}
+                      k2=!=k1 ==> sel (upd h k2 v) k1 = sel h k1
+```
+
+The `Heap` library provides axiomatizes several other functions---the
+interested reader refer to `lib/heap.fst` for more details.
+
+~Remark
+Note, although `sel` is marked as a total function, the axioms
+underspecify its behavior, e.g., `sel h r` has no further
+interpretation unless `h` can be proven to be an `upd`.
+
+Also note the use of the `{:pattern ...}` form in the axioms above.
+This provides the SMT solver with a trigger for the quantifiers, in
+effect orienting the equalities in `SelUpd1` and `SelUpd2` as
+left-to-right rewritings.  
+~
+
+The functions `sel` and `upd` provided a logical theory of heaps. At
+the programmatic level, we require stateful operations to allocate,
+read and write references in the current heap of the program. The
+signatures of these stateful primitives are provided in `lib/st.fst`,
+as illustrated (in slightly simplified form) below.
+
+Let's start with the signature of `read`:
+
+```
+assume val read: #a:Type -> r:ref a -> STATE a (fun (post:StatePost a) (h0:heap) -> 
+                 post (sel h0 r) h0)
+```
+
+This says that `read r` returns a result `v:a` when `r:ref a`;
+and, to prove for any post-condition `post:StatePost a` relating the
+`v` to the resulting heap, it suffices to prove `post (sel h0 r) h0`
+when `read r` is run in the initial heap `h0`.
+
+Next, here's the signature of `write`:
+
+```
+assume val write: #a:Type -> r:ref a -> v:a -> STATE unit (fun (post:StatePost a) (h0:heap) -> 
+                 post () (upd h0 r v))
+```
+
+This says that `write r v` returns a a `unit`-typed result when `r:ref
+a` and `v:a`; and, to prove for any post-condition `post:StatePost a`
+relating the `()` to the resulting heap, it suffices to prove 
+`post () (upd h0 r v)` when `write r v` is run in the initial heap `h0`.
+
+~Remark
+F\* provides syntactic sugar so that you can write `!r` for `read r`
+and `r := v` instead of `ST.write r v`.
+~
+
+As with the `PureWP`, the predicate transformers `StateWP t` form a
+monad, as shown by the combinators below. 
+
+```
+type return_STATE (#a:Type) (v:a) = fun (post:StatePost a) (h0:heap) -> post v h0
+
+type bind_STATE (#a:Type) (wp1:StateWP a) (wp2:a -> StateWP b) 
+     = fun (post:StatePost b) (h0:heap) -> wp1 (fun (x:a) -> wp2 x post) h0
+```
+
+## Derived forms: `Pure` and `ST`
 
 
+## Indexed computation types 
 
 
-In a language like Haskell, or any functional language
-including F\*, you might define the state monad 
-`ST (s:Type) (a:Type) = s -> Tot (a * s)`. However, in F\*, using 
-this definition of `ST` only gives you a pure function that 
-threads through a store `s` while computing a result `a`. 
-
-By default, the state is the primitive `heap` of the
-program itself.
-
-
-## Generating compact verification conditions
-
-Aside from introducing and advertising the new F* to HOPE attendees,
-we plan to go into some depth about one technical aspect of F*, namely
-the problem of efficiently computing verification conditions for a
-program. We sketch the issue below.
-
-Consider the traditional formulation of a weakest pre-condition
-calculus: WP(e, Q) computes the weakest pre-condition of the
-post-condition Q for the program e.
-
-In the case where e is a conditional expression, the rule looks like:
-
-WP(if b then e1 else e2, Q) = b ==> WP(e1, Q)
-/\ (not b) ==> WP(e2, Q)
-
-While simple and familiar, this formulation has a significant
-drawback: the post-condition formula Q is duplicated across the
-branches, leading to an exponential blowup in the size of the
-verification condition.
-
-This problem with WP computations is well known---Flanagan and Saxe
-(POPL 2001, http://dl.acm.org/citation.cfm?id=360220) and Leino (JIPL
-2005, http://dl.acm.org/citation.cfm?id=1710882) both study this
-problem and provide equivalent solutions. In essence, they show that
-for a first-order, assignment-free guarded command language the
-weakest pre-condition can be computed in a size nearly linear in the
-size of the program. Then, they show that first-order imperative WHILE
-language can be converted into SSA form and then into a guarded
-command language.
-
-In the context of F*, we generalize the results of Flanagan and Saxe,
-and Leino, to the setting of a higher-order language. The main
-technical idea is a new "Double Dijkstra Monad". Given a program, F*
-infers a monadic computation type index by (1) a WP, the weakest
-pre-condition predicate transformer; and (2) a WLP, the weakest
-liberal pre-condition predicate transformer. Intuitively, WLP(e, Q) is
-sufficient to guarantee that if e contains no internal assertion
-failures, then its result satisfies Q; in contrast, the WP(e, Q) is
-sufficient to guarantee both that e's internal assertions succeed and
-that its result satisfies Q.
-
-The WP and WLP are related by the following identity:
-
-WP(e, Q) <==> (WP(e, (\x. True))
-/\ forall y. WLP(e, (\x. x=y)) ==> Q y)
-
-In words, the formula above can be read as follows:
-
-Proving that e contains no failing assertions and produces a result
-satisfying Q (i.e., WP(e, Q)) is equivalent to proving (a) that e
-contains no failing assertions (i.e., WP(e, \x.True)) and (b) that Q y
-holds for any result y that e may produce
-(i.e, forall y. WLP(e, \x.x=y) ==> Q y).
-
-With this identity in hand, the rule for computing the WP of a
-conditional becomes as follows, avoiding the exponential blow up by
-avoiding the repetition of Q in each branch.
-
-WP(if b then e1 else e2, Q) = (b ==> WP(e1, \x.True)
-/\ ~b ==> WP(e2, \x.True))
-/\ (forall y. (b ==> WLP(e1, \x. x=y)
-/\ ~b ==> WLP(e2, \x. x=y))
-==> Q y)
-
-
-## `M t1..tn r wp wlp`: Computation types and Dijkstra monads
-
-In its most primitive form, each effect in F\* introduces a
-_computation type_ of the form `M t1..tn r wp wlp`, which is uses to
-classify computations `e`. The `M t1..tn` indicates the name of the
-effect `M` and several user-defined indexes `t1..tn`.  The type `r`
-indicates the type of the result of the computation; `wp` is a
-predicate transformer that is not weaker than the weakest
-pre-condition of `e`; and `wlp` is a predicate transformer not weaker
-than the weakest _liberal_ pre-condition of `e`. For the sake of
-brevity, we call `wp` the weakest pre-condition and `wlp` the weakest
-liberal pre-condition.
-
-For the purposes of simplifying the presentation here, we start by
-discussing a simplified form of computation types, i.e, we will
-consider computation types of the form `M r wp`, those that have a
-non-parameterized effect constructor `M`; a result type `r`; and a
-weakest pre-condition `wp`.
+## Lifting effects
 
 ## Specifying the `PURE` effect
-
-
-
-
 
 
 
@@ -3381,12 +3505,6 @@ weakest pre-condition `wp`.
 
 In this chapter, we look in detail at F\*'s state monad and how it can be used
 to specify, program and verify stateful code. 
-
-
-## The `ST` monad, in brief
-
-The standard library of F\* includes `lib/st.fst` which provides 
-
 
 
 ## Stateful access control
