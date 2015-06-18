@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap --z3timeout 30;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap --split_cases 1;
     variables:LIB=../../lib;
     other-files:$LIB/ordset.fsi $LIB/ordsetproperties.fst $LIB/ordmap.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst
  --*)

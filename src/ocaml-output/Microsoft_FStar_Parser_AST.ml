@@ -141,7 +141,7 @@ let lid_with_range = (fun lid r -> (Microsoft_FStar_Absyn_Syntax.lid_of_path (Mi
 
 let to_string_l = (fun sep f l -> (Support.String.concat sep (Support.List.map f l)))
 
-let imp_to_string = (fun _348145 -> (match (_348145) with
+let imp_to_string = (fun _348358 -> (match (_348358) with
 | Hash -> begin
 "#"
 end
@@ -175,7 +175,7 @@ end
 (Microsoft_FStar_Absyn_Print.sli l)
 end
 | Construct ((l, args)) -> begin
-(Support.Microsoft.FStar.Util.format2 "(%s %s)" (Microsoft_FStar_Absyn_Print.sli l) (to_string_l " " (fun _348365 -> (match (_348365) with
+(Support.Microsoft.FStar.Util.format2 "(%s %s)" (Microsoft_FStar_Absyn_Print.sli l) (to_string_l " " (fun _348578 -> (match (_348578) with
 | (a, imp) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s%s" (imp_to_string imp) (term_to_string a))
 end)) args))
@@ -193,7 +193,7 @@ end
 (Support.Microsoft.FStar.Util.format3 "let %s = %s in %s" (pat_to_string pat) (term_to_string tm) (term_to_string body))
 end
 | Let ((_, lbs, body)) -> begin
-(Support.Microsoft.FStar.Util.format2 "let rec %s in %s" (to_string_l " and " (fun _348395 -> (match (_348395) with
+(Support.Microsoft.FStar.Util.format2 "let rec %s in %s" (to_string_l " and " (fun _348608 -> (match (_348608) with
 | (p, b) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (pat_to_string p) (term_to_string b))
 end)) lbs) (term_to_string body))
@@ -205,7 +205,7 @@ end
 (Support.Microsoft.FStar.Util.format3 "if %s then %s else %s" (term_to_string t1) (term_to_string t2) (term_to_string t3))
 end
 | Match ((t, branches)) -> begin
-(Support.Microsoft.FStar.Util.format2 "match %s with %s" (term_to_string t) (to_string_l " | " (fun _348412 -> (match (_348412) with
+(Support.Microsoft.FStar.Util.format2 "match %s with %s" (term_to_string t) (to_string_l " | " (fun _348625 -> (match (_348625) with
 | (p, w, e) -> begin
 (Support.Microsoft.FStar.Util.format3 "%s %s -> %s" (pat_to_string p) (match (w) with
 | None -> begin
@@ -220,13 +220,13 @@ end
 (Support.Microsoft.FStar.Util.format2 "(%s : %s)" (term_to_string t1) (term_to_string t2))
 end
 | Record ((Some (e), fields)) -> begin
-(Support.Microsoft.FStar.Util.format2 "{%s with %s}" (term_to_string e) (to_string_l " " (fun _348427 -> (match (_348427) with
+(Support.Microsoft.FStar.Util.format2 "{%s with %s}" (term_to_string e) (to_string_l " " (fun _348640 -> (match (_348640) with
 | (l, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli l) (term_to_string e))
 end)) fields))
 end
 | Record ((None, fields)) -> begin
-(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l " " (fun _348434 -> (match (_348434) with
+(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l " " (fun _348647 -> (match (_348647) with
 | (l, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli l) (term_to_string e))
 end)) fields))
@@ -322,7 +322,7 @@ end
 (Support.Microsoft.FStar.Util.format1 "(|%s|)" (to_string_l ", " pat_to_string l))
 end
 | PatRecord (l) -> begin
-(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l "; " (fun _348548 -> (match (_348548) with
+(Support.Microsoft.FStar.Util.format1 "{%s}" (to_string_l "; " (fun _348761 -> (match (_348761) with
 | (f, e) -> begin
 (Support.Microsoft.FStar.Util.format2 "%s=%s" (Microsoft_FStar_Absyn_Print.sli f) (pat_to_string e))
 end)) l))
@@ -364,7 +364,7 @@ end
 (mk_term (Construct ((s, args))) r Un)
 end
 | _ -> begin
-(Support.List.fold_left (fun t _348592 -> (match (_348592) with
+(Support.List.fold_left (fun t _348805 -> (match (_348805) with
 | (a, imp) -> begin
 (mk_term (App ((t, a, imp))) r Un)
 end)) t args)
@@ -405,7 +405,7 @@ let mkWildAdmitMagic = (fun r -> ((mk_pattern PatWild r), None, (mkAdmitMagic r)
 
 let focusBranches = (fun branches r -> (let should_filter = (Support.Microsoft.FStar.Util.for_some (Support.Prims.fst) branches)
 in if should_filter then begin
-(let _348627 = (Microsoft_FStar_Tc_Errors.warn r "Focusing on only some cases")
+(let _348840 = (Microsoft_FStar_Tc_Errors.warn r "Focusing on only some cases")
 in (let focussed = ((Support.List.map (Support.Prims.snd)) (Support.List.filter (Support.Prims.fst) branches))
 in (Support.List.append focussed (((mkWildAdmitMagic r))::[]))))
 end else begin
@@ -414,8 +414,8 @@ end))
 
 let focusLetBindings = (fun lbs r -> (let should_filter = (Support.Microsoft.FStar.Util.for_some (Support.Prims.fst) lbs)
 in if should_filter then begin
-(let _348633 = (Microsoft_FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
-in (Support.List.map (fun _348637 -> (match (_348637) with
+(let _348846 = (Microsoft_FStar_Tc_Errors.warn r "Focusing on only some cases in this (mutually) recursive definition")
+in (Support.List.map (fun _348850 -> (match (_348850) with
 | (f, lb) -> begin
 if f then begin
 lb

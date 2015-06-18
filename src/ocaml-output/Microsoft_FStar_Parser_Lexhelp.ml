@@ -5,7 +5,7 @@ in (fun s -> (match ((Support.Microsoft.FStar.Util.smap_try_find strings s)) wit
 res
 end
 | None -> begin
-(let _414667 = (Support.Microsoft.FStar.Util.smap_add strings s s)
+(let _414880 = (Support.Microsoft.FStar.Util.smap_add strings s s)
 in s)
 end)))
 
@@ -15,7 +15,7 @@ let call_string_finish = (fun fin buf endm b -> (fin endm b (Support.Microsoft.F
 
 let add_string = (fun buf x -> (Support.Microsoft.FStar.Bytes.emit_bytes buf (Support.Microsoft.FStar.Bytes.string_as_unicode_bytes x)))
 
-let add_int_char = (fun buf c -> (let _414680 = (Support.Microsoft.FStar.Bytes.emit_int_as_byte buf (c mod 256))
+let add_int_char = (fun buf c -> (let _414893 = (Support.Microsoft.FStar.Bytes.emit_int_as_byte buf (c mod 256))
 in (Support.Microsoft.FStar.Bytes.emit_int_as_byte buf (c / 256))))
 
 let add_unichar = (fun buf c -> (add_int_char buf c))
@@ -27,7 +27,7 @@ in (Support.Microsoft.FStar.Bytes.make (fun i -> (Support.Microsoft.FStar.Bytes.
 
 let stringbuf_is_bytes = (fun buf -> (let bytes = (Support.Microsoft.FStar.Bytes.close buf)
 in (let ok = (Support.Microsoft.FStar.Util.mk_ref true)
-in (let _414693 = (Support.Microsoft.FStar.Util.for_range 0 (((Support.Microsoft.FStar.Bytes.length bytes) / 2) - 1) (fun i -> if ((Support.Microsoft.FStar.Bytes.get bytes ((i * 2) + 1)) <> 0) then begin
+in (let _414906 = (Support.Microsoft.FStar.Util.for_range 0 (((Support.Microsoft.FStar.Bytes.length bytes) / 2) - 1) (fun i -> if ((Support.Microsoft.FStar.Bytes.get bytes ((i * 2) + 1)) <> 0) then begin
 (ok := false)
 end))
 in (! (ok))))))
@@ -110,12 +110,12 @@ type compatibilityMode =
 
 let keywords = (Support.List.append (((ALWAYS, "and", Microsoft_FStar_Parser_Parse.AND))::((ALWAYS, "as", Microsoft_FStar_Parser_Parse.AS))::((ALWAYS, "assert", Microsoft_FStar_Parser_Parse.ASSERT))::((ALWAYS, "assume", Microsoft_FStar_Parser_Parse.ASSUME))::((ALWAYS, "begin", Microsoft_FStar_Parser_Parse.BEGIN))::((FSHARP, "default", Microsoft_FStar_Parser_Parse.DEFAULT))::((ALWAYS, "effect", Microsoft_FStar_Parser_Parse.EFFECT))::((ALWAYS, "else", Microsoft_FStar_Parser_Parse.ELSE))::((ALWAYS, "end", Microsoft_FStar_Parser_Parse.END))::((ALWAYS, "ensures", Microsoft_FStar_Parser_Parse.ENSURES))::((ALWAYS, "exception", Microsoft_FStar_Parser_Parse.EXCEPTION))::((ALWAYS, "exists", Microsoft_FStar_Parser_Parse.EXISTS))::((ALWAYS, "false", Microsoft_FStar_Parser_Parse.FALSE))::((ALWAYS, "finally", Microsoft_FStar_Parser_Parse.FINALLY))::((ALWAYS, "for", Microsoft_FStar_Parser_Parse.FOR))::((ALWAYS, "forall", Microsoft_FStar_Parser_Parse.FORALL))::((ALWAYS, "fun", Microsoft_FStar_Parser_Parse.FUN))::((ALWAYS, "function", Microsoft_FStar_Parser_Parse.FUNCTION))::((ALWAYS, "if", Microsoft_FStar_Parser_Parse.IF))::((ALWAYS, "in", Microsoft_FStar_Parser_Parse.IN))::((ALWAYS, "lazy", Microsoft_FStar_Parser_Parse.LAZY))::((ALWAYS, "let", Microsoft_FStar_Parser_Parse.LET (false)))::((ALWAYS, "logic", Microsoft_FStar_Parser_Parse.LOGIC))::((ALWAYS, "match", Microsoft_FStar_Parser_Parse.MATCH))::((ALWAYS, "module", Microsoft_FStar_Parser_Parse.MODULE))::((ALWAYS, "of", Microsoft_FStar_Parser_Parse.OF))::((ALWAYS, "open", Microsoft_FStar_Parser_Parse.OPEN))::((ALWAYS, "or", Microsoft_FStar_Parser_Parse.OR))::((ALWAYS, "opaque", Microsoft_FStar_Parser_Parse.OPAQUE))::((ALWAYS, "private", Microsoft_FStar_Parser_Parse.PRIVATE))::((FSHARP, "public", Microsoft_FStar_Parser_Parse.PUBLIC))::((ALWAYS, "rec", Microsoft_FStar_Parser_Parse.REC))::((ALWAYS, "requires", Microsoft_FStar_Parser_Parse.REQUIRES))::((ALWAYS, "then", Microsoft_FStar_Parser_Parse.THEN))::((ALWAYS, "to", Microsoft_FStar_Parser_Parse.TO))::((ALWAYS, "true", Microsoft_FStar_Parser_Parse.TRUE))::((ALWAYS, "try", Microsoft_FStar_Parser_Parse.TRY))::((ALWAYS, "type", Microsoft_FStar_Parser_Parse.TYPE))::((ALWAYS, "val", Microsoft_FStar_Parser_Parse.VAL))::((ALWAYS, "when", Microsoft_FStar_Parser_Parse.WHEN))::((ALWAYS, "with", Microsoft_FStar_Parser_Parse.WITH))::((ALWAYS, "new_effect", Microsoft_FStar_Parser_Parse.NEW_EFFECT))::((ALWAYS, "sub_effect", Microsoft_FStar_Parser_Parse.SUB_EFFECT))::((ALWAYS, "total", Microsoft_FStar_Parser_Parse.TOTAL))::((ALWAYS, "kind", Microsoft_FStar_Parser_Parse.KIND))::((ALWAYS, "_", Microsoft_FStar_Parser_Parse.UNDERSCORE))::[]) (Support.List.map (fun s -> (FSHARP, s, Microsoft_FStar_Parser_Parse.RESERVED)) (("atomic")::("break")::("checked")::("component")::("constraint")::("constructor")::("continue")::("eager")::("fixed")::("functor")::("global")::("include")::("mixin")::("parallel")::("process")::("protected")::("pure")::("sealed")::("trait")::("tailcall")::("volatile")::[])))
 
-let stringKeywords = (Support.List.map (fun _414723 -> (match (_414723) with
+let stringKeywords = (Support.List.map (fun _414936 -> (match (_414936) with
 | (_, w, _) -> begin
 w
 end)) keywords)
 
-let unreserve_words = (Support.List.choose (fun _414728 -> (match (_414728) with
+let unreserve_words = (Support.List.choose (fun _414941 -> (match (_414941) with
 | (mode, keyword, _) -> begin
 if (mode = FSHARP) then begin
 Some (keyword)
@@ -125,7 +125,7 @@ end
 end)) keywords)
 
 let kwd_table = (let tab = (Support.Microsoft.FStar.Util.smap_create 1000)
-in (let _414734 = (Support.List.iter (fun _414733 -> (match (_414733) with
+in (let _414947 = (Support.List.iter (fun _414946 -> (match (_414946) with
 | (mode, keyword, token) -> begin
 (Support.Microsoft.FStar.Util.smap_add tab keyword token)
 end)) keywords)
@@ -140,7 +140,7 @@ exception IndentationProblem of ((string * Support.Microsoft.FStar.Range.range))
 type lexargs =
 {getSourceDirectory : unit  ->  string; contents : string}
 
-let mkLexargs = (fun _414745 -> (match (_414745) with
+let mkLexargs = (fun _414958 -> (match (_414958) with
 | (srcdir, filename, contents) -> begin
 {getSourceDirectory = srcdir; contents = contents}
 end))
@@ -148,7 +148,7 @@ end))
 let kwd_or_id = (fun args r s -> (match ((kwd s)) with
 | Some (v) -> begin
 if (v = Microsoft_FStar_Parser_Parse.RESERVED) then begin
-(let _414751 = (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "The keyword \'%s\' is reserved for future use by F#. (%s)" s (Support.Microsoft.FStar.Range.string_of_range r)))
+(let _414964 = (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "The keyword \'%s\' is reserved for future use by F#. (%s)" s (Support.Microsoft.FStar.Range.string_of_range r)))
 in Microsoft_FStar_Parser_Parse.IDENT ((intern_string s)))
 end else begin
 v

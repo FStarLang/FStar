@@ -28,14 +28,14 @@ let rec parse_query_for_split_cases (t:term) (f:term -> term) :bool * (term * (t
             | App (ITE, _) when is_ite_all_the_way t2 ->
               true, (t2, (fun x -> f (mkImp (t1, x))))
 
-            | _ -> false, (mkFalse, fun _ -> mkFalse)
+            | _ -> false, (mkFalse, (fun _ -> mkFalse))
       in
       r
 
     | App (ITE, _) when is_ite_all_the_way t ->
       true, (t, f)
 
-    | _ -> false, (mkFalse, fun _ -> mkFalse)
+    | _ -> false, (mkFalse, (fun _ -> mkFalse))
 
 let strip_not (t:term) :term = match t.tm with
     | App (Not, hd::_) -> hd
@@ -72,7 +72,7 @@ let check_exhaustiveness (f:term -> term) (neg_guards:term) (check:decl -> unit)
 let can_handle_query (q:decl) :bool * (term * (term -> term)) =
     match q with
         | Assume(q', _) -> parse_query_for_split_cases (strip_not q') (fun x -> x)
-        | _ -> false, (mkFalse, fun x -> x)
+        | _ -> false, (mkFalse, (fun x -> x))
 
 let r = ref 0
 

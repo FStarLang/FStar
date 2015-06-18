@@ -21,7 +21,7 @@ PARSER_SRC=$(addprefix parser/, $(PARSER))
 PARSER_NOGEN=ast.fs parseutil.fs parse.fsy lexhelp.fs lex.fsl dsenv.fs desugar.fs parseit.fsi parseit.fs driver.fs
 PARSER_NOGEN_SRC=$(addprefix parser/, $(PARSER_NOGEN))
 
-TOSMT=term.fsi term.fs z3.fs encode.fs
+TOSMT=term.fsi term.fs z3.fs splitcases.fs encode.fs
 TOSMT_SRC=$(addprefix tosmt/, $(TOSMT))
 
 TC=tcenv.fsi tcenv.fs recheck.fs normalize.fsi normalize.fs errors.fs rel.fsi rel.fs tcutil.fsi tcutil.fs tc.fs

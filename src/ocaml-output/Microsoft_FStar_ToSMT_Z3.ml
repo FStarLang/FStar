@@ -3,7 +3,7 @@ type z3version =
 | Z3V_Unknown
 | Z3V of (int * int * int)
 
-let z3v_compare = (fun known _425696 -> (match (_425696) with
+let z3v_compare = (fun known _426161 -> (match (_426161) with
 | (w1, w2, w3) -> begin
 (match (known) with
 | Z3V_Unknown -> begin
@@ -32,7 +32,7 @@ end))
 
 let _z3version = (Support.Microsoft.FStar.Util.mk_ref None)
 
-let get_z3version = (fun _425708 -> (match (_425708) with
+let get_z3version = (fun _426173 -> (match (_426173) with
 | () -> begin
 (let prefix = "Z3 version "
 in (match ((! (_z3version))) with
@@ -40,16 +40,16 @@ in (match ((! (_z3version))) with
 version
 end
 | None -> begin
-(let _425718 = (Support.Microsoft.FStar.Util.run_proc (! (Microsoft_FStar_Options.z3_exe)) "-version" "")
-in (match (_425718) with
+(let _426183 = (Support.Microsoft.FStar.Util.run_proc (! (Microsoft_FStar_Options.z3_exe)) "-version" "")
+in (match (_426183) with
 | (_, out, _) -> begin
 (let out = (match ((Support.Microsoft.FStar.Util.splitlines out)) with
 | x::_ when (Support.Microsoft.FStar.Util.starts_with x prefix) -> begin
 (let x = (Support.Microsoft.FStar.Util.trim_string (Support.Microsoft.FStar.Util.substring_from x (Support.String.length prefix)))
-in (let x = (Support.Prims.try_with (fun _425725 -> (match (_425725) with
+in (let x = (Support.Prims.try_with (fun _426190 -> (match (_426190) with
 | () -> begin
 (Support.List.map Support.Microsoft.FStar.Util.int_of_string (Support.Microsoft.FStar.Util.split x "."))
-end)) (fun _425724 -> []))
+end)) (fun _426189 -> []))
 in (match (x) with
 | i1::i2::i3::[] -> begin
 Z3V ((i1, i2, i3))
@@ -61,13 +61,13 @@ end
 | _ -> begin
 Z3V_Unknown
 end)
-in (let _425741 = (_z3version := Some (out))
+in (let _426206 = (_z3version := Some (out))
 in out))
 end))
 end))
 end))
 
-let ini_params = (fun _425743 -> (match (_425743) with
+let ini_params = (fun _426208 -> (match (_426208) with
 | () -> begin
 (let t = if (z3v_le (get_z3version ()) (4, 3, 1)) then begin
 (! (Microsoft_FStar_Options.z3timeout))
@@ -89,7 +89,7 @@ type z3status =
 | UNKNOWN
 | TIMEOUT
 
-let status_to_string = (fun _425689 -> (match (_425689) with
+let status_to_string = (fun _426154 -> (match (_426154) with
 | SAT -> begin
 "sat"
 end
@@ -103,7 +103,7 @@ end
 "timeout"
 end))
 
-let tid = (fun _425752 -> (match (_425752) with
+let tid = (fun _426217 -> (match (_426217) with
 | () -> begin
 (Support.Microsoft.FStar.Util.string_of_int (Support.Microsoft.FStar.Util.current_tid ()))
 end))
@@ -119,13 +119,13 @@ let queries_dot_smt2 = (Support.Microsoft.FStar.Util.mk_ref None)
 
 let get_qfile = (let ctr = (Support.Microsoft.FStar.Util.mk_ref 0)
 in (fun fresh -> if fresh then begin
-(let _425764 = (Support.Microsoft.FStar.Util.incr ctr)
+(let _426229 = (Support.Microsoft.FStar.Util.incr ctr)
 in (Support.Microsoft.FStar.Util.open_file_for_writing (Support.Microsoft.FStar.Util.format1 "queries-%s.smt2" (Support.Microsoft.FStar.Util.string_of_int (! (ctr))))))
 end else begin
 (match ((! (queries_dot_smt2))) with
 | None -> begin
 (let fh = (Support.Microsoft.FStar.Util.open_file_for_writing "queries-bg-0.smt2")
-in (let _425768 = (queries_dot_smt2 := Some (fh))
+in (let _426233 = (queries_dot_smt2 := Some (fh))
 in fh))
 end
 | Some (fh) -> begin
@@ -134,39 +134,39 @@ end)
 end))
 
 let log_query = (fun fresh i -> (let fh = (get_qfile fresh)
-in (let _425775 = (Support.Microsoft.FStar.Util.append_to_file fh i)
+in (let _426240 = (Support.Microsoft.FStar.Util.append_to_file fh i)
 in if fresh then begin
 (Support.Microsoft.FStar.Util.close_file fh)
 end)))
 
 let bg_z3_proc = (let ctr = (Support.Microsoft.FStar.Util.mk_ref (- (1)))
-in (let new_proc = (fun _425779 -> (match (_425779) with
+in (let new_proc = (fun _426244 -> (match (_426244) with
 | () -> begin
-(new_z3proc (Support.Microsoft.FStar.Util.format1 "bg-%s" (let _425780 = (Support.Microsoft.FStar.Util.incr ctr)
+(new_z3proc (Support.Microsoft.FStar.Util.format1 "bg-%s" (let _426245 = (Support.Microsoft.FStar.Util.incr ctr)
 in (Support.Microsoft.FStar.Util.string_of_int (! (ctr))))))
 end))
 in (let z3proc = (Support.Microsoft.FStar.Util.mk_ref (new_proc ()))
 in (let x = []
-in (let grab = (fun _425785 -> (match (_425785) with
+in (let grab = (fun _426250 -> (match (_426250) with
 | () -> begin
-(let _425786 = (Support.Microsoft.FStar.Util.monitor_enter x)
+(let _426251 = (Support.Microsoft.FStar.Util.monitor_enter x)
 in (! (z3proc)))
 end))
-in (let release = (fun _425789 -> (match (_425789) with
+in (let release = (fun _426254 -> (match (_426254) with
 | () -> begin
 (Support.Microsoft.FStar.Util.monitor_exit x)
 end))
-in (let refresh = (fun _425791 -> (match (_425791) with
+in (let refresh = (fun _426256 -> (match (_426256) with
 | () -> begin
 (let proc = (grab ())
-in (let _425793 = (Support.Microsoft.FStar.Util.kill_process proc)
-in (let _425795 = (z3proc := (new_proc ()))
-in (let _425803 = (match ((! (queries_dot_smt2))) with
+in (let _426258 = (Support.Microsoft.FStar.Util.kill_process proc)
+in (let _426260 = (z3proc := (new_proc ()))
+in (let _426268 = (match ((! (queries_dot_smt2))) with
 | None -> begin
 ()
 end
 | Some (fh) -> begin
-(let _425800 = (Support.Microsoft.FStar.Util.close_file fh)
+(let _426265 = (Support.Microsoft.FStar.Util.close_file fh)
 in (let fh = (Support.Microsoft.FStar.Util.open_file_for_writing (Support.Microsoft.FStar.Util.format1 "queries-bg-%s.smt2" (Support.Microsoft.FStar.Util.string_of_int (! (ctr)))))
 in (queries_dot_smt2 := Some (fh))))
 end)
@@ -210,20 +210,20 @@ in (parse (Support.Microsoft.FStar.Util.trim_string stdout)))))
 
 let doZ3Exe = (let ctr = (Support.Microsoft.FStar.Util.mk_ref 0)
 in (fun fresh input -> (let z3proc = if fresh then begin
-(let _425850 = (Support.Microsoft.FStar.Util.incr ctr)
+(let _426315 = (Support.Microsoft.FStar.Util.incr ctr)
 in (new_z3proc (Support.Microsoft.FStar.Util.string_of_int (! (ctr)))))
 end else begin
 (bg_z3_proc.grab ())
 end
 in (let res = (doZ3Exe' input z3proc)
-in (let _425854 = if fresh then begin
+in (let _426319 = if fresh then begin
 (Support.Microsoft.FStar.Util.kill_process z3proc)
 end else begin
 (bg_z3_proc.release ())
 end
 in res)))))
 
-let z3_options = (fun _425856 -> (match (_425856) with
+let z3_options = (fun _426321 -> (match (_426321) with
 | () -> begin
 (let mbqi = if (z3v_le (get_z3version ()) (4, 3, 1)) then begin
 "mbqi"
@@ -244,34 +244,34 @@ type 'a job =
 type z3job =
 (bool * (string * Support.Microsoft.FStar.Range.range) list) job
 
-let job_queue = (let x = (Support.Microsoft.FStar.Util.mk_ref (({job = (fun _425863 -> (match (_425863) with
+let job_queue = (let x = (Support.Microsoft.FStar.Util.mk_ref (({job = (fun _426328 -> (match (_426328) with
 | () -> begin
 (false, (("", (Support.Microsoft.FStar.Range.mk_range "" 0 0)))::[])
 end)); callback = (fun a -> ())})::[]))
-in (let _425866 = (x := [])
+in (let _426331 = (x := [])
 in x))
 
 let pending_jobs = (Support.Microsoft.FStar.Util.mk_ref 0)
 
-let with_monitor = (fun m f -> (let _425870 = (Support.Microsoft.FStar.Util.monitor_enter m)
+let with_monitor = (fun m f -> (let _426335 = (Support.Microsoft.FStar.Util.monitor_enter m)
 in (let res = (f ())
-in (let _425873 = (Support.Microsoft.FStar.Util.monitor_exit m)
+in (let _426338 = (Support.Microsoft.FStar.Util.monitor_exit m)
 in res))))
 
-let z3_job = (fun fresh label_messages input _425878 -> (match (_425878) with
+let z3_job = (fun fresh label_messages input _426343 -> (match (_426343) with
 | () -> begin
-(let _425881 = (doZ3Exe fresh input)
-in (match (_425881) with
+(let _426346 = (doZ3Exe fresh input)
+in (match (_426346) with
 | (status, lblnegs) -> begin
 (let result = (match (status) with
 | UNSAT -> begin
 (true, [])
 end
 | _ -> begin
-(let _425885 = if ((! (Microsoft_FStar_Options.debug)) <> []) then begin
+(let _426350 = if ((! (Microsoft_FStar_Options.debug)) <> []) then begin
 (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format1 "Z3 says: %s\n" (status_to_string status)))
 end
-in (let failing_assertions = ((Support.List.collect (fun l -> (match (((Support.List.tryFind (fun _425893 -> (match (_425893) with
+in (let failing_assertions = ((Support.List.collect (fun l -> (match (((Support.List.tryFind (fun _426358 -> (match (_426358) with
 | (m, _, _) -> begin
 ((Support.Prims.fst m) = l)
 end))) label_messages)) with
@@ -287,33 +287,33 @@ in result)
 end))
 end))
 
-let rec dequeue' = (fun _425903 -> (match (_425903) with
+let rec dequeue' = (fun _426368 -> (match (_426368) with
 | () -> begin
 (let j = (match ((! (job_queue))) with
 | [] -> begin
 (failwith "Impossible")
 end
 | hd::tl -> begin
-(let _425908 = (job_queue := tl)
+(let _426373 = (job_queue := tl)
 in hd)
 end)
-in (let _425911 = (Support.Microsoft.FStar.Util.incr pending_jobs)
-in (let _425913 = (Support.Microsoft.FStar.Util.monitor_exit job_queue)
-in (let _425915 = (run_job j)
-in (let _425918 = (with_monitor job_queue (fun _425917 -> (match (_425917) with
+in (let _426376 = (Support.Microsoft.FStar.Util.incr pending_jobs)
+in (let _426378 = (Support.Microsoft.FStar.Util.monitor_exit job_queue)
+in (let _426380 = (run_job j)
+in (let _426383 = (with_monitor job_queue (fun _426382 -> (match (_426382) with
 | () -> begin
 (Support.Microsoft.FStar.Util.decr pending_jobs)
 end)))
 in (dequeue ()))))))
 end))
-and dequeue = (fun _425920 -> (match (_425920) with
+and dequeue = (fun _426385 -> (match (_426385) with
 | () -> begin
-(let _425921 = (Support.Microsoft.FStar.Util.monitor_enter job_queue)
-in (let rec aux = (fun _425924 -> (match (_425924) with
+(let _426386 = (Support.Microsoft.FStar.Util.monitor_enter job_queue)
+in (let rec aux = (fun _426389 -> (match (_426389) with
 | () -> begin
 (match ((! (job_queue))) with
 | [] -> begin
-(let _425926 = (Support.Microsoft.FStar.Util.monitor_wait job_queue)
+(let _426391 = (Support.Microsoft.FStar.Util.monitor_wait job_queue)
 in (aux ()))
 end
 | _ -> begin
@@ -324,13 +324,13 @@ in (aux ())))
 end))
 and run_job = (fun j -> (j.callback (j.job ())))
 
-let init = (fun _425931 -> (match (_425931) with
+let init = (fun _426396 -> (match (_426396) with
 | () -> begin
 (let n_runners = ((! (Microsoft_FStar_Options.n_cores)) - 1)
 in (let rec aux = (fun n -> if (n = 0) then begin
 ()
 end else begin
-(let _425935 = (Support.Microsoft.FStar.Util.spawn (dequeue))
+(let _426400 = (Support.Microsoft.FStar.Util.spawn (dequeue))
 in (aux (n - 1)))
 end)
 in (aux n_runners)))
@@ -339,29 +339,29 @@ end))
 let enqueue = (fun fresh j -> if (not (fresh)) then begin
 (run_job j)
 end else begin
-(let _425939 = (Support.Microsoft.FStar.Util.monitor_enter job_queue)
-in (let _425941 = (job_queue := (Support.List.append (! (job_queue)) ((j)::[])))
-in (let _425943 = (Support.Microsoft.FStar.Util.monitor_pulse job_queue)
+(let _426404 = (Support.Microsoft.FStar.Util.monitor_enter job_queue)
+in (let _426406 = (job_queue := (Support.List.append (! (job_queue)) ((j)::[])))
+in (let _426408 = (Support.Microsoft.FStar.Util.monitor_pulse job_queue)
 in (Support.Microsoft.FStar.Util.monitor_exit job_queue))))
 end)
 
-let finish = (fun _425945 -> (match (_425945) with
+let finish = (fun _426410 -> (match (_426410) with
 | () -> begin
 (let bg = (bg_z3_proc.grab ())
-in (let _425947 = (Support.Microsoft.FStar.Util.kill_process bg)
-in (let _425949 = (bg_z3_proc.release ())
-in (let rec aux = (fun _425952 -> (match (_425952) with
+in (let _426412 = (Support.Microsoft.FStar.Util.kill_process bg)
+in (let _426414 = (bg_z3_proc.release ())
+in (let rec aux = (fun _426417 -> (match (_426417) with
 | () -> begin
-(let _425956 = (with_monitor job_queue (fun _425953 -> (match (_425953) with
+(let _426421 = (with_monitor job_queue (fun _426418 -> (match (_426418) with
 | () -> begin
 ((! (pending_jobs)), (Support.List.length (! (job_queue))))
 end)))
-in (match (_425956) with
+in (match (_426421) with
 | (n, m) -> begin
 if ((n + m) = 0) then begin
 ((Support.Prims.ignore) (Microsoft_FStar_Tc_Errors.report_all ()))
 end else begin
-(let _425957 = (Support.Microsoft.FStar.Util.sleep 500)
+(let _426422 = (Support.Microsoft.FStar.Util.sleep 500)
 in (aux ()))
 end
 end))
@@ -376,13 +376,13 @@ let fresh_scope = (Support.Microsoft.FStar.Util.mk_ref (([])::[]))
 
 let bg_scope = (Support.Microsoft.FStar.Util.mk_ref [])
 
-let push = (fun msg -> (let _425960 = (fresh_scope := ((Microsoft_FStar_ToSMT_Term.Caption (msg))::[])::(! (fresh_scope)))
+let push = (fun msg -> (let _426425 = (fresh_scope := ((Microsoft_FStar_ToSMT_Term.Caption (msg))::[])::(! (fresh_scope)))
 in (bg_scope := (Support.List.append ((Microsoft_FStar_ToSMT_Term.Caption (msg))::(Microsoft_FStar_ToSMT_Term.Push)::[]) (! (bg_scope))))))
 
-let pop = (fun msg -> (let _425963 = (fresh_scope := (Support.List.tl (! (fresh_scope))))
+let pop = (fun msg -> (let _426428 = (fresh_scope := (Support.List.tl (! (fresh_scope))))
 in (bg_scope := (Support.List.append ((Microsoft_FStar_ToSMT_Term.Caption (msg))::(Microsoft_FStar_ToSMT_Term.Pop)::[]) (! (bg_scope))))))
 
-let giveZ3 = (fun decls -> (let _425971 = (match ((! (fresh_scope))) with
+let giveZ3 = (fun decls -> (let _426436 = (match ((! (fresh_scope))) with
 | hd::tl -> begin
 (fresh_scope := ((Support.List.append hd decls))::tl)
 end
@@ -395,20 +395,20 @@ let bgtheory = (fun fresh -> if fresh then begin
 ((Support.List.flatten) (Support.List.rev (! (fresh_scope))))
 end else begin
 (let bg = (! (bg_scope))
-in (let _425975 = (bg_scope := [])
+in (let _426440 = (bg_scope := [])
 in (Support.List.rev bg)))
 end)
 
-let refresh = (fun _425977 -> (match (_425977) with
+let refresh = (fun _426442 -> (match (_426442) with
 | () -> begin
-(let _425978 = (bg_z3_proc.refresh ())
+(let _426443 = (bg_z3_proc.refresh ())
 in (let theory = (bgtheory true)
 in (bg_scope := (Support.List.rev theory))))
 end))
 
 let mark = (fun msg -> (push msg))
 
-let reset_mark = (fun msg -> (let _425983 = (pop msg)
+let reset_mark = (fun msg -> (let _426448 = (pop msg)
 in (refresh ())))
 
 let commit_mark = (fun msg -> (match ((! (fresh_scope))) with
@@ -427,7 +427,7 @@ end else begin
 (Support.List.append (Support.List.append (Support.List.append theory ((Microsoft_FStar_ToSMT_Term.Push)::[])) qry) ((Microsoft_FStar_ToSMT_Term.Pop)::[]))
 end
 in (let input = ((Support.String.concat "\n") (Support.List.map (Microsoft_FStar_ToSMT_Term.declToSmt (z3_options ())) theory))
-in (let _426001 = if (! (Microsoft_FStar_Options.logQueries)) then begin
+in (let _426466 = if (! (Microsoft_FStar_Options.logQueries)) then begin
 (log_query fresh input)
 end
 in (enqueue fresh {job = (z3_job fresh label_messages input); callback = cb})))))))

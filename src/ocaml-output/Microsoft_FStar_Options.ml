@@ -135,7 +135,7 @@ let use_build_config = (Support.Microsoft.FStar.Util.mk_ref false)
 
 let interactive = (Support.Microsoft.FStar.Util.mk_ref false)
 
-let split_cases = (Support.Microsoft.FStar.Util.mk_ref false)
+let split_cases = (Support.Microsoft.FStar.Util.mk_ref 0)
 
 let init_options = (fun _23889 -> (match (_23889) with
 | () -> begin
@@ -180,7 +180,7 @@ in (let _23964 = (unthrottle_inductives := false)
 in (let _23966 = (use_eq_at_higher_order := false)
 in (let _23968 = (fs_typ_app := false)
 in (let _23970 = (n_cores := 1)
-in (let _23972 = (split_cases := false)
+in (let _23972 = (split_cases := 0)
 in (verify_module := [])))))))))))))))))))))))))))))))))))))))))))
 end))
 
@@ -332,10 +332,7 @@ end))), "Allow the use of t<t1,...,tn> syntax for type applications; brittle sin
 end))), "Do not allow the use of t<t1,...,tn> syntax for type applications"))::((Support.Microsoft.FStar.Getopt.noshort, "n_cores", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (n_cores := (Support.Microsoft.FStar.Util.int_of_string x))), "positive integer")), "Maximum number of cores to use for the solver (default 1)"))::((Support.Microsoft.FStar.Getopt.noshort, "verify_module", Support.Microsoft.FStar.Getopt.OneArg (((fun x -> (verify_module := (x)::(! (verify_module)))), "string")), "Name of the module to verify"))::((Support.Microsoft.FStar.Getopt.noshort, "use_build_config", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _24063 -> (match (_24063) with
 | () -> begin
 (use_build_config := true)
-end))), "Expect just a single file on the command line and no options; will read the \'build-config\' prelude from the file"))::((Support.Microsoft.FStar.Getopt.noshort, "split_cases", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _24064 -> (match (_24064) with
-| () -> begin
-(split_cases := true)
-end))), "Generate separate verification conditions for each branch of a match"))::((Support.Microsoft.FStar.Getopt.noshort, "in", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _24065 -> (match (_24065) with
+end))), "Expect just a single file on the command line and no options; will read the \'build-config\' prelude from the file"))::((Support.Microsoft.FStar.Getopt.noshort, "split_cases", Support.Microsoft.FStar.Getopt.OneArg (((fun n -> (split_cases := (Support.Microsoft.FStar.Util.int_of_string n))), "t")), "Partition VC of a match into groups of n cases"))::((Support.Microsoft.FStar.Getopt.noshort, "in", Support.Microsoft.FStar.Getopt.ZeroArgs ((fun _24065 -> (match (_24065) with
 | () -> begin
 (interactive := true)
 end))), "Interactive mode; reads input from stdin"))::[]

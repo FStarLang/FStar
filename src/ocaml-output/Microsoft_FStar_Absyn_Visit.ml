@@ -18,7 +18,7 @@ typ
 end
 | Some (t) -> begin
 (let t' = (compress_typ_aux pos t)
-in (let _36495 = (m := Some (t'))
+in (let _36490 = (m := Some (t'))
 in t'))
 end)
 end
@@ -59,7 +59,7 @@ exp
 end
 | Some (e) -> begin
 (let e' = (compress_exp_aux meta e)
-in (let _36554 = (m := Some (e'))
+in (let _36549 = (m := Some (e'))
 in e'))
 end)
 end
@@ -91,7 +91,7 @@ knd
 end
 | Some (k) -> begin
 (let k' = (compress_kind k)
-in (let _36599 = (m := Some (k'))
+in (let _36594 = (m := Some (k'))
 in k'))
 end)
 end
@@ -127,7 +127,7 @@ type ('env, 'm) imap =
 type ('env, 'm, 'n) mapper =
 ('env, Microsoft_FStar_Absyn_Syntax.knd) imap  ->  ('env, Microsoft_FStar_Absyn_Syntax.typ) imap  ->  ('env, Microsoft_FStar_Absyn_Syntax.exp) imap  ->  'env  ->  boundvars  ->  'm  ->  ('n * 'env)
 
-let push_tbinder = (fun binders _36473 -> (match (_36473) with
+let push_tbinder = (fun binders _36468 -> (match (_36468) with
 | None -> begin
 binders
 end
@@ -135,7 +135,7 @@ end
 (Support.Microsoft.FStar.Util.Inl (a))::binders
 end))
 
-let push_vbinder = (fun binders _36474 -> (match (_36474) with
+let push_vbinder = (fun binders _36469 -> (match (_36469) with
 | None -> begin
 binders
 end
@@ -170,18 +170,18 @@ type typ_components =
 type exp_components =
 (Microsoft_FStar_Absyn_Syntax.binders * Microsoft_FStar_Absyn_Syntax.knd list * Microsoft_FStar_Absyn_Syntax.typ list * Microsoft_FStar_Absyn_Syntax.exp list * Microsoft_FStar_Absyn_Syntax.arg list)
 
-let leaf_k = (fun _36648 -> (match (_36648) with
+let leaf_k = (fun _36643 -> (match (_36643) with
 | () -> begin
 ([], [], [], [])
 end))
 
-let leaf_te = (fun _36649 -> (match (_36649) with
+let leaf_te = (fun _36644 -> (match (_36644) with
 | () -> begin
 ([], [], [], [], [])
 end))
 
 let rec reduce_kind = (fun map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders k -> (let rec visit_kind = (fun env binders k -> (let k = (compress_kind k)
-in (let _36708 = (match (k.Microsoft_FStar_Absyn_Syntax.n) with
+in (let _36703 = (match (k.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Kind_delayed (_) -> begin
 (failwith "Impossible")
 end
@@ -189,35 +189,35 @@ end
 ((leaf_k ()), env)
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_uvar ((_, args)) -> begin
-(let _36684 = (map_args map_typ map_exp env binders args)
-in (match (_36684) with
+(let _36679 = (map_args map_typ map_exp env binders args)
+in (match (_36679) with
 | (args, env) -> begin
 (([], [], [], args), env)
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_abbrev ((kabr, k)) -> begin
-(let _36691 = (map_kind env binders k)
-in (match (_36691) with
+(let _36686 = (map_kind env binders k)
+in (match (_36686) with
 | (k, env) -> begin
-(let _36694 = (map_args map_typ map_exp env binders (Support.Prims.snd kabr))
-in (match (_36694) with
+(let _36689 = (map_args map_typ map_exp env binders (Support.Prims.snd kabr))
+in (match (_36689) with
 | (args, env) -> begin
 (([], (k)::[], [], args), env)
 end))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_arrow ((bs, k)) -> begin
-(let _36702 = (map_binders map_kind map_typ env binders bs)
-in (match (_36702) with
+(let _36697 = (map_binders map_kind map_typ env binders bs)
+in (match (_36697) with
 | (bs, binders, env) -> begin
-(let _36705 = (map_kind env binders k)
-in (match (_36705) with
+(let _36700 = (map_kind env binders k)
+in (match (_36700) with
 | (k, env) -> begin
 ((bs, (k)::[], [], []), env)
 end))
 end))
 end)
-in (match (_36708) with
+in (match (_36703) with
 | (components, env) -> begin
 (combine_kind k components env)
 end))))
@@ -225,71 +225,71 @@ and map_kind = (fun env binders k -> (map_kind' visit_kind map_typ map_exp env b
 and map_typ = (fun env binders t -> (reduce_typ map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders t))
 and map_exp = (fun env binders e -> (reduce_exp map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders e))
 in (map_kind env binders k)))
-and map_args = (fun map_typ map_exp env binders arguments -> (let _36742 = (Support.List.fold_left (fun _36726 _36729 -> (match ((_36726, _36729)) with
+and map_args = (fun map_typ map_exp env binders arguments -> (let _36737 = (Support.List.fold_left (fun _36721 _36724 -> (match ((_36721, _36724)) with
 | ((out, env), (arg, imp)) -> begin
 (match (arg) with
 | Support.Microsoft.FStar.Util.Inl (t) -> begin
-(let _36734 = (map_typ env binders t)
-in (match (_36734) with
+(let _36729 = (map_typ env binders t)
+in (match (_36729) with
 | (t, env) -> begin
 (((Support.Microsoft.FStar.Util.Inl (t), imp))::out, env)
 end))
 end
 | Support.Microsoft.FStar.Util.Inr (e) -> begin
-(let _36739 = (map_exp env binders e)
-in (match (_36739) with
+(let _36734 = (map_exp env binders e)
+in (match (_36734) with
 | (e, env) -> begin
 (((Support.Microsoft.FStar.Util.Inr (e), imp))::out, env)
 end))
 end)
 end)) ([], env) arguments)
-in (match (_36742) with
+in (match (_36737) with
 | (args', env) -> begin
 ((Support.List.rev args'), env)
 end)))
-and map_binders = (fun map_kind map_typ env binders bs -> (let _36773 = ((Support.List.fold_left (fun _36752 b -> (match (_36752) with
+and map_binders = (fun map_kind map_typ env binders bs -> (let _36768 = ((Support.List.fold_left (fun _36747 b -> (match (_36747) with
 | (bs, binders, env) -> begin
 (match (b) with
 | (Support.Microsoft.FStar.Util.Inl (a), imp) -> begin
-(let _36760 = (map_kind env binders a.Microsoft_FStar_Absyn_Syntax.sort)
-in (match (_36760) with
+(let _36755 = (map_kind env binders a.Microsoft_FStar_Absyn_Syntax.sort)
+in (match (_36755) with
 | (k, env) -> begin
 (let binders = (push_tbinder binders (Some (a.Microsoft_FStar_Absyn_Syntax.v)))
 in (((Support.Microsoft.FStar.Util.Inl ((bvd_to_bvar_s a.Microsoft_FStar_Absyn_Syntax.v k)), imp))::bs, binders, env))
 end))
 end
 | (Support.Microsoft.FStar.Util.Inr (x), imp) -> begin
-(let _36768 = (map_typ env binders x.Microsoft_FStar_Absyn_Syntax.sort)
-in (match (_36768) with
+(let _36763 = (map_typ env binders x.Microsoft_FStar_Absyn_Syntax.sort)
+in (match (_36763) with
 | (t, env) -> begin
 (let binders = (push_vbinder binders (Some (x.Microsoft_FStar_Absyn_Syntax.v)))
 in (((Support.Microsoft.FStar.Util.Inr ((bvd_to_bvar_s x.Microsoft_FStar_Absyn_Syntax.v t)), imp))::bs, binders, env))
 end))
 end)
 end)) ([], binders, env)) bs)
-in (match (_36773) with
+in (match (_36768) with
 | (bs, binders, env) -> begin
 ((Support.List.rev bs), binders, env)
 end)))
 and reduce_typ = (fun map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders t -> (let rec map_comp = (fun env binders c -> (match (c.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Total (t) -> begin
-(let _36796 = (map_typ env binders t)
-in (match (_36796) with
+(let _36791 = (map_typ env binders t)
+in (match (_36791) with
 | (t, env) -> begin
 ((Microsoft_FStar_Absyn_Syntax.mk_Total t), env)
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Comp (ct) -> begin
-(let _36801 = (map_typ env binders ct.Microsoft_FStar_Absyn_Syntax.result_typ)
-in (match (_36801) with
+(let _36796 = (map_typ env binders ct.Microsoft_FStar_Absyn_Syntax.result_typ)
+in (match (_36796) with
 | (t, env) -> begin
-(let _36804 = (map_args map_typ map_exp env binders ct.Microsoft_FStar_Absyn_Syntax.effect_args)
-in (match (_36804) with
+(let _36799 = (map_args map_typ map_exp env binders ct.Microsoft_FStar_Absyn_Syntax.effect_args)
+in (match (_36799) with
 | (args, env) -> begin
-(let _36815 = ((Support.Microsoft.FStar.Util.fold_map (fun env flag -> (match (flag) with
+(let _36810 = ((Support.Microsoft.FStar.Util.fold_map (fun env flag -> (match (flag) with
 | Microsoft_FStar_Absyn_Syntax.DECREASES (arg) -> begin
-(let _36811 = (map_exp env binders arg)
-in (match (_36811) with
+(let _36806 = (map_exp env binders arg)
+in (match (_36806) with
 | (arg, env) -> begin
 (env, Microsoft_FStar_Absyn_Syntax.DECREASES (arg))
 end))
@@ -297,134 +297,134 @@ end
 | f -> begin
 (env, f)
 end)) env) ct.Microsoft_FStar_Absyn_Syntax.flags)
-in (match (_36815) with
+in (match (_36810) with
 | (env, flags) -> begin
-((Microsoft_FStar_Absyn_Syntax.mk_Comp (let _36816 = ct
-in {Microsoft_FStar_Absyn_Syntax.effect_name = _36816.Microsoft_FStar_Absyn_Syntax.effect_name; Microsoft_FStar_Absyn_Syntax.result_typ = t; Microsoft_FStar_Absyn_Syntax.effect_args = args; Microsoft_FStar_Absyn_Syntax.flags = flags})), env)
+((Microsoft_FStar_Absyn_Syntax.mk_Comp (let _36811 = ct
+in {Microsoft_FStar_Absyn_Syntax.effect_name = _36811.Microsoft_FStar_Absyn_Syntax.effect_name; Microsoft_FStar_Absyn_Syntax.result_typ = t; Microsoft_FStar_Absyn_Syntax.effect_args = args; Microsoft_FStar_Absyn_Syntax.flags = flags})), env)
 end))
 end))
 end))
 end))
-and visit_typ = (fun env binders t -> (let _36966 = (match ((compress_typ t).Microsoft_FStar_Absyn_Syntax.n) with
+and visit_typ = (fun env binders t -> (let _36961 = (match ((compress_typ t).Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_delayed (_) -> begin
 (failwith "Impossible")
 end
 | (Microsoft_FStar_Absyn_Syntax.Typ_unknown) | (Microsoft_FStar_Absyn_Syntax.Typ_btvar (_)) | (Microsoft_FStar_Absyn_Syntax.Typ_const (_)) -> begin
-(let _36834 = (map_typ env binders t)
-in (match (_36834) with
+(let _36829 = (map_typ env binders t)
+in (match (_36829) with
 | (_, env) -> begin
 ((leaf_te ()), env)
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_app ((t, args)) -> begin
-(let _36841 = (map_typ env binders t)
-in (match (_36841) with
+(let _36836 = (map_typ env binders t)
+in (match (_36836) with
 | (t, env) -> begin
-(let _36844 = (map_args map_typ map_exp env binders args)
-in (match (_36844) with
+(let _36839 = (map_args map_typ map_exp env binders args)
+in (match (_36839) with
 | (args, env) -> begin
 (([], [], (t)::[], [], args), env)
 end))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_lam ((axs, t)) -> begin
-(let _36852 = (map_binders map_kind map_typ env binders axs)
-in (match (_36852) with
+(let _36847 = (map_binders map_kind map_typ env binders axs)
+in (match (_36847) with
 | (axs, binders, env) -> begin
-(let _36855 = (map_typ env binders t)
-in (match (_36855) with
+(let _36850 = (map_typ env binders t)
+in (match (_36850) with
 | (t, env) -> begin
 ((axs, [], (t)::[], [], []), env)
 end))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_refine ((x, t2)) -> begin
-(let _36863 = (map_binders map_kind map_typ env binders (((Support.Microsoft.FStar.Util.Inr (x), None))::[]))
-in (match (_36863) with
+(let _36858 = (map_binders map_kind map_typ env binders (((Support.Microsoft.FStar.Util.Inr (x), None))::[]))
+in (match (_36858) with
 | (bs, binders, env) -> begin
-(let _36866 = (map_typ env binders t2)
-in (match (_36866) with
+(let _36861 = (map_typ env binders t2)
+in (match (_36861) with
 | (t2, env) -> begin
 ((bs, [], (t2)::[], [], []), env)
 end))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_fun ((bs, c)) -> begin
-(let _36874 = (map_binders map_kind map_typ env binders bs)
-in (match (_36874) with
+(let _36869 = (map_binders map_kind map_typ env binders bs)
+in (match (_36869) with
 | (bs, binders, env) -> begin
-(let _36877 = (map_comp env binders c)
-in (match (_36877) with
+(let _36872 = (map_comp env binders c)
+in (match (_36872) with
 | (c, env) -> begin
 ((bs, [], [], (c)::[], []), env)
 end))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_ascribed ((t, k)) -> begin
-(let _36884 = (map_typ env binders t)
-in (match (_36884) with
+(let _36879 = (map_typ env binders t)
+in (match (_36879) with
 | (t, env) -> begin
-(let _36887 = (map_kind env binders k)
-in (match (_36887) with
+(let _36882 = (map_kind env binders k)
+in (match (_36882) with
 | (k, env) -> begin
 (([], (k)::[], (t)::[], [], []), env)
 end))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_uvar ((_, k)) -> begin
-(let _36895 = (map_kind env binders k)
-in (match (_36895) with
+(let _36890 = (map_kind env binders k)
+in (match (_36890) with
 | (k, env) -> begin
 (([], (k)::[], [], [], []), env)
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_slack_formula ((t1, t2, flag))) -> begin
-(let _36904 = (map_typ env binders t1)
-in (match (_36904) with
+(let _36899 = (map_typ env binders t1)
+in (match (_36899) with
 | (t1, env) -> begin
-(let _36907 = (map_typ env binders t2)
-in (match (_36907) with
+(let _36902 = (map_typ env binders t2)
+in (match (_36902) with
 | (t2, env) -> begin
 (([], [], (t1)::(t2)::[], [], []), env)
 end))
 end))
 end
 | (Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_labeled ((t, _, _, _)))) | (Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_named ((t, _)))) | (Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_refresh_label ((t, _, _)))) -> begin
-(let _36932 = (map_typ env binders t)
-in (match (_36932) with
+(let _36927 = (map_typ env binders t)
+in (match (_36927) with
 | (t, env) -> begin
 (([], [], (t)::[], [], []), env)
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_meta (Microsoft_FStar_Absyn_Syntax.Meta_pattern ((t, ps))) -> begin
-(let _36940 = (map_typ env binders t)
-in (match (_36940) with
+(let _36935 = (map_typ env binders t)
+in (match (_36935) with
 | (t, env) -> begin
-(let _36963 = (Support.List.fold_left (fun _36943 arg -> (match (_36943) with
+(let _36958 = (Support.List.fold_left (fun _36938 arg -> (match (_36938) with
 | (pats, env) -> begin
 (match (arg) with
 | (Support.Microsoft.FStar.Util.Inl (t), _) -> begin
-(let _36952 = (map_typ env binders t)
-in (match (_36952) with
+(let _36947 = (map_typ env binders t)
+in (match (_36947) with
 | (t, env) -> begin
 (((Support.Microsoft.FStar.Util.Inl (t), None))::pats, env)
 end))
 end
 | (Support.Microsoft.FStar.Util.Inr (e), _) -> begin
-(let _36960 = (map_exp env binders e)
-in (match (_36960) with
+(let _36955 = (map_exp env binders e)
+in (match (_36955) with
 | (e, env) -> begin
 (((Support.Microsoft.FStar.Util.Inr (e), None))::pats, env)
 end))
 end)
 end)) ([], env) ps)
-in (match (_36963) with
+in (match (_36958) with
 | (pats, env) -> begin
 (([], [], (t)::[], [], (Support.List.rev pats)), env)
 end))
 end))
 end)
-in (match (_36966) with
+in (match (_36961) with
 | (components, env) -> begin
 (combine_typ t components env)
 end)))
@@ -432,27 +432,27 @@ and map_kind = (fun env binders k -> (reduce_kind map_kind' map_typ' map_exp' co
 and map_typ = (fun env binders t -> (map_typ' map_kind visit_typ map_exp env binders t))
 and map_exp = (fun env binders e -> (reduce_exp map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders e))
 in (map_typ env binders t)))
-and reduce_exp = (fun map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders e -> (let rec map_exps = (fun env binders el -> (let _37004 = (Support.List.fold_left (fun _36997 e -> (match (_36997) with
+and reduce_exp = (fun map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders e -> (let rec map_exps = (fun env binders el -> (let _36999 = (Support.List.fold_left (fun _36992 e -> (match (_36992) with
 | (out, env) -> begin
-(let _37001 = (map_exp env binders e)
-in (match (_37001) with
+(let _36996 = (map_exp env binders e)
+in (match (_36996) with
 | (e, env) -> begin
 ((e)::out, env)
 end))
 end)) ([], env) el)
-in (match (_37004) with
+in (match (_36999) with
 | (el, env) -> begin
 ((Support.List.rev el), env)
 end)))
-and map_exps_with_binders = (fun env el -> (let _37018 = (Support.List.fold_left (fun _37009 _37012 -> (match ((_37009, _37012)) with
+and map_exps_with_binders = (fun env el -> (let _37013 = (Support.List.fold_left (fun _37004 _37007 -> (match ((_37004, _37007)) with
 | ((out, env), (b, e)) -> begin
-(let _37015 = (map_exp env b e)
-in (match (_37015) with
+(let _37010 = (map_exp env b e)
+in (match (_37010) with
 | (e, env) -> begin
 ((e)::out, env)
 end))
 end)) ([], env) el)
-in (match (_37018) with
+in (match (_37013) with
 | (el, env) -> begin
 ((Support.List.rev el), env)
 end)))
@@ -460,13 +460,13 @@ and map_kind = (fun env binders k -> (reduce_kind map_kind' map_typ' map_exp' co
 and map_typ = (fun env binders t -> (reduce_typ map_kind' map_typ' map_exp' combine_kind combine_typ combine_exp env binders t))
 and map_exp = (fun env binders e -> (map_exp' map_kind map_typ visit_exp env binders e))
 and visit_exp = (fun env binders e -> (let e = (compress_exp_uvars e)
-in (let _37217 = (match (e.Microsoft_FStar_Absyn_Syntax.n) with
+in (let _37212 = (match (e.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Exp_delayed (_) -> begin
 (failwith "impossible")
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_meta (Microsoft_FStar_Absyn_Syntax.Meta_desugared ((e, _))) -> begin
-(let _37043 = (map_exp env binders e)
-in (match (_37043) with
+(let _37038 = (map_exp env binders e)
+in (match (_37038) with
 | (e, env) -> begin
 (([], [], [], (e)::[], []), env)
 end))
@@ -475,29 +475,29 @@ end
 ((leaf_te ()), env)
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_uvar ((_, t)) -> begin
-(let _37060 = (map_typ env binders t)
-in (match (_37060) with
+(let _37055 = (map_typ env binders t)
+in (match (_37055) with
 | (t, env) -> begin
 (([], [], (t)::[], [], []), env)
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_abs ((bs, e)) -> begin
-(let _37068 = (map_binders map_kind map_typ env binders bs)
-in (match (_37068) with
+(let _37063 = (map_binders map_kind map_typ env binders bs)
+in (match (_37063) with
 | (bs, binders, env) -> begin
-(let _37071 = (map_exp env binders e)
-in (match (_37071) with
+(let _37066 = (map_exp env binders e)
+in (match (_37066) with
 | (e, env) -> begin
 ((bs, [], [], (e)::[], []), env)
 end))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_app ((e, args)) -> begin
-(let _37078 = (map_exp env binders e)
-in (match (_37078) with
+(let _37073 = (map_exp env binders e)
+in (match (_37073) with
 | (e, env) -> begin
-(let _37081 = (map_args map_typ map_exp env binders args)
-in (match (_37081) with
+(let _37076 = (map_args map_typ map_exp env binders args)
+in (match (_37076) with
 | (args, env) -> begin
 (([], [], [], (e)::[], args), env)
 end))
@@ -523,7 +523,7 @@ end
 | Microsoft_FStar_Absyn_Syntax.Pat_disj ([]) -> begin
 (failwith "impossible")
 end))
-in (let branches = ((Support.List.collect (fun _37126 -> (match (_37126) with
+in (let branches = ((Support.List.collect (fun _37121 -> (match (_37121) with
 | (p, w, e) -> begin
 (let binders = (pat_binders binders p)
 in (match (w) with
@@ -534,26 +534,26 @@ end
 ((binders, w))::((binders, e))::[]
 end))
 end))) pl)
-in (let _37134 = (map_exps_with_binders env (((binders, e1))::branches))
-in (match (_37134) with
+in (let _37129 = (map_exps_with_binders env (((binders, e1))::branches))
+in (match (_37129) with
 | (el, env) -> begin
 (([], [], [], el, []), env)
 end))))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((e, t)) -> begin
-(let _37141 = (map_typ env binders t)
-in (match (_37141) with
+(let _37136 = (map_typ env binders t)
+in (match (_37136) with
 | (t, env) -> begin
-(let _37144 = (map_exp env binders e)
-in (match (_37144) with
+(let _37139 = (map_exp env binders e)
+in (match (_37139) with
 | (e, env) -> begin
 (([], [], (t)::[], (e)::[], []), env)
 end))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_let (((false, (x, t, e1)::[]), e2)) -> begin
-(let _37157 = (map_typ env binders t)
-in (match (_37157) with
+(let _37152 = (map_typ env binders t)
+in (match (_37152) with
 | (t, env) -> begin
 (let binders' = (match (x) with
 | Support.Microsoft.FStar.Util.Inl (x) -> begin
@@ -562,34 +562,34 @@ end
 | _ -> begin
 binders
 end)
-in (let _37165 = (map_exps_with_binders env (((binders, e1))::((binders', e2))::[]))
-in (match (_37165) with
+in (let _37160 = (map_exps_with_binders env (((binders, e1))::((binders', e2))::[]))
+in (match (_37160) with
 | (el, env) -> begin
 (([], [], (t)::[], el, []), env)
 end)))
 end))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_let (((true, bvdt_tl), e)) -> begin
-(let tl = (Support.List.map (fun _37177 -> (match (_37177) with
+(let tl = (Support.List.map (fun _37172 -> (match (_37172) with
 | (_, t, _) -> begin
 t
 end)) bvdt_tl)
-in (let el = (Support.List.map (fun _37184 -> (match (_37184) with
+in (let el = (Support.List.map (fun _37179 -> (match (_37179) with
 | (_, _, e) -> begin
 e
 end)) bvdt_tl)
-in (let _37195 = ((Support.List.fold_left (fun _37188 t -> (match (_37188) with
+in (let _37190 = ((Support.List.fold_left (fun _37183 t -> (match (_37183) with
 | (tl, env) -> begin
-(let _37192 = (map_typ env binders t)
-in (match (_37192) with
+(let _37187 = (map_typ env binders t)
+in (match (_37187) with
 | (t, env) -> begin
 ((t)::tl, env)
 end))
 end)) ([], env)) tl)
-in (match (_37195) with
+in (match (_37190) with
 | (tl, env) -> begin
 (let tl = (Support.List.rev tl)
-in (let binders = (Support.List.fold_left (fun binders _37203 -> (match (_37203) with
+in (let binders = (Support.List.fold_left (fun binders _37198 -> (match (_37198) with
 | (x, _, _) -> begin
 (match (x) with
 | Support.Microsoft.FStar.Util.Inl (x) -> begin
@@ -599,8 +599,8 @@ end
 binders
 end)
 end)) binders bvdt_tl)
-in (let _37211 = (map_exps env binders (Support.List.append el ((e)::[])))
-in (match (_37211) with
+in (let _37206 = (map_exps env binders (Support.List.append el ((e)::[])))
+in (match (_37206) with
 | (el, env) -> begin
 (([], [], tl, el, []), env)
 end))))
@@ -609,7 +609,7 @@ end
 | Microsoft_FStar_Absyn_Syntax.Exp_let (_) -> begin
 (failwith "impossible")
 end)
-in (match (_37217) with
+in (match (_37212) with
 | (components, env) -> begin
 (combine_exp e components env)
 end))))
@@ -717,7 +717,7 @@ end
 | (Microsoft_FStar_Absyn_Syntax.Exp_let (((is_rec, lbs), _)), (_, _, tl, el, _)) -> begin
 (match ((Support.Microsoft.FStar.Util.first_N (Support.List.length lbs) el)) with
 | (el, e'::[]) -> begin
-(let lbs' = (Support.List.map3 (fun _37676 t e -> (match (_37676) with
+(let lbs' = (Support.List.map3 (fun _37671 t e -> (match (_37671) with
 | (lbname, _, _) -> begin
 (lbname, t, e)
 end)) lbs tl el)
@@ -732,14 +732,14 @@ end
 end)
 in (e', env)))))
 
-let collect_from_typ = (fun f env t -> ((Support.Prims.snd) (reduce_typ (fun _37729 _37731 _37733 env _37736 k -> (k, env)) (fun _37711 vt _37714 env bvs t -> (let env = (f env t)
+let collect_from_typ = (fun f env t -> ((Support.Prims.snd) (reduce_typ (fun _37724 _37726 _37728 env _37731 k -> (k, env)) (fun _37706 vt _37709 env bvs t -> (let env = (f env t)
 in (match ((compress_typ t).Microsoft_FStar_Absyn_Syntax.n) with
 | (Microsoft_FStar_Absyn_Syntax.Typ_unknown) | (Microsoft_FStar_Absyn_Syntax.Typ_btvar (_)) | (Microsoft_FStar_Absyn_Syntax.Typ_const (_)) -> begin
 (t, env)
 end
 | _ -> begin
 (vt env bvs t)
-end))) (fun _37701 _37703 _37705 env _37708 e -> (e, env)) (fun k _37698 env -> (k, env)) (fun t _37694 env -> (t, env)) (fun e _37690 env -> (e, env)) env [] t)))
+end))) (fun _37696 _37698 _37700 env _37703 e -> (e, env)) (fun k _37693 env -> (k, env)) (fun t _37689 env -> (t, env)) (fun e _37685 env -> (e, env)) env [] t)))
 
 
 

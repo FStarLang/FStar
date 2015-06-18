@@ -19,11 +19,11 @@ Some ((Microsoft_FStar_Absyn_Syntax.text_of_lid l))
 end))
 
 let signature_to_sigtables = (fun s -> (let ht = (Support.Microsoft.FStar.Util.smap_create default_table_size)
-in (let _112753 = (Support.List.iter (fun se -> (let lids = (Microsoft_FStar_Absyn_Util.lids_of_sigelt se)
+in (let _112748 = (Support.List.iter (fun se -> (let lids = (Microsoft_FStar_Absyn_Util.lids_of_sigelt se)
 in (Support.List.iter (fun l -> (Support.Microsoft.FStar.Util.smap_add ht l.Microsoft_FStar_Absyn_Syntax.str se)) lids))) s)
 in ht)))
 
-let modules_to_sigtables = (fun mods -> (signature_to_sigtables (Support.List.collect (fun _112759 -> (match (_112759) with
+let modules_to_sigtables = (fun mods -> (signature_to_sigtables (Support.List.collect (fun _112754 -> (match (_112754) with
 | (_, m) -> begin
 m.Microsoft_FStar_Absyn_Syntax.declarations
 end)) mods)))
@@ -46,7 +46,7 @@ type env =
 {solver : solver_t; range : Support.Microsoft.FStar.Range.range; curmodule : Microsoft_FStar_Absyn_Syntax.lident; gamma : binding list; modules : Microsoft_FStar_Absyn_Syntax.modul list; expected_typ : Microsoft_FStar_Absyn_Syntax.typ option; level : level; sigtab : sigtable list; is_pattern : bool; instantiate_targs : bool; instantiate_vargs : bool; effects : effects; generalize : bool; letrecs : (Microsoft_FStar_Absyn_Syntax.lbname * Microsoft_FStar_Absyn_Syntax.typ) list; top_level : bool; check_uvars : bool; use_eq : bool; is_iface : bool; admit : bool; default_effects : (Microsoft_FStar_Absyn_Syntax.lident * Microsoft_FStar_Absyn_Syntax.lident) list} and solver_t =
 {init : env  ->  unit; push : string  ->  unit; pop : string  ->  unit; mark : string  ->  unit; reset_mark : string  ->  unit; commit_mark : string  ->  unit; encode_modul : env  ->  Microsoft_FStar_Absyn_Syntax.modul  ->  unit; encode_sig : env  ->  Microsoft_FStar_Absyn_Syntax.sigelt  ->  unit; solve : env  ->  Microsoft_FStar_Absyn_Syntax.typ  ->  unit; is_trivial : env  ->  Microsoft_FStar_Absyn_Syntax.typ  ->  bool; finish : unit  ->  unit; refresh : unit  ->  unit}
 
-let bound_vars = (fun env -> ((Support.List.collect (fun _112722 -> (match (_112722) with
+let bound_vars = (fun env -> ((Support.List.collect (fun _112717 -> (match (_112717) with
 | Binding_typ ((a, k)) -> begin
 ((Support.Microsoft.FStar.Util.Inl (Microsoft_FStar_Absyn_Util.bvd_to_bvar_s a k)))::[]
 end
@@ -66,22 +66,22 @@ let debug = (fun env l -> (((Support.Microsoft.FStar.Util.for_some (fun x -> (en
 
 let show = (fun env -> ((Support.Microsoft.FStar.Util.for_some (fun x -> (env.curmodule.Microsoft_FStar_Absyn_Syntax.str = x))) (! (Microsoft_FStar_Options.show_signatures))))
 
-let new_sigtab = (fun _112826 -> (match (_112826) with
+let new_sigtab = (fun _112821 -> (match (_112821) with
 | () -> begin
 (Support.Microsoft.FStar.Util.smap_create default_table_size)
 end))
 
 let sigtab = (fun env -> (Support.List.hd env.sigtab))
 
-let push = (fun env msg -> (let _112830 = (env.solver.push msg)
+let push = (fun env msg -> (let _112825 = (env.solver.push msg)
+in (let _112827 = env
+in {solver = _112827.solver; range = _112827.range; curmodule = _112827.curmodule; gamma = _112827.gamma; modules = _112827.modules; expected_typ = _112827.expected_typ; level = _112827.level; sigtab = ((Support.Microsoft.FStar.Util.smap_copy (sigtab env)))::env.sigtab; is_pattern = _112827.is_pattern; instantiate_targs = _112827.instantiate_targs; instantiate_vargs = _112827.instantiate_vargs; effects = _112827.effects; generalize = _112827.generalize; letrecs = _112827.letrecs; top_level = _112827.top_level; check_uvars = _112827.check_uvars; use_eq = _112827.use_eq; is_iface = _112827.is_iface; admit = _112827.admit; default_effects = _112827.default_effects})))
+
+let mark = (fun env -> (let _112830 = (env.solver.mark "USER MARK")
 in (let _112832 = env
 in {solver = _112832.solver; range = _112832.range; curmodule = _112832.curmodule; gamma = _112832.gamma; modules = _112832.modules; expected_typ = _112832.expected_typ; level = _112832.level; sigtab = ((Support.Microsoft.FStar.Util.smap_copy (sigtab env)))::env.sigtab; is_pattern = _112832.is_pattern; instantiate_targs = _112832.instantiate_targs; instantiate_vargs = _112832.instantiate_vargs; effects = _112832.effects; generalize = _112832.generalize; letrecs = _112832.letrecs; top_level = _112832.top_level; check_uvars = _112832.check_uvars; use_eq = _112832.use_eq; is_iface = _112832.is_iface; admit = _112832.admit; default_effects = _112832.default_effects})))
 
-let mark = (fun env -> (let _112835 = (env.solver.mark "USER MARK")
-in (let _112837 = env
-in {solver = _112837.solver; range = _112837.range; curmodule = _112837.curmodule; gamma = _112837.gamma; modules = _112837.modules; expected_typ = _112837.expected_typ; level = _112837.level; sigtab = ((Support.Microsoft.FStar.Util.smap_copy (sigtab env)))::env.sigtab; is_pattern = _112837.is_pattern; instantiate_targs = _112837.instantiate_targs; instantiate_vargs = _112837.instantiate_vargs; effects = _112837.effects; generalize = _112837.generalize; letrecs = _112837.letrecs; top_level = _112837.top_level; check_uvars = _112837.check_uvars; use_eq = _112837.use_eq; is_iface = _112837.is_iface; admit = _112837.admit; default_effects = _112837.default_effects})))
-
-let commit_mark = (fun env -> (let _112840 = (env.solver.commit_mark "USER MARK")
+let commit_mark = (fun env -> (let _112835 = (env.solver.commit_mark "USER MARK")
 in (let sigtab = (match (env.sigtab) with
 | hd::_::tl -> begin
 (hd)::tl
@@ -89,21 +89,21 @@ end
 | _ -> begin
 (failwith "Impossible")
 end)
-in (let _112851 = env
-in {solver = _112851.solver; range = _112851.range; curmodule = _112851.curmodule; gamma = _112851.gamma; modules = _112851.modules; expected_typ = _112851.expected_typ; level = _112851.level; sigtab = sigtab; is_pattern = _112851.is_pattern; instantiate_targs = _112851.instantiate_targs; instantiate_vargs = _112851.instantiate_vargs; effects = _112851.effects; generalize = _112851.generalize; letrecs = _112851.letrecs; top_level = _112851.top_level; check_uvars = _112851.check_uvars; use_eq = _112851.use_eq; is_iface = _112851.is_iface; admit = _112851.admit; default_effects = _112851.default_effects}))))
+in (let _112846 = env
+in {solver = _112846.solver; range = _112846.range; curmodule = _112846.curmodule; gamma = _112846.gamma; modules = _112846.modules; expected_typ = _112846.expected_typ; level = _112846.level; sigtab = sigtab; is_pattern = _112846.is_pattern; instantiate_targs = _112846.instantiate_targs; instantiate_vargs = _112846.instantiate_vargs; effects = _112846.effects; generalize = _112846.generalize; letrecs = _112846.letrecs; top_level = _112846.top_level; check_uvars = _112846.check_uvars; use_eq = _112846.use_eq; is_iface = _112846.is_iface; admit = _112846.admit; default_effects = _112846.default_effects}))))
 
-let reset_mark = (fun env -> (let _112854 = (env.solver.reset_mark "USER MARK")
-in (let _112856 = env
-in {solver = _112856.solver; range = _112856.range; curmodule = _112856.curmodule; gamma = _112856.gamma; modules = _112856.modules; expected_typ = _112856.expected_typ; level = _112856.level; sigtab = (Support.List.tl env.sigtab); is_pattern = _112856.is_pattern; instantiate_targs = _112856.instantiate_targs; instantiate_vargs = _112856.instantiate_vargs; effects = _112856.effects; generalize = _112856.generalize; letrecs = _112856.letrecs; top_level = _112856.top_level; check_uvars = _112856.check_uvars; use_eq = _112856.use_eq; is_iface = _112856.is_iface; admit = _112856.admit; default_effects = _112856.default_effects})))
+let reset_mark = (fun env -> (let _112849 = (env.solver.reset_mark "USER MARK")
+in (let _112851 = env
+in {solver = _112851.solver; range = _112851.range; curmodule = _112851.curmodule; gamma = _112851.gamma; modules = _112851.modules; expected_typ = _112851.expected_typ; level = _112851.level; sigtab = (Support.List.tl env.sigtab); is_pattern = _112851.is_pattern; instantiate_targs = _112851.instantiate_targs; instantiate_vargs = _112851.instantiate_vargs; effects = _112851.effects; generalize = _112851.generalize; letrecs = _112851.letrecs; top_level = _112851.top_level; check_uvars = _112851.check_uvars; use_eq = _112851.use_eq; is_iface = _112851.is_iface; admit = _112851.admit; default_effects = _112851.default_effects})))
 
 let pop = (fun env msg -> (match (env.sigtab) with
 | ([]) | (_::[]) -> begin
 (failwith "Too many pops")
 end
 | _::tl -> begin
-(let _112868 = (env.solver.pop msg)
-in (let _112870 = env
-in {solver = _112870.solver; range = _112870.range; curmodule = _112870.curmodule; gamma = _112870.gamma; modules = _112870.modules; expected_typ = _112870.expected_typ; level = _112870.level; sigtab = tl; is_pattern = _112870.is_pattern; instantiate_targs = _112870.instantiate_targs; instantiate_vargs = _112870.instantiate_vargs; effects = _112870.effects; generalize = _112870.generalize; letrecs = _112870.letrecs; top_level = _112870.top_level; check_uvars = _112870.check_uvars; use_eq = _112870.use_eq; is_iface = _112870.is_iface; admit = _112870.admit; default_effects = _112870.default_effects}))
+(let _112863 = (env.solver.pop msg)
+in (let _112865 = env
+in {solver = _112865.solver; range = _112865.range; curmodule = _112865.curmodule; gamma = _112865.gamma; modules = _112865.modules; expected_typ = _112865.expected_typ; level = _112865.level; sigtab = tl; is_pattern = _112865.is_pattern; instantiate_targs = _112865.instantiate_targs; instantiate_vargs = _112865.instantiate_vargs; effects = _112865.effects; generalize = _112865.generalize; letrecs = _112865.letrecs; top_level = _112865.top_level; check_uvars = _112865.check_uvars; use_eq = _112865.use_eq; is_iface = _112865.is_iface; admit = _112865.admit; default_effects = _112865.default_effects}))
 end))
 
 let initial_env = (fun solver module_lid -> {solver = solver; range = Microsoft_FStar_Absyn_Syntax.dummyRange; curmodule = module_lid; gamma = []; modules = []; expected_typ = None; level = Expr; sigtab = ((new_sigtab ()))::[]; is_pattern = false; instantiate_targs = true; instantiate_vargs = true; effects = {decls = []; order = []; joins = []}; generalize = true; letrecs = []; top_level = true; check_uvars = false; use_eq = false; is_iface = false; admit = false; default_effects = []})
@@ -125,7 +125,7 @@ end))
 let join = (fun env l1 l2 -> if (Microsoft_FStar_Absyn_Syntax.lid_equals l1 l2) then begin
 (l1, (fun t wp -> wp), (fun t wp -> wp))
 end else begin
-(match (((Support.Microsoft.FStar.Util.find_opt (fun _112899 -> (match (_112899) with
+(match (((Support.Microsoft.FStar.Util.find_opt (fun _112894 -> (match (_112894) with
 | (m1, m2, _, _, _) -> begin
 ((Microsoft_FStar_Absyn_Syntax.lid_equals l1 m1) && (Microsoft_FStar_Absyn_Syntax.lid_equals l2 m2))
 end))) env.effects.joins)) with
@@ -159,7 +159,7 @@ end))
 
 let wp_signature = (fun env m -> (wp_sig_aux env.effects.decls m))
 
-let default_effect = (fun env l -> (Support.Microsoft.FStar.Util.find_map env.default_effects (fun _112958 -> (match (_112958) with
+let default_effect = (fun env l -> (Support.Microsoft.FStar.Util.find_map env.default_effects (fun _112953 -> (match (_112953) with
 | (l', m) -> begin
 if (Microsoft_FStar_Absyn_Syntax.lid_equals l l') then begin
 Some (m)
@@ -170,7 +170,7 @@ end))))
 
 let build_lattice = (fun env se -> (match (se) with
 | Microsoft_FStar_Absyn_Syntax.Sig_effect_abbrev ((l, _, c, quals, r)) -> begin
-(match ((Support.Microsoft.FStar.Util.find_map quals (fun _112723 -> (match (_112723) with
+(match ((Support.Microsoft.FStar.Util.find_map quals (fun _112718 -> (match (_112718) with
 | Microsoft_FStar_Absyn_Syntax.DefaultEffect (n) -> begin
 n
 end
@@ -181,15 +181,15 @@ end)))) with
 env
 end
 | Some (e) -> begin
-(let _112977 = env
-in {solver = _112977.solver; range = _112977.range; curmodule = _112977.curmodule; gamma = _112977.gamma; modules = _112977.modules; expected_typ = _112977.expected_typ; level = _112977.level; sigtab = _112977.sigtab; is_pattern = _112977.is_pattern; instantiate_targs = _112977.instantiate_targs; instantiate_vargs = _112977.instantiate_vargs; effects = _112977.effects; generalize = _112977.generalize; letrecs = _112977.letrecs; top_level = _112977.top_level; check_uvars = _112977.check_uvars; use_eq = _112977.use_eq; is_iface = _112977.is_iface; admit = _112977.admit; default_effects = ((e, l))::env.default_effects})
+(let _112972 = env
+in {solver = _112972.solver; range = _112972.range; curmodule = _112972.curmodule; gamma = _112972.gamma; modules = _112972.modules; expected_typ = _112972.expected_typ; level = _112972.level; sigtab = _112972.sigtab; is_pattern = _112972.is_pattern; instantiate_targs = _112972.instantiate_targs; instantiate_vargs = _112972.instantiate_vargs; effects = _112972.effects; generalize = _112972.generalize; letrecs = _112972.letrecs; top_level = _112972.top_level; check_uvars = _112972.check_uvars; use_eq = _112972.use_eq; is_iface = _112972.is_iface; admit = _112972.admit; default_effects = ((e, l))::env.default_effects})
 end)
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_new_effect ((ne, _)) -> begin
-(let effects = (let _112984 = env.effects
-in {decls = (ne)::env.effects.decls; order = _112984.order; joins = _112984.joins})
-in (let _112987 = env
-in {solver = _112987.solver; range = _112987.range; curmodule = _112987.curmodule; gamma = _112987.gamma; modules = _112987.modules; expected_typ = _112987.expected_typ; level = _112987.level; sigtab = _112987.sigtab; is_pattern = _112987.is_pattern; instantiate_targs = _112987.instantiate_targs; instantiate_vargs = _112987.instantiate_vargs; effects = effects; generalize = _112987.generalize; letrecs = _112987.letrecs; top_level = _112987.top_level; check_uvars = _112987.check_uvars; use_eq = _112987.use_eq; is_iface = _112987.is_iface; admit = _112987.admit; default_effects = _112987.default_effects}))
+(let effects = (let _112979 = env.effects
+in {decls = (ne)::env.effects.decls; order = _112979.order; joins = _112979.joins})
+in (let _112982 = env
+in {solver = _112982.solver; range = _112982.range; curmodule = _112982.curmodule; gamma = _112982.gamma; modules = _112982.modules; expected_typ = _112982.expected_typ; level = _112982.level; sigtab = _112982.sigtab; is_pattern = _112982.is_pattern; instantiate_targs = _112982.instantiate_targs; instantiate_vargs = _112982.instantiate_vargs; effects = effects; generalize = _112982.generalize; letrecs = _112982.letrecs; top_level = _112982.top_level; check_uvars = _112982.check_uvars; use_eq = _112982.use_eq; is_iface = _112982.is_iface; admit = _112982.admit; default_effects = _112982.default_effects}))
 end
 | Microsoft_FStar_Absyn_Syntax.Sig_sub_effect ((sub, _)) -> begin
 (let compose_edges = (fun e1 e2 -> {msource = e1.msource; mtarget = e2.mtarget; mlift = (fun r wp1 -> (e2.mlift r (e1.mlift r wp1)))})
@@ -201,7 +201,7 @@ in (let wp = (Microsoft_FStar_Absyn_Util.ftv (Microsoft_FStar_Absyn_Syntax.lid_o
 in (Microsoft_FStar_Absyn_Print.typ_to_string (l arg wp)))))
 in (let order = (edge)::env.effects.order
 in (let ms = ((Support.List.map (fun e -> e.Microsoft_FStar_Absyn_Syntax.mname)) env.effects.decls)
-in (let find_edge = (fun order _113019 -> (match (_113019) with
+in (let find_edge = (fun order _113014 -> (match (_113014) with
 | (i, j) -> begin
 if (Microsoft_FStar_Absyn_Syntax.lid_equals i j) then begin
 ((fun __dataconst_1 -> Some (__dataconst_1)) (id_edge i))
@@ -249,10 +249,10 @@ end
 | Some ((k, e1, e2)) -> begin
 ((i, j, k, e1.mlift, e2.mlift))::[]
 end)))) ms))) ms)
-in (let effects = (let _113063 = env.effects
-in {decls = _113063.decls; order = order; joins = joins})
-in (let _113066 = env
-in {solver = _113066.solver; range = _113066.range; curmodule = _113066.curmodule; gamma = _113066.gamma; modules = _113066.modules; expected_typ = _113066.expected_typ; level = _113066.level; sigtab = _113066.sigtab; is_pattern = _113066.is_pattern; instantiate_targs = _113066.instantiate_targs; instantiate_vargs = _113066.instantiate_vargs; effects = effects; generalize = _113066.generalize; letrecs = _113066.letrecs; top_level = _113066.top_level; check_uvars = _113066.check_uvars; use_eq = _113066.use_eq; is_iface = _113066.is_iface; admit = _113066.admit; default_effects = _113066.default_effects})))))))))))))
+in (let effects = (let _113058 = env.effects
+in {decls = _113058.decls; order = order; joins = joins})
+in (let _113061 = env
+in {solver = _113061.solver; range = _113061.range; curmodule = _113061.curmodule; gamma = _113061.gamma; modules = _113061.modules; expected_typ = _113061.expected_typ; level = _113061.level; sigtab = _113061.sigtab; is_pattern = _113061.is_pattern; instantiate_targs = _113061.instantiate_targs; instantiate_vargs = _113061.instantiate_vargs; effects = effects; generalize = _113061.generalize; letrecs = _113061.letrecs; top_level = _113061.top_level; check_uvars = _113061.check_uvars; use_eq = _113061.use_eq; is_iface = _113061.is_iface; admit = _113061.admit; default_effects = _113061.default_effects})))))))))))))
 end
 | _ -> begin
 env
@@ -271,7 +271,7 @@ and add_sigelts = (fun env ses -> ((Support.List.iter (add_sigelt env)) ses))
 let empty_lid = (Microsoft_FStar_Absyn_Syntax.lid_of_ids (((Microsoft_FStar_Absyn_Syntax.id_of_text ""))::[]))
 
 let finish_module = (fun env m -> (let sigs = if (Microsoft_FStar_Absyn_Syntax.lid_equals m.Microsoft_FStar_Absyn_Syntax.name Microsoft_FStar_Absyn_Const.prims_lid) then begin
-((Support.List.collect (fun _112724 -> (match (_112724) with
+((Support.List.collect (fun _112719 -> (match (_112719) with
 | Binding_sig (se) -> begin
 (se)::[]
 end
@@ -281,12 +281,12 @@ end))) env.gamma)
 end else begin
 m.Microsoft_FStar_Absyn_Syntax.exports
 end
-in (let _113095 = (add_sigelts env sigs)
-in (let _113097 = env
-in {solver = _113097.solver; range = _113097.range; curmodule = empty_lid; gamma = []; modules = (m)::env.modules; expected_typ = _113097.expected_typ; level = _113097.level; sigtab = _113097.sigtab; is_pattern = _113097.is_pattern; instantiate_targs = _113097.instantiate_targs; instantiate_vargs = _113097.instantiate_vargs; effects = _113097.effects; generalize = _113097.generalize; letrecs = _113097.letrecs; top_level = _113097.top_level; check_uvars = _113097.check_uvars; use_eq = _113097.use_eq; is_iface = _113097.is_iface; admit = _113097.admit; default_effects = _113097.default_effects}))))
+in (let _113090 = (add_sigelts env sigs)
+in (let _113092 = env
+in {solver = _113092.solver; range = _113092.range; curmodule = empty_lid; gamma = []; modules = (m)::env.modules; expected_typ = _113092.expected_typ; level = _113092.level; sigtab = _113092.sigtab; is_pattern = _113092.is_pattern; instantiate_targs = _113092.instantiate_targs; instantiate_vargs = _113092.instantiate_vargs; effects = _113092.effects; generalize = _113092.generalize; letrecs = _113092.letrecs; top_level = _113092.top_level; check_uvars = _113092.check_uvars; use_eq = _113092.use_eq; is_iface = _113092.is_iface; admit = _113092.admit; default_effects = _113092.default_effects}))))
 
-let set_level = (fun env level -> (let _113101 = env
-in {solver = _113101.solver; range = _113101.range; curmodule = _113101.curmodule; gamma = _113101.gamma; modules = _113101.modules; expected_typ = _113101.expected_typ; level = level; sigtab = _113101.sigtab; is_pattern = _113101.is_pattern; instantiate_targs = _113101.instantiate_targs; instantiate_vargs = _113101.instantiate_vargs; effects = _113101.effects; generalize = _113101.generalize; letrecs = _113101.letrecs; top_level = _113101.top_level; check_uvars = _113101.check_uvars; use_eq = _113101.use_eq; is_iface = _113101.is_iface; admit = _113101.admit; default_effects = _113101.default_effects}))
+let set_level = (fun env level -> (let _113096 = env
+in {solver = _113096.solver; range = _113096.range; curmodule = _113096.curmodule; gamma = _113096.gamma; modules = _113096.modules; expected_typ = _113096.expected_typ; level = level; sigtab = _113096.sigtab; is_pattern = _113096.is_pattern; instantiate_targs = _113096.instantiate_targs; instantiate_vargs = _113096.instantiate_vargs; effects = _113096.effects; generalize = _113096.generalize; letrecs = _113096.letrecs; top_level = _113096.top_level; check_uvars = _113096.check_uvars; use_eq = _113096.use_eq; is_iface = _113096.is_iface; admit = _113096.admit; default_effects = _113096.default_effects}))
 
 let is_level = (fun env level -> (env.level = level))
 
@@ -294,21 +294,21 @@ let modules = (fun env -> env.modules)
 
 let current_module = (fun env -> env.curmodule)
 
-let set_current_module = (fun env lid -> (let _113109 = env
-in {solver = _113109.solver; range = _113109.range; curmodule = lid; gamma = _113109.gamma; modules = _113109.modules; expected_typ = _113109.expected_typ; level = _113109.level; sigtab = _113109.sigtab; is_pattern = _113109.is_pattern; instantiate_targs = _113109.instantiate_targs; instantiate_vargs = _113109.instantiate_vargs; effects = _113109.effects; generalize = _113109.generalize; letrecs = _113109.letrecs; top_level = _113109.top_level; check_uvars = _113109.check_uvars; use_eq = _113109.use_eq; is_iface = _113109.is_iface; admit = _113109.admit; default_effects = _113109.default_effects}))
+let set_current_module = (fun env lid -> (let _113104 = env
+in {solver = _113104.solver; range = _113104.range; curmodule = lid; gamma = _113104.gamma; modules = _113104.modules; expected_typ = _113104.expected_typ; level = _113104.level; sigtab = _113104.sigtab; is_pattern = _113104.is_pattern; instantiate_targs = _113104.instantiate_targs; instantiate_vargs = _113104.instantiate_vargs; effects = _113104.effects; generalize = _113104.generalize; letrecs = _113104.letrecs; top_level = _113104.top_level; check_uvars = _113104.check_uvars; use_eq = _113104.use_eq; is_iface = _113104.is_iface; admit = _113104.admit; default_effects = _113104.default_effects}))
 
 let set_range = (fun e r -> if (r = Microsoft_FStar_Absyn_Syntax.dummyRange) then begin
 e
 end else begin
-(let _113113 = e
-in {solver = _113113.solver; range = r; curmodule = _113113.curmodule; gamma = _113113.gamma; modules = _113113.modules; expected_typ = _113113.expected_typ; level = _113113.level; sigtab = _113113.sigtab; is_pattern = _113113.is_pattern; instantiate_targs = _113113.instantiate_targs; instantiate_vargs = _113113.instantiate_vargs; effects = _113113.effects; generalize = _113113.generalize; letrecs = _113113.letrecs; top_level = _113113.top_level; check_uvars = _113113.check_uvars; use_eq = _113113.use_eq; is_iface = _113113.is_iface; admit = _113113.admit; default_effects = _113113.default_effects})
+(let _113108 = e
+in {solver = _113108.solver; range = r; curmodule = _113108.curmodule; gamma = _113108.gamma; modules = _113108.modules; expected_typ = _113108.expected_typ; level = _113108.level; sigtab = _113108.sigtab; is_pattern = _113108.is_pattern; instantiate_targs = _113108.instantiate_targs; instantiate_vargs = _113108.instantiate_vargs; effects = _113108.effects; generalize = _113108.generalize; letrecs = _113108.letrecs; top_level = _113108.top_level; check_uvars = _113108.check_uvars; use_eq = _113108.use_eq; is_iface = _113108.is_iface; admit = _113108.admit; default_effects = _113108.default_effects})
 end)
 
 let get_range = (fun e -> e.range)
 
 let find_in_sigtab = (fun env lid -> (Support.Microsoft.FStar.Util.smap_try_find (sigtab env) (Microsoft_FStar_Absyn_Syntax.text_of_lid lid)))
 
-let lookup_bvvdef = (fun env bvvd -> (Support.Microsoft.FStar.Util.find_map env.gamma (fun _112725 -> (match (_112725) with
+let lookup_bvvdef = (fun env bvvd -> (Support.Microsoft.FStar.Util.find_map env.gamma (fun _112720 -> (match (_112720) with
 | Binding_var ((id, t)) when (Microsoft_FStar_Absyn_Util.bvd_eq id bvvd) -> begin
 Some (t)
 end
@@ -351,7 +351,7 @@ end
 end))
 in (let cur_mod = (in_cur_mod lid)
 in (let found = if cur_mod then begin
-(Support.Microsoft.FStar.Util.find_map env.gamma (fun _112726 -> (match (_112726) with
+(Support.Microsoft.FStar.Util.find_map env.gamma (fun _112721 -> (match (_112721) with
 | Binding_lid ((l, t)) -> begin
 if (Microsoft_FStar_Absyn_Syntax.lid_equals lid l) then begin
 Some (Support.Microsoft.FStar.Util.Inl (t))
@@ -412,7 +412,7 @@ end
 (raise (Microsoft_FStar_Absyn_Syntax.Error (((name_not_found lid), (Microsoft_FStar_Absyn_Syntax.range_of_lid lid)))))
 end))
 
-let lookup_projector = (fun env lid i -> (let fail = (fun _113221 -> (match (_113221) with
+let lookup_projector = (fun env lid i -> (let fail = (fun _113216 -> (match (_113216) with
 | () -> begin
 (failwith (Support.Microsoft.FStar.Util.format2 "Impossible: projecting field #%s from constructor %s is undefined" (Support.Microsoft.FStar.Util.string_of_int i) (Microsoft_FStar_Absyn_Print.sli lid)))
 end))
@@ -452,16 +452,16 @@ end
 (raise (Microsoft_FStar_Absyn_Syntax.Error (((name_not_found lid), (Microsoft_FStar_Absyn_Syntax.range_of_lid lid)))))
 end))
 
-let lookup_lid = (fun env lid -> (let not_found = (fun _113267 -> (match (_113267) with
+let lookup_lid = (fun env lid -> (let not_found = (fun _113262 -> (match (_113262) with
 | () -> begin
 (raise (Microsoft_FStar_Absyn_Syntax.Error (((name_not_found lid), (Microsoft_FStar_Absyn_Syntax.range_of_lid lid)))))
 end))
-in (let mapper = (fun _112728 -> (match (_112728) with
+in (let mapper = (fun _112723 -> (match (_112723) with
 | (Support.Microsoft.FStar.Util.Inl (t)) | (Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Syntax.Sig_datacon ((_, t, _, _, _, _)))) | (Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Syntax.Sig_val_decl ((_, t, _, _)))) | (Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Syntax.Sig_let (((_, (_, t, _)::[]), _, _, _)))) -> begin
 Some (t)
 end
 | Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Syntax.Sig_let (((_, lbs), _, _, _))) -> begin
-(Support.Microsoft.FStar.Util.find_map lbs (fun _112727 -> (match (_112727) with
+(Support.Microsoft.FStar.Util.find_map lbs (fun _112722 -> (match (_112722) with
 | (Support.Microsoft.FStar.Util.Inl (_), _, _) -> begin
 (failwith "impossible")
 end
@@ -478,8 +478,8 @@ None
 end))
 in (match ((Support.Microsoft.FStar.Util.bind_opt (lookup_qname env lid) mapper)) with
 | Some (t) -> begin
-(let _113342 = t
-in {Microsoft_FStar_Absyn_Syntax.n = _113342.Microsoft_FStar_Absyn_Syntax.n; Microsoft_FStar_Absyn_Syntax.tk = _113342.Microsoft_FStar_Absyn_Syntax.tk; Microsoft_FStar_Absyn_Syntax.pos = (Microsoft_FStar_Absyn_Syntax.range_of_lid lid); Microsoft_FStar_Absyn_Syntax.fvs = _113342.Microsoft_FStar_Absyn_Syntax.fvs; Microsoft_FStar_Absyn_Syntax.uvs = _113342.Microsoft_FStar_Absyn_Syntax.uvs})
+(let _113337 = t
+in {Microsoft_FStar_Absyn_Syntax.n = _113337.Microsoft_FStar_Absyn_Syntax.n; Microsoft_FStar_Absyn_Syntax.tk = _113337.Microsoft_FStar_Absyn_Syntax.tk; Microsoft_FStar_Absyn_Syntax.pos = (Microsoft_FStar_Absyn_Syntax.range_of_lid lid); Microsoft_FStar_Absyn_Syntax.fvs = _113337.Microsoft_FStar_Absyn_Syntax.fvs; Microsoft_FStar_Absyn_Syntax.uvs = _113337.Microsoft_FStar_Absyn_Syntax.uvs})
 end
 | None -> begin
 (not_found ())
@@ -487,7 +487,7 @@ end))))
 
 let is_datacon = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Syntax.Sig_val_decl ((_, _, quals, _)))) -> begin
-((Support.Microsoft.FStar.Util.for_some (fun _112729 -> (match (_112729) with
+((Support.Microsoft.FStar.Util.for_some (fun _112724 -> (match (_112724) with
 | Microsoft_FStar_Absyn_Syntax.Assumption -> begin
 true
 end
@@ -504,7 +504,7 @@ end))
 
 let is_record = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Syntax.Sig_tycon ((_, _, _, _, _, tags, _)))) -> begin
-(Support.Microsoft.FStar.Util.for_some (fun _112730 -> (match (_112730) with
+(Support.Microsoft.FStar.Util.for_some (fun _112725 -> (match (_112725) with
 | (Microsoft_FStar_Absyn_Syntax.RecordType (_)) | (Microsoft_FStar_Absyn_Syntax.RecordConstructor (_)) -> begin
 true
 end
@@ -526,7 +526,7 @@ end))
 
 let lookup_effect_abbrev = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Syntax.Sig_effect_abbrev ((lid, binders, c, quals, _)))) -> begin
-if ((Support.Microsoft.FStar.Util.for_some (fun _112731 -> (match (_112731) with
+if ((Support.Microsoft.FStar.Util.for_some (fun _112726 -> (match (_112726) with
 | Microsoft_FStar_Absyn_Syntax.Opaque -> begin
 true
 end
@@ -544,7 +544,7 @@ end))
 
 let lookup_typ_abbrev = (fun env lid -> (match ((lookup_qname env lid)) with
 | Some (Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Syntax.Sig_typ_abbrev ((lid, tps, _, t, quals, _)))) -> begin
-if ((Support.Microsoft.FStar.Util.for_some (fun _112732 -> (match (_112732) with
+if ((Support.Microsoft.FStar.Util.for_some (fun _112727 -> (match (_112727) with
 | Microsoft_FStar_Absyn_Syntax.Opaque -> begin
 true
 end
@@ -561,7 +561,7 @@ end
 None
 end))
 
-let lookup_btvdef = (fun env btvd -> (Support.Microsoft.FStar.Util.find_map env.gamma (fun _112733 -> (match (_112733) with
+let lookup_btvdef = (fun env btvd -> (Support.Microsoft.FStar.Util.find_map env.gamma (fun _112728 -> (match (_112728) with
 | Binding_typ ((id, k)) when (Microsoft_FStar_Absyn_Util.bvd_eq id btvd) -> begin
 Some (k)
 end
@@ -587,7 +587,7 @@ end))
 
 let is_projector = (fun env l -> (match ((lookup_qname env l)) with
 | (Some (Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Syntax.Sig_tycon ((_, _, _, _, _, quals, _))))) | (Some (Support.Microsoft.FStar.Util.Inr (Microsoft_FStar_Absyn_Syntax.Sig_val_decl ((_, _, quals, _))))) -> begin
-(Support.Microsoft.FStar.Util.for_some (fun _112734 -> (match (_112734) with
+(Support.Microsoft.FStar.Util.for_some (fun _112729 -> (match (_112729) with
 | Microsoft_FStar_Absyn_Syntax.Projector (_) -> begin
 true
 end
@@ -621,14 +621,14 @@ end))
 let lookup_operator = (fun env opname -> (let primName = (Microsoft_FStar_Absyn_Syntax.lid_of_path (("Prims")::((Support.String.strcat "_dummy_" opname.Microsoft_FStar_Absyn_Syntax.idText))::[]) Microsoft_FStar_Absyn_Syntax.dummyRange)
 in (lookup_lid env primName)))
 
-let push_sigelt = (fun env s -> (build_lattice (let _113583 = env
-in {solver = _113583.solver; range = _113583.range; curmodule = _113583.curmodule; gamma = (Binding_sig (s))::env.gamma; modules = _113583.modules; expected_typ = _113583.expected_typ; level = _113583.level; sigtab = _113583.sigtab; is_pattern = _113583.is_pattern; instantiate_targs = _113583.instantiate_targs; instantiate_vargs = _113583.instantiate_vargs; effects = _113583.effects; generalize = _113583.generalize; letrecs = _113583.letrecs; top_level = _113583.top_level; check_uvars = _113583.check_uvars; use_eq = _113583.use_eq; is_iface = _113583.is_iface; admit = _113583.admit; default_effects = _113583.default_effects}) s))
+let push_sigelt = (fun env s -> (build_lattice (let _113578 = env
+in {solver = _113578.solver; range = _113578.range; curmodule = _113578.curmodule; gamma = (Binding_sig (s))::env.gamma; modules = _113578.modules; expected_typ = _113578.expected_typ; level = _113578.level; sigtab = _113578.sigtab; is_pattern = _113578.is_pattern; instantiate_targs = _113578.instantiate_targs; instantiate_vargs = _113578.instantiate_vargs; effects = _113578.effects; generalize = _113578.generalize; letrecs = _113578.letrecs; top_level = _113578.top_level; check_uvars = _113578.check_uvars; use_eq = _113578.use_eq; is_iface = _113578.is_iface; admit = _113578.admit; default_effects = _113578.default_effects}) s))
 
-let push_local_binding = (fun env b -> (let _113587 = env
-in {solver = _113587.solver; range = _113587.range; curmodule = _113587.curmodule; gamma = (b)::env.gamma; modules = _113587.modules; expected_typ = _113587.expected_typ; level = _113587.level; sigtab = _113587.sigtab; is_pattern = _113587.is_pattern; instantiate_targs = _113587.instantiate_targs; instantiate_vargs = _113587.instantiate_vargs; effects = _113587.effects; generalize = _113587.generalize; letrecs = _113587.letrecs; top_level = _113587.top_level; check_uvars = _113587.check_uvars; use_eq = _113587.use_eq; is_iface = _113587.is_iface; admit = _113587.admit; default_effects = _113587.default_effects}))
+let push_local_binding = (fun env b -> (let _113582 = env
+in {solver = _113582.solver; range = _113582.range; curmodule = _113582.curmodule; gamma = (b)::env.gamma; modules = _113582.modules; expected_typ = _113582.expected_typ; level = _113582.level; sigtab = _113582.sigtab; is_pattern = _113582.is_pattern; instantiate_targs = _113582.instantiate_targs; instantiate_vargs = _113582.instantiate_vargs; effects = _113582.effects; generalize = _113582.generalize; letrecs = _113582.letrecs; top_level = _113582.top_level; check_uvars = _113582.check_uvars; use_eq = _113582.use_eq; is_iface = _113582.is_iface; admit = _113582.admit; default_effects = _113582.default_effects}))
 
 let uvars_in_env = (fun env -> (let no_uvs = {Microsoft_FStar_Absyn_Syntax.uvars_k = (Microsoft_FStar_Absyn_Syntax.new_uv_set ()); Microsoft_FStar_Absyn_Syntax.uvars_t = (Microsoft_FStar_Absyn_Syntax.new_uvt_set ()); Microsoft_FStar_Absyn_Syntax.uvars_e = (Microsoft_FStar_Absyn_Syntax.new_uvt_set ())}
-in (let ext = (fun out uvs -> (let _113594 = out
+in (let ext = (fun out uvs -> (let _113589 = out
 in {Microsoft_FStar_Absyn_Syntax.uvars_k = (Support.Microsoft.FStar.Util.set_union out.Microsoft_FStar_Absyn_Syntax.uvars_k uvs.Microsoft_FStar_Absyn_Syntax.uvars_k); Microsoft_FStar_Absyn_Syntax.uvars_t = (Support.Microsoft.FStar.Util.set_union out.Microsoft_FStar_Absyn_Syntax.uvars_t uvs.Microsoft_FStar_Absyn_Syntax.uvars_t); Microsoft_FStar_Absyn_Syntax.uvars_e = (Support.Microsoft.FStar.Util.set_union out.Microsoft_FStar_Absyn_Syntax.uvars_e uvs.Microsoft_FStar_Absyn_Syntax.uvars_e)}))
 in (let rec aux = (fun out g -> (match (g) with
 | [] -> begin
@@ -645,12 +645,12 @@ out
 end))
 in (aux no_uvs env.gamma)))))
 
-let push_module = (fun env m -> (let _113627 = (add_sigelts env m.Microsoft_FStar_Absyn_Syntax.exports)
-in (let _113629 = env
-in {solver = _113629.solver; range = _113629.range; curmodule = _113629.curmodule; gamma = []; modules = (m)::env.modules; expected_typ = None; level = _113629.level; sigtab = _113629.sigtab; is_pattern = _113629.is_pattern; instantiate_targs = _113629.instantiate_targs; instantiate_vargs = _113629.instantiate_vargs; effects = _113629.effects; generalize = _113629.generalize; letrecs = _113629.letrecs; top_level = _113629.top_level; check_uvars = _113629.check_uvars; use_eq = _113629.use_eq; is_iface = _113629.is_iface; admit = _113629.admit; default_effects = _113629.default_effects})))
+let push_module = (fun env m -> (let _113622 = (add_sigelts env m.Microsoft_FStar_Absyn_Syntax.exports)
+in (let _113624 = env
+in {solver = _113624.solver; range = _113624.range; curmodule = _113624.curmodule; gamma = []; modules = (m)::env.modules; expected_typ = None; level = _113624.level; sigtab = _113624.sigtab; is_pattern = _113624.is_pattern; instantiate_targs = _113624.instantiate_targs; instantiate_vargs = _113624.instantiate_vargs; effects = _113624.effects; generalize = _113624.generalize; letrecs = _113624.letrecs; top_level = _113624.top_level; check_uvars = _113624.check_uvars; use_eq = _113624.use_eq; is_iface = _113624.is_iface; admit = _113624.admit; default_effects = _113624.default_effects})))
 
-let set_expected_typ = (fun env t -> (let _113633 = env
-in {solver = _113633.solver; range = _113633.range; curmodule = _113633.curmodule; gamma = _113633.gamma; modules = _113633.modules; expected_typ = Some (t); level = _113633.level; sigtab = _113633.sigtab; is_pattern = _113633.is_pattern; instantiate_targs = _113633.instantiate_targs; instantiate_vargs = _113633.instantiate_vargs; effects = _113633.effects; generalize = _113633.generalize; letrecs = _113633.letrecs; top_level = _113633.top_level; check_uvars = _113633.check_uvars; use_eq = false; is_iface = _113633.is_iface; admit = _113633.admit; default_effects = _113633.default_effects}))
+let set_expected_typ = (fun env t -> (let _113628 = env
+in {solver = _113628.solver; range = _113628.range; curmodule = _113628.curmodule; gamma = _113628.gamma; modules = _113628.modules; expected_typ = Some (t); level = _113628.level; sigtab = _113628.sigtab; is_pattern = _113628.is_pattern; instantiate_targs = _113628.instantiate_targs; instantiate_vargs = _113628.instantiate_vargs; effects = _113628.effects; generalize = _113628.generalize; letrecs = _113628.letrecs; top_level = _113628.top_level; check_uvars = _113628.check_uvars; use_eq = false; is_iface = _113628.is_iface; admit = _113628.admit; default_effects = _113628.default_effects}))
 
 let expected_typ = (fun env -> (match (env.expected_typ) with
 | None -> begin
@@ -660,8 +660,8 @@ end
 Some (t)
 end))
 
-let clear_expected_typ = (fun env -> ((let _113640 = env
-in {solver = _113640.solver; range = _113640.range; curmodule = _113640.curmodule; gamma = _113640.gamma; modules = _113640.modules; expected_typ = None; level = _113640.level; sigtab = _113640.sigtab; is_pattern = _113640.is_pattern; instantiate_targs = _113640.instantiate_targs; instantiate_vargs = _113640.instantiate_vargs; effects = _113640.effects; generalize = _113640.generalize; letrecs = _113640.letrecs; top_level = _113640.top_level; check_uvars = _113640.check_uvars; use_eq = false; is_iface = _113640.is_iface; admit = _113640.admit; default_effects = _113640.default_effects}), (expected_typ env)))
+let clear_expected_typ = (fun env -> ((let _113635 = env
+in {solver = _113635.solver; range = _113635.range; curmodule = _113635.curmodule; gamma = _113635.gamma; modules = _113635.modules; expected_typ = None; level = _113635.level; sigtab = _113635.sigtab; is_pattern = _113635.is_pattern; instantiate_targs = _113635.instantiate_targs; instantiate_vargs = _113635.instantiate_vargs; effects = _113635.effects; generalize = _113635.generalize; letrecs = _113635.letrecs; top_level = _113635.top_level; check_uvars = _113635.check_uvars; use_eq = false; is_iface = _113635.is_iface; admit = _113635.admit; default_effects = _113635.default_effects}), (expected_typ env)))
 
 let fold_env = (fun env f a -> (Support.List.fold_right (fun e a -> (f a e)) env.gamma a))
 
@@ -697,14 +697,14 @@ end)) [] env.gamma))
 
 let idents = (fun env -> (Microsoft_FStar_Absyn_Syntax.freevars_of_list ((Support.List.map (Support.Prims.fst)) (binders env))))
 
-let lidents = (fun env -> (let keys = (Support.List.fold_left (fun keys _112735 -> (match (_112735) with
+let lidents = (fun env -> (let keys = (Support.List.fold_left (fun keys _112730 -> (match (_112730) with
 | Binding_sig (s) -> begin
 (Support.List.append (Microsoft_FStar_Absyn_Util.lids_of_sigelt s) keys)
 end
 | _ -> begin
 keys
 end)) [] env.gamma)
-in (Support.Microsoft.FStar.Util.smap_fold (sigtab env) (fun _113686 v keys -> (Support.List.append (Microsoft_FStar_Absyn_Util.lids_of_sigelt v) keys)) keys)))
+in (Support.Microsoft.FStar.Util.smap_fold (sigtab env) (fun _113681 v keys -> (Support.List.append (Microsoft_FStar_Absyn_Util.lids_of_sigelt v) keys)) keys)))
 
 
 

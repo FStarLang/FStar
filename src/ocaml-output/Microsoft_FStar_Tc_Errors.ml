@@ -15,7 +15,7 @@ let num_errs = (Support.Microsoft.FStar.Util.mk_ref 0)
 
 let verification_errs = (Support.Microsoft.FStar.Util.mk_ref [])
 
-let add_errors = (fun env errs -> (let errs = ((Support.List.map (fun _147752 -> (match (_147752) with
+let add_errors = (fun env errs -> (let errs = ((Support.List.map (fun _147747 -> (match (_147747) with
 | (msg, r) -> begin
 (let r = if (r = Microsoft_FStar_Absyn_Syntax.dummyRange) then begin
 (Microsoft_FStar_Tc_Env.get_range env)
@@ -25,35 +25,35 @@ end
 in (r, msg))
 end))) errs)
 in (let n_errs = (Support.List.length errs)
-in (Support.Microsoft.FStar.Util.atomically (fun _147756 -> (match (_147756) with
+in (Support.Microsoft.FStar.Util.atomically (fun _147751 -> (match (_147751) with
 | () -> begin
-(let _147757 = (verification_errs := (Support.List.append errs (! (verification_errs))))
+(let _147752 = (verification_errs := (Support.List.append errs (! (verification_errs))))
 in (num_errs := ((! (num_errs)) + n_errs)))
 end))))))
 
-let report_all = (fun _147759 -> (match (_147759) with
+let report_all = (fun _147754 -> (match (_147754) with
 | () -> begin
-(let all_errs = (Support.Microsoft.FStar.Util.atomically (fun _147760 -> (match (_147760) with
+(let all_errs = (Support.Microsoft.FStar.Util.atomically (fun _147755 -> (match (_147755) with
 | () -> begin
 (let x = (! (verification_errs))
-in (let _147762 = (verification_errs := [])
+in (let _147757 = (verification_errs := [])
 in x))
 end)))
-in (let all_errs = (Support.List.sortWith (fun _147768 _147772 -> (match ((_147768, _147772)) with
+in (let all_errs = (Support.List.sortWith (fun _147763 _147767 -> (match ((_147763, _147767)) with
 | ((r1, _), (r2, _)) -> begin
 (Support.Microsoft.FStar.Range.compare r1 r2)
 end)) all_errs)
-in (let _147777 = ((Support.List.iter (fun _147776 -> (match (_147776) with
+in (let _147772 = ((Support.List.iter (fun _147771 -> (match (_147771) with
 | (r, msg) -> begin
 (Support.Microsoft.FStar.Util.fprint2 "%s: %s\n" (Support.Microsoft.FStar.Range.string_of_range r) msg)
 end))) all_errs)
 in (Support.List.length all_errs))))
 end))
 
-let report = (fun r msg -> (let _147781 = (Support.Microsoft.FStar.Util.incr num_errs)
+let report = (fun r msg -> (let _147776 = (Support.Microsoft.FStar.Util.incr num_errs)
 in (Support.Microsoft.FStar.Util.print_string (Support.Microsoft.FStar.Util.format2 "%s: %s\n" (Support.Microsoft.FStar.Range.string_of_range r) msg))))
 
-let get_err_count = (fun _147783 -> (match (_147783) with
+let get_err_count = (fun _147778 -> (match (_147778) with
 | () -> begin
 (! (num_errs))
 end))
@@ -111,7 +111,7 @@ end
 end)
 in (Support.Microsoft.FStar.Util.format1 "The pattern variable \"%s\" was used more than once" m)))
 
-let disjunctive_pattern_vars = (fun v1 v2 -> (let vars = (fun v -> ((Support.String.concat ", ") ((Support.List.map (fun _147739 -> (match (_147739) with
+let disjunctive_pattern_vars = (fun v1 v2 -> (let vars = (fun v -> ((Support.String.concat ", ") ((Support.List.map (fun _147734 -> (match (_147734) with
 | Support.Microsoft.FStar.Util.Inl (a) -> begin
 (Microsoft_FStar_Absyn_Print.strBvd a)
 end
@@ -128,11 +128,11 @@ end
 ((Microsoft_FStar_Absyn_Print.sli ct.Microsoft_FStar_Absyn_Syntax.effect_name), ct.Microsoft_FStar_Absyn_Syntax.result_typ)
 end))
 
-let computed_computation_type_does_not_match_annotation = (fun env e c c' -> (let _147865 = (name_and_result c)
-in (match (_147865) with
+let computed_computation_type_does_not_match_annotation = (fun env e c c' -> (let _147860 = (name_and_result c)
+in (match (_147860) with
 | (f1, r1) -> begin
-(let _147868 = (name_and_result c')
-in (match (_147868) with
+(let _147863 = (name_and_result c')
+in (match (_147863) with
 | (f2, r2) -> begin
 (Support.Microsoft.FStar.Util.format4 "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\"" (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env r1) f1 (Microsoft_FStar_Tc_Normalize.typ_norm_to_string env r2) f2)
 end))
