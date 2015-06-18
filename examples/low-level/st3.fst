@@ -610,8 +610,8 @@ val scopedWhile1 :
   -> loopInv:(smem -> Type)
   -> bd:(unit -> WNSC unit (fun m -> loopInv m /\ refExistsInMem r m /\ (lc (loopkupRef r m)))
               (fun _ _ m1 -> loopInv m1 /\ refExistsInMem r m1))
-  -> Mem unit (requires (fun m -> loopInv m /\ refExistsInMem r m))
-              (ensures (fun m0 _ m1 -> loopInv m1 /\ refExistsInMem r m1 /\ ~(lc (loopkupRef r m1)) ))
+  -> Mem unit ((fun m -> loopInv m /\ refExistsInMem r m))
+              ((fun m0 _ m1 -> loopInv m1 /\ refExistsInMem r m1 /\ ~(lc (loopkupRef r m1)) ))
 let scopedWhile1 'a r lc 'loopInv bd =
   scopedWhile
   (*augment the loop invariant to include the precondition for evaluating the guard*)
