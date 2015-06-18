@@ -3241,7 +3241,9 @@ How does this help us? Let's see.
 First, you can prove the following property about `WLP`.
 
 ```
-(1)   WLP e P  <==> forall x. P x \/ WLP e (fun y -> y <> x)
+(Identity 1)  
+           WLP e P 
+      <==> forall x. P x \/ WLP e (fun y -> y <> x)
 ```
 
 Here's one way to read formula (1): Proving that `P` is true of the
@@ -3253,7 +3255,8 @@ Armed with identity (1) above, we can also prove the following
 identity:
 
 ```
-(2)  WP e P 
+(Identity 2) 
+          WP e P 
      <==> WP e (fun x -> True) /\ WLP e P
      <==> WP e (fun x -> True) /\ (forall x. P x \/ WLP e (fun y -> y <> x)) (by (1))
 ```
@@ -3298,7 +3301,7 @@ effect `M` and several user-defined indexes `t1..tn`.  The type `t`
 indicates the type of the result of the computation; `wp` is a
 predicate transformer that is not weaker than the weakest
 pre-condition of `e`; and `wlp` is a predicate transformer not weaker
-than the weakest _liberal_ pre-condition of `e`. For the sake of
+than the weakest liberal pre-condition of `e`. For the sake of
 brevity, we call `wp` the weakest pre-condition and `wlp` the weakest
 liberal pre-condition. 
 
@@ -3325,7 +3328,6 @@ form what is known as a [Dijkstra monad]. Some concrete examples
 should provide better intuition.
 
 ~Remark
-
 We follow an informal syntactic convention that the non-abbreviated
 all-caps names for computation types are the primitive forms---other
 forms are derived from these.
@@ -3333,8 +3335,8 @@ forms are derived from these.
 For example, the computation type constructor `PURE` is a more
 primitive version of the `Pure`, which we have used earlier in this
 tutorial. By the end of this chapter, you will see how `Pure`, `Tot`,
-`Lemma` etc. are expressed in terms of `PURE`. Likewiwse `STATE` is
-the primitive form of `ST`; `EXN` is the primitive form of `Exn`; etc.
+etc. are expressed in terms of `PURE`. Likewiwse `STATE` is the
+primitive form of `ST`; `EXN` is the primitive form of `Exn`; etc.
 
 ~
 
@@ -3351,14 +3353,15 @@ as it provides some insight into how F\* works under the covers. It
 also provides some guidance on how to define new effects. We discuss a
 fragment of it here.
 
-The type of pure computations is `PURE t wp` where 
-`wp : (t -> Type) -> Type`. This means that pure computations produce
+The type of pure computations is `PURE t wp wlp` where 
+`wp, wlp : (t -> Type) -> Type`. This means that pure computations produce
 `t`-typed results and are decribed by predicate transformers that
 transform result predicates (post-conditions of kind `t -> Type`) to
 pre-conditions, which are propositions of kind `Type`.
 
-Seen another way, the signature of the `wp` has the following
-form---it transforms pure post-conditions to pure pre-conditions.
+Seen another way, the signatures of the `wp` and `wlp` have the
+following form---they transform pure post-conditions to pure
+pre-conditions.
 
 ```
 kind PurePost (a:Type) = a -> Type
@@ -3366,11 +3369,11 @@ kind PurePre = Type
 kind PureWP (a:Type) = PurePost a -> PurePre
 ```
 
-For example, one computation type for `0` is `PURE int wp_zero` where
-`wp_zero = fun (p:(int -> Type)) -> p 0`.  This means that in order to
+For example, one computation type for `0` is `PURE int return_zero return_zero` where
+`return_zero = fun (p:(int -> Type)) -> p 0`.  This means that in order to
 prove any property `p` about the result of the computation `0` is
 suffices to prove `p 0`---which is of course what you would
-expect. The type `wp_zero` is an instance of the more general form
+expect. The type `return_zero` is an instance of the more general form
 below:
 
 ```
@@ -3378,8 +3381,11 @@ type return_PURE (#a:Type) (x:a) = fun (post: PurePost a) -> post x
 ```
 
 When sequentially composing two pure computations using 
-`let x = e1 in e2`, if `e1: PURE t1 wp1` and `e2: (x:t1 -> PURE t2 (wp2 x))`, 
-we type the composed computation as `PURE t2 (bind_PURE wp1 wp2)`, where:
+`let x = e1 in e2`, if 
+`e1: PURE t1 wp1 wlp1` and 
+`e2: (x:t1 -> PURE t2 (wp2 x) (wlp2 x))`, 
+we type the composed computation as 
+`PURE t2 (bind_PURE wp1 wp2) (bind_PURE wlp1 wlp2)`, where:
 
 ```
 type bind_PURE (#a:Type) (#b:Type) 
@@ -3389,6 +3395,181 @@ type bind_PURE (#a:Type) (#b:Type)
 ```
 
 One can show that `return_PURE` and `bind_PURE` together form a monad.
+
+### The `Pure` effect
+
+The `Pure` effect is an abbreviation for `PURE` that allows you to
+write specifications with pre- and post-conditions instead of
+predicate transformers. It is defined as follows:
+
+```
+effect Pure (a:Type) (pre:Type) (post: a -> Type) = 
+       PURE a (fun (p:PurePost a) -> pre /\ forall (x:a). post x ==> p x)
+              (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
+```
+
+That is `Pure a pre post` is a computation which when `pre` is true
+produces a result `v:a` such that `post v` is true.
+
+The `Tot` effect is defined below:
+
+```
+effect Tot (a:Type) = 
+       PURE a (fun (p:PurePost a) -> forall (x:a). p x)
+              (fun (p:PurePost a) -> forall (x:a). p x)
+```
+
+This means that a computation type `Tot a` only reveals that the
+computation always terminates with an `a`-typed result.
+
+### From predicate transformers to pre- and post-conditions
+
+We have just seen how the definition of `Pure a pre post` unfolds into
+the `PURE` effect. It is also possible to go in the other direction,
+turning a specification written in the `PURE a wp wlp` style into a
+`Pure a pre post`. However, whereas F\* will always automatically
+unfold the definition of `Pure` in terms of `PURE` as needed, it will
+not automatically transform the more primitive `PURE` effect into the
+derived form `Pure`. Instead, one uses an explicit coercion for this
+purpose, with the signature shown below.
+
+```
+type as_requires (#a:Type) (wp:PureWP a)  = wp (fun x -> True)
+type as_ensures  (#a:Type) (wlp:PureWP a) (x:a) = ~ (wlp (fun y -> ~(y=x)))
+assume val as_Pure: #a:Type -> #b:(a -> Type)
+          -> #wp:(x:a -> PureWP (b x))
+          -> #wlp:(x:a -> PureWP (b x))
+          -> =f:(x:a -> PURE (b x) (wp x) (wlp x))
+          -> x:a -> Pure (b x) (as_requires (wp x))
+                               (as_ensures (wlp x))
+```
+
+~Remark
+
+ The second last argument to `as_Pure` is named `f` and is tagged with
+ an equality constraint, written by preceding the bound variable name
+ with the equality symbol, i.e., `=f`. Given an application `as_Pure
+ g`, the equality constraint on the `f` argument of `as_Pure`
+ instructs F\*'s type inference engine to unify the type of `g` with
+ the expected type of `f`. Without this constraint, by default, F\*
+ will try to prove that the type of `g` is a subtype of the expected
+ type of `f`. In cases like this, where an argument mentions several
+ implicit arguments that need to be inferred (`a, b, wp, wlp`, in this
+ case), the equality constraint produces better inference resutls. 
+
+~
+
+One way to understand this type is as follows: `as_Pure f` coerces the
+type of `f` which has a `PURE (b x) wp wlp` effect to an equivalent
+function type written in terms of `Pure`.  The pre-condition of the
+resulting function type is easily computed from the `wp`, using
+`as_requires wp`, which is just the weakest pre-condition of the
+trivial post-condition.
+
+Computing the post-condition is a bit more subtle, and is accomplished
+with the `as_ensures wlp` function. Perhaps the easiest way to
+understand it is by studying the roundtrip transformation of `PURE` to
+`Pure` and back to `PURE`. The key step below is in the transformation
+from (b) to (c), where we see that by ensuring 
+`~wlp (fun y -> y <> x)`, we make use precisely of the Identity 1 
+from the previous section. Given only a `wp` without a `wlp`, we would be 
+stuck not being able to construct `as_ensures`.
+
+```
+(a) Pure t (as_requires wp)
+           (as_ensures wlp)
+
+= (definition)
+
+(b) PURE t (fun post -> wp (fun x -> True) /\ forall y. ~(wlp (fun y' -> y<>y')) ==> post y)
+           (fun post -> forall y. wp (fun x -> True) /\  ~(wlp (fun y’ -> y<>y')) ==> post y)
+
+= (unfolding ==> and double negation)
+
+(c) PURE t (fun post -> wp (fun x -> True) /\ forall y.  wlp (fun y' -> y<>y’) \/ post y)
+           (fun post -> forall y. not (wp (fun x -> True)) \/ wlp (fun y’ -> y<>y’) \/ post y)
+
+= (folding ==>)
+
+(d) PURE t (fun post -> wp (fun x -> True) /\ forall y.  wlp (fun y’ -> y<>y’) \/ post y)
+           (fun post -> forall y. wp (fun x -> True) ==> (wlp (fun y’ -> y<>y’) \/ post y))
+
+= (rearranging quantifier) 
+
+(e) PURE t (fun post -> wp (fun x -> True) /\ forall y.  wlp (fun y’ -> y<>y’) \/ post y)
+           (fun post -> wp (fun x -> True) ==> forall y. (wlp (fun y’ -> y<>y’) \/ post y))
+
+= (identity 1)
+
+(f) PURE t (fun post -> wp (fun x -> True) /\ wlp (fun y’ -> post y’))
+           (fun post -> wp (fun x -> True) ==> wlp (fun y’ -> post y’)) 
+
+<: (strengthening wlp, eta reduction)
+
+(g) PURE t (fun post -> wp (fun x -> True) /\ wlp post)
+            wlp
+
+= (identity 2, eta) 
+
+(h) PURE t wp wlp
+```
+
+Here are a few small examples using this coercion to move from `PURE`
+to `Pure`.
+
+```
+val f : x:int -> PURE int (fun 'p -> x > 0 /\ 'p (x + 1)) (fun 'p -> x > 0 ==> 'p (x + 1))
+let f x = assert (x > 0); x + 1
+
+val h : #req:(int -> Type) 
+     -> #ens:(int -> int -> Type) 
+     -> =f:(x:int -> Pure int (req x) (ens x)) 
+     -> y:int -> Pure int (req y) (ens y)
+let h f x = f x
+
+val g : x:int -> Pure int (x > 0) (fun y -> y == x + 1)
+let g = h (as_Pure f)
+```
+
+~Exercise
+
+Work out the roundtrip unfolding a `Pure t pre post` into a `PURE`
+effect and then back to a `Pure` using the `as_Pure` coercion. Prove
+that after this round trip, the resulting type is logically equivalent
+to the type you started with.
+
+~~ Answer
+```
+Pure t p q
+
+= (definition)
+
+PURE t wp wlp
+  where wp  = fun post -> p /\ forall (y:t). q y ==> post y
+    and wlp = fun post -> forall (y:t). p /\ q y ==> post y
+
+<:  (definition)
+
+  Pure t (p /\ forall (y:t). q y ==> True)
+         (fun y -> not (forall (z:t). p /\ q z ==> (y<>z)))
+
+=  (simplification/de Morgan)
+
+Pure t (p)
+       (fun y -> exists (z:t). p /\ q z /\ y=z)
+
+= (replacing existential by equality)
+
+   Pure t p
+          (fun y -> p /\ q y)
+
+<: (weakening post-condition, eta)
+  
+   Pure t p q
+```
+~~
+~
+
 
 ## The `STATE` effect
 
