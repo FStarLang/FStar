@@ -149,7 +149,7 @@ other utilities required for the build.)
 
         $ make ocaml
 
-2. Then run the following commands in `src/ocaml-output`:
+2. On windows, close all instances of fstar.exe, e.g. your F* IDE, becuase this step will overwrite fstar.exe. Then run the following commands in `src/ocaml-output`:
 
         $ make parser
         $ make
