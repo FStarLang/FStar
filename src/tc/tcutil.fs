@@ -807,6 +807,17 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (lc:lc
                 comp=strengthen},
        {g0 with Rel.guard_f=Rel.Trivial} 
 
+let add_equality_to_post_condition env (comp:comp) (res_t:typ) = 
+    let md_pure = Tc.Env.get_effect_decl env Const.pure_effect_lid in 
+    let x = Util.gen_bvar res_t in
+    let y = Util.gen_bvar res_t in
+    let xexp, yexp = Util.bvar_to_exp x, Util.bvar_to_exp y in
+    let yret = mk_Typ_app(md_pure.ret, [targ res_t; varg yexp]) None res_t.pos in
+    let x_eq_y_yret = mk_Typ_app(md_pure.assume_p, [targ res_t; targ <| Util.mk_eq res_t res_t xexp yexp; targ <| yret]) None res_t.pos in
+    let forall_y_x_eq_y_yret = mk_Typ_app(md_pure.close_wp, [targ res_t; targ res_t; targ <| mk_Typ_lam([v_binder y], x_eq_y_yret) None res_t.pos]) None res_t.pos in
+    let lc2 = mk_comp md_pure res_t forall_y_x_eq_y_yret forall_y_x_eq_y_yret [RETURN] in
+    let lc = bind env None (lcomp_of_comp comp) (Some (Env.Binding_var(x.v, x.sort)), lcomp_of_comp lc2) in
+    lc.comp()
 
 let ite env (guard:formula) lcomp_then lcomp_else = 
   let comp () = 
@@ -815,7 +826,8 @@ let ite env (guard:formula) lcomp_then lcomp_else =
       let wp = ifthenelse md res_t guard wp_then wp_else in
       let wlp = ifthenelse md res_t guard wlp_then wlp_else in
       if !Options.split_cases
-      then mk_comp md res_t wp wlp [] 
+      then let comp = mk_comp md res_t wp wlp [] in
+           add_equality_to_post_condition env comp res_t
       else let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) None wp.pos in
            let wlp = mk_Typ_app(md.ite_wlp, [targ res_t; targ wlp]) None wlp.pos in
            mk_comp md res_t wp wlp [] in
@@ -841,10 +853,10 @@ let bind_cases env (res_t:typ) (lcases:list<(formula * lcomp)>) : lcomp =
         let comp = List.fold_right (fun (g, cthen) celse ->
             let (md, _, _), (_, wp_then, wlp_then), (_, wp_else, wlp_else) = lift_and_destruct env (cthen.comp()) celse in
             mk_comp md res_t (ifthenelse md res_t g wp_then wp_else) (ifthenelse md res_t g wlp_then wlp_else) []) lcases default_case in
-        let comp = comp_to_comp_typ comp in
         if !Options.split_cases
-        then mk_Comp comp
-        else let md = Tc.Env.get_effect_decl env comp.effect_name in
+        then add_equality_to_post_condition env comp res_t
+        else let comp = comp_to_comp_typ comp in
+             let md = Tc.Env.get_effect_decl env comp.effect_name in
              let _, wp, wlp = destruct_comp comp in
              let wp = mk_Typ_app(md.ite_wp, [targ res_t; targ wlp; targ wp]) None wp.pos in
              let wlp = mk_Typ_app(md.ite_wlp, [targ res_t; targ wlp]) None wlp.pos in
