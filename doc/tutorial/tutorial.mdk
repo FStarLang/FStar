@@ -302,7 +302,7 @@ with the security policy. The reads to `tmp` and `readme`, and the
 write to `tmp` are allowed by the policy, so the program successfully
 type-checks. On the other hand, if we uncomment the lines that read
 or write `"junk"` to the `password` file, the F\* type-checker complains
-complains that the `passwd` file does not have the type
+that the `passwd` file does not have the type
 `:f:filename{canRead f}`, respectively `:f:filename{canWrite f}`.
 For instance, if we uncomment the `write` we get the following error message:
 
