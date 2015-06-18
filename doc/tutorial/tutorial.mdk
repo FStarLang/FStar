@@ -3448,8 +3448,8 @@ assume val as_Pure: #a:Type -> #b:(a -> Type)
 
  The second last argument to `as_Pure` is named `f` and is tagged with
  an equality constraint, written by preceding the bound variable name
- with the equality symbol, i.e., `=f`. Given an application `as_Pure
- g`, the equality constraint on the `f` argument of `as_Pure`
+ with the equality symbol, i.e., `=f`. Given an application 
+ `as_Pure g`, the equality constraint on the `f` argument of `as_Pure`
  instructs F\*'s type inference engine to unify the type of `g` with
  the expected type of `f`. Without this constraint, by default, F\*
  will try to prove that the type of `g` is a subtype of the expected
@@ -3772,67 +3772,99 @@ structures.
 
 # Verifying Stateful Programs
 
-In this chapter, we look in detail at F\*'s state monad and how it can be used
-to specify, program and verify stateful code. 
-
+In the previous chapter, we saw how F\*'s `ST` monad was specified. We
+now look at several programs illustrating its use. If you skipped the
+previous chapter, you should be ok---we'll explain what's needed about
+the `ST` monad as we go along, although, eventually, you'll probably
+want to refer to the previous chapter for more details.
 
 ## Stateful access control
 
-Recall our access control example from [#sec-access-control]. A
-restriction of that example was that the access control policy was fixed
-by the two functions `canWrite` and `canRead`. What if we want to
-administer access rights using an access control list (ACL)?
+We'll start with a simple example, based on the access control example
+from [#sec-access-control]. A restriction of that example was that the
+access control policy was fixed by the two functions `canWrite` and
+`canRead`. What if we want to administer access rights using an access
+control list (ACL)? Here's one simple way to model it---of course, a
+full implementation of stateful access control would have to pay
+attention to many more details.
+
+The main idea is to maintain a reference that holds the current access
+control list. In order to access a resource, we need to prove that the
+current state contains the appropriate permission. 
+
+Here's how it goes:
+
 
 ```
 module DynACLs
 open Heap
-open ST
+open ST      (* we open the Heap and ST namespaces to use stateful primitives *)
 type file = string
 
-(* using dynamic ACLs in some database *)
+(* Each entry is an element in our access-control list *)
 type entry =
   | Readable of string
   | Writable of string
 type db = list entry
-assume val acls: ref db
+
+(* The acls reference stores the current access-control list, initially empty *)
+let acls = ref []
+
+(* We define two pure functions that test whether 
+   the suitable permission exists in some db *)
+let canRead db file =
+  is_Some (List.find (function Readable x | Writable x -> x=file) db)
 
 let canWrite db file =
   is_Some (List.find (function Writable x -> x=file | _ -> false) db)
 
-let canRead db file =
-  is_Some (List.find (function Readable x | Writable x -> x=file) db)
+(* 
+   Here are two stateful functions which alter the access control list. 
+   In reality, these functions may themselves be protected by some 
+   further authentication mechanism to ensure that an attacker cannot 
+   alter the access control list 
+   
+   F* infers a fully precise predicate transformer semantics for them 
+*)
+let grant e  = acls := e::!acls
+let revoke e = acls := List.filter (fun e' -> e<>e') !acls
 
+(* Next, we model two primitives that provide access to files *)
 
-type CanRead f h  = canRead  (Heap.sel h acls) f == true
-type CanWrite f h = canWrite (Heap.sel h acls) f == true
+(* We use two heap predicates, which will serve as stateful pre-conditions *)
+type CanRead (f:file) (h:heap)  = canRead  (Heap.sel h acls) f 
+type CanWrite (f:file) (h:heap) = canWrite (Heap.sel h acls) f 
 
-(* F* infers precise specifications for all non-recursive effectful computations *)
-let grant e =
-  let a = ST.read acls in
-  ST.write acls (e::a)
+(* In order to call `read`, you need to prove 
+   the `CanRead f` permission exists in the input heap *)
+assume val read:   f:file -> ST string
+       (requires (CanRead f))
+       (ensures (fun h s h' -> h=h'))
 
-let revoke e =
-  let a = ST.read acls in
-  let db = List.filter (fun e' -> e<>e') a in
-  ST.write acls db
+(* Likewise for `delete` *)
+assume val delete: f:file -> ST unit
+       (requires (CanWrite f))
+       (ensures (fun h s h' -> h=h'))
 
-(* two dangerous primitives *)
-assume val read:   file:string -> ST string
-                                     (requires (CanRead file))
-                                     (ensures (fun h s h' -> h=h'))
-                                     (modifies no_refs)
+(* Then, we have a top-level API, which provides protected 
+   access to a file by first checking the access control list.
 
-assume val delete: file:string -> ST unit
-                                     (requires (CanWrite file))
-                                     (ensures (fun h s h' -> h=h'))
-                                     (modifies no_refs)
+   If the check fails, it raises a fatal exception using `failwith`. 
+   As such, it is defined to have effect `All`, which combines
+   both state and exceptions. 
 
-val checkedDelete: file -> All unit (fun h -> True) (fun h x h' -> h==h')
+   Regardless, the specification proves that `checkedDelete` 
+   does not change the heap.
+ *)
+val checkedDelete: file -> All unit 
+    (requires (fun h -> True))
+    (ensures (fun h x h' -> h=h'))
 let checkedDelete file =
   if canWrite !acls file
   then delete file
   else failwith "unwritable"
 
+(* Finally, we have a top-level client program *)
 val test_acls: file -> unit
 let test_acls f =
   grant (Readable f);     (* ok *)
@@ -3855,7 +3887,7 @@ let grant e = ST.write acls (e::ST.read acls)
 
 val revoke: e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> True))
-elet revoke e =
+let revoke e =
   let db = List.filterT (fun e' -> e<>e') (ST.read acls) in
   ST.write acls db
 ~~
@@ -3863,7 +3895,7 @@ elet revoke e =
 ~~Answer {exname=ex8a-acls}
 ~~~ SolutionFragment
 val grant : e:entry -> ST unit (requires (fun h -> True))
-                               (ensures (fun h x h' -> sel h' acls == e::sel h acls))
+                               (ensures (fun h x h' -> sel h' acls = e::sel h acls))
 let grant e = ST.write acls (e::ST.read acls)
 
 val revoke: e:entry -> ST unit (requires (fun h -> True))
