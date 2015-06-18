@@ -3718,9 +3718,57 @@ let g = h (as_ST f)
 
 ## Lifting effects
 
+When programming with multiple effects, you can instruct F\* to
+automatically infer a specification for your program with a predicate
+transformer that captures the semantics of all the effects you
+use. The way this works is that F\* computes the least effect for each
+sub-term of your program, and then lifts the specification of each
+sub-term into some larger effect, as may be needed by the context. 
+
+For example, say you write:
+
+```
+let y = !x in y + 1
+```
+
+The sub-term `!x` has the `STATE` effect; whereas the sub-term `y+1`
+is `PURE`. Since the whole term has at least `STATE` effect, we'd like
+to lift the pure sub-computation to `STATE`. To do this, you can
+specify that `PURE` is a sub-effect of `STATE`, as follows (adapted
+from `lib/prims.fst`):
+
+```
+sub_effect
+  PURE   ~> STATE = fun (a:Type) (wp:PureWP a) (p:StatePost a) (h:heap) -> 
+                    wp (fun a -> p a h)
+```
+
+This says that in order to lift a `PURE` compuataion to `STATE`, we
+lift its `wp:PureWP a` (equivalently for its `wlp`) to a `StateWP a`
+that says that that pure computation leaves the state unmodified. 
 
 ## Indexed computation types 
 
+Finally, as mentioned earlier, in its full form a computation type has
+the shape `M t1..tn t wp wlp`, where `t1..tn` are some user-chosen
+indices to the effect constructor `M`.
+
+This is convenient in that it allows effects to be defined
+parametrically, and specific effects derived just by instantiation.
+
+For example, the `STATE` effect is actually defined as an instance of
+a more general parameterized effect `STATE_h (mem:Type)`, which is
+parametric in the type of the memory used by the state monad.
+
+Specifically, we have in `lib/prims.fst`
+
+```
+new_effect STATE = STATE_h heap
+```
+
+However, as we will see in subsequent sections, it is often convenient
+to define other variants of the state monad using different memory
+structures.
 
 # Verifying Stateful Programs
 
