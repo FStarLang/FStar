@@ -5,9 +5,9 @@ NEGFILES=negative-tests.fst
 all: .all.ver testmref testhyperheap.vv mac2 all-neg
 
 all-neg: $(NEGFILES)
-	-$(FSTAR) --admit_fsi Set $(STDLIB) $^
+	-$(FSTAR) --admit_fsi Set $(STDLIB) --split_cases 1 $^
 	@echo "---------------------------------------"
-	@echo "       Done ! EXPECT 35 FAILURES       "
+	@echo "       Done ! EXPECT 31 FAILURES       "
 	@echo "---------------------------------------"
 
 

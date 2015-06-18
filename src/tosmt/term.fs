@@ -280,6 +280,7 @@ let inst tms t =
    aux 0 t
         
 let mkQuant' (qop, pats, wopt, vars, body) = mkQuant (qop, pats |> List.map (List.map (abstr vars)), wopt, List.map fv_sort vars, abstr vars body)
+let mkForall'' (pats, wopt, sorts, body) = mkQuant (Forall, pats, wopt, sorts, body)
 let mkForall' (pats, wopt, vars, body) = mkQuant' (Forall, pats, wopt, vars, body)
 let mkForall (pats, vars, body) = mkQuant' (Forall, [pats], None, vars, body)
 let mkExists (pats, vars, body) = mkQuant' (Exists, [pats], None, vars, body)
@@ -566,3 +567,15 @@ let mk_or_l l = match l with
   | [] -> mkFalse
   | hd::tl -> List.fold_left (fun p1 p2 -> mkOr(p1,p2)) hd tl
 
+
+let rec print_smt_term (t:term) :string = match t.tm with
+  | Integer n               -> Util.format1 "Integer %s" (Util.string_of_int n)
+  | BoundV  n               -> Util.format1 "BoundV %s" (Util.string_of_int n)
+  | FreeV  fv               -> Util.format1 "FreeV %s" (fst fv)
+  | App (op, l)             -> Util.format2 "App %s [ %s ]" (op_to_string op) (print_smt_term_list l)
+  | Quant (qop, l, _, _, t) -> Util.format3 "Quant %s %s %s" (qop_to_string qop) (print_smt_term_list_list l) (print_smt_term t)
+
+and print_smt_term_list (l:list<term>) :string = List.fold_left (fun s t -> (s ^ "; " ^ (print_smt_term t))) "" l
+
+and print_smt_term_list_list (l:list<list<term>>) :string =
+    List.fold_left (fun s l -> (s ^ "; [ " ^ (print_smt_term_list l) ^ " ] ")) "" l

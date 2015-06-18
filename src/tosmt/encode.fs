@@ -25,6 +25,8 @@ open Microsoft.FStar.Absyn.Syntax
 open Microsoft.FStar.Tc
 open Microsoft.FStar.ToSMT.Term
 
+open Microsoft.FStar.ToSMT.SplitQueryCases
+
 let add_fuel x tl = if !Options.unthrottle_inductives then tl else x::tl 
 let withenv c (a, b) = (a,b,c)
 let vargs args = List.filter (function (Inl _, _) -> false | _ -> true) args
@@ -1854,14 +1856,14 @@ let solve tcenv q : unit =
             let fresh = String.length q.hash >= 2048 in   
             Z3.giveZ3 prefix;
 
-            let with_fuel (n, i) = 
+            let with_fuel p (n, i) = 
                 [Term.Caption (Util.format1 "<fuel='%s'>" (string_of_int n)); 
                     Term.Assume(mkEq(mkApp("MaxFuel", []), n_fuel n), None);
                     Term.Assume(mkEq(mkApp("MaxIFuel", []), n_fuel i), None);
-                    qry;
+                    p;
                     Term.CheckSat]@suffix in
     
-            let check () =
+            let check (p:decl) =
                 let initial_config = (!Options.initial_fuel, !Options.initial_ifuel) in
                 let alt_configs = List.flatten [(if !Options.max_ifuel > !Options.initial_ifuel then [(!Options.initial_fuel, !Options.max_ifuel)] else []);
                                                 (if !Options.max_fuel / 2 > !Options.initial_fuel then [(!Options.max_fuel / 2, !Options.max_ifuel)] else []);
@@ -1875,23 +1877,31 @@ let solve tcenv q : unit =
                             | _ -> errs in 
                             Tc.Errors.add_errors tcenv errs in
 
-                let rec try_alt_configs errs = function 
+                let rec try_alt_configs (p:decl) errs = function 
                     | [] -> report (false, errs)
                     | [mi] -> 
                         begin match errs with 
-                        | [] -> Z3.ask fresh labels (with_fuel mi) (cb [])
+                        | [] -> Z3.ask fresh labels (with_fuel p mi) (cb p [])
                         | _ -> report (false, errs)
                         end
 
                     | mi::tl -> 
-                        Z3.ask fresh labels (with_fuel mi) (fun (ok, errs') -> 
+                        Z3.ask fresh labels (with_fuel p mi) (fun (ok, errs') -> 
                         match errs with 
-                            | [] -> cb tl (ok, errs')  
-                            | _ -> cb tl (ok, errs))
+                            | [] -> cb p tl (ok, errs')  
+                            | _ -> cb p tl (ok, errs))
 
-                and cb alt (ok, errs) = if ok then () else try_alt_configs errs alt in
-                Z3.ask fresh labels (with_fuel initial_config) (cb alt_configs)  in
-            if !Options.admit_smt_queries then () else check ();
+                and cb (p:decl) alt (ok, errs) = if ok then () else try_alt_configs p errs alt in
+                Z3.ask fresh labels (with_fuel p initial_config) (cb p alt_configs)  in
+
+            let process_query (q:decl) :unit =
+                if !Options.split_cases > 0 then
+                    let (b, cb) = SplitQueryCases.can_handle_query q in
+                    if b then SplitQueryCases.handle_query cb !Options.split_cases check else check q
+                else check q
+            in
+
+            if !Options.admit_smt_queries then () else process_query qry;
             pop ()
     end
 

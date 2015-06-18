@@ -103,6 +103,7 @@ val mkITE: (term * term * term) -> term
 val mkCases : list<term> -> term
 val mkForall: (list<pat> * fvs * term) -> term
 val mkForall': (list<list<pat>> * option<int> * fvs * term) -> term
+val mkForall'': (list<list<pat>> * option<int> * list<sort> * term) -> term
 val mkExists: (list<pat> * fvs * term) -> term
 
 type caption = option<string>
@@ -171,3 +172,8 @@ val n_fuel: int -> term
 val push: unit -> unit
 val pop: unit -> unit
 val commit_mark: unit -> unit
+
+val print_smt_term: term -> string
+val print_smt_term_list: list<term> -> string
+val print_smt_term_list_list: list<list<term>> -> string
+

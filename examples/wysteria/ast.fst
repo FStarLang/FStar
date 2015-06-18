@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap --z3timeout 30;
     variables:LIB=../../lib;
     other-files:$LIB/ordset.fsi $LIB/ordsetproperties.fst $LIB/ordmap.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst
  --*)
@@ -475,9 +475,10 @@ let env_upd_slice_lemma p en x v =
   cut (FEq (slice_en p (update_env en x v))
       (update_env (slice_en p en) x (slice_v p v)))
 
-val cstep_lemma: #c:sconfig -> #c':sconfig -> h:cstep c c' -> p:prin
-                 -> Tot (cor (u:unit{slice_c p c = slice_c p c'})
-                             (cstep (slice_c p c) (slice_c p c')))
+opaque val cstep_lemma: #c:sconfig -> #c':sconfig -> h:cstep c c' -> p:prin
+                        -> Tot (cor (u:unit{slice_c p c = slice_c p c'})
+                               (cstep (slice_c p c) (slice_c p c')))
+#set-options "--max_fuel 2 --initial_fuel 2 --initial_ifuel 2 --max_ifuel 2"
 let cstep_lemma #c #c' h p = match h with
   | C_aspar_ps (Conf _ m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
@@ -548,8 +549,7 @@ let cstep_lemma #c #c' h p = match h with
     else
       IntroR (C_box_beta (slice_c p c) (slice_c p c'))
 
-  (* TODO: FIXME: this is ~> for faster type checking, fix it finally*)
-  | C_unbox_beta (Conf _ m _ _ _) _ ~>
+  | C_unbox_beta (Conf _ m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
     else
       IntroR (C_unbox_beta (slice_c p c) (slice_c p c'))
@@ -611,10 +611,10 @@ let rec pstep_star_upd #pi #pi' h p c = match h with
   | PS_tran #pi #pi' #pi'' h1 h2 ->
     PS_tran (pstep_upd h1 p c) (pstep_star_upd #pi' #pi'' h2 p c)
 
-val forward_simulation: c:sconfig -> c':sconfig -> h:cstep c c' -> ps:prins
-                        -> Tot (cexists (fun pi' -> cand (pstep_star (slice_c_ps ps c) pi')
-                                                         (u:unit{pi' = slice_c_ps ps c'})))
-                           (decreases (OrdSet.size ps))
+opaque val forward_simulation: c:sconfig -> c':sconfig -> h:cstep c c' -> ps:prins
+                               -> Tot (cexists (fun pi' -> cand (pstep_star (slice_c_ps ps c) pi')
+                                                                (u:unit{pi' = slice_c_ps ps c'})))
+                                  (decreases (OrdSet.size ps))
 let rec forward_simulation c c' h ps =
   if ps = OrdSet.empty then
     ExIntro empty (Conj (PS_refl empty) ())
