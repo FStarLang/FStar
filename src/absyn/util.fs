@@ -52,8 +52,9 @@ type gensym_t = {
 }
 let gs = 
   let ctr = mk_ref 0 in
-  {gensym =(fun () -> "_" ^ (Util.string_of_int (incr ctr; !ctr)));
-   reset = (fun () -> ctr := 0)}
+  let n_resets = mk_ref 0 in 
+  {gensym =(fun () -> "_" ^ (Util.string_of_int !n_resets) ^ "_" ^ (Util.string_of_int (incr ctr; !ctr)));
+   reset = (fun () -> ctr := 0; incr n_resets)}
 let gensym () = gs.gensym()
 let reset_gensym() = gs.reset()
 let rec gensyms x = match x with

@@ -5,8 +5,8 @@ let is_cache_file = (fun fn -> ((Support.Microsoft.FStar.Util.get_file_extension
 
 let parse_fragment = (fun curmod env frag -> (match ((Microsoft_FStar_Parser_ParseIt.parse (Support.Microsoft.FStar.Util.Inr (frag)))) with
 | Support.Microsoft.FStar.Util.Inl (Support.Microsoft.FStar.Util.Inl (modul::[])) -> begin
-(let _415481 = (Microsoft_FStar_Parser_Desugar.desugar_partial_modul curmod env modul)
-in (match (_415481) with
+(let _40_13 = (Microsoft_FStar_Parser_Desugar.desugar_partial_modul curmod env modul)
+in (match (_40_13) with
 | (env, modul) -> begin
 Support.Microsoft.FStar.Util.Inl ((env, modul))
 end))
@@ -31,11 +31,11 @@ end else begin
 (Microsoft_FStar_Parser_Desugar.desugar_file env ast)
 end
 | Support.Microsoft.FStar.Util.Inl (Support.Microsoft.FStar.Util.Inr (_)) -> begin
-(let _415504 = (Support.Microsoft.FStar.Util.fprint1 "%s: Expected a module\n" fn)
+(let _40_36 = (Support.Microsoft.FStar.Util.fprint1 "%s: Expected a module\n" fn)
 in (exit (1)))
 end
 | Support.Microsoft.FStar.Util.Inr ((msg, r)) -> begin
-(let _415510 = (Support.Microsoft.FStar.Util.print_string (Microsoft_FStar_Absyn_Print.format_error r msg))
+(let _40_42 = (Support.Microsoft.FStar.Util.print_string (Microsoft_FStar_Absyn_Print.format_error r msg))
 in (exit (1)))
 end)
 end)
