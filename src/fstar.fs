@@ -205,6 +205,7 @@ let batch_mode_tc filenames =
     let prims_mod, dsenv, env = tc_prims () in
 
     let all_mods, dsenv, env = filenames |> List.fold_left (fun (all_mods, dsenv, env) f -> 
+        Util.reset_gensym();
         let dsenv, env, ms = tc_one_file dsenv env f in
         all_mods@ms, dsenv, env)
         (prims_mod, dsenv, env) in

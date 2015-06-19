@@ -46,11 +46,16 @@ let handleable = function
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
-
-let gensym : unit -> string =
+type gensym_t = {
+    gensym: unit -> string;
+    reset:unit -> unit;
+}
+let gs = 
   let ctr = mk_ref 0 in
-  (fun () -> "_" ^ (Util.string_of_int (incr ctr; !ctr)))
-
+  {gensym =(fun () -> "_" ^ (Util.string_of_int (incr ctr; !ctr)));
+   reset = (fun () -> ctr := 0)}
+let gensym () = gs.gensym()
+let reset_gensym() = gs.reset()
 let rec gensyms x = match x with
   | 0 -> []
   | n -> gensym ()::gensyms (n-1)
