@@ -91,23 +91,6 @@ let incrementIfNot2 r =
     else memwrite r (oldv + 1));oldv
 
 
-val scopedWhile3 : loopInv:(smem -> Type)
-  -> #wglc:(smem -> Type)
-  -> wg:(unit -> whileGuard loopInv wglc)
-  -> bd:(unit -> whileBody loopInv wglc)
-  -> SST unit (fun m -> loopInv m)
-              (fun m0 _ m1 -> loopInv m1 /\ sids m0 = sids m1 /\ (~(wglc m1)))
-let rec scopedWhile3 (loopInv:(smem -> Type))
-  (#wglc:(smem -> Type))
-  (wg:(unit -> whileGuard loopInv wglc))
-  (bd:(unit -> whileBody loopInv wglc)) =
-   if (wg ())
-      then
-        ((withNewScope #unit
-          #(fun m -> loopInv m /\ (wglc m)) #(fun _ _ m1 -> loopInv m1) bd);
-        (scopedWhile loopInv wglc wg bd))
-      else ()
-
 
 (*What are the advantage (if any) of writing low-level programs this way,
   as opposed to writihg it as constructs in a deep embedding of C, e.g. VST.
