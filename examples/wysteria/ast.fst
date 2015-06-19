@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap --split_cases 1;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap;
     variables:LIB=../../lib;
     other-files:$LIB/ordset.fsi $LIB/ordsetproperties.fst $LIB/ordmap.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst
  --*)
@@ -478,7 +478,7 @@ let env_upd_slice_lemma p en x v =
 opaque val cstep_lemma: #c:sconfig -> #c':sconfig -> h:cstep c c' -> p:prin
                         -> Tot (cor (u:unit{slice_c p c = slice_c p c'})
                                (cstep (slice_c p c) (slice_c p c')))
-#set-options "--max_fuel 2 --initial_fuel 2 --initial_ifuel 2 --max_ifuel 2"
+#set-options "--max_fuel 2 --initial_fuel 2 --initial_ifuel 2 --max_ifuel 2 --split_cases 1"
 let cstep_lemma #c #c' h p = match h with
   | C_aspar_ps (Conf _ m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
@@ -555,6 +555,8 @@ let cstep_lemma #c #c' h p = match h with
       IntroR (C_unbox_beta (slice_c p c) (slice_c p c'))
 
 (**********)
+
+#reset-options
 
 open OrdMap
 
