@@ -52,12 +52,13 @@ let rec unlabel t = match t.tm with
 let kind_star r = mk_term (Name (lid_of_path ["Type"] r)) r Kind
 
 
-let compile_op s = 
+let compile_op arity s = 
     let name_of_char = function 
             |'&' -> "Amp"
             |'@'  -> "At"
             |'+' -> "Plus"
-            |'-' -> "Minus"
+            |'-' when (arity=1) -> "Minus"
+            |'-' -> "Subtraction"
             |'/' -> "Slash"
             |'<' -> "Less"
             |'=' -> "Equals"
@@ -73,39 +74,40 @@ let compile_op s =
         else name_of_char (Util.char_at s i) :: aux (i + 1) in
     "op_"^ (String.concat "_" (aux 0))
 
-let compile_op_lid s r = [Syntax.mk_ident(compile_op s, r)] |> Syntax.lid_of_ids 
+let compile_op_lid n s r = [Syntax.mk_ident(compile_op n s, r)] |> Syntax.lid_of_ids 
     
 let op_as_vlid env arity rng s =
   let r l = Some (set_lid_range l rng) in
-  match s, env.phase with
-    | "=", _ ->    r Const.op_Eq
-    | ":=", _ ->   r Const.op_ColonEq
-    | "<", _ ->    r Const.op_LT
-    | "<=", _ ->   r Const.op_LTE
-    | ">", _ ->    r Const.op_GT
-    | ">=", _ ->   r Const.op_GTE
-    | "&&", _ ->   r Const.op_And
-    | "||", _ ->   r Const.op_Or
-    | "*", _ ->    r Const.op_Multiply
-    | "+", _ ->    r Const.op_Addition
-    | "-", _  when 
-      (arity=1) -> r Const.op_Minus
-    | "-", _ ->    r Const.op_Subtraction
-    | "/", _ ->    r Const.op_Division
-    | "%", _ ->    r Const.op_Modulus
-    | "!", _ ->    r Const.read_lid
-    | "@", _ ->    r Const.list_append_lid
-    | "^", _ ->    r Const.strcat_lid
-    | "|>", _ ->   r Const.pipe_right_lid
-    | "<|", _ ->   r Const.pipe_left_lid
-    | "<>", _ ->   r Const.op_notEq
-    | s, _ ->   
-      begin match DesugarEnv.try_lookup_lid env (compile_op_lid s rng) with 
+  let fallback () = 
+      match s, env.phase with
+        | "=", _ ->    r Const.op_Eq
+        | ":=", _ ->   r Const.op_ColonEq
+        | "<", _ ->    r Const.op_LT
+        | "<=", _ ->   r Const.op_LTE
+        | ">", _ ->    r Const.op_GT
+        | ">=", _ ->   r Const.op_GTE
+        | "&&", _ ->   r Const.op_And
+        | "||", _ ->   r Const.op_Or
+        | "*", _ ->    r Const.op_Multiply
+        | "+", _ ->    r Const.op_Addition
+        | "-", _  when 
+          (arity=1) -> r Const.op_Minus
+        | "-", _ ->    r Const.op_Subtraction
+        | "/", _ ->    r Const.op_Division
+        | "%", _ ->    r Const.op_Modulus
+        | "!", _ ->    r Const.read_lid
+        | "@", _ ->    r Const.list_append_lid
+        | "^", _ ->    r Const.strcat_lid
+        | "|>", _ ->   r Const.pipe_right_lid
+        | "<|", _ ->   r Const.pipe_left_lid
+        | "<>", _ ->   r Const.op_notEq
+        | _ -> None in
+   begin match DesugarEnv.try_lookup_lid env (compile_op_lid arity s rng) with 
         | Some ({n=Exp_fvar(fv, _)}) -> Some fv.v
-        | _ -> None
-      end
+        | _ -> fallback()
+   end
 
-let op_as_tylid env rng s =
+let op_as_tylid env arity rng s =
   let r l = Some (set_lid_range l rng) in
   match s with
     | "~"   ->  r Const.not_lid
@@ -117,7 +119,7 @@ let op_as_tylid env rng s =
     | "==>" ->  r Const.imp_lid
     | "<==>" -> r Const.iff_lid
     | s -> 
-      begin match DesugarEnv.try_lookup_typ_name env (compile_op_lid s rng) with 
+      begin match DesugarEnv.try_lookup_typ_name env (compile_op_lid arity s rng) with 
         | Some ({n=Typ_const ftv}) -> Some ftv.v
         | _ -> None
       end
@@ -136,7 +138,7 @@ let rec is_type env (t:term) =
     | Op("==>", _)
     | Op("<==>", _)  
     | Op("<<", _) -> true              
-    | Op(s, _) -> (match op_as_tylid env t.range s with
+    | Op(s, args) -> (match op_as_tylid env (List.length args) t.range s with
         | None -> false
         | _ -> true)
     | QForall _
@@ -804,7 +806,7 @@ and desugar_typ env (top:term) : typ =
       desugar_typ env (mk_term(Op("~", [mk_term (Op("==", args)) top.range top.level])) top.range top.level)
       
     | Op(s, args) ->
-      begin match op_as_tylid env top.range s with
+      begin match op_as_tylid env (List.length args) top.range s with
         | None -> desugar_exp env top |> Util.b2t
         | Some l ->
           let args = List.map (fun t -> arg_withimp_t Nothing <| desugar_typ_or_exp env t) args in

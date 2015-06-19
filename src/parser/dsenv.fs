@@ -456,6 +456,16 @@ let check_admits nm env =
     | _ -> ())
 
 let finish env modul = 
+  modul.declarations |> List.iter (function
+    | Sig_bundle(ses, quals, _, _) -> 
+      if List.contains Private quals 
+      then ses |> List.iter (function 
+                | Sig_datacon(lid, _, _, _, _, _) -> Util.smap_remove (sigmap env) lid.str
+                | _ -> ())
+    | Sig_val_decl(lid, _, quals, _) -> 
+      if List.contains Private quals 
+      then Util.smap_remove (sigmap env) lid.str
+    | _ -> ());
   {env with 
     curmodule=None;
     modules=(modul.name, modul)::env.modules; 

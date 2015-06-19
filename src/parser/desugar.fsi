@@ -33,7 +33,7 @@ val desugar_partial_modul: option<(modul * 'a)> -> env -> AST.modul -> env * Syn
 (* private *) val desugar_modul : env -> AST.modul -> env * Syntax.modul
 (* private *) val mk_data_projectors : env -> sigelt -> list<sigelt>
 (* private *) val close : env -> term -> term
-(* private *) val op_as_tylid : env -> range -> string -> option<lident>
+(* private *) val op_as_tylid : env -> int -> range -> string -> option<lident>
 (* private *) val op_as_vlid : env -> int -> range -> string -> option<lident>
 
 val add_modul_to_env: Syntax.modul -> env -> env

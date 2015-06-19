@@ -615,6 +615,11 @@ let is_pure_effect env l =
   let l = norm_eff_name env l in 
   lid_equals l Const.pure_effect_lid
 
+let is_pure_or_ghost_effect env l =
+  let l = norm_eff_name env l in 
+  lid_equals l Const.pure_effect_lid
+  || lid_equals l Const.effect_GHOST_lid
+
 let mk_comp md result wp wlp flags = 
   mk_Comp ({effect_name=md.mname;
              result_typ=result;
@@ -677,7 +682,7 @@ let bind env e1opt (lc1:lcomp) ((b, lc2):lcomp_with_binder) : lcomp =
             else None in
         match e1opt, b with 
             | Some e, Some (Env.Binding_var(x,_)) -> 
-                if Util.is_total_comp c1 && not (Syntax.is_null_bvd x)
+                if Util.is_tot_or_gtot_comp c1 && not (Syntax.is_null_bvd x)
                 then Some <| Util.subst_comp [Inr(x, e)] c2
                 else aux ()
             | _ -> aux () in
@@ -899,13 +904,10 @@ let close_comp env bindings (lc:lcomp) =
 let maybe_assume_result_eq_pure_term env (e:exp) (lc:lcomp) : lcomp = 
   let refine () = 
       let c = lc.comp() in
-      if not (is_pure_effect env lc.eff_name)
+      if not (is_pure_or_ghost_effect env lc.eff_name)
       then c
       else if Util.is_partial_return c then c
       else 
-//      match (compress_typ (Util.comp_result c)).n with 
-//        | Typ_fun _ -> c (* no need to include equalities for functions *)
-//        | _ -> 
            let c = Tc.Normalize.weak_norm_comp env c in
            let t = c.result_typ in
            let c = mk_Comp c in 
@@ -1027,6 +1029,10 @@ let weaken_result_typ env (e:exp) (lc:lcomp) (t:typ) : exp * lcomp * guard_t =
             let eq_ret, _trivial_so_ok_to_discard = 
             strengthen_precondition (Some <| Errors.subtyping_failed env lc.res_typ t) (Env.set_range env e.pos) e cret
                                     (guard_of_guard_formula <| Rel.NonTrivial guard) in
+//            let eq_ret = 
+//                if Util.is_pure_or_ghost_comp c
+//                then weaken_precondition env eq_ret (Rel.NonTrivial (Util.mk_eq t t xexp e))
+//                else eq_ret in 
             let c = bind env (Some e) (lcomp_of_comp <| mk_Comp ct) (Some(Env.Binding_var(x, lc.res_typ)), eq_ret) in
             let c = c.comp () in
             if Tc.Env.debug env <| Options.Extreme
