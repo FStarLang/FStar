@@ -76,7 +76,7 @@ type qop =
   | Exists
 
 type term' =
-  | Integer    of int
+  | Integer    of string //unbounded mathematical integers
   | BoundV     of int
   | FreeV      of fv
   | App        of op  * list<term>
@@ -145,7 +145,7 @@ let weightToSmt = function
     | Some i -> Util.format1 ":weight %s\n" (string_of_int i)
 
 let rec hash_of_term' t = match t with 
-    | Integer i -> string_of_int i 
+    | Integer i ->  i 
     | BoundV i  -> "@"^string_of_int i
     | FreeV x   -> fst x ^ ":" ^ strSort (snd x)
     | App(op, tms) -> "("^(op_to_string op)^(List.map (fun t -> t.hash) tms |> String.concat " ")^")"
@@ -174,7 +174,8 @@ let mk t =
 
 let mkTrue       = mk (App(True, [])) 
 let mkFalse      = mk (App(False, []))
-let mkInteger i  = mk (Integer i) 
+let mkInteger i  = mk (Integer i)
+let mkInteger' i = mkInteger (string_of_int i) 
 let mkBoundV i   = mk (BoundV i) 
 let mkFreeV x    = mk (FreeV x) 
 let mkApp' f        = mk (App f) 
@@ -307,9 +308,10 @@ type decls_t = list<decl>
 let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, abstr vars tm, c)
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
 let fresh_token (tok_name, sort) id = 
-    Assume(mkEq(mkInteger id, mkApp(constr_id_of_sort sort, [mkApp (tok_name,[])])), Some "fresh token")
+    Assume(mkEq(mkInteger' id, mkApp(constr_id_of_sort sort, [mkApp (tok_name,[])])), Some "fresh token")
      
 let constructor_to_decl (name, projectors, sort, id) =
+    let id = string_of_int id in
     let cdecl = DeclFun(name, projectors |> List.map snd, sort, Some "Constructor") in
     let n_bvars = List.length projectors in
     let bvar_name i = "x_" ^ string_of_int i in
@@ -359,9 +361,7 @@ let name_binders sorts =
 
 let termToSmt t = 
     let rec aux n (names:list<fv>) t = match t.tm with  
-      | Integer i     -> 
-        if i < 0 then Util.format1 "(- %s)" (string_of_int (-i)) 
-        else string_of_int i
+      | Integer i     -> i
       | BoundV i -> 
         List.nth names i |> fst
       | FreeV x -> fst x 
@@ -495,8 +495,8 @@ and mkPrelude z3options =
 let mk_Kind_type        = mkApp("Kind_type", [])
 let mk_Typ_app t1 t2    = mkApp("Typ_app", [t1;t2])
 let mk_Typ_dep t1 t2    = mkApp("Typ_dep", [t1;t2])
-let mk_Typ_uvar i       = mkApp("Typ_uvar", [mkInteger i])
-let mk_Exp_uvar i       = mkApp("Exp_uvar", [mkInteger i])
+let mk_Typ_uvar i       = mkApp("Typ_uvar", [mkInteger' i])
+let mk_Exp_uvar i       = mkApp("Exp_uvar", [mkInteger' i])
 
 let mk_Term_unit        = mkApp("Term_unit", [])
 let boxInt t            = mkApp("BoxInt", [t]) 
@@ -541,7 +541,7 @@ let mk_ApplyTT t t'   = mkApp("ApplyTT", [t;t'])
 let mk_ApplyET e t    = mkApp("ApplyET", [e;t])
 let mk_ApplyEE e e'   = mkApp("ApplyEE", [e;e'])
 let mk_ApplyEF e f    = mkApp("ApplyEF", [e;f])
-let mk_String_const i = mkApp("String_const", [ mkInteger i ])
+let mk_String_const i = mkApp("String_const", [ mkInteger' i ])
 let mk_Precedes x1 x2 = mkApp("Precedes", [x1;x2]) |> mk_Valid
 let mk_LexCons x1 x2  = mkApp("LexCons", [x1;x2])
 let rec n_fuel n = 
@@ -569,7 +569,7 @@ let mk_or_l l = match l with
 
 
 let rec print_smt_term (t:term) :string = match t.tm with
-  | Integer n               -> Util.format1 "Integer %s" (Util.string_of_int n)
+  | Integer n               -> Util.format1 "Integer %s" n
   | BoundV  n               -> Util.format1 "BoundV %s" (Util.string_of_int n)
   | FreeV  fv               -> Util.format1 "FreeV %s" (fst fv)
   | App (op, l)             -> Util.format2 "App %s [ %s ]" (op_to_string op) (print_smt_term_list l)

@@ -21,7 +21,9 @@ let int_lid = (pconst "int")
 
 let uint8_lid = (pconst "uint8")
 
-let int32_lid = (pconst "int32")
+let int32_lid = (p2l (("Int32")::("int32")::[]))
+
+let int31_lid = (p2l (("Int31")::("int31")::[]))
 
 let int64_lid = (pconst "int64")
 

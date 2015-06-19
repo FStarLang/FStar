@@ -153,7 +153,7 @@ let const_to_string x = match x with
   | Const_char x ->       "'" ^ (Util.string_of_char x) ^ "'"
   | Const_string(bytes, _) -> Util.format1 "\"%s\"" (Util.string_of_bytes bytes)
   | Const_bytearray _  ->  "<bytearray>"
-  | Const_int   x -> Util.string_of_int x
+  | Const_int   x -> x
   | Const_int64 _ -> "<int64>"
   | Const_uint8 _ -> "<uint8>"
    

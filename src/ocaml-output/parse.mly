@@ -58,7 +58,7 @@
 %token <int16 * bool> INT16
 %token <int32 * bool> INT32 INT32_DOT_DOT
 %token <int64 * bool> INT64
-%token <int32 * bool> INT
+%token <string * bool> INT
 
 %token <byte> UINT8
 %token <uint16> UINT16

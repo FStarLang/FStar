@@ -94,7 +94,7 @@ let serialize_sconst (writer:Writer) (ast:sconst) :unit =
     | Const_float(v) -> writer.write_char 'g'; writer.write_double v
     | Const_bytearray(v, _) -> writer.write_char 'h'; writer.write_bytearray v
     | Const_string(v, _) -> writer.write_char 'i'; writer.write_bytearray v
-    | Const_int(v) -> writer.write_char 'j'; writer.write_int v
+    | Const_int(v) -> writer.write_char 'j'; writer.write_string v
 
 let deserialize_sconst (reader:Reader) :sconst =
     match (reader.read_char()) with
@@ -107,7 +107,7 @@ let deserialize_sconst (reader:Reader) :sconst =
     | 'g' -> Const_float(reader.read_double ())
     | 'h' -> Const_bytearray(reader.read_bytearray (), dummyRange)
     | 'i' -> Const_string(reader.read_bytearray (), dummyRange)
-    | 'j' -> Const_int(reader.read_int ())
+    | 'j' -> Const_int(reader.read_string ())
     |  _  -> parse_error()
 
 let serialize_either (writer:Writer) (s_l:Writer -> 'a -> unit) (s_r:Writer -> 'b -> unit) (ast:either<'a, 'b>) :unit =

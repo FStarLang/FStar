@@ -63,7 +63,7 @@ type qop =
   | Exists
 
 type term' =
-  | Integer    of int
+  | Integer    of string
   | BoundV     of int
   | FreeV      of fv
   | App        of op  * list<term>
@@ -78,7 +78,8 @@ val fv_of_term : term -> fv
 val free_variables: term -> fvs
 val mkTrue : term
 val mkFalse : term
-val mkInteger : int -> term
+val mkInteger : string -> term
+val mkInteger' : int -> term
 val mkBoundV : int -> term
 val mkFreeV  : (string * sort) -> term
 val mkApp' : (op * list<term>) -> term

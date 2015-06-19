@@ -13,7 +13,7 @@ type token =
   | INT32 of (int32 * bool)
   | INT32_DOT_DOT of (int32 * bool)
   | INT64 of (int64 * bool)
-  | INT of (int32 * bool)
+  | INT of (string * bool)
   | UINT8 of (byte)
   | UINT16 of (uint16)
   | UINT32 of (uint32)
@@ -4453,7 +4453,7 @@ let yyact = [|
 # 4454 "parse.ml"
                : 'constant))
 ; (fun __caml_parser_env ->
-    let _1 = (Parsing.peek_val __caml_parser_env 0 : int32 * bool) in
+    let _1 = (Parsing.peek_val __caml_parser_env 0 : string * bool) in
     Obj.repr(
 # 1002 "parse.mly"
   (

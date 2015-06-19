@@ -242,13 +242,8 @@ rule token args = parse
      } 
  | xint 
  | int 
-     { let s = ulexeme lexbuf in 
-       (* Allow <max_int+1> to parse as min_int.  Allowed only because we parse '-' as an operator. *)
-       if s = "2147483648" then INT32(-2147483648,true) else
-       let n =
-           try int32 s with _ ->  fail lexbuf "This number is outside the allowable range for 32-bit signed integers" 0
-       in 
-       INT(n,false)
+     { 
+		let s = ulexeme lexbuf in INT(s, false)
      } 
  | xint32 
  | int32 

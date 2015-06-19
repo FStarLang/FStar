@@ -13,7 +13,7 @@ type token =
   | INT32 of (int32 * bool)
   | INT32_DOT_DOT of (int32 * bool)
   | INT64 of (int64 * bool)
-  | INT of (int32 * bool)
+  | INT of (string * bool)
   | UINT8 of (byte)
   | UINT16 of (uint16)
   | UINT32 of (uint32)

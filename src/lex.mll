@@ -214,7 +214,7 @@ rule token = parse
        mknewline (n - !lc) lexbuf;
        cpp_filename lexbuf }
  | "__SOURCE_FILE__" {STRING (ba_of_string lexbuf.lex_curr_p.pos_fname)}
- | "__LINE__"  {INT (!lc, false)}
+ | "__LINE__"  {INT (string_of_int !lc, false)}
 
  (* Must appear before tvar to avoid 'a <-> 'a' conflict *)
  | '\'' (char as c) '\''
@@ -236,8 +236,8 @@ rule token = parse
      { INT8 (char_of_int (int_of_string (clean_number x)), false) }
  | (uint16 | int16 | xint16) as x
      { INT16 (int_of_string (clean_number x), false) }
- | (int| xint) as x
-     { INT (int_of_string (clean_number x), false)  }
+ | (xint | int) as x
+     { INT (clean_number x, false)  }
  | (uint32l | uint32 | xint32 | int32) as x (* TODO: separate these out and check bounds *)
      { INT32 (int_of_string (clean_number x), false) }
  | (uint64 | int64) as x
@@ -316,7 +316,7 @@ rule token = parse
  | '+'         { PLUS_OP }
  | '-'         { MINUS_OP }
  | custom_op   {CUSTOM_OP (L.lexeme lexbuf) }
- 
+
  | _ { failwith "unexpected char" }
  | eof { lc := 1; EOF }
 
