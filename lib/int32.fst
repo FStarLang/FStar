@@ -13,6 +13,7 @@ opaque type WithinInt32 (i:int) =
 private type int32 =
   | Int32 : i:int{WithinInt32 i} -> int32
 
+//TODO: mark this as GTot; currently not working  
 val as_int: i:int32 -> Tot int
 let as_int (Int32 i) = i
 
