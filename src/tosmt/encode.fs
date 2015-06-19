@@ -1896,8 +1896,8 @@ let solve tcenv q : unit =
 
             let process_query (q:decl) :unit =
                 if !Options.split_cases > 0 then
-                    let (b, cb) = SplitQueryCases.can_handle_query q in
-                    if b then SplitQueryCases.handle_query cb !Options.split_cases check else check q
+                    let (b, cb) = SplitQueryCases.can_handle_query !Options.split_cases q in
+                    if b then SplitQueryCases.handle_query cb check else check q
                 else check q
             in
 

@@ -548,7 +548,6 @@ let cstep_lemma #c #c' h p = match h with
     if not (mem p (Mode.ps m)) then IntroL ()
     else
       IntroR (C_box_beta (slice_c p c) (slice_c p c'))
-
   | C_unbox_beta (Conf _ m _ _ _) _ ->
     if not (mem p (Mode.ps m)) then IntroL ()
     else
