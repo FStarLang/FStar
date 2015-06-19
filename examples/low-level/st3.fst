@@ -576,7 +576,6 @@ sub_effect
 type mStackNonEmpty (m:smem) = b2t (isNonEmpty (st m))
 
 
-(** withNewStackFrame combinator *)
 
 
 (*Sane SST*)
@@ -586,6 +585,10 @@ effect Mem (a:Type) (pre:Pre) (post: (smem -> Post a)) (mod:set aref) =
 effect PureMem (a:Type) (pre:Pre) (post: (smem -> Post a)) =
         SST a pre (fun m0 a m1 -> post m0 a m1 /\ m0=m1)
 
+(*incase one does not want to reason about changed references*)
+let allRefs : set aref = complement empty
+
+(** withNewStackFrame combinator *)
 (*adding requires/ensures here causes the definition of scopedWhile below to not typecheck.
 Hope this is not a concert w.r.t. soundness*)
 effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) (mod:set aref) =

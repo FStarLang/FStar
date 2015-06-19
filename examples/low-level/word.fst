@@ -15,6 +15,7 @@ assume val nexp : nat -> nat -> Tot nat
 
 type wordNat = (n:int{0 < n /\ n < (nexp bitsize bitsize)})
 
+(*0 is the LSB*)
 type word = (n:nat{n<bitsize}) -> Tot bool
 
 assume val toNat : word -> Tot wordNat
@@ -44,3 +45,25 @@ assume val modAddNat : wordNat -> wordNat -> Tot wordNat
 
 val wmodAdd : word -> word -> Tot word
 let wmodAdd w1 w2 =  fromNat (modAddNat (toNat w1) (toNat w2))
+
+(*machine primitive operation*)
+val rightshift : nat -> word -> Tot word
+let rightshift  sh w =
+  fun ind ->
+    let newInd = ind + sh in
+    if (newInd < bitsize)
+    then w newInd
+    else false
+(*false stands for the bit 0*)
+
+(*machine primitive operation*)
+val leftshift : nat -> word -> Tot word
+let leftshift  sh w =
+  fun ind ->
+    let newInd = ind - sh in
+    if (0< newInd)
+    then w newInd
+    else false
+
+val leftrotate : (n:nat{n<bitsize}) -> word -> Tot word
+let leftrotate n w = bitwiseOr (leftshift n w) (rightshift (bitsize - n) w)

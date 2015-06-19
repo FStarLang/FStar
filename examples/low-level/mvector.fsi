@@ -7,7 +7,8 @@
 module MVector
 open StructuredMem
 open MachineWord
-
+open Heap
+open Set
 (*
     Can we generalize vector to cover all the algebraic types definable in C?
 *)
@@ -30,7 +31,7 @@ val updIndex :  #a:Type -> #n:nat -> r:(ref (vector a n))
  Mem unit
     (requires (fun m -> b2t (refExistsInMem r m)))
     (ensures (fun m0 _ m1-> (refExistsInMem r m0) /\ m1= (writeMemAux r  m0 (updateIndex (loopkupRef r m0) index newV))))
-
+    (singleton (Ref r))
 (*There is no way to read or write a whole vector.
 
 (Technically, you can read a vector, but there's nothing you can do with
