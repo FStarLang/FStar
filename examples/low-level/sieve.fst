@@ -96,12 +96,11 @@ type markedIffMultipleOrInit (n:nat) (lo:nat) (upto:nat{lo*(upto-1)<n})
   /\ (forall (k:nat{k < n}). (marked n init k ==> marked n new k))
   /\ (forall (k:nat{k < n}). (marked n new k ==> (marked n init k \/ divides lo k)))
 
-type  innerLoopInv (n:nat) (lo: ref nat) (lov:nat) (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool))
+type  innerLoopInv (n:nat) (lo: ref nat)  (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool))
     (initres: ((k:nat{k<n}) -> Tot bool)) (m:smem) =
  distinctRefsExists3 m lo res li
-  /\ loopkupRef lo m = lov
-  /\ ((loopkupRef li m)-1)*lov < n
-  /\ markedIffMultipleOrInit n lov (loopkupRef li m) initres (loopkupRef res m)
+  /\ ((loopkupRef li m)-1)*(loopkupRef lo m) < n
+  /\ markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) initres (loopkupRef res m)
 
   (* this works, is totally precise, but is hard to use
   /\ loopkupRef res m = markMultiplesUpto n lov (loopkupRef li m) initres*)
@@ -144,7 +143,6 @@ let multiplesMarkedAsDividesIff n bitv newv lo = (multiplesMarkedAsDivides n new
 
 val innerLoop : n:nat{n>1}
   -> lo: ref nat
-  -> lov:nat
   -> li : ref nat
   -> res : ref ((k:nat{k<n}) -> Tot bool)
   -> initres : ((k:nat{k<n}) -> Tot bool)
@@ -152,17 +150,18 @@ val innerLoop : n:nat{n>1}
       (requires (fun m ->
         (*(refExistsInMem li m) /\ (refExistsInMem lo m) /\ (refExistsInMem res m) /\ (li=!=lo) /\ (lo=!=res) /\ (li=!=res)*)
         distinctRefsExists3 m lo res li /\ loopkupRef li m = 0
-                    /\ loopkupRef lo m = lov /\ loopkupRef res m= initres))
+                    /\ loopkupRef res m= initres))
       (ensures (fun m0 _ m1 -> distinctRefsExists3 m1 lo res li
-                      /\ loopkupRef lo m1 = lov
                       /\ markedIffDividesOrInit n (loopkupRef lo m1) initres (loopkupRef res m1)
       ))
+      (union (singleton (Ref li)) (singleton (Ref res)))
 
-let innerLoop n lo lov li res initres =
+let innerLoop n lo li res initres =
   (scopedWhile
-    (innerLoopInv n lo lov li res initres)
+    (innerLoopInv n lo li res initres)
     (innerGuardLC n lo li)
     (fun u -> (memread li * memread lo < n))
+    (union (singleton (Ref li)) (singleton (Ref res)))
     (fun u ->
       let liv = memread li in
       let lov = memread lo in
@@ -172,6 +171,7 @@ let innerLoop n lo lov li res initres =
 
     (*the part below has no computaional content; why does SMTPatT not work?*)
       let newv = memread res in
+      let lov = memread lo in
       (multiplesMarkedAsDividesIff n initres newv lov)
 
 type distinctRefsExists2
@@ -227,6 +227,7 @@ val outerLoopBody :
   whileBody
     (outerLoopInv n lo res)
     (outerGuardLC n lo)
+    (union (singleton (Ref lo)) (singleton (Ref res)))
 
 
 let outerLoopBody n lo res u =
@@ -235,7 +236,7 @@ let outerLoopBody n lo res u =
   let lov = memread lo in
   let li = salloc 0 in
   let liv = memread li in
-  innerLoop n lo lov li res initres;
+  innerLoop n lo li res initres;
   let newres = memread res in
   memwrite lo (lov+1);
   (*the part below has no computational content*)
@@ -251,12 +252,14 @@ val outerLoop : n:nat{n>1}
             /\ sids m0 = sids m1
            /\ (markedIffHasDivisorSmallerThan n n (loopkupRef res m1))
       )
+      (union (singleton (Ref lo)) (singleton (Ref res)))
 
 let outerLoop n lo res =
   scopedWhile
     (outerLoopInv n lo res)
     (outerGuardLC n lo)
     (fun u -> (memread lo < n))
+    (union (singleton (Ref lo)) (singleton (Ref res)))
     (outerLoopBody n lo res)
 
 type markedIffNotPrime
@@ -278,29 +281,6 @@ val isNotPrimeIf :
 let isNotPrimeIf n m = ()
 
 
-val existsWeakining : #a:Type
-  ->p:(a -> Type) -> q:(a->Type)
-  -> Lemma
-      (requires ((forall x. p x ==> q x)) /\ (exists y. p y))
-      (ensures (exists z. q z))
-let existsWeakining 'a 'p 'q = ()
-
-(*is this consistent? of course it breakes canonicity*)
-assume val existsCexists : #a:Type
-  ->p:(a -> Type)
-  ->u:unit{exists x. p x}
-  -> cexists p
-
-(*this should work without needing admit*)
-val cexistsExists :
-#a:Type
-  ->p:(a -> Type)
-  -> cexists p
-  ->u:unit{exists x. p x}
-let cexistsExists 'a 'p c =
-match c with
-| ExIntro x  px -> (admit ())
-
 
 (*how can one manually provide a witness to an existential? switch to cexists completely?*)
 
@@ -316,6 +296,7 @@ val sieve : n:nat{n>1} -> unit
   -> WNSC ((k:nat{k<n}) -> Tot bool)
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
+        empty
 let sieve n u =
   let lo = salloc 2 in
   let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
@@ -327,13 +308,15 @@ val sieveFull : n:nat{n>1}
   -> Mem ((k:nat{k<n}) -> Tot bool)
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
-let sieveFullTypeInfFail n= withNewScope (sieve n)
+        empty
+(*let sieveFullTypeInfFail n= withNewScope #empty (sieve n)*)
 
 
 val sieveUnfolded : n:nat{n>1} -> unit
   -> WNSC ((k:nat{k<n}) -> Tot bool)
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
+        empty
 let sieveUnfolded n u =
   let lo = salloc 2 in
   let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
@@ -342,12 +325,13 @@ let sieveUnfolded n u =
     (outerLoopInv n lo res)
     (outerGuardLC n lo)
     (fun u -> (memread lo < n))
+    (union (singleton (Ref lo)) (singleton (Ref res)))
     (fun u ->
         let initres = memread res in
         let lov = memread lo in
         let li = salloc 0 in
         let liv = memread li in
-        innerLoop n lo lov li res initres;
+        innerLoop n lo li res initres;
         let newres = memread res in
         memwrite lo (lov+1);
     (*the part below has no computational content*)
@@ -355,12 +339,11 @@ let sieveUnfolded n u =
   memread res
 
 
-type  innerLoopInv2 (n:nat) (lo: ref nat) (lov:nat) (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool))
+type  innerLoopInv2 (n:nat) (lo: ref nat) (li : ref nat) (res:ref ((k:nat{k<n}) -> Tot bool))
     (initres: ((k:nat{k<n}) -> Tot bool)) (m:smem) =
   (refExistsInMem li m) /\ (refExistsInMem lo m) /\ (refExistsInMem res m)
-  /\ loopkupRef lo m = lov
-  /\ ((loopkupRef li m)-1)*lov < n
-  /\ markedIffMultipleOrInit n lov (loopkupRef li m) initres (loopkupRef res m)
+  /\ ((loopkupRef li m)-1)*(loopkupRef lo m) < n
+  /\ markedIffMultipleOrInit n (loopkupRef lo m) (loopkupRef li m) initres (loopkupRef res m)
 
 type  outerLoopInv2 (n:nat) (lo: ref nat) (res:ref ((k:nat{k<n}) -> Tot bool)) (m:smem) =
   refExistsInMem lo m /\ refExistsInMem res m
@@ -372,6 +355,7 @@ val sieveUnfolded3 : n:nat{n>1} -> unit
   -> WNSC ((k:nat{k<n}) -> Tot bool)
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
+        empty
 let sieveUnfolded3 n u =
   let lo:(ref nat) = salloc 2 in
   let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
@@ -380,6 +364,7 @@ let sieveUnfolded3 n u =
     lo
     (fun lov -> lov < n)
     (outerLoopInv2 n lo res)
+    (union (singleton (Ref lo)) (singleton (Ref res)))
     (fun u ->
         let initres = memread res in
         let lov = memread lo in
@@ -389,7 +374,8 @@ let sieveUnfolded3 n u =
             lo
             li
             (fun lov liv -> liv *lov < n)
-            (innerLoopInv2 n lo lov li res initres)
+            (innerLoopInv2 n lo li res initres)
+            (union (singleton (Ref li)) (singleton (Ref res)))
             (fun u ->
               let liv = memread li in
               let lov = memread lo in
@@ -411,6 +397,7 @@ val sieveUnfolded2 : n:nat{n>1} -> unit
   -> WNSC ((k:nat{k<n}) -> Tot bool)
         (requires (fun m -> True))
         (ensures (fun _ resv _ -> markedIffHasDivisorSmallerThan n n resv))
+        empty
 let sieveUnfolded2 n u =
   let lo = salloc 2 in
   let f:((k:nat{k<n}) -> Tot bool) = (fun x -> false) in
@@ -419,15 +406,17 @@ let sieveUnfolded2 n u =
     (outerLoopInv2 n lo res)
     (outerGuardLC n lo)
     (fun u -> (memread lo < n))
+    (union (singleton (Ref lo)) (singleton (Ref res)))
     (fun u ->
         let initres = memread res in
         let lov = memread lo in
         let li = salloc 0 in
         let liv = memread li in
         (scopedWhile
-            (innerLoopInv2 n lo lov li res initres)
+            (innerLoopInv2 n lo li res initres)
             (innerGuardLC n lo li)
             (fun u -> (memread li * memread lo < n))
+            (union (singleton (Ref li)) (singleton (Ref res)))
             (fun u ->
               let liv = memread li in
               let lov = memread lo in

@@ -453,8 +453,41 @@ match (refLoc r) with
 | InStack id -> (refExistsInMemSTailSids r id (st m0) (st m1))
 
 
+
+(** modifiesOnly and lemmas about it*)
+
+(** cannot just uses ST.modifies. That was on heap; has to be lifted to smem.
+Also, why does it's definition have to be so procedural, unlike the more declarative one below?
+*)
+
+type canModify  (m0 : smem)  (m1: smem) (rs: set aref ) =
+  forall (a:Type) (r: ref a).
+      refExistsInMem r m0
+      ==> (~(Set.mem (Ref r) rs))
+      ==> (refExistsInMem r m1 /\ (loopkupRef r m0 = loopkupRef r m1))
+
+
 type  mreads (#a:Type) (r: ref a) (v:a) (m:smem) = refExistsInMem r m /\ loopkupRef r m = v
 
+(*lemmas needed for automatic inference*)
+val canModifyNone : m:smem -> Lemma (canModify m m empty)
+let canModifyNone m = ()
+
+val canModifyWrite : #a:Type -> r:(ref a) -> v:a -> m:smem
+  -> Lemma (canModify m (writeMemAux r m v) (singleton (Ref r)))
+let canModifyWrite r v m = ()
+
+
+(*val canModifySalloc : #a:Type -> r:(ref a) -> v:a -> m:smem
+  -> Lemma (canModify m (writeMemAux r m v) (singleton (Ref r)))
+let canModifyWrite r v m = ()*)
+
+
+(*perhaps we also need canModify version of the while combinator.
+Currently it is annoying to carry around non-modification properties in
+loop invariants. One has to carry around an extra parameter denoting the value
+at the beginning of the loop. canModify an perhaps alleviate this problem
+*)
 
 (*should extend to types with decidable equality*)
 (*val is1SuffixOf : list sidt -> list sidt -> Tot bool
@@ -547,23 +580,25 @@ type mStackNonEmpty (m:smem) = b2t (isNonEmpty (st m))
 
 
 (*Sane SST*)
-effect Mem (a:Type) (pre:Pre) (post: (smem -> Post a)) =
-        SST a pre (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1)
+effect Mem (a:Type) (pre:Pre) (post: (smem -> Post a)) (mod:set aref) =
+        SST a pre (fun m0 a m1 -> post m0 a m1 /\ sids m0 = sids m1 /\ canModify m0 m1 mod)
 
 effect PureMem (a:Type) (pre:Pre) (post: (smem -> Post a)) =
         SST a pre (fun m0 a m1 -> post m0 a m1 /\ m0=m1)
 
 (*adding requires/ensures here causes the definition of scopedWhile below to not typecheck.
 Hope this is not a concert w.r.t. soundness*)
-effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) =
+effect WNSC (a:Type) (pre:(smem -> Type))  (post: (smem -> SSTPost a)) (mod:set aref) =
   Mem a
       ( (*requires *) (fun m -> isNonEmpty (st m) /\ topstb m = emp /\ pre (mtail m)))
       ( (* ensures *) (fun m0 a m1 -> post (mtail m0) a (mtail m1)))
+      mod
 
 val withNewScope : #a:Type -> #pre:(smem -> Type) -> #post:(smem -> SSTPost a)
-  -> body:(unit -> WNSC a pre post)
-      -> Mem a pre post
-let withNewScope 'a 'pre 'post body =
+  -> #mod:set aref
+  -> body:(unit -> WNSC a pre post mod)
+      -> Mem a pre post mod
+let withNewScope 'a 'pre 'post #mod body =
     pushStackFrame ();
     let v = body () in
     popStackFrame (); v
@@ -582,27 +617,28 @@ effect whileGuard (pre :(smem -> Type))
   = PureMem bool  pre (fun m0 b _ ->   (lc m0 <==> b = true))
 (* the guard of a while loop is not supposed to change the memory*)
 
-effect whileBody (loopInv:smem -> Type) (lc:smem  -> Type)
+effect whileBody (loopInv:smem -> Type) (lc:smem  -> Type) (mod:set aref)
   = WNSC unit (fun m -> loopInv m /\ lc m)
               (fun _ _ m1 -> loopInv m1)
+              mod
 
 
 
 val scopedWhile : loopInv:(smem -> Type)
   -> wglc:(smem -> Type)
   -> wg:(unit -> whileGuard loopInv wglc)
-  -> bd:(unit -> whileBody loopInv wglc)
+  -> mod:(set aref)
+  -> bd:(unit -> whileBody loopInv wglc mod)
   -> Mem unit (requires (fun m -> loopInv m))
               (ensures (fun m0 _ m1 -> loopInv m1 /\ (~(wglc m1))))
-let rec scopedWhile (loopInv:(smem -> Type))
-  (wglc:(smem -> Type))
-  (wg:(unit -> whileGuard loopInv wglc))
-  (bd:(unit -> whileBody loopInv wglc)) =
+              mod
+let rec scopedWhile
+   'loopInv 'wglc wg mod bd =
    if (wg ())
       then
         ((withNewScope #unit
-            #(fun m -> loopInv m /\ (wglc m)) #(fun _ _ m1 -> loopInv m1) bd);
-        (scopedWhile loopInv wglc wg bd))
+            #(fun m -> 'loopInv m /\ ('wglc m)) #(fun _ _ m1 -> 'loopInv m1) #mod bd);
+        (scopedWhile 'loopInv 'wglc wg mod bd))
       else ()
 
 
@@ -611,16 +647,19 @@ val scopedWhile1 :
   -> r:(ref a)
   -> lc : (a -> Tot bool)
   -> loopInv:(smem -> Type)
+  -> mod:(set aref)
   -> bd:(unit -> WNSC unit (fun m -> loopInv m /\ refExistsInMem r m /\ (lc (loopkupRef r m)))
-              (fun _ _ m1 -> loopInv m1 /\ refExistsInMem r m1))
+              (fun _ _ m1 -> loopInv m1 /\ refExistsInMem r m1) mod )
   -> Mem unit ((fun m -> loopInv m /\ refExistsInMem r m))
-              ((fun m0 _ m1 -> loopInv m1 /\ refExistsInMem r m1 /\ ~(lc (loopkupRef r m1)) ))
-let scopedWhile1 'a r lc 'loopInv bd =
+              ((fun m0 _ m1 -> loopInv m1 /\ refExistsInMem r m1 /\ ~(lc (loopkupRef r m1))))
+              mod
+let scopedWhile1 'a r lc 'loopInv mod bd =
   scopedWhile
   (*augment the loop invariant to include the precondition for evaluating the guard*)
     (fun m -> 'loopInv m /\ refExistsInMem r m)
     (fun m -> refExistsInMem r m /\ (lc (loopkupRef r m)))
     (fun u -> lc (memread r))
+    mod
     bd
 
 val scopedWhile2 :
@@ -630,16 +669,19 @@ val scopedWhile2 :
   -> rb:(ref b)
   -> lc : (a -> b ->  Tot bool)
   -> loopInv:(smem -> Type)
+  -> mod:(set aref)
   -> bd:(unit -> WNSC unit (fun m -> loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m /\ (lc (loopkupRef ra m) (loopkupRef rb m)))
-              (fun _ _ m1 -> loopInv m1 /\ refExistsInMem ra m1 /\ refExistsInMem rb m1))
+              (fun _ _ m1 -> loopInv m1 /\ refExistsInMem ra m1 /\ refExistsInMem rb m1) mod)
   -> Mem unit (requires (fun m -> loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m))
               (ensures (fun m0 _ m1 -> loopInv m1 /\ refExistsInMem ra m1 /\ refExistsInMem rb m1 /\ ~(lc (loopkupRef ra m1) (loopkupRef rb m1)) ))
-let scopedWhile2 'a ra rb lc 'loopInv bd =
+              mod
+let scopedWhile2 'a ra rb lc 'loopInv mod bd =
   scopedWhile
   (*augment the loop invariant to include the precondition for evaluating the guard*)
     (fun m -> 'loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m)
     (fun m -> refExistsInMem ra m /\ refExistsInMem rb m /\ (lc (loopkupRef ra m) (loopkupRef rb m))  )
     (fun u -> lc (memread ra) (memread rb))
+    mod
     bd
 
 (*effect SSTS (a:Type) (wlp: Post a -> Pre) = StSTATE a wlp wlp*)
