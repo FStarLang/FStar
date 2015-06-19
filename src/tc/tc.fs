@@ -1321,10 +1321,10 @@ and tc_ghost_exp env e : exp * typ * guard_t =
   let e, c, g = tc_exp env e in
   if is_total_lcomp c 
   then e, c.res_typ, g
-  else let expected_c = Util.gtotal_comp c.res_typ in
+  else let c = c.comp() |> norm_c env in
+       let expected_c = Util.gtotal_comp (Util.comp_result c) in
        let g = Rel.solve_deferred_constraints env g in
-       let c = c.comp() |> norm_c env in
-       match Tc.Rel.sub_comp env c expected_c with
+       match Tc.Rel.sub_comp ({env with use_eq=false}) c expected_c with
         | Some g' -> e, Util.comp_result c, Rel.conj_guard g g'
         | _ -> raise (Error(Tc.Errors.expected_ghost_expression e c, e.pos))
 
