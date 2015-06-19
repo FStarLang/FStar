@@ -3031,9 +3031,9 @@ So far, we have mostly programmed total functions and give them
 specifications using rich types. Under the covers, F\* has a second
 level of checking at work to ensure that the specifications that you
 write are also meaningful---this is F\*'s kind system. Before moving
-on to more advanced F\* features, you'll have to have a little
-understanding of the kind system. In short, just as types describe
-properties of programs, kinds describe properties of types.
+on to more advanced F\* features, you'll have to understand the kind
+system a little. In short, just as types describe properties of
+programs, kinds describe properties of types.
 
 ## `Type`: The type of types
 
@@ -3046,8 +3046,8 @@ just as we say that `0 : int` (zero has type `int`), we also say
 
 Beyond the base types, consider types like `list int`, `list bool`
 etc.  These are also types, of course, and in F\* `list int : Type`
-and `list bool : Type`. However, what about the unapplied type
-constructor `list`---it's not a `Type` own its own; it only produces a
+and `list bool : Type`. But, what about the unapplied type
+constructor `list`---it's not a `Type` on its own; it only produces a
 `Type` when applied to a `Type`. In that sense, `list` is type
 constructor. To describe this, just as we use the `->` type
 constructor to describe functions at the level of programs, we use the
@@ -3134,7 +3134,7 @@ is the type `nat`, of course.  With less syntactic sugar, you can view
 the type `x:int{phi(x)}` as the application of a type constructor
 `refinement` to two arguments `int` and a refinement formula 
 `fun x -> phi(x)`. As discussed in Section [#sec-bool-versus-type], the formula
-`phi(x)` is itself a `Type`. Thus, the kind of the `refinemnt`
+`phi(x)` is itself a `Type`. Thus, the kind of the `refinement`
 constructor is `a:Type -> (a -> Type) -> Type`, meaning it takes two
 arguments; first, a type `a`; then a second argument, a predicate on
 `a` (whose kind depends on `a`); and then bulids a `Type`.
@@ -3179,7 +3179,7 @@ Let's start by considering a very simple, purely functional
 programming language with only the following forms:
 
 ```
-b ::= true | false
+b ::= x | true | false
 e ::= b | let x = e1 in e2 | assert b | if b then e1 else e2
 ```
 
@@ -3196,7 +3196,7 @@ WP (if b then e1 else e2) P = (b ==> WP e1 P) /\ ((not b) ==> WP e2 P)
 ```
 
 This is nice and simple, but it has a significant drawback,
-particularly in the the third rule: the post-condition formula `P` is
+particularly in the fourth rule: the post-condition formula `P` is
 duplicated across the branches. As several branching expressions are
 sequenced, this leads to an exponential blowup in the size of the
 verification condition.
@@ -3263,7 +3263,7 @@ identity:
 
 That is, in order to prove that a computation `e` has no internal
 assertion failures and produces a result satisfying `P`, one can
-equivalent prove (a) that `e` has no internal assertion failures
+equivalently prove (a) that `e` has no internal assertion failures
 (i.e., `WP e (fun x -> True)`) and then prove (b) that `e`'s result
 satisfies `P` (i.e, `WLP e P`).
 
@@ -3279,7 +3279,7 @@ WP (if b then e1 else e2) P
 ```
 
 In this form, the post-condition `P` is no longer duplicated across
-the branches of the computation and we avoid the exponenetial blowup
+the branches of the computation and we avoid the exponential blowup
 (at the cost of computing both the `WP` and the `WLP`).
 
 WPs and WLPs are convenient for type inference---for loop- and
