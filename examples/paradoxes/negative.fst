@@ -1,6 +1,6 @@
 module Negative
 
-(* Example showing why we need the strict positivity check on inductives *)
+(* Example showing why we need the positivity check on inductives *)
 
 (* this fails as it should:
 
