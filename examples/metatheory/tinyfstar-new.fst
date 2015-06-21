@@ -1,15 +1,16 @@
 (*--build-config
-    options:--z3timeout 20 --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2;
+    options:--z3timeout 15 --max_fuel 8 --max_ifuel 6 --initial_fuel 4 --initial_ifuel 2;
     other-files:../../lib/classical.fst ../../lib/ext.fst ../../lib/constr.fst
   --*)
 //NS: --log_types   ... don't give this option in the file by default.
 //    it prints a LOT of noisy debugging in the regression tests
 
 (*TODO list :
- * write the new TyApp and the needed lemmas
- * update substitution lemma and derived lemma (changes on styping, skinding, scmp, VAssume -> VConstr, TyApp
  * code kdg_* to manipulate kinds with binding, wp etc …
+ * simplification of TcPrecedes to compare just int ? Anyway there is still a kinding problem where TcPrecedes is used FIXME
+ * understand why VPreceedsIntro in substitution lemma is checked without using subst_on_value
 *)
+
 module TinyFStarNew
 
 open Classical
@@ -188,6 +189,7 @@ let tfixpure = TTLam (KType) (*tx*)(
 		     TTLam (KTArr (TVar 2) (k_m (EfPure) (TEApp (TVar 0) (EVar 0)))) (*wp*)(
 *)
 
+let ttapp2 tf t1 t2 = TTApp (TTApp tf t1) t2
 let tfalse = TConst TcFalse
 let tand  a b = TTApp (TTApp (TConst TcAnd) a) b
 
@@ -197,10 +199,11 @@ let tforallt k p = TTApp (TConst (TcForallT k)) (TTLam k p)
 val teqe : typ -> exp -> exp -> Tot(typ)
 let teqe t e1 e2 = TEApp (TEApp (TTApp (TConst TcEqE) t) e1) e2
 (* SF : ^ TcEqE needs the type of the expression. To change *)
-let teqt k t1 t2 = TTApp (TTApp (TConst (TcForallT k)) t1) t2
+let teqt k t1 t2 = TTApp (TTApp (TConst (TcEqT k)) t1) t2
 let teqtype = teqt KType
 
 let tprecedes e1 e2 = TEApp (TEApp (TConst TcPrecedes) e1) e2
+(* SF : FIXME : problem here : bad kinding : TcPrecedes expect types *)
 
 (*TODO:write a function {e|t|k}shift_up which
 shift both expression and type variables
@@ -705,6 +708,7 @@ let timpl t1 t2 = tforalle t1 (tesh t2)
 let tnot t = timpl t tfalse
 let ttrue = tnot tfalse
 let tor t1 t2 = timpl (tnot t1) t2
+
 
 (*************************************)
 (*   Common substitution functions   *)
@@ -1251,7 +1255,6 @@ let econsts ec =
 
 
 //}}}
-
 (***********************)
 (* Head normal forms   *)
 (***********************)
@@ -1647,7 +1650,9 @@ and styping : g:env -> t':typ -> t:typ -> Type =
             =hk:kinding g t KType ->
 	    =hk':kinding g t' KType ->
                 styping g t' t 
-
+(* SF : we could try to remove hk hk' at some point.
+ But that would imply coding a more complicated derived lemma
+ with a mutually recursive inversion for TTApp *)
 | SubFun : #g:env -> #t:typ -> #t':typ -> 
            #c':cmp -> #c:cmp ->
            =hst:styping g t t' ->
@@ -2373,11 +2378,12 @@ val subst_on_bind_all : s:sub -> ta:typ -> tb:typ ->
                         Lemma(tsubst s (bind_all ta tb wp f) =
 			     bind_all (tsubst s ta) (tsubst s tb) (tsubst s wp) (tsubst s f))
 let subst_on_bind_all s ta tb wp f =
+admit()(*
 subst_on_k_post_all s tb;
 tsubst_tlam_shift s wp;
 tsubst_tlam_shift s tb;
-assert(tsubst (sub_elam (sub_tlam s)) theap = theap);
 subst_on_bind_all1 s f
+*)
 
 
 (* SF : ^ This proof is an ugly hack. And it is slow.
@@ -2703,6 +2709,7 @@ SubstTyping (sub_tbeta t) (textend k g) g
 
        | _ -> (ksubst_tbeta_shift t (Some.v (lookup_tvar g (a-1))); KVar (a-1))
 )
+
 (*
 val compose_with_renaming_arrow : g1 : env -> g2 : env -> g3 : env -> s12 : sub -> s23 : sub -> hs12 : subst_typing s12 g1 g2{ is_RenamingTyping hs12} -> hs23 : subst_typing s23 g2 g3 -> Tot (hr : subst_typing (sub_comp s23 s12) g1 g3)
 let compose_with_renaming_arrow g1 g2 g3 s12 s23 hs12 hs23 =
@@ -3327,6 +3334,26 @@ let newhs : subst_typing (sub_tlam s) g1ext g2ext =
 in newhs
 //}}}
 
+
+(******************)
+(* skinding arrow *)
+(******************)
+
+val skinding_hs : #g:env -> k:knd -> k':knd ->
+                 hsk:skinding g k k' ->
+		 Tot(subst_typing sub_id (textend k' g) (textend k g))
+let skinding_hs g k k' hsk = 
+let gext = textend k g in
+let hskext : skinding gext (ktsh k) (ktsh k') = skinding_substitution sub_tinc hsk (hs_sub_tinc g k) in
+SubstTyping sub_id (textend k' g) (textend k g)
+(fun x -> tsubst_with_sub_id (Some.v (lookup_evar (textend k' g) x)); TyVar x)
+(fun a -> match a with
+  | 0 -> let hk : kinding (textend k g) (TVar 0) (ktsh k) = KVar #(textend k g) 0 in
+         let hk' : kinding (textend k g) (TVar 0) (ktsh k') = KSub hk hskext in
+	 (ksubst_with_sub_id (ktsh k'); hk')
+  | _ -> (ksubst_with_sub_id (Some.v (lookup_tvar (textend k' g) a)); KVar a)
+)
+
 (********************)
 (* ewf manipulation *)
 (********************)
@@ -3459,6 +3486,7 @@ type inversion_tarr_res : env -> typ -> eff -> typ -> typ -> Type =
                   kinding g targ KType ->
 		  kinding (eextend targ g) tret KType ->
 		  kinding (eextend targ g) wp (k_m m tret) ->
+		  validity (eextend targ g) (monotonic m tret wp) ->
 		  inversion_tarr_res g targ m tret wp
 val inversion_tarr : #g:env -> #targ:typ -> #m:eff -> #tret:typ -> #wp:typ ->
                      hk:kinding g (TArr targ (Cmp m tret wp)) KType ->
@@ -3466,9 +3494,11 @@ val inversion_tarr : #g:env -> #targ:typ -> #m:eff -> #tret:typ -> #wp:typ ->
 (decreases %[hk])
 let rec inversion_tarr g targ m tret wp hk =
 match hk with
-| KArr #g #t1 #t2 #phi #m hk1 hk2 hkp hv -> InversionTArr (hk1) (hk2) (hkp)
+| KArr #g #t1 #t2 #phi #m hk1 hk2 hkp hv -> InversionTArr (hk1) (hk2) (hkp) (hv)
 | KSub #g #t #k' #k hk hs ->
   let KSubRefl hw = hs in inversion_tarr hk
+
+
 //}}}
 
 (**************************************)
@@ -3511,13 +3541,13 @@ assume val v_true : #g:env -> =hewf:ewf g -> Tot (validity g ttrue)
 (* Should follow without VExMiddle *)
 val v_not_not_intro : #g:env -> #t:typ ->
                       =hv:validity g t ->
-                          validity g (tnot (tnot t))
+                          Tot(validity g (tnot (tnot t)))
 let v_not_not_intro = admit()
 
 (* Should follow from VExMiddle (it's equivalent to it) *)
 val v_not_not_elim : #g:env -> t:typ ->
                      =hv:validity g (tnot (tnot t)) ->
-                         validity g t
+                         Tot(validity g t)
 let v_not_not_elim = admit()
 
 (* Sketch for v_or_intro1
@@ -3535,7 +3565,7 @@ let v_not_not_elim = admit()
 val v_or_intro1 : #g:env -> #t1:typ -> #t2:typ ->
                   =hv1:validity g t1 ->
                   =hk2:kinding g t2 KType ->
-                       validity g (tor t1 t2)
+                       Tot(validity g (tor t1 t2))
 let v_or_intro1 g t1 t2 hv1 hk2 = magic()
   (*
   v_impl_intro (tnot t1) t2
@@ -3545,7 +3575,7 @@ let v_or_intro1 g t1 t2 hv1 hk2 = magic()
 val v_or_intro2 : #g:env -> #t1:typ -> #t2:typ ->
                   =hv:validity g t2 ->
                   =hk:kinding g t1 KType ->
-                      validity g (tor t1 t2)
+                      Tot(validity g (tor t1 t2))
 let v_or_intro2 = admit()
 
 (* CH: TODO: so far didn't manage to derive this on paper,
@@ -3555,7 +3585,7 @@ val v_or_elim : #g:env -> t1:typ -> t2:typ -> #t3:typ ->
                 =hv1:validity (eextend t1 g) (tesh t3) ->
                 =hv2:validity (eextend t2 g) (tesh t3) ->
                 =hk :kinding g t3 KType ->
-                     validity g t3
+                     Tot(validity g t3)
 let v_or_elim = admit()
 
 (* CH: TODO: prove symmetry and transitivity of equality as in the F7
@@ -3576,12 +3606,12 @@ let v_eq_syme = admit()
 val v_eq_trant : #g:env -> #t1:typ -> #t2:typ -> #t3:typ -> #k:knd ->
              =hv12:validity g (teqt k t1 t2) ->
              =hv23:validity g (teqt k t2 t3) ->
-                   validity g (teqt k t1 t3)
+                   Tot(validity g (teqt k t1 t3))
 let v_eq_trant = admit()
 
 val v_eq_symt : #g:env -> #t1:typ -> #t2:typ -> #k:knd ->
             =hv:validity g (teqt k t1 t2) ->
-                validity g (teqt k t2 t1)
+                Tot(validity g (teqt k t2 t1))
 let v_eq_symt = admit()
 
 val v_inv_foralle : #g:env -> t:typ -> phi:typ ->
@@ -3627,26 +3657,19 @@ val scmp_derived : #g:env -> #m':eff -> #t':typ -> #wp':typ ->
                              hsc : scmp g (Cmp m' t' wp') (Cmp m t wp) ->
                              Tot (scmp_der g m' t' wp' m t wp )
 (decreases %[hsc])
-val styping_derived : #g:env -> #t':typ -> #t:typ -> 
-                      hwf:ewf g ->
-		      hst:styping g t' t ->
-		      Tot (cand (kinding g t' KType) (kinding g t KType))
-(decreases %[hst])
 val kinding_derived : #g:env -> #t:typ -> #k:knd ->
                       hwf:ewf g ->
                       hkt:kinding g t k ->
 		      Tot (kwf g k)
 (decreases %[hkt])
+val styping_derived : #g:env -> #t':typ -> #t:typ -> 
+		      hst:styping g t' t ->
+		      Tot (cand (kinding g t' KType) (kinding g t KType))
+(decreases %[hst])
 val skinding_derived : #g:env -> #k:knd -> #k':knd ->
-                       hwf:ewf g ->
 		       hsk:skinding g k k' ->
 		       Tot (cand (kwf g k) (kwf g k')) 
 (decreases %[hsk])
-val validity_derived : #g:env -> #t:typ ->
-                       hwf:ewf g ->
-		       hv:validity g t ->
-		       Tot (kinding g t KType)
-(decreases %[hv])
 
 let ~> rec typing_derived g e m t wp hwf ht =
 match ht with
@@ -3686,7 +3709,7 @@ match ht with
  let wpret = tyapp_wp m e2 t t' wp wp1 wp2 in
  let TypingDerived hktarr hkwp1 hmono1 : typing_der g m tarr wp1 = typing_derived hwf ht1 in
  let TypingDerived hkt hkwp2 hmono2 : typing_der g m t wp2 = typing_derived hwf ht2 in 
- let InversionTArr hktarg hkt' hkwp = inversion_tarr #g #t #m #t' #wp hktarr in
+ let InversionTArr hktarg hkt' hkwp _ = inversion_tarr #g #t #m #t' #wp hktarr in
  if (teappears 0 t') then
    let Some htot2 = htot in
    let hktret : kinding g tret KType = kinding_substitution (sub_ebeta e2) hkt' (ebeta_hs htot2) in
@@ -3718,9 +3741,9 @@ match ht with
 )
 and scmp_derived g m' t' wp' m t wp hwf hsc =
 let SCmp _ _ _ _  hssub hkwp hvmono hkwp' hvmono' hvsub = hsc in
-let Conj hkt' hkt : cand (kinding g t' KType) (kinding g t KType) = styping_derived hwf hssub in
+let Conj hkt' hkt : cand (kinding g t' KType) (kinding g t KType) = styping_derived hssub in
 ScmpDerived #g #m' #t' #wp' #m #t #wp hkt' hkwp' hkt hkwp 
-and styping_derived g t' t hwf hst = 
+and styping_derived g t' t hst = 
 match hst with
 | SubConv #g #t t' hv hk hk' -> Conj hk' hk
 | SubFun #g #t #t' #c' #c hst hsc hk' -> 
@@ -3728,18 +3751,18 @@ match hst with
  (*g |- t -> c : KType*)
  let Cmp mc tc wpc = c in
  let Cmp mc' tc' wpc' = c' in
- let Conj hkt hkt' : cand (kinding g t KType) (kinding g t' KType) = styping_derived hwf hst in
+ let Conj hkt hkt' : cand (kinding g t KType) (kinding g t' KType) = styping_derived hst in
  let hwfext : ewf (eextend t g) = GType hwf hkt in
- let ScmpDerived hktc'g hkwp'c hktcg hkwpc : scmp_der (eextend t g) mc' tc' wpc' mc tc wpc = scmp_derived #(eextend t g) #mc' #tc' #wpc' #mc #tc #wpc hwfext hsc in
- let Conj hkt hkt' = styping_derived #g #t #t' hwf hst in
+ let SCmp _ _ _ _ hstc'tc hkwpc hvmonowpc hkwpc' hvmonowpc' _ = hsc in
+ let Conj hktc' hktc : cand (kinding (eextend t g) tc' KType) (kinding (eextend t g) tc KType) = styping_derived hstc'tc in
  let hv: validity (eextend t g) (monotonic mc tc wpc) = SCmp.hvmono hsc in
- let hktarr : kinding g (TArr t c) KType = KArr hkt hktcg hkwpc hv in
+ let hktarr : kinding g (TArr t c) KType = KArr hkt hktc hkwpc hv in
  Conj hk' hktarr
 )
 | SubTrans #g #t1 #t2 #t3 hs12 hs23 -> 
 (
- let Conj hkt1 hkt2 = styping_derived hwf hs12 in
- let Conj hkt2 hkt3 = styping_derived hwf hs23 in
+ let Conj hkt1 hkt2 = styping_derived hs12 in
+ let Conj hkt2 hkt3 = styping_derived hs23 in
  Conj hkt1 hkt3 
 )
 |_ -> admit()
@@ -3764,10 +3787,10 @@ match hk with
 | KEApp #g #t #t' #k #e hk ht hw -> hw
 | KSub #g #t #k' #k hk hs ->
 (
- let Conj hkw1 hkw2 : cand (kwf g k') (kwf g k) = skinding_derived hwf hs in
+ let Conj hkw1 hkw2 : cand (kwf g k') (kwf g k) = skinding_derived hs in
  hkw2
 )
-and ~> skinding_derived g k k' hwf hsk = 
+and ~> skinding_derived g k k' hsk = 
 match hsk with
 | KSubRefl hw -> Conj hw hw
 (*
@@ -3780,64 +3803,35 @@ match hsk with
 | KSubKArr #g #k1 #k2 k1' k2' hs21 hs12' hkwf1 ~>
 (
  let gext = textend k2 g in
- let Conj hkw2 hkw1 : cand (kwf g k2) (kwf g k1) = skinding_derived hwf hs21 in
+ let Conj hkw2 hkw1 : cand (kwf g k2) (kwf g k1) = skinding_derived hs21 in
 (* SF : problem with this rule. I can not go from textend k2 g to textend k1 g so
  I am stuck*)
- let hwfext = GKind hwf hkw2 in
- let Conj hkw1' hkw2' : cand (kwf gext k1') (kwf gext k2') = skinding_derived hwfext hs12' in
+ let Conj hkw1' hkw2' : cand (kwf gext k1') (kwf gext k2') = skinding_derived hs12' in
  let hkwf2 : kwf g (KKArr k2 k2') = WfKArr hkw2 hkw2' in
  Conj hkwf1 hkwf2
 )
 | KSubTArr #g #t1 #t2 #k1 #k2 hs21 hs12' hkwf1 ~>
 (
  let gext = eextend t2 g in
- let Conj hk2 hk1 : cand (kinding g t2 KType) (kinding g t1 KType) = styping_derived hwf hs21 in
- let hwfext = GType hwf hk2 in
- let Conj hkwf1' hkwf2' : cand (kwf gext k1) (kwf gext k2) = skinding_derived hwfext hs12' in
+ let Conj hk2 hk1 : cand (kinding g t2 KType) (kinding g t1 KType) = styping_derived hs21 in
+ let Conj hkwf1' hkwf2' : cand (kwf gext k1) (kwf gext k2) = skinding_derived hs12' in
  let hkwf2 : kwf g (KTArr t2 k2) = WfTArr hk2 hkwf2' in
  Conj hkwf1 hkwf2
  (*… Here too*)
 )
-and validity_derived g t hwf hv =
-match hv with
-(*| VAssume #g e t h -> admit()*)
-| VRedE #g #e #t #e' ht ht' hst ->
-(
- admit() 
-)
-| VSubstE #g #e1 #e2 #t' t hv12 ht1 ht2 hk hvsub ->
-(
- let hs:subst_typing (sub_ebeta e2) (eextend t' g) g = ebeta_hs ht2 in
- kinding_substitution (sub_ebeta e2) hk hs
-)
-| VSubstT #g #t1 #t2 #k t hv12 hkw hk hvsub ->
-(
- magic()
-)
-| VForallElim #g #t #phi #e hv ht ->
-(
- let hvext : validity (eextend t g) phi = v_inv_foralle t phi hv in
- let hs:subst_typing (sub_ebeta e) (eextend t g) g = ebeta_hs ht in
- magic()
- (*SF: is there an easy way to do this one ?*)
-)
-| _ -> admit()
 (*validity_derived seems to need a lot of inversion lemma, and is not used in the
  other proofs. So maybe I finish it later ?*)
 //}}}
-
 (********************************************)
 (* Subtyping/Subkinding Substitution Arrows *)
 (********************************************)
 //{{{
 val styping_hs : #g:env -> t:typ -> t':typ ->
-                 hwf: ewf g ->
 		 hst: styping g t t' ->
 		 Tot(subst_typing sub_id (eextend t' g) (eextend t g))
-let styping_hs g t t' hwf hst = 
-let Conj hk hk' = styping_derived hwf hst in
+let styping_hs g t t' hst = 
+let Conj hk hk' = styping_derived #g #t #t' hst in
 let gext = eextend t g in
-let hwfext : ewf gext = GType hwf hk in
 let hstext : styping gext (tesh t) (tesh t') = styping_substitution sub_einc hst (hs_sub_einc g t) in
 let hkext : kinding gext (tesh t) KType = kinding_substitution sub_einc hk (hs_sub_einc g t) in
 let hk'ext : kinding gext (tesh t') KType = kinding_substitution sub_einc hk' (hs_sub_einc g t) in
@@ -3856,16 +3850,390 @@ SubstTyping sub_id (eextend t' g) (eextend t g)
 )
 (fun a -> (ksubst_with_sub_id (Some.v (lookup_tvar (eextend t' g) a)); KVar a))
 
-val skinding_hs : #g:env -> k:knd -> k':knd ->
-                 hsk:skinding g k k' ->
-		 Tot(subst_typing sub_id (textend k' g) (textend k g))
-let skinding_hs g k k' hsk = admit()
+
 //}}}
+
+
+val skinding_trans : #g:env -> #k1:knd -> #k2:knd -> #k3:knd ->
+   hsk12:skinding g k1 k2 ->
+   hsk23:skinding g k2 k3 ->
+   Tot(skinding g k1 k3)
+(decreases %[k2])
+let rec skinding_trans g k1 k2 k3 hsk12 hsk23 =
+match hsk12 with
+| KSubRefl #x1 #x2 hw -> hsk23
+| KSubKArr #x1 #k1arg #k2arg k1body k2body hsk21arg hsk12body hwf1 ->
+(
+ match hsk23 with
+ | KSubRefl _ -> hsk12
+ | KSubKArr #x2 #x3 #k3arg _ k3body hsk32arg hsk23body _ ->
+ let hsk31arg : skinding g k3arg k1arg = skinding_trans hsk32arg hsk21arg in
+ let hsk12body' : skinding (textend k3arg g) k1body k2body = ksubst_with_sub_id k1body; ksubst_with_sub_id k2body; skinding_substitution sub_id hsk12body (skinding_hs #g k3arg k2arg hsk32arg) in
+ let hsk13body : skinding (textend k3arg g) k1body k3body = skinding_trans #(textend k3arg g) #k1body #k2body #k3body hsk12body' hsk23body in
+ KSubKArr k1body k3body hsk31arg hsk13body hwf1
+)
+| KSubTArr #x1 #t1 #t2 #k1body #k2body hst21 hsk12body hwf1 ->
+(
+ match hsk23 with
+ | KSubRefl _ -> hsk12
+ | KSubTArr #x2 #x3 #t3 #x4 #k3body hst32 hsk23body hwf2 ->
+ (
+  let hst31 : styping g t3 t1 = SubTrans hst32 hst21 in
+  let hsk12body' : skinding (eextend t3 g) k1body k2body = ksubst_with_sub_id k1body; ksubst_with_sub_id k2body; skinding_substitution (sub_id) hsk12body (styping_hs t3 t2 hst32) in
+  let hsk13body : skinding (eextend t3 g) k1body k3body = skinding_trans #(eextend t3 g) #k1body #k2body #k3body hsk12body' hsk23body in
+  KSubTArr hst31 hsk13body hwf1
+ )
+
+)
+
+
+type inversion_ttapp_res : env -> typ -> typ -> knd -> Type =
+| InversionTTApp : #g:env -> #t1:typ -> #t2:typ -> #kres:knd ->
+  k1:knd -> k2:knd -> 
+  hkt1:kinding g t1 (KKArr k1 k2) ->
+  hkt2:kinding g t2 k1 ->
+  hsk:skinding g (ksubst_tbeta t2 k2) kres ->
+  inversion_ttapp_res g t1 t2 kres
+
+val inversion_ttapp : #g:env -> #t1:typ -> #t2:typ -> #kres:knd ->
+    hk : kinding g (TTApp t1 t2) kres ->
+    Tot( inversion_ttapp_res g t1 t2 kres )    
+(decreases %[hk])
+let rec inversion_ttapp g t1 t2 kres hk =
+match hk with
+| KTApp #x1 #x2 #x3 #k k' hkt1 hkt2 hw ->
+(
+ InversionTTApp k k' hkt1 hkt2 (KSubRefl #g #kres hw)
+)
+| KSub #x1 #x2 #k' #x3 hk hs -> 
+(
+ let InversionTTApp k1 k2 hkt1 hkt2 hsk = inversion_ttapp #g #t1 #t2 #k' hk in
+ let hsktrans = skinding_trans #g #(ksubst_tbeta t2 k2) #k' #kres hsk hs in
+ InversionTTApp k1 k2 hkt1 hkt2 hsktrans
+)
+
+type inversion_teapp_res : env -> typ -> exp -> knd -> Type =
+| InversionTEApp : #g:env -> #t:typ -> #e:exp -> #kres:knd ->
+  targ:typ -> kbody:knd ->
+  hkt: kinding g t (KTArr targ kbody) ->
+  hte: typing g e (tot targ) ->
+  hsk:skinding g (ksubst_ebeta e kbody) kres ->
+  inversion_teapp_res g t e kres
+
+val inversion_teapp : #g:env -> #t:typ -> #e:exp -> #kres:knd ->
+    hk : kinding g (TEApp t e) kres ->
+    Tot (inversion_teapp_res g t e kres)
+(decreases %[hk])
+let rec inversion_teapp g t e kres hk =
+match hk with
+| KEApp #x1 #x2 #targ #kbody #x3 hkt hte hkwf ->
+(
+ InversionTEApp targ kbody hkt hte (KSubRefl #g #kres hkwf)
+)
+| KSub #x1 #x2 #k' #x3 hk' hs ->
+(
+ let InversionTEApp targ kbody hkt hke hsk = inversion_teapp #g #t #e #k' hk' in
+ let hsktrans = skinding_trans #g #(ksubst_ebeta e kbody) #k' #kres hsk hs in
+ InversionTEApp targ kbody hkt hke hsktrans
+)
+
+type inversion_telam_res : env -> typ -> typ -> knd -> Type =
+| InversionTELam : #g:env -> #targ:typ -> #tbody:typ -> #ks:knd ->
+        kbodyb:knd ->
+        hktarg : kinding g targ KType ->
+        hktbody : kinding (eextend targ g) tbody kbodyb ->
+        hsk:option (skinding g (KTArr targ kbodyb) ks){KTArr targ kbodyb <> ks ==> is_Some hsk} ->
+	(* SF : option only here, otherwise we need ewf of the environment … *)
+        inversion_telam_res g targ tbody ks
+                
+val inversion_telam : #g:env -> #targ:typ -> #tbody:typ -> #ks:knd ->
+     hk:kinding g (TELam targ tbody) ks ->
+     Tot( inversion_telam_res g targ tbody ks)
+(decreases %[hk])
+let rec inversion_telam g targ tbody ks hk =
+match hk with
+| KELam #g #t1 #t2 #k2 hktarg hktbody ->
+(
+ InversionTELam #g #targ #tbody #(KTArr targ k2) k2 hktarg hktbody None
+)
+| KSub #x1 #x2 #ks' #x3 hk' hsk -> 
+(
+ let InversionTELam kbodyb ktarg hktbody hsko = inversion_telam #g #targ #tbody #ks' hk' in
+ match hsko with
+ | Some hskb -> (let hsk = skinding_trans #g #(KTArr targ kbodyb) #ks' #ks hskb hsk in InversionTELam #g #targ #tbody #ks kbodyb ktarg hktbody (Some hsk )
+)
+ | None -> InversionTELam #g #targ #tbody #ks kbodyb ktarg hktbody (Some hsk)
+ )
+
+val kwf_tconsts : #g:env -> #tc:tconst ->
+  tcwf g tc ->
+  Tot (kwf g (tconsts tc))
+let kwf_tconsts g tc htcwf = admit()
+
+val inversion_tconst : #g:env -> #tc:tconst -> #kres:knd ->
+   hk:kinding g (TConst tc) kres ->
+   Tot (skinding g (tconsts tc) kres)
+(decreases %[hk])
+let rec inversion_tconst g tc kres hk =
+match hk with
+| KConst htcwf -> KSubRefl (kwf_tconsts htcwf)
+| KSub #x1 #x2 #k' hk hsk -> 
+(
+ let hsk1 : skinding g (tconsts tc) k' = inversion_tconst hk in
+ let hsk : skinding g (tconsts tc) kres = skinding_trans hsk1 hsk in
+ hsk
+)
+
+type kkarr_to_kkarr_res : env -> knd -> knd -> knd -> Type =
+| KKArrToKKArr : #g:env -> #karg1:knd -> #kbody1:knd -> k2:knd ->
+   karg2:knd -> kbody2:knd{k2 = KKArr karg2 kbody2} ->
+   hskarg : skinding g karg2 karg1 ->
+   hskbody : skinding (textend karg2 g) kbody1 kbody2 ->
+   kkarr_to_kkarr_res g karg1 kbody1 k2
+
+val kkarr_to_kkarr : #g:env -> #karg1:knd -> #kbody1:knd -> #k2:knd ->
+   hsk:skinding g (KKArr karg1 kbody1) k2 ->
+   Tot (kkarr_to_kkarr_res g karg1 kbody1 k2)
+
+let kkarr_to_kkarr g karg1 kbody1 k2 hsk =
+match hsk with
+| KSubRefl hw -> let WfKArr hkwkarg hkwkbody = hw in 
+   KKArrToKKArr (KKArr karg1 kbody1) karg1 kbody1 (KSubRefl hkwkarg) (KSubRefl hkwkbody)
+| KSubKArr #x1 #x2 #karg2 _ kbody2 hs21arg hs12body hkw -> 
+   KKArrToKKArr (KKArr karg2 kbody2) karg2 kbody2 hs21arg hs12body
+
+
+val inversion_teqt : #g:env -> t1:typ -> t2:typ -> k:knd ->
+  kinding g (teqt k t1 t2) KType ->
+  Tot( cand (kinding g t1 k) (kinding g t2 k))
+let inversion_teqt g t1 t2 k hk = 
+let InversionTTApp karg2 kbody2 hkteqt1 hkt2 hsk2 = inversion_ttapp #g #(TTApp (TConst (TcEqT k)) t1) #t2 #KType hk in
+let InversionTTApp karg1 kbody1 hkteq hkt1 hsk1 = inversion_ttapp #g #(TConst (TcEqT k)) #t1 #(KKArr karg2 kbody2) hkteqt1 in
+let hskbase : skinding g (KKArr k (KKArr (ktsh k) KType)) (KKArr karg1 kbody1) = inversion_tconst #g #(TcEqT k) #(KKArr karg1 kbody1) hkteq in
+let KKArrToKKArr x4 x5 x6 hs1arg hs1body = kkarr_to_kkarr #g #k #(KKArr (ktsh k) KType) #(KKArr karg1 kbody1) hskbase in
+let hk1final : kinding g t1 k = KSub #g #t1 #karg1 #k hkt1 hs1arg in
+let hs1body : skinding (textend karg1 g) (KKArr (ktsh k) KType) (kbody1) = hs1body in
+let hsk2 : skinding g (KKArr k KType) (ksubst_tbeta t1 kbody1) = ksubst_tbeta_shift t1 k; skinding_substitution (sub_tbeta t1) hs1body (tbeta_hs hkt1) in
+let hsk2': skinding g (KKArr k KType) (KKArr karg2 kbody2) = skinding_trans hsk2 hsk1 in
+let KKArrToKKArr #x1 #x2 #x3 x4 x5 x6 hs2arg _ = kkarr_to_kkarr #g #k #KType hsk2' in
+let hk2final : kinding g t2 k = KSub #g #t2 #karg2 #k hkt2 hs2arg in
+Conj hk1final hk2final
+
+val inversion_teqtype : #g:env -> t1:typ -> t2:typ ->
+  kinding g (teqtype t1 t2) KType ->
+  Tot( cand (kinding g t1 KType) (kinding g t2 KType))
+let inversion_teqtype g t1 t2 hk = 
+inversion_teqt t1 t2 KType hk
+
+val inversion_tand : #g:env -> t1:typ -> t2:typ ->
+  kinding g (tand t1 t2) KType ->
+  Tot (cand (kinding g t1 KType) (kinding g t2 KType))
+let inversion_tand g t1 t2 hk =
+let InversionTTApp karg2 kbody2 hktand1 hkt2 hsk2 = inversion_ttapp #g #(TTApp (TConst TcAnd) t1) #t2 #KType hk in
+let InversionTTApp karg1 kbody1 hktand hkt1 hsk1 = inversion_ttapp #g #(TConst TcAnd) #t1 #(KKArr karg2 kbody2) hktand1 in
+let hskbase : skinding g (KKArr KType (KKArr KType KType)) (KKArr karg1 kbody1) = inversion_tconst #g #TcAnd #(KKArr karg1 kbody1) hktand in
+let KKArrToKKArr x4 x5 x6 hs1arg hs1body = kkarr_to_kkarr #g #KType #(KKArr KType KType) #(KKArr karg1 kbody1) hskbase in
+let hk1final : kinding g t1 KType = KSub #g #t1 #karg1 #KType hkt1 hs1arg in
+let hs1body : skinding (textend karg1 g) (KKArr KType KType) (kbody1) = hs1body in
+let hsk2 : skinding g (KKArr KType KType) (ksubst_tbeta t1 kbody1) = skinding_substitution (sub_tbeta t1) hs1body (tbeta_hs hkt1) in
+let hsk2': skinding g (KKArr KType KType) (KKArr karg2 kbody2) = skinding_trans hsk2 hsk1 in
+let KKArrToKKArr #x1 #x2 #x3 x4 x5 x6 hs2arg _ = kkarr_to_kkarr #g #KType #KType hsk2' in
+let hk2final : kinding g t2 KType = KSub #g #t2 #karg2 #KType hkt2 hs2arg in
+Conj hk1final hk2final
+
 
 val kwf_post_pure : #g:env -> #t:typ ->
   kinding g t KType ->
   Tot (kwf g (k_post_pure t))
 let kwf_post_pure g t hk = admit()
+
+val inversion_tforalle : #g:env -> t:typ -> phi:typ ->
+      hk:kinding g (tforalle t phi) KType ->
+      Tot (cand (kinding g t KType) (kinding (eextend t g) phi KType))
+let inversion_tforalle g t phi hk = admit()
+
+val inversion_tforallt : #g:env -> k:knd -> phi:typ ->
+      hk:kinding g (tforallt k phi) KType ->
+      Tot (cand (kwf g k) (kinding (textend k g) phi KType))
+let inversion_tforallt g k phi hk = admit()
+
+
+val kdg_teqe : #g:env -> #e1:exp -> #e2:exp -> #t:typ ->
+               hk : kinding g t KType ->
+	       ht1: typing g e1 (tot t) ->
+	       ht2: typing g e2 (tot t) ->
+	       Tot (kinding g (teqe t e1 e2) KType)
+let kdg_teqe g e1 e2 t hk ht1 ht2 = admit()
+
+val kdg_teqt : #g:env -> #t1:typ -> #t2:typ -> #k:knd ->
+               hkwf: kwf g k ->
+	       hk1 : kinding g t1 k ->
+	       hk2 : kinding g t2 k ->
+	       Tot (kinding g (teqt k t1 t2) KType)
+let kdg_teqt g t1 t2 k hkwf hk1 hk2 = admit()
+
+val kdg_tforalle : #g:env -> #t:typ -> #phi:typ ->
+               hkt:kinding g t KType ->
+	       hkphi:kinding (eextend t g) phi KType ->
+	       Tot (kinding g (tforalle t phi) KType)
+let kdg_tforalle g t phi hkt hkphi = admit()
+
+val kdg_tforallt : #g:env -> #k:knd -> #phi:typ ->
+               hkwf : kwf g k ->
+	       hkphi : kinding (textend k g) phi KType ->
+	       Tot (kinding g (tforallt k phi) KType)
+let kdg_tforallt g k phi hkwf hkphi = admit()
+
+val kdg_tand : #g:env -> #p1:typ -> #p2:typ ->
+               hk1 : kinding g p1 KType ->
+	       hk2 : kinding g p2 KType ->
+	       Tot (kinding g (tand p1 p2) KType)
+let kdg_tand g p1 p2 hk1 hk2 = admit()
+
+val kdg_tor : #g:env -> #p1:typ -> #p2:typ ->
+              hk1 : kinding g p1 KType ->
+	      hk2 : kinding g p2 KType ->
+	      Tot (kinding g (tor p1 p2) KType)
+let kdg_tor g p1 p2 hk1 hk2 = admit()
+
+val kdg_tnot : #g:env -> #t:typ ->
+              hk : kinding g t KType ->
+	      Tot (kinding g (tnot t) KType)
+let kdg_tnot g t hk = admit()
+
+
+val validity_derived : #g:env -> #t:typ ->
+                       hwf:ewf g ->
+		       hv:validity g t ->
+		       Tot (kinding g t KType)
+(decreases %[hv])
+let rec validity_derived g t hwf hv =
+match hv with
+(*| VAssume #g e t h -> admit()*)
+| VRedE #g #e #t #e' ht ht' hst ->
+(
+ let TypingDerived hk _ _ = typing_derived #g #e #EfPure #t #(tot_wp t) hwf ht in
+ kdg_teqe #g #e #e' #t hk ht ht'
+)
+| VEqReflE #g #e #t ht ->
+(
+ let TypingDerived hk _ _ = typing_derived #g #e #EfPure #t #(tot_wp t) hwf ht in
+ kdg_teqe hk ht ht
+)
+| VSubstE #g #e1 #e2 #t' t hv12 ht1 ht2 hk hvsub ->
+(
+ let hs:subst_typing (sub_ebeta e2) (eextend t' g) g = ebeta_hs ht2 in
+ kinding_substitution (sub_ebeta e2) hk hs
+)
+| VRedT #g #t #t' #k hk hk' hst ->
+(
+ let hkwf : kwf g k = kinding_derived hwf hk in
+ kdg_teqt hkwf hk hk'
+)
+| VEqReflT #g #t #k hk ->
+(
+ let hkwf : kwf g k = kinding_derived hwf hk in
+ kdg_teqt hkwf hk hk
+)
+| VSubstT #g #t1 #t2 #k t hv12 hkw hk hvsub ->
+(
+ let hkteq : kinding g (teqt k t1 t2) KType = validity_derived hwf hv12 in
+ let Conj hkt1 hkt2 : cand (kinding g t1 k) (kinding g t2 k) = inversion_teqt t1 t2 k hkteq in
+ let hs:subst_typing (sub_tbeta t2) (textend k g) g = tbeta_hs hkt2 in
+ kinding_substitution (sub_tbeta t2) hk hs
+)
+| VSelAsHeap #g #h #l hth htl -> admit()
+| VUpdAsHeap #g #h #l #i hth htl hti -> admit()
+| VSelEq #g #eh #el #ei hth htl hti -> admit()
+(* SF : ^ easy but boring *)
+| VForallIntro #g #t #phi hk hv ->
+(
+ let hwfext = GType hwf hk in
+ let hkphi : kinding (eextend t g) phi KType = validity_derived hwfext hv in
+ kdg_tforalle hk hkphi
+)
+| VForallTypIntro #g #k #phi hkw hv ->
+(
+ let hwfext = GKind hwf hkw in
+ let hkphi : kinding (textend k g) phi KType = validity_derived hwfext hv in
+ kdg_tforallt hkw hkphi
+)
+| VForallElim #g #t #phi #e hv ht ->
+(
+ let hkforall : kinding g (tforalle t phi) KType = validity_derived hwf hv in
+ let Conj hkt hkphi = inversion_tforalle t phi hkforall in
+ let hs:subst_typing (sub_ebeta e) (eextend t g) g = ebeta_hs ht in
+ kinding_substitution (sub_ebeta e) hkphi hs
+)
+| VForallTypElim #g #t #k #phi hv hk ->
+(
+ let hkforall : kinding g (tforallt k phi) KType = validity_derived hwf hv in
+ let Conj hkwf hkphi = inversion_tforallt k phi hkforall in
+ let hs:subst_typing (sub_tbeta t) (textend k g) g = tbeta_hs hk in
+ kinding_substitution (sub_tbeta t) hkphi hs
+)
+| VAndElim1 #g #p1 #p2 hv ->
+(
+ let hkand : kinding g (tand p1 p2) KType = validity_derived hwf hv in
+ let Conj hkp1 hkp2 = inversion_tand p1 p2 hkand in
+ hkp1
+)
+| VAndElim2 #g #p1 #p2 hv ->
+(
+ let hkand : kinding g (tand p1 p2) KType = validity_derived hwf hv in
+ let Conj hkp1 hkp2 = inversion_tand p1 p2 hkand in
+ hkp2
+)
+| VAndIntro #g #p1 #p2 hv1 hv2 ->
+(
+ let hk1 = validity_derived hwf hv1 in
+ let hk2 = validity_derived hwf hv2 in
+ kdg_tand hk1 hk2
+)
+| VExMiddle #g #t1 #t2 hk1 hk2 hv1 hv2 -> hk2
+| VOrIntro1 #g #t1 #t2 hv hk ->
+(
+ let hk1 : kinding g t1 KType = validity_derived hwf hv in
+ kdg_tor hk1 hk
+)
+| VOrIntro2 #g #t1 #t2 hv hk ->
+(
+ let hk2 : kinding g t2 KType = validity_derived hwf hv in
+ kdg_tor hk hk2
+)
+| VOrElim #g #t1 #t2 #t3 hk1 hk2 hk3 hvor hv1 hv2 -> hk3
+| VFalseElim #g #t hv hk -> hk
+| VPreceedsIntro #g #v1 #v2 #t1 #t2 ht1 ht2 -> admit()
+(* SF : problem in spec here : kinding problem *)
+| VDistinctC #g #t #c1 #c2 ht1 ht2 ->
+(
+ let TypingDerived hkt _ _ = typing_derived #g #(EConst c1) #EfPure #t #(tot_wp t) hwf ht1 in
+ let hkteqe : kinding g (teqe t (EConst c1) (EConst c2)) KType = kdg_teqe hkt ht1 ht2 in
+ kdg_tnot hkteqe
+)
+| VDistinctTH #g #t1 #t2 hk1 hk2 -> 
+(
+ let hkteqtype : kinding g (teqtype t1 t2) KType = kdg_teqt (WfType g) hk1 hk2 in
+ kdg_tnot hkteqtype
+)
+| VInjTH #g #t1 #t2 #phi #t1' #t2' #phi' #m hvtemp ->
+(
+ let hk : kinding g (teqtype (TArr t1  (Cmp m t2  phi)) (TArr t1' (Cmp m t2' phi')) ) KType = validity_derived hwf hvtemp in
+ let Conj hkarr hkarr' : cand (kinding g (TArr t1 (Cmp m t2 phi)) KType) (kinding g (TArr t1' (Cmp m t2' phi')) KType) = inversion_teqtype (TArr t1 (Cmp m t2 phi)) (TArr t1' (Cmp m t2' phi')) hk in
+ let InversionTArr hkt1 hkt2 hkphi _ = inversion_tarr #g #t1 #m #t2 #phi hkarr in
+ let InversionTArr hkt1' hkt2' hkphi' _ = inversion_tarr #g #t1' #m #t2' #phi' hkarr' in
+ let hvtemp1 : validity g (tand (teqtype t1 t1') (tforalle t1 (teqtype t2 t2'))) = VAndElim1 #g #(tand (teqtype t1 t1') (tforalle t1 (teqtype t2 t2'))) #(tforalle t1 (teqt (k_m m t2) phi phi')) hv in
+ let hveqt1 : validity g (teqtype t1 t1') = VAndElim1 #g #(teqtype t1 t1') #(tforalle t1 (teqtype t2 t2')) hvtemp1 in
+ let hst1 : styping g t1 t1' = SubConv t1 hveqt1 hkt1' hkt1 in
+ let hs : subst_typing (sub_id) (eextend t1' g) (eextend t1 g) = styping_hs t1 t1' hst1 in
+ let hkt2' : kinding (eextend t1 g) t2' KType = tsubst_with_sub_id t2'; kinding_substitution (sub_id) hkt2' hs in
+ let hkphi' : kinding (eextend t1 g) phi' (k_m m t2') = tsubst_with_sub_id phi'; ksubst_with_sub_id (k_m m t2'); kinding_substitution (sub_id) hkphi' hs in
+ let hkteqt2 : kinding (eextend t1 g) (teqtype t2 t2') KType = kdg_teqt (WfType (eextend t1 g)) hkt2 hkt2' in
+ let hkteqphi : kinding (eextend t1 g) (teqt (k_m m t2) phi phi') KType = magic() in
+ admit()
+(* SF : problem : I need kinding (eextend t1 g) phi' (k_m m t2) *)
+)
+| _ -> admit()
 
 (**************)
 (* The Jungle *)
@@ -3883,15 +4251,15 @@ down m t (op m t timpl wp (lift EfPure m t (return_pure t e)))
 
 
 val tot_ret_weakest : #g:env -> #e:exp -> #t:typ -> 
-		      hk: kinding g t KType ->
+                      hwf:ewf g ->
                       ht: typing g e (tot t) ->
                       Tot (validity g (ret_weakest e EfPure t (tot_wp t)))
-let tot_ret_weakest g e t hk ht = admit()
+let tot_ret_weakest g e t hwf ht = admit()
   (*{{{
+let TypingDerived hk kwp _ = typing_derived hwf ht in
 let wp = tot_wp t in
 let g' = textend (k_post_pure t) g in
 let wpp = TTApp (ttsh wp) (TVar 0) in
-let kwp : kinding g wp (k_m EfPure t) = kdg_tot_wp hk in
 let kwp' : kinding g' (ttsh wp) (k_m EfPure (ttsh t)) = (*kinding_substitution sub_tinc kwp (hs_sub_tinc g (k_post_pure t))*) magic() in
 let hkwpp : kinding g' wpp KType = KTApp KType kwp' (KVar 0) (WfType g') in
 let hkwf : kwf g (k_post_pure t) = magic() (*KTApp KType*)  in
@@ -3926,16 +4294,17 @@ hvimpl''
 
 val value_inversion : #g:env -> #e:exp{is_value e \/ is_EVar e} -> 
                       #m:eff -> #t:typ -> #wp:typ ->
+                      hwf:ewf g -> 
                       ht:typing g e (Cmp m t wp) ->
 		      Tot (cand (typing g e (Cmp EfPure t (return_pure t e))) 
 			        (validity g (ret_weakest e m t wp)))
 (decreases %[ht])
-let rec value_inversion g e m t wp ht = admit()
+let rec value_inversion g e m t wp hwf ht = admit()
   (*
 match ht with
-| TyVar _         -> Conj (TyRet t ht) (tot_ret_weakest (magic()) ht)
+| TyVar _         -> Conj (TyRet t ht) (tot_ret_weakest hwf ht)
 | TyConst _ _ _   -> Conj (TyRet t ht) (magic())
-| TyAbs _ _ _ _ _ -> Conj (TyRet t ht) (magic())
+| TyAbs _ _ _ _ _ -> Conj (TyRet t ht) (tot_ret_weakest hwf ht)
 | TyRet _ _ -> Conj ht (magic())
 | TySub #g #e #c' #c ht' hsc -> 
 (
@@ -3985,7 +4354,7 @@ match hst with
    admit()
    (*
      let hktarr1 : kinding g (TArr t1 c1) KType = magic() in (*How do I get this ???*)
-     let hktarr2 : kinding g (TArr t2 c2) KType = styping_derived hwf hst in
+     let hktarr2 : kinding g (TArr t2 c2) KType = styping_derived hst in
      let hvimpl : validity g (tnot (teqtype (TArr t1 c1) (TArr t2 c2))) = VDistinctTH hktarr1 hktarr2 in
      let hvfalse : validity g tfalse = v_impl_elim hvimpl hv in
      Inr (hvfalse)
@@ -4020,20 +4389,35 @@ val scmp_transitivity : #g:env -> #c1:cmp -> #c2:cmp -> #c3:cmp ->
                         scmp g c1 c2 ->
 			scmp g c2 c3 ->
 			Tot (scmp g c1 c3)
-let scmp_transitivity g c1 c2 c3 hs12 hs23 = admit()
-  (*
+let scmp_transitivity g c1 c2 c3 hs12 hs23 =
 let Cmp m1 t1 wp1 = c1 in
 let Cmp m2 t2 wp2 = c2 in
 let Cmp m3 t3 wp3 = c3 in
-let SCmp m1 wp1 m2 wp2 hst12 hk2 hvmono2 hvsub12 = hs12 in
-let SCmp m2 wp2 m3 wp3 hst23 hk3 hvmono3 hvsub23 = hs23 in
+let SCmp _ _ _ _ hst12 hkwp2 hvmono2 hkwp1 hvmono1 hvsub12 = hs12 in
+let SCmp _ _ _ _ hst23 hkwp3 hvmono3 hkwp2 hvmono2 hvsub23 = hs23 in
 let hst13 = SubTrans hst12 hst23 in
 let hvsub13 : validity g (sub_computation m3 t3 wp3 m1 t1 wp1) = 
-  admit()
+  admit() (*TODO:fill this*)
 in
-SCmp #g m1 #t1 wp1 m3 #t3 wp3 hst13 hk3 hvmono3 hvsub13
-*)
+SCmp #g m1 #t1 wp1 m3 #t3 wp3 hst13 hkwp3 hvmono3 hkwp1 hvmono1 hvsub13
 (* SF : ^ still not up-to-date since the changes on scmp *)
+
+val styping_refl : #g:env -> #t:typ -> 
+      kinding g t KType ->
+      Tot (styping g t t)
+let styping_refl g t hk =
+  let hv : validity g (teqtype t t) = VEqReflT #g #t #KType hk in
+  SubConv #g #t t hv hk hk
+
+val scmp_refl : #g:env -> #m:eff -> #t:typ -> #wp:typ ->
+     hkt : kinding g t KType ->
+     hkwp : kinding g wp (k_m m t) ->
+     hvmono : validity g (monotonic m t wp) ->
+     Tot (scmp g (Cmp m t wp) (Cmp m t wp))
+let scmp_refl g m t wp hkt hkwp hvmono =
+  let hvsub : validity g (sub_computation m t wp m t wp) = magic() in
+  SCmp #g m #t wp m #t wp (styping_refl #g #t hkt) hkwp hvmono hkwp hvmono hvsub
+
 type styping_arrow_to_arrow_res : env -> typ -> cmp -> typ -> Type =
 | StypingAToA : #g:env -> #t1:typ -> #c1:cmp -> #t:typ ->
     #t1':typ -> #c1':cmp -> 
@@ -4054,9 +4438,11 @@ match hst with
 | SubConv _ hvseqt hkt hks ->
 (
  (* s =_Type t and s =_Type TArr t1 c1*)
- let hv' : validity g (teqtype t (TArr t1 c1)) = magic() (*transitivity*) in 
- let hst' : styping g t1 t1 = magic() in
- let hscmp' : scmp (eextend t1 g) c1 c1 = magic() in
+ let hv' : validity g (teqtype t (TArr t1 c1)) = let hvteqs : validity g (teqtype t s) = v_eq_symt #g #s #t #KType hvseqt in v_eq_trant #g #t #s #(TArr t1 c1) #KType hvteqs hv(*transitivity*) in 
+ let Cmp m1 tret1 wp1 = c1 in
+ let InversionTArr #g #t1 hkt1 hktret1 hkwp1 hvmono1 = inversion_tarr #g #t1 #m1 #tret1 #wp1 hk in
+ let hst' : styping g t1 t1 = styping_refl #g #t1 hkt1 in
+ let hscmp' : scmp (eextend t1 g) c1 c1 = scmp_refl #(eextend t1 g) #m1 #tret1 #wp1 hktret1 hkwp1 hvmono1 in
  Inl (StypingAToA #g #t1 #c1 #t #t1 #c1 hv' hst' hscmp')
 )
 | SubFun #g #tt #st #sc #tc hsttarg hscmp hk' ->
@@ -4065,7 +4451,7 @@ match hst with
  (* s =_Type TArr t1 c1 *)
  (* g |- tt <: st *)
  (* g,tt |- sc <: tc *)
- let Conj hks hkt = styping_derived hwf hst in
+ let Conj hks hkt = styping_derived hst in
  if Cmp.m c1 <> Cmp.m sc then
    let hvnoteq : validity g (tnot (teqtype s (TArr t1 c1))) = VDistinctTH #g #s #(TArr t1 c1) hks hk in
    let hvfalse : validity g tfalse = v_impl_elim hvnoteq hv in
@@ -4078,8 +4464,10 @@ match hst with
    let hveqwp : validity g (tforalle st (teqt (k_m m stret) swp wp1)) = VAndElim2 #g #(tand (teqtype st t1) (tforalle st (teqtype stret tret1))) #(tforalle st (teqt (k_m m stret) swp wp1)) hv3 in
    let hveqtarg : validity g (teqtype st t1) = VAndElim1 #g #(teqtype st t1) #(tforalle st (teqtype stret tret1)) hv2 in
    let hveqtret : validity g (tforalle st (teqtype stret tret1)) = VAndElim2 #g #(teqtype st t1) #(tforalle st (teqtype stret tret1)) hv2 in
-   let hveqt : validity g (teqtype t t) = magic() in
-   let hststt1 : styping g st t1 = SubConv #g #t1 #st hveqtarg (magic()) (magic()) in
+   let InversionTArr hkst hkstret hkswp hvmonoswp = inversion_tarr #g #st #m #stret #swp hks in
+   let InversionTArr hkt1 hktret1 hkwp1 hvmonowp1 = inversion_tarr #g #t1 #m #tret1 #wp1 hk in
+   let hveqt : validity g (teqtype t t) = VEqReflT #g #t #KType hkt in
+   let hststt1 : styping g st t1 = SubConv #g #t1 #st hveqtarg hkt1 hkst in
    let hstttt1 : styping g tt t1 = SubTrans #g #tt #st #t1 hsttarg hststt1 in
    let hscc1tc : scmp (eextend tt g) c1 tc = admit() (*hs : SubConv on hveqtret and SubTrans, hk : inversion on hscmp, hvmono : inversion on scmp, hk': inversion on hk', hvmono' : stronger inversion on hk', hvsub : use the teqtype between s and TArr t1 c1 to get what you want*)
    in
@@ -4096,7 +4484,7 @@ match hst with
   if (is_Inr temp) then Inr (Inr.v temp) else
   let StypingAToA #x5 #x6 #x7 #x8 #tt #tc hvteqt hstttut hscuctc : styping_arrow_to_arrow_res g ut uc t = Inl.v (temp) in (* needs g |- TArr ut uc : KType *)
   let hstttt1 : styping g tt t1 = SubTrans #g #tt #ut #t1 hstttut hstutt1 in
-  let hs : subst_typing sub_id (eextend ut g) (eextend tt g) = styping_hs tt ut hwf hstttut in
+  let hs : subst_typing sub_id (eextend ut g) (eextend tt g) = styping_hs tt ut hstttut in
   let hscc1uc' : scmp (eextend tt g) c1 uc = csubst_with_sub_id c1; csubst_with_sub_id uc; scmp_substitution sub_id hscc1uc hs in
   let hscc1tc : scmp (eextend tt g) c1 tc = scmp_transitivity #(eextend tt g) #c1 #uc #tc hscc1uc' hscuctc in
 
