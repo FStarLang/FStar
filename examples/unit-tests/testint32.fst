@@ -1,6 +1,21 @@
 (*--build-config
     other-files:../../lib/int32.fst
  --*)
+(*
+   Copyright 2008-2015 Nikhil Swamy and Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
 module TestInt32
 open Int32
 let f0 (x:nat32) : int32 = x - 1l
@@ -27,10 +42,10 @@ let lemma_g1_f1 x y = ()
 val lemma_g2_f2 : x:nat32{x < (Int32.max_value / 2l)} -> Lemma (ensures (f2 x = g2 x))
 let lemma_g2_f2 x = ()
 
-val lemma_mid_mid : x:nat32 -> y:nat32{y <= x /\ y<>0l}
+val lemma_mid'_mid : x:nat32 -> y:nat32{y <= x /\ y<>0l}
                 -> Lemma
                   (requires ((Prims.op_LessThanOrEqual (Prims.op_Addition (as_int x) (as_int y))
                                                        Int32.max_value_int)
                              /\ ((x + y) % 2l) = 0l))
                   (ensures (mid_nat x y = mid_nat' x y))
-let lemma_mid_mid x y = ()
+let lemma_mid'_mid x y = ()

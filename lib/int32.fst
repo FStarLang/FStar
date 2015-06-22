@@ -93,7 +93,7 @@ opaque val op_Question_Slash: i:int32
                            -> Tot (k:int32{as_int i >= 0 ==> as_int k = as_int i / as_int j})
 let op_Question_Slash (Int32 i) (Int32 j) =
   if i < 0
-  then magic ()
+  then magic ()//mark as admit, because we do not specify the overflow semantics
   else Int32 (i / j)
 
 //division does not overflow when the dividend is non-negative
@@ -111,7 +111,7 @@ opaque val op_Question_Percent:
                              ==> as_int k = as_int i % as_int j})
 let op_Question_Percent (Int32 i) (Int32 j) =
   if i=min_value_int && j = -1
-  then magic()
+  then magic()//mark as admit, because we do not specify the overflow semantics
   else Int32 (i % j)
 
 //From: http://stackoverflow.com/questions/19285163/does-modulus-overflow
@@ -129,7 +129,7 @@ opaque val op_Question_Minus: i:int32
                    -> Tot int32
 let op_Question_Minus (Int32 i) =
   if i = min_value_int
-  then magic()
+  then magic()//mark as admit, because we do not specify the overflow semantics
   else Int32 (-i)
 
 val op_Minus: i:int32{i <> min_value}
