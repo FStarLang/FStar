@@ -157,8 +157,8 @@ let hexgraph_short = '\\' 'x' hex hex
 let unicodegraph_short = '\\' 'u' hex hex hex hex
 let unicodegraph_long =  '\\' 'U' hex hex hex hex hex hex hex hex
 let newline = ('\n' | '\r' '\n')
-let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'|'|'^'
-let custom_op = custom_op_char (custom_op_char | '>' | '!' )*
+let custom_op_char = '&'|'@'|'+'|'-'|'/'|'<'|'='|'|'|'^'|'?'
+let custom_op = custom_op_char (custom_op_char | '>' | '!' | '*' )*
 let connecting_char = '\Pc'
 let combining_char = '\Mn' | '\Mc'
 let formatting_char = '\Cf' 

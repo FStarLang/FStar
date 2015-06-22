@@ -952,8 +952,8 @@ and tc_exp env e : exp * lcomp * guard_t =
                             let refine_with_equality = 
                                 //if the function is pure, but its arguments are not, then add an equality refinement here
                                 //OW, for pure applications we always add an equality at the end; see ADD_EQ_REFINEMENT below
-                                Util.is_pure_lcomp cres
-                                && comps |> Util.for_some (fun (_, c) -> not (Util.is_pure_lcomp c)) in (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
+                                Util.is_pure_or_ghost_lcomp cres
+                                && comps |> Util.for_some (fun (_, c) -> not (Util.is_pure_or_ghost_lcomp c)) in (* if the guard is trivial, then strengthen_precondition below will not add an equality; so add it here *)
                       
                             let cres = //NS: Choosing when to add an equality refinement is VERY important for performance. Adding it unconditionally impacts run time by >5x
                                 if refine_with_equality 
@@ -1003,7 +1003,7 @@ and tc_exp env e : exp * lcomp * guard_t =
         then Util.fprint1 "Introduced %s implicits in application\n" (string_of_int <| List.length g.implicits);
         let c = if Options.should_verify env.curmodule.str
                 && not (Util.is_lcomp_partial_return c)
-                && Util.is_pure_lcomp c //ADD_EQ_REFINEMENT for pure applications
+                && Util.is_pure_or_ghost_lcomp c //ADD_EQ_REFINEMENT for pure applications
                 then Tc.Util.maybe_assume_result_eq_pure_term env e c 
                 else c in
         if debug env Options.Extreme 

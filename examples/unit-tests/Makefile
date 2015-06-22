@@ -2,7 +2,7 @@ VERFILES=unit1.fst unit2.fst testset.fst short-circuit.fst
 include ../Makefile.include
 NEGFILES=negative-tests.fst
 
-all: basictests testmref testhyperheap.vv mac2 all-neg
+all: basictests testint32.vv testmref testhyperheap.vv mac2 all-neg
 
 basictests: $(VERFILES)
 		$(FSTAR) --admit_fsi Set $(STDLIB) $(FSTAR_HOME)/lib/int32.fst $^

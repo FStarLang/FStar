@@ -791,7 +791,7 @@ let strengthen_precondition (reason:option<(unit -> string)>) env (e:exp) (lc:lc
                 | Rel.Trivial -> c
                 | Rel.NonTrivial f -> 
                 let c = 
-                    if Util.is_pure_comp c 
+                    if Util.is_pure_or_ghost_comp c 
                     && not (is_function (Util.comp_result c))
                     && not (Util.is_partial_return c)
                     then let x = Util.gen_bvar (Util.comp_result c) in
@@ -918,7 +918,7 @@ let maybe_assume_result_eq_pure_term env (e:exp) (lc:lcomp) : lcomp =
            comp_set_flags ((bind env None (lcomp_of_comp c) (Some (Env.Binding_var(x, t)), eq_ret)).comp()) (PARTIAL_RETURN::comp_flags c) in
   let flags = 
     if not (Util.is_function_typ lc.res_typ)
-    && Util.is_pure_lcomp lc
+    && Util.is_pure_or_ghost_lcomp lc
     && not (Util.is_lcomp_partial_return lc)
     then PARTIAL_RETURN::lc.cflags
     else lc.cflags in

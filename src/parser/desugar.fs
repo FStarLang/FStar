@@ -69,6 +69,7 @@ let compile_op arity s =
             |'^' -> "Hat"
             |'%' -> "Percent"
             |'*' -> "Star"
+            |'?' -> "Question"
             | _ -> "UNKNOWN" in
     let rec aux i =
         if i = String.length s
@@ -78,7 +79,7 @@ let compile_op arity s =
 
 let compile_op_lid n s r = [Syntax.mk_ident(compile_op n s, r)] |> Syntax.lid_of_ids
 
-let op_as_vlid env arity rng s =
+let     op_as_vlid env arity rng s =
   let r l = Some (set_lid_range l rng) in
   let fallback () =
       match s with

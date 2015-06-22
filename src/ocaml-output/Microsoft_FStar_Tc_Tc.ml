@@ -1505,9 +1505,9 @@ in (let _31_1744 = (match (bs) with
 | [] -> begin
 (let cres = (Microsoft_FStar_Tc_Util.subst_lcomp subst cres)
 in (let g = (Microsoft_FStar_Tc_Rel.conj_guard g_head g)
-in (let refine_with_equality = ((Microsoft_FStar_Absyn_Util.is_pure_lcomp cres) && ((Support.Microsoft.FStar.Util.for_some (fun _31_1734 -> (match (_31_1734) with
+in (let refine_with_equality = ((Microsoft_FStar_Absyn_Util.is_pure_or_ghost_lcomp cres) && ((Support.Microsoft.FStar.Util.for_some (fun _31_1734 -> (match (_31_1734) with
 | (_, c) -> begin
-(not ((Microsoft_FStar_Absyn_Util.is_pure_lcomp c)))
+(not ((Microsoft_FStar_Absyn_Util.is_pure_or_ghost_lcomp c)))
 end))) comps))
 in (let cres = if refine_with_equality then begin
 (Microsoft_FStar_Tc_Util.maybe_assume_result_eq_pure_term env (Microsoft_FStar_Absyn_Syntax.mk_Exp_app_flat (head, (Support.List.rev arg_rets)) (Some (cres.Microsoft_FStar_Absyn_Syntax.res_typ)) top.Microsoft_FStar_Absyn_Syntax.pos) cres)
@@ -1577,7 +1577,7 @@ in (match (_31_1782) with
 (let _31_1783 = if ((Microsoft_FStar_Tc_Env.debug env) (Microsoft_FStar_Options.Other ("Implicits"))) then begin
 (Support.Microsoft.FStar.Util.fprint1 "Introduced %s implicits in application\n" (Support.Microsoft.FStar.Util.string_of_int (Support.List.length g.Microsoft_FStar_Tc_Rel.implicits)))
 end
-in (let c = if (((Microsoft_FStar_Options.should_verify env.Microsoft_FStar_Tc_Env.curmodule.Microsoft_FStar_Absyn_Syntax.str) && (not ((Microsoft_FStar_Absyn_Util.is_lcomp_partial_return c)))) && (Microsoft_FStar_Absyn_Util.is_pure_lcomp c)) then begin
+in (let c = if (((Microsoft_FStar_Options.should_verify env.Microsoft_FStar_Tc_Env.curmodule.Microsoft_FStar_Absyn_Syntax.str) && (not ((Microsoft_FStar_Absyn_Util.is_lcomp_partial_return c)))) && (Microsoft_FStar_Absyn_Util.is_pure_or_ghost_lcomp c)) then begin
 (Microsoft_FStar_Tc_Util.maybe_assume_result_eq_pure_term env e c)
 end else begin
 c

@@ -1074,7 +1074,7 @@ in (match ((Microsoft_FStar_Tc_Rel.guard_f g0)) with
 c
 end
 | Microsoft_FStar_Tc_Rel.NonTrivial (f) -> begin
-(let c = if (((Microsoft_FStar_Absyn_Util.is_pure_comp c) && (not ((is_function (Microsoft_FStar_Absyn_Util.comp_result c))))) && (not ((Microsoft_FStar_Absyn_Util.is_partial_return c)))) then begin
+(let c = if (((Microsoft_FStar_Absyn_Util.is_pure_or_ghost_comp c) && (not ((is_function (Microsoft_FStar_Absyn_Util.comp_result c))))) && (not ((Microsoft_FStar_Absyn_Util.is_partial_return c)))) then begin
 (let x = (Microsoft_FStar_Absyn_Util.gen_bvar (Microsoft_FStar_Absyn_Util.comp_result c))
 in (let xret = (return_value env x.Microsoft_FStar_Absyn_Syntax.sort (Microsoft_FStar_Absyn_Util.bvar_to_exp x))
 in (let xbinding = Microsoft_FStar_Tc_Env.Binding_var ((x.Microsoft_FStar_Absyn_Syntax.v, x.Microsoft_FStar_Absyn_Syntax.sort))
@@ -1239,7 +1239,7 @@ in (Microsoft_FStar_Absyn_Util.comp_set_flags ((bind env None (lcomp_of_comp c) 
 end
 end)
 end))
-in (let flags = if (((not ((Microsoft_FStar_Absyn_Util.is_function_typ lc.Microsoft_FStar_Absyn_Syntax.res_typ))) && (Microsoft_FStar_Absyn_Util.is_pure_lcomp lc)) && (not ((Microsoft_FStar_Absyn_Util.is_lcomp_partial_return lc)))) then begin
+in (let flags = if (((not ((Microsoft_FStar_Absyn_Util.is_function_typ lc.Microsoft_FStar_Absyn_Syntax.res_typ))) && (Microsoft_FStar_Absyn_Util.is_pure_or_ghost_lcomp lc)) && (not ((Microsoft_FStar_Absyn_Util.is_lcomp_partial_return lc)))) then begin
 (Microsoft_FStar_Absyn_Syntax.PARTIAL_RETURN)::lc.Microsoft_FStar_Absyn_Syntax.cflags
 end else begin
 lc.Microsoft_FStar_Absyn_Syntax.cflags

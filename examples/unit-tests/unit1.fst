@@ -380,13 +380,3 @@ let h f x = f x
 
 val g : x:ref int -> ST int (fun h -> True) (fun h0 y h1 -> h0=h1 /\ y >= 0)
 let g = h (as_ST f)
-
-module TestInt32
-open Int32
-let f0 (x:nat32) : int32 = x - 1l
-let f1 (x:nat32) (y:nat32{y <= x}) : nat32 = x - y
-let mid_nat (x:nat32) (y:nat32{y <= x /\ y<>0l}) : nat32 =
-  x - ((x - y) / 2l)
-let max (x:int32) (y:int32) = if x < y then y else x
-let min (x:int32) (y:int32) = if x < y then x else y
-let times (x:nat32{x < 10000l}) = x * 2l
