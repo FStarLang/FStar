@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap --logQueries;
     variables:LIB=../../lib;
     other-files:$LIB/ordset.fsi $LIB/ordsetproperties.fst $LIB/ordmap.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst
  --*)
@@ -491,6 +491,134 @@ type sstep: config -> config -> Type =
 
 assume val preceds_axiom: en:env -> x:varname -> Lemma (ensures (en x << en))
 
+val slice_v_sps : prins -> v:value -> Tot value (decreases %[v])
+val slice_en_sps: prins -> en:env -> Tot (varname -> Tot value) (decreases %[en])
+
+let rec slice_v_sps ps v =
+  match v with
+    | V_const _     -> v
+    | V_box ps' v'  ->
+      let v'' = if subset ps' ps then slice_v_sps ps v' else V_emp in
+      V_box ps' v''
+    | V_clos en x e -> V_clos (slice_en_sps ps en) x e
+    | V_emp         -> v
+
+and slice_en_sps ps en =
+  let _ = () in
+  fun x -> preceds_axiom en x; slice_v_sps ps (en x)
+
+assume val slice_emp_en_sps: ps:prins
+                             -> Lemma (requires (True))
+                                      (ensures (slice_en_sps ps empty_env = empty_env))
+                                [SMTPat (slice_en_sps ps empty_env)]
+
+val slice_e_sps: prins -> exp -> Tot exp
+let slice_e_sps ps e = e
+
+val slice_r_sps: prins -> r:redex{is_sec_redex r} -> Tot redex
+let slice_r_sps ps r = match r with
+  | R_assec ps' v  -> R_assec ps' (slice_v_sps ps v)
+  | R_unbox v     -> R_unbox (slice_v_sps ps v)
+  | R_let x v1 e2 -> R_let x (slice_v_sps ps v1) e2
+  | R_app v1 v2   -> R_app (slice_v_sps ps v1) (slice_v_sps ps v2)
+
+val slice_f'_sps: ps:prins -> f:frame'{is_sec_frame f} -> Tot frame'
+let slice_f'_sps ps f = match f with
+  | F_assec_ps _ -> f
+  | F_assec_e  _ -> f
+  | F_assec_ret  -> f
+  | F_unbox      -> f
+  | F_let    _ _ -> f
+  | F_app_e1   _ -> f
+  | F_app_e2   v -> F_app_e2  (slice_v_sps ps v)
+
+val slice_f_sps: ps:prins -> f:frame{Frame.m f = Mode Sec ps /\
+                                     is_sec_frame (Frame.f f)}
+                 -> Tot frame
+let slice_f_sps ps (Frame m en f') = Frame m (slice_en_sps ps en)
+                                             (slice_f'_sps ps f')
+
+val slice_s_sps: ps:prins -> s:stack{stack_inv s (Mode Sec ps) Source}
+                 -> Tot (r:stack{stack_target_inv r (Mode Sec ps)})
+let rec slice_s_sps ps s = match s with
+  | []     -> []
+  | hd::tl ->
+    if Frame.m hd = Mode Sec ps then
+      (slice_f_sps ps hd)::(slice_s_sps ps tl)
+    else
+      []
+
+val slice_t_sps: ps:prins -> t:term{term_inv t (Mode Sec ps) Source} -> Tot term
+let slice_t_sps ps t = match t with
+  | T_exp _ -> t
+  | T_red r -> T_red (slice_r_sps ps r)
+  | T_val v -> T_val (slice_v_sps ps v)
+
+val slice_c_sps: c:sconfig{is_sec c} -> Tot tconfig
+let slice_c_sps (Conf _ (Mode Sec ps) s en t) =
+    Conf Target (Mode Sec ps) (slice_s_sps ps s) (slice_en_sps ps en)
+                (slice_t_sps ps t)
+
+(**********)
+
+open Constructive
+
+open FunctionalExtensionality
+
+val env_upd_slice_lemma_ps: ps:prins -> en:env -> x:varname -> v:value
+                            -> Lemma (requires (True))
+                                     (ensures (slice_en_sps ps (update_env en x v) =
+                                               update_env (slice_en_sps ps en) x (slice_v_sps ps v)))
+                                     [SMTPat (slice_en_sps ps (update_env en x v))]
+let env_upd_slice_lemma_ps ps en x v =
+  cut (FEq (slice_en_sps ps (update_env en x v))
+      (update_env (slice_en_sps ps en) x (slice_v_sps ps v)))
+
+
+val cstep_sec_slice_lemma: c:sconfig{is_sec c} -> c':sconfig -> h:cstep c c'
+                           -> Tot (cand (u:unit{Conf.m c' = Conf.m c})
+                                        (cstep (slice_c_sps c) (slice_c_sps c')))
+#set-options "--split_cases 1"
+let cstep_sec_slice_lemma c c' h = match h with
+  | C_unbox c c'      -> Conj () (C_unbox (slice_c_sps c) (slice_c_sps c'))
+  | C_const c c'      -> Conj () (C_const (slice_c_sps c) (slice_c_sps c'))
+  | C_var c c'        -> Conj () (C_var (slice_c_sps c) (slice_c_sps c'))
+  | C_let_e1 c c'     -> Conj () (C_let_e1 (slice_c_sps c) (slice_c_sps c'))
+  | C_abs c c'        -> Conj () (C_abs (slice_c_sps c) (slice_c_sps c'))
+  | C_app_e1 c c'     -> Conj () (C_app_e1 (slice_c_sps c) (slice_c_sps c'))
+  | C_app_e2 c c'     -> Conj () (C_app_e2 (slice_c_sps c) (slice_c_sps c'))
+  | C_unbox_red c c'  -> Conj () (C_unbox_red (slice_c_sps c) (slice_c_sps c'))
+  | C_let_red c c'    -> Conj () (C_let_red (slice_c_sps c) (slice_c_sps c'))
+  | C_app_red c c'    -> Conj () (C_app_red (slice_c_sps c) (slice_c_sps c'))
+  | C_let_beta c c'   -> Conj () (C_let_beta (slice_c_sps c) (slice_c_sps c'))
+  | C_app_beta c c'   -> Conj () (C_app_beta (slice_c_sps c) (slice_c_sps c'))
+  | C_unbox_beta c c' -> Conj () (C_unbox_beta (slice_c_sps c) (slice_c_sps c'))
+
+#reset-options
+
+val is_exit_sec_config: c:sconfig -> Tot bool
+let is_exit_sec_config c =
+  is_sec c && is_value c && (Mode.m (Frame.m (Cons.hd (Conf.s c))) = Par)
+
+val sstep_sec_slice_lemma: c:sconfig{is_sec c /\ not (is_exit_sec_config c)}
+                           -> c':sconfig -> h:sstep c c'
+                           -> Tot (cand (u:unit{Conf.m c' = Conf.m c})
+                                        (sstep (slice_c_sps c) (slice_c_sps c')))
+#set-options "--split_cases 1"
+let sstep_sec_slice_lemma c c' h = match h with
+  | C_step c c' h     ->
+    let Conj _ p = cstep_sec_slice_lemma c c' h in
+    Conj () (C_step (slice_c_sps c) (slice_c_sps c') p)
+  | C_assec_ps c c'   -> Conj () (C_assec_ps (slice_c_sps c) (slice_c_sps c'))
+  | C_assec_e c c'    -> Conj () (C_assec_e (slice_c_sps c) (slice_c_sps c'))
+  | C_assec_red c c'  -> Conj () (C_assec_red (slice_c_sps c) (slice_c_sps c'))
+  | C_assec_beta c c' -> Conj () (C_assec_beta (slice_c_sps c) (slice_c_sps c'))
+  | C_assec_ret c c'  -> Conj () (C_assec_ret (slice_c_sps c) (slice_c_sps c'))
+
+#reset-options
+
+(**********)
+
 val slice_v : prin -> v:value -> Tot value (decreases %[v])
 val slice_en: prin -> en:env -> Tot (varname -> Tot value) (decreases %[en])
 
@@ -578,68 +706,6 @@ let rec slice_c p (Conf Source (Mode as_m ps) s en t) =
       else slice_en p (get_sec_ret_env (Mode as_m ps) s), T_sec_wait
   in
   Conf Target (Mode Par (singleton p)) (slice_s p s) en' t'
-
-(**********)
-val slice_v_sps : prins -> v:value -> Tot value (decreases %[v])
-val slice_en_sps: prins -> en:env -> Tot (varname -> Tot value) (decreases %[en])
-
-let rec slice_v_sps ps v =
-  match v with
-    | V_const _     -> v
-    | V_box ps' v'  ->
-      let v'' = if subset ps' ps then slice_v_sps ps v' else V_emp in
-      V_box ps' v''
-    | V_clos en x e -> V_clos (slice_en_sps ps en) x e
-    | V_emp         -> v
-
-and slice_en_sps ps en =
-  let _ = () in
-  fun x -> preceds_axiom en x; slice_v_sps ps (en x)
-
-assume val slice_emp_en_sps: ps:prins
-                             -> Lemma (requires (True))
-                                      (ensures (slice_en_sps ps empty_env = empty_env))
-                                [SMTPat (slice_en_sps ps empty_env)]
-
-val slice_e_sps: prins -> exp -> Tot exp
-let slice_e_sps ps e = e
-
-val slice_r_sps: prins -> r:redex{is_sec_redex r} -> Tot redex
-let slice_r_sps ps r = match r with
-  | R_assec ps' v  -> R_assec ps' (slice_v_sps ps v)
-  | R_unbox v     -> R_unbox (slice_v_sps ps v)
-  | R_let x v1 e2 -> R_let x (slice_v_sps ps v1) e2
-  | R_app v1 v2   -> R_app (slice_v_sps ps v1) (slice_v_sps ps v2)
-
-val slice_f'_sps: ps:prins -> f:frame'{is_sec_frame f} -> Tot frame'
-let slice_f'_sps ps f = match f with
-  | F_assec_ps _ -> f
-  | F_assec_e  _ -> f
-  | F_assec_ret  -> f
-  | F_unbox      -> f
-  | F_let    _ _ -> f
-  | F_app_e1   _ -> f
-  | F_app_e2   v -> F_app_e2  (slice_v_sps ps v)
-
-val slice_f_sps: ps:prins -> f:frame{Frame.m f = Mode Sec ps /\
-                                     is_sec_frame (Frame.f f)}
-                 -> Tot frame
-let slice_f_sps ps (Frame m en f') = Frame m (slice_en_sps ps en)
-                                             (slice_f'_sps ps f')
-
-val slice_s_sps: ps:prins -> s:stack{stack_inv s (Mode Sec ps) Source}
-                 -> Tot (r:stack{stack_target_inv r (Mode Sec ps)})
-let rec slice_s_sps ps s = match s with
-  | []     -> []
-  | hd::tl ->
-    if Frame.m hd = Mode Sec ps then
-      (slice_f_sps ps hd)::(slice_s_sps ps tl)
-    else
-      []
-
-val slice_c_sps: c:sconfig{is_sec c} -> Tot tconfig
-let slice_c_sps (Conf _ (Mode Sec ps) s en t) =
-    Conf Target (Mode Sec ps) (slice_s_sps ps s) (slice_en_sps ps en) t
 
 (**********)
 
