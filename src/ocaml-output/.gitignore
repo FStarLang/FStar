@@ -38,3 +38,4 @@ Microsoft_FStar_ToSMT_Z3.ml
 parse.ml
 parse.mli
 parse.mly
+Microsoft_FStar_ToSMT_SplitQueryCases.ml
