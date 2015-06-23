@@ -21,6 +21,8 @@ let p_cmp p1 p2 = p1 <= p2
 
 type prins = s:ordset prin p_cmp{not (s = empty)}
 
+type eprins = ordset prin p_cmp
+
 type const =
   | C_prin : c:prin -> const
   | C_prins: c:prins -> const
@@ -43,29 +45,34 @@ type exp' =
 and exp =
   | Exp: e:exp' -> info:option other_info -> exp
 
-and value =
-  | V_const  : c:const -> value
-  | V_box    : ps:prins -> v:value -> value
-  | V_clos   : en:env -> x:varname -> e:exp -> value
+type value: eprins -> Type =
+  | V_const  : c:const -> value empty
+  | V_box    : #vps:eprins -> ps:prins -> v:value vps{subset vps ps}
+               -> value ps
+  | V_clos   : en:env -> x:varname -> e:exp -> value empty
 
   (* bomb value, comes up in target only *)
-  | V_emp : value
+  | V_emp    : value empty
+
+and dvalue:Type =
+  | DV: vps:eprins -> v:value vps -> dvalue
 
 (* TODO: fix it, option value *)
-and env = varname -> Tot value
-    
+and env = varname -> Tot dvalue
+
 type redex =
-  | R_aspar: ps:prins -> v:value -> redex
-  | R_assec: ps:prins -> v:value -> redex
-  | R_box  : ps:prins -> v:value -> redex
-  | R_unbox: v:value -> redex
-  | R_let  : x:varname -> v:value -> e:exp -> redex
-  | R_app  : v1:value -> v2:value -> redex
+  | R_aspar: #vps:eprins -> ps:prins -> v:value vps -> redex
+  | R_assec: #vps:eprins -> ps:prins -> v:value vps -> redex
+  | R_box  : #vps:eprins -> ps:prins -> v:value vps -> redex
+  | R_unbox: #vps:eprins -> v:value vps -> redex
+  | R_let  : #vps:eprins -> x:varname -> v:value vps -> e:exp -> redex
+  | R_app  : #vps1:eprins -> #vps2:eprins -> v1:value vps1 -> v2:value vps2
+             -> redex
 
 assume val empty_env: env
 
-val update_env: env -> varname -> value -> Tot env
-let update_env en x v = fun y -> if y = x then v else en y
+val update_env: #vps:eprins -> env -> varname -> value vps -> Tot env
+let update_env #vps en x v = fun y -> if y = x then DV vps v else en y
 
 type as_mode =
   | Par
@@ -84,7 +91,7 @@ type frame' =
   | F_unbox    : frame'
   | F_let      : x:varname -> e2:exp -> frame'
   | F_app_e1   : e2:exp -> frame'
-  | F_app_e2   : v:value -> frame'
+  | F_app_e2   : #vps:eprins -> v:value vps -> frame'
   
 type frame =
   | Frame: m:mode -> en:env -> f:frame'-> frame
@@ -94,7 +101,7 @@ type stack = list frame
 type term =
   | T_exp     : e:exp -> term
   | T_red     : r:redex -> term
-  | T_val     : v:value -> term
+  | T_val     : #vps:eprins -> v:value vps -> term
   
   | T_sec_wait: term
 
@@ -159,10 +166,10 @@ let is_value c = is_T_val (Conf.t c)
 val is_value_ps: c:config -> Tot bool
 let is_value_ps c = match c with
   | Conf _ _ _ _ (T_val (V_const (C_prins _))) -> true
-  | _                                        -> false
+  | _                                          -> false
 
-val c_value: c:config{is_value c} -> Tot value
-let c_value (Conf _ _ _ _ (T_val v)) = v
+val c_value: c:config{is_value c} -> Tot (vps:eprins & value vps)
+let c_value (Conf _ _ _ _ (T_val #vps v)) = (| vps, v |)
 
 val c_value_ps: c:config{is_value_ps c} -> Tot prins
 let c_value_ps c = match c with
@@ -212,7 +219,8 @@ let step_const (Conf l m s en (T_exp (Exp (E_const c) _))) =
 
 val step_var: c:config{pre_evar c} -> Tot config
 let step_var (Conf l m s en (T_exp (Exp (E_var x) _))) =
-  Conf l m s en (T_val (en x))
+  let DV _ v = en x in
+  Conf l m s en (T_val v)
 
 val step_let_e1: c:config{pre_elet c} -> Tot config
 let step_let_e1 (Conf l m s en (T_exp (Exp (E_let x e1 e2) _))) =
@@ -294,10 +302,12 @@ let step_aspar c = match c with
 
 val pre_box: config -> Tot comp
 let pre_box c = match c with
-  | Conf l (Mode Par ps1) _ _ (T_red (R_box ps2 _)) ->
-    if src l then
-      if subset ps2 ps1 then Do else NA
-    else Do
+  | Conf l (Mode Par ps1) _ _ (T_red (R_box #vps ps2 _)) ->
+    if subset vps ps2 then
+      if src l then
+        if subset ps2 ps1 then Do else NA
+      else Do
+    else NA
 
   | _ -> NA
 
@@ -493,25 +503,24 @@ type sstep: config -> config -> Type =
 
 assume val preceds_axiom: en:env -> x:varname -> Lemma (ensures (en x << en))
 
-val slice_v_sps : prins -> v:value -> Tot value (decreases %[v])
-val slice_en_sps: prins -> en:env -> Tot (varname -> Tot value) (decreases %[en])
+val slice_v_sps : #vps:eprins -> prins -> v:value vps -> Tot (r:dvalue{subset (DV.vps r) vps})  (decreases %[v])
+val slice_en_sps: prins -> en:env -> Tot (varname -> Tot dvalue) (decreases %[en])
 
-let rec slice_v_sps ps v =
+let rec slice_v_sps #vps ps v =
   match v with
-    | V_const _     -> v
+    | V_const _     -> DV vps v
     | V_box ps' v'  ->
-      (* TODO: FIXME: change the unbox_s semantics per this *)
-      let v'' =
+      let DV _ v'' =
         if not (intersect ps' ps = empty) then slice_v_sps ps v'
-        else V_emp
+        else DV empty V_emp
       in
-      V_box ps' v''
-    | V_clos en x e -> V_clos (slice_en_sps ps en) x e
-    | V_emp         -> v
+      DV ps' (V_box ps' v'')
+    | V_clos en x e -> DV empty (V_clos (slice_en_sps ps en) x e)
+    | V_emp         -> DV vps v
 
 and slice_en_sps ps en =
   let _ = () in
-  fun x -> preceds_axiom en x; slice_v_sps ps (en x)
+  fun x -> preceds_axiom en x; slice_v_sps ps (DV.v (en x))
 
 assume val slice_emp_en_sps: ps:prins
                              -> Lemma (requires (True))
@@ -523,10 +532,10 @@ let slice_e_sps ps e = e
 
 val slice_r_sps: prins -> r:redex{is_sec_redex r} -> Tot redex
 let slice_r_sps ps r = match r with
-  | R_assec ps' v  -> R_assec ps' (slice_v_sps ps v)
-  | R_unbox v     -> R_unbox (slice_v_sps ps v)
-  | R_let x v1 e2 -> R_let x (slice_v_sps ps v1) e2
-  | R_app v1 v2   -> R_app (slice_v_sps ps v1) (slice_v_sps ps v2)
+  | R_assec ps' v  -> R_assec ps' (DV.v (slice_v_sps ps v))
+  | R_unbox v     -> R_unbox (DV.v (slice_v_sps ps v))
+  | R_let x v1 e2 -> R_let x (DV.v (slice_v_sps ps v1)) e2
+  | R_app v1 v2   -> R_app (DV.v (slice_v_sps ps v1)) (DV.v (slice_v_sps ps v2))
 
 val slice_f'_sps: ps:prins -> f:frame'{is_sec_frame f} -> Tot frame'
 let slice_f'_sps ps f = match f with
@@ -536,7 +545,7 @@ let slice_f'_sps ps f = match f with
   | F_unbox      -> f
   | F_let    _ _ -> f
   | F_app_e1   _ -> f
-  | F_app_e2   v -> F_app_e2  (slice_v_sps ps v)
+  | F_app_e2   v -> F_app_e2  (DV.v (slice_v_sps ps v))
 
 val slice_f_sps: ps:prins -> f:frame{Frame.m f = Mode Sec ps /\
                                      is_sec_frame (Frame.f f)}
@@ -558,7 +567,7 @@ val slice_t_sps: ps:prins -> t:term{term_inv t (Mode Sec ps) Source} -> Tot term
 let slice_t_sps ps t = match t with
   | T_exp _ -> t
   | T_red r -> T_red (slice_r_sps ps r)
-  | T_val v -> T_val (slice_v_sps ps v)
+  | T_val v -> T_val (DV.v (slice_v_sps ps v))
 
 val slice_c_sps: c:sconfig{is_sec c} -> Tot tconfig
 let slice_c_sps (Conf _ (Mode Sec ps) s en t) =
@@ -571,14 +580,14 @@ open Constructive
 
 open FunctionalExtensionality
 
-val env_upd_slice_lemma_ps: ps:prins -> en:env -> x:varname -> v:value
+val env_upd_slice_lemma_ps: #vps:eprins -> ps:prins -> en:env -> x:varname -> v:value vps
                             -> Lemma (requires (True))
                                      (ensures (slice_en_sps ps (update_env en x v) =
-                                               update_env (slice_en_sps ps en) x (slice_v_sps ps v)))
+                                               update_env (slice_en_sps ps en) x (DV.v (slice_v_sps ps v))))
                                      [SMTPat (slice_en_sps ps (update_env en x v))]
-let env_upd_slice_lemma_ps ps en x v =
+let env_upd_slice_lemma_ps #vps ps en x v =
   cut (FEq (slice_en_sps ps (update_env en x v))
-      (update_env (slice_en_sps ps en) x (slice_v_sps ps v)))
+      (update_env (slice_en_sps ps en) x (DV.v (slice_v_sps ps v))))
 
 val cstep_sec_slice_lemma: c:sconfig{is_sec c} -> c':sconfig -> h:cstep c c'
                            -> Tot (cand (u:unit{Conf.m c' = Conf.m c})
@@ -624,21 +633,21 @@ let sstep_sec_slice_lemma c c' h = match h with
 
 (**********)
 
-val slice_v : prin -> v:value -> Tot value (decreases %[v])
-val slice_en: prin -> en:env -> Tot (varname -> Tot value) (decreases %[en])
+val slice_v : #vps:eprins -> prin -> v:value vps -> Tot (r:dvalue{subset (DV.vps r) vps}) (decreases %[v])
+val slice_en: prin -> en:env -> Tot (varname -> Tot dvalue) (decreases %[en])
 
-let rec slice_v p v =
+let rec slice_v #vps p v =
   match v with
-    | V_const _     -> v
+    | V_const _     -> DV vps v
     | V_box ps v'   ->
-      let v'' = if mem p ps then slice_v p v' else V_emp in
-      V_box ps v''
-    | V_clos en x e -> V_clos (slice_en p en) x e
-    | V_emp         -> v
+      let DV _ v'' = if mem p ps then slice_v p v' else DV empty V_emp in
+      DV ps (V_box ps v'')
+    | V_clos en x e -> DV empty (V_clos (slice_en p en) x e)
+    | V_emp         -> DV vps v
 
 and slice_en p en =
   let _ = () in
-  fun x -> preceds_axiom en x; slice_v p (en x)
+  fun x -> preceds_axiom en x; slice_v p (DV.v (en x))
 
 assume val slice_emp_en: p:prin
                          -> Lemma (requires (True))
@@ -650,14 +659,14 @@ let slice_e p e = e
 
 val slice_r: prin -> redex -> Tot redex
 let slice_r p r = match r with
-  | R_aspar ps v  -> R_aspar ps (slice_v p v)
-  | R_assec ps v  -> R_assec ps (slice_v p v)
+  | R_aspar ps v  -> R_aspar ps (DV.v (slice_v p v))
+  | R_assec ps v  -> R_assec ps (DV.v (slice_v p v))
   | R_box ps v    ->
-    let v' = if mem p ps then slice_v p v else V_emp in
+    let DV _ v' = if mem p ps then slice_v p v else DV empty V_emp in
     R_box ps v'
-  | R_unbox v     -> R_unbox (slice_v p v)
-  | R_let x v1 e2 -> R_let x (slice_v p v1) e2
-  | R_app v1 v2   -> R_app (slice_v p v1) (slice_v p v2)
+  | R_unbox v     -> R_unbox (DV.v (slice_v p v))
+  | R_let x v1 e2 -> R_let x (DV.v (slice_v p v1)) e2
+  | R_app v1 v2   -> R_app (DV.v (slice_v p v1)) (DV.v (slice_v p v2))
 
 val slice_f': p:prin -> f:frame'{not (is_F_assec_ret f)} -> Tot frame'
 let slice_f' p f = match f with
@@ -669,7 +678,7 @@ let slice_f' p f = match f with
   | F_unbox      -> f
   | F_let    _ _ -> f
   | F_app_e1   _ -> f
-  | F_app_e2   v -> F_app_e2  (slice_v p v)
+  | F_app_e2   v -> F_app_e2  (DV.v (slice_v p v))
 
 val slice_f: p:prin -> f:frame{Mode.m (Frame.m f) = Par    /\
                                mem p (Mode.ps (Frame.m f)) /\
@@ -693,7 +702,7 @@ let rec slice_s p s = match s with
 
 val slice_t: p:prin -> t:term{not (t = T_sec_wait)} -> Tot term
 let slice_t p t = match t with
-  | T_val v -> T_val (slice_v p v)
+  | T_val v -> T_val (DV.v (slice_v p v))
   | T_exp e -> t
   | T_red r -> T_red (slice_r p r)
 
@@ -714,26 +723,71 @@ let rec slice_c p (Conf Source (Mode as_m ps) s en t) =
 
 (**********)
 
-val compose_vals: v:value -> value -> Tot value (decreases %[v])
-val compose_envs: en:env -> env -> Tot (varname -> Tot value) (decreases %[en])
+val compose_vals: #vps1:eprins -> #vps2:eprins -> v1:value vps1 -> v2:value vps2
+                  -> Tot (r:dvalue{subset (DV.vps r) (union vps1 vps2)})
+                     (decreases %[v1])
+val compose_envs: en:env -> env -> Tot (varname -> Tot dvalue) (decreases %[en])
 
-let rec compose_vals v1 v2 = match v1, v2 with
-  | V_const c1, V_const c2 ->
-    if c1 = c2 then v1 else V_emp
-  | V_box ps1 v1', V_box ps2 v2' ->
-    if ps1 = ps2 then V_box ps1 (compose_vals v1' v2')
-    else V_emp
-  | V_clos en1 x1 e1, V_clos en2 x2 e2 ->
-    if x1 = x2 && e1 = e2 then V_clos (compose_envs en1 en2) x1 e1
-    else V_emp
-  | V_emp, v
-  | v, V_emp -> v
-  | _ -> V_emp
-
+let rec compose_vals #vps1 #vps2 v1 v2 =
+  let def = DV empty V_emp in
+  match v1 with
+    | V_const c1 ->
+      if is_V_const v2 && V_const.c v1 = V_const.c v2 then
+        DV vps1 v1
+      else def
+      
+    | V_box ps1 v1' ->
+      if is_V_box v2 then
+        let V_box ps2 v2' = v2 in
+        if ps1 = ps2 then
+          DV ps1 (V_box ps1 (DV.v (compose_vals v1' v2')))
+        else
+          def
+      else def
+      
+    | V_clos en1 x1 e1 ->
+      if is_V_clos v2 then
+        let V_clos en2 x2 e2 = v2 in
+        if x1 = x2 && e1 = e2 then
+          DV vps1 (V_clos (compose_envs en1 en2) x1 e1)
+        else def
+      else def
+      
+    | V_emp -> DV vps2 v2
+    
+    | _ -> if is_V_emp v2 then DV vps1 v1 else def
+      
 and compose_envs en1 en2 =
   let _ = () in
-  fun x -> preceds_axiom en1 x; compose_vals (en1 x) (en2 x)
+  fun x -> preceds_axiom en1 x; compose_vals (DV.v (en1 x)) (DV.v (en2 x))
 
+(*val slice_weakening: #vps:eprins -> v:value vps -> ps:prins
+                     -> ps':prins{intersect ps' vps = empty}
+                     -> Lemma (requires (True))
+                              (ensures (slice_v_sps ps v = slice_v_sps (union ps ps') v))
+                        (decreases %[v])
+val slice_weakening_en: en:env -> ps:prins
+                        -> ps':prins{intersect ps' vps = empty}
+                        -> Lemma (requires (True))
+                              (ensures (slice_en_sps ps en = slice_en_sps (union ps ps') v))
+                           (decreases %[en])
+
+let rec slice_weakening #vps v ps ps' = match v with
+  | V_const _ -> ()
+  
+  | V_box ps'' v'' ->
+    if intersect ps'' ps = empty then ()
+    else
+      slice_weakening v'' ps ps'
+      
+  | 
+  
+  | _ -> admit ()
+  *)
+(* check_marker *)
+
+
+(*
 let t_union (p1:prin) (p2:prin) :prins = insert p1 (insert p2 empty)
 
 val compose_vals_lemma_prin: v:value -> p1:prin -> p2:prin
@@ -787,7 +841,7 @@ let rec compose_vals_lemma v ps p =
   else
     admit ()
 
-and compose_envs_lemma en ps p = admit ()
+and compose_envs_lemma en ps p = admit ()*)
 
 (* check_marker *)
 
