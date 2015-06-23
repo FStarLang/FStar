@@ -1,7 +1,7 @@
 VERFILES=counters.fst intsort.fst insertionsort.fst mergesort.fst
 OTHERFLAGS=
 include ../Makefile.include
-all: .all.ver downgrade binary_search qsc gc
+all: .all.ver downgrade binary_search qsc gc binary_search_tree.fulllib.ver
 
 ARR_LIB=$(addprefix $(FSTAR_HOME)/lib/, classical.fst ext.fst set.fsi set.fst heap.fst stperm.fst seq.fsi seq.fst seqproperties.fst arr.fst)
 
