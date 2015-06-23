@@ -1258,7 +1258,7 @@ module IO = struct
 end
 
 module Tcp = struct
-  open Unix
+  open BatUnix
   type stream = file_descr
   type listener = file_descr
   let listen s i =
@@ -1283,18 +1283,18 @@ module Tcp = struct
 
   let read s i =
     let sock_recv sock maxlen =
-      let str = Bytes.create maxlen in
+      let str = BatString.create maxlen in
       let recvlen = recv sock str 0 maxlen [] in
-      Microsoft.FStar.Util.unicode_of_string (Bytes.sub str 0 recvlen) in
+      Microsoft.FStar.Util.unicode_of_string (String.sub str 0 recvlen) in
     try Some (sock_recv s i)
     with Unix_error (e,s1,s2) -> None
 
   let write s b =
     let b = Microsoft.FStar.Util.string_of_unicode b in
     let sock_send sock str =
-      let len = Bytes.length str in
+      let len = String.length str in
       send sock str 0 len [] in
-    try (let n = sock_send s b in if n < Bytes.length b then None else Some())
+    try (let n = sock_send s b in if n < String.length b then None else Some())
     with Unix_error (e,s1,s2) -> None
 
   let close s = close s
