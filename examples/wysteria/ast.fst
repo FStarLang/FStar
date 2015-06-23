@@ -321,7 +321,8 @@ let pre_unbox c = match c with
     if as_m = Par then
       if subset ps1 ps2 then Do else NA
     else
-      if subset ps2 ps1 then Do else NA
+      if not (intersect ps1 ps2 = empty) then Do else NA
+      (*if subset ps2 ps1 then Do else NA*)
 
   | _ -> NA
 
@@ -501,7 +502,121 @@ type sstep: config -> config -> Type =
 
 (**********)
 
+
 assume val preceds_axiom: en:env -> x:varname -> Lemma (ensures (en x << en))
+
+val slice_v : #vps:eprins -> prin -> v:value vps -> Tot (r:dvalue{subset (DV.vps r) vps}) (decreases %[v])
+val slice_en: prin -> en:env -> Tot (varname -> Tot dvalue) (decreases %[en])
+
+let rec slice_v #vps p v =
+  match v with
+    | V_const _     -> DV vps v
+    | V_box ps v'   ->
+      let DV _ v'' = if mem p ps then slice_v p v' else DV empty V_emp in
+      DV ps (V_box ps v'')
+    | V_clos en x e -> DV empty (V_clos (slice_en p en) x e)
+    | V_emp         -> DV vps v
+
+and slice_en p en =
+  let _ = () in
+  fun x -> preceds_axiom en x; slice_v p (DV.v (en x))
+
+assume val slice_emp_en: p:prin
+                         -> Lemma (requires (True))
+                                  (ensures (slice_en p empty_env = empty_env))
+                            [SMTPat (slice_en p empty_env)]
+
+
+val compose_vals: #vps1:eprins -> #vps2:eprins -> v1:value vps1 -> v2:value vps2
+                  -> Tot (r:dvalue{subset (DV.vps r) (union vps1 vps2)})
+                     (decreases %[v1])
+val compose_envs: en:env -> env -> Tot (varname -> Tot dvalue) (decreases %[en])
+
+let rec compose_vals #vps1 #vps2 v1 v2 =
+  let def = DV empty V_emp in
+  match v1 with
+    | V_const c1 ->
+      if is_V_const v2 && V_const.c v1 = V_const.c v2 then
+        DV vps1 v1
+      else def
+      
+    | V_box ps1 v1' ->
+      if is_V_box v2 then
+        let V_box ps2 v2' = v2 in
+        if ps1 = ps2 then
+          DV ps1 (V_box ps1 (DV.v (compose_vals v1' v2')))
+        else
+          def
+      else def
+      
+    | V_clos en1 x1 e1 ->
+      if is_V_clos v2 then
+        let V_clos en2 x2 e2 = v2 in
+        if x1 = x2 && e1 = e2 then
+          DV vps1 (V_clos (compose_envs en1 en2) x1 e1)
+        else def
+      else def
+      
+    | V_emp -> DV vps2 v2
+    
+    | _ -> if is_V_emp v2 then DV vps1 v1 else def
+      
+and compose_envs en1 en2 =
+  let _ = () in
+  fun x -> preceds_axiom en1 x; compose_vals (DV.v (en1 x)) (DV.v (en2 x))
+
+
+(*type value_map = OrdMap.ordmap prin value p_cmp
+type env_map = OrdMap.ordmap prin env p_cmp
+
+val mempty: #key:Type -> #value:Type -> #f:cmp key -> Tot (OrdMap.ordmap key value f)
+let mempty (#k:Type) (#v:Type) #f = OrdMap.empty #k #v #f
+
+val mremove  : #key:Type -> #value:Type -> #f:cmp key -> key
+               -> OrdMap.ordmap key value f -> Tot (OrdMap.ordmap key value f)
+val mchoose  : #key:Type -> #value:Type -> #f:cmp key -> OrdMap.ordmap key value f
+               -> Tot (option (key * value))
+
+val msize    : #key:Type -> #value:Type -> #f:cmp key -> OrdMap.ordmap key value f
+               -> Tot nat
+
+let mremove (#k:Type) (#v:Type) #f = OrdMap.remove #k #v #f
+let mchoose (#k:Type) (#v:Type) #f = OrdMap.choose #k #v #f
+let msize (#k:Type) (#v:Type) #f = OrdMap.size #k #v #f
+
+val slice_v_ps: #vps:eprins -> prins -> v:value vps -> Tot (value_map)*)
+
+(*val compose_vals_m: m:value_map{not (m = mempty)} -> Tot value (decreases (msize m))
+let rec compose_vals_m m =
+  let Some (p, v) = mchoose m in
+  let m_rest = mremove p m in
+  if m_rest = mempty then v
+  else 
+    let v' = compose_vals_m m_rest in
+    compose_vals v v'
+
+assume val map_axiom: #k:Type -> #v:Type -> #f:cmp k -> m:OrdMap.ordmap k v f
+                      -> x:k -> y:v -> Lemma (requires (True))
+                                             (ensures (not (update x y m = mempty)))
+                                      [SMTPat (update x y m)] 
+
+val get_x_map: m:env_map{not (m = mempty)} -> x:varname
+               -> Tot (r:value_map{not (r = mempty)}) (decreases (msize m))
+let rec get_x_map m x =
+  let Some (p, en) = mchoose m in
+  let m_rest = mremove p m in
+  if m_rest = mempty then update p (en x) mempty
+  else
+    let m' = get_x_map (mremove p m) x in
+    update p (en x) m'
+
+val compose_envs_m: m:env_map{not (m = mempty)} -> Tot env (decreases (msize m))
+let compose_envs_m m = fun x -> compose_vals_m (get_x_map m x)
+
+
+val 
+
+
 
 val slice_v_sps : #vps:eprins -> prins -> v:value vps -> Tot (r:dvalue{subset (DV.vps r) vps})  (decreases %[v])
 val slice_en_sps: prins -> en:env -> Tot (varname -> Tot dvalue) (decreases %[en])
@@ -511,7 +626,8 @@ let rec slice_v_sps #vps ps v =
     | V_const _     -> DV vps v
     | V_box ps' v'  ->
       let DV _ v'' =
-        if not (intersect ps' ps = empty) then slice_v_sps ps v'
+        let ps'' = intersect ps' ps in
+        if not (ps'' = empty) then slice_v_sps ps'' v'
         else DV empty V_emp
       in
       DV ps' (V_box ps' v'')
@@ -606,7 +722,7 @@ let cstep_sec_slice_lemma c c' h = match h with
   | C_app_red c c'    -> Conj () (C_app_red (slice_c_sps c) (slice_c_sps c'))
   | C_let_beta c c'   -> Conj () (C_let_beta (slice_c_sps c) (slice_c_sps c'))
   | C_app_beta c c'   -> Conj () (C_app_beta (slice_c_sps c) (slice_c_sps c'))
-  | C_unbox_beta c c' -> Conj () (C_unbox_beta (slice_c_sps c) (slice_c_sps c'))
+  | C_unbox_beta c c' ~> Conj () (C_unbox_beta (slice_c_sps c) (slice_c_sps c'))
 
 #reset-options
 
@@ -632,27 +748,6 @@ let sstep_sec_slice_lemma c c' h = match h with
 #reset-options
 
 (**********)
-
-val slice_v : #vps:eprins -> prin -> v:value vps -> Tot (r:dvalue{subset (DV.vps r) vps}) (decreases %[v])
-val slice_en: prin -> en:env -> Tot (varname -> Tot dvalue) (decreases %[en])
-
-let rec slice_v #vps p v =
-  match v with
-    | V_const _     -> DV vps v
-    | V_box ps v'   ->
-      let DV _ v'' = if mem p ps then slice_v p v' else DV empty V_emp in
-      DV ps (V_box ps v'')
-    | V_clos en x e -> DV empty (V_clos (slice_en p en) x e)
-    | V_emp         -> DV vps v
-
-and slice_en p en =
-  let _ = () in
-  fun x -> preceds_axiom en x; slice_v p (DV.v (en x))
-
-assume val slice_emp_en: p:prin
-                         -> Lemma (requires (True))
-                                  (ensures (slice_en p empty_env = empty_env))
-                            [SMTPat (slice_en p empty_env)]
 
 val slice_e: prin -> exp -> Tot exp
 let slice_e p e = e
@@ -719,47 +814,10 @@ let rec slice_c p (Conf Source (Mode as_m ps) s en t) =
       if as_m = Par then slice_en p en, slice_t p t
       else slice_en p (get_sec_ret_env (Mode as_m ps) s), T_sec_wait
   in
-  Conf Target (Mode Par (singleton p)) (slice_s p s) en' t'
+  Conf Target (Mode Par (singleton p)) (slice_s p s) en' t'*)
 
 (**********)
 
-val compose_vals: #vps1:eprins -> #vps2:eprins -> v1:value vps1 -> v2:value vps2
-                  -> Tot (r:dvalue{subset (DV.vps r) (union vps1 vps2)})
-                     (decreases %[v1])
-val compose_envs: en:env -> env -> Tot (varname -> Tot dvalue) (decreases %[en])
-
-let rec compose_vals #vps1 #vps2 v1 v2 =
-  let def = DV empty V_emp in
-  match v1 with
-    | V_const c1 ->
-      if is_V_const v2 && V_const.c v1 = V_const.c v2 then
-        DV vps1 v1
-      else def
-      
-    | V_box ps1 v1' ->
-      if is_V_box v2 then
-        let V_box ps2 v2' = v2 in
-        if ps1 = ps2 then
-          DV ps1 (V_box ps1 (DV.v (compose_vals v1' v2')))
-        else
-          def
-      else def
-      
-    | V_clos en1 x1 e1 ->
-      if is_V_clos v2 then
-        let V_clos en2 x2 e2 = v2 in
-        if x1 = x2 && e1 = e2 then
-          DV vps1 (V_clos (compose_envs en1 en2) x1 e1)
-        else def
-      else def
-      
-    | V_emp -> DV vps2 v2
-    
-    | _ -> if is_V_emp v2 then DV vps1 v1 else def
-      
-and compose_envs en1 en2 =
-  let _ = () in
-  fun x -> preceds_axiom en1 x; compose_vals (DV.v (en1 x)) (DV.v (en2 x))
 
 (*val slice_weakening: #vps:eprins -> v:value vps -> ps:prins
                      -> ps':prins{intersect ps' vps = empty}
@@ -847,50 +905,6 @@ and compose_envs_lemma en ps p = admit ()*)
 
 (*
 
-type value_map = OrdMap.ordmap prin value p_cmp
-type env_map = OrdMap.ordmap prin env p_cmp
-
-val mempty: #key:Type -> #value:Type -> #f:cmp key -> Tot (OrdMap.ordmap key value f)
-let mempty (#k:Type) (#v:Type) #f = OrdMap.empty #k #v #f
-
-val mremove  : #key:Type -> #value:Type -> #f:cmp key -> key
-               -> OrdMap.ordmap key value f -> Tot (OrdMap.ordmap key value f)
-val mchoose  : #key:Type -> #value:Type -> #f:cmp key -> OrdMap.ordmap key value f
-               -> Tot (option (key * value))
-
-val msize    : #key:Type -> #value:Type -> #f:cmp key -> OrdMap.ordmap key value f
-               -> Tot nat
-
-let mremove (#k:Type) (#v:Type) #f = OrdMap.remove #k #v #f
-let mchoose (#k:Type) (#v:Type) #f = OrdMap.choose #k #v #f
-let msize (#k:Type) (#v:Type) #f = OrdMap.size #k #v #f
-
-val compose_vals_m: m:value_map{not (m = mempty)} -> Tot value (decreases (msize m))
-let rec compose_vals_m m =
-  let Some (p, v) = mchoose m in
-  let m_rest = mremove p m in
-  if m_rest = mempty then v
-  else 
-    let v' = compose_vals_m m_rest in
-    compose_vals v v'
-
-assume val map_axiom: #k:Type -> #v:Type -> #f:cmp k -> m:OrdMap.ordmap k v f
-                      -> x:k -> y:v -> Lemma (requires (True))
-                                             (ensures (not (update x y m = mempty)))
-                                      [SMTPat (update x y m)] 
-
-val get_x_map: m:env_map{not (m = mempty)} -> x:varname
-               -> Tot (r:value_map{not (r = mempty)}) (decreases (msize m))
-let rec get_x_map m x =
-  let Some (p, en) = mchoose m in
-  let m_rest = mremove p m in
-  if m_rest = mempty then update p (en x) mempty
-  else
-    let m' = get_x_map (mremove p m) x in
-    update p (en x) m'
-
-val compose_envs_m: m:env_map{not (m = mempty)} -> Tot env (decreases (msize m))
-let compose_envs_m m = fun x -> compose_vals_m (get_x_map m x)
 
 val compose_vals_lemma: m:value_map{not (m = mempty)} -> v:value
                         -> Lemma (requires (forall p. contains p m ==>
