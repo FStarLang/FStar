@@ -1,6 +1,7 @@
 VERFILES=unit1.fst unit2.fst testset.fst short-circuit.fst
 include ../Makefile.include
 NEGFILES=negative-tests.fst
+NEGTESTS=31
 
 all: basictests testint32.vv testmref testhyperheap.vv mac2 all-neg
 
@@ -8,10 +9,8 @@ basictests: $(VERFILES)
 		$(FSTAR) --admit_fsi Set $(STDLIB) $(FSTAR_HOME)/lib/int32.fst $^
 
 all-neg: $(NEGFILES)
-	-$(FSTAR) --admit_fsi Set $(STDLIB) --split_cases 1 $^
-	@echo "---------------------------------------"
-	@echo "       Done ! EXPECT 31 FAILURES       "
-	@echo "---------------------------------------"
+	-$(FSTAR) --admit_fsi Set $(STDLIB) --split_cases 1 $^ | tee fstar_log
+	@FAILC=`egrep "^Error: [0-9]* errors" -o fstar_log | egrep -o "[0-9]*"`; if [ "$$FAILC" != "$(NEGTESTS)" ]; then echo "Wrong failure count: $$FAILC (expected $(NEGTESTS))" && false; else echo "Success: $$FAILC failures were expected"; fi
 
 
 inverse:
