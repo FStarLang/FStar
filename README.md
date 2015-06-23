@@ -1,6 +1,8 @@
 F*: An ML-like language with a type system for program verification
 ===================================================================
 
+![Build status](https://www.fstar-lang.org:3443/fstarlang/fstar/badge?branch=master)
+
 ### F\* website
 
 More information on F\* can be found at www.fstar-lang.org
