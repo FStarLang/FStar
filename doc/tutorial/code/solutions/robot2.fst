@@ -167,7 +167,7 @@ type bots : set rid -> Type =
            -> hd:bot{distinct (Bot.r hd) rs}
            -> tl:bots rs
            -> bots (rs ++^ Bot.r hd)
-#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+#set-options "--initial_fuel 2 --max_fuel 2 --initial_ifuel 1 --max_ifuel 1"
 val mem : #rs:set rid -> bot -> bs:bots rs -> Tot bool (decreases bs)
 let rec mem  (#rs:set rid) b bs = match bs with
   | Nil -> false
@@ -191,24 +191,23 @@ val lemma_bots_tl_disjoint : #rs:set rid -> bs:bots rs{is_Cons bs}
                                     (ensures (forall b. mem b (Cons.tl bs) ==> disjoint (Bot.r b) (Bot.r (Cons.hd bs))))
 let lemma_bots_tl_disjoint #rs bs = ()
 
+opaque logic type trigger (#a:Type) (x:a) = True
 val fly_robot_army:  #rs:Set.set rid
                   -> bs:bots rs
                   -> ST unit
-                     (requires (fun h -> (forall b.{:pattern (mem b bs)} mem b bs ==> robot_inv b h)))
+                     (requires (fun h -> (forall b.{:pattern (trigger b)} (trigger b /\ mem b bs ==> robot_inv b h))))
                      (ensures  (fun h0 _u h1 ->
                                     modifies rs h0 h1
-                                     /\ (forall b.{:pattern (mem b bs)} mem b bs ==> robot_inv b h1 /\ flying b h1)))
+                                     /\ (forall b.{:pattern (trigger b)} (trigger b /\ mem b bs ==> robot_inv b h1 /\ flying b h1))))
 let rec fly_robot_army #rs bs =
   match bs with
-   | Cons #rs' hd tl  ->
-         cut (rs == (rs' ++^ Bot.r hd)); //not necesary, but goes faster with the hint
-         cut (b2t (mem hd bs)); //triggering requires for (fly hd)
-         lemma_bots_tl_disjoint bs;
-     fly hd;
-         cut (forall b. mem b tl ==> mem b bs);//re-triggering requires for goal
-     fly_robot_army tl
-     
    | Nil -> ()
+   | Cons #rs' hd tl  ->
+         cut (trigger hd);
+         cut (rs == (rs' ++^ Bot.r hd)); //not necesary, but goes faster with the hint
+         lemma_bots_tl_disjoint bs; //again, not necessary; but goes faster
+     fly hd;
+     fly_robot_army tl
 
 val main: unit -> ST unit
     (requires (fun _ -> True))
