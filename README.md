@@ -97,15 +97,15 @@ add this to your `.emacs` or `.emacs.d/init.el`:
 
 By default F* only verifies the input code, it does not execute it.
 To execute F* code one needs to translate it to OCaml
-using the OCaml backend (the `--codegen OCaml` command-line argument to F*).
+using the OCaml backend (the `--codegen OCaml` command-line argument to F\*).
 The generated executable OCaml code most often depends on a support library.
 The sources for this suport library are available in the `src/ocaml-output` directory
 and can be compiled by installing all pre-requisites and running `make` there
-(previous binaries don't include `src/ocaml-output`, so you will need the F*
-sources for this). The process and pre-requisites are the same as for
-[building F* using the OCaml snapshot].
+(previous binaries don't include `src/ocaml-output`, so you will need the F\*
+sources for this). The pre-requisites and compilation process are the same as for
+[building F\* using the OCaml snapshot].
 
-[building F* using the OCaml snapshot]:https://github.com/FStarLang/FStar/blob/master/INSTALL.md#building-f-using-the-ocaml-snapshot
+[building F\* using the OCaml snapshot]:https://github.com/FStarLang/FStar/blob/master/INSTALL.md#building-f-using-the-ocaml-snapshot
 
 The OCaml backend will produce `<ModuleName>.ml` files for each F*
 module in the code.
