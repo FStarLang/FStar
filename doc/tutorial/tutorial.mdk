@@ -3972,7 +3972,21 @@ let mk_counter_2 _ =
 Fix this example.
 
 ~~ ExerciseFragment {exname=ex10b-evens}
+val mk_counter_2: unit
+               -> ST t (requires (fun h -> True))
+                       (ensures  (fun h v h' ->
+                         On  (Evens.fp v) (Evens.inv v) h'
+                         /\ Heap.fresh h (Evens.fp v)))
+                       (modifies no_refs)
+let mk_counter_2 _ =
+  let x = ST.alloc 0 in
+  let evens = fun _ ->
+    let rx = ST.read x in
+    ST.write x (rx + 1);
+    2 * rx in
+  Evens (fun h -> b2t(contains h r)) (Set.singleton (Ref x)) evens
 ~~
+
 ~
 
 # Cryptography examples
