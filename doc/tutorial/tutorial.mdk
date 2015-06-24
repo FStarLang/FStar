@@ -3968,7 +3968,26 @@ let mk_counter_2 _ =
   Evens (fun h -> b2t(contains h r)) (Set.singleton (Ref x)) evens
 ```
 
+~Exercise
+Fix this example.
 
+~~ ExerciseFragment {exname=ex10b-evens}
+val mk_counter_2: unit
+               -> ST t (requires (fun h -> True))
+                       (ensures  (fun h v h' ->
+                         On  (Evens.fp v) (Evens.inv v) h'
+                         /\ Heap.fresh h (Evens.fp v)))
+                       (modifies no_refs)
+let mk_counter_2 _ =
+  let x = ST.alloc 0 in
+  let evens = fun _ ->
+    let rx = ST.read x in
+    ST.write x (rx + 1);
+    2 * rx in
+  Evens (fun h -> b2t(contains h r)) (Set.singleton (Ref x)) evens
+~~
+
+~
 
 # Cryptography examples
 
@@ -4511,7 +4530,7 @@ assume val enc: k:key -> p:plain -> c:cipher
 ~ Exercise
 Refine the type of the encryption function to model the *correctness* property:
 A correctly generated ciphertext, decrypts to its plaintext.
-~~ ExerciseFragment {exname=ex10a-encrypt}
+~~ ExerciseFragment {exname=ex12a-encrypt}
 assume val enc: k:key -> p:plain -> c:cipher
 ~~
 
