@@ -7,7 +7,7 @@ type even (x:int) = x%2=0
 effect InvST (t:Type) (inv:(heap -> Type)) (fp:set aref) (post:(heap -> t -> heap -> Type)) =
              ST t (fun h -> On fp inv h)
                   (fun h i h' -> post h i h' /\ On fp inv h')
-                  (SomeRefs fp)
+//                  (SomeRefs fp)
 
 type even_post (h:heap) (i:int) (h':heap) = even i
 
@@ -28,7 +28,7 @@ val mk_counter: unit
                      (ensures  (fun h v h' ->
                              On  (Evens.fp v) (Evens.inv v) h'
                              /\ Heap.fresh h (Evens.fp v)))
-                     (modifies no_refs)
+//                     (modifies no_refs)
 let mk_counter _ =
   let x = ST.alloc 0 in
   let y = ST.alloc 0 in
@@ -46,7 +46,7 @@ val mk_counter2: unit
                        (ensures  (fun h v h' ->
                          On  (Evens.fp v) (Evens.inv v) h'
                          /\ Heap.fresh h (Evens.fp v)))
-                       (modifies no_refs)
+//                       (modifies no_refs)
 let mk_counter2 _ =
   let x = ST.alloc 0 in
   let evens = fun _ ->
