@@ -3909,31 +3909,49 @@ let revoke e =
 
 ## Local state in two counters
 
-```
-module Evens
-open Heap
-open Set
-open ST
-type even (x:int) = x%2=0
+In this simple example with two counters we show how to maintain useful
+invariants about the heap.
 
+We define an auxiliary effect `InvST` that maintains the invariant `inv`.
+
+```
 effect InvST (t:Type) (inv:(heap -> Type)) (fp:set aref) (post:(heap -> t -> heap -> Type)) =
              ST t (fun h -> On fp inv h)
                   (fun h i h' -> post h i h' /\ On fp inv h')
                   (SomeRefs fp)
+```
 
+The two counters will be updated simultaneously, such that their sum is
+always even. This requirement is expressed using the type `even` and
+`even_post` when liftet to the post condition of a stateful function.
+
+```                
+type even (x:int) = x%2=0
 type even_post (h:heap) (i:int) (h':heap) = even i
+```
 
+The following invariant states that the counters are allocated and synchronized.
+```
+opaque type inv1 (r1:ref int) (r2:ref int) (h:heap) =
+           Heap.sel h r1 = Heap.sel h r2
+           /\ contains h r1
+           /\ contains h r2
+```
 
+We will employ two techniques to prove that the invariant is maintained.
+
+ * First, by proving that `r1` and `r2` are incremented by the same amount.
+ * Second, using alias analysis by proving that `r1` and `r2` are not changed at all.
+ 
+
+```
 type t =
   | Evens : inv:(heap -> Type)
           -> fp:set aref
           -> (unit -> InvST int inv fp even_post)
           -> t
 
-opaque type inv1 (r1:ref int) (r2:ref int) (h:heap) =
-           Heap.sel h r1 = Heap.sel h r2
-           /\ contains h r1
-           /\ contains h r2
+
 
 val mk_counter: unit
              -> ST t (requires (fun h -> True))
