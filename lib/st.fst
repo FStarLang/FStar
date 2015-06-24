@@ -50,7 +50,7 @@ assume val write:  #a:Type -> r:ref a -> v:a -> Prims.ST unit
                                                  (fun h -> True)
                                                  (fun h0 x h1 -> h1==upd h0 r v)
 
-assume val op_ColonEquals:  #a:Type -> r:ref a -> v:a -> Prims.ST unit
+assume val op_Colon_Equals:  #a:Type -> r:ref a -> v:a -> Prims.ST unit
                                                  (fun h -> True)
                                                  (fun h0 x h1 -> h1==upd h0 r v)
 

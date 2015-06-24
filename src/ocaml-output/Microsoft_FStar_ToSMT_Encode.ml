@@ -114,11 +114,11 @@ in f))))
 end))
 in (let push = (fun _45_145 -> (match (_45_145) with
 | () -> begin
-(scopes := ((new_scope ()))::(! (scopes)))
+(Support.ST.op_Colon_Equals scopes (((new_scope ()))::(! (scopes))))
 end))
 in (let pop = (fun _45_147 -> (match (_45_147) with
 | () -> begin
-(scopes := (Support.List.tl (! (scopes))))
+(Support.ST.op_Colon_Equals scopes (Support.List.tl (! (scopes))))
 end))
 in (let mark = (fun _45_149 -> (match (_45_149) with
 | () -> begin
@@ -134,7 +134,7 @@ in (let commit_mark = (fun _45_153 -> (match (_45_153) with
 | (hd1, hd2)::(next1, next2)::tl -> begin
 (let _45_166 = (Support.Microsoft.FStar.Util.smap_fold hd1 (fun key value v -> (Support.Microsoft.FStar.Util.smap_add next1 key value)) ())
 in (let _45_171 = (Support.Microsoft.FStar.Util.smap_fold hd2 (fun key value v -> (Support.Microsoft.FStar.Util.smap_add next2 key value)) ())
-in (scopes := ((next1, next2))::tl)))
+in (Support.ST.op_Colon_Equals scopes (((next1, next2))::tl))))
 end
 | _ -> begin
 (failwith "Impossible")
@@ -844,7 +844,7 @@ end
 ((encode_const c), [])
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_ascribed ((e, t)) -> begin
-(let _45_948 = (e.Microsoft_FStar_Absyn_Syntax.tk := Some (t))
+(let _45_948 = (Support.ST.op_Colon_Equals e.Microsoft_FStar_Absyn_Syntax.tk (Some (t)))
 in (encode_exp e env))
 end
 | Microsoft_FStar_Absyn_Syntax.Exp_meta (Microsoft_FStar_Absyn_Syntax.Meta_desugared ((e, _))) -> begin
@@ -2506,7 +2506,7 @@ in (prefix, suffix))))
 
 let last_env = (Support.Microsoft.FStar.Util.mk_ref [])
 
-let init_env = (fun tcenv -> (last_env := ({bindings = []; depth = 0; tcenv = tcenv; warn = true; cache = (Support.Microsoft.FStar.Util.smap_create 100); nolabels = false; use_zfuel_name = false})::[]))
+let init_env = (fun tcenv -> (Support.ST.op_Colon_Equals last_env (({bindings = []; depth = 0; tcenv = tcenv; warn = true; cache = (Support.Microsoft.FStar.Util.smap_create 100); nolabels = false; use_zfuel_name = false})::[])))
 
 let get_env = (fun tcenv -> (match ((! (last_env))) with
 | [] -> begin
@@ -2522,7 +2522,7 @@ let set_env = (fun env -> (match ((! (last_env))) with
 (failwith "Empty env stack")
 end
 | _::tl -> begin
-(last_env := (env)::tl)
+(Support.ST.op_Colon_Equals last_env ((env)::tl))
 end))
 
 let push_env = (fun _45_2957 -> (match (_45_2957) with
@@ -2536,7 +2536,7 @@ end
 in (let refs = (Support.Microsoft.FStar.Util.smap_copy hd.cache)
 in (let top = (let _45_2965 = hd
 in {bindings = _45_2965.bindings; depth = _45_2965.depth; tcenv = _45_2965.tcenv; warn = _45_2965.warn; cache = refs; nolabels = _45_2965.nolabels; use_zfuel_name = _45_2965.use_zfuel_name})
-in (last_env := (top)::(hd)::tl))))
+in (Support.ST.op_Colon_Equals last_env ((top)::(hd)::tl)))))
 end)
 end))
 
@@ -2548,7 +2548,7 @@ let pop_env = (fun _45_2968 -> (match (_45_2968) with
 end
 | _::tl -> begin
 (let _45_2974 = (Microsoft_FStar_ToSMT_Term.pop ())
-in (last_env := tl))
+in (Support.ST.op_Colon_Equals last_env tl))
 end)
 end))
 
@@ -2567,7 +2567,7 @@ let commit_mark_env = (fun _45_2978 -> (match (_45_2978) with
 (let _45_2979 = (Microsoft_FStar_ToSMT_Term.commit_mark ())
 in (match ((! (last_env))) with
 | hd::_::tl -> begin
-(last_env := (hd)::tl)
+(Support.ST.op_Colon_Equals last_env ((hd)::tl))
 end
 | _ -> begin
 (failwith "Impossible")

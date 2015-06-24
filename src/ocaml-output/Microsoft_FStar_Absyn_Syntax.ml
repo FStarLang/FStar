@@ -353,7 +353,7 @@ let list_of_freevars = (fun fvs -> (Support.List.append ((Support.List.map (fun 
 let get_unit_ref = (fun _15_354 -> (match (_15_354) with
 | () -> begin
 (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (())))
-in (let _15_356 = (x := None)
+in (let _15_356 = (Support.ST.op_Colon_Equals x None)
 in x))
 end))
 
@@ -405,12 +405,12 @@ let mk_Kind_unknown = {n = Kind_unknown; tk = (get_unit_ref ()); pos = dummyRang
 let get_knd_nref = (fun _15_390 -> (match (_15_390) with
 | () -> begin
 (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Kind_unknown)))
-in (let _15_392 = (x := None)
+in (let _15_392 = (Support.ST.op_Colon_Equals x None)
 in x))
 end))
 
 let get_knd_ref = (fun k -> (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Kind_unknown)))
-in (let _15_396 = (x := k)
+in (let _15_396 = (Support.ST.op_Colon_Equals x k)
 in x)))
 
 let mk_Typ_btvar = (fun x k p -> {n = Typ_btvar (x); tk = (get_knd_ref k); pos = p; fvs = (mk_fvs ()); uvs = (mk_uvs ())})
@@ -535,12 +535,12 @@ let mk_Typ_unknown = {n = Typ_unknown; tk = (get_knd_nref ()); pos = dummyRange;
 let get_typ_nref = (fun _15_528 -> (match (_15_528) with
 | () -> begin
 (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Typ_unknown)))
-in (let _15_530 = (x := None)
+in (let _15_530 = (Support.ST.op_Colon_Equals x None)
 in x))
 end))
 
 let get_typ_ref = (fun t -> (let x = (Support.Microsoft.FStar.Util.mk_ref (Some (mk_Typ_unknown)))
-in (let _15_534 = (x := t)
+in (let _15_534 = (Support.ST.op_Colon_Equals x t)
 in x)))
 
 let mk_Total = (fun t -> {n = Total (t); tk = (Support.Microsoft.FStar.Util.mk_ref None); pos = t.pos; fvs = (mk_fvs ()); uvs = (mk_uvs ())})

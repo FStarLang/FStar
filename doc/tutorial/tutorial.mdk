@@ -480,7 +480,7 @@ type `:int -> int -> int`, i.e. it is a function taking two integers
 and producing an integer. Function types in F\* are more precise and
 capture not just the types of the arguments and the result, but also
 the effect of the function's body. As such, every function value has a
-type of the form `:t1 -> ... -> tn -> E t`, where `:t1 .. tn` are the
+type of the form `:t_1 -> ... -> t_n -> E t`, where `:t_1 .. t_n` are the
 types of each of the arguments; `:E` is the effect of its body; and
 `:t` is the type of its result. (*Note to the experts: We
 will generalize this to dependent functions and indexed effects
@@ -1654,19 +1654,19 @@ We could explain what that means, that longer `lex_t` are smaller?
 
 **We include the following syntactic sugar**:
 
->>`%[v1;...;vn]` is shorthand for `(LexCons v1 ... (LexCons vn LexTop))`
+>>`%[v1;...;v_n]` is shorthand for `(LexCons v_1 ... (LexCons v_n LexTop))`
 
 ## A termination proof in detail
 
 Suppose we are defining a function by recursion, using the following form:
 
 
-    val f: y1:t1 -> .. -> yn:tn -> Tot t
+    val f: y1:t_1 -> .. -> yn:t_n -> Tot t
     let rec f x1 .. xn = e
 
 Usually, in ML, when type-checking `e`, the recursively bound function
 `f` is available for use in `e` at the type
-`y1:t1 -> .. -> yn:tn -> Tot t`, exactly the type written by the
+`y1:t_1 -> .. -> yn:t_n -> Tot t`, exactly the type written by the
 programmer. This type is, however, not sufficient to guarantee that an
 invocation of `f` does not trigger an infinite chain of recursive calls.
 
@@ -1676,7 +1676,7 @@ is available for use in `e`, but only at the more restrictive type shown below:
 
        y1:t1
     -> ...
-    -> yn:tn{%[y1;...;yn] << %[x1;...;xn]}
+    -> yn:t_n{%[y_1;...;y_n] << %[x_1;...;x_n]}
     -> Tot t
 
 That is, by default, F\* requires the function's parameters to decrease
@@ -3296,8 +3296,8 @@ in precision (computing just the WP alone would not allow this).
 
 Expressions in F\* are given _computation types_ `C`.  In its most
 primitive form, each effect in F\* introduces a computation type of
-the form `M t1..tn t wp wlp`. The `M t1..tn` indicates the name of the
-effect `M` and several user-defined indexes `t1..tn`.  The type `t`
+the form `M t_1..t_n t wp wlp`. The `M t_1..t_n` indicates the name of the
+effect `M` and several user-defined indexes `t_1..t_n`.  The type `t`
 indicates the type of the result of the computation; `wp` is a
 predicate transformer that is not weaker than the weakest
 pre-condition of `e`; and `wlp` is a predicate transformer not weaker
@@ -3315,7 +3315,7 @@ A computation `e` has type `M t wp wlp` if when run in an initial
 configuration satisfying `wp post`, it (either runs forever, if
 allowed, or) produces a result of type `t` in a final configuration
 `f` such that `post f` is true, all the while exhibiting no more
-effects that are allowed by `M`. In other words, `M` is an upper bound
+effects than are allowed by `M`. In other words, `M` is an upper bound
 on the effects of `e`; `t` is its result type; and `wp` is a predicate
 transformer that for any post-condition of the final configuration of
 `e`, produces a sufficient condition on the initial configuration of
@@ -3750,7 +3750,7 @@ that says that that pure computation leaves the state unmodified.
 ## Indexed computation types 
 
 Finally, as mentioned earlier, in its full form a computation type has
-the shape `M t1..tn t wp wlp`, where `t1..tn` are some user-chosen
+the shape `M t_1..t_n t wp wlp`, where `t_1..t_n` are some user-chosen
 indices to the effect constructor `M`.
 
 This is convenient in that it allows effects to be defined
@@ -3880,7 +3880,7 @@ let test_acls f =
 Write down some types for `grant` and `revoke` that are sufficiently
 precise to allow the program to continue to type-check.
 
-~~ ExerciseFragment {exname=ex8a-acls}
+~~ ExerciseFragment {exname=ex10a-acls}
 val grant : e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> True))
 let grant e = ST.write acls (e::ST.read acls)
@@ -3892,8 +3892,8 @@ let revoke e =
   ST.write acls db
 ~~
 
-~~Answer {exname=ex8a-acls}
-~~~ SolutionFragment
+~~Answer 
+~~~ SolutionFragment {exname=ex10a-acls}
 val grant : e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> sel h' acls = e::sel h acls))
 let grant e = ST.write acls (e::ST.read acls)

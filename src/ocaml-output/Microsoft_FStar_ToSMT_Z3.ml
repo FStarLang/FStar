@@ -61,7 +61,7 @@ end
 | _ -> begin
 Z3V_Unknown
 end)
-in (let _43_53 = (_z3version := Some (out))
+in (let _43_53 = (Support.ST.op_Colon_Equals _z3version (Some (out)))
 in out))
 end))
 end))
@@ -125,7 +125,7 @@ end else begin
 (match ((! (queries_dot_smt2))) with
 | None -> begin
 (let fh = (Support.Microsoft.FStar.Util.open_file_for_writing "queries-bg-0.smt2")
-in (let _43_80 = (queries_dot_smt2 := Some (fh))
+in (let _43_80 = (Support.ST.op_Colon_Equals queries_dot_smt2 (Some (fh)))
 in fh))
 end
 | Some (fh) -> begin
@@ -160,7 +160,7 @@ in (let refresh = (fun _43_103 -> (match (_43_103) with
 | () -> begin
 (let proc = (grab ())
 in (let _43_105 = (Support.Microsoft.FStar.Util.kill_process proc)
-in (let _43_107 = (z3proc := (new_proc ()))
+in (let _43_107 = (Support.ST.op_Colon_Equals z3proc (new_proc ()))
 in (let _43_115 = (match ((! (queries_dot_smt2))) with
 | None -> begin
 ()
@@ -168,7 +168,7 @@ end
 | Some (fh) -> begin
 (let _43_112 = (Support.Microsoft.FStar.Util.close_file fh)
 in (let fh = (Support.Microsoft.FStar.Util.open_file_for_writing (Support.Microsoft.FStar.Util.format1 "queries-bg-%s.smt2" (Support.Microsoft.FStar.Util.string_of_int (! (ctr)))))
-in (queries_dot_smt2 := Some (fh))))
+in (Support.ST.op_Colon_Equals queries_dot_smt2 (Some (fh)))))
 end)
 in (release ())))))
 end))
@@ -248,7 +248,7 @@ let job_queue = (let x = (Support.Microsoft.FStar.Util.mk_ref (({job = (fun _43_
 | () -> begin
 (false, (("", (Support.Microsoft.FStar.Range.mk_range "" 0 0)))::[])
 end)); callback = (fun a -> ())})::[]))
-in (let _43_178 = (x := [])
+in (let _43_178 = (Support.ST.op_Colon_Equals x [])
 in x))
 
 let pending_jobs = (Support.Microsoft.FStar.Util.mk_ref 0)
@@ -294,7 +294,7 @@ let rec dequeue' = (fun _43_215 -> (match (_43_215) with
 (failwith "Impossible")
 end
 | hd::tl -> begin
-(let _43_220 = (job_queue := tl)
+(let _43_220 = (Support.ST.op_Colon_Equals job_queue tl)
 in hd)
 end)
 in (let _43_223 = (Support.Microsoft.FStar.Util.incr pending_jobs)
@@ -340,7 +340,7 @@ let enqueue = (fun fresh j -> if (not (fresh)) then begin
 (run_job j)
 end else begin
 (let _43_251 = (Support.Microsoft.FStar.Util.monitor_enter job_queue)
-in (let _43_253 = (job_queue := (Support.List.append (! (job_queue)) ((j)::[])))
+in (let _43_253 = (Support.ST.op_Colon_Equals job_queue (Support.List.append (! (job_queue)) ((j)::[])))
 in (let _43_255 = (Support.Microsoft.FStar.Util.monitor_pulse job_queue)
 in (Support.Microsoft.FStar.Util.monitor_exit job_queue))))
 end)
@@ -376,26 +376,26 @@ let fresh_scope = (Support.Microsoft.FStar.Util.mk_ref (([])::[]))
 
 let bg_scope = (Support.Microsoft.FStar.Util.mk_ref [])
 
-let push = (fun msg -> (let _43_272 = (fresh_scope := ((Microsoft_FStar_ToSMT_Term.Caption (msg))::[])::(! (fresh_scope)))
-in (bg_scope := (Support.List.append ((Microsoft_FStar_ToSMT_Term.Caption (msg))::(Microsoft_FStar_ToSMT_Term.Push)::[]) (! (bg_scope))))))
+let push = (fun msg -> (let _43_272 = (Support.ST.op_Colon_Equals fresh_scope (((Microsoft_FStar_ToSMT_Term.Caption (msg))::[])::(! (fresh_scope))))
+in (Support.ST.op_Colon_Equals bg_scope (Support.List.append ((Microsoft_FStar_ToSMT_Term.Caption (msg))::(Microsoft_FStar_ToSMT_Term.Push)::[]) (! (bg_scope))))))
 
-let pop = (fun msg -> (let _43_275 = (fresh_scope := (Support.List.tl (! (fresh_scope))))
-in (bg_scope := (Support.List.append ((Microsoft_FStar_ToSMT_Term.Caption (msg))::(Microsoft_FStar_ToSMT_Term.Pop)::[]) (! (bg_scope))))))
+let pop = (fun msg -> (let _43_275 = (Support.ST.op_Colon_Equals fresh_scope (Support.List.tl (! (fresh_scope))))
+in (Support.ST.op_Colon_Equals bg_scope (Support.List.append ((Microsoft_FStar_ToSMT_Term.Caption (msg))::(Microsoft_FStar_ToSMT_Term.Pop)::[]) (! (bg_scope))))))
 
 let giveZ3 = (fun decls -> (let _43_283 = (match ((! (fresh_scope))) with
 | hd::tl -> begin
-(fresh_scope := ((Support.List.append hd decls))::tl)
+(Support.ST.op_Colon_Equals fresh_scope (((Support.List.append hd decls))::tl))
 end
 | _ -> begin
 (failwith "Impossible")
 end)
-in (bg_scope := (Support.List.append (Support.List.rev decls) (! (bg_scope))))))
+in (Support.ST.op_Colon_Equals bg_scope (Support.List.append (Support.List.rev decls) (! (bg_scope))))))
 
 let bgtheory = (fun fresh -> if fresh then begin
 ((Support.List.flatten) (Support.List.rev (! (fresh_scope))))
 end else begin
 (let bg = (! (bg_scope))
-in (let _43_287 = (bg_scope := [])
+in (let _43_287 = (Support.ST.op_Colon_Equals bg_scope [])
 in (Support.List.rev bg)))
 end)
 
@@ -403,7 +403,7 @@ let refresh = (fun _43_289 -> (match (_43_289) with
 | () -> begin
 (let _43_290 = (bg_z3_proc.refresh ())
 in (let theory = (bgtheory true)
-in (bg_scope := (Support.List.rev theory))))
+in (Support.ST.op_Colon_Equals bg_scope (Support.List.rev theory))))
 end))
 
 let mark = (fun msg -> (push msg))
@@ -413,7 +413,7 @@ in (refresh ())))
 
 let commit_mark = (fun msg -> (match ((! (fresh_scope))) with
 | hd::s::tl -> begin
-(fresh_scope := ((Support.List.append hd s))::tl)
+(Support.ST.op_Colon_Equals fresh_scope (((Support.List.append hd s))::tl))
 end
 | _ -> begin
 (failwith "Impossible")

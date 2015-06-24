@@ -132,7 +132,7 @@ b
 end
 | None -> begin
 (let fvs = (Support.Microsoft.FStar.Util.remove_dups fv_eq (freevars t))
-in (let _42_111 = (t.freevars := Some (fvs))
+in (let _42_111 = (Support.ST.op_Colon_Equals t.freevars (Some (fvs)))
 in fvs))
 end))
 

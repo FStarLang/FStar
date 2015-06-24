@@ -18,7 +18,7 @@ typ
 end
 | Some (t) -> begin
 (let t' = (compress_typ_aux pos t)
-in (let _17_23 = (m := Some (t'))
+in (let _17_23 = (Support.ST.op_Colon_Equals m (Some (t')))
 in t'))
 end)
 end
@@ -59,7 +59,7 @@ exp
 end
 | Some (e) -> begin
 (let e' = (compress_exp_aux meta e)
-in (let _17_82 = (m := Some (e'))
+in (let _17_82 = (Support.ST.op_Colon_Equals m (Some (e')))
 in e'))
 end)
 end
@@ -91,7 +91,7 @@ knd
 end
 | Some (k) -> begin
 (let k' = (compress_kind k)
-in (let _17_127 = (m := Some (k'))
+in (let _17_127 = (Support.ST.op_Colon_Equals m (Some (k')))
 in k'))
 end)
 end

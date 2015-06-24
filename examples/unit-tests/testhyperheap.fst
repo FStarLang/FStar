@@ -13,6 +13,6 @@ val test0: #r:rid -> i:int -> v:rref r int -> ST int
 let test0 _r i v =
   let r = new_region () in
   let x = ralloc r i in
-  let j = op_Bang x in
-  op_ColonEquals x (j + (op_Bang v));
-  op_Bang x
+  let j = !x in
+  x := j + !v;
+  !x

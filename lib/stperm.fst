@@ -43,7 +43,7 @@ assume val write: #a:Type -> r:ref a -> v:a -> ST unit
                                                  (requires (fun h -> contains h r))
                                                  (ensures (fun h0 x h1 -> h1==upd h0 r v))
 
-assume val op_ColonEquals: #a:Type -> r:ref a -> v:a -> ST unit
+assume val op_Colon_Equals: #a:Type -> r:ref a -> v:a -> ST unit
                                                  (requires (fun h -> contains h r))
                                                  (ensures (fun h0 x h1 -> h1==upd h0 r v))
 

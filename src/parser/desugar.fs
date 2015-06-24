@@ -70,6 +70,7 @@ let compile_op arity s =
             |'%' -> "Percent"
             |'*' -> "Star"
             |'?' -> "Question"
+            |':' -> "Colon"
             | _ -> "UNKNOWN" in
     let rec aux i =
         if i = String.length s

@@ -1092,7 +1092,7 @@ in (match (_28_1287) with
 | (_, uh, kh, _) -> begin
 (let _28_1288 = (fix_slack_uv (ul, kl) false)
 in (let _28_1290 = (fix_slack_uv (uh, kh) true)
-in (let _28_1292 = (slack.flag := true)
+in (let _28_1292 = (Support.ST.op_Colon_Equals slack.flag true)
 in (Microsoft_FStar_Absyn_Util.mk_conj (Support.Prims.fst slack.lower) (Support.Prims.fst slack.upper)))))
 end))
 end)))
@@ -1156,7 +1156,7 @@ end else begin
 in (let hi = ((destruct Microsoft_FStar_Absyn_Const.and_lid Microsoft_FStar_Absyn_Util.mk_disj) (compress env wl phi2))
 in (match ((low, hi)) with
 | (None, None) -> begin
-(let _28_1391 = (flag := true)
+(let _28_1391 = (Support.ST.op_Colon_Equals flag true)
 in Support.Microsoft.FStar.Util.Inl ((Microsoft_FStar_Absyn_Util.unmeta_typ phi)))
 end
 | ((Some (_), None)) | ((None, Some (_))) -> begin

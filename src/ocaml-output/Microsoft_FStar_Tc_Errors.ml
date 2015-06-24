@@ -27,8 +27,8 @@ end))) errs)
 in (let n_errs = (Support.List.length errs)
 in (Support.Microsoft.FStar.Util.atomically (fun _26_18 -> (match (_26_18) with
 | () -> begin
-(let _26_19 = (verification_errs := (Support.List.append errs (! (verification_errs))))
-in (num_errs := ((! (num_errs)) + n_errs)))
+(let _26_19 = (Support.ST.op_Colon_Equals verification_errs (Support.List.append errs (! (verification_errs))))
+in (Support.ST.op_Colon_Equals num_errs ((! (num_errs)) + n_errs)))
 end))))))
 
 let report_all = (fun _26_21 -> (match (_26_21) with
@@ -36,7 +36,7 @@ let report_all = (fun _26_21 -> (match (_26_21) with
 (let all_errs = (Support.Microsoft.FStar.Util.atomically (fun _26_22 -> (match (_26_22) with
 | () -> begin
 (let x = (! (verification_errs))
-in (let _26_24 = (verification_errs := [])
+in (let _26_24 = (Support.ST.op_Colon_Equals verification_errs [])
 in x))
 end)))
 in (let all_errs = (Support.List.sortWith (fun _26_30 _26_34 -> (match ((_26_30, _26_34)) with

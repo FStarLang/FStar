@@ -1723,7 +1723,7 @@ cres
 end else begin
 (Microsoft_FStar_Tc_Util.bind env None (Microsoft_FStar_Tc_Util.lcomp_of_comp c1) (None, cres))
 end
-in (let _31_1910 = (e2.Microsoft_FStar_Absyn_Syntax.tk := Some (Microsoft_FStar_Tc_Recheck.t_unit))
+in (let _31_1910 = (Support.ST.op_Colon_Equals e2.Microsoft_FStar_Absyn_Syntax.tk (Some (Microsoft_FStar_Tc_Recheck.t_unit)))
 in (((w cres) (Microsoft_FStar_Absyn_Syntax.mk_Exp_let ((false, ((x, (Microsoft_FStar_Absyn_Util.comp_result c1), e1))::[]), e2))), cres, Microsoft_FStar_Tc_Rel.trivial_guard))))
 end))
 end))
@@ -1838,7 +1838,7 @@ in (match (_31_2014) with
 if (not (is_inner_let)) then begin
 (let cres = (Microsoft_FStar_Tc_Util.lcomp_of_comp (Microsoft_FStar_Absyn_Util.total_comp Microsoft_FStar_Tc_Recheck.t_unit top.Microsoft_FStar_Absyn_Syntax.pos))
 in (let _31_2016 = (Microsoft_FStar_Tc_Util.discharge_guard env g_lbs)
-in (let _31_2018 = (e1.Microsoft_FStar_Absyn_Syntax.tk := Some (Microsoft_FStar_Tc_Recheck.t_unit))
+in (let _31_2018 = (Support.ST.op_Colon_Equals e1.Microsoft_FStar_Absyn_Syntax.tk (Some (Microsoft_FStar_Tc_Recheck.t_unit)))
 in (((w cres) (Microsoft_FStar_Absyn_Syntax.mk_Exp_let ((true, lbs), e1))), cres, Microsoft_FStar_Tc_Rel.trivial_guard))))
 end else begin
 (let _31_2032 = ((Support.List.fold_left (fun _31_2022 _31_2027 -> (match ((_31_2022, _31_2027)) with

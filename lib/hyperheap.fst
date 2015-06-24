@@ -59,7 +59,7 @@ assume val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
                     not (Heap.contains region_i (as_ref x))
                     /\ m1=Map.upd m0 i (Heap.upd region_i (as_ref x) init))))
 
-assume val op_ColonEquals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
+assume val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
   (requires (fun m -> True))
   (ensures (fun m0 _u m1 -> m1= Map.upd m0 i (Heap.upd (Map.sel m0 i) (as_ref r) v)))
 

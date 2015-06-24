@@ -545,6 +545,8 @@ let dfst t = MkDTuple2._1 t
 
 val dsnd : #a:Type -> #b:(a -> Type) -> t:(DTuple2 a b) -> Tot (b (MkDTuple2._1 t))
 let dsnd t = MkDTuple2._2 t
+
+type Let (#a:Type) (x:a) (body:(a -> Type)) = body x
 logic type InductionHyp : #a:Type -> a -> Type -> Type
 assume val by_induction_on: #a:Type -> #p:Type -> induction_on:a -> proving:p -> Lemma (ensures (InductionHyp induction_on p))
 assume val _assume : p:Type -> unit -> (y:unit{p})

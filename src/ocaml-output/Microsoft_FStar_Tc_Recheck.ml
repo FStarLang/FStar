@@ -116,7 +116,7 @@ k
 end
 | None -> begin
 (let k = (recompute t)
-in (let _23_123 = (t.Microsoft_FStar_Absyn_Syntax.tk := Some (k))
+in (let _23_123 = (Support.ST.op_Colon_Equals t.Microsoft_FStar_Absyn_Syntax.tk (Some (k)))
 in k))
 end)))
 
@@ -181,7 +181,7 @@ t
 end
 | None -> begin
 (let t = (recompute e)
-in (let _23_203 = (e.Microsoft_FStar_Absyn_Syntax.tk := Some (t))
+in (let _23_203 = (Support.ST.op_Colon_Equals e.Microsoft_FStar_Absyn_Syntax.tk (Some (t)))
 in t))
 end)))
 

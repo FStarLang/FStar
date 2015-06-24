@@ -28,7 +28,7 @@ in (Support.Microsoft.FStar.Bytes.make (fun i -> (Support.Microsoft.FStar.Bytes.
 let stringbuf_is_bytes = (fun buf -> (let bytes = (Support.Microsoft.FStar.Bytes.close buf)
 in (let ok = (Support.Microsoft.FStar.Util.mk_ref true)
 in (let _38_32 = (Support.Microsoft.FStar.Util.for_range 0 (((Support.Microsoft.FStar.Bytes.length bytes) / 2) - 1) (fun i -> if ((Support.Microsoft.FStar.Bytes.get bytes ((i * 2) + 1)) <> 0) then begin
-(ok := false)
+(Support.ST.op_Colon_Equals ok false)
 end))
 in (! (ok))))))
 
