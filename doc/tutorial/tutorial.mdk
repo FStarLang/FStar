@@ -4530,7 +4530,7 @@ assume val enc: k:key -> p:plain -> c:cipher
 ~ Exercise
 Refine the type of the encryption function to model the *correctness* property:
 A correctly generated ciphertext, decrypts to its plaintext.
-~~ ExerciseFragment {exname=ex10a-encrypt}
+~~ ExerciseFragment {exname=ex12a-encrypt}
 assume val enc: k:key -> p:plain -> c:cipher
 ~~
 
