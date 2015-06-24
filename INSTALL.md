@@ -4,7 +4,7 @@
 
 ### Overview of the build process
 
-F* is written in a subset of F# that F* can also parse with a special flag.
+F\* is written in a subset of F# that F\* itself can also parse with a special flag.
 Therefore, the standard build process of F* is as follows:
 
 - build F* using the F# compiler
@@ -16,8 +16,8 @@ a native, more optimized binary of F*.
 
 It may be the case that it's easier for you to build F* directly from the OCaml
 sources. Therefore, for convenience, we keep a (possibly outdated) snapshot of
-the F* sources translated to OCaml. This allows you to bootstrap F* with just an
-OCaml compiler. See [Building F* using the OCaml snapshot].
+the F* sources translated to OCaml in the repo. This allows you to bootstrap F*
+with just an OCaml compiler (see [below](#building-f-using-the-ocaml-snapshot)).
 
 ### Building F* from sources (.NET version) ###
 
@@ -91,7 +91,7 @@ Please note that 1) the Makefile is currently broken on Windows, and 2) the
           $ source setenv.sh
           $ make test.net -C src
 
-  - If `make test.net` (`make boot` in fact) causes stack overflow try
+  - If `make test.net` (`make boot` in fact) causes a stack overflow try
     issuing `ulimit -s unlimited` in the terminal beforehand.
 
 
@@ -149,7 +149,7 @@ other utilities required for the build.)
 
         $ make ocaml
 
-2. On windows, close all instances of fstar.exe, e.g. your F* IDE, becuase this step will overwrite fstar.exe. Then run the following commands in `src/ocaml-output`:
+2. On windows, close all instances of fstar.exe, e.g. your F* IDE, because this step will overwrite fstar.exe. Then run the following commands in `src/ocaml-output`:
 
         $ make parser
         $ make
