@@ -115,7 +115,7 @@ let array_mk_array_lid = p2l ["Array"; "mk_array"]
 let write_lid    = p2l ["ST"; "write"]
 let read_lid     = p2l ["ST"; "read"]
 let alloc_lid    = p2l ["ST"; "alloc"]
-let op_ColonEq   = p2l ["ST"; "op_ColonEquals"]
+let op_ColonEq   = p2l ["ST"; "op_Colon_Equals"]
 
 (* Constants for sets and ref sets *)
 let set_empty = p2l ["Set"; "empty"]

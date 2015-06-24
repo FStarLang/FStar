@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Seq --admit_fsi Map --max_ifuel 1 --initial_ifuel 1 --initial_fuel 0 --max_fuel 0;
+    options:--admit_fsi Set --admit_fsi Seq --admit_fsi Map --max_ifuel 1 --initial_ifuel 1 --initial_fuel 0 --max_fuel 0 --z3timeout 10;
     other-files:../../lib/ext.fst ../../lib/set.fsi ../../lib/heap.fst ../../lib/map.fsi ../../lib/hyperheap.fst ../../lib/seq.fsi
   --*)
 (* A standalone experiment corresponding to building a stateful encryption on
@@ -65,7 +65,7 @@ val enc : #i:rid -> e:encryptor i -> ad:ad -> p:plain -> ST cipher
                 /\ h1 = upd h0 (Enc.log e) (snoc (sel h0 (Enc.log e)) (Entry ad c p))))
 let enc i e ad p =
   let c = enc0 emp in
-  op_ColonEquals (Enc.log e) (snoc (op_Bang (Enc.log e)) (Entry ad c p));
+  op_Colon_Equals (Enc.log e) (snoc (op_Bang (Enc.log e)) (Entry ad c p));
   c
 
 let basicMatch i c (Entry i' c' p) = i = i' && c = c'
@@ -188,8 +188,8 @@ val stateful_enc : #i:rid -> e:st_encryptor i -> p:plain -> ST cipher
                  /\ sel h1 (StEnc.log e) = snoc (sel h0 (StEnc.log e)) (StEntry c p)))
 let stateful_enc i (StEnc log ctr e) p =
     let c = enc e (op_Bang ctr) p in
-    op_ColonEquals log (snoc (op_Bang log) (StEntry c p));
-    op_ColonEquals ctr (op_Bang ctr + 1);
+    op_Colon_Equals log (snoc (op_Bang log) (StEntry c p));
+    op_Colon_Equals ctr (op_Bang ctr + 1);
     c
 
 val stateful_dec: #i:rid -> d:st_decryptor i -> c:cipher -> ST (option plain)
@@ -214,7 +214,7 @@ let stateful_dec _id (StDec _ ctr d) c =
   cut(trigger i);
   match dec d (op_Bang ctr) c with
     | None -> None
-    | Some p -> op_ColonEquals ctr (op_Bang ctr + 1); Some p
+    | Some p -> op_Colon_Equals ctr (op_Bang ctr + 1); Some p
 
 
 val test_st_frame :   s1:sti

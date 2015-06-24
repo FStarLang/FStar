@@ -396,7 +396,7 @@ end
 []
 end))) formals)
 in (let record = {typename = typename; constrname = constrname; parms = parms; fields = fields}
-in (record_cache := (record)::(! (record_cache))))))
+in (Support.ST.op_Colon_Equals record_cache ((record)::(! (record_cache)))))))
 end
 | _ -> begin
 ()

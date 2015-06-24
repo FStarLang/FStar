@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map --admit_fsi HyperHeap --max_fuel 0 --initial_ifuel 0;
+    options:--admit_fsi Set --admit_fsi Map --admit_fsi HyperHeap --max_fuel 0 --initial_ifuel 0 --logQueries --z3timeout 20;
     variables:LIB=../../../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/map.fsi $LIB/hyperheap2.fsi $LIB/util.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/map.fsi $LIB/hyperheap2.fsi $LIB/util.fst $LIB/list.fst
 --*)
 module Robot
 #set-options "--initial_fuel 0 --max_ifuel 0"
@@ -138,6 +138,7 @@ val fly: b:bot -> ST unit
               /\ robot_inv b h1
               /\ flying b h1))
 let fly b =
+  Arm.azim (Bot.right b)  := 17;
   Arm.polar (Bot.left b)  := 0;
   Arm.polar (Bot.right b) := 0;
   Point.z (Bot.pos b)     := 100
@@ -155,6 +156,64 @@ val fly_robots: b0:bot
 let fly_robots b0 b1 =
   fly b0;
   fly b1
+
+open Set
+type distinct (r:rid) (s:set rid) =
+  forall x. Set.mem x s ==> disjoint x r
+
+type bots : set rid -> Type =
+  | Nil    : bots Set.empty
+  | Cons   :  rs:set rid
+           -> hd:bot{distinct (Bot.r hd) rs}
+           -> tl:bots rs
+           -> bots (rs ++^ Bot.r hd)
+#set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
+let test_bots (rs:set rid) (bs:bots rs) =
+  match bs with
+    | Cons rs' hd tl ->
+      assert (rs =(rs' ++^ Bot.r hd))
+    | Nil -> ()
+
+val mem : #rs:set rid -> bot -> bs:bots rs -> Tot bool (decreases bs)
+let rec mem  (#rs:set rid) b bs = match bs with
+  | Nil -> false
+  | Cons _ hd tl -> b=hd || mem b tl
+
+val lemma_aux: rs:set rid -> bs:bots rs -> b:bot
+             -> Lemma (requires (mem #rs b bs))
+                      (ensures (Set.mem (Bot.r b) rs))
+                      (decreases bs)
+                      [SMTPat (mem #rs b bs)]
+let rec lemma_aux rs bs b =
+  match bs with
+    | Nil -> ()
+    | Cons rs' hd tl ->
+      if b=hd
+      then ()
+      else lemma_aux rs' tl b
+
+val lemma_bots_tl_disjoint : #rs:set rid -> bs:bots rs{is_Cons bs}
+                           -> Lemma (requires (True))
+                                    (ensures (forall b. mem b (Cons.tl bs) ==> disjoint (Bot.r b) (Bot.r (Cons.hd bs))))
+let lemma_bots_tl_disjoint #rs bs = ()
+
+val fly_robot_army:  rs:Set.set rid
+                  -> bs:bots rs
+                  -> ST unit
+                     (requires (fun h -> (forall b.{:pattern (mem b bs)} mem b bs ==> robot_inv b h)))
+                     (ensures  (fun h0 _u h1 ->
+                                    modifies rs h0 h1
+                                     /\ (forall b.{:pattern (mem b bs)} mem b bs ==> robot_inv b h1 /\ flying b h1)))
+let rec fly_robot_army (rs:set rid) (bs:bots rs) =
+  match bs with
+   | Cons rs' hd tl  ->
+     cut (rs == (rs' ++^ Bot.r hd));
+     cut (b2t (mem hd bs));
+     lemma_bots_tl_disjoint bs;
+     fly hd;
+     cut (forall b. mem b tl ==> mem b bs);
+     fly_robot_army rs' tl
+   | Nil -> ()
 
 val main: unit -> ST unit
     (requires (fun _ -> True))

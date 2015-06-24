@@ -2,7 +2,7 @@
 let process_args = (fun _55_1 -> (match (_55_1) with
 | () -> begin
 (let file_list = (Support.Microsoft.FStar.Util.mk_ref [])
-in (let res = (Support.Microsoft.FStar.Getopt.parse_cmdline (Microsoft_FStar_Options.specs ()) (fun i -> (file_list := (Support.List.append (! (file_list)) ((i)::[])))))
+in (let res = (Support.Microsoft.FStar.Getopt.parse_cmdline (Microsoft_FStar_Options.specs ()) (fun i -> (Support.ST.op_Colon_Equals file_list (Support.List.append (! (file_list)) ((i)::[])))))
 in (let _55_8 = (match (res) with
 | Support.Microsoft.FStar.Getopt.GoOn -> begin
 (Support.Prims.ignore (Microsoft_FStar_Options.set_fstar_home ()))
@@ -214,7 +214,7 @@ in (let commit_mark = (fun dsenv env -> (let dsenv = (Microsoft_FStar_Parser_Des
 in (let env = (Microsoft_FStar_Tc_Env.commit_mark env)
 in (dsenv, env))))
 in (let fail = (fun curmod dsenv_mark env_mark -> (let _55_195 = ((Support.Prims.ignore) (Microsoft_FStar_Tc_Errors.report_all ()))
-in (let _55_197 = (Microsoft_FStar_Tc_Errors.num_errs := 0)
+in (let _55_197 = (Support.ST.op_Colon_Equals Microsoft_FStar_Tc_Errors.num_errs 0)
 in (let _55_199 = (Support.Microsoft.FStar.Util.fprint1 "%s\n" fail)
 in (let _55_203 = (reset_mark dsenv_mark env_mark)
 in (match (_55_203) with

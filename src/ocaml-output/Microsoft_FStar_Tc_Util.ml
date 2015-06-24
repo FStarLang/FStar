@@ -1444,11 +1444,11 @@ in (let uk = (Support.List.map (Microsoft_FStar_Absyn_Print.uvar_k_to_string) (S
 in (let union = (Support.String.concat "," (Support.List.append (Support.List.append ue ut) uk))
 in (let hide_uvar_nums_saved = (! (Microsoft_FStar_Options.hide_uvar_nums))
 in (let print_implicits_saved = (! (Microsoft_FStar_Options.print_implicits))
-in (let _30_1645 = (Microsoft_FStar_Options.hide_uvar_nums := false)
-in (let _30_1647 = (Microsoft_FStar_Options.print_implicits := true)
+in (let _30_1645 = (Support.ST.op_Colon_Equals Microsoft_FStar_Options.hide_uvar_nums false)
+in (let _30_1647 = (Support.ST.op_Colon_Equals Microsoft_FStar_Options.print_implicits true)
 in (let _30_1649 = (Microsoft_FStar_Tc_Errors.report r (Support.Microsoft.FStar.Util.format2 "Unconstrained unification variables %s in type signature %s; please add an annotation" union (Microsoft_FStar_Absyn_Print.typ_to_string t)))
-in (let _30_1651 = (Microsoft_FStar_Options.hide_uvar_nums := hide_uvar_nums_saved)
-in (Microsoft_FStar_Options.print_implicits := print_implicits_saved)))))))))))
+in (let _30_1651 = (Support.ST.op_Colon_Equals Microsoft_FStar_Options.hide_uvar_nums hide_uvar_nums_saved)
+in (Support.ST.op_Colon_Equals Microsoft_FStar_Options.print_implicits print_implicits_saved)))))))))))
 end))
 
 let gen = (fun verify env ecs -> if (not ((Support.Microsoft.FStar.Util.for_all (fun _30_1659 -> (match (_30_1659) with

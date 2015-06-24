@@ -20,7 +20,7 @@ end
 
 module ST = struct
   let read x = !x
-  let op_ColonEquals x y = x := y
+  let op_Colon_Equals x y = x := y
   let alloc x = ref x
 end
 
@@ -291,7 +291,7 @@ module Microsoft = struct
       let string_of_int64 = BatInt64.to_string
       let string_of_float = string_of_float
       let string_of_char  (i:char) = spr "%c" i
-      let hex_string_of_byte (i:char) = 
+      let hex_string_of_byte (i:char) =
           let hs = spr "%x" (int_of_char i) in
           if (String.length hs = 1) then "0" ^ hs
           else hs

@@ -157,7 +157,7 @@ let read_lid = (p2l (("ST")::("read")::[]))
 
 let alloc_lid = (p2l (("ST")::("alloc")::[]))
 
-let op_ColonEq = (p2l (("ST")::("op_ColonEquals")::[]))
+let op_ColonEq = (p2l (("ST")::("op_Colon_Equals")::[]))
 
 let set_empty = (p2l (("Set")::("empty")::[]))
 

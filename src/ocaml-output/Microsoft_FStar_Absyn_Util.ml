@@ -38,7 +38,7 @@ in {gensym = (fun _18_60 -> (match (_18_60) with
 in (! (ctr)))))
 end)); reset = (fun _18_63 -> (match (_18_63) with
 | () -> begin
-(let _18_64 = (ctr := 0)
+(let _18_64 = (Support.ST.op_Colon_Equals ctr 0)
 in (Support.Microsoft.FStar.Util.incr n_resets))
 end))}))
 
@@ -266,7 +266,7 @@ in (match (t0.Microsoft_FStar_Absyn_Syntax.n) with
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_delayed ((Support.Microsoft.FStar.Util.Inr (mk_t), m)) -> begin
 (let t = (mk_t ())
-in (let _18_285 = (m := Some (t))
+in (let _18_285 = (Support.ST.op_Colon_Equals m (Some (t)))
 in (subst_typ' s t)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_btvar (a) -> begin
@@ -538,7 +538,7 @@ in (match (k.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Kind_delayed ((k', s, m)) -> begin
 (let k' = ((Support.Prims.fst) (Microsoft_FStar_Absyn_Visit.reduce_kind (visit_knd s) (map_typ s) (map_exp s) (Microsoft_FStar_Absyn_Visit.combine_kind) (Microsoft_FStar_Absyn_Visit.combine_typ) (Microsoft_FStar_Absyn_Visit.combine_exp) subst_ctrl [] k'))
 in (let k' = (compress_kind k')
-in (let _18_581 = (m := Some (k'))
+in (let _18_581 = (Support.ST.op_Colon_Equals m (Some (k')))
 in k')))
 end
 | Microsoft_FStar_Absyn_Syntax.Kind_uvar ((uv, actuals)) -> begin
@@ -681,12 +681,12 @@ in (match (t.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Typ_delayed ((Support.Microsoft.FStar.Util.Inl ((t', s)), m)) -> begin
 (let res = ((Support.Prims.fst) (Microsoft_FStar_Absyn_Visit.reduce_typ (map_knd s) (visit_typ s) (map_exp s) (Microsoft_FStar_Absyn_Visit.combine_kind) (Microsoft_FStar_Absyn_Visit.combine_typ) (Microsoft_FStar_Absyn_Visit.combine_exp) subst_ctrl [] t'))
 in (let res = (compress_typ' res)
-in (let _18_733 = (m := Some (res))
+in (let _18_733 = (Support.ST.op_Colon_Equals m (Some (res)))
 in res)))
 end
 | Microsoft_FStar_Absyn_Syntax.Typ_delayed ((Support.Microsoft.FStar.Util.Inr (mk_t), m)) -> begin
 (let t = (compress_typ' (mk_t ()))
-in (let _18_741 = (m := Some (t))
+in (let _18_741 = (Support.ST.op_Colon_Equals m (Some (t)))
 in t))
 end
 | _ -> begin
@@ -721,7 +721,7 @@ in (match (e.Microsoft_FStar_Absyn_Syntax.n) with
 | Microsoft_FStar_Absyn_Syntax.Exp_delayed ((e', s, m)) -> begin
 (let e = ((Support.Prims.fst) (Microsoft_FStar_Absyn_Visit.reduce_exp (map_knd s) (map_typ s) (visit_exp s) (Microsoft_FStar_Absyn_Visit.combine_kind) (Microsoft_FStar_Absyn_Visit.combine_typ) (Microsoft_FStar_Absyn_Visit.combine_exp) subst_ctrl [] e'))
 in (let res = (compress_exp e)
-in (let _18_780 = (m := Some (res))
+in (let _18_780 = (Support.ST.op_Colon_Equals m (Some (res)))
 in res)))
 end
 | _ -> begin
@@ -1211,11 +1211,11 @@ end))
 
 let stash = (fun uvonly s _18_1470 -> (match (_18_1470) with
 | (fvs, uvs) -> begin
-(let _18_1471 = (s.Microsoft_FStar_Absyn_Syntax.uvs := Some (uvs))
+(let _18_1471 = (Support.ST.op_Colon_Equals s.Microsoft_FStar_Absyn_Syntax.uvs (Some (uvs)))
 in if uvonly then begin
 ()
 end else begin
-(s.Microsoft_FStar_Absyn_Syntax.fvs := Some (fvs))
+(Support.ST.op_Colon_Equals s.Microsoft_FStar_Absyn_Syntax.fvs (Some (fvs)))
 end)
 end))
 
@@ -1542,16 +1542,16 @@ end)
 end)) out) (Support.Microsoft.FStar.Util.set_elements uvs.Microsoft_FStar_Absyn_Syntax.uvars_e))
 in (let _18_1935 = (match (s) with
 | SynSumKind (k) -> begin
-(k.Microsoft_FStar_Absyn_Syntax.uvs := Some (out))
+(Support.ST.op_Colon_Equals k.Microsoft_FStar_Absyn_Syntax.uvs (Some (out)))
 end
 | SynSumType (t) -> begin
-(t.Microsoft_FStar_Absyn_Syntax.uvs := Some (out))
+(Support.ST.op_Colon_Equals t.Microsoft_FStar_Absyn_Syntax.uvs (Some (out)))
 end
 | SynSumExp (e) -> begin
-(e.Microsoft_FStar_Absyn_Syntax.uvs := Some (out))
+(Support.ST.op_Colon_Equals e.Microsoft_FStar_Absyn_Syntax.uvs (Some (out)))
 end
 | SynSumComp (c) -> begin
-(c.Microsoft_FStar_Absyn_Syntax.uvs := Some (out))
+(Support.ST.op_Colon_Equals c.Microsoft_FStar_Absyn_Syntax.uvs (Some (out)))
 end)
 in out)))))
 and uvars_in_kind = (fun k -> ((update_uvars (SynSumKind (k))) (vs_kind k true (fun _18_1941 -> (match (_18_1941) with
