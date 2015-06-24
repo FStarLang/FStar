@@ -3892,8 +3892,8 @@ let revoke e =
   ST.write acls db
 ~~
 
-~~Answer {exname=ex10a-acls}
-~~~ SolutionFragment
+~~Answer 
+~~~ SolutionFragment {exname=ex10a-acls}
 val grant : e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> sel h' acls = e::sel h acls))
 let grant e = ST.write acls (e::ST.read acls)
