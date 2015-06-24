@@ -163,56 +163,51 @@ type distinct (r:rid) (s:set rid) =
 
 type bots : set rid -> Type =
   | Nil    : bots Set.empty
-  | Cons   :  rs:set rid
+  | Cons   :  #rs:set rid
            -> hd:bot{distinct (Bot.r hd) rs}
            -> tl:bots rs
            -> bots (rs ++^ Bot.r hd)
 #set-options "--initial_fuel 1 --max_fuel 1 --initial_ifuel 1 --max_ifuel 1"
-let test_bots (rs:set rid) (bs:bots rs) =
-  match bs with
-    | Cons rs' hd tl ->
-      assert (rs =(rs' ++^ Bot.r hd))
-    | Nil -> ()
-
 val mem : #rs:set rid -> bot -> bs:bots rs -> Tot bool (decreases bs)
 let rec mem  (#rs:set rid) b bs = match bs with
   | Nil -> false
-  | Cons _ hd tl -> b=hd || mem b tl
+  | Cons hd tl -> b=hd || mem b tl
 
-val lemma_aux: rs:set rid -> bs:bots rs -> b:bot
+val lemma_aux: #rs:set rid -> bs:bots rs -> b:bot
              -> Lemma (requires (mem #rs b bs))
                       (ensures (Set.mem (Bot.r b) rs))
                       (decreases bs)
                       [SMTPat (mem #rs b bs)]
-let rec lemma_aux rs bs b =
+let rec lemma_aux #rs bs b =
   match bs with
     | Nil -> ()
-    | Cons rs' hd tl ->
+    | Cons hd tl ->
       if b=hd
       then ()
-      else lemma_aux rs' tl b
+      else lemma_aux tl b
 
 val lemma_bots_tl_disjoint : #rs:set rid -> bs:bots rs{is_Cons bs}
                            -> Lemma (requires (True))
                                     (ensures (forall b. mem b (Cons.tl bs) ==> disjoint (Bot.r b) (Bot.r (Cons.hd bs))))
 let lemma_bots_tl_disjoint #rs bs = ()
 
-val fly_robot_army:  rs:Set.set rid
+val fly_robot_army:  #rs:Set.set rid
                   -> bs:bots rs
                   -> ST unit
                      (requires (fun h -> (forall b.{:pattern (mem b bs)} mem b bs ==> robot_inv b h)))
                      (ensures  (fun h0 _u h1 ->
                                     modifies rs h0 h1
                                      /\ (forall b.{:pattern (mem b bs)} mem b bs ==> robot_inv b h1 /\ flying b h1)))
-let rec fly_robot_army (rs:set rid) (bs:bots rs) =
+let rec fly_robot_army #rs bs =
   match bs with
-   | Cons rs' hd tl  ->
-     cut (rs == (rs' ++^ Bot.r hd));
-     cut (b2t (mem hd bs));
-     lemma_bots_tl_disjoint bs;
+   | Cons #rs' hd tl  ->
+         cut (rs == (rs' ++^ Bot.r hd)); //not necesary, but goes faster with the hint
+         cut (b2t (mem hd bs)); //triggering requires for (fly hd)
+         lemma_bots_tl_disjoint bs;
      fly hd;
-     cut (forall b. mem b tl ==> mem b bs);
-     fly_robot_army rs' tl
+         cut (forall b. mem b tl ==> mem b bs);//re-triggering requires for goal
+     fly_robot_army tl
+     
    | Nil -> ()
 
 val main: unit -> ST unit
