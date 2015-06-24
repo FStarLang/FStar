@@ -1,7 +1,7 @@
 (*--build-config
-    options:--admit_fsi OrdSet --admit_fsi OrdMap --logQueries;
+    options:--admit_fsi OrdSet --admit_fsi OrdMap;
     variables:LIB=../../lib;
-    other-files:$LIB/ordset.fsi $LIB/ordsetproperties.fst $LIB/ordmap.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst
+    other-files:$LIB/ordset.fsi $LIB/ordsetproperties.fst $LIB/ordmap.fsi $LIB/list.fst $LIB/constr.fst $LIB/ext.fst $LIB/classical.fst
  --*)
 
 module AST
@@ -58,7 +58,7 @@ type value: v_meta -> Type =
                 -> value (ps, Can_b)
 
   | V_clos    : en:env -> x:varname -> e:exp -> value (empty, Cannot_b)
-  
+
   | V_emp_clos: x:varname -> e:exp -> value (empty, Can_b)
 
   (* bomb value, comes up in target only *)
@@ -102,7 +102,7 @@ type frame' =
   | F_let      : x:varname -> e2:exp -> frame'
   | F_app_e1   : e2:exp -> frame'
   | F_app_e2   : #meta:v_meta -> v:value meta -> frame'
-  
+
 type frame =
   | Frame: m:mode -> en:env -> f:frame'-> frame
 
@@ -112,7 +112,7 @@ type term =
   | T_exp     : e:exp -> term
   | T_red     : r:redex -> term
   | T_val     : #meta:v_meta -> v:value meta -> term
-  
+
   | T_sec_wait: term
 
 type level = | Source | Target
@@ -166,7 +166,7 @@ type config =
 
 type sconfig = c:config{is_Source (Conf.l c)}
 type tconfig = c:config{is_Target (Conf.l c)}
-          
+
 val is_sframe: c:config -> f:(frame' -> Tot bool) -> Tot bool
 let is_sframe (Conf _ _ s _ _) f = is_Cons s && f (Frame.f (Cons.hd s))
 
@@ -262,7 +262,7 @@ val step_app_e2: c:config{is_value c /\ is_sframe c is_F_app_e1}
                  -> Tot config
 let step_app_e2 (Conf l _ ((Frame m en (F_app_e1 e2))::s) _ (T_val v)) =
   Conf l m ((Frame m en (F_app_e2 v))::s) en (T_exp e2)
-  
+
 val step_aspar_red: c:config{is_value c /\ is_sframe c is_F_aspar_e}
                     -> Tot config
 let step_aspar_red (Conf l _ ((Frame m en (F_aspar_e ps))::s) _ (T_val v)) =
@@ -282,7 +282,7 @@ val step_let_red: c:config{is_value c /\ is_sframe c is_F_let}
                   -> Tot config
 let step_let_red (Conf l _ ((Frame m en (F_let x e2))::s) _ (T_val v)) =
   Conf l m s en (T_red (R_let x v e2))
-  
+
 val step_app_red: c:config{is_value c /\ is_sframe c is_F_app_e2}
                   -> Tot config
 let step_app_red (Conf l _ ((Frame m en (F_app_e2 v1))::s) _ (T_val v2)) =
@@ -305,7 +305,7 @@ let pre_aspar c = match c with
       else
         if subset ps1 ps2 then Do else Skip
     else NA
-  
+
   | _ -> NA
 
 val step_aspar: c:config{not (pre_aspar c = NA)} -> Tot config
@@ -314,7 +314,7 @@ let step_aspar c = match c with
     let en, x, e = get_en_b v in
     let m'  = if src l then Mode Par ps else m in
     let s'  = (Frame m en' (F_box_e ps))::s in
-    
+
     (*
      * for parties not in ps, the choice of empty_env is arbitrary
      * perhaps we should prove the theorem using any env and then
@@ -406,7 +406,7 @@ type cstep: config -> config -> Type =
   | C_abs:
     c:config{pre_eabs c} -> c':config{c' = step_abs c}
     -> cstep c c'
-  
+
   | C_empabs:
     c:config{pre_eempabs c} -> c':config{c' = step_empabs c}
     -> cstep c c'
@@ -452,7 +452,7 @@ type cstep: config -> config -> Type =
 
   | C_let_beta:
     c:config{is_let_redex c} -> c':config{c' = step_let c} -> cstep c c'
-    
+
   | C_app_beta:
     c:config{is_app_redex c} -> c':config{c' = step_app c} -> cstep c c'
 
@@ -510,7 +510,7 @@ val step_assec_ret: c:config{is_value c /\ is_sframe c is_F_assec_ret}
 let step_assec_ret (Conf l _ ((Frame m en F_assec_ret)::s) _ t) = Conf l m s en t
 
 type sstep: config -> config -> Type =
-  
+
   | C_step:
     c:config -> c':config -> h:cstep c c' -> sstep c c'
 
@@ -522,16 +522,16 @@ type sstep: config -> config -> Type =
     c:config{is_value_ps c /\ is_sframe c is_F_assec_ps}
     -> c':config{c' = step_assec_e2 c}
     -> sstep c c'
-  
+
   | C_assec_red:
     c:config{is_value c /\ is_sframe c is_F_assec_e}
     -> c':config{c' = step_assec_red c}
     -> sstep c c'
-    
+
   | C_assec_beta:
     c:config{not (pre_assec c = NA)} -> c':config{c' = step_assec c}
     -> sstep c c'
-    
+
   | C_assec_ret:
     c:config{is_value c /\ is_sframe c is_F_assec_ret}
     -> c':config{c' = step_assec_ret c}
@@ -553,13 +553,13 @@ let rec slice_v #meta p v =
   let emp = D_v (empty, Can_b) V_emp in
   match v with
     | V_const _      -> def
-  
+
     | V_box ps v     ->
       let D_v _ v' = if mem p ps then slice_v p v else emp in
       D_v meta (V_box ps v')
 
     | V_clos en x e  -> D_v meta (V_clos (slice_en p en) x e)
-    
+
     | V_emp_clos _ _ -> def
 
     | V_emp          -> emp
@@ -592,42 +592,41 @@ val compose_vals: #m1:v_meta -> #m2:v_meta -> v1:value m1 -> v2:value m2
 val compose_envs: en:env -> env -> Tot (varname -> Tot (option dvalue)) (decreases %[en])
 
 let rec compose_vals #m1 #m2 v1 v2 =
-  let emp = D_v (empty, Can_b) V_emp in
-  match v1 with
-    | V_const c1 ->
-      if is_V_const v2 && V_const.c v1 = V_const.c v2 then
-        D_v m1 v1
-      else emp
-      
-    | V_box ps1 v1 ->
-      if is_V_box v2 then
-        let V_box ps2 v2 = v2 in
-        if ps1 = ps2 then
-          D_v m1 (V_box ps1 (D_v.v (compose_vals v1 v2)))
-        else
-          emp
-      else emp
-      
-    | V_clos en1 x1 e1 ->
-      if is_V_clos v2 then
-        let V_clos en2 x2 e2 = v2 in
-        if x1 = x2 && e1 = e2 then
-          D_v m1 (V_clos (compose_envs en1 en2) x1 e1)
+  if is_V_emp v1 then D_v m2 v2
+  else if is_V_emp v2 then D_v m1 v1
+  else
+    let emp = D_v (empty, Can_b) V_emp in
+    match v1 with
+      | V_const c1 ->
+        if is_V_const v2 && V_const.c v1 = V_const.c v2 then
+          D_v m1 v1
         else emp
-      else emp
-      
-    | V_emp_clos x1 e1 ->
-      if is_V_emp_clos v2 then
-        let V_emp_clos x2 e2 = v2 in
-        if x1 = x2 && e1 = e2 then
-          D_v m1 (V_emp_clos x1 e1)
+
+      | V_box ps1 v1 ->
+        if is_V_box v2 then
+          let V_box ps2 v2 = v2 in
+          if ps1 = ps2 then
+            D_v m1 (V_box ps1 (D_v.v (compose_vals v1 v2)))
+          else
+            emp
         else emp
-      else emp
-      
-    | V_emp -> D_v m2 v2
-    
-    | _ -> if is_V_emp v2 then D_v m1 v1 else emp
-      
+
+      | V_clos en1 x1 e1 ->
+        if is_V_clos v2 then
+          let V_clos en2 x2 e2 = v2 in
+          if x1 = x2 && e1 = e2 then
+            D_v m1 (V_clos (compose_envs en1 en2) x1 e1)
+          else emp
+        else emp
+
+      | V_emp_clos x1 e1 ->
+        if is_V_emp_clos v2 then
+          let V_emp_clos x2 e2 = v2 in
+          if x1 = x2 && e1 = e2 then
+            D_v m1 (V_emp_clos x1 e1)
+          else emp
+        else emp
+
 and compose_envs en1 en2 =
   let _ = () in
   fun x -> preceds_axiom en1 x;
@@ -649,7 +648,7 @@ let rec slice_v_sps #meta ps v =
   let emp = D_v (empty, Can_b) V_emp in
   match v with
    | V_const _      -> def
-   
+
    | V_box ps' v    ->
      let D_v _ v' =
        //let ps'' = intersect ps' ps in
@@ -659,7 +658,7 @@ let rec slice_v_sps #meta ps v =
      D_v meta (V_box ps' v')
 
    | V_clos en x e  -> D_v meta (V_clos (slice_en_sps ps en) x e)
-   
+
    | V_emp_clos _ _ -> def
 
    | V_emp          -> emp
@@ -679,6 +678,114 @@ let slice_emp_en_sps ps =
   let _ = cut (FEq (slice_en_sps ps empty_env) empty_env) in
   ()
 
+open Classical
+
+val slice_lem_singl_v: #m:v_meta -> v:value m -> p:prin
+                      -> Lemma (requires (True))
+                               (ensures (slice_v p v =
+                                         slice_v_sps (singleton p) v))
+                         (decreases %[v])
+val slice_lem_singl_en_x: en:env -> p:prin -> x:varname
+                          -> Lemma (requires (True))
+                                   (ensures ((slice_en p en) x =
+                                             (slice_en_sps (singleton p) en) x))
+                            (decreases %[en; 0])
+val slice_lem_singl_en: en:env -> p:prin
+                        -> Lemma (requires (True))
+                                 (ensures (slice_en p en =
+                                           slice_en_sps (singleton p) en))
+                          (decreases %[en; 1])
+let rec slice_lem_singl_v #m v p = match v with
+  | V_const _      -> ()
+  | V_box ps v     -> if mem p ps then slice_lem_singl_v v p else ()
+  | V_clos en _ _  -> slice_lem_singl_en en p
+  | V_emp_clos _ _ -> ()
+  | V_emp          -> ()
+
+and slice_lem_singl_en_x en p x =
+  if en x = None then ()
+  else (preceds_axiom en x; slice_lem_singl_v (D_v.v (Some.v (en x))) p)
+
+and slice_lem_singl_en en p =
+  forall_intro #varname #(fun x -> b2t ((slice_en p en) x =
+                                        (slice_en_sps (singleton p) en) x))
+                        (slice_lem_singl_en_x en p);
+  let _ = cut (FEq (slice_en p en) (slice_en_sps (singleton p) en)) in
+  ()
+
+
+val box_slice_lem: #m:v_meta -> v:value m
+                   -> ps1:prins -> ps2:prins{not (intersect ps1 ps2 = empty) /\
+                                             subset (fst m) ps2 /\ snd m = Can_b}
+                   -> Lemma (requires (True))
+                            (ensures (slice_v_sps ps1 (V_box ps2 v) =
+                                      slice_v_sps (intersect ps1 ps2) (V_box ps2 v)))
+                      (decreases v)
+let rec box_slice_lem #m v ps1 ps2 = match v with
+  | V_const _        -> ()  
+  | V_box #m' ps' v' ->
+    let _ = assert (subset ps' ps2) in
+    if intersect ps1 ps' = empty then ()
+    else
+      let _ = assert (intersect ps1 ps' = intersect (intersect ps1 ps2) ps') in
+      box_slice_lem v' ps1 ps';
+      box_slice_lem v' (intersect ps1 ps2) ps';
+      ()
+  | V_emp_clos _ _   -> ()
+  | V_emp            -> ()
+
+let t_union (p1:prin) (p2:prin) :prins = union (singleton p1) (singleton p2)
+
+val slc_v_lem_2: #m:v_meta -> v:value m -> p1:prin -> p2:prin
+                 -> Lemma (requires (True))
+                          (ensures (compose_vals (D_v.v (slice_v p1 v)) (D_v.v (slice_v p2 v)) =
+                                    slice_v_sps (t_union p1 p2) v))
+                    (decreases %[v])
+val slc_en_x_lem_2: en:env -> p1:prin -> p2:prin -> x:varname
+                    -> Lemma (requires (True))
+                             (ensures ((compose_envs (slice_en p1 en) (slice_en p2 en)) x =
+                                       (slice_en_sps (t_union p1 p2) en) x))
+                       (decreases %[en;0])
+val slc_en_lem_2: en:env -> p1:prin -> p2:prin
+                  -> Lemma (requires (True))
+                           (ensures (compose_envs (slice_en p1 en) (slice_en p2 en) =
+                                     slice_en_sps (t_union p1 p2) en))
+                      (decreases %[en;1])
+let rec slc_v_lem_2 #m v p1 p2 = match v with
+  | V_const _      -> ()
+  
+  | V_box ps v     ->
+    let p1p2 = t_union p1 p2 in
+    if mem p1 ps && mem p2 ps then slc_v_lem_2 v p1 p2
+    else if mem p1 ps && not (mem p2 ps) then
+      let _ = assert (intersect p1p2 ps = intersect (singleton p1) ps) in
+      let _ = assert (intersect p1p2 ps = (singleton p1)) in
+      box_slice_lem v p1p2 ps;
+      box_slice_lem v (singleton p1) ps;
+      slice_lem_singl_v (V_box ps v) p1
+    else if not (mem p1 ps) && mem p2 ps then
+      let _ = assert (intersect p1p2 ps = intersect (singleton p2) ps) in
+      let _ = assert (intersect p1p2 ps = (singleton p2)) in
+      box_slice_lem v p1p2 ps;
+      box_slice_lem v (singleton p2) ps;
+      slice_lem_singl_v (V_box ps v) p2
+    else ()
+  | V_clos en _ _  -> slc_en_lem_2 en p1 p2
+  | V_emp_clos _ _ -> ()
+  | V_emp          -> ()
+
+and slc_en_x_lem_2 en p1 p2 x =
+  if en x = None then ()
+  else (preceds_axiom en x; slc_v_lem_2 (D_v.v (Some.v (en x))) p1 p2)
+
+and slc_en_lem_2 en p1 p2 =
+  forall_intro #varname #(fun x -> b2t ((compose_envs (slice_en p1 en)
+                                                      (slice_en p2 en)) x =
+                                        (slice_en_sps (t_union p1 p2) en) x))
+                        (slc_en_x_lem_2 en p1 p2);
+  let _ = cut (FEq (compose_envs (slice_en p1 en) (slice_en p2 en))
+                   (slice_en_sps (t_union p1 p2) en)) in
+  ()
 
 (*type value_map = OrdMap.ordmap prin value p_cmp
 type env_map = OrdMap.ordmap prin env p_cmp
@@ -705,14 +812,14 @@ let rec compose_vals_m m =
   let Some (p, v) = mchoose m in
   let m_rest = mremove p m in
   if m_rest = mempty then v
-  else 
+  else
     let v' = compose_vals_m m_rest in
     compose_vals v v'
 
 assume val map_axiom: #k:Type -> #v:Type -> #f:cmp k -> m:OrdMap.ordmap k v f
                       -> x:k -> y:v -> Lemma (requires (True))
                                              (ensures (not (update x y m = mempty)))
-                                      [SMTPat (update x y m)] 
+                                      [SMTPat (update x y m)]
 
 val get_x_map: m:env_map{not (m = mempty)} -> x:varname
                -> Tot (r:value_map{not (r = mempty)}) (decreases (msize m))
@@ -728,7 +835,7 @@ val compose_envs_m: m:env_map{not (m = mempty)} -> Tot env (decreases (msize m))
 let compose_envs_m m = fun x -> compose_vals_m (get_x_map m x)
 
 
-val 
+val
 
 
 
@@ -946,14 +1053,14 @@ val slice_weakening_en: en:env -> ps:prins
 
 let rec slice_weakening #meta v ps ps' = match v with
   | V_const _ -> ()
-  
+
   | V_box ps'' v'' ->
     if intersect ps'' ps = empty then ()
     else
       slice_weakening v'' ps ps'
-      
-  | 
-  
+
+  |
+
   | _ -> admit ()
   *)
 (* check_marker *)
@@ -990,8 +1097,8 @@ let rec compose_vals_lemma_prin v p1 p2 =
     | _ -> admit ()
 
 and compose_envs_lemma_prin en p1 p2 = admit ()
-                                      
-                              
+
+
 (* check_marker *)
 
 val compose_vals_lemma: v:value -> ps:prins -> p:prin
@@ -1009,7 +1116,7 @@ val compose_envs_lemma: en:env -> ps:prins -> p:prin
 
 let rec compose_vals_lemma v ps p =
   if is_singleton ps then
-    
+
   else
     admit ()
 
@@ -1030,8 +1137,8 @@ val compose_envs_lemma: m:env_map{not (m = mempty)} -> en:env
                                                      (Some.v (select p m) = slice_en p en)))
                                 (ensures (compose_envs_m m = slice_en_sps (dom m) en))
                                 (decreases %[msize m; en])
-                              
-let rec compose_vals_lemma m v = 
+
+let rec compose_vals_lemma m v =
 
 and compose_env_lemma m en = admit ()
 
@@ -1067,23 +1174,23 @@ type composable_vals: value -> value -> Type =
   | Composable_const:
     c1:const -> c2:const{c1 = c2}
     -> composable_vals (V_const c1) (V_const c2)
-    
+
   | Composable_box:
     ps1:prins -> ps2:prins{ps1 = ps2} -> v1:value -> v2:value
     -> h:composable_vals v1 v2 -> composable_vals (V_box ps1 v1) (V_box ps2 v2)
-  
+
   | Composable_clos:
     en1:env -> en2:env -> h:(composable_envs en1 en2)
     -> x1:varname -> x2:varname{x1 = x2}
     -> e1:exp -> e2:exp{e1 = e2}
     -> composable_vals (V_clos en1 x1 e1) (V_clos en2 x2 e2)
-    
+
   | Composable_emp_l:
     v:value -> composable_vals V_emp v
 
   | Composable_emp_r:
     v:value -> composable_vals v V_emp
-    
+
 and composable_envs: (env -> env -> Type) =
   | Composable_en:
     en1:env -> en2:env -> h:cforall (fun x -> composable_vals (en1 x) (en2 x))
@@ -1091,16 +1198,16 @@ and composable_envs: (env -> env -> Type) =
 
 
 (*val compose_vals: value -> value -> Tot value
-val compose_ens: varname -> Tot 
+val compose_ens: varname -> Tot
 
 let rec compose_vals v1 v2 = match v1, v2 with
   | V_const c1, V_const c2 ->
     if c1 = c2 then Some (V_const c1) else None
-    
+
   | V_box ps1 v1, V_box ps2 v2 ->
     if ps1 = ps2 then V_box ps1 (compose_vals v1 v2) else None
-  
-  | V_clos 
+
+  | V_clos
 
 type tstep: protocol -> protocol -> Type =
 
@@ -1108,7 +1215,7 @@ type tstep: protocol -> protocol -> Type =
     pi:protocol -> p:prin{OrdMap.contains p (fst pi)} -> c':tconfig
     -> h:cstep (Some.v (OrdMap.select p (fst pi))) c'
     -> tstep pi (OrdMap.update p c' (fst pi), snd pi)
-  
+
   | T_secstep:
     pi:protocol{is_Some (snd pi)} -> c':tconfig
     -> h:sstep (Some.v (snd pi)) c'
@@ -1242,7 +1349,7 @@ type pstep_star: protocol -> protocol -> Type =
 
   | PS_refl:
     pi:protocol -> pstep_star pi pi
-    
+
   | PS_tran:
     #pi:protocol -> #pi':protocol -> #pi'':protocol
     -> h1:pstep pi pi' -> h2:pstep_star pi' pi''
