@@ -120,7 +120,7 @@ other utilities required for the build.)
      (see below).
 
 1. Install OPAM (version 1.2.x).
-   - Installation instructions available at various places
+   - Installation instructions are available at various places
      (e.g., https://github.com/realworldocaml/book/wiki/Installation-Instructions#getting-opam
      or http://opam.ocaml.org/doc/Install.html).
      You need to initialize it by running `opam init` and update the `PATH`
