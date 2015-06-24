@@ -3315,7 +3315,7 @@ A computation `e` has type `M t wp wlp` if when run in an initial
 configuration satisfying `wp post`, it (either runs forever, if
 allowed, or) produces a result of type `t` in a final configuration
 `f` such that `post f` is true, all the while exhibiting no more
-effects that are allowed by `M`. In other words, `M` is an upper bound
+effects than are allowed by `M`. In other words, `M` is an upper bound
 on the effects of `e`; `t` is its result type; and `wp` is a predicate
 transformer that for any post-condition of the final configuration of
 `e`, produces a sufficient condition on the initial configuration of
@@ -3880,7 +3880,7 @@ let test_acls f =
 Write down some types for `grant` and `revoke` that are sufficiently
 precise to allow the program to continue to type-check.
 
-~~ ExerciseFragment {exname=ex8a-acls}
+~~ ExerciseFragment {exname=ex10a-acls}
 val grant : e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> True))
 let grant e = ST.write acls (e::ST.read acls)
@@ -3892,7 +3892,7 @@ let revoke e =
   ST.write acls db
 ~~
 
-~~Answer {exname=ex8a-acls}
+~~Answer {exname=ex10a-acls}
 ~~~ SolutionFragment
 val grant : e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> sel h' acls = e::sel h acls))
