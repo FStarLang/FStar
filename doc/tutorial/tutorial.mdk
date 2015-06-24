@@ -3968,7 +3968,10 @@ let mk_counter_2 _ =
   Evens (fun h -> b2t(contains h r)) (Set.singleton (Ref x)) evens
 ```
 
+~Exercise
+Fix this example.
 
+~~ ExerciseFragment {exname=ex10b-evens}
 
 # Cryptography examples
 
