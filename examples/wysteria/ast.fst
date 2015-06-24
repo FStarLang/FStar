@@ -1062,15 +1062,18 @@ let rec slc_v_lem_m #meta v m =
   let m_rest = mremove p m in
   if m_rest = mempty then
     let _ = assert (dom m = singleton p) in
-    let _ = slice_lem_singl_v v p in
-    ()
+    slice_lem_singl_v v p
   else
     let _ = assert (dom m = union (singleton p) (dom m_rest)) in
-    let _ = slc_v_lem_m v m_rest in
-    let _ = slc_v_lem_ps v p (dom m_rest) in
-    ()
+    slc_v_lem_m v m_rest; slc_v_lem_ps v p (dom m_rest)
 
-val slc_en_lem_m: en:env -> m:env_map{not (m = mempty) /\ not (dom m = empty) /\
+assume val dom_nonemp_map: m:env_map{not (m = mempty)}
+                           -> Lemma (requires (True))
+                                    (ensures (not (dom m = empty)))
+                              [SMTPat (dom m)]
+
+
+val slc_en_lem_m: en:env -> m:env_map{not (m = mempty) /\
                                       (forall p. contains p m ==>
                                                  (Some.v (select p m) = slice_en p en))}
                   -> Lemma (requires (True))
@@ -1081,18 +1084,10 @@ let rec slc_en_lem_m en m =
   let m_rest = mremove p m in
   if m_rest = mempty then
     let _ = assert (dom m = singleton p) in
-    let _ = slice_lem_singl_en en p in
-    ()
+    slice_lem_singl_en en p
   else
-    (*let _ = assert (dom m = union (singleton p) (dom m_rest)) in
-    let _ = assert (not (m_rest = mempty)) in
-    let _ = _assume (b2t (not (dom m_rest = empty))) in
-    let _ = assert (msize m_rest < msize m) in
-    let _ = assert (forall p. contains p m_rest ==> (Some.v (select p m_rest) = slice_en p en)) in
-    let _ = slc_en_lem_m en m_rest in
-    let _ = slc_en_lem_ps en p (dom m_rest) in*)
-    admit ()
-
+    let _ = assert (dom m = union (singleton p) (dom m_rest)) in
+    slc_en_lem_m en m_rest; slc_en_lem_ps en p (dom m_rest)
 (*
 
 
