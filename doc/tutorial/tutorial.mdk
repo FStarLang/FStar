@@ -3972,6 +3972,8 @@ let mk_counter_2 _ =
 Fix this example.
 
 ~~ ExerciseFragment {exname=ex10b-evens}
+~~
+~
 
 # Cryptography examples
 
