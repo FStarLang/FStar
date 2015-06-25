@@ -977,10 +977,12 @@ val slc_en_lem_ps: en:env -> p:prin -> ps:prins
                                                      (slice_en_sps ps en)
                                         = slice_en_sps (union (singleton p) ps) en))
                         (decreases %[en; 1])
+#set-options "--z3timeout 10"
 let rec slc_v_lem_ps #m v p ps = match v with
   | V_const _      -> ()
   
   | V_box ps' v'   ->
+    let _ = admit () in
     if mem p ps' && not (intersect ps ps' = empty) then
       slc_v_lem_ps v' p ps
     else if mem p ps' && intersect ps ps' = empty then
@@ -1013,6 +1015,7 @@ and slc_en_lem_ps en p ps =
                    (slice_en_sps (union (singleton p) ps) en)) in
   ()
 
+#reset-options
 
 val mempty: #key:Type -> #value:Type -> #f:cmp key -> Tot (OrdMap.ordmap key value f)
 let mempty (#k:Type) (#v:Type) #f = OrdMap.empty #k #v #f
@@ -1088,6 +1091,114 @@ let rec slc_en_lem_m en m =
   else
     let _ = assert (dom m = union (singleton p) (dom m_rest)) in
     slc_en_lem_m en m_rest; slc_en_lem_ps en p (dom m_rest)
+
+val env_upd_slice_lemma: #m:v_meta -> p:prin -> en:env -> x:varname -> v:value m
+                         -> Lemma (requires (True))
+                                  (ensures (slice_en p (update_env en x v) =
+                                            update_env (slice_en p en) x (D_v.v (slice_v p v))))
+let env_upd_slice_lemma #m p en x v =
+  cut (FEq (slice_en p (update_env en x v))
+      (update_env (slice_en p en) x (D_v.v (slice_v p v))))
+
+opaque val cstep_par_slice_lemma: c:sconfig -> c':sconfig -> h:cstep c c' -> p:prin
+                                  -> Tot (cor (u:unit{slice_c p c = slice_c p c'})
+                                         (cstep (slice_c p c) (slice_c p c')))
+#set-options "--split_cases 1"
+let cstep_par_slice_lemma c c' h p =
+  (* TODO: FIXME: wanted to write this, but does not split then *)
+  (*if is_sec c then IntroL ()
+  else*)
+  match h with
+    | C_aspar_ps (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_aspar_ps (slice_c p c) (slice_c p c'))
+    | C_unbox (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_unbox (slice_c p c) (slice_c p c'))
+    | C_const (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_const (slice_c p c) (slice_c p c'))
+    | C_var (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_var (slice_c p c) (slice_c p c'))
+    | C_let_e1 (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_let_e1 (slice_c p c) (slice_c p c'))
+    | C_abs (Conf _ m _ en _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else
+        IntroR (C_abs (slice_c p c) (slice_c p c'))
+    | C_empabs (Conf _ m _ en _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else
+        IntroR (C_empabs (slice_c p c) (slice_c p c'))
+    | C_app_e1 (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_app_e1 (slice_c p c) (slice_c p c'))
+    | C_aspar_e (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_aspar_e (slice_c p c) (slice_c p c'))
+    | C_app_e2 (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_app_e2 (slice_c p c) (slice_c p c'))
+    | C_aspar_red (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_aspar_red (slice_c p c) (slice_c p c'))
+    | C_box_red (Conf _ m s _ _) _ ->
+      if mem p (Mode.ps m) then
+        IntroR (C_box_red (slice_c p c) (slice_c p c'))
+      else if mem p (Mode.ps (Frame.m (Cons.hd s))) then
+        IntroR (C_box_red (slice_c p c) (slice_c p c'))
+      else IntroL ()
+    | C_unbox_red (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_unbox_red (slice_c p c) (slice_c p c'))
+    | C_let_red (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_let_red (slice_c p c) (slice_c p c'))
+    | C_app_red (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else IntroR (C_app_red (slice_c p c) (slice_c p c'))
+    | C_let_beta (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else
+        let Conf _ _ _ en (T_red (R_let x v _)) = c in
+        let _ = env_upd_slice_lemma p en x v in
+        IntroR (C_let_beta (slice_c p c) (slice_c p c'))
+    | C_app_beta (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else
+        let T_red (R_app f v) = Conf.t c in
+        let (en, x, _) = get_en_b f in
+        env_upd_slice_lemma p en x v;
+        IntroR (C_app_beta (slice_c p c) (slice_c p c'))
+    | C_aspar_beta (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else
+        let T_red (R_aspar _ v) = Conf.t c in
+        let (en, x, _) = get_en_b v in
+        env_upd_slice_lemma p en x (V_const (C_unit));
+        IntroR (C_aspar_beta (slice_c p c) (slice_c p c'))
+    | C_box_beta (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else
+        IntroR (C_box_beta (slice_c p c) (slice_c p c'))
+    | C_unbox_beta (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else
+        IntroR (C_unbox_beta (slice_c p c) (slice_c p c'))
+
+(**********)
+#reset-options
+
+val is_enter_sec_config: c:sconfig -> Tot bool
+let is_enter_sec_config c =
+  is_par c && is_T_red (Conf.t c) && (is_R_assec (T_red.r (Conf.t c)))
+
+
+
+
+
 (*
 
 
@@ -1203,95 +1314,6 @@ type tstep: protocol -> protocol -> Type =
 open Constructive
 open FunctionalExtensionality
 
-val env_upd_slice_lemma: p:prin -> en:env -> x:varname -> v:value
-                         -> Lemma (requires (True))
-                                  (ensures (slice_en p (update_env en x v) =
-                                            update_env (slice_en p en) x (slice_v p v)))
-let env_upd_slice_lemma p en x v =
-  cut (FEq (slice_en p (update_env en x v))
-      (update_env (slice_en p en) x (slice_v p v)))
-
-opaque val cstep_lemma: #c:sconfig -> #c':sconfig -> h:cstep c c' -> p:prin
-                        -> Tot (cor (u:unit{slice_c p c = slice_c p c'})
-                               (cstep (slice_c p c) (slice_c p c')))
-#set-options "--max_fuel 2 --initial_fuel 2 --initial_ifuel 2 --max_ifuel 2 --split_cases 1"
-let cstep_lemma #c #c' h p = match h with
-  | C_aspar_ps (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else IntroR (C_aspar_ps (slice_c p c) (slice_c p c'))
-  | C_unbox (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else IntroR (C_unbox (slice_c p c) (slice_c p c'))
-  | C_const (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else IntroR (C_const (slice_c p c) (slice_c p c'))
-  | C_var (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else IntroR (C_var (slice_c p c) (slice_c p c'))
-  | C_let_e1 (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else IntroR (C_let_e1 (slice_c p c) (slice_c p c'))
-  | C_abs (Conf _ m _ en _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else
-      IntroR (C_abs (slice_c p c) (slice_c p c'))
-  | C_app_e1 (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else IntroR (C_app_e1 (slice_c p c) (slice_c p c'))
-  | C_aspar_e (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else IntroR (C_aspar_e (slice_c p c) (slice_c p c'))
-  | C_app_e2 (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else IntroR (C_app_e2 (slice_c p c) (slice_c p c'))
-  | C_aspar_red (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else IntroR (C_aspar_red (slice_c p c) (slice_c p c'))
-  | C_box_red (Conf _ m s _ _) _ ->
-    if mem p (Mode.ps m) then
-      IntroR (C_box_red (slice_c p c) (slice_c p c'))
-    else if mem p (Mode.ps (Frame.m (Cons.hd s))) then
-      IntroR (C_box_red (slice_c p c) (slice_c p c'))
-    else IntroL ()
-  | C_unbox_red (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else IntroR (C_unbox_red (slice_c p c) (slice_c p c'))
-  | C_let_red (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else IntroR (C_let_red (slice_c p c) (slice_c p c'))
-  | C_app_red (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else IntroR (C_app_red (slice_c p c) (slice_c p c'))
-  | C_let_beta (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else
-      let Conf _ _ _ en (T_red (R_let x v _)) = c in
-      let _ = env_upd_slice_lemma p en x v in
-      IntroR (C_let_beta (slice_c p c) (slice_c p c'))
-  | C_app_beta (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else
-      let T_red (R_app (V_clos en x _) v) = Conf.t c in
-      env_upd_slice_lemma p en x v;
-      IntroR (C_app_beta (slice_c p c) (slice_c p c'))
-  | C_aspar_beta (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else
-      let T_red (R_aspar _ (V_clos en x _)) = Conf.t c in
-      env_upd_slice_lemma p en x (V_const (C_unit));
-      IntroR (C_aspar_beta (slice_c p c) (slice_c p c'))
-  | C_box_beta (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else
-      IntroR (C_box_beta (slice_c p c) (slice_c p c'))
-  | C_unbox_beta (Conf _ m _ _ _) _ ->
-    if not (mem p (Mode.ps m)) then IntroL ()
-    else
-      IntroR (C_unbox_beta (slice_c p c) (slice_c p c'))
-
-(**********)
-
-#reset-options
 
 open OrdMap
 
