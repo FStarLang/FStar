@@ -19,6 +19,9 @@ open Set
 open ST
 type even (x:int) = x%2=0
 
+opaque type fresh (refs:set aref) (h0:heap) =
+  (forall (a:Type) (a:ref a).{:pattern (contains h0 a)} mem (Ref a) refs ==> not(contains h0 a))
+
 effect InvST (t:Type) (inv:(heap -> Type)) (fp:set aref) (post:(heap -> t -> heap -> Type)) =
              ST t (fun h -> On fp inv h)
                   (fun h i h' -> modifies fp h h' /\ post h i h' /\ On fp inv h')
@@ -42,7 +45,7 @@ val mk_counter: unit
                      (ensures  (fun h v h' ->
                              modifies !{} h h'
                              /\ On  (Evens.fp v) (Evens.inv v) h'
-                             /\ Heap.fresh h (Evens.fp v)))
+                             /\ fresh (Evens.fp v) h))
 let mk_counter _ =
   let x = ST.alloc 0 in
   let y = ST.alloc 0 in
@@ -60,7 +63,7 @@ val mk_counter_2: unit
                        (ensures  (fun h v h' ->
                          modifies !{} h h'
                          /\ On  (Evens.fp v) (Evens.inv v) h'
-                         /\ Heap.fresh h (Evens.fp v)))
+                         /\ fresh (Evens.fp v) h))
 let mk_counter_2 _ =
   let x = ST.alloc 0 in
   let evens _ =
