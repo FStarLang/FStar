@@ -134,12 +134,12 @@ let server () =
       let (t, m) = split msg signal_size  in
       match signal_split t with
       | Some (s, c) ->
-        if fresh_cnt c then (
+        if fresh_cnt c then
           if verify k t m then (
-	    assert(Signal s c);
-	    max_lemma s c !log_prot;
-	    log_and_update s c;
+	          assert(Signal s c);
+	          max_lemma s c !log_prot;
+	          log_and_update s c;
             None
-	  ) else Some "MAC failed"
-	) else Some "Counter already used"
+	        ) else Some "MAC failed"
+	      else Some "Counter already used"
       | None -> Some "Bad tag" )

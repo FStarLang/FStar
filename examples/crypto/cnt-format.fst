@@ -1,12 +1,10 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Format --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    options:--admit_fsi Set --verify_module Format;
     variables:LIB=../../lib;
-    other-files:$LIB/string.fst $LIB/list.fst
-            $LIB/ext.fst $LIB/classical.fst
-            $LIB/set.fsi $LIB/set.fst
-            $LIB/heap.fst $LIB/st.fst
-            $LIB/seq.fsi $LIB/seqproperties.fst
-  --*)
+    other-files:../../lib/list.fst
+      ../../lib/string.fst
+      ../../lib/partialmap.fst
+--*)
 
 
 (*
@@ -28,29 +26,32 @@
 module Format
 open Prims.PURE
 open String
-open Seq
-open SeqProperties
+open Array
 
-
-type message = Seq.seq byte
-type msg (l:nat) = m:message{Seq.length m==l}
+type message = seq byte
+type msg (l:nat) = m:message{length m==l}
 
 (* ----- a lemma on array append *)
 val append_inj_lemma: b1:message -> b2:message
                    -> c1:message -> c2:message
-                   -> Lemma (requires (length b1==length c1 /\  Eq (append b1 b2) (append c1 c2)))
-                            (ensures True)//(Eq b1 c1 /\ Eq b2 c2))
+                   -> Lemma (requires (length b1==length c1 /\  equal (append b1 b2) (append c1 c2)))
+                            (ensures (equal b1 c1 /\ equal b2 c2))
                             [SMTPat (append b1 b2); SMTPat (append c1 c2)] (* given to the SMT solver *)
 let rec append_inj_lemma b1 b2 c1 c2 =
   ()
 
 (* ----- from strings to bytestring and back *)
 type uint = i:int{0 <= i}
-val max_int : uint -> Tot uint
-let rec max_int (i:int{1 <= i}) = if i > 1 then 256 * max_int (i-1) else 256
+type pint = i:int{1 <= i}
+(*assume *)
+val max_int : i:pint -> Tot uint
+let rec max_int i =
+  if i > 1 then
+    256 * max_int (i-1)
+  else 256
 
-logic type UInt (len:uint) (i:int) = (0 <= i /\ i < max_int len)
-type ulint (len:uint) = i:int{UInt len i}
+logic type UInt (len:pint) (i:int) = (0 <= i /\ i < max_int len)
+type ulint (len:pint) = i:int{UInt len i}
 type uint16 = i:int{UInt 2 i}
 let uint16_max = (max_int 2) - 1
 type uint32 = i:int{UInt 4 i}
@@ -71,11 +72,11 @@ assume val iutf8T: m:message -> Tot (s:string{utf8 s == m})
 
 assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
-    Eq (utf8 s0) (utf8 s1) ==> s0==s1
+    equal (utf8 s0) (utf8 s1) ==> s0==s1
 
-assume val ulint_to_bytes: len:uint -> ulint len -> Tot (msg len)
-assume val bytes_to_ulint: len:uint -> x:msg len -> Tot (y:ulint len{ulint_to_bytes len y == x})
-assume UINT_inj: forall len s0 s1. Eq (ulint_to_bytes len s0) (ulint_to_bytes len s1) ==> s0==s1
+assume val ulint_to_bytes: len:pint -> ulint len -> Tot (msg len)
+assume val bytes_to_ulint: len:pint -> x:msg len -> Tot (y:ulint len{ulint_to_bytes len y == x})
+assume UINT_inj: forall len s0 s1. equal (ulint_to_bytes len s0) (ulint_to_bytes len s1) ==> s0==s1
 
 let uint16_to_bytes = ulint_to_bytes 2
 let uint32_to_bytes = ulint_to_bytes 4
@@ -98,6 +99,7 @@ let tag2 = create 1 2uy
 
 let request s = append tag0 (utf8 s)
 
+val response: s:string{ length (utf8 s) < max_int 2} -> string -> Tot message
 let response s t =
   let lb = uint16_to_bytes (length (utf8 s)) in
   append tag1 (append lb (append (utf8 s) (utf8 t)))
@@ -123,7 +125,7 @@ let signal_size = 7 (* Bytes *)
 
 val signal_components_corr:
   s0:uint32 -> c0:uint16 -> s1:uint32 -> c1:uint16 ->
-  Lemma (requires (Eq (signal s0 c0) (signal s1 c1)))
+  Lemma (requires (equal (signal s0 c0) (signal s1 c1)))
         (ensures  (s0==s1 /\ c0==c1))
         [SMTPat (signal s0 c0); SMTPat (signal s1 c1)]
 let signal_components_corr s0 c0 s1 c1 = ()
@@ -139,20 +141,20 @@ let signal_components_corr s0 c0 s1 c1 = ()
    sufficient *)
 
 val req_resp_distinct:
-  s:string -> s':string16 -> t':string ->
+  s:string -> s':string16{ length (utf8 s') < max_int 2} -> t':string ->
   Lemma (requires True)
         (ensures ( ( (request s) <> (response s' t'))))
         [SMTPat (request s); SMTPat (response s' t')]
-let req_resp_distinct s s' t' = cut (Seq.index tag0 0 == 0uy)
+let req_resp_distinct s s' t' = cut (index tag0 0 == 0uy)
 
 val req_components_corr:
   s0:string -> s1:string ->
-  Lemma (requires (Eq (request s0) (request s1)))
+  Lemma (requires (equal (request s0) (request s1)))
         (ensures  (s0==s1))
 let req_components_corr s0 s1 = ()
 
 val resp_components_corr:
-  s0:string16 -> t0:string -> s1:string16 -> t1:string ->
-  Lemma (requires (Eq (response s0 t0) (response s1 t1)))
+  s0:string16{ length (utf8 s0) < max_int 2} -> t0:string -> s1:string16{ length (utf8 s1) < max_int 2} -> t1:string ->
+  Lemma (requires (equal (response s0 t0) (response s1 t1)))
         (ensures  (s0==s1 /\ t0==t1))
 let resp_components_corr s0 t0 s1 t1 = ()
