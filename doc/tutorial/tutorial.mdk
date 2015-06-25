@@ -4238,39 +4238,20 @@ let shift p = Point.x p := 17; Point.y p := 18
 let shift p = Point.x p := 17; Point.y p := 18
 ~~~
 ~~
-
-
 ~
 
-<!--
-```
-val frame: p1:point -> p2:point -> ST unit 
-  (requires (fun h -> at_origin p1 h))
-  
-let frame (p1:point) (p2:point) = 
-    //say we know that p2 is at the origin
-    shift_point p1
-    //we'd like to prove that p2 remains at the origin
 
-val new_point: x:int -> y:int -> ST point 
-  (requires (fun h -> True))
-  (ensures (fun h0 p h1 ->
-                modifies Set.empty h0 h1
-                /\ Heap.contains h1 (Point.x p)
-                /\ Heap.contains h1 (Point.y p)
-                /\ Heap.sel h1 (Point.x p) = x
-                /\ Heap.sel h1 (Point.y p) = y))
+## Hyper-heaps
 
-val shift_point_x: p:point -> ST unit 
-  (requires (fun h -> True))
-  (ensures (fun h0 _ h1 -> 
-                modifies !{Point.x p} h0 h1
-                /\ sel h1 (Point.x p) = sel h0 (Point.x p) + 1))
+The style of the previous section is quite general. But, as programs scale up, 
+specifying and reasoning about anti-aliasing can get to be quite tedious. In this chapter, 
+we look at an alternative way of proving stateful programs correct by making use of 
+a more structured representation of memory that we call a "HyperHeap". First, we illustrate 
+the problem of scaling up the approach of the previous chapter to even slightly larger examples
 
-```
--->
+### Flying robots
 
-### Hyper-heaps
+
 
 
 ## Local state in two counters
