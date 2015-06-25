@@ -42,7 +42,7 @@ type withinfo_t<'a,'t> = {
   p: Range.range; 
 } 
 
-(* Free term and type varibles *)
+(* Free term and type variables *)
 type var<'t>  = withinfo_t<lident,'t>
 type fieldname = lident //TODO:remove
 type inst<'a> = ref<option<'a>> //TODO: remove

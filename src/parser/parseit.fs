@@ -36,7 +36,7 @@ let read_build_config (filename:string) =
         | _ -> fail "more than one 'options' field" in
     let set_filenames v = match !filenames with 
         | None -> filenames := Some v
-        | _ -> fail "more than on 'other-files' field" in
+        | _ -> fail "more than one 'other-files' field" in
     let set_variable (x, v) = variables := (x,v)::!variables in
     let substitute_variables (f:string) = !variables |> List.fold_left (fun (f:string) (x,v) -> f.Replace("$"^x, v)) f  in
     let fs = 
