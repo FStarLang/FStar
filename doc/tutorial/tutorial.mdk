@@ -3909,6 +3909,115 @@ let revoke e =
 
 ## Reasoning about (anti-)aliased heap structures
 
+A central problem in reasoning about heap-manipulating programs has to do 
+with reasoning about updates to references in the presence of aliasing. In general, 
+any two references (with compatible types) can alias each other (i.e, they may refer 
+to the same piece of memory), so updating one can also change the contents of the other. 
+In this section, we'll look at two small but representative samples that illustrate
+how this form of reasoning can be done in F\*. 
+
+### Dynamic frames
+
+For our first example, we define the type of a 2-dimensional
+mutable point. The refinement on `y` ensures that the references
+used to store each coordinate are distinct.
+
+```
+type point = 
+  | Point : x:ref int -> y:ref int{y<>x} -> point
+```
+
+Allocating a new point is straightforward:
+
+```
+let new_point x y = 
+  let x = ref x in 
+  let y = ref y in 
+  Point x y
+```
+
+As is moving a point by a unit along the `x`-axis.
+```
+let shift_x p = Point.x p := !(Point.x p) + 1
+```
+
+Now, things get a bit more interesting. Let's say we hav e
+a pair of points, `p1` and `p2`, we want to shift `p1`, and 
+reason that `p2` is unchanged. For example, we'd like 
+to identify some conditions that are sufficient to prove that 
+the assertion in the program below always succeeds. 
+
+```
+let frame (p1:point) (p2:point) = 
+    let x0 = !(Point.x p2) in //p2.x is initially x0
+    shift_x p1;
+    let x1 = !(Point.x p2) in
+    assert (x0 = x1)  //p2.x is unchanged
+```
+
+If you give this program (reproduced in its entirety below) to F\*, it
+will report no errors. This may surprise you: after all, if you call
+`frame p p` the assertion will indeed fail. What's going on here is that
+for functions in the `ST` effect, F\* infers a most precise type for it,
+and if the programmer did not write down any other specification, this
+precise inferred type is what F\* will use. This means that without an
+annotation on `frame`, F\* does not check that the assertion will succeed
+on every invocation of `frame`; instead, using the inferred type it will
+aim to prove that the assertion will succeed whenever the function is
+called. Let's try:
+
+```
+val test0: unit -> ST unit (requires (fun h -> True)) (ensures (fun _ _ _ -> True))
+let test0 () =
+  let x = new_point 0 0 in 
+  frame x x
+```
+
+Here, we wrote a specification for `test0`, asking it to have trivial
+pre-condition. When we ask F\* to check this, it complains at the call to
+`frame x x`, saying that the assertion failed.
+
+If we try calling `frame` with two distinct points, as below, then we
+can prove that the assertion succeeds.
+
+```
+val test1: unit -> ST unit (requires (fun h -> True)) (ensures (fun _ _ _ -> True))
+let test1 () =
+  let x = new_point 0 0 in
+  let y = new_point 0 0 
+  frame x y
+```
+<!--
+```
+val frame: p1:point -> p2:point -> ST unit 
+  (requires (fun h -> at_origin p1 h))
+  
+let frame (p1:point) (p2:point) = 
+    //say we know that p2 is at the origin
+    shift_point p1
+    //we'd like to prove that p2 remains at the origin
+
+val new_point: x:int -> y:int -> ST point 
+  (requires (fun h -> True))
+  (ensures (fun h0 p h1 ->
+                modifies Set.empty h0 h1
+                /\ Heap.contains h1 (Point.x p)
+                /\ Heap.contains h1 (Point.y p)
+                /\ Heap.sel h1 (Point.x p) = x
+                /\ Heap.sel h1 (Point.y p) = y))
+
+val shift_point_x: p:point -> ST unit 
+  (requires (fun h -> True))
+  (ensures (fun h0 _ h1 -> 
+                modifies !{Point.x p} h0 h1
+                /\ sel h1 (Point.x p) = sel h0 (Point.x p) + 1))
+
+```
+-->
+
+### Hyper-heaps
+
+
 ## Local state in two counters
 
 In this simple example with two counters we show how to maintain useful
