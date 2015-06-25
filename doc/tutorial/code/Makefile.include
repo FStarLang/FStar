@@ -11,7 +11,7 @@ FSTAR_HOME = ../../../..
 
 STDLIB = $(addprefix $(FSTAR_HOME)/lib/, $(LIB_FILES))
 SECLIB = $(addprefix $(FSTAR_HOME)/lib/, string.fst partialmap.fst list.fst st.fst array-realized.fst )
-FSTAR  = $(FSTAR_HOME)/bin/fstar.exe $(STDLIB) $(OTHERFLAGS) 
+FSTAR  = $(FSTAR_HOME)/bin/fstar.exe $(STDLIB) $(OTHERFLAGS)
 
 # FSTAR = $(FSTAR_HOME)/src/ocaml-output/fstarml $(STDLIB)
 
@@ -37,6 +37,7 @@ EXERCISES =\
   ex7b-stlc-pairs\
   ex7c-stlc-let\
   ex7d-stlc-eval\
+  ex10-shift\
 # Files currently not compiling
 #  ex6b-sort-poly\
    ex6d-no-discard\

@@ -1,11 +1,11 @@
 (*--build-config
-    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module CntProtocol --admit_fsi Seq --admit_fsi Format --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module CntProtocol --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
     variables:LIB=../../lib;
     other-files:$LIB/string.fst $LIB/list.fst
             $LIB/ext.fst $LIB/classical.fst
             $LIB/set.fsi $LIB/set.fst
             $LIB/heap.fst $LIB/st.fst
-            $LIB/seq.fsi $LIB/seqproperties.fst cnt-format.fsi cnt-mac.fst
+            $LIB/seq.fsi $LIB/seqproperties.fst cnt-format.fst cnt-mac.fst
   --*)
 
 module CntProtocol
@@ -118,6 +118,7 @@ val client : uint32 -> ST (option string)
 let client (s: uint32) =
   let c = next_cnt () in
   admitP (Signal s c);
+  assert(Signal s c);
   let t = Format.signal s c in
   let m = mac k t in
   send (append t m);
@@ -136,7 +137,7 @@ let server () =
       | Some (s, c) ->
         if fresh_cnt c then
           if verify k t m then (
-//	          assert(Signal s c);
+	          assert(Signal s c);
 	          max_lemma s c !log_prot;
 	          log_and_update s c;
             None
