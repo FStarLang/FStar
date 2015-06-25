@@ -3658,8 +3658,9 @@ relating the `()` to the resulting heap, it suffices to prove
 `post () (upd h0 r v)` when `write r v` is run in the initial heap `h0`.
 
 ~Remark
-F\* provides syntactic sugar so that you can write `!r` for `read r`
-and `r := v` instead of `ST.write r v`.
+F\* provides support for user-defined custom operators. To allow you to
+write `!r` for `read r` and `r := v` instead of `ST.write r v`, we define
+`let op_Bang x = ST.read x` and `let op_Colon_Equals x v = ST.write x v`.
 ~
 
 As with the `PureWP`, the predicate transformers `StateWP t` form a
@@ -3714,6 +3715,15 @@ let h f x = f x
 
 val g : x:ref int -> ST int (fun h -> True) (fun h0 y h1 -> h0=h1 /\ y >= 0)
 let g = h (as_ST f)
+```
+
+### The `St` effect
+
+We define another abbreviation on top of `ST` for stateful programs with
+trivial pre- and post-conditions.
+
+```
+  effect St (a:Type) = ST a (fun h -> True) (fun _ _ _ -> True)
 ```
 
 ## Lifting effects
@@ -3954,45 +3964,284 @@ to identify some conditions that are sufficient to prove that
 the assertion in the program below always succeeds. 
 
 ```
-let frame (p1:point) (p2:point) = 
-    let x0 = !(Point.x p2) in //p2.x is initially x0
+let shift_p1 (p1:point) (p2:point) = 
+    let p2_0 = !(Point.x p2), !(Point.y p2)  in //p2 is initially p2_0
     shift_x p1;
-    let x1 = !(Point.x p2) in
-    assert (x0 = x1)  //p2.x is unchanged
+    let p2_1 = !(Point.x p2), !(Point.y p2) in
+    assert (p2_0 = p2_1)                        //p2 is unchanged
 ```
 
 If you give this program (reproduced in its entirety below) to F\*, it
 will report no errors. This may surprise you: after all, if you call
-`frame p p` the assertion will indeed fail. What's going on here is that
+`shift_p1 p p` the assertion will indeed fail. What's going on here is that
 for functions in the `ST` effect, F\* infers a most precise type for it,
 and if the programmer did not write down any other specification, this
 precise inferred type is what F\* will use. This means that without an
-annotation on `frame`, F\* does not check that the assertion will succeed
-on every invocation of `frame`; instead, using the inferred type it will
+annotation on `shift_p1`, F\* does not check that the assertion will succeed
+on every invocation of `shift_p1`; instead, using the inferred type it will
 aim to prove that the assertion will succeed whenever the function is
 called. Let's try:
 
 ```
-val test0: unit -> ST unit (requires (fun h -> True)) (ensures (fun _ _ _ -> True))
+val test0: unit -> St unit
 let test0 () =
   let x = new_point 0 0 in 
-  frame x x
+  shift_p1 x x
 ```
 
 Here, we wrote a specification for `test0`, asking it to have trivial
 pre-condition. When we ask F\* to check this, it complains at the call to
-`frame x x`, saying that the assertion failed.
+`shift_p1 x x`, saying that the assertion failed.
 
-If we try calling `frame` with two distinct points, as below, then we
+If we try calling `shift_p1` with two distinct points, as below, then we
 can prove that the assertion succeeds.
 
 ```
-val test1: unit -> ST unit (requires (fun h -> True)) (ensures (fun _ _ _ -> True))
+val test1: unit -> St unit 
 let test1 () =
   let x = new_point 0 0 in
   let y = new_point 0 0 
-  frame x y
+  shift_p1 x y
 ```
+
+In simple code like our example above, it is a reasonable trade-off to let F\* infer
+the most precise type of a function, and to have it check later, at each call site, that
+the those calls are safe. 
+
+As you write larger programs, it's a good idea to write down the types
+you expect, at least for tricky top-level functions. To see what these
+types look like for stateful programs, let's decorate each of the
+top-level functions in our example with the types---for these tiny
+functions, the types can often be larger than the code itself; but this
+is just an exercise. Typically, one wouldn't write down the types of such
+simple functions.
+
+### A type for `shift_x` and the `Heap.modifies` predicate
+
+Let's start with `shift_x`, since it is the simplest:
+
+Here's one very precise type for it:
+
+```
+val shift_x : p:point -> ST unit 
+  (requires (fun h -> True))
+  (ensures (fun h0 _ h1 -> h1=upd h0 (Point.x) (sel h0 (Point.x) + 1)))  
+```
+
+Another, less precise but more idiomatic type for it is:
+
+```
+val shift_x : p:point -> ST unit 
+  (requires (fun h -> True))
+  (ensures (fun h0 _ h1 -> modifies (only (Point.x p)) h0 h1))  
+```
+
+Informally, `ensures`-clause above says that the heap after calling this
+function (`h1`) differs from the initial heap `h0` only at `Point.x` (and
+possibly some newly allocated locations). Let's look at it in more detail.
+
+The predicate `modifies` is defined in the module `Heap`
+(`lib/heap.fst`). First, let's look at its signature, which says that it
+relates a `set aref` to a pair of heaps. The type `aref` is the type of a
+reference, but with the type of referent abstracted. As such, the first
+argument to `modifies` is a set of heterogenously typed references.
+
+```
+  type aref = 
+    | Ref : #a:Type -> ref a -> aref
+  let only x = Set.singleton (Ref x)
+  type modifies : set aref -> heap -> heap -> Type   
+```
+
+The definition of `modifies` follows:
+
+```
+type modifies mods h0 h1 = 
+  Heap.equal h1 (Heap.concat h1 (Heap.restrict (Set.complement mods) h0))  
+  
+```
+**Heap.equal**: `Heap.equal` is an equivalence relation on `heap` capturing the notion of
+_extensional equality_; i.e., two heaps are extensionally equal if they map each 
+reference to the same value. 
+
+**Heap.concat**: Each reference `r` in the heap `concat h h'` contains a value that is the
+same as in `h`, except if the `r` is in `h'`, in which case it's value is
+whatever value `h'` contains at `r`. More formally:
+
+```
+   sel r (concat h h')
+   = if contains h' r then sel h' r else sel h r 
+```
+
+**Heap.restrict** The function `restrict s h` provides a way to shrink
+the domain of the heap `h` to be at most `s`. Specifically:
+
+```
+  contains (restrict s h) r = Set.mem (Ref r) s && contains h r
+```
+
+Altogether, the definition of `modifies` says that for every reference `r`, 
+if `r` is not in the set `mods` and `r` if the heap `h0` contains `r`, 
+then `sel h1 r = sel h0 r`, i.e., it hasn't changed. Otherwise, 
+`sel h1 r = sel h1 r`---meaning we know nothing else about it.
+
+~Remark
+We define the following infix operators to build sets of heterogenous references. 
+
+```
+let op_Hat_Plus_Plus (#a:Type) (r:ref a) (s:set aref) = 
+    Set.union (Set.singleton (Ref r)) s
+
+let op_Plus_Plus_Hat (#a:Type) (s:set aref) (r:ref a) = 
+    Set.union s (Set.singleton (Ref r))
+
+let op_Hat_Plus_Hat (#a:Type) (#b:Type) (r1:ref a) (r2:ref b) = 
+    Set.union (Set.singleton (Ref r1)) (Set.singleton (Ref r2))
+```
+~
+
+### A type for `new_point` and freshness of references
+
+Here's a precise type for `new_point`, with its definition reproduced 
+for convenience.
+
+```
+val new_point: x:int -> y:int -> ST point 
+  (requires (fun h -> True))
+  (ensures (fun h0 p h1 ->
+                modifies Set.empty h0 h1
+                /\ fresh (Point.x p ^+^ Point.y p) h0 h1
+                /\ Heap.sel h1 (Point.x p) = x
+                /\ Heap.sel h1 (Point.y p) = y))
+let new_point x y =
+  let x = ref x in
+  let y = ref y in
+  Point x y
+```
+
+The `modifies` clause says the function modifies no existing
+reference---that's easy to see, it only allocates new references.
+
+In the body of the definition, we build `Point x y` and the type of
+`Point` requires us to prove that `x <> y`. The only way to prove that is
+if we know that `ref` returns a distinct reference each time, i.e., we
+need freshness. 
+
+~Remark
+Most identifiers in F\* are resolved unambiguously to some binder in scope. The identifier
+`ref` is the sole exception. It is idiomatic in ML to write `ref t` both for the type of a 
+reference and `ref v` to allocate a new reference. To support this idiom, F\* handles the 
+`ref` identifier in a special manner: in the latter form, when `ref` is applied to an expression, 
+F\* resolves `ref` to `ST.alloc`. If you don't like this convention, you can always just write
+`ST.alloc` yourself.
+~
+
+The type of `ST.alloc` (the name to which `ref` is resolved in the body
+of `new_point`) gives us the freshness we need to prove that `x <> y`. The type 
+below says that the returned reference does not exists in the initial heap
+and does exist in the final heap (initialized appropriately).
+
+```
+val alloc:  #a:Type -> init:a -> ST (ref a)
+    (requires (fun h -> True))
+    (ensures (fun h0 r h1 -> fresh (only r) h0 h1 /\ h1==upd h0 r init))
+
+type fresh (refs:set aref) (h0:heap) (h1:heap) =
+  forall (a:Type) (r:ref a). mem (Ref r) refs 
+                         ==> not(contains h0 a) /\ contains h1 a
+```
+
+
+Coming back to the type of `new_point`: By stating that the new heap
+contains both `Point.x` and `Point.y`, we provide the caller with enough
+information to prove that any references that it might allocate
+subsequently will be different from the references in the newly allocated
+point. For example, the assertion in the code below succeeds, only
+because `new_point` guarantees that the heap prior to the allocation of
+`z` contains `Point.x p`; and `ST.alloc` guarantees that `z` is different
+from any reference that exists in the prior heap. Carrying
+`Heap.contains` predicates in specifications is important for this
+reason.
+
+
+```
+let p = new_point () in 
+let z = ref 0 in 
+assert (Point.x p <> z)  
+```
+
+On the other hand, since the `ST` library we are working with provides no
+ability to deallocate a reference (other versions of it do; see, for
+example, `lib/stperm.fst`), we know that if we have a value `v:ref t`,
+that the current heap must contain it. Capturing this invariant, the `ST`
+library also provides the following primitive (whose implementation is a
+noop).
+
+```
+val recall: #a:Type -> r:ref a -> ST unit
+  (requires (fun h -> True))
+  (ensures (fun h0 _ h1 -> h0=h1 /\ Heap.contains h1 r))
+```
+
+Using this, we can write the following code. 
+
+```
+val f : ref int -> St unit
+let f (x:ref int) = 
+  recall x;         //gives us that the initial heap contains x, for free
+  let y = ref 0 in 
+  assert (y <> x)
+```
+
+As a matter of style, we prefer to keep the use of `recall` to a minimum,
+and instead carry `Heap.contains` predicates in our specifications, as
+much as possible.
+
+### A type for `shift_p1`
+
+Now, we have all the machinery we need to give `shift_p1` a sufficiently 
+strong type to prove that its assertion will never fail (if its pre-condition is met).
+
+```
+val shift_p1: p1:point
+           -> p2:point{   Point.x p2 <> Point.x p1
+                       /\ Point.y p2 <> Point.x p1 }
+           -> ST unit
+    (requires (fun h -> True))
+    (ensures (fun h0 _ h1 -> modifies (only (Point.x p1)) h0 h1))
+```
+
+In order to prove that the assignment to `Point.x p1` did not change
+`p2`, we need to know that `Point.x p1` does not alias either component
+of `p2`. In general, if `p1` can change arbitrarily, we also need the
+other two conjuncts, i.e., we will need that the references of `p1` and `p2`
+are pairwise distinct.
+
+~Remark 
+A note on style: we could have placed the refinement on `p2` within the
+requires clause. However, since the refinement is independent of the
+state, we prefer to write it in a manner that makes its state independence
+explicit.
+~
+
+~Exercise 
+Change `shift_x` to the function `shift` below that moves both the `x` and `y` components
+of its argument by some amount. Prove that calling this function in
+`shift_p1` does not change `p2`.
+
+~~ ExerciseFragment {exname=ex10b-shift}
+let shift p = Point.x p := 17; Point.y p := 18
+~~
+
+~~Answer 
+~~~ SolutionFragment {exname=ex10b-shift}
+let shift p = Point.x p := 17; Point.y p := 18
+~~~
+~~
+
+
+~
+
 <!--
 ```
 val frame: p1:point -> p2:point -> ST unit 
