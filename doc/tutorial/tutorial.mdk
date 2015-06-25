@@ -4249,8 +4249,90 @@ we look at an alternative way of proving stateful programs correct by making use
 a more structured representation of memory that we call a "HyperHeap". First, we illustrate
 the problem of scaling up the approach of the previous chapter to even slightly larger examples
 
+```
+  type a = b
+  ```
+  
 ### Flying robots
 
+![johnnysokko]
+
+Let's have some fun with flying robots. Maybe you've seen this classic Japanese
+TV series from the 60s. <https://en.wikipedia.org/wiki/Giant_Robo_(tokusatsu)>. Let's build
+a tiny model of this flying robot. 
+
+Our `bot` has a 3d-point representing its position; and two arms, both in polar coordinates. 
+
+```
+  type bot = {                            
+    pos:point;                                       
+    left:arm;                                        
+    right:arm
+  }                                      
+  and point = {                           
+    x:ref int;                           
+    y:ref int;                           
+    z:ref int;
+  }
+  and arm = {
+    polar:ref int;
+    azim:ref int
+  }  
+```
+
+Our bot has an invariant: whenever it is flying, it has its arms up. 
+
+![flying]
+
+We can write a function to make our robot fly, which sets its arms up and then 
+shoots the robot into the sky.
+
+```
+  let fly b = 
+    b.left.polar := 0; 
+    b.right.polar := 0;
+    b.z := 100
+  ```
+
+Now, we'd like to prove properties like the following:
+
+```
+  //initially, in h0: b1 not flying, b2 not flying 
+      fly b1
+  //in h1: b1 flying, b2 not flying
+  ```
+
+To prove this property, and to prove that the bot's invariant is
+maintained, we need many anti-aliasing invariants, including the
+following (stated informally). 
+
+```
+forall r1, r2. r1 in refs_in b1
+              /\ r2 in refs_in b2 ==> r1 <> r2
+refs in b.left.arm `disjoint` refs in b.pos
+refs in b.right.arm `disjoint` refs in b.pos
+refs in b.left.arm `disjoint` refs in b.right.arm
+```
+
+As you can see, what started out as a bit of fun programming is now a
+painful exercise in managing anti-aliasing invariants. Worse, even if we
+state all these invariants, proving that they are preserved involves
+reasoning about a quadratic number of inequalities between the all the
+references in each robot, as well as a further quadratic inequalities
+among the references of each bot.
+
+F\*'s effect mechanism provides an alternative to this tedium. Instead of
+working with the primitive `ST` effect (and its flat model of memory via
+the `heap` type) that we have been working with so far, we can define 
+easily define a different, more structured view of memory as a new effect. 
+One such alternative is the HyperHeap, a model of memory which provides a 
+convenient built-in notion of disjoint sets of references. 
+
+[johnnysokko]: johnnysokko.jpg "Johnny Sokko" { width=300px }
+[flying]: flying.gif "Flying Bot" { width=200px }
+
+
+### Hyper-heaps
 
 
 
