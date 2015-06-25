@@ -3747,6 +3747,12 @@ This says that in order to lift a `PURE` compuataion to `STATE`, we
 lift its `wp:PureWP a` (equivalently for its `wlp`) to a `StateWP a`
 that says that that pure computation leaves the state unmodified. 
 
+Note that the type of `PURE   ~> STATE` is
+`(a:Type) -> PureWP a -> StatePost a -> heap -> Type` which corresponds
+to `(a:Type) -> PureWP a -> StateWP a` as
+`kind StateWP a   = StatePost a -> StatePre` and
+`kind StatePre    = heap -> Type`.
+
 ## Indexed computation types 
 
 Finally, as mentioned earlier, in its full form a computation type has
@@ -3941,7 +3947,7 @@ As is moving a point by a unit along the `x`-axis.
 let shift_x p = Point.x p := !(Point.x p) + 1
 ```
 
-Now, things get a bit more interesting. Let's say we hav e
+Now, things get a bit more interesting. Let's say we have
 a pair of points, `p1` and `p2`, we want to shift `p1`, and 
 reason that `p2` is unchanged. For example, we'd like 
 to identify some conditions that are sufficient to prove that 
