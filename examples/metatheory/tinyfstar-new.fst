@@ -4775,7 +4775,7 @@ val pure_kinding_preservation : #g:env -> #t:typ -> #t':typ -> #k:knd ->
      hk:kinding g t k ->
      hstep:tstep t t' ->
      Tot (kinding g t' k)
-(decreases %[hstep])
+(decreases %[hstep;hk])
 
 (* SF : Would it not be easier to do an induction on %[hstep;ht] / %[hstep;hk] to remove the TySub and TyRet / KSub cases ? Most of those complicated inversion lemmas would not be needed anymore … *)
 let rec pure_typing_preservation g e e' t wp post hwf ht hstep hv = 
@@ -4878,7 +4878,34 @@ match hstep with
  admit() 
 )
 | _ -> admit()
-and pure_kinding_preservation g t t' k hwf hk hstep = admit()
+and ~> pure_kinding_preservation g t t' k hwf hk hstep = 
+if is_KSub hk then
+let KSub #g #t #k' #k hk' hsk = hk in
+ let hkt': kinding g t' k' = pure_kinding_preservation hwf hk' hstep in
+ KSub #g #t' #k' #k hkt' hsk
+else
+(
+ match hstep with
+ | TsArrT1 #t1 #t1' c hsteparg ->
+ (
+  let Cmp mc tc wpc = c in
+  let KArr hkt1 hktc hkwp hvmono = hk in
+  let hkt1' : kinding g t1' KType = pure_kinding_preservation #g #t1 #t1' #KType hwf hkt1 hsteparg in
+  let hs : subst_typing (sub_id) (eextend t1 g) (eextend t1' g) =
+    let heq : validity g (teqtype t1 t1') = VRedT #g #t1 #t1' #KType hkt1 hkt1' hsteparg in
+    let heq : validity g (teqtype t1' t1) = v_eq_symt #g #t1 #t1' #KType heq in
+    let hst:styping g t1' t1 = SubConv #g #t1 t1' heq hkt1 hkt1' in
+    styping_hs #g t1' t1 hst
+  in
+  let hktc':kinding (eextend t1' g) tc KType = tsubst_with_sub_id tc; kinding_substitution (sub_id) (hktc) (hs) in
+  let hkwp':kinding (eextend t1' g) wpc (k_m mc tc) = tsubst_with_sub_id wpc; ksubst_with_sub_id (k_m mc tc); kinding_substitution (sub_id) (hkwp) (hs) in
+  let hvmono' : validity (eextend t1' g) (monotonic mc tc wpc) = tsubst_with_sub_id (monotonic mc tc wpc); validity_substitution (sub_id) (hvmono) (hs) in
+  let hktarr' : kinding g (TArr t1' (Cmp mc tc wpc)) KType = KArr #g #t1' #tc #wpc #mc hkt1' hktc' hkwp' hvmono' in
+  hktarr'
+ )
+ | _ -> admit()
+)
+
 (*
 match hstep with
 | PsLamT #t #t' ebody hstep ->
