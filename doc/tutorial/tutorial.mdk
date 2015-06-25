@@ -3907,6 +3907,8 @@ let revoke e =
 ~~
 ~
 
+## Reasoning about (anti-)aliased heap structures
+
 ## Local state in two counters
 
 In this simple example with two counters we show how to maintain useful
