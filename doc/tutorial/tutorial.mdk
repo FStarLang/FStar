@@ -3038,8 +3038,8 @@ programs, kinds describe properties of types.
 ## `Type`: The type of types
 
 The basic construct in the kind system is the constant `Type`, which
-is the basic type of a type. For example, 
-just as we say that `0 : int` (zero has type `int`), we also say 
+is the basic type of a type. For example,
+just as we say that `0 : int` (zero has type `int`), we also say
 `int : Type` (`int` has kind `Type`), `bool : Type`, `nat : Type` etc.
 
 ## Arrow kinds
@@ -3062,7 +3062,7 @@ families, or [GADTs]. For example, here is one definition of a
 `vector`, a length-indexed list.
 
 ```
-type vector : Type -> nat -> Type = 
+type vector : Type -> nat -> Type =
    | Nil :  vector 'a 0
    | Cons : hd:'a -> n:nat -> tl:vector 'a n -> vector 'a (n + 1)
 ```
@@ -3091,7 +3091,7 @@ val reverse_vector: #a:Type -> #n:nat -> vector a n -> Tot (vector a n)
 ```
 
 This indicates that `reverse_vector` expects three arguments, but the
-`#` sign mark the first two arguments as implicit. Given a term 
+`#` sign mark the first two arguments as implicit. Given a term
 `v : vector t m`, simply writing `reverse_vector v` will type-check as
 `vector t m`---internally, F\* elaborates the function call to
 `reverse_vector #t #m v`, instantiating the two implicit arguments
@@ -3108,7 +3108,7 @@ words, the "ticked" type variable is an implicit type argument. With
 this in mind, the definition of `vector` is desugared to:
 
 ```
-type vector : Type -> nat -> Type = 
+type vector : Type -> nat -> Type =
    | Nil :  #a:Type -> vector a 0
    | Cons : #a:Type -> hd:a -> n:nat -> tl:vector a n -> vector a (n + 1)
 ```
@@ -3117,7 +3117,7 @@ One could go further and also define the `Cons` constructor's `n`
 argument to be implicit, like so:
 
 ```
-type vector : Type -> nat -> Type = 
+type vector : Type -> nat -> Type =
    | Nil :  #a:Type -> vector a 0
    | Cons : #a:Type -> hd:a -> #n:nat -> tl:vector a n -> vector a (n + 1)
 ```
@@ -3125,14 +3125,14 @@ type vector : Type -> nat -> Type =
 With this, given `v: vector int m`, we can write `Cons 0 v` to build a
 `vector int (m + 1)`.
 
-## Dependent kind arrows and type function 
+## Dependent kind arrows and type function
 
 Even some of the built-in type constructors can be given
 kinds. Consider the refinement type constructor: `_:_{_}`, whose
 instances include types we've seen before, like `x:int{x >= 0}`, which
 is the type `nat`, of course.  With less syntactic sugar, you can view
 the type `x:int{phi(x)}` as the application of a type constructor
-`refinement` to two arguments `int` and a refinement formula 
+`refinement` to two arguments `int` and a refinement formula
 `fun x -> phi(x)`. As discussed in Section [#sec-bool-versus-type], the formula
 `phi(x)` is itself a `Type`. Thus, the kind of the `refinement`
 constructor is `a:Type -> (a -> Type) -> Type`, meaning it takes two
@@ -3145,8 +3145,8 @@ the level of types, which when applied to a particular value, say,
 
 ## Kind abbreviations
 
-F\* allows top-level declarations to define abbreviations for kinds. For example, 
-one can write: 
+F\* allows top-level declarations to define abbreviations for kinds. For example,
+one can write:
 
 ```
 kind Predicate (a:Type) = a -> Type
@@ -3154,7 +3154,7 @@ kind Predicate (a:Type) = a -> Type
 
 Now, the kind `Predicate a` is an abbreviation for `a -> Type`.
 
-# Specifying effects 
+# Specifying effects
 
 F\* provides a mechanism to define new effects. As mentioned earlier,
 the system is already configured with several basic effects, including
@@ -3221,7 +3221,7 @@ liberal pre-condition predicate transformer. Intuitively, `WLP e Q` is
 sufficient to guarantee that if `e` contains no internal assertion
 failures, then its result satisfies `P`; in contrast, the `WP e P` is
 sufficient to guarantee both that `e`'s internal assertions succeed and
-that its result satisfies `P`. 
+that its result satisfies `P`.
 
 Here's the definition of `WLP` for our small example langauge.
 
@@ -3236,13 +3236,13 @@ The only difference with the `WP` is in the case of assertions. For a
 WLP, rather than requiring a proof of the assertion, we try to prove
 the post-condition assuming the assertion succeeds.
 
-How does this help us? Let's see. 
+How does this help us? Let's see.
 
 First, you can prove the following property about `WLP`.
 
 ```
-(Identity 1)  
-           WLP e P 
+(Identity 1)
+           WLP e P
       <==> forall x. P x \/ WLP e (fun y -> y <> x)
 ```
 
@@ -3255,8 +3255,8 @@ Armed with identity (1) above, we can also prove the following
 identity:
 
 ```
-(Identity 2) 
-          WP e P 
+(Identity 2)
+          WP e P
      <==> WP e (fun x -> True) /\ WLP e P
      <==> WP e (fun x -> True) /\ (forall x. P x \/ WLP e (fun y -> y <> x)) (by (1))
 ```
@@ -3271,7 +3271,7 @@ Finally, we come back to our rule for conditional expressions, which
 we can restate as follows (using identities (1) and (2)):
 
 ```
-WP (if b then e1 else e2) P 
+WP (if b then e1 else e2) P
 =    (b ==> WP e1 (fun x -> True))
   /\ ((not b) ==> WP e2 (fun x -> True))
   /\ (forall y. P y \/ ((b ==> WLP e1 (fun x -> x<>y)
@@ -3303,7 +3303,7 @@ predicate transformer that is not weaker than the weakest
 pre-condition of `e`; and `wlp` is a predicate transformer not weaker
 than the weakest liberal pre-condition of `e`. For the sake of
 brevity, we call `wp` the weakest pre-condition and `wlp` the weakest
-liberal pre-condition. 
+liberal pre-condition.
 
 For the purposes of the presentation here, we start by discussing a
 simplified form of these `C` types, i.e, we will consider computation
@@ -3353,7 +3353,7 @@ as it provides some insight into how F\* works under the covers. It
 also provides some guidance on how to define new effects. We discuss a
 fragment of it here.
 
-The type of pure computations is `PURE t wp wlp` where 
+The type of pure computations is `PURE t wp wlp` where
 `wp, wlp : (t -> Type) -> Type`. This means that pure computations produce
 `t`-typed results and are decribed by predicate transformers that
 transform result predicates (post-conditions of kind `t -> Type`) to
@@ -3380,15 +3380,15 @@ below:
 type return_PURE (#a:Type) (x:a) = fun (post: PurePost a) -> post x
 ```
 
-When sequentially composing two pure computations using 
-`let x = e1 in e2`, if 
-`e1: PURE t1 wp1 wlp1` and 
-`e2: (x:t1 -> PURE t2 (wp2 x) (wlp2 x))`, 
-we type the composed computation as 
+When sequentially composing two pure computations using
+`let x = e1 in e2`, if
+`e1: PURE t1 wp1 wlp1` and
+`e2: (x:t1 -> PURE t2 (wp2 x) (wlp2 x))`,
+we type the composed computation as
 `PURE t2 (bind_PURE wp1 wp2) (bind_PURE wlp1 wlp2)`, where:
 
 ```
-type bind_PURE (#a:Type) (#b:Type) 
+type bind_PURE (#a:Type) (#b:Type)
                (wp1: PureWP a)
                (wp2: a -> PureWP b)
  = fun (post:PurePost b) -> wp1 (fun (x:a) -> wp2 x post)
@@ -3403,7 +3403,7 @@ write specifications with pre- and post-conditions instead of
 predicate transformers. It is defined as follows:
 
 ```
-effect Pure (a:Type) (pre:Type) (post: a -> Type) = 
+effect Pure (a:Type) (pre:Type) (post: a -> Type) =
        PURE a (fun (p:PurePost a) -> pre /\ forall (x:a). post x ==> p x)
               (fun (p:PurePost a) -> forall (x:a). pre /\ post x ==> p x)
 ```
@@ -3414,7 +3414,7 @@ produces a result `v:a` such that `post v` is true.
 The `Tot` effect is defined below:
 
 ```
-effect Tot (a:Type) = 
+effect Tot (a:Type) =
        PURE a (fun (p:PurePost a) -> forall (x:a). p x)
               (fun (p:PurePost a) -> forall (x:a). p x)
 ```
@@ -3448,14 +3448,14 @@ assume val as_Pure: #a:Type -> #b:(a -> Type)
 
  The second last argument to `as_Pure` is named `f` and is tagged with
  an equality constraint, written by preceding the bound variable name
- with the equality symbol, i.e., `=f`. Given an application 
+ with the equality symbol, i.e., `=f`. Given an application
  `as_Pure g`, the equality constraint on the `f` argument of `as_Pure`
  instructs F\*'s type inference engine to unify the type of `g` with
  the expected type of `f`. Without this constraint, by default, F\*
  will try to prove that the type of `g` is a subtype of the expected
  type of `f`. In cases like this, where an argument mentions several
  implicit arguments that need to be inferred (`a, b, wp, wlp`, in this
- case), the equality constraint produces better inference resutls. 
+ case), the equality constraint produces better inference resutls.
 
 ~
 
@@ -3470,9 +3470,9 @@ Computing the post-condition is a bit more subtle, and is accomplished
 with the `as_ensures wlp` function. Perhaps the easiest way to
 understand it is by studying the roundtrip transformation of `PURE` to
 `Pure` and back to `PURE`. The key step below is in the transformation
-from (b) to (c), where we see that by ensuring 
-`~wlp (fun y -> y <> x)`, we make use precisely of the Identity 1 
-from the previous section. Given only a `wp` without a `wlp`, we would be 
+from (b) to (c), where we see that by ensuring
+`~wlp (fun y -> y <> x)`, we make use precisely of the Identity 1
+from the previous section. Given only a `wp` without a `wlp`, we would be
 stuck not being able to construct `as_ensures`.
 
 ```
@@ -3494,7 +3494,7 @@ stuck not being able to construct `as_ensures`.
 (d) PURE t (fun post -> wp (fun x -> True) /\ forall y.  wlp (fun y’ -> y<>y’) \/ post y)
            (fun post -> forall y. wp (fun x -> True) ==> (wlp (fun y’ -> y<>y’) \/ post y))
 
-= (rearranging quantifier) 
+= (rearranging quantifier)
 
 (e) PURE t (fun post -> wp (fun x -> True) /\ forall y.  wlp (fun y’ -> y<>y’) \/ post y)
            (fun post -> wp (fun x -> True) ==> forall y. (wlp (fun y’ -> y<>y’) \/ post y))
@@ -3502,14 +3502,14 @@ stuck not being able to construct `as_ensures`.
 = (identity 1)
 
 (f) PURE t (fun post -> wp (fun x -> True) /\ wlp (fun y’ -> post y’))
-           (fun post -> wp (fun x -> True) ==> wlp (fun y’ -> post y’)) 
+           (fun post -> wp (fun x -> True) ==> wlp (fun y’ -> post y’))
 
 <: (strengthening wlp, eta reduction)
 
 (g) PURE t (fun post -> wp (fun x -> True) /\ wlp post)
             wlp
 
-= (identity 2, eta) 
+= (identity 2, eta)
 
 (h) PURE t wp wlp
 ```
@@ -3521,9 +3521,9 @@ to `Pure`.
 val f : x:int -> PURE int (fun 'p -> x > 0 /\ 'p (x + 1)) (fun 'p -> x > 0 ==> 'p (x + 1))
 let f x = assert (x > 0); x + 1
 
-val h : #req:(int -> Type) 
-     -> #ens:(int -> int -> Type) 
-     -> =f:(x:int -> Pure int (req x) (ens x)) 
+val h : #req:(int -> Type)
+     -> #ens:(int -> int -> Type)
+     -> =f:(x:int -> Pure int (req x) (ens x))
      -> y:int -> Pure int (req y) (ens y)
 let h f x = f x
 
@@ -3564,7 +3564,7 @@ Pure t (p)
           (fun y -> p /\ q y)
 
 <: (weakening post-condition, eta)
-  
+
    Pure t p q
 ```
 ~~
@@ -3601,10 +3601,10 @@ assume val contains : #a:Type -> heap -> ref a -> a -> Tot bool
 ```
 
 These functions are interpreted using the following standard axioms,
-which allows the SMT solver to reason about heaps. 
+which allows the SMT solver to reason about heaps.
 
 ```
-assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).            
+assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).
                       {:pattern (sel (upd h r v) r)}
                       sel (upd h r v) r = v
 
@@ -3624,7 +3624,7 @@ interpretation unless `h` can be proven to be an `upd`.
 Also note the use of the `{:pattern ...}` form in the axioms above.
 This provides the SMT solver with a trigger for the quantifiers, in
 effect orienting the equalities in `SelUpd1` and `SelUpd2` as
-left-to-right rewritings.  
+left-to-right rewritings.
 ~
 
 The functions `sel` and `upd` provide a logical theory of heaps. At
@@ -3652,9 +3652,9 @@ assume val write: #a:Type -> r:ref a -> v:a -> STATE unit (wp_write r) (wp_write
 where wp_write r = fun (post:StatePost a) (h0:heap) -> post () (upd h0 r v)
 ```
 
-This says that `write r v` returns a a `unit`-typed result when 
+This says that `write r v` returns a a `unit`-typed result when
 `r:ref a` and `v:a`; and, to prove any post-condition `post:StatePost a`
-relating the `()` to the resulting heap, it suffices to prove 
+relating the `()` to the resulting heap, it suffices to prove
 `post () (upd h0 r v)` when `write r v` is run in the initial heap `h0`.
 
 ~Remark
@@ -3664,12 +3664,12 @@ write `!r` for `read r` and `r := v` instead of `ST.write r v`, we define
 ~
 
 As with the `PureWP`, the predicate transformers `StateWP t` form a
-monad, as shown by the combinators below. 
+monad, as shown by the combinators below.
 
 ```
 type return_STATE (#a:Type) (v:a) = fun (post:StatePost a) (h0:heap) -> post v h0
 
-type bind_STATE (#a:Type) (wp1:StateWP a) (wp2:a -> StateWP b) 
+type bind_STATE (#a:Type) (wp1:StateWP a) (wp2:a -> StateWP b)
      = fun (post:StatePost b) (h0:heap) -> wp1 (fun (x:a) -> wp2 x post) h0
 ```
 
@@ -3688,7 +3688,7 @@ effect ST (a:Type) (pre:StatePre) (post: (heap -> StatePost a)) = STATE a
      (forall a h1. (pre h /\ post h a h1) ==> p a h1))          (* WLP *)
 ```
 
-As before, we can also define a coercion to move to `ST` from `STATE`. 
+As before, we can also define a coercion to move to `ST` from `STATE`.
 
 
 ```
@@ -3702,7 +3702,7 @@ val as_ST: #a:Type -> #b:(a -> Type)
                              (as_ensures (wlp x))
 ```
 
-And here's a small program that uses this coercion. 
+And here's a small program that uses this coercion.
 
 ```
 let f x = !x * !x
@@ -3733,7 +3733,7 @@ automatically infer a specification for your program with a predicate
 transformer that captures the semantics of all the effects you
 use. The way this works is that F\* computes the least effect for each
 sub-term of your program, and then lifts the specification of each
-sub-term into some larger effect, as may be needed by the context. 
+sub-term into some larger effect, as may be needed by the context.
 
 For example, say you write:
 
@@ -3749,13 +3749,13 @@ from `lib/prims.fst`):
 
 ```
 sub_effect
-  PURE   ~> STATE = fun (a:Type) (wp:PureWP a) (p:StatePost a) (h:heap) -> 
+  PURE   ~> STATE = fun (a:Type) (wp:PureWP a) (p:StatePost a) (h:heap) ->
                     wp (fun a -> p a h)
 ```
 
 This says that in order to lift a `PURE` compuataion to `STATE`, we
 lift its `wp:PureWP a` (equivalently for its `wlp`) to a `StateWP a`
-that says that that pure computation leaves the state unmodified. 
+that says that that pure computation leaves the state unmodified.
 
 Note that the type of `PURE   ~> STATE` is
 `(a:Type) -> PureWP a -> StatePost a -> heap -> Type` which corresponds
@@ -3763,7 +3763,7 @@ to `(a:Type) -> PureWP a -> StateWP a` as
 `kind StateWP a   = StatePost a -> StatePre` and
 `kind StatePre    = heap -> Type`.
 
-## Indexed computation types 
+## Indexed computation types
 
 Finally, as mentioned earlier, in its full form a computation type has
 the shape `M t_1..t_n t wp wlp`, where `t_1..t_n` are some user-chosen
@@ -3806,7 +3806,7 @@ attention to many more details.
 
 The main idea is to maintain a reference that holds the current access
 control list. In order to access a resource, we need to prove that the
-current state contains the appropriate permission. 
+current state contains the appropriate permission.
 
 Here's how it goes:
 
@@ -3826,7 +3826,7 @@ type db = list entry
 (* The acls reference stores the current access-control list, initially empty *)
 let acls = ref []
 
-(* We define two pure functions that test whether 
+(* We define two pure functions that test whether
    the suitable permission exists in some db *)
 let canRead db file =
   is_Some (List.find (function Readable x | Writable x -> x=file) db)
@@ -3834,13 +3834,13 @@ let canRead db file =
 let canWrite db file =
   is_Some (List.find (function Writable x -> x=file | _ -> false) db)
 
-(* 
-   Here are two stateful functions which alter the access control list. 
-   In reality, these functions may themselves be protected by some 
-   further authentication mechanism to ensure that an attacker cannot 
-   alter the access control list 
-   
-   F* infers a fully precise predicate transformer semantics for them 
+(*
+   Here are two stateful functions which alter the access control list.
+   In reality, these functions may themselves be protected by some
+   further authentication mechanism to ensure that an attacker cannot
+   alter the access control list
+
+   F* infers a fully precise predicate transformer semantics for them
 *)
 let grant e  = acls := e::!acls
 let revoke e = acls := List.filter (fun e' -> e<>e') !acls
@@ -3848,10 +3848,10 @@ let revoke e = acls := List.filter (fun e' -> e<>e') !acls
 (* Next, we model two primitives that provide access to files *)
 
 (* We use two heap predicates, which will serve as stateful pre-conditions *)
-type CanRead (f:file) (h:heap)  = canRead  (Heap.sel h acls) f 
-type CanWrite (f:file) (h:heap) = canWrite (Heap.sel h acls) f 
+type CanRead (f:file) (h:heap)  = canRead  (Heap.sel h acls) f
+type CanWrite (f:file) (h:heap) = canWrite (Heap.sel h acls) f
 
-(* In order to call `read`, you need to prove 
+(* In order to call `read`, you need to prove
    the `CanRead f` permission exists in the input heap *)
 assume val read:   f:file -> ST string
        (requires (CanRead f))
@@ -3862,17 +3862,17 @@ assume val delete: f:file -> ST unit
        (requires (CanWrite f))
        (ensures (fun h s h' -> h=h'))
 
-(* Then, we have a top-level API, which provides protected 
+(* Then, we have a top-level API, which provides protected
    access to a file by first checking the access control list.
 
-   If the check fails, it raises a fatal exception using `failwith`. 
+   If the check fails, it raises a fatal exception using `failwith`.
    As such, it is defined to have effect `All`, which combines
-   both state and exceptions. 
+   both state and exceptions.
 
-   Regardless, the specification proves that `checkedDelete` 
+   Regardless, the specification proves that `checkedDelete`
    does not change the heap.
  *)
-val checkedDelete: file -> All unit 
+val checkedDelete: file -> All unit
     (requires (fun h -> True))
     (ensures (fun h x h' -> h=h'))
 let checkedDelete file =
@@ -3908,7 +3908,7 @@ let revoke e =
   ST.write acls db
 ~~
 
-~~Answer 
+~~Answer
 ~~~ SolutionFragment {exname=ex10a-acls}
 val grant : e:entry -> ST unit (requires (fun h -> True))
                                (ensures (fun h x h' -> sel h' acls = e::sel h acls))
@@ -3925,12 +3925,12 @@ let revoke e =
 
 ## Reasoning about (anti-)aliased heap structures
 
-A central problem in reasoning about heap-manipulating programs has to do 
-with reasoning about updates to references in the presence of aliasing. In general, 
-any two references (with compatible types) can alias each other (i.e, they may refer 
-to the same piece of memory), so updating one can also change the contents of the other. 
+A central problem in reasoning about heap-manipulating programs has to do
+with reasoning about updates to references in the presence of aliasing. In general,
+any two references (with compatible types) can alias each other (i.e, they may refer
+to the same piece of memory), so updating one can also change the contents of the other.
 In this section, we'll look at two small but representative samples that illustrate
-how this form of reasoning can be done in F\*. 
+how this form of reasoning can be done in F\*.
 
 ### Dynamic frames
 
@@ -3939,16 +3939,16 @@ mutable point. The refinement on `y` ensures that the references
 used to store each coordinate are distinct.
 
 ```
-type point = 
+type point =
   | Point : x:ref int -> y:ref int{y<>x} -> point
 ```
 
 Allocating a new point is straightforward:
 
 ```
-let new_point x y = 
-  let x = ref x in 
-  let y = ref y in 
+let new_point x y =
+  let x = ref x in
+  let y = ref y in
   Point x y
 ```
 
@@ -3958,13 +3958,13 @@ let shift_x p = Point.x p := !(Point.x p) + 1
 ```
 
 Now, things get a bit more interesting. Let's say we have
-a pair of points, `p1` and `p2`, we want to shift `p1`, and 
-reason that `p2` is unchanged. For example, we'd like 
-to identify some conditions that are sufficient to prove that 
-the assertion in the program below always succeeds. 
+a pair of points, `p1` and `p2`, we want to shift `p1`, and
+reason that `p2` is unchanged. For example, we'd like
+to identify some conditions that are sufficient to prove that
+the assertion in the program below always succeeds.
 
 ```
-let shift_p1 (p1:point) (p2:point) = 
+let shift_p1 (p1:point) (p2:point) =
     let p2_0 = !(Point.x p2), !(Point.y p2)  in //p2 is initially p2_0
     shift_x p1;
     let p2_1 = !(Point.x p2), !(Point.y p2) in
@@ -3985,7 +3985,7 @@ called. Let's try:
 ```
 val test0: unit -> St unit
 let test0 () =
-  let x = new_point 0 0 in 
+  let x = new_point 0 0 in
   shift_p1 x x
 ```
 
@@ -3997,16 +3997,16 @@ If we try calling `shift_p1` with two distinct points, as below, then we
 can prove that the assertion succeeds.
 
 ```
-val test1: unit -> St unit 
+val test1: unit -> St unit
 let test1 () =
   let x = new_point 0 0 in
-  let y = new_point 0 0 
+  let y = new_point 0 0
   shift_p1 x y
 ```
 
 In simple code like our example above, it is a reasonable trade-off to let F\* infer
 the most precise type of a function, and to have it check later, at each call site, that
-the those calls are safe. 
+the those calls are safe.
 
 As you write larger programs, it's a good idea to write down the types
 you expect, at least for tricky top-level functions. To see what these
@@ -4023,17 +4023,17 @@ Let's start with `shift_x`, since it is the simplest:
 Here's one very precise type for it:
 
 ```
-val shift_x : p:point -> ST unit 
+val shift_x : p:point -> ST unit
   (requires (fun h -> True))
-  (ensures (fun h0 _ h1 -> h1=upd h0 (Point.x) (sel h0 (Point.x) + 1)))  
+  (ensures (fun h0 _ h1 -> h1=upd h0 (Point.x) (sel h0 (Point.x) + 1)))
 ```
 
 Another, less precise but more idiomatic type for it is:
 
 ```
-val shift_x : p:point -> ST unit 
+val shift_x : p:point -> ST unit
   (requires (fun h -> True))
-  (ensures (fun h0 _ h1 -> modifies (only (Point.x p)) h0 h1))  
+  (ensures (fun h0 _ h1 -> modifies (only (Point.x p)) h0 h1))
 ```
 
 Informally, `ensures`-clause above says that the heap after calling this
@@ -4047,22 +4047,22 @@ reference, but with the type of referent abstracted. As such, the first
 argument to `modifies` is a set of heterogenously typed references.
 
 ```
-  type aref = 
+  type aref =
     | Ref : #a:Type -> ref a -> aref
   let only x = Set.singleton (Ref x)
-  type modifies : set aref -> heap -> heap -> Type   
+  type modifies : set aref -> heap -> heap -> Type
 ```
 
 The definition of `modifies` follows:
 
 ```
-type modifies mods h0 h1 = 
-  Heap.equal h1 (Heap.concat h1 (Heap.restrict (Set.complement mods) h0))  
-  
+type modifies mods h0 h1 =
+  Heap.equal h1 (Heap.concat h1 (Heap.restrict (Set.complement mods) h0))
+
 ```
 **Heap.equal**: `Heap.equal` is an equivalence relation on `heap` capturing the notion of
-_extensional equality_; i.e., two heaps are extensionally equal if they map each 
-reference to the same value. 
+_extensional equality_; i.e., two heaps are extensionally equal if they map each
+reference to the same value.
 
 **Heap.concat**: Each reference `r` in the heap `concat h h'` contains a value that is the
 same as in `h`, except if the `r` is in `h'`, in which case it's value is
@@ -4070,7 +4070,7 @@ whatever value `h'` contains at `r`. More formally:
 
 ```
    sel r (concat h h')
-   = if contains h' r then sel h' r else sel h r 
+   = if contains h' r then sel h' r else sel h r
 ```
 
 **Heap.restrict** The function `restrict s h` provides a way to shrink
@@ -4080,33 +4080,33 @@ the domain of the heap `h` to be at most `s`. Specifically:
   contains (restrict s h) r = Set.mem (Ref r) s && contains h r
 ```
 
-Altogether, the definition of `modifies` says that for every reference `r`, 
-if `r` is not in the set `mods` and `r` if the heap `h0` contains `r`, 
-then `sel h1 r = sel h0 r`, i.e., it hasn't changed. Otherwise, 
+Altogether, the definition of `modifies` says that for every reference `r`,
+if `r` is not in the set `mods` and `r` if the heap `h0` contains `r`,
+then `sel h1 r = sel h0 r`, i.e., it hasn't changed. Otherwise,
 `sel h1 r = sel h1 r`---meaning we know nothing else about it.
 
 ~Remark
-We define the following infix operators to build sets of heterogenous references. 
+We define the following infix operators to build sets of heterogenous references.
 
 ```
-let op_Hat_Plus_Plus (#a:Type) (r:ref a) (s:set aref) = 
+let op_Hat_Plus_Plus (#a:Type) (r:ref a) (s:set aref) =
     Set.union (Set.singleton (Ref r)) s
 
-let op_Plus_Plus_Hat (#a:Type) (s:set aref) (r:ref a) = 
+let op_Plus_Plus_Hat (#a:Type) (s:set aref) (r:ref a) =
     Set.union s (Set.singleton (Ref r))
 
-let op_Hat_Plus_Hat (#a:Type) (#b:Type) (r1:ref a) (r2:ref b) = 
+let op_Hat_Plus_Hat (#a:Type) (#b:Type) (r1:ref a) (r2:ref b) =
     Set.union (Set.singleton (Ref r1)) (Set.singleton (Ref r2))
 ```
 ~
 
 ### A type for `new_point` and freshness of references
 
-Here's a precise type for `new_point`, with its definition reproduced 
+Here's a precise type for `new_point`, with its definition reproduced
 for convenience.
 
 ```
-val new_point: x:int -> y:int -> ST point 
+val new_point: x:int -> y:int -> ST point
   (requires (fun h -> True))
   (ensures (fun h0 p h1 ->
                 modifies Set.empty h0 h1
@@ -4125,19 +4125,19 @@ reference---that's easy to see, it only allocates new references.
 In the body of the definition, we build `Point x y` and the type of
 `Point` requires us to prove that `x <> y`. The only way to prove that is
 if we know that `ref` returns a distinct reference each time, i.e., we
-need freshness. 
+need freshness.
 
 ~Remark
 Most identifiers in F\* are resolved unambiguously to some binder in scope. The identifier
-`ref` is the sole exception. It is idiomatic in ML to write `ref t` both for the type of a 
-reference and `ref v` to allocate a new reference. To support this idiom, F\* handles the 
-`ref` identifier in a special manner: in the latter form, when `ref` is applied to an expression, 
+`ref` is the sole exception. It is idiomatic in ML to write `ref t` both for the type of a
+reference and `ref v` to allocate a new reference. To support this idiom, F\* handles the
+`ref` identifier in a special manner: in the latter form, when `ref` is applied to an expression,
 F\* resolves `ref` to `ST.alloc`. If you don't like this convention, you can always just write
 `ST.alloc` yourself.
 ~
 
 The type of `ST.alloc` (the name to which `ref` is resolved in the body
-of `new_point`) gives us the freshness we need to prove that `x <> y`. The type 
+of `new_point`) gives us the freshness we need to prove that `x <> y`. The type
 below says that the returned reference does not exists in the initial heap
 and does exist in the final heap (initialized appropriately).
 
@@ -4147,7 +4147,7 @@ val alloc:  #a:Type -> init:a -> ST (ref a)
     (ensures (fun h0 r h1 -> fresh (only r) h0 h1 /\ h1==upd h0 r init))
 
 type fresh (refs:set aref) (h0:heap) (h1:heap) =
-  forall (a:Type) (r:ref a). mem (Ref r) refs 
+  forall (a:Type) (r:ref a). mem (Ref r) refs
                          ==> not(contains h0 a) /\ contains h1 a
 ```
 
@@ -4165,9 +4165,9 @@ reason.
 
 
 ```
-let p = new_point () in 
-let z = ref 0 in 
-assert (Point.x p <> z)  
+let p = new_point () in
+let z = ref 0 in
+assert (Point.x p <> z)
 ```
 
 On the other hand, since the `ST` library we are working with provides no
@@ -4183,13 +4183,13 @@ val recall: #a:Type -> r:ref a -> ST unit
   (ensures (fun h0 _ h1 -> h0=h1 /\ Heap.contains h1 r))
 ```
 
-Using this, we can write the following code. 
+Using this, we can write the following code.
 
 ```
 val f : ref int -> St unit
-let f (x:ref int) = 
+let f (x:ref int) =
   recall x;         //gives us that the initial heap contains x, for free
-  let y = ref 0 in 
+  let y = ref 0 in
   assert (y <> x)
 ```
 
@@ -4199,7 +4199,7 @@ much as possible.
 
 ### A type for `shift_p1`
 
-Now, we have all the machinery we need to give `shift_p1` a sufficiently 
+Now, we have all the machinery we need to give `shift_p1` a sufficiently
 strong type to prove that its assertion will never fail (if its pre-condition is met).
 
 ```
@@ -4217,24 +4217,24 @@ of `p2`. In general, if `p1` can change arbitrarily, we also need the
 other two conjuncts, i.e., we will need that the references of `p1` and `p2`
 are pairwise distinct.
 
-~Remark 
+~Remark
 A note on style: we could have placed the refinement on `p2` within the
 requires clause. However, since the refinement is independent of the
 state, we prefer to write it in a manner that makes its state independence
 explicit.
 ~
 
-~Exercise 
+~Exercise
 Change `shift_x` to the function `shift` below that moves both the `x` and `y` components
 of its argument by some amount. Prove that calling this function in
 `shift_p1` does not change `p2`.
 
-~~ ExerciseFragment {exname=ex10b-shift}
+~~ ExerciseFragment {exname=ex10-shift}
 let shift p = Point.x p := 17; Point.y p := 18
 ~~
 
-~~Answer 
-~~~ SolutionFragment {exname=ex10b-shift}
+~~Answer
+~~~ SolutionFragment {exname=ex10-shift}
 let shift p = Point.x p := 17; Point.y p := 18
 ~~~
 ~~
@@ -4243,10 +4243,10 @@ let shift p = Point.x p := 17; Point.y p := 18
 
 ## Hyper-heaps
 
-The style of the previous section is quite general. But, as programs scale up, 
-specifying and reasoning about anti-aliasing can get to be quite tedious. In this chapter, 
-we look at an alternative way of proving stateful programs correct by making use of 
-a more structured representation of memory that we call a "HyperHeap". First, we illustrate 
+The style of the previous section is quite general. But, as programs scale up,
+specifying and reasoning about anti-aliasing can get to be quite tedious. In this chapter,
+we look at an alternative way of proving stateful programs correct by making use of
+a more structured representation of memory that we call a "HyperHeap". First, we illustrate
 the problem of scaling up the approach of the previous chapter to even slightly larger examples
 
 ### Flying robots
@@ -4272,7 +4272,7 @@ The two counters will be updated simultaneously, such that their sum is
 always even. This requirement is expressed using the type `even` and
 `even_post` when liftet to the post condition of a stateful function.
 
-```                
+```
 type even (x:int) = x%2=0
 type even_post (h:heap) (i:int) (h':heap) = even i
 ```
@@ -4289,7 +4289,7 @@ We will employ two techniques to prove that the invariant is maintained.
 
  * First, by proving that `r1` and `r2` are incremented by the same amount.
  * Second, using alias analysis by proving that `r1` and `r2` are not changed at all.
- 
+
 
 ```
 type t =
