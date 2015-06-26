@@ -4241,7 +4241,7 @@ let shift p = Point.x p := 17; Point.y p := 18
 ~
 
 
-## Hyper-heaps
+# Lightweight framing with hyper-heaps
 
 The style of the previous section is quite general. But, as programs scale up,
 specifying and reasoning about anti-aliasing can get to be quite tedious. In this chapter,
@@ -4253,7 +4253,7 @@ the problem of scaling up the approach of the previous chapter to even slightly 
   type a = b
   ```
   
-### Flying robots
+## Flying robots
 
 ![johnnysokko]
 
@@ -4330,9 +4330,10 @@ convenient built-in notion of disjoint sets of references.
 
 [johnnysokko]: johnnysokko.jpg "Johnny Sokko" { width=300px }
 [flying]: flying.gif "Flying Bot" { width=200px }
+[heap]: heap.jpg "A flat heap" {width=300px}
+[hyperheap]: hyperheap.jpg "A hyper-heap" {width=500px}
 
-
-### Hyper-heaps
+## Hyper-heaps
 
 So far, we have been working with the `heap` type, a flat, typed-map from 
 references to their contents. The `ref` type is abstract---it has no structure
@@ -4377,43 +4378,416 @@ and `ST` we've been working with, except that instead of the type of
 memory being a flat `heap`, the memory has type `HyperHeap.t`, a map from
 region ids `rid` to `heaps`.
 
+### The type of region identifiers, `rid`
+
 The type `rid` is abstract to clients, with a few operations on it
 revealing its hierarchical structure. Specifically, we have three functions:
 
 ```
+type rid
+val root : rid
 val includes : rid -> rid -> Tot bool
 val extends  : rid -> rid -> Tot bool
 let disjoint i j = not (includes i j) && not (includes j i)
 ```
 
-And they satisfy the following lemmas:
+One way to think of `rid` is as a `list int`, where `includes i j` if and
+only if `i` is a prefix of `j`; and `extends i j` is true if `i = _::j`.
+However, while this may provide you with some intuition, formally, the
+only properties that these functions are known to satisfy are revealed by
+the following lemmas:
 
 ```
 val lemma_includes_refl: i:rid
-                      -> Lemma (requires (True))
-                               (ensures (includes i i))
-                               [SMTPat (includes i i)]
+-> Lemma (requires (True))
+         (ensures (includes i i))
+         [SMTPat (includes i i)]
 
-val lemma_disjoint_includes: i:rid -> j:rid -> k:rid ->
-  Lemma (requires (disjoint i j /\ includes j k))
-        (ensures (disjoint i k))
-        [SMTPat (disjoint i j);
-         SMTPat (includes j k)]
+val lemma_disjoint_includes: i:rid -> j:rid -> k:rid 
+-> Lemma (requires (disjoint i j /\ includes j k))
+         (ensures (disjoint i k))
+         [SMTPat (disjoint i j);
+          SMTPat (includes j k)]
 
-val lemma_extends_includes: i:rid -> j:rid ->
- Lemma (requires (extends j i))
-       (ensures (includes i j))
-       [SMTPat (extends j i)]
+val lemma_extends_includes: i:rid -> j:rid 
+-> Lemma (requires (extends j i))
+         (ensures (includes i j))
+         [SMTPat (extends j i)]
 
-val lemma_extends_disjoint: i:rid -> j:rid -> k:rid ->
-   Lemma (requires (extends j i /\ extends k i /\ j<>k))
+val lemma_extends_disjoint: i:rid -> j:rid -> k:rid 
+-> Lemma (requires (extends j i /\ extends k i /\ j<>k))
          (ensures (disjoint j k))
          [SMTPat (extends j i);
           SMTPat (extends k i)]
 ```
 
-[heap]: heap.jpg "A flat heap" {width=300px}
-[hyperheap]: hyperheap.jpg "A hyper-heap" {width=500px}
+### The type of region-indexed references: `rref`
+
+Next, we have a type `rref` for region-indexed
+references, as a funtion `as_ref` that coerces an `rref` to its
+underlying heap reference.
+
+~ Remark
+The functions `as_ref` and `ref_as_rref` have effect `GTot`, indicating
+that they are **ghostly** total functions. A subsequent chapter will
+describe ghost effects in more detail. For now, it suffices to know that
+computations with effect `GTot` can only be used in specifications.
+Concrete executable programs cannot use `GTot`. In this case, the `GTot`
+effect is used to ensure that client programs of `HyperHeap` cannot break
+the abstraction of the `rref` type, except in their specifications.
+
+~
+
+```
+  type rref : rid -> Type -> Type
+  val as_ref      : #a:Type -> #id:rid -> r:rref id a -> GTot (ref a)
+  val ref_as_rref : #a:Type -> i:rid -> r:ref a -> GTot (rref i a)
+  val lemma_as_ref_inj: #a:Type -> #i:rid -> r:rref i a
+      -> Lemma (requires (True))
+               (ensures ((ref_as_rref i (as_ref r) = r)))
+         [SMTPat (as_ref r)]
+```
+
+The functions `Heap.sel` and `Heap.upd` are adapted to work with
+hyper-heaps instead; in effect, we select first the region `i`
+corresponding to `rref i a` and then perform the select/update within the
+heap within that region. An important point to note is that although the
+`rid` type is structured hierarchically, the map of all regions is itself
+flat. Thus, selecting the region corresponding to `i` is constant time
+operation (rather than requiring a tree traversal). As we will see below,
+this is crucial for good automation in proofs.
+
+```
+let sel (#a:Type) (#i:rid) (m:t) (r:rref i a) = Heap.sel (Map.sel m i) (as_ref r)
+let upd (#a:Type) (#i:rid) (m:t) (r:rref i a) (v:a) = Map.upd m i (Heap.upd (Map.sel m i) (as_ref r) v)
+```
+### Stateful operations on regions and references 
+
+**Creating a new region** `HyperHeap` also provides four main stateful functions. The
+first of these, `new_region r0`, allocates a new, empty region rooted at `r0`
+
+```
+val new_region: r0:rid -> ST rid
+      (requires (fun m -> True))
+      (ensures (fun (m0:t) (r1:rid) (m1:t) ->
+                           extends r1 r0
+                        /\ fresh_region r1 m0 m1
+                        /\ m1=Map.upd m0 r1 Heap.emp))
+```
+
+**Allocating a reference in a region** The function `ralloc r v` allocates a new reference
+ in region `r` and initializes its contents to `v`.
+
+```
+val ralloc: #a:Type -> i:rid -> init:a -> ST (rref i a)
+    (requires (fun m -> True))
+    (ensures (fun m0 x m1 ->
+                    Let (Map.sel m0 i) (fun region_i ->
+                    not (Heap.contains region_i (as_ref x))
+                    /\ m1=Map.upd m0 i (Heap.upd region_i (as_ref x) init))))
+```
+
+**Reading and writing references** These next two operations are written `!r`
+and `r := v`, for dereference and assignment of `rref`'s, respectively.
+
+```
+val op_Bang: #a:Type -> #i:rid -> r:rref i a -> ST a
+  (requires (fun m -> True))
+  (ensures (fun m0 x m1 -> m1=m0 /\ x=Heap.sel (Map.sel m0 i) (as_ref r)))
+
+val op_Colon_Equals: #a:Type -> #i:rid -> r:rref i a -> v:a -> ST unit
+  (requires (fun m -> True))
+  (ensures (fun m0 _u m1 -> m1=Map.upd m0 i (Heap.upd (Map.sel m0 i) (as_ref r) v)))
+```
+
+### Framing conditions for hyper-heaps: `modifies` revised
+
+Finally, we redefine `modifies` clauses to work with hyper-heaps instead
+of heaps. Crucially, given a region ids `r1, ..., rn`, we intend to write
+`modifies (r1 ^++ ... ++^ rn) h0 h1` to mean that `h1` may differ from
+`h0` in all regions _rooted at some region_ in the set `{r1, ..., rn}`
+(and, as before, any other regions that are newly allocated in `h1`). As
+we will see, generalizing modifies clauses to work with hierarchical
+region names is a crucial feature, both for compactness of specifications
+and for better automation. 
+
+
+```
+type modifies (s:Set.set rid) (m0:t) (m1:t) =
+  Map.Equal m1 (Map.concat m1 (Map.restrict (Set.complement (mod_set s)) m0))
+
+where 
+val mod_set : Set.set rid -> GTot (Set.set rid)
+and forall (x:rid) (s:Set.set rid). 
+           Set.mem x (mod_set s) <==> (exists (y:rid). Set.mem y s /\ includes y x)
+```
+
+~Remark
+The interpretation of `Map.restrict, Map.concat` and `Map.Equal` is
+analogous to the counterparts for `Heap` discussed in the previous
+section.
+
+The definition of `mod_set s` is non-constructive, since deciding
+`Set.mem x (mod_set s)` requires finding a witness in `s`, and element
+`y` of `s`, such that `includes y x`. As such, we mark it as a ghost
+function with the `GTot` effect.
+~
+
+## Robot, fly!
+
+We now look at the use of hyper-heaps to solve our problem of 
+programming our robots. 
+
+The main idea is to define our data structures in a way that distinct
+components of the robot are allocated in distinct regions, thereby
+maintaining an invariant that the components do not interfere. For
+example, by allocating the left arm and the right arm of the robot in
+distinct regions, we know that the arms do not alias each other---moving
+one arm does not disturb the other.
+
+Here's how it goes:
+
+Each type carries an extra implicit parameter, recording the region in
+which its mutable references reside. Within a region, we get no free
+anti-aliasing properties---so, for those references, we write explicit
+inequalities that say, for example, that the `x, y` and `z` fields of a
+point are not aliased.
+
+For the `bot` itself, we say that its components are allocated in
+disjoint sub-regions of `r`, the region of the bot. Note that the
+hierarchical region names allow us to state this conveniently. With just
+a flat namespace of regions, we would had to have explicitly specified
+the set of regions that are transitively allocated within a bot (possibly
+breaking the abstraction of sub-objects, which would have to reveal how
+many regions they used.)
+
+```
+module Robot
+open Util
+open Heap
+open HyperHeap
+
+type point =
+  | Point : #r:rid
+          -> x:rref r int
+          -> y:rref r int
+          -> z:rref r int{x<>y /\ y<>z /\ x<>z}
+          -> point
+
+type arm =
+  | Arm : #r:rid
+       -> polar:rref r int
+       -> azim:rref r int{polar <> azim}
+       -> arm
+
+type bot =
+  | Bot : #r:rid
+       -> pos  :point{includes r (Point.r pos)}
+       -> left :arm  {includes r (Arm.r left)}
+       -> right:arm  {includes r (Arm.r right)
+                        /\ disjoint (Point.r pos) (Arm.r left)
+                        /\ disjoint (Point.r pos) (Arm.r right)
+                        /\ disjoint (Arm.r left)  (Arm.r right)}
+       -> bot
+```
+
+Next, we define our robot invariant: whenever it is flying, its arms are
+up. Additionally, we state that all the regions of the bot are included
+in the heap. This is a matter of taste: alternatively, we could have
+omitted the `contains` predicates in our invariant, and resorted to
+`ST.recall` (its analog for hyper-heaps), to prove that a region exists
+whenever we need that property.
+
+```
+let flying (b:bot) (h:HyperHeap.t) =
+    sel h (Point.z (Bot.pos b)) > 0
+
+let arms_up (b:bot) (h:HyperHeap.t) =
+    sel h (Arm.polar (Bot.right b)) = 0
+    && sel h (Arm.polar (Bot.left b)) = 0
+
+type robot_inv (b:bot) (h:HyperHeap.t) =
+  Map.contains h (Bot.r b)
+  /\ Map.contains h (Point.r (Bot.pos b))
+  /\ Map.contains h (Arm.r (Bot.left b))
+  /\ Map.contains h (Arm.r (Bot.right b))
+  /\ (flying b h ==> arms_up b h)
+```
+
+Now, we come to the code that builds new points, arms, and robots. In
+each case, the caller specifies `r0`, the region within which the object
+is to be allocated. We create a new sub-region of `r0`, allocate the
+object within in, prove that the region is fresh (meaning the initial
+heap does not contain that region, while the final heap does), and that
+the object is initialized as expected. Inthe case of `new_robot`, we also 
+prove that the the returned `bot` satisfies the robot invariant.
+
+
+```
+val new_point: r0:rid -> x:int -> y:int -> z:int -> ST point
+    (requires (fun h0 -> True))
+    (ensures (fun h0 p h1 ->
+          modifies Set.empty h0 h1
+          /\ extends (Point.r p) r0
+          /\ fresh_region (Point.r p) h0 h1
+          /\ sel h1 (Point.x p) = x
+          /\ sel h1 (Point.y p) = y
+          /\ sel h1 (Point.z p) = z))
+let new_point r0 x y z=
+  let r = new_region r0 in
+  let x = ralloc r x in
+  let y = ralloc r y in
+  let z = ralloc r z in
+  Point x y z
+
+val new_arm: r0:rid -> ST arm
+    (requires (fun h0 -> True))
+    (ensures (fun h0 x h1 ->
+          modifies Set.empty h0 h1
+          /\ extends (Arm.r x) r0
+          /\ fresh_region (Arm.r x) h0 h1))
+let new_arm r0 =
+  let r = new_region r0 in
+  let p = ralloc r 0 in
+  let a = ralloc r 0 in
+  Arm p a
+
+val new_robot: r0:rid -> ST bot (requires (fun h0 -> True))
+                                (ensures (fun h0 x h1 ->
+                                      modifies Set.empty h0 h1
+                                      /\ extends (Bot.r x) r0
+                                      /\ fresh_region (Bot.r x) h0 h1
+                                      /\ robot_inv x h1))
+let new_robot r0 =
+  let r = new_region r0 in
+  let p = new_point r 0 0 0 in
+  let left = new_arm r in
+  let right = new_arm r in
+  Bot #r p left right
+```
+
+Next, we write our function `fly`, which sets the robots arms up, and
+shoots it up to fly. As an illustration, we show that we can also modify
+some other reference arbitrarily, and the anti-aliasing properties of our
+invariant suffice to prove that this assignment does not mess with the
+robot invariant.
+
+```
+val fly: b:bot -> ST unit
+  (requires (robot_inv b))
+  (ensures (fun h0 _u h1 ->
+              modifies (only (Bot.r b)) h0 h1
+              /\ robot_inv b h1
+              /\ flying b h1))
+let fly b =
+  Arm.polar (Bot.left b)  := 0;
+  Arm.polar (Bot.right b) := 0;
+  Point.z (Bot.pos b)     := 100
+  Arm.azim (Bot.right b)  := 17;
+```
+
+Finally, if we're given two robots, `b0` and `b1`, we know that they are
+allocated in disjoint regions, and satisfy the robot invariant, then we
+can fly one, not impact the invariant of the other; then fly the other,
+and have both of them flying at the end.
+
+```
+val fly_robots: b0:bot
+             -> b1:bot{disjoint (Bot.r b0) (Bot.r b1)}
+             -> ST unit
+    (requires (fun h -> robot_inv b0 h /\ robot_inv b1 h))
+    (ensures (fun h0 x h1 ->
+              modifies (Bot.r b0 ^+^ Bot.r b1) h0 h1
+              /\ robot_inv b0 h1
+              /\ robot_inv b1 h1
+              /\ flying b0 h1
+              /\ flying b1 h1))
+let fly_robots b0 b1 =
+  fly b0;
+  fly b1
+```
+
+
+~Exercise
+Extend this example by adding a function which takes a list of robots,
+each in a region disjoint from all others, and fly all of them.
+
+~~ ExerciseFragment {exname=robot2}
+val fly_robot_army: ...
+~~
+
+~~Answer
+~~~ SolutionFragment {exname=robot2}
+val fly_robot_army:  #rs:Set.set rid
+                  -> bs:bots rs
+                  -> ST unit
+                     (requires (fun h -> (forall b.{:pattern (trigger b)} (trigger b /\ mem b bs ==> robot_inv b h))))
+                     (ensures  (fun h0 _u h1 ->
+                                    modifies rs h0 h1
+                                     /\ (forall b.{:pattern (trigger b)} (trigger b /\ mem b bs ==> robot_inv b h1 /\ flying b h1))))
+~~~
+~~
+~
+
+
+## Why hyper-heaps work
+
+The style of dynamic frames and explicit inequalities between objects is
+not incompatible with hyper-heaps: as we've also seen, within a region,
+we resort to pairwise inequalities, as usual. However, using hyper-heaps
+where possible, as we've just seen, makes specifications much more
+concise. As it turns out, they also make verifying programs much more
+efficient. On some benchmarks, we've noticed a speedup in verification
+time of more than a factor of `20x` when using hyper-heaps for
+disjointness invariants. In this section, we look a bit more closely at
+what's happening under the covers and why hyper-heaps help.
+
+First, without hyper heaps, consider a computation `f ()` run in a heap
+`h0` and producing a heap `h1` related by `modifies {x1,...,xn} h0 h1`,
+for some set of references `{x1...xn}`. Consider also some predicate
+`Q = fun h -> P (sel h y1) ... (sel h yn)`, which is initially true in
+`h0`. We would like to prove that if `Q h1` is also true. In other words,
+we need to prove the formula:
+
+```
+Expanding definitions: 
+  P (sel h0 y1) ... (sel h0 ym)
+  /\ h1 = concat h1 (restrict (complement {x1..xn}) h0)
+  ==> P (sel h1 y1) ... (sel h1 ym)
+``` 
+In general, for an arbitrary uninterpreted predicate `P`, to prove this,
+one must prove an quadratic number of inequalities, e.g., to prove that
+`sel h1 y1 = sel h0 y1`, requires proving that `y1` is not equal to any
+the `{x1..xn}`.
+
+However, if one can group related references into regions (meaning
+related references are generally read and updated together), one can do
+much better. For example, moving to hyper-heaps, suppose we place all the
+`{x1..xn}` in a region included by `rx`. Suppose `{y1,...,ym}` are all
+allocated in some region `ry`. Now, our goal is to prove
+
+```
+  P (Heap.sel (Map.sel h0 ry) y1) ... (Heap.sel (Map.sel h0 ry) ym)
+  /\ h1 = concat h1 (restrict (mod_set {rx}) h0)
+  ==> P (Heap.sel (Map.sel h1 ry) y1) ... (Heap.sel (Map.sel h1 ry) ym)
+```
+
+To prove this, we only need to prove that
+`Map.sel h0 ry = Map.sel h1 ry`, which involves proving
+`not (included rx ry)`. Having proven this fact, the SMT solver simply
+unifies the representation of all occurrences of these sub-terms
+everywhere in the formula above and concludes the proof immediately.
+Thus, in such (arguably common) cases, what initially required quadratic
+number of reasoning steps, now only requires a constant number of steps!
+
+In more general scenarios, we may still have to perform a quadratic
+number of reasoning steps, but with hyper-heaps, we are quadratic only in
+the number of regions involved, which are often _much_ smaller than the
+number of references that they may contain. The use of region hierarchies
+serves to further reduce the number of region identifiers that one refers
+to, making the constants smaller still. Of course, in the degenerate case
+where one has just one reference per region, this devolves back to the
+performance one would get without regions at all.
 
 
 ## Local state in two counters
