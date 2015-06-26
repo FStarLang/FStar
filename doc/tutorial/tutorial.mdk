@@ -4349,10 +4349,71 @@ heaps from before. The picture below depicts the structure.
 ![hyperheap]
 
 At the top-level we have regions `R0 ... Rn`, each associated with a
-fragment of heap references.
+fragment of heap references. Region identifiers `R0.0 ... R0.m` are 
+within the hierarchy rooted at `R0`; each has a set of references distinct from 
+all other regions (including its parent `R0`); and so on. 
+
+The `HyperHeap` module in F\*'s standard library defines this structure,
+a type `rid` for region ids, and a type `rref (r:rid) (a:Type)`, which is
+the type of a reference in region `r` that points to an `a`-typed value.
+We prove that values of type `rref r a` are in an injection with values
+of type `ref a`---meaning that hyper-heaps are in 1-1 correspondence with
+the underlying heap, except, as we will see, the additional structure
+provided helps with stating and proving memory invariants.
+
+The module `HyperHeap` defines (see `lib/hyperheap.fsi`, for its abstract
+specification):
+
+```
+type t = Map.t rid heap
+new_effect STATE = STATE_h t
+effect ST (a:Type) (pre:t -> Type) (post:t -> a -> t -> Type) =
+       STATE a (fun 'p m0 -> pre m0 /\ (forall x m1. post m0 x m1 ==> 'p x m1))
+               (fun 'p m0 ->  (forall x m1. pre m0 /\ post m0 x m1 ==> 'p x m1))
+```
+
+That is `HyperHeap.STATE` and `HyperHeap.ST` are just like the `STATE`
+and `ST` we've been working with, except that instead of the type of
+memory being a flat `heap`, the memory has type `HyperHeap.t`, a map from
+region ids `rid` to `heaps`.
+
+The type `rid` is abstract to clients, with a few operations on it
+revealing its hierarchical structure. Specifically, we have three functions:
+
+```
+val includes : rid -> rid -> Tot bool
+val extends  : rid -> rid -> Tot bool
+let disjoint i j = not (includes i j) && not (includes j i)
+```
+
+And they satisfy the following lemmas:
+
+```
+val lemma_includes_refl: i:rid
+                      -> Lemma (requires (True))
+                               (ensures (includes i i))
+                               [SMTPat (includes i i)]
+
+val lemma_disjoint_includes: i:rid -> j:rid -> k:rid ->
+  Lemma (requires (disjoint i j /\ includes j k))
+        (ensures (disjoint i k))
+        [SMTPat (disjoint i j);
+         SMTPat (includes j k)]
+
+val lemma_extends_includes: i:rid -> j:rid ->
+ Lemma (requires (extends j i))
+       (ensures (includes i j))
+       [SMTPat (extends j i)]
+
+val lemma_extends_disjoint: i:rid -> j:rid -> k:rid ->
+   Lemma (requires (extends j i /\ extends k i /\ j<>k))
+         (ensures (disjoint j k))
+         [SMTPat (extends j i);
+          SMTPat (extends k i)]
+```
 
 [heap]: heap.jpg "A flat heap" {width=300px}
-[hyperheap]: hyperheap.jpg {width=500px}
+[hyperheap]: hyperheap.jpg "A hyper-heap" {width=500px}
 
 
 ## Local state in two counters
