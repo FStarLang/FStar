@@ -1087,13 +1087,6 @@ val if_enter_sec_then_from_sec: sconfig -> Tot bool
 let if_enter_sec_then_from_sec c =
   not (is_T_red (Conf.t c) && is_R_assec (T_red.r (Conf.t c))) || is_sec c
 
-
-(*
- * This code exhibits a strange behavior. It verifies on mac with
- * split cases option. But does not verify on windows. From debugging seems
- * like F* hangs when writing query to Z3 process. No clue yet on why it
- * happens.
- *)
 opaque val sstep_par_slice_lemma: c:sconfig{if_enter_sec_then_from_sec c &&
                                             if_exit_sec_then_to_sec c}
                                   -> c':sconfig -> h:sstep c c' -> p:prin
