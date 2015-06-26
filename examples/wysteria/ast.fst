@@ -383,94 +383,6 @@ let step_app c = match c with
     let (en, x, e) = get_en_b f in
     Conf l m s (update_env en x v) (T_exp e)
 
-type cstep: config -> config -> Type =
-
-  | C_aspar_ps:
-    c:config{pre_easpar c} -> c':config{c' = step_aspar_e1 c}
-    -> cstep c c'
-
-  | C_unbox:
-    c:config{pre_eunbox c} -> c':config{c' = step_unbox_e c}
-    -> cstep c c'
-
-  | C_const:
-    c:config{pre_econst c} -> c':config{c' = step_const c}
-    -> cstep c c'
-
-  | C_var:
-    c:config{pre_evar c} -> c':config{c' = step_var c}
-    -> cstep c c'
-
-  | C_let_e1:
-    c:config{pre_elet c} -> c':config{c' = step_let_e1 c}
-    -> cstep c c'
-
-  | C_abs:
-    c:config{pre_eabs c} -> c':config{c' = step_abs c}
-    -> cstep c c'
-
-  | C_empabs:
-    c:config{pre_eempabs c} -> c':config{c' = step_empabs c}
-    -> cstep c c'
-
-  | C_app_e1:
-    c:config{pre_eapp c} -> c':config{c' = step_app_e1 c}
-    -> cstep c c'
-
-  | C_aspar_e:
-    c:config{is_value_ps c /\ is_sframe c is_F_aspar_ps}
-    -> c':config{c' = step_aspar_e2 c}
-    -> cstep c c'
-
-  | C_app_e2:
-    c:config{is_value c /\ is_sframe c is_F_app_e1}
-    -> c':config{c' = step_app_e2 c}
-    -> cstep c c'
-
-  | C_aspar_red:
-    c:config{is_value c /\ is_sframe c is_F_aspar_e}
-    -> c':config{c' = step_aspar_red c}
-    -> cstep c c'
-
-  | C_box_red:
-    c:config{is_value c /\ is_sframe c is_F_box_e}
-    -> c':config{c' = step_box_red c}
-    -> cstep c c'
-
-  | C_unbox_red:
-    c:config{is_value c /\ is_sframe c is_F_unbox}
-    -> c':config{c' = step_unbox_red c}
-    -> cstep c c'
-
-  | C_let_red:
-    c:config{is_value c /\ is_sframe c is_F_let}
-    -> c':config{c' = step_let_red c}
-    -> cstep c c'
-
-  | C_app_red:
-    c:config{is_value c /\ is_sframe c is_F_app_e2}
-    -> c':config{c' = step_app_red c}
-    -> cstep c c'
-
-  | C_let_beta:
-    c:config{is_let_redex c} -> c':config{c' = step_let c} -> cstep c c'
-
-  | C_app_beta:
-    c:config{is_app_redex c} -> c':config{c' = step_app c} -> cstep c c'
-
-  | C_aspar_beta:
-    c:config{not (pre_aspar c = NA)} -> c':config{c' = step_aspar c}
-    -> cstep c c'
-
-  | C_box_beta:
-    c:config{pre_box c = Do} -> c':config{c' = step_box c} -> cstep c c'
-
-  | C_unbox_beta:
-    c:config{pre_unbox c = Do} -> c':config{c' = step_unbox c}
-    -> cstep c c'
-
-(**********)
-
 type pre_eassec (c:config) =
   is_T_exp (Conf.t c) /\ is_E_assec (Exp.e (T_exp.e (Conf.t c)))
 
@@ -513,9 +425,90 @@ let step_assec_ret (Conf l _ ((Frame m en F_assec_ret)::s) _ t) = Conf l m s en 
 
 type sstep: config -> config -> Type =
 
-  | C_step:
-    c:config -> c':config -> h:cstep c c' -> sstep c c'
+  | C_aspar_ps:
+    c:config{pre_easpar c} -> c':config{c' = step_aspar_e1 c}
+    -> sstep c c'
 
+  | C_unbox:
+    c:config{pre_eunbox c} -> c':config{c' = step_unbox_e c}
+    -> sstep c c'
+
+  | C_const:
+    c:config{pre_econst c} -> c':config{c' = step_const c}
+    -> sstep c c'
+
+  | C_var:
+    c:config{pre_evar c} -> c':config{c' = step_var c}
+    -> sstep c c'
+
+  | C_let_e1:
+    c:config{pre_elet c} -> c':config{c' = step_let_e1 c}
+    -> sstep c c'
+
+  | C_abs:
+    c:config{pre_eabs c} -> c':config{c' = step_abs c}
+    -> sstep c c'
+
+  | C_empabs:
+    c:config{pre_eempabs c} -> c':config{c' = step_empabs c}
+    -> sstep c c'
+
+  | C_app_e1:
+    c:config{pre_eapp c} -> c':config{c' = step_app_e1 c}
+    -> sstep c c'
+
+  | C_aspar_e:
+    c:config{is_value_ps c /\ is_sframe c is_F_aspar_ps}
+    -> c':config{c' = step_aspar_e2 c}
+    -> sstep c c'
+
+  | C_app_e2:
+    c:config{is_value c /\ is_sframe c is_F_app_e1}
+    -> c':config{c' = step_app_e2 c}
+    -> sstep c c'
+
+  | C_aspar_red:
+    c:config{is_value c /\ is_sframe c is_F_aspar_e}
+    -> c':config{c' = step_aspar_red c}
+    -> sstep c c'
+
+  | C_box_red:
+    c:config{is_value c /\ is_sframe c is_F_box_e}
+    -> c':config{c' = step_box_red c}
+    -> sstep c c'
+
+  | C_unbox_red:
+    c:config{is_value c /\ is_sframe c is_F_unbox}
+    -> c':config{c' = step_unbox_red c}
+    -> sstep c c'
+
+  | C_let_red:
+    c:config{is_value c /\ is_sframe c is_F_let}
+    -> c':config{c' = step_let_red c}
+    -> sstep c c'
+
+  | C_app_red:
+    c:config{is_value c /\ is_sframe c is_F_app_e2}
+    -> c':config{c' = step_app_red c}
+    -> sstep c c'
+
+  | C_let_beta:
+    c:config{is_let_redex c} -> c':config{c' = step_let c} -> sstep c c'
+
+  | C_app_beta:
+    c:config{is_app_redex c} -> c':config{c' = step_app c} -> sstep c c'
+
+  | C_aspar_beta:
+    c:config{not (pre_aspar c = NA)} -> c':config{c' = step_aspar c}
+    -> sstep c c'
+
+  | C_box_beta:
+    c:config{pre_box c = Do} -> c':config{c' = step_box c} -> sstep c c'
+
+  | C_unbox_beta:
+    c:config{pre_unbox c = Do} -> c':config{c' = step_unbox c}
+    -> sstep c c'
+    
   | C_assec_ps:
     c:config{pre_eassec c} -> c':config{c' = step_assec_e1 c}
     -> sstep c c'
@@ -644,11 +637,16 @@ let env_upd_slice_lemma_ps #meta ps en x v =
 
 open Constructive
 
-val cstep_sec_slice_lemma: c:sconfig{is_sec c} -> c':sconfig -> h:cstep c c'
+val if_exit_sec_then_to_sec: c:sconfig -> Tot bool
+let if_exit_sec_then_to_sec c =
+  not (is_sframe c is_F_assec_ret) || (Mode.m (Frame.m (Cons.hd (Conf.s c))) = Sec)
+
+val sstep_sec_slice_lemma: c:sconfig{is_sec c /\ if_exit_sec_then_to_sec c}
+                           -> c':sconfig -> h:sstep c c'
                            -> Tot (cand (u:unit{Conf.m c' = Conf.m c})
-                                        (cstep (slice_c_sps c) (slice_c_sps c')))
+                                        (sstep (slice_c_sps c) (slice_c_sps c')))
 #set-options "--split_cases 1"
-let cstep_sec_slice_lemma c c' h = match h with
+let sstep_sec_slice_lemma c c' h = match h with
   | C_unbox c c'      -> Conj () (C_unbox (slice_c_sps c) (slice_c_sps c'))
   | C_const c c'      -> Conj () (C_const (slice_c_sps c) (slice_c_sps c'))
   | C_var c c'        -> Conj () (C_var (slice_c_sps c) (slice_c_sps c'))
@@ -663,22 +661,6 @@ let cstep_sec_slice_lemma c c' h = match h with
   | C_let_beta c c'   -> Conj () (C_let_beta (slice_c_sps c) (slice_c_sps c'))
   | C_app_beta c c'   -> Conj () (C_app_beta (slice_c_sps c) (slice_c_sps c'))
   | C_unbox_beta c c' -> Conj () (C_unbox_beta (slice_c_sps c) (slice_c_sps c'))
-
-#reset-options
-
-val if_exit_sec_then_to_sec: c:sconfig -> Tot bool
-let if_exit_sec_then_to_sec c =
-  not (is_sframe c is_F_assec_ret) || (Mode.m (Frame.m (Cons.hd (Conf.s c))) = Sec)
-
-val sstep_sec_slice_lemma: c:sconfig{is_sec c /\ if_exit_sec_then_to_sec c}
-                           -> c':sconfig -> h:sstep c c'
-                           -> Tot (cand (u:unit{Conf.m c' = Conf.m c})
-                                        (sstep (slice_c_sps c) (slice_c_sps c')))
-#set-options "--split_cases 1"
-let sstep_sec_slice_lemma c c' h = match h with
-  | C_step c c' h     ->
-    let Conj _ p = cstep_sec_slice_lemma c c' h in
-    Conj () (C_step (slice_c_sps c) (slice_c_sps c') p)
   | C_assec_ps c c'   -> Conj () (C_assec_ps (slice_c_sps c) (slice_c_sps c'))
   | C_assec_e c c'    -> Conj () (C_assec_e (slice_c_sps c) (slice_c_sps c'))
   | C_assec_red c c'  -> Conj () (C_assec_red (slice_c_sps c) (slice_c_sps c'))
@@ -686,6 +668,7 @@ let sstep_sec_slice_lemma c c' h = match h with
   | C_assec_ret c c'  -> Conj () (C_assec_ret (slice_c_sps c) (slice_c_sps c'))
 
 #reset-options
+
 
 (**********)
 
@@ -1100,11 +1083,17 @@ let env_upd_slice_lemma #m p en x v =
   cut (FEq (slice_en p (update_env en x v))
       (update_env (slice_en p en) x (D_v.v (slice_v p v))))
 
-opaque val cstep_par_slice_lemma: c:sconfig -> c':sconfig -> h:cstep c c' -> p:prin
+val if_enter_sec_then_from_sec: sconfig -> Tot bool
+let if_enter_sec_then_from_sec c =
+  not (is_T_red (Conf.t c) && is_R_assec (T_red.r (Conf.t c))) || is_sec c
+
+opaque val sstep_par_slice_lemma: c:sconfig{if_enter_sec_then_from_sec c &&
+                                            if_exit_sec_then_to_sec c}
+                                  -> c':sconfig -> h:sstep c c' -> p:prin
                                   -> Tot (cor (u:unit{slice_c p c = slice_c p c'})
-                                         (cstep (slice_c p c) (slice_c p c')))
+                                         (sstep (slice_c p c) (slice_c p c')))
 #set-options "--split_cases 1"
-let cstep_par_slice_lemma c c' h p =
+let sstep_par_slice_lemma c c' h p =
   (* TODO: FIXME: wanted to write this, but does not split then *)
   (*if is_sec c then IntroL ()
   else*)
@@ -1187,47 +1176,29 @@ let cstep_par_slice_lemma c c' h p =
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else
         IntroR (C_unbox_beta (slice_c p c) (slice_c p c'))
+    | C_assec_ps (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else
+        IntroR (C_assec_ps (slice_c p c) (slice_c p c'))
+    | C_assec_e (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else
+        IntroR (C_assec_e (slice_c p c) (slice_c p c'))
+    | C_assec_red (Conf _ m _ _ _) _ ->
+      if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
+      else
+        IntroR (C_assec_red (slice_c p c) (slice_c p c'))
+    | C_assec_beta _ _ -> IntroL ()
+    | C_assec_ret (Conf _ m _ _ _) _ -> IntroL ()
 
 (**********)
 #reset-options
 
-val if_enter_sec_then_from_sec: sconfig -> Tot bool
-let if_enter_sec_then_from_sec c =
-  not (is_T_red (Conf.t c) && is_R_assec (T_red.r (Conf.t c))) || is_sec c
-
-opaque val sstep_par_slice_lemma: c:sconfig{if_enter_sec_then_from_sec c &&
-                                            if_exit_sec_then_to_sec c}
-                                  -> c':sconfig -> h:sstep c c' -> p:prin
-                                  -> Tot (cor (u:unit{slice_c p c = slice_c p c'})
-                                         (sstep (slice_c p c) (slice_c p c')))
-#set-options "--split_cases 1"                                         
-let sstep_par_slice_lemma c c' h p = match h with
-  | C_step c c' h ->
-    let h = cstep_par_slice_lemma c c' h p in
-    if is_IntroL h then IntroL ()
-    else IntroR (C_step (slice_c p c) (slice_c p c') (IntroR.h h))
-  | C_assec_ps (Conf _ m _ _ _) _ ->
-    if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
-    else
-      IntroR (C_assec_ps (slice_c p c) (slice_c p c'))
-  | C_assec_e (Conf _ m _ _ _) _ ->
-    if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
-    else
-      IntroR (C_assec_e (slice_c p c) (slice_c p c'))
-  | C_assec_red (Conf _ m _ _ _) _ ->
-    if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
-    else
-      IntroR (C_assec_red (slice_c p c) (slice_c p c'))
-  | C_assec_beta _ _ -> IntroL ()
-  | C_assec_ret (Conf _ m _ _ _) _ -> IntroL ()
-
-#reset-options
-
 (**********)
 
-type tpar = OrdMap.ordmap prin tconfig p_cmp
+type tpar = OrdMap.ordmap prin (c:tconfig{Mode.m (Conf.m c) = Par}) p_cmp
 
-type protocol = tpar * option tconfig
+type protocol = tpar * option (c:tconfig{Mode.m (Conf.m c) = Sec})
 
 val slice_c_ps_par: ps:prins -> sconfig -> Tot tpar (decreases (size ps))
 let rec slice_c_ps_par ps c =
@@ -1237,7 +1208,7 @@ let rec slice_c_ps_par ps c =
     if ps_rest = empty then mempty
     else slice_c_ps_par ps_rest c
   in
-update p (slice_c p c) pi'
+  update p (slice_c p c) pi'
 
 val slice_c_ps: ps:prins -> c:sconfig{subset (Mode.ps (Conf.m c)) ps}
                 -> Tot protocol
@@ -1246,6 +1217,101 @@ let slice_c_ps ps c =
   let tsec = if is_sec c then Some (slice_c_sps c) else None in
   pi, tsec
 
+val dom_slice_lemma: ps:prins -> c:sconfig
+                     -> Lemma (requires (True)) (ensures (dom (slice_c_ps_par ps c) = ps))
+                        (decreases (size ps))
+                        [SMTPat (slice_c_ps_par ps c)]
+let rec dom_slice_lemma ps c =
+  let Some p = choose ps in
+  let ps_rest = remove p ps in
+  if ps_rest = empty then () else dom_slice_lemma ps_rest c
+
+val tpre_par: pi:protocol -> p:prin{contains p (fst pi)} -> Tot bool
+let tpre_par (pi, _) p =
+  let Some (Conf _ _ _ _ t) = select p pi in
+  not (is_T_red t && is_R_assec (T_red.r t))
+
+type ps_in_pi (ps:prins) (pi:protocol) = (forall p. mem p ps ==> contains p (fst pi))
+
+val tpre_assec: pi:protocol
+                -> ps:prins{ps_in_pi ps pi}
+                -> x:varname -> e:exp
+                -> ps':prins{subset ps' ps}
+                -> Tot bool (decreases (size ps'))
+let rec tpre_assec pi ps x e ps' =
+  let Some p = choose ps' in
+  let Some (Conf _ _ _ _ t) = select p (fst pi) in
+  let b = match t with
+    | T_red (R_assec ps v) ->
+      if is_clos v then
+        let (_, x1, e1) = get_en_b v in
+        x1 = x && e1 = e
+      else
+        false
+    | _ -> false
+  in
+  let ps_rest = remove p ps' in
+  if ps_rest = empty then b
+  else b && (tpre_assec pi ps x e ps_rest)
+
+val get_env_m: pi:protocol -> ps:prins{ps_in_pi ps pi}
+               -> Tot (m:env_map{dom m  = ps}) (decreases (size ps))
+let rec get_env_m pi ps =
+  let Some p = choose ps in
+  let ps_rest = remove p ps in
+  let Some (Conf _ _ _ en _) = select p (fst pi) in
+  if ps_rest = empty then update p en mempty
+  else
+    let m = get_env_m pi ps_rest in
+    update p en m
+
+val step_to_wait: pi:tpar -> ps:prins{forall p. mem p ps ==> contains p pi}
+                  -> Tot tpar (decreases (size ps))
+let rec step_to_wait pi ps =
+  let Some p = choose ps in
+  let ps_rest = remove p ps in
+  let Some (Conf l m s en _) = select p pi in
+  if ps_rest = empty then update p (Conf l m s en T_sec_wait) pi
+  else
+    let pi' = step_to_wait pi ps_rest in
+    update p (Conf l m s en T_sec_wait) pi'
+
+val tstep_assec: pi:protocol{is_None (snd pi)} -> ps:prins{ps_in_pi ps pi}
+                 -> x:varname -> e:exp{tpre_assec pi ps x e ps}
+                 -> Tot protocol (decreases (size ps))
+let tstep_assec pi ps x e =
+  let envm = get_env_m pi ps in
+  let env = update_env (compose_envs_m envm) x (V_const C_unit) in
+  let tsec = Conf Target (Mode Sec ps) [] env (T_exp e) in
+  (step_to_wait (fst pi) ps, Some tsec)
+
+type pstep: protocol -> protocol -> Type =
+
+  | P_par:
+    pi:protocol -> p:prin{contains p (fst pi) /\ tpre_par pi p}
+    -> c':tconfig -> h:sstep (Some.v (select p (fst pi))) c'
+    -> pstep pi (update p c' (fst pi), (snd pi))
+    
+  | P_sec:
+    pi:protocol{is_Some (snd pi)} -> c':tconfig
+    -> h:sstep (Some.v (snd pi)) c'
+    -> pstep pi (fst pi, Some c')
+      
+  | P_sec_enter:
+    pi:protocol{is_None (snd pi)} -> ps:prins{ps_in_pi ps pi}
+    -> x:varname -> e:exp{tpre_assec pi ps x e ps}
+    -> pi':protocol{pi' = tstep_assec pi ps x e}
+    -> pstep pi pi'
+ 
+(*type pstep_star: protocol -> protocol -> Type =
+
+  | PS_refl:
+    pi:protocol -> pstep_star pi pi
+
+  | PS_tran:
+    #pi:protocol -> #pi':protocol -> #pi'':protocol
+    -> h1:pstep pi pi' -> h2:pstep_star pi' pi''
+    -> pstep_star pi pi''*)
 
 (*
 
@@ -1348,40 +1414,6 @@ open OrdMap
 
 type protocol = ordmap prin tconfig p_cmp
 
-val slice_c_ps: ps:prins -> sconfig -> Tot protocol (decreases (OrdSet.size ps))
-let rec slice_c_ps ps c =
-  if ps = OrdSet.empty then OrdMap.empty
-  else
-    let Some p = OrdSet.choose ps in
-    let ps_rest = OrdSet.remove p ps in
-    let pi' = slice_c_ps ps_rest c in
-    OrdMap.update p (slice_c p c) pi'
-
-val dom_slice_lemma: ps:prins -> c:sconfig
-                     -> Lemma (requires (True)) (ensures (dom (slice_c_ps ps c) = ps))
-                        (decreases (OrdSet.size ps))
-                        [SMTPat (slice_c_ps ps c)]
-let rec dom_slice_lemma ps c =
-  if ps = OrdSet.empty then ()
-  else
-    dom_slice_lemma (OrdSet.remove (Some.v (OrdSet.choose ps)) ps) c
-
-type pstep: protocol -> protocol -> Type =
-
-  | P_cstep:
-    pi:protocol -> p:prin{contains p pi} -> c':tconfig
-    -> h:cstep (Some.v (select p pi)) c'
-    -> pstep pi (update p c' pi)
-
-type pstep_star: protocol -> protocol -> Type =
-
-  | PS_refl:
-    pi:protocol -> pstep_star pi pi
-
-  | PS_tran:
-    #pi:protocol -> #pi':protocol -> #pi'':protocol
-    -> h1:pstep pi pi' -> h2:pstep_star pi' pi''
-    -> pstep_star pi pi''
 
 val pstep_upd: #pi:protocol -> #pi':protocol -> h:pstep pi pi'
                -> p:prin{not (contains p pi)} -> c:tconfig
