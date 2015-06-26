@@ -4334,6 +4334,25 @@ convenient built-in notion of disjoint sets of references.
 
 ### Hyper-heaps
 
+So far, we have been working with the `heap` type, a flat, typed-map from 
+references to their contents. The `ref` type is abstract---it has no structure
+and only supports equality operations. Conceptually, it looks like this:
+
+![heap]
+
+A hyper-heap provides organizes the heap into many disjoint fragments, or
+regions. Each region is collectively addressed by a _region identifier_,
+and these identifiers are organized in a tree-shaped hierarchy. Each
+region is itself a map from typed references to values, just like our
+heaps from before. The picture below depicts the structure.
+
+![hyperheap]
+
+At the top-level we have regions `R0 ... Rn`, each associated with a
+fragment of heap references.
+
+[heap]: heap.jpg "A flat heap" {width=300px}
+[hyperheap]: hyperheap.jpg {width=500px}
 
 
 ## Local state in two counters
