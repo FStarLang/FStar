@@ -1099,12 +1099,12 @@ opaque val sstep_par_slice_lemma: c:sconfig{if_enter_sec_then_from_sec c &&
                                   -> c':sconfig -> h:sstep c c' -> p:prin
                                   -> Tot (cor (u:unit{slice_c p c = slice_c p c'})
                                          (sstep (slice_c p c) (slice_c p c')))
-//#set-options "--split_cases 1"
-let sstep_par_slice_lemma c c' h p = admit ()
+#set-options "--split_cases 1"
+let sstep_par_slice_lemma c c' h p =
   (* TODO: FIXME: wanted to write this, but does not split then *)
   (*if is_sec c then IntroL ()
   else*)
-  (*match h with
+  match h with
     | C_aspar_ps (Conf _ m _ _ _) _ ->
       if is_sec c || not (mem p (Mode.ps m)) then IntroL ()
       else IntroR (C_aspar_ps (slice_c p c) (slice_c p c'))
@@ -1196,10 +1196,10 @@ let sstep_par_slice_lemma c c' h p = admit ()
       else
         IntroR (C_assec_red (slice_c p c) (slice_c p c'))
     | C_assec_beta _ _ -> IntroL ()
-    | C_assec_ret (Conf _ m _ _ _) _ -> IntroL ()*)
+    | C_assec_ret (Conf _ m _ _ _) _ -> IntroL ()
 
 (**********)
-//#reset-options
+#reset-options
 
 (**********)
 

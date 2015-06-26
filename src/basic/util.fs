@@ -54,59 +54,61 @@ let spawn (f:unit -> unit) = let t = new Thread(f) in t.Start()
 let ctr = ref 0
 let start_process (id:string) (prog:string) (args:string) (cond:string -> string -> bool) : proc = 
     let signal = new Object() in
-    let with_sig f = 
-        System.Threading.Monitor.Enter(signal);
-        let res = f() in
-        System.Threading.Monitor.Exit(signal);
-        res in
     let startInfo = new ProcessStartInfo() in
     let driverOutput = new StringBuilder() in
     let killed = ref false in
     let proc = new Process() in
-        startInfo.FileName <- prog;
-        startInfo.Arguments <- args;
-        startInfo.UseShellExecute <- false;
-        startInfo.RedirectStandardOutput <- true;
-        startInfo.RedirectStandardInput <- true;
-        proc.EnableRaisingEvents <- true;
-        proc.OutputDataReceived.AddHandler(
-             DataReceivedEventHandler(fun _ args -> 
-                if !killed then ()
-                else with_sig(fun () -> 
-                           ignore <| driverOutput.Append(args.Data);
-                           ignore <| driverOutput.Append("\n");
-                           if null = args.Data
-                           then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
-                           if null = args.Data || cond id args.Data
-                           then System.Threading.Monitor.Pulse(signal))));
-        proc.Exited.AddHandler(
-             EventHandler(fun _ _ ->
-                if !killed then ()
-                else
-                    System.Threading.Monitor.Enter(signal);
-                    killed := true;
-                    Printf.fprintf stdout "%s exited inadvertently\n%s\n" prog (driverOutput.ToString());
-                    stdout.Flush();
-                    System.Threading.Monitor.Exit(signal);
-                    exit(1)));
-        proc.StartInfo <- startInfo;
-        proc.Start() |> ignore;
-        proc.BeginOutputReadLine();
-        incr ctr;
-        let proc = {m=signal;
-                    outbuf=driverOutput;
-                    proc=proc;
-                    killed=killed;
-                    id=prog ^ ":" ^id^ "-" ^ (string_of_int !ctr)} in
-        all_procs := proc::!all_procs;
+    incr ctr;
+    let proc_wrapper = {m=signal;
+                        outbuf=new StringBuilder();
+                        proc=proc;
+                        killed=killed;
+                        id=prog ^ ":" ^id^ "-" ^ (string_of_int !ctr)} in
+
+    startInfo.FileName <- prog;
+    startInfo.Arguments <- args;
+    startInfo.UseShellExecute <- false;
+    startInfo.RedirectStandardOutput <- true;
+    startInfo.RedirectStandardInput <- true;
+    proc.EnableRaisingEvents <- true;
+    proc.OutputDataReceived.AddHandler(
+            DataReceivedEventHandler(
+                fun _ args -> 
+                    if !killed then ()
+                    else
+                        ignore <| driverOutput.Append(args.Data);
+                        ignore <| driverOutput.Append("\n");
+                        if null = args.Data
+                            then (Printf.printf "Unexpected output from %s\n%s\n" prog (driverOutput.ToString()));
+                        if null = args.Data || cond id args.Data
+                        then
+                            System.Threading.Monitor.Enter(signal);
+                            ignore (proc_wrapper.outbuf.Clear());
+                            ignore (proc_wrapper.outbuf.Append(driverOutput.ToString()));
+                            ignore (driverOutput.Clear());
+                            System.Threading.Monitor.Pulse(signal);
+                            System.Threading.Monitor.Exit(signal)));
+    proc.Exited.AddHandler(
+            EventHandler(fun _ _ ->
+            if !killed then ()
+            else
+                System.Threading.Monitor.Enter(signal);
+                killed := true;
+                Printf.fprintf stdout "%s exited inadvertently\n%s\n" prog (driverOutput.ToString());
+                stdout.Flush();
+                System.Threading.Monitor.Exit(signal);
+                exit(1)));
+    proc.StartInfo <- startInfo;
+    proc.Start() |> ignore;
+    proc.BeginOutputReadLine();
+    all_procs := proc_wrapper::!all_procs;
 //        Printf.printf "Started process %s\n" (proc.id);
-        proc
+    proc_wrapper
 let tid () = System.Threading.Thread.CurrentThread.ManagedThreadId |> string_of_int   
 
 let ask_process (p:proc) (input:string) : string = 
     System.Threading.Monitor.Enter(p.m);
     //Printf.printf "Thread %s is asking process %s\n" (tid()) p.id;
-    ignore <| p.outbuf.Clear();
     //Printf.printf "Thread %s is writing to process %s ... responding?=%A\n" (tid()) p.id p.proc.Responding;
     //Printf.fprintf stderr "Thread %s is writing to process %s:\n%s\n" (tid()) p.id input;
 //    if p.id = "z3.exe:bg"

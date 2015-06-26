@@ -163,14 +163,21 @@ module Microsoft = struct
         proc
 
       let ask_process (p:proc) (stdin:string) : string =
+        let out = Buffer.create 16 in
+        
+        let rec read_out _ =
+          let s = BatString.trim (input_line p.inc) in
+          if s = "Done!" then ()
+          else
+            (Buffer.add_string out (s ^ "\n"); read_out ())
+        in
+        
+        let child_thread = Thread.create (fun _ -> read_out ()) () in
+        
         output_string p.outc stdin;
         flush p.outc;
-        let r = ref "" in
-        let l = ref "" in
-        while !l <> "Done!" do
-         r := (!r)^(!l)^"\n";
-         l := BatString.trim (input_line p.inc);
-        done; !r
+        Thread.join child_thread;
+        Buffer.contents out
 
       let kill_process (p:proc) =
         let _ = Unix.close_process (p.inc, p.outc) in
