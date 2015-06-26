@@ -4789,6 +4789,15 @@ to, making the constants smaller still. Of course, in the degenerate case
 where one has just one reference per region, this devolves back to the
 performance one would get without regions at all.
 
+<!--
+
+NS: I'm removing this section for the moment. It involves explain 
+a third model of the heap, augmented with permissions to deal with information 
+hiding etc. This is getting to be extremely advanced, particularly as it also involves
+reasoning about existentially quantified invariant predicates. It was nice to have 
+as a placeholder when it was the only non-trivial stateful example available in the tutorial. 
+But, that's no longer the case. We could restore it at some point, with a full explanation 
+of the permission model etc., if we think that would be useful.
 
 ## Local state in two counters
 
@@ -4889,6 +4898,7 @@ let mk_counter_2 _ =
 ~~
 
 ~
+-->
 
 # Cryptography examples
 
