@@ -12,8 +12,8 @@ open Heap
 
 type vector (a:Type) (n:nat) = (index:nat{index<n} -> Tot a)
 
-let updateIndex 'a #n f index newV =
-  (fun indx -> if (indx= index) then newV else f indx)
+let updateIndex 'a #n f index newV indx =
+  if (indx= index) then newV else f indx
 
 let atIndex 'a #n f index  =
    f index
@@ -36,3 +36,5 @@ let readIndex 'a #n r index =
 let updIndex 'a #n r index newV =
   let rv = (memread r) in
   memwrite r (updateIndex rv index newV)
+
+let subVector 'a #n offset leng f indx =f (indx+offset)

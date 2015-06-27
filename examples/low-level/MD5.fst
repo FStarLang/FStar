@@ -156,7 +156,7 @@ let psize n =
   of data/chunk location*)
 (*pads the input*)
 
-val cloneAndPad : #n:nat
+assume val cloneAndPad : #n:nat
   -> r:(ref (vector word n))
   -> rcloned :(ref (vector word (psize n)))
   -> Mem unit
@@ -202,7 +202,7 @@ let processChunk n ch offset acc =
     (*allRefs ; why does this not work?*)
     (fun u ->
       let liv = memread li in
-      let vA = readIndex acc iB in
+      let vA = readIndex acc iA in
       let vB = readIndex acc iB in
       let vC = readIndex acc iC in
       let vD = readIndex acc iD in
@@ -257,6 +257,7 @@ val mD5 : n:nat
 
 let mD5 n ch =
   let clonedCh = salloc (allZeros (psize n)) in
+  cloneAndPad ch clonedCh;
   (*withNewScope #(vector word 4)
     #(fun m -> True /\ refExistsInMem ch m)
     #(fun m0 _ m1 -> True /\ refExistsInMem ch m1)
@@ -264,3 +265,5 @@ let mD5 n ch =
     pushStackFrame ();
     let mdd5:(vector word 4) = mainLoop (psize n) clonedCh () in
         popStackFrame (); mdd5
+
+(*can we run this program and compare it agains standard implementations?*)

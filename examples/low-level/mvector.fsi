@@ -25,6 +25,9 @@ val atIndex : #a:Type -> #n:nat -> (vector a n)
 val readIndex :  #a:Type -> #n:nat -> r:(ref (vector a n))
   -> index:nat{index<n} -> PureMem a (fun m -> b2t (refExistsInMem r m)) (fun _ _ _-> True)
 
+val subVector : #a:Type -> #n:nat -> offset:nat
+  -> len:(k:nat{k+offset<n}) -> (vector a n) -> Tot (vector a len)
+
 
 val updIndex :  #a:Type -> #n:nat -> r:(ref (vector a n))
   -> index:(index:nat{index<n}) -> newV:a ->
