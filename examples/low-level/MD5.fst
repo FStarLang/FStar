@@ -129,6 +129,37 @@ let iB:(n:nat{n<4})=1
 let iC:(n:nat{n<4})=2
 let iD:(n:nat{n<4})=3
 
+opaque type divides  (divisor :nat) (n:nat) =
+exists (k:nat). k*divisor=n
+
+
+val leastMultipleGeq : n:nat -> div:pos -> Tot (m:nat{divides div n /\ m < n+ div /\ n<=m})
+let leastMultipleGeq n div = admit ()
+(*(div - (n % div)) + n*)
+(*(ceil (n/div))*div*)
+
+(*MOVE to mvector.fsi*)
+type prefixEqual  (#a:Type) (#n1:nat) (#n2:nat)
+  (v1: vector a n1) (v2: vector a n1) (p:nat{p <= n1 /\ p<= n2})
+  = forall (n:nat). n<p ==> atIndex v1 n = atIndex v2 n
+
+
+(*size of the messsage after padding. this function will be used to preallocate
+  an array of the right size*)
+val psize : n:nat -> Tot (m:nat{divides 16 n /\ m < n+ 32 /\ n<=m})
+let psize n =
+  let lm = leastMultipleGeq n 16 in
+  if ((lm+1) % 16 < 12) then lm else lm+16
+
+(*pads the input*)
+val cloneAndPad : #n:nat -> r:(ref (vector word n)) ->
+  Mem (ref (vector word (psize n)))
+    (fun m -> refExistsInMem r m /\ True)
+    (fun m0 rp m1  -> refExistsInMem r m0 /\ refExistsInMem rp m1
+      (*/\ prefixEqual (loopkupRef r m0) (loopkupRef rp m1) n*)
+      )
+    (empty)
+
 val processChunk :
  ch:(ref chunk512)
 -> acc:(ref (vector word 4))
