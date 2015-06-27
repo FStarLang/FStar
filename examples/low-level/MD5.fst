@@ -118,8 +118,6 @@ assume val consts: n:nat{n<64} -> Tot word
 
 (*A chunk of 512 bits, or 16 32 bit words.
   MD5 processes messages as these chunk *)
-type chunk512 =  vector word 16
-
 
 
 (*How can we make these private to this file
@@ -133,7 +131,7 @@ opaque type divides  (divisor :nat) (n:nat) =
 exists (k:nat). k*divisor=n
 
 
-val leastMultipleGeq : n:nat -> div:pos -> Tot (m:nat{divides div n /\ m < n+ div /\ n<=m})
+val leastMultipleGeq : n:nat -> div:pos -> Tot (m:nat{divides div m /\ m < n+ div /\ n<=m})
 let leastMultipleGeq n div = admit ()
 (*(div - (n % div)) + n*)
 (*(ceil (n/div))*div*)
@@ -146,22 +144,38 @@ type prefixEqual  (#a:Type) (#n1:nat) (#n2:nat)
 
 (*size of the messsage after padding. this function will be used to preallocate
   an array of the right size*)
-val psize : n:nat -> Tot (m:nat{divides 16 n /\ m < n+ 32 /\ n<=m})
+val psize : n:nat -> Tot (m:nat{divides 16 m /\ m < n+ 32 /\ n<=m})
 let psize n =
   let lm = leastMultipleGeq n 16 in
   if ((lm+1) % 16 < 12) then lm else lm+16
 
+(*we can tradeoff space for time by not copying the whole thing,
+  but allocate only a new array for padding. Perhaps it can also include
+  the leftofer from the last complete chunk.
+   The MD5 main loop will have to be modified to handle this dichotomy
+  of data/chunk location*)
 (*pads the input*)
-val cloneAndPad : #n:nat -> r:(ref (vector word n)) ->
-  Mem (ref (vector word (psize n)))
-    (fun m -> refExistsInMem r m /\ True)
-    (fun m0 rp m1  -> refExistsInMem r m0 /\ refExistsInMem rp m1
-      (*/\ prefixEqual (loopkupRef r m0) (loopkupRef rp m1) n*)
-      )
-    (empty)
 
+val cloneAndPad : #n:nat
+  -> r:(ref (vector word n))
+  -> rcloned :(ref (vector word (psize n)))
+  -> Mem unit
+      (fun m -> refExistsInMem r m /\ refExistsInMem rcloned m)
+      (fun m0 rp m1  -> refExistsInMem r m0 /\ refExistsInMem rcloned m1
+      (*/\ prefixEqual (loopkupRef r m0) (loopkupRef rp m1) n*)
+        )
+        (empty)
+
+(*type chunk512 =  vector word 16*)
+
+(**perhaps we should use vector (ref word) n instead of ref (vector word n).
+  Note that it is easy do define subobjects for that style.
+  As a general principle. do we only create refs for words?
+ *)
 val processChunk :
- ch:(ref chunk512)
+  n : nat
+ -> ch:(ref (vector word n))
+ -> offset:nat{offset + 16 <= n}
 -> acc:(ref (vector word 4))
 -> WNSC unit
     (fun m -> refExistsInMem ch m
@@ -173,7 +187,8 @@ val processChunk :
               )
     (singleton (Ref acc))
 
-let processChunk ch acc =
+
+let processChunk n ch offset acc =
   let li = salloc #nat 0 in
   scopedWhile1
     li
@@ -195,7 +210,57 @@ let processChunk ch acc =
       let g:(n:nat{n<16}) = idx liv liv in
       updIndex acc iD vC;
       updIndex acc iA vD;
-      let mg = readIndex ch g in
+      let mg = readIndex ch (offset+g) in
       let vBr = wmodAdd vA  (wmodAdd fF ( wmodAdd(consts liv)  mg)) in
       updIndex acc iB (wmodAdd vB (leftrotate (rots liv) vBr));
       memwrite li (liv+1))
+
+
+assume val initAcc : (vector word 4)
+
+val mainLoop :
+  n : nat{divides 16 n}
+ -> ch:(ref (vector word n))
+ -> un:unit
+ -> WNSC (vector word 4)
+    (fun m -> True /\ refExistsInMem ch m)
+    (fun m0 _ m1 -> True /\ refExistsInMem ch m1)
+    (empty)
+
+let mainLoop n ch u =
+  let offset = salloc #nat 0 in
+  let acc =  salloc initAcc in
+  scopedWhile1
+    offset
+    (fun offsetv -> offsetv +16 <= n)
+    (fun m -> True
+              /\ refExistsInMem ch m
+              /\ refExistsInMem acc m
+              /\ refExistsInMem offset m
+              )
+    (union (singleton (Ref offset)) (singleton (Ref acc)))
+    (fun u ->
+        let offsetv = memread offset in
+        processChunk n ch offsetv acc;
+        memwrite offset (offsetv + 16));
+  memread acc
+
+assume val allZeros : n:nat -> Tot (vector word n)
+
+
+val mD5 : n:nat
+ -> ch:(ref (vector word n))
+ -> WNSC (vector word 4)
+    (fun m -> True /\ refExistsInMem ch m)
+    (fun m0 _ m1 -> True /\ refExistsInMem ch m1)
+    (empty)
+
+let mD5 n ch =
+  let clonedCh = salloc (allZeros (psize n)) in
+  (*withNewScope #(vector word 4)
+    #(fun m -> True /\ refExistsInMem ch m)
+    #(fun m0 _ m1 -> True /\ refExistsInMem ch m1)
+    #(empty)*)
+    pushStackFrame ();
+    let mdd5:(vector word 4) = mainLoop (psize n) clonedCh () in
+        popStackFrame (); mdd5
