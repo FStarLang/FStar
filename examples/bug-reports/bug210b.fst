@@ -27,5 +27,9 @@ let rec fix_F f x a =
          assert(acc_inv x a << a); (* should follow from refinement; F* bug *)
            (* F* can't prove this even it's in the definition of acc_inv *)
          axiom1_dep #aa #(fun y -> r y x -> Tot (acc aa r y)) (acc_inv x a) y;
+         admitP (acc_inv x a y << acc_inv x a);
          axiom1 #(r y x) #(acc aa r y) (acc_inv x a y) h;
+         admitP (acc_inv x a y h << acc_inv x a y);
+         admitP (acc_inv x a y h << acc_inv x a);
+         admitP (acc_inv x a y h << a);
          fix_F f y (acc_inv x a y h))
