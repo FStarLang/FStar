@@ -14,7 +14,9 @@ module Prims = struct
   let snd = snd
   let failwith = failwith
   let try_with f1 f2 = try f1 () with | e -> f2 e
+  let _assume () = ()
   let _assert x = ()
+  let magic () = failwith "no magic"
   let min x y = if x < y then x else y
 end
 
@@ -82,6 +84,7 @@ module List = struct
   let for_all = BatList.for_all
   let forall2 = BatList.for_all2
   let tryFind f l = try Some (BatList.find f l) with | Not_found -> None
+  let find = tryFind
   let tryPick f l = try f (BatList.find (fun x -> f x <> None) l) with | Not_found -> None
   let flatten = BatList.flatten
   let split = unzip
