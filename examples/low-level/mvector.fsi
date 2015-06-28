@@ -9,6 +9,8 @@ open StructuredMem
 open MachineWord
 open Heap
 open Set
+open Stack
+
 (*
     Can we generalize vector to cover all the algebraic types definable in C?
 *)
@@ -26,7 +28,8 @@ val readIndex :  #a:Type -> #n:nat -> r:(ref (vector a n))
   -> index:nat{index<n} -> PureMem a (fun m -> b2t (refExistsInMem r m)) (fun _ _ _-> True)
 
 val subVector : #a:Type -> #n:nat -> offset:nat
-  -> len:(k:nat{k+offset<n}) -> (vector a n) -> Tot (vector a len)
+  -> len:(k:nat{k+offset<=n}) -> (vector a n) -> Tot (vector a len)
+
 
 
 val updIndex :  #a:Type -> #n:nat -> r:(ref (vector a n))

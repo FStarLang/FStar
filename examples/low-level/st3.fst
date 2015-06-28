@@ -651,8 +651,11 @@ val scopedWhile1 :
   -> lc : (a -> Tot bool)
   -> loopInv:(smem -> Type)
   -> mod:(set aref)
-  -> bd:(unit -> WNSC unit (fun m -> loopInv m /\ refExistsInMem r m /\ (lc (loopkupRef r m)))
-              (fun _ _ m1 -> loopInv m1 /\ refExistsInMem r m1) mod )
+  -> bd:(unit -> WNSC unit
+              (fun m -> loopInv m /\ refExistsInMem r m /\ (lc (loopkupRef r m)))
+              (fun _ _ m1 -> loopInv m1 /\ refExistsInMem r m1)
+              mod
+              )
   -> Mem unit ((fun m -> loopInv m /\ refExistsInMem r m))
               ((fun m0 _ m1 -> loopInv m1 /\ refExistsInMem r m1 /\ ~(lc (loopkupRef r m1))))
               mod

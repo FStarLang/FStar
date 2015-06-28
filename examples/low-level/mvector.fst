@@ -7,8 +7,10 @@
 module MVector
 open StructuredMem
 open MachineWord
-open Seq
 open Heap
+open Stack
+open Set
+
 
 type vector (a:Type) (n:nat) = (index:nat{index<n} -> Tot a)
 

@@ -103,19 +103,6 @@ floor(abs(sin(i + 1)) × (2 pow 32))
 assume val consts: n:nat{n<64} -> Tot word
 
 
-(*add an operation to ref to get a readonly version
-  of ref? like const pointers in C++?
-  add permission to ref?
-  salloc gives rw. the downgrade op returns
-  a ref with downgraded permissions
-  It would be nice to have a guarantee (for free)
-    that the MD% function did not change the message.
-   It is possible to prove such things even now.
-   One has to add the no-change assumpttiom
-   to the loop invariant. just like the fact that
-   lo does not change in the sieve's inner loop
-  *)
-
 (*A chunk of 512 bits, or 16 32 bit words.
   MD5 processes messages as these chunk *)
 
