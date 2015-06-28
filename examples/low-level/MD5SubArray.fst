@@ -21,20 +21,6 @@ open Stack
 
 type array (a:Type) (n:nat)= vector (ref a) n
 
-(*define this using flatten refs?*)
-type arrayExixtsInMem (#a:Type) (#n:nat) (v: vector (ref  a) n) (m:smem) =
- forall (k:(p:nat{p<n})).{:pattern(k<n)} refExistsInMem (atIndex v k) m
-
-assume val sallocateVector :  a:Type -> n:nat
- -> init:a
- ->
-Mem (vector (ref a) n)
-  (requires (fun m -> isNonEmpty (st m)))
-   (ensures (fun _ r m1-> (arrayExixtsInMem r m1)))
-   (empty)
-
-type chunk512 = array word 16
-
 val flattenRefsUpto : #a:Type -> #n:nat -> upto:(m:nat{m<=n}) -> (array a n) -> Tot (set aref)
 let rec flattenRefsUpto 'a #n upto v  =
   match upto with
@@ -42,8 +28,36 @@ let rec flattenRefsUpto 'a #n upto v  =
   | _ -> union (singleton (Ref (atIndex v (upto-1)))) (flattenRefsUpto (upto -1) v)
 
 
+
 val flattenRefs : #a:Type -> #n:nat -> (array a n) -> Tot (set aref)
 let flattenRefs 'a #n v  = flattenRefsUpto n v
+
+
+assume val memFlattenIndex :
+  #a:Type ->  #n:nat
+  -> v:(vector (ref  a) n)
+  -> ind:(m:nat{m<n})
+  -> m:smem
+  ->
+  Lemma
+    (requires True)
+    (ensures (mem (Ref (atIndex v ind)) (flattenRefs v)))
+      [SMTPat (ind < n)]
+
+(*define this using flatten refs?*)
+type arrayExixtsInMem (#a:Type) (#n:nat) (v: vector (ref  a) n) (m:smem) =
+ forall (r:(r:(ref a){mem (Ref r) (flattenRefs v)})).
+ {:pattern (mem (Ref r) (flattenRefs v))}refExistsInMem r m
+
+assume val sallocateVector :  a:Type -> n:nat
+ -> init:a
+ ->
+Mem (vector (ref a) n)
+  (requires (fun m -> isNonEmpty (st m)))
+   (ensures (fun m0 r m1-> (arrayExixtsInMem r m1) /\ mtail m0 = mtail m1))
+   (empty)
+
+type chunk512 = array word 16
 
 assume val w0 : word
 
@@ -112,7 +126,6 @@ let processChunkSubArray ch acc =
       memwrite li (liv+1)
       )
 
-
 val subArrayExists :
 #a:Type
 -> #n:nat
@@ -153,7 +166,12 @@ val mainLoopSubArray :
     (fun m -> True /\ arrayExixtsInMem ch m /\ arrayExixtsInMem acc m)
     (fun m0 _ m1 -> True
       /\ arrayExixtsInMem acc m1 /\ arrayExixtsInMem ch m1)
-    (union (flattenRefs acc) (flattenRefs ch))
+    (
+      (*union *)
+      (flattenRefs acc)
+      (*(flattenRefs ch)*)
+      )
+
 
 let mainLoopSubArray n ch acc u =
   let offset = salloc #nat 0 in
@@ -167,11 +185,11 @@ let mainLoopSubArray n ch acc u =
               /\ refExistsInMem offset m
               )
     (
-      union
+      (*union*)
         (union
           (singleton (Ref offset))
           (flattenRefs acc))
-          (flattenRefs ch)
+          (*(flattenRefs ch)*)
     )
     (fun u ->
 
