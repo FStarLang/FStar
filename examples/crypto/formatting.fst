@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --verify_module Format;
+    options:--admit_fsi Set --verify_module Formatting;
     variables:LIB=../../lib;
     other-files:../../lib/list.fst
       ../../lib/string.fst
@@ -22,9 +22,7 @@
    limitations under the License.
 *)
 
-
-
-module Format
+module Formatting
 open Prims.PURE
 open String
 open Array
@@ -45,17 +43,20 @@ let rec append_inj_lemma b1 b2 c1 c2 = ()
 logic type UInt16 (i:int) = (0 <= i /\ i < 65536)
 type uint16 = i:int{UInt16 i}
 
-assume val utf8:
+val utf8:
   s:string  -> Tot (m:message{length m <= strlen s})
   (* this spec is accurate for ASCII strings *)
+let utf8 s = magic()
 
-assume val iutf8: m:message -> s:string{utf8 s == m}
+val iutf8: m:message -> s:string{utf8 s == m}
+let iutf8 m = magic()
 
 assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
     equal (utf8 s0) (utf8 s1) ==> s0==s1
 
-assume val uint16_to_bytes: uint16 -> Tot (msg 2)
+val uint16_to_bytes: uint16 -> Tot (msg 2)
+let uint16_to_bytes u = magic()
 assume UINT16_inj: forall s0 s1. equal (uint16_to_bytes s0) (uint16_to_bytes s1) ==> s0==s1
 
 type string16 = s:string{UInt16 (length (utf8 s))} (* up to 65K *)
