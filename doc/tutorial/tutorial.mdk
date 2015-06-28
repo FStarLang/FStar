@@ -3170,7 +3170,7 @@ directly to the next chapter.
 
 Type inference in F\* is based on a weakest pre-condition calculus for
 higher order programs. For every term `e`, F\* computes `WP e`, which
-captures the semantics of `e` as _predicate transformer_. If you want
+captures the semantics of `e` as a _predicate transformer_. If you want
 to prove some property `P` about the result of `e` (i.e., a
 post-condition), it suffices to prove `WP e P` of the initial
 configuration in which `e` is executed (i.e., a pre-condition).
@@ -3333,7 +3333,7 @@ all-caps names for computation types are the primitive forms---other
 forms are derived from these.
 
 For example, the computation type constructor `PURE` is a more
-primitive version of the `Pure`, which we have used earlier in this
+primitive version of `Pure`, which we have used earlier in this
 tutorial. By the end of this chapter, you will see how `Pure`, `Tot`,
 etc. are expressed in terms of `PURE`. Likewiwse `STATE` is the
 primitive form of `ST`; `EXN` is the primitive form of `Exn`; etc.
@@ -3589,8 +3589,8 @@ final heap) into a pre-condition, a predicate on the input heap.
 
 The type `heap` is axiomatized in `lib/heap.fst` and is one model of
 the primitive heap provided by the F\* runtime system. Specifically,
-we have the uninterpreted functions below to select, update, and test
-the presence of a reference in a heap.
+we have functions to select, update, and test the presence of a
+reference in a heap.
 
 ```
 module Heap
@@ -3600,8 +3600,8 @@ assume val upd : #a:Type -> heap -> ref a -> a -> Tot heap
 assume val contains : #a:Type -> heap -> ref a -> a -> Tot bool
 ```
 
-These functions are interpreted using the following standard axioms,
-which allows the SMT solver to reason about heaps.
+These functions are interpreted using standard axioms, which allows
+the SMT solver to reason about heaps, for instance:
 
 ```
 assume SelUpd1:       forall (a:Type) (h:heap) (r:ref a) (v:a).
@@ -3613,7 +3613,7 @@ assume SelUpd2:       forall (a:Type) (b:Type) (h:heap) (k1:ref a) (k2:ref b) (v
                       k2=!=k1 ==> sel (upd h k2 v) k1 = sel h k1
 ```
 
-The `Heap` library provides axiomatizes several other functions---the
+The `Heap` library axiomatizes several other functions---the
 interested reader refer to `lib/heap.fst` for more details.
 
 ~Remark
@@ -3757,11 +3757,13 @@ This says that in order to lift a `PURE` compuataion to `STATE`, we
 lift its `wp:PureWP a` (equivalently for its `wlp`) to a `StateWP a`
 that says that that pure computation leaves the state unmodified.
 
-Note that the type of `PURE   ~> STATE` is
+Note that the type of `PURE ~> STATE` is
 `(a:Type) -> PureWP a -> StatePost a -> heap -> Type` which corresponds
-to `(a:Type) -> PureWP a -> StateWP a` as
-`kind StateWP a   = StatePost a -> StatePre` and
-`kind StatePre    = heap -> Type`.
+to `(a:Type) -> PureWP a -> StateWP a` since:
+```
+kind StateWP a   = StatePost a -> StatePre
+kind StatePre    = heap -> Type
+```
 
 ## Indexed computation types
 
