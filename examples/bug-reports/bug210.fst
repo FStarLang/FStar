@@ -16,26 +16,26 @@ assume type r : (aa -> aa -> Type)
 
 val acc_inv : x:aa -> a:(acc aa r x) ->
               Tot (e:(y:aa -> r y x -> Tot (acc aa r y)){e << a})
-let acc_inv x a = match a with | AccIntro z h1 -> h1
+let acc_inv x a = match a with | AccIntro h1 -> h1
 
-assume val axiom1_dep : a:Type -> b:(a->Type) -> f:(y:a -> Tot (b y)) -> x:a ->
+assume val axiom1_dep : #a:Type -> #b:(a->Type) -> f:(y:a -> Tot (b y)) -> x:a ->
                         Lemma (f x << f)
 
-val axiom1 : a:Type -> b:Type -> f:(a -> Tot b) -> x:a ->
+val axiom1 : #a:Type -> #b:Type -> f:(a -> Tot b) -> x:a ->
              Lemma (Precedes (f x) f)
 let axiom1 f x = axiom1_dep f x
 
 (* Can't prove it is total without axioms: I know that [acc_inv x a << a]
    but from this I cannot deduce [acc_inv x a y h << a] *)
-val fix_F : p:(aa -> Type) ->
+val fix_F : #p:(aa -> Type) ->
             (x:aa -> (y:aa -> r y x -> Tot (p y)) -> Tot (p x)) ->
             x:aa -> a:(acc aa r x) -> Tot (p x) (decreases a)
 let rec fix_F f x a =
   f x (fun y h ->
          (* admitP(acc_inv x a << a); (\* should follow from refinement; F* bug *\) *)
-         axiom1_dep aa (fun y -> r y x -> Tot (acc aa r y)) (acc_inv x a) y;
+         axiom1_dep #aa #(fun y -> r y x -> Tot (acc aa r y)) (acc_inv x a) y;
          (* admitP (acc_inv x a y << acc_inv x a); *)
-         axiom1 (r y x) (acc aa r y) (acc_inv x a y) h;
+         axiom1 #(r y x) #(acc aa r y) (acc_inv x a y) h;
          (* admitP (acc_inv x a y h << acc_inv x a y); *)
          (* admitP (acc_inv x a y h << acc_inv x a); *)
          (* admitP (acc_inv x a y h << a); *)
