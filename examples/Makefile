@@ -9,6 +9,7 @@ all:
 	make -C termination
 	make -C software_foundations
 	make -C metatheory
+	make -C wf
 	make -C wysteria
 	make -C ../doc/tutorial/code/solutions
 	make -C unit-tests
