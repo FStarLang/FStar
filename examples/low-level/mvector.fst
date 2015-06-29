@@ -4,6 +4,7 @@
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst word.fst mvector.fsi
   --*)
 
+(*rename mvector to vector. The word array is used for memory-stored vectors *)
 module MVector
 open StructuredMem
 open MachineWord
@@ -24,19 +25,5 @@ let atIndex 'a #n f index  =
   see whether you missed a Tot somewhere.
   Is there a way to make Tot the default effect, instead of ALL
 *)
-
-(*val readIndex :  #a:Type -> #n:nat -> r:(ref (vector a n))
-  -> index:nat{index<n} -> Mem a (fun m -> b2t (refExistsInMem r m)) (fun _ _ _-> True)*)
-let readIndex 'a #n r index =
-  let rv = (memread r) in (atIndex rv index)
-
-(*Can one reinclude the types from the FSI file?*)
-
-(*val updIndex :  #a:Type -> #n:nat -> r:(ref (vector a n))
-  -> index:nat{index<n} -> a ->
- Mem unit (fun m -> b2t (refExistsInMem r m)) (fun _ _ _-> True)*)
-let updIndex 'a #n r index newV =
-  let rv = (memread r) in
-  memwrite r (updateIndex rv index newV)
 
 let subVector 'a #n offset leng f indx =f (indx+offset)
