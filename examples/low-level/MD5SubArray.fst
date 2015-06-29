@@ -4,11 +4,6 @@
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
     st3.fst $LIB/constr.fst word.fst mvector.fsi mvector.fst MD5.fst
   --*)
-
-(*Why is MD5 so? Why did its designer(s) think
-  it was a good way to convolute bits?
-  Is there a principle behind its design? or just random convolutery?
-  *)
 module MD5SubArray
 open StructuredMem
 open MVector
@@ -18,7 +13,6 @@ open MachineWord
 open MD5
 open Stack
 
-
 type array (a:Type) (n:nat)= vector (ref a) n
 
 val flattenRefsUpto : #a:Type -> #n:nat -> upto:(m:nat{m<=n}) -> (array a n) -> Tot (set aref)
@@ -27,11 +21,8 @@ let rec flattenRefsUpto 'a #n upto v  =
   | 0 -> empty
   | _ -> union (singleton (Ref (atIndex v (upto-1)))) (flattenRefsUpto (upto -1) v)
 
-
-
 val flattenRefs : #a:Type -> #n:nat -> (array a n) -> Tot (set aref)
 let flattenRefs 'a #n v  = flattenRefsUpto n v
-
 
 assume val memFlattenIndex :
   #a:Type ->  #n:nat
@@ -51,11 +42,10 @@ type arrayExixtsInMem (#a:Type) (#n:nat) (v: vector (ref  a) n) (m:smem) =
 
 assume val sallocateVector :  a:Type -> n:nat
  -> init:a
- ->
-Mem (vector (ref a) n)
-  (requires (fun m -> isNonEmpty (st m)))
-   (ensures (fun m0 r m1-> (arrayExixtsInMem r m1) /\ mtail m0 = mtail m1))
-   (empty)
+ -> Mem (vector (ref a) n)
+    (requires (fun m -> isNonEmpty (st m)))
+    (ensures (fun m0 r m1-> (arrayExixtsInMem r m1) /\ mtail m0 = mtail m1))
+      (empty)
 
 type chunk512 = array word 16
 
@@ -87,16 +77,16 @@ val processChunkSubArray :
               (*/\ ch =!= acc*)
               ))
     ((flattenRefs acc))
+    (*(Set.complement Set.empty)*)
 
 (* Surprisingly, any anti-aliasing condition between ch and acc was not required.
     even though and acc might have some refs in common,
-    anything in ch -acc is not modified. Hence the modified clause works
+    anything in ch-acc is not modified. Hence the modifies clause checks.
 *)
 
 (*had to increase timeout to get this to typecheck.
   The switch from "ref vector" to "vector ref" cost atleast 10 times more time
 *)
-
 
 let processChunkSubArray ch acc =
   let li = salloc #nat 0 in
@@ -109,7 +99,7 @@ let processChunkSubArray ch acc =
               /\ refExistsInMem li m /\ loopkupRef li m < 65
               )
     (union (singleton (Ref li)) (flattenRefs acc))
-    (*allRefs ; why does this not work?*)
+    (*(Set.complement Set.empty)*)
     (fun u ->
       let liv = memread li in
       let vA = memread (atIndex acc iA) in
@@ -139,9 +129,7 @@ val subArrayExists :
     [SMTPat (subVector #(ref a) #n offset len ch); SMTPatT (arrayExixtsInMem #a #n ch m)]
 
 let subArrayExists 'a #n ch offset len m = (admit ())
-(*redefine arrayExixtsInMem in terms of flattenRefs.
-  then characterize subVector in terms of flatten.
-  Note that subVector is opaque and Fstar doesnot know anything about it*)
+(*Note that subVector is opaque and Fstar doesnot know anything about it*)
 
 (*because SMTPat does not work above, this is a nop to get the logic right*)
 val subArrayExists2 :
@@ -154,7 +142,6 @@ val subArrayExists2 :
     (requires (fun m -> arrayExixtsInMem ch m))
     (ensures (fun _ _ m1 -> arrayExixtsInMem (subVector offset len ch) m1))
 let subArrayExists2 'a #n ch offset len = (admit ())
-
 
 
 val mainLoopSubArrayAux :
@@ -200,7 +187,9 @@ let mainLoopSubArrayAux n ch acc u =
         );
   initAcc
 
-
+  val memAssert : p:(smem->Type) ->
+    PureMem unit (requires p) (ensures (fun _ _ _ -> True))
+  let memAssert 'p = ()
 
 
 val mainLoopSubArray :
@@ -210,13 +199,10 @@ val mainLoopSubArray :
  -> WNSC (vector word 4)
     (fun m -> True /\ arrayExixtsInMem ch m)
     (fun m0 _ m1 -> True)
-    empty
 
-
-val memAssert : p:(smem->Type) ->
-  PureMem unit (requires p) (ensures (fun _ _ _ -> True))
-let memAssert 'p = ()
-
+    (*this computation does not modify anything, but F* needs more convincing *)
+    (* (Set.empty)*)
+    (Set.complement (Set.empty))
 
 let mainLoopSubArray n ch u =
   let acc =  sallocateVector word 4 w0 in
@@ -224,9 +210,5 @@ let mainLoopSubArray n ch u =
   pushStackFrame ();
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
   memAssert (fun m -> True /\ arrayExixtsInMem acc (m));
-  popStackFrame (); initAcc
-
-(*perhaps the can modify set is causing issues*)
-
-    let x = (mainLoopSubArrayAux n ch acc ()) in
+  let x = (mainLoopSubArrayAux n ch acc ()) in
   popStackFrame (); x
