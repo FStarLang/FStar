@@ -253,4 +253,9 @@ let mD5 n ch =
     let mdd5:(vector word 4) = mainLoop (psize n) clonedCh () in
         popStackFrame (); mdd5
 
-(*can we run this program and compare it agains standard implementations?*)
+(*can we run this program and compare it agains standard implementations?
+  That at least needs the following:
+  1) implementations of admitted functions, e.g. padding
+  2) implementations of =
+  3) (optionally, for efficiency) proper "Extraction" of word to native words in OCaml
+*)

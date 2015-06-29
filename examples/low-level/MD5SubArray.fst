@@ -40,11 +40,29 @@ type arrayExixtsInMem (#a:Type) (#n:nat) (v: vector (ref  a) n) (m:smem) =
  forall (r:(r:(ref a){mem (Ref r) (flattenRefs v)})).
  {:pattern (mem (Ref r) (flattenRefs v))}refExistsInMem r m
 
+
+ type allocateVectorInBlock (#a:Type) (#n:nat) (rv: vector (ref a) n)
+  (h0 : memblock)
+  (h1 : memblock) (init : a)  (rl: refLocType) =
+  (forall (r:(r:(ref a){mem (Ref r) (flattenRefs rv)})).
+        {:pattern (mem (Ref r) (flattenRefs rv))}
+           refLoc r = rl
+          /\ not (Heap.contains h0 r)
+          /\ Heap.contains h1 r
+          /\  init = sel h0 r)
+/\ Heap.equal h1 (concat h0 (restrict h1 (flattenRefs rv)))
+
+(*tj*)
 assume val sallocateVector :  a:Type -> n:nat
  -> init:a
  -> Mem (vector (ref a) n)
     (requires (fun m -> isNonEmpty (st m)))
-    (ensures (fun m0 r m1-> (arrayExixtsInMem r m1) /\ mtail m0 = mtail m1))
+    (ensures (fun m0 rv m1->
+        (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
+        /\ (topstid m0 = topstid m1)
+        /\ mtail m0 = mtail m1
+        /\  allocateVectorInBlock rv (topstb m0) (topstb m1) init (InStack (topstid m0))
+    ))
       (empty)
 
 type chunk512 = array word 16
@@ -199,16 +217,28 @@ val mainLoopSubArray :
  -> WNSC (vector word 4)
     (fun m -> True /\ arrayExixtsInMem ch m)
     (fun m0 _ m1 -> True)
-
     (*this computation does not modify anything, but F* needs more convincing *)
     (* (Set.empty)*)
+    (*allRefs*)
     (Set.complement (Set.empty))
+
 
 let mainLoopSubArray n ch u =
   let acc =  sallocateVector word 4 w0 in
+  let dummy = salloc 0 in
+  memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
   pushStackFrame ();
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
   memAssert (fun m -> True /\ arrayExixtsInMem acc (m));
   let x = (mainLoopSubArrayAux n ch acc ()) in
-  popStackFrame (); x
+  popStackFrame ();
+  memAssert (fun m -> True /\ arrayExixtsInMem acc (m));
+  memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
+  memAssert (fun m -> True /\ arrayExixtsInMem ch (mtail m));
+  (*memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));*)
+  (*the assert below does not check after the mainLoopSubArray is called,
+    because
+  *)
+  (*memAssert (fun m -> ~ (refExistsInMem dummy (mtail m)));*)
+  initAcc
