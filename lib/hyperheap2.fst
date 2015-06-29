@@ -27,10 +27,10 @@ opaque val root : rid
 let root = []
 
 private type rref (id:rid) (a:Type) = Prims.ref a
-val as_ref : #a:Type -> #id:rid -> r:rref id a -> Tot (ref a)
+val as_ref : #a:Type -> #id:rid -> r:rref id a -> GTot (ref a)
 let as_ref id r = r
 
-private val ref_as_rref : #a:Type -> i:rid -> r:ref a -> Tot (rref i a)
+private val ref_as_rref : #a:Type -> i:rid -> r:ref a -> GTot (rref i a)
 let ref_as_rref i r = r
 
 val lemma_as_ref_inj: #a:Type -> #i:rid -> r:rref i a
@@ -87,7 +87,7 @@ val lemma_includes_refl: i:rid
                                (ensures (includes i i))
                                [SMTPat (includes i i)]
 let lemma_includes refl i = ()
-  
+
 val lemma_extends_includes: i:rid -> j:rid ->
   Lemma (requires (extends j i))
         (ensures (includes i j))

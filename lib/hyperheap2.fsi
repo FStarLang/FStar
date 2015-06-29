@@ -61,7 +61,7 @@ val lemma_extends_disjoint: i:rid -> j:rid -> k:rid ->
          (ensures (disjoint j k))
          [SMTPat (extends j i);
           SMTPat (extends k i)]
-            
+
 type fresh_region (i:rid) (m0:t) (m1:t) =
  (forall j. includes i j ==> not (Map.contains m0 j))
  /\ Map.contains m1 i
@@ -95,6 +95,13 @@ val get: unit -> ST t
   (requires (fun m -> True))
   (ensures (fun m0 x m1 -> m0=x /\ m1=m0))
 
+val recall: #r:rid -> x:rref r 'a -> ST unit
+  (requires (fun h -> True))
+  (ensures (fun h0 _ h1 ->
+              h0=h1
+              /\ Map.contains h1 r
+              /\ Heap.contains (Map.sel h1 r) (as_ref x)))
+
 val mod_set : Set.set rid -> Tot (Set.set rid)
 assume Mod_set_def: forall (x:rid) (s:Set.set rid). {:pattern Set.mem x (mod_set s)}
                     Set.mem x (mod_set s) <==> (exists (y:rid). Set.mem y s /\ includes y x)
@@ -113,6 +120,8 @@ type contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) =
 type fresh_rref (#a:Type) (#i:rid) (r:rref i a) (m0:t) (m1:t) =
   not (Heap.contains (Map.sel m0 i) (as_ref r))
   /\  (Heap.contains (Map.sel m1 i) (as_ref r))
+
+type modifies_rref (r:rid) (s:Set.set aref) h0 h1 = Heap.modifies s (Map.sel h0 r) (Map.sel h1 r)
 
 kind STPost (a:Type) = a -> t -> Type
 kind STWP (a:Type) = STPost a -> t -> Type
