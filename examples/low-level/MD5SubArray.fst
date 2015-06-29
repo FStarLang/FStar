@@ -225,7 +225,9 @@ val mainLoopSubArray :
 
 let mainLoopSubArray n ch u =
   let acc =  sallocateVector word 4 w0 in
-  let dummy = salloc 0 in
+  let dummy : ref nat = salloc 0 in
+  (*assert (b2t (not (Set.mem (Ref dummy) (flattenRefs acc)))) ;*)
+  memAssert (fun m -> ~ (refExistsInMem dummy (mtail m)));
   memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
   pushStackFrame ();
@@ -236,9 +238,9 @@ let mainLoopSubArray n ch u =
   memAssert (fun m -> True /\ arrayExixtsInMem acc (m));
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
   memAssert (fun m -> True /\ arrayExixtsInMem ch (mtail m));
+  (*need to separately prove the property that reltive memory location of
+    arrays is preerved even after modification of their conents.
+    The assertion below typechecked above *)
   (*memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));*)
-  (*the assert below does not check after the mainLoopSubArray is called,
-    because
-  *)
-  (*memAssert (fun m -> ~ (refExistsInMem dummy (mtail m)));*)
+  memAssert (fun m -> ~ (refExistsInMem dummy (mtail m)));
   initAcc
