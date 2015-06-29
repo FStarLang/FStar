@@ -157,15 +157,15 @@ let subArrayExists2 'a #n ch offset len = (admit ())
 
 
 
-val mainLoopSubArray :
+val mainLoopSubArrayAux :
   n : nat{divides 16 n}
  -> ch:((array word n))
  -> acc : (array word 4)
  -> un:unit
  -> WNSC (vector word 4)
-    (fun m -> True /\ arrayExixtsInMem ch m /\ arrayExixtsInMem acc m)
-    (fun m0 _ m1 -> True
-      /\ arrayExixtsInMem acc m1 /\ arrayExixtsInMem ch m1)
+    (requires (fun m -> True /\ arrayExixtsInMem ch m /\ arrayExixtsInMem acc m))
+    (ensures (fun m0 _ m1 -> True
+      /\ arrayExixtsInMem acc m1 /\ arrayExixtsInMem ch m1))
     (
       (*union *)
       (flattenRefs acc)
@@ -173,7 +173,7 @@ val mainLoopSubArray :
       )
 
 
-let mainLoopSubArray n ch acc u =
+let mainLoopSubArrayAux n ch acc u =
   let offset = salloc #nat 0 in
   (*let acc =  sallocateVector word 4 w0 in*)
   scopedWhile1
@@ -199,3 +199,34 @@ let mainLoopSubArray n ch acc u =
         memwrite offset (offsetv + 16)
         );
   initAcc
+
+
+
+
+val mainLoopSubArray :
+  n : nat{divides 16 n}
+ -> ch:((array word n))
+ -> un:unit
+ -> WNSC (vector word 4)
+    (fun m -> True /\ arrayExixtsInMem ch m)
+    (fun m0 _ m1 -> True)
+    empty
+
+
+val memAssert : p:(smem->Type) ->
+  PureMem unit (requires p) (ensures (fun _ _ _ -> True))
+let memAssert 'p = ()
+
+
+let mainLoopSubArray n ch u =
+  let acc =  sallocateVector word 4 w0 in
+  memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
+  pushStackFrame ();
+  memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
+  memAssert (fun m -> True /\ arrayExixtsInMem acc (m));
+  popStackFrame (); initAcc
+
+(*perhaps the can modify set is causing issues*)
+
+    let x = (mainLoopSubArrayAux n ch acc ()) in
+  popStackFrame (); x
