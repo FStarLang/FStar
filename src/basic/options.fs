@@ -89,7 +89,7 @@ let verify_module = Util.mk_ref []
 let use_build_config = Util.mk_ref false
 let interactive = Util.mk_ref false
 let split_cases = Util.mk_ref 0
-
+let _include_path = Util.mk_ref []
 let init_options () = 
     show_signatures := [];
     norm_then_print := true;
@@ -133,7 +133,8 @@ let init_options () =
     fs_typ_app  := false;
     n_cores  := 1;
     split_cases := 0;
-    verify_module := []
+    verify_module := [];
+    _include_path := []
 
 let set_fstar_home () = 
   let fh = match !fstar_home_opt with 
@@ -143,17 +144,16 @@ let set_fstar_home () =
       _fstar_home := x;
       fstar_home_opt := Some x;
       x
-//      let x = Util.expand_environment_variable "FSTAR_HOME" in
-//      _fstar_home := x;
-      
     | Some x -> _fstar_home := x; x in
   fh
 let get_fstar_home () = match !fstar_home_opt with 
     | None -> ignore <| set_fstar_home(); !_fstar_home
     | Some x -> x
 
+let get_include_path () = !_include_path@["."; get_fstar_home() ^ "/lib"]
+
 let prims () = match !prims_ref with 
-  | None -> (get_fstar_home()) ^ "/lib/prims.fst" 
+  | None -> "prims.fst" 
   | Some x -> x
 
 let prependOutputDir fname = match !outputDir with
@@ -220,7 +220,8 @@ let rec specs () : list<Getopt.opt> =
      ( noshort, "verify_module", OneArg ((fun x -> verify_module := x::!verify_module), "string"), "Name of the module to verify");
      ( noshort, "use_build_config", ZeroArgs (fun () -> use_build_config := true), "Expect just a single file on the command line and no options; will read the 'build-config' prelude from the file");
      ( noshort, "split_cases", OneArg ((fun n -> split_cases := int_of_string n), "t"), "Partition VC of a match into groups of n cases");
-     ( noshort, "in", ZeroArgs (fun () -> interactive := true), "Interactive mode; reads input from stdin")
+     ( noshort, "in", ZeroArgs (fun () -> interactive := true), "Interactive mode; reads input from stdin");
+     ( noshort, "include", OneArg ((fun s -> _include_path := !_include_path @ [s]), "path"), "A directory in which to search for files included on the command line")
     ] in 
      ( 'h', "help", ZeroArgs (fun x -> display_usage specs; exit 0), "Display this information")::specs
 and parse_codegen s =

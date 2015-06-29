@@ -163,7 +163,7 @@ end
 Microsoft_FStar_Parser_Parse.STRING ((Support.Microsoft.FStar.Bytes.string_as_unicode_bytes (Support.Microsoft.FStar.Range.file_of_range r)))
 end
 | "__LINE__" -> begin
-Microsoft_FStar_Parser_Parse.INT32 (((Support.Microsoft.FStar.Util.int32_of_int (Support.Microsoft.FStar.Range.line_of_pos (Support.Microsoft.FStar.Range.start_of_range r))), false))
+Microsoft_FStar_Parser_Parse.INT (((Support.Microsoft.FStar.Util.string_of_int (Support.Microsoft.FStar.Range.line_of_pos (Support.Microsoft.FStar.Range.start_of_range r))), false))
 end
 | _ -> begin
 Microsoft_FStar_Parser_Parse.IDENT ((intern_string s))

@@ -1,12 +1,11 @@
 (*--build-config
-    options:--admit_fsi Set --admit_fsi Map --admit_fsi HyperHeap --max_fuel 0 --initial_ifuel 0 --logQueries --z3timeout 20;
-    variables:LIB=../../../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/map.fsi $LIB/hyperheap2.fsi $LIB/util.fst $LIB/list.fst
+    options:--debug yes --admit_fsi Set --admit_fsi Map --admit_fsi HyperHeap --max_fuel 0 --initial_ifuel 0 --logQueries --z3timeout 20;
+    other-files:ext.fst set.fsi heap.fst map.fsi hyperheap2.fsi util.fst list.fst
 --*)
 module Robot
 #set-options "--initial_fuel 0 --max_ifuel 0"
-open Util
 open Heap
+open Util
 open HyperHeap
 
 type point =

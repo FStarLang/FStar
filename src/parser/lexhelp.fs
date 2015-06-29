@@ -236,6 +236,6 @@ let kwd_or_id args (r:Range.range) s =
         | "__SOURCE_FILE__" ->
           STRING (Bytes.string_as_unicode_bytes (Range.file_of_range r))
         | "__LINE__" ->
-          INT32 (Util.int32_of_int <| Range.line_of_pos (Range.start_of_range r), false)
+          INT (Util.string_of_int <| Range.line_of_pos (Range.start_of_range r), false)
         | _ ->
           IDENT (intern_string(s))

@@ -26,6 +26,23 @@ let resetLexbufPos filename (lexbuf: Microsoft.FSharp.Text.Lexing.LexBuffer<char
 
 let bc_start = "(*--build-config"
 let bc_end   = "--*)"
+let open_file (filename:string) =
+    let include_path = Options.get_include_path() in
+    try 
+        let p = Util.find_map include_path (fun p -> 
+                let path = System.IO.Path.Combine(p, filename) in
+                if System.IO.File.Exists(path)
+                then Some path
+                else None) in
+        match p with 
+        | Some f -> 
+            if !Options.debug <> []
+            then Util.fprint1 "Opening file: %s\n" f;
+            new System.IO.StreamReader(f) 
+        | _ -> raise (Absyn.Syntax.Err("unable to open file")) 
+    with e -> raise (Absyn.Syntax.Err (Util.format2 "Unable to open file: %s\n%s\n" filename (e.ToString())))
+
+
 let read_build_config (filename:string) =
     let fail msg = raise (Absyn.Syntax.Err(Util.format2 "Could not parse a valid build configuration from %s; %s" filename msg)) in
     let options = ref None in
@@ -39,10 +56,7 @@ let read_build_config (filename:string) =
         | _ -> fail "more than one 'other-files' field" in
     let set_variable (x, v) = variables := (x,v)::!variables in
     let substitute_variables (f:string) = !variables |> List.fold_left (fun (f:string) (x,v) -> f.Replace("$"^x, v)) f  in
-    let fs = 
-        try 
-           new System.IO.StreamReader(filename) 
-        with e -> raise (Absyn.Syntax.Err (Util.format1 "Unable to open file: %s\n" filename)) in
+    let fs = open_file filename in
     let contents = fs.ReadToEnd() in
     if contents.StartsWith(bc_start)
     then 
@@ -108,11 +122,9 @@ let parse fn =
 
   let filename,sr,fs = match fn with
     | Inl (filename:string) ->
-      (try
-        let fs = new System.IO.StreamReader(filename) in
-        let contents = fs.ReadToEnd() in
-        filename, new System.IO.StringReader(contents) :> System.IO.TextReader, contents
-       with e -> raise (Absyn.Syntax.Err (Util.format1 "Unable to open file: %s\n" filename)))
+      let fs = open_file filename in
+      let contents = fs.ReadToEnd() in
+      filename, new System.IO.StringReader(contents) :> System.IO.TextReader, contents      
     | Inr (s:string) -> "<input>", new System.IO.StringReader(s) :> System.IO.TextReader, s  in
 
   let lexbuf = Microsoft.FSharp.Text.Lexing.LexBuffer<char>.FromTextReader(sr) in

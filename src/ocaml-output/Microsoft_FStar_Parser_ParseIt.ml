@@ -12,6 +12,23 @@ let resetLexbufPos filename lexbuf =
 let bc_start = "(*--build-config"
 let bc_end   = "--*)"
 
+let find_file (filename:string) =
+  let include_path = Microsoft_FStar_Options.get_include_path () in
+  let f = find_map include_path (fun p ->
+    let p = p ^ "/" ^ filename in
+    if Sys.file_exists p then Some p else None) in
+  try
+    match f with
+      | None -> raise (Err "")
+      | Some f -> f
+  with e -> raise (Err (Util.format1 "Unable to open file: %s\n" filename))
+
+let open_file (filename:string) =
+  let f = find_file filename in
+  try
+    BatFile.with_file_in f BatIO.read_all
+  with e -> raise (Err (Util.format1 "Unable to open file: %s\n" filename))
+
 let read_build_config (filename:string) =
     let fail msg = raise (Err(Util.format2 "Could not parse a valid build configuration from %s; %s" filename msg)) in
     let options = ref None in
@@ -26,9 +43,7 @@ let read_build_config (filename:string) =
     let set_variable (x, v) = variables := (x,v)::!variables in
     let substitute_variables (f:string) = !variables |> List.fold_left
       (fun (f:string) (x,v) -> BatString.replace f ("$"^x) v |> snd) f in
-    let contents =
-        try BatFile.with_file_in filename BatIO.read_all
-        with e -> raise (Err (Util.format1 "Unable to open file: %s\n" filename)) in
+    let contents = open_file filename in
     if Util.starts_with contents bc_start
     then
         let bc_end_index = BatString.find contents bc_end in
@@ -93,7 +108,7 @@ let parse fn =
 
   let filename,lexbuf = match fn with
     | Inl(f) ->
-       (try f, Lexing.from_channel (open_in f)
+       (try f, Lexing.from_channel (open_in (find_file f))
         with _ -> raise (Err(Util.format1 "Unable to open file: %s\n" f)))
     | Inr(s) ->
       "<input>", Lexing.from_string s in

@@ -261,7 +261,7 @@ let go _ =
       Util.print_string msg
     | GoOn ->
              let filenames = if !Options.use_build_config  //if the user explicitly requested it
-                             || List.length filenames = 1  //or, if there is only a single file on the command line
+                             || (not !Options.interactive && List.length filenames = 1)  //or, if there is only a single file on the command line
                              then match filenames with 
                                     | [f] -> Parser.Driver.read_build_config f //then, try to read a build config from the header of the file
                                     | _ -> Util.print_string "--use_build_config expects just a single file on the command line and no other arguments"; exit 1

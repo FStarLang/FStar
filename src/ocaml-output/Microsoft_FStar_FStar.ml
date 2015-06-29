@@ -311,7 +311,7 @@ end
 (Support.Microsoft.FStar.Util.print_string msg)
 end
 | Support.Microsoft.FStar.Getopt.GoOn -> begin
-(let filenames = if ((! (Microsoft_FStar_Options.use_build_config)) || ((Support.List.length filenames) = 1)) then begin
+(let filenames = if ((! (Microsoft_FStar_Options.use_build_config)) || ((not ((! (Microsoft_FStar_Options.interactive)))) && ((Support.List.length filenames) = 1))) then begin
 (match (filenames) with
 | f::[] -> begin
 (Microsoft_FStar_Parser_Driver.read_build_config f)
