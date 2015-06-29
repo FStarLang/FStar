@@ -1261,37 +1261,48 @@ let tstep_assec pi ps x e =
   let tsec = Conf Target (Mode Sec ps) [] env (T_exp e) in
   (step_to_wait (fst pi) ps, Some tsec)
 
-val ps_sec_waiting: pi:protocol -> ps:prins{ps_in_pi ps pi}
-                    -> Tot bool (decreases (size ps))
-let rec ps_sec_waiting pi ps =
-  let Some p = choose ps in
-  let ps_rest = remove p ps in
-  let Some (Conf _ _ _ _ t) = select p (fst pi) in
-  is_T_sec_wait t &&
-    (ps_rest = empty || ps_sec_waiting pi ps_rest)
+type ps_sec_waiting (pi:protocol) (ps:prins) =
+  (forall p. mem p ps ==> (contains p (fst pi) /\
+                           is_T_sec_wait (Conf.t (Some.v (select p (fst pi))))))
 
-val tpre_assec_ret: pi:protocol
-                    -> ps:prins{ps_in_pi ps pi}
-                    -> Tot bool
-let rec tpre_assec_ret pi ps =
-  is_Some (snd pi) && (Conf.m (Some.v (snd pi)) = Mode Sec ps)  &&
-  is_value (Some.v (snd pi)) && (Conf.s (Some.v (snd pi)) = []) &&
+type tpre_assec_ret (pi:protocol) (ps:prins) =
+  is_Some (snd pi) /\ (Conf.m (Some.v (snd pi)) = Mode Sec ps)  /\
+  is_value (Some.v (snd pi)) /\ (Conf.s (Some.v (snd pi)) = []) /\
   ps_sec_waiting pi ps
 
-val ret_sec_value_to_ps: #m:v_meta -> pi:tpar -> ps:prins{forall p. mem p ps ==> contains p pi}
-                         -> v:value m -> Tot tpar (decreases (size ps))
+val ret_sec_value_to_p: #meta:v_meta -> c:tconfig -> p:prin
+                        -> v:value meta -> Tot tconfig
+let ret_sec_value_to_p #meta c p v =
+  let Conf l m s en _ = c in
+  Conf l m s en (T_val (D_v.v (slice_v p v)))
+
+val ret_sec_value_to_ps:
+  #m:v_meta -> pi:tpar -> ps:prins{forall p. mem p ps ==> contains p pi} -> v:value m
+  -> Tot (pi':tpar{(forall p. mem p ps ==>
+                              contains p pi' /\
+                              Some.v (select p pi') =
+                                ret_sec_value_to_p (Some.v (select p pi)) p v) /\
+                   (forall p. not (mem p ps) ==> select p pi' = select p pi)})
+    (decreases (size ps))
 let rec ret_sec_value_to_ps #meta pi ps v =
   let Some p = choose ps in
   let ps_rest = remove p ps in
-  let Some (Conf l m s en _) = select p pi in
-  if ps_rest = empty then update p (Conf l m s en (T_val v)) pi
+  let c' = ret_sec_value_to_p (Some.v (select p pi)) p v in
+  if ps_rest = empty then update p c' pi
   else
     let pi' = ret_sec_value_to_ps #meta pi ps_rest v in
-    update p (Conf l m s en (T_val v)) pi'
+    update p c' pi'
 
-val tstep_assec_ret: pi:protocol -> ps:prins{ps_in_pi ps pi /\
-                                               tpre_assec_ret pi ps}
-                     -> Tot protocol
+val tstep_assec_ret:
+  pi:protocol -> ps:prins{ps_in_pi ps pi /\ tpre_assec_ret pi ps}
+  -> Tot (pi':protocol{(forall p. mem p ps ==>
+                                  contains p (fst pi') /\
+                                  Some.v (select p (fst pi')) =
+                                  ret_sec_value_to_p (Some.v (select p (fst pi))) p
+                                  (T_val.v (Conf.t (Some.v (snd pi))))) /\
+                       (forall p. not (mem p ps) ==> select p (fst pi') = select p (fst pi)) /\
+                       (snd pi' = None)})
+
 let tstep_assec_ret pi ps =
   let pi, Some c = pi in
   let D_v _ v = c_value c in
@@ -1504,6 +1515,102 @@ let rec forward_simulation_par #c #c' h ps = admit ()
 
         let h5 = PP_tran h3 h4 in
         h5*)
+
+val slice_v_lem_singl_of_ps: #m:v_meta -> v:value m -> ps:prins -> p:prin{mem p ps}
+                             -> Lemma (requires (True))
+                                      (ensures (slice_v p (D_v.v (slice_v_sps ps v)) =
+                                                slice_v p v))
+                                (decreases %[v])
+val slice_en_x_lem_singl_of_ps: en:env -> ps:prins -> p:prin{mem p ps} -> x:varname
+                                -> Lemma (requires (True))
+                                         (ensures ((slice_en p (slice_en_sps ps en)) x =
+                                                   (slice_en p en) x))
+                                   (decreases %[en;0])                                
+val slice_en_lem_singl_of_ps: en:env -> ps:prins -> p:prin{mem p ps}
+                              -> Lemma (requires (True))
+                                       (ensures (slice_en p (slice_en_sps ps en) =
+                                                 slice_en p en))
+                                 (decreases %[en;1])
+let rec slice_v_lem_singl_of_ps #m v ps p = match v with
+  | V_const _ -> ()  
+  | V_box ps' v' ->
+    if intersect ps ps' = empty then
+      let _ = assert (mem p ps' ==> mem p (intersect ps ps')) in
+      ()
+    else if not (mem p ps') then ()
+    else slice_v_lem_singl_of_ps v' ps p  
+  | V_clos en _ _ -> slice_en_lem_singl_of_ps en ps p
+  | V_emp_clos _ _ -> ()
+  | V_emp -> ()
+
+and slice_en_x_lem_singl_of_ps en ps p x =
+  if en x = None then ()
+  else (preceds_axiom en x; slice_v_lem_singl_of_ps (D_v.v (Some.v (en x))) ps p)
+
+and slice_en_lem_singl_of_ps en ps p =
+  forall_intro #varname #(fun x -> b2t ((slice_en p (slice_en_sps ps en)) x =
+                                        (slice_en p en) x))
+               (slice_en_x_lem_singl_of_ps en ps p);
+  let _ = cut (FEq (slice_en p (slice_en_sps ps en)) (slice_en p en)) in
+  ()
+
+val slice_v_lem_singl_of_ps_forall:
+  #m:v_meta -> v:value m -> ps:prins
+  -> Lemma (requires (True))
+           (ensures (forall p. mem p ps ==>
+                               slice_v p (D_v.v (slice_v_sps ps v)) =
+                               slice_v p v))
+let slice_v_lem_singl_of_ps_forall #m v ps =
+  forall_intro (slice_v_lem_singl_of_ps #m v ps)
+
+assume val contains_is_some_eq_lemma: pi1:tpar -> pi2:tpar
+                                      -> Lemma (requires (forall p. contains p pi1 <==> contains p pi2))
+                                               (ensures (forall p. is_Some (select p pi1) =
+                                                                   is_Some (select p pi2)))
+                                                                   
+val forward_simulation_exit_sec: #c:config -> #c':config
+                                 -> h:sstep c c'{is_C_assec_ret h /\ is_par c'}
+                                 -> ps:prins{subset (Mode.ps (Conf.m c)) ps}
+                                 -> Tot (pstep (slice_c_ps ps c) (slice_c_ps ps c'))
+let forward_simulation_exit_sec #c #c' h ps =
+  let Conf Source (Mode Sec ps')
+           ((Frame (Mode Par ps'') en F_assec_ret)::s) _ (T_val v) = c in
+  
+  let Conf Source (Mode Par ps') s en (T_val v) = c' in
+  
+  let pi = slice_c_ps ps c in
+  let _ = slice_c_ps_tpar_lemma ps c in
+  
+  let pi' = slice_c_ps ps c' in  
+  let _ = slice_c_ps_tpar_lemma ps c' in
+  
+  let _ = slice_v_lem_singl_of_ps_forall (D_v.v (c_value c)) ps' in
+  
+  let _ = assert (forall p. mem p ps' ==>
+                            Some.v (select p (fst pi')) =
+                            ret_sec_value_to_p (Some.v (select p (fst pi))) p
+                              (T_val.v (Conf.t (Some.v (snd pi))))) in
+                              
+  (*let _ = assert (forall p. contains p (fst pi) = contains p (fst pi')) in*)  
+  let _ = contains_is_some_eq_lemma (fst pi) (fst pi') in
+  (*let _ = assert (forall p. is_Some (select p (fst pi)) = is_Some (select p (fst pi'))) in*)
+  let _ = assert (forall p. not (mem p ps') ==> select p (fst pi') =
+                                                select p (fst pi)) in
+  
+  let pi'' = tstep_assec_ret pi ps' in
+  
+  let _ = assert (forall p. mem p ps' ==>
+                            Some.v (select p (fst pi'')) =
+                            ret_sec_value_to_p (Some.v (select p (fst pi))) p
+                              (T_val.v (Conf.t (Some.v (snd pi))))) in
+  let _ = assert (forall p. not (mem p ps') ==> select p (fst pi'') =
+                                                select p (fst pi)) in
+                                                
+  let _ = assert (fst pi' = fst pi'') in
+  let _ = assert (snd pi' = snd pi'') in
+  let _ = assert (pi' = pi'') in
+
+  P_sec_exit pi ps' pi'
 
 
 (*
