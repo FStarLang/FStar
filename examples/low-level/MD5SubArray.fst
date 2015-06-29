@@ -209,6 +209,13 @@ let mainLoopSubArrayAux n ch acc u =
     PureMem unit (requires p) (ensures (fun _ _ _ -> True))
   let memAssert 'p = ()
 
+val arrayExistsInMemTailSids : #a:Type -> #n:nat -> r:(vector (ref a) n)
+  -> m0:smem -> m1:smem -> Lemma
+  (requires (sids m0 = sids m1 /\ arrayExixtsInMem r (mtail m0) /\ arrayExixtsInMem r m1))
+  (ensures arrayExixtsInMem r (mtail m1))
+  [SMTPat (sids m0 = sids m1)]
+let arrayExistsInMemTailSids 'a #n r m0 m1 = (admit ())
+
 
 val mainLoopSubArray :
   n : nat{divides 16 n}
@@ -218,10 +225,9 @@ val mainLoopSubArray :
     (fun m -> True /\ arrayExixtsInMem ch m)
     (fun m0 _ m1 -> True)
     (*this computation does not modify anything, but F* needs more convincing *)
-    (* (Set.empty)*)
+     (*(Set.empty)*)
     (*allRefs*)
     (Set.complement (Set.empty))
-
 
 let mainLoopSubArray n ch u =
   let acc =  sallocateVector word 4 w0 in
@@ -229,6 +235,7 @@ let mainLoopSubArray n ch u =
   (*assert (b2t (not (Set.mem (Ref dummy) (flattenRefs acc)))) ;*)
   memAssert (fun m -> ~ (refExistsInMem dummy (mtail m)));
   memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));
+  memAssert (fun m -> forall (r:(r:(ref word){Set.mem (Ref r) (flattenRefs acc)})). ~ (refExistsInMem r (mtail m)) );
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
   pushStackFrame ();
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
@@ -238,9 +245,10 @@ let mainLoopSubArray n ch u =
   memAssert (fun m -> True /\ arrayExixtsInMem acc (m));
   memAssert (fun m -> True /\ arrayExixtsInMem ch (m));
   memAssert (fun m -> True /\ arrayExixtsInMem ch (mtail m));
-  (*need to separately prove the property that reltive memory location of
-    arrays is preerved even after modification of their conents.
-    The assertion below typechecked above *)
-  (*memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));*)
+  (* The assertion below typechecked above. sids have not changed since because we pushed once and then popped once.
+
+   *)
+    (*memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));*)
+  (*memAssert (fun m -> forall (r:(r:(ref word){Set.mem (Ref r) (flattenRefs acc)})). ~ (refExistsInMem r (mtail m)) );*)
   memAssert (fun m -> ~ (refExistsInMem dummy (mtail m)));
   initAcc
