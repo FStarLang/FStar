@@ -962,26 +962,38 @@ val slc_en_lem_ps: en:env -> p:prin -> ps:prins
                                                      (slice_en_sps ps en)
                                         = slice_en_sps (union (singleton p) ps) en))
                         (decreases %[en; 1])
-#set-options "--z3timeout 10"
 let rec slc_v_lem_ps #m v p ps = match v with
   | V_const _      -> ()
   
   | V_box ps' v'   ->
-    let _ = admit () in
+    let psp = singleton p in
     if mem p ps' && not (intersect ps ps' = empty) then
       slc_v_lem_ps v' p ps
     else if mem p ps' && intersect ps ps' = empty then
-      let _ = _assume (b2t (intersect (union (singleton p) ps) ps' = singleton p)) in
-      box_slice_lem v' (union (singleton p) ps) ps';
+      let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
+      let _ = cut (forall p. not (mem p (intersect ps ps'))) in
+      let _ = cut (forall p. mem p (intersect (union psp ps) ps') = mem p psp) in
+      let _ = OrdSet.eq_lemma (intersect (union psp ps) ps') psp in
+
+      box_slice_lem v' (union psp ps) ps';
       slice_lem_singl_v v' p;
       ()
     else if not (mem p ps') && not (intersect ps ps' = empty) then
-      let _ = _assume (b2t (intersect (union (singleton p) ps) ps' = intersect ps ps')) in
+      let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
+      let _ = cut (forall p. not (mem p (intersect psp ps'))) in
+      let _ = cut (forall p. mem p (intersect (union psp ps) ps') = mem p (intersect ps ps')) in
+      let _ = OrdSet.eq_lemma (intersect (union psp ps) ps') (intersect ps ps') in
+      
       box_slice_lem v' (union (singleton p) ps) ps';
       box_slice_lem v' ps ps';
       ()    
     else
-      let _ = _assume (b2t (intersect (union (singleton p) ps) ps' = empty)) in
+      let _ = cut (forall p. mem p (union psp ps) = mem p psp || mem p ps) in
+      let _ = cut (forall p. not (mem p (intersect psp ps'))) in
+      let _ = cut (forall p. not (mem p (intersect ps ps'))) in
+      let _ = cut (forall p. not (mem p (intersect (union psp ps) ps'))) in
+      let _ = OrdSet.eq_lemma (intersect (union psp ps) ps') empty in
+
       ()
   | V_clos en _ _  -> slc_en_lem_ps en p ps
   | V_emp_clos _ _ -> ()
@@ -999,8 +1011,6 @@ and slc_en_lem_ps en p ps =
   let _ = cut (FEq (compose_envs (slice_en p en) (slice_en_sps ps en))
                    (slice_en_sps (union (singleton p) ps) en)) in
   ()
-
-#reset-options
 
 val mempty: #key:Type -> #value:Type -> #f:cmp key -> Tot (OrdMap.ordmap key value f)
 let mempty (#k:Type) (#v:Type) #f = OrdMap.empty #k #v #f
