@@ -1,7 +1,7 @@
 (*--build-config
     options:--admit_fsi Set --z3timeout 10;
     variables:LIB=../../lib;
-    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst word.fst mvector.fsi mvector.fst
+    other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst
   --*)
 
 module Array
@@ -10,7 +10,7 @@ open MachineWord
 open Heap
 open Set
 open Stack
-open MVector
+open Seq
 
 
 (*to make vector opaque, just include vector.fsi*)
@@ -19,10 +19,9 @@ let testf v = v 1*)
 
 type array : Type -> Type
 
-assume val length : #a:Type -> (array a) -> Tot nat
-
 (*making it GTot causes a strange error in the postcondition of readIndex *)
-assume val asRef : #a:Type  -> va:(array a) -> Tot (ref (vector a (length va)))
+assume val asRef : #a:Type  -> va:(array a) -> Tot (ref (seq a))
+
 
 (*using the 2 definitions below causes a strange error in readIndex amd updIndex*)
 (*val arrayExistsInMem : #a:Type -> (array a) -> smem -> GTot bool
@@ -34,46 +33,44 @@ let lookup 'a va m = (admit ())*)
 (*loopkupRef (asRef va) m*)
 
 val readIndex :  #a:Type  -> r:(array a)
-  -> index:nat{index < length r}
+  -> index:nat
   -> PureMem a
-        (requires (fun m -> b2t (refExistsInMem (asRef r) m)))
-        (*without the Let binding, this doesn't typecheck unless GTot is replaced by Tot in the definition of asRef *)
-        (ensures (fun m v _-> Let  (asRef r) (fun rr ->
-            ((refExistsInMem rr m) /\ v = atIndex (loopkupRef rr m) index) ) ) )
+        (requires (fun m ->  (refExistsInMem (asRef r) m) /\ index < Seq.length (loopkupRef (asRef r) m) ) )
+        (ensures (fun m v _->
+          (refExistsInMem (asRef r) m) /\ index < Seq.length (loopkupRef (asRef r) m) /\ v = Seq.index (loopkupRef (asRef r) m) index ))
 
 val writeIndex :  #a:Type -> r:((array a))
-  -> index:nat{index<length r} -> newV:a ->
+  -> index:nat -> newV:a ->
  Mem unit
-    (requires (fun m -> b2t (refExistsInMem (asRef r) m)))
-    (ensures (fun m0 _ m1-> (Let (asRef r) (fun rr -> refExistsInMem rr m0 /\
-      Let (loopkupRef rr m0) (fun (rrv:(vector a (length r))) ->
-             b2t (m1 = (writeMemAux rr m0 (updateIndex rrv index newV))))))))
+    (requires (fun m ->  (refExistsInMem (asRef r) m) /\ index < Seq.length (loopkupRef (asRef r) m) ) )
+    (ensures ( fun m0 _ m1 ->
+        (refExistsInMem (asRef r) m0) /\ index < Seq.length (loopkupRef (asRef r) m0) /\
+          (m1 = (writeMemAux (asRef r) m0 (Seq.upd (loopkupRef (asRef r) m0) index newV)))))
       (singleton (Ref (asRef r)))
 
 (*There is no way to read or write a whole vector in non-ghost mode *)
 
 (*create an array on stack*)
-val screateArray :  #a:Type  -> #n:nat -> init:(vector a n)
+val screate :  #a:Type -> init:(seq a)
   -> Mem (array a)
         (requires  (fun m -> (isNonEmpty (st m))))
-        (ensures (fun m0 v m1->
-            (isNonEmpty (st m0)) /\ (isNonEmpty (st m1)) /\ length v = n
-            /\ allocateInBlock (asRef v) (topstb m0) (topstb m1) init
-            /\ refLoc (asRef v) = InStack (topstid m0) /\ (topstid m0 = topstid m1)
+        (ensures (fun m0 vv m1->
+            (isNonEmpty (st m0)) /\ (isNonEmpty (st m1))
+            /\ allocateInBlock (asRef vv) (topstb m0) (topstb m1) init
+            /\ refLoc (asRef vv) = InStack (topstid m0) /\ (topstid m0 = topstid m1)
             /\ mtail m0 = mtail m1))
         (empty)
 
 (*create an array on the heap*)
-val hcreateArray :  #a:Type  -> #n:nat -> init:(vector a n)
+val hcreate :  #a:Type -> init:(seq a)
   -> Mem (array a)
         (requires  (fun m -> True))
         (ensures (fun m0 v m1->
-            length v = n
-            /\ allocateInBlock (asRef v) (hp m0) (hp m1) init
+            allocateInBlock (asRef v) (hp m0) (hp m1) init
             /\ refLoc (asRef v) = InHeap /\ (snd m0 = snd m1)))
         (empty)
 
-val readArray :  #a:Type  -> r:(array a)
-  -> PureMem (vector a (length r))
+val to_seq :  #a:Type  -> r:(array a)
+  -> PureMem (seq a)
         (requires (fun m -> b2t (refExistsInMem (asRef r) m)))
         (ensures (fun m v _-> (refExistsInMem (asRef r) m) /\ v = (loopkupRef (asRef r) m)))
