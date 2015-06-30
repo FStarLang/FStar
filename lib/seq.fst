@@ -1,3 +1,7 @@
+(*--build-config
+    options:--admit_fsi Set;
+    other-files: seq.fsi
+  --*)
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -14,40 +18,31 @@
    limitations under the License.
 *)
 
+
 (* A logical theory of sequences indexed by natural numbers in [0, n) *)
 module Seq
 #set-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0"
 
 (* Representation hidden from clients *)
-type seq (a:Type) = {
-  contents: nat -> Tot a;
-  length:   nat
-}
+type seq (a:Type) =
+| MkSeq: length:nat -> contents:(n:nat{n<length} -> Tot a) -> seq a
 
 (* Primitive operations on sequences *)
-let length s = s.length
+let length s = MkSeq.length s
 
-let create len v = {
-  contents=(fun i -> v);
-  length=len;
-}
+let create len v =  MkSeq len (fun i -> v)
 
-let index s i = s.contents i
+let index s i = MkSeq.contents s i
 
-let upd s n v = {
-  contents=(fun i -> if i=n then v else s.contents i);
-  length=s.length;
-}
+let upd s n v =
+ MkSeq (length s) (fun i -> if i=n then v else (MkSeq.contents s) i)
 
-let append s1 s2 = {
-  contents=(fun x -> if x < s1.length then s1.contents x else s2.contents (x - s1.length));
-  length=s1.length + s2.length;
-}
+let append s1 s2 =
+  MkSeq (length s1 + length s2) (fun x -> if x < (length s1) then index s1 x else index s2 (x - (length s1)))
 
-let slice s i j = {
-  contents=(fun x -> s.contents (x + i));
-  length=j - i;
-}
+let slice s i j =
+  MkSeq (j-i) (fun x -> index s (x + i))
+
 
 (* Lemmas about length *)
 let lemma_create_len n i   = ()
@@ -66,17 +61,8 @@ let lemma_index_slice s i j k = ()
 logic type Eq (#a:Type) (s1:seq a) (s2:seq a) =
   (length s1 = length s2
    /\ (forall (i:nat{i < length s1}).{:pattern (index s1 i); (index s2 i)} (index s1 i == index s2 i)))
-(* Need to assume extensionality here, since it doesn't follow from functional extensionality alone;
-   We only want the maps that hold the sequences to agree on the locations within range;
-   An alternative would be to define
 
-       type seq (a:Type) = (| len:nat * (x:nat{x < len} -> a) |)
-
-   i.e., restricting the domain of the maps to the indices within range only.
-   In that case, functional extensionality should suffice.
-
-   TODO: try moving to that style?
- *)
+(*This should be provable now*)
 assume Extensionality: forall (a:Type) (s1:seq a) (s2:seq a). Eq s1 s2 <==> (s1=s2)
 
 let lemma_eq_intro s1 s2 = ()
