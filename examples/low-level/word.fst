@@ -67,3 +67,8 @@ let leftshift  sh w =
 
 val leftrotate : (n:nat{n<bitsize}) -> word -> Tot word
 let leftrotate n w = bitwiseOr (leftshift n w) (rightshift (bitsize - n) w)
+
+
+val w0 : word
+let w0 x = false
+ 

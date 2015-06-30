@@ -67,8 +67,6 @@ assume val sallocateVector :  a:Type -> n:nat
 
 type chunk512 = array word 16
 
-assume val w0 : word
-
 val arrayExistsMod :
     #a:Type
     -> #n:nat

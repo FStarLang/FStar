@@ -37,3 +37,5 @@ let screate  init = (salloc init)
 let hcreate init = (halloc init)
 
 let to_seq  r = memread (r)
+
+let length r = Seq.length (memread r)

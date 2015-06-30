@@ -2,7 +2,7 @@
     options:--admit_fsi Set --z3timeout 10;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
-    st3.fst $LIB/constr.fst word.fst mvector.fsi mvector.fst
+    st3.fst $LIB/seq.fsi $LIB/seq.fst word.fst
   --*)
 
 (*Why is MD5 so? Why did its designer(s) think
@@ -131,7 +131,9 @@ let psize n =
   let lm = leastMultipleGeq n 16 in
   if ((lm+1) % 16 < 12) then lm else lm+16
 
-assume val initAcc : (vector word 4)
+open Seq
+
+assume val initAcc : s:(seq word){length s =4}
 
 (*we can tradeoff space for time by not copying the whole thing,
   but allocate only a new array for padding. Perhaps it can also include
