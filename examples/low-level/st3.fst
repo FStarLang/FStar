@@ -17,6 +17,12 @@ open ListSet
 
 type sidt = nat
 
+(*type MemStorable : Type -> Type =
+ | StoreInt : MemStorable int*)
+
+(*What is the analog of Coq's "Hint Constructors MemStorable" ?*)
+(*val test : unit ->  Lemma (requires True) (ensures (MemStorable int))*)
+(*let test u = ()*)
 
 
 type memblock = heap
