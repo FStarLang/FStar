@@ -148,6 +148,24 @@ val update_bigint_lemma:
 	       /\ (modifies !{Bigint63.data b} h0 h1) ))
 let update_bigint_lemma h0 h1 b idx v = ()
 
+type EqualBigint (a:bigint) (b:bigint) (ha:heap) (hb:heap) =
+  (contains ha (Bigint63.data a)) 
+  /\ (contains hb (Bigint63.data b))
+  /\ (getLength ha a = getLength hb b)
+  /\ (forall (i:nat). i < getLength ha a ==> getValue ha a i = getValue hb b i)
+  /\ (Bigint63.t a = getTemplate b)
+
+val copy:
+  a:bigint ->
+  ST bigint
+     (requires (fun h -> inHeap h a /\ getLength h a > 0))
+     (ensures (fun h0 b h1 ->
+	       (EqualBigint a b h0 h1)
+	       /\ (modifies !{} h0 h1)
+     ))
+let copy a =
+  Bigint63 (Array.copy (Bigint63.data a)) (Bigint63.t a)
+
 (* Normalized big integer type *)
 type Normalized (h:heap) (b:bigint{ inHeap h b })  =
   (forall (n:nat). n < getLength h b ==> getSize h b n <= (Bigint63.t b) n)

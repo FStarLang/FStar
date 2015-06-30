@@ -80,37 +80,38 @@ let swap x i j =
   cut (b2t(equal h1 (Heap.upd h0 x s1)))
 
 (* Helper functions for stateful array manipulation *)
-val array_copy_aux:
-  s:array int -> cpy:array int -> ctr:nat ->
-  ST unit
-     (requires (fun h -> (contains h s /\ contains h cpy /\ s <> cpy)
-			 /\ (Seq.length (sel h cpy) = Seq.length (sel h s))
-			 /\ (ctr <= Seq.length (sel h cpy))
-			 /\ (forall (i:nat). i < ctr ==> Seq.index (sel h s) i = Seq.index (sel h cpy) i)))
-     (ensures (fun h0 u h1 -> (contains h1 s /\ contains h1 cpy /\ s <> cpy )
+val copy_aux:
+  #a:Type -> s:array a -> cpy:array a -> ctr:nat ->
+     ST unit
+	(requires (fun h -> (contains h s /\ contains h cpy /\ s <> cpy)
+			    /\ (Seq.length (sel h cpy) = Seq.length (sel h s))
+			    /\ (ctr <= Seq.length (sel h cpy))
+			    /\ (forall (i:nat). i < ctr ==> Seq.index (sel h s) i = Seq.index (sel h cpy) i)))
+	(ensures (fun h0 u h1 -> (contains h1 s /\ contains h1 cpy /\ s <> cpy )
 			      /\ (modifies !{cpy} h0 h1)
 			      /\ (Seq.Eq (sel h1 cpy) (sel h1 s))))
-let rec array_copy_aux s cpy ctr =
+let rec copy_aux s cpy ctr =
   match Array.length cpy - ctr with
   | 0 -> ()
   | _ -> Array.upd cpy ctr (Array.index s ctr);
-	 array_copy_aux s cpy (ctr+1)
+	 copy_aux s cpy (ctr+1)
 
-val array_copy: 
-	 s:array int -> 
-	 ST (array int)
-	    (requires (fun h -> contains h s))
-	    (ensures (fun h0 r h1 -> (modifies !{} h0 h1)
+val copy: 
+  #a:Type -> s:array a -> 
+  ST (array a)
+     (requires (fun h -> contains h s
+			 /\ Seq.length (sel h s) > 0))
+     (ensures (fun h0 r h1 -> (modifies !{} h0 h1)
 				     /\ not(contains h0 r)
 				     /\ (contains h1 r)
 				     /\ (Seq.Eq (sel h1 r) (sel h0 s))))
-let array_copy s =
-  let cpy = Array.create (Array.length s) 0 in
-  array_copy_aux s cpy 0;
+let copy s =
+  let cpy = Array.create (Array.length s) (Array.index s 0) in
+  copy_aux s cpy 0;
   cpy
 
-val array_blit_aux:
-  s:array int -> s_idx:nat -> t:array int -> t_idx:nat -> len:nat -> ctr:nat ->
+val blit_aux:
+  #a:Type -> s:array a -> s_idx:nat -> t:array a -> t_idx:nat -> len:nat -> ctr:nat ->
   ST unit
      (requires (fun h -> 
 		(contains h s /\ contains h t /\ s <> t)
@@ -131,14 +132,14 @@ val array_blit_aux:
 	       /\ (forall (i:nat).
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==> 
 		     Seq.index (sel h1 t) i = Seq.index (sel h0 t) i) ))
-let rec array_blit_aux s s_idx t t_idx len ctr =
+let rec blit_aux s s_idx t t_idx len ctr =
   match len - ctr with
   | 0 -> ()
   | _ -> Array.upd t (t_idx + ctr) (Array.index s (s_idx + ctr));
-	 array_blit_aux s s_idx t t_idx len (ctr+1)
+	 blit_aux s s_idx t t_idx len (ctr+1)
 
-val array_blit:
-  s:array int -> s_idx:nat -> t:array int -> t_idx:nat -> len:nat ->
+val blit:
+  #a:Type -> s:array a -> s_idx:nat -> t:array a -> t_idx:nat -> len:nat ->
   ST unit
      (requires (fun h -> 
 		(contains h s) 
@@ -158,5 +159,5 @@ val array_blit:
 	       /\ (forall (i:nat).
 		   (i < Seq.length (sel h1 t) /\ (i < t_idx \/ i >= t_idx + len)) ==> 
 		     (Seq.index (sel h1 t) i = Seq.index (sel h0 t) i)) ))
-let rec array_blit s s_idx t t_idx len =
-  array_blit_aux s s_idx t t_idx len 0
+let rec blit s s_idx t t_idx len =
+  blit_aux s s_idx t t_idx len 0

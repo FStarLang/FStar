@@ -1,4 +1,4 @@
-module Addition
+module Substraction
 
 open IntLib
 open Limb
@@ -10,13 +10,13 @@ open Heap
 open Bigint
 
 (* 
-   Auxiliary addition function. 
+   Auxiliary substraction function. 
    Takes two input arrays, the current index for the computation and the temporary result 
  *)
 
-(* Auxiliary addition function putting the result in the first operand *)
+(* Auxiliary substraction function putting the result in the first operand *)
 (* Code, not tailrecursive, proof without witness *)
-val addition:
+val substraction:
   a:bigint -> a_idx:nat ->  b:bigint -> b_idx:nat -> len:nat ->
   ST unit
     (requires (fun h -> 
@@ -46,7 +46,7 @@ val addition:
 
 	      /\ (forall (i:nat).
 		  i < len ==> 
-		    getValue h1 a (i+a_idx) = getValue h0 a (i+a_idx) + getValue h0 b (i+b_idx)) 
+		    getValue h1 a (i+a_idx) = getValue h0 a (i+a_idx) - getValue h0 b (i+b_idx)) 
 		 
 	      /\ (forall (i:nat).
 		  (i < getLength h1 a /\ (i < a_idx \/ i >= a_idx + len)) ==> 
@@ -61,12 +61,12 @@ val addition:
 		    getSize h1 a i = getSize h0 a i)
  
 ))
-let rec addition a a_idx b b_idx len =
+let rec substraction a a_idx b b_idx len =
   match len with
   | 0 -> ()
   |  _ -> 
       let h0 = erase (ST.get()) in
-      addition a a_idx b b_idx (len-1);
+      substraction a a_idx b b_idx (len-1);
       let h1 =
 	erase (ST.get ()) in
       let ai = Bigint.get a (a_idx+len-1) in
@@ -75,16 +75,17 @@ let rec addition a a_idx b b_idx len =
       let bi = Bigint.get b (b_idx+len-1) in
       let size_bi = 
 	erase (getSize h1 b (b_idx+len-1)) in
-      let v = Limb.add size_ai ai size_bi bi in
+      let v = Limb.sub size_ai ai size_bi bi in
       erase (
 	  order_n_bits v (max size_ai size_bi + 1) (wordSize a - 1));
       let (t:tint (wordSize a)) = mk_tint a (erase (max size_ai size_bi + 1))  v in
       let h1 = erase (ST.get()) in
       updateBigint a (a_idx+len-1) t
 
+
 (* Code *)
-(* Tail recursive version of the addition *)
-val addition_tr:
+(* Tail recursive version of the substraction *)
+val substraction_tr:
   ghost_a:seq (tint ocaml63) -> a:bigint -> a_idx:nat ->  b:bigint -> b_idx:nat -> len:nat -> ctr:nat ->
   ST unit
     (requires (fun h -> 
@@ -100,7 +101,7 @@ val addition_tr:
 	       /\ (maxSize h b <= wordSize a - 2)
 	       /\ (forall (i:nat). i < ctr
 		   ==> (
-		      (getValue h a (a_idx+i) = dsnd (Seq.index ghost_a (a_idx+i)) + getValue h b (b_idx+i))
+		      (getValue h a (a_idx+i) = dsnd (Seq.index ghost_a (a_idx+i)) - getValue h b (b_idx+i))
 		      /\ (getSize h a (a_idx+i) = max (dfst (Seq.index ghost_a (a_idx+i))) (getSize h b (b_idx+i)) + 1)))
 	       /\ (forall (i:nat). ( i < getLength h a /\ (i < a_idx \/ i >= a_idx + ctr))
 		   ==> (getValue h a i = dsnd (Seq.index ghost_a i) /\ getSize h a i = dfst (Seq.index ghost_a i)))
@@ -125,7 +126,7 @@ val addition_tr:
 	      /\ (Seq.length ghost_a = getLength h0 a)
 		 
 	      /\ (forall (i:nat). i < len 
-		  ==> ((getValue h1 a (i+a_idx) = dsnd (Seq.index ghost_a (a_idx+i)) + getValue h0 b (i+b_idx)) 
+		  ==> ((getValue h1 a (i+a_idx) = dsnd (Seq.index ghost_a (a_idx+i)) - getValue h0 b (i+b_idx)) 
 		       /\ (getSize h1 a (i+a_idx) = max (dfst (Seq.index ghost_a (a_idx+i))) (getSize h0 b (i+b_idx)) + 1)))
 		 
 	      /\ (forall (i:nat). (i < getLength h1 a /\ (i < a_idx \/ i >= a_idx + len)) 
@@ -133,7 +134,7 @@ val addition_tr:
    
 ))
 
-let rec addition_tr ghost_a a a_idx b b_idx len ctr =
+let rec substraction_tr ghost_a a a_idx b b_idx len ctr =
   match len - ctr with
   | 0 -> ()
   | _ -> 
@@ -146,14 +147,14 @@ let rec addition_tr ghost_a a a_idx b b_idx len ctr =
       let bi = Bigint.get b (b_idx+i) in
       let size_bi = 
 	erase (getSize h1 b (b_idx+i)) in
-      let v = Limb.add size_ai ai size_bi bi in
+      let v = Limb.sub size_ai ai size_bi bi in
       let (t:tint (wordSize a)) = mk_tint a (erase (max size_ai size_bi + 1))  v in
       updateBigint a (a_idx+i) t;
-      addition_tr ghost_a a a_idx b b_idx len (ctr+1);
+      substraction_tr ghost_a a a_idx b b_idx len (ctr+1);
       ()
 
 
-val addition_lemma_aux:
+val substraction_lemma_aux:
   h0:heap ->
   h1:heap ->
   a:bigint{ (inHeap h0 a) 
@@ -166,17 +167,17 @@ val addition_lemma_aux:
 	   /\ (len <= getLength h0 b)
 	   /\ (len <= getLength h1 a)
 	   /\ (forall (i:nat). i < len 
-	       ==> getValue h1 a i = getValue h0 a i + getValue h0 b i) } ->
+	       ==> getValue h1 a i = getValue h0 a i - getValue h0 b i) } ->
   Lemma
-    (requires ( (eval h0 a (len-1) + eval h0 b (len-1) = eval h1 a (len-1))
-		/\ (getValue h1 a (len-1) = getValue h0 a (len-1) + getValue h0 b (len-1)) ) )
-    (ensures (eval h0 a len + eval h0 b len = eval h1 a len))
-let addition_lemma_aux h0 h1 a b len =
+    (requires ( (eval h0 a (len-1) - eval h0 b (len-1) = eval h1 a (len-1))
+		/\ (getValue h1 a (len-1) = getValue h0 a (len-1) - getValue h0 b (len-1)) ) )
+    (ensures (eval h0 a len - eval h0 b len = eval h1 a len))
+let substraction_lemma_aux h0 h1 a b len =
   erase (
-      distributivity_add_right (pow2 (bitweight (Bigint63.t a) (len-1))) (getValue h0 a (len-1))  (getValue h0 b (len-1))
+      distributivity_sub_right (pow2 (bitweight (Bigint63.t a) (len-1))) (getValue h0 a (len-1))  (getValue h0 b (len-1))
     )
 
-val addition_lemma:
+val substraction_lemma:
   h0:heap ->
   h1:heap ->
   a:bigint{ (inHeap h0 a) 
@@ -189,19 +190,19 @@ val addition_lemma:
 	   /\ (len <= getLength h0 b)
 	   /\ (len <= getLength h1 a)
 	   /\ (forall (i:nat). i < len 
-	       ==> getValue h1 a i = getValue h0 a i + getValue h0 b i) } ->
+	       ==> getValue h1 a i = getValue h0 a i - getValue h0 b i) } ->
   Lemma
     (requires (True))
-    (ensures ( eval h0 a len + eval h0 b len = eval h1 a len ))
-let rec addition_lemma h0 h1 a b len =
+    (ensures ( eval h0 a len - eval h0 b len = eval h1 a len ))
+let rec substraction_lemma h0 h1 a b len =
   erase (
       match len with
       | 0 -> ()
-      | _ -> addition_lemma h0 h1 a b (len-1);
-	     addition_lemma_aux h0 h1 a b len
+      | _ -> substraction_lemma h0 h1 a b (len-1);
+	     substraction_lemma_aux h0 h1 a b len
     )
 
-val addition_max_value_lemma:
+val substraction_max_value_lemma:
   h0:heap -> 
   h1:heap -> 
   a:bigint{ (inHeap h0 a)
@@ -212,13 +213,13 @@ val addition_max_value_lemma:
   c:bigint{ (inHeap h1 c)
 	    /\ (getLength h1 c = getLength h0 a)
 	    /\ (forall (i:nat). i < getLength h1 c 
-		==> getValue h1 c i = getValue h0 a i + getValue h0 b i) } ->
+		==> getValue h1 c i = getValue h0 a i - getValue h0 b i) } ->
   Lemma
     (requires (True))
     (ensures (maxValue h1 c <= maxValue h0 a + maxValue h0 b))
-let addition_max_value_lemma h0 h1 a b c = ()
+let substraction_max_value_lemma h0 h1 a b c = ()
   
-val addition_max_size_lemma:
+val substraction_max_size_lemma:
   h0:heap -> 
   h1:heap -> 
   a:bigint{ (inHeap h0 a) } -> 
@@ -231,7 +232,7 @@ val addition_max_size_lemma:
   Lemma
     (requires (True))
     (ensures (maxSize h1 c <= max (maxSize h0 a) (maxSize h0 b) + 1))
-let addition_max_size_lemma h0 h1 a b c = ()
+let substraction_max_size_lemma h0 h1 a b c = ()
 
 val max_value_lemma: h:heap -> a:bigint{ inHeap h a } -> m:nat ->
 		     Lemma 
@@ -242,7 +243,7 @@ let max_value_lemma h a m = ()
 val abs_lemma: unit -> Lemma (ensures (forall a b. abs (a + b) <= abs a + abs b))
 let abs_lemma () = () 
 
-assume val addition_max_value_lemma_extended:
+val substraction_max_value_lemma_extended:
   h0:heap -> 
   h1:heap -> 
   a:bigint{ (inHeap h0 a) } -> 
@@ -253,19 +254,18 @@ assume val addition_max_value_lemma_extended:
   len:nat{ len + idx <= getLength h0 a /\ len <= getLength h0 b } ->
   Lemma
     (requires ((forall (i:nat). i < len 
-		==> getValue h1 c (i+idx) = getValue h0 a (i+idx) + getValue h0 b i)
+		==> getValue h1 c (i+idx) = getValue h0 a (i+idx) - getValue h0 b i)
 	       /\ (forall (i:nat). ( i < getLength h1 c /\ (i < idx \/ i >= idx + len))
 		   ==> getValue h1 c i = getValue h0 a i)))
     (ensures (maxValue h1 c <= maxValue h0 a + maxValue h0 b))
-(*
-let addition_max_value_lemma_extended h0 h1 a b c idx len = 
+let substraction_max_value_lemma_extended h0 h1 a b c idx len = 
   cut ( forall (i:nat). (i < getLength h1 c /\ (i < idx \/ i >= idx + len))
 	==> (getValue h1 c i = getValue h0 a i /\ abs (getValue h1 c i) <= maxValue h0 a + maxValue h0 b));
   cut ( forall (i:nat). (i < getLength h1 c /\ (i < idx \/ i >= idx + len)) 
   	==> abs (getValue h1 c i) <= maxValue h0 a + maxValue h0 b);
   abs_lemma ();
   cut ( forall (i:nat). (i < idx + len /\ i >= idx)
-	==> ((getValue h1 c i = getValue h0 a i + getValue h0 b (i-idx)) 
+	==> ((getValue h1 c i = getValue h0 a i - getValue h0 b (i-idx)) 
 	     /\ (abs (getValue h1 c i) <= abs (getValue h0 a i) + abs (getValue h0 b (i-idx)))) );
   cut ( forall (i:nat). (i < idx + len /\ i >= idx)
 	==> ( abs (getValue h0 a i) <= maxValue h0 a /\ abs (getValue h0 b (i-idx)) <= maxValue h0 b));
@@ -275,10 +275,8 @@ let addition_max_value_lemma_extended h0 h1 a b c idx len =
 	==> abs (getValue h1 c i) <= maxValue h0 a + maxValue h0 b);
   max_value_lemma h1 c (maxValue h0 a + maxValue h0 b);
   ()
- *)
 
-
-val addition_max_size_lemma_extended:
+val substraction_max_size_lemma_extended:
   h0:heap -> 
   h1:heap -> 
   a:bigint{ (inHeap h0 a) } -> 
@@ -293,7 +291,7 @@ val addition_max_size_lemma_extended:
 	       /\ (forall (i:nat). ( i < getLength h1 c /\ (i < idx \/ i >= idx + len))
 		   ==> getSize h1 c i = getSize h0 a i)))
     (ensures (maxSize h1 c <= max (maxSize h0 a) (maxSize h0 b) + 1))
-let addition_max_size_lemma_extended h0 h1 a b c idx len = 
+let substraction_max_size_lemma_extended h0 h1 a b c idx len = 
   cut ( forall (i:nat). (i < getLength h1 c /\ (i < idx \/ i >= idx + len))
 	==> (getSize h1 c i = getSize h0 a i /\ getSize h1 c i <= max (maxSize h0 a) (maxSize h0 b) + 1) );
   cut ( forall (i:nat). (i < getLength h1 c /\ (i < idx \/ i >= idx + len)) 
@@ -310,7 +308,8 @@ let addition_max_size_lemma_extended h0 h1 a b c idx len =
 	==> getSize h1 c i <= max (maxSize h0 a) (maxSize h0 b) + 1 );
   ()
 
-val addition_with_lemma:
+
+val substraction_with_lemma:
   a:bigint -> b:bigint -> len:nat ->
   ST unit
     (requires (fun h -> 
@@ -337,17 +336,15 @@ val addition_with_lemma:
       /\ (Seq.length (sel h1 (Bigint63.data b)) = Seq.length (sel h0 (Bigint63.data b)))
       /\ (Seq.length (sel h1 (Bigint63.data a)) >= len)
       /\ (Seq.length (sel h1 (Bigint63.data b)) >= len)
-      /\ (eval h1 a len = eval h0 a len + eval h0 b len)
-      /\ (maxSize h1 a <= max (maxSize h0 a) (maxSize h0 b) + 1)
-      /\ (maxValue h1 a <= maxValue h0 a + maxValue h0 b)
+      /\ (eval h1 a len = eval h0 a len - eval h0 b len)
     ))
-let addition_with_lemma a b len =
+let substraction_with_lemma a b len =
   let h0 =
     erase (ST.get()) in
-  addition_tr (erase (Array.to_seq (Bigint63.data a))) a 0 b 0 len 0;
+  substraction_tr (erase (Array.to_seq (Bigint63.data a))) a 0 b 0 len 0;
   erase (
-      let h1 = ST.get() in
-      addition_lemma h0 h1 a b len;
-      addition_max_value_lemma_extended h0 h1 a b a 0 len;
-      addition_max_size_lemma_extended h0 h1 a b a 0 len
+      let h1 = ST.get() in      
+      substraction_lemma h0 h1 a b len;
+      substraction_max_value_lemma_extended h0 h1 a b a 0 len;
+      substraction_max_size_lemma_extended h0 h1 a b a 0 len
     )

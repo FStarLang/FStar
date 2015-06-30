@@ -555,6 +555,7 @@ let multiplication_step a b ctr c tmp =
       cut (True /\ maxSize h1 c <= wordSize a - 2);
       cut (True /\ maxValue h1 c = maxValue h0 c)
     );
+
   addition_tr (erase (Array.to_seq (Bigint63.data c))) c ctr tmp 0 len 0;
   let h2 = 
     erase (ST.get()) in
@@ -578,7 +579,6 @@ let multiplication_step a b ctr c tmp =
       cut (True /\ maxValue h2 c <= (ctr+1) * (maxValue h0 a * maxValue h0 b));
       
       (* Prove the eval property *)
-
       cut (inHeap h1 c /\ inHeap h1 tmp /\ inHeap h2 c);
       cut (Bigint63.t c = Bigint63.t tmp /\ True);
       cut (getLength h1 tmp >= len /\ getLength h1 c >= len + ctr);
@@ -601,14 +601,18 @@ let multiplication_step a b ctr c tmp =
 
       cut (True /\ eval h2 c (getLength h1 c) = eval h1 c (getLength h1 c) + pow2 (bitweight (Bigint63.t a) ctr) * eval h1 tmp len);
       
+      (* 3m up to this point *)
       (* Resize the resulting array appropriatly, according to the bound computed on its maximum value *)
+      admit () ) (*
+
       cut (inHeap h2 a /\ inHeap h2 b /\ inHeap h2 c);
       cut (getLength h2 a > 0 /\ True);
       auxiliary_lemma_6 h0 h2 a a;
       auxiliary_lemma_6 h0 h2 b b;
+      cut ( maxValue h2 c <= (ctr+1) * (maxValue h2 a * maxValue h2 b) /\ True);
       
       multiplication_step_resize a b (ctr+1) c;
-      (* Verified up to this ponit *)
+      (* Verified up to this point *)
       
       
       let h3 = ST.get() in

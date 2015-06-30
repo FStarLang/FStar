@@ -32,13 +32,6 @@ let rec eval h b n =
 
 (* Function returning the size of the integer *)
 assume logic val sizeOf: x:int -> Tot (n:nat{ Bitsize x n /\ (forall (m:nat). Bitsize x m ==> m >= n) }) 
-
-type EqualBigint (a:bigint) (b:bigint) (ha:heap) (hb:heap) =
-  (contains ha (Bigint63.data a)) 
-  /\ (contains hb (Bigint63.data b))
-  /\ (getLength ha a = getLength hb b)
-  /\ (forall (i:nat). i < getLength ha a ==> getValue ha a i = getValue hb b i)
-  /\ (Bigint63.t a = getTemplate b)
      
 (* Helper functions for stateful array manipulation *)
 val array_copy_aux:
