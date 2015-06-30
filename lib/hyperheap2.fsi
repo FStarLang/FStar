@@ -27,11 +27,16 @@ val root : rid
 type rref : rid -> Type -> Type
 val as_ref      : #a:Type -> #id:rid -> r:rref id a -> GTot (ref a)
 val ref_as_rref : #a:Type -> i:rid -> r:ref a -> GTot (rref i a)
+type proj_type (#a:Type) (#id:rid) (r:rref id a) = a
+
 val lemma_as_ref_inj: #a:Type -> #i:rid -> r:rref i a
     -> Lemma (requires (True))
              (ensures ((ref_as_rref i (as_ref r) = r)))
        [SMTPat (as_ref r)]
-
+val lemma_proj_typ_inj: #a:Type -> #i:rid -> r:rref i a
+    -> Lemma (requires True)
+             (ensures ((rref i (proj_type r) == rref i a)))
+             [SMTPat (as_ref r)]
 effect ST (a:Type) (pre:t -> Type) (post:t -> a -> t -> Type) =
        STATE a (fun 'p m0 -> pre m0 /\ (forall x m1. post m0 x m1 ==> 'p x m1))
                (fun 'p m0 ->  (forall x m1. pre m0 /\ post m0 x m1 ==> 'p x m1))
@@ -53,7 +58,7 @@ val lemma_disjoint_includes: i:rid -> j:rid -> k:rid ->
 
 val lemma_extends_includes: i:rid -> j:rid ->
  Lemma (requires (extends j i))
-       (ensures (includes i j))
+       (ensures (includes i j /\ not(includes j i)))
        [SMTPat (extends j i)]
 
 val lemma_extends_disjoint: i:rid -> j:rid -> k:rid ->
@@ -61,6 +66,12 @@ val lemma_extends_disjoint: i:rid -> j:rid -> k:rid ->
          (ensures (disjoint j k))
          [SMTPat (extends j i);
           SMTPat (extends k i)]
+
+val lemma_includes_trans: i:rid -> j:rid -> k:rid
+                        -> Lemma (requires (includes i j /\ includes j k))
+                                 (ensures (includes i k))
+                                 [SMTPat (includes i j);
+                                  SMTPat (includes j k)]
 
 type fresh_region (i:rid) (m0:t) (m1:t) =
  (forall j. includes i j ==> not (Map.contains m0 j))

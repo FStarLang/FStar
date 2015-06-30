@@ -1362,6 +1362,13 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 [Term.Assume(mkForall([tapp], vars, mkEq(tapp, dproj_app)), Some "projector axiom")]
             | _ -> [] in
 
+        let pretype_axioms tapp vars = 
+            let xxsym, xx = fresh_fvar "x" Term_sort in
+            let ffsym, ff = fresh_fvar "f" Fuel_sort in
+            let xx_has_type = mk_HasTypeFuel ff xx tapp in
+            [Term.Assume(mkForall([xx_has_type], (xxsym, Term_sort)::(ffsym, Fuel_sort)::vars, 
+                                  mkImp(xx_has_type, mkEq(tapp, mkApp("PreType", [xx])))), Some "pretyping")] in
+
         let tname, ttok, env = new_typ_constant_and_tok_from_lid env t in
         let ttok_tm = mkApp(ttok, []) in
         let guard = mk_and_l guards in
@@ -1393,7 +1400,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             else kindingAx
                 @(primitive_type_axioms t tname tapp)
                 @(inversion_axioms tapp vars)
-                @(projection_axioms tapp vars) in
+                @(projection_axioms tapp vars)
+                @(pretype_axioms tapp vars) in
  
         let g = decls
                 @binder_decls

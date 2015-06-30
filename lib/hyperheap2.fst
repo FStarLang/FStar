@@ -90,7 +90,7 @@ let lemma_includes refl i = ()
 
 val lemma_extends_includes: i:rid -> j:rid ->
   Lemma (requires (extends j i))
-        (ensures (includes i j))
+        (ensures (includes i j /\ not(includes j i)))
         [SMTPat (extends j i)]
 let lemma_extends_includes i j = ()
 
@@ -147,6 +147,28 @@ val lemma_modifies_trans: m1:t -> m2:t -> m3:t
                        -> Lemma (requires (modifies s1 m1 m2 /\ modifies s2 m2 m3))
                                 (ensures (modifies (Set.union s1 s2) m1 m3))
 let lemma_modifies_trans m1 m2 m3 s1 s2 = ()
+
+assume val lemma_includes_trans: i:rid -> j:rid -> k:rid
+                        -> Lemma (requires (includes i j /\ includes j k))
+                                 (ensures (includes i k))
+                                 [SMTPat (includes i j);
+                                  SMTPat (includes j k)]
+val lemma_modset: i:rid -> j:rid
+                  -> Lemma (requires (includes j i))
+                           (ensures (Set.subset (mod_set (Set.singleton i)) (mod_set (Set.singleton j))))
+let lemma_modset i j = ()
+
+val lemma_modifies_includes: m1:t -> m2:t
+                       -> i:rid -> j:rid
+                       -> Lemma (requires (modifies (Set.singleton i) m1 m2 /\ includes j i))
+                                (ensures (modifies (Set.singleton j) m1 m2))
+let lemma_modifies_includes m1 m2 s1 s2 = ()
+
+val lemma_modifies_includes2: m1:t -> m2:t
+                       -> s1:Set.set rid -> s2:Set.set rid
+                       -> Lemma (requires (modifies s1 m1 m2 /\ (forall x. Set.mem x s1 ==> (exists y. Set.mem y s2 /\ includes y x))))
+                                (ensures (modifies s2 m1 m2))
+let lemma_modifies_includes2 m1 m2 s1 s2 = ()
 
 type contains_ref (#a:Type) (#i:rid) (r:rref i a) (m:t) =
     Map.contains m i /\ Heap.contains (Map.sel m i) (as_ref r)
