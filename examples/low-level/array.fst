@@ -13,8 +13,9 @@ open Stack
 open Set
 open MVector
 
+
 type array : Type -> Type =
- | MkArr : #a:Type -> len:nat -> ref:(ref (vector a len)) -> array a
+ | MkArr : #a:Type -> len:nat -> ref:(ref (vector a len)) -> offset:nat -> vlen:nat{offset+vlen<=len} -> array a
 
 (*Can we reinclude the types here, even when they are included in .fsi?
   F* does not complain, even if we change the types*)
@@ -38,10 +39,9 @@ let writeIndex 'a r index newV =
 
 
 let screateArray #n  init =
-  MkArr n (salloc init)
+  MkArr n (salloc init) 0 n
 
 let hcreateArray #n init =
-  MkArr n (halloc init)
-
+  MkArr n (halloc init) 0 n
 
 let readArray  r = memread (MkArr.ref r)
