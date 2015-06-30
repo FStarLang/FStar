@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 10;
+    options:--admit_fsi Set --z3timeout 10 --logQueries;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
     st3.fst $LIB/constr.fst word.fst mvector.fsi mvector.fst array.fsi array.fst MD5Common.fst withScope.fst
@@ -18,17 +18,23 @@ open MachineWord
 open Array
 open MD5Common
 
+type prefixEqual  (#a:Type) (#n1:nat) (#n2:nat)
+  (v1: vector a n1) (v2: vector a n2) (p:nat{p <= n1 /\ p<= n2})
+  = forall (n:nat). n<p ==> atIndex v1 n = atIndex v2 n
+
+
+
+
 assume val cloneAndPad :
   r:(array word)
   -> rcloned :(array word)
   -> Mem unit
       (fun m -> refExistsInMem (asRef r) m /\ refExistsInMem (asRef rcloned) m)
       (fun m0 rp m1  -> refExistsInMem (asRef r) m0 /\ refExistsInMem (asRef rcloned) m1
+          /\ refExistsInMem (asRef r) m1
           /\ length rcloned = psize (length r)
-          (*/\ MVector.prefixEqual (loopkupRef r m0) (loopkupRef rp m1) (length r)*)
-        )
+          /\ prefixEqual (loopkupRef (asRef r) m0) (loopkupRef (asRef rcloned) m1) (length r))
         (empty)
-
 
 val processChunk :
  ch:(array word)
@@ -100,8 +106,6 @@ let mainLoop ch u =
 
 assume val allZeros : n:nat -> Tot (vector word n)
 
-
-
 val mD5 : n:nat
  -> ch:(array word)
  -> WNSC (vector word 4)
@@ -115,7 +119,7 @@ let mD5 n ch =
   withNewScope
     #(vector word 4)
     #(fun m -> refExistsInMem (asRef ch) (m) /\ refExistsInMem (asRef clonedCh) (m))
-    #(fun m0 _ m1 -> refExistsInMem (asRef ch) (m1) /\ refExistsInMem (asRef ch) (m1))
+    #(fun m0 _ m1 -> True /\ refExistsInMem (asRef ch) (m1))
     #(empty)
     (mainLoop clonedCh)
 

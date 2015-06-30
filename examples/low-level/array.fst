@@ -22,13 +22,11 @@ type array : Type -> Type =
  (*val length : #a:Type -> (array a) -> Tot string
  let length v = "cat"*)
 
-
 (*val length : #a:Type -> (array a) -> Tot nat*)
 let length v = MkArr.len v
 
 (*val asRef : #a:Type  -> va:(array a) -> GTot (ref (vector a (length va)))*)
 let asRef va = MkArr.ref va
-
 
 let readIndex 'a r index =
   let rv = (memread (MkArr.ref r)) in (atIndex rv index)

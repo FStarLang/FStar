@@ -12,12 +12,17 @@ open Set
 open Stack
 open MVector
 
+
+(*to make vector opaque, just include vector.fsi*)
+(*val testf : vector nat 10 -> nat
+let testf v = v 1*)
+
 type array : Type -> Type
 
-val length : #a:Type -> (array a) -> Tot nat
+assume val length : #a:Type -> (array a) -> Tot nat
 
 (*making it GTot causes a strange error in the postcondition of readIndex *)
-val asRef : #a:Type  -> va:(array a) -> Tot (ref (vector a (length va)))
+assume val asRef : #a:Type  -> va:(array a) -> Tot (ref (vector a (length va)))
 
 (*using the 2 definitions below causes a strange error in readIndex amd updIndex*)
 (*val arrayExistsInMem : #a:Type -> (array a) -> smem -> GTot bool
@@ -32,13 +37,17 @@ val readIndex :  #a:Type  -> r:(array a)
   -> index:nat{index < length r}
   -> PureMem a
         (requires (fun m -> b2t (refExistsInMem (asRef r) m)))
-        (ensures (fun m v _-> (refExistsInMem (asRef r) m) /\ v = atIndex (loopkupRef (asRef r) m) index))
+        (*without the Let binding, this doesn't typecheck unless GTot is replaced by Tot in the definition of asRef *)
+        (ensures (fun m v _-> Let  (asRef r) (fun rr ->
+            ((refExistsInMem rr m) /\ v = atIndex (loopkupRef rr m) index) ) ) )
 
 val writeIndex :  #a:Type -> r:((array a))
   -> index:nat{index<length r} -> newV:a ->
  Mem unit
     (requires (fun m -> b2t (refExistsInMem (asRef r) m)))
-    (ensures (fun m0 _ m1-> (refExistsInMem (asRef r) m0) /\ m1 = (writeMemAux (asRef r)  m0 (updateIndex (loopkupRef (asRef r) m0) index newV))))
+    (ensures (fun m0 _ m1-> (Let (asRef r) (fun rr -> refExistsInMem rr m0 /\
+      Let (loopkupRef rr m0) (fun (rrv:(vector a (length r))) ->
+             b2t (m1 = (writeMemAux rr m0 (updateIndex rrv index newV))))))))
       (singleton (Ref (asRef r)))
 
 (*There is no way to read or write a whole vector in non-ghost mode *)

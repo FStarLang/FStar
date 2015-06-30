@@ -126,7 +126,7 @@ let leastMultipleGeq n div = admit ()
 
 (*size of the messsage after padding. this function will be used to preallocate
   an array of the right size*)
-val psize : n:nat -> Tot (m:nat{divides 16 m /\ m < n+ 32 /\ n<=m})
+val psize : n:nat -> Tot (m:nat{divides 16 m /\ (m < n+ 32) /\ (n<=m)})
 let psize n =
   let lm = leastMultipleGeq n 16 in
   if ((lm+1) % 16 < 12) then lm else lm+16

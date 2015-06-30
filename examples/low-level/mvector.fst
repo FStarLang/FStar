@@ -15,9 +15,16 @@ open Set
 
 type vector (a:Type) (n:nat) = (index:nat{index<n} -> Tot a)
 
+val updateIndex : #a:Type -> #n:nat -> (vector a n)
+  -> index:nat{index<n} -> a -> Tot (vector a n)
 let updateIndex 'a #n f index newV indx =
   if (indx= index) then newV else f indx
 
+
+
+
+val atIndex : #a:Type -> #n:nat -> (vector a n)
+  -> index:nat{index<n} -> Tot a
 let atIndex 'a #n f index  =
    f index
 
@@ -26,4 +33,6 @@ let atIndex 'a #n f index  =
   Is there a way to make Tot the default effect, instead of ALL
 *)
 
+val subVector : #a:Type -> #n:nat -> offset:nat
+  -> len:(k:nat{k+offset<=n}) -> (vector a n) -> Tot (vector a len)
 let subVector 'a #n offset leng f indx =f (indx+offset)
