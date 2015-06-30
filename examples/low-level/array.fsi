@@ -4,35 +4,41 @@
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst st3.fst $LIB/constr.fst word.fst mvector.fsi mvector.fst
   --*)
 
-module MVector
+module Array
 open StructuredMem
 open MachineWord
 open Heap
 open Set
 open Stack
+open MVector
 
 type array : Type -> Type
 
-assume val length : #a:Type -> (array a) -> Tot nat
+val length : #a:Type -> (array a) -> Tot nat
 
-assume val asRef : #a:Type  -> (array a) -> GTot (ref a)
+(*making it GTot causes a strange error in the postcondition of readIndex *)
+val asRef : #a:Type  -> va:(array a) -> Tot (ref (vector a (length va)))
+
+(*using the 2 definitions below causes a strange error in readIndex amd updIndex*)
+(*val arrayExistsInMem : #a:Type -> (array a) -> smem -> GTot bool
+let arrayExistsInMem v sm = refExistsInMem (asRef v) sm
+
+val lookup : #a:Type  -> va:(array a) -> m:smem{(arrayExistsInMem va m)} -> GTot ((vector a (length va)))
+let lookup 'a va m = (admit ())*)
+
+(*loopkupRef (asRef va) m*)
 
 val readIndex :  #a:Type  -> r:(array a)
-  -> index:nat{index< length r} -> PureMem a (fun m -> b2t (refExistsInMem (asRef r) m)) (fun _ _ _-> True)
+  -> index:nat{index < length r}
+  -> PureMem a
+        (fun m -> b2t (refExistsInMem (asRef r) m) )
+        (fun m v _-> (refExistsInMem (asRef r) m) /\ v == atIndex (loopkupRef (asRef r) m) index)
 
-val updIndex :  #a:Type -> #n:nat -> r:(ref (vector a n))
-  -> index:(index:nat{index<n}) -> newV:a ->
+val writeIndex :  #a:Type -> r:((array a))
+  -> index:nat{index<length r} -> newV:a ->
  Mem unit
-    (requires (fun m -> b2t (refExistsInMem r m)))
-    (ensures (fun m0 _ m1-> (refExistsInMem r m0) /\ m1= (writeMemAux r  m0 (updateIndex (loopkupRef r m0) index newV))))
-    (singleton (Ref r))
-(*There is no way to read or write a whole vector.
+    (requires (fun m -> b2t (refExistsInMem (asRef r) m)))
+    (ensures (fun m0 _ m1-> (refExistsInMem (asRef r) m0) /\ m1 = (writeMemAux (asRef r)  m0 (updateIndex (loopkupRef (asRef r) m0) index newV))))
+      (singleton (Ref (asRef r)))
 
-(Technically, you can read a vector, but there's nothing you can do with
-  the result if updateIndex and atIndex are ghosts.)
-
-This seems closer to C's lvalue/rvalue semantics.
-
-If we allowed a program to read
- a full vector and apply some blackbox/convoluted function to it,
- and write it back, what would the compiler do?*)
+(*There is no way to read or write a whole vector in non-ghost mode *)
