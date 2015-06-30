@@ -12,43 +12,6 @@ open Prims
 open List
 open ListSet
 
-let scopedID (n:nat) =
-  withNewScope (fun () -> n)
-
-val withNewScope3 : #a:Type ->
-      body:(unit -> SST a mStackNonEmpty
-                          (fun m0 _ m1 -> mStackNonEmpty m1))
-      -> SST a (requires (fun m -> True))
-               (ensures (fun m0 a m1 -> True))
-
-let withNewScope3 body =
-    pushStackFrame ();
-    let v = body () in
-    popStackFrame (); v
-
-val identity  : n:nat
-  -> SST nat (fun m -> True)
-              (fun _ n' _ ->  n'==n)
-let identity n = n
-
-
-val identity2  : n:nat -> unit ->
-   SST nat (fun m -> mStackNonEmpty m)
-           (fun _ n' m1 ->  n'=n /\ mStackNonEmpty m1)
-let identity2 n u = n
-
-
-val scopedID : n:nat
-  -> SST nat (requires (fun m -> True))
-             (ensures (fun _ n' _ -> True)) // n'==n))
-(* This does not typecheck *)
-(* NS: Why do you expect it to type-check? The post-condition of withNewScope3 is just True.
-       So, there's no way to prove that n=n' from that.
-       It does check if you remove that post-condition from scopedID *)
-let scopedID (n:nat) =
-  withNewScope3 #nat
-    (fun () ->  n)
-
 (* NS: Here's how I would write it *)
 val withNewScope4 : #a:Type -> #req:(smem -> Type) -> #ens:(smem -> a -> smem -> Type)
       -> =body:(unit -> SST a req ens) //=body is an equality constraint for type inference

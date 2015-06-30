@@ -2,7 +2,7 @@
     options:--admit_fsi Set --z3timeout 10;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
-    st3.fst $LIB/constr.fst word.fst mvector.fsi mvector.fst array.fsi array.fst MD5Common.fst
+    st3.fst $LIB/constr.fst word.fst mvector.fsi mvector.fst array.fsi array.fst MD5Common.fst withScope.fst
   --*)
 
 (*Why is MD5 so? Why did its designer(s) think
@@ -101,6 +101,7 @@ let mainLoop ch u =
 assume val allZeros : n:nat -> Tot (vector word n)
 
 
+
 val mD5 : n:nat
  -> ch:(array word)
  -> WNSC (vector word 4)
@@ -111,13 +112,43 @@ val mD5 : n:nat
 let mD5 n ch =
   let clonedCh = screateArray (allZeros (psize n)) in
   cloneAndPad ch clonedCh;
-  (*withNewScope #(vector word 4)
-    #(fun m -> True /\ refExistsInMem ch m)
-    #(fun m0 _ m1 -> True /\ refExistsInMem ch m1)
-    #(empty)*)
+  withNewScope
+    #(vector word 4)
+    #(fun m -> refExistsInMem (asRef ch) (m) /\ refExistsInMem (asRef clonedCh) (m))
+    #(fun m0 _ m1 -> refExistsInMem (asRef ch) (m1) /\ refExistsInMem (asRef ch) (m1))
+    #(empty)
+    (mainLoop clonedCh)
+
+(*open Example2
+
+val mD53 : n:nat
+ -> ch:(array word)
+ -> WNSC (vector word 4)
+    (fun m -> True /\ refExistsInMem (asRef ch) m)
+    (fun m0 _ m1 -> True /\ refExistsInMem (asRef ch) m1)
+    (empty)
+
+let mD53 n ch =
+  let clonedCh = screateArray (allZeros (psize n)) in
+  cloneAndPad ch clonedCh;
+  withNewScope4
+    (mainLoop clonedCh)*)
+
+
+val mD52 : n:nat
+ -> ch:(array word)
+ -> WNSC (vector word 4)
+    (fun m -> True /\ refExistsInMem (asRef ch) m)
+    (fun m0 _ m1 -> True /\ refExistsInMem (asRef ch) m1)
+    (empty)
+
+let mD52 n ch =
+  let clonedCh = screateArray (allZeros (psize n)) in
+  cloneAndPad ch clonedCh;
     pushStackFrame ();
-      let mdd5:(vector word 4) = mainLoop clonedCh () in
+      let mdd5 = mainLoop clonedCh () in
     popStackFrame (); mdd5
+
 
 (*can we run this program and compare it agains standard implementations?
   That at least needs the following:
