@@ -24,6 +24,9 @@ val atIndex : #a:Type -> #n:nat -> (vector a n)
   -> index:nat{index<n} -> Tot a
 
 
+type prefixEqual  (#a:Type) (#n1:nat) (#n2:nat)
+  (v1: vector a n1) (v2: vector a n1) (p:nat{p <= n1 /\ p<= n2})
+  = forall (n:nat). n<p ==> atIndex v1 n = atIndex v2 n
 
 val subVector : #a:Type -> #n:nat -> offset:nat
   -> len:(k:nat{k+offset<=n}) -> (vector a n) -> Tot (vector a len)

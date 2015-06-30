@@ -2,7 +2,7 @@
     options:--admit_fsi Set --z3timeout 50;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
-    st3.fst $LIB/constr.fst word.fst mvector.fsi mvector.fst MD5.fst
+    st3.fst $LIB/constr.fst word.fst mvector.fsi mvector.fst MD5Common.fst
   --*)
 module MD5SubArray
 open StructuredMem
@@ -10,7 +10,7 @@ open MVector
 open Heap
 open Set
 open MachineWord
-open MD5
+open MD5Common
 open Stack
 
 type array (a:Type) (n:nat)= vector (ref a) n
@@ -217,6 +217,7 @@ val arrayExistsInMemTailSids : #a:Type -> #n:nat -> r:(vector (ref a) n)
 let arrayExistsInMemTailSids 'a #n r m0 m1 = (admit ())
 
 
+
 val mainLoopSubArray :
   n : nat{divides 16 n}
  -> ch:((array word n))
@@ -251,4 +252,4 @@ let mainLoopSubArray n ch u =
     (*memAssert (fun m -> ~ (arrayExixtsInMem acc (mtail m)));*)
   (*memAssert (fun m -> forall (r:(r:(ref word){Set.mem (Ref r) (flattenRefs acc)})). ~ (refExistsInMem r (mtail m)) );*)
   memAssert (fun m -> ~ (refExistsInMem dummy (mtail m)));
-  initAcc
+  x

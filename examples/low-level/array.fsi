@@ -31,8 +31,8 @@ let lookup 'a va m = (admit ())*)
 val readIndex :  #a:Type  -> r:(array a)
   -> index:nat{index < length r}
   -> PureMem a
-        (fun m -> b2t (refExistsInMem (asRef r) m) )
-        (fun m v _-> (refExistsInMem (asRef r) m) /\ v == atIndex (loopkupRef (asRef r) m) index)
+        (requires (fun m -> b2t (refExistsInMem (asRef r) m)))
+        (ensures (fun m v _-> (refExistsInMem (asRef r) m) /\ v = atIndex (loopkupRef (asRef r) m) index))
 
 val writeIndex :  #a:Type -> r:((array a))
   -> index:nat{index<length r} -> newV:a ->
@@ -42,3 +42,29 @@ val writeIndex :  #a:Type -> r:((array a))
       (singleton (Ref (asRef r)))
 
 (*There is no way to read or write a whole vector in non-ghost mode *)
+
+(*create an array on stack*)
+val screateArray :  #a:Type  -> #n:nat -> init:(vector a n)
+  -> Mem (array a)
+        (requires  (fun m -> (isNonEmpty (st m))))
+        (ensures (fun m0 v m1->
+            (isNonEmpty (st m0)) /\ (isNonEmpty (st m1)) /\ length v = n
+            /\ allocateInBlock (asRef v) (topstb m0) (topstb m1) init
+            /\ refLoc (asRef v) = InStack (topstid m0) /\ (topstid m0 = topstid m1)
+            /\ mtail m0 = mtail m1))
+        (empty)
+
+(*create an array on the heap*)
+val hcreateArray :  #a:Type  -> #n:nat -> init:(vector a n)
+  -> Mem (array a)
+        (requires  (fun m -> True))
+        (ensures (fun m0 v m1->
+            length v = n
+            /\ allocateInBlock (asRef v) (hp m0) (hp m1) init
+            /\ refLoc (asRef v) = InHeap /\ (snd m0 = snd m1)))
+        (empty)
+
+val readArray :  #a:Type  -> r:(array a)
+  -> PureMem (vector a (length r))
+        (requires (fun m -> b2t (refExistsInMem (asRef r) m)))
+        (ensures (fun m v _-> (refExistsInMem (asRef r) m) /\ v = (loopkupRef (asRef r) m)))

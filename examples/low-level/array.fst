@@ -25,7 +25,7 @@ type array : Type -> Type =
 (*val length : #a:Type -> (array a) -> Tot nat*)
 let length v = MkArr.len v
 
-val asRef : #a:Type  -> va:(array a) -> GTot (ref (vector a (length va)))
+(*val asRef : #a:Type  -> va:(array a) -> GTot (ref (vector a (length va)))*)
 let asRef va = MkArr.ref va
 
 
@@ -35,3 +35,13 @@ let readIndex 'a r index =
 let writeIndex 'a r index newV =
   let rv = (memread (MkArr.ref r) ) in
   memwrite (MkArr.ref r) (updateIndex rv index newV)
+
+
+let screateArray #n  init =
+  MkArr n (salloc init)
+
+let hcreateArray #n init =
+  MkArr n (halloc init)
+
+
+let readArray  r = memread (MkArr.ref r)
