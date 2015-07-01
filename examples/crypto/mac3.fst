@@ -1,3 +1,13 @@
+(*--build-config
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Pad --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    variables:LIB=../../lib;
+    other-files:$LIB/string.fst $LIB/list.fst
+            $LIB/ext.fst $LIB/classical.fst
+            $LIB/set.fsi $LIB/set.fst
+            $LIB/heap.fst $LIB/st.fst
+            $LIB/seq.fsi $LIB/seqproperties.fst
+  --*)
+
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
@@ -35,7 +45,8 @@
 
 module MAC3
 
-open Array
+open Seq
+open SeqProperties
 type bytes = seq byte (* concrete byte arrays *)
 type text  = bytes    (* a type abbreviation, for clarity *)
 
@@ -82,7 +93,7 @@ type entry =
          -> m:tag
          -> entry
 
-let log = ST.alloc #(list entry) [] 
+let log = ST.alloc #(list entry) []
 
 let mac k t =
   let m = sha1 k t in

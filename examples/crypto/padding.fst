@@ -1,5 +1,17 @@
+(*--build-config
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Pad --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    variables:LIB=../../lib;
+    other-files:$LIB/string.fst $LIB/list.fst
+            $LIB/ext.fst $LIB/classical.fst
+            $LIB/set.fsi $LIB/set.fst
+            $LIB/heap.fst $LIB/st.fst
+            $LIB/seq.fsi $LIB/seqproperties.fst
+  --*)
+
+
 module Pad
-open Array
+open Seq
+open SeqProperties
 
 (* a coercion; avoid it? *)
 assume val n2b: n:nat {( n < 256 )} -> Tot (b:uint8{b==n})
@@ -13,7 +25,7 @@ type block = nbytes blocksize
 type text = b:bytes {(length b < blocksize)}
 
 val pad: n:nat { 1 <= n /\ n <= blocksize } -> Tot (nbytes n)
-let pad n = Array.create #uint8 n (n2b (n-1))
+let pad n = Seq.create #uint8 n (n2b (n-1))
 
 (* pad 1 = [| 0 |]; pad 2 = [| 1; 1 |]; ... *)
 
@@ -21,19 +33,23 @@ let pad n = Array.create #uint8 n (n2b (n-1))
 val encode: a: text -> Tot block
 let encode a = append a (pad (blocksize - length a))
 
-val inj: a: text -> b: text -> Lemma (requires (Array.equal (encode a) (encode b)))
-                                     (ensures (Array.equal a b))
+val inj: a: text -> b: text -> Lemma (requires (Seq.Eq (encode a) (encode b)))
+                                     (ensures (Seq.Eq a b))
                                      [SMTPat (encode a); SMTPat (encode b)]
                                      (decreases (length a))
 let inj a b =
   if length a = length b
-  then ()
+  then
+    begin
+    lemma_append_inj a (pad (blocksize - length a)) b (pad (blocksize - length b));
+    ()
+    end
   else let aa = encode a in
        let bb = encode b in
-       cut (Array.index aa 31 =!= Array.index bb 31)
+       cut (Seq.index aa 31 =!= Seq.index bb 31)
 
 
-val decode: b:block -> Tot (option (t:text { Array.equal b (encode t) }))
+val decode: b:block -> Tot (option (t:text { Seq.Eq b (encode t) }))
 let decode (b:block) =
   let padsize = b2n(index b (blocksize - 1)) + 1 in
   if (padsize < blocksize)
@@ -90,7 +106,8 @@ let verify k t tag = BMAC.verify k (encode t) tag
 
 
 module MAC2
-open Array
+open Seq
+open SeqProperties
 open Pad
 
 type text2 = b:bytes { length b <=  blocksize }

@@ -40,6 +40,9 @@ val append_inj_lemma: b1:message -> b2:message
                             (ensures (Seq.Eq b1 c1 /\ Seq.Eq b2 c2))
                             [SMTPat (append b1 b2); SMTPat (append c1 c2)] (* given to the SMT solver *)
 let append_inj_lemma b1 b2 c1 c2 =
+    lemma_append_len_disj b1 b2 c1 c2;
+    erase (Classical.forall_intro (lemma_append_inj_l b1 b2 c1 c2));
+    erase (Classical.forall_intro (lemma_append_inj_r b1 b2 c1 c2));
     ()
 
 (* ----- from strings to bytestring and back *)

@@ -1,4 +1,15 @@
 (*--build-config
+    options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module Formatting --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
+    variables:LIB=../../lib;
+    other-files:$LIB/string.fst $LIB/list.fst
+            $LIB/ext.fst $LIB/classical.fst
+            $LIB/set.fsi $LIB/set.fst
+            $LIB/heap.fst $LIB/st.fst
+            $LIB/seq.fsi $LIB/seqproperties.fst
+  --*)
+
+
+(*--build-config
     options:--admit_fsi Set --verify_module Formatting;
     variables:LIB=../../lib;
     other-files:../../lib/list.fst
@@ -25,7 +36,8 @@
 module Formatting
 open Prims.PURE
 open String
-open Array
+open Seq
+open SeqProperties
 
 type message = seq byte
 type msg (l:nat) = m:message{length m==l}
@@ -33,10 +45,14 @@ type msg (l:nat) = m:message{length m==l}
 (* ----- a lemma on array append *)
 val append_inj_lemma: b1:message -> b2:message
                    -> c1:message -> c2:message
-                   -> Lemma (requires (length b1==length c1 /\ equal (append b1 b2) (append c1 c2)))
-                            (ensures (equal b1 c1 /\ equal b2 c2))
+                   -> Lemma (requires (length b1==length c1 /\ Seq.Eq (append b1 b2) (append c1 c2)))
+                            (ensures (Seq.Eq b1 c1 /\ Seq.Eq b2 c2))
                             [SMTPat (append b1 b2); SMTPat (append c1 c2)] (* given to the SMT solver *)
-let rec append_inj_lemma b1 b2 c1 c2 = ()
+let rec append_inj_lemma b1 b2 c1 c2 =
+  lemma_append_len_disj b1 b2 c1 c2;
+  erase (Classical.forall_intro (lemma_append_inj_l b1 b2 c1 c2));
+  erase (Classical.forall_intro (lemma_append_inj_r b1 b2 c1 c2))
+
 
 (* ----- from strings to bytestring and back *)
 
@@ -53,11 +69,11 @@ let iutf8 m = magic()
 
 assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
-    equal (utf8 s0) (utf8 s1) ==> s0==s1
+    Seq.Eq (utf8 s0) (utf8 s1) ==> s0==s1
 
 val uint16_to_bytes: uint16 -> Tot (msg 2)
 let uint16_to_bytes u = magic()
-assume UINT16_inj: forall s0 s1. equal (uint16_to_bytes s0) (uint16_to_bytes s1) ==> s0==s1
+assume UINT16_inj: forall s0 s1. Seq.Eq (uint16_to_bytes s0) (uint16_to_bytes s1) ==> s0==s1
 
 type string16 = s:string{UInt16 (length (utf8 s))} (* up to 65K *)
 
@@ -92,19 +108,19 @@ let response s t =
 val req_resp_distinct:
   s:string -> s':string16 -> t':string ->
   Lemma (requires True)
-        (ensures (not (Array.equal (request s) (response s' t'))))
+        (ensures (not( (request s) = (response s' t'))))
         [SMTPat (request s); SMTPat (response s' t')]
 
 val req_components_corr:
   s0:string -> s1:string ->
-  Lemma (requires (Array.equal (request s0) (request s1)))
+  Lemma (requires (Seq.Eq (request s0) (request s1)))
         (ensures  (s0==s1))
 
 val resp_components_corr:
   s0:string16 -> t0:string -> s1:string16 -> t1:string ->
-  Lemma (requires (Array.equal (response s0 t0) (response s1 t1)))
+  Lemma (requires (Seq.Eq (response s0 t0) (response s1 t1)))
         (ensures  (s0==s1 /\ t0==t1))
 
-let req_resp_distinct s s' t' = cut (Array.index tag0 0 == 0uy)
+let req_resp_distinct s s' t' = cut (Seq.index tag0 0 == 0uy)
 let req_components_corr s0 s1 = ()
 let resp_components_corr s0 t0 s1 t1 = ()
