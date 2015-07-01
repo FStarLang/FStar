@@ -97,15 +97,15 @@ val mainLoop :
 let mainLoop ch u =
   let offset = salloc #nat 0 in
   let acc =  screate initAcc in
-  let chv =   (memread (asRef ch)) in
+  let chl = Array.length ch in
   scopedWhile1
     offset
-    (fun offsetv-> offsetv +16 <= Seq.length chv)
+    (fun offsetv-> offsetv +16 <= chl)
     (fun m -> True
               /\ refExistsInMem (asRef ch) m
               /\ refExistsInMem (asRef acc) m
               /\ refExistsInMem offset m
-              /\ loopkupRef (asRef ch) m = chv
+              /\ Seq.length (loopkupRef (asRef ch) m) = chl
               /\ 4 = (Seq.length (loopkupRef (asRef acc) m))
               )
     (union (singleton (Ref offset)) (singleton (Ref (asRef acc))))

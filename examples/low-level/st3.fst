@@ -628,7 +628,7 @@ effect whileGuard (pre :(smem -> Type))
 
 effect whileBody (loopInv:smem -> Type) (lc:smem  -> Type) (mod:set aref)
   = WNSC unit (fun m -> loopInv m /\ lc m)
-              (fun _ _ m1 -> loopInv m1)
+              (fun m0 _ m1 -> (* (loopInv m0 /\ canModify m0 m1 mod) ==> *) loopInv m1)
               mod
 
 
@@ -657,11 +657,9 @@ val scopedWhile1 :
   -> lc : (a -> Tot bool)
   -> loopInv:(smem -> Type)
   -> mod:(set aref)
-  -> bd:(unit -> WNSC unit
-              (fun m -> loopInv m /\ refExistsInMem r m /\ (lc (loopkupRef r m)))
-              (fun _ _ m1 -> loopInv m1 /\ refExistsInMem r m1)
-              mod
-              )
+  -> bd:(unit -> whileBody
+                      (fun m -> loopInv m /\ refExistsInMem r m)
+                      (fun m -> refExistsInMem r m /\ lc (loopkupRef r m))  mod)
   -> Mem unit ((fun m -> loopInv m /\ refExistsInMem r m))
               ((fun m0 _ m1 -> loopInv m1 /\ refExistsInMem r m1 /\ ~(lc (loopkupRef r m1))))
               mod
@@ -682,8 +680,10 @@ val scopedWhile2 :
   -> lc : (a -> b ->  Tot bool)
   -> loopInv:(smem -> Type)
   -> mod:(set aref)
-  -> bd:(unit -> WNSC unit (fun m -> loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m /\ (lc (loopkupRef ra m) (loopkupRef rb m)))
-              (fun _ _ m1 -> loopInv m1 /\ refExistsInMem ra m1 /\ refExistsInMem rb m1) mod)
+  -> bd:(unit -> whileBody
+                      (fun m -> loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m)
+                      (fun m -> refExistsInMem ra m /\ refExistsInMem rb m /\ lc (loopkupRef ra m) (loopkupRef rb m))
+                      mod)
   -> Mem unit (requires (fun m -> loopInv m /\ refExistsInMem ra m /\ refExistsInMem rb m))
               (ensures (fun m0 _ m1 -> loopInv m1 /\ refExistsInMem ra m1 /\ refExistsInMem rb m1 /\ ~(lc (loopkupRef ra m1) (loopkupRef rb m1)) ))
               mod
