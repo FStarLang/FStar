@@ -30,10 +30,14 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
 					seq.fsi seqproperties.fst ) formatting.fst sha1.fst mac.fst rpc.fst
 
 rpc-extract:
-	$(FSTAR) --codegen OCaml --admit_fsi Set $(FSTAR_HOME)/lib/list.fst $(FSTAR_HOME)/lib/string.fst $(FSTAR_HOME)/lib/partialmap.fst $(FSTAR_HOME)/lib/st.fst sha1.fst mac.fst formatting.fst rpc.fst
+	$(FSTAR) --codegen OCaml --admit_fsi Seq  \
+          $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
+					set.fsi set.fst \
+					heap.fst st.fst \
+					seq.fsi seqproperties.fst ) sha1.fst mac.fst formatting.fst rpc.fst
 	ocamlfind ocamlopt -o rpc -package batteries -linkpkg -thread -I $(FSTAR_HOME)/src/ocaml-output/ $(FSTAR_HOME)/src/ocaml-output/support.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
- cnt-protocol: cnt-format.fst cnt-format.fsi cnt-mac.fst cnt-protocol.fst
+cnt-protocol: cnt-format.fst cnt-format.fsi cnt-mac.fst cnt-protocol.fst
 	$(FSTAR) --admit_fsi Set $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst ) cnt-format-deprecated.fst
 	$(FSTAR) --z3timeout 10 --prims ../../lib/prims.fst --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1 \
           $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
