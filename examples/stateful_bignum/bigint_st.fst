@@ -17,7 +17,7 @@ type u8 = int
 let ocaml63 = 63
 
 (* Maps the index of the integer data to the theoretic bit size of the cell *)
-type template = nat -> Tot nat
+type template = nat -> Tot pos
 type template_const = t:template{ forall (n:nat). t n = t 0 }
 
 (* Sized integer *)

@@ -2,6 +2,7 @@ module Retemplate
 
 open Heap
 open ST
+open Eval
 open Bigint
 
 val retemplate:

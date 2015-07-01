@@ -42,7 +42,7 @@ let auxiliary_lemma_1 t a b =
   pow2_exp_lemma (bitweight t a) (bitweight t b)
 
 (* Lemma : first half of the helper for the multiplication_step_lemma *)
-assume val multiplication_step_lemma_p1:
+val multiplication_step_lemma_p1:
   h0:heap -> 
   h1:heap -> 
   a:norm_bigint{ inHeap h0 a } -> 
@@ -63,7 +63,7 @@ assume val multiplication_step_lemma_p1:
                           pow2 (bitweight (Bigint63.t a) idx) * eval h0 b (len-1)  +	        
 			  pow2 (bitweight (Bigint63.t a) (len-1+idx)) * getValue h0 b (len-1)
 	     ))
-(*
+
 let multiplication_step_lemma_p1 h0 h1 a b c idx len =
   auxiliary_lemma_0 len idx 1;
   cut (eval h1 c (len+idx-1) = eval h0 a (len+idx-1) + (pow2 (bitweight (Bigint63.t a) idx)) * eval h0 b (len-1) /\ True);
@@ -87,10 +87,10 @@ let multiplication_step_lemma_p1 h0 h1 a b c idx len =
   cut (True /\ eval h1 c (len+idx) = eval h0 a (len+idx) +  
 				       pow2 (bitweight (Bigint63.t a) idx) * eval h0 b (len-1)  +	        
 				       pow2 (bitweight (Bigint63.t a) (len-1+idx)) * getValue h0 b (len-1))
- *)
+
 
 (* Lemma : second half of the helper for the multiplciation_step_lemma *)
-assume val multiplication_step_lemma_p2:
+val multiplication_step_lemma_p2:
   h0:heap -> 
   h1:heap -> 
   a:norm_bigint{ inHeap h0 a } -> 
@@ -108,7 +108,7 @@ assume val multiplication_step_lemma_p2:
     ))
     (ensures (eval h1 c (len+idx) = eval h0 a (len+idx) + pow2 (bitweight (Bigint63.t a) idx) * eval h0 b len
 	     ))
-(*
+
 let multiplication_step_lemma_p2 h0 h1 a b c idx len =
   auxiliary_lemma_0 len idx 1;
   auxiliary_lemma_1 (Bigint63.t a) idx (len-1);
@@ -122,7 +122,7 @@ let multiplication_step_lemma_p2 h0 h1 a b c idx len =
   cut (True /\ pow2 (bitweight (Bigint63.t a) (len-1+idx)) * getValue h0 b (len-1) =
          pow2 (bitweight (Bigint63.t a) idx) * pow2 (bitweight (Bigint63.t a) (len-1)) * getValue h0 b (len-1) );
   cut ( True /\ eval h1 c (len+idx) = eval h0 a (len+idx) + pow2 (bitweight (Bigint63.t a) idx) * eval h0 b len) 
- *)
+
 
 (* Lemma : changes the result of the addition function into the equivalent relation between 
   evaluated bigints *)
@@ -247,7 +247,7 @@ let helper_lemma_4 a b = ()
 #reset-options
 
 (* Lemma *)
-assume val auxiliary_lemma_2:
+val auxiliary_lemma_2:
   h0:heap ->
   h1:heap ->
   h2:heap ->
@@ -268,7 +268,7 @@ assume val auxiliary_lemma_2:
     (requires (True))
     (ensures ((maxValue h0 a <= pow2 ((wordSize a - log (getLength h0 a) - 2 ) / 2 )) 
 	    /\ (maxValue h1 b <= pow2 ((wordSize b - log (getLength h0 a) - 2 ) / 2))))
-(*
+
 let auxiliary_lemma_2 h0 h1 h2 a b ctr c =
   cut ( maxValue h0 a <= pow2 (maxSize h0 a) /\ True );
   if (((wordSize a - log (getLength h0 a) - 2) / 2) > (maxSize h0 a)) then
@@ -281,13 +281,13 @@ let auxiliary_lemma_2 h0 h1 h2 a b ctr c =
   cut (pow2 (maxSize h1 b) <= pow2 ((wordSize b - log (getLength h1 b) - 2) / 2) /\ True );
   cut (maxValue h1 b <= pow2 (maxSize h1 b) /\ True );
   cut (maxValue h1 b <= pow2 ((wordSize b - log (getLength h1 b) - 2) / 2 ) /\ True )
- *)
+
   
 #reset-options
 
 
 (* Lemma : bounds the maxValues product *)
-assume val auxiliary_lemma_3:
+val auxiliary_lemma_3:
   h0:heap ->
   h1:heap ->
   h2:heap ->
@@ -307,7 +307,7 @@ assume val auxiliary_lemma_3:
   Lemma
     (requires (True))
     (ensures (maxValue h0 a * maxValue h1 b <= pow2 (wordSize a - log (getLength h0 a) - 2)))
-(*
+
 let auxiliary_lemma_3 h0 h1 h2 a b ctr c =
   erase 
     (
@@ -326,12 +326,12 @@ let auxiliary_lemma_3 h0 h1 h2 a b ctr c =
       cut (maxValue h0 a * maxValue h1 b <= pow2 s /\ True);
       ()
     )
- *)
+
 
 #reset-options
 
 (* GHOST CODE, not tail recursive because this function should only be ghost *)
-assume val multiplication_step_resize_iterate:
+val multiplication_step_resize_iterate:
   a:bigint -> size:nat -> ctr:nat ->
   ST unit
      (requires (fun h ->
@@ -351,7 +351,7 @@ assume val multiplication_step_resize_iterate:
 		   (i < ctr ==> getSize h1 a i = size)
 		   /\ (i < getLength h1 a ==> getValue h0 a i = getValue h1 a i))
      ))
-(*
+
 let rec multiplication_step_resize_iterate a size ctr =
   match ctr with
   | 0 -> ()
@@ -360,11 +360,11 @@ let rec multiplication_step_resize_iterate a size ctr =
      multiplication_step_resize_iterate a size i;
      let t = mk_tint a size (Bigint.get a i) in
      updateBigint a i t
- *)
+
 
 (* GHOST CODE : resizes a bigint, knowing a tighter bound on its maximum value *)
 (* It should be erased since the size is a ghost parameter *)
-assume val multiplication_step_resize : 
+val multiplication_step_resize : 
   a:norm_bigint -> b:norm_bigint -> ctr:pos -> c:norm_bigint ->
   ST unit
      (requires (fun h -> 
@@ -398,7 +398,7 @@ assume val multiplication_step_resize :
 			/\ (getSize h1 c i = wordSize a - 2)))
 
      ))
-(*
+
 let multiplication_step_resize a b ctr c =
   let h0 = ST.get() in
   let s = (wordSize a - log (getLength h0 a) - 2) in
@@ -415,7 +415,7 @@ let multiplication_step_resize a b ctr c =
   cut ( forall (i:nat). i < getLength h0 c ==> Bitsize (getValue h0 c i) (wordSize a - 2) );
   let new_size = wordSize a - 2 in
   multiplication_step_resize_iterate c new_size (getLength h0 c)
- *)
+
 
 #reset-options
 
@@ -433,7 +433,7 @@ let auxiliary_lemma_4 ha hb a b = ()
 #reset-options
 
 (* Lemma : extends the "eval" property to the total length if apporpriate *)
-assume val auxiliary_lemma_5: 
+val auxiliary_lemma_5: 
   h0:heap -> h1:heap -> 
   a:bigint{ inHeap h0 a } ->
   b:bigint{ (inHeap h1 b) 
@@ -447,7 +447,7 @@ assume val auxiliary_lemma_5:
 		/\ (forall (i:nat). (i < len2 /\ i >= len)
 		    ==> getValue h1 b i = getValue h0 a i)))
     (ensures ( (eval h1 b len2 = eval h0 a len2 + c)))
-(*
+
 let rec auxiliary_lemma_5 h0 h1 a b c len len2 =
   match len2 - len with
   | 0 -> ()
@@ -458,16 +458,16 @@ let rec auxiliary_lemma_5 h0 h1 a b c len len2 =
      cut (True /\ eval h1 b len2 = eval h1 b (len2-1) + (pow2 (bitweight t (len2-1))) * getValue h1 b (len2-1));
      cut (True /\ eval h1 b len2 = eval h0 a (len2-1) + c + (pow2 (bitweight t (len2-1))) * getValue h0 a (len2-1));
      cut (True /\ eval h1 b len2 = eval h0 a len2 + c)
- *)
+
 
 (* Same as auxiliary_lemma_4, TODO : remove *)
-assume val auxiliary_lemma_6 : ha:heap -> hb:heap -> a:bigint{ inHeap ha a } -> b:bigint{ inHeap hb b } ->
+val auxiliary_lemma_6 : ha:heap -> hb:heap -> a:bigint{ inHeap ha a } -> b:bigint{ inHeap hb b } ->
 			       Lemma
 				 (requires (Seq.Eq (sel ha (Bigint63.data a)) (sel hb (Bigint63.data b))))
 				 (ensures (maxSize ha a = maxSize hb b /\ maxValue ha a = maxValue hb b))
-(*
+
 let auxiliary_lemma_6 h0 h1 a b = ()
- *)
+
 
 #reset-options
 
@@ -616,7 +616,7 @@ let multiplication_step a b ctr c tmp =
       
       
       let h3 = ST.get() in
-      admit () ) (*
+
       cut (inHeap h3 a /\ inHeap h3 b /\ inHeap h3 c /\ inHeap h3 tmp);
       cut (getLength h0 a = getLength h3 a /\ True);
       cut (getLength h0 b = getLength h3 b /\ True);
@@ -625,19 +625,17 @@ let multiplication_step a b ctr c tmp =
             
       auxiliary_lemma_6 h2 h3 c c;
       eval_eq_lemma h2 h3 c c (getLength h3 c);
-      admit () ) (*
+
       cut (maxValue h3 c <= (ctr+1) * (maxValue h0 a * maxValue h0 b) /\ True);
       cut (eval h3 c (getLength h3 c) = eval h0 a (getLength h0 a) * getValue h0 b ctr * pow2 (bitweight (Bigint63.t a) ctr) + eval h0 c (getLength h0 c) /\ True);
             
       ()
     );
   ()
-
-
-(*
+		  *)
 
 (* Lemma : factorizes "eval" equation *)
-assume val multiplication_step_lemma_2:
+val multiplication_step_lemma_2:
   h0:heap ->
   h1:heap ->
   a:norm_bigint{ (inHeap h0 a)
@@ -651,7 +649,7 @@ assume val multiplication_step_lemma_2:
   Lemma
     (requires (eval h1 c (getLength h1 c) = (eval h0 a (getLength h0 a) * getValue h0 b (getLength h0 a - ctr)) * pow2 (bitweight (Bigint63.t a) (getLength h0 a - ctr)) + eval h0 a (getLength h0 a) * eval h0 b (getLength h0 b - ctr) ))
     (ensures ( eval h1 c (getLength h1 c) = eval h0 a (getLength h0 a) * eval h0 b (getLength h0 a - ctr + 1)))
-(*
+
 let multiplication_step_lemma_2 h0 h1 a b ctr c =
   let t = Bigint63.t a in
   let len_a = getLength h0 a in
@@ -663,14 +661,14 @@ let multiplication_step_lemma_2 h0 h1 a b ctr c =
   distributivity_add_right (eval h0 a len_a) (pow2 (bitweight t (len_a - ctr)) * getValue h0 b (len_a - ctr)) (eval h0 b (len_a - ctr));
   cut (True /\ eval h1 c (getLength h1 c) = eval h0 a len_a * (pow2 (bitweight t (len_a - ctr)) * getValue h0 b (len_a - ctr) + eval h0 b (len_a - ctr))) ;
   () 
- *)
+ 
 
 (* Helper lemma, ensures clause is self explainatory *)
 val auxiliary_lemma_7: a:int -> b:int -> c:int -> Lemma (ensures (a-(b-c)=a-b+c))
 let auxiliary_lemma_7 a b c = ()
 
 (* Code : tail recursive calls to run the multiplication *)
-assume val multiplication_aux:
+val multiplication_aux:
   a:norm_bigint -> b:norm_bigint -> ctr:nat -> c:norm_bigint -> tmp:norm_bigint ->
   ST unit
      (requires (fun h -> 
@@ -718,7 +716,7 @@ assume val multiplication_aux:
 	       /\ (maxSize h1 c <= wordSize a - 2)
 	       /\ (eval h1 c (getLength h1 c) = eval h0 a (getLength h0 a) * eval h0 b (getLength h0 b))
      ))
-(*
+
 let rec multiplication_aux a b ctr c tmp = 
   match ctr with
   | 0 -> ()
@@ -777,7 +775,7 @@ let rec multiplication_aux a b ctr c tmp =
 	     
        );
      multiplication_aux a b (ctr-1) c tmp
- *)
+
 
 
 (* Helper lemma, ensures clause is self explainatory *)
