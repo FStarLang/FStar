@@ -27,15 +27,25 @@ type prefixEqual  (#a:Type)
   (v1: seq a) (v2: seq a) (p:nat{p <= length v1 /\ p<= length v2})
   = forall (n:nat{n<p}). index v1 n = index v2 n
 
+(*val prefixInc: a#Type -> n:nat->
+  (m1 = (writeMemAux (asRef r) m0 (Seq.upd (loopkupRef (asRef r) m0) index newV)))*)
+
+type prefixEqualL  (#a:Type)
+  (v1: seq a) (v2:(seq a))
+  = length v1 <= length v2 /\ (forall (n:nat{n<length v1}). index v1 n = index v2 n)
+
+
 (* Helper functions for stateful array manipulation *)
 val copy:
   #a:Type -> s:array a -> scp :array a
   -> WNSC unit
      (requires (fun h -> contains h s /\ contains h scp /\ glength s h <= glength scp h))
      (ensures (fun h0 _ h1 -> (contains h1 s) /\  (contains h1 scp)
-				      (*/\ sel h1 s = sel h1 scp *)
+                /\ (length  (sel h1 s) <= length (sel  h1 scp))
+                /\ prefixEqualL (sel h1 s) (sel h1 scp)
               ))
      (only (asRef scp))
+
 let copy s scp =
   let ctr = salloc #nat 0 in
   let len = Array.length s in
@@ -48,7 +58,7 @@ let copy s scp =
           /\ (loopkupRef ctr m) <=len
           /\ prefixEqual (sel m s) (sel m scp) (loopkupRef ctr m)
           )
-    (only (asRef scp))
+    (union (only (asRef scp)) (only ctr))
     (fun u -> let ctrv = memread ctr in
-              (*writeIndex scp ctrv (readIndex s ctrv);*)
-              memwrite ctr (ctrv (*+1*) ))
+              writeIndex scp ctrv (readIndex s ctrv);
+              memwrite ctr (ctrv +1 ))
