@@ -32,6 +32,11 @@ let length s = MkSeq.length s
 
 let create len v =  MkSeq len (fun i -> v)
 
+val exFalso0 : a:Type -> n:nat{n<0} -> Tot a
+let exFalso0 'a n = ()
+
+let createEmpty 'a =  (MkSeq 0 (fun i -> (exFalso0 'a i)))
+
 let index s i = MkSeq.contents s i
 
 let upd s n v =

@@ -41,19 +41,21 @@ val copy:
   -> WNSC unit
      (requires (fun h -> contains h s /\ contains h scp /\ glength s h <= glength scp h))
      (ensures (fun h0 _ h1 -> (contains h1 s) /\  (contains h1 scp)
-                /\ (length  (sel h1 s) <= length (sel  h1 scp))
+                /\ (glength  s h1  <= glength  scp h1)
                 /\ prefixEqualL (sel h1 s) (sel h1 scp)
+                /\ (contains h0 scp) /\ glength scp h0 = glength scp h1
               ))
      (only (asRef scp))
 
 let copy s scp =
   let ctr = salloc #nat 0 in
   let len = Array.length s in
+  let lenscp = Array.length scp in
   scopedWhile1
     ctr
     (fun ctrv -> ctrv < len)
     (fun m -> contains m s /\ contains m scp
-        /\ len = glength s m /\ len <= glength scp m
+        /\ len = glength s m /\ lenscp = glength scp m
           /\ refExistsInMem ctr m
           /\ (loopkupRef ctr m) <=len
           /\ prefixEqual (sel m s) (sel m scp) (loopkupRef ctr m)
@@ -62,3 +64,44 @@ let copy s scp =
     (fun u -> let ctrv = memread ctr in
               writeIndex scp ctrv (readIndex s ctrv);
               memwrite ctr (ctrv +1 ))
+
+(* sclone does not make sense*)
+val hcloneAux:
+  #a:Type -> s:array a
+  -> Mem (array a)
+     (requires (fun h -> contains h s /\ 0 < glength s h ))
+     (ensures (fun h0 scp h1 -> (contains h1 s) /\  (contains h1 scp)
+                /\ (glength s h1) = (glength scp h1)
+                /\ Seq.Eq (sel h1 s) (sel h1 scp)
+              ))
+     (empty)
+
+let hcloneAux s =
+  let scp = hcreate (Seq.create (Array.length s) (readIndex s 0)) in
+    pushStackFrame ();
+      copy s scp;
+    popStackFrame ();
+    scp
+
+(*allow creation of uninitialized arrays? ,
+  but use the type system to prevent reading of uninitialized indices?
+
+  Currently, there might be some wasted computation in initializing an array
+  that will immediately be written into.
+*)
+
+
+val hclone:
+  #a:Type -> s:array a
+  -> Mem (array a)
+     (requires (fun h -> contains h s))
+     (ensures (fun h0 scp h1 -> (contains h1 s) /\  (contains h1 scp)
+                /\ (glength s h1) = (glength scp h1)
+                /\ Seq.Eq (sel h1 s) (sel h1 scp)
+              ))
+     (empty)
+
+let hclone 'a s =
+  if (Array.length s = 0)
+  then  hcreate (Seq.createEmpty #'a)
+  else hcloneAux s

@@ -25,6 +25,8 @@ val index:  #a:Type -> s:seq a -> i:nat{i < length s} -> Tot a
 
 (* Constructors *)
 val create: #a:Type -> nat -> a -> Tot (seq a)
+val createEmpty: #a:Type -> Tot (s:(seq a){length s=0})
+
 val upd:    #a:Type -> s:seq a -> n:nat{n < length s} -> a ->  Tot (seq a)
 val append: #a:Type -> seq a -> seq a -> Tot (seq a)
 val slice:  #a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s} -> Tot (seq a)
