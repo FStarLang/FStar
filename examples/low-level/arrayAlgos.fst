@@ -1,5 +1,5 @@
 (*--build-config
-    options:--admit_fsi Set --z3timeout 10 --logQueries;
+    options:--admit_fsi Set --z3timeout 10;
     variables:LIB=../../lib;
     other-files:$LIB/ext.fst $LIB/set.fsi $LIB/heap.fst $LIB/st.fst $LIB/list.fst  stack.fst listset.fst
     st3.fst $LIB/constr.fst word.fst $LIB/seq.fsi $LIB/seq.fst array.fsi array.fst withScope.fst
@@ -82,6 +82,13 @@ let hcloneAux s =
       copy s scp;
     popStackFrame ();
     scp
+
+(*Since we always use the Mem abbreviation and never SST directly,
+  withNewScope does not have any advantage over pushStackFrame/popStackFrame.
+  The definition of Mem prevents one from improperly pushing/popping
+    of stack frames; i.e. any computation of type Mem ....
+    must pop exactly all the stack frames it pushed
+  *)
 
     (*let hcloneAux s =
       let scp = hcreate (Seq.create (Array.length s) (readIndex s 0)) in
