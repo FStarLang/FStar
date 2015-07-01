@@ -83,6 +83,22 @@ let hcloneAux s =
     popStackFrame ();
     scp
 
+    (*let hcloneAux s =
+      let scp = hcreate (Seq.create (Array.length s) (readIndex s 0)) in
+        withNewScope
+          #_ (*the pre/post conditions below just come from the definition of copy. It is annoying that they cannot be inferred*)
+          #((fun h -> contains h s /\ contains h scp /\ glength s h <= glength scp h))
+          #((fun h0 _ h1 -> (contains h1 s) /\  (contains h1 scp)
+                   /\ (glength  s h1  <= glength  scp h1)
+                   /\ prefixEqualL (sel h1 s) (sel h1 scp)
+                   /\ (contains h0 scp) /\ glength scp h0 = glength scp h1
+                 ))
+          #(only (asRef scp))
+          (fun u -> copy s scp);
+        scp*)
+
+
+
 (*allow creation of uninitialized arrays? ,
   but use the type system to prevent reading of uninitialized indices?
 
