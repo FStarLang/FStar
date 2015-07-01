@@ -40,7 +40,7 @@ type SameFormat (ha:heap) (hb:heap) (a:bigint) (b:bigint) =
   /\ (Bigint63.t a = Bigint63.t b) 
   /\ (Seq.length (sel ha (Bigint63.data a)) = Seq.length (sel hb (Bigint63.data b)))
 
-logic type inHeap (h:heap) (b:bigint) = b2t (contains h (Bigint63.data b))
+type inHeap (h:heap) (b:bigint) = b2t (contains h (Bigint63.data b))
 
 (* Getters *)
 
