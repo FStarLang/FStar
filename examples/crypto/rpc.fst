@@ -7,16 +7,19 @@
             $LIB/heap.fst $LIB/st.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
             formatting.fst
+            Bytes.fst
             sha1.fst
             mac.fst
+
   --*)
 
 
 (* Copyright (c) Microsoft Corporation.  All rights reserved.  *)
 
 module RPC
-open Seq
-open SeqProperties
+open Platform.Bytes
+(*open Seq
+open SeqProperties*)
 open SHA1
 open Formatting
 open MAC
@@ -43,7 +46,7 @@ let k = keygen reqresp
 
 let client (s:string16) =
   assume (Request s);
-  send (append (utf8 s) (mac k (Formatting.request s)));
+  send ( (utf8 s) @| (mac k (Formatting.request s)));
   recv (fun msg ->
     if length msg < macsize then failwith "Too short"
     else
@@ -65,7 +68,7 @@ let server () =
           ( assert (Request s);
             let t = "22" in
             assume (Response s t);
-            send (append (utf8 t) (mac k (Formatting.response s t)))))
+            send ( (utf8 t) @| (mac k (Formatting.response s t)))))
 
 (*
 let test () =
