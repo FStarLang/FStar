@@ -6,11 +6,13 @@
             $LIB/set.fsi $LIB/set.fst
             $LIB/heap.fst $LIB/st.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
+            Bytes.fst
   --*)
 module SHA1
 open Seq
+open Platform.Bytes
 
-type bytes = seq byte (* concrete byte arrays *)
+(*type bytes = seq byte (* concrete byte arrays *)*)
 type text  = bytes    (* a type abbreviation, for clarity *)
 
 type nbytes (n:nat) =
@@ -31,20 +33,20 @@ let sample n = magic()
 val sha1: bytes -> Tot tag
 let sha1 bs = magic()
 
-val xor : bytes -> bytes -> Tot bytes
-let xor a b = magic()
+(*val xor : bytes -> bytes -> Tot bytes
+let xor a b = magic()*)
 
-assume val x5c : byte
-assume val x36 : byte
+(*assume val x5c : byte
+assume val x36 : byte*)
 
 val hmac_sha1: key -> text -> Tot tag
 let hmac_sha1 k t =
-  (*let x5c = 92 in
-  let x36 = 54 in*)
+  let x5c = byte_of_int 92 in
+  let x36 = byte_of_int 54 in
   let opad = Seq.create blocksize x5c in
   let ipad = Seq.create blocksize x36 in
-  let xor_key_opad = xor k opad in
-  let xor_key_ipad = xor k ipad in
+  let xor_key_opad = xor k opad (length k) in
+  let xor_key_ipad = xor k ipad (length k) in
   sha1 ( append xor_key_opad
                 (sha1 (append xor_key_ipad t))
        )

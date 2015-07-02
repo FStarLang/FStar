@@ -34,10 +34,10 @@ rpc-extract:
           $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \
-					seq.fst seqproperties.fst ) sha1.fst mac.fst formatting.fst rpc.fst
+					seq.fst seqproperties.fst ) Bytes.fst sha1.fst mac.fst formatting.fst rpc.fst
 	ocamlfind ocamlopt -o rpc -package batteries -linkpkg -thread -I \
 	        $(FSTAR_HOME)/src/ocaml-output/ $(FSTAR_HOME)/src/ocaml-output/support.ml \
-					seq.ml seqproperties.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
+					seq.ml seqproperties.ml Platform_Bytes.ml SHA1.ml MAC.ml Formatting.ml RPC.ml
 
 cnt-protocol: cnt-format.fst cnt-format.fsi cnt-mac.fst cnt-protocol.fst
 	$(FSTAR) --admit_fsi Set $(addprefix $(FSTAR_HOME)/lib/, list.fst string.fst partialmap.fst ) cnt-format-deprecated.fst
