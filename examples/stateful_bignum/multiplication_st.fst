@@ -88,7 +88,6 @@ let multiplication_step_lemma_p1 h0 h1 a b c idx len =
 				       pow2 (bitweight (Bigint63.t a) idx) * eval h0 b (len-1)  +	        
 				       pow2 (bitweight (Bigint63.t a) (len-1+idx)) * getValue h0 b (len-1))
 
-
 (* Lemma : second half of the helper for the multiplciation_step_lemma *)
 val multiplication_step_lemma_p2:
   h0:heap -> 
@@ -145,8 +144,6 @@ val multiplication_step_lemma:
     (ensures (eval h1 c (len+idx) = eval h0 a (len+idx) + pow2 (bitweight (Bigint63.t a) idx) * eval h0 b len
 	     ))
 
-#reset-options
-
 let rec multiplication_step_lemma h0 h1 a b c idx len =
   match len with
   | 0 ->
@@ -156,6 +153,8 @@ let rec multiplication_step_lemma h0 h1 a b c idx len =
      multiplication_step_lemma h0 h1 a b c idx (len-1);
      multiplication_step_lemma_p1 h0 h1 a b c idx len;
      multiplication_step_lemma_p2 h0 h1 a b c idx len
+
+#reset-options
 
 (* Helper lemmas that avoid super long computation or intensive use of "cuts" *)
 (* Helper lemma, ensures clause is self explainatory *)
@@ -199,6 +198,7 @@ val size_lemma_2:
   Lemma
     (requires (maxValue h a <= x * (pow2 n))) 
     (ensures ( forall (i:nat). i < getLength h a ==> Bitsize (getValue h a i) (sizeOf x + n) ))
+
 let size_lemma_2 h a x n =
   erase (
       cut (x < pow2 (sizeOf x) /\ True );
@@ -209,6 +209,7 @@ let size_lemma_2 h a x n =
       cut ( forall (i:nat). i < getLength h a ==> Bitsize (getValue h a i) (sizeOf x + n) /\ True );
       ()
     )
+
 
 (* Lemma : "sizeOf" increases *)
 val size_lemma_3:
@@ -281,7 +282,6 @@ let auxiliary_lemma_2 h0 h1 h2 a b ctr c =
   cut (pow2 (maxSize h1 b) <= pow2 ((wordSize b - log (getLength h1 b) - 2) / 2) /\ True );
   cut (maxValue h1 b <= pow2 (maxSize h1 b) /\ True );
   cut (maxValue h1 b <= pow2 ((wordSize b - log (getLength h1 b) - 2) / 2 ) /\ True )
-
   
 #reset-options
 
@@ -471,6 +471,140 @@ let auxiliary_lemma_6 h0 h1 a b = ()
 
 #reset-options
 
+val multiplication_step_p1:
+  a:norm_bigint -> b:norm_bigint -> ctr:nat -> c:norm_bigint -> tmp:bigint ->
+  ST unit 
+     (requires (fun h ->
+		(inHeap h a) /\ (inHeap h b) /\ (inHeap h c) /\ (inHeap h tmp)
+		/\ (getLength h a = getLength h b)
+		/\ (getLength h tmp = getLength h a)
+		/\ (getLength h a > 0)
+		/\ (getLength h c = 2 * getLength h a - 1)
+		/\ (Bigint63.t a = Bigint63.t b)
+		/\ (Bigint63.t a = Bigint63.t c)
+		/\ (Bigint63.t a = Bigint63.t tmp)
+		/\ (Bigint63.data c <> Bigint63.data a)
+		/\ (Bigint63.data b <> Bigint63.data c)
+		/\ (Bigint63.data tmp <> Bigint63.data a)
+		/\ (Bigint63.data tmp <> Bigint63.data b)
+		/\ (Bigint63.data tmp <> Bigint63.data c)
+		/\ (log (getLength h a) <= wordSize a - 2)
+		/\ (maxSize h a <= (wordSize a - log (getLength h a) - 2) / 2)
+		/\ (maxSize h b <= (wordSize b - log (getLength h a) - 2) / 2)
+		/\ (maxSize h c <= wordSize a - 2)
+		/\ (maxValue h c <= ctr * maxValue h a * maxValue h b)
+		/\ (ctr < getLength h a)
+	       ))
+     (ensures (fun h0 u h1 ->
+	       (inHeap h0 a) /\ (inHeap h1 a) /\ (inHeap h0 b) /\ (inHeap h1 b) /\ (inHeap h0 c) /\ (inHeap h1 c)
+	       /\ (inHeap h0 tmp) /\ (inHeap h1 tmp)
+	       /\ (getLength h0 a = getLength h0 b)
+	       /\ (getLength h0 tmp = getLength h0 a)
+	       /\ (getLength h1 tmp = getLength h0 tmp)
+	       /\ (getLength h0 a > 0)
+	       /\ (getLength h1 c = 2 * getLength h0 a - 1)
+	       /\ (ctr < getLength h0 a)
+	       /\ (Bigint63.t a = Bigint63.t b)
+	       /\ (Bigint63.t a = Bigint63.t c)
+	       /\ (Bigint63.t a = Bigint63.t tmp)
+	       /\ (Bigint63.data c <> Bigint63.data a)
+	       /\ (Bigint63.data b <> Bigint63.data c)
+	       /\ (Bigint63.data tmp <> Bigint63.data a)
+	       /\ (Bigint63.data tmp <> Bigint63.data b)
+	       /\ (Bigint63.data tmp <> Bigint63.data c)
+	       /\ (modifies !{Bigint63.data c,Bigint63.data tmp} h0 h1)
+	       /\ (log (getLength h0 a) <= wordSize a - 2)
+	       /\ (maxSize h0 a <= (wordSize a - log (getLength h0 a) - 2) / 2)
+	       /\ (maxSize h0 b <= (wordSize b - log (getLength h0 a) - 2) / 2)
+	       /\ (maxSize h0 c <= wordSize a - 2)
+	       /\ (maxValue h0 c <= ctr * maxValue h0 a * maxValue h0 b)
+
+	       /\ (maxValue h1 c <= (ctr+1) * (maxValue h0 a * maxValue h0 b))
+	       /\ (eval h1 c (getLength h1 c) = eval h0 c (getLength h0 c) + pow2 (bitweight (Bigint63.t a) ctr) * eval h0 a (getLength h0 a) * getValue h0 b ctr)
+     ))
+
+let multiplication_step_p1 a b ctr c tmp =
+  let h0 = 
+    erase (ST.get()) in
+  let n = 
+    erase (getSize h0 b ctr) in
+  let s = Bigint.get b ctr in
+  let tmp_seq = 
+    erase (Array.to_seq (Bigint63.data tmp)) in
+  let len = get_length a in
+  scalar_multiplication_tr tmp tmp_seq a 0 n s len 0;
+  let h1 = 
+    erase (ST.get()) in	 
+  erase 
+    ( 
+      theorem_scalar_multiplication h0 h1 a n s len tmp;
+      (* Infer additional information on values and sizes of tmp *)
+      scalar_multiplication_max_value_lemma h0 h1 tmp a n s;
+      scalar_multiplication_max_size_lemma h0 h1 tmp a n s;
+      cut (True /\ maxSize h1 tmp <= wordSize a - 2);
+      cut (True /\ maxValue h1 tmp = maxValue h0 a * abs s );
+      auxiliary_lemma_4 h0 h1 c c;
+      cut (True /\ maxSize h1 c <= wordSize a - 2);
+      cut (True /\ maxValue h1 c = maxValue h0 c);
+      cut (eval h1 tmp (getLength h1 tmp) = eval h0 a (getLength h0 a) * s /\ True)
+    );
+
+  addition_tr (erase (Array.to_seq (Bigint63.data c))) c ctr tmp 0 len 0;
+  let h2 = 
+    erase (ST.get()) in
+  erase 
+    (
+      (* Infer additional information on values and sizes of c *)
+      (* Timeout important required ( > 200 ) *)
+      addition_max_value_lemma_extended h1 h2 c tmp c ctr len;
+      cut (True /\ maxValue h2 c <= maxValue h1 c + maxValue h0 a * abs s);
+
+      auxiliary_lemma_6 h0 h1 c c;
+      mul_incr_lemma (maxValue h0 a) (abs s) (maxValue h0 b);
+      cut (True /\ maxValue h2 c <= maxValue h0 c + maxValue h0 a * maxValue h0 b);
+
+      cut (True /\ maxValue h2 c <= ctr * maxValue h0 a * maxValue h0 b + maxValue h0 a * maxValue h0 b);
+
+      paren_mul_right ctr (maxValue h0 a) (maxValue h0 b);
+      helper_lemma_1 (maxValue h0 a * maxValue h0 b);
+      distributivity_add_left ctr 1 (maxValue h0 a * maxValue h0 b);
+      
+      cut (True /\ maxValue h2 c <= (ctr+1) * (maxValue h0 a * maxValue h0 b));
+      
+      (* Prove the eval property *)
+      cut (inHeap h1 c /\ inHeap h1 tmp /\ inHeap h2 c);
+      cut (Bigint63.t c = Bigint63.t tmp /\ True);
+      cut (getLength h1 tmp >= len /\ getLength h1 c >= len + ctr);
+      cut (getLength h1 c = getLength h2 c /\ True);
+      cut ( forall (i:nat). 
+	      ((i < len ==> getValue h2 c (i+ctr) = getValue h1 c (i+ctr) + getValue h1 tmp i)
+	       /\ ((i < ctr) ==> getValue h2 c i = getValue h1 c i)));
+      multiplication_step_lemma h1 h2 c tmp c ctr len;
+
+      cut (True /\ eval h2 c (len+ctr) = eval h1 c (len+ctr) + pow2 (bitweight (Bigint63.t a) ctr) * eval h1 tmp len);
+  
+      cut (inHeap h1 c /\ inHeap h2 c);
+      cut (getLength h1 c = getLength h2 c /\ True);
+      cut ( len+ctr <= getLength h1 c /\ True);
+      
+      cut (forall (i:nat). (i >= len+ctr /\ i < getLength h2 c)
+	   ==> getValue h1 c i = getValue h2 c i);
+      
+      auxiliary_lemma_5 h1 h2 c c (pow2 (bitweight (Bigint63.t a) ctr) * eval h1 tmp len) (ctr+len) (getLength h1 c);
+
+      cut (True /\ eval h2 c (getLength h1 c) = eval h1 c (getLength h1 c) + pow2 (bitweight (Bigint63.t a) ctr) * eval h1 tmp len);
+      cut (True /\ eval h2 c (getLength h2 c) = eval h1 c (getLength h1 c) + pow2 (bitweight (Bigint63.t a) ctr) * eval h0 a (getLength h0 a) * s);
+      auxiliary_lemma_6 h0 h1 c c;
+      eval_eq_lemma h0 h1 c c (getLength h0 c);
+
+      cut (True /\ eval h2 c (getLength h2 c) = eval h0 c (getLength h0 c) + pow2 (bitweight (Bigint63.t a) ctr) * eval h0 a (getLength h0 a) * getValue h0 b ctr);
+      cut ((getLength h2 tmp = getLength h0 tmp) /\ (getLength h2 c = 2 * getLength h0 a - 1));
+      cut (True /\ maxValue h2 c <= (ctr+1) * (maxValue h0 a * maxValue h0 b));
+      cut (True /\ (modifies !{Bigint63.data c,Bigint63.data tmp} h0 h2));
+      ()
+    )
+
+
 (* Code : does 1 step of the multiplication (1 scalar multiplication), 
    and infers the appropriate properties on sizes, values and evaluated
    values for the resulting bigint *)
@@ -529,110 +663,19 @@ val multiplication_step:
 let multiplication_step a b ctr c tmp =
   let h0 = 
     erase (ST.get()) in
-  let n = 
-    erase (getSize h0 b ctr) in
-  let s = Bigint.get b ctr in
-  let tmp_seq = 
-    erase (Array.to_seq (Bigint63.data tmp)) in
-	  (*
-  erase (
-      max_size_lemma h0 a ((wordSize a - 2)/2);
-      cut ((forall (n:nat). n < getLength h0 a ==> getSize h0 a n <= (wordSize a) / 2))
-    );
-	   *)
-  let len = get_length a in
-  scalar_multiplication_tr tmp tmp_seq a 0 n s len 0;
-  let h1 = 
-    erase (ST.get()) in	 
-  erase 
-    ( 
-      (* Infer additional information on values and sizes of tmp *)
-      scalar_multiplication_max_value_lemma h0 h1 tmp a n s;
-      scalar_multiplication_max_size_lemma h0 h1 tmp a n s;
-      cut (True /\ maxSize h1 tmp <= wordSize a - 2);
-      cut (True /\ maxValue h1 tmp = maxValue h0 a * abs s );
-      auxiliary_lemma_4 h0 h1 c c;
-      cut (True /\ maxSize h1 c <= wordSize a - 2);
-      cut (True /\ maxValue h1 c = maxValue h0 c)
-    );
-
-  addition_tr (erase (Array.to_seq (Bigint63.data c))) c ctr tmp 0 len 0;
+  multiplication_step_p1 a b ctr c tmp;
+  let h1 =
+    erase (ST.get()) in
+  auxiliary_lemma_6 h0 h1 a a;
+  auxiliary_lemma_6 h0 h1 b b;
+  multiplication_step_resize a b (ctr+1) c;
   let h2 = 
     erase (ST.get()) in
-  erase 
-    (
-      (* Infer additional information on values and sizes of c *)
-      (* Timeout important required ( > 200 ) *)
-      addition_max_value_lemma_extended h1 h2 c tmp c ctr len;
-      cut (True /\ maxValue h2 c <= maxValue h1 c + maxValue h0 a * abs s);
-
-      auxiliary_lemma_6 h0 h1 c c;
-      mul_incr_lemma (maxValue h0 a) (abs s) (maxValue h0 b);
-      cut (True /\ maxValue h2 c <= maxValue h0 c + maxValue h0 a * maxValue h0 b);
-
-      cut (True /\ maxValue h2 c <= ctr * maxValue h0 a * maxValue h0 b + maxValue h0 a * maxValue h0 b);
-
-      paren_mul_right ctr (maxValue h0 a) (maxValue h0 b);
-      helper_lemma_1 (maxValue h0 a * maxValue h0 b);
-      distributivity_add_left ctr 1 (maxValue h0 a * maxValue h0 b);
-      
-      cut (True /\ maxValue h2 c <= (ctr+1) * (maxValue h0 a * maxValue h0 b));
-      
-      (* Prove the eval property *)
-      cut (inHeap h1 c /\ inHeap h1 tmp /\ inHeap h2 c);
-      cut (Bigint63.t c = Bigint63.t tmp /\ True);
-      cut (getLength h1 tmp >= len /\ getLength h1 c >= len + ctr);
-      cut (getLength h1 c = getLength h2 c /\ True);
-      cut ( forall (i:nat). 
-	      ((i < len ==> getValue h2 c (i+ctr) = getValue h1 c (i+ctr) + getValue h1 tmp i)
-	       /\ ((i < ctr) ==> getValue h2 c i = getValue h1 c i)));
-      multiplication_step_lemma h1 h2 c tmp c ctr len;
-
-      cut (True /\ eval h2 c (len+ctr) = eval h1 c (len+ctr) + pow2 (bitweight (Bigint63.t a) ctr) * eval h1 tmp len);
-  
-      cut (inHeap h1 c /\ inHeap h2 c);
-      cut (getLength h1 c = getLength h2 c /\ True);
-      cut ( len+ctr <= getLength h1 c /\ True);
-      
-      cut (forall (i:nat). (i >= len+ctr /\ i < getLength h2 c)
-	   ==> getValue h1 c i = getValue h2 c i);
-      
-      auxiliary_lemma_5 h1 h2 c c (pow2 (bitweight (Bigint63.t a) ctr) * eval h1 tmp len) (ctr+len) (getLength h1 c);
-
-      cut (True /\ eval h2 c (getLength h1 c) = eval h1 c (getLength h1 c) + pow2 (bitweight (Bigint63.t a) ctr) * eval h1 tmp len);
-      
-      (* 3m up to this point *)
-      (* Resize the resulting array appropriatly, according to the bound computed on its maximum value *)
-      admit () ) (*
-
-      cut (inHeap h2 a /\ inHeap h2 b /\ inHeap h2 c);
-      cut (getLength h2 a > 0 /\ True);
-      auxiliary_lemma_6 h0 h2 a a;
-      auxiliary_lemma_6 h0 h2 b b;
-      cut ( maxValue h2 c <= (ctr+1) * (maxValue h2 a * maxValue h2 b) /\ True);
-      
-      multiplication_step_resize a b (ctr+1) c;
-      (* Verified up to this point *)
-      
-      
-      let h3 = ST.get() in
-
-      cut (inHeap h3 a /\ inHeap h3 b /\ inHeap h3 c /\ inHeap h3 tmp);
-      cut (getLength h0 a = getLength h3 a /\ True);
-      cut (getLength h0 b = getLength h3 b /\ True);
-      cut (getLength h0 c = getLength h3 c /\ True);
-      cut (modifies !{Bigint63.data c, Bigint63.data tmp} h0 h3);
-            
-      auxiliary_lemma_6 h2 h3 c c;
-      eval_eq_lemma h2 h3 c c (getLength h3 c);
-
-      cut (maxValue h3 c <= (ctr+1) * (maxValue h0 a * maxValue h0 b) /\ True);
-      cut (eval h3 c (getLength h3 c) = eval h0 a (getLength h0 a) * getValue h0 b ctr * pow2 (bitweight (Bigint63.t a) ctr) + eval h0 c (getLength h0 c) /\ True);
-            
-      ()
-    );
+  eval_eq_lemma h1 h2 c c (getLength h1 c);
+  swap_mul (eval h0 a (getLength h0 a) * getValue h0 b ctr) (pow2 (bitweight (Bigint63.t a) ctr));
+  paren_mul_left (eval h0 a (getLength h0 a)) (getValue h0 b ctr) (pow2 (bitweight (Bigint63.t a) ctr));
   ()
-		  *)
+
 
 (* Lemma : factorizes "eval" equation *)
 val multiplication_step_lemma_2:
