@@ -19,6 +19,7 @@ type nbytes (n:nat) =
 (* we rely on some external crypto library implementing HMAC-SHA1 *)
 
 let keysize = 16
+let blocksize = keysize
 let macsize = 20
 
 type key = nbytes keysize
@@ -26,10 +27,24 @@ type tag = nbytes macsize
 
 val sample: n:nat -> nbytes n
 let sample n = magic()
-val sha1: key -> text -> Tot tag
-let sha1 k t = magic()
 
-(* to verify, we simply recompute & compare *)
+val sha1: bytes -> Tot tag
+let sha1 bs = magic()
 
-val sha1verify: key -> text -> tag -> Tot bool
-let sha1verify k txt tag = (sha1 k txt = tag)
+val xor : bytes -> bytes -> Tot bytes
+let xor a b = magic()
+
+assume val x5c : byte
+assume val x36 : byte
+
+val hmac_sha1: key -> text -> Tot tag
+let hmac_sha1 k t =
+  (*let x5c = 92 in
+  let x36 = 54 in*)
+  let opad = Seq.create blocksize x5c in
+  let ipad = Seq.create blocksize x36 in
+  let xor_key_opad = xor k opad in
+  let xor_key_ipad = xor k ipad in
+  sha1 ( append xor_key_opad
+                (sha1 (append xor_key_ipad t))
+       )

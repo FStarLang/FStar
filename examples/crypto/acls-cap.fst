@@ -6,6 +6,8 @@
             $LIB/set.fsi $LIB/set.fst
             $LIB/heap.fst $LIB/st.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
+            sha1.fst
+            mac.fst
             ../security/acls2.fst
   --*)
 

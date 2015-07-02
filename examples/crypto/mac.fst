@@ -73,15 +73,16 @@ type entry =
          -> m:tag
          -> entry
 
-let log = ST.alloc #(list entry) [] 
+let log = ST.alloc #(list entry) []
 
 let mac k t =
-  let m = sha1 k t in
+  let m = hmac_sha1 k t in
   log := Entry k t m :: !log;
   m
 
 let verify k text tag =
-  let verified = sha1verify k text tag in
+  (* to verify, we simply recompute & compare *)
+  let verified = (hmac_sha1 k text = tag) in
   let found =
     is_Some
       (List.find
