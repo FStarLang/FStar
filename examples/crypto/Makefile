@@ -30,7 +30,7 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
 					seq.fsi seqproperties.fst ) Bytes.fst formatting.fst sha1.fst mac.fst rpc.fst
 
 rpc-extract:
-	$(FSTAR) --codegen OCaml \
+	$(FSTAR) --codegen-lib Bytes --codegen OCaml \
           $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \

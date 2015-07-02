@@ -6,16 +6,8 @@
             $LIB/set.fsi $LIB/set.fst
             $LIB/heap.fst $LIB/st.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
+            Bytes.fst
   --*)
-
-
-(*--build-config
-    options:--admit_fsi Set --verify_module Formatting;
-    variables:LIB=../../lib;
-    other-files:../../lib/list.fst
-      ../../lib/string.fst
-      ../../lib/partialmap.fst
---*)
 
 (*
    Copyright 2008-2014 Nikhil Swamy and Microsoft Research
@@ -38,16 +30,18 @@ open Prims.PURE
 open String
 open Seq
 open SeqProperties
+open Platform.Bytes
 
-type message = seq byte
+
+type message = bytes
 type msg (l:nat) = m:message{length m==l}
 
 (* ----- a lemma on array append *)
 val append_inj_lemma: b1:message -> b2:message
                    -> c1:message -> c2:message
-                   -> Lemma (requires (length b1==length c1 /\ Seq.Eq (append b1 b2) (append c1 c2)))
+                   -> Lemma (requires (length b1==length c1 /\ Seq.Eq (b1 @| b2) (c1 @| c2)))
                             (ensures (Seq.Eq b1 c1 /\ Seq.Eq b2 c2))
-                            [SMTPat (append b1 b2); SMTPat (append c1 c2)] (* given to the SMT solver *)
+                            [SMTPat (b1 @| b2); SMTPat (c1 @| c2)] (* given to the SMT solver *)
 let rec append_inj_lemma b1 b2 c1 c2 =
   lemma_append_len_disj b1 b2 c1 c2;
   erase (Classical.forall_intro (lemma_append_inj_l b1 b2 c1 c2));
@@ -85,14 +79,14 @@ val response: string16 -> string -> Tot message
 
 (* -------- implementation *)
 
-let tag0 = create 1 0uy
-let tag1 = create 1 1uy
+let tag0 = createBytes 1 0uy
+let tag1 = createBytes 1 1uy
 
-let request s = append tag0 (utf8 s)
+let request s = tag0 @| (utf8 s)
 
 let response s t =
   let lb = uint16_to_bytes (length (utf8 s)) in
-  append tag1 (append lb (append (utf8 s) (utf8 t)))
+  tag1 @| (lb @| ( (utf8 s) @| (utf8 t)))
 
 
 (* ------- 3 lemmas on message formats:
@@ -110,17 +104,16 @@ val req_resp_distinct:
   Lemma (requires True)
         (ensures (not( (request s) = (response s' t'))))
         [SMTPat (request s); SMTPat (response s' t')]
+let req_resp_distinct s s' t' = cut (Seq.index tag0 0 == 0uy)
 
 val req_components_corr:
   s0:string -> s1:string ->
   Lemma (requires (Seq.Eq (request s0) (request s1)))
         (ensures  (s0==s1))
+let req_components_corr s0 s1 = ()
 
 val resp_components_corr:
   s0:string16 -> t0:string -> s1:string16 -> t1:string ->
   Lemma (requires (Seq.Eq (response s0 t0) (response s1 t1)))
         (ensures  (s0==s1 /\ t0==t1))
-
-let req_resp_distinct s s' t' = cut (Seq.index tag0 0 == 0uy)
-let req_components_corr s0 s1 = ()
 let resp_components_corr s0 t0 s1 t1 = ()
