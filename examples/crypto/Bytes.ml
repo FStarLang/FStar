@@ -161,3 +161,6 @@ let iutf8 (x:bytes) : string = get_cbytes x (* TODO: use Camomile *)
 let utf8 (x:string) : bytes = abytes (System.Text.Encoding.UTF8.GetBytes x)
 let iutf8 (x:bytes) : string = System.Text.Encoding.UTF8.GetString (get_cbytes x)
 *)
+
+let byte_of_int (i:int) =
+  abytes (char_of_int i)
