@@ -33,12 +33,6 @@ let sample n = magic()
 val sha1: bytes -> Tot tag
 let sha1 bs = magic()
 
-(*val xor : bytes -> bytes -> Tot bytes
-let xor a b = magic()*)
-
-(*assume val x5c : byte
-assume val x36 : byte*)
-
 val hmac_sha1: key -> text -> Tot tag
 let hmac_sha1 k t =
   let x5c = byte_of_int 92 in

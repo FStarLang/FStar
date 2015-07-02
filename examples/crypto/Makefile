@@ -34,7 +34,7 @@ rpc-extract:
           $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \
-					seq.fst seqproperties.fst ) Bytes.fst sha1.fst mac.fst formatting.fst rpc.fst
+					seq.fst seqproperties.fst ) Bytes.fst sha1.fst mac.fst formatting.fst rpc.fst --debug high
 	cp Bytes.ml Platform_Bytes.ml
 	ocamlfind ocamlopt -o rpc -package batteries -linkpkg -thread -I \
 	        $(FSTAR_HOME)/src/ocaml-output/ $(FSTAR_HOME)/src/ocaml-output/support.ml \

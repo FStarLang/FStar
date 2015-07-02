@@ -53,13 +53,13 @@ let rec append_inj_lemma b1 b2 c1 c2 =
 logic type UInt16 (i:int) = (0 <= i /\ i < 65536)
 type uint16 = i:int{UInt16 i}
 
-val utf8:
+(*val utf8:
   s:string  -> Tot (m:message{length m <= strlen s})
   (* this spec is accurate for ASCII strings *)
-let utf8 s = magic()
+let utf8 s = magic()*)
 
-val iutf8: m:message -> s:string{utf8 s == m}
-let iutf8 m = magic()
+(*val iutf8: m:message -> s:string{utf8 s == m}
+let iutf8 m = magic()*)
 
 assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
