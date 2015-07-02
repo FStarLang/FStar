@@ -830,10 +830,14 @@ and epstep : exp -> exp -> Type =
               eelse:exp ->
               =ht:epstep e0 e0' ->
               epstep (EIf0 e0 ethen eelse) (EIf0 e0' ethen eelse)
-  | PsFixPure : #tx:typ -> #t':typ -> #t'':typ -> #wp:typ ->
-                #d:exp -> #f:exp -> #v:value ->
+  | PsFixPure : tx:typ -> t':typ -> t'':typ -> wp:typ ->
+                d:exp -> f:exp -> v:value ->
                 epstep (eapp3 (EConst (EcFixPure tx t' t'' wp)) d f v)
 		       (eapp2 f (eapp2 (EConst (EcFixPure tx t' t'' wp)) d f) v)
+  | PsUpd : h:heap -> l:loc -> i:int ->
+            epstep (eapp3 (EConst EcUpd) (eheap h) (eloc l) (eint i)) (eheap (upd_heap l i h))
+  | PsSel : h:heap -> l:loc ->
+            epstep (eapp2 (EConst EcSel) (eheap h) (eloc l)) (eint (h l))
 
 type cfg =
   | Cfg : h:heap -> e:exp -> cfg
@@ -906,6 +910,9 @@ let tot_wp t = (TTLam (k_post_pure t)
 let tot t = Cmp EfPure t (tot_wp t)
 val return_pure : t:typ -> e:exp -> Tot typ
 let return_pure t e = TTLam (k_post_pure t) (TEApp (TVar 0) (etsh e))
+
+val return_pure_cmp : t:typ -> e:exp -> Tot cmp
+let return_pure_cmp t e = Cmp EfPure t (return_pure t e)
 
 let tot_wp_all t = (TTLam (k_post_all t) 
                       (tforalle (ttsh t) 
@@ -4622,9 +4629,7 @@ match ht with
  AbsInversion #g #targ #ebody #mc #tc #wpc mb tretb wpb htbody hst hvretweak
 )
 
-(*
 type scmpex : env -> e:exp -> cmp -> cmp -> Type =
-| SExRefl : g:env -> e:exp -> c:cmp -> scmpex g e c c
 | SExTrans : #g:env -> #e:exp -> #c1:cmp -> #c2:cmp -> #c3:cmp ->
              scmpex g e c1 c2 ->
              scmpex g e c2 c3 ->
@@ -4634,7 +4639,7 @@ type scmpex : env -> e:exp -> cmp -> cmp -> Type =
 	    scmpex g e c1 c2
 | SExRet : #g:env -> #e:exp -> #t:typ ->
            typing g e (tot t) ->
-	   scmpex g e (tot t) (return_pure t e)
+	   scmpex g e (tot t) (return_pure_cmp t e)
 
 val subtype_with_scmpex : #g:env -> #e:exp -> #c1:cmp -> #c2:cmp -> #e':exp ->
       scmpex g e c1 c2 ->
@@ -4643,7 +4648,43 @@ val subtype_with_scmpex : #g:env -> #e:exp -> #c1:cmp -> #c2:cmp -> #e':exp ->
       Tot (typing g e' c2)
 let subtype_with_scmpex g e c1 c2 e' hsc ht hstep = admit()
 
-TODO : replace inversion_tot_res by scmpex *)
+type remove_subtyping_res : env -> exp -> cmp -> Type =
+| RemoveSub : #g:env -> #e:exp -> #c:cmp ->
+  c' : cmp -> 
+  hsc: scmpex g e c' c ->
+  ht': typing g e c'{not(is_TySub ht') /\ not(is_TyRet ht')} ->
+  remove_subtyping_res g e c
+
+val remove_subtyping : #g:env -> #e:exp -> #c:cmp ->
+     hwf:ewf g ->
+     ht:typing g e c ->
+     Tot(remove_subtyping_res g e c)
+  (decreases %[ht])
+let rec remove_subtyping g e c hwf ht =
+if not (is_TySub ht) && not (is_TyRet ht) then
+  let Cmp mc tc wpc = c in
+  let TypingDerived hktc hkwpc hvmonoc = typing_derived #g #e #mc #tc #wpc hwf ht in
+  let hsc : scmp g c c = scmp_refl #g #mc #tc #wpc hktc hkwpc hvmonoc in
+  let hscex : scmpex g e c c = SExSCmp #g #e #c #c hsc in
+  RemoveSub #g #e #c c hscex ht
+else
+match ht with
+| TySub #x1 #x2 #c' #x4 ht' hsc ->
+(
+ let RemoveSub c'' hsc' ht' = remove_subtyping #g #e #c' hwf ht' in
+ let hsctemp : scmpex g e c' c = SExSCmp #g #e #c' #c hsc in
+ let hsc : scmpex g e c'' c = SExTrans hsc' hsctemp in
+ RemoveSub #g #e #c c'' hsc ht'
+)
+| TyRet _ htot ->
+(
+ let Cmp mc tc wpc = c in
+ let RemoveSub c' hsc' ht' = remove_subtyping hwf htot in
+ let hscex : scmpex g e (tot tc) (return_pure_cmp tc e) = SExRet #g #e #tc htot in
+ let hscex : scmpex g e c' (return_pure_cmp tc e) = SExTrans #g #e #c' #(tot tc) #(return_pure_cmp tc e) hsc' hscex in
+ RemoveSub #g #e #c c' hscex ht'
+)
+
 (*
 type inversion_tot_res : g:env -> e:exp -> mb:eff -> tb:typ -> wpb:typ ->
                                            ms:eff -> ts:typ -> wps:typ ->
@@ -5075,6 +5116,39 @@ and
   let htg' : typing g e0' (Cmp EfPure tint wpg) = pure_typing_preservation #g #e0 #e0' #tint #wpg #postwpg hwf htg hstep hv' in
   TyIf0 g e0' ethen eelse EfPure t wpg wpt wpe htg' htt hte
 )
+| PsFixPure tx t' t'' wpfix d f v ->
+(
+
+ let TyApp #x1 #x2 #x3 #x4 #targ3s #tfun3s #wpbody3s #wpfun3s #wparg3s htfun3 htarg3 htot3 hk3 = ht in
+(* Sketch of the proof :
+  * I call base types the ones that are built with tx t' t'' wpfix without subtyping
+  * we get a tot proof for 'd', 'f', 'v' with base types with the same technic than in TyApp using the subtyping relations we get when we invert the typing judgement
+  * we convert them to return proofs
+  * we get a typing proof for 'fix_pure d f' and we subsume it in order for the type to match the one of the second argument of f (everything with base types), still with a 'return' wp for 'fix_pure d f'
+  * we get a typing proof for 'f v (fix_pure d f)' that is of type "t'' v" and wp "wpfix v"
+  * we show that g |- t'' v <: t and g |= wpbody3s[v/x] ==>_PURE wpfix v with the different subcomputation relations we have
+  * we show with V-Constr, that g |= bind wpfun3s (fun _ -> bind wparg3s (fun x -> wpbody3s)) ==>_PURE bind wparg3s (fun x -> wpbody3s)
+  and g |= bind wparg3s (fun x -> wpbody3s) ==> wpbody3s[v/x]
+  * so we can subsume a last time and get what we want
+ *)
+ let tdb = tfixpured tx t' in
+ let tfb = tsubst_ebeta d (tfixpureF tx t'' wp) in
+ let tvb = tx in
+ (* We first get the fact that the argument have the right base type
+  and the return wp *)
+ let htd : typing g d (return_pure_cmp tdb d) = magic() in
+ let htf : typing g f (return_pure_cmp tfb f) = magic() in
+ let htv : typing g v (return_pure_cmp tvb v) = magic() in
+ (* We first build the proof that fix_pure d F has the good type to be
+  the second argument of F *)
+ let htfix : typing g (eapp2 (EConst EcFixPure) d f) 
+             (return_pure_cmp (TArr tx (Cmp EfPure (TEApp (tesh t'') (EVar 0)) (op_pure (TEApp (tesh t'') (EVar 0)) tand (up_pure (TEApp (tesh t'') (EVar 0)) (tprecedes (EApp d (EVar 0)) (EApp d v))) (TEApp (tesh wpfix) (EVar 0)))))) = magic() in
+ (* We now get the fact that the final expression has the good base type (the fact that we have the 'return' wp for all arguments let us reduce to the final wp directly*)
+ let htappb : typing g (eapp2 f v (eapp2 (EConst EcFixPure) d f)) (Cmp EfPure (TEApp t'' v) (TEApp wpfix v)) = magic() in
+ (* We can use the different subtyping relation we have to get that the base computation and the subsumed one are related *)
+ let hscmp : scmp g (eapp2 f v (eapp2 (EConst EcFixPure) d f)) (Cmp EfPure (TEApp t'' v) (TEApp wpfix v)) (Cmp EfPure t wp) = magic() in
+ TySub #g #(eapp2 f v (eapp2 (EConst EcFixPure) d f)) #(Cmp EfPure (TEApp t'' v) (TEApp wpfix v)) #(Cmp EfPure t wp) htappb hscmp
+)
 | _ -> admit()
 and ~> pure_kinding_preservation g t t' k hwf hk hstep = 
 if is_KSub hk then
@@ -5187,6 +5261,8 @@ else
  )
  | _ -> admit()
 )
+
+
 
 (*
 match hstep with
