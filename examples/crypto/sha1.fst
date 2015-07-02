@@ -43,10 +43,10 @@ val hmac_sha1: key -> text -> Tot tag
 let hmac_sha1 k t =
   let x5c = byte_of_int 92 in
   let x36 = byte_of_int 54 in
-  let opad = Seq.create blocksize x5c in
-  let ipad = Seq.create blocksize x36 in
+  let opad = createBytes blocksize x5c in
+  let ipad = createBytes blocksize x36 in
   let xor_key_opad = xor k opad (length k) in
   let xor_key_ipad = xor k ipad (length k) in
-  sha1 ( append xor_key_opad
-                (sha1 (append xor_key_ipad t))
+  sha1 ( xor_key_opad @|
+                (sha1 (xor_key_ipad @| t))
        )

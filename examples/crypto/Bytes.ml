@@ -81,7 +81,7 @@ let (@|) (a:bytes) (b:bytes) =
        index = 0;
        max = a.length + b.length}
 
-let op_AtBar a b = a @| b
+let op_At_Bar a b = a @| b
 
 let split (b:bytes) i : bytes * bytes =
     {bl = b.bl;
@@ -96,8 +96,8 @@ let length (d:bytes) = d.length
 
 
 let empty_bytes = abytes ""
-let createBytes len (value:int) : bytes =
-    try abytes (String.make len (char_of_int value))
+let createBytes len (value:byte) : bytes =
+    try abytes (String.make len value)
     with _ -> failwith "Default integer for createBytes was greater than max_value"
 
 type lbytes = bytes
@@ -162,5 +162,5 @@ let utf8 (x:string) : bytes = abytes (System.Text.Encoding.UTF8.GetBytes x)
 let iutf8 (x:bytes) : string = System.Text.Encoding.UTF8.GetString (get_cbytes x)
 *)
 
-let byte_of_int (i:int) =
-  abytes (char_of_int i)
+let byte_of_int (i:int) : byte =
+  char_of_int i
