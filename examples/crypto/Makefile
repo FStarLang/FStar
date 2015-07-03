@@ -29,17 +29,18 @@ rpc: formatting.fst sha1.fst mac.fst rpc.fst
           $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \
-					seq.fsi seqproperties.fst ) Bytes.fst formatting.fst sha1.fst mac.fst rpc.fst
+					seq.fsi seqproperties.fst ) Bytes.fst \
+					$(addprefix $(MITLS)/CoreCrypto/, CoreCrypto.fst) \
+					sha1.fst mac.fst formatting.fst rpc.fst
 
 
 
 rpc-extract:
-	$(FSTAR) --codegen-lib Platform --codegen-lib CoreCrypto --codegen-lib Hash --codegen OCaml \
+	$(FSTAR) --codegen-lib Platform --codegen-lib CoreCrypto --codegen OCaml \
           $(addprefix $(FSTAR_HOME)/lib/, string.fst list.fst ext.fst classical.fst \
 					set.fsi set.fst \
 					heap.fst st.fst \
 					seq.fst seqproperties.fst ) Bytes.fst \
-					$(MITLS)/CoreCrypto/Hash.fst \
 					$(MITLS)/CoreCrypto/CoreCrypto.fst \
 					sha1.fst mac.fst formatting.fst rpc.fst  --debug high
 	#cp Bytes.ml Platform_Bytes.ml
