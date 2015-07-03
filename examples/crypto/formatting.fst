@@ -34,7 +34,7 @@ open Platform.Bytes
 
 
 type message = bytes
-type msg (l:nat) = m:message{length m==l}
+type msg (l:nat) = lbytes l
 
 (* ----- a lemma on array append *)
 val append_inj_lemma: b1:message -> b2:message
@@ -59,14 +59,16 @@ type uint16 = i:int{UInt16 i}
 let utf8 s = magic()*)
 
 (*val iutf8: m:message -> s:string{utf8 s == m}
-let iutf8 m = magic()*)
+let iutf8 m = Platform.Bytes.iutf8 m*)
 
 assume UTF8_inj:
   forall s0 s1.{:pattern (utf8 s0); (utf8 s1)}
     Seq.Eq (utf8 s0) (utf8 s1) ==> s0==s1
 
-val uint16_to_bytes: uint16 -> Tot (msg 2)
-let uint16_to_bytes u = magic()
+val uint16_to_bytes: u:uint16{repr_bytes u <= 2} -> Tot (msg 2)
+
+let uint16_to_bytes u = bytes_of_int 2 u
+
 assume UINT16_inj: forall s0 s1. Seq.Eq (uint16_to_bytes s0) (uint16_to_bytes s1) ==> s0==s1
 
 type string16 = s:string{UInt16 (length (utf8 s))} (* up to 65K *)

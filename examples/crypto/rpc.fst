@@ -1,16 +1,18 @@
 (*--build-config
     options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module RPC --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    variables:LIB=../../lib;
+    variables:LIB=../../lib
+              MITLS=../../../mitls-fstar/libs/fst/;
     other-files:$LIB/string.fst $LIB/list.fst
             $LIB/ext.fst $LIB/classical.fst
             $LIB/set.fsi $LIB/set.fst
             $LIB/heap.fst $LIB/st.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
-            formatting.fst
             Bytes.fst
+            $MITLS/CoreCrypto/Hash.fst
+            $MITLS/CoreCrypto/CoreCrypto.fst
+            formatting.fst
             sha1.fst
             mac.fst
-
   --*)
 
 
@@ -24,12 +26,18 @@ open SHA1
 open Formatting
 open MAC
 
+
 (* some basic, untrusted network controlled by the adversary *)
 
+
+(*let log_prot = ST.alloc []*)
+val msg_buffer: ref message
+let msg_buffer = ST.alloc (createBytes 10 (byte_of_int 0))
+
 val send: message -> unit
-let send m = magic()
+let send m = msg_buffer := m
 val recv: (message -> unit) -> unit
-let recv m = magic()
+let recv call = call !msg_buffer
 
 (* two events, recording genuine requests and responses *)
 

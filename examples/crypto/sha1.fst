@@ -1,22 +1,24 @@
 (*--build-config
     options:--z3timeout 10 --prims ../../lib/prims.fst --verify_module SHA1 --admit_fsi Seq --max_fuel 4 --initial_fuel 0 --max_ifuel 2 --initial_ifuel 1;
-    variables:LIB=../../lib;
+    variables:LIB=../../lib
+              MITLS=../../../mitls-fstar/libs/fst/;
     other-files:$LIB/string.fst $LIB/list.fst
             $LIB/ext.fst $LIB/classical.fst
             $LIB/set.fsi $LIB/set.fst
             $LIB/heap.fst $LIB/st.fst
             $LIB/seq.fsi $LIB/seqproperties.fst
             Bytes.fst
+            $MITLS/CoreCrypto/Hash.fst
+            $MITLS/CoreCrypto/CoreCrypto.fst
   --*)
 module SHA1
 open Seq
 open Platform.Bytes
+open CoreCrypto.Hash
+open CoreCrypto
 
-(*type bytes = seq byte (* concrete byte arrays *)*)
 type text  = bytes    (* a type abbreviation, for clarity *)
 
-type nbytes (n:nat) =
-  b:bytes{length b == n} (* fixed-length bytes *)
 
 (* we rely on some external crypto library implementing HMAC-SHA1 *)
 
@@ -24,14 +26,11 @@ let keysize = 16
 let blocksize = keysize
 let macsize = 20
 
-type key = nbytes keysize
-type tag = nbytes macsize
+type key = lbytes keysize
+type tag = lbytes macsize
 
-val sample: n:nat -> nbytes n
-let sample n = magic()
-
-val sha1: bytes -> Tot tag
-let sha1 bs = magic()
+val sample: n:nat -> lbytes n
+let sample n = random n
 
 val hmac_sha1: key -> text -> Tot tag
 let hmac_sha1 k t =
